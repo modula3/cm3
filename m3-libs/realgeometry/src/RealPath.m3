@@ -122,9 +122,9 @@ PROCEDURE CurrentPoint (self: T): RealPoint.T
         RETURN e.r;
     | ArcElem(e) =>
         pt[0] := e.center[0] + e.radius * 
-                 FLOAT(Math.cos(DegToRad * FLOAT(e.ang2,LONGREAL)),REAL);
+                 FLOAT(Math.cos(Math.Degree * FLOAT(e.ang2,LONGREAL)),REAL);
         pt[1] := e.center[1] + e.radius * 
-                 FLOAT(Math.sin(DegToRad * FLOAT(e.ang2,LONGREAL)),REAL);
+                 FLOAT(Math.sin(Math.Degree * FLOAT(e.ang2,LONGREAL)),REAL);
         RETURN pt;
     ELSE
       <* ASSERT FALSE *>
@@ -266,13 +266,13 @@ PROCEDURE FindArcBBox(e: ArcElem; VAR min, max: RealPoint.T) =
 
     (* get the end points *)
     p1[0] := e.center[0] + e.radius *
-             FLOAT(Math.cos(DegToRad * FLOAT(ang1,LONGREAL)),REAL);
+             FLOAT(Math.cos(Math.Degree * FLOAT(ang1,LONGREAL)),REAL);
     p1[1] := e.center[1] + e.radius * 
-             FLOAT(Math.sin(DegToRad * FLOAT(ang1,LONGREAL)),REAL);
+             FLOAT(Math.sin(Math.Degree * FLOAT(ang1,LONGREAL)),REAL);
     p2[0] := e.center[0] + e.radius * 
-             FLOAT(Math.cos(DegToRad * FLOAT(ang2,LONGREAL)),REAL);
+             FLOAT(Math.cos(Math.Degree * FLOAT(ang2,LONGREAL)),REAL);
     p2[1] := e.center[1] + e.radius * 
-             FLOAT(Math.sin(DegToRad * FLOAT(ang2,LONGREAL)),REAL);
+             FLOAT(Math.sin(Math.Degree * FLOAT(ang2,LONGREAL)),REAL);
 
     (* start with the end points as bounds *)
     min[0] := MIN(p1[0], p2[0]);
@@ -366,8 +366,6 @@ PROCEDURE GetElement(self: T; pos: CARDINAL): Element
 
     RETURN self.elemList[pos];
   END GetElement;
-
-CONST DegToRad = FLOAT(2.0 * Math.Pi / 360.0, LONGREAL);    
 
 BEGIN
   <* ASSERT PATH_GROWTH_FACTOR > 0.0 *>

@@ -471,7 +471,7 @@ PROCEDURE AddSpotLight (self: T; color: Color.T; p, d: Point3.T;
 
         GL.glLightfv (l, GL.GL_SPOT_DIRECTION, ADR (d));
         GL.glLightf (l, GL.GL_SPOT_EXPONENT, conc);
-        GL.glLightf (l, GL.GL_SPOT_CUTOFF, 180.0 * spread / Math.Pi);
+        GL.glLightf (l, GL.GL_SPOT_CUTOFF, spread / FLOAT (Math.Degree, REAL));
 
         GL.glLightf (l, GL.GL_CONSTANT_ATTENUATION,  att0);
         GL.glLightf (l, GL.GL_LINEAR_ATTENUATION,    att1);
@@ -664,7 +664,7 @@ PROCEDURE SetupCamera (self: T) =
     WITH aspect = self.aspect * FLOAT(self.winWidth) / FLOAT(self.winHeight) DO
       CASE self.projType OF
       | ProjType.Persp =>
-        GLu.gluPerspective (FLOAT (self.fovy / Math.Pi * 180.0, LONGREAL), 
+        GLu.gluPerspective (FLOAT (self.fovy, LONGREAL) / Math.Degree, 
                             FLOAT (aspect, LONGREAL), 
                             FLOAT (self.near, LONGREAL), 
                             FLOAT (self.far, LONGREAL));

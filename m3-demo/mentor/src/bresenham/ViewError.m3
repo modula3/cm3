@@ -80,7 +80,7 @@ PROCEDURE New (): View.T =
 PROCEDURE DrawLupe(view: T; color: PaintOp.T; radius: REAL) = 
   VAR
     polygon : ARRAY [0..NPOINTS-1] OF REFANY ; 
-    angIncr := Math.Pi / FLOAT(NSUBDIV) ; 
+    angIncr := Math.Pi / FLOAT(NSUBDIV, LONGREAL) ; 
     ang     : LONGREAL ;
   BEGIN
     polygon [0] := 
@@ -98,7 +98,7 @@ PROCEDURE DrawLupe(view: T; color: PaintOp.T; radius: REAL) =
 
 
     FOR i := 0 TO NSUBDIV-1 DO
-      ang := FLOAT(FLOAT(i) * angIncr, LONGREAL);
+      ang := FLOAT(i, LONGREAL) * angIncr;
       polygon[i+6]:=
         NEW(GraphVBT.Vertex, graph:=view.graph, 
             pos:=R2.T{
@@ -125,7 +125,7 @@ PROCEDURE DrawLupe(view: T; color: PaintOp.T; radius: REAL) =
         NEW(GraphVBT.Vertex, graph:=view.graph, pos:=R2.T{XC+radius+1.0, YC}).init();
 
     FOR i := 0 TO NSUBDIV-1 DO
-      ang := FLOAT(FLOAT(i) * angIncr, LONGREAL);
+      ang := FLOAT(i, LONGREAL) * angIncr;
       polygon[i+6]:=
         NEW(GraphVBT.Vertex, graph:=view.graph, 
             pos:=R2.T{
