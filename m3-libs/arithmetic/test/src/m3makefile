@@ -1,6 +1,6 @@
 import("libm3")
 import("tempfiles")
-override("m3na","/home/thielema/programming/m3/pkg")
+%override("m3na","/home/thielema/programming/m3/pkg")
 %override("m3na","../../..")
 import("m3na")
 
@@ -12,6 +12,8 @@ import("m3na")
 import_lib("g2c","/usr/lib")  % needed for blas and lapack, part of the f2c package, I guess
 import_lib("blas","/usr/lib")
 import_lib("lapack","/usr/lib")
+%import_lib("lapack","/home/ignacio/lib")
+%import_lib("lapack","/home/thielema/lib/ix86-linux2")
 
 implementation("TestWordEx")
 implementation("TestBits")
@@ -35,3 +37,4 @@ implementation("TestLapack")
 implementation("TestTex")
 module("Test")
 program("Test")
+
