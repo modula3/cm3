@@ -905,7 +905,7 @@ PROCEDURE Test () =
                matchRamp, matchRampSmooth, matchSincSmooth, matchLongRamp,
                testSSE, testInverseDSSE, testDeriveWSSE};
   BEGIN
-    CASE Example.matchBSplineWavelet OF
+    CASE Example.matchSincSmooth OF
     | Example.matchBSpline =>
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50), 6,
@@ -950,7 +950,7 @@ PROCEDURE Test () =
     | Example.matchSincSmooth =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
-          4, 2, 10, 0.0D0);
+          4, 6, 10, 1.0D-3);
     | Example.matchLongRamp =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(
