@@ -4,6 +4,16 @@ GCC_BACKEND=${GCC_BACKEND:-no}
 WIN32=${WIN32:-yes}
 M3GDB=${M3GDB:-no}
 
+UNAME=$(uname)
+
+if [ "${UNAME}" = FreeBSD ] ; then
+  GCC_BACKEND=yes
+  WIN32=no
+  ROOT=${ROOT:-$(pwd)}
+fi
+
+export GCC_BACKEND WIN32 M3GDB BUILDARGS ROOT
+
 # base libraries and compiler
 PKGS=""
 PKGS="${PKGS} m3-libs/m3core"
