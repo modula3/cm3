@@ -49,15 +49,19 @@ typedef int PLINT;
 
 %define DOC(func, string) 
 %wrapper %{#define _doc_ ## func string %}
+%insert(m3wrapintf) %{(* func: string *)%}
 %enddef
 
+/*
 %pragma(modula3) enumitem="Escape,PLESC_";
 %pragma(modula3) setitem="DrawMode,DRAW_";
 %pragma(modula3) setitem="Option,PL_OPT_";
 %pragma(modula3) setitem="Parse,PL_PARSE_";
 %pragma(modula3) enumitem="Buffering,PLESPLFLTBUFFERING_";
+*/
 
 %insert(m3wrapintf) %{
+TYPE
   Option = {enabled, arg, nodelete, invisible, disabled, dummy5, dummy6,
             dummy7, func, bool, int, float, string};
   OptionSet = SET OF Option;
@@ -240,10 +244,10 @@ typedef int PLINT;
 %rename("FindCommand") plFindCommand;
 %rename("GetName") plGetName;
 %rename("GetInt") plGetInt;
-%rename("GetFlt") plGetFlt;
-%rename("Alloc2dGrid") plAlloc2dGrid;
-%rename("Free2dGrid") plFree2dGrid;
-%rename("MinMax2dGrid") plMinMax2dGrid;
+%rename("GetFloat") plGetFlt;
+%rename("Alloc2DGrid") plAlloc2dGrid;
+%rename("Free2DGrid") plFree2dGrid;
+%rename("MinMax2DGrid") plMinMax2dGrid;
 %rename("HLS_RGB") plHLS_RGB;
 %rename("RGB_HLS") plRGB_HLS;
 %rename("GetCursor") plGetCursor;
@@ -373,6 +377,7 @@ END;%}
 %typemap("m3argouttype") PLINT *OUTPUT "INTEGER"
 
 
+#ifdef AdditionalTypeInfo
 /* Test of new interface style. */
 typedef PLINT  PLFLT_ARRAY_SIZE;
 typedef PLFLT *PLFLT_ARRAY;
@@ -390,7 +395,7 @@ typedef PLFLT *PLFLT_ARRAY_CK;
 
 void
 plline_new(PLFLT_ARRAY_SIZE n, PLFLT_ARRAY x, PLFLT_ARRAY_CK y);
-
+#endif
 
 /* swig compatible PLplot API definitions from here on. */
 %include plplotcapi.i
