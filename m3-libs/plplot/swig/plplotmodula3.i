@@ -50,7 +50,7 @@ typedef float PLFLT;
 typedef int PLINT;
 
 /***************************
-	A trick for docstrings
+        A trick for docstrings
 ****************************/
 
 %define DOC(func, string) 
@@ -81,6 +81,7 @@ IMPORT LongRealBasic  AS R;
 IMPORT LongRealVectorFast AS V;
 IMPORT LongRealMatrixFast AS M;
 IMPORT M3toC;
+IMPORT Ctypes AS C;
 %}
 
 %insert(m3wrapintf) %{
@@ -91,8 +92,6 @@ IMPORT LongRealVectorFast AS V;
 IMPORT LongRealMatrixFast AS M;
 
 TYPE
-  CallbackM3Data = REFANY;
-
   Option = {enabled, arg, nodelete, invisible, disabled, dummy5, dummy6,
             dummy7, func, bool, int, float, string};
   OptionSet = SET OF Option;
@@ -343,23 +342,42 @@ FOR i:=0 TO LAST($1_name) DO $1[i] := ADR($1_name[i,0]) END;%}
 
 
 
-%rename("plotter") pltr;
-%rename("objectData") OBJECT_DATA;
+//%rename("plotter") pltr;
+//%rename("objectData") OBJECT_DATA;
+
+%insert(m3wrapintf) %{
+TYPE
+  CallbackM3Proc = PROCEDURE (data: REFANY);
+%}
+
+%insert(m3wrapimpl) %{
+TYPE
+  CallbackM3Data =
+    RECORD
+      callback    : CallbackM3Proc;
+      callbackData: REFANY;
+    END;
+
+PROCEDURE CallbackM3()=BEGIN END CallbackM3;
+%}
 
 %typemap(rawintype) pltr_func %{PlotterFunc%}
 %typemap(rawintype) PLPointer %{REFANY%}
+%typemap(rawinmode) PLPointer %{%}
 
-%typemap(m3intype) (pltr_func pltr, PLPointer OBJECT_DATA)
-%{PROCEDURE (data: REF CallbackM3Data) (* objectData: REFANY*)%}
+%typemap(m3intype)  pltr_func %{CallbackM3Proc%}
+%typemap(m3intype)  PLPointer %{REFANY%}
+%typemap(m3inmode)  PLPointer %{%}
+
 %typemap(m3rawarg) (pltr_func pltr, PLPointer OBJECT_DATA)
-%{CallbackM3, NEW(REF CallbackM3Data,callback:=plotter,callbackData:=objectData)%}
+%{CallbackM3, NEW(REF CallbackM3Data,callback:=$1_name,callbackData:=$2_name)%}
 
 %typemap(rawintype) defined_func %{PlotterFunc%}
-%typemap(m3intype)  defined_func %{PROCEDURE (x: R.T): R.T%}
+%typemap(m3intype,numinputs=0)  defined_func %{PROCEDURE (x: R.T): R.T%}
 %typemap(m3rawarg)  defined_func %{NIL (*not yet supported*)%}
 
 %typemap(rawintype) fill_func %{PlotterFunc%}
-%typemap(m3intype)  fill_func %{PROCEDURE (x: R.T): R.T%}
+%typemap(m3intype,numinputs=0)  fill_func %{PROCEDURE ()%}
 %typemap(m3rawarg)  fill_func %{NIL (*not yet supported*)%}
 
 
@@ -373,13 +391,13 @@ FOR i:=0 TO LAST($1_name) DO $1[i] := ADR($1_name[i,0]) END;%}
 %typemap(m3intype)  char *legline[4] %{ARRAY [0..3] OF TEXT%}
 %typemap(m3indecl)  char *legline[4] %{$1: ARRAY [0..3] OF C.char_star;%}
 %typemap(m3in)      char *legline[4]
-%{FOR i:=FIRST($1_name) TO FIRST($1_name) DO
+%{FOR i:=FIRST($1_name) TO LAST($1_name) DO
 $1[i]:=M3toC.SharedTtoS($1_name[i]);
 END;%}
-%typemap(m3rawarg) char *legline[4]
+%typemap(m3rawarg)  char *legline[4]
 %{$1%}
 %typemap(m3freearg) char *legline[4]
-%{FOR i:=FIRST($1_name) TO FIRST($1_name) DO
+%{FOR i:=FIRST($1_name) TO LAST($1_name) DO
 M3toC.FreeSharedS($1_name[i],$1[i]);
 END;%}
 
@@ -390,6 +408,15 @@ END;%}
 %typemap(m3intype)  PLINT *p_argc %{CARDINAL%}
 %typemap(rawintype) char **argv   %{(*ARRAY OF*) C.char_star%}
 %typemap(m3intype)  char **argv   %{ARRAY OF TEXT%}
+
+%typemap(m3intype,numinputs=0) PLFLTOutput ""
+%typemap(m3argouttype) PLFLTOutput "R.T"
+
+%typemap(m3intype,numinputs=0) PLINTOutput ""
+%typemap(m3indecl) PLINTOutput %{$1_name: C.int;%}
+%typemap(m3rawarg) PLINTOutput %{$1_name%}
+%typemap(m3freearg) PLINTOutput %{result.$input := $1_name;%}  // heavy abuse
+%typemap(m3argouttype) PLINTOutput %{INTEGER%}
 
 
 %feature("m3:multiretval") plcalc_world;
@@ -408,12 +435,6 @@ END;%}
 %feature("m3:multiretval") plgzax;
 %feature("m3:multiretval") plHLS_RGB;
 %feature("m3:multiretval") plRGB_HLS;
-
-%typemap("m3intype",numinputs=0) PLFLTOutput ""
-%typemap("m3argouttype") PLFLTOutput "R.T"
-
-%typemap("m3intype",numinputs=0) PLINTOutput ""
-%typemap("m3argouttype") PLINTOutput "INTEGER"
 
 
 /* swig compatible PLplot API definitions from here on. */
