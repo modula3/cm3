@@ -634,7 +634,7 @@ VAR
 BEGIN
   EVAL defs.put("CM3_RELEASE", "5.2.5");       (* readable release version *)
   EVAL defs.put("CM3_VERSION", "050205");      (* version as number *)
-  EVAL defs.put("CM3_CREATED", "2003-04-23");  (* date of last change *)
+  EVAL defs.put("CM3_CREATED", "2003-05-22");  (* date of last change *)
   EVAL defs.put("M3_PROFILING", "");           (* no profiling by default *)
   EVAL defs.put("EOL", Wr.EOL);
 END Makefile.
