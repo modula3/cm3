@@ -6,10 +6,10 @@
 %      modified on Mon Apr 06 14:45:41 PDT 1992 by muller
 
 
-override (tcl, "../../..")
+override ("tcl", "../../..")
 
-import (libm3)
-import (tcl)
-implementation (TclCTest)
-% implementation (TclTest)
-program (test)
+import ("libm3")
+import ("tcl")
+implementation ("TclCTest")
+% implementation ("TclTest")
+program ("test")
