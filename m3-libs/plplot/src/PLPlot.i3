@@ -7,37 +7,42 @@
  *******************************************************************************)
 
 INTERFACE PLPlot;
-
-(* * * * Precaution: This conversion from the C headers is not well tested
-   and may contain bugs, irritating function names or improper types.  We
-   should use enumerations, sets, subranges whereever possible to increase
-   safety for parameter passing.  We should use exceptions to indicate
-   errors.  * * * *)
-
-IMPORT NADefinitions AS NA;
 IMPORT LongRealBasic AS R;
 IMPORT LongRealVector AS V;
+IMPORT NADefinitions AS NA;
 IMPORT LongRealMatrix AS M;
+
+
 
 TYPE
   Option = {enabled, arg, nodelete, invisible, disabled, dummy5, dummy6,
             dummy7, func, bool, int, float, string};
-  OptionSet = SET OF Option;
+
+  Window = {dummy0, device, world};
 
   Parse =
     {full, quiet, nodelete, showall, override, noprogram, nodash, skip};
-  ParseSet = SET OF Parse;
 
-  Escape = {dummy0, setRgb, allocNcol, setLpb, expose, resize, redraw,
-            text, graph, fill, di, flush, eh, getc, swin, plfltbuffering,
-            xormod, setCompression, clear, dash, hasText, image, imageops};
+  Escape = {setRgb, allocNcol, expose, graph, xormod};
 
   Buffering = {dummy0, enable, disable, query};
 
   DrawMode = {linex, liney, magColor, baseCont, topCont, surfCont, sides,
               faceted, mesh};
-  DrawModeSet = SET OF DrawMode;
 
+(* * * * Precaution:
+
+   This conversion from the C headers is not well tested and may contain
+   bugs, irritating function names or improper types.  We should use
+   enumerations, sets, subranges whereever possible to increase safety for
+   parameter passing.  We should use exceptions to indicate errors.  * *
+   * *)
+
+
+TYPE
+  DrawModeSet = SET OF DrawMode;
+  OptionSet = SET OF Option;
+  ParseSet = SET OF Parse;
 
 TYPE CallbackM3Proc = PROCEDURE (data: REFANY);
 
@@ -46,74 +51,55 @@ TYPE
   Tile = {box, ticks, axes, gridMajor, gridMinor, xTicksLog, yTicksLog};
   TileSet = SET OF Tile;
 
+TYPE
+  DirTile = {axis, lowerBorder, upperBorder, fixedPointLabel, gridMajor,
+             gridMinor, ticksOutward, logarithmic, labelMajorUnconv,
+             labelMinorUnconv, ticksMajor, ticksMinor};
+  DirTileSet = SET OF DirTile;
+
+
+TYPE
+  LineStyle = {none, continuous, shortDash, longDash, longDashShortGap,
+               dotDash, complex0, complex1, complex2};
+
 
 CONST
-  plescSetRgb               = 1;
-  plescAllocNcol            = 2;
-  plescSetLpb               = 3;
-  plescExpose               = 4;
-  plescResize               = 5;
-  plescRedraw               = 6;
-  plescText                 = 7;
-  plescGraph                = 8;
-  plescFill                 = 9;
-  plescDi                   = 10;
-  plescFlush                = 11;
-  plescEh                   = 12;
-  plescGetc                 = 13;
-  plescSwin                 = 14;
-  plescPlfltbuffering       = 15;
-  plescXormod               = 16;
-  plescSetCompression       = 17;
-  plescClear                = 18;
-  plescDash                 = 19;
-  plescHasText              = 20;
-  plescImage                = 21;
-  plescImageops             = 22;
-  drawLinex                 = 16_01;
-  drawLiney                 = 16_02;
-  drawLinexy                = 16_03;
-  drawMagColor              = 16_04;
-  drawBaseCont              = 16_08;
-  drawTopCont               = 16_10;
-  drawSurfCont              = 16_20;
-  drawSides                 = 16_40;
-  drawFaceted               = 16_80;
-  drawMesh                  = 16_100;
-  plswinDevice              = 1;
-  plswinWorld               = 2;
-  plOptEnabled              = 16_0001;
-  plOptArg                  = 16_0002;
-  plOptNodelete             = 16_0004;
-  plOptInvisible            = 16_0008;
-  plOptDisabled             = 16_0010;
-  plOptFunc                 = 16_0100;
-  plOptBool                 = 16_0200;
-  plOptInt                  = 16_0400;
-  plOptFloat                = 16_0800;
-  plOptString               = 16_1000;
-  plParsePartial            = 16_0000;
-  plParseFull               = 16_0001;
-  plParseQuiet              = 16_0002;
-  plParseNodelete           = 16_0004;
-  plParseShowall            = 16_0008;
-  plParseOverride           = 16_0010;
-  plParseNoprogram          = 16_0020;
-  plParseNodash             = 16_0040;
-  plParseSkip               = 16_0080;
-  plMaxkey                  = 16;
-  plMaxwindows              = 64;
-  plNotset                  = (-42);
-  plesplfltbufferingEnable  = 1;
-  plesplfltbufferingDisable = 2;
-  plesplfltbufferingQuery   = 3;
+  drawLinex                = DrawModeSet{DrawMode.linex};
+  drawLiney                = DrawModeSet{DrawMode.liney};
+  drawLinexy               = DrawModeSet{DrawMode.linex, DrawMode.liney};
+  drawMagColor             = DrawModeSet{DrawMode.magColor};
+  drawBaseCont             = DrawModeSet{DrawMode.baseCont};
+  drawTopCont              = DrawModeSet{DrawMode.topCont};
+  drawSurfCont             = DrawModeSet{DrawMode.surfCont};
+  drawSides                = DrawModeSet{DrawMode.sides};
+  drawFaceted              = DrawModeSet{DrawMode.faceted};
+  drawMesh                 = DrawModeSet{DrawMode.mesh};
+  optEnabled               = OptionSet{Option.enabled};
+  optArg                   = OptionSet{Option.arg};
+  optNodelete              = OptionSet{Option.nodelete};
+  optInvisible             = OptionSet{Option.invisible};
+  optDisabled              = OptionSet{Option.disabled};
+  optFunc                  = OptionSet{Option.func};
+  optBool                  = OptionSet{Option.bool};
+  optInt                   = OptionSet{Option.int};
+  optFloat                 = OptionSet{Option.float};
+  optString                = OptionSet{Option.string};
+  parsePartial             = ParseSet{};
+  parseFull                = ParseSet{Parse.full};
+  parseQuiet               = ParseSet{Parse.quiet};
+  parseNodelete            = ParseSet{Parse.nodelete};
+  parseShowall             = ParseSet{Parse.showall};
+  parseOverride            = ParseSet{Parse.override};
+  parseNoprogram           = ParseSet{Parse.noprogram};
+  parseNodash              = ParseSet{Parse.nodash};
+  parseSkip                = ParseSet{Parse.skip};
+  maxKey        : CARDINAL = 16;
+  maxWindows    : CARDINAL = 64;
 (* pl_setcontlabelformat: "Set the format of the contour labels." *)
-
 PROCEDURE SetContLabelFormat (lexp, sigdig: INTEGER; );
 
 (* pl_setcontlabelparam: "Set offset and spacing of contour labels." *)
-PROCEDURE SetContLabelParam (offset, size, spacing: LONGREAL;
-                             active               : INTEGER;  );
+PROCEDURE SetContLabelParam (offset, size, spacing: R.T; active: INTEGER; );
 
 (* pladv: "Advance to subpage \"page\", or to the next one if \"page\" =
    0." *)
@@ -121,13 +107,13 @@ PROCEDURE Advance (page: INTEGER; );
 
 (* plaxes: "This functions similarly to plbox() except that the origin of
    the axes is placed at the user-specified point (x0, y0)." *)
-PROCEDURE DrawAxes (x0, y0: LONGREAL;
-                    xopt  : TEXT;
-                    xtick : LONGREAL;
+PROCEDURE DrawAxes (x0, y0: R.T;
+                    xopt  : DirTileSet;
+                    xtick : R.T;
                     nxsub : INTEGER;
-                    yopt  : TEXT;
-                    ytick : LONGREAL;
-                    nysub : INTEGER;  );
+                    yopt  : DirTileSet;
+                    ytick : R.T;
+                    nysub : INTEGER;    );
 
 (* plbin: "Plot a histogram using x to store data values and y to store
    frequencies." *)
@@ -138,23 +124,26 @@ PROCEDURE PlotBins (READONLY x, y: V.TBody; center: INTEGER; )
 PROCEDURE StartPage ();
 
 (* plbox: "Draw a box around the current viewport." *)
-PROCEDURE DrawBox (xopt : TEXT;
-                   xtick: LONGREAL;
+PROCEDURE DrawBox (xopt : DirTileSet;
+                   xtick: R.T;
                    nxsub: INTEGER;
-                   yopt : TEXT;
-                   ytick: LONGREAL;
-                   nysub: INTEGER;  );
+                   yopt : DirTileSet;
+                   ytick: R.T;
+                   nysub: INTEGER;    );
 
 (* plbox3: "This is the 3-d analogue of plbox()." *)
-PROCEDURE DrawBox3D (xopt, xlabel: TEXT;
-                     xtick       : LONGREAL;
-                     nsubx       : INTEGER;
-                     yopt, ylabel: TEXT;
-                     ytick       : LONGREAL;
-                     nsuby       : INTEGER;
-                     zopt, zlabel: TEXT;
-                     ztick       : LONGREAL;
-                     nsubz       : INTEGER;  );
+PROCEDURE DrawBox3D (xopt  : DirTileSet;
+                     xlabel: TEXT;
+                     xtick : R.T;
+                     nsubx : INTEGER;
+                     yopt  : DirTileSet;
+                     ylabel: TEXT;
+                     ytick : R.T;
+                     nsuby : INTEGER;
+                     zopt  : DirTileSet;
+                     zlabel: TEXT;
+                     ztick : R.T;
+                     nsubz : INTEGER;    );
 
 (* plPLFLTMatrix: "Calculate world coordinates and subpage from relative
    device coordinates." *)
@@ -165,7 +154,7 @@ TYPE
                       window: INTEGER;
                     END;
 
-PROCEDURE CalcWorld (rx, ry: LONGREAL; ): CalcWorldResult;
+PROCEDURE CalcWorld (rx, ry: R.T; ): CalcWorldResult;
 
 (* plclear: "Clear current subpage." *)
 PROCEDURE Clear ();
@@ -174,7 +163,7 @@ PROCEDURE Clear ();
 PROCEDURE SetFGColorDiscr (icol0: INTEGER; );
 
 (* plcol1: "Set color, map 1.  Argument is a float between 0.  and 1." *)
-PROCEDURE SetFGColorCont (col1: LONGREAL; );
+PROCEDURE SetFGColorCont (col1: R.T; );
 
 (* plcont: "Draw a contour plot." *)
 PROCEDURE PlotContour (READONLY z             : M.TBody;
@@ -194,7 +183,7 @@ PROCEDURE ExitAll ();
 PROCEDURE Exit ();
 
 (* plenv: "Simple interface for defining viewport and window." *)
-PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: LONGREAL;
+PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: R.T;
                           just: AxesScaling := AxesScaling.independent;
                           axis: TileSet := TileSet{Tile.box, Tile.ticks}; );
 
@@ -325,24 +314,24 @@ PROCEDURE GetZLabelParam (): GetZLabelParamResult;
 
 (* plhist: "Draw histogram." *)
 PROCEDURE PlotHistogram (READONLY x             : V.TBody;
-                                  datmin, datmax: LONGREAL;
+                                  datmin, datmax: R.T;
                                   nbin          : INTEGER;
-                                  oldwin        : INTEGER    := 0; );
+                                  oldwin        : INTEGER   := 0; );
 
 (* plhls: "Set current color (map 0) by hue, lightness, and saturation." *)
-PROCEDURE SetColorHLS (h, l, s: LONGREAL; );
+PROCEDURE SetColorHLS (h, l, s: R.T; );
 
 (* plinit: "Initialize PLplot, using preset or default options." *)
 PROCEDURE Init ();
 
 (* pljoin: "Draw a line segment from (x1, y1) to (x2, y2)." *)
-PROCEDURE PlotLineSegment (x1, y1, x2, y2: LONGREAL; );
+PROCEDURE PlotLineSegment (x1, y1, x2, y2: R.T; );
 
 (* pllab: "Label graphs." *)
 PROCEDURE SetLabels (xlabel, ylabel, tlabel: TEXT; );
 
 (* pllightsource: "Set position of the light source." *)
-PROCEDURE SetLightPos (x, y, z: LONGREAL; );
+PROCEDURE SetLightPos (x, y, z: R.T; );
 
 (* plline: "Draw line segments connecting a series of points." *)
 PROCEDURE PlotLines (READONLY x, y: V.TBody; ) RAISES {NA.Error};
@@ -351,7 +340,7 @@ PROCEDURE PlotLines (READONLY x, y: V.TBody; ) RAISES {NA.Error};
 PROCEDURE PlotLines3D (READONLY x, y, z: V.TBody; ) RAISES {NA.Error};
 
 (* pllsty: "Set line style." *)
-PROCEDURE SetLineStyle (lin: INTEGER; );
+PROCEDURE SetLineStyle (lin: [LineStyle.continuous .. LAST(LineStyle)]; );
 
 (* plmesh: "Plot a 3-d mesh representation of z[x][y]." *)
 PROCEDURE PlotMesh (READONLY x, y: V.TBody;
@@ -369,7 +358,7 @@ PROCEDURE PlotMeshColored (READONLY x, y  : V.TBody;
 PROCEDURE CreateStream (): INTEGER;
 
 (* plmtex: "Print \"text\" at specified position relative to viewport." *)
-PROCEDURE PrintTextVP (side: TEXT; disp, pos, just: LONGREAL; text: TEXT; );
+PROCEDURE PrintTextVP (side: TEXT; disp, pos, just: R.T; text: TEXT; );
 
 (* plot3d: "Plot a 3-d representation of the function z[x][y]." *)
 PROCEDURE Plot3D (READONLY x, y     : V.TBody;
@@ -417,13 +406,13 @@ PROCEDURE SetLabelPrecision (setp, prec: INTEGER; );
 PROCEDURE SetFillStyle (patt: INTEGER; );
 
 (* plptex: "Print \"text\" at world coordinate (x,y)." *)
-PROCEDURE PrintTextWorld (x, y, dx, dy, just: LONGREAL; text: TEXT; );
+PROCEDURE PrintTextWorld (x, y, dx, dy, just: R.T; text: TEXT; );
 
 (* plreplot: "Replay contents of plot buffer to current device/file." *)
 PROCEDURE Replot ();
 
 (* plschr: "Set character height." *)
-PROCEDURE SetCharacterHeight (def, scale: LONGREAL; );
+PROCEDURE SetCharacterHeight (def, scale: R.T; );
 
 (* plscmap0: "Set color map 0 colors by 8 bit RGB values." *)
 PROCEDURE SetColorMapDiscr (READONLY r, g, b: ARRAY OF INTEGER; )
@@ -464,21 +453,21 @@ PROCEDURE SetDevice (devname: TEXT; );
 
 (* plsdidev: "Set window into device space using margin, aspect ratio, and
    justification." *)
-PROCEDURE SetWindowDevice (mar, aspect, jx, jy: LONGREAL; );
+PROCEDURE SetWindowDevice (mar, aspect, jx, jy: R.T; );
 
 (* plsdimap: "Set up transformation from metafile coordinates." *)
 PROCEDURE LoadTransformation (dimxmin, dimxmax, dimymin, dimymax: INTEGER;
-                              dimxpmm, dimypmm: LONGREAL; );
+                              dimxpmm, dimypmm                  : R.T;     );
 
 (* plsdiori: "Set plot orientation, specifying rotation in units of
    pi/2." *)
-PROCEDURE SetOrientation (rot: LONGREAL; );
+PROCEDURE SetOrientation (rot: R.T; );
 
 (* plsdiplt: "Set window into plot space." *)
-PROCEDURE SetWindowPlot (xmin, ymin, xmax, ymax: LONGREAL; );
+PROCEDURE SetWindowPlot (xmin, ymin, xmax, ymax: R.T; );
 
 (* plsdiplz: "Set window into plot space incrementally (zoom)." *)
-PROCEDURE ZoomWindow (xmin, ymin, xmax, ymax: LONGREAL; );
+PROCEDURE ZoomWindow (xmin, ymin, xmax, ymax: R.T; );
 
 (* plsesc: "Set the escape character for text strings." *)
 PROCEDURE SetEscapeChar (esc: CHAR; );
@@ -496,7 +485,7 @@ PROCEDURE SetFileName (fnam: TEXT; );
 
 (* plshades: "Shade regions with continuous range of colours." *)
 PROCEDURE ShadeRegions (READONLY a                     : M.TBody;
-                                 xmin, xmax, ymin, ymax: LONGREAL;
+                                 xmin, xmax, ymin, ymax: R.T;
                         READONLY x                     : V.TBody;
                         fill_width, cont_color, cont_width, rectangular: INTEGER;
                         pltr       : CallbackM3Proc;
@@ -504,27 +493,27 @@ PROCEDURE ShadeRegions (READONLY a                     : M.TBody;
 
 (* plshade: "Shade region with discrete colour, pattern fill." *)
 PROCEDURE ShadeRegion (READONLY a: M.TBody;
-                       left, right, bottom, top, shade_min, shade_max: LONGREAL;
+                       left, right, bottom, top, shade_min, shade_max: R.T;
                        sh_cmap : INTEGER;
-                       sh_color: LONGREAL;
+                       sh_color: R.T;
                        sh_width, min_color, min_width, max_color,
                          max_width, rectangular: INTEGER;
                        pltr       : CallbackM3Proc;
                        OBJECT_DATA: REFANY;         );
 
 (* plsmaj: "Set up lengths of major tick marks." *)
-PROCEDURE SetMajorTickSize (def, scale: LONGREAL; );
+PROCEDURE SetMajorTickSize (def, scale: R.T; );
 
 (* plsmin: "Set up lengths of minor tick marks." *)
-PROCEDURE SetMinorTickSize (def, scale: LONGREAL; );
+PROCEDURE SetMinorTickSize (def, scale: R.T; );
 
 (* plsori: "Set orientation.  Must be done before calling plinit." *)
 PROCEDURE SetGlobalOrientation (ori: INTEGER; );
 
 (* plspage: "Set output device parameters.  Usually ignored by the
    driver." *)
-PROCEDURE SetOutputDeviceParam (xp, yp                  : LONGREAL;
-                                xleng, yleng, xoff, yoff: INTEGER;  );
+PROCEDURE SetOutputDeviceParam (xp, yp                  : R.T;
+                                xleng, yleng, xoff, yoff: INTEGER; );
 
 (* plspause: "Set the pause (on end-of-page) status." *)
 PROCEDURE SetPause (pause: INTEGER; );
@@ -536,7 +525,7 @@ PROCEDURE SetStream (strm: INTEGER; );
 PROCEDURE SetSubWindows (nx, ny: INTEGER; );
 
 (* plssym: "Set symbol height." *)
-PROCEDURE SetSymbolHeight (def, scale: LONGREAL; );
+PROCEDURE SetSymbolHeight (def, scale: R.T; );
 
 (* plstar: "Initialize PLplot, passing in the windows/page settings." *)
 PROCEDURE Start (nx, ny: INTEGER; );
@@ -546,11 +535,11 @@ PROCEDURE Start (nx, ny: INTEGER; );
 PROCEDURE StartDev (devname: TEXT; nx, ny: INTEGER; );
 
 (* plstripa: "Add a point to a stripchart.  " *)
-PROCEDURE AddStripchartPoint (id, pen: INTEGER; x, y: LONGREAL; );
+PROCEDURE AddStripchartPoint (id, pen: INTEGER; x, y: R.T; );
 
 (* plstripc: "Create 1d stripchart." *)
 PROCEDURE CreateStripchart (xspec, yspec: TEXT;
-                            xmin, xmax, xjump, ymin, ymax, xlpos, ylpos: LONGREAL;
+                            xmin, xmax, xjump, ymin, ymax, xlpos, ylpos: R.T;
                             y_ascl, acc, colbox, collab: INTEGER;
                             READONLY colline, styline: ARRAY OF INTEGER;
                             VAR legline: ARRAY [0 .. 3] OF TEXT;
@@ -566,7 +555,7 @@ PROCEDURE SetNewLineStyle (READONLY mark, space: ARRAY OF INTEGER; )
 
 (* plsvpa: "Set the edges of the viewport to the specified absolute
    coordinates." *)
-PROCEDURE SetVPAbsolute (xmin, xmax, ymin, ymax: LONGREAL; );
+PROCEDURE SetVPAbsolute (xmin, xmax, ymin, ymax: R.T; );
 
 (* plsxax: "Set x axis labeling parameters." *)
 PROCEDURE SetXLabelParam (digmax, digits: INTEGER; );
@@ -587,15 +576,15 @@ PROCEDURE ShowTextScreen ();
 
 (* plvasp: "Sets the edges of the viewport with the given aspect ratio,
    leaving room for labels." *)
-PROCEDURE SetVPAspect (aspect: LONGREAL; );
+PROCEDURE SetVPAspect (aspect: R.T; );
 
 (* plvpas: "Create the largest viewport of the specified aspect ratio that
    fits within the specified normalized subpage coordinates." *)
-PROCEDURE CreateVPAspect (xmin, xmax, ymin, ymax, aspect: LONGREAL; );
+PROCEDURE CreateVPAspect (xmin, xmax, ymin, ymax, aspect: R.T; );
 
 (* plvpor: "Create a viewport with the specified normalized subpage
    coordinates." *)
-PROCEDURE CreateVP (xmin, xmax, ymin, ymax: LONGREAL; );
+PROCEDURE CreateVP (xmin, xmax, ymin, ymax: R.T; );
 
 (* plvsta: "Define a \"standard\" viewport with seven character heights for
    the left margin and four character heights everywhere else." *)
@@ -603,14 +592,14 @@ PROCEDURE SetStandardVP ();
 
 (* plw3d: "Set up a window for three-dimensional plotting." *)
 PROCEDURE Init3DWindow (basex, basey, height, xmin0, xmax0, ymin0, ymax0,
-                          zmin0, zmax0, alt, az: LONGREAL; );
+                          zmin0, zmax0, alt, az: R.T; );
 
 (* plwid: "Set pen width." *)
 PROCEDURE SetPenWidth (width: INTEGER; );
 
 (* plwind: "Set up world coordinates of the viewport boundaries (2d
    plots)." *)
-PROCEDURE SetWindow (xmin, xmax, ymin, ymax: LONGREAL; );
+PROCEDURE SetWindow (xmin, xmax, ymin, ymax: R.T; );
 
 (* plxormod: "Set xor mode; mode = 1-enter, 0-leave, status = 0 if not
    interactive device." *)
