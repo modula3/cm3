@@ -4,6 +4,8 @@ import("wellfett")
 import("fftw")
 import("bilist")
 
+module("GZipRd")
+
 module("TestDaubechies")
 module("TestTransition")
 module("TestBSpline")
