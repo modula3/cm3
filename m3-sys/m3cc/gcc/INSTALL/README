@@ -1,10 +1,6 @@
-The installation instructions are no longer in this directory.  Instead
-they can be found in the "install" directory at the toplevel of the GCC
-distribution (ie gcc-2.95/install).  For HTML browsing start with
-install/index.html, for plaintext, start with install/INDEX.
+This directory has been obsoleted for GCC snapshots and CVS access.
 
-Moving the installation instructions in this manner makes it significantly
-easier to share code between the distribution and the web pages.
+For releases the installation documentation is generated from
+gcc/doc/install.texi and copied into this directory.
 
-This directory (INSTALL) will be completely removed in the next major
-GCC release.
+To read this documentation, please point your HTML browser to "index.html".

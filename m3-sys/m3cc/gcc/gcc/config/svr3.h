@@ -1,6 +1,6 @@
 /* Operating system specific defines to be used when targeting GCC for
    generic System V Release 3 system.
-   Copyright (C) 1991, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1996, 2000 Free Software Foundation, Inc.
    Contributed by Ron Guilmette (rfg@monkeys.com).
 
 This file is part of GNU CC.
@@ -61,7 +61,7 @@ Boston, MA 02111-1307, USA.
 #undef ASM_FILE_START
 #define ASM_FILE_START(FILE)					\
   do { output_file_directive ((FILE), main_input_filename);	\
-       if (optimize) ASM_FILE_START_1 (FILE);			\
+       if (optimize) { ASM_FILE_START_1 (FILE); }		\
      } while (0)
 
 /* By default, do nothing: a few machines support .optim, but not most.  */
@@ -157,7 +157,7 @@ Boston, MA 02111-1307, USA.
    definitions should work for most svr3 systems.  */
 
 #undef ASM_BYTE_OP
-#define ASM_BYTE_OP "\t.byte"
+#define ASM_BYTE_OP "\t.byte\t"
 
 /* The prefix to add to user-visible assembler symbols.
 
@@ -215,9 +215,9 @@ Boston, MA 02111-1307, USA.
 
 #define USE_CONST_SECTION	0
 
-#define INIT_SECTION_ASM_OP     ".section\t.init"
-#define FINI_SECTION_ASM_OP     ".section .fini,\"x\""
-#define CONST_SECTION_ASM_OP	".section\t.rodata, \"x\""
+#define INIT_SECTION_ASM_OP     "\t.section\t.init"
+#define FINI_SECTION_ASM_OP     "\t.section .fini,\"x\""
+#define CONST_SECTION_ASM_OP	"\t.section\t.rodata, \"x\""
 #define CTORS_SECTION_ASM_OP	INIT_SECTION_ASM_OP
 #define DTORS_SECTION_ASM_OP    FINI_SECTION_ASM_OP
 
@@ -266,7 +266,7 @@ init_section ()							\
 {								\
   if (in_section != in_init)					\
     {								\
-      fprintf (asm_out_file, "\t%s\n", INIT_SECTION_ASM_OP);	\
+      fprintf (asm_out_file, "%s\n", INIT_SECTION_ASM_OP);	\
       in_section = in_init;					\
     }								\
 }
@@ -277,7 +277,7 @@ fini_section ()							\
 {								\
   if (in_section != in_fini)					\
     {								\
-      fprintf (asm_out_file, "\t%s\n", FINI_SECTION_ASM_OP);	\
+      fprintf (asm_out_file, "%s\n", FINI_SECTION_ASM_OP);	\
       in_section = in_fini;					\
     }								\
 }
@@ -288,7 +288,6 @@ fini_section ()							\
 void									\
 const_section ()							\
 {									\
-  extern void text_section();						\
   if (!USE_CONST_SECTION)						\
     text_section();							\
   else if (in_section != in_const)					\

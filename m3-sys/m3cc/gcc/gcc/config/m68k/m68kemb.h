@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.  "embedded" 68XXX.
    This is meant to be included after m68k.h.
-   Copyright (C) 1994, 1995 Free Software Foundation, Inc.  */
+   Copyright (C) 1994, 1995, 1998, 1999 Free Software Foundation, Inc.  */
 
 #define PTRDIFF_TYPE "long int"
 #define SIZE_TYPE "long unsigned int"
@@ -26,10 +26,11 @@
 #define FUNCTION_VALUE(VALTYPE,FUNC) LIBCALL_VALUE (TYPE_MODE (VALTYPE))
 
 #undef LIBCALL_VALUE
-#define LIBCALL_VALUE(MODE)                                                \
- gen_rtx (REG, (MODE),                                                     \
-          ((TARGET_68881                                                   \
-            && ((MODE) == SFmode || (MODE) == DFmode || (MODE) == XFmode)) \
+#define LIBCALL_VALUE(MODE)					\
+ gen_rtx_REG ((MODE),						\
+	      ((TARGET_68881					\
+		&& ((MODE) == SFmode || (MODE) == DFmode	\
+		    || (MODE) == XFmode))			\
            ? 16 : 0))
 
 #undef FUNCTION_VALUE_REGNO_P
@@ -39,8 +40,8 @@
 #define NEEDS_UNTYPED_CALL 1
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Dmc68000 -D__embedded__ -Asystem(embedded) \
-  -Amachine(mc68000)"
+#define CPP_PREDEFINES "-Dmc68000 -D__embedded__ -Asystem=embedded \
+  -Amachine=mc68000"
 
 /* Override the default LIB_SPEC from gcc.c.  We don't currently support
    profiling, or libg.a.  */

@@ -1,5 +1,6 @@
 /* Subroutines for insn-output.c for Motorola 68000 family.
-   Copyright (C) 1987, 93-98, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
+   Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -18,22 +19,23 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-
-/* Some output-actions in m68k.md need these.  */
 #include "config.h"
 #include "system.h"
 #include "tree.h"
 #include "rtl.h"
+#include "function.h"
 #include "regs.h"
 #include "hard-reg-set.h"
 #include "real.h"
 #include "insn-config.h"
 #include "conditions.h"
-#include "insn-flags.h"
 #include "output.h"
 #include "insn-attr.h"
 #include "recog.h"
 #include "toplev.h"
+#include "expr.h"
+#include "reload.h"
+#include "tm_p.h"
 
 /* Needed for use_return_insn.  */
 #include "flags.h"
@@ -52,8 +54,8 @@ enum reg_class regno_reg_class[]
    if SGS_SWITCH_TABLE.  */
 int switch_table_difference_label_flag;
 
-static rtx find_addr_reg ();
-rtx legitimize_pic_address ();
+static rtx find_addr_reg PARAMS ((rtx));
+static const char *singlemove_string PARAMS ((rtx *));
 
 
 /* Alignment to use for loops and jumps */
@@ -89,41 +91,43 @@ void
 override_options ()
 {
   int def_align;
+  int i;
 
   def_align = 1;
 
   /* Validate -malign-loops= value, or provide default */
+  m68k_align_loops = def_align;
   if (m68k_align_loops_string)
     {
-      m68k_align_loops = atoi (m68k_align_loops_string);
-      if (m68k_align_loops < 1 || m68k_align_loops > MAX_CODE_ALIGN)
-	fatal ("-malign-loops=%d is not between 1 and %d",
-	       m68k_align_loops, MAX_CODE_ALIGN);
+      i = atoi (m68k_align_loops_string);
+      if (i < 1 || i > MAX_CODE_ALIGN)
+	error ("-malign-loops=%d is not between 1 and %d", i, MAX_CODE_ALIGN);
+      else
+	m68k_align_loops = i;
     }
-  else
-    m68k_align_loops = def_align;
 
   /* Validate -malign-jumps= value, or provide default */
+  m68k_align_jumps = def_align;
   if (m68k_align_jumps_string)
     {
-      m68k_align_jumps = atoi (m68k_align_jumps_string);
-      if (m68k_align_jumps < 1 || m68k_align_jumps > MAX_CODE_ALIGN)
-	fatal ("-malign-jumps=%d is not between 1 and %d",
-	       m68k_align_jumps, MAX_CODE_ALIGN);
+      i = atoi (m68k_align_jumps_string);
+      if (i < 1 || i > MAX_CODE_ALIGN)
+	error ("-malign-jumps=%d is not between 1 and %d", i, MAX_CODE_ALIGN);
+      else
+	m68k_align_jumps = i;
     }
-  else
-    m68k_align_jumps = def_align;
 
   /* Validate -malign-functions= value, or provide default */
+  m68k_align_funcs = def_align;
   if (m68k_align_funcs_string)
     {
-      m68k_align_funcs = atoi (m68k_align_funcs_string);
-      if (m68k_align_funcs < 1 || m68k_align_funcs > MAX_CODE_ALIGN)
-	fatal ("-malign-functions=%d is not between 1 and %d",
-	       m68k_align_funcs, MAX_CODE_ALIGN);
+      i = atoi (m68k_align_funcs_string);
+      if (i < 1 || i > MAX_CODE_ALIGN)
+	error ("-malign-functions=%d is not between 1 and %d",
+	       i, MAX_CODE_ALIGN);
+      else
+	m68k_align_funcs = i;
     }
-  else
-    m68k_align_funcs = def_align;
 }
 
 /* This function generates the assembly code for function entry.
@@ -151,6 +155,19 @@ output_function_prologue (stream, size)
   int fsize = (size + 3) & -4;
   int cfa_offset = INCOMING_FRAME_SP_OFFSET, cfa_store_offset = cfa_offset;
   
+  /* If the stack limit is a symbol, we can check it here,
+     before actually allocating the space.  */
+  if (current_function_limit_stack
+      && GET_CODE (stack_limit_rtx) == SYMBOL_REF)
+    {
+#if defined (MOTOROLA)
+      asm_fprintf (stream, "\tcmp.l %0I%s+%d,%Rsp\n\ttrapcs\n",
+		   XSTR (stack_limit_rtx, 0), fsize + 4);
+#else
+      asm_fprintf (stream, "\tcmpl %0I%s+%d,%Rsp\n\ttrapcs\n",
+		   XSTR (stack_limit_rtx, 0), fsize + 4);
+#endif
+    }
 
   if (frame_pointer_needed)
     {
@@ -356,7 +373,7 @@ output_function_prologue (stream, size)
       mask &= ~ (1 << (15 - FRAME_POINTER_REGNUM));
       num_saved_regs--;
     }
-  if (flag_pic && regs_ever_live[PIC_OFFSET_TABLE_REGNUM])
+  if (flag_pic && current_function_uses_pic_offset_table)
     {
       mask |= 1 << (15 - PIC_OFFSET_TABLE_REGNUM);
       num_saved_regs++;
@@ -374,6 +391,24 @@ output_function_prologue (stream, size)
 #endif
 #endif
 
+  /* If the stack limit is not a symbol, check it here.  
+     This has the disadvantage that it may be too late...  */
+  if (current_function_limit_stack)
+    {
+      if (REG_P (stack_limit_rtx))
+	{
+#if defined (MOTOROLA)
+	  asm_fprintf (stream, "\tcmp.l %s,%Rsp\n\ttrapcs\n",
+		       reg_names[REGNO (stack_limit_rtx)]);
+#else
+	  asm_fprintf (stream, "\tcmpl %s,%Rsp\n\ttrapcs\n",
+		       reg_names[REGNO (stack_limit_rtx)]);
+#endif
+	}
+      else if (GET_CODE (stack_limit_rtx) != SYMBOL_REF)
+	warning ("stack limit expression is not supported");
+    }
+  
   if (num_saved_regs <= 2)
     {
       /* Store each separately in the same order moveml uses.
@@ -493,7 +528,10 @@ use_return_insn ()
   for (regno = 0 ; regno < FIRST_PSEUDO_REGISTER ; regno++)
     if (regs_ever_live[regno] && ! call_used_regs[regno])
       return 0;
-  
+
+  if (flag_pic && current_function_uses_pic_offset_table)
+    return 0;
+
   return 1;
 }
 
@@ -568,7 +606,7 @@ output_function_epilogue (stream, size)
         nregs++;
 	mask |= 1 << regno;
       }
-  if (flag_pic && regs_ever_live[PIC_OFFSET_TABLE_REGNUM])
+  if (flag_pic && current_function_uses_pic_offset_table)
     {
       nregs++;
       mask |= 1 << PIC_OFFSET_TABLE_REGNUM;
@@ -841,7 +879,7 @@ not_sp_operand (op, mode)
      register rtx op;
      enum machine_mode mode;
 {
-  return op != stack_pointer_rtx && general_operand (op, mode);
+  return op != stack_pointer_rtx && nonimmediate_operand (op, mode);
 }
 
 /* Return TRUE if X is a valid comparison operator for the dbcc 
@@ -996,7 +1034,7 @@ output_dbcc_and_branch (operands)
     }
 }
 
-char *
+const char *
 output_scc_di(op, operand1, operand2, dest)
      rtx op;
      rtx operand1;
@@ -1183,7 +1221,7 @@ output_scc_di(op, operand1, operand2, dest)
   return "";
 }
 
-char *
+const char *
 output_btst (operands, countop, dataop, insn, signpos)
      rtx *operands;
      rtx countop, dataop;
@@ -1334,8 +1372,6 @@ legitimize_pic_address (orig, mode, reg)
 			     gen_rtx_PLUS (Pmode,
 					   pic_offset_table_rtx, orig));
       current_function_uses_pic_offset_table = 1;
-      if (reload_in_progress)
-	regs_ever_live[PIC_OFFSET_TABLE_REGNUM] = 1;
       RTX_UNCHANGING_P (pic_ref) = 1;
       emit_move_insn (reg, pic_ref);
       return reg;
@@ -1372,9 +1408,11 @@ legitimize_pic_address (orig, mode, reg)
 
 typedef enum { MOVL, SWAP, NEGW, NOTW, NOTB, MOVQ } CONST_METHOD;
 
+static CONST_METHOD const_method PARAMS ((rtx));
+
 #define USE_MOVQ(i)	((unsigned)((i) + 128) <= 255)
 
-CONST_METHOD
+static CONST_METHOD
 const_method (constant)
      rtx constant;
 {
@@ -1430,7 +1468,7 @@ const_int_cost (constant)
     }
 }
 
-char *
+const char *
 output_move_const_into_data_reg (operands)
      rtx *operands;
 {
@@ -1483,7 +1521,7 @@ output_move_const_into_data_reg (operands)
     }
 }
 
-char *
+const char *
 output_move_simode_const (operands)
      rtx *operands;
 {
@@ -1514,7 +1552,7 @@ output_move_simode_const (operands)
   return "move%.l %1,%0";
 }
 
-char *
+const char *
 output_move_simode (operands)
      rtx *operands;
 {
@@ -1531,7 +1569,7 @@ output_move_simode (operands)
   return "move%.l %1,%0";
 }
 
-char *
+const char *
 output_move_himode (operands)
      rtx *operands;
 {
@@ -1600,7 +1638,7 @@ output_move_himode (operands)
   return "move%.w %1,%0";
 }
 
-char *
+const char *
 output_move_qimode (operands)
      rtx *operands;
 {
@@ -1674,7 +1712,7 @@ output_move_qimode (operands)
   return "move%.b %1,%0";
 }
 
-char *
+const char *
 output_move_stricthi (operands)
      rtx *operands;
 {
@@ -1687,7 +1725,7 @@ output_move_stricthi (operands)
   return "move%.w %1,%0";
 }
 
-char *
+const char *
 output_move_strictqi (operands)
      rtx *operands;
 {
@@ -1703,7 +1741,7 @@ output_move_strictqi (operands)
 /* Return the best assembler insn template
    for moving operands[1] into operands[0] as a fullword.  */
 
-static char *
+static const char *
 singlemove_string (operands)
      rtx *operands;
 {
@@ -1720,7 +1758,7 @@ singlemove_string (operands)
 /* Output assembler code to perform a doubleword move insn
    with operands OPERANDS.  */
 
-char *
+const char *
 output_move_double (operands)
      rtx *operands;
 {
@@ -2098,7 +2136,7 @@ find_addr_reg (addr)
 
 /* Output assembler code to perform a 32 bit 3 operand add.  */
 
-char *
+const char *
 output_addsi3 (operands)
      rtx *operands;
 {
@@ -2145,7 +2183,7 @@ output_addsi3 (operands)
       if (INTVAL (operands[2]) < 0
 	  && INTVAL (operands[2]) >= -8)
         {
-	  operands[2] = GEN_INT (-INTVAL (operands[2]));
+	  operands[2] = GEN_INT (- INTVAL (operands[2]));
 	  return "subq%.l %2,%0";
 	}
       /* On the CPU32 it is faster to use two addql instructions to
@@ -2162,7 +2200,7 @@ output_addsi3 (operands)
 	  if (INTVAL (operands[2]) < -8
 	      && INTVAL (operands[2]) >= -16)
 	    {
-	      operands[2] = GEN_INT (-INTVAL (operands[2]) - 8);
+	      operands[2] = GEN_INT (- INTVAL (operands[2]) - 8);
 	      return "subq%.l %#8,%0\n\tsubq%.l %2,%0";
 	    }
 	}
@@ -2304,7 +2342,7 @@ notice_update_cc (exp, insn)
     cc_status.flags = CC_IN_68881;
 }
 
-char *
+const char *
 output_move_const_double (operands)
      rtx *operands;
 {
@@ -2338,7 +2376,7 @@ output_move_const_double (operands)
     }
 }
 
-char *
+const char *
 output_move_const_single (operands)
      rtx *operands;
 {
@@ -2381,7 +2419,7 @@ output_move_const_single (operands)
   
 static int inited_68881_table = 0;
 
-char *strings_68881[7] = {
+static const char *const strings_68881[7] = {
   "0.0",
   "1.0",
   "10.0",
@@ -2513,7 +2551,7 @@ floating_exact_log2 (x)
 
 static int inited_FPA_table = 0;
 
-char *strings_FPA[38] = {
+static const char *const strings_FPA[38] = {
 /* small rationals */
   "0.0",
   "1.0",
@@ -2709,6 +2747,8 @@ standard_sun_fpa_constant_p (x)
    'b' for byte insn (no effect, on the Sun; this is for the ISI).
    'd' to force memory addressing to be absolute, not relative.
    'f' for float insn (print a CONST_DOUBLE as a float rather than in hex)
+   'o' for operands to go directly to output_operand_address (bypassing
+       print_operand_address--used only for SYMBOL_REFs under TARGET_PCREL)
    'w' for FPA insn (print a CONST_DOUBLE as a SunFPA constant rather
        than directly).  Second part of 'y' below.
    'x' for float insn (print a CONST_DOUBLE as a float rather than in hex),
@@ -2785,6 +2825,14 @@ print_operand (file, op, letter)
     {
       asm_fprintf (file, "%R");
     }
+  else if (letter == 'o')
+    {
+      /* This is only for direct addresses with TARGET_PCREL */
+      if (GET_CODE (op) != MEM || GET_CODE (XEXP (op, 0)) != SYMBOL_REF
+          || !TARGET_PCREL) 
+	abort ();
+      output_addr_const (file, XEXP (op, 0));
+    }
   else if (GET_CODE (op) == REG)
     {
 #ifdef SUPPORT_SUN_FPA
@@ -2850,7 +2898,14 @@ print_operand (file, op, letter)
     }
   else
     {
-      asm_fprintf (file, "%0I"); output_addr_const (file, op);
+      /* Use `print_operand_address' instead of `output_addr_const'
+	 to ensure that we print relevant PIC stuff.  */
+      asm_fprintf (file, "%0I");
+      if (TARGET_PCREL
+	  && (GET_CODE (op) == SYMBOL_REF || GET_CODE (op) == CONST))
+	print_operand_address (file, op);
+      else
+	output_addr_const (file, op);
     }
 }
 
@@ -3151,7 +3206,7 @@ print_operand_address (file, addr)
 	    fprintf (file, "l)");
 	    break;
 	  }
-	/* FALL-THROUGH (is this really what we want? */
+	/* FALL-THROUGH (is this really what we want?)  */
       default:
         if (GET_CODE (addr) == CONST_INT
 	    && INTVAL (addr) < 0x8000
@@ -3167,6 +3222,25 @@ print_operand_address (file, addr)
 #else
 	    fprintf (file, "%d:w", INTVAL (addr));
 #endif
+	  }
+	else if (GET_CODE (addr) == CONST_INT)
+	  {
+	    fprintf (file,
+#if HOST_BITS_PER_WIDE_INT == HOST_BITS_PER_INT
+		     "%d",
+#else
+		     "%ld",
+#endif
+		     INTVAL (addr));
+	  }
+	else if (TARGET_PCREL)
+	  {
+	    fputc ('(', file);
+	    output_addr_const (file, addr);
+	    if (flag_pic == 1)
+	      asm_fprintf (file, ":w,%Rpc)");
+	    else
+	      asm_fprintf (file, ":l,%Rpc)");
 	  }
 	else
 	  {
@@ -3261,7 +3335,7 @@ const_uint32_operand (op, mode)
   return (GET_CODE (op) == CONST_INT
 	  && (INTVAL (op) >= 0 && INTVAL (op) <= 0xffffffffL));
 #else
-  return ((GET_CODE (op) == CONST_INT && INTVAL (op) >= 0)
+  return (GET_CODE (op) == CONST_INT
 	  || (GET_CODE (op) == CONST_DOUBLE && CONST_DOUBLE_HIGH (op) == 0));
 #endif
 }
@@ -3280,7 +3354,129 @@ const_sint32_operand (op, mode)
 	  && (INTVAL (op) >= (-0x7fffffff - 1) && INTVAL (op) <= 0x7fffffff));
 }
 
-char *
+/* Operand predicates for implementing asymmetric pc-relative addressing
+   on m68k.  The m68k supports pc-relative addressing (mode 7, register 2)
+   when used as a source operand, but not as a destintation operand.
+
+   We model this by restricting the meaning of the basic predicates
+   (general_operand, memory_operand, etc) to forbid the use of this
+   addressing mode, and then define the following predicates that permit
+   this addressing mode.  These predicates can then be used for the
+   source operands of the appropriate instructions.
+
+   n.b.  While it is theoretically possible to change all machine patterns
+   to use this addressing more where permitted by the architecture,
+   it has only been implemented for "common" cases: SImode, HImode, and
+   QImode operands, and only for the principle operations that would
+   require this addressing mode: data movement and simple integer operations.
+
+   In parallel with these new predicates, two new constraint letters
+   were defined: 'S' and 'T'.  'S' is the -mpcrel analog of 'm'.
+   'T' replaces 's' in the non-pcrel case.  It is a no-op in the pcrel case.
+   In the pcrel case 's' is only valid in combination with 'a' registers.
+   See addsi3, subsi3, cmpsi, and movsi patterns for a better understanding
+   of how these constraints are used.
+
+   The use of these predicates is strictly optional, though patterns that
+   don't will cause an extra reload register to be allocated where one
+   was not necessary:
+
+	lea (abc:w,%pc),%a0	; need to reload address
+	moveq &1,%d1		; since write to pc-relative space
+	movel %d1,%a0@		; is not allowed
+	...
+	lea (abc:w,%pc),%a1	; no need to reload address here
+	movel %a1@,%d0		; since "movel (abc:w,%pc),%d0" is ok
+
+   For more info, consult tiemann@cygnus.com.
+
+
+   All of the ugliness with predicates and constraints is due to the
+   simple fact that the m68k does not allow a pc-relative addressing
+   mode as a destination.  gcc does not distinguish between source and
+   destination addresses.  Hence, if we claim that pc-relative address
+   modes are valid, e.g. GO_IF_LEGITIMATE_ADDRESS accepts them, then we
+   end up with invalid code.  To get around this problem, we left
+   pc-relative modes as invalid addresses, and then added special
+   predicates and constraints to accept them.
+
+   A cleaner way to handle this is to modify gcc to distinguish
+   between source and destination addresses.  We can then say that
+   pc-relative is a valid source address but not a valid destination
+   address, and hopefully avoid a lot of the predicate and constraint
+   hackery.  Unfortunately, this would be a pretty big change.  It would
+   be a useful change for a number of ports, but there aren't any current
+   plans to undertake this.
+
+   ***************************************************************************/
+
+
+/* Special case of a general operand that's used as a source operand.
+   Use this to permit reads from PC-relative memory when -mpcrel
+   is specified.  */
+
+int
+general_src_operand (op, mode)
+     rtx op;
+     enum machine_mode mode;
+{
+  if (TARGET_PCREL
+      && GET_CODE (op) == MEM
+      && (GET_CODE (XEXP (op, 0)) == SYMBOL_REF
+	  || GET_CODE (XEXP (op, 0)) == LABEL_REF
+	  || GET_CODE (XEXP (op, 0)) == CONST))
+    return 1;
+  return general_operand (op, mode);
+}
+
+/* Special case of a nonimmediate operand that's used as a source.
+   Use this to permit reads from PC-relative memory when -mpcrel
+   is specified.  */
+
+int
+nonimmediate_src_operand (op, mode)
+     rtx op;
+     enum machine_mode mode;
+{
+  if (TARGET_PCREL && GET_CODE (op) == MEM
+      && (GET_CODE (XEXP (op, 0)) == SYMBOL_REF
+	  || GET_CODE (XEXP (op, 0)) == LABEL_REF
+	  || GET_CODE (XEXP (op, 0)) == CONST))
+    return 1;
+  return nonimmediate_operand (op, mode);
+}
+
+/* Special case of a memory operand that's used as a source.
+   Use this to permit reads from PC-relative memory when -mpcrel
+   is specified.  */
+
+int
+memory_src_operand (op, mode)
+     rtx op;
+     enum machine_mode mode;
+{
+  if (TARGET_PCREL && GET_CODE (op) == MEM
+      && (GET_CODE (XEXP (op, 0)) == SYMBOL_REF
+	  || GET_CODE (XEXP (op, 0)) == LABEL_REF
+	  || GET_CODE (XEXP (op, 0)) == CONST))
+    return 1;
+  return memory_operand (op, mode);
+}
+
+/* Predicate that accepts only a pc-relative address.  This is needed
+   because pc-relative addresses don't satisfy the predicate
+   "general_src_operand".  */
+
+int
+pcrel_address (op, mode)
+     rtx op;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
+{
+  return (GET_CODE (op) == SYMBOL_REF || GET_CODE (op) == LABEL_REF
+	  || GET_CODE (op) == CONST);
+}
+
+const char *
 output_andsi3 (operands)
      rtx *operands;
 {
@@ -3321,7 +3517,7 @@ output_andsi3 (operands)
   return "and%.l %2,%0";
 }
 
-char *
+const char *
 output_iorsi3 (operands)
      rtx *operands;
 {
@@ -3360,7 +3556,7 @@ output_iorsi3 (operands)
   return "or%.l %2,%0";
 }
 
-char *
+const char *
 output_xorsi3 (operands)
      rtx *operands;
 {

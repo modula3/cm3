@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.  MIPS R3000 version with
    GOFAST floating point library.
-   Copyright (C) 1994, 1997, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1997, 1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -53,6 +53,7 @@ do {							\
    specified using the `__attribute__ ((aligned (N)))' construct.  If
    not defined, the default value is `BIGGEST_ALIGNMENT'.  */
 
+#undef MAX_OFILE_ALIGNMENT
 #define MAX_OFILE_ALIGNMENT (32768*8)
 
 /* A C statement to output something to the assembler file to switch to section
@@ -60,6 +61,7 @@ do {							\
    NULL_TREE.  Some target formats do not support arbitrary sections.  Do not
    define this macro in such cases.  */
 
+#undef ASM_OUTPUT_SECTION_NAME
 #define ASM_OUTPUT_SECTION_NAME(F, DECL, NAME, RELOC) \
 do {								\
   extern FILE *asm_out_text_file;				\
@@ -67,6 +69,8 @@ do {								\
     fprintf (asm_out_text_file, "\t.section %s,\"ax\",@progbits\n", (NAME)); \
   else if ((DECL) && DECL_READONLY_SECTION (DECL, RELOC))	\
     fprintf (F, "\t.section %s,\"a\",@progbits\n", (NAME));	\
+  else if (! strcmp (NAME, ".bss"))                             \
+    fprintf (F, "\t.section %s,\"aw\",@nobits\n", (NAME));      \
   else								\
     fprintf (F, "\t.section %s,\"aw\",@progbits\n", (NAME));	\
 } while (0)
@@ -87,8 +91,44 @@ do {								\
 
 #undef TYPE_ASM_OP
 #undef SIZE_ASM_OP
-#define TYPE_ASM_OP	".type"
-#define SIZE_ASM_OP	".size"
+#define TYPE_ASM_OP	"\t.type\t"
+#define SIZE_ASM_OP	"\t.size\t"
+
+/* If defined, a C expression whose value is a string containing the
+   assembler operation to identify the following data as
+   uninitialized global data.  If not defined, and neither
+   `ASM_OUTPUT_BSS' nor `ASM_OUTPUT_ALIGNED_BSS' are defined,
+   uninitialized global data will be output in the data section if
+   `-fno-common' is passed, otherwise `ASM_OUTPUT_COMMON' will be
+   used.  */
+#ifndef BSS_SECTION_ASM_OP
+#define BSS_SECTION_ASM_OP	"\t.section\t.bss"
+#endif
+
+#define SBSS_SECTION_ASM_OP	"\t.section .sbss"
+
+/* Like `ASM_OUTPUT_BSS' except takes the required alignment as a
+   separate, explicit argument.  If you define this macro, it is used
+   in place of `ASM_OUTPUT_BSS', and gives you more flexibility in
+   handling the required alignment of the variable.  The alignment is
+   specified as the number of bits.
+
+   Try to use function `asm_output_aligned_bss' defined in file
+   `varasm.c' when defining this macro. */
+#ifndef ASM_OUTPUT_ALIGNED_BSS
+#define ASM_OUTPUT_ALIGNED_BSS(FILE, DECL, NAME, SIZE, ALIGN) \
+do {									\
+  ASM_GLOBALIZE_LABEL (FILE, NAME);					\
+  if (SIZE > 0 && SIZE <= mips_section_threshold)			\
+    sbss_section ();							\
+  else									\
+    bss_section ();							\
+  ASM_OUTPUT_ALIGN (FILE, floor_log2 (ALIGN / BITS_PER_UNIT));		\
+  last_assemble_variable_decl = DECL;					\
+  ASM_DECLARE_OBJECT_NAME (FILE, NAME, DECL);				\
+  ASM_OUTPUT_SKIP (FILE, SIZE ? SIZE : 1);				\
+} while (0)
+#endif
 
 /* These macros generate the special .type and .size directives which
    are used to set the corresponding fields of the linker symbol table
@@ -100,7 +140,7 @@ do {								\
 #undef ASM_DECLARE_OBJECT_NAME
 #define ASM_DECLARE_OBJECT_NAME(FILE, NAME, DECL)			\
   do {									\
-    fprintf (FILE, "\t%s\t ", TYPE_ASM_OP);				\
+    fprintf (FILE, "%s", TYPE_ASM_OP);				\
     assemble_name (FILE, NAME);						\
     putc (',', FILE);							\
     fprintf (FILE, TYPE_OPERAND_FMT, "object");				\
@@ -109,7 +149,7 @@ do {								\
     if (!flag_inhibit_size_directive && DECL_SIZE (DECL))		\
       {									\
 	size_directive_output = 1;					\
-	fprintf (FILE, "\t%s\t ", SIZE_ASM_OP);				\
+	fprintf (FILE, "%s", SIZE_ASM_OP);				\
 	assemble_name (FILE, NAME);					\
 	fprintf (FILE, ",%d\n",  int_size_in_bytes (TREE_TYPE (DECL)));	\
       }									\
@@ -125,14 +165,14 @@ do {								\
 #undef ASM_FINISH_DECLARE_OBJECT
 #define ASM_FINISH_DECLARE_OBJECT(FILE, DECL, TOP_LEVEL, AT_END)	 \
 do {									 \
-     char *name = XSTR (XEXP (DECL_RTL (DECL), 0), 0);			 \
+     const char *name = XSTR (XEXP (DECL_RTL (DECL), 0), 0);		 \
      if (!flag_inhibit_size_directive && DECL_SIZE (DECL)		 \
          && ! AT_END && TOP_LEVEL					 \
 	 && DECL_INITIAL (DECL) == error_mark_node			 \
 	 && !size_directive_output)					 \
        {								 \
 	 size_directive_output = 1;					 \
-	 fprintf (FILE, "\t%s\t ", SIZE_ASM_OP);			 \
+	 fprintf (FILE, "%s", SIZE_ASM_OP);				 \
 	 assemble_name (FILE, name);					 \
 	 fprintf (FILE, ",%d\n", int_size_in_bytes (TREE_TYPE (DECL)));  \
        }								 \
@@ -153,6 +193,7 @@ do {									 \
    but until that support is generally available, the 'if' below
    should serve. */
 
+#undef ASM_WEAKEN_LABEL
 #define ASM_WEAKEN_LABEL(FILE,NAME) ASM_OUTPUT_WEAK_ALIAS(FILE,NAME,0)
 #define ASM_OUTPUT_WEAK_ALIAS(FILE,NAME,VALUE)	\
  do {						\
@@ -172,6 +213,7 @@ do {									 \
 #define MAKE_DECL_ONE_ONLY(DECL) (DECL_WEAK (DECL) = 1)
 #undef UNIQUE_SECTION_P
 #define UNIQUE_SECTION_P(DECL) (DECL_ONE_ONLY (DECL))
+#undef UNIQUE_SECTION
 #define UNIQUE_SECTION(DECL,RELOC)					   \
 do {									   \
   int len, size, sec;							   \
@@ -187,9 +229,12 @@ do {									   \
   size = int_size_in_bytes (TREE_TYPE (decl));				   \
 									   \
   /* Determine the base section we are interested in:			   \
-     0=text, 1=rodata, 2=data, 3=sdata.  */				   \
+     0=text, 1=rodata, 2=data, 3=sdata, [4=bss].  */			   \
   if (TREE_CODE (DECL) == FUNCTION_DECL)				   \
     sec = 0;								   \
+  else if (DECL_INITIAL (DECL) == 0					   \
+           || DECL_INITIAL (DECL) == error_mark_node)			   \
+    sec = 2;								   \
   else if ((TARGET_EMBEDDED_PIC || TARGET_MIPS16)			   \
       && TREE_CODE (decl) == STRING_CST					   \
       && !flag_writable_strings)					   \
@@ -236,7 +281,8 @@ do {									   \
 
 /* Support the ctors/dtors and other sections.  */
  
-/* Define the pseudo-ops used to switch to the .ctors and .dtors sections.
+/* Define the names of and pseudo-ops used to switch to the .ctors and
+   .dtors sections.
  
    Note that we want to give these sections the SHF_WRITE attribute
    because these sections will actually contain data (i.e. tables of
@@ -251,21 +297,27 @@ do {									   \
    errors unless the .ctors and .dtors sections are marked as writable
    via the SHF_WRITE attribute.)  */
 
+#define CTORS_SECTION_NAME      ".ctors"
 #define CTORS_SECTION_ASM_OP    "\t.section\t.ctors,\"aw\""
+#define DTORS_SECTION_NAME      ".dtors"
 #define DTORS_SECTION_ASM_OP    "\t.section\t.dtors,\"aw\""
  
+/* There's no point providing a default definition of __CTOR_LIST__
+   since people are expected either to use crtbegin.o, or an equivalent,
+   or provide their own definition.  */
+#define CTOR_LISTS_DEFINED_EXTERNALLY
+
 /* A list of other sections which the compiler might be "in" at any
    given time.  */
 #undef EXTRA_SECTIONS
-#define EXTRA_SECTIONS in_sdata, in_rdata, in_ctors, in_dtors
+#define EXTRA_SECTIONS in_sdata, in_sbss, in_rdata, in_ctors, in_dtors
  
 #define INVOKE__main
-#define NAME__MAIN "__gccmain"
-#define SYMBOL__MAIN __gccmain
 
 #undef EXTRA_SECTION_FUNCTIONS
 #define EXTRA_SECTION_FUNCTIONS                                         \
   SECTION_FUNCTION_TEMPLATE(sdata_section, in_sdata, SDATA_SECTION_ASM_OP) \
+  SECTION_FUNCTION_TEMPLATE(sbss_section, in_sbss, SBSS_SECTION_ASM_OP) \
   SECTION_FUNCTION_TEMPLATE(rdata_section, in_rdata, RDATA_SECTION_ASM_OP) \
   SECTION_FUNCTION_TEMPLATE(ctors_section, in_ctors, CTORS_SECTION_ASM_OP) \
   SECTION_FUNCTION_TEMPLATE(dtors_section, in_dtors, DTORS_SECTION_ASM_OP)
@@ -283,6 +335,7 @@ void FN ()                                                            \
 
 /* A C statement (sans semicolon) to output an element in the table of
    global constructors.  */
+#undef ASM_OUTPUT_CONSTRUCTOR
 #define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)                             \
   do {                                                                \
     ctors_section ();                                                 \
@@ -294,6 +347,7 @@ void FN ()                                                            \
 
 /* A C statement (sans semicolon) to output an element in the table of
    global destructors.  */
+#undef ASM_OUTPUT_DESTRUCTOR
 #define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)                              \
   do {                                                                \
     dtors_section ();                                                 \
@@ -302,28 +356,28 @@ void FN ()                                                            \
     fprintf (FILE, "\n");                                             \
   } while (0)
 
-#define CTOR_LIST_BEGIN                                 \
-asm (CTORS_SECTION_ASM_OP);                             \
-func_ptr __CTOR_LIST__[1] = { (func_ptr) (-1) }
+#define CTOR_LIST_BEGIN                                               \
+func_ptr __CTOR_LIST__ __attribute__((section(CTORS_SECTION_NAME))) = \
+  (func_ptr) (-1)
  
-#define CTOR_LIST_END                                   \
-asm (CTORS_SECTION_ASM_OP);                             \
-func_ptr __CTOR_END__[1] = { (func_ptr) 0 };
+#define CTOR_LIST_END                                                 \
+func_ptr __CTOR_END__ __attribute__((section(CTORS_SECTION_NAME))) =  \
+  (func_ptr) 0
  
-#define DTOR_LIST_BEGIN                                 \
-asm (DTORS_SECTION_ASM_OP);                             \
-func_ptr __DTOR_LIST__[1] = { (func_ptr) (-1) }
+#define DTOR_LIST_BEGIN                                               \
+func_ptr __DTOR_LIST__ __attribute__((section(DTORS_SECTION_NAME))) = \
+  (func_ptr) (-1)
 
-#define DTOR_LIST_END                                   \
-asm (DTORS_SECTION_ASM_OP);                             \
-func_ptr __DTOR_END__[1] = { (func_ptr) 0 };
+#define DTOR_LIST_END                                                 \
+func_ptr __DTOR_END__ __attribute__((section(DTORS_SECTION_NAME))) =  \
+  (func_ptr) 0
 
 /* Don't set the target flags, this is done by the linker script */
 #undef LIB_SPEC
 #define LIB_SPEC ""
 
 #undef  STARTFILE_SPEC
-#define STARTFILE_SPEC "crtbegin%O%s crt0%O%s"
+#define STARTFILE_SPEC "crtbegin%O%s %{!mno-crt0:crt0%O%s}"
 
 #undef  ENDFILE_SPEC
 #define ENDFILE_SPEC "crtend%O%s"

@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# (C) 1998-1999 Free Software Foundation
+# (C) 1998, 1999, 2000 Free Software Foundation
 # Originally by Alexandre Oliva <oliva@dcc.unicamp.br>
 
 # This script is Free Software, and it can be copied, distributed and
@@ -48,7 +48,7 @@ if test -z "$AWK" ; then
   done
 fi
 
-: ${filesuffix=}; export fileprefix
+: ${filesuffix=}; export filesuffix
 : ${move=true}; export move
 : ${forcemail=false}; export forcemail
 while true; do
@@ -63,7 +63,7 @@ while true; do
     esac
 done
 : ${mailto="\" address \""}; export mailto
-files=`find . -name \*.sum$filesuffix -print`
+files=`find . -name \*.sum$filesuffix -print | sort`
 anyfile=false anychange=$forcemail &&
 for file in $files; do
     [ -f $file ] &&
@@ -82,23 +82,36 @@ for file in $files; do
 done &&
 $anyfile &&
 if $forcemail || $anychange; then :; else mailto=nobody; fi &&
+# We use cat instead of listing the files as arguments to AWK because
+# GNU awk 3.0.0 would break if any of the filenames contained `=' and
+# was preceded by an invalid ``variable'' name.
+cat ./config.status $files |
 $AWK '
 BEGIN {
   lang="";
   address="gcc-testresults@gcc.gnu.org";
   version="gcc";
-  print "cat <<\EOF |";
+  print "cat <<'"'"'EOF'"'"' |";
 '${prepend_logs+"  system(\"cat $prepend_logs\"); "}'
 }
-$1 ~ /\/configure$/ { $1 = "configure flags:"; configflags = $0 }
+$1 ~ /\/configure$/ {
+    srcdir = $1;
+    gsub(/\/configure$/, "", srcdir);
+    printf "LAST_UPDATED: ";
+    system("tail -1 " srcdir "/LAST_UPDATED");
+    print "";
+
+    $1 = "configure flags:"; configflags = $0;
+    gsub(/--with-gcc-version-trigger=[^ ]* /, "", configflags);
+    gsub(/ --norecursion/, "", configflags)
+}
 /^Running target / { print ""; print; }
 /^Target / { if (host != "") next; else host = $3; }
+/^Host / && host ~ /^unix\{.*\}$/ { host = $3 " " substr(host, 5); }
 /^Native / { if (host != "") next; else host = $4; }
 /^[ 	]*=== [^ 	]+ tests ===/ {
   if (lang == "") lang = " "$2" "; else lang = " ";
 }
-/--disable-haifa/ { prefix="haifa-disabled "; }
-/--enable-haifa/ { prefix="haifa-enabled "; }
 $2 == "version" { save = $0; $1 = ""; $2 = ""; version = $0; gsub(/^ */, "", version); gsub(/\r$/, "", version); $0 = save; }
 /\===.*Summary/ { print ""; print; blanks=1; }
 /tests ===/ || /^(Target|Host|Native)/ || $2 == "version" { print; blanks=1; }
@@ -119,7 +132,7 @@ END { if (lang != "") {
   print "Mail -s \"Results for " prefix version lang "testsuite on " host "\" '"${mailto}"' &&";
 }}
 { next; }
-' ./config.status $files | sed "s/\([\`\$\\\\]\)/\\\\\\1/g" &&
+' | sed "s/\([\`\$\\\\]\)/\\\\\\1/g" &&
 if $move; then
     for file in $files `ls -1 $files | sed s/sum$/log/`; do
       [ -f $file ] && echo "mv `pwd`/$file `pwd`/$file.sent &&"

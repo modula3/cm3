@@ -10,18 +10,23 @@ prog=$0
 srcdir=$1
 ignore="$2"
 
+if test $# -lt 1; then
+  echo "symlink-tree error:  Usage: symlink-tree srcdir \"ignore1 ignore2 ...\""
+  exit 1
+fi
+
 ignore_additional=". .. CVS"
 
 # If we were invoked with a relative path name, adjust ${prog} to work
 # in subdirs.
 case ${prog} in
-/*) ;;
+/* | [A-Za-z]:[\\/]*) ;;
 *) prog=../${prog} ;;
 esac
 
 # Set newsrcdir to something subdirectories can use.
 case ${srcdir} in
-/*) newsrcdir=${srcdir} ;;
+/* | [A-Za-z]:[\\/]*) newsrcdir=${srcdir} ;;
 *) newsrcdir=../${srcdir} ;;
 esac
 

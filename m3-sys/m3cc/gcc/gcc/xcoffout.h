@@ -1,6 +1,6 @@
 /* XCOFF definitions.  These are needed in dbxout.c, final.c,
    and xcoffout.h. 
-   Copyright (C) 1998 Free Software Foundation, Inc.
+   Copyright (C) 1998, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -20,7 +20,7 @@ the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 
-#define ASM_STABS_OP ".stabx"
+#define ASM_STABS_OP "\t.stabx\t"
 
 /* Tags and typedefs are C_DECL in XCOFF, not C_LSYM.  */
 
@@ -103,7 +103,7 @@ Boston, MA 02111-1307, USA.  */
   if (current_sym_addr && current_sym_code == N_FUN		\
       && GET_CODE (current_sym_addr) == SYMBOL_REF)		\
     {								\
-      char *_p = XSTR (current_sym_addr, 0);			\
+      const char *_p = XSTR (current_sym_addr, 0);		\
       if (*_p == '*')						\
 	fprintf (asmfile, "%s", _p+1);				\
       else							\
@@ -136,7 +136,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* Name of the current include file.  */
 
-extern char *xcoff_current_include_file;
+extern const char *xcoff_current_include_file;
 
 /* Names of bss and data sections.  These should be unique names for each
    compilation unit.  */
@@ -147,7 +147,7 @@ extern char *xcoff_read_only_section_name;
 
 /* Last source file name mentioned in a NOTE insn.  */
 
-extern char *xcoff_lastfile;
+extern const char *xcoff_lastfile;
 
 /* Don't write out path name for main source file.  */
 #define DBX_OUTPUT_MAIN_SOURCE_DIRECTORY(FILE,FILENAME)
@@ -172,6 +172,15 @@ extern char *xcoff_lastfile;
     }							\
 }
 
+/* .stabx has the type in a different place.  */
+#if 0  /* Do not emit any marker for XCOFF until assembler allows XFT_CV.  */
+#define DBX_OUTPUT_GCC_MARKER(FILE) \
+  fprintf ((FILE), "%s\"%s\",0,%d,0\n", ASM_STABS_OP, STABS_GCC_MARKER, \
+	   stab_to_sclass (N_GSYM))
+#else
+#define DBX_OUTPUT_GCC_MARKER(FILE)
+#endif
+
 /* Do not break .stabs pseudos into continuations.  */
 #define DBX_CONTIN_LENGTH 0
 
@@ -188,24 +197,24 @@ extern char *xcoff_lastfile;
 
 /* Prototype functions in xcoffout.c. */
 
-extern int stab_to_sclass			PROTO ((int));
+extern int stab_to_sclass			PARAMS ((int));
 #ifdef BUFSIZ
-extern void xcoffout_begin_function		PROTO ((FILE *, int));
-extern void xcoffout_begin_block		PROTO ((FILE *, int, int));
-extern void xcoffout_end_epilogue		PROTO ((FILE *));
-extern void xcoffout_end_function		PROTO ((FILE *, int));
-extern void xcoffout_end_block			PROTO ((FILE *, int, int));
+extern void xcoffout_begin_function		PARAMS ((FILE *, int));
+extern void xcoffout_begin_block		PARAMS ((FILE *, int, int));
+extern void xcoffout_end_epilogue		PARAMS ((FILE *));
+extern void xcoffout_end_function		PARAMS ((FILE *, int));
+extern void xcoffout_end_block			PARAMS ((FILE *, int, int));
 #endif /* BUFSIZ */
 
 #ifdef TREE_CODE
-extern void xcoff_output_standard_types		PROTO ((tree));
+extern void xcoff_output_standard_types		PARAMS ((tree));
 #ifdef BUFSIZ
-extern void xcoffout_declare_function		PROTO ((FILE *, tree, char *));
+extern void xcoffout_declare_function		PARAMS ((FILE *, tree, const char *));
 #endif /* BUFSIZ */
 #endif /* TREE_CODE */
 
 #ifdef RTX_CODE
 #ifdef BUFSIZ
-extern void xcoffout_source_line		PROTO ((FILE *, char *, rtx));
+extern void xcoffout_source_line		PARAMS ((FILE *, const char *, rtx));
 #endif /* BUFSIZ */
 #endif /* RTX_CODE */

@@ -1,5 +1,5 @@
 /* Definitions for rtems targeting a SH using COFF.
-   Copyright (C) 1997, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1997, 1998, 2000, 2002 Free Software Foundation, Inc.
    Contributed by Joel Sherrill (joel@OARcorp.com).
 
 This file is part of GNU CC.
@@ -19,17 +19,16 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-#include "sh/sh.h"
-
 /* Specify predefined symbols in preprocessor.  */
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-D__sh__ -Drtems -D__rtems__ \
-  -Asystem(rtems) -Acpu(sh) -Amachine(sh)"
+#define CPP_PREDEFINES "-D__sh__ -D__rtems__ \
+  -Asystem=rtems -Acpu=sh -Amachine=sh"
 
 /* Generate calls to memcpy, memcmp and memset.  */
 #ifndef TARGET_MEM_FUNCTIONS
 #define TARGET_MEM_FUNCTIONS
 #endif
 
-/* end of sh/rtems.h */
+/* Get machine-independent configuration parameters for RTEMS.  */
+#include <rtems.h>

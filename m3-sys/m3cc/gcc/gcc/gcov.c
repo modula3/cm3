@@ -1,6 +1,7 @@
 /* Gcov.c: prepend line execution counts and branch probabilities to a
    source file.
-   Copyright (C) 1990, 91-94, 96, 97, 98, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 1992, 1993, 1994, 1996, 1997, 1998,
+   1999, 2000 Free Software Foundation, Inc.
    Contributed by James E. Wilson of Cygnus Support.
    Mangled by Bob Manson of Cygnus Support.
 
@@ -138,7 +139,8 @@ struct bb_info {
 
 struct arcdata
 {
-  int prob;
+  int hits;
+  int total;
   int call_insn;
   struct arcdata *next;
 };
@@ -213,22 +215,43 @@ static int output_function_summary = 0;
 
 static char *object_directory = 0;
 
+/* Output the number of times a branch was taken as opposed to the percentage
+   of times it was taken.  Turned on by the -c option */
+   
+static int output_branch_counts = 0;
+
 /* Forward declarations.  */
-static void process_args PROTO ((int, char **));
-static void open_files PROTO ((void));
-static void read_files PROTO ((void));
-static void scan_for_source_files PROTO ((void));
-static void output_data PROTO ((void));
-static void print_usage PROTO ((void)) ATTRIBUTE_NORETURN;
+static void process_args PARAMS ((int, char **));
+static void open_files PARAMS ((void));
+static void read_files PARAMS ((void));
+static void scan_for_source_files PARAMS ((void));
+static void output_data PARAMS ((void));
+static void print_usage PARAMS ((void)) ATTRIBUTE_NORETURN;
+static void init_arc PARAMS ((struct adj_list *, int, int, struct bb_info *));
+static struct adj_list *reverse_arcs PARAMS ((struct adj_list *));
+static void create_program_flow_graph PARAMS ((struct bb_info_list *));
+static void solve_program_flow_graph PARAMS ((struct bb_info_list *));
+static void calculate_branch_probs PARAMS ((struct bb_info_list *, int,
+					    struct arcdata **, int));
+static void function_summary PARAMS ((void));
+
+extern int main PARAMS ((int, char **));
 
 int
 main (argc, argv)
      int argc;
      char **argv;
 {
+/* LC_CTYPE determines the character set used by the terminal so it has be set
+   to output messages correctly.  */
+
 #ifdef HAVE_LC_MESSAGES
+  setlocale (LC_CTYPE, "");
   setlocale (LC_MESSAGES, "");
+#else
+  setlocale (LC_ALL, "");
 #endif
+
   (void) bindtextdomain (PACKAGE, localedir);
   (void) textdomain (PACKAGE);
 
@@ -245,9 +268,9 @@ main (argc, argv)
   return 0;
 }
 
-static void fnotice PVPROTO ((FILE *, const char *, ...)) ATTRIBUTE_PRINTF_2;
+static void fnotice PARAMS ((FILE *, const char *, ...)) ATTRIBUTE_PRINTF_2;
 static void
-fnotice VPROTO ((FILE *file, const char *msgid, ...))
+fnotice VPARAMS ((FILE *file, const char *msgid, ...))
 {
 #ifndef ANSI_PROTOTYPES
   FILE *file;
@@ -266,27 +289,14 @@ fnotice VPROTO ((FILE *file, const char *msgid, ...))
   va_end (ap);
 }
 
-
-PTR
-xmalloc (size)
-  size_t size;
-{
-  register PTR value = (PTR) malloc (size);
-  if (value == 0)
-    {
-      fnotice (stderr, "error: virtual memory exhausted");
-      exit (FATAL_EXIT_CODE);
-    }
-  return value;
-}
-
 /* More 'friendly' abort that prints the line and file.
    config.h can #define abort fancy_abort if you like that sort of thing.  */
+extern void fancy_abort PARAMS ((void)) ATTRIBUTE_NORETURN;
 
 void
 fancy_abort ()
 {
-  fnotice (stderr, "Internal gcc abort.\n");
+  fnotice (stderr, "Internal gcov abort.\n");
   exit (FATAL_EXIT_CODE);
 }
 
@@ -314,6 +324,8 @@ process_args (argc, argv)
 	{
 	  if (argv[i][1] == 'b')
 	    output_branch_probs = 1;
+	  else if (argv[i][1] == 'c')
+	    output_branch_counts = 1;
 	  else if (argv[i][1] == 'v')
 	    fputs (gcov_version_string, stderr);
 	  else if (argv[i][1] == 'n')
@@ -371,7 +383,7 @@ open_files ()
 	  strcat (bbg_file_name, "/");
 	}
 
-      cptr = rindex (input_file_name, '/');
+      cptr = strrchr (input_file_name, '/');
       if (cptr)
 	{
 	  strcat (da_file_name, cptr + 1);
@@ -392,25 +404,25 @@ open_files ()
       strcpy (bbg_file_name, input_file_name);
     }
 
-  cptr = rindex (bb_file_name, '.');
+  cptr = strrchr (bb_file_name, '.');
   if (cptr)
     strcpy (cptr, ".bb");
   else
     strcat (bb_file_name, ".bb");
 
-  cptr = rindex (da_file_name, '.');
+  cptr = strrchr (da_file_name, '.');
   if (cptr)
     strcpy (cptr, ".da");
   else
     strcat (da_file_name, ".da");
 
-  cptr = rindex (bbg_file_name, '.');
+  cptr = strrchr (bbg_file_name, '.');
   if (cptr)
     strcpy (cptr, ".bbg");
   else
     strcat (bbg_file_name, ".bbg");
 
-  bb_file = fopen (bb_file_name, "r");
+  bb_file = fopen (bb_file_name, "rb");
   if (bb_file == NULL)
     {
       fnotice (stderr, "Could not open basic block file %s.\n", bb_file_name);
@@ -419,14 +431,14 @@ open_files ()
 
   /* If none of the functions in the file were executed, then there won't
      be a .da file.  Just assume that all counts are zero in this case.  */
-  da_file = fopen (da_file_name, "r");
+  da_file = fopen (da_file_name, "rb");
   if (da_file == NULL)
     {
       fnotice (stderr, "Could not open data file %s.\n", da_file_name);
       fnotice (stderr, "Assuming that all execution counts are zero.\n");
     }
     
-  bbg_file = fopen (bbg_file_name, "r");
+  bbg_file = fopen (bbg_file_name, "rb");
   if (bbg_file == NULL)
     {
       fnotice (stderr, "Could not open program flow graph file %s.\n",
@@ -508,10 +520,8 @@ create_program_flow_graph (bptr)
   /* Read the number of blocks.  */
   __read_long (&num_blocks, bbg_file, 4);
 
-  /* Create an array of size bb number of bb_info structs.  Bzero it.  */
-  bb_graph = (struct bb_info *) xmalloc (num_blocks
-					 * sizeof (struct bb_info));
-  bzero ((char *) bb_graph, sizeof (struct bb_info) * num_blocks);
+  /* Create an array of size bb number of bb_info structs.  */
+  bb_graph = (struct bb_info *) xcalloc (num_blocks, sizeof (struct bb_info));
 
   bptr->bb_graph = bb_graph;
   bptr->num_blocks = num_blocks;
@@ -569,7 +579,7 @@ create_program_flow_graph (bptr)
     for (arcptr = bb_graph[i].succ; arcptr; arcptr = arcptr->succ_next)
       if (! arcptr->on_tree)
 	{
-	  long tmp_count = 0;;
+	  long tmp_count = 0;
 	  if (da_file && __read_long (&tmp_count, da_file, 8))
 	    abort();
 
@@ -802,8 +812,7 @@ scan_for_source_files ()
 	      /* No sourcefile structure for this file name exists, create
 		 a new one, and append it to the front of the sources list.  */
 	      s_ptr = (struct sourcefile *) xmalloc (sizeof(struct sourcefile));
-	      s_ptr->name = xmalloc (strlen ((char *) ptr) + 1);
-	      strcpy (s_ptr->name, (char *) ptr);
+	      s_ptr->name = xstrdup (ptr);
 	      s_ptr->maxlineno = 0;
 	      s_ptr->next = sources;
 	      sources = s_ptr;
@@ -881,10 +890,11 @@ calculate_branch_probs (current_graph, block_num, branch_probs, last_line_num)
 	continue;
 		      
       a_ptr = (struct arcdata *) xmalloc (sizeof (struct arcdata));
+      a_ptr->total = total;
       if (total == 0)
-	a_ptr->prob = -1;
+          a_ptr->hits = 0;
       else
-	a_ptr->prob = ((arcptr->arc_count * 100) + (total >> 1)) / total;
+          a_ptr->hits = arcptr->arc_count;
       a_ptr->call_insn = arcptr->fake;
 
       if (output_function_summary)
@@ -892,15 +902,15 @@ calculate_branch_probs (current_graph, block_num, branch_probs, last_line_num)
 	  if (a_ptr->call_insn)
 	    {
 	      function_calls++;
-	      if (a_ptr->prob != -1)
+	      if (a_ptr->total != 0)
 		function_calls_executed++;
 	    }
 	  else
 	    {
 	      function_branches++;
-	      if (a_ptr->prob != -1)
+	      if (a_ptr->total != 0)
 		function_branches_executed++;
-	      if (a_ptr->prob > 0)
+	      if (a_ptr->hits > 0)
 		function_branches_taken++;
 	    }
 	}
@@ -1006,7 +1016,13 @@ output_data ()
     {
       /* If this is a relative file name, and an object directory has been
 	 specified, then make it relative to the object directory name.  */
-      if (*s_ptr->name != '/' && object_directory != 0
+      if (! (*s_ptr->name == '/' || *s_ptr->name == DIR_SEPARATOR
+	     /* Check for disk name on MS-DOS-based systems.  */
+	     || (DIR_SEPARATOR == '\\'
+		 && s_ptr->name[1] == ':'
+		 && (s_ptr->name[2] == DIR_SEPARATOR
+		     || s_ptr->name[2] == '/')))
+	  && object_directory != 0
 	  && *object_directory != '\0')
 	{
 	  int objdir_count = strlen (object_directory);
@@ -1019,17 +1035,11 @@ output_data ()
       else
 	source_file_name = s_ptr->name;
 
-      line_counts = (long *) xmalloc (sizeof (long) * s_ptr->maxlineno);
-      bzero ((char *) line_counts, sizeof (long) * s_ptr->maxlineno);
-      line_exists = xmalloc (s_ptr->maxlineno);
-      bzero (line_exists, s_ptr->maxlineno);
+      line_counts = (long *) xcalloc (sizeof (long), s_ptr->maxlineno);
+      line_exists = xcalloc (1, s_ptr->maxlineno);
       if (output_branch_probs)
-	{
-	  branch_probs = (struct arcdata **) xmalloc (sizeof (struct arcdata *)
-						      * s_ptr->maxlineno);
-	  bzero ((char *) branch_probs, 
-		 sizeof (struct arcdata *) * s_ptr->maxlineno);
-	}
+	branch_probs = (struct arcdata **)
+	  xcalloc (sizeof (struct arcdata *), s_ptr->maxlineno);
       
       /* There will be a zero at the beginning of the bb info, before the
 	 first list of line numbers, so must initialize block_num to 0.  */
@@ -1183,15 +1193,15 @@ output_data ()
 		  if (a_ptr->call_insn)
 		    {
 		      total_calls++;
-		      if (a_ptr->prob != -1)
+		      if (a_ptr->total != 0)
 			total_calls_executed++;
 		    }
 		  else
 		    {
 		      total_branches++;
-		      if (a_ptr->prob != -1)
+		      if (a_ptr->total != 0)
 			total_branches_executed++;
-		      if (a_ptr->prob > 0)
+		      if (a_ptr->hits > 0)
 			total_branches_taken++;
 		    }
 		}
@@ -1246,7 +1256,7 @@ output_data ()
 	    }
 
 	  count = strlen (source_file_name);
-	  cptr = rindex (s_ptr->name, '/');
+	  cptr = strrchr (s_ptr->name, '/');
 	  if (cptr)
 	    cptr = cptr + 1;
 	  else
@@ -1255,7 +1265,7 @@ output_data ()
 	    {
 	      gcov_file_name = xmalloc (count + 7 + strlen (input_file_name));
 	      
-	      cptr = rindex (input_file_name, '/');
+	      cptr = strrchr (input_file_name, '/');
 	      if (cptr)
 		strcpy (gcov_file_name, cptr + 1);
 	      else
@@ -1263,7 +1273,7 @@ output_data ()
 
 	      strcat (gcov_file_name, ".");
 
-	      cptr = rindex (source_file_name, '/');
+	      cptr = strrchr (source_file_name, '/');
 	      if (cptr)
 		strcat (gcov_file_name, cptr + 1);
 	      else
@@ -1272,7 +1282,7 @@ output_data ()
 	  else
 	    {
 	      gcov_file_name = xmalloc (count + 6);
-	      cptr = rindex (source_file_name, '/');
+	      cptr = strrchr (source_file_name, '/');
 	      if (cptr)
 		strcpy (gcov_file_name, cptr + 1);
 	      else
@@ -1339,24 +1349,43 @@ output_data ()
 		    {
 		      if (a_ptr->call_insn)
 			{
-			  if (a_ptr->prob == -1)
+			  if (a_ptr->total == 0)
 			    fnotice (gcov_file, "call %d never executed\n", i);
-			  else
-			    fnotice (gcov_file,
-				     "call %d returns = %d%%\n",
-				     i, 100 - a_ptr->prob);
+		            else
+			      {
+				if (output_branch_counts)
+				  fnotice (gcov_file,
+				           "call %d returns = %d\n",
+				           i, a_ptr->total - a_ptr->hits);
+			        else
+                                  fnotice (gcov_file,
+				           "call %d returns = %d%%\n",
+				            i, 100 - ((a_ptr->hits * 100) +
+                                           (a_ptr->total >> 1))/a_ptr->total);
+			      }
 			}
 		      else
 			{
-			  if (a_ptr->prob == -1)
+			  if (a_ptr->total == 0)
 			    fnotice (gcov_file, "branch %d never executed\n",
 				     i);
 			  else
-			    fnotice (gcov_file, "branch %d taken = %d%%\n", i,
-				     a_ptr->prob);
+			    {
+			      if (output_branch_counts)
+			        fnotice (gcov_file,
+				         "branch %d taken = %d\n",
+                                         i, a_ptr->hits);
+			      else
+                                fnotice (gcov_file,
+                                         "branch %d taken = %d%%\n", i,
+                                         ((a_ptr->hits * 100) +
+                                          (a_ptr->total >> 1))/
+                                          a_ptr->total);
+
+			    }
 			}
-		    }
-		}
+		   }
+	      }
 
 	      /* Gracefully handle errors while reading the source file.  */
 	      if (retval == NULL)

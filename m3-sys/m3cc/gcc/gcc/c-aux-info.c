@@ -1,7 +1,8 @@
 /* Generate information regarding function declarations and definitions based
    on information stored in GCC's tree structure.  This code implements the
    -aux-info option.
-   Copyright (C) 1989, 91, 94, 95, 97-98, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1989, 1991, 1994, 1995, 1997, 1998,
+   1999, 2000 Free Software Foundation, Inc.
    Contributed by Ron Guilmette (rfg@segfault.us.com).
 
 This file is part of GNU CC.
@@ -38,74 +39,13 @@ typedef enum formals_style_enum formals_style;
 
 static const char *data_type;
 
-static char *affix_data_type		PROTO((const char *));
-static const char *gen_formal_list_for_type PROTO((tree, formals_style));
-static int   deserves_ellipsis		PROTO((tree));
-static const char *gen_formal_list_for_func_def PROTO((tree, formals_style));
-static const char *gen_type		PROTO((const char *, tree, formals_style));
-static const char *gen_decl		PROTO((tree, int, formals_style));
+static char *affix_data_type		PARAMS ((const char *));
+static const char *gen_formal_list_for_type PARAMS ((tree, formals_style));
+static int   deserves_ellipsis		PARAMS ((tree));
+static const char *gen_formal_list_for_func_def PARAMS ((tree, formals_style));
+static const char *gen_type		PARAMS ((const char *, tree, formals_style));
+static const char *gen_decl		PARAMS ((tree, int, formals_style));
 
-/* Concatenate a sequence of strings, returning the result.
-
-   This function is based on the one in libiberty.  */
-
-/* This definition will conflict with the one from prefix.c in
-   libcpp.a when linking cc1 and cc1obj.  So only provide it if we are
-   not using libcpp.a */
-#ifndef USE_CPPLIB
-char *
-concat VPROTO((const char *first, ...))
-{
-  register int length;
-  register char *newstr;
-  register char *end;
-  register const char *arg;
-  va_list args;
-#ifndef ANSI_PROTOTYPES
-  const char *first;
-#endif
-
-  /* First compute the size of the result and get sufficient memory.  */
-
-  VA_START (args, first);
-#ifndef ANSI_PROTOTYPES
-  first = va_arg (args, const char *);
-#endif
-
-  arg = first;
-  length = 0;
-
-  while (arg != 0)
-    {
-      length += strlen (arg);
-      arg = va_arg (args, const char *);
-    }
-
-  newstr = (char *) malloc (length + 1);
-  va_end (args);
-
-  /* Now copy the individual pieces to the result string.  */
-
-  VA_START (args, first);
-#ifndef ANSI_PROTOTYPES
-  first = va_arg (args, char *);
-#endif
-
-  end = newstr;
-  arg = first;
-  while (arg != 0)
-    {
-      while (*arg)
-	*end++ = *arg++;
-      arg = va_arg (args, const char *);
-    }
-  *end = '\000';
-  va_end (args);
-
-  return (newstr);
-}
-#endif /* ! USE_CPPLIB */
-
 /* Given a string representing an entire type or an entire declaration
    which only lacks the actual "data-type" specifier (at its left end),
    affix the data-type specifier to the left end of the given type
@@ -394,7 +334,7 @@ gen_type (ret_val, t, style)
           return ret_val;
 
         case ARRAY_TYPE:
-	  if (TYPE_SIZE (t) == 0 || TREE_CODE (TYPE_SIZE (t)) != INTEGER_CST)
+	  if (!COMPLETE_TYPE_P (t) || TREE_CODE (TYPE_SIZE (t)) != INTEGER_CST)
 	    ret_val = gen_type (concat (ret_val, "[]", NULL_PTR),
 				TREE_TYPE (t), style);
 	  else if (int_size_in_bytes (t) == 0)

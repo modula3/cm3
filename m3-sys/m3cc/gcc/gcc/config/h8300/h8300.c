@@ -1,5 +1,5 @@
 /* Subroutines for insn-output.c for Hitachi H8/300.
-   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000
+   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
    Free Software Foundation, Inc. 
    Contributed by Steve Chamberlain (sac@cygnus.com),
    Jim Wilson (wilson@cygnus.com), and Doug Evans (dje@cygnus.com).
@@ -22,29 +22,35 @@ the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 #include "config.h"
-#include <stdio.h>
+#include "system.h"
 #include "rtl.h"
+#include "tree.h"
 #include "regs.h"
 #include "hard-reg-set.h"
 #include "real.h"
 #include "insn-config.h"
 #include "conditions.h"
-#include "insn-flags.h"
 #include "output.h"
 #include "insn-attr.h"
 #include "flags.h"
 #include "recog.h"
 #include "expr.h"
-#include "tree.h"
-#include "obstack.h"
+#include "function.h"
+#include "toplev.h"
+#include "c-pragma.h"
+#include "tm_p.h"
+#include "ggc.h"
 
 /* Forward declarations.  */
-void print_operand_address ();
-char *index ();
-
-static int h8300_interrupt_function_p PROTO ((tree));
-static int h8300_monitor_function_p PROTO ((tree));
-static int h8300_os_task_function_p PROTO ((tree));
+static int h8300_interrupt_function_p PARAMS ((tree));
+static int h8300_monitor_function_p PARAMS ((tree));
+static int h8300_os_task_function_p PARAMS ((tree));
+static void dosize PARAMS ((FILE *, const char *, unsigned int));
+static int round_frame_size PARAMS ((int));
+static unsigned int compute_saved_regs PARAMS ((void));
+static void push PARAMS ((FILE *, int));
+static void pop PARAMS ((FILE *, int));
+static const char *cond_string PARAMS ((enum rtx_code));
 
 /* CPU_TYPE, says what cpu we're compiling for.  */
 int cpu_type;
@@ -64,29 +70,26 @@ int monitor;
 /* True if a #pragma saveall has been seen for the current function.  */
 int pragma_saveall;
 
-static char *names_big[] =
-{"r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7"};
+static const char *const names_big[] =
+{ "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7" };
 
-static char *names_extended[] =
-{"er0", "er1", "er2", "er3", "er4", "er5", "er6", "er7"};
+static const char *const names_extended[] =
+{ "er0", "er1", "er2", "er3", "er4", "er5", "er6", "er7" };
 
-static char *names_upper_extended[] =
-{"e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7"};
+static const char *const names_upper_extended[] =
+{ "e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7" };
 
 /* Points to one of the above.  */
 /* ??? The above could be put in an array indexed by CPU_TYPE.  */
-char **h8_reg_names;
+const char * const *h8_reg_names;
 
 /* Various operations needed by the following, indexed by CPU_TYPE.  */
 
-static char *h8_push_ops[2] =
-{"push", "push.l"};
-static char *h8_pop_ops[2] =
-{"pop", "pop.l"};
-static char *h8_mov_ops[2] =
-{"mov.w", "mov.l"};
+static const char *const h8_push_ops[2] = { "push", "push.l" };
+static const char *const h8_pop_ops[2] = { "pop", "pop.l" };
+static const char *const h8_mov_ops[2] = { "mov.w", "mov.l" };
 
-char *h8_push_op, *h8_pop_op, *h8_mov_op;
+const char *h8_push_op, *h8_pop_op, *h8_mov_op;
 
 /* Initialize various cpu specific globals at start up.  */
 
@@ -100,21 +103,27 @@ h8300_init_once ()
     }
   else
     {
-      /* For this we treat the H8/300 and H8/S the same.  */
+      /* For this we treat the H8/300H and H8/S the same.  */
       cpu_type = (int) CPU_H8300H;
       h8_reg_names = names_extended;
     }
   h8_push_op = h8_push_ops[cpu_type];
   h8_pop_op = h8_pop_ops[cpu_type];
   h8_mov_op = h8_mov_ops[cpu_type];
+
+  if (!TARGET_H8300S && TARGET_MAC)
+    {
+      error ("-ms2600 is used without -ms.");
+      target_flags |= 1;
+    }
 }
 
-char *
+const char *
 byte_reg (x, b)
      rtx x;
      int b;
 {
-  static char *names_small[] =
+  static const char *const names_small[] =
   {"r0l", "r0h", "r1l", "r1h", "r2l", "r2h", "r3l", "r3h",
    "r4l", "r4h", "r5l", "r5h", "r6l", "r6h", "r7l", "r7h"};
 
@@ -124,11 +133,21 @@ byte_reg (x, b)
 /* REGNO must be saved/restored across calls if this macro is true.  */
 
 #define WORD_REG_USED(regno)					\
-  (regno < 7 &&							\
-   (interrupt_handler						\
-    || pragma_saveall						\
-    || (regno == FRAME_POINTER_REGNUM && regs_ever_live[regno])	\
-    || (regs_ever_live[regno] && !call_used_regs[regno])))
+  (regno < 7							\
+   /* No need to save registers if this function will not return.  */\
+   && ! TREE_THIS_VOLATILE (current_function_decl)		\
+   && (pragma_saveall						\
+       /* Save any call saved register that was used.  */	\
+       || (regs_ever_live[regno] && !call_used_regs[regno])	\
+       /* Save the frame pointer if it was used.  */		\
+       || (regno == FRAME_POINTER_REGNUM && regs_ever_live[regno])\
+       /* Save any register used in an interrupt handler.  */	\
+       || (interrupt_handler && regs_ever_live[regno])		\
+       /* Save call clobbered registers in non-leaf interrupt	\
+	  handlers.  */						\
+       || (interrupt_handler					\
+	   && call_used_regs[regno]				\
+	   && !current_function_is_leaf)))
 
 /* Output assembly language to FILE for the operation OP with operand size
    SIZE to adjust the stack pointer.  */
@@ -136,74 +155,93 @@ byte_reg (x, b)
 static void
 dosize (file, op, size)
      FILE *file;
-     char *op;
+     const char *op;
      unsigned int size;
 {
-  /* On the h8300h and h8300s, for sizes <= 8 bytes it is as good or
-     better to use adds/subs insns rather than add.l/sub.l
-     with an immediate value.   */
-  if (size > 4 && size <= 8 && (TARGET_H8300H || TARGET_H8300S))
+  /* On the H8/300H and H8/S, for sizes <= 8 bytes, it is as good or
+     better to use adds/subs insns rather than add.l/sub.l with an
+     immediate value.
+
+     Also, on the H8/300, if we don't have a temporary to hold the
+     size of the frame in the prologue, we simply emit a sequence of
+     subs since this shouldn't happen often.  */
+  if ((TARGET_H8300 && size <= 4)
+      || ((TARGET_H8300H || TARGET_H8300S) && size <= 8)
+      || (TARGET_H8300 && interrupt_handler)
+      || (TARGET_H8300 && current_function_needs_context
+	  && ! strcmp (op, "sub")))
     {
-      /* Crank the size down to <= 4 */
-      fprintf (file, "\t%ss\t#%d,sp\n", op, 4);
-      size -= 4;
+      unsigned HOST_WIDE_INT amount;
+
+      /* Try different amounts in descending order.  */
+      for (amount = (TARGET_H8300H || TARGET_H8300S) ? 4 : 2;
+	   amount > 0;
+	   amount /= 2)
+	{
+	  for (; size >= amount; size -= amount)
+	    fprintf (file, "\t%ss\t#%d,sp\n", op, amount);
+	}
     }
-
-  switch (size)
+  else
     {
-    case 4:
-      if (TARGET_H8300H || TARGET_H8300S)
-	{
-	  fprintf (file, "\t%ss\t#%d,sp\n", op, 4);
-	  size = 0;
-	  break;
-	}
-    case 3:
-      fprintf (file, "\t%ss\t#%d,sp\n", op, 2);
-      size -= 2;
-      /* Fall through...  */
-    case 2:
-    case 1:
-      fprintf (file, "\t%ss\t#%d,sp\n", op, size);
-      size = 0;
-      break;
-    case 0:
-      break;
-    default:
       if (TARGET_H8300)
-	{
-	  if (current_function_needs_context
-	      && strcmp (op, "sub") == 0)
-	    {
-	      /* Egad.  We don't have a temporary to hold the
-		 size of the frame in the prologue!  Just inline
-		 the bastard since this shouldn't happen often.  */
-	      while (size >= 2)
-		{
-		  fprintf (file, "\tsubs\t#2,sp\n");
-		  size -= 2;
-		}
-
-	      if (size)
-		fprintf (file, "\tsubs\t#1,sp\n");
-
-	      size = 0;
-	    }
-	  else
-	    fprintf (file, "\tmov.w\t#%d,r3\n\t%s.w\tr3,sp\n", size, op);
-	}
+	fprintf (file, "\tmov.w\t#%d,r3\n\t%s.w\tr3,sp\n", size, op);
       else
-	fprintf (file, "\t%s\t#%d,sp\n", op, size);
-      size = 0;
-      break;
+	fprintf (file, "\t%s.l\t#%d,sp\n", op, size);
     }
 }
 
-/* Output assembly language code for the function prologue.  */
-static int push_order[FIRST_PSEUDO_REGISTER] =
-{0, 1, 2, 3, 4, 5, 6, -1, -1, -1};
-static int pop_order[FIRST_PSEUDO_REGISTER] =
-{6, 5, 4, 3, 2, 1, 0, -1, -1, -1};
+/* Round up frame size SIZE.  */
+
+static int
+round_frame_size (size)
+     int size;
+{
+  return (size + STACK_BOUNDARY / 8 - 1) & -STACK_BOUNDARY / 8;
+}
+
+/* Compute which registers to push/pop.
+   Return a bit vector of registers.  */
+
+static unsigned int
+compute_saved_regs ()
+{
+  unsigned int saved_regs = 0;
+  int regno;
+
+  /* Construct a bit vector of registers to be pushed/popped.  */
+  for (regno = 0; regno <= 6; regno++)
+    {
+      if (WORD_REG_USED (regno))
+	saved_regs |= 1 << regno;
+    }
+
+  /* Don't push/pop the frame pointer as it is treated separately.  */
+  if (frame_pointer_needed)
+    saved_regs &= ~(1 << FRAME_POINTER_REGNUM);
+
+  return saved_regs;
+}
+
+/* Output assembly language code to push register RN.  */
+
+static void
+push (file, rn)
+     FILE *file;
+     int rn;
+{
+  fprintf (file, "\t%s\t%s\n", h8_push_op, h8_reg_names[rn]);
+}
+
+/* Output assembly language code to pop register RN.  */
+
+static void
+pop (file, rn)
+     FILE *file;
+     int rn;
+{
+  fprintf (file, "\t%s\t%s\n", h8_pop_op, h8_reg_names[rn]);
+}
 
 /* This is what the stack looks like after the prolog of 
    a function with a frame has been set up:
@@ -223,14 +261,17 @@ static int pop_order[FIRST_PSEUDO_REGISTER] =
    <saved registers>   	<- sp
 */
 
+/* Output assembly language code for the function prologue.  */
+
 void
 function_prologue (file, size)
      FILE *file;
      int size;
 {
-  register int mask = 0;
-  int fsize = (size + STACK_BOUNDARY / 8 - 1) & -STACK_BOUNDARY / 8;
+  int fsize = round_frame_size (size);
   int idx;
+  int saved_regs;
+  int n_regs;
 
   /* Note a function with the interrupt attribute and set interrupt_handler
      accordingly.  */
@@ -257,110 +298,76 @@ function_prologue (file, size)
       if (TARGET_H8300)
 	{
 	  fprintf (file, "\tsubs\t#2,sp\n");
-	  fprintf (file, "\tpush\tr0\n");
+	  push (file, 0);
 	  fprintf (file, "\tstc\tccr,r0l\n");
+	  fprintf (file, "\tmov.b\tr0l,@(2,sp)\n");
+	  pop (file, 0);
 	  fprintf (file, "\torc\t#128,ccr\n");
+	}
+      else if (TARGET_H8300H)
+	{
+	  push (file, 0);
+	  fprintf (file, "\tstc\tccr,r0l\n");
 	  fprintf (file, "\tmov.b\tr0l,@(4,sp)\n");
+	  pop (file, 0);
+	  fprintf (file, "\torc\t#128,ccr\n");
+	}
+      else if (TARGET_H8300S)
+	{
+	  fprintf (file, "\tstc\texr,@-sp\n");
+	  push (file, 0);
+	  fprintf (file, "\tstc\tccr,r0l\n");
+	  fprintf (file, "\tmov.b\tr0l,@(6,sp)\n");
+	  pop (file, 0);
+	  fprintf (file, "\torc\t#128,ccr\n");
 	}
       else
-	{
-	  fprintf (file, "\tpush\ter0\n");
-	  fprintf (file, "\tstc\tccr,r0l\n");
-	  fprintf (file, "\torc\t#128,ccr\n");
-	  fprintf (file, "\tmov.b\tr0l,@(4,sp)\n");
-	}
+	abort ();
     }
 
   if (frame_pointer_needed)
     {
-      /* Push fp */
-      fprintf (file, "\t%s\t%s\n", h8_push_op,
-	       h8_reg_names[FRAME_POINTER_REGNUM]);
+      /* Push fp.  */
+      push (file, FRAME_POINTER_REGNUM);
       fprintf (file, "\t%s\t%s,%s\n", h8_mov_op,
 	       h8_reg_names[STACK_POINTER_REGNUM],
 	       h8_reg_names[FRAME_POINTER_REGNUM]);
     }
 
-  /* leave room for locals */
+  /* Leave room for locals.  */
   dosize (file, "sub", fsize);
 
-  /* Push the rest of the registers */
-  for (idx = 0; idx < FIRST_PSEUDO_REGISTER; idx++)
+  /* Push the rest of the registers in ascending order.  */
+  saved_regs = compute_saved_regs ();
+  for (idx = 0; idx < FIRST_PSEUDO_REGISTER; idx += n_regs)
     {
-      int regno = push_order[idx];
+      int regno = idx;
 
-      if (regno >= 0
-	  && WORD_REG_USED (regno)
-	  && (!frame_pointer_needed || regno != FRAME_POINTER_REGNUM))
+      n_regs = 1;
+      if (saved_regs & (1 << regno))
 	{
 	  if (TARGET_H8300S)
 	    {
-	      /* Try to push multiple registers.  */
-	      if (regno == 0 || regno == 4)
-		{
-		  int second_regno = push_order[idx + 1];
-		  int third_regno = push_order[idx + 2];
-		  int fourth_regno = push_order[idx + 3];
+	      /* See how many registers we can push at the same time.  */
+	      if ((regno == 0 || regno == 4)
+		  && ((saved_regs >> regno) & 0x0f) == 0x0f)
+		n_regs = 4;
 
-		  if (fourth_regno >= 0
-		      && WORD_REG_USED (fourth_regno)
-		      && (!frame_pointer_needed
-			  || fourth_regno != FRAME_POINTER_REGNUM)
-		      && third_regno >= 0
-		      && WORD_REG_USED (third_regno)
-		      && (!frame_pointer_needed
-			  || third_regno != FRAME_POINTER_REGNUM)
-		      && second_regno >= 0
-		      && WORD_REG_USED (second_regno)
-		      && (!frame_pointer_needed
-			  || second_regno != FRAME_POINTER_REGNUM))
-		    {
-		      fprintf (file, "\tstm.l %s-%s,@-sp\n", 
-			       h8_reg_names[regno],
-			       h8_reg_names[fourth_regno]);
-		      idx += 3;
-		      continue;
-		    }
-		}
-	      if (regno == 0 || regno == 4)
-		{
-		  int second_regno = push_order[idx + 1];
-		  int third_regno = push_order[idx + 2];
+	      else if ((regno == 0 || regno == 4)
+		       && ((saved_regs >> regno) & 0x07) == 0x07)
+		n_regs = 3;
 
-		  if (third_regno >= 0
-		      && WORD_REG_USED (third_regno)
-		      && (!frame_pointer_needed
-			  || third_regno != FRAME_POINTER_REGNUM)
-		      && second_regno >= 0
-		      && WORD_REG_USED (second_regno)
-		      && (!frame_pointer_needed
-			  || second_regno != FRAME_POINTER_REGNUM))
-		    {
-		      fprintf (file, "\tstm.l %s-%s,@-sp\n", 
-			       h8_reg_names[regno],
-			       h8_reg_names[third_regno]);
-		      idx += 2;
-		      continue;
-		    }
-		}
-	      if (regno == 0 || regno == 2 || regno == 4 || regno == 6)
-		{
-		  int second_regno = push_order[idx + 1];
-
-		  if (second_regno >= 0
-		      && WORD_REG_USED (second_regno)
-		      && (!frame_pointer_needed
-			  || second_regno != FRAME_POINTER_REGNUM))
-		    {
-		      fprintf (file, "\tstm.l %s-%s,@-sp\n", 
-			       h8_reg_names[regno],
-			       h8_reg_names[second_regno]);
-		      idx += 1;
-		      continue;
-		    }
-		}
+	      else if ((regno == 0 || regno == 2 || regno == 4 || regno == 6)
+		       && ((saved_regs >> regno) & 0x03) == 0x03)
+		n_regs = 2;
 	    }
-	  fprintf (file, "\t%s\t%s\n", h8_push_op, h8_reg_names[regno]);
+
+	  if (n_regs == 1)
+	    push (file, regno);
+	  else
+	    fprintf (file, "\tstm.l\t%s-%s,@-sp\n",
+		     h8_reg_names[regno],
+		     h8_reg_names[regno + (n_regs - 1)]);
 	}
     }
 }
@@ -372,11 +379,11 @@ function_epilogue (file, size)
      FILE *file;
      int size;
 {
-  register int regno;
-  register int mask = 0;
-  int fsize = (size + STACK_BOUNDARY / 8 - 1) & -STACK_BOUNDARY / 8;
+  int fsize = round_frame_size (size);
   int idx;
   rtx insn = get_last_insn ();
+  int saved_regs;
+  int n_regs;
 
   if (os_task)
     {
@@ -387,10 +394,10 @@ function_epilogue (file, size)
       goto out;
     }
 
-  /* monitor epilogues are the same as interrupt function epilogues.
+  /* Monitor epilogues are the same as interrupt function epilogues.
      Just make a note that we're in an monitor epilogue.  */
   if (monitor)
-    fprintf(file, ";monitor epilogue\n");
+    fprintf (file, ";monitor epilogue\n");
 
   /* If the last insn was a BARRIER, we don't have to write any code.  */
   if (GET_CODE (insn) == NOTE)
@@ -398,104 +405,53 @@ function_epilogue (file, size)
   if (insn && GET_CODE (insn) == BARRIER)
     goto out;
 
-  /* Pop the saved registers. */
-  for (idx = 0; idx < FIRST_PSEUDO_REGISTER; idx++)
+  /* Pop the saved registers in descending order.  */
+  saved_regs = compute_saved_regs ();
+  for (idx = 0; idx < FIRST_PSEUDO_REGISTER; idx += n_regs)
     {
-      int regno = pop_order[idx];
+      int regno = (FIRST_PSEUDO_REGISTER - 1) - idx;
 
-      if (regno >= 0
-	  && WORD_REG_USED (regno)
-	  && (!frame_pointer_needed || regno != FRAME_POINTER_REGNUM))
+      n_regs = 1;
+      if (saved_regs & (1 << regno))
 	{
 	  if (TARGET_H8300S)
 	    {
-	      /* Try to pop multiple registers.  */
-	      if (regno == 7 || regno == 3)
-		{
-		  int second_regno = pop_order[idx + 1];
-		  int third_regno = pop_order[idx + 2];
-		  int fourth_regno = pop_order[idx + 3];
+	      /* See how many registers we can pop at the same time.  */
+	      if ((regno == 7 || regno == 3)
+		  && ((saved_regs >> (regno - 3)) & 0x0f) == 0x0f)
+		n_regs = 4;
 
-		  if (fourth_regno >= 0
-		      && WORD_REG_USED (fourth_regno)
-		      && (!frame_pointer_needed
-			  || fourth_regno != FRAME_POINTER_REGNUM)
-		      && third_regno >= 0
-		      && WORD_REG_USED (third_regno)
-		      && (!frame_pointer_needed
-			  || third_regno != FRAME_POINTER_REGNUM)
-		      && second_regno >= 0
-		      && WORD_REG_USED (second_regno)
-		      && (!frame_pointer_needed
-			  || second_regno != FRAME_POINTER_REGNUM))
-		    {
-		      fprintf (file, "\tldm.l @sp+,%s-%s\n", 
-			       h8_reg_names[fourth_regno],
-			       h8_reg_names[regno]);
-		      idx += 3;
-		      continue;
-		    }
-		}
-	      if (regno == 6 || regno == 2)
-		{
-		  int second_regno = pop_order[idx + 1];
-		  int third_regno = pop_order[idx + 2];
+	      else if ((regno == 6 || regno == 2)
+		       && ((saved_regs >> (regno - 2)) & 0x07) == 0x07)
+		n_regs = 3;
 
-		  if (third_regno >= 0
-		      && WORD_REG_USED (third_regno)
-		      && (!frame_pointer_needed
-			  || third_regno != FRAME_POINTER_REGNUM)
-		      && second_regno >= 0
-		      && WORD_REG_USED (second_regno)
-		      && (!frame_pointer_needed
-			  || second_regno != FRAME_POINTER_REGNUM))
-		    {
-		      fprintf (file, "\tldm.l @sp+,%s-%s\n", 
-			       h8_reg_names[third_regno],
-			       h8_reg_names[regno]);
-		      idx += 2;
-		      continue;
-		    }
-		}
-	      if (regno == 7 || regno == 5 || regno == 3 || regno == 1)
-		{
-		  int second_regno = pop_order[idx + 1];
-
-		  if (second_regno >= 0
-		      && WORD_REG_USED (second_regno)
-		      && (!frame_pointer_needed
-			  || second_regno != FRAME_POINTER_REGNUM))
-		    {
-		      fprintf (file, "\tldm.l @sp+,%s-%s\n", 
-			       h8_reg_names[second_regno],
-			       h8_reg_names[regno]);
-		      idx += 1;
-		      continue;
-		    }
-		}
+	      else if ((regno == 7 || regno == 5 || regno == 3 || regno == 1)
+		       && ((saved_regs >> (regno - 1)) & 0x03) == 0x03)
+		n_regs = 2;
 	    }
-	  fprintf (file, "\t%s\t%s\n", h8_pop_op, h8_reg_names[regno]);
+
+	  if (n_regs == 1)
+	    pop (file, regno);
+	  else
+	    fprintf (file, "\tldm.l\t@sp+,%s-%s\n",
+		     h8_reg_names[regno - (n_regs - 1)],
+		     h8_reg_names[regno]);
 	}
     }
 
-  /* deallocate locals */
+  /* Deallocate locals.  */
   dosize (file, "add", fsize);
 
-  /* pop frame pointer if we had one. */
+  /* Pop frame pointer if we had one.  */
   if (frame_pointer_needed)
-    fprintf (file, "\t%s\t%s\n", h8_pop_op, h8_reg_names[FRAME_POINTER_REGNUM]);
-
-  /* If this is a monitor function, there is one register still left on
-     the stack.  */
-  if (monitor)
-    fprintf (file, "\t%s\t%s\n", h8_pop_op, h8_reg_names[0]);
+    pop (file, FRAME_POINTER_REGNUM);
 
   if (interrupt_handler)
     fprintf (file, "\trte\n");
   else
     fprintf (file, "\trts\n");
 
-out:
+ out:
   interrupt_handler = 0;
   os_task = 0;
   monitor = 0;
@@ -504,6 +460,7 @@ out:
 
 /* Output assembly code for the start of the file.  */
 
+void
 asm_file_start (file)
      FILE *file;
 {
@@ -535,29 +492,10 @@ asm_file_end (file)
 
 int
 small_power_of_two (value)
-     int value;
+     HOST_WIDE_INT value;
 {
-  switch (value)
-    {
-    case 1:
-    case 2:
-    case 4:
-    case 8:
-    case 16:
-    case 32:
-    case 64:
-    case 128:
-    case 256:
-    case 512:
-    case 1024:
-    case 2048:
-    case 4096:
-    case 8192:
-    case 16384:
-    case 32768:
-      return 1;
-    }
-  return 0;
+  int power = exact_log2 (value);
+  return power >= 0 && power <= 15;
 }
 
 /* Return true if VALUE is a valid constant for constraint 'O', which
@@ -566,12 +504,12 @@ small_power_of_two (value)
 
 int
 ok_for_bclr (value)
-     int value;
+     HOST_WIDE_INT value;
 {
   return small_power_of_two ((~value) & 0xff);
 }
 
-/* Return true is OP is a valid source operand for an integer move
+/* Return true if OP is a valid source operand for an integer move
    instruction.  */
 
 int
@@ -602,7 +540,7 @@ general_operand_dst (op, mode)
 int
 o_operand (operand, mode)
      rtx operand;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return (GET_CODE (operand) == CONST_INT
 	  && CONST_OK_FOR_O (INTVAL (operand)));
@@ -613,7 +551,7 @@ o_operand (operand, mode)
 int
 p_operand (operand, mode)
      rtx operand;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return (GET_CODE (operand) == CONST_INT
 	  && CONST_OK_FOR_P (INTVAL (operand)));
@@ -624,7 +562,7 @@ p_operand (operand, mode)
 int
 call_insn_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   if (GET_CODE (op) == MEM)
     {
@@ -637,111 +575,86 @@ call_insn_operand (op, mode)
   return 0;
 }
 
+/* Return 1 if an addition/subtraction of a constant integer can be
+   transformed into two consecutive adds/subs that are faster than the
+   straightforward way.  Otherwise, return 0.  */
+
 int
-adds_subs_operand (op, mode)
+two_insn_adds_subs_operand (op, mode)
      rtx op;
      enum machine_mode mode;
 {
   if (GET_CODE (op) == CONST_INT)
     {
-      if (INTVAL (op) <= 4 && INTVAL (op) >= 0)
-	return 1;
-      if (INTVAL (op) >= -4 && INTVAL (op) <= 0)
-	return 1;
-      if ((TARGET_H8300H || TARGET_H8300S)
-	  && INTVAL (op) != 7
-	  && (INTVAL (op) <= 8 && INTVAL (op) >= 0))
-	return 1;
-      if ((TARGET_H8300H || TARGET_H8300S)
-	  && INTVAL (op) != -7
-	  && (INTVAL (op) >= -8 && INTVAL (op) <= 0))
-	return 1;
+      HOST_WIDE_INT value = INTVAL (op);
+
+      /* Force VALUE to be positive so that we do not have to consider
+         the negative case.  */
+      if (value < 0)
+	value = -value;
+      if (TARGET_H8300H || TARGET_H8300S)
+	{
+	  /* A constant addition/subtraction takes 2 states in QImode,
+	     4 states in HImode, and 6 states in SImode.  Thus, the
+	     only case we can win is when SImode is used, in which
+	     case, two adds/subs are used, taking 4 states.  */
+	  if (mode == SImode
+	      && (value == 2 + 1
+		  || value == 4 + 1
+		  || value == 4 + 2
+		  || value == 4 + 4))
+	    return 1;
+	}
+      else
+	{
+	  /* A constant addition/subtraction takes 2 states in
+	     QImode. It takes 6 states in HImode, requiring the
+	     constant to be loaded to a register first, and a lot more
+	     in SImode.  Thus the only case we can win is when either
+	     HImode or SImode is used.  */
+	  if (mode != QImode
+	      && (value == 2 + 1
+		  || value == 2 + 2))
+	    return 1;
+	}
     }
+
   return 0;
 }
 
-/* Return nonzero if op is an adds/subs operand which only requires
-   one insn to implement.  It is assumed that OP is already an adds/subs
-   operand.  */
-int
-one_insn_adds_subs_operand (op, mode)
-     rtx op;
+/* Split an add of a small constant into two adds/subs insns.  */
+
+void
+split_adds_subs (mode, operands)
      enum machine_mode mode;
-{
-  int val = INTVAL (op);
-
-  if (val == 1 || val == -1
-      || val == 2 || val == -2
-      || ((TARGET_H8300H || TARGET_H8300S)
-	  && (val == 4 || val == -4)))
-    return 1;
-  return 0;
-}
-
-char *
-output_adds_subs (operands)
      rtx *operands;
 {
-  int val = INTVAL (operands[2]);
+  HOST_WIDE_INT val = INTVAL (operands[1]);
+  rtx reg = operands[0];
+  HOST_WIDE_INT sign = 1;
+  HOST_WIDE_INT amount;
 
-  /* First get the value into the range -4..4 inclusive.
-
-     The only way it can be out of this range is when TARGET_H8300H
-     or TARGET_H8300S is true, thus it is safe to use adds #4 and subs #4.  */
-  if (val > 4)
+  /* Force VAL to be positive so that we do not have to consider the
+     sign.  */
+  if (val < 0)
     {
-      output_asm_insn ("adds #4,%A0", operands);
-      val -= 4;
+      val = -val;
+      sign = -1;
     }
 
-  if (val < -4)
+  /* Try different amounts in descending order.  */
+  for (amount = (TARGET_H8300H || TARGET_H8300S) ? 4 : 2;
+       amount > 0;
+       amount /= 2)
     {
-      output_asm_insn ("subs #4,%A0", operands);
-      val += 4;
+      for (; val >= amount; val -= amount)
+	{
+	  rtx tmp = gen_rtx_PLUS (mode, reg, GEN_INT (sign * amount));
+	  emit_insn (gen_rtx_SET (VOIDmode, reg, tmp));
+	}
     }
 
-  /* Handle case were val == 4 or val == -4 and we're compiling
-     for TARGET_H8300H or TARGET_H8300S.  */
-  if ((TARGET_H8300H || TARGET_H8300S)
-      && val == 4)
-    return "adds #4,%A0";
-
-  if ((TARGET_H8300H || TARGET_H8300S)
-      && val == -4)
-    return "subs #4,%A0";
-
-  if (val > 2)
-    {
-      output_asm_insn ("adds #2,%A0", operands);
-      val -= 2;
-    }
-
-  if (val < -2)
-    {
-      output_asm_insn ("subs #2,%A0", operands);
-      val += 2;
-    }
-
-  /* val should be one or two now.  */
-  if (val == 2)
-    return "adds #2,%A0";
-
-  if (val == -2)
-    return "subs #2,%A0";
-
-  /* val should be one now.  */
-  if (val == 1)
-    return "adds #1,%A0";
-
-  if (val == -1)
-    return "subs #1,%A0";
-
-  /* If not optimizing, we might be asked to add 0.  */
-  if (val == 0)
-    return "";
-
-  /* In theory, this can't happen.  */
-  abort ();
+  return;
 }
 
 /* Return true if OP is a valid call operand, and OP represents
@@ -750,7 +663,7 @@ output_adds_subs (operands)
 int
 small_call_insn_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   if (GET_CODE (op) == MEM)
     {
@@ -816,21 +729,17 @@ bit_operand (op, mode)
   if (GET_CODE (op) == SUBREG)
     return 1;
   if (!rtx_equal_function_value_matters)
-    {
-      /* We're building rtl */
-      return GET_CODE (op) == MEM;
-    }
+    /* We're building rtl.  */
+    return GET_CODE (op) == MEM;
   else
-    {
-      return (GET_CODE (op) == MEM
-	      && EXTRA_CONSTRAINT (op, 'U'));
-    }
+    return (GET_CODE (op) == MEM
+	    && EXTRA_CONSTRAINT (op, 'U'));
 }
 
 int
 bit_memory_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return (GET_CODE (op) == MEM
 	  && EXTRA_CONSTRAINT (op, 'U'));
@@ -841,7 +750,7 @@ bit_memory_operand (op, mode)
 int
 eq_operator (x, mode)
      rtx x;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return (GET_CODE (x) == EQ || GET_CODE (x) == NE);
 }
@@ -856,27 +765,25 @@ eq_operator (x, mode)
    an rte instruction rather than an rts.  A pointer to a function
    with this attribute may be safely used in an interrupt vector.  */
 
-int
-handle_pragma (p_getc, p_ungetc, pname)
-     int (*  p_getc) PROTO ((void));
-     void (* p_ungetc) PROTO ((int));
-     char * pname;
+void
+h8300_pr_interrupt (pfile)
+     cpp_reader *pfile ATTRIBUTE_UNUSED;
 {
-  int retval = 0;
-
-  if (strcmp (pname, "interrupt") == 0)
-    interrupt_handler = retval = 1;
-  else if (strcmp (pname, "saveall") == 0)
-    pragma_saveall = retval = 1;
-
-  return retval;
+  interrupt_handler = 1;
 }
-
+
+void
+h8300_pr_saveall (pfile)
+     cpp_reader *pfile ATTRIBUTE_UNUSED;
+{
+  pragma_saveall = 1;
+}
+
 /* If the next arg with MODE and TYPE is to be passed in a register, return
    the rtx to represent where it is passed.  CUM represents the state after
    the last argument.  NAMED is not used.  */
 
-static char *hand_list[] =
+static const char *const hand_list[] =
 {
   "__main",
   "__cmpsi2",
@@ -907,7 +814,7 @@ function_arg (cum, mode, type, named)
      int named;
 {
   rtx result = 0;
-  char *fname;
+  const char *fname;
   int regpass = 0;
 
   /* Never pass unnamed arguments in registers.  */
@@ -922,7 +829,7 @@ function_arg (cum, mode, type, named)
 
   if (cum->libcall)
     {
-      char **p;
+      const char * const *p;
 
       fname = XSTR (cum->libcall, 0);
 
@@ -953,16 +860,16 @@ function_arg (cum, mode, type, named)
 	  switch (cum->nbytes / UNITS_PER_WORD)
 	    {
 	    case 0:
-	      result = gen_rtx (REG, mode, 0);
+	      result = gen_rtx_REG (mode, 0);
 	      break;
 	    case 1:
-	      result = gen_rtx (REG, mode, 1);
+	      result = gen_rtx_REG (mode, 1);
 	      break;
 	    case 2:
-	      result = gen_rtx (REG, mode, 2);
+	      result = gen_rtx_REG (mode, 2);
 	      break;
 	    case 3:
-	      result = gen_rtx (REG, mode, 3);
+	      result = gen_rtx_REG (mode, 3);
 	      break;
 	    default:
 	      result = 0;
@@ -1016,7 +923,7 @@ const_costs (r, c)
 
 /* Documentation for the machine specific operand escapes:
 
-   'A' print rn in h8/300 mode, erN in H8/300H mode
+   'A' print rn in H8/300 mode, erN in H8/300H mode
    'C' print (operand - 2).
    'E' like s but negative.
    'F' like t but negative.
@@ -1054,7 +961,7 @@ const_costs (r, c)
 
 /* Return assembly language string which identifies a comparison type.  */
 
-static char *
+static const char *
 cond_string (code)
      enum rtx_code code;
 {
@@ -1095,7 +1002,7 @@ print_operand (file, x, code)
      int code;
 {
   /* This is used for communication between the 'P' and 'U' codes.  */
-  static char *last_p;
+  static const char *last_p;
 
   /* This is used for communication between codes V,W,Z and Y.  */
   static int bitint;
@@ -1233,6 +1140,8 @@ print_operand (file, x, code)
 	case AND:
 	  fprintf (file, "band");
 	  break;
+	default:
+	  break;
 	}
       break;
     case 'c':
@@ -1246,6 +1155,8 @@ print_operand (file, x, code)
 	  break;
 	case AND:
 	  fprintf (file, "biand");
+	  break;
+	default:
 	  break;
 	}
       break;
@@ -1284,7 +1195,7 @@ print_operand (file, x, code)
 	    REAL_VALUE_TYPE rv;
 	    REAL_VALUE_FROM_CONST_DOUBLE (rv, x);
 	    REAL_VALUE_TO_TARGET_SINGLE (rv, val);
-	    fprintf (file, "#%d", ((val >> 16) & 0xffff));
+	    fprintf (file, "#%ld", ((val >> 16) & 0xffff));
 	    break;
 	  }
 	default:
@@ -1314,7 +1225,7 @@ print_operand (file, x, code)
 	    REAL_VALUE_TYPE rv;
 	    REAL_VALUE_FROM_CONST_DOUBLE (rv, x);
 	    REAL_VALUE_TO_TARGET_SINGLE (rv, val);
-	    fprintf (file, "#%d", (val & 0xffff));
+	    fprintf (file, "#%ld", (val & 0xffff));
 	    break;
 	  }
 	default:
@@ -1418,12 +1329,15 @@ print_operand (file, x, code)
 	     area), then specify a symbolic address as "foo:8",
 	     otherwise if operand is still in eight bit section, use
 	     "foo:16".  */
- 	  if (GET_CODE (XEXP (x, 0)) == SYMBOL_REF
+	  if (GET_CODE (XEXP (x, 0)) == SYMBOL_REF
 	      && SYMBOL_REF_FLAG (XEXP (x, 0)))
 	    fprintf (file, (code == 'R' ? ":8" : ":16"));
 	  else if (GET_CODE (XEXP (x, 0)) == SYMBOL_REF
-	      && TINY_DATA_NAME_P (XSTR (XEXP (x, 0), 0)))
+		   && TINY_DATA_NAME_P (XSTR (XEXP (x, 0), 0)))
 	    fprintf (file, ":16");
+	  else if ((code == 'R')
+		   && EIGHTBIT_CONSTANT_ADDRESS_P (XEXP (x, 0)))
+	    fprintf (file, ":8");
 	  break;
 
 	case CONST_INT:
@@ -1439,9 +1353,11 @@ print_operand (file, x, code)
 	    REAL_VALUE_TYPE rv;
 	    REAL_VALUE_FROM_CONST_DOUBLE (rv, x);
 	    REAL_VALUE_TO_TARGET_SINGLE (rv, val);
-	    fprintf (file, "#%d", val);
+	    fprintf (file, "#%ld", val);
 	    break;
 	  }
+	default:
+	  break;
 	}
     }
 }
@@ -1488,7 +1404,7 @@ print_operand_address (file, addr)
 
     case CONST_INT:
       {
-	/* Since the h8/300 only has 16 bit pointers, negative values are also
+	/* Since the H8/300 only has 16 bit pointers, negative values are also
 	   those >= 32768.  This happens for example with pointer minus a
 	   constant.  We don't want to turn (char *p - 2) into
 	   (char *p + 65534) because loop unrolling can build upon this
@@ -1497,7 +1413,7 @@ print_operand_address (file, addr)
 	if (TARGET_H8300)
 	  n = (int) (short) n;
 	if (n < 0)
-	  /* ??? Why the special case for -ve values? */
+	  /* ??? Why the special case for -ve values?  */
 	  fprintf (file, "-%d", -n);
 	else
 	  fprintf (file, "%d", n);
@@ -1517,8 +1433,8 @@ print_operand_address (file, addr)
 
 void
 final_prescan_insn (insn, operand, num_operands)
-     rtx insn, *operand;
-     int num_operands;
+     rtx insn, *operand ATTRIBUTE_UNUSED;
+     int num_operands ATTRIBUTE_UNUSED;
 {
   /* This holds the last insn address.  */
   static int last_insn_address = 0;
@@ -1534,9 +1450,9 @@ final_prescan_insn (insn, operand, num_operands)
 
   if (TARGET_ADDRESSES)
     {
-      fprintf (asm_out_file, "; 0x%x %d\n", insn_addresses[uid],
-	       insn_addresses[uid] - last_insn_address);
-      last_insn_address = insn_addresses[uid];
+      fprintf (asm_out_file, "; 0x%x %d\n", INSN_ADDRESSES (uid),
+	       INSN_ADDRESSES (uid) - last_insn_address);
+      last_insn_address = INSN_ADDRESSES (uid);
     }
 }
 
@@ -1561,11 +1477,12 @@ do_movsi (operands)
 }
 
 /* Function for INITIAL_ELIMINATION_OFFSET(FROM, TO, OFFSET).
-   Define the offset between two registers, one to be eliminated, and the other
-   its replacement, at the start of a routine.  */
+   Define the offset between two registers, one to be eliminated, and
+   the other its replacement, at the start of a routine.  */
 
 int
 initial_offset (from, to)
+     int from, to;
 {
   int offset = 0;
 
@@ -1593,7 +1510,7 @@ initial_offset (from, to)
 
 /* Update the condition code from the insn.  */
 
-int
+void
 notice_update_cc (body, insn)
      rtx body;
      rtx insn;
@@ -1607,26 +1524,26 @@ notice_update_cc (body, insn)
     case CC_NONE_0HIT:
       /* Insn does not change CC, but the 0'th operand has been changed.  */
       if (cc_status.value1 != 0
-	  && reg_overlap_mentioned_p (recog_operand[0], cc_status.value1))
+	  && reg_overlap_mentioned_p (recog_data.operand[0], cc_status.value1))
 	cc_status.value1 = 0;
       break;
 
     case CC_SET_ZN:
-      /* Insn sets the Z,N flags of CC to recog_operand[0].
+      /* Insn sets the Z,N flags of CC to recog_data.operand[0].
 	 The V flag is unusable.  The C flag may or may not be known but
 	 that's ok because alter_cond will change tests to use EQ/NE.  */
       CC_STATUS_INIT;
       cc_status.flags |= CC_OVERFLOW_UNUSABLE | CC_NO_CARRY;
-      cc_status.value1 = recog_operand[0];
+      cc_status.value1 = recog_data.operand[0];
       break;
 
     case CC_SET_ZNV:
-      /* Insn sets the Z,N,V flags of CC to recog_operand[0].
+      /* Insn sets the Z,N,V flags of CC to recog_data.operand[0].
 	 The C flag may or may not be known but that's ok because
 	 alter_cond will change tests to use EQ/NE.  */
       CC_STATUS_INIT;
       cc_status.flags |= CC_NO_CARRY;
-      cc_status.value1 = recog_operand[0];
+      cc_status.value1 = recog_data.operand[0];
       break;
 
     case CC_COMPARE:
@@ -1642,12 +1559,12 @@ notice_update_cc (body, insn)
     }
 }
 
-/* Recognize valid operators for bit instructions */
+/* Recognize valid operators for bit instructions.  */
 
 int
 bit_operator (x, mode)
      rtx x;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   enum rtx_code code = GET_CODE (x);
 
@@ -1687,7 +1604,6 @@ bit_operator (x, mode)
      SHIFT_SPECIAL
 
      * There other oddballs.  Not worth explaining.  SHIFT_SPECIAL
-
 
    Here are some thoughts on what the absolutely positively best code is.
    "Best" here means some rational trade-off between code size and speed,
@@ -1744,7 +1660,6 @@ bit_operator (x, mode)
             ASHIFTRT: loop
    7      - ASHIFT | LSHIFTRT: rotate, mask off other bits
             ASHIFTRT: shll, subx (propagate carry bit to all bits)
-
 
    H8/300H HImode shifts
    1-4    - do them inline
@@ -1809,7 +1724,7 @@ bit_operator (x, mode)
             (with sign extension for ASHIFTRT)
    16     - move word into place, zero or sign extend other
    17-20  - do 16bit shift, then inline remaining shifts
-   20-23  - loop
+   21-23  - loop
    24*    - ASHIFT: move byte 0(msb) to byte 1, zero byte 0,
                     move word 0 to word 1, zero word 0
             LSHIFTRT: move word 1 to word 0, move byte 1 to byte 0,
@@ -1828,7 +1743,7 @@ bit_operator (x, mode)
 int
 nshift_operator (x, mode)
      rtx x;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   switch (GET_CODE (x))
     {
@@ -1843,8 +1758,8 @@ nshift_operator (x, mode)
 }
 
 /* Called from the .md file to emit code to do shifts.
-   Returns a boolean indicating success
-   (currently this is always TRUE).  */
+   Return a boolean indicating success.
+   (Currently this is always TRUE).  */
 
 int
 expand_a_shift (mode, code, operands)
@@ -1854,15 +1769,17 @@ expand_a_shift (mode, code, operands)
 {
   emit_move_insn (operands[0], operands[1]);
 
-  /* need a loop to get all the bits we want  - we generate the
-     code at emit time, but need to allocate a scratch reg now  */
+  /* Need a loop to get all the bits we want  - we generate the
+     code at emit time, but need to allocate a scratch reg now.  */
 
-  emit_insn (gen_rtx
-	     (PARALLEL, VOIDmode,
+  emit_insn (gen_rtx_PARALLEL
+	     (VOIDmode,
 	      gen_rtvec (2,
-			 gen_rtx (SET, VOIDmode, operands[0],
-				  gen_rtx (code, mode, operands[0], operands[2])),
-			 gen_rtx (CLOBBER, VOIDmode, gen_rtx (SCRATCH, QImode, 0)))));
+			 gen_rtx_SET (VOIDmode, operands[0],
+				      gen_rtx (code, mode, operands[0],
+					       operands[2])),
+			 gen_rtx_CLOBBER (VOIDmode,
+					  gen_rtx_SCRATCH (QImode)))));
 
   return 1;
 }
@@ -1889,16 +1806,16 @@ enum shift_alg
 /* Symbols of the various shifts which can be used as indices.  */
 
 enum shift_type
-  {
-    SHIFT_ASHIFT, SHIFT_LSHIFTRT, SHIFT_ASHIFTRT
-  };
+{
+  SHIFT_ASHIFT, SHIFT_LSHIFTRT, SHIFT_ASHIFTRT
+};
 
 /* Symbols of the various modes which can be used as indices.  */
 
 enum shift_mode
-  {
-    QIshift, HIshift, SIshift
-  };
+{
+  QIshift, HIshift, SIshift
+};
 
 /* For single bit shift insns, record assembler and what bits of the
    condition code are valid afterwards (represented as various CC_FOO
@@ -1906,15 +1823,14 @@ enum shift_mode
 
 struct shift_insn
 {
-  char *assembler;
+  const char *assembler;
   int cc_valid;
 };
 
 /* Assembler instruction shift table.
 
    These tables are used to look up the basic shifts.
-   They are indexed by cpu, shift_type, and mode.
-*/
+   They are indexed by cpu, shift_type, and mode.  */
 
 static const struct shift_insn shift_one[2][3][3] =
 {
@@ -2056,10 +1972,37 @@ static const char *const rotate_two[3][3] =
     }
 };
 
-/* Given CPU, MODE, SHIFT_TYPE, and shift count COUNT, determine the best
-   algorithm for doing the shift.  The assembler code is stored in ASSEMBLER.
-   We don't achieve maximum efficiency in all cases, but the hooks are here
-   to do so.
+struct shift_info {
+  /* Shift algorithm.  */
+  enum shift_alg alg;
+
+  /* The number of bits to be shifted by shift1 and shift2.  Valid
+     when ALG is SHIFT_SPECIAL.  */
+  unsigned int remainder;
+
+  /* Special insn for a shift.  Valid when ALG is SHIFT_SPECIAL.  */
+  const char *special;
+
+  /* Insn for a one-bit shift.  Valid when ALG is either SHIFT_INLINE
+     or SHIFT_SPECIAL, and REMAINDER is non-zero.  */
+  const char *shift1;
+
+  /* Insn for a two-bit shift.  Valid when ALG is either SHIFT_INLINE
+     or SHIFT_SPECIAL, and REMAINDER is non-zero.  */
+  const char *shift2;
+
+  /* Valid CC flags.  */
+  int cc_valid_p;
+};
+
+static enum shift_alg get_shift_alg PARAMS ((enum shift_type,
+					     enum shift_mode, int,
+					     struct shift_info *));
+
+/* Given SHIFT_TYPE, SHIFT_MODE, and shift count COUNT, determine the
+   best algorithm for doing the shift.  The assembler code is stored
+   in the pointers in INFO.  We don't achieve maximum efficiency in
+   all cases, but the hooks are here to do so.
 
    For now we just use lots of switch statements.  Since we don't even come
    close to supporting all the cases, this is simplest.  If this function ever
@@ -2070,49 +2013,20 @@ static const char *const rotate_two[3][3] =
    1,2,3,4 will be inlined (1,2 for SI).  */
 
 static enum shift_alg
-get_shift_alg (cpu, shift_type, mode, count, assembler_p,
-	       assembler2_p, cc_valid_p)
-     enum attr_cpu cpu;
+get_shift_alg (shift_type, shift_mode, count, info)
      enum shift_type shift_type;
-     enum machine_mode mode;
+     enum shift_mode shift_mode;
      int count;
-     const char **assembler_p;
-     const char **assembler2_p;
-     int *cc_valid_p;
+     struct shift_info *info;
 {
-  /* The default is to loop.  */
-  enum shift_alg alg = SHIFT_LOOP;
-  enum shift_mode shift_mode;
-
-  /* We don't handle negative shifts or shifts greater than the word size,
-     they should have been handled already.  */
-
-  if (count < 0 || count > GET_MODE_BITSIZE (mode))
-    abort ();
-
-  switch (mode)
-    {
-    case QImode:
-      shift_mode = QIshift;
-      break;
-    case HImode:
-      shift_mode = HIshift;
-      break;
-    case SImode:
-      shift_mode = SIshift;
-      break;
-    default:
-      abort ();
-    }
-
   /* Assume either SHIFT_LOOP or SHIFT_INLINE.
      It is up to the caller to know that looping clobbers cc.  */
-  *assembler_p = shift_one[cpu][shift_type][shift_mode].assembler;
+  info->shift1 = shift_one[cpu_type][shift_type][shift_mode].assembler;
   if (TARGET_H8300S)
-    *assembler2_p = shift_two[shift_type][shift_mode].assembler;
+    info->shift2 = shift_two[shift_type][shift_mode].assembler;
   else
-    *assembler2_p = NULL;
-  *cc_valid_p = shift_one[cpu][shift_type][shift_mode].cc_valid;
+    info->shift2 = NULL;
+  info->cc_valid_p = shift_one[cpu_type][shift_type][shift_mode].cc_valid;
 
   /* Now look for cases we want to optimize.  */
 
@@ -2132,8 +2046,8 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	     through the entire value.  */
 	  if (shift_type == SHIFT_ASHIFTRT && count == 7)
 	    {
-	      *assembler_p = "shll\t%X0\n\tsubx\t%X0,%X0";
-	      *cc_valid_p = 0;
+	      info->special = "shll\t%X0\n\tsubx\t%X0,%X0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 
@@ -2142,10 +2056,10 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	    return SHIFT_LOOP;
 
 	  /* Other shifts by 5, 6, or 7 bits use SHIFT_ROT_AND.  */
-	  *assembler_p = rotate_one[cpu][shift_type][shift_mode];
+	  info->shift1 = rotate_one[cpu_type][shift_type][shift_mode];
 	  if (TARGET_H8300S)
-	    *assembler2_p = rotate_two[shift_type][shift_mode];
-	  *cc_valid_p = 0;
+	    info->shift2 = rotate_two[shift_type][shift_mode];
+	  info->cc_valid_p = 0;
 	  return SHIFT_ROT_AND;
 	}
 
@@ -2158,36 +2072,36 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	{
 	  if (shift_type == SHIFT_ASHIFT && TARGET_H8300)
 	    {
-	      *assembler_p = "shar.b\t%t0\n\tmov.b\t%s0,%t0\n\trotxr.b\t%t0\n\trotr.b\t%s0\n\tand.b\t#0x80,%s0";
-	      *cc_valid_p = 0;
+	      info->special = "shar.b\t%t0\n\tmov.b\t%s0,%t0\n\trotxr.b\t%t0\n\trotr.b\t%s0\n\tand.b\t#0x80,%s0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 
 	  if (shift_type == SHIFT_ASHIFT && TARGET_H8300H)
 	    {
-	      *assembler_p = "shar.b\t%t0\n\tmov.b\t%s0,%t0\n\trotxr.w\t%T0\n\tand.b\t#0x80,%s0";
-	      *cc_valid_p = 0;
+	      info->special = "shar.b\t%t0\n\tmov.b\t%s0,%t0\n\trotxr.w\t%T0\n\tand.b\t#0x80,%s0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 
 	  if (shift_type == SHIFT_LSHIFTRT && TARGET_H8300)
 	    {
-	      *assembler_p = "shal.b\t%s0\n\tmov.b\t%t0,%s0\n\trotxl.b\t%s0\n\trotl.b\t%t0\n\tand.b\t#0x01,%t0";
-	      *cc_valid_p = 0;
+	      info->special = "shal.b\t%s0\n\tmov.b\t%t0,%s0\n\trotxl.b\t%s0\n\trotl.b\t%t0\n\tand.b\t#0x01,%t0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 
 	  if (shift_type == SHIFT_LSHIFTRT && TARGET_H8300H)
 	    {
-	      *assembler_p = "shal.b\t%s0\n\tmov.b\t%t0,%s0\n\trotxl.w\t%T0\n\tand.b\t#0x01,%t0";
-	      *cc_valid_p = 0;
+	      info->special = "shal.b\t%s0\n\tmov.b\t%t0,%s0\n\trotxl.w\t%T0\n\tand.b\t#0x01,%t0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 
 	  if (shift_type == SHIFT_ASHIFTRT)
 	    {
-	      *assembler_p = "shal.b\t%s0\n\tmov.b\t%t0,%s0\n\trotxl.b\t%s0\n\tsubx\t%t0,%t0";
-	      *cc_valid_p = 0;
+	      info->special = "shal.b\t%s0\n\tmov.b\t%t0,%s0\n\trotxl.b\t%s0\n\tsubx\t%t0,%t0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 	}
@@ -2196,19 +2110,19 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	  switch (shift_type)
 	    {
 	    case SHIFT_ASHIFT:
-	      *assembler_p = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_LSHIFTRT:
-	      *assembler_p = "mov.b\t%t0,%s0\n\tsub.b\t%t0,%t0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.b\t%t0,%s0\n\tsub.b\t%t0,%t0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_ASHIFTRT:
 	      if (TARGET_H8300)
-		*assembler_p = "mov.b\t%t0,%s0\n\tshll\t%t0\n\tsubx\t%t0,%t0\t";
+		info->special = "mov.b\t%t0,%s0\n\tshll\t%t0\n\tsubx\t%t0,%t0";
 	      else
-		*assembler_p = "mov.b\t%t0,%s0\n\texts.w\t%T0";
-	      *cc_valid_p = 0;
+		info->special = "mov.b\t%t0,%s0\n\texts.w\t%T0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 	}
@@ -2217,19 +2131,19 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	  switch (shift_type)
 	    {
 	    case SHIFT_ASHIFT:
-	      *assembler_p = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tshal.b\t%t0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tshal.b\t%t0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_LSHIFTRT:
-	      *assembler_p = "mov.b\t%t0,%s0\n\tsub.b\t%t0,%t0\n\tshlr.b\t%s0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.b\t%t0,%s0\n\tsub.b\t%t0,%t0\n\tshlr.b\t%s0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_ASHIFTRT:
 	      if (TARGET_H8300)
-		*assembler_p = "mov.b\t%t0,%s0\n\tbld\t#7,%s0\n\tsubx\t%t0,%t0\n\tshar.b\t%s0";
+		info->special = "mov.b\t%t0,%s0\n\tbld\t#7,%s0\n\tsubx\t%t0,%t0\n\tshar.b\t%s0";
 	      else
-		*assembler_p = "mov.b\t%t0,%s0\n\texts.w\t%T0\n\tshar.b\t%s0";
-	      *cc_valid_p = 0;
+		info->special = "mov.b\t%t0,%s0\n\texts.w\t%T0\n\tshar.b\t%s0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 	}
@@ -2239,26 +2153,26 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	    {
 	    case SHIFT_ASHIFT:
 	      if (TARGET_H8300S)
-		*assembler_p = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tshal.b\t#2,%t0\n\t";
+		info->special = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tshal.b\t#2,%t0";
 	      else
-		*assembler_p = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tshal.b\t%t0\n\tshal.b\t%t0";
-	      *cc_valid_p = 0;
+		info->special = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tshal.b\t%t0\n\tshal.b\t%t0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_LSHIFTRT:
 	      if (TARGET_H8300S)
-		*assembler_p = "mov.b\t%t0,%s0\n\tsub.b\t%t0,%t0\n\tshlr.b\t#2,%s0";
+		info->special = "mov.b\t%t0,%s0\n\tsub.b\t%t0,%t0\n\tshlr.b\t#2,%s0";
 	      else
-		*assembler_p = "mov.b\t%t0,%s0\n\tsub.b\t%t0,%t0\n\tshlr.b\t%s0\n\tshlr.b\t%s0";
-	      *cc_valid_p = 0;
+		info->special = "mov.b\t%t0,%s0\n\tsub.b\t%t0,%t0\n\tshlr.b\t%s0\n\tshlr.b\t%s0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_ASHIFTRT:
 	      if (TARGET_H8300)
-		*assembler_p = "mov.b\t%t0,%s0\n\tbld\t#7,%s0\n\tsubx\t%t0,%t0\n\tshar.b\t%s0\n\tshar.b\t%s0";
+		info->special = "mov.b\t%t0,%s0\n\tbld\t#7,%s0\n\tsubx\t%t0,%t0\n\tshar.b\t%s0\n\tshar.b\t%s0";
 	      else if (TARGET_H8300H)
-		*assembler_p = "mov.b\t%t0,%s0\n\texts.w\t%T0\n\tshar.b\t%s0\n\tshar.b\t%s0";
+		info->special = "mov.b\t%t0,%s0\n\texts.w\t%T0\n\tshar.b\t%s0\n\tshar.b\t%s0";
 	      else if (TARGET_H8300S)
-		*assembler_p = "mov.b\t%t0,%s0\n\texts.w\t%T0\n\tshar.b\t#2,%s0";
-	      *cc_valid_p = 0;
+		info->special = "mov.b\t%t0,%s0\n\texts.w\t%T0\n\tshar.b\t#2,%s0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 	}
@@ -2268,26 +2182,26 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	    {
 	    case SHIFT_ASHIFT:
 	      if (TARGET_H8300S)
-		*assembler_p = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tshal.b\t#2,%t0\n\tshal.b\t%t0";
+		info->special = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tshal.b\t#2,%t0\n\tshal.b\t%t0";
 	      else
-		*assembler_p = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tshal.b\t%t0\n\tshal.b\t%t0\n\tshal.b\t%t0";
-	      *cc_valid_p = 0;
+		info->special = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tshal.b\t%t0\n\tshal.b\t%t0\n\tshal.b\t%t0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_LSHIFTRT:
 	      if (TARGET_H8300S)
-		*assembler_p = "mov.b\t%t0,%s0\n\tsub.b\t%t0,%t0\n\tshlr.b\t#2,%s0\n\tshlr.b\t%s0";
+		info->special = "mov.b\t%t0,%s0\n\tsub.b\t%t0,%t0\n\tshlr.b\t#2,%s0\n\tshlr.b\t%s0";
 	      else
-		*assembler_p = "mov.b\t%t0,%s0\n\tsub.b\t%t0,%t0\n\tshlr.b\t%s0\n\tshlr.b\t%s0\n\tshlr.b\t%s0";
-	      *cc_valid_p = 0;
+		info->special = "mov.b\t%t0,%s0\n\tsub.b\t%t0,%t0\n\tshlr.b\t%s0\n\tshlr.b\t%s0\n\tshlr.b\t%s0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_ASHIFTRT:
 	      if (TARGET_H8300)
-		*assembler_p = "mov.b\t%t0,%s0\n\tbld\t#7,%s0\n\tsubx\t%t0,%t0\n\tshar.b\t%s0\n\tshar.b\t%s0\n\tshar.b\t%s0";
+		info->special = "mov.b\t%t0,%s0\n\tbld\t#7,%s0\n\tsubx\t%t0,%t0\n\tshar.b\t%s0\n\tshar.b\t%s0\n\tshar.b\t%s0";
 	      else if (TARGET_H8300H)
-		*assembler_p = "mov.b\t%t0,%s0\n\texts.w\t%T0\n\tshar.b\t%s0\n\tshar.b\t%s0\n\tshar.b\t%s0";
+		info->special = "mov.b\t%t0,%s0\n\texts.w\t%T0\n\tshar.b\t%s0\n\tshar.b\t%s0\n\tshar.b\t%s0";
 	      else if (TARGET_H8300S)
-		*assembler_p = "mov.b\t%t0,%s0\n\texts.w\t%T0\n\tshar.b\t#2,%s0\n\tshar.b\t%s0";
-	      *cc_valid_p = 0;
+		info->special = "mov.b\t%t0,%s0\n\texts.w\t%T0\n\tshar.b\t#2,%s0\n\tshar.b\t%s0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 	}
@@ -2297,46 +2211,46 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	    {
 	    case SHIFT_ASHIFT:
 	      if (TARGET_H8300S)
-		*assembler_p = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tshal.b\t#2,%t0\n\tshal.b\t#2,%t0";
+		info->special = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tshal.b\t#2,%t0\n\tshal.b\t#2,%t0";
 	      else
-		*assembler_p = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tshal.b\t%t0\n\tshal.b\t%t0\n\tshal.b\t%t0\n\tshal.b\t%t0";
-	      *cc_valid_p = 0;
+		info->special = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tshal.b\t%t0\n\tshal.b\t%t0\n\tshal.b\t%t0\n\tshal.b\t%t0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_LSHIFTRT:
 	      if (TARGET_H8300S)
-		*assembler_p = "mov.b\t%t0,%s0\n\tsub.b\t%t0,%t0\n\tshlr.b\t#2,%s0\n\tshlr.b\t#2,%s0";
+		info->special = "mov.b\t%t0,%s0\n\tsub.b\t%t0,%t0\n\tshlr.b\t#2,%s0\n\tshlr.b\t#2,%s0";
 	      else
-		*assembler_p = "mov.b\t%t0,%s0\n\tsub.b\t%t0,%t0\n\tshlr.b\t%s0\n\tshlr.b\t%s0\n\tshlr.b\t%s0\n\tshlr.b\t%s0";
-	      *cc_valid_p = 0;
+		info->special = "mov.b\t%t0,%s0\n\tsub.b\t%t0,%t0\n\tshlr.b\t%s0\n\tshlr.b\t%s0\n\tshlr.b\t%s0\n\tshlr.b\t%s0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_ASHIFTRT:
 	      if (TARGET_H8300)
-		*assembler_p = "mov.b\t%t0,%s0\n\tbld\t#7,%s0\n\tsubx\t%t0,%t0\n\tshar.b\t%s0\n\tshar.b\t%s0\n\tshar.b\t%s0\n\tshar.b\t%s0";
+		info->special = "mov.b\t%t0,%s0\n\tbld\t#7,%s0\n\tsubx\t%t0,%t0\n\tshar.b\t%s0\n\tshar.b\t%s0\n\tshar.b\t%s0\n\tshar.b\t%s0";
 	      else if (TARGET_H8300H)
-		*assembler_p = "mov.b\t%t0,%s0\n\texts.w\t%T0\n\tshar.b\t%s0\n\tshar.b\t%s0\n\tshar.b\t%s0\n\tshar.b\t%s0";
+		info->special = "mov.b\t%t0,%s0\n\texts.w\t%T0\n\tshar.b\t%s0\n\tshar.b\t%s0\n\tshar.b\t%s0\n\tshar.b\t%s0";
 	      else if (TARGET_H8300S)
-		*assembler_p = "mov.b\t%t0,%s0\n\texts.w\t%T0\n\tshar.b\t#2,%s0\n\tshar.b\t#2,%s0";
-	      *cc_valid_p = 0;
+		info->special = "mov.b\t%t0,%s0\n\texts.w\t%T0\n\tshar.b\t#2,%s0\n\tshar.b\t#2,%s0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 	}
-      else if (!TARGET_H8300 && (count == 13 || count == 14)
+      else if ((!TARGET_H8300 && (count == 13 || count == 14))
 	       || count == 15)
 	{
 	  if (count == 15 && shift_type == SHIFT_ASHIFTRT)
 	    {
-	      *assembler_p = "shll\t%t0,%t0\n\tsubx\t%t0,%t0\n\tmov.b\t%t0,%s0";
-	      *cc_valid_p = 0;
+	      info->special = "shll\t%t0\n\tsubx\t%t0,%t0\n\tmov.b\t%t0,%s0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 	  else if (shift_type != SHIFT_ASHIFTRT)
 	    {
-	      *assembler_p = rotate_one[cpu][shift_type][shift_mode];
+	      info->shift1 = rotate_one[cpu_type][shift_type][shift_mode];
 	      if (TARGET_H8300S)
-	        *assembler2_p = rotate_two[shift_type][shift_mode];
+	        info->shift2 = rotate_two[shift_type][shift_mode];
 	      else
-		*assembler2_p = NULL;
-	      *cc_valid_p = 0;
+		info->shift2 = NULL;
+	      info->cc_valid_p = 0;
 	      return SHIFT_ROT_AND;
 	    }
 	}
@@ -2352,16 +2266,16 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	  switch (shift_type)
 	    {
 	    case SHIFT_ASHIFT:
-	      *assembler_p = "mov.b\t%y0,%z0\n\tmov.b\t%x0,%y0\n\tmov.b\t%w0,%x0\n\tsub.b\t%w0,%w0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.b\t%y0,%z0\n\tmov.b\t%x0,%y0\n\tmov.b\t%w0,%x0\n\tsub.b\t%w0,%w0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_LSHIFTRT:
-	      *assembler_p = "mov.b\t%x0,%w0\n\tmov.b\t%y0,%x0\n\tmov.b\t%z0,%y0\n\tsub.b\t%z0,%z0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.b\t%x0,%w0\n\tmov.b\t%y0,%x0\n\tmov.b\t%z0,%y0\n\tsub.b\t%z0,%z0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_ASHIFTRT:
-	      *assembler_p = "mov.b\t%x0,%w0\n\tmov.b\t%y0,%x0\n\tmov.b\t%z0,%y0\n\tshll\t%z0\n\tsubx\t%z0,%z0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.b\t%x0,%w0\n\tmov.b\t%y0,%x0\n\tmov.b\t%z0,%y0\n\tshll\t%z0\n\tsubx\t%z0,%z0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 	}
@@ -2370,16 +2284,16 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	  switch (shift_type)
 	    {
 	    case SHIFT_ASHIFT:
-	      *assembler_p = "mov.w\t%e0,%f4\n\tmov.b\t%s4,%t4\n\tmov.b\t%t0,%s4\n\tmov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tmov.w\t%f4,%e0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.w\t%e0,%f4\n\tmov.b\t%s4,%t4\n\tmov.b\t%t0,%s4\n\tmov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tmov.w\t%f4,%e0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_LSHIFTRT:
-	      *assembler_p = "mov.w\t%e0,%f4\n\tmov.b\t%t0,%s0\n\tmov.b\t%s4,%t0\n\tmov.b\t%t4,%s4\n\textu.w\t%f4\n\tmov.w\t%f4,%e0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.w\t%e0,%f4\n\tmov.b\t%t0,%s0\n\tmov.b\t%s4,%t0\n\tmov.b\t%t4,%s4\n\textu.w\t%f4\n\tmov.w\t%f4,%e0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_ASHIFTRT:
-	      *assembler_p = "mov.w\t%e0,%f4\n\tmov.b\t%t0,%s0\n\tmov.b\t%s4,%t0\n\tmov.b\t%t4,%s4\n\texts.w\t%f4\n\tmov.w\t%f4,%e0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.w\t%e0,%f4\n\tmov.b\t%t0,%s0\n\tmov.b\t%s4,%t0\n\tmov.b\t%t4,%s4\n\texts.w\t%f4\n\tmov.w\t%f4,%e0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 	}
@@ -2388,19 +2302,19 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	  switch (shift_type)
 	    {
 	    case SHIFT_ASHIFT:
-	      *assembler_p = "mov.w\t%f0,%e0\n\tsub.w\t%f0,%f0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.w\t%f0,%e0\n\tsub.w\t%f0,%f0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_LSHIFTRT:
-	      *assembler_p = "mov.w\t%e0,%f0\n\tsub.w\t%e0,%e0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.w\t%e0,%f0\n\tsub.w\t%e0,%e0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_ASHIFTRT:
 	      if (TARGET_H8300)
-		*assembler_p = "mov.w\t%e0,%f0\n\tshll\t%z0\n\tsubx\t%z0,%z0\n\tmov.b\t%z0,%y0";
+		info->special = "mov.w\t%e0,%f0\n\tshll\t%z0\n\tsubx\t%z0,%z0\n\tmov.b\t%z0,%y0";
 	      else
-		*assembler_p = "mov.w\t%e0,%f0\n\texts.l\t%S0";
-	      *cc_valid_p = 0;
+		info->special = "mov.w\t%e0,%f0\n\texts.l\t%S0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 	}
@@ -2409,16 +2323,16 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	  switch (shift_type)
 	    {
 	    case SHIFT_ASHIFT:
-	      *assembler_p = "mov.w\t%f0,%e0\n\tsub.w\t%f0,%f0\n\tshll.l\t%S0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.w\t%f0,%e0\n\tsub.w\t%f0,%f0\n\tshll.l\t%S0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_LSHIFTRT:
-	      *assembler_p = "mov.w\t%e0,%f0\n\tsub.w\t%e0,%e0\n\tshlr.l\t%S0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.w\t%e0,%f0\n\tsub.w\t%e0,%e0\n\tshlr.l\t%S0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_ASHIFTRT:
-	      *assembler_p = "mov.w\t%e0,%f0\n\texts.l\t%S0\n\tshar.l\t%S0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.w\t%e0,%f0\n\texts.l\t%S0\n\tshar.l\t%S0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 	}
@@ -2428,24 +2342,24 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	    {
 	    case SHIFT_ASHIFT:
 	      if (TARGET_H8300S)
-		*assembler_p = "mov.w\t%f0,%e0\n\tsub.w\t%f0,%f0\n\tshll.l\t#2,%S0";
+		info->special = "mov.w\t%f0,%e0\n\tsub.w\t%f0,%f0\n\tshll.l\t#2,%S0";
 	      else
-		*assembler_p = "mov.w\t%f0,%e0\n\tsub.w\t%f0,%f0\n\tshll.l\t%S0\n\tshll.l\t%S0";
-	      *cc_valid_p = 0;
+		info->special = "mov.w\t%f0,%e0\n\tsub.w\t%f0,%f0\n\tshll.l\t%S0\n\tshll.l\t%S0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_LSHIFTRT:
 	      if (TARGET_H8300S)
-		*assembler_p = "mov.w\t%e0,%f0\n\tsub.w\t%e0,%e0\n\tshlr.l\t#2,%S0";
+		info->special = "mov.w\t%e0,%f0\n\tsub.w\t%e0,%e0\n\tshlr.l\t#2,%S0";
 	      else
-		*assembler_p = "mov.w\t%e0,%f0\n\tsub.w\t%e0,%e0\n\tshlr.l\t%S0\n\tshlr.l\t%S0";
-	      *cc_valid_p = 0;
+		info->special = "mov.w\t%e0,%f0\n\tsub.w\t%e0,%e0\n\tshlr.l\t%S0\n\tshlr.l\t%S0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_ASHIFTRT:
 	      if (TARGET_H8300S)
-		*assembler_p = "mov.w\t%e0,%f0\n\texts.l\t%S0\n\tshar.l\t#2,%S0";
+		info->special = "mov.w\t%e0,%f0\n\texts.l\t%S0\n\tshar.l\t#2,%S0";
 	      else
-		*assembler_p = "mov.w\t%e0,%f0\n\texts.l\t%S0\n\tshar.l\t%S0\n\tshar.l\t%S0";
-	      *cc_valid_p = 0;
+		info->special = "mov.w\t%e0,%f0\n\texts.l\t%S0\n\tshar.l\t%S0\n\tshar.l\t%S0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 	}
@@ -2455,24 +2369,24 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	    {
 	    case SHIFT_ASHIFT:
 	      if (TARGET_H8300S)
-		*assembler_p = "mov.w\t%f0,%e0\n\tsub.w\t%f0,%f0\n\tshll.l\t#2,%S0\n\tshll.l\t%S0";
+		info->special = "mov.w\t%f0,%e0\n\tsub.w\t%f0,%f0\n\tshll.l\t#2,%S0\n\tshll.l\t%S0";
 	      else
-		*assembler_p = "mov.w\t%f0,%e0\n\tsub.w\t%f0,%f0\n\tshll.l\t%S0\n\tshll.l\t%S0\n\tshll.l\t%S0";
-	      *cc_valid_p = 0;
+		info->special = "mov.w\t%f0,%e0\n\tsub.w\t%f0,%f0\n\tshll.l\t%S0\n\tshll.l\t%S0\n\tshll.l\t%S0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_LSHIFTRT:
 	      if (TARGET_H8300S)
-		*assembler_p = "mov.w\t%e0,%f0\n\tsub.w\t%e0,%e0\n\tshlr.l\t#2,%S0\n\tshlr.l\t%S0";
+		info->special = "mov.w\t%e0,%f0\n\tsub.w\t%e0,%e0\n\tshlr.l\t#2,%S0\n\tshlr.l\t%S0";
 	      else
-		*assembler_p = "mov.w\t%e0,%f0\n\tsub.w\t%e0,%e0\n\tshlr.l\t%S0\n\tshlr.l\t%S0\n\tshlr.l\t%S0";
-	      *cc_valid_p = 0;
+		info->special = "mov.w\t%e0,%f0\n\tsub.w\t%e0,%e0\n\tshlr.l\t%S0\n\tshlr.l\t%S0\n\tshlr.l\t%S0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_ASHIFTRT:
 	      if (TARGET_H8300S)
-		*assembler_p = "mov.w\t%e0,%f0\n\texts.l\t%S0\n\tshar.l\t#2,%S0\n\tshar.l\t%S0";
+		info->special = "mov.w\t%e0,%f0\n\texts.l\t%S0\n\tshar.l\t#2,%S0\n\tshar.l\t%S0";
 	      else
-		*assembler_p = "mov.w\t%e0,%f0\n\texts.l\t%S0\n\tshar.l\t%S0\n\tshar.l\t%S0\n\tshar.l\t%S0";
-	      *cc_valid_p = 0;
+		info->special = "mov.w\t%e0,%f0\n\texts.l\t%S0\n\tshar.l\t%S0\n\tshar.l\t%S0\n\tshar.l\t%S0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 	}
@@ -2481,16 +2395,16 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	  switch (shift_type)
 	    {
 	    case SHIFT_ASHIFT:
-	      *assembler_p = "mov.w\t%f0,%e0\n\tsub.w\t%f0,%f0\n\tshll.l\t#2,%S0\n\tshll.l\t#2,%S0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.w\t%f0,%e0\n\tsub.w\t%f0,%f0\n\tshll.l\t#2,%S0\n\tshll.l\t#2,%S0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_LSHIFTRT:
-	      *assembler_p = "mov.w\t%e0,%f0\n\tsub.w\t%e0,%e0\n\tshlr.l\t#2,%S0\n\tshlr.l\t#2,%S0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.w\t%e0,%f0\n\tsub.w\t%e0,%e0\n\tshlr.l\t#2,%S0\n\tshlr.l\t#2,%S0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_ASHIFTRT:
-	      *assembler_p = "mov.w\t%e0,%f0\n\texts.l\t%S0\n\tshar.l\t#2,%S0\n\tshar.l\t#2,%S0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.w\t%e0,%f0\n\texts.l\t%S0\n\tshar.l\t#2,%S0\n\tshar.l\t#2,%S0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 	}
@@ -2499,16 +2413,16 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	  switch (shift_type)
 	    {
 	    case SHIFT_ASHIFT:
-	      *assembler_p = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tmov.w\t%f0,%e0\n\tsub.w\t%f0,%f0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.b\t%s0,%t0\n\tsub.b\t%s0,%s0\n\tmov.w\t%f0,%e0\n\tsub.w\t%f0,%f0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_LSHIFTRT:
-	      *assembler_p = "mov.w\t%e0,%f0\n\tmov.b\t%t0,%s0\n\textu.w\t%f0\n\textu.l\t%S0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.w\t%e0,%f0\n\tmov.b\t%t0,%s0\n\textu.w\t%f0\n\textu.l\t%S0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    case SHIFT_ASHIFTRT:
-	      *assembler_p = "mov.w\t%e0,%f0\n\tmov.b\t%t0,%s0\n\texts.w\t%f0\n\texts.l\t%S0";
-	      *cc_valid_p = 0;
+	      info->special = "mov.w\t%e0,%f0\n\tmov.b\t%t0,%s0\n\texts.w\t%f0\n\texts.l\t%S0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 	}
@@ -2520,12 +2434,12 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	    }
 	  else
 	    {
-	      *assembler_p = rotate_one[cpu][shift_type][shift_mode];
+	      info->shift1 = rotate_one[cpu_type][shift_type][shift_mode];
 	      if (TARGET_H8300S)
-	        *assembler2_p = rotate_two[shift_type][shift_mode];
+		info->shift2 = rotate_two[shift_type][shift_mode];
 	      else
-		*assembler2_p = NULL;
-	      *cc_valid_p = 0;
+		info->shift2 = NULL;
+	      info->cc_valid_p = 0;
 	      return SHIFT_ROT_AND;
 	    }
 	}
@@ -2534,10 +2448,10 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	  if (shift_type == SHIFT_ASHIFTRT)
 	    {
 	      if (TARGET_H8300)
-		*assembler_p = "shll\t%z0\n\tsubx %w0,%w0\n\tmov.b\t%w0,%x0\n\tmov.w\t%f0,%e0";
+		info->special = "shll\t%z0\n\tsubx\t%w0,%w0\n\tmov.b\t%w0,%x0\n\tmov.w\t%f0,%e0";
 	      else
-		*assembler_p = "shll\t%e0\n\tsubx\t%w0,%w0\n\tmov.b\t%w0,%x0\n\tmov.w\t%f0,%e0";
-	      *cc_valid_p = 0;
+		info->special = "shll\t%e0\n\tsubx\t%w0,%w0\n\tmov.b\t%w0,%x0\n\tmov.w\t%f0,%e0";
+	      info->cc_valid_p = 0;
 	      return SHIFT_SPECIAL;
 	    }
 	  else
@@ -2545,20 +2459,20 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
 	      if (TARGET_H8300)
 		{
 		  if (shift_type == SHIFT_ASHIFT)
-		    *assembler_p = "sub.w\t%e0,%e0\n\tshlr\t%w0\n\tmov.w\t%e0,%f0\n\trotxr\t%z0";
+		    info->special = "sub.w\t%e0,%e0\n\tshlr\t%w0\n\tmov.w\t%e0,%f0\n\trotxr\t%z0";
 		  else
-		    *assembler_p = "sub.w\t%f0,%f0\n\tshll\t%z0\n\tmov.w\t%f0,%e0\n\trotxl\t%w0";
-		  *cc_valid_p = 0;
+		    info->special = "sub.w\t%f0,%f0\n\tshll\t%z0\n\tmov.w\t%f0,%e0\n\trotxl\t%w0";
+		  info->cc_valid_p = 0;
 		  return SHIFT_SPECIAL;
 		}
 	      else
 		{
-		  *assembler_p = rotate_one[cpu][shift_type][shift_mode];
-	      if (TARGET_H8300S)
-	        *assembler2_p = rotate_two[shift_type][shift_mode];
-	      else
-		*assembler2_p = NULL;
-		  *cc_valid_p = 0;
+		  info->shift1 = rotate_one[cpu_type][shift_type][shift_mode];
+		  if (TARGET_H8300S)
+		    info->shift2 = rotate_two[shift_type][shift_mode];
+		  else
+		    info->shift2 = NULL;
+		  info->cc_valid_p = 0;
 		  return SHIFT_ROT_AND;
 		}
 	    }
@@ -2569,26 +2483,24 @@ get_shift_alg (cpu, shift_type, mode, count, assembler_p,
       abort ();
     }
 
-  return alg;
+  /* No fancy method is available.  Just loop.  */
+  return SHIFT_LOOP;
 }
 
 /* Emit the assembler code for doing shifts.  */
 
-char *
+const char *
 emit_a_shift (insn, operands)
-     rtx insn;
+     rtx insn ATTRIBUTE_UNUSED;
      rtx *operands;
 {
   static int loopend_lab;
-  char *assembler;
-  char *assembler2;
-  int cc_valid;
-  rtx inside = PATTERN (insn);
   rtx shift = operands[3];
   enum machine_mode mode = GET_MODE (shift);
   enum rtx_code code = GET_CODE (shift);
   enum shift_type shift_type;
   enum shift_mode shift_mode;
+  struct shift_info info;
 
   loopend_lab++;
 
@@ -2624,13 +2536,20 @@ emit_a_shift (insn, operands)
 
   if (GET_CODE (operands[2]) != CONST_INT)
     {
-      /* Indexing by reg, so have to loop and test at top */
+      /* Indexing by reg, so have to loop and test at top.  */
       output_asm_insn ("mov.b	%X2,%X4", operands);
       fprintf (asm_out_file, "\tble	.Lle%d\n", loopend_lab);
 
       /* Get the assembler code to do one shift.  */
-      get_shift_alg (cpu_type, shift_type, mode, 1, &assembler,
-		     &assembler2, &cc_valid);
+      get_shift_alg (shift_type, shift_mode, 1, &info);
+
+      fprintf (asm_out_file, ".Llt%d:\n", loopend_lab);
+      output_asm_insn (info.shift1, operands);
+      output_asm_insn ("add	#0xff,%X4", operands);
+      fprintf (asm_out_file, "\tbne	.Llt%d\n", loopend_lab);
+      fprintf (asm_out_file, ".Lle%d:\n", loopend_lab);
+
+      return "";
     }
   else
     {
@@ -2643,34 +2562,33 @@ emit_a_shift (insn, operands)
       /* If the count is too big, truncate it.
          ANSI says shifts of GET_MODE_BITSIZE are undefined - we choose to
 	 do the intuitive thing.  */
-      else if (n > GET_MODE_BITSIZE (mode))
+      else if ((unsigned int) n > GET_MODE_BITSIZE (mode))
 	n = GET_MODE_BITSIZE (mode);
 
-      alg = get_shift_alg (cpu_type, shift_type, mode, n, &assembler,
-			   &assembler2, &cc_valid);
+      alg = get_shift_alg (shift_type, shift_mode, n, &info);
 
       switch (alg)
 	{
 	case SHIFT_INLINE:
 	  /* Emit two bit shifts first.  */
-	  while (n > 1 && assembler2 != NULL)
+	  while (n > 1 && info.shift2 != NULL)
 	    {
-	      output_asm_insn (assembler2, operands);
+	      output_asm_insn (info.shift2, operands);
 	      n -= 2;
 	    }
 
 	  /* Now emit one bit shifts for any residual.  */
 	  while (n > 0)
 	    {
-	      output_asm_insn (assembler, operands);
+	      output_asm_insn (info.shift1, operands);
 	      n -= 1;
 	    }
 
 	  /* Keep track of CC.  */
-	  if (cc_valid)
+	  if (info.cc_valid_p)
 	    {
 	      cc_status.value1 = operands[0];
-	      cc_status.flags |= cc_valid;
+	      cc_status.flags |= info.cc_valid_p;
 	    }
 	  return "";
 
@@ -2678,25 +2596,26 @@ emit_a_shift (insn, operands)
 	  {
 	    int m = GET_MODE_BITSIZE (mode) - n;
 	    int mask = (shift_type == SHIFT_ASHIFT
-			? ((1 << GET_MODE_BITSIZE (mode) - n) - 1) << n
-			: (1 << GET_MODE_BITSIZE (mode) - n) - 1);
+			? ((1 << (GET_MODE_BITSIZE (mode) - n)) - 1) << n
+			: (1 << (GET_MODE_BITSIZE (mode) - n)) - 1);
 	    char insn_buf[200];
+
 	    /* Not all possibilities of rotate are supported.  They shouldn't
 	       be generated, but let's watch for 'em.  */
-	    if (assembler == 0)
+	    if (info.shift1 == 0)
 	      abort ();
 
 	    /* Emit two bit rotates first.  */
-	    while (m > 1 && assembler2 != NULL)
+	    while (m > 1 && info.shift2 != NULL)
 	      {
-		output_asm_insn (assembler2, operands);
+		output_asm_insn (info.shift2, operands);
 		m -= 2;
 	      }
 
 	    /* Now single bit rotates for any residual.  */
 	    while (m > 0)
 	      {
-		output_asm_insn (assembler, operands);
+		output_asm_insn (info.shift1, operands);
 		m -= 1;
 	      }
 
@@ -2706,22 +2625,23 @@ emit_a_shift (insn, operands)
 		switch (mode)
 		  {
 		  case QImode:
-		    sprintf (insn_buf, "and #%d,%%X0",
-			     mask, n);
+		    sprintf (insn_buf, "and\t#%d,%%X0", mask);
 		    cc_status.value1 = operands[0];
 		    cc_status.flags |= CC_NO_CARRY;
 		    break;
 		  case HImode:
-		    sprintf (insn_buf, "and #%d,%%s0\n\tand #%d,%%t0",
-			     mask & 255, mask >> 8, n);
+		    sprintf (insn_buf, "and\t#%d,%%s0\n\tand\t#%d,%%t0",
+			     mask & 255, mask >> 8);
 		    break;
 		  case SImode:
 		    abort ();
+		  default:
+		    break;
 		  }
 	      }
 	    else
 	      {
-		sprintf (insn_buf, "and.%c #%d,%%%c0",
+		sprintf (insn_buf, "and.%c\t#%d,%%%c0",
 			 "bwl"[shift_mode], mask,
 			 mode == QImode ? 'X' : mode == HImode ? 'T' : 'S');
 		cc_status.value1 = operands[0];
@@ -2730,53 +2650,220 @@ emit_a_shift (insn, operands)
 	    output_asm_insn (insn_buf, operands);
 	    return "";
 	  }
-	case SHIFT_SPECIAL:
-	  output_asm_insn (assembler, operands);
-	  return "";
-	}
 
-      /* A loop to shift by a "large" constant value.
-	 If we have shift-by-2 insns, use them.  */
-      if (assembler2 != NULL)
-	{
-	  fprintf (asm_out_file, "\tmov.b	#%d,%sl\n", n / 2,
-		   names_big[REGNO (operands[4])]);
-	  fprintf (asm_out_file, ".Llt%d:\n", loopend_lab);
-	  output_asm_insn (assembler2, operands);
-	  output_asm_insn ("add	#0xff,%X4", operands);
-	  fprintf (asm_out_file, "\tbne	.Llt%d\n", loopend_lab);
-	  if (n % 2)
-	    output_asm_insn (assembler, operands);
+	case SHIFT_SPECIAL:
+	  output_asm_insn (info.special, operands);
 	  return "";
-	}
-      else
-	{
-	  fprintf (asm_out_file, "\tmov.b	#%d,%sl\n", n,
-		   names_big[REGNO (operands[4])]);
-	  fprintf (asm_out_file, ".Llt%d:\n", loopend_lab);
-	  output_asm_insn (assembler, operands);
-	  output_asm_insn ("add	#0xff,%X4", operands);
-	  fprintf (asm_out_file, "\tbne	.Llt%d\n", loopend_lab);
+
+	case SHIFT_LOOP:
+	  /* A loop to shift by a "large" constant value.
+	     If we have shift-by-2 insns, use them.  */
+	  if (info.shift2 != NULL)
+	    {
+	      fprintf (asm_out_file, "\tmov.b	#%d,%sl\n", n / 2,
+		       names_big[REGNO (operands[4])]);
+	      fprintf (asm_out_file, ".Llt%d:\n", loopend_lab);
+	      output_asm_insn (info.shift2, operands);
+	      output_asm_insn ("add	#0xff,%X4", operands);
+	      fprintf (asm_out_file, "\tbne	.Llt%d\n", loopend_lab);
+	      if (n % 2)
+		output_asm_insn (info.shift1, operands);
+	    }
+	  else
+	    {
+	      fprintf (asm_out_file, "\tmov.b	#%d,%sl\n", n,
+		       names_big[REGNO (operands[4])]);
+	      fprintf (asm_out_file, ".Llt%d:\n", loopend_lab);
+	      output_asm_insn (info.shift1, operands);
+	      output_asm_insn ("add	#0xff,%X4", operands);
+	      fprintf (asm_out_file, "\tbne	.Llt%d\n", loopend_lab);
+	    }
 	  return "";
+
+	default:
+	  abort ();
 	}
     }
+}
+
+/* A rotation by a non-constant will cause a loop to be generated, in
+   which a rotation by one bit is used.  A rotation by a constant,
+   including the one in the loop, will be taken care of by
+   emit_a_rotate () at the insn emit time.  */
 
-  fprintf (asm_out_file, ".Llt%d:\n", loopend_lab);
-  output_asm_insn (assembler, operands);
-  output_asm_insn ("add	#0xff,%X4", operands);
-  fprintf (asm_out_file, "\tbne	.Llt%d\n", loopend_lab);
-  fprintf (asm_out_file, ".Lle%d:\n", loopend_lab);
+int
+expand_a_rotate (code, operands)
+     int code;
+     rtx operands[];
+{
+  rtx dst = operands[0];
+  rtx src = operands[1];
+  rtx rotate_amount = operands[2];
+  enum machine_mode mode = GET_MODE (dst);
+  rtx tmp;
+
+  /* We rotate in place.  */
+  emit_move_insn (dst, src);
+
+  if (GET_CODE (rotate_amount) != CONST_INT)
+    {
+      rtx counter = gen_reg_rtx (QImode);
+      rtx start_label = gen_label_rtx ();
+      rtx end_label = gen_label_rtx ();
+
+      /* If the rotate amount is less than or equal to 0,
+	 we go out of the loop.  */
+      emit_cmp_and_jump_insns (rotate_amount, GEN_INT (0),
+			       LE, NULL_RTX, QImode, 0, 0, end_label);
+
+      /* Initialize the loop counter.  */
+      emit_move_insn (counter, rotate_amount);
+
+      emit_label (start_label);
+
+      /* Rotate by one bit.  */
+      tmp = gen_rtx (code, mode, dst, GEN_INT (1));
+      emit_insn (gen_rtx_SET (mode, dst, tmp));
+
+      /* Decrement the counter by 1.  */
+      tmp = gen_rtx_PLUS (QImode, counter, GEN_INT (-1));
+      emit_insn (gen_rtx_SET (VOIDmode, counter, tmp));
+
+      /* If the loop counter is non-zero, we go back to the beginning
+	 of the loop.  */
+      emit_cmp_and_jump_insns (counter, GEN_INT (0),
+			       NE, NULL_RTX, QImode, 1, 0, start_label);
+
+      emit_label (end_label);
+    }
+  else
+    {
+      /* Rotate by AMOUNT bits.  */
+      tmp = gen_rtx (code, mode, dst, rotate_amount);
+      emit_insn (gen_rtx_SET (mode, dst, tmp));
+    }
+
+  return 1;
+}
+
+/* Emit rotate insns.  */
+
+const char *
+emit_a_rotate (code, operands)
+     int code;
+     rtx *operands;
+{
+  rtx dst = operands[0];
+  rtx rotate_amount = operands[2];
+  enum shift_mode rotate_mode;
+  enum shift_type rotate_type;
+  const char *insn_buf;
+  int bits;
+  int amount;
+  enum machine_mode mode = GET_MODE (dst);
+
+  if (GET_CODE (rotate_amount) != CONST_INT)
+    abort ();
+
+  switch (mode)
+    {
+    case QImode:
+      rotate_mode = QIshift;
+      break;
+    case HImode:
+      rotate_mode = HIshift;
+      break;
+    case SImode:
+      rotate_mode = SIshift;
+      break;
+    default:
+      abort ();
+    }
+
+  switch (code)
+    {
+    case ROTATERT:
+      rotate_type = SHIFT_ASHIFT;
+      break;
+    case ROTATE:
+      rotate_type = SHIFT_LSHIFTRT;
+      break;
+    default:
+      abort ();
+    }
+
+  amount = INTVAL (rotate_amount);
+
+  /* Clean up AMOUNT.  */
+  if (amount < 0)
+    amount = 0;
+  if ((unsigned int) amount > GET_MODE_BITSIZE (mode))
+    amount = GET_MODE_BITSIZE (mode);
+
+  /* Determine the faster direction.  After this phase, amount will be
+     at most a half of GET_MODE_BITSIZE (mode).  */
+  if ((unsigned int) amount > GET_MODE_BITSIZE (mode) / 2)
+    {
+      /* Flip the direction.  */
+      amount = GET_MODE_BITSIZE (mode) - amount;
+      rotate_type =
+	(rotate_type == SHIFT_ASHIFT) ? SHIFT_LSHIFTRT : SHIFT_ASHIFT;
+    }
+
+  /* See if a byte swap (in HImode) or a word swap (in SImode) can
+     boost up the rotation.  */
+  if ((mode == HImode && TARGET_H8300 && amount >= 5)
+      || (mode == HImode && TARGET_H8300H && amount >= 6)
+      || (mode == HImode && TARGET_H8300S && amount == 8)
+      || (mode == SImode && TARGET_H8300H && amount >= 10)
+      || (mode == SImode && TARGET_H8300S && amount >= 13))
+    {
+      switch (mode)
+	{
+	case HImode:
+	  /* This code works on any family.  */
+	  insn_buf = "xor.b\t%s0,%t0\n\txor.b\t%t0,%s0\n\txor.b\t%s0,%t0";
+	  output_asm_insn (insn_buf, operands);
+	  break;
+
+	case SImode:
+	  /* This code works on the H8/300H and H8/S.  */
+	  insn_buf = "xor.w\t%e0,%f0\n\txor.w\t%f0,%e0\n\txor.w\t%e0,%f0";
+	  output_asm_insn (insn_buf, operands);
+	  break;
+
+	default:
+	  abort ();
+	}
+
+      /* Adjust AMOUNT and flip the direction.  */
+      amount = GET_MODE_BITSIZE (mode) / 2 - amount;
+      rotate_type =
+	(rotate_type == SHIFT_ASHIFT) ? SHIFT_LSHIFTRT : SHIFT_ASHIFT;
+    }
+
+  /* Emit rotate insns.  */
+  for (bits = TARGET_H8300S ? 2 : 1; bits > 0; bits /= 2)
+    {
+      if (bits == 2)
+	insn_buf = rotate_two[rotate_type][rotate_mode];
+      else
+	insn_buf = rotate_one[cpu_type][rotate_type][rotate_mode];
+
+      for (; amount >= bits; amount -= bits)
+	output_asm_insn (insn_buf, operands);
+    }
 
   return "";
 }
 
 /* Fix the operands of a gen_xxx so that it could become a bit
-  operating insn.  */
+   operating insn.  */
 
 int
 fix_bit_operand (operands, what, type)
      rtx *operands;
-     char what;
+     int what;
      enum rtx_code type;
 {
   /* The bit_operand predicate accepts any memory during RTL generation, but
@@ -2788,22 +2875,22 @@ fix_bit_operand (operands, what, type)
       if (CONST_OK_FOR_LETTER_P (INTVAL (operands[2]), what))
 	{
 	  /* Ok to have a memory dest.  */
-	  if (GET_CODE (operands[0]) == MEM && !EXTRA_CONSTRAINT (operands[0], 'U'))
+	  if (GET_CODE (operands[0]) == MEM
+	      && !EXTRA_CONSTRAINT (operands[0], 'U'))
 	    {
-	      rtx mem;
-	      mem = gen_rtx (MEM, GET_MODE (operands[0]),
-			   copy_to_mode_reg (Pmode, XEXP (operands[0], 0)));
-	      RTX_UNCHANGING_P (mem) = RTX_UNCHANGING_P (operands[0]);
+	      rtx mem = gen_rtx_MEM (GET_MODE (operands[0]),
+				     copy_to_mode_reg (Pmode,
+						       XEXP (operands[0], 0)));
 	      MEM_COPY_ATTRIBUTES (mem, operands[0]);
 	      operands[0] = mem;
 	    }
 
-	  if (GET_CODE (operands[1]) == MEM && !EXTRA_CONSTRAINT (operands[1], 'U'))
+	  if (GET_CODE (operands[1]) == MEM
+	      && !EXTRA_CONSTRAINT (operands[1], 'U'))
 	    {
-	      rtx mem;
-	      mem = gen_rtx (MEM, GET_MODE (operands[1]),
-			   copy_to_mode_reg (Pmode, XEXP (operands[1], 0)));
-	      RTX_UNCHANGING_P (mem) = RTX_UNCHANGING_P (operands[1]);
+	      rtx mem = gen_rtx_MEM (GET_MODE (operands[1]),
+				     copy_to_mode_reg (Pmode,
+						       XEXP (operands[1], 0)));
 	      MEM_COPY_ATTRIBUTES (mem, operands[0]);
 	      operands[1] = mem;
 	    }
@@ -2816,8 +2903,9 @@ fix_bit_operand (operands, what, type)
   operands[1] = force_reg (QImode, operands[1]);
   {
     rtx res = gen_reg_rtx (QImode);
-    emit_insn (gen_rtx (SET, VOIDmode, res, gen_rtx (type, QImode, operands[1], operands[2])));
-    emit_insn (gen_rtx (SET, VOIDmode, operands[0], res));
+    emit_insn (gen_rtx_SET (VOIDmode, res,
+			    gen_rtx (type, QImode, operands[1], operands[2])));
+    emit_insn (gen_rtx_SET (VOIDmode, operands[0], res));
   }
   return 1;
 }
@@ -2939,7 +3027,7 @@ h8300_tiny_data_p (decl)
 int
 h8300_valid_machine_decl_attribute (decl, attributes, attr, args)
      tree decl;
-     tree attributes;
+     tree attributes ATTRIBUTE_UNUSED;
      tree attr;
      tree args;
 {
@@ -2975,27 +3063,26 @@ h8300_valid_machine_decl_attribute (decl, attributes, attr, args)
       DECL_SECTION_NAME (decl) = build_string (6, ".tiny");
       return 1;
     }
-      
+
   return 0;
 }
 
-extern struct obstack *saveable_obstack;
-
+void
 h8300_encode_label (decl)
      tree decl;
 {
-  char *str = XSTR (XEXP (DECL_RTL (decl), 0), 0);
+  const char *str = XSTR (XEXP (DECL_RTL (decl), 0), 0);
   int len = strlen (str);
-  char *newstr;
+  char *newstr = alloca (len + 2);
 
-  newstr = obstack_alloc (saveable_obstack, len + 2);
+  newstr[0] = '&';
+  strcpy (&newstr[1], str);
 
-  strcpy (newstr + 1, str);
-  *newstr = '&';
-  XSTR (XEXP (DECL_RTL (decl), 0), 0) = newstr;
+  XSTR (XEXP (DECL_RTL (decl), 0), 0) =
+    ggc_alloc_string (newstr, len + 1);
 }
 
-char *
+const char *
 output_simode_bld (bild, log2, operands)
      int bild;
      int log2;
@@ -3027,9 +3114,10 @@ output_simode_bld (bild, log2, operands)
 
    We use this to get the lengths of various memory references correct.  */
 
+int
 h8300_adjust_insn_length (insn, length)
      rtx insn;
-     int length;
+     int length ATTRIBUTE_UNUSED;
 {
   rtx pat;
 
@@ -3095,15 +3183,15 @@ h8300_adjust_insn_length (insn, length)
       && GET_MODE (SET_DEST (pat)) == SImode
       && INTVAL (SET_SRC (pat)) != 0)
     {
+      int val = INTVAL (SET_SRC (pat));
+
       if (TARGET_H8300
-	  && ((INTVAL (SET_SRC (pat)) & 0xffff) == 0
-	      || ((INTVAL (SET_SRC (pat)) >> 16) & 0xffff) == 0))
+	  && ((val & 0xffff) == 0
+	      || ((val >> 16) & 0xffff) == 0))
 	return -2;
 
       if (TARGET_H8300H || TARGET_H8300S)
 	{
-	  int val = INTVAL (SET_SRC (pat));
-
 	  if (val == (val & 0xff)
 	      || val == (val & 0xff00))
 	    return -6;
@@ -3117,8 +3205,8 @@ h8300_adjust_insn_length (insn, length)
   if (GET_CODE (pat) == PARALLEL
       && GET_CODE (XVECEXP (pat, 0, 0)) == SET
       && (GET_CODE (SET_SRC (XVECEXP (pat, 0, 0))) == ASHIFTRT
-          || GET_CODE (SET_SRC (XVECEXP (pat, 0, 0))) == LSHIFTRT
-          || GET_CODE (SET_SRC (XVECEXP (pat, 0, 0))) == ASHIFT))
+	  || GET_CODE (SET_SRC (XVECEXP (pat, 0, 0))) == LSHIFTRT
+	  || GET_CODE (SET_SRC (XVECEXP (pat, 0, 0))) == ASHIFT))
     {
       rtx src = SET_SRC (XVECEXP (pat, 0, 0));
       enum machine_mode mode = GET_MODE (src);
@@ -3130,7 +3218,7 @@ h8300_adjust_insn_length (insn, length)
       shift = INTVAL (XEXP (src, 1));
       /* According to ANSI, negative shift is undefined.  It is
          considered to be zero in this case (see function
-         emit_a_shift above). */
+         emit_a_shift above).  */
       if (shift < 0)
 	shift = 0;
 
@@ -3156,6 +3244,57 @@ h8300_adjust_insn_length (insn, length)
 
       /* XXX ??? Could check for more shift/rotate cases here.  */
     }
-    
+
+  /* Rotations need various adjustments.  */
+  if (GET_CODE (pat) == SET
+      && (GET_CODE (SET_SRC (pat)) == ROTATE
+	  || GET_CODE (SET_SRC (pat)) == ROTATERT))
+    {
+      rtx src = SET_SRC (pat);
+      enum machine_mode mode = GET_MODE (src);
+      int amount;
+      int states = 0;
+
+      if (GET_CODE (XEXP (src, 1)) != CONST_INT)
+	return 0;
+
+      amount = INTVAL (XEXP (src, 1));
+
+      /* Clean up AMOUNT.  */
+      if (amount < 0)
+	amount = 0;
+      if ((unsigned int) amount > GET_MODE_BITSIZE (mode))
+	amount = GET_MODE_BITSIZE (mode);
+
+      /* Determine the faster direction.  After this phase, amount
+	 will be at most a half of GET_MODE_BITSIZE (mode).  */
+      if ((unsigned int) amount > GET_MODE_BITSIZE (mode) / 2)
+	/* Flip the direction.  */
+	amount = GET_MODE_BITSIZE (mode) - amount;
+
+      /* See if a byte swap (in HImode) or a word swap (in SImode) can
+	 boost up the rotation.  */
+      if ((mode == HImode && TARGET_H8300 && amount >= 5)
+	  || (mode == HImode && TARGET_H8300H && amount >= 6)
+	  || (mode == HImode && TARGET_H8300S && amount == 8)
+	  || (mode == SImode && TARGET_H8300H && amount >= 10)
+	  || (mode == SImode && TARGET_H8300S && amount >= 13))
+	{
+	  /* Adjust AMOUNT and flip the direction.  */
+	  amount = GET_MODE_BITSIZE (mode) / 2 - amount;
+	  states += 6;
+	}
+
+      /* We use 2-bit rotatations on the H8/S.  */
+      if (TARGET_H8300S)
+	amount = amount / 2 + amount % 2;
+
+      /* The H8/300 uses three insns to rotate one bit, taking 6
+         states.  */
+      states += amount * ((TARGET_H8300 && mode == HImode) ? 6 : 2);
+
+      return -(20 - states);
+    }
+
   return 0;
 }

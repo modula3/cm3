@@ -1,5 +1,5 @@
 ;; Machine description of the Argonaut ARC cpu for GNU C compiler
-;; Copyright (C) 1994, 1997, 1999 Free Software Foundation, Inc.
+;; Copyright (C) 1994, 1997, 1998, 1999, 2000 Free Software Foundation, Inc.
 
 ;; This file is part of GNU CC.
 
@@ -290,6 +290,8 @@
 	  return \"ld%V1 %0,%1\;ld%V1 %R0,%R1\";
     case 3 :
       return \"st%V0 %1,%0\;st%V0 %R1,%R0\";
+    default:
+      abort();
     }
 }"
   [(set_attr "type" "move,move,load,store")
@@ -304,7 +306,7 @@
 ;{
 ;  /* Flow doesn't understand that this is effectively a DFmode move.
 ;     It doesn't know that all of `operands[0]' is set.  */
-;  emit_insn (gen_rtx (CLOBBER, VOIDmode, operands[0]));
+;  emit_insn (gen_rtx_CLOBBER (VOIDmode, operands[0]));
 ;
 ;  /* Emit insns that movsi_insn can handle.  */
 ;  emit_insn (gen_movsi (operand_subword (operands[0], 0, 0, DImode),
@@ -393,6 +395,8 @@
 	return \"ld%V1 %0,%1\;ld%V1 %R0,%R1\";
     case 3 :
       return \"st%V0 %1,%0\;st%V0 %R1,%R0\";
+    default:
+      abort();
     }
 }"
   [(set_attr "type" "move,move,load,store")
@@ -407,7 +411,7 @@
 ;{
 ;  /* Flow doesn't understand that this is effectively a DFmode move.
 ;     It doesn't know that all of `operands[0]' is set.  */
-;  emit_insn (gen_rtx (CLOBBER, VOIDmode, operands[0]));
+;  emit_insn (gen_rtx_CLOBBER (VOIDmode, operands[0]));
 ;
 ;  /* Emit insns that movsi_insn can handle.  */
 ;  emit_insn (gen_movsi (operand_subword (operands[0], 0, 0, DFmode),
@@ -586,9 +590,9 @@
   "
 {
   enum rtx_code code = GET_CODE (operands[1]);
-  rtx ccreg = gen_rtx (REG,
-		       SELECT_CC_MODE (code, arc_compare_op0, arc_compare_op1),
-		       61);
+  rtx ccreg
+    = gen_rtx_REG (SELECT_CC_MODE (code, arc_compare_op0, arc_compare_op1),
+		   61);
 
   operands[1] = gen_rtx (code, VOIDmode, ccreg, const0_rtx);
 }")
@@ -602,14 +606,14 @@
 ;  "
 ;{
 ;  enum rtx_code code = GET_CODE (operands[1]);
-;  rtx ccreg = gen_rtx (REG,
-;		       SELECT_CC_MODE (code, arc_compare_op0, arc_compare_op1),
-;		       61);
+;  rtx ccreg
+;   = gen_rtx_REG (SELECT_CC_MODE (code, arc_compare_op0, arc_compare_op1),
+;		   61);
 ;
 ;  operands[1] = gen_rtx (code, VOIDmode, ccreg, const0_rtx);
 ;}")
-
 (define_expand "movsfcc"
+
   [(set (match_operand:SF 0 "register_operand" "")
 	(if_then_else (match_operand 1 "comparison_operator" "")
 		      (match_operand:SF 2 "nonmemory_operand" "")
@@ -618,9 +622,9 @@
   "
 {
   enum rtx_code code = GET_CODE (operands[1]);
-  rtx ccreg = gen_rtx (REG,
-		       SELECT_CC_MODE (code, arc_compare_op0, arc_compare_op1),
-		       61);
+  rtx ccreg
+    = gen_rtx_REG (SELECT_CC_MODE (code, arc_compare_op0, arc_compare_op1),
+		   61);
 
   operands[1] = gen_rtx (code, VOIDmode, ccreg, const0_rtx);
 }")
@@ -633,10 +637,10 @@
 ;  "0 /* ??? can generate less efficient code if constants involved */"
 ;  "
 ;{
-;  enum rtx_code code = GET_CODE (operands[1]);
-;  rtx ccreg = gen_rtx (REG,
-;		       SELECT_CC_MODE (code, arc_compare_op0, arc_compare_op1),
-;		       61);
+; enum rtx_code code = GET_CODE (operands[1]);
+; rtx ccreg
+;   = gen_rtx_REG (SELECT_CC_MODE (code, arc_compare_op0, arc_compare_op1),
+;		   61);
 ;
 ;  operands[1] = gen_rtx (code, VOIDmode, ccreg, const0_rtx);
 ;}")
@@ -1060,12 +1064,14 @@
 {
   if (! TARGET_SHIFTER)
     {
-      emit_insn (gen_rtx
-		 (PARALLEL, VOIDmode,
+      emit_insn (gen_rtx_PARALLEL
+		 (VOIDmode,
 		  gen_rtvec (2,
-			     gen_rtx (SET, VOIDmode, operands[0],
-				      gen_rtx (ASHIFT, SImode, operands[1], operands[2])),
-			     gen_rtx (CLOBBER, VOIDmode, gen_rtx (SCRATCH, SImode, 0)))));
+			     gen_rtx_SET (VOIDmode, operands[0],
+					  gen_rtx_ASHIFT (SImode, operands[1],
+							  operands[2])),
+			     gen_rtx_CLOBBER (VOIDmode,
+					      gen_rtx_SCRATCH (SImode)))));
       DONE;
     }
 }")
@@ -1079,12 +1085,15 @@
 {
   if (! TARGET_SHIFTER)
     {
-      emit_insn (gen_rtx
-		 (PARALLEL, VOIDmode,
+      emit_insn (gen_rtx_PARALLEL
+		 (VOIDmode,
 		  gen_rtvec (2,
-			     gen_rtx (SET, VOIDmode, operands[0],
-				      gen_rtx (ASHIFTRT, SImode, operands[1], operands[2])),
-			     gen_rtx (CLOBBER, VOIDmode, gen_rtx (SCRATCH, SImode, 0)))));
+			     gen_rtx_SET (VOIDmode, operands[0],
+					  gen_rtx_ASHIFTRT (SImode,
+							    operands[1],
+							    operands[2])),
+			     gen_rtx_CLOBBER (VOIDmode,
+					      gen_rtx_SCRATCH (SImode)))));
       DONE;
     }
 }")
@@ -1098,12 +1107,15 @@
 {
   if (! TARGET_SHIFTER)
     {
-      emit_insn (gen_rtx
-		 (PARALLEL, VOIDmode,
+      emit_insn (gen_rtx_PARALLEL
+		 (VOIDmode,
 		  gen_rtvec (2,
-			     gen_rtx (SET, VOIDmode, operands[0],
-				      gen_rtx (LSHIFTRT, SImode, operands[1], operands[2])),
-			     gen_rtx (CLOBBER, VOIDmode, gen_rtx (SCRATCH, SImode, 0)))));
+			     gen_rtx_SET (VOIDmode, operands[0],
+					  gen_rtx_LSHIFTRT (SImode,
+							    operands[1],
+							    operands[2])),
+			     gen_rtx_CLOBBER (VOIDmode,
+					      gen_rtx_SCRATCH (SImode)))));
       DONE;
     }
 }")

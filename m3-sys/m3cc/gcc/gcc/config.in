@@ -1,134 +1,4 @@
-/* config.in.  Generated automatically from configure.in by autoheader.  */
-/* Define if you can safely include both <string.h> and <strings.h>.  */
-#undef STRING_WITH_STRINGS
-
-/* Define if printf supports "%p".  */
-#undef HAVE_PRINTF_PTR
-
-/* Define if you want expensive run-time checks. */
-#undef ENABLE_CHECKING
-
-/* Define to 1 if NLS is requested.  */
-#undef ENABLE_NLS
-
-/* Define as 1 if you have catgets and don't want to use GNU gettext.  */
-#undef HAVE_CATGETS
-
-/* Define as 1 if you have gettext and don't want to use GNU gettext.  */
-#undef HAVE_GETTEXT
-
-/* Define if your cpp understands the stringify operator.  */
-#undef HAVE_CPP_STRINGIFY
-
-/* Define if your compiler understands volatile.  */
-#undef HAVE_VOLATILE
-
-/* Define if your assembler supports specifying the maximum number
-   of bytes to skip when using the GAS .p2align command. */
-#undef HAVE_GAS_MAX_SKIP_P2ALIGN
-
-/* Define if your assembler supports .balign and .p2align.  */
-#undef HAVE_GAS_BALIGN_AND_P2ALIGN
-
-/* Define if your assembler supports .subsection and .subsection -1 starts
-   emitting at the beginning of your section */
-#undef HAVE_GAS_SUBSECTION_ORDERING
-
-/* Define if your assembler uses the old HImode fild and fist notation.  */
-#undef HAVE_GAS_FILDS_FISTS
-
-/* Define if you have a working <inttypes.h> header file.  */
-#undef HAVE_INTTYPES_H
-
-/* Define if your locale.h file contains LC_MESSAGES.  */
-#undef HAVE_LC_MESSAGES
-
-/* Define as 1 if you have the stpcpy function.  */
-#undef HAVE_STPCPY
-
-/* Whether malloc must be declared even if <stdlib.h> is included.  */
-#undef NEED_DECLARATION_MALLOC
-
-/* Whether realloc must be declared even if <stdlib.h> is included.  */
-#undef NEED_DECLARATION_REALLOC
-
-/* Whether calloc must be declared even if <stdlib.h> is included.  */
-#undef NEED_DECLARATION_CALLOC
-
-/* Whether free must be declared even if <stdlib.h> is included.  */
-#undef NEED_DECLARATION_FREE
-
-/* Whether bcopy must be declared even if <string.h> is included.  */
-#undef NEED_DECLARATION_BCOPY
-
-/* Whether bcmp must be declared even if <string.h> is included.  */
-#undef NEED_DECLARATION_BCMP
-
-/* Whether bzero must be declared even if <string.h> is included.  */
-#undef NEED_DECLARATION_BZERO
-
-/* Whether index must be declared even if <string.h> is included.  */
-#undef NEED_DECLARATION_INDEX
-
-/* Whether rindex must be declared even if <string.h> is included.  */
-#undef NEED_DECLARATION_RINDEX
-
-/* Whether getenv must be declared even if <stdlib.h> is included.  */
-#undef NEED_DECLARATION_GETENV
-
-/* Whether atol must be declared even if <stdlib.h> is included.  */
-#undef NEED_DECLARATION_ATOL
-
-/* Whether atof must be declared even if <stdlib.h> is included.  */
-#undef NEED_DECLARATION_ATOF
-
-/* Whether sbrk must be declared even if <stdlib.h> is included.  */
-#undef NEED_DECLARATION_SBRK
-
-/* Whether abort must be declared even if <stdlib.h> is included.  */
-#undef NEED_DECLARATION_ABORT
-
-/* Whether strerror must be declared even if <string.h> is included.  */
-#undef NEED_DECLARATION_STRERROR
-
-/* Whether strsignal must be declared even if <string.h> is included.  */
-#undef NEED_DECLARATION_STRSIGNAL
-
-/* Whether strstr must be declared even if <string.h> is included.  */
-#undef NEED_DECLARATION_STRSTR
-
-/* Whether getcwd must be declared even if <unistd.h> is included.  */
-#undef NEED_DECLARATION_GETCWD
-
-/* Whether getwd must be declared even if <unistd.h> is included.  */
-#undef NEED_DECLARATION_GETWD
-
-/* Whether getrlimit must be declared even if <sys/resource.h> is included.  */
-#undef NEED_DECLARATION_GETRLIMIT
-
-/* Whether setrlimit must be declared even if <sys/resource.h> is included.  */
-#undef NEED_DECLARATION_SETRLIMIT
-
-/* Whether putc_unlocked must be declared even if <stdio.h> is included.  */
-#undef NEED_DECLARATION_PUTC_UNLOCKED
-
-/* Whether fputs_unlocked must be declared even if <stdio.h> is included.  */
-#undef NEED_DECLARATION_FPUTS_UNLOCKED
-
-/* Define to enable the use of a default assembler. */
-#undef DEFAULT_ASSEMBLER
-
-/* Define to enable the use of a default linker. */
-#undef DEFAULT_LINKER
-
-/* Define if host mkdir takes a single argument. */
-#undef MKDIR_TAKES_ONE_ARG
-
-/* Define to the name of the distribution.  */
-#undef PACKAGE
-
-/* Define to the version of the distribution.  */
-#undef VERSION
+/* config.in.  Generated automatically from configure.in by autoheader 2.13.  */
 
 /* Define if using alloca.c.  */
 #undef C_ALLOCA
@@ -140,6 +10,13 @@
    This function is required for alloca.c support on those systems.  */
 #undef CRAY_STACKSEG_END
 
+/* Define to the type of elements in the array set by `getgroups'.
+   Usually this is either `int' or `gid_t'.  */
+#undef GETGROUPS_T
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef gid_t
+
 /* Define if you have alloca, as a function or macro.  */
 #undef HAVE_ALLOCA
 
@@ -149,8 +26,8 @@
 /* Define if you don't have vprintf but do have _doprnt.  */
 #undef HAVE_DOPRNT
 
-/* Define if you have a working `mmap' system call.  */
-#undef HAVE_MMAP
+/* Define if you have the ANSI # stringizing operator in cpp. */
+#undef HAVE_STRINGIZE
 
 /* Define if you have <sys/wait.h> that is POSIX.1 compatible.  */
 #undef HAVE_SYS_WAIT_H
@@ -163,6 +40,9 @@
 
 /* Define as __inline if that's what the C compiler calls it.  */
 #undef inline
+
+/* Define if your C compiler doesn't accept -c and -o together.  */
+#undef NO_MINUS_C_MINUS_O
 
 /* Define to `long' if <sys/types.h> doesn't define.  */
 #undef off_t
@@ -185,14 +65,45 @@
 /* Define if you have the ANSI C header files.  */
 #undef STDC_HEADERS
 
-/* Define if `sys_siglist' is declared by <signal.h>.  */
-#undef SYS_SIGLIST_DECLARED
-
 /* Define if you can safely include both <sys/time.h> and <time.h>.  */
 #undef TIME_WITH_SYS_TIME
 
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef uid_t
+
 /* Define vfork as fork if vfork does not work.  */
 #undef vfork
+
+/* Define to 1 if NLS is requested.  */
+#undef ENABLE_NLS
+
+/* Define as 1 if you have catgets and don't want to use GNU gettext.  */
+#undef HAVE_CATGETS
+
+/* Define as 1 if you have gettext and don't want to use GNU gettext.  */
+#undef HAVE_GETTEXT
+
+/* Define if your locale.h file contains LC_MESSAGES.  */
+#undef HAVE_LC_MESSAGES
+
+/* Define as 1 if you have the stpcpy function.  */
+#undef HAVE_STPCPY
+
+/* Define if your assembler supports specifying the maximum number
+   of bytes to skip when using the GAS .p2align command. */
+#undef HAVE_GAS_MAX_SKIP_P2ALIGN
+
+/* Define if your assembler supports .balign and .p2align.  */
+#undef HAVE_GAS_BALIGN_AND_P2ALIGN
+
+/* Define if your assembler uses the old HImode fild and fist notation.  */
+#undef HAVE_GAS_FILDS_FISTS
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef ssize_t
+
+/* Define if cpp should also search $prefix/include. */
+#undef PREFIX_INCLUDE_DIR
 
 /* Define if you have the __argz_count function.  */
 #undef HAVE___ARGZ_COUNT
@@ -209,17 +120,11 @@
 /* Define if you have the atoq function.  */
 #undef HAVE_ATOQ
 
-/* Define if you have the bcmp function.  */
-#undef HAVE_BCMP
-
 /* Define if you have the bcopy function.  */
 #undef HAVE_BCOPY
 
 /* Define if you have the bsearch function.  */
 #undef HAVE_BSEARCH
-
-/* Define if you have the bzero function.  */
-#undef HAVE_BZERO
 
 /* Define if you have the dcgettext function.  */
 #undef HAVE_DCGETTEXT
@@ -239,11 +144,11 @@
 /* Define if you have the getrlimit function.  */
 #undef HAVE_GETRLIMIT
 
+/* Define if you have the getrusage function.  */
+#undef HAVE_GETRUSAGE
+
 /* Define if you have the gettimeofday function.  */
 #undef HAVE_GETTIMEOFDAY
-
-/* Define if you have the index function.  */
-#undef HAVE_INDEX
 
 /* Define if you have the isascii function.  */
 #undef HAVE_ISASCII
@@ -251,8 +156,14 @@
 /* Define if you have the kill function.  */
 #undef HAVE_KILL
 
+/* Define if you have the lstat function.  */
+#undef HAVE_LSTAT
+
 /* Define if you have the munmap function.  */
 #undef HAVE_MUNMAP
+
+/* Define if you have the nl_langinfo function.  */
+#undef HAVE_NL_LANGINFO
 
 /* Define if you have the popen function.  */
 #undef HAVE_POPEN
@@ -262,9 +173,6 @@
 
 /* Define if you have the putenv function.  */
 #undef HAVE_PUTENV
-
-/* Define if you have the rindex function.  */
-#undef HAVE_RINDEX
 
 /* Define if you have the setenv function.  */
 #undef HAVE_SETENV
@@ -287,14 +195,14 @@
 /* Define if you have the strdup function.  */
 #undef HAVE_STRDUP
 
-/* Define if you have the strerror function.  */
-#undef HAVE_STRERROR
-
 /* Define if you have the strrchr function.  */
 #undef HAVE_STRRCHR
 
 /* Define if you have the strsignal function.  */
 #undef HAVE_STRSIGNAL
+
+/* Define if you have the strstr function.  */
+#undef HAVE_STRSTR
 
 /* Define if you have the strtoul function.  */
 #undef HAVE_STRTOUL
@@ -310,6 +218,9 @@
 
 /* Define if you have the <fcntl.h> header file.  */
 #undef HAVE_FCNTL_H
+
+/* Define if you have the <langinfo.h> header file.  */
+#undef HAVE_LANGINFO_H
 
 /* Define if you have the <limits.h> header file.  */
 #undef HAVE_LIMITS_H
@@ -364,3 +275,210 @@
 
 /* Define if you have the i library (-li).  */
 #undef HAVE_LIBI
+
+/* Define to enable the use of a default linker. */
+#undef DEFAULT_LINKER
+
+/* Define to enable the use of a default assembler. */
+#undef DEFAULT_ASSEMBLER
+
+/* Define if you want more run-time sanity checks.  This one gets a grab
+   bag of miscellaneous but relatively cheap checks. */
+#undef ENABLE_CHECKING
+
+/* Define if you want all operations on trees (the basic data
+   structure of the front ends) to be checked for dynamic type safety
+   at runtime.  This is moderately expensive. */
+#undef ENABLE_TREE_CHECKING
+
+/* Define if you want all operations on RTL (the basic data structure
+   of the optimizer and back end) to be checked for dynamic type safety
+   at runtime.  This is quite expensive. */
+#undef ENABLE_RTL_CHECKING
+
+/* Define if you want the garbage collector to do object poisoning and
+   other memory allocation checks.  This is quite expensive. */
+#undef ENABLE_GC_CHECKING
+
+/* Define if you want the garbage collector to operate in maximally
+   paranoid mode, validating the entire heap and collecting garbage at
+   every opportunity.  This is extremely expensive. */
+#undef ENABLE_GC_ALWAYS_COLLECT
+
+/* Define if you want the C and C++ compilers to support multibyte
+   character sets for source code. */
+#undef MULTIBYTE_CHARS
+
+/* Define if your compiler supports the `long double' type. */
+#undef HAVE_LONG_DOUBLE
+
+/* Define if the `_Bool' type is built-in. */
+#undef HAVE__BOOL
+
+/* Always define this when using the GNU C Library */
+#undef _GNU_SOURCE
+
+/* Define if your compiler understands volatile. */
+#undef HAVE_VOLATILE
+
+/* Define if you have a working <stdbool.h> header file. */
+#undef HAVE_STDBOOL_H
+
+/* Define if you can safely include both <string.h> and <strings.h>. */
+#undef STRING_WITH_STRINGS
+
+/* Define if you have a working <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define if enumerated bitfields are treated as unsigned values. */
+#undef ENUM_BITFIELDS_ARE_UNSIGNED
+
+/* Define if printf supports %p. */
+#undef HAVE_PRINTF_PTR
+
+/* Define if mmap can get us zeroed pages from /dev/zero. */
+#undef HAVE_MMAP_DEV_ZERO
+
+/* Define if mmap can get us zeroed pages using MAP_ANON(YMOUS). */
+#undef HAVE_MMAP_ANON
+
+/* Define if read-only mmap of a plain file works. */
+#undef HAVE_MMAP_FILE
+
+/* Define if you have the iconv() function. */
+#undef HAVE_ICONV
+
+/* Define as const if the declaration of iconv() needs const. */
+#undef ICONV_CONST
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_BCOPY
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_GETENV
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_ATOL
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_SBRK
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_ABORT
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_ATOF
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_GETCWD
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_GETWD
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_STRSIGNAL
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_PUTC_UNLOCKED
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_FPUTS_UNLOCKED
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_STRSTR
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_ENVIRON
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_MALLOC
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_REALLOC
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_CALLOC
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_FREE
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_BASENAME
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_GETOPT
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_GETRLIMIT
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_SETRLIMIT
+
+/* Define to 1 if we found this declaration otherwise define to 0. */
+#undef HAVE_DECL_GETRUSAGE
+
+/* Define if host mkdir takes a single argument. */
+#undef MKDIR_TAKES_ONE_ARG
+
+/* Define to the name of the distribution. */
+#undef PACKAGE
+
+/* Define to the version of the distribution. */
+#undef VERSION
+
+/* Define to 1 if installation paths should be looked up in Windows32
+   Registry. Ignored on non windows32 hosts. */
+#undef ENABLE_WIN32_REGISTRY
+
+/* Define to be the last portion of registry key on windows hosts. */
+#undef WIN32_REGISTRY_KEY
+
+/* Define if your assembler supports .subsection and .subsection -1 starts
+   emitting at the beginning of your section. */
+#undef HAVE_GAS_SUBSECTION_ORDERING
+
+/* Define if your assembler supports .weak. */
+#undef HAVE_GAS_WEAK
+
+/* Define if your assembler supports .hidden. */
+#undef HAVE_GAS_HIDDEN
+
+/* Define if your assembler supports .uleb128. */
+#undef HAVE_AS_LEB128
+
+/* Define if your assembler mis-optimizes .eh_frame data. */
+#undef USE_AS_TRADITIONAL_FORMAT
+
+/* Define if your assembler supports .register. */
+#undef HAVE_AS_REGISTER_PSEUDO_OP
+
+/* Define if your assembler supports -relax option. */
+#undef HAVE_AS_RELAX_OPTION
+
+/* Define if the assembler supports 64bit sparc. */
+#undef AS_SPARC64_FLAG
+
+/* Define if your assembler supports offsetable %lo(). */
+#undef HAVE_AS_OFFSETABLE_LO10
+
+/* Define if your assembler supports dwarf2 .file/.loc directives. */
+#undef HAVE_AS_DWARF2_DEBUG_LINE
+
+/* Define to 1 if you want to enable namespaces (-fhonor-std) by default. */
+#undef ENABLE_STD_NAMESPACE
+
+/* Define 0/1 to force the choice for exception handling model. */
+#undef CONFIG_SJLJ_EXCEPTIONS
+
+
+/* Bison unconditionally undefines `const' if neither `__STDC__' nor
+   __cplusplus are defined.  That's a problem since we use `const' in
+   the GCC headers, and the resulting bison code is therefore type
+   unsafe.  Thus, we must match the bison behavior here.  */
+
+#ifndef __STDC__
+#ifndef __cplusplus
+#undef const
+#define const
+#endif
+#endif

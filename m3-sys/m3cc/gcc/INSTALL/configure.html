@@ -1,0 +1,510 @@
+<html lang="en">
+<head>
+<title>Installing GCC: Configuration</title>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name=description content="Installing GCC: Configuration">
+<meta name=generator content="makeinfo 4.0b">
+<link href="http://texinfo.org/" rel=generator-home>
+</head>
+
+<body>
+<h1 align="center">Installing GCC: Configuration</h1>
+
+<p>Like most GNU software, GCC must be configured before it can be built. 
+This document describes the recommended configuration procedure
+for both native and cross targets.
+
+<p>We use <var>srcdir</var> to refer to the toplevel source directory for
+GCC; we use <var>objdir</var> to refer to the toplevel build/object directory.
+
+<p>If you obtained the sources via CVS, <var>srcdir</var> must refer to the top
+<code>gcc</code> directory, the one where the <code>MAINTAINERS</code> can be found,
+and not its <code>gcc</code> subdirectory, otherwise the build will fail.
+
+<p>First, we <strong>highly</strong> recommend that GCC be built into a
+separate directory than the sources which does <strong>not</strong> reside
+within the source tree.  This is how we generally build GCC; building
+where <var>srcdir</var> == <var>objdir</var> should still work, but doesn't
+get extensive testing; building where <var>objdir</var> is a subdirectory
+of <var>srcdir</var> is unsupported.
+
+<p>If you have previously built GCC in the same directory for a
+different target machine, do <code>make distclean</code> to delete all files
+that might be invalid.  One of the files this deletes is
+<code>Makefile</code>; if <code>make distclean</code> complains that <code>Makefile</code>
+does not exist, it probably means that the directory is already suitably
+clean.  However, with the recommended method of building in a separate
+<var>objdir</var>, you should simply use a different <var>objdir</var> for each
+target.
+
+<p>Second, when configuring a native system, either <code>cc</code> or
+<code>gcc</code> must be in your path or you must set <code>CC</code> in
+your environment before running configure.  Otherwise the configuration
+scripts may fail.
+
+<p>Note that the bootstrap compiler and the resulting GCC must be link
+compatible, else the bootstrap will fail with linker errors about
+incompatible object file formats.  Several multilibed targets are
+affected by this requirement, see
+<a href="specific.html">host/target specific installation notes</a>.
+
+<p>To configure GCC:
+
+<pre>   % mkdir <var>objdir</var>
+   % cd <var>objdir</var>
+   % <var>srcdir</var>/configure [<var>options</var>] [<var>target</var>]
+</pre>
+
+<h2><a name="TOC0">Target specification</h2>
+
+<ul>
+<li>GCC has code to correctly determine the correct value for <var>target</var>
+for nearly all native systems.  Therefore, we highly recommend you not
+provide a configure target when configuring a native compiler.
+
+<li><var>target</var> must be specified as <code>--target=<var>target</var></code>
+when configuring a cross compiler; examples of valid targets would be
+i960-rtems, m68k-coff, sh-elf, etc.
+
+<li>Specifying just <var>target</var> instead of <code>--target=<var>target</var></code>
+implies that the host defaults to <var>target</var>. 
+</ul>
+
+<h2><a name="TOC1">Options specification</h2>
+
+<p>Use <var>options</var> to override several configure time options for
+GCC.  A list of supported <var>options</var> follows; <code>configure
+--help</code> may list other options, but those not listed below may not
+work and should not normally be used.
+
+<dl>
+<dt><code>--prefix=<var>dirname</var></code>
+<dd>Specify the toplevel installation
+directory.  This is the recommended way to install the tools into a directory
+other than the default.  The toplevel installation directory defaults to
+<code>/usr/local</code>.
+
+<p>We <strong>highly</strong> recommend against <var>dirname</var> being the same or a
+subdirectory of <var>objdir</var> or vice versa.
+
+<p>These additional options control where certain parts of the distribution
+are installed.  Normally you should not need to use these options.
+<dl>
+
+<br><dt><code>--exec-prefix=<var>dirname</var></code>
+<dd>Specify the toplevel installation directory for architecture-dependent
+files.  The default is <code><var>prefix</var></code>.
+
+<br><dt><code>--bindir=<var>dirname</var></code>
+<dd>Specify the installation directory for the executables called by users
+(such as <code>gcc</code> and <code>g++</code>).  The default is
+<code><var>exec-prefix</var>/bin</code>.
+
+<br><dt><code>--libdir=<var>dirname</var></code>
+<dd>Specify the installation directory for object code libraries and
+internal parts of GCC.  The default is <code><var>exec-prefix</var>/lib</code>.
+
+<br><dt><code>--with-slibdir=<var>dirname</var></code>
+<dd>Specify the installation directory for the shared libgcc library.  The
+default is <code><var>libdir</var></code>.
+
+<br><dt><code>--infodir=<var>dirname</var></code>
+<dd>Specify the installation directory for documentation in info format. 
+The default is <code><var>prefix</var>/info</code>.
+
+<br><dt><code>--mandir=<var>dirname</var></code>
+<dd>Specify the installation directory for manual pages.  The default is
+<code><var>prefix</var>/man</code>.  (Note that the manual pages are only extracts from
+the full GCC manuals, which are provided in Texinfo format.  The
+<code>g77</code> manpage is unmaintained and may be out of date; the others
+are derived by an automatic conversion process from parts of the full
+manual.)
+
+<br><dt><code>--with-gxx-include-dir=<var>dirname</var></code>
+<dd>Specify
+the installation directory for G++ header files.  The default is
+<code><var>prefix</var>/include/g++-v3</code>.
+
+</dl>
+
+<br><dt><code>--with-local-prefix=<var>dirname</var></code>
+<dd>Specify the
+installation directory for local include files.  The default is
+<code>/usr/local</code>.  Specify this option if you want the compiler to
+search directory <code><var>dirname</var>/include</code> for locally installed
+header files <em>instead</em> of <code>/usr/local/include</code>.
+
+<p>You should specify <code>--with-local-prefix</code> <strong>only</strong> if your
+site has a different convention (not <code>/usr/local</code>) for where to put
+site-specific files.
+
+<p>The default value for <code>--with-local-prefix</code> is <code>/usr/local</code>
+regardless of the value of <code>--prefix</code>.  Specifying
+<code>--prefix</code> has no effect on which directory GCC searches for
+local header files.  This may seem counterintuitive, but actually it is
+logical.
+
+<p>The purpose of <code>--prefix</code> is to specify where to <em>install
+GCC</em>.  The local header files in <code>/usr/local/include</code>--if you put
+any in that directory--are not part of GCC.  They are part of other
+programs--perhaps many others.  (GCC installs its own header files in
+another directory which is based on the <code>--prefix</code> value.)
+
+<p><strong>Do not</strong> specify <code>/usr</code> as the <code>--with-local-prefix</code>! 
+The directory you use for <code>--with-local-prefix</code> <strong>must not</strong>
+contain any of the system's standard header files.  If it did contain
+them, certain programs would be miscompiled (including GNU Emacs, on
+certain targets), because this would override and nullify the header
+file corrections made by the <code>fixincludes</code> script.
+
+<p>Indications are that people who use this option use it based on mistaken
+ideas of what it is for.  People use it as if it specified where to
+install part of GCC.  Perhaps they make this assumption because
+installing GCC creates the directory.
+
+<br><dt><code>--enable-shared[=<var>package</var>[,<small>...</small>]]</code>
+<dd>Build shared versions of libraries, if shared libraries are supported on
+the target platform.  Unlike GCC 2.95.x and earlier, shared libraries
+are enabled by default on all platforms that support shared libraries,
+except for <code>libobjc</code> which is built as a static library only by
+default.
+
+<p>If a list of packages is given as an argument, build shared libraries
+only for the listed packages.  For other packages, only static libraries
+will be built.  Package names currently recognized in the GCC tree are
+<code>libgcc</code> (also known as <code>gcc</code>), <code>libstdc++</code> (not
+<code>libstdc++-v3</code>), <code>libffi</code>, <code>zlib</code>, <code>boehm-gc</code> and
+<code>libjava</code>.  Note that <code>libobjc</code> does not recognize itself by
+any name, so, if you list package names in <code>--enable-shared</code>,
+you will only get static Objective-C libraries.  <code>libf2c</code> and
+<code>libiberty</code> do not support shared libraries at all.
+
+<p>Use <code>--disable-shared</code> to build only static libraries.  Note that
+<code>--disable-shared</code> does not accept a list of package names as
+argument, only <code>--enable-shared</code> does.
+
+<br><dt><code><a name="with-gnu-as"></a>--with-gnu-as</code>
+<dd>Specify that the compiler should assume that the
+assembler it finds is the GNU assembler.  However, this does not modify
+the rules to find an assembler and will result in confusion if found
+assembler is not actually the GNU assembler.  (Confusion will also
+result if the compiler finds the GNU assembler but has not been
+configured with <code>--with-gnu-as</code>.)  If you have more than one
+assembler installed on your system, you may want to use this option in
+connection with <code>--with-as=<var>pathname</var></code>.
+
+<p>The systems where it makes a difference whether you use the GNU assembler are
+<code>hppa1.0-<var>any</var>-<var>any</var></code>, <code>hppa1.1-<var>any</var>-<var>any</var></code>,
+<code>i386-<var>any</var>-sysv</code>, <code>i386-<var>any</var>-isc</code>,
+<code>i860-<var>any</var>-bsd</code>, <code>m68k-bull-sysv</code>,
+<code>m68k-hp-hpux</code>, <code>m68k-sony-bsd</code>,
+<code>m68k-altos-sysv</code>, <code>m68000-hp-hpux</code>,
+<code>m68000-att-sysv</code>, <code><var>any</var>-lynx-lynxos</code>,
+and <code>mips-<var>any</var></code>. 
+On any other system, <code>--with-gnu-as</code> has no effect.
+
+<p>On the systems listed above (except for the HP-PA, for ISC on the
+386, and for <code>mips-sgi-irix5.*</code>), if you use the GNU assembler,
+you should also use the GNU linker (and specify <code>--with-gnu-ld</code>).
+
+<br><dt><code>--with-as=<var>pathname</var></code>
+<dd>Specify that the
+compiler should use the assembler pointed to by <var>pathname</var>, rather
+than the one found by the standard rules to find an assembler, which
+are:
+<ul>
+<li>Check the
+<code><var>exec_prefix</var>/lib/gcc-lib/<var>target</var>/<var>version</var></code>
+directory, where <var>exec_prefix</var> defaults to <var>prefix</var> which
+defaults to <code>/usr/local</code> unless overridden by the
+<code>--prefix=<var>pathname</var></code> switch described above. <var>target</var> is the
+target system triple, such as <code>sparc-sun-solaris2.7</code>, and
+<var>version</var> denotes the GCC version, such as 3.0. 
+<li>Check operating system specific directories (e.g. <code>/usr/ccs/bin</code> on
+Sun Solaris 2). 
+</ul>
+Note that these rules do not check for the value of <code>PATH</code>.  You may
+want to use <code>--with-as</code> if no assembler is installed in the
+directories listed above, or if you have multiple assemblers installed
+and want to choose one that is not found by the above rules.
+
+<br><dt><code><a name="with-gnu-ld"></a>--with-gnu-ld</code>
+<dd>Same as <a href="#with-gnu-as"><code>--with-gnu-as</code></a>
+but for linker.
+
+<br><dt><code>--with-ld=<var>pathname</var></code>
+<dd>Same as
+<code>--with-as</code>, but for the linker.
+
+<br><dt><code>--with-stabs</code>
+<dd>Specify that stabs debugging
+information should be used instead of whatever format the host normally
+uses.  Normally GCC uses the same debug format as the host system.
+
+<p>On MIPS based systems and on Alphas, you must specify whether you want
+GCC to create the normal ECOFF debugging format, or to use BSD-style
+stabs passed through the ECOFF symbol table.  The normal ECOFF debug
+format cannot fully handle languages other than C.  BSD stabs format can
+handle other languages, but it only works with the GNU debugger GDB.
+
+<p>Normally, GCC uses the ECOFF debugging format by default; if you
+prefer BSD stabs, specify <code>--with-stabs</code> when you configure GCC.
+
+<p>No matter which default you choose when you configure GCC, the user
+can use the <code>-gcoff</code> and <code>-gstabs+</code> options to specify explicitly
+the debug format for a particular compilation.
+
+<p><code>--with-stabs</code> is meaningful on the ISC system on the 386, also, if
+<code>--with-gas</code> is used.  It selects use of stabs debugging
+information embedded in COFF output.  This kind of debugging information
+supports C++ well; ordinary COFF debugging information does not.
+
+<p><code>--with-stabs</code> is also meaningful on 386 systems running SVR4.  It
+selects use of stabs debugging information embedded in ELF output.  The
+C++ compiler currently (2.6.0) does not support the DWARF debugging
+information normally used on 386 SVR4 platforms; stabs provide a
+workable alternative.  This requires gas and gdb, as the normal SVR4
+tools can not generate or interpret stabs.
+
+<br><dt><code>--disable-multilib</code>
+<dd>Specify that multiple target
+libraries to support different target variants, calling
+conventions, etc should not be built.  The default is to build a
+predefined set of them.
+
+<p>Some targets provide finer-grained control over which multilibs are built
+(e.g., <code>--disable-softfloat</code>):
+<dl>
+
+<br><dt><code>arc-*-elf*</code>
+<dd>biendian.
+
+<br><dt><code>arm-*-*</code>
+<dd>fpu, 26bit, underscore, interwork, biendian, nofmult.
+
+<br><dt><code>m68*-*-*</code>
+<dd>softfloat, m68881, m68000, m68020.
+
+<br><dt><code>mips*-*-*</code>
+<dd>single-float, biendian, softfloat.
+
+<br><dt><code>powerpc*-*-*, rs6000*-*-*</code>
+<dd>aix64, pthread, softfloat, powercpu, powerpccpu, powerpcos, biendian,
+sysv, aix.
+
+</dl>
+
+<br><dt><code>--enable-threads</code>
+<dd>Specify that the target
+supports threads.  This affects the Objective-C compiler and runtime
+library, and exception handling for other languages like C++ and Java. 
+On some systems, this is the default.
+
+<p>In general, the best (and, in many cases, the only known) threading
+model available will be configured for use.  Beware that on some
+systems, gcc has not been taught what threading models are generally
+available for the system.  In this case, <code>--enable-threads</code> is an
+alias for <code>--enable-threads=single</code>.
+
+<br><dt><code>--disable-threads</code>
+<dd>Specify that threading support should be disabled for the system. 
+This is an alias for <code>--enable-threads=single</code>.
+
+<br><dt><code>--enable-threads=<var>lib</var></code>
+<dd>Specify that
+<var>lib</var> is the thread support library.  This affects the Objective-C
+compiler and runtime library, and exception handling for other languages
+like C++ and Java.  The possibilities for <var>lib</var> are:
+
+<dl>
+<dt><code>aix</code>
+<dd>AIX thread support. 
+<br><dt><code>dce</code>
+<dd>DCE thread support. 
+<br><dt><code>mach</code>
+<dd>Generic MACH thread support, known to work on NeXTSTEP.  (Please note
+that the file needed to support this configuration, <code>gthr-mach.h</code>, is
+missing and thus this setting will cause a known bootstrap failure.) 
+<br><dt><code>no</code>
+<dd>This is an alias for <code>single</code>. 
+<br><dt><code>posix</code>
+<dd>Generic POSIX thread support. 
+<br><dt><code>pthreads</code>
+<dd>Same as <code>posix</code> on arm*-*-linux*, *-*-chorusos* and *-*-freebsd*
+only.  A future release of gcc might remove this alias or extend it
+to all platforms. 
+<br><dt><code>rtems</code>
+<dd>RTEMS thread support. 
+<br><dt><code>single</code>
+<dd>Disable thread support, should work for all platforms. 
+<br><dt><code>solaris</code>
+<dd>Sun Solaris 2 thread support. 
+<br><dt><code>vxworks</code>
+<dd>VxWorks thread support. 
+<br><dt><code>win32</code>
+<dd>Microsoft Win32 API thread support. 
+</dl>
+
+<br><dt><code>--with-cpu=<var>cpu</var></code>
+<dd>Specify which cpu variant the
+compiler should generate code for by default.  This is currently
+only supported on the some ports, specifically arm, powerpc, and
+SPARC.  If configure does not recognize the model name (e.g. arm700,
+603e, or ultrasparc) you provide, please check the configure script
+for a complete list of supported models.
+
+<br><dt><code>--enable-target-optspace</code>
+<dd>Specify that target
+libraries should be optimized for code space instead of code speed. 
+This is the default for the m32r platform.
+
+<br><dt><code>--disable-cpp</code>
+<dd>Specify that a user visible <code>cpp</code> program should not be installed.
+
+<br><dt><code>--with-cpp-install-dir=<var>dirname</var></code>
+<dd>Specify that the user visible <code>cpp</code> program should be installed
+in <code><var>prefix</var>/<var>dirname</var>/cpp</code>, in addition to <var>bindir</var>.
+
+<br><dt><code>--enable-maintainer-mode</code>
+<dd>The build rules that
+regenerate the GCC master message catalog <code>gcc.pot</code> are normally
+disabled.  This is because it can only be rebuilt if the complete source
+tree is present.  If you have changed the sources and want to rebuild the
+catalog, configuring with <code>--enable-maintainer-mode</code> will enable
+this.  Note that you need a recent version of the <code>gettext</code> tools
+to do so.
+
+<br><dt><code>--enable-version-specific-runtime-libs</code>
+<dd>Specify
+that runtime libraries should be installed in the compiler specific
+subdirectory (<code><var>libsubdir</var></code>) rather than the usual places.  In
+addition, <code>libstdc++</code>'s include files will be installed in
+<code><var>libsubdir</var>/include/g++</code> unless you overruled it by using
+<code>--with-gxx-include-dir=<var>dirname</var></code>.  Using this option is
+particularly useful if you intend to use several versions of GCC in
+parallel. This is currently supported by <code>libf2c</code> and
+<code>libstdc++</code>, and is the default for <code>libobjc</code> which cannot be
+changed in this case.
+
+<br><dt><code>--enable-languages=<var>lang1</var>,<var>lang2</var>,<small>...</small></code>
+<dd>Specify that only a particular subset of compilers and
+their runtime libraries should be built.  For a list of valid values for
+<var>langN</var> you can issue the following command in the
+<code>gcc</code> directory of your GCC source tree:<br>
+<pre>grep language= */config-lang.in
+</pre>
+Currently, you can use any of the following:
+<code>c</code>, <code>c++</code>, <code>f77</code>, <code>java</code> and <code>objc</code>. 
+<code>CHILL</code> is not currently maintained, and will almost
+certainly fail to compile.<br>
+If you do not pass this flag, all languages available in the <code>gcc</code>
+sub-tree will be configured.  Re-defining <code>LANGUAGES</code> when calling
+<code>make bootstrap</code> <strong>does not</strong> work anymore, as those
+language sub-directories might not have been configured!
+
+<br><dt><code>--disable-libgcj</code>
+<dd>Specify that the run-time libraries
+used by GCJ should not be built.  This is useful in case you intend
+to use GCJ with some other run-time, or you're going to install it
+separately, or it just happens not to build on your particular
+machine.  In general, if the Java front end is enabled, the GCJ
+libraries will be enabled too, unless they're known to not work on
+the target platform.  If GCJ is enabled but <code>libgcj</code> isn't built, you
+may need to port it; in this case, before modifying the top-level
+<code>configure.in</code> so that <code>libgcj</code> is enabled by default on this platform,
+you may use <code>--enable-libgcj</code> to override the default.
+
+<br><dt><code>--with-dwarf2</code>
+<dd>Specify that the compiler should
+use DWARF 2 debugging information as the default.
+
+<br><dt><code>--enable-win32-registry</code>
+<dt><code>--enable-win32-registry=<var>key</var></code>
+<dt><code>--disable-win32-registry</code>
+<dd>The <code>--enable-win32-registry</code> option enables Windows-hosted GCC
+to look up installations paths in the registry using the following key:
+
+<pre><code>HKEY_LOCAL_MACHINE\SOFTWARE\Free Software Foundation\<var>key</var></code>
+</pre>
+
+<p><var>key</var> defaults to GCC version number, and can be overridden by the
+<code>--enable-win32-registry=<var>key</var></code> option. Vendors and distributors
+who use custom installers are encouraged to provide a different key,
+perhaps one comprised of vendor name and GCC version number, to
+avoid conflict with existing installations.  This feature is enabled
+by default, and can be disabled by <code>--disable-win32-registry</code>
+option.  This option has no effect on the other hosts.
+
+<br><dt><code>--nfp</code>
+<dd>Specify that the machine does not have a floating point unit.  This
+option only applies to <code>m68k-sun-sunos<var>n</var></code> and
+<code>m68k-isi-bsd</code>.  On any other system, <code>--nfp</code> has no effect.
+
+<br><dt><code>--enable-checking</code>
+<dt><code>--enable-checking=<var>list</var></code>
+<dd>When you specify this option, the compiler is built to perform checking
+of tree node types when referencing fields of that node, and some other
+internal consistency checks.  This does not change the generated code,
+but adds error checking within the compiler.  This will slow down the
+compiler and may only work properly if you are building the compiler
+with GCC.  This is on by default when building from CVS or snapshots,
+but off for releases.  More control over the checks may be had by
+specifying <var>list</var>; the categories of checks available are
+<code>misc</code>, <code>tree</code>, <code>gc</code>, <code>rtl</code> and <code>gcac</code>.  The
+default when <var>list</var> is not specified is <code>misc,tree,gc</code>; the
+checks <code>rtl</code> and <code>gcac</code> are very expensive.
+
+<br><dt><code>--enable-nls</code>
+<dt><code>--disable-nls</code>
+<dd>The <code>--enable-nls</code> option enables Native Language Support (NLS),
+which lets GCC output diagnostics in languages other than American
+English.  Native Language Support is enabled by default if not doing a
+canadian cross build.  The <code>--disable-nls</code> option disables NLS.
+
+<br><dt><code>--with-included-gettext</code>
+<dd>If NLS is enabled, the <code>--with-included-gettext</code> option causes the build
+procedure to prefer its copy of GNU <code>gettext</code>.
+
+<br><dt><code>--with-catgets</code>
+<dd>If NLS is enabled, and if the host lacks <code>gettext</code> but has the
+inferior <code>catgets</code> interface, the GCC build procedure normally
+ignores <code>catgets</code> and instead uses GCC's copy of the GNU
+<code>gettext</code> library.  The <code>--with-catgets</code> option causes the
+build procedure to use the host's <code>catgets</code> in this situation.
+
+<br><dt><code>--with-system-zlib</code>
+<dd>Use installed zlib rather than that included with GCC.  This option
+only applies if the Java front end is being built. 
+</dl>
+
+<p>Some options which only apply to building cross compilers:
+<dl>
+<dt><code>--with-headers=<var>dir</var></code>
+<dd>Specifies a directory
+which has target include files. 
+<em>This options is required</em> when building a cross
+compiler, if <code><var>prefix</var>/<var>target</var>/sys-include</code> doesn't pre-exist. 
+These include files will be copied into the <code>gcc</code> install directory. 
+Fixincludes will be run on these files to make them compatible with
+GCC. 
+<br><dt><code>--with-libs=``<var>dir1</var> <var>dir2</var> <small>...</small> <var>dirN</var>''</code>
+<dd>Specifies a list of directories which contain the target runtime
+libraries.  These libraries will be copied into the <code>gcc</code> install
+directory. 
+<br><dt><code>--with-newlib</code>
+<dd>Specifies that <code>newlib</code> is
+being used as the target C library.  This causes <code>__eprintf</code> to be
+omitted from <code>libgcc.a</code> on the assumption that it will be provided by
+<code>newlib</code>. 
+</dl>
+
+<p>Note that each <code>--enable</code> option has a corresponding
+<code>--disable</code> option and that each <code>--with</code> option has a
+corresponding <code>--without</code> option.
+
+<hr>
+<p>
+<a href="./index.html">Return to the GCC Installation page</a>
+
+</body></html>
+

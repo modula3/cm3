@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler.  Vax version.
-   Copyright (C) 1987, 88, 91, 93-96, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1988, 1991, 1993, 1994, 1995, 1996, 1997, 1998,
+   1999, 2000, 2001 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -21,11 +22,15 @@ Boston, MA 02111-1307, USA.  */
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
-#define CPP_PREDEFINES "-Dvax -D__vax__ -Dunix -Asystem(unix) -Asystem(bsd) -Acpu(vax) -Amachine(vax)"
+#define CPP_PREDEFINES "-Dvax -D__vax__ -Dunix -Asystem=unix -Asystem=bsd -Acpu=vax -Amachine=vax"
+
+/* Use -J option for long branch support with Unix assembler. */
+
+#define ASM_SPEC "-J"
 
 /* If using g-format floating point, alter math.h.  */
 
-#define	CPP_SPEC "%{mg:-DGFLOAT}"
+#define	CPP_SPEC "%{mg:%{!ansi:-DGFLOAT} -D__GFLOAT}"
 
 /* Choose proper libraries depending on float format.
    Note that there are no profiling libraries for g-format.
@@ -65,15 +70,15 @@ extern int target_flags;
    where VALUE is the bits to set or minus the bits to clear.
    An empty string NAME is used to identify the default VALUE.  */
 
-#define TARGET_SWITCHES  \
-  { {"unix", 1},  \
-    {"gnu", -1},  \
-    {"vaxc-alignment", 2}, \
-    {"g", 4}, \
-    {"g-float", 4}, \
-    {"d", -4},	\
-    {"d-float", -4}, \
-    { "", TARGET_DEFAULT}}
+#define TARGET_SWITCHES						\
+  { {"unix", 1, "Generate code for UNIX assembler"},  		\
+    {"gnu", -1, "Generate code for GNU assembler (gas)"},  	\
+    {"vaxc-alignment", 2, "Use VAXC structure conventions"}, 	\
+    {"g", 4, "Generate GFLOAT double precision code"},		\
+    {"g-float", 4, "Generate GFLOAT double precision code"},	\
+    {"d", -4, "Generate DFLOAT double precision code"},		\
+    {"d-float", -4, "Generate DFLOAT double precision code"},	\
+    { "", TARGET_DEFAULT, 0}}
 
 /* Default target_flags if no switches specified.  */
 
@@ -258,7 +263,7 @@ enum reg_class { NO_REGS, ALL_REGS, LIM_REG_CLASSES };
    This is an initializer for a vector of HARD_REG_SET
    of length N_REG_CLASSES.  */
 
-#define REG_CLASS_CONTENTS {0, 0xffff}
+#define REG_CLASS_CONTENTS {{0}, {0xffff}}
 
 /* The same information, inverted:
    Return the class number of the smallest class containing
@@ -347,8 +352,7 @@ enum reg_class { NO_REGS, ALL_REGS, LIM_REG_CLASSES };
 /* Given an rtx for the address of a frame,
    return an rtx for the address of the word in the frame
    that holds the dynamic chain--the previous frame's address.  */
-#define DYNAMIC_CHAIN_ADDRESS(frame) \
-gen_rtx (PLUS, Pmode, frame, GEN_INT (12))
+#define DYNAMIC_CHAIN_ADDRESS(FRAME) plus_constant ((FRAME), 12)
 
 /* If we generate an insn to push BYTES bytes,
    this says how many the stack pointer really advances by.
@@ -365,9 +369,10 @@ gen_rtx (PLUS, Pmode, frame, GEN_INT (12))
    or for a library call it is an identifier node for the subroutine name.
    SIZE is the number of bytes of arguments passed on the stack.
 
-   On the Vax, the RET insn always pops all the args for any function.  */
+   On the Vax, the RET insn pops a maximum of 255 args for any function.  */
 
-#define RETURN_POPS_ARGS(FUNDECL,FUNTYPE,SIZE) (SIZE)
+#define RETURN_POPS_ARGS(FUNDECL,FUNTYPE,SIZE) \
+  ((SIZE) > 255*4 ? 0 : (SIZE))
 
 /* Define how to find the value returned by a function.
    VALTYPE is the data type of the value (as a tree).
@@ -377,14 +382,14 @@ gen_rtx (PLUS, Pmode, frame, GEN_INT (12))
 /* On the Vax the return value is in R0 regardless.  */   
 
 #define FUNCTION_VALUE(VALTYPE, FUNC)  \
-  gen_rtx (REG, TYPE_MODE (VALTYPE), 0)
+  gen_rtx_REG (TYPE_MODE (VALTYPE), 0)
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
 
 /* On the Vax the return value is in R0 regardless.  */   
 
-#define LIBCALL_VALUE(MODE)  gen_rtx (REG, MODE, 0)
+#define LIBCALL_VALUE(MODE)  gen_rtx_REG (MODE, 0)
 
 /* Define this if PCC uses the nonreentrant convention for returning
    structure and union values.  */
@@ -530,14 +535,14 @@ gen_rtx (PLUS, Pmode, frame, GEN_INT (12))
      movl $STATIC,r0   (store the functions static chain)
      jmp  *$FUNCTION   (jump to function code at address FUNCTION)  */
 
-#define TRAMPOLINE_TEMPLATE(FILE)					\
-{									\
-  ASM_OUTPUT_SHORT (FILE, const0_rtx);					\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x8fd0));	\
-  ASM_OUTPUT_INT (FILE, const0_rtx);					\
-  ASM_OUTPUT_BYTE  (FILE, 0x50+STATIC_CHAIN_REGNUM);			\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x9f17));	\
-  ASM_OUTPUT_INT (FILE, const0_rtx);					\
+#define TRAMPOLINE_TEMPLATE(FILE)			\
+{							\
+  ASM_OUTPUT_SHORT (FILE, const0_rtx);			\
+  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x8fd0));		\
+  ASM_OUTPUT_INT (FILE, const0_rtx);			\
+  ASM_OUTPUT_BYTE  (FILE, 0x50 + STATIC_CHAIN_REGNUM);	\
+  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x9f17));		\
+  ASM_OUTPUT_INT (FILE, const0_rtx);			\
 }
 
 /* Length in units of the trampoline for entering a nested function.  */
@@ -552,12 +557,12 @@ gen_rtx (PLUS, Pmode, frame, GEN_INT (12))
    to the start of the trampoline.  */
 #define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT)			\
 {									\
-  emit_insn (gen_rtx (ASM_INPUT, VOIDmode,				\
-		      "movpsl -(sp)\n\tpushal 1(pc)\n\trei"));		\
-  emit_move_insn (gen_rtx (MEM, HImode, TRAMP),				\
-		  gen_rtx (MEM, HImode, FNADDR));			\
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 4)), CXT);\
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 11)),	\
+  emit_insn (gen_rtx_ASM_INPUT (VOIDmode,				\
+				"movpsl -(sp)\n\tpushal 1(pc)\n\trei")); \
+  emit_move_insn (gen_rtx_MEM (HImode, TRAMP),				\
+		  gen_rtx_MEM (HImode, FNADDR));			\
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 4)), CXT);\
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 11)),	\
 		  plus_constant (FNADDR, 2));				\
 }
 
@@ -573,7 +578,7 @@ gen_rtx (PLUS, Pmode, frame, GEN_INT (12))
 
 #define RETURN_ADDR_RTX(COUNT, FRAME)	\
   ((COUNT == 0)				\
-   ? gen_rtx (MEM, Pmode, plus_constant (FRAME, RETURN_ADDRESS_OFFSET)) \
+   ? gen_rtx_MEM (Pmode, plus_constant (FRAME, RETURN_ADDRESS_OFFSET)) \
    : (rtx) 0)
 
 
@@ -731,15 +736,15 @@ gen_rtx (PLUS, Pmode, frame, GEN_INT (12))
  : (GET_CODE (PROD) == MULT						\
     &&									\
     (xfoo0 = XEXP (PROD, 0), xfoo1 = XEXP (PROD, 1),			\
-     ((GET_CODE (xfoo0) == CONST_INT					\
-       && INTVAL (xfoo0) == GET_MODE_SIZE (MODE)			\
-       && GET_CODE (xfoo1) == REG					\
-       && REG_OK_FOR_INDEX_P (xfoo1))					\
-      ||								\
-      (GET_CODE (xfoo1) == CONST_INT					\
-       && INTVAL (xfoo1) == GET_MODE_SIZE (MODE)			\
-       && GET_CODE (xfoo0) == REG					\
-       && REG_OK_FOR_INDEX_P (xfoo0))))))
+     ((((GET_CODE (xfoo0) == CONST_INT					\
+         && GET_CODE (xfoo1) == REG)					\
+         && INTVAL (xfoo0) == (int)GET_MODE_SIZE (MODE))		\
+         && REG_OK_FOR_INDEX_P (xfoo1))					\
+        ||								\
+      (((GET_CODE (xfoo1) == CONST_INT					\
+         && GET_CODE (xfoo0) == REG)					\
+         && INTVAL (xfoo1) == (int)GET_MODE_SIZE (MODE))		\
+         && REG_OK_FOR_INDEX_P (xfoo0))))))
 
 /* Go to ADDR if X is the sum of a register
    and a valid index term for mode MODE.  */
@@ -860,6 +865,10 @@ gen_rtx (PLUS, Pmode, frame, GEN_INT (12))
    is done just by pretending it is already truncated.  */
 #define TRULY_NOOP_TRUNCATION(OUTPREC, INPREC) 1
 
+/* When a prototype says `char' or `short', really pass an `int'.
+   (On the vax, this is required for system-library compatibility.)  */
+#define PROMOTE_PROTOTYPES 1
+
 /* Specify the machine mode that pointers have.
    After generation of rtl, the compiler makes no further distinction
    between pointers and any other objects of this machine mode.  */
@@ -977,7 +986,30 @@ gen_rtx (PLUS, Pmode, frame, GEN_INT (12))
 	CC_STATUS_INIT;						\
       else if (GET_CODE (SET_DEST (EXP)) != ZERO_EXTRACT	\
 	       && GET_CODE (SET_DEST (EXP)) != PC)		\
-	{ cc_status.flags = 0;					\
+	{							\
+	  cc_status.flags = 0;					\
+	  /* The integer operations below don't set carry or	\
+	     set it in an incompatible way.  That's ok though	\
+	     as the Z bit is all we need when doing unsigned	\
+	     comparisons on the result of these insns (since	\
+	     they're always with 0).  Set CC_NO_OVERFLOW to	\
+	     generate the correct unsigned branches.  */	\
+	  switch (GET_CODE (SET_SRC (EXP)))			\
+	    {							\
+	    case NEG:						\
+	      if (GET_MODE_CLASS (GET_MODE (EXP)) == MODE_FLOAT)\
+	 	break;						\
+	    case AND:						\
+	    case IOR:						\
+	    case XOR:						\
+	    case NOT:						\
+	    case MEM:						\
+	    case REG:						\
+	      cc_status.flags = CC_NO_OVERFLOW;			\
+	      break;						\
+	    default:						\
+	      break;						\
+	    }							\
 	  cc_status.value1 = SET_DEST (EXP);			\
 	  cc_status.value2 = SET_SRC (EXP); } }			\
   else if (GET_CODE (EXP) == PARALLEL				\
@@ -1013,8 +1045,17 @@ gen_rtx (PLUS, Pmode, frame, GEN_INT (12))
 /* Control the assembler format that we output.  */
 
 /* Output at beginning of assembler file.  */
+/* When debugging, we want to output an extra dummy label so that gas
+   can distinguish between D_float and G_float prior to processing the
+   .stabs directive identifying type double.  */
 
-#define ASM_FILE_START(FILE) fprintf (FILE, "#NO_APP\n");
+#define ASM_FILE_START(FILE) \
+  do {								\
+    fputs (ASM_APP_OFF, FILE);					\
+    if (write_symbols == DBX_DEBUG)				\
+      fprintf (FILE, "___vax_%c_doubles:\n", ASM_DOUBLE_CHAR);	\
+  } while (0)
+
 
 /* Output to assembler file text saying following lines
    may contain character constants, extra white space, comments, etc.  */
@@ -1028,11 +1069,11 @@ gen_rtx (PLUS, Pmode, frame, GEN_INT (12))
 
 /* Output before read-only data.  */
 
-#define TEXT_SECTION_ASM_OP ".text"
+#define TEXT_SECTION_ASM_OP "\t.text"
 
 /* Output before writable data.  */
 
-#define DATA_SECTION_ASM_OP ".data"
+#define DATA_SECTION_ASM_OP "\t.data"
 
 /* How to refer to registers in assembler output.
    This sequence is indexed by compiler's hard-register-number (see above).  */
@@ -1203,17 +1244,6 @@ do { char dstr[30];							\
 ( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 10),	\
   sprintf ((OUTPUT), "%s.%d", (NAME), (LABELNO)))
 
-/* When debugging, we want to output an extra dummy label so that gas
-   can distinguish between D_float and G_float prior to processing the
-   .stabs directive identifying type double.  */
-
-#define ASM_IDENTIFY_LANGUAGE(FILE)	\
-  do {								\
-    output_lang_identify (FILE);				\
-    if (write_symbols == DBX_DEBUG)				\
-      fprintf (FILE, "___vax_%c_doubles:\n", ASM_DOUBLE_CHAR);	\
-  } while (0)
-
 /* Output code to add DELTA to the first argument, and then jump to FUNCTION.
    Used for C++ multiple inheritance.
 	.mask	^m<r2,r3,r4,r5,r6,r7,r8,r9,r10,r11>	#conservative entry mask
@@ -1271,8 +1301,7 @@ VAX operand formatting codes:
   ((CODE) == '#')
 
 #define PRINT_OPERAND(FILE, X, CODE)  \
-{ extern char *rev_cond_name ();					\
-  if (CODE == '#') fputc (ASM_DOUBLE_CHAR, FILE);			\
+{ if (CODE == '#') fputc (ASM_DOUBLE_CHAR, FILE);			\
   else if (CODE == 'C')							\
     fputs (rev_cond_name (X), FILE);					\
   else if (CODE == 'D' && GET_CODE (X) == CONST_INT && INTVAL (X) < 0)	\

@@ -1,8 +1,8 @@
 /* Generate from machine description:
-
    - some macros CODE_FOR_... giving the insn_code_number value
    for each of the defined standard insn names.
-   Copyright (C) 1987, 1991, 1995, 1998, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1991, 1995, 1998,
+   1999, 2000, 2001 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -25,24 +25,15 @@ Boston, MA 02111-1307, USA.  */
 #include "hconfig.h"
 #include "system.h"
 #include "rtl.h"
-#include "obstack.h"
+#include "errors.h"
+#include "gensupport.h"
 
-static struct obstack obstack;
-struct obstack *rtl_obstack = &obstack;
-
-#define obstack_chunk_alloc xmalloc
-#define obstack_chunk_free free
-
-void fatal PVPROTO ((const char *, ...))
-  ATTRIBUTE_PRINTF_1 ATTRIBUTE_NORETURN;
-void fancy_abort PROTO((void)) ATTRIBUTE_NORETURN;
-
-/* Define this so we can link with print-rtl.o to get debug_rtx function.  */
-char **insn_name_ptr = 0;
 
 static int insn_code_number;
 
-static void gen_insn PROTO((rtx));
+static void gen_insn PARAMS ((rtx));
+static void output_predicate_decls PARAMS ((void));
+static int print_md_constant PARAMS ((void **, void *));
 
 static void
 gen_insn (insn)
@@ -56,84 +47,46 @@ gen_insn (insn)
 	    insn_code_number);
 }
 
-PTR
-xmalloc (size)
-  size_t size;
-{
-  register PTR val = (PTR) malloc (size);
+/* Print out declarations for all predicates mentioned in
+   PREDICATE_CODES.  */
 
-  if (val == 0)
-    fatal ("virtual memory exhausted");
-  return val;
-}
-
-PTR
-xrealloc (old, size)
-  PTR old;
-  size_t size;
+static void
+output_predicate_decls ()
 {
-  register PTR ptr;
-  if (old)
-    ptr = (PTR) realloc (old, size);
-  else
-    ptr = (PTR) malloc (size);
-  if (!ptr)
-    fatal ("virtual memory exhausted");
-  return ptr;
-}
+#ifdef PREDICATE_CODES
+  static struct {
+    const char *name;
+    RTX_CODE codes[NUM_RTX_CODE];
+  } predicate[] = {
+    PREDICATE_CODES
+  };
+  size_t i;
 
-void
-fatal VPROTO ((const char *format, ...))
-{
-#ifndef ANSI_PROTOTYPES
-  const char *format;
+  putc ('\n', stdout);
+  puts ("struct rtx_def;\n#include \"machmode.h\"\n");
+  for (i = 0; i < sizeof predicate / sizeof *predicate; i++)
+    printf ("extern int %s PARAMS ((struct rtx_def *, enum machine_mode));\n",
+	    predicate[i].name);
+  putc ('\n', stdout);
 #endif
-  va_list ap;
-
-  VA_START (ap, format);
-
-#ifndef ANSI_PROTOTYPES
-  format = va_arg (ap, const char *);
-#endif
-
-  fprintf (stderr, "gencodes: ");
-  vfprintf (stderr, format, ap);
-  va_end (ap);
-  fprintf (stderr, "\n");
-  exit (FATAL_EXIT_CODE);
 }
 
-/* More 'friendly' abort that prints the line and file.
-   config.h can #define abort fancy_abort if you like that sort of thing.  */
+extern int main PARAMS ((int, char **));
 
-void
-fancy_abort ()
-{
-  fatal ("Internal gcc abort.");
-}
-
 int
 main (argc, argv)
      int argc;
      char **argv;
 {
   rtx desc;
-  FILE *infile;
-  register int c;
 
-  obstack_init (rtl_obstack);
+  progname = "gencodes";
 
   if (argc <= 1)
     fatal ("No input file name.");
 
-  infile = fopen (argv[1], "r");
-  if (infile == 0)
-    {
-      perror (argv[1]);
-      exit (FATAL_EXIT_CODE);
-    }
-
-  init_rtl ();
+  if (init_md_reader (argv[1]) != SUCCESS_EXIT_CODE)
+    return (FATAL_EXIT_CODE);
 
   printf ("/* Generated automatically by the program `gencodes'\n\
 from the machine description file `md'.  */\n\n");
@@ -147,32 +100,50 @@ from the machine description file `md'.  */\n\n");
 
   while (1)
     {
-      c = read_skip_spaces (infile);
-      if (c == EOF)
-	break;
-      ungetc (c, infile);
+      int line_no;
 
-      desc = read_rtx (infile);
+      desc = read_md_rtx (&line_no, &insn_code_number);
+      if (desc == NULL)
+	break;
+
       if (GET_CODE (desc) == DEFINE_INSN || GET_CODE (desc) == DEFINE_EXPAND)
-	{
-	  gen_insn (desc);
-	  insn_code_number++;
-	}
-      if (GET_CODE (desc) == DEFINE_PEEPHOLE
-	  || GET_CODE (desc) == DEFINE_SPLIT)
-	{
-	  insn_code_number++;
-	}
+	gen_insn (desc);
     }
 
-  printf ("  CODE_FOR_nothing };\n");
+  printf ("  CODE_FOR_nothing = %d };\n", insn_code_number + 1);
 
-  printf ("\n#define MAX_INSN_CODE ((int) CODE_FOR_nothing)\n");
+  printf ("\n#define MAX_INSN_CODE ((int) CODE_FOR_nothing)\n\n");
 
-  printf ("#endif /* MAX_INSN_CODE */\n");
+  traverse_md_constants (print_md_constant, stdout);
+
+  output_predicate_decls ();
+
+  printf ("\n#endif /* MAX_INSN_CODE */\n");
 
   fflush (stdout);
-  exit (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
-  /* NOTREACHED */
-  return 0;
+  return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
+}
+
+/* Define this so we can link with print-rtl.o to get debug_rtx function.  */
+
+const char *
+get_insn_name (code)
+     int code ATTRIBUTE_UNUSED;
+{
+  return NULL;
+}
+
+/* Called via traverse_md_constants; emit a #define for
+   the current constant definition.  */
+
+static int
+print_md_constant (slot, info)
+     void **slot;
+     void *info;
+{
+  struct md_constant *def = *slot;
+  FILE *file = info;
+
+  fprintf (file, "#define %s %s\n", def->name, def->value);
+  return 1;
 }

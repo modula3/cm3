@@ -1,5 +1,6 @@
 /* Read and manage MIPS symbol tables from object modules.
-   Copyright (C) 1991, 1994, 1995, 1997, 1998, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1994, 1995, 1997, 1998, 1999, 2000, 2001
+   Free Software Foundation, Inc.
    Contributed by hartzell@boulder.colorado.edu,
    Rewritten by meissner@osf.org.
 
@@ -22,7 +23,6 @@ Boston, MA 02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
-
 #ifdef index
 #undef index
 #undef rindex
@@ -56,26 +56,15 @@ typedef const PTR_T CPTR_T;
 #define uint	unsigned int
 #define ulong	unsigned long
 
-
-static void
-fatal(s)
+void fatal PARAMS ((const char *)) ATTRIBUTE_NORETURN;
+void fancy_abort PARAMS ((void)) ATTRIBUTE_NORETURN;
+  
+void
+fatal (s)
   const char *s;
 {
-  fprintf(stderr, "%s\n", s);
-  exit(FATAL_EXIT_CODE);
-}
-
-/* Same as `malloc' but report error if no memory available.  */
-/* Do this before size_t is fiddled with so it matches the prototype
-   in libiberty.h . */
-PTR
-xmalloc (size)
-  size_t size;
-{
-  register PTR value = (PTR) malloc (size);
-  if (value == 0)
-    fatal ("Virtual memory exhausted.");
-  return value;
+  fprintf (stderr, "%s\n", s);
+  exit (FATAL_EXIT_CODE);
 }
 
 /* Due to size_t being defined in sys/types.h and different
@@ -274,18 +263,6 @@ const char *sc_to_string	__proto((sc_t));
 const char *glevel_to_string	__proto((glevel_t));
 const char *lang_to_string	__proto((lang_t));
 const char *type_to_string	__proto((AUXU *, int, FDR *));
-
-#ifndef __alpha
-# ifdef NEED_DECLARATION_MALLOC
-extern PTR_T	malloc	__proto((size_t));
-# endif
-# ifdef NEED_DECLARATION_CALLOC
-extern PTR_T	calloc	__proto((size_t, size_t));
-# endif
-# ifdef NEED_DECLARATION_REALLOC
-extern PTR_T	realloc	__proto((PTR_T, size_t));
-# endif
-#endif
 
 extern char *optarg;
 extern int   optind;
@@ -928,7 +905,7 @@ print_symbol (sym_ptr, number, strbase, aux_base, ifd, fdp)
 	if (want_scope)
 	  {
 	    if (free_scope == (scope_t *) 0)
-	      scope_ptr = (scope_t *) malloc (sizeof (scope_t));
+	      scope_ptr = (scope_t *) xmalloc (sizeof (scope_t));
 	    else
 	      {
 		scope_ptr = free_scope;
@@ -982,7 +959,7 @@ print_symbol (sym_ptr, number, strbase, aux_base, ifd, fdp)
 	if (want_scope)
 	  {
 	    if (free_scope == (scope_t *) 0)
-	      scope_ptr = (scope_t *) malloc (sizeof (scope_t));
+	      scope_ptr = (scope_t *) xmalloc (sizeof (scope_t));
 	    else
 	      {
 		scope_ptr = free_scope;
@@ -1056,7 +1033,7 @@ print_symbol (sym_ptr, number, strbase, aux_base, ifd, fdp)
 
   if (MIPS_IS_STAB(sym_ptr))
     {
-      register int i = sizeof(stab_names) / sizeof(stab_names[0]);
+      register int i = ARRAY_SIZE (stab_names);
       const char *stab_name = "stab";
       short code = MIPS_UNMARK_STAB(sym_ptr->index);
       while (--i >= 0)
@@ -1434,14 +1411,7 @@ read_tfile __proto((void))
 				    "Auxiliary symbols");
 
   if (sym_hdr.iauxMax > 0)
-    {
-      aux_used = calloc (sym_hdr.iauxMax, 1);
-      if (aux_used == (char *) 0)
-	{
-	  perror ("calloc");
-	  exit (1);
-	}
-    }
+    aux_used = xcalloc (sym_hdr.iauxMax, 1);
 
   l_strings = (char *) read_seek ((PTR_T) 0,
 				  sym_hdr.issMax,
@@ -1470,6 +1440,8 @@ read_tfile __proto((void))
 }
 
 
+
+extern int main PARAMS ((int, char **));
 
 int
 main (argc, argv)

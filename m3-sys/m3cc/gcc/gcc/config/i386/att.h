@@ -1,5 +1,5 @@
 /* Definitions for AT&T assembler syntax for the Intel 80386.
-   Copyright (C) 1988, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1996, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -30,10 +30,8 @@ Boston, MA 02111-1307, USA.  */
 
 /* Assembler pseudos to introduce constants of various size.  */
 
-/* #define ASM_BYTE_OP "\t.byte"  Now in svr3.h or svr4.h.  */
-#define ASM_SHORT "\t.value"
-#define ASM_LONG "\t.long"
-#define ASM_DOUBLE "\t.double"
+#define ASM_SHORT "\t.value\t"
+#define ASM_LONG "\t.long\t"
 
 /* How to output an ASCII string constant.  */
 
@@ -42,11 +40,21 @@ do								\
 { int i = 0; 							\
   while (i < (size))						\
     { if (i%10 == 0) { if (i!=0) fprintf ((FILE), "\n");	\
-		       fprintf ((FILE), "%s ", ASM_BYTE_OP); }	\
+		       fprintf ((FILE), "%s", ASM_BYTE_OP); }	\
       else fprintf ((FILE), ",");				\
 	fprintf ((FILE), "0x%x", ((p)[i++] & 0377)) ;}		\
       fprintf ((FILE), "\n");					\
 } while (0)
+
+/* Output at beginning of assembler file.  */
+/* The .file command should always begin the output.  */
+#undef ASM_FILE_START
+#define ASM_FILE_START(FILE)						\
+  do {									\
+	output_file_directive (FILE, main_input_filename);		\
+	if (target_flags & MASK_INTEL_SYNTAX)				\
+	  fputs ("\t.intel_syntax\n", FILE);				\
+  } while (0)
 
 /* Do use .optim by default on this machine.  */
 #undef ASM_FILE_START_1
@@ -71,6 +79,10 @@ do								\
 
 /* Define the syntax of labels and symbol definitions/declarations.  */
 
+/* The prefix to add for compiler private assembler symbols.  */
+#undef LOCAL_LABEL_PREFIX
+#define LOCAL_LABEL_PREFIX "."
+
 /* This is how to store into the string BUF
    the symbol_ref name of an internal numbered label where
    PREFIX is the class of label and NUM is the number within the class.
@@ -78,14 +90,14 @@ do								\
 
 #undef ASM_GENERATE_INTERNAL_LABEL
 #define ASM_GENERATE_INTERNAL_LABEL(BUF,PREFIX,NUMBER)	\
-  sprintf ((BUF), ".%s%d", (PREFIX), (NUMBER))
+  sprintf ((BUF), "%s%s%d", LOCAL_LABEL_PREFIX, (PREFIX), (NUMBER))
 
 /* This is how to output an internal numbered label where
    PREFIX is the class of label and NUM is the number within the class.  */
 
 #undef ASM_OUTPUT_INTERNAL_LABEL
 #define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)	\
-  fprintf (FILE, ".%s%d:\n", PREFIX, NUM)
+  fprintf (FILE, "%s%s%d:\n", LOCAL_LABEL_PREFIX, PREFIX, NUM)
 
 /* The prefix to add to user-visible assembler symbols. */
 

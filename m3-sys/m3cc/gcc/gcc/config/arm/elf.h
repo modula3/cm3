@@ -1,6 +1,7 @@
-/* Definitions of target machine for GNU compiler,
-   for ARM with ELF obj format.
-   Copyright (C) 1995, 1996, 1997, 1998, 1999 Free Software Foundation, Inc.
+/* Definitions of target machine for GNU compiler.
+   For ARM with ELF obj format.
+   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001
+   Free Software Foundation, Inc.
    Contributed by Philip Blundell <philb@gnu.org> and
    Catherine Moore <clm@cygnus.com>
    
@@ -32,8 +33,29 @@ Boston, MA 02111-1307, USA.  */
 #define USER_LABEL_PREFIX ""
 #endif
 
-#ifndef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Darm -Darm_elf -Acpu(arm) -Amachine(arm) -D__ELF__"
+#ifndef SUBTARGET_CPP_SPEC
+#define SUBTARGET_CPP_SPEC  "-D__ELF__"
+#endif
+
+#ifndef SUBTARGET_EXTRA_SPECS
+#define SUBTARGET_EXTRA_SPECS \
+  { "subtarget_extra_asm_spec",	SUBTARGET_EXTRA_ASM_SPEC },
+#endif
+
+#ifndef SUBTARGET_EXTRA_ASM_SPEC
+#define SUBTARGET_EXTRA_ASM_SPEC ""
+#endif
+
+#ifndef ASM_SPEC
+#define ASM_SPEC "\
+%{mbig-endian:-EB} \
+%{mcpu=*:-m%*} \
+%{march=*:-m%*} \
+%{mapcs-*:-mapcs-%*} \
+%{mapcs-float:-mfloat} \
+%{msoft-float:-mno-fpu} \
+%{mthumb-interwork:-mthumb-interwork} \
+%(subtarget_extra_asm_spec)"
 #endif
 
 /* The following macro defines the format used to output the second
@@ -54,8 +76,8 @@ Boston, MA 02111-1307, USA.  */
    are used to set the corresponding fields of the linker symbol table
    entries in an ELF object file under SVR4.  These macros also output
    the starting labels for the relevant functions/objects.  */
-#define TYPE_ASM_OP     ".type"
-#define SIZE_ASM_OP     ".size"
+#define TYPE_ASM_OP     "\t.type\t"
+#define SIZE_ASM_OP     "\t.size\t"
 
 /* Write the extra assembler code needed to declare a function properly.
    Some svr4 assemblers need to also have something extra said about the
@@ -63,9 +85,8 @@ Boston, MA 02111-1307, USA.  */
 #define ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL)	\
   do							\
     {							\
-      if (TARGET_POKE_FUNCTION_NAME)			\
-        arm_poke_function_name (FILE, NAME);		\
-      fprintf (FILE, "\t%s\t ", TYPE_ASM_OP);		\
+      ARM_DECLARE_FUNCTION_NAME (FILE, NAME, DECL);     \
+      fprintf (FILE, "%s", TYPE_ASM_OP);		\
       assemble_name (FILE, NAME);			\
       putc (',', FILE);					\
       fprintf (FILE, TYPE_OPERAND_FMT, "function");	\
@@ -76,79 +97,81 @@ Boston, MA 02111-1307, USA.  */
   while (0)
 
 /* Write the extra assembler code needed to declare an object properly.  */
-#define ASM_DECLARE_OBJECT_NAME(FILE, NAME, DECL)			\
-  do {									\
-    fprintf (FILE, "\t%s\t ", TYPE_ASM_OP);				\
-    assemble_name (FILE, NAME);						\
-    putc (',', FILE);							\
-    fprintf (FILE, TYPE_OPERAND_FMT, "object");				\
-    putc ('\n', FILE);							\
-    size_directive_output = 0;						\
-    if (!flag_inhibit_size_directive && DECL_SIZE (DECL))		\
-      {									\
-	size_directive_output = 1;					\
-	fprintf (FILE, "\t%s\t ", SIZE_ASM_OP);				\
-	assemble_name (FILE, NAME);					\
-	putc (',', FILE);						\
-	fprintf (FILE, HOST_WIDE_INT_PRINT_DEC,				\
-		 int_size_in_bytes (TREE_TYPE (DECL)));			\
-	fputc ('\n', FILE);						\
-      }									\
-    ASM_OUTPUT_LABEL(FILE, NAME);					\
-  } while (0)
+#define ASM_DECLARE_OBJECT_NAME(FILE, NAME, DECL)		\
+  do								\
+    {								\
+      fprintf (FILE, "%s", TYPE_ASM_OP);			\
+      assemble_name (FILE, NAME);				\
+      putc (',', FILE);						\
+      fprintf (FILE, TYPE_OPERAND_FMT, "object");		\
+      putc ('\n', FILE);					\
+      size_directive_output = 0;				\
+      if (!flag_inhibit_size_directive && DECL_SIZE (DECL))	\
+        {							\
+	  size_directive_output = 1;				\
+	  fprintf (FILE, "%s", SIZE_ASM_OP);			\
+	  assemble_name (FILE, NAME);				\
+	  putc (',', FILE);					\
+	  fprintf (FILE, HOST_WIDE_INT_PRINT_DEC,		\
+		   int_size_in_bytes (TREE_TYPE (DECL)));	\
+	  fputc ('\n', FILE);					\
+        }							\
+      ASM_OUTPUT_LABEL(FILE, NAME);				\
+    }								\
+  while (0)
 
 /* Output the size directive for a decl in rest_of_decl_compilation
    in the case where we did not do so before the initializer.
    Once we find the error_mark_node, we know that the value of
    size_directive_output was set
    by ASM_DECLARE_OBJECT_NAME when it was run for the same decl.  */
-#define ASM_FINISH_DECLARE_OBJECT(FILE, DECL, TOP_LEVEL, AT_END)	 \
-do {									 \
-     char * name = XSTR (XEXP (DECL_RTL (DECL), 0), 0);			 \
-     if (!flag_inhibit_size_directive && DECL_SIZE (DECL)		 \
-         && ! AT_END && TOP_LEVEL					 \
-	 && DECL_INITIAL (DECL) == error_mark_node			 \
-	 && !size_directive_output)					 \
-       {								 \
-	 size_directive_output = 1;					 \
-	 fprintf (FILE, "\t%s\t ", SIZE_ASM_OP);			 \
-	 assemble_name (FILE, name);					 \
-	 putc (',', FILE);						 \
-	 fprintf (FILE, HOST_WIDE_INT_PRINT_DEC,			 \
-		  int_size_in_bytes (TREE_TYPE (DECL))); 		 \
-	fputc ('\n', FILE);						 \
-       }								 \
-   } while (0)
+#define ASM_FINISH_DECLARE_OBJECT(FILE, DECL, TOP_LEVEL, AT_END)	\
+  do									\
+    {									\
+      const char * name = XSTR (XEXP (DECL_RTL (DECL), 0), 0);		\
+      if (!flag_inhibit_size_directive && DECL_SIZE (DECL)		\
+          && ! AT_END && TOP_LEVEL					\
+	  && DECL_INITIAL (DECL) == error_mark_node			\
+	  && !size_directive_output)					\
+        {								\
+	  size_directive_output = 1;					\
+	  fprintf (FILE, "%s", SIZE_ASM_OP);				\
+	  assemble_name (FILE, name);					\
+	  putc (',', FILE);						\
+	  fprintf (FILE, HOST_WIDE_INT_PRINT_DEC,			\
+		  int_size_in_bytes (TREE_TYPE (DECL)));		\
+	 fputc ('\n', FILE);						\
+        }								\
+    }									\
+  while (0)
 
 /* This is how to declare the size of a function.  */
-#define ASM_DECLARE_FUNCTION_SIZE(FILE, FNAME, DECL)			\
-  do {									\
-    if (!flag_inhibit_size_directive)					\
-      {									\
-        char label[256];						\
-	static int labelno;						\
-	labelno ++;							\
-	ASM_GENERATE_INTERNAL_LABEL (label, "Lfe", labelno);		\
-	ASM_OUTPUT_INTERNAL_LABEL (FILE, "Lfe", labelno);		\
-	fprintf (FILE, "\t%s\t ", SIZE_ASM_OP);				\
-	assemble_name (FILE, (FNAME));					\
-        fprintf (FILE, ",");						\
-	assemble_name (FILE, label);					\
-        fprintf (FILE, "-");						\
-	assemble_name (FILE, (FNAME));					\
-	putc ('\n', FILE);						\
-      }									\
-  } while (0)
+#define ASM_DECLARE_FUNCTION_SIZE(FILE, FNAME, DECL)		\
+  do								\
+    {								\
+      ARM_DECLARE_FUNCTION_SIZE (FILE, FNAME, DECL);		\
+      if (!flag_inhibit_size_directive)				\
+        {							\
+          char label[256];					\
+	  static int labelno;					\
+	  labelno ++;						\
+	  ASM_GENERATE_INTERNAL_LABEL (label, "Lfe", labelno);	\
+	  ASM_OUTPUT_INTERNAL_LABEL (FILE, "Lfe", labelno);	\
+	  fprintf (FILE, "%s", SIZE_ASM_OP);			\
+	  assemble_name (FILE, (FNAME));			\
+          fprintf (FILE, ",");					\
+	  assemble_name (FILE, label);				\
+          fprintf (FILE, "-");					\
+	  assemble_name (FILE, (FNAME));			\
+	  putc ('\n', FILE);					\
+        }							\
+    }								\
+  while (0)
 
 /* Define this macro if jump tables (for `tablejump' insns) should be
    output in the text section, along with the assembler instructions.
    Otherwise, the readonly data section is used.  */
 #define JUMP_TABLES_IN_TEXT_SECTION 1
-
-#ifndef ASM_SPEC
-#define ASM_SPEC "%{mbig-endian:-EB} %{mcpu=*:-m%*} %{march=*:-m%*} \
- %{mapcs-*:-mapcs-%*} %{mthumb-interwork:-mthumb-interwork} %{mapcs-float:mfloat}"
-#endif
 
 #ifndef LINK_SPEC
 #define LINK_SPEC "%{mbig-endian:-EB} -X"
@@ -160,72 +183,54 @@ do {									 \
 #endif
 
 #ifndef TARGET_DEFAULT
-#define TARGET_DEFAULT (ARM_FLAG_SOFT_FLOAT | ARM_FLAG_APCS_32)
+#define TARGET_DEFAULT (ARM_FLAG_SOFT_FLOAT | ARM_FLAG_APCS_32 | ARM_FLAG_APCS_FRAME)
 #endif
 
 #ifndef MULTILIB_DEFAULTS
-#define MULTILIB_DEFAULTS { "mlittle-endian", "msoft-float", "mapcs-32", "mno-thumb-interwork" }
+#define MULTILIB_DEFAULTS \
+  { "marm", "mlittle-endian", "msoft-float", "mapcs-32", "mno-thumb-interwork", "fno-leading-underscore" }
 #endif
-
-/* Setting this to 32 produces more efficient code, but the value set in previous
-   versions of this toolchain was 8, which produces more compact structures. The
-   command line option -mstructure_size_boundary=<n> can be used to change this
-   value.  */
-#undef  STRUCTURE_SIZE_BOUNDARY
-#define STRUCTURE_SIZE_BOUNDARY arm_structure_size_boundary
-
-extern int arm_structure_size_boundary;
 
 /* A C expression whose value is nonzero if IDENTIFIER with arguments ARGS
    is a valid machine specific attribute for DECL.
    The attributes in ATTRIBUTES have previously been assigned to DECL.  */
 #define VALID_MACHINE_DECL_ATTRIBUTE(DECL, ATTRIBUTES, IDENTIFIER, ARGS) \
-arm_valid_machine_decl_attribute (DECL, IDENTIFIER, ARGS)
+  arm_valid_machine_decl_attribute (DECL, IDENTIFIER, ARGS)
 
-
-/* A C statement to output assembler commands which will identify the
-   object file as having been compiled with GNU CC (or another GNU
-   compiler).  */
-/* Define this to NULL so we don't get anything.
-   We have ASM_IDENTIFY_LANGUAGE.
-   Also, when using stabs, gcc2_compiled must be a stabs entry, not an
-   ordinary symbol, or gdb won't see it.  The stabs entry must be
-   before the N_SO in order for gdb to find it.  */
-#ifndef ASM_IDENTIFY_GCC
-#define ASM_IDENTIFY_GCC(STREAM) 				\
-     fprintf (STREAM, "%sgcc2_compiled.:\n", LOCAL_LABEL_PREFIX )
-#endif
 
 /* This outputs a lot of .req's to define alias for various registers.
    Let's try to avoid this.  */
 #ifndef ASM_FILE_START
-#define ASM_FILE_START(STREAM) \
-do {								\
-  extern char * version_string;					\
-  fprintf (STREAM, "%s Generated by gcc %s for ARM/elf\n",	\
-	   ASM_COMMENT_START, version_string);			\
-  output_file_directive ((STREAM), main_input_filename);	\
-} while (0)
+#define ASM_FILE_START(STREAM)					\
+  do								\
+    {								\
+      fprintf (STREAM, "%s Generated by gcc %s for ARM/elf\n",	\
+	       ASM_COMMENT_START, version_string);		\
+      output_file_directive (STREAM, main_input_filename);	\
+      fprintf (STREAM, ASM_APP_OFF);				\
+    }								\
+  while (0)
 #endif
-     
+
 /* Output an internal label definition.  */
 #ifndef ASM_OUTPUT_INTERNAL_LABEL
 #define ASM_OUTPUT_INTERNAL_LABEL(STREAM, PREFIX, NUM)  	\
-  do                                    	      	   	\
-    {						      	   	\
+  do								\
+    {								\
       char * s = (char *) alloca (40 + strlen (PREFIX));	\
-      extern int arm_target_label, arm_ccfsm_state;	   	\
+      extern int arm_target_label, arm_ccfsm_state;		\
       extern rtx arm_target_insn;				\
-						           	\
-      if (arm_ccfsm_state == 3 && arm_target_label == (NUM)   	\
+								\
+      if (arm_ccfsm_state == 3 && arm_target_label == (NUM)	\
 	&& !strcmp (PREFIX, "L"))				\
 	{							\
-	  arm_ccfsm_state = 0;				        \
+	  arm_ccfsm_state = 0;					\
 	  arm_target_insn = NULL;				\
 	}							\
-	ASM_GENERATE_INTERNAL_LABEL (s, (PREFIX), (NUM));   	\
-	ASM_OUTPUT_LABEL (STREAM, s);	                	\
-    } while (0)
+	ASM_GENERATE_INTERNAL_LABEL (s, (PREFIX), (NUM));	\
+        ASM_OUTPUT_LABEL (STREAM, s);		                \
+    }								\
+  while (0)
 #endif
 
 /* Support the ctors/dtors and other sections.  */
@@ -275,68 +280,96 @@ do {								\
 #endif
 
 #ifndef CTORS_SECTION_FUNCTION
-#define CTORS_SECTION_FUNCTION 						\
-void									\
-ctors_section ()							\
-{									\
-  if (in_section != in_ctors)						\
-    {									\
-      fprintf (asm_out_file, "%s\n", CTORS_SECTION_ASM_OP);		\
-      in_section = in_ctors;						\
-    }									\
+#define CTORS_SECTION_FUNCTION 					\
+void								\
+ctors_section ()						\
+{								\
+  if (in_section != in_ctors)					\
+    {								\
+      fprintf (asm_out_file, "%s\n", CTORS_SECTION_ASM_OP);	\
+      in_section = in_ctors;					\
+    }								\
 }
 #endif
 
 #ifndef DTORS_SECTION_FUNCTION
-#define DTORS_SECTION_FUNCTION 						\
-void									\
-dtors_section ()							\
-{									\
-  if (in_section != in_dtors)						\
-    {									\
-      fprintf (asm_out_file, "%s\n", DTORS_SECTION_ASM_OP);		\
-      in_section = in_dtors;						\
-    }									\
+#define DTORS_SECTION_FUNCTION 					\
+void								\
+dtors_section ()						\
+{								\
+  if (in_section != in_dtors)					\
+    {								\
+      fprintf (asm_out_file, "%s\n", DTORS_SECTION_ASM_OP);	\
+      in_section = in_dtors;					\
+    }								\
 }
 #endif
+
+/* A C statement to output something to the assembler file to switch to
+   section NAME for object DECL which is either a FUNCTION_DECL, a VAR_DECL
+   or NULL_TREE.  */
+#undef  ASM_OUTPUT_SECTION_NAME
+#define ASM_OUTPUT_SECTION_NAME(STREAM, DECL, NAME, RELOC)        	\
+  do									\
+    {								  	\
+      if ((DECL) && TREE_CODE (DECL) == FUNCTION_DECL)		  	\
+	fprintf (STREAM, "\t.section %s,\"ax\",%%progbits\n", NAME);	\
+      else if ((DECL) && DECL_READONLY_SECTION (DECL, RELOC))	  	\
+	fprintf (STREAM, "\t.section %s,\"a\"\n", NAME);		\
+      else if (! strncmp (NAME, ".bss", 4))      			\
+	fprintf (STREAM, "\t.section %s,\"aw\",%%nobits\n", NAME);	\
+      else							 	\
+	fprintf (STREAM, "\t.section %s,\"aw\"\n", NAME);	  	\
+    }									\
+  while (0)
 
 /* Support the ctors/dtors sections for g++.  */
 #ifndef INT_ASM_OP
-#define INT_ASM_OP 	".word"
+#define INT_ASM_OP 	"\t.word\t"
 #endif
 
 /* A C statement (sans semicolon) to output an element in the table of
    global constructors.  */
 #ifndef ASM_OUTPUT_CONSTRUCTOR
-#define ASM_OUTPUT_CONSTRUCTOR(STREAM,NAME) \
-do {						\
-  ctors_section ();				\
-  fprintf (STREAM, "\t%s\t ", INT_ASM_OP);	\
-  assemble_name (STREAM, NAME);			\
-  fprintf (STREAM, "\n");			\
-} while (0)
+#define ASM_OUTPUT_CONSTRUCTOR(STREAM, NAME)	\
+  do						\
+    {						\
+      ctors_section ();				\
+      fprintf (STREAM, "%s", INT_ASM_OP);	\
+      assemble_name (STREAM, NAME);		\
+      fprintf (STREAM, "\n");			\
+    }						\
+  while (0)
 #endif
      
 /* A C statement (sans semicolon) to output an element in the table of
    global destructors.  */
 #ifndef ASM_OUTPUT_DESTRUCTOR
-#define ASM_OUTPUT_DESTRUCTOR(STREAM,NAME) \
-do {						\
-  dtors_section ();                   		\
-  fprintf (STREAM, "\t%s\t ", INT_ASM_OP);	\
-  assemble_name (STREAM, NAME);              	\
-  fprintf (STREAM, "\n");			\
-} while (0)
+#define ASM_OUTPUT_DESTRUCTOR(STREAM, NAME)	\
+  do						\
+    {						\
+      dtors_section ();				\
+      fprintf (STREAM, "%s", INT_ASM_OP);	\
+      assemble_name (STREAM, NAME);		\
+      fprintf (STREAM, "\n");			\
+    }						\
+  while (0)
 #endif
 
 /* This is how we tell the assembler that a symbol is weak.  */
 
-#define ASM_WEAKEN_LABEL(FILE,NAME) \
-  do { fputs ("\t.weak\t", FILE); assemble_name (FILE, NAME); \
-       fputc ('\n', FILE); } while (0)
+#define ASM_WEAKEN_LABEL(FILE, NAME)		\
+  do						\
+    {						\
+      fputs ("\t.weak\t", FILE);		\
+      assemble_name (FILE, NAME);		\
+      fputc ('\n', FILE);			\
+    }						\
+  while (0)
 
 /* For PIC code we need to explicitly specify (PLT) and (GOT) relocs.  */
-#define NEED_PLT_GOT	flag_pic
+#define NEED_PLT_RELOC	flag_pic
+#define NEED_GOT_RELOC	flag_pic
 
 /* The ELF assembler handles GOT addressing differently to NetBSD.  */
 #define GOT_PCREL	0
@@ -345,10 +378,16 @@ do {						\
    machine.  Use this macro to limit the alignment which can be
    specified using the `__attribute__ ((aligned (N)))' construct.  If
    not defined, the default value is `BIGGEST_ALIGNMENT'.  */
-#define MAX_OFILE_ALIGNMENT (32768*8)
+#define MAX_OFILE_ALIGNMENT (32768 * 8)
 
-/* Align output to a power of two.  */
-#define ASM_OUTPUT_ALIGN(STREAM, POWER)  \
-   fprintf (STREAM, "\t.align\t%d\n", POWER)
+/* Align output to a power of two.  Note ".align 0" is redundant,
+   and also GAS will treat it as ".align 2" which we do not want.  */
+#define ASM_OUTPUT_ALIGN(STREAM, POWER)			\
+  do							\
+    {							\
+      if ((POWER) > 0)					\
+	fprintf (STREAM, "\t.align\t%d\n", POWER);	\
+    }							\
+  while (0)
 
-#include "arm/aout.h"
+#include "aout.h"
