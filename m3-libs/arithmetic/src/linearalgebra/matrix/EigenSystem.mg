@@ -13,7 +13,8 @@
 *)
 
 MODULE EigenSystem;
-IMPORT Wr, Stdio, Math, Fmt, LongReal;
+IMPORT Math, LongReal;
+(*IMPORT Wr, Stdio, Fmt;*)
 
 EXCEPTION NormalTermination;
 
@@ -32,7 +33,7 @@ Wilkinson/Reinsch and gives the same results. *)
       	           VAR v: REF ARRAY OF ARRAY OF LONGREAL;
                    VAR nrot: INTEGER;
                        eigenVect:= FALSE)
-      RAISES { NoConvergence, ArrayTooSmall} =
+      RAISES { ArrayTooSmall} =
     VAR
       tresh,theta,tau,t,sm,s,h,g,c: LONGREAL;
       b  := NEW( LongRealVector, n);
@@ -327,7 +328,6 @@ PROCEDURE Tred2(n: CARDINAL;
     RAISES {ArraySizesDontMatch}=
   VAR
     l: INTEGER;
-    lastD := LAST(d^);
     firstD := FIRST(d^);
     f,g,h,hh: LONGREAL;
   BEGIN
