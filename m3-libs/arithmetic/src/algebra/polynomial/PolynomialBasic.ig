@@ -35,7 +35,7 @@ VAR
   (*CONST*) Zero : T;
   (*CONST*) One  : T;
 
-PROCEDURE New(n:CARDINAL):T;  (*make a poly for a0..an*)
+PROCEDURE New(degree:CARDINAL):T;  (*make a poly for a0..an*)
 CONST
   FromArray = V.FromArray;
   Copy      = V.Copy;

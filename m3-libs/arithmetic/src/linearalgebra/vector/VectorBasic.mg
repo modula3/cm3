@@ -1,4 +1,4 @@
-GENERIC MODULE VectorBasic(R);
+GENERIC MODULE VectorBasic(R,VS);
 (*
 Abstract:
 
@@ -40,8 +40,7 @@ END FromArray;
 (*-----------------*)
 PROCEDURE Copy(  x:T):T =
 VAR
-  n:=NUMBER(x^);
-  z:=NEW(T,n);
+  z:=NEW(T,NUMBER(x^));
 BEGIN
   z^:=x^;
   RETURN z;
@@ -50,8 +49,7 @@ END Copy;
 
 (*-----------------*)
 <*INLINE*>
-PROCEDURE AssertEqualSize(
-                 x,y:T) RAISES {Error}=
+PROCEDURE AssertEqualSize(x,y:T) RAISES {Error}=
 BEGIN
   IF NUMBER(x^) # NUMBER(y^) THEN
     RAISE Error(Err.bad_size);
@@ -82,30 +80,20 @@ BEGIN
 END Equal;
 
 (*-----------------*)
-PROCEDURE Add(
-                 x,y:T):T RAISES {Error}=
+PROCEDURE Add(x,y:T):T RAISES {Error}=
 VAR
-  z:T;
-BEGIN
-  AssertEqualSize(x,y);
   z:=NEW(T,NUMBER(x^));
-  FOR i:=FIRST(x^) TO LAST(x^) DO
-    z[i]:=R.Add(x[i],y[i]);
-  END;
+BEGIN
+  VS.Add(z^,x^,y^);
   RETURN z;
 END Add;
 
 (*-----------------*)
-PROCEDURE Sub(
-               x,y:T):T RAISES {Error}=
+PROCEDURE Sub(x,y:T):T RAISES {Error}=
 VAR
-  z:T;
-BEGIN
-  AssertEqualSize(x,y);
   z:=NEW(T,NUMBER(x^));
-  FOR i:=FIRST(x^) TO LAST(x^) DO
-    z[i]:=R.Sub(x[i],y[i]);
-  END;
+BEGIN
+  VS.Sub(z^,x^,y^);
   RETURN z;
 END Sub;
 
@@ -114,8 +102,10 @@ PROCEDURE Neg(x:T):T =    (*return -x *)
 VAR
   y:=NEW(T,NUMBER(x^));
 BEGIN
-  FOR i:=FIRST(x^) TO LAST(x^) DO
-    y[i] := R.Neg(x[i]);
+  TRY
+    VS.Neg(y^,x^);
+  EXCEPT
+  | Error(err) => EVAL err; <*ASSERT FALSE*>
   END;
   RETURN y;
 END Neg;
@@ -127,8 +117,10 @@ PROCEDURE Scale(
 VAR
   z:=NEW(T,NUMBER(x^));
 BEGIN
-  FOR i:=FIRST(x^) TO LAST(x^) DO
-    z[i]:=R.Mul(x[i],y);
+  TRY
+    VS.Scale(z^,x^,y);
+  EXCEPT
+  | Error(err) => EVAL err; <*ASSERT FALSE*>
   END;
   RETURN z;
 END Scale;
@@ -137,15 +129,8 @@ END Scale;
 (*-----------------*)
 PROCEDURE Inner(
                 x,y:T):R.T RAISES {Error}=
-VAR
-  sum:R.T;
 BEGIN
-  AssertEqualSize(x,y);
-  sum:=R.Zero;
-  FOR i:=FIRST(x^) TO LAST(x^) DO
-    sum:=R.Add(sum,R.Mul(R.Conj(x[i]),y[i]));
-  END;
-  RETURN sum;
+  RETURN VS.Inner(x^,y^);
 END Inner;
 
 (*-----------------*)
@@ -168,83 +153,38 @@ BEGIN
 END Cross;
 *)
 
-PROCEDURE Apply(x:T;f:ApplyFtn)=
+(*-----------------*)
+PROCEDURE ArithSeq (num: CARDINAL; from: R.T; by: R.T): T =
+  VAR x := NEW(T, num);
   BEGIN
-    FOR j:=0 TO LAST(x^) DO
-      f(x[j]);
+    FOR j := 0 TO num - 1 DO
+      x[j] := from;
+      IF j < num - 1 THEN from := R.Add(from, by); END;
     END;
-  END Apply;
-
-PROCEDURE Map(x:T;f:MapFtn):T=
-  VAR
-    y:=NEW(T,NUMBER(x^));
-  BEGIN
-    FOR j:=0 TO LAST(x^) DO
-      y[j]:=f(x[j]);
-    END;
-    RETURN y;
-  END Map;
-
-PROCEDURE Reduce(x:T;f:ReduceFtn;accu:R.T):R.T=
-  BEGIN
-    FOR j:=0 TO LAST(x^) DO
-      accu:=f(accu,x[j]);
-    END;
-    RETURN accu;
-  END Reduce;
-
-
-PROCEDURE Sum(READONLY x:TBody):R.T=
-  VAR
-    sum:=R.Zero;
-  BEGIN
-    FOR i:=FIRST(x) TO LAST(x) DO
-      sum:=R.Add(sum,x[i]);
-    END;
-    RETURN sum;
-  END Sum;
+    RETURN x;
+  END ArithSeq;
 
 (*-----------------*)
-PROCEDURE ArithSeq(num:CARDINAL;from:R.T;by:R.T):T=
-VAR
-  x:=NEW(T,num);
-BEGIN
-  FOR j:=0 TO num-1 DO
-    x[j] := from;
-    IF j<num-1 THEN
-      from := R.Add(from,by);
+PROCEDURE GeomSeq (num: CARDINAL; from: R.T; by: R.T): T =
+  VAR x := NEW(T, num);
+  BEGIN
+    FOR j := 0 TO num - 1 DO
+      x[j] := from;
+      IF j < num - 1 THEN from := R.Mul(from, by); END;
     END;
-  END;
-  RETURN x;
-END ArithSeq;
+    RETURN x;
+  END GeomSeq;
 
 (*-----------------*)
-PROCEDURE GeomSeq(num:CARDINAL;from:R.T;by:R.T):T=
-VAR
-  x:=NEW(T,num);
-BEGIN
-  FOR j:=0 TO num-1 DO
-    x[j] := from;
-    IF j<num-1 THEN
-      from := R.Mul(from,by);
+PROCEDURE RecursiveSeq (num: CARDINAL; from: R.T; by: VS.MapFtn): T =
+  VAR x := NEW(T, num);
+  BEGIN
+    FOR j := 0 TO num - 1 DO
+      x[j] := from;
+      IF j < num - 1 THEN from := by(from); END;
     END;
-  END;
-  RETURN x;
-END GeomSeq;
-
-(*-----------------*)
-PROCEDURE RecursiveSeq(num:CARDINAL;from:R.T;by:MapFtn):T=
-VAR
-  x:=NEW(T,num);
-BEGIN
-  FOR j:=0 TO num-1 DO
-    x[j] := from;
-    IF j<num-1 THEN
-      from := by(from);
-    END;
-  END;
-  RETURN x;
-END RecursiveSeq;
+    RETURN x;
+  END RecursiveSeq;
 
 (*-----------------*)
 BEGIN

@@ -5,16 +5,18 @@
 readonly proc VectorBasic (nm, field, rimpl) is
   local basic  = nm & "VectorBasic"
   local rfield = field & rimpl
-  build_generic_intf (basic, "VectorBasic", [rfield], VISIBLE)
-  build_generic_impl (basic, "VectorBasic", [rfield])
+  local vecsup = field & "VectorSupport"
+  build_generic_intf (basic,  "VectorBasic",   [rfield, vecsup], VISIBLE)
+  build_generic_impl (basic,  "VectorBasic",   [rfield, vecsup])
+  build_generic_intf (vecsup, "VectorSupport", [rfield], VISIBLE)
+  build_generic_impl (vecsup, "VectorSupport", [rfield])
 end
 
 readonly proc VectorFast (nm, field, rimpl) is
+  VectorBasic (nm, field, rimpl)
   local basic  = nm & "VectorBasic"
   local fast   = nm & "VectorFast"
   local rfield = field & rimpl
-  build_generic_intf (basic, "VectorBasic", [rfield], VISIBLE)
-  build_generic_impl (basic, "VectorBasic", [rfield])
   build_generic_intf (fast,  "VectorFast",  [rfield, basic], VISIBLE)
   build_generic_impl (fast,  "VectorFast",  [rfield])
 end
