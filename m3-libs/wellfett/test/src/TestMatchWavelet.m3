@@ -76,6 +76,11 @@ PROCEDURE MatchPattern (target                               : S.T;
     PL.SetColor0(3);
     PL.PlotLines(abscissa^, targetvec^);
 
+    IO.Put(Fmt.FN("normal matrix %s, right hand side %s\n",
+                  ARRAY OF
+                    TEXT{MF.Fmt(M.MulMMA(basis)),
+                         VF.Fmt(M.MulV(basis, targetvec))}));
+
     coef := LA.LeastSquaresGen(
               basis, ARRAY OF V.T{targetvec},
               flags := LA.LSGenFlagSet{LA.LSGenFlag.transposed})[0];
@@ -482,9 +487,9 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
 
     unit   := IIntPow.Power(2, levels);
     twonit := 2 * unit;
-    first := MIN(target.getFirst(),
+    first := MIN(wavelet.getFirst(),
                  generatorvan.getFirst() - twonit * translates);
-    last := MAX(target.getLast(),
+    last := MAX(wavelet.getLast(),
                 generatorvan.getLast() + twonit * (translates - 1));
     size := last - first + 1;
 
@@ -496,37 +501,68 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
        V.Inner(target.getData(),target.getData()) may be different *)
 
     basis := TranslatesBasis(generatorvan, first, twonit, size, translates);
-    normalMat  := M.MMA(basis);
+    normalMat  := M.MulMMA(basis);
     targetCor  := M.MulV(basis, targetVec);
     waveletCor := M.MulV(basis, waveletVec);
 
   BEGIN
     (*
     CheckDerivatives();
+
+    IO.Put(Fmt.FN("normal matrix %s\n",
+                  ARRAY OF
+                    TEXT{MF.Fmt(normalMat)}));
     *)
 
     CONST tol = 1.0D-14;
     VAR
       yfirst := -translates;
-      y      := NEW(S.T).fromArray(V.ArithSeq(2 * translates)^, yfirst);
-      cf     := R.One;
+      y      := NEW(S.T).fromArray(V.New(2 * translates)^, yfirst);
+      cf     := R.Zero;
     (*
+      cf     := R.One;
+      y      := NEW(S.T).fromArray(V.ArithSeq(2 * translates)^, yfirst);
       y := V.FromVectorArray(
              ARRAY OF V.T{V.ArithSeq(2 * translates), V.FromScalar(R.One)});
     *)
     BEGIN
       FOR j := 0 TO 100 DO
         VAR
+          (*
           der := AddDerv(
-                   DeriveDist(normalMat, waveletCor, waveletNormSqr, y),
+                   DeriveDist(normalMat, targetCor, targetNormSqr, y),
                    ScaleDerv(DeriveSSE(hdualvan, gdual, y), smoothWeight));
-          extder := ExtendDervTarget(der, y.getData(), cf, targetVec,
-                                     targetCor, waveletVec);
+          extder := ExtendDervTarget(der, y.getData(), cf, V.Neg(waveletVec),
+                                     V.Neg(waveletCor), V.Neg(targetVec));
+          *)
+          (* changed role of 'target' and 'wavelet'
+
+	     der := AddDerv(
+             DeriveDist(normalMat, waveletCor, waveletNormSqr, y),
+             ScaleDerv(DeriveSSE(hdualvan, gdual, y), smoothWeight));
+             extder := ExtendDervTarget(der, y.getData(), cf, targetVec,
+             targetCor, waveletVec); *)
+          derdist := DeriveDist(normalMat, targetCor, targetNormSqr, y);
+          derwavdist := ExtendDervTarget(derdist, y.getData(), cf, waveletVec,
+                                  waveletCor, targetVec);
+				  der:=derwavdist;
+				  (*
+          der := AddDerv(
+                      derwavdist, ScaleDerv(DeriveWSSE(hdualvan, gdual, y, cf),
+                                     smoothWeight));
+				     *)
 
         (* targetdiff := V.Sub(targetVec, M.MulTV(basis, y.getData()));
            targetdist := V.Inner(targetdiff, targetdiff); *)
         BEGIN
-          IF VT.Norm1(extder.first) <= tol * RT.Abs(extder.zeroth) THEN
+          IO.Put(Fmt.FN("normal matrix %s, right hand side %s =?= %s, dist %s\n",
+                        ARRAY OF
+                          TEXT{MF.Fmt(M.Scale(der.second, RT.Half)),
+                               VF.Fmt(V.Scale(der.first, RT.Half)),
+			       VF.Fmt(M.MulV(basis, targetVec)),
+			       RF.Fmt(der.zeroth)}));
+
+          IF VT.Norm1(der.first) <= tol * RT.Abs(der.zeroth) THEN
             RETURN MatchCoef{y, cf};
           END;
           (*
@@ -537,7 +573,7 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
           *)
           VAR
             vec := LA.LeastSquaresGen(
-                     extder.second, ARRAY OF V.T{V.Neg(extder.first)})[0].x;
+                     der.second, ARRAY OF V.T{V.Neg(der.first)})[0].x;
           BEGIN
             cf := cf + vec[LAST(vec^)];
             y := y.superpose(NEW(S.T).fromArray(SUBARRAY(vec^, FIRST(vec^),
@@ -618,7 +654,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
 PROCEDURE Test () =
   <*FATAL BSpl.DifferentParity*>
   BEGIN
-    CASE 7 OF
+    CASE 3 OF
     | 0 =>
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50), 6,
@@ -627,10 +663,56 @@ PROCEDURE Test () =
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(1), 7).translate(10), 6, 4,
           2, 5);
-      (*
-      0.515299272019265, 1.09394334049039, 2.37421841031068, 0.167484610002095, -1.6496475444949, -4.50118081829745, -2.99168284568131, -2.07333727163662, -1.13262489000281, -0.469773425085895
-      -0.482838852151025
-      *)
+      (* The figures given here previously was wrong because the generator
+         was convolved with (1,0,-1) instead of (1,-1) translates 5, size
+         1917, residuum 0.00340514677538585, V11{0.186869299925214,
+         0.269986933917237, 0.670508585560263, 0.649776682132423,
+         -0.175806649674353, -0.875993675942413, -0.856283049545732,
+         -0.458477950438848, -0.31397715987086, -0.11516417311729, ...}
+         0.330691666379811
+
+         normal matrix M11x11{ V11{0.0161472957290307,
+         -0.00559983260609975, -0.00505952378235719, 0.00222304094235515,
+         0.000359570031703171, 3.0975498832575e-6, 0, 0, 0, 0,
+         2.32316241244312e-6}, V11{-0.00559983260609975,
+         0.0161472957290307, -0.00559983260609975, -0.00505952378235719,
+         0.00222304094235515, 0.000359570031703171, 3.0975498832575e-6, 0,
+         0, 0, 0.000264256811481678}, V11{-0.00505952378235719,
+         -0.00559983260609975, 0.0161472957290307, -0.00559983260609975,
+         -0.00505952378235719, 0.00222304094235515, 0.000359570031703171,
+         3.0975498832575e-6, 0, 0, 0.00108527475640496},
+         V11{0.00222304094235515, -0.00505952378235719,
+         -0.00559983260609975, 0.0161472957290307, -0.00559983260609975,
+         -0.00505952378235719, 0.00222304094235515, 0.000359570031703171,
+         3.0975498832575e-6, 0, -0.00486459676222939},
+         V11{0.000359570031703171, 0.00222304094235515,
+         -0.00505952378235719, -0.00559983260609975, 0.0161472957290307,
+         -0.00559983260609975, -0.00505952378235719, 0.00222304094235515,
+         0.000359570031703171, 3.0975498832575e-6, 0.0035127420319303},
+         V11{3.0975498832575e-6, 0.000359570031703171, 0.00222304094235515,
+         -0.00505952378235719, -0.00559983260609975, 0.0161472957290307,
+         -0.00559983260609975, -0.00505952378235719, 0.00222304094235515,
+         0.000359570031703171, 0.0035127420319303}, V11{ 0,
+         3.0975498832575e-6, 0.000359570031703171, 0.00222304094235515,
+         -0.00505952378235719, -0.00559983260609975, 0.0161472957290307,
+         -0.00559983260609975, -0.00505952378235719, 0.00222304094235515,
+         -0.00486459676222939}, V11{ 0, 0, 3.0975498832575e-6,
+         0.000359570031703171, 0.00222304094235515, -0.00505952378235719,
+         -0.00559983260609975, 0.0161472957290307, -0.00559983260609975,
+         -0.00505952378235719, 0.00108527475640496}, V11{ 0, 0, 0,
+         3.0975498832575e-6, 0.000359570031703171, 0.00222304094235515,
+         -0.00505952378235719, -0.00559983260609975, 0.0161472957290307,
+         -0.00559983260609975, 0.000264256811481678}, V11{ 0, 0, 0, 0,
+         3.0975498832575e-6, 0.000359570031703171, 0.00222304094235515,
+         -0.00505952378235719, -0.00559983260609975, 0.0161472957290307,
+         2.32316241244312e-6}, V11{2.32316241244312e-6,
+         0.000264256811481678, 0.00108527475640496, -0.00486459676222939,
+         0.0035127420319303, 0.0035127420319303, -0.00486459676222939,
+         0.00108527475640496, 0.000264256811481678, 2.32316241244312e-6,
+         0.00607551933531692} }
+
+	 right hand side V11{-0.000507581740606285, -0.0043502456585385, 0.00372261402001387, 0.00752535046345245, 0.0000644560183646876, -0.00732281293999634, -0.00405405009320778, 0.00436865203022013, 0.00055361790029776,            0, -0.000462356031884442}
+ *)
     | 2 =>
         MatchPattern(
           NEW(S.T).fromArray(
