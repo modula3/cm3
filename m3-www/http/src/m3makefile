@@ -15,7 +15,7 @@ Module("HTTPPayment")
 Module("HTTPProxy")
 Module("HTTPControl")
 Module("HTTPControlValue")
-module("TextExtras")
+%module("TextExtras") % now in libm3
 Module("FastLex")
 
 Library("http")
