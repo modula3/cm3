@@ -33,6 +33,7 @@ P="${P} m3front"
 P="${P} m3quake"
 [ "${GCC_BACKEND}" = yes ] && P="${P} m3cc"
 P="${P} cm3"
+P="${P} cminstall"
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]

@@ -29,11 +29,14 @@ head "stage 1: building cm3 compiler"
 
 # install the compiler
 head "stage 2: installing cm3 compiler"
+echo "installing ${INSTALLROOT}/bin/cm3${EXE}"
 cp "${ROOT}/m3-sys/cm3/${TARGET}/cm3${EXE}" "${INSTALLROOT}/bin"
 [ "${GCC_BACKEND}" = yes ] && \
+  echo "installing ${INSTALLROOT}/bin/cm3cg${EXE}" && \
   cp "${ROOT}/m3-sys/m3cc/${TARGET}/cm3cg${EXE}" "${INSTALLROOT}/bin"
 
 # configure a temporary config file
+echo configuring temporary config file "${INSTALLROOT}/bin/cm3.cfg"
 sed -e '
   /^INSTALL_ROOT[ \t]*=/s;^.*$;INSTALL_ROOT = "'${INSTALLROOT}${SL}'";
 ' "${ROOT}/m3-sys/cm3/src/config/${TARGET}" > "${INSTALLROOT}/bin/cm3.cfg"
@@ -54,10 +57,27 @@ head "stage 4: installing libraries using new cm3 compiler"
 "${ROOT}/scripts/do-cm3-min.sh" buildglobal || exit 1
 
 head "stage 5: re-adjusting cm3.cfg"
-cp "${ROOT}/m3-sys/cm3/src/config/${TARGET}" "${INSTALLROOT}/bin/cm3.cfg"
-cp "${ROOT}/m3-sys/cm3/src/config/${TARGET}" "${INSTALLROOT}/bin/cm3.cfg--default"
+echo ".../cminstall/src/config/${TARGET} -->" \
+  "${INSTALLROOT}/bin/cm3.cfg"
+cp "${ROOT}/m3-sys/cminstall/src/config/${TARGET}" \
+  "${INSTALLROOT}/bin/cm3.cfg"
+echo ".../cm3/src/config/${TARGET} -->" \
+  "${INSTALLROOT}/bin/cm3.cfg--default"
+cp "${ROOT}/m3-sys/cm3/src/config/${TARGET}" \
+  "${INSTALLROOT}/bin/cm3.cfg--default"
 
-ARCHIVE="${TMPDIR}/cm3-min-${M3OSTYPE}-${TARGET}-${CM3VERSION}.tar.gz"
-head "stage 6: building archive in ${ARCHIVE}"
-tar -C "${TMPDIR}" -czf "${ARCHIVE}" cm3 || exit 1
-ls -l "${ARCHIVE}"
+ARCHIVE1="system.tgz"
+ARCHIVE2="cm3-min-${M3OSTYPE}-${TARGET}-${CM3VERSION}.tgz"
+head "stage 6: building archive in ${ARCHIVE2}"
+echo tar -C "${TMPDIR}" -czf "${TMPDIR}/${ARCHIVE1}" cm3
+tar -C "${TMPDIR}" -czf "${TMPDIR}/${ARCHIVE1}" cm3 || exit 1
+echo cp "${ROOT}/m3-sys/cminstall/${TARGET}/cminstall${EXE}" "${TMPDIR}"
+cp "${ROOT}/m3-sys/cminstall/${TARGET}/cminstall${EXE}" "${TMPDIR}" ||  exit 1
+echo tar -C "${TMPDIR}" -czf "${TMPDIR}/${ARCHIVE2}" cminstall${EXE} \
+  ${ARCHIVE1}
+tar -C "${TMPDIR}" -czf "${TMPDIR}/${ARCHIVE2}" cminstall${EXE} ${ARCHIVE1} \
+  || exit 1
+ls -l "${ARCHIVE2}"
+echo "cleaning up"
+rm -rf "${INSTALLROOT}"
+rm -f "${TMPDIR}/${ARCHIVE1}"

@@ -66,7 +66,7 @@ if [ -z "${PKGS}" ] ; then
 fi
 
 for PKG in ${PKGS} ; do
-  echo " === package ${PKG} ==="
+  echo "=== package ${PKG} ==="
   exec_cmd "$PKG"
   res=$?
   if [ "$res" != "0" ] ; then
