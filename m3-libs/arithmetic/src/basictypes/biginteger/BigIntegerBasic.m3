@@ -229,6 +229,7 @@ END Mod;
 BEGIN
   Zero     := FromInteger(0);
   One      := FromInteger(1);
+  Two      := FromInteger(2);
   MinusOne := FromInteger(-1);
 
 (*  billion := FromInteger (1000000000);  *)

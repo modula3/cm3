@@ -37,6 +37,7 @@ PROCEDURE Copy (READONLY x : T) : T;
 VAR
   (*CONST*)Zero,
   (*CONST*)One,
+  (*CONST*)Two,
   (*CONST*)MinusOne
    : T;
 

@@ -2,8 +2,6 @@ for myself:
 
 todo:
   - combinatorics and number theory with bigintegers
-    calculating binomial coefficients might be sped up by
-    keeping a list of machine size integer factors
   - physical units
   - Bits, SLE (MatrixDecomposition), eigensystem, FFT (FourierTransform), Random/RNG01/RNG02, Root, Stat
   - ODE
