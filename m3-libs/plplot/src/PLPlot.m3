@@ -53,9 +53,11 @@ PROCEDURE DrawAxes (x0, y0: LONGREAL;
                     ytick : LONGREAL;
                     nysub : INTEGER;  ) =
   VAR
+    arg3: C.char_star;
+    arg6: C.char_star;
+  BEGIN
     arg3 := M3toC.SharedTtoS(xopt);
     arg6 := M3toC.SharedTtoS(yopt);
-  BEGIN
     PLPlotRaw.plaxes(x0, y0, arg3, xtick, nxsub, arg6, ytick, nysub);
     M3toC.FreeSharedS(xopt, arg3);
     M3toC.FreeSharedS(yopt, arg6);
@@ -81,9 +83,11 @@ PROCEDURE DrawBox (xopt : TEXT;
                    ytick: LONGREAL;
                    nysub: INTEGER;  ) =
   VAR
+    arg1: C.char_star;
+    arg4: C.char_star;
+  BEGIN
     arg1 := M3toC.SharedTtoS(xopt);
     arg4 := M3toC.SharedTtoS(yopt);
-  BEGIN
     PLPlotRaw.plbox(arg1, xtick, nxsub, arg4, ytick, nysub);
     M3toC.FreeSharedS(xopt, arg1);
     M3toC.FreeSharedS(yopt, arg4);
@@ -99,13 +103,19 @@ PROCEDURE DrawBox3D (xopt, xlabel: TEXT;
                      ztick       : LONGREAL;
                      nsubz       : INTEGER;  ) =
   VAR
-    arg1  := M3toC.SharedTtoS(xopt);
-    arg2  := M3toC.SharedTtoS(xlabel);
-    arg5  := M3toC.SharedTtoS(yopt);
-    arg6  := M3toC.SharedTtoS(ylabel);
-    arg9  := M3toC.SharedTtoS(zopt);
-    arg10 := M3toC.SharedTtoS(zlabel);
+    arg1 : C.char_star;
+    arg2 : C.char_star;
+    arg5 : C.char_star;
+    arg6 : C.char_star;
+    arg9 : C.char_star;
+    arg10: C.char_star;
   BEGIN
+    arg1 := M3toC.SharedTtoS(xopt);
+    arg2 := M3toC.SharedTtoS(xlabel);
+    arg5 := M3toC.SharedTtoS(yopt);
+    arg6 := M3toC.SharedTtoS(ylabel);
+    arg9 := M3toC.SharedTtoS(zopt);
+    arg10 := M3toC.SharedTtoS(zlabel);
     PLPlotRaw.plbox3(arg1, arg2, xtick, nsubx, arg5, arg6, ytick, nsuby,
                      arg9, arg10, ztick, nsubz);
     M3toC.FreeSharedS(xopt, arg1);
@@ -147,11 +157,12 @@ PROCEDURE PlotContour (READONLY z             : M.TBody;
                                 pltr          : CallbackM3Proc;
                                 OBJECT_DATA   : REFANY;         ) =
   VAR
-    arg1 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
-    nx   := NUMBER(z);
-    ny   := NUMBER(z[0]);
-    n    := NUMBER(x);
+    arg1: REF ARRAY OF ADDRESS;
+    nx                         := NUMBER(z);
+    ny                         := NUMBER(z[0]);
+    n                          := NUMBER(x);
   BEGIN
+    arg1 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg1[i] := ADR(z[i, 0]) END;
     PLPlotRaw.plcont(arg1[0], nx, ny, kx, lx, ky, ly, x[0], n, CallbackM3,
                      NEW(REF CallbackM3Data, callback := pltr,
@@ -191,10 +202,10 @@ PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: LONGREAL;
         INC(arg6, 0);
       ELSIF axis = TileSet{Tile.box, Tile.ticks, Tile.axes} THEN
         INC(arg6, 1);
-      ELSIF axis = TileSet{Tile.box, Tile.ticks, Tile.axes, Tile.gridMinor} THEN
+      ELSIF axis = TileSet{Tile.box, Tile.ticks, Tile.axes, Tile.gridMajor} THEN
         INC(arg6, 2);
-      ELSIF axis = TileSet{Tile.box, Tile.ticks, Tile.axes, Tile.gridMinor,
-                           Tile.gridMajor} THEN
+      ELSIF axis = TileSet{Tile.box, Tile.ticks, Tile.axes, Tile.gridMajor,
+                           Tile.gridMinor} THEN
         INC(arg6, 3);
       ELSE
         <*ASSERT FALSE*>(*combination not supported by PLPlot :-( *)
@@ -465,10 +476,13 @@ PROCEDURE PlotLineSegment (x1, y1, x2, y2: LONGREAL; ) =
 
 PROCEDURE SetLabels (xlabel, ylabel, tlabel: TEXT; ) =
   VAR
+    arg1: C.char_star;
+    arg2: C.char_star;
+    arg3: C.char_star;
+  BEGIN
     arg1 := M3toC.SharedTtoS(xlabel);
     arg2 := M3toC.SharedTtoS(ylabel);
     arg3 := M3toC.SharedTtoS(tlabel);
-  BEGIN
     PLPlotRaw.pllab(arg1, arg2, arg3);
     M3toC.FreeSharedS(xlabel, arg1);
     M3toC.FreeSharedS(ylabel, arg2);
@@ -504,12 +518,13 @@ PROCEDURE PlotMesh (READONLY x, y: V.TBody;
                     READONLY z   : M.TBody;
                              opt : INTEGER; ) RAISES {NA.Error} =
   VAR
-    nx   := NUMBER(x);
-    ny   := NUMBER(y);
-    arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
+    nx                         := NUMBER(x);
+    ny                         := NUMBER(y);
+    arg3: REF ARRAY OF ADDRESS;
   BEGIN
     IF NUMBER(z) # nx THEN RAISE NA.Error(Err.bad_size) END;
     IF NUMBER(z[0]) # ny THEN RAISE NA.Error(Err.bad_size) END;
+    arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
     PLPlotRaw.plmesh(x[0], y[0], arg3[0], nx, ny, opt);
   END PlotMesh;
@@ -519,13 +534,14 @@ PROCEDURE PlotMeshColored (READONLY x, y  : V.TBody;
                                     opt   : INTEGER;
                            READONLY clevel: V.TBody; ) RAISES {NA.Error} =
   VAR
-    nx   := NUMBER(x);
-    ny   := NUMBER(y);
-    arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
-    n    := NUMBER(clevel);
+    nx                         := NUMBER(x);
+    ny                         := NUMBER(y);
+    arg3: REF ARRAY OF ADDRESS;
+    n                          := NUMBER(clevel);
   BEGIN
     IF NUMBER(z) # nx THEN RAISE NA.Error(Err.bad_size) END;
     IF NUMBER(z[0]) # ny THEN RAISE NA.Error(Err.bad_size) END;
+    arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
     PLPlotRaw.plmeshc(x[0], y[0], arg3[0], nx, ny, opt, clevel[0], n);
   END PlotMeshColored;
@@ -542,9 +558,11 @@ PROCEDURE CreateStream (): INTEGER =
 
 PROCEDURE PrintTextVP (side: TEXT; disp, pos, just: LONGREAL; text: TEXT; ) =
   VAR
+    arg1: C.char_star;
+    arg5: C.char_star;
+  BEGIN
     arg1 := M3toC.SharedTtoS(side);
     arg5 := M3toC.SharedTtoS(text);
-  BEGIN
     PLPlotRaw.plmtex(arg1, disp, pos, just, arg5);
     M3toC.FreeSharedS(side, arg1);
     M3toC.FreeSharedS(text, arg5);
@@ -554,12 +572,13 @@ PROCEDURE Plot3D (READONLY x, y     : V.TBody;
                   READONLY z        : M.TBody;
                            opt, side: INTEGER; ) RAISES {NA.Error} =
   VAR
-    nx   := NUMBER(x);
-    ny   := NUMBER(y);
-    arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
+    nx                         := NUMBER(x);
+    ny                         := NUMBER(y);
+    arg3: REF ARRAY OF ADDRESS;
   BEGIN
     IF NUMBER(z) # nx THEN RAISE NA.Error(Err.bad_size) END;
     IF NUMBER(z[0]) # ny THEN RAISE NA.Error(Err.bad_size) END;
+    arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
     PLPlotRaw.plot3d(x[0], y[0], arg3[0], nx, ny, opt, side);
   END Plot3D;
@@ -569,13 +588,14 @@ PROCEDURE Plot3DC (READONLY x, y  : V.TBody;
                             opt   : INTEGER;
                    READONLY clevel: V.TBody; ) RAISES {NA.Error} =
   VAR
-    nx   := NUMBER(x);
-    ny   := NUMBER(y);
-    arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
-    n    := NUMBER(clevel);
+    nx                         := NUMBER(x);
+    ny                         := NUMBER(y);
+    arg3: REF ARRAY OF ADDRESS;
+    n                          := NUMBER(clevel);
   BEGIN
     IF NUMBER(z) # nx THEN RAISE NA.Error(Err.bad_size) END;
     IF NUMBER(z[0]) # ny THEN RAISE NA.Error(Err.bad_size) END;
+    arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
     PLPlotRaw.plot3dc(x[0], y[0], arg3[0], nx, ny, opt, clevel[0], n);
   END Plot3DC;
@@ -585,13 +605,14 @@ PROCEDURE Surface3D (READONLY x, y  : V.TBody;
                               opt   : INTEGER;
                      READONLY clevel: V.TBody; ) RAISES {NA.Error} =
   VAR
-    nx   := NUMBER(x);
-    ny   := NUMBER(y);
-    arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
-    n    := NUMBER(clevel);
+    nx                         := NUMBER(x);
+    ny                         := NUMBER(y);
+    arg3: REF ARRAY OF ADDRESS;
+    n                          := NUMBER(clevel);
   BEGIN
     IF NUMBER(z) # nx THEN RAISE NA.Error(Err.bad_size) END;
     IF NUMBER(z[0]) # ny THEN RAISE NA.Error(Err.bad_size) END;
+    arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
     PLPlotRaw.plsurf3d(x[0], y[0], arg3[0], nx, ny, opt, clevel[0], n);
   END Surface3D;
@@ -644,8 +665,9 @@ PROCEDURE SetFillStyle (patt: INTEGER; ) =
   END SetFillStyle;
 
 PROCEDURE PrintTextWorld (x, y, dx, dy, just: LONGREAL; text: TEXT; ) =
-  VAR arg6 := M3toC.SharedTtoS(text);
+  VAR arg6: C.char_star;
   BEGIN
+    arg6 := M3toC.SharedTtoS(text);
     PLPlotRaw.plptex(x, y, dx, dy, just, arg6);
     M3toC.FreeSharedS(text, arg6);
   END PrintTextWorld;
@@ -723,8 +745,9 @@ PROCEDURE SetCompression (compression: INTEGER; ) =
   END SetCompression;
 
 PROCEDURE SetDevice (devname: TEXT; ) =
-  VAR arg1 := M3toC.SharedTtoS(devname);
+  VAR arg1: C.char_star;
   BEGIN
+    arg1 := M3toC.SharedTtoS(devname);
     PLPlotRaw.plsdev(arg1);
     M3toC.FreeSharedS(devname, arg1);
   END SetDevice;
@@ -763,10 +786,12 @@ PROCEDURE SetEscapeChar (esc: CHAR; ) =
 
 PROCEDURE SetOption (VAR opt, optarg: TEXT; ): INTEGER =
   VAR
-    arg1            := M3toC.SharedTtoS(opt);
-    arg2            := M3toC.SharedTtoS(optarg);
+    arg1  : C.char_star;
+    arg2  : C.char_star;
     result: INTEGER;
   BEGIN
+    arg1 := M3toC.SharedTtoS(opt);
+    arg2 := M3toC.SharedTtoS(optarg);
     result := PLPlotRaw.plsetopt(arg1, arg2);
     M3toC.FreeSharedS(opt, arg1);
     M3toC.FreeSharedS(optarg, arg2);
@@ -779,8 +804,9 @@ PROCEDURE SetFamilyFile (fam, num, bmax: INTEGER; ) =
   END SetFamilyFile;
 
 PROCEDURE SetFileName (fnam: TEXT; ) =
-  VAR arg1 := M3toC.SharedTtoS(fnam);
+  VAR arg1: C.char_star;
   BEGIN
+    arg1 := M3toC.SharedTtoS(fnam);
     PLPlotRaw.plsfnam(arg1);
     M3toC.FreeSharedS(fnam, arg1);
   END SetFileName;
@@ -792,11 +818,12 @@ PROCEDURE ShadeRegions (READONLY a                     : M.TBody;
                         pltr       : CallbackM3Proc;
                         OBJECT_DATA: REFANY;         ) =
   VAR
-    arg1 := NEW(REF ARRAY OF ADDRESS, NUMBER(a));
-    nx   := NUMBER(a);
-    ny   := NUMBER(a[0]);
-    n    := NUMBER(x);
+    arg1: REF ARRAY OF ADDRESS;
+    nx                         := NUMBER(a);
+    ny                         := NUMBER(a[0]);
+    n                          := NUMBER(x);
   BEGIN
+    arg1 := NEW(REF ARRAY OF ADDRESS, NUMBER(a));
     FOR i := 0 TO LAST(a) DO arg1[i] := ADR(a[i, 0]) END;
     PLPlotRaw.plshades(
       arg1[0], nx, ny, NIL (*not yet supported*), xmin, xmax, ymin, ymax,
@@ -815,10 +842,11 @@ PROCEDURE ShadeRegion (READONLY a: M.TBody;
                        pltr       : CallbackM3Proc;
                        OBJECT_DATA: REFANY;         ) =
   VAR
-    arg1 := NEW(REF ARRAY OF ADDRESS, NUMBER(a));
-    nx   := NUMBER(a);
-    ny   := NUMBER(a[0]);
+    arg1: REF ARRAY OF ADDRESS;
+    nx                         := NUMBER(a);
+    ny                         := NUMBER(a[0]);
   BEGIN
+    arg1 := NEW(REF ARRAY OF ADDRESS, NUMBER(a));
     FOR i := 0 TO LAST(a) DO arg1[i] := ADR(a[i, 0]) END;
     PLPlotRaw.plshade(
       arg1[0], nx, ny, NIL (*not yet supported*), left, right, bottom, top,
@@ -875,8 +903,9 @@ PROCEDURE Start (nx, ny: INTEGER; ) =
   END Start;
 
 PROCEDURE StartDev (devname: TEXT; nx, ny: INTEGER; ) =
-  VAR arg1 := M3toC.SharedTtoS(devname);
+  VAR arg1: C.char_star;
   BEGIN
+    arg1 := M3toC.SharedTtoS(devname);
     PLPlotRaw.plstart(arg1, nx, ny);
     M3toC.FreeSharedS(devname, arg1);
   END StartDev;
@@ -896,30 +925,39 @@ PROCEDURE CreateStripchart (VAR xspec, yspec: TEXT;
   VAR
     id   : INTEGER;
     arg1 : C.int;
-    arg2                                 := M3toC.SharedTtoS(xspec);
-    arg3                                 := M3toC.SharedTtoS(yspec);
+    arg2 : C.char_star;
+    arg3 : C.char_star;
     n                                    := NUMBER(colline);
     arg17: ARRAY [0 .. 3] OF C.char_star;
-    arg18                                := M3toC.SharedTtoS(labx);
-    arg19                                := M3toC.SharedTtoS(laby);
-    arg20                                := M3toC.SharedTtoS(labtop);
+    arg18: C.char_star;
+    arg19: C.char_star;
+    arg20: C.char_star;
   BEGIN
-    IF NUMBER(styline) # n THEN RAISE NA.Error(Err.bad_size) END;
-    FOR i := FIRST(legline) TO LAST(legline) DO
-      arg17[i] := M3toC.SharedTtoS(legline[i]);
+    TRY
+      IF NUMBER(styline) # n THEN RAISE NA.Error(Err.bad_size) END;
+      arg2 := M3toC.SharedTtoS(xspec);
+      arg3 := M3toC.SharedTtoS(yspec);
+      FOR i := FIRST(legline) TO LAST(legline) DO
+        arg17[i] := M3toC.SharedTtoS(legline[i]);
+      END;
+      arg18 := M3toC.SharedTtoS(labx);
+      arg19 := M3toC.SharedTtoS(laby);
+      arg20 := M3toC.SharedTtoS(labtop);
+      PLPlotRaw.plstripc(
+        arg1, arg2, arg3, xmin, xmax, xjump, ymin, ymax, xlpos, ylpos,
+        y_ascl, acc, colbox, collab, colline[0], styline[0], arg17, arg18,
+        arg19, arg20);
+      id := arg1;
+    FINALLY
+      M3toC.FreeSharedS(xspec, arg2);
+      M3toC.FreeSharedS(yspec, arg3);
+      FOR i := FIRST(legline) TO LAST(legline) DO
+        M3toC.FreeSharedS(legline[i], arg17[i]);
+      END;
+      M3toC.FreeSharedS(labx, arg18);
+      M3toC.FreeSharedS(laby, arg19);
+      M3toC.FreeSharedS(labtop, arg20);
     END;
-    PLPlotRaw.plstripc(arg1, arg2, arg3, xmin, xmax, xjump, ymin, ymax,
-                       xlpos, ylpos, y_ascl, acc, colbox, collab,
-                       colline[0], styline[0], arg17, arg18, arg19, arg20);
-    M3toC.FreeSharedS(xspec, arg2);
-    M3toC.FreeSharedS(yspec, arg3);
-    FOR i := FIRST(legline) TO LAST(legline) DO
-      M3toC.FreeSharedS(legline[i], arg17[i]);
-    END;
-    M3toC.FreeSharedS(labx, arg18);
-    M3toC.FreeSharedS(laby, arg19);
-    M3toC.FreeSharedS(labtop, arg20);
-    id := arg1;
     RETURN id;
   END CreateStripchart;
 
@@ -1006,13 +1044,13 @@ PROCEDURE SetWindow (xmin, xmax, ymin, ymax: LONGREAL; ) =
     PLPlotRaw.plwind(xmin, xmax, ymin, ymax);
   END SetWindow;
 
-PROCEDURE SetXORMode (mode: INTEGER; ): INTEGER =
+PROCEDURE SetXORMode (mode: BOOLEAN; ): BOOLEAN =
   VAR
-    status: INTEGER;
+    status: BOOLEAN;
     arg2  : C.int;
   BEGIN
-    PLPlotRaw.plxormod(mode, arg2);
-    status := arg2;
+    PLPlotRaw.plxormod(ORD(mode), arg2);
+    status := arg2 # 0;
     RETURN status;
   END SetXORMode;
 
@@ -1028,9 +1066,11 @@ PROCEDURE ResetOpts () =
 
 PROCEDURE SetUsage (VAR program_string, usage_string: TEXT; ) =
   VAR
+    arg1: C.char_star;
+    arg2: C.char_star;
+  BEGIN
     arg1 := M3toC.SharedTtoS(program_string);
     arg2 := M3toC.SharedTtoS(usage_string);
-  BEGIN
     PLPlotRaw.plSetUsage(arg1, arg2);
     M3toC.FreeSharedS(program_string, arg1);
     M3toC.FreeSharedS(usage_string, arg2);

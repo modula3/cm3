@@ -8,6 +8,11 @@
 
 INTERFACE PLPlot;
 
+(* * * * Precaution: This conversion from the C headers is not well tested
+   and may contain bugs, irritating function names or improper types.  We
+   should use enumerations, sets, subranges whereever possible to increase
+   safety for parameter passing.  We should use exceptions to indicate
+   errors.  * * * *)
 
 IMPORT NADefinitions AS NA;
 IMPORT LongRealBasic AS R;
@@ -38,7 +43,7 @@ TYPE CallbackM3Proc = PROCEDURE (data: REFANY);
 
 TYPE
   AxesScaling = {none, independent, equal, square};
-  Tile = {box, ticks, axes, gridMinor, gridMajor, xTicksLog, yTicksLog};
+  Tile = {box, ticks, axes, gridMajor, gridMinor, xTicksLog, yTicksLog};
   TileSet = SET OF Tile;
 
 
@@ -609,7 +614,7 @@ PROCEDURE SetWindow (xmin, xmax, ymin, ymax: LONGREAL; );
 
 (* plxormod: "Set xor mode; mode = 1-enter, 0-leave, status = 0 if not
    interactive device." *)
-PROCEDURE SetXORMode (mode: INTEGER; ): INTEGER;
+PROCEDURE SetXORMode (mode: BOOLEAN; ): BOOLEAN;
 
 PROCEDURE ClearOpts ();
 
