@@ -33,15 +33,3 @@ int m3_ftruncate(int fd, long length)
   off_t len = (off_t) length;
   return ftruncate(fd, length);
 }
-
-/* added to avoid problems with the ellipsis... */
-
-int m3_fcntl(int fd, int cmd, int arg)
-{
-  return fcntl(fd, cmd, arg);
-}
-
-int m3_open(const char *path, int flags, mode_t mode)
-{
-  return open(path, flags, mode);
-}

@@ -8,7 +8,7 @@
 
 INTERFACE Uin;
 
-FROM Ctypes IMPORT short, char;
+FROM Ctypes IMPORT char;
 FROM Utypes IMPORT u_char, u_short, u_long;
 IMPORT Word;
 
@@ -25,9 +25,12 @@ CONST
   IPPROTO_PUP = 12;		(* pup *)
   IPPROTO_UDP = 17;		(* user datagram protocol *)
   IPPROTO_IDP = 22;		(* xns idp *)
-  IPPROTO_HELLO = 63;		(* "hello" routing protocol *)
-  IPPROTO_ND = 77;		(* UNOFFICIAL net disk proto *)
+  IPPROTO_TP = 29;              (* tp-4 w/ class negotiation *)
+  IPPROTO_RSVP = 46;            (* resource reservation *)
+  IPPROTO_EON = 80;             (* ISO cnlp *)
+  IPPROTO_ENCAP = 98;           (* encapsulation header *)
 
+  IPPROTO_DIVERT = 254;         (* divert pseudo-protocol *)
   IPPROTO_RAW = 255;		(* raw IP packet *)
   IPPROTO_MAX = 256;
 
@@ -128,7 +131,8 @@ PROCEDURE IN_SET_LOOPBACK_ADDR(a: struct_sockaddr_in_star);
 (* Socket address, internet style. *)
 TYPE
   struct_sockaddr_in = RECORD
-    sin_family: short;
+    sin_len: u_char;
+    sin_family: u_char;
     sin_port: u_short;
     sin_addr: struct_in_addr;
     sin_zero: ARRAY [0..7] OF char;

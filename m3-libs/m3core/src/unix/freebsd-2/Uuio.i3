@@ -50,13 +50,17 @@ CONST
 
 (*** read, readv(2) - read from a file ***)
 
-<*EXTERNAL*> PROCEDURE read (d: int; buf: char_star; nbytes: int): int;
+<*EXTERNAL "m3_read"*>
+PROCEDURE read (d: int; buf: char_star; nbytes: int): int;
+
 <*EXTERNAL*> PROCEDURE readv (d: int; iov: struct_iovec_star;
                               iovcnt: int): int;
 
 (*** write, writev(2) - write on a file ***)
 
-<*EXTERNAL*> PROCEDURE write (d: int; buf: char_star; nbytes: int): int;
+<*EXTERNAL "m3_write"*>
+PROCEDURE write (d: int; buf: char_star; nbytes: int): int;
+
 <*EXTERNAL*> PROCEDURE writev (d: int; iov: struct_iovec_star;
                                ioveclen: int): int;
 
