@@ -4,7 +4,8 @@
 (* Last modified on Fri Feb 10 11:56:08 PST 1995 by kalsow     *)
 (*      modified on Thu Jul 15 16:23:08 PDT 1993 by swart      *)
 
-UNSAFE MODULE MachineIDPosix EXPORTS MachineIDPosix, MachineID;
+UNSAFE MODULE MachineIDPosix EXPORTS MachineID;
+IMPORT MachineIDPosixC;
 
 EXCEPTION Failure;
 PROCEDURE Get (): T =
@@ -19,7 +20,7 @@ PROCEDURE Get (): T =
 
 PROCEDURE CanGet (VAR(*OUT*) id: T): BOOLEAN =
   BEGIN
-    RETURN CCanGet(ADR(id.r[0]));
+    RETURN MachineIDPosixC.CanGet(ADR(id.r[0]));
   END CanGet;
 
 BEGIN
