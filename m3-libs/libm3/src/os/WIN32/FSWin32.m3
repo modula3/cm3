@@ -280,7 +280,7 @@ REVEAL Iterator = PublicIterator BRANDED OBJECT
 PROCEDURE Iterate(p: Pathname.T): Iterator RAISES {OSError.E} =
   VAR
     iter     := NEW(Iterator);
-    allFiles := p & "\\*";
+    allFiles := Pathname.Join(p, "*", NIL);
     handle   := WinBase.FindFirstFile(M3toC.TtoS(allFiles), ADR(iter.ffd));
   BEGIN
     IF LOOPHOLE(handle, INTEGER) = WinBase.INVALID_HANDLE_VALUE THEN
@@ -330,16 +330,16 @@ PROCEDURE IterRaw(iter: Iterator; VAR (*out*) s: Ctypes.char_star): BOOLEAN =
                 RETURN FALSE
               ELSE
                 <* FATAL OSError.E *> BEGIN OSErrorWin32.Raise() END
-              END
-            END
-          END
+              END;
+            END;
+          END;
         END;
-        s := ADR(iter.ffd.cFileName);
-        IF NOT DotOrDotDot(LOOPHOLE(s, UNTRACED REF CHAR)) THEN
-          RETURN TRUE
-        END
-        (* else continue to next entry *)
+      END;
+      s := ADR(iter.ffd.cFileName);
+      IF NOT DotOrDotDot(LOOPHOLE(s, UNTRACED REF CHAR)) THEN
+	RETURN TRUE
       END
+      (* else continue to next entry *)
     END
   END IterRaw;
 
