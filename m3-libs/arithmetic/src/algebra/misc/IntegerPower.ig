@@ -12,7 +12,7 @@ TYPE
   T = R.T;
   PositiveInteger = [1..LAST(CARDINAL)];
 
-PROCEDURE IntegerPower(x:T; y:PositiveInteger):T;
+PROCEDURE Power(x:T; y:PositiveInteger):T;
 (*returns the power x^y with respect to the multiplication of R.
   This implementation needs only Log2(y) multiplications.*)
 
