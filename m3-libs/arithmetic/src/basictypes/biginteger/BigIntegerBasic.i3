@@ -13,6 +13,11 @@ Daniel Beer
 
 FROM xUtils IMPORT Error;
 
+(*
+BigIntegers are immutable, do not change them manually,
+because some routines use references to existing BigIntegers
+for performance reasons.
+*)
 TYPE
   Value <: REFANY;
   T     =  RECORD
