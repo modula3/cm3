@@ -520,16 +520,17 @@ PROCEDURE GetLiftedPrimalGeneratorMask (         hdual, gdual0: S.T;
   S.T =
   VAR
     hsdual := mc.lift.upsample(2).convolve(hdual);
-    gdual  := gdual0.superpose(hsdual.scale(R.One / mc.amp));
+    gdual  := gdual0.superpose(hsdual.scale(R.One / mc.wavelet0Amp));
   BEGIN
     RETURN gdual.alternate();
   END GetLiftedPrimalGeneratorMask;
 
 TYPE
-  MatchCoef = RECORD
-                lift: S.T;
-                amp : R.T;       (*coefficient of the target function*)
-              END;
+  MatchCoef =
+    RECORD
+      lift                  : S.T;
+      wavelet0Amp, targetAmp: R.T;  (*coefficient of the target function*)
+    END;
 
 PROCEDURE MatchPatternSmooth (target                 : S.T;
                               hdual, gdual0, hdualvan: S.T;
@@ -614,29 +615,37 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
 
     VAR yfirst := -translates;
 
-    PROCEDURE SplitParamVec (x: V.T): MatchCoef =
+    CONST constWavAmp = TRUE;
+
+    PROCEDURE SplitParamVec (x: V.T; wavAmp: R.T): MatchCoef =
       BEGIN
+        IF NOT constWavAmp THEN wavAmp := x[LAST(x^)]; END;
         RETURN
           MatchCoef{NEW(S.T).fromArray(
                       SUBARRAY(x^, FIRST(x^), NUMBER(x^) - 1), yfirst),
-                    x[LAST(x^)]};
+                    wavAmp, R.One};
       END SplitParamVec;
 
     <*UNUSED*>
     PROCEDURE ComputeOptCritDeriv (x: V.T): FnD.T RAISES {NA.Error} =
       VAR
-        mc := SplitParamVec(x);
+        (*SplitParamVec may return initWavelet0Amp as waveletAmp and this
+           won't work if we compute the real derivative instead of a finite
+           difference.*)
+        mc := SplitParamVec(x, initWavelet0Amp);
         derdist := DeriveDist(normalMat, targetCor, targetNormSqr, mc.lift);
-        derwavdist := ExtendDervTarget(derdist, mc.lift.getData(), mc.amp,
-                                       waveletVec, waveletCor, targetVec);
+        derwavdist := ExtendDervTarget(
+                        derdist, mc.lift.getData(), mc.wavelet0Amp,
+                        waveletVec, waveletCor, targetVec);
       BEGIN
         (*
         IO.Put(
           Fmt.FN("y %s, cf %s\n", ARRAY OF TEXT{SF.Fmt(y), RF.Fmt(cf)}));
         *)
-        RETURN FnD.Add(derwavdist, FnD.Scale(DeriveWSSE(hdualvan, gdual0,
-                                                        mc.lift, mc.amp),
-                                             smoothWeightFade));
+        RETURN FnD.Add(
+                 derwavdist, FnD.Scale(DeriveWSSE(hdualvan, gdual0,
+                                                  mc.lift, mc.wavelet0Amp),
+                                       smoothWeightFade));
       END ComputeOptCritDeriv;
 
     PROCEDURE ComputeOptCritDiff (x: V.T): FnD.T RAISES {NA.Error} =
@@ -644,7 +653,8 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
       PROCEDURE SquareSmoothEstimate (x: V.T): R.T =
         VAR
           hsums := GetLiftedPrimalGeneratorMask(
-                     hdualnovan, gdual0novan, SplitParamVec(x)).wrapCyclic(
+                     hdualnovan, gdual0novan,
+                     SplitParamVec(x, initWavelet0Amp)).wrapCyclic(
                      3).getData();
 
         BEGIN
@@ -657,7 +667,8 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
       PROCEDURE TransitionSpecRad (x: V.T): R.T RAISES {NA.Error} =
         VAR
           hprimal := GetLiftedPrimalGeneratorMask(
-                       hdualnovan, gdual0novan, SplitParamVec(x));
+                       hdualnovan, gdual0novan,
+                       SplitParamVec(x, initWavelet0Amp));
         BEGIN
           (*
           IO.Put("TransitionSpecRad "&Fmt.Int(ncall)&"\n");
@@ -669,41 +680,88 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
       PROCEDURE TransitionBSpline (x: V.T): R.T RAISES {NA.Error} =
         VAR
           hprimal := GetLiftedPrimalGeneratorMask(
-                       hdualnovan, gdual0novan, SplitParamVec(x));
+                       hdualnovan, gdual0novan,
+                       SplitParamVec(x, initWavelet0Amp));
         BEGIN
           RETURN EigenDistBSpline(Refn.TransitionEV(hprimal).eigenvalues);
         END TransitionBSpline;
 
-      PROCEDURE TransitionATATrace (x: V.T): R.T =
+      PROCEDURE TransitionFrobenius (x: V.T): R.T =
         VAR
           hprimal := GetLiftedPrimalGeneratorMask(
-                       hdualnovan, gdual0novan, SplitParamVec(x));
+                       hdualnovan, gdual0novan,
+                       SplitParamVec(x, initWavelet0Amp));
+          hh := hprimal.autocorrelate();
+          (*frob0 := M.Trace(M.MulMMA(Refn.RadicBandMatrix(hh)));*)
+          frob1           := R.Zero;
+          alter: [0 .. 1] := 1;
+          n               := hh.getLast();
         BEGIN
-          RETURN M.Trace(M.MulMMA(Refn.TransitionMatrix(hprimal)));
-        END TransitionATATrace;
+          (*because of the symmetry we can content ourselves with the half
+             autocorrelated mask*)
+          FOR i := hh.getFirst() TO -1 DO
+            VAR val := hh.getValue(i);
+            BEGIN
+              frob1 := frob1 + FLOAT(n + alter, R.T) * val * val;
+              alter := 1 - alter;
+            END;
+          END;
+          VAR val := hh.getValue(0);
+          BEGIN
+            frob1 := R.Two * frob1 + FLOAT(n + alter, R.T) * val * val;
+          END;
+          (*
+          IO.Put(Fmt.FN("Frobenius norm %s =?= %s\n",
+                        ARRAY OF TEXT{RF.Fmt(frob0), RF.Fmt(frob1)}));
+          *)
+          RETURN frob1;
+        END TransitionFrobenius;
 
       VAR
-        mc := SplitParamVec(x);
+        mc := SplitParamVec(x, initWavelet0Amp);
         derdist := DeriveDist(normalMat, targetCor, targetNormSqr, mc.lift);
-        derwavdist := ExtendDervTarget(derdist, mc.lift.getData(), mc.amp,
-                                       waveletVec, waveletCor, targetVec);
 
         dx  := V.New(NUMBER(x^));
         dxv := VT.Norm1(x) * difdist;
         (*dx := V.Scale(x, 1.0D-2);*)
-        dersmooth: FnD.T;
+        derwavdist, dersmooth: FnD.T;
 
       <*FATAL Thread.Alerted, Wr.Failure*>
       BEGIN
+        IF constWavAmp THEN
+          VAR zerovec := V.New(mc.lift.getNumber());
+          BEGIN
+            FOR i := FIRST(zerovec^) TO LAST(zerovec^) DO
+              zerovec[i] := R.Zero;
+            END;
+            derwavdist :=
+              FnD.T{zeroth := derdist.zeroth, first :=
+                    V.FromVectorArray(
+                      ARRAY OF V.T{derdist.first, V.FromScalar(R.Zero)}),
+                    second := M.FromMatrixArray(
+                                ARRAY [0 .. 1], [0 .. 1] OF
+                                  M.T{ARRAY OF
+                                        M.T{derdist.second,
+                                            M.ColumnFromArray(zerovec^)},
+                                      ARRAY OF
+                                        M.T{M.RowFromArray(zerovec^),
+                                            M.FromScalar(R.One)}})};
+          END;
+        ELSE
+          derwavdist :=
+            ExtendDervTarget(derdist, mc.lift.getData(), mc.wavelet0Amp,
+                             waveletVec, waveletCor, targetVec);
+        END;
         IO.Put(
           Fmt.FN("ComputeOptCritDiff for x=%s", ARRAY OF TEXT{VF.Fmt(x)}));
         FOR i := FIRST(dx^) TO LAST(dx^) DO dx[i] := dxv END;
-        CASE 0 OF
+        CASE 3 OF
         | 0 =>
             dersmooth := Fn.EvalCentralDiff2(SquareSmoothEstimate, x, dx);
         | 1 => dersmooth := Fn.EvalCentralDiff2(TransitionSpecRad, x, dx);
         | 2 => dersmooth := Fn.EvalCentralDiff2(TransitionBSpline, x, dx);
-        | 3 => dersmooth := Fn.EvalCentralDiff2(TransitionATATrace, x, dx);
+        | 3 =>
+            dersmooth := Fn.EvalCentralDiff2(TransitionFrobenius, x, dx);
         ELSE
           <*ASSERT FALSE*>
         END;
@@ -722,8 +780,8 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
 
 
     CONST
-      maxIter    = 30;
-      smoothFac  = 2.5D0;
+      maxIter    = 20;
+      smoothFac  = 2.0D0;
       maxSubIter = 30;
 
       ymin = -3.5D0;
@@ -755,6 +813,7 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
                           waveletVec, waveletCor, targetVec);
       x := V.Neg(LA.LeastSquares(initderwavdist.second,
                                  ARRAY OF V.T{initderwavdist.first})[0].x);
+      initWavelet0Amp := x[LAST(x^)];
 
       smoothWeightFade := smoothWeight / RIntPow.Power(smoothFac, maxIter);
 
@@ -780,10 +839,10 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
           END;
         END;
         VAR
-          mc := SplitParamVec(x);
+          mc := SplitParamVec(x, initWavelet0Amp);
           gdual := gdual0.superpose(
                      hdualvan.convolve(
-                       mc.lift.scale(R.One / mc.amp).upsample(2)));
+                       mc.lift.scale(R.One / mc.wavelet0Amp).upsample(2)));
         BEGIN
           PL.StartPage();
           WP.PlotWaveletsYLim(hdual, gdual, levels, ymin, ymax);
@@ -792,7 +851,7 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         smoothWeightFade := smoothWeightFade * smoothFac;
       END;
       PL.Exit();
-      RETURN SplitParamVec(x);
+      RETURN SplitParamVec(x, initWavelet0Amp);
     END;
   END MatchPatternSmooth;
 
@@ -825,10 +884,10 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
     s := SIntPow.MulPower(
            mc.lift.translate((2 - smooth - vanishing) DIV 2), vanatom,
            vanishing);
-    gdual0a := gdual0.scale(mc.amp);
+    gdual0a := gdual0.scale(mc.wavelet0Amp);
     gduala  := gdual0a.superpose(s.upsample(2).convolve(hdual));
     gdual := gdual0.superpose(
-               s.upsample(2).convolve(hdual.scale(R.One / mc.amp)));
+               s.upsample(2).convolve(hdual.scale(R.One / mc.wavelet0Amp)));
     unit          := IIntPow.Power(2, levels);
     twopow        := FLOAT(unit, R.T);
     grid          := R.One / twopow;
@@ -949,7 +1008,7 @@ PROCEDURE Test () =
         *)
         TestMatchPatternSmooth(Refn.Refine(BSpl.WaveletMask(2, 8),
                                            BSpl.GeneratorMask(2), 6).scale(
-                                 64.0D0).translate(50), 6, 2, 8, 5, 1.0D-8);
+                                 64.0D0).translate(50), 6, 2, 8, 5, 1.0D-4);
     | Example.matchSincSmooth =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
