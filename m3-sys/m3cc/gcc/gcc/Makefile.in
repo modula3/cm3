@@ -1333,9 +1333,11 @@ $(srcdir)/c-parse.y: c-parse.in
 	$(srcdir)/move-if-change tmp-c-parse.y $(srcdir)/c-parse.y
 
 $(srcdir)/c-gperf.h: c-parse.gperf
-	gperf -p -j1 -i 1 -g -o -t -G -N is_reserved_word \
-	   -k1,3,$$ $(srcdir)/c-parse.gperf >tmp-gperf.h
-	 $(srcdir)/move-if-change tmp-gperf.h $(srcdir)/c-gperf.h
+	if type gperf ; then \
+	   gperf -p -j1 -i 1 -g -o -t -G -N is_reserved_word \
+	     -k1,3,$$ $(srcdir)/c-parse.gperf >tmp-gperf.h ; \
+	   $(srcdir)/move-if-change tmp-gperf.h $(srcdir)/c-gperf.h ; \
+	fi
 # options -L C -F ', 0, 0' removed
 
 c-decl.o : c-decl.c $(CONFIG_H) system.h $(TREE_H) c-tree.h c-lex.h flags.h \

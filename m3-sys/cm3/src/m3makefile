@@ -9,6 +9,7 @@
 % remove_m3_option ("-gui")
 % m3_option ("-times")
 
+include ("../../../compat.quake")
 import ("libm3")
 import ("m3middle")
 import ("m3linker")
