@@ -192,7 +192,8 @@ print_list2() {
   N=36; export N
   while [ -n "$1" ] ; do
     echo "${INDENT} `format_one $1` `format_one $2`"
-    shift; shift
+    [ -n "$1" ] && shift
+    [ -n "$1" ] && shift
   done
 }
 
@@ -201,7 +202,10 @@ print_list4() {
   N=18; export N
   while [ -n "$1" ] ; do
     echo "${INDENT} `format_one $1` `format_one $2` `format_one $3` `format_one $4`"
-    shift; shift
+    [ -n "$1" ] && shift
+    [ -n "$1" ] && shift
+    [ -n "$1" ] && shift
+    [ -n "$1" ] && shift
   done
 }
 
