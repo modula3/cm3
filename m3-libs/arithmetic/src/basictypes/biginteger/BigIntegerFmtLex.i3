@@ -2,7 +2,7 @@ INTERFACE BigIntegerFmtLex;
 (*Copyright (c) 1996, m3na project*)
 
 IMPORT BigInteger AS B;
-IMPORT Rd, Wr, Thread;
+IMPORT Rd, Thread;
 IMPORT Fmt AS F;
 IMPORT Lex AS L;
 IMPORT FloatMode;
