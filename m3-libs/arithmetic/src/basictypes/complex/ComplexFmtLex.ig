@@ -15,9 +15,12 @@ TYPE
   T = C.T;
   FmtStyle = RECORD elemStyle := RF.FmtStyle{}; END;
 
+(*
 PROCEDURE Lex(str:TEXT):C.T RAISES {Error};
         (*reads after the "COMPLEX{" in COMPLEX{re:=<r>; im:=<r>},
         thru the "}"*)
+*)
+
 PROCEDURE Fmt (READONLY x : T; READONLY style := FmtStyle{}) : TEXT;
         (*outputs as "COMPLEX{re:=<r>; im:=<r>}"
         Uses simple F.Real if x.im=0.0.*)

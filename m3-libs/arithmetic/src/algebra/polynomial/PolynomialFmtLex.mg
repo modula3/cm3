@@ -15,7 +15,6 @@ CONST Module = "PolynomialFmtLex.";
 
 (*--------------------*)
 (*
-<* UNUSED *>
 PROCEDURE Lex( 
                str:TEXT):T =
 BEGIN
