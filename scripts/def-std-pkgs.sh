@@ -146,4 +146,5 @@ P="${P} shownew"
 P="${P} cube"
 P="${P} calculator"
 P="${P} fisheye"
+[ "${M3OSTYPE}" != "WIN32" -o -n "${CM3_ALL}" ] && P="${P} mentor"
 
