@@ -25,11 +25,14 @@ IMPORT LongRealBSplineWavelet AS BSpl;
 
 IMPORT LongRealFmtLex AS RF;
 IMPORT LongRealVectorFmtLex AS VF;
+IMPORT LongRealComplexVectorFmtLex AS CVF;
 IMPORT LongRealMatrixFmtLex AS MF;
 IMPORT LongRealSignalFmtLex AS SF;
 IMPORT LongRealWaveletPlot AS WP;
 IMPORT PLPlot AS PL;
 IMPORT IO, Fmt, Wr, Thread;
+IMPORT IntList;
+
 IMPORT NADefinitions AS NA;
 
 (*{RT.Half, R.Zero, -RT.Half} instead of {R.One, R.Zero, -R.One} has the
@@ -434,33 +437,92 @@ PROCEDURE TranslatesBasis (generatorvan: S.T;
   END TranslatesBasis;
 
 
+TYPE
+  MatrixElem = RECORD
+                 enX, enY        : IntList.T;
+                 prevEnX, prevEnY: IntList.T;
+                 value           : R.T;
+               END;
+
+PROCEDURE FindMinMatrix (READONLY mat               : M.TBody;
+                                  enabledX, enabledY: IntList.T; ):
+  MatrixElem =
+  VAR
+    result          : MatrixElem;
+    enX, enY        : IntList.T;
+    prevEnX, prevEnY: IntList.T;
+  BEGIN
+    result.value := R.PosInf;
+    prevEnX := NIL;
+    enX := enabledX;
+    WHILE enX # NIL DO
+      prevEnY := NIL;
+      enY := enabledY;
+      WHILE enY # NIL DO
+        IF result.value > mat[enX.head, enY.head] THEN
+          result.value := mat[enX.head, enY.head];
+          result.enX := enX;
+          result.enY := enY;
+          result.prevEnX := prevEnX;
+          result.prevEnY := prevEnY;
+        END;
+        prevEnY := enY;
+        enY := enY.tail;
+      END;
+      prevEnX := enX;
+      enX := enX.tail;
+    END;
+    RETURN result;
+  END FindMinMatrix;
+
+PROCEDURE IntListRemove (list, prev: IntList.T): IntList.T =
+  BEGIN
+    IF prev # NIL THEN
+      prev.tail := prev.tail.tail;
+      RETURN list;
+    ELSE
+      RETURN list.tail;
+    END;
+  END IntListRemove;
+
 (*Compute a kind of distance of a given eigenspectrum to the one of the
    transfer matrix of the B-Spline of corresponding order*)
-PROCEDURE EigenDistBSpline (READONLY specX: ARRAY OF C.T) =
-  TYPE BIT = (*BITS 1 FOR*) BOOLEAN;
+PROCEDURE EigenDistBSpline (specX: REF ARRAY OF C.T): R.T =
   VAR
-    enabledX   := NEW(REF ARRAY OF BIT, NUMBER(specX));
-    enabledY   := NEW(REF ARRAY OF BIT, NUMBER(specX));
-    specY      := NEW(V.T, NUMBER(specX));
-    distMatrix := NEW(M.T, NUMBER(specX), NUMBER(specX));
+    enabledX, enabledY: IntList.T := NIL;
+    specY                         := NEW(V.T, NUMBER(specX^));
+    distMatrix := NEW(M.T, NUMBER(specX^), NUMBER(specX^));
   BEGIN
     VAR eigY := R.One;
     BEGIN
-      FOR i := FIRST(specX) TO LAST(specX) DO
-        enabledX[i] := TRUE;
-        enabledY[i] := TRUE;
+      FOR i := FIRST(specX^) TO LAST(specX^) DO
+        enabledX := IntList.Cons(i, enabledX);
+        enabledY := IntList.Cons(i, enabledY);
         eigY := eigY / R.Two;
         specY[i] := eigY;
       END;
-      specY[LAST(specX)] := R.Two * eigY;
+      specY[LAST(specX^)] := R.Two * eigY;
     END;
-    FOR i := FIRST(specX) TO LAST(specX) DO
-      FOR j := FIRST(specX) TO LAST(specX) DO
+    IO.Put(Fmt.FN("compute distance between spectra\n%s%s\n",
+                  ARRAY OF TEXT{CVF.Fmt(specX), VF.Fmt(specY)}));
+    FOR i := FIRST(specX^) TO LAST(specX^) DO
+      FOR j := FIRST(specX^) TO LAST(specX^) DO
         distMatrix[i, j] :=
           CT.AbsSqr(C.T{specX[i].re - specY[j], specX[i].im});
       END;
     END;
-
+    VAR sum := R.Zero;
+    BEGIN
+      FOR i := FIRST(specX^) TO LAST(specX^) DO
+        VAR min := FindMinMatrix(distMatrix^, enabledX, enabledY);
+        BEGIN
+          sum := sum + min.value;
+          enabledX := IntListRemove(enabledX, min.prevEnX);
+          enabledY := IntListRemove(enabledY, min.prevEnY);
+        END;
+      END;
+      RETURN sum;
+    END;
   END EigenDistBSpline;
 
 
@@ -561,9 +623,6 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
                     TEXT{MF.Fmt(normalMat)}));
     *)
 
-    CONST
-      tol     = 1.0D-4;
-      difdist = 1.0D-5;
     VAR yfirst := -translates;
 
     PROCEDURE SplitParamVec (x: V.T): MatchCoef =
@@ -618,6 +677,14 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
           RETURN Refn.TransitionSpecRad(hprimal);
         END TransitionSpecRad;
 
+      PROCEDURE TransitionBSpline (x: V.T): R.T RAISES {NA.Error} =
+        VAR
+          hprimal := GetLiftedPrimalGeneratorMask(
+                       hdualnovan, gdual0novan, SplitParamVec(x));
+        BEGIN
+          RETURN EigenDistBSpline(Refn.TransitionEV(hprimal).eigenvalues);
+        END TransitionBSpline;
+
       VAR
         (*ncall:=0;*)
         mc := SplitParamVec(x);
@@ -635,10 +702,11 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         IO.Put(
           Fmt.FN("ComputeOptCritDiff for x=%s", ARRAY OF TEXT{VF.Fmt(x)}));
         FOR i := FIRST(dx^) TO LAST(dx^) DO dx[i] := dxv END;
-        CASE 1 OF
+        CASE 2 OF
         | 0 =>
             dersmooth := Fn.EvalCentralDiff2(SquareSmoothEstimate, x, dx);
         | 1 => dersmooth := Fn.EvalCentralDiff2(TransitionSpecRad, x, dx);
+        | 2 => dersmooth := Fn.EvalCentralDiff2(TransitionBSpline, x, dx);
         ELSE
           <*ASSERT FALSE*>
         END;
@@ -657,8 +725,12 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
 
 
     CONST
-      maxIter   = 10;
-      smoothFac = 1.5D0;
+      maxIter    = 10;
+      smoothFac  = 1.5D0;
+      maxSubIter = 30;
+
+      tol     = 1.0D-4;
+      difdist = 1.0D-5;
 
     VAR
       (*
@@ -694,7 +766,7 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
           subiter: CARDINAL := 0;
         BEGIN
           WHILE NOT precOk DO
-            IF subiter >= 15 THEN
+            IF subiter >= maxSubIter THEN
               RAISE NA.Error(NA.Err.not_converging);
             END;
             INC(subiter);
@@ -865,7 +937,7 @@ PROCEDURE Test () =
         *)
         TestMatchPatternSmooth(Refn.Refine(BSpl.WaveletMask(2, 8),
                                            BSpl.GeneratorMask(2), 6).scale(
-                                 64.0D0).translate(50), 6, 2, 8, 5, 1.0D-5);
+                                 64.0D0).translate(0), 6, 2, 8, 5, 1.0D-5);
     | Example.matchSincSmooth =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
