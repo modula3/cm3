@@ -11,11 +11,13 @@ Abstract: High level interface to plplot library.
 *)
 
 IMPORT LongRealBasic AS R;
+FROM NADefinitions IMPORT Error;
 
 (*==========================*)
 
 TYPE
-  ColorMap = [0..15];
+  Map0Color = [0..15];  (*the actual color is not determined*)
+  Map1Color = R.T;
 
 <*INLINE*>
 PROCEDURE Init();
@@ -25,9 +27,34 @@ PROCEDURE Init();
 PROCEDURE Exit();
 (* End a plotting session for all open streams. *)
 
+
 <*INLINE*>
-PROCEDURE SetColorMap0(icol0:ColorMap);
+PROCEDURE SetEnvironment(xmin,xmax,ymin,ymax:R.T;
+  just:CARDINAL:=0; axis:CARDINAL:=0);
+(* Simple interface for defining viewport and window. *)
+
+
+<*INLINE*>
+PROCEDURE SetColor0(icol0:Map0Color);
 (* Set color, map 0. *)
+
+<*INLINE*>
+PROCEDURE SetColor1(icol1:Map1Color);
+(* Set color, map 1. Argument is a float between 0. and 1. *)
+
+<*INLINE*>
+PROCEDURE SetLabel(xlabel, ylabel, tlabel : TEXT);
+(* Simple routine for labelling graphs. *)
+
+
+<*INLINE*>
+PROCEDURE PlotPoints(READONLY x,y :ARRAY OF R.T; code:CARDINAL)
+  RAISES {Error};
+(* Plots array y against x for n points using ASCII code "code".*)
+
+<*INLINE*>
+PROCEDURE PlotLines(READONLY x,y:ARRAY OF R.T) RAISES {Error};
+(* Draws line segments connecting a series of points. *)
 
 <*INLINE*>
 PROCEDURE Histogram(READONLY data:ARRAY OF R.T;
@@ -35,10 +62,6 @@ PROCEDURE Histogram(READONLY data:ARRAY OF R.T;
                              numbin:CARDINAL;
                              oldwin:CARDINAL:=0);
 (* Draws a histogram of n values of a variable in array data[0..n-1] *)
-
-<*INLINE*>
-PROCEDURE SetLabel(xlabel, ylabel, tlabel : TEXT);
-(* Simple routine for labelling graphs. *)
 
 (*==========================*)
 END PLPlot.

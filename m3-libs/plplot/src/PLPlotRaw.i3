@@ -16,8 +16,8 @@ IMPORT Ctypes AS C;
 (*==========================*)
 
 TYPE
-  PLINT = INTEGER;
-  PLFLT = LONGREAL;
+  PLINT = C.int;
+  PLFLT = C.double;
   PLFLT_star = UNTRACED REF PLFLT;
 
 CONST
@@ -44,18 +44,43 @@ PROCEDURE plinit();
 PROCEDURE plend();
 (* End a plotting session for all open streams. *)
 
+
+
+<*EXTERNAL c_plenv*>
+PROCEDURE plenv(xmin:PLFLT; xmax:PLFLT; ymin:PLFLT; ymax:PLFLT;
+	just:PLINT; axis:PLINT);
+(* Simple interface for defining viewport and window. *)
+
+
+
 <*EXTERNAL c_plcol0*>
 PROCEDURE plcol0(icol0:PLINT);
 (* Set color, map 0.  Argument is integer between 0 and 15. *)
+
+<*EXTERNAL c_plcol1*>
+PROCEDURE plcol1(icol1:PLFLT);
+(* Set color, map 1.  Argument is a float between 0. and 1. *)
+
+
+<*EXTERNAL c_pllab*>
+PROCEDURE pllab(xlabel, ylabel, tlabel:C.const_char_star);
+(* Simple routine for labelling graphs. *)
+
+
+<*EXTERNAL c_plpoin*>
+PROCEDURE plpoin(n:PLINT; READONLY x,y:(*ARRAY OF*) PLFLT; code:PLINT);
+(* Plots array y against x for n points using ASCII code "code".*)
+
+
+<*EXTERNAL c_plline*>
+PROCEDURE plline(n:PLINT; READONLY x,y:(*ARRAY OF*) PLFLT);
+(* Draws line segments connecting a series of points. *)
 
 <*EXTERNAL c_plhist*>
 PROCEDURE plhist(n:PLINT; READONLY data:(*ARRAY OF*)PLFLT; datmin:PLFLT; datmax:PLFLT;
 	 nbin:PLINT; oldwin:PLINT);
 (* Draws a histogram of n values of a variable in array data[0..n-1] *)
 
-<*EXTERNAL c_pllab*>
-PROCEDURE pllab(xlabel, ylabel, tlabel:C.const_char_star);
-(* Simple routine for labelling graphs. *)
 
 (*
 <*EXTERNAL*>
@@ -90,7 +115,7 @@ PROCEDURE c_pllab(xlabel:C.const_char_star; ylabel:C.const_char_star; tlabel:C.c
 END PLPlotRaw.
 
 (*
-/* $Id: PLPlotRaw.i3,v 1.2 2003-07-27 19:20:42 thielema Exp $
+/* $Id: PLPlotRaw.i3,v 1.3 2003-07-27 21:08:05 thielema Exp $
 
     Copyright (C) 1992 by 
     Maurice J. LeBrun, Geoff Furnish, Tony Richardson.
