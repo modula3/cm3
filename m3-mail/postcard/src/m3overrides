@@ -1,2 +1,0 @@
-override ("formsvbt", ROOT & "/m3-ui")
-override ("mtex", ROOT & "/m3-tools")
