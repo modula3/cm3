@@ -38,13 +38,6 @@ echo "using files listed in $1"
 cp "$1" "${ROOT}/.tar-include"
 cd "${ROOT}" || exit 1
 /bin/ls -1d COPYRIGHT-CMASS COPYRIGHT-DEC >> .tar-include
-echo "building exclude list..."
-for p in ${P} ; do
-  find ${p} \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
-            -name '*.rej'  -or -name 'cvs-nq-up' -or -name '*-diffs' -or \
-            \( -name 'CVS' -a -type d \) \) -print | \
-    sed -e 's;^./;;' >> .tar-exclude
-done
 
 echo "archiving..."
 export GZIP="-9 -v"
