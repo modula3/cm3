@@ -218,7 +218,7 @@ BEGIN
     y2:=nr.sin(x);
     Msg("sin(" & Fmt.Real(x,prec:=2)
       & ")= cheby:" & Fmt.Real(y1,prec:=4)
-      & " Math32:"  & Fmt.Real(y2,prec:=4) & "\n");
+      & " Matrixh32:"  & Fmt.Real(y2,prec:=4) & "\n");
   END;
 
   Msg("Doing derivatives and integrals\n");
@@ -234,7 +234,7 @@ BEGIN
     y2:=nr.sin(x);
     Msg("sin(" & Fmt.Real(x,prec:=2)
       & ")= cheby:" & Fmt.Real(y1,prec:=4)
-      & " Math32:"  & Fmt.Real(y2,prec:=4) & "\n");
+      & " Matrixh32:"  & Fmt.Real(y2,prec:=4) & "\n");
   END;
   
   RETURN result;

@@ -1,4 +1,4 @@
-MODULE TestMat EXPORTS Test;
+MODULE TestMatrix EXPORTS Test;
 (*Copyright (c) 1996, m3na project
 Abstract:  TestS for xMat module.
 
@@ -11,7 +11,7 @@ FROM xReal64 IMPORT REAL64;
 
 (*=======================*)
 CONST
-  Module = "TestMat.";
+  Module = "TestMatrix.";
 
 (*----------------------*)
 PROCEDURE TestABC():BOOLEAN=
@@ -25,9 +25,9 @@ BEGIN
   RETURN result;   
 END TestABC;
 (*----------------------*)
-PROCEDURE TestMatrix():BOOLEAN=
+PROCEDURE TestMatrixBasic():BOOLEAN=
 CONST
-  ftn = Module & "TestMatrix";
+  ftn = Module & "TestMatrixBasic";
   m=3; n=3;
   v3=ARRAY [0..2] OF REAL64 {1.0D0,2.0D0,3.0D0};
 VAR
@@ -54,15 +54,15 @@ BEGIN
   Msg("m1^T=\n" & M.fmt(M.transpose(m1)) & "\n");
 
   RETURN result;   
-END TestMatrix;
+END TestMatrixBasic;
 (*-------------------------*)
-PROCEDURE TestMat():BOOLEAN=
-CONST ftn = Module & "TestMat";
+PROCEDURE TestMatrix():BOOLEAN=
+CONST ftn = Module & "TestMatrix";
 VAR result:=TRUE;
 BEGIN
-  NewLine(); EVAL TestMatrix();
+  NewLine(); EVAL TestMatrixBasic();
   RETURN result;
-END TestMat;
+END TestMatrix;
 (*=======================*)
 BEGIN
-END TestMat.
+END TestMatrix.

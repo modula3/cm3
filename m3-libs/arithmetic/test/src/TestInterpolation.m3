@@ -1,4 +1,4 @@
-MODULE TestInterp EXPORTS Test;
+MODULE TestInterpolation EXPORTS Test;
 (*Copyright (c) 1996, m3na project
 Abstract: Test driver for interpolation.
 
@@ -11,7 +11,7 @@ IMPORT xReal64 AS R;
 FROM xReal64 IMPORT REAL64,Array,sin,cos;
 (*=======================*)
 CONST
-  Module = "TestInterp.";
+  Module = "TestInterpolation.";
 VAR
 (*=======================*)
 (*----------------------*)
@@ -97,14 +97,14 @@ BEGIN
   RETURN result;   
 END TestNewt;
 (*-------------------------*)
-PROCEDURE TestInterp():BOOLEAN=
-CONST ftn = Module & "TestInterp";
+PROCEDURE TestInterpolation():BOOLEAN=
+CONST ftn = Module & "TestInterpolation";
 VAR result:=TRUE;
 BEGIN
   NewLine(); EVAL TestLinear();
   NewLine(); EVAL TestNewt();
   RETURN result;
-END TestInterp;
+END TestInterpolation;
 (*=======================*)
 BEGIN
-END TestInterp.
+END TestInterpolation.
