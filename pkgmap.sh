@@ -2,11 +2,11 @@
 
 ROOT=${ROOT:-$(pwd)}
 
-BUILDLOCAL="cm3 -build -override -DROOT=${ROOT}"
-CLEANLOCAL="cm3 -clean -override -DROOT=${ROOT}"
-BUILDGLOBAL="cm3 -build  -DROOT=${ROOT}"
-CLEANGLOBAL="cm3 -clean -DROOT=${ROOT}"
-SHIP="cm3 -ship -DROOT=${ROOT}"
+BUILDLOCAL="${BUILDLOCAL:-cm3 -build -override -DROOT=${ROOT} ${BUILDARGS}}"
+CLEANLOCAL="${CLEANLOCAL:-cm3 -clean -override -DROOT=${ROOT} ${CLEANARGS}}"
+BUILDGLOBAL="${BUILDGLOBAL:-cm3 -build  -DROOT=${ROOT} ${BUILDARGS}}"
+CLEANGLOBAL="${CLEANGLOBAL:-cm3 -clean -DROOT=${ROOT} ${CLEANARGS}}"
+SHIP="${SHIP:-cm3 -ship -DROOT=${ROOT} ${SHIPARGS}}"
 
 ACTION="build"
 AREA=""
