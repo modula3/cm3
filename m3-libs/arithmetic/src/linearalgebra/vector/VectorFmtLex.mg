@@ -19,18 +19,21 @@ Abstract:
 
 2/17/96   Harry George   Converted from OO to ADT format
 *)
+(*
 FROM xUtils IMPORT Error,Err;
+*)
 IMPORT Wr,TextWr,Fmt AS F,Thread;
 
 <*UNUSED*> CONST Module = "VectorFmt.";
 
 (*-----------------*)
-<*UNUSED*>
+(*
 PROCEDURE Lex(
                str:TEXT):T =
 BEGIN
   RAISE Error(Err.not_implemented);
 END Lex;
+*)
 (*-----------------*)
 PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}):TEXT
                RAISES {Thread.Alerted, Wr.Failure} =

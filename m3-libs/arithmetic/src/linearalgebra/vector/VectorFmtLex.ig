@@ -11,8 +11,9 @@ TYPE
   T = V.T;
   FmtStyle = RECORD elemStyle := RF.FmtStyle{}; END;
 
-<*UNUSED*>
+(*
 PROCEDURE Lex(str:TEXT):T;
+*)
 PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}) : TEXT RAISES {Thread.Alerted, Wr.Failure};
 
 (*==========================*)
