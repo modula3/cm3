@@ -1,6 +1,7 @@
 RandomBayesDurham
 RandomCombinedFast
 RandomCombinedSlow
+RandomDECSRC
 RandomImprovedMcGill
 RandomIteratedSquaring
 RandomMultiplicativeFibo
