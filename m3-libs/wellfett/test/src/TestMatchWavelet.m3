@@ -686,12 +686,32 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
           RETURN EigenDistBSpline(Refn.TransitionEV(hprimal).eigenvalues);
         END TransitionBSpline;
 
+      PROCEDURE TransitionBinomial (x: V.T): R.T RAISES {NA.Error} =
+        VAR
+          hprimal := GetLiftedPrimalGeneratorMask(
+                       hdualnovan, gdual0novan,
+                       SplitParamVec(x, initWavelet0Amp));
+          bsplinemask := BSpl.GeneratorMask(
+                           hprimal.getNumber() - 1).translate(
+                           hprimal.getFirst());
+        BEGIN
+	  (*
+          IO.Put(Fmt.FN("%s-%s, %s-%s\n",
+                        ARRAY OF
+                          TEXT{Fmt.Int(hprimal.getFirst()),
+                               Fmt.Int(hprimal.getLast()),
+                               Fmt.Int(bsplinemask.getFirst()),
+                               Fmt.Int(bsplinemask.getLast())}));
+          *)
+	  RETURN -ABS(bsplinemask.inner(hprimal));
+        END TransitionBinomial;
+
       PROCEDURE TransitionFrobenius (x: V.T): R.T =
         VAR
           hprimal := GetLiftedPrimalGeneratorMask(
                        hdualnovan, gdual0novan,
                        SplitParamVec(x, initWavelet0Amp));
-          hh := hprimal;
+          hh := hprimal.autocorrelate();
           (*frob0 := M.Trace(M.MulMMA(Refn.RadicBandMatrix(hh)));*)
           frob1           := R.Zero;
           alter: [0 .. 1] := 1;
@@ -755,13 +775,14 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         IO.Put(
           Fmt.FN("ComputeOptCritDiff for x=%s", ARRAY OF TEXT{VF.Fmt(x)}));
         FOR i := FIRST(dx^) TO LAST(dx^) DO dx[i] := dxv END;
-        CASE 3 OF
+        CASE 4 OF
         | 0 =>
             dersmooth := Fn.EvalCentralDiff2(SquareSmoothEstimate, x, dx);
         | 1 => dersmooth := Fn.EvalCentralDiff2(TransitionSpecRad, x, dx);
         | 2 => dersmooth := Fn.EvalCentralDiff2(TransitionBSpline, x, dx);
         | 3 =>
             dersmooth := Fn.EvalCentralDiff2(TransitionFrobenius, x, dx);
+        | 4 => dersmooth := Fn.EvalCentralDiff2(TransitionBinomial, x, dx);
         ELSE
           <*ASSERT FALSE*>
         END;
@@ -1008,7 +1029,7 @@ PROCEDURE Test () =
         *)
         TestMatchPatternSmooth(Refn.Refine(BSpl.WaveletMask(2, 8),
                                            BSpl.GeneratorMask(2), 6).scale(
-                                 64.0D0).translate(50), 6, 2, 8, 5, 1.0D0);
+                                 64.0D0).translate(50), 6, 2, 8, 5, 1.0D3);
     | Example.matchSincSmooth =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
