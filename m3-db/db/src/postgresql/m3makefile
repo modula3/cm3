@@ -1,5 +1,0 @@
-import_sys_lib ("POSTGRESQL")
-Interface("PostgreSQL")
-Interface("PostgreSQLDBRep")
-implementation("PostgreSQLDB")
-
