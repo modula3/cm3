@@ -1,10 +1,10 @@
 GENERIC INTERFACE VectorBasic(R,VS);
-(*Copyright (c) 1996, m3na project
+(**Copyright (c) 1996, m3na project
 
 Abstract: Vector math
 
 2/17/96  Harry George    Convert from Objects to ADT's
-*)
+**)
 FROM NADefinitions IMPORT Error;
 (*==========================*)
 
@@ -16,8 +16,12 @@ TYPE
   TBody = ARRAY OF R.T;
   T     = REF TBody;
 
+  TVBody = ARRAY OF T;
+
 PROCEDURE New(n:CARDINAL):T; (*make new vector with n components T*)
 PROCEDURE FromArray(READONLY x:TBody):T;
+PROCEDURE FromVectorArray(READONLY x:TVBody):T;
+PROCEDURE FromScalar (x: R.T): T;
 PROCEDURE Copy(x:T):T;
 
 (*

@@ -61,6 +61,10 @@ MatrixFmtLex("BigInteger",      "Basic")
 %import_lib("blas","/usr/lib")
 
 % needed for blas and lapack, part of the f2c package, I guess
-import_lib("g2c","/usr/lib")
-import_lib("blas","/usr/lib")
-import_lib("lapack","/usr/lib")
+%import_lib("g2c","/usr/lib")
+%import_lib("blas","/usr/lib")
+%import_lib("lapack","/usr/lib")
+
+% inserted to cm3.cfg:
+%     "BLAS-LAPACK": [ "-L/usr/lib", "-lg2c", "-lblas", "-llapack" ]
+import_sys_lib("BLAS-LAPACK")

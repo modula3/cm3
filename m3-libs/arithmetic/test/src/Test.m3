@@ -61,7 +61,9 @@ BEGIN
   NewLine(); EVAL TestRoot();
   NewLine(); EVAL TestInterpolation();
   NewLine(); EVAL TestVector();
+*)
   NewLine(); EVAL TestMatrix();
+(*
   NewLine(); EVAL TestSLE();
   NewLine(); EVAL TestRandom();
   NewLine(); EVAL TestFFT();
@@ -72,8 +74,6 @@ BEGIN
   NewLine(); EVAL TestUnit();
   NewLine(); EVAL TestLapack();
   NewLine(); EVAL TestTex();
-*)
   NewLine(); EVAL TestPLPlot();
-(*
 *)
 END Test.
