@@ -303,8 +303,8 @@ PROCEDURE WrapCyclic (x: T; length: CARDINAL): T =
     RETURN z;
   END WrapCyclic;
 
-PROCEDURE Slice (x: T; num: CARDINAL): REF ARRAY OF T =
-  VAR slice := NEW(REF ARRAY OF T, num);
+PROCEDURE Slice (x: T; num: CARDINAL): REF SignalPP =
+  VAR slice := NEW(REF SignalPP, num);
   BEGIN
     FOR j := 0 TO LAST(slice^) DO
       slice[j] := x.translate(-j).downsample(num);
@@ -312,8 +312,8 @@ PROCEDURE Slice (x: T; num: CARDINAL): REF ARRAY OF T =
     RETURN slice;
   END Slice;
 
-PROCEDURE SliceRev (x: T; num: CARDINAL): REF ARRAY OF T =
-  VAR slice := NEW(REF ARRAY OF T, num);
+PROCEDURE SliceRev (x: T; num: CARDINAL): REF SignalPP =
+  VAR slice := NEW(REF SignalPP, num);
   BEGIN
     FOR j := 0 TO LAST(slice^) DO
       slice[j] := x.translate(j).downsample(num);
@@ -321,7 +321,7 @@ PROCEDURE SliceRev (x: T; num: CARDINAL): REF ARRAY OF T =
     RETURN slice;
   END SliceRev;
 
-PROCEDURE Interleave (x: T; READONLY slice: ARRAY OF T): T =
+PROCEDURE Interleave (x: T; READONLY slice: SignalPP): T =
   VAR
     first := NUMBER(slice) * slice[0].getFirst();
     last  := NUMBER(slice) * slice[0].getLast();
@@ -346,8 +346,8 @@ PROCEDURE Interleave (x: T; READONLY slice: ARRAY OF T): T =
   END Interleave;
 
 (*convert slices from forward to backward order*)
-PROCEDURE ReverseSlices (READONLY slice: ARRAY OF T): REF ARRAY OF T =
-  VAR revSlice := NEW(REF ARRAY OF T, NUMBER(slice));
+PROCEDURE ReverseSlices (READONLY slice: SignalPP): REF SignalPP =
+  VAR revSlice := NEW(REF SignalPP, NUMBER(slice));
   BEGIN
     revSlice[0] := slice[0];
     FOR i := 1 TO LAST(slice) DO
@@ -356,7 +356,7 @@ PROCEDURE ReverseSlices (READONLY slice: ARRAY OF T): REF ARRAY OF T =
     RETURN revSlice;
   END ReverseSlices;
 
-PROCEDURE InterleaveRev (x: T; READONLY slice: ARRAY OF T): T =
+PROCEDURE InterleaveRev (x: T; READONLY slice: SignalPP): T =
   BEGIN
     RETURN Interleave(x, ReverseSlices(slice)^);
   END InterleaveRev;
