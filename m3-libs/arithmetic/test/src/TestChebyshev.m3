@@ -10,7 +10,7 @@ Abstract: Test driver for Modula-3 rendition of
 IMPORT Fmt;
 IMPORT LongRealBasic AS R,
        LongRealTrans AS RT,
-       LongRealChebyPolynomialFast AS CP,
+       LongRealChebyPolynomial AS CP,
        NADefinitions;
 
 <*FATAL NADefinitions.Error *>
