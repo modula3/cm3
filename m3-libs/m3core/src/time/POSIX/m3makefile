@@ -36,7 +36,9 @@ readonly _DateImpls = {
   "SUN3"       : "DateBsd",
   "SUN386"     : "DateBsd",
   "UMAX"       : "DateBsd",
-  "VAX"        : "DateBsd"
+  "VAX"        : "DateBsd",
+  "I386_DARWIN": "DateBsd",
+  "PPC_DARWIN" : "DateBsd"
 }
 
 if _DateImpls contains TARGET
