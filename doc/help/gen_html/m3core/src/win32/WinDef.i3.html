@@ -1,0 +1,245 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: m3core/src/win32/WinDef.i3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>m3core/src/win32/WinDef.i3</H2></A><HR>
+<inInterface>
+<PRE></PRE> Copyright (C) 1994, Digital Equipment Corporation         
+ All rights reserved.                                      
+ See the file COPYRIGHT for a full description.            
+                                                           
+ by Stephen Harrison                                       
+                                                           
+ Last modified on Tue Oct  3 10:34:10 PDT 1995 by najork   
+      modified on Tue Nov  8 16:20:58 PST 1994 by kalsow   
+      modified on Thu Mar 18 17:53:33 PST 1993 by harrison 
+
+<P><PRE>INTERFACE <interface><A HREF="WinDef.m3.html">WinDef</A></interface>;
+</PRE> Corresponds to build version 0001 of windef.h 
+
+<P><PRE>IMPORT <A HREF="../C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="WinBaseTypes.i3.html">WinBaseTypes</A>;
+
+TYPE
+  ULONG = WinBaseTypes.ULONG;
+  PULONG = WinBaseTypes.PULONG;
+  USHORT = WinBaseTypes.USHORT;
+  PUSHORT = WinBaseTypes.PUSHORT;
+  UCHAR = WinBaseTypes.UCHAR;
+  PUCHAR = WinBaseTypes.PUCHAR;
+  PSZ = WinBaseTypes.PSZ;
+  DWORD = WinBaseTypes.DWORD;
+  BOOL = WinBaseTypes.BOOL;
+  BYTE = WinBaseTypes.BYTE;
+  WORD = WinBaseTypes.WORD;
+  WFLOAT = WinBaseTypes.WFLOAT;
+  PFLOAT = WinBaseTypes.PFLOAT;
+  PBOOL = WinBaseTypes.PBOOL;
+  LPBOOL = WinBaseTypes.LPBOOL;
+  PBYTE = WinBaseTypes.PBYTE;
+  LPBYTE = WinBaseTypes.LPBYTE;
+  PINT = WinBaseTypes.PINT;
+  LPINT = WinBaseTypes.LPINT;
+  PWORD = WinBaseTypes.PWORD;
+  LPWORD = WinBaseTypes.LPWORD;
+  LPLONG = WinBaseTypes.LPLONG;
+  PDWORD = WinBaseTypes.PDWORD;
+  LPDWORD = WinBaseTypes.LPDWORD;
+  LPVOID = WinBaseTypes.LPVOID;
+  LPCVOID = WinBaseTypes.LPCVOID;
+  INT = WinBaseTypes.INT;
+  UINT = WinBaseTypes.UINT;
+  PUINT = WinBaseTypes.PUINT;
+
+  CCHAR = Ctypes.char;
+  LONG = Ctypes.long;
+  PLONG = Ctypes.long_star;
+  PSHORT = Ctypes.short_star;
+  SHORT = Ctypes.short;
+
+CONST
+  MAX_PATH = 260;
+</PRE> Types use for passing &amp; returning polymorphic values 
+<PRE>TYPE
+  WPARAM = UINT;
+  LPARAM = LONG;
+  LRESULT = LONG;
+
+&lt;* INLINE *&gt;
+PROCEDURE <A HREF="WinDef.m3.html#MAKEWORD">MAKEWORD</A>(a, b: BYTE): WORD;
+&lt;* INLINE *&gt;
+PROCEDURE <A HREF="WinDef.m3.html#MAKELONG">MAKELONG</A>(a, b: WORD): LONG;
+&lt;* INLINE *&gt;
+PROCEDURE <A HREF="WinDef.m3.html#LOWORD">LOWORD</A>(l: LONG): WORD;
+&lt;* INLINE *&gt;
+PROCEDURE <A HREF="WinDef.m3.html#HIWORD">HIWORD</A>(l: LONG): WORD;
+&lt;* INLINE *&gt;
+PROCEDURE <A HREF="WinDef.m3.html#LOBYTE">LOBYTE</A>(w: WORD): BYTE;
+&lt;* INLINE *&gt;
+PROCEDURE <A HREF="WinDef.m3.html#HIBYTE">HIBYTE</A>(w: WORD): BYTE;
+
+TYPE
+  ATOM = WORD;
+
+  HANDLE       = WinBaseTypes.HANDLE;
+  SPHANDLE     = UNTRACED REF WinBaseTypes.HANDLE;
+  LPHANDLE     = UNTRACED REF WinBaseTypes.HANDLE;
+  HGLOBAL      = WinBaseTypes.HANDLE;
+  HLOCAL       = WinBaseTypes.HANDLE;
+  GLOBALHANDLE = WinBaseTypes.HANDLE;
+  LOCALHANDLE  = WinBaseTypes.HANDLE;
+
+  PROC     = &lt;*WINAPI*&gt; PROCEDURE ();
+  NEARPROC = &lt;*WINAPI*&gt; PROCEDURE ();
+  FARPROC  = &lt;*WINAPI*&gt; PROCEDURE ();
+
+TYPE
+  <A HREF="WinDef.m3.html#HWND">HWND</A>         &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HHOOK">HHOOK</A>        &lt;: HANDLE;
+  HGDIOBJ      =  HANDLE; (*?? &lt;: HANDLE *)
+  <A HREF="WinDef.m3.html#HACCEL">HACCEL</A>       &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HBITMAP">HBITMAP</A>      &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HBRUSH">HBRUSH</A>       &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HDC">HDC</A>          &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HGLRC">HGLRC</A>        &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HDESK">HDESK</A>        &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HENHMETAFILE">HENHMETAFILE</A> &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HMF">HMF</A>          &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HEMF">HEMF</A>         &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HFONT">HFONT</A>        &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HICON">HICON</A>        &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HMENU">HMENU</A>        &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HMETAFILE">HMETAFILE</A>    &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HINSTANCE">HINSTANCE</A>    &lt;: HANDLE;
+  HMODULE      = HINSTANCE;
+  <A HREF="WinDef.m3.html#HPALETTE">HPALETTE</A>     &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HPEN">HPEN</A>         &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HRGN">HRGN</A>         &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HRSRC">HRSRC</A>        &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HSTR">HSTR</A>         &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HWINSTA">HWINSTA</A>      &lt;: HANDLE;
+  <A HREF="WinDef.m3.html#HKL">HKL</A>          &lt;: HANDLE;
+
+TYPE
+  HFILE = Ctypes.int;   (* Polymorphic with C runtime file handle type *)
+  HCURSOR = HICON;      (* HICONs &amp; HCURSORs are polymorphic *)
+
+  COLORREF = DWORD;
+  LPCOLORREF = UNTRACED REF DWORD;
+
+CONST
+  HFILE_ERROR: HFILE = -1;
+
+TYPE
+  PRECT = UNTRACED REF RECT;
+  NPRECT =  UNTRACED REF RECT;
+  LPRECT =  UNTRACED REF RECT;
+  RECT = RECORD
+    left  : LONG;
+    top   : LONG;
+    right : LONG;
+    bottom: LONG;
+  END;
+
+  PRECTL = UNTRACED REF RECTL;
+  RECTL = RECORD
+    left  : LONG;
+    top   : LONG;
+    right : LONG;
+    bottom: LONG;
+  END;
+
+  PPOINT = UNTRACED REF POINT;
+  NPPOINT =  UNTRACED REF POINT;
+  LPPOINT =  UNTRACED REF POINT;
+  POINT = RECORD
+    x: LONG;
+    y: LONG;
+  END;
+
+  PPOINTL = UNTRACED REF POINTL;
+  POINTL = RECORD
+    x: LONG;
+    y: LONG;
+  END;
+
+  PSIZE = UNTRACED REF SIZE;
+  LPSIZE = UNTRACED REF SIZE;
+  SIZE = RECORD
+    cx: LONG;
+    cy: LONG;
+  END;
+
+  SIZEL = SIZE;
+  PSIZEL = UNTRACED REF SIZE;
+
+  PPOINTS = UNTRACED REF POINTS;
+  LPPOINTS = UNTRACED REF POINTS;
+  POINTS = RECORD
+    x: SHORT;
+    y: SHORT;
+  END;
+
+CONST
+  (* mode selections for the device mode function *)
+  DM_UPDATE = 1;
+  DM_COPY   = 2;
+  DM_PROMPT = 4;
+  DM_MODIFY = 8;
+
+  DM_IN_BUFFER   = DM_MODIFY;
+  DM_IN_PROMPT   = DM_PROMPT;
+  DM_OUT_BUFFER  = DM_COPY;
+  DM_OUT_DEFAULT = DM_UPDATE;
+
+  (* device capabilities indices *)
+  DC_FIELDS           = 1;
+  DC_PAPERS           = 2;
+  DC_PAPERSIZE        = 3;
+  DC_MINEXTENT        = 4;
+  DC_MAXEXTENT        = 5;
+  DC_BINS             = 6;
+  DC_DUPLEX           = 7;
+  DC_SIZE             = 8;
+  DC_EXTRA            = 9;
+  DC_VERSION          = 10;
+  DC_DRIVER           = 11;
+  DC_BINNAMES         = 12;
+  DC_ENUMRESOLUTIONS  = 13;
+  DC_FILEDEPENDENCIES = 14;
+  DC_TRUETYPE         = 15;
+  DC_PAPERNAMES       = 16;
+  DC_ORIENTATION      = 17;
+  DC_COPIES           = 18;
+
+END WinDef.
+</PRE>
+</inInterface>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

@@ -1,0 +1,67 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: libm3/src/os/Common/OSError.i3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>libm3/src/os/Common/OSError.i3</H2></A><HR>
+<inInterface>
+<PRE></PRE> Copyright (C) 1993, Digital Equipment Corporation. 
+ All rights reserved. 
+ See the file COPYRIGHT for a full description. 
+ Last modified on Thu Dec  9 11:36:37 PST 1993 by mcjones 
+
+<P> <CODE>OSError.E</CODE> is an exception raised by a number of operating system
+   interfaces such as <CODE>File</CODE>, <CODE>FS</CODE>, and <CODE>Process</CODE>.
+   \index{errors, operating system}
+   \index{operating system errors}
+
+
+<P><PRE>INTERFACE <interface><A HREF="#x1">OSError</A></interface>;
+
+IMPORT <A HREF="../../../derived/AtomList.i3.html">AtomList</A>;
+
+TYPE Code = AtomList.T;
+
+EXCEPTION E(Code);
+
+END OSError.
+</PRE> <CODE>E(code)</CODE> is raised by a number of methods and procedures in the
+   operating system interfaces to signal any of an open-ended class
+   of failures. 
+
+</inInterface>
+<HR>
+<A NAME="x1">OSError's implementation  is in:
+</A><UL>
+<LI><A HREF="../POSIX/OSErrorPosix.m3.html#0TOP0">libm3/src/os/POSIX/OSErrorPosix.m3</A>
+<LI><A HREF="../WIN32/OSErrorWin32.m3.html#0TOP0">libm3/src/os/WIN32/OSErrorWin32.m3</A>
+</UL>
+<P>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

@@ -1,0 +1,56 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: m3tools/src/M3RecVal.i3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>m3tools/src/M3RecVal.i3</H2></A><HR>
+<inInterface>
+<PRE></PRE> Copyright 1995-96 Critical Mass, Inc. All rights reserved.    
+
+<P><PRE>INTERFACE <interface><A HREF="M3RecVal.m3.html">M3RecVal</A></interface>;
+
+IMPORT <A HREF="../../m3middle/src/M3ID.i3.html">M3ID</A>, <A HREF="M3Const.i3.html">M3Const</A>;
+
+TYPE
+  <A HREF="M3RecVal.m3.html#T">T</A> &lt;: REFANY;
+
+PROCEDURE <A HREF="M3RecVal.m3.html#NewEmpty">NewEmpty</A> (): T;
+
+PROCEDURE <A HREF="M3RecVal.m3.html#SetField">SetField</A> (t: T;  id: M3ID.T;  READONLY val: M3Const.T): T;
+
+PROCEDURE <A HREF="M3RecVal.m3.html#Qualify">Qualify</A> (t: T;  id: M3ID.T;  VAR(*OUT*) val: M3Const.T): BOOLEAN;
+
+PROCEDURE <A HREF="M3RecVal.m3.html#Compare">Compare</A> (a, b: T): INTEGER;
+</PRE><BLOCKQUOTE><EM> (a = b) =&gt; 0, (a # b) =&gt; -99. </EM></BLOCKQUOTE><PRE>
+
+END M3RecVal.
+</PRE>
+</inInterface>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>
