@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.18 2003-02-10 14:53:13 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.19 2003-07-25 23:18:17 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -38,6 +38,7 @@ if syscall_wrappers_exist && [ -z "$M3GC_SIMPLE" ] ; then
 fi
 P="${P} m3core"
 P="${P} libm3"
+P="${P} patternmatching"
 P="${P} m3bundle"
 P="${P} m3middle"
 [ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3objfile"
