@@ -5,4 +5,4 @@ import("plplot")
 include_dir("signal")
 include_dir("wavelet")
 
-library("wavelib")
+library("wellfett")
