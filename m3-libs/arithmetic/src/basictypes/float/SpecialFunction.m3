@@ -8,9 +8,13 @@ Abstract: Special Functions
 
 *)
 FROM xUtils IMPORT Error,Err;
-FROM LongRealTrans IMPORT Zero, Half, One, Two, Tiny, Eps, Exp, Log;
+FROM LongRealTrans IMPORT Zero, Half, One, Two, Tiny, Exp, Log;
 
 CONST Module = "xSpecFtn.";
+
+CONST
+  Eps = 1.0D-15;  (*ca. 2^-53*)
+
 (*==========================*)
 PROCEDURE factorial(n:CARDINAL):T=
 CONST
