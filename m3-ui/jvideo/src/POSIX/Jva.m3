@@ -42,7 +42,8 @@ PROCEDURE Connect (t: T; hostname: TEXT)
     END;
     TRY
       req.hostnameLength := Text.Length(hostname) + 1;
-      WITH string = M3toC.TtoS(hostname) DO
+      WITH string = M3toC.SharedTtoS(hostname) DO
+        TRY
           LOCK t DO
             Jv.Send(t, ADR(req), BYTESIZE(req));
             Jv.Send(t, string, req.hostnameLength);
@@ -51,6 +52,9 @@ PROCEDURE Connect (t: T; hostname: TEXT)
           IF reply.request # req.request THEN
             RAISE OSError.E(AtomList.List1(Atom.FromText("Connect")));
           END;
+        FINALLY
+          M3toC.FreeSharedS(hostname,string);
+        END;
       END;
     EXCEPT
     | OSError.E (e) => RAISE OSError.E(AtomList.Cons(Jv.ServerFailure, e));

@@ -10,7 +10,7 @@ UNSAFE MODULE WinTrestle;
 
 IMPORT Axis, Batch, Cstring, Ctypes, Fmt, M3toC, Point, ProperSplit, Rect, 
        Region, RTCollectorSRC, RTHeapDep, RTHeapRep, RTParams, RTLinker, 
-       ScrnColorMap, ScrnCursor, ScrnPixmap, Split, Text, TextF, Thread,
+       ScrnColorMap, ScrnCursor, ScrnPixmap, Split, Text, Thread,
        Trestle, TrestleClass, TrestleImpl, VBT, VBTClass, VBTRep, WinBase, 
        WinDef, WinGDI, WinKey, WinMsg, WinPaint, WinScreenType,
        WinScreenTypePrivate, WinScrnColorMap, WinScrnCursor, WinScrnPixmap, 
@@ -90,6 +90,9 @@ REVEAL
                              are scheduled for deletion. *)
     cageSet     := FALSE; (* TRUE if the VBT wants mouse events *)
 
+    badR        := Region.Empty;  (* Region known to be bad to inside WinTrestle,
+                              but not necessarily known in Trestle or Windows. *)
+
     last         : Last;                     (* last button/mouse click info *)
     title_string : Ctypes.char_star := NIL;  (* the installed title string *)
     hpal         : WinDef.HPALETTE := NIL;   (* the palette handle or NIL *)
@@ -146,6 +149,7 @@ PROCEDURE SetShape (trsl: T; v: VBT.T) =
     sizeChange := width # rect.right - rect.left OR 
                   height # rect.bottom - rect.top;
 
+    (*********
     IF (sizeChange) THEN
       DEBUG ("size change:  target size: "
               & Fmt.Int (width) & " x " & Fmt.Int (height)
@@ -153,6 +157,7 @@ PROCEDURE SetShape (trsl: T; v: VBT.T) =
               & Fmt.Int (rect.right - rect.left) & " x " 
               & Fmt.Int (rect.bottom - rect.top) & "\n");
     END;
+    **********)
 
     IF sizeChange AND width # 0 AND height # 0 THEN
       a := NewArg ();
@@ -223,11 +228,33 @@ PROCEDURE SetCursor (self: T; v: VBT.T) =
   END SetCursor;
 
 PROCEDURE PaintBatch (self: T;  v: VBT.T;  ba: Batch.T) =
+  (* LL.sup = self *)
   VAR
-    ur   : Child := v.upRef;
-    hdc  := ur.hdc;
-    hwnd := ur.hwnd;
-    status: WinDef.BOOL;
+    ur : Child := v.upRef;
+    a  : Arg;
+  BEGIN
+    IF (ur.hdc = NIL) OR (v.st = NIL) THEN
+      (* the window hasn't been created yet... *)
+      Batch.Free (ba);
+      RETURN;
+    END;
+
+    a := NewArg ();
+    a.trsl  := self;
+    a.vbt   := v;
+    a.batch := ba;
+    PostMsg (ur, WinMsg.PAINTBATCH_VBT, a);
+    EVAL WinGDI.GdiFlush ();
+  END PaintBatch;
+
+(*******************************************
+PROCEDURE PaintBatch (self: T;  v: VBT.T;  ba: Batch.T) =
+  (* LL.sup = self *)
+  VAR
+    ur     : Child := v.upRef;
+    hdc    := ur.hdc;
+    hwnd   := ur.hwnd;
+    status : WinDef.BOOL;
   BEGIN
     IF (hdc = NIL) THEN
       (* the window hasn't been created yet... *)
@@ -235,7 +262,14 @@ PROCEDURE PaintBatch (self: T;  v: VBT.T;  ba: Batch.T) =
       RETURN;
     END;
 
-    WinPaint.PaintBatch (self, v, ba, hdc);
+    ur.badR := WinPaint.PaintBatch (self, v, ba, hdc, ur.badR);
+    IF NOT Region.IsEmpty (ur.badR) THEN
+      (* tell trestle to repaint the new bad region *)
+      VBTClass.ForceRepaint (v, ur.badR, TRUE);
+      ur.badR := Region.Empty;
+      (* Did we reset the bad region too soon?  What if Capture() is
+         called before the bad region is really painted?? -- WKK 11/11/97 *)
+    END;
 
     (*
      * Commenting out these two lines breaks "Fours" (the Trstle version 
@@ -251,6 +285,7 @@ PROCEDURE PaintBatch (self: T;  v: VBT.T;  ba: Batch.T) =
     status := WinGDI.GdiFlush();
     <* ASSERT status = True *>
   END PaintBatch;
+************************************)
 
 (* Windows maintains batches of paint requests on a per-thread (as opposed to
    per-window) basis.  Batches are flushed by calling "GdiFlush".  Since 
@@ -292,7 +327,7 @@ PROCEDURE Capture (            self: T;
     END;
 
     LOCK self DO
-      br := Region.Empty;
+      br := ur.badR;
 
       dstDc := WinGDI.CreateCompatibleDC (ur.hdc);
       <* ASSERT dstDc # NIL *>
@@ -409,6 +444,8 @@ PROCEDURE Acquire (<*UNUSED*> self: T;
       AcquireClipboard (v);
     ELSIF s = VBT.KBFocus THEN
       (* do nothing *)
+    ELSIF s = VBT.Target THEN
+      (* do nothing *)
     ELSE
       DEBUG ("Called WinTrestle.Acquire:  s = " & Fmt_Selection (s) & 
             "  ts= " & Fmt.Int (ts) & "\n");
@@ -421,7 +458,9 @@ PROCEDURE Release (<*UNUSED*> self: T;
                    <*UNUSED*> w: VBT.T;
                    <*UNUSED*> s: VBT.Selection) =
   BEGIN
+    (***
     DEBUG ("WARNING: WinTrestle.Release is not yet implemented \n");
+    ***)
   END Release;
 
 
@@ -933,6 +972,9 @@ TYPE
     bool    : BOOLEAN;
     old_dec : TrestleClass.Decoration;
     new_dec : TrestleClass.Decoration;
+    batch   : Batch.T;
+    vbt     : VBT.T;
+    trsl    : T;
     (** result  : ArgResult; **)
   END;
 
@@ -1033,8 +1075,14 @@ VAR
   windowclassName := M3toC.CopyTtoS ("Trestle VBT");
 
 VAR
+  titlebar_y  := WinUser.GetSystemMetrics (WinUser.SM_CYCAPTION);
+  (*** NOPE: on Win95 the FULLSCREEN value depends on whether the
+    task bar is at the bottom of the screen or not!  If it is, we'll
+    be tricked into thinking the titlebar is about twice as big as it
+    should be...   -- WKK 6/24/97
   titlebar_y  := WinUser.GetSystemMetrics (WinUser.SM_CYSCREEN) - 
                  WinUser.GetSystemMetrics (WinUser.SM_CYFULLSCREEN) - 1;
+  ******)
   nonclient_x := 2 * WinUser.GetSystemMetrics (WinUser.SM_CXFRAME);
   nonclient_y := 2 * WinUser.GetSystemMetrics (WinUser.SM_CYFRAME) +
                      titlebar_y;
@@ -1094,6 +1142,10 @@ PROCEDURE WindowProc (hwnd   : WinDef.HWND;
     | WinMsg.DELETE_VBT => 
         a := GetArg (lParam);
         DeleteVBT (a.ch);
+
+    | WinMsg.PAINTBATCH_VBT => 
+        a := GetArg (lParam);
+        PaintBatchVBT (a.ch, a.trsl, a.vbt, a.batch);
 
     | WinUser.WM_DESTROY =>
         DestroyVBT (GetChild (hwnd));
@@ -1488,33 +1540,75 @@ PROCEDURE GetVBTSize (hwnd   : WinDef.HWND;
     info.ptMaxTrackSize.y := info.ptMaxSize.y;
   END GetVBTSize;
 
+PROCEDURE PaintBatchVBT (ur: Child;  self: T;  v: VBT.T;  ba: Batch.T) =
+  VAR
+    hdc    := ur.hdc;
+    status : WinDef.BOOL;
+  BEGIN
+    IF (hdc = NIL) THEN
+      (* the window hasn't been created yet... *)
+      Batch.Free (ba);
+      RETURN;
+    END;
+
+    LOCK VBT.mu DO
+      LOCK v DO
+        ur.badR := WinPaint.PaintBatch (self, v, ba, hdc, ur.badR);
+        IF NOT Region.IsEmpty (ur.badR) THEN
+          (* tell trestle to repaint the new bad region *)
+          VBTClass.ForceRepaint (v, ur.badR, TRUE);
+          ur.badR := Region.Empty;
+          (* Did we reset the bad region too soon?  What if Capture() is
+             called before the bad region is really painted?? -- WKK 11/11/97 *)
+        END;
+      END;
+    END;
+
+    status := WinGDI.GdiFlush();
+    <* ASSERT status = True *>
+  END PaintBatchVBT;
+
 PROCEDURE PaintVBT (hwnd: WinDef.HWND) =
   (* Repaint the damaged portion of the window *)
   VAR
-    ur   := GetChild (hwnd);
-    info : WinUser.PAINTSTRUCT;
-    hdc  : WinDef.HDC;
-    rgn  : Region.T;
-    rect : Rect.T;
+    ur     := GetChild (hwnd);
+    v      := ur.ch;
+    info   : WinUser.PAINTSTRUCT;
+    hdc    : WinDef.HDC;
+    bad    : WinDef.RECT;
+    rect   : Rect.T;
+    rgn    : Region.T;
+    status : WinDef.BOOL;
 (** rc: WinDef.RECT; **)
   BEGIN
-(**********
+(******
 DEBUG ("Paint: hwnd = " & Fmt.Unsigned(LOOPHOLE(hwnd, INTEGER)));
 DEBUG ("  hdc = " & Fmt.Unsigned(LOOPHOLE(ur.hdc, INTEGER)));
 EVAL WinUser.GetClientRect (hwnd, ADR(rc));
 DEBUG ("  dom = "); PrintRect (ToRect (rc));  DEBUG ("\n");
-**********)
+******)
+
+    (* find the bits that Windows wants us to repaint. *)
+    status := WinUser.GetUpdateRect (hwnd, ADR(bad), (*bErase :=*) False);
+    <*ASSERT status # False*>
+
+    (* Invalidate the entire Trestle window so that Windows will
+       let us repaint some of the non-bad bits, if we want to... *)
+    status := WinUser.InvalidateRect (hwnd, NIL, (*bErase :=*) False);
+    <*ASSERT status # False *>
 
     hdc := WinUser.BeginPaint (hwnd, ADR (info));
     IF (hdc # info.hdc) THEN DEBUG ("WM_PAINT: BeginPaint HDC # info HDC\n"); END;
 
-    IF (hdc # NIL) AND (ur # NIL) AND (ur.ch # NIL) THEN
+    IF (hdc # NIL) AND (ur # NIL) AND (v # NIL) THEN
       (* there's still a vbt to paint... *)
       IF (hdc # ur.hdc) THEN DEBUG ("WM_PAINT: BeginPaint HDC # ur.hdc\n"); END;
-      rect := ToRect (info.rcPaint);
+      rect := ToRect (bad); (** info.rcPaint == full Trestle window **)
 (** DEBUG ("paint "); PrintRect (rect); DEBUG ("\n");***)
-      rgn := Region.FromRect (Rect.Full (* rect*));
-      LOCK VBT.mu DO  VBTClass.Repaint (ur.ch, rgn);  END;
+      IF NOT Rect.IsEmpty (rect) THEN
+        rgn := Region.FromRect (rect);
+        LOCK VBT.mu DO VBTClass.Repaint (v, rgn); END;
+      END;
     END;
 
     EVAL WinUser.EndPaint (hwnd, ADR (info));
@@ -1543,13 +1637,13 @@ PROCEDURE PaintVBT (hwnd: WinDef.HWND) =
 
 PROCEDURE MoveVBT (hwnd: WinDef.HWND) =
   VAR
+    v     := GetVBT (hwnd);
     rc    : WinDef.RECT;
     new   : Rect.T;
-    v     : VBT.T := GetVBT (hwnd);
     status: WinDef.BOOL;
   BEGIN
     (*** If the VBT is already deleted, bail out ***)
-    IF v = NIL THEN RETURN; END;
+    IF (v = NIL) THEN RETURN; END;
 
     status := WinUser.GetClientRect (hwnd, ADR(rc));
     <* ASSERT status = True *>
@@ -1566,12 +1660,12 @@ PROCEDURE MoveVBT (hwnd: WinDef.HWND) =
 PROCEDURE ActivateVBT (hwnd: WinDef.HWND;  wParam: WinDef.WPARAM) =
   (* This is derived from "XMessenger.EnterLeave".  The original 
      procedure does a lot more ... *)
-  VAR 
+  VAR
     v    := GetVBT (hwnd);
     time := WinUser.GetMessageTime () + 1;
   BEGIN
     (*** If the VBT is already deleted, bail out ***)
-    IF v = NIL THEN RETURN; END;
+    IF (v = NIL) THEN RETURN; END;
 
     EVAL WinUser.SetFocus (hwnd);
 
@@ -1630,7 +1724,7 @@ PROCEDURE VBTKeyPress (hwnd: WinDef.HWND;  wParam: WinDef.WPARAM;  down: BOOLEAN
     modifiers := GetModifiers ();
   BEGIN
     (*** If the VBT is already deleted, bail out ***)
-    IF (v = NIL)THEN RETURN; END;
+    IF (v = NIL) THEN RETURN; END;
 
     LOCK VBT.mu DO
       VBTClass.Key (v, VBT.KeyRec {keysym, time, down, modifiers});
@@ -1893,30 +1987,38 @@ PROCEDURE RealizeClipboard (hwnd: WinDef.HWND) =
     ts    := WinBase.GetTickCount ();
     hglb  : WinDef.HGLOBAL;
     lptstr: Ctypes.char_star;
-    handle: WinDef.HANDLE;
+    txtstr: Ctypes.char_star;
+    txt   : TEXT;
   BEGIN
     LOCK VBT.mu DO
       TRY 
-        WITH t = NARROW (v.read (VBT.Source, tc).toRef(), TEXT) DO
-          hglb := WinBase.GlobalAlloc (WinBase.GMEM_DDESHARE, 
-                                       Text.Length (t) + 1);
-          <* ASSERT hglb # NIL *>
-
-          lptstr := WinBase.GlobalLock (hglb);
-          <* ASSERT lptstr # NIL *>
-
-          EVAL Cstring.strcpy (lptstr, M3toC.TtoS (t));
-
-          EVAL WinBase.GlobalUnlock(hglb);
-
-          handle := WinUser.SetClipboardData (WinUser.CF_TEXT, hglb);
-          <* ASSERT handle # NIL *>
-        END;
-        VBTClass.Misc (v, 
-                       VBT.MiscRec {VBT.Lost, VBT.NullDetail, ts, VBT.Source});
-      EXCEPT
-      | VBT.Error => (* things went bad ... ignore *)
+        txt := NARROW (v.read (VBT.Source, tc).toRef(), TEXT);
+      EXCEPT VBT.Error =>
+        RETURN; (* things went badly ... ignore *)
       END;
+
+      (* According to the Win32 documentation, the WM_RENDERALLFORMATS
+         and WM_RENDERFORMAT messages are only sent to the window that
+         already owns the clipboard and therefore it's an error to
+         reopen it.  --- So, I guess we won't... *)
+
+      hglb := WinBase.GlobalAlloc (WinBase.GMEM_MOVEABLE+WinBase.GMEM_DDESHARE, 
+                                         Text.Length (txt) + 1);
+      <* ASSERT hglb # NIL *>
+
+      lptstr := WinBase.GlobalLock (hglb);
+      <* ASSERT lptstr # NIL *>
+
+      txtstr := M3toC.SharedTtoS (txt);
+      EVAL Cstring.strcpy (lptstr, txtstr);
+      M3toC.FreeSharedS (txt, txtstr);
+
+      EVAL WinBase.GlobalUnlock(hglb);
+
+      EVAL WinUser.SetClipboardData (WinUser.CF_TEXT, hglb);
+      (* we don't care if it worked or not, we gave it our best shot... *)
+
+      VBTClass.Misc (v, VBT.MiscRec {VBT.Lost, VBT.NullDetail, ts, VBT.Source});
     END;
   END RealizeClipboard;
 
@@ -2282,7 +2384,7 @@ PROCEDURE RegisterWindowClass (name: Ctypes.char_star;  topLevel: BOOLEAN) =
     wc    : WinUser.WNDCLASS;
     status: WinDef.BOOL;
   BEGIN
-    hInst := RTLinker.info.instance;
+    hInst := RTLinker.instance;
 
     wc.style         := WinUser.CS_HREDRAW + WinUser.CS_VREDRAW;
     wc.lpfnWndProc   := WindowProc;
@@ -2328,14 +2430,14 @@ PROCEDURE PrintChild (ur: Child) =
   END PrintChild;
 ************)
 
-(**********
+(*******
 PROCEDURE PrintRect (READONLY r: Rect.T) =
   BEGIN
     DEBUG ("[" & Fmt.Int (r.west) & ".." & Fmt.Int (r.east)
          & " x " & Fmt.Int (r.north) & ".." & Fmt.Int (r.south)
          & "]");
   END PrintRect;
-***********)
+*******)
 
 VAR
   msg_indent := 0;

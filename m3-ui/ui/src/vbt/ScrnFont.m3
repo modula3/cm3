@@ -11,14 +11,25 @@
 
 MODULE ScrnFont;
 
-IMPORT TextF, Rect, Interval, Text;
+IMPORT Rect, Interval, Text;
 
 REVEAL T = Public BRANDED OBJECT END; Private = BRANDED OBJECT END;
 
 PROCEDURE BoundingBox(txt: TEXT; fnt: T): Rect.T =
-  VAR junk: BOOLEAN;
+  VAR
+    len := Text.Length(txt);
+    buf : ARRAY [0..127] OF CHAR;
+    rbuf: REF ARRAY OF CHAR;
+    junk: BOOLEAN;
   BEGIN
-    RETURN BoundingBoxSubValid(SUBARRAY(txt^, 0, LAST(txt^)), fnt, junk)
+    IF (len <= NUMBER(buf)) THEN
+      Text.SetChars (buf, txt);
+      RETURN BoundingBoxSubValid(SUBARRAY(buf, 0, len), fnt, junk)
+    ELSE
+      rbuf := NEW (REF ARRAY OF CHAR, len);
+      Text.SetChars (rbuf^, txt);
+      RETURN BoundingBoxSubValid(rbuf^, fnt, junk)
+    END;
   END BoundingBox;
 
 PROCEDURE BoundingBoxSub (READONLY txt: ARRAY OF CHAR; fnt: T): Rect.T =
@@ -50,13 +61,16 @@ PROCEDURE BoundingBoxSubValid (READONLY    txt  : ARRAY OF CHAR;
           len2          := 0;
           ch  : INTEGER;
         BEGIN
-          IF (ORD(FIRST(CHAR)) < fc OR lc < ORD(LAST(CHAR)))
-               AND (dc < fc OR lc < dc) THEN
+          IF (ORD(FIRST(CHAR)) < fc OR lc < ORD(LAST(CHAR))) THEN
             FOR i := 0 TO len - 1 DO
               ch := ORD(txt[i]);
-              IF fc <= ch AND ch <= lc THEN INC(len2) END
+              IF fc <= ch AND ch <= lc THEN
+                INC(len2);
+              ELSE
+                valid := FALSE;
+                IF fc <= dc AND dc <= lc THEN INC(len2) END;
+              END
             END;
-            valid := len = len2;
             len := len2
           END
         END;
@@ -77,7 +91,7 @@ PROCEDURE BoundingBoxSubValid (READONLY    txt  : ARRAY OF CHAR;
         rp := 0;
         IF m.selfClearing THEN
           FOR i := 0 TO LAST(txt) DO
-            WITH pw = GetCM(m, txt[i], valid).printWidth DO
+            WITH pw = GetCWidth(m, txt[i], valid) DO
               IF pw > 0 THEN
                 we.hi := MAX(we.hi, rp + pw)
               ELSE
@@ -118,51 +132,84 @@ PROCEDURE GetCM (m: Metrics; ch: CHAR; VAR (*INOUT*) valid: BOOLEAN):
   VAR c := ORD(ch);
   BEGIN
     IF c < m.firstChar OR c > m.lastChar THEN
+      valid := FALSE;
       c := m.defaultChar;
       IF c < m.firstChar OR c > m.lastChar THEN
-        valid := FALSE;
         RETURN EmptyCM
       END
     END;
     RETURN m.charMetrics[c - m.firstChar]
   END GetCM;
 
+PROCEDURE GetCWidth (m: Metrics; ch: CHAR; VAR(*INOUT*) valid: BOOLEAN): INTEGER =
+  VAR c := ORD(ch);
+  BEGIN
+    IF c < m.firstChar OR c > m.lastChar THEN
+      valid := FALSE;
+      c := m.defaultChar;
+      IF c < m.firstChar OR c > m.lastChar THEN
+        RETURN EmptyCM.printWidth
+      END
+    END;
+    RETURN m.charMetrics[c - m.firstChar].printWidth;
+  END GetCWidth;
+
 PROCEDURE TextWidth (txt: TEXT; fnt: T): INTEGER =
-  VAR
-    len           := Text.Length(txt);
-    rp  : INTEGER;
-    junk: BOOLEAN;
+  VAR len := Text.Length(txt);
   BEGIN
     IF (fnt = NIL) OR (len = 0) THEN RETURN len END;
     WITH m = fnt.metrics DO
       IF m = NIL THEN
         RETURN len
       ELSIF m.charMetrics = NIL THEN
-        VAR
-          fc            := m.firstChar;
-          lc            := m.lastChar;
-          dc            := m.defaultChar;
-          len2          := 0;
-          ch  : INTEGER;
-        BEGIN
-          IF (ORD(FIRST(CHAR)) < fc OR lc < ORD(LAST(CHAR)))
-               AND (dc < fc OR lc < dc) THEN
-            FOR i := 0 TO len - 1 DO
-              ch := ORD(txt[i]);
-              IF fc <= ch AND ch <= lc THEN INC(len2) END
-            END;
-            len := len2
-          END
-        END;
-        RETURN len * m.maxBounds.printWidth
+        RETURN FixedTextWidth (txt, len, m);
       ELSE
-        rp := 0;
-        FOR i := 0 TO len - 1 DO
-          WITH cm = GetCM(m, txt[i], junk) DO INC(rp, cm.printWidth) END
-        END;
-        RETURN rp
+        RETURN VariableTextWidth (txt, len, m);
       END
     END
   END TextWidth;
+
+PROCEDURE FixedTextWidth (txt: TEXT;  len: CARDINAL;  m: Metrics): INTEGER =
+  VAR
+    fc            := m.firstChar;
+    lc            := m.lastChar;
+    dc            := m.defaultChar;
+    len2          := 0;
+    ch  : INTEGER;
+    buf : ARRAY [0..127] OF CHAR;
+    i, j: CARDINAL;
+  BEGIN
+    IF (ORD(FIRST(CHAR)) < fc OR lc < ORD(LAST(CHAR)))
+      AND (dc < fc OR lc < dc) THEN
+      i := 0;  j := NUMBER (buf);
+      WHILE (i < len) DO
+        IF (j >= NUMBER(buf)) THEN (*refill buffer*)
+          Text.SetChars(buf, txt, i);  j := 0;
+        END;
+        ch := ORD(buf[j]);  INC(i);  INC(j);
+        IF fc <= ch AND ch <= lc THEN INC(len2) END;
+      END;
+      len := len2;
+    END;
+    RETURN len * m.maxBounds.printWidth;
+  END FixedTextWidth;
+
+PROCEDURE VariableTextWidth (txt: TEXT;  len: CARDINAL;  m: Metrics): INTEGER =
+  VAR
+    rp  : INTEGER  := 0;
+    i   : CARDINAL := 0;
+    j   : CARDINAL := NUMBER(buf);
+    junk: BOOLEAN;
+    buf : ARRAY [0..127] OF CHAR;
+  BEGIN
+    WHILE (i < len) DO
+      IF (j >= NUMBER(buf)) THEN (*refill buffer*)
+        Text.SetChars(buf, txt, i);  j := 0;
+      END;
+      INC(rp, GetCWidth(m, buf[j], junk));
+      INC(i); INC(j);
+    END;
+    RETURN rp;
+  END VariableTextWidth;
 
 BEGIN END ScrnFont.

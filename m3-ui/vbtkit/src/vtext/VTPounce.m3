@@ -85,15 +85,15 @@ PROCEDURE Locate (              view  : View;
           CASE c OF
           | '\n' => iR := iL + 1; EXIT
           | '\t' =>
-              IF '\t' IN view.vScreenFont.vScreenFont.vFont.vFont.printable THEN
-                w0 := w0 + view.vScreenFont.vScreenFont.width [' ']
-                        + view.vScreenFont.vScreenFont.width ['\t'] - 1;
-                w0 := w0 - w0 MOD view.vScreenFont.vScreenFont.width ['\t']
+              IF '\t' IN view.vScreenFont.vFont.printable THEN
+                w0 := w0 + view.vScreenFont.width [' ']
+                         + view.vScreenFont.width ['\t'] - 1;
+                w0 := w0 - w0 MOD view.vScreenFont.width ['\t']
               ELSE
-                w0 := w0 + view.vScreenFont.vScreenFont.width [c]
+                w0 := w0 + view.vScreenFont.width [c]
               END
           ELSE
-            w0 := w0 + view.vScreenFont.vScreenFont.width [c]
+            w0 := w0 + view.vScreenFont.width [c]
           END;
           IF w0 > w THEN iR := iL + 1; EXIT END;
           iL := iL + 1

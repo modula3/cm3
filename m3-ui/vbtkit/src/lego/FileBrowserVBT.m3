@@ -14,7 +14,7 @@
 
 MODULE FileBrowserVBT;
 
-IMPORT AnchorSplit, AnyEvent, Atom, Axis, BorderedVBT, Cursor, File, Filter,
+IMPORT AnchorSplit, AnyEvent, ASCII, Atom, Axis, BorderedVBT, Cursor, File, Filter,
        Font, FS, HVSplit, ISOChar, Lex, ListVBT, MenuSwitchVBT, MultiFilter,
        MultiSplit, OSError, PaintOp, Pathname, Pixmap, Process, Rd, Rect,
        RegularFile, Shadow, ShadowedVBT, ShadowedFeedbackVBT, Split, Text,
@@ -25,16 +25,17 @@ REVEAL
   T = Public BRANDED "FileBrowserVBT 4.0" OBJECT
         mu: MUTEX;
         <* LL = mu *>
-        helper  : Helper;
-        dirmenu : DirMenu;
-        suffixes: TextList.T;
-        readOnly: BOOLEAN;
-        dir     : Pathname.T;
-        toSelect: TEXT; (* if non-empty/NIL, select this string *)
-        truthInHelper: BOOLEAN;   (* where to look for the value *)
-        time         : Time.T;  (* last time we looked at this directory *)
-        statThread   : Thread.T;
-        isDir        : REF ARRAY OF BOOLEAN
+        helper        : Helper;
+        dirmenu       : DirMenu;
+        suffixes      : TextList.T;
+        readOnly      : BOOLEAN;
+        dir           : Pathname.T;
+        toSelect      : TEXT; (* if non-empty/NIL, select this string *)
+        truthInHelper : BOOLEAN;   (* where to look for the value *)
+        display_time  : Time.T;  (* last time we looked at this directory *)
+        statThread    : Thread.T;
+        isDir         : REF ARRAY OF BOOLEAN;
+        topCell       : ListVBT.Cell;
       OVERRIDES
         init         := Init;
         selectItems  := SelectItems; (* no-op *)
@@ -43,6 +44,7 @@ REVEAL
         error        := DefaultError; (* no-op *)
         insertCells  := InsertCells;
         removeCells  := RemoveCells;
+        reportVisible:= ReportVisible;
         getValue     := GetValue;
       END;
   Selector = ListVBT.MultiSelector BRANDED OBJECT
@@ -100,6 +102,11 @@ VAR
   fblist: FBList := NIL;
   fbcond         := NEW (Thread.Condition);
 
+VAR (*CONST*)
+  on_unix := Text.Equal (JoinPath ("a", "b"), "a/b");
+
+CONST
+  WindowsDelay = 300.0d0;  (* # seconds between directory updates on Windows *)
 
 (****************************  Creation  ***************************)
 
@@ -128,6 +135,7 @@ PROCEDURE Init (v     : T;
         v.toSelect := "";
         v.truthInHelper := FALSE;
         v.isDir := NEW (REF ARRAY OF BOOLEAN, 100);
+        v.topCell := 0;
         v.statThread := NIL;
         LOCK tlock DO
           fblist := NEW (FBList, car := WeakRef.FromRef (v), cdr := fblist);
@@ -175,6 +183,13 @@ PROCEDURE RemoveCells (v: T; at: ListVBT.Cell; n: CARDINAL) =
     END
   END RemoveCells;
 
+PROCEDURE ReportVisible (v: T;  firstCell: ListVBT.Cell;
+                         <*UNUSED*> num: CARDINAL) =
+  (* LL.sup = v *)
+  BEGIN
+    v.topCell := firstCell;
+  END ReportVisible;
+
 PROCEDURE GetValue (v: T; this: ListVBT.Cell): REFANY =
   (* Strip off the directory marker if this is a directory. *)
   VAR val: Pathname.T := Public.getValue (v, this);
@@ -192,7 +207,7 @@ PROCEDURE Refresh (v: T) =
     LOCK v.mu DO
       IF VBT.Domain (v) = Rect.Empty THEN RETURN END;
       TRY
-        IF FS.Status (v.dir).modificationTime > v.time THEN DisplayDir (v) END
+        IF DirChanged (v) THEN DisplayDir (v) END
       EXCEPT
       | OSError.E (code) =>
           CallError (v, code);
@@ -201,6 +216,17 @@ PROCEDURE Refresh (v: T) =
       END
     END
   END Refresh;
+
+PROCEDURE DirChanged (v: T): BOOLEAN
+  RAISES {OSError.E} =
+  BEGIN
+    IF on_unix THEN
+      RETURN FS.Status (v.dir).modificationTime > v.display_time;
+    ELSE
+      (* Windows doesn't maintain time stamps for its directories. No surprise! *)
+      RETURN Time.Now () > v.display_time + WindowsDelay;
+    END;
+  END DirChanged;
 
 PROCEDURE Watcher (<* UNUSED *> cl: Thread.Closure): REFANY =
   <* LL = {} *>
@@ -319,7 +345,7 @@ PROCEDURE SetSuffixes (v: T; suffixes: TEXT) =
     WITH list = ParseSuffixes (suffixes) DO
       LOCK v.mu DO
         v.suffixes := list;
-        v.time := 0.0D0;             (* force true redisplay next chance *)
+        v.display_time := 0.0D0;       (* force true redisplay next chance *)
         VBT.Mark (v)
       END
     END
@@ -358,16 +384,16 @@ PROCEDURE Set (v: T; path: Pathname.T; time: VBT.TimeStamp := 0)
     LOCK v.mu DO
       TRY
         IF NOT Pathname.Absolute (path) THEN
-          path := Pathname.Join (v.dir, path, NIL)
+          path := JoinPath (v.dir, path);
         END;
         TRY
           abs := FS.GetAbsolutePathname (path);
           type := FS.Status (abs).type;
           IF type = RegularFile.FileType THEN
-              v.dir := Pathname.Prefix (abs);
-              file := Pathname.Last (abs)
+            v.dir := Pathname.Prefix (abs);
+            file := Pathname.Last (abs);
           ELSIF type = FS.DirectoryFileType THEN
-            v.dir := abs; file := ""
+            v.dir := abs; file := "";
           ELSE                   <* ASSERT FALSE *>
           END
         EXCEPT
@@ -392,7 +418,7 @@ PROCEDURE Set (v: T; path: Pathname.T; time: VBT.TimeStamp := 0)
       | OSError.E (c) => RaiseError (v, Atom.ToText (c.head), path)
       END;                       (* outer TRY *)
       v.toSelect := file;
-      v.time := 0.0D0;           (* That'll trigger the Watcher. *)
+      v.display_time := 0.0D0; (* trigger the Watcher to redisplay "v". *)
       ShowFileInHelper (v, file, time);
     END                          (* LOCK *)
   END Set;
@@ -400,7 +426,10 @@ PROCEDURE Set (v: T; path: Pathname.T; time: VBT.TimeStamp := 0)
 <* EXPORTED *>
 PROCEDURE Unselect (v: T) =
   BEGIN
-    LOCK v.mu DO v.selectNone () END
+    LOCK v.mu DO
+      v.toSelect := "";
+      v.selectNone ();
+    END;
   END Unselect;
 
 <* EXPORTED *>
@@ -427,7 +456,7 @@ PROCEDURE GetFiles (v: T): TextList.T RAISES {Error} =
           IF NOT Pathname.Valid (file) THEN
             RaiseError (v, "Invalid pathname", file)
           ELSIF NOT Pathname.Absolute (file) THEN
-            file := Pathname.Join (v.dir, file, NIL)
+            file := JoinPath (v.dir, file)
           END;
           RETURN TextList.List1 (file)
         END
@@ -438,8 +467,7 @@ PROCEDURE GetFiles (v: T): TextList.T RAISES {Error} =
         BEGIN
           FOR i := v.count () - 1 TO 0 BY -1 DO
             IF v.isSelected (i) THEN
-              res := TextList.Cons (
-                       Pathname.Join (v.dir, v.getValue (i), NIL), res)
+              res := TextList.Cons (JoinPath (v.dir, v.getValue (i)), res)
             END
           END;
           RETURN res
@@ -463,60 +491,47 @@ PROCEDURE DisplayDir (v: T) =
   VAR
     oldCount := v.count ();
     newCount := 0;
-    this     := -1; (* entry to select *)
     cl       := NEW (StatCl, v := v); (* Thread closure *)
-  PROCEDURE satisfies (file: Pathname.T): BOOLEAN =
-    VAR
-      ext      := Pathname.LastExt (file);
-      suffixes := v.suffixes;
-    BEGIN
-      IF Text.Empty (ext) THEN ext := "$" END;
-      WHILE suffixes # NIL DO
-        IF Text.Equal (ext, suffixes.head) THEN RETURN TRUE END;
-        suffixes := suffixes.tail
-      END;
-      RETURN FALSE
-    END satisfies;
   BEGIN
     IF v.statThread # NIL THEN Thread.Alert (v.statThread) END;
+    v.display_time := Time.Now (); (* set it now in case we raise an error later *)
     VBT.SetCursor (v, Cursor.NotReady);
     TRY
+      (* find the files that match the current suffix set *)
       allfiles := TextListSort.SortD (Directory (v.dir));
       cl.files := allfiles;
       IF v.suffixes = NIL THEN
         satfiles := allfiles
       ELSE
         WHILE allfiles # NIL DO
-          IF satisfies (allfiles.head) THEN
+          IF SuffixMatch (allfiles.head, v.suffixes) THEN
             satfiles := TextList.Cons (allfiles.head, satfiles)
           END;
           allfiles := allfiles.tail
         END;
         satfiles := TextList.ReverseD (satfiles)
       END;
+
+      (* make sure we have the right number of slots *)
       newCount := TextList.Length (satfiles) + 2;
       IF oldCount < newCount THEN
         v.insertCells (oldCount, newCount - oldCount)
       ELSIF newCount < oldCount THEN
         v.removeCells (newCount, oldCount - newCount)
       END;
-      v.isDir [0] := TRUE;       (* for Current *)
-      v.isDir [1] := TRUE;       (* for Parent *)
-      FOR i := 2 TO newCount - 1 DO v.isDir [i] := FALSE END;
-      v.setValue (0, Pathname.Current & DirMarker);
-      v.setValue (1, Pathname.Parent & DirMarker);
+
+      (* rebuild the list *)
+      v.selectNone ();
+      SetValue (v, 0, Pathname.Current, TRUE);
+      SetValue (v, 1, Pathname.Parent,  TRUE);
       FOR i := 2 TO newCount - 1 DO
-        IF NOT Text.Empty (v.toSelect) AND 
-          Text.Equal (satfiles.head, v.toSelect) THEN 
-          this := i; v.toSelect := "";
-        END;
-        v.setValue (i, satfiles.head);
+        SetValue (v, i, satfiles.head, FALSE);  (* assume isDir=FALSE for now... *)
         satfiles := satfiles.tail;
       END;
-      v.selectOnly (this);
-      v.time := FS.Status (v.dir).modificationTime;
+      v.scrollTo (v.topCell);
+
       ShowDirInMenu (v);
-      v.statThread := Thread.Fork (cl)
+      v.statThread := Thread.Fork (cl);  (* add directories to the list lazily *)
     EXCEPT
     | OSError.E (e) => CallError (v, e)
     END
@@ -536,7 +551,28 @@ PROCEDURE Directory (dir: Pathname.T): TextList.T RAISES {OSError.E} =
       iter.close ()
     END
   END Directory;
-    
+
+PROCEDURE SuffixMatch (file: Pathname.T;  suffixes: TextList.T): BOOLEAN =
+  VAR ext := Pathname.LastExt (file);
+  BEGIN
+    IF Text.Empty (ext) THEN ext := "$" END;
+    WHILE suffixes # NIL DO
+      IF FileNameEq (ext, suffixes.head) THEN RETURN TRUE END;
+      suffixes := suffixes.tail
+    END;
+    RETURN FALSE
+  END SuffixMatch;
+
+PROCEDURE SetValue (v: T;  index: INTEGER;  name: TEXT;  isDir: BOOLEAN) =
+  CONST Tail = ARRAY BOOLEAN OF TEXT { "", DirMarker };
+  BEGIN
+    v.isDir [index] := isDir;
+    v.setValue (index, name & Tail [isDir]);
+    IF NOT Text.Empty (v.toSelect) AND FileNameEq (name, v.toSelect) THEN
+      v.selectOnly (index);
+    END;
+  END SetValue;
+
 TYPE
   StatCl = Thread.Closure OBJECT
              v    : T;
@@ -546,8 +582,11 @@ TYPE
            END;
 
 PROCEDURE DoStats (cl: StatCl): REFANY =
+  (* Update the displayed file list to include any directories
+     and fix any missing "DirMarker" tags. *)
   VAR
     file : Pathname.T;
+    cmp  : INTEGER;
     i                 := 2;      (* We're skipping over Current and Parent *)
     v                 := cl.v;
     count             := v.count ();
@@ -557,38 +596,17 @@ PROCEDURE DoStats (cl: StatCl): REFANY =
         file := cl.files.head;
         cl.files := cl.files.tail;
         TRY
-          IF FS.Status (Pathname.Join (v.dir, file, NIL)).type
-               = FS.DirectoryFileType THEN
+          IF FS.Status (JoinPath (v.dir, file)).type = FS.DirectoryFileType THEN
             LOCK v.mu DO
               IF Thread.TestAlert () THEN RETURN NIL END;
               LOOP
-                IF i = count THEN
-                  v.insertCells (count, 1);
-                  v.setValue (count, file & DirMarker);
-                  v.isDir [count] := TRUE;
-                  INC (count);
-                  INC (i);
-                  EXIT
-                ELSE
-                  WITH t = Text.Compare (v.getValue (i), file) DO
-                    IF t = -1 THEN
-                      INC (i)
-                    ELSIF t = 0 THEN
-                      v.setValue (i, file & DirMarker);
-                      v.isDir [i] := TRUE;
-                      INC (i);
-                      EXIT
-                    ELSE
-                      v.insertCells (i, 1);
-                      v.setValue (i, file & DirMarker);
-                      v.isDir [i] := TRUE;
-                      INC (count);
-                      INC (i);
-                      EXIT
-                    END          (* IF *)
-                  END            (* WITH *)
-                END              (* IF *)
-              END                (* LOOP *)
+                IF (i = count) THEN (* end-of-list *) cmp := +1; EXIT; END;
+                cmp := Text.Compare (v.getValue (i), file);
+                IF (cmp >= 0) THEN EXIT; END;
+                INC (i);
+              END;
+              IF (cmp # 0) THEN  v.insertCells (i, 1); INC (count); END;
+              SetValue (v, i, file, TRUE); INC (i);
             END                  (* LOCK *)
           END                    (* IF *)
         EXCEPT
@@ -631,37 +649,26 @@ PROCEDURE DirMenuButtonGet (dmb: DirMenuButton): TEXT =
 PROCEDURE DirMenuButtonCallback (         dmb: DirMenuButton;
                                  READONLY cd : VBT.MouseRec   ) =
   <* LL = VBT.mu *>
+  <* FATAL Split.NotAChild, Pathname.Invalid *>
   VAR
     arcs := NEW(Pathname.Arcs).init();
     vbox := dmb.dm.vbox;
     next := dmb;
     pn: Pathname.T := "MaryHadALittleLamb";
-    debugPathname: TEXT := "";
   BEGIN
     arcs.addlo(dmb.get());
-    debugPathname := dmb.get();
+    LOOP
+      next := Split.Succ(vbox, next);
+      IF next = NIL THEN EXIT END;
+      arcs.addlo(next.get());
+    END;
+    pn := Pathname.Compose(arcs);
+
     TRY
-      LOOP
-        next := Split.Succ(vbox, next);
-        IF next = NIL THEN EXIT END;
-        arcs.addlo(next.get());
-        IF next.get() = NIL THEN 
-          debugPathname := debugPathname & "/**NIL**"
-        ELSE 
-          debugPathname := debugPathname & "/" & next.get();
-        END
-      END;
-      pn := Pathname.Compose(arcs);
       Set(dmb.dm.filebrowser, pn, cd.time)
-    EXCEPT
-    | Error (e) => 
-         dmb.dm.filebrowser.error(e)
-    | Split.NotAChild =>         
-         <* ASSERT FALSE *>
-    | Pathname.Invalid => 
-         (* what is causing this assertion?? -- mhb 10/5/95 *)
-         <* ASSERT FALSE *>
-    END
+    EXCEPT Error (e) => 
+      dmb.dm.filebrowser.error(e)
+    END;
   END DirMenuButtonCallback;
 
 (***************************  User interface  **************************)
@@ -680,12 +687,16 @@ PROCEDURE InsideClick (         s   : Selector;
     ListVBT.MultiSelector.insideClick (s, cd, this);
     ShowFileInHelper (v, "", cd.time);
     IF cd.clickType = VBT.ClickType.FirstDown THEN
+      LOCK v.mu DO
+        (* let the Watcher know about the new selection *)
+        IF v.getFirstSelected (first) THEN v.toSelect := v.getValue (first); END;
+      END;
       v.selectItems (event)
     ELSIF cd.clickType = VBT.ClickType.LastUp AND cd.clickCount = 3 THEN
       LOCK v.mu DO
         IF NOT v.getFirstSelected (first) THEN (* error? *) RETURN END;
         isDir := v.isDir [first];
-        path := Pathname.Join (v.dir, v.getValue (first), NIL)
+        path := JoinPath (v.dir, v.getValue (first))
       END;
       IF isDir THEN
         v.activateDir (path, event)
@@ -750,14 +761,24 @@ PROCEDURE ShowDirInMenu (v: T) =
       arcs := Pathname.Decompose(v.dir);
     BEGIN
       IF arcs = NIL THEN TextVBT.Put(top, "????"); RETURN END;
-      WITH curr = arcs.remhi() DO
-        TextVBT.SetFont(top, fnt := v.dirmenu.font, bgFg := v.dirmenu.shadow);
-        IF curr = NIL THEN
-          TextVBT.Put(top, "????")
-        ELSE
-          TextVBT.Put(top, curr)
-        END
+      TextVBT.SetFont(top, fnt := v.dirmenu.font, bgFg := v.dirmenu.shadow);
+
+      (* remove trailing arcs that are empty or NIL *)
+      VAR arc: TEXT; BEGIN
+        LOOP
+          IF (arcs.size() = 0) THEN
+            TextVBT.Put(top, "????");
+            EXIT;
+          END;
+          arc := arcs.remhi();
+          IF (arc # NIL) AND NOT Text.Empty (arc) THEN
+            TextVBT.Put(top, arc);
+            EXIT;
+          END;
+        END;
       END;
+
+      (* update the menu buttons *)
       VAR
         vbox     : HVSplit.T;
         arc      : TEXT;
@@ -851,7 +872,7 @@ PROCEDURE HelperReturn (hp: Helper; READONLY event: VBT.KeyRec) =
           RaiseError (v, "Invalid pathname", text)
         END;
         IF NOT Pathname.Absolute (text) THEN
-          text := Pathname.Join (v.dir, text, NIL)
+          text := JoinPath (v.dir, text)
         END
       END;
       Set (v, text, event.time);
@@ -863,6 +884,44 @@ PROCEDURE HelperReturn (hp: Helper; READONLY event: VBT.KeyRec) =
     | Error (x) => v.error (x)
     END
   END HelperReturn;
+
+PROCEDURE JoinPath (dir, file: TEXT): TEXT =
+  BEGIN
+    IF (dir = NIL) THEN RETURN file; END;
+    IF (file = NIL) OR Text.Empty (file) THEN RETURN dir; END;
+    RETURN Pathname.Join (dir, file, NIL);
+  END JoinPath;
+
+PROCEDURE FileNameEq (a, b: TEXT): BOOLEAN =
+  BEGIN
+    IF on_unix
+      THEN RETURN Text.Equal (a, b);
+      ELSE RETURN CIEqual (a, b);
+    END;
+  END FileNameEq;
+
+PROCEDURE CIEqual (a, b: TEXT): BOOLEAN =
+  (* Case-insensitive TEXT comparisons *)
+  VAR
+    len1 := Text.Length (a);
+    len2 := Text.Length (b);
+    c1, c2: CHAR;
+    b1, b2: ARRAY [0..63] OF CHAR;
+  BEGIN
+    IF (len1 # len2) THEN RETURN FALSE; END;
+    len2 := 0;
+    WHILE (len2 < len1) DO
+      Text.SetChars (b1, Text.Sub (a, len2, LAST (CARDINAL)));
+      Text.SetChars (b2, Text.Sub (b, len2, LAST (CARDINAL)));
+      FOR i := 0 TO MIN (len1 - len2, NUMBER (b1))-1 DO
+        c1 := ASCII.Upper [b1[i]];
+        c2 := ASCII.Upper [b2[i]];
+        IF (c1 # c2) THEN RETURN FALSE; END
+      END;
+      INC (len2, NUMBER (b1));
+    END;
+    RETURN TRUE;
+  END CIEqual;
 
 PROCEDURE RaiseError (v: T; text, path: TEXT := "") RAISES {Error} =
   BEGIN
