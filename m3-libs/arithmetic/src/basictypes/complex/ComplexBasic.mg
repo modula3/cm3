@@ -146,7 +146,9 @@ PROCEDURE Rec(READONLY x : T) : T RAISES {Error} =
   but not for all, e.g. GCD(-3-3i,-1-4i)
   (the order is important, the opposite would work!).
   The last example lead to a cycle:
-   -3-3i,-1-4i,1-4i,3-3i,4-i,4+i,3+3i,... *)
+   -3-3i,-1-4i,1-4i,3-3i,4-i,4+i,3+3i,...
+  In this case the Euclidean algorithm may be rewritten
+  to process the pair (x*u,y) for several units u in parallel. *)
 PROCEDURE Mod(READONLY x,y:T):T RAISES {Error} =
   VAR
     denom : R.T;
