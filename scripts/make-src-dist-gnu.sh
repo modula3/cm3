@@ -21,7 +21,7 @@ fi
 
 STAGE="${STAGE:-${TMPDIR}}"
 [ -d "${STAGE}" ] || mkdir "${STAGE}" || mkdir -p "${STAGE}" || exit 1
-ARCHIVE="${STAGE}/cm3-src-sys-${CM3VERSION}.tgz"
+ARCHIVE="${STAGE}/cm3-src-gnu-${CM3VERSION}.tgz"
 header "building CM3 source distribution in ${ARCHIVE}"
 
 #-----------------------------------------------------------------------------
@@ -30,14 +30,8 @@ header "building CM3 source distribution in ${ARCHIVE}"
 
 cd "${ROOT}" || exit 1
 
-/bin/ls -1d COPYRIGHT-CMASS COPYRIGHT-DEC scripts m3-sys/cm3 > .tar-include
-/bin/ls -1d m3-sys/cminstall m3-sys/dll2lib m3-sys/fix_nl >> .tar-include
-/bin/ls -1d m3-sys/libdump m3-sys/m3back m3-sys/m3cgcat  >> .tar-include
-/bin/ls -1d m3-sys/m3cggen m3-sys/m3front m3-sys/m3linker >> .tar-include
-/bin/ls -1d m3-sys/m3loader m3-sys/m3middle m3-sys/m3objfile >> .tar-include
-/bin/ls -1d m3-sys/m3quake m3-sys/m3scanner m3-sys/scripts >> .tar-include
-/bin/ls -1d m3-sys/m3staloneback m3-sys/m3tools m3-sys/mklib >> .tar-include
-/bin/ls -1d m3-libs/m3core m3-libs/libm3 >> .tar-include
+/bin/ls -1d COPYRIGHT-CMASS COPYRIGHT-DEC scripts > .tar-include
+/bin/ls -1d m3-sys/m3cc m3-sys/m3gdb >> .tar-include
 /bin/ls -1d m3-*/*/${TARGET} > .tar-exclude
 echo "building exclude list..."
 find . \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
