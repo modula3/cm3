@@ -9,7 +9,8 @@ Abstract: Random number generators
 
 IMPORT LongFloat;
 IMPORT LongRealBasic AS R,
-       LongRealTrans AS RT;
+       LongRealTrans AS RT,
+       LongRealIntegerPower AS RP;
 FROM xUtils IMPORT Error,Err;
 
 CONST Module = "RandomBasic.";
@@ -36,8 +37,8 @@ REVEAL
     dirichlet:=Dirichlet;
 (*
     poisson:=Poisson;
-    binomial:=Binomial;
 *)
+    binomial:=Binomial;
   END;
 (*========================================*)
 (*-------------------*)
@@ -283,8 +284,35 @@ PROCEDURE Binomial(SELF:T;
                      p:R.T;
                      n:CARDINAL
                      ):CARDINAL=
+
+  PROCEDURE Calc(p,q:R.T):CARDINAL =
+  VAR
+    qp:=q/p;
+    prob:=RP.Power(p,n);
+    rnd:=SELF.uniform();
+    den:=R.Zero;
+    num:=FLOAT(n,R.T);
+    k:CARDINAL:=0;
+  BEGIN
+    WHILE prob<rnd DO
+      rnd:=rnd-prob;
+      den:=den+R.One;
+      prob:=prob*qp*num/den;
+      num:=num-R.One;
+      INC(k);
+    END;
+    RETURN k;
+  END Calc;
+
 <*UNUSED*> CONST ftn = Module & "Binomial";
 BEGIN
+  IF n=0 THEN
+    RETURN 0;
+  ELSIF p<RT.Half THEN
+    RETURN n-Calc(R.One-p,p);
+  ELSE
+    RETURN   Calc(p,R.One-p);
+  END;
 END Binomial;
 
 (*==========================*)
