@@ -29,8 +29,7 @@ END Norm1;
 PROCEDURE Norm2(
                 x:T):R.T RAISES {Error}=
 VAR
-  v:REF M.TRow;
-  specrad:=Eigen.SquareMethod(M.Mul(M.Adjungate(x),x),v);
+  specrad:=Eigen.SquareMethod(M.Mul(M.Adjungate(x),x)).value;
 BEGIN
   RETURN RT.SqRt(specrad);
 END Norm2;
