@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkginfo.sh,v 1.3 2001-02-12 22:39:00 wagner Exp $
+# $Id: pkginfo.sh,v 1.4 2001-05-12 15:21:40 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -28,7 +28,7 @@ fi
 
 pkg_defined() {
   for p in $* ; do
-    "$QGREP" /$p\$ "$PKGSDB" || return 1
+    qgrep /$p\$ "$PKGSDB" || return 1
   done
   return 0
 }

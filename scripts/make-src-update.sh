@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-update.sh,v 1.1 2001-02-24 16:52:54 wagner Exp $
+# $Id: make-src-update.sh,v 1.2 2001-05-12 15:21:40 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -19,7 +19,19 @@ fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
-P=`pkgpath $@`
+P=""
+for p in $@ ; do
+  if pkg_defined "$p" ; then
+    NP=`pkgpath "${p}"`
+    echo "adding package ${NP}"
+    P="${P} ${NP}"
+  elif [ -d "${ROOT}/${p}" ] ; then
+    echo "adding directory ${p}"
+    P="${P} ${p}"
+  else
+    echo "${p} not found, skipping" 1>&2
+  fi
+done
 
 DATESTR=`date +"%Y-%m-%d"`
 STAGE="${STAGE:-${TMPDIR}}"
