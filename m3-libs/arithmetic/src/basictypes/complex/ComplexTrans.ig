@@ -8,7 +8,7 @@ Abstract: Transcendental functions of complex numbers.
 3/23/96 Harry George    Incorporated Warren Smith's implementations
 *)
 
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 
 TYPE
   T = C.T;

@@ -10,7 +10,7 @@ Abstract: Transcendental functions of complex numbers.
 3/16/96   Warren Smith    Improved routines, and new routines.
                           The ones with beginning caps are wds's
 *)
-FROM xUtils IMPORT Error,Err;
+FROM NADefinitions IMPORT Error,Err;
 IMPORT FloatMode;
 
 <*UNUSED*> CONST Module = "ComplexTrans.";

@@ -5,7 +5,7 @@ Abstract: Fraction numbers and basic operations
 
 *)
 
-FROM xUtils IMPORT Error,Err;
+FROM NADefinitions IMPORT Error,Err;
 
 <*UNUSED*> CONST Module = "FractionBasic.";
 (*==========================*)

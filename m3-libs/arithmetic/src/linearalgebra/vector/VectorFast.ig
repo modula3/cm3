@@ -5,7 +5,7 @@ Abstract: Vector math
 
 2/17/96  Harry George    Convert from Objects to ADT's
 *)
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 (*==========================*)
 TYPE
   (*text form: "V6{a0,a1,a2,a3,a4,a5}"*)

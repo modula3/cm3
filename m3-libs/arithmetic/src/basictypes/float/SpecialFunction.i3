@@ -16,7 +16,7 @@ Abstract:  This is a Modula-3 rendition of a collection
 1/22/96    Harry George      Change to m3na project
 2/17/96    Harry George      Convert to separate Real* modules
 *)
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 
 (*=================*)
 TYPE

@@ -14,7 +14,7 @@ was xComplex.m3
 *)
 
 IMPORT FloatMode;
-FROM xUtils IMPORT Error, Err;
+FROM NADefinitions IMPORT Error, Err;
 
 <*UNUSED*> CONST Module = "ComplexFast.";
 (*==========================*)

@@ -5,7 +5,7 @@ Abstract: Combinatoric operations
 
 *)
 
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 
 <*UNUSED*> CONST Module = "Combinatoric.";
 (*==========================*)

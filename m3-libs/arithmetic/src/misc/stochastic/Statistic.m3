@@ -5,7 +5,7 @@ Abstract: <describe>
 
 1/1/96  <name>    Initial version
 *)
-FROM xUtils IMPORT Error,Err;
+FROM NADefinitions IMPORT Error,Err;
 IMPORT LongRealBasic   AS R,
        LongRealTrans   AS RT,
        SpecialFunction AS SF;

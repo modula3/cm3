@@ -6,7 +6,7 @@ Abstract: Implementation of Modula-3 version of
 
 12/27/95  Harry George    Initial version
 *)
-FROM xUtils IMPORT Error,Err;
+FROM NADefinitions IMPORT Error,Err;
 FROM RT IMPORT Cos, Pi;
 
 CONST Module = "ChebyPolynomialFast.";

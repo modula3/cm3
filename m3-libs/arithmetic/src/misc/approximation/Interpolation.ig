@@ -11,7 +11,7 @@ Abstract: Direct access to interpolation
 
 2/17/96  Harry George    Converted to ADT format
 *)
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 
 (*==========================*)
 (*

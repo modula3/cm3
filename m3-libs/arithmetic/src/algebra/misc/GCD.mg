@@ -6,7 +6,7 @@ Abstract: Integers
 2/17/96  Harry George    Initial version
 *)
 
-FROM xUtils IMPORT Error, Err;
+FROM NADefinitions IMPORT Error, Err;
 
 <*UNUSED*> CONST Module = "GCD.";
 (*==========================*)

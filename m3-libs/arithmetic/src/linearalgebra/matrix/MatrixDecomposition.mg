@@ -19,7 +19,7 @@ Abstract:
 
 2/17/96   Harry George   ...and back to ADT with REAL64.
 *)
-FROM xUtils IMPORT Error,Err;
+FROM NADefinitions IMPORT Error,Err;
 FROM RT IMPORT Tiny, Eps;
 
 CONST Module = "MatrixDecomposition";

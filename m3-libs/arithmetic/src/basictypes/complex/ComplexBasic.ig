@@ -12,7 +12,7 @@ Originally was xComplex
 
 *)
 
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 
 (*==========================*)
 

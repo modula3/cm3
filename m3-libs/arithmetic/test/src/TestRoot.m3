@@ -7,7 +7,7 @@ Abstract: Test driver for Modula-3 rendition of
 1/28/96   Harry George   converted to m3na
 2/17/96   Harry George   Converted to ADT format
 *)
-FROM xUtils IMPORT Error,Err;
+FROM NADefinitions IMPORT Error,Err;
 IMPORT Fmt,
        LongRealBasic  AS R,
        LongRealTrans  AS RT,
@@ -25,6 +25,8 @@ IMPORT Fmt,
        Integer32PolynomialBasic  AS IP,
        Integer32PolynomialFmtLex AS IPF,
        Thread,Wr;
+
+<*FATAL Error*>
 (*=======================*)
 CONST
   Module = "TestRoot.";

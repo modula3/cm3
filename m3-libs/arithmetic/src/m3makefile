@@ -26,6 +26,8 @@ include_dir("algebra")
 include_dir("nonlinear")
 include_dir("stochastic")
 
+module("NADefinitions")
+
 module("xUtils")
 export_interface("xUtils")
 

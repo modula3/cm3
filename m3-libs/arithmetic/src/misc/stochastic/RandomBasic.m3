@@ -13,7 +13,7 @@ IMPORT LongRealBasic AS R,
        LongReal      AS RSpec,
        LongRealIntegerPower AS RP,
        Word AS W;
-FROM xUtils IMPORT Error,Err;
+FROM NADefinitions IMPORT Error,Err;
 
 CONST Module = "RandomBasic.";
 

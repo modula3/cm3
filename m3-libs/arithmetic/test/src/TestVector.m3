@@ -5,7 +5,7 @@ Abstract:  Tests for Vector module.
 1/1/96    <name>   Initial version
 
 *)
-(*FROM xUtils IMPORT Error,Err;*)
+(*FROM NADefinitions IMPORT Error,Err;*)
 IMPORT (*LongRealBasic  AS R,*)
        LongRealFmtLex AS RF,
        LongRealVectorBasic  AS V,

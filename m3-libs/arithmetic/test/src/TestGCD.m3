@@ -21,14 +21,14 @@ IMPORT
   BigIntegerFractionPolynomialFmtLex AS BFrPF,
   Fmt AS F,
 *)
-  xUtils;
+  NADefinitions;
 
 (*=======================*)
 CONST
   Module = "TestGCD.";
 
 (*----------------------*)
-<*FATAL xUtils.Error*>
+<*FATAL NADefinitions.Error*>
 PROCEDURE TestIntegerGCD():BOOLEAN=
 CONST
   ftn = Module & "TestIntegerGCD";

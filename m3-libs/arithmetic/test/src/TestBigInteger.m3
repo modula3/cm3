@@ -16,7 +16,7 @@ IMPORT
   WordEx AS Wx,
   Word AS W,
   Fmt AS F,
-  Text,Wr,Thread,xUtils;
+  Text,Wr,Thread,NADefinitions;
 FROM BigIntegerMatrixIntegerPower IMPORT Power;
 (*=======================*)
 CONST
@@ -26,7 +26,7 @@ CONST
   base2Style  = BF.FmtStyle{base:=2};
   base16Style = BF.FmtStyle{base:=16};
 (*----------------------*)
-<*FATAL xUtils.Error*>
+<*FATAL NADefinitions.Error*>
 PROCEDURE TestBasic():BOOLEAN=
 CONST
   ftn = Module & "TestBasic";

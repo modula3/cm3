@@ -15,7 +15,7 @@ Originally was xComplex
 *)
 
 IMPORT FloatMode;
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 
 (*==========================*)
 

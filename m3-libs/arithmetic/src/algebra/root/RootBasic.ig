@@ -13,7 +13,7 @@ Abstract: Arithmetic on the roots of polynomials
           etc.
 *)
 
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 (*==========================*)
 
 CONST

@@ -6,7 +6,7 @@ Abstract: Generic computation of the greatest common divisor
 2/17/96  Harry George    Initial version
 *)
 
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 
 (*==========================*)
 

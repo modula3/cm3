@@ -9,13 +9,13 @@ Abstract: Test driver for interpolation.
 IMPORT LongRealBasic  AS R,
        LongRealFmtLex AS RF,
        LongRealInterpolation AS Ip,
-       xUtils;
+       NADefinitions;
 FROM LongRealTrans IMPORT Sin;
 (*=======================*)
 CONST
   Module = "TestInterpolation.";
 (*=======================*)
-<*FATAL xUtils.Error*>
+<*FATAL NADefinitions.Error*>
 (*----------------------*)
 PROCEDURE TestLinear():BOOLEAN=
 CONST
