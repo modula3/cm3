@@ -6,7 +6,7 @@ IMPORT Fmt, M3Timers, Pathname, Process, Quake, Time, Wr;
 IMPORT RTCollector, RTCollectorSRC, RTParams, RTutils, Thread;
 
 IMPORT Builder, Dirs, M3Build, M3Options, Makefile, Msg, Utils, WebFile;
-IMPORT MxConfig AS M3Config, CMKey, CMCurrent;
+IMPORT MxConfig AS M3Config(*, CMKey, CMCurrent *);
 
 VAR
   config    : TEXT          := NIL;
@@ -43,7 +43,9 @@ PROCEDURE DoIt () =
         Msg.Verbose ("EVAL (\"", config, "\")");
         Quake.Run (mach, config);
 
+        (* -- disabled 
         CheckExpire (Quake.LookUp (mach, "INSTALL_KEY"));
+        *)
 
         (* figure out where we are and get where we want to be *)
         build_dir := Quake.LookUp (mach, "BUILD_DIR");
@@ -74,6 +76,7 @@ PROCEDURE DoIt () =
     EXCEPT
     | Quake.Error (msg) =>
         Msg.Error (NIL, msg);
+	M3Options.exit_code := 2;
     | Thread.Alerted =>
         Msg.FatalError (NIL, "interrupted");
     END;
@@ -81,6 +84,7 @@ PROCEDURE DoIt () =
     Process.Exit (M3Options.exit_code);
   END DoIt;
 
+(* -- disabled --
 PROCEDURE CheckExpire (passwd: TEXT) =
   CONST Day = 24.0d0 * 3600.0d0;
   CONST FirstWarning = 7.0d0 * Day;
@@ -136,6 +140,7 @@ PROCEDURE BuyIt () =
       Msg.Error (NIL, "--- ", BuyMsg[i]);
     END;
   END BuyIt;
+*)
 
 (*------------------------------------------------- process shutdown ---*)
 
