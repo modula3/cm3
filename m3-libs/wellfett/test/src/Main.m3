@@ -1,7 +1,7 @@
 MODULE Main;
 
-IMPORT TestMatchWavelet;
+IMPORT TestCDFLifting;
 
 BEGIN
-  TestMatchWavelet.Test();
+  TestCDFLifting.Test();
 END Main.
