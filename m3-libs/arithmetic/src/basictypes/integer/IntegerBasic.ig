@@ -34,35 +34,5 @@ CONST
 <*INLINE*> PROCEDURE DivMod(x,y:T;VAR r:T):T RAISES {Error};  (*return x/y and write the remainder in r*)
 <*OBSOLETE*>CONST ScaleInt = Mul;
 
-(*============================*)
-(* Factoring                  *)
-(*============================*)
-
-(*
-PROCEDURE IsPrime(n:T):BOOLEAN;
-(*is this number a prime number?*)
-*)
-
-TYPE
-  Power      = RECORD p : T; m : [0..BITSIZE(T)] END;
-  PowerArray = REF ARRAY OF Power;
-  Array      = REF ARRAY OF T;
-
-PROCEDURE Factor(n:T;      (*factor this number*)
-                 ):Array;  (*giving primes*)
-(*e.g., factor(24) gives 2^3 * 3^1 or {2,2,2,3}*)
-
-(*
-PROCEDURE Factor(n:T;          (*factor this number*)
-                 VAR p,m:Array (*giving primes and multiplicity*)
-                 ):CARDINAL;   (*and count of factors*)
-(*e.g., factor(24) gives 2^3 * 3^1 or:
-   p=[2,3]
-   m=[3,1]
-   return=2;
-p and m are created by the procedure.
-*)
-*)
-
 (*==========================*)
 END IntegerBasic.

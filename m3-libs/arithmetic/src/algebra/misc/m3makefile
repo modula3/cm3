@@ -26,3 +26,7 @@ GCD("BigIntegerFractionPolynomial", "BigIntegerFractionPolynomialBasic")
 generic_module("Combinatoric")
 Combinatoric("Cardinal32",          "Cardinal32Basic")
 Combinatoric("BigInteger",          "BigIntegerBasic")
+
+
+module("NumberTheory")
+implementation("PrimeNumber")
