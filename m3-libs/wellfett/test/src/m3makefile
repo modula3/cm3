@@ -4,6 +4,7 @@ import("wavelib")
 
 module("TestDaubechies")
 module("TestTransition")
+module("TestBSpline")
 implementation("Main")
 
 program("test")

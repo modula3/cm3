@@ -2,7 +2,7 @@ GENERIC MODULE BSplineWavelet(R, S, IntPow, DB);
 
 CONST Half = FLOAT(0.50D0, R.T);
 
-PROCEDURE GeneratorMask (n: CARDINAL; base: CARDINAL): S.T =
+PROCEDURE GeneratorMask (n: CARDINAL; base: [1 .. LAST(CARDINAL)]): S.T =
   VAR
     maskArr := NEW(REF ARRAY OF R.T, base);
     coef    := R.One / R.FromInteger(base);
@@ -18,7 +18,7 @@ PROCEDURE WaveletMask (n, m: CARDINAL): S.T RAISES {DifferentParity} =
     BEGIN
       mask := IntPow.MulPower(
                 mask, NEW(S.T).fromArray(ARRAY OF R.T{Half, Half}), m);
-      RETURN mask.alternate();
+      RETURN mask.translate(1).alternate();
     END;
   END WaveletMask;
 

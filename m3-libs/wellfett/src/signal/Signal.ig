@@ -34,6 +34,7 @@ TYPE
 
       translate (dist: IndexType): T;
       scale     (factor: R.T): T;
+      negate     (): T;
       (*obviously, raise must be limitted to a finite interval*)
       raise (offset: R.T; first, number: IndexType): T;
 

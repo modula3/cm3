@@ -1,7 +1,7 @@
 MODULE Main;
 
-IMPORT TestTransition;
+IMPORT TestBSpline;
 
 BEGIN
-  TestTransition.Test();
+  TestBSpline.Test();
 END Main.

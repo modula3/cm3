@@ -25,6 +25,7 @@ REVEAL
 
         translate := Translate;
         scale     := Scale;
+        negate    := Neg;
         raise     := Raise;
 
         translateD := TranslateD;
@@ -195,7 +196,7 @@ PROCEDURE Adjoint (x: T): T =
   VAR z := NEW(T);
   BEGIN
     z.data := NEW(V.T, NUMBER(x.data^));
-    z.first := -(x.first + LAST(x.data^));
+    z.first := -GetLast(x);
     FOR j := FIRST(z.data^) TO LAST(z.data^) DO
       z.data[j] := R.Conj(x.data[LAST(x.data^) + FIRST(z.data^) - j]);
     END;
@@ -213,6 +214,15 @@ PROCEDURE Scale (x: T; factor: R.T): T =
     END;
     RETURN z;
   END Scale;
+
+PROCEDURE Neg (x: T): T =
+  VAR z := NEW(T);
+  BEGIN
+    z.data := NEW(V.T, NUMBER(x.data^));
+    z.first := x.first;
+    FOR i := 0 TO LAST(x.data^) DO z.data[i] := R.Neg(x.data[i]); END;
+    RETURN z;
+  END Neg;
 
 PROCEDURE ScaleD (x: T; factor: R.T) =
   BEGIN
