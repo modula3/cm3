@@ -1,5 +1,5 @@
 
-GENERIC INTERFACE DiscreteWaveletTransform(S, VS, VSR, MS);
+GENERIC INTERFACE DiscreteWaveletTransform(S, SV, SVR, SM);
 
 IMPORT NADefinitions AS NA;
 
@@ -11,46 +11,46 @@ TYPE
   ScalingType = CARDINAL;
   SignalPP = ARRAY OF S.T;
 
-PROCEDURE FilterBankToPolyphase (READONLY x      : VS.TBody;
-                                          scaling: ScalingType; ): MS.T;
+PROCEDURE FilterBankToPolyphase (READONLY x      : SV.TBody;
+                                          scaling: ScalingType; ): SM.T;
 (*'scaling' is the factor of sub-sampling which may differ from the number
    of channels, in that case the polyphase matrix is not square.*)
 
-PROCEDURE PolyphaseToFilterBank (READONLY x: MS.TBody; ): VS.T;
+PROCEDURE PolyphaseToFilterBank (READONLY x: SM.TBody; ): SV.T;
 (*scaling=NUMBER(x[0])*)
 
 PROCEDURE FilterBankAnalysisSingle (         x      : S.T;
-                                    READONLY filter : VS.TBody;
-                                             scaling: ScalingType; ): VS.T;
+                                    READONLY filter : SV.TBody;
+                                             scaling: ScalingType; ): SV.T;
 (*Transform signal x into NUMBER(y) channels downsampled by 'scaling'*)
 
-PROCEDURE FilterBankSynthesisSingle (READONLY x, filter: VS.TBody;
+PROCEDURE FilterBankSynthesisSingle (READONLY x, filter: SV.TBody;
                                               scaling  : ScalingType; ):
   S.T RAISES {NA.Error};
 (*Transform NUMBER(y) downsampled channels into one signal*)
 
 <*INLINE*>
-PROCEDURE FilterBankAnalysisTISingle (x: S.T; READONLY filter: VS.TBody; ):
-  VS.T;
+PROCEDURE FilterBankAnalysisTISingle (x: S.T; READONLY filter: SV.TBody; ):
+  SV.T;
 
 CONST
-  FilterBankSynthesisTISingle: PROCEDURE (READONLY x, filter: VS.TBody; ):
-                                 S.T RAISES {NA.Error} = VSR.Dot;
+  FilterBankSynthesisTISingle: PROCEDURE (READONLY x, filter: SV.TBody; ):
+                                 S.T RAISES {NA.Error} = SVR.Dot;
 
 TYPE
   WaveletCoeffs = RECORD
                     low : S.T;
-                    high: MS.T;
+                    high: SM.T;
                   END;
 
   DyadicWaveletCoeffs = RECORD
                           low : S.T;
-                          high: VS.T;
+                          high: SV.T;
                         END;
 
 (*
 PROCEDURE FilterBankAnalysis (         x        : S.T;
-                               READONLY y        : VS.TBody;
+                               READONLY y        : SV.TBody;
                                         numLevels: CARDINAL; ):
   WaveletCoeffs;
 *)
