@@ -436,6 +436,34 @@ ELSE
 END;
 END;%}
 
+%insert(m3wrapintf) %{TYPE
+DirTile = {axis, lowerBorder, upperBorder, fixedPointLabel,
+gridMajor, gridMinor, ticksOutward, logarithmic,
+labelMajorUnconv, labelMinorUnconv,
+ticksMajor, ticksMinor};
+DirTileSet = SET OF DirTile;
+%}
+%insert(m3wrapimpl) %{CONST
+tileToChar = ARRAY DirTile OF CHAR {'a','b','c','f','g','h','i','l','m','n','s','t'};
+%}
+%typemap(rawintype) const char *xopt, const char *yopt, const char *zopt %{(*ARRAY OF*) CHAR%}
+%typemap(rawinmode) const char *xopt, const char *yopt, const char *zopt %{READONLY%}
+%typemap(m3intype)  const char *xopt, const char *yopt, const char *zopt %{DirTileSet%}
+%typemap(m3argdecl) const char *xopt, const char *yopt, const char *zopt
+%{$1: ARRAY [0..ORD(LAST(Tile))+1] OF CHAR;
+$1i: CARDINAL := 0;%}
+%typemap(m3argraw)  const char *xopt, const char *yopt, const char *zopt %{$1[0]%}
+%typemap(m3inconv)  const char *xopt, const char *yopt, const char *zopt
+%{FOR t:=FIRST(DirTile) TO LAST(DirTile) DO
+IF t IN $1_name THEN
+$1[$1i]:=tileToChar[t];
+INC($1i);
+END;
+END;
+$1[$1i]:='\000';
+%}
+%typemap(m3freearg)  const char *xopt, const char *yopt, const char *zopt %{%}
+
 %typemap(m3intype)  PLINT mode    %{BOOLEAN%}
 %typemap(m3argraw)  PLINT mode    %{ORD($1_name)%}
 
