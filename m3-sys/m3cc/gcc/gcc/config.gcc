@@ -2090,7 +2090,7 @@ m68k-*-linux*)		# Motorola m68k's running GNU/Linux
 				# aka the GNU/Linux C library 6.
 	tm_file=m68k/linux.h
 	tmake_file="t-slibgcc-elf-ver t-linux m68k/t-linux"
-	extra_parts="crtbegin.o crtbeginS.o crtend.o crtendS.o"
+	extra_parts="crtbegin.o crtbeginS.o crtbeginT.o crtend.o crtendS.o"
 	float_format=m68k
 	gnu_ld=yes
 	;;
@@ -3429,7 +3429,7 @@ xtensa-*-elf*)
 	;;
 xtensa-*-linux*)
 	tm_file="${tm_file} dbxelf.h elfos.h svr4.h linux.h xtensa/linux.h"
-	tmake_file="t-linux xtensa/t-xtensa"
+	tmake_file="t-slibgcc-elf-ver t-linux xtensa/t-xtensa"
 	extra_parts="crtbegin.o crtbeginS.o crtbeginT.o crtend.o crtendS.o"
 	gas=yes gnu_ld=yes
 	;;
