@@ -25,6 +25,16 @@ REVEAL T = RandomBasic.TWord BRANDED OBJECT
     engine:=Engine;
   END;
 
+PROCEDURE New(initrng:RandomBasic.T):T=
+  VAR
+    SELF:=NEW(T);
+  BEGIN
+    FOR i:=amf1-1 TO 0 BY -1 DO
+      SELF.arrmf1[i] := Word.Or(initrng.generateWord(), 2_1);
+    END;
+    RETURN SELF;
+  END New;
+
 (* Generates a new random word: *)
 PROCEDURE Engine(SELF:T):Word.T=
   BEGIN

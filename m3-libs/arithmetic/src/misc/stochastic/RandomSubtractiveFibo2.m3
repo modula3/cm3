@@ -30,6 +30,17 @@ REVEAL T = RandomBasic.TWord BRANDED OBJECT
     engine:=Engine;
   END;
 
+PROCEDURE New(initrng:RandomBasic.T):T=
+  VAR
+    SELF:=NEW(T);
+  BEGIN
+    FOR i:=asf2-1 TO 0 BY -1 DO
+      SELF.arrsf2[i] := initrng.generateWord();
+    END;
+    SELF.arrsf2[0] := Word.Or(initrng.generateWord(), 2_1);
+    RETURN SELF;
+  END New;
+
 (* Generates a new random word, mod 2^32 - 5 (a prime): *)
 PROCEDURE Engine(SELF:T):Word.T=
   VAR

@@ -12,9 +12,10 @@ IMPORT RandomBasic,
        RandomSubtractiveFibo1   AS SubFibo1,
        RandomSubtractiveFibo2   AS SubFibo2,
        RandomMultiplicativeFibo AS MulFibo,
-       Word;
+       Word,FloatMode;
 IMPORT RandomRep;
 
+<*UNUSED*>
 CONST Module = "RandomCombinedFast.";
 (*==========================*)
 
@@ -38,6 +39,7 @@ PROCEDURE GenerateWord(SELF:T):Word.T =
   END GenerateWord;
 
 PROCEDURE GenerateReal(SELF:T):R.T=
+  <*FATAL FloatMode.Trap*>
   VAR
     x : R.T;
   BEGIN
@@ -74,33 +76,6 @@ PROCEDURE New(fixed : BOOLEAN := FALSE):T=
     RETURN SELF;
   END New;
 
-(*
-(*----------------------------------------*)
-PROCEDURE Test()=
-BEGIN
-  (*testing code: *)
-(*
-  IO.Put( Fmt.LongReal( Uni01() ) & "\n");
-*)
-
-  FOR i:=0 TO 10000000 DO
-(*
-    EVAL ComboGen();
-    EVAL FasterGen();
-*)
-    EVAL SubtractiveFibo1();
-    EVAL RT.Sin( FLOAT(i, R.T) );
-    EVAL ImprovedMcGill();
-    EVAL MultiplicativeFibo1();
-    EVAL QuaternaryFibo();
-    EVAL WolframCA();
-    EVAL SubtractiveFibo2();
-    EVAL FasterUni01();
-    EVAL Uni01();
-    EVAL FasterRandWord();
-  END;
-END Test;
-*)
 (*==========================*)
 BEGIN
 END RandomCombinedFast.
