@@ -5,7 +5,9 @@ Abstract: Integers of arbitrary size
 
 *)
 
-IMPORT Rd, Thread, FloatMode, Lex AS L, Fmt AS F, Text, TextRd, Word;
+IMPORT (*Rd, Thread, FloatMode, Lex AS L, TextRd,*)
+       Fmt AS F, Text,
+       Word;
 IMPORT BigIntegerRep   AS BR;
 IMPORT BigIntegerBasic AS BB;
 FROM NADefinitions IMPORT Error, Err;

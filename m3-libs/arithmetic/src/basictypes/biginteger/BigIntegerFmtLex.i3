@@ -5,7 +5,8 @@ Abstract: Formatting of integers of arbitrary size
 
 *)
 
-IMPORT BigIntegerBasic AS B, Lex AS L, Fmt AS F, FloatMode, Rd, Thread;
+IMPORT (*Lex AS L, FloatMode, Rd, Thread,*)
+       BigIntegerBasic AS B, Fmt AS F;
 
 
 (*==========================*)

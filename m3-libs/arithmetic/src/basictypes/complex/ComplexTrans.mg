@@ -242,11 +242,11 @@ BEGIN
       END;
     END;
     (* Root is on the same side as the radicand with respect to the real axis. *)
-
   EXCEPT
+(*
     Error(err) =>
-      <*ASSERT err#Err.divide_by_zero*>
-      (*division by zero never occurs, although Div() can throw it potentially*)
+      <*ASSERT err#Err.root_of_negative*>
+*)
   END;
   RETURN z;
 END SqRt;

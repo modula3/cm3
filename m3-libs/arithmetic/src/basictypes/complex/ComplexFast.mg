@@ -93,6 +93,7 @@ PROCEDURE Div(READONLY x0,y0 : T) : T RAISES {Error} =
     x, y, z : T;
     denom   : R.T;
     exp     : INTEGER;
+  <*FATAL FloatMode.Trap*>
   BEGIN
     (*avoid overflow and underflow by conditioning*)
     x := Normalize(x0,exp);
@@ -112,6 +113,7 @@ PROCEDURE Rec(READONLY x0 : T) : T RAISES{Error} =
     x, z  : T;
     denom : R.T;
     exp   : INTEGER;
+  <*FATAL FloatMode.Trap*>
   BEGIN
     x := Normalize(x0,exp);
     denom := x.re*x.re + x.im*x.im;
@@ -157,6 +159,7 @@ END ScaleInt;
 (*-------------------*)
 
 PROCEDURE Normalize (READONLY x: T; VAR exp: INTEGER): T =
+  <*FATAL FloatMode.Trap*>
   BEGIN
     IF NOT IsZero(x) THEN
       exp:=ILogb(x);

@@ -8,7 +8,9 @@ Abstract: Complex numbers in polar coordinates
 3/23/96 Harry George    Incorporated Warren Smith's implementations
 *)
 
+(*
 FROM NADefinitions IMPORT Error;
+*)
 
 (*==========================*)
 TYPE
