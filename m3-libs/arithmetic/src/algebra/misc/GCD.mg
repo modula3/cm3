@@ -1,25 +1,21 @@
 GENERIC MODULE GCD(R);
-(*Arithmetic for Modula-3, see doc for details
-
-   Abstract: Integers *)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT Arithmetic AS Arith;
 
 <* UNUSED *>
 CONST
   Module = "GCD.";
-(*==========================*)
 
-(*----------------------*)
-PROCEDURE GCD (u, v: T): T =
-  (*returns the greatest common denominator for u and v.*)
-  (*use Euclid's algorithm*)
+PROCEDURE GCD (u, v: T; ): T =
+  (* returns the greatest common denominator for u and v. *)
+  (* use Euclid's algorithm *)
   (* Arith.ErrorDivisionByZero cannot occur *)
   <* FATAL Arith.Error *>
-  VAR
-    w: T;
   BEGIN
-    WHILE NOT R.IsZero(v) DO w := R.Mod(u, v); u := v; v := w; END;
+    WHILE NOT R.IsZero(v) DO
+      WITH w = R.Mod(u, v) DO u := v; v := w; END;
+    END;
     (*
       WHILE v#0 DO
         w:=u MOD v;
@@ -30,7 +26,7 @@ PROCEDURE GCD (u, v: T): T =
     RETURN u;
   END GCD;
 
-PROCEDURE LCM (u, v: T): T =
+PROCEDURE LCM (u, v: T; ): T =
   BEGIN
     TRY
       RETURN R.Mul(R.Div(u, GCD(u, v)), v);
@@ -41,8 +37,8 @@ PROCEDURE LCM (u, v: T): T =
     END;
   END LCM;
 
-PROCEDURE BezoutGCD (u, v: T; VAR (*OUT*) c: ARRAY [0 .. 1], [0 .. 1] OF T):
-  T =
+PROCEDURE BezoutGCD
+  (u, v: T; VAR (*OUT*) c: ARRAY [0 .. 1], [0 .. 1] OF T; ): T =
   (*
   / u \ - / q0 1 \ / q1 1 \ ... / gcd(u,v) \
   \ v / - \ 1  0 / \ 1  0 /     \    0     /
@@ -103,7 +99,7 @@ PROCEDURE Bezout (u, v, w: T; VAR (*OUT*) c: ARRAY [0 .. 1], [0 .. 1] OF T)
     c[0, 1] := R.Sub(c[0, 1], R.Mul(fr.quot, c[1, 1]));
   END Bezout;
 
-PROCEDURE MACDecompose (u, v: T; VAR (*OUT*) mac: MAC): T =
+PROCEDURE MACDecompose (u, v: T; VAR (*OUT*) mac: MAC; ): T =
   (* Arith.ErrorDivisionByZero cannot occur *)
   <* FATAL Arith.Error *>
   BEGIN
@@ -119,6 +115,5 @@ PROCEDURE MACDecompose (u, v: T; VAR (*OUT*) mac: MAC): T =
     RETURN u;
   END MACDecompose;
 
-(*==========================*)
 BEGIN
 END GCD.

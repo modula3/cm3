@@ -26,6 +26,7 @@ GCD("BigIntegerComplex",            "BigIntegerComplex")
 GCD("BigIntegerFractionPolynomial", "BigIntegerFractionPolynomial")
 % GCD will not work with floating point numbers,
 % because values that should be zero, aren't zero most often
+%  GCD("LongRealPolynomial",           "LongRealPolynomial")
 
 Generic_module("Combinatoric")
 Combinatoric("Cardinal32",          "Cardinal32Basic")
