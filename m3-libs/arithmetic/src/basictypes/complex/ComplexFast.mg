@@ -141,10 +141,9 @@ PROCEDURE Mod(<*UNUSED*> READONLY x:T; READONLY y:T):T RAISES {Error} =
   END Mod;
 
 (*-------------------*)
-PROCEDURE DivMod(READONLY x,y:T;VAR (*OUT*) r:T):T RAISES {Error} =
+PROCEDURE DivMod(READONLY x,y:T): QuotRem RAISES {Error} =
   BEGIN
-    r:=Zero;
-    RETURN Div(x,y);
+    RETURN QuotRem{Div(x,y),Zero};
   END DivMod;
 
 (*-------------------*)

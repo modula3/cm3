@@ -190,16 +190,15 @@ END Mul;
 
 PROCEDURE Div (READONLY x, y : T) : T RAISES {Error} =
 VAR
-  q, r : T;
+  qr := Rep.DivModU (x, y);
 
 BEGIN
-  q := Rep.DivModU (x, y, r);
-  q.sign := x.sign#y.sign;
+  qr.quot.sign := x.sign#y.sign;
   (*IF NOT Equal(r,Zero) THEN*)
-  IF r.size # 0 THEN
+  IF qr.rem.size # 0 THEN
     RAISE Error(Err.indivisible);
   END;
-  RETURN q;
+  RETURN qr.quot;
 END Div;
 
 PROCEDURE Rec(READONLY x:T):T RAISES {Error} =
@@ -213,27 +212,32 @@ PROCEDURE Rec(READONLY x:T):T RAISES {Error} =
     END;
   END Rec;
 
-PROCEDURE DivMod (READONLY x, y : T; VAR r : T) : T RAISES {Error} =
+(*Is this correct?*)
+PROCEDURE DivMod (READONLY x, y : T) : QuotRem RAISES {Error} =
 VAR
-  q : T;
+  qr := Rep.DivModU (x, y);
 
 BEGIN
-  q := Rep.DivModU (x, y, r);
-  r.sign := y.sign;
-  q.sign := x.sign#y.sign;
-  IF q.sign THEN (*means x.sign#y.sign*)
-    r := Rep.SubU (y, r);
+  qr.rem.sign  := y.sign;
+  qr.quot.sign := x.sign#y.sign;
+  IF qr.quot.sign AND NOT IsZero(qr.rem) THEN (*means x.sign#y.sign*)
+    qr.rem := Rep.SubU (y, qr.rem);
+    IF IsZero(qr.quot) THEN
+      IF qr.quot.sign THEN
+        qr.quot := One;
+      ELSE
+        qr.quot := MinusOne;
+      END;
+    ELSE
+      qr.quot := Rep.SubU (qr.quot, One);
+    END;
   END;
-  RETURN q;
+  RETURN qr;
 END DivMod;
 
 PROCEDURE Mod (READONLY x, y : T) : T RAISES {Error} =
-VAR
-  r : T;
-
 BEGIN
-  EVAL DivMod (x, y, r);
-  RETURN r;
+  RETURN DivMod (x, y).rem;
 END Mod;
 
 (*==========================*)

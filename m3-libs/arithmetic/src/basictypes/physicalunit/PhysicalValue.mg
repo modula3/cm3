@@ -97,14 +97,12 @@ PROCEDURE Mod(READONLY x,y:T):T RAISES {Error} =
   END Mod;
 
 (*-------------------*)
-PROCEDURE DivMod(READONLY x,y:T;VAR (*OUT*) r:T):T RAISES {Error} =
+PROCEDURE DivMod(READONLY x,y:T): QuotRem RAISES {Error} =
   VAR
-    q:T;
+    qr:=R.DivMod(x.val,y.val);
   BEGIN
-    q.val:=R.DivMod(x.val,y.val,r.val);
-    r.unit:=x.unit;
-    q.unit:=U.Sub(x.unit,y.unit);
-    RETURN q;
+    RETURN QuotRem{T{qr.quot,U.Sub(x.unit,y.unit)},
+                   T{qr.rem,x.unit}};
   END DivMod;
 
 

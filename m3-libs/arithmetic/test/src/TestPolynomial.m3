@@ -85,7 +85,7 @@ CONST
 VAR
   u:=NEW(P.T,5);
   v:=NEW(P.T,4);
-  q,r:P.T;
+  qr:P.QuotRem;
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
@@ -93,14 +93,14 @@ BEGIN
   v^:=Poly4{0.1D0,0.2D0,0.3D0,0.4D0};
   Msg("u="   & PF.Fmt(u) & "\n");
   Msg("v="   & PF.Fmt(v) & "\n");
-  Msg("u/v="); q:=P.DivMod(u,v,r);
-      Msg(PF.Fmt(q) & " rem=" & PF.Fmt(r) & "\n");
-  <*ASSERT NUMBER(r^)<NUMBER(v^)*>
-  <*ASSERT P.Equal(P.Add(P.Mul(v,q),r),u)*>
-  Msg("v/u="); q:=P.DivMod(v,u,r);
-      Msg(PF.Fmt(q) & " rem=" & PF.Fmt(r) & "\n");
-  <*ASSERT NUMBER(r^)<NUMBER(u^)*>
-  <*ASSERT P.Equal(P.Add(P.Mul(u,q),r),v)*>
+  Msg("u/v="); qr:=P.DivMod(u,v);
+      Msg(PF.Fmt(qr.quot) & " rem=" & PF.Fmt(qr.rem) & "\n");
+  <*ASSERT NUMBER(qr.rem^)<NUMBER(v^)*>
+  <*ASSERT P.Equal(P.Add(P.Mul(v,qr.quot),qr.rem),u)*>
+  Msg("v/u="); qr:=P.DivMod(v,u);
+      Msg(PF.Fmt(qr.quot) & " rem=" & PF.Fmt(qr.rem) & "\n");
+  <*ASSERT NUMBER(qr.rem^)<NUMBER(u^)*>
+  <*ASSERT P.Equal(P.Add(P.Mul(u,qr.quot),qr.rem),v)*>
   RETURN result;
 END TestDiv;
 (*-----------------------*)

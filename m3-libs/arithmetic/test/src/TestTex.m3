@@ -28,6 +28,7 @@ IMPORT LongRealBasic            AS R,
        LongRealMatrixFmtLex     AS MF,
        LongRealComplexPolynomialFmtLex AS PF;
 
+IMPORT NADefinitions AS NA;
 
 (*=======================*)
 CONST
@@ -41,7 +42,7 @@ VAR
   result:=TRUE;
   out := FileWr.Open(filename & ".tex");
 
-<*FATAL OSError.E, Thread.Alerted, Wr.Failure *>
+<*FATAL OSError.E, Thread.Alerted, Wr.Failure, NA.Error *>
 BEGIN
   Debug(1,ftn,"begin\n");
 
@@ -101,11 +102,12 @@ BEGIN
     FOR j:=0 TO 20 DO
       Wr.PutText(out,FrF.Tex(Fr.T{y,x}) & "&=&");
       Wr.PutText(out,FrF.Tex(Fr.T{y,x},style:=FrF.TexStyle{flags:=FrF.TexFlagSet{FrF.TexFlag.fraction}})&"&=&");
+      <*FATAL NA.Error*>
       VAR
-        r : B.T;
+        qr := B.DivMod(y,x);
       BEGIN
-        Wr.PutText(out,BF.Tex(B.DivMod(y,x,r))&"."&
-                       Fmt.Pad(BF.Tex(B.DivMod(B.Mul(billard,r),x,r)),9,'0')&"\\\\\n");
+        Wr.PutText(out,BF.Tex(qr.quot)&"."&
+                       Fmt.Pad(BF.Tex(B.DivMod(B.Mul(billard,qr.rem),x).rem),9,'0')&"\\\\\n");
       END;
       VAR z := B.Add(x,y); BEGIN x:=y; y:=z; END;
     END;
@@ -148,7 +150,7 @@ BEGIN
 END TestTexVector;
 (*-------------------------*)
 PROCEDURE TestTex():BOOLEAN=
-CONST ftn = Module & "TestTex";
+<*UNUSED*> CONST ftn = Module & "TestTex";
 VAR result:=TRUE;
 BEGIN
   NewLine(); EVAL TestTexVector();

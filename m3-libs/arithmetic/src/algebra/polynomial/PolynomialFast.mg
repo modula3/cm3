@@ -105,28 +105,24 @@ BEGIN
 END Mul;
 
 (*---------------------*)
-PROCEDURE Div(
-               x,y:T):T RAISES {Error}=
+PROCEDURE Div(x,y:T):T RAISES {Error}=
 VAR
-  r,q:T;
+  qr:=DivMod(x,y);
 BEGIN
-  q:=DivMod(x,y,r);
-  IF NOT Equal(r,Zero) THEN
+  IF NOT Equal(qr.rem,Zero) THEN
     RAISE Error(Err.indivisible);
   END;
-  RETURN q;
+  RETURN qr.quot;
 END Div;
 
 (*---------------------*)
-PROCEDURE DivMod(
-               x,y:T;
-           VAR r:T):T=
+PROCEDURE DivMod(x,y:T):QuotRem=
 <*UNUSED*>
 CONST ftn = Module & "DivMod";
 VAR
   xn:=NUMBER(x^);                xl:=LAST(x^);
   yn:=NUMBER(y^); y0:=FIRST(y^); yl:=LAST(y^);
-  q:T;
+  q,r:T;
   qtmp,ymax:R.T;
   qn,q0,ql,qi,ri2:CARDINAL;
 BEGIN
@@ -137,7 +133,7 @@ BEGIN
   IF xl<yl THEN
     (*can't do any DivModides at all*)
     q:=NEW(T,1); q[0]:=R.Zero;
-    RETURN q;
+    RETURN QuotRem{q,r};
   END;
 
   (*---setup quotient---*)
@@ -160,7 +156,7 @@ BEGIN
       r[ri2]:=r[ri2]-qtmp*y[yi];
     END;
   END;
-  RETURN q;
+  RETURN QuotRem{q,r};
 END DivMod;
 
 (*---------------------*)

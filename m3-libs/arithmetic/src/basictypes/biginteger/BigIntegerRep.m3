@@ -416,9 +416,9 @@ END AddShifted;
 
 (*x and y cannot be READONLY parameters, otherwise conflicts arise,
   when someone passes the same variable to x and r*)
-PROCEDURE DivModU (x, y : T; VAR r : T) : T RAISES {Error} =
+PROCEDURE DivModU (x, y : T) : QuotRem RAISES {Error} =
 VAR
-  q : T;
+  q, r : T;
   qmswstartpos : BitPos;
   qmsbpos, rmsbpos, ymsbpos : BitPos;
   qmsw,    rmsw,    ymsw    : W.T;
@@ -434,8 +434,7 @@ IO.Put(Fmt.FN("DivModU (size %s) 16_%s by (size %s) 16_%s\n",
 
   (*this check is necessary, we would access non-existing data otherwise*)
   IF x.size = 0 THEN
-    r := x;
-    RETURN r;  (*the quotient is zero, too*)
+    RETURN QuotRem{x,x};  (*the quotient and remainder are zero, too*)
   END;
 
   r.data := NEW(Value,x.size+2);
@@ -491,7 +490,7 @@ IO.Put(Fmt.FN("rmsw %s, ymsw %s, qmsw %s, ymsw*qmsw %s\n",
   END;
 
   CorrectSize (q, LAST(q.data^));
-  RETURN q;
+  RETURN QuotRem{q,r};
 END DivModU;
 
 (*==========================*)

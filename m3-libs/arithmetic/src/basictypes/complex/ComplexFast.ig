@@ -24,6 +24,7 @@ CONST
 
 TYPE
   T = CB.T;
+  QuotRem = RECORD quot, rem: T END;
 
 CONST
   Zero     = T{re:=FLOAT( 0.0,R.T), im:=FLOAT(0.0,R.T)};
@@ -44,7 +45,7 @@ CONST
 <*INLINE*> PROCEDURE Div(READONLY x,y:T):T RAISES {Error};  (*return x/y*)
 <*INLINE*> PROCEDURE Rec(READONLY x:T):T RAISES {Error};    (*return 1/x*)
 <*INLINE*> PROCEDURE Mod(READONLY x,y:T):T RAISES {Error};  (*return x mod y, which is always 0 for rational numbers*)
-<*INLINE*> PROCEDURE DivMod(READONLY x,y:T;VAR (*OUT*) r:T):T RAISES {Error};  (*return x/y and write the remainder in r, which is in turn 0*)
+<*INLINE*> PROCEDURE DivMod(READONLY x,y:T): QuotRem RAISES {Error};  (*return x/y and write the remainder in r, which is in turn 0*)
 
 <*INLINE*> PROCEDURE Square(READONLY x:T):T;         (*return x*x*)
 <*INLINE*> PROCEDURE Scale (READONLY x:T; y:R.T):T;  (*return x*y*)

@@ -14,6 +14,7 @@ CONST
 
 TYPE
   T = R.T;
+  QuotRem = RECORD quot, rem: T END;
   Array = REF ARRAY OF T;
 
 CONST
@@ -44,7 +45,7 @@ CONST
 <*INLINE*> PROCEDURE Div(x,y:T):T RAISES {Error};  (*return x/y*)
 <*INLINE*> PROCEDURE Rec(x:T):T RAISES {Error};    (*return 1/x*)
 <*INLINE*> PROCEDURE Mod(x,y:T):T RAISES {Error};  (*return 0 normally, because there is no restriction for division for rational numbers*)
-<*INLINE*> PROCEDURE DivMod(x,y:T;VAR (*OUT*) r:T):T RAISES {Error};  (*return x/y and write the remainder 0 in r*)
+<*INLINE*> PROCEDURE DivMod(x,y:T): QuotRem RAISES {Error};  (*return x/y and the remainder 0*)
 <*INLINE*> PROCEDURE IntMod(x,y:T):T RAISES {Error};  (*return x mod y*)
 CONST Scale = Mul;
 <*OBSOLETE*> PROCEDURE ScaleInt(x:T;y:INTEGER):T;  (*return x*y*)

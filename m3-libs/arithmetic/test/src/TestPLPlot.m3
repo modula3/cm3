@@ -9,6 +9,8 @@ Abstract:  Tests for PLPlot module.
 IMPORT PLPlot        AS PL,
        LongRealTrans AS RT;
 
+IMPORT NADefinitions AS NA;
+
 (*=======================*)
 CONST
   Module = "TestPLPlot.";
@@ -50,6 +52,7 @@ CONST
 
 VAR
   result:=TRUE;
+<*FATAL NA.Error*>
 BEGIN
   Debug(1,ftn,"begin\n");
 
@@ -100,7 +103,7 @@ BEGIN
 END TestCurve;
 (*-------------------------*)
 PROCEDURE TestPLPlot():BOOLEAN=
-CONST ftn = Module & "TestPLPlot";
+<*UNUSED*> CONST ftn = Module & "TestPLPlot";
 VAR result:=TRUE;
 BEGIN
   PL.Init();

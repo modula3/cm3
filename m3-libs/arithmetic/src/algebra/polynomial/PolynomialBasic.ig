@@ -22,6 +22,7 @@ TYPE
     and behaves like a vector of arbitrary size*)
   TBody = V.TBody;
   T     = V.T;
+  QuotRem = RECORD quot, rem: T END;
 
 (* It's not possible to obtain a pointer to a constant array.
    We can not turn T from a reference type to an array type,
@@ -54,8 +55,8 @@ CONST Scale = V.Scale;
 PROCEDURE Mul(x,y:T):T;  (*return x*y*)
 PROCEDURE Div(x,y:T):T RAISES {Error};  (*return x/y if possible, will fail for floating point numbers often*)
 PROCEDURE Mod(x,y:T):T RAISES {Error};  (*return x mod y*)
-PROCEDURE DivMod(x,y:T;                 (*compute x/y *)
-              VAR r:T):T RAISES {Error};   (*giving quotient with remainder r*)
+PROCEDURE DivMod(x,y:T):QuotRem RAISES {Error};  
+             (*compute quotient x/y and remainder*)
 
 PROCEDURE Eval(x:T;           (*eval this polynomial*)
                xi:R.T          (*at this point*)
