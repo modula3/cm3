@@ -9,44 +9,53 @@
     <META HTTP-EQUIV="Keywords" CONTENT="m3, modula-3, modula3, M3, Modula-3, modula-3, cm3, CM3, FreeCM3">
     <META HTTP-EQUIV="Reply-to" CONTENT="webmaster@m3.org"> 
     <LINK HREF="../style/normal.css" REL="stylesheet" TYPE="text/css">
-    <title>Known Problems with CM3 5.1</title>
+    <title>Known Problems with CM3 5.1 and 5.2</title>
   </head>
 
   <body bgcolor="#ffffff">
-    <h2>Known Problems with CM3 5.1</h2>
+    <h2>Known Problems with CM3 5.1 and 5.2</h2>
 
     <p>
       Contents:<br><br>
 
       <a href="#p_1">1 General Problems</a><br>
-      &nbsp;&nbsp;    
+      &nbsp;&nbsp;
       <a href="#p_1_1">1.1 Linkage failure: cannot find -lXaw</a><br>
-      &nbsp;&nbsp;    
+      &nbsp;&nbsp;
       <a href="#p_1_2">1.2 Filenames with spaces</a><br>
-      &nbsp;&nbsp;    
+      &nbsp;&nbsp;
       <a href="#p_1_3">1.3 Linker trouble with latest Microsoft VC++
         compilers on WIN32 platform</a><br>
-      &nbsp;&nbsp;    
+      &nbsp;&nbsp;
       <a href="#p_1_4">1.4 Assembler problem on LINUXLIBC6 (filds 
         instrcution)</a><br>
       <br>
       <a href="#p_2">2 Release 5.1.0</a><br>
-      &nbsp;&nbsp;    
+      &nbsp;&nbsp;
       <a href="#p_2_1">2.1 Installation on NT386 fails because of
         missing cygwin.dll</a><br>
       <br>
       <a href="#p_3">3 Release 5.1.1</a><br>
       <br>
       <a href="#p_4">4 Release 5.1.2-5.1.8</a><br>
-      &nbsp;&nbsp;    
+      &nbsp;&nbsp;
       <a href="#p_4_1">4.1 Linkage failure: missing -L before library
       paths (installer bug)</a><br>
-      &nbsp;&nbsp;    
+      &nbsp;&nbsp;
       <a href="#p_4_2">4.2 [Release 5.1.8] Linkage failure on POSIX
         platforms due to wrong paths (/pub/lang/m3/cm3-dist) in binary
         installation archives
-      </a><br>
-      &nbsp;&nbsp;    
+      </a><br><br>
+      <a href="#p_5">5 Release 5.2.X</a><br>
+      &nbsp;&nbsp;
+      <a href="#p_5_1">5.1 Problems building the core distribution
+        with Apple's gcc</a><br>
+      &nbsp;&nbsp;
+      <a href="#p_5_2">5.2 Compilation of m3gc-enhanced fails on
+        PPC_DARWIN</a><br>
+      &nbsp;&nbsp;
+      <a href="#p_5_3">5.3 Problems with efficient exception handling
+        (`stack walkers') and gcc 3.2.1</a><br>
     </p>
 
     <a name="p_1">
@@ -432,6 +441,269 @@ SYSTEM_LIBS = {
       after installation.
     </p>
 
+    <a name="p_5">
+    <h3>
+      5 Release 5.2.X
+    </h3> 
+    </a>
+
+    <a name="p_5_1">
+    <h4>
+      5.1 Problems building the core distribution
+      with Apple's gcc
+    </h4>
+    </a>
+
+    <p>
+      <b>Platforms:</b> PPC_DARWIN
+    </p>
+
+    <p>
+      <b>Description:</b>
+      The first problem is that Apple's gcc will produce the two
+      non-relocatable symbols saveSP and restFP when compiling
+      setjmp/longjmp calls; this will make the building of a dynamic
+      library for m3core fail. The work-around is to use an assembler
+      source RTThredC.s instead of RTThreadC.c that does not refer to
+      these routines and explicitly saves and restores the floating
+      point registers.
+    </p>
+
+    <p>
+      For the explanation of the second problem I just append the
+      mail I've to interested parties:
+    </p>
+
+    <p>
+      --- start of quote ---<br>
+      After your failure reports for compilation of the
+      cm3/m3-sys/m3cc package (the gcc 3.2.1 based code generator) I
+      made some tests myself and found that I had obviously again used
+      my own gcc to build this package.
+    </p>
+
+    <p>
+      I've made two or three attempts to get the package compile with
+      Apple's native gcc (3.1 prerelease), but failed too. If nobody
+      else finds a smart configuration hack I'm afraid that one will
+      need a bootstrapped gcc 3.2.1 C compiler to compile the cm3cg
+      code generator. This is annoying as it adds another big
+      dependency for cm3 on Darwin; but it is not as big a problem as
+      it might seem for two reasons:
+    </p>
+
+    <ol>
+      <li>
+        It was relatively easy for me to bootstrap gcc 3.2.1 on Darwin
+        6.3 using the standard procedure; I only had to manually
+        change the order of some definitions in one `fixed' include
+        file. So everybody who really wants to compile the cm3 code
+        generator for her/himself should be able to do so.
+      </li>
+      <li>
+        You don't need to recompile the code generator at all if you
+        use the binary installation package; if you want to rebuild
+        all the core packages, just specify
+        <pre>
+            OMIT_GCC=yes ./do-cm3-core.sh buildship</pre>
+        and it will leave the m3cc package out.
+      </li>
+    </ol>
+
+    <p>
+      I've added a warning that is issued when building m3cc on
+      PPC_DARWIN; the patched m3cc package is tagged
+      devel_m3cc_d3_1_5.
+    </p>
+
+    <p>
+      If anybody finds a way to avoid this bootstrap dependency and use
+      Apple's native compiler to build m3cc, I'd be very interested.<br>
+      --- end of quote ---<br>
+    </p>
+
+    <p>
+      As noted above, the 5.2.0 sources do not contain these changes; to get
+      them, please use either anonymous CVS, CVSup, or the selective package
+      download with appropriate arguments. You'll find all these on the
+      M3 download page at http://www.elegosoft.com/ .
+    </p>
+
+    <p>
+      <b>Solution:</b>
+      The correct fix seems to be to add <tt>-lcc_dynamic</tt> when
+      linking dynamic libraries. Thank you to Ben Hines for this
+      hint. I've changed the configuration files for PPC_DARWIN in
+      packages cm3 and cminstall and created new versions
+      devel_cm3_d2_0_4 and devel_cminstall_d0_7_2. These fixes are
+      included in <b>CM3 5.2.4</b>.
+    </p>
+
+    <a name="p_5_2">
+    <h4>
+      5.2 Compilation of m3gc-enhanced fails on
+        PPC_DARWIN
+    </h4>
+    </a>
+
+    <p>
+      <b>Platforms:</b> PPC_DARWIN
+    </p>
+
+    <p>
+      <b>Description:</b>
+      The compilation of package m3gc-enhanced fails on PPC_DARWIN
+      with the following errors:
+    </p>
+    <pre>
+      <font size="-1">
+      new source -> compiling RTHeapDepC.c
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:88:21: sys/msg.h: No such file or directory
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:141: error: parse error before "__unused"
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:141: warning: initialization makes integer from pointer without a cast
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:141: warning: data definition has no type or storage class
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c: In function `adjtime':
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:176: error: argument `delta' doesn't match prototype
+      /usr/include/sys/time.h:180: error: prototype declaration
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c: In function `getdomainname':
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:447: error: `SYS_getdomainname' undeclared (first use in this function)
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:447: error: (Each undeclared identifier is reported only once
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:447: error: for each function it appears in.)
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c: In function `gethostname':
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:473: error: `SYS_gethostname' undeclared (first use in this function)
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c: In function `mount':
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:737: error: argument `type' doesn't match prototype
+      /usr/include/sys/mount.h:384: error: prototype declaration
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:745: error: `MOUNT_UFS' undeclared (first use in this function)
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:747: error: dereferencing pointer to incomplete type
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:747: error: dereferencing pointer to incomplete type
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:748: error: `MOUNT_MFS' undeclared (first use in this function)
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:753: error: dereferencing pointer to incomplete type
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:753: error: dereferencing pointer to incomplete type
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:755: error: `MOUNT_NFS' undeclared (first use in this function)
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:757: error: dereferencing pointer to incomplete type
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:757: error: dereferencing pointer to incomplete type
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:758: error: dereferencing pointer to incomplete type
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:758: error: dereferencing pointer to incomplete type
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:759: error: dereferencing pointer to incomplete type
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:759: error: dereferencing pointer to incomplete type
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c: In function `quotactl':
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:846: error: argument `path' doesn't match prototype
+      /usr/include/sys/quota.h:218: error: prototype declaration
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c: In function `setdomainname':
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:1035: error: `SYS_setdomainname' undeclared (first use in this function)
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c: In function `sethostname':
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:1071: error: `SYS_sethostname' undeclared (first use in this function)
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c: In function `setitimer':
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:1085: error: argument `value' doesn't match prototype
+      /usr/include/sys/time.h:184: error: prototype declaration
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c: In function `settimeofday':
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:1159: error: argument `tp' doesn't match prototype
+      /usr/include/sys/time.h:185: error: prototype declaration
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:1159: error: argument `tzp' doesn't match prototype
+      /usr/include/sys/time.h:185: error: prototype declaration
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c: In function `uname':
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:1264: error: `SYS_uname' undeclared (first use in this function)
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c: In function `utimes':
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:1302: error: argument `file' doesn't match prototype
+      /usr/include/sys/time.h:186: error: prototype declaration
+      ../src/runtime/PPC_DARWIN/RTHeapDepC.c:1302: error: argument `tvp' doesn't match prototype
+      /usr/include/sys/time.h:186: error: prototype declaration
+      compilation failed => not building library "libm3gcdefs.a"
+      Fatal Error: package build failed</font></pre>
+
+    <p>
+      <b>Solution:</b>
+      Do not compile m3gc-enhanced on PPC_DARWIN. It won't work as the
+      virtual memory system and several system interfaces are too
+      different from FreeBSD, from which the code was initially
+      copied. m3gc-enhanced and some m3core modules would need a
+      certain amount of work to become useful and allow generational
+      and incremental garbage collection on PPC_DARWIN.
+    </p>
+    <p>
+      There is a switch -- <tt>M3GC_SIMPLE=yes</tt> -- which forces
+      compilation of m3gc-simple only and omitting m3gc-enhanced. You
+      use it like this:
+    </p>
+    <pre>
+      M3GC_SIMPLES=yes ./scripts/do-cm3-core.sh buildlocal</pre>
+    <p>
+      Unfortunately, due to an oversight this switch has not been
+      activated by default for PPC_DARWIN in release 5.2.4, but
+      shortly after. So if you get a version of the scripts dated
+      after the 5.2.4 release, you won't need to specify
+      <tt>M3GC_SIMPLES=yes</tt> in your environment.
+    </p>
+
+    <a name="p_5_3">
+    <h4>
+      5.3 Problems with efficient exception handling (`stack walkers')
+          and gcc 3.2.1
+    </h4>
+    </a>
+
+    <p>
+      <b>Platforms:</b> all (principally), SOLgnu
+    </p>
+
+    <p>
+      <b>Description:</b>
+      Due to massive changes in gcc, since the upgrade of the code
+      generator backend cm3cg to gcc 3.2.1, the implementation of stack
+      walkers used for efficient exception handling on some platforms
+      (in CM3 currently only SOLgnu, more are concerned in PM3) is
+      broken. Here is an excerpt from an email by John Polstra
+      concerned with this problem:
+    </p>
+    <blockquote>
+      I have been looking at this today, and the news is not so good.
+      I believe that the current M3 stack walking implementation
+      _cannot_ work with modern GCCs.  The M3 implementation builds
+      its own PC range tables.  It emits a label marking the start of
+      a code region; then emits the code for the region; and then
+      emits a label marking the end of the region.  And it relies on
+      exactly that code remaining between the two labels.  But GCC now
+      performs extensive flow analysis and code motion.  It will
+      happily move code into or out of the region if it thinks that's
+      a good idea.  There is not even a guarantee that the start label
+      will appear before the end label in the generated code.
+    </blockquote>
+    <blockquote>
+      The SET_LABEL operation in M3's intermediate language has a
+      boolean "barrier" parameter which can be set to TRUE if code
+      motion past the label must not take place, and the front end
+      uses that to try to anchor these kinds of labels in place.  But
+      that no longer works with modern GCC.  In fact, in my
+      experiments the back end deleted the labels entirely.
+    </blockquote>
+    <blockquote>
+      As far as I can tell, the only way to accomplish the above is to
+      use GCC's built-in exception support.  There is a nice complete
+      API for it -- see "gcc/except.h".  I think we would need to
+      change the front end and the intermediate language to pass the
+      higher-level language constructs (TRY...EXCEPT, TRY...FINALLY,
+      etc.) all the way through to the back end.  Then GCC would
+      generate the range tables and the code to use them itself.  It
+      actually doesn't look very hard to do this, and I'm sure the
+      resulting code would be better than it is now.  But I'm not
+      volunteering at the moment. :-)
+    </blockquote>
+
+    <p>
+      <b>Solution:</b>
+      None at the moment. If you want to use the gcc 3.2.1-based
+      backend for SOLgnu and other platforms with stack walkers, turn
+      off this feature in
+      <tt>cm3/m3-sys/m3middle/src/Target.m3</tt>. This will produce
+      less efficient code for exception handling, but perhaps improve
+      code performance in other aspects (untested).
+    </p>
+    <p>
+      <b>Hint:</b> We are still looking for volunteers to adapt the m3
+      frontend to the new gcc exception interface :-)
+    </p>
+
     <!--
     <h4></h4>
 
@@ -452,7 +724,7 @@ SYSTEM_LIBS = {
     <address><a href="mailto:m3-support@elego.de">m3-support@elego.de</a></address>
 <!-- Created: Fri Mar  2 10:51:41 MET 2001 -->
 <!-- hhmts start -->
-Last modified: Tue Feb 12 12:38:43 CET 2002
+Last modified: Sat Apr  5 14:53:08 CEST 2003
 <!-- hhmts end -->
   </body>
 </html>
