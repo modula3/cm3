@@ -31,6 +31,7 @@ cd "${ROOT}" || exit 1
 /bin/ls -1d COPYRIGHT-CMASS COPYRIGHT-DEC scripts m3-* > .tar-include
 /bin/ls -1d compat.quake >> .tar-include
 /bin/ls -1d m3-*/*/${TARGET} > .tar-exclude
+/bin/ls -1d m3-*/*/${TARGET}p >> .tar-exclude
 echo "building exclude list..."
 find . \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
           -name '*.rej'  -or -name 'cvs-nq-up' -or -name '*-diffs' -or \
