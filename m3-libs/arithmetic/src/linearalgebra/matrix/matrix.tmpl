@@ -81,11 +81,12 @@ readonly proc Lapack (nm, impl) is
   local rtrans  = nm & "Trans"
   local cfield  = nm & "Complex" & impl
   local vfield  = nm & "Vector" & impl
+  local vecsup  = nm & "VectorSupport"
   local cvfield = nm & "ComplexVectorBasic"
   local mfield  = nm & "Matrix" & impl
   local mlap    = nm & "MatrixLapack"
   local mlapraw = mlap & "Raw"
   module (mlapraw)
-  build_generic_intf (mlap, "FloatMatrixLapack", [rfield, cvfield, mfield], VISIBLE)
-  build_generic_impl (mlap, "FloatMatrixLapack", [rfield, cfield, vfield, cvfield, mfield, mlapraw])
+  build_generic_intf (mlap, "FloatMatrixLapack", [rfield,         vfield,         cvfield, mfield], VISIBLE)
+  build_generic_impl (mlap, "FloatMatrixLapack", [rfield, cfield, vfield, vecsup, cvfield, mfield, mlapraw])
 end

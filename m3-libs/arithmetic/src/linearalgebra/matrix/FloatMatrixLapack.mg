@@ -1,4 +1,4 @@
-GENERIC MODULE FloatMatrixLapack(R, C, V, CV, M, LA);
+GENERIC MODULE FloatMatrixLapack(R, C, V, VS, CV, M, LA);
 (*Copyright (c) 1996, m3na project
 
    Abstract: <describe> *)
@@ -55,6 +55,55 @@ PROCEDURE EigenValuesGen (A: M.T; flags := EVGenFlagSet{}): EV
     RETURN result;
   END EigenValuesGen;
 
+PROCEDURE LeastSquaresGen (         A    : M.T;
+                           READONLY B    : ARRAY OF V.T;
+                                    flags: LSGenFlagSet  ): REF ARRAY OF LS
+  RAISES {Error} =
+  VAR
+    ls    := NEW(REF ARRAY OF LS, NUMBER(B));
+    minmn := MIN(NUMBER(A^), NUMBER(A[0]));
+    maxmn := MAX(NUMBER(A^), NUMBER(A[0]));
+    X     := M.New(NUMBER(B), maxmn);
+    Atmp := M.Copy(A);           (*The information returned in Atmp is too
+                                    much implementation specific and is
+                                    ignored for now until one finds a
+                                    sophisticated way of utilizing it*)
+    xsize  : CARDINAL;
+    success: INTEGER;
+    trans  : CHAR;
+    work := NEW(REF ARRAY OF R.T, MAX(1, minmn + MAX(minmn, NUMBER(B))));
+  BEGIN
+    IF LSGenFlag.transposed IN flags THEN
+      xsize := NUMBER(A[0]);
+      trans := 'N';              (*we have to think inverse because FORTRAN
+                                    always considers the matrices to be
+                                    transposed*)
+    ELSE
+      xsize := NUMBER(A^);
+      trans := 'T';
+    END;
+
+    FOR j := 0 TO LAST(X^) DO
+      IF NUMBER(X[j]) # xsize THEN RAISE Error(Err.bad_size); END;
+      SUBARRAY(X[j], 0, xsize) := B[j]^;
+    END;
+
+    LA.GELS(trans, NUMBER(Atmp[0]), NUMBER(Atmp^), NUMBER(X^), Atmp[0, 0],
+            NUMBER(Atmp[0]), X[0, 0], NUMBER(X[0]), work[0], NUMBER(work^),
+            success);
+
+    IF success < 0 THEN
+      RAISE Error(Err.not_converging); (*nonsense :-)*)
+    END;
+
+    FOR j := 0 TO LAST(X^) DO
+      ls[j].x := V.FromArray(SUBARRAY(X[j], 0, xsize));
+      ls[j].res := VS.Inner(SUBARRAY(X[j], xsize, maxmn - xsize),
+                            SUBARRAY(X[j], xsize, maxmn - xsize));
+    END;
+
+    RETURN ls;
+  END LeastSquaresGen;
 
 PROCEDURE GetMachineParameter (param: MachParam): R.T =
   CONST
