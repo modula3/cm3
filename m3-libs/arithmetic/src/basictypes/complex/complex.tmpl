@@ -23,8 +23,8 @@ readonly proc ComplexTrans (nm, field, rfast, cfast) is
   local rtrans = field & "Trans"
   local cfield = field & "Complex" & cfast
   local ctrans = field & "ComplexTrans"
-  build_generic_intf (basic, "ComplexTrans", [cfield, rfield], VISIBLE)
-  build_generic_impl (basic, "ComplexTrans", [cfield, rfield, rtrans])
+  build_generic_intf (basic, "ComplexTrans", [rfield, cfield], VISIBLE)
+  build_generic_impl (basic, "ComplexTrans", [rfield, rtrans, cfield])
 end
 
 readonly proc ComplexFmtLex (nm, field, rfast, cfast) is
@@ -32,6 +32,6 @@ readonly proc ComplexFmtLex (nm, field, rfast, cfast) is
   local rfield = field & rfast
   local rfmt   = field & "FmtLex"
   local cfield = field & "Complex" & cfast
-  build_generic_intf (basic, "ComplexFmtLex", [cfield, rfmt], VISIBLE)
+  build_generic_intf (basic, "ComplexFmtLex", [        rfmt, cfield], VISIBLE)
   build_generic_impl (basic, "ComplexFmtLex", [rfield, rfmt])
 end

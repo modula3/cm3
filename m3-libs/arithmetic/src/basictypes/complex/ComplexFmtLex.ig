@@ -1,4 +1,4 @@
-GENERIC INTERFACE ComplexFmtLex(C,RF);
+GENERIC INTERFACE ComplexFmtLex(RF,C);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Formatting and parsing complex numbers
