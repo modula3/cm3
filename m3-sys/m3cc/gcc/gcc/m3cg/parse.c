@@ -82,14 +82,29 @@ static varray_type m3_global_varrays[M3VA_MAX];
 #define EXPR_POP()	STACK_POP (expr_stack)
 #define EXPR_REF(n)	STACK_REF (expr_stack, n)
 
-/* The call stack has pairs of trees on it: first the argument chain, then
-   the type chain. */
-#define CALL_PUSH(a, t)	\
-    do { STACK_PUSH (call_stack, a); STACK_PUSH (call_stack, t); } while (0)
-#define CALL_POP() \
-    do { STACK_POP (call_stack); STACK_POP (call_stack); } while (0)
-#define CALL_TOP_ARG()	STACK_REF (call_stack, -2)
-#define CALL_TOP_TYPE()	STACK_REF (call_stack, -1)
+/* The call stack has triples on it: first the argument chain, then
+   the type chain, then the static chain expression. */
+#define CALL_PUSH(a, t, s)		\
+    do					\
+      {					\
+	STACK_PUSH (call_stack, a);	\
+	STACK_PUSH (call_stack, t);	\
+	STACK_PUSH (call_stack, s);	\
+      }					\
+    while (0)
+
+#define CALL_POP()			\
+    do					\
+      {					\
+	STACK_POP (call_stack);		\
+	STACK_POP (call_stack);		\
+	STACK_POP (call_stack);		\
+      }					\
+    while (0)
+
+#define CALL_TOP_ARG()		STACK_REF (call_stack, -3)
+#define CALL_TOP_TYPE()		STACK_REF (call_stack, -2)
+#define CALL_TOP_STATIC_CHAIN()	STACK_REF (call_stack, -1)
 
 
 /* Function declarations. */
@@ -120,6 +135,7 @@ static void m3_start_call PARAMS ((void));
 static void m3_store PARAMS ((tree, int, tree, tree));
 static void m3_swap PARAMS ((void));
 static void one_field PARAMS ((int, tree, tree *, tree *));
+static tree proc_addr PARAMS ((tree, int));
 static void reload_buffer PARAMS ((void));
 static long get_byte PARAMS ((void));
 static long get_int PARAMS ((void));
@@ -882,9 +898,26 @@ static tree declare_temp (t, in_mem, v) /* GCC32OK */
 }
 
 
+ /* Return a tree representing the address of the given procedure.  If
+    NO_TRAMP is true, the static address is used rather than the trampoline
+    address for a nested procedure.  */
+ 
+static tree
+proc_addr (proc, no_tramp)
+     tree proc;
+     int no_tramp;
+{
+  tree expr = m3_build1 (ADDR_EXPR,
+                         build_pointer_type (TREE_TYPE (proc)),
+                         proc);
+  if (no_tramp)
+    TREE_STATIC (expr) = 1;
+  return expr;
+}
+
 static void m3_start_call () /* GCC32OK */
 {
-  CALL_PUSH (NULL_TREE, NULL_TREE);
+  CALL_PUSH (NULL_TREE, NULL_TREE, NULL_TREE);
 }
 
 static void m3_pop_param (t) /* GCC32OK */
@@ -910,8 +943,9 @@ static void m3_call_direct (p, return_type) /* GCC32OK */
   }
 
   call = build (CALL_EXPR, return_type,
-		m3_build1 (ADDR_EXPR, build_pointer_type (TREE_TYPE (p)), p),
-		CALL_TOP_ARG ());
+		proc_addr (p, 1),
+		CALL_TOP_ARG (),
+		CALL_TOP_STATIC_CHAIN ());
   TREE_SIDE_EFFECTS (call) = 1;
   if (return_type == t_void) {
     expand_expr_stmt (call);
@@ -933,7 +967,8 @@ static void m3_call_indirect (t) /* GCC32OK */
 
   call = build (CALL_EXPR, t,
                 m3_cast (fntype, fnaddr),
-                CALL_TOP_ARG ());
+		CALL_TOP_ARG (),
+		CALL_TOP_STATIC_CHAIN ());
   if (t == t_void) {
     TREE_SIDE_EFFECTS (call) = 1;
     expand_expr_stmt (call);
@@ -2421,15 +2456,9 @@ m3cg_do_init_proc () /* GCC32OK */
   BYTEOFFSET (o);
   PROC       (p);
 
-  tree f, v, expr;
-  tree proc_type = TREE_TYPE (p);
-  tree ptr_type = build_pointer_type (proc_type);
-  one_field (o, ptr_type, &f, &v);
-  expr = m3_build1 (ADDR_EXPR, ptr_type, p);
-  /* Prevent the use of trampolines for nested functions, since
-     we are outside the parent function at this point and the
-     trampolines don't exist any more. */
-  TREE_STATIC (expr) = 1;
+  tree f, v;
+  tree expr = proc_addr (p, 1);
+  one_field (o, TREE_TYPE (expr), &f, &v);
   TREE_VALUE (v) = expr;
 }
 
@@ -3943,9 +3972,9 @@ m3cg_do_pop_struct () /* GCC32OK */
 static void
 m3cg_do_pop_static_link () /* GCC32OK */
 {
-  /* This is ignored now that we use gcc's built-in nested function
-     support. */
-  EXPR_POP ();
+  tree v = declare_temp (t_addr, 0, NULL_TREE);
+  m3_store (v, 0, TREE_TYPE (v), t_addr);
+  CALL_TOP_STATIC_CHAIN () = v;
 }
 
 static void
@@ -3953,11 +3982,9 @@ m3cg_do_load_procedure () /* GCC32OK */
 {
   PROC (p);
 
-  tree proc_type = TREE_TYPE (p);
-  tree ptr_type = build_pointer_type (proc_type);
   if (debug_procs)
     fprintf(stderr, "  load procedure %s\n", IDENTIFIER_POINTER(DECL_NAME(p)));
-  EXPR_PUSH (m3_build1 (ADDR_EXPR, ptr_type, p));
+  EXPR_PUSH (proc_addr (p, 1));
 }
 
 static void
@@ -3969,7 +3996,7 @@ m3cg_do_load_static_link () /* GCC32OK */
   if (debug_procs)
     fprintf(stderr, "  load link %s\n",
             IDENTIFIER_POINTER(DECL_NAME(p)));
-  EXPR_PUSH (null_pointer_node);
+  EXPR_PUSH (m3_rtl (lookup_static_chain (p)));
 }
 
 static void
