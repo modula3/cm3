@@ -7,7 +7,7 @@ Abstract:  Tests for Rand module.
 *)
 IMPORT xReal64 AS R,
        xInteger AS I;
-IMPORT xRand,xRNG01,xRNG02,xStat,Fmt;
+IMPORT xRand,xRNG01,xRNG02,Statistic,Fmt;
 FROM xReal64 IMPORT REAL64;
 
 (*=======================*)
@@ -30,9 +30,9 @@ END TestABC;
 PROCEDURE printstats(name:TEXT;
                      data:R.Array)=
   VAR
-    r:xStat.StatRec;
+    r:Statistic.T;
   BEGIN
-    xStat.describe(data,r);
+    Statistic.Describe(data,r);
     Msg("\n" & name);
     Msg("\n"
      & " min =" & R.fmt(r.min ,prec:=6,style:=Fmt.Style.Fix)
