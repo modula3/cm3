@@ -119,7 +119,7 @@ PROCEDURE Fmt(READONLY x: T; READONLY style := FmtStyle{}): TEXT =
     END;
   END Fmt;
 
-PROCEDURE Tex (x : T; READONLY style := TexStyle{}; within : Precedence) : TEXT =
+PROCEDURE Tex (x : T; READONLY style := TexStyle{}; <*UNUSED*> within : Precedence) : TEXT =
   BEGIN
     IF style.base=10 THEN
       RETURN Fmt (x, FmtStyle{base:=style.base});
@@ -127,69 +127,6 @@ PROCEDURE Tex (x : T; READONLY style := TexStyle{}; within : Precedence) : TEXT 
       RETURN Fmt (x, FmtStyle{base:=style.base}) & "_{" & F.Int (style.base) & "}";
     END;
   END Tex;
-
-(*
-PROCEDURE WriteLongNumber (READONLY x : LongNumber) =
-VAR
-  j : INTEGER;
-
-BEGIN
-  IF x.size=0 THEN
-    WriteString ("0");
-  ELSE
-    IF x.sign THEN
-      WriteString ("-");
-    ELSE
-      WriteString ("+");
-    END;
-    FOR j:=x.size-1 TO 0 BY -1 DO
-      WriteCardHex (x.data[j], 4);
-    END;
-  END;
-END WriteLongNumber;
-
-PROCEDURE WriteLongNumberDC (READONLY x : LongNumber) =
-VAR
-  j, cnt : INTEGER;
-  y1, y2, out : LongNumber;
-  res : REF ARRAY OF LONGCARD;
-
-BEGIN
-  IF x.size=0 THEN
-    WriteString (" 0000");
-  ELSE
-    InitLong (y1, y2, out);
-    AssignLong (y1, x);
-
-    res'RANGE := x.size;
-    memPool.NewPooled (res);
-
-    cnt := -1;
-    WHILE y1.size#0 DO
-      INC (cnt);
-      DivModULong (y2, out, y1, billion);
-      IF KEY out.size
-        OF 1 THEN res[cnt] := LONGCARD (out.data[0]) END;
-        OF 2 THEN res[cnt] := LONGCARD (out.data[0]) + LONGCARD (out.data[1]) SHL 16 END;
-        ELSE res[cnt] := 0
-      END;
-      AssignLong (y1, y2);
-    END;
-
-    IF x.sign THEN
-      WriteString ("-");
-    ELSE
-      WriteString ("+");
-    END;
-    WriteCard (res[cnt]);
-    FOR j:=cnt-1 TO 0 BY -1 DO
-      WriteCard (res[j], 9);
-    END;
-
-    DeleteLong (y1, y2, out);
-  END;
-END WriteLongNumberDC;
-*)
 
 (*==========================*)
 BEGIN
