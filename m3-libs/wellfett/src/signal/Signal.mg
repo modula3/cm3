@@ -115,7 +115,7 @@ PROCEDURE WrapCyclic (x: T; length: IndexType): T =
 
   BEGIN
     j := x.first MOD length;
-    FOR i := 0 TO LAST(z.data^) DO
+    FOR i := 0 TO LAST(x.data^) DO
       z.data[j] := R.Add(z.data[j], x.data[i]);
       INC(j);
       IF j >= length THEN j := 0; END;
