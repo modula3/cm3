@@ -42,10 +42,13 @@ readonly proc EigenSystem (nm, impl) is
   local basic = nm & "EigenSystem"
   local rfield  = nm & "Basic"
   local rtrans  = nm & "Trans"
+  local cfield  = nm & "Complex" & impl
   local vfield  = nm & "Vector" & impl
+  local cvfield = nm & "ComplexVectorBasic"
   local mfield  = nm & "Matrix" & impl
-  build_generic_intf (basic, "EigenSystem", [        rtrans, vfield, mfield], VISIBLE)
-  build_generic_impl (basic, "EigenSystem", [rfield, rtrans, vfield, mfield])
+  local mlap    = nm & "MatrixLapack"
+  build_generic_intf (basic, "EigenSystem", [        rtrans,         vfield, cvfield, mfield], VISIBLE)
+  build_generic_impl (basic, "EigenSystem", [rfield, rtrans, cfield, vfield, cvfield, mfield, mlap])
 end
 
 readonly proc CharPolynomial (nm, mimpl, rimpl) is
