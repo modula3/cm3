@@ -157,7 +157,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Setjmp                    := "_setjmp";
                  Checks_integer_ops        := TRUE;
                  Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
+                 Aligned_procedures        := FALSE;
                  EOL                       := "\n";
 
     |  Systems.AP3000 =>
