@@ -753,7 +753,13 @@ SYSTEM_LIBS = {
       <b>Hint:</b> We are still looking for volunteers to adapt the m3
       frontend to the new gcc exception interface :-)
     </p>
-
+    <p>
+      <b>Fix:</b>The stack handler tables have been functional for some time
+      now (since 2003/10/10) on targets that support it (SOLgnu/SOLsun,
+      ALPHA_OSF).  As such, stack walkers have been turned on for these
+      targets in their cm3 configuration files.  We still should look into
+      adapting the m3 frontend use the gcc exception framework.
+    </p>
     <a name="p_5_4">
     <h4>
       5.4 Installation program fails with unhandled
