@@ -9,7 +9,7 @@ IMPORT (*Rd, Thread, FloatMode, Lex AS L, TextRd,*)
        Fmt AS F, Text,
        Word;
 IMPORT BigIntegerRep   AS BR;
-IMPORT BigIntegerBasic AS BB;
+IMPORT BigInteger      AS BB;
 FROM FmtLexSupport IMPORT Precedence;
 FROM NADefinitions IMPORT Error, Err;
 

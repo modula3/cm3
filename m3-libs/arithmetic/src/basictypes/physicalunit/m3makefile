@@ -20,7 +20,7 @@ SIUnit("Extended", "Extended", "Basic")
 
 generic_module("PhysicalValue")
 PhysicalValue("Integer32",       "Integer32",       "Basic")
-PhysicalValue("BigInteger",      "BigInteger",      "Basic")
+PhysicalValue("BigInteger",      "BigInteger",      "")
 PhysicalValue("Real",            "Real",            "Basic")
 PhysicalValue("LongReal",        "LongReal",        "Basic")
 PhysicalValue("Extended",        "Extended",        "Basic")

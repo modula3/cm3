@@ -4,12 +4,12 @@ template("fraction")
 
 
 generic_module("FractionBasic")
-FractionBasic("Integer32",            "Integer32",  "Basic",           "Integer32GCD")
-FractionBasic("BigInteger",           "BigInteger", "Basic",           "BigIntegerGCD")
+FractionBasic("Integer32",            "Integer32",  "Basic",      "Integer32GCD")
+FractionBasic("BigInteger",           "BigInteger", "",           "BigIntegerGCD")
 %FractionBasic("BigIntegerPolynomial", "BigIntegerPolynomial", "Basic", "BigIntegerPolynomialGCD")
 %FractionBasic("LongRealPolynomial",   "LongRealPolynomial",   "Basic", "LongRealPolynomialGCD")
 
 generic_module("FractionFmtLex")
 FractionFmtLex("Integer32",            "Integer32",  "Basic")
-FractionFmtLex("BigInteger",           "BigInteger", "Basic")
+FractionFmtLex("BigInteger",           "BigInteger", "")
 %FractionFmtLex("BigIntegerPolynomial", "BigIntegerPolynomial", "Basic")

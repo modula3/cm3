@@ -17,7 +17,7 @@ Vector("RealComplex",        "Basic", "RealComplex",        "Fast")
 Vector("LongRealComplex",    "Basic", "LongRealComplex",    "Fast")
 Vector("ExtendedComplex",    "Basic", "ExtendedComplex",    "Fast")
 Vector("Integer32",          "Basic", "Integer32",          "Basic")
-Vector("BigInteger",         "Basic", "BigInteger",         "Basic")
+Vector("BigInteger",         "Basic", "BigInteger",         "")
 Vector("BigIntegerFraction", "Basic", "BigIntegerFraction", "Basic")
 
 generic_module("VectorTrans")

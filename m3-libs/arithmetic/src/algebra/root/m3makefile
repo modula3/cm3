@@ -11,7 +11,7 @@ Root("RealComplex",        "RealComplex",     "Basic")
 Root("LongRealComplex",    "LongRealComplex", "Basic")
 Root("ExtendedComplex",    "ExtendedComplex", "Basic")
 Root("Integer32",          "Integer32",       "Basic")
-Root("BigInteger",         "BigInteger",      "Basic")
+Root("BigInteger",         "BigInteger",      "")
 
 generic_module("RootApproximation")
 RootApproximation("Real",     "Real",     "Basic", "Fast")
