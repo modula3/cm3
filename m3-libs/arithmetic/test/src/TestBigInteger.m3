@@ -1,6 +1,6 @@
-MODULE tBigInteger EXPORTS test;
+MODULE TestBigInteger EXPORTS Test;
 (*Copyright (c) 1996, m3na project
-Abstract:  Tests for BigInteger module.
+Abstract:  TestS for BigInteger module.
 
 3/6/96    Harry George   Initial version
 
@@ -17,63 +17,63 @@ IMPORT
   Text;
 (*=======================*)
 CONST
-  Module = "tBigInteger.";
+  Module = "TestBigInteger.";
 (*----------------------*)
-PROCEDURE test_basic():BOOLEAN=
+PROCEDURE TestBasic():BOOLEAN=
 CONST
-  ftn = Module & "test_basic";
+  ftn = Module & "TestBasic";
 VAR
   result:=TRUE;
   carry:=TRUE;
   hi,lo:W.T;
 BEGIN
-  debug(1,ftn,"begin\n");
-  msg("W.Size " & F.Int(W.Size) & "\n");
-  msg("W.GT(2,3) " & F.Bool(W.GT(2,3)) & "\n");
-  msg("PlusWithCarry " & F.Int(Wx.PlusWithCarry(2,3,carry)) & "\n");
-  msg("MinusWithBorrow " & F.Int(Wx.MinusWithBorrow(2,3,carry)) & "\n");
-  msg("MinusWithBorrow " & F.Int(Wx.MinusWithBorrow(5,3,carry)) & "\n");
-  msg("MinusWithBorrow " & F.Int(Wx.MinusWithBorrow(5,3,carry)) & "\n");
+  Debug(1,ftn,"begin\n");
+  Msg("W.Size " & F.Int(W.Size) & "\n");
+  Msg("W.GT(2,3) " & F.Bool(W.GT(2,3)) & "\n");
+  Msg("PlusWithCarry " & F.Int(Wx.PlusWithCarry(2,3,carry)) & "\n");
+  Msg("MinusWithBorrow " & F.Int(Wx.MinusWithBorrow(2,3,carry)) & "\n");
+  Msg("MinusWithBorrow " & F.Int(Wx.MinusWithBorrow(5,3,carry)) & "\n");
+  Msg("MinusWithBorrow " & F.Int(Wx.MinusWithBorrow(5,3,carry)) & "\n");
   Wx.DoubleLengthMultiply(7,16_249,lo,hi);
-  msg("DoubleLengthMultiply " & F.Int(hi,16) & " " & F.Int(lo,16) & "\n");
-  msg("Plus " & F.Int(W.Plus(3,2)) & "\n");
+  Msg("DoubleLengthMultiply " & F.Int(hi,16) & " " & F.Int(lo,16) & "\n");
+  Msg("Plus " & F.Int(W.Plus(3,2)) & "\n");
   RETURN result;
-END test_basic;
+END TestBasic;
 (*----------------------*)
-PROCEDURE test_power():BOOLEAN=
+PROCEDURE TestPower():BOOLEAN=
 CONST
-  ftn = Module & "test_power";
+  ftn = Module & "TestPower";
   cycles  = 52;
 VAR
   x, y, z : B.T;
   fff     : TEXT;
   result  := TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   x := B.FromInteger(8);
   y := B.One;
   z := B.Zero;
 
   FOR j:=0 TO cycles-1 DO
-    (*msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(j), FL.Fmt(z,16), FL.Fmt(z,2)}));*)
+    (*Msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(j), FL.Fmt(z,16), FL.Fmt(z,2)}));*)
     z := Br.AddU(z,y);
     y := Br.MulU(y,x);
   END;
-  (*msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(cycles), FL.Fmt(z,16), FL.Fmt(z,2)}));*)
+  (*Msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(cycles), FL.Fmt(z,16), FL.Fmt(z,2)}));*)
   z := Br.MulU(z,B.FromInteger(7));
   fff := FL.Fmt(z,16);
-  msg("multiply with 7: 16_" & fff & ": 2_" & FL.Fmt(z,2) & "\n");
+  Msg("multiply with 7: 16_" & fff & ": 2_" & FL.Fmt(z,2) & "\n");
   <*ASSERT Text.Length(fff) = (cycles DIV 4)*3 *>
   FOR j:=0 TO Text.Length(fff)-1 DO
     <*ASSERT Text.GetChar(fff,j)='f'*>
   END;
 
   RETURN result;
-END test_power;
+END TestPower;
 (*----------------------*)
-PROCEDURE test_addshift():BOOLEAN=
+PROCEDURE TestAddshift():BOOLEAN=
 CONST
-  ftn = Module & "test_addshift";
+  ftn = Module & "TestAddshift";
   cycles  = 4*13;
 VAR
   x, y    : B.T;
@@ -81,18 +81,18 @@ VAR
   result  := TRUE;
   sh      := Br.BitPos{0,0};
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   x.data := NEW(Br.Value,cycles*3 DIV W.Size +2);
   x.size := NUMBER(x.data^);
   Br.Clear(x.data);
 
   FOR j:=0 TO cycles DO
 (*
-    msg(F.FN("%2s: bit %02s,%02s; 16_%s\n",
+    Msg(F.FN("%2s: bit %02s,%02s; 16_%s\n",
              ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,16)}));
 *)
 (*
-    msg(F.FN("%2s: bit %s,%s; 16_%s, 2_%s\n",
+    Msg(F.FN("%2s: bit %s,%s; 16_%s, 2_%s\n",
              ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,16), FL.Fmt(x,2)}));
 *)
     Br.AddShifted(x,j,sh);
@@ -102,7 +102,7 @@ BEGIN
   sh := Br.BitPos{0,0};
   FOR j:=0 TO cycles DO
 (*
-    msg(F.FN("%2s: bit %02s,%02s; 16_%s\n",
+    Msg(F.FN("%2s: bit %02s,%02s; 16_%s\n",
              ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,16)}));
 *)
     Br.AddShifted(x,cycles-j,sh);
@@ -113,7 +113,7 @@ BEGIN
   sh := Br.BitPos{0,0};
   quotient := cycles * 2_1001001001;
   FOR j:=0 TO cycles DO
-    msg(F.FN("%2s: bit %02s,%02s; 16_%s\n",
+    Msg(F.FN("%2s: bit %02s,%02s; 16_%s\n",
              ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,16)}));
     Br.SubShiftedProd(x,cycles-j,sh);
     sh := Br.AddBitPos(sh,Br.BitPos{0,3});
@@ -133,10 +133,10 @@ BEGIN
   y := B.FromInteger(16_1001001);
   y := Br.MulU(y,y);
 *)
-  msg(F.FN("x = 16_%s   y = 16_%s\n",
+  Msg(F.FN("x = 16_%s   y = 16_%s\n",
            ARRAY OF TEXT{FL.Fmt(x,16), FL.Fmt(y,16)}));
   q := Br.DivModU(x,y,r);
-  msg(F.FN("q = 16_%s   r = 16_%s\n",
+  Msg(F.FN("q = 16_%s   r = 16_%s\n",
            ARRAY OF TEXT{FL.Fmt(q,16), FL.Fmt(r,16)}));
   q.sign := FALSE;
   r.sign := FALSE;
@@ -145,23 +145,23 @@ BEGIN
   <*ASSERT NOT B.IsZero(B.Mod(B.FromInteger(16_4f7d3f), B.FromInteger(16_37))) *>
 
   RETURN result;
-END test_addshift;
+END TestAddshift;
 (*----------------------*)
-PROCEDURE test_fibonacci():BOOLEAN=
+PROCEDURE TestFibonacci():BOOLEAN=
 CONST
-  ftn = Module & "test_fibonacci";
+  ftn = Module & "TestFibonacci";
 VAR
   x, y, z : B.T;
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   x := B.Zero;
   y := B.One;
   (*x := B.FromInteger(16_7FFFFFFF);*)
 
   FOR j:=0 TO 100 DO
-    (*msg("size: " & F.Int(x.size) & "\n");*)
-    msg(F.Pad(F.Int(j),2) & ": 16_" & FL.Fmt(x,16) & ": 2_" & FL.Fmt(x,2) & "\n");
+    (*Msg("size: " & F.Int(x.size) & "\n");*)
+    Msg(F.Pad(F.Int(j),2) & ": 16_" & FL.Fmt(x,16) & ": 2_" & FL.Fmt(x,2) & "\n");
     z := Br.AddU(x,y);
     x := y;
     y := z;
@@ -169,33 +169,33 @@ BEGIN
 
   (*!!! compare with explicit formula !!!*)
   RETURN result;
-END test_fibonacci;
+END TestFibonacci;
 (*-------------------------*)
-PROCEDURE test_pseudoprime():BOOLEAN=
+PROCEDURE TestPseudoprime():BOOLEAN=
 (*
-This prime test works for many numbers but not for all.
+This prime Test works for many numbers but not for all.
 *)
 CONST
-  ftn = Module & "test_pseudoprime";
+  ftn = Module & "TestPseudoprime";
 VAR
   x : ARRAY [0..3] OF B.T;
   mod : B.T;
   result:=TRUE;
   prime0, prime1 : BOOLEAN;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   x[0] := B.FromInteger(3);
   x[1] := B.Zero;
   x[2] := B.FromInteger(2);
 
   FOR j:=3 TO 10000 DO
     x[3] := B.Add (x[0], x[1]);
-    (*msg(F.FN("%s / %s\n", ARRAY OF TEXT {FL.Fmt(x[3],16), F.Int(j,16)}));*)
+    (*Msg(F.FN("%s / %s\n", ARRAY OF TEXT {FL.Fmt(x[3],16), F.Int(j,16)}));*)
     mod := B.Mod(x[3],B.FromInteger(j));
     prime0 := B.IsZero(mod);
     prime1 := I.isprime(j);
     (*
-    msg(F.FN("%2s: %s, mod %s prime %s vs. %s\n",
+    Msg(F.FN("%2s: %s, mod %s prime %s vs. %s\n",
       ARRAY OF TEXT {F.Int(j), FL.Fmt(x[3],10), FL.Fmt(mod,10), F.Bool(prime0), F.Bool(prime1)}));
     *)
     <*ASSERT prime0=prime1*>
@@ -204,20 +204,20 @@ BEGIN
     x[2] := x[3];
   END;
   RETURN result;
-END test_pseudoprime;
+END TestPseudoprime;
 (*-------------------------*)
-PROCEDURE test_BigInteger():BOOLEAN=
-CONST ftn = Module & "test_BigInteger";
+PROCEDURE TestBigInteger():BOOLEAN=
+CONST ftn = Module & "TestBigInteger";
 VAR result:=TRUE;
 BEGIN
-  newline(); EVAL test_basic();
-  newline(); EVAL test_power();
-  newline(); EVAL test_addshift();
-  (*newline(); EVAL test_fibonacci();*)
-  newline(); EVAL test_pseudoprime();
+  NewLine(); EVAL TestBasic();
+  NewLine(); EVAL TestPower();
+  NewLine(); EVAL TestAddshift();
+  (*NewLine(); EVAL TestFibonacci();*)
+  NewLine(); EVAL TestPseudoprime();
 
   RETURN result;
-END test_BigInteger;
+END TestBigInteger;
 (*=======================*)
 BEGIN
-END tBigInteger.
+END TestBigInteger.

@@ -1,6 +1,6 @@
-MODULE tWordEx EXPORTS test;
+MODULE TestWordEx EXPORTS Test;
 (*Copyright (c) 1996, m3na project
-Abstract:  Tests for WordEx module.
+Abstract:  TestS for WordEx module.
 
 3/23/96 Harry George   Initial version
 
@@ -9,38 +9,38 @@ IMPORT xWordEx;
 
 (*=======================*)
 CONST
-  Module = "tWordEx.";
+  Module = "TestWordEx.";
 (*----------------------*)
-PROCEDURE test_ABC():BOOLEAN=
+PROCEDURE TestABC():BOOLEAN=
 CONST
-  ftn = Module & "test_ABC";
+  ftn = Module & "TestABC";
 VAR
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
 
   RETURN result;   
-END test_ABC;
+END TestABC;
 (*----------------------*)
-PROCEDURE test_wordex():BOOLEAN=
+PROCEDURE TestWordex():BOOLEAN=
 CONST
-  ftn = Module & "test_wordex";
+  ftn = Module & "TestWordex";
 VAR
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   xWordEx.Test();
-  msg("ok\n");
+  Msg("ok\n");
   RETURN result;   
-END test_wordex;
+END TestWordex;
 (*-------------------------*)
-PROCEDURE test_WordEx():BOOLEAN=
-CONST ftn = Module & "test_WordEx";
+PROCEDURE TestWordEx():BOOLEAN=
+CONST ftn = Module & "TestWordEx";
 VAR result:=TRUE;
 BEGIN
-  newline(); EVAL test_wordex();
+  NewLine(); EVAL TestWordex();
   RETURN result;
-END test_WordEx;
+END TestWordEx;
 (*=======================*)
 BEGIN
-END tWordEx.
+END TestWordEx.

@@ -1,6 +1,6 @@
-MODULE tRand EXPORTS test;
+MODULE TestRand EXPORTS Test;
 (*Copyright (c) 1996, m3na project
-Abstract:  Tests for Rand module.
+Abstract:  TestS for Rand module.
 
 3/16/96    Harry George   Initial version (basic structure)
 3/17/96    Warren Smith   Normal, Gamma, and Dirichlet
@@ -12,19 +12,19 @@ FROM xReal64 IMPORT REAL64;
 
 (*=======================*)
 CONST
-  Module = "tRand.";
+  Module = "TestRand.";
 
 (*----------------------*)
-PROCEDURE test_ABC():BOOLEAN=
+PROCEDURE TestABC():BOOLEAN=
 CONST
-  ftn = Module & "test_ABC";
+  ftn = Module & "TestABC";
 VAR
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
 
   RETURN result;   
-END test_ABC;
+END TestABC;
 
 (*--------------------------*)
 PROCEDURE printstats(name:TEXT;
@@ -33,8 +33,8 @@ PROCEDURE printstats(name:TEXT;
     r:xStat.StatRec;
   BEGIN
     xStat.describe(data,r);
-    msg("\n" & name);
-    msg("\n"
+    Msg("\n" & name);
+    Msg("\n"
      & " min =" & R.fmt(r.min ,prec:=6,style:=Fmt.Style.Fix)
      & " max =" & R.fmt(r.max ,prec:=6,style:=Fmt.Style.Fix)
      & " mean=" & R.fmt(r.avg ,prec:=6,style:=Fmt.Style.Fix)
@@ -46,9 +46,9 @@ PROCEDURE printstats(name:TEXT;
      & "\n");
 END printstats;
 (*----------------------*)
-PROCEDURE test_engines():BOOLEAN=
+PROCEDURE TestEngines():BOOLEAN=
 CONST
-  ftn = Module & "test_engines";
+  ftn = Module & "TestEngines";
   N = 10000; n1=0; nn=N-1;
 VAR
   result:=TRUE;
@@ -69,9 +69,9 @@ VAR
   END do_engine;
   (*----------------------*)
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
 
-  msg("N=" & I.fmt(N) & "\n");
+  Msg("N=" & I.fmt(N) & "\n");
   
   do_engine("DECSRC",decsrc);  
   do_engine("ran0  ",ran0);  
@@ -80,11 +80,11 @@ BEGIN
   do_engine("fast  ",fast);  
 
   RETURN result;   
-END test_engines;
+END TestEngines;
 (*----------------------*)
-PROCEDURE test_Uniform():BOOLEAN=
+PROCEDURE TestUniform():BOOLEAN=
 CONST
-  ftn = Module & "test_Uniform";
+  ftn = Module & "TestUniform";
   N = 10000; n1 = 0; nn = N-1;
 VAR
   result:=TRUE;
@@ -93,7 +93,7 @@ VAR
   data2:=NEW(R.Array,N);
   data3:=NEW(R.Array,N);
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
 
   FOR i:=n1 TO nn DO
     data1[i]:=rand.uniform();
@@ -105,48 +105,48 @@ BEGIN
   printstats("200..1000",data3);
   
   RETURN result;   
-END test_Uniform;
+END TestUniform;
 (*----------------------*)
-PROCEDURE test_Exponential():BOOLEAN=
+PROCEDURE TestExponential():BOOLEAN=
 CONST
-  ftn = Module & "test_Exponential";
+  ftn = Module & "TestExponential";
   N = 10000; n1=0; nn=N-1;
 VAR
   result:=TRUE;
   rand:=NEW(xRNG02.fast).init();
   data1:=NEW(R.Array,N);
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   FOR i:=n1 TO nn DO
     data1[i]:=rand.exponential();
   END;
   printstats("exponential, mean=1",data1);
 
   RETURN result;   
-END test_Exponential;
+END TestExponential;
 
 (*----------------------*)
-PROCEDURE test_Normal():BOOLEAN=
+PROCEDURE TestNormal():BOOLEAN=
 CONST
-  ftn = Module & "test_Normal";
+  ftn = Module & "TestNormal";
   N = 10000; n1=0; nn=N-1;
 VAR
   result:=TRUE;
   rand:=NEW(xRNG02.fast).init();
   data1:=NEW(R.Array,N);
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
 
   FOR i:=n1 TO nn DO
     data1[i]:=rand.gaussian();
   END;
   printstats("Normal (Gaussian): mean=0, var=1",data1);
   RETURN result;   
-END test_Normal;
+END TestNormal;
 (*----------------------*)
-PROCEDURE test_Gamma():BOOLEAN=
+PROCEDURE TestGamma():BOOLEAN=
 CONST
-  ftn = Module & "test_Gamma";
+  ftn = Module & "TestGamma";
   N = 10000; n1=0; nn=N-1;
 VAR
   result:=TRUE;
@@ -155,7 +155,7 @@ VAR
   data2:=NEW(R.Array,N);
   data3:=NEW(R.Array,N);
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
 
   FOR i:=n1 TO nn DO
     data1[i]:=rand.gamma(1.0d0);
@@ -166,11 +166,11 @@ BEGIN
   printstats("gamma(2.5)",data2);
   printstats("gamma(5.1)",data3);
   RETURN result;   
-END test_Gamma;
+END TestGamma;
 (*----------------------*)
-PROCEDURE test_Dirichlet():BOOLEAN=
+PROCEDURE TestDirichlet():BOOLEAN=
 CONST
-  ftn = Module & "test_Dirichlet";
+  ftn = Module & "TestDirichlet";
   N = 10000; n1=0; nn=N-1;
 VAR
   result:=TRUE;
@@ -179,26 +179,26 @@ VAR
   data2:=NEW(R.Array,N);
   data3:=NEW(R.Array,N);
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
 
   FOR i:=n1 TO nn DO
   END;
   RETURN result;   
-END test_Dirichlet;
+END TestDirichlet;
 
 (*-------------------------*)
-PROCEDURE test_Rand():BOOLEAN=
-CONST ftn = Module & "test_Rand";
+PROCEDURE TestRand():BOOLEAN=
+CONST ftn = Module & "TestRand";
 VAR result:=TRUE;
 BEGIN
-  newline(); EVAL test_engines();
-  newline(); EVAL test_Uniform();
-  newline(); EVAL test_Exponential();
-  newline(); EVAL test_Normal();
-  newline(); EVAL test_Gamma();
-  newline(); EVAL test_Dirichlet();
+  NewLine(); EVAL TestEngines();
+  NewLine(); EVAL TestUniform();
+  NewLine(); EVAL TestExponential();
+  NewLine(); EVAL TestNormal();
+  NewLine(); EVAL TestGamma();
+  NewLine(); EVAL TestDirichlet();
   RETURN result;
-END test_Rand;
+END TestRand;
 (*=======================*)
 BEGIN
-END tRand.
+END TestRand.

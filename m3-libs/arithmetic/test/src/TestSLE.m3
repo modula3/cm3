@@ -1,4 +1,4 @@
-MODULE tSLE EXPORTS test;
+MODULE TestSLE EXPORTS Test;
 (*Copyright (c) 1995,1996 Harry George
 Abstract: Test driver for xSLE (simultaneous
           linear equations)
@@ -16,7 +16,7 @@ IMPORT xInteger AS I,
 FROM xReal64 IMPORT REAL64;
 IMPORT xSLE;
 
-<*UNUSED*> CONST Module = "tSLE.";
+<*UNUSED*> CONST Module = "TestSLE.";
 
 (*=====================================*)
 TYPE
@@ -73,14 +73,14 @@ BEGIN
   build_B(size);
 END build_data;
 (*--------------------*)
-PROCEDURE test_backsub():BOOLEAN=
+PROCEDURE TestBacksub():BOOLEAN=
 CONST
-  ftn = Module & "test_backsub";
+  ftn = Module & "TestBacksub";
 VAR
   size:=4;
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   build_AX(size);
   (*---zero out lower triangle---*)
   FOR row:=n1 TO nn DO
@@ -90,32 +90,32 @@ BEGIN
   END;
   build_B(size);
 
-  msg("A=" & M.fmt(A)); 
-  msg("B=" & V.fmt(B));
+  Msg("A=" & M.fmt(A)); 
+  Msg("B=" & V.fmt(B));
   xSLE.backsub(A,x:=foundX,b:=B);
-  msg("knownX=" & V.fmt(knownX)); 
-  msg("foundX=" & V.fmt(foundX)); 
+  Msg("knownX=" & V.fmt(knownX)); 
+  Msg("foundX=" & V.fmt(foundX)); 
   RETURN result;  
-END test_backsub;  
+END TestBacksub;  
 (*--------------------*)
-PROCEDURE test_householder():BOOLEAN=
+PROCEDURE TestHouseholder():BOOLEAN=
 CONST
-  ftn = Module & "test_householder";
+  ftn = Module & "TestHouseholder";
 VAR
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   build_data(4);
 
-  msg("A=" & M.fmt(A)); 
+  Msg("A=" & M.fmt(A)); 
   xSLE.householder(A);
-  msg("householder(A)=" & M.fmt(A)); 
+  Msg("householder(A)=" & M.fmt(A)); 
   RETURN result;  
-END test_householder;  
+END TestHouseholder;  
 (*--------------------*)
-PROCEDURE test_tridiag():BOOLEAN=
+PROCEDURE TestTridiag():BOOLEAN=
 CONST
-  ftn = Module & "test_tridiag";
+  ftn = Module & "TestTridiag";
   n = 3; n1=0; nn=n-1;
 VAR
   A:=NEW(M.Matrix,n,n);
@@ -128,7 +128,7 @@ VAR
   r:R.Array;
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   A^:=M3x3{V3{1.0d0, 1.0d0, 0.0d0},
            V3{0.5d0, 2.0d0, 1.0d0},
            V3{0.0d0, 0.5d0, 3.0d0}};
@@ -137,67 +137,67 @@ BEGIN
     b[i]:=A[i,i];
     IF i<nn THEN c[i]:=A[i,i+1]; END;    
   END;
-  msg("A=" & M.fmt(A));
+  Msg("A=" & M.fmt(A));
   knownX^:=V3{1.0d0,2.0d0,3.0d0};
-  msg("knownX=" & V.fmt(knownX));
+  Msg("knownX=" & V.fmt(knownX));
   r:=M.mulV(A,knownX);
-  msg("r=     " & V.fmt(r));
+  Msg("r=     " & V.fmt(r));
   
   xSLE.tridiag(a,b,c,r,foundX);
-  msg("foundX=" & V.fmt(foundX));
+  Msg("foundX=" & V.fmt(foundX));
   RETURN result;  
-END test_tridiag;  
+END TestTridiag;  
 (*---------------------*)
 (* LU factor           *)
 (*---------------------*)
 (*------------------------*)
-PROCEDURE test_LU():BOOLEAN RAISES {} =
-CONST ftn = Module & "test_LU";
+PROCEDURE TestLU():BOOLEAN RAISES {} =
+CONST ftn = Module & "TestLU";
 VAR
   Acopy:=NEW(M.Matrix,n,n);
   det:REAL64;
   d:INTEGER;
   index:=NEW(I.Array,n);
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   
   build_data();
   TRY
     xSLE.LUfactor(A,index,d);
-    msg("after LUfactor: d=" & I.fmt(d)
+    Msg("after LUfactor: d=" & I.fmt(d)
       & ", A=" & M.fmt(A));
     (*---make a copy so we can reuse the decomp---*)   
     Acopy^:=A^;
     det:=xSLE.LUdet(Acopy,d);
-    msg("det=" & R.fmt(det) & "\n");
+    Msg("det=" & R.fmt(det) & "\n");
 
     Acopy^:=A^;
     xSLE.LUinverse(A,D,index);
-    msg("A inverse =" & M.fmt(D));
+    Msg("A inverse =" & M.fmt(D));
         
     Acopy^:=A^;
     foundX^:=B^;
     xSLE.LUbacksub(Acopy,foundX,index);
 
   EXCEPT
-  | Error(code) => msg("LU fails\n");
+  | Error(code) => Msg("LU fails\n");
                    RETURN FALSE;
   END;
 
   (*---report results---*)
-  msg("knownX= " & V.fmt(knownX));
-  msg("foundX= " & V.fmt(foundX));
+  Msg("knownX= " & V.fmt(knownX));
+  Msg("foundX= " & V.fmt(foundX));
   RETURN TRUE;
-END test_LU;
+END TestLU;
 (*------------------------*)
-PROCEDURE test_SLE():BOOLEAN=
+PROCEDURE TestSLE():BOOLEAN=
 BEGIN
-  newline(); EVAL test_backsub();
-  newline(); EVAL test_householder();
-  newline(); EVAL test_tridiag();
-  newline(); EVAL test_LU();
+  NewLine(); EVAL TestBacksub();
+  NewLine(); EVAL TestHouseholder();
+  NewLine(); EVAL TestTridiag();
+  NewLine(); EVAL TestLU();
   RETURN TRUE;
-END test_SLE;
+END TestSLE;
 (*=======================*)
 BEGIN
-END tSLE.
+END TestSLE.
