@@ -4,6 +4,16 @@
 %pragma(modula3) unsafe="true";
 %pragma(modula3) library="m3fftw";
 
+/*
+  RTType.GetNDimensions and RTHeap.GetArrayShape
+  for retrieving data from open arrays
+  with unknown number of dimensions.
+  RTHooks.AllocateOpenArray
+  is probably not of great help.
+  RTTypeMap.WalkRef walks through all
+  fields of a RECORD(?), ARRAY(?).
+*/
+
 %ignore fftw_iodim_do_not_use_me;
 %ignore fftw_r2r_kind_do_not_use_me;
 
@@ -26,11 +36,11 @@ REVEAL
 
 %typemap(m3rawintype)  fftw_plan       %{Plan%};
 %typemap(m3rawinmode)  fftw_plan       %{%};
+%typemap(m3rawrettype) fftw_plan       %{Plan%};
 %typemap(m3rawintype)  fftw_complex *  %{ARRAY OF Complex%};
 %typemap(m3rawintype)  fftw_iodim *    %{IODim%};
 %typemap(m3rawintype)  fftw_r2r_kind * %{R2RKind%};
-%typemap(m3rawrettype) fftw_plan       %{Plan%};
- 
+
 
 %typemap(m3rawintype)  void  * %{ADDRESS%};
 // fftw_export_wisdom
@@ -49,14 +59,22 @@ TYPE
   Complex = RECORD r, i: LONGREAL; END;
 %}
 
+%insert(m3wrapimpl) %{
+FROM FFTWLongRealRaw IMPORT R2RKind, IODim;
+
+REVEAL
+  Plan = BRANDED REF FFTWLongRealRaw.Plan;
+%}
+
 %typemap(m3wrapintype)  fftw_plan       %{Plan%};
 %typemap(m3wrapinmode)  fftw_plan       %{%};
+%typemap(m3wraprettype) fftw_plan       %{Plan%};
+%typemap(m3wrapargraw)  fftw_plan       %{$input^%};
 %typemap(m3wrapintype)  fftw_complex *  %{ARRAY OF Complex%};
 %typemap(m3wrapintype)  double *        %{LONGREAL%};
 %typemap(m3wrapintype)  fftw_iodim *    %{IODim%};
 %typemap(m3wrapintype)  fftw_r2r_kind * %{ARRAY OF R2RKind%};
 %typemap(m3wrapintype)  fftw_r2r_kind   %{R2RKind%};
-%typemap(m3wraprettype) fftw_plan       %{Plan%};
 
 %typemap(m3wrapintype)  void  * %{REFANY%};
 %typemap(m3wraprettype) void  * %{REFANY%};
@@ -148,6 +166,58 @@ TYPE
 %rename("Malloc") fftw_malloc;
 %rename("Free") fftw_free;
 %rename("Flops") fftw_flops;
+
+/* ignore all functions that I have not considered so far */
+%ignore fftw_plan_dft;
+%ignore fftw_plan_many_dft;
+%ignore fftw_plan_guru_dft;
+%ignore fftw_plan_guru_split_dft;
+%ignore fftw_execute_dft;
+%ignore fftw_execute_split_dft;
+%ignore fftw_plan_many_dft_r2c;
+%ignore fftw_plan_dft_r2c;
+%ignore fftw_plan_dft_r2c_1d;
+%ignore fftw_plan_dft_r2c_2d;
+%ignore fftw_plan_dft_r2c_3d;
+%ignore fftw_plan_many_dft_c2r;
+%ignore fftw_plan_dft_c2r;
+%ignore fftw_plan_dft_c2r_1d;
+%ignore fftw_plan_dft_c2r_2d;
+%ignore fftw_plan_dft_c2r_3d;
+%ignore fftw_plan_guru_dft_r2c;
+%ignore fftw_plan_guru_dft_c2r;
+%ignore fftw_plan_guru_split_dft_r2c;
+%ignore fftw_plan_guru_split_dft_c2r;
+%ignore fftw_execute_dft_r2c;
+%ignore fftw_execute_dft_c2r;
+%ignore fftw_execute_split_dft_r2c;
+%ignore fftw_execute_split_dft_c2r;
+%ignore fftw_plan_many_r2r;
+%ignore fftw_plan_r2r;
+%ignore fftw_plan_r2r_1d;
+%ignore fftw_plan_r2r_2d;
+%ignore fftw_plan_r2r_3d;
+%ignore fftw_plan_guru_r2r;
+%ignore fftw_execute_r2r;
+%ignore fftw_destroy_plan;
+%ignore fftw_forget_wisdom;
+%ignore fftw_cleanup;
+%ignore fftw_plan_with_nthreads;
+%ignore fftw_init_threads;
+%ignore fftw_cleanup_threads;
+%ignore fftw_export_wisdom_to_file;
+%ignore fftw_export_wisdom_to_string;
+%ignore fftw_export_wisdom;
+%ignore fftw_import_system_wisdom;
+%ignore fftw_import_wisdom_from_file;
+%ignore fftw_import_wisdom_from_string;
+%ignore fftw_import_wisdom;
+%ignore fftw_fprint_plan;
+%ignore fftw_print_plan;
+%ignore fftw_malloc;
+%ignore fftw_free;
+%ignore fftw_flops;
+
 
 /* This is the original fftw3.h file
    without the FFTW_DEFINE_API macro calls. */
