@@ -21,17 +21,6 @@ IMPORT xRoot;
 (*=======================*)
 CONST
   Module = "TestRoot.";
-(*----------------------*)
-PROCEDURE TestABC():BOOLEAN=
-CONST
-  ftn = Module & "TestABC";
-VAR
-  result:=TRUE;
-BEGIN
-  Debug(1,ftn,"begin\n");
-
-  RETURN result;
-END TestABC;
 (*---------------------*)
 VAR (*globally visible*)
   r1:=-10.0D0; r2:=2.0D0; r3:=10.0D0;
@@ -367,6 +356,37 @@ END TestZRoots;
 ******************************)
 (*-----------------------*)
 PROCEDURE TestPowerSeq():BOOLEAN=
+
+  PROCEDURE TestPowerPoly(READONLY x:IR.PowerSumSeq) =
+  VAR
+    p : IR.T;
+    y : REF IR.PowerSumSeq;
+  BEGIN
+    p := IR.FromPowerSumSeq(x);
+    Msg(IPF.Fmt(p) & "\n");
+    y := IR.ToPowerSumSeq(p);
+    FOR j:=0 TO LAST(y^) DO
+      Msg(Fmt.Int(y[j]) & ", ");
+      <*ASSERT x[j]=y[j]*>
+    END;
+    Msg("\n");
+  END TestPowerPoly;
+
+  PROCEDURE TestPolyPower(x:IR.T) =
+  VAR
+    y : IR.T;
+    s : REF IR.PowerSumSeq;
+  BEGIN
+    s := IR.ToPowerSumSeq(x);
+    FOR j:=0 TO LAST(s^) DO
+      Msg(Fmt.Int(s[j]) & ", ");
+    END;
+    Msg("\n");
+    y := IR.FromPowerSumSeq(s^);
+    Msg(IPF.Fmt(y) & "\n");
+    <*ASSERT IR.Equal(x,y)*>
+  END TestPolyPower;
+
 CONST
   ftn = Module & "TestPowerSeq";
 VAR
@@ -374,13 +394,23 @@ VAR
   
 BEGIN
   Debug(1,ftn,"begin\n");
-  Msg(IPF.Fmt(IR.FromPowerSumSeq(ARRAY OF I.T{0,2,0,2,0,2,0,2,0,2,0,2})) & "\n");
-  Msg(IPF.Fmt(IR.FromPowerSumSeq(ARRAY OF I.T{2,2,2,2,2,2})) & "\n");
-  Msg(IPF.Fmt(IR.FromPowerSumSeq(ARRAY OF I.T{3,3,3,3,3,3})) & "\n");
-  Msg(IPF.Fmt(IR.FromPowerSumSeq(ARRAY OF I.T{-2,2,-2,2})) & "\n");
-  Msg(IPF.Fmt(IR.FromPowerSumSeq(ARRAY OF I.T{-1,-1,-1,-1,-1,-1,-1})) & "\n");
-  Msg(IPF.Fmt(IR.FromPowerSumSeq(ARRAY OF I.T{-2,-2,-2,-2,-2,-2,-2})) & "\n");
-  Msg(IPF.Fmt(IR.FromPowerSumSeq(ARRAY OF I.T{4,8,16,32,64})) & "\n");
+  TestPowerPoly(IR.PowerSumSeq{0,2,0,2,0,2,0,2,0,2,0,2});
+  TestPowerPoly(IR.PowerSumSeq{2,2,2,2,2,2});
+  TestPowerPoly(IR.PowerSumSeq{3,3,3,3,3,3});
+  TestPowerPoly(IR.PowerSumSeq{-2,2,-2,2});
+  TestPowerPoly(IR.PowerSumSeq{-1,-1,-1,-1,-1,-1,-1});
+  TestPowerPoly(IR.PowerSumSeq{-2,-2,-2,-2,-2,-2,-2});
+  TestPowerPoly(IR.PowerSumSeq{4,8,16,32,64});
+
+  VAR
+    p : IR.T;
+  BEGIN
+    p  := IR.New(7);
+    p^ := IR.TBody{1,1,1,1,1,1,1,1}; TestPolyPower(p);
+    p^ := IR.TBody{729,243,81,27,9,3,1,1}; TestPolyPower(p);
+    p  := IR.New(2);
+    p^ := IR.TBody{4,4,1}; TestPolyPower(p);
+  END;
 
   RETURN result;
 END TestPowerSeq;

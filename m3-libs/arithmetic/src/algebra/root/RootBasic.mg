@@ -136,6 +136,14 @@ BEGIN
   RETURN (GCD(x,P.Derive(x)));
 END ElimMultRoots;
 
+(*given the sequence x of power sums,
+  return the next one with respect to the polynomial y*)
+(*consider x as a cyclic buffer for successive sums of powers of the roots*)
+PROCEDURE GetNextPowerSum(READONLY x:PowerSumSeq; k:CARDINAL; y:T):R.T=
+BEGIN
+  
+END GetNextPowerSum;
+
 PROCEDURE PowN(READONLY x:T;
                         y:CARDINAL):T=
 BEGIN
@@ -168,8 +176,20 @@ END PowN;
 PROCEDURE ToPowerSumSeq(x:T):REF PowerSumSeq=
 VAR
   y:=NEW(T,NUMBER(x^)-1);
+  sum:R.T;
+  div:R.T;
 BEGIN
   <*ASSERT R.Equal(x[LAST(x^)],R.One)*>
+  x[LAST(x^)]:=R.One;
+  div:=R.One;
+  FOR n:=1 TO LAST(x^) DO
+    sum:=R.Mul(x[LAST(x^)-n],div);
+    FOR j:=1 TO n-1 DO
+      sum:=R.Add(sum,R.Mul(y[j-1],x[LAST(x^)-n+j]));
+    END;
+    y[n-1]:=R.Neg(sum);  (*R.Div(sum,x[LAST(x^)]), but it is only divisible if the leading coefficient is one, what we asserted at the beginning*)
+    div:=R.Add(div,R.One);
+  END;
   RETURN y;
 END ToPowerSumSeq;
 
