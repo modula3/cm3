@@ -1,2 +1,3 @@
-import(libm3")
+%import("libm3")
 Module("Signal")
+Library("wavelib")

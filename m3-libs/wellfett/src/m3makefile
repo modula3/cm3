@@ -1,2 +1,5 @@
+import("libm3")
+
+include_dir("signal")
 
 Library("wavelib")
