@@ -1,4 +1,4 @@
-CM3 Free Distribution -- scripts/README $Id: README,v 1.7 2003-09-19 14:29:45 wagner Exp $
+CM3 Free Distribution -- scripts/README $Id: README,v 1.8 2004-02-03 18:20:17 thielema Exp $
 
 This directory contains various scripts that can be used to compile /
 build / bootstrap part or all of the CM3 source distribution.
@@ -19,9 +19,9 @@ You are probably most interested in one of the following:
 
  o Use do-cm3-min.sh to compile the minimal set of CM3 libraries.
 
- o Use do-m3-base.sh to compile a basic system without GUI.
+ o Use do-cm3-base.sh to compile a basic system without GUI.
 
- o Use do-m3-std.sh to compile a standard system with GUI and full
+ o Use do-cm3-std.sh to compile a standard system with GUI and full
    networking support.
 
  o Use do-pkg.sh to compile or clean one or more arbitrary packages.
