@@ -57,3 +57,9 @@ Point: Add, Sub, Mul, Div
 ---------------
 
 Conventions for names of Array and Reference types?
+
+---------------
+
+How can I access the name of a module that another module imports?
+This is especially useful if you want to find out, with which module
+a generic module was instantiated.
