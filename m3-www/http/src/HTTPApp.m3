@@ -1,6 +1,13 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Thu Mar 20 17:04:39 PST 1997 by steveg *)
+(* Created by steveg *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:50:46 1997
+ *)
 
 MODULE HTTPApp;
 
@@ -104,7 +111,8 @@ PROCEDURE WriteUnlock() =
   END WriteUnlock;
 
 REVEAL
-  RequestHandler = RequestHandlerPublic BRANDED OBJECT
+  RequestHandler = RequestHandlerPublic BRANDED
+  "HTTPApp.RequestHandler" OBJECT
     port: INTEGER;
   OVERRIDES
     accept := DefaultAccept;
@@ -132,7 +140,7 @@ PROCEDURE DefaultRequest(<* UNUSED *> self: RequestHandler;
   END DefaultRequest;
 
 REVEAL
-  ReplyHandler = ReplyHandlerPublic BRANDED OBJECT
+  ReplyHandler = ReplyHandlerPublic BRANDED "HTTPApp.ReplyHandler" OBJECT
   OVERRIDES
     reply := DefaultReply;
   END;
@@ -147,7 +155,7 @@ PROCEDURE DefaultReply(<* UNUSED *> self: ReplyHandler;
   END DefaultReply;
 
 REVEAL
-  Proxy = ProxyPublic BRANDED OBJECT
+  Proxy = ProxyPublic BRANDED "HTTPApp.Proxy" OBJECT
           OVERRIDES
             init := InitProxy;
             add  := AddProxy;
@@ -218,7 +226,7 @@ PROCEDURE AddProxy (self: Proxy; ruleTxt: TEXT; log: App.Log)
   END AddProxy;
 
 REVEAL
-  Server = ServerPublic BRANDED OBJECT
+  Server = ServerPublic BRANDED "HTTPApp.Server" OBJECT
   OVERRIDES
     init := InitServer;
     initParse := InitParseServer;

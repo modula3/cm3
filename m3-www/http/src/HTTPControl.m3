@@ -1,6 +1,13 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Sat Jan 11 22:04:17 PST 1997 by steveg *)
+(* Created by steveg *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:50:35 1997
+ *)
 
 MODULE HTTPControl EXPORTS HTTPControl;
 
@@ -14,7 +21,7 @@ VAR
   mu                   := NEW(MUTEX);
 
 REVEAL
-  Form = FormPublic BRANDED OBJECT
+  Form = FormPublic BRANDED "HTTPControl.Form" OBJECT
            nameF: TEXT;
          OVERRIDES
            init    := FormInitDefault;
@@ -54,7 +61,7 @@ PROCEDURE FormRespondDefault (<* UNUSED *> self   : Form;
   END FormRespondDefault;
 
 REVEAL
-  Iterator = IteratorPublic BRANDED OBJECT
+  Iterator = IteratorPublic BRANDED "HTTPControl.Iterator" OBJECT
              OVERRIDES
                next := IteratorDefaultNext;
              END;
@@ -102,7 +109,7 @@ PROCEDURE ValuesAddValue (self: Values; value: Value; tail: BOOLEAN) =
   END ValuesAddValue;
 
 REVEAL
-  StaticForm = StaticFormPublic BRANDED OBJECT
+  StaticForm = StaticFormPublic BRANDED "HTTPControl.StaticForm" OBJECT
                  values       : Values;
                  urlSF, urlSet: TEXT;
                OVERRIDES
@@ -153,7 +160,7 @@ PROCEDURE StaticFormAccept (             self   : StaticForm;
   END StaticFormAccept;
 
 REVEAL
-  Value = ValuePublic BRANDED OBJECT
+  Value = ValuePublic BRANDED "HTTPControl.Value" OBJECT
           OVERRIDES
             setText       := SetTextNull;
             getText       := GetTextNull;
@@ -193,7 +200,8 @@ PROCEDURE WriteFormItemNull (<* UNUSED *> value: Value;
   END WriteFormItemNull;
 
 REVEAL
-  ContainerValue = ContainerValuePublic BRANDED OBJECT
+  ContainerValue = ContainerValuePublic BRANDED
+  "HTTPControl.ContainerValue" OBJECT
                    OVERRIDES
                      setValues := ContainerValueSetValuesNull;
                    END;
