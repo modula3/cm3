@@ -38,8 +38,10 @@ CONST
 (* Factoring                  *)
 (*============================*)  
 
+(*
 PROCEDURE IsPrime(n:T):BOOLEAN;
 (*is this number a prime number?*)
+*)
 
 TYPE
   Power      = RECORD p : T; m : [0..BITSIZE(T)] END;
