@@ -28,6 +28,10 @@ PROCEDURE Exit ();
 
 
 <*INLINE*>
+PROCEDURE SubPlots (nx, ny: CARDINAL);
+(* Set the number of subwindows in x and y *)
+
+<*INLINE*>
 PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: R.T;
                           just                  : CARDINAL := 0;
                           axis                  : CARDINAL := 0  );

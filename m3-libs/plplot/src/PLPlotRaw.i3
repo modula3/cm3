@@ -18,7 +18,7 @@ TYPE
   PLINT = C.int;
   PLFLT = C.double;
   PLFLT_star = UNTRACED REF PLFLT;
-  bool  = BITS BITSIZE(PLINT) FOR BOOLEAN;
+  bool = BITS BITSIZE(PLINT) FOR BOOLEAN;
 
 CONST
   PL_PARSE_PARTIAL  = 16_0000;   (* For backward compatibility *)
@@ -47,6 +47,10 @@ PROCEDURE plend ();
 (* End a plotting session for all open streams. *)
 
 
+
+<*EXTERNAL c_plssub*>
+PROCEDURE plssub (nx, ny: PLINT);
+(* Set the number of subwindows in x and y *)
 
 <*EXTERNAL c_plenv*>
 PROCEDURE plenv (xmin: PLFLT;

@@ -3,10 +3,10 @@ UNSAFE MODULE PLPlot;
 
    *)
 
-IMPORT M3toC,
-       (*Ctypes AS C,*)
-       LongRealBasic AS R,
-       PLPlotRaw     AS PL;
+IMPORT M3toC;
+(*IMPORT Ctypes AS C,*)
+IMPORT LongRealBasic AS R;
+IMPORT PLPlotRaw AS PL;
 FROM NADefinitions IMPORT Error, Err;
 
 <*UNUSED*>
@@ -23,6 +23,11 @@ PROCEDURE Exit () =
     PL.plend()
   END Exit;
 
+PROCEDURE SubPlots (nx, ny: CARDINAL) =
+  BEGIN
+    PL.plssub(nx, ny);
+  END SubPlots;
+
 PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: R.T;
                           just                  : CARDINAL := 0;
                           axis                  : CARDINAL := 0  ) =
@@ -30,12 +35,11 @@ PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: R.T;
     PL.plenv(xmin, xmax, ymin, ymax, just, axis);
   END SetEnvironment;
 
-PROCEDURE SetXORMode (mode: BOOLEAN): BOOLEAN=
-  VAR
-    success: PL.PLINT;
+PROCEDURE SetXORMode (mode: BOOLEAN): BOOLEAN =
+  VAR success: PL.PLINT;
   BEGIN
-    PL.plxormod(ORD(mode),success);
-    RETURN success#0;
+    PL.plxormod(ORD(mode), success);
+    RETURN success # 0;
   END SetXORMode;
 
 PROCEDURE SetColor0 (icol0: Map0Color) =
