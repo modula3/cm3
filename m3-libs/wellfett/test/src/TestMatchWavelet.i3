@@ -22,7 +22,9 @@ TYPE
 
 PROCEDURE MatchPattern (target                                : S.T;
                         refineMask, generatorMask, waveletMask: S.T;
-                        numLevels, numTranslates              : CARDINAL; ):
+                        numLevels                             : CARDINAL;
+                        firstTranslate                        : INTEGER;
+                        numTranslates                         : CARDINAL; ):
   SimpleApprox;
 
 PROCEDURE TestMatchPatternSmooth (target: S.T;

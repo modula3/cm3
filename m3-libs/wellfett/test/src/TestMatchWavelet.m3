@@ -12,6 +12,7 @@ IMPORT LongRealVectorTrans AS VT;
 
 IMPORT LongRealMatrix AS M;
 IMPORT LongRealMatrixLapack AS LA;
+IMPORT LongRealMatrixIntegerPower AS MIntPower;
 
 IMPORT LongRealFunctional AS Fn;
 IMPORT LongRealFunctionalDeriv2 AS FnD;
@@ -88,27 +89,31 @@ PROCEDURE PlotFrame (READONLY abscissa       : V.TBody;
 
 PROCEDURE MatchPattern (target                                : S.T;
                         refineMask, generatorMask, waveletMask: S.T;
-                        numLevels, numTranslates              : CARDINAL; ):
+                        numLevels                             : CARDINAL;
+                        firstTranslate                        : INTEGER;
+                        numTranslates                         : CARDINAL; ):
   SimpleApprox =
   VAR
     generator := Refn.Refine(generatorMask, refineMask, numLevels);
     wavelet   := Refn.Refine(waveletMask, refineMask, numLevels);
 
+    lastTranslate := firstTranslate + numTranslates - 1;
+
     twonit := IIntPow.MulPower(2, 2, numLevels);
     first := MIN(wavelet.getFirst(),
-                 generator.getFirst() - twonit * numTranslates);
+                 generator.getFirst() + twonit * firstTranslate);
     last := MAX(wavelet.getLast(),
-                generator.getLast() + twonit * (numTranslates - 1));
+                generator.getLast() + twonit * lastTranslate);
     size := last - first + 1;
 
     targetVec := V.New(size);
-    basis     := M.New(2 * numTranslates + 1, size);
+    basis     := M.New(numTranslates + 1, size);
 
   <*FATAL NA.Error*>
   BEGIN
     wavelet.clipToArray(first, basis[LAST(basis^)]);
-    FOR j := -numTranslates TO numTranslates - 1 DO
-      generator.clipToArray(first - twonit * j, basis[j + numTranslates]);
+    FOR j := firstTranslate TO lastTranslate DO
+      generator.clipToArray(first - twonit * j, basis[j - firstTranslate]);
     END;
 
     target.clipToArray(first, targetVec^);
@@ -136,11 +141,11 @@ PROCEDURE MatchPattern (target                                : S.T;
       IO.Put(Fmt.FN("residuum - %s\n", ARRAY OF TEXT{RF.Fmt(coef.res)}));
       *)
 
-      RETURN
-        SimpleApprox{NEW(S.T).fromArray(
-                       SUBARRAY(coef.x^, 0, 2 * numTranslates),
-                       -numTranslates), coef.x[LAST(coef.x^)],
-                     NEW(S.T).fromVector(approx, first), basis, targetVec};
+      RETURN SimpleApprox{
+               NEW(S.T).fromArray(
+                 SUBARRAY(coef.x^, 0, numTranslates), firstTranslate),
+               coef.x[LAST(coef.x^)], NEW(S.T).fromVector(approx, first),
+               basis, targetVec};
     END;
   END MatchPattern;
 
@@ -161,8 +166,8 @@ PROCEDURE TestMatchPattern (target: S.T;
                   hdual, NEW(S.T).fromArray(
                            ARRAY OF R.T{RT.Half, R.Zero, -RT.Half}),
                   vanishing).translate(-smooth - vanishing);
-    approx := MatchPattern(
-                target, hdual, hdualvan, gdual, numLevels, numTranslates);
+    approx := MatchPattern(target, hdual, hdualvan, gdual, numLevels,
+                           -numTranslates, 2 * numTranslates);
 
     unit   := IIntPow.MulPower(1, 2, numLevels);
     twopow := FLOAT(unit, R.T);
@@ -180,6 +185,87 @@ PROCEDURE TestMatchPattern (target: S.T;
     PL.PlotLines(abscissa^, approx.approx.getData()^);
     PL.Exit();
   END TestMatchPattern;
+
+
+TYPE
+  NormEqu = RECORD
+              mat: M.T;
+              vec: V.T;
+            END;
+
+PROCEDURE ComputeNormalEqu (target                                : S.T;
+                            refineMask, generatorMask, waveletMask: S.T;
+                            numLevels     : CARDINAL;
+                            firstTranslate: INTEGER;
+                            numTranslates : CARDINAL; ): NormEqu =
+  VAR
+    maxSize := MAX(refineMask.getNumber(),
+                   MAX(generatorMask.getNumber(), waveletMask.getNumber()));
+
+    refineMaskAutoCor    := refineMask.autocorrelate();
+    generatorMaskAutoCor := generatorMask.autocorrelate();
+    waveletMaskAutoCor   := waveletMask.autocorrelate();
+
+    refineTrans := Refn.RadicBandMatrix(
+                     NEW(S.T).fromVector(refineMaskAutoCor.clipToVector(
+                                           -maxSize, 2 * maxSize + 1)));
+    generatorTrans := Refn.RadicBandMatrix(
+                        NEW(S.T).fromVector(
+                          generatorMaskAutoCor.clipToVector(
+                            -maxSize, 2 * maxSize + 1)));
+    waveletTrans := Refn.RadicBandMatrix(
+                      NEW(S.T).fromVector(waveletMaskAutoCor.clipToVector(
+                                            -maxSize, 2 * maxSize + 1)));
+
+    refinePower      := MIntPower.Power(refineTrans, numLevels);
+    generatorMat     := M.Mul(generatorTrans, refinePower);
+    generatorAutoCor := M.GetColumn(generatorMat, maxSize);
+
+  BEGIN
+    RETURN NormEqu{generatorMat, generatorAutoCor};
+  END ComputeNormalEqu;
+
+PROCEDURE TestNormalEqu () =
+  CONST
+    numLevels      = 7;
+    firstTranslate = -7;
+    numTranslate   = 10;
+
+  VAR
+    target := Refn.Refine(
+                S.One, BSpl.GeneratorMask(4).scale(2.0D0), 7).translate(30);
+
+    refineMask    := NEW(S.T).fromArray(ARRAY OF R.T{0.9D0, 1.1D0, 0.7D0});
+    generatorMask := NEW(S.T).fromArray(ARRAY OF R.T{0.7D0, 0.0D0, 0.8D0});
+    waveletMask := NEW(S.T).fromArray(
+                     ARRAY OF R.T{-0.5D0, 0.2D0, 0.9D0}, -1);
+
+    approx := MatchPattern(target, refineMask, generatorMask, waveletMask,
+                           numLevels, firstTranslate, numTranslate);
+    covar     := M.MulMMA(approx.basis);
+    targetCor := M.MulV(approx.basis, approx.targetPad);
+
+    normEqu := ComputeNormalEqu(
+                 target, refineMask, generatorMask, waveletMask, numLevels,
+                 firstTranslate, numTranslate);
+
+  <*FATAL Thread.Alerted, Wr.Failure*>
+  BEGIN
+    IO.Put(Fmt.FN("normal matrix:\n%s\ncorrelation with target:\n%s\n",
+                  ARRAY OF
+                    TEXT{MF.Fmt(covar, style := MF.FmtStyle{
+                                                  width := 20, elemStyle :=
+                                                  RF.FmtStyle{}}),
+                         VF.Fmt(targetCor)}));
+    IO.Put(
+      Fmt.FN("normal matrix:\n%s\ncorrelation with target:\n%s\n",
+             ARRAY OF
+               TEXT{MF.Fmt(normEqu.mat,
+                           style := MF.FmtStyle{width := 20, elemStyle :=
+                                                RF.FmtStyle{}}),
+                    VF.Fmt(normEqu.vec)}));
+  END TestNormalEqu;
+
 
 (** SSE  - Square Smoothness Estimate,
            that is the estimate that depends on the sum of the squares of the eigenvalues
@@ -1213,7 +1299,7 @@ PROCEDURE CheckVanishingMoments () =
                      ARRAY OF
                        TEXT{Fmt.Int(j), RF.Fmt(polyMom), RF.Fmt(chebyMom)}));
           END;
-	  (*
+          (*
           VAR
             minX     := FLOAT(difSig.getFirst(), R.T);
             maxX     := FLOAT(difSig.getLast(), R.T);
@@ -1227,7 +1313,7 @@ PROCEDURE CheckVanishingMoments () =
             PL.PlotLines(abscissa^, chebyDifSig.getData()^);
             PL.Exit();
           END;
-	  *)
+          *)
 
           polyDifSig := MulRamp(polyDifSig, scale);
           (*apply recursive construction of chebyshev polynomials*)
@@ -1246,6 +1332,7 @@ PROCEDURE CheckVanishingMoments () =
     END;
   END CheckVanishingMoments;
 
+
 PROCEDURE Test () =
   CONST
     numlevel = 6;
@@ -1254,13 +1341,14 @@ PROCEDURE Test () =
     Example = {matchBSpline, matchBSplineVan, matchBSplineWavelet,
                matchRamp, matchRampSmooth, matchSincSmooth, matchGaussian,
                matchLongRamp, matchMassPeak, checkVanishingMoments,
-               testSSE, testInverseDSSE, testDeriveWSSE};
+               testSSE, testInverseDSSE, testDeriveWSSE, testNormalEqu};
   <*FATAL BSpl.DifferentParity*>
   BEGIN
-    CASE Example.checkVanishingMoments OF
+    CASE Example.testNormalEqu OF
     | Example.matchBSpline =>
         TestMatchPattern(
-          Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50),
+          Refn.Refine(
+            S.One, BSpl.GeneratorMask(4).scale(2.0D0), 7).translate(-50),
           numlevel, 4, 0, 5);
     | Example.matchBSplineVan =>
         TestMatchPattern(
@@ -1426,6 +1514,7 @@ PROCEDURE Test () =
           dataY := M.GetColumn(data, 1);
           clipX := V.FromArray(SUBARRAY(dataX^, clipFirst, clipNumber));
           clipY := V.FromArray(SUBARRAY(dataY^, clipFirst, clipNumber));
+        <*FATAL NA.Error*>
         BEGIN
           PL.Init();
           PL.SetEnvironment(dataX[FIRST(dataX^)], dataX[LAST(dataX^)],
@@ -1446,6 +1535,7 @@ PROCEDURE Test () =
         TestInverseDSSE(ARRAY OF R.T{1.0D0, 1.0D0, 0.1D0});
         TestInverseDSSE(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0});
     | Example.testDeriveWSSE => TestDeriveWSSE();
+    | Example.testNormalEqu => TestNormalEqu();
     ELSE
       <*ASSERT FALSE*>
     END;
