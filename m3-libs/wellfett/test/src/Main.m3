@@ -1,7 +1,7 @@
 MODULE Main;
 
-IMPORT TestCDFLifting;
+IMPORT TestTransition;
 
 BEGIN
-  TestCDFLifting.Test();
+  TestTransition.Test();
 END Main.
