@@ -17,12 +17,18 @@ TYPE
   TBody = ARRAY OF R.T;
   T = BRANDED "Polynomial" REF TBody;
 
+(* Isn't possible to obtain a pointer to a constant array?
 CONST
   Zero    =  TBody{R.Zero};
   One     =  TBody{R.One};
+*)
+
+VAR
+  Zero    : T;
+  One     : T;
 
 PROCEDURE New(n:CARDINAL):T;    (*make a poly for a0..an*)
-PROCEDURE Copy(p:T):T;       (*copy p to a New poly*)
+PROCEDURE Copy(p:T):T;        (*copy p to a New poly*)
 (*
 PROCEDURE Zero(p:T);          (*set p to zeros*)
 PROCEDURE One (p:T);          (*set p to 1*)
@@ -33,6 +39,8 @@ PROCEDURE Eval(p:T;           (*eval this polynomial*)
                ):R.T;
 PROCEDURE Add(p1,p2:T):T;  (*return p1+p2*)
 PROCEDURE Sub(p1,p2:T):T;  (*return p1-p2*)
+PROCEDURE Equal(p1,p2:T):BOOLEAN;  (*return p1=p2*)
+
 PROCEDURE Mul(p1,p2:T):T;  (*return p1*p2*)
 PROCEDURE DivMod(p1,p2:T;        (*compute p1/p2 *) 
               VAR r:T):T RAISES {Error};   (*giving quotient with remainder r*)
