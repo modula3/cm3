@@ -62,7 +62,7 @@ BEGIN
     Wr.PutText(wr,"\\left(");
   END;
   FOR i:=FIRST(x^) TO LAST(x^) DO
-    Wr.PutText(wr,RF.Tex(x[i],style.elemStyle));
+    Wr.PutText(wr,RF.Tex(x[i],style.elemStyle,Precedence.sum));
     IF i#LAST(x^) THEN Wr.PutText(wr,sep); END;
   END;
   IF TexFlag.vertical IN style.flags THEN
