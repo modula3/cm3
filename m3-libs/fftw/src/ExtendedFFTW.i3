@@ -44,6 +44,19 @@ TYPE
 
 EXCEPTION SizeMismatch;
 
+(* maximum comfort routines :-) *)
+PROCEDURE DFTR2C1D (READONLY x: ARRAY OF R.T;
+                    flags := FlagSet{Flag.Estimate}; ):
+  REF ARRAY OF Complex;
+
+PROCEDURE DFTC2R1D (READONLY x: ARRAY OF Complex;
+                    parity: [0 .. 1];  (* even or odd output size *)
+                    flags              := FlagSet{Flag.Estimate};   ):
+  REF ARRAY OF R.T;
+
+
+
+(* medium comfort routines *)
 
 PROCEDURE Execute (p: Plan; );
 
