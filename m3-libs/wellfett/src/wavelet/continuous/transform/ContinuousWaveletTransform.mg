@@ -1,4 +1,4 @@
-GENERIC MODULE ContinuousWaveletTransform(R, V, VS, RV, S, C, CV, FFT);
+GENERIC MODULE ContinuousWaveletTransform(R, V, VS, RT, RV, S, C, CV, FFT);
 
 
 (* One can improve performance a lot here: Eliminate the monolithic Fourier
@@ -49,9 +49,10 @@ PROCEDURE AnalysisScale (h: AnalysisHandle; scale: R.T; ): S.T =
   VAR
     wav    := NEW(V.T, h.size);
     center := (h.width - 1) DIV 2;
+    amp    := R.One / RT.SqRt(scale);
   BEGIN
     FOR i := 0 TO h.width - 1 DO
-      wav[i] := h.wavelet(R.FromInteger(i - center) / scale);
+      wav[i] := amp * h.wavelet(R.FromInteger(i - center) / scale);
     END;
     VS.Clear(SUBARRAY(wav^, h.width, NUMBER(wav^) - h.width));
     WITH wavFT = FFT.DFTR2C1D(wav^)^ DO
