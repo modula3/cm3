@@ -19,7 +19,6 @@ CONST Module = "RandomBasic.";
 REVEAL
   T = TPrivate BRANDED OBJECT
   OVERRIDES
-    init:=NIL;
     engine:=NIL;
     uniform:=Uniform;
     exponential:=Exponential;
@@ -35,8 +34,8 @@ REVEAL
 (*-------------------*)
 PROCEDURE Uniform(SELF:T;
                   min:R.T:=R.Zero;  (*from min*)
-                  max:R.T:=R.One   (*up to but not including max*)
-                  ):R.T            (*return uniform deviate*)
+                  max:R.T:=R.One;   (*up to but not including max*)
+                  ):R.T             (*return uniform deviate*)
                   (* RAISES{xUtils.Error}  using this here and in the methods declarations let the compiler believe that procedure and method definitions do not match and thus it leads to the error: "procedure redefined (Uniform)" *)
                   =
 VAR

@@ -26,9 +26,10 @@ TYPE
   T <: TPublic;
   TPublic = OBJECT
   METHODS
+(*
     init(seed  :[FIRST(INTEGER)..-1]:=-1
               ):T RAISES {Error};
-
+*)
     engine():R.T; (*raw engine; returns Min..Max*)
 
     uniform(min:R.T:=Min;  (*from min*)

@@ -1,4 +1,4 @@
-INTERFACE RandomNumber01;
+INTERFACE RandomBayesDurham;
 (*Copyright (c) 1996, m3na project
 
 Abstract: Collection of random number generators
@@ -12,9 +12,10 @@ IMPORT RandomBasic;
 
 (*==========================*)
 TYPE
-  DECSRC <: RandomBasic.T;  (*wrapper for DEC SRC Random.Default*)
-  ran0   <: RandomBasic.T;  (*inspired by NR92 ran0*)
-  ran1   <: RandomBasic.T;  (*inspired by NR92 ran1*)
+  T <: RandomBasic.T;  (*inspired by NR92 ran0*)
+
+PROCEDURE New(seed:[1..LAST(INTEGER)]:=1;
+                 ):T;
 
 (*==========================*)
-END RandomNumber01.
+END RandomBayesDurham.
