@@ -128,7 +128,7 @@ TYPE
 %rename("CopyStateFrom") plcpstrm;
 %rename("ExitAll") plend;
 %rename("Exit") plend1;
-%rename("Environment") plenv;
+%rename("SetEnvironment") plenv;
 %rename("StopPage") pleop;
 %rename("PlotErrorX") plerrx;
 %rename("PlotErrorY") plerry;
@@ -401,11 +401,13 @@ END;%}
 M3toC.FreeSharedS($1_name[i],$1[i]);
 END;%}
 
+%typemap(m3indefault) PLINT oldwin "0"
 
 %typemap(m3inmode)  PLINT *p_argc %{VAR%}
-%typemap(rawinmode) char **argv   %{VAR%}
-%typemap(m3inmode)  char **argv   %{VAR%}
 %typemap(m3intype)  PLINT *p_argc %{CARDINAL%}
+
+%typemap(rawinmode) char **argv   %{READONLY%}
+%typemap(m3inmode)  char **argv   %{READONLY%}
 %typemap(rawintype) char **argv   %{(*ARRAY OF*) C.char_star%}
 %typemap(m3intype)  char **argv   %{ARRAY OF TEXT%}
 
@@ -413,10 +415,14 @@ END;%}
 %typemap(m3argouttype) PLFLTOutput "R.T"
 
 %typemap(m3intype,numinputs=0) PLINTOutput ""
-%typemap(m3indecl) PLINTOutput %{$1_name: C.int;%}
-%typemap(m3rawarg) PLINTOutput %{$1_name%}
-%typemap(m3freearg) PLINTOutput %{result.$input := $1_name;%}  // heavy abuse
+%typemap(m3indecl) PLINTOutput %{$1: C.int;%}
+%typemap(m3rawarg) PLINTOutput %{$1%}
+%typemap(m3argout) PLINTOutput %{$1%}
 %typemap(m3argouttype) PLINTOutput %{INTEGER%}
+
+%typemap(m3rawarg) char %{ORD($1_name)%}
+
+
 
 
 %feature("m3:multiretval") plcalc_world;

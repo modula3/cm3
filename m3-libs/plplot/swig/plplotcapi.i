@@ -41,6 +41,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
      instead of 'arg0', 'arg1' etc.
      In Modula 3 the argument names can be used
      for named argument calls, e.g. PlotLines(x:=xdata,y:=ydata);
+   - removed plParseOpts because I don't know what it does,
+     what are inputs and what are outputs?
 */
 
 /* For passing user data, as with X's XtPointer */
@@ -912,11 +914,11 @@ plSetUsage(char *program_string, char *usage_string);
 /* This is wrapped by common API plsetopt so ignore. */
 PLINT
 plSetOpt(char *opt, char *optarg);
-#endif
 
 /* Process options list using current options info. */
 PLINT
 plParseOpts(PLINT *p_argc, char **argv, PLINT mode);
+#endif
 
 /* Print usage & syntax message. */
 
