@@ -32,6 +32,17 @@ VAR ControlPanel: T;
         Thread.Alerted, 
         OSError.E, Wr.Failure, Rd.Failure *>
 
+VAR trace := FALSE;
+
+PROCEDURE D(s: TEXT) =
+  BEGIN
+    IF NOT trace THEN RETURN END;
+    TRY
+      Wr.PutText(Stdio.stdout, s & Wr.EOL);
+      Wr.Flush(Stdio.stdout);
+    EXCEPT ELSE
+    END;
+  END D;
 
 (* **************** Control Panel Form **************** *)
 
@@ -649,6 +660,7 @@ PROCEDURE GetGroupInfo (sessName: TEXT; inMenu: BOOLEAN := TRUE):
     panel := Resolve(NIL);
     info  := GetExistingGI(sessName);
   BEGIN
+    D("GetGroupInfo: " & sessName);
     IF info # NIL THEN RETURN info END;
     info := NEW(AlgGroupInfo, groupName := sessName, title := sessName);
     IF inMenu THEN
@@ -665,6 +677,7 @@ PROCEDURE UpdateSessionMenu (panel: T) =
     info: AlgGroupInfo;
   BEGIN
     groupInfo := RefListSort.SortD(groupInfo, GICompare);
+    D("UpdateSessionMenu: " & Fmt.Int(RefList.Length(groupInfo)));
     l := groupInfo;
     FormsVBT.Delete(panel.fv, "sessionMenu", 0, LAST(CARDINAL));
     WHILE l # NIL DO
@@ -744,6 +757,7 @@ PROCEDURE RegisterAlg (proc: NewAlgProc; name, sessName: TEXT) =
   (* LL = {} *)
   VAR info: AlgGroupInfo;
   BEGIN
+    D("RegisterAlg: " & name & ", " & sessName);
     LOCK VBT.mu DO
       info := GetGroupInfo(sessName);
       IF NOT TextList.Member(info.algs, name) THEN
@@ -763,6 +777,7 @@ PROCEDURE RegisterView (proc          : NewViewProc;
   (* LL = {} *)
   VAR info: AlgGroupInfo;
   BEGIN
+    D("RegisterView: " & name & ", " & sessName);
     LOCK VBT.mu DO
       info := GetGroupInfo(sessName);
       IF NOT TextList.Member(info.views, name) THEN
@@ -788,6 +803,7 @@ TYPE
 PROCEDURE NewSessionDefault (name: TEXT; panel: T) =
   (* Get the inTrestle parm from the FV before calling NewSession. *)
   BEGIN                         (* LL = VBT.mu *)
+    D("NewSessionDefault");
     IF NOT ZeusSnapshot.SessionFromStateDir(panel, name, FALSE) THEN
       NewSession(name, panel, FormsVBT.GetBoolean(panel.fv, "inTrestle"))
     END;
@@ -819,6 +835,7 @@ PROCEDURE NewSession (name     : TEXT;
     END Attach;
 
   BEGIN
+    D("NewSession");
     EVAL sess.init();
     Zeus.AttachAlg(sess, sess.alg);
     sess.alg.install();
@@ -2756,5 +2773,6 @@ PROCEDURE DebugFinish() =
 (* **************** Mainline **************** *)
 
 BEGIN
+  D("ZuesPanel.Main");
   LOCK VBT.mu DO ControlPanel := NewPanel(); END;
 END ZeusPanel.
