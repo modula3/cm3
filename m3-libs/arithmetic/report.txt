@@ -1,11 +1,13 @@
 for myself:
 
 todo:
-  - (overflow check in integer modules)
   - physical units
   - combinatorics and number theory with bigintegers
   - fast integer power by binary decomposition of exponent
   - separate generic GCD from integer module
+  - (overflow check in integer modules)
+  - (extract common average factors to prevent overflow and underflow
+    for real number based complex Abs(), complex Div(), vector norm)
 
 
 for Harry:
