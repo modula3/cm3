@@ -10,9 +10,16 @@ IMPORT Fmt AS F, Wr,TextWr,Thread;
 
 <*UNUSED*>CONST Module = "IntegerFmtLex.";
 (*==========================*)
+
+(*----------------------*)
+PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}) : TEXT =
+BEGIN
+  RETURN F.Int (x, style.base);
+END Fmt;
+
 (*----------------------*)
 PROCEDURE FmtArray(READONLY a:ARRAY OF I.T;
-                   base      :CARDINAL:=10;
+                   style     :=FmtStyle{};
                    cellwidth :CARDINAL:=4;
                    linewidth :CARDINAL:=60):TEXT RAISES {Thread.Alerted, Wr.Failure} =
 VAR
@@ -22,7 +29,7 @@ VAR
 BEGIN
   Wr.PutText(wr,"A" & Fmt(n) & "{");
   FOR i:=n1 TO nn DO
-    Wr.PutText(wr,F.Pad(Fmt(a[i],base:=base),cellwidth)); 
+    Wr.PutText(wr,F.Pad(Fmt(a[i],style),cellwidth)); 
     IF i#nn THEN Wr.PutText(wr,", "); END;
     INC(currwidth,cellwidth+2);
     IF currwidth>linewidth THEN

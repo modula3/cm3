@@ -98,16 +98,16 @@ PROCEDURE SlowFmtU(x: T; base: Base): TEXT =
     END;
   END SlowFmtU;
 
-PROCEDURE Fmt(READONLY x: T; base: Base := 10): TEXT =
+PROCEDURE Fmt(READONLY x: T; READONLY style := FmtStyle{}): TEXT =
   VAR
     txt : TEXT;
   BEGIN
-    CASE base OF
+    CASE style.base OF
       |  2 => txt := FastFmtU(x, 2,Word.Size);
       |  4 => txt := FastFmtU(x, 4,Word.Size DIV 2);
       | 16 => txt := FastFmtU(x,16,Word.Size DIV 4);
     ELSE
-      txt := SlowFmtU(x,base);
+      txt := SlowFmtU(x,style.base);
     END;
     IF x.sign THEN
       RETURN "-" & txt;
