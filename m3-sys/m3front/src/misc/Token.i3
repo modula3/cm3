@@ -28,7 +28,7 @@ TYPE
 
        (* pragmas (that escape from the scanner) *)
        tINLINE, tEXTERNAL, tASSERT, tUNUSED, tOBSOLETE, tTRACE,
-       tCALLCONV, tIMPLICIT, tDEBUG, tFATAL,
+       tCALLCONV, tIMPLICIT, tDEBUG, tLAZYALIGN, tSTRICTALIGN, tFATAL,
 
        (* reserved words *)
        tAND, tANY, tARRAY, tAS,
@@ -70,9 +70,11 @@ CONST
 
   DeclStart = Set {T.tCONST, T.tTYPE, T.tREVEAL, T.tVAR, T.tIMPLICIT,
                    T.tEXTERNAL, T.tINLINE, T.tUNUSED, T.tOBSOLETE,
+                   T.tLAZYALIGN, T.tSTRICTALIGN,
                    T.tEXCEPTION, T.tPROCEDURE, T.tFATAL, T.tCALLCONV};
 
   TypeStart = Set {T.tIDENT, T.tARRAY, T.tBITS, T.tBRANDED, T.tLBRACE,
+                   T.tLAZYALIGN, T.tSTRICTALIGN,
                    T.tUNTRACED, T.tOBJECT, T.tPROCEDURE, T.tRECORD,
 		   T.tREF, T.tSET, T.tLBRACKET, T.tLPAREN};
 

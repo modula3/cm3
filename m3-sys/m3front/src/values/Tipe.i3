@@ -10,7 +10,7 @@ INTERFACE Tipe;
 
 IMPORT Type, Decl;
 
-PROCEDURE Parse (READONLY att: Decl.Attributes);
+PROCEDURE Parse (att: Decl.Attributes);
 
 PROCEDURE Define (name: TEXT;  t: Type.T;  reserved: BOOLEAN);
 

@@ -1402,6 +1402,10 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
         (* a simple aligned load *)
         SimpleIndirectLoad (x, t);
 
+      ELSIF (size = s) AND (a MOD 8) = 0 AND Target.Allow_packed_byte_aligned THEN
+        (* a byte aligned load, used by packed structures, supported by the processor *)
+        SimpleIndirectLoad (x, t);
+
       ELSIF (size < s) THEN
         Err ("load_indirect size too large");
         Force (); (* to connect the error message with the code *)
@@ -1650,6 +1654,9 @@ PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size) =
 
       IF (size = s) AND (a MOD align) = 0 THEN
         (* a simple aligned store *)
+        SimpleIndirectStore (x, t);
+      ELSIF (size = s) AND (a MOD 8) = 0 AND Target.Allow_packed_byte_aligned THEN
+        (* a byte aligned store, used by packed structures, supported by the processor *)
         SimpleIndirectStore (x, t);
       ELSIF (size < s) THEN
         Err ("store_indirect size too large");
@@ -2727,7 +2734,7 @@ PROCEDURE FindIntType (t: Type;  s: Size;  o: Offset;  a: Alignment): MType =
   END FindIntType;
 
 PROCEDURE ScanTypes (READONLY x: ARRAY [0..3] OF Target.Int_type;
-                     t: Type;  s: Size;  o: Offset;  a: Alignment): MType =
+                     t: Type;  s: Size;  o: Offset;  a: Alignment): Type (* MType *) =
   VAR
     best_s := TargetMap.CG_Size [t] + 1;
     best_a := TargetMap.CG_Align [t] + 1;

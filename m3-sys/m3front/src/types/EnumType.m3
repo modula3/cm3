@@ -158,13 +158,20 @@ PROCEDURE Check (p: P) =
     p.info.hash      := hash;
   END Check;
 
+
 PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
   VAR
     sz := TargetMap.Word_types [p.rep].size;
-    z0 := offset DIV Target.Integer.align * Target.Integer.align;
+    z0: INTEGER;
   BEGIN
+    IF p.info.lazyAligned THEN
+      z0 := offset DIV 8 * 8;
+    ELSE
+      z0 := offset DIV Target.Integer.align * Target.Integer.align;
+    END;
     RETURN (offset + sz) <= (z0 + Target.Integer.size);
   END CheckAlign;
+
 
 PROCEDURE Compiler (p: P) =
   VAR v := Scope.ToList (p.scope);
