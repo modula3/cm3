@@ -1,7 +1,0 @@
-
-template("matchwavelet")
-
-Generic_module("MatchWavelet")
-
-%MatchWavelet("Real",            "RealBasic")
-MatchWavelet("LongReal",        "LongRealBasic")
