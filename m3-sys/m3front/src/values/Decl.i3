@@ -19,6 +19,7 @@ TYPE
       isObsolete:  BOOLEAN  := FALSE;
       isImplicit:  BOOLEAN  := FALSE;
       callingConv: CG.CallingConvention := NIL;
+      isLazyAligned: BOOLEAN  := FALSE;
     END;
 
 

@@ -47,6 +47,8 @@ REVEAL
         trace       : Tracer.T;
         type_info   : Type.ModuleInfo;
         value_info  : Value.T;
+        lazyAligned : BOOLEAN;
+        containsLazyAlignments: BOOLEAN;
       OVERRIDES
         typeCheck   := TypeCheckMethod;
         set_globals := ValueRep.NoInit;
@@ -139,6 +141,8 @@ PROCEDURE Create (name: M3ID.T): T =
     t.type_info   := NIL;
     t.value_info  := NIL;
     t.counter     := InitialCounter;
+    t.lazyAligned := FALSE;
+    t.containsLazyAlignments := FALSE;
     RETURN t;
   END Create;
 
@@ -789,6 +793,21 @@ PROCEDURE IsExternal (): BOOLEAN =
     RETURN (curModule # NIL) AND (curModule.external);
   END IsExternal;
 
+PROCEDURE LazyAlignmentOn (): BOOLEAN = 
+  BEGIN
+    RETURN curModule # NIL AND curModule.lazyAligned;
+  END LazyAlignmentOn;
+
+PROCEDURE SetLazyAlignment (on: BOOLEAN) = 
+  BEGIN
+    IF curModule # NIL THEN
+      curModule.lazyAligned := on;
+      IF on THEN
+        curModule.containsLazyAlignments := TRUE;
+      END;
+    END;
+  END SetLazyAlignment;
+
 PROCEDURE ExportScope (t: T): Scope.T =
   BEGIN
     IF (t = NIL)
@@ -801,6 +820,7 @@ PROCEDURE Compile (t: T) =
   VAR save: T;  zz: Scope.T;  yy: Revelation.Set;
   BEGIN
     (* ETimer.Push (M3Timers.emit); *)
+    Target.Allow_packed_byte_aligned := t.containsLazyAlignments;
     save := Switch (t);
     Scanner.offset := t.origin;
     yy := Revelation.Push (t.revelations);
