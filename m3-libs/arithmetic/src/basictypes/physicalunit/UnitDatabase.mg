@@ -1,9 +1,11 @@
 GENERIC MODULE UnitDatabase(UU,UUList,CU,CUList);
 
-IMPORT PhysicalUnit       AS U,
-       PhysicalUnitFmtLex AS UF;
+IMPORT PhysicalUnit       AS U;
 
-IMPORT IO, Fmt;
+(*
+IMPORT IO, Fmt,
+       PhysicalUnitFmtLex AS UF;
+*)
 
 (*
 PROCEDURE NextItem(VAR uu:UU.T):BOOLEAN=
@@ -118,14 +120,20 @@ PROCEDURE FindBestUU(READONLY db:T;remain:U.T;isFirst:BOOLEAN):CU.T=
     minDiff : U.ExpType := LAST(U.ExpType);
     minExp  : U.ExpType := LAST(U.ExpType);
   BEGIN
+(*
 IO.Put("find unit closest to " & UF.Fmt(remain) & "\n");
+*)
     WHILE uu#NIL DO
+(*
 IO.Put(UF.Fmt(uu.head.unit)&"  ");
+*)
       diff := Approx(remain,uu.head.unit,exp);
+(*
 IO.Put("   exp " & Fmt.Int(exp));
 IO.Put("   diff " & Fmt.Int(diff));
 IO.Put("   indep " & Fmt.Bool(UU.Flags.independent IN uu.head.flags));
 IO.Put("   isFirst " & Fmt.Bool(isFirst) & "\n");
+*)
       IF (diff<minDiff) AND
          (NOT UU.Flags.independent IN uu.head.flags OR
           (isFirst AND diff=0)) THEN
@@ -153,11 +161,15 @@ BEGIN
     ucList:=CUList.Cons(FindBestUU(db,remain,ucList=NIL),ucList);
 
     (* extract the found usual unit from the given one *)
+(*
 IO.Put("best unit " & UF.Fmt(ucList.head.uu.head.unit) & "\n");
 IO.Put("scaled by " & Fmt.Int(ucList.head.exp) & ": " & UF.Fmt(U.Scale(ucList.head.uu.head.unit,ucList.head.exp)) & "\n");
 IO.Put("remain before Sub " & UF.Fmt(remain) & "\n");
+*)
     remain:=U.Sub(remain,U.Scale(ucList.head.uu.head.unit,ucList.head.exp));
+(*
 IO.Put("remain after Sub " & UF.Fmt(remain) & "\n");
+*)
     newNorm := U.Norm1(remain);
     (*the database must contain all unit vectors so that every composed unit can be decomposed
       into unit vectors from the database*)
