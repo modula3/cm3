@@ -50,6 +50,17 @@ pkgpath() {
   fi
 }
 
+listpkgs() {
+  if [ -n "$1" ] ; then
+    while [ -n "$1" ] ; do
+      egrep "$1" "$PKGSDB"
+      shift
+    done | sed -e "s;^;${ROOT}/;"
+  else
+    cat "$PKGSDB" | sed -e "s;^;${ROOT}/;"
+  fi
+}
+
 syscall_wrappers_exist() {
   T1="${ROOT}/m3-libs/m3core/src/runtime/${TARGET}/RTHeapDepC.c"
   T1="${ROOT}/m3-libs/m3gc-enhanced/src/runtime/${TARGET}/RTHeapDepC.c"
