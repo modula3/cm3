@@ -137,7 +137,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    |  Systems.ALPHA_OSF, Systems.Tru64v5 =>
+    |  Systems.ALPHA_OSF =>
                  Integer := Int64;
                  Word    := Word64;
                  Address := Word64;   Address.cg_type := CGType.Addr;
@@ -691,6 +691,27 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  NTCall (6, "PASCAL",     1); (* __stdcall *)
                  NTCall (7, "__cdecl",    0); (* __cdecl *)
                  NTCall (8, "__stdcall",  1); (* __stdcall *)
+
+    |  Systems.PPC_LINUX => 
+      (* FIXME: preliminary assumptions bound to change *)
+                 max_align                 := 64;
+                 Little_endian             := FALSE;
+                 PCC_bitfield_type_matters := TRUE;
+                 Structure_size_boundary   := 8;
+                 Bitfield_can_overlap      := FALSE;
+                 First_readable_addr       := 4096 * Char.size;
+                 Jumpbuf_size              := (26 + 36 + 129 + 1 + 1) * 
+                                              Address.size;
+                 Jumpbuf_align             := Word64.align;
+                 Fixed_frame_size          := 8 * Address.size;
+                 Guard_page_size           := 0 * Char.size;
+                 All_floats_legal          := TRUE;
+                 Has_stack_walker          := FALSE;
+                 Setjmp                    := "_setjmp";
+                 Checks_integer_ops        := FALSE;
+                 Global_handler_stack      := TRUE;
+                 Aligned_procedures        := TRUE;
+                 EOL                       := "\n";
 
     ELSE RETURN FALSE;
     END;
