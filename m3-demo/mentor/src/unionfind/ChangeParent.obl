@@ -1,0 +1,230 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+(*                                                                           *)
+(* Last modified on Mon Jan  9 12:04:15 PST 1995 by najork                   *)
+(*      modified on Fri Aug 19 12:49:52 PDT 1994 by heydon                   *)
+
+(* ChangeParent.obl -- histogram of grouped "ChangeParent" operations. *)
+
+let Margin   = 5.0;           (* in mm *)
+let InitMaxX = 4;
+let InitMaxY = 4.0;
+
+let BarColor    = color_named("yellow");
+let BorderColor = color_named("black");
+let BorderWidth = 0.05;
+let TextColor   = color_named("black");
+let FontSz      = 0.6;
+let Lab1Y       = ~0.5;
+let Lab2Y       = ~1.5;
+let MinY        = ~2.0;
+
+(* Bar Object ============================================================= *)
+
+let Bar = {
+  slot: Int => ok,
+  count: Int => 0,
+  v: Vertex => ok,
+
+  barHeight => meth(self: Bar): Real,
+    math_sqrt(float(self.count))
+  end,
+
+  updateVertex => meth(self): Ok,
+    let ht = self.barHeight();
+    graph_setVertexSize(self.v, 0.9, ht);
+    graph_moveVertex(self.v, 0.5 + float(self.slot), ht / 2.0, false);
+    ok
+  end,
+
+  updateLabel => meth(self): Ok,
+    graph_setVertexLabel(self.v, fmt_int(self.count));
+    ok
+  end,
+
+  new => meth(self: Bar, g: Graph, f: Font, slot: Int): Bar,
+    self.slot := slot;
+    self.v := graph_newVertex(g);
+    graph_setVertexColor(self.v, BarColor);
+    graph_setVertexBorderColor(self.v, BorderColor);
+    graph_setVertexBorder(self.v, BorderWidth);
+    graph_setVertexFont(self.v, f);
+    graph_setVertexLabelColor(self.v, TextColor);
+    graph_setVertexLabel(self.v, "");
+    self.updateVertex();
+    let v = graph_newVertex(g);
+    graph_vertexToBack(v);
+    graph_setVertexColor(v, color_named("white"));
+    graph_setVertexFont(v, f);
+    graph_setVertexLabelColor(v, TextColor);
+    graph_setVertexLabel(v, fmt_int(slot+1));
+    graph_setVertexSize(v, 1.0, 1.0);
+    graph_moveVertex(v, 0.5 + float(slot), Lab1Y, false);
+    self
+  end,
+
+  inc => meth(self: Bar): Ok,
+  (* increment the count of the bar "self", and update its vertex
+     to reflect the change. *)
+    self.count := self.count + 1;
+    self.updateVertex();
+    self.updateLabel();
+    ok
+  end,
+};
+
+(* View Object ============================================================ *)
+
+let view: View = {
+
+  (* Data members --------------------------------------------------------- *)
+
+  graphvbt => graph_new(),
+  bar: [Bar] => ok,
+  maxX: Int => InitMaxX,     (* slots [0..maxX-1] *)
+  maxY: Real => InitMaxY,    (* values [0..maxY] *)
+  currLen: Int => ok,
+  labelFont: Font => ok,
+  total: Int => 0,
+  count: Int => 0,
+  totalV: Vertex => ok,
+
+  setWorld => meth(self: View): Ok,
+    graph_setWorld(self.graphvbt,
+      0.0, float(self.maxX), self.maxY + 2.0, MinY);
+    ok
+  end,
+
+  updateTotal => meth(self: View): Ok,
+    let txt = "Total = " & fmt_int(self.total) & "  Average = " &
+      if self.count is 0 then "0.00" else
+        text_replaceAll("d", "0",
+                        text_sub(fmt_real(float(self.total)/float(self.count)),
+                                 0, 4));
+      end;
+    graph_setVertexLabel(self.totalV, txt);
+    ok
+  end,
+
+  moveTotalLabel => meth(self: View): Ok,
+    graph_moveVertex(self.totalV, float(self.maxX)/2.0, Lab2Y, true);
+    ok
+  end,
+
+  (* Setup ---------------------------------------------------------------- *)
+
+  Setup => meth(self: View): Ok,
+    self.labelFont := graph_newFont(self.graphvbt, "Helvetica", FontSz,
+      "Roman", "bold", "*");
+    graph_setMargin(self.graphvbt, Margin);
+    self.setWorld();
+    ok
+  end,
+
+  NewSet => meth(self: View, nm: Text): Ok,
+    ok
+  end,
+
+  FinishedSets => meth(self: View, numSets: Int, usesRanks: Bool): Ok,
+    self.totalV := graph_newVertex(self.graphvbt);
+    graph_vertexToBack(self.totalV);
+    graph_setVertexFont(self.totalV, self.labelFont);
+    graph_setVertexLabelColor(self.totalV, TextColor);
+    graph_setVertexColor(self.totalV, color_named("white"));
+    graph_setVertexSize(self.totalV, 200.0, 1.0);
+    self.updateTotal(); self.moveTotalLabel();
+
+    self.bar := array_new(self.maxX, ok);
+    for i = 0 to self.maxX - 1 do
+      self.bar[i] := clone(Bar).new(self.graphvbt, self.labelFont, i)
+    end;
+    zeus_animate(self.graphvbt, 0.0, 0.0);
+    ok
+  end,
+
+  (* DoFind events -------------------------------------------------------- *)
+
+  StartDoFind => meth(self, id): Ok,
+    ok
+  end,
+
+  StepUp => meth(self, child, parent): Ok,
+    ok
+  end,
+
+  Found => meth(self, root): Ok,
+    ok
+  end,
+
+  StepDown => meth(self: View, childId, parentId: Int): Ok,
+    ok
+  end,
+
+  ChangeParent => meth(self: View, childId, parentId, rootId: Int): Ok,
+    self.currLen := self.currLen + 1;
+    ok
+  end,
+
+  EndDoFind => meth(self, id): Ok,
+    ok
+  end,
+
+  (* Find events ---------------------------------------------------------- *)
+
+  StartFind => meth(self: View, id: Int): Ok,
+    ok
+  end,
+
+  EndFind => meth(self: View, id: Int): Ok,
+    ok
+  end,
+
+  (* Union events --------------------------------------------------------- *)
+
+  StartUnion => meth(self: View, id1, id2: Int, bothRoots: Bool): Ok,
+    ok
+  end,
+
+  FoundFirst => meth(self: View, root1: Int): Ok,
+    ok
+  end,
+
+  CompareRanks => meth(self: View, id1, id2: Int): Ok,
+    ok
+  end,
+
+  Unite => meth(self: View, childId, parentId, pRank: Int): Ok,
+    self.currLen := 0;
+    ok
+  end,
+
+  EndUnion => meth(self): Ok,
+    var rescale: Bool = false;
+    if self.currLen >= self.maxX then
+      var sz: Int = (self.currLen - self.maxX) + 1;
+      var new: [Bar] = array_new(sz, ok);
+      for i = 0 to sz - 1 do
+        new[i] := clone(Bar).new(self.graphvbt, self.labelFont, self.maxX + i)
+      end;
+      self.bar := self.bar @ new;
+      self.maxX := self.currLen + 1;
+      self.moveTotalLabel();
+      rescale := true
+    end;
+    if self.bar[self.currLen].barHeight() >= self.maxY then
+      self.maxY := 1.5 * self.maxY;
+      rescale := true
+    end;
+    if rescale then
+      self.setWorld();
+      graph_redisplay(self.graphvbt)
+    end;
+    self.bar[self.currLen].inc();
+    self.total := self.total + self.currLen + 1;
+    self.count := self.count + 1;
+    self.updateTotal();
+    zeus_animate(self.graphvbt, 0.0, 0.0);
+    ok
+  end,
+};

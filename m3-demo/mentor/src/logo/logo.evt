@@ -1,0 +1,10 @@
+(* Copyright (C) 1992, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+
+
+OUTPUT Init(text: TEXT[]);
+OUTPUT RandomStep(delta: REAL[Fmt.Real]);
+OUTPUT Shift();
+OUTPUT Marquee(side: INTEGER[Fmt.Int]);
+OUTPUT MarqueeSpots();

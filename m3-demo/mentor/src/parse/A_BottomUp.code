@@ -1,0 +1,34 @@
+@Parse
+PROCEDURE Parse ()@
+
+    @1 state := <initial state>@
+    @2 token := Scan ()@
+    LOOP
+       @3 CASE LookUp (state, token) OF@
+       @4 | Action.Shift (new_state) =>@
+           @5 PUSH state@
+           @6 state := new_state@
+           @7 token := Scan ()@
+
+       @8 | Action.Goto (new_state) =>@
+           @9 PUSH state@
+           @10 state := new_state@
+
+       @11 | Action.Reduce (p) =>@
+            where p is "lhs -> x0 x1 ... xn"
+            @12 POP n states@
+            @13 (GOTO, state) := LookUp (top_of_stack, p.lhs)@
+            @14 PUSH state@
+
+       @15 | Action.Accept =>@
+            @16 EXIT@
+
+       @17 | Action.Error  =>@
+            @18 ERROR@
+            @19 EXIT@
+       END;
+    END;
+ @20 END Parse@
+
+@Parse
+

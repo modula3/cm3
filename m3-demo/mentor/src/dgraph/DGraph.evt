@@ -1,0 +1,42 @@
+(* Copyright 1992 Digital Equipment Corporation. *)
+(* Distributed only by permission.*)
+(* Last modified on Tue Aug  4 19:29:02 1992 by mjordan*)
+
+IMPORT AdjMatrix;
+
+OUTPUT Setup (m: AdjMatrix.T[AdjMatrix.ToText]);
+(* Call once at the beginning to identify for views the
+   vertices in the graph and the initial set of edges *)
+
+OUTPUT AddEdge (from, to: INTEGER[Fmt.Int]);
+(* Add an edge from "from" to "to" *)
+
+OUTPUT MarkEdge (from, to: INTEGER[Fmt.Int]; depth: INTEGER[Fmt.Int]);
+OUTPUT UnMarkEdge (from, to: INTEGER[Fmt.Int]; depth: INTEGER[Fmt.Int]);
+(* Mark/Unmark edge between "from" and "to", depending as
+   "on=TRUE/FALSE", respectively. Different kinds of
+   probes (e.g. to support recursive algorithms) can be
+   differentiated by "depth". *)
+
+OUTPUT MarkVertex(v: INTEGER[Fmt.Int]; depth: INTEGER[Fmt.Int]; 
+    rcset: AdjMatrix.RCSet[AdjMatrix.RCToText]);
+OUTPUT UnMarkVertex(v: INTEGER[Fmt.Int]; depth: INTEGER[Fmt.Int];
+    rcset: AdjMatrix.RCSet[AdjMatrix.RCToText]);
+(* Ditto for vertices. For matrix views, "rc" can be set to indicate
+   whether the row, column or both should be marked. *)
+
+
+(*                   DFS Tree operations                             *)
+
+OUTPUT NewTree(root: INTEGER[Fmt.Int]; label: TEXT[]);
+(* Adds a new tree to the DFS tree forest, with label "label" *)
+
+OUTPUT Highlight(node: INTEGER[Fmt.Int]; highlight: REAL[Fmt.Real];
+                 nodeOnly: BOOLEAN[Fmt.Bool]);
+
+OUTPUT AddChild(parent, pred, child: INTEGER[Fmt.Int]; label: TEXT[]);
+(* Adds "child", with label "label", parent "parent" and predecessor
+   "pred". *)
+
+OUTPUT RemoveChild(parent, ch: INTEGER[Fmt.Int]);
+

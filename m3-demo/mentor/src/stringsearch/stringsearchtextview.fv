@@ -1,0 +1,16 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(VBox
+  (HBox
+    (Shape (Width + 0) (Height + 0) "Probes: ")
+    (Shape (Width 60) (Numeric HideButtons  (Max 500000) %probeCount =0))
+    (Glue 6) 
+    (Shape (Width + 0) (Height + 0)  "    Pattern: ")
+    (TextEdit ReadOnly (Font "-*-courier-bold-r-*-*-*-180-*-*-*-*-*-*")
+      %pattern ="")
+    Fill)
+  (Shape (Height 100 + Inf) (Width 250 + Inf)
+    (TextEdit  ReadOnly (Font "-*-courier-bold-r-*-*-*-180-*-*-*-*-*-*")
+      %text ="")))

@@ -1,0 +1,223 @@
+(* Copyright (C) 1992, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+
+
+MODULE AdjMatrixVBT;
+
+IMPORT GraphVBT, R2, PaintOp, Text;
+
+REVEAL
+  T = Public BRANDED OBJECT
+    n: INTEGER;
+    elems: REF ARRAY OF ARRAY OF GraphVBT.Vertex;
+    r_labels: REF ARRAY OF GraphVBT.Vertex;
+    c_labels: REF ARRAY OF GraphVBT.Vertex;
+    do_redisplay := TRUE;
+  OVERRIDES
+    init := Init;
+    getColor := GetColor;
+    setColor := SetColor;
+    getText := GetText;
+    setText := SetText;
+    getHighlight := GetHighlight;
+    setHighlight := SetHighlight;
+    getRowLabel := GetRowLabel;
+    setRowLabel := SetRowLabel;
+    getColumnLabel := GetColumnLabel;
+    setColumnLabel := SetColumnLabel;
+    display := Display;
+  END;
+
+  Prefix = GraphVBT.T BRANDED OBJECT END;
+
+CONST
+  GW = 0.1;     (* grid-line width *)
+  HGW = 0.05;   (* half grid-line width *)
+  VS = 0.7;     (* vertex size *)
+  HVS = 0.35;   (* half vertex size *)
+  VHB = 0.1;    (* vertex highlight border *)
+  VC = GW+HVS+VHB; 
+  
+
+PROCEDURE Init(self: T; n: INTEGER; grid := TRUE): T RAISES {}=
+  VAR label: TEXT;
+  BEGIN
+    self.n := n;
+    self.elems := NEW(REF ARRAY OF ARRAY OF GraphVBT.Vertex, n, n);
+    self.c_labels := NEW(REF ARRAY OF GraphVBT.Vertex, n);
+    self.r_labels := NEW(REF ARRAY OF GraphVBT.Vertex, n);
+
+    (* Add an extra column and row for the label *)
+    INC(n);
+    self.world := GraphVBT.WorldRectangle{0.0, FLOAT(n) + GW,
+                                           0.0, FLOAT(n) + GW};
+    self.pixelSizeDivisor := ARRAY [0 .. 1] OF CARDINAL{(n*10)+1,(n*10)+1};
+    EVAL GraphVBT.T.init(self);
+
+    IF grid THEN
+      (* draw grid *)
+      FOR i := 0 TO n DO (* verticals *)
+        EVAL NEW(GraphVBT.Vertex, graph := self,
+            pos := R2.T{FLOAT(i)+HGW, FLOAT(n)/2.0},
+            sizeW := R2.T{GW, FLOAT(n)}).init();
+      END; (* for *)
+      FOR i := 0 TO n DO (* horizontals *)
+        EVAL NEW(GraphVBT.Vertex, graph := self,
+           pos := R2.T{FLOAT(n)/2.0, FLOAT(i)+HGW},
+            sizeW := R2.T{FLOAT(n), GW}).init();
+      END; (* for *)
+    END;
+    Break(self);
+
+    FOR i := 0 TO n-1 DO
+      FOR j := 0 TO n-1 DO
+        label := "";
+        IF i = 0 OR j = 0 THEN
+          IF i = 0 AND j = 0 THEN (* nothing *)
+          ELSIF i = 0 THEN label := Text.FromChar(VAL(ORD('A') + j-1, CHAR));
+          ELSE label := Text.FromChar(VAL(ORD('A') + i-1, CHAR));
+          END;
+        END; (* if *)
+
+        WITH v = NEW(GraphVBT.Vertex, graph := self,
+                     pos := R2.T{FLOAT(j)+VC, FLOAT(i)+VC},
+                     sizeW := R2.T{VS, VS},
+                     color := PaintOp.Bg,
+                     label := label,
+                     fontColor := PaintOp.Fg).init() DO
+          IF (i = 0 OR j = 0) THEN
+            (* label vertex *)
+            IF i = 0 AND j = 0 THEN (* nothing *)
+            ELSIF i = 0 THEN self.c_labels[j-1] := v;
+            ELSE self.r_labels[i-1] := v;
+            END;
+          ELSE
+            self.elems[i-1, j-1] := v;
+            EVAL NEW(GraphVBT.VertexHighlight,
+                     vertex := v,
+                     borderW := R2.T{VHB, VHB}).init();
+          END;
+        END;
+      END; (* for *)
+    END; (* for *)
+
+    RETURN self;
+  END Init;
+
+PROCEDURE Break(self: T) RAISES {}=
+  BEGIN
+    
+  END Break;
+
+PROCEDURE Display(t: T; state: BOOLEAN) RAISES {}=
+  BEGIN
+    t.do_redisplay := state;
+    IF state THEN t.redisplay() END; 
+  END Display;
+
+PROCEDURE GetColor(self: T; n, m: INTEGER): PaintOp.T RAISES {}=
+  BEGIN
+    LOCK self.mu DO
+      WITH v = self.elems[n, m] DO
+        RETURN v.color;
+      END; (* with *)
+    END; (* lock *)
+  END GetColor;
+
+PROCEDURE SetColor(self: T; n, m: INTEGER; color: PaintOp.T) RAISES {}=
+  BEGIN
+    LOCK self.mu DO
+      WITH v = self.elems[n, m] DO
+        v.setColor(color);
+      END; (* with *)
+    END; (* lock *)
+    IF self.do_redisplay THEN self.redisplay() END;
+  END SetColor;
+
+PROCEDURE GetText(self: T; n, m: INTEGER): TEXT RAISES {}=
+  BEGIN
+    LOCK self.mu DO
+      WITH v = self.elems[n, m] DO
+        RETURN v.label;
+      END; (* with *)
+    END; (* lock *)
+  END GetText;
+
+PROCEDURE SetText(self: T; n, m: INTEGER; t: TEXT) RAISES {}=
+  BEGIN
+    LOCK self.mu DO
+      WITH v = self.elems[n, m] DO
+        v.setLabel(t);
+      END; (* with *)
+    END; (* lock *)
+    IF self.do_redisplay THEN self.redisplay() END;
+  END SetText;
+
+PROCEDURE GetHighlight(self: T; n, m: INTEGER): PaintOp.T RAISES {}=
+  BEGIN
+    LOCK self.mu DO
+      WITH v = self.elems[n, m] DO
+          WITH vh = NARROW(v.vertexHighlights.first,
+                         GraphVBT.VertexHighlight) DO
+            RETURN vh.color;
+          END;
+      END; (* with *)
+    END; (* lock *)
+  END GetHighlight;
+
+PROCEDURE SetHighlight(self: T; n, m: INTEGER; color: PaintOp.T) RAISES {}=
+  BEGIN
+    LOCK self.mu DO
+      WITH v = self.elems[n, m] DO
+          WITH vh = NARROW(v.vertexHighlights.first,
+                         GraphVBT.VertexHighlight) DO
+            vh.setColor(color);
+          END;
+      END; (* with *)
+    END; (* lock *)
+    IF self.do_redisplay THEN self.redisplay() END;
+  END SetHighlight;
+
+PROCEDURE SetRowLabel(self: T; n: INTEGER; color: PaintOp.T)=
+  BEGIN
+    LOCK self.mu DO
+        WITH v = self.r_labels[n] DO
+          v.setColor(color);
+        END; (* with *)
+    END; (* lock *)
+    IF self.do_redisplay THEN self.redisplay() END;
+  END SetRowLabel;
+
+PROCEDURE SetColumnLabel(self: T; n: INTEGER; color: PaintOp.T) RAISES {}=
+  BEGIN
+    LOCK self.mu DO
+        WITH v = self.c_labels[n] DO
+          v.setColor(color);
+        END; (* with *)
+    END; (* lock *)
+    IF self.do_redisplay THEN self.redisplay() END;
+  END SetColumnLabel;
+
+PROCEDURE GetRowLabel(self: T; m: INTEGER): PaintOp.T =
+  BEGIN
+    LOCK self.mu DO
+        WITH v = self.r_labels[m] DO
+          RETURN v.color;
+        END; (* with *)
+    END; (* lock *)
+  END GetRowLabel;
+
+PROCEDURE GetColumnLabel(self: T; m: INTEGER): PaintOp.T =
+  BEGIN
+    LOCK self.mu DO
+        WITH v = self.c_labels[m] DO
+          RETURN v.color;
+        END; (* with *)
+    END; (* lock *)
+  END GetColumnLabel;
+
+BEGIN
+
+END AdjMatrixVBT.
+

@@ -1,0 +1,19 @@
+Null call test (1 threads waiting) ... 3393 usec/call.
+Null call test (5 threads waiting) ... 3566 usec/call.
+Null call test (10 threads waiting) ... 3930 usec/call.
+Null call test (15 threads waiting) ... 4023 usec/call.
+Null call test (20 threads waiting) ... 4379 usec/call.
+Null call test (25 threads waiting) ... 4744 usec/call.
+Null call test (30 threads waiting) ... 5230 usec/call.
+Null call test (35 threads waiting) ... 5598 usec/call.
+Null call test (40 threads waiting) ... 5781 usec/call.
+Null call test (45 threads waiting) ... 5973 usec/call.
+Null call test (50 threads waiting) ... 6301 usec/call.
+
+
+Null call test (1 threads waiting) ... 3676 usec/call.
+Null call test (5 threads waiting) ... 3939 usec/call.
+Null call test (10 threads waiting) ... 4170 usec/call.
+Null call test (15 threads waiting) ... 4580 usec/call.
+Null call test (20 threads waiting) ... 5074 usec/call.
+Null call test (25 threads waiting) ... 5500 usec/call.

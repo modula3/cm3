@@ -1,0 +1,30 @@
+/* Copyright (C) 1994, Digital Equipment Corporation         */
+/* All rights reserved.                                      */
+/* See the file COPYRIGHT for a full description.            */
+
+import ("zeus")
+import ("obliqrt")
+
+zume   ("Minimax")
+oblume ("Minimax", "ViewGameTreeA")
+oblume ("Minimax", "ViewGameTreeB")
+oblume ("Minimax", "ViewColorScale")
+
+module ("AlgMinimax")
+interface ("GameBoardPrivate")
+module ("GameBoard")
+module ("GamePlay")
+module ("GameMove")
+module ("MoveList")
+module ("Minimax")
+module ("TypeFmt")
+module ("ViewGameBoard")
+module ("HumanPlayer")
+
+resource("MinimaxInput.fv")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation  ("Main")
+  bundle  ("MinimaxBundle")
+  program  ("minimax")
+end

@@ -1,0 +1,37 @@
+%+---------------------------------------------------------------------------+
+%|            Copyright (C) 1992, Digital Equipment Corporation              |
+%| 		          All rights reserved.                               |
+%|                  See the file COPYRIGHT for a full description.           |
+%+---------------------------------------------------------------------------+
+\documentstyle{article}
+\input{psfig}
+
+\begin{document}
+
+\def\getfig #1(#2){
+  \vbox{\psfig{figure=#1.ps,width=3.5in}\hbox{\hfil #1 (#2) \hfil}\vfil}}
+  
+\def\do   #1(#2){\centerline{\getfig #1(#2)}}
+\def\dodo #1(#2) #3(#4){\centerline{\getfig #1(#2)\hfil\getfig #3(#4)}}
+
+\do sym(20x20 Symmetric Graph)
+\vfil
+The next page contains cartesian transformations, the page
+after are polar. The left column uses a focus in the northwest,
+and the right column uses a focus in the southeast. The distortion
+increases from top to bottom. The top row has $d=1.46$, the
+middle row has $d=2.92$, and the bottom row is $d=4.38$.
+\newpage
+
+\def\fig#1{\psfig{figure=#1.ps,width=3.5in}}
+\def\dopage #1 #2 #3 #4 #5 #6{
+  \vbox to\vsize{
+    \hbox to\hsize{\fig#1\hfill\fig#4}\vfill
+    \hbox to\hsize{\fig#2\hfill\fig#5}\vfill
+    \hbox to\hsize{\fig#3\hfill\fig#6}}}
+
+
+\dopage symCnw1 symCnw2 symCnw3 symCse1 symCse2 symCse3 
+\dopage symPnw1 symPnw2 symPnw3 symPse1 symPse2 symPse3
+
+\end{document}

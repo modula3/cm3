@@ -1,0 +1,253 @@
+(ZSplit
+
+  (LabelFont (Family "helvetica") (WeightName "bold") (PointSize 140))
+  (Font (Family "courier") (WeightName "bold") (Slant "r") (Width "normal")
+        (PointSize 140))
+  (Macro Flexible BOA (child) `(Shape (Width + Inf) (Height + Inf) ,child))
+  (Macro Fixed BOA (child) `(Shape (Width + 0) (Height + 0) ,child))
+  (Macro FixedHt BOA (ht child) `(Shape (Height ,ht) ,child))
+  (Macro FixedWt BOA (wt child) `(Shape (Width ,wt) ,child))
+  (Macro Label BOA (text) `(Text LeftAlign ,text))
+
+  (Macro Logo ()
+    `(FixedWt 80 (VBox 
+      (Fill)
+      (Fixed (Text "BOARD"))
+      (Glue 3)
+      (Fixed (Text "VIEWER"))
+      (Fill)
+      )))
+
+  (Macro InfoBar ()
+    `(Shape (Height + 0) (Rim (Pen 5)
+      (HBox
+        (Fill)
+	(Text RightAlign %info "Not Connected")
+      ))))
+
+  (Macro FileMenu ()
+        `(Menu
+          (FixedWt 50 "File")
+          (VBox
+            (PopMButton %create  (For contact)  (Label "Create"))
+            (PopMButton %open    (For contact)  (Label "Open"))
+            (MButton    %save			(Label "Save"))
+            (MButton	%close			(Label "Close"))
+            (PopMButton	%remove	 (For contact)	(Label "Remove"))
+            (MButton    %quit			(Label "Quit"))
+	  )))
+
+  (Macro FontMenu ()
+    `(Menu %font
+      (FixedWt 50 "Font")
+      (VBox
+        (LabelFont (Family "times"))
+	(VBox (LabelFont (Slant "r")) 
+           (MButton %f_1 (LabelFont (WeightName "medium")) "times-r-medium")
+           (MButton %f_2 (LabelFont (WeightName "bold")) "times-r-bold"))
+	(VBox (LabelFont (Slant "i")) 
+           (MButton %f_3 (LabelFont (WeightName "medium")) "times-i-medium")
+	   (MButton %f_4 (LabelFont (WeightName "bold")) "times-i-bold"))
+	(VBox    
+          (LabelFont (Family "helvetica") (Slant "r"))
+          (MButton %f_5 (LabelFont (WeightName "medium")) "helvetica-r-medium")
+          (MButton %f_6 (LabelFont (WeightName "bold")) "helvetica-r-bold"))
+	(VBox    
+          (LabelFont (Family "courier") (Slant "r"))
+          (MButton %f_7 (LabelFont (WeightName "medium")) "courier-r-medium")
+          (MButton %f_8 (LabelFont (WeightName "bold")) "courier-r-bold"))
+	)))
+
+  (Macro FontSizeMenu ()
+    `(Menu %fontsize
+       (FixedWt 50 "Size")
+       (VBox
+	 (LabelFont (Family "times"))
+	 (MButton %fs_7 (LabelFont (PointSize 60)) "6")
+	 (MButton %fs_1 (LabelFont (PointSize 100)) "10")
+	 (MButton %fs_2 (LabelFont (PointSize 140)) "14")
+	 (MButton %fs_3 (LabelFont (PointSize 180)) "18")
+	 (MButton %fs_4 (LabelFont (PointSize 240)) "24")
+	 (MButton %fs_5 (LabelFont (PointSize 480)) "48")
+	 (MButton %fs_6 (LabelFont (PointSize 640)) "64")
+       )))
+
+  (Macro ColorMenu ()
+    `(Menu %color
+      (FixedWt 50 "Color")
+      (FixedWt 50 (VBox 
+	 (MButton %c_1 (BgColor "Black") "")
+	 (MButton %c_2 (BgColor "DarkRed") "")
+	 (MButton %c_3 (BgColor "DarkBlue") "")
+	 (MButton %c_4 (BgColor "Green4") "")
+	 (MButton %c_5 (BgColor "Yellow") "")
+	 (MButton %c_6 (BgColor "Cyan") "")
+	 (MButton %c_7 (BgColor "Magenta") "")
+	 (MButton %c_8 (BgColor "White") "")
+      ))))
+
+  (Macro MenuBar ()
+    `(Rim (Pen 5)
+      (HBox
+	(Glue 10)
+	(FileMenu)
+	(Glue 10)
+	(FontMenu)
+	(FontSizeMenu)
+	(Glue 10)
+	(ColorMenu)
+	(Fill)
+	(Glue 10)
+        (PopButton (For help) (FixedWt 50 "Help")))))
+
+  (Macro MouseKeys ()
+    `(Rim (Pen 3) 
+      (Color "Black")
+      (Fixed (VBox
+        (Text "MouseKey")
+        (Glue 3)
+        (Text %mousel LeftAlign "L:")
+        (Glue 3)
+        (Text %mousem LeftAlign "M:")
+        (Glue 3)
+       (Text %mouser LeftAlign "R:")
+      ))))
+
+  (Macro Zoomer ()
+    `(VBox
+      (Fixed (Text LeftAlign "ZoomRate"))
+      (Glue 3)
+      (Frame Lowered 
+        (VBox 
+          (Fixed (Text LeftAlign %zoomrate_feedback  "0.5"))
+          (Glue 3)
+	  (Scroller %zoomrate =5 (Min 0) (Max 25))
+	))))
+
+  (Macro Focus ()
+    `(Rim (Pen 3) (VBox 
+      (Color "DarkBlue")
+      (Choice %focus    (Label "Focus"))
+      (Glue 7)
+      (Zoomer)    
+      (Glue 10)
+      (Button %reset (Label "Reset"))  
+      (Glue 5)
+      (Fixed (Label "Offset.h"))
+      (Frame Lowered 
+        (TypeIn %off_h =""
+          (TabTo off_v)))
+      (Glue 5)
+      (Fixed (Label "Offset.v"))
+      (Frame Lowered 
+        (TypeIn %off_v =""
+          (TabTo scale)))
+      (Glue 5)
+      (Fixed (Label "Scale"))
+      (Frame Lowered 
+        (TypeIn %scale =""
+          (TabTo off_h)))
+     )))
+
+  (Macro Edit ()
+    `(Rim (Pen 3) (VBox
+      (Color "DarkRed")
+      (Choice %text	(Label "Text"))
+      (Glue 5)
+      (Choice %draw	(Label "Draw"))
+      (Glue 5)
+      (Choice %select	(Label "Select"))
+      (Glue 10)
+      (Button %unselect   (Label "Unselect")) 
+      (Glue 10)
+      (Button %delete   (Label "Delete")) 
+      (Glue 10)
+      (TrillButton %undo     (Label "Undo"))  
+      (Glue 10)
+      (Button %refresh  (Label "Refresh"))  
+     ))) 
+
+  (Macro SideBar () 
+    `(FixedWt 80 
+      (Radio %state =focus (VBox
+        (Glue 10)
+        (Edit)
+        (Glue 10)
+        (Chisel 3.0)
+        (Glue 10)
+	(MouseKeys)
+        (Glue 10)
+	(Chisel 3.0)
+	(Glue 10)
+        (Focus)
+	(Glue 10)
+	(Fill)
+      ))))
+
+  (Macro Win () 
+    `(Flexible (Generic %win)))
+
+
+  (ZBackground %zbg 
+    (Shape (Width 500 + Inf - 200) (Height 630 + Inf - 300)
+      (VBox
+        (HBox 
+	  (Logo)
+	  (Chisel 3.0) 
+	  (VBox
+	    (InfoBar) 
+	    (Chisel 3.0)
+	    (MenuBar)))
+        (Chisel 3.0)
+        (HBox 
+	  (SideBar) 
+	  (Chisel 3.0) 
+	  (Win))
+      )))
+
+  (ZChassis %contact
+    (Title (Text %jobname ""))
+    (Font (Family "helvetica") (WeightName "bold") (PointSize 140))
+    (Shape (Width 375 + Inf - 100) (Rim (Pen 5)
+      (VBox 
+        (HBox
+	  (FixedWt 115 "Server Machine:")
+	  (Frame Lowered 
+	    (TypeIn %server ="alester"
+	      (TabTo board))))
+	(Glue 10)
+        (HBox
+	  (FixedWt 115 "Board Name:")
+	  (Frame Lowered 
+	    (TypeIn %board ="/udir/umesh/boards/"
+	      (TabTo server))))
+	(Glue 10)
+        (HBox
+	  (Button %contactserver (FixedWt 60 "Do It"))
+  	  (Glue 10)
+	  (Fill)
+  	  (CloseButton %cancelconnect (FixedWt 60 "Cancel")))
+      ))))
+
+  (ZChassis %help
+    (Title "Help")
+    (LabelFont (Family "times") (WeightName "medium") (PointSize 100))
+    (Font (Family "times") (WeightName "medium") (Slant "r") (Width "normal")
+        (PointSize 100))
+    (Shape (Width 375 + Inf) (Height 100 + Inf)
+      (TextEdit ReadOnly (From "Help.txt"))))
+
+  (ZChassis %error
+    (Title "Error Message")
+    (Font (Family "helvetica") (WeightName "bold") (PointSize 140))
+    (At 0.7 0.99 SE)
+    (Rim (Pen 5)
+      (VBox
+        (Text %errmsg "")
+	(Glue 10)
+	(HBox
+	  (Fill)
+	  (CloseButton (FixedWt 50 "Seen"))
+	  (Fill)))))
+)
+

@@ -1,0 +1,75 @@
+(* Copyright 1992 Digital Equipment Corporation. *)
+(* Distributed only by permission.*)
+(* Last modified on Tue Aug  4 16:39:55 PDT 1992 by broder  *)
+(*      modified on Thu Jul 23 11:15:03 PDT 1992 by guarino *)
+(*      modified on Tue Jul 21 06:11:10 1992 by mhb *)
+
+(* The basic paradigm of the algorithms that can be animated using
+   this package is a pattern that ``slides'' along a string.
+   At every step, the state of the algorithm is given by the current 
+   location of the pattern, and a partial match (possibly empty) for
+   this pattern position.
+   Based on this state, the algorithm decides which location to probe 
+   next.
+   The result of the comparison determines the new pattern location, 
+   and a (possible empty) new partial match. 
+   The algorithm finds all occurences of the pattern in string
+*)
+
+
+(* Current restrictions:   
+   1) The partial match consists at all times of a contigous substring.
+ *)
+
+OUTPUT Setup (p, s: TEXT[]);
+(* Call to identify the search pattern and the string to be searched. 
+   Clears previous pattern and string, and all markings.
+  *)
+
+(* All the following events must be consistent with the current pattern
+position.   See SlideTo *)
+
+OUTPUT Probe (i, j: CARDINAL[Fmt.Int]);
+(* Compare pattern letter i with string letter j
+   Always immediately followed by a Result event  *)
+
+OUTPUT Result(res: BOOLEAN[Fmt.Bool]);
+(* The result of the last comparison. 
+   Clears the display of the previous Probe event.
+   Always immediately followed by PartialMatch or PartialMatchClear
+ *)
+
+
+OUTPUT PartialMatch (i,j,len: CARDINAL[Fmt.Int]);
+(* Report a partial match at pattern location i and string 
+   location j for length len.
+   Clears the last Result and replaces the previously reported 
+   partial match.
+*)
+
+OUTPUT PartialMatchClear ();
+(*  Clears the last PartialMatch(i,j, len) (possibly empty)
+     and Result.
+*)
+
+OUTPUT CompleteMatch (j: CARDINAL[Fmt.Int]);
+(* Report a complete match at location j and clears the last partial
+   match (possibly empty) *)
+
+OUTPUT SlideTo(j: CARDINAL[Fmt.Int]);
+(* Slides the pattern to location j. Slides are allowed only after 
+   Setup, PartialMatchClear, or CompleteMatch.  
+   Currently only forward slides are allowed.
+ *)
+
+(* Events related to building the KMP search automaton *)
+
+OUTPUT KMPSetup(p: TEXT[]);
+(* Called once per run to start the construction of the automaton
+corresponding to search pattern p.
+The automaton is ``born'' with the 0 -> 0 to avoid special case.
+*)
+
+OUTPUT AddEdge(f, t: CARDINAL[Fmt.Int]);
+(* Add a non trivial edge from f to t with the given label *)
+

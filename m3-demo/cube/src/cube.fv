@@ -1,0 +1,70 @@
+(Rim
+  #| (Font "*-Courier-Bold-R-*-120-*-ISO8859-1") |#
+  #| (LabelFont "*-Helvetica-Bold-R-*-120-*-ISO8859-1") |#
+  (Pen 10)
+  (VBox
+    (Rim
+      (Pen 10)
+      (Border
+        (BgColor "White")
+        (Shape (Width 100 + Infinity) (Height 275 + Infinity) (Generic %cube))))
+    (Shape
+      (Height + 0)
+      (VBox
+        (HBox
+          (VBox
+            (HBox (TrillButton %spin (Shape (Width 45) (Height 25) "Spin")))
+            Fill)
+          (Glue 8)
+          (HBox
+            (Shape (Width 50) (Text LeftAlign "Rotate:"))
+            (VBox Fill (Numeric %rotate =4) Fill))
+          (Glue 8)
+          (VBox
+            (Shape
+              (Width + 0)
+              (HBox
+                (Text LeftAlign "Style:")
+                (Radio
+                  (VBox
+                    (Choice %wireframe =TRUE "Wireframe")
+                    (Choice %solid "Solid"))))))
+          Fill)
+        (Glue 20)
+        (VBox
+          (Text LeftAlign "Viewing position:")
+          (HBox
+            (Glue 20)
+            (VBox
+              (HBox
+                (Shape (Width 50) (Text RightAlign "Mu:  "))
+                (Numeric %mu (Min -1000) (Max 1000) =10)
+                Fill)
+              (HBox
+                (Shape (Width 50) (Text RightAlign "Theta:  "))
+                (Numeric %theta (Min -1000) (Max 1000) =-30)
+                Fill)
+              (HBox
+                (Shape (Width 50) (Text RightAlign "Phi:  "))
+                (Numeric %phi (Min -1000) (Max 1000) =30)
+                Fill)))
+          (Glue 8)
+          (HBox (Boolean %buffer =TRUE "Double Buffer") Fill)
+          (Glue 8))
+        (Glue 20)
+        (VBox
+          (Text LeftAlign "Projection:")
+          (HBox
+            (Glue 20)
+            (Radio
+              (VBox
+                (HBox
+                  (Text LeftAlign "ScreenR:")
+                  (Border (Shape (Width + Inf) (TypeIn %screen ="4.0"))))
+                (HBox
+                  (Choice %ortho =TRUE (Text LeftAlign "Orthographic"))
+                  Fill)
+                (HBox (Choice %persp (Text LeftAlign "Perspective")) Fill)
+                (HBox
+                  (Shape (Width 40) (Text RightAlign "d:"))
+                  (Border (Shape (Width + Inf) (TypeIn %d ="5.0"))))))))))))

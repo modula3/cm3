@@ -1,0 +1,22 @@
+% Copyright (C) 1994, Digital Equipment Corporation.
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Created by Carsten Weich
+%
+% Last modified on Thu Jan 19 13:51:22 PST 1995 by kalsow
+%      modified on Fri Sep 23 10:29:51 PDT 1994 by weich
+
+% m3_option("-keep")
+% m3_option("-debug")
+
+override ("stable", WDROOT)  % pick up the local copy
+
+import("libm3")
+import("stable")
+
+module("TestObj")
+stableobj("TestObj", ["TestObj"])
+implementation("Main")
+
+program("Test")

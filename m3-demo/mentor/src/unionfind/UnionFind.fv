@@ -1,0 +1,67 @@
+; Copyright (C) 1994, Digital Equipment Corporation                         
+; All rights reserved.                                                      
+; See the file COPYRIGHT for a full description.                            
+;                                                                           
+; Last modified on Thu Aug 18 14:08:09 PDT 1994 by heydon                   
+
+(Rim (Pen 10)
+  (VBox
+    (HBox
+      (Text RightAlign "Input:")
+      (Glue 3)
+      (Radio %inputFrom =randomInput
+        (HBox (ShadowSize 0)
+          (LinkButton (For randomPage)
+            (Choice (ShadowSize 1.5) %randomInput "Random"))
+          (Glue 3)
+          (LinkButton (For filePage)
+            (Choice (ShadowSize 1.5) %fileInput "From File"))
+        )
+      )
+      Fill
+    )
+    (Glue 5)
+    (TSplit %tsplit Flex (Which randomPage)
+      (VBox %randomPage
+  	(HBox
+  	  (VBox
+  	    (Text RightAlign "# of Sets:")
+  	    (Glue 2)
+  	    (Text RightAlign "# of Unions:")
+  	  )
+  	  (Glue 2)
+  	  (VBox
+  	    (Numeric %setCnt (Min 2) =20)
+  	    (Glue 2)
+  	    (Numeric %unionCnt (Min 0) =20)
+  	  )
+  	  Fill
+  	)
+  	(Glue 5)
+  	Ridge
+  	(Glue 5)
+  	(HBox
+  	  Fill
+  	  (Boolean %fixedSeed "Use fixed random seed?")
+  	  Fill
+  	)
+      )
+      (VBox %filePage
+  	(DirMenu %dirMenu (For browser))
+  	(Glue 4)
+  	(Shape (Height 60 + Inf)
+  	  (Frame Lowered (BgColor "White")
+  	    (FileBrowser %browser ReadOnly (Suffixes "sx"))
+  	  )
+  	)
+  	(Glue 4)
+  	(HBox
+  	  "File:"
+  	  (Frame Lowered (BgColor "White")
+  	    (Helper (For browser) FirstFocus)
+  	  )
+  	)
+      )   
+    )
+  )
+)

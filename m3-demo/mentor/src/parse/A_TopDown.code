@@ -1,0 +1,26 @@
+@Parse
+PROCEDURE Parse ()@
+
+  @1 PUSH <start symbol>@
+  @2 token := Scan ()@
+
+  @13 WHILE stack not empty DO@
+     @3 stack_top := Pop ()@
+     @4 IF (stack_top is a terminal) THEN@
+        @5 IF (stack_top = token)@
+           @6 THEN token := Scan ()@
+           @7 ELSE ERROR@
+        END
+     @8 ELSE@
+        @9 p := LookUp (token, stack_top)@
+          where p is "stack_top ::= x1 x2 ... Xn"
+        @10 IF (p # NIL)@
+            @11 THEN PUSH xn ... x2 x1@
+            @12 ELSE ERROR@
+        END
+     END
+  END
+@Parse
+
+
+

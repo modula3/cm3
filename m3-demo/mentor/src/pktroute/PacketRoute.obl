@@ -1,0 +1,567 @@
+(* Copyright 1993 Digital Equipment Corporation.                             *)
+(* Distributed only by permission.                                           *)
+(*                                                                           *)
+(* Last modified on Sat Oct 23 17:53:45 PDT 1993 by heydon                   *)
+(*      modified on Tue Jul 27 16:25:00 PDT 1993 by rsanchez                 *)
+
+(* This view shows the packets flowing along the edges. *)
+
+let nodeColor = [color_named("yellow"), color_named("red")];
+let edgeColor = [color_named("Blue"), color_named("Orange")];
+let packetColor = [color_named("VeryLightGreen"), 
+                   color_named("VeryDarkGreen")];
+let labelColor = color_named("Black");
+let packetDiscardColor = color_named("DarkRed");
+let borderColor = color_named("Black");
+let backgroundColor = color_named("White");
+
+let normal = 0;
+let congested = 1;
+
+let one = 0;
+let two = 0;
+let twoplus = 1;
+
+let edgeWidth = 0.1;
+let borderWidth = 0.1;
+
+let invisibleCP = proc(g, pt)
+  let vtx = graph_newVertex(g);
+  graph_setVertexSize(vtx, 0.0, 0.0);
+  graph_moveVertex(vtx, pt[0], pt[1], false);
+  vtx
+end;
+
+let abs = proc (r) if r < 0.0 then 0.0-r else r end end;
+
+let MakeBezierPathProc = proc (cpp)
+  let x000 = cpp[0][0],  y000 = cpp[0][1],
+      x001 = cpp[1][0],  y001 = cpp[1][1],
+      x011 = cpp[2][0],  y011 = cpp[2][1],
+      x111 = cpp[3][0],  y111 = cpp[3][1];
+  proc (t)
+    let s = 1.0-t;
+    let sss = s*s*s,
+        sst = s*s*t*3.0,
+        stt = s*t*t*3.0,
+        ttt = t*t*t;
+    [(sss*x000) + (sst*x001) + (stt*x011) + (ttt*x111),
+     (sss*y000) + (sst*y001) + (stt*y011) + (ttt*y111)]
+  end;
+end;
+
+let Interp = proc (t,a,b) let s = 1.0-t; (a*s)+(b*t) end;
+
+let MoveOnCurvedEdge = proc (vtx, cpp)
+  for i = 0 to 3 do
+    let j = if i > 0 then i-1 else 0 end;
+    let t = float(i)/3.0;
+    graph_moveVertexOnPath(vtx, MakeBezierPathProc(
+      [[Interp(t,cpp[0][0],cpp[0][0]),Interp(t,cpp[0][1],cpp[0][1])],
+       [Interp(t,cpp[0][0],cpp[1][0]),Interp(t,cpp[0][1],cpp[1][1])],
+       [Interp(t,cpp[i][0],cpp[j][0]),Interp(t,cpp[i][1],cpp[j][1])],
+       [Interp(t,cpp[i][0],cpp[i][0]),Interp(t,cpp[i][1],cpp[i][1])]]
+    ));
+  end;
+end;
+
+
+let HashEntry =
+  {
+   key1 => ok,
+   key2 => ok,
+   value => ok,
+   next => ok,
+   };
+
+let HashTable =
+  {
+    num => ok,
+    size => ok,
+    table => ok,
+
+    curindex => ok,
+    curentry => ok,
+
+    create => meth(self, num)
+      self.num := num;
+      self.size := real_round(float(num)*math_log(float(num)));
+      self.table := array_new(self.size, ok);
+      self;
+    end,
+
+    getfirst => meth(self)
+      self.curindex := 0;
+      self.curentry := ok;
+      loop
+        if self.curindex is self.size then
+          exit;
+        else
+          if self.table[self.curindex] isnot ok then
+            self.curentry := self.table[self.curindex];
+            exit;
+          end;
+          self.curindex := self.curindex + 1;
+        end;
+      end;
+      if self.curentry isnot ok then
+        self.curentry.value;
+      else
+        ok;
+      end;
+    end,
+
+    getnext => meth(self)
+      if self.curentry isnot ok then
+        self.curentry := self.curentry.next;
+        loop
+          if self.curentry isnot ok then
+            exit;
+          else
+            self.curindex := self.curindex + 1;
+            if self.curindex < self.size then
+              self.curentry := self.table[self.curindex];
+            else
+              exit;
+            end;
+          end;
+        end;
+        if self.curentry isnot ok then
+          self.curentry.value;
+        else
+          ok;
+        end;
+      else
+        ok;
+      end;
+    end,
+
+    lookup => meth(self, key1, key2)
+      let index = ((key1 * self.size) + key2) % self.num;
+      if self.table[index] isnot ok then
+         var entry = self.table[index];
+         loop
+           if (entry is ok) orif
+              ((entry.key1 is key1) and (entry.key2 is key2)) then
+             exit;
+           else
+             entry := entry.next;
+           end;
+         end;
+         if entry isnot ok then
+           entry.value;
+         else
+           ok;
+         end;
+      else
+        ok;
+      end;
+    end,
+
+    insert => meth(self, key1, key2, value)
+      let index = ((key1 * self.size) + key2) % self.num;
+      var newentry = clone(HashEntry);
+      newentry.key1 := key1;
+      newentry.key2 := key2;
+      newentry.value := value;
+      newentry.next := ok;
+
+      if self.table[index] isnot ok then
+        var entry = self.table[index];
+        loop
+          if entry.next is ok then
+            entry.next := newentry;
+            exit;
+          else
+            entry := entry.next;
+          end;
+        end;
+      else
+        self.table[index] := newentry;
+      end;
+    end,
+  };
+
+let StraightEdge =
+  {
+    g => ok,
+    e => ok,
+    v1 => ok,
+    v2 => ok,
+
+    create => meth (self, t, v1, v2)
+      self.g := t.g;
+      self.v1 := v1;
+      self.v2 := v2;
+      self.e := graph_newEdge(v1.v, v2.v);
+      graph_moveEdge(self.e, v1.v, v2.v, false);
+      graph_setEdgeColor(self.e, edgeColor[normal]);
+      self
+    end,
+
+    initialWidth => meth(self, size)
+      graph_setEdgeWidth(self.e, size/10.0);
+    end,
+
+    movePktAlongEdge => meth(self, fromN, pkt)
+      if fromN is self.v1.id then
+        graph_moveVertex(pkt, self.v2.pos[0], self.v2.pos[1], true);
+      else
+        graph_moveVertex(pkt, self.v1.pos[0], self.v1.pos[1], true);
+      end;
+    end,
+
+  };
+
+let CurvedEdge =
+  {
+    g => ok,
+    e => ok,
+    v1 => ok,
+    v2 => ok,
+    cvv12 => [[ok,ok],[ok,ok],[ok,ok],[ok,ok]],
+    cpp12 => [[ok,ok],[ok,ok],[ok,ok],[ok,ok]],
+    cvv21 => [[ok,ok],[ok,ok],[ok,ok],[ok,ok]],
+    cpp21 => [[ok,ok],[ok,ok],[ok,ok],[ok,ok]],
+
+    create => meth (self, t, v1, v2, x1, y1, x2, y2)
+      self.g := t.g;
+      self.v1 := v1;
+      self.v2 := v2;
+      let cpt1 = [x1, y1];
+      let cpt2 = [x2, y2];
+      self.cpp12 := [v1.pos, [x1,y1], [x2,y2], v2.pos];
+      self.cpp21 := [v2.pos, [x2,y2], [x1,y1], v1.pos];
+      var cpt1v = invisibleCP(self.g, [x1, y1]);
+      var cpt2v = invisibleCP(self.g, [x2, y2]);
+      self.cvv12 := [v1.v, cpt1v, cpt2v, v2.v];
+      self.cvv21 := [v2.v, cpt2v, cpt1v, v1.v];
+      self.e := graph_newEdge(v1.v, v2.v);
+      graph_moveEdgeBezier(self.e, v1.v, v2.v, cpt1v, cpt2v, false);
+      graph_setEdgeColor(self.e, edgeColor[normal]);
+      self
+    end,
+
+    initialWidth => meth(self, size)
+      graph_setEdgeWidth(self.e, size/10.0);
+    end,
+
+    movePktAlongEdge => meth(self, fromN, pkt)
+      if fromN is self.v1.id then
+        MoveOnCurvedEdge(pkt, self.cpp12);
+      else
+        MoveOnCurvedEdge(pkt, self.cpp21);
+      end;
+      ok
+    end,
+
+  };
+
+let Node =
+  {
+    g => ok,
+    v => ok,
+    qs => 0,
+    id => ok,
+    maxQS => ok,
+    bounded => ok,
+    pos => ok,
+    vpkts => ok,
+    pktsSize => ok,
+    pktsPos => ok,
+
+    pktOutLst => [],
+    pktInLst => [],
+
+    incQS => meth(self)
+      self.qs := self.qs + 1;
+    end,
+
+    decQS => meth(self)
+      self.qs := self.qs - 1;
+    end,
+
+    updQS => meth(self, qs)
+       self.qs := qs;
+    end,
+
+    getQS => meth(self) self.qs end,
+
+    create => meth(self, t, id, x, y)
+      self.g := t.g;
+      self.id := id;
+      self.maxQS := t.maxQS;
+      self.bounded := t.bounded;
+      self.pos := [x, y];
+      self.v := graph_newVertex(self.g);
+      graph_moveVertex(self.v, x, y, false); 
+      graph_setVertexShape(self.v, "ellipse");
+      graph_setVertexColor(self.v, nodeColor[normal]); 
+      self
+    end,
+
+    initialSize => meth(self, size)
+      graph_setVertexSize(self.v, size, size);
+      graph_setVertexBorder(self.v, size/10.0);
+      graph_setVertexBorderColor(self.v, borderColor);
+      self.vpkts := graph_newVertex(self.g);
+      self.pktsSize := size/3.0;
+      self.pktsPos := [self.pos[0] - (size/9.0),
+		       self.pos[1] + (size/9.0)];
+      graph_moveVertex( self.vpkts, self.pktsPos[0], 
+                        self.pktsPos[1], false);
+      graph_setVertexSize(self.vpkts, 0.0, 0.0);
+      graph_setVertexBorder(self.vpkts, self.pktsSize/5.0);
+      graph_setVertexBorderColor(self.vpkts, borderColor);
+    end,
+
+    updateNodeState => meth(self)
+      if (self.qs is 0) or (self.qs is 1) then
+        graph_setVertexColor(self.v, nodeColor[normal]);
+	graph_setVertexSize(self.vpkts, 0.0, 0.0);
+      else
+        if (self.qs >= self.maxQS) and self.bounded then
+          graph_setVertexColor(self.v, nodeColor[congested]);
+        else
+          graph_setVertexColor(self.v, nodeColor[normal]);
+        end;
+        graph_setVertexSize(self.vpkts, self.pktsSize, self.pktsSize);
+	if self.qs is 2 then
+	  graph_setVertexColor(self.vpkts, packetColor[two]);
+        else
+	  graph_setVertexColor(self.vpkts, packetColor[twoplus]);
+        end;
+      end;
+    end,
+
+    pktOut => meth(self, pkt, edge)
+      self.pktOutLst := self.pktOutLst @
+          [{pkt => pkt, edge => edge}];
+    end,
+
+    pktIn => meth(self, pkt, edge)
+      self.pktInLst := self.pktInLst @
+          [{pkt => pkt, edge => edge}];
+    end,
+  };
+
+let Packet =
+  {
+    g => ok,
+    v => ok,
+    src => ok,
+    dst => ok,
+    pktPos => ok,
+    discardFlag => false,
+
+    create => meth(self, t, src, dst, name)
+      self.g := t.g;
+      self.src := src;
+      self.dst := dst;
+      self.v := graph_newVertex(self.g);
+      self.pktPos := [t.node(src).pos[0],
+		      t.node(src).pos[1]];
+      graph_moveVertex( self.v, self.pktPos[0], self.pktPos[1], false);
+      graph_setVertexSize(self.v, t.nodeSize/3.0, t.nodeSize/3.0);
+      graph_setVertexBorder(self.v, (t.nodeSize/3.0)/5.0);
+      graph_setVertexBorderColor(self.v, borderColor);
+      graph_setVertexColor(self.v,  packetColor[one]);
+      t.node(src).incQS();
+      self
+    end,
+
+    move => meth(self, t, fromN, toN)
+      let edge = t.edge(fromN, toN);
+      t.node(fromN).pktOut(self, edge);
+      t.node(toN).pktIn(self, edge);
+      graph_vertexToFront(self.v);
+    end,
+
+    setDiscardReady => meth(self)
+      graph_setVertexColor(self.v, packetDiscardColor);
+      graph_vertexToFront(self.v);
+      self.discardFlag := true
+    end,
+
+    discard => meth(self, vw)
+      vw.node(self.dst).decQS();
+      graph_removeVertex(self.v);
+    end,
+
+  };
+
+let view =
+  {
+    graphvbt => graph_new(),
+    g => meth (self) self.graphvbt end,
+
+    nodeCnt => ok,
+    maxQS => ok,
+    bounded => ok,
+
+    nodeSize => 0.0,
+
+    vertexFont => ok,
+
+    nodeT => [],
+    edgeT => [],
+    pktT => [],
+
+    node => meth(self, id)
+      self.nodeT[id];
+    end,
+
+    edge => meth(self, id1, id2)
+      var res = self.edgeT.lookup(id1, id2);
+      if res is ok then
+        res := self.edgeT.lookup(id2, id1);
+      end;
+      res
+    end,
+
+    packet => meth(self, id)
+      self.pktT[id];
+    end,
+
+    StartGraph => meth (self, nodeCnt, maxQS, bounded, xMax, yMax)
+      (* Set the World *)
+      graph_setWorld(self.graphvbt, 0.0, xMax, yMax, 0.0);
+      self.vertexFont := graph_newFont(
+         self.graphvbt, "Helvetica", 0.5, "Roman", "bold", "*");
+
+      (* Initialize some variables *)
+      self.nodeCnt := nodeCnt;
+      self.maxQS := maxQS;
+      self.bounded := bounded;
+      self.nodeT := array_new(nodeCnt, ok);
+      self.edgeT := HashTable.create(nodeCnt);
+   end,
+  
+    NewNode => meth (self, id, x, y)
+      self.nodeT[id] :=
+          clone(Node).create(self, id, x, y);
+    end,
+
+    NewStraightEdge => meth (self, id1, id2)
+      self.edgeT.insert(id1, id2,
+                        clone(StraightEdge).create( self,
+                                                    self.node(id1),
+                                                    self.node(id2)));
+    end,
+
+
+    NewCurvedEdge => meth (self, id1, id2, x1, y1, x2, y2)
+      self.edgeT.insert(id1, id2,
+                        clone(CurvedEdge).create( self,
+                                                  self.node(id1),
+                                                  self.node(id2),
+                                                  x1, y1, x2, y2));
+    end,
+
+    NewLabel => meth (self, label, x, y)
+      let vl = graph_newVertex(self.graphvbt);
+      graph_setVertexFont(vl, self.vertexFont);
+      graph_setVertexSize(vl, 0.5, 0.5);
+      graph_setVertexColor(vl, backgroundColor);
+      graph_moveVertex(vl, x, y, false);
+      graph_setVertexLabel(vl, label);
+      graph_setVertexLabelColor(vl, labelColor);
+    end,
+
+    EndGraph => meth (self)
+      let distance = proc(pt1, pt2)
+        let dx = pt2[1] - pt1[1], dy = pt2[0] - pt1[0];
+        (dx * dx) + (dy * dy)
+      end;
+      var minDst = ok;
+      if #(self.nodeT) > 1 then
+	minDst := distance(self.nodeT[0].pos, self.nodeT[1].pos);
+	for i = 0 to #(self.nodeT) - 1 do
+	  let pos1 = self.nodeT[i].pos;
+	  for j = (i + 1) to #(self.nodeT) - 1 do
+	    let curDst = distance(pos1, self.nodeT[j].pos);
+	    if curDst < minDst then minDst := curDst end
+	  end
+	end;
+	minDst := math_sqrt(minDst);
+      else
+	minDst := 1.0
+      end;
+      self.nodeSize := minDst/1.5;
+      for i = 0 to #(self.nodeT) - 1 do
+        self.nodeT[i].initialSize(self.nodeSize);
+      end;
+      var edge = self.edgeT.getfirst();
+      if edge isnot ok then
+        edge.initialWidth(self.nodeSize);
+        loop
+          edge := self.edgeT.getnext();
+          if edge is ok then
+            exit;
+          else
+            edge.initialWidth(self.nodeSize);
+          end;
+        end;
+      end;
+    end,
+
+    StartPackets => meth (self, pktCnt)
+      self.pktT := array_new(pktCnt, ok);
+    end,
+
+    NewPacket => meth (self, id, source, dest, fewestHops, name)
+      self.pktT[id] :=
+          clone(Packet).create(self, source, dest, name);
+    end,
+
+    EndPackets => meth (self)
+      for i = 0 to #(self.nodeT) - 1 do
+        self.nodeT[i].updateNodeState();
+      end;
+      graph_redisplay(self.graphvbt);
+    end,
+
+    MovePacket => meth (self, id, fromN, toN)
+      self.packet(id).move(self, fromN, toN);
+    end,
+
+    QueueSizes => meth (self, queueSizes)
+      for i = 0 to #(self.nodeT) - 1 do
+        self.nodeT[i].updQS(queueSizes[i]);
+        if #(self.nodeT[i].pktOutLst) isnot 0 then
+          self.nodeT[i].updateNodeState();
+        end;
+      end;
+      graph_redisplay(self.graphvbt);
+      for i = 0 to #(self.nodeT) - 1 do
+        for j = 0 to #(self.nodeT[i].pktOutLst) - 1 do
+          self.nodeT[i].pktOutLst[j].edge.movePktAlongEdge(
+                   i, self.nodeT[i].pktOutLst[j].pkt.v);
+        end;
+        self.nodeT[i].pktOutLst := [];
+      end;
+      zeus_animate(self.graphvbt, 0.0, 1.0);
+    end,
+
+    Absorb => meth(self, pktID, nodeID)
+      let pkt = self.packet(pktID);
+      pkt.setDiscardReady();
+    end,
+
+    Step => meth(self)
+      graph_redisplay(self.graphvbt);
+      for i = 0 to #(self.nodeT) - 1 do
+        let pktIns = self.nodeT[i].pktInLst;
+	for j = 0 to #(pktIns) - 1 do
+          let pkt = pktIns[j].pkt;
+	  if pkt.discardFlag is true then
+	    pkt.discard(self)
+          end
+        end;
+        self.nodeT[i].updateNodeState();
+        self.nodeT[i].pktInLst := [];
+      end;
+      graph_redisplay(self.graphvbt);
+    end,      
+
+  };

@@ -1,0 +1,39 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+
+(Scale
+  (HScale 1)
+  (VScale 1)
+  (Rim
+    (Pen 10)
+    (VBox
+      (Radio
+        %data
+        (VBox
+          Fill
+          (Border
+            (Pen 1)
+            (VBox
+              (Choice %random (Text "random"))
+              (Glue 2)
+              (Text "sample size")
+              (Glue 2)
+              (HBox (Glue 2) (Numeric %N (Min 4) (Max 80) =16) (Glue 2))
+              (Glue 2)))
+          Fill
+          (Glue 5)
+          (Border
+            (Pen 1)
+            (VBox
+              (Choice %selected =TRUE (Text "selected"))
+              (Glue 5)
+              (Radio
+                %selectedsize
+                (HBox
+                  (Glue 7)
+                  (Choice %selectedsmall =TRUE (Text "small"))
+                  (Choice %selectedlarge (Text "large"))))
+              (Glue 2)))
+          Fill)))))

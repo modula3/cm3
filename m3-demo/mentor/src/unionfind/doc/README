@@ -1,0 +1,10 @@
+Last modified on Thu Aug 18 19:39:48 PDT 1994 by heydon
+
+This directory contains the following files documenting the
+UnionFind(1) Zeus animation program:
+
+  UnionFindProblem.txt  describes the Union-Find problem
+  UnionFindAlgs.txt     describes the Union-Find algorithms in the animation
+  UsersGuide.txt        describes how to drive the Union-Find animation
+  InputFileFormat.txt   describes the format for Union-Find input files
+  ExampleInput.sx       a sample Union-Find input file

@@ -1,0 +1,107 @@
+; Copyright (C) 1993, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(VBox
+   (Radio %game =Hexpawn
+   (HBox
+     Fill
+     (VBox (ShadowSize 0.01)
+       (LinkButton (For AHexpawn)
+         (LinkButton  
+           (For BHexpawn) 
+           (Choice (ShadowSize 1.5) %Hexpawn (Text LeftAlign "Hexpawn")))
+       )
+       (LinkButton (For ATicTacToe)
+        (LinkButton 
+          (For BTicTacToe) 
+          (Choice (ShadowSize 1.5) %TicTacToe (Text LeftAlign "TicTacToe")))
+       )
+     )
+     Fill
+   )
+   )
+(Glue 5)
+(Bar)
+(HBox
+  (Glue 5)
+  (VBox
+     (Glue 5)
+     (Text Center "Player A")
+     (Glue 5)
+     (Radio %AHumanComp =AHuman
+       (VBox
+         (Choice %AHuman  (Text LeftAlign "Human"))
+         (Choice %AMinimax (Text LeftAlign "Minimax"))
+         (HBox (Glue 30)
+            (VBox
+              (HBox (Text "Depth:") (Glue 5)
+                    (Numeric (Min 1) (Max 10) %ADepth =3))
+              (VBox (Text LeftAlign "Heuristic:")
+              (HBox (Glue 10)
+                (TSplit
+                    (Radio %AHexpawn =AHPTrivial
+                      (VBox
+                        (Choice %AHPTrivial (Text LeftAlign "Trivial"))
+                        (Choice %AHPSmart (Text LeftAlign "Smart"))
+                        Fill
+                      )
+                     )
+                    (Radio %ATicTacToe =ATTTTrivial
+                      (VBox
+                        (Choice %ATTTTrivial (Text LeftAlign "Trivial"))
+                        (Choice %ATTTLines (Text LeftAlign"Lines"))
+                        (Choice %ATTTPositions (Text LeftAlign "Positions"))
+                      )
+                    )
+                 ))
+               )
+              )
+            )
+         )
+      )
+   ) 
+  (Glue 5)                 
+  (Bar)
+  (Glue 5)
+(HBox
+  (VBox
+     (Glue 5)
+     (Text Center "Player B")
+     (Glue 5)
+     (Radio %BHumanComp =BHuman
+       (VBox
+         (Choice %BHuman  (Text LeftAlign "Human"))
+         (Choice %BMinimax (Text LeftAlign "Minimax"))
+         (HBox (Glue 30)
+            (VBox
+              (HBox (Text "Depth:") (Glue 5)
+                    (Numeric (Min 1) (Max 10) %BDepth =3))
+              (VBox (Text LeftAlign "Heuristic:")
+              (HBox (Glue 10)
+                (TSplit
+                    (Radio %BHexpawn =BHPTrivial
+                      (VBox
+                        (Choice %BHPTrivial (Text LeftAlign "Trivial"))
+                        (Choice %BHPSmart (Text LeftAlign "Smart"))
+                        Fill
+                      )
+                     )
+                    (Radio %BTicTacToe =BTTTTrivial
+                      (VBox
+                        (Choice %BTTTTrivial (Text LeftAlign "Trivial"))
+                        (Choice %BTTTLines (Text LeftAlign "Lines"))
+                        (Choice %BTTTPositions (Text LeftAlign "Positions"))
+                      )
+                    )
+                 )
+               ))
+              )
+            )
+         )
+      )
+   ) 
+)
+(Glue 5)
+)
+)

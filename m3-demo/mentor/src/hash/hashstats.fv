@@ -1,0 +1,16 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(Rim
+  (Pen 10)
+  (VBox
+    (LabelFont (Family "helvetica") (WeightName "bold") (PointSize 240))
+    (Font "-adobe-helvetica-bold-r-normal--34-240-*-*-p-182-iso8859-1")
+      (HBox
+        (Text LeftAlign "Ops:  ")
+        (Shape (Width 100) (Numeric %Operations)))
+    (Glue 10)
+    (HBox
+      (Text LeftAlign "Run time:  ")
+      (Shape (Width 100) (Numeric %Runtime)))))

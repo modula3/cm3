@@ -1,0 +1,19 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(Scale
+  (HScale 1)
+  (VScale 1)
+  (Rim
+    (Pen 10)
+    (Shape
+      (Width 450 + Infinity)
+      (VBox
+        (HBox
+          (HBox (Text "i = ") (TextEdit ReadOnly (TurnMargin 0) %i))
+          (HBox (Text "j = ") (TextEdit ReadOnly (TurnMargin 0) %j)))
+        (HBox
+          (HBox (Text "v = ") (TextEdit ReadOnly (TurnMargin 0) %v))
+          (HBox (Text "N = ") (TextEdit ReadOnly (TurnMargin 0) %N)))
+        (HBox (Text "a = ") (TextEdit ReadOnly (TurnMargin 0) %a))))))

@@ -1,0 +1,37 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Thu Jun 20 15:28:44 PDT 1996 by heydon
+%      modified on Tue Jan 31 14:17:15 PST 1995 by kalsow
+%      modified on Sun Aug 21 08:44:05 PDT 1994 by mhb
+%      modified on Tue May 24 09:38:19 PDT 1994 by najork
+%      modified on Thu Oct  1 14:00:19 PDT 1992 by steveg
+%      modified on Tue Sep  8 21:54:03 PDT 1992 by johnh
+
+%  To build a version of mentor with a single chunk, foo,
+%  run "m3build -Dfoo".
+
+Chunks = [ "binpack", "bresenham", "closestpoint", "dgraph", "euclid",
+           "hash", "hull", "kpaths", "logo", "match", "maxflow", "minimax",
+           "parse", "pktroute", "pqueue", "searchtree", "sorting",
+           "stringsearch", "subtype", "unionfind", "wheeler", "zpaper" ]
+
+% check for a "-Dfoo" on the command line
+one_chunk = ""
+foreach c in Chunks
+  if defined (c) one_chunk = c end
+end
+
+if one_chunk
+  include_dir (one_chunk)
+else
+  MENTOR_UMBRELLA = "TRUE"
+  foreach c in Chunks
+    include_dir (c)
+  end
+  bundle         ("MentorBundle")
+  implementation ("Main")
+  ManPage        ("mentor",1)
+  Program        ("mentor")
+end

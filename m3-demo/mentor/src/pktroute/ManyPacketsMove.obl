@@ -1,0 +1,224 @@
+(* Copyright 1993 Digital Equipment Corporation.                             *)
+(* Distributed only by permission.                                           *)
+(*                                                                           *)
+(* Last modified on Thu Oct 14 17:07:55 PDT 1993 by heydon                   *)
+(*      modified on Tue Jul 27 16:25:00 PDT 1993 by rsanchez                 *)
+
+(* This view shows the total number of hops that each packet needs to traverse
+   to go from its source to its destination node. It is designed to show the
+   performance of the network on between 10 to 100 packets. *)  
+
+let BackGroundColor = color_named("White");
+let MinHopsColor = color_named("Pink");
+let CurrHopsColor = color_named("Yellow");
+let LabelColor = color_named("Black");
+let CapColor = LabelColor;
+let BorderColor = LabelColor;
+
+let BarWidth = 0.40;
+let CapFactor = 0.025;
+let Gap = 0.05;
+let SouthInit = ~3.0;
+let BorderSize = 0.05;
+let ScaleFactor = 1.5;
+
+let XValR = proc(i) float(i) + (Gap+BarWidth)/2.0 end;
+let XValL = proc(i) float(i) - (Gap+BarWidth)/2.0 end;
+
+let StatString1 = " finished using shortest path";
+let StatString2 = " average shortest path utilization";
+
+let FontFromSize =
+  proc(g, sz)
+    graph_newFont(g, "Helvetica", sz, "Roman", "bold", "*")
+  end;
+
+let MoveTextVertex =
+  proc(vtx, font, x, y, width, height)
+    graph_setVertexFont(vtx, font);
+    graph_moveVertex(vtx, x, y, false);
+    graph_setVertexSize(vtx, width, height);
+  end;
+
+let MakeTextVertex =
+  proc(vtx, font, x, y, width, height)
+    graph_setVertexColor(vtx, BackGroundColor);
+    graph_setVertexLabelColor(vtx, LabelColor);
+    MoveTextVertex(vtx, font, x, y, width, height)
+  end;
+
+let MoveBarVertex =
+  proc(vtx, width, height, x)
+    graph_setVertexSize(vtx, width, height);
+    graph_moveVertex(vtx, x, height/2.0, false);
+  end;
+    
+let MakeBarVertex =
+  proc(vtx, clr, width, height, x)
+    graph_setVertexBorder(vtx, BorderSize);
+    graph_setVertexBorderColor(vtx, BorderColor); 
+    graph_setVertexColor(vtx, clr);
+    MoveBarVertex(vtx, width, height, x)
+  end;
+
+let MoveCapVertex =
+  proc(vtx, (*int*) x, (*int*) y, (*real*) height)
+    graph_setVertexSize(vtx, BarWidth, height);
+    graph_moveVertex(vtx, XValR(x), float(y)+(height/2.0), false);
+  end;
+
+let MakeCapVertex =
+  proc(vw, (*int*) x, (*int*) y, (*real*) height)
+    let vtx = graph_newVertex(vw.graphvbt);
+    graph_setVertexBorder(vtx, BorderSize);
+    graph_setVertexBorderColor(vtx, BorderColor);
+    graph_setVertexColor(vtx, CapColor);
+    MoveCapVertex(vtx, x, y, height);
+    vtx
+  end;
+
+let view =
+  {
+    graphvbt => graph_new(),
+    pktCnt => ok,	(* total number of packets (from "StartPackets") *)
+    maxHops => 0.0,	(* current max number of hops (related to "north" *)
+    hopsT => ok,	(* array of packets *)
+    caps => ok,		(* array of caps *)
+    someDone => false,	(* did any packets get absorbed this step? *)
+    doneMinCnt => 0,	(* number done using shortest paths *)
+    doneCnt => 0,	(* number of done packets (= # of caps) *)
+    doneUtilSum => 0.0,	(* sum of utilization ratios of absorbed packets *)
+    rescale => false,	(* should world coordinates be scaled vertically? *)
+    fontSz => 0.55,	(* label font size *)
+    vtxFont => ok,	(* font used to display two rows of labels *)
+    labH => 1.0,	(* vertical size of label vertex *)
+    yLab1 => ~1.0,	(* "y" coordinate of first row of labels *)
+    yLab2 => ~2.0,	(* "y" coordinate of second row of labels *)
+    label1 => ok,	(* first text label *)
+    label2 => ok,	(* second text label *)
+    (* world coordinates *)
+    west => ~1.0,	(* readonly *)
+    south => SouthInit,
+    east =>  meth(self) float(self.pktCnt) end,
+    north => meth(self) self.maxHops+self.capH + (self.south/SouthInit) end,
+    capH =>  meth(self) CapFactor * self.maxHops end,
+    mid =>   meth(self) (self.west + self.east) / 2.0 end,
+    width => meth(self) self.east - self.west end,
+
+    StartGraph => meth (self, nodeCnt, maxQS, bounded, xMax, yMax)
+      (* initialize graph window to be over empty space *)
+      graph_setWorld(self.graphvbt, ~10.0, ~9.0, 1.0, 0.0)
+    end,
+
+    StartPackets => meth (self, pktCnt)
+      self.pktCnt := pktCnt;
+      self.vtxFont := FontFromSize(self.graphvbt, self.fontSz);
+
+      (* create packet bars *)
+      self.hopsT := array_new(pktCnt, ok);
+      self.caps := array_new(pktCnt, ok);
+      for i = 0 to pktCnt-1 do
+        let vtx1 = graph_newVertex(self.graphvbt);
+	MakeBarVertex(vtx1, CurrHopsColor, BarWidth, BorderSize, XValR(i));
+
+	self.hopsT[i] := {
+	  minNumHops => ok,	(* length of shortest path for this packet *)
+	  curNumHops => 0,	(* number of times this packet has moved *)
+	  vmin => vtx1,		(* vertex that grows each time packet moves *)
+	}
+      end;
+
+      (* create labels *)
+      self.label1 := graph_newVertex(self.graphvbt);
+      MakeTextVertex(self.label1, self.vtxFont,
+        self.mid, self.yLab1, self.width, self.labH);
+      graph_setVertexLabel(self.label1, "0%" & StatString1);
+
+      self.label2 := graph_newVertex(self.graphvbt);
+      MakeTextVertex(self.label2, self.vtxFont,
+        self.mid, self.yLab2, self.width, self.labH);
+      graph_setVertexLabel(self.label2, "0%" & StatString2);
+    end,
+
+    NewPacket => meth (self, id, source, dest, fewestHops, name)
+      let pkt = self.hopsT[id];
+      pkt.minNumHops := fewestHops;
+      if float(fewestHops) > self.maxHops then
+        self.maxHops := float(fewestHops)
+      end;
+      let vtx = graph_newVertex(self.graphvbt);
+      MakeBarVertex(vtx, MinHopsColor, BarWidth, float(fewestHops), XValL(id))
+    end,
+
+    EndPackets => meth (self)
+      graph_setWorld(self.graphvbt,
+	self.west, self.east, self.north, self.south);
+      graph_redisplay(self.graphvbt)
+    end,
+
+    MovePacket => meth(self, id, fromN, toN) 
+      let pkt = self.hopsT[id];
+      pkt.curNumHops := pkt.curNumHops + 1;
+      MoveBarVertex(pkt.vmin, BarWidth, float(pkt.curNumHops), XValR(id));
+      if float(pkt.curNumHops) > self.maxHops then
+	self.rescale := true;
+      end
+    end,
+
+    Absorb => meth(self, id, (*unused*) dest)
+      let pkt = self.hopsT[id];
+      let v = MakeCapVertex(self, id, pkt.curNumHops, self.capH());
+      self.caps[self.doneCnt] := { vtx => v, id => id };
+      self.doneCnt := self.doneCnt + 1;
+      if pkt.minNumHops is pkt.curNumHops then
+        self.doneMinCnt := self.doneMinCnt + 1
+      end;
+      self.doneUtilSum := self.doneUtilSum +
+        (float(pkt.curNumHops) / float(pkt.minNumHops));
+      self.someDone := true
+    end,
+
+    Step => meth (self)
+      let Percent = proc((*real*) num, (*int*) denom)
+	fmt_int(round((100.0 * num) / float(denom))) & "%"
+      end;
+
+      (* update stats if necessary *)
+      if self.someDone then
+        self.someDone := false;
+        let val = Percent(float(self.doneMinCnt), self.doneCnt);
+        graph_setVertexLabel(self.label1, val & StatString1);
+        let val = Percent(self.doneUtilSum, self.doneCnt);
+        graph_setVertexLabel(self.label2, val & StatString2);
+      end;
+
+      if self.rescale then
+	self.rescale := false;
+	self.maxHops := self.maxHops * ScaleFactor;
+	self.south   := self.south   * ScaleFactor;
+	self.fontSz  := self.fontSz  * ScaleFactor;
+	self.labH    := self.labH    * ScaleFactor;
+	self.yLab1   := self.yLab1   * ScaleFactor;
+	self.yLab2   := self.yLab2   * ScaleFactor;
+
+        (* reposition labels and caps *)
+        self.vtxFont := FontFromSize(self.graphvbt, self.fontSz);
+	MoveTextVertex(self.label1, self.vtxFont,
+          self.mid, self.yLab1, self.width, self.labH);
+        MoveTextVertex(self.label2, self.vtxFont,
+          self.mid, self.yLab2, self.width, self.labH);
+        for i = 0 to self.doneCnt - 1 do
+	  let obj = self.caps[i];
+          let id = obj.id;
+          let y = self.hopsT[id].curNumHops;
+          MoveCapVertex(obj.vtx, id, y, self.capH())
+        end;
+
+        (* double height of world coordinates *)
+        graph_setWorld(self.graphvbt, 
+	  self.west, self.east, self.north, self.south);
+      end;
+
+      graph_redisplay(self.graphvbt)
+    end
+  };

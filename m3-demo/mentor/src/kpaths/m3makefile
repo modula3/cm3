@@ -1,0 +1,28 @@
+% Copyright (C) 1993, Digital Equipment Corporation
+% All rights reserved.                             
+% See the file COPYRIGHT for a full description.   
+
+% Last modified on Thu Jun 20 15:37:45 PDT 1996 by heydon
+
+import("zeus")
+
+zume("ShortestPath")
+oblume("ShortestPath", "SPGraph")
+
+interface("Edge")
+interface("Vertex")
+interface("EdgeSeqRep")
+interface("VertexSeqRep")
+module("EdgeSeq")
+module("VertexSeq")
+module("ShortestPath")
+module("AtomEdgeTbl")
+module("AtomVertexTbl")
+
+resource("graph.sx")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation ("Main")
+  bundle ("ShortestPathBundle")
+  program ("sp")
+end

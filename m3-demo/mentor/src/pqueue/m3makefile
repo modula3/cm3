@@ -1,0 +1,32 @@
+/* Copyright (C) 1994, Digital Equipment Corporation         */
+/* All rights reserved.                                      */
+/* See the file COPYRIGHT for a full description.            */
+/*                                                           */
+/* Last modified on Thu Jun 20 15:42:22 PDT 1996 by heydon   */
+/*      modified on Tue May 24 09:09:00 PDT 1994 by najork   */
+/*      modified on Thu Sep 24 12:52:37 PDT 1992 by mhb      */
+/*      modified on Tue Sep  8 20:22:33 PDT 1992 by johnh    */
+/*      modified on Tue Jul 28 07:32:23 1992 by owicki       */
+
+/* Note that the name pqueue is already taken up for a quake function,
+   (defined in pqueue/src/pqueue.tmpl). So, if you want to use the name 
+   pqueue in here, be sure to quote it! */
+
+
+import   ("zeus")
+
+zume     ("PQueue")
+
+module   ("PQueue")
+module   ("PQAlgs")
+module   ("PQViews")
+module   ("PQBarView")
+
+resource ("pqueueAlgs.m3")
+resource ("pqueueinput.fv")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation ("Main")
+  bundle         ("PQueueBundle")
+  program        ("pqueue")
+end

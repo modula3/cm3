@@ -1,0 +1,68 @@
+(* Copyright 1992 Digital Equipment Corporation.           *)
+(* Distributed only by permission.                         *)
+(* Last modified on Fri Jul 24 22:15:47 1992 by kalsow     *)
+(*      modified on Wed Jul 22 00:37:01 1992 by mhb        *)
+
+MODULE V_xxx;
+
+IMPORT HSV, PaintOp, PaintOpCache, RectsVBT, View, ZeusPanel;
+IMPORT BinpackViewClass, BinPack;
+
+TYPE
+  T = BinpackViewClass.T BRANDED OBJECT
+        rects  : RectsVBT.T;
+      OVERRIDES
+        oeSetup   := Setup;
+        oePush    := Push;
+        oePop     := Pop;
+        oeScan    := Scan;
+        oeGoto    := Goto;
+        oeNewLeaf := NewLeaf;
+        oeNewNode := NewNode;
+      END;
+
+(*---------------------------------------------------------------- events ---*)
+
+PROCEDURE Setup (t: T;  s: Parse.State) =
+  BEGIN
+  END Setup;
+
+PROCEDURE Push (t: T;  tag: TEXT) =
+  BEGIN
+  END Push;
+
+PROCEDURE Pop  (t: T) =
+  BEGIN
+  END Pop;
+
+PROCEDURE Scan (t: T;  token: TEXT) =
+  BEGIN
+  END Scan;
+
+PROCEDURE Goto (t: T;  state: INTEGER) =
+  BEGIN
+  END Goto;
+
+PROCEDURE NewLeaf (t: T;  id: INTEGER;  tag: TEXT) =
+  BEGIN
+  END NewLeaf;
+
+PROCEDURE NewNode (t: T;  id: INTEGER;  op: TEXT;  children: Parse.IntList) =
+  BEGIN
+  END NewNode;
+
+(*-------------------------------------------------------------- internal ---*)
+
+(*------------------------------------------------------------------ init ---*)
+
+PROCEDURE New (): View.T =
+  VAR b := PaintOp.FromRGB (0.0, 0.0, 0.0, PaintOp.Mode.Stable);
+  VAR w := PaintOp.FromRGB (1.0, 1.0, 1.0, PaintOp.Mode.Stable);
+  VAR r := NEW(RectsVBT.T).init();
+  BEGIN
+    RETURN NEW(T, rects := r, black := b, white := w).init(r)
+  END New;
+
+BEGIN
+  ZeusPanel.RegisterView (New, "xxx", "Parse");
+END V_xxx.

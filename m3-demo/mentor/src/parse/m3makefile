@@ -1,0 +1,40 @@
+/* Copyright (C) 1994, Digital Equipment Corporation         */
+/* All rights reserved.                                      */
+/* See the file COPYRIGHT for a full description.            */
+/*                                                           */
+/* Last modified on Thu Jun 20 15:40:42 PDT 1996 by heydon   */
+/*      modified on Tue May 24 09:06:47 PDT 1994 by najork   */
+/*      modified on Thu Sep 24 12:42:21 PDT 1992 by mhb      */
+/*      modified on Thu Sep  3 16:10:57 PDT 1992 by kalsow   */
+
+import ("zeus")
+
+/* events */
+zume ("Parse")
+
+/* algorithms */
+module ("A_RecDescent")
+module ("A_BottomUp")
+module ("A_TopDown")
+
+/* views */
+module ("V_Stack")
+module ("V_Input")
+module ("V_Tree")
+
+/* resources */
+resource ("Parse.fv")
+resource ("A_RecDescent.code")
+resource ("A_TopDown.code")
+resource ("A_BottomUp.code")
+
+/* misc. code */
+module ("Parse")
+module ("ParseColor")
+module ("Token")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation ("Main")
+  bundle         ("ParseBundle")
+  program        ("parse")
+end

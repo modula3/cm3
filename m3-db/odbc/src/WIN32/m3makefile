@@ -1,0 +1,7 @@
+% Copyright (C) 1996, Critical Mass, Inc.  All Rights Reserved.
+% See the file COPYRIGHT.CM for a full description.
+%
+
+Interface ("SQLtypes")
+Interface ("SQL")
+Module    ("SQLext")

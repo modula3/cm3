@@ -1,0 +1,45 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(Rim
+  (Pen 0)
+  (HBox
+    (VBox
+      (Shape
+        (BgColor "White")
+        (LightShadow "White")
+        (DarkShadow "White")
+        (Width 300 + inf)
+        (Height 100 + inf)
+        (PageButton (For parms) (Generic %g)))
+      (TSplit
+        %parms
+        Flex
+        Circular
+        (Shape (Width + Inf) (Generic))
+        (Rim
+          (Pen 5)
+          (HBox
+            (VBox
+              (HBox
+                (Fill)
+                (Shape (Width + 0) (Height + 0) "Bezier parameters ")
+                (Fill))
+              (Glue 6)
+              (HBox
+                (VBox
+                  (HBox "px")
+                  (Glue 2)
+                  (Numeric %px =25 (Min 0) (Max 100)))
+                (Glue 10)
+                (VBox
+                  (HBox "py")
+                  (Glue 2)
+                  (Numeric %py =25 (Min 0) (Max 100)))
+                (Glue 10)
+                (VBox
+                  (HBox "Control points size")
+                  (Glue 2)
+                  (Numeric %cpsize =0 (Min 0) (Max 10)))))
+            (Fill)))))))

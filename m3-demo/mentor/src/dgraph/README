@@ -1,0 +1,78 @@
+This package contains animations of some algorithms on directed
+graphs, currently "Depth First Search", and "Transitive Closure" by
+two algorithms, a variant of "Depth First Search" and "Warshall's"
+algorithms. The algorithms and some of the animation ideas were taken
+from Bob Sedgewick's book "Algorithms in C++".
+
+In Sedgewick's book (for C and C++) the representation of the graph is
+explicit in the algorithms, in part because the performance of some of
+the algorithms depends on the representation. Sedgewick uses two
+representations, an adjacency list and an adjacency matrix.  In this
+package the algorithms are implemented using the adjacency matrix
+abstraction, but the actual representation is not revealed to the
+client - it could equally well be implemented as an adjacency list as
+a matrix. In practice, the matrix representation is used. The
+interface that defines the adjacency matrix abstraction is
+"AdjMatrix".
+
+In order to animate graph algorithms, there has to be a way to specify
+the graph to be operated on. A very simple representation in terms of
+S-expressions is defined and this is interpreted by methods on an
+"AdjMatrix.T". The "ReadGraph" interface drives the process from a
+form associated with the "Algorithm.T".
+
+I tried to establish a set of events that would be applicable to a
+wide range of algorithms and also be capable of different
+interpretations by different views. Unfortunately, this attempt at
+"reuse" was not particularly successful. However, events such as
+"MarkEdge" do seem to be generally useful, but really good animations
+seem to require much closer coupling between the algorithm and the
+events. The events are found in "DGraph.evt".
+
+I experimented with several different views to show the adjacency
+matrix. Much of this was hampered by the initial lack of support for
+rendering a matrix in terms of VBTs. I defined an adjacency matrix VBT
+interface "AdjMatrixVBT", but only implemented the VBT in terms of
+other VBTs, e.g. "GraphVBT". The latter implementation (in file
+AdjMatrixVBT.m3.gvbt") had dismal performance, so the current
+implementation is based on a version of the "Grid" interface called
+"GridMJJ". Sitting on top of the facilities offered by "AdjMatrixVBT"
+are three different ways of viewing the matrix that interpret the
+"DGraph" events.  The first view, plain "AdjMatrixView", denotes an
+edge as a filled black square. Edges are marked by changing the color
+of the box outline, which is normally black. In
+"AdjacencyMatrixView01" edges are marked by a "1" character (as in
+Sedgewick's book) and missing edges by a "0". Edges are marked by
+changing the color of the outline box and the character. The latter is
+not desirable but the Grid interface enforces it. Finally the
+"AdjMatrixView01_K" interface is a variant of the previous view that
+leaves edges marked at depth 1 colored, thus showing which entries in
+the matrix have been considered in the algorithm thus far in the
+algorithm. Clearly this view is only appropriate for algorithms, like
+Warshall's, which sweep through the matrix systematically. In all of
+the views vertices are marked by coloring the row or column label
+appropriately.
+
+The "GraphView" interface supports a circles (nodes) and lines (edges)
+representation of the graph. There are two variants, one which simply
+freezes the initial form of the graph and one which responds to events
+which mark edges and vertices and adds new edges. Edges are marked by
+coloring the line between the and vertices are marked by coloring the
+circle.
+
+The "DFSTreeView" is a view that shows the depth first search tree
+being constructed, as per the book. It is used only by the "Depth
+First Search" algorithm.
+
+The "Depth First Search" algorithm is in module "DFS".  "Transitive
+Closure by Depth First Search" is in module DFSTC.  "Warshall" is in
+the module "Warshall". There are code views for all three algorithms,
+in cleaned up Modula-3. There is a data view for "DFS" showing the
+"val" array, and there is one for "Warshall" showing the values of the
+array indices (vertices).
+
+A sample graph description is in the file "data". An acyclic version
+of a similar graph is in "data.a". Both these are taken directly from
+Sedgewick's book.
+
+Mick Jordan

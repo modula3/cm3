@@ -1,0 +1,37 @@
+(* Copyright (C) 1993, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+
+IMPORT GameBoard, TypeFmt, Minimax;
+
+OUTPUT Setup ();
+(* Call once at the beginning *)
+
+OUTPUT PlayerMove (player: INTEGER[Fmt.Int]; 
+                   fromx, fromy, tox, toy:  INTEGER[Fmt.Int]);
+(* A move on the board. *)
+
+OUTPUT Finished (winner: INTEGER[Fmt.Int]);
+(* Game is over. *)
+
+OUTPUT EvaluateNode(board: GameBoard.T[TypeFmt.Board]);
+  (* Called when minimax evaluates a new board *)
+
+OUTPUT PlayerThinking(player:INTEGER[Fmt.Int]; 
+                      board:GameBoard.T[TypeFmt.Board]);
+  (* Called when a player is asked to think of a move *)
+
+OUTPUT FinishedEvalNode(board:GameBoard.T[TypeFmt.BoardKey]);
+  (* Called when minimax finishes evaluating a node *)
+
+OUTPUT BoardValueUpdated(board:GameBoard.T[TypeFmt.BoardKey];
+                    newValue: Minimax.BoardValue[Fmt.Int]);
+
+FEEDBACK HumanSelection(xCoord, yCoord:INTEGER[Fmt.Int]);
+(* called when the user has clicked on a square *)
+
+OUTPUT HumanCellSelected(xCoord, yCoord:INTEGER[Fmt.Int]);
+(* called when the user has clicked on a valid square *)
+
+OUTPUT HumanIllegalMove();
+(* called when the user has tried to give an invalid move *)

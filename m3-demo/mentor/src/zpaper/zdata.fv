@@ -1,0 +1,13 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+
+(VBox 
+  (Macro TB BOA (text)
+    `(Shape (Width 60) (Text RightAlign ,text)))
+  (Glue 10)
+  (HBox (TB "N: ") (Numeric (Min 1) (Max 1000) %N =50) Fill)
+  (Glue 10)
+  (HBox (TB "k: ") (Numeric (Min 1) (Max 1000) %k =5) Fill)
+  (Glue 10))

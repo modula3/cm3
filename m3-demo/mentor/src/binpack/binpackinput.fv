@@ -1,0 +1,27 @@
+; Copyright (C) 1994, Digital Equipment Corporation    
+; All rights reserved.                                 
+; See the file COPYRIGHT for a full description.       
+
+; provides for a single integer number whose name is N 
+
+(VBox
+  (Macro Label BOA (text) `(Shape (Width 120) (Text RightAlign ,text)))
+  (Macro Line BOA (label expr) `(HBox (Label ,label) ,expr Fill))
+  (Glue 10)
+  (Line "Number of weights: " (Numeric (Min 1) (Max 1000) %N =26))
+  (Glue 10)
+  (Line "Number of bins: " (Numeric (Min 1) (Max 100) %B =10))
+  (Glue 10)
+  (Filter %runtimeOpts Dormant
+    (Frame Chiseled
+      (VBox
+        (Glue 10)
+        (Line
+          "Bin to empty: "
+          (Filter (Numeric (Min 0) (Max 1000) %toEmpty AllowEmpty)))
+        (Glue 10)
+        (Line
+          "Delete a weight: "
+          (Filter (Numeric (Min 0) (Max 1000) %toDelete AllowEmpty)))
+        (Glue 10))))
+  (Glue 10))
