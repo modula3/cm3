@@ -13,7 +13,7 @@ IMPORT RandomRep, RandomBasic;
 CONST Module = "RandomBayesDurham.";
 (*==========================*)
 (*---------------------*)
-REVEAL T = RandomBasic.T BRANDED OBJECT
+REVEAL T = RandomBasic.TReal BRANDED OBJECT
     z1:INTEGER;
   OVERRIDES
     engine:=Engine;

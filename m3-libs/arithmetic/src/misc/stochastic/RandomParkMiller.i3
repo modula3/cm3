@@ -12,7 +12,7 @@ IMPORT RandomBasic;
 
 (*==========================*)
 TYPE
-  T <: RandomBasic.T;  (*inspired by NR92 ran1*)
+  T <: RandomBasic.TReal;  (*inspired by NR92 ran1*)
 
 PROCEDURE New(seed:[1..LAST(INTEGER)]:=1;
                  ):T;

@@ -18,7 +18,7 @@ CONST Module = "RandomParkMiller.";
 CONST
   TableSize = 32; (*for Bayes-Durham shuffle*)
 
-REVEAL T = RandomBasic.T BRANDED OBJECT
+REVEAL T = RandomBasic.TReal BRANDED OBJECT
     z1,table_z:INTEGER;
     table:ARRAY[0..TableSize-1] OF INTEGER;
   OVERRIDES

@@ -8,10 +8,10 @@ Pseudo-random number generator by Warren D. Smith.
 IMPORT RandomBasic,
        LongRealBasic AS R,
        LongRealTrans AS RT,
-       LongReal      AS RSpec,
        Word;
 IMPORT RandomRep;
 
+<*UNUSED*>
 CONST Module = "RandomIteratedSquaring.";
 (*==========================*)
 
@@ -25,14 +25,12 @@ CONST
   DefaultXis = 243213.0D0;
 *)
 
-REVEAL T = TPublic BRANDED OBJECT
+REVEAL T = RandomBasic.TBoolean BRANDED OBJECT
     xis : R.T;
     seedbitind : INTEGER := 3;
     seed1, seed2 : Word.T;
   OVERRIDES
     engine:=Engine;
-    generateBoolean := GenerateBoolean;
-    generateWord    := GenerateWord;
   END;
 
 (** Note: period of the bit sequence this produces is
@@ -44,7 +42,7 @@ REVEAL T = TPublic BRANDED OBJECT
  * If seed1 or seed2 are nonzero, then will add a perturbation to output
  * according to the bits of the seed words.
 *********************************************)
-PROCEDURE GenerateBoolean(SELF:T) : BOOLEAN =
+PROCEDURE Engine(SELF:T) : BOOLEAN =
   VAR
     perturb : Word.T;
   BEGIN
@@ -60,32 +58,8 @@ PROCEDURE GenerateBoolean(SELF:T) : BOOLEAN =
 
     SELF.xis := (SELF.xis * SELF.xis) MOD moduis;
 
-    RETURN ( (SELF.xis < (moduis-R.One)*0.5D0) = (perturb#0) );
-  END GenerateBoolean;
-
-(* Generates a longreal, bit by bit, using IteratedSquaring *)
-PROCEDURE Engine(SELF:T) : R.T =
-  VAR
-    x : R.T := R.Zero;
-  BEGIN
-    FOR i:=0 TO RSpec.Precision-1 DO
-      x := RT.Half * (x + FLOAT(ORD(GenerateBoolean(SELF)), R.T));
-    END;
-    <* ASSERT R.Zero <= x *>
-    <* ASSERT x < R.One *>
-    RETURN x;
+    RETURN ( (SELF.xis < (moduis-R.One)*RT.Half) = (perturb#0) );
   END Engine;
-
-(* Generates a word, bit by bit, using IteratedSquaring *)
-PROCEDURE GenerateWord(SELF:T) : Word.T =
-  VAR
-    x : Word.T := 0;
-  BEGIN
-    FOR i:=0 TO Word.Size DO
-      x := Word.Plus( Word.LeftShift(x,1), ORD(GenerateBoolean(SELF)));
-    END;
-    RETURN x;
-  END GenerateWord;
 
 (*==========================*)
 BEGIN
