@@ -278,7 +278,10 @@ PROCEDURE FourierDecay () =
             maskSpec := FFT.DFTR2C1D(mask.wrapCyclic(bandWidth)^);
             band := CV.FromArray(
                       SUBARRAY(genSpec^, bandWidth, bandWidth + 1));
-            bandWrapped            := band;
+            bandWrapped := band;
+            (* the frequency band mapped back to time domain *)
+            bandMask := NEW(S.T).fromVector(FFT.DFTC2R1D(band^, 0)).scale(
+                          0.5D0);
             curBandWidth           := bandWidth;
             decaySpec              := CV.New(NUMBER(genSpec^));
             k           : CARDINAL := l - 1;
@@ -308,14 +311,15 @@ PROCEDURE FourierDecay () =
                 SUBARRAY(decaySpec^, curBandWidth, curBandWidth) :=
                   decayBand;
                 IO.Put(
-                  Fmt.FN("%s: sum (%s)\n   %s <-> %s <-> %s <-> %s\n",
-                         ARRAY OF
-                           TEXT{Fmt.Int(k),
-                                (*RF.Fmt(CVT.Norm2(CVB.Sub(decayBand,
-                                   genBand))),*)
-                                RF.Fmt(sum / decaySum), RF.Fmt(sum),
-                                RF.Fmt(decayDoubSum), RF.Fmt(decaySum),
-                                RF.Fmt(wrappedSum)}));
+                  Fmt.FN(
+                    "%s: sum (%s)\n   %s <-> %s <-> %s <-> %s <-> %s\n",
+                    ARRAY OF
+                      TEXT{
+                      Fmt.Int(k),
+                      (*RF.Fmt(CVT.Norm2(CVB.Sub(decayBand, genBand))),*)
+                      RF.Fmt(sum / decaySum), RF.Fmt(sum),
+                      RF.Fmt(decayDoubSum), RF.Fmt(decaySum),
+                      RF.Fmt(wrappedSum), RF.Fmt(bandMask.getValue(0))}));
                 IO.Put(
                   Fmt.FN(
                     "diff: upsampled %s, Fourier interpolated %s\n",
@@ -369,10 +373,11 @@ PROCEDURE FourierDecay () =
               (* alternative way: upsample and wrap frequency band *)
               WITH bandWrappedNew = UpSample2(bandWrapped^) DO
                 bandWrapped := NEW(CV.T, NUMBER(bandWrapped^));
-                CVS.Add(bandWrapped^,
-                       SUBARRAY(bandWrappedNew^, 0, NUMBER(bandWrapped^)),
-                       SUBARRAY(
-                         bandWrappedNew^, bandWidth, NUMBER(bandWrapped^)));
+                CVS.Add(
+                  bandWrapped^,
+                  SUBARRAY(bandWrappedNew^, 0, NUMBER(bandWrapped^)),
+                  SUBARRAY(
+                    bandWrappedNew^, bandWidth, NUMBER(bandWrapped^)));
               END;
               WITH bandSpec = SUBARRAY(bandWrapped^, 0, bandWidth) DO
                 MulVecC(bandSpec, maskSpec^, bandSpec);
@@ -380,6 +385,8 @@ PROCEDURE FourierDecay () =
               bandWrapped[LAST(bandWrapped^)] :=
                 C.Mul(maskSpec[0], bandWrapped[LAST(bandWrapped^)]);
 
+              (* second alternative: perform convolution in time domain *)
+              bandMask := bandMask.convolveDown(mask, 2).scale(0.5D0);
 
               (* IO.Put(Fmt.FN("diff upsampled - Fourier interpolated" & "
                  after multiplication: %s\n", ARRAY OF
