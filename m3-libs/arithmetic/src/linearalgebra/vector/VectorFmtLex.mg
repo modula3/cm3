@@ -1,7 +1,6 @@
-GENERIC MODULE VectorFmtLex(R, RF);
-(*Arithmetic for Modula-3, see doc for details*)
+GENERIC MODULE VectorFmtLex(RF, RSeq);
+(* Arithmetic for Modula-3, see doc for details *)
 
-(*IMPORT Arithmetic AS Arith;*)
 IMPORT Rd, Wr, TextWr, Thread;
 IMPORT Fmt AS F;
 IMPORT Lex AS L;
@@ -9,8 +8,9 @@ IMPORT FloatMode;
 IMPORT FmtLexSupport AS FSup;
 FROM FmtLexSupport IMPORT Precedence;
 
-<*UNUSED*>
-CONST Module = "VectorFmt.";
+<* UNUSED *>
+CONST
+  Module = "VectorFmt.";
 
 PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}; ): TEXT
   RAISES {Thread.Alerted, Wr.Failure} =
@@ -25,9 +25,9 @@ PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}; ): TEXT
     RETURN TextWr.ToText(wr);
   END Fmt;
 
-PROCEDURE Tex (         x     : T;
-               READONLY style       := TexStyle{}; <*UNUSED*>
-                        within      := Precedence.sum         ): TEXT
+PROCEDURE Tex (                      x     : T;
+                            READONLY style       := TexStyle{};
+               <* UNUSED *>          within      := Precedence.sum): TEXT
   RAISES {Thread.Alerted, Wr.Failure} =
   VAR
     wr        := TextWr.New();
@@ -55,36 +55,25 @@ PROCEDURE Tex (         x     : T;
 
 PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
   RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted} =
-  TYPE
-    List = REF RECORD
-                 prev: List;
-                 data: R.T;
-               END;
   VAR
-    item: List := NIL;
-    n          := 0;
+    seq := NEW(RSeq.T).init();
+    n   := 0;
   BEGIN
     TRY
-      (*read the values into a list*)
+      (* read the values into a sequence *)
       REPEAT
-        item :=
-          NEW(List, prev := item, data := RF.Lex(rd, style.elemStyle));
-        (*IO.Put("new data: "&RF.Fmt(item.data)&"\n");*)
+        seq.addhi(RF.Lex(rd, style.elemStyle));
+        (* IO.Put("new data: "&RF.Fmt(item.data)&"\n"); *)
         INC(n);
       UNTIL
         NOT FSup.CheckChar(rd, style.sep) OR FSup.CheckChar(rd, style.term);
     EXCEPT
-    | Rd.EndOfFile =>            (*treat like termination character*)
+    | Rd.EndOfFile =>            (* treat like termination character *)
     END;
 
-    (*copy the list elements into the vector's array*)
-    VAR z := NEW(T, n);
-    BEGIN
-      FOR i := n - 1 TO 0 BY -1 DO
-        z[i] := item.data;
-        item := item.prev;
-      END;
-      <*ASSERT item=NIL*>
+    (* copy the list elements into the vector's array *)
+    WITH z = NEW(T, seq.size()) DO
+      FOR i := FIRST(z^) TO LAST(z^) DO z[i] := seq.get(i); END;
       RETURN z;
     END;
   END Lex;
