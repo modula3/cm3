@@ -49,16 +49,19 @@ BEGIN
   END;
 END MinMax;
 
+<*UNUSED*>
 PROCEDURE Min (a, b : INTEGER) : INTEGER =
 BEGIN
   IF a<b THEN RETURN a ELSE RETURN b END;
 END Min;
 
+<*UNUSED*>
 PROCEDURE Max (a, b : INTEGER) : INTEGER =
 BEGIN
   IF a>b THEN RETURN a ELSE RETURN b END;
 END Max;
 
+<*UNUSED*>
 PROCEDURE Swap (VAR x, y : T) =
 VAR
   s : T;
@@ -455,6 +458,7 @@ BEGIN
     INC(j);
     x.data[j] := Wx.MinusWithBorrow(x.data[j], 0, borrow);
   END;
+  CorrectSize(x,x.size);
 END SubShiftedProd;
 
 (*x := x+SHL(y,sh)   (inplace, make sure that x.data has enough space)*)
@@ -475,6 +479,16 @@ BEGIN
   END;
 END AddShifted;
 
+(*make sure, that x.data contains enough data*)
+PROCEDURE GetSubword (READONLY x : T; startbit : INTEGER) : W.T =
+VAR
+  start,
+  subsh :  INTEGER;
+BEGIN
+  start := startbit DIV W.Size;
+  subsh := startbit MOD W.Size;
+  RETURN W.Or (W.Shift(x.data[start],-subsh), W.Shift(x.data[start+1],W.Size-subsh));
+END GetSubword;
 
 
 PROCEDURE DivModU (READONLY x, y : T; VAR r : T) : T RAISES {Error} =
@@ -484,6 +498,11 @@ BEGIN
   IF y.size = 0 THEN
     RAISE Error(Err.divide_by_zero);
   END;
+
+  (*normalize remainder and divisor temporarily
+    divide most significant 32 bit of r by the most significant 16 bit of y*)
+  EVAL Wx.FindMostSignifBit(x.data[x.size-1]);
+
   RETURN q;
 END DivModU;
 
