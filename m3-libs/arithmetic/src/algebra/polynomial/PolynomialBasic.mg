@@ -39,10 +39,12 @@ PROCEDURE Add (x, y: T): T =
   BEGIN
     IF xl >= yl THEN
       FOR i := 0 TO yl DO z[i] := R.Add(x[i], y[i]); END;
-      FOR i := yl + 1 TO xl DO z[i] := x[i]; END;
+      SUBARRAY(z^, NUMBER(y^), NUMBER(z^) - NUMBER(y^)) :=
+        SUBARRAY(x^, NUMBER(y^), NUMBER(z^) - NUMBER(y^));
     ELSE
       FOR i := 0 TO xl DO z[i] := R.Add(x[i], y[i]); END;
-      FOR i := xl + 1 TO yl DO z[i] := y[i]; END;
+      SUBARRAY(z^, NUMBER(x^), NUMBER(z^) - NUMBER(x^)) :=
+        SUBARRAY(y^, NUMBER(x^), NUMBER(z^) - NUMBER(x^));
     END;
     RETURN Strip(z);
   END Add;
@@ -56,7 +58,8 @@ PROCEDURE Sub (x, y: T): T =
   BEGIN
     IF xl >= yl THEN
       FOR i := 0 TO yl DO z[i] := R.Sub(x[i], y[i]); END;
-      FOR i := yl + 1 TO xl DO z[i] := x[i]; END;
+      SUBARRAY(z^, NUMBER(y^), NUMBER(z^) - NUMBER(y^)) :=
+        SUBARRAY(x^, NUMBER(y^), NUMBER(z^) - NUMBER(y^));
     ELSE
       FOR i := 0 TO xl DO z[i] := R.Sub(x[i], y[i]); END;
       FOR i := xl + 1 TO yl DO z[i] := R.Neg(y[i]); END;
@@ -79,25 +82,18 @@ PROCEDURE IsZero (x: T): BOOLEAN =
 (*---------------------*)
 PROCEDURE Equal (x, y: T): BOOLEAN =
   VAR
-    xl := LAST(x^);
-    yl := LAST(y^);
+    xn := NUMBER(x^);
+    yn := NUMBER(y^);
+  <*FATAL Error*>(*we won't give VR.Equal a chance to complain about
+                    mismatching vector sizes*)
   BEGIN
-    IF xl >= yl THEN
-      FOR i := 0 TO yl DO
-        IF NOT R.Equal(x[i], y[i]) THEN RETURN FALSE END
-      END;
-      FOR i := yl + 1 TO xl DO
-        IF NOT R.Equal(x[i], R.Zero) THEN RETURN FALSE END
-      END;
+    IF xn >= yn THEN
+      RETURN VR.Equal(SUBARRAY(x^, 0, yn), SUBARRAY(y^, 0, yn))
+               AND VR.IsZero(SUBARRAY(x^, yn, xn - yn));
     ELSE
-      FOR i := 0 TO xl DO
-        IF NOT R.Equal(x[i], y[i]) THEN RETURN FALSE END
-      END;
-      FOR i := xl + 1 TO yl DO
-        IF NOT R.Equal(R.Zero, y[i]) THEN RETURN FALSE END
-      END;
+      RETURN VR.Equal(SUBARRAY(x^, 0, xn), SUBARRAY(y^, 0, xn))
+               AND VR.IsZero(SUBARRAY(y^, xn, yn - xn));
     END;
-    RETURN TRUE;
   END Equal;
 
 (*---------------------*)

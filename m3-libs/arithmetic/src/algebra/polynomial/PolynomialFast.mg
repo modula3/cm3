@@ -26,10 +26,12 @@ PROCEDURE Add (x, y: T): T =
   BEGIN
     IF xl >= yl THEN
       FOR i := 0 TO yl DO z[i] := x[i] + y[i]; END;
-      FOR i := yl + 1 TO xl DO z[i] := x[i]; END;
+      SUBARRAY(z^, NUMBER(y^), NUMBER(z^) - NUMBER(y^)) :=
+        SUBARRAY(x^, NUMBER(y^), NUMBER(z^) - NUMBER(y^));
     ELSE
       FOR i := 0 TO xl DO z[i] := x[i] + y[i]; END;
-      FOR i := xl + 1 TO yl DO z[i] := y[i]; END;
+      SUBARRAY(z^, NUMBER(x^), NUMBER(z^) - NUMBER(x^)) :=
+        SUBARRAY(y^, NUMBER(x^), NUMBER(z^) - NUMBER(x^));
     END;
     RETURN z;
   END Add;
@@ -45,7 +47,8 @@ PROCEDURE Sub (x, y: T): T =
   BEGIN
     IF xl >= yl THEN
       FOR i := 0 TO yl DO z[i] := x[i] - y[i]; END;
-      FOR i := yl + 1 TO xl DO z[i] := x[i]; END;
+      SUBARRAY(z^, NUMBER(y^), NUMBER(z^) - NUMBER(y^)) :=
+        SUBARRAY(x^, NUMBER(y^), NUMBER(z^) - NUMBER(y^));
     ELSE
       FOR i := 0 TO xl DO z[i] := x[i] - y[i]; END;
       FOR i := xl + 1 TO yl DO z[i] := -y[i]; END;
