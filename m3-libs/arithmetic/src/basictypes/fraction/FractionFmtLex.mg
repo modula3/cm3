@@ -11,6 +11,7 @@ Abstract: Formatting and parsing fraction numbers
                           The ones with beginning caps are wds's
 *)
 (*FROM NADefinitions IMPORT Error,Err;*)
+FROM FmtLexSupport IMPORT Precedence, Parenthesize;
 
 <*UNUSED*> CONST Module = "FractionFmtLex.";
 
@@ -31,6 +32,21 @@ BEGIN
             & "d:=" & RF.Fmt(x.d,style.elemStyle) & "}";
 	RETURN t;
 END Fmt;
+
+PROCEDURE Tex (READONLY x : T; READONLY style := TexStyle{}; within := Precedence.sum) : TEXT =
+  VAR
+    t:TEXT;
+  BEGIN
+    IF TexFlag.fraction IN style.flags THEN
+      t := "\\frac{" &
+           RF.Tex(x.n,style.elemStyle,Precedence.sum) & "}{" &
+           RF.Tex(x.d,style.elemStyle,Precedence.sum) & "}";
+    ELSE
+      t := RF.Tex(x.n,style.elemStyle,Precedence.product) & " / " &
+           RF.Tex(x.d,style.elemStyle,Precedence.power);
+    END;
+    RETURN Parenthesize (t, Precedence.product, within);
+  END Tex;
 
 (*==========================*)
 BEGIN
