@@ -3,7 +3,7 @@
 MODULE Main;
 
 IMPORT Atom, AtomList, File, Fmt, FS, OSError, OS, Params, Pathname;
-IMPORT Stdio, Text, TextF, Thread, Wr;
+IMPORT Stdio, Text, Thread, Wr;
 
 CONST
   KnownSourceSuffixes = ARRAY OF TEXT {
@@ -176,7 +176,8 @@ PROCEDURE SuffixMatch (path, suffix: TEXT): BOOLEAN =
     IF len >= slen THEN
       offset := len - slen;
       FOR i := 0 TO slen-1 DO
-        IF Map [path [i+offset]] # Map [suffix[i]] THEN
+        IF Map [Text.GetChar(path, i+offset)] # 
+	   Map [Text.GetChar(suffix, i)] THEN
           RETURN FALSE;
         END;
       END;
