@@ -5,7 +5,7 @@ Abstract: Statistics routines
 
 3/16/96  Harry George    Initial version
 *)
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 IMPORT LongRealBasic AS R;
 
 (*==========================*)

@@ -3,7 +3,7 @@ GENERIC INTERFACE PolarBasic(R, C);
 
    Abstract: Complex numbers in polar coordinates *)
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 CONST Brand = R.Brand & "Polar";
 

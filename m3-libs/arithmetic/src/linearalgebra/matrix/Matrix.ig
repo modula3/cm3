@@ -2,7 +2,7 @@ GENERIC INTERFACE Matrix(R, V, MI);
 (*Arithmetic for Modula-3, see doc for details
 
    Abstract: Matrix math*)
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 (*==========================*)
 
 CONST Brand = R.Brand & "Matrix";

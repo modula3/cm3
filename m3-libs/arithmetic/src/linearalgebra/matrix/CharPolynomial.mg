@@ -4,7 +4,7 @@ Abstract: Characteristic polynomial of a matrix
 
 *)
 
-FROM NADefinitions IMPORT Error,Err;
+IMPORT Arithmetic AS Arith;
 
 <*UNUSED*> CONST Module = "CharPolynomial.";
 
@@ -12,13 +12,13 @@ FROM NADefinitions IMPORT Error,Err;
 (*it is trace(x^n) = lambda[1]^n+...+lambda[n]^n
   thus we get sequence of power sums if we compute
   the trace of successive powers of x*)
-PROCEDURE CharPolynomial(x:M.T):Rt.T RAISES{Error}=
+PROCEDURE CharPolynomial(x:M.T):Rt.T RAISES{Arith.Error}=
 VAR
   p:REF Rt.PowerSumSeq;
   pow:M.T;
 BEGIN
   IF NUMBER(x^)#NUMBER(x[0]) THEN
-    RAISE Error(Err.bad_size);
+    RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
   END;
   p:=NEW(REF Rt.PowerSumSeq,NUMBER(x^));
   pow:=x;
@@ -31,12 +31,12 @@ BEGIN
 END CharPolynomial;
 
 (*-----------------*)
-PROCEDURE CompanionMatrix(x:Rt.T):M.T RAISES{Error}=
+PROCEDURE CompanionMatrix(x:Rt.T):M.T RAISES{Arith.Error}=
 VAR
   y:M.T;
 BEGIN
   IF NOT R.Equal(x[LAST(x^)],R.One) THEN
-    RAISE Error(Err.indivisible);
+    RAISE Arith.Error(NEW(Arith.ErrorIndivisible).init());
   END;
   y:=M.New(LAST(x^),LAST(x^));
   FOR j:=0 TO LAST (y^)-1 DO

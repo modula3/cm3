@@ -4,7 +4,7 @@ MODULE TestVector EXPORTS Test;
    1/1/96 <name> Initial version
 
    *)
-(*FROM NADefinitions IMPORT Error,Err;*)
+(*IMPORT Arithmetic AS Arith;*)
 IMPORT                           (*LongRealBasic AS R,*)
   LongRealFmtLex       AS RF,
   LongRealVector       AS V,

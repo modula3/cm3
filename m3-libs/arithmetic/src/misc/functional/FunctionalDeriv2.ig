@@ -5,7 +5,7 @@ GENERIC INTERFACE FunctionalDeriv2(R,V,M);
 
    <describe> *)
 
-IMPORT NADefinitions AS NA;
+IMPORT Arithmetic AS Arith;
 
 (*==========================*)
 
@@ -16,7 +16,7 @@ TYPE
         second: M.T;
       END;
 
-PROCEDURE Add (READONLY x, y: T): T RAISES {NA.Error};
+PROCEDURE Add (READONLY x, y: T): T RAISES {Arith.Error};
 PROCEDURE Scale (READONLY x: T; y: R.T): T;
 
 (*==========================*)

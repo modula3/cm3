@@ -8,7 +8,7 @@ Abstract: Bits and Bytes
 IMPORT Word, Fmt AS F;
 FROM Word IMPORT And,Xor,Not,LeftShift,RightShift;
 (*
-FROM NADefinitions IMPORT Debug;
+FROM Arithmetic IMPORT Debug;
 *)
 
 CONST Module = "Bits.";

@@ -3,13 +3,15 @@ GENERIC MODULE FloatMatrixLapack(R, C, V, VR, CV, M, LA);
 
    Abstract: <describe> *)
 
-FROM NADefinitions IMPORT Error, Err;
+IMPORT Arithmetic AS Arith;
 
-<*UNUSED*>
-CONST Module = "FloatMatrixLapack.";
+<* UNUSED *>
+CONST
+  Module = "FloatMatrixLapack.";
 (*==========================*)
 
-PROCEDURE EigenValues (A: M.T; flags := EVFlagSet{}): EV RAISES {Error} =
+PROCEDURE EigenValues (A: M.T; flags := EVFlagSet{}): EV
+  RAISES {Arith.Error} =
   VAR
     eigRe            := V.New(NUMBER(A^));
     eigIm            := V.New(NUMBER(A^));
@@ -20,7 +22,9 @@ PROCEDURE EigenValues (A: M.T; flags := EVFlagSet{}): EV RAISES {Error} =
     success: INTEGER;
     result : EV;
   BEGIN
-    IF NUMBER(A^) # NUMBER(A[0]) THEN RAISE Error(Err.bad_size); END;
+    IF NUMBER(A^) # NUMBER(A[0]) THEN
+      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
+    END;
 
     result.eigenvalues := CV.New(NUMBER(A^));
 
@@ -40,9 +44,10 @@ PROCEDURE EigenValues (A: M.T; flags := EVFlagSet{}): EV RAISES {Error} =
     (*A finer error analysis is possible!  In some cases partial results
        should be returned*)
     IF success < 0 THEN
-      RAISE Error(Err.b1_too_small); (*nonsense :-)*)
+      RAISE
+        Arith.Error(NEW(Arith.ErrorAlmostZero).init()); (*nonsense :-)*)
     ELSIF success > 0 THEN
-      RAISE Error(Err.not_converging);
+      RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
     END;
 
     result.upperTri := M.Transpose(A);
@@ -55,7 +60,7 @@ PROCEDURE EigenValues (A: M.T; flags := EVFlagSet{}): EV RAISES {Error} =
   END EigenValues;
 
 PROCEDURE LeastSquares (A: M.T; READONLY B: ARRAY OF V.T; flags: LSFlagSet):
-  REF ARRAY OF LS RAISES {Error} =
+  REF ARRAY OF LS RAISES {Arith.Error} =
   VAR
     ls    := NEW(REF ARRAY OF LS, NUMBER(B));
     minmn := MIN(NUMBER(A^), NUMBER(A[0]));
@@ -84,7 +89,9 @@ PROCEDURE LeastSquares (A: M.T; READONLY B: ARRAY OF V.T; flags: LSFlagSet):
     END;
 
     FOR j := 0 TO LAST(X^) DO
-      IF NUMBER(X[j]) # bsize THEN RAISE Error(Err.bad_size); END;
+      IF NUMBER(X[j]) # bsize THEN
+        RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
+      END;
       SUBARRAY(X[j], 0, bsize) := B[j]^;
     END;
 
@@ -93,7 +100,8 @@ PROCEDURE LeastSquares (A: M.T; READONLY B: ARRAY OF V.T; flags: LSFlagSet):
             success);
 
     IF success < 0 THEN
-      RAISE Error(Err.not_converging); (*nonsense :-)*)
+      RAISE
+        Arith.Error(NEW(Arith.ErrorNoConvergence).init()); (*nonsense :-)*)
     END;
 
     FOR j := 0 TO LAST(X^) DO

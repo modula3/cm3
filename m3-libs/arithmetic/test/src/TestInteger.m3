@@ -14,7 +14,7 @@ IMPORT Cardinal32Basic        AS Cd,
        LongRealTrans          AS RT,
        LongRealFmtLex         AS RF,
        NumberTheory           AS NT,
-       NADefinitions          AS NA;
+       Arithmetic          AS Arith;
 (*=======================*)
 CONST Module = "TestInteger.";
 (*----------------------*)
@@ -82,7 +82,7 @@ PROCEDURE TestFactor (): BOOLEAN =
     *)
     p: NT.PowerArray;
     n: Cd.T;
-  <* FATAL NA.Error *>
+  <* FATAL Arith.Error *>
   BEGIN
     Debug(1, ftn, "begin\n");
     FOR i := 1111 TO 1000000 BY 4321 DO

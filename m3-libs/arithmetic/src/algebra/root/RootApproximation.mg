@@ -1,6 +1,6 @@
 GENERIC MODULE RootApproximation(R, RT, RRt, C, CT, CP, CRt);
 (*Arithmetic for Modula-3, see doc for details*)
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 (**
 IMPORT LongRealComplexVectorFmtLex AS VF,
        LongRealComplexFmtLex AS CF,

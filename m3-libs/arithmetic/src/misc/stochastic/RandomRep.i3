@@ -8,7 +8,7 @@ Used to put object wrapper on RNG's.
 *)
 IMPORT LongRealBasic AS R;
 FROM RandomBasic IMPORT T,TPublic;
-FROM NADefinitions      IMPORT Error;
+FROM Arithmetic      IMPORT Error;
 
 (*==========================*)
 REVEAL

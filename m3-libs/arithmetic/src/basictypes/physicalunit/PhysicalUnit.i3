@@ -14,7 +14,7 @@ Abstract: Computations with vectors of exponents of physical units.
 IMPORT IntIntTbl      AS Tbl,
        RealBasic      AS R;
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 TYPE
   T = Tbl.Default;

@@ -12,7 +12,7 @@ IMPORT IO, Lex, TextRd;
 
 IMPORT Rd, Wr, Thread;
 IMPORT FloatMode;
-IMPORT NADefinitions AS NA;
+IMPORT Arithmetic AS Arith;
 
 (*=======================*)
 CONST Module = "TestFmtLex.";
@@ -32,7 +32,7 @@ PROCEDURE TestMatrixIO (): BOOLEAN =
     text   := "";
 
   <*FATAL FloatMode.Trap, Lex.Error, Rd.Failure, Wr.Failure,
-          Thread.Alerted, NA.Error*>
+          Thread.Alerted, Arith.Error*>
   BEGIN
     Debug(1, ftn, "begin\n");
 

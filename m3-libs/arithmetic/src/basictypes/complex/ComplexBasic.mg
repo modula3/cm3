@@ -3,7 +3,7 @@ GENERIC MODULE ComplexBasic(R);
 
    Abstract: Complex numbers and basic operations *)
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 <*UNUSED*>
 CONST Module = "ComplexBasic.";

@@ -4,10 +4,11 @@ GENERIC MODULE FloatBasic();
    Abstract: Generic wrapper routines for basic operations of float
    types *)
 
-FROM NADefinitions IMPORT Error, Err;
+IMPORT Arithmetic AS Arith;
 
-<*UNUSED*>
-CONST Module = "FloatBasic.";
+<* UNUSED *>
+CONST
+  Module = "FloatBasic.";
 (*==========================*)
 
 PROCEDURE FromInteger (x: INTEGER): T =
@@ -41,10 +42,12 @@ PROCEDURE IsZero (x: T): BOOLEAN =
     RETURN x = Zero;
   END IsZero;
 
-<*INLINE*>
-PROCEDURE CheckDivisor (x: T) RAISES {Error} =
+<* INLINE *>
+PROCEDURE CheckDivisor (x: T) RAISES {Arith.Error} =
   BEGIN
-    IF x = Zero THEN RAISE Error(Err.divide_by_zero); END;
+    IF x = Zero THEN
+      RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init());
+    END;
   END CheckDivisor;
 
 
@@ -53,33 +56,37 @@ PROCEDURE Mul (x, y: T): T =
     RETURN x * y
   END Mul;
 
-PROCEDURE Div (x, y: T): T RAISES {Error} =
+PROCEDURE Div (x, y: T): T RAISES {Arith.Error} =
   BEGIN
     CheckDivisor(y);
     RETURN x / y
   END Div;
 
-PROCEDURE Mod ( <*UNUSED*>x: T; y: T): T RAISES {Error} =
+PROCEDURE Mod (<* UNUSED *> x: T; y: T): T RAISES {Arith.Error} =
   BEGIN
     CheckDivisor(y);
     RETURN Zero
   END Mod;
 
-PROCEDURE DivMod (x, y: T): QuotRem RAISES {Error} =
+PROCEDURE DivMod (x, y: T): QuotRem RAISES {Arith.Error} =
   BEGIN
     CheckDivisor(y);
     RETURN QuotRem{x / y, Zero}
   END DivMod;
 
-PROCEDURE IntMod (x, y: T): T RAISES {Error} =
+PROCEDURE IntMod (x, y: T): T RAISES {Arith.Error} =
   BEGIN
-    IF y = Zero THEN RAISE Error(Err.divide_by_zero) END;
+    IF y = Zero THEN
+      RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init())
+    END;
     RETURN x MOD y
   END IntMod;
 
-PROCEDURE Rec (x: T): T RAISES {Error} =
+PROCEDURE Rec (x: T): T RAISES {Arith.Error} =
   BEGIN
-    IF x = Zero THEN RAISE Error(Err.divide_by_zero) END;
+    IF x = Zero THEN
+      RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init())
+    END;
     RETURN One / x
   END Rec;
 

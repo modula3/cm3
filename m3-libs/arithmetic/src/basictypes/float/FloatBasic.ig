@@ -4,7 +4,7 @@ GENERIC INTERFACE FloatBasic(R, RTy, RFl);
    Abstract: Generic wrapper routines for basic operations of float
    types *)
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 (*==========================*)
 

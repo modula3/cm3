@@ -1,6 +1,6 @@
 GENERIC MODULE Vector(R, VR);
 (*Arithmetic for Modula-3, see doc for details*)
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 <*UNUSED*>
 CONST Module = "Vector.";

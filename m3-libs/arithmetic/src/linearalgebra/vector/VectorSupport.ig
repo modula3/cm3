@@ -6,7 +6,7 @@ GENERIC INTERFACE VectorSupport(R);
    The routines are utilized for many similar data types.
 
    *)
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 (*==========================*)
 
 TYPE T = ARRAY OF R.T;

@@ -13,7 +13,11 @@ TYPE
      facilities.  In future we might add a dynamic method to the objects
      which generates an error message text or similar services. *)
 
-  ErrorRoot = AtomList.T BRANDED OBJECT END;
+  ErrorRoot = AtomList.T BRANDED OBJECT
+              METHODS
+                init (msg: TEXT := ""; oldErr: ErrorRoot := NIL; ):
+                      ErrorRoot := ErrorInit;
+              END;
   ErrorBadParameters = ErrorRoot BRANDED OBJECT END;
   ErrorOperationAborted = ErrorRoot BRANDED OBJECT END;
 
@@ -44,11 +48,12 @@ TYPE
   ErrorAlmostZero =
     ErrorOperationAborted BRANDED OBJECT END; (*in tridiagonal, rewrite for
                                                  n-1 eqns*)
-  ErrorNotConverging =
+  ErrorNoConvergence =
     ErrorOperationAborted BRANDED OBJECT END; (*e.g., eps or maxiter too
                                                  small*)
 
-PROCEDURE Raise (err: ErrorRoot; msg: TEXT := ""; oldErr: ErrorRoot := NIL; )
-  RAISES {Error};
+PROCEDURE ErrorInit (err   : ErrorRoot;
+                     msg   : TEXT        := "";
+                     oldErr: ErrorRoot   := NIL; ): ErrorRoot;
 
 END Arithmetic.

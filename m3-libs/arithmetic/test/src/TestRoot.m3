@@ -1,6 +1,6 @@
 MODULE TestRoot EXPORTS Test;
 (*Arithmetic for Modula-3, see doc for details*)
-FROM NADefinitions IMPORT Error, Err;
+IMPORT Arithmetic AS Arith;
 IMPORT Fmt,
        LongRealBasic                   AS R,
        LongRealTrans                   AS RT,
@@ -20,9 +20,10 @@ IMPORT Fmt,
        Thread,
        Wr;
 
-<*FATAL Error*>
-(*=======================*)
-CONST Module = "TestRoot.";
+<* FATAL Arith.Error *>
+  (*=======================*)
+CONST
+  Module = "TestRoot.";
 
 (*---------------------*)
 PROCEDURE TestPolyRoots (         p     : CP.T;
@@ -45,7 +46,7 @@ PROCEDURE TestPolyRoots (         p     : CP.T;
       (*
           Msg(CF.Fmt(rt[j]) & " ->" & CF.Fmt(CP.Eval(p,rt[j])) & ",\n");
       *)
-      <*ASSERT CT.AbsSqr(CP.Eval(p,rt[j]))<epssqr*>
+      <* ASSERT CT.AbsSqr(CP.Eval(p, rt[j])) < epssqr *>
     END;
     Msg("\n");
   END TestPolyRoots;
@@ -138,7 +139,7 @@ PROCEDURE TestRootApproximation (): BOOLEAN =
           (*
                   Msg(CF.Fmt(rt[j]) & " - next approx " & RF.Fmt(minerror) & "\n");
           *)
-          <*ASSERT minerror < roottolsqr*>
+          <* ASSERT minerror < roottolsqr *>
         END;
       END;
 
@@ -222,7 +223,7 @@ PROCEDURE TestBracketOut (): BOOLEAN =
       x.r := x.l + 1.0D0;
       Msg("start at x.l=" & RF.Fmt(x.l, prec3Style) & " x.r="
             & RF.Fmt(x.r, prec3Style));
-      <*FATAL ANY*>
+      <* FATAL ANY *>
       BEGIN
         IF FZ.BracketOut(MyFun, x, maxiter := maxiter) THEN
           Msg(" end at x.l=" & RF.Fmt(x.l, prec3Style) & " x.r="
@@ -254,7 +255,7 @@ PROCEDURE TestBracketIn (): BOOLEAN =
     FOR i := 10 TO 100 BY 10 DO
       n := i;
       Msg("n=" & Fmt.Int(n) & "\n");
-      <*FATAL Error*>
+      <* FATAL Arith.Error *>
       BEGIN
         nb := FZ.BracketIn(func := MyFun, x := x, n := n, xb := xb^);
         IF nb > 0 THEN
@@ -276,7 +277,7 @@ PROCEDURE TestBisection (): BOOLEAN =
     result                := TRUE;
     x        : FZ.Bracket;
     tol, root: R.T;
-  <*FATAL Error*>
+  <* FATAL Arith.Error *>
   BEGIN
     Debug(1, ftn, "begin\n");
     Msg("true roots: r1=" & RF.Fmt(r1) & " r2=" & RF.Fmt(r2) & " r3="
@@ -306,7 +307,7 @@ PROCEDURE TestBrent (): BOOLEAN =
     tol := 0.001D0;
     Msg("start at x.l=" & RF.Fmt(x.l, prec3Style) & " x.r="
           & RF.Fmt(x.r, prec3Style) & " tol=" & RF.Fmt(tol));
-    <*FATAL Error*>
+    <* FATAL Arith.Error *>
     BEGIN
       root := FZ.Brent(MyFun, x, tol := tol);
     END;
@@ -338,13 +339,13 @@ PROCEDURE TestNewtonRaphson (): BOOLEAN =
         root := FZ.NewtonRaphson(MyFun2, x, tol, maxiter);
         Msg(" found  root=" & RF.Fmt(root, prec5Style) & "\n");
       EXCEPT
-      | Error (err) =>
-          CASE err OF
-          | Err.not_bracketed => Msg(" not bracketed\n");
-          | Err.out_of_range => Msg(" jumped out\n");
-          | Err.not_converging => Msg(" not converging\n");
+      | Arith.Error (err) =>
+          TYPECASE err OF
+          | Arith.ErrorNotBracketed => Msg(" not bracketed\n");
+          | Arith.ErrorOutOfRange => Msg(" jumped out\n");
+          | Arith.ErrorNoConvergence => Msg(" not converging\n");
           ELSE
-            <*ASSERT FALSE*>
+            <* ASSERT FALSE *>
           END;
       ELSE
         Msg(" other error\n");
@@ -444,23 +445,23 @@ PROCEDURE WritePowerSeq (s: REF IR.PowerSumSeq) =
     Msg("\n");
   END WritePowerSeq;
 
-<*FATAL Thread.Alerted, Wr.Failure*>
-(*-----------------------*)
+<* FATAL Thread.Alerted, Wr.Failure *>
+  (*-----------------------*)
 PROCEDURE TestPowerSeq (): BOOLEAN =
 
   PROCEDURE TestPowerPoly (READONLY x: IR.PowerSumSeq) =
     VAR
       p: IR.T;
       y: REF IR.PowerSumSeq;
-    <*FATAL Error*>
+    <* FATAL Arith.Error *>
     BEGIN
       p := IR.FromPowerSumSeq(x);
       Msg(IPF.Fmt(p) & "\n");
       y := IR.ToPowerSumSeq(p, NUMBER(x));
-      <*ASSERT NUMBER(x)=NUMBER(y^)*>
+      <* ASSERT NUMBER(x) = NUMBER(y^) *>
       FOR j := 0 TO LAST(y^) DO
         Msg(Fmt.Int(y[j]) & ", ");
-        <*ASSERT x[j]=y[j]*>
+        <* ASSERT x[j] = y[j] *>
       END;
       Msg("\n");
     END TestPowerPoly;
@@ -469,13 +470,13 @@ PROCEDURE TestPowerSeq (): BOOLEAN =
     VAR
       y: IR.T;
       s: REF IR.PowerSumSeq;
-    <*FATAL Error*>
+    <* FATAL Arith.Error *>
     BEGIN
       s := IR.ToPowerSumSeq(x, LAST(x^));
       WritePowerSeq(s);
       y := IR.FromPowerSumSeq(s^);
       Msg(IPF.Fmt(y) & "\n");
-      <*ASSERT IR.Equal(x,y)*>
+      <* ASSERT IR.Equal(x, y) *>
     END TestPolyPower;
 
   CONST ftn = Module & "TestPowerSeq";
@@ -530,7 +531,7 @@ PROCEDURE TestRootOp (): BOOLEAN =
           (*
                   Msg(Fmt.Int(j) & "," & Fmt.Int(k) & "  ");
           *)
-          <*ASSERT I.IsZero(IP.Eval(z,op(rootx[j],rooty[k])))*>
+          <* ASSERT I.IsZero(IP.Eval(z, op(rootx[j], rooty[k]))) *>
         END;
       END;
       (*
@@ -557,7 +558,7 @@ PROCEDURE TestRootOp (): BOOLEAN =
           (*
                   Msg(Fmt.Int(j) & "  ");
           *)
-          <*ASSERT I.IsZero(IP.Eval(z,pow))*>
+          <* ASSERT I.IsZero(IP.Eval(z, pow)) *>
         END;
       END;
       (*
@@ -685,7 +686,7 @@ PROCEDURE TestRootOp (): BOOLEAN =
                   Msg(Fmt.FN("%s^%s = %s\n",
                              ARRAY OF TEXT{IPF.Fmt(x), Fmt.Int(k), IPF.Fmt(z)}));
           *)
-          <*ASSERT IP.Equal(z,IR.PowNSlow(x,k))*>
+          <* ASSERT IP.Equal(z, IR.PowNSlow(x, k)) *>
         END;
       END;
     END;
@@ -695,8 +696,9 @@ PROCEDURE TestRootOp (): BOOLEAN =
 
 (*-------------------------*)
 PROCEDURE TestRoot (): BOOLEAN =
-  <*UNUSED*>
-  CONST ftn = Module & "TestRoot";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "TestRoot";
   VAR result := TRUE;
   BEGIN
     NewLine();

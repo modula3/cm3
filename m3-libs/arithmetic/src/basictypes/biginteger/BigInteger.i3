@@ -10,7 +10,7 @@ INTERFACE BigInteger;
 
 (*==========================*)
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 CONST Brand = "BigInteger";
 

@@ -1,7 +1,7 @@
 GENERIC INTERFACE IntegerBasic(I, It);
 (*Arithmetic for Modula-3, see doc for details*)
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 CONST Brand = It.Brand;
 

@@ -1,15 +1,14 @@
 MODULE TestSLE EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details 
+(*Arithmetic for Modula-3, see doc for details
 
-   Abstract: Test driver for
-   LongRealMatrixDecomposition (simultaneous linear equations)
+   Abstract: Test driver for LongRealMatrixDecomposition (simultaneous
+   linear equations)
 
-   12/13/95 Harry George Initial version: nr utilities
-    2/17/96 Harry George
+   12/13/95 Harry George Initial version: nr utilities 2/17/96 Harry George
    Converted to m3na format
 
    *)
-FROM NADefinitions IMPORT Error;
+IMPORT Arithmetic AS Arith;
 IMPORT LongRealBasic               AS R,
        LongRealTrans               AS RT,
        LongRealFmtLex              AS RF,
@@ -23,9 +22,9 @@ IMPORT LongRealBasic               AS R,
        Fmt;
 
 CONST Module = "TestSLE.";
-<*FATAL ANY*>
+<* FATAL ANY *>
 
-(*=====================================*)
+  (*=====================================*)
 TYPE
   M3x3 = ARRAY [0 .. 2] OF ARRAY [0 .. 2] OF R.T;
   V3 = ARRAY [0 .. 2] OF R.T;
@@ -37,8 +36,9 @@ VAR rand := NEW(Rand.T).init();
 PROCEDURE BuildAX (VAR (*OUT*) A, C, D       : M.T;
                    VAR (*OUT*) knownX, foundX: V.T;
                                size          : CARDINAL := 3) =
-  <*UNUSED*>
-  CONST ftn = Module & "BuildAX";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "BuildAX";
   VAR
     n  := size;
     n1 := 0;
@@ -61,8 +61,9 @@ PROCEDURE BuildAX (VAR (*OUT*) A, C, D       : M.T;
   END BuildAX;
 (*---------------------*)
 PROCEDURE BuildB (VAR (*OUT*) B: V.T; A: M.T; knownX: V.T) =
-  <*UNUSED*>
-  CONST ftn = Module & "BuildB";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "BuildB";
   BEGIN
     B := M.MulV(A, knownX);
   END BuildB;
@@ -70,8 +71,9 @@ PROCEDURE BuildB (VAR (*OUT*) B: V.T; A: M.T; knownX: V.T) =
 PROCEDURE BuildData (VAR (*OUT*) A, C, D          : M.T;
                      VAR (*OUT*) B, knownX, foundX: V.T;
                                  size             : CARDINAL := 3) =
-  <*UNUSED*>
-  CONST ftn = Module & "BuildData";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "BuildData";
   BEGIN
     BuildAX(A, C, D, knownX, foundX, size);
     BuildB(B, A, knownX);
@@ -105,7 +107,8 @@ PROCEDURE TestBacksub (): BOOLEAN =
     Msg("knownX=" & VF.Fmt(knownX));
     Msg("foundX=" & VF.Fmt(foundX));
 
-    <*ASSERT VT.NormInf(V.Sub(foundX,knownX)) < RT.Eps * 10.0D0 * VT.NormInf(knownX) *>
+    <* ASSERT VT.NormInf(V.Sub(foundX, knownX))
+                < RT.Eps * 10.0D0 * VT.NormInf(knownX) *>
 
     RETURN result;
   END TestBacksub;
@@ -165,7 +168,8 @@ PROCEDURE TestTridiag (): BOOLEAN =
     MD.SolveTriDiag(a, b, c, r, foundX);
     Msg("foundX=" & VF.Fmt(foundX));
 
-    <*ASSERT VT.NormInf(V.Sub(foundX,knownX)) < RT.Eps * VT.NormInf(knownX) *>
+    <* ASSERT VT.NormInf(V.Sub(foundX, knownX))
+                < RT.Eps * VT.NormInf(knownX) *>
 
     RETURN result;
   END TestTridiag;
@@ -213,8 +217,8 @@ PROCEDURE TestLU (): BOOLEAN RAISES {} =
       MD.LUBackSubst(Acopy, foundX, index^);
 
     EXCEPT
-    | Error (err) =>
-        Msg("LU fails, error code " & Fmt.Int(ORD(err)) & "\n");
+    | Arith.Error (err) =>
+        Msg("LU fails, error code " & Fmt.Int(TYPECODE(err)) & "\n");
         RETURN FALSE;
     END;
 
@@ -222,7 +226,8 @@ PROCEDURE TestLU (): BOOLEAN RAISES {} =
     Msg("knownX= " & VF.Fmt(knownX));
     Msg("foundX= " & VF.Fmt(foundX));
 
-    <*ASSERT VT.NormInf(V.Sub(foundX,knownX)) < RT.Eps * 10.0D0 * VT.NormInf(knownX) *>
+    <* ASSERT VT.NormInf(V.Sub(foundX, knownX))
+                < RT.Eps * 10.0D0 * VT.NormInf(knownX) *>
 
     RETURN TRUE;
   END TestLU;

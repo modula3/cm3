@@ -4,10 +4,11 @@ GENERIC MODULE ComplexFast(R);
    Abstract: Complex numbers and basic operations *)
 
 IMPORT FloatMode;
-FROM NADefinitions IMPORT Error, Err;
+IMPORT Arithmetic AS Arith;
 
-<*UNUSED*>
-CONST Module = "ComplexFast.";
+<* UNUSED *>
+CONST
+  Module = "ComplexFast.";
 (*==========================*)
 
 (*
@@ -80,46 +81,51 @@ PROCEDURE Mul (READONLY x, y: T): T =
   END Mul;
 
 (*-------------------*)
-PROCEDURE Div (READONLY x0, y0: T): T RAISES {Error} =
+PROCEDURE Div (READONLY x0, y0: T): T RAISES {Arith.Error} =
   VAR
     x        := Normalize(x0);
     y        := Scalb(y0, -x.exp);
     denom    := y.re * y.re + y.im * y.im;
     z    : T;
-  <*FATAL FloatMode.Trap*>
+  <* FATAL FloatMode.Trap *>
   BEGIN
     (*avoid overflow and underflow by conditioning*)
-    IF denom = R.Zero THEN RAISE Error(Err.divide_by_zero); END;
+    IF denom = R.Zero THEN
+      RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init());
+    END;
     z.re := (x.val.re * y.re + x.val.im * y.im) / denom;
     z.im := (-x.val.re * y.im + x.val.im * y.re) / denom;
     RETURN z;
   END Div;
 
 (*-------------------*)
-PROCEDURE Rec (READONLY x0: T): T RAISES {Error} =
+PROCEDURE Rec (READONLY x0: T): T RAISES {Arith.Error} =
   VAR
     x        := Normalize(x0);
     denom    := x.val.re * x.val.re + x.val.im * x.val.im;
     z    : T;
-  <*FATAL FloatMode.Trap*>
+  <* FATAL FloatMode.Trap *>
   BEGIN
-    IF denom = R.Zero THEN RAISE Error(Err.divide_by_zero); END;
+    IF denom = R.Zero THEN
+      RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init());
+    END;
     z.re := x.val.re / denom;
     z.im := -x.val.im / denom;
     RETURN Scalb(z, -x.exp);
   END Rec;
 
 (*-------------------*)
-PROCEDURE Mod ( <*UNUSED*>READONLY x: T; READONLY y: T): T RAISES {Error} =
+PROCEDURE Mod (<* UNUSED *> READONLY x: T; READONLY y: T): T
+  RAISES {Arith.Error} =
   BEGIN
     IF y.re = R.Zero AND y.im = R.Zero THEN
-      RAISE Error(Err.divide_by_zero);
+      RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init());
     END;
     RETURN Zero;
   END Mod;
 
 (*-------------------*)
-PROCEDURE DivMod (READONLY x, y: T): QuotRem RAISES {Error} =
+PROCEDURE DivMod (READONLY x, y: T): QuotRem RAISES {Arith.Error} =
   BEGIN
     RETURN QuotRem{Div(x, y), Zero};
   END DivMod;
@@ -143,7 +149,7 @@ PROCEDURE Scale (READONLY x: T; y: R.T): T =
   END Scale;
 
 (*----------------*)
-<*UNUSED*>
+<* UNUSED *>
 PROCEDURE ScaleInt (x: T; y: INTEGER): T =
   VAR
     yr    := FLOAT(y, R.T);
@@ -158,7 +164,7 @@ PROCEDURE ScaleInt (x: T; y: INTEGER): T =
 (*-------------------*)
 
 PROCEDURE Normalize (READONLY x: T): TExp =
-  <*FATAL FloatMode.Trap*>
+  <* FATAL FloatMode.Trap *>
   BEGIN
     IF NOT IsZero(x) THEN
       VAR exp := ILogb(x);

@@ -4,12 +4,12 @@ IMPORT Wr, Stdio, IO, Fmt,
        LongRealVectorFmtLex AS VF,
        LongRealFmtLex AS RF;
 *)
-FROM NADefinitions IMPORT Error, Err;
+IMPORT Arithmetic AS Arith;
 
 EXCEPTION NormalTermination;
 
-PROCEDURE PowerMethod (A: M.T; tol: R.T; maxiter: CARDINAL; ):
-  EigenPair RAISES {Error} =
+PROCEDURE PowerMethod (A: M.T; tol: R.T; maxiter: CARDINAL; ): EigenPair
+  RAISES {Arith.Error} =
   VAR
     x, dx, v: V.T;
     err     : R.T;
@@ -20,7 +20,9 @@ PROCEDURE PowerMethod (A: M.T; tol: R.T; maxiter: CARDINAL; ):
     x^ := A[0];                  (*is this initialization random enough?*)
     x2 := V.Inner(x, x);
     REPEAT
-      IF maxiter = 0 THEN RAISE Error(Err.not_converging); END;
+      IF maxiter = 0 THEN
+        RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
+      END;
       DEC(maxiter);
 
       (*turn new into old*)
@@ -82,7 +84,7 @@ PROCEDURE MaxColumn (x: M.T; VAR max: R.T): CARDINAL =
    have to compare whether computing the whole eigenvalue spectrum using
    other methods is faster. *)
 PROCEDURE SquareMethod (A: M.T; tol: R.T; maxiter: CARDINAL; ): EigenPair
-  RAISES {Error} =
+  RAISES {Arith.Error} =
   VAR
     B, C      : M.T;
     v, x, dx  : V.T;
@@ -93,7 +95,9 @@ PROCEDURE SquareMethod (A: M.T; tol: R.T; maxiter: CARDINAL; ): EigenPair
   BEGIN
     C := A;
     REPEAT
-      IF maxiter = 0 THEN RAISE Error(Err.not_converging); END;
+      IF maxiter = 0 THEN
+        RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
+      END;
       DEC(maxiter);
 
       (*turn new into old*)

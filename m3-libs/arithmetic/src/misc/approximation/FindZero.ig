@@ -6,7 +6,7 @@ Abstract: Direct access to root finders
 1/28/96  Harry George    Initial version
 *)
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 (*==========================*)
 
 TYPE

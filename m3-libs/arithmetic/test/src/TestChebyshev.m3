@@ -12,9 +12,9 @@ IMPORT Fmt;
 IMPORT LongRealBasic           AS R,
        LongRealTrans           AS RT,
        LongRealChebyPolynomial AS CP,
-       NADefinitions;
+       Arithmetic;
 
-<*FATAL NADefinitions.Error *>
+<*FATAL Arithmetic.Error *>
 
 (*=======================*)
 CONST Module = "TestChebyshev.";

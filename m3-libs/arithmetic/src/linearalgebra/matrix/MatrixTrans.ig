@@ -3,7 +3,7 @@ GENERIC INTERFACE MatrixTrans(R, M);
 
    Abstract: Matrix math *)
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 (*==========================*)
 

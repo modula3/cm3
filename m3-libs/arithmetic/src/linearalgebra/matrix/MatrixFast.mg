@@ -1,7 +1,7 @@
 GENERIC MODULE MatrixFast(R, V, VS);
 (*Arithmetic for Modula-3, see doc for details*)
 
-FROM NADefinitions IMPORT Error, Err;
+IMPORT Arithmetic AS Arith;
 
 CONST Module = "MatrixFast.";
 
@@ -10,10 +10,10 @@ CONST Dummy = VS.Inner;
 
 (*-----------------*)
 <*INLINE*>
-PROCEDURE AssertEqualSize (x, y: T) RAISES {Error} =
+PROCEDURE AssertEqualSize (x, y: T) RAISES {Arith.Error} =
   BEGIN
     IF NUMBER(x^) # NUMBER(y^) OR NUMBER(x[0]) # NUMBER(y[0]) THEN
-      RAISE Error(Err.bad_size);
+      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
     END;
   END AssertEqualSize;
 
@@ -28,7 +28,7 @@ PROCEDURE IsZero (x: T): BOOLEAN =
     RETURN TRUE;
   END IsZero;
 (*----------------*)
-PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Error} =
+PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Arith.Error} =
   <*UNUSED*>
   CONST ftn = Module & "Equal";
   BEGIN
@@ -43,7 +43,7 @@ PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Error} =
   END Equal;
 
 (*----------------*)
-PROCEDURE Add (x, y: T): T RAISES {Error} =
+PROCEDURE Add (x, y: T): T RAISES {Arith.Error} =
   <*UNUSED*>
   CONST ftn = Module & "Add";
   VAR
@@ -62,7 +62,7 @@ PROCEDURE Add (x, y: T): T RAISES {Error} =
     RETURN z;
   END Add;
 (*----------------*)
-PROCEDURE Sub (x, y: T): T RAISES {Error} =
+PROCEDURE Sub (x, y: T): T RAISES {Arith.Error} =
   <*UNUSED*>
   CONST ftn = Module & "Sub";
   VAR
@@ -92,7 +92,7 @@ PROCEDURE Scale (x: T; y: R.T): T =
   END Scale;
 
 (*-----------------*)
-PROCEDURE Mul (x, y: T): T RAISES {Error} =
+PROCEDURE Mul (x, y: T): T RAISES {Arith.Error} =
   <*UNUSED*>
   CONST ftn = "Mul";
   VAR
@@ -102,7 +102,7 @@ PROCEDURE Mul (x, y: T): T RAISES {Error} =
     z: T;
 
   BEGIN
-    IF NUMBER(y^) # n THEN RAISE Error(Err.bad_size); END;
+    IF NUMBER(y^) # n THEN RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init()); END;
     z := NEW(T, m, p);
     FOR i := FIRST(x^) TO LAST(x^) DO
       FOR j := FIRST(y[0]) TO LAST(y[0]) DO
@@ -119,12 +119,12 @@ PROCEDURE Mul (x, y: T): T RAISES {Error} =
   END Mul;
 
 (*----------------*)
-PROCEDURE MulV (x: T; y: V.T): V.T RAISES {Error} =
+PROCEDURE MulV (x: T; y: V.T): V.T RAISES {Arith.Error} =
   <*UNUSED*>
   CONST ftn = Module & "MulV";
   VAR z := NEW(V.T, NUMBER(x^));
   BEGIN
-    IF NUMBER(x[0]) # NUMBER(y^) THEN RAISE Error(Err.bad_size); END;
+    IF NUMBER(x[0]) # NUMBER(y^) THEN RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init()); END;
 
     FOR i := FIRST(x^) TO LAST(x^) DO
       VAR sum := R.Zero;
@@ -139,12 +139,12 @@ PROCEDURE MulV (x: T; y: V.T): V.T RAISES {Error} =
   END MulV;
 
 (*-----------------*)
-PROCEDURE MulTV (x: T; y: V.T): V.T RAISES {Error} =
+PROCEDURE MulTV (x: T; y: V.T): V.T RAISES {Arith.Error} =
   <*UNUSED*>
   CONST ftn = Module & "MulTV";
   VAR z := NEW(V.T, NUMBER(x[0]));
   BEGIN
-    IF NUMBER(x^) # NUMBER(y^) THEN RAISE Error(Err.bad_size); END;
+    IF NUMBER(x^) # NUMBER(y^) THEN RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init()); END;
 
     FOR i := FIRST(x[0]) TO LAST(x[0]) DO
       VAR sum := R.Zero;

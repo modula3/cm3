@@ -1,6 +1,6 @@
 GENERIC MODULE PolynomialFast(R, VR);
 (*Arithmetic for Modula-3, see doc for details*)
-FROM NADefinitions IMPORT Error, Err;
+IMPORT Arithmetic AS Arith;
 
 CONST Module = "PolynomialFast.";
 
@@ -96,17 +96,20 @@ PROCEDURE Mul (x, y: T): T =
   END Mul;
 
 (*---------------------*)
-PROCEDURE Div (x, y: T): T RAISES {Error} =
+PROCEDURE Div (x, y: T): T RAISES {Arith.Error} =
   VAR qr := DivMod(x, y);
   BEGIN
-    IF NOT IsZero(qr.rem) THEN RAISE Error(Err.indivisible); END;
+    IF NOT IsZero(qr.rem) THEN
+      RAISE Arith.Error(NEW(Arith.ErrorIndivisible).init());
+    END;
     RETURN qr.quot;
   END Div;
 
 (*---------------------*)
 PROCEDURE DivMod (x, y: T): QuotRem =
-  <*UNUSED*>
-  CONST ftn = Module & "DivMod";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "DivMod";
   VAR
     xn                            := NUMBER(x^);
     xl                            := LAST(x^);

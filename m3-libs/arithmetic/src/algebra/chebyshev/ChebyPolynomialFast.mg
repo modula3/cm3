@@ -2,7 +2,7 @@ GENERIC MODULE ChebyPolynomialFast(R, RT);
 (*Arithmetic for Modula-3, see doc for details
 
    Abstract: Implementation of Modula-3 version of NR92, ch 5. *)
-FROM NADefinitions IMPORT Error, Err;
+IMPORT Arithmetic AS Arith;
 FROM RT IMPORT Cos, Pi;
 
 CONST Module = "ChebyPolynomialFast.";
@@ -39,8 +39,9 @@ PROCEDURE Expand (func: Ftn;       (*differentiate polynomial*)
   END Expand;
 (*--------------------------*)
 PROCEDURE FindUpperExp (x: T; prec: R.T): CARDINAL =
-  <*UNUSED*>
-  CONST ftn = Module & "FindUpperExp";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "FindUpperExp";
   VAR error: R.T := R.Zero;
   BEGIN
     FOR i := LAST(x^) TO 0 BY -1 DO
@@ -61,9 +62,10 @@ PROCEDURE Abort (x: T;           (*abort the expansion*)
 (*--------------------------*)
 PROCEDURE Eval (x: T;            (*eval this polynomial*)
                 xi: R.T          (*at this point*)
-  ): R.T RAISES {Error} =
-  <*UNUSED*>
-  CONST ftn = Module & "Eval";
+  ): R.T RAISES {Arith.Error} =
+  <* UNUSED *>
+  CONST
+    ftn = Module & "Eval";
   VAR
     dj   := R.Zero;
     djp1 := R.Zero;
@@ -71,7 +73,7 @@ PROCEDURE Eval (x: T;            (*eval this polynomial*)
   BEGIN
     IF xi < -R.One OR xi > R.One THEN
       (*need -1<x<+1*)
-      RAISE Error(Err.out_of_range);
+      RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
     END;
     FOR j := LAST(x^) TO 1 BY -1 DO
       dj := R.Two * xi * djp1 - djp2 + x[j];

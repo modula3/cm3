@@ -5,7 +5,7 @@ Abstract: Simultaneous Linear Equations.
 
 1/27/96  Harry George    Initial version, from prev work
 *)
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 TYPE
   IndexArray = ARRAY OF CARDINAL;

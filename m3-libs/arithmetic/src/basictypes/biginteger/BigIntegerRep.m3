@@ -7,15 +7,16 @@ MODULE BigIntegerRep;
 
 IMPORT Word AS W;
 IMPORT WordEx AS Wx;
-FROM NADefinitions IMPORT Error, Err;
+IMPORT Arithmetic AS Arith;
 FROM BigInteger IMPORT Zero;
 (*
 IMPORT IO,Fmt,BigIntegerFmtLex AS BF;
 CONST base16Style = BF.FmtStyle{base:=16};
 *)
 
-<*UNUSED*>
-CONST Module = "BigIntegerRep.";
+<* UNUSED *>
+CONST
+  Module = "BigIntegerRep.";
 (*==========================*)
 
 
@@ -25,7 +26,7 @@ PROCEDURE Clear ( (*OUT*)v: Value) =
   END Clear;
 
 
-<*INLINE*>
+<* INLINE *>
 PROCEDURE MinMax (VAR min, max: INTEGER; a, b: INTEGER) =
   BEGIN
     IF a < b THEN min := a; max := b; ELSE min := b; max := a; END;
@@ -102,7 +103,7 @@ PROCEDURE SubU (READONLY x, y: T): T =
         z.data[j] := Wx.MinusWithBorrow(0, y.data[j], carry);
       END;
     END;
-    <*ASSERT NOT carry*>(*otherwise it was x<y*)
+    <* ASSERT NOT carry *>       (*otherwise it was x<y*)
 
     CorrectSize(z, max - 1);
     RETURN z;
@@ -272,7 +273,7 @@ PROCEDURE AddBitPos (READONLY x, y: BitPos): BitPos =
     END;
   END AddBitPos;
 
-<*INLINE*>
+<* INLINE *>
 PROCEDURE CompareBitPos (READONLY x, y: BitPos): [-1 .. 1] =
   BEGIN
     IF x.word < y.word THEN
@@ -350,7 +351,7 @@ PROCEDURE SubShiftedProd (VAR x: T; READONLY y: T; z: W.T; sh: BitPos) =
       carry := FALSE;
       lo := Wx.PlusWithCarry(lo, oldhi, carry);
       hi := Wx.PlusWithCarry(hi, 0, carry);
-      <*ASSERT NOT carry*>
+      <* ASSERT NOT carry *>
       loshft := Wx.LeftShiftWithProbscosis(lo, sh.bit, probs);
       x.data[sh.word + k] :=
         Wx.MinusWithBorrow(x.data[sh.word + k], loshft, borrow);
@@ -399,7 +400,7 @@ PROCEDURE AddShifted (VAR x: T; y: W.T; sh: BitPos) =
 
 (*x and y cannot be READONLY parameters, otherwise conflicts arise, when
    someone passes the same variable to x and r*)
-PROCEDURE DivModU (x, y: T): QuotRem RAISES {Error} =
+PROCEDURE DivModU (x, y: T): QuotRem RAISES {Arith.Error} =
   VAR
     q, r                     : T;
     qmswstartpos             : BitPos;
@@ -411,7 +412,9 @@ PROCEDURE DivModU (x, y: T): QuotRem RAISES {Error} =
            ARRAY OF TEXT {Fmt.Int(x.size),BF.Fmt(x,style:=base16Style),
                           Fmt.Int(y.size),BF.Fmt(y,style:=base16Style)}));
     *)
-    IF y.size = 0 THEN RAISE Error(Err.divide_by_zero); END;
+    IF y.size = 0 THEN
+      RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init());
+    END;
 
     (*this check is necessary, we would access non-existing data
        otherwise*)
@@ -461,7 +464,7 @@ PROCEDURE DivModU (x, y: T): QuotRem RAISES {Error} =
         qmswstartpos.word := 0;
         qmswstartpos.bit := 0;
       ELSE
-        <*ASSERT qmswstartpos.word>=0 *>
+        <* ASSERT qmswstartpos.word >= 0 *>
       END;
       AddShifted(q, qmsw, qmswstartpos);
       SubShiftedProd(r, y, qmsw, qmswstartpos);

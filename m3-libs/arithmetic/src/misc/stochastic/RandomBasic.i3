@@ -15,7 +15,7 @@ To do: (Lemming)
 IMPORT LongRealBasic AS R,
        LongRealTrans AS RT,
        Word AS W;
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 (*==========================*)
 CONST

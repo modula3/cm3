@@ -19,13 +19,13 @@ IMPORT Integer32GCD                    AS IG,
          BigIntegerFractionPolynomialFmtLex AS BFrPF,
          Fmt AS F,
        *)
-       NADefinitions;
+       Arithmetic;
 
 (*=======================*)
 CONST Module = "TestGCD.";
 
 (*----------------------*)
-<*FATAL NADefinitions.Error*>
+<*FATAL Arithmetic.Error*>
 PROCEDURE TestIntegerGCD (): BOOLEAN =
   CONST
     ftn = Module & "TestIntegerGCD";

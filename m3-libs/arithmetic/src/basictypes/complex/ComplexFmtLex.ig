@@ -6,7 +6,7 @@ GENERIC INTERFACE ComplexFmtLex(RF, C);
 IMPORT Rd, Thread;
 IMPORT Lex AS L;
 IMPORT FloatMode;
-(*FROM NADefinitions IMPORT Error;*)
+(*FROM Arithmetic IMPORT Error;*)
 FROM FmtLexSupport IMPORT Precedence;
 
 

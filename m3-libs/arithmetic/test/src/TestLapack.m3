@@ -16,9 +16,9 @@ IMPORT LongRealBasic  AS R,
        LongRealComplexFmtLex  AS CF,
        (*LongRealVectorFmtLex AS VF,*)
        LongRealMatrixFmtLex AS MF;
-IMPORT NADefinitions;
+IMPORT Arithmetic;
 
-<*FATAL NADefinitions.Error, Thread.Alerted, Wr.Failure*>
+<*FATAL Arithmetic.Error, Thread.Alerted, Wr.Failure*>
 (*=======================*)
 CONST Module = "TestLapack.";
 

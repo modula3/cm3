@@ -6,7 +6,7 @@ GENERIC INTERFACE Interpolation(R, V);
    All interpolation routines in this module interpolate by computing
    linear combinations of the node values.  Thus each linear space can be
    used for values, e.g.  complex number, vector, matrix, polynomial *)
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 (*==========================*)
 (*

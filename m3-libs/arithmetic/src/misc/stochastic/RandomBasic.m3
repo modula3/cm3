@@ -14,7 +14,7 @@ IMPORT LongRealBasic        AS R,
        LongReal             AS RSpec,
        LongRealIntegerPower AS RP,
        Word                 AS W,
-       NADefinitions        AS NA;
+       Arithmetic           AS Arith;
 
 CONST Module = "RandomBasic.";
 
@@ -101,13 +101,15 @@ PROCEDURE Uniform (SELF: T;
                    min : R.T := R.Zero; (*from min*)
                    max : R.T := R.One; (*up to but not including max*)
   ): R.T                         (*return uniform deviate*)
-  RAISES {NA.Error} =
+  RAISES {Arith.Error} =
   VAR t: R.T;
   BEGIN
     t := SELF.generateReal();
     IF min = Min AND max = Max THEN RETURN t; END;
 
-    IF min >= max THEN RAISE NA.Error(NA.Err.out_of_range); END;
+    IF min >= max THEN
+      RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
+    END;
 
     RETURN min + t * (max - min);
   END Uniform;
@@ -150,7 +152,7 @@ END Gaussian1;
  * G.Marsaglia & T.A. Bray: A convenient method for
  * generating normal random variables, SIAM Review 6 (1964) 260-264.**)
 PROCEDURE NormalDev (SELF: T): R.T =
-  <* FATAL NA.Error *>           (*we preserve, that it is always
+  <* FATAL Arith.Error *>        (*we preserve, that it is always
                                     min<=max*)
   VAR
     v, u, w, x, sum: R.T;
@@ -338,7 +340,7 @@ PROCEDURE BinomialIntervalPartition (SELF: T; p: R.T; n: CARDINAL):
   CARDINAL =
 
   PROCEDURE Calc (p, q: R.T): CARDINAL =
-    <* FATAL NA.Error *>         (*bad_size can't be raised by RP.Power*)
+    <* FATAL Arith.Error *>      (*bad_size can't be raised by RP.Power*)
     VAR
       pq             := p / q;
       prob           := RP.Power(q, n);

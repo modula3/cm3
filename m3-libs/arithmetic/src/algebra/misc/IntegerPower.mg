@@ -1,7 +1,7 @@
 GENERIC MODULE IntegerPower(R);
 (*Arithmetic for Modula-3, see doc for details *)
 
-IMPORT NADefinitions AS NA;
+IMPORT Arithmetic AS Arith;
 
 <* UNUSED *>
 CONST
@@ -10,7 +10,7 @@ CONST
 (*----------------------*)
 
 PROCEDURE Power (x: T; y0: PositiveInteger): T
-  RAISES {NA.Error} <* NOWARN *> =
+  RAISES {Arith.Error} <* NOWARN *> =
   (* for some datatypes no Error can occur *)
   VAR
     pow            := x;
@@ -30,7 +30,7 @@ PROCEDURE Power (x: T; y0: PositiveInteger): T
   END Power;
 
 PROCEDURE MulPower (x, y: T; z: CARDINAL): T
-  RAISES {NA.Error} <* NOWARN *> =
+  RAISES {Arith.Error} <* NOWARN *> =
   (* for some datatypes no Error can occur *)
   BEGIN
     WHILE z > 0 DO

@@ -1,6 +1,6 @@
 GENERIC MODULE VectorBasic(R, V);
 (*Arithmetic for Modula-3, see doc for details *)
-FROM NADefinitions IMPORT Error, Err;
+IMPORT Arithmetic AS Arith;
 
 (*VR is needed to reveal the structure of V.T*)
 
@@ -10,9 +10,9 @@ CONST Module = "VectorBasic.";
 
 (*-----------------*)
 <*INLINE*>
-PROCEDURE AssertEqualSize (READONLY x, y: T) RAISES {Error} =
+PROCEDURE AssertEqualSize (READONLY x, y: T) RAISES {Arith.Error} =
   BEGIN
-    IF NUMBER(x) # NUMBER(y) THEN RAISE Error(Err.bad_size); END;
+    IF NUMBER(x) # NUMBER(y) THEN RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init()); END;
   END AssertEqualSize;
 
 (*---------------------*)
@@ -25,7 +25,7 @@ PROCEDURE IsZero (READONLY x: T): BOOLEAN =
   END IsZero;
 
 (*---------------------*)
-PROCEDURE Equal (READONLY x, y: T): BOOLEAN RAISES {Error} =
+PROCEDURE Equal (READONLY x, y: T): BOOLEAN RAISES {Arith.Error} =
   BEGIN
     AssertEqualSize(x, y);
     FOR i := FIRST(x) TO LAST(x) DO
@@ -35,7 +35,7 @@ PROCEDURE Equal (READONLY x, y: T): BOOLEAN RAISES {Error} =
   END Equal;
 
 (*-----------------*)
-PROCEDURE Add (READONLY x, y: T): V.T RAISES {Error} =
+PROCEDURE Add (READONLY x, y: T): V.T RAISES {Arith.Error} =
   VAR z := NEW(V.T, NUMBER(x));
   BEGIN
     AssertEqualSize(x, y);
@@ -44,7 +44,7 @@ PROCEDURE Add (READONLY x, y: T): V.T RAISES {Error} =
   END Add;
 
 (*-----------------*)
-PROCEDURE Sub (READONLY x, y: T): V.T RAISES {Error} =
+PROCEDURE Sub (READONLY x, y: T): V.T RAISES {Arith.Error} =
   VAR z := NEW(V.T, NUMBER(x));
   BEGIN
     AssertEqualSize(x, y);
@@ -71,7 +71,7 @@ PROCEDURE Scale (READONLY x: T; y: R.T): V.T =
 
 
 (*-----------------*)
-PROCEDURE Inner (READONLY x, y: T): R.T RAISES {Error} =
+PROCEDURE Inner (READONLY x, y: T): R.T RAISES {Arith.Error} =
   VAR sum := R.Zero;
   BEGIN
     AssertEqualSize(x, y);
@@ -82,7 +82,7 @@ PROCEDURE Inner (READONLY x, y: T): R.T RAISES {Error} =
   END Inner;
 
 (*-----------------*)
-PROCEDURE Dot (READONLY x, y: T): R.T RAISES {Error} =
+PROCEDURE Dot (READONLY x, y: T): R.T RAISES {Arith.Error} =
   VAR sum := R.Zero;
   BEGIN
     AssertEqualSize(x, y);
@@ -107,7 +107,7 @@ PROCEDURE Dot (READONLY x, y: T): R.T RAISES {Error} =
    by a QR factorization
 
 PROCEDURE Cross(
-                x,y:T):T RAISES {Error}=
+                x,y:T):T RAISES {Arith.Error}=
 BEGIN
   RAISE Error(Err.not_implemented);
 END Cross;

@@ -1,13 +1,15 @@
 GENERIC MODULE Functional(R, RT, V, VT, M, FD, LA);
 (* Arithmetic for Modula-3, see doc for details *)
 
-IMPORT NADefinitions AS NA;
+IMPORT Arithmetic AS Arith;
 
-<*UNUSED*>
-CONST Module = "Functional.";
+<* UNUSED *>
+CONST
+  Module = "Functional.";
 (*==========================*)
 
-PROCEDURE EvalCentralDiff2 (f: Func; x, dx: V.T): FD.T RAISES {NA.Error} =
+PROCEDURE EvalCentralDiff2 (f: Func; x, dx: V.T): FD.T
+  RAISES {Arith.Error} =
   VAR
     der := FD.T{
              f(x), NEW(V.T, NUMBER(x^)), NEW(M.T, NUMBER(x^), NUMBER(x^))};
@@ -56,7 +58,7 @@ PROCEDURE FindStationaryPoint (f      : FuncDeriv2;
                                x      : V.T;
                                tol    : R.T;
                                maxiter: CARDINAL    ): V.T
-  RAISES {NA.Error} =
+  RAISES {Arith.Error} =
   BEGIN
     FOR iter := 0 TO maxiter - 1 DO
       VAR der := f(x);
@@ -64,11 +66,11 @@ PROCEDURE FindStationaryPoint (f      : FuncDeriv2;
         IF VT.Norm1(der.first) <= tol * RT.Abs(der.zeroth) THEN
           RETURN x;
         END;
-        x := V.Sub(x, LA.LeastSquares(
-                        der.second, ARRAY OF V.T{der.first})[0].x);
+        x := V.Sub(x, LA.LeastSquares(der.second, ARRAY OF V.T{der.first})[
+                        0].x);
       END;
     END;
-    RAISE NA.Error(NA.Err.not_converging);
+    RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
   END FindStationaryPoint;
 
 (*==========================*)

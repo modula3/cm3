@@ -14,7 +14,7 @@ Abstract: Arithmetic on the roots of polynomials
           etc.
 **)
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 (*==========================*)
 
 CONST
