@@ -7,6 +7,7 @@ Daniel Beer
 *)
 
 IMPORT Word AS W, xWordEx AS Wx;
+FROM xUtils IMPORT Error, Err;
 
 <*UNUSED*> CONST Module = "BigIntegerBasic.";
 (*==========================*)
@@ -18,6 +19,7 @@ CONST
 REVEAL
   Value = BRANDED "BigIntegerValue" REF ARRAY OF W.T;
 
+<*UNUSED*>
 PROCEDURE FastCopy (READONLY x : T) : T =
 VAR
   y := T{NEW(Value,NUMBER(x.data^)),x.size,x.sign};
@@ -344,115 +346,163 @@ BEGIN
   RETURN z;
 END Mul;
 
+
 (*
-PROCEDURE ModU (READONLY x, y : T) : T =
-VAR
-  sr, sy, move, j : INTEGER;
-  a, b, bSml, bBig, carry, d1, d2, t, quot : LONGCARD;
+General problem with division:
+We cannot easily find a digit of the quotient
+if we only know the most significant digits of dividend and divisor.
+Thus we only determine a close lower estimate,
+which may cause several iterations for one digit of the quotient.
+*)
 
+(*
+If we would use a Word by HalfWord division,
+we had to distinguish between more cases.
+*)
+
+(*
+PROCEDURE DoubleDivMod (lo, hi, div : W.T; VAR r : W.T) : W.T =
+CONST
+  HalfSize = W.Size DIV 2;
+VAR
+  sh       : INTEGER;
+  divsmall,
+  plo, phi,
+  carry    : W.T;
+  q        : W.T;
+  carrybit : BOOLEAN;
 BEGIN
-  ASSERT2 (y.size # 0, DivZero);
-  Assign (z, x);
+  <*ASSERT W.LT(lo,div)*>
+  sh  := W.Size-1 - Wx.FindMostSignifBit(div);
+  div := W.Shift(div,sh);
 
-  sr := z.size-1;
-  sy := y.size-1;
-  move := sr - sy;
+  carry := 0;
+  lo    := Wx.LeftShiftWithProbscosis(lo, sh, carry);
+  hi    := Wx.LeftShiftWithProbscosis(hi, sh, carry);
+  <*ASSERT carry=0*>
 
-  bSml := y.data[sy];
-  IF sy>0 THEN
-    bBig := bSml SHL 16 + y.data[sy-1] + 1;
-  ELSE
-    bBig := bSml SHL 16 + 1;
-  END;
-  INC (bSml);
+  divsmall := W.Shift(div,-HalfSize)+1;
 
-  WHILE move>=0 DO
-    IF sr>0 THEN
-      a := z.data[sr] SHL 16 + z.data[sr-1];
-    ELSE
-      a := z.data[sr] SHL 16;
-    END;
+  (*first lower estimation of the quotient*)
+  q := W.Shift(W.Divide(hi,divsmall),HalfSize);
+  Wx.DoubleLengthMultiply(q,div,plo,phi);
 
-    IF sr = sy + move THEN
-      b := bBig
-    ELSE
-      b := bSml
-    END;
+  carrybit := FALSE;
+  lo := Wx.MinusWithBorrow(lo,plo,carrybit);
+  hi := Wx.MinusWithBorrow(hi,phi,carrybit);
+  <*ASSERT NOT carrybit*>
 
-    IF a >= b THEN
-      quot := a DIV b;
-      (* Berechnung von neuem Rest *)
-      carry := 0;
-      FOR j:=move TO move+sy DO
-        d1 := z.data[j];
-        d2 := quot * y.data[j-move] + carry;
+  (*second lower estimation of the quotient*)
+  carry := 0;
+  hi    := Wx.LeftShiftWithProbscosis(hi, HalfSize, carry);
+  lo    := Wx.LeftShiftWithProbscosis(lo, HalfSize, carry);
+  <*ASSERT carry=0*>
 
-        IF d1 < d2 THEN
-          t := d2 - d1 + 16_FFFF;
-          z.data[j] := CARDINAL (16_FFFF - CAST (LONGCARD, (CAST (LONGSET, t) * ModMask)));
-          carry := t SHR 16;
-        ELSE
-          z.data[j] := d1 - d2;
-          carry := 0;
-        END;
-      END;
-      IF carry > 0 THEN
-        z.data[move+sy+1] := z.data[move+sy+1] - carry;   (* immer =Null ?? *)
-      END;
+(*???
+  q := W.Shift(W.Divide(hi,divsmall),HalfSize);
+  Wx.DoubleLengthMultiply(q,div,plo,phi);
 
-      WHILE (sr>=0) AND (z.data[sr]=0) DO DEC (sr) END;
+  carrybit := FALSE;
+  lo := MinusWithBorrow(lo,plo,carrybit);
+  hi := MinusWithBorrow(hi,phi,carrybit);
+  <*ASSERT NOT carrybit*>
+*)
 
-      move := sr - sy;
-    ELSE
-      DEC (move);
-    END;
+  carry := 0;
+  hi    := Wx.RightShiftWithProbscosis(hi, sh, carry);
+  lo    := Wx.RightShiftWithProbscosis(lo, sh, carry);
+  <*ASSERT carry=0*>
+  r := lo;
+  RETURN q;
+END DoubleDivMod;
+*)
 
-(*    WriteT (z); *)
-  END;
 
-  z.size := sr + 1;             (* für Compare *)
-
-  IF CompareU (z, y) # -1 THEN
-(*    WriteString ("Result is not -1 than Modul!"+&10); *)
-
-    (* r := r - y *)
-    carry := 0;
-    FOR j:=0 TO sy DO
-      d1 := z.data[j];
-      d2 := y.data[j] + carry;
-
-      IF d1 < d2 THEN
-        z.data[j] := 16_10000 + d1 - d2;
-        carry := 1;
-      ELSE
-        z.data[j] := d1 - d2;
-        carry := 0;
-      END;
-    END;
-    IF carry = 1 THEN
-      z.data[sy+1] := z.data[sy+1] - 1;
-      WriteString ("Carry"+&10);
-    END;
-
-    WHILE (sr>=0) AND (z.data[sr]=0) DO DEC (sr) END;
-  END;
-
-  z.size := sr + 1;
-END ModU;
-
-PROCEDURE DivModU (VAR q, r : T = READONLY x, y : T);
+(*x := x-SHL(y*z,sh)   (inplace, make sure that x.data has enough space) *)
+PROCEDURE SubShiftedProd(VAR x : T; READONLY y : T; z : W.T; sh : INTEGER) =
 VAR
-  sr, sy, move, j : INTEGER;
+  start,
+  subsh  :  INTEGER;
+  lo, hi,
+  oldhi,
+  probs,
+  loshft :  W.T;
+  carry  := FALSE;
+  borrow := FALSE;
+  j      :  INTEGER;
+BEGIN
+  start := sh DIV W.Size;
+  subsh := sh MOD W.Size;
+
+  hi := 0;
+  probs := 0;
+  FOR k:=0 TO y.size-1 DO
+    oldhi := hi;
+    Wx.DoubleLengthMultiply(y.data[k],z,lo,hi);
+    carry := FALSE;
+    lo := Wx.PlusWithCarry(lo,oldhi,carry);
+    hi := Wx.PlusWithCarry(hi,0,carry);
+    loshft := Wx.LeftShiftWithProbscosis(lo,subsh,probs);
+    x.data[start+k] := Wx.MinusWithBorrow(x.data[start+k],loshft,borrow);
+  END;
+  j := start+y.size;
+  loshft := Wx.LeftShiftWithProbscosis(oldhi,subsh,probs);
+  x.data[j] := Wx.MinusWithBorrow(x.data[j],loshft,borrow);
+  INC(j);
+  x.data[j] := Wx.MinusWithBorrow(x.data[j],probs,borrow);
+
+  WHILE borrow DO
+    INC(j);
+    x.data[j] := Wx.MinusWithBorrow(x.data[j], 0, borrow);
+  END;
+END SubShiftedProd;
+
+(*x := x+SHL(y,sh)   (inplace, make sure that x.data has enough space)*)
+PROCEDURE AddShifted(VAR x : T; y : W.T; sh : INTEGER) =
+VAR
+  start,
+  subsh :  INTEGER;
+  carry := FALSE;
+BEGIN
+  start := sh DIV W.Size;
+  subsh := sh MOD W.Size;
+  x.data[start] := Wx.PlusWithCarry(x.data[start], W.Shift(y,sh), carry);
+  INC(start);
+  x.data[start] := Wx.PlusWithCarry(x.data[start], W.Shift(y,sh-W.Size), carry);
+  WHILE carry DO
+    INC(start);
+    x.data[start] := Wx.PlusWithCarry(x.data[start], 0, carry);
+  END;
+END AddShifted;
+
+
+
+PROCEDURE DivModU (READONLY x, y : T; VAR r : T) : T RAISES {Error} =
+VAR
+  q : T;
+BEGIN
+  IF y.size = 0 THEN
+    RAISE Error(Err.divide_by_zero);
+  END;
+  RETURN q;
+END DivModU;
+
+(*
+PROCEDURE DivModU (READONLY x, y : T; VAR r : T) :  T;
+VAR
+  sz, sy, move, j : INTEGER;
   a, b, bSml, bBig, carry, d1, d2, t, quot : LONGCARD;
   xRun, yRun, qRun, rRun : CARDPTR;
 
 BEGIN
-  ASSERT2 (y.size # 0, DivZero);
-  Assign (z, x);
+  IF y.size = 0 THEN
+    RAISE Error(divide_by_zero);
+  END;
+  z := Copy (x);
 
-  sr := z.size-1;
+  sz := z.size-1;
   sy := y.size-1;
-  move := sr - sy;
+  move := sz - sy;
 
   IF move < 0 THEN
     SetZero (q);
@@ -482,13 +532,13 @@ BEGIN
     INC (bSml);
 
     WHILE move>=0 DO
-      IF sr>0 THEN
-        a := z.data[sr] SHL 16 + z.data[sr-1];
+      IF sz>0 THEN
+        a := z.data[sz] SHL 16 + z.data[sz-1];
       ELSE
-        a := z.data[sr] SHL 16;
+        a := z.data[sz] SHL 16;
       END;
 
-      IF sr = sy + move THEN
+      IF sz = sy + move THEN
         b := bBig
       ELSE
         b := bSml
@@ -515,7 +565,7 @@ BEGIN
           z.data[move+sy+1] := z.data[move+sy+1] - carry;   (* immer =Null ?? *)
         END;
 
-        WHILE (sr>=0) AND (z.data[sr]=0) DO DEC (sr) END;
+        WHILE (sz>=0) AND (z.data[sz]=0) DO DEC (sz) END;
 
         (* Berechnung von neuem Quotienten *)
         carry := quot;
@@ -526,7 +576,7 @@ BEGIN
           INC (move);
         END;
 
-        move := sr - sy;
+        move := sz - sy;
       ELSE
         DEC (move);
       END;
@@ -535,9 +585,9 @@ BEGIN
     END;
   END;
 
-  z.size := sr + 1;             (* für Compare *)
+  z.size := sz + 1;             (* für Compare *)
 
-  IF CompareU (z, y) # -1 THEN
+  IF CompareU (z, y) >= 0 THEN
 (*    WriteString ("Result is not smaller than Modul!"+&10); *)
 
     (* r := r - y *)
@@ -558,7 +608,7 @@ BEGIN
       z.data[sy+1] := z.data[sy+1] - 1;
       WriteString ("Carry"+&10);
     END;
-    WHILE (sr>=0) AND (z.data[sr]=0) DO DEC (sr) END;
+    WHILE (sz>=0) AND (z.data[sz]=0) DO DEC (sz) END;
 
     (* q := q + 1 *)
     j := 0;
@@ -569,103 +619,47 @@ BEGIN
     INC (q.data[j]);
   END;
 
-  z.size := sr + 1;
+  z.size := sz + 1;
   CorrectSize (q, q.size-1);
 END DivModU;
+*)
 
-
-PROCEDURE Div (VAR q : T = READONLY x, y : T);
+PROCEDURE Div (READONLY x, y : T) : T RAISES {Error} =
 VAR
-  j : INTEGER;
+  q, r : T;
 
 BEGIN
-  ASSERT2 (y.size # 0, DivZero);
-  DivModU (q, tmp, x, y);
-
-  IF tmp.size # 0 THEN
-    IF x.sign THEN       (* INC (q) *)
-      j := 0;
-      WHILE q.data[j] = 16_FFFF DO
-        q.data[j] := 0;
-        INC (j);
-      END;
-      INC (q.data[j]);
-    END;
+  q := DivModU (x, y, r);
+  q.sign := x.sign#y.sign;
+  (*IF NOT Equal(r,Zero) THEN*)
+  IF r.size # 0 THEN
+    RAISE Error(Err.indivisible);
   END;
-
-  q.sign := x.sign # y.sign;
+  RETURN q;
 END Div;
 
-PROCEDURE Mod (READONLY x, y : T) : T =
+PROCEDURE DivMod (READONLY x, y : T; VAR r : T) : T RAISES {Error} =
 VAR
-  j : INTEGER;
-  t, carry : W.T;
+  q : T;
 
 BEGIN
-  ASSERT2 (y.size # 0, DivZero);
-  ModU (z, x, y);
-
-  IF z.size # 0 THEN
-    IF x.sign THEN       (* r := y - r; *)
-      carry := 0;
-      FOR j:=0 TO z.size-1 DO
-        t := y.data[j] - z.data[j] - carry;
-
-        IF t < 0 THEN
-          z.data[j] := 16_10000 + t;
-          carry := 1;
-        ELSE
-          z.data[j] := t;
-          carry := 0;
-        END;
-      END;
-      IF carry = 1 THEN HALT (66) END;
-    END;
+  q := DivModU (x, y, r);
+  r.sign := y.sign;
+  q.sign := x.sign#y.sign;
+  IF q.sign THEN (*means x.sign#y.sign*)
+    r := SubU (y, r);
   END;
-
-  z.sign := FALSE;
-END Mod;
-
-PROCEDURE DivMod (VAR q, r : T = READONLY x, y : T);
-VAR
-  j : INTEGER;
-  t, carry : W.T;
-
-BEGIN
-  ASSERT2 (y.size # 0, DivZero);
-  DivModU (q, r, x, y);
-
-  IF z.size # 0 THEN
-    IF x.sign THEN
-      (* INC (q) *)
-      j := 0;
-      WHILE q.data[j] = 16_FFFF DO
-        q.data[j] := 0;
-        INC (j);
-      END;
-      INC (q.data[j]);
-
-      (* r := y - r; *)
-      carry := 0;
-      FOR j:=0 TO z.size-1 DO
-        t := y.data[j] - z.data[j] - carry;
-
-        IF t < 0 THEN
-          z.data[j] := 16_10000 + t;
-          carry := 1;
-        ELSE
-          z.data[j] := t;
-          carry := 0;
-        END;
-      END;
-      IF carry = 1 THEN HALT (66) END;
-    END;
-  END;
-
-  q.sign := x.sign # y.sign;
-  z.sign := FALSE;
+  RETURN q;
 END DivMod;
-*)
+
+PROCEDURE Mod (READONLY x, y : T) : T RAISES {Error} =
+VAR
+  r : T;
+
+BEGIN
+  EVAL DivMod (x, y, r);
+  RETURN r;
+END Mod;
 
 (*==========================*)
 BEGIN
