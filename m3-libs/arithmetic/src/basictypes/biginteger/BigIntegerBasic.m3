@@ -421,11 +421,51 @@ END DoubleDivMod;
 *)
 
 
+TYPE
+  BitPos =
+    RECORD
+      word : INTEGER;
+      bit  : [0..W.Size-1];
+    END;
+
+PROCEDURE SubBitPos (READONLY x,y : BitPos) : BitPos =
+BEGIN
+  IF x.bit >= y.bit THEN
+    RETURN BitPos{x.word-y.word,x.bit-y.bit};
+  ELSE
+    RETURN BitPos{x.word-y.word-1,W.Size-y.bit+x.bit};
+  END;
+END SubBitPos;
+
+<*INLINE*>
+PROCEDURE CompareBitPos (READONLY x,y : BitPos) : [-1..1] =
+BEGIN
+  IF    x.word < y.word THEN
+    RETURN -1;
+  ELSIF x.word > y.word THEN
+    RETURN 1;
+  ELSIF x.bit < y.bit THEN
+    RETURN -1;
+  ELSIF x.bit > y.bit THEN
+    RETURN 1;
+  ELSE
+    RETURN 0;
+  END;
+END CompareBitPos;
+
+PROCEDURE BitPosEndToBegin (READONLY x : BitPos) : BitPos =
+BEGIN
+  IF x.bit < W.Size-1 THEN
+    RETURN BitPos{x.word-1,x.bit+1};
+  ELSE
+    RETURN BitPos{x.word,0};
+  END;
+END BitPosEndToBegin;
+
+
 (*x := x-SHL(y*z,sh)   (inplace, make sure that x.data has enough space) *)
-PROCEDURE SubShiftedProd(VAR x : T; READONLY y : T; z : W.T; sh : INTEGER) =
+PROCEDURE SubShiftedProd(VAR x : T; READONLY y : T; z : W.T; sh : BitPos) =
 VAR
-  start,
-  subsh  :  INTEGER;
   lo, hi,
   oldhi,
   probs,
@@ -434,9 +474,6 @@ VAR
   borrow := FALSE;
   j      :  INTEGER;
 BEGIN
-  start := sh DIV W.Size;
-  subsh := sh MOD W.Size;
-
   hi := 0;
   probs := 0;
   FOR k:=0 TO y.size-1 DO
@@ -445,11 +482,11 @@ BEGIN
     carry := FALSE;
     lo := Wx.PlusWithCarry(lo,oldhi,carry);
     hi := Wx.PlusWithCarry(hi,0,carry);
-    loshft := Wx.LeftShiftWithProbscosis(lo,subsh,probs);
-    x.data[start+k] := Wx.MinusWithBorrow(x.data[start+k],loshft,borrow);
+    loshft := Wx.LeftShiftWithProbscosis(lo,sh.bit,probs);
+    x.data[sh.word+k] := Wx.MinusWithBorrow(x.data[sh.word+k],loshft,borrow);
   END;
-  j := start+y.size;
-  loshft := Wx.LeftShiftWithProbscosis(oldhi,subsh,probs);
+  j := sh.word+y.size;
+  loshft := Wx.LeftShiftWithProbscosis(oldhi,sh.bit,probs);
   x.data[j] := Wx.MinusWithBorrow(x.data[j],loshft,borrow);
   INC(j);
   x.data[j] := Wx.MinusWithBorrow(x.data[j],probs,borrow);
@@ -462,47 +499,73 @@ BEGIN
 END SubShiftedProd;
 
 (*x := x+SHL(y,sh)   (inplace, make sure that x.data has enough space)*)
-PROCEDURE AddShifted(VAR x : T; y : W.T; sh : INTEGER) =
+PROCEDURE AddShifted(VAR x : T; y : W.T; sh : BitPos) =
 VAR
-  start,
-  subsh :  INTEGER;
   carry := FALSE;
 BEGIN
-  start := sh DIV W.Size;
-  subsh := sh MOD W.Size;
-  x.data[start] := Wx.PlusWithCarry(x.data[start], W.Shift(y,sh), carry);
-  INC(start);
-  x.data[start] := Wx.PlusWithCarry(x.data[start], W.Shift(y,sh-W.Size), carry);
+  x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], W.Shift(y,sh.bit), carry);
+  INC(sh.word);
+  x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], W.Shift(y,sh.bit-W.Size), carry);
   WHILE carry DO
-    INC(start);
-    x.data[start] := Wx.PlusWithCarry(x.data[start], 0, carry);
+    INC(sh.word);
+    x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], 0, carry);
   END;
 END AddShifted;
 
-(*make sure, that x.data contains enough data*)
-PROCEDURE GetSubword (READONLY x : T; startbit : INTEGER) : W.T =
-VAR
-  start,
-  subsh :  INTEGER;
+(*grab the W.Size bits from sh downwards*)
+PROCEDURE GetSubword (READONLY x : T; sh : BitPos) : W.T =
 BEGIN
-  start := startbit DIV W.Size;
-  subsh := startbit MOD W.Size;
-  RETURN W.Or (W.Shift(x.data[start],-subsh), W.Shift(x.data[start+1],W.Size-subsh));
+  RETURN W.Or (W.Shift(x.data[sh.word-1],-sh.bit), W.Shift(x.data[sh.word],W.Size-sh.bit));
 END GetSubword;
 
+PROCEDURE GetMSWord (READONLY x : T; VAR xmswpos : BitPos) : W.T =
+BEGIN
+  xmswpos.bit  := Wx.FindMostSignifBit(x.data[x.size-1]);
+  xmswpos.word := x.size-1;
+  RETURN GetSubword(x,BitPosEndToBegin(xmswpos));
+END GetMSWord;
 
 PROCEDURE DivModU (READONLY x, y : T; VAR r : T) : T RAISES {Error} =
 VAR
   q : T;
+  qmswpos, rmswpos, ymswpos : BitPos;
+  qmsw,    rmsw,    ymsw    : W.T;
 BEGIN
   IF y.size = 0 THEN
     RAISE Error(Err.divide_by_zero);
   END;
 
+  r.data := NEW(Value,x.size+1);
+  q.data := NEW(Value,x.size-y.size+1);
+  SUBARRAY(r.data^,0,x.size-1) := SUBARRAY(x.data^,0,x.size-1);
+
   (*normalize remainder and divisor temporarily
     divide most significant 32 bit of r by the most significant 16 bit of y*)
-  EVAL Wx.FindMostSignifBit(x.data[x.size-1]);
+  ymsw := GetMSWord(y,ymswpos);
+  INC(ymsw);  (*round up to get a lower estimate for quotient*)
 
+  rmsw := GetMSWord(r,rmswpos);
+  (*round down by neglecting the following bits to get a lower estimate for quotient*)
+  WHILE CompareBitPos (rmswpos, ymswpos) > 0 DO
+    qmsw    := rmsw DIV ymsw;
+    qmswpos := SubBitPos(rmswpos,ymswpos);
+    AddShifted     (q, qmsw, BitPosEndToBegin(qmswpos));
+    SubShiftedProd (r, y, qmsw, BitPosEndToBegin(qmswpos));
+    rmsw := GetMSWord(r,rmswpos);
+  END;
+  (*CorrectSize (q, LAST(q.data));*)
+
+  (*this loop will run at most three times*)
+  WHILE Compare (r, y) > 0 DO
+    (*
+    r := SubU (r, y);
+    q := AddU (q, One);
+    *)
+    AddShifted     (q, 1, BitPos{0,0});
+    SubShiftedProd (r, y, 1, BitPos{0,0});
+  END;
+
+  CorrectSize (q, LAST(q.data^));
   RETURN q;
 END DivModU;
 
