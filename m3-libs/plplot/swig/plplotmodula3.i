@@ -349,8 +349,8 @@ ny:=NUMBER($1_name[0]);%}
 nx:=NUMBER($1_name);
 ny:=NUMBER($1_name[0]);%}
 %typemap("m3in")      PLFLTMatrixCk
-%{IF nx#NUMBER(x) THEN RAISE NA.Error(Err.bad_size) END;
-IF ny#NUMBER(y) THEN RAISE NA.Error(Err.bad_size) END;
+%{IF NUMBER($1_name) # nx THEN RAISE NA.Error(Err.bad_size) END;
+IF NUMBER($1_name[0]) # ny THEN RAISE NA.Error(Err.bad_size) END;
 FOR i:=0 TO LAST($1_name) DO tmpmat[i] := ADR($1_name[i,0]) END;%}
 %typemap("m3rawarg")  PLFLTMatrixCk %{tmpmat[0]%}
 
