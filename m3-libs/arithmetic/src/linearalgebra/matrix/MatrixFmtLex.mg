@@ -27,12 +27,13 @@ CONST Module = "MatrixFmtLex.";
 
 (*-----------------*)
 (*
-PROCEDURE Lex( 
+PROCEDURE Lex(
                str:TEXT):T RAISES {Error}=
 BEGIN
   RAISE Error(Err.not_implemented);
 END Lex;
 *)
+
 (*-----------------*)
 PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}):TEXT
                RAISES {Thread.Alerted, Wr.Failure} =

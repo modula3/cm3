@@ -7,21 +7,24 @@ Abstract:  TestS for BigInteger module.
 *)
 
 IMPORT
-  BigIntegerBasic  AS B,
-  BigIntegerRep    AS Br,
-  BigIntegerFmtLex AS FL,
+  BigIntegerBasic        AS B,
+  BigIntegerRep          AS BR,
+  BigIntegerFmtLex       AS BF,
+  BigIntegerMatrixBasic  AS BM,
+  BigIntegerMatrixFmtLex AS BMF,
   xInteger   AS I,
   xWordEx AS Wx,
   Word AS W,
   Fmt AS F,
   Text;
+FROM BigIntegerMatrixIntegerPower IMPORT IntegerPower;
 (*=======================*)
 CONST
   Module = "TestBigInteger.";
 
 CONST
-  base2Style  = FL.FmtStyle{base:=2};
-  base16Style = FL.FmtStyle{base:=16};
+  base2Style  = BF.FmtStyle{base:=2};
+  base16Style = BF.FmtStyle{base:=16};
 (*----------------------*)
 PROCEDURE TestBasic():BOOLEAN=
 CONST
@@ -59,14 +62,14 @@ BEGIN
   z := B.Zero;
 
   FOR j:=0 TO cycles-1 DO
-    (*Msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(j), FL.Fmt(z,base16Style), FL.Fmt(z,base2Style)}));*)
-    z := Br.AddU(z,y);
-    y := Br.MulU(y,x);
+    (*Msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(j), BF.Fmt(z,base16Style), BF.Fmt(z,base2Style)}));*)
+    z := BR.AddU(z,y);
+    y := BR.MulU(y,x);
   END;
-  (*Msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(cycles), FL.Fmt(z,base16Style), FL.Fmt(z,base2Style)}));*)
-  z := Br.MulU(z,B.FromInteger(7));
-  fff := FL.Fmt(z,base16Style);
-  Msg("multiply with 7: 16_" & fff & ": 2_" & FL.Fmt(z,base2Style) & "\n");
+  (*Msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(cycles), BF.Fmt(z,base16Style), BF.Fmt(z,base2Style)}));*)
+  z := BR.MulU(z,B.FromInteger(7));
+  fff := BF.Fmt(z,base16Style);
+  Msg("multiply with 7: 16_" & fff & ": 2_" & BF.Fmt(z,base2Style) & "\n");
   <*ASSERT Text.Length(fff) = (cycles DIV 4)*3 *>
   FOR j:=0 TO Text.Length(fff)-1 DO
     <*ASSERT Text.GetChar(fff,j)='f'*>
@@ -83,68 +86,68 @@ VAR
   x, y    : B.T;
   q, r    : B.T;
   result  := TRUE;
-  sh      := Br.BitPos{0,0};
+  sh      := BR.BitPos{0,0};
 BEGIN
   Debug(1,ftn,"begin\n");
-  x.data := NEW(Br.Value,cycles*3 DIV W.Size +2);
+  x.data := NEW(BR.Value,cycles*3 DIV W.Size +2);
   x.size := NUMBER(x.data^);
-  Br.Clear(x.data);
+  BR.Clear(x.data);
 
   FOR j:=0 TO cycles DO
 (*
     Msg(F.FN("%2s: bit %02s,%02s; 16_%s\n",
-             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,base16Style)}));
+             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), BF.Fmt(x,base16Style)}));
 *)
 (*
     Msg(F.FN("%2s: bit %s,%s; 16_%s, 2_%s\n",
-             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,base16Style), FL.Fmt(x,base2Style)}));
+             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), BF.Fmt(x,base16Style), BF.Fmt(x,base2Style)}));
 *)
-    Br.AddShifted(x,j,sh);
-    sh := Br.AddBitPos(sh,Br.BitPos{0,3});
+    BR.AddShifted(x,j,sh);
+    sh := BR.AddBitPos(sh,BR.BitPos{0,3});
   END;
 
-  sh := Br.BitPos{0,0};
+  sh := BR.BitPos{0,0};
   FOR j:=0 TO cycles DO
 (*
     Msg(F.FN("%2s: bit %02s,%02s; 16_%s\n",
-             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,base16Style)}));
+             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), BF.Fmt(x,base16Style)}));
 *)
-    Br.AddShifted(x,cycles-j,sh);
-    sh := Br.AddBitPos(sh,Br.BitPos{0,3});
+    BR.AddShifted(x,cycles-j,sh);
+    sh := BR.AddBitPos(sh,BR.BitPos{0,3});
   END;
 
 (*
-  sh := Br.BitPos{0,0};
+  sh := BR.BitPos{0,0};
   quotient := cycles * 2_1001001001;
   FOR j:=0 TO cycles DO
     Msg(F.FN("%2s: bit %02s,%02s; 16_%s\n",
-             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,base16Style)}));
-    Br.SubShiftedProd(x,cycles-j,sh);
-    sh := Br.AddBitPos(sh,Br.BitPos{0,3});
+             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), BF.Fmt(x,base16Style)}));
+    BR.SubShiftedProd(x,cycles-j,sh);
+    sh := BR.AddBitPos(sh,BR.BitPos{0,3});
   END;
 *)
   x := B.One;
   FOR j:=0 TO 13 DO
-    x := Br.AddU(B.One,Br.MulU(x,B.FromInteger(16_1000)));
+    x := BR.AddU(B.One,BR.MulU(x,B.FromInteger(16_1000)));
   END;
-  y := Br.MulU(B.FromInteger(16_1000001),B.FromInteger(16_1001));
+  y := BR.MulU(B.FromInteger(16_1000001),B.FromInteger(16_1001));
 (*
   x := B.FromInteger(16_1001001);
   FOR j:=0 TO 1 DO
-    x := Br.MulU(x,x);
+    x := BR.MulU(x,x);
   END;
-  x := Br.AddU(x,B.One);
+  x := BR.AddU(x,B.One);
   y := B.FromInteger(16_1001001);
-  y := Br.MulU(y,y);
+  y := BR.MulU(y,y);
 *)
   Msg(F.FN("x = 16_%s   y = 16_%s\n",
-           ARRAY OF TEXT{FL.Fmt(x,base16Style), FL.Fmt(y,base16Style)}));
-  q := Br.DivModU(x,y,r);
+           ARRAY OF TEXT{BF.Fmt(x,base16Style), BF.Fmt(y,base16Style)}));
+  q := BR.DivModU(x,y,r);
   Msg(F.FN("q = 16_%s   r = 16_%s\n",
-           ARRAY OF TEXT{FL.Fmt(q,base16Style), FL.Fmt(r,base16Style)}));
+           ARRAY OF TEXT{BF.Fmt(q,base16Style), BF.Fmt(r,base16Style)}));
   q.sign := FALSE;
   r.sign := FALSE;
-  <*ASSERT B.Equal(x,Br.AddU(r,Br.MulU(q,y)))*>
+  <*ASSERT B.Equal(x,BR.AddU(r,BR.MulU(q,y)))*>
 
   <*ASSERT NOT B.IsZero(B.Mod(B.FromInteger(16_4f7d3f), B.FromInteger(16_37))) *>
 
@@ -154,26 +157,49 @@ END TestAddshift;
 PROCEDURE TestFibonacci():BOOLEAN=
 CONST
   ftn = Module & "TestFibonacci";
+TYPE
+  RowBody    = ARRAY [0..1] OF B.T;
+  MatrixBody = ARRAY [0..1] OF RowBody;
+CONST
+  cycles = 250;
 VAR
-  x, y, z : B.T;
+  x, y, z   : B.T;
+  base, pow : BM.T;
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
   x := B.Zero;
   y := B.One;
-  (*x := B.FromInteger(16_7FFFFFFF);*)
 
-  FOR j:=0 TO 100 DO
-    (*Msg("size: " & F.Int(x.size) & "\n");*)
-    Msg(F.FN("%2s: 16_%s, 2_%s\n",
-      ARRAY OF TEXT {F.Int(j), FL.Fmt(x,base16Style), FL.Fmt(x)}));
-    z := Br.AddU(x,y);
+  base  := BM.New(2,2);
+  base^ := MatrixBody{RowBody{B.Zero,B.One},RowBody{B.One,B.One}};
+
+  FOR j:=0 TO cycles DO
+(*
+    Msg(F.FN("%2s: 16_%s, 10_%s\n",
+      ARRAY OF TEXT {F.Int(j), BF.Fmt(x,base16Style), BF.Fmt(x)}));
+*)
+    z := BR.AddU(x,y);
     x := y;
     y := z;
+    pow := IntegerPower(base,j+1);
+(*
+    Msg(F.FN("%2s: 16_%s = 16_%s\n",
+      ARRAY OF TEXT {
+        F.Int(j),
+        BF.Fmt(y,base16Style),
+        BF.Fmt(pow[1,1],base16Style)
+      }
+    ));
+*)
+    <*ASSERT B.Equal(y,pow[1,1])*>
   END;
+  Msg(BF.Fmt(x,base16Style)); NewLine();
 
-  (*!!! compare with explicit formula !!!*)
-  (*!!! better: compare with fast integer power of matrix {{0,1},{1,1}}!!!*)
+  pow := IntegerPower(base,cycles);
+  Msg(BMF.Fmt(pow,BMF.FmtStyle{elemStyle:=base16Style})); NewLine();
+  <*ASSERT B.Equal(x,pow[1,1])*>
+
   RETURN result;
 END TestFibonacci;
 (*-------------------------*)
@@ -196,13 +222,13 @@ BEGIN
 
   FOR j:=3 TO 10000 DO
     x[3] := B.Add (x[0], x[1]);
-    (*Msg(F.FN("%s / %s\n", ARRAY OF TEXT {FL.Fmt(x[3],base16Style), F.Int(j,16)}));*)
+    (*Msg(F.FN("%s / %s\n", ARRAY OF TEXT {BF.Fmt(x[3],base16Style), F.Int(j,16)}));*)
     mod := B.Mod(x[3],B.FromInteger(j));
     prime0 := B.IsZero(mod);
     prime1 := I.isprime(j);
     (*
     Msg(F.FN("%2s: %s, mod %s prime %s vs. %s\n",
-      ARRAY OF TEXT {F.Int(j), FL.Fmt(x[3],10), FL.Fmt(mod,10), F.Bool(prime0), F.Bool(prime1)}));
+      ARRAY OF TEXT {F.Int(j), BF.Fmt(x[3],10), BF.Fmt(mod,10), F.Bool(prime0), F.Bool(prime1)}));
     *)
     <*ASSERT prime0=prime1*>
     x[0] := x[1];
