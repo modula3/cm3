@@ -150,6 +150,7 @@ BEGIN
   RETURN z;
 END Scale;
 
+(*
 PROCEDURE ScaleInt(x:T;y:INTEGER):T=
 VAR
   z:T;
@@ -158,7 +159,7 @@ BEGIN
   z.im:=R.ScaleInt(x.im,y);
   RETURN z;
 END ScaleInt;
-
+*)
 
 (*==========================*)
 BEGIN
