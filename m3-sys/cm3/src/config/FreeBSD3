@@ -15,7 +15,6 @@ if M3_PROFILING
 else
   readonly BUILD_DIR  = TARGET           % directory for results
 end
-readonly BUILD_DIR    = TARGET           % directory for results
 readonly OS_TYPE      = "POSIX"          % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"         % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "i486--bsd"      % "cpu-vendor-os" string for GNU
