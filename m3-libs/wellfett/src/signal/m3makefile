@@ -3,6 +3,7 @@ template("signal")
 
 
 generic_module("Signal")
+generic_interface("SignalRep")
 Signal("Real",               "RealBasic")
 Signal("LongReal",           "LongRealBasic")
 Signal("Extended",           "ExtendedBasic")

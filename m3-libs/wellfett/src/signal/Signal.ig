@@ -4,10 +4,11 @@ GENERIC INTERFACE Signal(R);
 TYPE
   IndexType = INTEGER;
 
-  T <: Public;
-  Public = OBJECT
+  T <: TPublic;
+  TPublic = OBJECT
 	METHODS
 	init(first, last : IndexType);
+	fromArray(READONLY arr : ARRAY OF R.T; first : IndexType := 0);
 	copy() : T;
 
 	getfirst()  : IndexType;

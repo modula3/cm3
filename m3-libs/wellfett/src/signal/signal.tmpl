@@ -4,6 +4,8 @@
 
 readonly proc Signal (nm, field) is
   local basic = nm & "Signal"
-  build_generic_intf (basic, "Signal", [field], VISIBLE)
-  build_generic_impl (basic, "Signal", [field])
+  local rep   = basic & "Rep"
+  build_generic_intf (basic, "Signal",    [field], VISIBLE)
+  build_generic_impl (basic, "Signal",    [field, rep])
+  build_generic_intf (rep,   "SignalRep", [field, basic], VISIBLE)
 end
