@@ -15,7 +15,7 @@ IMPORT LongRealBasic            AS R,
        LongRealPolarBasic       AS Polar,
        BigIntegerBasic          AS B,
        BigIntegerFractionBasic  AS Fr,
-       LongRealVectorFast       AS V,
+       LongRealVector           AS V,
        LongRealMatrixFast       AS M,
        LongRealComplexPolynomialBasic AS P,
 

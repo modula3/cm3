@@ -19,7 +19,6 @@ PROCEDURE Sum (READONLY x: T): R.T;
 
 PROCEDURE ArithSeq (num: CARDINAL; from: R.T; by: R.T): V.T;
 PROCEDURE GeomSeq (num: CARDINAL; from: R.T; by: R.T): V.T;
-PROCEDURE RecursiveSeq (num: CARDINAL; from: R.T; by: V.MapFtn): V.T;
 
 (*==========================*)
 END VectorBasic.

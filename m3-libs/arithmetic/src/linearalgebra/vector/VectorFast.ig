@@ -21,7 +21,6 @@ PROCEDURE Min (READONLY x: T): R.T;
 
 PROCEDURE ArithSeq (num: CARDINAL; from := R.Zero; by := R.One): V.T;
 PROCEDURE GeomSeq (num: CARDINAL; from := R.One; by := R.Two): V.T;
-PROCEDURE RecursiveSeq (num: CARDINAL; from: R.T; by: V.MapFtn): V.T;
 
 (*==========================*)
 END VectorFast.

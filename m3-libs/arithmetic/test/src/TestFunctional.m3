@@ -3,7 +3,7 @@ MODULE TestFunctional EXPORTS Test;
 
 IMPORT LongRealBasic AS R;
 IMPORT LongRealTrans AS RT;
-IMPORT LongRealVectorBasic AS V;
+IMPORT LongRealVector      AS V;
 IMPORT LongRealVectorTrans AS VT;
 IMPORT LongRealMatrixBasic AS M;
 IMPORT LongRealMatrixTrans AS MT;
