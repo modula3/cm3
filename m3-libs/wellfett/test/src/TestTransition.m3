@@ -239,7 +239,8 @@ PROCEDURE RandomMaskWithLeastEstimate():S.T=
       slice:=NEW(S.T).fromArray(rndArr).slice(3);
     BEGIN
       FOR j:=FIRST(slice^) TO LAST(slice^) DO
-        slice[j].raiseD(AThird/FLOAT(slice[j].getNumber(),R.T)-slice[j].offset());
+        slice[j] := slice[j].raise((AThird-slice[j].sum())/FLOAT(slice[j].getNumber(),R.T),
+	                           slice[j].getFirst(),slice[j].getNumber());
       END;
       RETURN NEW(S.T).interleave(slice^);
     END;
@@ -256,7 +257,7 @@ PROCEDURE RandomMask(size:CARDINAL):S.T=
       rndArr[j]:=rnd.uniform(-1.0D0,1.0D0);
     END;
     mask := mask.fromArray(rndArr^);
-    RETURN mask.raise(1.0D0/FLOAT(size,R.T)-mask.offset());
+    RETURN mask.raise((1.0D0-mask.sum())/FLOAT(size,R.T),mask.getFirst(),mask.getNumber());
   END RandomMask;
 
 PROCEDURE CompareTranslatedMasks(mask0,mask1:S.T) =
