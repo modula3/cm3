@@ -10,12 +10,15 @@ Abstract: Direct access to Polynomial functions
 FROM xUtils IMPORT Error;
 (*==========================*)
 
+CONST
+  Brand = "Polynomial";
+
 TYPE
   (*interpretation is: a[0] + a[1]*xi + a[2]* xi^2...a[n]*xi^n *)
   (*text form is: T4{a0,a1,a2,a3} *)
 
   TBody = ARRAY OF R.T;
-  T = BRANDED "Polynomial" REF TBody;
+  T = REF TBody;
 
 (* It's not possible to obtain a pointer to a constant array.
    We can not turn T from a reference type to an array type,
