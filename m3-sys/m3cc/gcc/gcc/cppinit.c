@@ -103,9 +103,13 @@ static void mark_named_operators	PARAMS ((cpp_reader *));
 static void append_include_chain	PARAMS ((cpp_reader *,
 						 char *, int, int));
 static struct search_path * remove_dup_dir	PARAMS ((cpp_reader *,
+						 struct search_path *,
+						 struct search_path **));
+static struct search_path * remove_dup_nonsys_dirs PARAMS ((cpp_reader *,
+						 struct search_path **,
 						 struct search_path *));
 static struct search_path * remove_dup_dirs PARAMS ((cpp_reader *,
-						 struct search_path *));
+						 struct search_path **));
 static void merge_include_chains	PARAMS ((cpp_reader *));
 static bool push_include		PARAMS ((cpp_reader *,
 						 struct pending_option *));
@@ -189,7 +193,7 @@ path_include (pfile, list, path)
 	  name[q - p] = 0;
 	}
 
-      append_include_chain (pfile, name, path, 0);
+      append_include_chain (pfile, name, path, path == SYSTEM);
 
       /* Advance past this name.  */
       if (*q == 0)
@@ -272,21 +276,77 @@ append_include_chain (pfile, dir, path, cxx_aware)
 }
 
 /* Handle a duplicated include path.  PREV is the link in the chain
-   before the duplicate.  The duplicate is removed from the chain and
-   freed.  Returns PREV.  */
+   before the duplicate, or NULL if the duplicate is at the head of
+   the chain.  The duplicate is removed from the chain and freed.
+   Returns PREV.  */
 static struct search_path *
-remove_dup_dir (pfile, prev)
+remove_dup_dir (pfile, prev, head_ptr)
      cpp_reader *pfile;
      struct search_path *prev;
+     struct search_path **head_ptr;
 {
-  struct search_path *cur = prev->next;
+  struct search_path *cur;
+
+  if (prev != NULL)
+    {
+      cur = prev->next;
+      prev->next = cur->next;
+    }
+  else
+    {
+      cur = *head_ptr;
+      *head_ptr = cur->next;
+    }
 
   if (CPP_OPTION (pfile, verbose))
     fprintf (stderr, _("ignoring duplicate directory \"%s\"\n"), cur->name);
 
-  prev->next = cur->next;
   free ((PTR) cur->name);
   free (cur);
+
+  return prev;
+}
+
+/* Remove duplicate non-system directories for which there is an equivalent
+   system directory later in the chain.  The range for removal is between
+   *HEAD_PTR and END.  Returns the directory before END, or NULL if none.
+   This algorithm is quadratic in the number of system directories, which is
+   acceptable since there aren't usually that many of them.  */
+static struct search_path *
+remove_dup_nonsys_dirs (pfile, head_ptr, end)
+     cpp_reader *pfile;
+     struct search_path **head_ptr;
+     struct search_path *end;
+{
+  int sysdir = 0;
+  struct search_path *prev = NULL, *cur, *other;
+
+  for (cur = *head_ptr; cur; cur = cur->next)
+    {
+      if (cur->sysp)
+	{
+	  sysdir = 1;
+	  for (other = *head_ptr, prev = NULL;
+	       other != end;
+	       other = other ? other->next : *head_ptr)
+	    {
+	      if (!other->sysp
+		  && INO_T_EQ (cur->ino, other->ino)
+		  && cur->dev == other->dev)
+		{
+		  other = remove_dup_dir (pfile, prev, head_ptr);
+		  if (CPP_OPTION (pfile, verbose))
+		    fprintf (stderr,
+  _("  as it is a non-system directory that duplicates a system directory\n"));
+		}
+	      prev = other;
+	    }
+	}
+    }
+
+  if (!sysdir)
+    for (cur = *head_ptr; cur != end; cur = cur->next)
+      prev = cur;
 
   return prev;
 }
@@ -296,31 +356,18 @@ remove_dup_dir (pfile, prev)
    in the number of -I switches, which is acceptable since there
    aren't usually that many of them.  */
 static struct search_path *
-remove_dup_dirs (pfile, head)
+remove_dup_dirs (pfile, head_ptr)
      cpp_reader *pfile;
-     struct search_path *head;
+     struct search_path **head_ptr;
 {
   struct search_path *prev = NULL, *cur, *other;
 
-  for (cur = head; cur; cur = cur->next)
+  for (cur = *head_ptr; cur; cur = cur->next)
     {
-      for (other = head; other != cur; other = other->next)
+      for (other = *head_ptr; other != cur; other = other->next)
         if (INO_T_EQ (cur->ino, other->ino) && cur->dev == other->dev)
 	  {
-	    if (cur->sysp && !other->sysp)
-	      {
-		cpp_warning (pfile,
-			     "changing search order for system directory \"%s\"",
-			     cur->name);
-		if (strcmp (cur->name, other->name))
-		  cpp_warning (pfile, 
-			       "  as it is the same as non-system directory \"%s\"",
-			       other->name);
-		else
-		  cpp_warning (pfile, 
-			       "  as it has already been specified as a non-system directory");
-	      }
-	    cur = remove_dup_dir (pfile, prev);
+	    cur = remove_dup_dir (pfile, prev, head_ptr);
 	    break;
 	  }
       prev = cur;
@@ -358,28 +405,33 @@ merge_include_chains (pfile)
   else
     brack = systm;
 
-  /* This is a bit tricky.  First we drop dupes from the quote-include
-     list.  Then we drop dupes from the bracket-include list.
-     Finally, if qtail and brack are the same directory, we cut out
-     brack and move brack up to point to qtail.
+  /* This is a bit tricky.  First we drop non-system dupes of system
+     directories from the merged bracket-include list.  Next we drop
+     dupes from the bracket and quote include lists.  Then we drop
+     non-system dupes from the merged quote-include list.  Finally,
+     if qtail and brack are the same directory, we cut out brack and
+     move brack up to point to qtail.
 
      We can't just merge the lists and then uniquify them because
      then we may lose directories from the <> search path that should
-     be there; consider -Ifoo -Ibar -I- -Ifoo -Iquux. It is however
+     be there; consider -Ifoo -Ibar -I- -Ifoo -Iquux.  It is however
      safe to treat -Ibar -Ifoo -I- -Ifoo -Iquux as if written
      -Ibar -I- -Ifoo -Iquux.  */
 
-  remove_dup_dirs (pfile, brack);
-  qtail = remove_dup_dirs (pfile, quote);
+  remove_dup_nonsys_dirs (pfile, &brack, systm);
+  remove_dup_dirs (pfile, &brack);
 
   if (quote)
     {
+      qtail = remove_dup_dirs (pfile, &quote);
       qtail->next = brack;
 
+      qtail = remove_dup_nonsys_dirs (pfile, &quote, brack);
+
       /* If brack == qtail, remove brack as it's simpler.  */
-      if (brack && INO_T_EQ (qtail->ino, brack->ino)
+      if (qtail && brack && INO_T_EQ (qtail->ino, brack->ino)
 	  && qtail->dev == brack->dev)
-	brack = remove_dup_dir (pfile, qtail);
+	brack = remove_dup_dir (pfile, qtail, &quote);
     }
   else
     quote = brack;
@@ -396,7 +448,7 @@ struct lang_flags
   char objc;
   char cplusplus;
   char extended_numbers;
-  char trigraphs;
+  char std;
   char dollars_in_ident;
   char cplusplus_comments;
   char digraphs;
@@ -404,7 +456,7 @@ struct lang_flags
 
 /* ??? Enable $ in identifiers in assembly? */
 static const struct lang_flags lang_defaults[] =
-{ /*              c99 objc c++ xnum trig dollar c++comm digr  */
+{ /*              c99 objc c++ xnum std dollar c++comm digr  */
   /* GNUC89 */  { 0,  0,   0,  1,   0,   1,     1,      1     },
   /* GNUC99 */  { 1,  0,   0,  1,   0,   1,     1,      1     },
   /* STDC89 */  { 0,  0,   0,  0,   1,   0,     0,      0     },
@@ -431,7 +483,8 @@ set_lang (pfile, lang)
   CPP_OPTION (pfile, objc)		 = l->objc;
   CPP_OPTION (pfile, cplusplus)		 = l->cplusplus;
   CPP_OPTION (pfile, extended_numbers)	 = l->extended_numbers;
-  CPP_OPTION (pfile, trigraphs)		 = l->trigraphs;
+  CPP_OPTION (pfile, std)		 = l->std;
+  CPP_OPTION (pfile, trigraphs)		 = l->std;
   CPP_OPTION (pfile, dollars_in_ident)	 = l->dollars_in_ident;
   CPP_OPTION (pfile, cplusplus_comments) = l->cplusplus_comments;
   CPP_OPTION (pfile, digraphs)		 = l->digraphs;
@@ -847,7 +900,7 @@ init_standard_includes (pfile)
 		  && !CPP_OPTION (pfile, no_standard_cplusplus_includes)))
 	    {
 	      /* Does this dir start with the prefix?  */
-	      if (!memcmp (p->fname, default_prefix, default_len))
+	      if (!strncmp (p->fname, default_prefix, default_len))
 		{
 		  /* Yes; change prefix and add to search list.  */
 		  int flen = strlen (p->fname);
@@ -1295,7 +1348,7 @@ parse_option (input)
       md = (mn + mx) / 2;
 
       opt_len = cl_options[md].opt_len;
-      comp = memcmp (input, cl_options[md].opt_text, opt_len);
+      comp = strncmp (input, cl_options[md].opt_text, opt_len);
 
       if (comp > 0)
 	mn = md + 1;
@@ -1320,7 +1373,7 @@ parse_option (input)
 	      for (; mn < (unsigned int) N_OPTS; mn++)
 		{
 		  opt_len = cl_options[mn].opt_len;
-		  if (memcmp (input, cl_options[mn].opt_text, opt_len))
+		  if (strncmp (input, cl_options[mn].opt_text, opt_len))
 		    break;
 		  if (input[opt_len] == '\0')
 		    return mn;
@@ -1880,7 +1933,10 @@ init_dependency_output (pfile)
 	{
 	  spec = getenv ("SUNPRO_DEPENDENCIES");
 	  if (spec)
-	    CPP_OPTION (pfile, print_deps) = 2;
+	    {
+	      CPP_OPTION (pfile, print_deps) = 2;
+	      CPP_OPTION (pfile, deps_ignore_main_file) = 1;
+	    }
 	  else
 	    return;
 	}

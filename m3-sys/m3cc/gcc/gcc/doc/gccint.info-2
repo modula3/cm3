@@ -116,6 +116,7 @@ FIXME: document the others.
 
 * Test Idioms::  Idioms used in test suite code.
 * C Tests::      The C language test suites.
+* libgcj Tests:: The Java library test suites.
 
 
 File: gccint.info,  Node: Test Idioms,  Next: C Tests,  Up: Test Suites
@@ -185,7 +186,7 @@ on all targets).
    FIXME: discuss non-C test suites here.
 
 
-File: gccint.info,  Node: C Tests,  Prev: Test Idioms,  Up: Test Suites
+File: gccint.info,  Node: C Tests,  Next: libgcj Tests,  Prev: Test Idioms,  Up: Test Suites
 
 C Language Test Suites
 ----------------------
@@ -257,6 +258,28 @@ C Language Test Suites
 
    FIXME: merge in `testsuite/README.gcc' and discuss the format of
 test cases and magic comments more.
+
+
+File: gccint.info,  Node: libgcj Tests,  Prev: C Tests,  Up: Test Suites
+
+The Java library test suites.
+-----------------------------
+
+   Runtime tests are executed via `make check' from the `testsuite'
+directory of the libjava hierarchy in the build tree.  Additional
+runtime tests can be checked into this testsuite.
+
+   Regression testing of the core packages in libgcj is also covered by
+the Mauve test suite.  The Mauve Project develops tests for the Java
+Class Libraries.  These tests are run as part of libgcj testing by
+specifying the location of the Mauve tree when invoking `make', as in
+`make MAUVEDIR=~/mauve check'.
+
+   The Jacks project provides a test suite for Java compilers that can
+be used to test changes that affect the GCJ front end.  There is no
+automated mechanism to run the Jacks suite as part of GCJ testing.
+
+   We encourage developers to contribute test cases to Mauve and Jacks.
 
 
 File: gccint.info,  Node: Passes,  Next: Trees,  Prev: Source Tree,  Up: Top

@@ -86,13 +86,19 @@ the other form by either removing `no-' or adding it.
      Return "short" `struct' and `union' values in memory like longer
      ones, rather than in registers.  This convention is less
      efficient, but it has the advantage of allowing intercallability
-     between GCC-compiled files and files compiled with other compilers.
+     between GCC-compiled files and files compiled with other
+     compilers, particularly the Portable C Compiler (pcc).
 
      The precise convention for returning structures in memory depends
      on the target configuration macros.
 
      Short structures and unions are those whose size and alignment
      match that of some integer type.
+
+     *Warning:* code compiled with the `-fpcc-struct-return' switch is
+     not binary compatible with code compiled with the
+     `-freg-struct-return' switch.  Use it to conform to a non-default
+     application binary interface.
 
 `-freg-struct-return'
      Return `struct' and `union' values in registers when possible.
@@ -107,14 +113,39 @@ the other form by either removing `no-' or adding it.
      standard, and we chose the more efficient register return
      alternative.
 
+     *Warning:* code compiled with the `-freg-struct-return' switch is
+     not binary compatible with code compiled with the
+     `-fpcc-struct-return' switch.  Use it to conform to a non-default
+     application binary interface.
+
 `-fshort-enums'
      Allocate to an `enum' type only as many bytes as it needs for the
      declared range of possible values.  Specifically, the `enum' type
      will be equivalent to the smallest integer type which has enough
      room.
 
+     *Warning:* the `-fshort-enums' switch causes GCC to generate code
+     that is not binary compatible with code generated without that
+     switch.  Use it to conform to a non-default application binary
+     interface.
+
 `-fshort-double'
      Use the same size for `double' as for `float'.
+
+     *Warning:* the `-fshort-double' switch causes GCC to generate code
+     that is not binary compatible with code generated without that
+     switch.  Use it to conform to a non-default application binary
+     interface.
+
+`-fshort-wchar'
+     Override the underlying type for `wchar_t' to be `short unsigned
+     int' instead of the default for the target.  This option is useful
+     for building programs to run under WINE.
+
+     *Warning:* the `-fshort-wchar' switch causes GCC to generate code
+     that is not binary compatible with code generated without that
+     switch.  Use it to conform to a non-default application binary
+     interface.
 
 `-fshared-data'
      Requests that the data and non-`const' variables of this
@@ -243,10 +274,12 @@ the other form by either removing `no-' or adding it.
      three-way choice.
 
 `-fpack-struct'
-     Pack all structure members together without holes.  Usually you
-     would not want to use this option, since it makes the code
-     suboptimal, and the offsets of structure members won't agree with
-     system libraries.
+     Pack all structure members together without holes.
+
+     *Warning:* the `-fpack-struct' switch causes GCC to generate code
+     that is not binary compatible with code generated without that
+     switch.  Additionally, it makes the code suboptimial.  Use it to
+     conform to a non-default application binary interface.
 
 `-finstrument-functions'
      Generate instrumentation calls for entry and exit to functions.
@@ -336,9 +369,11 @@ the other form by either removing `no-' or adding it.
      forcibly change the way C symbols are represented in the object
      file.  One use is to help link with legacy assembly code.
 
-     Be warned that you should know what you are doing when invoking
-     this option, and that not all targets provide complete support for
-     it.
+     *Warning:* the `-fleading-underscore' switch causes GCC to
+     generate code that is not binary compatible with code generated
+     without that switch.  Use it to conform to a non-default
+     application binary interface.  Not all targets provide complete
+     support for this switch.
 
 
 File: gcc.info,  Node: Environment Variables,  Next: Running Protoize,  Prev: Code Gen Options,  Up: Invoking GCC
@@ -504,7 +539,8 @@ preprocessor.
      This variable is the same as the environment variable
      `DEPENDENCIES_OUTPUT' (*note DEPENDENCIES_OUTPUT::), except that
      system header files are not ignored, so it implies `-M' rather
-     than `-MM'.  *Note Preprocessor Options::.
+     than `-MM'.  However, the dependence on the main input file is
+     omitted.  *Note Preprocessor Options::.
 
 
 File: gcc.info,  Node: Running Protoize,  Prev: Environment Variables,  Up: Invoking GCC
@@ -1015,7 +1051,6 @@ extensions, accepted by GCC in C89 mode and in C++.
 * Labels as Values::    Getting pointers to labels, and computed gotos.
 * Nested Functions::    As in Algol and Pascal, lexical scoping of functions.
 * Constructing Calls::	Dispatching a call to another function.
-* Naming Types::        Giving a name to the type of some expression.
 * Typeof::              `typeof': referring to the type of an expression.
 * Lvalues::             Using `?:', `,' and casts in lvalues.
 * Conditionals::        Omitting the middle operand of a `?:' expression.
@@ -1111,8 +1146,7 @@ the value of an enumeration constant, the width of a bit-field, or the
 initial value of a static variable.
 
    If you don't know the type of the operand, you can still do this,
-but you must use `typeof' (*note Typeof::) or type naming (*note Naming
-Types::).
+but you must use `typeof' (*note Typeof::).
 
    Statement expressions are not supported fully in G++, and their fate
 there is unclear.  (It is possible that they will become fully supported
@@ -1140,54 +1174,4 @@ statement-expressions of this form in header files that are designed to
 work with C++.  (Note that some versions of the GNU C Library contained
 header files using statement-expression that lead to precisely this
 bug.)
-
-
-File: gcc.info,  Node: Local Labels,  Next: Labels as Values,  Prev: Statement Exprs,  Up: C Extensions
-
-Locally Declared Labels
-=======================
-
-   Each statement expression is a scope in which "local labels" can be
-declared.  A local label is simply an identifier; you can jump to it
-with an ordinary `goto' statement, but only from within the statement
-expression it belongs to.
-
-   A local label declaration looks like this:
-
-     __label__ LABEL;
-
-or
-
-     __label__ LABEL1, LABEL2, ...;
-
-   Local label declarations must come at the beginning of the statement
-expression, right after the `({', before any ordinary declarations.
-
-   The label declaration defines the label _name_, but does not define
-the label itself.  You must do this in the usual way, with `LABEL:',
-within the statements of the statement expression.
-
-   The local label feature is useful because statement expressions are
-often used in macros.  If the macro contains nested loops, a `goto' can
-be useful for breaking out of them.  However, an ordinary label whose
-scope is the whole function cannot be used: if the macro can be
-expanded several times in one function, the label will be multiply
-defined in that function.  A local label avoids this problem.  For
-example:
-
-     #define SEARCH(array, target)                     \
-     ({                                                \
-       __label__ found;                                \
-       typeof (target) _SEARCH_target = (target);      \
-       typeof (*(array)) *_SEARCH_array = (array);     \
-       int i, j;                                       \
-       int value;                                      \
-       for (i = 0; i < max; i++)                       \
-         for (j = 0; j < max; j++)                     \
-           if (_SEARCH_array[i][j] == _SEARCH_target)  \
-             { value = i; goto found; }                \
-       value = -1;                                     \
-      found:                                           \
-       value;                                          \
-     })
 

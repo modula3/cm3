@@ -664,6 +664,10 @@ Open-Ended Hooks for DBX Format
 `DBX_OUTPUT_RBRAC (STREAM, NAME)'
      Like `DBX_OUTPUT_LBRAC', but for the end of a scope level.
 
+`DBX_OUTPUT_NFUN (STREAM, LSCOPE_LABEL, DECL)'
+     Define this macro if the target machine requires special handling
+     to output an `N_FUN' entry for the function DECL.
+
 `DBX_OUTPUT_ENUM (STREAM, TYPE)'
      Define this macro if the target machine requires special handling
      to output an enumeration type.  The definition should be a C

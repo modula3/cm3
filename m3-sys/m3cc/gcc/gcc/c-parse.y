@@ -488,6 +488,10 @@ alignof:
 	ALIGNOF { skip_evaluation++; }
 	;
 
+typeof:
+	TYPEOF { skip_evaluation++; }
+	;
+
 cast_expr:
 	unary_expr
 	| '(' typename ')' cast_expr  %prec UNARY
@@ -1283,10 +1287,10 @@ typespec_nonreserved_nonattr:
 		{ /* For a typedef name, record the meaning, not the name.
 		     In case of `foo foo, bar;'.  */
 		  $$ = lookup_name ($1); }
-	| TYPEOF '(' expr ')'
-		{ $$ = TREE_TYPE ($3); }
-	| TYPEOF '(' typename ')'
-		{ $$ = groktypename ($3); }
+	| typeof '(' expr ')'
+		{ skip_evaluation--; $$ = TREE_TYPE ($3); }
+	| typeof '(' typename ')'
+		{ skip_evaluation--; $$ = groktypename ($3); }
 	;
 
 /* typespec_nonreserved_attr does not exist.  */
@@ -1430,6 +1434,7 @@ initelt:
 		  if (pedantic)
 		    pedwarn ("obsolete use of designated initializer with `:'"); }
 	  initval
+		{}
 	| initval
 	;
 

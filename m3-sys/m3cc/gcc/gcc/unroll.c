@@ -1188,6 +1188,9 @@ unroll_loop (loop, insn_count, strength_reduce_p)
   /* Keep track of the unroll factor for the loop.  */
   loop_info->unroll_number = unroll_number;
 
+  /* And whether the loop has been preconditioned.  */
+  loop_info->preconditioned = loop_preconditioned;
+
   /* For each biv and giv, determine whether it can be safely split into
      a different variable for each unrolled copy of the loop body.
      We precalculate and save this info here, since computing it is
@@ -2868,7 +2871,7 @@ find_splittable_givs (loop, bl, unroll_type, increment, unroll_number)
 		  value = tem;
 		}
 
-	      splittable_regs[REGNO (v->new_reg)] = value;
+	      splittable_regs[reg_or_subregno (v->new_reg)] = value;
 	    }
 	  else
 	    {
@@ -3047,21 +3050,21 @@ find_splittable_givs (loop, bl, unroll_type, increment, unroll_number)
 		 itself does not have to be splittable.  */
 
 	      if (v->same && v->same->giv_type == DEST_REG)
-		addr_combined_regs[REGNO (v->same->new_reg)] = v->same;
+		addr_combined_regs[reg_or_subregno (v->same->new_reg)] = v->same;
 
 	      if (GET_CODE (v->new_reg) == REG)
 		{
 		  /* This giv maybe hasn't been combined with any others.
 		     Make sure that it's giv is marked as splittable here.  */
 
-		  splittable_regs[REGNO (v->new_reg)] = value;
+		  splittable_regs[reg_or_subregno (v->new_reg)] = value;
 
 		  /* Make it appear to depend upon itself, so that the
 		     giv will be properly split in the main loop above.  */
 		  if (! v->same)
 		    {
 		      v->same = v;
-		      addr_combined_regs[REGNO (v->new_reg)] = v;
+		      addr_combined_regs[reg_or_subregno (v->new_reg)] = v;
 		    }
 		}
 
@@ -3098,7 +3101,7 @@ find_splittable_givs (loop, bl, unroll_type, increment, unroll_number)
 	  if (! v->ignore)
 	    count = REG_IV_CLASS (ivs, REGNO (v->src_reg))->biv_count;
 
-	  splittable_regs_updates[REGNO (v->new_reg)] = count;
+	  splittable_regs_updates[reg_or_subregno (v->new_reg)] = count;
 	}
 
       result++;
@@ -3997,12 +4000,6 @@ loop_iterations (loop)
 	}
       return 0;
     }
-  else if (comparison_code == EQ)
-    {
-      if (loop_dump_stream)
-	fprintf (loop_dump_stream, "Loop iterations: EQ comparison loop.\n");
-      return 0;
-    }
   else if (GET_CODE (final_value) != CONST_INT)
     {
       if (loop_dump_stream)
@@ -4013,6 +4010,43 @@ loop_iterations (loop)
 	  fprintf (loop_dump_stream, ".\n");
 	}
       return 0;
+    }
+  else if (comparison_code == EQ)
+    {
+      rtx inc_once;
+
+      if (loop_dump_stream)
+	fprintf (loop_dump_stream, "Loop iterations: EQ comparison loop.\n");
+
+      inc_once = gen_int_mode (INTVAL (initial_value) + INTVAL (increment),
+			       GET_MODE (iteration_var));
+
+      if (inc_once == final_value)
+	{
+	  /* The iterator value once through the loop is equal to the
+	     comparision value.  Either we have an infinite loop, or
+	     we'll loop twice.  */
+	  if (increment == const0_rtx)
+	    return 0;
+	  loop_info->n_iterations = 2;
+	}
+      else
+	loop_info->n_iterations = 1;
+
+      if (GET_CODE (loop_info->initial_value) == CONST_INT)
+	loop_info->final_value
+	  = gen_int_mode ((INTVAL (loop_info->initial_value)
+			   + loop_info->n_iterations * INTVAL (increment)),
+			  GET_MODE (iteration_var));
+      else
+	loop_info->final_value
+	  = plus_constant (loop_info->initial_value,
+			   loop_info->n_iterations * INTVAL (increment));
+      loop_info->final_equiv_value
+	= gen_int_mode ((INTVAL (initial_value)
+			 + loop_info->n_iterations * INTVAL (increment)),
+			GET_MODE (iteration_var));
+      return loop_info->n_iterations;
     }
 
   /* Final_larger is 1 if final larger, 0 if they are equal, otherwise -1.  */

@@ -904,9 +904,11 @@ can be C expressions that refer to static variables, such as the
 
 `ADJUST_FIELD_ALIGN (FIELD, COMPUTED)'
      An expression for the alignment of a structure field FIELD if the
-     alignment computed in the usual way is COMPUTED.  GCC uses this
-     value instead of the value in `BIGGEST_ALIGNMENT' or
-     `BIGGEST_FIELD_ALIGNMENT', if defined.
+     alignment computed in the usual way (including applying of
+     `BIGGEST_ALIGNMENT' and `BIGGEST_FIELD_ALIGNMENT' to the
+     alignment) is COMPUTED.  It overrides alignment only if the field
+     alignment has not been set by the `__attribute__ ((aligned (N)))'
+     construct.
 
 `MAX_OFILE_ALIGNMENT'
      Biggest alignment supported by the object file format of this
