@@ -1,0 +1,18 @@
+This directory contains MPW scripts and related files that are needed to
+build Cygnus GNU tools for MPW.
+
+"tr-7to8-src" is actually the source to an MPW script that transforms
+sequences like "\Option-d" into the actual 8-bit chars that MPW needs.
+It's only the source because it can't itself include any 8-bit chars.
+It *can* be processed into a genuine "tr-7to8" by using itself:
+
+	tr-7to8 tr-7to8-src | sed -e 's/Src//' >new-tr-7to8
+
+Use this to verify:
+
+	compare tr-7to8 new-tr-7to8
+
+If you don't have a working tr-7to8, then you will have to manually
+replace all occurrences of "\Option-d" with real Option-d (which looks
+like a delta), then do similarly with all the other "\Option-..."
+strings, and then change "\SrcOption-d" into the string "\Option-d".
