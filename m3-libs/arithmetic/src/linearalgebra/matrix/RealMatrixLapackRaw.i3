@@ -1392,4 +1392,7 @@ PROCEDURE TZRQF (READONLY M   : INTEGER;
                  VAR      TAU : (* ARRAY OF *) REAL;
                  VAR      INFO: INTEGER;                                 );
 
+<*EXTERNAL slamch_ *>
+PROCEDURE LAMCH (READONLY CMACH: CHAR; ): REAL;
+
 END RealMatrixLapackRaw.

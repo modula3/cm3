@@ -1,4 +1,4 @@
-GENERIC INTERFACE FloatMatrixLapack(R,CV,M);
+GENERIC INTERFACE FloatMatrixLapack(R, CV, M);
 (*Copyright (c) 1996, m3na project
 
    Abstract: High level interfaces to LAPACK
@@ -25,9 +25,11 @@ TYPE
 PROCEDURE EigenValuesGen (A: M.T; flags := EVGenFlagSet{}): EV
   RAISES {Error};
 
-(*
-PROCEDURE GetMachineParameter (READONLY cmach: CHAR): R.T;
-*)
+
+TYPE
+  MachParam = {eps, sfmin, base, epsbase, t, rnd, emin, rmin, emax, rmax};
+
+PROCEDURE GetMachineParameter (param: MachParam): R.T;
 
 (*==========================*)
 END FloatMatrixLapack.

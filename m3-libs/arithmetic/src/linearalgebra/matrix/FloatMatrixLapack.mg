@@ -1,8 +1,7 @@
 GENERIC MODULE FloatMatrixLapack(R, C, V, CV, M, LA);
 (*Copyright (c) 1996, m3na project
 
-   Abstract: <describe>
- *)
+   Abstract: <describe> *)
 
 FROM NADefinitions IMPORT Error, Err;
 
@@ -55,6 +54,16 @@ PROCEDURE EigenValuesGen (A: M.T; flags := EVGenFlagSet{}): EV
 
     RETURN result;
   END EigenValuesGen;
+
+
+PROCEDURE GetMachineParameter (param: MachParam): R.T =
+  CONST
+    chars = ARRAY MachParam OF
+              CHAR{'E', 'S', 'B', 'P', 'N', 'R', 'M', 'U', 'L', 'O'};
+  BEGIN
+    RETURN LA.LAMCH(chars[param]);
+  END GetMachineParameter;
+
 
 (*==========================*)
 BEGIN

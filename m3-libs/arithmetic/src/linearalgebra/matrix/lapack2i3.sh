@@ -127,6 +127,7 @@ trsyl
 trti2
 trtri
 tzrqf
+lamch_strip
 "
 
 # geqlf
