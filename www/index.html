@@ -81,6 +81,47 @@
     <h3>News</h3>
 
     <dl>
+      <dt>2001-03-01 (16 hours later)</dt>
+      <dd>
+        <p>
+          Several source and binary distributions have been upgraded
+          to patch level 1 (cm3 5.1.1). This patch level includes all
+          the fixes and extensions prior to 2001-03-01 (described
+          below) plus the following recent changes:
+        </p>
+        <ul>
+          <li>
+            fixes for packages postgres95 and smalldb (conditional
+            compilation and win32 extensions)
+          </li>
+          <li>
+            cm3 now defines the quake variables <tt>CM3_VERSION</tt>,
+            <tt>CM3_CREATED</tt>, and <tt>EOL</tt>. Based on these
+            values, conditional compilation in m3makefiles should be
+            easy. 
+          </li>
+          <li>
+            The installer now looks for several other archives to
+            unpack and installs them if found, including docs, fixes,
+            and misc. On win32, the missing cygwin.dll for tar.exe has
+            been added. 
+          </li>
+          <li>
+            cm3 has a new option -depend, which writes a makefile
+            dependency line containing the package dependencies.
+          </li>
+          <li>
+            As usual, several scripts have been fixes ;-) and some new
+            ones provided.
+          </li>
+        </ul>
+        <p>
+          The TODO and package status lists have been updated. Some
+          platform notes have been added on the installation page.
+        </p>
+        <p></p>
+      </dd>
+
       <dt>2001-03-01</dt>
       <dd>
         <p>
@@ -222,7 +263,7 @@
     <address><a href="mailto:m3-support@elego.de">Olaf Wagner</a></address>
 <!-- Created: Fri Feb 16 14:00:24 MET 2001 -->
 <!-- hhmts start -->
-Last modified: Thu Mar  1 01:02:08 MET 2001
+Last modified: Thu Mar  1 23:26:43 MET 2001
 <!-- hhmts end -->
   </body>
 </html>

@@ -55,7 +55,9 @@
     </pre>
     <p>
       You will then get the installation program, a copyright notice,
-      and the installation program. Start the installer with
+      and the installation program. You can place additional archives,
+      e.g. the doc distribution (cm3-doc-CM3VERSION.tgz) in the same
+      directory. Start the installer with
     </p>
     <pre>
   ./cminstall
@@ -83,11 +85,48 @@
   ./do-cm3-std.sh -help
   ./do-cm3-std.sh buildship
     </pre>
+
+    <h2>Platform Notes</h2>
+
+    <h3>WIN32</h3>
+
+    <p>
+      The NT386 target (which is the only one currently supported for the
+      WIN32 platform) needs the Microsoft linker (and C compiler if
+      you compile C sources) to be operable. It seems that the Borland
+      linker (which is freely evailable) cannot be used without
+      changes as it does not support the definition of entry
+      points. This needs to be further investigated, though. Anybody
+      who knows about other usable linkers or who gets M3 programs
+      linked without the Microsoft tools should tell us.
+    </p>
+
+    <h3>POSIX</h3>
+
+    <p>
+      This release (5.1.0) has been bootstrapped on FreeBSD3,
+      LINUXLIBC6, and SOLgnu, where the majority of the supplied
+      packages compiles. The newly ported compiler backend based on
+      gcc 2.95.2 still seems to contains some minor problems, though,
+      which need to be fixed.
+    </p>
+
+    <p>
+      I have made no attempt to compile m3gdb yet. My experience is
+      that it will take at least a week. The current m3gdb which
+      exists as a port on FreeBSD (and is based on a much later
+      version) is partially usable; it fails on displaying of several
+      types (TEXTs, WIDECHARs, etc.) which have been changed in CM3
+      5.1. I haven't even investigated yet if someone at Critical Mass
+      has made changes to m3gdb to make it work again with the new
+      system. 
+    </p>
+
     <hr>
     <address><a href="mailto:m3-support@elego.de">Olaf Wagner</a></address>
 <!-- Created: Fri Feb 16 15:27:10 MET 2001 -->
 <!-- hhmts start -->
-Last modified: Sat Feb 17 00:57:36 MET 2001
+Last modified: Thu Mar  1 23:17:00 MET 2001
 <!-- hhmts end -->
   </body>
 </html>
