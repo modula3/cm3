@@ -23,6 +23,16 @@ REVEAL T = RandomBasic.TBoolean BRANDED OBJECT
     engine:=Engine;
   END;
 
+PROCEDURE New(initrng:RandomBasic.T):T=
+  VAR
+    SELF:=NEW(T);
+  BEGIN
+    FOR i:=wolfnum-1 TO 0 BY -1 DO
+      SELF.wolfarr[i] := initrng.generateWord();
+    END;
+    RETURN SELF;
+  END New;
+
 (*************************************************************
 S.Wolfram: Advances Applied Math 7 (1986) 123- had proposed the following
 nonlinear "cellular automaton" random number generator:

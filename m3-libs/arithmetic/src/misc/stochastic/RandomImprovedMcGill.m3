@@ -28,6 +28,18 @@ REVEAL T = RandomBasic.TWord BRANDED OBJECT
     engine:=Engine;
   END;
 
+PROCEDURE New(initrng:RandomBasic.T):T=
+  VAR
+    SELF:=NEW(T);
+  BEGIN
+    FOR i:=mgSIZE-1 TO 0 BY -1 DO
+      SELF.arrmg[i] := initrng.generateWord();
+    END;
+    SELF.MultCongMg := Word.Or(initrng.generateWord(), 2_1);
+    SELF.ShiftRegMg := Word.Or(initrng.generateWord(), 16_7ff);
+    RETURN SELF;
+  END New;
+
 (*********************************************************
  McGill "Super-duper" generator by G. Marsaglia, K. Ananthanarayana
 & N. Paul; but with an improvement suggested by Marsaglia after observing that
@@ -70,6 +82,18 @@ CONST
 VAR
   arrbd : ARRAY [0..abd-1] OF R.T; (* initialize to rands in [0,1) *)
   ybd : R.T := R.Zero;
+
+<* UNUSED *>
+(*it's crap, just to save the code*)
+PROCEDURE NewBD(initrng:RandomBasic.T):T=
+  VAR
+    SELF:=NEW(T);
+  BEGIN
+    FOR i:=abd-1 TO 0 BY -1 DO
+      arrbd[i] := initrng.generateReal();
+    END;
+    RETURN SELF;
+  END NewBD;
 
 (* Inputs a random real in [0,1), outputs a "more random" one: *)
 <* UNUSED *>

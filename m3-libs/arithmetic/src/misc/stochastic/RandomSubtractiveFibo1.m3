@@ -25,6 +25,16 @@ REVEAL T = RandomBasic.TReal BRANDED OBJECT
     engine:=Engine;
   END;
 
+PROCEDURE New(initrng:RandomBasic.T):T=
+  VAR
+    SELF:=NEW(T);
+  BEGIN
+    FOR i:=asf1-1 TO 0 BY -1 DO
+      SELF.arrsf1[i] := initrng.generateReal();
+    END;
+    RETURN SELF;
+  END New;
+
 (* Generates a new random real in [0,1): *)
 PROCEDURE Engine(SELF:T):R.T=
   VAR

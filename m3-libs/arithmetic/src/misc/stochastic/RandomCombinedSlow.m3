@@ -768,31 +768,6 @@ PROCEDURE Init(NonReproducible : BOOLEAN := TRUE) =
     ELSE
       seed1 := DefaultSeed1; seed2 := DefaultSeed2; xis := DefaultXis;
     END;
-    FOR i:=asf1-1 TO 0 BY -1 DO
-      arrsf1[i] := initlongreal();
-    END;
-    FOR i:=abd-1 TO 0 BY -1 DO
-      arrbd[i] := initlongreal();
-    END;
-    FOR i:=asf2-1 TO 0 BY -1 DO
-      arrsf2[i] := initword();
-    END;
-    arrsf2[0] := Word.Or(initword(), 2_1);
-    FOR i:=asf3-1 TO 0 BY -1 DO
-      arrsf3[i] := initword();
-    END;
-    arrsf3[0] := Word.Or(initword(), 2_1);
-    FOR i:=amf1-1 TO 0 BY -1 DO
-      arrmf1[i] := Word.Or(initword(), 2_1);
-    END;
-    FOR i:=mgSIZE-1 TO 0 BY -1 DO
-      arrmg[i] := initword();
-    END;
-    FOR i:=wolfnum-1 TO 0 BY -1 DO
-      wolfarr[i] := initword();
-    END;
-    MultCongMg := Word.Or(initword(), 2_1);
-    ShiftRegMg := Word.Or(initword(), 16_7ff);
 
     (* rev 'em up by 6000 calls to Uni01() *)
     FOR i:=0 TO 6000 DO

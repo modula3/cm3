@@ -29,6 +29,17 @@ REVEAL T = RandomBasic.TWord BRANDED OBJECT
     engine:=Engine;
   END;
 
+PROCEDURE New(initrng:RandomBasic.T):T=
+  VAR
+    SELF:=NEW(T);
+  BEGIN
+    FOR i:=asf3-1 TO 0 BY -1 DO
+      SELF.arrsf3[i] := initrng.generateWord();
+    END;
+    SELF.arrsf3[0] := Word.Or(initrng.generateWord(), 2_1);
+    RETURN SELF;
+  END New;
+
 (** Generates a new random Word.T; period at least 2^asf3 - 1;
  * uses both XOR and [- mod 2^wordsize] in the recurrence, hence may
  * avoid some of the known problems with each of these operations alone. *)
