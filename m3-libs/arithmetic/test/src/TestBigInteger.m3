@@ -33,6 +33,7 @@ VAR
   result:=TRUE;
   carry:=TRUE;
   hi,lo:W.T;
+  x,y:B.T;
 BEGIN
   Debug(1,ftn,"begin\n");
   Msg("W.Size " & F.Int(W.Size) & "\n");
@@ -44,6 +45,19 @@ BEGIN
   Wx.DoubleLengthMultiply(7,16_249,lo,hi);
   Msg("DoubleLengthMultiply " & F.Int(hi,16) & " " & F.Int(lo,16) & "\n");
   Msg("Plus " & F.Int(W.Plus(3,2)) & "\n");
+(*
+  x:=B.FromInteger(16_88d390);
+  y:=B.Add(B.Mul(B.FromInteger(16_d6c5),B.FromInteger(16_10000)),B.FromInteger(16_61ad));
+*)
+  x:=B.FromInteger(16_800000);
+  y:=B.Mul(B.FromInteger(16_8000),B.FromInteger(16_10000));
+  <*ASSERT B.Equal(B.Mod(x,y),x) *>
+  x:=B.Add(B.Mul(B.FromInteger(16_d6c5),B.FromInteger(16_10000)),
+           B.FromInteger(16_61ad));
+  y:=B.Add(B.Mul(B.FromInteger(16_d63c),B.FromInteger(16_10000)),
+           B.FromInteger(16_8e1d));
+  <*ASSERT B.Equal(B.Mod(x,y),B.Sub(x,y)) *>
+
   RETURN result;
 END TestBasic;
 (*----------------------*)
