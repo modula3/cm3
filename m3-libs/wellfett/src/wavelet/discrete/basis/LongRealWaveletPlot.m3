@@ -3,7 +3,8 @@ MODULE LongRealWaveletPlot;
 IMPORT LongRealBasic AS R;
 IMPORT LongRealIntegerPower AS RIntPow;
 IMPORT LongRealSignal AS S;
-IMPORT LongRealVectorFast AS V;
+IMPORT LongRealVector AS V;
+IMPORT LongRealVectorFast AS VR;
 
 IMPORT LongRealRefinableFunc AS Refn;
 
@@ -40,15 +41,15 @@ PROCEDURE PlotWavelets (hdual, gdual: S.T; levels: CARDINAL) =
     basis := ComputeBasisFunctions(hdual, gdual, levels);
 
     ymin := MIN(
-              MIN(V.Min(basis[Basis.primal, Filter.lowpass].getData()^),
-                  V.Min(basis[Basis.primal, Filter.highpass].getData()^)),
-              MIN(V.Min(basis[Basis.dual, Filter.lowpass].getData()^),
-                  V.Min(basis[Basis.dual, Filter.highpass].getData()^)));
+              MIN(VR.Min(basis[Basis.primal, Filter.lowpass].getData()^),
+                  VR.Min(basis[Basis.primal, Filter.highpass].getData()^)),
+              MIN(VR.Min(basis[Basis.dual, Filter.lowpass].getData()^),
+                  VR.Min(basis[Basis.dual, Filter.highpass].getData()^)));
     ymax := MAX(
-              MAX(V.Max(basis[Basis.primal, Filter.lowpass].getData()^),
-                  V.Max(basis[Basis.primal, Filter.highpass].getData()^)),
-              MAX(V.Max(basis[Basis.dual, Filter.lowpass].getData()^),
-                  V.Max(basis[Basis.dual, Filter.highpass].getData()^)));
+              MAX(VR.Max(basis[Basis.primal, Filter.lowpass].getData()^),
+                  VR.Max(basis[Basis.primal, Filter.highpass].getData()^)),
+              MAX(VR.Max(basis[Basis.dual, Filter.lowpass].getData()^),
+                  VR.Max(basis[Basis.dual, Filter.highpass].getData()^)));
 
   BEGIN
     DoPlot(basis, ymin, ymax, grid);
