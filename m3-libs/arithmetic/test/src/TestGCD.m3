@@ -8,26 +8,27 @@ IMPORT
   Integer32GCD               AS IG,
   Integer32ComplexGCD        AS ICG,
   Integer32ComplexBasic      AS IC,
-  Integer32ComplexFmtLex     AS ICF,
   BigIntegerBasic            AS B,
-  BigIntegerFmtLex           AS BF,
   BigIntegerComplexBasic     AS BC,
-  BigIntegerComplexFmtLex    AS BCF,
   BigIntegerComplexGCD       AS BCG,
   BigIntegerFractionBasic            AS BFr,
   BigIntegerFractionPolynomialBasic  AS BFrP,
-  BigIntegerFractionPolynomialFmtLex AS BFrPF,
   BigIntegerFractionPolynomialGCD    AS BFrPG,
-  xWordEx AS Wx,
-  Word AS W,
+(*
+  Integer32ComplexFmtLex     AS ICF,
+  BigIntegerFmtLex           AS BF,
+  BigIntegerComplexFmtLex    AS BCF,
+  BigIntegerFractionPolynomialFmtLex AS BFrPF,
   Fmt AS F,
-  Text;
+*)
+  xUtils;
 
 (*=======================*)
 CONST
   Module = "TestGCD.";
 
 (*----------------------*)
+<*FATAL xUtils.Error*>
 PROCEDURE TestIntegerGCD():BOOLEAN=
 CONST
   ftn = Module & "TestIntegerGCD";
@@ -141,15 +142,19 @@ BEGIN
         FOR l:=-10 TO -10 DO
           x := BC.T{B.FromInteger(i),B.FromInteger(j)};
           y := BC.T{B.FromInteger(k),B.FromInteger(l)};
+(*
           Msg(F.FN("x=%s,y=%s\n",
                    ARRAY OF TEXT{BCF.Fmt(x), BCF.Fmt(y)}));
           Msg(F.FN("q=%s,r=%s\n",
                    ARRAY OF TEXT{BCF.Fmt(BC.Div(x,y)), BCF.Fmt(BC.Mod(x,y))}));
+*)
           gcd := BCG.GCD(x,y);
+(*
           Msg(F.FN("gcd(%s+%si,%s+%si) = %s+%si\n",
                    ARRAY OF TEXT{F.Int(i), F.Int(j),
                                  F.Int(k), F.Int(l),
                                  BF.Fmt(gcd.re), BF.Fmt(gcd.im)}));
+*)
           <*ASSERT BC.Equal(gcd,BCG.GCD(y,x))*>
           <*ASSERT BC.IsZero(BC.Mod(x,gcd))*>
           <*ASSERT BC.IsZero(BC.Mod(y,gcd))*>
@@ -185,6 +190,7 @@ BEGIN
   (*poly0  := BFrP.Mul(fac0,fac0);*)
   poly1  := BFrP.Derive(poly0);
 
+(*
   Msg(F.FN("%s,%s\n",
            ARRAY OF TEXT{BFrPF.Fmt(fac0),BFrPF.Fmt(fac1)}));
   Msg(F.FN("gcd(%s,%s)\n",
@@ -197,16 +203,20 @@ BEGIN
     q := BFrP.DivMod(poly1,poly0,r);
     Msg(F.FN("q=%s,r=%s\n", ARRAY OF TEXT{BFrPF.Fmt(q), BFrPF.Fmt(r)}));
   END;
+*)
 
   gcd    := BFrPG.GCD(poly0,poly1);
+(*
   Msg(F.FN("gcd(%s,%s) = %s\n",
            ARRAY OF TEXT{BFrPF.Fmt(poly0),BFrPF.Fmt(poly1),BFrPF.Fmt(gcd)}));
+*)
   (*fac0 and gcd must be equal upto a unit*)
   <*ASSERT BFrP.IsZero(BFrP.Mod(gcd,fac0)) AND BFrP.IsZero(BFrP.Mod(fac0,gcd))*>
   RETURN result;
 END TestPolynomialGCD;
 (*-------------------------*)
 PROCEDURE TestGCD():BOOLEAN=
+<*UNUSED*>
 CONST ftn = Module & "TestGCD";
 VAR result:=TRUE;
 BEGIN
