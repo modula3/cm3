@@ -1,4 +1,4 @@
-GENERIC MODULE MatrixFast(V,R);
+GENERIC MODULE MatrixBasic(V,R);
 (*
 Abstract:
 
@@ -22,7 +22,7 @@ Abstract:
 
 FROM xUtils IMPORT Error,Err;
 
-CONST Module = "MatrixFast.";
+CONST Module = "MatrixBasic.";
 
 (*-----------------*)
 PROCEDURE New( 
@@ -107,7 +107,7 @@ BEGIN
   tmp:=NEW(T,m,n);
   FOR i:=m1 TO mm DO
     FOR j:=n1 TO nn DO
-      tmp[i,j]:= mat1[i,j] + mat2[i,j];
+      tmp[i,j]:= R.Add(mat1[i,j], mat2[i,j]);
     END;
   END;
   RETURN tmp;
@@ -128,7 +128,7 @@ BEGIN
   tmp:=NEW(T,m,n);
   FOR i:=m1 TO mm DO
     FOR j:=n1 TO nn DO
-      tmp[i,j]:= mat1[i,j] - mat2[i,j];
+      tmp[i,j] := R.Sub(mat1[i,j], mat2[i,j]);
     END;
   END;
   RETURN tmp;
@@ -147,7 +147,7 @@ BEGIN
 
   FOR i:=m1 TO mm DO
     FOR j:=n1 TO nn DO
-      IF mat1[i,j] # mat2[i,j] THEN
+      IF NOT R.Equal (mat1[i,j], mat2[i,j]) THEN
         RETURN FALSE;
       END;
     END;
@@ -176,7 +176,7 @@ BEGIN
     FOR j:=p1 TO pp DO
       tmp[i,j]:=R.Zero;
       FOR k:=n1 TO nn DO
-        tmp[i,j]:=tmp[i,j] + mat1[i,k] * mat2[k,j];
+        tmp[i,j]:=R.Add(tmp[i,j], R.Mul(mat1[i,k], mat2[k,j]));
       END;
     END;
   END;
@@ -203,7 +203,7 @@ BEGIN
   FOR i:=m1 TO mm DO
     c[i]:=R.Zero;
     FOR j:=n1 TO nn DO
-      c[i]:=c[i]+b[j]*A[i,j];
+      c[i]:=R.Add(c[i],R.Mul(b[j],A[i,j]));
     END;
   END;
   RETURN c;
@@ -212,9 +212,9 @@ END MulV;
 (*-----------------*)
 PROCEDURE Transpose( 
                      mat:T):T =
-<*UNUSED*> CONST ftn = Module & "mTranspose";
+<*UNUSED*> CONST ftn = Module & "Transpose";
 VAR
-  m:=NUMBER(mat^);    m1:=0; mm:=m-1;
+  m:=NUMBER(mat^);   m1:=0; mm:=m-1;
   n:=NUMBER(mat[0]); n1:=0; nn:=n-1;
   tmp:T;
 BEGIN
@@ -228,5 +228,23 @@ BEGIN
 END Transpose;
 
 (*-----------------*)
+PROCEDURE Adjungate( 
+                     mat:T):T =
+<*UNUSED*> CONST ftn = Module & "Adjungate";
+VAR
+  m:=NUMBER(mat^);   m1:=0; mm:=m-1;
+  n:=NUMBER(mat[0]); n1:=0; nn:=n-1;
+  tmp:T;
 BEGIN
-END MatrixFast.
+  tmp:=NEW(T,n,m);
+  FOR i:=n1 TO nn DO
+    FOR j:=m1 TO mm DO
+      tmp[i,j]:=R.Conj(mat[j,i]);
+    END;
+  END;
+  RETURN tmp;
+END Adjungate;
+
+(*-----------------*)
+BEGIN
+END MatrixBasic.
