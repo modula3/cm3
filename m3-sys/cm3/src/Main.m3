@@ -39,15 +39,18 @@ PROCEDURE DoIt () =
     TRY
       TRY
         (* figure out what we're trying to do *)
-        Makefile.ScanCommandLine ();
+        VAR
+          defs := Makefile.ScanCommandLine ();
+          name, val: TEXT;
+          iter := defs.iterate();
+        BEGIN
+          WHILE iter.next(name, val) DO
+            Quake.Define(mach, name, val);
+          END;
+        END;
 
         (* define the site configuration *)
         Msg.Verbose ("EVAL (\"", config, "\")");
-        (* If you change the version, don't forget to change it in 
-           Makefile.m3, too *)
-        Quake.Define(mach, "CM3_VERSION", "050101");
-        Quake.Define(mach, "CM3_CREATED", "2001-03-01");
-        Quake.Define(mach, "EOL", Wr.EOL);
         Quake.Run (mach, config);
 
         (* -- disabled 
