@@ -187,17 +187,32 @@ PROCEDURE TestBinomial():BOOLEAN=
 CONST
   ftn = Module & "TestBinomial";
   N = 10000; n1=0; nn=N-1;
+  numBuckets = 15;
 VAR
   result:=TRUE;
   rand:=CombFast.New();
   data1:=NEW(R.Array,N);
+  count:=NEW(REF ARRAY OF CARDINAL,numBuckets+1);
+  curcnt:CARDINAL;
 BEGIN
   Debug(1,ftn,"begin\n");
 
-  FOR i:=n1 TO nn DO
-    data1[i]:=FLOAT(rand.binomial(0.3D0,20),R.T);
+  FOR j:=0 TO numBuckets DO
+    count[j]:=0;
   END;
-  PrintStats("Binomial 20",data1);
+
+  FOR i:=n1 TO nn DO
+    curcnt:=rand.binomial(0.4D0,numBuckets);
+    data1[i]:=FLOAT(curcnt,R.T);
+    INC(count[curcnt]);
+  END;
+  PrintStats("Binomial "&Fmt.Int(numBuckets),data1);
+
+  FOR j:=0 TO numBuckets DO
+    Msg(Fmt.FN("%2s: %s\n", ARRAY OF TEXT
+          {Fmt.Int(j), Fmt.Pad("",count[j] DIV 100,'-')}));
+  END;
+
   RETURN result;
 END TestBinomial;
 (*----------------------*)
