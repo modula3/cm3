@@ -14,8 +14,45 @@
 
 GENERIC MODULE EigenSystem(M,V,R,RT);
 (*IMPORT Wr, Stdio, Fmt;*)
+FROM NADefinitions IMPORT Error,Err;
 
 EXCEPTION NormalTermination;
+
+PROCEDURE PowerMethod(     A   : M.T;
+                       VAR v   : V.T;
+			   tol : R.T;
+                           maxiter : CARDINAL;
+                             ) : R.T RAISES {Error}=
+  VAR
+    x   : V.T;
+    err : R.T;
+    lambdaold,
+    lambda : R.T;
+    x2, v2, vx : R.T;
+  BEGIN
+    lambda := R.Zero;
+    x  := V.New(NUMBER(A^));
+    x^ := A[0];  (*is this initialization random enough?*)
+    REPEAT
+      IF maxiter=0 THEN
+        RAISE Error(Err.not_converging);
+      END;
+      DEC(maxiter);
+      lambdaold := lambda;
+      v := x;
+      x := M.MulV(A,v);
+      (*compute the minimum possible Euclidean distance
+        from lambda*v to x*)
+      x2 := V.Inner(x,x);
+      v2 := V.Inner(v,v);
+      vx := V.Inner(v,x);
+      err := (x2*v2-vx*vx)/(v2*v2);
+    UNTIL err <= tol;
+    (*calculate the lambda for which x is optimally approximated by lambda*v
+      with respect to the Euclidean norm*)
+    RETURN R.Div(vx,v2);
+  END PowerMethod;
+
 
 CONST
   tol = RT.MinPos/RT.MinPosNormal;
