@@ -21,18 +21,8 @@ Usage:  You can call these directly, or use the T OBJECTS:
 
 IMPORT Word,RandomBasic;
 
-TYPE
-  T <: RandomBasic.T;
-
-(*==========================*)
-(*** Initializes all random number generators here. Quite slow.
-If fixed=FALSE (the default) will incorporate the
-   time into the seed.
-If TRUE will use a particular fixed seed.
-*************************************************************)
-PROCEDURE New(fixed : BOOLEAN := FALSE):T;
-
-(** The below are faster but less-random versions based on combining
+(** The below are faster than the slow variant
+but less-random versions based on combining
 only 2 generators, not 5. They should still be very random. If you
 are doing a serious Monte-Carlo experiment, then just to be sure you
 should probably try both the slow & fast versions to see if the
@@ -41,8 +31,18 @@ the fast generator has a weakness. In the event you find any such
 statistical evidence of flaws in any of these generators, please
 tell me at wds@research.NJ.NEC.COM.
 ************************************************************)
-PROCEDURE FasterRandWord() : Word.T;
-PROCEDURE FasterUni01() : LONGREAL;
+
+TYPE
+  T <: RandomBasic.T;
+
+
+(*==========================*)
+(*** Initializes all random number generators here. Quite slow.
+If fixed=FALSE (the default) will incorporate the
+   time into the seed.
+If TRUE will use a particular fixed seed.
+*************************************************************)
+PROCEDURE New(fixed : BOOLEAN := FALSE):T;
 
 (*==========================*)
 END RandomCombinedFast.

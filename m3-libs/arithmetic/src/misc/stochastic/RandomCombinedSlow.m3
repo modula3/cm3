@@ -292,323 +292,35 @@ explains the results of the Marsaglia test battery above.
                          "InitDone" flag in Init proc.
 *)
 
-IMPORT LongRealBasic AS R,
+IMPORT RandomBasic,
+       LongRealBasic AS R,
        LongRealTrans AS RT,
-       Word, Tick, TimeStamp;
-FROM RandomBasic IMPORT T;
+       RandomIteratedSquaring   AS IterSqr,
+       RandomSubtractiveFibo1   AS SubFibo1,
+       RandomSubtractiveFibo2   AS SubFibo2,
+       RandomMultiplicativeFibo AS MulFibo,
+       RandomQuaternaryFibo     AS QuaFibo,
+       RandomImprovedMcGill     AS McGill,
+       RandomWolframCA          AS Wolf,
+       Word;
 IMPORT RandomRep;
 
+<*UNUSED*>
 CONST Module = "RandomCombinedSlow.";
 (*==========================*)
-VAR InitDone:=FALSE;  (*is the big Init done yet?*)
-
-(*---object wrappers---*)
 
 (*------------------*)
-REVEAL slow = T BRANDED OBJECT
+REVEAL T = RandomBasic.T BRANDED OBJECT
+    subfibo1:SubFibo1.T;
+    subfibo2:SubFibo2.T;
+    mulfibo:MulFibo.T;
+    quafibo:QuaFibo.T;
+    mcgill:McGill.T;
+    wolf:Wolf.T;
   OVERRIDES
-    engine:=slow_engine;
+    generateWord:=GenerateWord;
+    generateReal:=GenerateReal;
   END;
-
-PROCEDURE slow_init(SELF:T;
-                    seed:[FIRST(INTEGER)..-1]:=-1
-                       ):T=
-VAR
-  t:=NARROW(SELF,slow);
-BEGIN
-  IF NOT InitDone THEN
-    IF seed = -1 THEN
-      (*default init*)
-      Init(FALSE);
-    ELSE
-      (*use time to make it nonreproducible*)
-      Init(TRUE);
-    END;
-  END;
-
-  RETURN t;
-END slow_init;
-
-PROCEDURE slow_engine(<*UNUSED*>SELF:slow):R.T=
-<*UNUSED*>
-CONST
-  ftn= Module & "slow_engine";
-BEGIN
-  RETURN Uni01();
-END slow_engine;
-
-(*------------------*)
-REVEAL fast = T BRANDED OBJECT
-  OVERRIDES
-    engine:=fast_engine;
-  END;
-
-PROCEDURE fast_init(SELF:T;
-                    seed:[FIRST(INTEGER)..-1]:=-1
-                       ):T=
-VAR
-  t:=NARROW(SELF,fast);
-BEGIN
-  IF NOT InitDone THEN
-    IF seed = -1 THEN
-      (*default init*)
-      Init(FALSE);
-    ELSE
-      (*use time to make it nonreproducible*)
-      Init();
-    END;
-  END;
-
-  RETURN t;
-END fast_init;
-
-PROCEDURE fast_engine(<*UNUSED*>SELF:fast):R.T=
-<*UNUSED*>
-CONST
-  ftn= Module & "fast_engine";
-BEGIN
-  RETURN FasterUni01();
-END fast_engine;
-
-
-
-
-(*=============================================*)
-CONST
-  asf1 = 97;
-  bsf1 = 34;
-VAR
-  isf1 := asf1;
-  jsf1 := bsf1;
-  arrsf1 : ARRAY [0..asf1-1] OF R.T; (* initialize to rands in [0,1) not all with LS Bit=0*)
-
-(* Generates a new random real in [0,1): *)
-PROCEDURE SubtractiveFibo1() : R.T =
-  VAR
-    x : R.T;
-  BEGIN
-    DEC(isf1);
-    DEC(jsf1);
-    IF isf1<0 THEN
-      isf1 := asf1-1; (* wraparound *)
-    ELSIF jsf1<0 THEN
-      jsf1 := asf1-1; (* wraparound *)
-    END;
-    x := arrsf1[isf1] - arrsf1[jsf1];
-    IF x<R.Zero THEN x := x+R.One; END; (* subtraction mod 1 *)
-    arrsf1[isf1] := x;
-    RETURN x;
-  END SubtractiveFibo1;
-
-CONST
-  asf2 = 95;
-  bsf2 = 17;
-(*
-  TwoTo32Minus5 = 16_fffffffb; (* prime *)
-  TwoTo32Minus1 = 16_ffffffff;
-*)
-VAR
-  isf2 := asf2;
-  jsf2 := bsf2;
-  arrsf2 : ARRAY [0..asf2-1] OF INTEGER;
-       (* initialize to random Word.Ts mod TwoTo32Minus5 *)
-
-(* Generates a new random word, mod 2^32 - 5 (a prime): *)
-PROCEDURE SubtractiveFibo2() : Word.T =
-  VAR
-    x,y : Word.T;
-  BEGIN
-    <* ASSERT Word.Size = 32 *>
-    DEC(isf2);
-    DEC(jsf2);
-    IF isf2<0 THEN
-      isf2 := asf2-1; (* wraparound *)
-    ELSIF jsf2<0 THEN
-      jsf2 := asf2-1; (* wraparound *)
-    END;
-    y := arrsf2[isf2];
-    x := Word.Minus(y, arrsf2[jsf2]);
-    IF Word.GT(x, y) THEN (* subtraction "wrapped" *)
-      x := x+5;
-    END;
-    arrsf2[isf2] := x;
-    RETURN x;
-  END SubtractiveFibo2;
-
-CONST
-  amf1 = 98;
-  bmf1 = 27;
-VAR
-  imf1 := amf1;
-  jmf1 := bmf1;
-  arrmf1 : ARRAY [0..amf1-1] OF Word.T; (* initialize to random odd words *)
-
-(* Generates a new random word: *)
-PROCEDURE MultiplicativeFibo1() : Word.T =
-  BEGIN
-    DEC(imf1);
-    DEC(jmf1);
-    IF imf1<0 THEN
-      imf1 := amf1-1; (* wraparound *)
-    ELSIF jmf1<0 THEN
-      jmf1 := amf1-1; (* wraparound *)
-    END;
-    arrmf1[imf1] := Word.Times(arrmf1[imf1], arrmf1[jmf1]);
-    RETURN arrmf1[imf1];
-  END MultiplicativeFibo1;
-
-CONST
-  asf3 = 89;
-  bsf3 = 57;
-  csf3 = 14;
-  dsf3 = 5;   (* x^89 + x^57 + x^14 + x^5 + 1 primitive mod 2 *)
-VAR
-  isf3 := asf3;
-  jsf3 := bsf3;
-  ksf3 := csf3;
-  msf3 := dsf3;
-  arrsf3 : ARRAY [0..asf3-1] OF Word.T; (* initialize to random words, not all even *)
-
-(** Generates a new random Word.T; period at least 2^asf3 - 1;
- * uses both XOR and [- mod 2^wordsize] in the recurrence, hence may
- * avoid some of the known problems with each of these operations alone. *)
-PROCEDURE QuaternaryFibo() : Word.T =
-  VAR
-    x : Word.T;
-  BEGIN
-    DEC(isf3);
-    DEC(jsf3);
-    DEC(ksf3);
-    DEC(msf3);
-    IF isf3<0 THEN
-      isf3 := asf3-1; (* wraparound *)
-    ELSIF jsf3<0 THEN
-      jsf3 := asf3-1; (* wraparound *)
-    ELSIF ksf3<0 THEN
-      ksf3 := asf3-1; (* wraparound *)
-    ELSIF msf3<0 THEN
-      msf3 := asf3-1; (* wraparound *)
-    END;
-    x := Word.Minus( arrsf3[msf3], Word.Xor( arrsf3[ksf3],
-                   Word.Minus( arrsf3[isf3], arrsf3[jsf3] ) ) );
-    arrsf3[isf3] := x;
-    RETURN x;
-  END QuaternaryFibo;
-
-(*************************************************************
-S.Wolfram: Advances Applied Math 7 (1986) 123- had proposed the following
-nonlinear "cellular automaton" random number generator:
-Consider a 1D circular array of bits B[0..modulus-1].
-At the t-th time step, you update according to
-         Bnew[i] = Bold[i-1] XOR ( Bold[i] OR Bold[i+1] )
-where the subscripts have circular wraparound. (Somehow,
-I don't think a 1-line formula involving 3 bits published in 1986
-is out of the public domain.) The time-series
-B[0] form a random-appearing bit sequence, according to a large
-number of empirical tests by Wolfram. Unfortunately you only get
-1 bit at a time. An equivalent formula in the bit-complement universe is
-         Bnew[i] = Bold[i-1] XOR ( Bold[i] AND Bold[i+1] )
-and this also suggests the new idea of replacing the bits B by nonnegative
-integers Y mod 2^wordsize and then
-         Ynew[i] = Yold[i-1] + ( Yold[i] * Yold[i+1] )
-would be the same as Wolfram on its LS bits, but will generate a full word
-at a time.
-*********************************************************)
-CONST
-  wolfnum = 5;
-  MSbit = Word.LeftShift(2_1, Word.Size-1);
-VAR
-  wolfarr : ARRAY [0 .. wolfnum-1] OF Word.T; (* initialize with random bits *)
-
-PROCEDURE WolframCA() : BOOLEAN =
-  VAR
-    origcarry, carry, borrow : BOOLEAN;
-    x, a, b : Word.T;
-  BEGIN
-    borrow    :=  ( Word.And( wolfarr[0], 2_1 ) # 0 );
-    origcarry :=  ( Word.And( wolfarr[LAST(wolfarr)], MSbit ) # 0 );
-    FOR i:=LAST(wolfarr) TO FIRST(wolfarr) BY -1 DO
-      x := wolfarr[i]; (* old word *)
-      IF i>0 THEN (* get carry from word below [borrow is from word above] *)
-        carry :=  ( Word.And( wolfarr[i-1], MSbit ) # 0 );
-      ELSE
-        carry := origcarry;
-      END;
-      a := Word.RightShift(x,1);
-      a := Word.Or( a, Word.LeftShift(ORD(borrow), Word.Size-1) );
-      b := Word.LeftShift(x,1);
-      b := Word.Or( b, ORD(carry) );
-      (* CA update formula -> new word: *)
-      wolfarr[i] := Word.Xor(a, Word.Or(x, b));
-      (* get borrow from old word for next time: *)
-      borrow :=  ( Word.And( x, 2_1 ) # 0 );
-    END;
-    RETURN borrow;
-  END WolframCA;
-
-CONST
-  MULTmg = 69069;
-  mgSIZE = 103;
-  SCALEmg = (FLOAT(mgSIZE, R.T) / 4294967296.0D0);
-VAR
-  MultCongMg : Word.T;  (* initialize to a random odd word *)
-  ShiftRegMg : Word.T; (* initialize to a random word with 7ff in LS 11 bits *)
-  arrmg : ARRAY [0..mgSIZE-1] OF Word.T; (* initialize to random Word.Ts *)
-  ymg : Word.T := 0;
-
-(*********************************************************
- McGill "Super-duper" generator by G. Marsaglia, K. Ananthanarayana
-& N. Paul; but with an improvement suggested by Marsaglia after observing that
-the unmodified generator failed the "MTUPLE test on low order bits."
-That generator was linear and optimized for speed rather than randomness;
-hence not to be relied on. It was a combination
-of a shift register generator and a linear congruential generator.
-Not being confident that Marsaglia's improvement will fix the MTUPLE
-test problem, I have added one further improvement to the McGill generator:
-I combined it with the Bays-Durham shuffling algorithm. The resulting
-generator ought to pass the full Marsaglia test battery and also should
-have a larger period.
-*********************************************************)
-PROCEDURE ImprovedMcGill(): Word.T =
-  VAR
-    r0, r1 : Word.T;
-    j : CARDINAL;
-  BEGIN
-    <* ASSERT Word.Size = 32 *>
-    r0 := Word.RightShift(ShiftRegMg, 15);
-    r1 := Word.Xor( ShiftRegMg, r0 );
-    r0 := Word.LeftShift(r1, 17);
-    ShiftRegMg := Word.Xor(r0, r1);
-
-    MultCongMg := Word.Times(MULTmg, MultCongMg);
-    (** Marsaglia's improvement: we've changed Word.Xor --> Word.Plus: *)
-    r1 := Word.Plus(MultCongMg, ShiftRegMg);
-
-    (** My improvement: the normal McGill generator would just return r1 here,
-     * but I feed it into a Bays-Durham shuffler. *)
-    j := FLOOR( FLOAT(ybd, R.T) * SCALEmg );
-    ymg := arrmg[j];
-    arrmg[j] := r1;
-    RETURN ymg;
-  END ImprovedMcGill;
-
-CONST
-  abd = 101;
-VAR
-  arrbd : ARRAY [0..abd-1] OF R.T; (* initialize to rands in [0,1) *)
-  ybd : R.T := R.Zero;
-
-(* Inputs a random real in [0,1), outputs a "more random" one: *)
-<* UNUSED *>
-PROCEDURE BaysDurhamShuffler(x : R.T) : R.T =
-  VAR
-    j : CARDINAL;
-  BEGIN
-    j := FLOOR( FLOAT(abd, R.T) * ybd );
-    ybd := arrbd[j];
-    arrbd[j] := x;
-    RETURN ybd;
-  END BaysDurhamShuffler;
 
 (******************************************************
 The random words output by this generator ought to be extremely
@@ -633,173 +345,54 @@ parameters in the CONST declarations (Optimizer on. Asserts on.):
     FasterRandWord      80
   Math.sin             130  (for comparison)
 **********************************************)
-PROCEDURE RandWord() : Word.T =
+PROCEDURE GenerateWord(SELF:T):Word.T =
   BEGIN
     RETURN Word.Plus(
                Word.Plus(
-         Word.Plus( SubtractiveFibo2(), MultiplicativeFibo1() ),
-         Word.Plus( QuaternaryFibo(), ImprovedMcGill() ) ),
-              ORD(WolframCA()) );
-  END RandWord;
+         Word.Plus( SELF.subfibo2.engine(), SELF.mulfibo.engine() ),
+         Word.Plus( SELF.quafibo.engine(), SELF.mcgill.engine() ) ),
+              ORD(SELF.wolf.engine()) );
+  END GenerateWord;
 
-PROCEDURE Uni01() : R.T =
+PROCEDURE GenerateReal(SELF:T):R.T=
   VAR
     x : R.T;
   BEGIN
     x := R.Scalb(
-         R.Scalb( FLOAT( RandWord(), R.T ) , 6-Word.Size )
-             + FLOAT( RandWord(), R.T ), -Word.Size );
-    <* ASSERT -0.5D0 <= x *>
+         R.Scalb( FLOAT( GenerateWord(SELF), R.T ) , 6-Word.Size )
+             + FLOAT( GenerateWord(SELF), R.T ), -Word.Size );
+    <* ASSERT -RT.Half <= x *>
     <* ASSERT x < 0.52D0 *>
     IF x < R.Zero THEN x := x+R.One; END;
-    x := x - SubtractiveFibo1();
+    x := x - SELF.subfibo1.engine();
     IF x < R.Zero THEN x := x+R.One; END;
     <* ASSERT x >= R.Zero *>
     <* ASSERT x < R.One *>
     RETURN x;
-  END Uni01;
-
-(** However, if your need for speed is so great that RandWord() and Uni01()
-above will not do, try the routines below, which only combine two of the
-5 generators in RandWord(), selected for high speed and high randomness.
-***************************************)
-PROCEDURE FasterRandWord() : Word.T =
-  BEGIN
-    RETURN Word.Plus( SubtractiveFibo2(), MultiplicativeFibo1() );
-  END FasterRandWord;
-
-PROCEDURE FasterUni01() : R.T =
-  VAR
-    x : R.T;
-  BEGIN
-    x := R.Scalb(
-         R.Scalb( FLOAT( MultiplicativeFibo1(), R.T ) , 6-Word.Size )
-             + FLOAT( MultiplicativeFibo1(), R.T ), -Word.Size );
-    (** note, those multiplications were really just bit shifts. How
-      * do I get the compiler to know that?? *)
-    <* ASSERT -0.5D0 <= x *>
-    <* ASSERT x < 0.52D0 *>
-    IF x < R.Zero THEN x := x+R.One; END;
-    x := x - SubtractiveFibo1();
-    IF x < R.Zero THEN x := x+R.One; END;
-    <* ASSERT x >= R.Zero *>
-    <* ASSERT x < R.One *>
-    RETURN x;
-  END FasterUni01;
-
-CONST
-   moduis = 9739.0D0 * 9719.0D0;
-       (* = 94653341. Factors are each primes, 3 mod 4. *)
-   DefaultSeed1 = 3145981;
-   DefaultSeed2 = 2718280;
-   DefaultXis = 243213.0D0;
-VAR
-   xis : R.T;
-   seedbitind : INTEGER := 3;
-   seed1, seed2 : Word.T;
-
-(** Note: period of the bit sequence this produces is
- * only 23658471. However, that should be adequate for its
- * intended purpose, which is to initialize the state of
- * the other generators to something interesting.
- * (And if the seeds are nonzero, period will
- * generally be 2*Word.Size*23658471.)
- * If seed1 or seed2 are nonzero, then will add a perturbation to output
- * according to the bits of the seed words.
-*********************************************)
-PROCEDURE IteratedSquaring() : BOOLEAN =
-  VAR
-    perturb : Word.T;
-  BEGIN
-    DEC(seedbitind);
-    IF seedbitind<0 THEN seedbitind := Word.Size * 2 - 1; END;
-    IF seedbitind<Word.Size THEN
-      perturb := Word.And(
-                 Word.RightShift(seed1, seedbitind), 2_1 );
-    ELSE
-      perturb := Word.And(
-            Word.RightShift(seed2, seedbitind-Word.Size), 2_1 );
-    END;
-
-    xis := (xis * xis) MOD moduis;
-
-    RETURN ( (xis < (moduis-R.One)*0.5D0) = (perturb#0) );
-  END IteratedSquaring;
-
-(* Generates a longreal, bit by bit, using IteratedSquaring *)
-PROCEDURE initlongreal() : R.T =
-  VAR
-    x : R.T := R.Zero;
-  BEGIN
-    FOR i:=0 TO 57 DO
-      x := 0.5D0 * (x + FLOAT(ORD(IteratedSquaring()), R.T));
-    END;
-    <* ASSERT R.Zero <= x *>
-    <* ASSERT x < R.One *>
-    RETURN x;
-  END initlongreal;
-
-(* Generates a word, bit by bit, using IteratedSquaring *)
-PROCEDURE initword() : Word.T =
-  VAR
-    x : Word.T := 0;
-  BEGIN
-    FOR i:=0 TO Word.Size DO
-      x := Word.Plus( Word.LeftShift(x,1), ORD(IteratedSquaring()));
-    END;
-    RETURN x;
-  END initword;
+  END GenerateReal;
 
 (*** Initializes all random number generators here. Quite slow.
-If NonReproducible=TRUE (the default) will use the time as seed.
-If FALSE will use a particular fixed seed.
+If fixed=FALSE (the default) will use the time as seed.
+If TRUE will use a particular fixed seed.
 *************************************************************)
-PROCEDURE Init(NonReproducible : BOOLEAN := TRUE) =
+PROCEDURE New(fixed : BOOLEAN := FALSE):T=
+  VAR
+    is:=IterSqr.New(fixed);
+    SELF:=NEW(T,subfibo1:=SubFibo1.New(is),
+                subfibo2:=SubFibo2.New(is),
+                mulfibo :=MulFibo.New(is),
+                quafibo :=QuaFibo.New(is),
+                mcgill  :=McGill.New(is),
+                wolf    :=Wolf.New(is)
+              );
   BEGIN
-    (*---HGG 3/23/96: flag so objects don't repeat this proc---*)
-    InitDone:=TRUE;
-    (*----------------------------------------------------------*)
-
-    IF NonReproducible THEN
-      seed1 := TimeStamp.Hash(TimeStamp.New());
-      seed2 := Tick.Now();
-      xis := ABS( DefaultXis + FLOAT(seed1, R.T)
-                      + FLOAT(seed1, R.T) ) MOD moduis;
-    ELSE
-      seed1 := DefaultSeed1; seed2 := DefaultSeed2; xis := DefaultXis;
-    END;
-
     (* rev 'em up by 6000 calls to Uni01() *)
     FOR i:=0 TO 6000 DO
-      EVAL Uni01();
+      EVAL SELF.generateReal();
     END;
-  END Init;
+    RETURN SELF;
+  END New;
 
-(*----------------------------------------*)
-PROCEDURE Test()=
-BEGIN
-  (*testing code: *)
-(*
-  IO.Put( Fmt.LongReal( Uni01() ) & "\n");
-*)
-
-  FOR i:=0 TO 10000000 DO
-(*
-    EVAL ComboGen();
-    EVAL FasterGen();
-*)
-    EVAL SubtractiveFibo1();
-    EVAL RT.Sin( FLOAT(i, R.T) );
-    EVAL ImprovedMcGill();
-    EVAL MultiplicativeFibo1();
-    EVAL QuaternaryFibo();
-    EVAL WolframCA();
-    EVAL SubtractiveFibo2();
-    EVAL FasterUni01();
-    EVAL Uni01();
-    EVAL FasterRandWord();
-  END;
-END Test;
 (*==========================*)
 BEGIN
 END RandomCombinedSlow.

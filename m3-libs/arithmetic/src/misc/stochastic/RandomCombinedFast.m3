@@ -59,8 +59,8 @@ PROCEDURE GenerateReal(SELF:T):R.T=
   END GenerateReal;
 
 (*** Initializes all random number generators here. Quite slow.
-If NonReproducible=TRUE (the default) will use the time as seed.
-If FALSE will use a particular fixed seed.
+If fixed=FALSE (the default) will use the time as seed.
+If TRUE will use a particular fixed seed.
 *************************************************************)
 PROCEDURE New(fixed : BOOLEAN := FALSE):T=
   VAR
