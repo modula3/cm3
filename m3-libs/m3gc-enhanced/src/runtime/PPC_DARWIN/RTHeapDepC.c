@@ -1199,7 +1199,7 @@ sigprocmask(int how, const sigset_t *set, sigset_t *oset)
   ENTER_CRITICAL;
   MAKE_READABLE(set);
   MAKE_WRITABLE(oset);
-  result = syscall(SYS_sigprocmask, set, oset);
+  result = syscall(SYS_sigprocmask, how, set, oset);
   EXIT_CRITICAL;
   return result;
 }
