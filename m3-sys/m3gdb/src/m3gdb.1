@@ -1,0 +1,89 @@
+.\" Copyright (C) 1993, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.\" Last modified on Tue Oct  5 12:09:52 PDT 1993 by muller
+.TH m3gdb 1 
+.SH Name
+m3gdb \- The GNU Debugger, with Modula-3 support
+
+.SH Description
+.B m3gdb
+is a modified version of
+.BR gdb (1)
+with support for the Modula-3 language. 
+
+If the current language is 
+.B m3 
+(in the gdb sense), then all expressions
+are interpreted using the Modula-3 syntax.  All values which have a
+Modula-3 type are printed according to that type.
+In addition, 
+.B m3gdb
+supports two new commands.  The command
+.B threads
+lists the threads that exist in the program, with the first thread
+being the most recently active one.  The command
+.B switch 
+.I n
+switches the current context to the thread identified as
+.IR n,
+by the
+.B threads
+command.  If you use the
+.B switch
+command, you
+.B must
+use it again to switch back to the thread that was interrupted before
+you can continue the execution of the program (i.e. the first thread
+listed by the
+.B threads
+command).  If the 
+.B switch
+command is interrupted, the state of
+.B m3gdb
+is essentially random and most likely to cause a core dump.  The
+current language must be 
+.B m3
+for the 
+.B threads
+and
+.B switch
+commands to work.
+
+When
+.B m3gdb
+is started, the language is 
+.BR C.  
+This means that you cannot insert a
+breakpoint using the Modula-3 syntax.  You probably want to type
+.B set la m3
+to set the language to 
+.BR m3.
+
+gdb does not have a concept of statement, only expressions.
+Accordingly, m3gdb treats := as an expression constructor.
+
+.SH "See Also"
+.BR gdb (1),
+the gdb documentation under info.
+
+.SH Bugs
+
+Many.  Please send bug reports to 
+.BR m3-request@src.dec.com .
+
+This release of m3gdb is based on gdb 4.9.  We should move to gdb
+4.10.
+
+Real numbers are not parsed properly.
+
+The comparison operators (other than =), VAL, &, IN do not work.
+
+The = operator does not work on open arrays.
+
+.SH Author Of Object
+Eric Muller, for the Modula-3 extensions.
+
+.SH Author Of Documentation
+Eric Muller
