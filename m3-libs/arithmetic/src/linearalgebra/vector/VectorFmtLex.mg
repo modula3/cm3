@@ -1,4 +1,4 @@
-GENERIC MODULE VectorFmtLex(RF,VR);
+GENERIC MODULE VectorFmtLex(RF);
 (*
 Abstract:
 

@@ -1,4 +1,4 @@
-GENERIC MODULE MatrixFast(R, V, VR);
+GENERIC MODULE MatrixFast(R, V);
 (**
 Abstract:
 

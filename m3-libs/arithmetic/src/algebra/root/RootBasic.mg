@@ -1,4 +1,4 @@
-GENERIC MODULE RootBasic(R,VR,P);
+GENERIC MODULE RootBasic(R,P);
 (*Copyright (c) 1995, Harry George
 
 Abstract: Roots.

@@ -1,4 +1,4 @@
-GENERIC MODULE Functional(R, RT, V, VR, VT, M, FD, LA);
+GENERIC MODULE Functional(R, RT, V, VT, M, FD, LA);
 (* Copyright (c) 1996, m3na project *)
 
 IMPORT NADefinitions AS NA;

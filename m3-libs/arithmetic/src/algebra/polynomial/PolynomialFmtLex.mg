@@ -1,4 +1,4 @@
-GENERIC MODULE PolynomialFmtLex(R,RF,VR);
+GENERIC MODULE PolynomialFmtLex(R,RF);
 (*Copyright (c) 1995, Harry George
 
 Abstract: Polynomials.

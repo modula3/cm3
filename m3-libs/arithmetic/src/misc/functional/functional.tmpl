@@ -8,13 +8,13 @@ readonly proc Functional (nm, field, rimpl) is
   local rfield  = field & rimpl
   local rtrans  = field & "Trans"
   local vfield  = field & "Vector"
-  local vrep    = field & "VectorRep"
+  local vecsup  = field & "VectorSupport"
   local vtrans  = field & "VectorTrans"
   local mfield  = field & "MatrixFast"
   local funcder = field & "FunctionalDeriv2"
   local lapack  = field & "MatrixLapack"
   build_generic_intf (basic, "Functional", [rfield,         vfield,                 funcder], VISIBLE)
-  build_generic_impl (basic, "Functional", [rfield, rtrans, vfield, vrep, vtrans, mfield, funcder, lapack])
+  build_generic_impl (basic, "Functional", [rfield, rtrans, vfield, vtrans, mfield, funcder, lapack])
 end
 
 readonly proc FunctionalDeriv2 (nm, field, rimpl) is
