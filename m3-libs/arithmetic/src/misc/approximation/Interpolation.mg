@@ -134,6 +134,71 @@ BEGIN
   RETURN y;
 END Newton;
 
+(*------------------*)
+PROCEDURE CubicHermite(
+                 READONLY xa,ya:ARRAY OF R.T;  (*interpolation nodes*)
+                 x:R.T;                        (*the function argument*)
+                 ):R.T=
+
+  PROCEDURE InterpolateQuadratic(READONLY xb,yb:ARRAY [0..2] OF R.T):R.T=
+  VAR
+    x01:=xb[0]-xb[1];
+    x12:=xb[1]-xb[2];
+    x02:=xb[0]-xb[2];
+    xx0:=x-xb[0];
+    xx1:=x-xb[1];
+    xx2:=x-xb[2];
+    sum:R.T;
+  BEGIN
+    sum:=   -yb[1]*xx0*xx2/(x01*x12);
+    sum:=sum+yb[0]*xx1*xx2/(x01*x02);
+    sum:=sum+yb[2]*xx0*xx1/(x12*x02);
+    RETURN sum;
+  END InterpolateQuadratic;
+
+  (*probably not very efficient*)
+  PROCEDURE InterpolateHalf(READONLY xb,yb:ARRAY [0..2] OF R.T):R.T=
+  CONST
+    Three = FLOAT(3,R.T);
+  VAR
+    x01:=xb[0]-xb[1];
+    x12:=xb[1]-xb[2];
+    x02:=xb[0]-xb[2];
+    xin12:=(x-xb[2])/x12;
+    hermy1,        (*p(x[1])=1, p(x'[1])=0, p(x[2])=0, p(x'[2])=0*)
+    hermdy1 : R.T; (*p(x[1])=0, p(x'[1])=1, p(x[2])=0, p(x'[2])=0*)
+    sum:R.T;
+  BEGIN
+    hermy1 :=xin12*xin12*(Three-R.Two*xin12);
+    hermdy1:=xin12*xin12*(x-xb[1]);
+    sum:=(hermdy1*(x01-x12)/(x01*x12)+hermy1)*yb[1];
+    sum:=sum+hermdy1*x12/(x01*x02)*yb[0];
+    sum:=sum-hermdy1*x01/(x12*x02)*yb[2];
+    RETURN sum;
+  END InterpolateHalf;
+
+  PROCEDURE InterpolatePiece(READONLY xb,yb:ARRAY [0..3] OF R.T):R.T=
+  BEGIN
+    RETURN InterpolateHalf(SUBARRAY(xb,0,3),SUBARRAY(yb,0,3)) +
+           InterpolateHalf(ARRAY OF R.T{xb[3],xb[2],xb[1]},
+                           ARRAY OF R.T{yb[3],yb[2],yb[1]});
+  END InterpolatePiece;
+
+BEGIN
+  IF x<=xa[1] THEN
+    RETURN InterpolateQuadratic(SUBARRAY(xa,0,3),SUBARRAY(ya,0,3));
+  ELSIF x>=xa[LAST(xa)-1] THEN
+    RETURN InterpolateQuadratic(SUBARRAY(xa,LAST(xa)-2,3),SUBARRAY(xa,LAST(xa)-2,3));
+  ELSE
+    FOR j:=1 TO LAST(xa)-2 DO
+      IF (*xa[j]<x AND*) x<=xa[j+1] THEN
+        RETURN InterpolatePiece(SUBARRAY(xa,j-1,4),SUBARRAY(ya,j-1,4));
+      END;
+    END;
+  END;
+  <*ASSERT FALSE*>
+END CubicHermite;
+
 
 (*==========================*)
 BEGIN
