@@ -21,7 +21,7 @@ import		("juno-compiler")
 /* build the font pickles first */
 PKLPKG=         ".." & SL & "pkl-fonts"
 PKLDIR=         PKLPKG & SL & TARGET
-exec            ("cd " & PKLDIR & " && ./PklFonts > FontData.pkl")
+exec            ("cd " & PKLDIR & " && ." & SL & "PklFonts > FontData.pkl")
 
 /* private interfaces */
 interface       ("EditorUI")
