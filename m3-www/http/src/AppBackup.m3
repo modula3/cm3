@@ -1,6 +1,6 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Sat Aug 17 08:30:27 PDT 1996 by steveg *)
+(* Last modified on Thu Mar 20 11:38:30 PST 1997 by steveg *)
 
 MODULE AppBackup;
 
@@ -59,13 +59,15 @@ PROCEDURE WriteDefault(self: T; <* UNUSED *> wr: Wr.T) RAISES {App.Error} =
                  App.LogStatus.Error);
   END WriteDefault;
 
-PROCEDURE LockFile(file: RegularFile.T; t: T) 
-  RAISES {App.Error} =
+PROCEDURE LockFile(<* UNUSED *> file: RegularFile.T; <* UNUSED *> t: T)  =
   CONST
+(*
     MaxTry = 10;
     RetryInterval = 1.0D0;
   VAR try := 1;
+ *)
   BEGIN
+(* Nov 16: file.lock broken in call to fcntl - int vs. long confusion
     TRY
       WHILE NOT file.lock() DO
         IF try = MaxTry THEN
@@ -76,19 +78,22 @@ PROCEDURE LockFile(file: RegularFile.T; t: T)
         Thread.Pause(RetryInterval);
       END;
       (* Check for Windows NT problem *)
-      IF file.lock() THEN
+      (* IF file.lock() THEN
         t.log.log("WARNING: Could lock file TWICE", App.LogStatus.Status);
       END;
+      *)
     EXCEPT
     | OSError.E(cause) => 
         t.log.log(Fmt.F("Could not lock file: %s (error: %s)",
                         t.name, RdUtils.FailureText(cause)),
                   App.LogStatus.Error);
     END;
+ *)
   END LockFile;
 
-PROCEDURE UnlockFile(file: RegularFile.T; t: T) RAISES {App.Error} =
+PROCEDURE UnlockFile(<* UNUSED *> file: RegularFile.T; <* UNUSED *> t: T) =
   BEGIN
+(* Nov 16: file.lock broken in call to fcntl - int vs. long confusion
     TRY
       file.unlock();
     EXCEPT
@@ -97,6 +102,7 @@ PROCEDURE UnlockFile(file: RegularFile.T; t: T) RAISES {App.Error} =
                         t.name, RdUtils.FailureText(cause)),
                 App.LogStatus.Error);
     END;
+ *)
   END UnlockFile;
 
 PROCEDURE SynchronousRead(t: T; initial: BOOLEAN) RAISES {App.Error} =
@@ -156,13 +162,17 @@ PROCEDURE WriteBackupFile (t: T) RAISES {App.Error} =
   BEGIN
     TRY
       FS.Rename(t.name, t.name & "-OLD");
+    EXCEPT
+    | OSError.E=>
+    END;
+    TRY
       file := FS.OpenFile(t.name, truncate := TRUE,
                           access := FS.AccessOption.OnlyOwnerCanRead);
     EXCEPT
     | OSError.E (cause) =>
         t.log.log(
-          Fmt.F("WARNING: Could not open file: %s (error: %s)", t.name,
-                RdUtils.FailureText(cause)), App.LogStatus.Status);
+          Fmt.F("Could not open file: %s for writing (error: %s)", t.name,
+                RdUtils.FailureText(cause)), App.LogStatus.Error);
         RETURN;
     END;
 

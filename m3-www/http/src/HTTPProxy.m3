@@ -1,10 +1,10 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Mon Aug 12 21:01:24 PDT 1996 by steveg *)
+(* Last modified on Sat Jan 11 22:04:02 PST 1997 by steveg *)
 
 MODULE HTTPProxy;
 
-IMPORT App, Fmt, HTTP, HTTPApp, Rd, RdCopy, Thread, Wr;
+IMPORT App, Fmt, HTTP, HTTPApp, IO, Rd, RdCopy, TextRd, TextWr, Thread, Wr;
 
 
 REVEAL
@@ -15,14 +15,15 @@ REVEAL
     replyHandlerGenerator := ReplyHandlerGenerator;
   END;
 
-PROCEDURE ReplyHandlerGenerator(<* UNUSED *> self: RequestHandler;
-                                     <* UNUSED *> request: HTTP.Request; 
-                                     <* UNUSED *> serverData, acceptState: REFANY;
-                                     <* UNUSED *> rd: Rd.T;  
-                                     <* UNUSED *> wr: Wr.T;
-                                     <* UNUSED *> log: App.Log): HTTPApp.ReplyHandler =
+PROCEDURE ReplyHandlerGenerator (             self   : RequestHandler;
+                                 <* UNUSED *> request: HTTP.Request;
+                                 <* UNUSED *> serverData, acceptState: REFANY;
+                                 <* UNUSED *> rd : Rd.T;
+                                 <* UNUSED *> wr : Wr.T;
+                                 <* UNUSED *> log: App.Log):
+  HTTPApp.ReplyHandler =
   BEGIN
-    RETURN NEW(ReplyHandler);
+    RETURN NEW(ReplyHandler, logReply := self.logReply);
   END ReplyHandlerGenerator;
 
 PROCEDURE Accept(<* UNUSED *> self: RequestHandler;
@@ -47,40 +48,79 @@ PROCEDURE Request (self                   : RequestHandler;
                     request.toText(
                       HTTP.DefaultStyle(request.version), TRUE, log)),
               App.LogStatus.Verbose);
-
     ELSIF App.Debug() THEN
       log.log(
         Fmt.F("Proxy request: %s %s", HTTP.MethodText[request.method],
               request.url.toText()), App.LogStatus.Debug);
     END;
+    IF request.method = HTTP.Method.Post AND request.postData # NIL THEN
+      IF self.logRequest THEN
+        log.log(request.postData, App.LogStatus.Verbose);
+      END;
+      rd := TextRd.New(request.postData);
+    END;
     HTTPApp.Client(
       request, HTTPApp.DefaultProxy(), HTTP.DefaultStyle(request.version),
       rd, wr, self.replyHandlerGenerator(
-                request, serverData, acceptState, rd, wr, log), log);
+                request, serverData, acceptState, rd, wr, log),
+      self.service, log);
   END Request;
 
 REVEAL
   ReplyHandler = HTTPApp.ReplyHandler BRANDED OBJECT
+    logReply: BOOLEAN;
   OVERRIDES
     reply := Reply;
   END;
 
-PROCEDURE Reply (<* UNUSED *> self : HTTPApp.ReplyHandler;
-                              reply: HTTP.Reply;
-                              rd   : Rd.T;
-                              wr   : Wr.T;
-                              log  : App.Log               )
-  RAISES {App.Error} =
+PROCEDURE Reply (self : ReplyHandler;
+                 reply: HTTP.Reply;
+                 rd   : Rd.T;
+                 wr   : Wr.T;
+                 log  : App.Log       ) RAISES {App.Error} =
+  VAR
+    twr               : TextWr.T;
+    rep               : TEXT;
+    contentLengthField: HTTP.Field;
+    length            : CARDINAL   := LAST(CARDINAL);
   BEGIN
+    IF App.Verbose() THEN
+      log.log(
+        Fmt.F("Proxy reply headers: %s",
+              reply.toText(HTTP.DefaultStyle(reply.version), log)),
+        App.LogStatus.Verbose);
+
+    ELSIF App.Debug() THEN
+      log.log(Fmt.F("Proxy reply: %s %s", Fmt.Int(reply.code), reply.reason),
+              App.LogStatus.Debug);
+    END;
     reply.write(wr, HTTP.DefaultStyle(reply.version), log);
+    contentLengthField :=
+      reply.lookupField(HTTP.FieldName[HTTP.FieldType.Content_Length]);
     TRY
-      EVAL RdCopy.ToWriter(rd, wr);
+      IF contentLengthField # NIL THEN
+        TRY
+          length := IO.GetInt(TextRd.New(contentLengthField.value));
+        EXCEPT
+        | IO.Error =>
+            log.log("Proxy error copying request\n", App.LogStatus.Error);
+        END;
+      END;
+
+      IF self.logReply THEN
+        twr := TextWr.New();
+        EVAL RdCopy.ToWriter(rd, twr, length);
+        rep := TextWr.ToText(twr);
+        log.log(rep, App.LogStatus.Verbose);
+        Wr.PutText(wr, rep);
+      ELSE
+        EVAL RdCopy.ToWriter(rd, wr, length);
+      END;
     EXCEPT
       Rd.Failure, Thread.Alerted, Wr.Failure =>
-        RAISE App.Error("Proxy error copying reply\n");
+        log.log("Proxy error copying reply\n", App.LogStatus.Error);
     END;
   END Reply;
-
 
 BEGIN
 END HTTPProxy.

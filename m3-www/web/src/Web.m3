@@ -7,7 +7,7 @@
 MODULE Web;
 
 IMPORT ASCII, ConnRW, Date, Env, FloatMode, Fmt, IP, Lex, Rd,
-       TextList, TCP, Text, TextF, TextRd, TextWr, Thread, Wr;
+       TextList, TCP, Text, TextRd, TextWr, Thread, Wr;
 
 <* FATAL FloatMode.Trap, Rd.Failure *>
 
@@ -559,7 +559,7 @@ PROCEDURE Pop (VAR list: TextList.T): TEXT =
 
 PROCEDURE CIEqual (t, u: TEXT): BOOLEAN RAISES {} =
   BEGIN
-    IF t[0] # u[0] THEN RETURN FALSE END;
+    IF Text.GetChar(t,0) # Text.GetChar(u,0) THEN RETURN FALSE END;
     VAR
       lt: CARDINAL := Text.Length(t);
       lu: CARDINAL := Text.Length(u);
@@ -567,7 +567,8 @@ PROCEDURE CIEqual (t, u: TEXT): BOOLEAN RAISES {} =
     BEGIN
       IF lt = lu THEN
         WHILE i < lt DO
-          IF ASCII.Upper[t[i]] # ASCII.Upper[u[i]] THEN
+          IF ASCII.Upper[Text.GetChar(t,i)] # 
+             ASCII.Upper[Text.GetChar(u,i)] THEN
             RETURN FALSE
           ELSE
             INC(i)

@@ -1,6 +1,6 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Thu Feb  1 15:36:21 PST 1996 by steveg *)
+(* Last modified on Sun Dec 29 15:46:24 PST 1996 by steveg *)
 
 INTERFACE HTTPProxy;
 
@@ -11,6 +11,12 @@ IMPORT App, HTTP, HTTPApp, Rd, Wr;
 TYPE
   RequestHandler <: RequestHandlerPublic;
   RequestHandlerPublic = HTTPApp.RequestHandler OBJECT
+    service: INTEGER;
+    (* the service number given to the "HTTPApp.Server" call *)
+    logRequest, logReply: BOOLEAN := FALSE;
+    (* if "logRequest" = TRUE, then the body of the request is 
+       copied to "log".  if "logReply" = TRUE, then the body
+       of the reply is logged. *)
   METHODS
     replyHandlerGenerator(request: HTTP.Request; 
                           serverData, acceptState: REFANY;

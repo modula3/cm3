@@ -182,7 +182,8 @@ BEGIN
       END;
 
       HTTPApp.Client(request, proxy, HTTP.DefaultStyle(version), rd,
-                     Stdio.stdout, NEW(ReplyHandler), App.defaultLog);
+                     Stdio.stdout, NEW(ReplyHandler),
+                     HTTPApp.AnyService, App.defaultLog);
 
     END;
   EXCEPT
