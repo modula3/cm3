@@ -1,3 +1,11 @@
-%import("libm3")
-Module("Signal")
-Library("wavelib")
+
+template("signal")
+
+
+generic_module("Signal")
+Signal("Real",               "RealBasic")
+Signal("LongReal",           "LongRealBasic")
+Signal("Extended",           "ExtendedBasic")
+Signal("RealComplex",        "RealComplexFast")
+Signal("LongRealComplex",    "LongRealComplexFast")
+Signal("ExtendedComplex",    "ExtendedComplexFast")

@@ -1,0 +1,9 @@
+%
+%  Quake functions to instantiate operations on generic signals.
+%
+
+readonly proc Signal (nm, field) is
+  local basic = nm & "Signal"
+  build_generic_intf (basic, "Signal", [field], VISIBLE)
+  build_generic_impl (basic, "Signal", [field])
+end

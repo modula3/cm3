@@ -1,8 +1,8 @@
-MODULE Signal;
+GENERIC MODULE Signal(R);
 
 REVEAL
   T = Public BRANDED OBJECT
-	data : REF ARRAY OF ElemType;
+	data : REF ARRAY OF R.T;
 	first : IndexType;
 	OVERRIDES
 	init      := Init;
@@ -27,7 +27,7 @@ REVEAL
 
 PROCEDURE Init (SELF : T; first, last : IndexType) =
   BEGIN
-	SELF.data := NEW(REF ARRAY OF ElemType, last-first);
+	SELF.data := NEW(REF ARRAY OF R.T, last-first);
   END Init;
 
 PROCEDURE Copy (SELF : T) : T =
@@ -100,7 +100,7 @@ PROCEDURE WrapCyclic (x : T; length : IndexType) : T =
 	z.init (0, length);
 	j := x.first MOD length;
 	FOR i:=0 TO LAST(z.data^) DO
-      z.data[j] := z.data[j] + x.data[i];
+      z.data[j] := R.Add (z.data[j], x.data[i]);
 	  INC(j);
 	  IF j>=length THEN
 		j:=0;
@@ -110,17 +110,17 @@ PROCEDURE WrapCyclic (x : T; length : IndexType) : T =
   END WrapCyclic;
 
 
-PROCEDURE Scale (x : T; factor : ElemType) =
+PROCEDURE Scale (x : T; factor : R.T) =
   BEGIN
 	FOR i:=0 TO LAST(x.data^) DO
-      x.data[i] := x.data[i] * factor;
+      x.data[i] := R.Mul (x.data[i], factor);
 	END;
   END Scale;
 
-PROCEDURE Raise (x : T; offset : ElemType) =
+PROCEDURE Raise (x : T; offset : R.T) =
   BEGIN
 	FOR i:=0 TO LAST(x.data^) DO
-      x.data[i] := x.data[i] + offset;
+      x.data[i] := R.Add (x.data[i], offset);
 	END;
   END Raise;
 
@@ -134,7 +134,7 @@ PROCEDURE Convolve (x : T; y : T) : T =
 	z.init(x.getfirst()+y.getfirst(),x.getlast()+y.getlast());
 	FOR i:=0 TO LAST(x.data^) DO
 	  FOR j:=0 TO LAST(y.data^) DO
-		z.data[i+j] := z.data[i+j] + x.data[i] + y.data[j];
+		z.data[i+j] := R.Add(z.data[i+j], R.Mul(x.data[i], y.data[j]));
 	  END;
 	END;
     RETURN z;
@@ -150,11 +150,11 @@ PROCEDURE Superpose (x : T; y : T) : T =
 	z.init(MIN(x.getfirst(),y.getfirst()),MAX(x.getlast(),y.getlast()));
 	j := x.getfirst()-z.getfirst();
 	FOR i:=0 TO LAST(x.data^) DO
-	  z.data[i+j] := z.data[i+j] + x.data[i];
+	  z.data[i+j] := R.Add (z.data[i+j], x.data[i]);
 	END;
 	j := y.getfirst()-z.getfirst();
 	FOR i:=0 TO LAST(y.data^) DO
-	  z.data[i+j] := z.data[i+j] + y.data[i];
+	  z.data[i+j] := R.Add (z.data[i+j], y.data[i]);
 	END;
     RETURN z;
   END Superpose;
