@@ -7,6 +7,7 @@
  *                                                                        
  * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
  * City of New York.  Blair MacIntyre, Computer Science Department.       
+ * See file COPYRIGHT-COLUMBIA for details.
  * 
  * Author          : Blair MacIntyre
  * Created On      : Fri Jun  2 15:44:44 1995
@@ -20,6 +21,9 @@
  * $Revision$
  * 
  * $Log$
+ * Revision 1.1.1.1  2001/12/02 00:06:45  wagner
+ * Blair MacIntyre's events library
+ *
  * Revision 1.6  1998/09/25 15:22:26  bm
  * small bug in Event package
  * make binaries dynamically linked

@@ -7,6 +7,7 @@
  *                                                                        
  * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
  * City of New York.  Blair MacIntyre, Computer Science Department.       
+ * See file COPYRIGHT-COLUMBIA for details.
  * 
  * Author          : Blair MacIntyre
  * Created On      : Wed May 10 16:39:14 1995
@@ -20,6 +21,9 @@
  * $Revision$
  * 
  * $Log$
+ * Revision 1.1.1.1  2001/12/02 00:06:45  wagner
+ * Blair MacIntyre's events library
+ *
  * Revision 1.4  1997/10/24 19:31:36  bm
  * Added the ability to flush the readers and worker pool.
  *
@@ -38,7 +42,7 @@ MODULE WorkerPool;
 IMPORT Work, Thread, WorkSeq, ZombieSeq, Scheduler, ThreadF;
 (* IMPORT RTTypeSRC, IO; *)
 
-IMPORT IO;
+(* IMPORT IO; *)
 REVEAL
   Private = Thread.Mutex BRANDED "WorkerPool.Private" OBJECT END;
   T = Public BRANDED "WorkerPool.T" OBJECT 
