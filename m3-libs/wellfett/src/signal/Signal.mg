@@ -31,7 +31,8 @@ REVEAL
 
 PROCEDURE Init (SELF : T; first, last : IndexType) : T =
   BEGIN
-	SELF.data := NEW(REF ARRAY OF R.T, last-first);
+	SELF.data  := NEW(REF ARRAY OF R.T, last-first);
+	SELF.first := first;
 	FOR j:=0 TO LAST(SELF.data^) DO
       SELF.data[j] := R.Zero;
 	END;
@@ -183,7 +184,7 @@ PROCEDURE RaiseD (x : T; offset : R.T) =
 
 PROCEDURE Convolve (x : T; y : T) : T =
   VAR
-	z := NEW(T).init(x.getFirst()+y.getFirst(),x.getLast()+y.getLast());
+	z := NEW(T).init(x.getFirst()+y.getFirst(),x.getLast()+y.getLast()-1);
   BEGIN
 	FOR i:=0 TO LAST(x.data^) DO
 	  FOR j:=0 TO LAST(y.data^) DO
