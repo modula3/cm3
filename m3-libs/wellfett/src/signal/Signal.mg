@@ -30,6 +30,8 @@ REVEAL
         translateD := TranslateD;
         scaleD     := ScaleD;
 
+        alternate := Alternate;
+
         convolve  := Mul;
         superpose := Add;
       END;
@@ -235,6 +237,36 @@ PROCEDURE Raise (x: T; offset: R.T; first, number: IndexType): T =
   END Raise;
 
 
+PROCEDURE Alternate (x: T): T =
+  VAR
+    z    := NEW(T).init(x.first, NUMBER(x.data^));
+    sign := R.One;
+  BEGIN
+    IF x.first MOD 2 # 0 THEN sign := R.Neg(R.One); END;
+    FOR i := 0 TO LAST(x.data^) DO
+      z.data[i] := R.Mul(sign, x.data[i]);
+      sign := R.Neg(sign);
+    END;
+    RETURN z;
+  END Alternate;
+
+<*UNUSED*>
+PROCEDURE AlternateBool (x: T): T =
+  VAR
+    z    := NEW(T).init(x.first, NUMBER(x.data^));
+    sign := x.first MOD 2 # 0;
+  BEGIN
+    FOR i := 0 TO LAST(x.data^) DO
+      IF sign THEN
+        z.data[i] := R.Neg(x.data[i]);
+      ELSE
+        z.data[i] := x.data[i];
+      END;
+      sign := NOT sign;
+    END;
+    RETURN z;
+  END AlternateBool;
+
 PROCEDURE Mul (x: T; y: T): T =
   VAR z := NEW(T).init(x.first + y.first, NUMBER(x.data^) + LAST(y.data^));
   BEGIN
@@ -270,4 +302,5 @@ PROCEDURE Add (x: T; y: T): T =
 
 
 BEGIN
+  One := NEW(T).fromArray(ARRAY OF R.T{R.One});
 END Signal.

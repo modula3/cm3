@@ -41,9 +41,14 @@ TYPE
       translateD (dist: IndexType);
       scaleD     (factor: R.T);
 
+      alternate (): T;
+
       convolve  (with: T): T;
       superpose (with: T): T;
     END;
+
+VAR
+  One : T;
 
 PROCEDURE Add (x: T; y: T): T;
 PROCEDURE Mul (x: T; y: T): T;

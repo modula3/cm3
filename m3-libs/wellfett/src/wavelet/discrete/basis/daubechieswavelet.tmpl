@@ -6,6 +6,7 @@ readonly proc DaubechiesWavelet (nm, field, rimpl) is
   local basic  = nm & "DaubechiesWavelet"
   local rfield = field & rimpl
   local signal = field & "Signal"
+  local intpow = signal & "IntegerPower"
   build_generic_intf (basic, "DaubechiesWavelet", [signal], VISIBLE)
-  build_generic_impl (basic, "DaubechiesWavelet", [rfield, signal])
+  build_generic_impl (basic, "DaubechiesWavelet", [rfield, signal, intpow])
 end
