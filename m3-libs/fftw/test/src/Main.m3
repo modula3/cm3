@@ -1,6 +1,6 @@
 MODULE Main;
 
-IMPORT FFTWLongReal AS FFT, IO, Fmt;
+IMPORT LongRealFFTW AS FFT, IO, Fmt;
 
 VAR
   x := NEW(REF ARRAY OF FFT.Complex, 23);
