@@ -1,11 +1,12 @@
 GENERIC INTERFACE DaubechiesWavelet(S);
 
-(*the wavelet filter convoluted with its adjungate,
-  to obtain the filter itself you have to apply spectral factorization*)
-PROCEDURE FilterAbsSqr(n : CARDINAL) : S.T;
+PROCEDURE FilterAbsSqr (n: CARDINAL): S.T;
+(* The wavelet filter convoluted with its adjoint.
 
-(*the wavelet filter convoluted with its adjungate
-  without the factor (1,1)^m that corresponds to m zeros at -1*)
-PROCEDURE FilterPureAbsSqr(n : CARDINAL) : S.T;
+   To obtain the filter itself you have to apply spectral factorization. *)
+
+PROCEDURE FilterPureAbsSqr (n: CARDINAL): S.T;
+(* The wavelet filter convoluted with its adjoint without the factor
+   (1,1)^m that corresponds to m zeros at -1. *)
 
 END DaubechiesWavelet.

@@ -12,7 +12,7 @@ IMPORT IO, Fmt, Wr, Thread;
 (*IMPORT Arithmetic AS Arith;*)
 
 PROCEDURE ShowFilters () =
-  <*FATAL BSpl.DifferentParity, Thread.Alerted, Wr.Failure*>
+  <* FATAL Thread.Alerted, Wr.Failure *>
   BEGIN
     IO.Put(Fmt.FN("dual generator: %s\n",
                   ARRAY OF TEXT{SF.Fmt(BSpl.GeneratorMask(2))}));
@@ -29,7 +29,7 @@ PROCEDURE Reconstruction (hdual, gdual: S.T): S.T =
   END Reconstruction;
 
 PROCEDURE CheckPerfectReconstruction () =
-  <*FATAL BSpl.DifferentParity, Thread.Alerted, Wr.Failure*>
+  <* FATAL Thread.Alerted, Wr.Failure *>
   BEGIN
     FOR i := 0 TO 6 DO
       FOR j := i MOD 2 TO 8 BY 2 DO
@@ -44,7 +44,6 @@ PROCEDURE CheckPerfectReconstruction () =
   END CheckPerfectReconstruction;
 
 PROCEDURE ShowBSplWavelets () =
-  <*FATAL BSpl.DifferentParity*>
   BEGIN
     PL.Init();
     WP.PlotBiorthogonal(BSpl.GeneratorMask(3), BSpl.WaveletMask(3, 9), 6);
@@ -58,7 +57,7 @@ PROCEDURE Test () =
     | 1 => CheckPerfectReconstruction();
     | 2 => ShowBSplWavelets();
     ELSE
-      <*ASSERT FALSE*>
+      <* ASSERT FALSE *>
     END;
   END Test;
 

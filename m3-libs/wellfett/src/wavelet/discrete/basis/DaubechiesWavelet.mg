@@ -10,7 +10,7 @@ PROCEDURE FilterAbsSqr (n: CARDINAL): S.T =
   VAR
     sum := FilterPureAbsSqr(n);
     fac := NEW(S.T).fromArray(ARRAY OF R.T{Quarter, Half, Quarter}, -1);
-  <* FATAL Arith.Error *>           (*Power can't fail for signals*)
+  <* FATAL Arith.Error *>        (* Power can't fail for signals *)
   BEGIN
     RETURN IntPow.MulPower(sum, fac, n);
   END FilterAbsSqr;
@@ -29,7 +29,7 @@ PROCEDURE FilterPureAbsSqr (n: CARDINAL): S.T =
         coef[k - 1] := binom;
         binom := binom * FLOAT(n - 1 + k, R.T) / FLOAT(k, R.T);
       END;
-      (*use Horner's scheme for more numerical stability*)
+      (* use Horner's scheme for more numerical stability *)
       sum := NEW(S.T).fromArray(ARRAY OF R.T{coef[n - 1]});
       FOR k := n - 2 TO 0 BY -1 DO
         sum := sum.convolve(fac);
