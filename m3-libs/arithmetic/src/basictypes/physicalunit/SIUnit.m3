@@ -12,13 +12,14 @@ VAR
   db:DB.T;
 
 CONST
-  sixty    = 60.0D0;
-  daySecs  = sixty*sixty*24.0D0;  (*86400.0D0*)
-  yearSecs = daySecs*365.2422D0;
-  earthAcc = 9.80665D0;
-  K2       = 1024.0D0;
-  deg180   = 180.0D0;
-  bytesize = 8.0D0;
+  sixty     = 60.0D0;
+  daySecs   = sixty*sixty*24.0D0;  (*86400.0D0*)
+  yearSecs  = daySecs*365.2422D0;
+  earthAcc  = 9.80665D0;
+  K2        = 1024.0D0;
+  deg180    = 180.0D0;
+  radPerDeg = RT.Pi/deg180;
+  bytesize  = 8.0D0;
 
   pico  = 1.0D-12;
   nano  = 1.0D-9;
@@ -55,46 +56,47 @@ BEGIN
   });
 
   DB.AddUnit(db,voltage,scales:=SUA{
-    SU{"mV",    milli, flags := isUnit},
-    SU{"V",     one, flags := isUnit+defScale},
-    SU{"kV",    kilo, flags := isUnit},
-    SU{"MV",    mega, flags := isUnit},
-    SU{"GV",    giga, flags := isUnit}
+    SU{"mV",    milli,                    flags := isUnit},
+    SU{"V",     one,                      flags := isUnit+defScale},
+    SU{"kV",    kilo,                     flags := isUnit},
+    SU{"MV",    mega,                     flags := isUnit},
+    SU{"GV",    giga,                     flags := isUnit}
   });
 
   DB.AddUnit(db,angle,scales:=SUA{
-    SU{"°",     RT.Pi/deg180, flags := isUnit+defScale},
-    SU{"'",     RT.Pi/(deg180*sixty), flags := isUnit},
-    SU{"''",    RT.Pi/(deg180*sixty*sixty), flags := isUnit},
-    SU{"rad",   one},
-    SU{"grad",  RT.Pi/200.0D0}
+    SU{"''",    radPerDeg/(sixty*sixty),  flags := isUnit},
+    SU{"'",     radPerDeg/(sixty),        flags := isUnit},
+    SU{"grad",  RT.Pi/200.0D0},
+    SU{"°",     radPerDeg,                flags := isUnit+defScale},
+    SU{"rad",   one}
   });
 
   DB.AddUnit(db,time,scales:=SUA{
-    SU{"s",     one, flags := isUnit+defScale},
-    SU{"ms",    milli, flags := isUnit},
-    SU{"us",    micro, flags := isUnit},
-    SU{"min",   sixty, flags := isUnit},
-    SU{"h",     sixty*sixty, flags := isUnit},
-    SU{"d",     daySecs, flags := isUnit},
-    SU{"a",     yearSecs, flags := isUnit}
+    SU{"us",    micro,                    flags := isUnit},
+    SU{"ms",    milli,                    flags := isUnit},
+    SU{"s",     one,                      flags := isUnit+defScale},
+    SU{"min",   sixty,                    flags := isUnit},
+    SU{"h",     sixty*sixty,              flags := isUnit},
+    SU{"d",     daySecs,                  flags := isUnit},
+    SU{"a",     yearSecs,                 flags := isUnit}
   });
 
   DB.AddUnit(db,frequency,flags:=independent,scales:=SUA{
-    SU{"Hz",    one, flags := isUnit+defScale},
-    SU{"kHz",   kilo, flags := isUnit},
-    SU{"MHz",   mega, flags := isUnit},
-    SU{"GHz",   giga, flags := isUnit},
-    SU{"bpm",   one/sixty}
+    SU{"bpm",   one/sixty},
+    SU{"Hz",    one,                      flags := isUnit+defScale},
+    SU{"kHz",   kilo,                     flags := isUnit},
+    SU{"MHz",   mega,                     flags := isUnit},
+    SU{"GHz",   giga,                     flags := isUnit}
   });
 
   DB.AddUnit(db,length,scales:=SUA{
-    SU{"m",     one, flags := isUnit+defScale},
-    SU{"km",    kilo, flags := isUnit},
-    SU{"dm",    deci, flags := isUnit},
-    SU{"cm",    centi, flags := isUnit},
-    SU{"mm",    milli, flags := isUnit},
-    SU{"um",    micro, flags := isUnit}
+    SU{"nm",    nano,                     flags := isUnit},
+    SU{"um",    micro,                    flags := isUnit},
+    SU{"mm",    milli,                    flags := isUnit},
+    SU{"cm",    centi,                    flags := isUnit},
+    SU{"dm",    deci,                     flags := isUnit},
+    SU{"m",     one,                      flags := isUnit+defScale},
+    SU{"km",    kilo,                     flags := isUnit}
   });
 
   DB.AddUnit(db,area,scales:=SUA{
@@ -102,9 +104,9 @@ BEGIN
   });
 
   DB.AddUnit(db,volume,scales:=SUA{
-    SU{"l",     milli},
+    SU{"ml",    milli*milli},
     SU{"cl",    milli*centi},
-    SU{"ml",    milli*milli}
+    SU{"l",     milli}
   });
 
   DB.AddUnit(db,speed,scales:=SUA{
@@ -117,84 +119,84 @@ BEGIN
   });
 
   DB.AddUnit(db,mass,scales:=SUA{
-    SU{"kg",    one, flags := isUnit+defScale},
-    SU{"dt",    hecto, flags := isUnit},
-    SU{"t",     kilo, flags := isUnit},
-    SU{"kt",    mega, flags := isUnit},
-    SU{"g",     milli, flags := isUnit},
-    SU{"mg",    micro, flags := isUnit},
-    SU{"ug",    nano, flags := isUnit}
+    SU{"ug",    nano,                     flags := isUnit},
+    SU{"mg",    micro,                    flags := isUnit},
+    SU{"g",     milli,                    flags := isUnit},
+    SU{"kg",    one,                      flags := isUnit+defScale},
+    SU{"dt",    hecto,                    flags := isUnit},
+    SU{"t",     kilo,                     flags := isUnit},
+    SU{"kt",    mega,                     flags := isUnit}
   });
 
   DB.AddUnit(db,force,scales:=SUA{
-    SU{"N",     one, flags := isUnit+defScale},
-    SU{"kN",    kilo, flags := isUnit},
-    SU{"kp",    earthAcc, flags := isUnit}
+    SU{"N",     one,                      flags := isUnit+defScale},
+    SU{"kp",    earthAcc},
+    SU{"kN",    kilo,                     flags := isUnit}
   });
 
   DB.AddUnit(db,pressure,scales:=SUA{
-    SU{"Pa",    one, flags := isUnit+defScale},
-    SU{"kPa",   kilo, flags := isUnit},
-    SU{"bar",   hecto*kilo},
-    SU{"mbar",  hecto}
+    SU{"Pa",    one,                      flags := isUnit+defScale},
+    SU{"mbar",  hecto},
+    SU{"kPa",   kilo,                     flags := isUnit},
+    SU{"bar",   hecto*kilo}
   });
 
   DB.AddUnit(db,energy,scales:=SUA{
-    SU{"J",     one, flags := isUnit+defScale},
-    SU{"kJ",    kilo, flags := isUnit},
     SU{"eV",    1.602D-19},
+    SU{"J",     one,                      flags := isUnit+defScale},
     SU{"cal",   4.19D0},
+    SU{"kJ",    kilo,                     flags := isUnit},
     SU{"kcal",  4190.0D0}
   });
 
   DB.AddUnit(db,power,scales:=SUA{
-    SU{"W",     one, flags := isUnit+defScale},
-    SU{"mW",    milli, flags := isUnit},
-    SU{"kW",    kilo, flags := isUnit},
-    SU{"HP",    736.0D0}
+    SU{"mW",    milli,                    flags := isUnit},
+    SU{"W",     one,                      flags := isUnit+defScale},
+    SU{"HP",    736.0D0},
+    SU{"kW",    kilo,                     flags := isUnit}
   });
 
   DB.AddUnit(db,charge,scales:=SUA{
-    SU{"C",     one, flags := isUnit+defScale}
+    SU{"C",     one,                      flags := isUnit+defScale}
   });
 
   DB.AddUnit(db,current,scales:=SUA{
-    SU{"A",     one, flags := isUnit+defScale},
-    SU{"mA",    milli, flags := isUnit},
-    SU{"uA",    micro, flags := isUnit}
+    SU{"uA",    micro,                    flags := isUnit},
+    SU{"mA",    milli,                    flags := isUnit},
+    SU{"A",     one,                      flags := isUnit+defScale}
   });
 
   DB.AddUnit(db,resistance,scales:=SUA{
-    SU{"Ohm",   one, flags := isUnit+defScale},
-    SU{"kOhm",  kilo, flags := isUnit},
-    SU{"MOhm",  mega, flags := isUnit}
+    SU{"Ohm",   one,                      flags := isUnit+defScale},
+    SU{"kOhm",  kilo,                     flags := isUnit},
+    SU{"MOhm",  mega,                     flags := isUnit}
   });
 
   DB.AddUnit(db,capacity,scales:=SUA{
-    SU{"uF",    micro, flags := isUnit+defScale},
-    SU{"nF",    nano, flags := isUnit},
-    SU{"pF",    pico, flags := isUnit}
+    SU{"pF",    pico,                     flags := isUnit},
+    SU{"nF",    nano,                     flags := isUnit},
+    SU{"uF",    micro,                    flags := isUnit+defScale}
   });
 
   DB.AddUnit(db,temperature,scales:=SUA{
-    SU{"K",     one, flags := isUnit+defScale}
+    SU{"K",     one,                      flags := isUnit+defScale}
   });
 
   DB.AddUnit(db,information,scales:=SUA{
-    SU{"bit",   one, flags := isUnit+defScale},
-    SU{"B",     bytesize, flags := isUnit},
+    SU{"bit",   one,                      flags := isUnit+defScale},
+    SU{"B",     bytesize,                 flags := isUnit},
     SU{"kB",    kilo*bytesize},
-    SU{"KB",    K2*bytesize, flags := isUnit},
-    SU{"MB",    K2*K2*bytesize, flags := isUnit},
-    SU{"GB",    K2*K2*K2*bytesize, flags := isUnit}
+    SU{"KB",    K2*bytesize,              flags := isUnit},
+    SU{"MB",    K2*K2*bytesize,           flags := isUnit},
+    SU{"GB",    K2*K2*K2*bytesize,        flags := isUnit}
   });
 
   DB.AddUnit(db,datarate,flags:=independent,scales:=SUA{
-    SU{"baud",  one, flags := isUnit+defScale},
+    SU{"baud",  one,                      flags := isUnit+defScale},
     SU{"kbaud", kilo},
-    SU{"Kbaud", K2, flags := isUnit},
-    SU{"Mbaud", K2*K2, flags := isUnit},
-    SU{"Gbaud", K2*K2*K2, flags := isUnit}
+    SU{"Kbaud", K2,                       flags := isUnit},
+    SU{"Mbaud", K2*K2,                    flags := isUnit},
+    SU{"Gbaud", K2*K2*K2,                 flags := isUnit}
   });
 
   RETURN db;

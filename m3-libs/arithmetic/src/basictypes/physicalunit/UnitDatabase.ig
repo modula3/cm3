@@ -54,6 +54,7 @@ TYPE
     END;
   ScaledUnitInitArray = ARRAY OF ScaledUnitInit;
 
+(*scales must be given in increasing order!*)
 PROCEDURE AddUnit(VAR db:T;
                   READONLY unit:ARRAY OF U.ExpType;
                   flags:=UsualUnitFlagSet{};
