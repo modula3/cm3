@@ -3,3 +3,4 @@
 %%WORKDIR = XXDIR {OS_TYPE}
 
 override ("libm3", ROOT & "/m3-libs")
+override ("m3tk-misc", ROOT & "/m3-libs")
