@@ -31,11 +31,11 @@ PROCEDURE Factorial(n:CARDINAL):T;
 PROCEDURE LnFactorial(n:CARDINAL):T;
 (*returns ln(n!) as a real*)
 
-PROCEDURE Gamma(z:T):T;
-(*returns Gamma(z)*)
+PROCEDURE Gamma(x:T):T;
+(*returns Gamma(x)*)
 
-PROCEDURE LnGamma(z:T):T;
-(*returns ln(Gamma(z))*)
+PROCEDURE LnGamma(x:T):T;
+(*returns ln(Gamma(x))*)
 
 
 PROCEDURE Binomial(n,k:CARDINAL):T RAISES {Error};
@@ -67,8 +67,8 @@ PROCEDURE Erf(x:T):T RAISES {Error};
 PROCEDURE ErfC(x:T):T RAISES {Error};
 (*returns 1-Erf(x) *)
 
-PROCEDURE Beta(z,w:T):T;
-(*returns Gamma(z)*Gamma(w)/Gamma(z+w)*)
+PROCEDURE Beta(x,y:T):T;
+(*returns Gamma(x)*Gamma(y)/Gamma(x+y)*)
 
 PROCEDURE BetaI(a,b,x:T):T RAISES {Error};
 (*returns incomplete Beta Ix(a,b) *)
