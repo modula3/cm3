@@ -52,7 +52,6 @@ TYPE
     st_ctime  : time_t;
     st_spare3 : u_long;
     st_size   : off_t;
-    st_pad1   : long;
     st_blocks : quad_t;
     st_blksize: u_long;
     st_flags  : u_long;
@@ -69,5 +68,27 @@ TYPE
 <*EXTERNAL*> PROCEDURE lstat (path: char_star; buf: struct_stat_star): int;
 
 <*EXTERNAL*> PROCEDURE fstat (fd: int;  buf: struct_stat_star): int;
+
+(* chflags, fchflags *)
+CONST
+  (* Definitions of flags stored in file flags word. *)
+  (* Super-user and owner changeable flags. *)
+  UF_SETTABLE  = 16_0000ffff;      (* mask of owner changeable flags *)
+  UF_NODUMP    = 16_00000001;      (* do not dump file *)
+  UF_IMMUTABLE = 16_00000002;      (* file may not be changed *)
+  UF_APPEND    = 16_00000004;      (* writes to file may only append *)
+  UF_OPAQUE    = 16_00000008;      (* directory is opaque wrt. union *)
+
+  (* Super-user changeable flags. *)
+  SF_SETTABLE  = 16_ffff0000;      (* mask of superuser changeable flags *)
+  SF_ARCHIVED  = 16_00010000;      (* file is archived *)
+  SF_IMMUTABLE = 16_00020000;      (* file may not be changed *)
+  SF_APPEND    = 16_00040000;      (* writes to file may only append *)
+
+<*EXTERNAL*>
+PROCEDURE chflags(path: char_star; flags: u_long): int;
+
+<*EXTERNAL*>
+PROCEDURE fchflags(fd: int; flags: u_long): int;
 
 END Ustat.

@@ -75,7 +75,7 @@ PROCEDURE DisposeStack (VAR s: Stack) =
   VAR
     i       : INTEGER;
     base    := ADR (s.words[0]) - ADRSIZE (Header);
-    n_bytes := BYTESIZE (Header) + NUMBER (s.words^) * BYTESIZE (INTEGER));
+    n_bytes := BYTESIZE (Header) + NUMBER (s.words^) * BYTESIZE (INTEGER);
   BEGIN
     (* free the storage *)
     i := munmap (base, n_bytes);

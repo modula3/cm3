@@ -1,4 +1,5 @@
-/* Copyright 1996, Critical Mass, Inc.   All rights reserved. */
+/* Copyright 1996-2000, Critical Mass, Inc.   All rights reserved. */
+/* See file COPYRIGHT-CMASS for details. */
 
 /* The stubs that get from Modula-3 code into external DLLs
    make an indirect call through "m3_arg_check" to validate

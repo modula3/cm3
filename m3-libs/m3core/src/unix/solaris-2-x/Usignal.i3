@@ -21,7 +21,7 @@ CONST
   SIGILL     =  4;  (* illegal instruction (not reset when caught) *)
   SIGTRAP    =  5;  (* trace trap (not reset when caught) *)
   SIGIOT     =  6;  (* IOT instruction *)
-  SIGABRT    =  6;  (* used by abort, replace SIGIOT in the future *) 
+  SIGABRT    =  6;  (* used by abort, replace SIGIOT in the future *)
   SIGEMT     =  7;  (* EMT instruction *)
   SIGFPE     =  8;  (* floating point exception *)
   SIGKILL    =  9;  (* kill (cannot be caught or ignored) *)
@@ -82,8 +82,8 @@ TYPE
     si_trapno  : int;			 (* illegal trap number *)
   END;
   siginfo_t_fault_star = UNTRACED REF siginfo_t_fault;
-  (* valid SIGFPE codes for si_code field of siginfo_t_fault structure above *)
 
+  (* valid SIGFPE codes for si_code field of siginfo_t_fault structure above *)
 CONST
   FPE_INTDIV = 1;			 (* integer divide by zero *)
   FPE_INTOVF = 2;			 (* integer overflow *)
@@ -117,7 +117,7 @@ CONST
   (* these are only valid for SIGCLD *)
   SA_NOCLDWAIT  = 16_10000;   (* don't save zombie children *)
   SA_NOCLDSTOP  = 16_20000;   (* don't send job control SIGCLD's *)
- 
+
   (* this is only valid for SIGWAITING *)
   SA_WAITSIG    = 16_10000;   (* send SIGWAITING if all lwps block *)
 
@@ -138,19 +138,19 @@ PROCEDURE killpg (pgrp, sig: int): int;
 PROCEDURE sigpending (VAR set: sigset_t): int;
 
 (*** sigaction(2) - detailed signal management ***)
- 
+
 <*EXTERNAL*>
 PROCEDURE sigaction (sig: int; VAR act, oact: struct_sigaction): int;
 
 (*** sigprocmask(2) - change and/or examine calling process's signal mask ***)
- 
+
 <*EXTERNAL*>
 PROCEDURE sigprocmask (how: int; READONLY set: sigset_t;
                        oset: UNTRACED REF sigset_t := NIL): int;
 
 (*** sigsetops(3C) (sigemptyset,  sigfillset,  sigaddset,  sigdelset,
      sigismember) - manipulate sets of signals ***)
- 
+
 <*EXTERNAL*>
 PROCEDURE sigemptyset(VAR set: sigset_t): int;
 

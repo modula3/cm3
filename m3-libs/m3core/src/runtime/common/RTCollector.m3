@@ -2,7 +2,8 @@
 (* All rights reserved.                                      *)
 (* See the file COPYRIGHT for a full description.            *)
 (*                                                           *)
-(* portions Copyright 1997, Critical Mass, Inc.              *)
+(* Portions Copyright 1996-2000, Critical Mass, Inc.         *)
+(* See file COPYRIGHT-CMASS for details.                     *)
 (*                                                           *)
 (*| Last modified on Sat Nov 19 09:37:57 PST 1994 by kalsow  *)
 (*|      modified on Fri Aug  5 14:04:35 PDT 1994 by jdd     *)
@@ -13,7 +14,7 @@
 UNSAFE MODULE RTCollector EXPORTS RTCollector, RTCollectorSRC,
                                   RTHeapRep, RTWeakRef;
 
-IMPORT RT0, RTHeapEvent, RTHeapDep, RTHeapMap, RTIO, RTMachine;
+IMPORT RT0, RTHeapEvent, RTHeapDep, RTHeapMap, RTIO, RTMachine, RTVM;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
 IMPORT Word, Cstdlib, Thread, ThreadF, RuntimeError;
 IMPORT TextLiteral;
@@ -868,7 +869,7 @@ PROCEDURE CollectSomeInStateZero () =
        before the system call completed.  On those systems, we must ensure
        that the heap pages referenced by threads remain unprotected after
        the collection begins. *)
-    IF RTHeapDep.VM AND NOT RTMachine.AtomicWrappers THEN
+    IF RTVM.VMHeap() AND NOT RTVM.AtomicWrappers() THEN
       FinishThreadPages ();
     END;
 
@@ -2458,7 +2459,7 @@ PROCEDURE GrowHeap (pp: INTEGER): BOOLEAN =
     newP0       : Page;
     newP1       : Page;
   BEGIN
-    IF max_heap_size >= 0 AND total_heap > max_heap_size THEN
+    IF max_heap >= 0 AND total_heap > max_heap THEN
       RETURN FALSE;  (* heap is already too large *)
     END;
     IF allocatedPages = 0 THEN
@@ -2469,8 +2470,8 @@ PROCEDURE GrowHeap (pp: INTEGER): BOOLEAN =
     END;
     VAR bytes := (pp + 1) * BytesPerPage;
     BEGIN
-      IF max_heap_size >= 0 THEN
-        bytes := MIN (bytes, max_heap_size - total_heap);
+      IF max_heap >= 0 THEN
+        bytes := MIN (bytes, max_heap - total_heap);
         IF (bytes <= 0) THEN RETURN FALSE; END;
       END;
       newChunk := RTOS.GetMemory(bytes);
@@ -2479,7 +2480,7 @@ PROCEDURE GrowHeap (pp: INTEGER): BOOLEAN =
         RTIO.PutText ("Grow (");
         RTIO.PutHex  (bytes);
         RTIO.PutText (") => ");
-        RTIO.PutHex  (LOOPHOLE (newChunk, INTEGER));
+        RTIO.PutAddr (newChunk);
         RTIO.PutText ("   total: ");
         RTIO.PutInt  (total_heap DIV 1000000);
         RTIO.PutText (".");
@@ -2493,14 +2494,15 @@ PROCEDURE GrowHeap (pp: INTEGER): BOOLEAN =
         newChunk := fragment0;
         bytes := bytes + (fragment1 - fragment0);
       END;
-      VAR excess := (-LOOPHOLE(newChunk, INTEGER)) MOD BytesPerPage;
+      VAR excess := Word.Mod(-LOOPHOLE(newChunk, INTEGER), BytesPerPage);
       BEGIN
         INC(newChunk, excess);
         DEC(bytes, excess);
       END;
       VAR pages := bytes DIV BytesPerPage;
       BEGIN
-        firstNewPage := LOOPHOLE(newChunk, INTEGER) DIV BytesPerPage;
+        firstNewPage := Word.RightShift(LOOPHOLE(newChunk, INTEGER),
+                                        LogBytesPerPage);
         lastNewPage := firstNewPage + pages - 1;
         fragment0 :=
           LOOPHOLE((firstNewPage + pages) * BytesPerPage, ADDRESS);
