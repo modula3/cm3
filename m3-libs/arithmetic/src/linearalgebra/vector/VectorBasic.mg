@@ -103,11 +103,14 @@ END Equal;
 
 (*-----------------*)
 PROCEDURE Scale(
-                 x:T; factor:R.T)=
+                 x:T; y:R.T):T=
+VAR
+  z:=NEW(T,NUMBER(x^));
 BEGIN
   FOR i:=FIRST(x^) TO LAST(x^) DO
-    x[i]:=R.Mul(x[i],factor);
+    z[i]:=R.Mul(x[i],y);
   END;
+  RETURN z;
 END Scale;
 
 
