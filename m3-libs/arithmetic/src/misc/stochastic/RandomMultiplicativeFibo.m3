@@ -17,23 +17,23 @@ CONST
   amf1 = 98;
   bmf1 = 27;
 
-REVEAL T = RandomBasic.TWord BRANDED OBJECT
+REVEAL T = TPublic BRANDED OBJECT
     imf1 := amf1;
     jmf1 := bmf1;
     arrmf1 : ARRAY [0..amf1-1] OF Word.T; (* initialize to random odd words *)
   OVERRIDES
+    init:=Init;
     engine:=Engine;
   END;
 
-PROCEDURE New(initrng:RandomBasic.T):T=
+PROCEDURE Init(SELF:T;initrng:RandomBasic.T):T=
   VAR
-    SELF:=NEW(T);
-  BEGIN
+    BEGIN
     FOR i:=amf1-1 TO 0 BY -1 DO
       SELF.arrmf1[i] := Word.Or(initrng.generateWord(), 2_1);
     END;
     RETURN SELF;
-  END New;
+  END Init;
 
 (* Generates a new random word: *)
 PROCEDURE Engine(SELF:T):Word.T=

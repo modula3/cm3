@@ -12,10 +12,10 @@ IMPORT RandomBasic;
 
 (*==========================*)
 TYPE
-  T <: RandomBasic.TReal;  (*inspired by NR92 ran0*)
+  (*inspired by NR92 ran0*)
+  T <: TPublic;
 
-PROCEDURE New(seed:[1..LAST(INTEGER)]:=1;
-                 ):T;
+  TPublic = RandomBasic.TReal OBJECT METHODS init (seed:[1..LAST(INTEGER)]:=1): T; END;
 
 (*==========================*)
 END RandomBayesDurham.

@@ -12,9 +12,9 @@ IMPORT RandomBasic;
 
 (*==========================*)
 TYPE
-  T <: RandomBasic.TReal;
+  T <: TPublic;
 
-PROCEDURE New(initrng:RandomBasic.T):T;
+  TPublic = RandomBasic.TReal OBJECT METHODS init (initrng:RandomBasic.T): T; END;
 
 (*==========================*)
 END RandomSubtractiveFibo1.

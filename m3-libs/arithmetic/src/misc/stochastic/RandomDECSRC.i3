@@ -12,9 +12,9 @@ IMPORT RandomBasic;
 
 (*==========================*)
 TYPE
-  T <: RandomBasic.T;  (*wrapper for DEC SRC Random.Default*)
+  T <: TPublic;                  (*wrapper for DEC SRC Random.Default*)
 
-PROCEDURE New():T;
+  TPublic = RandomBasic.T OBJECT METHODS init (): T; END;
 
 (*==========================*)
 END RandomDECSRC.

@@ -30,17 +30,16 @@ disadvantage is it is too slow for applications which do
 a very small amount of computing per random number.
 **********************************************)
 
-TYPE
-  T <: RandomBasic.T;
-
-
 (*==========================*)
 (*** Initializes all random number generators here. Quite slow.
 If fixed=FALSE (the default) will incorporate the
    time into the seed.
 If TRUE will use a particular fixed seed.
 *************************************************************)
-PROCEDURE New(fixed : BOOLEAN := FALSE):T;
+TYPE
+  T <: TPublic;
+
+  TPublic = RandomBasic.T OBJECT METHODS init (fixed : BOOLEAN := FALSE): T; END;
 
 (*==========================*)
 END RandomCombinedSlow.

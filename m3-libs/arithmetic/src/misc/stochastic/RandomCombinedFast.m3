@@ -5,8 +5,7 @@ Abstract:
 Pseudo-random number generator by Warren D. Smith.
 *)
 
-IMPORT RandomBasic,
-       LongRealBasic AS R,
+IMPORT LongRealBasic AS R,
        LongRealTrans AS RT,
        RandomIteratedSquaring   AS IterSqr,
        RandomSubtractiveFibo1   AS SubFibo1,
@@ -20,11 +19,12 @@ CONST Module = "RandomCombinedFast.";
 (*==========================*)
 
 (*------------------*)
-REVEAL T = RandomBasic.T BRANDED OBJECT
+REVEAL T = TPublic BRANDED OBJECT
     subfibo1:SubFibo1.T;
     subfibo2:SubFibo2.T;
     mulfibo:MulFibo.T;
   OVERRIDES
+    init:=Init;
     generateWord:=GenerateWord;
     generateReal:=GenerateReal;
   END;
@@ -62,19 +62,19 @@ PROCEDURE GenerateReal(SELF:T):R.T=
 If fixed=FALSE (the default) will use the time as seed.
 If TRUE will use a particular fixed seed.
 *************************************************************)
-PROCEDURE New(fixed : BOOLEAN := FALSE):T=
+PROCEDURE Init(SELF:T;fixed : BOOLEAN := FALSE):T=
   VAR
-    is:=IterSqr.New(fixed);
-    SELF:=NEW(T,subfibo1:=SubFibo1.New(is),
-                subfibo2:=SubFibo2.New(is),
-                mulfibo :=MulFibo.New(is));
+    is:=NEW(IterSqr.T).init(fixed);
   BEGIN
-    (* rev 'em up by 6000 calls to Uni01() *)
-    FOR i:=0 TO 6000 DO
+    SELF.subfibo1:=NEW(SubFibo1.T).init(is);
+    SELF.subfibo2:=NEW(SubFibo2.T).init(is);
+    SELF.mulfibo :=NEW(MulFibo .T).init(is);
+    (* rev 'em up by 60 calls to Uni01() *)
+    FOR i:=0 TO 60 DO
       EVAL SELF.generateReal();
     END;
     RETURN SELF;
-  END New;
+  END Init;
 
 (*==========================*)
 BEGIN

@@ -19,26 +19,26 @@ CONST
   SCALEmg = (FLOAT(mgSIZE, R.T) / 4294967296.0D0);
 
 (*------------------*)
-REVEAL T = RandomBasic.TWord BRANDED OBJECT
+REVEAL T = TPublic BRANDED OBJECT
     MultCongMg : Word.T;  (* initialize to a random odd word *)
     ShiftRegMg : Word.T; (* initialize to a random word with 7ff in LS 11 bits *)
     arrmg : ARRAY [0..mgSIZE-1] OF Word.T; (* initialize to random Word.Ts *)
     ymg : Word.T := 0;
   OVERRIDES
+    init:=Init;
     engine:=Engine;
   END;
 
-PROCEDURE New(initrng:RandomBasic.T):T=
+PROCEDURE Init(SELF:T;initrng:RandomBasic.T):T=
   VAR
-    SELF:=NEW(T);
-  BEGIN
+    BEGIN
     FOR i:=mgSIZE-1 TO 0 BY -1 DO
       SELF.arrmg[i] := initrng.generateWord();
     END;
     SELF.MultCongMg := Word.Or(initrng.generateWord(), 2_1);
     SELF.ShiftRegMg := Word.Or(initrng.generateWord(), 16_7ff);
     RETURN SELF;
-  END New;
+  END Init;
 
 (*********************************************************
  McGill "Super-duper" generator by G. Marsaglia, K. Ananthanarayana

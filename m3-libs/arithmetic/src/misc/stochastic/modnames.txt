@@ -1,0 +1,11 @@
+RandomBayesDurham
+RandomCombinedFast
+RandomCombinedSlow
+RandomImprovedMcGill
+RandomIteratedSquaring
+RandomMultiplicativeFibo
+RandomParkMiller
+RandomQuaternaryFibo
+RandomSubtractiveFibo1
+RandomSubtractiveFibo2
+RandomWolframCA
