@@ -14,9 +14,10 @@ IMPORT
   BigIntegerComplexBasic     AS BC,
   BigIntegerComplexFmtLex    AS BCF,
   BigIntegerComplexGCD       AS BCG,
-  BigIntegerFractionPolynomialBasic  AS BFP,
-  BigIntegerFractionPolynomialFmtLex AS BFPF,
-  BigIntegerFractionPolynomialGCD    AS BFPG,
+  BigIntegerFractionBasic            AS BFr,
+  BigIntegerFractionPolynomialBasic  AS BFrP,
+  BigIntegerFractionPolynomialFmtLex AS BFrPF,
+  BigIntegerFractionPolynomialGCD    AS BFrPG,
   xWordEx AS Wx,
   Word AS W,
   Fmt AS F,
@@ -114,7 +115,8 @@ BEGIN
                    IC.IsZero(IC.Mod(x,gcd0)) AND
                    IC.IsZero(IC.Mod(y,gcd0)) AND
                    (*gcd0 and gcd1 must be equal upto a unit*)
-                   IC.IsZero(IC.Mod(gcd0,gcd1)) *>
+                   IC.IsZero(IC.Mod(gcd0,gcd1)) AND
+                   IC.IsZero(IC.Mod(gcd1,gcd0)) *>
         END;
       END;
     END;
@@ -159,33 +161,48 @@ BEGIN
   RETURN result;
 END TestBigComplexGCD;
 (*----------------------*)
+PROCEDURE IntToFrac(n:INTEGER):BFr.T=
+BEGIN
+  RETURN BFr.T{n:=B.FromInteger(n),d:=B.One};
+END IntToFrac;
 PROCEDURE TestPolynomialGCD():BOOLEAN=
 CONST
   ftn = Module & "TestPolynomialGCD";
 VAR
   fac0, fac1,
   poly0, poly1,
-  gcd : BP.T;
+  gcd : BFrP.T;
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
   (*This is a typical example where the naive Euclidean algorithm fails
     due to the fact that none of the operands can be reduced by the other one.*)
-  fac0   := BP.New(2);
-  fac0^  := BP.TBody{B.FromInteger(1),B.FromInteger(2),B.FromInteger(3)};
-  fac1   := BP.New(3);
-  fac1^  := BP.TBody{B.FromInteger(1),B.FromInteger(2),B.FromInteger(3),B.FromInteger(1)};
-  poly0  := BP.Mul(fac1,BP.Mul(fac0,fac0));
-  poly0  := BP.Mul(fac0,fac0);
+  fac0   := BFrP.New(2);
+  fac0^  := BFrP.TBody{IntToFrac(1),IntToFrac(2),IntToFrac(3)};
+  fac1   := BFrP.New(3);
+  fac1^  := BFrP.TBody{IntToFrac(1),IntToFrac(2),IntToFrac(3),IntToFrac(1)};
+  poly0  := BFrP.Mul(fac1,BFrP.Mul(fac0,fac0));
+  (*poly0  := BFrP.Mul(fac0,fac0);*)
+  poly1  := BFrP.Derive(poly0);
+
   Msg(F.FN("%s,%s\n",
-           ARRAY OF TEXT{BPF.Fmt(fac0),BPF.Fmt(fac1)}));
-  poly1  := BP.Derive(poly0);
+           ARRAY OF TEXT{BFrPF.Fmt(fac0),BFrPF.Fmt(fac1)}));
   Msg(F.FN("gcd(%s,%s)\n",
-           ARRAY OF TEXT{BPF.Fmt(poly0),BPF.Fmt(poly1)}));
-  gcd    := BPG.GCD(poly0,poly1);
+           ARRAY OF TEXT{BFrPF.Fmt(poly0),BFrPF.Fmt(poly1)}));
+
+  VAR q,r : BFrPG.T;
+  BEGIN
+    q := BFrP.DivMod(poly0,poly1,r);
+    Msg(F.FN("q=%s,r=%s\n", ARRAY OF TEXT{BFrPF.Fmt(q), BFrPF.Fmt(r)}));
+    q := BFrP.DivMod(poly1,poly0,r);
+    Msg(F.FN("q=%s,r=%s\n", ARRAY OF TEXT{BFrPF.Fmt(q), BFrPF.Fmt(r)}));
+  END;
+
+  gcd    := BFrPG.GCD(poly0,poly1);
   Msg(F.FN("gcd(%s,%s) = %s\n",
-           ARRAY OF TEXT{BPF.Fmt(poly0),BPF.Fmt(poly1),BPF.Fmt(gcd)}));
-  <*ASSERT BP.Equal(gcd,fac0)*>
+           ARRAY OF TEXT{BFrPF.Fmt(poly0),BFrPF.Fmt(poly1),BFrPF.Fmt(gcd)}));
+  (*fac0 and gcd must be equal upto a unit*)
+  <*ASSERT BFrP.IsZero(BFrP.Mod(gcd,fac0)) AND BFrP.IsZero(BFrP.Mod(fac0,gcd))*>
   RETURN result;
 END TestPolynomialGCD;
 (*-------------------------*)
