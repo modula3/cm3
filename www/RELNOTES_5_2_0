@@ -4,13 +4,13 @@ Release Notes for Critical Mass Modula-3 5.2.0
 There are basically two main changes in 5.2.0 compared with the
 previous releases:
 
- (1) integration of a new gcc backend based based on gcc 3.2.1
+ (1) integration of a new gcc back-end based on gcc 3.2.1
 
  (2) support for the PPC_DARWIN platform (Darwin on Power PC
      architecture)
 
 (2) depends on (1) as cross-compilation to PPC_DARWIN proved
-impossible with the older code generation backends.
+impossible with the older code generation back-ends.
 
 There have also been some minor extensions to the the builder (cm3)
 and several minor corrections have been made.
@@ -29,7 +29,7 @@ is no longer possible to use the stack walkers implemented on several
 M3 platforms for fast exception support, as the new gcc disallows the
 use of labels outside of functions. There is no easy fix or
 work-around for this; the best solution seems to be to make the m3
-frontend use the built-in exception support of gcc. However, there is
+front-end use the built-in exception support of gcc. However, there is
 currently no code for this, nor has anybody committed to this task, so
 it may take some months (or even longer) for this to realize. 
 
@@ -39,7 +39,7 @@ To sum up, this means that
      platforms featuring stack walkers (e.g. ALPHA_OSF, SOLgnu,
      SOLsun)
 
- (2) 5.2.0 will be no completele release covering all platforms and is
+ (2) 5.2.0 will be no complete release covering all platforms and is
      chiefly done to get the PPC_DARWIN support out.
 
 
@@ -49,7 +49,7 @@ New Target Platform PPC_DARWIN (Darwin, MacOS X on PowerPC Hardware)
 CM3 5.2.0 is the first Modula-3 release in history that will run on
 some of Apple Computer's operating systems, i.e. those that are based
 on Darwin. Cross-compilation was done from a FreeBSD4 system using the
-new gcc backend; the target host was a Darwin 6.3 machine identifying
+new gcc back-end; the target host was a Darwin 6.3 machine identifying
 itself as
 
   Darwin lamancha.opendarwin.org 6.3 Darwin Kernel Version 6.3: \
@@ -82,7 +82,7 @@ PPC_DARWIN support:
      exception handling (impossible with new gcc))
 
    Several of the basic Unix interfaces in m3core have been carefully
-   checked; others haven't been reviewd at all, so that there will be
+   checked; others haven't been reviewed at all, so that there will be
    room for improvements ;-)
 
  o The system configuration (cm3.cfg) supports static and dynamic
@@ -108,11 +108,11 @@ Software Solutions GmbH (bugs@elego.de). The web pages at
 www.elegosoft.com offer a nice interface for this.
 
 
-Acknowledgements
+Acknowledgments
 ----------------
 
  John D. Polstra has done the basic work of integrating a new gcc
-      backend. This release wouldn't be possible without his work.
+      back-end. This release wouldn't be possible without his work.
 
  Jordan K. Hubbard has provided an account on opendarwin.org with lots
       of disk and computing resources where all the target work was
