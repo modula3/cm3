@@ -24,39 +24,39 @@ Abstract:
 
 (*-----------------*)
 PROCEDURE Norm1( 
-                v:T):R.T=
+                x:T):R.T=
 VAR
   sum:R.T;
 BEGIN
   sum:=R.Zero;
-  FOR i:=FIRST(v^) TO LAST(v^) DO
-    sum:=R.Add(sum,Ct.Abs(v[i]));
+  FOR i:=FIRST(x^) TO LAST(x^) DO
+    sum:=R.Add(sum,Ct.Abs(x[i]));
   END;
   RETURN sum;
 END Norm1;
 
 (*-----------------*)
 PROCEDURE Norm2( 
-                v:T):R.T=
+                x:T):R.T=
 VAR
   sum:R.T;
 BEGIN
   sum:=R.Zero;
-  FOR i:=FIRST(v^) TO LAST(v^) DO
-    sum:=R.Add(sum,Ct.AbsSqr(v[i]));
+  FOR i:=FIRST(x^) TO LAST(x^) DO
+    sum:=R.Add(sum,Ct.AbsSqr(x[i]));
   END;
   RETURN Rt.SqRt(sum);
 END Norm2;
 
 (*-----------------*)
 PROCEDURE NormInf( 
-                v:T):R.T=
+                x:T):R.T=
 VAR
   max,abs:R.T;
 BEGIN
   max:=R.Zero;
-  FOR i:=FIRST(v^) TO LAST(v^) DO
-    abs:=Ct.Abs(v[i]);
+  FOR i:=FIRST(x^) TO LAST(x^) DO
+    abs:=Ct.Abs(x[i]);
     IF R.Compare(max,abs)<0 THEN
       max:=abs;
     END;

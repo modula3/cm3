@@ -12,20 +12,20 @@ TYPE
   T = REF ARRAY OF R.T;
 
 PROCEDURE New(n:CARDINAL):T; (*make new vector with n components T*)
-PROCEDURE Copy(v:T):T;
+PROCEDURE Copy(x:T):T;
 
 (*
-PROCEDURE Zero(v:T);                   (*set to zero*)
+PROCEDURE Zero(x:T);                   (*set to zero*)
     (*NOTE: you should make unit vectors as needed*)
 *)
 
-PROCEDURE Add(v1,v2:T):T RAISES {Error};   (*v1+v2*)
-PROCEDURE Sub(v1,v2:T):T RAISES {Error};   (*v1-v2*)
-PROCEDURE Equal(v1,v2:T):BOOLEAN RAISES {Error};  (*return v1=v2*)
+PROCEDURE Add(x,y:T):T RAISES {Error};   (*x+y*)
+PROCEDURE Sub(x,y:T):T RAISES {Error};   (*x-y*)
+PROCEDURE Equal(x,y:T):BOOLEAN RAISES {Error};  (*return x=y*)
 
-PROCEDURE Scale(v:T; factor:R.T);            (*v1:=v1*factor*)
-PROCEDURE Inner(v1,v2:T):R.T RAISES {Error};   (*<v1,v2>*)
+PROCEDURE Scale(x:T; factor:R.T);            (*x:=x*factor*)
+PROCEDURE Inner(x,y:T):R.T RAISES {Error};   (*<x,y>*)
 <*UNUSED*>
-PROCEDURE Cross(v1,v2:T):T RAISES {Error}; (*v1 x v2*)       
+PROCEDURE Cross(x,y:T):T RAISES {Error}; (*x x y*)       
 (*==========================*)
 END VectorBasic.
