@@ -36,6 +36,7 @@ BEGIN
   Msg("v="   & PF.Fmt(v) & "\n");
   Msg("u+v=" & PF.Fmt(P.Add(u,v)) & "\n");
   Msg("v+u=" & PF.Fmt(P.Add(v,u)) & "\n");
+  <*ASSERT P.Equal(P.Add(u,v),P.Add(v,u))*>
   RETURN result;
 END TestAdd;
 (*-----------------------*)
@@ -54,6 +55,8 @@ BEGIN
   Msg("v="   & PF.Fmt(v) & "\n");
   Msg("u-v=" & PF.Fmt(P.Sub(u,v)) & "\n");
   Msg("v-u=" & PF.Fmt(P.Sub(v,u)) & "\n");
+  <*ASSERT P.Equal(P.Add(u,P.Neg(v)),P.Sub(u,v))*>
+  <*ASSERT P.Equal(P.Add(v,P.Sub(u,v)),u)*>
   RETURN result;
 END TestSub;
 (*-----------------------*)
@@ -72,6 +75,7 @@ BEGIN
   Msg("v="   & PF.Fmt(v) & "\n");
   Msg("u*v=" & PF.Fmt(P.Mul(u,v)) & "\n");
   Msg("v*u=" & PF.Fmt(P.Mul(v,u)) & "\n");
+  <*ASSERT P.Equal(P.Mul(u,v),P.Mul(v,u))*>
   RETURN result;
 END TestMul;
 (*-----------------------*)
@@ -91,8 +95,12 @@ BEGIN
   Msg("v="   & PF.Fmt(v) & "\n");
   Msg("u/v="); q:=P.DivMod(u,v,r);
       Msg(PF.Fmt(q) & " rem=" & PF.Fmt(r) & "\n");
+  <*ASSERT NUMBER(r^)<NUMBER(v^)*>
+  <*ASSERT P.Equal(P.Add(P.Mul(v,q),r),u)*>
   Msg("v/u="); q:=P.DivMod(v,u,r);
       Msg(PF.Fmt(q) & " rem=" & PF.Fmt(r) & "\n");
+  <*ASSERT NUMBER(r^)<NUMBER(u^)*>
+  <*ASSERT P.Equal(P.Add(P.Mul(u,q),r),v)*>
   RETURN result;
 END TestDiv;
 (*-----------------------*)
