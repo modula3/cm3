@@ -2,11 +2,12 @@
 
 MODULE Main;
 
-IMPORT Fmt, M3Timers, Pathname, Process, Quake, Time, Wr;
+IMPORT M3Timers, Pathname, Process, Quake;
 IMPORT RTCollector, RTCollectorSRC, RTParams, RTutils, Thread;
 
 IMPORT Builder, Dirs, M3Build, M3Options, Makefile, Msg, Utils, WebFile;
 IMPORT MxConfig AS M3Config(*, CMKey, CMCurrent *);
+(* IMPORT Fmt, Time, Wr; only needed for key and expiration check *)
 
 VAR
   config    : TEXT          := NIL;
