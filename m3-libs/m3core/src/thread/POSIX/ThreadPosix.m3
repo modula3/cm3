@@ -1064,7 +1064,6 @@ PROCEDURE InitTopContext (VAR c: Context;  stackbase: ADDRESS) =
 
   END InitTopContext;
 
-
 PROCEDURE DetermineContext (oldSP: ADDRESS) =
   (* This routine looks at the stack frame for this call and takes
      it as a model for the frame to put in the stacks of forked
@@ -1085,6 +1084,11 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
       
       RTThread.FlushStackCache ();
 
+      IF debug THEN
+        OutAddr("modelSP:    ", modelSP);
+        OutAddr("oldSP:      ", oldSP);
+        OutInt("frame size: ", ABS (modelSP - oldSP));
+      END;
       modelFrame := NEW (UNTRACED REF ARRAY OF Word.T,
                          ABS (modelSP - oldSP) DIV ADRSIZE (Word.T)
                          + 1 + RTThread.FramePadBottom + RTThread.FramePadTop);
@@ -1475,5 +1479,24 @@ PROCEDURE QQ(): ADDRESS =
     RETURN ADR (xx);
   END QQ;
 
+PROCEDURE OutAddr(s: TEXT; a: ADDRESS) =
+  BEGIN
+    IF NOT debug THEN RETURN END;
+    RTIO.PutText(s);
+    RTIO.PutAddr(a);
+    RTIO.PutText("\r\n");
+    RTIO.Flush();
+  END OutAddr;
+
+PROCEDURE OutInt(s: TEXT; a: INTEGER) =
+  BEGIN 
+    IF NOT debug THEN RETURN END;
+    RTIO.PutText(s);
+    RTIO.PutInt(a);
+    RTIO.PutText("\r\n");
+    RTIO.Flush();
+  END OutInt;
+
+VAR debug := FALSE;
 BEGIN
 END ThreadPosix.
