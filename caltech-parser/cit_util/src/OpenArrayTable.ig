@@ -1,4 +1,4 @@
-(* $Id: OpenArrayTable.ig,v 1.1.1.1 2001-09-19 11:40:10 wagner Exp $ *)
+(* $Id: OpenArrayTable.ig,v 1.2 2001-09-19 14:07:43 wagner Exp $ *)
 
 (* Copyright 1992 Digital Equipment Corporation.             *)
 (* Distributed only by permission.                           *)

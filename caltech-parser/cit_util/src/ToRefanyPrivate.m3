@@ -1,4 +1,4 @@
-(* $Id: ToRefanyPrivate.m3,v 1.1.1.1 2001-09-19 11:40:10 wagner Exp $ *)
+(* $Id: ToRefanyPrivate.m3,v 1.2 2001-09-19 14:07:43 wagner Exp $ *)
 
 MODULE ToRefanyPrivate EXPORTS ToRefany;
 <*NOWARN*>IMPORT IntRefToRefany,BoolRefToRefany,CharRefToRefany,RealRefToRefany,LongrealRefToRefany;

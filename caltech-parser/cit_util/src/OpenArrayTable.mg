@@ -1,4 +1,4 @@
-(* $Id: OpenArrayTable.mg,v 1.1.1.1 2001-09-19 11:40:10 wagner Exp $ *)
+(* $Id: OpenArrayTable.mg,v 1.2 2001-09-19 14:07:43 wagner Exp $ *)
 
 (* Copyright (C) 1992, Digital Equipment Corporation                     *)
 (* All rights reserved.                                                  *)
