@@ -3,10 +3,14 @@ INTERFACE LongRealWaveletPlot;
 IMPORT LongRealSignal AS S;
 IMPORT LongRealBasic AS R;
 
-PROCEDURE PlotWavelets (hdual, gdual: S.T; levels: CARDINAL);
+PROCEDURE PlotOrthogonal (h: S.T; numlevels: CARDINAL);
 
-PROCEDURE PlotWaveletsYLim (hdual, gdual: S.T;
-                            levels      : CARDINAL;
-                            ymin, ymax  : R.T       );
+PROCEDURE PlotBiorthogonal (hdual, gdual: S.T; numlevels: CARDINAL);
+
+PROCEDURE PlotBiorthogonalYLim (hdual, gdual: S.T;
+                                numlevels   : CARDINAL;
+                                ymin, ymax  : R.T;      );
+
+PROCEDURE PlotAny (hprimal, gprimal, hdual, gdual: S.T; numlevels: CARDINAL);
 
 END LongRealWaveletPlot.

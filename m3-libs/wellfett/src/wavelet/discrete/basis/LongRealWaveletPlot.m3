@@ -16,30 +16,69 @@ FROM NADefinitions IMPORT Error;
 TYPE
   Basis = {primal, dual};
   Filter = {lowpass, highpass};
+  FilterBank = ARRAY Basis, Filter OF S.T;
   BasisFunctions = ARRAY Basis, Filter OF S.T;
 
-PROCEDURE ComputeBasisFunctions (hdual, gdual: S.T; levels: CARDINAL):
+(*this function should be moved into a general biorthogonal wavelet
+   module*)
+PROCEDURE ComputeDualFilterBank (primal: ARRAY Filter OF S.T; ):
+  ARRAY Filter OF S.T =
+  BEGIN
+    RETURN ARRAY Filter OF
+             S.T{primal[Filter.highpass].alternate(),
+                 primal[Filter.lowpass].alternate()};
+  END ComputeDualFilterBank;
+
+PROCEDURE ComputeBasisFunctions (bank     : ARRAY Basis, Filter OF S.T;
+                                 numlevels: CARDINAL                    ):
   BasisFunctions =
   VAR
-    hprimal  := gdual.alternate();
-    gprimal  := hdual.alternate();
-    hdual2   := hdual.scale(R.Two);
-    hprimal2 := hprimal.scale(R.Two);
-
+    refn := ARRAY Basis OF
+              S.T{bank[Basis.primal, Filter.lowpass].scale(R.Two),
+                  bank[Basis.dual, Filter.lowpass].scale(R.Two)};
+    basis: BasisFunctions;
   BEGIN
-    RETURN BasisFunctions{ARRAY Filter OF
-                            S.T{Refn.Refine(hprimal, hprimal2, levels),
-                                Refn.Refine(gprimal, hprimal2, levels)},
-                          ARRAY Filter OF
-                            S.T{Refn.Refine(hdual, hdual2, levels),
-                                Refn.Refine(gdual, hdual2, levels)}};
+    FOR b := FIRST(basis) TO LAST(basis) DO
+      FOR f := FIRST(basis[b]) TO LAST(basis[b]) DO
+        basis[b, f] := Refn.Refine(bank[b, f], refn[b], numlevels);
+      END;
+    END;
+    RETURN basis;
   END ComputeBasisFunctions;
 
-PROCEDURE PlotWavelets (hdual, gdual: S.T; levels: CARDINAL) =
-  VAR
-    grid  := 1.0D0 / RIntPow.Power(R.Two, levels);
-    basis := ComputeBasisFunctions(hdual, gdual, levels);
+PROCEDURE PlotOrthogonal (h: S.T; numlevels: CARDINAL) =
+  BEGIN
+    PlotBiorthogonal(h, h.adjoint().translate(1), numlevels);
+  END PlotOrthogonal;
 
+PROCEDURE PlotBiorthogonal (hdual, gdual: S.T; numlevels: CARDINAL) =
+  VAR dual := ARRAY Filter OF S.T{hdual, gdual};
+  BEGIN
+    PlotBank(FilterBank{ComputeDualFilterBank(dual), dual}, numlevels);
+  END PlotBiorthogonal;
+
+PROCEDURE PlotBiorthogonalYLim (hdual, gdual: S.T;
+                                numlevels   : CARDINAL;
+                                ymin, ymax  : R.T       ) =
+  VAR
+    dual := ARRAY Filter OF S.T{hdual, gdual};
+    grid := R.One / RIntPow.Power(R.Two, numlevels);
+    basis := ComputeBasisFunctions(
+               FilterBank{ComputeDualFilterBank(dual), dual}, numlevels);
+  BEGIN
+    DoPlot(basis, ymin, ymax, grid);
+  END PlotBiorthogonalYLim;
+
+PROCEDURE PlotAny (hprimal, gprimal, hdual, gdual: S.T; numlevels: CARDINAL) =
+  BEGIN
+    PlotBank(FilterBank{ARRAY Filter OF S.T{hprimal, gprimal},
+                        ARRAY Filter OF S.T{hdual, gdual}}, numlevels);
+  END PlotAny;
+
+PROCEDURE PlotBank (bank: FilterBank; numlevels: CARDINAL) =
+  VAR
+    grid  := R.One / RIntPow.Power(R.Two, numlevels);
+    basis := ComputeBasisFunctions(bank, numlevels);
     ymin := MIN(
               MIN(VR.Min(basis[Basis.primal, Filter.lowpass].getData()^),
                   VR.Min(basis[Basis.primal, Filter.highpass].getData()^)),
@@ -50,20 +89,9 @@ PROCEDURE PlotWavelets (hdual, gdual: S.T; levels: CARDINAL) =
                   VR.Max(basis[Basis.primal, Filter.highpass].getData()^)),
               MAX(VR.Max(basis[Basis.dual, Filter.lowpass].getData()^),
                   VR.Max(basis[Basis.dual, Filter.highpass].getData()^)));
-
   BEGIN
     DoPlot(basis, ymin, ymax, grid);
-  END PlotWavelets;
-
-PROCEDURE PlotWaveletsYLim (hdual, gdual: S.T;
-                            levels      : CARDINAL;
-                            ymin, ymax  : R.T       ) =
-  VAR
-    grid  := 1.0D0 / RIntPow.Power(R.Two, levels);
-    basis := ComputeBasisFunctions(hdual, gdual, levels);
-  BEGIN
-    DoPlot(basis, ymin, ymax, grid);
-  END PlotWaveletsYLim;
+  END PlotBank;
 
 TYPE Interval = RECORD left, right: R.T END;
 
