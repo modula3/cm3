@@ -2,9 +2,8 @@
 %  Quake functions to instantiate combinatoric computations for generic integer types.
 %
 
-readonly proc Combinatoric (nm, field, rimpl) is
+readonly proc Combinatoric (nm, rfield) is
   local basic  = nm & "Combinatoric"
-  local rfield = field & rimpl
   build_generic_intf (basic, "Combinatoric", [rfield], VISIBLE)
   build_generic_impl (basic, "Combinatoric", [rfield])
 end

@@ -434,7 +434,7 @@ END PowN;
 
 PROCEDURE ToPowerSumSeq(x:T;m:CARDINAL):REF PowerSumSeq=
 VAR
-  y:=NEW(T,m);
+  y:=NEW(REF PowerSumSeq,m);
   sum:R.T;
   div:R.T;
 BEGIN

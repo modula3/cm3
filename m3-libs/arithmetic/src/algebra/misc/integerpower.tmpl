@@ -2,9 +2,8 @@
 %  Quake functions to instantiate generic power with integer exponent.
 %
 
-readonly proc IntegerPower (nm, field, rimpl) is
+readonly proc IntegerPower (nm, rfield) is
   local basic  = nm & "IntegerPower"
-  local rfield = field & rimpl
   build_generic_intf (basic, "IntegerPower", [rfield], VISIBLE)
   build_generic_impl (basic, "IntegerPower", [rfield])
 end

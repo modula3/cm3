@@ -1,52 +1,26 @@
-GENERIC INTERFACE VectorFast(R, VB);
-(**Copyright (c) 1996, m3na project
-
-Abstract: Vector math
-
-2/17/96  Harry George    Convert from Objects to ADT's
-**)
+GENERIC INTERFACE VectorFast(R, V);
+(*Copyright (c) 1996, m3na project *)
 FROM NADefinitions IMPORT Error;
 (*==========================*)
 
-CONST Brand = VB.Brand;
+TYPE T = V.TBody;
 
-TYPE
-  (*text form: "V6{a0,a1,a2,a3,a4,a5}"*)
-  TBody = ARRAY OF R.T;
-  T = REF TBody;
+PROCEDURE IsZero (READONLY x: T): BOOLEAN;
+PROCEDURE Equal (READONLY x, y: T): BOOLEAN RAISES {Error};
 
-CONST
-  New             = VB.New;
-  FromArray       = VB.FromArray;
-  FromVectorArray = VB.FromVectorArray;
-  FromScalar      = VB.FromScalar;
-  Copy            = VB.Copy;
+PROCEDURE Add (READONLY x, y: T): V.T RAISES {Error};
+PROCEDURE Sub (READONLY x, y: T): V.T RAISES {Error};
+PROCEDURE Neg (READONLY x: T): V.T;
 
-(*
-PROCEDURE Zero(x:T);                   (*set to zero*)
-    (*NOTE: you should make unit vectors as needed*)
-*)
+PROCEDURE Scale (READONLY x: T; y: R.T): V.T;
+PROCEDURE Inner (READONLY x, y: T): R.T RAISES {Error};
 
-PROCEDURE IsZero (x: T): BOOLEAN;
-PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Error}; (*return x=y*)
+PROCEDURE Sum (READONLY x: T): R.T;
+PROCEDURE Max (READONLY x: T): R.T;
+PROCEDURE Min (READONLY x: T): R.T;
 
-PROCEDURE Add (x, y: T): T RAISES {Error}; (*x+y*)
-PROCEDURE Sub (x, y: T): T RAISES {Error}; (*x-y*)
-PROCEDURE Neg (x: T): T;         (*return -x *)
-
-PROCEDURE Scale (x: T; y: R.T): T; (*x:=x*factor*)
-PROCEDURE Inner (x, y: T): R.T RAISES {Error}; (*<x,y>*)
-(*
-PROCEDURE Cross(x,y:T):T RAISES {Error}; (*x x y*)
-*)
-
-PROCEDURE Sum (READONLY x: TBody): R.T;
-PROCEDURE Max (READONLY x: TBody): R.T;
-PROCEDURE Min (READONLY x: TBody): R.T;
-
-PROCEDURE ArithSeq (num: CARDINAL; from := R.Zero; by := R.One): T;
-PROCEDURE GeomSeq (num: CARDINAL; from := R.One; by := R.Two): T;
-CONST RecursiveSeq = VB.RecursiveSeq;
+PROCEDURE ArithSeq (num: CARDINAL; from := R.Zero; by := R.One): V.T;
+PROCEDURE GeomSeq (num: CARDINAL; from := R.One; by := R.Two): V.T;
 
 (*==========================*)
 END VectorFast.

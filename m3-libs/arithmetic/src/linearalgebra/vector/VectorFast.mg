@@ -1,100 +1,83 @@
-GENERIC MODULE VectorFast(R);
-(**
-Abstract:
-
-6/6/87    hgeorge
-          Initial version.
-
-2/11/89   hgeorge
-          To work with generic matrices.
-
-11/20/94  Harry George
-          Converted to Modula3 dynamic arrays.
-
-12/18/95  Harry George
-          ...and back to fully instantiated for REAL32.
-
-1/27/96   Harry George
-          Converted to OO format, and R.T
-
-2/17/96   Harry George   Converted from OO to ADT format
-**)
+GENERIC MODULE VectorFast(R, V);
+(*Copyright (c) 1996, m3na project *)
 FROM NADefinitions IMPORT Error, Err;
+
+(*VR is needed to reveal the structure of V.T*)
 
 <*UNUSED*>
 CONST Module = "VectorFast.";
 
 (*-----------------*)
 <*INLINE*>
-PROCEDURE AssertEqualSize (x, y: T) RAISES {Error} =
+PROCEDURE AssertEqualSize (READONLY x, y: T) RAISES {Error} =
   BEGIN
-    IF NUMBER(x^) # NUMBER(y^) THEN RAISE Error(Err.bad_size); END;
+    IF NUMBER(x) # NUMBER(y) THEN RAISE Error(Err.bad_size); END;
   END AssertEqualSize;
 
 (*---------------------*)
-PROCEDURE IsZero (x: T): BOOLEAN =
+PROCEDURE IsZero (READONLY x: T): BOOLEAN =
   BEGIN
-    FOR i := FIRST(x^) TO LAST(x^) DO
+    FOR i := FIRST(x) TO LAST(x) DO
       IF x[i] # R.Zero THEN RETURN FALSE; END
     END;
     RETURN TRUE;
   END IsZero;
 
 (*---------------------*)
-PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Error} =
+PROCEDURE Equal (READONLY x, y: T): BOOLEAN RAISES {Error} =
   BEGIN
     AssertEqualSize(x, y);
-    FOR i := FIRST(x^) TO LAST(x^) DO
+    FOR i := FIRST(x) TO LAST(x) DO
       IF x[i] # y[i] THEN RETURN FALSE; END
     END;
     RETURN TRUE;
   END Equal;
 
 (*-----------------*)
-PROCEDURE Add (x, y: T): T RAISES {Error} =
-  VAR z: T;
+PROCEDURE Add (READONLY x, y: T): V.T RAISES {Error} =
+  VAR
+    z := NEW(V.T, NUMBER(x));
   BEGIN
     AssertEqualSize(x, y);
-    z := NEW(T, NUMBER(x^));
-    FOR i := FIRST(x^) TO LAST(x^) DO z[i] := x[i] + y[i]; END;
+    FOR i := FIRST(x) TO LAST(x) DO z[i] := x[i] + y[i]; END;
     RETURN z;
   END Add;
 
 (*-----------------*)
-PROCEDURE Sub (x, y: T): T RAISES {Error} =
-  VAR z: T;
+PROCEDURE Sub (READONLY x, y: T): V.T RAISES {Error} =
+  VAR 
+    z := NEW(V.T, NUMBER(x));
   BEGIN
     AssertEqualSize(x, y);
-    z := NEW(T, NUMBER(x^));
-    FOR i := FIRST(x^) TO LAST(x^) DO z[i] := x[i] - y[i]; END;
+    FOR i := FIRST(x) TO LAST(x) DO z[i] := x[i] - y[i]; END;
     RETURN z;
   END Sub;
 
 (*---------------------*)
-PROCEDURE Neg (x: T): T =
-  VAR y := NEW(T, NUMBER(x^));
+PROCEDURE Neg (READONLY x: T): V.T =
+  VAR z := NEW(V.T, NUMBER(x));
   BEGIN
-    FOR i := FIRST(x^) TO LAST(x^) DO y[i] := -x[i]; END;
-    RETURN y;
+    FOR i := FIRST(x) TO LAST(x) DO z[i] := -x[i]; END;
+    RETURN z;
   END Neg;
 
 
 (*-----------------*)
-PROCEDURE Scale (x: T; y: R.T): T =
-  VAR z := NEW(T, NUMBER(x^));
+PROCEDURE Scale (READONLY x: T; y: R.T): V.T =
+  VAR z := NEW(V.T, NUMBER(x));
   BEGIN
-    FOR i := FIRST(x^) TO LAST(x^) DO z[i] := x[i] * y; END;
+    FOR i := FIRST(x) TO LAST(x) DO z[i] := x[i] * y; END;
     RETURN z;
   END Scale;
 
 
 (*-----------------*)
-PROCEDURE Inner (x, y: T): R.T RAISES {Error} =
-  VAR sum: R.T;
+PROCEDURE Inner (READONLY x, y: T): R.T RAISES {Error} =
+  VAR 
+    sum := R.Zero;
   BEGIN
     AssertEqualSize(x, y);
-    sum := R.Zero;
-    FOR i := FIRST(x^) TO LAST(x^) DO sum := sum + x[i] * y[i]; END;
+    FOR i := FIRST(x) TO LAST(x) DO sum := sum + x[i] * y[i]; END;
     RETURN sum;
   END Inner;
 
@@ -107,21 +90,21 @@ BEGIN
 END Cross;
 *)
 
-PROCEDURE Sum (READONLY x: TBody): R.T =
+PROCEDURE Sum (READONLY x: T): R.T =
   VAR sum := R.Zero;
   BEGIN
     FOR i := FIRST(x) TO LAST(x) DO sum := sum + x[i]; END;
     RETURN sum;
   END Sum;
 
-PROCEDURE Max (READONLY x: TBody): R.T =
+PROCEDURE Max (READONLY x: T): R.T =
   VAR max := R.NegInf;
   BEGIN
     FOR i := FIRST(x) TO LAST(x) DO max := MAX(max, x[i]); END;
     RETURN max;
   END Max;
 
-PROCEDURE Min (READONLY x: TBody): R.T =
+PROCEDURE Min (READONLY x: T): R.T =
   VAR min := R.PosInf;
   BEGIN
     FOR i := FIRST(x) TO LAST(x) DO min := MIN(min, x[i]); END;
@@ -130,27 +113,26 @@ PROCEDURE Min (READONLY x: TBody): R.T =
 
 
 (*-----------------*)
-PROCEDURE ArithSeq (num: CARDINAL; from: R.T; by: R.T): T =
-  VAR x := NEW(T, num);
+PROCEDURE ArithSeq (num: CARDINAL; from: R.T; by: R.T): V.T =
+  VAR x := NEW(V.T, num);
   BEGIN
-    FOR j := 0 TO num - 1 DO
-      x[j] := from;
-      IF j < num - 1 THEN from := from + by; END;
+    IF num > 0 THEN
+      x[0] := from;
+      FOR j := 1 TO num - 1 DO from := from + by; x[j] := from; END;
     END;
     RETURN x;
   END ArithSeq;
 
 (*-----------------*)
-PROCEDURE GeomSeq (num: CARDINAL; from: R.T; by: R.T): T =
-  VAR x := NEW(T, num);
+PROCEDURE GeomSeq (num: CARDINAL; from: R.T; by: R.T): V.T =
+  VAR x := NEW(V.T, num);
   BEGIN
-    FOR j := 0 TO num - 1 DO
-      x[j] := from;
-      IF j < num - 1 THEN from := from * by; END;
+    IF num > 0 THEN
+      x[0] := from;
+      FOR j := 1 TO num - 1 DO from := from * by; x[j] := from; END;
     END;
     RETURN x;
   END GeomSeq;
-
 
 
 (*-----------------*)

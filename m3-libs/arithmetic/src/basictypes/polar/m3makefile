@@ -4,11 +4,11 @@ template("polar")
 
 
 generic_module("PolarBasic")
-PolarBasic("Real",     "Real",     "Basic", "Fast")
-PolarBasic("LongReal", "LongReal", "Basic", "Fast")
-PolarBasic("Extended", "Extended", "Basic", "Fast")
+Polar("Real",     "Basic", "RealBasic")
+Polar("LongReal", "Basic", "LongRealBasic")
+Polar("Extended", "Basic", "ExtendedBasic")
 
 generic_module("PolarFmtLex")
-PolarFmtLex("Real",     "Real",     "Basic")
-PolarFmtLex("LongReal", "LongReal", "Basic")
-PolarFmtLex("Extended", "Extended", "Basic")
+PolarFmtLex("Real",     "RealBasic")
+PolarFmtLex("LongReal", "LongRealBasic")
+PolarFmtLex("Extended", "ExtendedBasic")

@@ -1,151 +1,85 @@
-GENERIC MODULE VectorBasic(R, VS);
-(**
-Abstract:
-
-6/6/87    hgeorge
-          Initial version.
-
-2/11/89   hgeorge
-          To work with generic matrices.
-
-11/20/94  Harry George
-          Converted to Modula3 dynamic arrays.
-
-12/18/95  Harry George
-          ...and back to fully instantiated for REAL32.
-
-1/27/96   Harry George
-          Converted to OO format, and R.T
-
-2/17/96   Harry George   Converted from OO to ADT format
-**)
+GENERIC MODULE VectorBasic(R, V);
+(*Copyright (c) 1996, m3na project *)
 FROM NADefinitions IMPORT Error, Err;
+
+(*VR is needed to reveal the structure of V.T*)
 
 <*UNUSED*>
 CONST Module = "VectorBasic.";
 
-(*-----------------*)
-PROCEDURE New (n: CARDINAL): T =
-  BEGIN
-    RETURN NEW(T, n);
-  END New;
-
-(*-----------------*)
-PROCEDURE FromArray (READONLY x: TBody): T =
-  VAR
-    n := NUMBER(x);
-    z := NEW(T, n);
-  BEGIN
-    z^ := x;
-    RETURN z;
-  END FromArray;
-
-(*-----------------*)
-PROCEDURE FromVectorArray (READONLY x: TVBody): T =
-  VAR size: CARDINAL := 0;
-  BEGIN
-    FOR i := FIRST(x) TO LAST(x) DO INC(size, NUMBER(x[i]^)); END;
-    VAR
-      z            := NEW(T, size);
-      iz: CARDINAL := 0;
-    BEGIN
-      FOR i := FIRST(x) TO LAST(x) DO
-        SUBARRAY(z^, iz, NUMBER(x[i]^)) := x[i]^;
-        INC(iz, NUMBER(x[i]^));
-      END;
-      RETURN z;
-    END;
-  END FromVectorArray;
-
-(*-----------------*)
-PROCEDURE FromScalar (x: R.T): T =
-  VAR z := NEW(T, 1);
-  BEGIN
-    z[0] := x;
-    RETURN z;
-  END FromScalar;
-
-(*-----------------*)
-PROCEDURE Copy (x: T): T =
-  VAR z := NEW(T, NUMBER(x^));
-  BEGIN
-    z^ := x^;
-    RETURN z;
-  END Copy;
-
 
 (*-----------------*)
 <*INLINE*>
-PROCEDURE AssertEqualSize (x, y: T) RAISES {Error} =
+PROCEDURE AssertEqualSize (READONLY x, y: T) RAISES {Error} =
   BEGIN
-    IF NUMBER(x^) # NUMBER(y^) THEN RAISE Error(Err.bad_size); END;
+    IF NUMBER(x) # NUMBER(y) THEN RAISE Error(Err.bad_size); END;
   END AssertEqualSize;
 
 (*---------------------*)
-PROCEDURE IsZero (x: T): BOOLEAN =
+PROCEDURE IsZero (READONLY x: T): BOOLEAN =
   BEGIN
-    FOR i := FIRST(x^) TO LAST(x^) DO
+    FOR i := FIRST(x) TO LAST(x) DO
       IF NOT R.IsZero(x[i]) THEN RETURN FALSE; END
     END;
     RETURN TRUE;
   END IsZero;
 
 (*---------------------*)
-PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Error} =
+PROCEDURE Equal (READONLY x, y: T): BOOLEAN RAISES {Error} =
   BEGIN
     AssertEqualSize(x, y);
-    FOR i := FIRST(x^) TO LAST(x^) DO
+    FOR i := FIRST(x) TO LAST(x) DO
       IF NOT R.Equal(x[i], y[i]) THEN RETURN FALSE; END
     END;
     RETURN TRUE;
   END Equal;
 
 (*-----------------*)
-PROCEDURE Add (x, y: T): T RAISES {Error} =
-  VAR z := NEW(T, NUMBER(x^));
+PROCEDURE Add (READONLY x, y: T): V.T RAISES {Error} =
+  VAR z := NEW(V.T, NUMBER(x));
   BEGIN
-    VS.Add(z^, x^, y^);
+    AssertEqualSize(x, y);
+    FOR i := FIRST(x) TO LAST(x) DO z[i] := R.Add(x[i], y[i]); END;
     RETURN z;
   END Add;
 
 (*-----------------*)
-PROCEDURE Sub (x, y: T): T RAISES {Error} =
-  VAR z := NEW(T, NUMBER(x^));
+PROCEDURE Sub (READONLY x, y: T): V.T RAISES {Error} =
+  VAR z := NEW(V.T, NUMBER(x));
   BEGIN
-    VS.Sub(z^, x^, y^);
+    AssertEqualSize(x, y);
+    FOR i := FIRST(x) TO LAST(x) DO z[i] := R.Sub(x[i], y[i]); END;
     RETURN z;
   END Sub;
 
 (*---------------------*)
-PROCEDURE Neg (x: T): T =
-  VAR y := NEW(T, NUMBER(x^));
+PROCEDURE Neg (READONLY x: T): V.T =
+  VAR z := NEW(V.T, NUMBER(x));
   BEGIN
-    TRY
-      VS.Neg(y^, x^);
-    EXCEPT
-    | Error (err) => EVAL err;   <*ASSERT FALSE*>
-    END;
-    RETURN y;
+    FOR i := FIRST(x) TO LAST(x) DO z[i] := R.Neg(x[i]); END;
+    RETURN z;
   END Neg;
 
 
 (*-----------------*)
-PROCEDURE Scale (x: T; y: R.T): T =
-  VAR z := NEW(T, NUMBER(x^));
+PROCEDURE Scale (READONLY x: T; y: R.T): V.T =
+  VAR z := NEW(V.T, NUMBER(x));
   BEGIN
-    TRY
-      VS.Scale(z^, x^, y);
-    EXCEPT
-    | Error (err) => EVAL err;   <*ASSERT FALSE*>
-    END;
+    FOR i := FIRST(x) TO LAST(x) DO z[i] := R.Mul(x[i], y); END;
     RETURN z;
   END Scale;
 
 
 (*-----------------*)
-PROCEDURE Inner (x, y: T): R.T RAISES {Error} =
+PROCEDURE Inner (READONLY x, y: T): R.T RAISES {Error} =
+  VAR sum: R.T;
   BEGIN
-    RETURN VS.Inner(x^, y^);
+    AssertEqualSize(x, y);
+    sum := R.Zero;
+    FOR i := FIRST(x) TO LAST(x) DO
+      sum := R.Add(sum, R.Mul(R.Conj(x[i]), y[i]));
+    END;
+    RETURN sum;
   END Inner;
 
 (*-----------------*)
@@ -169,38 +103,34 @@ BEGIN
 END Cross;
 **)
 
-(*-----------------*)
-PROCEDURE ArithSeq (num: CARDINAL; from: R.T; by: R.T): T =
-  VAR x := NEW(T, num);
+PROCEDURE Sum (READONLY x: T): R.T =
+  VAR sum := R.Zero;
   BEGIN
-    FOR j := 0 TO num - 1 DO
-      x[j] := from;
-      IF j < num - 1 THEN from := R.Add(from, by); END;
+    FOR i := FIRST(x) TO LAST(x) DO sum := R.Add(sum, x[i]); END;
+    RETURN sum;
+  END Sum;
+
+(*-----------------*)
+PROCEDURE ArithSeq (num: CARDINAL; from: R.T; by: R.T): V.T =
+  VAR x := NEW(V.T, num);
+  BEGIN
+    IF num > 0 THEN
+      x[0] := from;
+      FOR j := 1 TO num - 1 DO from := R.Add(from, by); x[j] := from; END;
     END;
     RETURN x;
   END ArithSeq;
 
 (*-----------------*)
-PROCEDURE GeomSeq (num: CARDINAL; from: R.T; by: R.T): T =
-  VAR x := NEW(T, num);
+PROCEDURE GeomSeq (num: CARDINAL; from: R.T; by: R.T): V.T =
+  VAR x := NEW(V.T, num);
   BEGIN
-    FOR j := 0 TO num - 1 DO
-      x[j] := from;
-      IF j < num - 1 THEN from := R.Mul(from, by); END;
+    IF num > 0 THEN
+      x[0] := from;
+      FOR j := 1 TO num - 1 DO from := R.Mul(from, by); x[j] := from; END;
     END;
     RETURN x;
   END GeomSeq;
-
-(*-----------------*)
-PROCEDURE RecursiveSeq (num: CARDINAL; from: R.T; by: VS.MapFtn): T =
-  VAR x := NEW(T, num);
-  BEGIN
-    FOR j := 0 TO num - 1 DO
-      x[j] := from;
-      IF j < num - 1 THEN from := by(from); END;
-    END;
-    RETURN x;
-  END RecursiveSeq;
 
 (*-----------------*)
 BEGIN

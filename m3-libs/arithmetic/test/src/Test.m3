@@ -65,16 +65,16 @@ BEGIN
   NewLine(); EVAL TestSLE();
   NewLine(); EVAL TestRandom();
   NewLine(); EVAL TestFFT();
+*)
   NewLine(); EVAL TestBigInteger();
+(*
   NewLine(); EVAL TestGCD();
   NewLine(); EVAL TestEigenSystem();
   NewLine(); EVAL TestChebyshev();
   NewLine(); EVAL TestUnit();
   NewLine(); EVAL TestLapack();
   NewLine(); EVAL TestTex();
-*)
   NewLine(); EVAL TestPLPlot();
-(*
   NewLine(); EVAL TestFunctional();
 *)
 END Test.

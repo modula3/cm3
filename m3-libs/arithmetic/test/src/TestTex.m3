@@ -1,23 +1,21 @@
 MODULE TestTex EXPORTS Test;
 (*Copyright (c) 1996, m3na project
+
 Abstract:  Tests for Tex module.
-
-1/1/96    <name>   Initial version
-
 *)
 
 IMPORT FileWr, Wr, Fmt, Process;
 IMPORT Thread, OSError;
 IMPORT TempFiles AS Tmp;
 
-IMPORT LongRealBasic            AS R,
-       LongRealComplexFast      AS C,
-       LongRealPolarBasic       AS Polar,
-       BigIntegerBasic          AS B,
-       BigIntegerFractionBasic  AS Fr,
-       LongRealVectorFast       AS V,
-       LongRealMatrixFast       AS M,
-       LongRealComplexPolynomialBasic AS P,
+IMPORT LongRealBasic             AS R,
+       LongRealComplex           AS C,
+       LongRealPolar             AS Polar,
+       BigInteger                AS B,
+       BigIntegerFraction        AS Fr,
+       LongRealVector            AS V,
+       LongRealMatrix            AS M,
+       LongRealComplexPolynomial AS P,
 
        LongRealFmtLex           AS RF,
        LongRealComplexFmtLex    AS CF,

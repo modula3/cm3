@@ -2,9 +2,8 @@
 %  Quake functions to instantiate generic greatest common divisor.
 %
 
-readonly proc GCD (nm, field, rimpl) is
+readonly proc GCD (nm, rfield) is
   local basic  = nm & "GCD"
-  local rfield = field & rimpl
   build_generic_intf (basic, "GCD", [rfield], VISIBLE)
   build_generic_impl (basic, "GCD", [rfield])
 end

@@ -8,7 +8,7 @@ Abstract:  Tests for Vector module.
 (*FROM NADefinitions IMPORT Error,Err;*)
 IMPORT (*LongRealBasic  AS R,*)
        LongRealFmtLex AS RF,
-       LongRealVectorBasic  AS V,
+       LongRealVector       AS V,
        LongRealVectorTrans  AS VT,
        LongRealVectorFmtLex AS VF;
 
