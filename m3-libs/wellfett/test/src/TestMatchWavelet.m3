@@ -343,7 +343,7 @@ TYPE
                 targetAmp: R.T;  (*coefficient of the target function*)
               END;
 
-PROCEDURE MatchPatternSmooth (wavelet               : S.T;
+PROCEDURE MatchPatternSmooth (target                : S.T;
                               hdual, gdual, hdualvan: S.T;
                               levels, translates    : CARDINAL;
                               smoothWeight          : R.T;      ):
@@ -392,7 +392,7 @@ PROCEDURE MatchPatternSmooth (wavelet               : S.T;
 
   VAR
     generatorvan := Refn.Refine(hdualvan.scale(RT.SqRtTwo), hdual, levels);
-    target := Refn.Refine(gdual.scale(R.One / RT.SqRtTwo), hdual, levels);
+    wavelet := Refn.Refine(gdual.scale(R.One / RT.SqRtTwo), hdual, levels);
 
     unit   := IIntPow.Power(2, levels);
     twonit := 2 * unit;
@@ -486,10 +486,12 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
     s := SIntPow.MulPower(
            mc.lift, NEW(S.T).fromArray(ARRAY OF R.T{1.0D0, -1.0D0}, -1),
            vanishing);
-    gdual := gdual0.scale(1.0D0 / RT.SqRtTwo).superpose(
-               s.upsample(2).convolve(
-                 hdual.scale(RT.SqRtTwo / mc.targetAmp)));
-
+    (*
+        gdual := s.upsample(2).convolve(
+                     hdual.scale(2.0D0));
+    *)
+    gdual := gdual0.negate().superpose(
+               s.upsample(2).convolve(hdual.scale(2.0D0)));
     unit          := IIntPow.Power(2, levels);
     twopow        := FLOAT(unit, R.T);
     grid          := R.One / twopow;
@@ -514,7 +516,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
         PL.SetEnvironment(MIN(lefttarget, leftpsidual),
                           MAX(righttarget, rightpsidual), ymin, ymax);
         PL.PlotLines(V.ArithSeq(target.getNumber(), lefttarget, grid)^,
-                     target.scale(twopow / mc.targetAmp).getData()^);
+                     target.scale(mc.targetAmp).getData()^);
         PL.SetColor0(2);
         PL.PlotLines(V.ArithSeq(psidual0.getNumber(), leftpsidual0, grid)^,
                      psidual0.getData()^);
