@@ -1,5 +1,4 @@
 (* Copyright according to COPYRIGHT-CMASS. *)
-(* FIXME: copied from FreeBSD3 target. Probably needs to be changed. *)
 
 (* This interface defines platform (machine + OS) dependent
    types and constants. *)
