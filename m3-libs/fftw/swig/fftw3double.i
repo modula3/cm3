@@ -4,6 +4,8 @@
 %pragma(modula3) unsafe="true";
 %pragma(modula3) library="m3fftw";
 
+#define FPREF(name) fftw_ ## name
+
 %insert(m3makefile) %{% compiled / works with with CM3 5.2.6 2003-06-27
 import_lib("fftw3","/usr/lib")%}
 
@@ -37,29 +39,29 @@ REVEAL
   Plan = UNTRACED BRANDED REF RECORD END;
 %}
 
-%typemap(m3rawintype)  fftw_plan       %{Plan%};
-%typemap(m3rawinmode)  fftw_plan       %{%};
-%typemap(m3rawrettype) fftw_plan       %{Plan%};
-%typemap(m3rawintype)  fftw_iodim *    %{IODim%};
-%typemap(m3rawintype)  fftw_r2r_kind * %{R2RKind%};
+%typemap(m3rawintype)  FPREF(plan)       %{Plan%};
+%typemap(m3rawinmode)  FPREF(plan)       %{%};
+%typemap(m3rawrettype) FPREF(plan)       %{Plan%};
+%typemap(m3rawintype)  FPREF(iodim) *    %{IODim%};
+%typemap(m3rawintype)  FPREF(r2r_kind) * %{R2RKind%};
 
-%typemap(m3rawintype)  fftw_complex *  %{Complex%};
-%typemap(m3rawintype)  fftw_complex_array_1d *  %{(* ARRAY OF *) Complex%};
-%typemap(m3rawintype)  fftw_complex_array_2d *  %{(* ARRAY OF ARRAY OF *) Complex%};
-%typemap(m3rawintype)  fftw_complex_array_3d *  %{(* ARRAY OF ARRAY OF ARRAY OF *) Complex%};
+%typemap(m3rawintype)  FPREF(complex) *  %{Complex%};
+%typemap(m3rawintype)  FPREF(complex_array_1d) *  %{(* ARRAY OF *) Complex%};
+%typemap(m3rawintype)  FPREF(complex_array_2d) *  %{(* ARRAY OF ARRAY OF *) Complex%};
+%typemap(m3rawintype)  FPREF(complex_array_3d) *  %{(* ARRAY OF ARRAY OF ARRAY OF *) Complex%};
 
-%typemap(m3rawinmode)  fftw_complex_array_1d *in,
-                       fftw_complex_array_2d *in,
-                       fftw_complex_array_3d *in,
+%typemap(m3rawinmode)  FPREF(complex_array_1d) *in,
+                       FPREF(complex_array_2d) *in,
+                       FPREF(complex_array_3d) *in,
 		       double *in
 		         %{READONLY%};
 
 
 %typemap(m3rawintype)  void  * %{ADDRESS%};
-// fftw_export_wisdom
+// FPREF(export_wisdom)
 %typemap(m3rawintype)  void (*)(char c, void *)
   %{PROCEDURE (c:CHAR; buf:ADDRESS;)%};
-// fftw_import_wisdom
+// FPREF(import_wisdom)
 %typemap(m3rawintype)  int (*)(void *)
   %{PROCEDURE (buf:ADDRESS;):CARDINAL%};
 
@@ -121,18 +123,18 @@ PROCEDURE CleanupPlan(<*UNUSED*> READONLY w: WeakRef.T; r: REFANY) =
 
 %}
 
-%typemap(m3wrapintype)   fftw_plan       %{Plan%};
-%typemap(m3wrapinmode)   fftw_plan       %{%};
-%typemap(m3wraprettype)  fftw_plan       %{Plan%};
-%typemap(m3wrapargraw)   fftw_plan       %{$input^%};
-%typemap(m3wrapretvar)   fftw_plan       %{plan:=NEW(Plan);%};
-%typemap(m3wrapretraw)   fftw_plan       %{plan^%};
-%typemap(m3wrapretcheck) fftw_plan       %{EVAL WeakRef.FromRef(plan,CleanupPlan);%};
-%typemap(m3wrapretconv)  fftw_plan       %{plan%};
-%typemap("m3wrapretcheck:import") fftw_plan %{WeakRef%};
+%typemap(m3wrapintype)   FPREF(plan)       %{Plan%};
+%typemap(m3wrapinmode)   FPREF(plan)       %{%};
+%typemap(m3wraprettype)  FPREF(plan)       %{Plan%};
+%typemap(m3wrapargraw)   FPREF(plan)       %{$input^%};
+%typemap(m3wrapretvar)   FPREF(plan)       %{plan:=NEW(Plan);%};
+%typemap(m3wrapretraw)   FPREF(plan)       %{plan^%};
+%typemap(m3wrapretcheck) FPREF(plan)       %{EVAL WeakRef.FromRef(plan,CleanupPlan);%};
+%typemap(m3wrapretconv)  FPREF(plan)       %{plan%};
+%typemap("m3wrapretcheck:import") FPREF(plan) %{WeakRef%};
 
 %typemap(m3wrapintype)  double *        %{LONGREAL%};
-%typemap(m3wrapintype)  fftw_iodim *    %{IODim%};
+%typemap(m3wrapintype)  FPREF(iodim) *    %{IODim%};
 
 %typemap(m3wrapintype)    int sign        %{Dir%};
 %typemap(m3wrapindefault) int sign        %{Dir.Backward%};
@@ -143,55 +145,55 @@ PROCEDURE CleanupPlan(<*UNUSED*> READONLY w: WeakRef.T; r: REFANY) =
 %typemap(m3wrapargraw)    unsigned flags  %{LOOPHOLE($input,C.unsigned_int)%};
 %typemap("m3wrapargraw:import") unsigned flags "Ctypes AS C"
 
-%typemap(m3wrapintype)  fftw_r2r_kind * %{ARRAY OF R2RKind%};
-%typemap(m3wrapintype)  fftw_r2r_kind   %{R2RKind%};
-%typemap(m3wrapargraw)  fftw_r2r_kind   %{ORD($input)%};
+%typemap(m3wrapintype)  FPREF(r2r_kind) * %{ARRAY OF R2RKind%};
+%typemap(m3wrapintype)  FPREF(r2r_kind)   %{R2RKind%};
+%typemap(m3wrapargraw)  FPREF(r2r_kind)   %{ORD($input)%};
 
-%typemap(m3wrapintype)  fftw_complex_array_1d *  %{REF ARRAY OF Complex%};
-%typemap(m3wrapintype)  fftw_complex_array_2d *  %{REF ARRAY OF ARRAY OF Complex%};
-%typemap(m3wrapintype)  fftw_complex_array_3d *  %{REF ARRAY OF ARRAY OF ARRAY OF Complex%};
-%typemap(m3wrapintype)  fftw_complex_tensor   *  %{REFANY (* Tensor of Complex *) %};
+%typemap(m3wrapintype)  FPREF(complex_array_1d) *  %{REF ARRAY OF Complex%};
+%typemap(m3wrapintype)  FPREF(complex_array_2d) *  %{REF ARRAY OF ARRAY OF Complex%};
+%typemap(m3wrapintype)  FPREF(complex_array_3d) *  %{REF ARRAY OF ARRAY OF ARRAY OF Complex%};
+%typemap(m3wrapintype)  FPREF(complex_tensor)   *  %{REFANY (* Tensor of Complex *) %};
 
-%typemap(m3wrapintype)  fftw_real_array_1d *  %{REF ARRAY OF LONGREAL%};
-%typemap(m3wrapintype)  fftw_real_array_2d *  %{REF ARRAY OF ARRAY OF LONGREAL%};
-%typemap(m3wrapintype)  fftw_real_array_3d *  %{REF ARRAY OF ARRAY OF ARRAY OF LONGREAL%};
-%typemap(m3wrapintype)  fftw_real_tensor   *  %{REFANY (* Tensor of LONGREAL *) %};
+%typemap(m3wrapintype)  FPREF(real_array_1d) *  %{REF ARRAY OF LONGREAL%};
+%typemap(m3wrapintype)  FPREF(real_array_2d) *  %{REF ARRAY OF ARRAY OF LONGREAL%};
+%typemap(m3wrapintype)  FPREF(real_array_3d) *  %{REF ARRAY OF ARRAY OF ARRAY OF LONGREAL%};
+%typemap(m3wrapintype)  FPREF(real_tensor)   *  %{REFANY (* Tensor of LONGREAL *) %};
 
-%typemap(m3wrapargraw)  fftw_complex_array_1d *, fftw_real_array_1d *  %{$input[0]%};
-%typemap(m3wrapargraw)  fftw_complex_array_2d *, fftw_real_array_2d *  %{$input[0,0]%};
-%typemap(m3wrapargraw)  fftw_complex_array_3d *, fftw_real_array_3d *  %{$input[0,0,0]%};
-%typemap(m3wrapargraw)  fftw_complex_tensor   *, fftw_real_tensor   *  %{$input%};
+%typemap(m3wrapargraw)  FPREF(complex_array_1d) *, FPREF(real_array_1d) *  %{$input[0]%};
+%typemap(m3wrapargraw)  FPREF(complex_array_2d) *, FPREF(real_array_2d) *  %{$input[0,0]%};
+%typemap(m3wrapargraw)  FPREF(complex_array_3d) *, FPREF(real_array_3d) *  %{$input[0,0,0]%};
+%typemap(m3wrapargraw)  FPREF(complex_tensor)   *, FPREF(real_tensor)   *  %{$input%};
 
 %typemap(m3wrapinmode)
-	fftw_complex_array_1d *, fftw_real_array_1d *,
-	fftw_complex_array_2d *, fftw_real_array_2d *,
-	fftw_complex_array_3d *, fftw_real_array_3d *
+	FPREF(complex_array_1d) *, FPREF(real_array_1d) *,
+	FPREF(complex_array_2d) *, FPREF(real_array_2d) *,
+	FPREF(complex_array_3d) *, FPREF(real_array_3d) *
 	  "";
 
 %typemap(m3wrapintype,numinputs=0) int n, int nx, int ny, int nz %{%}
 
-%typemap(m3wrapargvar) fftw_complex_array_1d *in, fftw_real_array_1d *in
+%typemap(m3wrapargvar) FPREF(complex_array_1d) *in, FPREF(real_array_1d) *in
   %{n := NUMBER($input^);%};
-%typemap(m3wrapargvar) fftw_complex_array_2d *in, fftw_real_array_2d *in
+%typemap(m3wrapargvar) FPREF(complex_array_2d) *in, FPREF(real_array_2d) *in
   %{nx := NUMBER($input^); ny := NUMBER($input[0]);%};
-%typemap(m3wrapargvar) fftw_complex_array_3d *in, fftw_real_array_3d *in
+%typemap(m3wrapargvar) FPREF(complex_array_3d) *in, FPREF(real_array_3d) *in
   %{nx := NUMBER($input^); ny := NUMBER($input[0]); nz := NUMBER($input[0,0]);%};
-%typemap(m3wrapargvar) fftw_complex_tensor   *in, fftw_real_tensor   *in
+%typemap(m3wrapargvar) FPREF(complex_tensor)   *in, FPREF(real_tensor)   *in
   %{$input%};
 
-%typemap(m3wrapincheck) fftw_complex_array_1d *out, fftw_real_array_1d *out
+%typemap(m3wrapincheck) FPREF(complex_array_1d) *out, FPREF(real_array_1d) *out
   %{IF n # NUMBER($input^) THEN RAISE SizeMismatch; END;%};
-%typemap(m3wrapincheck) fftw_complex_array_2d *out, fftw_real_array_2d *out
+%typemap(m3wrapincheck) FPREF(complex_array_2d) *out, FPREF(real_array_2d) *out
   %{IF nx # NUMBER($input^) OR ny # NUMBER($input[0]) THEN RAISE SizeMismatch; END;%};
-%typemap(m3wrapincheck) fftw_complex_array_3d *out, fftw_real_array_3d *out
+%typemap(m3wrapincheck) FPREF(complex_array_3d) *out, FPREF(real_array_3d) *out
   %{IF nx # NUMBER($input^) OR ny # NUMBER($input[0]) OR nz # NUMBER($input[0,0]) THEN RAISE SizeMismatch; END;%};
-%typemap(m3wrapincheck) fftw_complex_tensor   *out, fftw_real_tensor   *out
+%typemap(m3wrapincheck) FPREF(complex_tensor)   *out, FPREF(real_tensor)   *out
   %{$input%};
 
 %typemap("m3wrapincheck:throws")
-	fftw_complex_array_1d *out, fftw_real_array_1d *out,
-	fftw_complex_array_2d *out, fftw_real_array_2d *out,
-	fftw_complex_array_3d *out, fftw_real_array_3d *out
+	FPREF(complex_array_1d) *out, FPREF(real_array_1d) *out,
+	FPREF(complex_array_2d) *out, FPREF(real_array_2d) *out,
+	FPREF(complex_array_3d) *out, FPREF(real_array_3d) *out
 	  "SizeMismatch";
 
 %typemap(m3wraprettype) void  * %{REFANY%};
@@ -200,10 +202,10 @@ PROCEDURE CleanupPlan(<*UNUSED*> READONLY w: WeakRef.T; r: REFANY) =
 %typemap(m3wrapintype)  void  *data %{REFANY%};
 %typemap(m3wrapargraw)  void  *data %{LOOPHOLE(data,ADDRESS)%};
 
-// fftw_export_wisdom
+// FPREF(export_wisdom)
 %typemap(m3wrapintype)  void (*)(char c, void *)
   %{PROCEDURE (c:CHAR; buf:ADDRESS;)%};
-// fftw_import_wisdom
+// FPREF(import_wisdom)
 %typemap(m3wrapintype)  int (*)(void *)
   %{PROCEDURE (buf:ADDRESS;):CARDINAL%};
 
@@ -234,90 +236,90 @@ PROCEDURE CleanupPlan(<*UNUSED*> READONLY w: WeakRef.T; r: REFANY) =
 
 // adapt to Modula-3 conform names
 
-%rename("Execute") fftw_execute;
-%rename("PlanDFT") fftw_plan_dft;
-%rename("PlanDFT1D") fftw_plan_dft_1d;
-%rename("PlanDFT2D") fftw_plan_dft_2d;
-%rename("PlanDFT3D") fftw_plan_dft_3d;
-%rename("PlanManyDFT") fftw_plan_many_dft;
-%rename("PlanGuruDFT") fftw_plan_guru_dft;
-%rename("PlanGuruSplitDFT") fftw_plan_guru_split_dft;
-%rename("ExecuteDFT") fftw_execute_dft;
-%rename("ExecuteSplitDFT") fftw_execute_split_dft;
-%rename("PlanManyDFTR2C") fftw_plan_many_dft_r2c;
-%rename("PlanDFTR2C") fftw_plan_dft_r2c;
-%rename("PlanDFTR2C1D") fftw_plan_dft_r2c_1d;
-%rename("PlanDFTR2C2D") fftw_plan_dft_r2c_2d;
-%rename("PlanDFTR2C3D") fftw_plan_dft_r2c_3d;
-%rename("PlanManyDFTC2R") fftw_plan_many_dft_c2r;
-%rename("PlanDFTC2R") fftw_plan_dft_c2r;
-%rename("PlanDFTC2R1D") fftw_plan_dft_c2r_1d;
-%rename("PlanDFTC2R2D") fftw_plan_dft_c2r_2d;
-%rename("PlanDFTC2R3D") fftw_plan_dft_c2r_3d;
-%rename("PlanGuruDFTR2C") fftw_plan_guru_dft_r2c;
-%rename("PlanGuruDFTC2R") fftw_plan_guru_dft_c2r;
-%rename("PlanGuruSplitDFTR2C") fftw_plan_guru_split_dft_r2c;
-%rename("PlanGuruSplitDFTC2R") fftw_plan_guru_split_dft_c2r;
-%rename("ExecuteDFTR2C") fftw_execute_dft_r2c;
-%rename("ExecuteDFTC2R") fftw_execute_dft_c2r;
-%rename("ExecuteSplitDFTR2C") fftw_execute_split_dft_r2c;
-%rename("ExecuteSplitDFTC2R") fftw_execute_split_dft_c2r;
-%rename("PlanManyR2R") fftw_plan_many_r2r;
-%rename("PlanR2R") fftw_plan_r2r;
-%rename("PlanR2R1D") fftw_plan_r2r_1d;
-%rename("PlanR2R2D") fftw_plan_r2r_2d;
-%rename("PlanR2R3D") fftw_plan_r2r_3d;
-%rename("PlanGuruR2R") fftw_plan_guru_r2r;
-%rename("ExecuteR2R") fftw_execute_r2r;
-%rename("DestroyPlan") fftw_destroy_plan;
-%rename("ForgetWisdom") fftw_forget_wisdom;
-%rename("Cleanup") fftw_cleanup;
-%rename("PlanWithNThreads") fftw_plan_with_nthreads;
-%rename("InitThreads") fftw_init_threads;
-%rename("CleanupThreads") fftw_cleanup_threads;
-%rename("ExportWisdomToFile") fftw_export_wisdom_to_file;
-%rename("ExportWisdomToString") fftw_export_wisdom_to_string;
-%rename("ExportWisdom") fftw_export_wisdom;
-%rename("ImportSystemWisdom") fftw_import_system_wisdom;
-%rename("ImportWisdomFromFile") fftw_import_wisdom_from_file;
-%rename("ImportWisdomFromString") fftw_import_wisdom_from_string;
-%rename("ImportWisdom") fftw_import_wisdom;
-%rename("FPrintPlan") fftw_fprint_plan;
-%rename("PrintPlan") fftw_print_plan;
-%rename("Malloc") fftw_malloc;
-%rename("Free") fftw_free;
-%rename("Flops") fftw_flops;
+%rename("Execute") FPREF(execute);
+%rename("PlanDFT") FPREF(plan_dft);
+%rename("PlanDFT1D") FPREF(plan_dft_1d);
+%rename("PlanDFT2D") FPREF(plan_dft_2d);
+%rename("PlanDFT3D") FPREF(plan_dft_3d);
+%rename("PlanManyDFT") FPREF(plan_many_dft);
+%rename("PlanGuruDFT") FPREF(plan_guru_dft);
+%rename("PlanGuruSplitDFT") FPREF(plan_guru_split_dft);
+%rename("ExecuteDFT") FPREF(execute_dft);
+%rename("ExecuteSplitDFT") FPREF(execute_split_dft);
+%rename("PlanManyDFTR2C") FPREF(plan_many_dft_r2c);
+%rename("PlanDFTR2C") FPREF(plan_dft_r2c);
+%rename("PlanDFTR2C1D") FPREF(plan_dft_r2c_1d);
+%rename("PlanDFTR2C2D") FPREF(plan_dft_r2c_2d);
+%rename("PlanDFTR2C3D") FPREF(plan_dft_r2c_3d);
+%rename("PlanManyDFTC2R") FPREF(plan_many_dft_c2r);
+%rename("PlanDFTC2R") FPREF(plan_dft_c2r);
+%rename("PlanDFTC2R1D") FPREF(plan_dft_c2r_1d);
+%rename("PlanDFTC2R2D") FPREF(plan_dft_c2r_2d);
+%rename("PlanDFTC2R3D") FPREF(plan_dft_c2r_3d);
+%rename("PlanGuruDFTR2C") FPREF(plan_guru_dft_r2c);
+%rename("PlanGuruDFTC2R") FPREF(plan_guru_dft_c2r);
+%rename("PlanGuruSplitDFTR2C") FPREF(plan_guru_split_dft_r2c);
+%rename("PlanGuruSplitDFTC2R") FPREF(plan_guru_split_dft_c2r);
+%rename("ExecuteDFTR2C") FPREF(execute_dft_r2c);
+%rename("ExecuteDFTC2R") FPREF(execute_dft_c2r);
+%rename("ExecuteSplitDFTR2C") FPREF(execute_split_dft_r2c);
+%rename("ExecuteSplitDFTC2R") FPREF(execute_split_dft_c2r);
+%rename("PlanManyR2R") FPREF(plan_many_r2r);
+%rename("PlanR2R") FPREF(plan_r2r);
+%rename("PlanR2R1D") FPREF(plan_r2r_1d);
+%rename("PlanR2R2D") FPREF(plan_r2r_2d);
+%rename("PlanR2R3D") FPREF(plan_r2r_3d);
+%rename("PlanGuruR2R") FPREF(plan_guru_r2r);
+%rename("ExecuteR2R") FPREF(execute_r2r);
+%rename("DestroyPlan") FPREF(destroy_plan);
+%rename("ForgetWisdom") FPREF(forget_wisdom);
+%rename("Cleanup") FPREF(cleanup);
+%rename("PlanWithNThreads") FPREF(plan_with_nthreads);
+%rename("InitThreads") FPREF(init_threads);
+%rename("CleanupThreads") FPREF(cleanup_threads);
+%rename("ExportWisdomToFile") FPREF(export_wisdom_to_file);
+%rename("ExportWisdomToString") FPREF(export_wisdom_to_string);
+%rename("ExportWisdom") FPREF(export_wisdom);
+%rename("ImportSystemWisdom") FPREF(import_system_wisdom);
+%rename("ImportWisdomFromFile") FPREF(import_wisdom_from_file);
+%rename("ImportWisdomFromString") FPREF(import_wisdom_from_string);
+%rename("ImportWisdom") FPREF(import_wisdom);
+%rename("FPrintPlan") FPREF(fprint_plan);
+%rename("PrintPlan") FPREF(print_plan);
+%rename("Malloc") FPREF(malloc);
+%rename("Free") FPREF(free);
+%rename("Flops") FPREF(flops);
 
 /* ignore all functions that I have not considered so far */
-%ignore fftw_plan_dft;
-%ignore fftw_plan_many_dft;
-%ignore fftw_plan_guru_dft;
-%ignore fftw_plan_guru_split_dft;
-%ignore fftw_execute_dft;
-%ignore fftw_execute_split_dft;
-%ignore fftw_plan_many_dft_r2c;
-%ignore fftw_plan_dft_r2c;
-%ignore fftw_plan_many_dft_c2r;
-%ignore fftw_plan_dft_c2r;
-%ignore fftw_plan_guru_dft_r2c;
-%ignore fftw_plan_guru_dft_c2r;
-%ignore fftw_plan_guru_split_dft_r2c;
-%ignore fftw_plan_guru_split_dft_c2r;
-%ignore fftw_execute_dft_r2c;
-%ignore fftw_execute_dft_c2r;
-%ignore fftw_execute_split_dft_r2c;
-%ignore fftw_execute_split_dft_c2r;
-%ignore fftw_plan_many_r2r;
-%ignore fftw_plan_r2r;
-%ignore fftw_plan_guru_r2r;
-%ignore fftw_execute_r2r;
-%ignore fftw_malloc;
-%ignore fftw_free;
+%ignore FPREF(plan_dft);
+%ignore FPREF(plan_many_dft);
+%ignore FPREF(plan_guru_dft);
+%ignore FPREF(plan_guru_split_dft);
+%ignore FPREF(execute_dft);
+%ignore FPREF(execute_split_dft);
+%ignore FPREF(plan_many_dft_r2c);
+%ignore FPREF(plan_dft_r2c);
+%ignore FPREF(plan_many_dft_c2r);
+%ignore FPREF(plan_dft_c2r);
+%ignore FPREF(plan_guru_dft_r2c);
+%ignore FPREF(plan_guru_dft_c2r);
+%ignore FPREF(plan_guru_split_dft_r2c);
+%ignore FPREF(plan_guru_split_dft_c2r);
+%ignore FPREF(execute_dft_r2c);
+%ignore FPREF(execute_dft_c2r);
+%ignore FPREF(execute_split_dft_r2c);
+%ignore FPREF(execute_split_dft_c2r);
+%ignore FPREF(plan_many_r2r);
+%ignore FPREF(plan_r2r);
+%ignore FPREF(plan_guru_r2r);
+%ignore FPREF(execute_r2r);
+%ignore FPREF(malloc);
+%ignore FPREF(free);
 
 /* thread functions are not present in the libraries I have installed */
-%ignore fftw_plan_with_nthreads;
-%ignore fftw_init_threads;
-%ignore fftw_cleanup_threads;
+%ignore FPREF(plan_with_nthreads);
+%ignore FPREF(init_threads);
+%ignore FPREF(cleanup_threads);
 
 
 /* This is the original fftw3.h file
