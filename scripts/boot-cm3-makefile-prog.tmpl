@@ -24,6 +24,8 @@ OBJ_MO   := $(addsuffix .mo, $(BASES_MC))
 OBJ_O    := $(addsuffix .o, $(BASES_C))
 OBJECTS  := $(OBJ_IO) $(OBJ_MO) $(OBJ_O)
 
+.PHONY: all clean clean-as clean-obj
+
 all: $(PROGNAME)
 $(PROGNAME): $(OBJECTS)
 	$(CC) $(STATIC) -o $(PROGNAME) $(OBJECTS) $(LIBS)
