@@ -10,42 +10,6 @@ MODULE Target;
 
 IMPORT Text, TargetMap, M3RT;
 
-CONST
-  Systems = ARRAY OF TEXT {
-    (*  0 *) "AIX386",
-    (*  1 *) "ALPHA_OSF",
-    (*  2 *) "AP3000",
-    (*  3 *) "ARM",
-    (*  4 *) "DS3100",
-    (*  5 *) "FreeBSD",
-    (*  6 *) "FreeBSD2",
-    (*  7 *) "HP300",
-    (*  8 *) "HPPA",
-    (*  9 *) "IBMR2",
-    (* 10 *) "IBMRT",
-    (* 11 *) "IRIX5",
-    (* 12 *) "LINUX",
-    (* 13 *) "LINUXELF",
-    (* 14 *) "NEXT",
-    (* 15 *) "NT386",
-    (* 16 *) "OKI",
-    (* 17 *) "OS2",
-    (* 18 *) "SEQUENT",
-    (* 19 *) "SOLgnu",
-    (* 20 *) "SOLsun",
-    (* 21 *) "SPARC",
-    (* 22 *) "SUN3",
-    (* 23 *) "SUN386",
-    (* 24 *) "UMAX",
-    (* 25 *) "VAX",
-    (* 26 *) "FreeBSD3",
-    (* 27 *) "FreeBSD4",
-    (* 28 *) "FBSD_ALPHA",
-    (* 29 *) "LINUXLIBC6",
-    (* 30 *) "I386_DARWIN",
-    (* 31 *) "PPC_DARWIN"
-  };
-
 VAR (*CONST*)
   CCs : REF ARRAY OF CallingConvention;
 
@@ -55,10 +19,11 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
   BEGIN
     (* lookup the system *)
     IF (system = NIL) THEN RETURN FALSE END;
-    WHILE NOT Text.Equal (system, Systems[sys]) DO
-      INC (sys);  IF (sys >= NUMBER (Systems)) THEN RETURN FALSE END;
+    WHILE NOT Text.Equal (system, SystemNames[sys]) DO
+      INC (sys);  IF (sys >= NUMBER (SystemNames)) THEN RETURN FALSE END;
     END;
-    System_name := Systems[sys];
+    System := VAL(sys, Systems);
+    System_name := SystemNames[sys];
 
     (* build a generic 32-bit/IEEE system description *)
 
@@ -152,8 +117,8 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
     Allow_packed_byte_aligned := FALSE;
 		
     (* add the system-specific customization *)
-    CASE sys OF
-    |  0 => (* AIX386 *)
+    CASE System OF
+    |  Systems.AIX386 =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := FALSE;
@@ -172,7 +137,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    |  1 => (* ALPHA_OSF *)
+    |  Systems.ALPHA_OSF, Systems.Tru64v5 =>
                  Integer := Int64;
                  Word    := Word64;
                  Address := Word64;   Address.cg_type := CGType.Addr;
@@ -195,7 +160,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    |  2 => (* AP3000 *)
+    |  Systems.AP3000 =>
                  max_align                 := 16;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
@@ -214,7 +179,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    |  3 => (* ARM *)
+    |  Systems.ARM =>
                  max_align                 := 32;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
@@ -233,7 +198,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    |  4 => (* DS3100 *)
+    |  Systems.DS3100 =>
                  max_align                 := 64;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -252,7 +217,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    |  5, 6, 26, 27 => (* FreeBSD, FreeBSD2, FreeBSD3, FreeBSD4 *)
+    |  Systems.FreeBSD, Systems.FreeBSD2, Systems.FreeBSD3, Systems.FreeBSD4 =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -271,7 +236,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    |  7 => (* HP300 *)
+    |  Systems.HP300 =>
                  max_align                 := 16;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
@@ -290,7 +255,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    |  8 => (* HPPA *)
+    |  Systems.HPPA =>
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
@@ -309,7 +274,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := FALSE;
                  EOL                       := "\n";
 
-    |  9 => (* IBMR2 *)
+    |  Systems.IBMR2 =>
                  max_align                 := 32;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
@@ -328,7 +293,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    | 10 => (* IBMRT *)
+    | Systems.IBMRT =>
                  max_align                 := 32;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
@@ -347,7 +312,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    |  11 => (* IRIX5 *)
+    |  Systems.IRIX5 =>
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
@@ -366,7 +331,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    |  12, 13 => (* LINUX, LINUXELF *)
+    |  Systems.LINUX, Systems.LINUXELF =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -385,7 +350,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    | 14 => (* NEXT *)
+    | Systems.NEXT =>
                  max_align                 := 16;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
@@ -404,7 +369,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    | 15 => (* NT386 *)
+    | Systems.NT386 =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -437,7 +402,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  NTCall (7, "__cdecl",    0); (* __cdecl *)
                  NTCall (8, "__stdcall",  1); (* __stdcall *)
 
-    | 16 => (* OKI *)
+    | Systems.OKI =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -456,7 +421,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    |  17 => (* OS2 *)
+    |  Systems.OS2 =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -475,7 +440,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    | 18 => (* SEQUENT *)
+    | Systems.SEQUENT =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -494,7 +459,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    | 19, 20 => (* SOLgnu, SOLsun *)
+    | Systems.SOLgnu, Systems.SOLsun =>
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
@@ -513,7 +478,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    | 21 => (* SPARC *)
+    | Systems.SPARC =>
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
@@ -532,7 +497,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    | 22 => (* SUN3 *)
+    | Systems.SUN3 =>
                  max_align                 := 16;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
@@ -551,7 +516,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    | 23 => (* SUN386 *)
+    | Systems.SUN386 =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := FALSE;
@@ -570,7 +535,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    | 24 => (* UMAX *)
+    | Systems.UMAX =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -589,7 +554,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    | 25 => (* VAX *)
+    | Systems.VAX =>
                  Real.min.fraction     := -1.70111x+38;
                  Real.max.fraction     := -1.70111x+38;
                  Longreal.min.fraction := -1.70111x+38;
@@ -615,7 +580,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    |  29 => (* LINUXLIBC6 *)
+    |  Systems.LINUXLIBC6 =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -634,8 +599,8 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    |  30 => (* I386_DARWIN *)
-      (* FIXME: please carefully check all the values *)
+    |  Systems.I386_DARWIN =>
+      (* FIXME: please carefully check all the values; not active yet *)
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -654,7 +619,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    |  31 => (* PPC_DARWIN *)
+    |  Systems.PPC_DARWIN =>
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
@@ -674,6 +639,58 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
                  (* Allow_packed_byte_aligned := TRUE; use <*LAZYALIGN*>*)
+
+    | Systems.BSDI4 =>
+                 max_align                 := 32;
+                 Little_endian             := TRUE;
+                 PCC_bitfield_type_matters := TRUE;
+                 Structure_size_boundary   := 8;
+                 Bitfield_can_overlap      := FALSE;
+                 First_readable_addr       := 4096;
+                 Jumpbuf_size              := 10 * Address.size;
+                 Jumpbuf_align             := Address.align;
+                 Fixed_frame_size          := 4 * Address.size;
+                 Guard_page_size           := 4096 * Char.size;
+                 All_floats_legal          := TRUE;
+                 Has_stack_walker          := FALSE;
+                 Setjmp                    := "_setjmp";
+                 Checks_integer_ops        := FALSE;
+                 Global_handler_stack      := TRUE;
+                 Aligned_procedures        := TRUE;
+                 EOL                       := "\n";
+
+    | Systems.NT386GNU => 
+                 max_align                 := 32;
+                 Little_endian             := TRUE;
+                 PCC_bitfield_type_matters := TRUE;
+                 Structure_size_boundary   := 8;
+                 Bitfield_can_overlap      := FALSE;
+                 First_readable_addr       := 4096;
+                 Jumpbuf_size              := 52 * Address.size;
+                 Jumpbuf_align             := Address.align;
+                 Fixed_frame_size          := 0;
+                 Guard_page_size           := 0;
+                 All_floats_legal          := TRUE;
+                 Has_stack_walker          := FALSE;
+                 Setjmp                    := "setjmp";
+                 Checks_integer_ops        := FALSE;
+                 Global_handler_stack      := FALSE;
+                 Aligned_procedures        := TRUE;
+                 EOL                       := "\r\n";
+                 (* initial experiments indicate that the first 64K of
+                    a process's memory on NT are "free" and unreadable.
+                    --- WKK  9/9/94 *)
+
+                 CCs := NEW (REF ARRAY OF CallingConvention, 9);
+                 NTCall (0, "C",          0); (* __cdecl *)
+                 NTCall (1, "WINAPI",     1); (* __stdcall *)
+                 NTCall (2, "CALLBACK",   1); (* __stdcall *)
+                 NTCall (3, "WINAPIV",    0); (* __cdecl *)
+                 NTCall (4, "APIENTRY",   1); (* __stdcall *)
+                 NTCall (5, "APIPRIVATE", 1); (* __stdcall *)
+                 NTCall (6, "PASCAL",     1); (* __stdcall *)
+                 NTCall (7, "__cdecl",    0); (* __cdecl *)
+                 NTCall (8, "__stdcall",  1); (* __stdcall *)
 
     ELSE RETURN FALSE;
     END;
