@@ -23,10 +23,9 @@ do linear interpolation for x.
 *)
 
 PROCEDURE Newton(
-                 READONLY xa,ya:ARRAY OF R.T;(*interp table*)
-                 x:R.T;                      (*the input*)
-                 VAR dy:R.T;                 (*the error estimate*)
-                 start,len:CARDINAL:=0          (*for partial access*)
+                 READONLY xa,ya:ARRAY OF R.T;  (*interp table*)
+                 x:R.T;                        (*the input*)
+                 VAR dy:R.T;                   (*the error estimate*)
                  ):R.T RAISES {Error};
 (*Given an interpolation table with xa input and ya output,
 do Newton polynomial interpolation for x.  Report dy as error estimate.
