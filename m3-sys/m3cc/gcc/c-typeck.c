@@ -1572,7 +1572,7 @@ build_function_call (function, params)
   {
     register tree result
       = build (CALL_EXPR, TREE_TYPE (fntype),
-	       function, coerced_params, NULL_TREE, NULL_TREE);
+	       function, coerced_params, NULL_TREE);
 
     TREE_SIDE_EFFECTS (result) = 1;
     if (TREE_TYPE (result) == void_type_node)

@@ -95,25 +95,14 @@ Boston, MA 02111-1307, USA.  */
 {									\
   if (flag_pic)								\
     {									\
-      if (current_function_needs_context)                               \
-          fprintf (FILE, "\tpushl %%ecx\n");                            \
-      fprintf (FILE, "\tmovl _RT0u__inCritical@GOT(%%ebx),%%eax\n");    \
-      fprintf (FILE, "\tincl (%%eax)\n");                               \
+      fprintf (FILE, "\tleal %sP%d@GOTOFF(%%ebx),%%eax\n",		\
+	       LPREFIX, (LABELNO));					\
       fprintf (FILE, "\tcall *mcount@GOT(%%ebx)\n");			\
-      fprintf (FILE, "\tmovl _RT0u__inCritical@GOT(%%ebx),%%eax\n");    \
-      fprintf (FILE, "\tdecl (%%eax)\n");                               \
-      if (current_function_needs_context)                               \
-          fprintf (FILE, "\tpopl %%ecx\n");                             \
     }									\
   else									\
     {									\
-      if (current_function_needs_context)                               \
-          fprintf (FILE, "\tpushl %%ecx\n");                            \
-      fprintf (FILE, "\tincl _RT0u__inCritical\n");                     \
+      fprintf (FILE, "\tmovl $%sP%d,%%eax\n", LPREFIX, (LABELNO));	\
       fprintf (FILE, "\tcall mcount\n");				\
-      fprintf (FILE, "\tdecl _RT0u__inCritical\n");                     \
-      if (current_function_needs_context)                               \
-          fprintf (FILE, "\tpopl %%ecx\n");                             \
     }									\
 }
 

@@ -8347,8 +8347,7 @@ expand_builtin_apply (function, arguments, argsize)
     }
 
   /* All arguments and registers used for the call are set up by now!  */
-  function = prepare_call_address (function, NULL_TREE, &call_fusage, 0,
-				   NULL_TREE);
+  function = prepare_call_address (function, NULL_TREE, &call_fusage, 0);
 
   /* Ensure address is valid.  SYMBOL_REF is already valid, so no need,
      and we don't want to load it into a register as an optimization,
@@ -8874,7 +8873,7 @@ do_jump (exp, if_false_label, if_true_label)
   rtx drop_through_label = 0;
   rtx temp;
   rtx comparison = 0;
-  int i, j;
+  int i;
   tree type;
   enum machine_mode mode;
 
@@ -8952,14 +8951,7 @@ do_jump (exp, if_false_label, if_true_label)
       if (! SLOW_BYTE_ACCESS
 	  && TREE_CODE (TREE_OPERAND (exp, 1)) == INTEGER_CST
 	  && TYPE_PRECISION (TREE_TYPE (exp)) <= HOST_BITS_PER_WIDE_INT
-
-/*** doesn't work when compiling 64-bit to 32-bit *********
-  	  && (i = floor_log2 (TREE_INT_CST_LOW (TREE_OPERAND (exp, 1)))) >= 0
-***********************************************************/
-	  && (j = (TREE_INT_CST_LOW (TREE_OPERAND (exp, 1))), 
-	      i = (j >= 0)? floor_log2(j) : floor_log2(-j-1)+1,
-	      i >= 0)
-
+	  && (i = floor_log2 (TREE_INT_CST_LOW (TREE_OPERAND (exp, 1)))) >= 0
 	  && (mode = mode_for_size (i + 1, MODE_INT, 0)) != BLKmode
 	  && (type = type_for_mode (mode, 1)) != 0
 	  && TYPE_PRECISION (type) < TYPE_PRECISION (TREE_TYPE (exp))
