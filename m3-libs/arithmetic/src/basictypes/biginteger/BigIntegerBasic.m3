@@ -11,6 +11,7 @@ IMPORT Word AS W, xWordEx AS Wx;
 <*UNUSED*> CONST Module = "BigIntegerBasic.";
 (*==========================*)
 
+<*OBSOLETE*>
 CONST
   ModMask = 16_FFFF;
 
@@ -292,65 +293,58 @@ BEGIN
 END Equal;
 
 
-(*
+
+
 PROCEDURE Mul (READONLY x, y : T) : T =
 VAR
-  j, k : INTEGER;
-  m, t, carry : LONGCARD;
-  xRun, yRun, rRun : CARDPTR;
+  m,
+  lo, hi, oldhi : W.T;
+  carry : BOOLEAN;
+  z : T;
 
 BEGIN
   IF (x.size=0) OR (y.size=0) THEN
-    SetZero (r);
-    RETURN
+    RETURN Zero;
   END;
 
-  IF r.data=NIL THEN
-    NUMBER(r.data) := x.size+y.size;
-    memPool.NewPooled (r.data);
-  ELSIF NUMBER(r.data) < x.size+y.size THEN
-    memPool.DisposePooled (r.data);
-    NUMBER(r.data) := x.size+y.size;
-    memPool.NewPooled (r.data);
-  END;
+  z.data := NEW(Value,x.size+y.size);
 
-  xRun := x.data[0]'PTR;
-  yRun := y.data[0]'PTR;
-  rRun := r.data[0]'PTR;
-
+  (*initialize result data*)
   m := x.data[0];
-  carry := 0;
+  hi := 0;
   FOR k:=0 TO y.size-1 DO
-    t := m * y.data[k] + carry;
-    z.data[k] := CARDINAL (CAST (LONGCARD, (CAST (LONGSET, t) * ModMask)));
-    carry   := t SHR 16;
+    oldhi := hi;
+    Wx.DoubleLengthMultiply(m,y.data[k],lo,hi);
+    carry:=FALSE;
+    lo:=Wx.PlusWithCarry(lo,oldhi,carry);
+    hi:=Wx.PlusWithCarry(hi,0,carry);
+    z.data[k] := lo;
   END;
-  rRun^ := carry;
+  z.data[y.size] := hi;
 
   FOR j:=1 TO x.size-1 DO
-    yRun := y.data[0]'PTR;
-    rRun := r.data[j]'PTR;
-
     m := x.data[j];
-    carry := 0;
+    hi := 0;
     FOR k:=0 TO y.size-1 DO
-      t := m * y.data[k] + rRun^ + carry;
-      z.data[k] := CARDINAL (CAST (LONGCARD, (CAST (LONGSET, t) * ModMask)));
-      carry   := t SHR 16;
+      oldhi := hi;
+      Wx.DoubleLengthMultiply(m,y.data[k],lo,hi);
+      carry:=FALSE;
+      lo:=Wx.PlusWithCarry(lo,oldhi,carry);
+      hi:=Wx.PlusWithCarry(hi,0,carry);
+      carry:=FALSE;
+      lo:=Wx.PlusWithCarry(lo,z.data[j+k],carry);
+      hi:=Wx.PlusWithCarry(hi,0,carry);
+      z.data[j+k] := lo;
     END;
-    rRun^ := carry;
+    z.data[j+y.size] := hi;
   END;
 
-  r.sign := x.sign # y.sign;
-  CorrectSize (r, x.size+y.size-1);
+  z.sign := x.sign # y.sign;
+  CorrectSize (z, x.size+y.size-1);
+  RETURN z;
 END Mul;
 
-PROCEDURE MulS (VAR r : T; READONLY y : T) =
-BEGIN
-  Assign (tmp, r);
-  Mul (r, tmp, y);
-END MulS;
-
+(*
 PROCEDURE ModU (READONLY x, y : T) : T =
 VAR
   sr, sy, move, j : INTEGER;
@@ -358,9 +352,9 @@ VAR
 
 BEGIN
   ASSERT2 (y.size # 0, DivZero);
-  Assign (r, x);
+  Assign (z, x);
 
-  sr := r.size-1;
+  sr := z.size-1;
   sy := y.size-1;
   move := sr - sy;
 
@@ -374,9 +368,9 @@ BEGIN
 
   WHILE move>=0 DO
     IF sr>0 THEN
-      a := r.data[sr] SHL 16 + r.data[sr-1];
+      a := z.data[sr] SHL 16 + z.data[sr-1];
     ELSE
-      a := r.data[sr] SHL 16;
+      a := z.data[sr] SHL 16;
     END;
 
     IF sr = sy + move THEN
@@ -390,154 +384,61 @@ BEGIN
       (* Berechnung von neuem Rest *)
       carry := 0;
       FOR j:=move TO move+sy DO
-        d1 := r.data[j];
+        d1 := z.data[j];
         d2 := quot * y.data[j-move] + carry;
 
         IF d1 < d2 THEN
           t := d2 - d1 + 16_FFFF;
-          r.data[j] := CARDINAL (16_FFFF - CAST (LONGCARD, (CAST (LONGSET, t) * ModMask)));
+          z.data[j] := CARDINAL (16_FFFF - CAST (LONGCARD, (CAST (LONGSET, t) * ModMask)));
           carry := t SHR 16;
         ELSE
-          r.data[j] := d1 - d2;
+          z.data[j] := d1 - d2;
           carry := 0;
         END;
       END;
       IF carry > 0 THEN
-        r.data[move+sy+1] := r.data[move+sy+1] - carry;   (* immer =Null ?? *)
+        z.data[move+sy+1] := z.data[move+sy+1] - carry;   (* immer =Null ?? *)
       END;
 
-      WHILE (sr>=0) AND (r.data[sr]=0) DO DEC (sr) END;
+      WHILE (sr>=0) AND (z.data[sr]=0) DO DEC (sr) END;
 
       move := sr - sy;
     ELSE
       DEC (move);
     END;
 
-(*    WriteT (r); *)
+(*    WriteT (z); *)
   END;
 
-  r.size := sr + 1;             (* für Compare *)
+  z.size := sr + 1;             (* für Compare *)
 
-  IF CompareU (r, y) # -1 THEN
+  IF CompareU (z, y) # -1 THEN
 (*    WriteString ("Result is not -1 than Modul!"+&10); *)
 
     (* r := r - y *)
     carry := 0;
     FOR j:=0 TO sy DO
-      d1 := r.data[j];
+      d1 := z.data[j];
       d2 := y.data[j] + carry;
 
       IF d1 < d2 THEN
-        r.data[j] := 16_10000 + d1 - d2;
+        z.data[j] := 16_10000 + d1 - d2;
         carry := 1;
       ELSE
-        r.data[j] := d1 - d2;
+        z.data[j] := d1 - d2;
         carry := 0;
       END;
     END;
     IF carry = 1 THEN
-      r.data[sy+1] := r.data[sy+1] - 1;
+      z.data[sy+1] := z.data[sy+1] - 1;
       WriteString ("Carry"+&10);
     END;
 
-    WHILE (sr>=0) AND (r.data[sr]=0) DO DEC (sr) END;
+    WHILE (sr>=0) AND (z.data[sr]=0) DO DEC (sr) END;
   END;
 
-  r.size := sr + 1;
+  z.size := sr + 1;
 END ModU;
-
-PROCEDURE ModUS (VAR r : T = READONLY x : T);
-VAR
-  sr, sx, move, j : INTEGER;
-  a, b, bSml, bBig, carry, d1, d2, t, quot : LONGCARD;
-
-BEGIN
-  ASSERT2 (x.size # 0, DivZero);
-  sr := r.size-1;
-  sx := x.size-1;
-  move := sr - sx;
-
-  bSml := x.data[sx];
-  IF sx>0 THEN
-    bBig := bSml SHL 16 + x.data[sx-1] + 1;
-  ELSE
-    bBig := bSml SHL 16 + 1;
-  END;
-  INC (bSml);
-
-  WHILE move>=0 DO
-    IF sr>0 THEN
-      a := r.data[sr] SHL 16 + r.data[sr-1];
-    ELSE
-      a := r.data[sr] SHL 16;
-    END;
-
-    IF sr = sx + move THEN
-      b := bBig
-    ELSE
-      b := bSml
-    END;
-
-    IF a >= b THEN
-      quot := a DIV b;
-      (* Berechnung von neuem Rest *)
-      carry := 0;
-      FOR j:=move TO move+sx DO
-        d1 := r.data[j];
-        d2 := quot * x.data[j-move] + carry;
-
-        IF d1 < d2 THEN
-          t := d2 - d1 + 16_FFFF;
-          r.data[j] := CARDINAL (16_FFFF - CAST (LONGCARD, (CAST (LONGSET, t) * ModMask)));
-          carry := t SHR 16;
-        ELSE
-          r.data[j] := d1 - d2;
-          carry := 0;
-        END;
-      END;
-      IF carry > 0 THEN
-        r.data[move+sx+1] := r.data[move+sx+1] - carry;   (* immer =Null ?? *)
-      END;
-
-      WHILE (sr>=0) AND (r.data[sr]=0) DO DEC (sr) END;
-
-      move := sr - sx;
-    ELSE
-      DEC (move);
-    END;
-
-(*    WriteT (r); *)
-  END;
-
-  r.size := sr + 1;             (* für Compare *)
-
-  IF CompareU (r, x) # -1 THEN
-(*    WriteString ("Result is not -1 than Modul!"+&10); *)
-
-    (* r := r - y *)
-    carry := 0;
-    FOR j:=0 TO sx DO
-      d1 := r.data[j];
-      d2 := x.data[j] + carry;
-
-      IF d1 < d2 THEN
-        r.data[j] := 16_10000 + d1 - d2;
-        carry := 1;
-      ELSE
-        r.data[j] := d1 - d2;
-        carry := 0;
-      END;
-    END;
-    IF carry = 1 THEN
-      r.data[sx+1] := r.data[sx+1] - 1;
-      WriteString ("Carry"+&10);
-    END;
-
-    WHILE (sr>=0) AND (r.data[sr]=0) DO DEC (sr) END;
-  END;
-
-  r.size := sr + 1;
-END ModUS;
 
 PROCEDURE DivModU (VAR q, r : T = READONLY x, y : T);
 VAR
@@ -547,9 +448,9 @@ VAR
 
 BEGIN
   ASSERT2 (y.size # 0, DivZero);
-  Assign (r, x);
+  Assign (z, x);
 
-  sr := r.size-1;
+  sr := z.size-1;
   sy := y.size-1;
   move := sr - sy;
 
@@ -582,9 +483,9 @@ BEGIN
 
     WHILE move>=0 DO
       IF sr>0 THEN
-        a := r.data[sr] SHL 16 + r.data[sr-1];
+        a := z.data[sr] SHL 16 + z.data[sr-1];
       ELSE
-        a := r.data[sr] SHL 16;
+        a := z.data[sr] SHL 16;
       END;
 
       IF sr = sy + move THEN
@@ -598,23 +499,23 @@ BEGIN
         (* Berechnung von neuem Rest *)
         carry := 0;
         FOR j:=move TO move+sy DO
-          d1 := r.data[j];
+          d1 := z.data[j];
           d2 := quot * y.data[j-move] + carry;
 
           IF d1 < d2 THEN
             t := d2 - d1 + 16_FFFF;
-            r.data[j] := CARDINAL (16_FFFF - CAST (LONGCARD, (CAST (LONGSET, t) * ModMask)));
+            z.data[j] := CARDINAL (16_FFFF - CAST (LONGCARD, (CAST (LONGSET, t) * ModMask)));
             carry := t SHR 16;
           ELSE
-            r.data[j] := d1 - d2;
+            z.data[j] := d1 - d2;
             carry := 0;
           END;
         END;
         IF carry > 0 THEN
-          r.data[move+sy+1] := r.data[move+sy+1] - carry;   (* immer =Null ?? *)
+          z.data[move+sy+1] := z.data[move+sy+1] - carry;   (* immer =Null ?? *)
         END;
 
-        WHILE (sr>=0) AND (r.data[sr]=0) DO DEC (sr) END;
+        WHILE (sr>=0) AND (z.data[sr]=0) DO DEC (sr) END;
 
         (* Berechnung von neuem Quotienten *)
         carry := quot;
@@ -630,34 +531,34 @@ BEGIN
         DEC (move);
       END;
 
-  (*    WriteT (r); *)
+  (*    WriteT (z); *)
     END;
   END;
 
-  r.size := sr + 1;             (* für Compare *)
+  z.size := sr + 1;             (* für Compare *)
 
-  IF CompareU (r, y) # -1 THEN
+  IF CompareU (z, y) # -1 THEN
 (*    WriteString ("Result is not smaller than Modul!"+&10); *)
 
     (* r := r - y *)
     carry := 0;
     FOR j:=0 TO sy DO
-      d1 := r.data[j];
+      d1 := z.data[j];
       d2 := y.data[j] + carry;
 
       IF d1 < d2 THEN
-        r.data[j] := 16_10000 + d1 - d2;
+        z.data[j] := 16_10000 + d1 - d2;
         carry := 1;
       ELSE
-        r.data[j] := d1 - d2;
+        z.data[j] := d1 - d2;
         carry := 0;
       END;
     END;
     IF carry = 1 THEN
-      r.data[sy+1] := r.data[sy+1] - 1;
+      z.data[sy+1] := z.data[sy+1] - 1;
       WriteString ("Carry"+&10);
     END;
-    WHILE (sr>=0) AND (r.data[sr]=0) DO DEC (sr) END;
+    WHILE (sr>=0) AND (z.data[sr]=0) DO DEC (sr) END;
 
     (* q := q + 1 *)
     j := 0;
@@ -668,9 +569,10 @@ BEGIN
     INC (q.data[j]);
   END;
 
-  r.size := sr + 1;
+  z.size := sr + 1;
   CorrectSize (q, q.size-1);
 END DivModU;
+
 
 PROCEDURE Div (VAR q : T = READONLY x, y : T);
 VAR
@@ -694,13 +596,6 @@ BEGIN
   q.sign := x.sign # y.sign;
 END Div;
 
-PROCEDURE DivS (VAR q : T = READONLY y : T);
-BEGIN
-  ASSERT2 (y.size # 0, DivZero);
-  Assign (tmp, q);
-  Div (q, tmp, y);
-END DivS;
-
 PROCEDURE Mod (READONLY x, y : T) : T =
 VAR
   j : INTEGER;
@@ -708,19 +603,19 @@ VAR
 
 BEGIN
   ASSERT2 (y.size # 0, DivZero);
-  ModU (r, x, y);
+  ModU (z, x, y);
 
-  IF r.size # 0 THEN
+  IF z.size # 0 THEN
     IF x.sign THEN       (* r := y - r; *)
       carry := 0;
-      FOR j:=0 TO r.size-1 DO
-        t := y.data[j] - r.data[j] - carry;
+      FOR j:=0 TO z.size-1 DO
+        t := y.data[j] - z.data[j] - carry;
 
         IF t < 0 THEN
-          r.data[j] := 16_10000 + t;
+          z.data[j] := 16_10000 + t;
           carry := 1;
         ELSE
-          r.data[j] := t;
+          z.data[j] := t;
           carry := 0;
         END;
       END;
@@ -728,7 +623,7 @@ BEGIN
     END;
   END;
 
-  r.sign := FALSE;
+  z.sign := FALSE;
 END Mod;
 
 PROCEDURE DivMod (VAR q, r : T = READONLY x, y : T);
@@ -740,7 +635,7 @@ BEGIN
   ASSERT2 (y.size # 0, DivZero);
   DivModU (q, r, x, y);
 
-  IF r.size # 0 THEN
+  IF z.size # 0 THEN
     IF x.sign THEN
       (* INC (q) *)
       j := 0;
@@ -752,14 +647,14 @@ BEGIN
 
       (* r := y - r; *)
       carry := 0;
-      FOR j:=0 TO r.size-1 DO
-        t := y.data[j] - r.data[j] - carry;
+      FOR j:=0 TO z.size-1 DO
+        t := y.data[j] - z.data[j] - carry;
 
         IF t < 0 THEN
-          r.data[j] := 16_10000 + t;
+          z.data[j] := 16_10000 + t;
           carry := 1;
         ELSE
-          r.data[j] := t;
+          z.data[j] := t;
           carry := 0;
         END;
       END;
@@ -768,7 +663,7 @@ BEGIN
   END;
 
   q.sign := x.sign # y.sign;
-  r.sign := FALSE;
+  z.sign := FALSE;
 END DivMod;
 *)
 
