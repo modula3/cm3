@@ -6,6 +6,16 @@ import("libm3")
 override("m3na","/home/thielema/programming/m3/pkg/contrib")
 %override("m3na","../../..")
 import("m3na")
+
+% if you import 'blas' functions like 'e_wsfe' cannot be found
+% if you then switch to 'gslcblas', compile, switch back to 'blas'
+% then it can be compiled
+%import_lib("blas","/usr/lib")
+
+import_lib("g2c","/usr/lib")  % needed for blas and lapack, part of the f2c package, I guess
+import_lib("blas","/usr/lib")
+import_lib("lapack","/usr/lib")
+
 implementation("TestWordEx")
 implementation("TestBits")
 implementation("TestInteger")
@@ -24,5 +34,6 @@ implementation("TestGCD")
 implementation("TestEigenSystem")
 implementation("TestChebyshev")
 implementation("TestUnit")
+implementation("TestLapack")
 module("Test")
 program("Test")

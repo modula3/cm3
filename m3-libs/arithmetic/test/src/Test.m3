@@ -69,8 +69,9 @@ BEGIN
   NewLine(); EVAL TestGCD();
   NewLine(); EVAL TestEigenSystem();
   NewLine(); EVAL TestChebyshev();
-*)
   NewLine(); EVAL TestUnit();
+*)
+  NewLine(); EVAL TestLapack();
 (*
 *)
 END Test.

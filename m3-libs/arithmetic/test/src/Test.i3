@@ -32,4 +32,9 @@ PROCEDURE TestGCD():BOOLEAN;
 PROCEDURE TestEigenSystem():BOOLEAN;
 PROCEDURE TestChebyshev():BOOLEAN;
 PROCEDURE TestUnit():BOOLEAN;
+PROCEDURE TestLapack():BOOLEAN;
+
+<*EXTERNAL dlamch_*>
+PROCEDURE GetMachineParameter(READONLY cmach : CHAR):LONGREAL;
+
 END Test.

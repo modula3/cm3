@@ -8,9 +8,8 @@ todo:
      - reduce number parameters to template procedures,
        build final module names within that procedures
   - Hash routines
-  - BRANDED strings
   - (*OUT*) for remainder of DivMod
-  - ODE
+  - ODE by Simon Hood
   - Tex output of numbers
      - check for necessarity of parentheses by giving the precedence of the surrounding operation
      - polynomials: vector (1,2,3) or variable based output 1x^0+2x^1+3x^2, optionally output x^0 as 1 and x^1 as x and suppress zero coefficients
