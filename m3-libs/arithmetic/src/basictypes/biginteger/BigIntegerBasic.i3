@@ -36,7 +36,9 @@ PROCEDURE Copy (READONLY x : T) : T;
 
 VAR
   (*CONST*)Zero,
-  (*CONST*)One : T;
+  (*CONST*)One,
+  (*CONST*)MinusOne
+   : T;
 
 PROCEDURE Add (READONLY x, y : T) : T;
 PROCEDURE Sub (READONLY x, y : T) : T;

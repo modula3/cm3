@@ -41,6 +41,8 @@ PROCEDURE Eval(x:T;           (*eval this polynomial*)
                ):R.T;
 PROCEDURE Add(x,y:T):T;  (*return x+y*)
 PROCEDURE Sub(x,y:T):T;  (*return x-y*)
+<*INLINE*>
+PROCEDURE IsZero(x:T):BOOLEAN;
 PROCEDURE Equal(x,y:T):BOOLEAN;  (*return x=y*)
 
 PROCEDURE Mul(x,y:T):T;  (*return x*y*)
@@ -57,6 +59,6 @@ PROCEDURE Derive(x:T;           (*differentiate polynomial*)
 PROCEDURE EvalDerivate(x:T;          (*Eval this polynomial*)
                 xi:R.T;               (*for this argument*)
            VAR pd:ARRAY OF R.T;      (*returning x(xi), x'(xi)...*)
-                ) RAISES {Error};
+                );
 (*==========================*)
 END PolynomialBasic.

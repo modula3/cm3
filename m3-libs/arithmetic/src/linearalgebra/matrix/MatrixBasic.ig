@@ -25,6 +25,7 @@ PROCEDURE NewOne (n  :CARDINAL):T;               (*create identity matrix*)
 
 PROCEDURE Add(x,y:T):T RAISES {Error};   (*x + y*)
 PROCEDURE Sub(x,y:T):T RAISES {Error};   (*x - y*)
+PROCEDURE IsZero(x:T):BOOLEAN;
 PROCEDURE Equal(x,y:T):BOOLEAN RAISES {Error};  (*return v1=v2*)
 
 PROCEDURE Mul(x,y:T):T RAISES {Error};   (*x * y*)

@@ -26,6 +26,7 @@ CONST
 <*INLINE*> PROCEDURE Sub(x,y:T):T;  (*return x-y*)
 <*INLINE*> PROCEDURE Neg(x:T):T;    (*return -x *)
 <*INLINE*> PROCEDURE Conj(x:T):T;   (*return x*)
+<*INLINE*> PROCEDURE IsZero(x:T):BOOLEAN;
 
 <*INLINE*> PROCEDURE Mul(x,y:T):T;  (*return x*y*)
 <*INLINE*> PROCEDURE Div(x,y:T):T RAISES {Error};  (*return x/y*)

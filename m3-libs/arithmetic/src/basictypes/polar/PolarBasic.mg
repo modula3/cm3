@@ -27,6 +27,12 @@ BEGIN
 END FromComplex;
 
 (*----------------*)
+PROCEDURE IsZero(READONLY x:T):BOOLEAN =
+BEGIN
+  RETURN R.IsZero(x.radius);
+END IsZero;
+
+(*----------------*)
 PROCEDURE Equal(READONLY x,y:T):BOOLEAN =
 BEGIN
   RETURN R.Equal(x.radius,y.radius) AND R.Equal(x.angle,y.angle);

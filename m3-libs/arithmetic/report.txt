@@ -1,9 +1,9 @@
 for myself:
 
 todo:
-  - introduce IsZero and replace all comparisons with Zero by that
   - (overflow check in integer modules)
   - generic Fmt with a FmtStyle record
+  - physical units
 
 
 for Harry:

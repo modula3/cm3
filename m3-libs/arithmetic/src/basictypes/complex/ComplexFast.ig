@@ -31,6 +31,7 @@ CONST
 <*INLINE*> PROCEDURE Sub(READONLY x,y:T):T;  (*return x-y*)
 <*INLINE*> PROCEDURE Neg(READONLY x:T):T;    (*return -x *)
 <*INLINE*> PROCEDURE Conj(READONLY x:T):T;   (*return complex conjugated of x*)
+<*INLINE*> PROCEDURE IsZero(READONLY x:T):BOOLEAN;
 <*INLINE*> PROCEDURE Equal(READONLY x,y:T):BOOLEAN;  (*return x=y*)
 
 <*INLINE*> PROCEDURE Mul(READONLY x,y:T):T;  (*return x*y*)

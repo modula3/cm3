@@ -34,6 +34,7 @@ PROCEDURE Zero(x:T);          (*set x to zeros*)
 PROCEDURE One (x:T);          (*set x to 1*)
 *)
 
+PROCEDURE IsZero(x:T):BOOLEAN;
 PROCEDURE Eval(x:T;           (*eval this polynomial*)
                xi:R.T          (*at this point*)
                ):R.T;

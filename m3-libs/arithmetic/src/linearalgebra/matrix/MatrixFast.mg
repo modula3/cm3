@@ -165,6 +165,22 @@ BEGIN
   RETURN z;
 END Sub;
 (*----------------*)
+PROCEDURE IsZero( 
+               x:T):BOOLEAN =
+VAR
+  mf:=0; ml:=LAST(x^);
+  nf:=0; nl:=LAST(x[0]);
+BEGIN
+  FOR i:=mf TO ml DO
+    FOR j:=nf TO nl DO
+      IF x[i,j] # R.Zero THEN
+        RETURN FALSE;
+      END;
+    END;
+  END;
+  RETURN TRUE;
+END IsZero;
+(*----------------*)
 PROCEDURE Equal( 
                x,y:T):BOOLEAN RAISES {Error} =
 (*return x=y*)

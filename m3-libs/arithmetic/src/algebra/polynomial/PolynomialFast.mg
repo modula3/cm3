@@ -81,6 +81,12 @@ BEGIN
 END Sub;
 
 (*---------------------*)
+PROCEDURE IsZero(x:T):BOOLEAN =
+BEGIN
+  RETURN x=NIL OR x[0]=R.Zero;
+END IsZero;
+
+(*---------------------*)
 PROCEDURE Equal(x,y:T):BOOLEAN =
 VAR
   xl:=LAST(x^);

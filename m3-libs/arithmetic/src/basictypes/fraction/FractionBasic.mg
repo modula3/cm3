@@ -73,13 +73,20 @@ BEGIN
 END Conj;
 
 (*----------------*)
+PROCEDURE IsZero(READONLY x:T):BOOLEAN  (*return x=0*) =
+BEGIN
+  RETURN R.IsZero(x.n);
+END IsZero;
+
+(*----------------*)
 PROCEDURE Equal(READONLY x,y:T):BOOLEAN  (*return x=y*) =
 BEGIN
   (*comparing component-wise may fail if the field has more than one unit (say e.g. -1),
-    in this ccase the fraction representation is not unique!*)
+    in this case the fraction representation is not unique!*)
   RETURN R.Equal(R.Mul(x.n,y.d),R.Mul(y.n,x.d));
 END Equal;
 
+(*----------------*)
 PROCEDURE Compare(READONLY x,y:T) : [-1..1] =
 BEGIN
   RETURN R.Compare(R.Mul(x.n,y.d),R.Mul(y.n,x.d));
@@ -182,4 +189,7 @@ END Scale;
 
 (*==========================*)
 BEGIN
+  Zero     := T{n:=R.Zero,     d:=R.One};
+  One      := T{n:=R.One,      d:=R.One};
+  MinusOne := T{n:=R.MinusOne, d:=R.One};
 END FractionBasic.
