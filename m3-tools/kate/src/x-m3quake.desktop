@@ -3,5 +3,5 @@ Comment=Modula 3 Quake
 Hidden=false
 Icon=source
 MimeType=text/x-m3quake
-Patterns=m3makefile;m3overrides;*.tmpl
+Patterns=m3makefile;m3overrides;cm3.cfg;*.tmpl
 Type=MimeType
