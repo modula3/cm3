@@ -39,6 +39,9 @@ table    ("Space", "Fingerprint", "SpaceConn")
 list     ("Message", "Message")
 listfuncs ("Message", "Message", "MessageList")
 
+if defined("_SHAREDOBJ_OVERRIDE")
+  template("sharedobj-ov")
+end
 template("sharedobj")
 
 %netobj("ObjectSpace", "FindObjCallBack")
