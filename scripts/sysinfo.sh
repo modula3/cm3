@@ -21,6 +21,8 @@ case "${UNAME}" in
     CM3_OSTYPE=WIN32
     CM3_TARGET=NT386
     CM3_INSTALL="c:/cm3"
+    CM3_GCC_BACKEND=no
+    HAVE_SERIAL=yes
   ;;
 
   FreeBSD*)
@@ -53,7 +55,11 @@ case "${UNAME}" in
 esac
 
 # define the exported values
-ROOT=${ROOT:-${PRJ_ROOT}/cm3}
+if [ -n "$root" ] ; then
+  ROOT=${ROOT:-${root}}
+else
+  ROOT=${ROOT:-${PRJ_ROOT}/cm3}
+fi
 SCRIPTS=${SCRIPTS:-${ROOT}/scripts}
 M3GDB=${M3GDB:-${CM3_GDB}}
 OSTYPE=${OSTYPE:-${CM3_OSTYPE}}
