@@ -21,12 +21,65 @@ INTERFACE Target;
     boundary (i.e. (size + align - 1) DIV align * align).
 *)
 
+TYPE
+  Systems = {
+    AIX386, ALPHA_OSF, AP3000, ARM, DS3100,
+    FreeBSD, FreeBSD2, HP300, HPPA, IBMR2,
+    IBMRT, IRIX5, LINUX, LINUXELF, NEXT,
+    NT386, OKI, OS2, SEQUENT, SOLgnu, SOLsun,
+    SPARC, SUN3, SUN386, UMAX, VAX, FreeBSD3,
+    FreeBSD4, FBSD_ALPHA, LINUXLIBC6, I386_DARWIN,
+    PPC_DARWIN, BSDI4, NT386GNU, Tru64v5, Undefined
+  };
+
+CONST
+  SystemNames = ARRAY OF TEXT {
+    (*  0 *) "AIX386",
+    (*  1 *) "ALPHA_OSF",
+    (*  2 *) "AP3000",
+    (*  3 *) "ARM",
+    (*  4 *) "DS3100",
+    (*  5 *) "FreeBSD",
+    (*  6 *) "FreeBSD2",
+    (*  7 *) "HP300",
+    (*  8 *) "HPPA",
+    (*  9 *) "IBMR2",
+    (* 10 *) "IBMRT",
+    (* 11 *) "IRIX5",
+    (* 12 *) "LINUX",
+    (* 13 *) "LINUXELF",
+    (* 14 *) "NEXT",
+    (* 15 *) "NT386",
+    (* 16 *) "OKI",
+    (* 17 *) "OS2",
+    (* 18 *) "SEQUENT",
+    (* 19 *) "SOLgnu",
+    (* 20 *) "SOLsun",
+    (* 21 *) "SPARC",
+    (* 22 *) "SUN3",
+    (* 23 *) "SUN386",
+    (* 24 *) "UMAX",
+    (* 25 *) "VAX",
+    (* 26 *) "FreeBSD3",
+    (* 27 *) "FreeBSD4",
+    (* 28 *) "FBSD_ALPHA",
+    (* 29 *) "LINUXLIBC6",
+    (* 30 *) "I386_DARWIN",
+    (* 31 *) "PPC_DARWIN",
+    (* 32 *) "BSDI4",
+    (* 33 *) "NT386GNU",
+    (* 34 *) "Tru64v5"
+  };
+
 (*-------------------------------------------------------- initialization ---*)
 
 PROCEDURE Init (system: TEXT): BOOLEAN;
 (* Initialize the variables of this interface to reflect the architecture
    of "system".  Returns TRUE iff the "system" was known and the initialization
    was successful.  *)
+
+VAR (*CONST*)
+  System: Systems := Systems.Undefined; (* initialized by "Init" *)
 
 VAR (*CONST*)
   System_name: TEXT := NIL; (* initialized by "Init" *)
@@ -227,6 +280,11 @@ VAR (*CONST*)
 
   Bitfield_can_overlap: BOOLEAN;
   (* a C bit field cannot overlap two adjacent storage units *)  
+
+	Allow_packed_byte_aligned: BOOLEAN;
+	(* Allow the compiler to align scalar types on byte boundaries when packing. 
+	   The target processor must support byte alignment of scalar store and loads. This
+     does not remove the restriction that bitfields may not cross word boundaries. *)
 
   (* NIL checking *)
   First_readable_addr: CARDINAL;
