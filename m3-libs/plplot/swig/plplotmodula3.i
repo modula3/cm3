@@ -58,14 +58,10 @@ typedef int PLINT;
 %insert(m3wrapintf) %{(* func: string *)%}
 %enddef
 
-/*
-%pragma(modula3) enumitem="Escape,PLESC_";
-%pragma(modula3) setitem="DrawMode,DRAW_";
-%pragma(modula3) setitem="Option,PL_OPT_";
-%pragma(modula3) setitem="Parse,PL_PARSE_";
-%pragma(modula3) enumitem="Buffering,PLESPLFLTBUFFERING_";
-*/
 %pragma(modula3) unsafe="true";
+%pragma(modula3) library="m3plplot";
+
+%insert(m3makefile) %{import("m3na")%}
 
 %insert(m3rawintf) %{
 TYPE

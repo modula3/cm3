@@ -1,5 +1,9 @@
-import_lib("plplotd","/home/thielema/applications/plplot/lib")
-%import_lib("plplotd","/usr/lib")
+% automatically generated quake file for PLPlot
 
+import("m3na")
+import("libm3")
+import_lib("PLPlot","/usr/lib")
 module("PLPlotRaw")
 module("PLPlot")
+
+library("m3plplot")
