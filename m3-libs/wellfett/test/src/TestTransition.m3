@@ -33,22 +33,10 @@ IMPORT LongRealBasic               AS R,
 CONST
   AThird = 1.0D0/3.0D0;
 
-
-PROCEDURE TransitionEV (mask : S.T) : Eigen.EV
-    RAISES {NA.Error}=
-  BEGIN
-    RETURN Eigen.EigenValuesGen(
-             Refn.TransitionMatrix(
-               mask.adjoint().convolve(mask)
-             )
-           );
-  END TransitionEV;
-
-
 PROCEDURE PlotTransitionEV (mask : S.T) =
   <*FATAL NA.Error*>
   VAR
-    ev := TransitionEV(mask);
+    ev := Refn.TransitionEV(mask);
     x  := NEW(V.T,NUMBER(ev.eigenvalues^));
     y  := NEW(V.T,NUMBER(ev.eigenvalues^));
   BEGIN
@@ -213,7 +201,7 @@ PROCEDURE EstimateSpecRad(mask:S.T):R.T=
 
 PROCEDURE ComputeSpecRad(mask:S.T):R.T RAISES {NA.Error}=
   BEGIN
-    RETURN CVT.NormInf(TransitionEV(mask).eigenvalues);
+    RETURN CVT.NormInf(Refn.TransitionEV(mask).eigenvalues);
   END ComputeSpecRad;
 
 PROCEDURE CompareEstimate(mask:S.T)=

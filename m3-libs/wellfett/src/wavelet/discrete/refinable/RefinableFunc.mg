@@ -1,18 +1,18 @@
-GENERIC MODULE RefinableFunc(R,V,M,S);
+GENERIC MODULE RefinableFunc(R, V, CVT, M, Eigen, S);
 
-PROCEDURE ClearArray(VAR x : V.TBody) =
+IMPORT NADefinitions AS NA;
+
+PROCEDURE ClearArray (VAR x: V.TBody) =
   BEGIN
-    FOR j:=FIRST(x) TO LAST(x) DO
-      x[j] := R.Zero;
-    END;
+    FOR j := FIRST(x) TO LAST(x) DO x[j] := R.Zero; END;
   END ClearArray;
 
-PROCEDURE PlaceSubVector(VAR      y      : V.TBody;
-                         READONLY x      : V.TBody;
-                                  yStart : INTEGER) =
+PROCEDURE PlaceSubVector (VAR      y     : V.TBody;
+                          READONLY x     : V.TBody;
+                                   yStart: INTEGER  ) =
   VAR
-    yStop := yStart + NUMBER(x);
-    xl, xr, yl, yr : CARDINAL;
+    yStop                    := yStart + NUMBER(x);
+    xl, xr, yl, yr: CARDINAL;
   BEGIN
     IF yStart < 0 THEN
       xl := -yStart;
@@ -25,7 +25,7 @@ PROCEDURE PlaceSubVector(VAR      y      : V.TBody;
       RETURN;
     END;
 
-    yStop := yStart+NUMBER(x);
+    yStop := yStart + NUMBER(x);
     IF yStop < 0 THEN
       ClearArray(y);
       RETURN;
@@ -33,28 +33,49 @@ PROCEDURE PlaceSubVector(VAR      y      : V.TBody;
       xr := NUMBER(x);
       yr := yStop;
     ELSE
-      xr := NUMBER(y)-yStart;
+      xr := NUMBER(y) - yStart;
       yr := NUMBER(y);
     END;
 
-    ClearArray(SUBARRAY(y,0,yl));
-    SUBARRAY(y,yl,yr-yl) := SUBARRAY(x,xl,xr-xl);
-    ClearArray(SUBARRAY(y,yr,NUMBER(y)-yr));
+    ClearArray(SUBARRAY(y, 0, yl));
+    SUBARRAY(y, yl, yr - yl) := SUBARRAY(x, xl, xr - xl);
+    ClearArray(SUBARRAY(y, yr, NUMBER(y) - yr));
   END PlaceSubVector;
 
-PROCEDURE TransitionMatrix(mask : S.T; shift : CARDINAL := 2) : M.T =
+PROCEDURE TransitionMatrix (mask: S.T; shift: CARDINAL := 2): M.T =
   VAR
-    (*the size of the matrix is the minimum possible to avoid zeros
-      on the diagonal from outside the support of the mask*)
-    n := mask.getNumber() DIV (shift-1);
+    (*the size of the matrix is the minimum possible to avoid zeros on the
+       diagonal from outside the support of the mask*)
+    n := mask.getNumber() DIV (shift - 1);
     v := mask.getData();
-    z := M.NewZero(n,n);
+    z := M.NewZero(n, n);
   BEGIN
-    FOR j:=0 TO n-1 DO
-      PlaceSubVector(z[j],v^,j*shift-LAST(v^));
+    FOR j := 0 TO n - 1 DO
+      PlaceSubVector(z[j], v^, j * shift - LAST(v^));
     END;
     RETURN z;
   END TransitionMatrix;
+
+PROCEDURE TransitionEV (mask: S.T): Eigen.EV RAISES {NA.Error} =
+  BEGIN
+    RETURN Eigen.EigenValuesGen(
+             TransitionMatrix(mask.adjoint().convolve(mask)));
+  END TransitionEV;
+
+PROCEDURE TransitionSpecRad (mask: S.T): R.T RAISES {NA.Error} =
+  BEGIN
+    RETURN CVT.NormInf(TransitionEV(mask).eigenvalues);
+  END TransitionSpecRad;
+
+PROCEDURE Refine (start, mask: S.T; levels: CARDINAL; shift: CARDINAL := 2):
+  S.T =
+  BEGIN
+    WHILE levels > 0 DO
+      start := start.upsample(shift).convolve(mask);
+      DEC(levels);
+    END;
+    RETURN start;
+  END Refine;
 
 BEGIN
 END RefinableFunc.
