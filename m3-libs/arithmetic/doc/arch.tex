@@ -1,0 +1,321 @@
+\section{Project Architecture}
+\subsection{Team Structure}
+\begin{description}
+\item[Project Lead]
+     Coordinates all aspects of the project.
+     
+\item[Project Architect]
+     Approves the initial definition of and the subsequent
+     modifications of the public interface, the directory
+     structure, and the sufficiency of the supporting
+     analysis.
+     
+\item[Domain Expert]
+     Identifies topic area, researches it, develops
+     candidate interfaces, writes the analysis, codes the
+     test module and the implementation module.
+     Periodically, the domain expert reviews his/her work
+     with other team members and makes appropriate
+     modifications.
+     
+\item[Publicist]
+     Maintains web page, coordinates newsgroup postings,
+     coordinates public announcements and discussions of the
+     project.
+\end{description}
+
+\subsection{Communications}
+The team communicates via email and via postings to the
+project's web page under
+\begin{verbatim}
+    http://www.eskimo.com/~hgeorge/m3na
+\end{verbatim}
+
+Text must be readable in raw ascii form (e.g., as a simple
+insertion into an email message.) The formal documentation is in \TeX.
+
+Generally, a domain expert's analysis needs to be understood
+and approved by at least one other team member before the
+implementation code is reviewed.  The code, and its test
+modules, must be reviewed by at least one other team member
+prior to release.
+
+Once the project is established, releases will be made via
+M. Dagenais's ftp site.
+
+\subsection{Work Breakdown Structure (WBS)}
+\begin{verbatim}
+     1.                Manage project
+          1.1.         Develop general documentation
+          1.2.         Maintain web site
+          1.3.         Coordinate analysis and design reviews
+          1.4.         Coordinate code reviews
+     2.                Develop na.i3 and nap.i3 skeletons
+     3.                Develop release <rr>
+          3.1.         Identify domain experts and select topics
+          3.2.         Develop topic <tt>
+               3.2.1.  Research the field, and discuss opportunities
+               3.2.2.  Develop test module
+               3.2.3.  Perform original analysis, prototype as needed
+               3.2.4.  Discuss and approve anaysis.
+               3.2.5.  Code up alternatives
+               3.2.6.  Test for accuracy
+               3.2.7.  Test for timing
+               3.2.8.  Review selected alternative with team
+               3.2.9.  Stabilize interface, and retest
+          3.3.         Publish for external review
+          3.4.         Package and release
+          3.5.         Perform regression tests
+          3.6.         Update user's guide
+          3.7.         Update developer's guide
+          3.8.         Perform beta tests (if testers are available)
+          3.9.         Publicize
+\end{verbatim}
+
+\section{Library Architecture}
+\subsection{Packaging}
+The library is a collection of interface and implementation
+modules (x{\it name}.i3/m3).  [Originally, names were in the DOS 8.3
+format, but as Spencer Allain noted, we can use long names
+if we can tar it all up -- which is now the approach.]
+
+The library is documented with an analysis paper for each
+implementation module.  Trivial implementations are not
+discussed, but significant algorithms and design tradeoffs
+are explained in considerable detail.  The idea is to
+demonstrate independent development of the {\em code}, when
+working from published algorithms which may have associated
+copyrighted code in their own right.
+
+The test suite is composed of a general driver and a
+collection of test modules, one for each implementation
+module.  Test modules are named the same as the tested
+module, with "t" prepended instead of "x".
+
+The initial environment has been NT386, though the code is
+not OS dependent.  The file hierarchy is
+\begin{verbatim}
+     m3na_x.html            main web page
+     doc
+          backgnd.html      background page
+          people.html       participants
+          arch.doc          project architecture
+          concepts.doc      general numerical analysis
+          bib.doc           bibliography
+          <name>.doc        documentation for module nn
+          
+     m3na
+          m.bat              m3build | more
+          next.bat           cd ..\test
+          nt386
+               (binaries)
+          src
+               m3makefile
+               template.m3   template for a .m3 module
+               na.i3         public interface
+               nap.i3        private interface
+               x<name>.m3    implementation modules
+     
+     test
+          m.bat              m3build | more
+          go.bat             nt386\Test
+          next.bat           cd ..\m3na
+          nt386
+               (binaries)
+          src
+               m3makefile
+               template.m3    template for a .m3 module
+               test.i3        interface for all modules
+               test.m3        main module and driver
+               t<name>.m3     test modules
+\end{verbatim}
+
+\subsection{Module Templates}
+For {\tt m3na/src} there are {\tt template.i3/m3} which can be instantiated
+by copying to and then replacing XYZ with the new module name.
+
+For test/src there is {\tt template.m3} which can be similarly copied and
+edited to make new test modules.  Also, that template has an ABC proc
+template.
+
+\subsection{Group Structure}
+A group is (roughly) a set of elements and a set of
+operations which can be applied to them.  We have used this
+paradigm to collect functions into objects.  While purists
+may quibble about groups vs semigroups, etc., the point is
+to distinguish the elements of a group from the group
+itself.  This a) allows non-object elements, b) avoids
+Smalltalkian absurdities like sending "+" to "3".
+
+In the case of language primitives, the elements can be
+literals or variables, and the operations are infix
+operators.  In the case of constructed types, we have to
+make up our own treatment of literals and operators.  For
+those, here are the desired operations:
+\begin{itemize}
+   \item new (make one)
+   \item copy (given one, make another one)
+   \item lex (make one by reading a text string)
+   \item fmt (use one to make a text string)
+   \item eq,ne,gt,ge,lt,le (relational operators) [possibly not
+     relevant]
+   \item add,sub,mul,div (math operators)
+\end{itemize}
+
+A group usually also has several distinguished elements,
+such as:
+\begin{itemize}
+  \item Zero (such that x+Zero = x)
+  \item One (such that x*One = x)
+\end{itemize}
+
+\subsection{Naming}
+Names perform two basic functions:
+\begin{enumerate}
+  \item Assure lexical uniqueness within scope.
+  \item Provide mnemonic assistance to reader
+\end{enumerate}
+
+The names will be within Module or Object contexts, so their
+names will generally be unique.  Where needed, we provide
+added naming conventions.  Uniqueness is a function of both
+base type and construction.  Thus, an array of 32-bit reals
+is distinguished from an array of 64-bit reals.  And an
+array of reals is distinguished from a matrix of reals.  So
+for the primitives (which will not be in objects), we need a
+naming convention:
+\begin{tt} \begin{verbatim}
+     prefix means    example
+     ------ -------  ---------
+     b      bits     bReverseArray = a function to bit-reverse an array
+     i      INTEGER  iVector = a vector of INTEGERS
+     
+     c      COMPLEX  cVector = a vector of COMPLEX (64-bit reals)
+     
+\end{verbatim} \end{tt}
+
+The result is that a client can do:
+\begin{tt} \begin{verbatim}
+IMPORT xCmplx AS C;
+
+VAR c1,c2,c3:C.Complex;           (*make some variables*)
+BEGIN
+  c1:=C.COMPLEX{re:=1.5,im:=3.3}; (*make a new constant*)
+  c2:=C.Zero;                     (*use a predefined constant*)
+  c3:=C.add(c1,c2);               (*use an object method*)
+END;
+\end{verbatim} \end{tt}
+
+\subsection{Arrays}
+An array is a collection of items, all of the same type,
+which can be accessed by an index into the array.  Array
+types need to be distinguished by cell type, which we do
+with prefixes such as c and i.  They also need to be
+distinguished if their meaning is specific.  For example, a
+Vector is not really a general purpose array -- Instead, it
+has known operations such as dot product.  Similarly, a
+polynomial might be stored in an array, but it has specific
+operations such as evaluate at x, or take the derivative.
+
+We could distinguish these special uses of arrays by
+BRANDing them.  [I tried that for a while.]  But it is
+convenient to allow structural type matching, so that one
+"fmt" command works for simple arrays as well as Vectors and
+rows of Matrices.  Therefore all these types are being
+implemented as arrays.  Modula-3 provides several ways to
+implement the concept of an array.  We are generally using
+dynamic arrays.  There is (or may be) some overhead for
+dynamic linking, and some for allocation, but the payoff in
+readability is high.
+
+In a few cases (e.g., interpolation tables), we can expect
+the array to be a static or constant.  So the appropriate
+formal is an open array of REAL64.  If a dynamic array
+happens to be used as the actual parm, it can be
+dereferenced prior to the call:
+
+\begin{tt} \begin{verbatim}
+     y:=xInterp.linear(xarr^,yarr^,x);
+\end{verbatim} \end{tt}
+
+Modula-3's dynamic arrays only range 0..n-1.  But many math
+notations call for 1..n or perhaps some offset into the
+array.  To provide syntactic support for the semantics, we
+use this convention:
+\begin{tt} \begin{verbatim}
+     PROCEDURE myproc(a1,a2:Array;.......)=
+     (*a1 and a2 should be same size*)
+     VAR
+       n:=NUMBER(a1^);  n1:=0;  nn:=n-1;
+     BEGIN
+       IF NUMBER(a2^)#n THEN
+         RAISE Error(Err.bad_size);
+       END;
+     
+       FOR i:=n1 TO nn DO
+         (*do something to the a1's and a2's*)
+       END;
+     END;
+\end{verbatim} \end{tt}
+
+If an offset and/or limited length is needed:
+\begin{tt} \begin{verbatim}
+     PROCEDURE myproc(a1,a2:Array;
+                      offset:CARDINAL;
+                      length:CARDINAL:=0;
+                      ...
+     VAR
+       n:=NUMBER(a1^);  n1:=0;  nn:=n-1;
+     BEGIN
+       IF length#0 THEN
+         IF offset+length>n THEN
+           RAISE Error(Err.bad_size);
+         ELSE
+           n:=length; n1:=offset; nn:=n1+n-1;
+         END;
+       END;
+     
+       IF NUMBER(a2^)#n THEN
+         RAISE Error(Err.bad_size);
+       END;
+     
+       FOR i:=n1 TO nn DO
+         (*do something to all the a1's and a2's*)
+       END;
+     END;
+\end{verbatim} \end{tt}
+
+If you seriously need to eliminate the overhead of the
+dynamic references, then you can convert to static arrays:
+\begin{itemize}
+   \item Copy the offending code to a new module
+   \item Make a new hardcoded type:
+       {\tt TYPE Vector4 = ARRAY [1..4] OF REAL64;}
+   \item Change the proc signature to use that type instead
+       of the dynamic type
+   \item Change the initializations to:
+       {\tt VAR n:=NUMBER(a1); n1:=FIRST(a1); nn:=LAST(nn);}
+       (notice we no longer dereference a1 for NUMBER)
+\end{itemize}
+     
+\subsection{Matrices}
+The conventions for Matrices are similar to those for
+arrays:
+\begin{tt} \begin{verbatim}
+     PROCEDURE myproc(mat1,mat2:Matrix;.......
+     (*mat1 and mat2 should be mxn Matrices*)
+     VAR
+       m:=NUMBER(m1^);    m1:=0;  mm:=m-1;
+       n:=NUMBER(m1[0]);  n1:=0;  nn:=n-1;
+     BEGIN
+       IF NUMBER(mat2^)#m OR NUMBER(mat2[0])#n THEN
+         RAISE Error(Err.bad_size);
+       END;
+     
+       FOR i:=m1 TO mm DO
+         FOR j:=n1 TO nn DO
+           (*do something to mat1 and mat2*)
+         END;
+       END;
+     END;
+\end{verbatim} \end{tt}
