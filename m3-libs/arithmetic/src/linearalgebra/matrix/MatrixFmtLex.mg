@@ -57,6 +57,36 @@ BEGIN
   RETURN TextWr.ToText(wr);
 END Fmt;
 
+PROCEDURE Dup (str:TEXT; n:CARDINAL):TEXT =
+  VAR
+    wr:=TextWr.New();
+  BEGIN
+    FOR j:=0 TO n-1 DO
+      Wr.PutText(wr,str);
+    END;
+    RETURN TextWr.ToText(wr);
+  END Dup;
+
+(*-----------------*)
+PROCEDURE Tex (x : T; READONLY style := TexStyle{}):TEXT
+               RAISES {Thread.Alerted, Wr.Failure} =
+VAR
+  wr:=TextWr.New();
+BEGIN
+  Wr.PutText(wr,"\\left(\\begin{array}{");
+  Wr.PutText(wr,Dup("c",NUMBER(x[0])));
+  Wr.PutText(wr,"}\n");
+  FOR i:=FIRST(x^) TO LAST(x^) DO
+    FOR j:=FIRST(x[i]) TO LAST(x[i]) DO
+      Wr.PutText(wr,RF.Fmt(x[i,j],style.elemStyle));
+      IF j<LAST(x[i]) THEN Wr.PutText(wr," & "); END;
+    END;
+    Wr.PutText(wr," \\\\\n");
+  END;
+  Wr.PutText(wr,"\\end{array}\\right)\n");
+  RETURN TextWr.ToText(wr);
+END Tex;
+
 (*-----------------*)
 BEGIN
 END MatrixFmtLex.

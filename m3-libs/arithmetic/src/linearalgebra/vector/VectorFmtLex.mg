@@ -37,18 +37,45 @@ END Lex;
 (*-----------------*)
 PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}):TEXT
                RAISES {Thread.Alerted, Wr.Failure} =
-CONST width = 12;
 VAR
   wr:=TextWr.New();
 BEGIN
   Wr.PutText(wr,"V" & F.Int(NUMBER(x^)) & "{");
   FOR i:=FIRST(x^) TO LAST(x^) DO
-    Wr.PutText(wr,F.Pad(RF.Fmt(x[i],style.elemStyle),width));
+    Wr.PutText(wr,F.Pad(RF.Fmt(x[i],style.elemStyle),style.width));
     IF i#LAST(x^) THEN Wr.PutText(wr,", "); END;
   END;
   Wr.PutText(wr,"}\n");
   RETURN TextWr.ToText(wr);
 END Fmt;
+
+(*-----------------*)
+PROCEDURE Tex (x : T; READONLY style := TexStyle{}):TEXT
+               RAISES {Thread.Alerted, Wr.Failure} =
+VAR
+  wr:=TextWr.New();
+  sep:TEXT;
+BEGIN
+  CASE style.dir OF
+    | TexDirection.horizontal =>
+      sep:=style.sep;
+      Wr.PutText(wr,"\\left(");
+    | TexDirection.vertical =>
+      sep:=" \\\\\n";
+      Wr.PutText(wr,"\\left(\\begin{array}{c}\n");
+  END;
+  FOR i:=FIRST(x^) TO LAST(x^) DO
+    Wr.PutText(wr,RF.Tex(x[i],style.elemStyle));
+    IF i#LAST(x^) THEN Wr.PutText(wr,sep); END;
+  END;
+  CASE style.dir OF
+    | TexDirection.horizontal =>
+      Wr.PutText(wr,"\\right)\n");
+    | TexDirection.vertical =>
+      Wr.PutText(wr,"\\end{array}\\right)\n");
+  END;
+  RETURN TextWr.ToText(wr);
+END Tex;
 
 
 (*-----------------*)

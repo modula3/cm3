@@ -9,12 +9,23 @@ IMPORT Wr,Thread;
 (*==========================*)
 TYPE
   T = V.T;
-  FmtStyle = RECORD elemStyle := RF.FmtStyle{}; END;
+  FmtStyle = RECORD
+               width     : CARDINAL := 12;
+               elemStyle            := RF.FmtStyle{};
+             END;
+
+  TexDirection = {horizontal, vertical};
+  TexStyle = RECORD
+               dir              := TexDirection.horizontal;
+               sep       : TEXT := " \\quad ";
+               elemStyle        := RF.TexStyle{};
+             END;
 
 (*
 PROCEDURE Lex(str:TEXT):T;
 *)
 PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}) : TEXT RAISES {Thread.Alerted, Wr.Failure};
+PROCEDURE Tex (x : T; READONLY style := TexStyle{}) : TEXT RAISES {Thread.Alerted, Wr.Failure};
 
 (*==========================*)
 END VectorFmtLex.
