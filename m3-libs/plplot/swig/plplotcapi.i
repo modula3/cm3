@@ -436,7 +436,7 @@ DOC(plpsty, "Set fill pattern, using one of the predefined patterns.")
 void
 plpsty(PLINT patt);
 
-DOC(plptex, "Print \"text\" at world cooordinate (x,y).")
+DOC(plptex, "Print \"text\" at world coordinate (x,y).")
 void
 plptex(PLFLT x, PLFLT y, PLFLT dx, PLFLT dy, PLFLT just, const char *text);
 

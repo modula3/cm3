@@ -17,20 +17,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 */
 
 /* 
-A SWIG interface to PLplot for Modula3. This wrapper does the following:
+A SWIG interface to PLplot for Modula3.
 
-   1) it strictly provides the C-API with the usual change of not
-      requiring lengths for arrays,
-
-   2) it attempts to provide the entire API *excluding* callbacks for
-      plcont and plshade(s) (for now).
-      
-   3) it works both with the single and double-precision versions of the
-      PLplot library.
-
-This is known to work with swig-1.3.20 on Linux.
-
+Unfortunately, most things are untested.
+I tried to rename the functions to some descriptive names.
+This is not easy if you don't know exactly,
+what they do.
+If you find some names irritating
+don't hesitate to suggest better ones.
+Be prepared for changes.
 */
+
 %module PLPlot
 //%include typemaps.i
 
@@ -60,7 +57,7 @@ typedef int PLINT;
 %pragma(modula3) setitem="Parse,PL_PARSE_";
 %pragma(modula3) enumitem="Buffering,PLESPLFLTBUFFERING_";
 
-%pragma(modula3) wrapintfcode=%{
+%insert(m3wrapintf) %{
   Option = {enabled, arg, nodelete, invisible, disabled, dummy5, dummy6,
             dummy7, func, bool, int, float, string};
   OptionSet = SET OF Option;
@@ -81,132 +78,134 @@ typedef int PLINT;
 %}
 
 
-%rename("arrows") plarrows;
-%rename("sxwin") plsxwin;
 %rename("SetContLabelFormat") pl_setcontlabelformat;
 %rename("SetContLabelParam") pl_setcontlabelparam;
-%rename("adv") pladv;
-%rename("axes") plaxes;
-%rename("bin") plbin;
-%rename("bop") plbop;
-%rename("box") plbox;
-%rename("box3") plbox3;
+%rename("Advance") pladv;
+%rename("DrawAxes") plaxes;
+%rename("PlotBins") plbin;
+%rename("StartPage") plbop;
+%rename("DrawBox") plbox;
+%rename("DrawBox3D") plbox3;
 %rename("CalcWorld") plcalc_world;
 %rename("Clear") plclear;
-%rename("SetColorDiscr") plcol0;
-%rename("SetColorCont") plcol1;
+%rename("SetFGColorDiscr") plcol0;
+%rename("SetFGColorCont") plcol1;
 %rename("PlotContour") plcont;
-%rename("cpstrm") plcpstrm;
-%rename("Exit") plend;
-%rename("end1") plend1;
-%rename("env") plenv;
-%rename("eop") pleop;
-%rename("errx") plerrx;
-%rename("erry") plerry;
-%rename("famadv") plfamadv;
-%rename("fill") plfill;
-%rename("fill3") plfill3;
-%rename("flush") plflush;
-%rename("font") plfont;
-%rename("fontld") plfontld;
-%rename("gchr") plgchr;
-%rename("gcol0") plgcol0;
-%rename("gcolbg") plgcolbg;
-%rename("gcompression") plgcompression;
-%rename("gdev") plgdev;
-%rename("gdidev") plgdidev;
-%rename("gdiori") plgdiori;
-%rename("gdiplt") plgdiplt;
-%rename("gfam") plgfam;
-%rename("gfnam") plgfnam;
-%rename("glevel") plglevel;
-%rename("gpage") plgpage;
-%rename("gra") plgra;
-%rename("gspa") plgspa;
-%rename("gstrm") plgstrm;
-%rename("gver") plgver;
-%rename("gvpd") plgvpd;
-%rename("gvpw") plgvpw;
-%rename("gxax") plgxax;
-%rename("gyax") plgyax;
-%rename("gzax") plgzax;
-%rename("hist") plhist;
-%rename("hls") plhls;
+%rename("CopyStateFrom") plcpstrm;
+%rename("ExitAll") plend;
+%rename("Exit") plend1;
+%rename("Environment") plenv;
+%rename("StopPage") pleop;
+%rename("PlotErrorX") plerrx;
+%rename("PlotErrorY") plerry;
+%rename("AdvanceFamily") plfamadv;
+%rename("FillPolygon") plfill;
+%rename("FillPolygon3D") plfill3;
+%rename("Flush") plflush;
+%rename("SetFont") plfont;
+%rename("LoadFont") plfontld;
+%rename("GetCharacterHeight") plgchr;
+%rename("GetFGColorDiscrRGB") plgcol0;
+%rename("GetBGColorDiscrRGB") plgcolbg;
+%rename("GetCompression") plgcompression;
+%rename("GetDevice") plgdev;
+%rename("GetWindowDevice") plgdidev;
+%rename("GetOrientation") plgdiori;
+%rename("GetWindowPlot") plgdiplt;
+%rename("GetFamilyFile") plgfam;
+%rename("GetFileName") plgfnam;
+%rename("GetRunLevel") plglevel;
+%rename("GetOutputDeviceParam") plgpage;
+%rename("ShowGraphicScreen") plgra;
+%rename("GetBoundaries") plgspa;
+%rename("GetStream") plgstrm;
+%rename("GetVersion") plgver;
+%rename("GetVPBoundDev") plgvpd;
+%rename("GetVPBoundWorld") plgvpw;
+%rename("GetXLabelParam") plgxax;
+%rename("GetYLabelParam") plgyax;
+%rename("GetZLabelParam") plgzax;
+%rename("PlotHistogram") plhist;
+%rename("SetColorHLS") plhls;
 %rename("Init") plinit;
-%rename("join") pljoin;
-%rename("lab") pllab;
-%rename("lightsource") pllightsource;
+%rename("PlotLineSegment") pljoin;
+%rename("SetLabels") pllab;
+%rename("SetLightPos") pllightsource;
 %rename("PlotLines") plline;
 %rename("PlotLines3D") plline3;
-%rename("lsty") pllsty;
-%rename("Mesh") plmesh;
-%rename("MeshColored") plmeshc;
-%rename("mkstrm") plmkstrm;
-%rename("mtex") plmtex;
+%rename("SetLineStyle") pllsty;
+%rename("PlotMesh") plmesh;
+%rename("PlotMeshColored") plmeshc;
+%rename("CreateStream") plmkstrm;
+%rename("PrintTextVP") plmtex;
 %rename("Plot3D") plot3d;
 %rename("Plot3DC") plot3dc;
 %rename("Surface3D") plsurf3d;
 %rename("SetFillPattern") plpat;
 %rename("PlotPoints") plpoin;
 %rename("PlotPoints3D") plpoin3;
-%rename("poly3") plpoly3;
-%rename("prec") plprec;
-%rename("psty") plpsty;
-%rename("ptex") plptex;
-%rename("replot") plreplot;
-%rename("schr") plschr;
-%rename("scmap0") plscmap0;
-%rename("scmap0n") plscmap0n;
-%rename("scmap1") plscmap1;
-%rename("scmap1l") plscmap1l;
-%rename("scmap1n") plscmap1n;
-%rename("scol0") plscol0;
-%rename("scolbg") plscolbg;
-%rename("scolor") plscolor;
-%rename("scompression") plscompression;
-%rename("sdev") plsdev;
-%rename("sdidev") plsdidev;
-%rename("sdimap") plsdimap;
-%rename("sdiori") plsdiori;
-%rename("sdiplt") plsdiplt;
-%rename("sdiplz") plsdiplz;
-%rename("sesc") plsesc;
-%rename("setopt") plsetopt;
-%rename("sfam") plsfam;
-%rename("sfnam") plsfnam;
-%rename("shades") plshades;
-%rename("shade") plshade;
-%rename("smaj") plsmaj;
-%rename("smin") plsmin;
-%rename("sori") plsori;
-%rename("spage") plspage;
-%rename("spause") plspause;
-%rename("sstrm") plsstrm;
-%rename("ssub") plssub;
-%rename("ssym") plssym;
-%rename("star") plstar;
-%rename("start") plstart;
-%rename("stripa") plstripa;
-%rename("stripc") plstripc;
-%rename("stripd") plstripd;
-%rename("styl") plstyl;
-%rename("svpa") plsvpa;
-%rename("sxax") plsxax;
-%rename("syax") plsyax;
-%rename("sym") plsym;
-%rename("szax") plszax;
-%rename("text") pltext;
-%rename("vasp") plvasp;
-%rename("vpas") plvpas;
-%rename("vpor") plvpor;
-%rename("vsta") plvsta;
-%rename("w3d") plw3d;
-%rename("wid") plwid;
-%rename("wind") plwind;
-%rename("xormod") plxormod;
+%rename("PlotPolygon3D") plpoly3;
+%rename("SetLabelPrecision") plprec;
+%rename("SetFillPattern") plpsty;
+%rename("PrintTextWorld") plptex;
+%rename("Replot") plreplot;
+%rename("SetCharacterHeight") plschr;
+%rename("SetColorMapDiscr") plscmap0;
+%rename("SetColorDiscr") plscmap0n;
+%rename("SetColorMapCont") plscmap1;
+%rename("SetColorCont") plscmap1l;
+%rename("SetColorMapSizeCont") plscmap1n;
+%rename("SetColorRGB") plscol0;
+%rename("SetBGColor") plscolbg;
+%rename("ToggleColor") plscolor;
+%rename("SetCompression") plscompression;
+%rename("SetDevice") plsdev;
+%rename("SetWindowDevice") plsdidev;
+%rename("LoadTransformation") plsdimap;
+%rename("SetOrientation") plsdiori;
+%rename("SetWindowPlot") plsdiplt;
+%rename("ZoomWindow") plsdiplz;
+%rename("SetEscapeChar") plsesc;
+%rename("SetOption") plsetopt;
+%rename("SetFamilyFile") plsfam;
+%rename("SetFileName") plsfnam;
+%rename("ShadeRegions") plshades;
+%rename("ShadeRegion") plshade;
+%rename("SetMajorTickSize") plsmaj;
+%rename("SetMinorTickSize") plsmin;
+%rename("SetOrientation") plsori;
+%rename("SetOutputDeviceParam") plspage;
+%rename("SetPause") plspause;
+%rename("SetStream") plsstrm;
+%rename("SetSubWindows") plssub;
+%rename("SetSymbolHeight") plssym;
+%rename("Start") plstar;
+%rename("StartDev") plstart;
+%rename("AddStripchartPoint") plstripa;
+%rename("CreateStripchart") plstripc;
+%rename("DeleteStripchart") plstripd;
+%rename("SetLineStyle") plstyl;
+%rename("SetVPAbsolute") plsvpa;
+%rename("SetXLabelParam") plsxax;
+%rename("SetYLabelParam") plsyax;
+%rename("PlotSymbols") plsym;
+%rename("SetZLabelParam") plszax;
+%rename("ShowTextScreen") pltext;
+%rename("SetVPAspect") plvasp;
+%rename("CreateVPAspect") plvpas;
+%rename("CreateVP") plvpor;
+%rename("SetStandardVP") plvsta;
+%rename("Init3DWindow") plw3d;
+%rename("SetPenWidth") plwid;
+%rename("SetWindow") plwind;
+%rename("SetXORMode") plxormod;
+
+/* obsolete functions */
 %rename("rgb") plrgb;
 %rename("rgb1") plrgb1;
 %rename("shade1") plshade1;
+
+/* C / C++ functions */
 %rename("fcont") plfcont;
 %rename("map") plmap;
 %rename("meridians") plmeridians;
@@ -249,6 +248,7 @@ typedef int PLINT;
 %rename("RGB_HLS") plRGB_HLS;
 %rename("GetCursor") plGetCursor;
 %rename("TranslateCursor") plTranslateCursor;
+
 
 %typemap("m3intype",numinputs=0) PLINT n %{%}
 %typemap("m3indecl")             PLINT n %{n:=NUMBER(data);%}
