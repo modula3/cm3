@@ -35,17 +35,19 @@ CONST
 
   LnTwo       = LnFour*Half; (*FLOAT(0.693147180559945D0,T);*) (* ln(2) *)
 
-  Pi          = FLOAT(3.141592653589793D0,T);
-  TwoPi       = FLOAT(6.283185307179586D0,T);
-  OneOverPi   = FLOAT(0.318309886183791D0,T);
-  TwoOverPi   = FLOAT(0.636619772367581D0,T);
-  FourOverPi  = FLOAT(1.273239544735163D0,T);
-  LnPi        = FLOAT(1.144729885849400D0,T);  (*ln(pi) *)
+  Pi          = FLOAT(3.14159265358979323846264338327950288420X0,T);
+  LnPi        = FLOAT(1.14472988584940017414342735135305871165X0,T); (*ln(pi) *)
+  SqrtPi      = FLOAT(1.77245385090551602729816748334114518280X0,T);
 
-  EulerGamma  = FLOAT(0.577215632901532D0,T);  (*Euler's constant "gamma"*)
-  GoldenRatio = FLOAT(1.618033988749894D0,T);  (*golden ratio*)
-  DegPerRad   = FLOAT(57.29577951308232D0,T);  (*degrees per radian*)
-  RadPerDeg   = FLOAT(0.017453292519943D0,T);  (*radians per degree*)
+  TwoPi       = Two*Pi;
+  OneOverPi   = One/Pi;
+  TwoOverPi   = Two/Pi;
+  FourOverPi  = Two*TwoOverPi;
+
+  EulerGamma  = FLOAT(0.57721566490153286060651209008240243106X0,T); (*Euler's constant "gamma"*)
+  GoldenRatio = FLOAT(1.61803398874989484820458683436563811772X0,T); (*golden ratio*)
+  DegPerRad   = FLOAT(180.0D0,R.T) / Pi;                             (*degrees per radian*)
+  RadPerDeg   = Pi / FLOAT(180.0D0,R.T);                             (*radians per degree*)
 
 CONST
   Base            = R.Base;
