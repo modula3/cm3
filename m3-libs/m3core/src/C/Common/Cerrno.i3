@@ -9,7 +9,15 @@ INTERFACE Cerrno;
 
 FROM Ctypes IMPORT int;
 
-<*EXTERNAL*> VAR errno: int;
-(* The value of errno is preserved across thread switches. *)
+(* We cannot access "errno" directly as a variable, because on some systems
+   it is a C macro that expands to something more complicated.
+
+   The "errno" value is preserved across thread switches. *)
+
+<*EXTERNAL "m3_Cerrno_GetErrno"*>
+PROCEDURE GetErrno(): int;
+
+<*EXTERNAL "m3_Cerrno_SetErrno"*>
+PROCEDURE SetErrno(e: int);
 
 END Cerrno.

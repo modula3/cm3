@@ -159,9 +159,9 @@ long *b, *a;
   return (eq != 0L);
 }
 
-long tables_built = 0L;
-unsigned long LoBits[SET_GRAIN];  /* LoBits [i] = SET { 0..i } */
-unsigned long HiBits[SET_GRAIN];  /* HiBits [i] = SET { i..GRAIN-1 } */
+static long tables_built = 0L;
+static unsigned long LoBits[SET_GRAIN];  /* LoBits [i] = SET { 0..i } */
+static unsigned long HiBits[SET_GRAIN];  /* HiBits [i] = SET { i..GRAIN-1 } */
 
 BuildTables ()
 {
