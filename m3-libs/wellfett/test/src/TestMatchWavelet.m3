@@ -226,49 +226,48 @@ PROCEDURE TestInverseDRho (READONLY x0: ARRAY [0 .. 2] OF R.T) =
              ARRAY OF TEXT{VF.Fmt(x), VF.Fmt(ComputeDRho(y^)), VF.Fmt(y)}));
   END TestInverseDRho;
 
+TYPE
+  Deriv2 = RECORD
+             zeroth: R.T;
+             first : V.T;
+             second: M.T;
+           END;
+
+PROCEDURE Derivatives (hdual, gdual0, s: S.T;
+                       normalMat       : M.T;
+                       targetCor       : V.T;
+                       targetNormSqr   : R.T; ): Deriv2 =
+  VAR
+    gdual   := gdual0.superpose(s.upsample(2).convolve(hdual));
+    hprimal := gdual.alternate();
+    gprimal := hdual.alternate();
+    hsums   := hprimal.wrapCyclic(3).getData();
+    dsums := M.Cyclic(gprimal.translate(2 * s.getFirst()).wrapCyclic(
+                        3).getData(), s.getNumber(), -1);
+    normals := M.MulV(normalMat, s.getData());
+    dist := V.Inner(s.getData(), V.Sub(normals, V.Scale(targetCor, R.Two)))
+              + targetNormSqr;
+    linpart := Deriv2{zeroth := dist, first :=
+                      V.Scale(V.Sub(normals, targetCor), R.Two), second :=
+                      M.Scale(normalMat, R.Two)};
+    polypart := Deriv2{zeroth := ComputeRho(hsums^), first :=
+                       M.MulV(dsums, ComputeDRho(hsums^)), second :=
+                       M.Mul(M.Mul(dsums, ComputeDDRho(hsums^)),
+                             M.Transpose(dsums))};
+  BEGIN
+    (*
+    IO.Put(MF.Fmt(dsums) & "\n");
+    RETURN polypart;
+    *)
+    RETURN Deriv2{zeroth := linpart.zeroth + polypart.zeroth, first :=
+                  V.Add(linpart.first, polypart.first), second :=
+                  M.Add(linpart.second, polypart.second)};
+  END Derivatives;
+
 PROCEDURE MatchPatternSmooth (target: S.T;
                               levels, smooth, vanishing, translates: CARDINAL)
   RAISES {BSpl.DifferentParity} =
   <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
-
-  TYPE
-    Deriv2 = RECORD
-               zeroth: R.T;
-               first : V.T;
-               second: M.T;
-             END;
-
-  PROCEDURE Derivatives (s: S.T): Deriv2 =
-    VAR
-      gduallifted := gdual.superpose(s.upsample(2).convolve(hdual));
-      hprimal     := gduallifted.alternate();
-      gprimal     := hdual.alternate();
-      (*
-            hsums       := hprimal.translate(-2*s.getFirst()).wrapCyclic(3).getData();
-      *)
-      hsums := hprimal.wrapCyclic(3).getData();
-      dsums := M.Cyclic(gprimal.translate(2 * s.getFirst()).wrapCyclic(
-                          3).getData(), s.getNumber(), -1);
-      normals := M.MulV(normalMat, s.getData());
-      dist := V.Inner(
-                s.getData(), V.Sub(normals, V.Scale(targetCor, R.Two)))
-                + V.Inner(targetVec, targetVec);
-      linpart := Deriv2{zeroth := dist, first :=
-                        V.Scale(V.Sub(normals, targetCor), R.Two),
-                        second := M.Scale(normalMat, R.Two)};
-      polypart := Deriv2{zeroth := ComputeRho(hsums^), first :=
-                         M.MulV(dsums, ComputeDRho(hsums^)), second :=
-                         M.Mul(M.Mul(dsums, ComputeDDRho(hsums^)),
-                               M.Transpose(dsums))};
-    BEGIN
-      IO.Put(MF.Fmt(dsums) & "\n");
-      RETURN polypart;
-      (*
-            RETURN Deriv2{zeroth := linpart.zeroth + polypart.zeroth, first :=
-                          V.Add(linpart.first, polypart.first), second :=
-                          M.Add(linpart.second, polypart.second)};
-      *)
-    END Derivatives;
 
   VAR
     hdual := BSpl.GeneratorMask(smooth);
@@ -288,9 +287,10 @@ PROCEDURE MatchPatternSmooth (target: S.T;
 
     targetVec := V.Sub(target.clipToVector(first, size),
                        psi.clipToVector(first, size));
-    basis          := M.New(2 * translates, size);
-    normalMat: M.T;
-    targetCor: V.T;
+    basis              := M.New(2 * translates, size);
+    normalMat    : M.T;
+    targetCor    : V.T;
+    targetNormSqr      := V.Inner(targetVec, targetVec);
 
   BEGIN
     FOR j := -translates TO translates - 1 DO
@@ -304,54 +304,39 @@ PROCEDURE MatchPatternSmooth (target: S.T;
     normalMat := M.MMA(basis);
     targetCor := M.MulV(basis, targetVec);
 
+    CONST delta = 1.0D-8;
     VAR
       y := NEW(S.T).fromArray(
-             ARRAY OF R.T{0.2D0, -0.3D0, 0.0D0, -0.1D0}, -2);
-      der := Derivatives(y);
-      der0 := Derivatives(
-                y.superpose(NEW(S.T).fromArray(ARRAY OF R.T{1.0D-8}, -2)));
-      der1 := Derivatives(
-                y.superpose(NEW(S.T).fromArray(ARRAY OF R.T{1.0D-8}, -1)));
-      der2 := Derivatives(
-                y.superpose(NEW(S.T).fromArray(ARRAY OF R.T{1.0D-8}, 0)));
-      der3 := Derivatives(
-                y.superpose(NEW(S.T).fromArray(ARRAY OF R.T{1.0D-8}, 1)));
+             ARRAY OF R.T{0.2D0, -0.3D0, 0.0D0, -0.1D0, 0.0D0, 0.4D0}, -3);
+      der := Derivatives(
+               hdual, gdual, y, normalMat, targetCor, targetNormSqr);
+      derArr := NEW(REF ARRAY OF Deriv2, y.getNumber());
     BEGIN
-      IO.Put(VF.Fmt(V.Scale(der.first, 1.0D-8)) & "\n");
-      IO.Put(
-        Fmt.FN("der0 %s, %s\n", ARRAY OF
-                                  TEXT{RF.Fmt(der0.zeroth - der.zeroth),
-                                       RF.Fmt(der.first[0] * 1.0D-8)}));
-      IO.Put(
-        Fmt.FN("der1 %s, %s\n", ARRAY OF
-                                  TEXT{RF.Fmt(der1.zeroth - der.zeroth),
-                                       RF.Fmt(der.first[1] * 1.0D-8)}));
-      IO.Put(
-        Fmt.FN("der2 %s, %s\n", ARRAY OF
-                                  TEXT{RF.Fmt(der2.zeroth - der.zeroth),
-                                       RF.Fmt(der.first[2] * 1.0D-8)}));
-      IO.Put(
-        Fmt.FN("der3 %s, %s\n", ARRAY OF
-                                  TEXT{RF.Fmt(der3.zeroth - der.zeroth),
-                                       RF.Fmt(der.first[3] * 1.0D-8)}));
-      IO.Put(
-        Fmt.FN("der0 %s, %s\n", ARRAY OF
-                                  TEXT{VF.Fmt(V.Sub(der0.first, der.first)),
-                                       VF.Fmt(V.Scale(M.GetRow(der.second,0), 1.0D-8))}));
-      IO.Put(
-        Fmt.FN("der1 %s, %s\n", ARRAY OF
-                                  TEXT{VF.Fmt(V.Sub(der1.first, der.first)),
-                                       VF.Fmt(V.Scale(M.GetRow(der.second,1), 1.0D-8))}));
-      IO.Put(
-        Fmt.FN("der2 %s, %s\n", ARRAY OF
-                                  TEXT{VF.Fmt(V.Sub(der2.first, der.first)),
-                                       VF.Fmt(V.Scale(M.GetRow(der.second,2), 1.0D-8))}));
-      IO.Put(
-        Fmt.FN("der3 %s, %s\n", ARRAY OF
-                                  TEXT{VF.Fmt(V.Sub(der3.first, der.first)),
-                                       VF.Fmt(V.Scale(M.GetRow(der.second,3), 1.0D-8))}));
-    END;
+      FOR j := 0 TO LAST(derArr^) DO
+        derArr[j] :=
+          Derivatives(hdual, gdual, y.superpose(NEW(S.T).fromArray(
+                                                  ARRAY OF R.T{delta},
+                                                  j + y.getFirst())),
+                      normalMat, targetCor, targetNormSqr);
+      END;
 
+      IO.Put(VF.Fmt(V.Scale(der.first, delta)) & "\n");
+      FOR j := 0 TO LAST(derArr^) DO
+        IO.Put(Fmt.FN("der[%s] %s, %s\n",
+                      ARRAY OF
+                        TEXT{Fmt.Int(j + y.getFirst()),
+                             RF.Fmt(derArr[j].zeroth - der.zeroth),
+                             RF.Fmt(der.first[j] * delta)}));
+      END;
+      FOR j := 0 TO LAST(derArr^) DO
+        IO.Put(
+          Fmt.FN("der[%s] %s, %s\n",
+                 ARRAY OF
+                   TEXT{Fmt.Int(j + y.getFirst()),
+                        VF.Fmt(V.Sub(derArr[j].first, der.first)),
+                        VF.Fmt(V.Scale(M.GetRow(der.second, j), delta))}));
+      END;
+    END;
     (*
         (* CONST tol = 1.0D-14;*)
         (*VAR y := NEW(S.T).fromArray(V.New(2 * translates)^, -translates);*)
@@ -359,7 +344,8 @@ PROCEDURE MatchPatternSmooth (target: S.T;
         BEGIN
           FOR j := 0 TO 10 DO
             VAR
-              der        := Derivatives(y);
+              der := Derivatives(
+                       hdual, gdual, y, normalMat, targetCor, targetNormSqr);
               targetdiff := V.Sub(targetVec, M.MulTV(basis, y.getData()));
               targetdist := V.Inner(targetdiff, targetdiff);
             BEGIN
@@ -409,7 +395,7 @@ PROCEDURE Test () =
     | 3 =>
         MatchPatternSmooth(
           NEW(S.T).fromArray(
-            V.ArithSeq(512, -0.01D0, 0.02D0 / 512.0D0)^, -256), 6, 4, 2, 2);
+            V.ArithSeq(512, -0.01D0, 0.02D0 / 512.0D0)^, -256), 6, 4, 2, 3);
     | 4 =>
         TestRho(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
         TestRho(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0}));
