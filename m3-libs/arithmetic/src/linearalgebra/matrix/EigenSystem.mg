@@ -12,15 +12,23 @@
    *)
 
 GENERIC MODULE EigenSystem(M, V, R, RT);
-(*IMPORT Wr, Stdio, Fmt;*)
+(*
+IMPORT Wr, Stdio, IO, Fmt,
+       LongRealVectorFmtLex AS VF,
+       LongRealFmtLex AS RF;
+*)
 FROM NADefinitions IMPORT Error, Err;
 
 EXCEPTION NormalTermination;
 
 PROCEDURE PowerMethod (A: M.T; VAR v: V.T; tol: R.T; maxiter: CARDINAL; ):
   R.T RAISES {Error} =
+  (*the method may converge faster if one squares the matrix A again and again,
+    but matrix squaring is one order more expensive than matrix-vector-mutliplication
+    and one have to compare whether computing the whole eigenvalue spectrum
+    using other methods is faster*)
   VAR
-    x     : V.T;
+    x, dx : V.T;
     err   : R.T;
     tol2        := tol * tol;
     x2, vx: R.T;
@@ -36,13 +44,33 @@ PROCEDURE PowerMethod (A: M.T; VAR v: V.T; tol: R.T; maxiter: CARDINAL; ):
       v := x;
 
       x := M.MulV(A, v);
+      (* this error estimation sucks because of cancellations
+      v2 := V.Inner(v, v);
+      x2 := V.Inner(x, x);
+      vx := V.Inner(v, x);
+      err := (x2*v2-vx*vx)/(v2*v2);
+      *)
+      (*
+      x2 := V.Inner(x, x);
+      vx := V.Inner(v, x);
+      (*the error cannot become negative mathematically,
+        but numerically it is sometimes*)
+      err := ABS(x2-vx*vx);
+    UNTIL err <= tol2*vx*vx;
+      IO.Put(Fmt.FN("err %s, tol %s, x2 %s, vx %s, x %s\n",ARRAY OF TEXT{
+        RF.Fmt(err), RF.Fmt(tol), RF.Fmt(x2), RF.Fmt(vx), VF.Fmt(x)}));
+      *)
+
       (*compute the minimum possible Euclidean distance from lambda*v to
          x*)
       x2 := V.Inner(x, x);
-      vx := V.Inner(v, x);
-      (*err := (x2*v2-vx*vx)/(v2*v2); v was normalized to 1 *)
-      err := x2 - vx * vx;
-      (*err := RT.SqRt(x2)-vx;*)
+      vx := V.Inner(v, x);  (*approximation for largest eigenvalue*)
+      dx := V.Sub(v,V.Scale(x,R.Rec(vx)));
+      err := V.Inner(dx,dx);
+(*
+IO.Put(Fmt.FN("err %s, tol %s, dx %s, v %s, x %s\n",ARRAY OF TEXT{
+  RF.Fmt(err), RF.Fmt(tol), VF.Fmt(dx), VF.Fmt(v), VF.Fmt(x)}));
+*)
       x := V.Scale(x, R.Rec(RT.SqRt(x2)));
     UNTIL err <= tol2;
     (*calculate the lambda for which x is optimally approximated by

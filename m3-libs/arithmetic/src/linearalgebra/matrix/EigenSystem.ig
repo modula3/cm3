@@ -20,7 +20,7 @@ EXCEPTION
 
 PROCEDURE PowerMethod(     A       : M.T;
                        VAR v       : V.T;
-					       tol     := RT.Tiny;
+					       tol     := RT.Eps*FLOAT(100,RT.T);
                            maxiter : CARDINAL := 100;
 						         ) : RT.T RAISES {Error};
 
