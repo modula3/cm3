@@ -1,8 +1,0 @@
-Last modified on Mon Apr 29 15:45:19 PDT 1996 by heydon
-
-/proj/m3/pkg/juno-machine/tests/runtime/README
-
-This directory contains a simple program to test Juno's bytecode
-interpreter and disassembler: JunoRT.Exec() and JunoDisassem.P().
-See the file "src/RuntimeTest.m3" for information on how to run the
-test. Also see the file "src/README" for more information.
