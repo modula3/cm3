@@ -1,9 +1,9 @@
 for myself:
 
 todo:
-  - combinatorics and number theory with bigintegers
+  - adapt test routines for generic polynomials, matrices, vectors
   - physical units
-  - Bits, SLE (MatrixDecomposition), eigensystem, FFT (FourierTransform), Random/RNG01/RNG02, Root, Stat
+  - Bits, SLE (MatrixDecomposition), eigensystem, FFT (FourierTransform), Interpolation, Random/RNG01/RNG02, Root, Stat
   - ODE
   - Hash routines
   - BRANDED strings

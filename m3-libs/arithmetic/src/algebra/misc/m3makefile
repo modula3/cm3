@@ -15,6 +15,7 @@ IntegerPower("LongRealPolynomial",   "LongRealPolynomialFast")
 IntegerPower("LongRealMatrix",       "LongRealMatrixFast")
 
 generic_module("GCD")
+GCD("Cardinal32",                   "Cardinal32Basic")
 GCD("Integer32",                    "Integer32Basic")
 GCD("Integer32Complex",             "Integer32ComplexBasic")
 GCD("BigInteger",                   "BigIntegerBasic")

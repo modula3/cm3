@@ -31,7 +31,7 @@ VAR
 BEGIN
   arg:=Arg(x);
   abs:=Abs(x);
-  RETURN C.Scale(Exp(T{R.Zero,R.Mul(arg,y)}),abs);
+  RETURN C.Scale(Exp(T{R.Zero,R.Mul(arg,y)}),RT.Pow(abs,y));
 END PowR;
 
 (*----------------*)

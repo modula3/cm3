@@ -212,13 +212,13 @@ BEGIN
 END Derive;
 
 (*---------------------*)
-PROCEDURE EvalDerivate(
+PROCEDURE EvalDerivative(
                  x:T;      (*Evaluate the poly with these coefs*)
                  xi:R.T;    (*for this argument*)
              VAR pd:ARRAY OF R.T;  (*returning x(xi), x'(xi)...*)
                  ) =
 (*Given a poly with coefs x, find the value at xi as pd[0],
-and nd more EvalDerivateatives as pd[1]..pd[pdl].
+and nd more EvalDerivativeatives as pd[1]..pd[pdl].
 *)
 VAR
   xf:=FIRST(x^); xl:=LAST(x^);
@@ -246,7 +246,7 @@ BEGIN
     fact:=fact*fac;
   END;
 
-END EvalDerivate;
+END EvalDerivative;
 
 (*==========================*)
 BEGIN
