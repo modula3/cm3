@@ -32,7 +32,7 @@ import ("libm3")
 
 if not equal (OS_TYPE, "WIN32")
   %--- hack to get Win32 interfaces while compiling on Unix
-  override ("winlib", WDROOT)
+  override ("winlib", ROOT)
   import ("winlib")
 end
 
