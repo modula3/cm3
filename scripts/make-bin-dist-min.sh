@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.11 2001-03-01 16:10:29 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.12 2001-03-01 17:14:21 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -96,11 +96,11 @@ sed -e '
 # compile and install all needed packages
 header "stage 3: compiling libraries using new cm3 compiler"
 CM3="${INSTALLROOT}/bin/cm3${EXE}"
-BUILDLOCAL="${CM3} -build -override -DROOT=${ROOT}"
-CLEANLOCAL="${CM3} -clean -override -DROOT=${ROOT}"
-BUILDGLOBAL="${CM3} -build  -DROOT=${ROOT}"
-CLEANGLOBAL="${CM3} -clean -DROOT=${ROOT}"
-SHIP="${CM3} -ship -DROOT=${ROOT}"
+BUILDLOCAL="${CM3} -build -override -DROOT='${CM3ROOT}'"
+CLEANLOCAL="${CM3} -clean -override -DROOT='${CM3ROOT}'"
+BUILDGLOBAL="${CM3} -build  -DROOT='${CM3ROOT}'"
+CLEANGLOBAL="${CM3} -clean -DROOT='${CM3ROOT}'"
+SHIP="${CM3} -ship -DROOT='${CM3ROOT}'"
 export BUILDLOCAL CLEANLOCAL BUILDGLOBAL CLEANGLOBAL SHIP
 
 "${ROOT}/scripts/do-cm3-min.sh" buildlocal || exit 1

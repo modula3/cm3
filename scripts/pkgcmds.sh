@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgcmds.sh,v 1.5 2001-03-01 16:10:29 wagner Exp $
+# $Id: pkgcmds.sh,v 1.6 2001-03-01 17:14:21 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -16,13 +16,6 @@ else
   export root
 fi
 . "$sysinfo"
-
-if [ "${M3OSTYPE}" = "WIN32" ] ; then
-  CM3ROOT="`cygpath -w ${ROOT} | sed -e 's;\\\;\\\\\\\\;g'`"
-  #echo ${CM3ROOT}
-else
-  CM3ROOT="${ROOT}"
-fi
 
 # define build and ship programs for Critical Mass Modula-3
 CM3_BUILDLOCAL="${BUILDLOCAL:-cm3 -build -override -DROOT='${CM3ROOT}' ${BUILDARGS}}"

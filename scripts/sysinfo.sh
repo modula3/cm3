@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.15 2001-03-01 16:10:29 wagner Exp $
+# $Id: sysinfo.sh,v 1.16 2001-03-01 17:14:21 wagner Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -179,6 +179,12 @@ PKGSDB=${PKGSDB:-$ROOT/scripts/PKGS}
 QGREP=${QGREP:-"egrep >/dev/null 2>/dev/null"}
 GREP=${GREP:-egrep}
 
+if [ "${M3OSTYPE}" = "WIN32" ] ; then
+  CM3ROOT="`cygpath -w ${ROOT} | sed -e 's;\\\;\\\\\\\\;g'`"
+else
+  CM3ROOT="${ROOT}"
+fi
+
 
 #-----------------------------------------------------------------------------
 # output functions
@@ -231,10 +237,11 @@ debug "SYSLIBS     = $SYSLIBS"
 debug "DEV_BIN     = $DEV_BIN"
 debug "DEV_LIB     = $DEV_LIB"
 debug "TAR         = $TAR"
+debug "CM3ROOT     = $CM3ROOT"
 
 export ROOT SCRIPTS M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB QGREP
 export GREP TMPDIR EXE SL CM3VERSION SYSLIBDIR SYSLIB DEV_BIN DEV_LIB TAR
-export CM3LIBSEARCHPATH CM3BINSEARCHPATH
+export CM3LIBSEARCHPATH CM3BINSEARCHPATH CM3ROOT
 export SYSINFO_DONE
 
 fi
