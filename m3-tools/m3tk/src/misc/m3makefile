@@ -12,8 +12,8 @@ Interface("M3Assert")
 Interface("Err")
 Interface("Command")
 
-Interface("TextExtras")
-Interface("RdExtras")
+%Interface("TextExtras") % moved to libm3
+%Interface("RdExtras") % moved to libm3
 Interface("FingerPrint")
 
 implementation("M3Args")
@@ -22,14 +22,14 @@ implementation("M3Assert")
 implementation("Command")
 
 implementation("Err")
-implementation("TextExtras")
+%implementation("TextExtras") % moved to libm3
 
 Generic_interface("CITextTable")
 Generic_implementation("CITextTable")
 
 Module("CITextRefTbl")
 Module("Args")
-implementation("RdExtras")
+%implementation("RdExtras") % moved to libm3
 implementation("FingerPrint")
 
 Interface("Csort")
