@@ -7,6 +7,7 @@
  *                                                                       
  * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
  * City of New York.  Blair MacIntyre, Computer Science Department.       
+ * See file COPYRIGHT-COLUMBIA for details.
  *
  * Author          : Blair MacIntyre
  * Created On      : Wed May 24 10:28:43 1995
@@ -15,11 +16,14 @@
  * Update Count    : 456
  * 
  * $Source: /opt/cvs/cm3/m3-comm/sharedobj/src/SharedObjRT.m3,v $
- * $Date: 2001-12-02 13:14:14 $
+ * $Date: 2001-12-02 13:41:17 $
  * $Author: wagner $
- * $Revision: 1.1.1.1 $
+ * $Revision: 1.2 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.1.1.1  2001/12/02 13:14:14  wagner
+ * Blair MacIntyre's sharedobj package
+ *
  * Revision 1.8  1998/07/14 02:34:02  bm
  * tried to fix the distribution problems -- not yet working, but closer
  *
@@ -325,7 +329,7 @@ PROCEDURE ObjectCleaner (self: ObjectCleanerClosure): REFANY =
         WHILE self.tbl.size() = 0 DO
           Thread.Wait(self.mu, self.cv);
         END;
-        self.it := self.it.init(self.tbl);
+        self.it := self.it.init();
         <*ASSERT self.it.next(wrep, obj)*>
         <*ASSERT self.tbl.delete(wrep, obj)*>
       END;
@@ -1290,33 +1294,33 @@ PROCEDURE Wait(obj: T; c: Thread.Condition; m: Thread.Mutex := NIL) =
     END;
   END Wait;
 
-PROCEDURE AcquireGlobalLock (obj: T) RAISES {Error} =
+PROCEDURE AcquireGlobalLock (<*UNUSED*>obj: T) RAISES {Error} =
   BEGIN
     (* Not implemented yet.  Raise exception. *)
     RaiseError(Atom.FromText("Locking not yet implemented."));
   END AcquireGlobalLock;
 
-PROCEDURE ReleaseGlobalLock (obj: T) RAISES {Error} =
+PROCEDURE ReleaseGlobalLock (<*UNUSED*>obj: T) RAISES {Error} =
   BEGIN
     (* Not implemented yet.  Raise exception. *)
     RaiseError(Atom.FromText("Locking not yet implemented."));
   END ReleaseGlobalLock;
 
-PROCEDURE SetTimeliness (obj: T; value: Timeliness)
+PROCEDURE SetTimeliness (<*UNUSED*>obj: T; <*UNUSED*>value: Timeliness)
   RAISES {Error} =
   BEGIN
     (* Not implemented yet.  Raise exception. *)
     RaiseError(Atom.FromText("Timeliness not yet implemented."));
   END SetTimeliness;
 
-PROCEDURE Own (obj: T; willingness: Timeliness := 0)
+PROCEDURE Own (<*UNUSED*>obj: T; <*UNUSED*>willingness: Timeliness := 0)
   RAISES {Error} =
   BEGIN
     (* Not implemented yet.  Raise exception. *)
     RaiseError(Atom.FromText("Ownership not yet implemented."));
   END Own;
 
-PROCEDURE Disown (obj: T) RAISES {Error} =
+PROCEDURE Disown (<*UNUSED*>obj: T) RAISES {Error} =
   BEGIN
     (* Not implemented yet.  Raise exception. *)
     RaiseError(Atom.FromText("Ownership not yet implemented."));

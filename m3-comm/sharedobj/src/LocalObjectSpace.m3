@@ -7,6 +7,7 @@
  *                                                                        
  * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
  * City of New York.  Blair MacIntyre, Computer Science Department.       
+ * See file COPYRIGHT-COLUMBIA for details.
  * 
  * Author          : Blair MacIntyre
  * Created On      : Wed Sep 13 12:24:52 1995
@@ -15,11 +16,14 @@
  * Update Count    : 86
  * 
  * $Source: /opt/cvs/cm3/m3-comm/sharedobj/src/LocalObjectSpace.m3,v $
- * $Date: 2001-12-02 13:14:14 $
+ * $Date: 2001-12-02 13:41:16 $
  * $Author: wagner $
- * $Revision: 1.1.1.1 $
+ * $Revision: 1.2 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.1.1.1  2001/12/02 13:14:14  wagner
+ * Blair MacIntyre's sharedobj package
+ *
  * Revision 1.6  1998/07/14 02:34:01  bm
  * tried to fix the distribution problems -- not yet working, but closer
  *
@@ -39,13 +43,14 @@
 MODULE LocalObjectSpace EXPORTS LocalObjectSpace, SharedObjRTF;
 
 IMPORT Atom, AtomList, NetObj, Wr, Thread, EventWireRep, ObjectInfo,
-       IO, SharedObj, SharedObjRep, EventConn, Debug, SpaceConn,
+       IO, SharedObj, SharedObjRep, EventConn, SpaceConn,
        EventSpaceID, EventNumber, EventNumberF, SpaceTbl, ObjectSpace,
        Process, Fmt, IP, TCP, ConnMsgRW, SharedObjRT,
        SharedObjError, ObjCopy, ObjCopyList;
 
 FROM SharedObjRep IMPORT WireRep;
 (* FROM SharedObjRTF IMPORT debug, debug_level, localSpace; *)
+(* IMPORT Debug; *)
 
 REVEAL T = ObjectSpace.Local BRANDED "LocalObjectSpace v1.0" OBJECT 
       spaceTbl: SpaceTbl.T;
@@ -694,8 +699,8 @@ PROCEDURE SpaceFindObject (<*UNUSED*>self: T; wrep: SharedObjRep.WireRep;
     END;
   END SpaceFindObject;
 
-PROCEDURE SpaceLastCopy (self: T; wrep: WireRep; 
-                         seqNo: SharedObj.SequenceNumber) 
+PROCEDURE SpaceLastCopy (<*UNUSED*>self: T; <*UNUSED*>wrep: WireRep; 
+                         <*UNUSED*>seqNo: SharedObj.SequenceNumber) 
                   RAISES {SharedObj.Error} =
   BEGIN
     (* this will be obscenely hard to implement correctly, as messages

@@ -7,6 +7,7 @@
  *                                                                        
  * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
  * City of New York.  Blair MacIntyre, Computer Science Department.       
+ * See file COPYRIGHT-COLUMBIA for details.
  * 
  * Author          : Blair MacIntyre
  * Created On      : Wed Jun 28 19:12:54 1995
@@ -15,11 +16,14 @@
  * Update Count    : 13
  * 
  * $Source: /opt/cvs/cm3/m3-comm/sharedobj/src/ObjectInfo.m3,v $
- * $Date: 2001-12-02 13:14:14 $
+ * $Date: 2001-12-02 13:41:16 $
  * $Author: wagner $
- * $Revision: 1.1.1.1 $
+ * $Revision: 1.2 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.1.1.1  2001/12/02 13:14:14  wagner
+ * Blair MacIntyre's sharedobj package
+ *
  * Revision 1.3  1997/01/23 15:27:14  bm
  * Lot's of little bug fixes.
  *

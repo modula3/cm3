@@ -1,3 +1,6 @@
+(*
+ * See file COPYRIGHT-COLUMBIA for details.
+ *)
 MODULE ObjectSpace_FindObjCallBack_v2 EXPORTS ObjectSpace, ObjectSpace_FindObjCallBack_v2;
 
 IMPORT Rd, StubLib, EventNumber, Wr, SharedObj, NetObj, AtomList, Thread,

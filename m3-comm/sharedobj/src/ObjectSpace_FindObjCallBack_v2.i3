@@ -1,3 +1,6 @@
+(*
+ * See file COPYRIGHT-COLUMBIA for details.
+ *)
 INTERFACE ObjectSpace_FindObjCallBack_v2;
 
 IMPORT Rd, StubLib, EventNumber, Wr, SharedObj, NetObj, Thread,

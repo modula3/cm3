@@ -1,3 +1,6 @@
+(*
+ * See file COPYRIGHT-COLUMBIA for details.
+ *)
 INTERFACE ObjectSpace_T_v1;
 
 IMPORT Rd, IP, StubLib, EventNumber, SharedObjRep, Wr, EventWireRep,
