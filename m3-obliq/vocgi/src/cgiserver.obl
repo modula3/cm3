@@ -1,0 +1,83 @@
+(* Copyright (C) 1995, Digital Equipment Corporation.       *)
+(* All rights reserved.                                     *)
+(* See the file COPYRIGHT for a full description.           *)
+(*                                                          *)
+(* Last modified on Tue Jan 10 11:37:57 PST 1995 by mhb     *)
+
+sys_pushSilence();
+let MakeHtmlLink = proc(message, linkto)
+	"<A HREF=\"" & linkto & "\">" & message &   "</A>";
+end;
+
+
+let sessnob =
+{
+	sessions => [],
+
+	 ping => meth(s)
+         	true
+     	 end,
+
+	addNew => meth(s, name, site)
+
+		(* check if it is already registered, if so return  	   *)
+		(* this is ok because this would mean the new	     *)
+		(* session object will supersede the earlier object *)
+		(* by the same name.                                                  *)
+
+		var exists = false;
+     		foreach i in s.sessions do
+			if (i.n is name) and (i.s is site) then 
+				exists := true;
+			end;
+		end;
+
+		if not (exists) then
+			s.sessions := s.sessions @
+					[{ n => name,
+			  		    s =>  site }];
+		end;
+	end,
+
+	genListing => meth(s, partialcmd)
+		var l = "Content-type: text/html\n\n\n" &
+			"<TITLE>List of Sessions</TITLE>\n<UL>\n" &
+			"<H2>Sessions Registered with this Server</H2>\n" &
+			"(Generated automatically by vossns@" & sys_address & ")<P><P>\n" &
+			"<i>This page lists a set of Visual Obliq Sessions that are currently in progress. " &
+			"You may join a session by clicking on a corresponding link. This will cause the " &
+			"session-constructor to be imported within a 'safe' Visual Obliq interpreter on " &
+			" your site. Whenever the imported program tries to access " &
+       			"a file or spawn a process you will be notified and allowed to abort it, unless the action" &
+        		" is allowed in your </i>.vo.exempt<i> file.</i><P><P>\n";
+		foreach i in s.sessions do
+			try 
+				let sessnob = net_import(i.n, i.s);
+				sessnob.New; (* just to see if the constructor proc is available *)
+				 (* If the session was dead there would be an exception by this time
+				    this helps us make sure the session really exists *)
+				l := l & "<LI> " & MakeHtmlLink( i.n & " at " & i.s, partialcmd & "+" &  i.n & "+" & i.s);
+			except
+			else
+			end;
+		end;
+		l := l & "\n";
+
+	(* Uncomment these lines to debug output html
+		sys_printText(l);
+		sys_printFlush();		
+	*)
+		l
+	end
+	
+};
+
+net_export("vossns", "", sessnob);
+sys_popSilence();
+sys_printText("Registered  Visual Obliq Name-Server vossns\n");
+sys_printFlush();		
+
+(* loop forever *)
+loop 
+pause(2000.0);
+end;

@@ -1,0 +1,39 @@
+/* Copyright (C) 1994, Digital Equipment Corporation */
+/* All rights reserved. */
+/* See the file COPYRIGHT for a full description. */
+/* Makefile for package server */
+/* Last modified on Mon Apr  4 10:53:07 PDT 1994 by wobber     */
+
+import("libm3")
+import("tcp")
+import("smalldb")
+import("netobj")
+import("pkgobj")
+
+module ("ServerLog")
+module ("LockServer")
+module ("LockRestart")
+module ("PackageServer")
+module ("PSLib")
+module ("PSGet")
+module ("PSShip")
+module ("PSExportLink")
+module ("PSRestart")
+module ("PackageDB")
+module ("PathMap")
+module ("SiteServer")
+implementation ("StartPS")
+module("NetPathRefTbl")
+module("SNetPathRefTbl")
+module("StablePkl")
+
+interface("Param")
+module("Subrepo")
+module("Skulker")
+module("Util")
+module("Send")
+module("SiphonServer")
+
+build_standalone()
+
+program("packageserver")

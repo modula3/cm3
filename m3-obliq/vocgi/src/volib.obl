@@ -1,0 +1,1139 @@
+(* Copyright (C) 1995, Digital Equipment Corporation.       *)
+(* All rights reserved.                                     *)
+(* See the file COPYRIGHT for a full description.           *)
+(*                                                          *)
+(* Last modified on Tue Jan 10 11:38:03 PST 1995 by mhb     *)
+
+(* Mandatory Include for all Visual Obliq Programs *)
+
+(* Naming Convention for Online Listing within the VO Editor : 
+
+   A comment that begins/ends with ":" contains the signature of  an additional volib  proc.
+   A comment that begins/ends with "=" contains the name of a widget-class
+   and may be followed by one or more method signatures.
+   A comment that begins/ends with "-" contains the signature of a method
+  and is associated with the last widget-class name seen.
+   Null method signatures are ignored.
+*)
+
+module volib;
+
+sys_pushSilence();
+(* assert - must begin with a \n' *)
+let unpkList = proc(s)
+	let ar = text_explode("\n", s);
+	let n = #(ar) -1; 
+	array_sub(ar, 1, n);
+end;
+
+let pkList = proc(ar)
+	let n = text_implode('\n', ar);
+	n;
+end;
+
+let volibLocal = {
+
+  HOSTNAME => sys_address,
+           
+  Join => ok,
+
+  (*: LoadFile(filename:text) returns text :*)
+  LoadFile => meth(s, filename)
+    let r = rd_open(fileSys, filename);
+    let contents = rd_getText(r, rd_length(r));
+    rd_close(r);
+    contents
+    end,
+
+  (*: SaveFile(t:text, f:filename) returns boolean :*)
+  SaveFile => meth(s, t, filename)
+     try
+       let w = wr_open(fileSys, filename);
+       wr_putText(w, t);
+       wr_close(w);
+       true;
+     except else
+       false;
+     end
+    end,
+
+(*=       boolean        =*)
+  booleanNew => meth(s,   n)
+  {
+    SELF => 0,
+    form => 0, 
+    name => n,
+    class => "boolean",
+
+    (* Generic Attributes *)
+    parent => 0,
+
+    x => 0, y => 0, width =>0, height =>0, BgColor =>"", FgColor => "",
+    Font => "", Rim => 0, Border => 0, Embellishment => "",
+    InitialState => "", ResizeModel => "", 	
+
+    (* Widget Attributes *)
+    textLabel  => true, textString=>"", 
+    pixmap => "", initialValue => false, feedbackStyle => "",
+
+    (*- getValue() returns boolean -*)
+    getValue => meth(s) 
+     form_getBoolean(s.form, s.name) end,
+    (*- setValue(booleanval) -*)
+    setValue => meth(s, val) 
+      	s.textLabel  :=  val; 
+	form_putBoolean(s.form, s.name, val); ok end,	
+    (*- setLabel(tx:text) -*)
+    setLabel => meth(s, val) 	
+	s.textString := val;
+      	form_putText(s.form, s.name & "text", "", val, false); ok end,
+    (*- makeDormant() -*)
+    makeDormant => meth(s) 
+     s.InitialState := "Dormant";
+      form_putReactivity(s.form, s.name & "filter", "dormant"); ok end,
+    (*- makePassive() -*)
+    makePassive => meth(s) 
+     s.InitialState := "Passive";
+      form_putReactivity(s.form, s.name & "filter", "passive"); ok end,
+    (*- makeActive() -*)
+    makeActive => meth(s) 
+      s.InitialState := "Active";	
+      form_putReactivity(s.form, s.name & "filter", "active"); 
+      form_popUp(s.form, s.name & "top");
+      ok end,
+    (*- makeInvisible() -*)
+    makeInvisible => meth(s) 
+      s.InitialState := "Vanish";
+      refreshWidget( s);
+    	ok end,   
+     (*- -*)
+  } 
+  end,
+
+(*=       browser   =*)
+  browserNew => meth(s,  n)
+  { 
+    SELF => 0,
+    form => 0, 
+    name => n,
+    class => "browser",
+
+ (* Generic Attributes *)	
+    parent => 0,
+
+    x => 0, y => 0, width =>0, height =>0, BgColor =>"", FgColor => "",
+    Font => "", Rim => 0, Border => 0, Embellishment => "",
+    InitialState => "", ResizeModel => "", 
+ 
+  (* Widget Attributes *)
+   Quick => false, Multiplicity => false, Contents => [],
+   Selections => [], Selection => -1, (* not guaranteed to be up to date *)
+
+    (*- numElements() returns integer -*)
+    numElements => meth(s)
+	#(s.getElements());
+    end,
+   
+    (*- getElements() returns [text] -*)
+    getElements => meth(s)
+	copy(s.Contents);
+    end,
+  
+    (*- putElements(elems:[text]) -*)
+    putElements => meth(s, ar)
+	s.Contents := copy(ar);
+	s.Selections := [];
+	s.Selection := -1;
+	form_putText(s.form, s.name, "Items", pkList(s.Contents), false);
+	ok
+   end,
+
+   (*- getElement(atPosition:integer) returns text -*)
+   getElement => meth(s, n)
+	s.Contents[n];
+   end,
+   (*- isQuick() returns boolean -*)
+   isQuick => meth(s)
+	s.Quick;
+   end,
+   (*- setQuickness(q:boolean) -*)
+   setQuickness => meth(s, q)
+	s.Quick := q;
+	refreshWidget(s);
+   end,
+   (*- putElement(atPosition:integer, elem:text) -*)
+   putElement => meth(s, n, el)
+	s.Contents[n] := el;
+	(* update array *)
+	form_putText(s.form, s.name, "Items",  pkList(s.Contents), false);
+	s.getSelection(); (* to checkpoint selected items *)
+	if s.Multiplicity then
+		foreach i in s.Selections do
+			form_putText(s.form, s.name, "SelectAlso", s.Contents[i], false);
+		end;
+	else
+		if s.Selection isnot -1 then
+			form_putText(s.form, s.name, "Select", s.Contents[s.Selection], false);
+		end;
+	end;
+	ok
+   end,
+
+  (*- appendElement(elem:text) -*)
+   appendElement => meth(s, el)
+	s.Contents := s.Contents @ [el];
+	s.putElement(#(s.Contents) - 1, el);
+	ok
+   end,
+
+ (*- prependElement(elem:text) -*)
+  prependElement => meth(s, el)	
+	s.insertElement(0, el);
+	ok
+   end,	
+
+ (*- deleteElement(atPosition:integer) returns boolean -*)
+  deleteElement => meth(s, n)
+	try
+		let ar = s.getElements();
+		let sz = #(ar);
+		let newar = array_sub(ar, 0, n) @ array_sub(ar, n+1, (sz-n)-1);
+		s.putElements(newar);				
+		true;
+	except	
+	else
+		false;
+	end; 
+  end,
+
+ (*- insertElement(atPosition:integer, elem:text) returns boolean -*)
+  insertElement =>meth(s, n, el)
+	try
+		let ar = s.Contents;
+		let sz = #(ar);
+		s.Contents := array_sub(ar, 0, n) @ [el]  @ array_sub(ar, n, (sz-n));
+		(* update selections *)
+		s.getSelection(); (* to checkpoint selected items *)
+		if s.Multiplicity then
+			for i = 0 to #(s.Selections) do
+				if s.Selections[i] >= n then
+					s.Selections[i] := s.Selections[i]+1;
+				end 
+			end;
+		else
+			if s.Selection >= n then
+				s.Selection := s.Selection + 1;
+			end;
+		end;				
+		s.putElements(n, el);
+		true;
+	except
+	else	
+		false;
+	end; 
+  end,
+
+ (*- selectString(st:text)  -*)
+ (*-	 incrementalif not present turns off all -*)
+  selectString =>meth(s, st)
+	var op = "Select";
+	if s.Multiplicity then
+		foreach i in s.Contents do 
+			if i is st then	
+				op := "SelectAlso";
+			end;
+		end;
+	end;
+	form_putText(s.form, s.name, op, st, false);
+	ok;
+  end,
+
+
+(*- getSelection() returns selection(s) as text -*)
+(*- 	 with '\n' seperators  -*)
+   getSelection =>meth(wid)	
+	let sel = form_getText(wid.form, wid.name, "Select");
+	(* checkpoint selections - side effect *)
+	if wid.Multiplicity then	
+				wid.Selections :=[];
+				foreach item in wid.getSelItems() do
+					for i = 0 to #(wid.Contents) - 1 do
+						if item is wid.Contents[i] then
+							wid.Selections := wid.Selections @ [i];
+						end;
+					end;
+				end;
+			else
+				wid.Selection :=  -1;
+				if sel isnot "" then
+					for i = 0 to #(wid.Contents) - 1 do
+						if sel is wid.Contents[i] then
+							wid.Selection := i
+						end;
+					end;
+				end;
+			end;
+	sel
+   end,
+
+ (*- getSelItems() returns array of text -*)
+   getSelItems =>meth(s)	
+	let sel = form_getText(s.form, s.name, "Select");
+	if sel is "" then
+		[]
+	else
+		unpkList("\n" & sel);
+	end;
+   end,	
+
+   (*- toggleMultiplicity() switches between Uni/Multi browser-*)
+   toggleMultiplicity =>meth(s)	
+	checkptSX(s);
+	s.Multiplicity := not(s.Multiplicity);
+	rebuildWidget( s);
+	ok
+   end,	
+   (*- makeDormant() -*)
+    makeDormant => meth(s) 
+     s.InitialState := "Dormant";
+      form_putReactivity(s.form, s.name & "filter", "dormant"); ok end,
+    (*- makePassive() -*)
+    makePassive => meth(s) 
+     s.InitialState := "Passive";
+      form_putReactivity(s.form, s.name & "filter", "passive"); ok end,
+    (*- makeActive() -*)
+    makeActive => meth(s) 
+      s.InitialState := "Active";	
+      form_putReactivity(s.form, s.name & "filter", "active"); 
+      form_popUp(s.form, s.name & "top");
+      ok end,
+    (*- makeInvisible() -*)
+    makeInvisible => meth(s) 
+      s.InitialState := "Vanish";
+      refreshWidget( s);
+    	ok end,
+  (*- -*)
+  } 
+  end,
+
+ (*= button =*)
+  buttonNew => meth(s, n)
+  { 
+    SELF => 0,
+    form => 0, 
+    name => n,
+    class => "button",
+
+    (* Generic Attributes *)
+    parent => 0,
+
+    x => 0, y => 0, width =>0, height =>0, BgColor =>"", FgColor => "",
+    Font => "", Rim => 0, Border => 0, Embellishment => "",
+    InitialState => "", ResizeModel => "", 
+
+   (* Widget Attributes *)
+   textLabel => true, textString => "", pixmap => "",
+   Guard => false, Trill => false,
+
+    (*- makeDormant() -*)
+    makeDormant => meth(s) 
+     s.InitialState := "Dormant";
+      form_putReactivity(s.form, s.name & "filter", "dormant"); ok end,
+    (*- makePassive() -*)
+    makePassive => meth(s) 
+     s.InitialState := "Passive";
+      form_putReactivity(s.form, s.name & "filter", "passive"); ok end,
+    (*- makeActive() -*)
+    makeActive => meth(s) 
+      s.InitialState := "Active";	
+      form_putReactivity(s.form, s.name & "filter", "active"); 
+      form_popUp(s.form, s.name & "top");
+      ok end,
+    (*- makeInvisible() -*)
+    makeInvisible => meth(s) 
+      s.InitialState := "Vanish";
+      refreshWidget( s);
+    	ok end,
+    
+    (*- putText(tx:text) -*)
+    putText => meth(s, val) 	
+      s.textString := val;	
+      if not (s.textLabel) then
+	s.textLabel := true;
+	refreshWidget( s);
+      else
+	form_putText(s.form, s.name & "text", "", val, false); 
+     end;
+    ok end,
+    (*- putBgColor(clr:text) -*)
+    putBgColor => meth(s, val) 	
+      s.BgColor := val;
+      form_putText(s.form, s.name & "text", "BgColor", val, false); ok end,
+    (*- getText() returns text -*)
+    getText => meth(s) 
+	s.textString
+    end,
+   (*- putPixmap(filename:text) -*)
+    putPixmap => meth(s, val) 	
+      s.pixmap := val;
+      if s.textLabel then
+	s.textLabel := false;
+	refreshWidget( s);
+      else
+	form_putText(s.form, s.name & "pixmap", "", val, false); 
+     end;
+      ok end,
+   (*- -*)
+  } 
+  end,
+
+ (*= choice  =*)
+  choiceNew => meth(s,  n)
+  { 
+    SELF => 0,
+    form => 0, 
+    name => n,
+    class => "choice",
+
+   (* Generic Attributes *)
+    parent => 0,
+
+    x => 0, y => 0, width =>0, height =>0, BgColor =>"", FgColor => "",
+    Font => "", Rim => 0, Border => 0, Embellishment => "",
+    InitialState => "", ResizeModel => "", 
+
+     (* Widget Attributes *)
+    textLabel => true, textString => "", pixmap => "", 
+    initialValue => false, feedbackStyle => "CheckBox", 
+  
+ 
+    (*- getValue() returns boolean -*)
+    getValue => meth(s) 
+      form_getBoolean(s.form, s.name) end,
+    (*- setValue(booleanval) -*)
+    setValue => meth(s, val) 
+      form_putBoolean(s.form, s.name, val); ok end,
+    (*- setLabel(tx:text) -*)
+    setLabel => meth(s, val) 
+      s.textString := val;	
+      form_putText(s.form, s.name & "text", "", val, false); ok end,
+     (*- makeDormant() -*)
+    makeDormant => meth(s) 
+     s.InitialState := "Dormant";
+      form_putReactivity(s.form, s.name & "filter", "dormant"); ok end,
+    (*- makePassive() -*)
+    makePassive => meth(s) 
+     s.InitialState := "Passive";
+      form_putReactivity(s.form, s.name & "filter", "passive"); ok end,
+    (*- makeActive() -*)
+    makeActive => meth(s) 
+      s.InitialState := "Active";	
+      form_putReactivity(s.form, s.name & "filter", "active"); 
+      form_popUp(s.form, s.name & "top");
+      ok end,
+    (*- makeInvisible() -*)
+    makeInvisible => meth(s) 
+      s.InitialState := "Vanish";
+      refreshWidget( s);
+    	ok end,    
+  (*- -*)
+  } 
+  end,
+
+ (*= filebrowser =*)
+  filebrowserNew => meth(s,   n)
+  { 
+    SELF => 0,
+    form => 0, 
+    name => n,
+    class => "filebrowser",
+
+   (* Generic Attributes *)
+    parent => 0,
+
+    x => 0, y => 0, width =>0, height =>0, BgColor =>"", FgColor => "",
+    Font => "", Rim => 0, Border => 0, Embellishment => "",
+    InitialState => "", ResizeModel => "", 
+
+    (* Widget Attributes *)
+    LabelFont => "", ReadOnly => false,
+    Value => ".", Suffixes => [], ActionLabel => "",
+
+    (*- getFilename() returns text -*)
+    getFilename => meth(s) 
+      form_getText(s.form, s.name, "") end,    
+
+    (*- setFilename(fnm:text) -*)
+    setFilename => meth(s, fnm) 
+      form_putText(s.form, s.name, "",fnm, false ); ok end,    
+
+    (*- setActionLabel(lab:text)  -*)
+     setActionLabel => meth(s, lab)
+	s.ActionLabel := lab;
+	refreshWidget( s);
+	ok end,
+      (*- makeDormant() -*)
+    makeDormant => meth(s) 
+     s.InitialState := "Dormant";
+      form_putReactivity(s.form, s.name & "filter", "dormant"); ok end,
+    (*- makePassive() -*)
+    makePassive => meth(s) 
+     s.InitialState := "Passive";
+      form_putReactivity(s.form, s.name & "filter", "passive"); ok end,
+    (*- makeActive() -*)
+    makeActive => meth(s) 
+      s.InitialState := "Active";	
+      form_putReactivity(s.form, s.name & "filter", "active"); 
+      form_popUp(s.form, s.name & "top");
+      ok end,
+    (*- makeInvisible() -*)
+    makeInvisible => meth(s) 
+      s.InitialState := "Vanish";
+      refreshWidget( s);
+    	ok end,	   
+    (*- -*)
+  } 
+  end,
+
+ (*= form =*)
+  formNew => meth(s,  n)
+  { 
+    SELF => 0,
+    form => 0, 
+    name => n,
+    class => "form",
+
+   (* Generic Attributes *)
+    parent => 0,
+
+    x => 0, y => 0, width =>0, height =>0, BgColor =>"", FgColor => "",
+    Font => "", Rim => 0, Border => 0, Embellishment => "",
+    InitialState => "", ResizeModel => "", 	
+
+    (* Split Attributes *)
+    Texture => "", children => [],
+
+    (* Form Attributes *)
+    ParentForm => 0, ChildForms => [],
+    HasMenu => false, MenuBgColor => "", MenuFgColor => "",
+    MenuFont => "", Menu => [],
+    TitleBgColor => "",  TitleFgColor => "",
+    TitleString => "", StretchX => 0, StretchY => 0,
+    ShrinkX => 0,  ShrinkY => 0,
+
+    CheckpointedXY => false, (* if false pops up in default position *)
+ 
+    (*- show(), shows form (toplevel or anchored)-*)
+    show => meth(s) 
+      if s.ParentForm is 0 then
+	if  s.form is 0 then
+		s.SELF.FORM := form_new(computeSX(s));
+		s.SELF.VOAttachCBacks();   
+		form_show(s.form);
+	end
+      else
+	 s.popUp();
+      end;
+   ok end,
+    (*- hide(), hides form (toplevel or anchored) -*)
+    hide => meth(s) 
+     if s.ParentForm is 0  then
+	if  s.form isnot 0 then
+	      checkptSX(s);
+	      form_hide(s.form); 
+       	      s.SELF.FORM := 0;
+	end
+      else 
+	  s.close();    
+      end;
+     ok end,
+    (*- putTitleString(titstr:text) -*)
+    putTitleString => meth(s, val)
+      s.TitleString := val;
+      form_putText(s.form, s.name & "titlestring", "", val, false); ok end,
+    (*- putBgColor(clr:text) -*)
+    putBgColor => meth(s, val) 	
+      s.BgColor := val;
+      form_putText(s.form, s.name & "background", "BgColor", val, false); ok 
+      end,
+    (*- getText() returns text -*)
+    getText => meth(s) 
+      form_getText(s.form, s.name & "titlestring", "") end,
+     (*- popUp(), shows anchored form -*)
+    popUp => meth(s)
+      form_popUp(s.form, s.name); 
+      form_putReactivity(s.form, s.name & "filter", "active"); 
+      ok end,
+    (*- close(), hides anchored form -*)
+    close => meth(s) 
+      form_popDown(s.form, s.name); ok end,
+    (*- hasSelectedChoice() returns boolean -*)
+    hasSelectedChoice => meth(s)
+	try
+	   s.getChoice();   true;
+        except else false end;
+    end,	 
+    (*- getChoice() : text, exception if none selected. -*)
+    (*- - return value is name of choice, not label -*)
+    getChoice => meth(s)
+ 	form_getChoice(s.form, s.name & "radio")  end,
+     (*- putChoice(textname:text),  exception if nonexistent -*)
+     (*- - 	textname is the  name(not label) of the choice -*)
+    putChoice => meth(s, item)
+ 	form_putChoice(s.form, s.name & "radio", item); ok
+    end,	
+    (*- -*)
+  } 
+  end,
+
+  (*= frame =*)
+  frameNew => meth(s,  n)
+  { 
+    SELF => 0,
+    form => 0, 
+    name => n,
+    class => "frame",
+
+    (* Generic Attributes *)
+    parent => 0,
+
+    x => 0, y => 0, width =>0, height =>0, BgColor =>"", FgColor => "",
+    Font => "", Rim => 0, Border => 0, Embellishment => "",
+    InitialState => "", ResizeModel => "", 	
+
+    Texture => "", children => 0,	
+
+    (*- hasSelectedChoice() returns boolean -*)
+    hasSelectedChoice => meth(s)
+	try
+	   s.getChoice();   true;
+        except else false end;
+   end,	 
+    (*- getChoice() returns text, raises exception if unselected -*)
+    (*- -	The return value is the name of the choice, not its label -*)
+    getChoice => meth(s)
+ 	form_getChoice(s.form, s.name & "radio")  end,
+    (*- putChoice(textname: text), raises exception if nonexistant -*)
+    (*- - 	textname is a text containing the name (not label) of the choice -*)
+    putChoice => meth(s, item)
+ 	form_putChoice(s.form, s.name & "radio", item); ok
+    end,	
+    (*- makeActive() -*)
+    makeActive => meth(s) 
+      s.InitialState := "Active";	
+      form_putReactivity(s.form, s.name & "filter", "active"); 
+      form_popUp(s.form, s.name & "top");
+      ok end,
+    (*- makeInvisible() -*)
+    makeInvisible => meth(s) 
+      s.InitialState := "Vanish";
+      refreshWidget( s);
+    	ok end,
+    
+    (*- -*)
+  } 
+  end,
+
+ (*= hscroll =*)
+  hscrollNew => meth(s,  n)
+  { 
+    SELF => 0,
+    form => 0, 
+    name => n,
+    class => "hscroll",
+
+   (* Generic Attributes *)
+    parent => 0,
+
+    x => 0, y => 0, width =>0, height =>0, BgColor =>"", FgColor => "",
+    Font => "", Rim => 0, Border => 0, Embellishment => "",
+    InitialState => "", ResizeModel => "", 
+
+   (* Widget Attributes *)
+   Min => 0, Max => 0, Val => 0,
+   Thumb => 0, Step => 0,
+
+   (*- getValue() returns integer -*)
+    getValue => meth(s) 
+      form_getInt(s.form, s.name , "") end,
+    (*- getMin() returns integer -*)
+    getMin => meth(s) 
+      form_getInt(s.form, s.name , "Min") end,
+    (*- getMax() returns integer -*)
+    getMax => meth(s) 
+      form_getInt(s.form, s.name , "Max") end,
+    (*- setValue(val) -*)
+    setValue => meth(s, val) 
+      form_putInt(s.form, s.name , "", val); ok  end,
+    (*- setMin(minval) -*)
+    setMin => meth(s, val) 
+	s.Min := val;
+      form_putInt(s.form, s.name , "Min", val); ok end,
+    (*- setMax(maxval)  -*)
+    setMax => meth(s, val) 
+	s.Max := val;
+      form_putInt(s.form, s.name , "Max", val); ok  end,
+    (*- -*)
+  } 
+  end,
+
+  (*= menuitem =*)
+  menuItemNew => meth(s,   l, n, lev, initst)
+  { 
+    SELF => 0,
+    form => 0, 
+    Label => l,
+    name => n,
+    class => "menuItem",
+
+    Level => lev,
+    initialState => initst,
+
+    (*- setLabel(tx:text) -*)
+    setLabel => meth(s, val) 	
+	s.Label := val;
+      form_putText(s.form, s.name & "Label", "", val, false); ok end,
+    (*- makeDormant() -*)
+    makeDormant => meth(s) 
+     s.InitialState := "Dormant";
+      form_putReactivity(s.form, s.name & "filter", "dormant"); ok end,
+    (*- makePassive() -*)
+    makePassive => meth(s) 
+      s.InitialState := "Passive";
+      form_putReactivity(s.form, s.name & "filter", "passive"); ok end,
+    (*- makeActive() -*)
+    makeActive => meth(s) 
+      s.InitialState := "Active";	
+      form_putReactivity(s.form, s.name & "filter", "active"); ok end,
+     (*- makeInvisible() -*)
+    makeInvisible => meth(s) 
+      s.InitialState := "Vanish";	
+      form_putReactivity(s.form, s.name & "filter", "vanished"); ok end,
+   (*- -*)
+  } 
+  end,
+
+  (*= numeric =*)
+  numericNew => meth(s,  n)
+  { 
+    SELF => 0,
+    form => 0, 
+    name => n,
+    class => "numeric",
+
+   (* Generic Attributes *)
+    parent => 0,
+
+    x => 0, y => 0, width =>0, height =>0, BgColor =>"", FgColor => "",
+    Font => "", Rim => 0, Border => 0, Embellishment => "",
+    InitialState => "", ResizeModel => "", 
+
+   (* Widget Attributes *)
+   AllowEmpty => false, HideButtons => false,
+   Min => 0, Max => 0, Val => 0, 
+
+   (*- getValue() returns integer -*)
+    getValue => meth(s) 
+      form_getInt(s.form, s.name , "") end,
+    (*- getMin() returns integer -*)
+    getMin => meth(s) 
+      form_getInt(s.form, s.name , "Min") end,
+    (*- getMax() returns integer -*)
+    getMax => meth(s) 
+      form_getInt(s.form, s.name , "Max") end,
+    (*- setValue(val) -*)
+    setValue => meth(s, val) 
+      form_putInt(s.form, s.name , "", val); ok  end,
+    (*- setMin(minval) -*)
+    setMin => meth(s, val)
+	s.Min := val; 
+      form_putInt(s.form, s.name , "Min", val); ok end,
+    (*- setMax(maxval)  -*)
+    setMax => meth(s, val) 
+      s.Max := val;
+      form_putInt(s.form, s.name , "Max", val); ok  end,
+    (*- -*)
+  } 
+  end,
+
+(*= text =*) 
+  textNew => meth(s,  n)
+  { 
+    SELF => 0,
+    form => 0, 
+    name => n,
+    class => "text",
+
+   (* Generic Attributes *)
+    parent => 0,
+
+    x => 0, y => 0, width =>0, height =>0, BgColor =>"", FgColor => "",
+    Font => "", Rim => 0, Border => 0, Embellishment => "",
+    InitialState => "", ResizeModel => "", 
+
+    (* Widget Attributes *)
+    tOrientation => "Center", tVal => "",
+
+    (*- getText() returns text -*)
+    getText => meth(s) 
+      form_getText(s.form, s.name, "") end,
+    (*- putText(val:text) -*)
+    putText => meth(s, val) 
+     s.tVal := val;
+      form_putText(s.form, s.name, "", val, false); ok end,
+    (*- appendText(val:text) -*)
+    appendText => meth(s, val) 
+	s.tVal := s.tVal @ val;
+      form_putText(s.form, s.name, "", val, true); ok end,
+    (*- putBgColor(clr:text) -*)
+    putBgColor => meth(s, val) 
+	s.BgColor := val;
+      form_putText(s.form, s.name, "BgColor", val, false); ok end,
+    (*- putFgColor(clr:text) -*)
+    putFgColor => meth(s, val) 
+	s.FgColor := val;
+      form_putText(s.form, s.name, "FgColor", val, false); ok end,
+    (*- putValue(intval:integer) -*)
+    putValue => meth(s, val) 
+      var v = ok; 
+      try v := fmt_int(val) except else v := "" end;
+	s.tVal := v;
+      form_putText(s.form, s.name, "", v, false); 
+      ok end,
+     (*- makeActive() -*)
+    makeActive => meth(s) 
+      s.InitialState := "Active";	
+      form_putReactivity(s.form, s.name & "filter", "active"); 
+      form_popUp(s.form, s.name & "top");
+      ok end,
+     (*- makeInvisible() -*)
+    makeInvisible => meth(s) 
+      s.InitialState := "Vanish";
+      refreshWidget( s);
+    	ok end,	   
+    (*- -*)
+  }
+  end,
+
+(*= textedit =*) 
+  texteditNew => meth(s,  n)
+  { 
+    SELF => 0,
+    form => 0, 
+    name => n,
+    class => "textedit",
+
+   (* Generic Attributes *)
+    parent => 0,
+
+    x => 0, y => 0, width =>0, height =>0, BgColor =>"", FgColor => "",
+    Font => "", Rim => 0, Border => 0, Embellishment => "",
+    InitialState => "", ResizeModel => "", 
+
+   (* Widget Attributes *)
+    teReadOnly => false, teClip => false, teHasScrollbar => true,
+    teContents => "", teFromFile => "", getFromFile => false,
+    
+    (*- getText() returns text -*)
+    getText => meth(s) 
+      form_getText(s.form, s.name, "") end,
+    (*- putText(t:text) -*)
+    putText => meth(s, val) 
+      form_putText(s.form, s.name, "", val, false); ok end,
+    (*- appendText(t:text) -*)
+    appendText => meth(s, val) 
+      form_putText(s.form, s.name, "", val, true); ok end,
+    (*- flush() -*)
+    flush => meth(s) 
+      form_putText(s.form, s.name, "", "", false); ok end,
+      (*- makeDormant() -*)
+    makeDormant => meth(s) 
+     s.InitialState := "Dormant";
+      form_putReactivity(s.form, s.name & "filter", "dormant"); ok end,
+    (*- makePassive() -*)
+    makePassive => meth(s) 
+      s.InitialState := "Passive";
+      form_putReactivity(s.form, s.name & "filter", "passive"); ok end,
+    
+   (*- putBgColor(clr:text) -*)
+    putBgColor => meth(s, val) 	
+	s.BgColor := val;
+      form_putText(s.form, s.name, "BgColor", val, false); ok end,
+     (*- putFgColor(clr:text) -*)
+     putFgColor => meth(s, val) 
+     s.FgColor := val;
+      form_putText(s.form, s.name, "FgColor", val, false); ok end,
+(*- makeActive() -*)
+    makeActive => meth(s) 
+      s.InitialState := "Active";	
+      form_putReactivity(s.form, s.name & "filter", "active"); 
+      form_popUp(s.form, s.name & "top");
+      ok end,
+ (*- makeInvisible() -*)
+    makeInvisible => meth(s) 
+      s.InitialState := "Vanish";
+      refreshWidget( s);
+    	ok end,
+   (*- -*)
+  }
+  end,
+
+(*= typein =*)
+  typeinNew => meth(s,  n)
+  { 
+    SELF => 0,
+    form => 0, 
+    name => n,
+    class => "typein",
+
+    (* Generic Attributes *)
+    parent => 0,
+
+    x => 0, y => 0, width =>0, height =>0, BgColor =>"", FgColor => "",
+    Font => "", Rim => 0, Border => 0, Embellishment => "",
+    InitialState => "", ResizeModel => "", 
+
+    (* Widget Attributes *)
+     tyReadOnly => false, tyExpand => false, tyInit => "",
+
+   
+    (*- putText(t:text) -*)
+    putText => meth(s, val) 
+      form_putText(s.form, s.name, "", val, false); ok end,
+    (*- appendText(t:text) -*)
+    appendText => meth(s, val) 
+      form_putText(s.form, s.name, "", val, true); ok end,
+    (*- getText() returns text -*)
+    getText => meth(s) 
+      form_getText(s.form, s.name, "") end,
+   (*- flush() -*)
+    flush => meth(s) 
+      form_putText(s.form, s.name, "", "", false); ok end,
+
+(*- makeDormant() -*)
+    makeDormant => meth(s) 
+     s.InitialState := "Dormant";
+      form_putReactivity(s.form, s.name & "filter", "dormant"); ok end,
+    (*- makePassive() -*)
+    makePassive => meth(s) 
+     s.InitialState := "Passive";
+      form_putReactivity(s.form, s.name & "filter", "passive"); ok end,
+    (*- makeActive() -*)
+    makeActive => meth(s) 
+      s.InitialState := "Active";	
+      form_putReactivity(s.form, s.name & "filter", "active"); 
+      form_popUp(s.form, s.name & "top");
+      ok end,
+    (*- makeInvisible() -*)
+    makeInvisible => meth(s) 
+      s.InitialState := "Vanish";
+      refreshWidget( s);
+    	ok end,
+    
+
+   (*- putBgColor(clr:text) -*)
+    putBgColor => meth(s, val) 	
+	s.BgColor := val;
+      form_putText(s.form, s.name, "BgColor", val, false); ok end,
+     (*- putFgColor(clr:text) -*)
+     putFgColor => meth(s, val) 
+     s.FgColor := val;
+      form_putText(s.form, s.name, "FgColor", val, false); ok end,  
+  }
+  end,
+
+(*= vscroll =*)
+  vscrollNew => meth(s,  n)
+  { 
+    SELF => 0,
+    form => 0, 
+    name => n,
+    class => "vscroll",
+
+   (* Generic Attributes *)
+    parent => 0,
+
+    x => 0, y => 0, width =>0, height =>0, BgColor =>"", FgColor => "",
+    Font => "", Rim => 0, Border => 0, Embellishment => "",
+    InitialState => "", ResizeModel => "", 
+ 
+    (* Widget Attributes *)
+   Min => 0, Max => 0, Val => 0,
+   Thumb => 0, Step => 0,
+
+   (*- getValue() returns integer -*)
+    getValue => meth(s) 
+      form_getInt(s.form, s.name , "") end,
+    (*- getMin() returns integer -*)
+    getMin => meth(s) 
+      form_getInt(s.form, s.name , "Min") end,
+    (*- getMax() returns integer -*)
+    getMax => meth(s) 
+      form_getInt(s.form, s.name , "Max") end,
+    (*- setValue(val) -*)
+    setValue => meth(s, val) 
+      form_putInt(s.form, s.name , "", val); ok  end,
+    (*- setMin(minval) -*)
+    setMin => meth(s, val) 
+	s.Min := val;
+      form_putInt(s.form, s.name , "Min", val); ok end,
+    (*- setMax(maxval)  -*)
+    setMax => meth(s, val) 
+	s.Max := val;
+      form_putInt(s.form, s.name , "Max", val); ok  end,
+    (*- -*)
+  } 
+  end,
+
+(*= video =*)
+  videoNew => meth(s,  n)
+  { 
+    SELF => 0,
+    form => 0, 
+    name => n,
+    class => "video",
+
+   (* Generic Attributes *)
+    parent => 0,
+
+    x => 0, y => 0, width =>0, height =>0, BgColor =>"", FgColor => "",
+    Font => "", Rim => 0, Border => 0, Embellishment => "",
+    InitialState => "", ResizeModel => "", 
+
+    (* Widget Attributes *)
+     Source => "", Quality => 0, Width => 0, Height => 0,
+     Colours => 0, MSecs => 0, Synchronous => false,
+     FixedSize => false, Paused => false,
+ 
+    AuSource => "", Volume => 0, Mute => false, 
+    IgnoreMapping => false,
+
+    (*- setQuality(val:integer) returns boolean -*)
+    setQuality => meth(s, val) 		
+     try
+      form_putInt(s.form, s.name, "Quality", val); 
+      true
+     except else false  end
+     end,
+   (*- setWidth(wid:integer) -*)
+    setWidth => meth(s, val) 		
+      form_putInt(s.form, s.name, "Width", val); ok end,
+  (*- setSource(src:text) returns ok -*)
+    setSource => meth(s, src)
+	s.AuSource := src;
+    	s.Source := src; refreshWidget( s); ok  end,
+   (*- setHeight(ht:integer) -*)
+    setHeight => meth(s, val) 			
+      form_putInt(s.form, s.name, "Height", val); ok end,
+   (*- setFramesPerSec(fps:integer) -*)
+    setFramesPerSec => meth(s, val) 			
+      form_putInt(s.form, s.name, "MSecs", (1000 /val)); ok end,
+   (*- setVolume(v:integer) returns boolean -*)
+    setVolume => meth(s, val) 		
+      try	
+      	form_putInt(s.form, s.name & "audio" , "Volume", val);
+	true
+      except else
+	false
+      end
+     end, 
+    (*- setMute(onoff:boolean) -*)
+     setMute => meth(s, val)
+	form_putBool(s.form, s.name & "audio" , "Mute", val);	
+        ok end,
+    (*- setIgnoreMapping(onoff:boolean) -*)
+      setIgnoreMapping => meth(s, val)
+	form_putBool(s.form, s.name & "audio" , "IgnoreMapping", val);	
+        ok end,
+     (*- setSynchronous(onoff:boolean)  -*)
+      setSynchronous => meth(s, val)
+	form_putBool(s.form, s.name, "Synchronous", val);	
+        ok end,
+     (*- setPaused(onoff:boolean) -*)
+      setPaused => meth(s, val)
+	form_putBool(s.form, s.name, "Paused", val);	
+        ok end,
+     (*- setFixedSize(onoff:boolean) -*)
+      setFixedSize => meth(s, val)
+	form_putBool(s.form, s.name, "FixedSize", val);	
+        ok end,
+      (*- makeActive() -*)
+    makeActive => meth(s) 
+      s.InitialState := "Active";	
+      form_putReactivity(s.form, s.name & "filter", "active"); 
+      form_popUp(s.form, s.name & "top");
+      ok end,
+    (*- makeInvisible() -*)
+    makeInvisible => meth(s) 
+      s.InitialState := "Vanish";
+      refreshWidget( s);
+    	ok end,
+    
+     (*- -*)
+  } 
+  end,
+
+(* placeholders for restricted access procs  *)
+processNew => ok,
+rdOpen => ok,
+wrOpen =>  ok,
+wrOpenAppend => ok
+};
+
+
+(* Some useful procedures that will be copied into volibLocal
+    in cases where the computation needs to happen locally *)
+
+(*: Join(ssn:text, host:text) returns boolean  :*)
+let Join = proc(ssn, host) 
+  try
+    let sessionConst = net_import(ssn, host);
+    (sessionConst.New)(volibLocal);
+    true
+  except else 
+    false
+  end; 
+end;
+
+(* normal versions of restricted access procs  *)
+(*: processNew(nameAndArgs:[text], mergeOut:boolean) returns process :*)
+var processNew = proc(nameAndArgs, mergeOut) 
+	process_new(processor, nameAndArgs, mergeOut)
+end;
+
+(*: rdOpen(filename:text) returns reader :*)
+var rdOpen = proc(fnm) 
+	rd_open(fileSys, fnm)
+end;
+
+(*: wrOpen(filename:text) returns writer :*)
+var wrOpen =  proc(fnm) 
+		wr_open(fileSys, fnm);
+end;
+
+(*: wrOpenAppend(filename:text) returns writer :*)
+var wrOpenAppend = proc(fnm) 
+		wr_openAppend(fileSys, fnm);
+end;
+
+
+volibLocal.Join := Join;
+
+volibLocal.processNew := meth(s, n , mer)
+	processNew(n, mer)
+end;
+
+volibLocal.rdOpen := meth(s, fnm)
+	rdOpen(fnm)
+end;
+
+volibLocal.wrOpen := meth(s, fnm)
+	wrOpen(fnm)
+end;
+
+volibLocal.wrOpenAppend := meth(s, fnm)
+	wrOpenAppend(fnm)
+end;
+sys_popSilence();
+
+

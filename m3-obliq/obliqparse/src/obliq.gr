@@ -1,0 +1,488 @@
+(* <pre> *)
+(* METASYNTAX  (Parsing is LL(1) recursive descent).
+     Non-terminals are declared by '::=' and must be non-left-recursive.
+     Terminals are in double quotes '"'
+     '{ g1 .. gn }' is a (sequential) choice of grammars gi.
+     '[ g1 .. gn ]' is a sequence of grammars gi.
+     '(g1 * g2)' is '[g1 g]' where 'g::={[g2 g][]}', but left-associative
+     '_n' and '::' are used for abstract-syntax-tree generation.
+*)
+
+phrase ::=
+  { phraseEmpty
+    phraseHelp
+    phraseFlag
+    phraseFrame
+    phraseType
+    phraseTerm
+    phraseEOF
+  }
+
+phraseEmpty ::=
+  ";" 						:: BuildPhraseEmpty
+
+phraseEOF ::=
+  EOF 						:: BuildPhraseEmpty
+
+phraseHelp ::=
+  [ "~help" 
+    { name string [] }_1
+    { name string [] }_2
+    ";"
+  ]                                             :: BuildPhraseHelp
+
+phraseFlag ::=
+  [ "~flag" 
+    { name string [] }_1
+    { name string [] }_2
+    ";"
+  ]                                             :: BuildPhraseFlag
+
+phraseType ::=
+  [ typDecl ";" ] :: BuildPhraseEmpty
+
+phraseFrame ::=
+  { phraseLoad
+    phraseImport
+    phraseModule
+    phraseEndModule
+    phraseEstablish
+    phraseDelete
+    phraseSave
+    phraseQualify
+    phraseQuit
+  }
+
+phraseQuit ::=
+  [ "~quit" ";" ]				:: BuildPhraseQuit
+
+phraseLoad ::=
+  [ "load" 
+    { name_1					:: BuildPhraseLoadName
+      string_1 					:: BuildPhraseLoadString
+    }_2
+    ";" 
+  ]						:: Select2
+
+phraseImport ::=
+  [ "import" name_1 ";" ]			:: BuildPhraseImport
+
+phraseEstablish ::=
+  [ "~establish" name_1
+    { [ "for" name_2 ]	                	:: Select2
+      []
+    }_3
+    ";" 
+  ]		                                :: BuildPhraseEstablish
+
+phraseSave ::=
+  [ "~save" name_1 ";" ]	                :: BuildPhraseSave
+
+phraseDelete ::=
+  [ "~delete" name_1 ";" ]	        	:: BuildPhraseDelete
+
+phraseQualify ::=
+  [ "~qualify" ";" ]                            :: BuildPhraseQualify
+
+phraseModule ::=
+  [ "module" 
+    name_1
+    { [ "for" name_2 ]                          :: Select2
+      []
+    }_3
+    { [ "import" importList_4  ]               	:: Select4
+      []
+    }_5
+    { [ "export" exportList ] [] }
+    ";" 
+  ]			                	:: BuildPhraseModule
+
+phraseEndModule ::=
+  [ "end" "module" ";" ]                        :: BuildPhraseEndModule
+
+importList ::=
+  { [ name_1 
+	{ [ "," importList_2 ]			:: BuildImportList
+	  []					:: BuildImportListSingle
+	}_3
+    ]    					:: Select3                 
+    []						:: BuildImportListNil
+  }
+
+phraseTerm ::=
+  [ term_1 
+      { [ "!"
+          { int_2				:: BuildPhraseTermDepth
+	    [] 					:: BuildPhraseTermDeep
+          }_3
+	]					:: Select3
+	[]					:: BuildPhraseTerm
+      }_4
+    ";"
+  ]						:: Select4
+
+typDecl ::=
+  [ "type" ide { typParams [] } "=" typ ]
+
+typ ::=
+  { [ "(" typList ")" { typRngSpec [] } ]
+    [ "Option" typFields "end" ]
+    [ "{" typFields "}" ]
+    [ "[" { [ int "~*" ] [] } typ "]" ]
+    [ "All" "(" ide { typBound [] } ")" typ ]
+    [ "Some" "(" ide { typBound [] } ")" typ ]
+    [ "Self" "(" ide ")" typ ]
+    [ ide 
+        { [ "_" name { typParams [] } ]
+          typParams
+          []
+        }
+    ]
+  }
+
+typBound ::= 
+  [ "<:" typ ]
+
+typParams ::=
+  [ "(" typNameList ")" ]
+
+typNameList ::=
+  { [ ide { [ "," typList ] [] } ]
+    []
+  }
+
+typList ::=
+  { [ typ { [ "," typList ] [] } ]
+    []
+  }
+
+typFields ::=
+  { [ ide ":" typ
+      { [ "," typFields ]
+	[]
+      }
+    ]
+    []
+  }
+
+typSpec ::=
+  { [ ":" typ ] [] }
+
+typResSpec ::=
+  { [ ":" typ { [ "!" excList ] [] } ] 
+    [ "!" excList ]
+  }
+
+typRngSpec ::=
+  { [ "->" typ { [ "!" excList ] [] } ] 
+    [ "=>" typ { [ "!" excList ] [] } ] 
+    [ "!" excList ]
+  }
+
+excList ::=
+  { [ ide { [ "_" name ] [] } excList ] [] }
+
+procDecl ::=
+  {
+    [ { "All" "Some" } "(" ide { typBound [] } ")" procDecl ]
+    [ ide 
+      { [ ":" typ ]
+        [ "(" ideList ")" typResSpec ]
+        []
+      }
+    ]
+  }
+  
+exportList ::=
+  { [ typDecl { [ "," exportList ] [] } ]
+    [ procDecl { [ "," exportList ] [] } ]
+    []
+  }
+
+termBinding ::=
+  { [ ide_1 typSpec "=" term_2 
+      { [ "," termBinding_3 ] 			:: BuildTermBinding
+        []					:: BuildTermBindingSingle
+      }_4
+    ]						:: Select4
+    []						:: BuildTermBindingNil
+  }
+
+termSeq ::=
+  [ term_1
+    { [ ";" 
+	{ termSeq_2				:: BuildTermSeq
+	  []					:: Select1
+	}_3
+      ]						:: Select3
+      []					:: Select1
+    }_4
+  ]						:: Select4
+
+termSeqOpt ::=
+  { termSeq
+    []                                          :: BuildTermOk
+  }
+
+term ::=
+  ( termBase *_1
+    { [ "(" termList_2 ")" ]			:: BuildTermAppl
+      [ "_" name_2 
+        { [ "(" termList_3 ")" ]		:: BuildTermOp
+          []					:: BuildTermOpConst
+        }_4
+      ]						:: Select4
+      [ "." name_2 
+        { [ ":=" termOrAlias_3 ]		:: BuildTermUpdate
+          [ "(" termList_3 ")" ]                :: BuildTermInvoke
+          []					:: BuildTermSelect
+        }_4
+      ]						:: Select4
+      [ ":=" term_2 ]                           :: BuildTermAssign
+      [ "[" term_2 
+        { [ "]"
+            { [ ":=" term_3 ]			:: BuildTermArraySet
+              []				:: BuildTermArrayGet
+            }_4
+          ]					:: Select4
+          [ "for" term_3 "]"
+            { [ ":=" term_4 ]			:: BuildTermArrayUpd
+              []				:: BuildTermArraySub
+            }_5
+          ]					:: Select5
+        }_6
+      ]						:: Select6
+      [ ide_2 term_3 ]				:: BuildTermInfix
+      [ "andif" term_2 ]			:: BuildTermAndif
+      [ "orif" term_2 ]				:: BuildTermOrif
+    }
+  )
+
+termBase ::=
+  { 
+    termMinus
+    termIde
+    termConst
+    termArray
+    termObj
+    termOption
+    termClone
+    termDelegate
+    termRedirect
+    termProc
+    termMeth
+    termPar
+    termLet
+    termVar
+    termIf
+    termCase
+    termLoop
+    termExit
+    termFor
+    termForeach
+    termException
+    termRaise
+    termTry
+    termLock
+    termWatch
+    termAll
+    termSome
+    termSelf
+  }
+
+termIde ::=
+  ide_1 					:: BuildTermIde
+
+termConst ::=
+  { "ok"                                        :: BuildTermOk
+    "true"                                      :: BuildTermBoolTrue
+    "false"                                     :: BuildTermBoolFalse
+    char_1                                      :: BuildTermChar
+    string_1                                    :: BuildTermString
+    int_1                                       :: BuildTermInt
+    real_1                                      :: BuildTermReal
+  }
+
+termMinus ::=
+  [ "~-" term_1 ]                               :: BuildTermMinus
+
+termArray ::=
+  [ "[" termList_1 "]" ]			:: BuildTermArray
+
+termObj ::=
+  [ "{" termObjProtected_1 termObjSerialized_2
+    termObjFields_3 "}" ]                 	:: BuildTermObj
+
+termObjProtected ::=
+ {  [ "protected" { "," [] } ] 		        :: BuildOptionYes
+    []						:: BuildOptionNo
+  }
+  
+termObjSerialized ::=
+ {  [ "serialized" { "," [] } ] 	        :: BuildOptionYes
+    []						:: BuildOptionNo
+  }
+
+termOption ::=
+  [ "option" name_1 typSpec "=>" termSeqOpt_2 "end" ]	:: BuildTermOption
+
+termOrAlias ::=
+  { term
+    [ "alias" ide_1 "of" termSeq_2 "end" ]      :: BuildTermAlias
+  }
+
+termObjFields ::=
+  { [ name_1 typSpec "=>" termOrAlias_2 
+      { [ "," termObjFields_3 ]			:: BuildTermObjField
+	[]					:: BuildTermObjFieldSingle
+      }_4
+    ]						:: Select4
+    []						:: BuildTermObjFieldNil
+  }
+
+termClone ::=
+  [ "clone" "(" termList_1 ")" ]		:: BuildTermClone
+
+termDelegate ::= (* OBSOLETE *)
+  [ "delegate" termSeq_1 "to" termSeq_2 "end" ]	:: BuildTermRedirect
+
+termRedirect ::=
+  [ "redirect" termSeq_1 "to" termSeq_2 "end" ]	:: BuildTermRedirect
+
+termProc ::=
+  [ "proc" "(" ideList_1 ")" { [ typResSpec "," ] [] } termSeqOpt_2 "end" ]
+					 	:: BuildTermProc
+
+termMeth ::=
+  [ "meth" "(" ideList_1 ")" { [ typResSpec "," ] [] } termSeqOpt_2 "end" ]
+						:: BuildTermMeth
+termPar ::=
+  [ "(" termSeqOpt_1 ")" ]			:: Select1
+
+termLet ::=
+  [ "let"
+    { [ "rec" termBinding_1 ]                   :: BuildTermLetRec
+      termBinding_1                             :: BuildTermLet
+    }_2
+  ]                                             :: Select2                    
+
+termVar ::=
+  [ "var"
+    { [ "rec" termBinding_1 ]                   :: BuildTermVarRec
+      termBinding_1                             :: BuildTermVar
+    }_2
+  ]                                             :: Select2                    
+
+termIf ::=
+  [ "if" termSeq_1 "then" termSeqOpt_2 termElsif_3 ]
+						:: BuildTermIf
+termElsif ::=
+  { [ "end" ]					:: BuildTermIfEnd
+    [ "else" termSeqOpt_1 "end" ]			:: Select1
+    [ "elsif" termSeq_1 "then" termSeqOpt_2 termElsif_3 ]
+						:: BuildTermIf
+  }
+
+termCase ::=
+  [ "case" termSeq_1 
+    "of" termCaseList_2 ]			:: BuildTermCase
+
+termLoop ::=
+  [ "loop" termSeqOpt_1 "end" ]			:: BuildTermLoop
+
+termExit ::=
+  "exit"					:: BuildTermExit
+
+termFor ::=
+  [ "for" ide_1 typSpec "=" term_2 "to" term_3 "do" termSeqOpt_4 "end" ]
+						:: BuildTermFor
+
+termForeach ::=
+  [ "foreach" ide_1 typSpec "in" term_2 
+    { [ "do" termSeqOpt_3 ]			:: BuildTermForeachDo
+      [ "map" termSeqOpt_3 ]			:: BuildTermForeachMap
+    }_4
+    "end" 
+  ]						:: Select4
+						
+termException ::=
+  [ "exception"	"(" term_1 ")" ]		:: BuildTermException
+
+termRaise ::=
+  [ "raise" "(" term_1 ")" ]                    :: BuildTermRaise
+
+termTry ::=
+  [ "try" termSeqOpt_1 
+    { [ "except" termTryList_2 "end" ] 		:: BuildTermTry
+      [ "else" termSeqOpt_2 "end" ] 		:: BuildTermTryElse
+      [ "finally" termSeqOpt_2 "end" ]		:: BuildTermTryFinally
+    }_3
+  ]						:: Select3
+
+termList ::=
+  { [ term_1 
+      { [ "," termList_2 ]			:: BuildTermListCons
+	[]					:: BuildTermListSingle
+      }_3
+    ]						:: Select3
+    []						:: BuildTermListNil
+  }
+
+termLock ::=
+  [ "lock" termSeq_1 "do" termSeqOpt_2 "end" ]  :: BuildTermLock
+
+termWatch ::=
+  [ "watch" termSeq_1 "until" termSeq_2 "end" ] :: BuildTermWatch
+
+ideList ::=
+  { [ ide_1 typSpec
+      { [ "," ideList_2 ]			:: BuildIdeListCons
+	[]					:: BuildIdeListSingle
+      }_3
+    ]						:: Select3
+    []						:: BuildIdeListNil
+  }
+
+termCaseListEnd ::=
+  { "end"					:: BuildCaseListNil
+    [ "else" termSeqOpt_1 "end" ]	        :: BuildCaseListElse
+  }
+
+termCaseList ::=
+  { termCaseListEnd
+    [ name_1 
+      { [ "(" ide_2 typSpec ")" "=>" termSeqOpt_3
+          { [ "," termCaseList_4 ]		:: BuildCaseListCons
+	    termCaseListEnd_4         		:: BuildCaseListCons
+          }_5
+        ]					:: Select5
+        [ "=>" termSeqOpt_3
+          { [ "," termCaseList_4 ]		:: BuildCaseListCons
+	    termCaseListEnd_4         		:: BuildCaseListCons
+          }_5
+        ]					:: Select5
+      }_6
+    ]						:: Select6
+  }
+
+termTryList ::=
+  { [ "else" termSeqOpt_1 ]                     :: BuildTryListElse
+    [ term_1 "=>" termSeqOpt_2 
+      { [ "," termTryList_3 ]			:: BuildTryListCons
+	[ "else" termSeqOpt_3 ]			:: BuildTryListConsElse
+	[]					:: BuildTryListSingle
+      }_4
+    ]						:: Select4
+    []						:: BuildTryListNil
+  }
+
+termAll ::=
+    [ "All" "(" ide { typBound [] } ")" term_1 ]    :: Select1
+
+termSome ::=
+    [ "Some" "(" ide { typBound [] } ")" term_1 ]    :: Select1
+
+termSelf ::=
+    [ "Self" "(" ide ")" term_1 ]    :: Select1
+
+(* </pre> *)

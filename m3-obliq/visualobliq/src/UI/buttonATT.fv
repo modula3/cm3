@@ -1,0 +1,22 @@
+ (Shape %buttonatt (Height 200)
+  (Radio %buRadio (Value buTChoice)
+  
+   (VBox 
+     (Glue 10)
+     (Title "Button")
+     (Glue 10)
+     (BoxAround 95
+      (VBox
+        (HBox  (Text  "Label") (Glue 250))
+        (Glue 10)
+        (Choice (Color "VeryDarkBlue") %buTChoice (LField "Text       :" 250 (TypeIn (TabTo name) %buText (BgColor "White") ExpandOnDemand (Value "Text"))))
+        (Glue 10)
+        (Choice %buPChoice (Color "VeryDarkBlue") (LField "Pixmap :" 250 (TypeIn (TabTo name) %buPix ExpandOnDemand (BgColor "White") (Value ""))))
+        (Glue 10)
+       ))
+     
+      (Glue 10)
+      (HBox Fill (Boolean %buGuard "Guard") Fill (Boolean %buTrill "Trill") Fill ) 
+       Fill
+   ))
+  )

@@ -1,0 +1,104 @@
+.\" Copyright (C) 1989, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.\" Last modified on Wed Feb 12 12:33:19 PST 1992 by muller
+.\"
+.nh
+.TH analyze_coverage 1
+
+.SH Name
+analyze_coverage - interprets Modula-3 coverage analysis data
+
+.SH Syntax
+.B analyze_coverage
+[-command]*
+
+.SH Description
+
+.BR analyze_coverage (1)
+is a tool to manipulate and interpret Modula-3 coverage analysis data.
+
+When a Modula-3 program is compiled with the -Z option, statistics are
+collected each time the program runs; analyze_coverage(1) lets the
+user manipulate this collected data, where the basic information is
+the number of times each line of source code and each procedure has
+been executed.
+
+Statistics that are collected are concatened to the database file; its
+name is the value of the environment variable COVERAGE_DATABASE if
+defined, "coverage.out" otherwise. This file will grow with each
+execution; from time to time you may want to compact it by using the
+-w option (see below).
+
+analyze_coverage(1) maintains an internal coverage database and the 
+commands specify how to use and manipulate this database. 
+Initially, the database is empty. The commands are:
+
+.IP "r files" 6
+files are coverage files, as produced by the execution
+of a program. These files are read, and their contents
+are added to that of the database.
+
+.IP "w files" 6
+this outputs the current content of the database in
+each of files. If you plan to use coverage data produced
+by many executions in more than one instance of this
+program it is efficient to output the consolidated
+database during the first run and to use it as the
+input file in subsequent analyzis.
+
+.IP "l files"  6
+files are source files, and line count data is displayed
+for those files.
+
+.IP L 6
+displays line count data for the files for which some
+data is present in the current database.
+
+.IP "p files" 6
+files are source files, and procedure count data is
+displayed for those files.
+
+.IP P 6
+displays procedure count data for the files for which some
+data is present in the current database.
+
+.IP "S paths" 6
+extend the search path for source files with paths.
+Initially, the search path is value of the environment
+variable COVERAGE_PATH if defined, "." otherwise. When
+source files are mentionned (as arguments of the l
+and p commands), only the basename is used.
+
+.IP "o file"
+send subsequent output to file.
+
+.IP v 6
+turn verbose mode on.
+
+.IP q 6
+quit.
+
+.IP "e file" 6
+take the commands from file. When done, continue from here.
+
+.IP <empty> 6
+take the commands from the standard input. Each command
+(with its arguments) must be on a line by itself. 
+
+.PP
+If no 'r' command appears before one of the 'w', 'l', 'L', 'p',
+or 'P' commands, the default coverage file is read before that
+command is executed. The name of the default coverage file 
+is the value of the environment variable COVERAGE_DATABASE is
+defined, "coverage.out" otherwise.
+
+.SH Files
+coverage.output	    default input file for coverage data
+
+.SH Author of object
+Eric Muller
+
+.SH Author of documentation
+Eric Muller

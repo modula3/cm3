@@ -1,0 +1,8 @@
+% Copyright (C) 1993, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Wed Apr 12 08:28:33 PDT 1995 by kalsow 
+%      modified on Mon May 10 20:49:38 PDT 1993 by mjordan
+
+implementation("M3PathElemWin32")

@@ -1,0 +1,128 @@
+(Border
+  (Pen 1)
+  (Insert "shared.fv")
+  (Macro
+    anchor
+    BOA
+    (prompt popup)
+    `(VBox
+      (Glue 3)
+      (Shape (Height + 0) ,prompt)
+      (Glue 1)
+      ,popup))
+  (Macro
+    mxBtn
+    BOA
+    (name prompt (short "") which)
+    `(,@which
+       ,name
+       (HBox
+         (Text (Margin 6) LeftAlign ,prompt)
+         (Text (Margin 6) RightAlign ,short))))
+  (Macro
+    mBtn
+    BOA
+    (name prompt (short ""))
+    `(mxBtn ,name ,prompt ,short (Button)))
+  (Macro
+    mcBtn
+    BOA
+    (name prompt (short ""))
+    `(mxBtn
+       ,name
+       ,prompt
+       ,short
+       (Choice MenuStyle)))
+  (VBox
+    (TSplit %MenuBtnTSplit =0 Flex
+      (HBox
+        (Button %ShowMenu (Rim (Pen 3)
+          (Pixmap "menuArrow.pbm"))
+          )
+        (Shape (Width + Infinity)
+          (ZMove (Text (Margin 6) %This ""))
+          )
+        )
+      (HBox
+        (Button %HideMenu (Rim (Pen 3)
+          (Pixmap "upArrow.pbm"))
+          )
+        (Shape (Width + Infinity)
+          (ZMove (Text (Margin 6) "Menu"))
+          )
+        )
+      )
+    (Filter %MenuFilter
+      (TSplit %MenuTSplit Flex =0
+        (Glue 0)
+      (Frame (Rim (Pen 6) (HBox
+        (VBox
+          (anchor
+            "General ..."
+            (VBox
+              (mBtn %About "About Lectern" "")
+              (mBtn %Help "Help" "?")
+              (mBtn %Open "Open Document ..." "O")
+              (mBtn %Close "Close Viewer" "W")
+              (mBtn %Detach "Detach Viewer" "D")
+              (mBtn %SaveDoc "Save Document ..." "S")
+              (mBtn %Print "Print ..." "P")
+              (mBtn %Quit "Quit" "Q")))
+          (anchor
+            "Links ..."
+            (VBox
+              (mBtn %NewLink "New Bookmark" "N")
+              (mBtn %EditLink "Edit Links ..." "E")
+              (mBtn %JumpLink "Jump to Link ..." "J")
+              )
+            )
+          (Fill)
+          )
+        (Glue 3)
+        (VBox
+          (anchor
+            "Move ..."
+            (VBox
+              (mBtn %NextSector "Go Forward" "[SP]")
+              (mBtn %PrevSector "Go Backward" "[BS]")
+              (mBtn %NextPage "Next Page" "+ =")
+              (mBtn %PrevPage "Previous Page" "- _")
+              (mBtn %FirstPage "Beginning Page" "B")
+              (mBtn %ContentsPage "Contents Page" "C")
+              (mBtn %IndexPage "Index Page" "I")
+              (mBtn %GotoPage "Go ..." "0..9")
+              (mBtn %Home "Home (selection)" "H")
+              (mBtn %Find "Find ..." "F")
+              (mBtn %Undo "Undo Page Change" "U")
+              (mBtn %Redo "Redo Page Change" "R")
+              )
+            )
+          (Fill)
+          )
+        (Glue 3)
+        (VBox
+          (anchor
+            "Show or Hide ..."
+            (VBox
+              (mBtn %ShowHideMenu "Menu Anchor" "K")
+              (mBtn %OpenCloseMenu "Menu Buttons" "M")
+              (mBtn %ShowHideToolbar "Toolbar" "T")
+              (mBtn %ShowHideViewing "Viewing Controls" "V")
+              (mBtn %ShowHideLinks "Link Browsers" "L")))
+          (anchor
+            "View ..."
+            (VBox
+              (mBtn %Zoom "Zoom" "Z")
+              (mBtn %Larger "Larger Images" ". >")
+              (mBtn %Smaller "Smaller Images" ", <")
+              (mBtn %AutoSelect "Auto View Area" "A")
+              )
+            )
+          (Fill)
+          (Shape (Height + 0)
+            (Text %FullImageNumber RightAlign (Margin 9) ""))
+          (Glue 3)
+          (Shape (Height + 0)
+            (Text %FullPageNumber RightAlign (Margin 9) ""))
+          (Glue 3)
+          ))))))))

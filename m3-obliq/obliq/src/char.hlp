@@ -1,0 +1,6 @@
+  c: Char
+    A character in single quotes.
+  ascii_char(n: Int): Char
+    The ascii character of integer code 'n'.
+  ascii_val(c: Char): Int	
+    The integer code of the ascii character 'c'.

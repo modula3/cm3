@@ -1,0 +1,26 @@
+(Border
+  (Pen 0)
+  (Insert "shared.fv")
+  (VBox
+    (HBox
+      (Filter
+        (Button
+          %FindClose
+          (Rim (Pen 3) (Pixmap "upArrow.pbm"))))
+      (ZMove (Text %Status (Margin 9) "Find ...")))
+    (Frame
+      (zDecorate
+        (VBox
+          (TSplit (Filter (param %FindTxt 0)))
+          (HBox
+            (Shape (Width 0 + 20000) Fill)
+            (Filter (btn %FindFirst "First"))
+            (Shape (Width 0 + 10000) Fill)
+            (Filter (btnDefault %FindNext "Next"))
+            (Shape (Width 0 + 10000) Fill)
+            (Filter (btn %FindPrevious "Prev"))
+            (Shape (Width 0 + 10000) Fill)
+            (Filter
+              Dormant
+              (btn %FindStop "Stop"))
+            (Shape (Width 0 + 20000) Fill)))))))

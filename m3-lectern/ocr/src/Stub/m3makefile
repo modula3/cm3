@@ -1,0 +1,11 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Fri Sep 30 14:49:02 PDT 1994 by mcjones */
+
+import("libm3")
+
+implementation("OCR_Stub")
+
+Library("ocr")

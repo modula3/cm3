@@ -1,0 +1,262 @@
+.nh
+.TH packagetool 1
+.SH NAME
+packageserver - shared software management server
+.SH SYNTAX
+\fBpackageserver\fR [\fB-name\fR \fBreplicaName\fR] [\fB-c configFile\fR] [\fB-init\fR]
+.SH DESCRIPTION
+This program is the server which provides the package management
+services described in the manpage for \fBpackagetool(1)\fR.  You must know
+what you are doing before attempting to run this program.  Please read
+the \fBpackagetool(1)\fR manpage before proceeding any further.  More than
+likely, you will want to use \fBsmgr(1)\fR to run this program automatically
+at system startup, so please read its manpage as well.
+.PP
+With the \fB-c\fR option, the packageserver reads its configuration from the
+indicated file.  Otherwise, it fetches the configuration from the file
+\fBsiphon.config\fR in the current working directory.
+.PP  
+The packageserver determines from its configuration file whether it is
+the lock server for the local site.  The lock server maintains a local
+database which is a stable record of all known packages and package
+state.  It also writes writes a user-readable "history" file which
+represents a "check-out" history of all packages.
+.PP
+The lock server database is found in the "locks" subdirectory of the
+current working dir.  If the database doesn't exist, the \fB-init\fR option
+allows creation of an empty one.  The \fB-init\fR option also instructs
+the packageserver, if it also a lock server, to initially manage the
+set of repositories fond in its configuration file.  At startup time,
+these repositories are added to the lock database.  If there are remote
+sites, each locally known repository is enumerated at each foreign site.
+For each new package found, a local lock database entry is created.
+Each local replica then enumerates its file system and creates a lock
+server entry (managed by the local site) for any package directory found.
+
+The \fB-name\fR option is used to dictate the server name.  Otherwise the
+local host name is used.
+
+This program should be normally run as superUser so that it can change
+its uid to that of the site owner.
+
+If the configuration specifies the existence of remote sites, a
+designated packageserver replica will act as a \fBsiphon\fR server.  This
+siphon server is reponsible for propagating package updates for all
+repositories which are shared remotely.
+
+The goal of the siphon is to present a consistent view of a a
+repository tree at all sites.  To change a package, a user checks it
+out, makes modifications, and then reships it.  (See \fBpackagetool(1)\fR.)
+The ship operation updates the package (essentially) instantaneously
+at the local site, and also enqueues it for transmission to the other
+sites.  Since it typically takes several minutes (potentially several
+hours) for the transmission to make it to remote sites, there is an
+interval during which different sites have different versions of the
+package.  To prevent overlapping changes, the package tools use a
+version number scheme: users can only check out a package if the
+current site has the most recent version of that package.
+
+There is also a package fingerprint skulker that ensures consistency
+among replicas.  (See \fBpkgfp(1)\fR.)  The fingerprinter runs every night
+at each site, and fingerprints every package that has changed at that
+site.  The skulker then compares the fingerprints for the various
+sites, and reports any inconsistencies that are found.
+
+To check the current status of the packageserver, use \fBpkgq(1)\fR.
+
+.SH "SIPHON CONFIGURATION FILE"
+The packageserver gets its configuration information from a file.  The
+contents of this file are interpreted as an S-expression which is a
+list of attribute value pairs.  The list describes the site to be
+considered local by the packageserver.  The following
+attribute/value pairs are recognized:
+.IP "" 4
+\fBsite\fR "string"
+.IP "" 8
+The corresponding value is a string which names the site being
+described.  Site names are chosen arbitrarily.  We use the convention
+"S-xxx" (e.g.  S-SRC, S-PRL).  This attribute is required.
+.IP "" 4
+\fBlockServer\fR "replicaName"
+.IP "" 8
+Specifies the network name of the lock server for the site being
+specified.  For the present, this must be an IP hostname recognizable
+to \fBgethostbyname(3)\fR.  This attribute is required.
+.IP "" 4
+\fBsiphonServer\fR "replicaName"
+.IP "" 8
+Specifies the name of the siphon server for the site being specified.
+For the present, this must be an IP address recognizable to
+\fBgethostbyname(3)\fR.  This attribute can be omitted.  It is irrelevant if
+there are no remote sites, otherwise it defaults to the value of the
+\fBlockServer\fR attribute.
+.IP "" 4
+\fBreplicaServers\fR  "replicaName1"  "replicaName2" ...
+.IP "" 8
+Specifies a list of server names, one for each replica at this site.
+This attribute can be omitted.  It defaults to a single element list
+consisting of the value of the lock server attribute.  If this
+attribute exists, the lock server name must be included as an value
+element.
+.IP "" 4
+\fBipPort\fR "stringPortNumber"
+.IP "" 8
+Determines the IP port to which the packagetools will target new
+requests.  The default Network Object daemon (\fBnetobjd(1)\fR) serve this
+purpose instead if no \fBipPort\fR is specified.
+.IP "" 4
+\fBremoteSites\fR  site-exprA site-exprB  ...
+.IP "" 8
+Each value element of this attribute is in itself an attribute-value
+list representing a remote site.  Within these lists, the following
+attribute types are recognized: \fBsite\fR, \fBsiphonServe\fRr,
+\fBipPort\fR, and \fBroute\fR.  The first three have the same
+semantics as in a top level site description.  The "route" attribute
+is optional and is interpreted as follows:
+.IP "" 12
+\fBroute\fR "siteName1" "siteName2" ...
+.IP "" 8
+Updates should not be sent directly to the site being described,
+rather they should be routed through one of the sites in the route
+list.  This list is ordered by route preference. The first element is
+the best candidate.
+.IP "" 8
+The \fBremoteSites\fR attribute is optional.
+.IP "" 4
+\fBrepositories\fR "repositorySpec1" "repositorySpec2" ...
+.IP "" 8
+This attribute specifies the repositories known to the local replica.
+Each repositorySpec is a list with three elements: a repository name;
+a file system directory to which the repository maps; and an optional
+list of file system directories which may be used to hold packages.
+For example:
+.EX
+    (repositories
+       ("cra" "/proj/cra/pkg"
+          ("/proj/disks/d0/cra"
+           "/proj/disks/d2/cra"
+           "/proj/disks/d3/cra")))
+.EE
+This indicates single repository "cra" whose file system directory is
+"/proj/cra/pkg".  Three different directories in "/proj/disks" are
+cited as locations for new packages.
+
+The final list argument in a repositorySpec is intended to allow
+repositories to be split accross multiple volumes.  At package
+creation time, the server determines which of the listed directories
+contatins the greatest amount of free disk space.  The new package is
+created there, and a symbolic link to the new package is created in
+the actual repository directory (/proj/m3/pkg) if necessary.
+.IP "" 4
+\fBexports\fR "exportSpec1" "exportSpec2" ...
+.IP "" 8
+This attribute specifies the set of export paths known to the local
+replica.  Each \fBexportSpec\fR is itself a list with two elements: an
+export path and a file system directory to which the export path
+corresponds.  For example:
+.IP "" 12
+(exports ("mips" "/proj/mips"))
+.IP "" 8
+This indicates a single export path knwon as "mips" which maps to the
+local directory name "/proj/mips".
+.IP "" 4
+\fBdefaultRepository\fR "repositoryName"
+.IP "" 8
+This attribute specifies the repository name to be used as the default
+by the \fBpackagetool(1)\fR when presented with a package name which is a
+relative path name.  This attribute is not required.  If it is not
+present, relative package names are disallowed by the packagetool.
+.IP "" 4
+\fBbackupServers\fR "replicaName1"  "replicaName2" ...
+.IP "" 8
+List of package server names. Packages shipped with
+the \fB-b\fR option ("shippackage -b") will be backed up on the
+indicated servers.  This attribute is not required.
+
+For example, consider the SRC configuration file:
+.EX
+    (
+        (site "S-SRC")
+        (lockServer "swindle.pa.dec.com")
+        (replicaServers "swindle.pa.dec.com" "bamboozle.pa.dec.com")
+        (owner "firefly")
+        (backupServers "swindle.pa.dec.com")
+        (defaultRepository "cra")
+        (ipPort "5555")
+        (repositories
+            ("cra" "/proj/cra/pkg"
+                ("/proj/disks/d0/cra" "/proj/disks/d2/cra"
+                                      "/proj/disks/d3/cra"))
+            ("m3" "/proj/m3/pkg"
+                ("/proj/disks/d0/m3" "/proj/disks/d1/m3"
+                 "/proj/disks/d2/m3" "/proj/disks/d3/m3"))
+            ("adm" "/proj/adm/pkg" ("/proj/disks/d2/adm"))
+            ("src" "/proj/src/pkg" ("/proj/disks/d2/src"))
+        )
+        (exports
+            ("mips" "/proj/mips")
+            ("man" "/proj/man")
+            ("doc" "/proj/doc")
+            ("LINUX" "/proj/LINUX")
+            ("m3" "/proj/m3")
+            ("local" "/proj/local")
+            ("ultrix" "/proj/ultrix")
+            ("vax" "/proj/vax")
+            ("alpha" "/proj/alpha")
+            ("generic" "/proj/generic")
+            ("sun3" "/proj/sun3")
+        )
+        (remoteSites 
+            (
+                (site "S-PRL")
+                (siphonServer "mother.prl.dec.com")
+                (ipPort "5555")
+            ))))
+.EE
+This specifies that the local site is name "S-SRC", with a lock server
+and siphon server at the host "swindle.pa.dec.com".  There is a
+secondary packageserver replica at "bamboozle.pa.dec.com".  All
+repositories are file system directories owned by the user "firefly".
+This replica knows about repositories "cra", "m3", "adm", and "src",
+and export paths "mips", "man", "doc", "LINUX", "m3", "local",
+"ultrix", vax", "alpha", "generic", and "sun3".  Backups will be kept
+(if requested) at the server on swindle.  The default repository for
+all new packages is "cra".  This server listens on TCP port 5555.
+There is one remote site, S-PRL, whose siphon server can be found at
+"mother.prl.dec.com" listening on IP port 5555.
+.SH "EXPORT DIRECTORY MANAGEMENT"
+As described in the \fBpackagetool(1)\fR manpage, the package server
+allows for the "export" of symbolic links to directories outside of
+the repository file space.  These links point back to the repository
+and make it possible to implement search paths containing related
+files from unrelated packages.  This is useful, for example, when
+publishing executable or manpages for public use.
+.PP
+The packageserver allows for automatic creation of export directories
+under certain conditions:
+
+    1)  A parent of the export path exists in the "exports" map
+        (see the previous section).
+
+    2)  The packageserver has the necessary access control rights to
+        create the child directory.
+            
+It is possible to export a link to a path which is not present at one
+or more local replicas.  Links will be exported at all replicas
+supporting the path nonetheless.
+.SH "LOCAL CONFIGURATION"
+The standard SRC site is called "S-SRC".  The lock server is 
+swindle.  The lock database and history file can be found in the 
+directory /swindle/usr/adm/servers/ps/locks.
+.SH "SEE ALSO"
+.MS pkgq 1
+.MS packagetool 1 
+.MS pkgfp 1
+.SH AUTHOR
+Ted Wobber and Francis Prusker
+.PP
+Copyright 1992 Digital Equipment Corporation.
+.br
+Distributed only by permission.
+
+

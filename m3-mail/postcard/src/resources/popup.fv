@@ -1,0 +1,164 @@
+(Border
+  (Pen 1)
+  (Insert "shared.fv")
+  (TSplit
+      %DlgTSplit
+      Flex
+      =0
+      (dlgT
+        %AboutDlg
+        (dlgClose %AboutClose)
+        "About Postcard ..."
+        (VBox
+          (Text %Version LeftAlign "Version ?")
+          (Text
+            LeftAlign
+            "Send comments to Birrell@src.dec.com")
+          (Glue 6)
+          (menuSep)
+          (Glue 9)
+          (Pixmap
+            %Logo
+            (Color 0.25600001 0.0 0.029)
+            "logo.pbm")))
+      (dlgT
+        %NewFolderDlg
+        (dlgClose %NewFolderClose)
+        "Add Folder ..."
+        (VBox
+          (Text
+            (Margin 0)
+            LeftAlign
+            "New Folder or Bulletin Board Name:")
+          (Filter (param %NewFolderTxt))
+          (HBox
+            (Shape (Width 0 + 2) Fill)
+            (btnDefault %NewFolderConfirm "Add")
+            (Shape (Width 0 + 1) Fill)
+            (btn %NewFolderCancel "Cancel")
+            (Shape (Width 0 + 2) Fill))))
+      (dlgT
+        %FindDlg
+        (dlgClose %FindClose)
+        "Search Private Folders ..."
+        (VBox
+          (HBox
+            (VBox
+              (Fill)
+              (Shape
+                (Height + 0)
+                (Text
+                  (Margin 0)
+                  LeftAlign
+                  "Find summary line containing:")))
+            (menuSep)
+            (Glue 9)
+            (VBox
+              (Boolean
+                %FindInOpen
+                =TRUE
+                (Text
+                  (Margin 0)
+                  LeftAlign
+                  "search open folder"))
+              (Glue 3)
+              (Boolean
+                %FindInPrivate
+                (Text
+                  (Margin 0)
+                  LeftAlign
+                  "search other folders"))))
+          (Filter (param %FindTxt))
+          (HBox
+            (Shape (Width 0 + 20000) Fill)
+            (Filter (btnDefault %FindFirst "First"))
+            (Shape (Width 0 + 10000) Fill)
+            (Filter (btn %FindNext "Next"))
+            (Shape (Width 0 + 10000) Fill)
+            (Filter (btn %FindPrevious "Prev"))
+            (Shape (Width 0 + 10000) Fill)
+            (Filter
+              Dormant
+              (bgActive)
+              (btn %FindCancel "Stop"))
+            (Shape (Width 0 + 20000) Fill))))
+      (dlgT
+        %PrintDlg
+        (dlgClose %PrintClose)
+        "Print Selected Messages(s)..."
+        (VBox
+          (Text
+            (Margin 0)
+            LeftAlign
+            "Print Filter Command:")
+          (Filter (param %PrintTxt))
+          (HBox
+            (Shape (Width 0 + 2) Fill)
+            (btnDefault %PrintConfirm "Print")
+            (Shape (Width 0 + 1) Fill)
+            (btn %PrintCancel "Cancel")
+            (Shape (Width 0 + 2) Fill))))
+      (dlgT
+        %SaveDlg
+        (dlgClose %SaveClose)
+        "Save Selected Message(s) in File..."
+        (Shape
+          (Width 250 - 150 + Inf)
+          (Filter (VBox
+            (HBox
+              (Shape
+                (Width + Inf)
+                (Height 100 + Inf)
+                (borderIf2D
+                  (VBox
+                    (bgActive)
+                    (HBox
+                      (Shape
+                        (Width + Infinity)
+                        (DirMenu (For SaveFile)))
+                      (Glue 3)
+                      (Shape
+                        (Width + 0)
+                        (Pixmap "menuArrow.pbm"))
+                      (Glue 3))
+                    (barIf2D)
+                    (Frame
+                      Lowered
+                      (FileBrowser
+                        %SaveFile
+                        (bgInput))))))
+              (Glue 9)
+              (VBox
+                Fill
+                (btnDefault %SaveConfirm "Save")
+                (Glue 6)
+                (btn %SaveCancel "Cancel")))
+            (Glue 9)
+            (HBox
+              (Text (Margin 0) LeftAlign "File:")
+              (Glue 6)
+              (input
+                (Helper
+                  %SaveHelper
+                  (For SaveFile)
+                  ExpandOnDemand
+                  FirstFocus)))))))
+      (dlgT
+        %ErrorDlg
+        (dlgClose %ErrorClose)
+        "Error ..."
+        (message %ErrorText))
+      (dlgT
+        %ConfirmDlg
+        (dlgNoClose)
+        "Please confirm ..."
+        (VBox
+          (message %ConfirmText)
+          (Glue 6)
+          (HBox
+            (Shape (Width 0 + 2) Fill)
+            (btnDefault %Yes "Yes")
+            (Shape (Width 0 + 1) Fill)
+            (btn %No "No")
+            (Shape (Width 0 + 2) Fill))
+          (Glue 3)))))

@@ -1,0 +1,362 @@
+
+                                                    packagetool(1)
+
+NAME
+    packagetool - tool for managing shared software
+
+SYNTAX
+    getpackage [-ifv] [-r<replicas>] [package]
+    shippackage [-ifvn] [-r<replicas>] [-b<replicas>] [package] [-l exports]
+    createpackage [package]
+    deletepackage [-bf] [package]
+    lockpackage [package]
+    unlockpackage [-fk] [package]
+    whohas [-va] [package]
+    comparepackage [-r<replicas>] [package]
+
+       or equivalently:
+
+    packagetool {get|ship|create|delete|lock|unlock|whohas|compare} ...
+
+DESCRIPTION
+    The packagetool is the main vehicle for shared software development
+    at SRC.  It supports storing and retrieving shared software
+    components to and from a replicated file store, with locking to
+    prevent concurrent modification of the same component.
+
+    The packagetool does its work by communicating with servers running
+    the program packageserver(8).  The tool determines server addresses
+    by inspecting the value of the SIPHON_SITE environment variable.
+    This variable should be set to the network address of the
+    packageserver machine which holds the local lock database.  For
+    example:
+
+         setenv SIPHON_SITE swindle:5555
+
+    "swindle" is a hostname and "5555" is a TCP port number which
+    the packageserver uses to listen for new requests.  This port number
+    is configurable.
+
+    In the context of this tool, a "package" is a logically distinct
+    set of files that tend to be worked on as a unit.  Packages are
+    file system subtrees.  Related packages are grouped into "repositories":
+    file system directories reserved for and managed by the packagetool
+    system,  whose direct descendants are packages.  A repository can be
+    replicated within an management domain or "site".  All of SRC's
+    repositories are replicated on two servers, swindle and bamboozle,
+    each of which services a different part of SRC's file system
+    namespace but with replicated content.  This replication provides
+    data reliablilty and load-sharing.  At each site there is a single
+    lock server which stably records the set of repositories, replicas,
+    and packages available at that site, as well as the check-out state
+    for each package.
+
+    Repositories can also be replicated between different sites.   For
+    example, SRC, PRL and CRL will soon share a common set of replicated
+    repositories.  The packageserver(8) contains a component known as
+    the "siphon".  This component is responsible for guaranteeing
+    eventual consistency between locations.  Operations involving
+    the lock server proceed in real time, but site-to-site updates
+    of package contents take place in background.  Any given package
+    is owned by one and only one site; the lock state for each package
+    is managed at the owning site.  Packages can be checked out by any
+    site, as long as that site has the most recent version of the package.
+    Any site or replica need only maintain a subset of all repositories.
+    However, repositories cannot be subdivided.
+
+    Repositories names are simple strings.  It is possible to construct
+    a hierarchy of repositories using strings separated by the "/" character
+    (do not assume that repository names are Unix filenames).  It is not
+    permitted to nest repositories within repositories.  Servers are
+    responsible for mapping repository names into the actual file system
+    directories used for storing files.
+
+    Packages names are formed by concatenating a respository name and 
+    and package name.  For example, "m3/text" is a package name which
+    indicates the "text" package of the "m3" repository.
+
+    If the "package" parameter is omitted, and the "whohas" option
+    is not specified, the tail component of the current working directory
+    is used as a package name.  In this case, and also in the case where
+    the package parameter fails to name a repository, the penultimate
+    arc of the current working directory is interpreted as a single-arc
+    repository name.  If such a repository exists, it is prepended to the
+    package name.  If not, a configuration-dependent default repository
+    is used.
+
+    So, for example, if the current directory is:
+
+          /udir/wobber/m3/text
+
+    getpackage with no argument names the package "m3/text".
+
+    The file systems managed by packagetool/packageserver are "owned" 
+    by a single user (usually a fictitious name like "firefly").  
+    The packageservers for a given site run under this uid so that 
+    they alone have write access to the managed file system.  This 
+    helps encourage the model that so managed file systems are read-only 
+    except through the packagetool.
+
+
+OPTIONS
+  The packagetool supports the following options.  Each option allows
+  different switches.
+
+    getpackage [-ifv] [-r<replicas>] [package]
+        Attempts to set a lock on the specified package (unless the 
+        "-i" switch is present).  If successful, then the contents 
+        of the package are fetched into the current directory from 
+        one of the servers supporting the current site.  If the "-f" 
+        switch is present, then the local directory will be made to 
+        contain an exact copy of the remote package -- all remote 
+        files are fetched and local files that don't exist remotely 
+        are deleted. Otherwise, only file versions newer than local 
+        ones are fetched and local files that don't exist in the 
+        package ARE NOT removed. In all cases, file modes and dates 
+        are copied and the invoking user will own the retrieved files.
+     
+        The "-v" option provides additional file transfer statistics.
+
+        The "-r" option allows the caller to specify a particular
+        replica for comparison. 
+
+    shippackage [-ifvn] [-r<replicas>] [-b<replicas>] [package] [-l exports]
+        Checks the lock on the specified package to make sure that the
+        package is checked out to the current working directory (unless the
+        "-i" switch is present.)  If successful, then the package is copied
+        to ALL of the servers for the current site.  Older versions
+        of files ARE NOT copied -- the package ship will fail if this is the
+        case.  (The "-f" option causes all files to be copied, even if
+        sources older than corresponding targets are found.)  Remote files
+        that don't exist locally are deleted.
+      
+        DO NOT USE THE "-i" OPTION UNLESS YOU KNOW WHAT YOU ARE DOING!!
+        
+        Packages are copied atomically to each server (via directory
+        rename).  The entire ship operation is atomic as well.  New
+        package versions are committed at the lock server when all
+        the bits have been shipped.  The lock server then commits
+        the new package version at all the replicas.  If the lock
+        server fails while a commit is in progress, future "gets"
+        of the package will be directed only to those servers at which
+        the new version was installed.  If the new version wasn't
+        installed at all, then the lock server backs up to the old
+        version upon restart.  If one replica is down during a ship,
+        it will synchronize versions with the lock server and
+        automatically fetch any out-of-date packages upon restart.
+
+        A new package will not be committed at any replica until the
+        packagetool says:
+       
+            "Committing changes at replicas"
+   
+        Cancelling a shippackage prior to this message will always
+        abort the operation at all replicas.  
+
+        File dates are copied.  Destination file modes are determined as
+        follows depending on the mode of the source:
+
+              read owner                  ->  444
+              read-write owner            ->  644
+              read-execute owner          ->  555
+              read-write-execute owner    ->  755
+
+        If there is no package directory present at the server at the
+        time of the ship, one will be created on the fly.  
+        
+        The "-b" option causes a backup copy of the old package contents
+        to be kept at the designated server(s) (separated by '+').
+        For /proj/cra/pkg/foo, the backup copy would be kept in
+        /proj/cra/pkg/backups/foo.  If no replica is specified on
+        the command line, the default backup server for the local site
+        is used instead (see LOCAL CONFIGURATION).
+
+        The "exportLinks" parameter list applies only to the ship option
+        and allows for the creation of symbolic links to package files
+        at the server(s).  This is a useful way to make a subset of
+        package files available in a directory not specific to any
+        one package.  The most common uses for this facility are (1)
+        Modula3 definition files exported to the public and friends
+        interface directories, (2) object modules and libraries exported
+        to the lib directory, (3) executable programs exported to
+        /proj/bin, and (4) manual pages exported to /proj/man/cat[0-9].
+
+        The syntax of the export links parameter list is as follows:
+
+              ... [ -l <exportPath> <files> ... ] ...
+
+        In all cases, the -l entries start with a <exportPath> field which
+        specifies the directory into which the symbolic links are
+        placed.  The <files> list specifies the names of files to
+        which symbolic links are made.  These files must be within
+        the current package being shipped.  Links so created will
+        be expressed as relative links (i.e., beginning with '../').
+
+        The syntax of the <exportPath> parameter is similar to that
+        of repository names.  The packageserver translates each
+        export path into a file system directory name.  If no such
+        mapping exists, a warning is reported to the user.  Export paths
+        are hierarchical.  If a mapping exists for a parent arc, the
+        server will attempt to create any child directories.
+        
+        Two additional features may also be invoked in the specification
+        of the <files> list.  First, the list may contain a special
+        entry (usually the first) of the form +<subdir>.  The <subdir>
+        field, if supplied, is used as a prefix directory for all
+        of the files in the following list.  Thus, the sequence
+
+                -l target +ultrix f1 f2 f3
+
+        is equivalent to
+
+                -l target ultrix/f1 ultrix/f2 ultrix/f3
+
+        This feature is quite useful because packagetool(1) is
+        traditionally invoked from make, which has no internal facility
+        for performing the necessary string processing.
+
+        Each element in the list of <files> may also be of the form
+
+                         xxx=yyy
+
+        In this case, the symbolic link to yyy will have name xxx
+        in the target directory.  Here is a typical "ship" entry from
+        a Makefile:
+
+              	ship: tidy
+ 		shippackage $(BACKUP) $(PACKAGE) \
+        		-l mips/bin +tools $(TOOLS) \
+        		-l mips/bin +tools/mips $(TOOLSm) \
+        		-l mips/lib +ultrix releaseMakefile=Makefile \
+        		-l man/mips/cat1 +documents $(MAN1)
+
+        The packageserver keeps track of the links exported by each
+        package.  IF "-n" is NOT specified during ship, export links
+        that are no longer exported by the package will be purged.
+        (The server is careful to check that any candidate for deletion
+        still points to the previous target inside the package being
+        shipped.)
+
+        The "-v" option provides additional file transfer statistics.
+
+        The "-r" option allows the caller to specify a particular
+        replica as target of the ship.  This is only useful with the
+        "-i" switch and should be used with care. 
+
+    createpackage [package]
+        Creates and locks a new package (see "lock" below).  Writes
+        a new file called README in the current working directory.
+        This file denotes the current user as the package "owner".
+
+    deletepackage [-bf] [package]
+        Removes the subdirectory for the specified package on all
+        of the servers supporting the current site.  Also removes any
+        backups for and exported links to the specified package.  The
+        lock on the package is checked prior to deletion.  If the
+        package is successfully removed on all servers, then the package
+        is unlocked.  If "-b" is given, only backups are deleted.
+
+    lockpackage [package]
+        Attempts to set a lock on the specified package.  Packages are
+        checked out to the current working directory as in
+        "/swindle/udir/wobber/foo".  Future attempts to check out a package
+        to another directory will fail until the package is unlocked.  Future
+        attempts to check out the package to the same directory will succeed.
+
+    unlockpackage [-fk] [package]
+        Attempts to remove the lock on the specified package.  The "-f"
+        switch allows any user to unlock ANY package, as long as the
+        package is locked by someone at the same site.  The "-k" switch
+        forces unlockpackage to break anyone's lock.
+
+        If a user initiates a shippackage while possessing the package 
+        lock and the operation either fails or is cancelled, then 
+        the same user must either re-ship the package successfully (or 
+        release the lock) before the lock may be broken.  The "-k" 
+        switch will override this condition and assert the currently 
+        stored version of the package is in fact the truth.
+        
+    whohas [-va] [package]
+        Prints out the owner of the lock on the specified package
+        on stdout.  No output if the package is unlocked.  If no package
+        is specified, the lock state of all packages is output.  Whohas
+        with no arguments will by default only print out information
+        about packages managed by the local site.  The "-a" switch
+        tells it to fetch information from any and all sites.  This
+        might take a while.  The "-v" switch provides more detail
+        about lock server state when a single package is specified.
+        
+    comparepackage [-r<replicas>] [package]
+        Compares the contents of the current working directory with one
+        of the replicas of the specified package.  The "-r" switch
+        directs the packagetool to compare against a copy at a particular
+        replica.
+
+LOCAL CONFIGURATION
+
+    At SRC, the lock server is swindle.  It acts as the default
+    backup server as well.  There is also a replica on bamboozle.
+    SRC servers listen on TCP port 5555.
+
+    The following repositories currently exist at SRC:
+
+         Name     Unix FS Path        What
+         ----     ------------        ----
+
+         cra      /proj/cra/pkg       miscellaneous stuff
+         adm      /proj/adm/pkg       siphon and administatrative stuff
+         m3       /proj/m3/pkg        Modula3 libraries and applications
+         src      /proj/src/pkg       private stuff to SRC
+    
+    The first three is shared with CRL and PRL.  The last will never be
+    shared.  Anything which is not intended for replication to other sites
+    should go there.
+
+    The "cra" repository is the default.  For example:
+
+        (cd ~/foo; getpackage)
+    
+    will attempt to check out the "foo" paclage in the "cra" repository.
+
+    The following export paths currently exist at SRC:
+
+         Name     Unix FS Path        What
+         ----     ------------        ----
+
+         man       /proj/man          Manpages
+         doc       /proj/doc          Documentation
+         m3        /proj/m3           Modula3 defs, for exmpale
+         mips      /proj/mips         MIPS specific binaries, etc.
+         vax       /proj/vax          VAX specific binaries, etc.
+         alpha     /proj/alpha        ALPHA specific binaries, etc.
+         sun3      /proj/sun3         sun3 specific binaries, etc.
+         LINUX     /proj/LINUX        ???? specific binaries, etc.
+         generic   /proj/generic      Machine independent executables, etc,
+         local     /proj/local        3rd party software .. deprecated,
+                                            use one of the above
+         ultrix    /proj/ultrix       deprecated synonym for "vax"
+
+    There is compatibility code which performs the following conversions 
+    on repository names and export paths:
+
+         /proj/*/pkg  ->  *
+         /proj/*      ->  *
+        
+    So, /proj/m3/pkg is a synonym for the "m3" respoitory.
+
+SEE ALSO
+    pkgq(1)
+    packageserver(8)
+
+AUTHOR OF OBJECT
+    Ted Wobber
+
+AUTHOR OF DOCUMENTATION
+    Ted Wobber
+
+Copyright 1992 Digital Equipment Corporation.
+Distributed only by permission.
+
+Last modified on Fri Oct  8 16:41:32 PDT 1993 by wobber 
+     modified on Thu Nov 21 10:50:37 GMT+1:00 1991 by prusker
+     modified on Tue Apr 10 10:24:44 PDT 1990 by glassman

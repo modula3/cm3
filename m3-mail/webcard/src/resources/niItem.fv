@@ -1,0 +1,71 @@
+(Menu
+  (Insert "shared.fv")
+  (bgPassive)
+  (Text %Keyword (Margin 5) "Foo")
+  (borderIf2D
+    (Rim
+      (Pen 3)
+      (bgActive)
+      (VBox
+        (Text "Replace <this> sub-expression with:  ")
+        (Glue 3) (menuSep) (Glue 3)
+        (HBox
+          (VBox
+            (Glue 3)
+            (MButton %NIFrom (Text (Margin 2) LeftAlign "from ..."))
+            (MButton %NIGroup (Text (Margin 2) LeftAlign "group ..."))
+            (MButton %NISubject (Text (Margin 2) LeftAlign "subject ..."))
+            (MButton %NIToOrCC (Text (Margin 2) LeftAlign "to or cc ..."))
+            (MButton %NIWord (Text (Margin 2) LeftAlign "word ..."))
+            (Fill))
+          (Glue 3) (menuSep) (Glue 3)
+          (VBox
+            (Glue 3)
+            (MButton %NIOn (Text (Margin 2) LeftAlign "date ..."))
+            (MButton %NIBefore (Text (Margin 2) LeftAlign "before ..."))
+            (MButton %NIAfter (Text (Margin 2) LeftAlign "after ..."))
+            (MButton
+              %NILastWeek
+              (Text (Margin 2) LeftAlign "in the last week"))
+            (MButton
+              %NILastMonth
+              (Text (Margin 2) LeftAlign "in the last month"))
+            (MButton
+              %NILastYear
+              (Text (Margin 2) LeftAlign "in the last year"))
+            (Fill))
+          (Glue 3) (menuSep) (Glue 3)
+          (VBox
+            (Glue 3)
+            (MButton %NINot (Text (Margin 2) LeftAlign "NOT <this>"))
+            (MButton
+              %NIExpAndTrue
+              (Text (Margin 2) LeftAlign "<this> AND ..."))
+            (MButton
+              %NIExpOrFalse
+              (Text (Margin 2) LeftAlign "<this> OR ..."))
+            (TSplit
+              %NITSplit1
+              Flex
+              (VBox)
+              (VBox
+                (MButton
+                  %NIUnaryArg
+                  (Text (Margin 2) LeftAlign "its argument")))
+              (VBox
+                (MButton
+                  %NILeftArg
+                  (Text (Margin 2) LeftAlign "its left-arg"))
+                (MButton
+                  %NIRightArg
+                  (Text (Margin 2) LeftAlign "its right-arg"))
+                (TSplit
+                  %NITSplit2
+                  Flex
+                  (MButton
+                    %NIaORb
+                    (Text (Margin 2) LeftAlign "left-arg OR right-arg"))
+                  (MButton
+                    %NIaANDb
+                    (Text (Margin 2) LeftAlign "left-arg AND right-arg")))))
+            (Fill)))))))

@@ -1,0 +1,54 @@
+% Copyright 1994 Digital Equipment Corporation.
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Mon Nov 28 12:37:43 PST 1994 by glassman 
+%      modified on Tue Nov  1 09:55:25 PST 1994 by kalsow 
+%      modified on Tue May 24 11:03:44 PDT 1994 by birrell
+%      modified on Fri Apr  9 20:40:33 PDT 1993 by meehan
+%
+% Makefile for Modula-3 Postcard
+
+import ("formsvbt")
+
+include_dir     ("resources")
+
+ManExport       ("Postcard", 1)
+
+/* General-purpose modules */
+interface      ("UtimeExtra")
+interface      ("OSUtils")
+interface      ("MailUtilities")
+interface      ("MiscUtils")
+interface      ("FastMenu")
+interface      ("Rescreen")
+implementation ("OSUtils")
+implementation ("MailUtilities")
+implementation ("MiscUtils")
+implementation ("FastMenu")
+implementation ("Rescreen")
+
+/* Postcard itself */
+interface      ("Config")
+interface      ("Closure")
+interface      ("UnixMail")
+interface      ("BuiltInDisplay")
+interface      ("BuiltInCompose")
+interface      ("NI")
+implementation ("Config")
+implementation ("UnixMail")
+implementation ("BuiltInDisplay")
+implementation ("BuiltInCompose")
+implementation ("NI")
+implementation ("PostcardMain")
+
+Program        ("Postcard")
+
+import ("mtex")
+Mtex ("Postcard", 1)
+
+
+
+
+
+

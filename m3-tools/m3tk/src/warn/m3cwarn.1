@@ -1,0 +1,37 @@
+.SH "WARNING TOOL OPTIONS"
+.TP
+.B \-WarnExceptions
+This warns about uncaught exceptions. It only considers the procedure
+signatures of called procedures to determine what exceptions they
+may raise and so is only useful if RAISES clauses are used consistently.
+The <*FATAL*> pragma is recognised and interpreted 
+(see Guide to Using SRC Modula-3).
+.TP
+.B \-WarnReturns
+This warns about possible missing RETURN statements in function procedures.
+It attempts to be somewhat smart; for example, if the last statement of a
+procedure is an "IF THEN ELSE END", and both arms of the IF end with
+a RETURN, then no warning will be generated.
+.TP
+.B \-WarnUses
+This warns about unused variables and imported interfaces. It
+supports the <*UNUSED*> pragma (see Guide to Using SRC Modula-3).
+NOTE: if an imported interface contains a revelation, it is considered
+used, since the analysis to determine that a revelation is not used
+is considerable.
+.TP
+.B \-WarnIgnoreFor
+This option, to be used in conjunction with \fBWarnUses\fP, suppresses
+all warnings about unused FOR loop variables. NOTE: <*UNUSED*> can
+be applied to an individual FOR loop variable.
+.TP
+.B \-WarnNarrows
+This option warns about implicit NARROW calls.
+.TP
+.B \-WarnObsolete
+Warn about the use of declarations marked with the <*OBSOLETE*> pragma
+(see Guide to Using SRC Modula-3).
+.TP
+.B \-WarnAll
+This option is equivalent to \fB-WarnExceptions -WarnReturns -WarnUses -WarnNarrows -WarnObsolete\fP.
+

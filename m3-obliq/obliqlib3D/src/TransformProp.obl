@@ -1,0 +1,99 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* Digital Internal Use Only                                                 *)
+(* All rights reserved.                                                      *)
+(*                                                                           *)
+(* Last modified on Thu Jul 21 13:47:49 PDT 1994 by najork                   *)
+(*       Created on Fri May 27 20:32:05 PDT 1994 by najork                   *)
+
+
+module TransformPropWrap for TransformProp;
+
+
+let NameProto = clone (Prop_NameProto, {
+  bind => meth (self, pv) TransformProp_NameBind (self, pv) end
+});
+
+
+let ValProto = clone (Prop_ValProto, {
+  getBeh => meth (self) TransformProp_ValGetBeh (self) end,
+  setBeh => meth (self, beh) TransformProp_ValSetBeh (self, beh) end,
+  get    => meth (self) TransformProp_ValGet (self) end,
+  value  => meth (self, time) TransformProp_ValValue (self, time) end
+});
+
+
+let BehProto = clone (Prop_BehProto, {});
+  
+
+let ConstBehProto = clone (BehProto, {
+  set => 
+    meth (self, m) TransformProp_ConstBehSet (self, m) end,
+  compose => 
+    meth (self, m) TransformProp_ConstBehCompose (self, m) end,
+  reset => 
+    meth (self) TransformProp_ConstBehReset (self) end,
+  translate => 
+    meth (self, x, y, z) TransformProp_ConstBehTranslate (self, x, y, z) end,
+  scale => 
+    meth (self, x, y, z) TransformProp_ConstBehScale (self, x, y, z) end,
+  rotateX => 
+    meth (self, a) TransformProp_ConstBehRotateX (self, a) end,
+  rotateY => 
+    meth (self, a) TransformProp_ConstBehRotateY (self, a) end,
+  rotateZ => 
+    meth (self, a) TransformProp_ConstBehRotateZ (self, a) end
+});
+
+
+let SyncBehProto = clone (BehProto, {
+  addRequest => 
+    meth (self, req) 
+      TransformProp_SyncBehAddRequest (self, req) 
+    end,
+  reset =>
+    meth (self, start) 
+      TransformProp_SyncBehReset (self, start) 
+    end,
+  changeTo =>
+    meth (self, m, start, dur) 
+      TransformProp_SyncBehChangeTo (self, m, start, dur)
+    end,
+  translate =>
+    meth (self, x, y, z, start, dur) 
+      TransformProp_SyncBehTranslate (self, x, y, z, start, dur) 
+    end,
+  scale =>
+    meth (self, x, y, z, start, dur) 
+      TransformProp_SyncBehScale (self, x, y, z, start, dur) 
+    end,
+  rotateX =>
+    meth (self, a, start, dur) 
+      TransformProp_SyncBehRotateX (self, a, start, dur) 
+    end,
+  rotateY =>
+    meth (self, a, start, dur) 
+      TransformProp_SyncBehRotateY (self, a, start, dur) 
+    end,
+  rotateZ =>
+    meth (self, a, start, dur) 
+      TransformProp_SyncBehRotateZ (self, a, start, dur) 
+    end
+});
+
+
+let AsyncBehProto = clone (BehProto, {
+  compute => ok,
+});
+
+
+let DepBehProto = clone (BehProto, {
+  compute => ok,
+});
+
+
+let RequestProto = clone (Prop_RequestProto, {
+  value => ok,
+});
+
+
+end module;

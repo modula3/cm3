@@ -1,0 +1,54 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% File: mtex.tmpl
+% Last modified on Wed Aug  7 09:22:32 PDT 1996 by najork 
+%      modified on Fri Apr 26 17:21:00 PDT 1996 by detlefs
+%      modified on Fri Dec  2 10:12:44 PST 1994 by heydon
+%      modified on Fri Jul 29 15:04:15 PDT 1994 by kalsow
+
+proc MtexAtSRC (file, section) is
+  local src  = path_of (format ("%s.%s.mtex", file, section))
+  local man  = format ("%s.%s", file, section)
+  local html = format ("%s.%s.html", file, section)
+  local htmlbuild = format("%s/%s", BUILD_DIR, html)
+
+  if defined ("_all")
+    % rebuild nroff and HTML versions as necessary
+    if stale (man, src)   exec ("mtex2man <", src, ">", man)    end
+    if stale (html, src)  exec ("mtex2html <", src, ">", html)  end
+
+    % copy them to source directory if they changed
+    cp_if (man, "../src")
+    cp_if (html, "../src")
+  end
+
+  MandExport (file, section)
+  HtmlExport (format ("man/%s=%s", htmlbuild, htmlbuild))
+  deriveds ("", [man, html])
+end
+
+proc MtexOutsideSRC (file, section) is
+  local man  = format ("%s.%s", file, section)
+  local html = format ("%s.%s.html", file, section)
+
+  if defined ("_all")
+    cp_if ("../src/" & man, man)
+    cp_if ("../src/" & html, html)
+  end
+
+  MandExport (file, section)
+  HtmlExport (html)
+  deriveds ("", [man, html])
+end
+
+proc Mtex (file, section) is
+  if equal (OS_TYPE, "POSIX")
+    if defined ("AT_SRC")
+      MtexAtSRC(file, section)
+    else
+      MtexOutsideSRC(file, section)
+    end
+  end
+end

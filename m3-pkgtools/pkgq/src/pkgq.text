@@ -1,0 +1,236 @@
+                                                            pkgq(1)
+ 
+NAME
+    pkgq - siphon management (locks, sub-repositories, send queues, ...)
+ 
+SYNTAX
+    pkgq [-v] [-f] [-s site] [-q queue]
+            # status commands
+       | status <the default action>
+       | show [packages ...]
+       | showreps
+       | skulk [packages ...]
+       | showdirs [replicas=a+b+c] [subrepositories ...]
+       | check [replicas=a+b+c] [packages ...]
+       | find packageNameArc
+       | locks packages ...
+       | locallocks [packages ...]
+            # action commands
+       | synch [packages ...]
+       | createrep repositoryName
+       | removerep repositoryName
+       | enqueue packages ...
+       | dequeue packages ...
+       | change field=value packages ...
+       | corrupt [replicas=a+b+c] packages ...
+
+
+DESCRIPTION
+    This is an administrative tool for monitoring the packageserver
+    lock database and siphon. 
+ 
+    For operations on packages, each package argument can be a full
+    pathname beginning with "/".  Otherwise, the current package prefix
+    is prepended (in the CRA siphon, this prefix is /proj/cra/pkg).
+    If no package is specified, package operations apply to all
+    packages.
+
+    For operations on replicas, replicas are named through their
+    "site name", as defined in the configuration (see
+    siphon.config(7).  If no replica is specified, replica operations
+    apply to all replicas .
+
+    The following switches apply:
+    -s:      direct enquiries to this site (local site by default)
+             current valid sites are S-SRC, S-PRL, S-CRL
+    -q:      apply queue operation only for queue to this site
+             (showqueue, enqueue, dequeue)
+    -v:      verbose (applies only to show, showqueue, 
+             locks, locallocks, find)
+    -f:      force operation (enqueues to top of queue, dequeues
+             even if sending is in progress)
+
+    At SRC it is possible to peruse the PRL database by uttering
+    "pkgq -s S-PRL ...". At PRL, do "pkgq -s S-SRC ..." to peruse
+    SRC database.
+
+
+STATUS COMMANDS
+
+    status:   status of send queues <the default action>: packages
+                 waiting for sending, status of the communication
+                 lines to remote sites.  Indicates also the last received
+                 package, or any reception in progress.  Example:
+                
+                 Stats for siphon(S-CRL), up 0 days, 0:07 ...
+                    sent: 0; rcvd: 1; sending: 0; recving: 0/1; enqueued: 0;
+                 Queue for S-SRC: empty
+                    Connection ok for 17 mins
+                 Received "m3/m3cg-ip"(15) from S-SRC, finished Jul 22 15:00
+                    fetched 1077790 bytes, 9 files in 20 secs, avg=712 kbit/s
+                    pulled=9 unchanged=87 cached=0
+                 Stats for packageserver(caspian), up 0 days, 0:07 ...
+                    get: 0; currGet: 5/47; ship: 1; currShip: 1; backup: 0;
+                    prepare: 1; currPrepare: 0/1; commit: 1;
+ 
+    show:     prints out a description of the package database entry
+                 for the specified packages; each line will look
+                 something like this:
+                   
+                     graffiti: S-PRL  cv=12  Sep 29  2:07
+
+                 "graffiti"       the package name
+                 "S-PRL"          manager site name; if the package
+                                    is managed by the local site and is
+                                    locked, this is indicated by "(locked)".
+                 "cv=12"          the current version; the lastVersion
+                                    and pendingVersion field will be
+                                    printed here as well (e.g. "lv=7",
+                                    pv=2") if they are abnormal.
+                 "Sep 29  2:07"   last time entry was modified.
+
+                 It is expected that the output of this command will
+                 be piped through grep in order to filter the output.
+                 For example:
+                  
+                      pkgq show | grep S-PRL
+                      pkgq show | grep "(locked)"
+                      pkgq show | grep "lv="
+                
+                 More details are printed in verbose mode. For ex:
+                 
+                     graffiti
+                       Locked: perle:/smith/packages/graffiti (S-PRL)
+                       Managed by: S-PRL
+                       Instance=639963884; lv=12; cv=12; pv=0
+                       Last modified: Sep 29  2:07
+                 [each package has an instance number, to differentiate
+                 successive creation of the same package name].
+
+    showreps:    list all repositories registered in the lock database.
+                 
+    skulk:       check if packages are synchronized at all sites;
+                 report anomalies and fingerprint mismatches. For example, 
+                 "pkgq skulk graffiti" answers either:
+                     graffiti: package already synchronized
+                 or something like:
+                     graffiti: should update to 93 entry S-PRL(92)
+                 which means that the current version at the local site (S-PRL)
+                 is out-of-date (version 92 instead of 93).
+                
+    showdirs:    show which replicas share the indicated repositories;
+                 if there are no repository arguments, all
+                 repositories registered at lock server are
+                 considered.
+                 
+    check:       check if replicas have the current version (as recorded
+                 in the lock database) of the indicated packages.
+
+    find:        enumerates the set of known repositories searching
+                 for package pathnames whose tail arc matches the
+                 argument text.
+                 
+    locks:       tells if packages are locked, and who holds
+                 the lock; queries the lock database at the managing
+                 site of each package; if the managing site is remote,
+                 it can take a while; more information are printed in
+                 verbose mode; this option is usually called through the 
+                 "whohas" command.
+    
+    locallocks:  like locks, but queries only the local lock database;
+                 thus, it cannot tell the lock status if managing site
+                 is remote; with no argument, prints out all locked
+                 packages managed by the local site; more information
+                 are printed in verbose mode; this is usually called
+                 through the "whohas" command.
+
+
+ACTION COMMANDS
+             
+    synch:       synchronize sites (send current version as 
+                 needed, create foreign entries, report anomalies
+                 and fingerprint mismatch).
+                 
+    createrep:   register a repository at lock server; this will
+                 allow later creation of packages in this
+                 repository.  A repository name is a sequence of
+                 strings separated by "/".   In order for a replica
+                 to share a repository, there must be an entry in the
+                 replica's configuration file mapping the repository name
+                 to a file system directory.  The replica "owner"
+                 must have write access to this directory.
+                 
+                 The "createrep" command does not check that the new
+                 created repository is shared by any replicas.  The
+                 "showdirs" command can be used for this purpose.
+                 
+                 Repositories don't contain other repositories.
+                 They contain only packages.  Thus, createrep fails
+                 if any parent repository is already registered
+                 (i.e. /a/b not created if /a exists).
+                                  
+    removerep:   remove a repository entry from lock server; the
+                 repository should not contain any locally managed
+                 package. ALL foreign packages in the repository will
+                 be deleted.
+                 
+    enqueue:     send the indicated packages to remote site; with the
+                 "-f" switch, the package will be put at the head
+                 of the send queues; with -q switch, applies only to
+                 indicated queue; example:
+
+                     pkgq enqueue cra/graffiti
+                 
+    dequeue:     remove the packages from the send queues; with -q switch,
+                 applies only to indicated queue; if the package is
+                 currently sent, it will be removed only if the "-f"
+                 switch is present; in this case, the sending is canceled.
+ 
+    change:      modifies package database entries.  USE WITH CARE.
+                 possible fields to change and acceptable values are:
+
+                     managedBy -  text (delimited by " ")
+                     ownerKey -   text (delimited by " ")
+                     ownerSite -  text (delimited by " ")
+                     instance -   integer
+                     CV -         integer or "DeletedVN"
+                     LV -         integer or "DeletedVN"
+                     PV -         integer or "DeletedVN"
+
+    corrupt:     marks the specified package as corrupted at all specified
+                 replicas.  USE WITH CARE.  If no replica is specified,
+                 all replicas at the local site will be marked as
+                 corrupted (the local lock entry current version will
+                 be set to InitialVN).
+
+                 Specify a subset of replicas iff one or more replicas
+                 have bad bits; the replica restart code (or daemon)
+                 will refetch all bits from a good replica.
+
+                 Specify all replicas (the default) in order to refetch
+                 the package through the siphon.  This action can be
+                 accelerated by the "synch" command.
+    
+                 The "corrupt" option is useful since normal operation
+                 of the package tools and siphon prevents re-shipment
+                 of files and package versions thought already to be
+                 present.  It does not actually delete bits, but simply
+                 causes the local replica or site state for the package
+                 to be invalidated.  However, if a package is
+                 invalidated on all replicas, it will not be possible
+                 to "get" that package until the old bits have been
+                 recovered or a new package version is received.
+
+            
+SEE ALSO
+    packagetool(1), packageserver(8)
+ 
+AUTHOR OF OBJECT
+    Francis Prusker and Ted Wobber
+ 
+AUTHOR OF DOCUMENTATION
+    Francis Prusker and Ted Wobber
+ 
+Last modified on Thu Jul 22 12:38:00 PDT 1993 by wobber 
+     modified on Tue Nov 26 15:57:35 GMT+1:00 1991 by prusker
+     modified on Sun Feb 19 16:55:43 PST 1989 by glassman    

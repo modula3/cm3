@@ -1,0 +1,16 @@
+m3tk-syn.2.2 package -- created Thu Apr 2 16:27:19 PST 1992 by mjordan
+current owner mjordan
+
+This package contains the Modula-3 toolkit parser. It is here that
+the decisions on how to represent the lexical entities in the AST
+specification are made. Here is a guide to what is (publically)
+available:
+
+M3CId           Reveals an M3AST_LX.Symbol_rep, and provides 
+                procedures for TEXT <-> M3AST_LX.Symbol_rep mappings.
+M3CLiteral      Reveals an M3AST_LX.Literal_rep, and provides 
+                procedures for TEXT <-> M3AST_LX.Literal_rep mappings.
+M3CParse        The parser interface
+M3CPragma       An interface to the pragmas associated with an AST, i.e. 
+                M3AST_LX.PragmaStore.
+M3CSrcPos       Operations on M3AST_LX.SrcPos values.

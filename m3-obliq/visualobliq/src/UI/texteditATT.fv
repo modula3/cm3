@@ -1,0 +1,23 @@
+ (Shape %texteditatt (Height 200)
+   (VBox 
+     (Glue 10)
+     (Title "Text Editor")
+    
+    
+       (Glue 5) (HBox (Boolean %teReadOnly "ReadOnly")  Fill (Boolean %teClip "Clip") 
+                      Fill (Boolean (Value TRUE) %teHasScrollbar "Has Scrollbar" ))
+       (Glue 5)  
+       (Boolean %teToggle
+                   (LField "From File :" 150 (Filter %teFilter1 Dormant
+                                       (TypeIn ExpandOnDemand %teFrom
+                                             (BgColor "White")))))
+      (Glue 5)
+      (Filter %teFilter2
+        (VBox 
+         (Frame Lowered (Shape (BgColor "VeryLightPink") (Color "VeryDarkBlue") (Height 15)
+           (Text "Initial Contents")))
+          (Border  (Pen 1)
+            (Rim (Pen 1) (TextEdit (BgColor "VeryLightPink") %teInitial)))
+      ) )
+   )
+  )

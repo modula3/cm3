@@ -1,0 +1,3 @@
+TYPE ProxiedObj <: { extend: Self(X) All(Y<:{}) (Y) => X & Y }
+       Objects of this type also contain a field "raw", 
+       which is for internal use only.

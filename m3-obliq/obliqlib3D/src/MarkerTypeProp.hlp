@@ -1,0 +1,29 @@
+  MarkerTypeProp_NewConst(lt: MarkerType): MarkerTypePropVal            
+  MarkerTypeProp_NewSync(ah: AnimHandle, lt: MarkerType): MarkerTypePropVal
+  MarkerTypeProp_NewAsync(beh: MarkerTypePropAsyncBeh): MarkerTypePropVal
+  MarkerTypeProp_NewDep(beh: MarkerTypePropDepBeh): MarkerTypePropVal   
+  MarkerTypeProp_NewConstBeh(lt: MarkerType): MarkerTypePropConstBeh    
+  MarkerTypeProp_NewSyncBeh(ah: AnimHandle, 
+                            t: MarkerType): MarkerTypePropSyncBeh
+  MarkerTypeProp_NewAsyncBeh(compute: M1):MarkerTypePropAsyncBeh        
+  MarkerTypeProp_NewDepBeh(compute: M2):MarkerTypePropDepBeh            
+  MarkerTypeProp_NewRequest(start dur: Num, value: M3): MarkerTypePropRequest 
+WHERE                                                                   
+  MarkerTypePropName <: PropName & { bind: (v: MarkerTypePropVal) => Prop }
+  MarkerTypePropVal <: PropVal & { getBeh: () => MarkerTypePropBeh,      
+                                   setBeh: (MarkerTypePropBeh) => Ok,    
+                                   get: () => MarkerType,                
+                                   value: (Num) => MarkerType }         
+  MarkerTypePropBeh <: PropBeh                                           
+  MarkerTypePropConstBeh <: MarkerTypePropBeh & { set: (MarkerType) => Ok }
+  MarkerTypePropSyncBeh <: MarkerTypePropBeh &                           
+         { addRequest: (MarkerTypePropRequest) => Ok ! Prop_BadInterval,
+           change: (MarkerType,Num) => Ok ! Prop_BadInterval }         
+  MarkerTypePropAsyncBeh <: MarkerTypePropBeh & { compute: M1 }          
+  MarkerTypePropDepBeh <: MarkerTypePropBeh & { compute: M2 }            
+  MarkerTypePropRequest <: PropRequest & { value: M3 }                   
+  M1 = Self (X <: MarkerTypePropAsyncBeh) (Real) => MarkerType          
+  M2 = Self (X <: MarkerTypePropDepBeh) (Real) => MarkerType            
+  M3 = Self (X <: MarkerTypePropRequest) (MarkerType,Real) => MarkerType
+  MarkerType = Text  (one of "Dot", "Circle", "Cross", "Asterisk", "X") 
+  Num = Real + Int

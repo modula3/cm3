@@ -1,0 +1,9 @@
+m3tk-misc.2 package -- created Fri Mar 20 11:30:48 PST 1992 by mjordan
+current owner mjordan
+
+This package contains miscellaneous modules that support the Modula-3
+toolkit.
+
+M3Args          Keyword/value (command-line) argument package
+M3Assert        Toolkit specific assertions
+M3Time          (Clean) Elapsed CPU time interface

@@ -1,0 +1,14 @@
+  All(T) sys_copy(x: T): T ! net_failure
+    (also 'copy(x)') Make a local copy of a value, including most distributed 
+    values.
+  sys_getEnvVar(t: Text): Text
+    Return the value of the env variable whose name is t, or "" if there is no 
+    such variable.
+  sys_paramCount: Int
+    The number of program parameters.
+  sys_getParam(n: Int): Text
+    Return the n-th program parameter (indexed from 0).
+  sys_callFailure: Exception
+    Can be raised by Modula-3 code during a sys_call.
+  Some(T)Some(U) sys_call(name: Text, args: [T]): U ! sys_callFailure
+    Call a pre-registered Modula-3 procedure.

@@ -1,0 +1,28 @@
+  PointProp_NewConst(r: Point3): PointPropVal                         
+  PointProp_NewSync(ah: AnimHandle, r: Point3): PointPropVal          
+  PointProp_NewAsync(beh: PointPropAsyncBeh): PointPropVal            
+  PointProp_NewDep(beh: PointPropDepBeh): PointPropVal                
+  PointProp_NewConstBeh(r: Point3): PointPropConstBeh                 
+  PointProp_NewSyncBeh(ah: AnimHandle, r: Point3): PointPropSyncBeh   
+  PointProp_NewAsyncBeh(compute: M1):PointPropAsyncBeh                
+  PointProp_NewDepBeh(compute: M2):PointPropDepBeh                    
+  PointProp_NewRequest(start dur: Num, value: M3): PointPropRequest  
+WHERE                                                                 
+  PointPropName <: PropName & { bind: (v: PointPropVal) => Prop }        
+  PointPropVal <: PropVal & { getBeh: () => PointPropBeh,              
+                              setBeh: (PointPropBeh) => Ok,           
+                              get: () => Point3,                      
+                              value: (Num) => Point3 }                
+  PointPropBeh <: PropBeh                                              
+  PointPropConstBeh <: PointPropBeh & { set: (Point3) => Ok }          
+  PointPropSyncBeh <: PointPropBeh &                                   
+           { addRequest: (PointPropRequest) => Ok ! Prop_BadInterval, 
+             linMoveTo: (Point3,Num,Num) => Ok ! Prop_BadInterval,  
+             linMoveBy: (Point3,Num,Num) => Ok ! Prop_BadInterval } 
+  PointPropAsyncBeh <: PointPropBeh & { compute: M1 }                  
+  PointPropDepBeh <: PointPropBeh & { compute: M2 }                    
+  PointPropRequest <: PropRequest & { value: M3 }                      
+  M1 = Self (X <: PointPropAsyncBeh) (Real) => Point3                 
+  M2 = Self (X <: PointPropDepBeh) (Real) => Point3                   
+  M3 = Self (X <: PointPropRequest) (Point3,Real) => Point3           
+  Num = Real + Int

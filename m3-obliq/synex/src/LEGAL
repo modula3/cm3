@@ -1,0 +1,1 @@
+legalese -notouch -filetype .mod $*

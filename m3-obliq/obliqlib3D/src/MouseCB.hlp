@@ -1,0 +1,10 @@
+  MouseCB_New(invoke: M): MouseCB                                 
+WHERE                                                              
+  MouseCB <: ProxiedObj & { invoke: M }                             
+  M = Self (X <: MouseCB) (MouseRec) => Ok                         
+  MouseRec = { pos: Point2, change: Button,                        
+               modifiers: [Modifier], clickType: ClickType }       
+  Point2 = [2*Int]                                                 
+  Button = Text     (one of "Left", "Middle", "Right")       
+  Modifier = Text   (a Button or one of "Shift", "Lock", "Control", "Option")
+  ClickType = Text  (one of "FirstDown", "OtherDown", "OtherUp", "LastUp") 

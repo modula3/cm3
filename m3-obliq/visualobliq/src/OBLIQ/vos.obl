@@ -1,0 +1,8 @@
+(* Copyright (C) 1995, Digital Equipment Corporation.       *)
+(* All rights reserved.                                     *)
+(* See the file COPYRIGHT for a full description.           *)
+(*                                                          *)
+(* Last modified on Tue Jan 10 11:47:26 PST 1995 by mhb     *)
+
+load "volib.obl";
+load "vos-internal.obl";

@@ -1,0 +1,14 @@
+m3tk-warn.2 package -- created Fri Apr 3 15:27:19 PST 1992 by mjordan
+current owner mjordan
+
+This package provides a set of AST tree walks that warn the user
+of possible problems, e.g. unused variables. The set is pulled
+together under the auspices of a single tool that registers
+itself as a compiler front-end extension. Much more could be
+done here, of course.
+
+M3CWarnTool     Warning tool
+M3CChkNarrow    Check for implicit NARROW
+M3CChkRaises    Check for uncaught exceptions (doesnt handle <*FATAL*>
+M3CChkUses      Check unused declarations
+M3CChkReturn    Check missing RETURNs

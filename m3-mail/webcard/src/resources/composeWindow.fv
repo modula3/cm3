@@ -1,0 +1,29 @@
+(Rim
+  (Pen 0)
+  (Insert "shared.fv")
+  (Shape (Height 350 + Infinity - 350)
+    (ZSplit
+      (VBox
+        (VTile %Splitter)
+        (Shape
+          (Height + 0)
+          (VBox
+            (Shape
+              (Height 0 + Infinity)
+              (VBox (Texture (Color "White") LocalAlign "inc.pbm") (Bar 1)))
+            (HBox
+              (Shape (Width 0 + 10000) (Button %Compose "Compose"))
+              (barIf2D)
+              (Filter (Shape (Width 0 + 10000) (Button %Rescreen "Rescreen")))
+              (barIf2D)
+              (Shape (Width 0 + 60000) (bgPassive) (Fill))))))
+      (dlg
+        %ErrorDlg
+        "Error"
+        (Filter
+          %ErrorFilter
+          (VBox
+            (message %ErrorText)
+            (Glue 6)
+            (HBox (Fill) (closeBtn %ErrorClose "Close") (Fill))
+            (Glue 6)))))))

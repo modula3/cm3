@@ -1,0 +1,36 @@
+  SurfaceGO_Color: ColorPropName
+  SurfaceGO_SetColor(o: GO, color: ColorVal): Ok
+  SurfaceGO_RasterMode: RasterModePropName
+  SurfaceGO_SetRasterMode(o: GO, t: RasterModeVal): Ok
+  SurfaceGO_AmbientReflectionCoeff: RealPropName
+  SurfaceGO_SetAmbientReflectionCoeff(o: GO, r: RealVal): Ok
+  SurfaceGO_DiffuseReflectionCoeff: RealPropName
+  SurfaceGO_SetDiffuseReflectionCoeff(o: GO, r: RealVal): Ok
+  SurfaceGO_SpecularReflectionCoeff: RealPropName
+  SurfaceGO_SetSpecularReflectionCoeff(o: GO, r: RealVal): Ok
+  SurfaceGO_SpecularReflectionConc: RealPropName
+  SurfaceGO_SetSpecularReflectionConc(o: GO, r: RealVal): Ok
+  SurfaceGO_TransmissionCoeff: RealPropName
+  SurfaceGO_SetTransmissionCoeff(o: GO, r: RealVal): Ok
+  SurfaceGO_SpecularReflectionColor: ColorPropName
+  SurfaceGO_SetSpecularReflectionColor(o: GO, color: ColorVal): Ok
+  SurfaceGO_Lighting: BooleanPropName
+  SurfaceGO_SetLighting(o: GO, t: BooleanVal): Ok
+  SurfaceGO_Shading: ShadingPropName
+  SurfaceGO_SetShading(o: GO, sh: ShadingVal): Ok
+  SurfaceGO_EdgeVisibility: BooleanPropName
+  SurfaceGO_SetEdgeVisibility(o: GO, b: BoolVal): Ok
+  SurfaceGO_EdgeColor: ColorPropName
+  SurfaceGO_SetEdgeColor(o: GO, color: ColorVal): Ok
+  SurfaceGO_EdgeType: LineTypePropName
+  SurfaceGO_SetEdgeType(o: GO, lt: LineTypeVal): Ok
+  SurfaceGO_EdgeWidth: RealPropName
+  SurfaceGO_SetEdgeWidth(o: GO, r: RealVal): Ok
+TYPE
+  SurfaceGO <: GO
+  ColorVal = ColorPropVal + Color + Text
+  BooleanVal = BooleanPropVal + Bool
+  RealVal = RealPropVal + Real + Int
+  LineTypeVal = LineTypePropVal + LineType
+  RasterModeVal = RasterModePropVal + RasterMode
+  ShadingVal = ShadingPropVal + Shading

@@ -1,0 +1,112 @@
+.\" This file generated automatically by mtextoman(1)
+.nh
+.TH "mtex2tex" "1"
+.SH "NAME"
+.PP
+mtex2tex \- translate mtex(7) files to LaTeX format
+.SH "SYNTAX"
+.PP
+\fBmtex2tex\fR
+.SH "DESCRIPTION"
+.PP
+\fImtex2tex\fR is a filter that reads a file in
+mtex(7) format from its standard input, and
+writes a \fILaTeX\fR\-format file to standard output suitable for
+processing with latex(1).
+.PP
+In the output produced by \fImtex2tex\fR, the title of the manpage is
+a LaTeX \\section, and the sections of the manpage are LaTeX
+\\subsections. The output does not contain a
+\\documentstyle declaration, nor \\begin{document} and
+\\end{document} environment brackets. It is assumed that the
+output from this filter will be \\input into some other
+top\-level LaTeX document containing these commands, like this:
+.EX
+  \\documentstyle{article}
+  \\begin{document}
+  \\title{The \\it{mtex} Package Manpages}
+  \\author{Harvey Throgenbottom}
+  \\date{\\today}
+  \\maketitle
+  \\input{mtex.7.tex}
+  \\input{mtex2html.1.tex}
+  \\input{mtex2man.1.tex}
+  \\input{mtex2tex.1.tex}
+  \\end{document}
+.EE
+\fImtex2tex\fR is written entirely in LIM (see lim(1)).
+.SH "SPECIAL CHARACTERS"
+.PP
+There are several special characters for the LaTeX output format. Here
+are the characters and the strings they are translated to by
+mtex2tex(1):
+.PP
+\*(lq$\*(rq becomes \*(lq\\$\*(rq
+.br
+\*(lq&\*(rq becomes \*(lq\\&\*(rq
+.br
+\*(lq%\*(rq becomes \*(lq\\%\*(rq
+.br
+\*(lq#\*(rq becomes \*(lq\\#\*(rq
+.br
+\*(lq_\*(rq becomes \*(lq\\_\*(rq
+.br
+\*(lq{\*(rq becomes \*(lq\\{\*(rq
+.br
+\*(lq}\*(rq becomes \*(lq\\}\*(rq
+.br
+\*(lq~\*(rq becomes \*(lq{\\tt\\symbol{'176}}\*(rq
+.br
+\*(lq^\*(rq becomes \*(lq{\\tt\\symbol{'136}}\*(rq
+.br
+\*(lq\\\*(rq becomes \*(lq{\\tt\\symbol{'134}}\*(rq
+.BR
+.PP
+To prevent these characters from being translated within the
+scope of a \fItex\fR environment, you must escape them with a
+\\ (backslash) character.
+.SH "DIAGNOSTICS"
+.PP
+See the Diagnostics section
+of the mtex(7) manpage for a complete description.
+.SH "BUGS"
+.PP
+There is no way to specify that the space following a period should
+be the interword space in the case that the period does not end the
+sentence. Similarly, there is no way to indicate that a period
+following an uppercase letter actually ends a sentence.
+.PP
+By default, most LaTeX document styles do not skip a line to start a
+new paragraph. Instead, they indent the first line of the
+paragraph. This can lead to formatting anomalies compared to the
+HTML\- and man\-formatted versions of a manpage.
+.PP
+By default, most LaTeX document styles skip a line between list
+environment items, even if no new paragraph is indicated
+between them.
+.PP
+By default, most LaTeX document styles skip a line before the first
+line of an environment and after the last line of the environment,
+even if no new paragraph is indicated there.
+.PP
+The text following items in a description environment does not start
+on a new line.
+.PP
+Links are not indicated in any way.
+.SH "SEE ALSO"
+.PP
+mtex(7),
+mtex2html(1),
+mtex2man(1),
+xmosaic(1)
+
+This man page is also available as a hypertext document under Mosaic at URL
+http://src\-www.pa.dec.com/SRC/man/DS/mtex2tex.1.html.
+.PP
+.SH "AUTHOR OF PROGRAM AND DOCUMENTATION"
+.PP
+Allan Heydon
+(heydon@src.dec.com)
+.EX
+Last modified on Mon Feb  6 16:46:23 PST 1995 by heydon
+.EE

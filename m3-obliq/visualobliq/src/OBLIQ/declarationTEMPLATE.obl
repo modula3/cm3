@@ -1,0 +1,14 @@
+(* Copyright (C) 1995, Digital Equipment Corporation.       *)
+(* All rights reserved.                                     *)
+(* See the file COPYRIGHT for a full description.           *)
+(*                                                          *)
+(* Last modified on Tue Jan 10 11:46:40 PST 1995 by mhb     *)
+
+var $form$ = ok;
+var $form$Alive = ok;
+var $form$Instances = 0;
+var $form$Constructor = ok;
+var $form$New = proc(Local) 
+	($form$Constructor.VONew)(Local);
+		end;
+

@@ -1,0 +1,49 @@
+(ZSplit 
+  (Insert "shared.fv")
+  (Font (Family "helvetica") (PointSize 120) (WeightName "Bold"))
+  (LabelFont (Family "helvetica") (PointSize 120) (WeightName "Bold"))
+  (Macro T BOA (a) `(Shape (Width + 0) ,a))
+  (Macro B BOA (name label) `(Filter (Shape (Width 60) (Button (Name ,name) ,label))))
+  (Macro MB BOA (name label) `(Filter (MButton (Name ,name) (Text LeftAlign (Margin 14.5) ,label))))
+  (Macro MBC BOA (name label) `(Choice MenuStyle CheckMark (Name ,name) (Text LeftAlign ,label)))
+  (Macro MBB BOA (name label) `(Boolean MenuStyle CheckMark (Name ,name) (Text LeftAlign ,label)))
+  (VBox 
+    (HBox 
+      (TSplit %DetachTSplit
+         (B DetachOpen "Detach")
+         (B CloseOpen "Close"))
+      (B back "Back")
+      (B forward "Forward")
+      (Glue 0)
+      (Border (Pen 0) (B stop (Text (BgColor "Pink") "  Stop  ")))
+      (Glue 0)
+      (Menu (HBox "WWW"  (Pixmap "menuArrow.pbm") " ") (VBox
+        (MB autosurf "AutoSurf")
+        Chisel
+        (MB home "Home")
+        (MB reload "Reload")
+        (MB open "Open...")
+        Chisel
+        (MBB useZippers "Use Zippers")
+        Chisel
+        (Radio %displayStyle =displayImages (VBox
+          (MBC displayNoImages   "No Images")
+          (MBC displayImages     "Images")
+          (MBC displayBackground "Images in background")))))
+      (Glue 0)
+      Bar
+      (Shape (Width 40) (Text %pageCounts "55/99"))
+      Bar
+      (Shape (Height + 0) (Width + Inf - Inf) 
+        (Text (LabelFont (PointSize 100)) (BgColor "White") %title LeftAlign "???")))
+    (Glue 0) 
+    (Bar 0)
+    (Shape (Height 0) (HBox 
+      (Glue 5) 
+      (T "Location:")
+      (Frame Lowered (BgColor "VeryLightGray") (Filter (TypeIn (bgInput) %url)))
+      (Glue 10)))
+    (Glue 0)
+    (Bar 1)
+    (Shape (Width 600 - 300 + Inf) (Height 500 - 400 + Inf) (Generic %contents)))
+) 

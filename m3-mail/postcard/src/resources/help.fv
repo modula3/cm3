@@ -1,0 +1,207 @@
+(Border
+  (Pen 0)
+  (Insert "shared.fv")
+  (Macro shape BOA (body) `(Shape (Width 0 + 1000) ,body))
+  (Macro pad BOA () `(shape (HBox (barIf2D) (Fill))))
+  (Macro
+    helpBtn
+    BOA
+    (name body)
+    `(shape
+       (HBox
+         (barIf2D)
+         (Shape (Width + Infinity) (LinkButton (bgActive) (For ,name) ,body)))))
+  (Macro
+    textHelpBtn
+    BOA
+    (name label)
+    `(helpBtn ,name (Text (Margin 6) ,label)))
+  (Macro
+    help
+    BOA
+    (name value)
+    `(TextEdit ReadOnly (TurnMargin 0) ,name =,value))
+  (Macro
+    bigHelp
+    BOA
+    (name value)
+    `(TextEdit ReadOnly (TurnMargin 0) ,name (From ,value)))
+  (Macro
+    nextPrev
+    BOA
+    (prompt prev)
+    `(PageButton (bgActive) (For TheTSplit) ,@prev ,prompt))
+  (Shape (Height 350 + Infinity - 350)
+    (Frame
+      (Rim
+        (bgPassive)
+        (Pen 6)
+        (VBox
+          (HBox
+            (VBox
+              (Glue 6)
+              (barIf2D)
+              (HBox
+                (helpBtn General (Pixmap "noMailIcon.pbm"))
+                (textHelpBtn Folders "Folders")
+                (textHelpBtn Browse "Browse")
+                (helpBtn Inc (Pixmap "inc.pbm"))))
+            (HBox
+              (VBox
+                (Glue 6)
+                (barIf2D)
+                (HBox (helpBtn News (Pixmap "news.pbm")) (barIf2D)))
+              (Glue 6)
+              (VBox
+                (barIf2D)
+                (Shape
+                  (Height + Infinity)
+                  (HBox
+                    (textHelpBtn Widgets "Widgets")
+                    (textHelpBtn Editing "Editing")
+                    (textHelpBtn ManPage "Man Page")
+                    (barIf2D)))
+                (barIf2D)
+                (Glue 6))))
+          (HBox
+            (VBox
+              (barIf2D)
+              (textHelpBtn HeadersList "Message Header List")
+              (barIf2D)
+              (HBox
+                (textHelpBtn Move "Move")
+                (textHelpBtn Copy "Copy")
+                (textHelpBtn Delete "Delete")
+                (helpBtn Down (Pixmap "nextArrow.pbm")))
+              (barIf2D))
+            (VBox
+              (barIf2D)
+              (textHelpBtn FoldersList "Folder List")
+              (barIf2D)
+              (HBox
+                (helpBtn Up (Pixmap "prevArrow.pbm"))
+                (textHelpBtn Compose "Compose")
+                (textHelpBtn Forward "Forward")
+                (textHelpBtn Reply "Reply"))
+              (barIf2D))
+            (barIf2D)
+            (if2D (Glue 7) (Glue 6)))
+          (Glue 6)
+          (HBox
+            (VBox
+              (barIf2D)
+              (HBox
+                (textHelpBtn Detach "Detach")
+                (textHelpBtn View "View")
+                (textHelpBtn Print "Print")
+                (textHelpBtn dEdit "Edit"))
+              (barIf2D)
+              (textHelpBtn DisplayWindow "Display Sub-windows")
+              (barIf2D))
+            (barIf2D)
+            (Glue 6)
+            (VBox
+              (barIf2D)
+              (HBox
+                (textHelpBtn Send "Send")
+                (textHelpBtn Discard "Discard")
+                (textHelpBtn Edit "Edit")
+                (textHelpBtn Modify "Modify"))
+              (barIf2D)
+              (textHelpBtn ComposeWindow "Composition Sub-windows")
+              (barIf2D))
+            (barIf2D))
+          (Glue 6)
+          (input
+            (ZSplit
+              (TSplit
+                %TheTSplit
+                Circular
+                (help
+                  %Overview
+                  "This is the main window of Postcard's help system. For assistance in using Postcard, click on any of the buttons above. They are laid out in roughly the same order as each of Postcard's windows.\n\nIf you are having persistent problems, or if you think you have just lost the message containing the only copy of your new novel, read the Postcard \"man\" page for some suggestions on error recovery.\n\nSend comments, complaints and bug reports to Andrew Birrell (Birrell@src.dec.com).\n\nThe \"Next\" button at the bottom right of this window lets you read sequentially all the documentation provided by this window, in a fairly logical order.\n\nWhen you are finished using this window, use your window manager to iconize or delete it.")
+                (help
+                  %Widgets
+                  "Postcard's widgets use the familiar techniques of pull-down menus, button clicks, and selections.  Most of these usages should be self-explanatory. Selections are described in the help information for each sub-window; other details of the actions are described in the help information for each button.\n\nSeveral of Postcard's sub-windows have a scroll bar at their left edge. While the cursor is positioned in a scroll bar, you can scroll the contents by clicking a mouse button:  left-click moves the line beside the cursor to the top of the sub-window, right-click moves the line at the top of the sub-window down to where the cursor is.  Middle-click in a scroll positions proportionately in the contents, e.g. middle-click one third of the way down the scroll bar will scroll to one third the way down the contents.  You can hold down the middle button in the scroll bar and drag, causing the sub-window to scroll as you drag.\n\nBetween the various sub-windows there are grey dividing bars. When you move the cursor over a dividing bar, the cursor changes to a up-down (or left-right) arrow. If you now hold down a mouse button and drag, you can reposition the dividing bar, thus adjusting the allocation of screen space amongst the sub-windows.\n\nAll pull-down menus are indicated by having a downward pointing triangle in their anchor button.\n\nSome of the pull-down menus have accelerators. Left-clicking on the menu anchor pulls down the menu in the normal way, but middle-clicks or right-clicks invoke one of the menu's commands without any need to drag through the menu. Such commands are indicated by a drawing of a mouse beside the command on the menu, with the middle or right button highlighted. See the help information for the \"Browse\" and \"Reply\" menus.\n\nThere are some \"pop-up\" sub-windows that appear from time to time, providing messages or asking for information. Most of these have a title bar, which you can drag to re-position the sub-window, and a button containing an upward pointing triangle, which you can click to close the sub-window or cancel the operation.")
+                (Filter (bigHelp %Editing "editing.txt"))
+                (help
+                  %FoldersList
+                  "The folder list is the sub-window at the top-right of Postcard's main window. It contains one line for each of your folders.\n\nWhen you're starting Postcard you can use the command-line option \"-longFolders\" to make the folder list occupy the full height of the main window (in which case you will probably want to use the \"-geometry\" command line option to make the main window wider).\n\nPostcard uses folders as repositories for your private mail, and as the way to read news groups and bulletin boards, and as a way to share messages within a group of users. Use \"Add Folder\" and \"Remove Folder\" on the \"Folders\" menu to create and destroy folders, or to subscribe to news groups and bulletin boards.\n\nSee the help information for \"Widgets\" for a description of the scroll-bar.\n\nTo select a folder, click once on its line in the folder list. For a private folder, this makes the folder the destination for the \"Move\" and \"Copy\" commands.\n\nTo open a folder, double-click on its line in the folder list. Opening a folder loads its header lines into the message header list sub-window, where you can select them to display, print, copy, move, reply to or forward them.\n\nOpening a news group or bulletin board folder incorporates any new messages into the folder. News groups that have new messages are marked with a \"*\". News group and bulletin board folders are read-only: you cannnot move or delete messages from them, although you can copy from them.\n\nControl-clicking on a line in the folder list is a shortcut for the \"Copy\" command, and control-shift-clicking is a shortcut for \"Move\".")
+                (help
+                  %HeadersList
+                  "The message header list is the sub-window at the top-left of Postcard's main window. It contains one line for each message in the open folder, summarizing the header of the message. Each line contains: message identifier within the folder (usually a small integer), date, sender (or recipient if you sent the message yourself), and subject. Use the \"folder list\" sub-window to open a folder.\n\nTo select a message, click on its line in the list; the selected message is highlighted. You can select a contiguous run of messages by depressing a mouse button over the first message, dragging to the last, and releasing the mouse button. You can select additional messages, or de-select messages by shift-clicking or shift-dragging. Dragging off the top or bottom of the browser makes the browser scroll.\n\nMultiple-message selections are useful for the \"Print Selected Messages\", \"Move\", \"Copy\", \"Delete\" and \"Forward\" operations.\n\nSee the help information for \"Widgets\" for a description of the scroll-bar.\n\nBy default, whenever you select a message (or a set of messages) Postcard displays the first selected message in the display sub-window (below the header list). You can turn off this auto-display behavior with an option in the configuration dialog. When auto-display is turned off, use a double-click to display a message. Message display is asynchronous with selection, since it can be relatively slow.")
+                (help
+                  %General
+                  "The \"General\" menu has a miscellany of commands. The menu anchor button is a drawing of a mailbox. The flag is up and the door is open if you have new mail. Note that Postcard is compatible with other mail notification programs, e.g. \"faces -a\".\n\n\"About Postcard\" shows you the version number, data and maintainer's e-mail address. Please include the version number and date in any error reports.\n\n\"Help\" produces this window.\n\n\"Set Configuration\" creates a dialog containing options that let you adjust some aspects of Postcard's behavior to suit your personal preferences. Use the help buttons in that dialog to find out more about what the options do, and where and how they are stored. Postcard recovers from damaged configuration files by substituting various defaults. The configuration file is plain text; as a last resort in case of trouble you can edit it by hand, or just delete it.\n\n\"Rescreen\" is enabled only if your X-server offers multiple screens (displays). If so, click on this command to move Postcard's main window to another screen. If you are using a separate composition window, that window also has a rescreen button.\n\n\"Quit\" causes the Postcard application to terminate.")
+                (bigHelp %Folders "foldersMenu.txt")
+                (bigHelp %Browse "browseMenu.txt")
+                (help
+                  %Inc
+                  "The \"inc\" button (which looks like an envelope) incorporates any waiting new mail from the mail spool into your inbox folder, and opens the inbox folder.\n\nIf this button fails to incorporate new mail when the Postcard header says there is new mail, it may be because your .mh_profile file, which is stored in $HOME, is missing or damaged. See the Postcard \"man\" page for suggestions on recovering from such errors.\n\nNote that the down-arrow button can also incorporate new mail for you; that button by itself is generally the most convenient way to read all of your mail and news.")
+                (help
+                  %News
+                  "The \"news\" button (which looks like a newspaper) looks for the next news group or bulletin board with new articles, incorporates those articles, and opens the folder. News groups or bulletin boards that have new messages are marked with a \"*\" in the folder list.\n\nUse the \"Folders List\" help button for general information about Postcard's use of folders; use the \"Folders\" help button for descriptions of commands for operating on folders, including creating and destroying them.\n\nNote that the down-arrow button can also incorporate new news articles for you; that button by itself is generally the most convenient way to read all of your mail and news.")
+                (help
+                  %Move
+                  "\"Move\" moves the selected messages to the selected folder. You can also move the selected messages by control-shift clicking on the destination folder.\n\nThis button is dimmed if the selected folder is the same as the open folder, or the open folder is a news group or bulletin board.")
+                (help
+                  %Copy
+                  "\"Copy\" places a copy of each selected message in the selected folder. You can also copy the selected messages by control clicking on the destination folder.\n\nIf the open folder is not a bulletin board, the copy and the original message are really hard links to the same file, so changes to one will affect the other; the underlying file continues to exist until all links are deleted.  If the open folder is a bulletin board, a separate copy is really made.\n\nThis button is dimmed if the selected folder is the same as the open folder.")
+                (help
+                  %Delete
+                  "\"Delete\" deletes the selected messages.\n\nThere is an option in the configuration dialog that makes this \"delete\" button really just move the selected messages to a folder that you nominate. This gives an easy way to recover from accidental deletions. Indeed, with that option you can use your \"deleted\" folder as a temporary holding area for messages. Don't forget to clear it out occasionally with the \"Purge\" command.\n\nEven without that option, some recovery is possible; see the Postcard \"man\" page for information.\n\nThis button is dimmed if the open folder is a bulletin board (the \"Purge\" command in the \"Folders\" menu may be used to delete messages from a bulletin board).")
+                (help
+                  %Down
+                  "The down-arrow button generally selects and displays the message after the currently selected one.\n\nIf the open folder is a news group or bulletin board or your inbox, and the currently selected message is the last one, this button performs the same action as the \"news\" button or the \"inc\" button.\n\nThere is an option in the configuration dialog to prevent messages being displayed whenever you select them. If you have chosen that option, and the first selected message is not being displayed, then this button just displays the first selected message.")
+                (help
+                  %Up
+                  "The up-arrow button generally selects and displays the message before the currently selected one.\n\nThere is an option in the configuration dialog to prevent messages being displayed whenever you select them. If you have chosen that option, and the last selected message is not being displayed, then this button displays the last selected message.")
+                (help
+                  %Compose
+                  "The \"Compose\" button creates a new draft message.  The draft appears in a composition sub-window, unless you have chosen \"Always use external editor\" in the configuration dialog.\n\nSee the help button for composition sub-windows for information on editing within them.\n\nThere are several ways to include selected messages in a draft: read about the \"Forward\" button, the \"Reply\" menu, and \"Insert Selected Messages\" on the \"Edit\" menu of composition sub-windows.\n\nUse the help buttons in the configuration dialog to adjust the way the draft is initialized, or if you want to always use an external editor to edit your draft messages.")
+                (help
+                  %Forward
+                  "The \"Forward\" button creates a new draft message similarly to the \"Compose\" button, except that the body of the draft contains copies of the messages currently selected in the message list sub-window.  The draft appears in a composition sub-window, unless you have chosen \"Always use external editor\" in the configuration dialog.\n\nSee the help button for composition sub-windows for information on editing within them.\n\nThe \"Reply\" menu provides other ways to include selected messages in a draft. You can also use \"Insert Selected Messages\" on the \"Edit\" menu of composition sub-windows.\n\nUse the help buttons in the configuration dialog to adjust the the way the draft is initialized, or if you want to always use an external editor to edit your draft messages.")
+                (help
+                  %Reply
+                  "The buttons in the \"Reply\" menu produce a new draft message similarly to the \"Compose\" button, except that the header fields of the draft are arranged as a reply to the message currently selected in the message list sub-window.  The draft appears in a composition sub-window, unless you have chosen \"Always use external editor\" in the configuration dialog.\n\nUse middle-click and right-click as shortcuts for \"Reply to Sender\" and \"Reply to All\".\n\nUse \"Reply to Sender\" to reply to just the sender of the selected message, or \"Reply to All\" to reply to everyone who received the selected message. (But if the message has a \"FollowUp-To\" header field, the \"Reply To All\" command uses the contents of that field instead of the \"To\" or \"NewsGroups\" fields.)\n\nIf you hold down the \"Control\" key while clicking one of the \"Reply\" buttons, the draft will include the body of the selected message. You can also elect to have this behavior every time, with options in the configuration dialog. The configuration dialog also lets you provide a string that will prefix each line of a message included into the draft.\n\nThe \"Forward\" button provides another way to include selected messages in a draft. You can also use \"Insert Selected Messages\" on the \"Edit\" menu of composition sub-windows.\n\nUse the help buttons in the configuration dialog to adjust the the way the draft is initialized, or if you want to always use an external editor to edit your draft messages.")
+                (help
+                  %DisplayWindow
+                  "Postcard uses display sub-windows to display your messages. See the help information for the message header list to understand how to display a message.\n\nUse the \"Detach\" button to see multiple messages at a time. Use the \"View\" menu to see the unfiltered message header, or to use an external editor or PostScript previewer to view messages. Use the \"Print\" menu to print messages or their embedded PostScript. You can select text in the message window, and then use the \"Edit\" menu to copy the selected text to the \"clipboard\" or to select the entire message. \n\nPostcard uses a built-in editor to display messages. The display sub-windows are read-only:  you can select but not modify the text in them.\n\nSee the help information for \"Editing\" for details on editing and selecting text.\n\nSee the help information for \"Widgets\" for a description of the scroll-bar.")
+                (help
+                  %Detach
+                  "The \"Detach\" button lets you use multiple display sub-windows.\n\nWhen you click \"Detach\", this sub-window becomes a detached display sub-window; its contents are unchanged. The next time you ask Postcard to display a message, it will display it in a new, attached, sub-window.\n\nWhen you are finished with a detached display sub-window, click \"Close\".")
+                (help
+                  %dEdit
+                  "The \"Edit\" button in the display sub-window lets you copy the text you've selected in the display sub-window onto the \"clipboard\", or to select all of the text in the sub-window (which you can then copy onto the clipboard).\n\nSee the help information for \"Editing\" for details on editing and selecting text.")
+                (help
+                  %View
+                  "The \"View\" menu controls a cluster of options for displaying messages.\n\nBy default, Postcard filters a displayed message's header to show only the most interesting fields. Click \"Show Entire Header\" to display all of the header fields, in their original order. After you've clicked this button, click \"Show Brief Header\" in this menu to return to the filtered header.\n\n\"Use External Editor\" makes Postcard run an external editor on the currently displayed message. You can use the configuration dialog to specify the command used for the external editor. Postcard does not wait for the external editor to return.\n\n\"Use PostScript Previewer\" runs an external command to interpret PostScript embedded in the message. The PostScript should start with a line starting with \"!%\". The message from there on is stored into a temporary file, which is presented to the PostScript previewer. You can use the configuration dialog to specify the command used for the PostScript previewer. See also \"Print PostScript\" in the \"Print\" menu.")
+                (help
+                  %Print
+                  "The \"Print\" menu lets you print the displayed message.\n\n\"Print Message Text\" presents the raw message file to the print command specified in the configuration dialog. See also \"Print Selected Messages\" in the \"Browse\" menu.\n\n\"Print PostScript\" lets you print PostScript embedded in the message. The PostScript should start with a line starting with \"!%\". The message from there on is stored into a temporary file, which is presented to the PostScript printing command, which you can specify in the configuration dialog.")
+                (bigHelp %ComposeWindow "compose.txt")
+                (help
+                  %Send
+                  "The \"Send\" button saves your message in its backing file then uses the \"Send\" program to send the message.\n\nBefore sending the message, Postcard expands any \"aliases\" that you might have defined (you can do this at other times by clicking \"Expand Aliases\" on the \"Edit\" menu). Aliases allow you to use short names in place of complicated mail addresses. Alias expansion ignores the case of the alias names. Alias names may appear in the \"To\", \"Cc\" and \"Bcc\" fields of your draft message.\n\nAliases are defined in the file \"$HOME/.mail_aliases.sx\".  You can edit the file with any editor; Postcard notices when the modified time of this file changes, and re-reads it as necessary.  The format of this file is a symbolic expression with a somewhat unforgiving syntax.  A typical file might look like:\n\n    (Aliases\n        (\"jre\" \"ellis@src.dec.com\")\n        (\"kai\" \"li@princeton.edu\"))\n\nNote that the aliases and their values must be double-quoted in the alias file.\n\nIf the send succeeds (does not report an error), the draft message's backing file is renamed by prefixing a \",\" to the last part of its name. Also at this time the buttons in the composition sub-window change to \"Close\" (which is not undo-able) and \"Modify\" (which lets you compose a new message based on the text of this one).")
+                (help
+                  %Discard
+                  "Use the \"Discard\" button if you decide not to send the draft message. This lets Postcard re-use the composition sub-window for other draft messages, or lets you close the sub-window.\n\nIf you change your mind about discarding the draft, click \"Modify\". Note that after you click \"Close\" Postcard provides no way to access the discarded draft; but the Postcard \"man\" page includes suggestions for recovering from some cases of this situation.")
+                (help
+                  %Edit
+                  "The \"Edit\" menu in composition sub-windows provides some high-level editing operations on the contents of the draft message. (See the help information for \"Editing\" for details on editing and selecting text.)\n\n\"Undo\" reverses the effect of the most recent change to the text, such as deleting a line. Typing a sequence of graphic characters counts as a single change. There is no fixed limit on the number of changes you can undo.\n\n\"Redo\" reinstates the changes that \"Undo\" undid, one at a time.\n\n\"Cut\" copies the selection to the clipboard and deletes it from the composition window.\n\n\"Copy\" copies the selection onto the clipboard but doesn't delete it.\n\n\"Paste\" inserts the contents of the clipboard at the type-in point.\n\n\"Clear\" deletes the selected text.\n\n\"Select All\" selects all the text of the composition sub-window.\n\n\"Expand Aliases\" substitutes values of aliases that you have defined for recipient names. See the help information for the \"Send\" button for a description of aliases.\n\n\"Insert Selected Messages\" inserts the messages currently selected in the message header list into your draft at the type-in point. See also the descriptions of the \"Forward\" button and the \"Reply\" menu for other ways of inserting messages.\n\n\"Insert File\" allows you to insert an entire file into your draft at the type-in point.\n\n\"Use External Editor\" saves your draft in its backing file then invokes the external editor (defined in the configuration dialog). When the external editor command terminates, you can resume editing the draft, or click \"Send\" or \"Discard\". See also the option \"Always use external editor\" in the configuration dialog.")
+                (help
+                  %Modify
+                  "The \"Modify\" button appears in composition sub-windows after a successful \"Send\" or \"Discard\". It lets you create another message using the current text as the initial draft.\n\nNote that after you click \"Close\" Postcard provides no way to access the discarded draft; but the Postcard \"man\" page includes suggestions for recovering from some cases of this situation.")
+                (Filter (bigHelp %ManPage "Postcard.1")))
+              (ZChild
+                Open
+                (At 1. 1. SE)
+                (Shape (Width 54)
+                (HBox
+                  (barIf2D)
+                  (VBox
+                    (barIf2D)
+                    (nextPrev "Prev" (Back))
+                    (barIf2D)
+                    (nextPrev "Next" ()))))))))))))

@@ -1,0 +1,80 @@
+.\" Copyright (C) 1989, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.nh
+.TH SHOWHEAP 1
+.SH NAME
+showheap \- display the traced heap of a Modula-3 program
+
+.SH DESCRIPTION
+
+The showheap program displays a map of the traced heap of running
+Modula-3 program.
+
+Normally, you should not start showheap directly.  Rather, the runtime
+will start showheap and feed it with the proper data when the argument
+@M3showheap=showheap is given to a Modula-3 program; for example, to
+run the program foo and see the heap of that process, run foo with the
+argument @M3showheap=showheap.  A Trestle window will appear; when you
+click the start button, the program foo will actually start.
+
+The SRC Modula-3 garbage collector divides the traced heap into pages,
+and showheap shows the status of each page controlled by the
+collector.  The page size is implementation-dependent.  There are far
+more possible page states than can be easily shown, but showheap
+colorcodes page states as follows.
+
+- Non-heap pages are shown in black.  Any non-heap pages interspersed
+with the traced heap were allocated for the untraced heap, or using
+lower-level mechanisms.
+
+- Free pages are shown in white.  Free pages are available for
+allocation.
+
+- Previous-space pages are shown in shades of gray.  These are the
+pages that contained objects at the beginning of the current
+collection.
+
+- New-object pages are shown in shades of blue.  These pages contain
+objects allocated recently, that have not yet been through a
+collection.
+
+- Copied-object pages are shown in shades of red. These pages contain
+objects copied from previous-space pages during this collection.
+
+- Immobile-object pages are shown in shades of green.  These are like
+copied-object pages, but contain objects that could not be moved, such
+as objects referenced from thread states; they are left in place by
+the collector.
+
+- Older-generation pages are shown in shades of magenta, when
+generational collection is used.  These pages contain objects that
+have been through at least one collection, and that needn't be
+collected again for a while.
+
+When a program use the showheap facility, a Trestle window is created
+at the beginning of the execution.  It shows on the right a map of the
+traced heap; this map is a 2D matrix of squares, and each square
+represents a page.  Reading this matrix row by row, from left to
+right, one finds all that pages in increasing order.  Only the pages
+from the first to the last page in the traced heap are displayed (the
+other are non-heap pages).
+
+Most pages can contain multiple objects; larger objects require
+multiple pages, and those pages are shown as being connected.
+
+On the left side of the window, there is legend of the hues used,
+together with a count of pages in that state.  The line "gc =
+<number>" shows the number of garbage collections since the beginning
+of the execution of the program.  The line "off = <number>" is
+non-zero iff collection is currently prohibited.
+
+.SH SEE ALSO
+recordheap(1), replayheap(1)
+
+.SH AUTHOR OF OBJECT
+Eric Muller and John DeTreville
+
+.SH Author Of Documentation
+Eric Muller and John DeTreville

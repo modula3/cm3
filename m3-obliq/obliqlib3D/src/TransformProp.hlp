@@ -1,0 +1,41 @@
+  TransformProp_NewConst(m: Matrix4): TransformPropVal                  
+  TransformProp_NewSync(ah: AnimHandle, m: Matrix4): TransformPropVal   
+  TransformProp_NewAsync(beh: TransformPropAsyncBeh): TransformPropVal  
+  TransformProp_NewDep(beh: TransformPropDepBeh): TransformPropVal      
+  TransformProp_NewConstBeh(m: Matrix4): TransformPropConstBeh          
+  TransformProp_NewSyncBeh(ah: AnimHandle, m: Matrix4): TransformPropSyncBeh
+  TransformProp_NewAsyncBeh(compute: M1):TransformPropAsyncBeh          
+  TransformProp_NewDepBeh(compute: M2):TransformPropDepBeh              
+  TransformProp_NewRequest(start dur: Num, value: M3): TransformPropRequest
+WHERE                                                                   
+  TransformPropName <: PropName & { bind: (v: TransformPropVal) => Prop }  
+  TransformPropVal <: PropVal & { getBeh: () => TransformPropBeh,        
+                                  setBeh: (TransformPropBeh) => Ok,      
+                                  get: () => Matrix4,                    
+                                  value: (Num) => Matrix4 }             
+  TransformPropBeh <: PropBeh                                            
+  TransformPropConstBeh <: TransformPropBeh &                            
+                                  { set: (Matrix4) => Ok,               
+                                    compose: (Matrix4) => Ok,           
+                                    reset: () => Ok,                    
+                                    translate: (Num,Num,Num) => Ok,  
+                                    scale: (Num,Num,Num) => Ok,      
+                                    rotateX: (Num) => Ok,              
+                                    rotateY: (Num) => Ok,              
+                                    rotateZ: (Num) => Ok }             
+  TransformPropSyncBeh <: TransformPropBeh &                             
+       { addRequest: (TransformPropRequest) => Ok ! Prop_BadInterval,
+         reset: (Num) => Ok ! Prop_BadInterval,                        
+         changeTo: (Matrix4,Num,Num) => Ok ! Prop_BadInterval,        
+         translate: (Num,Num,Num,Num,Num) => Ok ! Prop_BadInterval,
+         scale: (Num,Num,Num,Num,Num) => Ok ! Prop_BadInterval,    
+         rotateX: (Num,Num,Num) => Ok ! Prop_BadInterval,            
+         rotateY: (Num,Num,Num) => Ok ! Prop_BadInterval,            
+         rotateZ: (Num,Num,Num) => Ok ! Prop_BadInterval }           
+  TransformPropAsyncBeh <: TransformPropBeh & { compute: M1 }            
+  TransformPropDepBeh <: TransformPropBeh & { compute: M2 }              
+  TransformPropRequest <: PropRequest & { value: M3 }                    
+  M1 = Self (X <: TransformPropAsyncBeh) (Real) => Matrix4                    
+  M2 = Self (X <: TransformPropDepBeh) (Real) => Matrix4                      
+  M3 = Self (X <: TransformPropRequest) (Matrix4,Real) => Matrix4
+  Num = Real = Int

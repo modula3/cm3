@@ -1,0 +1,894 @@
+.\" This file generated automatically by mtextoman(1)
+.nh
+.TH "mtex" "7"
+.SH "NAME"
+.PP
+\fBmtex\fR \- LaTeX\-like file format for describing man pages
+.PP
+.SH "INTRODUCTION"
+.PP
+This document describes \fImtex\fR, a file format suitable for describing
+formatted man pages. The programs mtex2html(1), mtex2man(1), and
+mtex2tex(1) are filters that convert
+\fImtex\fR documents into HTML\-, man\-, and LaTeX\-formatted documents suitable
+for viewing with a World\-Wide Web browser such as Netscape(1), with
+nroff(1)/troff(1) (using the man(7) or man.nopage(7) macro packages),
+and with latex(1)/xdvi(1) respectively.
+.PP
+The \fImtex\fR file format is loosely based on LaTeX, but it contains
+far fewer commands and is somewhat fragile. Like LaTeX, \fImtex\fR commands
+are introduced by the \\ (backslash) character, and command
+arguments are delimited by curly braces { }. \fIMtex\fR
+also uses \\begin and \\end commands to bracket
+\fIenvironments\fR. Some commands have multiple arguments, in which
+case the arguments are specified like this:
+.EX
+  \\cmd{arg1}{arg2}...{argN}
+.EE
+In such cases, the arguments may be separated by arbitrary
+whitespace. Unlike LaTeX, braces are \fInot\fR used in \fImtex\fR to
+delimit scopes; they are used only to delimit arguments.
+.PP
+Except where noted below, the filter programs parse \fImtex\fR files
+as a sequence of whitespace\-separated tokens. The programs for
+viewing the resulting output files automatically fill paragraphs,
+so how the input is divided into lines is generally
+unimportant. There are a few exceptions to this rule. For example,
+certain commands must start at the beginning of a line, and text
+within the verbatim environment is not
+\*(lqfilled\*(rq or justified.
+.PP
+The \fImtex\fR commands may be divided into two groups: \fIrunning\fR
+commands and \fIline\fR commands. The running commands may appear
+anywhere in running text. The line commands must appear at the
+start of a new line, and they generally cause a line break in the
+output.
+.PP
+The running commands are:
+.PD 0
+.RS 0
+.TP 6
+    *
+the typeface\-changing commands:
+\\bf, \\it, \\tt;
+.TP 6
+    *
+the hypertext commands:
+\\link, \\anchor; and
+.TP 6
+    *
+the line\-breaking command:
+\\newline.
+.RE
+.PD
+.PP
+The line commands are:
+.PD 0
+.RS 0
+.TP 6
+    *
+the command to declare a man page:
+\\manpage;
+.TP 6
+    *
+the command to start a new section:
+\\section;
+.TP 6
+    *
+the commands for bracketing environments:
+\\begin, \\end; and
+.TP 6
+    *
+the command for starting a new list item:
+\\item
+.RE
+.PD
+.PP
+.SH "INPUT CHARACTERS"
+.PP
+Any character is legal in an \fImtex\fR file, but five characters are
+special.
+.PP
+Commands in \fImtex\fR begin with a '\\' (backslash) character,
+and have arguments enclosed by { braces }. The backslash
+character is also used to escape other characters, as described below.
+Hence, these three characters are special. Braces that do not delimit
+arguments may appear in your input. However, to include a closing
+brace in the argument to a command, you must escape it as described
+below.
+.PP
+As in TeX, double\-quotes are indicated by pairs of single quotes: the
+input ``hello'' produces \*(lqhello\*(rq. Hence each of the single
+quote characters is special. Stand\-alone single quote characters may
+appear in your input (for example, as an apostrophe in a conjunction
+or possessive). However, to produce two consecutive single quote
+characters like ``this'', you must escape the characters as
+described below.
+.PP
+Each of the five special characters may be escaped with the
+backslash character itself:
+.PP
+.PD 0
+.RS 0
+.TP 6
+    *
+\\\\ produces backslash (\\)
+.TP 6
+    *
+\\{ produces left brace ({)
+.TP 6
+    *
+\\} produces right brace (})
+.TP 6
+    *
+\\` produces single left quote (`)
+.TP 6
+    *
+\\' produces single right quote (')
+.RE
+.PD
+.PP
+The escape for the left brace character is not strictly necessary; it
+is provided only for symmetry.
+.PP
+You are advised not to use the double\-quote character in your input,
+since there is no way to reliably specify this character in nroff
+input. In particular, double\-quote is known \fInot\fR to work in the
+arguments of the \\manpage and \\section
+commands. Use `` and '' wherever possible.
+.PP
+For each output format, certain additional characters are
+special. For example, in HTML, the \*(lq<\*(rq character is special;
+to produce it in an HTML file for viewing, you would have to write
+\*(lq&lt;\*(rq. Each of the filter programs translates the characters
+that are special for its output format automatically, so
+mtex2html(1) will in fact convert the input \*(lqa < b\*(rq to
+produce \*(lqa &lt; b\*(rq in the HTML output.
+.PP
+To include one of the output\-specific characters in the output
+without translating it, you can escape the character with a \\
+(backslash). However, since such escape sequences are
+output\-specific, they are only allowed in the
+output\-specific environments described below.
+.SH "COMMENTS"
+.PP
+Lines beginning with the % (percent) character start comments in
+the input file. All characters from the percent character up to and
+including the first newline character are ignored.
+.PP
+To include a percent character in your output, simply make sure that
+it does not appear at the start of an input line.
+.SH "PARAGRAPHS"
+.PP
+Paragraphs in the input are separated by one or more consecutive blank
+lines. Both mtex2html(1) and mtex2man(1) produce a single blank line
+in the output at the start of a new paragraph; mtex2tex(1)
+indents the first line of the new paragraph without skipping
+a line.
+.SH "TYPEFACE COMMANDS"
+.PP
+The \fImtex\fR format includes commands for typesetting short bits of
+text in a \fBbold\fR, \fIitalic\fR, or typewriter typeface:
+.PP
+.PD 0
+.RS 0
+.TP 6
+    *
+\\bf{<Text>} typesets <Text> in \fBbold face\fR
+.TP 6
+    *
+\\it{<Text>} typesets <Text> in \fIitalics\fR
+.TP 6
+    *
+\\tt{<Text>} typesets <Text> in typewriter font
+.RE
+.PD
+.PP
+The syntax of these commands is slightly different from standard
+TeX, since the arguments are expected to be short, and only one
+alternative typeface should be used at a time.
+.PP
+Typeface commands may be nested, but the output will probably not be
+what you expect. For example, the input \\it{one \\bf{bold}
+word} will most likely set the words \*(lqone\*(rq and \*(lqword\*(rq in an
+italic typeface, but the word \*(lqbold\*(rq in a bold roman typeface,
+not a bold italic typeface.
+.PP
+Typeface commands may appear in running text, but it is
+an unchecked error to include them in arguments to the
+\\manpage and
+\\section commands, since these commands
+automatically typeset their arguments in an output\-dependent way.
+.SH "THE MANPAGE COMMAND"
+.PP
+Every \fImtex\fR manpage should begin with the \fImanpage\fR
+command. It has the format:
+.EX
+  \\manpage{<PageTitle>}{<Name>}{<Section>}
+.EE
+The <PageTitle> is the nominal title for this page, and is
+used in HTML output only. The <Name> value should be the
+name of the command or routine, and <Section> should be the
+section of the manual in which this man page appears. For example,
+the source for this manpage begins with the line:
+.EX
+  \\manpage{The MTeX File Format}{mtex}{7}
+.EE
+The \\manpage command must start on its own line, and no other
+non\-whitespace characters may appear after its last argument on the
+same line. Any blank lines after it are ignored. The arguments
+should not include typeface commands.
+.SH "THE SECTION COMMAND"
+.PP
+New man page sections are introduced with the \\section
+command, which has the form:
+.EX
+  \\section{<Text>}
+.EE
+The <Text> will be typeset as a section title, indicated by
+typeface, font size, or indentation level. The \\section
+command must start on its own line, and no other non\-whitespace
+characters may appear after its argument on the same line. Only
+\\link and \\anchor commands may be used within the
+<Text> argument.
+.SH "ENVIRONMENTS"
+.PP
+An \fIenvironment\fR is a syntactic scope for formatting multiple
+input lines in a certain way. For example, the lines in a
+verbatim environment are formatted in a
+fixed\-width font without being filled or justified.
+.PP
+The lines of an environment are delimited by a matching
+\\begin\-\\end pair, like this:
+.EX
+  \\begin{<EnvType>}
+  ...
+  \\end{<EnvType>}
+.EE
+Environments may be nested, but matching \\begin and
+\\end lines must have matching <EnvType> arguments. The
+legal <EnvType> values are \fIverbatim\fR;
+\fIflushleft\fR; the list environments
+\fIitemize\fR, \fIenumerate\fR, and \fIdescription\fR;
+and the output\-specific environments \fIhtml\fR,
+\fIroff\fR, and \fItex\fR.
+.PP
+Both the \\begin and \\end commands must start on their
+own lines, and neither may be followed by any non\-whitespace
+characters.
+.SH "THE VERBATIM ENVIRONMENT"
+.PP
+Text within the \fIverbatim\fR environment is typeset in a
+fixed\-width font and is not filled. This means that whitespace
+within this environment is significant. Moreover, no characters
+within this environment are special, so in particular, all commands
+are ignored; special characters need not be escaped by a preceding
+backslash.
+.PP
+Regardless of whether there are blank lines before and/or after the
+verbatim environment, the verbatim text will be preceeded and followed
+by a blank line in the formated output.
+.SH "THE FLUSHLEFT ENVIRONMENT"
+.PP
+Normally, the lines of a paragraph are filled automatically by the
+programs that process the output produced by the mtex filters. To
+produce ragged\-right text in which you specify the line break
+positions manually, use the \fIflushleft\fR environment together with
+the \\newline command.
+.PP
+Within the \fIflushleft\fR environment, \\newline starts a new
+line of output flush with the current left margin. Only whitespace
+characters are allowed to follow this command on its line. It is an
+error for \\newline to occur outside the scope of a
+\fIflushleft\fR environment.
+.PP
+For example, the input:
+.EX
+  \\begin{flushleft}
+  Systems Research Center\\newline
+  131 Lytton Avenue\\newline
+  Palo Alto, CA 94301
+  \\end{flushleft}
+.EE
+produces
+.PP
+Systems Research Center
+.br
+131 Lytton Avenue
+.br
+Palo Alto, CA 94301
+.BR
+.PP
+.SH "THE LIST ENVIRONMENTS"
+.PP
+\fIMtex\fR provides three list environments for formatting a list of
+items: \fIitemize\fR, \fIenumerate\fR, and \fIdescription\fR. Items
+within the \fIitemize\fR environment are set off by tick marks,
+those within the \fIenumerate\fR environment are set off by cardinal
+numbers, and those within the \fIdescription\fR environment are set
+off by a user\-supplied string.
+.PP
+Items within the three list environment are denoted by the
+\\item command. In the \fIitemize\fR
+and \fIenumerate\fR environments, this command has no
+arguments, but in the \fIdescription\fR environment, it has a
+single argument which is the description string. Typeface
+changes are allowed within this argument, as are the other
+running commands, but the backslash escape sequence
+\*(lq\\\\\*(rq should not be used in this argument.
+.PP
+Paragraph breaks may be used between and within items to produce
+blank lines in the formatted output. However, since the text of
+items within the \fIitemize\fR and \fIenumerate\fR environments is
+expected to immediately follow the tick mark or cardinal tag, you
+are advised \fInot\fR to follow the zero\-argument \\item
+command with a paragraph break.
+.PP
+List environments may be nested arbitrarily, but the introduction
+of a new list environment indents the output, so nestings more than
+three deep are not advised.
+.PP
+The following example captures many of the possible ways in which
+the list environments can be used. The input:
+.EX
+  \\begin{description}
+  \\item{The \\it{itemize} environment}
+  The \\it{itemize} environment yields itemized lists:
+  \\begin{itemize}
+  \\item indented
+  \\item set off by tick marks
+  \\end{itemize}
+
+  \\item{The \\it{enumerate} environment}
+  The items within \\it{enumerate} are numbered:
+  \\begin{enumerate}
+  \\item start your manpage with \\tt{\\\\manpage}
+  \\item then, use \\tt{\\\\section} for the sections
+  \\end{enumerate}
+  The numbers are produced automatically.
+
+  \\item{The \\it{description} environment}
+  In the \\it{description} environment, each item is
+  labeled with a user\-supplied string.
+
+  Notice that blank lines within an item produce
+  paragraph breaks in the formatted output.
+  \\end{description}
+.EE
+produces:
+.PP
+.PD 0
+.RS 0
+.TP 6
+The \fIitemize\fR environment
+The \fIitemize\fR environment yields itemized lists:
+.RS 6
+.TP 6
+    -
+indented
+.TP 6
+    -
+set off by tick marks
+.RE
+.IP
+.TP 6
+The \fIenumerate\fR environment
+The items within \fIenumerate\fR are numbered:
+.RS 6
+.TP 6
+   1.
+start your manpage with \\manpage
+.TP 6
+   2.
+then, use \\section for the sections
+.RE
+.IP
+The numbers are produced automatically.
+.IP
+.TP 6
+The \fIdescription\fR environment
+In the \fIdescription\fR environment, each item is
+labeled with a user\-supplied string.
+.PD
+.IP
+.PD 0
+Notice that blank lines within an item produce
+paragraph breaks in the formatted output.
+.RE
+.PD
+.PP
+.SH "OUTPUT\-SPECIFIC ENVIRONMENTS"
+.PP
+The \fIhtml\fR, \fIroff\fR, and \fItex\fR environments can be used to
+include text for one particular output format. Text within the
+\fIhtml\fR environment is only processed by the mtex2html(1) filter,
+text within the \fIroff\fR environment is only processed by the
+mtex2man(1) filter, and text within the \fItex\fR environment is only
+processed by the mtex2tex(1) filter.
+.PP
+The special characters particular to an output format \fIare\fR
+converted in each of these environments. If you want to include
+any of them literally, you must escape them. For example, the
+following code includes an inlined image in the HTML file produced
+by mtex2html(1), but is ignored by the other filters:
+.EX
+  \\begin{html}
+  \\<IMG SRC="image.gif"\\>
+  \\end{html}
+.EE
+Notice how the < and > characters are escaped in this
+example, since those two characters are special for HTML. Each of the
+man pages for the filter programs has a section listing the characters
+that are special for its output format.
+.SH "ANCHORS AND LINKS"
+.PP
+You can create anchor locations using the \\anchor command,
+and links to other documents or to anchors in the current document
+using the \\link command. Both of these commands are running
+commands and may appear anywhere in the input.
+.PP
+The syntax of the anchor command is:
+.EX
+  \\anchor{<Name>}{<Text>}
+.EE
+This associates an anchor named <Name> with the text
+<Text>. The <Text> argument may contain other running
+commands, such as the typeface commands.
+.PP
+The syntax of the link command is:
+.EX
+  \\link{<Anchor>}{<Text>}
+.EE
+This makes the text <Text> a link to the anchor <Anchor>. The
+<Anchor> argument may be any legal HTML anchor, as described in
+\fIThe Beginner's Guide to HTML\fR. If you want the link to point to
+an anchor within the same document, <Anchor> should start with
+the # (pound\-sign) character.
+.PP
+Here is an example of a file with an anchor and a link to that local
+anchor:
+.EX
+  \\section{\\anchor{DescSect}{Description}}
+  Here is the description section text...
+
+  Later in the file, here is a link to
+  the \\link{#DescSect}{description} section.
+
+  Here is a non\-local link to the
+  \\link{http://src\-www.pa.dec.com/src.home.html}
+  {SRC Home Page}.
+.EE
+Notice in the second \\link example how we've taken
+advantage of the fact that command arguments may be separated
+by arbitrary amounts of whitespace.
+.SH "EXAMPLES"
+.PP
+Here is the mtex source for the \fBquake(1L)\fR man page:
+.EX
+  \\manpage{quake}{quake}{1L}
+
+  \\section{NAME}
+  quake \- a system for compiling Modula\-3 program descriptions
+
+  \\section{SYNOPSIS}
+  \\bf{quake} [\-nV] [definitions | files ...]
+
+  \\section{DESCRIPTION}
+  Quake is a simple, specialized language and its interpreter
+  drawing on elements of the C language, the Bourne shell, and
+  the C pre\-processor. It was designed to be a component of
+  m3build(1)\-the replacement for m3make (q.v.). Building a
+  complete, general\-purpose language was not one of the goals.
+
+  For a full description, see URL:
+
+  \\link{http://www.research.digital.com/SRC/modula\-3/html/quake/quake.html}
+  {http://www.research.digital.com/SRC/modula\-3/html/quake/quake.html}
+
+  \\section{SEE ALSO}
+  m3build(1)
+
+  \\section{AUTHOR}
+  Stephen Harrison
+.EE
+Here is the mtex source of a slightly more complicated man page \-\-\-
+the mtex2html(1) man page itself:
+.EX
+  \\manpage{mtex2html Man Page}{mtex2html}{1}
+  
+  \\section{NAME}
+
+  mtex2html \- translate mtex(7) files to HTML format
+  
+  \\section{SYNTAX}
+
+  \\bf{mtex2html}
+  
+  \\section{DESCRIPTION}
+  
+  \\it{mtex2html} is a filter that reads a file in \\link{mtex.7.html}
+  {mtex(7)} format from its standard input, and writes an
+  \\link{http://www.ncsa.uiuc.edu/General/Internet/WWW/HTMLPrimer.html}{HTML
+  (HyperText Markup Language)} file to standard output suitable for viewing
+  with xmosaic(1).
+  
+  \\it{mtex2html} is written entirely in LIM (see lim(1)).
+  
+  \\section{SPECIAL CHARACTERS}
+  
+  There are three special characters for the HTML output format. Here
+  are the characters and the strings they are translated to by
+  mtex2html(1):
+  
+  \\begin{flushleft}
+  ``\\tt{<}'' becomes ``\\tt{&lt;}''\\newline
+  ``\\tt{>}'' becomes ``\\tt{&gt;}''\\newline
+  ``\\tt{&}'' becomes ``\\tt{&amp;}''
+  \\end{flushleft}
+  
+  To prevent these characters from being translated within the
+  scope of an \\it{html} environment, you must escape them with a
+  \\tt{\\\\} (backslash) character.
+  
+  \\section{DIAGNOSTICS}
+  
+  See the \\link{mtex.7.html#Diagnostics}{Diagnostics} section of the
+  \\link{mtex.7.html}{mtex(7)} manpage for a complete description.
+
+  \\section{SEE ALSO}
+  
+  \\link{mtex.7.html}{mtex(7)},
+  \\link{mtex2man.1.html}{mtex2man(1)},
+  \\link{mtex2tex.1.html}{mtex2tex(1)},
+  xmosaic(1)
+  \\begin{roff}
+  
+  This man page is also available as a hypertext document under
+  Mosaic at URL
+  \\tt{http://src\-www.pa.dec.com/SRC/man/DS/mtex2html.1.html}.
+  \\end{roff}
+  
+  \\section{AUTHOR OF PROGRAM AND DOCUMENTATION}
+  
+  \\link{http://src\-www.pa.dec.com/SRC/people/Allan_Heydon/bio.html}
+  {Allan Heydon} (\\tt{heydon@src.dec.com})
+.EE
+Note the use of the \fIroff\fR environment in the SEE ALSO section. The
+text within this environment will not appear in the HTML file produced
+by the mtex2html(1) filter program.
+.SH "M3BUILD SUPPORT"
+.PP
+To build and install HTML\- and man\-formatted output files
+automatically using
+m3build(1), just add the following lines to your \fIm3makefile\fR:
+.EX
+  import("mtex")
+  Mtex(<title>, <section>)
+.EE
+You should have one Mtex line for each man page; you should
+have exactly one import("mtex") line (and it must appear
+before the Mtex lines).
+.PP
+Each Mtex line runs mtex2html(1) and mtex2man(1) on the file
+named \*(lq<title>.<section>.mtex\*(rq in your source directory. The
+corresponding derived files are called \*(lq<title>.<section>.html\*(rq
+and \*(lq<title>.<section>\*(rq. For example, the lines:
+.EX
+  import("mtex")
+  Mtex("Juno", 1)
+.EE
+cause the file \*(lqJuno.1.mtex\*(rq to be used as a source to produce
+the derived files \*(lqJuno.1.html\*(rq and \*(lqJuno.1\*(rq. When you ship
+your package, the man\-formatted man pages are installed as per
+the ManExport function, and the HTML\-formatted pages are
+installed in a site\-specific subdirectory of the default HTML
+export directory. At SRC, they are installed in:
+.EX
+  /proj/www/SRC/man/<BuildDir>
+.EE
+where \*(lq<BuildDir>\*(rq is the name of the build directory, such as
+\*(lqDS\*(rq or \*(lqAOSF\*(rq.
+.SH "MAKEFILE SUPPORT"
+.PP
+To build HTML\-, man\-, and LaTeX\-formatted output files
+automatically using make(1), you can add the following line to
+your Makefile:
+.EX
+  include /proj/cra/pkg/mtex/mtex.makestub
+.EE
+This includes the dependency rules specified in the mtex.makestub
+file, whose contents are:
+.EX
+  .SUFFIXES: .txt .tex .man .html .mtex
+
+  .mtex.html: ; mtex2html < $? > $@
+  .mtex.man:  ; mtex2man < $? > $@
+  .mtex.tex:  ; mtex2tex < $? > $@
+  .man.txt:   ; nroff \-man.nopage $? > $@
+.EE
+This file specifies rules for building the HTML\-, man\-, and
+LaTeX\-formatted manpages using the mtex2html(1), mtex2man(1),
+and mtex2tex(1) filter programs. The last line uses
+nroff(1) to produce an ASCII version of the manpage from the
+man\-formatted version.
+.PP
+This makefile stub defines rules for converting ".mtex"
+files to ".html", ".man", ".tex", and ".txt"
+files. Typically, your filename will include a section number, so the
+mtex source file will have the form "<name>.<sect>.mtex". With the
+above rules, you'll get files of the form "<name>.<sect>.html" and
+"<name>.<sect>.man". The former is fine to ship, but the latter is
+not, since the ".man" extension is extraneous. Tim Mann has discovered
+some make(1) magic for shipping the files correctly (this is only
+known to work with the version of make(1) running on OSF/1).
+.PP
+First, you'll need to define variables for naming the man pages. Since
+man pages for different sections are shipped to different places,
+you'll have to divide your package's man pages by section. Here's an
+example for the mtex man pages:
+.EX
+MAN1_DOCS = mtextohtml.1 mtextoman.1 mtextotex.1
+MAN7_DOCS = mtex.7
+MAN_DOCS  = $(MAN1_DOCS) $(MAN7_DOCS)
+HTML_DOCS = $(MAN_DOCS/$/.html)
+.EE
+The magic in the definition of HTML_DOCS expands to a list of
+files of the form "<name>.<sect>.html". Now, the line for building
+all of the documents is:
+.EX
+docs: $(HTML_DOCS) $(MAN_DOCS/$/.man)
+.EE
+The magic at the end of this line expands to a list of files of the
+form "<name>.<sect>.man". Hence, typing "make docs"
+produces a set of ".html" and ".man" files.
+.PP
+All that remains now is to ship the files to correct places with the
+correct names. At SRC, the roff\-formated man pages are shipped to the
+directory
+.EX
+  /proj/man/<arch>/man<sect>/
+.EE
+where <arch> is either "alpha" or "mips", and <sect> is the
+manual section number. The HTML\-formatted man pages are shipped to the
+directory
+.EX
+  /proj/www/SRC/man/<arch>/
+.EE
+where <arch> is either "AOSF" or "DS". Here is a typical
+shippackage(1) line:
+.EX
+ship: tidy
+        shippackage $(PACKAGE)\\
+          \-l /proj/www/SRC/man/AOSF $(HTML_DOCS)\\
+          \-l /proj/man/alpha/man1 $(MAN1_DOCS/*/&=&.man)\\
+          \-l /proj/man/alpha/man7 $(MAN7_DOCS/*/&=&.man)
+.EE
+The make magic in the lines for shipping the roff\-formatted man pages
+expands to a list of expressions of the form
+"<name>.<sect>=<name>.<sect>.man". This causes the link to be made
+to the ".man" file in the current directory, but for the shipped link
+to have the name "<name>.<sect>", as required.
+.SH "DIAGNOSTICS"
+.PP
+All of the filter programs use the same core program to do
+their processing, so they all have the same diagnostics.
+.PP
+If there are any errors in the input, the filter prints a
+descriptive error message followed by the line of the filter
+program at which the program aborted together with the number
+of characters read and written at the time of failure. In
+this case, the process exits with Unix exit code 2. If there
+were no errors, the process exits with Unix exit code 0.
+.PP
+Each error message gives a line number and a description of
+the error. The possible error messages and their meanings
+are:
+.PP
+.PD 0
+.RS 0
+.TP 6
+    *
+command must appear at start of line
+.PD
+.IP
+.PD 0
+One of the line commands \\manpage, \\section, \\begin,
+\\end or \\item on the indicated line does not appear at the start
+the a line.
+.IP
+.TP 6
+    *
+command not followed by left brace
+.PD
+.IP
+.PD 0
+The command on the indicated line is a known command, but it has at least
+one argument. The command name must be followed immediately by a left
+brace ({) character.
+.IP
+.TP 6
+    *
+no text allowed after command on this line
+.PD
+.IP
+.PD 0
+Either the \\newline command or one of the line commands \\manpage,
+\\section, \\begin, or \\end on the indicated line has a
+non\-whitespace character after its last argument on the same line as that
+argument.
+.IP
+.TP 6
+    *
+command illegal in argument begun on line <X>
+.PD
+.IP
+.PD 0
+One of the commands \\manpage, \\section,
+\\begin, \\end, \\item, or \\newline
+on the indicated line appears within a command argument.
+The opening left brace of the argument is on line number <X>.
+You may have simply left out the closing right brace. Only the
+running commands \\bf, \\it, \\tt, \\link,
+and \\anchor are allowed to appear in command arguments.
+.IP
+.TP 6
+    *
+command illegal in list environment
+.PD
+.IP
+.PD 0
+The \\manpage and \\section commands must appear at top\-level; they
+are not allowed to appear within one of the list
+environments.
+.IP
+.TP 6
+    *
+syntax error in \\<cmd>
+.PD
+.IP
+.PD 0
+A syntax error occurred while parsing the named <cmd> starting on the
+specified line. Most likely this is due to a missing argument or to an
+incorrect curly brace. Command syntax is described in the
+Introduction section above.
+.IP
+.TP 6
+    *
+unrecognized command or special character "\\<cmd>"
+.PD
+.IP
+.PD 0
+A \\ (backslash) character on the specified line is followed by
+the characters <cmd> that are neither a command, one of the five
+escape characters listed in the Input Characters
+section, nor one of the special characters for this output format.
+.IP
+.TP 6
+    *
+illegal output\-specific quoted character "\\<char>"
+.PD
+.IP
+.PD 0
+The quoted character <char> is special for this output format,
+but does not appear inside the corresponding output\-specific
+environment.
+.IP
+.TP 6
+    *
+unrecognized \\begin/\\end argument
+.PD
+.IP
+.PD 0
+The argument to the \\begin or \\end command on the specified line
+is not one of: verbatim, flushleft, itemize,
+enumerate, description, html, roff, or tex.
+.IP
+.TP 6
+    *
+not expecting \\end
+.PD
+.IP
+.PD 0
+An \\end command was encountered for which there is no matching
+\\begin, or which is contained within the argument to a command.
+.IP
+.TP 6
+    *
+expecting \\end{<env>}
+.PD
+.IP
+.PD 0
+The most recent \\begin command introduced the environment <env>,
+but the \\end command on the specified line closes a different
+environment.
+.IP
+.TP 6
+    *
+no matching \\end for \\begin
+.PD
+.IP
+.PD 0
+End\-of\-file was reached before an \\end command was found that matches
+the \\begin command on the specified line.
+.IP
+.TP 6
+    *
+no matching right brace for \\<cmd>
+.PD
+.IP
+.PD 0
+A matching right brace could not be found for one of the arguments to the
+command <cmd>. In this case, the line number given is that on which the
+command \fIbegins\fR.
+.IP
+.TP 6
+    *
+\\newline not in flushleft environment
+.PD
+.IP
+.PD 0
+The \\newline command is only allowed to appear in the scope of
+a \fIflushleft\fR environment.
+.IP
+.TP 6
+    *
+\\item should not have an argument in itemize/enumerate environment
+.PD
+.IP
+.PD 0
+The \\item command on the specified line has an argument, yet it should
+not because it appears within either an itemize or enumerate
+environment.
+.IP
+.TP 6
+    *
+\\item must have an argument in description environment
+.PD
+.IP
+.PD 0
+The \\item command on the specified line has no argument, yet it should
+because it appears within a description environment.
+.IP
+.TP 6
+    *
+\\item not in list environment
+.PD
+.IP
+.PD 0
+The \\item command on the specified line does not appear in a
+list environment.
+.PD
+.IP
+.PD 0
+.RE
+.PD
+.PP
+.SH "BUGS"
+.PP
+There are no provisions for distinguishing between dashes, hyphens,
+and minus signs.
+.PP
+The " (double\-quote) and \\ (backslash) characters
+should work in all circumstances. They don't due to
+difficulties with nroff(1) and the man(7) macros.
+.SH "SEE ALSO"
+.PP
+mtex2html(1),
+mtex2man(1),
+mtex2tex(1)
+.br
+make(1), latex(1), xdvi(1), xmosaic(1)
+.br
+nroff(1), troff(1), man(7), man.nopage(7)
+.BR
+
+This man page is also available as a hypertext document under Mosaic at URL
+http://src\-www.pa.dec.com/SRC/man/DS/mtex.7.html.
+.PP
+.SH "AUTHOR OF DOCUMENTATION"
+.PP
+Allan Heydon
+(heydon@src.dec.com)
+.EX
+Last modified on Tue Nov  7 10:41:29 PST 1995 by heydon
+.EE

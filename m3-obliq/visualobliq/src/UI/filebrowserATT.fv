@@ -1,0 +1,64 @@
+ (Shape %filebrowseratt (Height 200)
+   (VBox 
+      (Glue 8)	
+     (Title "File Browser")
+    (Glue 8)
+    (Field "Label Font :" 200 (FontField fbLFtypein fbLF)) 	
+    
+     (Glue 8)
+     (HBox  (Shape (Width 90) (Boolean %fbReadOnly "Read Only"))  (Glue 5)
+             (LField "Action Label  :" 200
+            (TypeIn ExpandOnDemand (TabTo fbVal) %fbActionLabel (BgColor "White")))   )
+     (Glue 5) 
+     (LField "Value :" 250
+            (TypeIn ExpandOnDemand (TabTo fbVal) %fbVal (BgColor "White")))   
+     (Glue 5)
+
+    (HBox (Radio %fbModes (Value fbNoSuffixes)
+              (Shape (Width  100)
+                 (VBox   Fill
+                      (LinkButton (For fbBlank)  (ShadowSize 0.01)
+                       (LinkButton (For fbPage2)  
+                             (Choice (ShadowSize 1) %fbNoSuffixes Inverting "No Suffixes")))
+                       (LinkButton (For fbEdit) (ShadowSize 0.01) 
+                           (LinkButton (For fbPage1) 
+                         (Choice (ShadowSize 1) %fbAddSuffixes  Inverting "Use Suffixes")))
+                    Fill
+                  )
+                 )
+              )
+           (Glue 10) 
+           (TSplit %fbSuffixesToolkit  (Which fbPage2)
+               (Border %fbPage1 (Pen 1) (Color "VeryDarkBlue")
+                 (VBox (Glue 5)
+                        (HBox  (Glue 5) 
+                                (Button %fbAddFirst "Add First") Fill
+                                (Filter %fbFilter
+                                (HBox
+                                (Button %fbAddAfter "Add After") Fill
+                                (Button %fbDelete "Delete"))) Fill
+                          )
+                      (Glue 5)
+                      (LField "Item to Insert :" 300 (TypeIn ExpandOnDemand (BgColor "White") %fbItem ))
+                 )
+                )
+            (Text %fbPage2 " ")
+            )
+        )
+
+
+     (Glue 10)
+     (TSplit %fbEditSuffixes (Which fbBlank)
+     (VBox %fbEdit
+          (Frame Lowered (Shape (BgColor "VeryLightPink") (Color "VeryDarkBlue") (Height 15)
+                    (Text "Suffixes")))
+          (Border  (Pen 1)
+            (Rim (Pen 1) (Browser (BgColor "VeryLightPink") %fbSuffixes))
+          ) 
+        )    
+      (Text %fbBlank " ")
+     )
+     
+     
+   )
+  )

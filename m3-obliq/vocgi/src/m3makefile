@@ -1,0 +1,19 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Thu Aug 22 23:48:55 PDT 1996 by najork 
+%      modified on Wed Apr  5 16:52:35 PDT 1995 by mhb   
+%      modified on Mon Oct 31 13:51:24 PST 1994 by kalsow
+%      modified on Fri Jul 22 11:03:28 PDT 1994 by bharat
+
+import("obliqlibm3")
+import("obliq")
+
+resource ("volib.obl")
+resource ("vos-internal.obl")
+bundle ("VOCgiBundle")
+
+implementation("Main")
+Program("vocgi")
+

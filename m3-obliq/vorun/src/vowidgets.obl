@@ -1,0 +1,487 @@
+(* Copyright (C) 1995, Digital Equipment Corporation.       *)
+(* All rights reserved.                                     *)
+(* See the file COPYRIGHT for a full description.           *)
+(*                                                          *)
+(* Last modified on Tue Jan 10 11:50:26 PST 1995 by mhb     *)
+
+module vowidgets;
+(* used by module "volib" *)
+(* requires module "templates" *)
+
+sys_pushSilence();
+
+(* generic routine - forward declaration *)
+var computeSX = 0;
+
+(* find and replace *)
+let rep = proc(sx , pattern, newval)
+	text_replaceAll("$" & pattern & "$", newval, sx);
+end;
+
+let replist = proc(s, plist)
+	var sx = s;
+	foreach tuple in plist do
+		sx := rep(sx, tuple[0], tuple[1]); 
+	end;
+	sx;
+end;
+
+let ResizeString = proc(ch) 
+	let model = ch.ResizeModel;
+	if text_equal(model, "CenterPin") then
+	"FixedHV";
+	elsif text_equal(model, "HScaled") then
+	"FixedV";
+	elsif text_equal(model, "VScaled") then
+	"FixedH";
+	else "Scaled";
+	end;
+end;
+
+let mutateName = proc(wid)
+	let ix = text_findLast("vq", wid.name, 1000);
+	if ix is -1 then
+		wid.name := wid.name & "vq0";
+	else	
+		let num = text_sub(wid.name, ix+2, text_length(wid.name)-ix+2);
+		let no = text_toInt(num) + 1;
+		wid.name :=  text_sub(wid.name, 0, ix+2) &  fmt_int(no); 
+	end;
+end;
+
+let genericSX = proc(v, s)
+	var sx =  replist(s,[ ["XSpan", fmt_int(v.width)],
+				  	 ["YSpan", fmt_int(v.height)],
+					 ["RimPen", fmt_int(v.Rim)],
+					 ["BorderPen", fmt_int(v.Border)],
+					 ["BgColor", v.BgColor],
+					 ["FgColor", v.FgColor],
+					 ["Font", v.Font],
+					 ["FilterState", v.InitialState],
+					]);	
+	if text_equal(v.Embellishment, "None") then
+		sx := rep(sx, "FrameStyle", "(ShadowSize 0)");
+	else
+		sx := rep(sx, "FrameStyle", v.Embellishment);
+	end;
+	sx := 	text_replaceAll("%@", "%" & v.name, sx);
+	sx;
+end;
+
+let splitSX = proc(nv, s)
+	var sx = s;
+	var footer = ")\n";
+	var includeTitleBar = true;
+	var childOffRed = 0;
+
+	sx := rep(sx, "ZSplitHeader", "(ZSplit %@zsplit\n (ZBackground %@zback\n");
+	if text_equal(nv.class, "form") then
+		if nv.ParentForm is 0 then 
+			childOffRed := 20;
+			sx := rep(sx, "YSpan", fmt_int(nv.height-childOffRed));
+			includeTitleBar := false;
+		end
+	end;		
+	foreach child in nv.children do
+		let csx = computeSX(child);
+		var visibility = "";
+		if child.InitialState isnot "Vanish" then
+			visibility := "Open";
+		end;
+		footer := footer & "(ZChild %" & child.name & "top (At " & fmt_int(child.x) & "  "
+                      & fmt_int(child.y - childOffRed) & "  NW Absolute) " & visibility & "\n " &
+                      ResizeString(child) &
+                      csx & "\n    )\n";
+	end;
+	if text_equal(nv.class, "form") then
+		foreach ch in nv.ChildForms do
+			footer := footer & computeSX(ch);
+		end
+	end;
+	footer := footer & ")\n";
+	sx := rep(sx, "ZSplitFooter", footer);
+	sx := rep(sx, "TextureFile", nv.Texture);
+	if text_equal(nv.class, "form") then
+		if includeTitleBar then 
+			sx := rep(sx, "IncludeTitleBar", "($TitleBar$)");
+		else
+			sx := rep(sx, "IncludeTitleBar", "");
+		end;
+		sx := rep(sx, "TitleBar", nv.name & "TitleBar");
+	end;
+	genericSX(nv, sx);
+end;
+
+let menuSX = proc(nv)
+	(* assert: nv is a formnode with a menu *)
+	var sx = Templates.menu;
+	sx := replist(sx, [["MenuBgColor", nv.MenuBgColor],
+					    ["MenuFgColor", nv.MenuFgColor],
+					     ["MenuFont", nv.MenuFont]]);
+	var menuDef = "";
+	let first = 0;
+	let last = #(nv.Menu)-1;
+	var i = first;
+	loop
+		if  i > last then exit; end;
+		let m = nv.Menu[i];
+		mutateName(m);
+		if (m.Level is 0) and not (text_equal(m.name, "RIDGE")) then
+			var ctr = 0;
+			var ix = i+1;
+			var pulldownDef = "(VBox \n"; (* start creation of pulldown *)
+			if ix <= last then
+			  	loop
+					let mx = nv.Menu[ix];
+					if (ix > last) or (mx.Level is 0) then exit; end;
+					if mx.Level is 1 then
+						if text_equal(mx.name, "RIDGE") then
+						 	pulldownDef := pulldownDef & "Ridge\n";	
+						else
+						pulldownDef :=
+              					      pulldownDef & "(MenuButton " & mx.name
+                					      & "Filter " & mx.initialState & " "
+                 					      & mx.name & " " & mx.name & "Label "
+                     					      & "\"" & mx.Label & "\")\n"
+                				end;	
+					        ctr := ctr + 1;
+					end;
+					ix := ix +1;
+				end;
+				pulldownDef := pulldownDef & ")\n"; (* close VBox *)
+			end; (* if ix <= last  *)
+		        if ctr > 0 then 
+				 menuDef :=
+         			     menuDef & "(PullDownMenuItem " & m.name & "Filter "
+           			     & m.initialState & " " & m.name & " "
+             			     & m.name & "Label " & "\"" & m.Label & "\"\n"
+              			     & pulldownDef & ")\n";
+			else
+				menuDef :=
+     				         menuDef & "(MenuItem " & m.name & "Filter "
+              				  & m.initialState & " " & m.name & " "
+               				  & m.name & "Label " & "\"" & m.Label & "\")\n";
+			end;
+			i := ix -1;
+		end;
+		i := i +1;
+	end;	
+	rep(sx, "MenuItems", menuDef);
+end;
+
+
+let booleanSX = proc(nv)
+	var sx = Templates.boolean;
+	sx := rep(sx, "fbstyle", nv.feedbackStyle);
+	if nv.initialValue then
+		sx :=rep(sx, "initValue", "TRUE");
+	else
+		sx:=rep(sx, "initValue", "FALSE");	
+	end;
+	if nv.textLabel then
+		sx:=rep(sx, "BooleanContents", "Text %@text \"" & nv.textString & "\"");
+	else
+		sx:=rep(sx, "BooleanContents","Pixmap %@pixmap \"" & nv.pixmap & "\"");
+	end;	
+	genericSX(nv, sx);
+end;
+
+let browserSX = proc(nv)
+	var sx = Templates.browser;
+	if nv.Multiplicity then
+		sx:=rep(sx, "typeOfBrowser", "MultiBrowser");
+		if #(nv.Selections) is 0 then
+			sx:=rep(sx, "ValueList", "");
+		else
+			var values = "";
+			foreach i in nv.Selections do
+				 values := values & fmt_int(i) & " ";
+			end;
+			sx := rep(sx, "ValueList", "(Value " & values  & " )" );
+		end;
+	else
+		sx:=rep(sx, "typeOfBrowser", "Browser");	
+		if nv.Selection is -1 then
+			sx := rep(sx, "ValueList", "");
+		else
+			sx := rep(sx, "ValueList",  "(Value " & fmt_int(nv.Selection) & " )" );
+		end;
+	end;
+	if nv.Quick then
+		sx := rep(sx, "quick", "Quick");
+	else
+		sx := rep(sx, "quick", "");
+	end;
+
+	if #(nv.Contents) is 0 then
+			sx:=rep(sx, "Items", "");
+		else
+			var items = "";
+			foreach item in nv.Contents do
+				 items := items & "\"" & item &  "\" ";
+			end;
+			sx := rep(sx, "Items", items );
+		end;
+	genericSX(nv, sx);
+end;
+
+let buttonSX = proc(nv)
+	var sx = Templates.button;
+	if nv.Guard then
+		sx := replist(sx, [["GuardHeader", "(Guard %@guard "],
+					    ["GuardFooter", ")"]]);
+	else
+		sx := replist(sx, [["GuardHeader", ""],
+					    ["GuardFooter", ""]]);	
+	end;
+	if nv.Trill then
+		sx := rep(sx, "Trill", "");
+	else
+		sx := rep(sx, "Trill", "");
+	end;			
+	if nv.textLabel then
+		sx := rep(sx, "ButtonContents","Text %@text \"" & nv.textString & "\"" );
+	else
+		sx := rep(sx, "ButtonContents",
+					       "Pixmap Accurate %@pixmap \"" & nv.pixmap & "\"");
+	end;	
+	genericSX(nv, sx);		
+end;
+
+let choiceSX = proc(nv)
+	var sx = Templates.choice;
+	sx:=rep(sx, "fbstyle", nv.feedbackStyle);
+	if nv.initialValue then
+		sx:=rep(sx, "initValue", "TRUE");
+	else
+		sx:=rep(sx, "initValue", "FALSE");	
+	end;
+	if nv.textLabel then
+		sx:=rep(sx, "ChoiceContents", "Text %@text \"" & nv.textString & "\"");
+	else
+		sx:=rep(sx, "ChoiceContents","Pixmap %@pixmap \"" & nv.pixmap & "\"");
+	end;	
+	genericSX(nv, sx);	
+end;
+
+let filebrowserSX = proc(nv)
+	var sx = Templates.filebrowser;
+	if nv.ReadOnly then
+		sx := rep(sx, "ReadOnly", "ReadOnly");
+	else
+		sx :=  rep(sx, "ReadOnly", "");
+	end;
+	sx := replist(sx, [["LabelFont", nv.LabelFont],
+				     ["Initial", nv.Value],
+				     ["fbName1", nv.name],
+				     ["fbName2", nv.name],
+				     ["ActionLabel", nv.ActionLabel]]);
+	if #(nv.Suffixes) is 0 then
+		sx := rep(sx, "Suffixes", "\"\"");
+	else
+		var suffixList = "";
+		foreach suf in nv.Suffixes do
+			suffixList := suffixList & " \"" & suf &
+				"\" ";
+		end;
+		sx := rep(sx, "Suffixes", suffixList);
+	end;
+	genericSX(nv, sx);
+end;
+
+let formSX = proc(nv)
+	var sx = Templates.form;
+	(* plug in all the appropriate values *)
+	var location = "";
+
+	if nv.CheckpointedXY then
+		location :=" (At  " & fmt_int(nv.x) & " " & fmt_int(nv.y) & "  NW Absolute) ";
+	end;
+
+	if nv.InitialState isnot "Vanish" then
+		sx := rep(sx, "ZChildState", location & "Open");
+	else
+		sx := rep(sx, "ZChildState", location);
+	end;
+	if nv.HasMenu then
+		sx := rep(sx, "MenuStructure", 
+					menuSX(nv));
+	else
+		sx := rep(sx, "MenuStructure", "");	
+	end;
+	sx := replist(sx,
+	 [ ["XStretch", fmt_int(nv.StretchX)],
+	   ["YStretch", fmt_int(nv.StretchY)],
+	   ["XShrink", fmt_int(nv.ShrinkX)],
+	   ["YShrink", fmt_int(nv.ShrinkY)],
+	   ["TitleBgColor", nv.TitleBgColor],
+	   ["TitleFgColor", nv.TitleFgColor],
+	   ["TitleString", nv.TitleString],
+	]);
+	splitSX(nv, sx);
+end;
+
+let frameSX = proc(nv)
+	var sx = Templates.frame;	
+	splitSX(nv, sx);
+end;
+
+let numericSX = proc(nv)
+	var sx = Templates.numeric;
+	sx := replist(sx, [["Value", fmt_int(nv.Val)],
+				    ["Min", fmt_int(nv.Min)],
+				    ["Max", fmt_int(nv.Max)]
+				]);
+	if nv.AllowEmpty then
+		sx := rep(sx, "AllowEmpty", "AllowEmpty");
+	else
+		sx := rep(sx, "AllowEmpty", "");	
+	end;
+	if nv.HideButtons then
+		sx := rep(sx, "HideButtons", "HideButtons");
+	else
+		sx := rep(sx, "HideButtons", "");	
+	end;
+	genericSX(nv, sx);
+end;
+
+let scrollerSX = proc(nv, s)
+	var sx = s;
+	sx := replist(sx, [["Value", fmt_int(nv.Val)],
+				    ["Min", fmt_int(nv.Min)],
+				    ["Max", fmt_int(nv.Max)],
+				    ["Thumb", fmt_int(nv.Thumb)],
+				    ["Step", fmt_int(nv.Step)],
+					]);
+	genericSX(nv, sx);
+end;
+
+let textSX = proc(nv)
+	var sx = Templates.text;
+	sx := replist(sx, [["Alignment", nv.tOrientation],
+				    ["Initial", nv.tVal]]);
+	genericSX(nv, sx);
+end;
+
+let texteditSX = proc(nv)
+	var sx = Templates.textedit;
+	if nv.teReadOnly then
+		sx := rep(sx, "ReadOnly", "ReadOnly");
+	else
+		sx := rep(sx, "ReadOnly", "");	
+	end;
+	if nv.teClip then
+		sx := rep(sx, "Clip", "Clip");
+	else
+		sx := rep(sx, "Clip", "");	
+	end;
+	if nv.teHasScrollbar then
+		sx := rep(sx, "NoScrollbar", "");
+	else
+		sx := rep(sx, "NoScrollbar", "NoScrollbar");	
+	end;
+	if nv.getFromFile then
+		sx := rep(sx, "Initial", "From \"" & nv.teFromFile & "\"")
+	else
+		sx := rep(sx, "Initial", "Value \"" & text_replaceAll("\n", "\\n",nv.teContents ) & "\"")
+	end;
+	genericSX(nv, sx);
+end;
+
+let typeinSX = proc(nv)
+	var sx = Templates.typein;
+	if nv.tyReadOnly then
+		sx := rep(sx, "ReadOnly", "ReadOnly");
+	else
+		sx := rep(sx, "ReadOnly", "");		
+	end;
+	if nv.tyExpand then
+		sx := rep(sx, "ExpandOnDemand", "ExpandOnDemand");
+	else
+		sx := rep(sx, "ExpandOnDemand", "");		
+	end;
+	sx := rep(sx, "Initial", nv.tyInit);
+	genericSX(nv, sx);
+end;
+
+let videoSX = proc(nv)
+	var sx = Templates.video;
+	if nv.Source is "" then
+		sx := rep(sx, "PlayVideo", "1");
+	else
+		sx := rep(sx, "PlayVideo", "0");
+	end;
+	sx := replist(sx, [ ["VideoSource", nv.Source],
+				      ["Quality", fmt_int(nv.Quality)],
+				      ["Width", fmt_int(nv.Width)],
+				      ["Height", fmt_int(nv.Height)],
+				      ["Colours", fmt_int(nv.Colours)],
+				      ["MSecs", fmt_int(nv.MSecs)],
+				      ["AudioSource", nv.AuSource],
+				      ["Volume", fmt_int(nv.Volume)],
+				]); 
+	if nv.Synchronous then
+		sx := rep(sx, "Synchronous", "Synchronous");	
+	else
+		sx := rep(sx, "Synchronous", "");	
+	end;
+	if nv.FixedSize then
+		sx := rep(sx, "FixedSize", "FixedSize");	
+	else
+		sx := rep(sx, "FixedSize", "");	
+	end;
+	if nv.Paused then
+		sx := rep(sx, "Paused", "Paused");	
+	else
+		sx := rep(sx, "Paused", "");	
+	end;
+	if nv.Mute then
+		sx := rep(sx, "Mute", "Mute");	
+	else
+		sx := rep(sx, "Mute", "");	
+	end;
+	if nv.IgnoreMapping then
+		sx := rep(sx, "IgnoreMapping", "IgnoreMapping");	
+	else
+		sx := rep(sx, "IgnoreMapping", "");	
+	end;
+	genericSX(nv, sx);
+end;
+
+
+(* procedure dispatching kludge *)
+computeSX := proc(wid)
+	mutateName(wid); (* unique sx-expression will result *)	
+        if wid.class is "boolean" then
+		booleanSX(wid);
+        elsif wid.class is "button" then
+		buttonSX(wid);
+	elsif wid.class is "browser" then
+		browserSX(wid);
+	elsif wid.class is "choice" then
+		choiceSX(wid);
+	elsif wid.class is "filebrowser" then
+		filebrowserSX(wid);
+	elsif wid.class is "form" then
+		formSX(wid);
+	elsif wid.class is "frame" then
+		frameSX(wid);
+	elsif wid.class is "hscroll" then
+		scrollerSX(wid, Templates.hscroll);
+	elsif wid.class is "numeric" then
+		numericSX(wid);
+	elsif wid.class is "text" then
+		textSX(wid);
+	elsif wid.class is "textedit" then
+		texteditSX(wid);
+	elsif wid.class is "typein" then
+		typeinSX(wid);
+        elsif wid.class is "video" then
+		videoSX(wid);
+	elsif wid.class is "vscroll" then
+		scrollerSX(wid, Templates.vscroll);
+	end;
+	
+end;
+
+sys_popSilence();

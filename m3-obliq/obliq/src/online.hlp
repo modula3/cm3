@@ -1,0 +1,19 @@
+  All(T) sys_print(x: T, depth: Int): Ok
+    Print an arbitrary value to stdout, up to some print depth. (Only available 
+    on-line.)
+  sys_printText(t: Text): Ok
+    Print a text to stdout. (Only available on-line.)
+  sys_printFlush(): Ok
+    Flush stdout. (Only available on-line.)
+  sys_pushSilence(): Ok
+    Push the silence stack; when non-empty nothing is printed. (Only available 
+    on-line.)
+  sys_popSilence(): Ok
+    Pop the silence stack (no-op on empty stack). (Only available on-line.)
+  sys_setPrompt(first: Text, next: Text): Ok
+    Set the interactive prompts (defaults: first="- ", next="  "). (Only 
+    available on-line.)
+  sys_getSearchPath(): Text
+    Get the current search path for 'load' and such. (Only available on-line.)
+  sys_setSearchPath(t: Text): Ok
+    Set the current search path for 'load' and such. (Only available on-line.)
