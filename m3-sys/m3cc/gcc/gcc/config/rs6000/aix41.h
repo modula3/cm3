@@ -64,7 +64,8 @@ Boston, MA 02111-1307, USA.  */
 %{mcpu=604e: -m604} \
 %{mcpu=620: -mppc} \
 %{mcpu=821: -mppc} \
-%{mcpu=860: -mppc}"
+%{mcpu=860: -mppc} \
+%{faltivec: -mvec}"
 
 #undef	ASM_DEFAULT_SPEC
 #define ASM_DEFAULT_SPEC "-mcom"

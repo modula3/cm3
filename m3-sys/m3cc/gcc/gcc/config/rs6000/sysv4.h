@@ -374,6 +374,18 @@ do {									\
 #define	RESTORE_FP_PREFIX "_restfpr_"
 #define RESTORE_FP_SUFFIX "_l"
 
+/* Prefix and suffix to use to saving vector */
+#undef	SAVE_VECTOR_PREFIX
+#undef	SAVE_VECTOR_SUFFIX
+#define	SAVE_VECTOR_PREFIX "_savev"
+#define SAVE_VECTOR_SUFFIX ""
+
+/* Prefix and suffix to use to restoring vector */
+#undef	RESTORE_VECTOR_PREFIX
+#undef	RESTORE_VECTOR_SUFFIX
+#define	RESTORE_VECTOR_PREFIX "_restv"
+#define RESTORE_VECTOR_SUFFIX ""
+
 /* Type used for ptrdiff_t, as a string used in a declaration.  */
 #undef	PTRDIFF_TYPE
 #define PTRDIFF_TYPE "int"
@@ -399,16 +411,16 @@ do {									\
 
 /* Alignment in bits of the stack boundary.  Note, in order to allow building
    one set of libraries with -mno-eabi instead of eabi libraries and non-eabi
-   versions, just use 64 as the stack boundary.  */
+   versions, just use 64 as the stack boundary.  AltiVec requires 128.  */
 #undef	STACK_BOUNDARY
-#define	STACK_BOUNDARY	64
+#define	STACK_BOUNDARY	128
 
 /* Real stack boundary as mandated by the appropriate ABI */
-#define ABI_STACK_BOUNDARY ((TARGET_EABI) ? 64 : 128)
+#define ABI_STACK_BOUNDARY 128
 
 /* No data type wants to be aligned rounder than this.  */
 #undef	BIGGEST_ALIGNMENT
-#define BIGGEST_ALIGNMENT ((TARGET_EABI) ? 64 : 128)
+#define BIGGEST_ALIGNMENT 128
 
 #undef  BIGGEST_FIELD_ALIGNMENT
 #undef  ADJUST_FIELD_ALIGN
