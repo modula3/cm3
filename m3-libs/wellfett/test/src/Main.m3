@@ -1,7 +1,7 @@
 MODULE Main;
 
-IMPORT TestTransform;
+IMPORT PlotWavelets;
 
 BEGIN
-  TestTransform.Test();
+  PlotWavelets.Test();
 END Main.
