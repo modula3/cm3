@@ -124,10 +124,13 @@ PROCEDURE <A NAME="EmitPkgImports"><procedure>EmitPkgImports</procedure></A> (RE
     has_loader    : BOOLEAN;            (* gen loader info file *)
     skip_link     : BOOLEAN;            (* don't bother linking final exe *)
     keep_resolved : BOOLEAN;            (* pass resolved library names to linker *)
+    split_if_shared: BOOLEAN;   (* pass resolved library names to linker only if linking static *)
     m3main_in_c   : BOOLEAN;            (* generate a C main program *)
     gui           : BOOLEAN;            (* generate a Windows GUI subsystem prog *)
     do_coverage   : BOOLEAN;            (* compile and link for coverage *)
     broken_linker : BOOLEAN;            (* linker can't do build_standalone() *)
+    lazy_init     : BOOLEAN;            (* only initialize the main module and
+                                           its imports *)
     Rpath_flag    : TEXT;               (* linker needs -R switches too... *)
     link_coverage : TEXT;               (* coverage library *)
     m3_front_flags: Arg.List;           (* configuration options for the front *)
@@ -170,6 +173,8 @@ PROCEDURE <A NAME="CompileUnits"><procedure>CompileUnits</procedure></A> (main  
     IF NOT Target.Init (s.target) THEN
       Msg.FatalError (NIL, &quot;unrecognized target machine: TARGET = &quot;, s.target);
     END;
+    Target.Has_stack_walker := GetConfigBool(s, &quot;M3_USE_STACK_WALKER&quot;,
+                                             Target.Has_stack_walker);
 
     s.host_os := GetOSType (s, &quot;NAMING_CONVENTIONS&quot;);
     IF (GetDefn (s, &quot;TARGET_NAMING&quot;) = NIL)
@@ -197,10 +202,12 @@ PROCEDURE <A NAME="CompileUnits"><procedure>CompileUnits</procedure></A> (main  
     s.has_loader     := GetConfigBool (s, &quot;SYS_HAS_LOADER&quot;);
     s.skip_link      := GetConfigBool (s, &quot;M3_SKIP_LINK&quot;);
     s.keep_resolved  := NOT GetConfigBool (s, &quot;M3_SPLIT_LIBNAMES&quot;);
+    s.split_if_shared:= GetConfigBool (s, &quot;M3_SPLIT_LIBNAMES_IF_SHARED&quot;, FALSE);
     s.m3main_in_c    := GetConfigBool (s, &quot;M3_MAIN_IN_C&quot;);
     s.gui            := GetConfigBool (s, &quot;M3_WINDOWS_GUI&quot;);
     s.do_coverage    := GetConfigBool (s, &quot;M3_COVERAGE&quot;);
     s.broken_linker  := GetConfigBool (s, &quot;M3_NEED_STANDALONE_LINKS&quot;);
+    s.lazy_init      := GetConfigBool (s, &quot;M3_LAZY_MODULE_INIT&quot;, TRUE);
     s.Rpath_flag     := GetConfigText (s, &quot;M3_SHARED_LIB_ARG&quot;);
     s.link_coverage  := GetConfigText (s, &quot;M3_COVERAGE_LIB&quot;);
     s.m3_front_flags := GetConfigArray (s, &quot;M3_FRONT_FLAGS&quot;);
@@ -266,10 +273,10 @@ PROCEDURE <A NAME="GetConfigInt"><procedure>GetConfigInt</procedure></A> (s: Sta
     RETURN 0;
   END GetConfigInt;
 
-PROCEDURE <A NAME="GetConfigBool"><procedure>GetConfigBool</procedure></A> (s: State;  symbol: TEXT): BOOLEAN =
+PROCEDURE <A NAME="GetConfigBool"><procedure>GetConfigBool</procedure></A> (s: State;  symbol: TEXT; default := FALSE): BOOLEAN =
   VAR bind := GetDefn (s, symbol);
   BEGIN
-    IF (bind = NIL) THEN RETURN FALSE; END;
+    IF (bind = NIL) THEN RETURN default; END;
     TRY
       RETURN QVal.ToBool (s.machine, bind.value);
     EXCEPT Quake.Error (msg) =&gt;
@@ -1841,7 +1848,8 @@ PROCEDURE <A NAME="GenerateCMain"><procedure>GenerateCMain</procedure></A> (s: S
     Msg.Commands (&quot;generate &quot;, init_code);
     wr := Utils.OpenWriter (init_code, fatal := TRUE);
     MxGen.GenerateMain (s.link_base, wr, NIL, Msg.level &gt;= Msg.Level.Debug,
-                        s.gui AND (s.target_os = M3Path.OSKind.Win32));
+                        s.gui AND (s.target_os = M3Path.OSKind.Win32),
+                        s.lazy_init);
     Utils.CloseWriter (wr, init_code);
     ETimer.Pop ();
 
@@ -1939,7 +1947,8 @@ PROCEDURE <A NAME="GenCGMain"><procedure>GenCGMain</procedure></A> (s: State;  o
     cg := M3Backend.Open (wr, object);
     IF (cg # NIL) THEN
       MxGen.GenerateMain (s.link_base, NIL, cg, Msg.level &gt;= Msg.Level.Debug,
-                          s.gui AND (s.target_os = M3Path.OSKind.Win32));
+                          s.gui AND (s.target_os = M3Path.OSKind.Win32),
+                          s.lazy_init);
       M3Backend.Close(cg);
     ELSE
       IF (NOT s.keep_files) THEN Utils.Remove (object); END;
@@ -1982,6 +1991,9 @@ PROCEDURE <A NAME="GenCGMain"><procedure>GenCGMain</procedure></A> (s: State;  o
       Arg.Append (pgm_objects, s.link_coverage);
     END;
 
+    IF s.split_if_shared AND shared THEN
+      s.keep_resolved := FALSE;
+    END;
     IF s.skip_link
       THEN import_libs := GetLibraries (s, pgmTime, pgmValid, NIL, NIL, FALSE);
       ELSE import_libs := GetLibraries (s, pgmTime, pgmValid, &quot;linking &quot;, pgm_file,
@@ -2042,6 +2054,9 @@ PROCEDURE <A NAME="BuildProgram"><procedure>BuildProgram</procedure></A> (s: Sta
       Arg.Append (pgm_objects, s.link_coverage);
     END;
 
+    IF s.split_if_shared AND shared THEN
+      s.keep_resolved := FALSE;
+    END;
     IF s.skip_link
       THEN import_libs := GetLibraries (s, pgmTime, pgmValid, NIL, NIL, FALSE);
       ELSE import_libs := GetLibraries (s, pgmTime, pgmValid, &quot;linking &quot;, pgm_file,
@@ -2256,7 +2271,8 @@ PROCEDURE <A NAME="BuildBootProgram"><procedure>BuildBootProgram</procedure></A>
   PROCEDURE EmitMain (wr: Wr.T) RAISES {} =
     BEGIN
       MxGen.GenerateMain (s.link_base, wr, NIL, Msg.level &gt;=Msg.Level.Debug,
-                          s.gui AND (s.target_os = M3Path.OSKind.Win32));
+                          s.gui AND (s.target_os = M3Path.OSKind.Win32),
+                          s.lazy_init);
     END EmitMain;
 
   BEGIN
@@ -2356,6 +2372,9 @@ PROCEDURE <A NAME="BuildLibrary"><procedure>BuildLibrary</procedure></A> (s: Sta
       libValid := FALSE;
     END;
 
+    IF s.split_if_shared AND shared THEN
+      s.keep_resolved := FALSE;
+    END;
     lib_objects := GetObjects   (s, lib_time, libValid, &quot;archiving &quot;, lib_file);
     import_libs := GetLibraries (s, lib_time, libValid, &quot;archiving &quot;, lib_file,
                                  FALSE);

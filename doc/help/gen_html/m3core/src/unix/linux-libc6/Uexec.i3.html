@@ -22,9 +22,6 @@ IMPORT <A HREF="../../C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="Utypes.i3.ht
 </PRE> Some of the Unix library process control calls. This is not a complete
 interface, and should be added to as needed 
 
-<P> Remember that any of the calls which may return an error code in
-'Uerror.errno' should be serialized by use of 'UnixMutex.errno'. 
-
 <P><PRE>&lt;*EXTERNAL*&gt;
 PROCEDURE execv(
     name: Ctypes.char_star;

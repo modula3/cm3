@@ -17,7 +17,7 @@
 <P><PRE>MODULE <module><implements><A HREF="Tipe.i3.html">Tipe</A></implements></module>;
 
 IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="#x1">M3ID</A>, <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="#x2">Value</A>, <A HREF="ValueRep.i3.html">ValueRep</A>, <A HREF="../misc/Scope.i3.html">Scope</A>, <A HREF="../types/OpaqueType.i3.html">OpaqueType</A>, <A HREF="../misc/WebInfo.i3.html">WebInfo</A>;
-IMPORT <A HREF="../misc/Token.i3.html">Token</A>, <A HREF="#x3">Type</A>, <A HREF="Decl.i3.html">Decl</A>, <A HREF="../misc/Scanner.i3.html">Scanner</A>, <A HREF="../types/NamedType.i3.html">NamedType</A>, <A HREF="../types/RefType.i3.html">RefType</A>, <A HREF="../types/ObjectType.i3.html">ObjectType</A>;
+IMPORT <A HREF="#x3">Token</A>, <A HREF="#x4">Type</A>, <A HREF="Decl.i3.html">Decl</A>, <A HREF="../misc/Scanner.i3.html">Scanner</A>, <A HREF="../types/NamedType.i3.html">NamedType</A>, <A HREF="../types/RefType.i3.html">RefType</A>, <A HREF="../types/ObjectType.i3.html">ObjectType</A>, <A HREF="Module.i3.html">Module</A>;
 FROM <A HREF="../misc/Scanner.i3.html">Scanner</A> IMPORT GetToken, Fail, Match, MatchID, cur;
 
 TYPE
@@ -41,28 +41,46 @@ TYPE
         fp_type     := ToType;
       END;
 
-PROCEDURE <A NAME="Parse"><procedure>Parse</procedure></A> (READONLY att: Decl.Attributes) =
+PROCEDURE <A NAME="Parse"><procedure>Parse</procedure></A> (att: Decl.Attributes) =
   VAR t: T;  id: M3ID.T;
   BEGIN
     Match (Token.T.tTYPE);
 
-    WHILE (cur.token = Token.T.tIDENT) DO
-      id := MatchID ();
-      t := Create (id);
-      t.unused := att.isUnused;
-      t.obsolete := att.isObsolete;
-      Scope.Insert (t);
-      CASE cur.token OF
-      | Token.T.tEQUAL =&gt;
+    WHILE (cur.token = Token.T.tIDENT OR
+           cur.token = Token.T.tLAZYALIGN OR
+           cur.token = Token.T.tSTRICTALIGN) DO
+      IF cur.token = Token.T.tLAZYALIGN THEN
+        att.isLazyAligned := TRUE;
+        Module.SetLazyAlignment (TRUE);
+        GetToken (); (* LAZYALIGN *)
+        Match (Token.T.tENDPRAGMA);
+      ELSIF cur.token = Token.T.tSTRICTALIGN THEN
+        att.isLazyAligned := FALSE;
+        Module.SetLazyAlignment (FALSE);
+        GetToken (); (* LAZYALIGN *)
+        Match (Token.T.tENDPRAGMA);
+      END;
+      IF cur.token = Token.T.tIDENT THEN
+        id := MatchID ();
+        t := Create (id);
+        t.unused := att.isUnused;
+        t.obsolete := att.isObsolete;
+        t.lazyAligned := att.isLazyAligned;
+        Scope.Insert (t);
+        CASE cur.token OF
+        | Token.T.tEQUAL =&gt;
           GetToken (); (* = *)
-	  t.value := Type.Parse ();
-      | Token.T.tSUBTYPE =&gt;
+          t.value := Type.Parse ();
+          Type.SetLazyAlignment (t.value, t.lazyAligned);
+        | Token.T.tSUBTYPE =&gt;
           GetToken (); (* &lt;: *)
           t.value := OpaqueType.New (Type.Parse (), t);
-      ELSE
+          Type.SetLazyAlignment (t.value, t.lazyAligned);
+        ELSE
           Fail (&quot;missing \'=\' or \'&lt;:\'&quot;);
+        END;
+        Match (Token.T.tSEMI);
       END;
-      Match (Token.T.tSEMI);
     END;
 
   END Parse;
@@ -163,7 +181,14 @@ END Tipe.
 </UL>
 <P>
 <HR>
-<A NAME="x3">interface Type is in:
+<A NAME="x3">interface Token is in:
+</A><UL>
+<LI><A HREF="../misc/Token.i3.html#0TOP0">m3front/src/misc/Token.i3</A>
+<LI><A HREF="../../../mentor/src/parse/Token.i3.html#0TOP0">mentor/src/parse/Token.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x4">interface Type is in:
 </A><UL>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>

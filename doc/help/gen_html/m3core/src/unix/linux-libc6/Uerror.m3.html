@@ -15,12 +15,15 @@
 
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="Uerror.i3.html">Uerror</A></implements></module>;
 
-IMPORT <A HREF="../../C/Common/Ctypes.i3.html">Ctypes</A>;
+IMPORT <A HREF="../../C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../../C/LINUXLIBC6/Cstring.i3.html">Cstring</A>;
 
 PROCEDURE <A NAME="GetFrom_sys_errlist"><procedure>GetFrom_sys_errlist</procedure></A>(n: INTEGER): Ctypes.char_star RAISES {}=
   BEGIN
+    (*
     &lt;* ASSERT 0 &lt;= n AND n &lt;= Max *&gt;
     RETURN sys_errlist[n]
+    *)
+    RETURN Cstring.strerror(n);
   END GetFrom_sys_errlist;
 
 BEGIN

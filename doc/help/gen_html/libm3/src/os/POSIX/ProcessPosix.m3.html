@@ -15,7 +15,7 @@
 
 <P><PRE>UNSAFE MODULE <module>ProcessPosix</module> EXPORTS <A HREF="../Common/Process.i3.html"><implements>Process</A></implements>;
 
-IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="../../../derived/AtomList.i3.html">AtomList</A>, <A HREF="../../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../../params/Env.i3.html">Env</A>, <A HREF="../Common/File.i3.html">File</A>, <A HREF="FilePosix.i3.html">FilePosix</A>, <A HREF="../../../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="../Common/OSError.i3.html">OSError</A>,
+IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="../../../derived/AtomList.i3.html">AtomList</A>, <A HREF="../../../../m3core/src/C/Common/Cerrno.i3.html">Cerrno</A>, <A HREF="../../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../../params/Env.i3.html">Env</A>, <A HREF="../Common/File.i3.html">File</A>, <A HREF="FilePosix.i3.html">FilePosix</A>, <A HREF="../../../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="../Common/OSError.i3.html">OSError</A>,
   <A HREF="OSErrorPosix.i3.html">OSErrorPosix</A>, <A HREF="../Common/Pathname.i3.html">Pathname</A>, <A HREF="../../../../m3core/src/runtime/common/RTLinker.i3.html">RTLinker</A>, <A HREF="../../../../m3core/src/runtime/common/RTProcess.i3.html">RTProcess</A>, <A HREF="../../../../m3core/src/runtime/common/RTSignal.i3.html">RTSignal</A>,
   <A HREF="../../../../m3core/src/thread/POSIX/SchedulerPosix.i3.html">SchedulerPosix</A>, <A HREF="../../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Unix.i3.html">Unix</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Uerror.i3.html">Uerror</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Uexec.i3.html">Uexec</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Uprocess.i3.html">Uprocess</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Ustat.i3.html">Ustat</A>,
   <A HREF="../../../../m3core/src/unix/linux-libc6/Utime.i3.html">Utime</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Uugid.i3.html">Uugid</A>, <A HREF="../../../../m3core/src/word/Word.i3.html">Word</A>;
@@ -96,13 +96,13 @@ PROCEDURE <A NAME="Create"><procedure>Create</procedure></A>(
       (* If ExecChild returns, the execve failed. Let's try to leave
         a note for our parent, in case we're still sharing their
         address space. *)
-      execErrno := Uerror.errno;
+      execErrno := Cerrno.GetErrno();
       Unix.underscore_exit(99)
     END;
 
     (* Back in parent. *)
 
-    forkErrno := Uerror.errno;
+    forkErrno := Cerrno.GetErrno();
 
     (* Enable scheduler. *)
     SchedulerPosix.EnableSwitching ();
@@ -178,7 +178,7 @@ PROCEDURE <A NAME="GetPathToExec"><procedure>GetPathToExec</procedure></A>(pn: P
     ELSE (* pn contains '/' *)
       pname := M3toC.SharedTtoS(pn);
       IF Ustat.stat(pname, ADR(statBuf)) &lt; 0 THEN
-        result := Uerror.errno;
+        result := Cerrno.GetErrno();
         M3toC.FreeSharedS(pn, pname);
         OSErrorPosix.Raise0(result)
       END;
@@ -247,7 +247,7 @@ PROCEDURE <A NAME="ExecChild"><procedure>ExecChild</procedure></A>(
 </PRE><BLOCKQUOTE><EM> Modify Unix state using <CODE>stdin</CODE>, ..., and invoke execve using
    <CODE>argx</CODE> and <CODE>envp</CODE>.  Do not invoke scheduler, allocator, or
    exceptions.  Return only if a fatal Unix error is encountered, in
-   which case Uerror.errno is set. </EM></BLOCKQUOTE><PRE>
+   which case Cerrno.GetErrno() is set. </EM></BLOCKQUOTE><PRE>
   VAR res := 0; t: Ctypes.char_star;
   BEGIN
     IF wdstr # NIL THEN
@@ -263,7 +263,7 @@ PROCEDURE <A NAME="ExecChild"><procedure>ExecChild</procedure></A>(
     RTSignal.RestoreHandlers();
     res := Unix.execve((*path*)argx[0], ADR(argx[2]), envp);
     &lt;* ASSERT res &lt; 0 *&gt;
-    IF Uerror.errno = Uerror.ENOEXEC THEN
+    IF Cerrno.GetErrno() = Uerror.ENOEXEC THEN
       t := argx[0]; argx[0] := argx[2]; argx[2] := t;
       res := Unix.execve(BinSh, ADR(argx[1]), envp);
       &lt;* ASSERT res &lt; 0 *&gt;
@@ -280,7 +280,7 @@ PROCEDURE <A NAME="SetFd"><procedure>SetFd</procedure></A>(fd: INTEGER; h: INTEG
     ELSIF Unix.fcntl(fd, Unix.F_SETFD, 1) &gt;= 0 THEN
       RETURN TRUE;
     ELSE (* EBADF =&gt; &quot;fd&quot; was already closed, don't panic *)
-      RETURN (Uerror.errno = Uerror.EBADF);
+      RETURN (Cerrno.GetErrno() = Uerror.EBADF);
     END;
   END SetFd;
 
@@ -371,7 +371,7 @@ PROCEDURE <A NAME="SetWorkingDirectory"><procedure>SetWorkingDirectory</procedur
   BEGIN
     LOCK wdCacheMutex DO
       IF Unix.chdir(fname) &lt; 0 THEN
-        err := Uerror.errno;
+        err := Cerrno.GetErrno();
         M3toC.FreeSharedS(pn, fname);
         OSErrorPosix.Raise0(err);
       END;

@@ -1926,6 +1926,7 @@ PROCEDURE <A NAME="NewProcessor"><procedure>NewProcessor</procedure></A> (): Val
 PROCEDURE <A NAME="RegisterSysCall"><procedure>RegisterSysCall</procedure></A> (name: TEXT; clos: SysCallClosure) =
   VAR v: Refany.T;
   BEGIN
+    &lt;* ASSERT sysCallTable # NIL *&gt;
     IF clos = NIL THEN
       EVAL sysCallTable.delete(name, (*out*) v);
     ELSE

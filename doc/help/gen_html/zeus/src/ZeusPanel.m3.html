@@ -38,6 +38,18 @@ VAR ControlPanel: T;
         Zeus.Error, Zeus.Locked,
         Thread.Alerted,
         OSError.E, Wr.Failure, Rd.Failure *&gt;
+
+VAR trace := FALSE;
+
+PROCEDURE <A NAME="D"><procedure>D</procedure></A>(s: TEXT) =
+  BEGIN
+    IF NOT trace THEN RETURN END;
+    TRY
+      Wr.PutText(Stdio.stdout, s &amp; Wr.EOL);
+      Wr.Flush(Stdio.stdout);
+    EXCEPT ELSE
+    END;
+  END D;
 </PRE> **************** Control Panel Form **************** 
 
 <P><PRE>PROCEDURE <A NAME="NewPanel"><procedure>NewPanel</procedure></A> (): T =
@@ -642,6 +654,7 @@ PROCEDURE <A NAME="GetGroupInfo"><procedure>GetGroupInfo</procedure></A> (sessNa
     panel := Resolve(NIL);
     info  := GetExistingGI(sessName);
   BEGIN
+    D(&quot;GetGroupInfo: &quot; &amp; sessName);
     IF info # NIL THEN RETURN info END;
     info := NEW(AlgGroupInfo, groupName := sessName, title := sessName);
     IF inMenu THEN
@@ -658,6 +671,7 @@ PROCEDURE <A NAME="UpdateSessionMenu"><procedure>UpdateSessionMenu</procedure></
     info: AlgGroupInfo;
   BEGIN
     groupInfo := RefListSort.SortD(groupInfo, GICompare);
+    D(&quot;UpdateSessionMenu: &quot; &amp; Fmt.Int(RefList.Length(groupInfo)));
     l := groupInfo;
     FormsVBT.Delete(panel.fv, &quot;sessionMenu&quot;, 0, LAST(CARDINAL));
     WHILE l # NIL DO
@@ -736,6 +750,7 @@ PROCEDURE <A NAME="RegisterAlg"><procedure>RegisterAlg</procedure></A> (proc: Ne
   (* LL = {} *)
   VAR info: AlgGroupInfo;
   BEGIN
+    D(&quot;RegisterAlg: &quot; &amp; name &amp; &quot;, &quot; &amp; sessName);
     LOCK VBT.mu DO
       info := GetGroupInfo(sessName);
       IF NOT TextList.Member(info.algs, name) THEN
@@ -754,6 +769,7 @@ PROCEDURE <A NAME="RegisterView"><procedure>RegisterView</procedure></A> (proc  
   (* LL = {} *)
   VAR info: AlgGroupInfo;
   BEGIN
+    D(&quot;RegisterView: &quot; &amp; name &amp; &quot;, &quot; &amp; sessName);
     LOCK VBT.mu DO
       info := GetGroupInfo(sessName);
       IF NOT TextList.Member(info.views, name) THEN
@@ -776,6 +792,7 @@ PROCEDURE <A NAME="RegisterView"><procedure>RegisterView</procedure></A> (proc  
 PROCEDURE <A NAME="NewSessionDefault"><procedure>NewSessionDefault</procedure></A> (name: TEXT; panel: T) =
   (* Get the inTrestle parm from the FV before calling NewSession. *)
   BEGIN                         (* LL = VBT.mu *)
+    D(&quot;NewSessionDefault&quot;);
     IF NOT ZeusSnapshot.SessionFromStateDir(panel, name, FALSE) THEN
       NewSession(name, panel, FormsVBT.GetBoolean(panel.fv, &quot;inTrestle&quot;))
     END;
@@ -807,6 +824,7 @@ PROCEDURE <A NAME="NewSession"><procedure>NewSession</procedure></A> (name     :
     END Attach;
 
   BEGIN
+    D(&quot;NewSession&quot;);
     EVAL sess.init();
     Zeus.AttachAlg(sess, sess.alg);
     sess.alg.install();
@@ -2684,6 +2702,7 @@ PROCEDURE <A NAME="DebugFinish"><procedure>DebugFinish</procedure></A>() =
 </PRE> **************** Mainline **************** 
 
 <P><PRE>BEGIN
+  D(&quot;ZuesPanel.Main&quot;);
   LOCK VBT.mu DO ControlPanel := NewPanel(); END;
 END ZeusPanel.
 </PRE>

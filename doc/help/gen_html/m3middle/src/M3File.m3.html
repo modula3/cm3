@@ -42,10 +42,12 @@ PROCEDURE <A NAME="Copy"><procedure>Copy</procedure></A> (src, dest: TEXT) RAISE
     rd, wr : File.T := NIL;
     len    : INTEGER;
     buf    : ARRAY [0..4095] OF File.Byte;
+    status  : File.Status;
   BEGIN
     TRY
       rd := FS.OpenFileReadonly (src);
       wr := OpenDestination (dest, rd);
+      status := FS.Status(src);
       LOOP
         len := rd.read (buf);
         IF (len &lt;= 0) THEN EXIT; END;
@@ -54,6 +56,9 @@ PROCEDURE <A NAME="Copy"><procedure>Copy</procedure></A> (src, dest: TEXT) RAISE
     FINALLY
       IF (wr # NIL) THEN wr.close (); END;
       IF (rd # NIL) THEN rd.close (); END;
+      TRY
+        FS.SetModificationTime(dest, status.modificationTime)
+      EXCEPT ELSE END;
     END;
   END Copy;
 
@@ -67,12 +72,14 @@ PROCEDURE <A NAME="CopyText"><procedure>CopyText</procedure></A> (src, dest: TEX
     out_buf : ARRAY [0..1023] OF File.Byte;
     eol_buf : ARRAY [0..7] OF File.Byte;
     eol_last: INTEGER;
+    status  : File.Status;
   BEGIN
     eol_last := Text.Length (eol) - 1;
     FOR i := 0 TO eol_last DO eol_buf[i] := ORD(Text.GetChar (eol, i)); END;
     TRY
       rd := FS.OpenFileReadonly (src);
       wr := OpenDestination (dest, rd);
+      status := FS.Status(src);
       out_len := 0;
       LOOP
         in_len := rd.read (in_buf);
@@ -104,6 +111,9 @@ PROCEDURE <A NAME="CopyText"><procedure>CopyText</procedure></A> (src, dest: TEX
     FINALLY
       IF (wr # NIL) THEN wr.close (); END;
       IF (rd # NIL) THEN rd.close (); END;
+      TRY
+        FS.SetModificationTime(dest, status.modificationTime);
+      EXCEPT ELSE END;
     END;
   END CopyText;
 

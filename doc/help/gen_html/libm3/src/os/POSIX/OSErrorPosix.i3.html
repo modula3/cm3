@@ -20,7 +20,7 @@ PROCEDURE <A HREF="OSErrorPosix.m3.html#ErrnoAtom">ErrnoAtom</A>(n: CARDINAL): A
 </PRE><BLOCKQUOTE><EM> Return an atom for <CODE>errno</CODE> value <CODE>n</CODE>. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="OSErrorPosix.m3.html#Raise">Raise</A>() RAISES {OSError.E};
-</PRE><BLOCKQUOTE><EM> == Raise0(Uerror.errno)) </EM></BLOCKQUOTE><PRE>
+</PRE><BLOCKQUOTE><EM> == Raise0(Cerrno.GetErrno())) </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="OSErrorPosix.m3.html#Raise0">Raise0</A>(errno: INTEGER) RAISES {OSError.E};
 </PRE><BLOCKQUOTE><EM> == RAISE OSError.E(AtomList.List1(ErrnoAtom(errno))) </EM></BLOCKQUOTE><PRE>

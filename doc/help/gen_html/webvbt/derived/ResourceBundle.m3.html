@@ -48,14 +48,14 @@ PROCEDURE <A NAME="LookUp"><procedure>LookUp</procedure></A> (&lt;*UNUSED*&gt; s
   END LookUp;
 
 CONST Names = ARRAY [0..8] OF TEXT {
-  &quot;errorimage.pbm&quot;,
-  &quot;contractArrow.pbm&quot;,
   &quot;hollowbullet.pbm&quot;,
   &quot;emptyimage.pbm&quot;,
   &quot;expandOnArrow.pbm&quot;,
   &quot;filledbullet.pbm&quot;,
   &quot;contractOnArrow.pbm&quot;,
   &quot;expandArrow.pbm&quot;,
+  &quot;errorimage.pbm&quot;,
+  &quot;contractArrow.pbm&quot;,
   NIL
 };
 
@@ -72,36 +72,36 @@ CONST Elements = ARRAY [0..8] OF TEXT {
 };
 
 CONST E0 =
-   &quot;P4\r\n16 16\r\n\000\0008\034|&gt;|&gt;|&gt;8\034\000\000\007\340\037\3708\0340\f&quot;
- &amp; &quot;p\016`\006`\006`\006\000\000&quot;;
-
-CONST E1 =
-   &quot;P4\r\n13 13\r\n\000\000\000\000\377\370\200\010@\020  \020@\010\200\007&quot;
- &amp; &quot;\000\000\000\000\000\000\000\000\000&quot;;
-
-CONST E2 =
    &quot;P4\r\n16 16\r\n\000\000\000\000\000\000\000\000\000\000\000\000\036\000&quot;
  &amp; &quot;!\000@\200@\200@\200@\200!\000\036\000\000\000\000\000&quot;;
 
-CONST E3 =
+CONST E1 =
    &quot;P4\r\n16 16\r\n\000\0008\034|&gt;|&gt;|&gt;8\034\000\000\000\000`\006`\006`\006p&quot;
  &amp; &quot;\0160\f8\034\037\370\007\340&quot;;
 
-CONST E4 =
+CONST E2 =
    &quot;P4\r\n13 13\r\nx\000|\000n\000g\000c\200a\300`\300a\300c\200g\000n\000|&quot;
  &amp; &quot;\000x\000&quot;;
 
-CONST E5 =
+CONST E3 =
    &quot;P4\r\n16 16\r\n\000\000\000\000\000\000\000\000\000\000\000\000\000\000&quot;
  &amp; &quot;&lt;\000~\000~\000~\000~\000&lt;\000\000\000\000\000\000\000&quot;;
 
-CONST E6 =
+CONST E4 =
    &quot;P4\r\n13 13\r\n\000\000\377\370\377\370\300\030\3408pp8\340\035\300\017&quot;
  &amp; &quot;\200\007\000\000\000\000\000\000\000&quot;;
 
-CONST E7 =
+CONST E5 =
    &quot;P4\r\n13 13\r\n0\0008\000&lt;\000&gt;\000?\000?\200?\200?\200?\000&gt;\000&lt;\0008&quot;
  &amp; &quot;\0000\000&quot;;
+
+CONST E6 =
+   &quot;P4\r\n16 16\r\n\000\0008\034|&gt;|&gt;|&gt;8\034\000\000\007\340\037\3708\0340\f&quot;
+ &amp; &quot;p\016`\006`\006`\006\000\000&quot;;
+
+CONST E7 =
+   &quot;P4\r\n13 13\r\n\000\000\000\000\377\370\200\010@\020  \020@\010\200\007&quot;
+ &amp; &quot;\000\000\000\000\000\000\000\000\000&quot;;
 
 BEGIN
 END ResourceBundle.

@@ -15,7 +15,7 @@ IMPORT <A HREF="../../../libm3/src/atom/Atom.i3.html">Atom</A>, <A HREF="../../.
 
 PROCEDURE <A NAME="RaiseOS"><procedure>RaiseOS</procedure></A> (a: Atom.T) RAISES {IP.Error} =
   BEGIN
-    Raise (a, Cerrno.errno);
+    Raise (a, Cerrno.GetErrno());
   END RaiseOS;
 
 BEGIN

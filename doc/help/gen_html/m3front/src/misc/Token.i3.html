@@ -14,9 +14,9 @@
  Last modified on Thu Apr  6 09:39:07 PDT 1995 by kalsow     
       modified on Sat Mar 16 00:31:16 1991 by muller         
 
-<P><PRE>INTERFACE <interface><A HREF="Token.m3.html">Token</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="#x1">Token</A></interface>;
 
-IMPORT <A HREF="#x1">M3ID</A>;
+IMPORT <A HREF="#x2">M3ID</A>;
 
 TYPE
   T = {tEOF,
@@ -36,7 +36,7 @@ TYPE
 
        (* pragmas (that escape from the scanner) *)
        tINLINE, tEXTERNAL, tASSERT, tUNUSED, tOBSOLETE, tTRACE,
-       tCALLCONV, tIMPLICIT, tDEBUG, tFATAL,
+       tCALLCONV, tIMPLICIT, tDEBUG, tLAZYALIGN, tSTRICTALIGN, tFATAL,
 
        (* reserved words *)
        tAND, tANY, tARRAY, tAS,
@@ -78,9 +78,11 @@ CONST
 
   DeclStart = Set {T.tCONST, T.tTYPE, T.tREVEAL, T.tVAR, T.tIMPLICIT,
                    T.tEXTERNAL, T.tINLINE, T.tUNUSED, T.tOBSOLETE,
+                   T.tLAZYALIGN, T.tSTRICTALIGN,
                    T.tEXCEPTION, T.tPROCEDURE, T.tFATAL, T.tCALLCONV};
 
   TypeStart = Set {T.tIDENT, T.tARRAY, T.tBITS, T.tBRANDED, T.tLBRACE,
+                   T.tLAZYALIGN, T.tSTRICTALIGN,
                    T.tUNTRACED, T.tOBJECT, T.tPROCEDURE, T.tRECORD,
 		   T.tREF, T.tSET, T.tLBRACKET, T.tLPAREN};
 
@@ -104,7 +106,14 @@ END Token.
 </PRE>
 </inInterface>
 <HR>
-<A NAME="x1">interface M3ID is in:
+<A NAME="x1">Token's implementation  is in:
+</A><UL>
+<LI><A HREF="Token.m3.html#0TOP0">m3front/src/misc/Token.m3</A>
+<LI><A HREF="../../../mentor/src/parse/Token.m3.html#0TOP0">mentor/src/parse/Token.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface M3ID is in:
 </A><UL>
 <LI><A HREF="../../../m3middle/src/M3ID.i3.html#0TOP0">m3middle/src/M3ID.i3</A>
 <LI><A HREF="../../../m3scan/src/M3ID.i3.html#0TOP0">m3scan/src/M3ID.i3</A>

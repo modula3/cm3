@@ -16,9 +16,16 @@
 <P><PRE>INTERFACE <interface>Cerrno</interface>;
 
 FROM <A HREF="Ctypes.i3.html">Ctypes</A> IMPORT int;
+</PRE> We cannot access <CODE>errno</CODE> directly as a variable, because on some systems
+   it is a C macro that expands to something more complicated.
+<P>
+   The <CODE>errno</CODE> value is preserved across thread switches. 
 
-&lt;*EXTERNAL*&gt; VAR errno: int;
-</PRE><BLOCKQUOTE><EM> The value of errno is preserved across thread switches. </EM></BLOCKQUOTE><PRE>
+<P><PRE>&lt;*EXTERNAL &quot;m3_Cerrno_GetErrno&quot;*&gt;
+PROCEDURE GetErrno(): int;
+
+&lt;*EXTERNAL &quot;m3_Cerrno_SetErrno&quot;*&gt;
+PROCEDURE SetErrno(e: int);
 
 END Cerrno.
 </PRE>

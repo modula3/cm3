@@ -50,6 +50,8 @@ PROCEDURE <A NAME="LookUp"><procedure>LookUp</procedure></A> (&lt;*UNUSED*&gt; s
   END LookUp;
 
 CONST Names = ARRAY [0..24] OF TEXT {
+  &quot;TranscriptView.fv&quot;,
+  &quot;Obliq3DView.i3&quot;,
   &quot;AlgClass.m3&quot;,
   &quot;IE3D.i3&quot;,
   &quot;GEFView.m3&quot;,
@@ -72,31 +74,29 @@ CONST Names = ARRAY [0..24] OF TEXT {
   &quot;ViewClass.i3&quot;,
   &quot;EventData.fv&quot;,
   &quot;ViewClass3D.m3&quot;,
-  &quot;TranscriptView.fv&quot;,
-  &quot;Obliq3DView.i3&quot;,
   NIL
 };
 
 VAR Elements := ARRAY [0..24] OF TEXT {
-  NIL (* E0 .. E0_2 *),
+  E0,
   E1,
-  NIL (* E2 .. E2_0 *),
-  NIL (* E3 .. E3_1 *),
-  NIL (* E4 .. E4_1 *),
-  E5,
-  E6,
-  NIL (* E7 .. E7_0 *),
-  NIL (* E8 .. E8_2 *),
-  E9,
-  E10,
+  NIL (* E2 .. E2_2 *),
+  E3,
+  NIL (* E4 .. E4_0 *),
+  NIL (* E5 .. E5_1 *),
+  NIL (* E6 .. E6_1 *),
+  E7,
+  E8,
+  NIL (* E9 .. E9_0 *),
+  NIL (* E10 .. E10_2 *),
   E11,
   E12,
   E13,
-  NIL (* E14 .. E14_1 *),
+  E14,
   E15,
   NIL (* E16 .. E16_1 *),
   E17,
-  E18,
+  NIL (* E18 .. E18_1 *),
   E19,
   E20,
   E21,
@@ -110,44 +110,74 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
   VAR wr := TextWr.New ();
   BEGIN
     CASE n OF
-    | 0 =&gt;
-        Wr.PutText (wr, E0);
-        Wr.PutText (wr, E0_0);
-        Wr.PutText (wr, E0_1);
-        Wr.PutText (wr, E0_2);
     | 2 =&gt;
         Wr.PutText (wr, E2);
         Wr.PutText (wr, E2_0);
-    | 3 =&gt;
-        Wr.PutText (wr, E3);
-        Wr.PutText (wr, E3_0);
-        Wr.PutText (wr, E3_1);
+        Wr.PutText (wr, E2_1);
+        Wr.PutText (wr, E2_2);
     | 4 =&gt;
         Wr.PutText (wr, E4);
         Wr.PutText (wr, E4_0);
-        Wr.PutText (wr, E4_1);
-    | 7 =&gt;
-        Wr.PutText (wr, E7);
-        Wr.PutText (wr, E7_0);
-    | 8 =&gt;
-        Wr.PutText (wr, E8);
-        Wr.PutText (wr, E8_0);
-        Wr.PutText (wr, E8_1);
-        Wr.PutText (wr, E8_2);
-    | 14 =&gt;
-        Wr.PutText (wr, E14);
-        Wr.PutText (wr, E14_0);
-        Wr.PutText (wr, E14_1);
+    | 5 =&gt;
+        Wr.PutText (wr, E5);
+        Wr.PutText (wr, E5_0);
+        Wr.PutText (wr, E5_1);
+    | 6 =&gt;
+        Wr.PutText (wr, E6);
+        Wr.PutText (wr, E6_0);
+        Wr.PutText (wr, E6_1);
+    | 9 =&gt;
+        Wr.PutText (wr, E9);
+        Wr.PutText (wr, E9_0);
+    | 10 =&gt;
+        Wr.PutText (wr, E10);
+        Wr.PutText (wr, E10_0);
+        Wr.PutText (wr, E10_1);
+        Wr.PutText (wr, E10_2);
     | 16 =&gt;
         Wr.PutText (wr, E16);
         Wr.PutText (wr, E16_0);
         Wr.PutText (wr, E16_1);
+    | 18 =&gt;
+        Wr.PutText (wr, E18);
+        Wr.PutText (wr, E18_0);
+        Wr.PutText (wr, E18_1);
     ELSE (*skip*)
     END;
     RETURN TextWr.ToText (wr);
   END GetElt;
 
 CONST E0 =
+   &quot;; Copyright (C) 1995, Digital Equipment Corporation.\n; All rights rese&quot;
+ &amp; &quot;rved.\n; See the file COPYRIGHT for a full description.\n;\n; Last modi&quot;
+ &amp; &quot;fied on Wed Feb  8 15:37:06 PST 1995 by kalsow\n\n;********************&quot;
+ &amp; &quot;************************************************\n;  NOTE: This file is&quot;
+ &amp; &quot; generated automatically from the event \n;        definition file #(_A&quot;
+ &amp; &quot;LGNAME_).evt.\n;*******************************************************&quot;
+ &amp; &quot;*************\n\n(VBox\n  (Rim\n    (Pen 2)\n    (HBox\n      (VBox (Gl&quot;
+ &amp; &quot;ue 4) (Shape (Height + Inf) (Button %clear \&quot;CLEAR\&quot;)) (Glue 4))\n     &quot;
+ &amp; &quot; (Glue 4)\n      (VBox\n        (Boolean =TRUE %alg (Text LeftAlign \&quot;A&quot;
+ &amp; &quot;lgorithm events\&quot;))\n        (Boolean =FALSE %zeus (Text LeftAlign \&quot;Ze&quot;
+ &amp; &quot;us events\&quot;))\n        (Boolean =TRUE %args (Text LeftAlign \&quot;Display a&quot;
+ &amp; &quot;rgs to events\&quot;)))\n      Fill))\n  (Bar 1)\n  (Shape (ShadowSize 0) (H&quot;
+ &amp; &quot;eight 200 + INF) (TextEdit ReadOnly %transcript)))\n&quot;;
+
+CONST E1 =
+   &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
+ &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
+ &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
+ &amp; &quot;                                       *)\n(* Last modified on Wed Feb &quot;
+ &amp; &quot; 8 15:34:46 PST 1995 by kalsow  *)\n(*      modified on Mon Jan 24 10:0&quot;
+ &amp; &quot;0:27 PST 1994 by najork  *)\n(*      modified on Sat Jul 17 10:55:21 PD&quot;
+ &amp; &quot;T 1993 by mhb     *)\n(*      modified on Wed Feb 17 16:47:18 PST 1993 &quot;
+ &amp; &quot;by johnh   *)\n\n(*****************************************************&quot;
+ &amp; &quot;****************\n|*  NOTE: This file is generated automatically from t&quot;
+ &amp; &quot;he event \n|*        definition file #(_ALGNAME_).evt.\n|**************&quot;
+ &amp; &quot;*******************************************************)\n\nINTERFACE #&quot;
+ &amp; &quot;(_ALGNAME_)#(_VIEWNAME_)Obliq3DView;\nEND #(_ALGNAME_)#(_VIEWNAME_)Obli&quot;
+ &amp; &quot;q3DView.\n\n&quot;;
+
+CONST E2 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -179,7 +209,7 @@ CONST E0 =
  &amp; &quot; Algorithm.T.init(v);\n  END #(_ALGNAME_)DefaultInit;\n\nPROCEDURE #(_A&quot;
  &amp; &quot;LGNAME_)DoIt (     &quot;;
 
-CONST E0_0 =
+CONST E2_0 =
    &quot;      fv : FormsVBT.T;\n                           e  : TEXT;\n        &quot;
  &amp; &quot;                   arg: REFANY;\n                &lt;*UNUSED*&gt; t  : VBT.Ti&quot;
  &amp; &quot;meStamp) =\n  &lt;* LL = VBT.mu *&gt;\n  BEGIN \n    IF Text.Equal(e, \&quot;stopa&quot;
@@ -211,7 +241,7 @@ CONST E0_0 =
  &amp; &quot;                      alg.eventDataRec.stopAt#(_EVENT_));\n    FormsVBT&quot;
  &amp; &quot;.PutInteger(fv, \&quot;waitAt#(_EVEN&quot;;
 
-CONST E0_1 =
+CONST E2_1 =
    &quot;T_)\&quot;, \n                        alg.eventDataRec.waitAt#(_EVENT_));\n#&quot;
  &amp; &quot;}\n    CountsToFV (fv, alg);\n  END ToFV;\n\nPROCEDURE CountsToFV (fv :&quot;
  &amp; &quot; FormsVBT.T; alg: T) =\n  &lt;* LL = VBT.mu *&gt;\n  BEGIN \n#{_OUTPUT\n    F&quot;
@@ -243,7 +273,7 @@ CONST E0_1 =
  &amp; &quot; = NIL THEN\n      RAISE ZeusClass.Error(\n          \&quot;#(_ALGNAME_)AlgC&quot;
  &amp; &quot;lass.#(_ALGNAME_)DefaultRestore: \&quot; &amp; \n  &quot;;
 
-CONST E0_2 =
+CONST E2_2 =
    &quot;        \&quot;eventData not set!\&quot;);\n    END;\n    TRY\n      v.eventData.&quot;
  &amp; &quot;restore(rd);\n      v.updateEventCounts(FALSE);\n      FromFV(v.eventDa&quot;
  &amp; &quot;ta, v);\n    EXCEPT\n    ELSE\n      RAISE ZeusClass.Error(\n          &quot;
@@ -256,7 +286,7 @@ CONST E0_2 =
  &amp; &quot;VBT.mu *&gt;\n  BEGIN\n    self.evtHandled := FALSE;\n  END #(_EVENT_);\n\n&quot;
  &amp; &quot;#}\n\nBEGIN\nEND #(_ALGNAME_)AlgClass.\n&quot;;
 
-CONST E1 =
+CONST E3 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -276,7 +306,7 @@ CONST E1 =
  &amp; &quot;\n      #(_ARGSTR_) \n    ) RAISES {Thread.Alerted};\n    &lt;* LL = VBT.m&quot;
  &amp; &quot;u *&gt;\n\n#}\n\nEND #(_ALGNAME_)IE.\n&quot;;
 
-CONST E2 =
+CONST E4 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -308,7 +338,7 @@ CONST E2 =
  &amp; &quot;FError.T (msg) =&gt;\n        ZeusPanel.ReportError(\n          Fmt.F(\&quot;GE&quot;
  &amp; &quot;F View error (%s) pars&quot;;
 
-CONST E2_0 =
+CONST E4_0 =
    &quot;ing file: %s\&quot;, msg, v.name));\n    END;\n  END Startrun;\n\nPROCEDURE &quot;
  &amp; &quot;New (): View.T =\n  VAR g := NEW(GraphVBT.T).init(); \n  BEGIN\n    RET&quot;
  &amp; &quot;URN NEW(T).init(g)\n  END New;\n\n(* event handling methods: *)\n\n#{_O&quot;
@@ -323,7 +353,7 @@ CONST E2_0 =
  &amp; &quot;E_).gef\&quot;, \&quot;#(_ALGNAME_)\&quot;); \nEND #(_ALGNAME_)#(_VIEWNAME_)GEFView.\n&quot;
 ;
 
-CONST E3 =
+CONST E5 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -355,7 +385,7 @@ CONST E3 =
  &amp; &quot;eusPanel.ReportError(NetObjError(err))\n    | Thread.Alerted =&gt; ZeusPan&quot;
  &amp; &quot;el.ReportError(\&quot;&quot;;
 
-CONST E3_0 =
+CONST E5_0 =
    &quot;NetObj call alerted\&quot;)\n    END\n  END Endrun;\n\n(* OUTPUT and UPDATE &quot;
  &amp; &quot;event handling methods: *)\n\n#{_OUTPUT\nPROCEDURE #(_EVENT_) (view: T;&quot;
  &amp; &quot; #(_ARGSTR_)) =\n  &lt;* LL.sup &lt; VBT.mu *&gt;\n  CONST EventName = \&quot;#(_EVEN&quot;
@@ -387,7 +417,7 @@ CONST E3_0 =
  &amp; &quot;IF NOT ISTYPE(jz, RemoteView.T) THEN\n    \terrMsg := \&quot;NetObj Error: T&quot;
  &amp; &quot;ype mismatch between Juno and Zeus\&quot;\n      ELSE&quot;;
 
-CONST E3_1 =
+CONST E5_1 =
    &quot;\n    \tres.jz := jz;\n    \tRETURN res\n      END\n    EXCEPT\n      N&quot;
  &amp; &quot;etObj.Error (err) =&gt; errMsg := NetObjError(err)\n    | Thread.Alerted =&quot;
  &amp; &quot;&gt;     errMsg := \&quot;NetObj Import alerted\&quot;\n    END;\n    ZeusPanel.Repo&quot;
@@ -402,7 +432,7 @@ CONST E3_1 =
  &amp; &quot;ME_)\&quot;)   \n  END RegisterView;\n\nBEGIN\n  RegisterView ();\nEND #(_AL&quot;
  &amp; &quot;GNAME_)#(_VIEWNAME_)JunoView.\n&quot;;
 
-CONST E4 =
+CONST E6 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -434,7 +464,7 @@ CONST E4 =
  &amp; &quot;ZeusPanel.NewForm(\&quot;#(_ALGNAME_)TranscriptView.fv\&quot;);\n    view.te := F&quot;
  &amp; &quot;ormsVBT.GetVBT(view.&quot;;
 
-CONST E4_0 =
+CONST E6_0 =
    &quot;fv, \&quot;transcript\&quot;);\n    TViewZTrace (view, \&quot;install\&quot;);\n    FormsVB&quot;
  &amp; &quot;T.AttachProc(view.fv, \&quot;clear\&quot;, Clear, view);\n    EVAL Filter.Replace&quot;
  &amp; &quot; (view, view.fv);\n    #(_ALGNAME_)ViewClass.T.install (view);\n  END T&quot;
@@ -466,7 +496,7 @@ CONST E4_0 =
  &amp; &quot;       &amp; #(_ARGFMT_)(#(_ARGNAME_))\n#|\n          &amp; \&quot; \&quot;\n#}\n        &quot;
  &amp; &quot;  )\n       END\n    END\n    END\n  END #(_EVENT_&quot;;
 
-CONST E4_1 =
+CONST E6_1 =
    &quot;);\n\n#}\n\n\n#{_UPDATE\nPROCEDURE #(_EVENT_) (view: T; #(_ARGSTR_)) =\n&quot;
  &amp; &quot;  &lt;* LL = VBT.mu *&gt;\n  BEGIN \n    IF FormsVBT.GetBoolean(view.fv, \&quot;al&quot;
  &amp; &quot;g\&quot;) THEN\n       IF NOT FormsVBT.GetBoolean(view.fv, \&quot;args\&quot;) THEN\n &quot;
@@ -485,7 +515,7 @@ CONST E4_1 =
  &amp; &quot;w \n      (TViewNew, \&quot;#(_ALGNAME_) Transcript View\&quot;, \&quot;#(_ALGNAME_)\&quot;&quot;
  &amp; &quot;); \nEND #(_ALGNAME_)TranscriptView.\n&quot;;
 
-CONST E5 =
+CONST E7 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -500,7 +530,7 @@ CONST E5 =
  &amp; &quot;ME_) Data View\&quot;, \n    \&quot;#(_ALGNAME_)\&quot;); \nEND #(_ALGNAME_)DataView.\n&quot;
 ;
 
-CONST E6 =
+CONST E8 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -517,7 +547,7 @@ CONST E6 =
  &amp; &quot;TE\n        ue#(_EVENT_) (#(_ARGSTR_)) RAISES {Thread.Alerted};\n#}\n  &quot;
  &amp; &quot;    END;\n      \nEND #(_ALGNAME_)3DViewClass.\n&quot;;
 
-CONST E7 =
+CONST E9 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -549,7 +579,7 @@ CONST E7 =
  &amp; &quot;tcher;\n\n&lt;*NOWARN*&gt; PROCEDURE FEDispatcher(v: ZeusClass.T; evt: REFANY&quot;
  &amp; &quot;) =\n  &lt;* LL = VB&quot;;
 
-CONST E7_0 =
+CONST E9_0 =
    &quot;T.mu *&gt;\n  BEGIN\n    TYPECASE v OF\n    | #(_ALGNAME_)AlgClass.T (alg)&quot;
  &amp; &quot; =&gt; &lt;*NOWARN*&gt;\n      TYPECASE evt OF\n#{_FEEDBACK\n      | #(_EVENT_)A&quot;
  &amp; &quot;rgs(var#(_EVENT_)Args) =&gt; &lt;*NOWARN*&gt;\n          alg.fe#(_EVENT_) (\n#{\n&quot;
@@ -579,7 +609,7 @@ CONST E7_0 =
  &amp; &quot; #(_EVENTPRIO_), \n                  \&quot;#(_EVENT_)\&quot;, FEDispatcher, zume&quot;
  &amp; &quot;ArgRec);\n  END #(_EVENT_);\n\n#}\n\nBEGIN\nEND #(_ALGNAME_)IE.\n&quot;;
 
-CONST E8 =
+CONST E10 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -611,7 +641,7 @@ CONST E8 =
  &amp; &quot;: T; #(_ARGSTR_)) =\n  &lt;* LL = VBT.mu *&gt;\n  BEGIN \n    IF FieldDefined&quot;
  &amp; &quot;(view.object, \&quot;#(_EVENT_)\&quot;) THEN\n &quot;;
 
-CONST E8_0 =
+CONST E10_0 =
    &quot;     Invoke (view, \&quot;#(_EVENT_)\&quot;, \&quot;\&quot;\n#{\n      &amp; #(_ARGFMT_)(#(_ARG&quot;
  &amp; &quot;NAME_))\n#|\n      &amp; \&quot;,\&quot;\n#}\n      )\n    END\n  END #(_EVENT_);\n#}&quot;
  &amp; &quot;\n\nPROCEDURE RegisterView () =\n  BEGIN \n    ZeusPanel.RegisterView(N&quot;
@@ -643,7 +673,7 @@ CONST E8_0 =
  &amp; &quot;er.Replace(view, rectsvbt)\n            END\n          END;\n          &quot;
  &amp; &quot;view.object := obj;\n        ELSIF FieldD&quot;;
 
-CONST E8_1 =
+CONST E10_1 =
    &quot;efined (obj, \&quot;formsvbt\&quot;) THEN\n          WITH formsvbt =\n           &quot;
  &amp; &quot; NARROW(Obliq.ObjectSelect(obj, \&quot;formsvbt\&quot;),\n                   ObLi&quot;
  &amp; &quot;bUI.ValForm).vbt DO\n            LOCK VBT.mu DO\n              EVAL Fil&quot;
@@ -675,7 +705,7 @@ CONST E8_1 =
  &amp; &quot;w: T; packet: ObValue.ErrorPacket) =\n  BEGIN\n    Obliq.ReportError(vi&quot;
  &amp; &quot;ew.swr, packet);\n    ZeusPanel.ReportEr&quot;;
 
-CONST E8_2 =
+CONST E10_2 =
    &quot;ror(\n      \&quot;Obliq error: \&quot; &amp; TextWr.ToText(view.wr))\n  END OblError&quot;
  &amp; &quot;;\n\nPROCEDURE OblException (view: T; packet: ObValue.ExceptionPacket) &quot;
  &amp; &quot;=\n  BEGIN\n    Obliq.ReportException(view.swr, packet);\n    ZeusPanel&quot;
@@ -685,7 +715,7 @@ CONST E8_2 =
  &amp; &quot;m.PackageSetup();\n  RegisterView ();\nEND #(_ALGNAME_)#(_VIEWNAME_)Obl&quot;
  &amp; &quot;iqView.\n&quot;;
 
-CONST E9 =
+CONST E11 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -705,7 +735,7 @@ CONST E9 =
  &amp; &quot;  &lt;* LL = VBT.mu *&gt;\n#}\n      END;\n      \nREVEAL\n  Algorithm.T &lt;: A&quot;
  &amp; &quot;lgorithmClass.T;\n  \nEND #(_ALGNAME_)AlgClass.\n&quot;;
 
-CONST E10 =
+CONST E12 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -733,7 +763,7 @@ CONST E10 =
  &amp; &quot;    view.evtHandled := FALSE;\n  END #(_EVENT_);\n#}\n\nBEGIN\nEND #(_A&quot;
  &amp; &quot;LGNAME_)ViewClass.\n&quot;;
 
-CONST E11 =
+CONST E13 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -748,7 +778,7 @@ CONST E11 =
  &amp; &quot;(_ALGNAME_)#(_VIEWNAME_)GEFView;\nEND #(_ALGNAME_)#(_VIEWNAME_)GEFView.&quot;
  &amp; &quot;\n\n&quot;;
 
-CONST E12 =
+CONST E14 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -761,7 +791,7 @@ CONST E12 =
  &amp; &quot;\nINTERFACE #(_ALGNAME_)#(_VIEWNAME_)JunoView;\nEND #(_ALGNAME_)#(_VIEW&quot;
  &amp; &quot;NAME_)JunoView.\n\n&quot;;
 
-CONST E13 =
+CONST E15 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -777,7 +807,7 @@ CONST E13 =
  &amp; &quot;s.T OBJECT\n      METHODS\n        &lt;* LL = VBT.mu *&gt;\n        init(): T&quot;
  &amp; &quot;;\n      END;\n\nEND #(_ALGNAME_)TranscriptView.\n&quot;;
 
-CONST E14 =
+CONST E16 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -809,7 +839,7 @@ CONST E14 =
  &amp; &quot;ENT_) (view: T; #(_ARGSTR_)) =\n  &lt;* LL.sup = VBT.mu *&gt;\n  BEGIN \n    &quot;
  &amp; &quot;  Invoke (view, \&quot;#(_EVENT_)\&quot;, \&quot;\&quot;\n#{\n&quot;;
 
-CONST E14_0 =
+CONST E16_0 =
    &quot;      &amp; #(_ARGFMT_)(#(_ARGNAME_))\n#|\n      &amp; \&quot;,\&quot;\n#}\n      )\n  EN&quot;
  &amp; &quot;D #(_EVENT_);\n#}\n\nTYPE \n  Closure = Thread.SizedClosure BRANDED OBJ&quot;
  &amp; &quot;ECT\n    view : T;\n  OVERRIDES\n    apply := Apply;\n  END;\n\n\nPROCE&quot;
@@ -841,7 +871,7 @@ CONST E14_0 =
  &amp; &quot;w;\n\n\nPROCEDURE Startrun (view: T) =\n  &lt;* LL.sup &lt; VBT.mu *&gt;\n  BEGI&quot;
  &amp; &quot;N\n    (*** Reload the .obl file ***)\n    WIT&quot;;
 
-CONST E14_1 =
+CONST E16_1 =
    &quot;H thread = Thread.Fork (\n                      NEW (Closure,\n        &quot;
  &amp; &quot;                   stackSize := 2 * Thread.GetDefaultStackSize (),\n   &quot;
  &amp; &quot;                        view := view)) DO\n      EVAL Thread.Join (thre&quot;
@@ -871,7 +901,7 @@ CONST E14_1 =
  &amp; &quot;                    \&quot;#(_ALGNAME_)\&quot;, \n                          sampl&quot;
  &amp; &quot;e := NEW(T));\nEND #(_ALGNAME_)#(_VIEWNAME_)Obliq3DView.\n&quot;;
 
-CONST E15 =
+CONST E17 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -880,7 +910,7 @@ CONST E15 =
  &amp; &quot;36:53 PDT 1993 by mhb    *)\n\nINTERFACE #(_ALGNAME_)DataView;\n\nEND #&quot;
  &amp; &quot;(_ALGNAME_)DataView.\n&quot;;
 
-CONST E16 =
+CONST E18 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -912,7 +942,7 @@ CONST E16 =
  &amp; &quot;   TYPECASE evt OF\n#{_OUTPUT\n      | #(_EVENT_)Args(var#(_EVENT_)Args&quot;
  &amp; &quot;) =&gt; \n          v&quot;;
 
-CONST E16_0 =
+CONST E18_0 =
    &quot;iew.oe#(_EVENT_) (\n#{\n              var#(_EVENT_)Args.#(_ARGNAME_)\n#&quot;
  &amp; &quot;|\n                ,\n#}\n              )\n#}\n#{_UPDATE\n      | #(_EV&quot;
  &amp; &quot;ENT_)Args(var#(_EVENT_)Args) =&gt; \n          view.ue#(_EVENT_) (\n#{\n  &quot;
@@ -944,7 +974,7 @@ CONST E16_0 =
  &amp; &quot;O_), \n                  \&quot;#(_EVENT_)\&quot;, OEDispatcher, zumeArgRec);\n  &quot;
  &amp; &quot;END #(_EVENT_);\n\n#}\n\n#{_FEEDBAC&quot;;
 
-CONST E16_1 =
+CONST E18_1 =
    &quot;K\nPROCEDURE #(_EVENT_) (\n      initiator: View.T; \n      #(_ARGSTR_)&quot;
  &amp; &quot; \n    ) RAISES {Thread.Alerted} =\n  &lt;* LL = VBT.mu *&gt;\n  VAR zumeArgR&quot;
  &amp; &quot;ec := NEW(#(_EVENT_)Args \n#{\n               , #(_ARGNAME_) := #(_ARGN&quot;
@@ -953,7 +983,7 @@ CONST E16_1 =
  &amp; &quot;tcher, zumeArgRec);\n  END #(_EVENT_);\n\n#}\n\nBEGIN\nEND #(_ALGNAME_)&quot;
  &amp; &quot;IE.\n&quot;;
 
-CONST E17 =
+CONST E19 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -974,7 +1004,7 @@ CONST E17 =
  &amp; &quot;    #(_ARGSTR_) \n    ) RAISES {Thread.Alerted};\n    &lt;* LL = VBT.mu *&gt;&quot;
  &amp; &quot;\n\n#}\n\nEND #(_ALGNAME_)IE.\n&quot;;
 
-CONST E18 =
+CONST E20 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -988,7 +1018,7 @@ CONST E18 =
  &amp; &quot;RFACE #(_ALGNAME_)#(_VIEWNAME_)ObliqView;\nEND #(_ALGNAME_)#(_VIEWNAME_&quot;
  &amp; &quot;)ObliqView.\n\n&quot;;
 
-CONST E19 =
+CONST E21 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -1006,7 +1036,7 @@ CONST E19 =
  &amp; &quot; ue#(_EVENT_) (#(_ARGSTR_)) RAISES {Thread.Alerted};\n#}\n      END;\n &quot;
  &amp; &quot;     \nEND #(_ALGNAME_)ViewClass.\n&quot;;
 
-CONST E20 =
+CONST E22 =
    &quot;; Copyright (C) 1995, Digital Equipment Corporation.\n; All rights rese&quot;
  &amp; &quot;rved.\n; See the file COPYRIGHT for a full description.\n;\n; Last modi&quot;
  &amp; &quot;fied on Wed Feb  8 15:29:09 PST 1995 by kalsow\n\n;********************&quot;
@@ -1037,7 +1067,7 @@ CONST E20 =
  &amp; &quot;) \&quot;0\&quot;)))\n#}\n                (Glue 3))))\n          Fill\n          &quot;
  &amp; &quot;(Glue 4 + Inf)\n        )\n      )\n    )\n  )\n)\n&quot;;
 
-CONST E21 =
+CONST E23 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -1061,36 +1091,6 @@ CONST E21 =
  &amp; &quot;\n#{\n    ; &lt;*UNUSED*&gt; #(_ARGMODE_)#(_ARGNAME_): #(_ARGTYPE_)\n#}\n) =\n&quot;
  &amp; &quot;  &lt;*LL = VBT.mu *&gt;\n  BEGIN \n    view.evtHandled := FALSE;\n  END #(_E&quot;
  &amp; &quot;VENT_);\n\n#}\n\nBEGIN\nEND #(_ALGNAME_)3DViewClass.\n&quot;;
-
-CONST E22 =
-   &quot;; Copyright (C) 1995, Digital Equipment Corporation.\n; All rights rese&quot;
- &amp; &quot;rved.\n; See the file COPYRIGHT for a full description.\n;\n; Last modi&quot;
- &amp; &quot;fied on Wed Feb  8 15:37:06 PST 1995 by kalsow\n\n;********************&quot;
- &amp; &quot;************************************************\n;  NOTE: This file is&quot;
- &amp; &quot; generated automatically from the event \n;        definition file #(_A&quot;
- &amp; &quot;LGNAME_).evt.\n;*******************************************************&quot;
- &amp; &quot;*************\n\n(VBox\n  (Rim\n    (Pen 2)\n    (HBox\n      (VBox (Gl&quot;
- &amp; &quot;ue 4) (Shape (Height + Inf) (Button %clear \&quot;CLEAR\&quot;)) (Glue 4))\n     &quot;
- &amp; &quot; (Glue 4)\n      (VBox\n        (Boolean =TRUE %alg (Text LeftAlign \&quot;A&quot;
- &amp; &quot;lgorithm events\&quot;))\n        (Boolean =FALSE %zeus (Text LeftAlign \&quot;Ze&quot;
- &amp; &quot;us events\&quot;))\n        (Boolean =TRUE %args (Text LeftAlign \&quot;Display a&quot;
- &amp; &quot;rgs to events\&quot;)))\n      Fill))\n  (Bar 1)\n  (Shape (ShadowSize 0) (H&quot;
- &amp; &quot;eight 200 + INF) (TextEdit ReadOnly %transcript)))\n&quot;;
-
-CONST E23 =
-   &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
- &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
- &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
- &amp; &quot;                                       *)\n(* Last modified on Wed Feb &quot;
- &amp; &quot; 8 15:34:46 PST 1995 by kalsow  *)\n(*      modified on Mon Jan 24 10:0&quot;
- &amp; &quot;0:27 PST 1994 by najork  *)\n(*      modified on Sat Jul 17 10:55:21 PD&quot;
- &amp; &quot;T 1993 by mhb     *)\n(*      modified on Wed Feb 17 16:47:18 PST 1993 &quot;
- &amp; &quot;by johnh   *)\n\n(*****************************************************&quot;
- &amp; &quot;****************\n|*  NOTE: This file is generated automatically from t&quot;
- &amp; &quot;he event \n|*        definition file #(_ALGNAME_).evt.\n|**************&quot;
- &amp; &quot;*******************************************************)\n\nINTERFACE #&quot;
- &amp; &quot;(_ALGNAME_)#(_VIEWNAME_)Obliq3DView;\nEND #(_ALGNAME_)#(_VIEWNAME_)Obli&quot;
- &amp; &quot;q3DView.\n\n&quot;;
 
 BEGIN
 END ZoomBundle.

@@ -43,6 +43,7 @@ REVEAL
     inTypeOf   : M3.Flag; (* reset in each compilation *)
     inToExpr   : M3.Flag; (* reset in each compilation *)
     inToType   : M3.Flag; (* reset in each compilation *)
+    lazyAligned: M3.Flag;
   METHODS
     typeCheck   (VAR cs: M3.CheckState);
     set_globals ()                        := NoInit;

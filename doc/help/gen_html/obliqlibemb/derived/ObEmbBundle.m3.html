@@ -48,10 +48,10 @@ PROCEDURE <A NAME="LookUp"><procedure>LookUp</procedure></A> (&lt;*UNUSED*&gt; s
   END LookUp;
 
 CONST Names = ARRAY [0..4] OF TEXT {
-  &quot;EmbProxiedObj.obl&quot;,
-  &quot;SharedObj.obl&quot;,
   &quot;EmbProxiedObj.hlp&quot;,
   &quot;SharedObj.hlp&quot;,
+  &quot;EmbProxiedObj.obl&quot;,
+  &quot;SharedObj.obl&quot;,
   NIL
 };
 
@@ -64,6 +64,25 @@ CONST Elements = ARRAY [0..4] OF TEXT {
 };
 
 CONST E0 =
+   &quot;  EmbProxiedObj_Error: Exception       \nWHERE\n  EmbProxiedObj &lt;: { ex&quot;
+ &amp; &quot;tend: Self(X) All(Y&lt;:{}) (Y) =&gt; X &amp; Y }\n       Objects of this type al&quot;
+ &amp; &quot;so contain a field \&quot;raw\&quot;, \n       which is for internal use.  \n&quot;;
+
+CONST E1 =
+   &quot;  SharedObj_AcquireGlobalLock(obj: T): Ok ! SharedObj_Error Thread_aler&quot;
+ &amp; &quot;ted\n  SharedObj_ReleaseGlobalLock(obj: T): Ok ! SharedObj_Error Thread&quot;
+ &amp; &quot;_alerted\n  SharedObj_Own(obj: T, t: Timeliness): Ok ! SharedObj_Error &quot;
+ &amp; &quot;Thread_alerted\n  SharedObj_Disown(obj: T): Ok ! SharedObj_Error Thread&quot;
+ &amp; &quot;_alerted\n  SharedObj_SetTimeliness(obj: T, t: Timeliness): Ok \n\t\t\t&quot;
+ &amp; &quot;\t! SharedObj_Error Thread_alerted  \n  SharedObj_SetNodeName(name: Tex&quot;
+ &amp; &quot;t): Text ! SharedObj_Error Thread_alerted  \n  SharedObj_SetDefaultSequ&quot;
+ &amp; &quot;encer(host: Text, name: Text): Ok \n\t\t\t\t! SharedObj_Error Thread_al&quot;
+ &amp; &quot;erted  \n  SharedObj_SetDebugLevel(level: Int): Ok\n  SharedObj_PullObj&quot;
+ &amp; &quot;ect(obj: T): T;\n  SharedObj_Error: Exception       \n  SharedObj_Fatal&quot;
+ &amp; &quot;: Exception        \nWHERE\n  T &lt;: EmbProxiedObj              \n  Timel&quot;
+ &amp; &quot;iness = -8...7\n&quot;;
+
+CONST E2 =
    &quot;(* Copyright (C) 1994, Digital Equipment Corporation                   &quot;
  &amp; &quot;      *)\n(* Digital Internal Use Only                                 &quot;
  &amp; &quot;                *)\n(* All rights reserved.                            &quot;
@@ -81,31 +100,12 @@ CONST E0 =
  &amp; &quot;f.raw := ok;\n\telse\n\t\traise(EmbProxiedObj_Error);\n\tend;\n\tnew\n\t&quot;
  &amp; &quot;end,\n};\n\nend module;\n&quot;;
 
-CONST E1 =
+CONST E3 =
    &quot;module SharedObjWrap for SharedObj;\n\n(* location is can be used to fi&quot;
  &amp; &quot;nd the name of the host the shared object is \n   on.  Could use it to &quot;
  &amp; &quot;decide whether or not to Pull and object, or just\n   for testing and d&quot;
  &amp; &quot;ebugging. *)\nlet TProto = EmbProxiedObj_TProto.extend({\n  location =&gt;&quot;
  &amp; &quot; meth(self) sys_getEnvVar(\&quot;HOSTNAME\&quot;) end\n}, ok);\n\nend module;\n&quot;;
-
-CONST E2 =
-   &quot;  EmbProxiedObj_Error: Exception       \nWHERE\n  EmbProxiedObj &lt;: { ex&quot;
- &amp; &quot;tend: Self(X) All(Y&lt;:{}) (Y) =&gt; X &amp; Y }\n       Objects of this type al&quot;
- &amp; &quot;so contain a field \&quot;raw\&quot;, \n       which is for internal use.  \n&quot;;
-
-CONST E3 =
-   &quot;  SharedObj_AcquireGlobalLock(obj: T): Ok ! SharedObj_Error Thread_aler&quot;
- &amp; &quot;ted\n  SharedObj_ReleaseGlobalLock(obj: T): Ok ! SharedObj_Error Thread&quot;
- &amp; &quot;_alerted\n  SharedObj_Own(obj: T, t: Timeliness): Ok ! SharedObj_Error &quot;
- &amp; &quot;Thread_alerted\n  SharedObj_Disown(obj: T): Ok ! SharedObj_Error Thread&quot;
- &amp; &quot;_alerted\n  SharedObj_SetTimeliness(obj: T, t: Timeliness): Ok \n\t\t\t&quot;
- &amp; &quot;\t! SharedObj_Error Thread_alerted  \n  SharedObj_SetNodeName(name: Tex&quot;
- &amp; &quot;t): Text ! SharedObj_Error Thread_alerted  \n  SharedObj_SetDefaultSequ&quot;
- &amp; &quot;encer(host: Text, name: Text): Ok \n\t\t\t\t! SharedObj_Error Thread_al&quot;
- &amp; &quot;erted  \n  SharedObj_SetDebugLevel(level: Int): Ok\n  SharedObj_PullObj&quot;
- &amp; &quot;ect(obj: T): T;\n  SharedObj_Error: Exception       \n  SharedObj_Fatal&quot;
- &amp; &quot;: Exception        \nWHERE\n  T &lt;: EmbProxiedObj              \n  Timel&quot;
- &amp; &quot;iness = -8...7\n&quot;;
 
 BEGIN
 END ObEmbBundle.

@@ -18,7 +18,7 @@
 
 IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="#x1">M3ID</A>, <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="#x2">Value</A>, <A HREF="ValueRep.i3.html">ValueRep</A>, <A HREF="../misc/Scope.i3.html">Scope</A>, <A HREF="../stmts/Stmt.i3.html">Stmt</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../misc/ESet.i3.html">ESet</A>,  <A HREF="External.i3.html">External</A>;
 IMPORT <A HREF="Variable.i3.html">Variable</A>, <A HREF="#x3">Type</A>, <A HREF="Procedure.i3.html">Procedure</A>, <A HREF="Ident.i3.html">Ident</A>, <A HREF="../../../m3middle/src/M3Buf.i3.html">M3Buf</A>, <A HREF="../stmts/BlockStmt.i3.html">BlockStmt</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>;
-IMPORT <A HREF="../misc/Host.i3.html">Host</A>, <A HREF="../misc/Token.i3.html">Token</A>, <A HREF="Revelation.i3.html">Revelation</A>, <A HREF="../misc/Coverage.i3.html">Coverage</A>, <A HREF="Decl.i3.html">Decl</A>, <A HREF="../misc/Scanner.i3.html">Scanner</A>, <A HREF="../misc/WebInfo.i3.html">WebInfo</A>;
+IMPORT <A HREF="../misc/Host.i3.html">Host</A>, <A HREF="#x4">Token</A>, <A HREF="Revelation.i3.html">Revelation</A>, <A HREF="../misc/Coverage.i3.html">Coverage</A>, <A HREF="Decl.i3.html">Decl</A>, <A HREF="../misc/Scanner.i3.html">Scanner</A>, <A HREF="../misc/WebInfo.i3.html">WebInfo</A>;
 IMPORT <A HREF="../misc/ProcBody.i3.html">ProcBody</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/M3RT.i3.html">M3RT</A>, <A HREF="../misc/Marker.i3.html">Marker</A>, <A HREF="../../../libm3/src/os/Common/File.i3.html">File</A>, <A HREF="../misc/Tracer.i3.html">Tracer</A>;
 
 FROM <A HREF="../misc/Scanner.i3.html">Scanner</A> IMPORT GetToken, Fail, Match, MatchID, cur;
@@ -55,6 +55,8 @@ REVEAL
         trace       : Tracer.T;
         type_info   : Type.ModuleInfo;
         value_info  : Value.T;
+        lazyAligned : BOOLEAN;
+        containsLazyAlignments: BOOLEAN;
       OVERRIDES
         typeCheck   := TypeCheckMethod;
         set_globals := ValueRep.NoInit;
@@ -147,6 +149,8 @@ PROCEDURE <A NAME="Create"><procedure>Create</procedure></A> (name: M3ID.T): T =
     t.type_info   := NIL;
     t.value_info  := NIL;
     t.counter     := InitialCounter;
+    t.lazyAligned := FALSE;
+    t.containsLazyAlignments := FALSE;
     RETURN t;
   END Create;
 
@@ -638,10 +642,10 @@ PROCEDURE <A NAME="SetGlobals"><procedure>SetGlobals</procedure></A> (t: T) =
   BEGIN
     IF (t.has_errors) THEN (*don't bother *) RETURN END;
     IF (Host.verbose) OR (Host.load_map AND Scanner.in_main) THEN
-      Out (FALSE, Target.EOL, Target.EOL, &quot; global data allocation for &quot;);
-      Out (FALSE, DataName (t), Target.EOL);
       Out (TRUE, Target.EOL, Target.EOL, &quot; global constants for &quot;);
       Out (TRUE, DataName (t), Target.EOL);
+      Out (FALSE, Target.EOL, Target.EOL, &quot; global data allocation for &quot;);
+      Out (FALSE, DataName (t), Target.EOL);
     END;
     IF (t.globals[FALSE].size = 0) THEN
       EVAL Allocate (M3RT.MI_SIZE, Target.Address.align, FALSE, &quot;*module info*&quot;);
@@ -797,6 +801,21 @@ PROCEDURE <A NAME="IsExternal"><procedure>IsExternal</procedure></A> (): BOOLEAN
     RETURN (curModule # NIL) AND (curModule.external);
   END IsExternal;
 
+PROCEDURE <A NAME="LazyAlignmentOn"><procedure>LazyAlignmentOn</procedure></A> (): BOOLEAN =
+  BEGIN
+    RETURN curModule # NIL AND curModule.lazyAligned;
+  END LazyAlignmentOn;
+
+PROCEDURE <A NAME="SetLazyAlignment"><procedure>SetLazyAlignment</procedure></A> (on: BOOLEAN) =
+  BEGIN
+    IF curModule # NIL THEN
+      curModule.lazyAligned := on;
+      IF on THEN
+        curModule.containsLazyAlignments := TRUE;
+      END;
+    END;
+  END SetLazyAlignment;
+
 PROCEDURE <A NAME="ExportScope"><procedure>ExportScope</procedure></A> (t: T): Scope.T =
   BEGIN
     IF (t = NIL)
@@ -809,6 +828,7 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (t: T) =
   VAR save: T;  zz: Scope.T;  yy: Revelation.Set;
   BEGIN
     (* ETimer.Push (M3Timers.emit); *)
+    Target.Allow_packed_byte_aligned := t.containsLazyAlignments;
     save := Switch (t);
     Scanner.offset := t.origin;
     yy := Revelation.Push (t.revelations);
@@ -906,12 +926,12 @@ PROCEDURE <A NAME="CompileModule"><procedure>CompileModule</procedure></A> (t: T
 
 PROCEDURE <A NAME="DeclareGlobalData"><procedure>DeclareGlobalData</procedure></A> (t: T) =
   BEGIN
-    CG.Comment (-1, FALSE, &quot;module global data&quot;);
-    t.globals[FALSE].seg := CG.Declare_segment (M3ID.Add (DataName (t)),
-                                                ModuleTypeUID, is_const := FALSE);
     CG.Comment (-1, FALSE, &quot;module global constants&quot;);
     t.globals[TRUE].seg := CG.Declare_segment (M3ID.NoID,
                                                 ModuleTypeUID, is_const := TRUE);
+    CG.Comment (-1, FALSE, &quot;module global data&quot;);
+    t.globals[FALSE].seg := CG.Declare_segment (M3ID.Add (DataName (t)),
+                                                ModuleTypeUID, is_const := FALSE);
   END DeclareGlobalData;
 
 PROCEDURE <A NAME="GlobalData"><procedure>GlobalData</procedure></A> (is_const: BOOLEAN): CG.Var =
@@ -1080,20 +1100,20 @@ PROCEDURE <A NAME="GenLinkerInfo"><procedure>GenLinkerInfo</procedure></A> (t: T
     EVAL Allocate (0, Target.Address.align, TRUE, &quot;*TOTAL*&quot;);
 
     (* generate a debugging type descriptor for the global data *)
-    CG.Comment (-1, FALSE, &quot;global data type descriptor&quot;);
-    CG.Emit_global_record (t.globals[FALSE].size, FALSE);
     CG.Comment (-1, FALSE, &quot;global constant type descriptor&quot;);
     CG.Emit_global_record (t.globals[TRUE].size, TRUE);
+    CG.Comment (-1, FALSE, &quot;global data type descriptor&quot;);
+    CG.Emit_global_record (t.globals[FALSE].size, FALSE);
 
     (* finish the global data initializations *)
-    CG.Comment (-1, FALSE, &quot;module global data&quot;);
-    CG.Bind_segment (t.globals[FALSE].seg, t.globals[FALSE].size, CG.Max_alignment,
-                     CG.Type.Struct, exported := FALSE, init := TRUE,
-                     is_const := FALSE);
     CG.Comment (-1, TRUE, &quot;module global constants&quot;);
     CG.Bind_segment (t.globals[TRUE].seg, t.globals[TRUE].size, CG.Max_alignment,
                      CG.Type.Struct, exported := FALSE, init := TRUE,
                      is_const := TRUE);
+    CG.Comment (-1, FALSE, &quot;module global data&quot;);
+    CG.Bind_segment (t.globals[FALSE].seg, t.globals[FALSE].size, CG.Max_alignment,
+                     CG.Type.Struct, exported := FALSE, init := TRUE,
+                     is_const := FALSE);
   END GenLinkerInfo;
 
 PROCEDURE <A NAME="AddFPTag"><procedure>AddFPTag</procedure></A> (t: T;  VAR x: M3.FPInfo): CARDINAL =
@@ -1201,6 +1221,13 @@ END Module.
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>
 <LI><A HREF="../../../stubgen/src/Type.i3.html#0TOP0">stubgen/src/Type.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x4">interface Token is in:
+</A><UL>
+<LI><A HREF="../misc/Token.i3.html#0TOP0">m3front/src/misc/Token.i3</A>
+<LI><A HREF="../../../mentor/src/parse/Token.i3.html#0TOP0">mentor/src/parse/Token.i3</A>
 </UL>
 <P>
 <PRE>

@@ -54,8 +54,8 @@ CONST Names = ARRAY [0..47] OF TEXT {
   &quot;scrollerATT.fv&quot;,
   &quot;netobjexec.obl&quot;,
   &quot;buildpopup.fv&quot;,
-  &quot;constructorTEMPLATE.obl&quot;,
   &quot;menuTEMPLATE.fv&quot;,
+  &quot;constructorTEMPLATE.obl&quot;,
   &quot;FlipPage.pbm&quot;,
   &quot;booleanTEMPLATE.fv&quot;,
   &quot;frameATT.fv&quot;,
@@ -69,8 +69,8 @@ CONST Names = ARRAY [0..47] OF TEXT {
   &quot;defnTEMPLATE.obl&quot;,
   &quot;testTEMPLATE.fv&quot;,
   &quot;buttonTEMPLATE.fv&quot;,
-  &quot;numericATT.fv&quot;,
   &quot;vos-internal.obl&quot;,
+  &quot;numericATT.fv&quot;,
   &quot;videoTEMPLATE.fv&quot;,
   &quot;browserATT.fv&quot;,
   &quot;callbackTEMPLATE.obl&quot;,
@@ -88,8 +88,8 @@ CONST Names = ARRAY [0..47] OF TEXT {
   &quot;numericTEMPLATE.fv&quot;,
   &quot;browserTEMPLATE.fv&quot;,
   &quot;menuATT.fv&quot;,
-  &quot;vscrollTEMPLATE.fv&quot;,
   &quot;templates.obl&quot;,
+  &quot;vscrollTEMPLATE.fv&quot;,
   &quot;booleanATT.fv&quot;,
   &quot;frameTEMPLATE.fv&quot;,
   &quot;typeinATT.fv&quot;,
@@ -139,8 +139,8 @@ VAR Elements := ARRAY [0..47] OF TEXT {
   E35,
   E36,
   NIL (* E37 .. E37_0 *),
-  E38,
-  NIL (* E39 .. E39_3 *),
+  NIL (* E38 .. E38_3 *),
+  E39,
   E40,
   E41,
   E42,
@@ -214,12 +214,12 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
     | 37 =&gt;
         Wr.PutText (wr, E37);
         Wr.PutText (wr, E37_0);
-    | 39 =&gt;
-        Wr.PutText (wr, E39);
-        Wr.PutText (wr, E39_0);
-        Wr.PutText (wr, E39_1);
-        Wr.PutText (wr, E39_2);
-        Wr.PutText (wr, E39_3);
+    | 38 =&gt;
+        Wr.PutText (wr, E38);
+        Wr.PutText (wr, E38_0);
+        Wr.PutText (wr, E38_1);
+        Wr.PutText (wr, E38_2);
+        Wr.PutText (wr, E38_3);
     | 44 =&gt;
         Wr.PutText (wr, E44);
         Wr.PutText (wr, E44_0);
@@ -319,6 +319,21 @@ CONST E3_0 =
  &amp; &quot;\n   \n )\n  \n\n\n    )\n)\n        \n \n)\n&quot;;
 
 CONST E4 =
+   &quot;(Filter %@Menu\n (Macro \n    MenuItem\n    BOA\n    (xFilter initState&quot;
+ &amp; &quot; x xLabel xLabelValue)\n    `(Filter %,xFilter ,initState\n        (Men&quot;
+ &amp; &quot;u %,x (Text %,xLabel ,xLabelValue))\n     )\n  ) \n  (Macro \n    PullD&quot;
+ &amp; &quot;ownMenuItem\n    BOA\n    (xFilter initState x xLabel xLabelValue pulld&quot;
+ &amp; &quot;own)\n    `(Filter %,xFilter ,initState\n        (Menu %,x (Text %,xLab&quot;
+ &amp; &quot;el ,xLabelValue)\n            (Border (Pen 1)\n                    ,pul&quot;
+ &amp; &quot;ldown\n            )\n        )\n     )\n  ) \n\n (Macro\n   MenuButton&quot;
+ &amp; &quot;\n   BOA\n   (xFilter initState x xLabel xLabelValue )\n   `(Filter %,x&quot;
+ &amp; &quot;Filter ,initState\n       (MButton %,x\n         (Text %,xLabel ,xLabel&quot;
+ &amp; &quot;Value) \n       )\n    )\n  )\n    (BgColor \&quot;$MenuBgColor$\&quot;) (Color \&quot;&quot;
+ &amp; &quot;$MenuFgColor$\&quot;)\n    (LabelFont \&quot;$MenuFont$\&quot;)\n    (ShadowSize 0)\n &quot;
+ &amp; &quot;   (Border  (Pen 1)\n        (HBox \n           $MenuItems$\n          &quot;
+ &amp; &quot; (Glue 1000)\n        )  \n    ) \n)\n&quot;;
+
+CONST E5 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -348,21 +363,6 @@ CONST E4 =
  &amp; &quot;ach callbacks for the first time *)\nSELF.VOAttachCBacks();\n\n(* Initi&quot;
  &amp; &quot;alization Code *)\n$InitializationCode$\n\n\t  form_show(SELF.FORM);\n\n&quot;
  &amp; &quot;\t  $form$Constructor.VORegister(VOInstance);\n          end\n };\n\n&quot;;
-
-CONST E5 =
-   &quot;(Filter %@Menu\n (Macro \n    MenuItem\n    BOA\n    (xFilter initState&quot;
- &amp; &quot; x xLabel xLabelValue)\n    `(Filter %,xFilter ,initState\n        (Men&quot;
- &amp; &quot;u %,x (Text %,xLabel ,xLabelValue))\n     )\n  ) \n  (Macro \n    PullD&quot;
- &amp; &quot;ownMenuItem\n    BOA\n    (xFilter initState x xLabel xLabelValue pulld&quot;
- &amp; &quot;own)\n    `(Filter %,xFilter ,initState\n        (Menu %,x (Text %,xLab&quot;
- &amp; &quot;el ,xLabelValue)\n            (Border (Pen 1)\n                    ,pul&quot;
- &amp; &quot;ldown\n            )\n        )\n     )\n  ) \n\n (Macro\n   MenuButton&quot;
- &amp; &quot;\n   BOA\n   (xFilter initState x xLabel xLabelValue )\n   `(Filter %,x&quot;
- &amp; &quot;Filter ,initState\n       (MButton %,x\n         (Text %,xLabel ,xLabel&quot;
- &amp; &quot;Value) \n       )\n    )\n  )\n    (BgColor \&quot;$MenuBgColor$\&quot;) (Color \&quot;&quot;
- &amp; &quot;$MenuFgColor$\&quot;)\n    (LabelFont \&quot;$MenuFont$\&quot;)\n    (ShadowSize 0)\n &quot;
- &amp; &quot;   (Border  (Pen 1)\n        (HBox \n           $MenuItems$\n          &quot;
- &amp; &quot; (Glue 1000)\n        )  \n    ) \n)\n&quot;;
 
 CONST E6 =
    &quot;P1\r\n# CREATOR: XV Version 3.00  Rev: 3/30/93\r\n19 16\r\n0 0 0 0 0 0 &quot;
@@ -1386,18 +1386,6 @@ CONST E18 =
  &amp; &quot;  \n\n&quot;;
 
 CONST E19 =
-   &quot; (Shape %numericatt (Height 200)\n   (VBox \n     (Glue 10)\n     (Titl&quot;
- &amp; &quot;e \&quot;Numeric\&quot;)\n     (Glue 10)\n     (HBox\n       (Glue 10)\n         &quot;
- &amp; &quot;    (VBox  (Field \&quot;Min  :\&quot; 150  (Numeric (TabTo numVal) %numMin  ))\n&quot;
- &amp; &quot;                 (Glue 3)\n                (Field \&quot;Value :\&quot; 150  (Num&quot;
- &amp; &quot;eric (TabTo numMax) %numVal  ))\n                (Glue 3)\n            &quot;
- &amp; &quot;    (Field \&quot;Max  :\&quot; 150  (Numeric (TabTo name) %numMax  ))\n         &quot;
- &amp; &quot;      )\n      (Glue 50) Fill\n              (VBox  \n                 &quot;
- &amp; &quot; (Boolean %numAllowEmpty \&quot;Allow Empty\&quot;)\n                  Fill\n    &quot;
- &amp; &quot;              (Boolean %numHideButtons \&quot;Hide Buttons\&quot;)\n             &quot;
- &amp; &quot;  )\n        (Glue 10)\n     )\n      Fill\n   )\n  )\n&quot;;
-
-CONST E20 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -1422,6 +1410,18 @@ CONST E20 =
  &amp; &quot; \n          ok \n          end);\n      form_show(noticeform);\n      &quot;
  &amp; &quot;ok\n      end,\n     ping =&gt; meth(s)\n        true\n     end\n    };\n &quot;
  &amp; &quot; net_export(\&quot;vos\&quot;, \&quot;\&quot;, vos);\nend;\n\n\n\n\n\n\n\n\n\n\n&quot;;
+
+CONST E20 =
+   &quot; (Shape %numericatt (Height 200)\n   (VBox \n     (Glue 10)\n     (Titl&quot;
+ &amp; &quot;e \&quot;Numeric\&quot;)\n     (Glue 10)\n     (HBox\n       (Glue 10)\n         &quot;
+ &amp; &quot;    (VBox  (Field \&quot;Min  :\&quot; 150  (Numeric (TabTo numVal) %numMin  ))\n&quot;
+ &amp; &quot;                 (Glue 3)\n                (Field \&quot;Value :\&quot; 150  (Num&quot;
+ &amp; &quot;eric (TabTo numMax) %numVal  ))\n                (Glue 3)\n            &quot;
+ &amp; &quot;    (Field \&quot;Max  :\&quot; 150  (Numeric (TabTo name) %numMax  ))\n         &quot;
+ &amp; &quot;      )\n      (Glue 50) Fill\n              (VBox  \n                 &quot;
+ &amp; &quot; (Boolean %numAllowEmpty \&quot;Allow Empty\&quot;)\n                  Fill\n    &quot;
+ &amp; &quot;              (Boolean %numHideButtons \&quot;Hide Buttons\&quot;)\n             &quot;
+ &amp; &quot;  )\n        (Glue 10)\n     )\n      Fill\n   )\n  )\n&quot;;
 
 CONST E21 =
    &quot;(Filter %@filter $FilterState$\n \n  (Shape %@shape (Width $XSpan$ + In&quot;
@@ -2071,16 +2071,6 @@ CONST E37_0 =
  &amp; &quot;               &quot;;
 
 CONST E38 =
-   &quot;(Filter %@filter $FilterState$\n \n  (Shape %@shape (Width $XSpan$ + In&quot;
- &amp; &quot;f - Inf) (Height $YSpan$ + Inf - Inf)\n  \n    (BgColor \&quot;$BgColor$\&quot;) &quot;
- &amp; &quot;(Color \&quot;$FgColor$\&quot;)\n     (LabelFont \&quot;$Font$\&quot;)  \n     \n     (Fram&quot;
- &amp; &quot;e $FrameStyle$  \n      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)\n   &quot;
- &amp; &quot;    (Border %@border (Pen $BorderPen$)\n\n        (Scroller Vertical %@&quot;
- &amp; &quot; \n            (Value $Value$) (Min $Min$)\n            (Max $Max$) (Th&quot;
- &amp; &quot;umb $Thumb$)\n            (Step $Step$)\n        )    \n       \n      &quot;
- &amp; &quot;   \n        )\n           \n        )\n      )\n    )\n )\n  \n\n&quot;;
-
-CONST E39 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -2113,7 +2103,7 @@ CONST E39 =
  &amp; &quot;XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)\n  \n    (BgColor \\\&quot;&quot;
  &amp; &quot;$BgC&quot;;
 
-CONST E39_0 =
+CONST E38_0 =
    &quot;olor$\\\&quot;) (Color \\\&quot;$FgColor$\\\&quot;)\n     (LabelFont \\\&quot;$Font$\\\&quot;)  &quot;
  &amp; &quot;\n     \n     (Frame $FrameStyle$  \n      (Rim %@rim (Pen $RimPen$) (S&quot;
  &amp; &quot;hadowSize 1.5)\n       (Border %@border (Pen $BorderPen$)\n\n         (&quot;
@@ -2146,7 +2136,7 @@ CONST E39_0 =
  &amp; &quot;etch$ - $XShrink$) \n        (Height $YSpan$ + $YStretch$ - $YShrink$)\n&quot;
  &amp; &quot;     &quot;;
 
-CONST E39_1 =
+CONST E38_1 =
    &quot;   (BgColor \\\&quot;$BgColor$\\\&quot;) \n        (Color \\\&quot;$FgColor$\\\&quot;)\n   &quot;
  &amp; &quot;     (LabelFont \\\&quot;$Font$\\\&quot;)\n        (Rim %@rim (Pen $RimPen$) \n  &quot;
  &amp; &quot;        (Border %@border (Pen $BorderPen$)\n            (VBox\n\t     (&quot;
@@ -2179,7 +2169,7 @@ CONST E39_1 =
  &amp; &quot;\n      )\n    )\n )\n  \n\n\&quot;,\nmenu =&gt; \&quot;\n(Filter %@Menu\n (Macro \n&quot;
  &amp; &quot;    MenuItem\n    BOA\n&quot;;
 
-CONST E39_2 =
+CONST E38_2 =
    &quot;    (xFilter initState x xLabel xLabelValue)\n    `(Filter %,xFilter ,i&quot;
  &amp; &quot;nitState\n        (Menu %,x (Text %,xLabel ,xLabelValue))\n     )\n  ) &quot;
  &amp; &quot;\n  (Macro \n    PullDownMenuItem\n    BOA\n    (xFilter initState x xL&quot;
@@ -2212,7 +2202,7 @@ CONST E39_2 =
  &amp; &quot;lor \\\&quot;$FgColor$\\\&quot;)\n     (Font \\\&quot;$Font$\\\&quot;)  \n     \n     (Fram&quot;
  &amp; &quot;e $FrameStyle$  \n   &quot;;
 
-CONST E39_3 =
+CONST E38_3 =
    &quot;   (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)\n       (Border %@border &quot;
  &amp; &quot;(Pen $BorderPen$)\n\n        (TextEdit %@ $ReadOnly$ $Clip$ $NoScrollba&quot;
  &amp; &quot;r$\n            ($Initial$)\n         )\n         \n        )\n        &quot;
@@ -2244,6 +2234,16 @@ CONST E39_3 =
  &amp; &quot;(Min $Min$)\n            (Max $Max$) (Thumb $Thumb$)\n            (Step&quot;
  &amp; &quot; $Step$)\n        )    \n       \n         \n        )\n           \n  &quot;
  &amp; &quot;      )\n      )\n    )\n )\n  \n\n\&quot;,\n};\n&quot;;
+
+CONST E39 =
+   &quot;(Filter %@filter $FilterState$\n \n  (Shape %@shape (Width $XSpan$ + In&quot;
+ &amp; &quot;f - Inf) (Height $YSpan$ + Inf - Inf)\n  \n    (BgColor \&quot;$BgColor$\&quot;) &quot;
+ &amp; &quot;(Color \&quot;$FgColor$\&quot;)\n     (LabelFont \&quot;$Font$\&quot;)  \n     \n     (Fram&quot;
+ &amp; &quot;e $FrameStyle$  \n      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)\n   &quot;
+ &amp; &quot;    (Border %@border (Pen $BorderPen$)\n\n        (Scroller Vertical %@&quot;
+ &amp; &quot; \n            (Value $Value$) (Min $Min$)\n            (Max $Max$) (Th&quot;
+ &amp; &quot;umb $Thumb$)\n            (Step $Step$)\n        )    \n       \n      &quot;
+ &amp; &quot;   \n        )\n           \n        )\n      )\n    )\n )\n  \n\n&quot;;
 
 CONST E40 =
    &quot; (Shape %booleanatt (Height 200)\n  \n   (VBox \n     (Glue 10)\n      &quot;

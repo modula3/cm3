@@ -15,7 +15,7 @@
 PROCEDURE <A HREF="TCPHackNull.m3.html#RefetchError">RefetchError</A>(fd: INTEGER): BOOLEAN;
   (* Awful hack to retrieve a meaningful error from a TCP accept
      socket.  Only works on Ultrix and OSF.  Leaves result
-     in Cerrno.errno.  Returns &quot;TRUE&quot; if and only if it might
+     in standard C's &quot;errno&quot;.  Returns &quot;TRUE&quot; if and only if it might
      possibly have succeeded. *)
 
 END TCPHack.

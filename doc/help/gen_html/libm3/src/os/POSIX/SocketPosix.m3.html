@@ -11,7 +11,7 @@
 
 <P><PRE>UNSAFE MODULE <module>SocketPosix</module> EXPORTS <A HREF="../Common/Socket.i3.html"><implements>Socket</A></implements>;
 
-IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="../../../derived/AtomList.i3.html">AtomList</A>, <A HREF="../../../../m3core/derived/Compiler.i3.html">Compiler</A>, <A HREF="../../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../Common/File.i3.html">File</A>, <A HREF="FilePosix.i3.html">FilePosix</A>;
+IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="../../../derived/AtomList.i3.html">AtomList</A>, <A HREF="../../../../m3core/derived/Compiler.i3.html">Compiler</A>, <A HREF="../../../../m3core/src/C/Common/Cerrno.i3.html">Cerrno</A>, <A HREF="../../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../Common/File.i3.html">File</A>, <A HREF="FilePosix.i3.html">FilePosix</A>;
 IMPORT <A HREF="../Common/OSError.i3.html">OSError</A>, <A HREF="OSErrorPosix.i3.html">OSErrorPosix</A>, <A HREF="../../../../m3core/src/thread/POSIX/SchedulerPosix.i3.html">SchedulerPosix</A>, <A HREF="../../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Unix.i3.html">Unix</A>;
 IMPORT <A HREF="../../../../m3core/src/unix/linux-libc6/Uin.i3.html">Uin</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Uuio.i3.html">Uuio</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Uerror.i3.html">Uerror</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Usocket.i3.html">Usocket</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Ustat.i3.html">Ustat</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Unetdb.i3.html">Unetdb</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Utypes.i3.html">Utypes</A>, <A HREF="../../../../m3core/src/word/Word.i3.html">Word</A>;
 
@@ -53,8 +53,10 @@ PROCEDURE <A NAME="Create"><procedure>Create</procedure></A> (reliable: BOOLEAN)
     t.fd := Usocket.socket (Usocket.AF_INET, Map[reliable], 0);
     IF t.fd = -1 THEN
       VAR err := Unexpected; BEGIN
-        IF Uerror.errno = Uerror.EMFILE OR Uerror.errno = Uerror.ENFILE THEN
-          err := NoResources;
+        WITH errno = Cerrno.GetErrno() DO
+          IF errno = Uerror.EMFILE OR errno = Uerror.ENFILE THEN
+            err := NoResources;
+          END;
         END;
         IOError (err);
       END;
@@ -96,7 +98,7 @@ PROCEDURE <A NAME="Bind"><procedure>Bind</procedure></A> (t: T;  READONLY ep: En
     status := Usocket.bind (t.fd, ADR (name), BYTESIZE (name));
     IF status # 0 THEN
       VAR err := Unexpected; BEGIN
-        IF Uerror.errno = Uerror.EADDRINUSE THEN err := PortBusy; END;
+        IF Cerrno.GetErrno() = Uerror.EADDRINUSE THEN err := PortBusy; END;
         IOError (err);
       END;
     END;
@@ -123,15 +125,17 @@ PROCEDURE <A NAME="Connect"><procedure>Connect</procedure></A> (t: T;  READONLY 
       status := Usocket.connect (t.fd, ADR(name), BYTESIZE(name));
       IF status = 0 THEN EXIT; END;
 
-      IF Uerror.errno = Uerror.EINVAL THEN
-        (* hack to try to get real errno, hidden due to NBIO bug in connect *)
-        RefetchError (t.fd);
-      ELSIF Uerror.errno = Uerror.EBADF THEN
-        (* we'll try the same for EBADF, which we've seen on Alpha *)
-        RefetchError (t.fd);
+      WITH errno = Cerrno.GetErrno() DO
+        IF errno = Uerror.EINVAL THEN
+          (* hack to try to get real errno, hidden due to NBIO bug in connect *)
+          RefetchError (t.fd);
+        ELSIF errno = Uerror.EBADF THEN
+          (* we'll try the same for EBADF, which we've seen on Alpha *)
+          RefetchError (t.fd);
+        END;
       END;
 
-      CASE Uerror.errno OF
+      CASE Cerrno.GetErrno() OF
       | Uerror.EISCONN =&gt;
           EXIT;
       | Uerror.EADDRNOTAVAIL,
@@ -172,7 +176,7 @@ PROCEDURE <A NAME="Accept"><procedure>Accept</procedure></A> (t: T): T
       fd := Usocket.accept (t.fd, ADR (name), ADR (len));
       IF fd &gt;= 0 THEN EXIT; END;
 
-      CASE Uerror.errno OF
+      CASE Cerrno.GetErrno() OF
       | Uerror.EMFILE,
         Uerror.ENFILE =&gt;
           IOError (NoResources);
@@ -211,7 +215,7 @@ PROCEDURE <A NAME="ReceiveFrom"><procedure>ReceiveFrom</procedure></A> (t: T;  V
         RETURN len;
       END;
 
-      CASE Uerror.errno OF
+      CASE Cerrno.GetErrno() OF
       | Uerror.ECONNRESET =&gt;
           RETURN 0;
       | Uerror.EPIPE,
@@ -243,7 +247,7 @@ PROCEDURE <A NAME="Read"><procedure>Read</procedure></A> (t: T;  VAR(*OUT*) b: A
       len := Uuio.read (t.fd, p_b, NUMBER (b));
       IF len &gt;= 0 THEN RETURN len; END;
 
-      CASE Uerror.errno OF
+      CASE Cerrno.GetErrno() OF
       | Uerror.ECONNRESET =&gt;
           RETURN 0;
       | Uerror.EPIPE,
@@ -283,7 +287,7 @@ PROCEDURE <A NAME="SendTo"><procedure>SendTo</procedure></A> (t: T;  READONLY ep
       IF len &gt;= 0 THEN
         INC (p, len);  DEC (n, len);
       ELSE
-        CASE Uerror.errno OF
+        CASE Cerrno.GetErrno() OF
         | Uerror.EPIPE,
           Uerror.ECONNRESET,
           Uerror.ENETRESET =&gt;
@@ -323,7 +327,7 @@ PROCEDURE <A NAME="Write"><procedure>Write</procedure></A> (t: T;  READONLY b: A
       IF len &gt;= 0 THEN
         INC (p, len);  DEC (n, len);
       ELSE
-        CASE Uerror.errno OF
+        CASE Cerrno.GetErrno() OF
         | Uerror.EPIPE,
           Uerror.ECONNRESET,
           Uerror.ENETRESET =&gt;
@@ -494,7 +498,7 @@ PROCEDURE <A NAME="MakeNonBlocking"><procedure>MakeNonBlocking</procedure></A> (
 PROCEDURE <A NAME="RefetchError"><procedure>RefetchError</procedure></A>(fd: INTEGER) =
 </PRE><BLOCKQUOTE><EM> Awful hack to retrieve a meaningful error from a TCP accept
    socket.  Only works on Ultrix and OSF.  Leaves result
-   in Uerror.errno.  </EM></BLOCKQUOTE><PRE>
+   in Cerrno.GetErrno().  </EM></BLOCKQUOTE><PRE>
   VAR optbuf: INTEGER := 0;   optlen := BYTESIZE(optbuf);
   BEGIN
     IF Compiler.ThisPlatform = Compiler.Platform.ALPHA_OSF
@@ -507,8 +511,8 @@ PROCEDURE <A NAME="RefetchError"><procedure>RefetchError</procedure></A>(fd: INT
 PROCEDURE <A NAME="IOError"><procedure>IOError</procedure></A> (a: Atom.T) RAISES {OSError.E} =
   VAR ec: AtomList.T := NIL;
   BEGIN
-    IF (Uerror.errno # 0) THEN
-      ec := AtomList.List1 (OSErrorPosix.ErrnoAtom (Uerror.errno));
+    IF (Cerrno.GetErrno() # 0) THEN
+      ec := AtomList.List1 (OSErrorPosix.ErrnoAtom (Cerrno.GetErrno()));
     END;
     RAISE OSError.E (AtomList.Cons (a, ec));
   END IOError;

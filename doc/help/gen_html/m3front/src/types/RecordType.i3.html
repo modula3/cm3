@@ -25,7 +25,7 @@ PROCEDURE <A HREF="RecordType.m3.html#Split">Split</A> (t: Type.T;  VAR fields: 
 
 PROCEDURE <A HREF="RecordType.m3.html#LookUp">LookUp</A> (t: Type.T;  name: M3ID.T;  VAR field: Value.T): BOOLEAN;
 
-PROCEDURE <A HREF="RecordType.m3.html#SizeAndAlignment">SizeAndAlignment</A> (fields: Scope.T;
+PROCEDURE <A HREF="RecordType.m3.html#SizeAndAlignment">SizeAndAlignment</A> (fields: Scope.T; lazyAligned: BOOLEAN;
                             VAR(*OUT*) recSize, recAlign: INTEGER;
                             VAR(*OUT*) is_solid: BOOLEAN);
 

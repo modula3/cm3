@@ -16,7 +16,7 @@
 
 <P><PRE>MODULE <module><implements><A HREF="Decl.i3.html">Decl</A></implements></module>;
 
-IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="#x1">M3ID</A>, <A HREF="../misc/M3String.i3.html">M3String</A>, <A HREF="../misc/Token.i3.html">Token</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../misc/ESet.i3.html">ESet</A>, <A HREF="Module.i3.html">Module</A>, <A HREF="Exceptionz.i3.html">Exceptionz</A>;
+IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="#x1">M3ID</A>, <A HREF="../misc/M3String.i3.html">M3String</A>, <A HREF="#x2">Token</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../misc/ESet.i3.html">ESet</A>, <A HREF="Module.i3.html">Module</A>, <A HREF="Exceptionz.i3.html">Exceptionz</A>;
 IMPORT <A HREF="Constant.i3.html">Constant</A>, <A HREF="Tipe.i3.html">Tipe</A>, <A HREF="Variable.i3.html">Variable</A>, <A HREF="Procedure.i3.html">Procedure</A>, <A HREF="Revelation.i3.html">Revelation</A>, <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>;
 FROM <A HREF="../misc/Scanner.i3.html">Scanner</A> IMPORT GetToken, Match, cur;
 
@@ -24,14 +24,16 @@ TYPE
   TK = Token.T;
 
 TYPE
-  Attr    = { External, Inline, Implicit, CallConv, Obsolete, Unused };
+  Attr    = { External, Inline, Implicit, CallConv, Obsolete, Unused,
+              LazyAligned };
   AttrSet = SET OF Attr;
 CONST
   RevealOK    = AttrSet { };
-  ConstantOK  = AttrSet { Attr.Obsolete, Attr.Unused };
-  TypeOK      = AttrSet { Attr.Obsolete, Attr.Unused };
+  ConstantOK  = AttrSet { Attr.Obsolete, Attr.Unused, Attr.LazyAligned };
+  TypeOK      = AttrSet { Attr.Obsolete, Attr.Unused, Attr.LazyAligned };
   ExceptionOK = AttrSet { Attr.Obsolete, Attr.Unused, Attr.Implicit };
-  VariableOK  = AttrSet { Attr.Obsolete, Attr.Unused, Attr.External };
+  VariableOK  = AttrSet { Attr.Obsolete, Attr.Unused, Attr.External,
+                          Attr.LazyAligned };
   ProcedureOK = AttrSet { Attr.Obsolete, Attr.Unused, Attr.External,
                           Attr.Inline, Attr.CallConv };
 
@@ -45,6 +47,7 @@ PROCEDURE <A NAME="Parse"><procedure>Parse</procedure></A> (interface, top_level
     att.isImplicit  := FALSE;
     att.alias       := M3ID.NoID;
     att.callingConv := NIL;
+    att.isLazyAligned := Module.LazyAlignmentOn ();
     LOOP
       CASE cur.token OF
       | TK.tEXTERNAL =&gt;
@@ -73,6 +76,16 @@ PROCEDURE <A NAME="Parse"><procedure>Parse</procedure></A> (interface, top_level
           att.callingConv := Target.FindConvention (M3ID.ToText (cur.id));
           got_cc := TRUE;
           GetToken (); (* convention name *)
+          Match (TK.tENDPRAGMA);
+      | TK.tLAZYALIGN =&gt;
+          att.isLazyAligned := TRUE;
+          Module.SetLazyAlignment (TRUE);
+          GetToken (); (* LAZYALIGN *)
+          Match (TK.tENDPRAGMA);
+      | TK.tSTRICTALIGN =&gt;
+          att.isLazyAligned := FALSE;
+          Module.SetLazyAlignment (FALSE);
+          GetToken (); (* LAZYALIGN *)
           Match (TK.tENDPRAGMA);
       ELSE EXIT;
       END;
@@ -197,6 +210,13 @@ END Decl.
 </A><UL>
 <LI><A HREF="../../../m3middle/src/M3ID.i3.html#0TOP0">m3middle/src/M3ID.i3</A>
 <LI><A HREF="../../../m3scan/src/M3ID.i3.html#0TOP0">m3scan/src/M3ID.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Token is in:
+</A><UL>
+<LI><A HREF="../misc/Token.i3.html#0TOP0">m3front/src/misc/Token.i3</A>
+<LI><A HREF="../../../mentor/src/parse/Token.i3.html#0TOP0">mentor/src/parse/Token.i3</A>
 </UL>
 <P>
 <PRE>

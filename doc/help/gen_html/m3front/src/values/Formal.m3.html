@@ -603,7 +603,7 @@ PROCEDURE <A NAME="IsExternalProcedure"><procedure>IsExternalProcedure</procedur
 
 PROCEDURE <A NAME="GenRecord"><procedure>GenRecord</procedure></A> (t: T;  actual: Expr.T) =
   BEGIN
-    &lt;* ASSERT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) *&gt;
+    (* &lt;* ASSERT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) *&gt; *)
     CASE t.mode OF
     | Mode.mVALUE =&gt;
         Expr.Compile (actual);

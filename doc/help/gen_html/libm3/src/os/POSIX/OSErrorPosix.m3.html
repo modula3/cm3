@@ -14,7 +14,7 @@
 
 <P><PRE>MODULE <module>OSErrorPosix</module> EXPORTS <A HREF="../Common/OSError.i3.html"><implements>OSError</A></implements>, <A HREF="OSErrorPosix.i3.html"><implements>OSErrorPosix</A></implements>;
 
-IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="../../../derived/AtomList.i3.html">AtomList</A>, <A HREF="../../fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../Common/OSError.i3.html">OSError</A>, <A HREF="../../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Uerror.i3.html">Uerror</A>;
+IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="../../../derived/AtomList.i3.html">AtomList</A>, <A HREF="../../../../m3core/src/C/Common/Cerrno.i3.html">Cerrno</A>, <A HREF="../../fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../Common/OSError.i3.html">OSError</A>, <A HREF="../../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Uerror.i3.html">Uerror</A>;
 
 VAR cache := ARRAY [0..Uerror.Max] OF Atom.T {NIL, ..};
 </PRE><BLOCKQUOTE><EM> The table is initialized lazily. </EM></BLOCKQUOTE><PRE>
@@ -61,7 +61,7 @@ PROCEDURE <A NAME="Raise0"><procedure>Raise0</procedure></A>(errno: INTEGER) RAI
 
 PROCEDURE <A NAME="Raise"><procedure>Raise</procedure></A>() RAISES {OSError.E} =
   BEGIN
-    Raise0(Uerror.errno)
+    Raise0(Cerrno.GetErrno())
   END Raise;
 
 BEGIN
