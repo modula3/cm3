@@ -159,6 +159,8 @@ case "${UNAME}" in
       i[3456]86*) CM3_TARGET=I386_DARWIN;;
     esac
     GMAKE=${GMAKE:-make}
+    M3GC_SIMPLE=yes
+    export M3GC_SIMPLE
   ;;
 
   SunOS*)
