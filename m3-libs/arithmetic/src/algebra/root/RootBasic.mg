@@ -476,6 +476,25 @@ BEGIN
   RETURN y;
 END FromPowerSumSeq;
 
+(*-----------------------*)
+(*
+PROCEDURE Deflate(
+                   x:T;
+                   c:R.T;
+                   VAR rem:R.T)=
+VAR
+  xl:=LAST(x^);
+  b,psave:R.T;
+BEGIN
+  b:=x[xl]; psave:=x[xl-1]; x[xl-1]:=b;
+  FOR i:=xl-2 TO 1 BY -1 DO
+    b:=psave+c*b;
+    psave:=x[i]; x[i]:=b;
+  END;
+  rem:=x[0]+c*x[1];
+END Deflate;
+*)
+
 (*==========================*)
 BEGIN
   Zero:=NEW(T,2); Zero^ := TBody{R.Zero,R.One};

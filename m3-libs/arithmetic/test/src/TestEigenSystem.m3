@@ -4,11 +4,15 @@
  *)
 MODULE TestEigenSystem EXPORTS Test;
 
-IMPORT LongRealEigenSystem AS EigenSys,
-       LongRealMatrixFast  AS M,
-       LongRealVectorFast  AS V,
-       LongRealBasic       AS R;
-IMPORT Wr, Stdio, Thread, Fmt;
+IMPORT LongRealEigenSystem    AS EigenSys,
+       LongRealCharPolynomial AS CP,
+       LongRealMatrixFast     AS M,
+       LongRealVectorFast     AS V,
+       LongRealPolynomialFast AS P,
+       LongRealBasic          AS R,
+       LongRealMatrixFmtLex     AS MF,
+       LongRealPolynomialFmtLex AS PF;
+IMPORT Wr, Stdio, Thread, Fmt, xUtils;
 
 <* FATAL Wr.Failure *>
 <* FATAL Thread.Alerted *>
@@ -184,6 +188,29 @@ PROCEDURE RunTestA() RAISES {}=
 
   END RunTestA;
 
+PROCEDURE TestCharPolynomial()=
+  <*FATAL xUtils.Error*>
+  VAR
+    p,cp:P.T;
+    m:M.T;
+  BEGIN
+    p:=P.New(10);
+    (*
+    FOR j:=0 TO LAST(p^)-1 DO
+      p[j]:=FLOAT(j,R.T);
+    END;
+    p[LAST(p^)]:=R.One;
+    *)
+    p^:=P.TBody{ 0.0D0, 1.0D0, -3.0D0,  4.0D0, 7.0D0,
+                -2.0D0, 4.0D0,  3.0D0, -1.0D0, 5.0D0,
+                 1.0D0};
+    Msg(Fmt.FN("Polynomial %s\n",ARRAY OF TEXT{PF.Fmt(p)}));
+    m:=CP.CompanionMatrix(p);
+    Msg(Fmt.FN("Companion %s\n",ARRAY OF TEXT{MF.Fmt(m,MF.FmtStyle{width:=4})}));
+    cp:=CP.CharPolynomial(m);
+    Msg(Fmt.FN("Characteristic polynomial %s\n",ARRAY OF TEXT{PF.Fmt(cp)}));
+    <*ASSERT P.Equal(p,cp)*>
+  END TestCharPolynomial;
 
 (*-------------------------*)
 PROCEDURE TestEigenSystem():BOOLEAN=
@@ -191,6 +218,7 @@ PROCEDURE TestEigenSystem():BOOLEAN=
 VAR result:=TRUE;
 BEGIN
   NewLine(); RunTestA();
+  NewLine(); TestCharPolynomial();
   RETURN result;
 END TestEigenSystem;
 (*=======================*)

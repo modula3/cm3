@@ -215,7 +215,7 @@ BEGIN
   FOR i:=mf TO ml DO
     sum:=R.Zero;
     FOR j:=nf TO nl DO
-      sum:=R.Add(sum,R.Mul(b[j],A[i,j]));
+      sum:=R.Add(sum,R.Mul(A[i,j],b[j]));
     END;
     c[i]:=sum;
   END;
@@ -257,6 +257,21 @@ BEGIN
   END;
   RETURN z;
 END Adjungate;
+
+(*-----------------*)
+PROCEDURE Trace(x:T):R.T=
+VAR
+  y:R.T;
+BEGIN
+  y:=x[0,0];
+  FOR j:=1 TO MIN(LAST(x^),LAST(x[0])) DO
+    y:=R.Add(y,x[j,j]);
+  END;
+  RETURN y;
+END Trace;
+
+(*-----------------*)
+(*PROCEDURE Determinant(x:T):R.T;*)
 
 (*-----------------*)
 BEGIN

@@ -13,7 +13,7 @@ IMPORT Wr, Thread;
 (*-----------------*)
 TYPE
   T = M.T;
-  FmtStyle = RECORD elemStyle := RF.FmtStyle{}; END;
+  FmtStyle = RECORD width : CARDINAL := 12; elemStyle := RF.FmtStyle{}; END;
 
 (*
 <*UNUSED*>

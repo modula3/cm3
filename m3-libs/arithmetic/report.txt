@@ -1,8 +1,10 @@
 for myself:
 
 todo:
+  - Trace, CharacteristicPolynomial, CompanionMatrix
+  - RootApproximation
   - physical units
-  - Bits, Interpolation, Random/RNG01/RNG02, Root, Stat
+  - Bits, Interpolation, Random/RNG01/RNG02, Stat
   - ODE
   - Hash routines
   - BRANDED strings

@@ -55,11 +55,7 @@ PROCEDURE Div(x,y:T):T RAISES {Error};  (*return x/y if possible, will fail for 
 PROCEDURE Mod(x,y:T):T RAISES {Error};  (*return x mod y*)
 PROCEDURE DivMod(x,y:T;                 (*compute x/y *)
               VAR r:T):T RAISES {Error};   (*giving quotient with remainder r*)
-(*
-PROCEDURE deflate(x:T;        (*divide this polynomial*)
-                  c:R.T;      (* by (xi-c) *)
-                  VAR rem:R.T);(*leaving remainder -- possibly 0*)
-*)
+
 PROCEDURE Derive(x:T;           (*differentiate polynomial*)
                  ):T;
 PROCEDURE EvalDerivative(x:T;          (*Eval this polynomial*)

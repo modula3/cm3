@@ -34,5 +34,9 @@ PROCEDURE Mul(x,y:T):T RAISES {Error};   (*x * y*)
 PROCEDURE MulV(A:T;b:V.T):V.T RAISES {Error};  (*A * b*)
 PROCEDURE Transpose(x:T):T;                  (*x^T*)
 PROCEDURE Adjungate(x:T):T;                  (*x^**)
+
+PROCEDURE Trace(x:T):R.T;    (*sum of the diagonal elements*)
+(*PROCEDURE Determinant(x:T):R.T;*)
+
 (*==========================*)
 END MatrixBasic.

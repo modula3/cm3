@@ -279,5 +279,16 @@ BEGIN
 END Transpose;
 
 (*-----------------*)
+PROCEDURE Trace(x:T):R.T=
+VAR
+  y:R.T:=R.Zero;
+BEGIN
+  FOR j:=0 TO MIN(LAST(x^),LAST(x[0])) DO
+    y:=y+x[j,j];
+  END;
+  RETURN y;
+END Trace;
+
+(*-----------------*)
 BEGIN
 END MatrixFast.

@@ -4,7 +4,7 @@ template("matrix")
 
 
 generic_module("MatrixBasic")
-MatrixBasic("Real",	       "RealVectorBasic",             "RealBasic")
+MatrixBasic("Real",            "RealVectorBasic",             "RealBasic")
 MatrixBasic("LongReal",        "LongRealVectorBasic",         "LongRealBasic")
 MatrixBasic("Extended",        "ExtendedVectorBasic",         "ExtendedBasic")
 MatrixBasic("LongRealComplex", "LongRealComplexVectorBasic",  "LongRealComplexBasic")
@@ -25,6 +25,14 @@ generic_module("EigenSystem")
 EigenSystem("Real",     "RealMatrixFast",     "RealVectorFast",     "RealBasic",     "RealTrans")
 EigenSystem("LongReal", "LongRealMatrixFast", "LongRealVectorFast", "LongRealBasic", "LongRealTrans")
 EigenSystem("Extended", "ExtendedMatrixFast", "ExtendedVectorFast", "ExtendedBasic", "ExtendedTrans")
+
+generic_module("CharPolynomial")
+CharPolynomial("Real",            "RealMatrixFast",              "RealRootBasic",             "RealBasic")
+CharPolynomial("LongReal",        "LongRealMatrixFast",          "LongRealRootBasic",         "LongRealBasic")
+CharPolynomial("Extended",        "ExtendedMatrixFast",          "ExtendedRootBasic",         "ExtendedBasic")
+CharPolynomial("LongRealComplex", "LongRealComplexMatrixBasic",  "LongRealComplexRootBasic",  "LongRealComplexBasic")
+CharPolynomial("Integer32",       "Integer32MatrixBasic",        "Integer32RootBasic",        "Integer32Basic")
+CharPolynomial("BigInteger",      "BigIntegerMatrixBasic",       "BigIntegerRootBasic",       "BigIntegerBasic")
 
 generic_module("MatrixFmtLex")
 MatrixFmtLex("Real",     "RealMatrixFast",     "RealFmtLex")

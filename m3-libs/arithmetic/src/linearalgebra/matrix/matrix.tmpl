@@ -26,6 +26,12 @@ readonly proc EigenSystem (nm, mfield, vfield, rfield, rtrans) is
   build_generic_impl (basic, "EigenSystem", [mfield, vfield, rfield, rtrans])
 end
 
+readonly proc CharPolynomial (nm, mfield, rtfield, rfield) is
+  local basic = nm & "CharPolynomial"
+  build_generic_intf (basic, "CharPolynomial", [mfield, rtfield], VISIBLE)
+  build_generic_impl (basic, "CharPolynomial", [mfield, rtfield, rfield])
+end
+
 readonly proc MatrixFmtLex (nm, matrix, rfmt) is
   local basic = nm & "MatrixFmtLex"
   build_generic_intf (basic, "MatrixFmtLex", [matrix, rfmt], VISIBLE)
