@@ -2,6 +2,8 @@ MODULE TestMatchWavelet;
 
 IMPORT LongRealBasic AS R;
 IMPORT LongRealTrans AS RT;
+IMPORT LongRealComplexFast AS C;
+IMPORT LongRealComplexTrans AS CT;
 IMPORT Integer32IntegerPower AS IIntPow;
 IMPORT LongRealIntegerPower AS RIntPow;
 
@@ -432,6 +434,36 @@ PROCEDURE TranslatesBasis (generatorvan: S.T;
   END TranslatesBasis;
 
 
+(*Compute a kind of distance of a given eigenspectrum to the one of the
+   transfer matrix of the B-Spline of corresponding order*)
+PROCEDURE EigenDistBSpline (READONLY specX: ARRAY OF C.T) =
+  TYPE BIT = (*BITS 1 FOR*) BOOLEAN;
+  VAR
+    enabledX   := NEW(REF ARRAY OF BIT, NUMBER(specX));
+    enabledY   := NEW(REF ARRAY OF BIT, NUMBER(specX));
+    specY      := NEW(V.T, NUMBER(specX));
+    distMatrix := NEW(M.T, NUMBER(specX), NUMBER(specX));
+  BEGIN
+    VAR eigY := R.One;
+    BEGIN
+      FOR i := FIRST(specX) TO LAST(specX) DO
+        enabledX[i] := TRUE;
+        enabledY[i] := TRUE;
+        eigY := eigY / R.Two;
+        specY[i] := eigY;
+      END;
+      specY[LAST(specX)] := R.Two * eigY;
+    END;
+    FOR i := FIRST(specX) TO LAST(specX) DO
+      FOR j := FIRST(specX) TO LAST(specX) DO
+        distMatrix[i, j] :=
+          CT.AbsSqr(C.T{specX[i].re - specY[j], specX[i].im});
+      END;
+    END;
+
+  END EigenDistBSpline;
+
+
 PROCEDURE GetLiftedPrimalGeneratorMask (         hdual, gdual0: S.T;
                                         READONLY mc           : MatchCoef):
   S.T =
@@ -529,7 +561,9 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
                     TEXT{MF.Fmt(normalMat)}));
     *)
 
-    CONST tol = 1.0D-10;
+    CONST
+      tol     = 1.0D-4;
+      difdist = 1.0D-5;
     VAR yfirst := -translates;
 
     PROCEDURE SplitParamVec (x: V.T): MatchCoef =
@@ -566,9 +600,9 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
                      3).getData();
 
         BEGIN
-(*
-IO.Put(Fmt.FN("Compute SSE of %s, sum %s\n",ARRAY OF TEXT{VF.Fmt(hsums),RF.Fmt(V.Sum(hsums^))}));
-*)
+          (*
+          IO.Put(Fmt.FN("Compute SSE of %s, sum %s\n",ARRAY OF TEXT{VF.Fmt(hsums),RF.Fmt(V.Sum(hsums^))}));
+          *)
           RETURN ComputeSSE(hsums^);
         END SquareSmoothEstimate;
 
@@ -592,7 +626,7 @@ IO.Put(Fmt.FN("Compute SSE of %s, sum %s\n",ARRAY OF TEXT{VF.Fmt(hsums),RF.Fmt(V
                                        waveletVec, waveletCor, targetVec);
 
         dx  := V.New(NUMBER(x^));
-        dxv := VT.Norm1(x) * 1.0D-4;
+        dxv := VT.Norm1(x) * difdist;
         (*dx := V.Scale(x, 1.0D-2);*)
         dersmooth: FnD.T;
 
@@ -601,7 +635,7 @@ IO.Put(Fmt.FN("Compute SSE of %s, sum %s\n",ARRAY OF TEXT{VF.Fmt(hsums),RF.Fmt(V
         IO.Put(
           Fmt.FN("ComputeOptCritDiff for x=%s", ARRAY OF TEXT{VF.Fmt(x)}));
         FOR i := FIRST(dx^) TO LAST(dx^) DO dx[i] := dxv END;
-        CASE 0 OF
+        CASE 1 OF
         | 0 =>
             dersmooth := Fn.EvalCentralDiff2(SquareSmoothEstimate, x, dx);
         | 1 => dersmooth := Fn.EvalCentralDiff2(TransitionSpecRad, x, dx);
@@ -831,7 +865,7 @@ PROCEDURE Test () =
         *)
         TestMatchPatternSmooth(Refn.Refine(BSpl.WaveletMask(2, 8),
                                            BSpl.GeneratorMask(2), 6).scale(
-                                 64.0D0).translate(30), 6, 2, 8, 5, 1.0D-10);
+                                 64.0D0).translate(50), 6, 2, 8, 5, 1.0D-5);
     | Example.matchSincSmooth =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
