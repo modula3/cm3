@@ -25,13 +25,13 @@ IMPORT LongRealBSplineWavelet AS BSpl;
 
 IMPORT LongRealFmtLex AS RF;
 IMPORT LongRealVectorFmtLex AS VF;
-IMPORT LongRealComplexVectorFmtLex AS CVF;
+(*IMPORT LongRealComplexVectorFmtLex AS CVF;*)
 IMPORT LongRealMatrixFmtLex AS MF;
 IMPORT LongRealSignalFmtLex AS SF;
 IMPORT LongRealWaveletPlot AS WP;
 IMPORT PLPlot AS PL;
 IMPORT IO, Fmt, Wr, Thread;
-IMPORT IntList;
+IMPORT IntBiList;
 
 IMPORT NADefinitions AS NA;
 
@@ -439,72 +439,58 @@ PROCEDURE TranslatesBasis (generatorvan: S.T;
 
 TYPE
   MatrixElem = RECORD
-                 enX, enY        : IntList.T;
-                 prevEnX, prevEnY: IntList.T;
-                 value           : R.T;
+                 enX, enY: IntBiList.Node;
+                 value   : R.T;
                END;
 
 PROCEDURE FindMinMatrix (READONLY mat               : M.TBody;
-                                  enabledX, enabledY: IntList.T; ):
+                                  enabledX, enabledY: IntBiList.T; ):
   MatrixElem =
   VAR
-    result          : MatrixElem;
-    enX, enY        : IntList.T;
-    prevEnX, prevEnY: IntList.T;
+    result  : MatrixElem;
+    enX, enY: IntBiList.Node;
   BEGIN
     result.value := R.PosInf;
-    prevEnX := NIL;
-    enX := enabledX;
+    enX := enabledX.getlo();
     WHILE enX # NIL DO
-      prevEnY := NIL;
-      enY := enabledY;
+      enY := enabledY.getlo();
       WHILE enY # NIL DO
-        IF result.value > mat[enX.head, enY.head] THEN
-          result.value := mat[enX.head, enY.head];
+        IF result.value
+             > mat[enabledX.getvalue(enX), enabledY.getvalue(enY)] THEN
+          result.value :=
+            mat[enabledX.getvalue(enX), enabledY.getvalue(enY)];
           result.enX := enX;
           result.enY := enY;
-          result.prevEnX := prevEnX;
-          result.prevEnY := prevEnY;
         END;
-        prevEnY := enY;
-        enY := enY.tail;
+        enY := enabledY.getnext(enY);
       END;
-      prevEnX := enX;
-      enX := enX.tail;
+      enX := enabledX.getnext(enX);
     END;
     RETURN result;
   END FindMinMatrix;
-
-PROCEDURE IntListRemove (list, prev: IntList.T): IntList.T =
-  BEGIN
-    IF prev # NIL THEN
-      prev.tail := prev.tail.tail;
-      RETURN list;
-    ELSE
-      RETURN list.tail;
-    END;
-  END IntListRemove;
 
 (*Compute a kind of distance of a given eigenspectrum to the one of the
    transfer matrix of the B-Spline of corresponding order*)
 PROCEDURE EigenDistBSpline (specX: REF ARRAY OF C.T): R.T =
   VAR
-    enabledX, enabledY: IntList.T := NIL;
-    specY                         := NEW(V.T, NUMBER(specX^));
-    distMatrix := NEW(M.T, NUMBER(specX^), NUMBER(specX^));
+    enabledX, enabledY := NEW(IntBiList.T).init();
+    specY              := NEW(V.T, NUMBER(specX^));
+    distMatrix         := NEW(M.T, NUMBER(specX^), NUMBER(specX^));
   BEGIN
     VAR eigY := R.One;
     BEGIN
       FOR i := FIRST(specX^) TO LAST(specX^) DO
-        enabledX := IntList.Cons(i, enabledX);
-        enabledY := IntList.Cons(i, enabledY);
+        EVAL enabledX.addhi(i);
+        EVAL enabledY.addhi(i);
         eigY := eigY / R.Two;
         specY[i] := eigY;
       END;
       specY[LAST(specX^)] := R.Two * eigY;
     END;
+    (*
     IO.Put(Fmt.FN("compute distance between spectra\n%s%s\n",
                   ARRAY OF TEXT{CVF.Fmt(specX), VF.Fmt(specY)}));
+    *)
     FOR i := FIRST(specX^) TO LAST(specX^) DO
       FOR j := FIRST(specX^) TO LAST(specX^) DO
         distMatrix[i, j] :=
@@ -517,8 +503,8 @@ PROCEDURE EigenDistBSpline (specX: REF ARRAY OF C.T): R.T =
         VAR min := FindMinMatrix(distMatrix^, enabledX, enabledY);
         BEGIN
           sum := sum + min.value;
-          enabledX := IntListRemove(enabledX, min.prevEnX);
-          enabledY := IntListRemove(enabledY, min.prevEnY);
+          enabledX.rem(min.enX);
+          enabledY.rem(min.enY);
         END;
       END;
       RETURN sum;
@@ -686,7 +672,6 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         END TransitionBSpline;
 
       VAR
-        (*ncall:=0;*)
         mc := SplitParamVec(x);
         derdist := DeriveDist(normalMat, targetCor, targetNormSqr, mc.lift);
         derwavdist := ExtendDervTarget(derdist, mc.lift.getData(), mc.amp,
