@@ -1,6 +1,0 @@
-
-import ("libm3")
-import ("m3middle")
-
-implementation ("Main")
-program ("libdump")
