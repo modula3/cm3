@@ -23,29 +23,36 @@ PROCEDURE ShowFilters () =
 
 PROCEDURE LiftCDFEven (order: R.T; num: CARDINAL) =
   VAR
-    frac       := R.One / order;
+    fac        := R.Two;
     orderupper := order;
     orderlower := order;
-    h, g       := S.One;
+    g          := S.One;
+    h          := NEW(S.T).fromArray(ARRAY OF R.T{order});
   BEGIN
     PL.Init();
     FOR i := 0 TO num - 1 DO
       VAR
-        val := FLOAT(2 * i + 1, R.T) * frac;
-        swap := g.superpose(h.convolve(
-                              NEW(S.T).fromArray(
-                                ARRAY OF R.T{val, R.Zero, val}, -1)));
+        val := FLOAT(2 * i + 1, R.T);
+        swap := g.scale(orderlower * orderupper).superpose(
+                  h.convolve(
+                    NEW(S.T).fromArray(ARRAY OF R.T{val, R.Zero, val}, -1)));
       BEGIN
+        fac := fac * val;
         g := h;
         h := swap;
       END;
-      IO.Put(Fmt.FN("sum: %s, filter: %s\n",
-                    ARRAY OF TEXT{RF.Fmt(h.sum()), SF.Fmt(h)}));
-      WP.PlotWavelets(h, g, 6);
+      VAR hscaled := h.scale(R.One / fac);
+      BEGIN
+        IO.Put(
+          Fmt.FN("sum: %s, filter: %s\n",
+                 ARRAY OF TEXT{RF.Fmt(hscaled.sum()), SF.Fmt(hscaled)}));
+      END;
+      (*WP.PlotWavelets(h, g, 6);*)
+      WP.PlotWavelets(
+        h.scale(R.One / h.sum()), g.scale(R.One / g.sum()), 6);
       FOR i := 0 TO 3 DO PL.Advance(i); PL.Clear(); END;
       orderupper := orderupper + R.Two;
       orderlower := orderlower - R.Two;
-      frac := R.One / (frac * orderlower * orderupper);
     END;
     PL.Exit();
   END LiftCDFEven;
@@ -56,11 +63,11 @@ PROCEDURE LiftCDFOdd (order: R.T; num: CARDINAL) =
 
 PROCEDURE Test () =
   BEGIN
-    CASE 1 OF
+    CASE 0 OF
     | 0 =>
-        CONST halforder = 3;
+        CONST halforder = 4;
         BEGIN
-          LiftCDFEven(FLOAT(halforder * 2, R.T), halforder);
+          LiftCDFEven(FLOAT(halforder * 2, R.T), halforder + 2);
         END;
     | 1 => LiftCDFEven(10.71D0, 10);
     | 2 => LiftCDFOdd(3.0D0, 2);
