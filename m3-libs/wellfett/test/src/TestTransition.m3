@@ -17,6 +17,7 @@ IMPORT LongRealEigenSystem AS Eigen;
 
 IMPORT LongRealDaubechiesWavelet AS DB;
 IMPORT LongRealRefinableFunc AS Refn;
+IMPORT LongRealRefinableSmooth AS RefnSm;
 
 IMPORT LongRealFmtLex AS RF;
 IMPORT LongRealSignalFmtLex AS SF;
@@ -34,7 +35,7 @@ CONST AThird = 1.0D0 / 3.0D0;
 PROCEDURE PlotTransitionEV (mask: S.T) =
   <*FATAL NA.Error*>
   VAR
-    ev := Refn.TransitionEV(mask);
+    ev := RefnSm.Eigenvalues(mask);
     x  := NEW(V.T, NUMBER(ev.eigenvalues^));
     y  := NEW(V.T, NUMBER(ev.eigenvalues^));
   BEGIN
@@ -170,10 +171,17 @@ PROCEDURE CompareEstimate (mask: S.T) =
   <*FATAL NA.Error, Thread.Alerted, Wr.Failure *>
   BEGIN
     IO.Put(
-      Fmt.FN("%s: %s < %s ?\n",
-             ARRAY OF
-               TEXT{SF.Fmt(mask), RF.Fmt(Refn.TransitionSpecRad(mask)),
-                    RF.Fmt(EstimateSpecRadSqr(mask))}));
+      Fmt.FN(
+        "%s: %s < %s ?\n",
+        ARRAY OF
+          TEXT{
+          SF.Fmt(mask),
+          RF.Fmt(
+            RefnSm.SpecRad(mask)) (*SpecRad is the spectral radius of the
+                                     transition matrix (already
+                                     autocorrelated), but autocorrelation
+                                     is already in 'mask', isn't it?'*),
+          RF.Fmt(EstimateSpecRadSqr(mask))}));
   END CompareEstimate;
 
 PROCEDURE RandomMaskWithLeastEstimate (): S.T =
@@ -222,7 +230,7 @@ PROCEDURE CompareTranslatedMasks (mask0, mask1: S.T) =
 
     FOR n := -10 TO 10 DO
       IO.Put(Fmt.FN("%s, ", ARRAY OF
-                              TEXT{RF.Fmt(Refn.TransitionSpecRad(
+                              TEXT{RF.Fmt(RefnSm.SpecRad(
                                             mask1.translate(
                                               3 * n).superpose(mask0)))}));
     END;

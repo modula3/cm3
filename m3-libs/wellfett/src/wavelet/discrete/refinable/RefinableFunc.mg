@@ -1,6 +1,4 @@
-GENERIC MODULE RefinableFunc(R, CVT, M, Eigen, S);
-
-IMPORT NADefinitions AS NA;
+GENERIC MODULE RefinableFunc(M, S);
 
 PROCEDURE RadicBandMatrix (mask: S.T; shift: CARDINAL := 2): M.T =
   VAR
@@ -20,22 +18,14 @@ PROCEDURE TransitionMatrix (mask: S.T; shift: CARDINAL := 2): M.T =
     RETURN RadicBandMatrix(mask.autocorrelate(), shift);
   END TransitionMatrix;
 
-PROCEDURE TransitionEV (mask: S.T): Eigen.EV RAISES {NA.Error} =
-  BEGIN
-    RETURN Eigen.EigenValues(TransitionMatrix(mask));
-  END TransitionEV;
 
-PROCEDURE TransitionSpecRad (mask: S.T): R.T RAISES {NA.Error} =
+PROCEDURE Refine (start, mask: S.T;
+                  numLevels  : CARDINAL;
+                  shift      : CARDINAL   := 2): S.T =
   BEGIN
-    RETURN CVT.NormInf(TransitionEV(mask).eigenvalues);
-  END TransitionSpecRad;
-
-PROCEDURE Refine (start, mask: S.T; levels: CARDINAL; shift: CARDINAL := 2):
-  S.T =
-  BEGIN
-    WHILE levels > 0 DO
+    WHILE numLevels > 0 DO
       start := mask.upConvolve(start, shift);
-      DEC(levels);
+      DEC(numLevels);
     END;
     RETURN start;
   END Refine;

@@ -5,12 +5,11 @@
 readonly proc RefinableFunc (nm, rfield, cfield) is
   local basic   = nm & "RefinableFunc"
   local vfield  = nm & "Vector"
-  local cvtrans = cfield & "VectorTrans"
   local mfield  = nm & "Matrix"
   local eigen   = nm & "EigenSystem"
   local signal  = nm & "Signal"
-  build_generic_intf (basic, "RefinableFunc", [rfield,          mfield, eigen, signal], VISIBLE)
-  build_generic_impl (basic, "RefinableFunc", [rfield, cvtrans, mfield, eigen, signal])
+  build_generic_intf (basic, "RefinableFunc", [mfield, signal], VISIBLE)
+  build_generic_impl (basic, "RefinableFunc", [mfield, signal])
 end
 
 readonly proc RefinableSmooth (nm, rfield, cfield) is
@@ -19,11 +18,12 @@ readonly proc RefinableSmooth (nm, rfield, cfield) is
   local vrep    = nm & "VectorRep"
   local vtrans  = nm & "VectorTrans"
   local ctrans  = cfield & "Trans"
+  local cvtrans = cfield & "VectorTrans"
   local mfield  = nm & "Matrix"
   local eigen   = nm & "EigenSystem"
   local signal  = nm & "Signal"
   local refn    = nm & "RefinableFunc"
   local bspl    = nm & "BSplineWavelet"
-  build_generic_intf (basic, "RefinableSmooth", [rfield, vfield, mfield, signal], VISIBLE)
-  build_generic_impl (basic, "RefinableSmooth", [rfield, cfield, ctrans, vfield, vrep, vtrans, mfield, signal, refn, bspl])
+  build_generic_intf (basic, "RefinableSmooth", [rfield, vfield, mfield, eigen, signal], VISIBLE)
+  build_generic_impl (basic, "RefinableSmooth", [rfield, cfield, ctrans, vfield, vrep, vtrans, cvtrans, mfield, eigen, signal, refn, bspl])
 end
