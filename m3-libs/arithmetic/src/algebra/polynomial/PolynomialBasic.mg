@@ -88,17 +88,6 @@ BEGIN
 END Sub;
 
 (*---------------------*)
-PROCEDURE Neg(x:T):T =    (*return -x *)
-VAR
-  y:=NEW(T,NUMBER(x^));
-BEGIN
-  FOR i:=FIRST(x^) TO LAST(x^) DO
-    y[i] := R.Neg(x[i]);
-  END;
-  RETURN y;
-END Neg;
-
-(*---------------------*)
 PROCEDURE Compare(<*UNUSED*>x,y:T) : [-1..1] =
 BEGIN
   <*ASSERT FALSE*>
