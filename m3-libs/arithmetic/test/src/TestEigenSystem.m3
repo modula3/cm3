@@ -4,21 +4,23 @@
  *)
 MODULE TestEigenSystem EXPORTS Test;
 
-IMPORT LongRealEigenSystem AS EigenSys;
-IMPORT Wr, Stdio, Math, Thread, Fmt;
+IMPORT LongRealEigenSystem AS EigenSys,
+       LongRealMatrixFast  AS M,
+       LongRealVectorFast  AS V,
+       LongRealBasic       AS R;
+IMPORT Wr, Stdio, Thread, Fmt;
 
 <* FATAL Wr.Failure *>
 <* FATAL Thread.Alerted *>
 <* FATAL EigenSys.NoConvergence *>
-<* FATAL EigenSys.ArrayTooSmall *>
 <* FATAL EigenSys.ArraySizesDontMatch *>
 
 (*=======================*)
 CONST
   Module = "TestEigenSystem.";
 
-PROCEDURE Print2(d,e: REF ARRAY OF LONGREAL;
-                 dWR, eWR: ARRAY OF LONGREAL) RAISES {}=
+PROCEDURE Print2(d,e: V.T;
+        READONLY dWR, eWR: V.TBody) RAISES {}=
   BEGIN
     Wr.PutText(Stdio.stdout, Fmt.Pad("i",4) &
       Fmt.Pad("Diagonale",18) &
@@ -37,8 +39,8 @@ PROCEDURE Print2(d,e: REF ARRAY OF LONGREAL;
     
   END Print2;
 
-PROCEDURE Print3(d,e,e2 : REF ARRAY OF LONGREAL;
-                 dWR,eWR,e2WR: ARRAY OF LONGREAL) RAISES {}=
+PROCEDURE Print3(d,e,e2 : V.T;
+        READONLY dWR,eWR,e2WR: V.TBody) RAISES {}=
   BEGIN
     Wr.PutText(Stdio.stdout, Fmt.Pad("i",4) &
       Fmt.Pad("Diagonale",18) &
@@ -61,7 +63,7 @@ PROCEDURE Print3(d,e,e2 : REF ARRAY OF LONGREAL;
   END Print3;
 
 
-PROCEDURE RunTql1(VAR d,e: REF ARRAY OF LONGREAL) RAISES {}=
+PROCEDURE RunTql1(VAR d,e: V.T) RAISES {}=
   BEGIN
     EigenSys.Tql1( d, e);
     Wr.PutText(Stdio.stdout, "Eigenwerte\n");
@@ -70,8 +72,8 @@ PROCEDURE RunTql1(VAR d,e: REF ARRAY OF LONGREAL) RAISES {}=
     END; (* for *)
   END RunTql1;
 
-PROCEDURE RunTql2(VAR d,e: REF ARRAY OF LONGREAL;
-                  VAR z: REF ARRAY OF ARRAY OF LONGREAL) RAISES {}=
+PROCEDURE RunTql2(VAR d,e: V.T;
+                  VAR z: M.T) RAISES {}=
   BEGIN
     EigenSys.Tql2( d, e, z);
     Wr.PutText(Stdio.stdout, "Eigenwerte\n");
@@ -80,17 +82,17 @@ PROCEDURE RunTql2(VAR d,e: REF ARRAY OF LONGREAL;
     END; (* for *)
   END RunTql2;
 
-PROCEDURE RunTred1(a: REF ARRAY OF ARRAY OF LONGREAL;
-                   dWR, eWR, e2WR: ARRAY OF LONGREAL) 
+PROCEDURE RunTred1(a: M.T;
+          READONLY dWR, eWR, e2WR: V.TBody) 
     RAISES {}=
   VAR
-    z: REF ARRAY OF ARRAY OF LONGREAL;
-    d, e, e2: REF ARRAY OF LONGREAL;
+    z: M.T;
+    d, e, e2: V.T;
   BEGIN
-    z := NEW( REF ARRAY OF ARRAY OF LONGREAL, NUMBER(a^), NUMBER(a[0]));
-    d := NEW( REF ARRAY OF LONGREAL, NUMBER(a^));
-    e := NEW( REF ARRAY OF LONGREAL, NUMBER(a^));
-    e2:= NEW( REF ARRAY OF LONGREAL, NUMBER(a^));
+    z := NEW( M.T, NUMBER(a^), NUMBER(a[0]));
+    d := NEW( V.T, NUMBER(a^));
+    e := NEW( V.T, NUMBER(a^));
+    e2:= NEW( V.T, NUMBER(a^));
     FOR i:=FIRST(z^) TO LAST(z^) DO
       FOR j:=FIRST(z[0]) TO LAST(z[0]) DO
         z[i,j] := a[i,j];
@@ -101,15 +103,15 @@ PROCEDURE RunTred1(a: REF ARRAY OF ARRAY OF LONGREAL;
     RunTql1( d,e);
   END RunTred1;
 
-PROCEDURE RunTred2(a: REF ARRAY OF ARRAY OF LONGREAL; 
-                   dWR, eWR: ARRAY OF LONGREAL;) RAISES {}=
+PROCEDURE RunTred2(a: M.T; 
+               VAR dWR, eWR: V.TBody;) RAISES {}=
   VAR
-    aLocal: REF ARRAY OF ARRAY OF LONGREAL;
-    d, e: REF ARRAY OF LONGREAL;
+    aLocal: M.T;
+    d, e: V.T;
   BEGIN
-    aLocal := NEW( REF ARRAY OF ARRAY OF LONGREAL, NUMBER(a^), NUMBER(a[0]));
-    d := NEW( REF ARRAY OF LONGREAL, NUMBER(a^));
-    e := NEW( REF ARRAY OF LONGREAL, NUMBER(a^));
+    aLocal := NEW( M.T, NUMBER(a^), NUMBER(a[0]));
+    d := NEW( V.T, NUMBER(a^));
+    e := NEW( V.T, NUMBER(a^));
     FOR i:=FIRST(a^) TO LAST(a^) DO
       FOR j:=FIRST(a[0]) TO LAST(a[0]) DO
         aLocal[i,j] := a[i,j];
@@ -133,28 +135,28 @@ PROCEDURE RunTred2(a: REF ARRAY OF ARRAY OF LONGREAL;
 
 PROCEDURE RunTestA() RAISES {}=
   VAR
-    a : REF ARRAY OF ARRAY OF LONGREAL;
-    d,e,e2 : REF ARRAY OF LONGREAL;
-    aWR := ARRAY[0..24] OF LONGREAL
+    a : M.T;
+    d,e,e2 : V.T;
+    aWR := ARRAY[0..24] OF R.T
              { 10.0D0,  1.0D0,  2.0D0,  3.0D0,  4.0D0,
                 1.0D0,  9.0D0, -1.0D0,  2.0D0, -3.0D0,
                 2.0D0, -1.0D0,  7.0D0,  3.0D0, -5.0D0,
                 3.0D0,  2.0D0,  3.0D0, 12.0D0, -1.0D0,
                 4.0D0, -3.0D0, -5.0D0, -1.0D0, 15.0D0}; 
-    eWR := ARRAY [0..4] OF LONGREAL
+    eWR := ARRAY [0..4] OF R.T
         {0.0d0, 7.49484677741D-1, -4.49626820120D0, 
             -2.15704099085D0, 7.14142842854D0};
-    dWR := ARRAY [0..4] OF LONGREAL
+    dWR := ARRAY [0..4] OF R.T
         {9.29520217754D0, 1.16267115569D1, 1.09604392078D1,
             6.11764705885D0, 1.5D1};
-    e2WR := ARRAY [0..4] OF LONGREAL
+    e2WR := ARRAY [0..4] OF R.T
         {0.0D0, 5.61727282169D-1, 2.02164277371D1,
              4.65282583621D0, 5.1D1};
   BEGIN
-    a := NEW( REF ARRAY OF ARRAY OF LONGREAL, 5, 5);
-    d := NEW( REF ARRAY OF LONGREAL, 5);
-    e := NEW( REF ARRAY OF LONGREAL, 5);
-    e2 := NEW( REF ARRAY OF LONGREAL, 5);
+    a := NEW( M.T, 5, 5);
+    d := NEW( V.T, 5);
+    e := NEW( V.T, 5);
+    e2 := NEW( V.T, 5);
 
     FOR i:=FIRST(a^) TO LAST(a^) DO
       FOR j:=FIRST(a[0]) TO LAST(a[0]) DO
@@ -185,7 +187,7 @@ PROCEDURE RunTestA() RAISES {}=
 
 (*-------------------------*)
 PROCEDURE TestEigenSystem():BOOLEAN=
-CONST ftn = Module & "TestEigenSystem";
+<*UNUSED*> CONST ftn = Module & "TestEigenSystem";
 VAR result:=TRUE;
 BEGIN
   NewLine(); RunTestA();
