@@ -23,6 +23,9 @@
       <a href="#p_1_1">1.1 Linkage failure: cannot find -lXaw</a><br>
       &nbsp;&nbsp;    
       <a href="#p_1_2">1.2 Filenames with spaces</a><br>
+      &nbsp;&nbsp;    
+      <a href="#p_1_3">1.3 Linker trouble with latest Microsoft VC++
+        compilers on WIN32 platform</a><br>
       <br>
       <a href="#p_2">2 Release 5.1.0</a><br>
       &nbsp;&nbsp;    
@@ -111,6 +114,50 @@
       too. Voluntary contributions in this area are more very welcome.
     </p>
 
+    <a name="p_1_3">
+    <h4>
+      1.3 Linker trouble with latest Microsoft VC++
+      compilers on WIN32 platform
+    </h4>
+
+    <p>
+      <b>Platforms:</b> WIN32/NT386, reproduced with Microsoft 32-Bit
+      C/C++-Compiler, Version 12.00.8804, non-issue with 32-bit C/C++
+      Standard Compiler Version 10.00.6002 for 80x86 
+    </p>
+
+    <p>
+      <b>Description:</b>
+      Building of dynamic libraries (DLLs) (e.g. for m3core) fails
+      with unreasolable ambigous symbols __real@8@... It turns out
+      that during the compilation of C sources the compiler defines an
+      8 bytes data section for every floating point constant (which is
+      fine) and marks it as exported (which is certainly
+      unexpected). The library archiver <tt>mklib</tt> shortens these
+      symbols after the first @ character and leaves the linker with
+      lots of equally named constants. It is still unclear to me why
+      the compiler behaves in this way.
+    </p>
+
+    <p>
+      <b>Solution:</b>
+      No real solution is known, as I haven't found a way to make the
+      compiler not export the floating point constants. Older
+      compilers (see above) do not exhibit this
+      behaviour. Unfortunately, it is neither possible (as has been
+      suggested) to (a) not to shorten the symbols after the @ character,
+      and (b) ignore the export of all symbols beginning with two
+      underscores while writing the linker .def file (this even fails
+      for libm3). In CM3 5.1.4 a workaround has been implemented,
+      which cures the problem for all tested m3 packages; this is
+      still no general solution, though, as it may break other
+      existing code. The <tt>mklib</tt> program has been extended by
+      a switch to ignore certain exported symbols: <tt>-ign:XXX</tt>
+      instructs the archiver to ignore all symbols beginning with
+      XXX. The option <tt>-ign:__real</tt> has been added to the
+      templates for the global configuration file <tt>cm3.cfg</tt>.
+    </p>
+
     <a name="p_2">
     <h3>2 Release 5.1.0</h3>
     </a>
@@ -182,7 +229,7 @@
     <address><a href="mailto:m3-support@elego.de">Olaf Wagner</a></address>
 <!-- Created: Fri Mar  2 10:51:41 MET 2001 -->
 <!-- hhmts start -->
-Last modified: Wed Mar  7 00:23:41 MET 2001
+Last modified: Fri Apr  6 17:51:45 MET DST 2001
 <!-- hhmts end -->
   </body>
 </html>
