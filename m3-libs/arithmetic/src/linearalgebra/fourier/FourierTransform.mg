@@ -1,4 +1,4 @@
-GENERIC MODULE FourierTransform(C,CT,R,RT);
+GENERIC MODULE FourierTransform(R,RT,C,CT);
 (*By Warren D. Smith, May 1985, March 1996. Gnu Copylefted.*)
 (*
 Abstract: Fast Fourier Transforms (FFT's)
