@@ -17,6 +17,7 @@ IMPORT LongRealMatrixIntegerPower AS MIntPower;
 
 IMPORT LongRealFunctional AS Fn;
 IMPORT LongRealFunctionalDeriv2 AS FnD;
+IMPORT LongRealMatchWavelet AS WM;
 
 IMPORT LongRealSignal AS S;
 IMPORT LongRealSignalIntegerPower AS SIntPow;
@@ -88,68 +89,6 @@ PROCEDURE PlotFrame (READONLY abscissa       : V.TBody;
     PlotLines(abscissa, target);
   END PlotFrame;
 
-PROCEDURE MatchPattern (target                                : S.T;
-                        refineMask, generatorMask, waveletMask: S.T;
-                        numLevels                             : CARDINAL;
-                        firstTranslate                        : INTEGER;
-                        numTranslates                         : CARDINAL; ):
-  SimpleApprox =
-  VAR
-    generator := Refn.Refine(generatorMask, refineMask, numLevels);
-    wavelet   := Refn.Refine(waveletMask, refineMask, numLevels);
-
-    lastTranslate := firstTranslate + numTranslates - 1;
-
-    twonit := IIntPow.MulPower(2, 2, numLevels);
-    first := MIN(wavelet.getFirst(),
-                 generator.getFirst() + twonit * firstTranslate);
-    last := MAX(wavelet.getLast(),
-                generator.getLast() + twonit * lastTranslate);
-    size := last - first + 1;
-
-    targetVec := V.New(size);
-    basis     := M.New(numTranslates + 1, size);
-
-  <*FATAL NA.Error*>
-  BEGIN
-    wavelet.clipToArray(first, basis[LAST(basis^)]);
-    FOR j := firstTranslate TO lastTranslate DO
-      generator.clipToArray(first - twonit * j, basis[j - firstTranslate]);
-    END;
-
-    target.clipToArray(first, targetVec^);
-
-    (*
-    IO.Put(Fmt.FN("normal matrix %s, right hand side %s\n",
-                  ARRAY OF
-                    TEXT{MF.Fmt(M.MulMMA(basis)),
-                         VF.Fmt(M.MulV(basis, targetvec))}));
-    *)
-
-    VAR
-      coef := LA.LeastSquares(basis, ARRAY OF V.T{targetVec},
-                              flags := LA.LSFlagSet{LA.LSFlag.transposed})[
-                0];
-      approx := M.MulTV(basis, coef.x);
-
-    <*FATAL Thread.Alerted, Wr.Failure*>
-    BEGIN
-      IO.Put(Fmt.FN("numTranslates %s, size %s, residuum %s, %s\n",
-                    ARRAY OF
-                      TEXT{Fmt.Int(numTranslates), Fmt.Int(size),
-                           RF.Fmt(coef.res), VF.Fmt(coef.x)}));
-      (*
-      IO.Put(Fmt.FN("residuum - %s\n", ARRAY OF TEXT{RF.Fmt(coef.res)}));
-      *)
-
-      RETURN SimpleApprox{
-               NEW(S.T).fromArray(
-                 SUBARRAY(coef.x^, 0, numTranslates), firstTranslate),
-               coef.x[LAST(coef.x^)], NEW(S.T).fromVector(approx, first),
-               basis, targetVec};
-    END;
-  END MatchPattern;
-
 (*{RT.Half, R.Zero, -RT.Half} instead of {R.One, R.Zero, -R.One} has the
    advantage that the sum of the coefficients of the primal filter doesn't
    change.*)
@@ -167,8 +106,8 @@ PROCEDURE TestMatchPattern (target: S.T;
                   hdual, NEW(S.T).fromArray(
                            ARRAY OF R.T{RT.Half, R.Zero, -RT.Half}),
                   vanishing).translate(-smooth - vanishing);
-    approx := MatchPattern(target, hdual, hdualvan, gdual, numLevels,
-                           -numTranslates, 2 * numTranslates);
+    approx := WM.MatchPattern(target, hdual, hdualvan, gdual, numLevels,
+                              -numTranslates, 2 * numTranslates);
 
     unit   := IIntPow.MulPower(1, 2, numLevels);
     twopow := FLOAT(unit, R.T);
@@ -263,8 +202,9 @@ PROCEDURE TestNormalEqu () =
     waveletMask := NEW(S.T).fromArray(
                      ARRAY OF R.T{-0.5D0, 0.2D0, 0.9D0}, -1);
 
-    approx := MatchPattern(target, refineMask, generatorMask, waveletMask,
-                           numLevels, firstTranslate, numTranslate);
+    approx := WM.MatchPattern(
+                target, refineMask, generatorMask, waveletMask, numLevels,
+                firstTranslate, numTranslate);
     covar     := M.MulMMA(approx.basis);
     targetCor := M.MulV(approx.basis, approx.targetPad);
 
