@@ -369,16 +369,16 @@ PROCEDURE IterRaw(iter: Iterator; VAR (*out*) s: Ctypes.char_star): BOOLEAN =
                 RETURN FALSE
               ELSE
                 <* FATAL OSError.E *> BEGIN OSErrorWin32.Raise() END
-              END
-            END
-          END
+              END;
+            END;
+          END;
         END;
-        s := ADR(iter.ffd.cFileName);
-        IF NOT DotOrDotDot(LOOPHOLE(s, UNTRACED REF CHAR)) THEN
-          RETURN TRUE
-        END
-        (* else continue to next entry *)
+      END;
+      s := ADR(iter.ffd.cFileName);
+      IF NOT DotOrDotDot(LOOPHOLE(s, UNTRACED REF CHAR)) THEN
+	RETURN TRUE
       END
+      (* else continue to next entry *)
     END
   END IterRaw;
 
