@@ -18,17 +18,20 @@ PKGS="${PKGS} m3-sys/m3quake"
 [ "${GCC_BACKEND}" = yes ] && PKGS="${PKGS} m3-sys/m3cc"
 PKGS="${PKGS} m3-sys/cm3"
 
-# cm3 tools (mostly for win32)
-# PKGS="${PKGS} m3-sys/m3loader"
+# cm3 tools (generic)
 PKGS="${PKGS} m3-sys/m3scanner"
 PKGS="${PKGS} m3-sys/m3tools"
+PKGS="${PKGS} m3-sys/m3cgcat"
+PKGS="${PKGS} m3-sys/m3cggen"
+[ "${M3GDB}" = yes ] && PKGS="${PKGS} m3-sys/m3gdb"
+PKGS="${PKGS} m3-tools/m3bundle"
+
+# cm3 tools (win32)
+# PKGS="${PKGS} m3-sys/m3loader"
 [ "${WIN32}" = yes ] && PKGS="${PKGS} m3-sys/mklib"
 [ "${WIN32}" = yes ] && PKGS="${PKGS} m3-sys/dll2lib"
 [ "${WIN32}" = yes ] && PKGS="${PKGS} m3-sys/fix_nl"
 [ "${WIN32}" = yes ] && PKGS="${PKGS} m3-sys/libdump"
-PKGS="${PKGS} m3-sys/m3cgcat"
-PKGS="${PKGS} m3-sys/m3cggen"
-[ "${M3GDB}" = yes ] && PKGS="${PKGS} m3-sys/m3gdb"
 
 # more libraries
 PKGS="${PKGS} m3-libs/bitvector"
