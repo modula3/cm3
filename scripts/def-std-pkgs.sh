@@ -30,6 +30,10 @@ P="${P} tempfiles"
 [ "${HAVE_TCL}" = "yes" -o -n "${CM3_ALL}" ] && P="${P} tcl"
 P="${P} tcp"
 P="${P} libsio"
+P="${P} debug"
+P="${P} listfuncs"
+P="${P} patternmatching"
+P="${P} embutils"
 
 # some CM3 communication extensions
 [ "${M3OSTYPE}" = "WIN32" -o -n "${CM3_ALL}" ] && P="${P} tapi"
@@ -50,6 +54,10 @@ P="${P} uniq"
 P="${P} netobj"
 P="${P} netobjd"
 P="${P} stubgen"
+P="${P} events"
+P="${P} rdwr"
+P="${P} sharedobj"
+P="${P} sharedobjgen"
 
 # database packages
 P="${P} odbc"
@@ -62,6 +70,7 @@ P="${P} stablegen"
 # the standard graphical user interface: trestle and formsvbt
 [ "${M3OSTYPE}" != "WIN32" -o -n "${CM3_ALL}" ] && P="${P} X11R4"
 P="${P} ui"
+P="${P} PEX"
 P="${P} vbtkit"
 P="${P} cmvbt"
 P="${P} jvideo"
@@ -74,6 +83,33 @@ P="${P} formsedit"
 P="${P} codeview"
 P="${P} mg"
 P="${P} mgkit"
+P="${P} opengl"
+P="${P} anim3D"
+P="${P} zeus"
+P="${P} m3zume"
+
+# obliq
+P="${P} synloc"
+P="${P} synex"
+P="${P} metasyn"
+P="${P} obliqrt"
+P="${P} obliqparse"
+P="${P} obliqprint"
+P="${P} obliq"
+P="${P} obliqlibemb"
+P="${P} obliqlibm3"
+P="${P} obliqlibui"
+P="${P} obliqlibanim"
+#P="${P} obliqlib3D" # does not compile
+P="${P} obliqsrvstd"
+P="${P} obliqsrvui"
+P="${P} visualobliq"
+P="${P} vocgi"
+P="${P} voquery"
+P="${P} vorun"
+
+# more graphics depending on obliq
+P="${P} webvbt"
 
 # more tools
 P="${P} recordheap"
@@ -89,3 +125,9 @@ P="${P} shownew"
 [ "${M3OSTYPE}" != "WIN32" -o -n "${CM3_ALL}" ] && P="${P} juno-machine"
 [ "${M3OSTYPE}" != "WIN32" -o -n "${CM3_ALL}" ] && P="${P} juno-compiler"
 [ "${M3OSTYPE}" != "WIN32" -o -n "${CM3_ALL}" ] && P="${P} juno-app"
+
+# demo programs
+P="${P} cube"
+P="${P} calculator"
+P="${P} fisheye"
+
