@@ -11,11 +11,11 @@ IMPORT LongRealMatrix AS M;
 
 IMPORT LongRealFmtLex AS RF, LongRealSignalFmtLex AS SF;
 
+IMPORT LongRealConvolution AS Conv;
 IMPORT LongRealContinuousWaveletTransform AS CWT;
 
 IMPORT PLPlot AS PL, PLPlotRaw AS PLRaw;
 IMPORT IO, Fmt, Wr, Thread;
-IMPORT Arithmetic AS Arith;
 
 
 
@@ -44,6 +44,7 @@ PROCEDURE TestShades () =
     PL.Exit();
   END TestShades;
 
+<* UNUSED *>
 PROCEDURE MexicanHat (t: R.T; ): R.T =
   BEGIN
     WITH t2 = t * t DO
@@ -70,7 +71,7 @@ PROCEDURE DiracTransform () =
     y := CWT.Analyse(
            S.One, GaussianDiff, width,
            V.GeomSeq(numScales, 30.0D0, RT.Pow(R.Half, R.One / 20.0D0))^,
-	   NEW(CWT.AnalysisFourier));
+           NEW(Conv.HandleFourier));
     m := NEW(M.T, numScales, width);
   BEGIN
     PL.Init();

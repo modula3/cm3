@@ -21,3 +21,15 @@ Vector("LongRealSignal",        "Basic", "LongRealSignal")
 Vector("LongRealComplexSignal", "Basic", "LongRealComplexSignal")
 Matrix("LongRealSignal",        "Basic", "LongRealSignal")
 Matrix("LongRealComplexSignal", "Basic", "LongRealComplexSignal")
+
+
+import("fftw")
+
+template("convolution")
+
+
+generic_module("Convolution")
+generic_implementation("ComplexConvolution")
+Convolution("Real",     "Real",     "Basic")
+Convolution("LongReal", "LongReal", "Basic")
+%Convolution("Extended", "Extended", "Basic")
