@@ -5,7 +5,9 @@ Abstract: Formatting and parsing fraction numbers
 
 *)
 
+(*
 FROM NADefinitions IMPORT Error;
+*)
 
 (*==========================*)
 TYPE

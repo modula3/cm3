@@ -19,6 +19,7 @@ PROCEDURE SqRt(N:[0..1073741823]):CARDINAL=
 (*returns integer sqrt of n*)
 (*from P. Heinrich, "A Fast Integer Square Root",
 Dr. Dobbs, Apr 1996, pp 113-114*)
+<*UNUSED*>
 CONST ftn = Module & "sqrt";
 VAR
   u,v,u2,n:Word.T;
@@ -72,9 +73,11 @@ END SqRt;
 (*----------------*)
 PROCEDURE SinCos(theta:Cordic;    (*given this angle*)
                   VAR s,c:INTEGER)= (*return sin and cos*)
+<*UNUSED*>
 CONST
   ftn = Module & "sin_cos";
 
+CONST
   AtanTbl = ARRAY [0..CordicBits] OF CARDINAL{
     32768,19344,10221,5188,2604,1303,652,326,163,81,41,20,10,5,3,1,1};
   n1=FIRST(AtanTbl); nn=LAST(AtanTbl);
