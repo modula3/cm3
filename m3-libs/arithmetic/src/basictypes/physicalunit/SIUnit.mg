@@ -1,11 +1,4 @@
-(*$$MC68881:=TRUE *)
-(*$$Symbols:=TRUE *)
-(* $$LargeCode:=TRUE *)
-MODULE SIUnit;
-
-IMPORT LongRealTrans AS RT,
-       LongRealUnitDatabase AS DB,
-       LongRealUsualUnit AS UU;
+GENERIC MODULE SIUnit(RT,UU,DB);
 
 
 PROCEDURE CreateDatabase():DB.T=
@@ -13,27 +6,40 @@ VAR
   db:DB.T;
 
 CONST
-  sixty     = 60.0D0;
-  daySecs   = sixty*sixty*24.0D0;  (*86400.0D0*)
-  yearSecs  = daySecs*365.2422D0;
-  earthAcc  = 9.80665D0;
-  K2        = 1024.0D0;
-  deg180    = 180.0D0;
-  radPerDeg = RT.Pi/deg180;
-  bytesize  = 8.0D0;
+  percent      = FLOAT(0.01D0,RT.T);
+  fourth       = FLOAT(0.25D0,RT.T);
+  half         = FLOAT(0.50D0,RT.T);
+  threefourth  = FLOAT(0.75D0,RT.T);
 
-  pico  = 1.0D-12;
-  nano  = 1.0D-9;
-  micro = 1.0D-6;
-  milli = 1.0D-3;
-  centi = 1.0D-2;
-  deci  = 1.0D-1;
-  one   = 1.0D0;
-(*deca  = 1.0D1;*)
-  hecto = 1.0D2;
-  kilo  = 1.0D3;
-  mega  = 1.0D6;
-  giga  = 1.0D9;
+  sixty        = FLOAT(60.0D0,RT.T);
+  daySecs      = sixty*sixty*FLOAT(24.0D0,RT.T);  (*86400.0D0*)
+  yearSecs     = daySecs*FLOAT(365.2422D0,RT.T);
+  earthAcc     = FLOAT(9.80665D0,RT.T);
+  K2           = FLOAT(1024.0D0,RT.T);
+  deg180       = FLOAT(180.0D0,RT.T);
+  grad200      = FLOAT(200.0D0,RT.T);
+  radPerDeg    = RT.Pi/deg180;
+  radPerGrad   = RT.Pi/grad200;
+  bytesize     = FLOAT(8.0D0,RT.T);
+
+  mach         = FLOAT(332.0D0,RT.T);
+  speedoflight = FLOAT(299792458.0D0,RT.T);
+  electronVolt = FLOAT(1.602D-19,RT.T);
+  calorien     = FLOAT(4.19D0,RT.T);
+  horsePower   = FLOAT(736.0D0,RT.T);
+
+  pico  = FLOAT(1.0D-12,RT.T);
+  nano  = FLOAT(1.0D-9,RT.T);
+  micro = FLOAT(1.0D-6,RT.T);
+  milli = FLOAT(1.0D-3,RT.T);
+  centi = FLOAT(1.0D-2,RT.T);
+  deci  = FLOAT(1.0D-1,RT.T);
+  one   = FLOAT(1.0D0,RT.T);
+(*deca  = FLOAT(1.0D1,RT.T);*)
+  hecto = FLOAT(1.0D2,RT.T);
+  kilo  = FLOAT(1.0D3,RT.T);
+  mega  = FLOAT(1.0D6,RT.T);
+  giga  = FLOAT(1.0D9,RT.T);
 
 TYPE
   SUA     = DB.ScaledUnitInitArray;
@@ -49,11 +55,11 @@ BEGIN
     SU{"pi",    RT.Pi},
     SU{"e",     RT.E},
 (*    SU{"i",     0.,1.}, *)
-    SU{"%",     0.01D0},
+    SU{"%",     percent},
 
-    SU{"¼",     0.25D0},
-    SU{"½",     0.50D0},
-    SU{"¾",     0.75D0}
+    SU{"¼",     fourth},
+    SU{"½",     half},
+    SU{"¾",     threefourth}
   });
 
   DB.AddUnit(db,voltage,scales:=SUA{
@@ -67,7 +73,7 @@ BEGIN
   DB.AddUnit(db,angle,scales:=SUA{
     SU{"''",    radPerDeg/(sixty*sixty),  flags := isUnit},
     SU{"'",     radPerDeg/(sixty),        flags := isUnit},
-    SU{"grad",  RT.Pi/200.0D0},
+    SU{"grad",  radPerGrad},
     SU{"°",     radPerDeg,                flags := isUnit+defScale},
     SU{"rad",   one}
   });
@@ -111,8 +117,8 @@ BEGIN
   });
 
   DB.AddUnit(db,speed,scales:=SUA{
-    SU{"mach",  332.0D0},
-    SU{"c",     299792458.0D0}
+    SU{"mach",  mach},
+    SU{"c",     speedoflight}
   });
 
   DB.AddUnit(db,acceleration,scales:=SUA{
@@ -143,17 +149,17 @@ BEGIN
   });
 
   DB.AddUnit(db,energy,scales:=SUA{
-    SU{"eV",    1.602D-19},
+    SU{"eV",    electronVolt},
     SU{"J",     one,                      flags := isUnit+defScale},
-    SU{"cal",   4.19D0},
+    SU{"cal",   calorien},
     SU{"kJ",    kilo,                     flags := isUnit},
-    SU{"kcal",  4190.0D0}
+    SU{"kcal",  kilo*calorien}
   });
 
   DB.AddUnit(db,power,scales:=SUA{
     SU{"mW",    milli,                    flags := isUnit},
     SU{"W",     one,                      flags := isUnit+defScale},
-    SU{"HP",    736.0D0},
+    SU{"HP",    horsePower},
     SU{"kW",    kilo,                     flags := isUnit}
   });
 
