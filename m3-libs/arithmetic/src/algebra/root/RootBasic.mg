@@ -279,7 +279,7 @@ END Mod;
 
 (*--------------------*)
 (*simple and inefficient method: successively multiply linear factors*)
-PROCEDURE FromRoots(READONLY root : ARRAY OF R.T):T=
+PROCEDURE FromRoots(READONLY root : RootArray):T=
 VAR
   z:=P.One;
   fac:=P.New(1);

@@ -12,15 +12,19 @@ FROM xUtils IMPORT Error;
 (*=====================*)
 (* Quadratics          *)
 (*=====================*)
+
+TYPE
+  RealPolynomial2    = ARRAY [0..2] OF R.T;
+  ComplexPolynomial2 = ARRAY [0..2] OF C.T;
+  RootArray2         = ARRAY [0..1] OF C.T;
+
 (*------------------*)
-PROCEDURE QuadraticReal (a,b,c:R.T;             (*coefs*)
-                    VAR alpha,beta:C.T; (*alpha +/- beta format*)
-                    VAR x1,x2:C.T);     (*root format*)
+PROCEDURE QuadraticReal   (READONLY x:RealPolynomial2;        (*coefs*)
+                           ):RootArray2;
 (*Given a*x^2+b*x+c=0, solve for x.*)
 (*------------------*)
-PROCEDURE QuadraticComplex(a,b,c:C.T;          (*coefs*)
-                   VAR alpha,beta:C.T; (*alpha +/- beta format*)
-                   VAR x1,x2:C.T);     (*results*)
+PROCEDURE QuadraticComplex(READONLY x:ComplexPolynomial2;     (*coefs*)
+                           ):RootArray2;
 (*Given a*x^2+b*x+c=0, solve for x.*)
 
 
