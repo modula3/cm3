@@ -18,20 +18,20 @@ TYPE
   T  = REF ARRAY OF ARRAY OF R.T;
 
 PROCEDURE New(m,n:CARDINAL):T; (*make New mxn matrix*)
-PROCEDURE Copy(mat:T):T;
+PROCEDURE Copy(x:T):T;
 
 (*
-PROCEDURE Zero(mat:T);                              (*set to zeros*)
-PROCEDURE One (mat:T) RAISES {Error};               (*set to identity*)
+PROCEDURE Zero(x:T);                              (*set to zeros*)
+PROCEDURE One (x:T) RAISES {Error};               (*set to identity*)
 *)
 
-PROCEDURE Add(mat1,mat2:T):T RAISES {Error};   (*mat1 + mat2*)
-PROCEDURE Sub(mat1,mat2:T):T RAISES {Error};   (*mat1 - mat2*)
-PROCEDURE Equal(mat1,mat2:T):BOOLEAN RAISES {Error};  (*return v1=v2*)
+PROCEDURE Add(x,y:T):T RAISES {Error};   (*x + y*)
+PROCEDURE Sub(x,y:T):T RAISES {Error};   (*x - y*)
+PROCEDURE Equal(x,y:T):BOOLEAN RAISES {Error};  (*return v1=v2*)
 
-PROCEDURE Mul(mat1,mat2:T):T RAISES {Error};   (*mat1 * mat2*)
+PROCEDURE Mul(x,y:T):T RAISES {Error};   (*x * y*)
 PROCEDURE MulV(A:T;b:V.T):V.T RAISES {Error};  (*A * b*)
-PROCEDURE Transpose(mat:T):T;                  (*mat^T*)
+PROCEDURE Transpose(x:T):T;                  (*x^T*)
 CONST Adjungate = Transpose;
 (*==========================*)
 END MatrixFast.

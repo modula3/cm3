@@ -32,49 +32,50 @@ BEGIN
 END New;
 (*-----------------*)
 PROCEDURE Copy( 
-                mat:T):T =
+                x:T):T =
 VAR
-  m:=NUMBER(mat^); n:=NUMBER(mat[0]);
-  tmp:=NEW(T,m,n);
+  m:=NUMBER(x^);
+  n:=NUMBER(x[0]);
+  z:=NEW(T,m,n);
 BEGIN
-  tmp^:=mat^;
-  RETURN tmp;
+  z^:=x^;
+  RETURN z;
 END Copy;
 
 (*
 (*-----------------*)
 PROCEDURE Zero( 
-                mat:T)=
+                x:T)=
 (*set all zeros*)
 VAR
-  m:=NUMBER(mat^);    m1:=0; mm:=m-1;
-  n:=NUMBER(mat[0]); n1:=0; nn:=n-1;
+  m:=NUMBER(x^);    mf:=0; ml:=m-1;
+  n:=NUMBER(x[0]); nf:=0; nl:=n-1;
 BEGIN
-  FOR i:=m1 TO mm DO
-    FOR j:=n1 TO nn DO
-      mat[i,j]:=R.Zero;
+  FOR i:=mf TO ml DO
+    FOR j:=nf TO nl DO
+      x[i,j]:=R.Zero;
     END;
   END;
 END Zero;
 (*-----------------*)
 PROCEDURE One( 
-               mat:T) RAISES {Error} =
+               x:T) RAISES {Error} =
 (*set all zeros except diagonal to 1's*)
 <*UNUSED*> <*UNUSED*> CONST ftn = "Midentity";
 VAR
-  m:=NUMBER(mat^);    m1:=0; mm:=m-1;
-  n:=NUMBER(mat[0]); n1:=0; nn:=n-1;
+  m:=NUMBER(x^);    mf:=0; ml:=m-1;
+  n:=NUMBER(x[0]); nf:=0; nl:=n-1;
 BEGIN
   IF m # n THEN
     RAISE Error(Err.bad_size);
   END;
-  FOR i:=m1 TO mm DO
-    FOR j:=n1 TO nn DO
-      mat[i,j]:=R.Zero;
+  FOR i:=mf TO ml DO
+    FOR j:=nf TO nl DO
+      x[i,j]:=R.Zero;
     END;
   END;
-  FOR i:=m1 TO mm DO
-    mat[i,i]:=R.One;
+  FOR i:=mf TO ml DO
+    x[i,i]:=R.One;
   END;
 END One;
 *)
@@ -83,71 +84,71 @@ END One;
 (*-----------------*)
 <*INLINE*>
 PROCEDURE AssertEqualSize( 
-                 mat1,mat2:T) RAISES {Error}=
+                 x,y:T) RAISES {Error}=
 BEGIN
-  IF NUMBER(mat1^)   # NUMBER(mat2^) OR
-     NUMBER(mat1[0]) # NUMBER(mat2[0]) THEN
+  IF NUMBER(x^)   # NUMBER(y^) OR
+     NUMBER(x[0]) # NUMBER(y[0]) THEN
     RAISE Error(Err.bad_size);
   END;
 END AssertEqualSize;
 
 (*----------------*)
 PROCEDURE Add( 
-               mat1,mat2:T):T RAISES {Error} =
-(*return mat1+mat2*)
+               x,y:T):T RAISES {Error} =
+(*return x+y*)
 (*each is mxn*)
 <*UNUSED*> CONST ftn = Module & "Add";
 VAR
-  m:=NUMBER(mat1^);   m1:=0; mm:=LAST(mat1^);
-  n:=NUMBER(mat1[0]); n1:=0; nn:=LAST(mat1[0]);
-  tmp:T;
+  m:=NUMBER(x^);   mf:=0; ml:=LAST(x^);
+  n:=NUMBER(x[0]); nf:=0; nl:=LAST(x[0]);
+  z:T;
 BEGIN
-  AssertEqualSize(mat1,mat2);
+  AssertEqualSize(x,y);
 
-  tmp:=NEW(T,m,n);
-  FOR i:=m1 TO mm DO
-    FOR j:=n1 TO nn DO
-      tmp[i,j]:= R.Add(mat1[i,j], mat2[i,j]);
+  z:=NEW(T,m,n);
+  FOR i:=mf TO ml DO
+    FOR j:=nf TO nl DO
+      z[i,j]:= R.Add(x[i,j], y[i,j]);
     END;
   END;
-  RETURN tmp;
+  RETURN z;
 END Add;
 (*----------------*)
 PROCEDURE Sub( 
-               mat1,mat2:T):T RAISES {Error} =
-(*return mat1-mat2*)
+               x,y:T):T RAISES {Error} =
+(*return x-y*)
 (*each is mxn*)
 <*UNUSED*> CONST ftn = Module & "Sub";
 VAR
-  m:=NUMBER(mat1^);   m1:=0; mm:=LAST(mat1^);
-  n:=NUMBER(mat1[0]); n1:=0; nn:=LAST(mat1[0]);
-  tmp:T;
+  m:=NUMBER(x^);   mf:=0; ml:=LAST(x^);
+  n:=NUMBER(x[0]); nf:=0; nl:=LAST(x[0]);
+  z:T;
 BEGIN
-  AssertEqualSize(mat1,mat2);
+  AssertEqualSize(x,y);
 
-  tmp:=NEW(T,m,n);
-  FOR i:=m1 TO mm DO
-    FOR j:=n1 TO nn DO
-      tmp[i,j] := R.Sub(mat1[i,j], mat2[i,j]);
+  z:=NEW(T,m,n);
+  FOR i:=mf TO ml DO
+    FOR j:=nf TO nl DO
+      z[i,j] := R.Sub(x[i,j], y[i,j]);
     END;
   END;
-  RETURN tmp;
+  RETURN z;
 END Sub;
 (*----------------*)
 PROCEDURE Equal( 
-               mat1,mat2:T):BOOLEAN RAISES {Error} =
-(*return mat1=mat2*)
+               x,y:T):BOOLEAN RAISES {Error} =
+(*return x=y*)
 (*each is mxn*)
 <*UNUSED*> CONST ftn = Module & "Equal";
 VAR
-  m1:=0; mm:=LAST(mat1^);
-  n1:=0; nn:=LAST(mat1[0]);
+  mf:=0; ml:=LAST(x^);
+  nf:=0; nl:=LAST(x[0]);
 BEGIN
-  AssertEqualSize(mat1,mat2);
+  AssertEqualSize(x,y);
 
-  FOR i:=m1 TO mm DO
-    FOR j:=n1 TO nn DO
-      IF NOT R.Equal (mat1[i,j], mat2[i,j]) THEN
+  FOR i:=mf TO ml DO
+    FOR j:=nf TO nl DO
+      IF NOT R.Equal (x[i,j], y[i,j]) THEN
         RETURN FALSE;
       END;
     END;
@@ -157,34 +158,35 @@ END Equal;
 
 (*-----------------*)
 PROCEDURE Mul( 
-               mat1,mat2:T):T RAISES {Error}=
-(*return mat1*mat2*)
-(* mat1:mxn  mat2:nxp  return:mxp*)
+               x,y:T):T RAISES {Error}=
+(*return x*y*)
+(* x:mxn  y:nxp  return:mxp*)
 <*UNUSED*> CONST ftn = "Mul";
 VAR
-  m:=NUMBER(mat1^);   m1:=0; mm:=m-1;
-  n:=NUMBER(mat1[0]); n1:=0; nn:=n-1;
-  p:=NUMBER(mat2[0]); p1:=0; pp:=p-1;
-  tmp:T;
+  m:=NUMBER(x^);   mf:=0; ml:=m-1;
+  n:=NUMBER(x[0]); nf:=0; nl:=n-1;
+  p:=NUMBER(y[0]); pf:=0; pl:=p-1;
+  z:T;
+  sum:R.T;
   
 BEGIN
-  IF NUMBER(mat2^)#n THEN
+  IF NUMBER(y^)#n THEN
     RAISE Error(Err.bad_size);
   END;
-  tmp:=NEW(T,m,p);
-  FOR i:=m1 TO mm DO
-    FOR j:=p1 TO pp DO
-      tmp[i,j]:=R.Zero;
-      FOR k:=n1 TO nn DO
-        tmp[i,j]:=R.Add(tmp[i,j], R.Mul(mat1[i,k], mat2[k,j]));
+  z:=NEW(T,m,p);
+  FOR i:=mf TO ml DO
+    FOR j:=pf TO pl DO
+      sum:=R.Zero;
+      FOR k:=nf TO nl DO
+        sum:=R.Add(sum, R.Mul(x[i,k], y[k,j]));
       END;
+      z[i,j]:=sum;
     END;
   END;
-  RETURN tmp;
+  RETURN z;
 END Mul;
 (*-----------------*)
 
-(*----------------*)
 PROCEDURE MulV(
                A:T; b:V.T):V.T RAISES {Error} =
 (*return c, in A x b=c*)
@@ -192,57 +194,59 @@ PROCEDURE MulV(
 
 <*UNUSED*> CONST ftn = Module & "MulV";
 VAR
-  m:=NUMBER(A^);   m1:=0; mm:=m-1;
-  n:=NUMBER(A[0]); n1:=0; nn:=n-1;
+  m:=NUMBER(A^);   mf:=0; ml:=m-1;
+  n:=NUMBER(A[0]); nf:=0; nl:=n-1;
   c:=NEW(V.T,m);
+  sum:R.T;
 BEGIN
   IF NUMBER(b^)#n THEN
     RAISE Error(Err.bad_size);
   END;
   
-  FOR i:=m1 TO mm DO
-    c[i]:=R.Zero;
-    FOR j:=n1 TO nn DO
-      c[i]:=R.Add(c[i],R.Mul(b[j],A[i,j]));
+  FOR i:=mf TO ml DO
+    sum:=R.Zero;
+    FOR j:=nf TO nl DO
+      sum:=R.Add(sum,R.Mul(b[j],A[i,j]));
     END;
+    c[i]:=sum;
   END;
   RETURN c;
 END MulV;
 
 (*-----------------*)
 PROCEDURE Transpose( 
-                     mat:T):T =
+                     x:T):T =
 <*UNUSED*> CONST ftn = Module & "Transpose";
 VAR
-  m:=NUMBER(mat^);   m1:=0; mm:=m-1;
-  n:=NUMBER(mat[0]); n1:=0; nn:=n-1;
-  tmp:T;
+  m:=NUMBER(x^);   mf:=0; ml:=m-1;
+  n:=NUMBER(x[0]); nf:=0; nl:=n-1;
+  z:T;
 BEGIN
-  tmp:=NEW(T,n,m);
-  FOR i:=n1 TO nn DO
-    FOR j:=m1 TO mm DO
-      tmp[i,j]:=mat[j,i];
+  z:=NEW(T,n,m);
+  FOR i:=nf TO nl DO
+    FOR j:=mf TO ml DO
+      z[i,j]:=x[j,i];
     END;
   END;
-  RETURN tmp;
+  RETURN z;
 END Transpose;
 
 (*-----------------*)
 PROCEDURE Adjungate( 
-                     mat:T):T =
+                     x:T):T =
 <*UNUSED*> CONST ftn = Module & "Adjungate";
 VAR
-  m:=NUMBER(mat^);   m1:=0; mm:=m-1;
-  n:=NUMBER(mat[0]); n1:=0; nn:=n-1;
-  tmp:T;
+  m:=NUMBER(x^);   mf:=0; ml:=m-1;
+  n:=NUMBER(x[0]); nf:=0; nl:=n-1;
+  z:T;
 BEGIN
-  tmp:=NEW(T,n,m);
-  FOR i:=n1 TO nn DO
-    FOR j:=m1 TO mm DO
-      tmp[i,j]:=R.Conj(mat[j,i]);
+  z:=NEW(T,n,m);
+  FOR i:=nf TO nl DO
+    FOR j:=mf TO ml DO
+      z[i,j]:=R.Conj(x[j,i]);
     END;
   END;
-  RETURN tmp;
+  RETURN z;
 END Adjungate;
 
 (*-----------------*)

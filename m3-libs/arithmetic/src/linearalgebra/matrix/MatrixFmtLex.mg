@@ -35,24 +35,24 @@ END Lex;
 *)
 (*-----------------*)
 PROCEDURE Fmt( 
-            mat:T; 
+            x:T; 
             style:=F.Style.Fix;
             prec:=2):TEXT RAISES {Thread.Alerted, Wr.Failure}= 
 CONST width = 12;
 VAR
-  m:=NUMBER(mat^);    m1:=0; mm:=m-1;
-  n:=NUMBER(mat[0]);  n1:=0; nn:=n-1;
+  m:=NUMBER(x^);    mf:=FIRST(x^);   ml:=LAST(x^);
+  n:=NUMBER(x[0]);  nf:=FIRST(x[0]); nl:=LAST(x[0]);
   wr:=TextWr.New();
 BEGIN
   Wr.PutText(wr,"M" & F.Int(m) & "x" & F.Int(n) & "{\n");
-  FOR i:=m1 TO mm DO
+  FOR i:=mf TO ml DO
     Wr.PutText(wr,"V" & F.Int(n) & "{");
-    FOR j:= n1 TO nn DO
-      Wr.PutText(wr,F.Pad(Rf.Fmt(mat[i,j],style,prec),width));
-      IF j#nn THEN Wr.PutText(wr,", "); END;
+    FOR j:= nf TO nl DO
+      Wr.PutText(wr,F.Pad(Rf.Fmt(x[i,j],style,prec),width));
+      IF j#nl THEN Wr.PutText(wr,", "); END;
     END;
     Wr.PutText(wr,"}");
-    IF i#mm THEN Wr.PutText(wr,","); END;
+    IF i#ml THEN Wr.PutText(wr,","); END;
     Wr.PutText(wr,"\n");
   END;
   Wr.PutText(wr,"}\n");
