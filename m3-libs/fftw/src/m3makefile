@@ -2,11 +2,11 @@
 import_lib("fftw3","/usr/lib")
 import("libm3")
 
-module("FFTWLongRealRaw")
-module("FFTWLongReal")
-module("FFTWRealRaw")
-module("FFTWReal")
-module("FFTWExtendedRaw")
-module("FFTWExtended")
+module("LongRealFFTWRaw")
+module("LongRealFFTW")
+module("RealFFTWRaw")
+module("RealFFTW")
+module("ExtendedFFTWRaw")
+module("ExtendedFFTW")
 
 library("m3fftw")

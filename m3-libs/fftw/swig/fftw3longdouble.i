@@ -1,5 +1,5 @@
 
-%module FFTWExtended
+%module ExtendedFFTW
 
 %insert(m3rawintf) %{
 IMPORT Extended AS R;
@@ -10,7 +10,7 @@ IMPORT Extended AS R;
 %}
 
 %insert(m3wrapimpl) %{
-IMPORT Extended AS R, FFTWExtendedRaw AS Raw;
+IMPORT Extended AS R, ExtendedFFTWRaw AS Raw;
 %}
 
 #define FPREF(name) fftwl_ ## name
