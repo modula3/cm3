@@ -14,6 +14,11 @@ VectorFast("Real",     "RealBasic")
 VectorFast("LongReal", "LongRealBasic")
 VectorFast("Extended", "ExtendedBasic")
 
+generic_module("VectorTrans")
+VectorTrans("Real",     "RealVectorFast",     "RealBasic",     "RealTrans",     "RealBasic",     "RealTrans")
+VectorTrans("LongReal", "LongRealVectorFast", "LongRealBasic", "LongRealTrans", "LongRealBasic", "LongRealTrans")
+VectorTrans("Extended", "ExtendedVectorFast", "ExtendedBasic", "ExtendedTrans", "ExtendedBasic", "ExtendedTrans")
+
 generic_module("VectorFmtLex")
 VectorFmtLex("Real",     "RealVectorFast",     "RealFmtLex")
 VectorFmtLex("LongReal", "LongRealVectorFast", "LongRealFmtLex")

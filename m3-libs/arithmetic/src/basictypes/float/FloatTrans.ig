@@ -51,11 +51,9 @@ CONST
 (* Handy collectors           *)
 (*============================*)
 TYPE Array = REF ARRAY OF T;
-  
-(*============================*)
-(* Functions                  *)
-(*============================*)
-(*CONST fmt = Fmt.Real;*)
+
+<*INLINE*> PROCEDURE Abs   (c:T):T;       (*return magnitude*)
+<*INLINE*> PROCEDURE AbsSqr(c:T):T;       (*return square of the magnitude*)
 
 (*---- Exponential and Logarithm functions ----*)
 <*INLINE*> PROCEDURE Exp   (x: T): T; (*returns e^x*)

@@ -18,9 +18,6 @@ PROCEDURE Copy(v:T):T;
 PROCEDURE Zero(v:T);                   (*set to zero*)
     (*NOTE: you should make unit vectors as needed*)
 
-PROCEDURE Norm1(v:T):R.T;                      (*Sum norm*)
-PROCEDURE Norm2(v:T):R.T;                      (*Euclidean norm*)
-PROCEDURE NormInf(v:T):R.T;                    (*Maximum norm*)
 PROCEDURE Add(v1,v2:T):T RAISES {Error};   (*v1+v2*)
 PROCEDURE Sub(v1,v2:T):T RAISES {Error};   (*v1-v2*)
 PROCEDURE Scale(v:T; factor:R.T);            (*v1:=v1*factor*)

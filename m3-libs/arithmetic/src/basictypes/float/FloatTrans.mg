@@ -16,6 +16,18 @@ IMPORT Math;
 <*UNUSED*> CONST Module = "FloatTrans.";
 (*==========================*)
 
+(*----------------*)
+PROCEDURE Abs (x : T) : T =
+BEGIN
+  RETURN ABS(x);
+END Abs;
+
+(*----------------*)
+PROCEDURE AbsSqr (x : T) : T =
+BEGIN
+  RETURN x*x;
+END AbsSqr;
+
 (*---- Exponential and Logarithm functions ----*)
 (*----------------*)
 PROCEDURE Exp (x: T): T=

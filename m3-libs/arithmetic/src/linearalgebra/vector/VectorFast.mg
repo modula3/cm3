@@ -50,48 +50,6 @@ BEGIN
 END Zero;
 *)
 
-(*-----------------*)
-PROCEDURE Norm1( 
-                v:T):R.T=
-VAR
-  sum:R.T;
-BEGIN
-  sum:=R.Zero;
-  FOR i:=FIRST(v^) TO LAST(v^) DO
-    sum:=sum+R.Abs(v[i]);
-  END;
-  RETURN sum;
-END Norm1;
-
-(*-----------------*)
-PROCEDURE Norm2( 
-                v:T):R.T=
-VAR
-  sum:R.T;
-BEGIN
-  sum:=R.Zero;
-  FOR i:=FIRST(v^) TO LAST(v^) DO
-    sum:=sum+v[i]*v[i];
-  END;
-  RETURN R.SqRt(sum);
-END Norm2;
-
-(*-----------------*)
-PROCEDURE NormInf( 
-                v:T):R.T=
-VAR
-  max,abs:R.T;
-BEGIN
-  max:=R.Zero;
-  FOR i:=FIRST(v^) TO LAST(v^) DO
-    abs:=R.Abs(v[i]);
-    IF max<abs THEN
-      max:=abs;
-    END;
-  END;
-  RETURN max;
-END NormInf;
-
 
 (*-----------------*)
 PROCEDURE Add( 
@@ -158,13 +116,14 @@ BEGIN
 END Inner;
 
 (*-----------------*)
+(*
 PROCEDURE Cross( 
                 v1,v2:T):T RAISES {Error}=
 (*return cross product of v1 and v2*)
 BEGIN
   RAISE Error(Err.not_implemented);
 END Cross;
-
+*)
 
 (*-----------------*)
 BEGIN
