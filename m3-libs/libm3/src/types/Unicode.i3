@@ -1,34 +1,58 @@
-(* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
-(* See file COPYRIGHT-CMASS for details. *)
-
+(*---------------------------------------------------------------------------*\
+ *  Copyright (c) 2003-2004 by Dirk Muysers.
+ *  For details see file "COPYRIGHT"
+ *
+ *  INTERFACE: Unicode.i3
+ *  PURPOSE:   Unicode character set
+ *  HISTORY:
+ *    DATE          PROGRAMMER       DESCRIPTION
+ *    30-Nov-2003   Dirk Muysers     Initial creation
+ *
+ *----------------------------------------------------------------------------
+ *  $Id: Unicode.i3,v 1.3 2003-12-17 15:22:39 wagner Exp $
+\*---------------------------------------------------------------------------*)
 INTERFACE Unicode;
 
-(* Unicode Characters
-
-   "Unicode" deals with individual characters.  It includes constant
-   definitions for the character codes of a few exotic characters,
-   such as "Unicode.NL" for new-line.  It classifies characters into
-   groups, like digits or punctuation and provides functions that map
-   lower-case letters into upper-case and the like.
-
-   Index: characters; punctuation; case, converting characters;
-          characters, case conversion; upper-case, converting to lower;
-          lower-case, converting to upper
-*)
-
+(*---------------------------------------------------------------------------*\
+ * DESCRIPTION:
+ *
+ * "Unicode" deals with individual characters that belong to the WIDECHAR type.
+ * It includes constant definitions for the character codes of a few exotic 
+ * characters, such as "Unicode.NL" for new-line.  It classifies
+ * characters into groups, like digits or punctuation and provides
+ * functions that map lower-case letters into upper-case and the like.
+ *
+ * Please note that this library is surrogate-blind. It considers
+ * surrogates as ordinary --although illegal-- characters und does not
+ * check their correct pairing.
+ * 
+\*---------------------------------------------------------------------------*)
 
 CONST
-  NUL = W'\000000';    SOH = W'\000001';    STX = W'\000002';    ETX = W'\000003';
-  EOT = W'\000004';    ENQ = W'\000005';    ACK = W'\000006';    BEL = W'\000007';
-  BS  = W'\000010';    HT  = W'\000011';    NL  = W'\000012';    VT  = W'\000013';
-  NP  = W'\000014';    CR  = W'\000015';    SO  = W'\000016';    SI  = W'\000017';
-  DLE = W'\000020';    DC1 = W'\000021';    DC2 = W'\000022';    DC3 = W'\000023';
-  DC4 = W'\000024';    NAK = W'\000025';    SYN = W'\000026';    ETB = W'\000027';
-  CAN = W'\000030';    EM  = W'\000031';    SUB = W'\000032';    ESC = W'\000033';
-  FS  = W'\000034';    GS  = W'\000035';    RS  = W'\000036';    US  = W'\000037';
-  SP  = W'\000040';    DEL = W'\000177';
+  NUL  = W'\x0000'; SOH  = W'\x0001'; STX  = W'\x0002';  ETX  = W'\x0003';
+  EOT  = W'\x0004'; ENQ  = W'\x0005'; ACK  = W'\x0006';  BEL  = W'\x0007';
+  BS   = W'\x0008'; HT   = W'\x0009'; NL   = W'\x000A';  VT   = W'\x000B';
+  NP   = W'\x000C'; CR   = W'\x000D'; SO   = W'\x000E';  SI   = W'\x000F';
+  DLE  = W'\x0010'; DC1  = W'\x0011'; DC2  = W'\x0012';  DC3  = W'\x0013';
+  DC4  = W'\x0014'; NAK  = W'\x0015'; SYN  = W'\x0016';  ETB  = W'\x0017';
+  CAN  = W'\x0018'; EM   = W'\x0019'; SUB  = W'\x001A';  ESC  = W'\x001B';
+  FS   = W'\x001C'; GS   = W'\x001D'; RS   = W'\x001E';  US   = W'\x001F';
+  SP   = W'\x0020'; DEL  = W'\x007F'; 
+  PAD  = W'\x0080'; HOP  = W'\x0081'; BPH  = W'\x0082';  NBH  = W'\x0083';
+  IND  = W'\x0084'; NEL  = W'\x0085'; SSA  = W'\x0086';  ESA  = W'\x0087';
+  HTS  = W'\x0088'; HTJ  = W'\x0089'; VTS  = W'\x008A';  PLD  = W'\x008B';
+  PLU  = W'\x008C'; RI   = W'\x008D'; SS2  = W'\x008E';  SS3  = W'\x008F';
+  DCS  = W'\x0090'; PU1  = W'\x0091'; PU2  = W'\x0092';  STS  = W'\x0093';
+  CCH  = W'\x0094'; MW   = W'\x0095'; SPA  = W'\x0096';  EPA  = W'\x0097';
+  SOS  = W'\x0098'; SGCI = W'\x0099'; SCI  = W'\x009A';  CSI  = W'\x009B';
+  ST   = W'\x009C'; OSC  = W'\x009D'; PM   = W'\x009E';  APC  = W'\x009F';
+  NBSP = W'\x00A0';
 
-(*--------------------------------------------------------- predicates ---*)
+TYPE T = WIDECHAR;
+
+(*---------------------------------------------------------------------------*\
+ * Predicates
+\*---------------------------------------------------------------------------*)
 
 PROCEDURE IsDefined (t: T): BOOLEAN;
 (* Returns "TRUE" if "t" has a defined meaning in Unicode. *)
@@ -45,7 +69,7 @@ PROCEDURE IsLetter (t: T): BOOLEAN;
 PROCEDURE IsDigit (t: T): BOOLEAN;
 (* Returns "TRUE" if "t" is a Unicode digit. *)
 
-PROCEDURE IsLetterOrDigit (t): BOOLEAN;
+PROCEDURE IsLetterOrDigit (t: T): BOOLEAN;
 (* == "IsLetter(t) OR IsDigit(t)". *)
 
 PROCEDURE IsUpperCase (t: T): BOOLEAN;
@@ -57,7 +81,9 @@ PROCEDURE IsLowerCase (t: T): BOOLEAN;
 PROCEDURE IsTitleCase (t: T): BOOLEAN;
 (* Returns "TRUE" if "t" is defined as a Unicode title-case letter. *)
 
-(*------------------------------------------------------- translations ---*)
+(*---------------------------------------------------------------------------*\
+ * Translations
+\*---------------------------------------------------------------------------*)
 
 PROCEDURE ToUpperCase (t: T): T;
 (* Return the upper-case equivalent of "t" if it has one.
@@ -76,3 +102,4 @@ PROCEDURE ToDigitValue (t: T): CARDINAL;
    Otherwise, returns "LAST (CARDINAL)". *)
 
 END Unicode.
+(* vi: set ai sw=2 ts=2 tw=80: *)
