@@ -1,9 +1,5 @@
-%remove_m3_option("-o")
-%remove_m3_option("-g")
-%remove_m3_option("-map")
-
 import("libm3")
-override("m3na","/home/thielema/programming/m3/pkg/contrib")
+override("m3na","/home/thielema/programming/m3/pkg")
 %override("m3na","../../..")
 import("m3na")
 
