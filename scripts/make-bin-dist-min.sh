@@ -113,6 +113,13 @@ export BUILDLOCAL CLEANLOCAL BUILDGLOBAL CLEANGLOBAL SHIP
 header "stage 4: installing libraries using new cm3 compiler"
 "${ROOT}/scripts/do-cm3-min.sh" buildglobal || exit 1
 
+header "stage 4a: applying library fixups"
+for d in m3core libm3; do
+  f="${INSTALLROOT}/pkg/${d}/${TARGET}/.M3EXPORTS"
+  echo "fixing ${f}"
+  perl -i -p -e 's;_import_otherlib\("m3gcdefs".*;_import_otherlib("m3gcdefs", LIB_USE, IMPORTED);' "${f}"
+done
+
 header "stage 5: re-adjusting cm3.cfg"
 echo ".../cminstall/src/config/${TARGET} -->" \
   "${INSTALLROOT}/bin/cm3.cfg"
