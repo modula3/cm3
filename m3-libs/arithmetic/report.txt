@@ -1,7 +1,6 @@
 for myself:
 
 todo:
-  - separate generic GCD from integer module
   - physical units
   - combinatorics and number theory with bigintegers
     calculating binomial coefficients might be sped up by
@@ -9,6 +8,8 @@ todo:
   - Bits, SLE (MatrixDecomposition), eigensystem, FFT (FourierTransform), Random/RNG01/RNG02, Root, Stat
   - ODE
   - Hash routines
+  - BRANDED strings
+  - (*OUT*) for remainder of DivMod
   - Tex output of numbers
   - (overflow check in integer modules)
 
