@@ -5,10 +5,20 @@ Abstract: Conform interface for formatting and parsing of EXTENDED numbers
 
 *)
 
-IMPORT Fmt AS F, Lex AS L;
+IMPORT Extended AS R, Fmt AS F, Lex AS L;
+
+TYPE
+  T = EXTENDED;
+  FmtStyle = RECORD
+               style   := F.Style.Auto;
+               prec    :  CARDINAL := R.MaxSignifDigits - 1;
+               literal := FALSE;
+             END;
 
 CONST
-  Fmt = F.Extended;
   Lex = L.Extended;
+
+<*INLINE*>
+PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}) : TEXT;
 
 END ExtendedFmtLex.

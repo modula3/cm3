@@ -5,10 +5,20 @@ Abstract: Conform interface for formatting and parsing of LONGREAL numbers
 
 *)
 
-IMPORT Fmt AS F, Lex AS L;
+IMPORT LongReal AS R, Fmt AS F, Lex AS L;
+
+TYPE
+  T = LONGREAL;
+  FmtStyle = RECORD
+               style   := F.Style.Auto;
+               prec    :  CARDINAL := R.MaxSignifDigits - 1;
+               literal := FALSE;
+             END;
 
 CONST
-  Fmt = F.LongReal;
   Lex = L.LongReal;
+
+<*INLINE*>
+PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}) : TEXT;
 
 END LongRealFmtLex.

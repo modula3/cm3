@@ -16,6 +16,6 @@ end
 
 readonly proc MatrixFmtLex (nm, matrix, rfmt) is
   local basic = nm & "MatrixFmtLex"
-  build_generic_intf (basic, "MatrixFmtLex", [matrix], VISIBLE)
+  build_generic_intf (basic, "MatrixFmtLex", [matrix, rfmt], VISIBLE)
   build_generic_impl (basic, "MatrixFmtLex", [rfmt])
 end

@@ -23,6 +23,6 @@ end
 
 readonly proc ComplexFmtLex (nm, cfield, rfield, rfmt) is
   local basic = nm & "ComplexFmtLex"
-  build_generic_intf (basic, "ComplexFmtLex", [cfield], VISIBLE)
-  build_generic_impl (basic, "ComplexFmtLex", [cfield, rfield, rfmt])
+  build_generic_intf (basic, "ComplexFmtLex", [cfield, rfmt], VISIBLE)
+  build_generic_impl (basic, "ComplexFmtLex", [rfield, rfmt])
 end

@@ -54,7 +54,7 @@ PROCEDURE Lex(txt: TEXT; defaultBase: [2..16]): INTEGER
 
 
 
-PROCEDURE FastFmtU(READONLY x: T; base: Base; pad: [1..Word.Size]): TEXT =
+PROCEDURE FastFmtU(READONLY x: T; base: F.Base; pad: [1..Word.Size]): TEXT =
   VAR
     txt : TEXT;
   BEGIN
@@ -70,11 +70,11 @@ PROCEDURE FastFmtU(READONLY x: T; base: Base; pad: [1..Word.Size]): TEXT =
   END FastFmtU;
 
 (*can be optimized with a division routine that is specialised to small divisors*)
-PROCEDURE SlowFmtU(x: T; base: Base): TEXT =
+PROCEDURE SlowFmtU(x: T; base: F.Base): TEXT =
   VAR
     r, b  : T;
     txt   := "";
-    digit : [0..LAST(Base)-1];
+    digit : [0..LAST(F.Base)-1];
   BEGIN
     TRY
       b := BB.FromInteger(base);

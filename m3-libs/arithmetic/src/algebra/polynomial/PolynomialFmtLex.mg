@@ -1,4 +1,4 @@
-GENERIC MODULE PolynomialFmtLex(P,Rf);
+GENERIC MODULE PolynomialFmtLex(RF);
 (*Copyright (c) 1995, Harry George
   
 Abstract: Polynomials.
@@ -8,7 +8,6 @@ Abstract: Polynomials.
 2/17/96   Harry George    Converted from OO to ADT format.
 *)
 
-FROM P IMPORT T;
 IMPORT Fmt AS F,Wr,TextWr,Thread;
 
 <* UNUSED *>
@@ -25,23 +24,20 @@ END Lex;
 *)
 
 (*----------------------*)
-PROCEDURE Fmt( 
-               x:T;
-               style:F.Style:=F.Style.Fix;
-               prec:CARDINAL:=1
-               ):TEXT RAISES {Thread.Alerted, Wr.Failure} =
+PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}):TEXT
+               RAISES {Thread.Alerted, Wr.Failure} =
 (*Generate a text object for the polynomial poly, in form:
  T3{a0,a1,a2}
 *)
 VAR
-  n:=NUMBER(x^); n1:=0; nn:=n-1;
+  n:=NUMBER(x^); nf:=FIRST(x^); nl:=LAST(x^);
   wr:=NEW(TextWr.T).init(); 
 BEGIN
-  Wr.PutText(wr,"T"
+  Wr.PutText(wr,"Polynomial"
      & F.Int(n) & "{");
-  FOR i:=n1 TO nn DO
-    Wr.PutText(wr,Rf.Fmt(x[i],style,prec));
-    IF i#nn THEN Wr.PutText(wr,", "); END;
+  FOR i:=nf TO nl DO
+    Wr.PutText(wr,RF.Fmt(x[i],style.elemStyle));
+    IF i#nl THEN Wr.PutText(wr,", "); END;
   END;
   Wr.PutText(wr,"}");
   RETURN TextWr.ToText(wr);

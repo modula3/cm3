@@ -1,4 +1,4 @@
-GENERIC INTERFACE ComplexFmtLex(C);
+GENERIC INTERFACE ComplexFmtLex(C,RF);
 (*Copyright (c) 1996, m3na project
   
 Abstract: Formatting and parsing complex numbers
@@ -9,14 +9,16 @@ Abstract: Formatting and parsing complex numbers
 *)
 
 FROM xUtils IMPORT Error;
-IMPORT Fmt AS F;
+
+(*==========================*)
+TYPE
+  T = C.T;
+  FmtStyle = RECORD elemStyle := RF.FmtStyle{}; END;
 
 PROCEDURE Lex(str:TEXT):C.T RAISES {Error};
         (*reads after the "COMPLEX{" in COMPLEX{re:=<r>; im:=<r>},
         thru the "}"*)
-PROCEDURE Fmt(x:C.T; 
-        style:F.Style:=F.Style.Fix;
-        prec:CARDINAL:=3):TEXT;
+PROCEDURE Fmt (READONLY x : T; READONLY style := FmtStyle{}) : TEXT;
         (*outputs as "COMPLEX{re:=<r>; im:=<r>}"
         Uses simple F.Real if x.im=0.0.*)
 

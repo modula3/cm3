@@ -5,13 +5,20 @@ Abstract: Conform interface for formatting and parsing of REAL numbers
 
 *)
 
-IMPORT Fmt AS F, Lex AS L;
+IMPORT Real AS R, Fmt AS F, Lex AS L;
 
 TYPE
   T = REAL;
+  FmtStyle = RECORD
+               style   := F.Style.Auto;
+               prec    :  CARDINAL := R.MaxSignifDigits - 1;
+               literal := FALSE;
+             END;
 
 CONST
   Lex = L.Real;
-  Fmt = F.Real;
+
+<*INLINE*>
+PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}) : TEXT;
 
 END RealFmtLex.

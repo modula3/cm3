@@ -1,4 +1,4 @@
-GENERIC MODULE ComplexFmtLex(C,R,RF);
+GENERIC MODULE ComplexFmtLex(R,RF);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Formatting and parsing complex numbers
@@ -11,7 +11,6 @@ Abstract: Formatting and parsing complex numbers
                           The ones with beginning caps are wds's
 *)
 (*FROM xUtils IMPORT Error,Err;*)
-IMPORT Fmt AS F;
 
 <*UNUSED*> CONST Module = "ComplexFmtLex.";
 
@@ -24,25 +23,20 @@ BEGIN
 END Lex;
 *)
 (*----------------------------*)
-PROCEDURE Fmt ( 
-                VALUE c:C.T;
-                style:F.Style:=F.Style.Fix;
-                prec:CARDINAL:=3
-                ):TEXT=
+PROCEDURE Fmt (READONLY x : T; READONLY style := FmtStyle{}) : TEXT =
 (*Generate in format "COMPLEX{re:=1.0,im:=2.0}"
 Uses simple F.Real if c.im=0.0.
 style and precision can be overridden*)
 VAR
   t:TEXT;
 BEGIN
-  IF R.Equal(c.im,R.Zero) THEN
-    t:=RF.Fmt(c.re);
-    RETURN t;
+  IF R.IsZero(x.im) THEN
+    t:=RF.Fmt(x.re);
   ELSE
-	t:="COMPLEX{re:=" & RF.Fmt(c.re,style,prec) & "D0,"
-             & "im:=" & RF.Fmt(c.im,style,prec) & "D0}";
-	RETURN t;
+    t:="COMPLEX{re:=" & RF.Fmt(x.re,style.elemStyle) & ","
+             & "im:=" & RF.Fmt(x.im,style.elemStyle) & "}";
   END;
+  RETURN t;
 END Fmt;
 
 (*==========================*)

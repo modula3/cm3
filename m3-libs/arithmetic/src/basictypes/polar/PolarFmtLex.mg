@@ -1,4 +1,4 @@
-GENERIC MODULE PolarFmtLex(P,RF);
+GENERIC MODULE PolarFmtLex(RF);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Complex numbers in polar coordinates
@@ -10,21 +10,16 @@ Abstract: Complex numbers in polar coordinates
 3/16/96   Warren Smith    Improved routines, and new routines.
                           The ones with beginning caps are wds's
 *)
-IMPORT Fmt AS F;
 
 <*UNUSED*> CONST Module = "PolarFmtLex.";
 
 (*----------------*)
-PROCEDURE Fmt( 
-                x:P.T;
-                style:F.Style:=F.Style.Fix;
-                prec:CARDINAL:=3
-                ):TEXT=
+PROCEDURE Fmt (READONLY x : T; READONLY style := FmtStyle{}) : TEXT =
 VAR
   t:TEXT;
 BEGIN
-  t:="POLAR{radius:=" & RF.Fmt(x.radius,style,prec) & "D0,"
-         & "angle:="  & RF.Fmt(x.angle ,style,prec) & "D0}";
+  t:="POLAR{radius:=" & RF.Fmt(x.radius,style.elemStyle) & ","
+         & "angle:="  & RF.Fmt(x.angle, style.elemStyle) & "}";
   RETURN t;
 END Fmt;
 

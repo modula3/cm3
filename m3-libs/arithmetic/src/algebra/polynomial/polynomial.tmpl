@@ -16,6 +16,6 @@ end
 
 readonly proc PolynomialFmtLex (nm, poly, rfmt) is
   local basic = nm & "PolynomialFmtLex"
-  build_generic_intf (basic, "PolynomialFmtLex", [poly], VISIBLE)
-  build_generic_impl (basic, "PolynomialFmtLex", [poly, rfmt])
+  build_generic_intf (basic, "PolynomialFmtLex", [poly, rfmt], VISIBLE)
+  build_generic_impl (basic, "PolynomialFmtLex", [      rfmt])
 end

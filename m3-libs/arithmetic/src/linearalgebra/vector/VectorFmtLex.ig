@@ -1,20 +1,19 @@
-GENERIC INTERFACE VectorFmtLex(V);
+GENERIC INTERFACE VectorFmtLex(V,RF);
 (*Copyright (c) 1996, m3na project
 
 Abstract: vector formatting
 
 2/17/96  Harry George    Convert from Objects to ADT's
 *)
-IMPORT Fmt AS F,Wr,Thread;
+IMPORT Wr,Thread;
 (*==========================*)
 TYPE
   T = V.T;
+  FmtStyle = RECORD elemStyle := RF.FmtStyle{}; END;
 
 <*UNUSED*>
 PROCEDURE Lex(str:TEXT):T;
-PROCEDURE Fmt(x:T;
-            style:=F.Style.Fix;
-            prec:=2):TEXT RAISES {Thread.Alerted, Wr.Failure};
+PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}) : TEXT RAISES {Thread.Alerted, Wr.Failure};
 
 (*==========================*)
 END VectorFmtLex.
