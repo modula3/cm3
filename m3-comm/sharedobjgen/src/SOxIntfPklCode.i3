@@ -7,6 +7,7 @@
  *                                                                        
  * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
  * City of New York.  Blair MacIntyre, Computer Science Department.       
+ * See file COPYRIGHT-COLUMBIA for details.
  * 
  * Author          : Blair MacIntyre
  * Created On      : Tue Feb 25 16:15:08 1997
@@ -20,6 +21,9 @@
  * $Revision$
  * 
  * $Log$
+ * Revision 1.1.1.1  2001/12/02 13:15:54  wagner
+ * Blair MacIntyre's sharedobjgen package
+ *
  * Revision 1.1  1997/05/25 20:27:50  bm
  * Pickling code for SharedObjects
  *

@@ -7,6 +7,7 @@
  *                                                                        
  * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
  * City of New York.  Blair MacIntyre, Computer Science Department.       
+ * See file COPYRIGHT-COLUMBIA for details.
  * 
  * Author          : Tobias Hoellerer (htobias)
  * Created On      : Fri Nov 10 17:37:04 EST 1995
@@ -20,6 +21,9 @@
  * $Revision$
  * 
  * $Log$
+ * Revision 1.1.1.1  2001/12/02 13:15:54  wagner
+ * Blair MacIntyre's sharedobjgen package
+ *
  * Revision 1.4  1997/10/22 14:45:14  bm
  * Bug fix.  Naming conflicts.
  *
