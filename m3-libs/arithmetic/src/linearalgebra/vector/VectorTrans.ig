@@ -1,4 +1,4 @@
-GENERIC INTERFACE VectorTrans(V,R);
+GENERIC INTERFACE VectorTrans(R,V);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Vector math
