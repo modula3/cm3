@@ -9,7 +9,7 @@ UNSAFE MODULE UDPWin32 EXPORTS UDP;
 *)
 
 IMPORT
-  WinSock, WinDef, IP, Thread, Ctypes, Text, Fmt, Atom, AtomList;
+  WinSock, WinDef, IP, Thread, Ctypes, Text, Fmt, Atom, AtomList, ETimer;
 
 REVEAL
   T = Public BRANDED "UDPWin32.T" OBJECT
@@ -117,10 +117,34 @@ PROCEDURE Receive(this: T; VAR (*INOUT*) d: Datagram; timeout: LONGREAL) RAISES 
 VAR
   size: Ctypes.int;
   remote: WinSock.struct_sockaddr_in;
+  set: WinSock.struct_fd_set;
+  timeval: WinSock.struct_timeval;
+  timer: ETimer.T := NIL;
 BEGIN
   <* ASSERT this.open *>
-  (* we do not support timeout in the Win32 version *)
-  <* ASSERT timeout < 0.0d0 *>
+  IF timeout >= 0.0d0 THEN 
+  	timer := ETimer.New("");
+  	ETimer.Enable(); 
+  	ETimer.Push(timer);
+  END;
+	timeval.tv_sec := 0;
+	timeval.tv_usec := 100000; (* check for alert or timeout every 1/10th of a second *)
+	LOOP
+		set.fd_count := 1;
+		set.fd_array[0] := this.socket;
+		WITH ret = WinSock.select(0, ADR(set), NIL, NIL, ADR(timeval)) DO
+	    IF ret = WinSock.SOCKET_ERROR THEN
+	      Error(WinSock.WSAGetLastError(), "select");
+	    END;
+	  	IF ret = 1 THEN EXIT END;
+	  	IF Thread.TestAlert() THEN
+	  		RAISE Thread.Alerted;
+	  	END;
+	  	IF timer # NIL AND timeout <= ETimer.Elapsed(timer) THEN
+	  		RAISE Timeout;
+	  	END; 
+		END;
+	END;
   remote.sin_zero := SinZero;
   size := BYTESIZE(WinSock.struct_sockaddr_in);
   WITH 
