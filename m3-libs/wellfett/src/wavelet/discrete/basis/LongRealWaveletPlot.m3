@@ -13,9 +13,6 @@ IMPORT PLPlot AS PL;
 FROM NADefinitions IMPORT Error;
 
 PROCEDURE PlotWavelets (hdual, gdual: S.T; levels: CARDINAL) =
-  CONST
-    ymin = -1.5D0;
-    ymax = 1.5D0;
   VAR
     twopow  := RIntPow.Power(R.Two, levels);
     grid    := 1.0D0 / twopow;
@@ -39,6 +36,13 @@ PROCEDURE PlotWavelets (hdual, gdual: S.T; levels: CARDINAL) =
     rightpsidual := FLOAT(psidual.getLast(), R.T) * grid;
     leftdual     := MIN(leftphidual, leftpsidual);
     rightdual    := MAX(rightphidual, rightpsidual);
+
+    ymin := MIN(
+              MIN(V.Min(phiprimal.getData()^), V.Min(psiprimal.getData()^)),
+              MIN(V.Min(phidual.getData()^), V.Min(psidual.getData()^)));
+    ymax := MAX(
+              MAX(V.Max(phiprimal.getData()^), V.Max(psiprimal.getData()^)),
+              MAX(V.Max(phidual.getData()^), V.Max(psidual.getData()^)));
 
   BEGIN
     TRY
