@@ -1,4 +1,4 @@
-GENERIC INTERFACE ChebyPolynomialFast(P,R);
+GENERIC INTERFACE ChebyPolynomialFast(R,P);
 (*
 Abstract:  Chebyshev polynomials and
            approximation of functions by sums of chebyshev polynomials
@@ -12,6 +12,9 @@ FROM NADefinitions IMPORT Error;
 (*=================================*)
 (* Chebyshev Approximations        *)
 (*=================================*)
+
+CONST
+  Brand = "Cheby" & P.Brand;
 
 TYPE
   TBody = P.TBody;

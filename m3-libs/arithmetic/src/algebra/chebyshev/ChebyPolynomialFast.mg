@@ -1,4 +1,4 @@
-GENERIC MODULE ChebyPolynomialFast(RT,R);
+GENERIC MODULE ChebyPolynomialFast(R,RT);
 (*Copyright (c) 1995, Harry George
 
 Abstract: Implementation of Modula-3 version of
