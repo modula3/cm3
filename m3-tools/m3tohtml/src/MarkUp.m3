@@ -42,6 +42,29 @@ PROCEDURE Annotate (rd: Rd.T;  wr: Wr.T;  path: TEXT)
     Trans (s);
   END Annotate;
 
+PROCEDURE Simple (rd: Rd.T;  wr: Wr.T;  path: TEXT)
+  RAISES {Thread.Alerted, Wr.Failure, Rd.Failure} =
+  VAR s: State; c : CHAR;
+  BEGIN
+    s.rd   := rd;
+    s.wr   := wr;
+    s.path := path;
+    OutT (s, "<HTML><HEAD><TITLE>\n");
+    OutT (s, path);
+    OutT (s, "</TITLE></HEAD><BODY BGCOLOR=\"#eeeeee\">\n");
+    OutT (s, "<H2>\n");
+    OutT (s, path);
+    OutT (s, "</H2><HR>\n");
+    OutT (s, "<PRE>\n");
+    WHILE NOT Rd.EOF(rd) DO
+      c := Rd.GetChar(rd); <*NOWARN *>
+      OutX (s, c);
+    END;
+    OutT (s, "</PRE>\n");
+    OutT (s, "</BODY>\n");
+    OutT (s, "</HTML>\n");
+  END Simple;
+
 (*------------------------------------------------------- file processing ---*)
 
 PROCEDURE Trans(VAR s: State)
