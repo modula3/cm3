@@ -3485,15 +3485,9 @@ start_decl (declarator, declspecs, initialized, attributes)
     switch (TREE_CODE (decl))
       {
       case TYPE_DECL:
-	/* typedef foo = bar  means give foo the same type as bar.
-	   We haven't parsed bar yet, so `finish_decl' will fix that up.
-	   Any other case of an initialization in a TYPE_DECL is an error.  */
-	if (pedantic || list_length (declspecs) > 1)
-	  {
-	    error ("typedef `%s' is initialized",
-		   IDENTIFIER_POINTER (DECL_NAME (decl)));
-	    initialized = 0;
-	  }
+	error ("typedef `%s' is initialized (use __typeof__ instead)",
+	       IDENTIFIER_POINTER (DECL_NAME (decl)));
+	initialized = 0;
 	break;
 
       case FUNCTION_DECL:
@@ -3642,16 +3636,7 @@ finish_decl (decl, init, asmspec_tree)
     init = 0;
 
   if (init)
-    {
-      if (TREE_CODE (decl) != TYPE_DECL)
-	store_init_value (decl, init);
-      else
-	{
-	  /* typedef foo = bar; store the type of bar as the type of foo.  */
-	  TREE_TYPE (decl) = TREE_TYPE (init);
-	  DECL_INITIAL (decl) = init = 0;
-	}
-    }
+    store_init_value (decl, init);
 
   /* Deduce size of array from initialization, if not already known */
   if (TREE_CODE (type) == ARRAY_TYPE
@@ -3911,6 +3896,7 @@ build_compound_literal (type, init)
   DECL_CONTEXT (decl) = current_function_decl;
   TREE_USED (decl) = 1;
   TREE_TYPE (decl) = type;
+  TREE_READONLY (decl) = TREE_READONLY (type);
   store_init_value (decl, init);
 
   if (TREE_CODE (type) == ARRAY_TYPE && !COMPLETE_TYPE_P (type))
@@ -3933,12 +3919,18 @@ build_compound_literal (type, init)
   if (TREE_STATIC (decl))
     {
       /* This decl needs a name for the assembler output.  We also need
-	 a unique suffix to be added to the name, for which DECL_CONTEXT
-	 must be set.  */
-      DECL_NAME (decl) = get_identifier ("__compound_literal");
-      DECL_CONTEXT (decl) = complit;
+	 a unique suffix to be added to the name.  */
+      char *name;
+      extern int var_labelno;
+
+      ASM_FORMAT_PRIVATE_NAME (name, "__compound_literal", var_labelno);
+      var_labelno++;
+      DECL_NAME (decl) = get_identifier (name);
+      DECL_DEFER_OUTPUT (decl) = 1;
+      DECL_COMDAT (decl) = 1;
+      DECL_ARTIFICIAL (decl) = 1;
+      pushdecl (decl);
       rest_of_decl_compilation (decl, NULL, 1, 0);
-      DECL_CONTEXT (decl) = NULL_TREE;
     }
 
   return complit;

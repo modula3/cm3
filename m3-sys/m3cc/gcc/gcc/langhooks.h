@@ -46,6 +46,7 @@ struct lang_hooks_for_tree_inlining
 							  void *, int *,
 							  void *));
   int (*anon_aggr_type_p) PARAMS ((union tree_node *));
+  bool (*var_mod_type_p) PARAMS ((union tree_node *));
   int (*start_inlining) PARAMS ((union tree_node *));
   void (*end_inlining) PARAMS ((union tree_node *));
   union tree_node *(*convert_parm_for_inlining) PARAMS ((union tree_node *,
@@ -155,6 +156,12 @@ struct lang_hooks
      command line.  By default, if the parameter is non-zero, prints a
      warning that the front end does not use such a parser.  */
   void (*set_yydebug) PARAMS ((int));
+
+  /* Called from expr_size to calculate the size of the value of an
+     expression in a language-dependent way.  Returns a tree for the size
+     in bytes.  A frontend can call lhd_expr_size to get the default
+     semantics in cases that it doesn't want to handle specially.  */
+  tree (*expr_size) PARAMS ((tree));
 
   struct lang_hooks_for_tree_inlining tree_inlining;
   
