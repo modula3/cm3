@@ -167,7 +167,7 @@ PROCEDURE Mod(READONLY x,y:T):T RAISES {Error} =
   END Mod;
 
 (*-------------------*)
-PROCEDURE DivMod(READONLY x,y:T;VAR r:T):T RAISES {Error} =
+PROCEDURE DivMod(x,y:T;VAR r:T):T RAISES {Error} =
   VAR
     denom : R.T;
     xbig,
