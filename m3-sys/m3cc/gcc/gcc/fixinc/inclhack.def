@@ -221,6 +221,23 @@ fix = {
 
 
 /*
+ * Solaris <sys/varargs.h> is a DDK (aka kernel-land) header providing
+ * the same interface as <stdarg.h>.  No idea why they couldn't have just
+ * used the standard header.
+ */
+fix = {
+    hackname = AAB_solaris_sys_varargs_h;
+    files    = "sys/varargs.h";
+    mach     = '*-*-solaris*';
+    replace  = "#ifdef __STDC__\n"
+	       "#include <stdarg.h>\n"
+	       "#else\n"
+	       "#include <varargs.h>\n"
+	       "#endif\n";
+};
+
+
+/*
  *  Fix non-ANSI memcpy declaration that conflicts with gcc's builtin
  *  declaration on Sun OS 4.x.  We must only fix this on Sun OS 4.x, because
  *  many other systems have similar text but correct versions of the file.
@@ -256,23 +273,6 @@ extern int memcmp();
 \#endif /* __memory_h__ */
 ';
 
-};
-
-
-/*
- * Solaris <sys/varargs.h> is a DDK (aka kernel-land) header providing
- * the same interface as <stdarg.h>.  No idea why they couldn't have just
- * used the standard header.
- */
-fix = {
-    hackname = AAB_solaris_sys_varargs_h;
-    files    = "sys/varargs.h";
-    mach     = '*-*-solaris*';
-    replace  = "#ifdef __STDC__\n"
-	       "#include <stdarg.h>\n"
-	       "#else\n"
-	       "#include <varargs.h>\n"
-	       "#endif\n";
 };
 
 
@@ -599,6 +599,22 @@ fix = {
     c_fix     = format;
     c_fix_arg = "__assert(const char *, const char *, int)";
     test_text = 'extern void __assert(char *, char *, int);';
+};
+
+
+/*
+ *  Obey __PRAGMA_EXTERN_PREFIX for Tru64 UNIX V5 <sys/stat.h>.
+ */
+fix = {
+    hackname  = alpha___extern_prefix;
+    files     = sys/stat.h;
+    select    = "#[ \t]*if[ \t]*defined\\(__DECC\\)";
+
+    mach      = "alpha*-dec-osf5*";
+    c_fix     = format;
+    c_fix_arg = "%0 || defined(__PRAGMA_EXTERN_PREFIX)";
+
+    test_text = "#   if defined(__DECC)";
 };
 
 
@@ -1146,6 +1162,69 @@ fix = {
 
 
 /*
+ *  Fix hpux 10.X missing ctype declarations 1
+ */
+fix = {
+    hackname = hpux10_ctype_declarations1;
+    files    = ctype.h;
+    select   = "^#[ \t]*define _toupper\\(__c\\)[ \t]*__toupper\\(__c\\)";
+    bypass   = "^[ \t]*extern[ \t]*int[ \t]*__tolower[ \t]*\\(";
+    c_fix     = format;
+    c_fix_arg = "#ifdef _PROTOTYPES\n"
+		"extern int __tolower(int);\n"
+		"extern int __toupper(int);\n"
+		"#else /* NOT _PROTOTYPES */\n"
+		"extern int __tolower();\n"
+		"extern int __toupper();\n"
+		"#endif /* _PROTOTYPES */\n\n"
+		"%0\n";
+
+    test_text = "#  define _toupper(__c)         __toupper(__c)\n";
+};
+
+
+/*
+ *  Fix hpux 10.X missing ctype declarations 2
+ */
+fix = {
+    hackname = hpux10_ctype_declarations2;
+    files    = ctype.h;
+    select   = "^#  if defined\\(_SB_CTYPE_MACROS\\) && \\!defined\\(__lint\\)";
+    bypass   = "^[ \t]*extern[ \t]*int[ \t]*_isalnum[ \t]*\\(";
+    c_fix     = format;
+    c_fix_arg = "%0\n\n"
+		"#ifdef _PROTOTYPES\n"
+		"     extern int _isalnum(int);\n"
+		"     extern int _isalpha(int);\n"
+		"     extern int _iscntrl(int);\n"
+		"     extern int _isdigit(int);\n"
+		"     extern int _isgraph(int);\n"
+		"     extern int _islower(int);\n"
+		"     extern int _isprint(int);\n"
+		"     extern int _ispunct(int);\n"
+		"     extern int _isspace(int);\n"
+		"     extern int _isupper(int);\n"
+		"     extern int _isxdigit(int);\n"
+		"#  else /* not _PROTOTYPES */\n"
+		"     extern int _isalnum();\n"
+		"     extern int _isalpha();\n"
+		"     extern int _iscntrl();\n"
+		"     extern int _isdigit();\n"
+		"     extern int _isgraph();\n"
+		"     extern int _islower();\n"
+		"     extern int _isprint();\n"
+		"     extern int _ispunct();\n"
+		"     extern int _isspace();\n"
+		"     extern int _isupper();\n"
+		"     extern int _isxdigit();\n"
+		"#endif /* _PROTOTYPES */\n";
+
+    test_text = "#  if defined(_SB_CTYPE_MACROS) && !defined(__lint)\n"
+		"     extern unsigned int *__SB_masks;\n";
+};
+
+
+/*
  *  Keep HP-UX 11 from stomping on C++ math namespace
  *  with defines for fabsf.
  */
@@ -1241,6 +1320,43 @@ fix = {
     sed = "s@inline double sqr(double [a-z][a-z]*) {.*}@@";
     test_text = "inline int abs(int v) { return (v>=0)?v:-v; }\n"
                 "inline double sqr(double v) { return v**0.5; }";
+};
+
+
+/*
+ *  Fix hpux broken ctype macros
+ */
+fix = {
+    hackname = hpux_ctype_macros;
+    files    = ctype.h;
+    select   = '((: |\()__SB_masks \? )'
+	       '(__SB_masks\[__(alnum|c)\] & _IS)';
+    c_fix     = format;
+    c_fix_arg = "%1(int)%3";
+
+    test_text = ": __SB_masks ? __SB_masks[__alnum] & _ISCNTRL\n"
+		"# define isalpha(__c) (__SB_masks ? __SB_masks[__c] & _IS\n";
+};
+
+
+/*
+ * HP-UX long_double
+ */
+fix = {
+    hackname  = hpux_long_double;
+    files     = stdlib.h;
+    select    = "extern[ \t]long_double[ \t]strtold";
+    bypass    = "long_double_t";
+    sed       = "/^#[ \t]*ifndef _LONG_DOUBLE/,/\\/\\* _LONG_DOUBLE \\*\\//D";
+    sed       = "s/long_double/long double/g";
+
+    test_text = "#  ifndef _LONG_DOUBLE\n"
+		"#    define _LONG_DOUBLE\n"
+		"     typedef struct {\n"
+		"       unsigned int word1, word2, word3, word4;\n"
+		"     } long_double;\n"
+		"#  endif /* _LONG_DOUBLE */\n"
+		"extern long_double strtold(const char *, char **);\n";
 };
 
 
@@ -1386,6 +1502,48 @@ fix = {
 
 
 /*
+ *  IRIX 6.5.1[89] <internal/sgimacros.h> unconditionally defines
+ *  __restrict as restrict iff __c99.  This is wrong for C++, which
+ *  needs many C99 features, but only supports __restrict.
+ */
+fix = {
+    hackname  = irix___restrict;
+    files     = internal/sgimacros.h;
+    select    = "(#ifdef __c99\n)(#[ \t]*define __restrict restrict)";
+
+    mach      = "mips-sgi-irix6.5";
+    c_fix     = format;
+    c_fix_arg = "%1"
+		"#  ifndef __cplusplus\n%2\n#  endif";
+
+    test_text = "#ifdef __c99\n#  define __restrict restrict";
+};
+
+/*
+ *  IRIX 6.5.1[78] <sys/socket.h> has a broken definition of socklen_t.
+ *  Various socket function prototypes use different types instead,
+ *  depending on the API in use (BSD, XPG4/5), but the socklen_t
+ *  definition doesn't reflect this (SGI Bug Id 864477, fixed in
+ *  IRIX 6.5.19).
+ */
+fix = {
+    hackname  = irix_socklen_t;
+    files     = sys/socket.h;
+    select    = "(#define _SOCKLEN_T\n)(typedef u_int32_t socklen_t;)";
+
+    mach      = "mips-sgi-irix6.5";
+    c_fix     = format;
+    c_fix_arg = "%1"
+    		"#if _NO_XOPEN4 && _NO_XOPEN5\n"
+    		"typedef int socklen_t;\n"
+		"#else\n"
+    		"%2\n"
+    		"#endif /* _NO_XOPEN4 && _NO_XOPEN5 */";
+
+    test_text = "#define _SOCKLEN_T\ntypedef u_int32_t socklen_t;";
+};
+
+/*
  *  IRIX 5.x's stdio.h declares some functions that take a va_list as
  *  taking char *.  However, GCC uses void * for va_list, so
  *  calling vfprintf with a va_list fails in C++.  */
@@ -1400,6 +1558,23 @@ fix = {
     "extern int printf( const char *, /* va_list */ char * );";
 };
 
+
+/*
+ *  IRIX 6.5.19 <internal/wchar_core.h> provides the XPG4 variant of
+ *  wcsftime by default.  ISO C99 requires the XPG5 variant instead.
+ */
+fix = {
+    hackname  = irix_wcsftime;
+    files     = internal/wchar_core.h;
+    select    = "#if _NO_XOPEN5\n(extern size_t[ \t]+wcsftime.*const char \*.*)";
+
+    mach      = "mips-sgi-irix6.5";
+    c_fix     = format;
+    c_fix_arg = "#if _NO_XOPEN5 && !defined(__c99)\n%1";
+
+    test_text = "#if _NO_XOPEN5\n"
+		"extern size_t          wcsftime(wchar_t *, __SGI_LIBC_NAMESPACE_QUALIFIER size_t, const char *, const struct tm *);";
+};
 
 /*
  * Fixing ISC fmod declaration
@@ -2050,6 +2225,26 @@ fix = {
 
 
 /*
+ *  Sun Solaris 2.5.1, 2.6 defines PTHREAD_{MUTEX|COND}_INITIALIZER
+ *  incorrectly, so we replace them with versions that correspond to
+ *  the definition.  We also explicitly name this fix "1" and the next
+ *  fix "2" because this one does not deal with the last field.  This
+ *  fix needs to run before the next.
+ */
+fix = {
+    hackname = solaris_mutex_init_1;
+    select = '@\(#\)pthread.h' "[ \t]+1.1[0-9][ \t]+9[567]/[0-9/]+ SMI";
+    files = pthread.h;
+    sed   = "/define[ \t]*PTHREAD_MUTEX_INI/s/{0, 0,/{{{0}, 0}, {{{0}}},/\n"
+            "/define[ \t]*PTHREAD_COND_INI/s/{0,/{{{0},0},/";
+    test_text =
+    '#ident "@(#)pthread.h  1.16    97/05/05 SMI"'"\n"
+    "#define PTHREAD_MUTEX_INITIALIZER\t{0, 0, 0}\n"
+    "#define PTHREAD_COND_INITIALIZER\t{0, 0} /* */\n";
+};
+
+
+/*
  * Sun Solaris defines PTHREAD_MUTEX_INITIALIZER with a trailing
  * "0" for the last field of the pthread_mutex_t structure, which is
  * of type upad64_t, which itself is typedef'd to int64_t, but with
@@ -2057,7 +2252,7 @@ fix = {
  * initializer to "{0}" instead
  */
 fix = {
-    hackname = solaris_mutex_init;
+    hackname = solaris_mutex_init_2;
     select = '@\(#\)pthread.h' "[ \t]+1.[0-9]+[ \t]+[0-9/]+ SMI";
     files = pthread.h;
     c_fix = format;
