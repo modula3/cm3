@@ -8,7 +8,7 @@ Abstract: Bits and Bytes
 IMPORT Word, Fmt AS F;
 FROM Word IMPORT And,Xor,Not,LeftShift,RightShift;
 (*
-FROM NADefinitions IMPORT debug;
+FROM NADefinitions IMPORT Debug;
 *)
 
 CONST Module = "Bits.";
@@ -34,7 +34,7 @@ BEGIN
   ELSE
     <*ASSERT FALSE*>
     (*
-    debug(1,ftn,"huh?");
+    Debug(1,ftn,"huh?");
     *)
   END;
 END WhichEndian;
