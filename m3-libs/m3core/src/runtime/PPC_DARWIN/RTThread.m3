@@ -1,5 +1,4 @@
 (* Copyright according to COPYRIGHT-CMASS. *)
-(* FIXME: copied from FreeBSD3 target. Probably needs to be changed. *)
 
 UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
@@ -7,9 +6,7 @@ IMPORT Usignal, Unix, Umman, RTMisc;
 
 CONST 
   SP_pos = 0;
-  (* FP_pos = 18; *)
   SP_copy_pos = 19;
-  (* FP_pos = 3; *)
 
 PROCEDURE SP (READONLY s: State): ADDRESS =
   BEGIN
@@ -35,8 +32,12 @@ PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
 
     (* find the aligned page and unmap it *)
     start := RTMisc.Align (ADR (s.words[0]), page_bytes);
-    i := Umman.mprotect (start, page_bytes, Umman.PROT_READ);
+    (* FIXME: stack protection seems not to be as easy as this on PPC.
+              Switched off until we properly implement use of memory
+              protection. (Leads to crashes in XEventsQueued)
+    i := Umman.mprotect (start, page_bytes, Umman.PROT_NONE);
     <* ASSERT i = 0 *>
+    *)
 
     (* finally, set the bounds of the usable region *)
     s.first := start + page_bytes;
@@ -47,8 +48,10 @@ PROCEDURE DisposeStack (VAR s: Stack) =
   VAR i: INTEGER;  start := RTMisc.Align (ADR (s.words[0]), page_bytes);
   BEGIN
     (* find the aligned page and re-map it *)
+    (* see above
     i := Umman.mprotect (start, page_bytes, Umman.PROT_READ+Umman.PROT_WRITE);
     <* ASSERT i = 0 *>
+    *)
 
     (* and finally, free the storage *)
     DISPOSE (s.words);
@@ -68,7 +71,6 @@ PROCEDURE FlushStackCache () =
 PROCEDURE UpdateStateForNewSP (VAR s: State; offset: INTEGER) =
   BEGIN
     INC (s [SP_pos], offset);
-    (* INC (s [FP_pos], offset); *)
     INC (s [SP_copy_pos], offset);
   END UpdateStateForNewSP;
 
