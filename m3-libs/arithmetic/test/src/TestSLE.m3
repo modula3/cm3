@@ -1,13 +1,9 @@
 MODULE TestSLE EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details
+(* Arithmetic for Modula-3, see doc for details
 
    Abstract: Test driver for LongRealMatrixDecomposition (simultaneous
-   linear equations)
+   linear equations) *)
 
-   12/13/95 Harry George Initial version: nr utilities 2/17/96 Harry George
-   Converted to m3na format
-
-   *)
 IMPORT Arithmetic AS Arith;
 IMPORT LongRealBasic               AS R,
        LongRealTrans               AS RT,
@@ -125,12 +121,13 @@ PROCEDURE TestHouseholder (): BOOLEAN =
     foundX: V.T;
 
     result := TRUE;
+
   BEGIN
     Debug(1, ftn, "begin\n");
     BuildData(A, C, D, B, knownX, foundX, 4);
 
     Msg("A=" & MF.Fmt(A));
-    MD.HouseHolder(A);
+    MD.HouseHolderD(A);
     Msg("HouseHolder(A)=" & MF.Fmt(A));
     RETURN result;
   END TestHouseholder;
@@ -142,12 +139,10 @@ PROCEDURE TestTridiag (): BOOLEAN =
     n1  = 0;
     nn  = n - 1;
   VAR
-    A               := NEW(M.T, n, n);
-    knownX          := NEW(R.Array, n);
-    foundX          := NEW(R.Array, n);
-    a               := NEW(R.Array, n);
-    b               := NEW(R.Array, n);
-    c               := NEW(R.Array, n);
+    A      := NEW(M.T, n, n);
+    knownX := NEW(R.Array, n);
+    foundX := NEW(R.Array, n);
+    t := MD.Tridiagonals{NEW(R.Array, n), NEW(R.Array, n), NEW(R.Array, n)};
     r     : R.Array;
     result          := TRUE;
   BEGIN
@@ -155,9 +150,9 @@ PROCEDURE TestTridiag (): BOOLEAN =
     A^ := M3x3{V3{1.0d0, 1.0d0, 0.0d0}, V3{0.5d0, 2.0d0, 1.0d0},
                V3{0.0d0, 0.5d0, 3.0d0}};
     FOR i := n1 TO nn DO
-      IF i > n1 THEN a[i] := A[i, i - 1]; END;
-      b[i] := A[i, i];
-      IF i < nn THEN c[i] := A[i, i + 1]; END;
+      IF i > n1 THEN t.a[i] := A[i, i - 1]; END;
+      t.b[i] := A[i, i];
+      IF i < nn THEN t.c[i] := A[i, i + 1]; END;
     END;
     Msg("A=" & MF.Fmt(A));
     knownX^ := V3{1.0d0, 2.0d0, 3.0d0};
@@ -165,7 +160,7 @@ PROCEDURE TestTridiag (): BOOLEAN =
     r := M.MulV(A, knownX);
     Msg("r=     " & VF.Fmt(r));
 
-    MD.SolveTriDiag(a, b, c, r, foundX);
+    MD.SolveTridiagonal(t, r, foundX);
     Msg("foundX=" & VF.Fmt(foundX));
 
     <* ASSERT VT.NormInf(V.Sub(foundX, knownX))
@@ -181,18 +176,18 @@ PROCEDURE TestLU (): BOOLEAN RAISES {} =
   CONST ftn = Module & "TestLU";
   CONST n = 4;
   VAR
-    A: M.T;
-    B: V.T;
-    C: M.T;
-    D: M.T;
+    A, Acopy: M.T;
+    B       : V.T;
+    C       : M.T;
+    D       : M.T;
 
     knownX: V.T;                 (*X is an nx1 matrix*)
     foundX: V.T;
 
-    Acopy          := NEW(M.T, n, n);
     det  : R.T;
     d    : INTEGER;
     index          := NEW(REF MD.IndexArray, n);
+
   BEGIN
     Debug(1, ftn, "begin\n");
 
@@ -201,20 +196,20 @@ PROCEDURE TestLU (): BOOLEAN RAISES {} =
       Msg(Fmt.Int(NUMBER(A^)) & "\n");
       Msg(Fmt.Int(NUMBER(A[0])) & "\n");
       Msg(Fmt.Int(NUMBER(index^)) & "\n");
-      MD.LUFactor(A, index^, d);
+      MD.LUFactorD(A, index^, d);
       Msg("after LUFactor: d=" & Fmt.Int(d) & ", A=" & MF.Fmt(A));
       (*---make a copy so we can reuse the decomp---*)
-      Acopy^ := A^;
+      Acopy := M.Copy(A);
       det := MD.LUDet(Acopy, d);
       Msg("det=" & RF.Fmt(det) & "\n");
 
-      Acopy^ := A^;
-      D := MD.LUInverse(A, index^);
+      Acopy := M.Copy(A);
+      D := MD.LUInverseD(A, index^);
       Msg("A inverse =" & MF.Fmt(D));
 
-      Acopy^ := A^;
+      Acopy := M.Copy(A);
       foundX^ := B^;
-      MD.LUBackSubst(Acopy, foundX, index^);
+      MD.LUBackSubstD(Acopy, foundX, index^);
 
     EXCEPT
     | Arith.Error (err) =>

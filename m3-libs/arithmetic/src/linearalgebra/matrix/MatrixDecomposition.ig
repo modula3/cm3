@@ -1,64 +1,60 @@
-GENERIC INTERFACE MatrixDecomposition(R,V,M);
-(*Arithmetic for Modula-3, see doc for details
+GENERIC INTERFACE MatrixDecomposition(R, V, M);
+(* Arithmetic for Modula-3, see doc for details
 
-Abstract: Simultaneous Linear Equations.
-
-1/27/96  Harry George    Initial version, from prev work
-*)
+   Abstract: Simultaneous Linear Equations. *)
 FROM Arithmetic IMPORT Error;
 
-TYPE
-  IndexArray = ARRAY OF CARDINAL;
+TYPE IndexArray = ARRAY OF CARDINAL;
 
-(*==========================*)
-(* Triangular Matrices      *)
-(*==========================*)
-(*A triangular matrix A is of the form:
+(* Triangular Matrices *)
+
+(* A triangular matrix A is of the form:
 | a11 a12 a13 a14
 | 0   a22 a23 a24
 | 0   0   a33 a34
 | 0   0   0   a44
 
-A x = b can be solved for x by back substitution
-*)
-PROCEDURE BackSubst(A:M.T;
-                    x,b:V.T
-                    ) RAISES {Error};
+   A x = b can be solved for x by back substitution *)
+PROCEDURE BackSubst (A: M.T; x, b: V.T) RAISES {Error};
 
-(*==========================*)
-(* Tridiagonal Matrices     *)
-(*==========================*)
-(*A tridiagonal matrix A has diagonals a,b,c:
+
+
+(* Tridiagonal Matrices *)
+
+(* A tridiagonal matrix A has diagonals a,b,c:
 |  b1 c1  0    ...
 |  a2 b2 c2    ...
 |   0 a3 b3 c3 ...
 |              ...
 |                 aN-1 bN-1 cN-1
 |                      aN   bN
-*)
+   *)
 
-PROCEDURE HouseHolder(A:M.T) RAISES {Error};   (*nxn*)
+PROCEDURE HouseHolderD (A: M.T) RAISES {Error}; (*nxn*)
 (*Convert A to tridiagonal form (destroying original A)*)
 
-PROCEDURE matrix_to_arrays(A:M.T;        (*nxn tridiagonal*)
-                           VAR a,b,c:V.T  (*array form*)
-                          ) RAISES {Error};
+TYPE Tridiagonals = RECORD a, b, c: V.T;  END;
 
-PROCEDURE SolveTriDiag(a,b,c,r:V.T;
-                    VAR u:V.T) RAISES {Error};
+PROCEDURE SplitTridiagonal (A: M.T;  (* matrix that contains only three
+                                        central diagonals, not checked *)
+  ): Tridiagonals RAISES {Error};
+
+
+PROCEDURE SolveTridiagonal (t: Tridiagonals; r: V.T; VAR u: V.T)
+  RAISES {Error};
 (*Solve for u in A*u=r, where A is given as a,b,c*)
 
-(*==========================*)
-(* nxn Matrices             *)
-(*==========================*)
+
+
+(* nxn Matrices *)
+
 (*A general nxn real matrix A is of the form
 | a11 a12 a13
 | a21 a22 a23
 | a31 a32 a33XS
 
-A x = b can be solved for x by Gaussian Elimination and
-backsubstitution
-*)
+   A x = b can be solved for x by Gaussian Elimination and
+   backsubstitution *)
 (*
 PROCEDURE GaussElim(A:  M.T;
                     x,b:V.T;
@@ -71,32 +67,23 @@ pivot:=FALSE
 *)
 *)
 
-(*==========================*)
-(* LU Factoring             *)
-(*==========================*)
-(*-----------------*)
-PROCEDURE LUFactor(A      :M.T;
-               VAR index  :IndexArray;
-               VAR d      :INTEGER) RAISES {Error};
-(*Factor A into Lower/Upper portions
-Destroys A's values.
-A is real nxn
-index is integer nx1
-return value "d" is used for BackSubst and det
-*)
-(*-----------------*)
-PROCEDURE LUBackSubst(A     :M.T;
-                      B     :V.T;
-             READONLY index :IndexArray) RAISES {Error};
-(*After LUfactor on A, solves A dot X = B.
-X is returned in B.  B's values are destroyed.
-A is real nxn
-B is real nx1
-index is integer nx1
-*)
-(*-----------------*)
-PROCEDURE LUInverse(A     :M.T;
-            READONLY index:IndexArray):M.T RAISES {Error};
+
+(* LU Factoring *)
+
+PROCEDURE LUFactorD (A: M.T; VAR index: IndexArray; VAR d: INTEGER)
+  RAISES {Error};
+(* Factor A into Lower/Upper portions Destroys A's values.
+
+   A is real nxn index is integer nx1 return value "d" is used for
+   BackSubst and det *)
+
+PROCEDURE LUBackSubstD (A: M.T; B: V.T; READONLY index: IndexArray)
+  RAISES {Error};
+(*After LUfactor on A, solves A dot X = B.  X is returned in B.  B's values
+   are destroyed.  A is real nxn B is real nx1 index is integer nx1 *)
+
+PROCEDURE LUInverseD (A: M.T; READONLY index: IndexArray): M.T
+  RAISES {Error};
 (*
 Inverse of A goes to B
 Must have done LUFactor on A first
@@ -105,27 +92,22 @@ A is real nxn
 B is real nxn
 index is integer nx1
 *)
-(*-----------------*)
-PROCEDURE LUDet(A:M.T;
-                d:INTEGER):R.T RAISES {Error};
-(*after LUFactor on A and no backsubs,
-returns determinant
-"d" is the parity marker from LUDecomp
-*)
 
-(*==========================*)
-(* QR Factoring             *)
-(*==========================*)
+PROCEDURE LUDet (A: M.T; d: INTEGER): R.T RAISES {Error};
+(*after LUFactor on A and no backsubs, returns determinant "d" is the
+   parity marker from LUDecomp *)
+
+
+
+(* QR Factoring *)
+
+(* Singular Value Decomposition*)
+
+(*In the problem A*x=b, we can decompose to A = U*W*V^T.  Then
+   x=V*diag(W)*U^T*b.  There are also others things which can be solved
+   once we have U,V,W. *)
 
 (*
-(*=============================*)
-(* Singular Value Decomposition*)
-(*=============================*)
-(*In the problem A*x=b, we can decompose to A = U*W*V^T.
-Then x=V*diag(W)*U^T*b.  There are also others things which
-can be solved once we have U,V,W.
-*)
-
 PROCEDURE SVDGolub(
            A:M.T;         (*mxn matrix*)
            b:V.T;         (*nx1 col matrix*)
@@ -152,5 +134,4 @@ PROCEDURE SVDSolve(U,V,W:M.T; (*decomposition*)
                    ) RAISES {Error};
 *)
 
-(*==========================*)
 END MatrixDecomposition.
