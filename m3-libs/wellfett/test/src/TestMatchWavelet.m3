@@ -56,7 +56,7 @@ PROCEDURE PlotFrame (READONLY abscissa       : V.TBody;
 
   VAR ymin, ymax: R.T;
 
-  <*FATAL NA.Error*>(*vector size mismatch can't occur*)
+  <*FATAL PL.SizeMismatch*>(*vector size mismatch can't occur*)
   BEGIN
     IF normalizeHeight THEN
       ymin := -1.1D0;
@@ -159,7 +159,7 @@ PROCEDURE TestMatchPattern (target: S.T;
   RAISES {BSpl.DifferentParity} =
   (*The degree of freedom, i.e.  the number of parameters to minimize for,
      is 2*numTranslates*)
-  <*FATAL NA.Error*>
+  <*FATAL PL.SizeMismatch*>
   VAR
     hdual := BSpl.GeneratorMask(smooth).scale(R.Two).translate(2);
     gdual := BSpl.WaveletMask(smooth, vanishing).scale(R.Two);
@@ -198,7 +198,8 @@ PROCEDURE ComputeNormalEqu (target                                : S.T;
                             refineMask, generatorMask, waveletMask: S.T;
                             numLevels     : CARDINAL;
                             firstTranslate: INTEGER;
-                            numTranslates : CARDINAL; ): NormEqu =
+                            numTranslates : CARDINAL; ): NormEqu
+  RAISES {NA.Error} =
   VAR
     refineSize := refineMask.getNumber() - 1;
 
@@ -273,7 +274,7 @@ PROCEDURE TestNormalEqu () =
 
     error := MT.Norm1(M.Sub(covar, normEqu.mat)) / MT.Norm1(covar);
 
-  <*FATAL Thread.Alerted, Wr.Failure*>
+  <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
   BEGIN
     IO.Put(
       Fmt.FN(
@@ -1064,7 +1065,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
                                     smallVanishing, numTranslates: CARDINAL;
                                   smoothWeight: R.T):
   ARRAY [0 .. 1] OF FB.T RAISES {BSpl.DifferentParity} =
-  <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
+  <*FATAL NA.Error, PL.SizeMismatch, Thread.Alerted, Wr.Failure*>
   VAR
     shiftVan      := 2 - smooth - vanishing;
     shiftSmallVan := (vanishing - smallVanishing) DIV 2 - 1;
@@ -1545,7 +1546,7 @@ PROCEDURE Test () =
           dataY := M.GetColumn(data, 1);
           clipX := V.FromArray(SUBARRAY(dataX^, clipFirst, clipNumber));
           clipY := V.FromArray(SUBARRAY(dataY^, clipFirst, clipNumber));
-        <*FATAL NA.Error*>
+        <*FATAL PL.SizeMismatch*>
         BEGIN
           PL.Init();
           PL.SetEnvironment(dataX[FIRST(dataX^)], dataX[LAST(dataX^)],

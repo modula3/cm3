@@ -20,8 +20,6 @@ IMPORT PLPlot AS PL;
 IMPORT Fmt;
 (*IMPORT IO, Fmt, Wr, Thread;*)
 
-IMPORT NADefinitions AS NA;
-
 IMPORT TestMatchWavelet;
 
 TYPE Box = RECORD horizontal, vertical: ARRAY [0 .. 1] OF R.T;  END;
@@ -47,7 +45,7 @@ PROCEDURE PLInitPS (fileName: TEXT; ) =
   END PLInitPS;
 
 PROCEDURE PlotSignal (func: S.T; READONLY bounds: Box; grid: R.T; ) =
-  <*FATAL NA.Error*>(*Number of filters and channels will always match*)
+  <*FATAL PL.SizeMismatch*>(*Number of filters and channels will always match*)
   BEGIN
     PL.SetFGColorDiscr(1);
     PL.SetEnvironment(bounds.horizontal[0], bounds.horizontal[1],
@@ -132,7 +130,7 @@ PROCEDURE PlotLiftingBasis (fileName                              : TEXT;
                               R.T{1.1D0 * VFs.Min(wavelet.getData()^),
                                   1.1D0 * VFs.Max(wavelet.getData()^)}};
 
-  <*FATAL NA.Error*>(*Number of filters and channels will always match*)
+  <*FATAL PL.SizeMismatch*>(*Number of filters and channels will always match*)
   BEGIN
     PLInitPS(fileName);
 
