@@ -19,15 +19,13 @@ CONST
   SCALEmg = (FLOAT(mgSIZE, R.T) / 4294967296.0D0);
 
 (*------------------*)
-REVEAL T = RandomBasic.T BRANDED OBJECT
+REVEAL T = RandomBasic.TWord BRANDED OBJECT
     MultCongMg : Word.T;  (* initialize to a random odd word *)
     ShiftRegMg : Word.T; (* initialize to a random word with 7ff in LS 11 bits *)
     arrmg : ARRAY [0..mgSIZE-1] OF Word.T; (* initialize to random Word.Ts *)
     ymg : Word.T := 0;
-(*
   OVERRIDES
     engine:=Engine;
-*)
   END;
 
 (*********************************************************

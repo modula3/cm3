@@ -17,12 +17,10 @@ CONST
   wolfnum = 5;
   MSbit = Word.LeftShift(2_1, Word.Size-1);
 
-REVEAL T = RandomBasic.T BRANDED OBJECT
+REVEAL T = RandomBasic.TBoolean BRANDED OBJECT
     wolfarr : ARRAY [0 .. wolfnum-1] OF Word.T; (* initialize with random bits *)
-(*
   OVERRIDES
     engine:=Engine;
-*)
   END;
 
 (*************************************************************

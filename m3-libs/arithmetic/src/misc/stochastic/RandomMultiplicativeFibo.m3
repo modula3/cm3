@@ -17,14 +17,12 @@ CONST
   amf1 = 98;
   bmf1 = 27;
 
-REVEAL T = RandomBasic.T BRANDED OBJECT
+REVEAL T = RandomBasic.TWord BRANDED OBJECT
     imf1 := amf1;
     jmf1 := bmf1;
     arrmf1 : ARRAY [0..amf1-1] OF Word.T; (* initialize to random odd words *)
-(*
   OVERRIDES
     engine:=Engine;
-*)
   END;
 
 (* Generates a new random word: *)
