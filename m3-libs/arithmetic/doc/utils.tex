@@ -28,7 +28,7 @@ It gets an {\tt Err} value, which can be
 used to do case decomposition in the exception handler.
 
 The selection of {\tt Err} values has been haphazard.  We probably should
-start with the POSIX matrixh error enumeration, and grow as needed.
+start with the POSIX matrix error enumeration, and grow as needed.
 Just haven't gotten around to looking at it.
 
 {\tt err} is a shorthand for raising {\tt Error}.
@@ -36,4 +36,18 @@ Originally, it also printed
 a message to stderr. Since that is no longer the approach, err is not
 much used.
 
- 
+
+There is still an open design decision:
+How to declare a set of exceptions?
+\begin{enumerate}
+\item One exception for each error -
+This implies long RAISES lists that are hard to update.
+\item One global exception for the library with a number that specifies the detailed error (current approach) -
+New exceptions can only be added by extending a central module.
+It's not possible to add detailed error specific information.
+\item One global exception with an object parameter. -
+With subclasses one can achieve a more detailed error analysis.
+What information should be provided by the exception object?
+Is handling of exceptions still easy?
+Is this method efficient?
+\end{enumerate}

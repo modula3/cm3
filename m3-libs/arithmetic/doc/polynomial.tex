@@ -92,7 +92,7 @@ down to the smallest.  For each v[vi], the applicable r term
 starts with the currently biggest ri (given by ri2), then
 decreasing ri2 for every vi decrease.
 
-Testing via matrixhcad
+Testing via MathCAD
 \begin{equation}
    \frac{1+2x+3x^2+4x^3+5x^4}{.1+.2x+.3x^2+.4x^3} 
      \rightarrow q=.6+12.5x, r=.9+.6x+.3x^2
@@ -267,7 +267,7 @@ derivatives) are in the right shape, but the factorial terms
 are incomplete.  What is the pattern?  Let's set up the
 program and try it out.  Use $a[i]=1$ for all i, so we can see
 the factorial terms more easily.  Experiments on
-$x=1,2,3,4,5$ (comparing to matrixhcad) show a pattern:  pd[0]
+$x=1,2,3,4,5$ (comparing to MathCAD) show a pattern:  pd[0]
 and pd[1] are ok.  pd[1] is off by $2=2!$ and pd[3] is off by
 $6=3!$.  In other words all of them are off by a factor:
 \begin{verbatim}
