@@ -1,23 +1,5 @@
-GENERIC MODULE MatrixDecomposition(R,RT,V,M);
-(*
-Abstract:
-
-6/6/87    hgeorge
-          Initial version.
-
-2/11/89   hgeorge
-          To work with generic SLErices.
-
-11/20/94  Harry George
-          Converted to Modula3 dynamic arrays.
-
-12/18/95  Harry George
-          ...and back to fully instantiated for REAL64.
-
-1/27/96   Harry George
-          Converted to OO format
-
-2/17/96   Harry George   ...and back to ADT with REAL64.
+GENERIC MODULE MatrixDecomposition(R,RT,V,VR,M);
+(*Copyright (c) 1996, m3na project
 *)
 FROM NADefinitions IMPORT Error,Err;
 FROM RT IMPORT Tiny, Eps;

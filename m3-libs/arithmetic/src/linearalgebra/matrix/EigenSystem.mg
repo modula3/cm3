@@ -1,4 +1,4 @@
-GENERIC MODULE EigenSystem(R, RT, V, M);
+GENERIC MODULE EigenSystem(R, RT, V, VR, M);
 (*
 IMPORT Wr, Stdio, IO, Fmt,
        LongRealVectorFmtLex AS VF,

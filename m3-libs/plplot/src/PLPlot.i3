@@ -11,7 +11,7 @@ INTERFACE PLPlot;
 
 IMPORT NADefinitions AS NA;
 IMPORT LongRealBasic AS R;
-IMPORT LongRealVectorFast AS V;
+IMPORT LongRealVector AS V;
 IMPORT LongRealMatrixFast AS M;
 
 TYPE

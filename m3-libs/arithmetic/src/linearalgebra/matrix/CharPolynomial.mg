@@ -1,4 +1,4 @@
-GENERIC MODULE CharPolynomial(R,Rt,M);
+GENERIC MODULE CharPolynomial(R,Rt,VR,M);
 (*
 Abstract: Characteristic polynomial of a matrix
 

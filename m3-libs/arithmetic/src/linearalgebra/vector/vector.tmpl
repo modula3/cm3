@@ -2,40 +2,36 @@
 %  Quake functions to instantiate operations on generic vectors.
 %
 
-readonly proc VectorBasic (nm, field, rimpl) is
-  local basic  = nm & "VectorBasic"
-  local rfield = field & rimpl
-  local vecsup = field & "VectorSupport"
-  build_generic_intf (basic,  "VectorBasic",   [rfield, vecsup], VISIBLE)
-  build_generic_impl (basic,  "VectorBasic",   [rfield, vecsup])
-  build_generic_intf (vecsup, "VectorSupport", [rfield], VISIBLE)
-  build_generic_impl (vecsup, "VectorSupport", [rfield])
+readonly proc Vector (nm, impl, field, rimpl) is
+  local base     = nm & "Vector"
+  local rep      = base & "Rep"
+  local instimpl = base & impl
+  local rfield   = field & rimpl
+  build_generic_intf (base,     "Vector",        [rfield], VISIBLE)
+  build_generic_impl (base,     "Vector",        [rfield, rep])
+  build_generic_intf (rep,      "VectorRep",     [rfield, base, instimpl], VISIBLE)
+  build_generic_impl (rep,      "VectorRep",     [rfield, base])
+  build_generic_intf (instimpl, "Vector" & impl, [rfield, base], VISIBLE)
+  build_generic_impl (instimpl, "Vector" & impl, [rfield, base, rep])
 end
 
-readonly proc VectorFast (nm, field, rimpl) is
-  VectorBasic (nm, field, rimpl)
-  local basic  = nm & "VectorBasic"
-  local fast   = nm & "VectorFast"
-  local rfield = field & rimpl
-  build_generic_intf (fast,  "VectorFast",  [rfield, basic], VISIBLE)
-  build_generic_impl (fast,  "VectorFast",  [rfield])
-end
-
-readonly proc VectorTrans (nm, real, complex, cimpl, vimpl) is
+readonly proc VectorTrans (nm, real, complex, cimpl) is
   local rfield = real & "Basic"
   local rtrans = real & "Trans"
   local cfield = real & complex & cimpl
   local ctrans = real & complex & "Trans"
-  local vfield = nm & "Vector" & vimpl
+  local vfield = nm & "Vector"
   local vtrans = nm & "VectorTrans"
+  local vrep   = nm & "VectorRep"
   build_generic_intf (vtrans, "VectorTrans", [rfield, vfield], VISIBLE)
-  build_generic_impl (vtrans, "VectorTrans", [rfield, rtrans, ctrans])
+  build_generic_impl (vtrans, "VectorTrans", [rfield, rtrans, ctrans, vrep])
 end
 
-readonly proc VectorFmtLex (nm, vimpl) is
-  local vfield = nm & "Vector" & vimpl
-  local vfmt   = nm & "VectorFmtLex"
+readonly proc VectorFmtLex (nm) is
   local rfmt   = nm & "FmtLex"
+  local vfield = nm & "Vector"
+  local vfmt   = nm & "VectorFmtLex"
+  local vrep   = nm & "VectorRep"
   build_generic_intf (vfmt, "VectorFmtLex", [rfmt, vfield], VISIBLE)
-  build_generic_impl (vfmt, "VectorFmtLex", [rfmt])
+  build_generic_impl (vfmt, "VectorFmtLex", [rfmt, vrep])
 end

@@ -7,6 +7,7 @@ readonly proc ChebyPolynomialFast (nm, field, rimpl, pimpl) is
   local rfield = field & rimpl
   local rtrans = field & "Trans"
   local pfield = field & "Polynomial" & pimpl
+  local vrep   = field & "VectorRep"
   build_generic_intf (basic, "ChebyPolynomialFast", [rfield, pfield], VISIBLE)
-  build_generic_impl (basic, "ChebyPolynomialFast", [rfield, rtrans])
+  build_generic_impl (basic, "ChebyPolynomialFast", [rfield, rtrans, vrep])
 end

@@ -1,4 +1,4 @@
-GENERIC MODULE PolynomialBasic(R,VS);
+GENERIC MODULE PolynomialBasic(R,VR);
 (*Copyright (c) 1995, Harry George
 
 Abstract: Polynomials.
@@ -122,7 +122,7 @@ VAR
   ynum:=Size(y);
   z:=NEW(T,xnum+ynum-1);
 BEGIN
-  VS.Clear(z^);
+  VR.Clear(z^);
 
   FOR i := 0 TO xnum-1 DO
     WITH zdata = SUBARRAY(z^, i, NUMBER(y^)) DO

@@ -1,4 +1,4 @@
-GENERIC MODULE FloatMatrixLapack(R, C, V, VS, CV, M, LA);
+GENERIC MODULE FloatMatrixLapack(R, C, V, VR, CV, CVR, M, LA);
 (*Copyright (c) 1996, m3na project
 
    Abstract: <describe> *)
@@ -98,7 +98,7 @@ PROCEDURE LeastSquares (A: M.T; READONLY B: ARRAY OF V.T; flags: LSFlagSet):
 
     FOR j := 0 TO LAST(X^) DO
       ls[j].x := V.FromArray(SUBARRAY(X[j], 0, xsize));
-      ls[j].res := VS.Inner(SUBARRAY(X[j], xsize, maxmn - xsize),
+      ls[j].res := VR.Inner(SUBARRAY(X[j], xsize, maxmn - xsize),
                             SUBARRAY(X[j], xsize, maxmn - xsize));
     END;
 

@@ -15,7 +15,7 @@ Interpolation("Real",     "RealBasic",     "RealTrans",     "RealBasic")
 Interpolation("LongReal", "LongRealBasic", "LongRealTrans", "LongRealBasic")
 Interpolation("Extended", "ExtendedBasic", "ExtendedTrans", "ExtendedBasic")
 Interpolation("LongRealComplex",    "LongRealComplexFast",    "LongRealTrans", "LongRealBasic")
-Interpolation("LongRealVector",     "LongRealVectorFast",     "LongRealTrans", "LongRealBasic")
+Interpolation("LongRealVector",     "LongRealVector",         "LongRealTrans", "LongRealBasic")
 Interpolation("LongRealMatrix",     "LongRealMatrixFast",     "LongRealTrans", "LongRealBasic")
 Interpolation("LongRealPolynomial", "LongRealPolynomialFast", "LongRealTrans", "LongRealBasic")
 

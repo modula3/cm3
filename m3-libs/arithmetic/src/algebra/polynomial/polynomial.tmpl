@@ -4,11 +4,11 @@
 
 readonly proc PolynomialBasic (nm, field, rimpl) is
   local basic  = nm & "PolynomialBasic"
-  local vfield = nm & "VectorBasic"
-  local vecsup = nm & "VectorSupport"
   local rfield = field & rimpl
+  local vfield = nm & "Vector"
+  local vrep   = nm & "VectorRep"
   build_generic_intf (basic, "PolynomialBasic", [rfield, vfield], VISIBLE)
-  build_generic_impl (basic, "PolynomialBasic", [rfield, vecsup])
+  build_generic_impl (basic, "PolynomialBasic", [rfield, vrep])
 end
 
 readonly proc PolynomialFast (nm, field, rimpl) is
@@ -16,9 +16,10 @@ readonly proc PolynomialFast (nm, field, rimpl) is
   local basic  = nm & "PolynomialBasic"
   local fast   = nm & "PolynomialFast"
   local rfield = field & rimpl
-  local vfield = field & "VectorFast"
+  local vfield = field & "Vector"
+  local vrep   = field & "VectorRep"
   build_generic_intf (fast,  "PolynomialFast",  [rfield, vfield, basic], VISIBLE)
-  build_generic_impl (fast,  "PolynomialFast",  [rfield])
+  build_generic_impl (fast,  "PolynomialFast",  [rfield, vrep])
 end
 
 readonly proc PolynomialFmtLex (nm, field, rimpl, pimpl) is
@@ -26,6 +27,7 @@ readonly proc PolynomialFmtLex (nm, field, rimpl, pimpl) is
   local rfield = field & rimpl
   local rfmt   = field & "FmtLex"
   local pfield = field & "Polynomial" & pimpl
+  local vrep   = field & "VectorRep"
   build_generic_intf (pfmt, "PolynomialFmtLex", [        rfmt, pfield], VISIBLE)
-  build_generic_impl (pfmt, "PolynomialFmtLex", [rfield, rfmt        ])
+  build_generic_impl (pfmt, "PolynomialFmtLex", [rfield, rfmt, vrep])
 end
