@@ -1,4 +1,4 @@
-GENERIC MODULE PolynomialFast(R);
+GENERIC MODULE PolynomialFast(R,VR);
 (*Copyright (c) 1995, Harry George
 
 Abstract: Polynomials.

@@ -1,4 +1,4 @@
-GENERIC MODULE RootBasic(R,P);
+GENERIC MODULE RootBasic(R,VR,P);
 (*Copyright (c) 1995, Harry George
 
 Abstract: Roots.
@@ -434,7 +434,7 @@ END PowN;
 
 PROCEDURE ToPowerSumSeq(x:T;m:CARDINAL):REF PowerSumSeq=
 VAR
-  y:=NEW(T,m);
+  y:=NEW(REF PowerSumSeq,m);
   sum:R.T;
   div:R.T;
 BEGIN

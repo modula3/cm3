@@ -13,7 +13,7 @@ IMPORT PLPlotRaw;
 FROM NADefinitions IMPORT Err;
 IMPORT NADefinitions AS NA;
 IMPORT LongRealBasic AS R;
-IMPORT LongRealVectorFast AS V;
+IMPORT LongRealVector AS V;
 IMPORT LongRealMatrixFast AS M;
 IMPORT M3toC;
 IMPORT Ctypes AS C;

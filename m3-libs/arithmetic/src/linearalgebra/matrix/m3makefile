@@ -4,14 +4,14 @@ template("matrix")
 
 
 generic_module("MatrixBasic")
-MatrixBasic("LongRealComplex",  "LongRealComplex", "Basic", "Basic")
-MatrixBasic("Integer32",        "Integer32",       "Basic", "Basic")
-MatrixBasic("BigInteger",       "BigInteger",      "Basic", "Basic")
+MatrixBasic("LongRealComplex",  "LongRealComplex", "Basic")
+MatrixBasic("Integer32",        "Integer32",       "Basic")
+MatrixBasic("BigInteger",       "BigInteger",      "Basic")
 
 generic_module("MatrixFast")
-MatrixFast("Real",     "Real",     "Basic", "Fast")
-MatrixFast("LongReal", "LongReal", "Basic", "Fast")
-MatrixFast("Extended", "Extended", "Basic", "Fast")
+MatrixFast("Real",     "Real",     "Basic")
+MatrixFast("LongReal", "LongReal", "Basic")
+MatrixFast("Extended", "Extended", "Basic")
 
 generic_module("MatrixTrans")
 MatrixTrans("Real",            "Real",     "Basic", "",        "Basic", "Fast")
