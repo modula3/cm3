@@ -124,6 +124,7 @@ case "${UNAME}" in
       /usr/bin/cygpath $@
     }
     strip_exe() {
+      return 0;
     }
   ;;
 
