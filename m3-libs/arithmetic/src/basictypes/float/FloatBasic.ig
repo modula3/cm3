@@ -20,6 +20,7 @@ CONST
   One      = FLOAT(1.0D0, T);
   Two      = FLOAT(2.0D0, T);
   MinusOne = FLOAT(-1.0D0, T);
+  Half     = FLOAT(0.5D0, T);
 
 (*used for Vector.Min, Vector.Max*)
 VAR                              (* CONST after initialization *)

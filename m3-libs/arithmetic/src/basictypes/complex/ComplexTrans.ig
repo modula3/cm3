@@ -7,6 +7,13 @@ FROM NADefinitions IMPORT Error;
 
 TYPE T = C.T;
 
+CONST
+  Zero     = C.Zero;
+  One      = C.One;
+  I        = C.I;
+  MinusOne = C.MinusOne;
+  Half     = C.Half;
+
 PROCEDURE Arg (READONLY x: T): R.T; (*return polar angle*)
 PROCEDURE Abs (READONLY x: T): R.T; (*return magnitude*)
 PROCEDURE AbsSqr (READONLY x: T): R.T; (*return square of the magnitude*)
