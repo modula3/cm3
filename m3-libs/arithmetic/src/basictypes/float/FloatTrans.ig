@@ -23,7 +23,7 @@ TYPE
 CONST
   (*---distinguished elements---*)
   Zero        = RB.Zero;
-  Half        = FLOAT(0.5D0,T);
+  Half        = RB.Half;
   One         = RB.One;
   MinusOne    = RB.MinusOne;
   Two         = RB.Two;

@@ -19,10 +19,11 @@ TYPE
   QuotRem = RECORD quot, rem: T;  END;
 
 CONST
-  Zero     = T{re := FLOAT(0.0, R.T), im := FLOAT(0.0, R.T)};
-  One      = T{re := FLOAT(1.0, R.T), im := FLOAT(0.0, R.T)};
-  I        = T{re := FLOAT(0.0, R.T), im := FLOAT(1.0, R.T)};
-  MinusOne = T{re := FLOAT(-1.0, R.T), im := FLOAT(0.0, R.T)};
+  Zero     = T{re := R.Zero, im := R.Zero};
+  One      = T{re := R.One, im := R.Zero};
+  I        = T{re := R.Zero, im := R.One};
+  MinusOne = T{re := R.MinusOne, im := R.Zero};
+  Half     = T{re := R.Half, im := R.Zero};
 
 <*INLINE*>
 PROCEDURE FromInteger (x: INTEGER): T;
