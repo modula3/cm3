@@ -9,7 +9,9 @@ FROM xUtils IMPORT Error;
 
 (*==========================*)
 
-TYPE T = R.T;
+TYPE
+  T = R.T;
+  Array = REF ARRAY OF T;
 
 CONST
   Zero        = FLOAT(0.0D0,T);

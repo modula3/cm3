@@ -26,7 +26,8 @@ PROCEDURE Equal(x,y:T):BOOLEAN RAISES {Error};  (*return x=y*)
 
 PROCEDURE Scale(x:T; y:R.T):T;            (*x:=x*factor*)
 PROCEDURE Inner(x,y:T):R.T RAISES {Error};   (*<x,y>*)
-<*UNUSED*>
+(*
 PROCEDURE Cross(x,y:T):T RAISES {Error}; (*x x y*)
+*)
 (*==========================*)
 END VectorFast.

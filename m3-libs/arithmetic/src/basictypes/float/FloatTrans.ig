@@ -47,11 +47,6 @@ CONST
   (*Eps  = Pow(FLOAT(R.Base,T),-FLOAT(R.Precision,T));  (*approx relative machine precision*)  *)
   (*Eps  = LongFloat.Scalb(One,-R.Precision);*)
 
-(*============================*)
-(* Handy collectors           *)
-(*============================*)
-TYPE Array = REF ARRAY OF T;
-
 <*INLINE*> PROCEDURE Abs   (c:T):T;       (*return magnitude*)
 <*INLINE*> PROCEDURE AbsSqr(c:T):T;       (*return square of the magnitude*)
 

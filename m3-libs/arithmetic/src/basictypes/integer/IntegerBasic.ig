@@ -10,7 +10,9 @@ FROM xUtils IMPORT Error;
 
 (*==========================*)
 
-TYPE T = I.T;
+TYPE
+  T = I.T;
+  Array = REF ARRAY OF T;
 
 CONST
   Zero        =  0;

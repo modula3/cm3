@@ -54,7 +54,7 @@ PROCEDURE deflate(x:T;        (*divide this polynomial*)
 *)
 PROCEDURE Derive(x:T;           (*differentiate polynomial*)
                  ):T;
-PROCEDURE EvalDerivate(x:T;          (*Eval this polynomial*)
+PROCEDURE EvalDerivative(x:T;          (*Eval this polynomial*)
                 xi:R.T;               (*for this argument*)
            VAR pd:ARRAY OF R.T;      (*returning x(xi), x'(xi)...*)
                 );
