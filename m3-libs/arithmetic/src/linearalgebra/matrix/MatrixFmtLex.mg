@@ -66,18 +66,23 @@ PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
                END;
   VAR
     vectorLexStyle := VF.LexStyle{
-                        sep := style.colSep, elemStyle := style.elemStyle};
+                        sep := style.colSep, term := style.rowTerm,
+                        elemStyle := style.elemStyle};
     item := NEW(List, prev := NIL, row := VF.Lex(rd, vectorLexStyle));
-    n    := 0;
+    n    := 1;
     m    := NUMBER(item.row^);
   BEGIN
-    (*read the values into a list*)
-    WHILE FSup.CheckSeparator(rd, style.rowSep) DO
-      item := NEW(List, prev := item, row := VF.Lex(rd, vectorLexStyle));
-      IF NUMBER(item.row^) # m THEN
-        RAISE L.Error;           (*should be NA.Error, size_mismatch*)
+    TRY
+      (*read the values into a list*)
+      WHILE NOT FSup.CheckChar(rd, style.matTerm) DO
+        item := NEW(List, prev := item, row := VF.Lex(rd, vectorLexStyle));
+        IF NUMBER(item.row^) # m THEN
+          RAISE L.Error;         (*should be NA.Error, size_mismatch*)
+        END;
+        INC(n);
       END;
-      INC(n);
+    EXCEPT
+    | Rd.EndOfFile =>            (*treat like termination character*)
     END;
 
     (*copy the list elements into the vector's array*)

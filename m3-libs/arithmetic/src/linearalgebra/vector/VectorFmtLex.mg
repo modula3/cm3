@@ -1,4 +1,4 @@
-GENERIC MODULE VectorFmtLex(R, RF,V);
+GENERIC MODULE VectorFmtLex(R, RF);
 (*Copyright (c) 1996, m3na project*)
 
 (*FROM NADefinitions IMPORT Error,Err;*)
@@ -12,7 +12,7 @@ FROM FmtLexSupport IMPORT Precedence;
 <*UNUSED*>
 CONST Module = "VectorFmt.";
 
-PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT
+PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}; ): TEXT
   RAISES {Thread.Alerted, Wr.Failure} =
   VAR wr := TextWr.New();
   BEGIN
@@ -64,14 +64,21 @@ PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
     item: List := NIL;
     n          := 0;
   BEGIN
-    (*read the values into a list*)
-    REPEAT
-      item := NEW(List, prev := item, data := RF.Lex(rd, style.elemStyle));
-      INC(n);
-    UNTIL NOT FSup.CheckSeparator(rd, style.sep);
+    TRY
+      (*read the values into a list*)
+      REPEAT
+        item :=
+          NEW(List, prev := item, data := RF.Lex(rd, style.elemStyle));
+        (*IO.Put("new data: "&RF.Fmt(item.data)&"\n");*)
+        INC(n);
+      UNTIL
+        NOT FSup.CheckChar(rd, style.sep) OR FSup.CheckChar(rd, style.term);
+    EXCEPT
+    | Rd.EndOfFile =>            (*treat like termination character*)
+    END;
 
     (*copy the list elements into the vector's array*)
-    VAR z := NEW(V.T, n);
+    VAR z := NEW(T, n);
     BEGIN
       FOR i := n - 1 TO 0 BY -1 DO
         z[i] := item.data;

@@ -34,6 +34,7 @@ PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within := Precedence.sum):
 TYPE
   LexStyle = RECORD
                sep       := ' ';
+               term      := '\n';
                elemStyle := RF.LexStyle{};
              END;
 

@@ -68,4 +68,4 @@ MatrixFmtLex("BigInteger",      "BigInteger")
 
 % inserted to cm3.cfg:
 %     "BLAS-LAPACK": [ "-L/usr/lib", "-lg2c", "-lblas", "-llapack" ]
-%import_sys_lib("BLAS-LAPACK")
+import_sys_lib("BLAS-LAPACK")
