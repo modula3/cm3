@@ -46,7 +46,7 @@ include_dir ("common")
 include_dir (OS_TYPE)
 include_dir (TARGET)
 if defined("M3_USE_STACK_WALKER")
-  if And(M3_USE_STACK_WALKER, HAS_STACK_WALKER{TARGET})
+  if M3_USE_STACK_WALKER and HAS_STACK_WALKER{TARGET}
     include_dir("ex_stack")
   else
     include_dir("ex_frame")
