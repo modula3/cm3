@@ -1,5 +1,5 @@
 
-GENERIC INTERFACE Signal(R, P);
+GENERIC INTERFACE Signal(R, V);
 
 TYPE
   IndexType = INTEGER;
@@ -9,18 +9,19 @@ TYPE
             METHODS
               init      (first, number: IndexType): T;
               initFL    (first, last: IndexType): T;
-              fromArray (READONLY arr: P.TBody; first: IndexType := 0): T;
+              fromArray (READONLY arr: V.TBody; first: IndexType := 0): T;
               copy      (): T;
 
-              clipToArray (first: IndexType := 0; VAR arr: P.TBody);
+              clipToArray (first: IndexType := 0; VAR arr: V.TBody);
               (*Take a clip starting at 'first' with length 'NUMBER(arr)'
                  and copy it to 'arr'.*)
+              clipToVector (first, size: IndexType): V.T;
 
               getFirst (): IndexType; (*simply 'first' would collide with a
                                          instance variable*)
               getLast   (): IndexType;
               getNumber (): IndexType;
-              getData   (): P.T;
+              getData   (): V.T;
 
               sum (): R.T;       (*asking for the offset is non-sense since
                                     we are working with a finite supported
