@@ -13,9 +13,6 @@ IMPORT Ctypes, Utypes, Uresource;
 (* Some of the Unix library process control calls. This is not a complete
 interface, and should be added to as needed *)
 
-(* Remember that any of the calls which may return an error code in
-'Uerror.errno' should be serialized by use of 'UnixMutex.errno'. *)
-
 <*EXTERNAL*> 
 PROCEDURE execv(
     name: Ctypes.char_star;
