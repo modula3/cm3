@@ -159,7 +159,7 @@ PROCEDURE MulV (A: T; b: V.T): V.T RAISES {Error} =
   BEGIN
     IF NUMBER(A[0]) # NUMBER(b^) THEN RAISE Error(Err.bad_size); END;
 
-    FOR i := mf TO ml DO c[i] := VR.Inner(A[i], b^); END;
+    FOR i := mf TO ml DO c[i] := VR.Dot(A[i], b^); END;
     RETURN c;
   END MulV;
 
@@ -252,7 +252,7 @@ PROCEDURE MulMMA (x: T): T =
       FOR j := i TO LAST(x^) DO
         <*FATAL Error*>(*x[i] and x[j] will have the same size*)
         BEGIN
-          z[i, j] := VR.Inner(x[i], x[j]);
+          z[i, j] := VR.Dot(x[i], x[j]);
         END;
         z[j, i] := R.Conj(z[i, j]);
       END;
