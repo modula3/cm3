@@ -12,7 +12,7 @@
     </keywords>
     <projectdirectory>.</projectdirectory>
     <absoluteprojectpath>false</absoluteprojectpath>
-    <description></description>
+    <description/>
     <ignoreparts>
       <part>Unterstützung für ClearCase (KDevelop)</part>
       <part>KDevcopyto</part>
@@ -29,7 +29,7 @@
       <terminal>true</terminal>
       <directoryradio>executable</directoryradio>
       <customdirectory>/</customdirectory>
-      <programargs></programargs>
+      <programargs/>
       <autocompile>true</autocompile>
       <envvars/>
     </run>
@@ -39,9 +39,9 @@
     <configurations>
       <default>
         <compiler>kdevfpcoptions</compiler>
-        <compileroptions></compileroptions>
+        <compileroptions/>
         <compilerexec>cd wellfett/test; cm3 -O</compilerexec>
-        <mainsource></mainsource>
+        <mainsource/>
       </default>
     </configurations>
   </kdevpascalproject>
@@ -109,7 +109,10 @@
     </useglobaltypes>
   </kdevfilecreate>
   <kdevfileview>
-    <groups/>
+    <groups>
+      <hidenonprojectfiles>false</hidenonprojectfiles>
+      <hidenonlocation>false</hidenonlocation>
+    </groups>
     <tree>
       <hidepatterns>*.o,*.lo,CVS</hidepatterns>
       <hidenonprojectfiles>false</hidenonprojectfiles>

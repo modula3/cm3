@@ -6,8 +6,8 @@
  * modify the SWIG interface file instead.
  *******************************************************************************)
 
-INTERFACE PLPlot;
-IMPORT PLPlotRaw;
+INTERFACE LongRealPLPlot;
+IMPORT LongRealPLPlotRaw;
 IMPORT Cstdio;
 
 TYPE
@@ -474,26 +474,26 @@ PROCEDURE SetFileName (fnam: TEXT; );
 
 (* c_plshades: "Shade regions with continuous range of colours." *)
 PROCEDURE PlotShades (READONLY a : FloatMatrix;
-                               df: PLPlotRaw.DefinedFunc;
+                               df: LongRealPLPlotRaw.DefinedFunc;
                                xmin, xmax, ymin, ymax: Float;
                       READONLY x                     : FloatVector;
                       fill_width, cont_color, cont_width: INTEGER;
-                      ff         : PLPlotRaw.FillFunc;
+                      ff         : LongRealPLPlotRaw.FillFunc;
                       rectangular: BOOLEAN;
                       plotter    : PlotterFunc;
-                      plotterData: REFANY;             );
+                      plotterData: REFANY;                     );
 
 (* c_plshade: "Shade region with discrete colour, pattern fill." *)
 PROCEDURE PlotShade (READONLY a : FloatMatrix;
-                              df: PLPlotRaw.DefinedFunc;
+                              df: LongRealPLPlotRaw.DefinedFunc;
                      left, right, bottom, top, shade_min, shade_max: Float;
                      sh_cmap : INTEGER;
                      sh_color: Float;
                      sh_width, min_color, min_width, max_color, max_width: INTEGER;
-                     ff         : PLPlotRaw.FillFunc;
+                     ff         : LongRealPLPlotRaw.FillFunc;
                      rectangular: BOOLEAN;
                      plotter    : PlotterFunc;
-                     plotterData: REFANY;             );
+                     plotterData: REFANY;                     );
 
 (* c_plsmaj: "Set up lengths of major tick marks." *)
 PROCEDURE SetMajorTickSize (def, scale: Float; );
@@ -641,4 +641,4 @@ TYPE RGB_HLSResult = RECORD h, l, s: Float;  END;
 PROCEDURE RGB_HLS (r, g, b: Float; ): RGB_HLSResult;
 
 
-END PLPlot.
+END LongRealPLPlot.

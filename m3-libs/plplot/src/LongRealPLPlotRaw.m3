@@ -6,8 +6,8 @@
  * modify the SWIG interface file instead.
  *******************************************************************************)
 
-MODULE PLPlotRaw;
+MODULE LongRealPLPlotRaw;
 
 
 BEGIN
-END PLPlotRaw.
+END LongRealPLPlotRaw.

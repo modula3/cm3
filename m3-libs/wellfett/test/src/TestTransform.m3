@@ -14,7 +14,7 @@ IMPORT LongRealSignal                   AS S,
 
 IMPORT LongRealBSplineWavelet AS BSpl;
 
-IMPORT (*LongRealFmtLex AS RF,*) LongRealSignalFmtLex AS SF, PLPlot AS PL;
+IMPORT (*LongRealFmtLex AS RF,*) LongRealSignalFmtLex AS SF, LongRealPLPlot AS PL;
 IMPORT IO, Fmt, Wr, Thread;
 
 FROM TestMatchWavelet IMPORT TestMatchPatternSmooth;

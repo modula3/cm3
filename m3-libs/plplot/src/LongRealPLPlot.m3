@@ -6,9 +6,9 @@
  * modify the SWIG interface file instead.
  *******************************************************************************)
 
-UNSAFE MODULE PLPlot;
+UNSAFE MODULE LongRealPLPlot;
 
-IMPORT PLPlotRaw;
+IMPORT LongRealPLPlotRaw;
 IMPORT M3toC;
 IMPORT Ctypes AS C;
 IMPORT Cstdio;
@@ -22,9 +22,9 @@ TYPE
                 END;
 
 (* The <*CALLBACK*> pragma may be necessary for use under Windows *)
-PROCEDURE PlotterCallback (            x, y  : PLPlotRaw.PLFLT;
-                           VAR (*OUT*) tx, ty: PLPlotRaw.PLFLT;
-                                       data  : PLPlotRaw.PLPointer; ) =
+PROCEDURE PlotterCallback (            x, y  : LongRealPLPlotRaw.PLFLT;
+                           VAR (*OUT*) tx, ty: LongRealPLPlotRaw.PLFLT;
+                           data: LongRealPLPlotRaw.PLPointer; ) =
   BEGIN
     WITH d = LOOPHOLE(data, UNTRACED REF PlotterData)^,
          t = d.callback(x, y, d.callbackData)           DO
@@ -40,17 +40,17 @@ CONST
 
 PROCEDURE SetContLabelFormat (lexp, sigdig: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetContLabelFormat(lexp, sigdig);
+    LongRealPLPlotRaw.SetContLabelFormat(lexp, sigdig);
   END SetContLabelFormat;
 
 PROCEDURE SetContLabelParam (offset, size, spacing: Float; active: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetContLabelParam(offset, size, spacing, active);
+    LongRealPLPlotRaw.SetContLabelParam(offset, size, spacing, active);
   END SetContLabelParam;
 
 PROCEDURE Advance (page: INTEGER; ) =
   BEGIN
-    PLPlotRaw.Advance(page);
+    LongRealPLPlotRaw.Advance(page);
   END Advance;
 
 PROCEDURE DrawAxes (x0, y0: Float;
@@ -76,7 +76,7 @@ PROCEDURE DrawAxes (x0, y0: Float;
     END;
     arg6[arg6i] := '\000';
 
-    PLPlotRaw.DrawAxes(
+    LongRealPLPlotRaw.DrawAxes(
       x0, y0, arg3[0], xtick, nxsub, arg6[0], ytick, nysub);
 
 
@@ -89,12 +89,12 @@ PROCEDURE PlotBins (READONLY x, y: FloatVector; center: INTEGER; ) =
     <* ASSERT NUMBER(y) = n,
                 "Array sizes of y (" & Fmt.Int(NUMBER(y)) & ") and "
                   & nName & " (" & Fmt.Int(n) & ") mismatch." *>
-    PLPlotRaw.PlotBins(n, x[0], y[0], center);
+    LongRealPLPlotRaw.PlotBins(n, x[0], y[0], center);
   END PlotBins;
 
 PROCEDURE StartPage () =
   BEGIN
-    PLPlotRaw.StartPage();
+    LongRealPLPlotRaw.StartPage();
   END StartPage;
 
 PROCEDURE DrawBox (xopt : DirTileSet;
@@ -119,7 +119,7 @@ PROCEDURE DrawBox (xopt : DirTileSet;
     END;
     arg4[arg4i] := '\000';
 
-    PLPlotRaw.DrawBox(arg1[0], xtick, nxsub, arg4[0], ytick, nysub);
+    LongRealPLPlotRaw.DrawBox(arg1[0], xtick, nxsub, arg4[0], ytick, nysub);
 
 
   END DrawBox;
@@ -165,8 +165,8 @@ PROCEDURE DrawBox3D (xopt  : DirTileSet;
     arg9[arg9i] := '\000';
 
     arg10 := M3toC.SharedTtoS(zlabel);
-    PLPlotRaw.DrawBox3D(arg1[0], arg2, xtick, nsubx, arg5[0], arg6, ytick,
-                        nsuby, arg9[0], arg10, ztick, nsubz);
+    LongRealPLPlotRaw.DrawBox3D(arg1[0], arg2, xtick, nsubx, arg5[0], arg6,
+                                ytick, nsuby, arg9[0], arg10, ztick, nsubz);
 
     M3toC.FreeSharedS(xlabel, arg2);
 
@@ -180,24 +180,24 @@ PROCEDURE CalcWorld (rx, ry: Float; ): CalcWorldResult =
     result: CalcWorldResult;
     arg5  : C.int;
   BEGIN
-    PLPlotRaw.CalcWorld(rx, ry, result.wx, result.wy, arg5);
+    LongRealPLPlotRaw.CalcWorld(rx, ry, result.wx, result.wy, arg5);
     result.window := arg5;
     RETURN result;
   END CalcWorld;
 
 PROCEDURE Clear () =
   BEGIN
-    PLPlotRaw.Clear();
+    LongRealPLPlotRaw.Clear();
   END Clear;
 
 PROCEDURE SetFGColorDiscr (icol0: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetFGColorDiscr(icol0);
+    LongRealPLPlotRaw.SetFGColorDiscr(icol0);
   END SetFGColorDiscr;
 
 PROCEDURE SetFGColorCont (col1: Float; ) =
   BEGIN
-    PLPlotRaw.SetFGColorCont(col1);
+    LongRealPLPlotRaw.SetFGColorCont(col1);
   END SetFGColorCont;
 
 PROCEDURE PlotContour (READONLY z             : FloatMatrix;
@@ -213,7 +213,7 @@ PROCEDURE PlotContour (READONLY z             : FloatMatrix;
   BEGIN
     arg1 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg1[i] := ADR(z[i, 0]) END;
-    PLPlotRaw.PlotContour(
+    LongRealPLPlotRaw.PlotContour(
       arg1[0], nx, ny, kx, lx, ky, ly, x[0], n, PlotterCallback,
       NEW(
         REF PlotterData, callback := plotter, callbackData := plotterData));
@@ -221,17 +221,17 @@ PROCEDURE PlotContour (READONLY z             : FloatMatrix;
 
 PROCEDURE CopyStateFrom (iplsr, flags: INTEGER; ) =
   BEGIN
-    PLPlotRaw.CopyStateFrom(iplsr, flags);
+    LongRealPLPlotRaw.CopyStateFrom(iplsr, flags);
   END CopyStateFrom;
 
 PROCEDURE ExitAll () =
   BEGIN
-    PLPlotRaw.ExitAll();
+    LongRealPLPlotRaw.ExitAll();
   END ExitAll;
 
 PROCEDURE Exit () =
   BEGIN
-    PLPlotRaw.Exit();
+    LongRealPLPlotRaw.Exit();
   END Exit;
 
 PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: Float;
@@ -262,12 +262,13 @@ PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: Float;
                                     :-( *)
       END;
     END;
-    PLPlotRaw.SetEnvironment(xmin, xmax, ymin, ymax, ORD(just) - 1, arg6);
+    LongRealPLPlotRaw.SetEnvironment(
+      xmin, xmax, ymin, ymax, ORD(just) - 1, arg6);
   END SetEnvironment;
 
 PROCEDURE StopPage () =
   BEGIN
-    PLPlotRaw.StopPage();
+    LongRealPLPlotRaw.StopPage();
   END StopPage;
 
 PROCEDURE PlotErrorX (READONLY xmin, xmax, y: FloatVector; ) =
@@ -280,7 +281,7 @@ PROCEDURE PlotErrorX (READONLY xmin, xmax, y: FloatVector; ) =
     <* ASSERT NUMBER(y) = n,
                 "Array sizes of y (" & Fmt.Int(NUMBER(y)) & ") and "
                   & nName & " (" & Fmt.Int(n) & ") mismatch." *>
-    PLPlotRaw.PlotErrorX(n, xmin[0], xmax[0], y[0]);
+    LongRealPLPlotRaw.PlotErrorX(n, xmin[0], xmax[0], y[0]);
   END PlotErrorX;
 
 PROCEDURE PlotErrorY (READONLY x, ymin, ymax: FloatVector; ) =
@@ -293,12 +294,12 @@ PROCEDURE PlotErrorY (READONLY x, ymin, ymax: FloatVector; ) =
     <* ASSERT NUMBER(ymax) = n,
                 "Array sizes of ymax (" & Fmt.Int(NUMBER(ymax)) & ") and "
                   & nName & " (" & Fmt.Int(n) & ") mismatch." *>
-    PLPlotRaw.PlotErrorY(n, x[0], ymin[0], ymax[0]);
+    LongRealPLPlotRaw.PlotErrorY(n, x[0], ymin[0], ymax[0]);
   END PlotErrorY;
 
 PROCEDURE AdvanceFamily () =
   BEGIN
-    PLPlotRaw.AdvanceFamily();
+    LongRealPLPlotRaw.AdvanceFamily();
   END AdvanceFamily;
 
 PROCEDURE FillPolygon (READONLY x, y: FloatVector; ) =
@@ -308,7 +309,7 @@ PROCEDURE FillPolygon (READONLY x, y: FloatVector; ) =
     <* ASSERT NUMBER(y) = n,
                 "Array sizes of y (" & Fmt.Int(NUMBER(y)) & ") and "
                   & nName & " (" & Fmt.Int(n) & ") mismatch." *>
-    PLPlotRaw.FillPolygon(n, x[0], y[0]);
+    LongRealPLPlotRaw.FillPolygon(n, x[0], y[0]);
   END FillPolygon;
 
 PROCEDURE FillPolygon3D (READONLY x, y, z: FloatVector; ) =
@@ -321,28 +322,28 @@ PROCEDURE FillPolygon3D (READONLY x, y, z: FloatVector; ) =
     <* ASSERT NUMBER(z) = n,
                 "Array sizes of z (" & Fmt.Int(NUMBER(z)) & ") and "
                   & nName & " (" & Fmt.Int(n) & ") mismatch." *>
-    PLPlotRaw.FillPolygon3D(n, x[0], y[0], z[0]);
+    LongRealPLPlotRaw.FillPolygon3D(n, x[0], y[0], z[0]);
   END FillPolygon3D;
 
 PROCEDURE Flush () =
   BEGIN
-    PLPlotRaw.Flush();
+    LongRealPLPlotRaw.Flush();
   END Flush;
 
 PROCEDURE SetFont (ifont: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetFont(ifont);
+    LongRealPLPlotRaw.SetFont(ifont);
   END SetFont;
 
 PROCEDURE LoadFont (fnt: INTEGER; ) =
   BEGIN
-    PLPlotRaw.LoadFont(fnt);
+    LongRealPLPlotRaw.LoadFont(fnt);
   END LoadFont;
 
 PROCEDURE GetCharacterHeight (): GetCharacterHeightResult =
   VAR result: GetCharacterHeightResult;
   BEGIN
-    PLPlotRaw.GetCharacterHeight(result.def, result.ht);
+    LongRealPLPlotRaw.GetCharacterHeight(result.def, result.ht);
     RETURN result;
   END GetCharacterHeight;
 
@@ -353,7 +354,7 @@ PROCEDURE GetFGColorDiscrRGB (icol0: INTEGER; ): GetFGColorDiscrRGBResult =
     arg3  : C.int;
     arg4  : C.int;
   BEGIN
-    PLPlotRaw.GetFGColorDiscrRGB(icol0, arg2, arg3, arg4);
+    LongRealPLPlotRaw.GetFGColorDiscrRGB(icol0, arg2, arg3, arg4);
     result.r := arg2;
     result.g := arg3;
     result.b := arg4;
@@ -367,7 +368,7 @@ PROCEDURE GetBGColorDiscrRGB (): GetBGColorDiscrRGBResult =
     arg2  : C.int;
     arg3  : C.int;
   BEGIN
-    PLPlotRaw.GetBGColorDiscrRGB(arg1, arg2, arg3);
+    LongRealPLPlotRaw.GetBGColorDiscrRGB(arg1, arg2, arg3);
     result.r := arg1;
     result.g := arg2;
     result.b := arg3;
@@ -379,7 +380,7 @@ PROCEDURE GetCompression (): INTEGER =
     compression: INTEGER;
     arg1       : C.int;
   BEGIN
-    PLPlotRaw.GetCompression(arg1);
+    LongRealPLPlotRaw.GetCompression(arg1);
     compression := arg1;
     RETURN compression;
   END GetCompression;
@@ -387,7 +388,7 @@ PROCEDURE GetCompression (): INTEGER =
 PROCEDURE GetWindowDevice (): GetWindowDeviceResult =
   VAR result: GetWindowDeviceResult;
   BEGIN
-    PLPlotRaw.GetWindowDevice(
+    LongRealPLPlotRaw.GetWindowDevice(
       result.mar, result.aspect, result.jx, result.jy);
     RETURN result;
   END GetWindowDevice;
@@ -395,14 +396,14 @@ PROCEDURE GetWindowDevice (): GetWindowDeviceResult =
 PROCEDURE GetOrientation (): Float =
   VAR rot: Float;
   BEGIN
-    PLPlotRaw.GetOrientation(rot);
+    LongRealPLPlotRaw.GetOrientation(rot);
     RETURN rot;
   END GetOrientation;
 
 PROCEDURE GetWindowPlot (): GetWindowPlotResult =
   VAR result: GetWindowPlotResult;
   BEGIN
-    PLPlotRaw.GetWindowPlot(
+    LongRealPLPlotRaw.GetWindowPlot(
       result.xmin, result.ymin, result.xmax, result.ymax);
     RETURN result;
   END GetWindowPlot;
@@ -414,7 +415,7 @@ PROCEDURE GetFamilyFile (): GetFamilyFileResult =
     arg2  : C.int;
     arg3  : C.int;
   BEGIN
-    PLPlotRaw.GetFamilyFile(arg1, arg2, arg3);
+    LongRealPLPlotRaw.GetFamilyFile(arg1, arg2, arg3);
     result.fam := arg1;
     result.num := arg2;
     result.bmax := arg3;
@@ -426,7 +427,7 @@ PROCEDURE GetRunLevel (): INTEGER =
     level: INTEGER;
     arg1 : C.int;
   BEGIN
-    PLPlotRaw.GetRunLevel(arg1);
+    LongRealPLPlotRaw.GetRunLevel(arg1);
     level := arg1;
     RETURN level;
   END GetRunLevel;
@@ -439,7 +440,7 @@ PROCEDURE GetOutputDeviceParam (): GetOutputDeviceParamResult =
     arg5  : C.int;
     arg6  : C.int;
   BEGIN
-    PLPlotRaw.GetOutputDeviceParam(
+    LongRealPLPlotRaw.GetOutputDeviceParam(
       result.xp, result.yp, arg3, arg4, arg5, arg6);
     result.xleng := arg3;
     result.yleng := arg4;
@@ -450,13 +451,13 @@ PROCEDURE GetOutputDeviceParam (): GetOutputDeviceParamResult =
 
 PROCEDURE ShowGraphicScreen () =
   BEGIN
-    PLPlotRaw.ShowGraphicScreen();
+    LongRealPLPlotRaw.ShowGraphicScreen();
   END ShowGraphicScreen;
 
 PROCEDURE GetBoundaries (): GetBoundariesResult =
   VAR result: GetBoundariesResult;
   BEGIN
-    PLPlotRaw.GetBoundaries(
+    LongRealPLPlotRaw.GetBoundaries(
       result.xmin, result.xmax, result.ymin, result.ymax);
     RETURN result;
   END GetBoundaries;
@@ -466,7 +467,7 @@ PROCEDURE GetStream (): INTEGER =
     strm: INTEGER;
     arg1: C.int;
   BEGIN
-    PLPlotRaw.GetStream(arg1);
+    LongRealPLPlotRaw.GetStream(arg1);
     strm := arg1;
     RETURN strm;
   END GetStream;
@@ -474,7 +475,7 @@ PROCEDURE GetStream (): INTEGER =
 PROCEDURE GetVPBoundDev (): GetVPBoundDevResult =
   VAR result: GetVPBoundDevResult;
   BEGIN
-    PLPlotRaw.GetVPBoundDev(
+    LongRealPLPlotRaw.GetVPBoundDev(
       result.xmin, result.xmax, result.ymin, result.ymax);
     RETURN result;
   END GetVPBoundDev;
@@ -482,7 +483,7 @@ PROCEDURE GetVPBoundDev (): GetVPBoundDevResult =
 PROCEDURE GetVPBoundWorld (): GetVPBoundWorldResult =
   VAR result: GetVPBoundWorldResult;
   BEGIN
-    PLPlotRaw.GetVPBoundWorld(
+    LongRealPLPlotRaw.GetVPBoundWorld(
       result.xmin, result.xmax, result.ymin, result.ymax);
     RETURN result;
   END GetVPBoundWorld;
@@ -493,7 +494,7 @@ PROCEDURE GetXLabelParam (): GetXLabelParamResult =
     arg1  : C.int;
     arg2  : C.int;
   BEGIN
-    PLPlotRaw.GetXLabelParam(arg1, arg2);
+    LongRealPLPlotRaw.GetXLabelParam(arg1, arg2);
     result.digmax := arg1;
     result.digits := arg2;
     RETURN result;
@@ -505,7 +506,7 @@ PROCEDURE GetYLabelParam (): GetYLabelParamResult =
     arg1  : C.int;
     arg2  : C.int;
   BEGIN
-    PLPlotRaw.GetYLabelParam(arg1, arg2);
+    LongRealPLPlotRaw.GetYLabelParam(arg1, arg2);
     result.digmax := arg1;
     result.digits := arg2;
     RETURN result;
@@ -517,7 +518,7 @@ PROCEDURE GetZLabelParam (): GetZLabelParamResult =
     arg1  : C.int;
     arg2  : C.int;
   BEGIN
-    PLPlotRaw.GetZLabelParam(arg1, arg2);
+    LongRealPLPlotRaw.GetZLabelParam(arg1, arg2);
     result.digmax := arg1;
     result.digits := arg2;
     RETURN result;
@@ -529,22 +530,22 @@ PROCEDURE PlotHistogram (READONLY x             : FloatVector;
                                   oldwin        : INTEGER       := 0; ) =
   VAR n := NUMBER(x);
   BEGIN
-    PLPlotRaw.PlotHistogram(n, x[0], datmin, datmax, nbin, oldwin);
+    LongRealPLPlotRaw.PlotHistogram(n, x[0], datmin, datmax, nbin, oldwin);
   END PlotHistogram;
 
 PROCEDURE SetColorHLS (h, l, s: Float; ) =
   BEGIN
-    PLPlotRaw.SetColorHLS(h, l, s);
+    LongRealPLPlotRaw.SetColorHLS(h, l, s);
   END SetColorHLS;
 
 PROCEDURE Init () =
   BEGIN
-    PLPlotRaw.Init();
+    LongRealPLPlotRaw.Init();
   END Init;
 
 PROCEDURE PlotLineSegment (x1, y1, x2, y2: Float; ) =
   BEGIN
-    PLPlotRaw.PlotLineSegment(x1, y1, x2, y2);
+    LongRealPLPlotRaw.PlotLineSegment(x1, y1, x2, y2);
   END PlotLineSegment;
 
 PROCEDURE SetLabels (xlabel, ylabel, tlabel: TEXT; ) =
@@ -556,7 +557,7 @@ PROCEDURE SetLabels (xlabel, ylabel, tlabel: TEXT; ) =
     arg1 := M3toC.SharedTtoS(xlabel);
     arg2 := M3toC.SharedTtoS(ylabel);
     arg3 := M3toC.SharedTtoS(tlabel);
-    PLPlotRaw.SetLabels(arg1, arg2, arg3);
+    LongRealPLPlotRaw.SetLabels(arg1, arg2, arg3);
     M3toC.FreeSharedS(xlabel, arg1);
     M3toC.FreeSharedS(ylabel, arg2);
     M3toC.FreeSharedS(tlabel, arg3);
@@ -564,7 +565,7 @@ PROCEDURE SetLabels (xlabel, ylabel, tlabel: TEXT; ) =
 
 PROCEDURE SetLightPos (x, y, z: Float; ) =
   BEGIN
-    PLPlotRaw.SetLightPos(x, y, z);
+    LongRealPLPlotRaw.SetLightPos(x, y, z);
   END SetLightPos;
 
 PROCEDURE PlotLines (READONLY x, y: FloatVector; ) =
@@ -574,7 +575,7 @@ PROCEDURE PlotLines (READONLY x, y: FloatVector; ) =
     <* ASSERT NUMBER(y) = n,
                 "Array sizes of y (" & Fmt.Int(NUMBER(y)) & ") and "
                   & nName & " (" & Fmt.Int(n) & ") mismatch." *>
-    PLPlotRaw.PlotLines(n, x[0], y[0]);
+    LongRealPLPlotRaw.PlotLines(n, x[0], y[0]);
   END PlotLines;
 
 PROCEDURE PlotLines3D (READONLY x, y, z: FloatVector; ) =
@@ -587,12 +588,12 @@ PROCEDURE PlotLines3D (READONLY x, y, z: FloatVector; ) =
     <* ASSERT NUMBER(z) = n,
                 "Array sizes of z (" & Fmt.Int(NUMBER(z)) & ") and "
                   & nName & " (" & Fmt.Int(n) & ") mismatch." *>
-    PLPlotRaw.PlotLines3D(n, x[0], y[0], z[0]);
+    LongRealPLPlotRaw.PlotLines3D(n, x[0], y[0], z[0]);
   END PlotLines3D;
 
 PROCEDURE SetLineStyle (lin: [LineStyle.continuous .. LAST(LineStyle)]; ) =
   BEGIN
-    PLPlotRaw.SetLineStyle(ORD(lin));
+    LongRealPLPlotRaw.SetLineStyle(ORD(lin));
   END SetLineStyle;
 
 PROCEDURE PlotMesh (READONLY x, y: FloatVector;
@@ -614,7 +615,7 @@ PROCEDURE PlotMesh (READONLY x, y: FloatVector;
                                    & nyName & " (" & Fmt.Int(ny) & ")." *>
     arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
-    PLPlotRaw.PlotMesh(x[0], y[0], arg3[0], nx, ny, opt);
+    LongRealPLPlotRaw.PlotMesh(x[0], y[0], arg3[0], nx, ny, opt);
   END PlotMesh;
 
 PROCEDURE PlotMeshColored (READONLY x, y  : FloatVector;
@@ -638,7 +639,7 @@ PROCEDURE PlotMeshColored (READONLY x, y  : FloatVector;
                                    & nyName & " (" & Fmt.Int(ny) & ")." *>
     arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
-    PLPlotRaw.PlotMeshColored(
+    LongRealPLPlotRaw.PlotMeshColored(
       x[0], y[0], arg3[0], nx, ny, opt, clevel[0], n);
   END PlotMeshColored;
 
@@ -647,7 +648,7 @@ PROCEDURE CreateStream (): INTEGER =
     strm: INTEGER;
     arg1: C.int;
   BEGIN
-    PLPlotRaw.CreateStream(arg1);
+    LongRealPLPlotRaw.CreateStream(arg1);
     strm := arg1;
     RETURN strm;
   END CreateStream;
@@ -659,7 +660,7 @@ PROCEDURE PrintTextVP (side: TEXT; disp, pos, just: Float; text: TEXT; ) =
   BEGIN
     arg1 := M3toC.SharedTtoS(side);
     arg5 := M3toC.SharedTtoS(text);
-    PLPlotRaw.PrintTextVP(arg1, disp, pos, just, arg5);
+    LongRealPLPlotRaw.PrintTextVP(arg1, disp, pos, just, arg5);
     M3toC.FreeSharedS(side, arg1);
     M3toC.FreeSharedS(text, arg5);
   END PrintTextVP;
@@ -683,7 +684,7 @@ PROCEDURE Plot3D (READONLY x, y     : FloatVector;
                                    & nyName & " (" & Fmt.Int(ny) & ")." *>
     arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
-    PLPlotRaw.Plot3D(x[0], y[0], arg3[0], nx, ny, opt, side);
+    LongRealPLPlotRaw.Plot3D(x[0], y[0], arg3[0], nx, ny, opt, side);
   END Plot3D;
 
 PROCEDURE Plot3DC (READONLY x, y  : FloatVector;
@@ -707,7 +708,8 @@ PROCEDURE Plot3DC (READONLY x, y  : FloatVector;
                                    & nyName & " (" & Fmt.Int(ny) & ")." *>
     arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
-    PLPlotRaw.Plot3DC(x[0], y[0], arg3[0], nx, ny, opt, clevel[0], n);
+    LongRealPLPlotRaw.Plot3DC(
+      x[0], y[0], arg3[0], nx, ny, opt, clevel[0], n);
   END Plot3DC;
 
 PROCEDURE Surface3D (READONLY x, y  : FloatVector;
@@ -731,7 +733,8 @@ PROCEDURE Surface3D (READONLY x, y  : FloatVector;
                                    & nyName & " (" & Fmt.Int(ny) & ")." *>
     arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
-    PLPlotRaw.Surface3D(x[0], y[0], arg3[0], nx, ny, opt, clevel[0], n);
+    LongRealPLPlotRaw.Surface3D(
+      x[0], y[0], arg3[0], nx, ny, opt, clevel[0], n);
   END Surface3D;
 
 PROCEDURE SetFillPattern (READONLY inc, del: ARRAY OF INTEGER; ) =
@@ -741,7 +744,7 @@ PROCEDURE SetFillPattern (READONLY inc, del: ARRAY OF INTEGER; ) =
     <* ASSERT NUMBER(del) = n,
                 "Array sizes of del (" & Fmt.Int(NUMBER(del)) & ") and "
                   & nName & " (" & Fmt.Int(n) & ") mismatch." *>
-    PLPlotRaw.SetFillPattern(n, inc[0], del[0]);
+    LongRealPLPlotRaw.SetFillPattern(n, inc[0], del[0]);
   END SetFillPattern;
 
 PROCEDURE PlotPoints (READONLY x, y: FloatVector; code: INTEGER; ) =
@@ -751,7 +754,7 @@ PROCEDURE PlotPoints (READONLY x, y: FloatVector; code: INTEGER; ) =
     <* ASSERT NUMBER(y) = n,
                 "Array sizes of y (" & Fmt.Int(NUMBER(y)) & ") and "
                   & nName & " (" & Fmt.Int(n) & ") mismatch." *>
-    PLPlotRaw.PlotPoints(n, x[0], y[0], code);
+    LongRealPLPlotRaw.PlotPoints(n, x[0], y[0], code);
   END PlotPoints;
 
 PROCEDURE PlotPoints3D (READONLY x, y, z: FloatVector; code: INTEGER; ) =
@@ -764,7 +767,7 @@ PROCEDURE PlotPoints3D (READONLY x, y, z: FloatVector; code: INTEGER; ) =
     <* ASSERT NUMBER(z) = n,
                 "Array sizes of z (" & Fmt.Int(NUMBER(z)) & ") and "
                   & nName & " (" & Fmt.Int(n) & ") mismatch." *>
-    PLPlotRaw.PlotPoints3D(n, x[0], y[0], z[0], code);
+    LongRealPLPlotRaw.PlotPoints3D(n, x[0], y[0], z[0], code);
   END PlotPoints3D;
 
 PROCEDURE PlotPolygon3D (READONLY x, y, z: FloatVector;
@@ -783,35 +786,35 @@ PROCEDURE PlotPolygon3D (READONLY x, y, z: FloatVector;
                 "Array size of draw (" & Fmt.Int(NUMBER(draw))
                   & " must be one more than that of " & nName & " ("
                   & Fmt.Int(n) & ")." *>
-    PLPlotRaw.PlotPolygon3D(n, x[0], y[0], z[0], draw[0], flag);
+    LongRealPLPlotRaw.PlotPolygon3D(n, x[0], y[0], z[0], draw[0], flag);
   END PlotPolygon3D;
 
 PROCEDURE SetLabelPrecision (setp, prec: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetLabelPrecision(setp, prec);
+    LongRealPLPlotRaw.SetLabelPrecision(setp, prec);
   END SetLabelPrecision;
 
 PROCEDURE SetFillStyle (patt: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetFillStyle(patt);
+    LongRealPLPlotRaw.SetFillStyle(patt);
   END SetFillStyle;
 
 PROCEDURE PrintTextWorld (x, y, dx, dy, just: Float; text: TEXT; ) =
   VAR arg6: C.char_star;
   BEGIN
     arg6 := M3toC.SharedTtoS(text);
-    PLPlotRaw.PrintTextWorld(x, y, dx, dy, just, arg6);
+    LongRealPLPlotRaw.PrintTextWorld(x, y, dx, dy, just, arg6);
     M3toC.FreeSharedS(text, arg6);
   END PrintTextWorld;
 
 PROCEDURE Replot () =
   BEGIN
-    PLPlotRaw.Replot();
+    LongRealPLPlotRaw.Replot();
   END Replot;
 
 PROCEDURE SetCharacterHeight (def, scale: Float; ) =
   BEGIN
-    PLPlotRaw.SetCharacterHeight(def, scale);
+    LongRealPLPlotRaw.SetCharacterHeight(def, scale);
   END SetCharacterHeight;
 
 PROCEDURE SetColorMapDiscr (READONLY r, g, b: ARRAY OF INTEGER; ) =
@@ -824,12 +827,12 @@ PROCEDURE SetColorMapDiscr (READONLY r, g, b: ARRAY OF INTEGER; ) =
     <* ASSERT NUMBER(b) = n,
                 "Array sizes of b (" & Fmt.Int(NUMBER(b)) & ") and "
                   & nName & " (" & Fmt.Int(n) & ") mismatch." *>
-    PLPlotRaw.SetColorMapDiscr(r[0], g[0], b[0], n);
+    LongRealPLPlotRaw.SetColorMapDiscr(r[0], g[0], b[0], n);
   END SetColorMapDiscr;
 
 PROCEDURE SetColorMapDiscrSize (ncol0: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetColorMapDiscrSize(ncol0);
+    LongRealPLPlotRaw.SetColorMapDiscrSize(ncol0);
   END SetColorMapDiscrSize;
 
 PROCEDURE SetColorMapCont (READONLY r, g, b: ARRAY OF INTEGER; ) =
@@ -842,7 +845,7 @@ PROCEDURE SetColorMapCont (READONLY r, g, b: ARRAY OF INTEGER; ) =
     <* ASSERT NUMBER(b) = n,
                 "Array sizes of b (" & Fmt.Int(NUMBER(b)) & ") and "
                   & nName & " (" & Fmt.Int(n) & ") mismatch." *>
-    PLPlotRaw.SetColorMapCont(r[0], g[0], b[0], n);
+    LongRealPLPlotRaw.SetColorMapCont(r[0], g[0], b[0], n);
   END SetColorMapCont;
 
 PROCEDURE SetColorCont (         itype                      : INTEGER;
@@ -864,73 +867,73 @@ PROCEDURE SetColorCont (         itype                      : INTEGER;
                 "Array size of rev (" & Fmt.Int(NUMBER(rev))
                   & " must be one more than that of " & nName & " ("
                   & Fmt.Int(n) & ")." *>
-    PLPlotRaw.SetColorCont(
+    LongRealPLPlotRaw.SetColorCont(
       itype, n, pos[0], coord1[0], coord2[0], coord3[0], rev[0]);
   END SetColorCont;
 
 PROCEDURE SetColorMapContSize (ncol1: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetColorMapContSize(ncol1);
+    LongRealPLPlotRaw.SetColorMapContSize(ncol1);
   END SetColorMapContSize;
 
 PROCEDURE SetColorRGB (icol0, r, g, b: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetColorRGB(icol0, r, g, b);
+    LongRealPLPlotRaw.SetColorRGB(icol0, r, g, b);
   END SetColorRGB;
 
 PROCEDURE SetBGColor (r, g, b: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetBGColor(r, g, b);
+    LongRealPLPlotRaw.SetBGColor(r, g, b);
   END SetBGColor;
 
 PROCEDURE ToggleColor (color: BOOLEAN; ) =
   BEGIN
-    PLPlotRaw.ToggleColor(ORD(color));
+    LongRealPLPlotRaw.ToggleColor(ORD(color));
   END ToggleColor;
 
 PROCEDURE SetCompression (compression: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetCompression(compression);
+    LongRealPLPlotRaw.SetCompression(compression);
   END SetCompression;
 
 PROCEDURE SetDevice (devname: TEXT; ) =
   VAR arg1: C.char_star;
   BEGIN
     arg1 := M3toC.SharedTtoS(devname);
-    PLPlotRaw.SetDevice(arg1);
+    LongRealPLPlotRaw.SetDevice(arg1);
     M3toC.FreeSharedS(devname, arg1);
   END SetDevice;
 
 PROCEDURE SetWindowDevice (mar, aspect, jx, jy: Float; ) =
   BEGIN
-    PLPlotRaw.SetWindowDevice(mar, aspect, jx, jy);
+    LongRealPLPlotRaw.SetWindowDevice(mar, aspect, jx, jy);
   END SetWindowDevice;
 
 PROCEDURE LoadTransformation (dimxmin, dimxmax, dimymin, dimymax: INTEGER;
                               dimxpmm, dimypmm                  : Float;   ) =
   BEGIN
-    PLPlotRaw.LoadTransformation(
+    LongRealPLPlotRaw.LoadTransformation(
       dimxmin, dimxmax, dimymin, dimymax, dimxpmm, dimypmm);
   END LoadTransformation;
 
 PROCEDURE SetOrientation (rot: Float; ) =
   BEGIN
-    PLPlotRaw.SetOrientation(rot);
+    LongRealPLPlotRaw.SetOrientation(rot);
   END SetOrientation;
 
 PROCEDURE SetWindowPlot (xmin, ymin, xmax, ymax: Float; ) =
   BEGIN
-    PLPlotRaw.SetWindowPlot(xmin, ymin, xmax, ymax);
+    LongRealPLPlotRaw.SetWindowPlot(xmin, ymin, xmax, ymax);
   END SetWindowPlot;
 
 PROCEDURE ZoomWindow (xmin, ymin, xmax, ymax: Float; ) =
   BEGIN
-    PLPlotRaw.ZoomWindow(xmin, ymin, xmax, ymax);
+    LongRealPLPlotRaw.ZoomWindow(xmin, ymin, xmax, ymax);
   END ZoomWindow;
 
 PROCEDURE SetEscapeChar (esc: CHAR; ) =
   BEGIN
-    PLPlotRaw.SetEscapeChar(ORD(esc));
+    LongRealPLPlotRaw.SetEscapeChar(ORD(esc));
   END SetEscapeChar;
 
 PROCEDURE SetOption (opt, optarg: TEXT; ): INTEGER =
@@ -941,7 +944,7 @@ PROCEDURE SetOption (opt, optarg: TEXT; ): INTEGER =
   BEGIN
     arg1 := M3toC.SharedTtoS(opt);
     arg2 := M3toC.SharedTtoS(optarg);
-    result := PLPlotRaw.SetOption(arg1, arg2);
+    result := LongRealPLPlotRaw.SetOption(arg1, arg2);
     M3toC.FreeSharedS(opt, arg1);
     M3toC.FreeSharedS(optarg, arg2);
     RETURN result;
@@ -949,26 +952,26 @@ PROCEDURE SetOption (opt, optarg: TEXT; ): INTEGER =
 
 PROCEDURE SetFamilyFile (fam, num, bmax: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetFamilyFile(fam, num, bmax);
+    LongRealPLPlotRaw.SetFamilyFile(fam, num, bmax);
   END SetFamilyFile;
 
 PROCEDURE SetFileName (fnam: TEXT; ) =
   VAR arg1: C.char_star;
   BEGIN
     arg1 := M3toC.SharedTtoS(fnam);
-    PLPlotRaw.SetFileName(arg1);
+    LongRealPLPlotRaw.SetFileName(arg1);
     M3toC.FreeSharedS(fnam, arg1);
   END SetFileName;
 
 PROCEDURE PlotShades (READONLY a : FloatMatrix;
-                               df: PLPlotRaw.DefinedFunc;
+                               df: LongRealPLPlotRaw.DefinedFunc;
                                xmin, xmax, ymin, ymax: Float;
                       READONLY x                     : FloatVector;
                       fill_width, cont_color, cont_width: INTEGER;
-                      ff         : PLPlotRaw.FillFunc;
+                      ff         : LongRealPLPlotRaw.FillFunc;
                       rectangular: BOOLEAN;
                       plotter    : PlotterFunc;
-                      plotterData: REFANY;             ) =
+                      plotterData: REFANY;                     ) =
   VAR
     arg1: REF ARRAY OF ADDRESS;
     nx                         := NUMBER(a);
@@ -977,7 +980,7 @@ PROCEDURE PlotShades (READONLY a : FloatMatrix;
   BEGIN
     arg1 := NEW(REF ARRAY OF ADDRESS, NUMBER(a));
     FOR i := 0 TO LAST(a) DO arg1[i] := ADR(a[i, 0]) END;
-    PLPlotRaw.PlotShades(
+    LongRealPLPlotRaw.PlotShades(
       arg1[0], nx, ny, df, xmin, xmax, ymin, ymax, x[0], n, fill_width,
       cont_color, cont_width, ff, ORD(rectangular), PlotterCallback,
       NEW(
@@ -985,15 +988,15 @@ PROCEDURE PlotShades (READONLY a : FloatMatrix;
   END PlotShades;
 
 PROCEDURE PlotShade (READONLY a : FloatMatrix;
-                              df: PLPlotRaw.DefinedFunc;
+                              df: LongRealPLPlotRaw.DefinedFunc;
                      left, right, bottom, top, shade_min, shade_max: Float;
                      sh_cmap : INTEGER;
                      sh_color: Float;
                      sh_width, min_color, min_width, max_color, max_width: INTEGER;
-                     ff         : PLPlotRaw.FillFunc;
+                     ff         : LongRealPLPlotRaw.FillFunc;
                      rectangular: BOOLEAN;
                      plotter    : PlotterFunc;
-                     plotterData: REFANY;             ) =
+                     plotterData: REFANY;                     ) =
   VAR
     arg1: REF ARRAY OF ADDRESS;
     nx                         := NUMBER(a);
@@ -1001,7 +1004,7 @@ PROCEDURE PlotShade (READONLY a : FloatMatrix;
   BEGIN
     arg1 := NEW(REF ARRAY OF ADDRESS, NUMBER(a));
     FOR i := 0 TO LAST(a) DO arg1[i] := ADR(a[i, 0]) END;
-    PLPlotRaw.PlotShade(
+    LongRealPLPlotRaw.PlotShade(
       arg1[0], nx, ny, df, left, right, bottom, top, shade_min, shade_max,
       sh_cmap, sh_color, sh_width, min_color, min_width, max_color,
       max_width, ff, ORD(rectangular), PlotterCallback,
@@ -1011,61 +1014,62 @@ PROCEDURE PlotShade (READONLY a : FloatMatrix;
 
 PROCEDURE SetMajorTickSize (def, scale: Float; ) =
   BEGIN
-    PLPlotRaw.SetMajorTickSize(def, scale);
+    LongRealPLPlotRaw.SetMajorTickSize(def, scale);
   END SetMajorTickSize;
 
 PROCEDURE SetMinorTickSize (def, scale: Float; ) =
   BEGIN
-    PLPlotRaw.SetMinorTickSize(def, scale);
+    LongRealPLPlotRaw.SetMinorTickSize(def, scale);
   END SetMinorTickSize;
 
 PROCEDURE SetGlobalOrientation (ori: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetGlobalOrientation(ori);
+    LongRealPLPlotRaw.SetGlobalOrientation(ori);
   END SetGlobalOrientation;
 
 PROCEDURE SetOutputDeviceParam (xp, yp                  : Float;
                                 xleng, yleng, xoff, yoff: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetOutputDeviceParam(xp, yp, xleng, yleng, xoff, yoff);
+    LongRealPLPlotRaw.SetOutputDeviceParam(
+      xp, yp, xleng, yleng, xoff, yoff);
   END SetOutputDeviceParam;
 
 PROCEDURE SetPause (pause: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetPause(pause);
+    LongRealPLPlotRaw.SetPause(pause);
   END SetPause;
 
 PROCEDURE SetStream (strm: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetStream(strm);
+    LongRealPLPlotRaw.SetStream(strm);
   END SetStream;
 
 PROCEDURE SetSubWindows (nx, ny: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetSubWindows(nx, ny);
+    LongRealPLPlotRaw.SetSubWindows(nx, ny);
   END SetSubWindows;
 
 PROCEDURE SetSymbolHeight (def, scale: Float; ) =
   BEGIN
-    PLPlotRaw.SetSymbolHeight(def, scale);
+    LongRealPLPlotRaw.SetSymbolHeight(def, scale);
   END SetSymbolHeight;
 
 PROCEDURE Start (nx, ny: INTEGER; ) =
   BEGIN
-    PLPlotRaw.Start(nx, ny);
+    LongRealPLPlotRaw.Start(nx, ny);
   END Start;
 
 PROCEDURE StartDev (devname: TEXT; nx, ny: INTEGER; ) =
   VAR arg1: C.char_star;
   BEGIN
     arg1 := M3toC.SharedTtoS(devname);
-    PLPlotRaw.StartDev(arg1, nx, ny);
+    LongRealPLPlotRaw.StartDev(arg1, nx, ny);
     M3toC.FreeSharedS(devname, arg1);
   END StartDev;
 
 PROCEDURE AddStripchartPoint (id, pen: INTEGER; x, y: Float; ) =
   BEGIN
-    PLPlotRaw.AddStripchartPoint(id, pen, x, y);
+    LongRealPLPlotRaw.AddStripchartPoint(id, pen, x, y);
   END AddStripchartPoint;
 
 PROCEDURE CreateStripchart (xspec, yspec: TEXT;
@@ -1097,7 +1101,7 @@ PROCEDURE CreateStripchart (xspec, yspec: TEXT;
     arg18 := M3toC.SharedTtoS(labx);
     arg19 := M3toC.SharedTtoS(laby);
     arg20 := M3toC.SharedTtoS(labtop);
-    PLPlotRaw.CreateStripchart(
+    LongRealPLPlotRaw.CreateStripchart(
       arg1, arg2, arg3, xmin, xmax, xjump, ymin, ymax, xlpos, ylpos,
       y_ascl, acc, colbox, collab, colline[0], styline[0], arg17, arg18,
       arg19, arg20);
@@ -1115,7 +1119,7 @@ PROCEDURE CreateStripchart (xspec, yspec: TEXT;
 
 PROCEDURE DeleteStripchart (id: INTEGER; ) =
   BEGIN
-    PLPlotRaw.DeleteStripchart(id);
+    LongRealPLPlotRaw.DeleteStripchart(id);
   END DeleteStripchart;
 
 PROCEDURE SetNewLineStyle (READONLY mark, space: ARRAY OF INTEGER; ) =
@@ -1125,22 +1129,22 @@ PROCEDURE SetNewLineStyle (READONLY mark, space: ARRAY OF INTEGER; ) =
     <* ASSERT NUMBER(space) = n,
                 "Array sizes of space (" & Fmt.Int(NUMBER(space))
                   & ") and " & nName & " (" & Fmt.Int(n) & ") mismatch." *>
-    PLPlotRaw.SetNewLineStyle(n, mark[0], space[0]);
+    LongRealPLPlotRaw.SetNewLineStyle(n, mark[0], space[0]);
   END SetNewLineStyle;
 
 PROCEDURE SetVPAbsolute (xmin, xmax, ymin, ymax: Float; ) =
   BEGIN
-    PLPlotRaw.SetVPAbsolute(xmin, xmax, ymin, ymax);
+    LongRealPLPlotRaw.SetVPAbsolute(xmin, xmax, ymin, ymax);
   END SetVPAbsolute;
 
 PROCEDURE SetXLabelParam (digmax, digits: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetXLabelParam(digmax, digits);
+    LongRealPLPlotRaw.SetXLabelParam(digmax, digits);
   END SetXLabelParam;
 
 PROCEDURE SetYLabelParam (digmax, digits: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetYLabelParam(digmax, digits);
+    LongRealPLPlotRaw.SetYLabelParam(digmax, digits);
   END SetYLabelParam;
 
 PROCEDURE PlotSymbols (READONLY x, y: FloatVector; code: INTEGER; ) =
@@ -1150,54 +1154,54 @@ PROCEDURE PlotSymbols (READONLY x, y: FloatVector; code: INTEGER; ) =
     <* ASSERT NUMBER(y) = n,
                 "Array sizes of y (" & Fmt.Int(NUMBER(y)) & ") and "
                   & nName & " (" & Fmt.Int(n) & ") mismatch." *>
-    PLPlotRaw.PlotSymbols(n, x[0], y[0], code);
+    LongRealPLPlotRaw.PlotSymbols(n, x[0], y[0], code);
   END PlotSymbols;
 
 PROCEDURE SetZLabelParam (digmax, digits: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetZLabelParam(digmax, digits);
+    LongRealPLPlotRaw.SetZLabelParam(digmax, digits);
   END SetZLabelParam;
 
 PROCEDURE ShowTextScreen () =
   BEGIN
-    PLPlotRaw.ShowTextScreen();
+    LongRealPLPlotRaw.ShowTextScreen();
   END ShowTextScreen;
 
 PROCEDURE SetVPAspect (aspect: Float; ) =
   BEGIN
-    PLPlotRaw.SetVPAspect(aspect);
+    LongRealPLPlotRaw.SetVPAspect(aspect);
   END SetVPAspect;
 
 PROCEDURE CreateVPAspect (xmin, xmax, ymin, ymax, aspect: Float; ) =
   BEGIN
-    PLPlotRaw.CreateVPAspect(xmin, xmax, ymin, ymax, aspect);
+    LongRealPLPlotRaw.CreateVPAspect(xmin, xmax, ymin, ymax, aspect);
   END CreateVPAspect;
 
 PROCEDURE CreateVP (xmin, xmax, ymin, ymax: Float; ) =
   BEGIN
-    PLPlotRaw.CreateVP(xmin, xmax, ymin, ymax);
+    LongRealPLPlotRaw.CreateVP(xmin, xmax, ymin, ymax);
   END CreateVP;
 
 PROCEDURE SetStandardVP () =
   BEGIN
-    PLPlotRaw.SetStandardVP();
+    LongRealPLPlotRaw.SetStandardVP();
   END SetStandardVP;
 
 PROCEDURE Init3DWindow (basex, basey, height, xmin0, xmax0, ymin0, ymax0,
                           zmin0, zmax0, alt, az: Float; ) =
   BEGIN
-    PLPlotRaw.Init3DWindow(basex, basey, height, xmin0, xmax0, ymin0,
-                           ymax0, zmin0, zmax0, alt, az);
+    LongRealPLPlotRaw.Init3DWindow(basex, basey, height, xmin0, xmax0,
+                                   ymin0, ymax0, zmin0, zmax0, alt, az);
   END Init3DWindow;
 
 PROCEDURE SetPenWidth (width: INTEGER; ) =
   BEGIN
-    PLPlotRaw.SetPenWidth(width);
+    LongRealPLPlotRaw.SetPenWidth(width);
   END SetPenWidth;
 
 PROCEDURE SetWindow (xmin, xmax, ymin, ymax: Float; ) =
   BEGIN
-    PLPlotRaw.SetWindow(xmin, xmax, ymin, ymax);
+    LongRealPLPlotRaw.SetWindow(xmin, xmax, ymin, ymax);
   END SetWindow;
 
 PROCEDURE SetXORMode (mode: BOOLEAN; ): BOOLEAN =
@@ -1205,7 +1209,7 @@ PROCEDURE SetXORMode (mode: BOOLEAN; ): BOOLEAN =
     status: BOOLEAN;
     arg2  : C.int;
   BEGIN
-    PLPlotRaw.SetXORMode(ORD(mode), arg2);
+    LongRealPLPlotRaw.SetXORMode(ORD(mode), arg2);
     status := arg2 # 0;
     RETURN status;
   END SetXORMode;
@@ -1220,61 +1224,61 @@ PROCEDURE PlotImage (READONLY z: FloatMatrix;
   BEGIN
     arg1 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg1[i] := ADR(z[i, 0]) END;
-    PLPlotRaw.PlotImage(arg1[0], nx, ny, xmin, xmax, ymin, ymax, zmin,
-                        zmax, dxmin, dxmax, dymin, dymax);
+    LongRealPLPlotRaw.PlotImage(arg1[0], nx, ny, xmin, xmax, ymin, ymax,
+                                zmin, zmax, dxmin, dxmax, dymin, dymax);
   END PlotImage;
 
 PROCEDURE Plotter0 (x, y: Float; pltr_data: REFANY; ): Plotter0Result =
   VAR result: Plotter0Result;
   BEGIN
-    PLPlotRaw.Plotter0(x, y, result.x, result.y, pltr_data);
+    LongRealPLPlotRaw.Plotter0(x, y, result.x, result.y, pltr_data);
     RETURN result;
   END Plotter0;
 
 PROCEDURE Plotter1 (x, y: Float; pltr_data: REFANY; ): Plotter1Result =
   VAR result: Plotter1Result;
   BEGIN
-    PLPlotRaw.Plotter1(x, y, result.x, result.y, pltr_data);
+    LongRealPLPlotRaw.Plotter1(x, y, result.x, result.y, pltr_data);
     RETURN result;
   END Plotter1;
 
 PROCEDURE Plotter2 (x, y: Float; pltr_data: REFANY; ): Plotter2Result =
   VAR result: Plotter2Result;
   BEGIN
-    PLPlotRaw.Plotter2(x, y, result.x, result.y, pltr_data);
+    LongRealPLPlotRaw.Plotter2(x, y, result.x, result.y, pltr_data);
     RETURN result;
   END Plotter2;
 
 PROCEDURE Plotter2P (x, y: Float; pltr_data: REFANY; ): Plotter2PResult =
   VAR result: Plotter2PResult;
   BEGIN
-    PLPlotRaw.Plotter2P(x, y, result.x, result.y, pltr_data);
+    LongRealPLPlotRaw.Plotter2P(x, y, result.x, result.y, pltr_data);
     RETURN result;
   END Plotter2P;
 
 PROCEDURE F2Eval2 (ix, iy: INTEGER; plf2eval_data: REFANY; ): LONGREAL =
   BEGIN
-    RETURN PLPlotRaw.F2Eval2(ix, iy, plf2eval_data);
+    RETURN LongRealPLPlotRaw.F2Eval2(ix, iy, plf2eval_data);
   END F2Eval2;
 
 PROCEDURE F2Eval (ix, iy: INTEGER; plf2eval_data: REFANY; ): LONGREAL =
   BEGIN
-    RETURN PLPlotRaw.F2Eval(ix, iy, plf2eval_data);
+    RETURN LongRealPLPlotRaw.F2Eval(ix, iy, plf2eval_data);
   END F2Eval;
 
 PROCEDURE F2EvalR (ix, iy: INTEGER; plf2eval_data: REFANY; ): LONGREAL =
   BEGIN
-    RETURN PLPlotRaw.F2EvalR(ix, iy, plf2eval_data);
+    RETURN LongRealPLPlotRaw.F2EvalR(ix, iy, plf2eval_data);
   END F2EvalR;
 
 PROCEDURE ClearOpts () =
   BEGIN
-    PLPlotRaw.ClearOpts();
+    LongRealPLPlotRaw.ClearOpts();
   END ClearOpts;
 
 PROCEDURE ResetOpts () =
   BEGIN
-    PLPlotRaw.ResetOpts();
+    LongRealPLPlotRaw.ResetOpts();
   END ResetOpts;
 
 PROCEDURE SetUsage (program_string, usage_string: TEXT; ) =
@@ -1284,35 +1288,35 @@ PROCEDURE SetUsage (program_string, usage_string: TEXT; ) =
   BEGIN
     arg1 := M3toC.SharedTtoS(program_string);
     arg2 := M3toC.SharedTtoS(usage_string);
-    PLPlotRaw.SetUsage(arg1, arg2);
+    LongRealPLPlotRaw.SetUsage(arg1, arg2);
     M3toC.FreeSharedS(program_string, arg1);
     M3toC.FreeSharedS(usage_string, arg2);
   END SetUsage;
 
 PROCEDURE OptUsage () =
   BEGIN
-    PLPlotRaw.OptUsage();
+    LongRealPLPlotRaw.OptUsage();
   END OptUsage;
 
 PROCEDURE SetFile (file: Cstdio.FILE_star; ) =
   BEGIN
-    PLPlotRaw.SetFile(file);
+    LongRealPLPlotRaw.SetFile(file);
   END SetFile;
 
 PROCEDURE HLS_RGB (h, l, s: Float; ): HLS_RGBResult =
   VAR result: HLS_RGBResult;
   BEGIN
-    PLPlotRaw.HLS_RGB(h, l, s, result.r, result.g, result.b);
+    LongRealPLPlotRaw.HLS_RGB(h, l, s, result.r, result.g, result.b);
     RETURN result;
   END HLS_RGB;
 
 PROCEDURE RGB_HLS (r, g, b: Float; ): RGB_HLSResult =
   VAR result: RGB_HLSResult;
   BEGIN
-    PLPlotRaw.RGB_HLS(r, g, b, result.h, result.l, result.s);
+    LongRealPLPlotRaw.RGB_HLS(r, g, b, result.h, result.l, result.s);
     RETURN result;
   END RGB_HLS;
 
 
 BEGIN
-END PLPlot.
+END LongRealPLPlot.

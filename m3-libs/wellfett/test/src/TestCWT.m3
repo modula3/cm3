@@ -15,7 +15,7 @@ IMPORT LongRealConvolution AS Conv;
 IMPORT LongRealContinuousWaveletAnalysis  AS CWA,
        LongRealContinuousWaveletSynthesis AS CWS;
 
-IMPORT PLPlot AS PL, PLPlotRaw AS PLRaw;
+IMPORT LongRealPLPlot AS PL, LongRealPLPlotRaw AS PLRaw;
 IMPORT IO, Fmt;
 
 

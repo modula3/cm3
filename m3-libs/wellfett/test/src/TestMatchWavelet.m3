@@ -32,7 +32,7 @@ IMPORT LongRealFmtLex       AS RF,
        LongRealMatrixFmtLex AS MF,
        LongRealSignalFmtLex AS SF,
        LongRealWaveletPlot  AS WP;
-IMPORT PLPlot AS PL;
+IMPORT LongRealPLPlot AS PL;
 IMPORT IO, Fmt, FileRd, Wr, Thread;
 
 IMPORT OSError, FloatMode, Lex, Rd;

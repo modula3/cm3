@@ -6,7 +6,7 @@
  * modify the SWIG interface file instead.
  *******************************************************************************)
 
-INTERFACE PLPlotRaw;
+INTERFACE LongRealPLPlotRaw;
 
 IMPORT Ctypes AS C;
 IMPORT Cstdio;
@@ -535,4 +535,4 @@ PROCEDURE HLS_RGB (h, l, s: C.double; VAR r, g, b: C.double; );
 <* EXTERNAL plRGB_HLS *>
 PROCEDURE RGB_HLS (r, g, b: C.double; VAR h, l, s: C.double; );
 
-END PLPlotRaw.
+END LongRealPLPlotRaw.

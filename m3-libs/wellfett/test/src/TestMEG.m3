@@ -22,7 +22,7 @@ IMPORT LongRealBasic                AS R,
        LongRealFFTW                 AS FFT,
        LongRealIntegerPower         AS RIntPow,
        Integer32IntegerPower        AS IIntPow,
-       PLPlot                       AS PL;
+       LongRealPLPlot                       AS PL;
 
 IMPORT Pathname, IO, Fmt, Wr, Thread, Rd, GZipRd;
 IMPORT Arithmetic AS Arith;

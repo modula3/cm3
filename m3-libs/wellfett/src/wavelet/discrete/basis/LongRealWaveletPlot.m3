@@ -9,7 +9,7 @@ IMPORT LongRealBasic        AS R,
 
 IMPORT LongRealRefinableFunc AS Refn, LongRealDyadicFilterBank AS FB;
 
-IMPORT LongRealSignalFmtLex AS SF, PLPlot AS PL;
+IMPORT LongRealSignalFmtLex AS SF, LongRealPLPlot AS PL;
 
 TYPE
   Basis = {primal, dual};
