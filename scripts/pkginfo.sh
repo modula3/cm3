@@ -28,7 +28,7 @@ fi
 
 pkg_defined() {
   for p in $* ; do
-    "$QGREP" /$p\$ "$PKGSDB" || return 1
+    qgrep /$p\$ "$PKGSDB" || return 1
   done
   return 0
 }

@@ -19,7 +19,19 @@ fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
-P=`pkgpath $@`
+P=""
+for p in $@ ; do
+  if pkg_defined "$p" ; then
+    NP=`pkgpath "${p}"`
+    echo "adding package ${NP}"
+    P="${P} ${NP}"
+  elif [ -d "${ROOT}/${p}" ] ; then
+    echo "adding directory ${p}"
+    P="${P} ${p}"
+  else
+    echo "${p} not found, skipping" 1>&2
+  fi
+done
 
 DATESTR=`date +"%Y-%m-%d"`
 STAGE="${STAGE:-${TMPDIR}}"

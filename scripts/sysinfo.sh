@@ -11,7 +11,7 @@ PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
 
 #-----------------------------------------------------------------------------
 # set some defaults
-CM3VERSION=${CM3VERSION:-"5.1.3"}
+CM3VERSION=${CM3VERSION:-"5.1.4"}
 CM3_GCC_BACKEND=yes
 CM3_GDB=no
 CM3_INSTALL=/usr/local/cm3
@@ -179,8 +179,11 @@ TARGET=${TARGET:-${CM3_TARGET}}
 GCC_BACKEND=${GCC_BACKEND:-${CM3_GCC_BACKEND}}
 INSTALLROOT=${INSTALLROOT:-${CM3_INSTALL}}
 PKGSDB=${PKGSDB:-$ROOT/scripts/PKGS}
-QGREP=${QGREP:-"egrep >/dev/null 2>/dev/null"}
 GREP=${GREP:-egrep}
+
+qgrep() {
+  egrep $@ >/dev/null 2>/dev/null
+}
 
 if [ "${M3OSTYPE}" = "WIN32" ] ; then
   CM3ROOT="`cygpath -w ${ROOT} | sed -e 's;\\\;\\\\\\\\;g'`"
@@ -230,7 +233,6 @@ debug "TARGET      = $TARGET"
 debug "GCC_BACKEND = $GCC_BACKEND"
 debug "INSTALLROOT = $INSTALLROOT"
 debug "PKGSDB      = $PKGSDB"
-debug "QGREP       = $QGREP"
 debug "GREP        = $GREP"
 debug "TMPDIR      = $TMPDIR"
 debug "EXE         = $EXE"
@@ -242,7 +244,7 @@ debug "DEV_LIB     = $DEV_LIB"
 debug "TAR         = $TAR"
 debug "CM3ROOT     = $CM3ROOT"
 
-export ROOT SCRIPTS M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB QGREP
+export ROOT SCRIPTS M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB
 export GREP TMPDIR EXE SL CM3VERSION SYSLIBDIR SYSLIB DEV_BIN DEV_LIB TAR
 export CM3LIBSEARCHPATH CM3BINSEARCHPATH CM3ROOT
 export SYSINFO_DONE
