@@ -8,6 +8,7 @@ IMPORT LongRealBasic              AS R,
        LongRealComplexVector      AS CV,
        LongRealComplexVectorTrans AS CVT,
        LongRealSignal             AS S,
+       LongRealComplexSignal      AS CS,
        LongRealBSplineWavelet     AS BSpl,
        LongRealSignalFmtLex       AS SF,
        LongRealRefinableFunc      AS Refn,
@@ -39,6 +40,53 @@ PROCEDURE SpecNorm (x: CV.T; rsize: CARDINAL; ): R.T =
     END;
   END SpecNorm;
 
+PROCEDURE PlotReal (s: S.T; l: CARDINAL; ) =
+  VAR
+    unit  := IIntPow.MulPower(1, 2, l);
+    grid  := R.One / FLOAT(unit, R.T);
+    left  := FLOAT(s.getFirst(), R.T) * grid;
+    right := FLOAT(s.getLast(), R.T) * grid;
+  <* FATAL PL.SizeMismatch *>
+  BEGIN
+    PL.SetFGColorDiscr(1);
+    PL.SetEnvironment(
+      left, right, VFs.Min(s.getData()^), VFs.Max(s.getData()^));
+    PL.SetFGColorDiscr(2);
+    PL.PlotLines(
+      V.ArithSeq(s.getNumber(), FLOAT(s.getFirst(), R.T) * grid, grid)^,
+      s.getData()^);
+  END PlotReal;
+
+PROCEDURE PlotComplex (s: CS.T; l: CARDINAL; ) =
+  VAR
+    unit     := IIntPow.MulPower(1, 2, l);
+    grid     := R.One / FLOAT(unit, R.T);
+    left     := FLOAT(s.getFirst(), R.T) * grid;
+    right    := FLOAT(s.getLast(), R.T) * grid;
+    vre, vim := NEW(V.T, s.getNumber());
+
+  <* FATAL PL.SizeMismatch *>
+  BEGIN
+    WITH v = s.getData()^ DO
+      FOR i := FIRST(vre^) TO LAST(vre^) DO
+        vre[i] := v[i].re;
+        vim[i] := v[i].im;
+      END;
+    END;
+    PL.SetFGColorDiscr(1);
+    PL.SetEnvironment(left, right, MIN(VFs.Min(vre^), VFs.Min(vim^)),
+                      MAX(VFs.Max(vre^), VFs.Max(vim^)));
+    WITH abscissa = V.ArithSeq(s.getNumber(),
+                               FLOAT(s.getFirst(), R.T) * grid, grid)^ DO
+      PL.SetFGColorDiscr(2);
+      PL.PlotLines(abscissa, vre^);
+      PL.SetFGColorDiscr(3);
+      PL.PlotLines(abscissa, vim^);
+    END;
+  END PlotComplex;
+
+(* Test FFT, check equivalence of Euclidean norm in the signal space and in
+   the frequency space. *)
 PROCEDURE BSplineSmoothness () =
   VAR x: ARRAY [1 .. 7], [0 .. 6] OF S.T;
   BEGIN
@@ -69,35 +117,47 @@ PROCEDURE BSplineSmoothness () =
                        Fmt.LongReal(VT.Norm1(xn[l].getData())),
                        Fmt.Int(xn[l].getFirst()), Fmt.Int(xn[l].getLast())}));
 
-            (*
-            VAR
-              unit  := IIntPow.MulPower(1, 2, l);
-              grid  := R.One / FLOAT(unit, R.T);
-              left  := FLOAT(FIRST(absspec^), R.T) * grid;
-              right := FLOAT(LAST(absspec^), R.T) * grid;
-            <* FATAL PL.SizeMismatch *> (*Number of filters and channels
-                                           will always match*)
-            BEGIN
-              PL.Init();
-              PL.SetFGColorDiscr(1);
-              PL.SetEnvironment(
-                left, right, VFs.Min(absspec^), VFs.Max(absspec^));
-              PL.SetFGColorDiscr(2);
-              PL.PlotLines(
-                V.ArithSeq(NUMBER(absspec^), R.Zero * grid, grid)^,
-                absspec^);
-              PL.Exit();
-            END;
-            *)
+            (*PlotReal(absspec, l);*)
           END;
         END;
       END;
     END;
   END BSplineSmoothness;
 
+
+PROCEDURE FourierDecay () =
+  VAR
+    (* A mask close to the one of the hat function. *)
+    mask := NEW(S.T).fromArray(ARRAY OF R.T{0.24D0, 0.52D0, 0.24D0}, -1);
+    generator           := mask;
+    twopow   : CARDINAL := 1;
+  BEGIN
+    FOR l := 0 TO 10 DO
+      PlotReal(generator, l);
+      VAR
+        minsize := generator.getNumber() * 2;
+        (*round up to the next multiple of twopow*)
+        newsize := minsize + (-minsize) MOD twopow;
+        spec    := DFTR2C1D(generator.wrapCyclic(newsize)^);
+      BEGIN
+        PlotComplex(NEW(CS.T).fromVector(spec), l);
+      END;
+      generator := Refn.Refine(generator, mask);
+      twopow := twopow * 2;
+    END;
+  END FourierDecay;
+
+
 PROCEDURE Test () =
   BEGIN
-    CASE 0 OF | 0 => BSplineSmoothness(); ELSE <* ASSERT FALSE *> END;
+    PL.Init();
+    CASE 1 OF
+    | 0 => BSplineSmoothness();
+    | 1 => FourierDecay();
+    ELSE
+      <* ASSERT FALSE *>
+    END;
+    PL.Exit();
   END Test;
 
 BEGIN
