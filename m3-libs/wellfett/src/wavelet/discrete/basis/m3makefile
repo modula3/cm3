@@ -1,5 +1,6 @@
 
 template("daubechieswavelet")
+template("bsplinewavelet")
 
 
 generic_module("DaubechiesWavelet")
@@ -9,3 +10,11 @@ DaubechiesWavelet("Extended",        "Extended",        "Basic")
 %DaubechiesWavelet("RealComplex",     "RealComplex",     "Fast")
 %DaubechiesWavelet("LongRealComplex", "LongRealComplex", "Fast")
 %DaubechiesWavelet("ExtendedComplex", "ExtendedComplex", "Fast")
+
+generic_module("BSplineWavelet")
+BSplineWavelet("Real",            "Real",            "Basic")
+BSplineWavelet("LongReal",        "LongReal",        "Basic")
+BSplineWavelet("Extended",        "Extended",        "Basic")
+%BSplineWavelet("RealComplex",     "RealComplex",     "Fast")
+%BSplineWavelet("LongRealComplex", "LongRealComplex", "Fast")
+%BSplineWavelet("ExtendedComplex", "ExtendedComplex", "Fast")

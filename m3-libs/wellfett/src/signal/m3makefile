@@ -12,5 +12,7 @@ Signal("RealComplex",     "RealComplex",     "Fast",  "Basic", "Basic")
 Signal("LongRealComplex", "LongRealComplex", "Fast",  "Basic", "Basic")
 Signal("ExtendedComplex", "ExtendedComplex", "Fast",  "Basic", "Basic")
 
+IntegerPower("RealSignal",            "RealSignal",            "")
 IntegerPower("LongRealSignal",        "LongRealSignal",        "")
+IntegerPower("ExtendedSignal",        "ExtendedSignal",        "")
 IntegerPower("LongRealComplexSignal", "LongRealComplexSignal", "")
