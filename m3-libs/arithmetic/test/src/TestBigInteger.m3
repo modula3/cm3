@@ -6,8 +6,14 @@ Abstract:  Tests for BigInteger module.
 
 *)
 
-IMPORT BigIntegerBasic AS B;
-IMPORT BigIntegerFmtLex AS FL;
+IMPORT
+  BigIntegerBasic  AS B,
+  BigIntegerRep    AS Br,
+  BigIntegerFmtLex AS FL,
+  xInteger   AS I,
+  xWordEx AS Wx,
+  Word AS W,
+  Fmt AS F;
 (*=======================*)
 CONST
   Module = "tBigInteger.";
@@ -16,23 +22,78 @@ PROCEDURE test_basic():BOOLEAN=
 CONST
   ftn = Module & "test_basic";
 VAR
-  x : B.T;
+  result:=TRUE;
+  carry:=TRUE;
+BEGIN
+  debug(1,ftn,"begin\n");
+  msg("W.Size " & F.Int(W.Size) & "\n");
+  msg("W.GT(2,3) " & F.Bool(W.GT(2,3)) & "\n");
+  msg("PlusWithCarry " & F.Int(Wx.PlusWithCarry(2,3,carry)) & "\n");
+  msg("MinusWithBorrow " & F.Int(Wx.MinusWithBorrow(2,3,carry)) & "\n");
+  msg("MinusWithBorrow " & F.Int(Wx.MinusWithBorrow(5,3,carry)) & "\n");
+  msg("MinusWithBorrow " & F.Int(Wx.MinusWithBorrow(5,3,carry)) & "\n");
+  msg("Plus " & F.Int(W.Plus(3,2)) & "\n");
+  RETURN result;
+END test_basic;
+(*----------------------*)
+PROCEDURE test_fibonacci():BOOLEAN=
+CONST
+  ftn = Module & "test_fibonacci";
+VAR
+  x, y, z : B.T;
   result:=TRUE;
 BEGIN
-  x := B.Zero;
-  FOR j:=0 TO 20 DO
-    msg(FL.Fmt(x,16));
-    x := B.Add(x,B.One);
-  END;
   debug(1,ftn,"begin\n");
-  RETURN result;   
-END test_basic;
+  x := B.Zero;
+  y := B.One;
+  (*x := B.FromInteger(16_7FFFFFFF);*)
+
+  FOR j:=0 TO 100 DO
+    (*msg("size: " & F.Int(x.size) & "\n");*)
+    msg(F.Pad(F.Int(j),2) & ": 16_" & FL.Fmt(x,16) & ": 2_" & FL.Fmt(x,2) & "\n");
+    z := Br.AddU(x,y);
+    x := y;
+    y := z;
+  END;
+
+  (*!!! compare with explicit formula !!!*)
+  RETURN result;
+END test_fibonacci;
+(*-------------------------*)
+PROCEDURE test_pseudoprime():BOOLEAN=
+CONST
+  ftn = Module & "test_pseudoprime";
+VAR
+  x : ARRAY [0..3] OF B.T;
+  r : B.T;
+  result:=TRUE;
+  prime0, prime1 : BOOLEAN;
+BEGIN
+  debug(1,ftn,"begin\n");
+  x[0] := B.FromInteger(3);
+  x[1] := B.Zero;
+  x[2] := B.FromInteger(2);
+
+  FOR j:=3 TO 100 DO
+    x[3] := B.Add (x[0], x[1]);
+    prime0 := B.Equal(B.Zero, B.Mod(x[3],B.FromInteger(j)));
+    prime1 := I.isprime(j);
+    msg(F.Pad(F.Int(j),2) & ": " & FL.Fmt(x[3],10) & ", prime " & F.Bool(prime0) & "vs. " & F.Bool(prime1) & "\n");
+    <*ASSERT prime0=prime1*>
+    x[0] := x[1];
+    x[1] := x[2];
+    x[2] := x[3];
+  END;
+  RETURN result;
+END test_pseudoprime;
 (*-------------------------*)
 PROCEDURE test_BigInteger():BOOLEAN=
 CONST ftn = Module & "test_BigInteger";
 VAR result:=TRUE;
 BEGIN
   newline(); EVAL test_basic();
+  (*newline(); EVAL test_fibonacci();*)
+  newline(); EVAL test_pseudoprime();
 
   RETURN result;
 END test_BigInteger;
