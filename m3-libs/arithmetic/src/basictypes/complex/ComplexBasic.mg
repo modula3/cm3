@@ -119,7 +119,7 @@ PROCEDURE DivScale(READONLY x,y:T;):T RAISES {Error} =
 VAR
   denom : R.T;
 BEGIN
-  denom := R.Add(R.Mul(x.re,x.re),R.Mul(y.im,y.im));
+  denom := R.Add(R.Mul(y.re,y.re),R.Mul(y.im,y.im));
   (* Err.divide_by_zero will be thrown by Div*)
   RETURN T{R.Div(x.re,denom),R.Div(x.im,denom)};
 END DivScale;

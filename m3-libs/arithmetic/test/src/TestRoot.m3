@@ -47,7 +47,7 @@ END myfun2;
 (* Quadratics              *)
 (*=========================*)
 (*-----------------------*)
-PROCEDURE TestQuadraticReal():BOOLEAN=
+PROCEDURE TestQuadratic():BOOLEAN=
 
   PROCEDURE TestSingle (READONLY x:RtA.RealPolynomial2) =
   VAR
@@ -57,20 +57,35 @@ PROCEDURE TestQuadraticReal():BOOLEAN=
     Msg(Fmt.FN("Solve %s+%s*t+%s*t^2=0  -->  ",
                ARRAY OF TEXT{RF.Fmt(x[0]), RF.Fmt(x[1]), RF.Fmt(x[2])}));
     rt := RtA.QuadraticReal(x);
-    Msg(Fmt.FN("{%s,%s}\n",
-               ARRAY OF TEXT{CF.Fmt(rt[0]), CF.Fmt(rt[1])}));
+    Msg(Fmt.FN("{%s,%s}\n", ARRAY OF TEXT
+        {CF.Fmt(rt[0]), CF.Fmt(rt[1])}));
+
+    (*evaluate polynomial for the found roots*)
     xc := CP.New(2);
     xc[0] := C.T{x[0], R.Zero};
     xc[1] := C.T{x[1], R.Zero};
     xc[2] := C.T{x[2], R.Zero};
+    Msg(Fmt.FN("0 = {%s,%s}\n", ARRAY OF TEXT
+        {CF.Fmt(CP.Eval(xc,rt[0])), CF.Fmt(CP.Eval(xc,rt[1]))}));
+    <*ASSERT CT.AbsSqr(CP.Eval(xc,rt[0]))<RT.Eps*>
+    <*ASSERT CT.AbsSqr(CP.Eval(xc,rt[1]))<RT.Eps*>
+
+    xc[0] := C.T{x[0], x[0]};
+    xc[1] := C.T{x[1], x[1]};
+    xc[2] := C.T{x[2], x[2]};
+    Msg(Fmt.FN("Solve %s+%s*t+%s*t^2=0  -->  ",
+               ARRAY OF TEXT{CF.Fmt(xc[0]), CF.Fmt(xc[1]), CF.Fmt(xc[2])}));
+    rt := RtA.QuadraticComplex(xc^);
     Msg(Fmt.FN("{%s,%s}\n", ARRAY OF TEXT
+        {CF.Fmt(rt[0]), CF.Fmt(rt[1])}));
+    Msg(Fmt.FN("0 = {%s,%s}\n", ARRAY OF TEXT
         {CF.Fmt(CP.Eval(xc,rt[0])), CF.Fmt(CP.Eval(xc,rt[1]))}));
     <*ASSERT CT.AbsSqr(CP.Eval(xc,rt[0]))<RT.Eps*>
     <*ASSERT CT.AbsSqr(CP.Eval(xc,rt[1]))<RT.Eps*>
   END TestSingle;
 
 CONST
-  ftn = Module & "TestQuadraticReal";
+  ftn = Module & "TestQuadratic";
 VAR
   result:=TRUE;
 BEGIN
@@ -84,37 +99,7 @@ BEGIN
   TestSingle(ARRAY OF R.T{ 1.0D0, 0.0D0, 1.0D0});
 
   RETURN result;
-END TestQuadraticReal;
-(*-----------------------*)
-PROCEDURE TestQuadraticComplex():BOOLEAN=
-CONST
-  ftn = Module & "TestQuadraticComplex";
-VAR
-  result:=TRUE;
-  alpha,beta,x1,x2:C.T;
-  a,b,c:C.T;
-BEGIN
-  Debug(1,ftn,"begin\n");
-  a:=C.T{re:=1.0D0,im:=1.0D0};
-  b:=C.T{re:=2.0D0,im:=2.0D0};
-  c:=C.T{re:=3.0D0,im:=3.0D0};
-  Msg("Solve a*x^2+b*x+c=0 for"
-    & "\na=" & CF.Fmt(a)
-    & "\nb=" & CF.Fmt(b)
-    & "\nc=" & CF.Fmt(c)
-    & "\n");
-
-  (*xRoot.QuadraticComplex(a,b,c,alpha,beta,x1,x2);*)
-
-  Msg("alpha=" & CF.Fmt(alpha)
-   & " beta=" & CF.Fmt(beta)
-   & "\n");
-  Msg("x1=" & CF.Fmt(x1)
-   & " x2=" & CF.Fmt(x2)
-   & "\n");
-
-  RETURN result;
-END TestQuadraticComplex;
+END TestQuadratic;
 
 CONST
   prec3Style = RF.FmtStyle{style:=Fmt.Style.Fix,prec:=3};
@@ -636,8 +621,7 @@ PROCEDURE TestRoot():BOOLEAN=
 CONST ftn = Module & "TestCh09_root";
 VAR result:=TRUE;
 BEGIN
-  NewLine(); EVAL TestQuadraticReal();
-  NewLine(); EVAL TestQuadraticComplex();
+  NewLine(); EVAL TestQuadratic();
   (*NewLine(); EVAL TestBracket_out();*)
   (*NewLine(); EVAL TestBracket_in();*)
   (*NewLine(); EVAL TestBisect();*)
