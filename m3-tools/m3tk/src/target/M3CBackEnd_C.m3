@@ -20,7 +20,6 @@
 (* Copyright (C) 1993, Digital Equipment Corporation           *)
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
-(* Last modified on Fri Apr 19 17:25:31 PDT 1996 by detlefs    *)
 
 
 MODULE M3CBackEnd_C  EXPORTS M3CBackEnd, M3CBackEnd_C;
@@ -33,7 +32,7 @@ the compiler front-end from a back-end . *)
 (* Version targeted to C back-end for a variety of machines *)
 
 IMPORT M3CBackEnd;
-IMPORT Fmt, Text, TextF, TextRd, TextWr, Rd, Wr, Word, Convert, RdExtras;
+IMPORT Fmt, Text, TextRd, TextWr, Rd, Wr, Word, Convert, RdExtras;
 IMPORT M3AST_AS, M3AST_SM;
 
 IMPORT M3AST_AS_F, M3AST_SM_F;
@@ -45,7 +44,8 @@ IMPORT M3Error, M3Assert, M3CSrcPos;
 IMPORT M3CStdProcs, M3CWordProcs;
 IMPORT M3CExpValue, M3CTypesMisc, M3ASTNext;
 FROM M3CBackEnd_C_cc IMPORT a32, a64, a16, a8, minAlignment, recAlignment,
-  arrayAlignment, ptrA, ptrS, realA, realS, longRealA, longRealS, intA, intS;
+  arrayAlignment, ptrA, ptrS, realA, realS, longRealA, longRealS, intA, intS,
+  wideCharA, wideCharS;
 
 IMPORT M3CBackEnd_Float_Real, M3CBackEnd_Float_LongReal,
     M3CBackEnd_Float_Extended;
@@ -179,6 +179,10 @@ PROCEDURE MayBeExactBitSizeAndAlign(ts: M3AST_AS.TYPE_SPEC;
         size := intS;
         align := intA;
 
+    | M3AST_AS.WideChar_type =>
+        size := wideCharS;
+        align := wideCharA;
+
     | M3AST_AS.Real_type =>
         size := realS;
         align := realA;
@@ -281,7 +285,7 @@ PROCEDURE LiteralValue_C(lit: M3AST_AS.EXP;
   BEGIN
     TYPECASE lit OF <*NOWARN*>
     | M3AST_AS.Char_literal =>
-        (* 'x' or '\x' or '\ddd' *)
+        (* 'x' or '\n' or '\ddd' or '\xDD'*)
         VAR
           cvi: INTEGER;
           t: TEXT := M3CLiteral.ToText(
@@ -297,10 +301,49 @@ PROCEDURE LiteralValue_C(lit: M3AST_AS.EXP;
             | '\"' => cvi := ORD('\"');
             | 'f' => cvi := ORD('\f');
             | '\\' => cvi := ORD('\\');
+            | 'x' =>
+              cvi := CHV(Text.GetChar(t, 3)) * 16 +
+                     CHV(Text.GetChar(t, 4));
             ELSE  (* \ddd *)
               cvi := CHV(Text.GetChar(t, 2)) * 64 + 
                      CHV(Text.GetChar(t, 3)) * 8 + 
                      CHV(Text.GetChar(t, 4));
+            END; (* case *)
+          ELSE
+            cvi := ORD(Text.GetChar(t, 1));
+          END; (* if *)
+          er := NewInteger_value(cvi);
+        END;
+
+    | M3AST_AS.WideChar_literal =>
+        (* 'x' or '\n' or '\dddddd' or '\xDDDD' *)
+        VAR
+          cvi: INTEGER;
+          t: TEXT := M3CLiteral.ToText(
+              NARROW(lit, M3AST_AS.Char_literal).lx_litrep);
+        BEGIN
+          IF Text.GetChar(t, 1) = '\\' THEN
+            (* escape *)
+            CASE Text.GetChar(t, 2) OF
+            | 'n' => cvi := ORD('\n');
+            | 't' => cvi := ORD('\t');
+            | 'r' => cvi := ORD('\r');
+            | '\'' => cvi := ORD('\'');
+            | '\"' => cvi := ORD('\"');
+            | 'f' => cvi := ORD('\f');
+            | '\\' => cvi := ORD('\\');
+            | 'x' =>
+              cvi := CHV(Text.GetChar(t, 3)) * 4096 + 
+                     CHV(Text.GetChar(t, 4)) * 256 + 
+                     CHV(Text.GetChar(t, 5)) * 16 + 
+                     CHV(Text.GetChar(t, 6));
+            ELSE  (* \ddd *)
+              cvi := CHV(Text.GetChar(t, 2)) * 32768 + 
+                     CHV(Text.GetChar(t, 3)) * 4096 + 
+                     CHV(Text.GetChar(t, 4)) * 512 + 
+                     CHV(Text.GetChar(t, 5)) * 64 + 
+                     CHV(Text.GetChar(t, 6)) * 8 + 
+                     CHV(Text.GetChar(t, 7));
             END; (* case *)
           ELSE
             cvi := ORD(Text.GetChar(t, 1));
@@ -315,6 +358,15 @@ PROCEDURE LiteralValue_C(lit: M3AST_AS.EXP;
         BEGIN
           er := tv;
           tv.sm_value := Text.Sub(t, 1, Text.Length(t) - 2); 
+        END;
+
+    | M3AST_AS.WideText_literal =>
+        VAR tv := NEW(Text_value);
+            t: TEXT := M3CLiteral.ToText(
+                NARROW(lit, M3AST_AS.Text_literal).lx_litrep);
+        BEGIN
+          er := tv;
+          tv.sm_value := Text.Sub(t, 2, Text.Length(t) - 3); 
         END;
 
     | M3AST_AS.Nil_literal =>
@@ -845,6 +897,8 @@ PROCEDURE StdUnaryTypeOp_C(
         TYPECASE ts OF <*NOWARN*>
         | M3AST_AS.Integer_type =>
             eint := FIRST(INTEGER);
+        | M3AST_AS.WideChar_type =>
+            eint := ORD(FIRST(WIDECHAR));
         | M3AST_AS.Real_type =>
         | M3AST_AS.LongReal_type =>
         | M3AST_AS.Extended_type =>        
@@ -853,6 +907,8 @@ PROCEDURE StdUnaryTypeOp_C(
         TYPECASE ts OF <*NOWARN*>
         | M3AST_AS.Integer_type =>
             eint := LAST(INTEGER);
+        | M3AST_AS.WideChar_type =>
+            eint := ORD(LAST(WIDECHAR));
         | M3AST_AS.Real_type =>
         | M3AST_AS.LongReal_type =>
         | M3AST_AS.Extended_type =>        
@@ -1104,7 +1160,6 @@ PROCEDURE NotImplemented(): M3CBackEnd.NumStatus RAISES {}=
 
 CONST
   SetCh = 's';
-  ExtendedCh = 'x';  ExtendedText = "x";
   LongRealCh = 'l';  LongRealText = "l";
   RealCh = 'r';      RealText = "r";
   TextCh = 't';      TextText = "t";
@@ -1133,8 +1188,6 @@ PROCEDURE ExpValueToText_C(e: M3AST_SM.Exp_value): TEXT RAISES {}=
           Wr.Close(s);
           RETURN result;
         END;
-    | Extended_value(extValue) =>
-        RETURN ExtendedText & Fmt.Extended(extValue.sm_value);
     | LongReal_value(longValue) =>
         RETURN LongRealText & Fmt.LongReal(longValue.sm_value);
     | Real_value(realValue) =>
@@ -1158,13 +1211,6 @@ PROCEDURE TextToExpValue_C(t: TEXT): M3AST_SM.Exp_value RAISES {}=
     CASE Text.GetChar(t, 0) OF
     | SetCh =>
         RETURN SetTextToExpValue(t);
-    | ExtendedCh =>
-        VAR
-	  new := NEW(Extended_value);
-        BEGIN
-          IF NOT TextTo_Extended(t, new.sm_value) THEN RAISE Fatal END;
-          RETURN new;
-        END;
     | LongRealCh =>
         VAR
 	  new := NEW(LongReal_value);
@@ -1219,38 +1265,46 @@ PROCEDURE TextTo_Int(t: Text.T;
     VAR i: INTEGER;
     <*UNUSED*> base: Fmt.Base := 10)
     : BOOLEAN=
-  VAR used: INTEGER; l: INTEGER;
+  VAR used: INTEGER; l: INTEGER;  buf: ARRAY [0..63] OF CHAR;
   BEGIN
     M3Assert.Check(t # NIL);
     l := Text.Length(t);
-    IF l>2 AND Text.GetChar(t, 2) = '_' OR
-       l>1 AND Text.GetChar(t, 1) = '_' THEN
-      i := Convert.ToUnsigned(t^, used);
+    M3Assert.Check(l <= NUMBER(buf));
+    Text.SetChars(buf, t);
+    IF l>2 AND buf[2] = '_' OR
+       l>1 AND buf[1] = '_' THEN
+      i := Convert.ToUnsigned(SUBARRAY(buf, 0, l), used);
     ELSE
-      i := Convert.ToInt(t^, used);
+      i := Convert.ToInt(SUBARRAY(buf, 0, l), used);
     END;
     RETURN used = l;
   END TextTo_Int;
 
 PROCEDURE TextTo_Real(t: Text.T; VAR real: REAL): BOOLEAN=
-  VAR used: INTEGER;
+  VAR used: INTEGER;  buf: ARRAY [0..63] OF CHAR;  len := Text.Length(t);
   BEGIN
-    real := Convert.ToFloat(t^, used);
-    RETURN used = Text.Length(t);
+    M3Assert.Check(len <= NUMBER(buf));
+    Text.SetChars(buf, t);
+    real := Convert.ToFloat(SUBARRAY(buf, 0, len), used);
+    RETURN used = len;
   END TextTo_Real;
 
 PROCEDURE TextTo_LongReal(t: Text.T; VAR long: LONGREAL): BOOLEAN=
-  VAR used: INTEGER;
+  VAR used: INTEGER;  buf: ARRAY [0..63] OF CHAR;  len := Text.Length(t);
   BEGIN
-    long := Convert.ToLongFloat(t^, used);
-    RETURN used = Text.Length(t);
+    M3Assert.Check(len <= NUMBER(buf));
+    Text.SetChars(buf, t);
+    long := Convert.ToLongFloat(SUBARRAY(buf, 0, len), used);
+    RETURN used = len;
   END TextTo_LongReal;
 
 PROCEDURE TextTo_Extended(t: Text.T; VAR extended: EXTENDED): BOOLEAN=
-  VAR used: INTEGER;
+  VAR used: INTEGER;  buf: ARRAY [0..63] OF CHAR;  len := Text.Length(t);
   BEGIN
-    extended := Convert.ToExtended(t^, used);
-    RETURN used = Text.Length(t);
+    M3Assert.Check(len <= NUMBER(buf));
+    Text.SetChars(buf, t);
+    extended := Convert.ToExtended(SUBARRAY(buf, 0, len), used);
+    RETURN used = len;
   END TextTo_Extended;
 
 

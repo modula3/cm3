@@ -2,7 +2,8 @@
 (* Distributed only by permission.                             *)
 
 MODULE ObLibOnline;
-IMPORT SynWr, SynLocation, TextRd, SynScan, ObLib, ObValue, ObPrintValue, ObFrame;
+IMPORT SynWr, SynLocation, TextRd, SynScan, ObLib, ObValue,
+       ObPrintValue, ObFrame, Pickle2 AS Pickle; 
 
 TYPE
 
@@ -105,5 +106,27 @@ TYPE
       END;
     END EvalOnline;
 
+TYPE
+  ObPackageSpecial = Pickle.Special BRANDED OBJECT
+                       OVERRIDES
+                         write := WriteLib;
+                         read := ReadLib;
+                       END;
+  
+(* just use the same one locally! *)
+PROCEDURE WriteLib (<*UNUSED*>ts: ObPackageSpecial; 
+                    <*UNUSED*>ref: REFANY; <*UNUSED*> out: Pickle.Writer) =
+  BEGIN
+  END WriteLib; 
+
+PROCEDURE ReadLib (<*UNUSED*>ts: ObPackageSpecial;
+                   in: Pickle.Reader;
+                   id: Pickle.RefID):REFANY =
+  BEGIN
+    in.noteRef(packageOnline, id);
+    RETURN packageOnline;
+  END ReadLib;
+
 BEGIN
+  Pickle.RegisterSpecial(NEW(ObPackageSpecial, sc := TYPECODE(PackageOnline)));
 END ObLibOnline.

@@ -58,14 +58,35 @@ IMPORT SynLocation, SynParse, MetaParser, ObFrame;
         name:=name, for:=for, imports:=p.stack[base+5]);
   END BuildPhraseModule;
 
+  PROCEDURE BuildPhraseAddHelp(<*UNUSED*>self: SynParse.Action; 
+                                  p: SynParse.T;
+      base: INTEGER; READONLY info: SynLocation.Info): SynParse.Tree =
+  VAR name, sort, short, long: TEXT;
+  BEGIN
+    name := SelectText(p, base+1);
+    IF p.stack[base+3] = NIL 
+    THEN sort := "mod " & name;
+    ELSE sort := SelectText(p, base+3);
+    END;
+    IF p.stack[base+5] = NIL 
+    THEN short := "the obliq " & name & " module";
+    ELSE short := SelectText(p, base+5);
+    END;
+    long := SelectText(p, base+6);
+    RETURN 
+      NEW(ObFrame.AddHelp, location:=SynLocation.NewLineLocation(info),
+        name:=name, sort := sort, short:=short, long:=long);
+  END BuildPhraseAddHelp; 
+
   PROCEDURE BuildPhraseEndModule(<*UNUSED*>self: SynParse.Action;
-                                 <*UNUSED*>p: SynParse.T;
-                                 <*UNUSED*>base: INTEGER;
+                                           p: SynParse.T;
+                                           base: INTEGER;
       READONLY info: SynLocation.Info): SynParse.Tree =
   BEGIN
     RETURN 
       NEW(ObFrame.EndModule,
-        location:=SynLocation.NewLineLocation(info));
+          location:=SynLocation.NewLineLocation(info),
+          ideList:=p.stack[base+2]);
   END BuildPhraseEndModule;
 
   PROCEDURE BuildImportList(<*UNUSED*>self: SynParse.Action; p: SynParse.T;
@@ -123,33 +144,34 @@ IMPORT SynLocation, SynParse, MetaParser, ObFrame;
   BEGIN
     RETURN 
       NEW(ObFrame.Save, location:=SynLocation.NewLineLocation(info),
-        name:=SelectText(p, base+1));
+          name:=SelectText(p, base+1));
   END BuildPhraseSave;
 
   PROCEDURE BuildPhraseQualify(<*UNUSED*>self: SynParse.Action; 
-                               <*UNUSED*>p: SynParse.T;
-                               <*UNUSED*>base: INTEGER; 
+                               p: SynParse.T; base: INTEGER; 
                            READONLY info: SynLocation.Info): SynParse.Tree  =
   BEGIN
     RETURN 
       NEW(ObFrame.Qualify,
-        location:=SynLocation.NewLineLocation(info));
+          location:=SynLocation.NewLineLocation(info),
+          ideList:=p.stack[base+2]);
   END BuildPhraseQualify;
 
 PROCEDURE RegisterActions(actions: MetaParser.ActionTable)  =
   BEGIN
     MetaParser.Register("BuildPhraseQuit", BuildPhraseQuit, actions);
     MetaParser.Register("BuildPhraseLoadName", BuildPhraseLoadName, actions);
-    MetaParser.Register("BuildPhraseLoadString", BuildPhraseLoadString, actions);
+    MetaParser.Register("BuildPhraseLoadString",BuildPhraseLoadString,actions);
     MetaParser.Register("BuildPhraseImport", BuildPhraseImport, actions);
     MetaParser.Register("BuildPhraseEstablish", BuildPhraseEstablish, actions);
     MetaParser.Register("BuildPhraseDelete", BuildPhraseDelete, actions);
     MetaParser.Register("BuildPhraseSave", BuildPhraseSave, actions);
     MetaParser.Register("BuildPhraseQualify", BuildPhraseQualify, actions);
     MetaParser.Register("BuildPhraseModule", BuildPhraseModule, actions);
+    MetaParser.Register("BuildPhraseAddHelp", BuildPhraseAddHelp, actions);
     MetaParser.Register("BuildPhraseEndModule", BuildPhraseEndModule, actions);
     MetaParser.Register("BuildImportList", BuildImportList, actions);
-    MetaParser.Register("BuildImportListSingle", BuildImportListSingle, actions);
+    MetaParser.Register("BuildImportListSingle",BuildImportListSingle,actions);
     MetaParser.Register("BuildImportListNil", BuildImportListNil, actions);
   END RegisterActions;
 

@@ -19,22 +19,22 @@ MODULE TextExtras;
 (* of this software.                                                       *)
 (***************************************************************************)
 
-IMPORT TextF;
-FROM TextF IMPORT New;
-FROM Text IMPORT Length, Sub;
+IMPORT Text, Text8;
 IMPORT ASCII;
 
 PROCEDURE Compare(t, u: T): INTEGER RAISES {} =
   VAR
-    minLength := Length(t);
-    otherLength := Length(u);
+    minLength := Text.Length(t);
+    otherLength := Text.Length(u);
     lengthDiff: INTEGER := minLength - otherLength;
     i: CARDINAL := 0;
   BEGIN
     IF lengthDiff > 0 THEN minLength := otherLength END;
     WHILE i < minLength DO
-      VAR ti := ORD(t[i]); ui := ORD(u[i]); (* workaround compiler bug *)
-      BEGIN                                 (* on byte subtractions *)
+      VAR
+        ti := ORD(Text.GetChar (t, i));
+        ui := ORD(Text.GetChar (u, i)); (* workaround compiler bug *)
+      BEGIN                             (* on byte subtractions *)
         WITH diff = ti - ui DO
           IF diff # 0 THEN RETURN diff ELSE INC(i) END;
         END;
@@ -46,14 +46,14 @@ PROCEDURE Compare(t, u: T): INTEGER RAISES {} =
 
 PROCEDURE CICompare(t, u: T): INTEGER RAISES {} =
   VAR
-    minLength := Length(t);
-    otherLength := Length(u);
+    minLength := Text.Length(t);
+    otherLength := Text.Length(u);
     lengthDiff := minLength - otherLength;
     i: CARDINAL := 0;
   BEGIN
     IF lengthDiff > 0 THEN minLength := otherLength END;
     WHILE i < minLength DO
-      WITH diff = ORD(ASCII.Upper[t[i]]) - ORD(ASCII.Upper[u[i]]) DO
+      WITH diff = ORD(ASCII.Upper[Text.GetChar (t, i)]) - ORD(ASCII.Upper[Text.GetChar (u, i)]) DO
         IF diff # 0 THEN RETURN diff ELSE INC(i) END;
       END;
     END;
@@ -63,13 +63,13 @@ PROCEDURE CICompare(t, u: T): INTEGER RAISES {} =
 
 PROCEDURE CIEqual(t, u: T): BOOLEAN RAISES {} =
   VAR
-    lt: CARDINAL := Length(t);
-    lu: CARDINAL := Length(u);
+    lt: CARDINAL := Text.Length(t);
+    lu: CARDINAL := Text.Length(u);
     i: CARDINAL := 0;
   BEGIN
     IF lt = lu THEN 
       WHILE i<lt DO
-        IF ASCII.Upper[t[i]] # ASCII.Upper[u[i]] THEN 
+        IF ASCII.Upper[Text.GetChar (t, i)] # ASCII.Upper[Text.GetChar (u, i)] THEN 
           RETURN FALSE 
         ELSE INC(i) 
         END;
@@ -84,7 +84,7 @@ EXCEPTION BadFind;
 PROCEDURE FindChar(t: T; ch: CHAR; VAR index: CARDINAL): BOOLEAN RAISES {} =
   VAR
     i: CARDINAL := index;
-    lt: CARDINAL := Length(t);
+    lt: CARDINAL := Text.Length(t);
   BEGIN
     IF i >= lt THEN
       IF i = lt THEN RETURN FALSE ELSE 
@@ -92,7 +92,7 @@ PROCEDURE FindChar(t: T; ch: CHAR; VAR index: CARDINAL): BOOLEAN RAISES {} =
       END;
     END;
     REPEAT
-      IF t[i] = ch THEN index := i; RETURN TRUE END;
+      IF Text.GetChar (t, i) = ch THEN index := i; RETURN TRUE END;
       INC(i);
     UNTIL i = lt;
     index := i;
@@ -108,7 +108,7 @@ PROCEDURE FindCharSet(
     RAISES {} =
   VAR
     i: CARDINAL := index;
-    lt: CARDINAL := Length(t);
+    lt: CARDINAL := Text.Length(t);
   BEGIN
     IF i >= lt THEN
       IF i = lt THEN RETURN FALSE ELSE
@@ -116,7 +116,7 @@ PROCEDURE FindCharSet(
       END
     END;
     REPEAT
-      IF t[i] IN charSet THEN index := i; RETURN TRUE END;
+      IF Text.GetChar (t, i) IN charSet THEN index := i; RETURN TRUE END;
       INC(i);
     UNTIL i = lt;
     index := i;
@@ -127,8 +127,8 @@ PROCEDURE FindCharSet(
 PROCEDURE FindSub(t, sub: T; VAR index: CARDINAL): BOOLEAN RAISES {} =
   VAR
     i: CARDINAL := index;
-    lt: CARDINAL := Length(t);
-    lsub: CARDINAL := Length(sub);
+    lt: CARDINAL := Text.Length(t);
+    lsub: CARDINAL := Text.Length(sub);
   BEGIN
     IF i > lt THEN <*FATAL BadFind*> BEGIN RAISE BadFind END; END;
     IF lsub = 0 THEN
@@ -137,10 +137,10 @@ PROCEDURE FindSub(t, sub: T; VAR index: CARDINAL): BOOLEAN RAISES {} =
       IF lsub <= lt THEN
         VAR
           lastStart := lt - lsub;
-          firstCh := sub[0];
+          firstCh := Text.GetChar (sub, 0);
         BEGIN
           WHILE i <= lastStart DO
-            IF t[i] = firstCh THEN 
+            IF Text.GetChar (t, i) = firstCh THEN 
               VAR 
                 j: CARDINAL := 1;
               BEGIN
@@ -148,7 +148,8 @@ PROCEDURE FindSub(t, sub: T; VAR index: CARDINAL): BOOLEAN RAISES {} =
                   IF j = lsub THEN
                     index := i;
                     RETURN TRUE;
-                  ELSIF i + j >= lt OR t[i+j] # sub[j] THEN
+                  ELSIF i + j >= lt
+                    OR Text.GetChar (t, i+j) # Text.GetChar (sub, j) THEN
                     EXIT
                   ELSE
                     INC(j);
@@ -168,7 +169,7 @@ PROCEDURE FindSub(t, sub: T; VAR index: CARDINAL): BOOLEAN RAISES {} =
 
 <*INLINE*> PROCEDURE Extract(t: T; fx, tx: CARDINAL): T RAISES {} =
   BEGIN
-    RETURN Sub(t, fx, tx-fx);
+    RETURN Text.Sub(t, fx, tx-fx);
   END Extract;
 
 
@@ -195,24 +196,24 @@ PROCEDURE Join(t1, t2, t3, t4, t5: T := NIL): T RAISES {}=
 PROCEDURE JoinN(READONLY texts: ARRAY OF TEXT): T RAISES {}=
   VAR
     n := NUMBER(texts);
-    result: T;
+    result: Text8.T;
   BEGIN
     IF n = 0 THEN <*FATAL JoinFailed*> BEGIN RAISE JoinFailed END; END;
 
     VAR
       length := 0;
     BEGIN
-      FOR i := 0 TO n - 1 DO INC(length, Length(texts[i])) END;
-      result := New(length);
+      FOR i := 0 TO n - 1 DO INC(length, Text.Length(texts[i])) END;
+      result := Text8.Create(length);
     END;
 
     VAR
       pos := 0;
     BEGIN
       FOR i := 0 TO n - 1 DO
-        WITH t = texts[i], tl = Length(t) DO
+        WITH t = texts[i], tl = Text.Length(t) DO
           IF tl > 0 THEN
-            SUBARRAY(result^, pos, tl) := SUBARRAY(t^, 0, tl);
+            Text.SetChars (SUBARRAY(result.contents^, pos, tl), t);
             INC(pos, tl);
           END;
         END;
@@ -227,10 +228,20 @@ CONST
         (* = LOOPHOLE( ROUND( .6125423371 * 2^32 ), INTEGER ) *)
 
 PROCEDURE CIHash (t: T): INTEGER =
-  VAR result := 0;
+  VAR
+    result := 0;
+    len    := Text.Length (t);
+    start  := 0;
+    cnt    : INTEGER;
+    buf    : ARRAY [0..255] OF CHAR;
   BEGIN
-    FOR i := 0 TO NUMBER (t^) - 1 DO
-      result := result * Multiplier + ORD (ASCII.Upper[t [i]]);
+    WHILE (start < len) DO
+      cnt := MIN (len - start, NUMBER (buf));
+      Text.SetChars (buf, t, start);
+      FOR i := 0 TO cnt-1 DO
+        result := result * Multiplier + ORD (ASCII.Upper[buf [i]]);
+      END;
+      INC (start, cnt);
     END;
     RETURN result;
   END CIHash;

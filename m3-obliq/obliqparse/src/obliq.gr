@@ -45,6 +45,7 @@ phraseFrame ::=
   { phraseLoad
     phraseImport
     phraseModule
+    phraseAddHelp
     phraseEndModule
     phraseEstablish
     phraseDelete
@@ -82,7 +83,10 @@ phraseDelete ::=
   [ "~delete" name_1 ";" ]	        	:: BuildPhraseDelete
 
 phraseQualify ::=
-  [ "~qualify" ";" ]                            :: BuildPhraseQualify
+  [ "~qualify"  
+    { [ "exporting" importList_1 ]		:: Select1
+      []
+    }_2 ";" ]		                        :: BuildPhraseQualify
 
 phraseModule ::=
   [ "module" 
@@ -97,8 +101,21 @@ phraseModule ::=
     ";" 
   ]			                	:: BuildPhraseModule
 
+phraseAddHelp ::= 
+  [ "addhelp" name_1 
+    { [ "sort" string_2 ]                       :: Select2
+      []
+    }_3
+    { [ "short" string_4 ]                      :: Select4
+      []
+    }_5
+    string_6 ";" ]      			:: BuildPhraseAddHelp
+
 phraseEndModule ::=
-  [ "end" "module" ";" ]                        :: BuildPhraseEndModule
+  [ "end" "module" 
+    { [ "exporting" importList_1 ]		:: Select1
+      []
+    }_2 ";" ]		                        :: BuildPhraseEndModule
 
 importList ::=
   { [ name_1 
@@ -267,10 +284,16 @@ termBase ::=
     termObj
     termOption
     termClone
+    termNotify
+    termPickler
+    termReplicate
+    termRemote
+    termSimple
     termDelegate
     termRedirect
     termProc
     termMeth
+    termUpdateMeth
     termPar
     termLet
     termVar
@@ -310,8 +333,9 @@ termArray ::=
   [ "[" termList_1 "]" ]			:: BuildTermArray
 
 termObj ::=
-  [ "{" termObjProtected_1 termObjSerialized_2
-    termObjFields_3 "}" ]                 	:: BuildTermObj
+  [ "{" termObjProtected_1 termObjSerialized_2 
+	termObjReplicated_3 termObjSimple_4
+    termObjFields_5 "}" ]                 	:: BuildTermObj
 
 termObjProtected ::=
  {  [ "protected" { "," [] } ] 		        :: BuildOptionYes
@@ -320,6 +344,16 @@ termObjProtected ::=
   
 termObjSerialized ::=
  {  [ "serialized" { "," [] } ] 	        :: BuildOptionYes
+    []						:: BuildOptionNo
+  }
+
+termObjReplicated ::=
+ {  [ "replicated" { "," [] } ] 	        :: BuildOptionYes
+    []						:: BuildOptionNo
+  }
+
+termObjSimple ::=
+ {  [ "simple" { "," [] } ] 	         	:: BuildOptionYes
     []						:: BuildOptionNo
   }
 
@@ -343,6 +377,21 @@ termObjFields ::=
 termClone ::=
   [ "clone" "(" termList_1 ")" ]		:: BuildTermClone
 
+termNotify ::=
+  [ "notify" term_1 "with" term_2 ]		:: BuildTermNotify
+
+termPickler ::=
+  [ "setpickler" "(" term_1 "," term_2 "," term_3 ")" ]	:: BuildTermPickler
+
+termReplicate ::=
+  [ "replicate" "(" termList_1 ")" ]		:: BuildTermReplicate
+
+termSimple ::=
+  [ "simple" "(" term_1 ")" ]			:: BuildTermSimple
+
+termRemote ::=
+  [ "remote" "(" term_1 ")" ]			:: BuildTermRemote
+
 termDelegate ::= (* OBSOLETE *)
   [ "delegate" termSeq_1 "to" termSeq_2 "end" ]	:: BuildTermRedirect
 
@@ -356,6 +405,9 @@ termProc ::=
 termMeth ::=
   [ "meth" "(" ideList_1 ")" { [ typResSpec "," ] [] } termSeqOpt_2 "end" ]
 						:: BuildTermMeth
+termUpdateMeth ::=
+  [ "umeth" "(" ideList_1 ")" { [ typResSpec "," ] [] } termSeqOpt_2 "end" ]
+						:: BuildTermUpdateMeth
 termPar ::=
   [ "(" termSeqOpt_1 ")" ]			:: Select1
 

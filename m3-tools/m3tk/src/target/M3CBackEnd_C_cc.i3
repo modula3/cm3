@@ -45,6 +45,8 @@ VAR
   longRealS: INTEGER; (* = 64; *)
   intA: INTEGER; (* = a32; *)
   intS: INTEGER; (* = 32; *)
+  wideCharA: INTEGER; (* = 16 *)
+  wideCharS: INTEGER; (* = 16 *)
 
   target: TEXT;  (* name of current target *)
 

@@ -211,7 +211,8 @@ IMPORT TextConv, ObCommand, SynWr, Text, Fmt, ObTree, ObLib;
     END;
   END PrintSerialized;
 
-  PROCEDURE PrintObjFields(swr: SynWr.T; fields: ObTree.TermObjFields; libEnv: ObLib.Env; env: ObTree.Env; 
+  PROCEDURE PrintObjFields(swr: SynWr.T; fields: ObTree.TermObjFields; 
+                           libEnv: ObLib.Env; env: ObTree.Env; 
     depth: INTEGER)  =
   VAR sep: TEXT;
   BEGIN
@@ -373,7 +374,8 @@ IMPORT TextConv, ObCommand, SynWr, Text, Fmt, ObTree, ObLib;
     | ObTree.TermMeth(node) =>
 	  SynWr.Beg(swr);
 	    SynWr.Beg(swr, 2);
-              SynWr.Text(swr, "meth(");
+              IF node.update THEN SynWr.Text(swr, "umeth("); 
+              ELSE SynWr.Text(swr, "meth("); END;
 	      newEnv := PrintIdeList(swr, node.binders, env);
               SynWr.Text(swr, ")...end");
 	    SynWr.End(swr);
@@ -512,7 +514,8 @@ IMPORT TextConv, ObCommand, SynWr, Text, Fmt, ObTree, ObLib;
         SynWr.Beg(swr);
 	  SynWr.Beg(swr, 2);
 	    SynWr.Beg(swr, 4);
-              SynWr.Text(swr, "meth(");
+              IF node.update THEN SynWr.Text(swr, "umeth("); 
+              ELSE SynWr.Text(swr, "meth("); END;
 	      newEnv := PrintIdeList(swr, node.binders, env);
               SynWr.Text(swr, ") ");
 	    SynWr.End(swr);
@@ -539,6 +542,56 @@ IMPORT TextConv, ObCommand, SynWr, Text, Fmt, ObTree, ObLib;
 	SynWr.Break(swr);
 	  PrintTermList(swr, node.objs, libEnv, env, depth);
           SynWr.Char(swr, ')');
+	SynWr.End(swr);
+    | ObTree.TermNotify(node) =>
+        IF depth<=0 THEN SynWr.Text(swr, "..."); RETURN END;
+	SynWr.Beg(swr, 2);
+	  SynWr.Text(swr, "notify ");
+	SynWr.Break(swr);
+	  PrintTerm(swr, node.obj, libEnv, env, depth);
+	  SynWr.Char(swr, ' ');
+	SynWr.Break(swr);
+	  SynWr.Text(swr, " with ");
+	SynWr.Break(swr);
+	  PrintTerm(swr, node.withObj, libEnv, env, depth);
+	SynWr.End(swr);
+    | ObTree.TermPickler(node) =>
+        IF depth<=0 THEN SynWr.Text(swr, "..."); RETURN END;
+	SynWr.Beg(swr, 2);
+	  SynWr.Text(swr, "setpickler(");
+	SynWr.Break(swr);
+	  PrintTerm(swr, node.obj, libEnv, env, depth);
+	  SynWr.Text(swr, ", ");
+	SynWr.Break(swr);
+	  PrintTerm(swr, node.pklIn, libEnv, env, depth);
+	  SynWr.Text(swr, ", ");
+	SynWr.Break(swr);
+	  PrintTerm(swr, node.pklOut, libEnv, env, depth);
+          SynWr.Char(swr, ')');
+	SynWr.End(swr);
+    | ObTree.TermReplicate(node) =>
+        IF depth<=0 THEN SynWr.Text(swr, "..."); RETURN END;
+	SynWr.Beg(swr, 2);
+	  SynWr.Text(swr, "replicate(");
+	SynWr.Break(swr);
+	  PrintTermList(swr, node.args, libEnv, env, depth);
+          SynWr.Char(swr, ')');
+	SynWr.End(swr);
+    | ObTree.TermRemote(node) =>
+        IF depth<=0 THEN SynWr.Text(swr, "..."); RETURN END;
+	SynWr.Beg(swr, 2);
+	  SynWr.Text(swr, "remote(");
+	SynWr.Break(swr);
+	  PrintTerm(swr, node.obj, libEnv, env, depth);
+	  SynWr.Char(swr, ')');
+	SynWr.End(swr);
+    | ObTree.TermSimple(node) =>
+        IF depth<=0 THEN SynWr.Text(swr, "..."); RETURN END;
+	SynWr.Beg(swr, 2);
+	  SynWr.Text(swr, "simple(");
+	SynWr.Break(swr);
+	  PrintTerm(swr, node.obj, libEnv, env, depth);
+	  SynWr.Char(swr, ')');
 	SynWr.End(swr);
     | ObTree.TermRedirect(node) =>
         IF depth<=0 THEN SynWr.Text(swr, "..."); RETURN END;

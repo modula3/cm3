@@ -2,7 +2,7 @@
 (* Distributed only by permission.                             *)
 
 INTERFACE ObLib;
-IMPORT SynLocation, ObCommand, ObValue;
+IMPORT SynLocation, ObCommand, ObValue, Fingerprint, Pickle2 AS Pickle;
 
 (* To set up a library one must provide (1) a name, (2) an array of opcodes,
    (3) an evaluator for the opcodes, (4) optionally, a help routine.
@@ -12,13 +12,16 @@ IMPORT SynLocation, ObCommand, ObValue;
 TYPE
 
   T = (* To be subtyped. *)
-    OBJECT
+    BRANDED OBJECT
       name: TEXT;
         (* The name the obliq parser recognizes as the name of the library. *)
 
       opCodes: REF OpCodes;
         (* The array of opcodes for the operations in this library. *)
 
+      ts: Fingerprint.T := Fingerprint.Zero;
+        (* used for unique identification when transfering libraries
+           between processes *)
     METHODS
       Eval(code: OpCode; arity: OpArity; READONLY args: ObValue.ArgArray; 
         temp: BOOLEAN; location: SynLocation.T): ObValue.Val 
@@ -85,8 +88,7 @@ TYPE
   HelpProc = 
     PROCEDURE(self: ObCommand.T; arg: TEXT; data: REFANY:=NIL);
 
-  Env = 
-    BRANDED OBJECT
+  Env = BRANDED OBJECT
       library: T;
       rest: Env;
     END;
@@ -124,6 +126,17 @@ TYPE
       VAR(*out*)code: OpCode; location: SynLocation.T): BOOLEAN;
   VAR helpCommandSet: ObCommand.Set;
 
+  PROCEDURE LookupFP (ts: Fingerprint.T; lib: T := NIL): T;
+  (* look up a library by its Fingerprint.  If lib is non-NIL, and the
+     library is not found in the FP table, store this lib in the table
+     and return it. *)
+
+  PROCEDURE CheckFP (lib: T);
+  (* Make sure the library has a Fingerprint *)
+
+  TYPE
+    ObLibSpecial <: Pickle.Special;
+  (* the Pickle.Special for transfering libraries *)
 END ObLib.
 
 (* ================= Example of a user library ================

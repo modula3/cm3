@@ -5,22 +5,30 @@
 (* Last modified on Fri Nov 12 16:53:54 PST 1993 by kalsow  *)
 (*      modified on Tue Mar 17 14:53:11 PST 1992 by muller  *)
 
-UNSAFE MODULE Main;
+MODULE Main;
 
-IMPORT Stdio, Wr, Fmt, Word, Text, Random, Cstdlib, Convert;
-IMPORT X, Xaw, Xt, XtN, Xmu, RTLinker, M3toC;
-IMPORT Columns, Rows, Bars, Squares, Threes;
+(* Modula-3 core *)
+IMPORT Axis, Date, Env, Fmt, FS, IntArraySort, IO, OSConfig, OSError;
+IMPORT Params, Point, Process, Random, Rect, Region, Stdio, Text;
+IMPORT TextWr, Thread, Time, Word, Wr;
 
-FROM M3toC IMPORT TtoS;
-FROM Config IMPORT Point, Piece, Game;
+(* UI toolkit *)
+IMPORT BorderedVBT, ButtonVBT, Font, HVSplit, Latin1Key, PaintOp, RigidVBT;
+IMPORT Split, TextVBT, Trestle, TrestleComm, TSplit, VBT;
 
-<*FATAL ANY*>
+(* Columns *)
+IMPORT Columns, Rows, Bars, ScoreDir, ScoreFile, Squares, Threes;
+FROM Config IMPORT Piece, Game;
 
 CONST
-  Aspect_ratio = 3    (* hUnit / vUnit *);
-  Score_basis  = 65.645;
+  ALIAS        = "GAMEALIAS";
+  MaxScores    = 9;
+  Margin       = 10;
+  Aspect_ratio = 3;    (* hUnit / vUnit *)
+  MinCell      = 6;
+  Score_basis  = 0.065645d0;
   Height_pts   = 10;
-  Speedup      = 0.95;
+  Speedup      = 0.95d0;
   Speedup_step = 5;
   Max_rows     = (30 * Aspect_ratio);
   Max_cols     = 30;
@@ -28,6 +36,12 @@ CONST
   Max_tints    = 36;
   Max_tiles    = 30;
   Max_level    = 5;
+
+  Title1    = "                    total            best                    ";
+  Title2    = "                ------------  -------------------------------";
+  Title3    = "player          games  HH:MM   score  erased lvl date            ";
+  Title4    = "--------------- ----- ------  ------- ------ --- ----------------";
+  BlankLine = "                                                             ";
 
 TYPE
   Event = {Noop, Tick, Drop, Move_left, Rotate_left, Rotate_right, Move_right};
@@ -43,21 +57,17 @@ CONST
   BLACK    = LAST (Color) - 1;
   NO_COLOR = LAST (Color);
 
-TYPE
-  Rect = RECORD x, y, width, height: INTEGER END;
-
 (* misc. flags & global parameters *)
 VAR  speed_up := TRUE;
 VAR  one_hand := TRUE;
 VAR  running  := FALSE;
 VAR  paused   := FALSE;
 VAR  level    := 1;
-VAR  keymap   : ARRAY CHAR OF Event;
+VAR  keymap   : ARRAY [0..255] OF Event;
 VAR  rand     : Random.T;
 
 (* clock *)
-VAR delay : INTEGER := 0;
-VAR tid   : Xt.IntervalId;
+VAR delay: Time.T := 0.0d0;
 
 (* game state *)
 VAR  all_games : ARRAY [0 .. 4] OF Game;
@@ -67,225 +77,161 @@ VAR  state     := State.Done;
 VAR  counter   := 0;
 VAR  curPiece  := 0; (* piece *)
 VAR  cur       : Piece;
-VAR  loc       : Point;
+VAR  curScored : BOOLEAN;
+VAR  loc       : Point.T;
 VAR  curRot    := 0;
 VAR  dropped   := FALSE;
 VAR  nWipeouts := 0;
 VAR  board     : ARRAY [0 .. Max_cols-1], [0 .. Max_rows-1] OF Color;
-VAR  wipeout   : ARRAY [0 .. Max_cols * Max_rows -1] OF Point;
+VAR  wipeout   : ARRAY [0 .. Max_cols * Max_rows -1] OF Point.T;
 VAR  curTint   : ARRAY [0 .. Max_tiles] OF Color;
+
+VAR  startTime : Time.T;
+VAR  stopTime  : Time.T;
+VAR  pauseTime : Time.T;
 
 (* scoring *)
 VAR  score     := 0;
 VAR  nWiped    := 0;
 
 (* graphics state *)
-VAR  domain      := Rect { 0,0,0,0 };
+VAR  focus       := FALSE;
+VAR  domain      := Rect.T { 0,0,0,0 };
 VAR  vUnit       := 0;
 VAR  hUnit       := 0;
-VAR  tints       : ARRAY Color OF INTEGER;
-VAR  topWindow   : Xt.Widget;
-VAR  box         : Xt.Widget;
-VAR  form        : Xt.Widget;
-VAR  lastChild   : Xt.Widget := NIL;
-VAR  goButton    : Xt.Widget;
-VAR  pauseButton : Xt.Widget;
-VAR  stopButton  : Xt.Widget;
-VAR  levelButton : Xt.Widget;
-VAR  gameButton  : Xt.Widget;
-VAR  handButton  : Xt.Widget;
-VAR  speedButton : Xt.Widget;
-VAR  quitButton  : Xt.Widget;
-VAR  keyLabel    : ARRAY [0..4] OF Xt.Widget;
-VAR  wipeLabel   : Xt.Widget;
-VAR  scoreLabel  : Xt.Widget;
-VAR  stateLabel  : Xt.Widget;
-VAR  playingArea : Xt.Widget;
-VAR  win         : X.Window;
-VAR  playWin     : X.Window;
-VAR  gc          : X.GC;
-VAR  dpy         : X.DisplayStar;
-VAR  kbstate     : X.XKeyboardState;
+VAR  tints       : ARRAY Color OF PaintOp.T;
+VAR  VBT_White   : PaintOp.T;
+VAR  VBT_Black   : PaintOp.T;
+VAR  chassis     : VBT.T;
+VAR  gameVBT     : VBT.T;
+VAR  scoresVBT   : VBT.T;
+VAR  scoreRows   : ARRAY [0..MaxScores+1] OF VBT.T;
+VAR  boardVBT    : VBT.T;
+VAR  goButton    : VBT.T;
+VAR  goTitle     : VBT.T;
+VAR  pauseButton : VBT.T;
+VAR  pauseTitle  : VBT.T;
+VAR  levelButton : VBT.T;
+VAR  levelTitle  : VBT.T;
+VAR  gameButton  : VBT.T;
+VAR  gameTitle   : VBT.T;
+VAR  handButton  : VBT.T;
+VAR  handTitle   : VBT.T;
+VAR  speedButton : VBT.T;
+VAR  speedTitle  : VBT.T;
+VAR  scoreButton : VBT.T;
+VAR  scoreTitle  : VBT.T;
+VAR  quitButton  : VBT.T;
+VAR  quitTitle   : VBT.T;
+VAR  keyLabel    : ARRAY [0..4] OF VBT.T;
+VAR  wipeLabel   : VBT.T;
+VAR  scoreLabel  : VBT.T;
+VAR  stateLabel  : VBT.T;
+
+VAR  northE      : Rect.T;
+VAR  westE       : Rect.T;
+VAR  southE      : Rect.T;
+VAR  eastE       : Rect.T;
+
+(* threads *)
+VAR  clock     : Thread.T;
+VAR  machine   : Thread.T;
 
 
-(**************************************************************)
-(*               Window system primitives                     *)
-(**************************************************************)
+(*-------------------------------------------------------- VBT constructors ---*)
 
-TYPE ArgList = RECORD
-       n: INTEGER;
-       a: Xt.ArgList;
-       v: ARRAY [0..19] OF Xt.Arg;
-     END;
-
-PROCEDURE AddArgI (VAR x: ArgList;  label: Xt.String;  val: INTEGER) =
+PROCEDURE Gap (h, v: REAL := 2.0): VBT.T =
   BEGIN
-    x.a := ADR (x.v[0]);
-    WITH n = x.v[x.n] DO
-      n.name := label;
-      n.value := LOOPHOLE(val, ADDRESS);
+    RETURN RigidVBT.FromHV (TextVBT.New (""), h, v);
+    (* an h X v mm white space *)
+  END Gap;
+
+PROCEDURE NewButton (name: TEXT;  proc: ButtonVBT.Proc;  VAR label: VBT.T): VBT.T =
+  BEGIN
+    label := TextVBT.New (name);
+    RETURN ButtonVBT.New (BorderedVBT.New (label), proc);
+  END NewButton;
+
+VAR
+  needFixed : BOOLEAN := TRUE;
+  fixedFont : Font.T;
+
+PROCEDURE NewLabel (t: TEXT): VBT.T =
+  BEGIN
+    IF (needFixed) THEN
+      needFixed := FALSE;
+      fixedFont := Font.FromName (
+                     ARRAY OF TEXT{"-*-courier-medium-r-*-*-*-120-*"});
     END;
-    INC (x.n);
-  END AddArgI;
+    RETURN TextVBT.New (t, 0.0, fnt := fixedFont);
+  END NewLabel;
 
-PROCEDURE AddArgT (VAR x: ArgList;  label: Xt.String;  text: TEXT) =
+PROCEDURE SetLabel (v: VBT.T;  txt: TEXT) =
   BEGIN
-    x.a := ADR (x.v[0]);
-    WITH n = x.v[x.n] DO  n.name := label;  n.value := TtoS (text)  END;
-    INC (x.n);
-  END AddArgT;
-
-PROCEDURE AddArgA (VAR x: ArgList;  label: Xt.String;  addr: ADDRESS) =
-  BEGIN
-    x.a := ADR (x.v[0]);
-    WITH n = x.v[x.n] DO  n.name := label;  n.value := addr END;
-    INC (x.n);
-  END AddArgA;
-
-PROCEDURE CreateButton (label: TEXT;  handler: Xt.CallbackProc): Xt.Widget =
-  VAR w: Xt.Widget;  args: ArgList;
-  BEGIN
-    args.n := 0;
-    AddArgT (args, XtN.label,       label);
-    AddArgI (args, XtN.borderWidth, 2);
-    AddArgI (args, XtN.width,       140);
-
-    w := Xt.CreateManagedWidget (TtoS (label), Xaw.commandWidgetClass,
-                                 form, args.a, args.n);
-    Xt.AddCallback (w, XtN.callback, handler);
-    lastChild := w;
-    RETURN w;
-  END CreateButton;
-
-
-PROCEDURE CreateLabel (text: TEXT): Xt.Widget =
-  VAR w: Xt.Widget;  args: ArgList;
-  BEGIN
-    args.n := 0;
-    text := Fmt.Pad (text, 17, ' ', Fmt.Align.Left);
-    AddArgT (args, XtN.label,       text);
-    AddArgI (args, XtN.borderWidth, 0);
-    AddArgI (args, XtN.justify,     Xmu.JustifyLeft);
-
-    w := Xt.CreateManagedWidget (TtoS (text), Xaw.labelWidgetClass,
-                                 form, args.a, args.n);
-    lastChild := w;
-    RETURN w;
-  END CreateLabel;
-
-
-PROCEDURE SetLabel (label: Xt.Widget;  text: TEXT) =
-  VAR args: ArgList;
-  BEGIN
-    args.n := 0;
-    AddArgT (args, XtN.label, text);
-    Xt.SetValues (label, args.a, args.n);
+    TextVBT.Put (v, txt);
   END SetLabel;
 
-
-PROCEDURE Enable (w: Xt.Widget) =
-  VAR args: ArgList;
+PROCEDURE VBTRow (a0, a1, a2: VBT.T := NIL): VBT.T =
   BEGIN
-    args.n := 0;
-    AddArgI (args, XtN.sensitive, ORD (TRUE));
-    Xt.SetValues (w, args.a, args.n);
-  END Enable;
+    RETURN HVSplit.Cons (Axis.T.Hor, a0, a1, a2, TextVBT.New (" "));
+  END VBTRow;
 
-
-PROCEDURE Disable (w: Xt.Widget) =
-  VAR args: ArgList;
+PROCEDURE VBTCol ( a0, a1, a2, a3, a4, a5, a6, a7, a8, a9,
+                  a10,a11,a12,a13,a14,a15,a16,a17,a18,a19,
+                  a20,a21,a22,a23,a24                      : VBT.T:=NIL): VBT.T =
+  VAR v: VBT.T;
   BEGIN
-    args.n := 0;
-    AddArgI (args, XtN.sensitive, ORD (FALSE));
-    Xt.SetValues (w, args.a, args.n);
-  END Disable;
+    v := HVSplit.Cons (Axis.T.Ver, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);
+    IF (a10 # NIL) THEN Split.AddChild (v, a10) END;
+    IF (a11 # NIL) THEN Split.AddChild (v, a11) END;
+    IF (a12 # NIL) THEN Split.AddChild (v, a12) END;
+    IF (a13 # NIL) THEN Split.AddChild (v, a13) END;
+    IF (a14 # NIL) THEN Split.AddChild (v, a14) END;
+    IF (a15 # NIL) THEN Split.AddChild (v, a15) END;
+    IF (a16 # NIL) THEN Split.AddChild (v, a16) END;
+    IF (a17 # NIL) THEN Split.AddChild (v, a17) END;
+    IF (a18 # NIL) THEN Split.AddChild (v, a18) END;
+    IF (a19 # NIL) THEN Split.AddChild (v, a19) END;
+    IF (a20 # NIL) THEN Split.AddChild (v, a20) END;
+    IF (a21 # NIL) THEN Split.AddChild (v, a21) END;
+    IF (a22 # NIL) THEN Split.AddChild (v, a22) END;
+    IF (a23 # NIL) THEN Split.AddChild (v, a23) END;
+    IF (a24 # NIL) THEN Split.AddChild (v, a24) END;
+    Split.AddChild (v, TextVBT.New (" "));
+    RETURN v;
+  END VBTCol;
 
-
-PROCEDURE MaskButtons (mask: TEXT) =
+PROCEDURE MakeColor (r, g, b: INTEGER): PaintOp.T =
+  VAR
+    rr := FLOAT (Word.And (r, 255)) / 255.0;
+    gg := FLOAT (Word.And (g, 255)) / 255.0;
+    bb := FLOAT (Word.And (b, 255)) / 255.0;
   BEGIN
-    FOR i := 0 TO Text.Length (mask)-1 DO
-      CASE (Text.GetChar (mask, i)) OF
-      | 'g' =>  Disable (goButton);
-      | 'G' =>  Enable  (goButton);
-      | 'p' =>  Disable (pauseButton);
-      | 'P' =>  Enable  (pauseButton);
-      | 's' =>  Disable (stopButton);
-      | 'S' =>  Enable  (stopButton);
-      | 'x' =>  Disable (gameButton);
-      | 'X' =>  Enable  (gameButton);
-      | 'l' =>  Disable (levelButton);
-      | 'L' =>  Enable  (levelButton);
-      | 'h' =>  Disable (handButton);
-      | 'H' =>  Enable  (handButton);
-      | 'Z' =>  Enable  (speedButton);
-      | 'z' =>  Disable (speedButton);
-      ELSE      (* ignore *)
+    RETURN PaintOp.Pair (VBT_White, PaintOp.FromRGB (rr, gg, bb));
+  END MakeColor;
+
+(*-------------------------------------------------------- keyboard focus ---*)
+
+PROCEDURE GetFocus (t: VBT.TimeStamp) =
+  BEGIN
+    IF (NOT focus) THEN
+      TRY
+        VBT.Acquire (boardVBT, VBT.KBFocus, t);
+        focus := TRUE;
+      EXCEPT VBT.Error =>
       END;
     END;
-  END MaskButtons;
-
-
-PROCEDURE GrabFocus () =
-  BEGIN
-    EVAL X.XGrabKeyboard (dpy, win, ORD (FALSE), X.GrabModeAsync,
-                              X.GrabModeAsync, X.CurrentTime);
-(*IF (kbstate.global_auto_repeat = ORD(TRUE)) THEN X.XAutoRepeatOff(dpy) END;*)
-  END GrabFocus;
-
+  END GetFocus;
 
 PROCEDURE DropFocus () =
   BEGIN
-    X.XUngrabKeyboard (dpy, X.CurrentTime);
-(*IF (kbstate.global_auto_repeat = ORD(TRUE)) THEN X.XAutoRepeatOn (dpy) END;*)
+    IF (focus) THEN
+      VBT.Release (boardVBT, VBT.KBFocus);
+      focus := FALSE;
+    END;
   END DropFocus;
 
-
-PROCEDURE StopClock () =
-  BEGIN
-    IF (tid # 0) THEN Xt.RemoveTimeOut (tid);  tid := 0; END;
-  END StopClock;
-
-
-PROCEDURE StartClock () =
-  BEGIN
-    IF (tid # 0) THEN Xt.RemoveTimeOut (tid) END;
-    tid := Xt.AddTimeOut (delay, ClockTick);
-  END StartClock;
-
-
-PROCEDURE MakeColor (r, g, b: INTEGER): INTEGER =
-  VAR color: X.XColor;  scr: INTEGER;
-  BEGIN
-    scr := X.XDefaultScreen (dpy);
-    IF (r = 255) AND (g = 255) AND (b = 255) THEN
-      color.pixel := X.XWhitePixel (dpy, scr);
-    ELSIF (r = 0) AND (g = 0) AND (b = 0) THEN
-      color.pixel := X.XBlackPixel (dpy, scr);
-    ELSE
-      (* do a real color lookup *)
-      color.red   := Word.And (r, 255) * 256 + 255;
-      color.green := Word.And (g, 255) * 256 + 255;
-      color.blue  := Word.And (b, 255) * 256 + 255;
-      color.flags := Word.Or (X.DoRed, Word.Or (X.DoGreen, X.DoBlue));
-      EVAL X.XAllocColor (dpy,
-               X.XDefaultColormap (dpy, scr),
-               LOOPHOLE (ADR (color), X.XColorStar));
-    END;
-    RETURN color.pixel;
-  END MakeColor;
-
-
-PROCEDURE Paint (READONLY r: Rect;  color: Color) =
-  BEGIN
-    X.XSetForeground (dpy, gc, tints [color]);
-    X.XFillRectangle (dpy, playWin, gc, r.x, r.y, r.width, r.height);
-  END Paint;
-
-
-(**************************************************************)
-(*                  Game primitives                           *)
-(**************************************************************)
-
+(*------------------------------------------------------- Game primitives ---*)
 
 PROCEDURE ScaleGame (g: Game) =
   (* scale the game to match the aspect ratio *)
@@ -305,8 +251,8 @@ PROCEDURE ScaleGame (g: Game) =
 	  WITH jj = p[j] DO
             FOR k := 0 TO  Aspect_ratio-1 DO
               WITH qq = q [j * Aspect_ratio + k] DO
-	        qq.x := jj.x;
-	        qq.y := jj.y * Aspect_ratio - (Aspect_ratio DIV 2) + k;
+	        qq.h := jj.h;
+	        qq.v := jj.v * Aspect_ratio - (Aspect_ratio DIV 2) + k;
               END;
 	    END;
 	  END;
@@ -324,28 +270,31 @@ PROCEDURE ScaleGame (g: Game) =
   END ScaleGame;
 
 PROCEDURE Die (g: Game;  msg: TEXT) =
+  <*FATAL Wr.Failure, Thread.Alerted*>
   BEGIN
     Wr.PutText (Stdio.stdout, g.name);
     Wr.PutText (Stdio.stdout, ": ");
     Wr.PutText (Stdio.stdout, msg);
-    Wr.PutChar (Stdio.stdout, '\n');
+    Wr.PutText (Stdio.stdout, Wr.EOL);
     Wr.Close   (Stdio.stdout);
-    Cstdlib.exit (-1);
+    Process.Exit (1);
   END Die;
 
 
 PROCEDURE ResetGame () =
-  VAR speedup: REAL;
+  VAR speedup: LONGREAL;
   BEGIN
     (* init the scalars *)
-    speedup  := 1.0 - 0.75 * (FLOAT (level - 1)) / FLOAT (Max_level);
+    speedup  := 1.0d0 - 0.75d0 * (FLOAT (level - 1, LONGREAL))
+                                  / FLOAT (Max_level, LONGREAL);
     state    := State.Done;
     counter  := 2;
-    delay    := ROUND (FLOAT (game.speed) * speedup);
+    delay    := FLOAT (game.speed, LONGREAL) * speedup / 1000.0d0;
     running  := FALSE;
     paused   := FALSE;
     score    := 0;
     nWiped   := 0;
+    cur      := NIL;
 
     (* start with an empty board *)
     FOR x := 0 TO Max_cols-1 DO
@@ -355,11 +304,10 @@ PROCEDURE ResetGame () =
     END;
 
     (* and clear the board *)
-    MaskButtons ("GpsXLHZ");
-    SetLabel (scoreLabel, "Score:  0        ");
-    SetLabel (wipeLabel,  "Erased: 0        ");
-    Resize ();
-    Repaint ();
+    SetLabel (scoreLabel, "0        ");
+    SetLabel (wipeLabel,  "0        ");
+    Resize (VBT.Domain (boardVBT));
+    VBT.ForceRepaint (boardVBT, Region.Full);
   END ResetGame;
 
 
@@ -370,20 +318,30 @@ PROCEDURE SetKeyBindings (on: BOOLEAN) =
 
     (* setup the key mapping *)
     FOR i := FIRST (keymap) TO LAST (keymap) DO keymap[i] := Event.Noop END;
-    keymap [' '] := Event.Drop;
+    keymap [Latin1Key.space] := Event.Drop;
 
     IF (one_hand) THEN
-      keymap ['S'] := Event.Move_left;      keymap ['s'] := Event.Move_left;
-      keymap ['D'] := Event.Rotate_right;   keymap ['d'] := Event.Rotate_right;
-      keymap ['F'] := Event.Move_right;     keymap ['f'] := Event.Move_right; 
-      keymap ['J'] := Event.Move_left;      keymap ['j'] := Event.Move_left;
-      keymap ['K'] := Event.Rotate_right;   keymap ['k'] := Event.Rotate_right;
-      keymap ['L'] := Event.Move_right;     keymap ['l'] := Event.Move_right; 
+      keymap [Latin1Key.S] := Event.Move_left;
+      keymap [Latin1Key.s] := Event.Move_left;
+      keymap [Latin1Key.D] := Event.Rotate_right;
+      keymap [Latin1Key.d] := Event.Rotate_right;
+      keymap [Latin1Key.F] := Event.Move_right;
+      keymap [Latin1Key.f] := Event.Move_right; 
+      keymap [Latin1Key.J] := Event.Move_left;
+      keymap [Latin1Key.j] := Event.Move_left;
+      keymap [Latin1Key.K] := Event.Rotate_right;
+      keymap [Latin1Key.k] := Event.Rotate_right;
+      keymap [Latin1Key.L] := Event.Move_right;
+      keymap [Latin1Key.l] := Event.Move_right; 
     ELSE
-      keymap ['D'] := Event.Move_left;      keymap ['d'] := Event.Move_left;
-      keymap ['F'] := Event.Rotate_left;    keymap ['f'] := Event.Rotate_left;
-      keymap ['J'] := Event.Rotate_right;   keymap ['j'] := Event.Rotate_right;
-      keymap ['K'] := Event.Move_right;     keymap ['k'] := Event.Move_right; 
+      keymap [Latin1Key.D] := Event.Move_left;
+      keymap [Latin1Key.d] := Event.Move_left;
+      keymap [Latin1Key.F] := Event.Rotate_left;
+      keymap [Latin1Key.f] := Event.Rotate_left;
+      keymap [Latin1Key.J] := Event.Rotate_right;
+      keymap [Latin1Key.j] := Event.Rotate_right;
+      keymap [Latin1Key.K] := Event.Move_right;
+      keymap [Latin1Key.k] := Event.Move_right; 
     END;
 
     (* set the window labels *)
@@ -403,51 +361,76 @@ PROCEDURE SetKeyBindings (on: BOOLEAN) =
 
     (* reset the button *)
     IF (one_hand)
-      THEN SetLabel (handButton, " Hands: one      ");
-      ELSE SetLabel (handButton, " Hands: two      ");
+      THEN SetLabel (handTitle, " Hands: one      ");
+      ELSE SetLabel (handTitle, " Hands: two      ");
     END;
   END SetKeyBindings;
 
 
-PROCEDURE Resize () =
-  VAR s: INTEGER;  x, y, width, height: Xt.Position;  args: ArgList;
+PROCEDURE Resize (READONLY r: Rect.T) =
+  CONST BorderWidth = 2;
+  VAR h, v, s: INTEGER;  p: Point.T;
   BEGIN
-    (* get the dimensions of the playing area *)
-    args.n := 0;
-    AddArgA (args, XtN.x,      ADR (x));
-    AddArgA (args, XtN.y,      ADR (y));
-    AddArgA (args, XtN.width,  ADR (width));
-    AddArgA (args, XtN.height, ADR (height));
-    Xt.GetValues (playingArea, args.a, args.n);
-
     (* find the critical dimension *)
-    hUnit := width DIV (game.nCols * Aspect_ratio);
-    vUnit := height DIV game.nRows;
-    s := MAX (1, MIN (hUnit, vUnit));
+    h := (Rect.HorSize (r) - Margin) DIV (game.nCols * Aspect_ratio);
+    v := (Rect.VerSize (r) - Margin) DIV (game.nRows);
+    s := MAX (MinCell, MIN (h, v));
 
     (* set the scaling units *)
     vUnit := s;
     hUnit := s * Aspect_ratio;
 
+    (* find the center and full extent of the new board *)
+    p := Rect.Middle (r);
+    h := game.nCols * hUnit;
+    v := game.nRows * vUnit;
+
     (* and save the domain of the playing area *)
-    domain.height := game.nRows * vUnit;
-    domain.width  := game.nCols * hUnit;
-    domain.x := (width - domain.width) DIV 2;
-    domain.y := (height - domain.height) DIV 2;
+    domain.north := p.v - v DIV 2;
+    domain.west  := p.h - h DIV 2;
+    domain.south := domain.north + v;
+    domain.east  := domain.west + h;
+
+    (* fix the edge boundaries *)
+    northE.north := domain.north - BorderWidth;
+    northE.south := domain.north;
+    northE.west  := domain.west - BorderWidth;
+    northE.east  := domain.east + BorderWidth;
+
+    southE.north := domain.south;
+    southE.south := domain.south + BorderWidth;
+    southE.west  := domain.west - BorderWidth;
+    southE.east  := domain.east + BorderWidth;
+
+    westE.north := domain.north;
+    westE.south := domain.south;
+    westE.west  := domain.west - BorderWidth;
+    westE.east  := domain.west;
+
+    eastE.north := domain.north;
+    eastE.south := domain.south;
+    eastE.west  := domain.east;
+    eastE.east  := domain.east + BorderWidth;
 
     (* reset the background of the window *)
-    X.XClearWindow (dpy, playWin);
+    VBT.PaintTint (boardVBT, r, VBT_White);
   END Resize;
 
 
+PROCEDURE Paint (READONLY r: Rect.T;  color: Color) =
+  BEGIN
+    VBT.PaintTint (boardVBT, r, tints [color]);
+  END Paint;
+
+
 PROCEDURE PaintTile (x, y: INTEGER;  color: Color) =
-  VAR r: Rect;
+  VAR r: Rect.T;
   BEGIN
     IF (paused) OR (x < 0) OR (y < 0) THEN RETURN END;
-    r.x      := domain.x + x * hUnit;
-    r.y      := domain.y + y * vUnit;
-    r.width  := hUnit;
-    r.height := vUnit;
+    r.west   := domain.west  + x * hUnit;
+    r.north  := domain.north + y * vUnit;
+    r.east   := r.west + hUnit;
+    r.south  := r.north + vUnit;
     Paint (r, color);
   END PaintTile;
 
@@ -455,36 +438,16 @@ PROCEDURE PaintTile (x, y: INTEGER;  color: Color) =
 PROCEDURE RepaintPiece () =
   BEGIN
     FOR i := 0 TO  game.nTiles-1 DO
-      PaintTile (loc.x + cur[i].x, loc.y + cur[i].y,
+      PaintTile (loc.h + cur[i].h, loc.v + cur[i].v,
                    curTint [(i+curRot) MOD game.nTiles] );
     END;
   END RepaintPiece;
-
-
-PROCEDURE Repaint () =
-  (* repaints the entire playing area *)
-  BEGIN
-    (* paint an empty board *)
-    Paint (domain, WHITE);
-    IF (paused) THEN RETURN END;
-
-    (* paint the fixed pieces *)
-    FOR x := 0 TO game.nCols-1 DO
-      FOR y := 0 TO game.nRows-1 DO
-	IF (board[x][y] # WHITE) THEN PaintTile (x, y, board[x][y]) END;
-      END;
-    END;
-
-    (* paint the current piece *)
-    IF (running) AND (cur # NIL) THEN  RepaintPiece ()  END;
-  END Repaint;
-
 
 PROCEDURE PlacePiece (p, x, y: INTEGER): BOOLEAN =
   VAR
     done: BOOLEAN;
     min, max, x1, y1, z1, nTiles: INTEGER;
-    old, new: ARRAY [0..Max_tiles-1] OF Point;
+    old, new: ARRAY [0..Max_tiles-1] OF Point.T;
     newPiece: Piece;
   BEGIN
     nTiles := game.nTiles;
@@ -492,29 +455,29 @@ PROCEDURE PlacePiece (p, x, y: INTEGER): BOOLEAN =
 
     (* map the existing and the new pieces *)
     FOR i := 0 TO nTiles-1 DO
-      old[i].x := loc.x + cur[i].x;
-      old[i].y := loc.y + cur[i].y;
-      new[i].x := x + newPiece[i].x;
-      new[i].y := y + newPiece[i].y;
+      old[i].h := loc.h + cur[i].h;
+      old[i].v := loc.v + cur[i].v;
+      new[i].h := x + newPiece[i].h;
+      new[i].v := y + newPiece[i].v;
     END;
 
     (* slide the new piece horizontally until it's on the board *)
     max := 0;  min := game.nCols;
     FOR i := 0 TO nTiles-1 DO
-      min := MIN (min, new[i].x);
-      max := MAX (max, new[i].x);
+      min := MIN (min, new[i].h);
+      max := MAX (max, new[i].h);
     END;
     IF (min < 0) THEN (* slide left *)
-      DEC (x, min);  FOR i := 0 TO nTiles-1 DO  DEC (new[i].x, min)  END;
+      DEC (x, min);  FOR i := 0 TO nTiles-1 DO  DEC (new[i].h, min)  END;
     END;
     max := max - game.nCols + 1;
     IF (max > 0) THEN (* slide right *)
-      DEC (x, max);  FOR i := 0 TO nTiles-1 DO  DEC (new[i].x, max) END;
+      DEC (x, max);  FOR i := 0 TO nTiles-1 DO  DEC (new[i].h, max) END;
     END;
 
     (* test for a fit *)
     FOR i := 0 TO nTiles-1 DO
-      x1 := new[i].x;  y1 := new[i].y;
+      x1 := new[i].h;  y1 := new[i].v;
       IF (y1 >= game.nRows) THEN RETURN FALSE END;
       IF (y1 >= 0) AND (board[x1][y1] # WHITE) THEN RETURN FALSE END;
     END;
@@ -522,14 +485,14 @@ PROCEDURE PlacePiece (p, x, y: INTEGER): BOOLEAN =
     (* IF we got here, it fits! *)
     curPiece := p;
     cur := game.pieces[p];
-    loc.x := x;
-    loc.y := y;
+    loc.h := x;
+    loc.v := y;
 
     (* erase the old piece *)
     FOR i := 0 TO  nTiles-1 DO
-      done := FALSE;  x1 := old[i].x;  y1 := old[i].y;
+      done := FALSE;  x1 := old[i].h;  y1 := old[i].v;
       FOR j := 0 TO  nTiles-1 DO
-        done := (new[j].x = x1) AND (new[j].y = y1);
+        done := (new[j].h = x1) AND (new[j].v = y1);
 	IF (done) THEN EXIT END;
       END;
       IF (NOT done) THEN PaintTile (x1, y1, WHITE) END;
@@ -537,10 +500,10 @@ PROCEDURE PlacePiece (p, x, y: INTEGER): BOOLEAN =
 
     (* paint the new piece *)
     FOR i := 0 TO  nTiles-1 DO
-      done := FALSE;  x1 := new[i].x;  y1 := new[i].y;
+      done := FALSE;  x1 := new[i].h;  y1 := new[i].v;
       z1 := curTint [(i+curRot) MOD nTiles];
       FOR j := 0 TO  nTiles-1 DO
-        done := (old[j].x = x1) AND (old[j].y = y1)
+        done := (old[j].h = x1) AND (old[j].v = y1)
                 AND (curTint [(j+curRot) MOD nTiles] = z1);
         IF (done) THEN EXIT END;
       END;
@@ -553,17 +516,17 @@ PROCEDURE PlacePiece (p, x, y: INTEGER): BOOLEAN =
 
 PROCEDURE MoveDown (): BOOLEAN =
   BEGIN
-    RETURN PlacePiece (curPiece, loc.x, loc.y + 1)
+    RETURN PlacePiece (curPiece, loc.h, loc.v + 1)
   END MoveDown;
 
 PROCEDURE MoveLeft () =
   BEGIN
-    EVAL PlacePiece (curPiece, loc.x - 1, loc.y);
+    EVAL PlacePiece (curPiece, loc.h - 1, loc.v);
   END MoveLeft;
 
 PROCEDURE MoveRight () =
   BEGIN
-    EVAL PlacePiece (curPiece, loc.x + 1, loc.y);
+    EVAL PlacePiece (curPiece, loc.h + 1, loc.v);
   END MoveRight;
 
 PROCEDURE RotateLeft () =
@@ -584,43 +547,49 @@ PROCEDURE EndOfGame (): BOOLEAN =
     FOR x := 0 TO game.nCols-1 DO
       IF (board [x][0] # WHITE) THEN
         (* the top row has a non-white cell *)
-	StopClock ();
-	state    := State.Done;
-	counter  := 9999999;
-	running  := FALSE;
-	paused   := FALSE;
-	SetLabel (stateLabel, "State:  DONE     ");
-	MaskButtons ("GpsXLHZ");
 	RETURN TRUE;
       END;
     END;
     RETURN FALSE;
   END EndOfGame;
 
+PROCEDURE EndGame () =
+  BEGIN
+    stopTime := Time.Now ();
+    state    := State.Done;
+    counter  := 9999999;
+    running  := FALSE;
+    paused   := FALSE;
+    UpdateScore ();
+    SetLabel (stateLabel, "DONE     ");
+    SetLabel (goTitle, "Go  ");
+  END EndGame;
+
+
+PROCEDURE ScorePiece (pts: INTEGER) =
+  BEGIN
+    IF NOT curScored THEN
+      ScorePoints (pts);
+      curScored := TRUE;
+    END;
+  END ScorePiece;
 
 PROCEDURE ScorePoints (pts: INTEGER) =
-  VAR buf: ARRAY [0..29] OF CHAR;  arg: Xt.Arg;
   BEGIN
-    INC (score, ROUND (FLOAT (pts) * Score_basis / 
-                        FLOAT (delay * Aspect_ratio)));
-    Text.SetChars (buf, "Score:  ");
-    WITH i = Convert.FromInt (SUBARRAY (buf, 8, 15), score) DO
-      buf[i+8] := ' ';  buf[i+9] := '\000';
-    END;
-    arg.name := XtN.label;
-    arg.value := ADR (buf[0]);
-    Xt.SetValues (scoreLabel, ADR (arg), 1);
+    INC (score, ROUND (FLOAT (pts, LONGREAL) * Score_basis
+                       / (delay * FLOAT (Aspect_ratio, LONGREAL))));
+    SetLabel (scoreLabel, Fmt.Int (score));
   END ScorePoints;
 
 
 PROCEDURE AddWipeout (x, y: INTEGER) =
   VAR i: INTEGER;
   BEGIN
-    wipeout [nWipeouts].x := x;
-    wipeout [nWipeouts].y := y;
+    wipeout [nWipeouts].h := x;
+    wipeout [nWipeouts].v := y;
 
     i := 0;
-    WHILE (wipeout[i].x # x) OR (wipeout[i].y # y) DO INC (i) END;
+    WHILE (wipeout[i].h # x) OR (wipeout[i].v # y) DO INC (i) END;
     IF (i = nWipeouts) THEN INC (nWipeouts) END;
   END AddWipeout;
 
@@ -724,7 +693,7 @@ PROCEDURE FindNWWipeout (x, y: INTEGER) =
 
 
 PROCEDURE FindWipeouts () =
-  VAR new, step: INTEGER;  buf: ARRAY [0..29] OF CHAR;  arg: Xt.Arg;
+  VAR new, step: INTEGER;
   BEGIN
     (* find the tiles that can be erased *)
     nWipeouts := 0;
@@ -741,23 +710,17 @@ PROCEDURE FindWipeouts () =
 
     (* score points for the erased tiles *)
     FOR x := 0 TO  nWipeouts-1 DO
-      ScorePoints ((game.nRows - wipeout[x].y) * Height_pts);
+      ScorePoints ((game.nRows - wipeout[x].v) * Height_pts);
     END;
 
     new  := nWiped + (nWipeouts DIV Aspect_ratio);
     step := Speedup_step * game.nMatches;
     IF ((new DIV step) # (nWiped DIV step)) AND (speed_up) THEN
-      delay := ROUND (FLOAT (delay) * Speedup);
+      delay := delay * Speedup;
     END;
     nWiped := new;
 
-    Text.SetChars (buf, "Erased: ");
-    WITH i = Convert.FromInt (SUBARRAY (buf, 8, 15), nWiped) DO
-      buf[i+8] := ' ';  buf[i+9] := '\000';
-    END;
-    arg.name := XtN.label;
-    arg.value := ADR (buf[0]);
-    Xt.SetValues (wipeLabel, ADR (arg), 1);
+    SetLabel (wipeLabel, Fmt.Int (nWiped));
   END FindWipeouts;
 
 
@@ -768,7 +731,7 @@ PROCEDURE EndFall () =
       state := State.Blinking;
       counter := 5 * Aspect_ratio;
       BlinkWipeouts (TRUE);
-    ELSIF NOT EndOfGame () THEN
+    ELSE
       state := State.Pausing;
       counter := 2 * Aspect_ratio;
     END;
@@ -779,7 +742,7 @@ PROCEDURE StartNewPiece () =
   VAR i, j, k, minx, maxx, maxy: INTEGER;
   BEGIN
     (* check for end of game *)
-    IF EndOfGame () THEN RETURN END;
+    IF EndOfGame () THEN EndGame ();  RETURN END;
 
     (* pick a piece *)
     i := Word.And (rand.integer (), 65535);  j := 0;  k := 0;
@@ -794,15 +757,15 @@ PROCEDURE StartNewPiece () =
     (* find an initial position *)
     maxx := 0;  maxy := 0;  minx := game.nCols;
     FOR i := 0 TO game.nTiles-1 DO
-      minx := MIN (minx, cur[i].x);
-      maxx := MAX (maxx, cur[i].x);
-      maxy := MAX (maxy, cur[i].y);
+      minx := MIN (minx, cur[i].h);
+      maxx := MAX (maxx, cur[i].h);
+      maxy := MAX (maxy, cur[i].v);
     END;
-    loc.x := rand.integer ();  IF (loc.x < 0) THEN loc.x := - loc.x END;
-    loc.x := (loc.x MOD game.nCols);
-    IF (loc.x + maxx >= game.nCols) THEN loc.x := game.nCols - maxx END;
-    IF (loc.x + minx < 0) THEN loc.x := -minx END;
-    loc.y := -maxy;
+    loc.h := rand.integer ();  IF (loc.h < 0) THEN loc.h := - loc.h END;
+    loc.h := (loc.h MOD game.nCols);
+    IF (loc.h + maxx >= game.nCols) THEN loc.h := game.nCols - maxx END;
+    IF (loc.h + minx < 0) THEN loc.h := -minx END;
+    loc.v := -maxy;
 
     (* assign its colors *)
     FOR i := 0 TO game.nTiles-1 BY Aspect_ratio DO
@@ -813,6 +776,7 @@ PROCEDURE StartNewPiece () =
     END;
 
     dropped := FALSE;
+    curScored := FALSE;
   END StartNewPiece;
 
 
@@ -820,8 +784,8 @@ PROCEDURE FixPiece () =
   VAR x, y: INTEGER;
   BEGIN
     FOR i := 0 TO game.nTiles-1 DO
-      x := loc.x + cur[i].x;
-      y := loc.y + cur[i].y;
+      x := loc.h + cur[i].h;
+      y := loc.v + cur[i].v;
       IF (0 <= x) AND (x < game.nCols) AND (0 <= y) AND (y < game.nRows) THEN
         board [x][y] := curTint [(i+curRot) MOD game.nTiles];
       END;
@@ -834,14 +798,14 @@ PROCEDURE BlinkWipeouts (on: BOOLEAN) =
   BEGIN
     IF (on) THEN (* erase wipeouts *)
       FOR i := 0 TO nWipeouts-1 DO
-        x := wipeout[i].x;
-	y := wipeout[i].y;
+        x := wipeout[i].h;
+	y := wipeout[i].v;
         PaintTile (x, y, WHITE);
       END;
     ELSE (* repaint wipeouts *)
       FOR i := 0 TO nWipeouts-1 DO
-        x := wipeout[i].x;
-	y := wipeout[i].y;
+        x := wipeout[i].h;
+	y := wipeout[i].v;
         PaintTile (x, y, board[x][y]);
       END;
     END;
@@ -853,8 +817,8 @@ PROCEDURE CollapseWipeouts () =
   BEGIN
     (* mark the wipeouts *)
     FOR i := 0 TO nWipeouts-1 DO
-      x1 := wipeout[i].x;
-      y1 := wipeout[i].y;
+      x1 := wipeout[i].h;
+      y1 := wipeout[i].v;
       board [x1][y1] := NO_COLOR;
     END;
 
@@ -881,6 +845,25 @@ PROCEDURE CollapseWipeouts () =
     END;
   END CollapseWipeouts;
 
+
+(*--------------------------------------------------------------- threads ---*)
+
+PROCEDURE Clock (<*UNUSED*> arg: REFANY): REFANY =
+  BEGIN
+    LOOP
+      Thread.Pause (delay);
+      IF (running) AND (NOT paused) THEN
+        PutEvent (Event.Tick);
+      END;
+    END;
+  END Clock;
+
+PROCEDURE Machine (<*UNUSED*> arg: REFANY): REFANY =
+  BEGIN
+    LOOP
+      Advance (GetEvent ());
+    END;
+  END Machine;
 
 PROCEDURE Advance (ev: Event) =
   BEGIN
@@ -925,7 +908,7 @@ PROCEDURE Advance (ev: Event) =
 
     | Event.Drop =>
         IF (NOT dropped) THEN
-          ScorePoints ((game.nRows - loc.y) * Height_pts);
+          ScorePiece ((game.nRows - loc.v) * Height_pts);
 	  dropped := TRUE;
         END;
         IF (state = State.Falling) THEN
@@ -962,161 +945,434 @@ PROCEDURE Advance (ev: Event) =
 (*                  Event handlers                            *)
 (**************************************************************)
 
-PROCEDURE ClockTick (<*UNUSED*> arg: Xt.Pointer;
-                     <*UNUSED*> id: Xt.IntervalIdStar) =
-  BEGIN
-    IF NOT (paused) THEN
-      IF (running) THEN
-        Advance (Event.Tick);
-        StartClock ();
-      END;
-    END;
-  END ClockTick;
-
-PROCEDURE GoPressed (<*UNUSED*> w: Xt.Widget;
-                     <*UNUSED*> data, env: Xt.Pointer) =
+PROCEDURE GoPressed (<*UNUSED*> v: ButtonVBT.T;  READONLY m: VBT.MouseRec) =
   BEGIN
     IF (state = State.Done) AND (NOT running) THEN
       ResetGame ();
       state   := State.Pausing;
       counter := 2;
       running := TRUE;
-      SetLabel (stateLabel, "State:  RUNNING  ");
-      MaskButtons ("gPSxlhz");
+      SetLabel (stateLabel, "RUNNING  ");
+      SetLabel (goTitle, "Stop");
+      startTime := Time.Now ();
     ELSIF (paused) THEN
+      startTime := startTime + (Time.Now () - pauseTime);
       paused := FALSE;
-      SetLabel (stateLabel, "State:  RUNNING  ");
-      MaskButtons ("gPSxlhz");
-      Repaint ();
-      Advance (Event.Drop);
+      SetLabel (stateLabel, "RUNNING  ");
+      PaintGame (boardVBT, Region.Full);
+      PutEvent (Event.Drop);
+    ELSIF (running) THEN
+      EndGame ();
     END;
-    GrabFocus ();
-    StartClock ();
+    GetFocus (m.time);
   END GoPressed;
 
-PROCEDURE PausePressed (<*UNUSED*> w: Xt.Widget; 
-                        <*UNUSED*> data, env: Xt.Pointer) =
+PROCEDURE PausePressed (<*UNUSED*> v: ButtonVBT.T;  READONLY m: VBT.MouseRec) =
   BEGIN
-    IF (paused) OR (NOT running) THEN RETURN END;
-    StopClock ();
-    paused := TRUE;
-    SetLabel (stateLabel, "State:  PAUSED   ");
-    MaskButtons ("GpSxlhz");
-    Repaint ();
+    IF (running) AND (NOT paused) THEN
+      pauseTime := Time.Now ();
+      paused := TRUE;
+      SetLabel (stateLabel, "PAUSED   ");
+      SetLabel (goTitle, "Resume");
+      PaintGame (boardVBT, Region.Full);
+    END;
+    GetFocus (m.time);
   END PausePressed;
 
-PROCEDURE StopPressed (<*UNUSED*> w: Xt.Widget; 
-                       <*UNUSED*> data, env: Xt.Pointer) =
+PROCEDURE OkPressed (<*UNUSED*> v: ButtonVBT.T;
+                     <*UNUSED*> READONLY m: VBT.MouseRec) =
+  (* We're done looking at the scores *)
+  <*FATAL Split.NotAChild*>
   BEGIN
-     StopClock ();
-     state    := State.Done;
-     counter  := 9999999;
-     running  := FALSE;
-     paused   := FALSE;
-     SetLabel (stateLabel, "State:  DONE     ");
-     MaskButtons ("GpsXLHZ");
-  END StopPressed;
+    TSplit.SetCurrent (chassis, gameVBT);
+    VBT.ForceRepaint (chassis, Region.Full);
+  END OkPressed;
 
-PROCEDURE LevelPressed (<*UNUSED*> w: Xt.Widget; 
-                        <*UNUSED*> data, env: Xt.Pointer) =
-  VAR label: Text.T;
+PROCEDURE LevelPressed (<*UNUSED*> v: ButtonVBT.T;
+                        <*UNUSED*> READONLY m: VBT.MouseRec) =
+  VAR label: TEXT;
   BEGIN
     IF (running) OR (paused) THEN RETURN END;
     level := (level MOD Max_level) + 1;
-    label := Text.Cat (" Level: ", Fmt.Int (level));
-    SetLabel (levelButton, Fmt.Pad (label, 17, ' ', Fmt.Align.Left));
+    label := " Level: " & Fmt.Int (level);
+    SetLabel (levelTitle, Fmt.Pad (label, 17, ' ', Fmt.Align.Left));
   END LevelPressed;
 
-PROCEDURE GamePressed (<*UNUSED*> w: Xt.Widget; 
-                       <*UNUSED*> data, env: Xt.Pointer) =
-  VAR label: Text.T;
+PROCEDURE GamePressed (<*UNUSED*> v: ButtonVBT.T;
+                       <*UNUSED*> READONLY m: VBT.MouseRec) =
   BEGIN
     IF (running) OR (paused) THEN RETURN END;
     gameID := (gameID + 1) MOD NUMBER (all_games);
-    game := all_games[gameID];
-    label :=  Text.Cat (" Game: ", game.name);
-    SetLabel (gameButton, Fmt.Pad (label, 17, ' ', Fmt.Align.Left));
-    ResetGame ();
+    SetGame (gameID);
   END GamePressed;
 
-PROCEDURE HandPressed (<*UNUSED*> w: Xt.Widget; 
-                       <*UNUSED*> data, env: Xt.Pointer) =
+PROCEDURE SetGame (id: INTEGER) =
+  <*FATAL TrestleComm.Failure*>
+  BEGIN
+    gameID := id;
+    game   := all_games[id];
+    SetLabel (gameTitle, "Game: " & game.name);
+    ResetScoreFileName ();
+    Trestle.Decorate (chassis, game.name, game.name, game.name);
+    <* ASSERT game.nPieces <= LAST(Color) *>
+    ResetGame ();
+  END SetGame;
+
+PROCEDURE HandPressed (<*UNUSED*> v: ButtonVBT.T;
+                       <*UNUSED*> READONLY m: VBT.MouseRec) =
   BEGIN
     IF (running) OR (paused) THEN RETURN END;
     one_hand := NOT one_hand;
     SetKeyBindings (one_hand);
   END HandPressed;
 
-PROCEDURE SpeedPressed (<*UNUSED*> w: Xt.Widget;
-		        <*UNUSED*> data, env: Xt.Pointer) =
+PROCEDURE SpeedPressed (<*UNUSED*> v: ButtonVBT.T;
+                       <*UNUSED*> READONLY m: VBT.MouseRec) =
   BEGIN
     IF (running) OR (paused) THEN RETURN END;
     speed_up := NOT speed_up;
     IF speed_up
-      THEN SetLabel (speedButton, " Speedup: on     ");
-      ELSE SetLabel (speedButton, " Speedup: off    ");
+      THEN SetLabel (speedTitle, " Speedup: on     ");
+      ELSE SetLabel (speedTitle, " Speedup: off    ");
     END;
   END SpeedPressed;
 
-PROCEDURE QuitPressed (<*UNUSED*> w: Xt.Widget;
-		       <*UNUSED*> data, env: Xt.Pointer) =
+PROCEDURE QuitPressed (<*UNUSED*> v: ButtonVBT.T;
+                       <*UNUSED*> READONLY m: VBT.MouseRec) =
   BEGIN
-(*IF (kbstate.global_auto_repeat = ORD(TRUE)) THEN X.XAutoRepeatOn (dpy) END;*)
-    Cstdlib.exit (0);
+    Process.Exit (0);
   END QuitPressed;
 
-PROCEDURE KeyClick (<*UNUSED*> w     : Xt.Widget;
-                    <*UNUSED*> tag   : Xt.Pointer;
-                               event : X.XAnyEventStar;
-                    <*UNUSED*> cont  : Xt.BooleanStar) =
-  VAR i: INTEGER;  buf: ARRAY [0..31] OF CHAR;
+(*---------------------------------------------------------------- scores ---*)
+
+TYPE
+  Result = REF RECORD
+    next   : Result;
+    player : TEXT;
+    score  : ScoreFile.Score;
+  END;
+
+VAR
+  scoreFile : TEXT := "";
+  dumping   : BOOLEAN := FALSE;
+
+PROCEDURE UpdateScore () =
+  VAR s: ScoreFile.Score;
   BEGIN
-   CASE (event^.type) OF
-   | X.ButtonPress =>
-      WITH z = LOOPHOLE (event, X.XButtonEventStar)^ DO
-        CASE (z.button) OF
-        | X.Button1 =>  Advance (Event.Move_left);
-        | X.Button2 =>  Advance (Event.Rotate_left);
-        | X.Button3 =>  Advance (Event.Move_right);
-        ELSE            (* do nothing *)
+    s.n_games    := 1;
+    s.n_seconds  := stopTime - startTime;
+    s.best_date  := Time.Now ();
+    s.best_wiped := nWiped;
+    s.best_level := level;
+    s.best_score := score;
+
+    TRY
+      ScoreFile.Put (scoreFile, PlayerName (), s);
+    EXCEPT ScoreFile.Error(msg) =>
+      NoteScoreFileError ("update", msg);
+    END;
+  END UpdateScore;
+
+PROCEDURE ScoresPressed (<*UNUSED*> v: ButtonVBT.T;
+                         <*UNUSED*> READONLY m: VBT.MouseRec) =
+  <*FATAL Split.NotAChild*>
+  VAR
+    j  := 0;
+    wr := TextWr.New ();
+    r  := GetResults ();
+    me := PlayerName ();
+    zz : Result := NIL;
+  BEGIN
+    FOR i := 0 TO MaxScores-1 DO
+      IF (r = NIL) THEN EXIT END;
+      PrintResult (wr, r);
+      SetLabel (scoreRows[j], TextWr.ToText (wr));  INC (j);
+      IF (zz = NIL) AND Text.Equal (r.player, me) THEN zz := r END;
+      r := r.next;
+    END;
+
+    (* see if we can print my score *)
+    IF (zz = NIL) THEN
+      WHILE (r # NIL) DO
+        IF Text.Equal (r.player, me) THEN
+          PrintResult (wr, r);
+          SetLabel (scoreRows[j], BlankLine);  INC (j);
+          SetLabel (scoreRows[j], TextWr.ToText (wr));  INC (j);
         END;
       END;
+    END;
 
-   | X.KeyPress =>
-      WITH z = LOOPHOLE (event, X.XKeyEventStar) DO
-        i := X.XLookupString (z, ADR (buf[0]), BYTESIZE (buf), NIL, NIL);
+    FOR i := j TO LAST (scoreRows) DO
+      SetLabel (scoreRows[i], BlankLine);
+    END;
+
+    (* and show it *)
+    TSplit.SetCurrent (chassis, scoresVBT);
+    VBT.ForceRepaint (chassis, Region.Full);
+  END ScoresPressed;
+
+PROCEDURE DumpScoreFiles () =
+  <*FATAL Thread.Alerted, Wr.Failure*>
+  VAR wr := Stdio.stdout;
+  BEGIN
+    dumping := TRUE;
+    FOR i := FIRST (all_games) TO LAST (all_games) DO
+      game := all_games[i];
+      ResetScoreFileName ();
+      IF ScoresExist () THEN
+        Wr.PutText (wr, Wr.EOL & "------ ");
+        Wr.PutText (wr, game.name);
+        Wr.PutText (wr, " ------" & Wr.EOL);
+        DumpScoreFile ();
       END;
-      (*** IF (i <= 0) THEN RETURN END; ***)
-      Advance (keymap[buf[0]]);
+    END;
+    Wr.Flush  (wr);
+  END DumpScoreFiles;
 
-   ELSE (* ignore event *)
-   END;
+PROCEDURE ScoresExist (): BOOLEAN =
+  BEGIN
+    TRY
+      EVAL FS.Status (scoreFile);
+      RETURN TRUE;
+    EXCEPT OSError.E =>
+      RETURN FALSE;
+    END;
+  END ScoresExist;
+
+PROCEDURE DumpScoreFile () =
+  <*FATAL Thread.Alerted, Wr.Failure*>
+  VAR r := GetResults ();  wr := Stdio.stdout;
+  BEGIN
+    Wr.PutText (wr, Title1);  Wr.PutText (wr, Wr.EOL);
+    Wr.PutText (wr, Title2);  Wr.PutText (wr, Wr.EOL);
+    Wr.PutText (wr, Title3);  Wr.PutText (wr, Wr.EOL);
+    Wr.PutText (wr, Title4);  Wr.PutText (wr, Wr.EOL);
+
+    WHILE (r # NIL) DO
+      PrintResult (wr, r);
+      Wr.PutText (wr, Wr.EOL);
+      r := r.next;
+    END;
+    Wr.PutText (wr, Wr.EOL);
+    Wr.Flush (wr);
+  END DumpScoreFile;
+
+PROCEDURE GetResults (): Result =
+  VAR
+    n_results   := 0;
+    all_results : Result;
+
+  PROCEDURE NoteScore (p: ScoreFile.Player;  READONLY s: ScoreFile.Score) =
+    VAR 
+    BEGIN
+      all_results := NEW(Result, next := all_results, player := p, score := s);
+      INC (n_results);
+    END NoteScore;
+
+  BEGIN
+    TRY
+      ScoreFile.Enumerate (scoreFile, NoteScore);
+    EXCEPT ScoreFile.Error(msg) =>
+      NoteScoreFileError ("read", msg);
+    END;
+    RETURN SortResults (all_results, n_results);
+  END GetResults;
+
+PROCEDURE SortResults (r: Result;  cnt: INTEGER): Result =
+  VAR
+    map := NEW (REF ARRAY OF INTEGER, cnt);
+    ref := NEW (REF ARRAY OF Result, cnt);
+    x   : Result;
+
+  PROCEDURE CmpResult (a, b: INTEGER): [-1..+1] =
+    VAR xa := ref[a];  xb := ref[b];
+    BEGIN
+      IF    (xa.score.best_score > xb.score.best_score) THEN RETURN -1;
+      ELSIF (xa.score.best_score < xb.score.best_score) THEN RETURN +1;
+      ELSE RETURN Text.Compare (xa.player, xb.player);
+      END;
+    END CmpResult;
+
+  BEGIN
+    FOR i := 0 TO cnt-1 DO
+      ref [i] := r;  r := r.next;
+      map [i] := i;
+    END;
+
+    (* sort them *)
+    IntArraySort.Sort (map^, CmpResult);
+
+    (* rebuild the linked list *)
+    r := NIL;
+    FOR i := cnt-1 TO 0 BY -1 DO
+      x := ref [map [i]];
+      x.next := r;
+      r := x;
+    END;
+
+    RETURN r;
+  END SortResults;
+
+PROCEDURE PrintResult (wr: Wr.T;  r: Result) =
+  <*FATAL Wr.Failure, Thread.Alerted*>
+  VAR
+    xx      : ARRAY [0..11] OF TEXT;
+    minutes := ROUND ((r.score.n_seconds + 30.0d0) / 60.0d0);
+    hours   := minutes DIV 60;
+    date    := Date.FromTime (r.score.best_date);
+  BEGIN
+    minutes := minutes - hours * 60;
+    xx[0]  := Text.Sub (r.player, 0, 16);
+    xx[1]  := Fmt.Int (r.score.n_games);
+    xx[2]  := Fmt.Int (hours);
+    xx[3]  := Fmt.Int (minutes);
+    xx[4]  := Fmt.Int (r.score.best_score);
+    xx[5]  := Fmt.Int (r.score.best_wiped);
+    xx[6]  := Fmt.Int (r.score.best_level);
+    xx[7]  := Fmt.Int (date.year MOD 100);
+    xx[8]  := Fmt.Int (ORD (date.month) + 1);
+    xx[9]  := Fmt.Int (date.day);
+    xx[10] := Fmt.Int (date.hour);
+    xx[11] := Fmt.Int (date.minute);
+    Wr.PutText (wr, Fmt.FN("%-16s %4s %3s:%02s  %7s %6s  %s  %02s.%02s.%02s %2s:%02s", xx));
+  END PrintResult;
+
+PROCEDURE PlayerName (): TEXT =
+  VAR n: TEXT;
+  BEGIN
+    n := Env.Get (ALIAS);
+    IF (n # NIL) THEN RETURN n END;
+    n := OSConfig.UserName ();
+    IF (n # NIL) THEN RETURN n END;
+    RETURN "<unknown player>";
+  END PlayerName;
+
+PROCEDURE ResetScoreFileName () =
+  BEGIN
+    scoreFile := ScoreDir.Root & game.name & ".scores";
+  END ResetScoreFileName;
+
+PROCEDURE NoteScoreFileError (op, msg: TEXT) =
+  <*FATAL ANY*>
+  BEGIN
+    IF (dumping) THEN
+      IO.Put ("** unable to " & op & " score file \"" & scoreFile & "\"");
+      IO.Put ("**     " & msg);
+    ELSE
+      (* clear the score file display *)
+      FOR i := FIRST (scoreRows) TO LAST (scoreRows) DO
+        SetLabel (scoreRows [i], BlankLine);
+      END;
+
+      (* insert the error message *)
+      SetLabel (scoreRows [2], "** unable to " & op & " score file \""
+                 & scoreFile & "\"");
+      SetLabel (scoreRows [3], "**     " & msg);
+
+      (* and show it *)
+      TSplit.SetCurrent (chassis, scoresVBT);
+      VBT.ForceRepaint (chassis, Region.Full);
+    END;
+  END NoteScoreFileError;
+
+(*--------------------------------------------------------- game board VBT ---*)
+
+TYPE
+  GameVBT = VBT.Leaf OBJECT OVERRIDES
+    mouse    := MouseClick;
+    key      := KeyClick;
+    reshape  := ReshapeGame;
+    repaint  := PaintGame;
+    shape    := GameShape;
+    misc     := GameMisc;
+  END;
+
+PROCEDURE KeyClick (<*UNUSED*> v: GameVBT;  READONLY cd: VBT.KeyRec) =
+  VAR e: Event;
+  BEGIN
+    IF (cd.wentDown) THEN
+      e := keymap [Word.And (cd.whatChanged, 16_ff)];
+      IF (e # Event.Noop) THEN  PutEvent (e);  END;
+    END;
   END KeyClick;
 
-PROCEDURE DoExpose (<*UNUSED*> w: Xt.Widget;  <*UNUSED*> tag: Xt.Pointer;
-                    <*UNUSED*> event: X.XAnyEventStar; 
-                    <*UNUSED*>cont: Xt.BooleanStar) =
+PROCEDURE MouseClick (<*UNUSED*> v: GameVBT;  READONLY cd: VBT.MouseRec) =
   BEGIN
-    Resize ();
-    Repaint ();
-  END DoExpose;
-
-PROCEDURE MoveFocus (<*UNUSED*> w: Xt.Widget;  <*UNUSED*> tag: Xt.Pointer;
-		     event: X.XAnyEventStar;
-                     <*UNUSED*> cont: Xt.BooleanStar) =
-  BEGIN
-    CASE (event^.type) OF
-    | X.EnterNotify =>
-        (**** IF (running) THEN StartClock () END; ****)
-        GrabFocus ();
-
-    | X.LeaveNotify =>
-        DropFocus ();
-        (*** IF (running) THEN StopClock () END; ***)
-
-    ELSE (* ignore *)
+    IF (cd.clickType = VBT.ClickType.FirstDown) THEN
+      GetFocus (cd.time);
+      IF    (cd.whatChanged = VBT.Modifier.MouseL) THEN
+        PutEvent (Event.Move_left);
+      ELSIF (cd.whatChanged = VBT.Modifier.MouseM) THEN
+        PutEvent (Event.Rotate_left);
+      ELSIF (cd.whatChanged = VBT.Modifier.MouseR) THEN
+        PutEvent (Event.Move_right);
+      END;
     END;
-  END MoveFocus;
+  END MouseClick;
+
+PROCEDURE GameShape (<*UNUSED*> v  : GameVBT;
+                                ax : Axis.T;
+                     <*UNUSED*> n  : CARDINAL): VBT.SizeRange =
+  VAR sz: INTEGER;
+  BEGIN
+    IF (ax = Axis.T.Hor)
+      THEN sz := game.nCols * hUnit;
+      ELSE sz := game.nRows * vUnit;
+    END;
+    sz := Margin + sz;
+    RETURN VBT.SizeRange {lo := sz, pref := sz, hi := 1024};
+  END GameShape;
+
+PROCEDURE GameMisc (<*UNUSED*> v: VBT.T;  READONLY cd: VBT.MiscRec) =
+  BEGIN
+    IF (cd.type = VBT.Deleted) OR (cd.type = VBT.Lost)
+     (* OR (cd.type = VBT.Iconized) *) THEN
+      DropFocus ();
+    (*
+    ELSIF (cd.type = VBT.Deiconized) THEN
+      GetFocus (cd.time);
+    *)
+    END;
+  END GameMisc;
+
+PROCEDURE PaintGame (v: GameVBT;  READONLY rgn: Region.T) =
+  VAR s: Rect.T;  r := Region.BoundingBox (rgn);
+  BEGIN
+    VBT.PaintTint (v, r, VBT_White);
+    VBT.PaintTint (v, Rect.Meet (r, northE), VBT_Black);
+    VBT.PaintTint (v, Rect.Meet (r, eastE), VBT_Black);
+    VBT.PaintTint (v, Rect.Meet (r, southE), VBT_Black);
+    VBT.PaintTint (v, Rect.Meet (r, westE), VBT_Black);
+
+    IF (paused) THEN
+      VBT.PaintTint (v, Rect.Meet (r, domain), VBT_White);
+      RETURN;
+    END;
+
+    (* paint the fixed pieces *)
+    FOR x := 0 TO game.nCols-1 DO
+      s.west := domain.west + x * hUnit;
+      s.east := s.west + hUnit;
+      FOR y := 0 TO game.nRows-1 DO
+        s.north := domain.north + y * vUnit;
+        s.south := s.north + vUnit;
+	IF (board[x][y] # WHITE) THEN
+          VBT.PaintTint (boardVBT, Rect.Meet (r, s), tints [board[x][y]]);
+          (** PaintTile (x, y, board[x][y]) **)
+        END;
+      END;
+    END;
+
+    (* paint the current piece *)
+    IF (running) AND (cur # NIL) THEN  RepaintPiece ()  END;
+  END PaintGame;
+
+PROCEDURE ReshapeGame (v: GameVBT;  READONLY cd: VBT.ReshapeRec) =
+  BEGIN
+    Resize (cd.new);
+    PaintGame (v, Region.Full);
+  END ReshapeGame;
+
 
 (**************************************************************)
 (*                  main program                              *)
@@ -1124,93 +1380,14 @@ PROCEDURE MoveFocus (<*UNUSED*> w: Xt.Widget;  <*UNUSED*> tag: Xt.Pointer;
 
 
 PROCEDURE Init () =
-  VAR args: ArgList;
+  VAR controls, ignore: VBT.T;
   BEGIN
-    (* build the game descriptions & scale them to the current aspect ratio *)
-    all_games[0] := Columns.Build ();
-    all_games[1] := Rows.Build ();
-    all_games[2] := Bars.Build ();
-    all_games[3] := Squares.Build ();
-    all_games[4] := Threes.Build ();
-    FOR i := 0 TO LAST (all_games) DO ScaleGame (all_games[i]) END;
-    game := all_games[0];
-    gameID := 0;
-
     (* seed the random number generator *)
     rand := NEW (Random.Default).init (fixed := FALSE);
 
-    (* top-level window *)
-    VAR
-      name := TtoS ("Columns");
-      argc : Xt.Cardinal := RTLinker.info.argc;
-      argv : X.Argv := RTLinker.info.argv;
-    BEGIN
-      topWindow := Xt.Initialize (name, name, NIL, 0, argc, argv);
-    END;
-
-    args.n := 0;
-    AddArgI (args, XtN.allowShellResize, ORD (TRUE));
-    AddArgI (args, XtN.input,            ORD (TRUE));
-    Xt.SetValues (topWindow, args.a, args.n);
-
-    args.n := 0;
-    AddArgI (args, XtN.borderWidth, 0);
-    AddArgI (args, XtN.sensitive,   ORD (TRUE));
-    AddArgI (args, XtN.orientation, Xmu.orientHorizontal);
-    AddArgI (args, XtN.input,       ORD (TRUE));
-    box := Xt.CreateManagedWidget (TtoS ("outerbox"), Xaw.panedWidgetClass,
-                                   topWindow, args.a, args.n);
-
-    (* create the column of labels & buttons *)
-    args.n := 0;
-    AddArgI (args, XtN.borderWidth, 0);
-    AddArgI (args, XtN.input,       ORD (TRUE));
-    AddArgI (args, XtN.orientation, Xmu.orientVertical);
-    AddArgI (args, XtN.sensitive,   ORD (TRUE));
-    AddArgI (args, XtN.showGrip,    ORD (FALSE));
-    form := Xt.CreateManagedWidget (TtoS ("form"), Xaw.boxWidgetClass, box,
-                                      args.a, args.n);
-
-    scoreLabel  := CreateLabel  ("Score:  0        ");
-    wipeLabel   := CreateLabel  ("Erased: 0        ");
-    stateLabel  := CreateLabel  ("State:  READY    ");
-    EVAL           CreateLabel  ("                 ");
-    keyLabel[0] := CreateLabel  ("                 ");
-    keyLabel[1] := CreateLabel  ("                 ");
-    keyLabel[2] := CreateLabel  ("                 ");
-    keyLabel[3] := CreateLabel  ("                 ");
-    keyLabel[4] := CreateLabel  ("                 ");
-    EVAL           CreateLabel  ("                 ");
-    goButton    := CreateButton (" Go              ", GoPressed);
-    pauseButton := CreateButton (" Pause           ", PausePressed);
-    stopButton  := CreateButton (" Stop            ", StopPressed);
-    gameButton  := CreateButton (" Game: Columns   ", GamePressed);
-    levelButton := CreateButton (" Level: 1        ", LevelPressed);
-    handButton  := CreateButton (" Hands: one      ", HandPressed);
-    speedButton := CreateButton (" Speedup: on     ", SpeedPressed);
-    EVAL           CreateLabel  ("                 ");
-    quitButton  := CreateButton (" Quit            ", QuitPressed);
-
-    (* playing area *)
-    args.n := 0;
-    AddArgI (args, XtN.width,         202);
-    AddArgI (args, XtN.height,        402);
-    AddArgI (args, XtN.borderWidth,   0);
-    AddArgI (args, XtN.sensitive,     ORD (TRUE));
-    AddArgI (args, XtN.input,         ORD (TRUE));
-    AddArgI (args, XtN.showGrip,      ORD (FALSE));
-    playingArea := Xt.CreateManagedWidget (TtoS ("playingArea"),
-                               Xaw.simpleWidgetClass, box, args.a, args.n);
-    Xt.AddEventHandler (playingArea, X.ExposureMask, ORD (FALSE), DoExpose);
-
-    MaskButtons ("GpsXLHZ");
-    Xt.RealizeWidget (topWindow);
-    dpy := Xt.Display (topWindow);
-    win := Xt.XtWindow (topWindow);
-    gc := X.XCreateGC (dpy, win, 0, NIL);
-    playWin := Xt.XtWindow (playingArea);
-
     (* build the colors *) 
+    VBT_White  := PaintOp.FromRGB (1.0, 1.0, 1.0);
+    VBT_Black  := PaintOp.FromRGB (0.0, 0.0, 0.0);
     tints [ 0] := MakeColor (255, 255, 255); (* white *)
     tints [ 1] := MakeColor (255, 160,   0); (* orange *)
     tints [ 2] := MakeColor (255, 255,   0); (* yellow *)
@@ -1235,29 +1412,179 @@ PROCEDURE Init () =
     END;
     tints [BLACK] := MakeColor (0, 0, 0); (* black *)
 
+    (* Build the buttons and labels *)
+    scoreLabel  := NewLabel  ("0        ");
+    wipeLabel   := NewLabel  ("0        ");
+    stateLabel  := NewLabel  ("READY    ");
+
+    keyLabel[0] := NewLabel  ("                 ");
+    keyLabel[1] := NewLabel  ("                 ");
+    keyLabel[2] := NewLabel  ("                 ");
+    keyLabel[3] := NewLabel  ("                 ");
+    keyLabel[4] := NewLabel  ("                 ");
+
+    goButton    := NewButton (" Go              ", GoPressed, goTitle);
+    pauseButton := NewButton (" Pause           ", PausePressed, pauseTitle);
+    gameButton  := NewButton (" Game: Columns   ", GamePressed, gameTitle);
+    levelButton := NewButton (" Level: 1        ", LevelPressed, levelTitle);
+    handButton  := NewButton (" Hands: one      ", HandPressed, handTitle);
+    speedButton := NewButton (" Speedup: on     ", SpeedPressed, speedTitle);
+    scoreButton := NewButton (" Scores          ", ScoresPressed, scoreTitle);
+    quitButton  := NewButton (" Quit            ", QuitPressed, quitTitle);
+
+    (* create the column of labels & buttons *)
+    controls := VBTCol (
+                VBTRow (NewLabel ("Score:  "), scoreLabel),
+                VBTRow (NewLabel ("Erased: "), wipeLabel),
+                VBTRow (NewLabel ("State:  "), stateLabel),
+                Gap (40.0, 3.0),
+                keyLabel[0],
+                keyLabel[1],
+                keyLabel[2],
+                keyLabel[3],
+                keyLabel[4],
+                Gap (),
+                goButton,
+                Gap (),
+                pauseButton,
+                Gap (),
+                gameButton,
+                Gap (),
+                levelButton,
+                Gap (),
+                handButton,
+                Gap (),
+                speedButton,
+                Gap (),
+                scoreButton,
+                Gap (),
+                quitButton);
+
+
+    (* playing area *)
+    boardVBT := NEW (GameVBT);
+    gameVBT := HVSplit.Cons (Axis.T.Hor, VBTCol (Gap()), controls, boardVBT);
+
+    (* score display *)
+    scoresVBT := HVSplit.New (Axis.T.Ver);
+    Split.AddChild (scoresVBT, NewLabel (Title1));
+    Split.AddChild (scoresVBT, NewLabel (Title2));
+    Split.AddChild (scoresVBT, NewLabel (Title3));
+    Split.AddChild (scoresVBT, NewLabel (Title4));
+    FOR i := 0 TO LAST (scoreRows) DO
+      scoreRows[i] := NewLabel (BlankLine);
+      Split.AddChild (scoresVBT, scoreRows[i]);
+    END;
+    Split.AddChild (scoresVBT, VBTRow (NewButton ("Ok", OkPressed, ignore)));
+    Split.AddChild (scoresVBT, NewLabel (" "));      
+
+    (* top-level installed window *)
+    chassis := TSplit.Cons (gameVBT, scoresVBT);
+
+    (* select a game, key bindings & playing speed *)
+    SetGame (0);
     SetKeyBindings (one_hand);
     ResetGame ();
+    Resize (Rect.Empty);
+    InitQueue ();
 
-    X.XGetKeyboardControl (dpy, ADR (kbstate));
-
-    (* catch key strokes (wherever they might be delivered! *)
-    Xt.AddEventHandler (topWindow, X.KeyPressMask + X.ButtonPressMask,
-                           ORD (FALSE), KeyClick, NIL);
-    Xt.AddEventHandler (box, X.KeyPressMask + X.ButtonPressMask,
-                           ORD (FALSE), KeyClick, NIL);
-    Xt.AddEventHandler (form, X.KeyPressMask + X.ButtonPressMask,
-                           ORD (FALSE), KeyClick, NIL);
-    Xt.AddEventHandler (playingArea, X.KeyPressMask + X.ButtonPressMask,
-                           ORD (FALSE), KeyClick, NIL);
-
-    (* watch for coming and going focus *)
-    Xt.AddEventHandler (topWindow, X.EnterWindowMask + X.LeaveWindowMask,
-                           ORD (FALSE), MoveFocus, NIL);
-
+    (* start the threads *)
+    machine := Thread.Fork (NEW (Thread.Closure, apply := Machine));
+    clock   := Thread.Fork (NEW (Thread.Closure, apply := Clock));
   END Init;
 
+(*----------------------------------------------------------- event queue ---*)
+
+VAR
+  events: RECORD
+    mutex    : MUTEX;
+    cnt      : INTEGER;
+    head     : INTEGER;
+    tail     : INTEGER;
+    nonempty : Thread.Condition;
+    nonfull  : Thread.Condition;
+    contents : ARRAY [0..2] OF Event;
+  END;
+
+PROCEDURE InitQueue () =
+  BEGIN
+    events.cnt      := 0;
+    events.head     := 0;
+    events.tail     := 0;
+    events.mutex    := NEW (MUTEX);
+    events.nonfull  := NEW (Thread.Condition);
+    events.nonempty := NEW (Thread.Condition);
+  END InitQueue;
+
+PROCEDURE PutEvent (evt: Event) =
+  BEGIN
+    WITH z = events DO
+      LOCK z.mutex DO
+        WHILE (z.cnt >= NUMBER (z.contents)) DO
+          Thread.Wait (z.mutex, z.nonfull);
+        END;
+        z.contents [z.head] := evt;
+        INC (z.head);
+        IF (z.head >= NUMBER (z.contents)) THEN z.head := 0; END;
+        INC (z.cnt);
+      END;
+      Thread.Signal (z.nonempty);
+    END;
+  END PutEvent;
+
+PROCEDURE GetEvent (): Event =
+  VAR evt: Event;
+  BEGIN
+    WITH z = events DO
+      LOCK z.mutex DO
+        WHILE (z.cnt <= 0) DO
+          Thread.Wait (z.mutex, z.nonempty);
+        END;
+        evt := z.contents [z.tail];
+        INC (z.tail);
+        IF (z.tail >= NUMBER (z.contents)) THEN z.tail := 0; END;
+        DEC (z.cnt);
+      END;
+      Thread.Signal (z.nonfull);
+    END;
+    RETURN evt;
+  END GetEvent;
+
+(*------------------------------------------------------------- main program ---*)
+
+PROCEDURE DoIt () =
+  <* FATAL TrestleComm.Failure*>
+  VAR i: INTEGER;  arg: TEXT;
+  BEGIN
+    (* build the game descriptions & scale them to the current aspect ratio *)
+    all_games[0] := Columns.Build ();
+    all_games[1] := Rows.Build ();
+    all_games[2] := Bars.Build ();
+    all_games[3] := Squares.Build ();
+    all_games[4] := Threes.Build ();
+    FOR i := 0 TO LAST (all_games) DO ScaleGame (all_games[i]) END;
+    game := all_games[0];
+    gameID := 0;
+
+    (* check the command line options *)
+    i := 1;
+    WHILE (i < Params.Count) DO
+      arg := Params.Get (i);
+      IF Text.Equal (arg, "-scores") THEN
+        DumpScoreFiles ();
+        RETURN;
+      ELSE
+        IO.Put ("Unrecognized option: \"" & arg & "\", ignored" & Wr.EOL);
+      END;
+      INC (i);
+    END;
+
+    Init ();
+    ResetGame ();
+    Trestle.Install (chassis, game.name, game.name, game.name);
+    Trestle.AwaitDelete (chassis);
+  END DoIt;
+
 BEGIN
-  Init ();
-  (* GrabFocus (); *)
-  Xt.MainLoop ();
+  DoIt ();
 END Main.

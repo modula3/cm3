@@ -38,7 +38,7 @@ PROCEDURE Is(
     | NULL =>
         baseType := t;
         RETURN TRUE;
-    | M3AST_AS.Integer_type, M3AST_AS.Enumeration_type =>
+    | M3AST_AS.Integer_type, M3AST_AS.WideChar_type, M3AST_AS.Enumeration_type =>
         baseType := t;
         RETURN TRUE;
     | M3AST_AS.Subrange_type(subrange) =>
@@ -93,6 +93,8 @@ PROCEDURE SameSupertype(
           ELSE
             RETURN FALSE;
           END;
+      | M3AST_AS.WideChar_type =>
+          RETURN ISTYPE(base2, M3AST_AS.WideChar_type);
       | M3AST_AS.Integer_type =>
           RETURN ISTYPE(base2, M3AST_AS.Integer_type);
       ELSE
@@ -149,6 +151,7 @@ PROCEDURE CompareM3TYPEs(
     IF t1 = NIL THEN RETURN TRUE END;
     TYPECASE t1 OF
     | M3AST_AS.Integer_type,
+      M3AST_AS.WideChar_type,
       M3AST_AS.Enumeration_type,
       M3AST_AS.Subrange_type,
       M3AST_AS.Set_type,
@@ -172,7 +175,7 @@ PROCEDURE Identical(t1, t2: M3AST_SM.TYPE_SPEC_UNSET): BOOLEAN RAISES {}=
 
     (* assert: 't1' and 't2' are of the same form and neither is NIL *)
     TYPECASE t1 OF
-    | M3AST_AS.Integer_type =>
+    | M3AST_AS.Integer_type, M3AST_AS.WideChar_type =>
         RETURN TRUE;
     | M3AST_AS.Enumeration_type =>
         RETURN IdenticalEnumerations(t1, t2);
@@ -218,6 +221,8 @@ PROCEDURE SubType(t1, t2: M3AST_SM.TYPE_SPEC_UNSET): BOOLEAN RAISES {}=
       TYPECASE t1 OF
       | M3AST_AS.Integer_type =>
           RETURN ISTYPE(t2, M3AST_AS.Integer_type);
+      | M3AST_AS.WideChar_type =>
+          RETURN ISTYPE(t2, M3AST_AS.WideChar_type);
       | M3AST_AS.Enumeration_type =>
           RETURN ISTYPE(t2, M3AST_AS.Enumeration_type) AND
               IdenticalEnumerations(t1, t2);
@@ -242,6 +247,8 @@ PROCEDURE SubType(t1, t2: M3AST_SM.TYPE_SPEC_UNSET): BOOLEAN RAISES {}=
               RETURN unset OR
                   (ISTYPE(base1, M3AST_AS.Enumeration_type) AND
                       IdenticalEnumerations(base1, t2));
+          | M3AST_AS.WideChar_type =>
+              RETURN unset OR ISTYPE(base1, M3AST_AS.WideChar_type);
           | M3AST_AS.Integer_type =>
               RETURN unset OR ISTYPE(base1, M3AST_AS.Integer_type);
           ELSE

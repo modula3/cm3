@@ -14,6 +14,7 @@ IMPORT AnchorBtnVBT, Axis, BorderedVBT, ButtonVBT, Card,
   PaintOp, Params, Point, Rd, RigidVBT, Solve, Solve2, Split, Stdio, 
   TSplit, Text, TextVBT, TextureVBT, Thread, Trestle, TrestleComm, VBT, Wr, 
   ZSplit, KeyboardKey, Process, Time;
+IMPORT RTProcess, IO;
 
 (* IMPORT RTHeapStats; *)
 (* IMPORT RTutils, RTCollector; *)
@@ -21,8 +22,8 @@ IMPORT AnchorBtnVBT, Axis, BorderedVBT, ButtonVBT, Card,
 FROM Card IMPORT Width, Height, Overlap, Value, Suit, Real, Family;
 
 CONST
-  Gutter = 16;
-  Gap    = 8;
+  Gutter = 6; (*16*)
+  Gap    = 3; (*8*)
 
 TYPE
   State = REF RECORD
@@ -40,15 +41,14 @@ VAR
   buttonFont := Font.FromName(
                   ARRAY OF
                     TEXT{
-                    "-*-menu-medium-r-*-*-*-120-*-*-*-*-iso8859-1",
                     "-*-helvetica-bold-r-*-*-*-120-*-*-*-*-iso8859-1",
+                    "-*-menu-medium-r-*-*-*-120-*-*-*-*-iso8859-1",
                     "-*-itc souvenir-demi-r-*-*-*-120-*-*-*-*-iso8859-1",
                     "-*-times-bold-r-*-*-*-120-*-*-*-*-iso8859-1"});
   textFont := Font.FromName(
                 ARRAY OF
                   TEXT{
-                  "-*-new century schoolbook-medium-r-"
-                    & "*-*-*-120-*-*-*-*-iso8859-1",
+                  "-*-new century schoolbook-medium-r-*-*-*-120-*-*-*-*-iso8859-1",
                   "-*-itc souvenir-demi-r-*-*-*-120-*-*-*-*-iso8859-1",
                   "-*-times-medium-r-*-*-*-120-*-*-*-*-iso8859-1",
                   "-*-helvetica-medium-r-*-*-*-120-*-*-*-*-iso8859-1"});
@@ -960,6 +960,15 @@ PROCEDURE Main () =
     END
   END Main;
 
+VAR old_handler: RTProcess.InterruptHandler := NIL;
+
+PROCEDURE CtrlC () =
+  BEGIN
+    IO.Put ("\r\n**Control-C**\r\n");
+    IF (old_handler # NIL) THEN old_handler (); END;
+  END CtrlC;
+
 BEGIN
+  old_handler := RTProcess.OnInterrupt (CtrlC);
   Main();
 END Solitaire.

@@ -352,7 +352,7 @@ PROCEDURE PackageSetup();
 VAR (* READONLY *) noArgs : Args;
 
 PROCEDURE New(swr: SynWr.T; env: GrammarEnv; 
-              stackSize: CARDINAL := 1024): T;
+              stackSize: CARDINAL := 10240): T;
 (* A new parsers, including a new scanner and the specified grammar
    and stack. Error messages are written to swr. 
    Use single-threaded. Separate parsers can be used

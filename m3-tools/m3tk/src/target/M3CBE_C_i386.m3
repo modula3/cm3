@@ -22,7 +22,7 @@ MODULE M3CBE_C_i386;
 IMPORT M3CBackEnd_C_cc;
 FROM M3CBackEnd_C_cc IMPORT a32, a64, a16, a8, minAlignment, recAlignment,
   arrayAlignment, ptrA, ptrS, realA, realS, longRealA, longRealS, intA, intS,
-  target;
+  wideCharA, wideCharS, target;
 
 CONST
   i386 = "i386";
@@ -31,8 +31,8 @@ PROCEDURE Init() RAISES {}=
   BEGIN
     a64 := 32; a32 := 32; a16 := 16; a8 := 8;
     minAlignment := 8; recAlignment := 8; arrayAlignment := 8;
-    ptrA := a32; realA := a32; longRealA := a64; intA := a32;
-    ptrS := 32; realS := 32; longRealS := 64; intS := 32;
+    ptrA := a32; realA := a32; longRealA := a64; intA := a32; wideCharA := 16;
+    ptrS := 32; realS := 32; longRealS := 64; intS := 32; wideCharS := 16;
     target := i386;
   END Init;
 

@@ -19,7 +19,7 @@ UNSAFE MODULE FingerPrint;
 (* of this software.                                                       *)
 (***************************************************************************)
 
-IMPORT TextF, Word;
+IMPORT Text AS M3Text, Word;
 
 CONST
   (*BITSPERBYTE = 8;*) (* unlikely to be machine dependent *)
@@ -760,26 +760,42 @@ PROCEDURE Text(t: TEXT;
   BEGIN
     h1 := 0;
     h2 := 0;
-    DataIncremental(ADR(t[0]), NUMBER(t^) - 1, h1, h2);
+    TextIncremental(t, h1, h2);
   END Text;
 
 PROCEDURE TextSingle(t: TEXT; 
                      VAR (* out *) h: INTEGER) RAISES {}=
   BEGIN
     h := 0;
-    DataIncrementalSingle(ADR(t[0]), NUMBER(t^) - 1, h);
+    TextIncrementalSingle(t, h);
   END TextSingle;
 
 PROCEDURE TextIncremental(t: TEXT; 
                           VAR (* out *) h1, h2: INTEGER) RAISES {}=
   BEGIN
-    DataIncremental(ADR(t[0]), NUMBER(t^) - 1, h1, h2);
+    TextSubIncremental(t, 0, M3Text.Length(t), h1, h2);
   END TextIncremental;
+
+PROCEDURE TextSubIncremental(t: TEXT;   start, len: CARDINAL;
+                          VAR (* out *) h1, h2: INTEGER) RAISES {}=
+  VAR buf: ARRAY [0..255] OF CHAR;
+  BEGIN
+    WHILE (len > 0) DO
+      M3Text.SetChars(buf, t, start);
+      DataIncremental(ADR(buf[0]), MIN(len, NUMBER(buf)), h1, h2);
+      INC(start, NUMBER(buf));  DEC(len, NUMBER(buf));
+    END;
+  END TextSubIncremental;
 
 PROCEDURE TextIncrementalSingle(t: TEXT; 
                                 VAR (* out *) h: INTEGER) RAISES {}=
+  VAR buf: ARRAY [0..255] OF CHAR;  x := 0;  len := M3Text.Length (t);
   BEGIN
-    DataIncrementalSingle(ADR(t[0]), NUMBER(t^) - 1, h);
+    WHILE (x < len) DO
+      M3Text.SetChars(buf, t, x);
+      DataIncrementalSingle(ADR(buf[0]), MIN(len-x, NUMBER(buf)), h);
+      INC(x, NUMBER(buf));
+    END;
   END TextIncrementalSingle;
 
 BEGIN

@@ -4,7 +4,8 @@
 
 MODULE Obliq;
 IMPORT Thread, SynWr, SynLocation, ObErr, ObCommand, ObLib, ObTree, ObScope, 
-       ObCheck, ObValue, ObEval, ObBuiltIn, NetObj, Text;
+       ObCheck, ObValue, ObEval, ObBuiltIn, NetObj, Text, SharedObj,
+       M3Config, ObPathSep;
 FROM ObValue IMPORT Error, Exception;
 
   VAR 
@@ -52,6 +53,13 @@ FROM ObValue IMPORT Error, Exception;
           scopeEnv := NIL, checkEnv := NIL, valueEnv := NIL, 
           nextFrame := NIL);
     TRY
+      env := NewEnv("hostName", NewText(ObValue.machineAddress), env);
+      env := NewEnv("target", NewText(M3Config.TARGET), env);
+      env := NewEnv("osType", NewText(M3Config.OS_TYPE), env);
+      env := NewEnv("pathSep", NewText(M3Config.PATH_SEP), env);
+      env := NewEnv("searchPathSep", 
+                    NewText(Text.FromChar(ObPathSep.SearchPathSeparator)),
+                    env);
       env := NewEnv("fileSysReader", 
                     ObValue.NewFileSystem(readOnly:=TRUE), env);
       env := NewEnv("fileSys", ObValue.NewFileSystem(readOnly:=FALSE), env);
@@ -458,13 +466,17 @@ FROM ObValue IMPORT Error, Exception;
     TRY 
       TYPECASE object OF
       | ObValue.ValObj(obj) =>
-          RETURN obj.remote.Select(label, FALSE, (*var*)hint);
+          RETURN obj.Select(label, FALSE, (*var*)hint);
       ELSE
         RaiseError("Obliq.ObjectSelect: object expected", loc);
         <*ASSERT FALSE*>
       END;
     EXCEPT 
     | ObValue.ServerError(msg) => RaiseError(msg, loc); <*ASSERT FALSE*>
+    | SharedObj.Error =>
+        RaiseException(ObValue.sharedException,
+          "on remote object selection", loc);
+        <*ASSERT FALSE*>
     | NetObj.Error =>
         RaiseException(ObValue.netException,
           "on remote object selection", loc);
@@ -483,7 +495,7 @@ FROM ObValue IMPORT Error, Exception;
     TRY 
       TYPECASE object OF
       | ObValue.ValObj(obj) =>
-        RETURN obj.remote.Invoke(label, NUMBER(args), args, 
+        RETURN obj.Invoke(label, NUMBER(args), args, 
                                  FALSE, (*var*) hint);
       ELSE
         RaiseError("Obliq.ObjectInvoke: object expected", loc);
@@ -491,6 +503,10 @@ FROM ObValue IMPORT Error, Exception;
       END;
     EXCEPT 
     | ObValue.ServerError(msg) => RaiseError(msg, loc); <*ASSERT FALSE*>
+    | SharedObj.Error =>
+        RaiseException(ObValue.sharedException,
+          "on remote object invocation", loc);
+        <*ASSERT FALSE*>
     | NetObj.Error =>
         RaiseException(ObValue.netException,
           "on remote object invocation", loc);
@@ -509,10 +525,13 @@ FROM ObValue IMPORT Error, Exception;
       TYPECASE object OF
       | ObValue.ValObj(obj) =>
           TRY 
-            obj.remote.Update(label, val, FALSE, (*var*) hint);
+            obj.Update(label, val, FALSE, (*var*) hint);
           EXCEPT 
           | ObValue.ServerError(msg) =>
               RaiseError(msg, loc);
+          | SharedObj.Error =>
+            RaiseException(ObValue.sharedException,
+                           "on remote object update", loc);
           | NetObj.Error =>
               RaiseException(ObValue.netException,
                 "on remote object update", loc);
@@ -531,8 +550,12 @@ FROM ObValue IMPORT Error, Exception;
       TYPECASE object OF
       | ObValue.ValObj(obj) =>
           TRY 
-            RETURN obj.remote.Has(label, (*var*) hint);
+            RETURN obj.Has(label, (*var*) hint);
           EXCEPT 
+          | SharedObj.Error =>
+            RaiseException(ObValue.sharedException,
+                           "on remote object 'has'", loc);
+            <*ASSERT FALSE*>
           | NetObj.Error =>
               RaiseException(ObValue.netException,
                 "on remote object 'has'", loc);
@@ -554,13 +577,17 @@ FROM ObValue IMPORT Error, Exception;
     TRY 
       TYPECASE object OF
       | ObValue.ValObj(obj) =>
-          RETURN ObValue.ObjClone1(obj.remote, NIL);
+          RETURN ObValue.ObjClone1(obj, NIL);
       ELSE 
         RaiseError("Obliq.ObjectClone1: object expected", loc);
         <*ASSERT FALSE*>
       END;
     EXCEPT 
     | ObValue.ServerError(msg) => RaiseError(msg, loc); <*ASSERT FALSE*>
+    | SharedObj.Error =>
+        RaiseException(ObValue.sharedException,
+          "on remote object cloning", loc);
+        <*ASSERT FALSE*>
     | NetObj.Error =>
         RaiseException(ObValue.netException,
           "on remote object cloning", loc);
@@ -574,12 +601,12 @@ FROM ObValue IMPORT Error, Exception;
 
   PROCEDURE ObjectClone(READONLY objects: Vals; loc: Location:=NIL): Val 
     RAISES {Error, Exception} =
-  VAR remObjs: REF ARRAY OF ObValue.RemObj;
+  VAR remObjs: REF ARRAY OF ObValue.ValObj;
   BEGIN
-    remObjs := NEW(REF ARRAY OF ObValue.RemObj, NUMBER(objects));
+    remObjs := NEW(REF ARRAY OF ObValue.ValObj, NUMBER(objects));
     FOR i:=0 TO NUMBER(objects)-1 DO
       TYPECASE objects[i] OF
-      | ObValue.ValObj(obj) => remObjs[i] := obj.remote;
+      | ObValue.ValObj(obj) => remObjs[i] := obj;
       ELSE
         RaiseError("Obliq.ObjectClone: object expected", loc);
         <*ASSERT FALSE*>
@@ -589,6 +616,10 @@ FROM ObValue IMPORT Error, Exception;
       RETURN ObValue.ObjClone(remObjs^, NIL); 
     EXCEPT 
     | ObValue.ServerError(msg) => RaiseError(msg, loc); <*ASSERT FALSE*>
+    | SharedObj.Error =>
+        RaiseException(ObValue.sharedException,
+          "on remote object cloning", loc);
+        <*ASSERT FALSE*>
     | NetObj.Error =>
         RaiseException(ObValue.netException,
           "on remote object cloning", loc);
@@ -605,8 +636,8 @@ FROM ObValue IMPORT Error, Exception;
   BEGIN
       TYPECASE object OF
       | ObValue.ValObj(object) =>
-          ObBuiltIn.NetExport(name, server, object.remote, loc);
-      ELSE RaiseError("Obliq.NetExport: network object expected", loc);
+          ObBuiltIn.NetExport(name, server, object, loc);
+      ELSE RaiseError("Obliq.NetExport: object expected", loc);
       END;
   END NetExport;
   
@@ -633,14 +664,56 @@ FROM ObValue IMPORT Error, Exception;
   BEGIN
       TYPECASE object OF
       | ObValue.ValObj(object) =>
-          RETURN ToText(ObBuiltIn.NetObjectWho(object.remote, loc), loc);
+          RETURN ToText(ObBuiltIn.NetObjectWho(object, loc), loc);
       | ObValue.ValEngine(engine) =>
           RETURN ToText(ObBuiltIn.NetEngineWho(engine.remote, loc), loc);
       ELSE
-        RaiseError("Obliq.NetWho: network object or engine expected", loc);
+        RaiseError("Obliq.NetWho: object or engine expected", loc);
         <*ASSERT FALSE*>
       END;
   END NetWho;
+
+  PROCEDURE ReplicaAcquireLock(object: Val; loc:SynLocation.T:=NIL)
+    RAISES {Exception} =
+    BEGIN
+      EVAL ObBuiltIn.ReplicaAcquireLock(object, loc);
+    END ReplicaAcquireLock;
+
+  PROCEDURE ReplicaReleaseLock(object: Val; loc: SynLocation.T:=NIL)
+    RAISES {Exception} =
+    BEGIN
+      EVAL ObBuiltIn.ReplicaReleaseLock(object, loc);
+    END ReplicaReleaseLock;
+
+  PROCEDURE ReplicaSetNodeName(name: TEXT := NIL; 
+                               loc: SynLocation.T:=NIL) : TEXT
+    RAISES {Exception, Error} =
+    BEGIN
+      IF name = NIL THEN name := "" END;
+      RETURN ToText(ObBuiltIn.ReplicaSetNodeName(name,loc));
+    END ReplicaSetNodeName;
+
+  PROCEDURE ReplicaSetDefaultSequencer(host, name: TEXT; 
+                                       loc: SynLocation.T:=NIL): TEXT
+    RAISES {Exception, Error} =
+    BEGIN
+      IF name = NIL THEN name := "" END;
+      IF host = NIL THEN host := "" END;
+      RETURN ToText(ObBuiltIn.ReplicaSetDefaultSequencer(host,name,loc));
+    END ReplicaSetDefaultSequencer;
+
+  PROCEDURE ReplicaNotify(object: Val; notifyObj: Val; 
+                          loc: SynLocation.T := NIL): Val
+    RAISES {Exception} =
+    BEGIN
+      RETURN ObBuiltIn.ReplicaNotify(object, notifyObj, loc);
+    END ReplicaNotify;
+
+  PROCEDURE ReplicaCancelNotifier(object: Val; loc: SynLocation.T := NIL)
+    RAISES {Exception} =
+    BEGIN
+      ObBuiltIn.ReplicaCancelNotifier(object, loc);
+    END ReplicaCancelNotifier;
 
   PROCEDURE NewVar(val: Val): Val =
   BEGIN
@@ -723,6 +796,7 @@ FROM ObValue IMPORT Error, Exception;
   PROCEDURE NewMutex(): Val =
   BEGIN
     RETURN NEW(ObBuiltIn.ValMutex, what:="<a Thread.Mutex>", picklable:=FALSE,
+               tag:="Thread`Mutex",
                mutex:=NEW(Thread.Mutex));
   END NewMutex;
 
@@ -739,6 +813,7 @@ FROM ObValue IMPORT Error, Exception;
   PROCEDURE NewCondition(): Val =
   BEGIN
     RETURN NEW(ObBuiltIn.ValCondition, what:="<a Thread.Condition>", 
+               tag:="Thread`Condition",
 	picklable:=FALSE, condition:= NEW(Thread.Condition));
   END NewCondition;
 

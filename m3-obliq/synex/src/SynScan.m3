@@ -4,7 +4,7 @@
 
 MODULE SynScan;
 IMPORT Wr, TextRefTbl, Text, TextConv, Rd, SynWr, SynLocation, 
-  Fmt, Lex, FloatMode, TextRd, Thread;
+       Fmt, Lex, FloatMode, TextRd, Thread, SynScan;
 
 REVEAL
   Keyword =  BRANDED OBJECT name: TEXT; keyword: BOOLEAN END;
@@ -212,10 +212,13 @@ PROCEDURE PopInput(sc: T) RAISES {NoReader} =
     IF sc^.input = NIL THEN RAISE NoReader
     ELSE
       TRY
-        IF sc^.input^.closeReader THEN Rd.Close(sc^.input^.rd) END;
-      EXCEPT Rd.Failure, Thread.Alerted => RAISE NoReader END;
-      sc^.input := sc^.input^.rest;
-      GetInputState(sc);
+        TRY
+          IF sc^.input^.closeReader THEN Rd.Close(sc^.input^.rd) END;
+        FINALLY
+          sc^.input := sc^.input^.rest;
+          GetInputState(sc);
+        END;
+      EXCEPT Rd.Failure, Thread.Alerted => END;
     END;
   END PopInput;
 
@@ -581,14 +584,13 @@ PROCEDURE PrintContext(sc: T) =
   END PrintContext;
 
 PROCEDURE PrintSequel(sc: T) =
-  <*FATAL NoReader*>
   VAR n: INTEGER; ch: CHAR;
   BEGIN
     IF sc^.input = NIL THEN RETURN END;
     n := 40;
     TRY
       WHILE (0 < n) AND (Rd.CharsReady(sc^.input^.rd) > 0) DO
-        ch:=GetChar(sc);
+        ch:=GetChar(sc); (* NOWARN *)
         IF sc^.input = NIL THEN RETURN END;
         IF (Rd.CharsReady(sc^.input^.rd)>0) OR (ch#'\n') THEN
           SynWr.Char(sc.swr, ch, loud:=TRUE);
@@ -598,19 +600,18 @@ PROCEDURE PrintSequel(sc: T) =
       IF Rd.CharsReady(sc^.input^.rd) > 0 THEN
         SynWr.Text(sc.swr, " ...", loud:=TRUE);
       END;
-    EXCEPT Rd.Failure => END;
+    EXCEPT Rd.Failure, SynScan.NoReader => END;
   END PrintSequel;
 
 PROCEDURE FlushInput(sc: T) =
-  <*FATAL NoReader*>
   BEGIN
     IF sc^.input = NIL THEN RETURN END;
     TRY
       WHILE Rd.CharsReady(sc^.input^.rd) > 0 DO 
-        EVAL GetChar(sc);
+        EVAL GetChar(sc); (* NOWARN *)
         IF sc^.input = NIL THEN RETURN END;
       END; 
-    EXCEPT Rd.Failure => END;
+    EXCEPT Rd.Failure, SynScan.NoReader => END;
   END FlushInput;
 
 PROCEDURE ErrorMsg(sc: T; msg: TEXT := "") =
@@ -889,21 +890,25 @@ PROCEDURE SetPrompt(sc: T; newFirstPrompt, newNextPrompt: TEXT) =
 PROCEDURE FirstPrompt(sc: T) = BEGIN sc^.isFirstPrompt := TRUE; END FirstPrompt;
 
 PROCEDURE Clear(sc: T) =
-  <*FATAL NoReader, Fail *>
   VAR ch: CHAR; class: TokenClass;
   BEGIN
     IF TopLevel(sc) THEN FlushInput(sc) END;
-    IF sc^.lookAheadReady THEN ch:=GetChar(sc) END;
-    IF sc^.tokenReady THEN class:=GetToken(sc) END;
+    TRY
+      IF sc^.lookAheadReady THEN ch:=GetChar(sc) END; (* NOWARN *)
+    EXCEPT SynScan.NoReader => END;
+    TRY
+      IF sc^.tokenReady THEN class:=GetToken(sc) END; (* NOWARN *)
+    EXCEPT SynScan.NoReader, SynScan.Fail => END;
     sc^.scanBufferSize := 0;
   END Clear;
 
 PROCEDURE Reset(sc: T) =
-  <*FATAL NoReader*>
   BEGIN
     Clear(sc);
     WHILE (sc^.input#NIL) AND NOT(Text.Empty(sc^.input^.fileName)) DO 
-      PopInput(sc);
+      TRY
+        PopInput(sc); (* NOWARN *)
+      EXCEPT SynScan.NoReader => END;
     END;
   END Reset;
 
