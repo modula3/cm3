@@ -55,6 +55,9 @@
 .globl __fpsetjmp;
 .type  __fpsetjmp,@function;
 __fpsetjmp:
+.globl _fpsetjmp;
+.type  _fpsetjmp,@function;
+_fpsetjmp:
 	movl	4(%esp),%eax
 	movl	0(%esp),%edx
 	movl	%edx, 0(%eax)
@@ -71,6 +74,9 @@ __fpsetjmp:
 .globl __fplongjmp;
 .type  __fplongjmp,@function;
 __fplongjmp:
+.globl _fplongjmp;
+.type  _fplongjmp,@function;
+_fplongjmp:
 	movl	4(%esp),%edx
 	movl	8(%esp),%eax
 	movl	0(%edx),%ecx

@@ -84,9 +84,10 @@ CONST
 <*EXTERNAL*> PROCEDURE fchmod (fd, mode: mode_t): int;
 (* ok *)
 
-(*** chown, fchown - change owner and group of a file ***)
+(*** chown, fchown, lchown - change owner and group of a file ***)
 <*EXTERNAL*> PROCEDURE chown (path: char_star; owner: uid_t; group: gid_t): int;
 <*EXTERNAL*> PROCEDURE fchown (fd: int; owner: uid_t; group: gid_t): int;
+<*EXTERNAL*> PROCEDURE lchown (path: char_star; owner: uid_t; group: gid_t): int;
 (* ok *)
 
 (*** chroot - change root directory ***)
@@ -94,7 +95,7 @@ CONST
 (* ok *)
 
 (*** close - delete a descriptor ***)
-<*EXTERNAL*> PROCEDURE close (d: int): int;
+<*EXTERNAL "m3_close"*> PROCEDURE close (d: int): int;
 (* ok *)
 
 (*** creat - create a new file ***)
@@ -102,8 +103,8 @@ CONST
 (* ok, but obsolete *)
 
 (*** dup, dup2 - duplicate an open file descriptor ***)
-<*EXTERNAL*> PROCEDURE dup (oldd: int): int;
-<*EXTERNAL*> PROCEDURE dup2 (oldd, newd: int): int;
+<*EXTERNAL "m3_dup"*> PROCEDURE dup (oldd: int): int;
+<*EXTERNAL "m3_dup2"*> PROCEDURE dup2 (oldd, newd: int): int;
 (* ok *)
 
 (*** execve - execute a file ***)
@@ -156,10 +157,7 @@ CONST (* l_type values *)
   F_WRLCK = 3; (* Write lock *)
   F_UNLCK = 2; (* Remove lock(s) *)
 
-(* with vm use this
 <*EXTERNAL "ufcntl"*> PROCEDURE fcntl (fd, request, arg: int): int;
-*)
-<*EXTERNAL "m3_fcntl"*> PROCEDURE fcntl (fd, request, arg: int): int;
 (* ok *)
 
 (*** flock - apply or remove an advisory lock on an open file ***)
@@ -773,6 +771,9 @@ CONST (* whence *)
  PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
 (* ok *)
 
+(*** mkfifo - make a FIFO (named pipe) ***)
+<*EXTERNAL*> PROCEDURE mkfifo (path: char_star; mode: mode_t): int;
+
 (*** mkdir - make a directory file ***)
 <*EXTERNAL*> PROCEDURE mkdir (path: char_star; mode: mode_t): int;
 (* ok *)
@@ -827,11 +828,7 @@ CONST (* flags *)
 
   M3_NONBLOCK = O_NONBLOCK;  (* -1 => would block, 0 => EOF *)
 
-(* with vm use this
 <*EXTERNAL "uopen" *> PROCEDURE open (name: char_star; 
-                                       flags, mode: int): int;
-*)
-<*EXTERNAL "m3_open" *> PROCEDURE open (name: char_star; 
                                        flags, mode: int): int;
 (* ok *)
 
@@ -892,7 +889,7 @@ CONST
 TYPE
   FDSet = SET OF [0 .. MAX_FDSET - 1];
 
-<*EXTERNAL*> PROCEDURE select (nfds: int;
+<*EXTERNAL "m3_select"*> PROCEDURE select (nfds: int;
                            readfds, writefds, exceptfds: UNTRACED REF FDSet;
                            timeout: UNTRACED REF struct_timeval): int;
 (* ok *)

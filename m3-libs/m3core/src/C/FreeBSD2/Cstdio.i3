@@ -55,6 +55,7 @@ TYPE
         (* Unix stdio files get aligned to block boundaries on fseek() *)
         blksize : int;        (* stat.st_blksize (may be != _bf._size) *)
         offset  : off_t;      (* current lseek offset *)
+        pad1    : int;        (* assume high 4 bytes of offset are 0 *)
  
         END;
 

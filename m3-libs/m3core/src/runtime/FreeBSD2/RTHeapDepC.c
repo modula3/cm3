@@ -80,7 +80,8 @@
 #include <sys/file.h>
 #include <sys/param.h>
 #if __FreeBSD__ >= 2
-# include <sys/sysctl.h>
+#include <sys/sysctl.h>
+#include <osreldate.h>
 #endif
 #include <sys/mount.h>
 #include <sys/ipc.h>
@@ -89,14 +90,26 @@
 #include <ufs/ufs/quota.h>
 #include <sys/signal.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/uio.h>
 #include <sys/wait.h>
+
+#if __FreeBSD__ >= 3
+#include <sys/time.h>
+#include <nfs/rpcv2.h>
+#include <nfs/nfsproto.h>
+#include <nfs/nfs.h>
+#include <ufs/ufs/ufsmount.h>
+#endif
+
+#include <string.h>
+#include <unistd.h>
 
 #ifdef   NULL
 #undef   NULL
 #endif
 #define  NULL (void *)(0)
-extern int RT0u__inCritical;
+extern long RT0u__inCritical;
 #define ENTER_CRITICAL RT0u__inCritical++
 #define EXIT_CRITICAL  RT0u__inCritical--
 
@@ -104,28 +117,28 @@ void (*RTHeapRep_Fault)(char*);
 void (*RTCSRC_FinishVM)();
 
 static char RTHeapDepC__c;
-#define MAKE_READABLE(x) if ((int)x) { RTHeapDepC__c = *(char*)(x); }
-#define MAKE_WRITABLE(x) if ((int)x) { *(char*)(x) = RTHeapDepC__c = *(char*)(x); }
+#define MAKE_READABLE(x) if (x != 0) { RTHeapDepC__c = *(char*)(x); }
+#define MAKE_WRITABLE(x) if (x != 0) { *(char*)(x) = RTHeapDepC__c = *(char*)(x); }
+
+/*
+ * Modula-3 compilation units are always compiled PIC.  This causes
+ * the a.out linker to complain that there is no reference to
+ * _DYNAMIC if the program is linked with "-static".  Provide a
+ * weak reference to it here so that static linking will work.
+ *
+ * This has nothing to do with the heap, so it doesn't really belong
+ * here.  But it needs to be someplace that is guaranteed to be pulled
+ * into every executable.
+ */
+#pragma weak _DYNAMIC
+extern int _DYNAMIC;
+static int *i __unused = &_DYNAMIC;
 
 /* Unless otherwise noted, all the following wrappers have the same
    structure. */
 
-int accept(s, addr, addrlen)   /* ok */
-int s;
-struct sockaddr *addr;
-int *addrlen;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_WRITABLE(addr);
-  MAKE_WRITABLE(addrlen);
-  result = syscall(SYS_accept, s, addr, addrlen);
-  EXIT_CRITICAL;
-  return result;
-}
-
 int access(path, mode)   /* ok */
-char *path;
+const char *path;
 int mode;
 { int result;
 
@@ -137,7 +150,7 @@ int mode;
 }
 
 int acct(file)   /* ok */
-char *file;
+const char *file;
 { int result;
 
   ENTER_CRITICAL;
@@ -216,7 +229,7 @@ char *tokenp, *argv[];
   
   { char *t, **a;
 
-    for (t = tokenp, a = argv; *t; t++, a++) {
+    for (t = tokenp, a = argv; t; t++, a++) {
       if (A_TOKEN_PTR(*t)) {
         MAKE_READABLE(*a);
       }
@@ -227,19 +240,6 @@ char *tokenp, *argv[];
   return result;
 }
 */
-
-int bind(s, name, namelen)   /* ok */
-int s;
-const struct sockaddr *name;
-int namelen;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_READABLE(name);
-  result = syscall(SYS_bind, s, name, namelen);
-  EXIT_CRITICAL;
-  return result;
-}
 
 /* not implemented
 int cachectl(addr, nbytes, op)
@@ -268,7 +268,7 @@ int nbytes, cache;
 */
 
 int chdir(path)   /* ok */
-char *path;
+const char *path;
 { int result;
 
   ENTER_CRITICAL;
@@ -278,8 +278,20 @@ char *path;
   return result;
 }
 
+int chflags(path, flags)
+const char *path;
+u_long flags;
+{ int result;
+
+  ENTER_CRITICAL;
+  MAKE_READABLE(path);
+  result = syscall(SYS_chflags, path, flags);
+  EXIT_CRITICAL;
+  return result;
+}
+
 int chmod(path, mode)   /* ok */
-char *path;
+const char *path;
 mode_t mode;
 { int result;
 
@@ -291,7 +303,7 @@ mode_t mode;
 }
 
 int chown(path, owner, group)   /* ok */
-char *path;
+const char *path;
 uid_t owner;
 gid_t group;
 { int result;
@@ -304,25 +316,12 @@ gid_t group;
 }
 
 int chroot(dirname)   /* ok */
-char *dirname;
+const char *dirname;
 { int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(dirname);
   result = syscall(SYS_chroot, dirname);
-  EXIT_CRITICAL;
-  return result;
-}
-
-int connect(s, name, namelen)   /* ok */
-int s;
-const struct sockaddr *name;
-int namelen;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_READABLE(name);
-  result = syscall(SYS_connect, s, name, namelen);
   EXIT_CRITICAL;
   return result;
 }
@@ -356,8 +355,8 @@ char * const envp[];
     result = syscall(SYS_execve, name, argv, envp);
     if (result == -1 && errno == EFAULT) {
       MAKE_READABLE(name);
-      { char **a; for (a = argv; *a; a++) MAKE_READABLE(*a); }
-      { char **e; for (e = envp; *e; e++) MAKE_READABLE(*e); }
+      { char * const *a; for (a = argv; *a; a++) MAKE_READABLE(*a); }
+      { char * const *e; for (e = envp; *e; e++) MAKE_READABLE(*e); }
     } else {
       return result;
     }
@@ -473,7 +472,7 @@ int namelen;
 
 int getgroups(gidsetsize, grouplist)   /* ok */
 int gidsetsize;
-int grouplist[];
+gid_t grouplist[];
 { int result;
 
   ENTER_CRITICAL;
@@ -513,20 +512,6 @@ char *path;
 }
 */
 
-int getpeername(s, name, namelen)   /* ok */
-int s;
-struct sockaddr *name;
-int *namelen;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_WRITABLE(name);
-  MAKE_WRITABLE(namelen);
-  result = syscall(SYS_getpeername, s, name, namelen);
-  EXIT_CRITICAL;
-  return result;
-}
-
 int getrlimit(resource, rlp)   /* ok */
 int resource;
 struct rlimit *rlp;
@@ -547,20 +532,6 @@ struct rusage *rusage;
   ENTER_CRITICAL;
   MAKE_WRITABLE(rusage);
   result = syscall(SYS_getrusage, who, rusage);
-  EXIT_CRITICAL;
-  return result;
-}
-
-int getsockname(s, name, namelen)   /* ok */
-int s;
-struct sockaddr *name;
-int *namelen;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_WRITABLE(name);
-  MAKE_WRITABLE(namelen);
-  result = syscall(SYS_getsockname, s, name, namelen);
   EXIT_CRITICAL;
   return result;
 }
@@ -629,9 +600,24 @@ char *argp;
   return result;
 }
 
+#ifdef SYS_lchown
+int lchown(path, owner, group)   /* ok */
+const char *path;
+uid_t owner;
+gid_t group;
+{ int result;
+
+  ENTER_CRITICAL;
+  MAKE_READABLE(path);
+  result = syscall(SYS_lchown, path, owner, group);
+  EXIT_CRITICAL;
+  return result;
+}
+#endif /* SYS_lchown */
+
 int link(name1, name2)   /* ok */
-char *name1;
-char *name2;
+const char *name1;
+const char *name2;
 { int result;
 
   ENTER_CRITICAL;
@@ -643,7 +629,7 @@ char *name2;
 }
 
 int lstat(path, buf)   /* ok */
-char *path;
+const char *path;
 struct stat *buf;
 { int result;
 
@@ -656,7 +642,7 @@ struct stat *buf;
 }
 
 int mkdir(path, mode)   /* ok */
-char *path;
+const char *path;
 mode_t mode;
 { int result;
 
@@ -667,8 +653,20 @@ mode_t mode;
   return result;
 }
 
+int mkfifo(path, mode)   /* ok */
+const char *path;
+mode_t mode;
+{ int result;
+
+  ENTER_CRITICAL;
+  MAKE_READABLE(path);
+  result = syscall(SYS_mkfifo, path, mode);
+  EXIT_CRITICAL;
+  return result;
+}
+
 int mknod(path, mode, dev)   /* ok */
-char *path;
+const char *path;
 mode_t mode;
 dev_t dev;
 { int result;
@@ -680,13 +678,51 @@ dev_t dev;
   return result;
 }
 
-/* quite different ...
-int mount(special, name, rwflag, type, options)
-char *special;
-char *name;
-int rwflag, type;
-char *options;
-*/
+#if __FreeBSD_version >= 300001		/* New form of mount(2) */
+int
+mount(type, dir, flags, data)
+  const char *type;
+  const char *dir;
+  int flags;
+  void *data;
+{ int result;
+  struct ufs_args *u_data;
+  struct mfs_args *m_data;
+  struct nfs_args *n_data;
+
+  ENTER_CRITICAL;
+  MAKE_READABLE(type);
+  MAKE_READABLE(dir);
+  if (strcmp(type, "ufs") == 0) {
+    u_data = (struct ufs_args*) data;
+    MAKE_READABLE(u_data);
+    MAKE_READABLE(u_data->fspec);
+    result = syscall(SYS_mount, type, dir, flags, data);
+  } else if (strcmp(type, "mfs") == 0) {
+    m_data = (struct mfs_args*) data;
+    MAKE_READABLE(m_data);
+    MAKE_READABLE(m_data->fspec);
+    result = syscall(SYS_mount, type, dir, flags, data);
+  } else if (strcmp(type, "nfs") == 0) {
+    n_data = (struct nfs_args*) data;
+    MAKE_READABLE(n_data);
+    MAKE_READABLE(n_data->addr); 
+    MAKE_READABLE(n_data->fh);
+    MAKE_READABLE(n_data->hostname);
+    result = syscall(SYS_mount, type, dir, flags, data);
+  } else {	/* Not anything we recognize. */
+    MAKE_READABLE(data);
+    result = syscall(SYS_mount, type, dir, flags, data);
+  }
+  EXIT_CRITICAL;
+  if (result != -1) {
+    result = 0;
+  }
+  return result;
+}
+
+#else /* __FreeBSD_version >= 300001 */
+
 int mount(type, dir, flags, data)
 int type;
 const char *dir;
@@ -723,6 +759,7 @@ void *data;
   }
   return result;
 }
+#endif /* __FreeBSD_version >= 300001 */
 
 int msgctl(msqid, cmd, buf)   /* ok */
 int msqid, cmd;
@@ -793,9 +830,13 @@ int uopen(const char* path, int flags, mode_t mode)   /* ok */
 }
 
 int quotactl(path, cmd, uid, addr)   /* ok */
-const char *path;
-int cmd, uid;
-char *addr;
+  const char *path;
+  int cmd, uid;
+#if __FreeBSD_version >= 400002
+  void *addr;
+#else
+  char *addr;
+#endif
 { int result;
 
   ENTER_CRITICAL;
@@ -821,21 +862,8 @@ char *addr;
   return result;
 }
 
-int read(d, buf, nbytes)   /* ok */
-int d;
-char *buf;
-size_t nbytes;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_WRITABLE(buf);
-  result = syscall(SYS_read, d, buf, nbytes);
-  EXIT_CRITICAL;
-  return result;
-}
-
 int readlink(path, buf, bufsiz)   /* ok */
-char *path;
+const char *path;
 char *buf;
 int bufsiz;
 { int result;
@@ -848,7 +876,7 @@ int bufsiz;
   return result;
 }
 
-int readv(d, iov, iovcnt)   /* ok */
+ssize_t readv(d, iov, iovcnt)   /* ok */
 int d;
 const struct iovec *iov;
 int iovcnt;
@@ -865,47 +893,7 @@ int iovcnt;
   return result;
 }
 
-int recv(s, buf, len, flags)   /* ok */
-int s;
-void *buf;
-#if __FreeBSD__ >=2
-size_t len;
-#else
-int len;
-#endif
-int flags;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_WRITABLE(buf);
-  result = syscall(SYS_recvfrom, s, buf, len, flags, NULL, 0);
-  EXIT_CRITICAL;
-  return result;
-}
-
-int recvfrom(s, buf, len, flags, from, fromlen)   /* ok */
-int s;
-void *buf;
-#if __FreeBSD__ >=2
-size_t len;
-#else
-int len;
-#endif
-int flags;
-struct sockaddr *from;
-int *fromlen;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_WRITABLE(buf);
-  MAKE_WRITABLE(from);
-  MAKE_WRITABLE(fromlen);
-  result = syscall(SYS_recvfrom, s, buf, len, flags, from, fromlen);
-  EXIT_CRITICAL;
-  return result;
-}
-
-int recvmsg(s, msg, flags)   /* ok */
+ssize_t recvmsg(s, msg, flags)   /* ok */
 int s;
 struct msghdr msg[];
 int flags;
@@ -940,7 +928,7 @@ char *to;
 }
 
 int rmdir(path)   /* ok */
-char *path;
+const char *path;
 { int result;
 
   ENTER_CRITICAL;
@@ -950,44 +938,42 @@ char *path;
   return result;
 }
 
-int select(nfds, readfds, writefds, exceptfds, timeout)   /* ok */
-int nfds;
-fd_set *readfds;
-fd_set *writefds;
-fd_set *exceptfds;
-struct timeval *timeout;
-{ int result;
+int
+#if (227002 <= __FreeBSD_version && __FreeBSD_version < 300000) || \
+  __FreeBSD_version >= 300002
+semctl(int semid, int semnum, int cmd, ...)
+#else
+semctl(int semid, int semnum, int cmd, union semun arg)
+#endif
+{
+  int result;
+#if (227002 <= __FreeBSD_version && __FreeBSD_version < 300000) || \
+  __FreeBSD_version >= 300002
+  union semun arg;
+  va_list ap;
 
-  ENTER_CRITICAL;
-  MAKE_WRITABLE(readfds);
-  MAKE_WRITABLE(writefds);
-  MAKE_WRITABLE(exceptfds);
-  MAKE_READABLE(timeout);
-  result = syscall(SYS_select, nfds, readfds, writefds, exceptfds, timeout);
-  EXIT_CRITICAL;
-  return result;
-}
-
-int semctl(semid, semnum, cmd, arg)   /* ok ? */
-int semid, cmd;
-int semnum;
-union semun arg;
-{ int result;
+  va_start(ap, cmd);
+  arg = va_arg(ap, union semun);
+  va_end(ap);
+#endif
 
   ENTER_CRITICAL;
   switch (cmd) {
-  case GETNCNT:
-  case GETPID:
-  case GETVAL:
-  case GETALL:
-  case GETZCNT:
+
+  case IPC_SET:
     MAKE_READABLE(arg.buf);
     break;
+
   case SETALL:
-  case SETVAL:
+    MAKE_READABLE(arg.array);
+    break;
+
+  case IPC_STAT:
     MAKE_WRITABLE(arg.buf);
     break;
-  default:
+
+  case GETALL:
+    MAKE_WRITABLE(arg.array);
     break;
   }
   result = syscall(SYS_semsys, 0, semid, semnum, cmd, arg);
@@ -1012,25 +998,7 @@ unsigned int nsops;
   return result;
 }
 
-int send(s, msg, len, flags)   /* ok */
-int s;
-const void *msg;
-#if __FreeBSD__ >=2
-size_t len;
-#else
-int len;
-#endif
-int flags;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_READABLE(msg);
-  result = syscall(SYS_sendto, s, msg, len, flags, NULL, 0);
-  EXIT_CRITICAL;
-  return result;
-}
-
-int sendmsg(s, msg, flags)   /* ok */
+ssize_t sendmsg(s, msg, flags)   /* ok */
 int s;
 const struct msghdr msg[];
 int flags;
@@ -1051,29 +1019,8 @@ int flags;
   return result;
 }
 
-int sendto(s, msg, len, flags, to, tolen)   /* ok */
-int s;
-const void *msg;
-#if __FreeBSD__ >=2
-size_t len;
-#else
-int len;
-#endif
-int flags;
-const struct sockaddr *to;
-int tolen;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_READABLE(msg);
-  MAKE_READABLE(to);
-  result = syscall(SYS_sendto, s, msg, len, flags, to, tolen);
-  EXIT_CRITICAL;
-  return result;
-}
-
 int setdomainname(name, namelen)   /* ok */
-char *name;
+const char *name;
 int namelen;
 { int result;
 
@@ -1086,7 +1033,7 @@ int namelen;
 
 int setgroups(ngroups, gidset)   /* ok */
 int ngroups;
-int *gidset;
+const gid_t *gidset;
 { int result;
 
   ENTER_CRITICAL;
@@ -1097,7 +1044,7 @@ int *gidset;
 }
 
 int sethostname(name, namelen)   /* ok */
-char *name;
+const char *name;
 int namelen;
 { int result;
 #if __FreeBSD__ >= 2
@@ -1213,20 +1160,20 @@ struct timezone *tzp;
   return result;
 }
 
-/* not implemented
-int sigpending(set)
-sigset_t *set;
+int sigaction(sig, act, oact)
+int sig;
+const struct sigaction *act;
+struct sigaction *oact;
 { int result;
 
   ENTER_CRITICAL;
-  MAKE_WRITABLE(set);
-  result = syscall(SYS_sigpending, set);
+  MAKE_READABLE(act);
+  MAKE_WRITABLE(oact);
+  result = syscall(SYS_sigaction, sig, act, oact);
   EXIT_CRITICAL;
   return result;
 }
-*/
 
-#if __FreeBSD__ >= 2
 int sigaltstack(ss, oss)   /* ok */
 const struct sigaltstack *ss;
 struct sigaltstack *oss;
@@ -1239,20 +1186,6 @@ struct sigaltstack *oss;
   EXIT_CRITICAL;
   return result;
 }
-#else
-int sigstack(ss, oss)   /* ok */
-const struct sigstack *ss;
-struct sigstack *oss;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_READABLE(ss);
-  MAKE_WRITABLE(oss);
-  result = syscall(SYS_sigstack, ss, oss);
-  EXIT_CRITICAL;
-  return result;
-}
-#endif
 
 int socketpair(d, type, protocol, sv)   /* ok */
 int d, type, protocol;
@@ -1267,7 +1200,7 @@ int sv[2];
 }
 
 int stat(path, buf)   /* ok */
-char *path;
+const char *path;
 struct stat *buf;
 { int result;
 
@@ -1280,7 +1213,7 @@ struct stat *buf;
 }
 
 int swapon(special)   /* ok */
-char *special;
+const char *special;
 { int result;
 
   ENTER_CRITICAL;
@@ -1291,8 +1224,8 @@ char *special;
 }
 
 int symlink(name1, name2)   /* ok */
-char *name1;
-char *name2;
+const char *name1;
+const char *name2;
 { int result;
 
   ENTER_CRITICAL;
@@ -1304,14 +1237,14 @@ char *name2;
 }
 
 int truncate(path, length)   /* ok */
-char *path;
-long length;
+const char *path;
+off_t length;
 { int result;
-  off_t len = (off_t)length;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
-  result = syscall(SYS_truncate, path, len);
+  /* The casts below pad "path" out to a 64-bit value as required. */
+  result = __syscall(SYS_truncate, (u_quad_t)(u_long)path, length);
   EXIT_CRITICAL;
   return result;
 }
@@ -1328,7 +1261,7 @@ struct utsname *name;
 }
 
 int unlink(path)   /* ok */
-char *path;
+const char *path;
 { int result;
 
   ENTER_CRITICAL;
@@ -1418,20 +1351,7 @@ int options;
   return result;
 }
 
-int write(fd, buf, nbytes)   /* ok */
-int fd;
-char *buf;
-int nbytes;
-{ int result;
-
-  ENTER_CRITICAL;
-  MAKE_READABLE(buf);
-  result = syscall(SYS_write, fd, buf, nbytes);
-  EXIT_CRITICAL;
-  return result;
-}
-
-int writev(fd, iov, ioveclen)   /* ok */
+ssize_t writev(fd, iov, ioveclen)   /* ok */
 int fd;
 const struct iovec *iov;
 int ioveclen;

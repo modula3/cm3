@@ -40,10 +40,10 @@ CONST
  *)
 TYPE
   dirent = RECORD                    (* describes directory entry *)
-    d_fileno:   Ctypes.long;           (* inode number of entry *)
-    d_reclen:   Ctypes.unsigned_char;  (* record length in bytes *)
+    d_fileno:   Ctypes.unsigned_long;  (* inode number of entry *)
+    d_reclen:   Ctypes.unsigned_short; (* record length in bytes *)
     d_type:     Ctypes.unsigned_char;  (* file types, see above *)
-    d_namelen:  Ctypes.unsigned_short; (* name length in bytes *)
+    d_namelen:  Ctypes.unsigned_char;  (* name length in bytes *)
     d_name:     ARRAY [0..MAXNAMLEN] OF Ctypes.char;  (* name *)
   END;
 
@@ -53,7 +53,7 @@ TYPE
     dd_fd:    Ctypes.int; (* file descriptor associated with directory *)
     dd_loc:   Ctypes.long; (* offset in current buffer *)
     dd_size:  Ctypes.long; (* amount of data returned by getdirentries *)
-    dd_buf:   UNTRACED REF Ctypes.char; (* data buffer *)
+    dd_buf:   Ctypes.char_star; (* data buffer *)
     dd_len:   Ctypes.int; (* size of data buffer *)
     dd_seek:  Ctypes.long (* magic cookie returned by getdirentries *);
     dd_rewind: Ctypes.long; (* magic cookie for rewinding *)

@@ -7,7 +7,7 @@
 (* ow 16.09.1994 *)
 (* ow 11.10.1994 *)
 
-UNSAFE MODULE RTThread;
+UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
 IMPORT Usignal, Unix, Umman, RTMisc;
 
@@ -111,6 +111,33 @@ PROCEDURE disallow_sigvtalrm () =
     i := Usignal.sigprocmask(Usignal.SIG_BLOCK, svt, old);
     <*ASSERT i = 0 *>
   END disallow_sigvtalrm;
+
+(*--------------------------------------------- exception handling support --*)
+
+PROCEDURE GetCurrentHandlers (): ADDRESS=
+  BEGIN
+    RETURN handlerStack;
+  END GetCurrentHandlers;
+
+PROCEDURE SetCurrentHandlers (h: ADDRESS)=
+  BEGIN
+    handlerStack := h;
+  END SetCurrentHandlers;
+
+(*RTHooks.PushEFrame*)
+PROCEDURE PushEFrame (frame: ADDRESS) =
+  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
+  VAR f := LOOPHOLE (frame, Frame);
+  BEGIN
+    f.next := handlerStack;
+    handlerStack := f;
+  END PushEFrame;
+
+(*RTHooks.PopEFrame*)
+PROCEDURE PopEFrame (frame: ADDRESS) =
+  BEGIN
+    handlerStack := frame;
+  END PopEFrame;
 
 BEGIN
 END RTThread.

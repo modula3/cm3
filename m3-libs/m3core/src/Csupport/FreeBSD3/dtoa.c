@@ -16,7 +16,7 @@
 #include "dtoa.h"
 
 /* Apparently libc defines both "__dtoa" and "dtoa".  ???  */
-
+#if 0
 char * __dtoa       
 #ifdef KR_headers
         (d, mode, ndigits, decpt, sign, rve)
@@ -27,3 +27,4 @@ char * __dtoa
 {
   return dtoa(d, mode, ndigits, decpt, sign, rve);
 }
+#endif

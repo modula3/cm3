@@ -53,6 +53,13 @@ TYPE
       w_Retcode : BITS  8 FOR [0..16_FF];  (* exit code if w_termsig == 0 *)
       w_Filler  : BITS 16 FOR [0..16_FFFF]; END;
 
+  (* M3 view of return code *)
+  w_M3 = RECORD
+      w_Retcode : BITS  8 FOR [0..16_FF];  (* exit code if w_termsig == 0 *)
+      w_Termsig : BITS  7 FOR [0..16_7F];  (* termination signal *)
+      w_Coredump: BITS  1 FOR [0..16_01];  (* core dump indicator *)
+      w_Filler  : BITS 16 FOR [0..16_FFFF]; END;
+
   (* stopped process status *)
   w_S = RECORD
       w_Stopval : BITS  8 FOR [0..16_FF];  (* == W_STOPPED if stopped *)

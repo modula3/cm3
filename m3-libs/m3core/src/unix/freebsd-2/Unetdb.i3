@@ -88,10 +88,10 @@ PROCEDURE VALID_SVC (a: int): BOOLEAN;
 (*** gethostent(3n), gethostbyaddr(3n), gethostbyname(3n), 
      sethostent(3n), endhostent(3n) - get network host entry ***)
 
-<*EXTERNAL*>
+<*EXTERNAL "m3_gethostbyname"*>
 PROCEDURE gethostbyname (name: char_star): struct_hostent_star;
 
-<*EXTERNAL*>
+<*EXTERNAL "m3_gethostbyaddr"*>
 PROCEDURE gethostbyaddr (addr: char_star; len, type: int): struct_hostent_star;
 
 <*EXTERNAL*>
