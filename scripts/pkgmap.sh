@@ -30,6 +30,8 @@ while [ -n "$1" ] ; do
     KEEP_GOING="yes"
   elif [ x-n = x"$1" ] ; then
     NO_ACTION="yes"
+  elif [ x-l = x"$1" ] ; then
+    LIST_ONLY="yes"
   elif [ x-c = x"$1" ] ; then
     if [ -z "${PKG_ACTION}" ] ; then
       PKG_ACTION="$2"
@@ -63,6 +65,11 @@ fi
 if [ -z "${PKGS}" ] ; then
   echo "no packages" 1>&2
   exit 1
+fi
+
+if [ "yes" = "$LIST_ONLY" ] ; then
+  listpkgs ${PKGS}
+  exit 0
 fi
 
 for PKG in ${PKGS} ; do

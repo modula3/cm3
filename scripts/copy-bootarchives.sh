@@ -81,7 +81,7 @@ if [ -n "${PKGS}" ] ; then
 fi
 
 for p in ${P}; do
-  echo ${RSYNC} -avz ${ROOT}/${p}/${CROSS_TARGET}/ ${DEST}/PPC_DARWIN/${p}/${CROSS_TARGET}/
-  ${RSYNC} -avz ${ROOT}/${p}/${CROSS_TARGET}/ ${DEST}/PPC_DARWIN/${p}/${CROSS_TARGET}/
+  echo ${RSYNC} -avz ${ROOT}/${p}/${CROSS_TARGET}/ ${DEST}/${CROSS_TARGET}/${p}/${CROSS_TARGET}/
+  ${RSYNC} -avz ${ROOT}/${p}/${CROSS_TARGET}/ ${DEST}/${CROSS_TARGET}/${p}/${CROSS_TARGET}/
 done
 

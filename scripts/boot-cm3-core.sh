@@ -36,7 +36,9 @@ export M3CONFIG BUILDARGS
 P=""
 if [ "$CROSS_TARGET" != "NT386GNU" ] ; then
   P="${P} m3gc-simple"
-  P="${P} m3gc-enhanced"
+  if TARGET=${CROSS_TARGET} syscall_wrappers_exist && [ -z "$M3GC_SIMPLE" ] ; then
+    [ ${CROSS_TARGET} != NT386 ] && P="${P} m3gc-enhanced"
+  fi
 fi
 P="${P} m3core"
 P="${P} libm3"
