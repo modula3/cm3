@@ -1,7 +1,6 @@
-INTERFACE SIUnit;
+GENERIC INTERFACE SIUnit(UDB);
 
-IMPORT LongRealUnitDatabase AS DB,
-       PhysicalUnit AS U;
+IMPORT PhysicalUnit AS U;
 
 (* Default values added by AddDefaultConstants *)
 TYPE
@@ -34,6 +33,6 @@ CONST
   information  = SIUnit{ 0, 0, 0, 0, 0, 0, 1};
   datarate     = SIUnit{ 0,-1, 0, 0, 0, 0, 1};
 
-PROCEDURE CreateDatabase():DB.T;
+PROCEDURE CreateDatabase():UDB.T;
 
 END SIUnit.
