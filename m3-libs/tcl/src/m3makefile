@@ -7,6 +7,6 @@
 
 
 import_lib ("tcl", "/usr/local/lib")
-import (libm3)
-Module (TclC)
-Library (m3tcl)
+import ("libm3")
+Module ("TclC")
+Library ("m3tcl")
