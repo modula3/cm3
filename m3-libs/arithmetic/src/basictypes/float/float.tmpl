@@ -20,3 +20,9 @@ readonly proc FloatTrans (nm, field, fieldb, fieldx) is
   build_generic_intf (trans, "FloatTrans", [field, fieldb, fieldx], VISIBLE)
   build_generic_impl (trans, "FloatTrans", [])
 end
+
+readonly proc FloatFmtLex (nm, field) is
+  local basic = nm & "FmtLex"
+  build_generic_intf (basic, "FloatFmtLex", [field], VISIBLE)
+  implementation (basic)
+end

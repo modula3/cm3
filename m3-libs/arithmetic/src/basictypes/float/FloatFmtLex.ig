@@ -1,24 +1,27 @@
-INTERFACE LongRealFmtLex;
+GENERIC INTERFACE FloatFmtLex(R);
 (*Copyright (c) 1996, m3na project
 
-Abstract: Conform interface for formatting and parsing of LONGREAL numbers
+Abstract: Generic interface for formatting and parsing of float numbers
 
 *)
 
-IMPORT LongReal AS R, Fmt AS F, Lex AS L;
+IMPORT Fmt AS F;
+(*IMPORT Lex AS L;*)
 
 TYPE
-  T = LONGREAL;
+  T = R.T;
   FmtStyle = RECORD
                style   := F.Style.Auto;
                prec    :  CARDINAL := R.MaxSignifDigits - 1;
                literal := FALSE;
              END;
 
+(*
 CONST
   Lex = L.LongReal;
+*)
 
 <*INLINE*>
 PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}) : TEXT;
 
-END LongRealFmtLex.
+END FloatFmtLex.

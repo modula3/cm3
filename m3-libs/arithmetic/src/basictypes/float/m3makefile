@@ -22,8 +22,9 @@ FloatTrans("Real",     "Real",     "RealBasic",     "RealEx")
 FloatTrans("LongReal", "LongReal", "LongRealBasic", "LongRealEx")
 FloatTrans("Extended", "Extended", "ExtendedBasic", "ExtendedEx")
 
-Module("RealFmtLex")
-Module("LongRealFmtLex")
-Module("ExtendedFmtLex")
+generic_interface("FloatFmtLex")
+FloatFmtLex("Real",     "Real")
+FloatFmtLex("LongReal", "LongReal")
+FloatFmtLex("Extended", "Extended")
 
 Module("SpecialFunction")
