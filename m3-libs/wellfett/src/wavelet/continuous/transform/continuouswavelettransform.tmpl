@@ -3,19 +3,29 @@
 %
 
 readonly proc ContinuousWaveletTransform (nm, stem, impl) is
-  local base     = nm & "ContinuousWaveletTransform"
-  local field    = stem & impl
-  local rfield   = stem & impl
-  local signal   = stem & "Signal"
-  local vector   = stem & "Vector"
-  local rtrans   = stem & "Trans"
-  local rvector  = stem & "VectorFast"
-  local vsupport = stem & "VectorSupport"
-  local complex  = stem & "Complex"
-  local cvector  = stem & "ComplexVector"
-  local fourier  = stem & "FFTW"
+  local base      = nm & "ContinuousWaveletTransform"
+  local cbase     = nm & "ComplexContinuousWaveletTransform"
+  local field     = stem & impl
+  local rfield    = stem & impl
+  local signal    = stem & "Signal"
+  local csignal   = stem & "ComplexSignal"
+  local vector    = stem & "Vector"
+  local rtrans    = stem & "Trans"
+  local rvector   = stem & "VectorFast"
+  local vsupport  = stem & "VectorSupport"
+  local cvsupport = stem & "ComplexVectorSupport"
+  local complex   = stem & "Complex"
+  local cvector   = stem & "ComplexVector"
+  local conv      = stem & "Convolution"
+  local cconv     = stem & "ComplexConvolution"
 
-  build_generic_intf (base, "ContinuousWaveletTransform", [rfield, rvector, signal], VISIBLE)
+  build_generic_intf (base, "ContinuousWaveletTransform",
+     [rfield, rvector, rfield, signal, conv], VISIBLE)
   build_generic_impl (base, "ContinuousWaveletTransform",
-     [field, vector, vsupport, rtrans, rvector, signal, complex, cvector, fourier])
+     [field, rtrans, rvector, field, vector, signal, conv])
+
+  build_generic_intf (cbase, "ContinuousWaveletTransform",
+     [rfield, rvector, complex, csignal, cconv], VISIBLE)
+  build_generic_impl (cbase, "ContinuousWaveletTransform",
+     [field, rtrans, rvector, complex, cvector, csignal, cconv])
 end

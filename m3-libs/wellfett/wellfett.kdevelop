@@ -12,18 +12,24 @@
     </keywords>
     <projectdirectory>.</projectdirectory>
     <absoluteprojectpath>false</absoluteprojectpath>
-    <description/>
-    <ignoreparts/>
+    <description></description>
+    <ignoreparts>
+      <part>Unterstützung für ClearCase (KDevelop)</part>
+      <part>KDevcopyto</part>
+      <part>Debugger (KDevelop)</part>
+      <part>Unterstützung für Perforce (KDevelop)</part>
+      <part>Unterstützung für Subversion (KDevelop)</part>
+    </ignoreparts>
     <secondaryLanguages/>
   </general>
   <kdevpascalproject>
     <run>
-      <mainprogram>src/wavelib</mainprogram>
+      <mainprogram>test/LINUXLIBC6/test</mainprogram>
       <mainsource>src/wavelib.pp</mainsource>
       <terminal>true</terminal>
       <directoryradio>executable</directoryradio>
       <customdirectory>/</customdirectory>
-      <programargs/>
+      <programargs></programargs>
       <autocompile>true</autocompile>
       <envvars/>
     </run>
@@ -32,10 +38,10 @@
     </general>
     <configurations>
       <default>
-        <compiler>kdevdccoptions</compiler>
-        <compileroptions/>
-        <compilerexec>cd wavelib/test; cm3</compilerexec>
-        <mainsource/>
+        <compiler>kdevfpcoptions</compiler>
+        <compileroptions></compileroptions>
+        <compilerexec>cd wellfett/test; cm3 -O</compilerexec>
+        <mainsource></mainsource>
       </default>
     </configurations>
   </kdevpascalproject>
@@ -103,13 +109,17 @@
     </useglobaltypes>
   </kdevfilecreate>
   <kdevfileview>
-    <groups>
-      <hidenonprojectfiles>false</hidenonprojectfiles>
-      <hidenonlocation>false</hidenonlocation>
-    </groups>
+    <groups/>
     <tree>
       <hidepatterns>*.o,*.lo,CVS</hidepatterns>
       <hidenonprojectfiles>false</hidenonprojectfiles>
     </tree>
   </kdevfileview>
+  <kdevcvsservice>
+    <recursivewhenupdate>true</recursivewhenupdate>
+    <prunedirswhenupdate>true</prunedirswhenupdate>
+    <createdirswhenupdate>true</createdirswhenupdate>
+    <recursivewhencommitremove>true</recursivewhencommitremove>
+    <revertoptions>-C</revertoptions>
+  </kdevcvsservice>
 </kdevelop>

@@ -5,6 +5,6 @@ template("continuouswavelettransform")
 
 
 generic_module("ContinuousWaveletTransform")
-%ContinuousWaveletTransform("Real",     "Real",     "Basic")
+ContinuousWaveletTransform("Real",     "Real",     "Basic")
 ContinuousWaveletTransform("LongReal", "LongReal", "Basic")
 %ContinuousWaveletTransform("Extended", "Extended", "Basic")
