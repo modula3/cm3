@@ -1,4 +1,4 @@
-GENERIC MODULE Signal(R, (*Signal,*) SignalRep, P);
+GENERIC MODULE Signal(R, SignalRep, P);
 
 REVEAL
   T = SignalRep.TPrivate BRANDED OBJECT
@@ -16,7 +16,7 @@ REVEAL
         downsample := DownSample;
         wrapCyclic := WrapCyclic;
         reverse    := Reverse;
-        adjungate  := Adjungate;
+        adjoint    := Adjoint;
 
         scale := Scale;
         raise := Raise;
@@ -137,7 +137,7 @@ PROCEDURE Reverse (x: T): T =
     RETURN z;
   END Reverse;
 
-PROCEDURE Adjungate (x: T): T =
+PROCEDURE Adjoint (x: T): T =
   VAR z := NEW(T);
   BEGIN
     z.data := NEW(REF ARRAY OF R.T, NUMBER(x.data^));
@@ -146,7 +146,7 @@ PROCEDURE Adjungate (x: T): T =
       z.data[j] := R.Conj(x.data[LAST(x.data^) + FIRST(z.data^) - j]);
     END;
     RETURN z;
-  END Adjungate;
+  END Adjoint;
 
 
 PROCEDURE Scale (x: T; factor: R.T): T =
