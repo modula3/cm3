@@ -32,7 +32,10 @@ Boston, MA 02111-1307, USA.  */
 #include "real.h"
 #include "regs.h"
 #include "output.h"
+#include "flags.h"
 #include "tm_p.h"
+#include "target.h"
+#include "target-def.h"
 
 struct datalabel_array datalbl[DATALBL_ARRSIZ];
 int datalbl_ndx = -1;
@@ -44,6 +47,115 @@ const char *const sectname[4] =
 {"Init", "Normal", "Konst", "Static"};
 
 static int which_bit PARAMS ((int));
+static bool assemble_integer_1750a PARAMS ((rtx, unsigned int, int));
+static void output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
+static void output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
+
+/* Initialize the GCC target structure.  */
+#undef TARGET_ASM_BYTE_OP
+#define TARGET_ASM_BYTE_OP "\tdata\t"
+#undef TARGET_ASM_ALIGNED_HI_OP
+#define TARGET_ASM_ALIGNED_HI_OP "\tdatal\t"
+#undef TARGET_ASM_ALIGNED_SI_OP
+#define TARGET_ASM_ALIGNED_SI_OP NULL
+#undef TARGET_ASM_INTEGER
+#define TARGET_ASM_INTEGER assemble_integer_1750a
+
+#undef TARGET_ASM_FUNCTION_PROLOGUE
+#define TARGET_ASM_FUNCTION_PROLOGUE output_function_prologue
+#undef TARGET_ASM_FUNCTION_EPILOGUE
+#define TARGET_ASM_FUNCTION_EPILOGUE output_function_epilogue
+
+struct gcc_target targetm = TARGET_INITIALIZER;
+
+/* Generate the assembly code for function entry.  FILE is a stdio
+   stream to output the code to.  SIZE is an int: how many units of
+   temporary storage to allocate.
+
+   Refer to the array `regs_ever_live' to determine which registers to
+   save; `regs_ever_live[I]' is nonzero if register number I is ever
+   used in the function.  This function is responsible for knowing
+   which registers should not be saved even if used.  */
+
+static void
+output_function_prologue (file, size)
+     FILE *file;
+     HOST_WIDE_INT size;
+{
+  if (flag_verbose_asm)
+    {
+      int regno, regs_used = 0;
+
+      fprintf (file, "\t; registers used: ");
+      for (regno = 0; regno < 14; regno++)
+	if (regs_ever_live[regno])
+	  {
+	    fprintf (file, " %s", reg_names[regno]);
+	    regs_used++;
+	  }
+
+      if (regs_used == 0)
+	fprintf (file, "(none)");
+    }
+
+  if (size > 0)
+    {
+      fprintf (file, "\n\t%s\tr15,%d",
+	       (size <= 16 ? "sisp" : "sim"), size);
+      if (flag_verbose_asm)
+	fprintf (file, "  ; reserve local-variable space");
+    }
+
+  if (frame_pointer_needed)
+    {
+      fprintf(file, "\n\tpshm\tr14,r14");
+      if (flag_verbose_asm)
+	fprintf (file, "  ; push old frame");
+      fprintf (file, "\n\tlr\tr14,r15");
+      if (flag_verbose_asm)
+	fprintf (file, "  ; set new frame");
+    }
+
+  fprintf (file, "\n");
+  program_counter = 0;
+  jmplbl_ndx = -1;
+}
+
+/* This function generates the assembly code for function exit.
+   Args are as for output_function_prologue ().
+
+   The function epilogue should not depend on the current stack
+   pointer!  It should use the frame pointer only.  This is mandatory
+   because of alloca; we also take advantage of it to omit stack
+   adjustments before returning.  */
+
+static void
+output_function_epilogue (file, size)
+     FILE *file;
+     HOST_WIDE_INT size;
+{
+  if (frame_pointer_needed)
+    {
+      fprintf (file, "\tlr\tr15,r14");
+      if (flag_verbose_asm)
+        fprintf (file, "  ; set stack ptr to frame ptr");
+      fprintf (file, "\n\tpopm\tr14,r14");
+      if (flag_verbose_asm)
+        fprintf (file, "  ; restore previous frame ptr");
+      fprintf (file, "\n");
+    }
+
+  if (size > 0)
+    {
+      fprintf (file, "\t%s\tr15,%d",
+	       (size <= 16 ? "aisp" : "aim"), size);
+      if (flag_verbose_asm)
+	fprintf (file, "  ; free up local-var space");
+      fprintf (file, "\n");
+    }
+
+  fprintf (file, "\turs\tr15\n\n");
+}
 
 void
 notice_update_cc (exp)
@@ -55,7 +167,7 @@ notice_update_cc (exp)
       /* Jumps do not alter the cc's.  */
       if (SET_DEST (exp) == pc_rtx)
 	return;
-      /* Moving a register or constant into memory doesn't alter the cc's. */
+      /* Moving a register or constant into memory doesn't alter the cc's.  */
       if (GET_CODE (SET_DEST (exp)) == MEM
 	  && (src_code == REG || src_code == CONST_INT))
 	return;
@@ -80,7 +192,7 @@ notice_update_cc (exp)
 	  cc_status.value1 = SET_SRC (exp);
 	  return;
 	}
-      /* Anything else will set cc_status. */
+      /* Anything else will set cc_status.  */
       cc_status.flags = CC_NO_OVERFLOW;
       cc_status.value1 = SET_SRC (exp);
       cc_status.value2 = SET_DEST (exp);
@@ -202,7 +314,7 @@ mod_regno_adjust (instr, op)
      rtx *op;
 {
   static char outstr[40];
-  const char *r = (!strncmp (instr, "dvr", 3) ? "r" : "");
+  const char *const r = (!strncmp (instr, "dvr", 3) ? "r" : "");
   int modregno_gcc = REGNO (op[3]), modregno_1750 = REGNO (op[0]) + 1;
 
   if (modregno_gcc == modregno_1750
@@ -550,7 +662,7 @@ print_operand (file, x, letter)
 
     case CALL:
       fprintf (file, "CALL nargs=");
-      fprintf (file, HOST_PTR_PRINTF, XEXP (x, 1));
+      fprintf (file, HOST_PTR_PRINTF, (PTR) XEXP (x, 1));
       fprintf (file, ", func is either '%s' or '%s'",
 	       XSTR (XEXP (XEXP (x, 0), 1), 0), XSTR (XEXP (x, 0), 1));
       break;
@@ -705,6 +817,25 @@ print_operand_address (file, addr)
   addr_inc = 0;
 }
 
+/* Target hook for assembling integer objects.  The 1750a version needs to
+   keep track of how many bytes have been written.  */
+
+static bool
+assemble_integer_1750a (x, size, aligned_p)
+     rtx x;
+     unsigned int size;
+     int aligned_p;
+{
+  if (default_assemble_integer (x, size, aligned_p))
+    {
+      if (label_pending)
+	label_pending = 0;
+      datalbl[datalbl_ndx].size += size;
+      return true;
+    }
+  return false;
+}
+
 
 /*
  *  Return non zero if the LS 16 bits of the given value has just one bit set,
@@ -739,4 +870,145 @@ which_bit (x)
   return b;
 }
 
+
+/* Convert a REAL_VALUE_TYPE to the target float format:
 
+        MSB                             LSB MSB            LSB
+        ------------------------------------------------------
+        |S|                 Mantissa       |  Exponent       |
+        ------------------------------------------------------
+         0 1                             23 24             31
+
+*/
+
+long
+real_value_to_target_single(in)
+     REAL_VALUE_TYPE in;
+{
+  union {
+    double d;
+    struct {
+#if HOST_WORDS_BIG_ENDIAN
+        unsigned int negative:1;
+        unsigned int exponent:11;
+        unsigned int mantissa0:20;
+        unsigned int mantissa1:32;
+#else
+        unsigned int mantissa1:32;
+        unsigned int mantissa0:20;
+        unsigned int exponent:11;
+        unsigned int negative:1;
+#endif
+    } s;
+  } ieee;
+
+  unsigned int mant;
+  int exp;
+
+  if (HOST_FLOAT_FORMAT != IEEE_FLOAT_FORMAT)
+    abort ();
+
+  ieee.d = in;
+
+  /* Don't bother with NaN, Inf, 0 special cases, since they'll be handled
+     by the over/underflow code below.  */
+  exp = ieee.s.exponent - 0x3ff;
+  mant = 1 << 23 | ieee.s.mantissa0 << 3 | ieee.s.mantissa1 >> 29;
+
+  /* The sign is actually part of the mantessa.  Since we're comming from
+     IEEE we know that either bit 23 is set or we have a zero.  */
+  if (! ieee.s.negative)
+    {
+      mant >>= 1;
+      exp += 1;
+    }
+
+  /* Check for overflow.  Crop to FLT_MAX.  */
+  if (exp > 127)
+    {
+      exp = 127;
+      mant = (ieee.s.negative ? 0xffffff : 0x7fffff);
+    }
+  /* Underflow to zero.  */
+  else if (exp < -128)
+    {
+      exp = 0;
+      mant = 0;
+    }
+
+  return mant << 8 | (exp & 0xff);
+}
+
+/* Convert a REAL_VALUE_TYPE to the target 1750a extended float format:
+
+        ----------------------------------------------------
+        | |      Mantissa       |        |   Mantissa      |
+        |S|         MS          |Exponent|      LS         |
+        ----------------------------------------------------
+         0 1                  23 24    31 32             47
+
+*/
+
+void
+real_value_to_target_double(in, out)
+     REAL_VALUE_TYPE in;
+     long out[];
+{
+  union {
+    double d;
+    struct {
+#if HOST_WORDS_BIG_ENDIAN
+        unsigned int negative:1;
+        unsigned int exponent:11;
+        unsigned int mantissa0:20;
+        unsigned int mantissa1:32;
+#else
+        unsigned int mantissa1:32;
+        unsigned int mantissa0:20;
+        unsigned int exponent:11;
+        unsigned int negative:1;
+#endif
+    } s;
+  } ieee;
+
+  unsigned int mant_h24, mant_l16;
+  int exp;
+
+  if (HOST_FLOAT_FORMAT != IEEE_FLOAT_FORMAT)
+    abort ();
+
+  ieee.d = in;
+
+  /* Don't bother with NaN, Inf, 0 special cases, since they'll be handled
+     by the over/underflow code below.  */
+  exp = ieee.s.exponent - 0x3ff;
+  mant_h24 = 1 << 23 | ieee.s.mantissa0 << 3 | ieee.s.mantissa1 >> 29;
+  mant_l16 = (ieee.s.mantissa1 >> 13) & 0xffff;
+
+  /* The sign is actually part of the mantessa.  Since we're comming from
+     IEEE we know that either bit 23 is set or we have a zero.  */
+  if (! ieee.s.negative)
+    {
+      mant_l16 = mant_l16 >> 1 | (mant_h24 & 1) << 15;
+      mant_h24 >>= 1;
+      exp += 1;
+    }
+
+  /* Check for overflow.  Crop to DBL_MAX.  */
+  if (exp > 127)
+    {
+      exp = 127;
+      mant_h24 = (ieee.s.negative ? 0xffffff : 0x7fffff);
+      mant_l16 = 0xffff;
+    }
+  /* Underflow to zero.  */
+  else if (exp < -128)
+    {
+      exp = 0;
+      mant_h24 = 0;
+      mant_l16 = 0;
+    }
+
+  out[0] = mant_h24 << 8 | (exp & 0xff);
+  out[1] = mant_l16;
+}

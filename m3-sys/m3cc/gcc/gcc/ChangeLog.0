@@ -1185,7 +1185,7 @@ Thu Jun 25 15:08:16 1998  Mark Mitchell  <mark@markmitchell.com>
 	* c-common.c (c_get_alias_set): New function.
 	* c-decl.c (init_decl_processing): Set lang_get_alias_set.
 
-	* expr.c (protect_from_queue): Propogage alias sets.
+	* expr.c (protect_from_queue): Propagate alias sets.
 	(expand_assignment): Calculate alias set for new MEMs.
 	(expand_expr): Likewise.
 	* function.c (put_var_into_stack): Likewise.
@@ -3651,7 +3651,7 @@ Thu May 14 16:30:47 1998  Andrew MacLeod  <amacleod@cygnus.com>
 	now that we don't automatically know what the labels might be.
 	Let scan_region() remove unreferenced EH BEGIN/END labels.
 	* integrate.c (get_label_from_map): Put inlined labels onto the
-	permanent obstack since we dont know which ones might be exception
+	permanent obstack since we don't know which ones might be exception
 	labels.
 	(save_for_inline_copying): Make new copies of all the handlers.
 	(expand_inline_function): Make new copies of all the handlers.
@@ -5188,7 +5188,7 @@ Wed Apr 15 01:21:21 1998  Jeffrey A Law  (law@cygnus.com)
 
 Tue Apr 14 23:39:13 1998  Richard Henderson  <rth@cygnus.com>
 
-	* alpha.md: Revert Oct 27 change, as it is superceded by Kenner's
+	* alpha.md: Revert Oct 27 change, as it is superseded by Kenner's
 	Nov 8 find_replacement change.  Move decls of get_unaligned_address
 	* alpha.h: ... here.
 
@@ -5370,7 +5370,7 @@ Wed Apr  8 12:51:19 1998  Jeffrey A Law  (law@cygnus.com)
 
 	* invoke.texi: Add ARC options.
 
-	* gcc.c (proces_command): Improve error message for -o with
+	* gcc.c (process_command): Improve error message for -o with
 	either -c or -S.
 
 	* i386/x-cygwin32 (CLIB): Link in advapi32.

@@ -180,7 +180,7 @@
 	       || ((- const_val) & 0xffff0000) == 0
 	       || (unsigned) ((- const_val) + 0x8000) < 0x10000)
 	{
-	  /* Can do this by loading the negative constant and then negating. */
+	  /* Can do this by loading the negative constant and then negating.  */
 	  emit_move_insn (operands[0], GEN_INT (- const_val));
 	  emit_insn (gen_negsi2 (operands[0], operands[0]));
 	  DONE;
@@ -1130,7 +1130,7 @@
     }
   else if (INTVAL (operands[1]) == 8
 	   && (INTVAL (operands[2]) % 8 == 0))
-    ;				/* Accept aligned byte-wide field. */
+    ;				/* Accept aligned byte-wide field.  */
   else
     FAIL;
 }")
@@ -1667,7 +1667,6 @@
   operands[0] = XEXP (operands[0], 0);
   if (GET_CODE (operands[0]) == SYMBOL_REF)
     {
-      extern rtx get_symref ();
       char *real_fcnname
 	= (char *) alloca (strlen (XSTR (operands[0], 0)) + 2);
 
@@ -1726,7 +1725,6 @@
   operands[1] = XEXP (operands[1], 0);
   if (GET_CODE (operands[1]) == SYMBOL_REF)
     {
-      extern rtx get_symref ();
       char *real_fcnname =
 		(char *) alloca (strlen (XSTR (operands[1], 0)) + 2);
 

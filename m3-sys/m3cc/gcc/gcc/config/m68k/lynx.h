@@ -29,8 +29,6 @@ Boston, MA 02111-1307, USA.  */
 
 #define BSS_SECTION_ASM_OP "\t.bss"
 
-#define ASM_LONG ".long"
-
 #include <lynx.h>
 
 /* See m68k.h.  7 means 68020 with 68881.  */
@@ -48,7 +46,7 @@ Boston, MA 02111-1307, USA.  */
 
 #define STRUCTURE_SIZE_BOUNDARY 16
 
-/* Lynx uses d2 and d3 as scratch registers. */
+/* Lynx uses d2 and d3 as scratch registers.  */
 #undef CALL_USED_REGISTERS
 #define CALL_USED_REGISTERS \
  {1, 1, 1, 1, 0, 0, 0, 0,   \

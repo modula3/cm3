@@ -59,6 +59,9 @@ Boston, MA 02111-1307, USA.  */
 
 #include "m68k/m68k.h"
 
+#undef INT_OP_GROUP
+#define INT_OP_GROUP INT_OP_NO_DOT
+
 /* See m68k.h.  7 means 68020 with 68881.  */
 
 #ifndef TARGET_DEFAULT
@@ -79,7 +82,7 @@ Boston, MA 02111-1307, USA.  */
 /* These definitions differ from those used for GAS by defining __HPUX_ASM__.
    This is needed because some programs, particularly GDB, need to
    know which assembler is being used so that the correct `asm'
-   instructions can be used. */
+   instructions can be used.  */
 
 #define CPP_SPEC \
 "%{!msoft-float:-D__HAVE_68881__ }\
@@ -133,7 +136,7 @@ Boston, MA 02111-1307, USA.  */
 
 #define STRUCTURE_SIZE_BOUNDARY 16
 
-/* hpux doesn't use static area for struct returns. */
+/* hpux doesn't use static area for struct returns.  */
 #undef PCC_STATIC_STRUCT_RETURN
 
 /* Generate calls to memcpy, memcmp and memset.  */
@@ -162,12 +165,6 @@ Boston, MA 02111-1307, USA.  */
 #undef TEXT_SECTION_ASM_OP
 #undef DATA_SECTION_ASM_OP
 #undef READONLY_DATA_SECTION
-#undef ASM_OUTPUT_DOUBLE
-#undef ASM_OUTPUT_FLOAT
-#undef ASM_OUTPUT_INT
-#undef ASM_OUTPUT_SHORT
-#undef ASM_OUTPUT_CHAR
-#undef ASM_OUTPUT_BYTE
 #undef ASM_OUTPUT_ADDR_VEC_ELT
 #undef ASM_OUTPUT_ADDR_DIFF_ELT
 #undef ASM_OUTPUT_ALIGN
@@ -267,49 +264,6 @@ do{  if (PREFIX[0] == 'L' && PREFIX[1] == 'I')		\
     fprintf (FILE, "%s%d:\n", PREFIX, NUM);		\
 } while(0)
 
-#define ASM_OUTPUT_DOUBLE(FILE, VALUE)			\
-  do { char dstr[30];					\
-       REAL_VALUE_TO_DECIMAL (VALUE, "%.20g", dstr);	\
-       fprintf (FILE, "\tdouble 0f%s\n", dstr);		\
-     } while (0)
-
-#define ASM_OUTPUT_FLOAT(FILE, VALUE)			\
-  do { char dstr[30];					\
-       REAL_VALUE_TO_DECIMAL (VALUE, "%.9g", dstr);	\
-       fprintf (FILE, "\tfloat 0f%s\n", dstr);		\
-     } while (0)
-
-#undef ASM_OUTPUT_LONG_DOUBLE
-#define ASM_OUTPUT_LONG_DOUBLE(FILE,VALUE)  				\
-do { long l[3];								\
-     REAL_VALUE_TO_TARGET_LONG_DOUBLE (VALUE, l);			\
-     fprintf (FILE, "\tlong 0x%x,0x%x,0x%x\n", l[0], l[1], l[2]);	\
-   } while (0)
-  
-/* This is how to output an assembler line defining an `int' constant.  */
-
-#define ASM_OUTPUT_INT(FILE,VALUE)  \
-( fprintf (FILE, "\tlong "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* Likewise for `char' and `short' constants.  */
-
-#define ASM_OUTPUT_SHORT(FILE,VALUE)  \
-( fprintf (FILE, "\tshort "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-#define ASM_OUTPUT_CHAR(FILE,VALUE)  \
-( fprintf (FILE, "\tbyte "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* This is how to output an assembler line for a numeric constant byte.  */
-
-#define ASM_OUTPUT_BYTE(FILE,VALUE)  \
-  fprintf (FILE, "\tbyte 0x%x\n", (VALUE))
-
 #define ASM_OUTPUT_ADDR_VEC_ELT(FILE, VALUE)  \
   fprintf (FILE, "\tlong L%d\n", VALUE)
 
@@ -317,10 +271,12 @@ do { long l[3];								\
   fprintf (FILE, "\tshort L%d-L%d\n", VALUE, REL)
 
 #define ASM_OUTPUT_ALIGN(FILE,LOG)	\
+do {					\
   if ((LOG) == 1)			\
     fprintf (FILE, "\tlalign 2\n");	\
   else if ((LOG) != 0)			\
-    abort ();
+    abort ();				\
+} while (0)
 
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
   fprintf (FILE, "\tspace %u\n", (SIZE))
@@ -547,11 +503,11 @@ do { long l[3];								\
         output_addr_const (FILE, addr);					\
     }}
 
-#define	ASM_OUTPUT_ASCII(f, p, size)	\
-do { register int i;			\
+#define	ASM_OUTPUT_ASCII(f, p, SIZE)	\
+do { size_t i, limit = (SIZE);		\
   int inside;				\
   inside = FALSE;			\
-  for (i = 0; i < (size); i++) {	\
+  for (i = 0; i < limit; i++) {	\
     if (i % 8 == 0) {			\
       if (i != 0) {			\
 	if (inside)			\
@@ -621,14 +577,15 @@ do { register int i;			\
 #endif /* not HPUX_ASM */
 
 /* In m68k svr4, a symbol_ref rtx can be a valid PIC operand if it is an
-   operand of a function call. */
+   operand of a function call.  */
 #undef LEGITIMATE_PIC_OPERAND_P
 #define LEGITIMATE_PIC_OPERAND_P(X) \
   ((! symbolic_operand (X, VOIDmode) \
-    && ! (GET_CODE (X) == CONST_DOUBLE && CONST_DOUBLE_MEM (X)	\
-	  && GET_CODE (CONST_DOUBLE_MEM (X)) == MEM		\
-	  && symbolic_operand (XEXP (CONST_DOUBLE_MEM (X), 0), VOIDmode))) \
-   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X))       \
+    && ! (GET_CODE (X) == CONST_DOUBLE && mem_for_const_double (X) != 0	\
+	  && GET_CODE (mem_for_const_double (X)) == MEM			\
+	  && symbolic_operand (XEXP (mem_for_const_double (X), 0),	\
+			       VOIDmode))) 				\
+   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X))       	\
    || PCREL_GENERAL_OPERAND_OK)
 
 /* hpux8 and later have C++ compatible include files, so do not

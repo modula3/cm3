@@ -821,7 +821,7 @@ Tue Dec 14 12:07:29 MET 1999  Jan Hubicka  <hubicka@freesoft.cz>
 	* regclass.c  (record_reg_classes): Do not do the copying preferrencing
 	when source does not die.
 
-	* regclass.c (record_reg_classes): Handle INOUT operands propertly.
+	* regclass.c (record_reg_classes): Handle INOUT operands properly.
 
 1999-12-14  Jakub Jelinek  <jakub@redhat.com>
 
@@ -2889,7 +2889,7 @@ Tue Nov  9 14:55:44 1999  Nick Clifton  <nickc@cygnus.com>
 	(reg_or_cmp_int16_operand): New predicate function.
 	(extend_operand): New predicate function.
 	(m32r_adjust_code): New scheduling function.
-	(m32r_adjust_priorty): New scheduling function.
+	(m32r_adjust_priority): New scheduling function.
 	(m32r_sched_init): New scheduling function.
 	(m32r_sched_reorder): New scheduling function.
 	(m32r_sched_variable_issue): New scheduling function.
@@ -3199,9 +3199,9 @@ Wed Nov  3 14:51:59 1999  Mark P. Mitchell  <mark@codesourcery.com>
 	* rtl.h (renumber_insns): New function.
 	(remove_unnecessary_notes): Likewise.
 	* emit-rtl.c (renumber_insns): Define.
-	(remove_unncessary_notes): Likewise.
+	(remove_unnecessary_notes): Likewise.
 	* toplev.c (rest_of_compilation): Remove dead code.
-	Use renumber_insns and remove_unncessary_notes.
+	Use renumber_insns and remove_unnecessary_notes.
 
 	* gcse.c (struct null_pointer_info): New type.
 	(get_bitmap_width): New function.
@@ -3491,7 +3491,7 @@ Sun Oct 31 20:42:17 1999  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
 
 Sun Oct 31 13:32:15 CET 1999  Marc Lehmann <pcg@goof.com>
 
-	* toplev.c (rest_of_compilation): Seperate the setjmp/vfork clobber
+	* toplev.c (rest_of_compilation): Separate the setjmp/vfork clobber
 	warning from -Wuninitialized and put it under -W.
 	* function.c (uninitialized_vars_warning): Warn only when the
 	corresponding flag is set.
@@ -4049,8 +4049,8 @@ Wed Oct 27 15:21:46 1999  Richard Henderson  <rth@cygnus.com>
 
 Wed Oct 27 12:33:40 1999  Mark Mitchell  <mark@codesourcery.com>
 
-	* rtl.h (note_stores): Add additional paramter.
-	* rtlanal.c (reg_set_p_1): Take additional paramter.
+	* rtl.h (note_stores): Add additional parameter.
+	* rtlanal.c (reg_set_p_1): Take additional parameter.
 	(reg_set_last_1): Likewise.
 	(reg_set_p): Adjust call to note_stores.
 	(reg_set_last): Likewise.
@@ -4110,7 +4110,7 @@ Wed Oct 27 12:33:40 1999  Mark Mitchell  <mark@codesourcery.com>
 	(prescan_loop): Adjust calls to note_stores.
 	(strength_reduce): Likewise.
 	(check_dbra_loop): Likewise.
-	* regmove.c (flags_set_1): Take additional paramter.
+	* regmove.c (flags_set_1): Take additional parameter.
 	(mark_flags_life_zones): Adjust calls to note_stores.
 	* reload1.c (mark_not_eliminable): Take additional parameter.
 	(forget_old_reloads_1): Likewise.
@@ -4124,7 +4124,7 @@ Wed Oct 27 12:33:40 1999  Mark Mitchell  <mark@codesourcery.com>
 	(reload_cse_regs_1): Likewise.
 	(reload_cse_record_set): Adjust calls to reload_cse_invalidate_rtx.
 	(reload_combine): Adjust calls to note_stores.
-	* resource.c (update_live_status): Take additional paramter.
+	* resource.c (update_live_status): Take additional parameter.
 	(mark_target_live_regs): Adjust calls to note_stores.
 	* stupid.c (find_clobbered_regs): Take additional parameter.
 	(stupid_life_analysis): Adjust calls to note_stores.
@@ -4248,7 +4248,7 @@ Tue Oct 26 18:23:38 1999  Jan Hubicka  <hubicka@freesoft.cz>
 	(record_reg_life_pat, record_reg_life, find_blocks): Remove.
 	(nan): New.
 	(goto_block_pat, print_blocks, dump_stack_info): Remove.
-	(reg_to_stack): Simplified test for existance of fp code.  Use
+	(reg_to_stack): Simplified test for existence of fp code.  Use
 	flow.c code.  Call shorten_branches after cross-jump opt.
 	(check_asm_stack_operands): Renamed from record_asm_reg_life.
 	Return false if the asm doesn't use stack regs.  Don't do life
@@ -5307,7 +5307,7 @@ Thu Oct 14 01:49:54 1999  Richard Henderson  <rth@cygnus.com>
 	(NUM_SPECIAL_MODE_PREDS): New.
 	(find_operand): New.
 	(validate_pattern): New argument `insn'.  Warn for assignment to
-	any predicate accepting non-lvalues.  Conditionaly warn for
+	any predicate accepting non-lvalues.  Conditionally warn for
 	match_operand without a mode.  Try much harder to match source
 	and destination modes on a set.
 	* tm.texi (SPECIAL_MODE_PREDICATES): Document.
@@ -5729,7 +5729,7 @@ Sat Oct  9 12:18:16 1999  Richard Henderson  <rth@cygnus.com>
 	(life_analysis): Give life_analysis_1 PROP flags.
 	(verify_wide_reg_1, verify_wide_reg): New.
 	(verify_local_live_at_start): New.
-	(update_life_info): Rewrite to call into propogate_block.
+	(update_life_info): Rewrite to call into propagate_block.
 	(mark_reg): New.
 	(mark_regs_live_at_end): After reload, if epilogue as rtl,
 	always mark stack pointer.  Conditionally mark PIC register.
@@ -5833,7 +5833,7 @@ Thu Oct  7 23:06:50 1999  Richard Henderson  <rth@cygnus.com>
 Thu Oct  7 22:53:00 1999  Franz Sirl  <Franz.Sirl-kernel@lauterbach.com>
 			  Mark Mitchell  <mark@codesourcery.com>
 
-	* tree.c (make_lang_type_fn): New funtion pointer.
+	* tree.c (make_lang_type_fn): New function pointer.
 	(make_lang_type): Call it.
 	* tree.h (make_lang_type): Declare.
 	(make_lang_type_fn): Likewise.
@@ -8622,7 +8622,7 @@ Tue Sep  7 00:47:52 1999  Mark Mitchell  <mark@codesourcery.com>
 	* except.c (mark_func_eh_entry): New function.
 	(mark_eh_node): Mark false_label and rethrow_label.
 	(init_eh): Add more GC roots.
-	* function.c (free_after_compilation): Take decl as a paramter.
+	* function.c (free_after_compilation): Take decl as a parameter.
 	Call free_stmt_status.
 	(mark_function_state): Don't assume x_parm_reg_stack_loc is
 	non-NULL.
@@ -9963,7 +9963,7 @@ Thu Aug 26 19:33:23 1999  Jim Wilson  <wilson@cygnus.com>
 	* dwarf2out.c (DWARF2_ASM_LINE_DEBUG_INFO): Add default definition.
 	(debug_dwarf): Add DWARF2_ASM_LINE_DEBUG_INFO support.
 	(dwarf2out_line, dwarf2out_finish): Likewise.
-	* tm.texi (DWARF2_ASM_LINE_DEBUG_INFO): Add documetation.
+	* tm.texi (DWARF2_ASM_LINE_DEBUG_INFO): Add documentation.
 
 Thu Aug 26 16:10:56 1999  Gavin Romig-Koch  <gavin@cygnus.com>
 
@@ -10124,7 +10124,7 @@ Wed Aug 25 13:41:47 EDT 1999  Andrew MacLeod  <amacleod@cygnus.com>
 	prototypes.
 	* toplev.c (rest_of_compilation): Initialize node cache.
 	* Makefile.in (OBJS): Add lists.o to list of object files.
-	(lists.o): Add dependancies.
+	(lists.o): Add dependencies.
 
 Wed Aug 25 17:31:56 1999  Nick Clifton  <nickc@cygnus.com>
 
@@ -10720,7 +10720,7 @@ Fri Aug 20 22:32:17 1999  Michael Hayes  <m.hayes@elec.canterbury.ac.nz>
 Thu Aug 19 14:42:38 1999  Mike Stump <mrs@wrs.com>
 			  Mark Mitchell <mark@codesourcery.com>
 
-	* c-common.c (c_get_alias_set): Fix support for poitners and
+	* c-common.c (c_get_alias_set): Fix support for pointers and
 	references.
 
 Thu Aug 19 11:51:22 EDT 1999  John Wehle  (john@feith.com)
@@ -10985,7 +10985,7 @@ Tue Aug 10 17:19:02 1999  Jim Wilson  <wilson@cygnus.com>
 
 Tue Aug 10 10:47:42 EDT 1999  Andrew MacLeod  <amacleod@cygnus.com>
 
-	* except.h (eh_nesting_info): Add new structure defintion.
+	* except.h (eh_nesting_info): Add new structure definition.
 	(init_eh_nesting_info, free_eh_nesting_info): Add function prototypes.
 	(reachable_handlers, update_rethrow_references): Add function
 	prototypes.
@@ -10993,7 +10993,7 @@ Tue Aug 10 10:47:42 EDT 1999  Andrew MacLeod  <amacleod@cygnus.com>
 	a rethrow symbol instead of an integer exception region number.
 	* flow.c (Make_edges): Use new exception nesting routines to determine
 	which handlers are reachable from a CALL or asynchronous insn.
-	Dont add an edge for calls with a REG_EH_REGION of -1 to non-local
+	Don't add an edge for calls with a REG_EH_REGION of -1 to non-local
 	goto receivers.
 	(delete_eh_regions): Update rethrow labels, and don't delete
 	regions which are the target of a rethrow.
@@ -12356,7 +12356,7 @@ Mon Jul 26 22:52:47 1999  Richard Henderson  <rth@cygnus.com>
 	* i960.h (BUILD_VA_LIST_TYPE): New.
 	(EXPAND_BUILTIN_VA_START): New.
 	(EXPAND_BUILTIN_VA_ARG): New.
-	* i960.md (store_multiple): Use change_address on individul mems.
+	* i960.md (store_multiple): Use change_address on individual mems.
 
 Mon Jul 26 22:43:12 1999  Richard Henderson  <rth@cygnus.com>
 
@@ -13070,7 +13070,7 @@ Thu Jul  8 12:55:12 1999  Jeffrey A Law  (law@cygnus.com)
 
 Thu Jul  8 18:03:19 1999  J"orn Rennecke <amylaar@cygnus.co.uk>
 
-	* reload1.c (choose_reload_regs): Never call remove_adress_replacements
+	* reload1.c (choose_reload_regs): Never call remove_address_replacements
 	when reload_out equals reload_in.
 
 Thu Jul  8 16:50:14 1999  Nick Clifton  <nickc@cygnus.com>
@@ -14051,7 +14051,7 @@ Fri Jun  4 03:20:40 1999  J"orn Rennecke <amylaar@cygnus.co.uk>
 	* sh.h (PREDICATE_CODES): Remove braf_label_ref_operand.
 	* sh.md (casesi_jump_2): Operand1 is now the inside of a
 	label_ref, and has no predicate.
-	The patten has a predicate to guard against invalid substitutions.
+	The pattern has a predicate to guard against invalid substitutions.
 	(dummy_jump): Delete.
 	(casesi): Update use of casesi_jump_2.
 
@@ -14401,7 +14401,7 @@ Thu May 20 10:00:42 1999  Stephen L Moshier  <moshier@world.std.com>
 
 Thu May 20 09:58:57 1999  Jan Hubicka <hubicka@freesoft.cz>
 
-	* function.c (assign_stack_local): Align stack slot propertly.
+	* function.c (assign_stack_local): Align stack slot properly.
 	(assign_outer_stack_local): Likewise.
 
 Thu May 20 10:38:43 1999  Mark Mitchell  <mark@codesourcery.com>

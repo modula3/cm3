@@ -25,8 +25,8 @@ Boston, MA 02111-1307, USA.  */
 /* Some output-actions in c4x.md need these.  */
 #include "config.h"
 #include "system.h"
-#include "toplev.h"
 #include "rtl.h"
+#include "tree.h"
 #include "regs.h"
 #include "hard-reg-set.h"
 #include "basic-block.h"
@@ -35,18 +35,20 @@ Boston, MA 02111-1307, USA.  */
 #include "insn-attr.h"
 #include "conditions.h"
 #include "output.h"
-#include "tree.h"
 #include "function.h"
 #include "expr.h"
+#include "optabs.h"
+#include "libfuncs.h"
 #include "flags.h"
 #include "loop.h"
 #include "recog.h"
 #include "c-tree.h"
 #include "ggc.h"
 #include "cpplib.h"
-#include "c-lex.h"
-#include "c-pragma.h"
+#include "toplev.h"
 #include "c4x-protos.h"
+#include "target.h"
+#include "target-def.h"
 
 rtx smulhi3_libfunc;
 rtx umulhi3_libfunc;
@@ -61,7 +63,7 @@ rtx floatunshihf2_libfunc;
 
 static int c4x_leaf_function;
 
-static const char *float_reg_names[] = FLOAT_REGISTER_NAMES;
+static const char *const float_reg_names[] = FLOAT_REGISTER_NAMES;
 
 /* Array of the smallest class containing reg number REGNO, indexed by
    REGNO.  Used by REGNO_REG_CLASS in c4x.h.  We assume that all these
@@ -156,11 +158,11 @@ int c4x_cpu_version = 40;	/* CPU version C30/31/32/33/40/44.  */
 
 /* Pragma definitions.  */
 
-static tree code_tree = NULL_TREE;
-static tree data_tree = NULL_TREE;
-static tree pure_tree = NULL_TREE;
-static tree noreturn_tree = NULL_TREE;
-static tree interrupt_tree = NULL_TREE;
+tree code_tree = NULL_TREE;
+tree data_tree = NULL_TREE;
+tree pure_tree = NULL_TREE;
+tree noreturn_tree = NULL_TREE;
+tree interrupt_tree = NULL_TREE;
 
 /* Forward declarations */
 static void c4x_add_gc_roots PARAMS ((void));
@@ -183,11 +185,40 @@ static int c4x_valid_operands PARAMS ((enum rtx_code, rtx *,
 static int c4x_arn_reg_operand PARAMS ((rtx, enum machine_mode, unsigned int));
 static int c4x_arn_mem_operand PARAMS ((rtx, enum machine_mode, unsigned int));
 static void c4x_check_attribute PARAMS ((const char *, tree, tree, tree *));
-static int c4x_parse_pragma PARAMS ((const char *, tree *, tree *));
 static int c4x_r11_set_p PARAMS ((rtx));
 static int c4x_rptb_valid_p PARAMS ((rtx, rtx));
 static int c4x_label_ref_used_p PARAMS ((rtx, rtx));
+static tree c4x_handle_fntype_attribute PARAMS ((tree *, tree, tree, int, bool *));
+const struct attribute_spec c4x_attribute_table[];
+static void c4x_insert_attributes PARAMS ((tree, tree *));
+static void c4x_asm_named_section PARAMS ((const char *, unsigned int));
+static int c4x_adjust_cost PARAMS ((rtx, rtx, rtx, int));
+
+/* Initialize the GCC target structure.  */
+#undef TARGET_ASM_BYTE_OP
+#define TARGET_ASM_BYTE_OP "\t.word\t"
+#undef TARGET_ASM_ALIGNED_HI_OP
+#define TARGET_ASM_ALIGNED_HI_OP NULL
+#undef TARGET_ASM_ALIGNED_SI_OP
+#define TARGET_ASM_ALIGNED_SI_OP NULL
 
+#undef TARGET_ATTRIBUTE_TABLE
+#define TARGET_ATTRIBUTE_TABLE c4x_attribute_table
+
+#undef TARGET_INSERT_ATTRIBUTES
+#define TARGET_INSERT_ATTRIBUTES c4x_insert_attributes
+
+#undef TARGET_INIT_BUILTINS
+#define TARGET_INIT_BUILTINS c4x_init_builtins
+
+#undef TARGET_EXPAND_BUILTIN
+#define TARGET_EXPAND_BUILTIN c4x_expand_builtin
+
+#undef TARGET_SCHED_ADJUST_COST
+#define TARGET_SCHED_ADJUST_COST c4x_adjust_cost
+
+struct gcc_target targetm = TARGET_INITIALIZER;
+
 /* Called to register all of our global variables with the garbage
    collector.  */
 
@@ -265,7 +296,7 @@ c4x_override_options ()
     case 40: target_flags |= C40_FLAG; break;
     case 44: target_flags |= C44_FLAG; break;
     default:
-      warning ("Unknown CPU version %d, using 40.\n", c4x_cpu_version);
+      warning ("unknown CPU version %d, using 40.\n", c4x_cpu_version);
       c4x_cpu_version = 40;
       target_flags |= C40_FLAG;
     }
@@ -276,7 +307,7 @@ c4x_override_options ()
     target_flags &= ~C3X_FLAG;
 
   /* Convert foo / 8.0 into foo * 0.125, etc.  */
-  flag_fast_math = 1;
+  set_fast_math_flags();
 
   /* We should phase out the following at some stage.
      This provides compatibility with the old -mno-aliases option.  */
@@ -476,7 +507,7 @@ c4x_hard_regno_rename_ok (regno1, regno2)
    Don't use R0 to pass arguments in, we use 0 to indicate a stack
    argument.  */
 
-static int c4x_int_reglist[3][6] =
+static const int c4x_int_reglist[3][6] =
 {
   {AR2_REGNO, R2_REGNO, R3_REGNO, RC_REGNO, RS_REGNO, RE_REGNO},
   {AR2_REGNO, R3_REGNO, RC_REGNO, RS_REGNO, RE_REGNO, 0},
@@ -827,13 +858,6 @@ c4x_expand_prologue ()
       return;
     }
   
-#ifdef FUNCTION_BLOCK_PROFILER_EXIT
-  if (profile_block_flag == 2)
-    {
-      FUNCTION_BLOCK_PROFILER_EXIT
-    }
-#endif
-
   /* For __interrupt__ function build specific prologue.  */
   if (c4x_interrupt_function_p ())
     {
@@ -856,7 +880,7 @@ c4x_expand_prologue ()
 	     requires more than 32767 words of local temporary
 	     storage!  */
 	  if (size > 32767)
-	    error ("ISR %s requires %d words of local vars, max is 32767.",
+	    error ("ISR %s requires %d words of local vars, max is 32767",
 		   current_function_name, size);
 
 	  insn = emit_insn (gen_addqi3 (gen_rtx_REG (QImode, SP_REGNO),
@@ -1215,7 +1239,6 @@ c4x_null_epilogue_p ()
       && ! c4x_interrupt_function_p ()
       && ! current_function_calls_alloca
       && ! current_function_args_size
-      && ! (profile_block_flag == 2)
       && ! (optimize < 2)
       && ! get_frame_size ())
     {
@@ -1609,7 +1632,7 @@ c4x_check_legit_addr (mode, addr, strict)
       return 0;
 
     case CONST_DOUBLE:
-      fatal_insn ("Using CONST_DOUBLE for address", addr);
+      fatal_insn ("using CONST_DOUBLE for address", addr);
 
     default:
       return 0;
@@ -1912,7 +1935,7 @@ c4x_print_operand (file, op, letter)
           if (GET_CODE(op1) == CONST_INT || GET_CODE(op1) == SYMBOL_REF)
 	    {
 	      asm_fprintf (file, "\t%s\t@", TARGET_C3X ? "ldp" : "ldpk");
-	      output_address (XEXP (adj_offsettable_operand (op, 1), 0));
+	      output_address (XEXP (adjust_address (op, VOIDmode, 1), 0));
 	      asm_fprintf (file, "\n");
 	    }
 	}
@@ -1934,7 +1957,7 @@ c4x_print_operand (file, op, letter)
       if (code == MEM && c4x_autoinc_operand (op, Pmode))
 	break;
       else if (code == MEM)
-	output_address (XEXP (adj_offsettable_operand (op, 1), 0));
+	output_address (XEXP (adjust_address (op, VOIDmode, 1), 0));
       else if (code == REG)
 	fprintf (file, "%s", reg_names[REGNO (op) + 1]);
       else
@@ -3417,7 +3440,7 @@ lsrc_operand (op, mode)
     mode = GET_MODE (op);
 
   if (mode != QImode && mode != Pmode)
-    fatal_insn ("Mode not QImode", op);
+    fatal_insn ("mode not QImode", op);
 
   if (GET_CODE (op) == CONST_INT)
     return c4x_L_constant (op) || c4x_J_constant (op);
@@ -3437,7 +3460,7 @@ tsrc_operand (op, mode)
     mode = GET_MODE (op);
 
   if (mode != QImode && mode != Pmode)
-    fatal_insn ("Mode not QImode", op);
+    fatal_insn ("mode not QImode", op);
 
   if (GET_CODE (op) == CONST_INT)
     return c4x_L_constant (op) || c4x_N_constant (op) || c4x_J_constant (op);
@@ -3494,7 +3517,7 @@ c4x_S_address_parse (op, base, incdec, index, disp)
   *disp = 0;
        
   if (GET_CODE (op) != MEM)
-    fatal_insn ("Invalid indirect memory address", op);
+    fatal_insn ("invalid indirect memory address", op);
   
   op = XEXP (op, 0);
   switch (GET_CODE (op))
@@ -3583,7 +3606,7 @@ c4x_S_address_parse (op, base, incdec, index, disp)
       /* Fallthrough.  */
 
     default:
-      fatal_insn ("Invalid indirect (S) memory address", op);
+      fatal_insn ("invalid indirect (S) memory address", op);
     }
 }
 
@@ -4460,141 +4483,6 @@ c4x_operand_subword (op, i, validate_address, mode)
   return operand_subword (op, i, validate_address, mode);
 }
 
-/* Handle machine specific pragmas for compatibility with existing
-   compilers for the C3x/C4x.
-
-   pragma				   attribute
-   ----------------------------------------------------------
-   CODE_SECTION(symbol,"section")          section("section")
-   DATA_SECTION(symbol,"section")          section("section")
-   FUNC_CANNOT_INLINE(function)            
-   FUNC_EXT_CALLED(function)               
-   FUNC_IS_PURE(function)                  const
-   FUNC_IS_SYSTEM(function)                
-   FUNC_NEVER_RETURNS(function)            noreturn
-   FUNC_NO_GLOBAL_ASG(function)            
-   FUNC_NO_IND_ASG(function)               
-   INTERRUPT(function)                     interrupt
-
-   */
-
-/* Parse a C4x pragma, of the form ( function [, "section"] ) \n.
-   FUNC is loaded with the IDENTIFIER_NODE of the function, SECT with
-   the STRING_CST node of the string.  If SECT is null, then this
-   pragma doesn't take a section string.  Returns 0 for a good pragma,
-   -1 for a malformed pragma.  */
-#define BAD(msgid, arg) do { warning (msgid, arg); return -1; } while (0)
-
-static int (*c_lex_func) (tree *);
-
-void
-c4x_init_pragma (get_token)
-  int (*get_token) PARAMS ((tree *));
-{
-  c_lex_func = get_token;
-}
-
-
-static int
-c4x_parse_pragma (name, func, sect)
-     const char *name;
-     tree *func;
-     tree *sect;
-{
-  tree f, s, x;
-
-  if (c_lex_func (&x) != CPP_OPEN_PAREN)
-    BAD ("missing '(' after '#pragma %s' - ignored", name);
-
-  if (c_lex_func (&f) != CPP_NAME)
-    BAD ("missing function name in '#pragma %s' - ignored", name);
-
-  if (sect)
-    {
-      if (c_lex_func (&x) != CPP_COMMA)
-	BAD ("malformed '#pragma %s' - ignored", name);
-      if (c_lex_func (&s) != CPP_STRING)
-	BAD ("missing section name in '#pragma %s' - ignored", name);
-      *sect = s;
-    }
-
-  if (c_lex_func (&x) != CPP_CLOSE_PAREN)
-    BAD ("missing ')' for '#pragma %s' - ignored", name);
-
-  if (c_lex_func (&x) != CPP_EOF)
-    warning ("junk at end of '#pragma %s'", name);
-
-  *func = f;
-  return 0;
-}
-
-void
-c4x_pr_CODE_SECTION (pfile)
-     cpp_reader *pfile ATTRIBUTE_UNUSED;
-{
-  tree func, sect;
-
-  if (c4x_parse_pragma ("CODE_SECTION", &func, &sect))
-    return;
-  code_tree = chainon (code_tree,
-		       build_tree_list (func,
-					build_tree_list (NULL_TREE, sect)));
-}
-
-void
-c4x_pr_DATA_SECTION (pfile)
-     cpp_reader *pfile ATTRIBUTE_UNUSED;
-{
-  tree func, sect;
-
-  if (c4x_parse_pragma ("DATA_SECTION", &func, &sect))
-    return;
-  data_tree = chainon (data_tree,
-		       build_tree_list (func,
-					build_tree_list (NULL_TREE, sect)));
-}
-
-void
-c4x_pr_FUNC_IS_PURE (pfile)
-     cpp_reader *pfile ATTRIBUTE_UNUSED;
-{
-  tree func;
-
-  if (c4x_parse_pragma ("FUNC_IS_PURE", &func, 0))
-    return;
-  pure_tree = chainon (pure_tree, build_tree_list (func, NULL_TREE));
-}
-
-void
-c4x_pr_FUNC_NEVER_RETURNS (pfile)
-     cpp_reader *pfile ATTRIBUTE_UNUSED;
-{
-  tree func;
-
-  if (c4x_parse_pragma ("FUNC_NEVER_RETURNS", &func, 0))
-    return;
-  noreturn_tree = chainon (noreturn_tree, build_tree_list (func, NULL_TREE));
-}
-
-void
-c4x_pr_INTERRUPT (pfile)
-     cpp_reader *pfile ATTRIBUTE_UNUSED;
-{
-  tree func;
-
-  if (c4x_parse_pragma ("INTERRUPT", &func, 0))
-    return;
-  interrupt_tree = chainon (interrupt_tree, build_tree_list (func, NULL_TREE));
-}
-
-/* Used for FUNC_CANNOT_INLINE, FUNC_EXT_CALLED, FUNC_IS_SYSTEM,
-   FUNC_NO_GLOBAL_ASG, and FUNC_NO_IND_ASG.  */
-void
-c4x_pr_ignored (pfile)
-     cpp_reader *pfile ATTRIBUTE_UNUSED;
-{
-}
-
 struct name_list
 {
   struct name_list *next;
@@ -4708,14 +4596,13 @@ c4x_check_attribute (attrib, list, decl, attributes)
 	 != IDENTIFIER_POINTER (DECL_NAME (decl)))
     list = TREE_CHAIN (list);
   if (list)
-    *attributes = chainon (*attributes,
-			   build_tree_list (get_identifier (attrib),
-					    TREE_VALUE (list)));
+    *attributes = tree_cons (get_identifier (attrib), TREE_VALUE (list),
+			     *attributes);
 }
 
 
-void
-c4x_set_default_attributes(decl, attributes)
+static void
+c4x_insert_attributes (decl, attributes)
      tree decl, *attributes;
 {
   switch (TREE_CODE (decl))
@@ -4736,31 +4623,36 @@ c4x_set_default_attributes(decl, attributes)
     }
 }
 
-
-/* Return nonzero if IDENTIFIER with arguments ARGS is a valid machine
-   specific attribute for TYPE.  The attributes in ATTRIBUTES have
-   previously been assigned to TYPE.  */
-
-int
-c4x_valid_type_attribute_p (type, attributes, identifier, args)
-     tree type;
-     tree attributes ATTRIBUTE_UNUSED;
-     tree identifier;
-     tree args ATTRIBUTE_UNUSED;
+/* Table of valid machine attributes.  */
+const struct attribute_spec c4x_attribute_table[] =
 {
-  if (TREE_CODE (type) != FUNCTION_TYPE)
-    return 0;
-  
-  if (is_attribute_p ("interrupt", identifier))
-    return 1;
-  
-  if (is_attribute_p ("assembler", identifier))
-    return 1;
-  
-  if (is_attribute_p ("leaf_pretend", identifier))
-    return 1;
-  
-  return 0;
+  /* { name, min_len, max_len, decl_req, type_req, fn_type_req, handler } */
+  { "interrupt",    0, 0, false, true,  true,  c4x_handle_fntype_attribute },
+  /* FIXME: code elsewhere in this file treats "naked" as a synonym of
+     "interrupt"; should it be accepted here?  */
+  { "assembler",    0, 0, false, true,  true,  c4x_handle_fntype_attribute },
+  { "leaf_pretend", 0, 0, false, true,  true,  c4x_handle_fntype_attribute },
+  { NULL,           0, 0, false, false, false, NULL }
+};
+
+/* Handle an attribute requiring a FUNCTION_TYPE;
+   arguments as in struct attribute_spec.handler.  */
+static tree
+c4x_handle_fntype_attribute (node, name, args, flags, no_add_attrs)
+     tree *node;
+     tree name;
+     tree args ATTRIBUTE_UNUSED;
+     int flags ATTRIBUTE_UNUSED;
+     bool *no_add_attrs;
+{
+  if (TREE_CODE (*node) != FUNCTION_TYPE)
+    {
+      warning ("`%s' attribute only applies to functions",
+	       IDENTIFIER_POINTER (name));
+      *no_add_attrs = true;
+    }
+
+  return NULL_TREE;
 }
 
 
@@ -4886,8 +4778,7 @@ c4x_check_laj_p (insn)
 #define	SETLDA_USE_COST	2
 #define	READ_USE_COST	2
 
-
-int
+static int
 c4x_adjust_cost (insn, link, dep_insn, cost)
      rtx insn;
      rtx link;
@@ -5025,19 +4916,20 @@ c4x_adjust_cost (insn, link, dep_insn, cost)
 }
 
 void
-c4x_init_builtins (endlink)
-     tree endlink;
+c4x_init_builtins ()
 {
+  tree endlink = void_list_node;
+
   builtin_function ("fast_ftoi",
 		    build_function_type 
 		    (integer_type_node,
 		     tree_cons (NULL_TREE, double_type_node, endlink)),
-		    C4X_BUILTIN_FIX, BUILT_IN_MD, NULL_PTR);
+		    C4X_BUILTIN_FIX, BUILT_IN_MD, NULL);
   builtin_function ("ansi_ftoi",
 		    build_function_type 
 		    (integer_type_node, 
 		     tree_cons (NULL_TREE, double_type_node, endlink)),
-		    C4X_BUILTIN_FIX_ANSI, BUILT_IN_MD, NULL_PTR);
+		    C4X_BUILTIN_FIX_ANSI, BUILT_IN_MD, NULL);
   if (TARGET_C3X)
     builtin_function ("fast_imult",
 		      build_function_type
@@ -5045,24 +4937,24 @@ c4x_init_builtins (endlink)
 		       tree_cons (NULL_TREE, integer_type_node,
 				  tree_cons (NULL_TREE,
 					     integer_type_node, endlink))),
-		      C4X_BUILTIN_MPYI, BUILT_IN_MD, NULL_PTR);
+		      C4X_BUILTIN_MPYI, BUILT_IN_MD, NULL);
   else
     {
       builtin_function ("toieee",
 		        build_function_type 
 			(double_type_node,
 			 tree_cons (NULL_TREE, double_type_node, endlink)),
-		        C4X_BUILTIN_TOIEEE, BUILT_IN_MD, NULL_PTR);
+		        C4X_BUILTIN_TOIEEE, BUILT_IN_MD, NULL);
       builtin_function ("frieee",
 		        build_function_type
 			(double_type_node, 
 			 tree_cons (NULL_TREE, double_type_node, endlink)),
-		        C4X_BUILTIN_FRIEEE, BUILT_IN_MD, NULL_PTR);
+		        C4X_BUILTIN_FRIEEE, BUILT_IN_MD, NULL);
       builtin_function ("fast_invf",
 		        build_function_type 
 			(double_type_node, 
 			 tree_cons (NULL_TREE, double_type_node, endlink)),
-		        C4X_BUILTIN_RCPF, BUILT_IN_MD, NULL_PTR);
+		        C4X_BUILTIN_RCPF, BUILT_IN_MD, NULL);
     }
 }
 
@@ -5157,4 +5049,12 @@ c4x_expand_builtin (exp, target, subtarget, mode, ignore)
       return target;
     }
   return NULL_RTX;
+}
+
+static void
+c4x_asm_named_section (name, flags)
+     const char *name;
+     unsigned int flags ATTRIBUTE_UNUSED;
+{
+  fprintf (asm_out_file, "\t.sect\t\"%s\"\n", name);
 }

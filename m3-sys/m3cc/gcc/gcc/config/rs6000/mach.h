@@ -22,7 +22,8 @@ Boston, MA 02111-1307, USA.  */
 
 #define TARGET_AIX 0
 
-#include "rs6000/rs6000.h"
+/* Print subsidiary information on the compiler version in use.  */
+#define TARGET_VERSION fprintf (stderr, " (Mach-RS/6000)");
 
 /* We don't define AIX under MACH; instead we define `unix'.  */
 #undef CPP_PREDEFINES

@@ -1,6 +1,6 @@
 /* Subroutines for insn-output.c for Clipper
-   Copyright (C) 1987, 1988, 1991, 1997, 1998,
-   1999, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1988, 1991, 1997, 1998, 1999, 2000, 2001
+   Free Software Foundation, Inc.
    Contributed by Holger Teutsch (holger@hotbso.rhein-main.de)
 
 This file is part of GNU CC.
@@ -31,19 +31,39 @@ Boston, MA 02111-1307, USA.  */
 #include "output.h"
 #include "insn-attr.h"
 #include "tree.h"
+#include "expr.h"
+#include "optabs.h"
+#include "libfuncs.h"
 #include "c-tree.h"
 #include "function.h"
-#include "expr.h"
 #include "flags.h"
 #include "recog.h"
 #include "tm_p.h"
+#include "target.h"
+#include "target-def.h"
+
+static void clipper_output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
+static void clipper_output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
+static void clix_asm_out_constructor PARAMS ((rtx, int));
+static void clix_asm_out_destructor PARAMS ((rtx, int));
 
 extern char regs_ever_live[];
 
 extern int frame_pointer_needed;
 
 static int frame_size;
+
+/* Initialize the GCC target structure.  */
+#undef TARGET_ASM_ALIGNED_HI_OP
+#define TARGET_ASM_ALIGNED_HI_OP "\t.word\t"
 
+#undef TARGET_ASM_FUNCTION_PROLOGUE
+#define TARGET_ASM_FUNCTION_PROLOGUE clipper_output_function_prologue
+#undef TARGET_ASM_FUNCTION_EPILOGUE
+#define TARGET_ASM_FUNCTION_EPILOGUE clipper_output_function_epilogue
+
+struct gcc_target targetm = TARGET_INITIALIZER;
+
 /* Compute size of a clipper stack frame where 'lsize' is the required
    space for local variables.  */
 
@@ -78,10 +98,10 @@ clipper_frame_size (lsize)
    can run with misaligned stack -> subq $4,sp / add $4,sp on entry and exit
    can be omitted.  */
 
-void
-output_function_prologue (file, lsize)
+static void
+clipper_output_function_prologue (file, lsize)
      FILE *file;
-     int lsize;				/* size for locals */
+     HOST_WIDE_INT lsize;			/* size for locals */
 {
   int i, offset;
   int size;
@@ -132,10 +152,10 @@ output_function_prologue (file, lsize)
     }
 }
 
-void
-output_function_epilogue (file, size)
+static void
+clipper_output_function_epilogue (file, size)
      FILE *file;
-     int size ATTRIBUTE_UNUSED;
+     HOST_WIDE_INT size ATTRIBUTE_UNUSED;
 {
   int i, offset;
 
@@ -206,7 +226,7 @@ void
 clipper_movstr (operands)
      rtx *operands;
 {
-  rtx dst,src,cnt,tmp,top,bottom,xops[3];
+  rtx dst,src,cnt,tmp,top,bottom=NULL_RTX,xops[3];
   int align;
   int fixed;
 
@@ -389,50 +409,22 @@ clipper_builtin_saveregs ()
   /* Store int regs  */
 
   mem = gen_rtx_MEM (SImode, r0_addr);
-  MEM_ALIAS_SET (mem) = set;
+  set_mem_alias_set (mem, set);
   emit_move_insn (mem, gen_rtx_REG (SImode, 0));
 
   mem = gen_rtx_MEM (SImode, r1_addr);
-  MEM_ALIAS_SET (mem) = set;
+  set_mem_alias_set (mem, set);
   emit_move_insn (mem, gen_rtx_REG (SImode, 1));
 
   /* Store float regs  */
 
   mem = gen_rtx_MEM (DFmode, f0_addr);
-  MEM_ALIAS_SET (mem) = set;
+  set_mem_alias_set (mem, set);
   emit_move_insn (mem, gen_rtx_REG (DFmode, 16));
 
   mem = gen_rtx_MEM (DFmode, f1_addr);
-  MEM_ALIAS_SET (mem) = set;
+  set_mem_alias_set (mem, set);
   emit_move_insn (mem, gen_rtx_REG (DFmode, 17));
-
-  if (current_function_check_memory_usage)
-    {
-      emit_library_call (chkr_set_right_libfunc, 1, VOIDmode, 3,
-			 f0_addr, ptr_mode,
-			 GEN_INT (GET_MODE_SIZE (DFmode)),
-			 TYPE_MODE (sizetype),
-			 GEN_INT (MEMORY_USE_RW),
-			 TYPE_MODE (integer_type_node));
-      emit_library_call (chkr_set_right_libfunc, 1, VOIDmode, 3,
-			 f1_addr, ptr_mode,
-			 GEN_INT (GET_MODE_SIZE (DFmode)),
-			 TYPE_MODE (sizetype),
-			 GEN_INT (MEMORY_USE_RW), 
-			 TYPE_MODE (integer_type_node));
-      emit_library_call (chkr_set_right_libfunc, 1, VOIDmode, 3,
-			 r0_addr, ptr_mode,
-			 GEN_INT (GET_MODE_SIZE (SImode)),
-			 TYPE_MODE (sizetype),
-			 GEN_INT (MEMORY_USE_RW),
-			 TYPE_MODE (integer_type_node));
-      emit_library_call (chkr_set_right_libfunc, 1, VOIDmode, 3,
-			 r1_addr, ptr_mode,
-			 GEN_INT (GET_MODE_SIZE (SImode)),
-			 TYPE_MODE (sizetype),
-			 GEN_INT (MEMORY_USE_RW),
-			 TYPE_MODE (integer_type_node));
-    }
 
   return addr;
 }
@@ -599,7 +591,7 @@ clipper_va_arg (valist, type)
 					    OPTAB_LIB_WIDEN),
 			       GEN_INT (2), GE, const0_rtx,
 			       TYPE_MODE (TREE_TYPE (num_field)),
-			       TREE_UNSIGNED (num_field), 0, false_label);
+			       TREE_UNSIGNED (num_field), false_label);
 
       inreg = fold (build (MULT_EXPR, integer_type_node, num_field,
 			   build_int_2 (2, 0)));
@@ -678,3 +670,23 @@ fp_reg_operand (op, mode)
 	   GET_MODE_CLASS (GET_MODE (SUBREG_REG (op))) == MODE_FLOAT));
 }
 
+static void
+clix_asm_out_constructor (symbol, priority)
+     rtx symbol;
+     int priority ATTRIBUTE_UNUSED;
+{
+  init_section ();
+  fputs ("\tloada  ", asm_out_file);
+  assemble_name (asm_out_file, XSTR (symbol, 0));
+  fputs (",r0\n\tsubq   $8,sp\n\tstorw   r0,(sp)\n", asm_out_file);
+}
+
+static void
+clix_asm_out_destructor (symbol, priority)
+     rtx symbol;
+     int priority ATTRIBUTE_UNUSED;
+{
+  fini_section ();
+  assemble_integer (symbol, POINTER_SIZE / BITS_PER_UNIT, POINTER_SIZE, 1);
+  assemble_integer (const0_rtx, POINTER_SIZE / BITS_PER_UNIT, POINTER_SIZE, 1);
+}

@@ -21,7 +21,7 @@ Boston, MA 02111-1307, USA.  */
 
 #include "m68k/m68kv4.h"
 
-/* Dollars and dots in labels are not allowed. */
+/* Dollars and dots in labels are not allowed.  */
 
 #define NO_DOLLAR_IN_LABEL
 #define NO_DOT_IN_LABEL
@@ -55,15 +55,15 @@ int switch_table_difference_label_flag;
 /* This definition of ASM_OUTPUT_ASCII is the same as the one in m68k/sgs.h,
    which has been overridden by the one in svr4.h.  However, we can't use
    the one in svr4.h because the ASV assembler croaks on some of the
-   strings that it emits (such as .string "\"%s\"\n"). */
+   strings that it emits (such as .string "\"%s\"\n").  */
 
 #undef ASM_OUTPUT_ASCII
 #define ASM_OUTPUT_ASCII(FILE,PTR,LEN)				\
 {								\
-  register int sp = 0, lp = 0, ch;				\
-  fprintf ((FILE), "%s", BYTE_ASM_OP);				\
+  register size_t sp = 0, limit = (LEN);			\
+  fputs (integer_asm_op (1, TRUE), (FILE));			\
   do {								\
-    ch = (PTR)[sp];						\
+    int ch = (PTR)[sp];						\
     if (ch > ' ' && ! (ch & 0x80) && ch != '\\')		\
       {								\
 	fprintf ((FILE), "'%c", ch);				\
@@ -72,18 +72,18 @@ int switch_table_difference_label_flag;
       {								\
 	fprintf ((FILE), "0x%x", ch);				\
       }								\
-    if (++sp < (LEN))						\
+    if (++sp < limit)						\
       {								\
 	if ((sp % 10) == 0)					\
 	  {							\
-	    fprintf ((FILE), "\n%s", BYTE_ASM_OP);		\
+	    fprintf ((FILE), "\n%s", integer_asm_op (1, TRUE));	\
 	  }							\
 	else							\
 	  {							\
 	    putc (',', (FILE));					\
 	  }							\
       }								\
-  } while (sp < (LEN));						\
+  } while (sp < limit);						\
   putc ('\n', (FILE));						\
 }
 
@@ -93,10 +93,12 @@ int switch_table_difference_label_flag;
 
 #undef ASM_GENERATE_INTERNAL_LABEL
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL,PREFIX,NUM)	\
+do {							\
   if (flag_pic && !strcmp(PREFIX,"LC"))			\
-    sprintf (LABEL, "*%s%%%d", PREFIX, NUM);		\
+    sprintf (LABEL, "*%s%%%ld", PREFIX, (long)(NUM));	\
   else							\
-    sprintf (LABEL, "*%s%s%d", LOCAL_LABEL_PREFIX, PREFIX, NUM)
+    sprintf (LABEL, "*%s%s%ld", LOCAL_LABEL_PREFIX, PREFIX, (long)(NUM)); \
+} while (0)
 
 #undef ASM_OUTPUT_INTERNAL_LABEL
 #define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)	\

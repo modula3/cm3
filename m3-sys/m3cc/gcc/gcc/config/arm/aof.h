@@ -52,20 +52,16 @@ Boston, MA 02111-1307, USA.  */
    two areas with the same attributes will be linked adjacently in the
    resulting executable, so we have to be careful not to do pc-relative 
    addressing across such boundaries.  */
-char *aof_text_section ();
 #define TEXT_SECTION_ASM_OP aof_text_section ()
 
-#define SELECT_RTX_SECTION(MODE,RTX) text_section ();
+#define SELECT_RTX_SECTION(MODE,RTX,ALIGN) text_section ();
 
-char *aof_data_section ();
 #define DATA_SECTION_ASM_OP aof_data_section ()
 
-#define EXTRA_SECTIONS in_zero_init, in_ctor, in_dtor, in_common
+#define EXTRA_SECTIONS in_zero_init, in_common
 
 #define EXTRA_SECTION_FUNCTIONS	\
 ZERO_INIT_SECTION		\
-CTOR_SECTION			\
-DTOR_SECTION			\
 COMMON_SECTION
 
 #define ZERO_INIT_SECTION					\
@@ -81,51 +77,12 @@ zero_init_section ()						\
     }								\
 }
 
-#define CTOR_SECTION							\
-void									\
-ctor_section ()								\
-{									\
-  static int ctors_once = 0;						\
-  if (in_section != in_ctor)						\
-    {									\
-      if (ctors_once)							\
-	{								\
-	  fprintf (stderr,						\
-		   "Attempt to output more than one ctor section\n");	\
-	  abort ();							\
-	}								\
-      fprintf (asm_out_file, "%s\n", CTORS_SECTION_ASM_OP);		\
-      in_section = in_ctor;						\
-      ctors_once = 1;							\
-    }									\
-}
-
-#define DTOR_SECTION							\
-void									\
-dtor_section ()								\
-{									\
-  static int dtors_once = 0;						\
-  if (in_section != in_dtor)						\
-    {									\
-      if (dtors_once)							\
-	{								\
-	  fprintf (stderr,						\
-		   "Attempt to output more than one dtor section\n");	\
-	  abort ();							\
-	}								\
-      fprintf (asm_out_file, "%s\n", DTORS_SECTION_ASM_OP);		\
-      in_section = in_dtor;						\
-      dtors_once = 1;							\
-    }									\
-}
-
 /* Used by ASM_OUTPUT_COMMON (below) to tell varasm.c that we've
    changed areas.  */
 #define COMMON_SECTION						\
 void								\
 common_section ()						\
 {								\
-  static int common_count = 1;					\
   if (in_section != in_common)					\
     {								\
       in_section = in_common;					\
@@ -163,6 +120,10 @@ do {					\
     (*ptr++) ();			\
 } while (0)
 
+/* We really want to put Thumb tables in a read-only data section, but
+   switching to another section during function output is not
+   possible.  We could however do what the SPARC does and defer the
+   whole table generation until the end of the function.  */
 #define JUMP_TABLES_IN_TEXT_SECTION 1
 
 #ifndef ARM_OS_NAME
@@ -226,64 +187,20 @@ do					\
 
 #define ASM_APP_OFF ""
 
-#define ASM_OUTPUT_LONG_DOUBLE(STREAM,VALUE) \
-  ASM_OUTPUT_DOUBLE((STREAM),(VALUE))
-
-#define ASM_OUTPUT_DOUBLE(STREAM,VALUE)				\
-do {								\
-  char dstr[30];						\
-  long l[2];							\
-  REAL_VALUE_TO_TARGET_DOUBLE ((VALUE), l);			\
-  REAL_VALUE_TO_DECIMAL ((VALUE), "%.14g", dstr);		\
-  fprintf ((STREAM), "\tDCD &%lx, &%lx\t%s double %s\n",	\
-	   l[0], l[1], ASM_COMMENT_START, dstr);		\
-} while (0)
-
-#define ASM_OUTPUT_FLOAT(STREAM,VALUE)			\
-do {							\
-  char dstr[30];					\
-  long l;						\
-  REAL_VALUE_TO_TARGET_SINGLE ((VALUE), l);		\
-  REAL_VALUE_TO_DECIMAL ((VALUE), "%.7g", dstr);	\
-  fprintf ((STREAM), "\tDCD &%lx\t%s double %s\n",	\
-	   l, ASM_COMMENT_START, dstr);			\
-} while (0)
-
-#define ASM_OUTPUT_INT(STREAM,VALUE)		\
-  (fprintf ((STREAM), "\tDCD\t"),		\
-   output_addr_const ((STREAM), (VALUE)),	\
-   fputc ('\n', (STREAM)))
-
-#define ASM_OUTPUT_SHORT(STREAM,VALUE)		\
-  (fprintf ((STREAM), "\tDCW\t"),		\
-   output_addr_const ((STREAM), (VALUE)),	\
-   fputc ('\n', (STREAM)))
-
-#define ASM_OUTPUT_CHAR(STREAM,VALUE)		\
-  (fprintf ((STREAM), "\tDCB\t"),		\
-   output_addr_const ((STREAM), (VALUE)),	\
-   fputc ('\n', (STREAM)))
-
-#define ASM_OUTPUT_BYTE(STREAM,VALUE)		\
-  fprintf ((STREAM), "\tDCB\t%d\n", (VALUE))
-
 #define ASM_OUTPUT_ASCII(STREAM,PTR,LEN)		\
 {							\
   int i;						\
   const char *ptr = (PTR);				\
   fprintf ((STREAM), "\tDCB");				\
-  for (i = 0; i < (LEN); i++)				\
+  for (i = 0; i < (long)(LEN); i++)			\
     fprintf ((STREAM), " &%02x%s", 			\
 	     (unsigned ) *(ptr++),			\
-	     (i + 1 < (LEN)				\
+	     (i + 1 < (long)(LEN)				\
 	      ? ((i & 3) == 3 ? "\n\tDCB" : ",")	\
 	      : "\n"));					\
 }
 
 #define IS_ASM_LOGICAL_LINE_SEPARATOR(C) ((C) == '\n')
-
-#define ASM_OPEN_PAREN "("
-#define ASM_CLOSE_PAREN ")"
 
 /* Output of Uninitialized Variables */
 
@@ -356,7 +273,7 @@ do {					\
   fprintf ((STREAM), "|%s|", NAME)
 
 #define ASM_GENERATE_INTERNAL_LABEL(STRING,PREFIX,NUM)	\
-  sprintf ((STRING), "*|%s..%d|", (PREFIX), (NUM))
+  sprintf ((STRING), "*|%s..%ld|", (PREFIX), (long)(NUM))
 
 #define ASM_FORMAT_PRIVATE_NAME(OUTVAR,NAME,NUMBER)	\
  ((OUTVAR) = (char *) alloca (strlen ((NAME)) + 10),	\
@@ -366,22 +283,6 @@ do {					\
 
 #define CTORS_SECTION_ASM_OP "\tAREA\t|C$$gnu_ctorsvec|, DATA, READONLY"
 #define DTORS_SECTION_ASM_OP "\tAREA\t|C$$gnu_dtorsvec|, DATA, READONLY"
-
-#define ASM_OUTPUT_CONSTRUCTOR(STREAM,NAME)	\
-do {						\
-  ctor_section ();				\
-  fprintf ((STREAM), "\tDCD\t");		\
-  assemble_name ((STREAM), (NAME));		\
-  fputc ('\n', (STREAM));			\
-} while (0);
-
-#define ASM_OUTPUT_DESTRUCTOR(STREAM,NAME)	\
-do {						\
-  dtor_section ();				\
-  fprintf ((STREAM), "\tDCD\t");		\
-  assemble_name ((STREAM), (NAME));		\
-  fputc ('\n', (STREAM));			\
-} while (0);
 
 /* Output of Assembler Instructions */
 
@@ -425,8 +326,13 @@ do {						\
 
 /* Output of Dispatch Tables */
 
-#define ASM_OUTPUT_ADDR_DIFF_ELT(STREAM,BODY,VALUE,REL)		\
-  fprintf ((STREAM), "\tb\t|L..%d|\n", (VALUE))
+#define ASM_OUTPUT_ADDR_DIFF_ELT(STREAM,BODY,VALUE,REL)			\
+  do {									\
+    if (TARGET_ARM)							\
+      fprintf ((STREAM), "\tb\t|L..%d|\n", (VALUE));			\
+    else								\
+      fprintf ((STREAM), "\tDCD\t|L..%d| - |L..%d|\n", (VALUE), (REL));	\
+  } while (0)
 
 #define ASM_OUTPUT_ADDR_VEC_ELT(STREAM,VALUE)	\
   fprintf ((STREAM), "\tDCD\t|L..%d|\n", (VALUE))
@@ -450,7 +356,5 @@ do {							\
   else							\
     fprintf ((STREAM), "\tALIGN %d\n", amount);		\
 } while (0)
-
-#include "arm/arm.h"
 
 #undef DBX_DEBUGGING_INFO

@@ -183,54 +183,6 @@ Boston, MA 02111-1307, USA.  */
 #define FUNCTION_VALUE(VALTYPE,FUNC) FUNCTION_VALUEX (TYPE_MODE (VALTYPE))
 #endif /* 0 */
 
-/* This is how to output an assembler line defining a `double' constant.  */
-
-#undef ASM_OUTPUT_DOUBLE
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)				\
-  {								\
-    if (REAL_VALUE_ISINF (VALUE))				\
-      {								\
-        if (REAL_VALUE_NEGATIVE (VALUE))			\
-          fprintf (FILE, "\t.double 0r-99e999\n");		\
-        else							\
-          fprintf (FILE, "\t.double 0r99e999\n");		\
-      }								\
-    else if (REAL_VALUE_ISNAN (VALUE))				\
-      { long l[2];						\
-        REAL_VALUE_TO_TARGET_DOUBLE ((VALUE), l);		\
-	fprintf (FILE, "\t.long 0x%lx\n\t.long 0x%lx\n", l[0], l[1]); \
-      }								\
-    else							\
-      { char dstr[30];						\
-        REAL_VALUE_TO_DECIMAL ((VALUE), "%.17g", dstr);		\
-        fprintf (FILE, "\t.double 0r%s\n", dstr);		\
-      }								\
-    }
-
-/* This is how to output an assembler line defining a `float' constant.  */
-
-#undef ASM_OUTPUT_FLOAT
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)				\
-  {								\
-    if (REAL_VALUE_ISINF (VALUE))				\
-      {								\
-        if (REAL_VALUE_NEGATIVE (VALUE))			\
-          fprintf (FILE, "\t.single 0r-99e999\n");		\
-        else							\
-          fprintf (FILE, "\t.single 0r99e999\n");			\
-      }								\
-    else if (REAL_VALUE_ISNAN (VALUE))				\
-      { long l;							\
-        REAL_VALUE_TO_TARGET_SINGLE ((VALUE), l);		\
-        fprintf (FILE, "\t.long 0x%lx\n", l);			\
-      }								\
-    else							\
-      { char dstr[30];						\
-        REAL_VALUE_TO_DECIMAL ((VALUE), "%.9g", dstr);		\
-        fprintf (FILE, "\t.single 0r%s\n", dstr);		\
-      }								\
-    }
-
 /* This is how to output an assembler lines defining floating operands.
    There's no way to output a NaN's fraction, so we lose it.  */
   
@@ -242,7 +194,7 @@ Boston, MA 02111-1307, USA.  */
           long l;						\
           REAL_VALUE_TO_TARGET_SINGLE (VALUE, l);		\
           if (sizeof (int) == sizeof (long))			\
-            asm_fprintf ((FILE), "%I0x%x", l);			\
+            asm_fprintf ((FILE), "%I0x%x", (int) l);		\
           else							\
             asm_fprintf ((FILE), "%I0x%lx", l);			\
         }							\
@@ -283,21 +235,3 @@ Boston, MA 02111-1307, USA.  */
           asm_fprintf (FILE, "%I0r%s", dstr);				\
         }								\
     } while (0)
-
-#if 0
-/* This was turned off as it caused linking errors on sunos4.1.
-   `gcc -a' links in /usr/lib/bb_link.o which does not provide __bb_link
-   but its own version of __bb_init_func. */
-#undef BLOCK_PROFILER_CODE
-#define BLOCK_PROFILER_CODE						\
-extern int ___tcov_init;						\
-									\
-__bb_init_func (blocks)							\
-	struct bb *blocks;						\
-{									\
-  if (! ___tcov_init)							\
-    ___tcov_init_func ();						\
-									\
-  ___bb_link (blocks->filename, blocks->counts, blocks->ncounts);	\
-}
-#endif

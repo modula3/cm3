@@ -38,20 +38,14 @@ Boston, MA 02111-1307, USA.  */
 #define NO_DOLLAR_IN_LABEL
 #define NO_DOT_IN_LABEL
 
+#undef INT_OP_GROUP
+#define INT_OP_GROUP INT_OP_NO_DOT
+
 #undef TEXT_SECTION_ASM_OP
 #define TEXT_SECTION_ASM_OP	"\ttext"
 
 #undef DATA_SECTION_ASM_OP
 #define DATA_SECTION_ASM_OP	"\tdata\t1"
-
-#undef BYTE_ASM_OP
-#define	BYTE_ASM_OP		"\tbyte\t"
-
-#undef WORD_ASM_OP
-#define WORD_ASM_OP		"\tshort\t"
-
-#undef LONG_ASM_OP
-#define LONG_ASM_OP		"\tlong\t"
 
 #undef SPACE_ASM_OP
 #define SPACE_ASM_OP		"\tspace\t"
@@ -74,13 +68,7 @@ Boston, MA 02111-1307, USA.  */
 #undef LOCAL_LABEL_PREFIX
 #define LOCAL_LABEL_PREFIX	"L%"
 
-#define ADDITIONAL_REGISTER_NAMES { "%a6", 14, "%a7", 15 }
-
-#undef ASM_OUTPUT_INT
-#define ASM_OUTPUT_INT(FILE,VALUE)                      \
-( fprintf ((FILE), "%s", LONG_ASM_OP),                  \
-  output_addr_const ((FILE), (VALUE)),                  \
-  fprintf ((FILE), "\n"))
+#define ADDITIONAL_REGISTER_NAMES { {"%a6", 14}, {"%a7", 15} }
 
 #undef ASM_OUTPUT_COMMON
 #define ASM_OUTPUT_COMMON(FILE, NAME, SIZE, ROUNDED)	\
@@ -180,7 +168,7 @@ do { fprintf (asm_out_file, "\tdef\t");			\
 #define ASM_OUTPUT_SOURCE_LINE(FILE, LINE)		\
     fprintf((FILE), "\tln\t%d\n", 			\
 	    (sdb_begin_function_line > 1 ?		\
-	     last_linenum - sdb_begin_function_line : 1))
+	     (LINE) - sdb_begin_function_line : 1))
 
 #define ASM_MOV_INSN	"mov.l"
 

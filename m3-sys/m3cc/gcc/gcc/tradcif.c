@@ -22,11 +22,12 @@
 
 #include "config.h"
 #include "system.h"
+#include "intl.h"
 #include "tradcpp.h"
 #include <setjmp.h>
 
   static int yylex PARAMS ((void));
-  static void yyerror PARAMS ((const char *msgid));
+  static void yyerror PARAMS ((const char *msgid)) ATTRIBUTE_NORETURN;
 
   static int parse_number PARAMS ((int));
   static int parse_escape PARAMS ((const char **));
@@ -39,7 +40,7 @@
 
   static const char *lexptr;
 
-#line 45 "tradcif.y"
+#line 46 "tradcif.y"
 typedef union {
   struct constant {long value; int unsignedp;} integer;
   int voidval;
@@ -117,10 +118,10 @@ static const short yyrhs[] = {    35,
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-    74,    79,    80,    85,    88,    91,    93,    96,   101,   107,
-   118,   129,   132,   135,   141,   147,   150,   153,   160,   167,
-   174,   181,   184,   187,   190,   193,   196,   199,   201,   203,
-   206
+    75,    80,    81,    86,    89,    92,    94,    97,   102,   108,
+   119,   130,   133,   136,   142,   148,   151,   154,   161,   168,
+   175,   182,   185,   188,   191,   194,   197,   200,   202,   204,
+   207
 };
 #endif
 
@@ -767,38 +768,38 @@ yyreduce:
   switch (yyn) {
 
 case 1:
-#line 75 "tradcif.y"
+#line 76 "tradcif.y"
 { expression_value = yyvsp[0].integer.value; ;
     break;}
 case 3:
-#line 81 "tradcif.y"
+#line 82 "tradcif.y"
 { yyval.integer = yyvsp[0].integer; ;
     break;}
 case 4:
-#line 86 "tradcif.y"
+#line 87 "tradcif.y"
 { yyval.integer.value = - yyvsp[0].integer.value;
 			  yyval.integer.unsignedp = yyvsp[0].integer.unsignedp; ;
     break;}
 case 5:
-#line 89 "tradcif.y"
+#line 90 "tradcif.y"
 { yyval.integer.value = ! yyvsp[0].integer.value;
 			  yyval.integer.unsignedp = 0; ;
     break;}
 case 6:
-#line 92 "tradcif.y"
+#line 93 "tradcif.y"
 { yyval.integer = yyvsp[0].integer; ;
     break;}
 case 7:
-#line 94 "tradcif.y"
+#line 95 "tradcif.y"
 { yyval.integer.value = ~ yyvsp[0].integer.value;
 			  yyval.integer.unsignedp = yyvsp[0].integer.unsignedp; ;
     break;}
 case 8:
-#line 97 "tradcif.y"
+#line 98 "tradcif.y"
 { yyval.integer = yyvsp[-1].integer; ;
     break;}
 case 9:
-#line 102 "tradcif.y"
+#line 103 "tradcif.y"
 { yyval.integer.unsignedp = yyvsp[-2].integer.unsignedp || yyvsp[0].integer.unsignedp;
 			  if (yyval.integer.unsignedp)
 			    yyval.integer.value = (unsigned) yyvsp[-2].integer.value * yyvsp[0].integer.value;
@@ -806,7 +807,7 @@ case 9:
 			    yyval.integer.value = yyvsp[-2].integer.value * yyvsp[0].integer.value; ;
     break;}
 case 10:
-#line 108 "tradcif.y"
+#line 109 "tradcif.y"
 { if (yyvsp[0].integer.value == 0)
 			    {
 			      error ("division by zero in #if");
@@ -819,7 +820,7 @@ case 10:
 			    yyval.integer.value = yyvsp[-2].integer.value / yyvsp[0].integer.value; ;
     break;}
 case 11:
-#line 119 "tradcif.y"
+#line 120 "tradcif.y"
 { if (yyvsp[0].integer.value == 0)
 			    {
 			      error ("division by zero in #if");
@@ -832,17 +833,17 @@ case 11:
 			    yyval.integer.value = yyvsp[-2].integer.value % yyvsp[0].integer.value; ;
     break;}
 case 12:
-#line 130 "tradcif.y"
+#line 131 "tradcif.y"
 { yyval.integer.value = yyvsp[-2].integer.value + yyvsp[0].integer.value;
 			  yyval.integer.unsignedp = yyvsp[-2].integer.unsignedp || yyvsp[0].integer.unsignedp; ;
     break;}
 case 13:
-#line 133 "tradcif.y"
+#line 134 "tradcif.y"
 { yyval.integer.value = yyvsp[-2].integer.value - yyvsp[0].integer.value;
 			  yyval.integer.unsignedp = yyvsp[-2].integer.unsignedp || yyvsp[0].integer.unsignedp; ;
     break;}
 case 14:
-#line 136 "tradcif.y"
+#line 137 "tradcif.y"
 { yyval.integer.unsignedp = yyvsp[-2].integer.unsignedp;
 			  if (yyval.integer.unsignedp)
 			    yyval.integer.value = (unsigned) yyvsp[-2].integer.value << yyvsp[0].integer.value;
@@ -850,7 +851,7 @@ case 14:
 			    yyval.integer.value = yyvsp[-2].integer.value << yyvsp[0].integer.value; ;
     break;}
 case 15:
-#line 142 "tradcif.y"
+#line 143 "tradcif.y"
 { yyval.integer.unsignedp = yyvsp[-2].integer.unsignedp;
 			  if (yyval.integer.unsignedp)
 			    yyval.integer.value = (unsigned) yyvsp[-2].integer.value >> yyvsp[0].integer.value;
@@ -858,17 +859,17 @@ case 15:
 			    yyval.integer.value = yyvsp[-2].integer.value >> yyvsp[0].integer.value; ;
     break;}
 case 16:
-#line 148 "tradcif.y"
+#line 149 "tradcif.y"
 { yyval.integer.value = (yyvsp[-2].integer.value == yyvsp[0].integer.value);
 			  yyval.integer.unsignedp = 0; ;
     break;}
 case 17:
-#line 151 "tradcif.y"
+#line 152 "tradcif.y"
 { yyval.integer.value = (yyvsp[-2].integer.value != yyvsp[0].integer.value);
 			  yyval.integer.unsignedp = 0; ;
     break;}
 case 18:
-#line 154 "tradcif.y"
+#line 155 "tradcif.y"
 { yyval.integer.unsignedp = 0;
 			  if (yyvsp[-2].integer.unsignedp || yyvsp[0].integer.unsignedp)
 			    yyval.integer.value =
@@ -877,7 +878,7 @@ case 18:
 			    yyval.integer.value = yyvsp[-2].integer.value <= yyvsp[0].integer.value; ;
     break;}
 case 19:
-#line 161 "tradcif.y"
+#line 162 "tradcif.y"
 { yyval.integer.unsignedp = 0;
 			  if (yyvsp[-2].integer.unsignedp || yyvsp[0].integer.unsignedp)
 			    yyval.integer.value =
@@ -886,7 +887,7 @@ case 19:
 			    yyval.integer.value = yyvsp[-2].integer.value >= yyvsp[0].integer.value; ;
     break;}
 case 20:
-#line 168 "tradcif.y"
+#line 169 "tradcif.y"
 { yyval.integer.unsignedp = 0;
 			  if (yyvsp[-2].integer.unsignedp || yyvsp[0].integer.unsignedp)
 			    yyval.integer.value =
@@ -895,7 +896,7 @@ case 20:
 			    yyval.integer.value = yyvsp[-2].integer.value < yyvsp[0].integer.value; ;
     break;}
 case 21:
-#line 175 "tradcif.y"
+#line 176 "tradcif.y"
 { yyval.integer.unsignedp = 0;
 			  if (yyvsp[-2].integer.unsignedp || yyvsp[0].integer.unsignedp)
 			    yyval.integer.value =
@@ -904,50 +905,50 @@ case 21:
 			    yyval.integer.value = yyvsp[-2].integer.value > yyvsp[0].integer.value; ;
     break;}
 case 22:
-#line 182 "tradcif.y"
+#line 183 "tradcif.y"
 { yyval.integer.value = yyvsp[-2].integer.value & yyvsp[0].integer.value;
 			  yyval.integer.unsignedp = yyvsp[-2].integer.unsignedp || yyvsp[0].integer.unsignedp; ;
     break;}
 case 23:
-#line 185 "tradcif.y"
+#line 186 "tradcif.y"
 { yyval.integer.value = yyvsp[-2].integer.value ^ yyvsp[0].integer.value;
 			  yyval.integer.unsignedp = yyvsp[-2].integer.unsignedp || yyvsp[0].integer.unsignedp; ;
     break;}
 case 24:
-#line 188 "tradcif.y"
+#line 189 "tradcif.y"
 { yyval.integer.value = yyvsp[-2].integer.value | yyvsp[0].integer.value;
 			  yyval.integer.unsignedp = yyvsp[-2].integer.unsignedp || yyvsp[0].integer.unsignedp; ;
     break;}
 case 25:
-#line 191 "tradcif.y"
+#line 192 "tradcif.y"
 { yyval.integer.value = (yyvsp[-2].integer.value && yyvsp[0].integer.value);
 			  yyval.integer.unsignedp = 0; ;
     break;}
 case 26:
-#line 194 "tradcif.y"
+#line 195 "tradcif.y"
 { yyval.integer.value = (yyvsp[-2].integer.value || yyvsp[0].integer.value);
 			  yyval.integer.unsignedp = 0; ;
     break;}
 case 27:
-#line 197 "tradcif.y"
+#line 198 "tradcif.y"
 { yyval.integer.value = yyvsp[-4].integer.value ? yyvsp[-2].integer.value : yyvsp[0].integer.value;
 			  yyval.integer.unsignedp = yyvsp[-2].integer.unsignedp || yyvsp[0].integer.unsignedp; ;
     break;}
 case 28:
-#line 200 "tradcif.y"
+#line 201 "tradcif.y"
 { yyval.integer = yylval.integer; ;
     break;}
 case 29:
-#line 202 "tradcif.y"
+#line 203 "tradcif.y"
 { yyval.integer = yylval.integer; ;
     break;}
 case 30:
-#line 204 "tradcif.y"
+#line 205 "tradcif.y"
 { yyval.integer.value = 0;
 			  yyval.integer.unsignedp = 0; ;
     break;}
 case 31:
-#line 206 "tradcif.y"
+#line 207 "tradcif.y"
 { yyval.integer.value =
 			    test_assertion ((unsigned char **) &lexptr); ;
     break;}
@@ -1173,7 +1174,7 @@ yyerrhandle:
     }
   return 1;
 }
-#line 209 "tradcif.y"
+#line 210 "tradcif.y"
 
 
 /* Take care of parsing a number (anything that starts with a digit).
@@ -1186,11 +1187,11 @@ static int
 parse_number (olen)
      int olen;
 {
-  register const char *p = lexptr;
-  register long n = 0;
-  register int c;
-  register int base = 10;
-  register int len = olen;
+  const char *p = lexptr;
+  long n = 0;
+  int c;
+  int base = 10;
+  int len = olen;
 
   for (c = 0; c < len; c++)
     if (p[c] == '.') {
@@ -1199,6 +1200,8 @@ parse_number (olen)
       return ERROR;
     }
 
+  /* Traditionally, all numbers are signed.  However, we make it
+     unsigned if requested with a suffix.  */
   yylval.integer.unsignedp = 0;
 
   if (len >= 3 && (!strncmp (p, "0x", 2) || !strncmp (p, "0X", 2))) {
@@ -1212,14 +1215,12 @@ parse_number (olen)
   while (len > 0) {
     c = *p++;
     len--;
-    if (c >= 'A' && c <= 'Z') c += 'a' - 'A';
+    if (ISUPPER (c))
+      c = TOLOWER (c);
 
-    if (c >= '0' && c <= '9') {
-      n *= base;
-      n += c - '0';
-    } else if (base == 16 && c >= 'a' && c <= 'f') {
-      n *= base;
-      n += c - 'a' + 10;
+    if (ISDIGIT (c)
+	|| (base == 16 && ISXDIGIT (c))) {
+      n = (n * base) + hex_value (c);
     } else {
       /* `l' means long, and `u' means unsigned.  */
       while (1) {
@@ -1241,13 +1242,9 @@ parse_number (olen)
   }
 
   if (len != 0) {
-    yyerror ("Invalid number in #if expression");
+    yyerror ("invalid number in #if expression");
     return ERROR;
   }
-
-  /* If too big to be signed, consider it unsigned.  */
-  if (n < 0)
-    yylval.integer.unsignedp = 1;
 
   lexptr = p;
   yylval.integer.value = n;
@@ -1255,15 +1252,15 @@ parse_number (olen)
 }
 
 struct token {
-  const char *operator;
-  int token;
+  const char *const operator;
+  const int token;
 };
 
 #ifndef NULL
 #define NULL 0
 #endif
 
-static struct token tokentab2[] = {
+static const struct token tokentab2[] = {
   {"&&", AND},
   {"||", OR},
   {"<<", LSH},
@@ -1280,10 +1277,10 @@ static struct token tokentab2[] = {
 static int
 yylex ()
 {
-  register int c;
-  register int namelen;
-  register const char *tokstart;
-  register struct token *toktab;
+  int c;
+  int namelen;
+  const char *tokstart;
+  const struct token *toktab;
 
  retry:
 
@@ -1315,8 +1312,7 @@ yylex ()
 
     /* Sign-extend the constant if chars are signed on target machine.  */
     {
-      if (lookup ((const unsigned char *)"__CHAR_UNSIGNED__",
-		   sizeof ("__CHAR_UNSIGNED__")-1, -1)
+      if (flag_signed_char == 0
 	  || ((c >> (CHAR_TYPE_SIZE - 1)) & 1) == 0)
 	yylval.integer.value = c & ((1 << CHAR_TYPE_SIZE) - 1);
       else
@@ -1326,7 +1322,7 @@ yylex ()
     yylval.integer.unsignedp = 0;
     c = *lexptr++;
     if (c != '\'') {
-      yyerror ("Invalid character constant in #if");
+      yyerror ("invalid character constant in #if");
       return ERROR;
     }
     
@@ -1366,7 +1362,7 @@ yylex ()
     yyerror ("double quoted strings not allowed in #if expressions");
     return ERROR;
   }
-  if (c >= '0' && c <= '9') {
+  if (ISDIGIT (c)) {
     /* It's a number */
     for (namelen = 0;
 	 c = tokstart[namelen], is_idchar (c) || c == '.'; 
@@ -1376,7 +1372,7 @@ yylex ()
   }
   
   if (!is_idstart (c)) {
-    yyerror ("Invalid token in expression");
+    yyerror ("invalid token in expression");
     return ERROR;
   }
   
@@ -1410,7 +1406,7 @@ static int
 parse_escape (string_ptr)
      const char **string_ptr;
 {
-  register int c = *(*string_ptr)++;
+  int c = *(*string_ptr)++;
   switch (c)
     {
     case 'a':
@@ -1451,8 +1447,8 @@ parse_escape (string_ptr)
     case '6':
     case '7':
       {
-	register int i = c - '0';
-	register int count = 0;
+	int i = c - '0';
+	int count = 0;
 	while (++count < 3)
 	  {
 	    c = *(*string_ptr)++;
@@ -1473,16 +1469,12 @@ parse_escape (string_ptr)
       }
     case 'x':
       {
-	register int i = 0;
+	int i = 0;
 	for (;;)
 	  {
 	    c = *(*string_ptr)++;
-	    if (c >= '0' && c <= '9')
-	      i = (i << 4) + c - '0';
-	    else if (c >= 'a' && c <= 'f')
-	      i = (i << 4) + c - 'a' + 10;
-	    else if (c >= 'A' && c <= 'F')
-	      i = (i << 4) + c - 'A' + 10;
+	    if (hex_p (c))
+	      i = (i << 4) + hex_value (c);
 	    else
 	      {
 		(*string_ptr)--;
@@ -1502,10 +1494,10 @@ parse_escape (string_ptr)
 }
 
 static void
-yyerror (s)
-     const char *s;
+yyerror (msgid)
+     const char *msgid;
 {
-  error (s);
+  error ("%s", _(msgid));
   longjmp (parse_return_error, 1);
 }
 

@@ -1,23 +1,23 @@
 /* Loop optimization definitions for GNU C-Compiler
-   Copyright (C) 1991, 1995, 1998, 1999, 2000, 2001
+   Copyright (C) 1991, 1995, 1998, 1999, 2000, 2001, 2002
    Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 #include "bitmap.h"
 #include "sbitmap.h"
@@ -27,18 +27,20 @@ Boston, MA 02111-1307, USA.  */
 /* Flags passed to loop_optimize.  */
 #define LOOP_UNROLL 1
 #define LOOP_BCT 2
+#define LOOP_PREFETCH 4
+#define LOOP_FIRST_PASS 8
 
 /* Get the loop info pointer of a loop.  */
 #define LOOP_INFO(LOOP) ((struct loop_info *) (LOOP)->aux)
 
 /* Get a pointer to the loop movables structure.  */
-#define LOOP_MOVABLES(LOOP) (&LOOP_INFO (loop)->movables)
+#define LOOP_MOVABLES(LOOP) (&LOOP_INFO (LOOP)->movables)
 
 /* Get a pointer to the loop registers structure.  */
-#define LOOP_REGS(LOOP) (&LOOP_INFO (loop)->regs)
+#define LOOP_REGS(LOOP) (&LOOP_INFO (LOOP)->regs)
 
 /* Get a pointer to the loop induction variables structure.  */
-#define LOOP_IVS(LOOP) (&LOOP_INFO (loop)->ivs)
+#define LOOP_IVS(LOOP) (&LOOP_INFO (LOOP)->ivs)
 
 /* Get the luid of an insn.  Catch the error of trying to reference the LUID
    of an insn added during loop, since these don't have LUIDs.  */
@@ -135,8 +137,8 @@ struct induction
 				   subtracted from add_val when this giv
 				   derives another.  This occurs when the
 				   giv spans a biv update by incrementation.  */
-  rtx ext_dependant;		/* If nonzero, is a sign or zero extension
-				   if a biv on which this giv is dependant.  */
+  rtx ext_dependent;		/* If nonzero, is a sign or zero extension
+				   if a biv on which this giv is dependent.  */
   struct induction *next_iv;	/* For givs, links together all givs that are
 				   based on the same biv.  For bivs, links
 				   together all biv entries that refer to the
@@ -184,7 +186,7 @@ struct iv_class
   unsigned reversed : 1;	/* 1 if we reversed the loop that this
 				   biv controls.  */
   unsigned all_reduced : 1;	/* 1 if all givs using this biv have
-                                   been reduced. */
+                                   been reduced.  */
 };
 
 

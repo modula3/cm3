@@ -19,8 +19,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-#ifndef _TRADCPP_H_
-#define _TRADCPP_H_
+#ifndef GCC_TRADCPP_H
+#define GCC_TRADCPP_H
 
 extern void error PARAMS ((const char *msgid, ...)) ATTRIBUTE_PRINTF_1;
 extern void warning PARAMS ((const char *msgid, ...)) ATTRIBUTE_PRINTF_1;
@@ -35,10 +35,11 @@ extern void fancy_abort PARAMS ((int, const char *)) ATTRIBUTE_NORETURN;
 extern struct hashnode *lookup PARAMS ((const unsigned char *, int, int));
 extern int parse_c_expression PARAMS ((const char *));  /* in tradcif.y */
 extern int test_assertion PARAMS ((unsigned char **));
+extern int flag_signed_char;
 
 #define is_idchar(x)	ISIDNUM(x)
 #define is_idstart(x)	ISIDST(x)
 #define is_space(x)	ISSPACE(x)
 #define is_nvspace(x)	(IS_NVSPACE(x) && x != '\0')
 
-#endif /* ! _TRADCPP_H_ */
+#endif /* ! GCC_TRADCPP_H */

@@ -1,5 +1,5 @@
 ;;- Machine description for GNU compiler, ns32000 Version
-;;  Copyright (C) 1988, 1994, 1996, 1998, 1999, 2000
+;;  Copyright (C) 1988, 1994, 1996, 1998, 1999, 2000, 2001
 ;;  Free Software Foundation, Inc.
 ;;  Contributed by Michael Tiemann (tiemann@cygnus.com)
 
@@ -346,7 +346,7 @@
   ""
   "*
 {
-  extern int flag_pic;						\
+  extern int flag_pic;
 
   if (FP_REG_P (operands[0]))
     {
@@ -386,7 +386,7 @@
     }
   else if (GET_CODE (operands[1]) == CONST && ! flag_pic)
     {
-	/* Must contain symbols so we don`t know how big it is. In
+	/* Must contain symbols so we don't know how big it is. In
 	 * that case addr might lead to overflow. For PIC symbolic
 	 * address loads always have to be done with addr.
 	 */
@@ -1275,7 +1275,7 @@
 ;; Retain this insn which *does* have a pattern indicating what it does,
 ;; just in case the compiler is smart enough to recognize a substitution.
 (define_insn "udivmoddisi4"
-  [(set (subreg:SI (match_operand:DI 0 "nonimmediate_operand" "=rm") 1)
+  [(set (subreg:SI (match_operand:DI 0 "nonimmediate_operand" "=rm") 4)
 	(truncate:SI (udiv:DI (match_operand:DI 1 "nonimmediate_operand" "0")
 		 (zero_extend:DI (match_operand:SI 2 "nonimmediate_operand" "rm")))))
    (set (subreg:SI (match_operand:DI 3 "nonimmediate_operand" "=0") 0)
@@ -1338,7 +1338,7 @@
   "deiw %2,%0")
 
 (define_insn "udivmoddihi4"
-  [(set (subreg:HI (match_operand:DI 0 "register_operand" "=r") 1)
+  [(set (subreg:HI (match_operand:DI 0 "register_operand" "=r") 2)
 	(truncate:HI (udiv:DI (match_operand:DI 1 "register_operand" "0")
 		 (zero_extend:DI (match_operand:HI 2 "nonimmediate_operand" "rm")))))
    (set (subreg:HI (match_operand:DI 3 "register_operand" "=0") 0)
@@ -2046,7 +2046,7 @@
 }")
 
 ;;; Index insns.  These are about the same speed as multiply-add counterparts.
-;;; but slower then using power-of-2 shifts if we can use them
+;;; but slower than using power-of-2 shifts if we can use them
 ;
 ;;; See note 1
 ;(define_insn ""
@@ -2217,8 +2217,8 @@
     {
       if (INTVAL (operands[2]) >= 8)
 	{
-	  operands[0] = adj_offsettable_operand (operands[0],
-					        INTVAL (operands[2]) / 8);
+	  operands[0] = adjust_address (operands[0], QImode,
+					INTVAL (operands[2]) / 8);
           operands[2] = GEN_INT (INTVAL (operands[2]) % 8);
 	}
       if (INTVAL (operands[1]) <= 8)

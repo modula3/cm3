@@ -86,7 +86,7 @@ Boston, MA 02111-1307, USA.  */
 #define NEED_PROBE (-2048)
 #endif
 
-/* use memcpy, memset instead of bcopy, etc. */
+/* use memcpy, memset instead of bcopy, etc.  */
 
 #define TARGET_MEM_FUNCTIONS
 
@@ -155,15 +155,6 @@ Boston, MA 02111-1307, USA.  */
 #undef IMMEDIATE_PREFIX
 #define IMMEDIATE_PREFIX "$"
 
-/* This is how to output an assembler line defining a `double' constant.  */
-
-#undef ASM_OUTPUT_DOUBLE
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)  \
-do { long l[2];						\
-     REAL_VALUE_TO_TARGET_DOUBLE (VALUE, l);		\
-     fprintf (FILE, "\t.long 0x%x, 0x%x\n", l[0], l[1]);	\
-   } while (0)
-
 /*unos has no .skip :-( */
 #undef ASM_OUTPUT_SKIP
 #define ASM_OUTPUT_SKIP(FILE,SIZE)	 	\
@@ -196,9 +187,9 @@ do { long l[2];						\
 
 #undef  ASM_OUTPUT_ASCII
 #define  ASM_OUTPUT_ASCII(FILE, P , SIZE)				\
-do {  int i;								\
+do {  size_t i, limit = (SIZE);						\
 	  fprintf ((FILE), "\t.ascii \"");				\
-	  for (i = 0; i < (SIZE); i++)					\
+	  for (i = 0; i < limit; i++)					\
 	    {								\
 	      register int c = (P)[i];					\
 	      if (i != 0 && (i / 200) * 200 == i)			\
@@ -258,7 +249,7 @@ do {  int i;								\
        or print pair of registers as rx:ry.
    'y' for a FPA insn (print pair of registers as rx:ry).  This also outputs
        CONST_DOUBLE's as SunFPA constant RAM registers if
-       possible, so it should not be used except for the SunFPA. */
+       possible, so it should not be used except for the SunFPA.  */
 
 #undef PRINT_OPERAND_PUNCT_VALID_P
 #define PRINT_OPERAND_PUNCT_VALID_P(CODE)				\
@@ -300,7 +291,7 @@ do {  int i;								\
 	ASM_OUTPUT_FLOAT_OPERAND (CODE, FILE, r);			\
       else								\
         { REAL_VALUE_TO_TARGET_SINGLE (r, l);				\
-          fprintf (FILE, "$0x%x", l); } }				\
+          fprintf (FILE, "$0x%lx", l); } }				\
   else if (GET_CODE (X) == CONST_DOUBLE && GET_MODE (X) == DFmode)	\
     { REAL_VALUE_TYPE r;						\
       REAL_VALUE_FROM_CONST_DOUBLE (r, X);				\
@@ -457,162 +448,10 @@ do {  int i;								\
 #define ASM_OUTPUT_SOURCE_LINE(FILE, LINENO)	\
   fprintf (FILE, "\t; ln\t%d\n",			\
 	   (sdb_begin_function_line		\
-	    ? last_linenum - sdb_begin_function_line : 1))
-
-/* This macro generates the assembly code for function entry.
-   FILE is a stdio stream to output the code to.
-   SIZE is an int: how many units of temporary storage to allocate.
-   Refer to the array `regs_ever_live' to determine which registers
-   to save; `regs_ever_live[I]' is nonzero if register number I
-   is ever used in the function.  This macro is responsible for
-   knowing which registers should not be saved even if used.  */
-
-/* Note that the order of the bit mask for fmovem is the opposite
-   of the order for movem!  */
-
-#undef FUNCTION_PROLOGUE
-#define FUNCTION_PROLOGUE(FILE, SIZE)     \
-{ register int regno;						\
-  register int mask = 0;					\
-  extern char call_used_regs[];					\
-  int fsize = ((SIZE) + 3) & -4;				\
-  /* unos stack probe */					\
-  if ( fsize > 30000 ) {					\
-    fprintf (FILE, "\tmovel sp,a0\n");				\
-    fprintf (FILE, "\taddl $-%d,a0\n", 2048 + fsize);		\
-    fprintf (FILE, "\ttstb (a0)\n");				\
-  } else {							\
-    fprintf (FILE, "\ttstb -%d(sp)\n", 2048 + fsize);		\
-  }								\
-  if (frame_pointer_needed)					\
-    { if (TARGET_68020 || fsize < 0x8000)			\
-        fprintf (FILE, "\tlink a6,$%d\n", -fsize);		\
-      else							\
-	fprintf (FILE, "\tlink a6,$0\n\tsubl $%d,sp\n", fsize); }  \
-  else if (fsize)						      \
-    {								      \
-      /* Adding negative number is faster on the 68040.  */	      \
-      if (fsize + 4 < 0x8000)					      \
-	{							      \
-	  fprintf (FILE, "\tadd.w #%d,sp\n", - (fsize + 4));	      \
-	}							      \
-      else							      \
-	{							      \
-	  fprintf (FILE, "\tadd.l #%d,sp\n", - (fsize + 4));          \
-	}							      \
-    }								      \
-  for (regno = 16; regno < 24; regno++)				\
-    if (regs_ever_live[regno] && ! call_used_regs[regno])	\
-       mask |= 1 << (regno - 16);				\
-  if ((mask & 0xff) != 0)					\
-    fprintf (FILE, "\tfmovem $0x%x,-(sp)\n", mask & 0xff);       \
-  mask = 0;							\
-  for (regno = 0; regno < 16; regno++)				\
-    if (regs_ever_live[regno] && ! call_used_regs[regno])	\
-       mask |= 1 << (15 - regno);				\
-  if (frame_pointer_needed)					\
-    mask &= ~ (1 << (15-FRAME_POINTER_REGNUM));			\
-  if (exact_log2 (mask) >= 0)					\
-    fprintf (FILE, "\tmovel %s,-(sp)\n", reg_names[15 - exact_log2 (mask)]);  \
-  else if (mask) fprintf (FILE, "\tmovem $0x%x,-(sp)\n", mask); }
+	    ? (LINENO) - sdb_begin_function_line : 1))
 
 /* Must put address in  %a0 , not  %d0 . -- LGM, 7/15/88 */
 /* UNOS ?? */
 #undef FUNCTION_PROFILER
 #define FUNCTION_PROFILER(FILE, LABEL_NO)	\
     fprintf (FILE, "\tmovl &LP%%%d,%%a0\n\tjsr mcount\n", (LABEL_NO))
-
-/* This macro generates the assembly code for function exit,
-   on machines that need it.  If FUNCTION_EPILOGUE is not defined
-   then individual return instructions are generated for each
-   return statement.  Args are same as for FUNCTION_PROLOGUE.
-
-   The function epilogue should not depend on the current stack pointer!
-   It should use the frame pointer only.  This is mandatory because
-   of alloca; we also take advantage of it to omit stack adjustments
-   before returning.  */
-
-#undef FUNCTION_EPILOGUE
-#define FUNCTION_EPILOGUE(FILE, SIZE) \
-{ register int regno;						\
-  register int mask, fmask;					\
-  register int nregs;						\
-  int offset, foffset, fpoffset;				\
-  extern char call_used_regs[];					\
-  int fsize = ((SIZE) + 3) & -4;				\
-  int big = 0;							\
-  nregs = 0;  fmask = 0; fpoffset = 0;				\
-  for (regno = 16; regno < 24; regno++)				\
-    if (regs_ever_live[regno] && ! call_used_regs[regno])	\
-      { nregs++; fmask |= 1 << (23 - regno); }			\
-  foffset = fpoffset + nregs * 12;				\
-  nregs = 0;  mask = 0;						\
-  if (frame_pointer_needed) regs_ever_live[FRAME_POINTER_REGNUM] = 0; \
-  for (regno = 0; regno < 16; regno++)				\
-    if (regs_ever_live[regno] && ! call_used_regs[regno])	\
-      { nregs++; mask |= 1 << regno; }				\
-  offset = foffset + nregs * 4;					\
-  if (offset + fsize >= 0x8000 					\
-      && frame_pointer_needed 					\
-      && (mask || fmask || fpoffset)) 				\
-    { fprintf (FILE, "\tmovel $%d,a0\n", -fsize);		\
-      fsize = 0, big = 1; }					\
-  if (exact_log2 (mask) >= 0) {					\
-    if (big)							\
-      fprintf (FILE, "\tmovel -%d(a6,a0.l),%s\n",		\
-	       offset + fsize, reg_names[exact_log2 (mask)]);	\
-    else if (! frame_pointer_needed)				\
-      fprintf (FILE, "\tmovel (sp)+,%s\n",			\
-	       reg_names[exact_log2 (mask)]);			\
-    else							\
-      fprintf (FILE, "\tmovel -%d(a6),%s\n",			\
-	       offset + fsize, reg_names[exact_log2 (mask)]); }	\
-  else if (mask) {						\
-    if (big)							\
-      fprintf (FILE, "\tmovem -%d(a6,a0.l),$0x%x\n",		\
-	       offset + fsize, mask);				\
-    else if (! frame_pointer_needed)				\
-      fprintf (FILE, "\tmovem (sp)+,$0x%x\n", mask);		\
-    else							\
-      fprintf (FILE, "\tmovem -%d(a6),$0x%x\n",		\
-	       offset + fsize, mask); }				\
-  if (fmask) {							\
-    if (big)							\
-      fprintf (FILE, "\tfmovem -%d(a6,a0.l),$0x%x\n",		\
-	       foffset + fsize, fmask);				\
-    else if (! frame_pointer_needed)				\
-      fprintf (FILE, "\tfmovem (sp)+,$0x%x\n", fmask);		\
-    else							\
-      fprintf (FILE, "\tfmovem -%d(a6),$0x%x\n",		\
-	       foffset + fsize, fmask); }			\
-  if (fpoffset != 0)						\
-    for (regno = 55; regno >= 24; regno--)			\
-      if (regs_ever_live[regno] && ! call_used_regs[regno]) {	\
-	if (big)						\
-	  fprintf(FILE, "\tfpmoved -%d(a6,a0.l), %s\n",	\
-		  fpoffset + fsize, reg_names[regno]);		\
-	else if (! frame_pointer_needed)			\
-	  fprintf(FILE, "\tfpmoved (sp)+, %s\n",			\
-		  reg_names[regno]);				\
-	else							\
-	  fprintf(FILE, "\tfpmoved -%d(a6), %s\n",		\
-		  fpoffset + fsize, reg_names[regno]);		\
-	fpoffset -= 8;						\
-      }								\
-  if (frame_pointer_needed)					\
-    fprintf (FILE, "\tunlk a6\n");				\
-  else if (fsize)                                                     \
-    {                                                                 \
-      if (fsize + 4 < 0x8000)                                         \
-	{                                                             \
-	  fprintf (FILE, "\tadd.w #%d,sp\n", fsize + 4);              \
-	}                                                             \
-      else                                                            \
-	{                                                             \
-	  fprintf (FILE, "\tadd.l #%d,sp\n", fsize + 4);              \
-	}                                                             \
-    }                                                                 \
-  if (current_function_pops_args)				\
-    fprintf (FILE, "\trtd $%d\n", current_function_pops_args);	\
-  else fprintf (FILE, "\trts\n"); }
-

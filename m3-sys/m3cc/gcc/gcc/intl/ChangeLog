@@ -1,30 +1,75 @@
-2002-02-20  Release Manager
+2002-07-25  Release Manager
 
-	* GCC 3.0.4 Released.
+	* GCC 3.1.1 Released.
 
-2002-02-20  Release Manager
+2002-05-25  Roman Lechtchinsky  <rl@cs.tu-berlin.de>
 
-	* GCC 3.0.4 Released.
+	* gettextP.h (SWAP): Change parameter type to unsigned int.
 
-2001-12-20  Release Manager
+2002-05-14  Release Manager
 
-	* GCC 3.0.3 Released.
+	* GCC 3.1 Released.
 
-2001-10-23  Release Manager
+2002-05-14  Release Manager
 
-	* GCC 3.0.2 Released.
+	* GCC 3.1 Released.
 
-2001-08-19  Release Manager
+Tue Dec 11 07:08:57 2001  Douglas B. Rupp  <rupp@gnat.com>
 
-	* GCC 3.0.1 Released.
+	* localealias.c (strings.h): Include.
 
-2001-08-19  Release Manager
+Mon Dec 10 06:09:57 2001  Douglas B. Rupp  <rupp@gnat.com>
 
-	* GCC 3.0.1 Released.
+	* Makefile.in (OUTPUT_OPTION): Add configure variable.
+	(.c.o): Add $(OUTPUT_OPTION).
 
-20010617 Release Manager
+2001-11-03  Kaveh R. Ghazi  <ghazi@caip.rutgers.edu>
 
-        * GCC 3.0 Released.
+	* l10nflist.c (_nl_normalize_codeset): Cast argument of ctype
+	function to `unsigned char'.
+	* loadmsgcat.c (_nl_load_domain): Likewise.
+	* localealias.c (read_alias_file, alias_compare): Likewise.
+	* localcharset.c: Include "gettextP.h".
+	* plural.y (__attribute__): Define.
+	(yyerror): Mark parameter with __attribute__ ((__unused__)).
+	* plural.c: Regenerate.
+
+2001-10-24  Zack Weinberg  <zack@codesourcery.com>
+
+	* loadmsgcat.c (INTTYPE_SIGNED, INTTYPE_MINIMUM,
+	INTTYPE_MAXIMUM): Clone from system.h.
+	(_nl_load_domain): Use them when testing for overflow of size_t.
+	Cast result of sizeof to off_t to compare to st_size value.
+	Move side effects out of conditional for comprehensibility.
+
+2001-10-21  Zack Weinberg  <zack@codesourcery.com>
+
+	* dcigettext.c: Don't use #elif.
+	* gettextP.h: Prototype nls_uint32 and locale_charset here.
+	Always define ZERO to 1 to avoid warnings (ZERO is used in
+	flexible-array-member declarations).
+	* loadmsgcat.c: Apply __extension__ to structure definitions
+	using C99 designated initializer syntax.
+	Do not prototype locale_charset here.
+	* localcharset.c: Prototype get_charset_aliases before use.
+	Get rid of STATIC nonsense.
+
+2001-10-19  Zack Weinberg  <zack@codesourcery.com>
+
+	* Makefile.in: Don't copy libgnuintl.h anywhere.
+
+2001-10-12  Zack Weinberg  <zack@codesourcery.com>
+
+	* Update entire directory from gettext 0.10.40.
+	* cat-compat.c, linux-msg.sed, po2tbl.sed.in, xopen-msg.sed:
+	Removed.
+	* config.charset, dcigettext.c, dcngettext.c, libgnuintl.h,
+	localcharset.c, locale.alias, ngettext.c, plural.c, plural.y,
+	ref-add.sin, ref-del.sin: New.
+
+2001-07-06  Roman Lechtchinsky  <rl@cs.tu-berlin.de>
+
+	* gettextP.h (SWAP): Change parameter type to unsigned int.
 
 2001-05-25  Rainer Orth  <ro@TechFak.Uni-Bielefeld.DE>
 
@@ -63,7 +108,7 @@
 	in call to _nl_normalize_codeset.
 	* l10nflist.c: Define _GNU_SOURCE before any system header is
 	included.
-	
+
 1998-04-29  Ulrich Drepper  <drepper@cygnus.com>
 
 	* intl/localealias.c (read_alias_file): Use unsigned char for
@@ -239,7 +284,7 @@ Fri Jul 19 00:15:46 1996  Ulrich Drepper  <drepper@cygnus.com>
 Sat Jul 13 18:11:35 1996  Ulrich Drepper  <drepper@cygnus.com>
 
 	* Makefile.in (install): Split goal.  Now depend on install-exec
-        and install-data.
+	and install-data.
 	(install-exec, install-data): New goals.  Created from former
 	install goal.
 	Reported by Karl Berry.
@@ -247,7 +292,7 @@ Sat Jul 13 18:11:35 1996  Ulrich Drepper  <drepper@cygnus.com>
 Sat Jun 22 04:58:14 1996  Ulrich Drepper  <drepper@cygnus.com>
 
 	* Makefile.in (MKINSTALLDIRS): New variable.  Path to
-        mkinstalldirs script.
+	mkinstalldirs script.
 	(install): use MKINSTALLDIRS variable or if the script is not present
 	try to find it in the $top_scrdir).
 
@@ -275,7 +320,7 @@ Tue Jun 11 17:05:13 1996  Ulrich Drepper  <drepper@cygnus.com>
 	result to __result to prevent name clash.
 
 	* l10nflist.c, localealias.c, dcgettext.c: Define _GNU_SOURCE to
-        get prototype for stpcpy and strcasecmp.
+	get prototype for stpcpy and strcasecmp.
 
 	* intlh.inst.in, libgettext.h: Move declaration of
 	`_nl_msg_cat_cntr' outside __extension__ block to prevent warning
@@ -300,7 +345,7 @@ Thu Jun  6 01:49:52 1996  Ulrich Drepper  <drepper@cygnus.com>
 	Patch by Eric Backus.
 
 	* localealias.c [!HAVE_ALLOCA]: Define alloca as macro using
-        malloc.
+	malloc.
 	(read_alias_file): Rename varriabe alloca_list to block_list as the
 	macro calls assume.
 	Patch by Eric Backus.
@@ -309,10 +354,10 @@ Thu Jun  6 01:49:52 1996  Ulrich Drepper  <drepper@cygnus.com>
 	Reported by Roland McGrath.
 
 	* Makefile.in (all): Depend on all-@USE_INCLUDED_LIBINTL@, not
-        all-@USE_NLS@.
+	all-@USE_NLS@.
 
 	* Makefile.in (install): intlh.inst comes from local dir, not
-        $(srcdir).
+	$(srcdir).
 
 	* Makefile.in (intlh.inst): Special handling of this goal.  If
 	used in gettext, this is really a rul to construct this file.  If
@@ -339,19 +384,19 @@ Tue Jun  4 02:47:49 1996  Ulrich Drepper  <drepper@cygnus.com>
 	* libintl.inst: Renamed to intlh.inst.in.
 
 	* localealias.c, dcgettext.c [__GNUC__]: Define HAVE_ALLOCA to 1
-        because gcc has __buitlin_alloca.
+	because gcc has __buitlin_alloca.
 	Reported by Roland McGrath.
 
 Mon Jun  3 00:32:16 1996  Ulrich Drepper  <drepper@cygnus.com>
 
 	* Makefile.in (installcheck): New goal to fulfill needs of
-        automake's distcheck.
+	automake's distcheck.
 
 	* Makefile.in (install): Reorder commands so that VERSION is
-        found.
+	found.
 
 	* Makefile.in (gettextsrcdir): Now use subdirectory intl/ in
-        @datadir@/gettext.
+	@datadir@/gettext.
 	(COMSRCS): Add l10nfile.c.
 	(OBJECTS): Add l10nfile.o.
 	(DISTFILES): Rename to DISTFILE.normal.  Remove $(DISTFILES.common).
@@ -367,7 +412,7 @@ Mon Jun  3 00:32:16 1996  Ulrich Drepper  <drepper@cygnus.com>
 Sun Jun  2 17:33:06 1996  Ulrich Drepper  <drepper@cygnus.com>
 
 	* loadmsgcat.c (_nl_load_domain): Parameter is now comes from
-        find_l10nfile.
+	find_l10nfile.
 
 Sat Jun  1 02:23:03 1996  Ulrich Drepper  <drepper@cygnus.com>
 
@@ -377,7 +422,7 @@ Sat Jun  1 02:23:03 1996  Ulrich Drepper  <drepper@cygnus.com>
 	code.  Use new l10nfile handling.
 
 	* localealias.c [!HAVE_ALLOCA]: Add code for handling missing
-        alloca code.
+	alloca code.
 
 	* l10nflist.c: Initial revision.
 
@@ -396,7 +441,7 @@ Tue Mar 26 12:39:14 1996  Ulrich Drepper  <drepper@myware>
 Sat Mar 23 02:00:35 1996  Ulrich Drepper  <drepper@myware>
 
 	* finddomain.c (stpcpy): Rename to stpcpy__ to prevent clashing
-        with external declaration.
+	with external declaration.
 
 Sat Mar  2 00:47:09 1996  Ulrich Drepper  <drepper@myware>
 
@@ -405,7 +450,7 @@ Sat Mar  2 00:47:09 1996  Ulrich Drepper  <drepper@myware>
 Sat Feb 17 00:25:59 1996  Ulrich Drepper  <drepper@myware>
 
 	* gettextP.h [loaded_domain]: Array `successor' must now contain up
-        to 63 elements (because of codeset name normalization).
+	to 63 elements (because of codeset name normalization).
 
 	* finddomain.c: Implement codeset name normalization.
 
@@ -418,7 +463,7 @@ Thu Feb 15 04:39:09 1996  Ulrich Drepper  <drepper@myware>
 Mon Jan 15 21:46:01 1996  Howard Gayle  <howard@hal.com>
 
 	* localealias.c (alias_compare): Increment string pointers in loop
-        of strcasecmp replacement.
+	of strcasecmp replacement.
 
 Fri Dec 29 21:16:34 1995  Ulrich Drepper  <drepper@myware>
 
@@ -433,7 +478,7 @@ Fri Dec 29 15:08:16 1995  Ulrich Drepper  <drepper@myware>
 Tue Dec 19 22:09:13 1995  Ulrich Drepper  <drepper@myware>
 
 	* Makefile.in (Makefile): Explicitly use $(SHELL) for running
-        shell scripts.
+	shell scripts.
 
 Fri Dec 15 17:34:59 1995  Andreas Schwab  <schwab@issan.informatik.uni-dortmund.de>
 

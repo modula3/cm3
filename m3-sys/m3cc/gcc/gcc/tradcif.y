@@ -24,11 +24,12 @@ Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 %{
 #include "config.h"
 #include "system.h"
+#include "intl.h"
 #include "tradcpp.h"
 #include <setjmp.h>
 
   static int yylex PARAMS ((void));
-  static void yyerror PARAMS ((const char *msgid));
+  static void yyerror PARAMS ((const char *msgid)) ATTRIBUTE_NORETURN;
 
   static int parse_number PARAMS ((int));
   static int parse_escape PARAMS ((const char **));
@@ -218,11 +219,11 @@ static int
 parse_number (olen)
      int olen;
 {
-  register const char *p = lexptr;
-  register long n = 0;
-  register int c;
-  register int base = 10;
-  register int len = olen;
+  const char *p = lexptr;
+  long n = 0;
+  int c;
+  int base = 10;
+  int len = olen;
 
   for (c = 0; c < len; c++)
     if (p[c] == '.') {
@@ -231,6 +232,8 @@ parse_number (olen)
       return ERROR;
     }
 
+  /* Traditionally, all numbers are signed.  However, we make it
+     unsigned if requested with a suffix.  */
   yylval.integer.unsignedp = 0;
 
   if (len >= 3 && (!strncmp (p, "0x", 2) || !strncmp (p, "0X", 2))) {
@@ -244,14 +247,12 @@ parse_number (olen)
   while (len > 0) {
     c = *p++;
     len--;
-    if (c >= 'A' && c <= 'Z') c += 'a' - 'A';
+    if (ISUPPER (c))
+      c = TOLOWER (c);
 
-    if (c >= '0' && c <= '9') {
-      n *= base;
-      n += c - '0';
-    } else if (base == 16 && c >= 'a' && c <= 'f') {
-      n *= base;
-      n += c - 'a' + 10;
+    if (ISDIGIT (c)
+	|| (base == 16 && ISXDIGIT (c))) {
+      n = (n * base) + hex_value (c);
     } else {
       /* `l' means long, and `u' means unsigned.  */
       while (1) {
@@ -273,13 +274,9 @@ parse_number (olen)
   }
 
   if (len != 0) {
-    yyerror ("Invalid number in #if expression");
+    yyerror ("invalid number in #if expression");
     return ERROR;
   }
-
-  /* If too big to be signed, consider it unsigned.  */
-  if (n < 0)
-    yylval.integer.unsignedp = 1;
 
   lexptr = p;
   yylval.integer.value = n;
@@ -287,15 +284,15 @@ parse_number (olen)
 }
 
 struct token {
-  const char *operator;
-  int token;
+  const char *const operator;
+  const int token;
 };
 
 #ifndef NULL
 #define NULL 0
 #endif
 
-static struct token tokentab2[] = {
+static const struct token tokentab2[] = {
   {"&&", AND},
   {"||", OR},
   {"<<", LSH},
@@ -312,10 +309,10 @@ static struct token tokentab2[] = {
 static int
 yylex ()
 {
-  register int c;
-  register int namelen;
-  register const char *tokstart;
-  register struct token *toktab;
+  int c;
+  int namelen;
+  const char *tokstart;
+  const struct token *toktab;
 
  retry:
 
@@ -347,8 +344,7 @@ yylex ()
 
     /* Sign-extend the constant if chars are signed on target machine.  */
     {
-      if (lookup ((const unsigned char *)"__CHAR_UNSIGNED__",
-		   sizeof ("__CHAR_UNSIGNED__")-1, -1)
+      if (flag_signed_char == 0
 	  || ((c >> (CHAR_TYPE_SIZE - 1)) & 1) == 0)
 	yylval.integer.value = c & ((1 << CHAR_TYPE_SIZE) - 1);
       else
@@ -358,7 +354,7 @@ yylex ()
     yylval.integer.unsignedp = 0;
     c = *lexptr++;
     if (c != '\'') {
-      yyerror ("Invalid character constant in #if");
+      yyerror ("invalid character constant in #if");
       return ERROR;
     }
     
@@ -398,7 +394,7 @@ yylex ()
     yyerror ("double quoted strings not allowed in #if expressions");
     return ERROR;
   }
-  if (c >= '0' && c <= '9') {
+  if (ISDIGIT (c)) {
     /* It's a number */
     for (namelen = 0;
 	 c = tokstart[namelen], is_idchar (c) || c == '.'; 
@@ -408,7 +404,7 @@ yylex ()
   }
   
   if (!is_idstart (c)) {
-    yyerror ("Invalid token in expression");
+    yyerror ("invalid token in expression");
     return ERROR;
   }
   
@@ -442,7 +438,7 @@ static int
 parse_escape (string_ptr)
      const char **string_ptr;
 {
-  register int c = *(*string_ptr)++;
+  int c = *(*string_ptr)++;
   switch (c)
     {
     case 'a':
@@ -483,8 +479,8 @@ parse_escape (string_ptr)
     case '6':
     case '7':
       {
-	register int i = c - '0';
-	register int count = 0;
+	int i = c - '0';
+	int count = 0;
 	while (++count < 3)
 	  {
 	    c = *(*string_ptr)++;
@@ -505,16 +501,12 @@ parse_escape (string_ptr)
       }
     case 'x':
       {
-	register int i = 0;
+	int i = 0;
 	for (;;)
 	  {
 	    c = *(*string_ptr)++;
-	    if (c >= '0' && c <= '9')
-	      i = (i << 4) + c - '0';
-	    else if (c >= 'a' && c <= 'f')
-	      i = (i << 4) + c - 'a' + 10;
-	    else if (c >= 'A' && c <= 'F')
-	      i = (i << 4) + c - 'A' + 10;
+	    if (hex_p (c))
+	      i = (i << 4) + hex_value (c);
 	    else
 	      {
 		(*string_ptr)--;
@@ -534,10 +526,10 @@ parse_escape (string_ptr)
 }
 
 static void
-yyerror (s)
-     const char *s;
+yyerror (msgid)
+     const char *msgid;
 {
-  error (s);
+  error ("%s", _(msgid));
   longjmp (parse_return_error, 1);
 }
 
