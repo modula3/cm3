@@ -32,7 +32,7 @@ TYPE
  *)
 
 <*EXTERNAL*>
-PROCEDURE gluErrorString (errorCode: GL.GLenum): GL.GLubyteStar;
+PROCEDURE gluErrorString (errorCode: GL.GLenum): GL.GLubyteArrayStar;
 
 <*EXTERNAL*>
 PROCEDURE gluOrtho2D (left, right, bottom, top: GL.GLdouble);

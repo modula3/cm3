@@ -10,6 +10,9 @@ UNSAFE INTERFACE GLX;
 
 IMPORT Ctypes, GL, X;
 
+FROM Utime IMPORT struct_timeval;
+FROM Unix IMPORT FDSet;
+
 (*****************************************************************************)
 (* Types and Constants (complete)                                            *)
 (*****************************************************************************)
@@ -118,5 +121,15 @@ CONST
 <*EXTERNAL*> PROCEDURE glXWaitGL ();
 
 <*EXTERNAL*> PROCEDURE glXWaitX ();
+
+(* ----------------HACK HACK HACK---------------*)
+(* This procedure will have an external symbol of GLX__S.  As a really
+   gross hack, we can manually edit any link library (at least on
+   Solaris) and change an external reference to "select" to "GLX__S",
+   which will pick up this.  Then, we can redirect the select call to
+   SchedulerPosix.IOWait so it doesn't block the process! *)
+
+PROCEDURE S (nfds: Ctypes.int; readfds, writefds, exceptfds:UNTRACED REF FDSet;
+             timeout: UNTRACED REF struct_timeval): Ctypes.int;
 
 END GLX.

@@ -1,0 +1,11 @@
+-direct
+d:\winnt\system32\opengl32.DLL
+src\WIN32\GL.i3
+src\WIN32\GLu.i3
+u:\arm3\bm-work\cm3\libsrc\m3-libs\m3core\src\win32\WinGDI.i3
+u:\arm3\bm-work\cm3\libsrc\m3-libs\m3core\src\win32\WinNT.i3
+u:\arm3\bm-work\cm3\libsrc\m3-libs\m3core\src\win32\WinDef.i3
+u:\arm3\bm-work\cm3\libsrc\m3-libs\m3core\src\win32\WinBaseTypes.i3
+u:\arm3\bm-work\cm3\libsrc\m3-libs\m3core\src\C\Common\Ctypes.i3
+u:\arm3\bm-work\cm3\libsrc\m3-libs\m3core\src\C\32BITS\BasicCtypes.i3
+u:\arm3\bm-work\cm3\libsrc\m3-libs\m3core\src\word\Word.i3

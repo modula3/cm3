@@ -33,7 +33,13 @@ TYPE
 (*GLvoid     = Ctypes.void; *)
 
   GLubyteStar  = UNTRACED REF GLubyte;
+  GLuintStar  = UNTRACED REF GLuint;
+  GLbooleanStar  = UNTRACED REF GLboolean;
   GLdoubleStar = UNTRACED REF GLdouble;
+  GLubyteArrayStar  = UNTRACED REF ARRAY OF GLubyte;
+  GLuintArrayStar  = UNTRACED REF ARRAY OF GLuint;
+  GLbooleanArrayStar  = UNTRACED REF ARRAY OF GLboolean;
+  GLdoubleArrayStar = UNTRACED REF GLdouble;
   GLvoidStar   = ADDRESS;
 
 (*****************************************************************************)
@@ -394,6 +400,11 @@ CONST
   GL_MAP2_GRID_SEGMENTS            = 16_0DD3;
   GL_TEXTURE_1D                    = 16_0DE0;
   GL_TEXTURE_2D                    = 16_0DE1;
+  GL_FEEDBACK_BUFFER_POINTER       = 16_0DF0;
+  GL_FEEDBACK_BUFFER_SIZE          = 16_0DF1;
+  GL_FEEDBACK_BUFFER_TYPE          = 16_0DF2;
+  GL_SELECTION_BUFFER_POINTER      = 16_0DF3;
+  GL_SELECTION_BUFFER_SIZE         = 16_0DF4;
 
   (* GetTextureParameter *)
 
@@ -450,6 +461,7 @@ CONST
   GL_2_BYTES        = 16_1407;
   GL_3_BYTES        = 16_1408;
   GL_4_BYTES        = 16_1409;
+  GL_DOUBLE         = 16_140A;
 
   (* LogicOp *)
 
@@ -594,6 +606,109 @@ CONST
   GL_CLAMP  = 16_2900;
   GL_REPEAT = 16_2901;
 
+  (* ClientAttribMask *)
+  GL_CLIENT_PIXEL_STORE_BIT         = 16_00000001;
+  GL_CLIENT_VERTEX_ARRAY_BIT        = 16_00000002;
+  GL_CLIENT_ALL_ATTRIB_BITS         = 16_ffffffff;
+
+  (* polygon_offset *)
+  GL_POLYGON_OFFSET_FACTOR          = 16_8038;
+  GL_POLYGON_OFFSET_UNITS           = 16_2A00;
+  GL_POLYGON_OFFSET_POINT           = 16_2A01;
+  GL_POLYGON_OFFSET_LINE            = 16_2A02;
+  GL_POLYGON_OFFSET_FILL            = 16_8037;
+
+  (* texture *)
+  GL_ALPHA4                         = 16_803B;
+  GL_ALPHA8                         = 16_803C;
+  GL_ALPHA12                        = 16_803D;
+  GL_ALPHA16                        = 16_803E;
+  GL_LUMINANCE4                     = 16_803F;
+  GL_LUMINANCE8                     = 16_8040;
+  GL_LUMINANCE12                    = 16_8041;
+  GL_LUMINANCE16                    = 16_8042;
+  GL_LUMINANCE4_ALPHA4              = 16_8043;
+  GL_LUMINANCE6_ALPHA2              = 16_8044;
+  GL_LUMINANCE8_ALPHA8              = 16_8045;
+  GL_LUMINANCE12_ALPHA4             = 16_8046;
+  GL_LUMINANCE12_ALPHA12            = 16_8047;
+  GL_LUMINANCE16_ALPHA16            = 16_8048;
+  GL_INTENSITY                      = 16_8049;
+  GL_INTENSITY4                     = 16_804A;
+  GL_INTENSITY8                     = 16_804B;
+  GL_INTENSITY12                    = 16_804C;
+  GL_INTENSITY16                    = 16_804D;
+  GL_R3_G3_B2                       = 16_2A10;
+  GL_RGB4                           = 16_804F;
+  GL_RGB5                           = 16_8050;
+  GL_RGB8                           = 16_8051;
+  GL_RGB10                          = 16_8052;
+  GL_RGB12                          = 16_8053;
+  GL_RGB16                          = 16_8054;
+  GL_RGBA2                          = 16_8055;
+  GL_RGBA4                          = 16_8056;
+  GL_RGB5_A1                        = 16_8057;
+  GL_RGBA8                          = 16_8058;
+  GL_RGB10_A2                       = 16_8059;
+  GL_RGBA12                         = 16_805A;
+  GL_RGBA16                         = 16_805B;
+  GL_TEXTURE_RED_SIZE               = 16_805C;
+  GL_TEXTURE_GREEN_SIZE             = 16_805D;
+  GL_TEXTURE_BLUE_SIZE              = 16_805E;
+  GL_TEXTURE_ALPHA_SIZE             = 16_805F;
+  GL_TEXTURE_LUMINANCE_SIZE         = 16_8060;
+  GL_TEXTURE_INTENSITY_SIZE         = 16_8061;
+  GL_PROXY_TEXTURE_1D               = 16_8063;
+  GL_PROXY_TEXTURE_2D               = 16_8064;
+
+  (* texture_object *)
+  GL_TEXTURE_PRIORITY               = 16_8066;
+  GL_TEXTURE_RESIDENT               = 16_8067;
+  GL_TEXTURE_BINDING_1D             = 16_8068;
+  GL_TEXTURE_BINDING_2D             = 16_8069;
+  GL_TEXTURE_3D_BINDING_EXT         = 16_806A;
+
+  (* vertex_array *)
+  GL_VERTEX_ARRAY                   = 16_8074;
+  GL_NORMAL_ARRAY                   = 16_8075;
+  GL_COLOR_ARRAY                    = 16_8076;
+  GL_INDEX_ARRAY                    = 16_8077;
+  GL_TEXTURE_COORD_ARRAY            = 16_8078;
+  GL_EDGE_FLAG_ARRAY                = 16_8079;
+  GL_VERTEX_ARRAY_SIZE              = 16_807A;
+  GL_VERTEX_ARRAY_TYPE              = 16_807B;
+  GL_VERTEX_ARRAY_STRIDE            = 16_807C;
+  GL_NORMAL_ARRAY_TYPE              = 16_807E;
+  GL_NORMAL_ARRAY_STRIDE            = 16_807F;
+  GL_COLOR_ARRAY_SIZE               = 16_8081;
+  GL_COLOR_ARRAY_TYPE               = 16_8082;
+  GL_COLOR_ARRAY_STRIDE             = 16_8083;
+  GL_INDEX_ARRAY_TYPE               = 16_8085;
+  GL_INDEX_ARRAY_STRIDE             = 16_8086;
+  GL_TEXTURE_COORD_ARRAY_SIZE       = 16_8088;
+  GL_TEXTURE_COORD_ARRAY_TYPE       = 16_8089;
+  GL_TEXTURE_COORD_ARRAY_STRIDE     = 16_808A;
+  GL_EDGE_FLAG_ARRAY_STRIDE         = 16_808C;
+  GL_VERTEX_ARRAY_POINTER           = 16_808E;
+  GL_NORMAL_ARRAY_POINTER           = 16_808F;
+  GL_COLOR_ARRAY_POINTER            = 16_8090;
+  GL_INDEX_ARRAY_POINTER            = 16_8091;
+  GL_TEXTURE_COORD_ARRAY_POINTER    = 16_8092;
+  GL_EDGE_FLAG_ARRAY_POINTER        = 16_8093;
+  GL_V2F                            = 16_2A20;
+  GL_V3F                            = 16_2A21;
+  GL_C4UB_V2F                       = 16_2A22;
+  GL_C4UB_V3F                       = 16_2A23;
+  GL_C3F_V3F                        = 16_2A24;
+  GL_N3F_V3F                        = 16_2A25;
+  GL_C4F_N3F_V3F                    = 16_2A26;
+  GL_T2F_V3F                        = 16_2A27;
+  GL_T4F_V4F                        = 16_2A28;
+  GL_T2F_C4UB_V3F                   = 16_2A29;
+  GL_T2F_C3F_V3F                    = 16_2A2A;
+  GL_T2F_N3F_V3F                    = 16_2A2B;
+  GL_T2F_C4F_N3F_V3F                = 16_2A2C;
+  GL_T4F_C4F_N3F_V4F                = 16_2A2D;
 
 (*****************************************************************************)
 (* Procedures                                                                *)
@@ -605,8 +720,18 @@ PROCEDURE glAccum (op: GLenum; value: GLfloat);
 <*EXTERNAL*> 
 PROCEDURE glAlphaFunc (func: GLenum; ref: GLclampf);
 
+<*EXTERNAL*>
+PROCEDURE glAreTexturesResident (n: GLsizei; textures: GLuintArrayStar;
+                                 residences: GLbooleanArrayStar): GLboolean;
+
+<*EXTERNAL*>
+PROCEDURE glArrayElement (i: GLint);
+
 <*EXTERNAL*> 
 PROCEDURE glBegin (mode: GLenum);
+
+<*EXTERNAL*>
+PROCEDURE glBindTexture (target: GLenum; texture: GLuint);
 
 <*EXTERNAL*> 
 PROCEDURE glBitmap (width : GLsizei; 
@@ -751,15 +876,40 @@ PROCEDURE glColorMask (red, green, blue, alpha: GLboolean);
 PROCEDURE glColorMaterial (face, mode: GLenum);
 
 <*EXTERNAL*> 
+PROCEDURE glColorPointer (size: GLint; type: GLenum; stride: GLsizei;
+                          pointer: GLvoidStar);
+
+<*EXTERNAL*> 
 PROCEDURE glCopyPixels (x, y         : GLint; 
                         width, height: GLsizei; 
                         type         : GLenum);
 
 <*EXTERNAL*> 
+PROCEDURE glCopyTexImage1D (target: GLenum; level: GLint;
+                            internalFormat: GLenum; x,y: GLint; 
+                            width: GLsizei; border: GLint);
+
+<*EXTERNAL*> 
+PROCEDURE glCopyTexImage2D (target: GLenum; level: GLint;
+                            internalFormat: GLenum; x,y: GLint; 
+                            width, height: GLsizei; border: GLint);
+
+<*EXTERNAL*> 
+PROCEDURE glCopyTexSubImage1D (target: GLenum; level: GLint;
+                               xoffset, x,y: GLint; width: GLsizei);
+
+<*EXTERNAL*> 
+PROCEDURE glCopyTexSubImage2D (target: GLenum; level: GLint;
+                               xoffset, yoffset, x, y: GLint; 
+                               width, height: GLsizei);
+<*EXTERNAL*> 
 PROCEDURE glCullFace (mode: GLenum);
 
 <*EXTERNAL*> 
 PROCEDURE glDeleteLists (list: GLuint; range: GLsizei);
+
+<*EXTERNAL*> 
+PROCEDURE glDeleteTextures (n: GLsizei; textures: GLuintStar);
 
 <*EXTERNAL*> 
 PROCEDURE glDepthFunc (func: GLenum);
@@ -774,7 +924,17 @@ PROCEDURE glDepthRange (near, far: GLclampd);
 PROCEDURE glDisable (cap : GLenum);
 
 <*EXTERNAL*> 
+PROCEDURE glDisableClientState (array: GLenum);
+
+<*EXTERNAL*> 
+PROCEDURE glDrawArrays  (mode: GLenum; first: GLint; count: GLsizei);
+
+<*EXTERNAL*> 
 PROCEDURE glDrawBuffer (mode : GLenum);
+
+<*EXTERNAL*>
+PROCEDURE glDrawElements (mode: GLenum; count: GLsizei; type: GLenum;
+                          indices: GLvoidStar);
 
 <*EXTERNAL*> 
 PROCEDURE glDrawPixels (width, height: GLsizei; 
@@ -784,11 +944,17 @@ PROCEDURE glDrawPixels (width, height: GLsizei;
 <*EXTERNAL*> 
 PROCEDURE glEdgeFlag (flag: GLboolean);
 
+<*EXTERNAL*>
+PROCEDURE glEdgeFlagPointer (stride: GLsizei; pointer: GLvoidStar);
+
 <*EXTERNAL*> 
 PROCEDURE glEdgeFlagv (flag: UNTRACED REF ARRAY OF GLboolean);
 
 <*EXTERNAL*> 
 PROCEDURE glEnable (cap : GLenum);
+
+<*EXTERNAL*>
+PROCEDURE glEnableClientState (array: GLenum);
 
 <*EXTERNAL*> 
 PROCEDURE glEnd ();
@@ -864,6 +1030,9 @@ PROCEDURE glFrustum (left, right, bottom, top, near, far: GLdouble);
 <*EXTERNAL*> 
 PROCEDURE glGenLists (range: GLsizei): GLuint;
 
+<*EXTERNAL*>
+PROCEDURE glGenTextures (n: GLsizei; textures:  GLuintArrayStar);
+
 <*EXTERNAL*> 
 PROCEDURE glGetBooleanv (pname: GLenum; 
                          params: UNTRACED REF ARRAY OF GLboolean);
@@ -934,11 +1103,14 @@ PROCEDURE glGetPixelMapuiv (map   : GLenum;
 PROCEDURE glGetPixelMapusv (map   : GLenum;
                             values: UNTRACED REF ARRAY OF GLushort);
 
+<*EXTERNAL*>
+PROCEDURE glGetPointerv(pname: GLenum; params: UNTRACED REF GLvoidStar);
+
 <*EXTERNAL*> 
 PROCEDURE glGetPolygonStipple (mask: UNTRACED REF ARRAY OF GLubyte);
 
 <*EXTERNAL*> 
-PROCEDURE glGetString (name: GLenum): UNTRACED REF ARRAY OF GLubyte;
+PROCEDURE glGetString (name: GLenum): GLubyteStar;
 
 <*EXTERNAL*> 
 PROCEDURE glGetTexEnvfv (target: GLenum; 
@@ -1000,6 +1172,9 @@ PROCEDURE glHint (target: GLenum; mode: GLenum);
 <*EXTERNAL*> 
 PROCEDURE glIndexMask (mask: GLuint);
 
+<*EXTERNAL*>
+PROCEDURE glIndexPointer(type: GLenum; stride: GLsizei; pointer: GLvoidStar);
+
 <*EXTERNAL*> 
 PROCEDURE glIndexd (c: GLdouble);
 
@@ -1025,13 +1200,26 @@ PROCEDURE glIndexs (c: GLshort);
 PROCEDURE glIndexsv (c: UNTRACED REF ARRAY OF GLshort);
 
 <*EXTERNAL*> 
+PROCEDURE glIndexub (c: GLubyte);
+
+<*EXTERNAL*> 
+PROCEDURE glIndexubv (c: UNTRACED REF ARRAY OF GLubyte);
+
+<*EXTERNAL*> 
 PROCEDURE glInitNames ();
+
+<*EXTERNAL*>
+PROCEDURE glInterleavedArrays (format: GLenum; stride: GLsizei;
+                               pointer: GLvoidStar);
 
 <*EXTERNAL*> 
 PROCEDURE glIsEnabled (cap: GLenum): GLboolean;
 
 <*EXTERNAL*> 
 PROCEDURE glIsList (list: GLuint): GLboolean;
+
+<*EXTERNAL*> 
+PROCEDURE glIsTexture (texture: GLuint): GLboolean;
 
 <*EXTERNAL*> 
 PROCEDURE glLightModelf (pname: GLenum; param: GLfloat);
@@ -1184,6 +1372,9 @@ PROCEDURE glNormal3s (nx, ny, nz: GLshort);
 <*EXTERNAL*> 
 PROCEDURE glNormal3sv (v : UNTRACED REF ARRAY OF GLshort);
 
+<*EXTERNAL*>
+PROCEDURE glNormalPointer(type: GLenum; stride: GLsizei; pointer: GLvoidStar);
+
 <*EXTERNAL*> 
 PROCEDURE glOrtho (left, right, bottom, top, near, far: GLdouble);
 
@@ -1233,13 +1424,23 @@ PROCEDURE glPolygonStipple (mask: UNTRACED REF ARRAY OF GLubyte);
 PROCEDURE glPopAttrib ();
 
 <*EXTERNAL*> 
+PROCEDURE glPopClientAttrib ();
+
+<*EXTERNAL*> 
 PROCEDURE glPopMatrix ();
 
 <*EXTERNAL*> 
 PROCEDURE glPopName ();
 
+<*EXTERNAL*>
+PROCEDURE  glPrioritizeTextures(n: GLsizei; textures: GLuintArrayStar;
+                                priorities: UNTRACED REF ARRAY OF GLclampf);
+
 <*EXTERNAL*> 
 PROCEDURE glPushAttrib (mask: GLbitfield);
+
+<*EXTERNAL*> 
+PROCEDURE glPushClientAttrib (mask: GLbitfield);
 
 <*EXTERNAL*> 
 PROCEDURE glPushMatrix ();
@@ -1484,6 +1685,10 @@ PROCEDURE glTexCoord4s (s, t, r, q: GLshort);
 <*EXTERNAL*>
 PROCEDURE glTexCoord4sv (v: UNTRACED REF ARRAY OF GLshort);
 
+<*EXTERNAL*>
+PROCEDURE glTexCoordPointer (size: GLint; type: GLenum; 
+                             stride: GLsizei; pointer: GLvoidStar);
+
 <*EXTERNAL*> 
 PROCEDURE glTexEnvf (target: GLenum; 
                      pname : GLenum;
@@ -1567,6 +1772,20 @@ PROCEDURE glTexParameteriv (target: GLenum;
                             params: UNTRACED REF ARRAY OF GLint);
   
 <*EXTERNAL*> 
+PROCEDURE glTexSubImage1D (target    : GLenum; 
+                           level, xoffset: GLint; 
+                           width     : GLsizei; 
+                           format, type: GLenum; 
+                           pixels    : GLvoidStar);
+
+<*EXTERNAL*> 
+PROCEDURE glTexSubImage2D (target    : GLenum; 
+                           level, xoffset, yoffset: GLint; 
+                           width, height: GLsizei; 
+                           format, type: GLenum; 
+                           pixels    : GLvoidStar);
+
+<*EXTERNAL*> 
 PROCEDURE glTranslated (x, y, z: GLdouble);
 
 <*EXTERNAL*> 
@@ -1643,6 +1862,10 @@ PROCEDURE glVertex4s (x, y, z, w: GLshort);
 
 <*EXTERNAL*> 
 PROCEDURE glVertex4sv (v: UNTRACED REF ARRAY OF GLshort);
+
+<*EXTERNAL*>
+PROCEDURE glVertexPointer (size: GLint; type: GLenum; 
+                           stride: GLsizei; pointer: GLvoidStar);
 
 <*EXTERNAL*> 
 PROCEDURE glViewport (x, y : GLint; width, height : GLsizei);

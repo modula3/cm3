@@ -32,7 +32,7 @@ TYPE
  *)
 
 <*EXTERNAL gluErrorString:WINAPI*>
-PROCEDURE gluErrorString (errorCode: GL.GLenum): GL.GLubyteStar;
+PROCEDURE gluErrorString (errorCode: GL.GLenum): GL.GLubyteArrayStar;
 
 <*EXTERNAL gluOrtho2D:WINAPI*>
 PROCEDURE gluOrtho2D (left, right, bottom, top: GL.GLdouble);

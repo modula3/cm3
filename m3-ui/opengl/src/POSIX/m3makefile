@@ -12,5 +12,5 @@
 import ("X11R4") 
 
 Interface ("GL")
-Interface ("GLX")
+Module ("GLX")
 Interface ("GLu")
