@@ -548,6 +548,10 @@ extern unsigned int case_values_threshold PARAMS ((void));
 /* Return an rtx for the size in bytes of the value of an expr.  */
 extern rtx expr_size PARAMS ((tree));
 
+/* Return a wide integer for the size in bytes of the value of EXP, or -1
+   if the size can vary or is larger than an integer.  */
+extern HOST_WIDE_INT int_expr_size PARAMS ((tree));
+
 extern rtx lookup_static_chain PARAMS ((tree));
 
 /* Convert a stack slot address ADDR valid in function FNDECL
@@ -607,6 +611,9 @@ extern void set_mem_expr PARAMS ((rtx, tree));
 
 /* Set the offset for MEM to OFFSET.  */
 extern void set_mem_offset PARAMS ((rtx, rtx));
+
+/* Set the size for MEM to SIZE.  */
+extern void set_mem_size PARAMS ((rtx, rtx));
 
 /* Return a memory reference like MEMREF, but with its mode changed
    to MODE and its address changed to ADDR.

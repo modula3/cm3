@@ -156,11 +156,11 @@ such as one option that enables many options, some of which select
 multilibs.  Example nonsensical definition, where @code{-malt-abi},
 @code{-EB}, and @code{-mspoo} cause different multilibs to be chosen:
 
-@example
+@smallexample
 #define TARGET_OPTION_TRANSLATE_TABLE \
 @{ "-fast",   "-march=fast-foo -malt-abi -I/usr/fast-foo" @}, \
 @{ "-compat", "-EB -malign=4 -mspoo" @}
-@end example
+@end smallexample
 
 @findex CPP_SPEC
 @item CPP_SPEC
@@ -1072,9 +1072,11 @@ by the @code{__attribute__ ((aligned (@var{n})))} construct.
 @findex ADJUST_FIELD_ALIGN
 @item ADJUST_FIELD_ALIGN (@var{field}, @var{computed})
 An expression for the alignment of a structure field @var{field} if the
-alignment computed in the usual way is @var{computed}.  GCC uses
-this value instead of the value in @code{BIGGEST_ALIGNMENT} or
-@code{BIGGEST_FIELD_ALIGNMENT}, if defined.
+alignment computed in the usual way (including applying of
+@code{BIGGEST_ALIGNMENT} and @code{BIGGEST_FIELD_ALIGNMENT} to the
+alignment) is @var{computed}.  It overrides alignment only if the
+field alignment has not been set by the
+@code{__attribute__ ((aligned (@var{n})))} construct.
 
 @findex MAX_OFILE_ALIGNMENT
 @item MAX_OFILE_ALIGNMENT
@@ -7420,6 +7422,11 @@ argument @var{name} is the name of an assembler symbol (for use with
 @findex DBX_OUTPUT_RBRAC
 @item DBX_OUTPUT_RBRAC (@var{stream}, @var{name})
 Like @code{DBX_OUTPUT_LBRAC}, but for the end of a scope level.
+
+@findex DBX_OUTPUT_NFUN
+@item DBX_OUTPUT_NFUN (@var{stream}, @var{lscope_label}, @var{decl})
+Define this macro if the target machine requires special handling to
+output an @code{N_FUN} entry for the function @var{decl}.
 
 @findex DBX_OUTPUT_ENUM
 @item DBX_OUTPUT_ENUM (@var{stream}, @var{type})

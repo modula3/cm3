@@ -242,7 +242,7 @@ static int push_secondary_reload PARAMS ((int, rtx, int, int, enum reg_class,
 #endif
 static enum reg_class find_valid_class PARAMS ((enum machine_mode, int,
 						unsigned int));
-static int reload_inner_reg_of_subreg PARAMS ((rtx, enum machine_mode));
+static int reload_inner_reg_of_subreg PARAMS ((rtx, enum machine_mode, int));
 static void push_replacement	PARAMS ((rtx *, int, enum machine_mode));
 static void combine_reloads	PARAMS ((void));
 static int find_reusable_reload	PARAMS ((rtx *, rtx, enum reg_class,
@@ -794,9 +794,10 @@ find_reusable_reload (p_in, out, class, type, opnum, dont_share)
    SUBREG_REG expression.  */
 
 static int
-reload_inner_reg_of_subreg (x, mode)
+reload_inner_reg_of_subreg (x, mode, output)
      rtx x;
      enum machine_mode mode;
+     int output;
 {
   rtx inner;
 
@@ -824,6 +825,7 @@ reload_inner_reg_of_subreg (x, mode)
      word and the number of regs for INNER is not the same as the
      number of words in INNER, then INNER will need reloading.  */
   return (GET_MODE_SIZE (mode) <= UNITS_PER_WORD
+	  && output
 	  && GET_MODE_SIZE (GET_MODE (inner)) > UNITS_PER_WORD
 	  && ((GET_MODE_SIZE (GET_MODE (inner)) / UNITS_PER_WORD)
 	      != HARD_REGNO_NREGS (REGNO (inner), GET_MODE (inner))));
@@ -1047,7 +1049,7 @@ push_reload (in, out, inloc, outloc, class,
   /* Similar issue for (SUBREG constant ...) if it was not handled by the
      code above.  This can happen if SUBREG_BYTE != 0.  */
 
-  if (in != 0 && reload_inner_reg_of_subreg (in, inmode))
+  if (in != 0 && reload_inner_reg_of_subreg (in, inmode, 0))
     {
       enum reg_class in_class = class;
 
@@ -1144,7 +1146,7 @@ push_reload (in, out, inloc, outloc, class,
      However, we must reload the inner reg *as well as* the subreg in
      that case.  In this case, the inner reg is an in-out reload.  */
 
-  if (out != 0 && reload_inner_reg_of_subreg (out, outmode))
+  if (out != 0 && reload_inner_reg_of_subreg (out, outmode, 1))
     {
       /* This relies on the fact that emit_reload_insns outputs the
 	 instructions for output reloads of type RELOAD_OTHER in reverse
@@ -1283,12 +1285,17 @@ push_reload (in, out, inloc, outloc, class,
 	 So add an additional reload.  */
 
 #ifdef SECONDARY_MEMORY_NEEDED
-      /* If a memory location is needed for the copy, make one.  */
-      if (in != 0 && GET_CODE (in) == REG
-	  && REGNO (in) < FIRST_PSEUDO_REGISTER
-	  && SECONDARY_MEMORY_NEEDED (REGNO_REG_CLASS (REGNO (in)),
-				      class, inmode))
-	get_secondary_mem (in, inmode, opnum, type);
+      {
+	int regnum;
+
+	/* If a memory location is needed for the copy, make one.  */
+	if (in != 0
+	    && ((regnum = true_regnum (in)) >= 0)
+	    && regnum < FIRST_PSEUDO_REGISTER
+	    && SECONDARY_MEMORY_NEEDED (REGNO_REG_CLASS (regnum),
+					class, inmode))
+	  get_secondary_mem (in, inmode, opnum, type);
+      }
 #endif
 
       i = n_reloads;
@@ -1314,11 +1321,16 @@ push_reload (in, out, inloc, outloc, class,
       n_reloads++;
 
 #ifdef SECONDARY_MEMORY_NEEDED
-      if (out != 0 && GET_CODE (out) == REG
-	  && REGNO (out) < FIRST_PSEUDO_REGISTER
-	  && SECONDARY_MEMORY_NEEDED (class, REGNO_REG_CLASS (REGNO (out)),
-				      outmode))
-	get_secondary_mem (out, outmode, opnum, type);
+      {
+	int regnum;
+
+	if (out != 0
+	    && ((regnum = true_regnum (out)) >= 0)
+	    && regnum < FIRST_PSEUDO_REGISTER
+	    && SECONDARY_MEMORY_NEEDED (class, REGNO_REG_CLASS (regnum),
+					outmode))
+	  get_secondary_mem (out, outmode, opnum, type);
+      }
 #endif
     }
   else
@@ -1712,7 +1724,8 @@ combine_reloads ()
 		&& ! (GET_CODE (rld[i].in) == REG
 		      && reg_overlap_mentioned_for_reload_p (rld[i].in,
 							     rld[output_reload].out))))
-	&& ! reload_inner_reg_of_subreg (rld[i].in, rld[i].inmode)
+	&& ! reload_inner_reg_of_subreg (rld[i].in, rld[i].inmode,
+					 rld[i].when_needed != RELOAD_FOR_INPUT)
 	&& (reg_class_size[(int) rld[i].class]
 	    || SMALL_REGISTER_CLASSES)
 	/* We will allow making things slightly worse by combining an
@@ -2643,7 +2656,7 @@ find_reloads (insn, replace, ind_levels, live_known, reload_reg_p)
 	;
       else if (constraints[i][0] == 'p')
 	{
-	  find_reloads_address (VOIDmode, (rtx*) 0,
+	  find_reloads_address (recog_data.operand_mode[i], (rtx*) 0,
 				recog_data.operand[i],
 				recog_data.operand_loc[i],
 				i, operand_type[i], ind_levels, insn);
@@ -4414,20 +4427,12 @@ find_reloads_toplev (x, opnum, type, ind_levels, is_set_dest, insn,
 					reg_equiv_constant[regno])) != 0)
 	return tem;
 
-      if (GET_MODE_BITSIZE (GET_MODE (x)) == BITS_PER_WORD
-	  && regno >= FIRST_PSEUDO_REGISTER && reg_renumber[regno] < 0
-	  && reg_equiv_constant[regno] != 0
-	  && (tem = operand_subword (reg_equiv_constant[regno],
-				     SUBREG_BYTE (x) / UNITS_PER_WORD, 0,
-				     GET_MODE (SUBREG_REG (x)))) != 0)
+      if (regno >= FIRST_PSEUDO_REGISTER && reg_renumber[regno] < 0
+	  && reg_equiv_constant[regno] != 0)
 	{
-	  /* TEM is now a word sized constant for the bits from X that
-	     we wanted.  However, TEM may be the wrong representation.
-
-	     Use gen_lowpart_common to convert a CONST_INT into a
-	     CONST_DOUBLE and vice versa as needed according to by the mode
-	     of the SUBREG.  */
-	  tem = gen_lowpart_common (GET_MODE (x), tem);
+	  tem =
+	    simplify_gen_subreg (GET_MODE (x), reg_equiv_constant[regno],
+				 GET_MODE (SUBREG_REG (x)), SUBREG_BYTE (x));
 	  if (!tem)
 	    abort ();
 	  return tem;

@@ -535,7 +535,6 @@ asm_output_aligned_bss (file, decl, name, size, align)
      const char *name;
      int size, align;
 {
-  ASM_GLOBALIZE_LABEL (file, name);
   bss_section ();
   ASM_OUTPUT_ALIGN (file, floor_log2 (align / BITS_PER_UNIT));
 #ifdef ASM_DECLARE_OBJECT_NAME
@@ -1194,6 +1193,8 @@ assemble_start_function (decl, fnname)
 
   /* Tell assembler to move to target machine's alignment for functions.  */
   align = floor_log2 (FUNCTION_BOUNDARY / BITS_PER_UNIT);
+  if (align < force_align_functions_log)
+    align = force_align_functions_log;
   if (align > 0)
     {
       ASM_OUTPUT_ALIGN (asm_out_file, align);

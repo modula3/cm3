@@ -88,10 +88,13 @@ soon as they are no longer needed.
 
 <p>If you want to save additional space during the bootstrap and in
 the final installation as well, you can build the compiler binaries
-without debugging information with <code>make CFLAGS='-O' LIBCFLAGS='-g
--O2' LIBCXXFLAGS='-g -O2 -fno-implicit-templates' bootstrap</code>.  This will save
+without debugging information as in the following example.  This will save
 roughly 40% of disk space both for the bootstrap and the final installation. 
 (Libraries will still contain debugging information.)
+
+<br><pre>     make CFLAGS='-O' LIBCFLAGS='-g -O2' \
+       LIBCXXFLAGS='-g -O2 -fno-implicit-templates' bootstrap
+</pre>
 
 <p>If you wish to use non-default GCC flags when compiling the stage2 and
 stage3 compilers, set <code>BOOT_CFLAGS</code> on the command line when doing
@@ -184,9 +187,9 @@ used to disable building the Ada front end.
 
 <p>Additional build tools (such as <code>gnatmake</code>) or a working GNAT
 run-time library installation are usually <em>not</em> required.  However,
-if you want to boostrap the compiler using a minimal version of GNAT,
+if you want to bootstrap the compiler using a minimal version of GNAT,
 you have to issue the following commands before invoking <code>make
-boostrap</code> (this assumes that you start with an unmodified and consistent
+bootstrap</code> (this assumes that you start with an unmodified and consistent
 source distribution):
 
 <br><pre>    cd <var>srcdir</var>/gcc/ada
@@ -215,7 +218,7 @@ following commands (assuming <code>make</code> is GNU make):
 <p>Currently, when compiling the Ada front end, you cannot use the parallel
 build feature described in the previous section.
 
-<hr>
+<hr />
 <p>
 <a href="./index.html">Return to the GCC Installation page</a>
 
