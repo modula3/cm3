@@ -1,6 +1,6 @@
-MODULE tFFT EXPORTS test;
+MODULE TestFFT EXPORTS Test;
 (*Copyright (c) 1996, m3na project
-Abstract:  Tests for FFT module.
+Abstract:  TestS for FFT module.
 
 3/23/96  Harry George   Initial version
 
@@ -9,38 +9,38 @@ Abstract:  Tests for FFT module.
 IMPORT xFFT;
 (*=======================*)
 CONST
-  Module = "tFFT.";
+  Module = "TestFFT.";
 (*----------------------*)
-PROCEDURE test_ABC():BOOLEAN=
+PROCEDURE TestABC():BOOLEAN=
 CONST
-  ftn = Module & "test_ABC";
+  ftn = Module & "TestABC";
 VAR
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
 
   RETURN result;   
-END test_ABC;
+END TestABC;
 (*----------------------*)
-PROCEDURE test_basic_FFT():BOOLEAN=
+PROCEDURE TestBasic_FFT():BOOLEAN=
 CONST
-  ftn = Module & "test_basic_FFT";
+  ftn = Module & "TestBasic_FFT";
 VAR
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   xFFT.Test();
-  msg("if we got here, FFT is ok\n");
+  Msg("if we got here, FFT is ok\n");
   RETURN result;   
-END test_basic_FFT;
+END TestBasic_FFT;
 (*-------------------------*)
-PROCEDURE test_FFT():BOOLEAN=
-CONST ftn = Module & "test_FFT";
+PROCEDURE TestFFT():BOOLEAN=
+CONST ftn = Module & "TestFFT";
 VAR result:=TRUE;
 BEGIN
-  newline(); EVAL test_basic_FFT();
+  NewLine(); EVAL TestBasic_FFT();
   RETURN result;
-END test_FFT;
+END TestFFT;
 (*=======================*)
 BEGIN
-END tFFT.
+END TestFFT.

@@ -1,6 +1,6 @@
-MODULE tPoly EXPORTS test;
+MODULE TestPoly EXPORTS Test;
 (*Copyright (c) 1996, m3na project
-Abstract:  Tests for Poly module.
+Abstract:  TestS for Poly module.
 
 2/4/96    Harry George   Initial version
 
@@ -11,102 +11,102 @@ FROM xReal64 IMPORT REAL64;
 IMPORT xReal64 AS R, xPoly AS P;
 (*=======================*)
 CONST
-  Module = "tPoly.";
+  Module = "TestPoly.";
 
 (*----------------------*)
-PROCEDURE test_ABC():BOOLEAN=
+PROCEDURE TestABC():BOOLEAN=
 CONST
-  ftn = Module & "test_ABC";
+  ftn = Module & "TestABC";
 VAR
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
 
   RETURN result;   
-END test_ABC;
+END TestABC;
 (*=======================*)
 TYPE
   Poly4 = ARRAY [0..3] OF REAL64;
   Poly5 = ARRAY [0..4] OF REAL64;
 (*-----------------------*)
-PROCEDURE test_add():BOOLEAN=
+PROCEDURE TestAdd():BOOLEAN=
 CONST
-  ftn = Module & "test_add";
+  ftn = Module & "TestAdd";
 VAR
   u:=NEW(P.Poly,5);
   v:=NEW(P.Poly,4);
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   u^:=Poly5{1.0D0,2.0D0,3.0D0,4.0D0,5.0D0};
   v^:=Poly4{0.1D0,0.2D0,0.3D0,0.4D0};
-  msg("u="   & P.fmt(u) & "\n");
-  msg("v="   & P.fmt(v) & "\n");
-  msg("u+v=" & P.fmt(P.add(u,v)) & "\n");          
-  msg("v+u=" & P.fmt(P.add(v,u)) & "\n");          
+  Msg("u="   & P.fmt(u) & "\n");
+  Msg("v="   & P.fmt(v) & "\n");
+  Msg("u+v=" & P.fmt(P.add(u,v)) & "\n");          
+  Msg("v+u=" & P.fmt(P.add(v,u)) & "\n");          
   RETURN result;
-END test_add;
+END TestAdd;
 (*-----------------------*)
-PROCEDURE test_sub():BOOLEAN=
+PROCEDURE TestSub():BOOLEAN=
 CONST
-  ftn = Module & "test_sub";
+  ftn = Module & "TestSub";
 VAR
   u:=NEW(P.Poly,5);
   v:=NEW(P.Poly,4);
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   u^:=Poly5{1.0D0,2.0D0,3.0D0,4.0D0,5.0D0};
   v^:=Poly4{0.1D0,0.2D0,0.3D0,0.4D0};
-  msg("u="   & P.fmt(u) & "\n");
-  msg("v="   & P.fmt(v) & "\n");
-  msg("u-v=" & P.fmt(P.sub(u,v)) & "\n");          
-  msg("v-u=" & P.fmt(P.sub(v,u)) & "\n");          
+  Msg("u="   & P.fmt(u) & "\n");
+  Msg("v="   & P.fmt(v) & "\n");
+  Msg("u-v=" & P.fmt(P.sub(u,v)) & "\n");          
+  Msg("v-u=" & P.fmt(P.sub(v,u)) & "\n");          
   RETURN result;
-END test_sub;
+END TestSub;
 (*-----------------------*)
-PROCEDURE test_mul():BOOLEAN=
+PROCEDURE TestMul():BOOLEAN=
 CONST
-  ftn = Module & "test_mul";
+  ftn = Module & "TestMul";
 VAR
   u:=NEW(P.Poly,5);
   v:=NEW(P.Poly,4);
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   u^:=Poly5{1.0D0,2.0D0,3.0D0,4.0D0,5.0D0};
   v^:=Poly4{0.1D0,0.2D0,0.3D0,0.4D0};
-  msg("u="   & P.fmt(u) & "\n");
-  msg("v="   & P.fmt(v) & "\n");
-  msg("u*v=" & P.fmt(P.mul(u,v)) & "\n");          
-  msg("v*u=" & P.fmt(P.mul(v,u)) & "\n");          
+  Msg("u="   & P.fmt(u) & "\n");
+  Msg("v="   & P.fmt(v) & "\n");
+  Msg("u*v=" & P.fmt(P.mul(u,v)) & "\n");          
+  Msg("v*u=" & P.fmt(P.mul(v,u)) & "\n");          
   RETURN result;
-END test_mul;
+END TestMul;
 (*-----------------------*)
-PROCEDURE test_div():BOOLEAN=
+PROCEDURE TestDiv():BOOLEAN=
 CONST
-  ftn = Module & "test_div";
+  ftn = Module & "TestDiv";
 VAR
   u:=NEW(P.Poly,5);
   v:=NEW(P.Poly,4);
   q,r:P.Poly;
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   u^:=Poly5{1.0D0,2.0D0,3.0D0,4.0D0,5.0D0};
   v^:=Poly4{0.1D0,0.2D0,0.3D0,0.4D0};
-  msg("u="   & P.fmt(u) & "\n");
-  msg("v="   & P.fmt(v) & "\n");
-  msg("u/v="); P.div(u,v,q,r);
-      msg(P.fmt(q) & " rem=" & P.fmt(r) & "\n");          
-  msg("v/u="); P.div(v,u,q,r);
-      msg(P.fmt(q) & " rem=" & P.fmt(r) & "\n");          
+  Msg("u="   & P.fmt(u) & "\n");
+  Msg("v="   & P.fmt(v) & "\n");
+  Msg("u/v="); P.div(u,v,q,r);
+      Msg(P.fmt(q) & " rem=" & P.fmt(r) & "\n");          
+  Msg("v/u="); P.div(v,u,q,r);
+      Msg(P.fmt(q) & " rem=" & P.fmt(r) & "\n");          
   RETURN result;
-END test_div;
+END TestDiv;
 (*-----------------------*)
-PROCEDURE test_deriv():BOOLEAN=
+PROCEDURE TestDeriv():BOOLEAN=
 CONST
-  ftn = Module & "test_deriv";
+  ftn = Module & "TestDeriv";
 VAR
   p:=NEW(P.Poly,5);
   nd:=3;
@@ -114,32 +114,32 @@ VAR
   x:=1.0D0;
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   p^:=Poly5{1.0D0,1.0D0,1.0D0,1.0D0,1.0D0};
-  msg("p="   & P.fmt(p) & "\n");
+  Msg("p="   & P.fmt(p) & "\n");
   FOR j:=1 TO 5 DO
     x:=FLOAT(j,REAL64);
-    msg("x=" & R.fmt(x));
+    Msg("x=" & R.fmt(x));
     P.deriv(p,x,pd,nd);
     FOR i:=0 TO nd DO
-      msg(" d"& Fmt.Int(i) & "=" & R.fmt(pd[i]));
+      Msg(" d"& Fmt.Int(i) & "=" & R.fmt(pd[i]));
     END;
-    msg("\n");
+    Msg("\n");
   END;
   RETURN result;
-END test_deriv;
+END TestDeriv;
 (*-------------------------*)
-PROCEDURE test_Poly():BOOLEAN=
-CONST ftn = Module & "test_oly";
+PROCEDURE TestPoly():BOOLEAN=
+CONST ftn = Module & "Testoly";
 VAR result:=TRUE;
 BEGIN
-  newline(); EVAL test_add();
-  newline(); EVAL test_sub();
-  newline(); EVAL test_mul();
-  newline(); EVAL test_div();
-  newline(); EVAL test_deriv();
+  NewLine(); EVAL TestAdd();
+  NewLine(); EVAL TestSub();
+  NewLine(); EVAL TestMul();
+  NewLine(); EVAL TestDiv();
+  NewLine(); EVAL TestDeriv();
   RETURN result;
-END test_Poly;
+END TestPoly;
 (*=======================*)
 BEGIN
-END tPoly.
+END TestPoly.

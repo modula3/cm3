@@ -1,4 +1,4 @@
-MODULE test EXPORTS test,Main;
+MODULE Test EXPORTS Test,Main;
 (*Copyright (c) 1996, 
 Abstract: Test driver for m3na library.
 
@@ -11,55 +11,55 @@ FROM xReal64 IMPORT REAL64,EPS;
 (*=======================*)
 <*UNUSED*> CONST Module = "Test.";
 (*-----------------*)
-PROCEDURE msg(str:TEXT) =
+PROCEDURE Msg(str:TEXT) =
 BEGIN
   Wr.PutText(Stdio.stdout,str);
   Wr.Flush(Stdio.stdout);
-END msg;
+END Msg;
 (*-----------------*)
-PROCEDURE debug(level:[0..3]; ftn,str:TEXT) =
+PROCEDURE Debug(level:[0..3]; ftn,str:TEXT) =
 BEGIN
   IF verbosity >= level THEN
-    (*debugging levels*)
+    (*Debugging levels*)
     Wr.PutText(Stdio.stdout,ftn & ":" & str);
     Wr.Flush(Stdio.stdout);
   END;
-END debug;
+END Debug;
 (*---------------------*)
-PROCEDURE verify(ftn,str:TEXT;
+PROCEDURE Verify(ftn,str:TEXT;
                  expected,found:REAL64;
                  eps:REAL64:=EPS 
                  ):BOOLEAN=
 BEGIN
   IF ABS(expected-found)<eps THEN
-    msg(ftn & ":" & str & ":passed\n");
+    Msg(ftn & ":" & str & ":passed\n");
     RETURN TRUE;
   ELSE
-    msg(ftn & ":" & str & ":failed\n");
+    Msg(ftn & ":" & str & ":failed\n");
     RETURN FALSE;
   END;
-END verify;  
+END Verify;  
 (*---------------------*)
-PROCEDURE newline()=
+PROCEDURE NewLine()=
 BEGIN
-  msg("\n");
-END newline;
+  Msg("\n");
+END NewLine;
 (*=====================================*)
 
 (*=======================*)
 BEGIN
-  newline(); EVAL test_WordEx();
-  (*newline(); EVAL test_Bits();*)
-  (*newline(); EVAL test_Integer();*)
-  (*newline(); EVAL test_Real64();*)
-  (*newline(); EVAL test_Cmplx();*)
-  (*newline(); EVAL test_Vect();*)
-  (*newline(); EVAL test_Mat();*)
-  (*newline(); EVAL test_Poly();*)
-  (*newline(); EVAL test_Root();*)
-  (*newline(); EVAL test_Interp();*)
-  (*newline(); EVAL test_SLE();*)
-  (*newline(); EVAL test_Rand();*)
-  (*newline(); EVAL test_FFT();*)
-  newline(); EVAL test_BigInteger();
-END test.
+  NewLine(); EVAL TestWordEx();
+  (*NewLine(); EVAL TestBits();*)
+  (*NewLine(); EVAL TestInteger();*)
+  (*NewLine(); EVAL TestReal64();*)
+  (*NewLine(); EVAL TestCmplx();*)
+  (*NewLine(); EVAL TestVect();*)
+  (*NewLine(); EVAL TestMat();*)
+  (*NewLine(); EVAL TestPoly();*)
+  (*NewLine(); EVAL TestRoot();*)
+  (*NewLine(); EVAL TestInterp();*)
+  (*NewLine(); EVAL TestSLE();*)
+  (*NewLine(); EVAL TestRand();*)
+  (*NewLine(); EVAL TestFFT();*)
+  NewLine(); EVAL TestBigInteger();
+END Test.

@@ -1,6 +1,6 @@
-MODULE tInteger EXPORTS test;
+MODULE TestInteger EXPORTS Test;
 (*Copyright (c) 1996, m3na project
-Abstract:  Tests for Integer module.
+Abstract:  TestS for Integer module.
 
 3/6/96    Harry George   Initial version
 
@@ -10,99 +10,99 @@ IMPORT xInteger AS I,
        xReal64  AS R;
 (*=======================*)
 CONST
-  Module = "tInteger.";
+  Module = "TestInteger.";
 (*----------------------*)
-PROCEDURE test_ABC():BOOLEAN=
+PROCEDURE TestABC():BOOLEAN=
 CONST
-  ftn = Module & "test_ABC";
+  ftn = Module & "TestABC";
 VAR
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
 
   RETURN result;   
-END test_ABC;
+END TestABC;
 (*----------------------*)
-PROCEDURE test_sqrt():BOOLEAN=
+PROCEDURE TestSqrt():BOOLEAN=
 CONST
-  ftn = Module & "test_sqrt";
+  ftn = Module & "TestSqrt";
 VAR
   result:=TRUE;
   ii,iisqrt:I.Card32;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   FOR i:=0 TO 10 DO
     ii:=i*i; iisqrt:=I.sqrt(ii);
-    msg("sqrt(" & I.fmt(ii)& ")="
+    Msg("sqrt(" & I.fmt(ii)& ")="
        & I.fmt(i) & "=" & I.fmt(iisqrt)
        & "\n");
   END;
 
   FOR i:=1111 TO 31000  BY 4321 DO
     ii:=i*i; iisqrt:=I.sqrt(ii);
-    msg("sqrt(" & I.fmt(ii)& ")="
+    Msg("sqrt(" & I.fmt(ii)& ")="
        & I.fmt(i) & "=" & I.fmt(iisqrt)
        & "\n");
   END;
   RETURN result;   
-END test_sqrt;
+END TestSqrt;
 (*----------------------*)
-PROCEDURE test_gcd():BOOLEAN=
+PROCEDURE TestGcd():BOOLEAN=
 CONST
-  ftn = Module & "test_gcd";
+  ftn = Module & "TestGcd";
 VAR
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   FOR i:=0 TO 100 BY 7 DO
     FOR j:=0 TO 100 BY 13 DO
-      msg("gcd(" & I.fmt(i) & "," & I.fmt(j) & ")="
+      Msg("gcd(" & I.fmt(i) & "," & I.fmt(j) & ")="
         & I.fmt(I.gcd(i,j))
         & "\n");
     END;
   END;
   RETURN result;   
-END test_gcd;
+END TestGcd;
 (*----------------------*)
-PROCEDURE test_isprime():BOOLEAN=
+PROCEDURE TestIsprime():BOOLEAN=
 CONST
-  ftn = Module & "test_isprime";
+  ftn = Module & "TestIsprime";
 VAR
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   FOR i:=46500 TO 47500  DO
     IF I.isprime(i) THEN
-      msg(" " & I.fmt(i));
+      Msg(" " & I.fmt(i));
     END;
   END;
-  msg("\n");
+  Msg("\n");
   RETURN result;   
-END test_isprime;
+END TestIsprime;
 (*----------------------*)
-PROCEDURE test_factor():BOOLEAN=
+PROCEDURE TestFactor():BOOLEAN=
 CONST
-  ftn = Module & "test_factor";
+  ftn = Module & "TestFactor";
 VAR
   result:=TRUE;
   p,m:I.Array;
   count:CARDINAL;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   FOR i:=1111 TO 100000 BY 4321 DO
-    msg(I.fmt(i) & ": ");
+    Msg(I.fmt(i) & ": ");
     count:=I.factor(i,p,m);
     FOR j:=0 TO count-1 DO
-      msg(I.fmt(p[j]) & "^" & I.fmt(m[j]) & " ");
+      Msg(I.fmt(p[j]) & "^" & I.fmt(m[j]) & " ");
     END;
-    msg("\n");
+    Msg("\n");
   END; 
   RETURN result;   
-END test_factor;
+END TestFactor;
 (*----------------------*)
-PROCEDURE test_cordic():BOOLEAN=
+PROCEDURE TestCordic():BOOLEAN=
 CONST
-  ftn = Module & "test_cordic";
+  ftn = Module & "TestCordic";
   n=10;
 VAR
   result:=TRUE;
@@ -111,13 +111,13 @@ VAR
   theta:I.Cordic;
   s,c:INTEGER;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   rad:=R.Zero;
   FOR i:=1 TO n DO
     rad:=rad+step;
     truesin:=R.sin(rad);
     truecos:=R.cos(rad);
-    msg("truecos=" & R.fmt(truecos)
+    Msg("truecos=" & R.fmt(truecos)
       &" truesin=" & R.fmt(truesin) & "\n");
 
     theta:=ROUND(rad*I.RadToCordic);
@@ -125,24 +125,24 @@ BEGIN
     I.sin_cos(theta:=theta,s:=s,c:=c);
     calcsin:=FLOAT(s,R.T)*I.CordicToReal;
     calccos:=FLOAT(c,R.T)*I.CordicToReal;
-    msg("calccos=" & R.fmt(calccos)
+    Msg("calccos=" & R.fmt(calccos)
       &" calcsin=" & R.fmt(calcsin) & "\n\n");
   END;
   RETURN result;   
-END test_cordic;
+END TestCordic;
 (*-------------------------*)
-PROCEDURE test_Integer():BOOLEAN=
-CONST ftn = Module & "test_Integer";
+PROCEDURE TestInteger():BOOLEAN=
+CONST ftn = Module & "TestInteger";
 VAR result:=TRUE;
 BEGIN
-  newline(); EVAL test_factor();
-  newline(); EVAL test_gcd();
-  newline(); EVAL test_isprime();
-  newline(); EVAL test_sqrt();
-  newline(); EVAL test_cordic();
+  NewLine(); EVAL TestFactor();
+  NewLine(); EVAL TestGcd();
+  NewLine(); EVAL TestIsprime();
+  NewLine(); EVAL TestSqrt();
+  NewLine(); EVAL TestCordic();
 
   RETURN result;
-END test_Integer;
+END TestInteger;
 (*=======================*)
 BEGIN
-END tInteger.
+END TestInteger.

@@ -1,6 +1,6 @@
-MODULE tMat EXPORTS test;
+MODULE TestMat EXPORTS Test;
 (*Copyright (c) 1996, m3na project
-Abstract:  Tests for xMat module.
+Abstract:  TestS for xMat module.
 
 1/1/96    <name>   Initial version
 
@@ -11,23 +11,23 @@ FROM xReal64 IMPORT REAL64;
 
 (*=======================*)
 CONST
-  Module = "tMat.";
+  Module = "TestMat.";
 
 (*----------------------*)
-PROCEDURE test_ABC():BOOLEAN=
+PROCEDURE TestABC():BOOLEAN=
 CONST
-  ftn = Module & "test_ABC";
+  ftn = Module & "TestABC";
 VAR
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
 
   RETURN result;   
-END test_ABC;
+END TestABC;
 (*----------------------*)
-PROCEDURE test_matrix():BOOLEAN=
+PROCEDURE TestMatrix():BOOLEAN=
 CONST
-  ftn = Module & "test_matrix";
+  ftn = Module & "TestMatrix";
   m=3; n=3;
   v3=ARRAY [0..2] OF REAL64 {1.0D0,2.0D0,3.0D0};
 VAR
@@ -36,33 +36,33 @@ VAR
   m2:M.Matrix;
   b:=V.new(n);
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
 
   m1[0]:=v3; m1[1]:=v3; m1[2]:=v3;
-  msg("m1=\n" & M.fmt(m1) & "\n");
+  Msg("m1=\n" & M.fmt(m1) & "\n");
 
   m2:=M.copy(m1);
-  msg("m2:=copy(m1)=\n" & M.fmt(m2) & "\n");
+  Msg("m2:=copy(m1)=\n" & M.fmt(m2) & "\n");
 
   b^:=v3;  b:=M.mulV(m1,b);
-  msg("m1*v3=\n" & V.fmt(b) & "\n");
+  Msg("m1*v3=\n" & V.fmt(b) & "\n");
 
-  msg("m1+m2=\n" & M.fmt(M.add(m1,m2)) & "\n");
-  msg("m1-m2=\n" & M.fmt(M.sub(m1,m2)) & "\n");
-  msg("m1*m2=\n" & M.fmt(M.mul(m1,m2)) & "\n");
+  Msg("m1+m2=\n" & M.fmt(M.add(m1,m2)) & "\n");
+  Msg("m1-m2=\n" & M.fmt(M.sub(m1,m2)) & "\n");
+  Msg("m1*m2=\n" & M.fmt(M.mul(m1,m2)) & "\n");
 
-  msg("m1^T=\n" & M.fmt(M.transpose(m1)) & "\n");
+  Msg("m1^T=\n" & M.fmt(M.transpose(m1)) & "\n");
 
   RETURN result;   
-END test_matrix;
+END TestMatrix;
 (*-------------------------*)
-PROCEDURE test_Mat():BOOLEAN=
-CONST ftn = Module & "test_Mat";
+PROCEDURE TestMat():BOOLEAN=
+CONST ftn = Module & "TestMat";
 VAR result:=TRUE;
 BEGIN
-  newline(); EVAL test_matrix();
+  NewLine(); EVAL TestMatrix();
   RETURN result;
-END test_Mat;
+END TestMat;
 (*=======================*)
 BEGIN
-END tMat.
+END TestMat.

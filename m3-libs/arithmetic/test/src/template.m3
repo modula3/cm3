@@ -1,6 +1,6 @@
-MODULE tXYZ EXPORTS test;
+MODULE TestXYZ EXPORTS Test;
 (*Copyright (c) 1996, m3na project
-Abstract:  Tests for XYZ module.
+Abstract:  TestS for XYZ module.
 
 1/1/96    <name>   Initial version
 
@@ -9,26 +9,26 @@ Abstract:  Tests for XYZ module.
 
 (*=======================*)
 CONST
-  Module = "tXYZ.";
+  Module = "TestXYZ.";
 (*----------------------*)
-PROCEDURE test_ABC():BOOLEAN=
+PROCEDURE TestABC():BOOLEAN=
 CONST
-  ftn = Module & "test_ABC";
+  ftn = Module & "TestABC";
 VAR
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
 
   RETURN result;   
-END test_ABC;
+END TestABC;
 (*-------------------------*)
-PROCEDURE test_XYZ():BOOLEAN=
-CONST ftn = Module & "test_XYZ";
+PROCEDURE TestXYZ():BOOLEAN=
+CONST ftn = Module & "TestXYZ";
 VAR result:=TRUE;
 BEGIN
-  newline(); EVAL test_ABC();
+  NewLine(); EVAL TestABC();
   RETURN result;
-END test_XYZ;
+END TestXYZ;
 (*=======================*)
 BEGIN
-END tXYZ.
+END TestXYZ.

@@ -1,4 +1,4 @@
-MODULE tRoot EXPORTS test;
+MODULE TestRoot EXPORTS Test;
 (*Copyright (c) 1996, Harry George
 Abstract: Test driver for Modula-3 rendition of
           Numerical Recipes in C, 1992.
@@ -13,18 +13,18 @@ FROM xReal64 IMPORT REAL64,Array,Ftn;
 IMPORT xRoot;
 (*=======================*)
 CONST
-  Module = "tRoot.";
+  Module = "TestRoot.";
 (*----------------------*)
-PROCEDURE test_ABC():BOOLEAN=
+PROCEDURE TestABC():BOOLEAN=
 CONST
-  ftn = Module & "test_ABC";
+  ftn = Module & "TestABC";
 VAR
   result:=TRUE;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
 
   RETURN result;   
-END test_ABC;
+END TestABC;
 (*---------------------*)
 VAR (*globally visible*)
   r1:=-10.0D0; r2:=2.0D0; r3:=10.0D0;
@@ -45,17 +45,17 @@ END myfun2;
 (* Quadratics              *)
 (*=========================*)
 (*-----------------------*)
-PROCEDURE test_quadreal():BOOLEAN=
+PROCEDURE TestQuadreal():BOOLEAN=
 CONST
-  ftn = Module & "test_quadreal";
+  ftn = Module & "TestQuadreal";
 VAR
   result:=TRUE;
   alpha,beta,x1,x2:C.COMPLEX;
   a,b,c:REAL64;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   a:=1.0D0; b:=2.0D0; c:=-3.0D0;
-  msg("Solve a*x^2+b*x+c=0 for"
+  Msg("Solve a*x^2+b*x+c=0 for"
     & "\na=" & R.fmt(a)
     & "\nb=" & R.fmt(b)
     & "\nc=" & R.fmt(c)
@@ -63,29 +63,29 @@ BEGIN
     
   xRoot.quadreal(a,b,c,alpha,beta,x1,x2);
   
-  msg("alpha=" & C.fmt(alpha)
+  Msg("alpha=" & C.fmt(alpha)
    & " beta=" & C.fmt(beta)
    & "\n");
-  msg("x1=" & C.fmt(x1)
+  Msg("x1=" & C.fmt(x1)
    & " x2=" & C.fmt(x2)
    & "\n");
 
   RETURN result;
-END test_quadreal;
+END TestQuadreal;
 (*-----------------------*)
-PROCEDURE test_quadcmplx():BOOLEAN=
+PROCEDURE TestQuadcmplx():BOOLEAN=
 CONST
-  ftn = Module & "test_cmplx";
+  ftn = Module & "TestCmplx";
 VAR
   result:=TRUE;
   alpha,beta,x1,x2:C.COMPLEX;
   a,b,c:C.COMPLEX;
 BEGIN
-  debug(1,ftn,"begin\n");
+  Debug(1,ftn,"begin\n");
   a:=C.COMPLEX{re:=1.0D0,im:=1.0D0};
   b:=C.COMPLEX{re:=2.0D0,im:=2.0D0};
   c:=C.COMPLEX{re:=3.0D0,im:=3.0D0};
-  msg("Solve a*x^2+b*x+c=0 for"
+  Msg("Solve a*x^2+b*x+c=0 for"
     & "\na=" & C.fmt(a)
     & "\nb=" & C.fmt(b)
     & "\nc=" & C.fmt(c)
@@ -93,55 +93,55 @@ BEGIN
     
   xRoot.quadcmpx(a,b,c,alpha,beta,x1,x2);
   
-  msg("alpha=" & C.fmt(alpha)
+  Msg("alpha=" & C.fmt(alpha)
    & " beta=" & C.fmt(beta)
    & "\n");
-  msg("x1=" & C.fmt(x1)
+  Msg("x1=" & C.fmt(x1)
    & " x2=" & C.fmt(x2)
    & "\n");
       
   RETURN result;
-END test_quadcmplx;
+END TestQuadcmplx;
 
 (*=========================*)
 (* NonLinears              *)
 (*=========================*)
 (*----------------------*)
-PROCEDURE test_bracket_out():BOOLEAN=
+PROCEDURE TestBracket_out():BOOLEAN=
 CONST
-  ftn = Module & "test_bracket_out";
+  ftn = Module & "TestBracket_out";
   maxiter=10;
 VAR
   result:=TRUE;
   x1,x2:REAL64;  
 BEGIN
-  debug(1,ftn,"begin\n");
-  msg("true roots: r1=" & R.fmt(r1)
+  Debug(1,ftn,"begin\n");
+  Msg("true roots: r1=" & R.fmt(r1)
                & " r2=" & R.fmt(r2)
                & " r3=" & R.fmt(r3) 
                & " maxiter=" & Fmt.Int(maxiter)
                & "\n");
   FOR i:=1 TO 50 DO
     x1:=5.0D0*FLOAT(i,REAL64)-50.0D0; x2:=x1+1.0D0;
-    msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
+    Msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
               & " x2=" & R.fmt(x2,style:=Fmt.Style.Fix,prec:=3));
     TRY
       IF xRoot.bracket_out(myfun,x1,x2,maxiter:=maxiter) THEN
-         msg(" end at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
+         Msg(" end at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
                   & " x2=" & R.fmt(x2,style:=Fmt.Style.Fix,prec:=3) 
                   & "\n");
-      ELSE msg(" not found\n");
+      ELSE Msg(" not found\n");
       END;
     EXCEPT
     | Error(code) => 
     END;
   END;  
   RETURN result;   
-END test_bracket_out;
+END TestBracket_out;
 (*----------------------*)
-PROCEDURE test_bracket_in():BOOLEAN=
+PROCEDURE TestBracket_in():BOOLEAN=
 CONST
-  ftn = Module & "test_bracket_in";
+  ftn = Module & "TestBracket_in";
 VAR
   result:=TRUE;
   x1,x2:REAL64;
@@ -150,72 +150,72 @@ VAR
   xb2:=NEW(Array,nb);
   n,nbtmp:CARDINAL;  
 BEGIN
-  debug(1,ftn,"begin\n");
-  msg("true roots: r1=" & R.fmt(r1)
+  Debug(1,ftn,"begin\n");
+  Msg("true roots: r1=" & R.fmt(r1)
                & " r2=" & R.fmt(r2)
                & " r3=" & R.fmt(r3) 
                & "\n");
   x1:=-50.0D0; x2:=+50.0D0;
-  msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
+  Msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
             & " x2=" & R.fmt(x2,style:=Fmt.Style.Fix,prec:=3)
             & " nb=" & Fmt.Int(nb)
             & "\n");
   FOR i:=10 TO 100 BY 10 DO
-    n:=i; msg("n=" & Fmt.Int(n) & "\n");
+    n:=i; Msg("n=" & Fmt.Int(n) & "\n");
     nbtmp:=nb; (*so we don't overwrite nb*)
     TRY
       IF xRoot.bracket_in(func:=myfun,x1:=x1,x2:=x2,n:=n,
       xb1:=xb1,xb2:=xb2,nb:=nbtmp) THEN
          FOR j:=0 TO nbtmp-1 DO
-         msg(" found  x1=" & R.fmt(xb1[j],style:=Fmt.Style.Fix,prec:=3) 
+         Msg(" found  x1=" & R.fmt(xb1[j],style:=Fmt.Style.Fix,prec:=3) 
                   & " x2=" & R.fmt(xb2[j],style:=Fmt.Style.Fix,prec:=3) 
                   & "\n");
          END;
-      ELSE msg(" not found\n");
+      ELSE Msg(" not found\n");
       END;
     EXCEPT
     | Error(code) => 
     END;
   END;  
   RETURN result;   
-END test_bracket_in;
+END TestBracket_in;
 (*----------------------*)
-PROCEDURE test_bisect():BOOLEAN=
+PROCEDURE TestBisect():BOOLEAN=
 CONST
-  ftn = Module & "test_bisect";
+  ftn = Module & "TestBisect";
 VAR
   result:=TRUE;
   x1,x2,tol,root:REAL64;
 BEGIN
-  debug(1,ftn,"begin\n");
-  msg("true roots: r1=" & R.fmt(r1)
+  Debug(1,ftn,"begin\n");
+  Msg("true roots: r1=" & R.fmt(r1)
                & " r2=" & R.fmt(r2)
                & " r3=" & R.fmt(r3) 
                & "\n");
   x1:=-1.0D0; x2:=2.9D0; tol:=0.001D0;
-  msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
+  Msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
             & " x2=" & R.fmt(x2,style:=Fmt.Style.Fix,prec:=3)
             & " tol=" & R.fmt(tol));
   root:=xRoot.bisect(myfun,x1,x2,tol);
-  msg(" found  root=" & R.fmt(root,style:=Fmt.Style.Fix,prec:=3) 
+  Msg(" found  root=" & R.fmt(root,style:=Fmt.Style.Fix,prec:=3) 
     & "\n");
   RETURN result;   
-END test_bisect;
+END TestBisect;
 (*----------------------*)
-PROCEDURE test_brent():BOOLEAN=
+PROCEDURE TestBrent():BOOLEAN=
 CONST
-  ftn = Module & "test_brent";
+  ftn = Module & "TestBrent";
 VAR
   result:=TRUE;
   x1,x2,tol,root:REAL64;
 BEGIN
-  debug(1,ftn,"begin\n");
-  msg("true roots: r1=" & R.fmt(r1)
+  Debug(1,ftn,"begin\n");
+  Msg("true roots: r1=" & R.fmt(r1)
                & " r2=" & R.fmt(r2)
                & " r3=" & R.fmt(r3) 
                & "\n");
   x1:=-12.0D0; x2:=1.0D0; tol:=0.001D0;
-  msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
+  Msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
             & " x2=" & R.fmt(x2,style:=Fmt.Style.Fix,prec:=3)
             & " tol=" & R.fmt(tol));
   TRY
@@ -223,66 +223,66 @@ BEGIN
   EXCEPT
   | Error(code) =>
   ELSE
-    msg("other error\n");
+    Msg("other error\n");
   END;
-  msg(" found  root=" & R.fmt(root,style:=Fmt.Style.Fix,prec:=3) 
+  Msg(" found  root=" & R.fmt(root,style:=Fmt.Style.Fix,prec:=3) 
     & "\n");
   RETURN result;   
-END test_brent;
+END TestBrent;
 (*----------------------*)
-PROCEDURE test_newtraph():BOOLEAN=
+PROCEDURE TestNewtraph():BOOLEAN=
 CONST
-  ftn = Module & "test_newtraph";
+  ftn = Module & "TestNewtraph";
 VAR
   result:=TRUE;
   x1,x2,tol,root:REAL64;
   maxiter:CARDINAL;
 BEGIN
-  debug(1,ftn,"begin\n");
-  msg("true roots: r1=" & R.fmt(r1)
+  Debug(1,ftn,"begin\n");
+  Msg("true roots: r1=" & R.fmt(r1)
                & " r2=" & R.fmt(r2)
                & " r3=" & R.fmt(r3) 
                & "\n");
   x1:=6.0D0; x2:=5.0D0; tol:=0.001D0; maxiter:=15;
 FOR i:=0 TO 10 DO
   x2:=x2+1.1D0; 
-  msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
+  Msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
             & " x2=" & R.fmt(x2,style:=Fmt.Style.Fix,prec:=3)
             & " tol=" & R.fmt(tol)
             & " maxiter=" & Fmt.Int(maxiter));
   TRY
     root:=xRoot.newtraph(myfun2,x1,x2,tol,maxiter);
-    msg(" found  root=" & R.fmt(root,style:=Fmt.Style.Fix,prec:=5) 
+    Msg(" found  root=" & R.fmt(root,style:=Fmt.Style.Fix,prec:=5) 
       & "\n");
   EXCEPT
   | Error(code) => CASE code OF
-                      | Err.not_bracketed=>msg(" not bracketed\n");
-                      | Err.out_of_range=>msg(" jumped out\n");
-                      | Err.not_converging=>msg(" not converging\n");
+                      | Err.not_bracketed=>Msg(" not bracketed\n");
+                      | Err.out_of_range=>Msg(" jumped out\n");
+                      | Err.not_converging=>Msg(" not converging\n");
                       END;
   ELSE
-    msg(" other error\n");
+    Msg(" other error\n");
   END;
 END;
   RETURN result;   
-END test_newtraph;
+END TestNewtraph;
 
 
 
 (****************************
 (*----------------------*)
 
-PROCEDURE test_laguer():BOOLEAN=
+PROCEDURE TestLaguer():BOOLEAN=
 CONST
-  ftn = Module & "test_laguer";
+  ftn = Module & "TestLaguer";
   n=4; m=n-1;
 VAR
   result:=TRUE;
   p:=NEW(na.cVector,n);
   x:C.COMPLEX;
 BEGIN
-  debug(1,ftn,"begin\n");
-  msg("true roots: r1=" & R.fmt(r1)
+  Debug(1,ftn,"begin\n");
+  Msg("true roots: r1=" & R.fmt(r1)
                & " r2=" & R.fmt(r2)
                & " r3=" & R.fmt(r3) 
                & "\n");
@@ -291,35 +291,35 @@ BEGIN
        C.COMPLEX(-2.0,0.0),  C.COMPLEX(1.0,0.0)};
 FOR i:=0 TO 10 DO
   x:=C.COMPLEX(FLOAT(i,REAL64),0.5);
-  msg("start at x=" & C.fmt(x,style:=Fmt.Style.Fix,prec:=3)); 
+  Msg("start at x=" & C.fmt(x,style:=Fmt.Style.Fix,prec:=3)); 
   TRY
     na.laguer(p,m,x);
-    msg(" found x=" & C.fmt(x,style:=Fmt.Style.Fix,prec:=5) 
+    Msg(" found x=" & C.fmt(x,style:=Fmt.Style.Fix,prec:=5) 
       & "\n");
   EXCEPT
   | Error(code) => CASE code OF
-                      | Err.divide_by_zero=>msg(" divide by zero\n");
-                      | Err.out_of_range=>msg(" jumped out\n");
-                      | Err.not_converging=>msg(" not converging\n");
+                      | Err.divide_by_zero=>Msg(" divide by zero\n");
+                      | Err.out_of_range=>Msg(" jumped out\n");
+                      | Err.not_converging=>Msg(" not converging\n");
                       END;
   ELSE
-    msg(" other error\n");
+    Msg(" other error\n");
   END;
 END;
   RETURN result;   
-END test_laguer;
+END TestLaguer;
 (*----------------------*)
-PROCEDURE test_zroots():BOOLEAN=
+PROCEDURE TestZRoots():BOOLEAN=
 CONST
-  ftn = Module & "test_zroots";
+  ftn = Module & "TestZRoots";
   n=4; m=n-1;
 VAR
   result:=TRUE;
   p:=NEW(na.cVector,n);
   roots:na.cVector;
 BEGIN
-  debug(1,ftn,"begin\n");
-  msg("true roots: r1=" & R.fmt(r1)
+  Debug(1,ftn,"begin\n");
+  Msg("true roots: r1=" & R.fmt(r1)
                & " r2=" & R.fmt(r2)
                & " r3=" & R.fmt(r3) 
                & "\n");
@@ -328,45 +328,45 @@ BEGIN
        C.COMPLEX(-2.0,0.0),  C.COMPLEX(1.0,0.0)};
   TRY
     na.zroots(p,roots,polish:=FALSE);
-    msg("\n     raw roots:");
+    Msg("\n     raw roots:");
     FOR i:=0 TO m-1 DO
-      msg(" root[" & Fmt.Int(i) & "]="
+      Msg(" root[" & Fmt.Int(i) & "]="
         & na.Ctext(roots[i],prec:=4));
     END;
     na.zroots(p,roots,polish:=TRUE);
-    msg("\npolished roots:");
+    Msg("\npolished roots:");
     FOR i:=0 TO m-1 DO
-      msg(" root[" & Fmt.Int(i) & "]="
+      Msg(" root[" & Fmt.Int(i) & "]="
         & na.Ctext(roots[i],prec:=4));
     END;
   EXCEPT
   | Error(code) => CASE code OF
-                      | Err.divide_by_zero=>msg(" divide by zero\n");
-                      | Err.out_of_range=>msg(" jumped out\n");
-                      | Err.not_converging=>msg(" not converging\n");
+                      | Err.divide_by_zero=>Msg(" divide by zero\n");
+                      | Err.out_of_range=>Msg(" jumped out\n");
+                      | Err.not_converging=>Msg(" not converging\n");
                       END;
   ELSE
-    msg(" other error\n");
+    Msg(" other error\n");
   END;
 
   RETURN result;   
-END test_zroots;
+END TestZRoots;
 ******************************)
 (*-------------------------*)
-PROCEDURE test_Root():BOOLEAN=
-CONST ftn = Module & "test_ch09_root";
+PROCEDURE TestRoot():BOOLEAN=
+CONST ftn = Module & "TestCh09_root";
 VAR result:=TRUE;
 BEGIN
-  newline(); EVAL test_quadreal();
-  newline(); EVAL test_quadcmplx();
-  (*newline(); EVAL test_bracket_out();*)
-  (*newline(); EVAL test_bracket_in();*)
-  (*newline(); EVAL test_bisect();*)
-  (*newline(); EVAL test_brent();*)
-  (*newline(); EVAL test_newtraph();*)
+  NewLine(); EVAL TestQuadreal();
+  NewLine(); EVAL TestQuadcmplx();
+  (*NewLine(); EVAL TestBracket_out();*)
+  (*NewLine(); EVAL TestBracket_in();*)
+  (*NewLine(); EVAL TestBisect();*)
+  (*NewLine(); EVAL TestBrent();*)
+  (*NewLine(); EVAL TestNewtraph();*)
 
   RETURN result;
-END test_Root;
+END TestRoot;
 (*=======================*)
 BEGIN
-END tRoot.
+END TestRoot.
