@@ -8,12 +8,9 @@ Abstract: Special Functions
 
 *)
 FROM xUtils IMPORT Error,Err;
-FROM LongRealTrans IMPORT Zero, Half, One, Two, Tiny, Exp, Ln;
+FROM LongRealTrans IMPORT Zero, Half, One, Two, Eps, Tiny, Exp, Ln;
 
 CONST Module = "xSpecFtn.";
-
-CONST
-  Eps = 1.0D-15;  (*ca. 2^-53*)
 
 (*==========================*)
 PROCEDURE Factorial(n:CARDINAL):T=
@@ -100,7 +97,7 @@ END LnGamma;
 (*--------------------*)
 PROCEDURE Binomial(n,k:CARDINAL):T RAISES {Error}=
 (*returns Binomial coefficient for "n over k"*)
-CONST ftn = Module & "Binomial";
+<*UNUSED*> CONST ftn = Module & "Binomial";
 VAR z:T;
 BEGIN
   IF k>n THEN
@@ -113,7 +110,7 @@ END Binomial;
 (*-------------------*)
 PROCEDURE GammaP(a,x:T):T RAISES {Error}=
 (*returns incomplete Gamma P(a,x)=Gamma(a,x)/Gamma(a)*)
-CONST ftn = Module & "GammaP";
+<*UNUSED*> CONST ftn = Module & "GammaP";
 VAR
   factor:=Exp(-LnGamma(a)-x+a*Ln(x));
 BEGIN
@@ -132,7 +129,7 @@ END GammaP;
 PROCEDURE GammaQ(a,x:T):T RAISES {Error}=
 (*returns incomplete Gamma Q(a,x)=Gamma(a,x)/Gamma(a)*)
 (*also, Q(a,x)=1-P(a,x) *)
-CONST ftn = Module & "GammaQ";
+<*UNUSED*> CONST ftn = Module & "GammaQ";
 VAR
   factor:=Exp(-LnGamma(a)-x+a*Ln(x));
 BEGIN
@@ -151,12 +148,12 @@ END GammaQ;
 PROCEDURE GamSer(a,x:T):T RAISES {Error}=
 (*helper for GammaP and GammaQ*)
 (*generates Gamma(a,x)/Gamma(a) via series*)
+<*UNUSED*> CONST ftn = Module & "GamSer";
 CONST
-  ftn = Module & "GamSer";
   MaxIter=90;
-  eps=5.0D0*Eps;
 VAR
   a1n,term,sum:T;
+  eps:=5.0D0*Eps;
 BEGIN
   (*---initialize---*)
   term:=One/a;
@@ -178,12 +175,12 @@ END GamSer;
 PROCEDURE GamCF(a,x:T):T RAISES {Error}=
 (*helper for GammaP and GammaQ*)
 (*generates Gamma(a,x) via continued fractions*)
+<*UNUSED*> CONST ftn = Module & "GamCF";
 CONST
-  ftn = Module & "GamCF";
   MaxIter=90;
-  eps=5.0d0*Eps;
 VAR
   f,D,C,m,xa,aj,bj,delta:T;
+  eps:=5.0d0*Eps;
 BEGIN
   (*---initialize for j=1---*)
   C:=x+One+a+One/Tiny;
@@ -245,13 +242,13 @@ END Beta;
 (*--------------------*)
 PROCEDURE BetaCF(a,b,x:T):T RAISES {Error}=
 (*helper for BetaI, returns continued fraction*)
+<*UNUSED*> CONST ftn = Module & "BetaCF";
 CONST
-  ftn = Module & "BetaCF";
   bj=One;
-  eps=5.0D0*Eps;
   MaxIter=90;
 VAR
   f,D,C,m,am,a2m,aj,delta:T;
+  eps:=5.0D0*Eps;
 BEGIN
   (*---initialize at j=2---*)
   aj:=-(a+b)*x/(a+One);
@@ -294,7 +291,7 @@ END BetaCF;
 (*--------------------*)
 PROCEDURE BetaI(a,b,x:T):T RAISES {Error}=
 (*returns incomplete Beta Ix(a,b) *)
-CONST ftn = Module & "BetaI";
+<*UNUSED*> CONST ftn = Module & "BetaI";
 VAR
   factor:T;
 BEGIN
