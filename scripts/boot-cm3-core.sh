@@ -22,13 +22,20 @@ if [ -z "$1" ] ; then
   exit 1
 fi
 CROSS_TARGET=$1
-BUILDARGS='-DM3_BOOTSTRAP=TRUE -DBIN_USE=${ROOT}/m3-sys/m3cc/${TARGET}-${CROSS_TARGET} -keep'
-M3CONFIG=${ROOT}/m3-sys/cm3/src/config/${CROSS_TARGET}
+BUILDARGS="-DM3_BOOTSTRAP=TRUE -keep"
+M3CONFIG_SRC=${ROOT}/m3-sys/cm3/src/config/${CROSS_TARGET}
+M3CONFIG=${ROOT}/scripts/${CROSS_TARGET}.cfg
+if [ ! -f "${M3CONFIG}" -o "${M3CONFIG}" -ot "${M3CONFIG_SRC}" ] ; then
+  sed -e "s;m3back.*=.*;m3back = \"@${ROOT}/m3-sys/m3cc/${TARGET}-${CROSS_TARGET}/cm3cg\";" \
+    ${M3CONFIG_SRC} > ${M3CONFIG}
+fi
 export M3CONFIG
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
 P=""
+P="${P} m3gc-simple"
+P="${P} m3gc-enhanced"
 P="${P} m3core"
 P="${P} libm3"
 P="${P} m3middle"

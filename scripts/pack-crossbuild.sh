@@ -29,6 +29,8 @@ export M3CONFIG
 . "$ROOT/scripts/pkgcmds.sh"
 
 P=""
+P="${P} m3gc-simple"
+P="${P} m3gc-enhanced"
 P="${P} m3core"
 P="${P} libm3"
 P="${P} m3middle"
