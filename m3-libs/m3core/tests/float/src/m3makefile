@@ -5,10 +5,10 @@
 /*      modified on Wed Mar  4 17:59:48 PST 1992 by stolfi                   */
 /*      modified on Tue Feb 11 15:20:06 PST 1992 by muller                   */
 
-import(libm3)
+import("libm3")
 
-implementation (Main)
-module (RealTest)
-module (LongTest)
+implementation ("Main")
+module ("RealTest")
+module ("LongTest")
 
-program (Test)
+program ("Test")
