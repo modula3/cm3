@@ -1,3 +1,4 @@
 override ("netobj", ROOT & "/m3-comm")
-% override ("sharedobj", ROOT & "/m3-xxx") % missing
+override ("sharedobj", ROOT & "/m3-comm")
 override ("synloc", ROOT & "/m3-obliq")
+override ("patternmatching", ROOT & "/m3-libs")

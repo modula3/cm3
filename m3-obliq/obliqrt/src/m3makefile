@@ -13,7 +13,7 @@
 import("netobj")
 import("sharedobj")
 import("synloc")
-import ("regex")
+import ("patternmatching")
 
 interface ("OpSys")
 Interface ("ObPathSep")

@@ -34,7 +34,7 @@ CONST ServerScript =
 VAR logWr: SynWr.T;
 
 BEGIN
-  ObliqOnline.Setup();
+  ObliqOnline.Setup(SynWr.out);
   RegisterLibraries();
   TRY 
     logWr := SynWr.New(FileWr.Open("/tmp/obliqsrvui.log"));
@@ -42,7 +42,7 @@ BEGIN
     logWr := SynWr.out;
   END;
   ObliqOnline.Interact(
-    ObliqOnline.New(Greetings, logWr, FALSE),
+    ObliqOnline.New(SynWr.out, Greetings, FALSE),
     "<server script>", TextRd.New(ServerScript));
 END Main.
 

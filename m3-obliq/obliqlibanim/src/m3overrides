@@ -1,7 +1,13 @@
-if equal (OS_TYPE, "WIN32")
-  override("obliqrt", "\\\\stieglitz\\graphics\\arm3\\bm-work\\cm3\\m3-obliq")
-  override("obliqlibui", "\\\\stieglitz\\graphics\\arm3\\bm-work\\cm3\\m3-obliq")
-else
-  override("obliqrt", "/proj/graphics/arm3/bm-work/cm3/m3-obliq")
-  override("obliqlibui", "/proj/graphics/arm3/bm-work/cm3/m3-obliq")
-end
+%if equal (OS_TYPE, "WIN32")
+%  override("obliqrt", "\\\\stieglitz\\graphics\\arm3\\bm-work\\cm3\\m3-obliq")
+%  override("obliqlibui", "\\\\stieglitz\\graphics\\arm3\\bm-work\\cm3\\m3-obliq")
+%else
+%  override("obliqrt", "/proj/graphics/arm3/bm-work/cm3/m3-obliq")
+%  override("obliqlibui", "/proj/graphics/arm3/bm-work/cm3/m3-obliq")
+%end
+override ("libm3", ROOT & "/m3-libs")
+override ("mgkit", ROOT & "/m3-ui")
+override ("synloc", ROOT & "/m3-obliq")
+override ("obliqrt", ROOT & "/m3-obliq")
+override ("obliqlibui", ROOT & "/m3-obliq")
+

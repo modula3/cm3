@@ -102,11 +102,11 @@ BEGIN
     GetParams();
     rsrcPath := Rsrc.BuildPath ("$VORUNPATH", VORunBundle.Get());
     
-    ObliqOnline.Setup();
+    ObliqOnline.Setup(SynWr.out);
     ObLibM3.PackageSetup();
     ObLibUI.PackageSetup();
         
-    interp := ObliqOnline.New(Greetings, SynWr.New(output),  FALSE);
+    interp := ObliqOnline.New(SynWr.New(output), Greetings, FALSE);
    
     (* Don't load default .obliq - who knows what it contains *)
     (* Instead use bundled files                                                   *)

@@ -1,5 +1,9 @@
-if equal (OS_TYPE, "WIN32")
-  override("obliq", "\\\\stieglitz\\graphics\\arm3\\bm-work\\cm3\\m3-obliq")
-else
-  override("obliq", "/proj/graphics/arm3/bm-work/cm3/m3-obliq")
-end
+%if equal (OS_TYPE, "WIN32")
+%  override("obliq", "\\\\stieglitz\\graphics\\arm3\\bm-work\\cm3\\m3-obliq")
+%else
+%  override("obliq", "/proj/graphics/arm3/bm-work/cm3/m3-obliq")
+%end
+override ("libm3", ROOT & "/m3-libs")
+override ("embutils", ROOT & "/m3-libs")
+override ("obliq", ROOT & "/m3-obliq")
+

@@ -6,7 +6,7 @@ IMPORT Text, TextRd, Rd, Lex, Fmt, ObLib, ObValue, SynLocation, TextConv,
        Thread, NetObj, Env, Params, Math, ObEval, ObjectSpace, FloatMode,
        SharedObj, SharedObjRT, ObValueNotify, Obliq, Time, SynWr, FmtTime,
        WorkerPool, Work, RegEx, LongFloat, Scheduler, RTHeapDebug,
-       RTCollector, RTHeapStats, RTProcess, TextF, ASCII, ThreadF;
+       RTCollector, RTHeapStats, RTProcess, ASCII, ThreadF, Text8;
 
 PROCEDURE Setup () =
   BEGIN
@@ -1429,9 +1429,9 @@ PROCEDURE EvalText (                    self  : PackageText;
             <*ASSERT FALSE*>
           END;
           WITH l = Text.Length(text1) DO
-            text2 := TextF.New(l);
+            text2 := Text8.Create(l);
             FOR i:=0 TO l-1 DO
-              text2[i] := ASCII.Upper[text1[i]];
+              NARROW(text2, Text8.Public).contents[i] := ASCII.Upper[Text.GetChar(text1,i)];
             END;
           END;
           RETURN ObValue.NewText(text2);
@@ -1443,9 +1443,9 @@ PROCEDURE EvalText (                    self  : PackageText;
             <*ASSERT FALSE*>
           END;
           WITH l = Text.Length(text1) DO
-            text2 := TextF.New(l);
+            text2 := Text8.Create(l);
             FOR i:=0 TO l-1 DO
-              text2[i] := ASCII.Lower[text1[i]];
+              NARROW(text2, Text8.Public).contents[i] := ASCII.Lower[Text.GetChar(text1,i)];
             END;
           END;
           RETURN ObValue.NewText(text2);

@@ -11,6 +11,7 @@ IMPORT ObliqOnline;
 IMPORT ObLibM3; (* rd,wr,lex,fmt,pickle,process,thread *)
 IMPORT ObLibUI; (* color,form *)
 IMPORT Dialog, Rsrc, NodeVBT, TextRd, Thread;
+IMPORT SynWr;
 
 CONST Greetings = "Internal Obliq interpreter installed...";
 
@@ -59,12 +60,12 @@ PROCEDURE loadObliqRsrc(name: TEXT) =
 
 PROCEDURE Setup() =
  BEGIN
-  ObliqOnline.Setup();
+  ObliqOnline.Setup(SynWr.out);
   ObLibM3.PackageSetup();
   ObLibUI.PackageSetup();
 
   (* Don't load default .obliq - who knows what it contains *)
-  interp := ObliqOnline.New(Greetings, NIL,  FALSE);
+  interp := ObliqOnline.New(NIL, Greetings, FALSE);
 
   (* Feed it the bundled obliq start-up files *) 
 

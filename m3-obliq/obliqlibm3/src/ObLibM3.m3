@@ -2288,7 +2288,7 @@ PROCEDURE EvalDict (                    self  : PackageDict;
       END;
       TYPECASE args[1] OF
       | ValIterator (node) => 
-        node.iterator := node.iterator.init(dict1);
+        node.iterator := node.iterator.init();
       ELSE
         ObValue.BadArgType(1, "iterator", self.name, opCode.name, loc); 
         <*ASSERT FALSE*>
