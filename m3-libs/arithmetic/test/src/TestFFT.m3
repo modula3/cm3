@@ -19,7 +19,7 @@ VAR
 BEGIN
   Debug(1,ftn,"begin\n");
 
-  RETURN result;   
+  RETURN result;
 END TestABC;
 (*----------------------*)
 PROCEDURE TestBasic_FFT():BOOLEAN=
@@ -31,7 +31,7 @@ BEGIN
   Debug(1,ftn,"begin\n");
   xFFT.Test();
   Msg("if we got here, FFT is ok\n");
-  RETURN result;   
+  RETURN result;
 END TestBasic_FFT;
 (*-------------------------*)
 PROCEDURE TestFFT():BOOLEAN=

@@ -15,7 +15,7 @@ Abstract:
           ...and back to fully instantiated for REAL32.
 
 1/27/96   Harry George
-          Converted to OO format and R.T          
+          Converted to OO format and R.T
 
 2/17/96   Harry George   ...and back to ADT format
 *)
@@ -25,13 +25,13 @@ FROM xUtils IMPORT Error,Err;
 CONST Module = "MatrixBasic.";
 
 (*-----------------*)
-PROCEDURE New( 
+PROCEDURE New(
                m,n:CARDINAL):T =
 BEGIN
   RETURN NEW(T,m,n);
 END New;
 (*-----------------*)
-PROCEDURE Copy( 
+PROCEDURE Copy(
                 x:T):T =
 VAR
   m:=NUMBER(x^);
@@ -75,7 +75,7 @@ END NewOne;
 
 (*-----------------*)
 <*INLINE*>
-PROCEDURE AssertEqualSize( 
+PROCEDURE AssertEqualSize(
                  x,y:T) RAISES {Error}=
 BEGIN
   IF NUMBER(x^)   # NUMBER(y^) OR
@@ -85,7 +85,7 @@ BEGIN
 END AssertEqualSize;
 
 (*----------------*)
-PROCEDURE Add( 
+PROCEDURE Add(
                x,y:T):T RAISES {Error} =
 (*return x+y*)
 (*each is mxn*)
@@ -106,7 +106,7 @@ BEGIN
   RETURN z;
 END Add;
 (*----------------*)
-PROCEDURE Sub( 
+PROCEDURE Sub(
                x,y:T):T RAISES {Error} =
 (*return x-y*)
 (*each is mxn*)
@@ -127,7 +127,7 @@ BEGIN
   RETURN z;
 END Sub;
 (*----------------*)
-PROCEDURE IsZero( 
+PROCEDURE IsZero(
                x:T):BOOLEAN =
 VAR
   mf:=0; ml:=LAST(x^);
@@ -144,7 +144,7 @@ BEGIN
 END IsZero;
 
 (*----------------*)
-PROCEDURE Equal( 
+PROCEDURE Equal(
                x,y:T):BOOLEAN RAISES {Error} =
 (*return x=y*)
 (*each is mxn*)
@@ -166,7 +166,7 @@ BEGIN
 END Equal;
 
 (*-----------------*)
-PROCEDURE Mul( 
+PROCEDURE Mul(
                x,y:T):T RAISES {Error}=
 (*return x*y*)
 (* x:mxn  y:nxp  return:mxp*)
@@ -177,7 +177,7 @@ VAR
   p:=NUMBER(y[0]); pf:=0; pl:=p-1;
   z:T;
   sum:R.T;
-  
+
 BEGIN
   IF NUMBER(y^)#n THEN
     RAISE Error(Err.bad_size);
@@ -211,7 +211,7 @@ BEGIN
   IF NUMBER(b^)#n THEN
     RAISE Error(Err.bad_size);
   END;
-  
+
   FOR i:=mf TO ml DO
     sum:=R.Zero;
     FOR j:=nf TO nl DO
@@ -223,7 +223,7 @@ BEGIN
 END MulV;
 
 (*-----------------*)
-PROCEDURE Transpose( 
+PROCEDURE Transpose(
                      x:T):T =
 <*UNUSED*> CONST ftn = Module & "Transpose";
 VAR
@@ -241,7 +241,7 @@ BEGIN
 END Transpose;
 
 (*-----------------*)
-PROCEDURE Adjungate( 
+PROCEDURE Adjungate(
                      x:T):T =
 <*UNUSED*> CONST ftn = Module & "Adjungate";
 VAR

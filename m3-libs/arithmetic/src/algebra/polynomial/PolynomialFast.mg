@@ -12,13 +12,13 @@ FROM xUtils IMPORT Error,Err;
 CONST Module = "PolynomialFast.";
 
 (*--------------------*)
-PROCEDURE New( 
+PROCEDURE New(
                n:CARDINAL):T=
 BEGIN
   RETURN NEW(T,n+1);
 END New;
 (*--------------------*)
-PROCEDURE Copy( 
+PROCEDURE Copy(
                x:T):T=
 VAR
   n:=NUMBER(x^);
@@ -29,7 +29,7 @@ BEGIN
 END Copy;
 
 (*--------------------*)
-PROCEDURE Eval( 
+PROCEDURE Eval(
                 x:T;
                 xi:R.T
                 ):R.T=
@@ -44,7 +44,7 @@ BEGIN
 END Eval;
 
 (*-----------------*)
-PROCEDURE Add( 
+PROCEDURE Add(
                x,y:T):T=
 VAR
   xn:=NUMBER(x^); xl:=xn-1;
@@ -62,7 +62,7 @@ BEGIN
   RETURN z;
 END Add;
 (*-----------------*)
-PROCEDURE Sub( 
+PROCEDURE Sub(
                x,y:T):T=
 VAR
   xn:=NUMBER(x^); xl:=xn-1;
@@ -103,7 +103,7 @@ BEGIN
 END Equal;
 
 (*---------------------*)
-PROCEDURE Mul( 
+PROCEDURE Mul(
                x,y:T):T=
 VAR
   xn:=NUMBER(x^);
@@ -122,7 +122,7 @@ BEGIN
 END Mul;
 
 (*---------------------*)
-PROCEDURE Div( 
+PROCEDURE Div(
                x,y:T):T RAISES {Error}=
 VAR
   r,q:T;
@@ -135,13 +135,13 @@ BEGIN
 END Div;
 
 (*---------------------*)
-PROCEDURE DivMod( 
+PROCEDURE DivMod(
                x,y:T;
            VAR r:T):T=
 <*UNUSED*>
 CONST ftn = Module & "DivMod";
 VAR
-  xn:=NUMBER(x^);                xl:=LAST(x^); 
+  xn:=NUMBER(x^);                xl:=LAST(x^);
   yn:=NUMBER(y^); y0:=FIRST(y^); yl:=LAST(y^);
   q:T;
   qtmp,ymax:R.T;
@@ -182,7 +182,7 @@ END DivMod;
 
 (*-----------------------*)
 (*
-PROCEDURE deflate( 
+PROCEDURE deflate(
                    x:T;
                    c:R.T;
                    VAR rem:R.T)=
@@ -212,7 +212,7 @@ BEGIN
 END Derive;
 
 (*---------------------*)
-PROCEDURE EvalDerivate( 
+PROCEDURE EvalDerivate(
                  x:T;      (*Evaluate the poly with these coefs*)
                  xi:R.T;    (*for this argument*)
              VAR pd:ARRAY OF R.T;  (*returning x(xi), x'(xi)...*)
@@ -237,7 +237,7 @@ BEGIN
     pd[0]:=x[i]+xi*pd[0];
   END;
 
-  (*---fix the factorials---*) 
+  (*---fix the factorials---*)
   fact:=R.One;
   fac:=R.Zero;
   FOR i:=0 TO pdl DO
@@ -246,7 +246,7 @@ BEGIN
     fact:=fact*fac;
   END;
 
-END EvalDerivate; 
+END EvalDerivate;
 
 (*==========================*)
 BEGIN

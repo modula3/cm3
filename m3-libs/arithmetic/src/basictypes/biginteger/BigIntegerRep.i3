@@ -1,6 +1,6 @@
 INTERFACE BigIntegerRep;
 (*Copyright (c) 1996, m3na project
-  
+
 Abstract: Integers of arbitrary size
 
 Daniel Beer

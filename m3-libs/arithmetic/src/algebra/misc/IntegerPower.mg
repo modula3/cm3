@@ -1,6 +1,6 @@
 GENERIC MODULE IntegerPower(R);
 (*Copyright (c) 1996, m3na project
-  
+
 Abstract: Integers
 
 2/17/96  Harry George    Initial version

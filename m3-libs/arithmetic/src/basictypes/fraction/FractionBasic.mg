@@ -1,6 +1,6 @@
 GENERIC MODULE FractionBasic(R,GCD);
 (*Copyright (c) 1996, m3na project
-  
+
 Abstract: Fraction numbers and basic operations
 
 *)

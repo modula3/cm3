@@ -29,8 +29,8 @@ BEGIN
   v^:=V4{0.1,0.2,0.3,0.4};
   Msg("u="   & nr.Ptext(u) & "\n");
   Msg("v="   & nr.Ptext(v) & "\n");
-  Msg("u+v=" & nr.Ptext(nr.Padd(u,v)) & "\n");          
-  Msg("v+u=" & nr.Ptext(nr.Padd(v,u)) & "\n");          
+  Msg("u+v=" & nr.Ptext(nr.Padd(u,v)) & "\n");
+  Msg("v+u=" & nr.Ptext(nr.Padd(v,u)) & "\n");
   RETURN result;
 END TestPadd;
 (*-----------------------*)
@@ -47,8 +47,8 @@ BEGIN
   v^:=V4{0.1,0.2,0.3,0.4};
   Msg("u="   & nr.Ptext(u) & "\n");
   Msg("v="   & nr.Ptext(v) & "\n");
-  Msg("u-v=" & nr.Ptext(nr.Psub(u,v)) & "\n");          
-  Msg("v-u=" & nr.Ptext(nr.Psub(v,u)) & "\n");          
+  Msg("u-v=" & nr.Ptext(nr.Psub(u,v)) & "\n");
+  Msg("v-u=" & nr.Ptext(nr.Psub(v,u)) & "\n");
   RETURN result;
 END TestPsub;
 (*-----------------------*)
@@ -65,8 +65,8 @@ BEGIN
   v^:=V4{0.1,0.2,0.3,0.4};
   Msg("u="   & nr.Ptext(u) & "\n");
   Msg("v="   & nr.Ptext(v) & "\n");
-  Msg("u*v=" & nr.Ptext(nr.Pmul(u,v)) & "\n");          
-  Msg("v*u=" & nr.Ptext(nr.Pmul(v,u)) & "\n");          
+  Msg("u*v=" & nr.Ptext(nr.Pmul(u,v)) & "\n");
+  Msg("v*u=" & nr.Ptext(nr.Pmul(v,u)) & "\n");
   RETURN result;
 END TestPmul;
 (*-----------------------*)
@@ -85,9 +85,9 @@ BEGIN
   Msg("u="   & nr.Ptext(u) & "\n");
   Msg("v="   & nr.Ptext(v) & "\n");
   Msg("u/v="); nr.Pdiv(u,v,q,r);
-      Msg(nr.Ptext(q) & " rem=" & nr.Ptext(r) & "\n");          
+      Msg(nr.Ptext(q) & " rem=" & nr.Ptext(r) & "\n");
   Msg("v/u="); nr.Pdiv(v,u,q,r);
-      Msg(nr.Ptext(q) & " rem=" & nr.Ptext(r) & "\n");          
+      Msg(nr.Ptext(q) & " rem=" & nr.Ptext(r) & "\n");
   RETURN result;
 END TestPdiv;
 (*-----------------------*)
@@ -135,7 +135,7 @@ VAR
   result:=TRUE;
   num:=NEW(nr.dVector,3);
   den:=NEW(nr.dVector,4);
-  x,d:REAL64;  
+  x,d:REAL64;
 BEGIN
   Debug(1,ftn,"begin\n");
   num^:=V3{1.0d0,2.0d0,3.0d0};
@@ -162,15 +162,15 @@ BEGIN
     & " a=" & Fmt.Real(a)
     & " b=" & Fmt.Real(b)
     & " c=" & Fmt.Real(c) & "\n");
-    
+
   nr.quadreal(a,b,c,x1,x2);
-  
+
   Msg("x1=" & nr.Ctext(x1)
    & " x2=" & nr.Ctext(x2) & "\n");
 
   IF NOT Verify(ftn,"quadreal",-3.0,x1.re,0.01) THEN
     result:=FALSE;
-  END;      
+  END;
   RETURN result;
 END TestQuadreal;
 (*-----------------------*)
@@ -190,12 +190,12 @@ BEGIN
     & " a=" & nr.Ctext(a)
     & " b=" & nr.Ctext(b)
     & " c=" & nr.Ctext(c) & "\n");
-    
+
   nr.quadcmpx(a,b,c,x1,x2);
-  
+
   Msg("x1=" & nr.Ctext(x1)
    & " x2=" & nr.Ctext(x2));
-      
+
   RETURN result;
 END TestQuadcmpx;
 (*-----------------------*)
@@ -236,7 +236,7 @@ BEGIN
       & ")= cheby:" & Fmt.Real(y1,prec:=4)
       & " Matrixh32:"  & Fmt.Real(y2,prec:=4) & "\n");
   END;
-  
+
   RETURN result;
 END TestCheby;
 (*-----------------------*)

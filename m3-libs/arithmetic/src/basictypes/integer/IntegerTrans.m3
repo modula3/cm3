@@ -1,6 +1,6 @@
 MODULE IntegerTrans;
 (*Copyright (c) 1996, m3na project
-  
+
 Abstract: Integers
 
 2/17/96  Harry George    Initial version
@@ -13,7 +13,7 @@ CONST Module = "IntegerTrans.";
 
 (*============================*)
 (* Integer Approximations     *)
-(*============================*)  
+(*============================*)
 (*----------------------*)
 PROCEDURE SqRt(N:[0..1073741823]):CARDINAL=
 (*returns integer sqrt of n*)
@@ -67,7 +67,7 @@ END SqRt;
 
 (*============================*)
 (* CORDIC Functions           *)
-(*============================*)  
+(*============================*)
 
 (*----------------*)
 PROCEDURE SinCos(theta:Cordic;    (*given this angle*)
@@ -84,7 +84,7 @@ CONST
   Quad2Boundary = CordicBase*2;
   Quad3Boundary = CordicBase*3;
   Quad4Boundary = CordicBase*4;
-  
+
 VAR
   z:INTEGER;
   x:INTEGER:=39796;  (*initialize here to overcome the expansion*)
@@ -128,7 +128,7 @@ BEGIN
   | 4 => c:= x; s:=-y;
   END;
 END SinCos;
- 
+
 (*==========================*)
 BEGIN
 END IntegerTrans.

@@ -1,6 +1,6 @@
 GENERIC MODULE PolynomialFmtLex(RF);
 (*Copyright (c) 1995, Harry George
-  
+
 Abstract: Polynomials.
 
 12/27/95  Harry George    Initial version
@@ -15,7 +15,7 @@ CONST Module = "PolynomialFmtLex.";
 
 (*--------------------*)
 (*
-PROCEDURE Lex( 
+PROCEDURE Lex(
                str:TEXT):T =
 BEGIN
   RAISE Error(Err.not_implemented);
@@ -30,7 +30,7 @@ PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}):TEXT
 *)
 VAR
   n:=NUMBER(x^); nf:=FIRST(x^); nl:=LAST(x^);
-  wr:=NEW(TextWr.T).init(); 
+  wr:=NEW(TextWr.T).init();
 BEGIN
   Wr.PutText(wr,"Polynomial"
      & F.Int(n) & "{");

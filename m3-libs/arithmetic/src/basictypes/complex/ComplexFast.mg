@@ -1,6 +1,6 @@
 GENERIC MODULE ComplexFast(R);
 (*Copyright (c) 1996, m3na project
-  
+
 Abstract: Complex numbers and basic operations
 
 was xComplex.m3
@@ -19,7 +19,7 @@ FROM xUtils IMPORT Error, Err;
 (*==========================*)
 
 (*
-  All routines with direct access to infix operators. 
+  All routines with direct access to infix operators.
   May be useful as long as the compiler cannot handle INLINE procedures.
 *)
 

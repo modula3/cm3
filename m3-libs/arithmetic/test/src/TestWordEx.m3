@@ -19,7 +19,7 @@ VAR
 BEGIN
   Debug(1,ftn,"begin\n");
 
-  RETURN result;   
+  RETURN result;
 END TestABC;
 (*----------------------*)
 PROCEDURE TestWordex():BOOLEAN=
@@ -31,7 +31,7 @@ BEGIN
   Debug(1,ftn,"begin\n");
   xWordEx.Test();
   Msg("ok\n");
-  RETURN result;   
+  RETURN result;
 END TestWordex;
 (*-------------------------*)
 PROCEDURE TestWordEx():BOOLEAN=

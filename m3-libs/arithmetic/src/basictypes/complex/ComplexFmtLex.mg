@@ -16,7 +16,7 @@ Abstract: Formatting and parsing complex numbers
 
 (*------------------------*)
 (*
-PROCEDURE Lex( 
+PROCEDURE Lex(
                str:TEXT):C.T RAISES {Error}=
 BEGIN
   RAISE Error(Err.not_implemented);

@@ -1,6 +1,6 @@
 MODULE SpecialFunction;
 (*Copyright (c) 1996, m3na project
-  
+
 Abstract: Special Functions
 
 2/3/96   Harry George    Initial version
@@ -20,7 +20,7 @@ PROCEDURE Factorial(n:CARDINAL):T=
 CONST
   max = 34;
   cache=ARRAY [0..max] OF T{
-1.0D0, 1.0D0, 2.0D0, 6.0D0, 24.0D0, 120.0D0,                      (*0-5*)     
+1.0D0, 1.0D0, 2.0D0, 6.0D0, 24.0D0, 120.0D0,                      (*0-5*)
 720.0D0, 5040.0D0, 40320.0D0, 362880.0D0,                         (*6-9*)
 3628800.0D0, 39916800.0D0, 479001600.0D0, 6227020800.0D0,         (*10-13*)
 87178291200.0D0, 1307674368000.0D0, 20922789888000.0D0,           (*14-16*)
@@ -39,7 +39,7 @@ BEGIN
   END;
 END Factorial;
 (*--------------------*)
-CONST max_factln = 70; 
+CONST max_factln = 70;
 VAR   factln_cache:ARRAY [2..max_factln] OF T;
 PROCEDURE LnFactorial(n:CARDINAL):T=
 (*returns ln(n!) as a real*)
@@ -58,7 +58,7 @@ BEGIN
     z:=LnGamma(FLOAT(n,T)+One);
     factln_cache[n]:=z;
   END;
-  RETURN z;  
+  RETURN z;
 END LnFactorial;
 
 (*--------------------*)
@@ -95,7 +95,7 @@ BEGIN
               +c[5]/(x1+5.0d0)
               +c[6]/(x1+6.0d0);
   z:=Ln(y)*(x1+0.5d0)+(-y)+lnsqrt2pi+Ln(series);
-  RETURN z;    
+  RETURN z;
 END LnGamma;
 (*--------------------*)
 PROCEDURE Binomial(n,k:CARDINAL):T RAISES {Error}=
@@ -193,7 +193,7 @@ BEGIN
   IF ABS(D)<Tiny THEN D:=Tiny; END;
   D:=One/D;
   f:=D;
-   
+
   (*---iterate---*)
   m:=Zero;
   FOR j:=1 TO MaxIter DO
@@ -260,7 +260,7 @@ BEGIN
   IF ABS(D)<Tiny THEN D:=Tiny; END;
   D:=One/D;
   f:=D;
-  
+
   (*---iterate---*)
   m:=Zero;
   FOR j:=3 TO MaxIter DO

@@ -22,7 +22,7 @@ VAR
 BEGIN
   Debug(1,ftn,"begin\n");
 
-  RETURN result;   
+  RETURN result;
 END TestABC;
 (*----------------------*)
 PROCEDURE TestVectororBasic():BOOLEAN=
@@ -32,14 +32,14 @@ CONST
 VAR
   result:=TRUE;
   v1:=V.new(n);
-  v2:=V.new(n);  
+  v2:=V.new(n);
 BEGIN
   Debug(1,ftn,"begin\n");
   V.Zero(v1); Msg("zero     =" & V.fmt(v1) & "\n");
- 
+
   v1[0]:=0.0D0; v1[1]:=1.0D0; v1[2]:=2.0D0; v1[3]:=3.0D0;
   Msg("v1       =" & V.fmt(v1) & "\n");
-  v2:=V.copy(v1); 
+  v2:=V.copy(v1);
   Msg("copy(v1) =" & V.fmt(v2) & "\n");
   Msg("|v1|     =" & R.fmt(V.abs(v1)) & "\n");
 
@@ -56,8 +56,8 @@ BEGIN
   EXCEPT
   | Error(err) => Msg("not implemented\n");
   END;
-    
-  RETURN result;   
+
+  RETURN result;
 END TestVectororBasic;
 (*-------------------------*)
 PROCEDURE TestVector():BOOLEAN=

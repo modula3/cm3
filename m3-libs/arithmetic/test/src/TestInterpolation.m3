@@ -94,7 +94,7 @@ BEGIN
     & "\n");
   END;
 
-  RETURN result;   
+  RETURN result;
 END TestNewt;
 (*-------------------------*)
 PROCEDURE TestInterpolation():BOOLEAN=

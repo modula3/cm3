@@ -1,6 +1,6 @@
 GENERIC INTERFACE PolynomialFmtLex(P,RF);
 (*Copyright (c) 1996, m3na project
-  
+
 Abstract: Direct access to Polynomial functions
 
 2/3/96   Harry George    Initial version

@@ -16,7 +16,7 @@ FROM xUtils IMPORT Error;
 <*UNUSED*> CONST Module = "PolarBasic.";
 
 (*----------------*)
-PROCEDURE FromComplex( 
+PROCEDURE FromComplex(
                    READONLY c:C.T):T=
 VAR
   x:T;
@@ -39,7 +39,7 @@ BEGIN
 END Equal;
 
 (*----------------*)
-PROCEDURE ToComplex( 
+PROCEDURE ToComplex(
                      READONLY x:T):C.T=
 BEGIN
   RETURN C.Scale(C.T{re:=Rt.Cos(x.angle),im:=Rt.Sin(x.angle)},x.radius);
@@ -58,7 +58,7 @@ PROCEDURE NormalizeAngle(VAR x:T) =
 	END;
   END NormalizeAngle;
 (*----------------*)
-PROCEDURE Mul( 
+PROCEDURE Mul(
                READONLY x,y:T):T=
 VAR
   z:T;
@@ -66,10 +66,10 @@ BEGIN
   z.radius:=R.Mul(x.radius,y.radius);
   z.angle :=R.Add(x.angle, y.angle);
   NormalizeAngle(z);
-  RETURN z;  
+  RETURN z;
 END Mul;
 (*----------------*)
-PROCEDURE Div( 
+PROCEDURE Div(
                READONLY x,y:T):T RAISES {Error}=
 VAR
   z:T;
@@ -77,7 +77,7 @@ BEGIN
   z.radius:=R.Div(x.radius,y.radius);
   z.angle :=R.Sub(x.angle, y.angle);
   NormalizeAngle(z);
-  RETURN z;  
+  RETURN z;
 END Div;
 
 

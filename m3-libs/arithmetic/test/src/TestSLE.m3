@@ -22,16 +22,16 @@ IMPORT xSLE;
 TYPE
   M3x3 = ARRAY [0..2] OF ARRAY [0..2] OF REAL64;
   V3   = ARRAY [0..2] OF REAL64;
-  
+
 VAR
   rand:=NEW(xRNG01.ran1).init();
 
   (*---must do build_data before using these---*)
   n:=0; n1:=0; nn:=n-1;
-  A:M.Matrix; 
+  A:M.Matrix;
   B:V.Vector;
-  C:M.Matrix;   
-  D:M.Matrix; 
+  C:M.Matrix;
+  D:M.Matrix;
 
   knownX:V.Vector;  (*X is an nx1 matrix*)
   foundX:V.Vector;
@@ -42,9 +42,9 @@ PROCEDURE build_AX(size:CARDINAL:=3)=
 CONST ftn = Module & "build_AX";
 BEGIN
   n:=size; n1:=0; nn:=n-1;
-  A:=NEW(M.Matrix,n,n); 
-  C:=NEW(M.Matrix,n,n);   
-  D:=NEW(M.Matrix,n,n); 
+  A:=NEW(M.Matrix,n,n);
+  C:=NEW(M.Matrix,n,n);
+  D:=NEW(M.Matrix,n,n);
   knownX:=NEW(V.Vector,n);  (*X is an nx1 matrix*)
   foundX:=NEW(V.Vector,n);
 
@@ -90,13 +90,13 @@ BEGIN
   END;
   build_B(size);
 
-  Msg("A=" & M.fmt(A)); 
+  Msg("A=" & M.fmt(A));
   Msg("B=" & V.fmt(B));
   xSLE.backsub(A,x:=foundX,b:=B);
-  Msg("knownX=" & V.fmt(knownX)); 
-  Msg("foundX=" & V.fmt(foundX)); 
-  RETURN result;  
-END TestBacksub;  
+  Msg("knownX=" & V.fmt(knownX));
+  Msg("foundX=" & V.fmt(foundX));
+  RETURN result;
+END TestBacksub;
 (*--------------------*)
 PROCEDURE TestHouseholder():BOOLEAN=
 CONST
@@ -107,11 +107,11 @@ BEGIN
   Debug(1,ftn,"begin\n");
   build_data(4);
 
-  Msg("A=" & M.fmt(A)); 
+  Msg("A=" & M.fmt(A));
   xSLE.householder(A);
-  Msg("householder(A)=" & M.fmt(A)); 
-  RETURN result;  
-END TestHouseholder;  
+  Msg("householder(A)=" & M.fmt(A));
+  RETURN result;
+END TestHouseholder;
 (*--------------------*)
 PROCEDURE TestTridiag():BOOLEAN=
 CONST
@@ -135,18 +135,18 @@ BEGIN
   FOR i:=n1 TO nn DO
     IF i>n1 THEN a[i]:=A[i,i-1]; END;
     b[i]:=A[i,i];
-    IF i<nn THEN c[i]:=A[i,i+1]; END;    
+    IF i<nn THEN c[i]:=A[i,i+1]; END;
   END;
   Msg("A=" & M.fmt(A));
   knownX^:=V3{1.0d0,2.0d0,3.0d0};
   Msg("knownX=" & V.fmt(knownX));
   r:=M.mulV(A,knownX);
   Msg("r=     " & V.fmt(r));
-  
+
   xSLE.tridiag(a,b,c,r,foundX);
   Msg("foundX=" & V.fmt(foundX));
-  RETURN result;  
-END TestTridiag;  
+  RETURN result;
+END TestTridiag;
 (*---------------------*)
 (* LU factor           *)
 (*---------------------*)
@@ -160,13 +160,13 @@ VAR
   index:=NEW(I.Array,n);
 BEGIN
   Debug(1,ftn,"begin\n");
-  
+
   build_data();
   TRY
     xSLE.LUfactor(A,index,d);
     Msg("after LUfactor: d=" & I.fmt(d)
       & ", A=" & M.fmt(A));
-    (*---make a copy so we can reuse the decomp---*)   
+    (*---make a copy so we can reuse the decomp---*)
     Acopy^:=A^;
     det:=xSLE.LUdet(Acopy,d);
     Msg("det=" & R.fmt(det) & "\n");
@@ -174,7 +174,7 @@ BEGIN
     Acopy^:=A^;
     xSLE.LUinverse(A,D,index);
     Msg("A inverse =" & M.fmt(D));
-        
+
     Acopy^:=A^;
     foundX^:=B^;
     xSLE.LUbacksub(Acopy,foundX,index);

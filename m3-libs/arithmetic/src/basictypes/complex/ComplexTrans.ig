@@ -13,7 +13,7 @@ FROM xUtils IMPORT Error;
 TYPE
   T = C.T;
 
-PROCEDURE Arg   (READONLY x:T):R.T;       (*return polar angle*)    
+PROCEDURE Arg   (READONLY x:T):R.T;       (*return polar angle*)
 PROCEDURE Abs   (READONLY x:T):R.T;       (*return magnitude*)
 PROCEDURE AbsSqr(READONLY x:T):R.T;       (*return square of the magnitude*)
 

@@ -22,7 +22,7 @@ VAR
 BEGIN
   Debug(1,ftn,"begin\n");
 
-  RETURN result;   
+  RETURN result;
 END TestABC;
 (*----------------------*)
 PROCEDURE TestMatrixBasic():BOOLEAN=
@@ -53,7 +53,7 @@ BEGIN
 
   Msg("m1^T=\n" & M.fmt(M.transpose(m1)) & "\n");
 
-  RETURN result;   
+  RETURN result;
 END TestMatrixBasic;
 (*-------------------------*)
 PROCEDURE TestMatrix():BOOLEAN=

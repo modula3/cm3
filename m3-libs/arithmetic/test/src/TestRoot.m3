@@ -23,12 +23,12 @@ VAR
 BEGIN
   Debug(1,ftn,"begin\n");
 
-  RETURN result;   
+  RETURN result;
 END TestABC;
 (*---------------------*)
 VAR (*globally visible*)
   r1:=-10.0D0; r2:=2.0D0; r3:=10.0D0;
-  
+
 (*---------------------*)
 PROCEDURE myfun(x:REAL64):REAL64=
 BEGIN
@@ -60,9 +60,9 @@ BEGIN
     & "\nb=" & R.fmt(b)
     & "\nc=" & R.fmt(c)
     & "\n");
-    
+
   xRoot.quadreal(a,b,c,alpha,beta,x1,x2);
-  
+
   Msg("alpha=" & C.fmt(alpha)
    & " beta=" & C.fmt(beta)
    & "\n");
@@ -90,16 +90,16 @@ BEGIN
     & "\nb=" & C.fmt(b)
     & "\nc=" & C.fmt(c)
     & "\n");
-    
+
   xRoot.quadcmpx(a,b,c,alpha,beta,x1,x2);
-  
+
   Msg("alpha=" & C.fmt(alpha)
    & " beta=" & C.fmt(beta)
    & "\n");
   Msg("x1=" & C.fmt(x1)
    & " x2=" & C.fmt(x2)
    & "\n");
-      
+
   RETURN result;
 END TestQuadcmplx;
 
@@ -113,30 +113,30 @@ CONST
   maxiter=10;
 VAR
   result:=TRUE;
-  x1,x2:REAL64;  
+  x1,x2:REAL64;
 BEGIN
   Debug(1,ftn,"begin\n");
   Msg("true roots: r1=" & R.fmt(r1)
                & " r2=" & R.fmt(r2)
-               & " r3=" & R.fmt(r3) 
+               & " r3=" & R.fmt(r3)
                & " maxiter=" & Fmt.Int(maxiter)
                & "\n");
   FOR i:=1 TO 50 DO
     x1:=5.0D0*FLOAT(i,REAL64)-50.0D0; x2:=x1+1.0D0;
-    Msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
+    Msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3)
               & " x2=" & R.fmt(x2,style:=Fmt.Style.Fix,prec:=3));
     TRY
       IF xRoot.bracket_out(myfun,x1,x2,maxiter:=maxiter) THEN
-         Msg(" end at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
-                  & " x2=" & R.fmt(x2,style:=Fmt.Style.Fix,prec:=3) 
+         Msg(" end at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3)
+                  & " x2=" & R.fmt(x2,style:=Fmt.Style.Fix,prec:=3)
                   & "\n");
       ELSE Msg(" not found\n");
       END;
     EXCEPT
-    | Error(code) => 
+    | Error(code) =>
     END;
-  END;  
-  RETURN result;   
+  END;
+  RETURN result;
 END TestBracket_out;
 (*----------------------*)
 PROCEDURE TestBracket_in():BOOLEAN=
@@ -148,15 +148,15 @@ VAR
   nb:CARDINAL:=5;
   xb1:=NEW(Array,nb);
   xb2:=NEW(Array,nb);
-  n,nbtmp:CARDINAL;  
+  n,nbtmp:CARDINAL;
 BEGIN
   Debug(1,ftn,"begin\n");
   Msg("true roots: r1=" & R.fmt(r1)
                & " r2=" & R.fmt(r2)
-               & " r3=" & R.fmt(r3) 
+               & " r3=" & R.fmt(r3)
                & "\n");
   x1:=-50.0D0; x2:=+50.0D0;
-  Msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
+  Msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3)
             & " x2=" & R.fmt(x2,style:=Fmt.Style.Fix,prec:=3)
             & " nb=" & Fmt.Int(nb)
             & "\n");
@@ -167,17 +167,17 @@ BEGIN
       IF xRoot.bracket_in(func:=myfun,x1:=x1,x2:=x2,n:=n,
       xb1:=xb1,xb2:=xb2,nb:=nbtmp) THEN
          FOR j:=0 TO nbtmp-1 DO
-         Msg(" found  x1=" & R.fmt(xb1[j],style:=Fmt.Style.Fix,prec:=3) 
-                  & " x2=" & R.fmt(xb2[j],style:=Fmt.Style.Fix,prec:=3) 
+         Msg(" found  x1=" & R.fmt(xb1[j],style:=Fmt.Style.Fix,prec:=3)
+                  & " x2=" & R.fmt(xb2[j],style:=Fmt.Style.Fix,prec:=3)
                   & "\n");
          END;
       ELSE Msg(" not found\n");
       END;
     EXCEPT
-    | Error(code) => 
+    | Error(code) =>
     END;
-  END;  
-  RETURN result;   
+  END;
+  RETURN result;
 END TestBracket_in;
 (*----------------------*)
 PROCEDURE TestBisect():BOOLEAN=
@@ -190,16 +190,16 @@ BEGIN
   Debug(1,ftn,"begin\n");
   Msg("true roots: r1=" & R.fmt(r1)
                & " r2=" & R.fmt(r2)
-               & " r3=" & R.fmt(r3) 
+               & " r3=" & R.fmt(r3)
                & "\n");
   x1:=-1.0D0; x2:=2.9D0; tol:=0.001D0;
-  Msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
+  Msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3)
             & " x2=" & R.fmt(x2,style:=Fmt.Style.Fix,prec:=3)
             & " tol=" & R.fmt(tol));
   root:=xRoot.bisect(myfun,x1,x2,tol);
-  Msg(" found  root=" & R.fmt(root,style:=Fmt.Style.Fix,prec:=3) 
+  Msg(" found  root=" & R.fmt(root,style:=Fmt.Style.Fix,prec:=3)
     & "\n");
-  RETURN result;   
+  RETURN result;
 END TestBisect;
 (*----------------------*)
 PROCEDURE TestBrent():BOOLEAN=
@@ -212,10 +212,10 @@ BEGIN
   Debug(1,ftn,"begin\n");
   Msg("true roots: r1=" & R.fmt(r1)
                & " r2=" & R.fmt(r2)
-               & " r3=" & R.fmt(r3) 
+               & " r3=" & R.fmt(r3)
                & "\n");
   x1:=-12.0D0; x2:=1.0D0; tol:=0.001D0;
-  Msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
+  Msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3)
             & " x2=" & R.fmt(x2,style:=Fmt.Style.Fix,prec:=3)
             & " tol=" & R.fmt(tol));
   TRY
@@ -225,9 +225,9 @@ BEGIN
   ELSE
     Msg("other error\n");
   END;
-  Msg(" found  root=" & R.fmt(root,style:=Fmt.Style.Fix,prec:=3) 
+  Msg(" found  root=" & R.fmt(root,style:=Fmt.Style.Fix,prec:=3)
     & "\n");
-  RETURN result;   
+  RETURN result;
 END TestBrent;
 (*----------------------*)
 PROCEDURE TestNewtraph():BOOLEAN=
@@ -241,18 +241,18 @@ BEGIN
   Debug(1,ftn,"begin\n");
   Msg("true roots: r1=" & R.fmt(r1)
                & " r2=" & R.fmt(r2)
-               & " r3=" & R.fmt(r3) 
+               & " r3=" & R.fmt(r3)
                & "\n");
   x1:=6.0D0; x2:=5.0D0; tol:=0.001D0; maxiter:=15;
 FOR i:=0 TO 10 DO
-  x2:=x2+1.1D0; 
-  Msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3) 
+  x2:=x2+1.1D0;
+  Msg("start at x1=" & R.fmt(x1,style:=Fmt.Style.Fix,prec:=3)
             & " x2=" & R.fmt(x2,style:=Fmt.Style.Fix,prec:=3)
             & " tol=" & R.fmt(tol)
             & " maxiter=" & Fmt.Int(maxiter));
   TRY
     root:=xRoot.newtraph(myfun2,x1,x2,tol,maxiter);
-    Msg(" found  root=" & R.fmt(root,style:=Fmt.Style.Fix,prec:=5) 
+    Msg(" found  root=" & R.fmt(root,style:=Fmt.Style.Fix,prec:=5)
       & "\n");
   EXCEPT
   | Error(code) => CASE code OF
@@ -264,7 +264,7 @@ FOR i:=0 TO 10 DO
     Msg(" other error\n");
   END;
 END;
-  RETURN result;   
+  RETURN result;
 END TestNewtraph;
 
 
@@ -284,17 +284,17 @@ BEGIN
   Debug(1,ftn,"begin\n");
   Msg("true roots: r1=" & R.fmt(r1)
                & " r2=" & R.fmt(r2)
-               & " r3=" & R.fmt(r3) 
+               & " r3=" & R.fmt(r3)
                & "\n");
   p^:=ARRAY [0..m] OF C.COMPLEX
       {C.COMPLEX(200.0,0.0), C.COMPLEX(-100.0,0.0),
        C.COMPLEX(-2.0,0.0),  C.COMPLEX(1.0,0.0)};
 FOR i:=0 TO 10 DO
   x:=C.COMPLEX(FLOAT(i,REAL64),0.5);
-  Msg("start at x=" & C.fmt(x,style:=Fmt.Style.Fix,prec:=3)); 
+  Msg("start at x=" & C.fmt(x,style:=Fmt.Style.Fix,prec:=3));
   TRY
     na.laguer(p,m,x);
-    Msg(" found x=" & C.fmt(x,style:=Fmt.Style.Fix,prec:=5) 
+    Msg(" found x=" & C.fmt(x,style:=Fmt.Style.Fix,prec:=5)
       & "\n");
   EXCEPT
   | Error(code) => CASE code OF
@@ -306,7 +306,7 @@ FOR i:=0 TO 10 DO
     Msg(" other error\n");
   END;
 END;
-  RETURN result;   
+  RETURN result;
 END TestLaguer;
 (*----------------------*)
 PROCEDURE TestZRoots():BOOLEAN=
@@ -321,7 +321,7 @@ BEGIN
   Debug(1,ftn,"begin\n");
   Msg("true roots: r1=" & R.fmt(r1)
                & " r2=" & R.fmt(r2)
-               & " r3=" & R.fmt(r3) 
+               & " r3=" & R.fmt(r3)
                & "\n");
   p^:=ARRAY [0..m] OF C.COMPLEX
       {C.COMPLEX(200.0,0.0), C.COMPLEX(-100.0,0.0),
@@ -349,7 +349,7 @@ BEGIN
     Msg(" other error\n");
   END;
 
-  RETURN result;   
+  RETURN result;
 END TestZRoots;
 ******************************)
 (*-------------------------*)

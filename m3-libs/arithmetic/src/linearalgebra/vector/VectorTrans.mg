@@ -15,7 +15,7 @@ Abstract:
           ...and back to fully instantiated for REAL32.
 
 1/27/96   Harry George
-          Converted to OO format, and R.T          
+          Converted to OO format, and R.T
 
 2/17/96   Harry George   Converted from OO to ADT format
 *)
@@ -23,7 +23,7 @@ Abstract:
 <*UNUSED*> CONST Module = "VectorTrans.";
 
 (*-----------------*)
-PROCEDURE Norm1( 
+PROCEDURE Norm1(
                 x:T):R.T=
 VAR
   sum:R.T;
@@ -36,7 +36,7 @@ BEGIN
 END Norm1;
 
 (*-----------------*)
-PROCEDURE Norm2( 
+PROCEDURE Norm2(
                 x:T):R.T=
 VAR
   sum:R.T;
@@ -49,7 +49,7 @@ BEGIN
 END Norm2;
 
 (*-----------------*)
-PROCEDURE NormInf( 
+PROCEDURE NormInf(
                 x:T):R.T=
 VAR
   max,abs:R.T;

@@ -2,7 +2,7 @@ INTERFACE SpecialFunction;
 (*The interface is Public Domain.
   The supporting implementations are copyrighted,
   but may be used free of charge so long as
-  appropriate credit is given.  
+  appropriate credit is given.
 
   WARNING:  USE AT YOUR OWN RISK.
   The authors accept no responsibility for
@@ -10,7 +10,7 @@ INTERFACE SpecialFunction;
   use of any of this material.
 
 Abstract:  This is a Modula-3 rendition of a collection
-           of numerical analysis routines.         
+           of numerical analysis routines.
 
 12/13/95   Harry George      Initial version
 1/22/96    Harry George      Change to m3na project
@@ -55,7 +55,7 @@ PROCEDURE GammaQ(a,x:T):T RAISES {Error};
 |     Px(<k)=GammaQ(k,x)
 |2. Chi-Square Probability:
 |   P(X2|df)=probability that observed chi-square should be
-|   less than X2, given df degrees of freedom. 
+|   less than X2, given df degrees of freedom.
 |     P(X2|df)=GammaP(df/2.0,X2/2.0); P(0|df)=0, P(inf|df)=1
 |   Complementary form:
 |     Q(X2|df)=GammaQ(df/2.0,X2/2.0); Q(0|df)=1, Q(inf|df)=0
@@ -78,7 +78,7 @@ PROCEDURE BetaI(a,b,x:T):T RAISES {Error};
 |   In other words, big A means t should probably be smaller
 |2. F-test distribution for df1 and df2 degrees of freedom is
 |     A(F|df1,df2) = BetaI(df1/2,df2/2,df2/(df2+df1*F))
-|    
+|
 |3. Cumulative binomial probability for event which has
 |   probability p of occurring in each trial,
 |   having the event occur k or moe times in n trials is

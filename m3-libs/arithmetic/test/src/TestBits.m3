@@ -20,7 +20,7 @@ VAR
 BEGIN
   Debug(1,ftn,"begin\n");
 
-  RETURN result;   
+  RETURN result;
 END TestABC;
 (*----------------------*)
 PROCEDURE TestWhichend():BOOLEAN=
@@ -37,7 +37,7 @@ BEGIN
     | +1 => Msg("big  endian\n");
     END;
   END;
-  RETURN result;   
+  RETURN result;
 END TestWhichend;
 (*----------------------*)
 PROCEDURE TestFmt():BOOLEAN=
@@ -52,8 +52,8 @@ BEGIN
   Msg("2_00001010=" & B.fmt(x,nbits:=8) & "\n");
   Msg("2_000000001010=" & B.fmt(x,nbits:=12) & "\n");
   Msg("2_0000000000001010=" & B.fmt(x,nbits:=16) & "\n");
-  
-  RETURN result;   
+
+  RETURN result;
 END TestFmt;
 (*----------------------*)
 PROCEDURE TestReverse():BOOLEAN=
@@ -68,13 +68,13 @@ BEGIN
     & B.fmt(B.reverse(x,nbits),nbits+2)
     & "\n");
 
-  RETURN result;   
+  RETURN result;
 END TestReverse;
 (*======================*)
 CONST
   textdata = "the quick brown fox jumped over the lazy dog";
 VAR
-  str:ARRAY [0..20] OF CHAR;	           
+  str:ARRAY [0..20] OF CHAR;	
 
 (*----------------------*)
 PROCEDURE TestHash_pjw():BOOLEAN=
@@ -82,14 +82,14 @@ CONST
   ftn = Module & "TestHash_pjw";
 VAR
   result:=TRUE;
-  
+
 BEGIN
   Debug(1,ftn,"begin\n");
   Text.SetChars(str,textdata);
   FOR i:=FIRST(str) TO LAST(str)-6 BY 5 DO
     Msg("hash=" & Fmt.Int(B.hash_pjw(str,i,i+5)) & "\n");
   END;
-  RETURN result;   
+  RETURN result;
 END TestHash_pjw;
 (*----------------------*)
 PROCEDURE TestHash_elf():BOOLEAN=
@@ -104,7 +104,7 @@ BEGIN
     Msg("hash=" & Fmt.Int(B.hash_elf(str,i,i+5)) & "\n");
   END;
 
-  RETURN result;   
+  RETURN result;
 END TestHash_elf;
 (*----------------------*)
 PROCEDURE TestBits():BOOLEAN=
@@ -115,10 +115,10 @@ BEGIN
   Debug(1,ftn,"begin\n");
   NewLine(); EVAL TestWhichend();
   NewLine(); EVAL TestFmt();
-  NewLine(); EVAL TestReverse();  
-  NewLine(); EVAL TestHash_pjw();  
-  NewLine(); EVAL TestHash_elf();  
-  RETURN result;   
+  NewLine(); EVAL TestReverse();
+  NewLine(); EVAL TestHash_pjw();
+  NewLine(); EVAL TestHash_elf();
+  RETURN result;
 END TestBits;
 (*=======================*)
 BEGIN

@@ -1,6 +1,6 @@
 GENERIC INTERFACE FractionFmtLex(Fr,RF);
 (*Copyright (c) 1996, m3na project
-  
+
 Abstract: Formatting and parsing fraction numbers
 
 *)

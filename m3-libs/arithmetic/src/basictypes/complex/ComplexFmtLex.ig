@@ -1,6 +1,6 @@
 GENERIC INTERFACE ComplexFmtLex(C,RF);
 (*Copyright (c) 1996, m3na project
-  
+
 Abstract: Formatting and parsing complex numbers
 
 1/1/96  Harry George    Initial version

@@ -15,14 +15,14 @@ FROM xUtils IMPORT Error,Err;
 <*UNUSED*> CONST Module = "ComplexTrans.";
 
 (*----------------*)
-PROCEDURE Arg( 
+PROCEDURE Arg(
                READONLY x:T):R.T=
 BEGIN
   RETURN RT.ArcTan2(x.im,x.re);
 END Arg;
 
 (*----------------*)
-PROCEDURE PowR( 
+PROCEDURE PowR(
                 READONLY x:T;
                 y:R.T):T=
 VAR
@@ -35,7 +35,7 @@ BEGIN
 END PowR;
 
 (*----------------*)
-PROCEDURE Pow( 
+PROCEDURE Pow(
                 x,y:T
                   ):T=
 VAR
@@ -49,14 +49,14 @@ END Pow;
 
 
 (*----------------*)
-PROCEDURE Exp( 
+PROCEDURE Exp(
                 READONLY x:T):T=
 BEGIN
   RETURN C.Scale(T{RT.Cos(x.im),RT.Sin(x.im)},RT.Exp(x.re));
 END Exp;
 
 (*----------------*)
-PROCEDURE Ln( 
+PROCEDURE Ln(
                 READONLY x:T):T=
 VAR
   z:T;
@@ -68,7 +68,7 @@ BEGIN
 END Ln;
 
 (*----------------*)
-PROCEDURE Cos( 
+PROCEDURE Cos(
                 READONLY x:T):T RAISES {Error}=
 VAR
   z:T;
@@ -81,7 +81,7 @@ BEGIN
   RETURN z;
 END Cos;
 (*----------------*)
-PROCEDURE Sin( 
+PROCEDURE Sin(
                 READONLY x:T):T RAISES {Error}=
 VAR
   z:T;
@@ -94,7 +94,7 @@ BEGIN
   RETURN z;
 END Sin;
 (*----------------*)
-PROCEDURE Tan( 
+PROCEDURE Tan(
                 READONLY x:T):T RAISES {Error}=
 VAR
   z:T;
@@ -104,7 +104,7 @@ BEGIN
 END Tan;
 
 (*----------------*)
-PROCEDURE CosH( 
+PROCEDURE CosH(
                 READONLY x:T):T RAISES {Error}=
 VAR
   z:T;
@@ -115,7 +115,7 @@ BEGIN
   RETURN z;
 END CosH;
 (*----------------*)
-PROCEDURE SinH( 
+PROCEDURE SinH(
                 READONLY x:T):T RAISES {Error}=
 VAR
   z:T;
@@ -132,7 +132,7 @@ BEGIN
   RETURN z;
 END SinH;
 (*----------------*)
-PROCEDURE TanH( 
+PROCEDURE TanH(
                 READONLY x:T):T RAISES {Error}=
 BEGIN
   RETURN C.Div(SinH(x),CosH(x));
