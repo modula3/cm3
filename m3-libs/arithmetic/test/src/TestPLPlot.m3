@@ -94,7 +94,7 @@ BEGIN
   PL.SetColor0(3);
   PL.SetLabel("#frTime",
               "#frElongation",
-	            "#frHarmonic Oscillator");
+              "#frHarmonic Oscillator");
 
   RETURN result;
 END TestCurve;
@@ -104,9 +104,7 @@ CONST ftn = Module & "TestPLPlot";
 VAR result:=TRUE;
 BEGIN
   PL.Init();
-(*
   NewLine(); EVAL TestHistogram();
-*)
   NewLine(); EVAL TestCurve();
   PL.Exit();
   RETURN result;
