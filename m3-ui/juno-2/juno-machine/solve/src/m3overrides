@@ -1,3 +1,5 @@
 % Last modified on Mon Apr 29 13:54:45 PDT 1996 by heydon
 
-override("juno-machine", WDROOT)
+%override("juno-machine", WDROOT)
+override ("libm3", ROOT & "/m3-libs")
+override ("juno-machine", ROOT & "/m3-ui/juno-2")

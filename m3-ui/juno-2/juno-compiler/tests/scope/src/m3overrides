@@ -6,5 +6,8 @@
 
 /* m3overrides for /proj/m3/pkg/juno-compiler/tests/scope/src */
 
-override(juno-machine,  WDROOT)
-override(juno-compiler, WDROOT)
+%override(juno-machine,  WDROOT)
+%override(juno-compiler, WDROOT)
+override ("libm3", ROOT & "/m3-libs")
+override ("juno-machine", ROOT & "/m3-ui/juno-2")
+override ("juno-compiler", ROOT & "/m3-ui/juno-2")
