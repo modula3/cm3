@@ -7,7 +7,7 @@ TYPE
   T <: TPublic;
   TPublic = OBJECT
 	METHODS
-	init(first, last : IndexType) : T;
+	init(first, number : IndexType) : T;
 	fromArray(READONLY arr : ARRAY OF R.T; first : IndexType := 0) : T;
 	copy() : T;
 

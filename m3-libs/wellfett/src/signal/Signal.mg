@@ -29,9 +29,9 @@ REVEAL
   END;
 
 
-PROCEDURE Init (SELF : T; first, last : IndexType) : T =
+PROCEDURE Init (SELF : T; first, number : IndexType) : T =
   BEGIN
-	SELF.data  := NEW(REF ARRAY OF R.T, last-first);
+	SELF.data  := NEW(REF ARRAY OF R.T, number);
 	SELF.first := first;
 	FOR j:=0 TO LAST(SELF.data^) DO
       SELF.data[j] := R.Zero;
@@ -67,7 +67,7 @@ PROCEDURE GetFirst (SELF : T) : IndexType =
 
 PROCEDURE GetLast (SELF : T) : IndexType =
   BEGIN
-	RETURN SELF.first + NUMBER(SELF.data^);
+	RETURN SELF.first + LAST(SELF.data^);
   END GetLast;
 
 PROCEDURE GetNumber (SELF : T) : IndexType =
@@ -83,7 +83,7 @@ PROCEDURE TranslateD (SELF : T; dist : IndexType) =
 
 PROCEDURE UpSample (x : T; factor : IndexType) : T =
   VAR
-	z := NEW(T).init(x.getFirst()*factor,(x.getLast()-1)*factor+1);
+	z := NEW(T).init(x.first*factor,LAST(x.data^)*factor+1);
   BEGIN
 	FOR i:=0 TO LAST(x.data^) DO
       z.data[i*factor] := x.data[i];
@@ -93,9 +93,15 @@ PROCEDURE UpSample (x : T; factor : IndexType) : T =
 
 PROCEDURE DownSample (x : T; factor : IndexType) : T =
   VAR
-	z := NEW(T).init (-((-x.getFirst()) DIV factor), (x.getLast()-1) DIV factor +1);
+	z := NEW(T);
+    last : IndexType := x.getLast() DIV factor;
   BEGIN
-	FOR i:=z.first TO z.first+LAST(z.data^) DO
+    z.first := -((-x.first) DIV factor);
+(*
+	z.data  := NEW(REF ARRAY OF R.T, (LAST(x.data^)-((-x.first) MOD NUMBER(x.data^))) DIV factor);
+*)
+	z.data  := NEW(REF ARRAY OF R.T, last-x.first+1);
+	FOR i:=z.first TO z.getLast() DO
       z.data[i-z.first] := x.data[i*factor-x.first];
 	END;
 	RETURN z;
@@ -114,6 +120,9 @@ PROCEDURE WrapCyclic (x : T; length : IndexType) : T =
 	  IF j>=length THEN
 		j:=0;
       END;
+      (*
+      j:=(j+1) MOD length;
+      *)
 	END;
 	RETURN z;
   END WrapCyclic;
@@ -184,7 +193,7 @@ PROCEDURE RaiseD (x : T; offset : R.T) =
 
 PROCEDURE Convolve (x : T; y : T) : T =
   VAR
-	z := NEW(T).init(x.getFirst()+y.getFirst(),x.getLast()+y.getLast()-1);
+	z := NEW(T).init(x.first+y.first,NUMBER(x.data^)+LAST(y.data^));
   BEGIN
 	FOR i:=0 TO LAST(x.data^) DO
 	  FOR j:=0 TO LAST(y.data^) DO
@@ -196,7 +205,9 @@ PROCEDURE Convolve (x : T; y : T) : T =
 
 PROCEDURE Superpose (x : T; y : T) : T =
   VAR
-	z := NEW(T).init(MIN(x.getFirst(),y.getFirst()),MAX(x.getLast(),y.getLast()));
+    first := MIN(x.getFirst(),y.getFirst());
+    last  := MAX(x.getLast(), y.getLast());
+	z := NEW(T).init(first,last-first+1);
 	j : IndexType;
 
   BEGIN
