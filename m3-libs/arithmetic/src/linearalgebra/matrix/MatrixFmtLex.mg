@@ -1,37 +1,13 @@
 GENERIC MODULE MatrixFmtLex(RF);
-(*
-Abstract:
+(*Copyright (c) 1996, m3na project*)
 
-6/6/87    hgeorge
-          Initial version.
-
-2/11/89   hgeorge
-          To work with generic matrices.
-
-11/20/94  Harry George
-          Converted to Modula3 dynamic arrays.
-
-12/18/95  Harry George
-          ...and back to fully instantiated for REAL32.
-
-1/27/96   Harry George
-          Converted to OO format and R.T
-
-2/17/96   Harry George   ...and back to ADT format
-*)
-
-IMPORT Rd, Wr,TextWr,Fmt AS F,Thread;
+IMPORT Rd, Wr, TextWr, Thread;
+IMPORT Fmt AS F;
+IMPORT Lex AS L;
+IMPORT FloatMode;
 
 <*UNUSED*>
 CONST Module = "MatrixFmtLex.";
-
-(*
-PROCEDURE Lex(
-               str:TEXT):T RAISES {Error}=
-BEGIN
-  RAISE Error(Err.not_implemented);
-END Lex;
-*)
 
 PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}):TEXT
                RAISES {Thread.Alerted, Wr.Failure} =
@@ -39,6 +15,8 @@ VAR
   m:=NUMBER(x^);    mf:=FIRST(x^);   ml:=LAST(x^);
   n:=NUMBER(x[0]);  nf:=FIRST(x[0]); nl:=LAST(x[0]);
   wr:=TextWr.New();
+PROCEDURE Lex (rd: Rd.T; READONLY style : LexStyle; ): T RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted}=BEGIN END Lex;
+
 BEGIN
   Wr.PutText(wr,"M" & F.Int(m) & "x" & F.Int(n) & "{\n");
   FOR i:=mf TO ml DO
@@ -70,6 +48,8 @@ PROCEDURE Tex (x : T; READONLY style := TexStyle{}):TEXT
                RAISES {Thread.Alerted, Wr.Failure} =
 VAR
   wr:=TextWr.New();
+PROCEDURE Lex (rd: Rd.T; READONLY style : LexStyle; ): T RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted}=BEGIN END Lex;
+
 BEGIN
   Wr.PutText(wr,"\\left(\\begin{array}{");
   Wr.PutText(wr,Dup("c",NUMBER(x[0])));
@@ -84,6 +64,8 @@ BEGIN
   Wr.PutText(wr,"\\end{array}\\right)\n");
   RETURN TextWr.ToText(wr);
 END Tex;
+
+PROCEDURE Lex (rd: Rd.T; READONLY style : LexStyle; ): T RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted}=BEGIN END Lex;
 
 BEGIN
 END MatrixFmtLex.

@@ -10,6 +10,7 @@ IMPORT Lex AS L;
 IMPORT FloatMode;
 FROM FmtLexSupport IMPORT Precedence;
 
+
 TYPE T = R.T;
 
 TYPE
@@ -22,6 +23,7 @@ TYPE
 <*INLINE*>
 PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT;
 
+
 TYPE
   TexStyle = RECORD
                style           := F.Style.Auto;
@@ -30,6 +32,7 @@ TYPE
 
 PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within := Precedence.sum):
   TEXT;
+
 
 TYPE LexStyle = RECORD END;
 

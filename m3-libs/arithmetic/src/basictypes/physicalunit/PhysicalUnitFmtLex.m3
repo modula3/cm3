@@ -1,26 +1,34 @@
 MODULE PhysicalUnitFmtLex;
-(*Copyright (c) 1996, m3na project
+(*Copyright (c) 1996, m3na project*)
 
-1/1/96  <name>    Initial version
-*)
+IMPORT PhysicalUnit AS U;
+(*IMPORT Rd, Wr, TextWr, Thread;*)
+IMPORT Fmt AS F;
+(*IMPORT Lex AS L;*)
+(*IMPORT FloatMode;*)
 
-IMPORT PhysicalUnit       AS U,
-       Fmt                AS F;
+<*UNUSED*>
+CONST Module = "PhysicalUnitFmtLex.";
 
-<*UNUSED*> CONST Module = "PhysicalUnitFmtLex.";
-
-PROCEDURE Fmt(unit:T):TEXT =
+PROCEDURE Fmt (unit: T): TEXT =
   VAR
-    it:=unit.iterate();
-    dim:INTEGER;
-    exp:U.ExpType;
-    res:TEXT:="{";
+    it             := unit.iterate();
+    dim: INTEGER;
+    exp: U.ExpType;
+    res: TEXT      := "{";
   BEGIN
-    WHILE it.next(dim,exp) DO
-      res:=res&"("&F.Int(dim)&","&F.Int(exp)&")";
+    WHILE it.next(dim, exp) DO
+      res := res & "(" & F.Int(dim) & "," & F.Int(exp) & ")";
     END;
-    RETURN res&"}";
+    RETURN res & "}";
   END Fmt;
+
+(*
+PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
+  RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted} =
+  BEGIN
+  END Lex;
+*)
 
 BEGIN
 END PhysicalUnitFmtLex.

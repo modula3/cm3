@@ -9,6 +9,7 @@ IMPORT FloatMode;
 (*FROM NADefinitions IMPORT Error;*)
 FROM FmtLexSupport IMPORT Precedence;
 
+
 TYPE T = C.T;
 
 TYPE FmtStyle = RECORD elemStyle := RF.FmtStyle{};  END;

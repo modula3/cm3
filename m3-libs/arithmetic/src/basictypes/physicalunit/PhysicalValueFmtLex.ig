@@ -1,6 +1,7 @@
 GENERIC INTERFACE PhysicalValueFmtLex(CF, PV, DB);
 (*Copyright (c) 1996, m3na project*)
 
+
 TYPE T = PV.T;
 
 TYPE

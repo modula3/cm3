@@ -1,6 +1,10 @@
 GENERIC MODULE PolarFmtLex(R, RF);
 (*Copyright (c) 1996, m3na project*)
 
+IMPORT Rd, Wr, Thread;
+IMPORT Fmt AS F;
+IMPORT Lex AS L;
+IMPORT FloatMode;
 FROM FmtLexSupport IMPORT Precedence, Parenthesize;
 
 <*UNUSED*>
@@ -30,6 +34,8 @@ PROCEDURE Tex (READONLY x     : T;
     END;
     RETURN t;
   END Tex;
+
+PROCEDURE Lex (rd: Rd.T; READONLY style : LexStyle; ): T RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted}=BEGIN END Lex;
 
 BEGIN
 END PolarFmtLex.

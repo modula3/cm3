@@ -7,6 +7,7 @@ IMPORT Lex AS L;
 IMPORT FloatMode;
 FROM FmtLexSupport IMPORT Precedence;
 
+
 TYPE T = I.T;
 
 TYPE FmtStyle = RECORD base: F.Base := 10;  END;

@@ -3,19 +3,16 @@ GENERIC MODULE FractionFmtLex(RF);
 
    Abstract: Formatting and parsing fraction numbers *)
 
+IMPORT Rd, Wr, Thread;
+IMPORT Fmt AS F;
+IMPORT Lex AS L;
+IMPORT FloatMode;
 (*FROM NADefinitions IMPORT Error,Err;*)
 FROM FmtLexSupport IMPORT Precedence, Parenthesize;
 
 <*UNUSED*>
 CONST Module = "FractionFmtLex.";
 
-(*
-PROCEDURE Lex(
-               str:TEXT):Fr.T RAISES {Error}=
-BEGIN
-  RAISE Error(Err.not_implemented);
-END Lex;
-*)
 PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT =
   VAR t: TEXT;
   BEGIN
@@ -38,6 +35,8 @@ PROCEDURE Tex (READONLY x     : T;
     END;
     RETURN Parenthesize(t, Precedence.product, within);
   END Tex;
+
+PROCEDURE Lex (rd: Rd.T; READONLY style : LexStyle; ): T RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted}=BEGIN END Lex;
 
 BEGIN
 END FractionFmtLex.

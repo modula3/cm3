@@ -1,15 +1,10 @@
 GENERIC MODULE ComplexFmtLex(R,RF);
-(*Copyright (c) 1996, m3na project
+(*Copyright (c) 1996, m3na project*)
 
-Abstract: Formatting and parsing complex numbers
-
-12/13/95  Harry George    Initial version
-1/27/96   Harry George    Converted to m3na format
-2/3/96    Harry George    Added trancendentals
-2/17/96   Harry George    Converted from Objects to ADT's
-3/16/96   Warren Smith    Improved routines, and new routines.
-                          The ones with beginning caps are wds's
-*)
+IMPORT Rd, Wr, Thread;
+IMPORT Fmt AS F;
+IMPORT Lex AS L;
+IMPORT FloatMode;
 (*FROM NADefinitions IMPORT Error,Err;*)
 FROM FmtLexSupport IMPORT Precedence, Parenthesize;
 
@@ -18,6 +13,8 @@ FROM FmtLexSupport IMPORT Precedence, Parenthesize;
 (*
 PROCEDURE Lex(
                str:TEXT):C.T RAISES {Error}=
+PROCEDURE Lex (rd: Rd.T; READONLY style : LexStyle; ): T RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted}=BEGIN END Lex;
+
 BEGIN
   RAISE Error(Err.not_implemented);
 END Lex;
@@ -28,6 +25,8 @@ Uses simple F.Real if c.im=0.0.
 style and precision can be overridden*)
 VAR
   t:TEXT;
+PROCEDURE Lex (rd: Rd.T; READONLY style : LexStyle; ): T RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted}=BEGIN END Lex;
+
 BEGIN
   IF R.IsZero(x.im) THEN
     t:=RF.Fmt(x.re,style.elemStyle);
@@ -41,6 +40,8 @@ END Fmt;
 PROCEDURE Tex (READONLY x : T; READONLY style := TexStyle{}; within := Precedence.sum) : TEXT =
 VAR
   t:TEXT;
+PROCEDURE Lex (rd: Rd.T; READONLY style : LexStyle; ): T RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted}=BEGIN END Lex;
+
 BEGIN
   IF R.IsZero(x.im) THEN
     t:=RF.Tex(x.re,style.elemStyle,within);
@@ -54,6 +55,8 @@ BEGIN
   END;
   RETURN t;
 END Tex;
+
+PROCEDURE Lex (rd: Rd.T; READONLY style : LexStyle; ): T RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted}=BEGIN END Lex;
 
 BEGIN
 END ComplexFmtLex.

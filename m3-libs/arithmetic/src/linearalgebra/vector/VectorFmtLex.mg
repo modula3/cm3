@@ -1,8 +1,11 @@
 GENERIC MODULE VectorFmtLex(RF);
+(*Copyright (c) 1996, m3na project*)
 
 (*FROM NADefinitions IMPORT Error,Err;*)
 IMPORT Rd, Wr, TextWr, Thread;
 IMPORT Fmt AS F;
+IMPORT Lex AS L;
+IMPORT FloatMode;
 FROM FmtLexSupport IMPORT Precedence;
 
 <*UNUSED*>
@@ -48,6 +51,11 @@ PROCEDURE Tex (         x     : T;
     RETURN TextWr.ToText(wr);
   END Tex;
 
+
+PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
+  RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted} =
+  BEGIN
+  END Lex;
 
 BEGIN
 END VectorFmtLex.
