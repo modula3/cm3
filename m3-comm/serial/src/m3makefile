@@ -1,6 +1,0 @@
-
-import ("libm3")
-
-interface   ("SerialPort")
-include_dir (OS_TYPE)
-Library     ("serialio")
