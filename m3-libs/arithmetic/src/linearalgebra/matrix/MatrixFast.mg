@@ -123,6 +123,44 @@ BEGIN
 END AssertEqualSize;
 
 (*----------------*)
+PROCEDURE IsZero(
+               x:T):BOOLEAN =
+VAR
+  mf:=0; ml:=LAST(x^);
+  nf:=0; nl:=LAST(x[0]);
+BEGIN
+  FOR i:=mf TO ml DO
+    FOR j:=nf TO nl DO
+      IF x[i,j] # R.Zero THEN
+        RETURN FALSE;
+      END;
+    END;
+  END;
+  RETURN TRUE;
+END IsZero;
+(*----------------*)
+PROCEDURE Equal(
+               x,y:T):BOOLEAN RAISES {Error} =
+(*return x=y*)
+(*each is mxn*)
+<*UNUSED*> CONST ftn = Module & "Equal";
+VAR
+  mf:=0; ml:=LAST(x^);
+  nf:=0; nl:=LAST(x[0]);
+BEGIN
+  AssertEqualSize(x,y);
+
+  FOR i:=mf TO ml DO
+    FOR j:=nf TO nl DO
+      IF x[i,j] # y[i,j] THEN
+        RETURN FALSE;
+      END;
+    END;
+  END;
+  RETURN TRUE;
+END Equal;
+
+(*----------------*)
 PROCEDURE Add(
                x,y:T):T RAISES {Error} =
 (*return x+y*)
@@ -164,43 +202,20 @@ BEGIN
   END;
   RETURN z;
 END Sub;
-(*----------------*)
-PROCEDURE IsZero(
-               x:T):BOOLEAN =
-VAR
-  mf:=0; ml:=LAST(x^);
-  nf:=0; nl:=LAST(x[0]);
-BEGIN
-  FOR i:=mf TO ml DO
-    FOR j:=nf TO nl DO
-      IF x[i,j] # R.Zero THEN
-        RETURN FALSE;
-      END;
-    END;
-  END;
-  RETURN TRUE;
-END IsZero;
-(*----------------*)
-PROCEDURE Equal(
-               x,y:T):BOOLEAN RAISES {Error} =
-(*return x=y*)
-(*each is mxn*)
-<*UNUSED*> CONST ftn = Module & "Equal";
-VAR
-  mf:=0; ml:=LAST(x^);
-  nf:=0; nl:=LAST(x[0]);
-BEGIN
-  AssertEqualSize(x,y);
 
-  FOR i:=mf TO ml DO
-    FOR j:=nf TO nl DO
-      IF x[i,j] # y[i,j] THEN
-        RETURN FALSE;
-      END;
+(*-----------------*)
+PROCEDURE Scale(
+                 x:T; y:R.T):T=
+VAR
+  z:=NEW(T,NUMBER(x^),NUMBER(x[0]));
+BEGIN
+  FOR i:=FIRST(x^) TO LAST(x^) DO
+    FOR j:=FIRST(x[0]) TO LAST(x[0]) DO
+      z[i,j]:=x[i,j]*y;
     END;
   END;
-  RETURN TRUE;
-END Equal;
+  RETURN z;
+END Scale;
 
 (*-----------------*)
 PROCEDURE Mul(
