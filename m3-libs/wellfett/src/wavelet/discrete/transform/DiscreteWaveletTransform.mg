@@ -34,8 +34,8 @@ PROCEDURE FilterBankAnalysisSingle (         x      : S.T;
   END FilterBankAnalysisSingle;
 
 PROCEDURE FilterBankSynthesisSingle (READONLY x, y   : SV.TBody;
-                                              scaling: ScalingType; ): S.T
-  RAISES {Arith.Error} =
+                                              scaling: ScalingType; ):
+  S.T =
   VAR z := S.Zero;
   BEGIN
     <* ASSERT NUMBER(x) = NUMBER(y),
@@ -94,8 +94,6 @@ PROCEDURE DyadicFilterBankSynthesis (READONLY x: DyadicWaveletCoeffs;
                                      READONLY y: ARRAY [0 .. 1] OF S.T; ):
   S.T =
   VAR z := x.low;
-  <* FATAL Arith.Error *>        (*Number of filters and channels will
-                                    always match*)
   BEGIN
     FOR i := LAST(x.high^) TO FIRST(x.high^) BY -1 DO
       z := FilterBankSynthesisSingle(ARRAY OF S.T{z, x.high[i]}, y, 2);

@@ -26,7 +26,7 @@ PROCEDURE FilterBankAnalysisSingle (         x      : S.T;
 
 PROCEDURE FilterBankSynthesisSingle (READONLY x, filter: SV.TBody;
                                               scaling  : ScalingType; ):
-  S.T RAISES {Arith.Error};
+  S.T;
 (* Transform NUMBER(y) downsampled channels into one signal.  Make sure
    that there are as many filters as signal channels. *)
 
