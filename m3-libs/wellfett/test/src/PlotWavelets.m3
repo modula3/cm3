@@ -88,7 +88,7 @@ PROCEDURE PlotApproximation (fileName                              : TEXT;
 
     waveletLiftedMask := waveletMask.superpose(
                            generatorMask.upConvolve(
-                             approx.lift.scale(R.Rec(approx.wavelet0Amp)),
+                             approx.lift.scale(R.One / approx.wavelet0Amp),
                              2));
     waveletLifted := Refn.Refine(waveletLiftedMask, refineMask, numLevels);
     complement    := FB.GetComplement(FB.T{generatorMask, waveletLifted});
@@ -188,9 +188,10 @@ PROCEDURE Test () =
     numLevels         = 7;
     cdfDualSmooth     = 3;
     cdfPrimalSmooth   = 5;
-    cdf31Primalsmooth = 1;
+    cdf31PrimalSmooth = 1;
   VAR
-    unit := IIntPow.MulPower(1, 2, numLevels);
+    vanAtom := NEW(S.T).fromArray(ARRAY OF R.T{R.Half, R.Zero, -R.Half});
+    unit    := IIntPow.MulPower(1, 2, numLevels);
     cdfName := Fmt.FN("cdf-%s-%s", ARRAY OF
                                      TEXT{Fmt.Int(cdfDualSmooth),
                                           Fmt.Int(cdfPrimalSmooth)});
@@ -203,15 +204,15 @@ PROCEDURE Test () =
     cdfBounds := NEW(REF Box, horizontal := ARRAY OF R.T{-4.0D0, 5.0D0},
                      vertical := ARRAY OF R.T{-3.0D0, 3.0D0});
 
-    cdf31DualWaveletMask := BSpl.WaveletMask(
-                              cdfDualSmooth, cdf31Primalsmooth).scale(
-                              R.Two).translate(1);
+    cdfDualGeneratorVanMask := SIntPow.MulPower(cdfDual[0], vanAtom,
+                                                cdfPrimalSmooth).translate(
+                                 2 - cdfPrimalSmooth - cdfDualSmooth);
     cdf31DualGeneratorVanMask := SIntPow.MulPower(
-                                   cdfDual[0],
-                                   NEW(S.T).fromArray(
-                                     ARRAY OF R.T{R.Half, R.Zero, -R.Half}),
-                                   cdf31Primalsmooth).translate(
-                                   2 - cdf31Primalsmooth - cdfDualSmooth);
+                                   cdfDual[0], vanAtom, cdf31PrimalSmooth).translate(
+                                   2 - cdf31PrimalSmooth - cdfDualSmooth);
+    cdf31DualWaveletMask := BSpl.WaveletMask(
+                              cdfDualSmooth, cdf31PrimalSmooth).scale(
+                              R.Two).translate(1);
 
     (*
         cdf4Dual := FB.T{BSpl.GeneratorMask(4).scale(R.Two).translate(-1),
@@ -229,20 +230,27 @@ PROCEDURE Test () =
                      0.714846570552542D0, 0.230377813308855D0});
 
   BEGIN
+    (*doubled generator amplitude for nicer appearance*)
+    PlotLiftingBasis("liftingbasis", cdfDual[0].translate(2),
+                     cdf31DualGeneratorVanMask.scale(R.Two),
+                     cdf31DualWaveletMask.translate(-2), numLevels, 8);
+
     (*The problem should be completely symmetric, but it isn't.  When the
        ramp is shifted to the left by 2..3 then lifting filter is
        approximately symmetric.*)
     PlotApproximation(
       "ramp",
       NEW(S.T).fromArray(
-        V.ArithSeq(2048 + 1, -1.0D0, 2.0D0 / 2048.0D0)^, unit - 2 - 1024),
+        V.ArithSeq(2048 + 1, -1.0D0, 2.0D0 / 2048.0D0)^, unit - 1024),
       cdfDual[0].translate(2), cdf31DualGeneratorVanMask,
       cdf31DualWaveletMask.translate(-2), numLevels, 8);
 
-    (*doubled generator amplitude for nicer appearance*)
-    PlotLiftingBasis("liftingbasis", cdfDual[0].translate(2),
-                     cdf31DualGeneratorVanMask.scale(R.Two),
-                     cdf31DualWaveletMask.translate(-2), numLevels, 8);
+    PlotApproximation(
+      "ramp5van",
+      NEW(S.T).fromArray(
+        V.ArithSeq(2048 + 1, -1.0D0, 2.0D0 / 2048.0D0)^, unit - 1024),
+      cdfDual[0].translate(2), cdfDualGeneratorVanMask,
+      cdfDual[0].translate(-2), numLevels, 8);
 
     PlotWavelet(
       cdfName & "-dual-gen", cdfDual[0], cdfDual[0], numLevels, cdfBounds);
