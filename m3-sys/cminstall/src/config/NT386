@@ -117,6 +117,9 @@ readonly DEV_LIB = BEGIN_CONFIG
      8 "D:\\MSDEVSTD\\LIB"
      8 "E:\\MSDEV\\LIB"
      8 "E:\\MSDEVSTD\\LIB"
+     8 "C:\\MSVS\\VC98\\LIB"
+     8 "D:\\MSVS\\VC98\\LIB"
+     8 "E:\\MSVS\\VC98\\LIB"
      5 "cl.exe" "..\\LIB"
 END_CONFIG  % libraries
 readonly DEV_BIN = BEGIN_CONFIG
@@ -125,10 +128,13 @@ readonly DEV_BIN = BEGIN_CONFIG
      9 "MSDEVDIR" "BIN"
      8 "C:\\MSDEV\\BIN"
      8 "C:\\MSDEVSTD\\BIN"
-     8 "D:\\MSDEV\\LIB"
-     8 "D:\\MSDEVSTD\\LIB"
-     8 "E:\\MSDEV\\LIB"
-     8 "E:\\MSDEVSTD\\LIB"
+     8 "D:\\MSDEV\\BIN"
+     8 "D:\\MSDEVSTD\\BIN"
+     8 "E:\\MSDEV\\BIN"
+     8 "E:\\MSDEVSTD\\BIN"
+     8 "C:\\MSVS\\VC98\\BIN"
+     8 "D:\\MSVS\\VC98\\BIN"
+     8 "E:\\MSVS\\VC98\\BIN"
      5 "cl.exe"        "..\\BIN"
 END_CONFIG % executables
 
