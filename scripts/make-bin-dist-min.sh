@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.19 2003-07-25 23:18:17 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.20 2004-10-31 14:25:10 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -97,6 +97,11 @@ sed -e '
   /^readonly DEV_LIB[ \t]*=/s;^.*$;readonly DEV_LIB = "'${DEV_LIB}${SL}'";
   /^readonly DEV_BIN[ \t]*=/s;^.*$;readonly DEV_BIN = "'${DEV_BIN}${SL}'";
 ' "${ROOT}/m3-sys/cm3/src/config/${TARGET}" > "${INSTALLROOT}/bin/cm3.cfg"
+
+#-----------------------------------------------------------------------------
+# clean everything
+header "clean evrything for build with new compiler"
+"${ROOT}/scripts/do-cm3-min.sh" realclean || exit 1
 
 #-----------------------------------------------------------------------------
 # compile and install all needed packages
