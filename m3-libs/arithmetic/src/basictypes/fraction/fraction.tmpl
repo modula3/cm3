@@ -2,24 +2,12 @@
 %  Quake functions to instantiate operations on generic fraction numbers.
 %
 
-readonly proc FractionBasic (nm, field) is
+readonly proc FractionBasic (nm, field, gcd) is
   local basic = nm & "FractionBasic"
   build_generic_intf (basic, "FractionBasic", [field], VISIBLE)
-  build_generic_impl (basic, "FractionBasic", [field])
+  build_generic_impl (basic, "FractionBasic", [field, gcd])
 end
 
-readonly proc FractionFast (nm, field) is
-  local basic = nm & "FractionFast"
-  build_generic_intf (basic, "FractionFast", [field], VISIBLE)
-  build_generic_impl (basic, "FractionFast", [field])
-end
-
-
-readonly proc FractionTrans (nm, ffield, rfield, rtrans) is
-  local basic = nm & "FractionTrans"
-  build_generic_intf (basic, "FractionTrans", [ffield, rfield], VISIBLE)
-  build_generic_impl (basic, "FractionTrans", [ffield, rfield, rtrans])
-end
 
 readonly proc FractionFmtLex (nm, ffield, rfield, rfmt) is
   local basic = nm & "FractionFmtLex"

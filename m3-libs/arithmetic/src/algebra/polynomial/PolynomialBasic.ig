@@ -41,9 +41,11 @@ PROCEDURE Eval(x:T;           (*eval this polynomial*)
                ):R.T;
 PROCEDURE Add(x,y:T):T;  (*return x+y*)
 PROCEDURE Sub(x,y:T):T;  (*return x-y*)
+PROCEDURE Neg(x:T):T;    (*return -x *)
 <*INLINE*>
 PROCEDURE IsZero(x:T):BOOLEAN;
 PROCEDURE Equal(x,y:T):BOOLEAN;  (*return x=y*)
+PROCEDURE Compare(x,y:T) : [-1..1];  (*a dummy to let Fraction module work*)
 
 PROCEDURE Mul(x,y:T):T;  (*return x*y*)
 PROCEDURE Div(x,y:T):T RAISES {Error};  (*return x/y if possible, will fail for floating point numbers often*)

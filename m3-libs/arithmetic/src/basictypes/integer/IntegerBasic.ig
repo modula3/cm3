@@ -62,8 +62,5 @@ p and m are created by the procedure.
 *)
 *)
 
-PROCEDURE GCD(u,v:T):T;
-(*returns the greatest common denominator for u and v.*)
-
 (*==========================*)
 END IntegerBasic.
