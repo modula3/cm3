@@ -42,6 +42,11 @@
       <a href="#p_4_1">4.1 Linkage failure: missing -L before library
       paths (installer bug)</a><br>
       &nbsp;&nbsp;    
+      <a href="#p_4_2">4.2 [Release 5.1.8] Linkage failure on POSIX
+        platforms due to wrong paths (/pub/lang/m3/cm3-dist) in binary
+        installation archives
+      </a><br>
+      &nbsp;&nbsp;    
     </p>
 
     <a name="p_1">
@@ -92,6 +97,7 @@
 
     <a name="p_1_2">
     <h4>1.2 Filenames with spaces</h4>
+    </a>
 
     <p>
       <b>Platforms:</b> all, especially WIN32
@@ -330,6 +336,102 @@ SYSTEM_LIBS = {
       5.1.8.
     </p>
 
+    <a name="p_4_2">
+    <h4>
+      4.2 [Release 5.1.8] Linkage failure on POSIX platforms due to
+          wrong paths (/pub/lang/m3/cm3-dist) in binary installation
+          archives
+    </h4> 
+    </a>
+
+    <p>
+      <b>Platforms:</b> all POSIX platforms
+    </p>
+
+    <p>
+      <b>Description:</b> The isolation of the garbage collection
+      support from <tt>m3core</tt> has lead to one unexpected problem
+      in the preparation of the minimal binary installation
+      archives. On all POSIX platforms, <tt>m3core</tt> now depends on
+      either <tt>m3gc-simple</tt> or <tt>m3gc-enhanced</tt>. As
+      <tt>m3core</tt> cannot <em>import</em> another Modula-3 library
+      (due to subtleties of the runtime implementation), these
+      libraries only contain some C source code files and are shipped
+      explicitly to the installation root (<tt>INSTALL_ROOT</tt> in
+      <tt>cm3.cfg</tt>). The used declaration for this export
+      (<tt>LibdExport(libname)</tt>) creates an import directive like
+      the following one in all <tt>.M3EXPORTS</tt> files of packages
+      depending on it:
+    </p>
+    <pre>
+  _import_otherlib("m3gcdefs", "/pub/lang/m3/cm3-dist/cm3/lib", IMPORTED)
+    </pre>
+    <p>
+      This directive contains the absolute path (<tt>LIB_INSTALL</tt>)
+      of the library in question. As the binary installation archives
+      are always produced in an empty staging area
+      (for example <tt>/pub/lang/m3/cm3-dist/cm3</tt>), this path is
+      unlikely to be correct for the actual installation (where it
+      should be <tt>/usr/local/cm3/lib</tt> by default).
+    </p>
+
+    <p>
+      <b>Solution:</b>
+      There are several possible solutions for this problem. We assume
+      that <tt>INSTALL_ROOT</tt> is <tt>/usr/local/cm3</tt> and
+      <tt>TARGET</tt> is the POSIX platform in use (FreeBSD4,
+      LINUXLIBC6, etc.).
+    </p>
+    <ol>
+      <li>
+        After the installation of the minimal binary cm3 5.1.8
+        distribution, edit the files
+        <blockquote>
+          <tt>/usr/local/cm3/pkg/m3core/TARGET/.M3EXPORTS</tt>
+          <tt>/usr/local/cm3/pkg/libm3/TARGET/.M3EXPORTS</tt>
+        </blockquote>
+        and replace the line
+        <blockquote>
+          <tt>_import_otherlib("m3gcdefs", "/pub/lang/m3/cm3-dist/cm3/lib", IMPORTED)</tt>
+        </blockquote>
+        by either
+        <blockquote>
+          <tt>_import_otherlib("m3gcdefs", "/usr/local/cm3/lib", IMPORTED)</tt>
+        </blockquote>
+        or
+        <blockquote>
+          <tt>_import_otherlib("m3gcdefs", LIB_USE, IMPORTED)</tt>
+        </blockquote>
+      </li>
+      <li>
+        After the installation of the minimal binary cm3 5.1.8
+        distribution, build and ship the packages <tt>m3core</tt> and
+        <tt>libm3</tt> from one of the source distribution archives
+        (e.g. <tt>cm3-src-std-5.1.8.tgz</tt>). You can do this with
+        the following commands (<tt>WORK</tt> identifying your working
+        area where you unpacked the sources):
+        <pre>
+  cd WORK/cm3/scripts
+  ./do-pkg buildship m3core
+  ./do-pkg buildship libm3
+        </pre>
+        This will put the correct paths in the <tt>.M3EXPORTS</tt>
+        files.
+      </li>
+      <li>
+        Use <tt>sed</tt> or <tt>perl</tt> to perform the needed
+        substitutions as described in (1).
+      </li>
+    </ol>
+    <p>
+      Future distributions (release &gt; 5.1.8) will avoid this
+      problem by either modifying the export/import-mechanism for
+      <tt>m3gc-simple</tt> and <tt>m3gc-enhanced</tt>, adjust the
+      absolute paths during the construction of the binary
+      distribution archive, or automatically adjust the abolsute paths
+      after installation.
+    </p>
+
     <!--
     <h4></h4>
 
@@ -350,7 +452,7 @@ SYSTEM_LIBS = {
     <address><a href="mailto:m3-support@elego.de">Olaf Wagner</a></address>
 <!-- Created: Fri Mar  2 10:51:41 MET 2001 -->
 <!-- hhmts start -->
-Last modified: Sat Jan 12 15:40:43 CET 2002
+Last modified: Tue Feb 12 12:38:43 CET 2002
 <!-- hhmts end -->
   </body>
 </html>
