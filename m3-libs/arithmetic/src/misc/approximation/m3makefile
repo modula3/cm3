@@ -17,7 +17,7 @@ Interpolation("Extended", "ExtendedBasic", "ExtendedTrans", "ExtendedBasic")
 Interpolation("LongRealComplex",    "LongRealComplexFast",    "LongRealTrans", "LongRealBasic")
 Interpolation("LongRealVector",     "LongRealVector",         "LongRealTrans", "LongRealBasic")
 Interpolation("LongRealMatrix",     "LongRealMatrixFast",     "LongRealTrans", "LongRealBasic")
-Interpolation("LongRealPolynomial", "LongRealPolynomialFast", "LongRealTrans", "LongRealBasic")
+Interpolation("LongRealPolynomial", "LongRealPolynomial",     "LongRealTrans", "LongRealBasic")
 
 generic_module("EulerSum")
 EulerSum("Real",     "RealTrans",     "RealBasic")
