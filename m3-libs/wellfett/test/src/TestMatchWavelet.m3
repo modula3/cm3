@@ -21,7 +21,7 @@ IMPORT LongRealFmtLex AS RF;
 IMPORT LongRealVectorFmtLex AS VF;
 IMPORT LongRealMatrixFmtLex AS MF;
 IMPORT LongRealSignalFmtLex AS SF;
-(*IMPORT LongRealWaveletPlot AS WP;*)
+IMPORT LongRealWaveletPlot AS WP;
 IMPORT PLPlot AS PL;
 IMPORT IO, Fmt, Wr, Thread;
 IMPORT NADefinitions AS NA;
@@ -116,28 +116,6 @@ PROCEDURE ComputeDRho (READONLY y: ARRAY [0 .. 2] OF R.T): V.T =
     FOR i := 0 TO LAST(y) DO z[i] := p1d + y[i] * p2d; END;
     RETURN z;
   END ComputeDRho;
-
-(*
-PROCEDURE ComputeDDRho (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
-  VAR
-    p1  := VS.Sum(y);
-    p2  := VS.Inner(y, y);
-    p12 := p1 * p1;
-    c0  := 6.0D0 * p12 - 2.0D0 * p2;
-    c1  := 2.0D0*(3.0D0 * p2 - p12);
-
-    z := M.New(NUMBER(y), NUMBER(y));
-  BEGIN
-    FOR i := 0 TO LAST(y) DO
-      FOR j := i TO LAST(y) DO
-        z[i, j] := c0 - 4.0D0 * p1 * (y[i] + y[j]) + 3.0D0 * y[i] * y[j];
-        z[j, i] := z[i, j];
-      END;
-      z[i, i] := z[i, i] + c1;
-    END;
-    RETURN M.Scale(z, 6.0D0);
-  END ComputeDDRho;
-*)
 
 PROCEDURE ComputeDDRho (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
   <*FATAL NA.Error*>
@@ -234,6 +212,7 @@ TYPE
            END;
 
 PROCEDURE Derivatives (hdual, gdual0, s: S.T;
+                       smoothWeight    : R.T;
                        normalMat       : M.T;
                        targetCor       : V.T;
                        targetNormSqr   : R.T; ): Deriv2 =
@@ -241,15 +220,17 @@ PROCEDURE Derivatives (hdual, gdual0, s: S.T;
     gdual   := gdual0.superpose(s.upsample(2).convolve(hdual));
     hprimal := gdual.alternate();
     gprimal := hdual.alternate();
-    hsums   := hprimal.wrapCyclic(3).getData();
-    dsums := M.Cyclic(gprimal.translate(2 * s.getFirst()).wrapCyclic(
-                        3).getData(), s.getNumber(), -1);
+
     normals := M.MulV(normalMat, s.getData());
     dist := V.Inner(s.getData(), V.Sub(normals, V.Scale(targetCor, R.Two)))
               + targetNormSqr;
     linpart := Deriv2{zeroth := dist, first :=
                       V.Scale(V.Sub(normals, targetCor), R.Two), second :=
                       M.Scale(normalMat, R.Two)};
+
+    hsums := hprimal.wrapCyclic(3).getData();
+    dsums := M.Cyclic(gprimal.translate(2 * s.getFirst()).wrapCyclic(
+                        3).getData(), s.getNumber(), -1);
     polypart := Deriv2{zeroth := ComputeRho(hsums^), first :=
                        M.MulV(dsums, ComputeDRho(hsums^)), second :=
                        M.Mul(M.Mul(dsums, ComputeDDRho(hsums^)),
@@ -259,23 +240,22 @@ PROCEDURE Derivatives (hdual, gdual0, s: S.T;
     IO.Put(MF.Fmt(dsums) & "\n");
     RETURN polypart;
     *)
-    RETURN Deriv2{zeroth := linpart.zeroth + polypart.zeroth, first :=
-                  V.Add(linpart.first, polypart.first), second :=
-                  M.Add(linpart.second, polypart.second)};
+    RETURN
+      Deriv2{
+        zeroth := linpart.zeroth + polypart.zeroth * smoothWeight, first :=
+        V.Add(linpart.first, V.Scale(polypart.first, smoothWeight)),
+        second :=
+        M.Add(linpart.second, M.Scale(polypart.second, smoothWeight))};
   END Derivatives;
 
-PROCEDURE MatchPatternSmooth (target: S.T;
-                              levels, smooth, vanishing, translates: CARDINAL)
+PROCEDURE MatchPatternSmooth (target                : S.T;
+                              hdual, gdual, hdualvan: S.T;
+                              levels, translates    : CARDINAL;
+                              smoothWeight          : R.T;      ): S.T
   RAISES {BSpl.DifferentParity} =
   <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
-
   VAR
-    hdual := BSpl.GeneratorMask(smooth);
-    gdual := BSpl.WaveletMask(smooth, vanishing);
-    vancore := SIntPow.MulPower(hdual, NEW(S.T).fromArray(
-                                         ARRAY OF R.T{1.0D0, -1.0D0}, -1),
-                                vanishing);
-    phivan := Refn.Refine(vancore.scale(RT.SqRtTwo), hdual, levels);
+    phivan := Refn.Refine(hdualvan.scale(RT.SqRtTwo), hdual, levels);
     psi    := Refn.Refine(gdual.scale(R.One / RT.SqRtTwo), hdual, levels);
 
     unit   := IIntPow.Power(2, levels);
@@ -304,6 +284,7 @@ PROCEDURE MatchPatternSmooth (target: S.T;
     normalMat := M.MMA(basis);
     targetCor := M.MulV(basis, targetVec);
 
+    (*
     CONST delta = 1.0D-8;
     VAR
       y := NEW(S.T).fromArray(
@@ -337,44 +318,69 @@ PROCEDURE MatchPatternSmooth (target: S.T;
                         VF.Fmt(V.Scale(M.GetRow(der.second, j), delta))}));
       END;
     END;
-    (*
-        (* CONST tol = 1.0D-14;*)
-        (*VAR y := NEW(S.T).fromArray(V.New(2 * translates)^, -translates);*)
-        VAR y := NEW(S.T).fromArray(V.ArithSeq(2 * translates)^, -translates);
-        BEGIN
-          FOR j := 0 TO 10 DO
-            VAR
-              der := Derivatives(
-                       hdual, gdual, y, normalMat, targetCor, targetNormSqr);
-              targetdiff := V.Sub(targetVec, M.MulTV(basis, y.getData()));
-              targetdist := V.Inner(targetdiff, targetdiff);
-            BEGIN
-              IO.Put(Fmt.FN("derivatives %s, %s, %s\n",
-                            ARRAY OF
-                              TEXT{RF.Fmt(der.zeroth), VF.Fmt(der.first),
-                                   MF.Fmt(der.second)}));
-              y := y.superpose(NEW(S.T).fromVector(
-                                 LA.LeastSquaresGen(
-                                   der.second, ARRAY OF V.T{V.Neg(der.first)})[
-                                   0].x, first := y.getFirst()));
-              (*
-                IO.Put(Fmt.FN("y %s, DRho(y) %s\n",
-                             ARRAY OF TEXT{VF.Fmt(y), VF.Fmt(ComputeDRho(y^))}));
-              *)
-            END;
-          END;
-          (* RAISE NA.Error(NA.Err.not_converging); *)
-        END;
     *)
+    CONST tol = 1.0D-14;
+    (*VAR y := NEW(S.T).fromArray(V.New(2 * translates)^, -translates);*)
+    VAR y := NEW(S.T).fromArray(V.ArithSeq(2 * translates)^, -translates);
+    BEGIN
+      FOR j := 0 TO 100 DO
+        VAR
+          der := Derivatives(hdualvan, gdual, y, smoothWeight, normalMat,
+                             targetCor, targetNormSqr);
+        (*targetdiff := V.Sub(targetVec, M.MulTV(basis, y.getData()));
+           targetdist := V.Inner(targetdiff, targetdiff); *)
+        BEGIN
+          IF VT.Norm1(der.first) <= tol * RT.Abs(der.zeroth) THEN
+            RETURN y;
+          END;
+          (*
+                    IO.Put(Fmt.FN("derivatives %s, %s, %s\n",
+                                  ARRAY OF
+                                    TEXT{RF.Fmt(der.zeroth), VF.Fmt(der.first),
+                                         MF.Fmt(der.second)}));
+          *)
+          y := y.superpose(NEW(S.T).fromVector(
+                             LA.LeastSquaresGen(
+                               der.second, ARRAY OF V.T{V.Neg(der.first)})[
+                               0].x, first := y.getFirst()));
+          (*
+            IO.Put(Fmt.FN("y %s, DRho(y) %s\n",
+                         ARRAY OF TEXT{VF.Fmt(y), VF.Fmt(ComputeDRho(y^))}));
+          *)
+        END;
+      END;
+      RAISE NA.Error(NA.Err.not_converging);
+    END;
   END MatchPatternSmooth;
 
-(*
-PROCEDURE MaximizeSmoothness (x: V.T) =
-  VAR id := M.NewOne(3);
+PROCEDURE TestMatchPatternSmooth (target: S.T;
+                                  levels, smooth, vanishing, translates: CARDINAL;
+                                  smoothWeight: R.T)
+  RAISES {BSpl.DifferentParity} =
+  <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
+  VAR
+    hdual := BSpl.GeneratorMask(smooth);
+    gdual := BSpl.WaveletMask(smooth, vanishing);
+    hdualvan := SIntPow.MulPower(hdual, NEW(S.T).fromArray(
+                                          ARRAY OF R.T{1.0D0, -1.0D0}, -1),
+                                 vanishing);
+    s := MatchPatternSmooth(target, hdual, gdual, hdualvan, levels,
+                            translates, smoothWeight);
+    gdualopt := gdual.superpose(s.upsample(2).convolve(hdualvan));
+  (*
+      unit     := IIntPow.Power(2, levels);
+      grid     := R.One / FLOAT(unit, R.T);
+      abscissa := V.ArithSeq(size, FLOAT(first, R.T) * grid, grid);
+  *)
   BEGIN
-
-  END MaximizeSmoothness;
-*)
+    IO.Put(
+      Fmt.FN("optimal lift %s,\ncyclice wrap of gdual %s\n",
+             ARRAY OF
+               TEXT{SF.Fmt(s), SF.Fmt(gdualopt.alternate().wrapCyclic(3))}));
+    PL.Init();
+    WP.PlotWavelets(hdual, gdualopt, 6);
+    PL.Exit();
+  END TestMatchPatternSmooth;
 
 PROCEDURE Test () =
   <*FATAL BSpl.DifferentParity*>
@@ -393,9 +399,10 @@ PROCEDURE Test () =
           NEW(S.T).fromArray(
             V.ArithSeq(512, -0.01D0, 0.02D0 / 512.0D0)^, -256), 6, 4, 2, 5);
     | 3 =>
-        MatchPatternSmooth(
+        TestMatchPatternSmooth(
           NEW(S.T).fromArray(
-            V.ArithSeq(512, -0.01D0, 0.02D0 / 512.0D0)^, -256), 6, 4, 2, 3);
+            V.ArithSeq(512, -0.01D0, 0.02D0 / 512.0D0)^, -256), 6, 3, 3, 5,
+          1000000000.0D0);
     | 4 =>
         TestRho(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
         TestRho(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0}));
@@ -403,10 +410,6 @@ PROCEDURE Test () =
         TestInverseDRho(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0});
         TestInverseDRho(ARRAY OF R.T{1.0D0, 1.0D0, 0.1D0});
         TestInverseDRho(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0});
-      (*
-          | 6 =>
-              MaximizeSmoothness(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
-      *)
     ELSE
       <*ASSERT FALSE*>
     END;
