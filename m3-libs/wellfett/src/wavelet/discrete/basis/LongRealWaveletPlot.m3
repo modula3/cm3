@@ -12,8 +12,6 @@ IMPORT LongRealDyadicFilterBank AS FB;
 IMPORT LongRealSignalFmtLex AS SF;
 IMPORT PLPlot AS PL;
 
-FROM NADefinitions IMPORT Error;
-
 TYPE
   Basis = {primal, dual};
   Filter = [0 .. 1];
@@ -123,7 +121,7 @@ PROCEDURE DoPlot (basis: BasisFunctions; ymin, ymax: R.T; grid: R.T) =
     boundsa: ARRAY Basis OF Interval;
   (*PlotLines may complain about inconsistent vector sizes but we won't
      give it a reason for complaints.*)
-  <*FATAL Error*>
+  <*FATAL PL.SizeMismatch*>
   BEGIN
     FOR b := FIRST(basis) TO LAST(basis) DO
       FOR f := FIRST(basis[b]) TO LAST(basis[b]) DO
