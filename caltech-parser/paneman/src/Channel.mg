@@ -1,6 +1,6 @@
 (* Copyright (c) 2000 California Institute of Technology *)
 (* All rights reserved. See the file COPYRIGHT for a full description. *)
-(* $Id: Channel.mg,v 1.1.1.1 2001-09-19 11:40:10 wagner Exp $ *)
+(* $Id: Channel.mg,v 1.2 2001-09-19 14:22:13 wagner Exp $ *)
 
 GENERIC MODULE Channel(Elem, ElemQueue);
 (* Channel implemented as a monitored queue *)
