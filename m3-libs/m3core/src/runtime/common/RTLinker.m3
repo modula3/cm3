@@ -12,8 +12,9 @@ UNSAFE MODULE RTLinker EXPORTS RTLinker, RTModule;
 
 IMPORT Cstdlib, Cstring;
 IMPORT RT0, RTParams, RTHeapRep;
-IMPORT RTTypeSRC, RTSignal, RTThreadInit, RTHeapInfo, RTLinkerX, RTHeapDebug, 
+IMPORT RTTypeSRC, RTSignal, RTThreadInit, RTHeapInfo, RTLinkerX, 
        RTIO;
+(* IMPORT RTHeapDebug; *) 
 
 VAR
   traceInit   := FALSE;
@@ -505,7 +506,7 @@ PROCEDURE TraceModuleAndImports(s: TEXT; m: RT0.ModulePtr) =
     OutModuleAndImports(m);
   END TraceModuleAndImports;
 
-PROCEDURE TraceMsg(s: TEXT) =
+<*UNUSED*> PROCEDURE TraceMsg(s: TEXT) =
   BEGIN
     IF NOT traceInit THEN RETURN END;
     RTIO.PutText(s);
