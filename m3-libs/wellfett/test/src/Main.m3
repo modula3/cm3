@@ -1,6 +1,6 @@
 MODULE Main;
 
-FROM TestSmoothness IMPORT Test;
+FROM TestCWT IMPORT Test;
 
 BEGIN
   Test();
