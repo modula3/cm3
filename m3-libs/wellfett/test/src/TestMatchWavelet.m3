@@ -1,38 +1,37 @@
 MODULE TestMatchWavelet;
 
-IMPORT LongRealBasic AS R;
-IMPORT LongRealTrans AS RT;
-IMPORT Integer32IntegerPower AS IIntPow;
-IMPORT LongRealIntegerPower AS RIntPow;
+IMPORT LongRealBasic         AS R,
+       LongRealTrans         AS RT,
+       Integer32IntegerPower AS IIntPow,
+       LongRealIntegerPower  AS RIntPow;
 
-IMPORT LongRealVector AS V;
-IMPORT LongRealVectorRep AS VR;
-IMPORT LongRealVectorFast AS VFs;
-IMPORT LongRealVectorTrans AS VT;
+IMPORT LongRealVector      AS V,
+       LongRealVectorRep   AS VR,
+       LongRealVectorFast  AS VFs,
+       LongRealVectorTrans AS VT;
 
-IMPORT LongRealMatrix AS M;
-IMPORT LongRealMatrixTrans AS MT;
-IMPORT LongRealMatrixLapack AS LA;
-IMPORT LongRealMatrixIntegerPower AS MIntPow;
+IMPORT LongRealMatrix             AS M,
+       LongRealMatrixTrans        AS MT,
+       LongRealMatrixLapack       AS LA,
+       LongRealMatrixIntegerPower AS MIntPow;
 
-IMPORT LongRealFunctional AS Fn;
-IMPORT LongRealFunctionalDeriv2 AS FnD;
-IMPORT LongRealMatchWavelet AS WM;
+IMPORT LongRealFunctional       AS Fn,
+       LongRealFunctionalDeriv2 AS FnD,
+       LongRealMatchWavelet     AS WM;
 
-IMPORT LongRealSignal AS S;
-IMPORT LongRealSignalIntegerPower AS SIntPow;
+IMPORT LongRealSignal AS S, LongRealSignalIntegerPower AS SIntPow;
 
-IMPORT LongRealRefinableFunc AS Refn;
-IMPORT LongRealRefinableSmooth AS RefnSm;
-IMPORT LongRealBSplineWavelet AS BSpl;
-IMPORT LongRealDyadicFilterBank AS FB;
+IMPORT LongRealRefinableFunc    AS Refn,
+       LongRealRefinableSmooth  AS RefnSm,
+       LongRealBSplineWavelet   AS BSpl,
+       LongRealDyadicFilterBank AS FB;
 
-IMPORT LongRealFmtLex AS RF;
-IMPORT LongRealVectorFmtLex AS VF;
-(*IMPORT LongRealComplexVectorFmtLex AS CVF;*)
-IMPORT LongRealMatrixFmtLex AS MF;
-IMPORT LongRealSignalFmtLex AS SF;
-IMPORT LongRealWaveletPlot AS WP;
+IMPORT LongRealFmtLex       AS RF,
+       LongRealVectorFmtLex AS VF,
+       (*LongRealComplexVectorFmtLex AS CVF,*)
+       LongRealMatrixFmtLex AS MF,
+       LongRealSignalFmtLex AS SF,
+       LongRealWaveletPlot  AS WP;
 IMPORT PLPlot AS PL;
 IMPORT IO, Fmt, FileRd, Wr, Thread;
 
@@ -57,7 +56,7 @@ PROCEDURE PlotFrame (READONLY abscissa       : V.TBody;
 
   VAR ymin, ymax: R.T;
 
-  <*FATAL PL.SizeMismatch*>(*vector size mismatch can't occur*)
+  <* FATAL PL.SizeMismatch *>    (*vector size mismatch can't occur*)
   BEGIN
     IF normalizeHeight THEN
       ymin := -1.1D0;
@@ -98,7 +97,7 @@ PROCEDURE TestMatchPattern (target: S.T;
   RAISES {BSpl.DifferentParity} =
   (*The degree of freedom, i.e.  the number of parameters to minimize for,
      is 2*numTranslates*)
-  <*FATAL PL.SizeMismatch*>
+  <* FATAL PL.SizeMismatch, NA.Error *> (*MulPower can't fail for signals*)
   VAR
     hdual := BSpl.GeneratorMask(smooth).scale(R.Two).translate(2);
     gdual := BSpl.WaveletMask(smooth, vanishing).scale(R.Two);
@@ -127,6 +126,7 @@ PROCEDURE TestMatchPattern (target: S.T;
     size     := approx.approx.getNumber();
     abscissa := V.ArithSeq(size, FLOAT(first, R.T) * grid, grid);
 
+  <* FATAL Thread.Alerted, Wr.Failure *>
   BEGIN
     IO.Put(Fmt.FN("%s - %s\n", ARRAY OF
                                  TEXT{RF.Fmt(approx.wavelet0Amp),
@@ -239,7 +239,7 @@ PROCEDURE TestNormalEqu () =
 
     error := MT.Norm1(M.Sub(covar, normEqu.mat)) / MT.Norm1(covar);
 
-  <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
+  <* FATAL NA.Error, Thread.Alerted, Wr.Failure *>
   BEGIN
     IO.Put(
       Fmt.FN(
@@ -260,7 +260,7 @@ PROCEDURE TestNormalEqu () =
                VF.Fmt(normEqu.vec,
                       style := VF.FmtStyle{elemStyle := realFmtStyle})}));
     IO.Put(Fmt.FN("error: %s\n", ARRAY OF TEXT{RF.Fmt(error)}));
-    <*ASSERT error<1.0D-15*>
+    <* ASSERT error < 1.0D-15 *>
   END TestNormalEqu;
 
 
@@ -276,7 +276,7 @@ PROCEDURE TestSSE (x: V.T) =
     dx0 := V.FromArray(ARRAY OF R.T{1.0D-8, 0.0D0, 0.0D0});
     dx1 := V.FromArray(ARRAY OF R.T{0.0D0, 1.0D-8, 0.0D0});
     dx2 := V.FromArray(ARRAY OF R.T{0.0D0, 0.0D0, 1.0D-8});
-  <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
+  <* FATAL NA.Error, Thread.Alerted, Wr.Failure *>
   BEGIN
     VAR
       rho     := RefnSm.ComputeSSE(x^);
@@ -329,7 +329,7 @@ PROCEDURE InverseDSSE (x: V.T): V.T RAISES {NA.Error} =
   END InverseDSSE;
 
 PROCEDURE TestInverseDSSE (READONLY x0: ARRAY [0 .. 2] OF R.T) =
-  <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
+  <* FATAL NA.Error, Thread.Alerted, Wr.Failure *>
   VAR
     x := V.FromArray(x0);
     y := InverseDSSE(x);
@@ -435,8 +435,9 @@ PROCEDURE DeriveWSSE (hdual, gdual0, s: S.T; c: R.T): FnD.T
   END DeriveWSSE;
 
 PROCEDURE TestDeriveWSSE () =
-  <*FATAL NA.Error*>
-  CONST delta = 1.0D-8;
+  <* FATAL NA.Error *>
+  CONST
+    delta = 1.0D-8;
   VAR
     hdual  := NEW(S.T).fromArray(ARRAY OF R.T{0.23D0, 1.678D0, -0.85D0});
     gdual0 := NEW(S.T).fromArray(ARRAY OF R.T{0.723D0, -1.078D0, 0.585D0});
@@ -458,7 +459,7 @@ PROCEDURE TestDeriveWSSE () =
 PROCEDURE PutDervDif (READONLY der   : FnD.T;
                       READONLY derArr: ARRAY OF FnD.T;
                                delta : R.T             ) =
-  <*FATAL Thread.Alerted, Wr.Failure, NA.Error *>
+  <* FATAL Thread.Alerted, Wr.Failure, NA.Error *>
   BEGIN
     (*compare first derivative (gradient) with the first difference*)
     IO.Put(VF.Fmt(V.Scale(der.first, delta)) & "\n");
@@ -532,7 +533,7 @@ PROCEDURE TranslatesBasis (generatorvan : S.T;
     RETURN basis;
   END TranslatesBasis;
 
-<*OBSOLETE*>
+<* OBSOLETE *>
 PROCEDURE GetLiftedPrimalGeneratorMask (         hdual, gdual0: S.T;
                                         READONLY mc           : MatchCoef):
   S.T =
@@ -576,12 +577,12 @@ PROCEDURE VarSplitParamVec (SELF: VarWavAmpMatching; x: V.T; ): MatchCoef =
   END VarSplitParamVec;
 
 
-PROCEDURE VarDeriveRegularized ( <*UNUSED*>SELF   : VarWavAmpMatching;
-                                           derdist: FnD.T;
-                                           READONLY mc: MatchCoef;
-                                           waveletVec, waveletCor,
-                                             targetVec: V.T; ): FnD.T =
-  <*FATAL NA.Error*>(*size mismatches can't occur*)
+PROCEDURE VarDeriveRegularized (<* UNUSED *> SELF   : VarWavAmpMatching;
+                                             derdist: FnD.T;
+                                READONLY mc: MatchCoef;
+                                waveletVec, waveletCor, targetVec: V.T; ):
+  FnD.T =
+  <* FATAL NA.Error *>           (*size mismatches can't occur*)
   BEGIN
     RETURN ExtendDervTarget(derdist, mc.lift.getData(), mc.wavelet0Amp,
                             waveletVec, waveletCor, targetVec);
@@ -595,14 +596,14 @@ PROCEDURE FixSplitParamVec (SELF: FixedWavAmpMatching; x: V.T; ):
                                         SELF.yfirst), SELF.wavAmp, R.One};
   END FixSplitParamVec;
 
-PROCEDURE FixDeriveRegularized ( <*UNUSED*>SELF   : FixedWavAmpMatching;
-                                           derdist: FnD.T;
-                                           READONLY mc: MatchCoef;
-                                           <*UNUSED*>
-                                           waveletVec, waveletCor,
-                                             targetVec: V.T; ): FnD.T =
-  <*FATAL NA.Error*>(*size mismatches can't occur*)
-  VAR zerovec := V.NewZero(mc.lift.getNumber());
+PROCEDURE FixDeriveRegularized (<* UNUSED *> SELF   : FixedWavAmpMatching;
+                                             derdist: FnD.T;
+                                READONLY mc: MatchCoef;
+                                <* UNUSED *> waveletVec, waveletCor,
+                                               targetVec: V.T; ): FnD.T =
+  <* FATAL NA.Error *>           (*size mismatches can't occur*)
+  VAR
+    zerovec := V.NewZero(mc.lift.getNumber());
   BEGIN
     RETURN
       FnD.T{
@@ -770,6 +771,10 @@ PROCEDURE NoVanPlotBase (         SELF     : NoVanFilterBasis;
     WP.PlotAnyYLim(
       refnPrimal.scale(R.Two), refnDual.scale(R.Two), bank[0, 0],
       bank[0, 1], bank[1, 0], bank[1, 1], numLevels, ymin, ymax);
+    (*
+    WP.PlotAny(refnPrimal.scale(R.Two), refnDual.scale(R.Two), bank[0, 0],
+                bank[0, 1], bank[1, 0], bank[1, 1], numLevels);
+    *)
   END NoVanPlotBase;
 
 
@@ -786,7 +791,7 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
                               smoothWeight            : R.T;         ):
   MatchCoef RAISES {NA.Error} =
 
-  <*UNUSED*>
+  <* UNUSED *>
   PROCEDURE CheckDerivatives () RAISES {NA.Error} =
     CONST
       delta = 1.0D-8;
@@ -874,7 +879,7 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
       yfirst             := -numTranslates;
       matching: Matching;
 
-    <*UNUSED*>
+    <* UNUSED *>
     PROCEDURE ComputeOptCritDeriv (x: V.T): FnD.T RAISES {NA.Error} =
       VAR
         (*SplitParamVec may return initWavelet0Amp as waveletAmp and this
@@ -903,7 +908,7 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
         VAR
           hprimal := dualBasis.getLiftedWaveletMaskNoVan(
                        matching.splitParamVec(x)).adjoint();
-        <*FATAL NA.Error*>
+        <* FATAL NA.Error *>
         BEGIN
           CASE 4 OF
           | 0 => RETURN RefnSm.SquareSmoothEstimate(hprimal);
@@ -914,7 +919,7 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
           | 5 => RETURN RefnSm.SimpFrobenius(hprimal);
           | 6 => RETURN RefnSm.SumNorm(hprimal);
           ELSE
-            <*ASSERT FALSE*>
+            <* ASSERT FALSE *>
           END;
         END EstimateSmoothness;
 
@@ -929,7 +934,7 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
                         derdist, mc, waveletVec, waveletCor, targetVec);
         dersmooth: FnD.T;
 
-      <*FATAL Thread.Alerted, Wr.Failure*>
+      <* FATAL Thread.Alerted, Wr.Failure *>
       BEGIN
         IO.Put(
           Fmt.FN("ComputeOptCritDiff for x=%s", ARRAY OF TEXT{VF.Fmt(x)}));
@@ -1030,7 +1035,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
                                     smallVanishing, numTranslates: CARDINAL;
                                   smoothWeight: R.T):
   ARRAY [0 .. 1] OF FB.T RAISES {BSpl.DifferentParity} =
-  <*FATAL NA.Error, PL.SizeMismatch, Thread.Alerted, Wr.Failure*>
+  <* FATAL NA.Error, PL.SizeMismatch, Thread.Alerted, Wr.Failure *>
   VAR
     shiftVan      := 2 - smooth - vanishing;
     shiftSmallVan := (vanishing - smallVanishing) DIV 2 - 1;
@@ -1152,7 +1157,7 @@ gdual := GetLiftedPrimalGeneratorMask(hdual,gdual0,MatchCoef{lift:=s,wavelet0Amp
         PL.Exit();
     | 2 =>
     ELSE
-      <*ASSERT FALSE*>
+      <* ASSERT FALSE *>
     END;
     RETURN dualBasis.getFilterBank(mc);
   END TestMatchPatternSmooth;
@@ -1339,7 +1344,7 @@ PROCEDURE Test () =
                matchRamp, matchRampSmooth, matchSincSmooth, matchGaussian,
                matchLongRamp, matchMassPeak, checkVanishingMoments,
                testSSE, testInverseDSSE, testDeriveWSSE, testNormalEqu};
-  <*FATAL BSpl.DifferentParity*>
+  <* FATAL BSpl.DifferentParity *>
   BEGIN
     CASE Example.matchRampSmooth OF
     | Example.matchBSpline =>
@@ -1501,7 +1506,8 @@ PROCEDURE Test () =
         CONST
           clipFirst  = 15500;
           clipNumber = 2500;
-        <*FATAL OSError.E, FloatMode.Trap, Lex.Error, Rd.Failure, Thread.Alerted*>
+        <* FATAL OSError.E, FloatMode.Trap, Lex.Error, Rd.Failure,
+          Thread.Alerted *>
         VAR
           rd := FileRd.Open(
                   "/home/thielema/projects/industry/bruker/data/Datasets"
@@ -1511,7 +1517,7 @@ PROCEDURE Test () =
           dataY := M.GetColumn(data, 1);
           clipX := V.FromArray(SUBARRAY(dataX^, clipFirst, clipNumber));
           clipY := V.FromArray(SUBARRAY(dataY^, clipFirst, clipNumber));
-        <*FATAL PL.SizeMismatch*>
+        <* FATAL PL.SizeMismatch *>
         BEGIN
           PL.Init();
           PL.SetEnvironment(dataX[FIRST(dataX^)], dataX[LAST(dataX^)],
@@ -1534,7 +1540,7 @@ PROCEDURE Test () =
     | Example.testDeriveWSSE => TestDeriveWSSE();
     | Example.testNormalEqu => TestNormalEqu();
     ELSE
-      <*ASSERT FALSE*>
+      <* ASSERT FALSE *>
     END;
   END Test;
 
