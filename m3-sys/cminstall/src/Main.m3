@@ -199,6 +199,7 @@ PROCEDURE DoIt () =
     Out ("  2) CM3's shared libraries and any you create and ship are in:");
     Out ("        ", OS.MakePath (install_root, "lib"));
     Out ("     On most Unix systems you need to set the LD_LIBRARAY_PATH");
+    Out ("     (on Darwin / MacOS X it's called DYLD_LIBRARY_PATH)");
     Out ("     environment variable before running programs that use");
     Out ("     these shared libraries.");
   ELSE
