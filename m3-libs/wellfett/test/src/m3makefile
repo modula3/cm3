@@ -1,9 +1,8 @@
 import("libm3")
 import("m3na")
-override("wavelib", "/home/thielema/programming/m3/pkg/")
 import("wavelib")
 
-%module("TestDaubechies")
+module("TestDaubechies")
 module("TestTransition")
 implementation("Main")
 

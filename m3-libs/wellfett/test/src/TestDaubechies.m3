@@ -4,8 +4,10 @@ IMPORT LongRealBasic               AS R,
        LongRealTrans               AS RT,
        LongRealSignal              AS S,
        LongRealVectorFast          AS V,
+(*
        LongRealVectorBasic         AS VB,
        LongRealComplexVectorTrans  AS CVT,
+*)
        LongRealMatrixFast          AS M,
        LongRealCharPolynomial      AS CharPoly,
        LongRealComplexRootBasic    AS CRt,
