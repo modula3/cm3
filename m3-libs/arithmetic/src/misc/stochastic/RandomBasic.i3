@@ -10,24 +10,24 @@ Abstract: Ramdom number generators
 To do: (Lemming)
  - Check if the Error exception of the 'uniform' method
    can be catched in the procedures which make use of 'uniform'
+ - implement Geometric, Poisson distribution
 *)
 IMPORT LongRealBasic AS R,
-       LongRealTrans AS RT,
-       xUtils;
+       LongRealTrans AS RT;
 FROM xUtils IMPORT Error;
 
 (*==========================*)
 CONST
   (*---safe boundaries for 0.0 .. 1.0 range---*)
   Min  = RT.Eps*5.0D0;
-  Max  = 1.0D0 - Min;
+  Max  = R.One - Min;
 
 TYPE
-  RandomGen <: PublicRandomGen;
-  PublicRandomGen = OBJECT
+  T <: TPublic;
+  TPublic = OBJECT
   METHODS
     init(seed  :[FIRST(INTEGER)..-1]:=-1
-              ):RandomGen RAISES {Error};
+              ):T RAISES {Error};
 
     engine():R.T; (*raw engine; returns Min..Max*)
 
@@ -51,12 +51,14 @@ TYPE
 
     dirichlet(p:R.Array);
 
+(*
     poisson(m:R.T    (*mean*)
            ):R.T;    (*Poisson, integer returned as real*)
+*)
 
-    binomial(p:R.T;  (*probability*)
-             n:INTEGER  (*trials*)
-            ):R.T;   (*Binomial, returned as real*)
+    binomial(p:R.T;       (*probability of successful trial*)
+             n:CARDINAL;  (*number of trials*)
+            ):CARDINAL;   (*number of successful trials*)
   END;
 
 

@@ -7,7 +7,7 @@ Abstract: Random number generators
 3/17/96  Warren Smith    Gamma, Gaussian, Dirichlet deviates
 *)
 
-IMPORT Math, LongFloat;
+IMPORT LongFloat;
 IMPORT LongRealBasic AS R,
        LongRealTrans AS RT;
 FROM xUtils IMPORT Error,Err;
@@ -25,7 +25,7 @@ CONST
 
 (*======================================*)
 REVEAL
-  RandomGen = PrivateRandomGen BRANDED OBJECT
+  T = TPrivate BRANDED OBJECT
   OVERRIDES
     init:=NIL;
     engine:=NIL;
@@ -34,21 +34,23 @@ REVEAL
     gaussian:=NormalDev;
     gamma:=GammaDev;
     dirichlet:=Dirichlet;
+(*
     poisson:=Poisson;
     binomial:=Binomial;
+*)
   END;
 (*========================================*)
 (*-------------------*)
-PROCEDURE Uniform(self:RandomGen;
-                  min:R.T:=0.0D0;  (*from min*)
-                  max:R.T:=1.0D0   (*up to but not including max*)
+PROCEDURE Uniform(SELF:T;
+                  min:R.T:=R.Zero;  (*from min*)
+                  max:R.T:=R.One   (*up to but not including max*)
                   ):R.T            (*return uniform deviate*)
                   (* RAISES{xUtils.Error}  using this here and in the methods declarations let the compiler believe that procedure and method definitions do not match and thus it leads to the error: "procedure redefined (Uniform)" *)
                   =
 VAR
   t:R.T;
 BEGIN
-  t:=self.engine();
+  t:=SELF.engine();
   IF min=Min AND max=Max THEN RETURN t; END;
 
   IF min>=max THEN
@@ -58,33 +60,33 @@ BEGIN
   RETURN min + t*(max-min);
 END Uniform;
 (*-------------------*)
-PROCEDURE Exponential(self:RandomGen):R.T=
+PROCEDURE Exponential(SELF:T):R.T=
 (*exponential, mean=1 *)
 BEGIN
-  RETURN -RT.Ln(self.engine());
+  RETURN -RT.Ln(SELF.engine());
 END Exponential;
 (*-------------------*)
 (**********************
-PROCEDURE Gaussian1(self:RandomGen):R.T=
+PROCEDURE Gaussian1(SELF:T):R.T=
 (*gaussian, mean=0, var=1 *)
 (*based on NR92*)
 VAR
   v1,v2,Rsq,tmp,result:R.T;
 BEGIN
-  IF NOT self.start THEN
-    self.start:=TRUE;
-    RETURN self.gauss_y;
+  IF NOT SELF.start THEN
+    SELF.start:=TRUE;
+    RETURN SELF.gauss_y;
   END;
 
   REPEAT
-    v1:=R.Two*self.engine(self) - R.One;
-    v2:=R.Two*self.engine(self) - R.One;
+    v1:=R.Two*SELF.engine(SELF) - R.One;
+    v2:=R.Two*SELF.engine(SELF) - R.One;
     Rsq:=v1*v1 + v2*v2;
   UNTIL (Rsq > R.Zero) AND (Rsq < R.One);
   tmp:=R.sqrt(-R.Two*R.log(Rsq))/Rsq;
   result:=v1*tmp;
-  self.gauss_y:=v2*tmp;
-  self.start:=FALSE;
+  SELF.gauss_y:=v2*tmp;
+  SELF.start:=FALSE;
   RETURN result;
 END Gaussian1;
 *********************************)
@@ -95,46 +97,46 @@ END Gaussian1;
  * using Marsaglia-Bray method on page 390 Devroye, see
  * G.Marsaglia & T.A. Bray: A convenient method for
  * generating normal random variables, SIAM Review 6 (1964) 260-264.**)
-PROCEDURE NormalDev(self:RandomGen) : R.T =
+PROCEDURE NormalDev(SELF:T) : R.T =
   VAR
     v,u,w,x,sum : R.T;
   BEGIN
-    u := self.uniform();
+    u := SELF.uniform();
     IF u <= 0.8638D0 THEN
-      v := self.uniform(-1.0D0, 1.0D0);
-      w := self.uniform(-1.0D0, 1.0D0);
-      x := 2.3153508D0 * u - 1.0D0 + v + w;
+      v := SELF.uniform(-R.One, R.One);
+      w := SELF.uniform(-R.One, R.One);
+      x := 2.3153508D0 * u - R.One + v + w;
       RETURN x;
     ELSIF u <= 0.9745D0 THEN
-      v := self.uniform();
-      x := 1.5D0 * (v-1.0D0 + 9.0334237D0 * (u - 0.8638D0));
+      v := SELF.uniform();
+      x := 1.5D0 * (v-R.One + 9.0334237D0 * (u - 0.8638D0));
       RETURN x;
       (* we only get here with probability 0.0255: *)
     ELSIF u > 0.9973002D0 THEN
       REPEAT
-        v := self.uniform();
-        w := self.uniform();
-        x := 4.5D0 - Math.log(w);
+        v := SELF.uniform();
+        w := SELF.uniform();
+        x := 4.5D0 - RT.Ln(w);
       UNTIL x*v*v <= 4.5D0;
-      x := LongFloat.CopySign( Math.sqrt(x+x) , u - 0.9986501D0 );
+      x := LongFloat.CopySign( RT.SqRt(x+x) , u - 0.9986501D0 );
       RETURN x;
     ELSE
       REPEAT
-        x := self.uniform(-3.0D0, 3.0D0);
-        u := self.uniform();
+        x := SELF.uniform(-3.0D0, 3.0D0);
+        u := SELF.uniform();
         v := ABS(x);
         w := 3.0D0-v;
         w := 6.6313339D0 * w*w;
-        sum := 0.0D0;
+        sum := R.Zero;
         IF v < 1.5D0 THEN sum := 6.0432809D0 * (1.5D0 - v); END;
-        IF v < 1.0D0 THEN sum := sum + 13.2626678D0 * (3.0D0 - v*v) - w; END;
-      UNTIL u <= 49.0024445D0 * Math.exp(-v*v*0.5D0) - sum - w;
+        IF v < R.One THEN sum := sum + 13.2626678D0 * (3.0D0 - v*v) - w; END;
+      UNTIL u <= 49.0024445D0 * RT.Exp(-v*v*0.5D0) - sum - w;
       RETURN x;
     END;
   END NormalDev;
 (*-------------------*)
 (***************************************
-PROCEDURE Gamma1(self:RandomGen;
+PROCEDURE Gamma1(SELF:T;
                 event:[1..LAST(INTEGER)]):R.T=
 (*gamma, waiting time for event in Poisson process, mean=1*)
 (*based on NR92*)
@@ -146,7 +148,7 @@ BEGIN
   IF event < cutoff THEN
     x:=R.One;
     FOR i:=1 TO event DO
-      x:=x*self.engine(self);
+      x:=x*SELF.engine(SELF);
     END;
     x:=-R.log(x);
   ELSE
@@ -155,14 +157,14 @@ BEGIN
     REPEAT
       REPEAT
         REPEAT
-          v1:=R.Two*self.engine(self)-R.One;
-          v2:=self.engine(self);
+          v1:=R.Two*SELF.engine(SELF)-R.One;
+          v2:=SELF.engine(SELF);
         UNTIL (v1*v1+v2*v2) <= R.One; (*within unit half-circle*)
         tanU:=v2/v1;
         x:=a0*tanU+x0;
       UNTIL x > R.Zero;  (*within positive probabilities*)
       ratio:=(R.One+tanU*tanU)*R.exp(x0*R.log(x/x0) - a0*tanU);
-    UNTIL self.engine(self) > ratio;
+    UNTIL SELF.engine(SELF) > ratio;
   END;
   RETURN x;
 END Gamma1;
@@ -184,62 +186,62 @@ END Gamma1;
  * p88-90. It appears to work now
  * according to mean and variance tests at a=.3,.5,.6,.9,1,2,3.
 ***************************************)
-PROCEDURE GammaDev(self:RandomGen;
+PROCEDURE GammaDev(SELF:T;
                    a : R.T) : R.T =
   BEGIN
-    <* ASSERT a>0.0D0 *>
-    IF a<1.0D0 THEN
+    <* ASSERT a>R.Zero *>
+    IF a<R.One THEN
       VAR
         u0,u1,x : R.T;
       BEGIN
         LOOP
-          u0 :=  self.uniform();
-          u1 :=  self.uniform();
+          u0 :=  SELF.uniform();
+          u1 :=  SELF.uniform();
           IF (a+EulerE)*u0>EulerE THEN
-            x := -Math.log((a+EulerE)*(1.0D0-u0)/(a*EulerE));
-            IF u1 <= Math.pow(x, a-1.0D0) THEN
-              <* ASSERT x>=0.0D0 *>
+            x := -RT.Ln((a+EulerE)*(R.One-u0)/(a*EulerE));
+            IF u1 <= RT.Pow(x, a-R.One) THEN
+              <* ASSERT x>=R.Zero *>
               RETURN x;
             END;
           ELSE
-            x := Math.pow((a+EulerE)*u0/EulerE, 1.0D0/a);
-            IF u1<=Math.exp(-x) THEN
-              <* ASSERT x>=0.0D0 *>
+            x := RT.Pow((a+EulerE)*u0/EulerE, R.One/a);
+            IF u1<=RT.Exp(-x) THEN
+              <* ASSERT x>=R.Zero *>
               RETURN x;
             END;
           END;
         END; (*LOOP*)
       END;
-    ELSIF a>1.0D0 THEN
+    ELSIF a>R.One THEN
       (* Cheng+Feast algorithm [CACM 23,7 (1980) 389-394?] for a>1: *)
       VAR
-        c1 := a-1.0D0;
-        c2 := (a-1.0D0/(6.0D0*a))/c1;
+        c1 := a-R.One;
+        c2 := (a-R.One/(6.0D0*a))/c1;
         c3 := 2.0D0/c1;
         c4 := c3+2.0D0;
-        c5 := 1.0D0/Math.sqrt(a);
+        c5 := R.One/RT.SqRt(a);
         u1, u2, w: R.T;
       BEGIN
         LOOP
           REPEAT
-            u1 :=  self.uniform();
-            u2 :=  self.uniform();
+            u1 :=  SELF.uniform();
+            u2 :=  SELF.uniform();
             IF a>2.5D0 THEN
-              u1 := u2 + c5*(1.0D0-1.86D0*u1);
+              u1 := u2 + c5*(R.One-1.86D0*u1);
             END;
-          UNTIL 0.0D0<u1 AND u1<1.0D0;
+          UNTIL R.Zero<u1 AND u1<R.One;
           w := c2*u2/u1;
-          IF c3*u1+w+1.0D0/w <= c4
+          IF c3*u1+w+R.One/w <= c4
              OR
-             c3*Math.log(u1) - Math.log(w) + w < 1.0D0 THEN
+             c3*RT.Ln(u1) - RT.Ln(w) + w < R.One THEN
             w := w*c1;
-            <* ASSERT w>=0.0D0 *>
+            <* ASSERT w>=R.Zero *>
             RETURN w;
           END;
         END; (*LOOP*)
       END;
     ELSE (* a=1, just use exponential: *)
-      RETURN -Math.log( self.uniform() );
+      RETURN -RT.Ln( SELF.uniform() );
     END;
   END GammaDev;
 (*----------------------*)
@@ -248,43 +250,41 @@ PROCEDURE GammaDev(self:RandomGen;
  * Follows L.Devroye: Non-uniform random variate generation,
  * Springer 1986.   p[] is overwritten by the Dirichlet deviate.
  *)
-PROCEDURE Dirichlet(self:RandomGen;
+PROCEDURE Dirichlet(SELF:T;
                     p:R.Array) =
   VAR
     t, sum : R.T;
     n1:=FIRST(p^); nn:=LAST(p^);
   BEGIN
-    sum := 0.0D0;
+    sum := R.Zero;
     FOR n:=nn TO n1 BY -1 DO
-      t := GammaDev(self, p[n] );
+      t := GammaDev(SELF, p[n] );
       p[n] := t;
       sum := sum + t;
     END;
-    t := 1.0D0/sum;
+    t := R.One/sum;
     FOR n:=nn TO n1 BY -1 DO
       p[n] := p[n] * t;
     END;
   END Dirichlet;
 
-
+(*
 (*-------------------*)
-PROCEDURE Poisson(self:RandomGen;
+PROCEDURE Poisson(SELF:T;
                      m:R.T    (*mean*)
                      ):R.T=
 (*Poisson, integer returned as real*)
 <*UNUSED*> CONST ftn = Module & "Poisson";
 BEGIN
-  RAISE Error(Err.not_implemented);
 END Poisson;
+*)
 (*-------------------*)
-PROCEDURE Binomial(self:RandomGen;
-                     p:R.T;  (*probability*)
-                     n:INTEGER  (*trials*)
-                     ):R.T=
-(*Binomial, returned as real*)
+PROCEDURE Binomial(SELF:T;
+                     p:R.T;
+                     n:CARDINAL
+                     ):CARDINAL=
 <*UNUSED*> CONST ftn = Module & "Binomial";
 BEGIN
-  RAISE Error(Err.not_implemented);
 END Binomial;
 
 (*==========================*)

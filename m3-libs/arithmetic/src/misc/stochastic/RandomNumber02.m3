@@ -293,8 +293,9 @@ explains the results of the Marsaglia test battery above.
 *)
 
 IMPORT LongRealBasic AS R,
-       Word, Math, Tick, TimeStamp;
-FROM RandomBasic IMPORT RandomGen;
+       LongRealTrans AS RT,
+       Word, Tick, TimeStamp;
+FROM RandomBasic IMPORT T;
 IMPORT RandomRep;
 
 CONST Module = "RandomNumber02.";
@@ -304,17 +305,17 @@ VAR InitDone:=FALSE;  (*is the big Init done yet?*)
 (*---object wrappers---*)
 
 (*------------------*)
-REVEAL slow = RandomGen BRANDED OBJECT
+REVEAL slow = T BRANDED OBJECT
   OVERRIDES
     init:=slow_init;
     engine:=slow_engine;
   END;
 
-PROCEDURE slow_init(self:RandomGen;
+PROCEDURE slow_init(SELF:T;
                     seed:[FIRST(INTEGER)..-1]:=-1
-                       ):RandomGen=
+                       ):T=
 VAR
-  t:=NARROW(self,slow);
+  t:=NARROW(SELF,slow);
 BEGIN
   IF NOT InitDone THEN
     IF seed = -1 THEN
@@ -329,7 +330,8 @@ BEGIN
   RETURN t;
 END slow_init;
 
-PROCEDURE slow_engine(<*UNUSED*>self:slow):R.T=
+PROCEDURE slow_engine(<*UNUSED*>SELF:slow):R.T=
+<*UNUSED*>
 CONST
   ftn= Module & "slow_engine";
 BEGIN
@@ -337,17 +339,17 @@ BEGIN
 END slow_engine;
 
 (*------------------*)
-REVEAL fast = RandomGen BRANDED OBJECT
+REVEAL fast = T BRANDED OBJECT
   OVERRIDES
     init:=fast_init;
     engine:=fast_engine;
   END;
 
-PROCEDURE fast_init(self:RandomGen;
+PROCEDURE fast_init(SELF:T;
                     seed:[FIRST(INTEGER)..-1]:=-1
-                       ):RandomGen=
+                       ):T=
 VAR
-  t:=NARROW(self,fast);
+  t:=NARROW(SELF,fast);
 BEGIN
   IF NOT InitDone THEN
     IF seed = -1 THEN
@@ -362,7 +364,8 @@ BEGIN
   RETURN t;
 END fast_init;
 
-PROCEDURE fast_engine(<*UNUSED*>self:fast):R.T=
+PROCEDURE fast_engine(<*UNUSED*>SELF:fast):R.T=
+<*UNUSED*>
 CONST
   ftn= Module & "fast_engine";
 BEGIN
@@ -379,12 +382,12 @@ CONST
 VAR
   isf1 := asf1;
   jsf1 := bsf1;
-  arrsf1 : ARRAY [0..asf1-1] OF LONGREAL; (* initialize to rands in [0,1) not all with LS Bit=0*)
+  arrsf1 : ARRAY [0..asf1-1] OF R.T; (* initialize to rands in [0,1) not all with LS Bit=0*)
 
 (* Generates a new random real in [0,1): *)
-PROCEDURE SubtractiveFibo1() : LONGREAL =
+PROCEDURE SubtractiveFibo1() : R.T =
   VAR
-    x : LONGREAL;
+    x : R.T;
   BEGIN
     DEC(isf1);
     DEC(jsf1);
@@ -394,7 +397,7 @@ PROCEDURE SubtractiveFibo1() : LONGREAL =
       jsf1 := asf1-1; (* wraparound *)
     END;
     x := arrsf1[isf1] - arrsf1[jsf1];
-    IF x<0.0D0 THEN x := x+1.0D0; END; (* subtraction mod 1 *)
+    IF x<R.Zero THEN x := x+R.One; END; (* subtraction mod 1 *)
     arrsf1[isf1] := x;
     RETURN x;
   END SubtractiveFibo1;
@@ -548,7 +551,7 @@ PROCEDURE WolframCA() : BOOLEAN =
 CONST
   MULTmg = 69069;
   mgSIZE = 103;
-  SCALEmg = (FLOAT(mgSIZE, LONGREAL) / 4294967296.0D0);
+  SCALEmg = (FLOAT(mgSIZE, R.T) / 4294967296.0D0);
 VAR
   MultCongMg : Word.T;  (* initialize to a random odd word *)
   ShiftRegMg : Word.T; (* initialize to a random word with 7ff in LS 11 bits *)
@@ -585,7 +588,7 @@ PROCEDURE ImprovedMcGill(): Word.T =
 
     (** My improvement: the normal McGill generator would just return r1 here,
      * but I feed it into a Bays-Durham shuffler. *)
-    j := FLOOR( FLOAT(ybd, LONGREAL) * SCALEmg );
+    j := FLOOR( FLOAT(ybd, R.T) * SCALEmg );
     ymg := arrmg[j];
     arrmg[j] := r1;
     RETURN ymg;
@@ -594,16 +597,16 @@ PROCEDURE ImprovedMcGill(): Word.T =
 CONST
   abd = 101;
 VAR
-  arrbd : ARRAY [0..abd-1] OF LONGREAL; (* initialize to rands in [0,1) *)
-  ybd : LONGREAL := 0.0D0;
+  arrbd : ARRAY [0..abd-1] OF R.T; (* initialize to rands in [0,1) *)
+  ybd : R.T := R.Zero;
 
 (* Inputs a random real in [0,1), outputs a "more random" one: *)
 <* UNUSED *>
-PROCEDURE BaysDurhamShuffler(x : LONGREAL) : LONGREAL =
+PROCEDURE BaysDurhamShuffler(x : R.T) : R.T =
   VAR
     j : CARDINAL;
   BEGIN
-    j := FLOOR( FLOAT(abd, LONGREAL) * ybd );
+    j := FLOOR( FLOAT(abd, R.T) * ybd );
     ybd := arrbd[j];
     arrbd[j] := x;
     RETURN ybd;
@@ -612,7 +615,7 @@ PROCEDURE BaysDurhamShuffler(x : LONGREAL) : LONGREAL =
 (******************************************************
 The random words output by this generator ought to be extremely
 random since this is a combination of 5 generators, each pretty good by
-itself, and all 5 work according to different principles. Its only
+itSELF, and all 5 work according to different principles. Its only
 disadvantage is it is too slow for applications which do
 a very small amount of computing per random number.
   On a 100 MHz Pentium, I generated 10^7 random words in 47
@@ -641,20 +644,20 @@ PROCEDURE RandWord() : Word.T =
               ORD(WolframCA()) );
   END RandWord;
 
-PROCEDURE Uni01() : LONGREAL =
+PROCEDURE Uni01() : R.T =
   VAR
-    x : LONGREAL;
+    x : R.T;
   BEGIN
-    x := Math.ldexp(
-         Math.ldexp( FLOAT( RandWord(), LONGREAL ) , 6-Word.Size )
-             + FLOAT( RandWord(), LONGREAL ), -Word.Size );
+    x := R.Scalb(
+         R.Scalb( FLOAT( RandWord(), R.T ) , 6-Word.Size )
+             + FLOAT( RandWord(), R.T ), -Word.Size );
     <* ASSERT -0.5D0 <= x *>
     <* ASSERT x < 0.52D0 *>
-    IF x < 0.0D00 THEN x := x+1.0D0; END;
+    IF x < R.Zero THEN x := x+R.One; END;
     x := x - SubtractiveFibo1();
-    IF x < 0.0D00 THEN x := x+1.0D0; END;
-    <* ASSERT x >= 0.0D0 *>
-    <* ASSERT x < 1.0D0 *>
+    IF x < R.Zero THEN x := x+R.One; END;
+    <* ASSERT x >= R.Zero *>
+    <* ASSERT x < R.One *>
     RETURN x;
   END Uni01;
 
@@ -667,22 +670,22 @@ PROCEDURE FasterRandWord() : Word.T =
     RETURN Word.Plus( SubtractiveFibo2(), MultiplicativeFibo1() );
   END FasterRandWord;
 
-PROCEDURE FasterUni01() : LONGREAL =
+PROCEDURE FasterUni01() : R.T =
   VAR
-    x : LONGREAL;
+    x : R.T;
   BEGIN
-    x := Math.ldexp(
-         Math.ldexp( FLOAT( MultiplicativeFibo1(), LONGREAL ) , 6-Word.Size )
-             + FLOAT( MultiplicativeFibo1(), LONGREAL ), -Word.Size );
+    x := R.Scalb(
+         R.Scalb( FLOAT( MultiplicativeFibo1(), R.T ) , 6-Word.Size )
+             + FLOAT( MultiplicativeFibo1(), R.T ), -Word.Size );
     (** note, those multiplications were really just bit shifts. How
       * do I get the compiler to know that?? *)
     <* ASSERT -0.5D0 <= x *>
     <* ASSERT x < 0.52D0 *>
-    IF x < 0.0D00 THEN x := x+1.0D0; END;
+    IF x < R.Zero THEN x := x+R.One; END;
     x := x - SubtractiveFibo1();
-    IF x < 0.0D00 THEN x := x+1.0D0; END;
-    <* ASSERT x >= 0.0D0 *>
-    <* ASSERT x < 1.0D0 *>
+    IF x < R.Zero THEN x := x+R.One; END;
+    <* ASSERT x >= R.Zero *>
+    <* ASSERT x < R.One *>
     RETURN x;
   END FasterUni01;
 
@@ -693,7 +696,7 @@ CONST
    DefaultSeed2 = 2718280;
    DefaultXis = 243213.0D0;
 VAR
-   xis : LONGREAL;
+   xis : R.T;
    seedbitind : INTEGER := 3;
    seed1, seed2 : Word.T;
 
@@ -722,19 +725,19 @@ PROCEDURE IteratedSquaring() : BOOLEAN =
 
     xis := (xis * xis) MOD moduis;
 
-    RETURN ( (xis < (moduis-1.0D0)*0.5D0) = (perturb#0) );
+    RETURN ( (xis < (moduis-R.One)*0.5D0) = (perturb#0) );
   END IteratedSquaring;
 
 (* Generates a longreal, bit by bit, using IteratedSquaring *)
-PROCEDURE initlongreal() : LONGREAL =
+PROCEDURE initlongreal() : R.T =
   VAR
-    x : LONGREAL := 0.0D0;
+    x : R.T := R.Zero;
   BEGIN
     FOR i:=0 TO 57 DO
-      x := 0.5D0 * (x + FLOAT(ORD(IteratedSquaring()), LONGREAL));
+      x := 0.5D0 * (x + FLOAT(ORD(IteratedSquaring()), R.T));
     END;
-    <* ASSERT 0.0D0 <= x *>
-    <* ASSERT x < 1.0D0 *>
+    <* ASSERT R.Zero <= x *>
+    <* ASSERT x < R.One *>
     RETURN x;
   END initlongreal;
 
@@ -762,8 +765,8 @@ PROCEDURE Init(NonReproducible : BOOLEAN := TRUE) =
     IF NonReproducible THEN
       seed1 := TimeStamp.Hash(TimeStamp.New());
       seed2 := Tick.Now();
-      xis := ABS( DefaultXis + FLOAT(seed1, LONGREAL)
-                      + FLOAT(seed1, LONGREAL) ) MOD moduis;
+      xis := ABS( DefaultXis + FLOAT(seed1, R.T)
+                      + FLOAT(seed1, R.T) ) MOD moduis;
     ELSE
       seed1 := DefaultSeed1; seed2 := DefaultSeed2; xis := DefaultXis;
     END;
@@ -802,24 +805,27 @@ PROCEDURE Init(NonReproducible : BOOLEAN := TRUE) =
 (*----------------------------------------*)
 PROCEDURE Test()=
 BEGIN
-(*  (*testing code: *)
-   IO.Put( Fmt.LongReal( Uni01() ) & "\n");
-
-   FOR i:=0 TO 10000000 DO
-     EVAL ComboGen();
-     EVAL SubtractiveFibo1();
-     EVAL Math.sin( FLOAT(i, LONGREAL) );
-     EVAL FasterGen();
-     EVAL ImprovedMcGill();
-     EVAL MultiplicativeFibo1();
-     EVAL QuaternaryFibo();
-     EVAL WolframCA();
-     EVAL SubtractiveFibo2();
-     EVAL FasterUni01();
-     EVAL Uni01();
-     EVAL FasterRandWord();
-  END;
+  (*testing code: *)
+(*
+  IO.Put( Fmt.LongReal( Uni01() ) & "\n");
 *)
+
+  FOR i:=0 TO 10000000 DO
+(*
+    EVAL ComboGen();
+    EVAL FasterGen();
+*)
+    EVAL SubtractiveFibo1();
+    EVAL RT.Sin( FLOAT(i, R.T) );
+    EVAL ImprovedMcGill();
+    EVAL MultiplicativeFibo1();
+    EVAL QuaternaryFibo();
+    EVAL WolframCA();
+    EVAL SubtractiveFibo2();
+    EVAL FasterUni01();
+    EVAL Uni01();
+    EVAL FasterRandWord();
+  END;
 END Test;
 (*==========================*)
 BEGIN
