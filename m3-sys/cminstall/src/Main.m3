@@ -370,9 +370,9 @@ PROCEDURE GenConfig (): TEXT =
               v2 := OS.GetAbsolutePath (Pathname.Prefix (v2), v1);
               IF (v2 # NIL) AND OS.IsDirectory (v2) THEN
                 result := v2;
-                kind := Kind.Dir;
               END;
             END;
+            kind := Kind.Dir;
             OutResult (result);
 
         | 4 =>  (* env-variable, exe-name *)
@@ -383,8 +383,8 @@ PROCEDURE GenConfig (): TEXT =
             v2 := Env.Get (v0);
             IF v2 # NIL THEN
               result := OS.FindExecutable (OS.MakePath (v2, v1));
-              kind := Kind.Exe;
             END;
+            kind := Kind.Exe;
             OutResult (result);
 
         | 5 => (* exe-name, dir-name *)
@@ -397,9 +397,9 @@ PROCEDURE GenConfig (): TEXT =
               v2 := OS.GetAbsolutePath (Pathname.Prefix (v2), v1);
               IF (v2 # NIL) AND OS.IsDirectory (v2) THEN
                 result := v2;
-                kind := Kind.Dir;
               END;
             END;
+            kind := Kind.Dir;
             OutResult (result);
 
         | 6 => (* dir-name, exe-name *)
@@ -412,7 +412,7 @@ PROCEDURE GenConfig (): TEXT =
             OutResult (result);
 
         | 7 => (* install root *)
-            result := install_root;
+            result := OS.FilenameWithoutSpaces (install_root);
             kind := Kind.Dir;
             confirm := FALSE;
             Out ("setting INSTALL_ROOT to " & result);
@@ -422,8 +422,8 @@ PROCEDURE GenConfig (): TEXT =
             OutS ("checking for directory " & v0 & "...");
             IF OS.IsDirectory (v0) THEN
               result := v0;
-              kind := Kind.Dir;
             END;
+            kind := Kind.Dir;
             OutResult (result);
 
         | 9 =>  (* env-variable, dir-name *)
@@ -436,9 +436,9 @@ PROCEDURE GenConfig (): TEXT =
               v2 := OS.GetAbsolutePath (v2, v1);
               IF (v2 # NIL) AND OS.IsDirectory (v2) THEN
                 result := v2;
-                kind := Kind.Dir;
               END;
             END;
+            kind := Kind.Dir;
             OutResult (result);
 
         | 10 => (* env-variable *)
@@ -448,8 +448,8 @@ PROCEDURE GenConfig (): TEXT =
               " with environment variable " & v0 & "...");
             IF (v1 # NIL) THEN
               result := OS.FindExecutable (v1);
-              kind := Kind.Exe;
             END;
+            kind := Kind.Exe;
             OutResult (result);
 
         | 11 => (* file-name *)
@@ -466,8 +466,8 @@ PROCEDURE GenConfig (): TEXT =
             IF (v0 # NIL) AND OS.IsDirectory (v0)
               AND FilesPresent (v0, lib_files) THEN
               result := v0;
-              kind := Kind.LibPath;
             END;
+            kind := Kind.LibPath;
             OutResult (result);
 
         | 13 => (* dir-name *)
@@ -475,9 +475,9 @@ PROCEDURE GenConfig (): TEXT =
             OutS ("checking for directory " & v0 & "...");
             IF OS.IsDirectory (v0) THEN
               result := v0;
-              kind := Kind.LibPath;
               lib_dirs.addhi(result);
             END;
+            kind := Kind.LibPath;
             OutResult (result);
 
         | 14 => (* install key *)
@@ -503,10 +503,12 @@ PROCEDURE GenConfig (): TEXT =
               EXIT;
           | Kind.Exe =>
               IF OS.IsExecutable (v0) THEN EXIT; END;
+              v0 := OS.FilenameWithoutSpaces (v0);
               Out ();
               Out ("Please enter the name of an executable program.");
           | Kind.Dir =>
               v0 := OS.CleanDirName (v0);
+              v0 := OS.FilenameWithoutSpaces (v0);
               IF OS.IsDirectory (v0) THEN EXIT; END;
               Out ();
               Out ("Please enter the name of a directory.");
@@ -514,6 +516,7 @@ PROCEDURE GenConfig (): TEXT =
               v0 := OS.CleanDirName (v0);
               IF v0 = NIL THEN v0 := "" END;
               IF OS.IsDirectory (v0) THEN
+                v0 := OS.FilenameWithoutSpaces (v0);
                 IF FilesPresent (v0, lib_files) THEN
                   v0 := "-L" & v0;
                   EXIT;

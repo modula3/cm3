@@ -5,6 +5,8 @@ INTERFACE OS;
 
 IMPORT AtomList, CoffTime;
 
+EXCEPTION Error(TEXT);
+
 CONST
   on_unix = (CoffTime.EpochAdjust = 0.0d0);
 
@@ -29,5 +31,10 @@ PROCEDURE RemoveFile (file: TEXT);
 PROCEDURE MoveFile (src, dest: TEXT);
 
 PROCEDURE Err (ec: AtomList.T): TEXT;
+
+PROCEDURE FilenameWithoutSpaces (fn: TEXT): TEXT;
+
+PROCEDURE GetShortFilename (longFilename: TEXT): TEXT RAISES {Error};
+  (* Return a mangled filename without spaces (WIN32). *)
 
 END OS.
