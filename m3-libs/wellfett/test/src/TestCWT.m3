@@ -1,14 +1,15 @@
 MODULE TestCWT;
 
-IMPORT LongRealBasic  AS R,
-       LongRealTrans  AS RT,
-       LongRealSignal AS S,
-       LongRealVector AS V;
+IMPORT LongRealBasic       AS R,
+       LongRealTrans       AS RT,
+       LongRealSignal      AS S,
+       LongRealVector      AS V,
+       LongRealVectorTrans AS VT;
 
 IMPORT LongRealMatrix AS M;
 
 (* Why isn't it reported as unused? *)
-IMPORT LongRealSignalFmtLex AS SF;
+IMPORT LongRealFmtLex AS RF, LongRealSignalFmtLex AS SF;
 
 IMPORT LongRealConvolution AS Conv;
 IMPORT LongRealContinuousWaveletAnalysis  AS CWA,
@@ -55,8 +56,20 @@ PROCEDURE MexicanHat (t: R.T; ): R.T =
 
 PROCEDURE GaussianDiff (t: R.T; ): R.T =
   BEGIN
-    RETURN t * RT.Exp(-t * t / R.Two);
+    RETURN RT.SqRt(R.Two / RT.SqRtPi) * t * RT.Exp(-t * t / R.Two);
   END GaussianDiff;
+
+PROCEDURE AssertApproxSignal (x, y: S.T; ) =
+  BEGIN
+    IO.Put(Fmt.F("metric distance %s, norm2 %s %s\n",
+                 RF.Fmt(VT.Norm2Sqr(V.Sub(x.getData(), y.getData()))),
+                 RF.Fmt(VT.Norm2Sqr(x.getData())),
+                 RF.Fmt(VT.Norm2Sqr(y.getData()))));
+    <* ASSERT x.getFirst() = y.getFirst() *>
+    <* ASSERT VT.Norm2Sqr(V.Sub(x.getData(), y.getData()))
+                < 1.0D0 * RT.Eps * RT.Eps
+                    * (VT.Norm2Sqr(x.getData()) + VT.Norm2Sqr(y.getData())) *>
+  END AssertApproxSignal;
 
 PROCEDURE DiracTransform () =
   CONST
@@ -67,24 +80,39 @@ PROCEDURE DiracTransform () =
     xmax = FLOAT(width DIV 2, R.T);
     ymin = -FLOAT(numScales DIV 2, R.T);
     ymax = FLOAT(numScales DIV 2, R.T);
+
   VAR
     scales := V.GeomSeq(numScales, 30.0D0, RT.Pow(R.Half, R.One / 20.0D0));
-    y := CWA.Do(
-           S.One, GaussianDiff, width, scales^, NEW(Conv.HandleFourier));
-    z := CWS.Do(y^, GaussianDiff, width, scales^, NEW(Conv.HandleFourier));
-    m := NEW(M.T, numScales, width);
+    yf := CWA.Do(
+            S.One, GaussianDiff, width, scales^, NEW(Conv.HandleFourier));
+    zf := CWS.Do(
+            yf^, GaussianDiff, width, scales^, NEW(Conv.HandleFourier));
+    yn := CWA.Do(
+            S.One, GaussianDiff, width, scales^, NEW(Conv.HandleNaive));
+    zn := CWS.Do(yn^, GaussianDiff, width, scales^, NEW(Conv.HandleNaive));
+
   BEGIN
-    IO.Put(Fmt.F("y.first %s, z.first %s\n", Fmt.Int(y[0].getFirst()),
-                 Fmt.Int(z.getFirst())));
+    IO.Put(Fmt.F("y.first %s, z.first %s\n", Fmt.Int(yf[0].getFirst()),
+                 Fmt.Int(zf.getFirst())));
+    <* ASSERT NUMBER(yn^) = NUMBER(yf^) *>
+    FOR i := FIRST(yn^) TO LAST(yn^) DO
+      AssertApproxSignal(yn[i], yf[i]);
+    END;
+    AssertApproxSignal(zn, zf);
+
     PL.Init();
-    PL.SetEnvironment(xmin, xmax, ymin, ymax);
-    FOR i := FIRST(m^) TO LAST(m^) DO m[i] := y[i].getData()^; END;
-    PL.PlotImage(M.Transpose(m)^, xmin, xmax, ymin, ymax, -200.0D0,
-                 200.0D0, xmin, xmax, ymin, ymax);
-    PL.PlotLines(V.ArithSeq(width, xmin, R.One)^,
-                 V.Scale(z.clipToVector(-(width DIV 2), width), -5.0D-6)^);
-    (* PL.PlotLines(V.ArithSeq(width * 2 - 1, xmin, R.Half)^,
-       V.Scale(z.getData(), 5.0D-6)^); *)
+    VAR m := NEW(M.T, numScales, width);
+    BEGIN
+      PL.SetEnvironment(xmin, xmax, ymin, ymax);
+      FOR i := FIRST(m^) TO LAST(m^) DO m[i] := yn[i].getData()^; END;
+      PL.PlotImage(M.Transpose(m)^, xmin, xmax, ymin, ymax, -200.0D0,
+                   200.0D0, xmin, xmax, ymin, ymax);
+      PL.PlotLines(
+        V.ArithSeq(width, xmin, R.One)^,
+        V.Scale(zf.clipToVector(-(width DIV 2), width), 1.0D1)^);
+      (* PL.PlotLines(V.ArithSeq(width * 2 - 1, xmin, R.Half)^,
+         V.Scale(z.getData(), 5.0D-6)^); *)
+    END;
     PL.Exit();
   END DiracTransform;
 

@@ -34,7 +34,7 @@ PROCEDURE New (x      : S.T;
    'wavelet'.  Splitting the transform into initialization and execution
    saves memory when the data of each scale is not stored somewhere. *)
 
-PROCEDURE GetScale (h: T; scale: R.T; ): S.T;
+PROCEDURE GetScale (h: T; scale, amp: R.T; ): S.T;
 (* Compute the continuous wavelet transform for one scale. *)
 
 

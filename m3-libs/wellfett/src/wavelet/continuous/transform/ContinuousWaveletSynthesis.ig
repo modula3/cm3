@@ -34,7 +34,7 @@ PROCEDURE New (wavelet: Wavelet; width: Width; conv: Conv.Handle := NIL; ):
    Splitting the transform into initialization and execution saves memory
    if the data of scales is not stored simultaneously. *)
 
-PROCEDURE PutScale (h: T; w: S.T; scale: R.T; );
+PROCEDURE PutScale (h: T; w: S.T; scale, amp: R.T; );
 (* Process another scale of the transform. *)
 
 PROCEDURE Finish (h: T; ): S.T;

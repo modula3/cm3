@@ -27,30 +27,30 @@ readonly proc ContinuousWaveletTransform (nm, stem, impl) is
   build_generic_intf (cwt, "ContinuousWaveletTransform",
      [rfield, rfield, vector, signal], VISIBLE)
   build_generic_impl (cwt, "ContinuousWaveletTransform",
-     [field, rtrans, field, vector])
+     [field, field, vector])
 
   build_generic_intf (ccwt, "ContinuousWaveletTransform",
      [rfield, complex, cvector, csignal], VISIBLE)
   build_generic_impl (ccwt, "ContinuousWaveletTransform",
-     [field, rtrans, complex, cvector])
+     [field, complex, cvector])
 
   build_generic_intf (cwa, "ContinuousWaveletAnalysis",
      [rfield, rvector, signal, conv, cwt], VISIBLE)
   build_generic_impl (cwa, "ContinuousWaveletAnalysis",
-     [rfield, rvector, signal, conv, cwt])
+     [rfield, rtrans, rvector, signal, conv, cwt])
 
   build_generic_intf (ccwa, "ContinuousWaveletAnalysis",
      [rfield, rvector, csignal, cconv, ccwt], VISIBLE)
   build_generic_impl (ccwa, "ContinuousWaveletAnalysis",
-     [rfield, rvector, csignal, cconv, ccwt])
+     [rfield, rtrans, rvector, csignal, cconv, ccwt])
 
   build_generic_intf (cws, "ContinuousWaveletSynthesis",
      [rfield, rvector, signal, conv, cwt], VISIBLE)
   build_generic_impl (cws, "ContinuousWaveletSynthesis",
-     [rfield, rvector, signal, conv, cwt])
+     [rfield, rtrans, rvector, signal, conv, cwt])
 
   build_generic_intf (ccws, "ContinuousWaveletSynthesis",
      [rfield, rvector, csignal, cconv, ccwt], VISIBLE)
   build_generic_impl (ccws, "ContinuousWaveletSynthesis",
-     [rfield, rvector, csignal, cconv, ccwt])
+     [rfield, rtrans, rvector, csignal, cconv, ccwt])
 end
