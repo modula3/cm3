@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-core.sh,v 1.3 2001-02-13 17:40:48 wagner Exp $
+# $Id: do-cm3-core.sh,v 1.4 2003-02-07 13:50:33 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -21,6 +21,8 @@ fi
 . "$ROOT/scripts/pkgcmds.sh"
 
 P=""
+P="${P} m3gc-simple"
+#P="${P} m3gc-enhanced"
 P="${P} m3core"
 P="${P} libm3"
 P="${P} m3middle"
@@ -30,7 +32,7 @@ P="${P} m3linker"
 [ "${GCC_BACKEND}" != yes ] && P="${P} m3staloneback"
 P="${P} m3front"
 P="${P} m3quake"
-[ "${GCC_BACKEND}" = yes ] && P="${P} m3cc"
+[ "${GCC_BACKEND}" = yes -a -z "$OMIT_GCC" ] && P="${P} m3cc"
 P="${P} cm3"
 P="${P} m3scanner"
 P="${P} m3tools"
