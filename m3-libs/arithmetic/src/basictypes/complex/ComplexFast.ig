@@ -31,6 +31,8 @@ CONST
   I        = T{re:=FLOAT( 0.0,R.T), im:=FLOAT(1.0,R.T)};
   MinusOne = T{re:=FLOAT(-1.0,R.T), im:=FLOAT(0.0,R.T)};
 
+<*INLINE*> PROCEDURE FromInteger(x:INTEGER):T;
+
 <*INLINE*> PROCEDURE Add(READONLY x,y:T):T;  (*return x+y*)
 <*INLINE*> PROCEDURE Sub(READONLY x,y:T):T;  (*return x-y*)
 <*INLINE*> PROCEDURE Neg(READONLY x:T):T;    (*return -x *)

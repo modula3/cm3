@@ -10,6 +10,8 @@ FROM NADefinitions IMPORT Error, Err;
 <*UNUSED*> CONST Module = "FloatBasic.";
 (*==========================*)
 
+PROCEDURE FromInteger(x:INTEGER):T = BEGIN RETURN FLOAT(x,T) END FromInteger;
+
 PROCEDURE Add(x,y:T):T = BEGIN RETURN x+y END Add;
 PROCEDURE Sub(x,y:T):T = BEGIN RETURN x-y END Sub;
 PROCEDURE Neg(x:T):T   = BEGIN RETURN -x  END Neg;

@@ -25,6 +25,12 @@ FROM NADefinitions IMPORT Error, Err;
 *)
 
 (*--------------*)
+PROCEDURE FromInteger(x:INTEGER):T =
+BEGIN
+  RETURN T{FLOAT(x,R.T),R.Zero};
+END FromInteger;
+
+(*--------------*)
 PROCEDURE Add(READONLY x,y:T):T=
 VAR
   z:T;
