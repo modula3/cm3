@@ -1,0 +1,20 @@
+%
+%  Quake functions to instantiate operations on generic continuous wavelet transform.
+%
+
+readonly proc ContinuousWaveletTransform (nm, stem, impl) is
+  local base     = nm & "ContinuousWaveletTransform"
+  local field    = stem & impl
+  local rfield   = stem & impl
+  local signal   = stem & "Signal"
+  local vector   = stem & "Vector"
+  local rvector  = stem & "VectorFast"
+  local vsupport = stem & "VectorSupport"
+  local complex  = stem & "Complex"
+  local cvector  = stem & "ComplexVector"
+  local fourier  = stem & "FFTW"
+
+  build_generic_intf (base, "ContinuousWaveletTransform", [rfield, rvector, signal], VISIBLE)
+  build_generic_impl (base, "ContinuousWaveletTransform",
+     [field, vector, vsupport, rvector, signal, complex, cvector, fourier])
+end
