@@ -3,5 +3,5 @@
 import ("libm3")
 Interface("SIO")
 include_dir(OS_TYPE)
-Library ("libinf1")
+Library ("libsio")
 
