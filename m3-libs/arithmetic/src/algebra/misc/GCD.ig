@@ -19,12 +19,19 @@ PROCEDURE GCD(u,v:T):T;
 PROCEDURE LCM(u,v:T):T;
 (*returns the least common multiple for u and v.*)
 
-PROCEDURE BezoutGCD(u,v:T; VAR (*OUT*) x,y : T) : T;
-(*returns factors x and y such that u*x+v*y=GCD(u,v).*)
+PROCEDURE BezoutGCD(u,v:T; VAR (*OUT*) c : ARRAY [0..1],[0..1] OF T) : T;
+(*returns GCD(u,v) and
+  'small' factors in the matrix c such that
+   c[0,0]*u+c[0,1]*v=GCD(u,v)
+   c[1,0]*u+c[1,1]*v=0
+   .*)
 
-PROCEDURE Bezout(u,v,w:T; VAR (*OUT*) x,y : T) RAISES {Error};
-(*returns factors x and y such that u*x+v*y=w.
-  w must be divisible by GCD(u,v)*)
+PROCEDURE Bezout(u,v,w:T; VAR (*OUT*) c : ARRAY [0..1],[0..1] OF T) RAISES {Error};
+(*returns 'small' factors in the matrix c such that
+   c[0,0]*u+c[0,1]*v=w
+   c[1,0]*u+c[1,1]*v=0
+  . w must be divisible by GCD(u,v),
+  otherwise Err.indivisible is raised. *)
 
 (*
 PROCEDURE MACDecompose(u,v:T; VAR (*OUT*) mac : RList.T) : T;
