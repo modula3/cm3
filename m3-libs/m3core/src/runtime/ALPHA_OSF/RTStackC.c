@@ -142,6 +142,6 @@ RTStack__PrevFrame (Frame* callee, Frame* caller)
 void RTStack__Unwind (Frame *target)
 {
   if (target->lock != FrameLock) abort ();
-  longjmp (& target->cxt, 1);    /* do a full longjmp to destination */
+  exc_resume (& target->cxt);	/* longjmp doesn't unwind through signals */
 }
 

@@ -5,37 +5,52 @@
 % Last modified on Tue Jan 24 08:32:45 PST 1995 by kalsow 
 %      modified on Fri Apr 30 11:31:44 PDT 1993 by mjordan
 
-readonly EXCEPTION_IMPL = {
-  "ALPHA_OSF"  : "ex_stack",  % has a working stack walker
-  "AIX386"     : "ex_frame",
-  "AP3000"     : "ex_frame",
-  "ARM"        : "ex_frame",
-  "DS3100"     : "ex_stack",  % has a working stack walker
-  "FreeBSD"    : "ex_frame",
-  "FreeBSD2"   : "ex_frame",
-  "HP300"      : "ex_frame",
-  "HPPA"       : "ex_frame",
-  "IBMR2"      : "ex_frame",
-  "IBMRT"      : "ex_frame",
-  "IRIX5"      : "ex_frame",
-  "LINUX"      : "ex_frame",
-  "LINUXELF"   : "ex_frame",
-  "NEXT"       : "ex_frame",
-  "NT386"      : "ex_frame",
-  "OKI"        : "ex_frame",
-  "OS2"        : "ex_frame",
-  "SEQUENT"    : "ex_frame",
-  "SOLgnu"     : "ex_stack",  % has a working stack walker
-  "SOLsun"     : "ex_stack",  % has a working stack walker
-  "SPARC"      : "ex_frame",
-  "SUN3"       : "ex_frame",
-  "SUN386"     : "ex_frame",
-  "UMAX"       : "ex_frame",
-  "VAX"        : "ex_frame"
+readonly HAS_STACK_WALKER = {
+  "ALPHA_OSF"  : TRUE,  % has a working stack walker
+  "AIX386"     : FALSE,
+  "AP3000"     : FALSE,
+  "ARM"        : FALSE,
+  "DS3100"     : TRUE,  % has a working stack walker
+  "FreeBSD"    : FALSE,
+  "FreeBSD2"   : FALSE,
+  "FreeBSD3"   : FALSE,
+  "FreeBSD4"   : FALSE,
+  "HP300"      : FALSE,
+  "HPPA"       : FALSE,
+  "IBMR2"      : FALSE,
+  "IBMRT"      : FALSE,
+  "IRIX5"      : FALSE,
+  "LINUX"      : FALSE,
+  "LINUXELF"   : FALSE,
+  "LINUXLIBC6" : FALSE,
+  "NEXT"       : FALSE,
+  "NT386"      : FALSE,
+  "NT386GNU"   : FALSE,
+  "OKI"        : FALSE,
+  "OS2"        : FALSE,
+  "SEQUENT"    : FALSE,
+  "SOLgnu"     : TRUE,  % has a working stack walker
+  "SOLsun"     : TRUE,  % has a working stack walker
+  "SPARC"      : FALSE,
+  "SUN3"       : FALSE,
+  "SUN386"     : FALSE,
+  "UMAX"       : FALSE,
+  "VAX"        : FALSE,
+  "I386_DARWIN": FALSE,
+  "PPC_DARWIN" : FALSE,
+  "PPC_LINUX"  : FALSE
 }
+
 
 include_dir ("common")
 include_dir (OS_TYPE)
 include_dir (TARGET)
-include_dir (EXCEPTION_IMPL{TARGET})
-
+if defined("M3_USE_STACK_WALKER")
+  if M3_USE_STACK_WALKER and HAS_STACK_WALKER{TARGET}
+    include_dir("ex_stack")
+  else
+    include_dir("ex_frame")
+  end
+else
+  include_dir("ex_frame")
+end
