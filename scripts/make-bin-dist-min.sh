@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.8 2001-02-16 11:28:32 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.9 2001-02-16 11:30:04 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -16,19 +16,44 @@ else
   export root
 fi
 . "$sysinfo"
+. "$ROOT/scripts/pkginfo.sh"
+. "$ROOT/scripts/pkgcmds.sh"
 
 STAGE="${STAGE:-${TMPDIR}}"
 [ -d "${STAGE}" ] || mkdir "${STAGE}" || mkdir -p "${STAGE}" || exit 1
 INSTALLROOT="${STAGE}/cm3"
 head "building CM3 installation in ${INSTALLROOT}"
 
+#-----------------------------------------------------------------------------
 # create the basic directories
 . "${ROOT}/scripts/create-skel.sh"
 
+#-----------------------------------------------------------------------------
 # compile the core system
 head "stage 1: building cm3 compiler"
-. "${ROOT}/scripts/boot-cm3-with-m3.sh" build || exit 1
+P=""
+P="${P} m3core"
+P="${P} libm3"
+P="${P} m3middle"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3objfile"
+P="${P} m3linker"
+[ "${GCC_BACKEND}" != yes ] && P="${P} m3back"
+[ "${GCC_BACKEND}" != yes ] && P="${P} m3staloneback"
+P="${P} m3front"
+P="${P} m3quake"
+[ "${GCC_BACKEND}" = yes ] && P="${P} m3cc"
+P="${P} cm3"
+P="${P} cminstall"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
 
+OPTIONS=""
+ACTION="`map_action build`"
+ADDARGS=""
+
+echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
+"$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}
+
+#-----------------------------------------------------------------------------
 # install the compiler
 head "stage 2: installing cm3 compiler"
 echo "installing ${INSTALLROOT}/bin/cm3${EXE}"
@@ -58,6 +83,7 @@ if [ -n "${SYSLIBS}" ] ; then
   done
 fi
 
+#-----------------------------------------------------------------------------
 # configure a temporary config file
 echo configuring temporary config file "${INSTALLROOT}/bin/cm3.cfg"
 sed -e '
@@ -66,6 +92,7 @@ sed -e '
   /^readonly DEV_BIN[ \t]*=/s;^.*$;readonly DEV_BIN = "'${DEV_BIN}${SL}'";
 ' "${ROOT}/m3-sys/cm3/src/config/${TARGET}" > "${INSTALLROOT}/bin/cm3.cfg"
 
+#-----------------------------------------------------------------------------
 # compile and install all needed packages
 head "stage 3: compiling libraries using new cm3 compiler"
 CM3="${INSTALLROOT}/bin/cm3${EXE}"
@@ -91,6 +118,8 @@ echo ".../cm3/src/config/${TARGET} -->" \
 cp "${ROOT}/m3-sys/cm3/src/config/${TARGET}" \
   "${INSTALLROOT}/bin/cm3.cfg--default"
 
+#-----------------------------------------------------------------------------
+# build binary distribution archives
 ARCHIVE1="system.tgz"
 ARCHIVE2="cm3-min-${M3OSTYPE}-${TARGET}-${CM3VERSION}.tgz"
 ABSARCH1="`cygpath -u ${STAGE}/${ARCHIVE1}`"
