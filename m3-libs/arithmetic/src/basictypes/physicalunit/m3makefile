@@ -1,6 +1,23 @@
 import("libm3")
 
+template("physicalvalue")
+
+
 module("PhysicalUnit")
-%module("PhysicalUnitValue")
-%module("PhysicalUnitFmtLex")
+
+generic_module("PhysicalValue")
+PhysicalValue("Integer32",       "Integer32Basic")
+PhysicalValue("BigInteger",      "BigIntegerBasic")
+PhysicalValue("Real",            "RealBasic")
+PhysicalValue("LongReal",        "LongRealBasic")
+PhysicalValue("Extended",        "ExtendedBasic")
+PhysicalValue("RealComplex",     "RealComplexBasic")
+PhysicalValue("LongRealComplex", "LongRealComplexBasic")
+PhysicalValue("ExtendedComplex", "ExtendedComplexBasic")
+%PhysicalValue("RealComplex",     "RealComplexFast")
+%PhysicalValue("LongRealComplex", "LongRealComplexFast")
+%PhysicalValue("ExtendedComplex", "ExtendedComplexFast")
+
+%generic_module("PhysicalValueFmtLex")
+
 %module("SIUnitValue")

@@ -202,6 +202,17 @@ BEGIN
   RETURN q;
 END Div;
 
+PROCEDURE Rec(READONLY x:T):T RAISES {Error} =
+  BEGIN
+    IF IsZero(x) THEN
+      RAISE Error(Err.divide_by_zero);
+    ELSIF Equal(x,One) THEN
+      RETURN One;
+    ELSE
+      RAISE Error(Err.indivisible);
+    END;
+  END Rec;
+
 PROCEDURE DivMod (READONLY x, y : T; VAR r : T) : T RAISES {Error} =
 VAR
   q : T;

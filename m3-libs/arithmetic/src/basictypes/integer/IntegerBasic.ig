@@ -32,6 +32,7 @@ CONST
 
 <*INLINE*> PROCEDURE Mul(x,y:T):T;  (*return x*y*)
 <*INLINE*> PROCEDURE Div(x,y:T):T RAISES {Error};  (*return x/y*)
+<*INLINE*> PROCEDURE Rec(x:T):T RAISES {Error};  (*return 1/x*)
 <*INLINE*> PROCEDURE Mod(x,y:T):T RAISES {Error};  (*return x mod y*)
 <*INLINE*> PROCEDURE DivMod(x,y:T;VAR r:T):T RAISES {Error};  (*return x/y and write the remainder in r*)
 <*OBSOLETE*>CONST ScaleInt = Mul;
