@@ -683,7 +683,7 @@ PROCEDURE StdGetFilterBank (SELF: StdFilterBasis; READONLY mc: MatchCoef; ):
   ARRAY [0 .. 1] OF FB.T =
   VAR dual := FB.T{SELF.getRefineMask(), SELF.getShapeWaveletMask(mc)};
   BEGIN
-    RETURN ARRAY OF FB.T{FB.GetComplement(dual), dual};
+    RETURN ARRAY OF FB.T{FB.Complement(dual), dual};
   END StdGetFilterBank;
 
 PROCEDURE StdPlotBase (         SELF     : StdFilterBasis;
@@ -703,7 +703,7 @@ PROCEDURE NoVanGetFilterBank (         SELF: NoVanFilterBasis;
   ARRAY [0 .. 1] OF FB.T =
   VAR
     bank := ARRAY [0 .. 1] OF
-              FB.T{FB.GetComplement(
+              FB.T{FB.Complement(
                      FB.T{SELF.lp,
                           SELF.hp.superpose(
                             SELF.lpVan.upConvolve(
@@ -721,7 +721,7 @@ PROCEDURE NoVanGetFilterBank (         SELF: NoVanFilterBasis;
     END;
     (*
         RETURN ARRAY OF
-                 FB.T{FB.GetComplement(
+                 FB.T{FB.Complement(
                         FB.T{SELF.lp,
                              SELF.hp.superpose(
                                SELF.lpVan.upConvolve(
@@ -736,7 +736,7 @@ PROCEDURE NoVanGetFilterBank (         SELF: NoVanFilterBasis;
                        FB.T{FB.T{bank[0, 0], bank[0, 1]},
                             FB.T{bank[1, 0], SIntPow.MulPower(
                                                bank[1, 1], vanAtom, van1)}};
-          VAR primal := FB.GetComplement(vanBank[1]);
+          VAR primal := FB.Complement(vanBank[1]);
           BEGIN
             IO.Put(
               Fmt.FN("Filter bank should be:\n%s\n%s\n%s\n%s\n",
