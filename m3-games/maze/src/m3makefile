@@ -4,4 +4,4 @@ import ("libm3")
 implementation ("Main")
 
 build_standalone ()
-program ("maze")
+Program ("maze")
