@@ -99,7 +99,9 @@ CONST
    (* FreeBSD3   *)  "FreeBSD",
    (* FreeBSD4   *)  "FreeBSD",
    (* FBSD_ALPHA *)  "FreeBSD",
-   (* LINUXLIBC6 *)  "Linux"
+   (* LINUXLIBC6 *)  "Linux",
+   (* I386_DARWIN*)  "Darwin",
+   (* PPP_DARWIN *)  "Darwin"
   };
 
 CONST
@@ -133,7 +135,9 @@ CONST
    (* FreeBSD3   *)  "i486",
    (* FreeBSD4   *)  "i486",
    (* FBSD_ALPHA *)  "i486",
-   (* LINUXLIBC6 *)  "i486"
+   (* LINUXLIBC6 *)  "i486",
+   (* I386_DARWIN*)  "i486",
+   (* PPP_DARWIN *)  "ppc"
   };
 
 PROCEDURE InitUserName () =
