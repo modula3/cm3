@@ -1,2 +1,6 @@
-/* $Id: m3overrides,v 1.1.1.1 2001-09-19 11:40:10 wagner Exp $ */
-include("../../m3overrides")
+/* $Id: m3overrides,v 1.2 2001-09-19 13:53:06 wagner Exp $ */
+override("cit_common", ROOT & "/caltech-parser")
+m3tk = ROOT & "/m3-tools/m3tk"
+if not stale(m3tk, m3tk)
+  override("m3tk", ROOT & "/m3-tools")
+end

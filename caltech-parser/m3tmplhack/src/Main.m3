@@ -25,7 +25,7 @@ FROM Stdio IMPORT stderr;
 CONST
   Delims = " ";
   ModuleMode = "module";
-  RawVers = "$Id: Main.m3,v 1.1.1.1 2001-09-19 11:40:10 wagner Exp $";
+  RawVers = "$Id: Main.m3,v 1.2 2001-09-19 13:53:06 wagner Exp $";
 VAR
   Version := Text.Sub(RawVers, 15, Text.Length(RawVers) - 17);
 
