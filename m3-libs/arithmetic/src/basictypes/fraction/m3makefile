@@ -3,13 +3,13 @@ import("libm3")
 template("fraction")
 
 
-generic_module("FractionBasic")
+Generic_module("FractionBasic")
 Fraction("Integer32",            "Basic", "Integer32Basic",  "Integer32GCD")
 Fraction("BigInteger",           "Basic", "BigInteger",      "BigIntegerGCD")
 %Fraction("BigIntegerPolynomial", "Basic", "BigIntegerPolynomial", "BigIntegerPolynomialGCD")
 %Fraction("LongRealPolynomial",   "Basic", "LongRealPolynomial",   "LongRealPolynomialGCD")
 
-generic_module("FractionFmtLex")
+Generic_module("FractionFmtLex")
 FractionFmtLex("Integer32",            "Integer32Basic")
 FractionFmtLex("BigInteger",           "BigInteger")
 %FractionFmtLex("BigIntegerPolynomial", "BigIntegerPolynomial")

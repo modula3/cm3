@@ -3,12 +3,12 @@ import("libm3")
 template("functional")
 
 
-generic_module("Functional")
+Generic_module("Functional")
 Functional("Real",     "Real",     "Basic")
 Functional("LongReal", "LongReal", "Basic")
 %Functional("Extended", "Extended", "Basic")
 
-generic_module("FunctionalDeriv2")
+Generic_module("FunctionalDeriv2")
 FunctionalDeriv2("Real",     "Real",     "Basic")
 FunctionalDeriv2("LongReal", "LongReal", "Basic")
 FunctionalDeriv2("Extended", "Extended", "Basic")

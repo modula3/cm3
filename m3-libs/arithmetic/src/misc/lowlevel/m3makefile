@@ -1,4 +1,4 @@
 import("libm3")
 
-module("Bits")
-module("WordEx")
+Module("Bits")
+Module("WordEx")

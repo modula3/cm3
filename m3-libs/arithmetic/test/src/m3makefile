@@ -24,6 +24,6 @@ implementation("TestLapack")
 implementation("TestTex")
 implementation("TestFunctional")
 
-module("Test")
+Module("Test")
 program("test")
 

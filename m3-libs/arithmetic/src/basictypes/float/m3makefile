@@ -7,22 +7,22 @@ template("float")
 
 Module("ExtendedType")
 
-generic_implementation("FloatEx")
+Generic_implementation("FloatEx")
 FloatEx("Real",     "Real")
 FloatEx("LongReal", "LongReal")
 FloatEx("Extended", "Extended")
 
-generic_module("FloatBasic")
+Generic_module("FloatBasic")
 FloatBasic("Real",     "Real",     "RealType",     "RealFloat")
 FloatBasic("LongReal", "LongReal", "LongrealType", "LongFloat")
 FloatBasic("Extended", "Extended", "ExtendedType", "ExtendedFloat")
 
-generic_module("FloatTrans")
+Generic_module("FloatTrans")
 FloatTrans("Real",     "Real",     "RealBasic",     "RealEx")
 FloatTrans("LongReal", "LongReal", "LongRealBasic", "LongRealEx")
 FloatTrans("Extended", "Extended", "ExtendedBasic", "ExtendedEx")
 
-generic_module("FloatFmtLex")
+Generic_module("FloatFmtLex")
 FloatFmtLex("Real",     "Real")
 FloatFmtLex("LongReal", "LongReal")
 FloatFmtLex("Extended", "Extended")

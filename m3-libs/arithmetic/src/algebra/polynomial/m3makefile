@@ -3,10 +3,10 @@ import("libm3")
 template("polynomial")
 
 
-generic_module("Polynomial")
+Generic_module("Polynomial")
 
-generic_module("PolynomialFast")
-generic_module("PolynomialBasic")
+Generic_module("PolynomialFast")
+Generic_module("PolynomialBasic")
 Polynomial("Real",     "Fast", "RealBasic")
 Polynomial("LongReal", "Fast", "LongRealBasic")
 Polynomial("Extended", "Fast", "ExtendedBasic")
@@ -18,7 +18,7 @@ Polynomial("Integer32",          "Basic", "Integer32Basic")
 Polynomial("BigInteger",         "Basic", "BigInteger")
 Polynomial("BigIntegerFraction", "Basic", "BigIntegerFraction")
 
-generic_module("PolynomialFmtLex")
+Generic_module("PolynomialFmtLex")
 PolynomialFmtLex("Real",               "RealBasic")
 PolynomialFmtLex("LongReal",           "LongRealBasic")
 PolynomialFmtLex("Extended",           "ExtendedBasic")
