@@ -44,6 +44,9 @@ void RTStack__CurFrame (f)
    Return the stack frame that called "f".  Returns with pc = NIL if
    "f" is the first frame on the stack or its predecessor is ill-formed. */
 
+void (*RTHeapDep_Fault)();
+void (*RTProcedureSRC_FromPC) (void *pc, void **p, char **file, char **name);
+
 RTStack__PrevFrame (callee, caller)
      Frame *callee;
      Frame *caller;
