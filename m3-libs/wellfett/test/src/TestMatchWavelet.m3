@@ -394,7 +394,7 @@ PROCEDURE TranslatesBasis (generatorvan: S.T;
     RETURN basis;
   END TranslatesBasis;
 
-
+<*OBSOLETE*>
 PROCEDURE GetLiftedPrimalGeneratorMask (         hdual, gdual0: S.T;
                                         READONLY mc           : MatchCoef):
   S.T =
@@ -409,8 +409,7 @@ PROCEDURE GetLiftedPrimalGeneratorMask (         hdual, gdual0: S.T;
 TYPE
   Matching =
     OBJECT
-      hdual, gdual0: S.T;
-      yfirst       : INTEGER;
+      yfirst: INTEGER;
     METHODS
       splitParamVec (x: V.T): MatchCoef;
       deriveRegularized (         derdist: FnD.T;
@@ -481,18 +480,90 @@ PROCEDURE FixDeriveRegularized ( <*UNUSED*>SELF   : FixedWavAmpMatching;
 
 
 TYPE
+  FilterBasis =
+    OBJECT
+      lp,                        (*h*)
+        lpvan,                   (*h*(1,0,-1)^m*)
+        lpnovan,                 (*h*(1,1)^m, hdualvan with (1,-1)^m
+                                    removed*)
+        hp0,                     (*h and g0 are complementary*)
+        hp0novan                 (*hnovan and g0novan are complementary*)
+                                                                         : S.T;
+    METHODS
+      getRefineMask      (): S.T;
+      getLSGeneratorMask (): S.T;
+      getLSWavelet0Mask  (): S.T;
+      getLiftedWaveletMaskNoVan (READONLY mc: MatchCoef): S.T := GetLiftedWaveletMaskNoVan;
+    END;
+
+  StdFilterBasis = FilterBasis OBJECT
+                   OVERRIDES
+                     getRefineMask      := StdGetRefineMask;
+                     getLSGeneratorMask := StdGetLSGeneratorMask;
+                     getLSWavelet0Mask  := StdGetLSWavelet0Mask;
+                   END;
+
+  NoVanFilterBasis = FilterBasis OBJECT
+                     OVERRIDES
+                       getRefineMask      := NoVanGetRefineMask;
+                       getLSGeneratorMask := NoVanGetLSGeneratorMask;
+                       getLSWavelet0Mask  := NoVanGetLSWavelet0Mask;
+                     END;
+
+PROCEDURE GetLiftedWaveletMaskNoVan (         SELF: FilterBasis;
+                                     READONLY mc  : MatchCoef;   ): S.T =
+  VAR
+    hpdif := SELF.lpnovan.upConvolve(
+               mc.lift.scale(R.One / mc.wavelet0Amp), 2);
+  BEGIN
+    RETURN SELF.hp0novan.superpose(hpdif);
+  END GetLiftedWaveletMaskNoVan;
+
+
+PROCEDURE StdGetRefineMask (SELF: StdFilterBasis; ): S.T =
+  BEGIN
+    RETURN SELF.lp;
+  END StdGetRefineMask;
+
+PROCEDURE StdGetLSGeneratorMask (SELF: StdFilterBasis; ): S.T =
+  BEGIN
+    RETURN SELF.lpvan;
+  END StdGetLSGeneratorMask;
+
+PROCEDURE StdGetLSWavelet0Mask (SELF: StdFilterBasis; ): S.T =
+  BEGIN
+    RETURN SELF.hp0;
+  END StdGetLSWavelet0Mask;
+
+
+PROCEDURE NoVanGetRefineMask (SELF: NoVanFilterBasis; ): S.T =
+  BEGIN
+    RETURN SELF.lp;
+  END NoVanGetRefineMask;
+
+PROCEDURE NoVanGetLSGeneratorMask (SELF: NoVanFilterBasis; ): S.T =
+  BEGIN
+    RETURN SELF.lpnovan;
+  END NoVanGetLSGeneratorMask;
+
+PROCEDURE NoVanGetLSWavelet0Mask (SELF: NoVanFilterBasis; ): S.T =
+  BEGIN
+    RETURN SELF.hp0;
+  END NoVanGetLSWavelet0Mask;
+
+
+TYPE
   MatchCoef =
     RECORD
       lift                  : S.T;
       wavelet0Amp, targetAmp: R.T;  (*coefficient of the target function*)
     END;
 
-PROCEDURE MatchPatternSmooth (target                 : S.T;
-                              hdual, gdual0, hdualvan: S.T;
-                              hdualnovan, gdual0novan: S.T;
-                              levels, translates     : CARDINAL;
-                              smoothWeight           : R.T;      ):
-  MatchCoef RAISES {NA.Error} =
+PROCEDURE MatchPatternSmooth (target            : S.T;
+                              dualBasis         : FilterBasis;
+                              levels, translates: CARDINAL;
+                              smoothWeight      : R.T;         ): MatchCoef
+  RAISES {NA.Error} =
 
   <*UNUSED*>
   PROCEDURE CheckDerivatives () RAISES {NA.Error} =
@@ -506,7 +577,8 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
              ARRAY OF R.T{0.2D0, -0.3D0, 0.0D0, -0.1D0, 0.0D0, 0.4D0}, -3);
       der := FnD.Add(
                DeriveDist(normalMat, waveletCor, waveletNormSqr, y),
-               FnD.Scale(DeriveSSE(hdualvan, gdual0, y), smoothWeight));
+               FnD.Scale(DeriveSSE(dualBasis.lpvan, dualBasis.hp0, y),
+                         smoothWeight));
       derArr := NEW(REF ARRAY OF FnD.T, NUMBER(der.first^));
       extder := ExtendDervTarget(
                   der, y.getData(), cf, targetVec, targetCor, waveletVec);
@@ -521,7 +593,8 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
           derArr[j] :=
             FnD.Add(
               DeriveDist(normalMat, waveletCor, waveletNormSqr, yp),
-              FnD.Scale(DeriveSSE(hdualvan, gdual0, yp), smoothWeight));
+              FnD.Scale(DeriveSSE(dualBasis.lpvan, dualBasis.hp0, yp),
+                        smoothWeight));
           extderArr[j] :=
             ExtendDervTarget(derArr[j], yp.getData(), cf, targetVec,
                              targetCor, waveletVec);
@@ -536,8 +609,10 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
     END CheckDerivatives;
 
   VAR
-    generatorvan := Refn.Refine(hdualvan, hdual, levels);
-    wavelet      := Refn.Refine(gdual0, hdual, levels);
+    generatorvan := Refn.Refine(dualBasis.getLSGeneratorMask(),
+                                dualBasis.getRefineMask(), levels);
+    wavelet := Refn.Refine(dualBasis.getLSWavelet0Mask(),
+                           dualBasis.getRefineMask(), levels);
 
     unit   := IIntPow.Power(2, levels);
     twonit := 2 * unit;
@@ -587,18 +662,19 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         IO.Put(
           Fmt.FN("y %s, cf %s\n", ARRAY OF TEXT{SF.Fmt(y), RF.Fmt(cf)}));
         *)
-        RETURN FnD.Add(
-                 derwavdist, FnD.Scale(DeriveWSSE(hdualvan, gdual0,
-                                                  mc.lift, mc.wavelet0Amp),
-                                       smoothWeightFade));
+        RETURN FnD.Add(derwavdist,
+                       FnD.Scale(
+                         DeriveWSSE(dualBasis.getLSGeneratorMask(),
+                                    dualBasis.getLSWavelet0Mask(), mc.lift,
+                                    mc.wavelet0Amp), smoothWeightFade));
       END ComputeOptCritDeriv;
 
     PROCEDURE ComputeOptCritDiff (x: V.T): FnD.T RAISES {NA.Error} =
 
       PROCEDURE EstimateSmoothness (x: V.T): R.T =
         VAR
-          hprimal := GetLiftedPrimalGeneratorMask(
-                       hdualnovan, gdual0novan, matching.splitParamVec(x));
+          hprimal := dualBasis.getLiftedWaveletMaskNoVan(
+                       matching.splitParamVec(x)).adjoint();
         <*FATAL NA.Error*>
         BEGIN
           CASE 4 OF
@@ -712,12 +788,13 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         END;
         VAR
           mc := matching.splitParamVec(x);
-          gdual := gdual0.superpose(
-                     hdualvan.upConvolve(
+          gdual := dualBasis.hp0.superpose(
+                     dualBasis.lpvan.upConvolve(
                        mc.lift.scale(R.One / mc.wavelet0Amp), 2));
         BEGIN
           PL.StartPage();
-          WP.PlotWaveletsYLim(hdual, gdual, levels, ymin, ymax);
+          WP.PlotWaveletsYLim(
+            dualBasis.getRefineMask(), gdual, levels, ymin, ymax);
           (*PL.StopPage();*)
         END;
         smoothWeightFade := smoothWeightFade * smoothFac;
@@ -748,12 +825,16 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
                                                                    mask*)
     gdual0novan := BSpl.WaveletMask(smooth + vanishing, 0);
 
+    dualBasis := NEW(StdFilterBasis, lp := hdual, hp0 := gdual0,
+                     lpvan := hdualvan, lpnovan := hdualnovan,
+                     hp0novan := gdual0novan);
+
     (*
     mc := MatchCoef{NEW(S.T).fromArray(
                       ARRAY OF R.T{1.0D0, 0.0D0, 0.0D0, 1.0D0}), 1.5D0};
     *)
-    mc := MatchPatternSmooth(target, hdual, gdual0, hdualvan, hdualnovan,
-                             gdual0novan, levels, translates, smoothWeight);
+    mc := MatchPatternSmooth(
+            target, dualBasis, levels, translates, smoothWeight);
     vanatom := NEW(S.T).fromArray(ARRAY OF R.T{RT.Half, -RT.Half});
     s := SIntPow.MulPower(
            mc.lift.translate((2 - smooth - vanishing) DIV 2), vanatom,
@@ -782,6 +863,7 @@ gdual := GetLiftedPrimalGeneratorMask(hdual,gdual0,MatchCoef{lift:=s,wavelet0Amp
     ymax = 1.5D0;
 
   BEGIN
+
     IO.Put(
       Fmt.FN("optimal lift %s,\ncyclic wrap of gdual %s\n\n"
              (* & "hsdual\n%s\n%s\n\n" & "gdual0\n%s\n%s\n\n" &
