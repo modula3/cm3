@@ -427,7 +427,7 @@ plmesh(PLFLTArrayX x, PLFLTArrayY y, PLFLTMatrixCk z,
 DOC(plmeshc, "Plot a 3-d contoured mesh representation of the function z[x][y].")
 void
 plmeshc(PLFLTArrayX x, PLFLTArrayY y, PLFLTMatrixCk z,
-	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArray x, PLINT n);
+	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArray clevel, PLINT n);
 
 DOC(plmkstrm, "Create a new stream and makes it the default.")
 void
@@ -446,12 +446,12 @@ plot3d(PLFLTArrayX x, PLFLTArrayY y, PLFLTMatrixCk z,
 DOC(plot3dc, "Plot a 3-d contoured representation of the function z[x][y].")
 void
 plot3dc(PLFLTArrayX x, PLFLTArrayY y, PLFLTMatrixCk z,
-	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArray x, PLINT n);
+	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArray clevel, PLINT n);
 
 DOC(plsurf3d, "Plot a 3-d contoured surface representation of the function z[x][y].")
 void
 plsurf3d(PLFLTArrayX x, PLFLTArrayY y, PLFLTMatrixCk z,
-	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArray x, PLINT n);
+	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArray clevel, PLINT n);
 
 DOC(plpat, "Set fill pattern directly.")
 void
