@@ -20,6 +20,7 @@ TYPE Err= {bad_size        (*e.g., vector sizes mismatched*)
           ,not_converging  (*e.g., eps or maxiter too small*)
           ,not_implemented (*it's just a stub*)
           ,out_of_range    (*parameter is out of range*)
+          ,unit_mismatch   (*physical units of values didn't meet the requirements of the operation*)
          };
 
 
