@@ -6,18 +6,20 @@ Abstract:  Tests for XYZ module.
 
 *)
 
-IMPORT Fmt;
+IMPORT Fmt,Wr,Thread;
 IMPORT LongRealBasic              AS R,
        LongRealVectorBasic        AS V,
-       LongRealComplexVectorBasic AS CV,
-       LongRealMatrixFast         AS M,
+       (*LongRealComplexVectorBasic AS CV,*)
+       (*LongRealMatrixFast         AS M,*)
        LongRealEigenSystem        AS ES,
        LongRealMatrixLapack       AS ML,
        LongRealCharPolynomial     AS MCP,
        LongRealComplexFmtLex      AS CF,
-       LongRealVectorFmtLex       AS VF,
+       (*LongRealVectorFmtLex       AS VF,*)
        LongRealMatrixFmtLex       AS MF;
+IMPORT NADefinitions;
 
+<*FATAL NADefinitions.Error, Thread.Alerted, Wr.Failure*>
 (*=======================*)
 CONST
   Module = "TestLapack.";
@@ -36,7 +38,7 @@ BEGIN
 
   FOR j:=FIRST(id) TO LAST(id) DO
     Msg(Fmt.FN("%s: %s\n", ARRAY OF TEXT
-         {Fmt.Char(id[j]), Fmt.LongReal(GetMachineParameter(id[j]))}));
+         {Fmt.Char(id[j]), Fmt.LongReal(ML.GetMachineParameter(id[j]))}));
   END;
 
   RETURN result;
@@ -59,9 +61,10 @@ BEGIN
 
   Msg(MF.Fmt(A) & "\n");
 
-  ev := ES.EigenValuesGen(A);
+  ev := ES.EigenValuesGen (A, flags:= ES.EVGenFlagSet{ES.EVGenFlag.schurVectors});
 
   Msg(MF.Fmt(ev.upperTri) & "\n");
+  Msg(MF.Fmt(ev.schur) & "\n");
 
   FOR j:=0 TO LAST(ev.eigenvalues^) DO
     Msg(Fmt.FN("%s: %s\n", ARRAY OF TEXT
