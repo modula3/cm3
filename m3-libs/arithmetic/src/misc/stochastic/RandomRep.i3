@@ -10,24 +10,17 @@ IMPORT LongRealBasic AS R;
 FROM RandomBasic IMPORT T,TPublic;
 
 (*==========================*)
-CONST
-  TableSize = 32; (*for Bayes-Durham shuffle*)
-
 REVEAL
   T <: TPrivate;
 
 TYPE
   TPrivate = TPublic BRANDED OBJECT
-    start:BOOLEAN;
-    z1,z2,table_z:INTEGER;
-    table:ARRAY[0..TableSize-1] OF INTEGER;
-    gauss_y:R.T;
   END;
 (*-------------------*)
 PROCEDURE Uniform(SELF:T;
                   min:R.T:=R.Zero;  (*from min*)
-                  max:R.T:=R.One   (*up to but not including max*)
-                  ):R.T;           (*return uniform deviate*)
+                  max:R.T:=R.One;   (*up to but not including max*)
+                  ):R.T;            (*return uniform deviate*)
 
 PROCEDURE Exponential(SELF:T):R.T;
 

@@ -168,3 +168,8 @@ a generic module was instantiated.
 Eps should be defined in Real.i3, LongReal.i3, Extended.i3,
 or Scaleb gets the privilege to generate constants
 ExtendedType.[im]3 -> main repository
+
+---------------
+
+/usr/local/cm3/doc/reference/objects.html
+<A HREF="opaques.html#idx.129">opaque type</A>,
