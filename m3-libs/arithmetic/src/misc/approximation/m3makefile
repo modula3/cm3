@@ -1,0 +1,9 @@
+import("libm3")
+
+template("findzero")
+
+
+generic_module("FindZero")
+FindZero("Real",     "RealTrans",     "RealBasic")
+FindZero("LongReal", "LongRealTrans", "LongRealBasic")
+FindZero("Extended", "ExtendedTrans", "ExtendedBasic")
