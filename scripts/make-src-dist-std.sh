@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-dist-std.sh,v 1.5 2001-11-25 14:02:58 wagner Exp $
+# $Id: make-src-dist-std.sh,v 1.6 2002-04-02 09:40:12 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -48,6 +48,14 @@ find . \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
           -name '.M3SHIP' -or -name '.M3IMPTAB' -or -name '.M3EXPORTS' -or \
           \( -name 'CVS' -a -type d \) \) -print | \
   sed -e 's;^./;;' >> .tar-exclude
+
+TARGETS=`cd ${ROOT}/m3-sys/cm3/src/config; echo *`
+
+for p in ${PKGS}; do
+  for t in ${TARGETS}; do
+    echo ${p}/${t} >> .tar-exclude
+  done
+done
 
 echo "archiving..."
 export GZIP="-9 -v"
