@@ -2,7 +2,8 @@
 (* All rights reserved.                                      *)
 (* See the file COPYRIGHT for a full description.            *)
 (*                                                           *)
-(* portions Copyright 1997, Critical Mass, Inc.              *)
+(* Portions Copyright 1996-2000, Critical Mass, Inc.         *)
+(* See file COPYRIGHT-CMASS for details.                     *)
 (*                                                           *)
 (*| Last modified on Sat Nov 19 09:37:57 PST 1994 by kalsow  *)
 (*|      modified on Fri Aug  5 14:04:35 PDT 1994 by jdd     *)
@@ -13,7 +14,7 @@
 UNSAFE MODULE RTCollector EXPORTS RTCollector, RTCollectorSRC,
                                   RTHeapRep, RTWeakRef;
 
-IMPORT RT0, RTHeapEvent, RTHeapDep, RTHeapMap, RTIO, RTMachine;
+IMPORT RT0, RTHeapEvent, RTHeapDep, RTHeapMap, RTIO, RTMachine, RTVM;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
 IMPORT Word, Cstdlib, Thread, ThreadF, RuntimeError;
 IMPORT TextLiteral;
@@ -868,7 +869,7 @@ PROCEDURE CollectSomeInStateZero () =
        before the system call completed.  On those systems, we must ensure
        that the heap pages referenced by threads remain unprotected after
        the collection begins. *)
-    IF RTHeapDep.VM AND NOT RTMachine.AtomicWrappers THEN
+    IF RTVM.VMHeap() AND NOT RTVM.AtomicWrappers() THEN
       FinishThreadPages ();
     END;
 
