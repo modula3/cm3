@@ -67,15 +67,33 @@ PROCEDURE Crash (msg: TEXT) =
 
 (*------------------------------------------------------ Ctl-C interrupts ---*)
 
-VAR cur_handler: InterruptHandler := NIL;
+VAR
+  cur_handler: InterruptHandler := NIL;
+  cur_enable : InterruptHandler := NIL;
+  cur_disable: InterruptHandler := NIL;
+  enabled    : BOOLEAN := FALSE;
 
 PROCEDURE OnInterrupt (p: InterruptHandler): InterruptHandler =
   (* This procedure should be atomic... but I doubt anyone cares. *)
   VAR old := cur_handler;
   BEGIN
+    IF enabled = (p = NIL) THEN
+      IF enabled
+        THEN IF (cur_disable # NIL) THEN cur_disable (); END;
+        ELSE IF (cur_enable  # NIL) THEN cur_enable ();  END;
+      END;
+      enabled := NOT enabled;
+    END;
+
     cur_handler := p;
     RETURN old;
   END OnInterrupt;
+
+PROCEDURE RegisterInterruptSetup (enable, disable: PROCEDURE ()) =
+  BEGIN
+    cur_enable := enable;
+    cur_disable := disable;
+  END RegisterInterruptSetup;
 
 BEGIN
 END RTProcess.

@@ -1,0 +1,27 @@
+(* Copyright (C) 1993 Digital Equipment Corporation                *)
+(* All rights reserved.                                            *)
+(* See the file COPYRIGHT for a full description.                  *)
+(* Last modified on Fri Jun 18 17:14:00 PDT 1993 by horning        *)
+
+GENERIC INTERFACE ListSort(Elem, ElemList);
+<* 
+TRAITS permutation(Elem.T, T.VAL)
+
+LET seq(t)   BE seq(t, T.head, T.tail)    IN
+LET seq'(t)  BE seq(t, T.head', T.tail')  IN
+
+PROCEDURE Sort(l: T; c := Elem.Compare): T;
+  REQUIRES FUNCTIONAL(c)
+  ENSURES fresh(RESULT) /\ permutation(seq'(RESULT), seq(l))
+    /\ \forall i: [0..len(seq'(RESULT))-2]
+         (c(seq'(RESULT)[i], seq'(RESULT)[i+1]) < 1)
+
+PROCEDURE SortD(l: T; c := Elem.Compare): T;
+  REQUIRES FUNCTIONAL(c)
+  MODIFIES reach(l)
+  ENSURES permutation(seq'(l), seq(l))
+    /\ \forall i: [0..len(seq'(l))-2]
+         (c(seq'(l)[i], seq'(l)[i+1]) < 1)
+*>
+END ListSort.
+

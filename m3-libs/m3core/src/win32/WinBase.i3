@@ -4,7 +4,8 @@
 (*                                                           *)
 (* by Stephen Harrison                                       *)
 (*                                                           *)
-(* Last modified on Mon Oct  9 10:03:11 PDT 1995 by najork   *)
+(* Last modified on Thu May 15 12:09:35 PDT 1997 by heydon   *)
+(*      modified on Mon Oct  9 10:03:11 PDT 1995 by najork   *)
 (*      modified on Wed Apr 12 14:38:08 PDT 1995 by kalsow   *)
 (*      modified on Thu Jul  1 15:56:26 PDT 1993 by mcjones  *)
 (*      modified on Wed Feb 10 19:52:26 PST 1993 by harrison *)
@@ -421,15 +422,17 @@ TYPE
 
   LPSYSTEM_INFO = UNTRACED REF SYSTEM_INFO;
   SYSTEM_INFO = RECORD
-    dwOemId                    : DWORD;
+    wProcessorArchitecture     : WORD;
+    wReserved0                 : WORD;
     dwPageSize                 : DWORD;
     lpMinimumApplicationAddress: LPVOID;
     lpMaximumApplicationAddress: LPVOID;
     dwActiveProcessorMask      : DWORD;
     dwNumberOfProcessors       : DWORD;
     dwProcessorType            : DWORD;
-    dwReserved1                : DWORD;
-    dwReserved2                : DWORD;
+    dwAllocationGranularity    : DWORD;
+    wProcessorLevel            : WORD;
+    wProcessorRevision         : WORD;
   END;
 
 (*???  #define FreeModule(hLibModule) FreeLibrary((hLibModule)) #define
@@ -956,7 +959,13 @@ PROCEDURE WinMain (hInstance    : HINSTANCE;
                    nShowCmd     : int        ): int;
 
 <*EXTERNAL FreeLibrary:WINAPI*>
-PROCEDURE FreeLibrary (hLibModule: HINSTANCE): BOOL;
+PROCEDURE FreeLibrary (hLibModule: HMODULE): BOOL;
+
+<*EXTERNAL FreeLibraryAndExitThread:WINAPI*>
+PROCEDURE FreeLibraryAndExitThread (hLibModule: HMODULE;  dwExitCode: DWORD);
+
+<*EXTERNAL DisableThreadLibraryCalls:WINAPI*>
+PROCEDURE DisableThreadLibraryCalls (hLibModule: HMODULE): BOOL;
 
 <*EXTERNAL GetProcAddress:WINAPI*>
 PROCEDURE GetProcAddress (hModule: HINSTANCE; lpProcName: LPCSTR): FARPROC;
@@ -1274,7 +1283,7 @@ PROCEDURE UnhandledExceptionFilter (ExceptionInfo: WinNT.PEXCEPTION_POINTERS
 TYPE
   LPTOP_LEVEL_EXCEPTION_FILTER = PTOP_LEVEL_EXCEPTION_FILTER;
   PTOP_LEVEL_EXCEPTION_FILTER
-    = PROCEDURE (ExceptionInfo: WinNT.PEXCEPTION_POINTERS): LONG;
+    = <*WINAPI*> PROCEDURE (ExceptionInfo: WinNT.PEXCEPTION_POINTERS): LONG;
 
 <*EXTERNAL SetUnhandledExceptionFilter:WINAPI*>
 PROCEDURE SetUnhandledExceptionFilter (
@@ -1896,6 +1905,14 @@ PROCEDURE SetTimeZoneInformation
 PROCEDURE SystemTimeToFileTime (lpSystemTime: LPSYSTEMTIME;
                                 lpFileTime  : LPFILETIME    ): BOOL;
 
+(* Note: As of 14-May-97, the following routine is implemented on
+   Windows/NT, but not on Windows 95. -CAH *)
+<*EXTERNAL SystemTimeToTzSpecificLocalTime:WINAPI*>
+PROCEDURE SystemTimeToTzSpecificLocalTime (
+            lpTimeZoneInformation: LPTIME_ZONE_INFORMATION;
+            lpUniversalTime      : LPSYSTEMTIME;
+            lpLocalTime          : LPSYSTEMTIME            ): BOOL;
+
 <*EXTERNAL FileTimeToLocalFileTime:WINAPI*>
 PROCEDURE FileTimeToLocalFileTime (lpFileTime     : LPFILETIME;
                                    lpLocalFileTime: LPFILETIME  ): BOOL;
@@ -2112,11 +2129,20 @@ PROCEDURE llseek (hFile: HFILE; lOffset: LONG; iOrigin: int): LONG;
 <*EXTERNAL TlsAlloc:WINAPI*>
 PROCEDURE TlsAlloc (): DWORD;
 
+(* The values passed to "TlsSetValue" and returned by "TlsGetValue"
+   were originally declared "LPVOID".  But, since it's clear that they're
+   going to stuff the values somewhere hidden to the collector, any attempt
+   to pass an address referring to a traced reference would cause disaster.
+   So, to avoid the additional check done by the GC wrappers, we declare
+   the values as "DWORD"s instead.  These routines are called *very frequently*
+   by the low-level thread and exception machinery.  Avoiding the extra
+   wrapper check is worth it.  *)
+
 <*EXTERNAL TlsGetValue:WINAPI*>
-PROCEDURE TlsGetValue (dwTlsIndex: DWORD): LPVOID;
+PROCEDURE TlsGetValue (dwTlsIndex: DWORD): DWORD;
 
 <*EXTERNAL TlsSetValue:WINAPI*>
-PROCEDURE TlsSetValue (dwTlsIndex: DWORD; lpTlsValue: LPVOID): BOOL;
+PROCEDURE TlsSetValue (dwTlsIndex: DWORD; lpTlsValue: DWORD): BOOL;
 
 <*EXTERNAL TlsFree:WINAPI*>
 PROCEDURE TlsFree (dwTlsIndex: DWORD): BOOL;
@@ -4312,9 +4338,7 @@ END WinBase.
   ConvertToGlobalHandle       (ord: 148  offset: 16_12354)
   CreateKernelThread          (ord: 163  offset: 16_2cda1)
   CreateSocketHandle          (ord: 176  offset: 16_32448)
-  DisableThreadLibraryCalls   (ord: 189  offset: 16_23f9b)
   FT_Thunk                    (ord: 234  offset: 16_2a57)
-  FreeLibraryAndExitThread    (ord: 272  offset: 16_23f86)
   GetCommConfig               (ord: 283  offset: 16_34a26)
   GetDaylightFlag             (ord: 312  offset: 16_2adb5)
   GetErrorMode                (ord: 324  offset: 16_27dec)

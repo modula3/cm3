@@ -13,9 +13,7 @@ INTERFACE Real;
 (* Properties of REAL (for ANSI/IEEE Standard 754-1985).
 
    This package defines some basic properties of the 
-   built-in float type REAL. If you want to instantiate
-   a generic type with real numbers, you should import the
-   "RealType" interface instead.
+   built-in float type REAL.
 
    Index: REAL; floating-point; generics
 *)

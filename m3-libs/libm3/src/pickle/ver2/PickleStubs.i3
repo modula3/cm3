@@ -42,7 +42,11 @@ PROCEDURE OutChars (writer: Pickle.Writer; READONLY chars: ARRAY OF CHAR)
   RAISES {Wr.Failure, Thread.Alerted};
 (* Marshal a char array in native format. *)
 
-PROCEDURE OutText (writer: Pickle.Writer; READONLY t: TEXT)
+PROCEDURE OutWideChars(writer: Pickle.Writer; READONLY arr: ARRAY OF WIDECHAR)
+    RAISES {Wr.Failure, Thread.Alerted};
+(* Marshal a wide char array in native format. *)
+
+PROCEDURE OutText (writer: Pickle.Writer; t: TEXT)
   RAISES {Wr.Failure, Thread.Alerted};
 (* Marshal a TEXT. *)
 
@@ -85,6 +89,10 @@ PROCEDURE OutCardinal (writer: Pickle.Writer; card: CARDINAL)
 PROCEDURE InChars (reader: Pickle.Reader; VAR chars: ARRAY OF CHAR)
   RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
 (* Unmarshal a char array of length "NUMBER(chars)". *)
+
+PROCEDURE InWideChars(reader: Pickle.Reader; VAR chars: ARRAY OF WIDECHAR)
+    RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
+(* Unmarshal a wide char array of length "NUMBER(chars)". *)
 
 PROCEDURE InText(reader: Pickle.Reader) : TEXT
    RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};

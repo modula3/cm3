@@ -72,7 +72,7 @@ PROCEDURE Start (name: Text.T; VAR r, w: File.T): BOOLEAN =
       
       (* execute the perf tool *)
       VAR args: ARRAY [0..1] OF Ctypes.char_star; BEGIN
-        args [0] := M3toC.TtoS (name);
+        args [0] := M3toC.SharedTtoS (name);
         args [1] := NIL;
         EVAL Uexec.execvp (args [0], ADR (args [0]));
       END;

@@ -147,7 +147,7 @@ PROCEDURE TimevalSecs(READONLY t: Utime.struct_timeval): REAL =
   BEGIN
     RETURN FLOAT(t.tv_sec) + (FLOAT(t.tv_usec) / 1.0e6)
   END TimevalSecs;
-  
+
 PROCEDURE VMFaultTime (): REAL =
   BEGIN
     RETURN 0.010;                (* guess 10ms to handle a page fault *)

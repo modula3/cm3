@@ -133,7 +133,7 @@ PROCEDURE ReplaceExt(pn: T; ext: TEXT): T =
   VAR baseLwb, baseUpb, extUpb: CARDINAL;
   BEGIN 
     NameSections(pn, baseLwb, baseUpb, extUpb);
-    IF baseUpb = extUpb THEN RETURN pn END; (* nothing to replace *)
+    IF baseLwb = extUpb THEN RETURN pn END; (* empty final arc name *)
     RETURN Text.Sub(pn, 0, baseUpb) & ExtSepText & ext
   END ReplaceExt;
 

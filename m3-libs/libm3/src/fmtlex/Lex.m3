@@ -15,7 +15,8 @@ FROM Thread IMPORT Alerted;
 PROCEDURE Scan(rd: Rd.T; READONLY cs: SET OF CHAR := NonBlanks): TEXT
     RAISES {Rd.Failure, Alerted} =
   CONST BufSize = 256;
-  VAR res := ""; i := 0; c: CHAR; buf: ARRAY [0..BufSize-1] OF CHAR; BEGIN
+  VAR res := ""; i := 0; c: CHAR; buf: ARRAY [0..BufSize-1] OF CHAR;
+  BEGIN
     TRY
       LOOP
 	c := Rd.GetChar(rd);
@@ -38,10 +39,12 @@ PROCEDURE Scan(rd: Rd.T; READONLY cs: SET OF CHAR := NonBlanks): TEXT
 
 PROCEDURE Skip(rd: Rd.T; READONLY cs: SET OF CHAR := Blanks)
     RAISES {Rd.Failure, Alerted} =
+  VAR c: CHAR;
   BEGIN
     TRY
       LOOP
-	IF NOT (Rd.GetChar(rd) IN cs) THEN
+        c := Rd.GetChar(rd);
+	IF NOT (c IN cs) THEN
 	  Rd.UnGetChar(rd);
 	  RETURN
 	END

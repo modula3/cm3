@@ -6,135 +6,177 @@
 (*      modified on Fri Jul 16 19:43:17 1993 by luca         *)
 
 MODULE TextConv;
-IMPORT Text;
+IMPORT Text, Text8;
+
+TYPE
+  Chars    = ARRAY OF CHAR;
+  RefChars = REF Chars;
+  Char4    = ARRAY [0..3] OF CHAR;
 
 CONST
   Octal = CharSet{'0'..'7'};
-  Octal01 = CharSet{'0', '1'};
 
-PROCEDURE EncodedCharSize(charIn: CHAR): INTEGER =
+CONST
+  EncodedSize = ARRAY CHAR OF [1..4] {
+  (*******   0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F  ***)
+  (* 00 *)   4, 4, 4, 4, 4, 4, 4, 4, 4, 2, 2, 4, 2, 2, 4, 4,
+  (* 10 *)   4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  (* 20 *)   1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1,
+  (* 30 *)   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  (* 40 *)   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  (* 50 *)   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1,
+  (* 60 *)   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  (* 70 *)   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  (* 80 *)   4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  (* 90 *)   4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  (* A0 *)   4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  (* B0 *)   4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  (* C0 *)   4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  (* D0 *)   4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  (* E0 *)   4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+  (* F0 *)   4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4
+  };
+
+
+PROCEDURE EncodedCharSize(charIn: CHAR): CARDINAL =
   BEGIN
-    IF charIn = Escape THEN RETURN 2;
-    ELSIF charIn = VAL(10, CHAR) THEN RETURN 2;
-    ELSIF charIn = VAL(13, CHAR) THEN RETURN 2;
-    ELSIF charIn = VAL(9, CHAR) THEN RETURN 2;
-    ELSIF charIn = VAL(12, CHAR) THEN RETURN 2;
-    ELSIF charIn IN Quotes THEN RETURN 2;
-    ELSIF charIn IN NonPrinting THEN RETURN 4;
-    ELSE RETURN 1;
-    END;
+    RETURN EncodedSize[charIn];
   END EncodedCharSize;
 
-PROCEDURE EncodeChar(
-    charIn: CHAR; 
-    VAR (*out*)charsOut: ARRAY[0..3] OF CHAR)
-    : INTEGER =
+PROCEDURE EncodeChar(charIn: CHAR; VAR (*out*)charsOut: Char4): CARDINAL =
+  VAR sz := EncodedSize[charIn];
   BEGIN
-    charsOut[0] := Escape;
-    IF charIn = Escape THEN charsOut[1] := charIn; RETURN 2;
-    ELSIF charIn = VAL(10, CHAR) THEN charsOut[1] := 'n'; RETURN 2;
-    ELSIF charIn = VAL(13, CHAR) THEN charsOut[1] := 'r'; RETURN 2;
-    ELSIF charIn = VAL(9, CHAR) THEN charsOut[1] := 't'; RETURN 2;
-    ELSIF charIn = VAL(12, CHAR) THEN charsOut[1] := 'f'; RETURN 2;
-    ELSIF charIn IN Quotes THEN charsOut[1] := charIn; RETURN 2;
-    ELSIF charIn IN NonPrinting THEN
+    IF sz = 1 THEN
+      charsOut[0] := charIn;
+    ELSIF sz = 2 THEN
+      charsOut[0] := Escape;
+      IF    charIn = Escape  THEN charsOut[1] := charIn;
+      ELSIF charIn = '\n'    THEN charsOut[1] := 'n';
+      ELSIF charIn = '\r'    THEN charsOut[1] := 'r';
+      ELSIF charIn = '\t'    THEN charsOut[1] := 't';
+      ELSIF charIn = '\f'    THEN charsOut[1] := 'f';
+      ELSE  (*quotes*)            charsOut[1] := charIn;
+      END;
+    ELSE <*ASSERT sz = 4*>
+      charsOut[0] := Escape;
       charsOut[1] := VAL((ORD(charIn) DIV 64)+ORD('0'), CHAR);
       charsOut[2] := VAL(((ORD(charIn) MOD 64) DIV 8)+ORD('0'), CHAR);
       charsOut[3] := VAL((ORD(charIn) MOD 8)+ORD('0'), CHAR);
-      RETURN 4;
-    ELSE charsOut[0] := charIn; RETURN 1;
     END;
+    RETURN sz;
   END EncodeChar;
 
-PROCEDURE EncodedCharsSize(
-    READONLY charsIn: ARRAY OF CHAR): INTEGER =
-  VAR in, out: INTEGER;
+PROCEDURE EncodedCharsSize(READONLY charsIn: Chars): CARDINAL =
+  VAR out: CARDINAL := 0;
   BEGIN
-    in := 0;
-    out := 0;
-    LOOP
-      IF in = NUMBER(charsIn) THEN RETURN out END;
-      INC(out, EncodedCharSize(charsIn[in]));
-      INC(in);
+    FOR in := FIRST(charsIn) TO LAST(charsIn) DO
+      INC(out, EncodedSize[charsIn[in]]);
     END;
+    RETURN out;
   END EncodedCharsSize;
 
-PROCEDURE EncodeChars(
-    READONLY charsIn: ARRAY OF CHAR; 
-    VAR (*out*)charsOut: ARRAY OF CHAR)
-    : INTEGER =
-  VAR in, out, avail: INTEGER; buf: ARRAY [0..3] OF CHAR;
+PROCEDURE EncodedTextSize(txt: TEXT): CARDINAL =
+  VAR
+    len : CARDINAL := Text.Length(txt);
+    in  : CARDINAL := 0;
+    out : CARDINAL := 0;
+    buf : ARRAY [0..63] OF CHAR;
   BEGIN
-    in := 0;
-    out := 0;
-    LOOP
-      IF in = NUMBER(charsIn) THEN RETURN out END;
-      avail := EncodeChar(charsIn[in], (*out*)buf);
-      FOR i := 0 TO avail-1 DO
-        charsOut[out] := buf[i];
-        INC(out);
-      END;
-      INC(in);
+    WHILE (in < len - NUMBER(buf)) DO
+      Text.SetChars(buf, txt, in);
+      INC(out, EncodedCharsSize(buf));
+      INC(in, NUMBER(buf));
     END;
+    IF (in < len) THEN
+      Text.SetChars(buf, txt, in);
+      INC(out, EncodedCharsSize(SUBARRAY(buf, 0, len-in)));
+    END;
+    RETURN out;
+  END EncodedTextSize;
+
+PROCEDURE EncodeChars(READONLY charsIn  : Chars; 
+                    VAR(*out*) charsOut : Chars): CARDINAL =
+  VAR out: CARDINAL := 0;   ch: CHAR;  buf: Char4;
+  BEGIN
+    FOR in := FIRST(charsIn) TO LAST(charsIn) DO
+      ch := charsIn[in];
+      IF EncodedSize[ch] = 1 THEN
+        charsOut[out] := ch;  INC(out);
+      ELSE
+        FOR i := 0 TO EncodeChar(ch, (*out*)buf)-1 DO
+          charsOut[out] := buf[i];  INC(out);
+        END;
+      END;
+    END;
+    RETURN out;
   END EncodeChars;
 
 PROCEDURE Encode(textIn: TEXT; quoted: BOOLEAN:=TRUE): TEXT =
-  TYPE Chars = REF ARRAY OF CHAR;
-  VAR charsIn, charsOut: Chars; len: INTEGER;
+  VAR
+    textLen : CARDINAL := Text.Length(textIn);
+    len     : CARDINAL := EncodedTextSize(textIn);
+    result  : Text8.T  := Text8.Create (len + 2 * ORD(quoted));
+    charsOut: RefChars := result.contents;
+    out     : CARDINAL := 0;
+    in      : CARDINAL := 0;
+    buf     : ARRAY [0..63] OF CHAR;
   BEGIN
-    charsIn := NEW(Chars, Text.Length(textIn));
-    Text.SetChars(charsIn^, textIn);
-    len := EncodedCharsSize(charsIn^);
     IF quoted THEN 
-      charsOut := NEW(Chars, len+2);
-      charsOut^[0] := '\"';
-      EVAL EncodeChars(charsIn^, SUBARRAY(charsOut^, 1, len));
-      charsOut^[len+1] := '\"';
-    ELSE
-      charsOut := NEW(Chars, len);
-      EVAL EncodeChars(charsIn^, charsOut^);
+      charsOut[0] := '\"';
+      charsOut[len+1] := '\"';
+      out := 1;  INC(len);
     END;
-    RETURN Text.FromChars(charsOut^);
+    WHILE (in < textLen - NUMBER(buf)) DO
+      Text.SetChars(buf, textIn, in);
+      INC(out, EncodeChars(buf, SUBARRAY(charsOut^, out, len-out)));
+      INC(in, NUMBER(buf));
+    END;
+    IF (in < textLen) THEN
+      Text.SetChars(buf, textIn, in);
+      INC(out, EncodeChars(SUBARRAY(buf, 0, textLen-in),
+                           SUBARRAY(charsOut^, out, len-out)));
+    END;
+    RETURN result;
   END Encode;
 
-PROCEDURE DecodeChar(
-    READONLY charsIn: ARRAY[0..3] OF CHAR; availIn: INTEGER;
-    VAR (*out*)charOut: CHAR)
-    : INTEGER RAISES {Fail} =
+PROCEDURE DecodeChar(READONLY charsIn: Char4;  availIn: INTEGER;
+                   VAR(*out*) charOut: CHAR): CARDINAL
+  RAISES {Fail} =
   VAR ord: INTEGER;
   BEGIN
-    IF availIn < 1 THEN RAISE Fail END;
-    IF charsIn[0] = Escape THEN
-      IF availIn < 2 THEN RAISE Fail END;
-      IF charsIn[1] = Escape THEN charOut := Escape; RETURN 2;
-      ELSIF charsIn[1] = 'n' THEN charOut := VAL(10, CHAR); RETURN 2;
-      ELSIF charsIn[1] = 'r' THEN charOut := VAL(13, CHAR); RETURN 2;
-      ELSIF charsIn[1] = 't' THEN charOut := VAL(9, CHAR); RETURN 2;
-      ELSIF charsIn[1] = 'f' THEN charOut := VAL(12, CHAR); RETURN 2;
-      ELSIF charsIn[1] IN Quotes THEN charOut := charsIn[1]; RETURN 2;
-      ELSIF charsIn[1] IN Octal01 THEN
-        IF availIn < 4 THEN RAISE Fail END;
-        IF NOT (charsIn[2] IN Octal) OR NOT (charsIn[3] IN Octal) THEN
-          RAISE Fail;
-        END;
-        ord := (ORD(charsIn[1])-ORD('0'))*64 +
-                (ORD(charsIn[2])-ORD('0'))*8 +
-                (ORD(charsIn[3])-ORD('0'));
-        charOut := VAL(ord, CHAR);
-        RETURN 4;
-      ELSE charOut := charsIn[1]; RETURN 2;
-      END;
-    ELSE charOut := charsIn[0]; RETURN 1;
+    IF    availIn < 1             THEN  RAISE Fail;
+    ELSIF charsIn[0] # Escape     THEN  charOut := charsIn[0]; RETURN 1;
+    ELSIF availIn < 2             THEN  RAISE Fail
+    ELSIF charsIn[1] = Escape     THEN  charOut := Escape; RETURN 2;
+    ELSIF charsIn[1] = 'n'        THEN  charOut := '\n'; RETURN 2;
+    ELSIF charsIn[1] = 'r'        THEN  charOut := '\r'; RETURN 2;
+    ELSIF charsIn[1] = 't'        THEN  charOut := '\t'; RETURN 2;
+    ELSIF charsIn[1] = 'f'        THEN  charOut := '\f'; RETURN 2;
+    ELSIF charsIn[1] = '\''       THEN  charOut := '\''; RETURN 2;
+    ELSIF charsIn[1] = '\"'       THEN  charOut := '\"'; RETURN 2;
+    ELSIF availIn < 4             THEN  RAISE Fail;
+    ELSIF NOT charsIn[1] IN Octal THEN  RAISE Fail;
+    ELSIF NOT charsIn[2] IN Octal THEN  RAISE Fail;
+    ELSIF NOT charsIn[3] IN Octal THEN  RAISE Fail;
+    ELSE
+      ord := (ORD(charsIn[1])-ORD('0'))*64 +
+             (ORD(charsIn[2])-ORD('0'))*8 +
+             (ORD(charsIn[3])-ORD('0'));
+      IF ord > ORD (LAST(CHAR)) THEN RAISE Fail; END;
+      charOut := VAL(ord, CHAR);
+      RETURN 4;
     END;
   END DecodeChar;
 
-PROCEDURE DecodedCharsSize(
-    READONLY charsIn: ARRAY OF CHAR)
-    : INTEGER RAISES {Fail} =
-  VAR in, out, avail: INTEGER;  buf: ARRAY [0..3] OF CHAR; charOut: CHAR;
+PROCEDURE DecodedCharsSize(READONLY charsIn: Chars): CARDINAL
+  RAISES {Fail} =
+  VAR
+    in    : CARDINAL := 0;
+    out   : CARDINAL := 0;
+    avail : INTEGER;
+    buf   : Char4;
+    charOut: CHAR;
   BEGIN
-    in := 0;
-    out := 0;
     LOOP
       avail := MIN(NUMBER(charsIn)-in, NUMBER(buf));
       IF avail=0 THEN RETURN out END;
@@ -144,14 +186,15 @@ PROCEDURE DecodedCharsSize(
     END;
   END DecodedCharsSize;
 
-PROCEDURE DecodeChars(
-    READONLY charsIn: ARRAY OF CHAR; 
-    VAR (*out*)charsOut: ARRAY OF CHAR)
-    : INTEGER RAISES {Fail} =
-  VAR in, out, avail: INTEGER;  buf: ARRAY [0..3] OF CHAR;
+PROCEDURE DecodeChars(READONLY charsIn  : Chars;
+                    VAR(*out*) charsOut : Chars): CARDINAL
+  RAISES {Fail} =
+  VAR
+    in    : CARDINAL := 0;
+    out   : CARDINAL := 0;
+    avail : INTEGER;
+    buf   : Char4;
   BEGIN
-    in := 0;
-    out := 0;
     LOOP
       avail := MIN(NUMBER(charsIn)-in, NUMBER(buf));
       IF avail=0 THEN RETURN out END;
@@ -161,31 +204,58 @@ PROCEDURE DecodeChars(
     END;
   END DecodeChars;
 
-PROCEDURE Decode(textIn: TEXT; quoted: BOOLEAN:=TRUE): TEXT RAISES {Fail} =
-  TYPE Chars = REF ARRAY OF CHAR;
-  VAR charsIn, charsOut: Chars; len: INTEGER;
+PROCEDURE Decode(textIn: TEXT; quoted: BOOLEAN:=TRUE): TEXT
+  RAISES {Fail} =
+  VAR len := Text.Length(textIn);
   BEGIN
-    len := Text.Length(textIn);
-    charsIn := NEW(Chars, len);
-    Text.SetChars(charsIn^, textIn);
-    IF quoted THEN
-      IF (len < 2) OR (charsIn^[0] # '\"') OR (charsIn^[len-1] # '\"')
-      THEN RAISE Fail;
-      END;
-      charsOut := NEW(Chars, DecodedCharsSize(SUBARRAY(charsIn^, 1, len-2)));
-      EVAL DecodeChars(SUBARRAY(charsIn^, 1, len-2), (*out*)charsOut^);
-    ELSE
-      charsOut := NEW(Chars, DecodedCharsSize(charsIn^));
-      EVAL DecodeChars(charsIn^, (*out*)charsOut^);
+    IF len <= MaxShortDecode
+      THEN RETURN DecodeShort(textIn, quoted, len);
+      ELSE RETURN DecodeLong(textIn, quoted, len);
     END;
-    RETURN Text.FromChars(charsOut^);
   END Decode;
-     
-PROCEDURE ImplodedSize(READONLY array: ARRAY OF TEXT): INTEGER =
-  VAR out: INTEGER;
+
+CONST MaxShortDecode = 128;
+
+PROCEDURE DecodeShort(textIn: TEXT; quoted: BOOLEAN; len: CARDINAL): TEXT
+  RAISES {Fail} =
+  VAR
+   buf : ARRAY [0..MaxShortDecode-1] OF CHAR;
+   tmp : ARRAY [0..MaxShortDecode-1] OF CHAR;
   BEGIN
-    out := 0;
-    FOR i:=0 TO NUMBER(array)-1 DO
+    Text.SetChars(buf, textIn);
+    RETURN DecodeBuf(SUBARRAY(buf, 0, len), tmp, quoted, len);
+  END DecodeShort;
+
+PROCEDURE DecodeLong(textIn: TEXT; quoted: BOOLEAN;  len: CARDINAL): TEXT
+  RAISES {Fail} =
+  VAR
+    buf := NEW (RefChars, len);
+    tmp := NEW (RefChars, len);
+  BEGIN
+    Text.SetChars(buf^, textIn);
+    RETURN DecodeBuf(buf^, tmp^, quoted, len);
+  END DecodeLong;
+
+PROCEDURE DecodeBuf(READONLY buf: Chars;  VAR tmp: Chars; 
+                    quoted: BOOLEAN;  len: CARDINAL): TEXT
+  RAISES {Fail} =
+  VAR start: CARDINAL := 0;
+  BEGIN
+    IF quoted THEN
+      IF (len < 2) OR (buf[0] # '\"') OR (buf[len-1] # '\"') THEN
+        RAISE Fail;
+      END;
+      start := 1;
+      len := len-2;
+    END;
+    len := DecodeChars(SUBARRAY (buf, start, len), tmp);
+    RETURN Text.FromChars(SUBARRAY (tmp, 0, len));
+  END DecodeBuf;
+     
+PROCEDURE ImplodedSize(READONLY array: ARRAY OF TEXT): CARDINAL =
+  VAR out: CARDINAL := 0;
+  BEGIN
+    FOR i := FIRST(array) TO LAST(array) DO
       INC(out, Text.Length(array[i]));
     END;
     INC(out, MAX(0,NUMBER(array)-1));
@@ -193,65 +263,61 @@ PROCEDURE ImplodedSize(READONLY array: ARRAY OF TEXT): INTEGER =
   END ImplodedSize;
 
 PROCEDURE Implode(READONLY array: ARRAY OF TEXT; sep: CHAR): TEXT =
-  TYPE Chars = REF ARRAY OF CHAR;
-  VAR charsOut: Chars; out, len: INTEGER; text: TEXT;
+  VAR
+    outLen := ImplodedSize(array);
+    result := Text8.Create (outLen);
+    buf    := result.contents;
+    out    : CARDINAL := 0;
+    len    : CARDINAL;
+    text   : TEXT;
   BEGIN
-    charsOut := NEW(Chars, ImplodedSize(array));
-    out := 0;
-    FOR i:=0 TO NUMBER(array)-1 DO
+    FOR i := FIRST(array) TO LAST(array) DO
+      IF i # FIRST(array) THEN buf[out] := sep;  INC (out); END;
       text := array[i];
       len := Text.Length(text);
-      Text.SetChars(SUBARRAY(charsOut^,out,len), text);
+      Text.SetChars(SUBARRAY(buf^, out, len), text);
       INC(out, len);
-      IF i#NUMBER(array)-1 THEN 
-        charsOut[out] := sep;
-        INC(out);
-      END;
     END;
-    RETURN Text.FromChars(charsOut^);
+    RETURN result;
   END Implode;
 
 PROCEDURE ExplodedItemSize(text : TEXT;
              VAR(*in-out*) in   : INTEGER; 
-                  READONLY sep  : SET OF CHAR): INTEGER =
-  VAR out, len: INTEGER; ch: CHAR;
+                  READONLY sep  : SET OF CHAR): CARDINAL =
+  VAR
+    out : CARDINAL := 0;
+    len : CARDINAL := Text.Length(text);
   BEGIN
-    out := 0;
-    len := Text.Length(text);
-    LOOP
-      IF in >= len THEN RETURN out END;
-      ch := Text.GetChar(text, in);
-      IF ch IN sep THEN RETURN out END;
-      INC(in);
-      INC(out);
+    WHILE (in < len) AND NOT (Text.GetChar(text, in) IN sep) DO
+      INC(in); INC(out);
     END;
+    RETURN out;
   END ExplodedItemSize;
 
 PROCEDURE ExplodeItem(text  : TEXT;
-        VAR(*in-out*) in    : INTEGER; 
-           VAR(*out*) chars : ARRAY OF CHAR;
+        VAR(*in-out*) in    : INTEGER;
+           VAR(*out*) chars : Chars;
              READONLY sep   : SET OF CHAR): INTEGER =
-  VAR out, len: INTEGER; ch: CHAR;
+  VAR
+    out : CARDINAL := 0;
+    len : CARDINAL := Text.Length(text);
+    ch  : CHAR;
   BEGIN
-    out := 0;
-    len := Text.Length(text);
-    LOOP
-      IF in >= len THEN RETURN out END;
+    WHILE (in < len) DO
       ch := Text.GetChar(text, in);
       IF ch IN sep THEN RETURN out END;
-      INC(in);
       chars[out] := ch;
-      INC(out);
+      INC(in); INC(out);
     END;
+    RETURN out;
   END ExplodeItem;
 
-PROCEDURE ExplodedSize(text: TEXT;
-              READONLY sep: SET OF CHAR): INTEGER =
-  VAR in, out, len: INTEGER;
+PROCEDURE ExplodedSize(text: TEXT;  READONLY sep: SET OF CHAR): CARDINAL =
+  VAR
+    len : CARDINAL := Text.Length(text);
+    out : CARDINAL := 0;
+    in  : INTEGER  := 0;
   BEGIN
-    in := 0;
-    out := 0;
-    len := Text.Length(text);
     LOOP
       EVAL ExplodedItemSize(text, (*in-out*)in, sep);
       IF in >= len THEN RETURN out+1; END;
@@ -262,17 +328,18 @@ PROCEDURE ExplodedSize(text: TEXT;
 PROCEDURE Explode(text  : TEXT;
        VAR(*out*) array : ARRAY OF TEXT; 
          READONLY sep   : SET OF CHAR) =
-  TYPE Chars = REF ARRAY OF CHAR;
-  VAR charsOut: Chars; in, in1, out, len: INTEGER;
+  VAR
+    len : CARDINAL := Text.Length(text);
+    out : CARDINAL := 0;
+    in  : INTEGER  := 0;
+    in1 : INTEGER;
+    txt : Text8.T;
   BEGIN
-    in := 0;
-    out := 0;
-    len := Text.Length(text);
     LOOP
       in1 := in;
-      charsOut := NEW(Chars, ExplodedItemSize(text, (*in-out*)in1, sep));
-      EVAL ExplodeItem(text, (*in-out*)in, charsOut^, sep);
-      array[out] := Text.FromChars(charsOut^);
+      txt := Text8.Create (ExplodedItemSize(text, (*in-out*)in1, sep));
+      EVAL ExplodeItem(text, (*in-out*)in, txt.contents^, sep);
+      array[out] := txt;
       IF in >= len THEN RETURN END;
       IF Text.GetChar(text, in) IN sep THEN INC(in); INC(out) END;
     END;
@@ -295,7 +362,7 @@ PROCEDURE EncodeCharToConsumer(
 PROCEDURE EncodeCharToConsumer(
     p: CharConsumer;
     charIn: CHAR) =
-  VAR (*out*)charsOut: ARRAY[0..3] OF CHAR; avail: INTEGER;
+  VAR (*out*)charsOut: Char4; avail: INTEGER;
   BEGIN
     avail := EncodeChar(charIn, (*out*)charsOut);
     FOR i:=0 TO avail-1 DO p(charsOut[i]) END;
@@ -316,7 +383,7 @@ PROCEDURE DecodeCharFromProducer(
     p: CharProducer;
     VAR (*out*)charOut: CHAR)
     RAISES {Fail} =
-  VAR charsIn: ARRAY[0..3] OF CHAR; availIn: INTEGER;
+  VAR charsIn: Char4; availIn: INTEGER;
   BEGIN
     TRY
       charsIn[0] := p();
@@ -324,7 +391,7 @@ PROCEDURE DecodeCharFromProducer(
       IF charsIn[0] = Escape THEN
         charsIn[1] := p();
         INC(availIn);
-        IF charsIn[1] IN Octal01 THEN
+        IF charsIn[1] IN Octal THEN
           charsIn[2] := p();
           charsIn[3] := p();
           INC(availIn, 2);

@@ -9,7 +9,7 @@
 
 UNSAFE MODULE WinNT;
 
-FROM M3toC IMPORT TtoS;
+IMPORT M3toC;
 FROM Word IMPORT And, Or, Not, Shift;
 FROM WinDef IMPORT WORD;
 
@@ -90,9 +90,9 @@ PROCEDURE IMAGE_ORDINAL (Ordinal: WORD): WORD =
   END IMAGE_ORDINAL;
 
 BEGIN
-  IMAGE_ARCHIVE_START            := TtoS("!<arch>\n");
-  IMAGE_ARCHIVE_END              := TtoS("`\n");
-  IMAGE_ARCHIVE_PAD              := TtoS("\n");
-  IMAGE_ARCHIVE_LINKER_MEMBER    := TtoS("/               ");
-  IMAGE_ARCHIVE_LONGNAMES_MEMBER := TtoS("//              ");
+  IMAGE_ARCHIVE_START            := M3toC.FlatTtoS("!<arch>\n");
+  IMAGE_ARCHIVE_END              := M3toC.FlatTtoS("`\n");
+  IMAGE_ARCHIVE_PAD              := M3toC.FlatTtoS("\n");
+  IMAGE_ARCHIVE_LINKER_MEMBER    := M3toC.FlatTtoS("/               ");
+  IMAGE_ARCHIVE_LONGNAMES_MEMBER := M3toC.FlatTtoS("//              ");
 END WinNT.

@@ -16,6 +16,7 @@ Interface("Pipe")
 Interface("Pathname")
 Interface("FS")
 Interface("Process")
+Interface("Socket")
 Interface("Terminal")
 
 /* The following only initialize the File.Type variables: */
@@ -23,3 +24,5 @@ implementation("FS")
 implementation("Terminal")
 implementation("RegularFile")
 implementation("Pipe")
+implementation("Socket")
+

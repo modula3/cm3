@@ -48,7 +48,7 @@
 | MODULE P1 EXPORTS Main;  IMPORT Pickle, IO;
 |   TYPE T = REF RECORD val: INTEGER END;
 | BEGIN
-|   Pickle.Write(NEW(T, val := 6), IO.OpenWrite("A.pickle"))
+|   Pickle.Write(IO.OpenWrite("A.pickle"), NEW(T, val := 6))
 | END P1.
 
    and then in the same directory, you compile and run the
@@ -300,6 +300,7 @@ TYPE
 
 TYPE
   SpecialPublic = OBJECT
+      prev: SpecialPublic := NIL;
       sc: TypeCode; 
     METHODS
       write(ref: REFANY; writer: Writer)
@@ -367,6 +368,13 @@ PROCEDURE RegisterSpecial(sp: Special);
    special registered for "REFANY" that special's methods are
    the default methods of the type "Special". *)
 
+PROCEDURE ReRegisterSpecial(sp: Special);
+(* ReRegister "sp" as the special for pickling and unpickling 
+   objects having type code "sp.sc".  Registering means that, unlike
+   with RegisterSpecial, a special can already exist for "sp."  It
+   will be saved in "sp.prev" and can be called by the "read" and
+   "write" methods of "sp". *)
+   
 END Pickle2.
 
 (* \paragraph{Examples.}  For example, suppose you

@@ -6,7 +6,7 @@
 
 MODULE FmtBuf EXPORTS FmtBuf, FmtBufF, FmtBufTest;
 
-IMPORT Text, TextF, Word, Convert, FloatMode, Process;
+IMPORT Text, Word, Convert, FloatMode, Process;
 IMPORT Real AS R, LongReal AS LR, Extended AS ER;
 IMPORT RealFloat, LongFloat, ExtendedFloat;
 
@@ -199,7 +199,7 @@ PROCEDURE Special(
         VAR strLen := Text.Length(str); BEGIN
           res := num.sign;
           IF res = 1 THEN b[0] := '-' END;
-          SUBARRAY(b, res, strLen) := SUBARRAY(str^, 0, strLen);
+          Text.SetChars (SUBARRAY(b, res, strLen), str);
           INC(res, strLen)
         END
     | Style.Sci =>
@@ -216,7 +216,7 @@ PROCEDURE Special(
             THEN name := Text.Sub(str, 0, 3); nmLen := 3
             ELSE name := str; nmLen := strLen
           END;
-          SUBARRAY(b, 1, nmLen) := SUBARRAY(name^, 0, nmLen);
+          Text.SetChars (SUBARRAY(b, 1, nmLen), name);
           res := 1 + nmLen;
           WITH num = sciWidth - res DO
             IF num > 0 THEN AppendBlanks(b, res, num) END
@@ -299,7 +299,7 @@ PROCEDURE Zero(VAR (*OUT*) b: T; READONLY num: NumAttr; READONLY fmt: FmtRec)
             ELSE str := AutoZero[num.sign]
           END;
           res := Text.Length(str);
-          SUBARRAY(b, 0, res) := SUBARRAY(str^, 0, res)
+          Text.SetChars (b, str);
         END
     END;
     RETURN res

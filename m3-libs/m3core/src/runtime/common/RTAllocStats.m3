@@ -7,7 +7,7 @@
 
 UNSAFE MODULE RTAllocStats;
 
-IMPORT RT0, RT0u, RTMisc, RTType, Word, RTHeapRep, RTAllocator;
+IMPORT RT0, RTType, Word, RTHeapRep, RTAllocator;
 IMPORT RTStack, RTProcedure, RTProcedureSRC, Text, Convert;
 FROM RT0 IMPORT Typecode;
 
@@ -37,11 +37,10 @@ PROCEDURE EnableTrace (tc: Typecode) =
   BEGIN
     IF NOT RTStack.Has_walker THEN RETURN END;
     IF NOT RTType.IsTraced (tc) THEN
-      RTMisc.FatalError(NIL, 0,
-                        "RTAllocStats.EnableTrace(untraced type) was called");
+      <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
     IF (info = NIL) THEN
-      info := NEW (InfoList, RT0u.nTypes);
+      info := NEW (InfoList, RTType.MaxTypecode() + 1);
       RTAllocator.callback := NoteAllocation;
     END;
     info [tc] := NEW (TypeInfo, sites := NEW (SiteList, 4));
@@ -50,7 +49,7 @@ PROCEDURE EnableTrace (tc: Typecode) =
 PROCEDURE NSites (tc: Typecode): INTEGER =
   VAR inf: TypeInfo := NIL;
   BEGIN
-    IF (info = NIL) THEN RETURN -1; END;
+    IF (info = NIL) OR (tc >= NUMBER (info^)) THEN RETURN -1; END;
     inf := info[tc];
     IF (inf = NIL) THEN RETURN -1; END;
     RETURN inf.n_sites;
@@ -59,7 +58,7 @@ PROCEDURE NSites (tc: Typecode): INTEGER =
 PROCEDURE GetSiteText (tc: Typecode;  site, depth: CARDINAL): TEXT =
   VAR inf: TypeInfo := NIL;
   BEGIN
-    IF (info = NIL) THEN RETURN NIL; END;
+    IF (info = NIL) OR (tc >= NUMBER (info^)) THEN RETURN NIL; END;
     inf := info[tc];
 
     IF (inf = NIL) THEN
@@ -83,10 +82,12 @@ PROCEDURE GetSiteText (tc: Typecode;  site, depth: CARDINAL): TEXT =
 (*-------------------------------------------------------------- internal ---*)
 
 PROCEDURE NoteAllocation (ref: REFANY) =
-  VAR inf: TypeInfo;  s: INTEGER;
+  VAR inf: TypeInfo;  s, tc: INTEGER;
   BEGIN
     IF (info = NIL) THEN RETURN END;
-    inf := info [TYPECODE (ref)];
+    tc := TYPECODE (ref);
+    IF (tc >= NUMBER (info^)) THEN RETURN END;
+    inf := info [tc];
     IF (inf = NIL) THEN RETURN END;
 
     IF (inf.n_sites > LAST (inf.sites^)) THEN ExpandSites (inf) END;

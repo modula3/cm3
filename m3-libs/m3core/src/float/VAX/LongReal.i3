@@ -2,8 +2,7 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 
-(* Last modified on Fri Aug 16 15:09:22 PDT 1996 by heydon     *)
-(*      modified on Fri Sep 24 08:26:51 PDT 1993 by kalsow     *)
+(* Last modified on Fri Sep 24 08:26:51 PDT 1993 by kalsow     *)
 (*      modified on Thu Apr 29 16:10:31 PDT 1993 by muller     *)
 (*      modified on Fri Feb 28 20:17:40 PST 1992 by stolfi     *)
 
@@ -11,11 +10,8 @@ INTERFACE LongReal;
 
 (* Basic properties OF LONGREAL (for the VAX).
 
-   This package defines some basic properties of the built-in
-   float type LONGREAL, for the VAX architecture. If you want
-   to instantiate a generic type with double-precision real
-   numbers, you should import the "LongRealType" interface
-   instead.
+   This package defines some basic properties of the 
+   built-in float type LONGREAL, for the VAX architecture.
 
    Index: LONGREAL; floating-point; generics
 *)

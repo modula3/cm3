@@ -9,78 +9,77 @@
 
 UNSAFE MODULE RTHeap;
 
-IMPORT RTType, RTMisc;
+IMPORT RTType, RT0, TextLiteral;
 
-(* If "r" is a traced reference, GetDataAdr returns the address of "r^"'s
-   data bytes.  If "r" is a traced object, GetDataAdr returns the address
-   of "r"'s data record's bytes.  It is a checked runtime error if "r" is
-   "NIL".  Note that the address can subsequently change unless object
-   mobility is disabled using "RTCollector". *)
+TYPE TK = RT0.TypeKind;
 
 PROCEDURE GetDataAdr (r: REFANY): ADDRESS =
   VAR def := RTType.Get(TYPECODE(r));
   BEGIN
     IF r = NIL THEN
-      Die (); <*ASSERT FALSE*>
-    ELSIF def.defaultMethods # NIL THEN
-      RETURN LOOPHOLE(r, ADDRESS) + ADRSIZE(ADDRESS);
-    ELSIF def.nDimensions # 0 THEN
-      RETURN LOOPHOLE(r, UNTRACED REF ADDRESS)^;
-    ELSE
-      RETURN LOOPHOLE(r, ADDRESS);
+      EVAL LOOPHOLE (r, UNTRACED REF INTEGER)^;  (* force a NIL fault *)
+    END;
+    CASE def.kind OF  <*NOWARN*>
+    | ORD(TK.Ref) =>
+          RETURN LOOPHOLE(r, ADDRESS);
+    | ORD(TK.Obj) =>
+          RETURN LOOPHOLE(r, ADDRESS) + ADRSIZE(ADDRESS);
+    | ORD(TK.Array) =>
+          RETURN LOOPHOLE(r, UNTRACED REF ADDRESS)^;
     END;
   END GetDataAdr;
 
-(* If "r" is a traced reference, GetDataSize returns the number of "r^"'s
-   data bytes.  If "r" is a traced object, GetDataSize returns the number
-   of "r"'s data record's bytes.  It is a checked runtime error if "r" is
-   "NIL". *)
-
 PROCEDURE GetDataSize (r: REFANY): CARDINAL =
-  VAR
-    def := RTType.Get(TYPECODE(r));
-    sizes: UNTRACED REF INTEGER;
-    n: INTEGER;
+  VAR def := RTType.Get(TYPECODE(r));
   BEGIN
     IF r = NIL THEN
-      Die (); <*ASSERT FALSE*>
-    ELSIF def.defaultMethods # NIL THEN
-      RETURN def.dataSize - BYTESIZE(ADDRESS);
-    ELSIF def.nDimensions = 0 THEN
-      RETURN def.dataSize;
-    ELSE (* an open array *)
-      n := 1;
-      sizes := LOOPHOLE(r, ADDRESS) + ADRSIZE(ADDRESS);
-      FOR i := 0 TO def.nDimensions - 1 DO
-        n := n * sizes^;
-        INC(sizes, ADRSIZE(INTEGER));
-      END;
-      RETURN n * def.elementSize;
+      EVAL LOOPHOLE (r, UNTRACED REF INTEGER)^;  (* force a NIL fault *)
+    END;
+    CASE def.kind OF <*NOWARN*>
+    | ORD(TK.Ref) =>
+          RETURN def.dataSize;
+    | ORD(TK.Obj) =>
+          IF def.typecode = RT0.TextLitTypecode THEN
+            VAR
+              txt := LOOPHOLE (r, TextLiteral.T);
+              len : INTEGER := txt.cnt;
+            BEGIN
+              IF (len >= 0)
+                THEN INC (len); (* null CHAR *)
+                ELSE len := 2 (*null WIDECHAR*) - len - len;
+              END;
+              RETURN ADR (txt.buf[len]) - ADR (txt.cnt)
+            END;
+          ELSE
+            RETURN def.dataSize - BYTESIZE(ADDRESS);
+          END;
+    | ORD(TK.Array) =>
+          VAR
+            adef := LOOPHOLE (def, RT0.ArrayTypeDefn);
+            n_elts: INTEGER := 1;
+            sizes: UNTRACED REF INTEGER := LOOPHOLE(r, ADDRESS) + ADRSIZE(ADDRESS);
+          BEGIN
+            FOR i := 0 TO adef.nDimensions - 1 DO
+              n_elts := n_elts * sizes^;
+              INC(sizes, ADRSIZE(INTEGER));
+            END;
+            RETURN n_elts * adef.elementSize;
+          END;
     END;
   END GetDataSize;
 
-(* If "r" is a traced reference to an open array, GetArrayShape returns in
-   "s[0 ..  n-1]" the size of each dimension of the n-dimensional open
-   array "r^".  If "s" is too large, the extra elements are ignored; if
-   it's too small, the extra sizes are discarded.  It is a checked runtime
-   error if "r" is "NIL".  If "r" is not a reference to an open array, "s"
-   is unchanged. *)
-
 PROCEDURE GetArrayShape (r: REFANY; VAR s: ARRAY OF INTEGER) =
   VAR
-    def := RTType.Get(TYPECODE(r));
+    def := LOOPHOLE (RTType.Get(TYPECODE(r)), RT0.ArrayTypeDefn);
     sizes: UNTRACED REF INTEGER := LOOPHOLE(r, ADDRESS) + ADRSIZE(ADDRESS);
   BEGIN
-    FOR i := 0 TO MIN(NUMBER(s), def.nDimensions) - 1 DO
-      s[i] := sizes^;
-      INC(sizes, ADRSIZE(sizes^));
+    IF (def.common.kind = ORD (TK.Array)) THEN
+      FOR i := 0 TO MIN(NUMBER(s), def.nDimensions) - 1 DO
+        s[i] := sizes^;
+        INC(sizes, ADRSIZE(sizes^));
+      END;
     END;
   END GetArrayShape;
-
-PROCEDURE Die () =
-  BEGIN
-    RTMisc.FatalError (NIL, 0, "NIL ref passed to RTHeap.GetData");
-  END Die;
 
 BEGIN
 END RTHeap.

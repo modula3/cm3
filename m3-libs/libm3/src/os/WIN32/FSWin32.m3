@@ -4,11 +4,12 @@
 (*                                                          *)
 (* Portions Copyright 1996, Critical Mass, Inc.             *)
 (*                                                          *)
-(* Last modified on Thu May  2 13:35:47 PDT 1996 by heydon  *)
-(*      modified on Thu Aug 31 14:02:00 PDT 1995 by steveg  *)
+(* Last modified on Thu Aug 31 14:02:00 PDT 1995 by steveg  *)
 (*      modified on Wed Nov 30 13:44:49 PST 1994 by kalsow  *)
 (*      modified on Fri Feb 18 10:45:30 PST 1994 by mcjones *)
 (*      modified on Fri May  7 22:56:07 PDT 1993 by mjordan *)
+
+(*** STORAGE LEAK:  FS.Status():  FindFirstFile() must be followed by FindClose(). ****)
 
 UNSAFE MODULE FSWin32 EXPORTS FS;
 
@@ -24,31 +25,35 @@ EXCEPTION InternalError; <* FATAL InternalError *>
 
 PROCEDURE GetAbsolutePathname(p: Pathname.T): Pathname.T
   RAISES {OSError.E} =
-  VAR lpFileName := M3toC.TtoS(p);
-  PROCEDURE DoIt(VAR chars: ARRAY OF CHAR): WinDef.DWORD
-    RAISES {OSError.E} =
-    VAR filePart: WinNT.LPSTR;
-    BEGIN
-      WITH n = WinBase.GetFullPathName(
-                 lpFileName := lpFileName,
-                 nBufferLength := NUMBER(chars),
-                 lpBuffer := ADR(chars[0]),
-                 lpFilePart := ADR(filePart)) DO
-        IF n = 0 THEN OSErrorWin32.Raise() END;
-        RETURN n
-      END
-    END DoIt;
-  VAR chars: ARRAY [0..63] OF CHAR; n := DoIt(chars);
+  VAR
+    fname : Ctypes.char_star := M3toC.SharedTtoS(p);
+    n     : WinDef.DWORD;
+    chars : ARRAY [0..63] OF CHAR;
   BEGIN
+    n := GetAbsPath(p, fname, chars);
     IF n < NUMBER(chars) THEN
+      M3toC.FreeSharedS(p, fname);
       RETURN Text.FromChars(SUBARRAY(chars, 0, n))
     END;
     WITH refChars = NEW(REF ARRAY OF CHAR, n + 1) DO
-      n := DoIt(refChars^);
+      n := GetAbsPath(p, fname, refChars^);
+      M3toC.FreeSharedS(p, fname);
       IF n > NUMBER(refChars^) THEN RAISE InternalError END;
       RETURN Text.FromChars(SUBARRAY(refChars^, 0, n))
-    END
+    END;
   END GetAbsolutePathname;
+
+PROCEDURE GetAbsPath(p: Pathname.T;  fname: Ctypes.char_star;
+                     VAR chars: ARRAY OF CHAR): WinDef.DWORD
+  RAISES {OSError.E} =
+  VAR filePart: WinNT.LPSTR;  n: WinDef.DWORD;
+  BEGIN
+    n := WinBase.GetFullPathName(
+           lpFileName := fname, nBufferLength := NUMBER(chars),
+           lpBuffer := ADR(chars[0]), lpFilePart := ADR(filePart));
+    IF n = 0 THEN Fail(p, fname); END;
+    RETURN n
+  END GetAbsPath;
 
 TYPE ABD = ARRAY BOOLEAN OF WinDef.DWORD;
 
@@ -156,16 +161,19 @@ PROCEDURE OpenFile(
     (* I believe the only reason for passing a non-NIL "hTemplate" to
        "CreateFile" is to supply OS/2-style ``extended attributes''
        for the file being created.  PMcJ 7/3/93 *)
-    handle := WinBase.CreateFile(
-      lpFileName := M3toC.TtoS(p),
-      dwDesiredAccess := WinNT.GENERIC_READ + WinNT.GENERIC_WRITE,
-      dwShareMode := WinNT.FILE_SHARE_READ + WinNT.FILE_SHARE_WRITE,
-      lpSecurityAttributes := lpsa,
-      dwCreationDisposition := createMode[create, truncate],
-      dwFlagsAndAttributes := attrs,
-      hTemplateFile := handleTemplate);
-    IF LOOPHOLE(handle, INTEGER) = WinBase.INVALID_HANDLE_VALUE THEN 
-      OSErrorWin32.Raise()
+    VAR fname := M3toC.SharedTtoS(p); BEGIN
+      handle := WinBase.CreateFile(
+        lpFileName := fname,
+        dwDesiredAccess := WinNT.GENERIC_READ + WinNT.GENERIC_WRITE,
+        dwShareMode := WinNT.FILE_SHARE_READ + WinNT.FILE_SHARE_WRITE,
+        lpSecurityAttributes := lpsa,
+        dwCreationDisposition := createMode[create, truncate],
+        dwFlagsAndAttributes := attrs,
+        hTemplateFile := handleTemplate);
+      IF LOOPHOLE(handle, INTEGER) = WinBase.INVALID_HANDLE_VALUE THEN
+        Fail(p, fname);
+      END;
+      M3toC.FreeSharedS(p, fname);
     END;
     RETURN FileWin32.New(handle, FileWin32.ReadWrite)
   END OpenFile;
@@ -182,45 +190,53 @@ PROCEDURE GetFileAttributes(handle: WinNT.HANDLE): WinDef.DWORD
 
 PROCEDURE GetFileSecurityDescriptor(pn: Pathname.T): REF ARRAY OF WinDef.BYTE
   RAISES {OSError.E} =
-  VAR rsd: REF ARRAY OF WinDef.BYTE; n, nNeeded: WinDef.DWORD;
   CONST Info = WinNT.OWNER_SECURITY_INFORMATION +
                WinNT.GROUP_SECURITY_INFORMATION +
                WinNT.DACL_SECURITY_INFORMATION +
                WinNT.SACL_SECURITY_INFORMATION;
+  VAR
+    rsd: REF ARRAY OF WinDef.BYTE;
+    n, nNeeded: WinDef.DWORD;
+    fname: Ctypes.char_star;
   BEGIN
     IF OSWin32.Win95() THEN RETURN NIL END; 
     (* WinBase.GetFileSecurity not implement in Win95 *)
 
+    fname := M3toC.SharedTtoS(pn);
     n := 64;
     LOOP
       rsd := NEW(REF ARRAY OF WinDef.BYTE, n);
       IF WinBase.GetFileSecurity(
-           lpFileName := M3toC.TtoS(pn),
+           lpFileName := fname,
            RequestedInformation := Info,
            pSecurityDescriptor := ADR(rsd[0]),
            nLength := n,
-           lpnLengthNeeded := ADR(nNeeded)) = False THEN OSErrorWin32.Raise()
+           lpnLengthNeeded := ADR(nNeeded)) = False THEN
+        Fail(pn, fname);
       END;
       IF nNeeded = 0 THEN EXIT END;
-      n := nNeeded
+      n := nNeeded;
     END;
+    M3toC.FreeSharedS(pn, fname);
+
     RETURN rsd
   END GetFileSecurityDescriptor;
 
 PROCEDURE OpenFileReadonly(p: Pathname.T): File.T RAISES {OSError.E}=
-  VAR handle: WinNT.HANDLE;
+  VAR handle: WinNT.HANDLE;  fname := M3toC.SharedTtoS(p);
   BEGIN
     handle := WinBase.CreateFile(
-      lpFileName := M3toC.TtoS(p),
+      lpFileName := fname,
       dwDesiredAccess := WinNT.GENERIC_READ,
       dwShareMode :=  WinNT.FILE_SHARE_READ,
       lpSecurityAttributes := NIL,
       dwCreationDisposition := WinBase.OPEN_EXISTING,
       dwFlagsAndAttributes := 0,
       hTemplateFile := NIL);
-    IF LOOPHOLE(handle, INTEGER) = WinBase.INVALID_HANDLE_VALUE THEN 
-      OSErrorWin32.Raise()
+    IF LOOPHOLE(handle, INTEGER) = WinBase.INVALID_HANDLE_VALUE THEN
+      Fail(p, fname);
     END;
+    M3toC.FreeSharedS(p, fname);
     RETURN FileWin32.New(handle, FileWin32.Read)
   END OpenFileReadonly;
 
@@ -229,41 +245,62 @@ PROCEDURE CreateDirectory(p: Pathname.T) RAISES {OSError.E}=
               nLength := BYTESIZE(WinBase.SECURITY_ATTRIBUTES),
               lpSecurityDescriptor := NIL, (* use caller's default *)
               bInheritHandle := 0};
-  BEGIN 
-    IF WinBase.CreateDirectory(M3toC.TtoS(p), ADR(sa)) = False THEN
-      OSErrorWin32.Raise()
-    END
+  VAR fname := M3toC.SharedTtoS(p);
+  BEGIN
+    IF WinBase.CreateDirectory(fname, ADR(sa)) = False THEN
+      Fail(p, fname);
+    END;
+    M3toC.FreeSharedS(p, fname);
   END CreateDirectory;
 
 PROCEDURE DeleteDirectory(p: Pathname.T) RAISES {OSError.E}=
-  BEGIN 
-    IF WinBase.RemoveDirectory(M3toC.TtoS(p)) = False THEN
-      OSErrorWin32.Raise()
-    END
+  VAR fname := M3toC.SharedTtoS(p);
+  BEGIN
+    IF WinBase.RemoveDirectory(fname) = False THEN
+      Fail(p, fname);
+    END;
+    M3toC.FreeSharedS(p, fname);
   END DeleteDirectory;
-
+  
 PROCEDURE DeleteFile(p: Pathname.T) RAISES {OSError.E}=
+  VAR fname := M3toC.SharedTtoS(p);
   BEGIN 
-    IF WinBase.DeleteFile(M3toC.TtoS(p)) = False THEN
-      OSErrorWin32.Raise()
-    END
+    IF WinBase.DeleteFile(fname) = False THEN
+      Fail(p, fname);
+    END;
+    M3toC.FreeSharedS(p, fname);
   END DeleteFile;
 
 PROCEDURE Rename(p0, p1: Pathname.T) RAISES {OSError.E} =
-  VAR err: INTEGER;
-  BEGIN 
-    IF WinBase.MoveFileEx(M3toC.TtoS(p0), M3toC.TtoS(p1),
-                          WinBase.MOVEFILE_REPLACE_EXISTING) = 0 THEN
-      err := WinBase.GetLastError();
-      IF (err = WinError.ERROR_CALL_NOT_IMPLEMENTED) THEN
-        (* MoveFileEx is not implemented on Win95 *)
-        IF WinBase.MoveFile(M3toC.TtoS(p0), M3toC.TtoS(p1)) = 0 THEN
-          OSErrorWin32.Raise();
-        END;
-        RETURN;
-      END;
-      OSErrorWin32.Raise0(err)
-    END
+  VAR
+    err: INTEGER;
+    f0 := M3toC.SharedTtoS(p0);
+    f1 := M3toC.SharedTtoS(p1);
+  BEGIN
+    IF WinBase.MoveFileEx(f0, f1, WinBase.MOVEFILE_REPLACE_EXISTING) # 0 THEN
+      M3toC.FreeSharedS(p0, f0);
+      M3toC.FreeSharedS(p1, f1);
+      RETURN;
+    END;
+
+    err := WinBase.GetLastError();
+    IF (err # WinError.ERROR_CALL_NOT_IMPLEMENTED) THEN
+      M3toC.FreeSharedS(p0, f0);
+      M3toC.FreeSharedS(p1, f1);
+      OSErrorWin32.Raise0(err);
+    END;
+
+    (* MoveFileEx is not implemented on Win95.  What a bunch of crap! *)
+    IF WinBase.MoveFile(f0, f1) # 0 THEN
+      M3toC.FreeSharedS(p0, f0);
+      M3toC.FreeSharedS(p1, f1);
+      RETURN;
+    END;
+
+    err := WinBase.GetLastError();
+    M3toC.FreeSharedS(p0, f0);
+    M3toC.FreeSharedS(p1, f1);
+    OSErrorWin32.Raise0(err);
   END Rename;
 
 REVEAL Iterator = PublicIterator BRANDED OBJECT
@@ -280,12 +317,14 @@ REVEAL Iterator = PublicIterator BRANDED OBJECT
 PROCEDURE Iterate(p: Pathname.T): Iterator RAISES {OSError.E} =
   VAR
     iter     := NEW(Iterator);
-    allFiles := p & "\\*";
-    handle   := WinBase.FindFirstFile(M3toC.TtoS(allFiles), ADR(iter.ffd));
+    allFiles := Pathname.Join (p, "*", NIL);
+    pattern  := M3toC.SharedTtoS(allFiles);
+    handle   := WinBase.FindFirstFile(pattern, ADR(iter.ffd));
   BEGIN
     IF LOOPHOLE(handle, INTEGER) = WinBase.INVALID_HANDLE_VALUE THEN
-      OSErrorWin32.Raise()
+      Fail(allFiles, pattern);
     END;
+    M3toC.FreeSharedS(allFiles, pattern);
     iter.handle := handle;
     RETURN iter;
   END Iterate;
@@ -366,7 +405,7 @@ PROCEDURE Status(p: Pathname.T): File.Status RAISES {OSError.E} =
   VAR
     ffd    : WinBase.WIN32_FIND_DATA;
     stat   : File.Status;
-    fname  := M3toC.TtoS(p);
+    fname  := M3toC.SharedTtoS(p);
     handle := WinBase.FindFirstFile(fname, ADR(ffd));
   BEGIN
     IF LOOPHOLE(handle, INTEGER) = WinBase.INVALID_HANDLE_VALUE THEN
@@ -380,13 +419,15 @@ PROCEDURE Status(p: Pathname.T): File.Status RAISES {OSError.E} =
           (* "p" names a directory; we don't have to set the other fields *)
           stat.type := DirectoryFileType
         ELSE
-          OSErrorWin32.Raise0(err)
-        END
-      END
+          M3toC.FreeSharedS(p, fname);
+          OSErrorWin32.Raise0(err);
+        END;
+      END;
     ELSE
       BuildStatus (ffd, (*OUT*) stat);
       EVAL WinBase.FindClose(handle);
     END;
+    M3toC.FreeSharedS(p, fname);
     RETURN stat;
   END Status;
 
@@ -416,6 +457,13 @@ PROCEDURE SetModificationTime(p: Pathname.T; READONLY t: Time.T)
     FINALLY h.close()      
     END
   END SetModificationTime;
+
+PROCEDURE Fail(p: Pathname.T;  f: Ctypes.char_star) RAISES {OSError.E} =
+  VAR err := WinBase.GetLastError();
+  BEGIN
+    M3toC.FreeSharedS(p, f);
+    OSErrorWin32.Raise0(err);
+  END Fail;
 
 BEGIN
 END FSWin32.

@@ -2,11 +2,12 @@
 (* Distributed only by permission.                           *)
 (* See the file COPYRIGHT for a full description.            *)
 (*                                                           *)
-(* Last modified on Fri Jan 26 13:39:15 PST 1996 by detlefs  *)
-(*      modified on Thu Sep 22 19:45:14 PDT 1994 by heydon   *)
+(* Last modified on Thu Sep 22 19:45:14 PDT 1994 by heydon   *)
 (*      modified on Thu Sep  8 15:15:04 PDT 1994 by kalsow   *)
+(*      modified on Tue Aug  9 15:58:24 PDT 1994 by detlefs  *)
 (*      modified on Mon Oct 25 11:00:36 PDT 1993 by mcjones  *)
 (*      modified on Mon Jun 28 13:20:59 PDT 1993 by gnelson  *)
+<*PRAGMA SPEC, LOOPINV*>
 
 GENERIC MODULE Sequence(Elem, Seq, Rep);
 (* Where "Seq = Sequence(Elem)" and "Rep = SequenceRep(Elem, Seq)". *)
@@ -32,6 +33,9 @@ VAR zero: Elem.T;
    Hence, setting elements of the sequence to "zero" should avoid
    storage leaks. *)
 
+<*SPEC INVARIANT (ALL [t1: Seq.T, t2: Seq.T]
+                    t1 # t2 IMPLIES t1.elem # t2.elem) *>
+
 PROCEDURE Init(s: Seq.T; sizeHint: CARDINAL): Seq.T = 
   BEGIN
     IF s.elem = NIL OR NUMBER(s.elem^) = 0 THEN
@@ -42,15 +46,23 @@ PROCEDURE Init(s: Seq.T; sizeHint: CARDINAL): Seq.T =
   END Init;
 
 PROCEDURE FromArray(s: Seq.T; READONLY a: ARRAY OF Elem.T): Seq.T = 
+  <*SPEC LET numA := NUMBER(a)*>
+  <*SPEC LET raPre := Rep.RefArray *>
   BEGIN
     s.sz := NUMBER(a);
     s.st := 0;
     s.elem := NEW(Rep.RefArray, MAX(s.sz, 1));
     FOR i := 0 TO s.sz-1 DO
+      <*LOOPINV (ALL [j: INTEGER]
+                   (0 <= j AND j < i) IMPLIES s.elem^[j] = a[j])
+                AND NUMBER(s.elem^) = numA
+                AND (ALL [r: Rep.RefArray]
+                        Rep.RefArray[r] = raPre[r] OR r = s.elem) *>
       s.elem[i] := a[i]
     END;
     RETURN s
   END FromArray;
+
 
 PROCEDURE Addhi(s: Seq.T; READONLY x: Elem.T) =
   BEGIN
@@ -142,13 +154,30 @@ PROCEDURE Getlo(s: Seq.T): Elem.T =
   END Getlo;
 
 PROCEDURE Cat(s, t: T): T =
-  VAR u := NEW(Seq.T); BEGIN
+  VAR u := NEW(Seq.T);
+      <*SPEC LET raPre := Rep.RefArray *>
+      <*SPEC LET dPreS := Data[s] *>
+      <*SPEC LET dPreT := Data[t] *>
+  BEGIN
     u.sz := s.sz + t.sz;
     u.elem := NEW(Rep.RefArray, MAX(u.sz, 1));
     FOR i := 0 TO s.sz-1 DO
+      <*LOOPINV NUMBER(u.elem^) = MAX(u.sz, 1)
+            AND (ALL [x: Rep.RefArray] 
+                     Rep.RefArray[x] = raPre[x] OR x = u.elem)
+            AND (ALL [j: INTEGER] (0 <= j AND j < i) IMPLIES
+                   u.elem^[j] = Rep.Abs(raPre[s.elem], s.st, s.sz)[j]) *>
       u.elem[i] := s.get(i)
     END;
     FOR i := 0 TO t.sz-1 DO
+      <*LOOPINV NUMBER(u.elem^) = MAX(u.sz, 1)
+            AND (ALL [x: Rep.RefArray] 
+                     Rep.RefArray[x] = raPre[x] OR x = u.elem)
+            AND (ALL [j: INTEGER] (0 <= j AND j < s.sz) IMPLIES
+                   u.elem^[j] = dPreS[j])
+                AND
+                (ALL [j: INTEGER] (0 <= j AND j < i) IMPLIES
+                   u.elem^[j + s.sz] = dPreT[j]) *>
       u.elem[i + s.sz] := t.get(i)
     END;
     RETURN u
@@ -156,7 +185,10 @@ PROCEDURE Cat(s, t: T): T =
 
 PROCEDURE Sub(s: T; start: CARDINAL;
     length: CARDINAL := LAST(CARDINAL)): T =
-  VAR u := NEW(Seq.T); BEGIN
+  VAR u := NEW(Seq.T);
+      <*SPEC LET raPre := Rep.RefArray *>
+      <*SPEC LET dPreS := Data[s] *>
+  BEGIN
     IF start >= s.sz OR length = 0 THEN
       u.sz := 0
     ELSE
@@ -164,10 +196,105 @@ PROCEDURE Sub(s: T; start: CARDINAL;
     END;
     u.elem := NEW(Rep.RefArray, MAX(u.sz, 1));
     FOR i := 0 TO u.sz-1 DO
+      <*LOOPINV NUMBER(u.elem^) = MAX(u.sz, 1)
+            AND (ALL [x: Rep.RefArray] 
+                     Rep.RefArray[x] = raPre[x] OR x = u.elem)
+            AND (ALL [j: INTEGER] (0 <= j AND j < i) IMPLIES
+                   u.elem^[j] = dPreS[start + j]) *>
       u.elem[i] := s.get(start + i)
     END;
     RETURN u
   END Sub;
+
+(* ESC specs... *)
+<*SPEC Init(s, sizeHint)
+       MODIFIES Valid[s], Data[s]
+       REQUIRES s # NIL
+       ENSURES RES = s AND Valid'[s] AND NUMBER(Data'[s]) = 0
+*>
+
+<*SPEC FromArray(s, a)
+       MODIFIES Valid[s], Data[s]
+       REQUIRES s # NIL
+       ENSURES RES = s AND Valid'[s] AND NUMBER(Data'[s]) = NUMBER(a)
+           AND (ALL [i: INTEGER] (0 <= i AND i < NUMBER(a)) IMPLIES
+                                 Data'[s][i] = a[i])
+*>
+
+<*SPEC Addhi(s, x)
+       MODIFIES Valid[s], Data[s]
+       REQUIRES Valid[s] AND s # NIL
+       ENSURES Valid'[s]
+           AND NUMBER(Data'[s]) = NUMBER(Data[s])+1
+           AND (ALL [i: INTEGER] 0 <= i AND i < NUMBER(Data[s]) IMPLIES
+                  Data'[s][i] = Data[s][i])
+           AND Data'[s][NUMBER(Data[s])] = x
+*>
+
+<*SPEC Addlo(s, x)
+       MODIFIES Valid[s], Data[s]
+       REQUIRES Valid[s] AND s # NIL
+       ENSURES Valid'[s]
+           AND NUMBER(Data'[s]) = NUMBER(Data[s])+1
+           AND Data'[s][0] = x
+           AND (ALL [i: CARDINAL]
+                 (0 <= i AND i < NUMBER(Data[s])) IMPLIES 
+                    Data'[s][i+1] = Data[s][i])
+*>
+
+<*SPEC Expand(s)
+       MODIFIES Valid[s], Data[s]
+       REQUIRES Valid[s]
+       ENSURES Valid'[s]
+           AND s.st' = 0 AND s.sz' = s.sz
+           AND NUMBER(s.elem'^') > NUMBER(s.elem^)
+           AND (ALL [i: INTEGER] (0 <= i AND i < NUMBER(Data[s])) IMPLIES
+                  Data'[s][i] = Data[s][i])
+           AND FRESH(s.elem')
+*>
+
+<*SPEC Remhi(s)
+       MODIFIES Valid[s], Data[s]
+       REQUIRES s # NIL AND Valid[s] AND NUMBER(Data[s]) > 0
+       ENSURES Valid'[s] AND NUMBER(Data'[s]) = NUMBER(Data[s])-1
+           AND (ALL [i: INTEGER] (0 <= i AND i < NUMBER(Data'[s])) IMPLIES
+                  Data'[s][i] = Data[s][i])
+*>
+
+<*SPEC Remlo(s)
+       MODIFIES Valid[s], Data[s]
+       REQUIRES s # NIL AND Valid[s] AND NUMBER(Data[s]) > 0
+       ENSURES Valid'[s] AND NUMBER(Data'[s]) = NUMBER(Data[s])-1
+           AND (ALL [i: INTEGER] (0 <= i AND i < NUMBER(Data'[s])) IMPLIES
+                  Data'[s][i] = Data[s][i+1])
+*>
+
+<*SPEC Put(s, i, x)
+       MODIFIES Valid[s], Data[s][i]
+       REQUIRES s # NIL AND Valid[s] AND i < NUMBER(Data[s])
+       ENSURES Valid'[s] AND Data'[s][i] = x
+           AND NUMBER(Data'[s]) = NUMBER(Data[s])
+*>
+
+<*SPEC Size(s)
+       REQUIRES s # NIL AND Valid[s]
+       ENSURES RES = NUMBER(Data[s])
+*>
+
+<*SPEC Gethi(s)
+       REQUIRES s # NIL AND Valid[s] AND NUMBER(Data[s]) > 0
+       ENSURES RES = Data[s][NUMBER(Data[s])-1]
+*>
+
+<*SPEC Getlo(s)
+       REQUIRES s # NIL AND Valid[s] AND NUMBER(Data[s]) > 0
+       ENSURES RES = Data[s][0]
+*>
+
+<*SPEC Get(s, i)
+       REQUIRES s # NIL AND Valid[s] AND i < NUMBER(Data[s])
+       ENSURES RES = Data[s][i]
+*>
 
 BEGIN
 END Sequence.

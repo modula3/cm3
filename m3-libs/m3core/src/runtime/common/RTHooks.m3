@@ -6,16 +6,18 @@
 
 (* Many of the routines in the RTHooks interface are exported directly
    by other modules of the runtime:
- 
-|     PushEFrame, PopEFrame   are in Thread
-|     LockMutex, UnlockMutex  are in Thread
-|     Allocate*, Dispose*     are in RTAllocator
+
+|     CheckIsType, ScanTypecase  are in RTType
+|     PushEFrame, PopEFrame      are in RTThread
+|     Allocate*, Dispose*        are in RTAllocator
+|     Concat, MultiCat           are in TextCat
+|     DebugText, DebugInt        are in RTDebug
 
 *)
 
 UNSAFE MODULE RTHooks;
 
-IMPORT RT0, RTException, RTMisc, Text, Word;
+IMPORT RT0, RTException, Word, RuntimeError;
 
 <*UNUSED*> VAR copyright := ARRAY [0..36] OF TEXT {
   "              SRC Modula-3 Non-commercial License",
@@ -40,7 +42,7 @@ IMPORT RT0, RTException, RTMisc, Text, Word;
   "    hereby grant to DIGITAL an irrevocable, fully paid, worldwide, and",
   "    non-exclusive license under your intellectual property rights,",
   "    including patent and copyright, to use and sublicense, without",
-  "  limititation, these modifications.",
+  "    limititation, these modifications.",
   "",
   "  - SRC Modula-3 is a research work which is provided 'as is',",
   "    and  DIGITAL disclaims all warranties",
@@ -57,55 +59,73 @@ IMPORT RT0, RTException, RTMisc, Text, Word;
   "                       All Rights Reserved"
    };
 
-(*----------------------------------------------------------------- RAISE ---*)
+(*------------------------------------------------------------ exceptions ---*)
 
-PROCEDURE Raise (exception: ADDRESS;  arg: ADDRESS) RAISES ANY =
+PROCEDURE Raise (ex     : ADDRESS; (*RT0.ExceptionPtr*)
+                 arg    : ADDRESS; (*RT0.ExceptionArg*)
+                 module : ADDRESS; (*RT0.ModulePtr*)
+                 line   : INTEGER) RAISES ANY =
+  VAR a: RT0.RaiseActivation;
   BEGIN
-    RTException.Raise (exception, arg);
+    a.exception   := ex;
+    a.arg         := arg;
+    a.module      := module;
+    a.line        := line;
+    a.pc          := NIL;
+    a.info0       := NIL;
+    a.info1       := NIL;
+    a.un_except   := NIL;
+    a.un_arg      := NIL;
+    RTException.Raise (a);
   END Raise;
 
 PROCEDURE ResumeRaise (info: ADDRESS) RAISES ANY =
-  TYPE Info = UNTRACED REF RECORD exception, arg: ADDRESS END;
-  VAR p := LOOPHOLE (info, Info);
   BEGIN
-    RTException.ResumeRaise (p.exception, p.arg);
+    RTException.ResumeRaise (LOOPHOLE (info, UNTRACED REF RT0.RaiseActivation)^);
   END ResumeRaise;
-
-(*----------------------------------------------- builtin TEXT operations ---*)
-
-PROCEDURE Concat (a, b: TEXT): TEXT =
-  BEGIN
-    RETURN Text.Cat (a, b);
-  END Concat;
 
 (*-------------------------------------------------------- runtime errors ---*)
 
 CONST
-  msgs = ARRAY [0..9] OF TEXT {
-    (* 0 *) "ASSERT failed",
-    (* 1 *) "Value out of range",
-    (* 2 *) "Subscript out of range",
-    (* 3 *) "Incompatible array shapes",
-    (* 4 *) "Attempt to dereference NIL",
-    (* 5 *) "NARROW failed",
-    (* 6 *) "Function did not return a value",
-    (* 7 *) "Unhandled value in CASE statement",
-    (* 8 *) "Unhandled type in TYPECASE statement",
-    (* 9 *) "Stack overflow"
-  };
+  MIN_RTErr = ORD (FIRST (RuntimeError.T));
+  MAX_RTErr = ORD (LAST (RuntimeError.T));
 
-PROCEDURE ReportFault (module: ADDRESS(*RT0.ModulePtr*);  info: INTEGER)=
-  VAR
-    line : INTEGER       := Word.RightShift (info, 4);
-    code : INTEGER       := Word.And (info, 16_f);
-    mi   : RT0.ModulePtr := module;
-    file : RT0.String    := NIL;
-    msg  : TEXT          := "bad error code!";
+PROCEDURE ReportFault (module: ADDRESS(*RT0.ModulePtr*);  info: INTEGER)
+  RAISES ANY =
+  VAR a: RT0.RaiseActivation;  code := Word.And (info, 16_1f);
   BEGIN
-    IF (0 <= code) AND (code <= LAST (msgs)) THEN msg := msgs[code]; END;
-    IF (mi # NIL) THEN file := mi.file; END;
-    RTMisc.FatalErrorS (file, line, msg);
+    a.exception   := RuntimeError.Self ();
+    a.arg         := LOOPHOLE (code, RT0.ExceptionArg);
+    a.module      := module;
+    a.line        := Word.RightShift (info, 5);
+    a.pc          := NIL;
+    a.info0       := NIL;
+    a.info1       := NIL;
+    a.un_except   := NIL;
+    a.un_arg      := NIL;
+    IF (code < MIN_RTErr) OR (MAX_RTErr < code) THEN
+      a.arg := LOOPHOLE (ORD (RuntimeError.T.Unknown), RT0.ExceptionArg);
+      a.info0 := LOOPHOLE (code, ADDRESS);
+    END;
+    RTException.Raise (a);
   END ReportFault;
+
+PROCEDURE AssertFailed (module: ADDRESS(*RT0.ModulePtr*);  line: INTEGER;
+                        msg: TEXT) RAISES ANY =
+  CONST Err = ORD (RuntimeError.T.AssertFailed);
+  VAR a: RT0.RaiseActivation;
+  BEGIN
+    a.exception   := RuntimeError.Self ();
+    a.arg         := LOOPHOLE (Err, RT0.ExceptionArg);
+    a.module      := module;
+    a.line        := line;
+    a.pc          := NIL;
+    a.info0       := LOOPHOLE (msg, ADDRESS);
+    a.info1       := NIL;
+    a.un_except   := NIL;
+    a.un_arg      := NIL;
+    RTException.Raise (a);
+  END AssertFailed;
 
 BEGIN
 END RTHooks.

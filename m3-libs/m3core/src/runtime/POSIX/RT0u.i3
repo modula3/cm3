@@ -16,24 +16,6 @@
 
 UNSAFE INTERFACE RT0u;
 
-IMPORT RT0;
-
-(*--------------------------------------------------- global module table ---*)
-
-VAR (*CONST*) nModules: CARDINAL := 0;  (* == # compilation units in pgm *)
-(* initialized by RTHooks' main body *)
-
-VAR (*CONST*) modules: UNTRACED REF (*ARRAY OF*) RT0.ModulePtr := NIL;
-(* allocated by the linker, its actual bounds are [0..nModules-1] *)
-
-(*----------------------------------------------------- global type table ---*)
-
-VAR (*CONST*) nTypes: CARDINAL := 0;   (* == max allocated typecode *)
-(* initialized by RTType.Init. *)
-
-VAR (*CONST*) types: UNTRACED REF (*ARRAY OF*) RT0.TypeDefn := NIL;
-(* allocated by the startup code, its actual bounds are [0..nTypes-1] *)
-
 (*------------------------------------------------------ mutual exclusion ---*)
 
 <*EXTERNAL RT0u__inCritical*>
@@ -43,14 +25,6 @@ VAR inCritical: INTEGER;
    preemption.  If inCritical is greater than zero, thread preemption
    is disabled.  We *ASSUME* that "INC(inCritical)" and "DEC(inCritical)"
    generate code that is atomic with respect to Unix signal delivery. *)
-
-(*------------------------------------------------------- allocator stats ---*)
-
-VAR (*CONST*) alloc_cnts : UNTRACED REF ARRAY RT0.Typecode OF INTEGER;
-(* allocated by the startup code, its actual bounds are [0..nTypes-1] *)
-
-VAR (*CONST*) alloc_bytes: UNTRACED REF ARRAY RT0.Typecode OF INTEGER;
-(* allocated by the startup code, its actual bounds are [0..nTypes-1] *)
 
 END RT0u.
 

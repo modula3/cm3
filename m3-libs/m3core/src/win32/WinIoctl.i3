@@ -1,15 +1,13 @@
-(* Copyright (C) 1994, Digital Equipment Corporation           *)
-(* All rights reserved.                                        *)
-(* See the file COPYRIGHT for a full description.              *)
-(*                                                             *)
-(* by Roumen Roupski                                           *)
-(*                                                             *)
-(* Last modified on Mon Aug 19 10:39:57 PDT 1996 by heydon     *)
-(*      modified on Tue Wen 19 04:44:10 EST 1996 by rroupski   *)
+(* Copyright (C) 1994, Digital Equipment Corporation         *)
+(* All rights reserved.                                      *)
+(* See the file COPYRIGHT for a full description.            *)
+(*                                                           *)
+(* by Roumen Roupski                                         *)
+(*                                                           *)
+(* Last modified on Tue Wen 19 04:44:10 EST 1996 by rroupski *)
 
 INTERFACE WinIoctl;
 (* Corresponds to build version 0013 of winioctl.h *)
-
 (* Abstract:
     This module defines the 32-Bit Windows Device I/O control codes.
 
@@ -118,91 +116,39 @@ CONST
 (* IoControlCode values for disk devices. *)
 CONST
   IOCTL_DISK_BASE                = FILE_DEVICE_DISK;
-  IOCTL_DISK_GET_DRIVE_GEOMETRY  = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0000,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
-  IOCTL_DISK_GET_PARTITION_INFO  = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0001,
-    Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
-  IOCTL_DISK_SET_PARTITION_INFO  = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0002,
-    Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS + FILE_WRITE_ACCESS };
-  IOCTL_DISK_GET_DRIVE_LAYOUT    = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0003,
-    Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
-  IOCTL_DISK_SET_DRIVE_LAYOUT    = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0004,
-    Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS + FILE_WRITE_ACCESS };
-  IOCTL_DISK_VERIFY              = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0005,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
-  IOCTL_DISK_FORMAT_TRACKS       = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0006,
-    Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS + FILE_WRITE_ACCESS };
-  IOCTL_DISK_REASSIGN_BLOCKS     = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0007,
-    Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS + FILE_WRITE_ACCESS };
-  IOCTL_DISK_PERFORMANCE         = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0008,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
-  IOCTL_DISK_IS_WRITABLE         = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0009,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
-  IOCTL_DISK_LOGGING             = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_000A,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
-  IOCTL_DISK_FORMAT_TRACKS_EX    = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_000B,
-    Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS + FILE_WRITE_ACCESS };
-  IOCTL_DISK_HISTOGRAM_STRUCTURE = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_000C,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
-  IOCTL_DISK_HISTOGRAM_DATA      = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_000D,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
-  IOCTL_DISK_HISTOGRAM_RESET     = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_000E,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
-  IOCTL_DISK_REQUEST_STRUCTURE   = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_000F,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
-  IOCTL_DISK_REQUEST_DATA        = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0010,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
+  IOCTL_DISK_GET_DRIVE_GEOMETRY  = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0000, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
+  IOCTL_DISK_GET_PARTITION_INFO  = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0001, Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
+  IOCTL_DISK_SET_PARTITION_INFO  = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0002, Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS + FILE_WRITE_ACCESS };
+  IOCTL_DISK_GET_DRIVE_LAYOUT    = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0003, Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
+  IOCTL_DISK_SET_DRIVE_LAYOUT    = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0004, Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS + FILE_WRITE_ACCESS };
+  IOCTL_DISK_VERIFY              = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0005, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
+  IOCTL_DISK_FORMAT_TRACKS       = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0006, Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS + FILE_WRITE_ACCESS };
+  IOCTL_DISK_REASSIGN_BLOCKS     = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0007, Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS + FILE_WRITE_ACCESS };
+  IOCTL_DISK_PERFORMANCE         = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0008, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
+  IOCTL_DISK_IS_WRITABLE         = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0009, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
+  IOCTL_DISK_LOGGING             = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_000A, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
+  IOCTL_DISK_FORMAT_TRACKS_EX    = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_000B, Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS + FILE_WRITE_ACCESS };
+  IOCTL_DISK_HISTOGRAM_STRUCTURE = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_000C, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
+  IOCTL_DISK_HISTOGRAM_DATA      = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_000D, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
+  IOCTL_DISK_HISTOGRAM_RESET     = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_000E, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
+  IOCTL_DISK_REQUEST_STRUCTURE   = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_000F, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
+  IOCTL_DISK_REQUEST_DATA        = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0010, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
 
 (*
   The following device control codes are common for all class drivers.  The
   functions codes defined here must match all of the other class drivers.
 *)
 CONST
-  IOCTL_DISK_CHECK_VERIFY     = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0200,
-    Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
-  IOCTL_DISK_MEDIA_REMOVAL    = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0201,
-    Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
-  IOCTL_DISK_EJECT_MEDIA      = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0202,
-    Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
-  IOCTL_DISK_LOAD_MEDIA       = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0203,
-    Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
-  IOCTL_DISK_RESERVE          = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0204,
-    Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
-  IOCTL_DISK_RELEASE          = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0205,
-    Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
-  IOCTL_DISK_FIND_NEW_DEVICES = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0206,
-    Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
-  IOCTL_DISK_REMOVE_DEVICE    = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0207,
-    Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
+  IOCTL_DISK_CHECK_VERIFY     = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0200, Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
+  IOCTL_DISK_MEDIA_REMOVAL    = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0201, Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
+  IOCTL_DISK_EJECT_MEDIA      = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0202, Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
+  IOCTL_DISK_LOAD_MEDIA       = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0203, Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
+  IOCTL_DISK_RESERVE          = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0204, Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
+  IOCTL_DISK_RELEASE          = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0205, Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
+  IOCTL_DISK_FIND_NEW_DEVICES = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0206, Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
+  IOCTL_DISK_REMOVE_DEVICE    = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0207, Method:= METHOD_BUFFERED, Access:= FILE_READ_ACCESS };
 
-  IOCTL_DISK_GET_MEDIA_TYPES  = CTL_CODE{
-    DeviceType:= IOCTL_DISK_BASE, Function:= 16_0300,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS  };
+  IOCTL_DISK_GET_MEDIA_TYPES  = CTL_CODE{ DeviceType:= IOCTL_DISK_BASE, Function:= 16_0300, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS  };
 
 
 (* Define the partition types returnable by known disk drivers. *)
@@ -583,9 +529,7 @@ TYPE
   END;
 
 CONST
-  IOCTL_SERIAL_LSRMST_INSERT = CTL_CODE{
-    DeviceType:= FILE_DEVICE_SERIAL_PORT, Function:= 31,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
+  IOCTL_SERIAL_LSRMST_INSERT = CTL_CODE{ DeviceType:= FILE_DEVICE_SERIAL_PORT, Function:= 31, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
 
 (*
 // The following values follow the escape designator in the
@@ -613,29 +557,13 @@ CONST SERIAL_LSRMST_LSR_NODATA : BYTE = 2;
 CONST
   SERIAL_LSRMST_MST : BYTE = 3;
 
-  FSCTL_LOCK_VOLUME       = CTL_CODE{
-    DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:=  6,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
-  FSCTL_UNLOCK_VOLUME     = CTL_CODE{
-    DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:=  7,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
-  FSCTL_DISMOUNT_VOLUME   = CTL_CODE{
-    DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:=  8,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
-  FSCTL_MOUNT_DBLS_VOLUME = CTL_CODE{
-    DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:= 13,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
-  FSCTL_GET_COMPRESSION   = CTL_CODE{
-    DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:= 15,
-    Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
-  FSCTL_SET_COMPRESSION   = CTL_CODE{
-    DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:= 16,
-    Method:= METHOD_BUFFERED, Access:= FILE_READ_DATA + FILE_WRITE_DATA };
-  FSCTL_READ_COMPRESSION  = CTL_CODE{
-    DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:= 17,
-    Method:= METHOD_NEITHER,  Access:= FILE_READ_DATA  };
-  FSCTL_WRITE_COMPRESSION = CTL_CODE{
-    DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:= 18,
-    Method:= METHOD_NEITHER,  Access:= FILE_WRITE_DATA };
+  FSCTL_LOCK_VOLUME       = CTL_CODE{ DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:=  6, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
+  FSCTL_UNLOCK_VOLUME     = CTL_CODE{ DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:=  7, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
+  FSCTL_DISMOUNT_VOLUME   = CTL_CODE{ DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:=  8, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
+  FSCTL_MOUNT_DBLS_VOLUME = CTL_CODE{ DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:= 13, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
+  FSCTL_GET_COMPRESSION   = CTL_CODE{ DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:= 15, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
+  FSCTL_SET_COMPRESSION   = CTL_CODE{ DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:= 16, Method:= METHOD_BUFFERED, Access:= FILE_READ_DATA + FILE_WRITE_DATA };
+  FSCTL_READ_COMPRESSION  = CTL_CODE{ DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:= 17, Method:= METHOD_NEITHER,  Access:= FILE_READ_DATA  };
+  FSCTL_WRITE_COMPRESSION = CTL_CODE{ DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:= 18, Method:= METHOD_NEITHER,  Access:= FILE_WRITE_DATA };
 
 END WinIoctl.
