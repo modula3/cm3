@@ -13,7 +13,7 @@ IMPORT LongRealVectorTrans AS VT;
 IMPORT LongRealMatrix AS M;
 IMPORT LongRealMatrixTrans AS MT;
 IMPORT LongRealMatrixLapack AS LA;
-IMPORT LongRealMatrixIntegerPower AS MIntPower;
+IMPORT LongRealMatrixIntegerPower AS MIntPow;
 
 IMPORT LongRealFunctional AS Fn;
 IMPORT LongRealFunctionalDeriv2 AS FnD;
@@ -109,6 +109,16 @@ PROCEDURE TestMatchPattern (target: S.T;
     approx := WM.MatchPattern(target, hdual, hdualvan, gdual, numLevels,
                               -numTranslates, 2 * numTranslates);
 
+    altWavelet0Amp := WM.MatchPatternWav(target, hdual, gdual, numLevels);
+    targetSubWavelet0 := target.superpose(
+                           Refn.Refine(gdual.scale(-altWavelet0Amp), hdual,
+                                       numLevels));
+    altApprox := WM.MatchPatternGen(
+                   targetSubWavelet0, hdual, hdualvan, numLevels,
+                   -numTranslates, 2 * numTranslates);
+    altWaveletMask := gdual.scale(altWavelet0Amp).superpose(
+                        hdualvan.upConvolve(altApprox.lift, 2));
+
     unit   := IIntPow.MulPower(1, 2, numLevels);
     twopow := FLOAT(unit, R.T);
     grid   := R.One / twopow;
@@ -118,11 +128,26 @@ PROCEDURE TestMatchPattern (target: S.T;
     abscissa := V.ArithSeq(size, FLOAT(first, R.T) * grid, grid);
 
   BEGIN
+    IO.Put(Fmt.FN("%s - %s\n", ARRAY OF
+                                 TEXT{RF.Fmt(approx.wavelet0Amp),
+                                      RF.Fmt(altWavelet0Amp)}));
+    IO.Put(
+      Fmt.FN("lift:\n%s\n%s\n",
+             ARRAY OF TEXT{SF.Fmt(approx.lift), SF.Fmt(altApprox.lift)}));
     PL.Init();
     PlotFrame(abscissa^, SUBARRAY(approx.basis^, 0, 2 * numTranslates),
               approx.basis[LAST(approx.basis^)], approx.targetPad^);
     PL.SetFGColorDiscr(4);
     PL.PlotLines(abscissa^, approx.approx.getData()^);
+    PL.SetFGColorDiscr(5);
+    PL.PlotLines(
+      abscissa^,
+      Refn.Refine(altWaveletMask, hdual, numLevels).clipToVector(
+        first, size)^);
+    IF FALSE THEN
+      PL.SetFGColorDiscr(6);
+      PL.PlotLines(abscissa^, targetSubWavelet0.clipToVector(first, size)^);
+    END;
     PL.Exit();
   END TestMatchPattern;
 
@@ -147,7 +172,7 @@ PROCEDURE ComputeNormalEqu (target                                : S.T;
     generatorMaskAutoCor := generatorMask.autocorrelate();
     waveletMaskAutoCor   := waveletMask.autocorrelate();
 
-    refinePower := MIntPower.Power(refineTrans, numLevels);
+    refinePower := MIntPow.Power(refineTrans, numLevels);
     (*extract the center column of the refinement matrix power*)
     refineAutoCor := NEW(S.T).fromVector(
                        M.GetColumn(refinePower, refineSize), -refineSize);
@@ -164,7 +189,7 @@ PROCEDURE ComputeNormalEqu (target                                : S.T;
     FOR i := 0 TO numTranslates - 1 DO
       generatorAutoCor.clipToArray(-i, generatorAutoCorMat[i]);
     END;
-    (*DWT routines is only of little help here*)
+    (*DWT routine is only of little help here*)
     VAR
       x := target;
       y := refineMask.adjoint();
@@ -1316,7 +1341,7 @@ PROCEDURE Test () =
                testSSE, testInverseDSSE, testDeriveWSSE, testNormalEqu};
   <*FATAL BSpl.DifferentParity*>
   BEGIN
-    CASE Example.testNormalEqu OF
+    CASE Example.matchRamp OF
     | Example.matchBSpline =>
         TestMatchPattern(
           Refn.Refine(
@@ -1334,10 +1359,9 @@ PROCEDURE Test () =
            0.649776682132423, -0.175806649674353, -0.875993675942413,
            -0.856283049545732, -0.458477950438848, -0.31397715987086,
            -0.11516417311729, ...} 0.330691666379811 *)
-        TestMatchPattern(
-          NEW(S.T).fromArray(
-            V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^, -256), numlevel, 4,
-          6, 5);
+        TestMatchPattern(NEW(S.T).fromArray(
+                           V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^,
+                           192 - 256), numlevel, 3, 1, 5);
     | Example.matchRampSmooth =>
         (*
           EVAL TestMatchPatternSmooth(NEW(S.T).fromArray(
@@ -1480,7 +1504,8 @@ PROCEDURE Test () =
         <*FATAL OSError.E, FloatMode.Trap, Lex.Error, Rd.Failure, Thread.Alerted*>
         VAR
           rd := FileRd.Open(
-                  "/home/thielema/projects/industry/bruker/data/Datasets/T/Normal/spectrum_28_23.dat");
+                  "/home/thielema/projects/industry/bruker/data/Datasets"
+                    & "/T/Normal/spectrum_28_23.dat");
           data  := MF.Lex(rd);
           dataX := M.GetColumn(data, 0);
           dataY := M.GetColumn(data, 1);
