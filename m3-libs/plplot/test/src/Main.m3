@@ -3,8 +3,6 @@ MODULE Main;
 IMPORT PLPlot AS PL;
 IMPORT LongRealTrans AS RT;
 
-IMPORT NADefinitions AS NA;
-
 
 PROCEDURE TestHistogram () =
   VAR
@@ -29,7 +27,7 @@ PROCEDURE TestHistogram () =
   END TestHistogram;
 
 PROCEDURE TestCurve () =
-  <*FATAL NA.Error*>
+  <*FATAL PL.SizeMismatch*>
   BEGIN
     (* Initialize plplot *)
     PL.SetEnvironment(-RT.TwoPi, RT.TwoPi, -1.1D0, 1.1D0);
