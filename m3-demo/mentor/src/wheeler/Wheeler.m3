@@ -10,7 +10,7 @@
 
 MODULE Wheeler EXPORTS Wheeler;
 
-IMPORT Char, CharArraySort, Text, TextArraySort, TextF, VBT;
+IMPORT Char, CharArraySort, Text, TextArraySort, VBT;
 IMPORT Thread, FormsVBT;
 
 (* Zeus stuff *)
