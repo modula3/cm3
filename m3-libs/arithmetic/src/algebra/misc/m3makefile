@@ -6,6 +6,8 @@ template("combinatoric")
 
 
 generic_module("IntegerPower")
+IntegerPower("Integer32",            "Integer32Basic")
+IntegerPower("Cardinal32",           "Cardinal32Basic")
 IntegerPower("BigInteger",           "BigIntegerBasic")
 IntegerPower("BigIntegerComplex",    "BigIntegerComplexBasic")
 IntegerPower("BigIntegerPolynomial", "BigIntegerPolynomialBasic")
