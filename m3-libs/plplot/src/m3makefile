@@ -1,1 +1,3 @@
 import_lib("plplotd","/usr/lib")
+
+module("PLPlotRaw")
