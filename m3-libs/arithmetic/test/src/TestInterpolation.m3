@@ -46,6 +46,7 @@ BEGIN
     & "\n dy=" & RF.Fmt(y2-y1)
     & " relerr=" & RF.Fmt((y2-y1)/y1)
     & "\n");
+    <*ASSERT ABS(y2-y1)<ABS(y1)*0.00011D0*>
   END;
   RETURN result;
 END TestLinear;
@@ -81,6 +82,7 @@ BEGIN
     & "\n dy=" & RF.Fmt(dy)
     & " relerr=" & RF.Fmt((y2-y1)/y1)
     & "\n");
+    <*ASSERT ABS(y2-y1)<ABS(y1)*0.000001D0*>
   END;
 
   offset:=0.1D0;
@@ -94,6 +96,7 @@ BEGIN
     & "\n dy=" & RF.Fmt(dy)
     & " relerr=" & RF.Fmt((y2-y1)/y1)
     & "\n");
+    <*ASSERT ABS(y2-y1)<ABS(y1)*0.0005D0*>
   END;
 
   RETURN result;
