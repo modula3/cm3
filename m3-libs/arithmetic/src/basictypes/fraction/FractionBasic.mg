@@ -149,7 +149,7 @@ BEGIN
 END Mod;
 
 (*----------------*)
-PROCEDURE DivMod(x,y:T;VAR r:T):T RAISES {Error}  (*return x/y and write the remainder (0) in r*) =
+PROCEDURE DivMod(x,y:T;VAR (*OUT*) r:T):T RAISES {Error}  (*return x/y and write the remainder (0) in r*) =
 BEGIN
   r:=Zero;
   RETURN Div(x,y);
