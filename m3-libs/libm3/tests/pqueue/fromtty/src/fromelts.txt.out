@@ -1,0 +1,25 @@
+> fromelts
+> showheap
+LAST(pq.heap^) = 0; pq.sz = 0
+pq.heap = Elts{NIL}
+> fromelts e d c b a z y x w
+"e" => 1
+"d" => 2
+"c" => 3
+"b" => 4
+"a" => 5
+"z" => 6
+"y" => 7
+"x" => 8
+"w" => 9
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 9
+pq.heap = Elts{NIL, "a", "b", "c", "e", "d", "z", "y", "x", "w"}
+> fromelts i h g
+"i" => 10
+"h" => 11
+"g" => 12
+> showheap  
+LAST(pq.heap^) = 9; pq.sz = 3
+pq.heap = Elts{NIL, "g", "h", "i", NIL (X6)}
+> ^D

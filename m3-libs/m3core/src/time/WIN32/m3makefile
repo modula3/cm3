@@ -1,0 +1,10 @@
+% Copyright (C) 1993, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Wed Sep  7 13:54:35 PDT 1994 by kalsow  
+%      modified on Tue Jun 15 21:53:44 PDT 1993 by harrison
+%      modified on Tue May  4 10:16:00 PDT 1993 by mjordan
+
+Module ("TimeWin32")
+implementation ("DateWin32")

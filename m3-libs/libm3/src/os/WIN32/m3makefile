@@ -1,0 +1,20 @@
+% Copyright (C) 1993, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Thu Aug 31 14:02:39 PDT 1995 by steveg
+%      modified on Thu Nov 10 15:17:04 PST 1994 by kalsow
+%      modified on Tue May  4 10:15:15 PDT 1993 by mjordan
+
+Interface("OSErrorWin32")
+Interface("FileWin32")
+
+Module("OSWin32")
+
+implementation("FSWin32")
+implementation("PathnameWin32")
+implementation("PipeWin32")
+implementation("ProcessWin32")
+implementation("OSErrorWin32")
+implementation("FileWin32")
+

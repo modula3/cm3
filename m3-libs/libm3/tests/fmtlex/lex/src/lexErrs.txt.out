@@ -1,0 +1,76 @@
+m abc abde	# => "de"
+** Raised "Lex.Error"
+-> "de"
+
+m abcde abc	# => ""
+** Raised "Lex.Error"
+-> ""
+
+b tru		# => ""
+** Raised "Lex.Error"
+-> ""
+
+b truXYZ	# => "XYZ"
+** Raised "Lex.Error"
+-> "XYZ"
+
+i		# => ""
+** Raised "Lex.Error"
+-> ""
+
+i + 5		# => " 5"
+** Raised "Lex.Error"
+-> " 5"
+
+i -ABC		# => "ABC"
+** Raised "Lex.Error"
+-> "ABC"
+
+i -3_1234ABC	# => "ABC"
+** Raised "Lex.Error"
+-> "ABC"
+
+I 3 -1234ABC	# => "ABC"
+** Raised "Lex.Error"
+-> "ABC"
+
+i 9_789012ABC	# => "ABC"
+** Raised "Lex.Error"
+-> "ABC"
+
+I 9 789012ABC	# => "ABC"
+** Raised "Lex.Error"
+-> "ABC"
+
+i 11_789ABCXYZ	# => "XYZ"
+** Raised "Lex.Error"
+-> "XYZ"
+
+I 11 789ABCXYZ	# => "XYZ"
+** Raised "Lex.Error"
+-> "XYZ"
+
+i 5_ABC		# => "ABC"
+** Raised "Lex.Error"
+-> "ABC"
+
+u		# => ""
+** Raised "Lex.Error"
+-> ""
+
+u -2		# => "-2"
+** Raised "Lex.Error"
+-> "-2"
+
+u 5_ABC		# => "ABC"
+** Raised "Lex.Error"
+-> "ABC"
+
+r ..		# => "."
+** Raised "Lex.Error"
+-> "."
+
+r .		# => ""
+** Raised "Lex.Error"
+-> ""
+

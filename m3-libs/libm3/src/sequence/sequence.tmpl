@@ -1,0 +1,28 @@
+% Copyright (C) 1993 Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Mon Sep 20 12:28:24 PDT 1993 by kalsow 
+
+%
+%  Quake functions to instantiate a generic sequence
+%  with elements of type "elt.T".  The resulting modules
+%  are named  'nmSeq' and 'nmSeqRep'.
+%
+
+readonly proc _build_sequence (nm, elt, vis) is
+  local seq  = nm & "Seq"
+  local rep  = nm & "SeqRep"
+
+  build_generic_intf (seq, "Sequence",    [elt],          vis)
+  build_generic_intf (rep, "SequenceRep", [elt, seq],     vis)
+  build_generic_impl (seq, "Sequence",    [elt, seq, rep])
+end
+
+readonly proc sequence (nm, elt) is
+  _build_sequence (nm, elt, HIDDEN)
+end
+
+readonly proc Sequence (nm, elt) is
+  _build_sequence (nm, elt, VISIBLE)
+end

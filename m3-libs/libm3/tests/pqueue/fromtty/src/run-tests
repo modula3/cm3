@@ -1,0 +1,23 @@
+#! /bin/csh -f
+#
+# Copyright (C) 1992, Digital Equipment Corporation 
+# All rights reserved.
+# See the file COPYRIGHT for a full description.
+#
+# Last modified on Fri Sep 23 10:26:45 PDT 1994 by heydon
+
+set arch = `/udir/heydon/libi/csh/m3arch`
+set prog = FromTTY
+
+if (-e ../$arch/$prog) then
+  set newoutfile = /tmp/fromttytest-$$.txt.out
+  foreach outfile ($*)
+    set infile = "$outfile:r".in
+    ../$arch/$prog $infile > $newoutfile
+    echo "diff $outfile $newoutfile"
+    diff $outfile $newoutfile
+    rm $newoutfile
+  end
+else
+  echo "Unknown host type \"$arch\""
+endif

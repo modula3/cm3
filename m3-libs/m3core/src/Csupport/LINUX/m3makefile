@@ -1,0 +1,33 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Mon Jun  3 17:52:46 PDT 1996 by heydon  
+%      modified on Fri Aug 13 14:05:13 PDT 1993 by kalsow  
+%      modified on Fri Jun 18 13:18:18 PDT 1993 by harrison
+%      modified on Thu Feb  4 15:58:38 PST 1993 by mjordan
+%      modified on Mon Oct 12 13:51:24 PDT 1992 by muller
+
+c_source ("dtoa")
+
+% The default version of the "writev" function supplied with older
+% versions of Linux allocates a large buffer on the stack, copies the
+% bytes in its "vector" argument onto the stack, and then executes a
+% single "write" system call on the buffer. Since the buffer allocated
+% on the stack is often quite large, this can easily cause thread
+% stacks to overflow. To avoid this problem, you may want to comment
+% out one of the following two lines to define an alternative version
+% of "writev" that does not exhibit this problem. Each of the two
+% alternative implementations has its own problems; consult each of
+% the source files named below for details.
+%
+% Linux kernels since version 1.3.40 have native "readv/writev"
+% functions, so this change is not necessary on those newer kernels.
+% In particular, libc libraries since version 5.2.12 have no longer
+% supplied library implementations for these functions.
+
+% This verion does only one "write" but copies the buffer onto the heap
+% c_source ("writev_slow")
+
+% This version avoids copying the buffer but does multiple "write"'s
+% c_source ("writev_sleazy")
