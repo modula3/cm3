@@ -2045,7 +2045,8 @@ find_if_block (test_bb, then_edge, else_edge)
   /* The THEN block of an IF-THEN combo must have zero or one successors.  */
   if (then_succ != NULL_EDGE
       && (then_succ->succ_next != NULL_EDGE
-          || (then_succ->flags & EDGE_COMPLEX)))
+          || (then_succ->flags & EDGE_COMPLEX)
+	  || (flow2_completed && tablejump_p (then_bb->end))))
     return FALSE;
 
   /* If the THEN block has no successors, conditional execution can still
@@ -2092,7 +2093,8 @@ find_if_block (test_bb, then_edge, else_edge)
 	   && then_succ->dest == else_succ->dest
 	   && else_bb->pred->pred_next == NULL_EDGE
 	   && else_succ->succ_next == NULL_EDGE
-	   && ! (else_succ->flags & EDGE_COMPLEX))
+	   && ! (else_succ->flags & EDGE_COMPLEX)
+	   && ! (flow2_completed && tablejump_p (else_bb->end)))
     join_bb = else_succ->dest;
 
   /* Otherwise it is not an IF-THEN or IF-THEN-ELSE combination.  */
@@ -2519,11 +2521,28 @@ dead_or_predicable (test_bb, merge_bb, other_bb, new_dest, reversep)
 
   if (GET_CODE (end) == JUMP_INSN)
     {
+      rtx tmp, insn, label;
+
       if (head == end)
 	{
 	  head = end = NULL_RTX;
 	  goto no_body;
 	}
+
+      /* If there is a jump table following merge_bb, fail
+	 if there are any insn between head and PREV_INSN (end)
+	 references it.  */
+      if ((label = JUMP_LABEL (end)) != NULL_RTX
+	  && (tmp = NEXT_INSN (label)) != NULL_RTX
+	  && GET_CODE (tmp) == JUMP_INSN
+	  && (GET_CODE (PATTERN (tmp)) == ADDR_VEC
+	      || GET_CODE (PATTERN (tmp)) == ADDR_DIFF_VEC))
+	{
+	  for (insn = head; insn != PREV_INSN (end); insn = NEXT_INSN (insn))
+	    if (find_reg_note (insn, REG_LABEL, label))
+	      return FALSE;
+	}
+
       end = PREV_INSN (end);
     }
 

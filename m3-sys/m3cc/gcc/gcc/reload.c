@@ -257,6 +257,7 @@ static int alternative_allows_memconst PARAMS ((const char *, int));
 static rtx find_reloads_toplev	PARAMS ((rtx, int, enum reload_type, int,
 					 int, rtx, int *));
 static rtx make_memloc		PARAMS ((rtx, int));
+static int maybe_memory_address_p PARAMS ((enum machine_mode, rtx, rtx *));
 static int find_reloads_address	PARAMS ((enum machine_mode, rtx *, rtx, rtx *,
 				       int, enum reload_type, int, rtx));
 static rtx subst_reg_equivs	PARAMS ((rtx, rtx));
@@ -4545,6 +4546,27 @@ make_memloc (ad, regno)
   return tem;
 }
 
+/* Returns true if AD could be turned into a valid memory reference
+   to mode MODE by reloading the part pointed to by PART into a 
+   register.  */
+
+static int
+maybe_memory_address_p (mode, ad, part)
+     enum machine_mode mode;
+     rtx ad;
+     rtx *part;
+{
+  int retv;
+  rtx tem = *part;
+  rtx reg = gen_rtx_REG (GET_MODE (tem), max_reg_num ());
+
+  *part = reg;
+  retv = memory_address_p (mode, ad);
+  *part = tem;
+
+  return retv;
+}
+
 /* Record all reloads needed for handling memory address AD
    which appears in *LOC in a memory reference to mode MODE
    which itself is found in location  *MEMREFLOC.
@@ -4825,26 +4847,24 @@ find_reloads_address (mode, memrefloc, ad, loc, opnum, type, ind_levels, insn)
      that the index needs a reload and find_reloads_address_1 will take care
      of it.
 
-     If we decide to do something here, it must be that
-     `double_reg_address_ok' is true and that this address rtl was made by
-     eliminate_regs.  We generate a reload of the fp/sp/ap + constant and
+     Handle all base registers here, not just fp/ap/sp, because on some
+     targets (namely Sparc) we can also get invalid addresses from preventive
+     subreg big-endian corrections made by find_reloads_toplev.
+
+     If we decide to do something, it must be that `double_reg_address_ok'
+     is true.  We generate a reload of the base register + constant and
      rework the sum so that the reload register will be added to the index.
      This is safe because we know the address isn't shared.
 
-     We check for fp/ap/sp as both the first and second operand of the
-     innermost PLUS.  */
+     We check for the base register as both the first and second operand of
+     the innermost PLUS.  */
 
   else if (GET_CODE (ad) == PLUS && GET_CODE (XEXP (ad, 1)) == CONST_INT
 	   && GET_CODE (XEXP (ad, 0)) == PLUS
-	   && (XEXP (XEXP (ad, 0), 0) == frame_pointer_rtx
-#if FRAME_POINTER_REGNUM != HARD_FRAME_POINTER_REGNUM
-	       || XEXP (XEXP (ad, 0), 0) == hard_frame_pointer_rtx
-#endif
-#if FRAME_POINTER_REGNUM != ARG_POINTER_REGNUM
-	       || XEXP (XEXP (ad, 0), 0) == arg_pointer_rtx
-#endif
-	       || XEXP (XEXP (ad, 0), 0) == stack_pointer_rtx)
-	   && ! memory_address_p (mode, ad))
+	   && GET_CODE (XEXP (XEXP (ad, 0), 0)) == REG
+	   && REGNO (XEXP (XEXP (ad, 0), 0)) < FIRST_PSEUDO_REGISTER
+	   && REG_MODE_OK_FOR_BASE_P (XEXP (XEXP (ad, 0), 0), mode)
+	   && ! maybe_memory_address_p (mode, ad, &XEXP (XEXP (ad, 0), 1)))
     {
       *loc = ad = gen_rtx_PLUS (GET_MODE (ad),
 				plus_constant (XEXP (XEXP (ad, 0), 0),
@@ -4861,15 +4881,10 @@ find_reloads_address (mode, memrefloc, ad, loc, opnum, type, ind_levels, insn)
 
   else if (GET_CODE (ad) == PLUS && GET_CODE (XEXP (ad, 1)) == CONST_INT
 	   && GET_CODE (XEXP (ad, 0)) == PLUS
-	   && (XEXP (XEXP (ad, 0), 1) == frame_pointer_rtx
-#if HARD_FRAME_POINTER_REGNUM != FRAME_POINTER_REGNUM
-	       || XEXP (XEXP (ad, 0), 1) == hard_frame_pointer_rtx
-#endif
-#if FRAME_POINTER_REGNUM != ARG_POINTER_REGNUM
-	       || XEXP (XEXP (ad, 0), 1) == arg_pointer_rtx
-#endif
-	       || XEXP (XEXP (ad, 0), 1) == stack_pointer_rtx)
-	   && ! memory_address_p (mode, ad))
+	   && GET_CODE (XEXP (XEXP (ad, 0), 1)) == REG
+	   && REGNO (XEXP (XEXP (ad, 0), 1)) < FIRST_PSEUDO_REGISTER
+	   && REG_MODE_OK_FOR_BASE_P (XEXP (XEXP (ad, 0), 1), mode)
+	   && ! maybe_memory_address_p (mode, ad, &XEXP (XEXP (ad, 0), 0)))
     {
       *loc = ad = gen_rtx_PLUS (GET_MODE (ad),
 				XEXP (XEXP (ad, 0), 0),
