@@ -2,4 +2,4 @@ import("libm3")
 
 module("BigIntegerRep")
 module("BigIntegerBasic")
-%module("BigIntegerFmtLex")
+module("BigIntegerFmtLex")
