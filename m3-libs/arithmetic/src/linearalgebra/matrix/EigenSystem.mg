@@ -24,10 +24,11 @@ PROCEDURE PowerMethod(     A   : M.T;
                            maxiter : CARDINAL;
                              ) : R.T RAISES {Error}=
   VAR
-    x   : V.T;
-    err : R.T;
+    x      :  V.T;
+    err    :  R.T;
+    tol2   := tol*tol;
     lambdaold,
-    lambda : R.T;
+    lambda :  R.T;
     x2, v2, vx : R.T;
   BEGIN
     lambda := R.Zero;
@@ -47,6 +48,7 @@ PROCEDURE PowerMethod(     A   : M.T;
       v2 := V.Inner(v,v);
       vx := V.Inner(v,x);
       err := (x2*v2-vx*vx)/(v2*v2);
+      x := V.Scale(x,R.Rec(RT.SqRt(x2)));
     UNTIL err <= tol;
     (*calculate the lambda for which x is optimally approximated by lambda*v
       with respect to the Euclidean norm*)
