@@ -206,7 +206,7 @@
 (define_insn ""
   [(set (match_operand:DF 0 "register_operand" "=d")
 	(match_operand:DF 1 "const_double_operand" "F"))]
-  "CONST_DOUBLE_MEM (operands[1]) == const0_rtx"
+  "mem_for_const_double (operands[1]) == 0"
   "ld.u %u1,%0\;ld.w %v1,%0"
   [(set_attr "type" "xalu")])
 
@@ -260,7 +260,7 @@
 (define_insn ""
   [(set (match_operand:DI 0 "register_operand" "=d")
 	(match_operand:DI 1 "const_double_operand" "F"))]
-  "CONST_DOUBLE_MEM (operands[1]) == const0_rtx"
+  "mem_for_const_double (operands[1]) == 0"
   "ld.u %u1,%0\;ld.w %v1,%0"
   [(set_attr "type" "xalu")])
 
@@ -1309,39 +1309,39 @@
 (define_insn "sqrtdf2"
   [(set (match_operand:DF 0 "register_operand" "=d")
 	(sqrt:DF (match_operand:DF 1 "register_operand" "0")))]
-  "! TARGET_C1 && flag_fast_math"
+  "! TARGET_C1 && flag_unsafe_math_optimizations"
   "sqrt.d %0"
   [(set_attr "type" "divd")])
 
 (define_insn "sqrtsf2"
   [(set (match_operand:SF 0 "register_operand" "=d")
 	(sqrt:SF (match_operand:SF 1 "register_operand" "0")))]
-  "! TARGET_C1 && flag_fast_math"
+  "! TARGET_C1 && flag_unsafe_math_optimizations"
   "sqrt.s %0"
   [(set_attr "type" "divs")])
 
 (define_insn "sindf2"
   [(set (match_operand:DF 0 "register_operand" "=d")
 	(unspec:DF [(match_operand:DF 1 "register_operand" "0")] 1))]
-  "! TARGET_C1 && flag_fast_math"
+  "! TARGET_C1 && flag_unsafe_math_optimizations"
   "sin.d %0")
 
 (define_insn "sinsf2"
   [(set (match_operand:SF 0 "register_operand" "=d")
 	(unspec:SF [(match_operand:SF 1 "register_operand" "0")] 1))]
-  "! TARGET_C1 && flag_fast_math"
+  "! TARGET_C1 && flag_unsafe_math_optimizations"
   "sin.s %0")
 
 (define_insn "cosdf2"
   [(set (match_operand:DF 0 "register_operand" "=d")
 	(unspec:DF [(match_operand:DF 1 "register_operand" "0")] 2))]
-  "! TARGET_C1 && flag_fast_math"
+  "! TARGET_C1 && flag_unsafe_math_optimizations"
   "cos.d %0")
 
 (define_insn "cossf2"
   [(set (match_operand:SF 0 "register_operand" "=d")
 	(unspec:SF [(match_operand:SF 1 "register_operand" "0")] 2))]
-  "! TARGET_C1 && flag_fast_math"
+  "! TARGET_C1 && flag_unsafe_math_optimizations"
   "cos.s %0")
 
 (define_insn "ftruncdf2"

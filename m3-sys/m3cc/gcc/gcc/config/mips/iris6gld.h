@@ -49,17 +49,15 @@ Boston, MA 02111-1307, USA.  */
 
 /* The GNU linker supports one-only sections.  */
 #define MAKE_DECL_ONE_ONLY(DECL) (DECL_WEAK (DECL) = 1)
-#undef  UNIQUE_SECTION_P
-#define UNIQUE_SECTION_P(DECL) (DECL_ONE_ONLY (DECL))
 #define UNIQUE_SECTION(DECL, RELOC)				\
   do								\
     {								\
       int len;							\
       int sec;							\
-      char *name;						\
+      const char *name;						\
       char *string;						\
-      char *prefix;						\
-      static char *prefixes[/*4*/3][2] =			\
+      const char *prefix;					\
+      static const char *const prefixes[/*4*/3][2] =		\
       {								\
 	{ ".text.",   ".gnu.linkonce.t." },			\
 	{ ".rodata.", ".gnu.linkonce.r." },			\

@@ -2,22 +2,22 @@
    Copyright (C) 2000 Free Software Foundation, Inc.
    Contributed by CodeSourcery, LLC
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 /* References:
 
@@ -103,7 +103,7 @@ struct conflict_graph_def
      conflicts exist involving that reg.  */
   conflict_graph_arc *neighbor_heads;
 
-  /* Arcs are allocated from here. */
+  /* Arcs are allocated from here.  */
   struct obstack arc_obstack;
 };
 
@@ -122,7 +122,7 @@ static int print_conflict	PARAMS ((int, int, void *));
 static void mark_reg		PARAMS ((rtx, rtx, void *));
 
 /* Callback function to compute the hash value of an arc.  Uses
-   current_graph to locate the graph to which the arc belongs. */
+   current_graph to locate the graph to which the arc belongs.  */
 
 static unsigned
 arc_hash (arcp)
@@ -449,19 +449,19 @@ conflict_graph_compute (regs, p)
 {
   int b;
   conflict_graph graph = conflict_graph_new (max_reg_num ());
+  regset_head live_head;
+  regset live = &live_head;
+  regset_head born_head;
+  regset born = &born_head;
+
+  INIT_REG_SET (live);
+  INIT_REG_SET (born);
 
   for (b = n_basic_blocks; --b >= 0; )
     {
       basic_block bb = BASIC_BLOCK (b);
-      regset_head live_head;
-      regset live = &live_head;
-      regset_head born_head;
-      regset born = &born_head;
       rtx insn;
       rtx head;
-
-      INIT_REG_SET (live);
-      INIT_REG_SET (born);
 
       /* Start with the regs that are live on exit, limited to those
 	 we're interested in.  */
@@ -482,7 +482,7 @@ conflict_graph_compute (regs, p)
 	    {
 	      /* Determine which regs are set in this insn.  Since
   	         we're in SSA form, if a reg is set here it isn't set
-  	         anywhere elso, so this insn is where the reg is born.  */
+  	         anywhere else, so this insn is where the reg is born.  */
 	      CLEAR_REG_SET (born);
 	      note_stores (PATTERN (insn), mark_reg, born);
 	      AND_REG_SET (born, regs);
@@ -523,6 +523,9 @@ conflict_graph_compute (regs, p)
 	    }
 	}
     }
+
+  FREE_REG_SET (live);
+  FREE_REG_SET (born);
 
   return graph;
 }

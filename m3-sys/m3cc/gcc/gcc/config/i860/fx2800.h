@@ -100,7 +100,8 @@ Boston, MA 02111-1307, USA.  */
    sets long & unsigned long in 18 & 19, not in 100 & 101 as shown above. */
 
 #define DBX_OUTPUT_STANDARD_TYPES(syms)	\
-{ char *dtyps[]={"", "char", "short int", "int", "logical*1",		\
+{ static const char *const dtyps[] = {					\
+	"", "char", "short int", "int", "logical*1",			\
 	"logical*2", "logical*4", "float", "double", "complex",		\
 	"doublecomplex", "character", "void", "nil", "boolean",		\
 	"unsigned char", "short unsigned int", "unsigned int",		\
@@ -157,6 +158,7 @@ Boston, MA 02111-1307, USA.  */
 #define DBX_MEMPARM_STABS_LETTER 'k'
 #define DBX_REGPARM_STABS_LETTER 'r'
 
+#undef  ASM_OUTPUT_SOURCE_LINE
 #define ASM_OUTPUT_SOURCE_LINE(file,num)		\
 	fprintf (file, "\t.stab \"\",.,0x%x,0,%d\n",	\
 		N_SLINE,num)
@@ -235,18 +237,12 @@ Boston, MA 02111-1307, USA.  */
 /* Undefine some things defined in i860.h because the native C compiler
    on the FX/2800 emits code to do these operations inline.  For GCC,
    we will use the default implementation of these things... i.e.
-   generating calls to libgcc1 routines.  */
+   generating calls to libgcc routines.  */
 
 #undef DIVSI3_LIBCALL
 #undef UDIVSI3_LIBCALL
 #undef REMSI3_LIBCALL
 #undef UREMSI3_LIBCALL
-
-/* The Alliant compiler's mod function gives the wrong result after a
-   shift operation. This bug typically hits in hash functions. */
-
-#define perform_umodsi3(a, b)	a %= b; if (a == b) a=0; return a
-#define perform_modsi3(a, b)	a %= b; if (a == b) a=0; return a
 
 /* Global pointer needs to be 8 byte aligned? Link error if not... */
 
@@ -270,15 +266,6 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_COMMENT_START
 #define ASM_COMMENT_START "//"
 
-/* Use definitions of ASM_OUTPUT_{DOUBLE,FLOAT} as given in i860.h */
-
-#undef ASM_OUTPUT_DOUBLE
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE) \
-  fprintf(FILE, "\t.double %.20e\n", (VALUE))
-#undef ASM_OUTPUT_FLOAT
-#define ASM_OUTPUT_FLOAT(FILE,VALUE) \
-  fprintf(FILE, "\t.float %.12e\n", (VALUE))
-
 #undef ASM_FILE_START
 #define ASM_FILE_START(FILE)
 #undef ASM_OUTPUT_FUNCTION_PREFIX
@@ -288,8 +275,6 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_OUTPUT_PROLOGUE_SUFFIX
 
 /* Overrides for svr4.h begin here */
-
-#undef SVR4
 
 #undef SWITCH_TAKES_ARG
 #undef WORD_SWITCH_TAKES_ARG
@@ -345,9 +330,12 @@ Boston, MA 02111-1307, USA.  */
 #define ASM_FILE_END(FILE)					\
 do {				 				\
      if (current_function_original_name != NULL) {		\
+       const char *long_op = integer_asm_op (4, FALSE);		\
        tdesc_section();						\
-       fprintf ((FILE), "%s __ETEXT\n", ASM_LONG);		\
-       fprintf ((FILE), "%s 0\n", ASM_LONG);			\
+       fprintf ((FILE), "%s __ETEXT\n", long_op);		\
+       fprintf ((FILE), "%s 0\n", long_op);			\
+       fputs ("\t.long\t__ETEXT\n", (FILE));			\
+       fputs ("\t.long\t0\n", (FILE));				\
        text_section();						\
        fputs("__ETEXT:\n", (FILE));				\
      }								\

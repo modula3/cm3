@@ -1,5 +1,5 @@
 /* Subroutines used for code generation on ROMP.
-   Copyright (C) 1990, 1991, 1992, 1993, 1997, 1998, 1999, 2000
+   Copyright (C) 1990, 1991, 1992, 1993, 1997, 1998, 1999, 2000, 2002
    Free Software Foundation, Inc.
    Contributed by Richard Kenner (kenner@nyu.edu)
 
@@ -33,11 +33,14 @@ Boston, MA 02111-1307, USA.  */
 #include "insn-attr.h"
 #include "flags.h"
 #include "recog.h"
-#include "expr.h"
 #include "obstack.h"
 #include "tree.h"
 #include "function.h"
+#include "expr.h"
+#include "toplev.h"
 #include "tm_p.h"
+#include "target.h"
+#include "target-def.h"
 
 #define min(A,B)	((A) < (B) ? (A) : (B))
 #define max(A,B)	((A) > (B) ? (A) : (B))
@@ -48,6 +51,16 @@ static void output_fpops PARAMS ((FILE *));
 static void init_fpops PARAMS ((void));
 static int memory_offset_in_range_p PARAMS ((rtx, enum machine_mode, int, int));
 static unsigned int hash_rtx PARAMS ((rtx));
+static void romp_output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
+static void romp_output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
+
+/* Initialize the GCC target structure.  */
+#undef TARGET_ASM_FUNCTION_PROLOGUE
+#define TARGET_ASM_FUNCTION_PROLOGUE romp_output_function_prologue
+#undef TARGET_ASM_FUNCTION_EPILOGUE
+#define TARGET_ASM_FUNCTION_EPILOGUE romp_output_function_epilogue
+
+struct gcc_target targetm = TARGET_INITIALIZER;
 
 /* Return 1 if the insn using CC0 set by INSN does not contain
    any unsigned tests applied to the condition codes.
@@ -177,7 +190,7 @@ update_cc (body, insn)
       break;
 
     case CC_CLOBBER:
-      /* Insn clobbers CC. */
+      /* Insn clobbers CC.  */
       CC_STATUS_INIT;
       break;
 
@@ -208,7 +221,7 @@ update_cc (body, insn)
       break;
 
     case CC_TBIT:
-      /* Insn sets T bit if result is non-zero.  Next insn must be branch. */
+      /* Insn sets T bit if result is non-zero.  Next insn must be branch.  */
       CC_STATUS_INIT;
       cc_status.flags = CC_IN_TB | CC_NOT_NEGATIVE;
       break;
@@ -269,12 +282,7 @@ memory_offset_in_range_p (op, mode, low, high)
 
   while (GET_CODE (op) == SUBREG)
     {
-      offset += SUBREG_WORD (op) * UNITS_PER_WORD;
-#if BYTES_BIG_ENDIAN
-      offset -= (min (UNITS_PER_WORD, GET_MODE_SIZE (GET_MODE (op)))
-		 - min (UNITS_PER_WORD,
-			GET_MODE_SIZE (GET_MODE (SUBREG_REG (op)))));
-#endif
+      offset += SUBREG_BYTE (op);
       op = SUBREG_REG (op);
     }
 
@@ -315,7 +323,7 @@ zero_memory_operand (op, mode)
   return memory_offset_in_range_p (op, mode, 0, 0);
 }
 
-/* Return 1 if OP is a valid operand for a `short' memory reference insn. */
+/* Return 1 if OP is a valid operand for a `short' memory reference insn.  */
 
 int
 short_memory_operand (op, mode)
@@ -331,7 +339,7 @@ short_memory_operand (op, mode)
 }
 
 /* Returns 1 if OP is a memory reference involving a symbolic constant
-   that is not in the constant pool. */
+   that is not in the constant pool.  */
 
 int
 symbolic_memory_operand (op, mode)
@@ -471,7 +479,7 @@ reg_or_any_cint_operand (op, mode)
      return GET_CODE (op) == CONST_INT || register_operand (op, mode);
 }
 
-/* Return 1 if the operand is either a register or a valid D-type operand. */
+/* Return 1 if the operand is either a register or a valid D-type operand.  */
 
 int
 reg_or_D_operand (op, mode)
@@ -685,7 +693,7 @@ print_operand (file, x, code)
       break;
 
     case 's':
-      /* Null or "16" depending on whether the constant is greater than 16. */
+      /* Null or "16" depending on whether the constant is greater than 16.  */
       if (GET_CODE (x) != CONST_INT)
 	output_operand_lossage ("invalid %%s value");
 
@@ -1051,8 +1059,8 @@ romp_using_r14 ()
 {
   /* If we are debugging, profiling, have a non-empty constant pool, or
      call a function, we need r14.  */
-  return (write_symbols != NO_DEBUG || profile_flag || get_pool_size () != 0
-	  || romp_makes_calls ());
+  return (write_symbols != NO_DEBUG || current_function_profile
+	  || get_pool_size () != 0 || romp_makes_calls ());
 }
 
 /* Return non-zero if this function needs to push space on the stack.  */
@@ -1077,14 +1085,14 @@ romp_pushes_stack ()
    word for static link, as many words as required for general register
    save area, plus 2 words for each FP reg 2-7 that must be saved.  */
 
-void
-output_prolog (file, size)
+static void
+romp_output_function_prologue (file, size)
      FILE *file;
-     int size;
+     HOST_WIDE_INT size;
 {
   int first_reg;
   int reg_save_offset;
-  int fp_save = size + current_function_outgoing_args_size;
+  HOST_WIDE_INT fp_save = size + current_function_outgoing_args_size;
 
   init_fpops ();
 
@@ -1132,7 +1140,7 @@ output_prolog (file, size)
 }
 
 /* Output the offset information used by debuggers.
-   This is the exactly the total_size value of output_epilog
+   This is the exactly the total_size value of output_function_epilogue()
    which is added to the frame pointer. However the value in the debug
    table is encoded in a space-saving way as follows:
 
@@ -1144,7 +1152,7 @@ output_prolog (file, size)
    The last 6 bits of the first byte initialize the offset value. In many
    cases where procedures have small local storage, this is enough and, in
    this case, the high-order size field is zero so the byte can (almost) be
-   used as is (see below). Thus, the byte value of 0x0d is encodes a offset
+   used as is (see below). Thus, the byte value of 0x0d is encodes an offset
    size of 13 words, or 52 bytes.
 
    For procedures with a local space larger than 60 bytes, the 6 bits
@@ -1161,10 +1169,10 @@ output_encoded_offset (file, reg_offset)
      FILE *file;
      unsigned reg_offset;
 {
-  /* Convert the offset value to 4-byte words rather than bytes. */
+  /* Convert the offset value to 4-byte words rather than bytes.  */
   reg_offset = (reg_offset + 3) / 4;
 
-  /* Now output 1-4 bytes in encoded form. */
+  /* Now output 1-4 bytes in encoded form.  */
   if (reg_offset < (1 << 6))
     /* Fits into one byte */
     fprintf (file, "\t.byte %d\n", reg_offset);
@@ -1187,17 +1195,17 @@ output_encoded_offset (file, reg_offset)
 
 /* Write function epilogue.  */
 
-void
-output_epilog (file, size)
+static void
+romp_output_function_epilogue (file, size)
      FILE *file;
-     int size;
+     HOST_WIDE_INT size;
 {
   int first_reg = first_reg_to_save();
   int pushes_stack = romp_pushes_stack ();
   int reg_save_offset = - ((16 - first_reg) + 1 + 4 + 4) * 4;
-  int total_size = (size + romp_sa_size ()
-		    + current_function_outgoing_args_size);
-  int fp_save = size + current_function_outgoing_args_size;
+  HOST_WIDE_INT total_size = (size + romp_sa_size ()
+			      + current_function_outgoing_args_size);
+  HOST_WIDE_INT fp_save = size + current_function_outgoing_args_size;
   int long_frame = total_size >= 32768;
   rtx insn = get_last_insn ();
   int write_code = 1;
@@ -1405,12 +1413,12 @@ check_precision (opmode, op1, op2)
 /* Structure to describe a floating-point operation.  */
 
 struct fp_op {
-  struct fp_op *next_same_hash;		/* Next op with same hash code. */
-  struct fp_op *next_in_mem;		/* Next op in memory. */
+  struct fp_op *next_same_hash;		/* Next op with same hash code.  */
+  struct fp_op *next_in_mem;		/* Next op in memory.  */
   int mem_offset;			/* Offset from data area.  */
   short size;				/* Size of block in bytes.  */
   short noperands;			/* Number of operands in block.  */
-  rtx ops[3];				/* RTL for operands. */
+  rtx ops[3];				/* RTL for operands.  */
   enum rtx_code opcode;			/* Operation being performed.  */
 };
 
@@ -1429,7 +1437,7 @@ static struct fp_op *last_fpop_in_mem;
 /* Subroutine number in file, to get unique "LF" labels.  */
 static int subr_number = 0;
 
-/* Current word offset in data area (includes header and any constant pool). */
+/* Current word offset in data area (includes header and any constant pool).  */
 int data_offset;
 
 /* Compute hash code for an RTX used in floating-point.  */
@@ -1539,7 +1547,7 @@ output_fpop (code, op0, op1, op2, insn)
       goto win;
 
   /* We have never seen this operation before.  */
-  fpop = (struct fp_op *) oballoc (sizeof (struct fp_op));
+  fpop = (struct fp_op *) xmalloc (sizeof (struct fp_op));
   fpop->mem_offset = data_offset;
   fpop->opcode = code;
   fpop->noperands = noperands;
@@ -1549,7 +1557,7 @@ output_fpop (code, op0, op1, op2, insn)
 
   /* Compute the size using the rules in Appendix A of the RT Linkage
      Convention (4.3/RT-PSD:5) manual.  These rules are a bit ambiguous,
-     but if we guess wrong, it will effect only efficiency, not correctness. */
+     but if we guess wrong, it will effect only efficiency, not correctness.  */
 
   /* Size = 24 + 32 for each non-fp (or fr7) */
   size = 24;
@@ -1580,11 +1588,11 @@ output_fpop (code, op0, op1, op2, insn)
   if (op2 && GET_MODE (op2) != opmode)
     size += 12;
 
-  /* 12 more if first and third operand types not the same. */
+  /* 12 more if first and third operand types not the same.  */
   if (op2 && GET_MODE (op0) != GET_MODE (op2))
     size += 12;
 
-  /* CMP and CMPT need additional.  Also, compute size of save/restore here. */
+  /* CMP and CMPT need additional.  Also, compute size of save/restore here.  */
   if (code == EQ)
     size += 32;
   else if (code == GE)
@@ -1633,7 +1641,7 @@ output_fpop (code, op0, op1, op2, insn)
 	    {
 	      if (REGNO (op0) == REGNO (op2))
 #if 1
-		/* This triggers a bug on the RT. */
+		/* This triggers a bug on the RT.  */
 		abort ();
 #else
 		size += fr0_avail ? 0 : 64;
@@ -1691,7 +1699,7 @@ output_fpop (code, op0, op1, op2, insn)
         size += 4;
     }
 
-  /* Done with size computation!  Chain this in. */
+  /* Done with size computation!  Chain this in.  */
   fpop->size = size;
   data_offset += size / UNITS_PER_WORD;
   fpop->next_in_mem = 0;
@@ -1957,10 +1965,8 @@ output_fpops (file)
 		  union real_extract u;
 
 		  memcpy (&u, &CONST_DOUBLE_LOW (immed[i]), sizeof u);
-		  if (GET_MODE (immed[i]) == DFmode)
-		    ASM_OUTPUT_DOUBLE (file, u.d);
-		  else
-		    ASM_OUTPUT_FLOAT (file, u.d);
+		  assemble_real (u.d, GET_MODE (immed[i]),
+				 GET_MODE_ALIGNMENT (GET_MODE (immed[i])));
 		}
 	      else
 		abort ();
@@ -2009,20 +2015,20 @@ romp_debugger_auto_correction(offset)
 
   /* We really want to go from STACK_POINTER_REGNUM to
      FRAME_POINTER_REGNUM, but this isn't defined. So go the other
-     direction and negate. */
+     direction and negate.  */
   INITIAL_ELIMINATION_OFFSET (FRAME_POINTER_REGNUM, STACK_POINTER_REGNUM,
 			      fp_to_sp);
 
   /* The offset value points somewhere between the frame pointer and
      the stack pointer. What is up from the frame pointer is down from the
-     stack pointer. Therefore the negation in the offset value too. */
+     stack pointer. Therefore the negation in the offset value too.  */
 
   return -(offset+fp_to_sp+4);
 }
 
 /* Return the offset value of an argument having
-   the given offset. Basically, we correct by going from a arg pointer to
-   stack pointer value. */
+   the given offset. Basically, we correct by going from an arg pointer to
+   stack pointer value.  */
 
 int
 romp_debugger_arg_correction (offset)
@@ -2037,4 +2043,29 @@ romp_debugger_arg_correction (offset)
      register argument, but we don't handle it here.  */
 
   return (offset - fp_to_argp);
+}
+
+void
+romp_initialize_trampoline (tramp, fnaddr, cxt)
+     rtx tramp, fnaddr, cxt;
+{
+  rtx addr, temp, val;
+
+  temp = expand_simple_binop (SImode, PLUS, tramp, GEN_INT (4),
+			       0, 1, OPTAB_LIB_WIDEN);
+  emit_move_insn (gen_rtx_MEM (SImode, memory_address (SImode, tramp)), temp);
+
+  val = force_reg (SImode, cxt);
+  addr = memory_address (HImode, plus_constant (tramp, 10));
+  emit_move_insn (gen_rtx_MEM (HImode, addr), gen_lowpart (HImode, val));
+  temp = expand_shift (RSHIFT_EXPR, SImode, val, build_int_2 (16, 0), 0, 1);
+  addr = memory_address (HImode, plus_constant (tramp, 6));
+  emit_move_insn (gen_rtx_MEM (HImode, addr), gen_lowpart (HImode, temp));
+
+  val = force_reg (SImode, fnaddr);
+  addr = memory_address (HImode, plus_constant (tramp, 24));
+  emit_move_insn (gen_rtx_MEM (HImode, addr), gen_lowpart (HImode, val));
+  temp = expand_shift (RSHIFT_EXPR, SImode, val, build_int_2 (16, 0), 0, 1);
+  addr = memory_address (HImode, plus_constant (tramp, 20));
+  emit_move_insn (gen_rtx_MEM (HImode, addr), gen_lowpart (HImode, temp));
 }

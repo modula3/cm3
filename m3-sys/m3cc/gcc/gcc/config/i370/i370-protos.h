@@ -46,12 +46,11 @@ extern void mvs_add_alias PARAMS ((const char *, const char *, int));
 extern int mvs_need_alias PARAMS ((const char *));
 extern int mvs_get_alias PARAMS ((const char *, char *));
 extern int mvs_check_alias PARAMS ((const char *, char *));
-extern void i370_function_prolog PARAMS ((FILE *, int));
 extern void check_label_emit PARAMS ((void));
 extern void mvs_free_label_list PARAMS ((void));
 
-#ifdef _C_PRAGMA_H
+#ifdef GCC_C_PRAGMA_H
 extern void i370_pr_map PARAMS ((cpp_reader *));
 #endif
 
-#endif
+#endif /* ! GCC_I370_PROTOS_H */

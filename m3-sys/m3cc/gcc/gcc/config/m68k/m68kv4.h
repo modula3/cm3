@@ -25,8 +25,11 @@ Boston, MA 02111-1307, USA.  */
 
 #define SGS_SWITCH_TABLES	/* Different switch table handling */
 
+/* TODO: convert includes to ${tm_file} list in config.gcc.  */
 #include "m68k/sgs.h"		/* The m68k/SVR4 assembler is SGS based */
 
+#include "dbxelf.h"
+#include "elfos.h"
 #include "svr4.h"		/* Pick up the generic SVR4 macros */
 
 /* See m68k.h.  7 means 68020 with 68881.  */
@@ -39,7 +42,7 @@ Boston, MA 02111-1307, USA.  */
     g++ assembler names.  When this is defined, g++ uses embedded '.'
     characters and some m68k assemblers have problems with this.  The
     chances are much greater that any particular assembler will permit
-    embedded '$' characters. */
+    embedded '$' characters.  */
 
 #undef NO_DOLLAR_IN_LABEL
 
@@ -65,7 +68,7 @@ Boston, MA 02111-1307, USA.  */
    If a 68881 is the default, gcc will use inline 68881 instructions, by
    predefining __HAVE_68881__, unless -msoft-float is specified.
    If a 68881 is not the default, gcc will only define __HAVE_68881__ if
-   -m68881 is specified. */
+   -m68881 is specified.  */
 
 #if TARGET_DEFAULT & MASK_68881
 #define CPP_SPEC "%{!msoft-float:-D__HAVE_68881__}"
@@ -77,7 +80,7 @@ Boston, MA 02111-1307, USA.  */
    for profiling a function entry.  We override the definition in m68k.h
    and match the way the native m68k/SVR4 compiler does profiling, with the
    address of the profile counter in a1, not a0, and using bsr rather
-   than jsr. */
+   than jsr.  */
 
 #undef FUNCTION_PROFILER
 #define FUNCTION_PROFILER(FILE, LABELNO)				\
@@ -92,7 +95,7 @@ Boston, MA 02111-1307, USA.  */
 #define BSS_ASM_OP	"\t.lcomm\t"
 
 /* Register in which address to store a structure value is passed to a
-   function.  The default in m68k.h is a1.  For m68k/SVR4 it is a0. */
+   function.  The default in m68k.h is a1.  For m68k/SVR4 it is a0.  */
 
 #undef STRUCT_VALUE_REGNUM
 #define STRUCT_VALUE_REGNUM 8
@@ -112,7 +115,7 @@ Boston, MA 02111-1307, USA.  */
 /* Define how the m68k registers should be numbered for Dwarf output.
    The numbering provided here should be compatible with the native
    SVR4 SDB debugger in the m68k/SVR4 reference port, where d0-d7
-   are 0-7, a0-a8 are 8-15, and fp0-fp7 are 16-23. */
+   are 0-7, a0-a8 are 8-15, and fp0-fp7 are 16-23.  */
 
 #define DBX_REGISTER_NUMBER(REGNO) (REGNO)
 
@@ -120,7 +123,7 @@ Boston, MA 02111-1307, USA.  */
    It is then overridden by m68k/sgs.h to use ".space", and again by svr4.h
    to use ".zero".  The m68k/SVR4 assembler uses ".space", so repeat the
    definition from m68k/sgs.h here.  Note that ASM_NO_SKIP_IN_TEXT is
-   defined in m68k/sgs.h, so we don't have to repeat it here. */
+   defined in m68k/sgs.h, so we don't have to repeat it here.  */
 
 #undef ASM_OUTPUT_SKIP
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
@@ -129,7 +132,7 @@ Boston, MA 02111-1307, USA.  */
 /* 1 if N is a possible register number for a function value.
    For m68k/SVR4 allow d0, a0, or fp0 as return registers, for integral,
    pointer, or floating types, respectively. Reject fp0 if not using a
-   68881 coprocessor. */
+   68881 coprocessor.  */
 
 #undef FUNCTION_VALUE_REGNO_P
 #define FUNCTION_VALUE_REGNO_P(N) \
@@ -145,7 +148,7 @@ Boston, MA 02111-1307, USA.  */
    and how to find (in the caller) the value returned by a function.  VALTYPE
    is the data type of the value (as a tree).  If the precise function being
    called is known, FUNC is its FUNCTION_DECL; otherwise, FUNC is 0.
-   For m68k/SVR4 generate the result in d0, a0, or fp0 as appropriate. */
+   For m68k/SVR4 generate the result in d0, a0, or fp0 as appropriate.  */
    
 #undef FUNCTION_VALUE
 #define FUNCTION_VALUE(VALTYPE, FUNC)					\
@@ -160,7 +163,7 @@ Boston, MA 02111-1307, USA.  */
    m68k/SVR4 convention is to copy the value returned for pointer functions
    from a0 to d0 in the function epilogue, so that callers that have
    neglected to properly declare the callee can still find the correct return
-   value. */
+   value.  */
 
 #define FUNCTION_EXTRA_EPILOGUE(FILE, SIZE)				\
 do {									\
@@ -172,7 +175,7 @@ do {									\
 /* Define how to find the value returned by a library function assuming the
    value has mode MODE.
    For m68k/SVR4 look for integer values in d0, pointer values in d0
-   (returned in both d0 and a0), and floating values in fp0. */
+   (returned in both d0 and a0), and floating values in fp0.  */
 
 #undef LIBCALL_VALUE
 #define LIBCALL_VALUE(MODE)						\
@@ -182,13 +185,13 @@ do {									\
    : gen_rtx_REG ((MODE), 0))
 
 /* Boundary (in *bits*) on which stack pointer should be aligned.
-   The m68k/SVR4 convention is to keep the stack pointer longword aligned. */
+   The m68k/SVR4 convention is to keep the stack pointer longword aligned.  */
  
 #undef STACK_BOUNDARY
 #define STACK_BOUNDARY 32
 
 /* Alignment of field after `int : 0' in a structure.
-   For m68k/SVR4, this is the next longword boundary. */
+   For m68k/SVR4, this is the next longword boundary.  */
 
 #undef EMPTY_FIELD_BOUNDARY
 #define EMPTY_FIELD_BOUNDARY 32
@@ -202,21 +205,21 @@ do {									\
 
 /* SVR4 m68k assembler is bitching on the `comm i,1,1' which asks for 
    1 byte alignment. Don't generate alignment for COMMON seems to be
-   safer until we the assembler is fixed. */
+   safer until we the assembler is fixed.  */
 #undef ASM_OUTPUT_ALIGNED_COMMON
 /* Same problem with this one.  */
 #undef ASM_OUTPUT_ALIGNED_LOCAL
 
 /* The `string' directive on m68k svr4 does not handle string with
    escape char (ie., `\') right. Use normal way to output ASCII bytes
-   seems to be safer. */
+   seems to be safer.  */
 #undef ASM_OUTPUT_ASCII
 #define ASM_OUTPUT_ASCII(FILE,PTR,LEN)				\
 do {								\
-  register int sp = 0, lp = 0, ch;				\
-  fprintf ((FILE), "%s", BYTE_ASM_OP);				\
+  register size_t sp = 0, limit = (LEN);			\
+  fputs (integer_asm_op (1, TRUE), (FILE));			\
   do {								\
-    ch = (PTR)[sp];						\
+    int ch = (PTR)[sp];						\
     if (ch > ' ' && ! (ch & 0x80) && ch != '\\')		\
       {								\
 	fprintf ((FILE), "'%c", ch);				\
@@ -225,18 +228,18 @@ do {								\
       {								\
 	fprintf ((FILE), "0x%x", ch);				\
       }								\
-    if (++sp < (LEN))						\
+    if (++sp < limit)						\
       {								\
 	if ((sp % 10) == 0)					\
 	  {							\
-	    fprintf ((FILE), "\n%s", BYTE_ASM_OP);		\
+	    fprintf ((FILE), "\n%s", integer_asm_op (1, TRUE));	\
 	  }							\
 	else							\
 	  {							\
 	    putc (',', (FILE));					\
 	  }							\
       }								\
-  } while (sp < (LEN));						\
+  } while (sp < limit);						\
   putc ('\n', (FILE));						\
 } while (0)
 
@@ -266,27 +269,28 @@ int switch_table_difference_label_flag;
   fprintf ((FILE), ",%u\n", (SIZE)))
 
 /* Override the definition in svr4.h. In m68k svr4, using swbeg is the 
-   standard way to do switch table. */
+   standard way to do switch table.  */
 #undef ASM_OUTPUT_BEFORE_CASE_LABEL
 #define ASM_OUTPUT_BEFORE_CASE_LABEL(FILE,PREFIX,NUM,TABLE)		\
   fprintf ((FILE), "%s&%d\n", SWBEG_ASM_OP, XVECLEN (PATTERN (TABLE), 1));
 
 /* In m68k svr4, a symbol_ref rtx can be a valid PIC operand if it is an
-   operand of a function call. */
+   operand of a function call.  */
 #undef LEGITIMATE_PIC_OPERAND_P
 #define LEGITIMATE_PIC_OPERAND_P(X) \
   ((! symbolic_operand (X, VOIDmode) \
-    && ! (GET_CODE (X) == CONST_DOUBLE && CONST_DOUBLE_MEM (X)	\
-	  && GET_CODE (CONST_DOUBLE_MEM (X)) == MEM		\
-	  && symbolic_operand (XEXP (CONST_DOUBLE_MEM (X), 0), VOIDmode))) \
-   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X))       \
+    && ! (GET_CODE (X) == CONST_DOUBLE && mem_for_const_double (X) != 0	\
+	  && GET_CODE (mem_for_const_double (X)) == MEM			\
+	  && symbolic_operand (XEXP (mem_for_const_double (X), 0),	\
+			       VOIDmode))) 				\
+   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X))       	\
    || PCREL_GENERAL_OPERAND_OK)
 
 /* Turn off function cse if we are doing PIC. We always want function call
    to be done as `bsr foo@PLTPC', so it will force the assembler to create 
    the PLT entry for `foo'. Doing function cse will cause the address of `foo'
    to be loaded into a register, which is exactly what we want to avoid when
-   we are doing PIC on svr4 m68k. */
+   we are doing PIC on svr4 m68k.  */
 #undef OVERRIDE_OPTIONS
 #define OVERRIDE_OPTIONS		\
 {					\
@@ -304,13 +308,13 @@ int switch_table_difference_label_flag;
 #undef TRAMPOLINE_TEMPLATE
 #define TRAMPOLINE_TEMPLATE(FILE)					\
 {									\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x227a));	\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (8));		\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x2f3a));	\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (8));		\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x4e75));	\
-  ASM_OUTPUT_INT (FILE, const0_rtx);		\
-  ASM_OUTPUT_INT (FILE, const0_rtx);		\
+  assemble_aligned_integer (2, GEN_INT (0x227a));			\
+  assemble_aligned_integer (2, GEN_INT (8));				\
+  assemble_aligned_integer (2, GEN_INT (0x2f3a));			\
+  assemble_aligned_integer (2, GEN_INT (8));				\
+  assemble_aligned_integer (2, GEN_INT (0x4e75));			\
+  assemble_aligned_integer (4, const0_rtx);				\
+  assemble_aligned_integer (4, const0_rtx);				\
 }
 
 /* Redefine since we are using a different trampoline */

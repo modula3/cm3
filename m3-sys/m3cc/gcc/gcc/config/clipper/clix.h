@@ -35,9 +35,9 @@ Boston, MA 02111-1307, USA.  */
 
 #define ASM_OUTPUT_ASCII(FILE,PTR,LEN)			\
 do {							\
-  const unsigned char *s;				\
-  int i;						\
-  for (i = 0, s = (const unsigned char *)(PTR); i < (LEN); s++, i++) \
+  const unsigned char *s = (const unsigned char *)(PTR);\
+  size_t i, limit = (LEN);				\
+  for (i = 0; i < limit; s++, i++)			\
     {							\
       if ((i % 8) == 0)					\
 	fputs ("\n\t.byte\t", (FILE));			\
@@ -45,22 +45,6 @@ do {							\
     }							\
   fputs ("\n", (FILE));					\
 } while (0)
-
-#undef ASM_OUTPUT_DOUBLE
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)	\
-{					\
-  union { int i[2]; double d; } _d_;	\
-  _d_.d = VALUE;				\
-  fprintf (FILE, "\t.long 0x%08x,0x%08x\n", _d_.i[0],_d_.i[1]); \
-}
-
-#undef ASM_OUTPUT_FLOAT
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)	\
-{					\
-  union { int i; float f; } _f_;	\
-  _f_.f = VALUE;				\
-  fprintf (FILE, "\t.long 0x%08x\n", _f_.i); \
-}
 
 /* This is how to output an assembler line
    that says to advance the location counter
@@ -70,7 +54,6 @@ do {							\
   fprintf(FILE, "\t.align %d\n", 1 << (LOG))
 
 
-#define ASM_LONG ".long"
 #define BSS_SECTION_ASM_OP  "\t.bss"
 #undef INIT_SECTION_ASM_OP
 #define INIT_SECTION_ASM_OP "\t.section .init,\"x\""
@@ -83,7 +66,7 @@ do {							\
    and CTOR_LIST_END to contribute to the .init section an instruction to
    push a word containing 0 (or some equivalent of that).
 
-   ASM_OUTPUT_CONSTRUCTOR should be defined to push the address of the
+   TARGET_ASM_CONSTRUCTOR should be defined to push the address of the
    constructor.  */
 
 #define CTOR_LIST_BEGIN				\
@@ -96,33 +79,16 @@ do {							\
 
 #undef CTOR_LIST_END
 
-#define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)	\
-  do {						\
-    init_section ();				\
-    fputs ("\tloada  ", FILE);			\
-    assemble_name (FILE, NAME);			\
-    fputs (",r0\n\tsubq   $8,sp\n\tstorw   r0,(sp)\n", FILE);	\
-  } while (0)
-
-
 /* fini psect is 8 aligned */
 
 #define DTOR_LIST_BEGIN	\
   asm (DTORS_SECTION_ASM_OP);				\
   func_ptr __DTOR_LIST__[2] = { (func_ptr) (-1), 0 };
 
-/* A C statement (sans semicolon) to output an element in the table of
-   global destructors.  */
-
-#undef ASM_OUTPUT_DESTRUCTOR
-#define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)       				\
-  do {									\
-    fini_section ();                   					\
-    fprintf (FILE, "%s\t ", ASM_LONG);					\
-    assemble_name (FILE, NAME);              				\
-    fprintf (FILE, ",0\n");						\
-  } while (0)
-
+#undef TARGET_ASM_CONSTRUCTOR
+#define TARGET_ASM_CONSTRUCTOR  clix_asm_out_constructor
+#undef TARGET_ASM_DESTRUCTOR
+#define TARGET_ASM_DESTRUCTOR   clix_asm_out_destructor
 
 /* On clix crt1.o first calls init code and then sets environ and a valid
    chrclass. Unfortunately stdio routines bomb with unset chrclass.

@@ -110,9 +110,7 @@ extern rtx d30v_expand_builtin_va_arg	PARAMS ((tree, tree));
 #endif	/* RTX_CODE */
 #endif	/* TREE_CODE */
 
-extern void d30v_function_prologue	PARAMS ((FILE *, int));
 extern void d30v_expand_prologue	PARAMS ((void));
-extern void d30v_function_epilogue	PARAMS ((FILE *, int));
 extern void d30v_expand_epilogue	PARAMS ((void));
 extern void d30v_function_profiler	PARAMS ((FILE *, int));
 #ifdef RTX_CODE
@@ -128,13 +126,13 @@ extern rtx d30v_legitimize_address	PARAMS ((rtx, rtx,
 						 enum machine_mode, int));
 extern int d30v_mode_dependent_address_p PARAMS ((rtx));
 extern rtx d30v_emit_comparison		PARAMS ((int, rtx, rtx, rtx));
-extern char *d30v_move_2words		PARAMS ((rtx *, rtx));
+extern const char *d30v_move_2words	PARAMS ((rtx *, rtx));
 extern int d30v_emit_cond_move		PARAMS ((rtx, rtx, rtx, rtx));
 extern void d30v_machine_dependent_reorg PARAMS ((rtx));
-extern int d30v_adjust_cost		PARAMS ((rtx, rtx, rtx, int));
 extern rtx d30v_return_addr		PARAMS ((void));
 #endif
 extern void d30v_init_expanders		PARAMS ((void));
+extern void debug_stack_info		PARAMS ((d30v_stack_t *));
 
 
 /* External variables referenced */

@@ -31,6 +31,26 @@ Boston, MA 02111-1307, USA.  */
 #undef SELECT_RTX_SECTION
 #include "svr3.h"
 
+#undef INT_OP_GROUP
+#define INT_OP_GROUP INT_OP_DC
+
+/* We use collect2 instead of ctors_section constructors.  */
+#undef INIT_SECTION_ASM_OP
+#undef FINI_SECTION_ASM_OP
+#undef DTORS_SECTION_ASM_OP
+#undef DO_GLOBAL_CTORS_BODY
+
+/* Remove handling for a separate constant data section.  We put
+   constant data in text_section, which is the default.  */
+#undef SELECT_SECTION
+#undef SELECT_RTX_SECTION
+#undef EXTRA_SECTIONS
+#undef EXTRA_SECTION_FUNCTIONS
+#undef CONST_SECTION_ASM_OP
+#undef READONLY_DATA_SECTION
+
+#define DPX2
+
 /* See m68k.h.  7 means 68020 with 68881.
  * We really have 68030 and 68882,
  * but this will get us going.  
@@ -82,24 +102,11 @@ Boston, MA 02111-1307, USA.  */
 /* The native assembler doesn't support fmovecr.  */
 #define NO_ASM_FMOVECR
 
-#undef EXTRA_SECTIONS
-#undef EXTRA_SECTION_FUNCTIONS
-#undef READONLY_DATA_SECTION
-#define READONLY_DATA_SECTION data_section
-#undef SELECT_SECTION
-#undef SELECT_RTX_SECTION
-#define fini_section() while (0)
-
-#undef CTORS_SECTION_ASM_OP
-#define CTORS_SECTION_ASM_OP "\tsection 15"
-#undef DTORS_SECTION_ASM_OP
-#define DTORS_SECTION_ASM_OP "\tsection 15"
-#undef INIT_SECTION_ASM_OP
-#define BSS_SECTION_ASM_OP     "\tsection 14"
 #undef TEXT_SECTION_ASM_OP
-#define TEXT_SECTION_ASM_OP    "\tsection 10"
+#define TEXT_SECTION_ASM_OP	"\tsection 10"
 #undef DATA_SECTION_ASM_OP
-#define DATA_SECTION_ASM_OP  "\tsection 15"
+#define DATA_SECTION_ASM_OP	"\tsection 15"
+#define BSS_SECTION_ASM_OP	"\tsection 14"
 
 
 /* Don't try using XFmode.  */
@@ -108,19 +115,12 @@ Boston, MA 02111-1307, USA.  */
 
 /* Define if you don't want extended real, but do want to use the
    software floating point emulator for REAL_ARITHMETIC and
-   decimal <-> binary conversion. */
+   decimal <-> binary conversion.  */
 #define REAL_ARITHMETIC 
 
 #undef ASM_OUTPUT_SOURCE_FILENAME
 #define ASM_OUTPUT_SOURCE_FILENAME(FILE, NA)	\
   do { fprintf ((FILE), "\t.file\t'%s'\n", (NA)); } while (0)
-
-/* Assembler pseudos to introduce constants of various size.  */
-
-#undef ASM_BYTE_OP
-#define ASM_BYTE_OP "\tdc.b\t"
-#undef ASM_LONG
-#define ASM_LONG "\tdc.l"
 
 /* 
  * we don't seem to support any of:
@@ -238,269 +238,6 @@ Boston, MA 02111-1307, USA.  */
 /* Output type in decimal not in octal as done in sdbout.c */	
 #define PUT_SDB_TYPE(a) fprintf(asm_out_file, "\t.type\t0%d%s", a, SDB_DELIM)
 		
-#undef FUNCTION_PROLOGUE
-#define FUNCTION_PROLOGUE(FILE, SIZE)                                 \
-{                                                                     \
-  register int regno;                                                 \
-  register int mask = 0;                                              \
-  int num_saved_regs = 0, first = 1;                                  \
-  extern char call_used_regs[];                                       \
-  int fsize = ((SIZE) + 3) & -4;                                      \
-                                                                      \
-                                                                      \
-  if (frame_pointer_needed)                                           \
-    {                                                                 \
-      /* Adding negative number is faster on the 68040.  */           \
-      if (fsize < 0x8000 && !TARGET_68040)                            \
-	{                                                             \
-	  fprintf (FILE, "\tlink %s,#%d\n", 	                      \
-		       reg_names[FRAME_POINTER_REGNUM], -fsize);      \
-	}                                                             \
-      else if (TARGET_68020)                                          \
-	{                                                             \
-	  fprintf (FILE, "\tlink %s,#%d\n",	                      \
-		       reg_names[FRAME_POINTER_REGNUM], -fsize);      \
-	}                                                             \
-      else                                                            \
-	{                                                             \
-	  fprintf (FILE, "\tlink %s,#0\n\tadd.l #%d,sp\n",	      \
-		       reg_names[FRAME_POINTER_REGNUM], -fsize);      \
-	}							      \
-    }								      \
-  else if (fsize)						      \
-    {								      \
-      /* Adding negative number is faster on the 68040.  */	      \
-      if (fsize + 4 < 0x8000)					      \
-	{							      \
-	  fprintf (FILE, "\tadd.w #%d,sp\n", - (fsize + 4));	      \
-	}							      \
-      else							      \
-	{							      \
-	  fprintf (FILE, "\tadd.l #%d,sp\n", - (fsize + 4));          \
-	}							      \
-    }								      \
-  for (regno = 23; regno >= 16; regno--)                              \
-    if (regs_ever_live[regno] && ! call_used_regs[regno])             \
-      if (first) {						      \
-        fprintf (FILE, "\tfmovem.x %s", reg_names[regno]);            \
-	first = 0;						      \
-       }							      \
-      else fprintf (FILE, "/%s", reg_names[regno]);            	      \
-  if (!first) fprintf (FILE, ",-(sp)\n");			      \
-								      \
-  mask = 0;							      \
-  for (regno = 0; regno < 16; regno++)				      \
-    if (regs_ever_live[regno] && ! call_used_regs[regno])	      \
-      {								      \
-        mask |= 1 << (15 - regno);				      \
-        num_saved_regs++;                   			      \
-      }                                                               \
-  if (frame_pointer_needed)                                           \
-    {                                                                 \
-      mask &= ~ (1 << (15 - FRAME_POINTER_REGNUM));                   \
-      num_saved_regs--;                                               \
-    }                                                                 \
-                                                                      \
-                                                                      \
-  if (num_saved_regs <= 2)                                            \
-    {                                                                 \
-      /* Store each separately in the same order moveml uses.         \
-         Using two movel instructions instead of a single moveml      \
-         is about 15% faster for the 68020 and 68030 at no expense    \
-         in code size */                                              \
-                                                                      \
-      int i;                                                          \
-                                                                      \
-      /* Undo the work from above. */                                 \
-      for (i = 0; i< 16; i++)                                         \
-        if (mask & (1 << i))                                          \
-          fprintf (FILE, "\tmove.l %s,-(sp)\n", reg_names[15 - i]);   \
-    }                                                                 \
-  else if (mask)                                                      \
-    {                                                                 \
-      first = 1;                                                      \
-      for (regno = 0; regno < 16; regno++)                            \
-        if (mask & (1 << regno))                                      \
-          if (first) {                                                \
-            fprintf (FILE, "\tmovem.l %s", reg_names[15 - regno]);    \
-            first = 0;                                                \
-           }                                                          \
-          else fprintf (FILE, "/%s", reg_names[15 - regno]);	      \
-      fprintf (FILE, ",-(sp)\n");	           		      \
-    }                                                                 \
-  if (flag_pic && current_function_uses_pic_offset_table)             \
-    {                                                                 \
-      fprintf (FILE, "\tmove.l #__GLOBAL_OFFSET_TABLE_, %s\n",        \
-		   reg_names[PIC_OFFSET_TABLE_REGNUM]);               \
-      fprintf (FILE, "\tlea.l (pc,%s.l),%s\n",                        \
-		   reg_names[PIC_OFFSET_TABLE_REGNUM],                \
-		   reg_names[PIC_OFFSET_TABLE_REGNUM]);               \
-    }                                                                 \
-}
-
-
-#undef FUNCTION_EPILOGUE
-#define FUNCTION_EPILOGUE(FILE, SIZE)                                 \
-{                                                                     \
-  register int regno;                                                 \
-  register int mask, fmask;                                           \
-  register int nregs;                                                 \
-  int offset, foffset, fpoffset, first = 1;		              \
-  extern char call_used_regs[];                                       \
-  int fsize = ((SIZE) + 3) & -4;                                      \
-  int big = 0;                                                        \
-  rtx insn = get_last_insn ();                                        \
-                                                                      \
-  /* If the last insn was a BARRIER, we don't have to write any code.  */ \
-  if (GET_CODE (insn) == NOTE)                                        \
-    insn = prev_nonnote_insn (insn);                                  \
-  if (insn && GET_CODE (insn) == BARRIER)                             \
-    {                                                                 \
-      /* Output just a no-op so that debuggers don't get confused     \
-	 about which function the pc is in at this address.  */       \
-      fprintf (FILE, "\tnop\n");                                      \
-      return;                                                         \
-    }                                                                 \
-                                                                      \
-  nregs = 0;  fmask = 0; fpoffset = 0;                                \
-  for (regno = 16; regno < 24; regno++)                               \
-    if (regs_ever_live[regno] && ! call_used_regs[regno])             \
-      {                                                               \
-        nregs++;                                                      \
-	fmask |= 1 << (23 - regno);                                   \
-      }                                                               \
-  foffset = fpoffset + nregs * 12;                                    \
-  nregs = 0;  mask = 0;                                               \
-  if (frame_pointer_needed)                                           \
-    regs_ever_live[FRAME_POINTER_REGNUM] = 0;                         \
-  for (regno = 0; regno < 16; regno++)                                \
-    if (regs_ever_live[regno] && ! call_used_regs[regno])             \
-      {                                                               \
-        nregs++;                                                      \
-	mask |= 1 << regno;                                           \
-      }                                                               \
-  offset = foffset + nregs * 4;                                       \
-  if (offset + fsize >= 0x8000                                        \
-      && frame_pointer_needed                                         \
-      && (mask || fmask || fpoffset))                                 \
-    {                                                                 \
-      fprintf (FILE, "\tmove.l #%d,a0\n", -fsize);                    \
-      fsize = 0, big = 1;                                             \
-    }                                                                 \
-  if (nregs <= 2)                                                     \
-    {                                                                 \
-      /* Restore each separately in the same order moveml does.       \
-         Using two movel instructions instead of a single moveml      \
-         is about 15% faster for the 68020 and 68030 at no expense    \
-         in code size. */                                             \
-                                                                      \
-      int i;                                                          \
-                                                                      \
-      /* Undo the work from above. */                                 \
-      for (i = 0; i< 16; i++)                                         \
-        if (mask & (1 << i))                                          \
-          {                                                           \
-            if (big)                                                  \
-	      {                                                       \
-		fprintf (FILE, "\tmove.l -%d(%s,a0.l),%s\n",          \
-			     offset + fsize,                          \
-			     reg_names[FRAME_POINTER_REGNUM],         \
-			     reg_names[i]);                           \
-	      }                                                       \
-            else if (! frame_pointer_needed)                          \
-	      {                                                       \
-		fprintf (FILE, "\tmove.l (sp)+,%s\n",                 \
-			     reg_names[i]);                           \
-	      }                                                       \
-            else                                                      \
-	      {                                                       \
-		fprintf (FILE, "\tmove.l -%d(%s),%s\n",               \
-			     offset + fsize,                          \
-			     reg_names[FRAME_POINTER_REGNUM],         \
-			     reg_names[i]);                           \
-	      }                                                       \
-            offset = offset - 4;                                      \
-          }                                                           \
-    }                                                                 \
-  else if (mask)                                                      \
-    {                                                                 \
-      first = 1;						      \
-      for (regno = 0; regno < 16; regno++)                            \
-        if (mask & (1 << regno))                                      \
-          if (first && big) {                                         \
-            fprintf (FILE, "\tmovem.l -%d(%s,a0.l),%s",               \
-		     offset + fsize,                                  \
-		     reg_names[FRAME_POINTER_REGNUM],                 \
-		     reg_names[regno]);                               \
-            first = 0;                                                \
-           }                                                          \
-          else if (first && ! frame_pointer_needed) {                 \
-            fprintf (FILE, "\tmovem.l (sp)+,%s",                      \
-		     offset + fsize,                                  \
-		     reg_names[FRAME_POINTER_REGNUM],                 \
-		     reg_names[regno]);                               \
-            first = 0;                                                \
-           }                                                          \
-          else if (first) {   				              \
-            fprintf (FILE, "\tmovem.l -%d(%s),%s",                    \
-		     offset + fsize,                                  \
-		     reg_names[FRAME_POINTER_REGNUM],                 \
-		     reg_names[regno]);                               \
-            first = 0;                                                \
-           }                                                          \
-          else  						      \
-	    fprintf (FILE, "/%s", reg_names[regno]);	              \
-      fprintf (FILE, "\n");	                 		      \
-    }                                                                 \
-  if (fmask)                                                          \
-    {                                                                 \
-      first = 1;						      \
-      for (regno = 16; regno < 24; regno++)                           \
-        if (fmask & (1 << (23 - regno)))                               \
-          if (first && big) {	                                      \
-            fprintf (FILE, "\tfmovem.x -%d(%s,a0.l),%s",              \
-		     foffset + fsize,                                 \
-		     reg_names[FRAME_POINTER_REGNUM],                 \
-		     reg_names[regno]);                               \
-	    first = 0;						      \
-           }                                                          \
-          else if (first && ! frame_pointer_needed) {                 \
-            fprintf (FILE, "\tfmovem.x (sp)+,%s",                     \
-		     foffset + fsize,                                 \
-		     reg_names[FRAME_POINTER_REGNUM],                 \
-		     reg_names[regno]);                               \
-	    first = 0;						      \
-           }                                                          \
-          else if (first) {    				              \
-            fprintf (FILE, "\tfmovem.x -%d(%s),%s",                   \
-		     foffset + fsize,                                 \
-		     reg_names[FRAME_POINTER_REGNUM],                 \
-		     reg_names[regno]);                               \
-	    first = 0;						      \
-           }                                                          \
-	  else fprintf (FILE, "/%s", reg_names[regno]); 	      \
-      fprintf (FILE, "\n");					      \
-    }                                                                 \
-  if (frame_pointer_needed)                                           \
-    fprintf (FILE, "\tunlk %s\n",                                     \
-	     reg_names[FRAME_POINTER_REGNUM]);                        \
-  else if (fsize)                                                     \
-    {                                                                 \
-      if (fsize + 4 < 0x8000)                                         \
-	{                                                             \
-	  fprintf (FILE, "\tadd.w #%d,sp\n", fsize + 4);              \
-	}                                                             \
-      else                                                            \
-	{                                                             \
-	  fprintf (FILE, "\tadd.l #%d,sp\n", fsize + 4);              \
-	}                                                             \
-    }                                                                 \
-  if (current_function_pops_args)                                     \
-    fprintf (FILE, "\trtd #%d\n", current_function_pops_args);        \
-  else                                                                \
-    fprintf (FILE, "\trts\n");                                        \
-}
-
 /* Translate Motorola opcodes such as `jbeq'
    into VERSAdos opcodes such as `beq'.
    Change `fbeq' to `fbseq', `fbne' to `fbsneq'.
@@ -532,68 +269,6 @@ Boston, MA 02111-1307, USA.  */
     }                                                   \
 }
 
-/* This is how to output a `long double' extended real constant. */
-#undef ASM_OUTPUT_LONG_DOUBLE 
-#define ASM_OUTPUT_LONG_DOUBLE(FILE,VALUE)  				\
-do { long l[3];								\
-     REAL_VALUE_TO_TARGET_LONG_DOUBLE (VALUE, l);			\
-     if (sizeof (int) == sizeof (long))					\
-       fprintf (FILE, "\tdc.l $%x,$%x,$%x\n", l[0], l[1], l[2]);	\
-     else								\
-       fprintf (FILE, "\tdc.l $%lx,$%lx,$%lx\n", l[0], l[1], l[2]);	\
-   } while (0)
-
-#undef ASM_OUTPUT_DOUBLE
-#if 0
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)  \
-  do { char dstr[30];						\
-       REAL_VALUE_TO_DECIMAL (VALUE, "%.20g", dstr);		\
-       fprintf (FILE, "\tdc.d %s\n", dstr);	        	\
-     } while (0)
-#endif
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)  \
-do { long l[2];								\
-     REAL_VALUE_TO_TARGET_DOUBLE (VALUE, l);			        \
-     fprintf (FILE, "\tdc.l $%x,$%x\n", l[0], l[1]);            	\
-   } while (0)
-
-
-/* This is how to output an assembler line defining a `float' constant.  */
-#undef ASM_OUTPUT_FLOAT
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)  \
-do { long l;						\
-     REAL_VALUE_TO_TARGET_SINGLE (VALUE, l);		\
-     if (sizeof (int) == sizeof (long))			\
-       fprintf (FILE, "\tdc.l $%x\n", l);		\
-     else						\
-       fprintf (FILE, "\tdc.l $%lx\n", l);		\
-   } while (0)
-
-/* This is how to output an assembler line defining an `int' constant.  */
-#undef ASM_OUTPUT_INT 
-#define ASM_OUTPUT_INT(FILE,VALUE)  \
-( fprintf (FILE, "\tdc.l "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* Likewise for `char' and `short' constants.  */
-#undef ASM_OUTPUT_SHORT
-#define ASM_OUTPUT_SHORT(FILE,VALUE)  \
-( fprintf (FILE, "\tdc.w "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-#undef ASM_OUTPUT_CHAR
-#define ASM_OUTPUT_CHAR(FILE,VALUE)  \
-( fprintf (FILE, "\tdc.b "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* This is how to output an assembler line for a numeric constant byte.  */
-#undef ASM_OUTPUT_BYTE
-#define ASM_OUTPUT_BYTE(FILE,VALUE)  \
-  fprintf (FILE, "\tdc.b $%x\n", (VALUE))
-
 /* This is how to output an element of a case-vector that is absolute.
    (The 68000 does not use such vectors,
    but we must define this macro anyway.)  */
@@ -607,7 +282,7 @@ do { long l;						\
   asm_fprintf (FILE, "\tdc.w %LL%d-%LL%d\n", VALUE, REL)
 
 /* Currently, JUMP_TABLES_IN_TEXT_SECTION must be defined in order to
-   keep switch tables in the text section. */
+   keep switch tables in the text section.  */
 #define JUMP_TABLES_IN_TEXT_SECTION 1
 
 /* Output a float value (represented as a C double) as an immediate operand.
@@ -626,7 +301,7 @@ do { long l;						\
           long l;						\
           REAL_VALUE_TO_TARGET_SINGLE (VALUE, l);		\
           if (sizeof (int) == sizeof (long))			\
-            asm_fprintf ((FILE), "%I$%x", l);			\
+            asm_fprintf ((FILE), "%I$%x", (int) l);		\
           else							\
             asm_fprintf ((FILE), "%I$%lx", l);			\
         }							\

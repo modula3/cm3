@@ -196,61 +196,6 @@ Boston, MA 02111-1307, USA.  */
 
 #define CTORS_SECTION_ASM_OP	"\t.section\t.ctors,\"x\""
 #define DTORS_SECTION_ASM_OP	"\t.section\t.dtors,\"x\""
-
-/* A list of other sections which the compiler might be "in" at any
-   given time.  */
-
-#undef EXTRA_SECTIONS
-#define EXTRA_SECTIONS in_ctors, in_dtors
-
-/* A list of extra section function definitions.  */
-
-#undef EXTRA_SECTION_FUNCTIONS
-#define EXTRA_SECTION_FUNCTIONS						\
-  CTORS_SECTION_FUNCTION						\
-  DTORS_SECTION_FUNCTION
-
-#define CTORS_SECTION_FUNCTION						\
-void									\
-ctors_section ()							\
-{									\
-  if (in_section != in_ctors)						\
-    {									\
-      fprintf (asm_out_file, "%s\n", CTORS_SECTION_ASM_OP);		\
-      in_section = in_ctors;						\
-    }									\
-}
-
-#define DTORS_SECTION_FUNCTION						\
-void									\
-dtors_section ()							\
-{									\
-  if (in_section != in_dtors)						\
-    {									\
-      fprintf (asm_out_file, "%s\n", DTORS_SECTION_ASM_OP);		\
-      in_section = in_dtors;						\
-    }									\
-}
-
-/* A C statement (sans semicolon) to output an element in the table of
-   global constructors.  */
-#define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)				\
-  do {									\
-    ctors_section ();							\
-    fprintf (FILE, "\t%s\t ", ASM_LONG);				\
-    assemble_name (FILE, NAME);						\
-    fprintf (FILE, "\n");						\
-  } while (0)
-
-/* A C statement (sans semicolon) to output an element in the table of
-   global destructors.  */
-#define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)       				\
-  do {									\
-    dtors_section ();                   				\
-    fprintf (FILE, "\t%s\t ", ASM_LONG);				\
-    assemble_name (FILE, NAME);              				\
-    fprintf (FILE, "\n");						\
-  } while (0)
 #endif /* defined (USE_GLD) */
 
 /* The file command should always begin the output.  */
@@ -290,11 +235,11 @@ dtors_section ()							\
 #define DEFAULT_PCC_STRUCT_RETURN 0
 
 /* If TARGET_68881, return SF and DF values in fp0 instead of d0.  */
-/* NYI: If FP=M68881U return SF and DF values in d0. */
+/* NYI: If FP=M68881U return SF and DF values in d0.  */
 /* NYI: If -mold return pointer in a0 and d0 */
 
 #undef FUNCTION_VALUE
-/* sysV68 (brain damaged) cc convention support. */
+/* sysV68 (brain damaged) cc convention support.  */
 #define FUNCTION_VALUE(VALTYPE,FUNC) \
   (TREE_CODE (VALTYPE) == REAL_TYPE && TARGET_68881 	\
    ? gen_rtx_REG (TYPE_MODE (VALTYPE), 16)		\
@@ -317,7 +262,7 @@ dtors_section ()							\
    d0 may be used, and fp0 as well if -msoft-float is not specified.  */
 
 #undef FUNCTION_VALUE_REGNO_P
-/* sysV68 (brain damaged) cc convention support. */
+/* sysV68 (brain damaged) cc convention support.  */
 #define FUNCTION_VALUE_REGNO_P(N) \
  ((N) == 0 || (N) == 8 || (TARGET_68881 && (N) == 16))
 
@@ -344,83 +289,12 @@ dtors_section ()							\
 ( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 12),	\
   sprintf ((OUTPUT), "%s_%%%d", (NAME), (LABELNO)))
 
+#undef INT_OP_GROUP
 #ifdef USE_GAS
-#undef ASM_LONG
-#define ASM_LONG	".long"
-#undef ASM_SHORT
-#define ASM_SHORT	".short"
-#undef ASM_CHAR
-#define ASM_CHAR	".byte"
-#undef ASM_BYTE
-#define ASM_BYTE	".byte"
-#undef ASM_BYTE_OP
-#define ASM_BYTE_OP	"\t.byte\t"
+#define INT_OP_GROUP INT_OP_STANDARD
 #else
-#undef ASM_LONG
-#define ASM_LONG	"long"
-#undef ASM_SHORT
-#define ASM_SHORT	"short"
-#undef ASM_CHAR
-#define ASM_CHAR	"byte"
-#undef ASM_BYTE
-#define ASM_BYTE	"byte"
-#undef ASM_BYTE_OP
-#define ASM_BYTE_OP	"\tbyte\t"
-#endif /* USE_GAS */
-
-/* The sysV68 as doesn't know about double's and float's.  */
-/* This is how to output an assembler line defining a `double' constant.  */
-
-#undef ASM_OUTPUT_DOUBLE
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)  \
-do { long l[2];						\
-     REAL_VALUE_TO_TARGET_DOUBLE (VALUE, l);		\
-     fprintf (FILE, "\t%s 0x%lx,0x%lx\n", ASM_LONG, l[0], l[1]); \
-   } while (0)
-
-#undef ASM_OUTPUT_LONG_DOUBLE
-#define ASM_OUTPUT_LONG_DOUBLE(FILE,VALUE)  				\
-do { long l[3];								\
-     REAL_VALUE_TO_TARGET_LONG_DOUBLE (VALUE, l);			\
-     fprintf (FILE, "\t%s 0x%lx,0x%lx,0x%lx\n", ASM_LONG, l[0], l[1], l[2]); \
-   } while (0)
-
-/* This is how to output an assembler line defining a `float' constant.  */
-
-#undef ASM_OUTPUT_FLOAT
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)  \
-do { long l;					\
-     REAL_VALUE_TO_TARGET_SINGLE (VALUE, l);	\
-     fprintf ((FILE), "\t%s 0x%lx\n", ASM_LONG, l);	\
-   } while (0)
-
-/* This is how to output an assembler line defining an `int' constant.  */
-
-#undef ASM_OUTPUT_INT
-#define ASM_OUTPUT_INT(FILE,VALUE)  \
-( fprintf (FILE, "\t%s ", ASM_LONG),		\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* Likewise for `char' and `short' constants.  */
-
-#undef ASM_OUTPUT_SHORT
-#define ASM_OUTPUT_SHORT(FILE,VALUE)  \
-( fprintf (FILE, "\t%s ", ASM_SHORT),		\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-#undef ASM_OUTPUT_CHAR
-#define ASM_OUTPUT_CHAR(FILE,VALUE)  \
-( fprintf (FILE, "\t%s ", ASM_CHAR),		\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* This is how to output an assembler line for a numeric constant byte.  */
-
-#undef ASM_OUTPUT_BYTE
-#define ASM_OUTPUT_BYTE(FILE,VALUE)  \
-  fprintf (FILE, "\t%s 0x%x\n", ASM_BYTE, (VALUE))
+#define INT_OP_GROUP INT_OP_NO_DOT
+#endif
 
 /* This is how to output an assembler line
    that says to advance the location counter
@@ -454,7 +328,7 @@ do { long l;					\
 /* The beginnings of sdb support...  */
 
 /* Undefining these will allow `output_file_directive' (in toplev.c)
-   to default to the right thing. */
+   to default to the right thing.  */
 #undef ASM_OUTPUT_MAIN_SOURCE_FILENAME
 #ifndef USE_GAS
 #define ASM_OUTPUT_SOURCE_FILENAME(FILE, FILENAME) \
@@ -467,14 +341,14 @@ do { long l;					\
 #define ASM_OUTPUT_SOURCE_LINE(FILE, LINENO)	\
   fprintf (FILE, "\tln\t%d\n",			\
 	   (sdb_begin_function_line		\
-	    ? last_linenum - sdb_begin_function_line : 1))
+	    ? (LINENO) - sdb_begin_function_line : 1))
 
 /* Yet another null terminated string format.  */
 
 #undef ASM_OUTPUT_ASCII
 #define ASM_OUTPUT_ASCII(FILE,PTR,LEN) \
-  do { register int sp = 0, lp = 0;				\
-    fprintf ((FILE), "%s", ASM_BYTE_OP);			\
+  do { register size_t sp = 0, lp = 0, limit = (LEN);		\
+    fputs (integer_asm_op (1, TRUE), (FILE));			\
   loop:								\
     if ((PTR)[sp] > ' ' && ! ((PTR)[sp] & 0x80) && (PTR)[sp] != '\\')	\
       { lp += 3;						\
@@ -482,7 +356,7 @@ do { long l;					\
     else							\
       { lp += 5;						\
 	fprintf ((FILE), "0x%x", (PTR)[sp]); }			\
-    if (++sp < (LEN))						\
+    if (++sp < limit)						\
       {	if (lp > 60)						\
 	  { lp = 0;						\
 	    fprintf ((FILE), "\n%s", ASCII_DATA_ASM_OP); }	\
@@ -530,7 +404,7 @@ do { long l;					\
 #define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)	\
     asm_fprintf (FILE, "%L%s%d:\n", PREFIX, NUM)
 
-/* The prefix to add to user-visible assembler symbols. */
+/* The prefix to add to user-visible assembler symbols.  */
 
 #undef USER_LABEL_PREFIX
 #define USER_LABEL_PREFIX ""
@@ -545,13 +419,14 @@ do { long l;					\
 
 #undef ASM_OUTPUT_ADDR_VEC_ELT
 #define ASM_OUTPUT_ADDR_VEC_ELT(FILE, VALUE)	\
-    asm_fprintf (FILE, "\t%s %LL%d\n", ASM_LONG, (VALUE))
+    asm_fprintf (FILE, "%s%LL%d\n", integer_asm_op (4, TRUE), (VALUE))
 
 /* This is how to output an element of a case-vector that is relative.  */
 
 #undef ASM_OUTPUT_ADDR_DIFF_ELT
 #define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL)	\
-    asm_fprintf (FILE, "\t%s %LL%d-%LL%d\n", ASM_SHORT, (VALUE), (REL))
+    asm_fprintf (FILE, "\t%s %LL%d-%LL%d\n",			\
+		 integer_asm_op (2, TRUE), (VALUE), (REL))
 
 #ifndef USE_GAS
 
@@ -791,7 +666,7 @@ do {(CUM).offset = 0;\
    tell g++.c about that.  */
 #define ALT_LIBM	"-lm881"
 
-#if (TARGET_DEFAULT & MASK_68881)      /* The default configuration has a 6888[12] FPU. */
+#if (TARGET_DEFAULT & MASK_68881)      /* The default configuration has a 6888[12] FPU.  */
 #define MATH_LIBRARY	"-lm881"
 #endif
 
@@ -807,7 +682,7 @@ do {(CUM).offset = 0;\
       _cleanup ();						\
     } while (0)
 
-/* FINALIZE_TRAMPOLINE clears the instruction cache. */
+/* FINALIZE_TRAMPOLINE clears the instruction cache.  */
 
 #undef FINALIZE_TRAMPOLINE
 #define FINALIZE_TRAMPOLINE(TRAMP)	\

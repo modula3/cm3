@@ -100,7 +100,7 @@ Boston, MA 02111-1307, USA.  */
    includes this file.  */
 
 #undef EXTRA_SECTIONS
-#define EXTRA_SECTIONS in_const, in_ctors, in_dtors
+#define EXTRA_SECTIONS in_const
 
 /* A default list of extra section function definitions.  For targets
    that use additional sections (e.g. .tdesc) you should override this
@@ -108,9 +108,7 @@ Boston, MA 02111-1307, USA.  */
 
 #undef EXTRA_SECTION_FUNCTIONS
 #define EXTRA_SECTION_FUNCTIONS						\
-  CONST_SECTION_FUNCTION						\
-  CTORS_SECTION_FUNCTION						\
-  DTORS_SECTION_FUNCTION
+  CONST_SECTION_FUNCTION
 
 #undef READONLY_DATA_SECTION
 #define READONLY_DATA_SECTION() const_section ()
@@ -128,52 +126,8 @@ const_section ()							\
     }									\
 }
 
-#define CTORS_SECTION_FUNCTION						\
-void									\
-ctors_section ()							\
-{									\
-  if (in_section != in_ctors)						\
-    {									\
-      fprintf (asm_out_file, "%s\n", CTORS_SECTION_ASM_OP);		\
-      in_section = in_ctors;						\
-    }									\
-}
-
-#define DTORS_SECTION_FUNCTION						\
-void									\
-dtors_section ()							\
-{									\
-  if (in_section != in_dtors)						\
-    {									\
-      fprintf (asm_out_file, "%s\n", DTORS_SECTION_ASM_OP);		\
-      in_section = in_dtors;						\
-    }									\
-}
-
-#define INT_ASM_OP		"\t.long\t"
-
-/* A C statement (sans semicolon) to output an element in the table of
-   global constructors.  */
-#define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)				\
-  do {									\
-    ctors_section ();							\
-    fprintf (FILE, "%s", INT_ASM_OP);					\
-    assemble_name (FILE, NAME);						\
-    fprintf (FILE, "\n");						\
-  } while (0)
-
-/* A C statement (sans semicolon) to output an element in the table of
-   global destructors.  */
-#define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)       				\
-  do {									\
-    dtors_section ();                   				\
-    fprintf (FILE, "%s", INT_ASM_OP);					\
-    assemble_name (FILE, NAME);              				\
-    fprintf (FILE, "\n");						\
-  } while (0)
-
 /* The linker will take care of this, and having them causes problems with
-   ld -r (specifically -rU). */
+   ld -r (specifically -rU).  */
 #define CTOR_LISTS_DEFINED_EXTERNALLY 1
 
 #define SET_ASM_OP	"\t.set\t"
@@ -201,11 +155,11 @@ while (0)
 #define PCC_BITFIELD_TYPE_TEST TYPE_NATIVE(rec)
 #define GROUP_BITFIELDS_BY_ALIGN TYPE_NATIVE(rec)
 
-/* DWARF2 Unwinding doesn't work with exception handling yet. */
+/* DWARF2 Unwinding doesn't work with exception handling yet.  */
 #undef DWARF2_UNWIND_INFO
 #define DWARF2_UNWIND_INFO 0
 
-/* Don't assume anything about the header files. */
+/* Don't assume anything about the header files.  */
 #define NO_IMPLICIT_EXTERN_C
 
 /* The definition of this macro implies that there are cases where
@@ -213,7 +167,7 @@ while (0)
 
    On NT (according to the spec) anything except strings/array that fits
    in 64 bits is returned in the registers (this appears to differ from
-   the rest of the Alpha family). */
+   the rest of the Alpha family).  */
 
 #undef RETURN_IN_MEMORY
 #define RETURN_IN_MEMORY(TYPE) \
@@ -233,7 +187,7 @@ while (0)
 }
 
 /* The current Interix assembler (consistent with the DEC documentation)
-   uses a=b NOT .set a,b; .set is for assembler options. */
+   uses a=b NOT .set a,b; .set is for assembler options.  */
 #undef ASM_OUTPUT_DEFINE_LABEL_DIFFERENCE_SYMBOL
 #define ASM_OUTPUT_DEFINE_LABEL_DIFFERENCE_SYMBOL(FILE, SY, HI, LO)    	\
  do {									\

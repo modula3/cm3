@@ -39,59 +39,6 @@ Boston, MA 02111-1307, USA.  */
    (Why isn't this in m68k.h?)  */
 
 #define STRUCTURE_SIZE_BOUNDARY 16
-/* This is how to output an assembler line defining a `double' constant.  */
-
-#undef	ASM_OUTPUT_DOUBLE
-#ifdef REAL_VALUE_TO_TARGET_DOUBLE
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)					\
-  do {									\
-    long hex[2];							\
-    REAL_VALUE_TO_TARGET_DOUBLE (VALUE, hex);				\
-    fprintf (FILE, "\t.long 0x%x\n\t.long 0x%x\n", hex[0], hex[1]);	\
-  } while (0)
-#else
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)					\
- do { if (REAL_VALUE_ISINF (VALUE))					\
-        {								\
-          if (REAL_VALUE_NEGATIVE (VALUE))				\
-            fprintf (FILE, "\t.double 0r-99e999\n");			\
-          else								\
-            fprintf (FILE, "\t.double 0r99e999\n");			\
-        }								\
-      else								\
-        { char dstr[30];						\
-          REAL_VALUE_TO_DECIMAL ((VALUE), "%.20e", dstr);		\
-          fprintf (FILE, "\t.double 0r%s\n", dstr);			\
-        }								\
-    } while (0)
-#endif
-
-/* This is how to output an assembler line defining a `float' constant.  */
-
-#undef	ASM_OUTPUT_FLOAT
-#ifdef REAL_VALUE_TO_TARGET_SINGLE
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)					\
-  do {									\
-    long hex;								\
-    REAL_VALUE_TO_TARGET_SINGLE (VALUE, hex);				\
-    fprintf (FILE, "\t.long 0x%x\n", hex);				\
-  } while (0)
-#else
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)					\
- do { if (REAL_VALUE_ISINF (VALUE))					\
-        {								\
-          if (REAL_VALUE_NEGATIVE (VALUE))				\
-            fprintf (FILE, "\t.single 0r-99e999\n");			\
-          else								\
-            fprintf (FILE, "\t.single 0r99e999\n");			\
-        }								\
-      else								\
-        { char dstr[30];						\
-          REAL_VALUE_TO_DECIMAL ((VALUE), "%.20e", dstr);		\
-          fprintf (FILE, "\t.single 0r%s\n", dstr);			\
-        }								\
-    } while (0)
-#endif
 
 #undef	ASM_OUTPUT_FLOAT_OPERAND
 #ifdef REAL_VALUE_TO_TARGET_SINGLE
@@ -99,7 +46,7 @@ Boston, MA 02111-1307, USA.  */
   do {									\
     long hex;								\
     REAL_VALUE_TO_TARGET_SINGLE (VALUE, hex);				\
-    fprintf (FILE, "#0%c%x", (CODE) == 'f' ? 'b' : 'x', hex);		\
+    fprintf (FILE, "#0%c%lx", (CODE) == 'f' ? 'b' : 'x', hex);		\
   } while (0)
 #else
 #define ASM_OUTPUT_FLOAT_OPERAND(CODE,FILE,VALUE)		\
@@ -109,7 +56,7 @@ Boston, MA 02111-1307, USA.  */
           long l;						\
           REAL_VALUE_TO_TARGET_SINGLE (VALUE, l);		\
           if (sizeof (int) == sizeof (long))			\
-            asm_fprintf ((FILE), "%I0x%x", l);			\
+            asm_fprintf ((FILE), "%I0x%x", (int) l);		\
           else							\
             asm_fprintf ((FILE), "%I0x%lx", l);			\
         }							\
@@ -134,7 +81,7 @@ Boston, MA 02111-1307, USA.  */
   do {									\
     long hex[2];							\
     REAL_VALUE_TO_TARGET_DOUBLE (VALUE, hex);				\
-    fprintf (FILE, "#0b%x%08x", hex[0], hex[1]);			\
+    fprintf (FILE, "#0b%lx%08lx", hex[0], hex[1]);			\
   } while (0)
 #else
 #define ASM_OUTPUT_DOUBLE_OPERAND(FILE,VALUE)				\
@@ -158,7 +105,7 @@ Boston, MA 02111-1307, USA.  */
    tables using pc relative addressing, since they are not in the text
    section, so we undefine CASE_VECTOR_PC_RELATIVE.  This also
    causes the compiler to use absolute addresses in the jump table,
-   so we redefine CASE_VECTOR_MODE to be SImode. */
+   so we redefine CASE_VECTOR_MODE to be SImode.  */
 
 #undef	CASE_VECTOR_MODE
 #define CASE_VECTOR_MODE SImode
@@ -177,13 +124,13 @@ Boston, MA 02111-1307, USA.  */
 #define GO_IF_INDEXABLE_BASE(X, ADDR)	\
 { if (LEGITIMATE_BASE_REG_P (X)) goto ADDR; }
 
-/* This accounts for the return pc and saved fp on the m68k. */
+/* This accounts for the return pc and saved fp on the m68k.  */
 
 #define OBJC_FORWARDING_STACK_OFFSET 8
 #define OBJC_FORWARDING_MIN_OFFSET 8
 
 /* FINALIZE_TRAMPOLINE enables executable stack.  The
-   __enable_execute_stack also clears the insn cache. */
+   __enable_execute_stack also clears the insn cache.  */
 
 #undef FINALIZE_TRAMPOLINE
 #define FINALIZE_TRAMPOLINE(TRAMP) \
@@ -191,7 +138,7 @@ Boston, MA 02111-1307, USA.  */
 		    0, VOIDmode, 1, memory_address (SImode, (TRAMP)), Pmode)
 
 /* A C expression used to clear the instruction cache from 
-   address BEG to address END.   On NeXTSTEP this i a system trap. */
+   address BEG to address END.   On NeXTSTEP this i a system trap.  */
 
 #define CLEAR_INSN_CACHE(BEG, END)   \
    asm volatile ("trap #2")

@@ -68,7 +68,6 @@ Boston, MA 02111-1307, USA.  */
 
 #define NM_FLAGS	"-p"
 
-#define ASM_LONG	".word\t"
 #define ASM_GLOBAL	".rdata\n\t\t.globl\t"
 
 #include "mips/mips.h"
@@ -78,7 +77,7 @@ Boston, MA 02111-1307, USA.  */
 
 #undef OBJECT_FORMAT_COFF
 
-/* We don't support debugging info for now. */
+/* We don't support debugging info for now.  */
 #undef DBX_DEBUGGING_INFO
 #undef SDB_DEBUGGING_INFO
 #undef MIPS_DEBUGGING_INFO

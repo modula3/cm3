@@ -1,21 +1,18 @@
-This is doc/gcc.info, produced by makeinfo version 4.0b from
+This is doc/gcc.info, produced by makeinfo version 4.2 from
 doc/gcc.texi.
 
 INFO-DIR-SECTION Programming
 START-INFO-DIR-ENTRY
 * gcc: (gcc).                  The GNU Compiler Collection.
 END-INFO-DIR-ENTRY
-   This file documents the use and the internals of the GNU compiler.
-
+   This file documents the use of the GNU compilers.
 
    Published by the Free Software Foundation
 59 Temple Place - Suite 330
 Boston, MA 02111-1307 USA
 
-
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001 Free Software Foundation, Inc.
-
+1999, 2000, 2001, 2002 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -54,8 +51,8 @@ your program or GCC:
      makes debugging work better in GDB but will probably make other
      debuggers crash or refuse to read the program.  If you want to
      control for certain whether to generate the extra information, use
-     `-gstabs+', `-gstabs', `-gxcoff+', `-gxcoff', `-gdwarf-1+', or
-     `-gdwarf-1' (see below).
+     `-gstabs+', `-gstabs', `-gxcoff+', `-gxcoff', `-gdwarf-1+',
+     `-gdwarf-1', or `-gvms' (see below).
 
      Unlike most other C compilers, GCC allows you to use `-g' with
      `-O'.  The shortcuts taken by optimized code may occasionally
@@ -126,13 +123,16 @@ your program or GCC:
      Produce debugging information in DWARF version 2 format (if that is
      supported).  This is the format used by DBX on IRIX 6.
 
+`-gvms'
+     Produce debugging information in VMS debug format (if that is
+     supported).  This is the format used by DEBUG on VMS systems.
+
 `-gLEVEL'
 `-ggdbLEVEL'
 `-gstabsLEVEL'
 `-gcoffLEVEL'
 `-gxcoffLEVEL'
-`-gdwarfLEVEL'
-`-gdwarf-2LEVEL'
+`-gvmsLEVEL'
      Request debugging information and also use LEVEL to specify how
      much information.  The default level is 2.
 
@@ -144,6 +144,11 @@ your program or GCC:
      Level 3 includes extra information, such as all the macro
      definitions present in the program.  Some debuggers support macro
      expansion when you use `-g3'.
+
+     Note that in order to avoid confusion between DWARF1 debug level 2,
+     and DWARF2, neither `-gdwarf' nor `-gdwarf-2' accept a
+     concatenated debug level.  Instead use an additional `-gLEVEL'
+     option to change the debug level for DWARF1 or DWARF2.
 
 `-p'
      Generate extra code to write profile information suitable for the
@@ -182,106 +187,49 @@ your program or GCC:
      Makes the compiler print some statistics about permanent memory
      allocation when it finishes.
 
-`-ax'
-     Generate extra code to profile basic blocks.  Your executable will
-     produce output that is a superset of that produced when `-a' is
-     used.  Additional output is the source and target address of the
-     basic blocks where a jump takes place, the number of times a jump
-     is executed, and (optionally) the complete sequence of basic
-     blocks being executed.  The output is appended to file `bb.out'.
-
-     You can examine different profiling aspects without recompilation.
-     Your executable will read a list of function names from file
-     `bb.in'.  Profiling starts when a function on the list is entered
-     and stops when that invocation is exited.  To exclude a function
-     from profiling, prefix its name with `-'.  If a function name is
-     not unique, you can disambiguate it by writing it in the form
-     `/path/filename.d:functionname'.  Your executable will write the
-     available paths and filenames in file `bb.out'.
-
-     Several function names have a special meaning:
-    `__bb_jumps__'
-          Write source, target and frequency of jumps to file `bb.out'.
-
-    `__bb_hidecall__'
-          Exclude function calls from frequency count.
-
-    `__bb_showret__'
-          Include function returns in frequency count.
-
-    `__bb_trace__'
-          Write the sequence of basic blocks executed to file
-          `bbtrace.gz'.  The file will be compressed using the program
-          `gzip', which must exist in your `PATH'.  On systems without
-          the `popen' function, the file will be named `bbtrace' and
-          will not be compressed.  *Profiling for even a few seconds on
-          these systems will produce a very large file.*  Note:
-          `__bb_hidecall__' and `__bb_showret__' will not affect the
-          sequence written to `bbtrace.gz'.
-
-     Here's a short example using different profiling parameters in
-     file `bb.in'.  Assume function `foo' consists of basic blocks 1
-     and 2 and is called twice from block 3 of function `main'.  After
-     the calls, block 3 transfers control to block 4 of `main'.
-
-     With `__bb_trace__' and `main' contained in file `bb.in', the
-     following sequence of blocks is written to file `bbtrace.gz': 0 3
-     1 2 1 2 4.  The return from block 2 to block 3 is not shown,
-     because the return is to a point inside the block and not to the
-     top.  The block address 0 always indicates, that control is
-     transferred to the trace from somewhere outside the observed
-     functions.  With `-foo' added to `bb.in', the blocks of function
-     `foo' are removed from the trace, so only 0 3 4 remains.
-
-     With `__bb_jumps__' and `main' contained in file `bb.in', jump
-     frequencies will be written to file `bb.out'.  The frequencies are
-     obtained by constructing a trace of blocks and incrementing a
-     counter for every neighbouring pair of blocks in the trace.  The
-     trace 0 3 1 2 1 2 4 displays the following frequencies:
-
-          Jump from block 0x0 to block 0x3 executed 1 time(s)
-          Jump from block 0x3 to block 0x1 executed 1 time(s)
-          Jump from block 0x1 to block 0x2 executed 2 time(s)
-          Jump from block 0x2 to block 0x1 executed 1 time(s)
-          Jump from block 0x2 to block 0x4 executed 1 time(s)
-
-     With `__bb_hidecall__', control transfer due to call instructions
-     is removed from the trace, that is the trace is cut into three
-     parts: 0 3 4, 0 1 2 and 0 1 2.  With `__bb_showret__', control
-     transfer due to return instructions is added to the trace.  The
-     trace becomes: 0 3 1 2 3 1 2 3 4.  Note, that this trace is not
-     the same, as the sequence written to `bbtrace.gz'.  It is solely
-     used for counting jump frequencies.
-
 `-fprofile-arcs'
-     Instrument "arcs" during compilation.  For each function of your
-     program, GCC creates a program flow graph, then finds a spanning
-     tree for the graph.  Only arcs that are not on the spanning tree
-     have to be instrumented: the compiler adds code to count the
-     number of times that these arcs are executed.  When an arc is the
-     only exit or only entrance to a block, the instrumentation code
-     can be added to the block; otherwise, a new basic block must be
-     created to hold the instrumentation code.
+     Instrument "arcs" during compilation to generate coverage data or
+     for profile-directed block ordering.  During execution the program
+     records how many times each branch is executed and how many times
+     it is taken.  When the compiled program exits it saves this data
+     to a file called `SOURCENAME.da' for each source file.
 
-     Since not every arc in the program must be instrumented, programs
-     compiled with this option run faster than programs compiled with
-     `-a', which adds instrumentation code to every basic block in the
-     program.  The tradeoff: since `gcov' does not have execution
-     counts for all branches, it must start with the execution counts
-     for the instrumented branches, and then iterate over the program
-     flow graph until the entire graph has been solved.  Hence, `gcov'
-     runs a little more slowly than a program which uses information
-     from `-a'.
-
-     `-fprofile-arcs' also makes it possible to estimate branch
-     probabilities, and to calculate basic block execution counts.  In
-     general, basic block execution counts do not give enough
-     information to estimate all branch probabilities.  When the
-     compiled program exits, it saves the arc execution counts to a
-     file called `SOURCENAME.da'.  Use the compiler option
+     For profile-directed block ordering, compile the program with
+     `-fprofile-arcs' plus optimization and code generation options,
+     generate the arc profile information by running the program on a
+     selected workload, and then compile the program again with the same
+     optimization and code generation options plus
      `-fbranch-probabilities' (*note Options that Control Optimization:
-     Optimize Options.) when recompiling, to optimize using estimated
-     branch probabilities.
+     Optimize Options.).
+
+     The other use of `-fprofile-arcs' is for use with `gcov', when it
+     is used with the `-ftest-coverage' option.  GCC supports two
+     methods of determining code coverage: the options that support
+     `gcov', and options `-a' and `-ax', which write information to
+     text files.  The options that support `gcov' do not need to
+     instrument every arc in the program, so a program compiled with
+     them runs faster than a program compiled with `-a', which adds
+     instrumentation code to every basic block in the program.  The
+     tradeoff: since `gcov' does not have execution counts for all
+     branches, it must start with the execution counts for the
+     instrumented branches, and then iterate over the program flow
+     graph until the entire graph has been solved.  Hence, `gcov' runs
+     a little more slowly than a program which uses information from
+     `-a' and `-ax'.
+
+     With `-fprofile-arcs', for each function of your program GCC
+     creates a program flow graph, then finds a spanning tree for the
+     graph.  Only arcs that are not on the spanning tree have to be
+     instrumented: the compiler adds code to count the number of times
+     that these arcs are executed.  When an arc is the only exit or
+     only entrance to a block, the instrumentation code can be added to
+     the block; otherwise, a new basic block must be created to hold
+     the instrumentation code.
+
+     This option makes it possible to estimate branch probabilities and
+     to calculate basic block execution counts.  In general, basic block
+     execution counts as provided by `-a' do not give enough
+     information to estimate all branch probabilities.
 
 `-ftest-coverage'
      Create data files for the `gcov' code-coverage utility (*note
@@ -297,8 +245,18 @@ your program or GCC:
           A list of all arcs in the program flow graph.  This allows
           `gcov' to reconstruct the program flow graph, so that it can
           compute all basic block and arc execution counts from the
-          information in the `SOURCENAME.da' file (this last file is
-          the output from `-fprofile-arcs').
+          information in the `SOURCENAME.da' file.
+
+     Use `-ftest-coverage' with `-fprofile-arcs'; the latter option
+     adds instrumentation to the program, which then writes execution
+     counts to another data file:
+
+    `SOURCENAME.da'
+          Runtime arc execution counts, used in conjunction with the arc
+          information in the file `SOURCENAME.bbg'.
+
+     Coverage data will map better to the source files if
+     `-ftest-coverage' is used without optimization.
 
 `-dLETTERS'
      Says to make debugging dumps during compilation at times specified
@@ -313,104 +271,104 @@ your program or GCC:
           information.
 
     `b'
-          Dump after computing branch probabilities, to `FILE.11.bp'.
+          Dump after computing branch probabilities, to `FILE.14.bp'.
 
     `B'
-          Dump after block reordering, to `FILE.26.bbro'.
+          Dump after block reordering, to `FILE.29.bbro'.
 
     `c'
           Dump after instruction combination, to the file
-          `FILE.14.combine'.
+          `FILE.16.combine'.
 
     `C'
-          Dump after the first if conversion, to the file `FILE.15.ce'.
+          Dump after the first if conversion, to the file `FILE.17.ce'.
 
     `d'
-          Dump after delayed branch scheduling, to `FILE.29.dbr'.
+          Dump after delayed branch scheduling, to `FILE.31.dbr'.
 
     `D'
           Dump all macro definitions, at the end of preprocessing, in
           addition to normal output.
 
     `e'
-          Dump after SSA optimizations, to `FILE.05.ssa' and
-          `FILE.06.ussa'.
+          Dump after SSA optimizations, to `FILE.04.ssa' and
+          `FILE.07.ussa'.
 
     `E'
-          Dump after the second if conversion, to `FILE.24.ce2'.
+          Dump after the second if conversion, to `FILE.26.ce2'.
 
     `f'
-          Dump after life analysis, to `FILE.13.life'.
+          Dump after life analysis, to `FILE.15.life'.
 
     `F'
-          Dump after purging `ADDRESSOF' codes, to `FILE.04.addressof'.
+          Dump after purging `ADDRESSOF' codes, to `FILE.09.addressof'.
 
     `g'
-          Dump after global register allocation, to `FILE.19.greg'.
+          Dump after global register allocation, to `FILE.21.greg'.
+
+    `h'
+          Dump after finalization of EH handling code, to `FILE.02.eh'.
+
+    `k'
+          Dump after reg-to-stack conversion, to `FILE.28.stack'.
 
     `o'
-          Dump after post-reload CSE and other optimizations, to
-          `FILE.20.postreload'.
+          Dump after post-reload optimizations, to `FILE.22.postreload'.
 
     `G'
-          Dump after GCSE, to `FILE.08.gcse'.
+          Dump after GCSE, to `FILE.10.gcse'.
 
     `i'
           Dump after sibling call optimizations, to `FILE.01.sibling'.
 
     `j'
-          Dump after the first jump optimization, to `FILE.02.jump'.
-
-    `J'
-          Dump after the last jump optimization, to `FILE.27.jump2'.
+          Dump after the first jump optimization, to `FILE.03.jump'.
 
     `k'
           Dump after conversion from registers to stack, to
-          `FILE.29.stack'.
+          `FILE.32.stack'.
 
     `l'
-          Dump after local register allocation, to `FILE.18.lreg'.
+          Dump after local register allocation, to `FILE.20.lreg'.
 
     `L'
-          Dump after loop optimization, to `FILE.09.loop'.
+          Dump after loop optimization, to `FILE.11.loop'.
 
     `M'
           Dump after performing the machine dependent reorganisation
-          pass, to `FILE.28.mach'.
+          pass, to `FILE.30.mach'.
 
     `n'
-          Dump after register renumbering, to `FILE.23.rnreg'.
+          Dump after register renumbering, to `FILE.25.rnreg'.
 
     `N'
-          Dump after the register move pass, to `FILE.16.regmove'.
+          Dump after the register move pass, to `FILE.18.regmove'.
 
     `r'
           Dump after RTL generation, to `FILE.00.rtl'.
 
     `R'
-          Dump after the second instruction scheduling pass, to
-          `FILE.25.sched2'.
+          Dump after the second scheduling pass, to `FILE.27.sched2'.
 
     `s'
           Dump after CSE (including the jump optimization that
-          sometimes follows CSE), to `FILE.03.cse'.
+          sometimes follows CSE), to `FILE.08.cse'.
 
     `S'
-          Dump after the first instruction scheduling pass, to
-          `FILE.17.sched'.
+          Dump after the first scheduling pass, to `FILE.19.sched'.
 
     `t'
           Dump after the second CSE pass (including the jump
-          optimization that sometimes follows CSE), to `FILE.10.cse2'.
+          optimization that sometimes follows CSE), to `FILE.12.cse2'.
 
     `w'
-          Dump after the second flow pass, to `FILE.21.flow2'.
+          Dump after the second flow pass, to `FILE.23.flow2'.
 
     `X'
-          Dump after dead code elimination, to `FILE.06.dce'.
+          Dump after SSA dead code elimination, to `FILE.06.ssadce'.
 
     `z'
-          Dump after the peephole pass, to `FILE.22.peephole2'.
+          Dump after the peephole pass, to `FILE.24.peephole2'.
 
     `a'
           Produce all the dumps listed above.
@@ -448,39 +406,44 @@ your program or GCC:
      `-g'.
 
 `-fdump-translation-unit (C and C++ only)'
-`-fdump-translation-unit-NUMBER (C and C++ only)'
+`-fdump-translation-unit-OPTIONS (C and C++ only)'
      Dump a representation of the tree structure for the entire
      translation unit to a file.  The file name is made by appending
-     `.tu' to the source file name.  If the `-NUMBER' form is used,
-     NUMBER controls the details of the dump as described for the
+     `.tu' to the source file name.  If the `-OPTIONS' form is used,
+     OPTIONS controls the details of the dump as described for the
      `-fdump-tree' options.
 
 `-fdump-class-hierarchy (C++ only)'
-`-fdump-class-hierarchy-NUMBER (C++ only)'
+`-fdump-class-hierarchy-OPTIONS (C++ only)'
      Dump a representation of each class's hierarchy and virtual
      function table layout to a file.  The file name is made by
-     appending `.class' to the source file name.  If the `-NUMBER' form
-     is used, NUMBER controls the details of the dump as described for
-     the `-fdump-tree' options.
+     appending `.class' to the source file name.  If the `-OPTIONS'
+     form is used, OPTIONS controls the details of the dump as
+     described for the `-fdump-tree' options.
 
-`-fdump-ast-SWITCH (C++ only)'
-`-fdump-ast-SWITCH-NUMBER (C++ only)'
-     Control the dumping at various stages of processing the abstract
-     syntax tree to a file.  The file name is generated by appending a
-     switch specific suffix to the source file name.  If the `-NUMBER'
-     form is used, NUMBER is a bit mask which controls the details of
-     the dump.  The following bits are meaningful (these are not set
-     symbolically, as the primary function of these dumps is for
-     debugging gcc itself):
+`-fdump-tree-SWITCH (C++ only)'
+`-fdump-tree-SWITCH-OPTIONS (C++ only)'
+     Control the dumping at various stages of processing the
+     intermediate language tree to a file.  The file name is generated
+     by appending a switch specific suffix to the source file name.  If
+     the `-OPTIONS' form is used, OPTIONS is a list of `-' separated
+     options that control the details of the dump. Not all options are
+     applicable to all dumps, those which are not meaningful will be
+     ignored. The following options are available
 
-    `bit0 (1)'
+    `address'
           Print the address of each node.  Usually this is not
           meaningful as it changes according to the environment and
-          source file.
+          source file. Its primary use is for tying up a dump file with
+          a debug environment.
 
-    `bit1 (2)'
-          Inhibit dumping of members of a scope or body of a function,
-          unless they are reachable by some other path.
+    `slim'
+          Inhibit dumping of members of a scope or body of a function
+          merely because that scope has been reached. Only dump such
+          items when they are directly reachable by some other path.
+
+    `all'
+          Turn on all options.
 
      The following tree dumps are possible:
     `original'
@@ -488,6 +451,9 @@ your program or GCC:
 
     `optimized'
           Dump after all tree based optimization, to `FILE.optimized'.
+
+    `inlined'
+          Dump after function inlining, to `FILE.inlined'.
 
 `-fpretend-float'
      When running a cross-compiler, pretend that the target machine
@@ -593,19 +559,9 @@ Options That Control Optimization
      in the function and get exactly the results you would expect from
      the source code.
 
-     Without `-O', the compiler only allocates variables declared
-     `register' in registers.  The resulting compiled code is a little
-     worse than produced by PCC without `-O'.
-
      With `-O', the compiler tries to reduce code size and execution
-     time.
-
-     When you specify `-O', the compiler turns on `-fthread-jumps' and
-     `-fdefer-pop' on all machines.  The compiler turns on
-     `-fdelayed-branch' on machines that have delay slots, and
-     `-fomit-frame-pointer' on machines that can support debugging even
-     without a frame pointer.  On some machines the compiler also turns
-     on other flags.
+     time, without performing any optimizations that take a great deal
+     of compilation time.
 
 `-O2'
      Optimize even more.  GCC performs nearly all supported
@@ -691,11 +647,12 @@ other form by either removing `no-' or adding it.
      in many functions.  *It also makes debugging impossible on some
      machines.*
 
-     On some machines, such as the Vax, this flag has no effect, because
+     On some machines, such as the VAX, this flag has no effect, because
      the standard calling sequence automatically handles the frame
      pointer and nothing is saved by pretending it doesn't exist.  The
      machine-description macro `FRAME_POINTER_REQUIRED' controls
-     whether a target machine supports this flag.  *Note Registers::.
+     whether a target machine supports this flag.  *Note Register
+     Usage: (gccint)Registers.
 
 `-foptimize-sibling-calls'
      Optimize sibling and tail recursive calls.
@@ -753,6 +710,24 @@ other form by either removing `no-' or adding it.
      whether or not optimization is turned on, use the
      `-fno-keep-static-consts' option.
 
+`-fmerge-constants'
+     Attempt to merge identical constants (string constants and
+     floating point constants) accross compilation units.
+
+     This option is default for optimized compilation if assembler and
+     linker support it.  Use `-fno-merge-constants' to inhibit this
+     behavior.
+
+`-fmerge-all-constants'
+     Attempt to merge identical constants and identical variables.
+
+     This option implies `-fmerge-constants'.  In addition to
+     `-fmerge-constants' this considers e.g. even constant initialized
+     arrays or initialized constant variables with integral or floating
+     point types.  Languages like C or C++ require each non-automatic
+     variable to have distinct location, so using this option will
+     result in non-conforming behavior.
+
 `-fno-function-cse'
      Do not put function addresses in registers; make each instruction
      that calls a constant function contain the function's address
@@ -763,11 +738,8 @@ other form by either removing `no-' or adding it.
      optimizations performed when this option is not used.
 
 `-ffast-math'
-     This option allows GCC to violate some ISO or IEEE rules and/or
-     specifications in the interest of optimizing code for speed.  For
-     example, it allows the compiler to assume arguments to the `sqrt'
-     function are non-negative numbers and that no floating-point values
-     are NaNs.
+     Sets `-fno-math-errno', `-funsafe-math-optimizations', and
+     `-fno-trapping-math'.
 
      This option causes the preprocessor macro `__FAST_MATH__' to be
      defined.
@@ -783,8 +755,38 @@ other form by either removing `no-' or adding it.
      IEEE exceptions for math error handling may want to use this flag
      for speed while maintaining IEEE arithmetic compatibility.
 
-     The default is `-fmath-errno'.  The `-ffast-math' option sets
-     `-fno-math-errno'.
+     This option should never be turned on by any `-O' option since it
+     can result in incorrect output for programs which depend on an
+     exact implementation of IEEE or ISO rules/specifications for math
+     functions.
+
+     The default is `-fmath-errno'.
+
+`-funsafe-math-optimizations'
+     Allow optimizations for floating-point arithmetic that (a) assume
+     that arguments and results are valid and (b) may violate IEEE or
+     ANSI standards.  When used at link-time, it may include libraries
+     or startup files that change the default FPU control word or other
+     similar optimizations.
+
+     This option should never be turned on by any `-O' option since it
+     can result in incorrect output for programs which depend on an
+     exact implementation of IEEE or ISO rules/specifications for math
+     functions.
+
+     The default is `-fno-unsafe-math-optimizations'.
+
+`-fno-trapping-math'
+     Compile code assuming that floating-point operations cannot
+     generate user-visible traps.  Setting this option may allow faster
+     code if one relies on "non-stop" IEEE arithmetic, for example.
+
+     This option should never be turned on by any `-O' option since it
+     can result in incorrect output for programs which depend on an
+     exact implementation of IEEE or ISO rules/specifications for math
+     functions.
+
+     The default is `-ftrapping-math'.
 
    The following options control specific optimizations.  The `-O2'
 option turns on all of these optimizations except `-funroll-loops' and
@@ -794,6 +796,9 @@ may handle it differently.
 
    You can use the following flags in the rare cases when "fine-tuning"
 of optimizations to be performed is desired.
+
+   Not all of the optimizations performed by GCC have `-f' options to
+control them.
 
 `-fstrength-reduce'
      Perform the optimizations of loop strength reduction and
@@ -835,12 +840,30 @@ of optimizations to be performed is desired.
      the global common subexpression elmination pass by adding
      `-fno-gcse' to the command line.
 
+`-fgcse-lm'
+     When `-fgcse-lm' is enabled, global common subexpression
+     elimination will attempt to move loads which are only killed by
+     stores into themselves.  This allows a loop containing a
+     load/store sequence to be changed to a load outside the loop, and
+     a copy/store within the loop.
+
+`-fgcse-sm'
+     When `-fgcse-sm' is enabled, A store motion pass is run after
+     global common subexpression elimination.  This pass will attempt
+     to move stores out of loops.  When used in conjunction with
+     `-fgcse-lm', loops containing a load/store sequence can be changed
+     to a load before the loop and a store after the loop.
+
 `-fdelete-null-pointer-checks'
-     Use global dataflow analysis to identify and eliminate useless null
-     pointer checks.  Programs which rely on NULL pointer dereferences
-     _not_ halting the program may not work properly with this option.
-     Use `-fno-delete-null-pointer-checks' to disable this optimizing
-     for programs which depend on that behavior.
+     Use global dataflow analysis to identify and eliminate useless
+     checks for null pointers.  The compiler assumes that dereferencing
+     a null pointer would have halted the program.  If a pointer is
+     checked after it has already been dereferenced, it cannot be null.
+
+     In some environments, this assumption is not true, and programs can
+     safely dereference null pointers.  Use
+     `-fno-delete-null-pointer-checks' to disable this optimization for
+     programs which depend on that behavior.
 
 `-fexpensive-optimizations'
      Perform a number of minor optimizations that are relatively
@@ -913,16 +936,21 @@ of optimizations to be performed is desired.
      flag by default.
 
 `-funroll-loops'
-     Perform the optimization of loop unrolling.  This is only done for
-     loops whose number of iterations can be determined at compile time
-     or run time.  `-funroll-loops' implies both `-fstrength-reduce' and
-     `-frerun-cse-after-loop'.
+     Unroll loops whose number of iterations can be determined at
+     compile time or upon entry to the loop.  `-funroll-loops' implies
+     both `-fstrength-reduce' and `-frerun-cse-after-loop'.  This
+     option makes code larger, and may or may not make it run faster.
 
 `-funroll-all-loops'
-     Perform the optimization of loop unrolling.  This is done for all
-     loops and usually makes programs run more slowly.
-     `-funroll-all-loops' implies `-fstrength-reduce' as well as
-     `-frerun-cse-after-loop'.
+     Unroll all loops, even if their number of iterations is uncertain
+     when the loop is entered.  This usually makes programs run more
+     slowly.  `-funroll-all-loops' implies the same options as
+     `-funroll-loops',
+
+`-fprefetch-loop-arrays'
+     If supported by the target machine, generate instructions to
+     prefetch memory to improve the performance of loops that access
+     large arrays.
 
 `-fmove-all-movables'
      Forces all invariant computations in loops to be moved outside the
@@ -959,8 +987,13 @@ of optimizations to be performed is desired.
      After running a program compiled with `-fprofile-arcs' (*note
      Options for Debugging Your Program or `gcc': Debugging Options.),
      you can compile it a second time using `-fbranch-probabilities',
-     to improve optimizations based on guessing the path a branch might
-     take.
+     to improve optimizations based on the number of times each branch
+     was taken.  When the program compiled with `-fprofile-arcs' exits
+     it saves arc execution counts to a file called `SOURCENAME.da' for
+     each source file  The information in this data file is very
+     dependent on the structure of the generated code, so you must use
+     the same source code and the same optimization options for both
+     compilations.
 
      With `-fbranch-probabilities', GCC puts a `REG_EXEC_COUNT' note on
      the first instruction of each basic block, and a `REG_BR_PROB'
@@ -971,13 +1004,19 @@ of optimizations to be performed is desired.
      path is taken more often.
 
 `-fno-guess-branch-probability'
-     Sometimes gcc will opt to guess branch probabilities when none are
-     available from either profile directed feedback (`-fprofile-arcs')
-     or `__builtin_expect'.  In a hard real-time system, people don't
-     want different runs of the compiler to produce code that has
-     different behavior; minimizing non-determinism is of paramount
-     import.  This switch allows users to reduce non-determinism,
-     possibly at the expense of inferior optimization.
+     Do not guess branch probabilities using a randomized model.
+
+     Sometimes gcc will opt to use a randomized model to guess branch
+     probabilities, when none are available from either profiling
+     feedback (`-fprofile-arcs') or `__builtin_expect'.  This means that
+     different runs of the compiler on the same program may produce
+     different object code.
+
+     In a hard real-time system, people don't want different runs of the
+     compiler to produce code that has different behavior; minimizing
+     non-determinism is of paramount import.  This switch allows users
+     to reduce non-determinism, possibly at the expense of inferior
+     optimization.
 
 `-fstrict-aliasing'
      Allows the compiler to assume the strictest aliasing rules
@@ -1073,9 +1112,13 @@ of optimizations to be performed is desired.
      form.  Users should not specify this option, since it is not yet
      ready for production use.
 
-`-fdce'
-     Perform dead-code elimination in SSA form.  Requires `-fssa'.  Like
-     `-fssa', this is an experimental feature.
+`-fssa-ccp'
+     Perform Sparse Conditional Constant Propagation in SSA form.
+     Requires `-fssa'.  Like `-fssa', this is an experimental feature.
+
+`-fssa-dce'
+     Perform aggressive dead-code elimination in SSA form.  Requires
+     `-fssa'.  Like `-fssa', this is an experimental feature.
 
 `-fsingle-precision-constant'
      Treat floating point constant as single precision constant instead
@@ -1087,6 +1130,11 @@ of optimizations to be performed is desired.
      optimization will most benefit processors with lots of registers.
      It can, however, make debugging impossible, since variables will
      no longer stay in a "home register".
+
+`-fno-cprop-registers'
+     After register allocation and post-register allocation instruction
+     splitting, we perform a copy-propagation pass to try to reduce
+     scheduling dependencies and occasionally eliminate the copy.
 
 `--param NAME=VALUE'
      In some places, GCC uses various constants to control the amount of
@@ -1121,6 +1169,9 @@ of optimizations to be performed is desired.
           allocated in order to perform the global common subexpression
           elimination optimization.  If more memory than specified is
           required, the optimization will not be done.
+
+    `max-gcse-passes'
+          The maximum number of passes of GCSE to run.
 
     `max-pending-list-length'
           The maximum number of pending dependencies scheduling will

@@ -1,21 +1,18 @@
-This is doc/gcc.info, produced by makeinfo version 4.0b from
+This is doc/gcc.info, produced by makeinfo version 4.2 from
 doc/gcc.texi.
 
 INFO-DIR-SECTION Programming
 START-INFO-DIR-ENTRY
 * gcc: (gcc).                  The GNU Compiler Collection.
 END-INFO-DIR-ENTRY
-   This file documents the use and the internals of the GNU compiler.
-
+   This file documents the use of the GNU compilers.
 
    Published by the Free Software Foundation
 59 Temple Place - Suite 330
 Boston, MA 02111-1307 USA
 
-
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001 Free Software Foundation, Inc.
-
+1999, 2000, 2001, 2002 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -36,1112 +33,946 @@ software.  Copies published by the Free Software Foundation raise
 funds for GNU development.
 
 
-File: gcc.info,  Node: Alternate Keywords,  Next: Incomplete Enums,  Prev: Explicit Reg Vars,  Up: C Extensions
+File: gcc.info,  Node: Type Attributes,  Next: Alignment,  Prev: Variable Attributes,  Up: C Extensions
 
-Alternate Keywords
-==================
+Specifying Attributes of Types
+==============================
 
-   The option `-traditional' disables certain keywords; `-ansi' and the
-various `-std' options disable certain others.  This causes trouble
-when you want to use GNU C extensions, or ISO C features, in a
-general-purpose header file that should be usable by all programs,
-including ISO C programs and traditional ones.  The keywords `asm',
-`typeof' and `inline' cannot be used since they won't work in a program
-compiled with `-ansi' (although `inline' can be used in a program
-compiled with `-std=c99'), while the keywords `const', `volatile',
-`signed', `typeof' and `inline' won't work in a program compiled with
-`-traditional'.  The ISO C99 keyword `restrict' is only available when
-`-std=gnu99' (which will eventually be the default) or `-std=c99' (or
-the equivalent `-std=iso9899:1999') is used.
+   The keyword `__attribute__' allows you to specify special attributes
+of `struct' and `union' types when you define such types.  This keyword
+is followed by an attribute specification inside double parentheses.
+Five attributes are currently defined for types: `aligned', `packed',
+`transparent_union', `unused', and `deprecated'.  Other attributes are
+defined for functions (*note Function Attributes::) and for variables
+(*note Variable Attributes::).
 
-   The way to solve these problems is to put `__' at the beginning and
-end of each problematical keyword.  For example, use `__asm__' instead
-of `asm', `__const__' instead of `const', and `__inline__' instead of
-`inline'.
+   You may also specify any one of these attributes with `__' preceding
+and following its keyword.  This allows you to use these attributes in
+header files without being concerned about a possible macro of the same
+name.  For example, you may use `__aligned__' instead of `aligned'.
 
-   Other C compilers won't accept these alternative keywords; if you
-want to compile with another compiler, you can define the alternate
-keywords as macros to replace them with the customary keywords.  It
-looks like this:
+   You may specify the `aligned' and `transparent_union' attributes
+either in a `typedef' declaration or just past the closing curly brace
+of a complete enum, struct or union type _definition_ and the `packed'
+attribute only past the closing brace of a definition.
 
-     #ifndef __GNUC__
-     #define __asm__ asm
-     #endif
+   You may also specify attributes between the enum, struct or union
+tag and the name of the type rather than after the closing brace.
 
-   `-pedantic' and other options cause warnings for many GNU C
-extensions.  You can prevent such warnings within one expression by
-writing `__extension__' before the expression.  `__extension__' has no
-effect aside from this.
+   *Note Attribute Syntax::, for details of the exact syntax for using
+attributes.
+
+`aligned (ALIGNMENT)'
+     This attribute specifies a minimum alignment (in bytes) for
+     variables of the specified type.  For example, the declarations:
+
+          struct S { short f[3]; } __attribute__ ((aligned (8)));
+          typedef int more_aligned_int __attribute__ ((aligned (8)));
+
+     force the compiler to insure (as far as it can) that each variable
+     whose type is `struct S' or `more_aligned_int' will be allocated
+     and aligned _at least_ on a 8-byte boundary.  On a Sparc, having
+     all variables of type `struct S' aligned to 8-byte boundaries
+     allows the compiler to use the `ldd' and `std' (doubleword load and
+     store) instructions when copying one variable of type `struct S' to
+     another, thus improving run-time efficiency.
+
+     Note that the alignment of any given `struct' or `union' type is
+     required by the ISO C standard to be at least a perfect multiple of
+     the lowest common multiple of the alignments of all of the members
+     of the `struct' or `union' in question.  This means that you _can_
+     effectively adjust the alignment of a `struct' or `union' type by
+     attaching an `aligned' attribute to any one of the members of such
+     a type, but the notation illustrated in the example above is a
+     more obvious, intuitive, and readable way to request the compiler
+     to adjust the alignment of an entire `struct' or `union' type.
+
+     As in the preceding example, you can explicitly specify the
+     alignment (in bytes) that you wish the compiler to use for a given
+     `struct' or `union' type.  Alternatively, you can leave out the
+     alignment factor and just ask the compiler to align a type to the
+     maximum useful alignment for the target machine you are compiling
+     for.  For example, you could write:
+
+          struct S { short f[3]; } __attribute__ ((aligned));
+
+     Whenever you leave out the alignment factor in an `aligned'
+     attribute specification, the compiler automatically sets the
+     alignment for the type to the largest alignment which is ever used
+     for any data type on the target machine you are compiling for.
+     Doing this can often make copy operations more efficient, because
+     the compiler can use whatever instructions copy the biggest chunks
+     of memory when performing copies to or from the variables which
+     have types that you have aligned this way.
+
+     In the example above, if the size of each `short' is 2 bytes, then
+     the size of the entire `struct S' type is 6 bytes.  The smallest
+     power of two which is greater than or equal to that is 8, so the
+     compiler sets the alignment for the entire `struct S' type to 8
+     bytes.
+
+     Note that although you can ask the compiler to select a
+     time-efficient alignment for a given type and then declare only
+     individual stand-alone objects of that type, the compiler's
+     ability to select a time-efficient alignment is primarily useful
+     only when you plan to create arrays of variables having the
+     relevant (efficiently aligned) type.  If you declare or use arrays
+     of variables of an efficiently-aligned type, then it is likely
+     that your program will also be doing pointer arithmetic (or
+     subscripting, which amounts to the same thing) on pointers to the
+     relevant type, and the code that the compiler generates for these
+     pointer arithmetic operations will often be more efficient for
+     efficiently-aligned types than for other types.
+
+     The `aligned' attribute can only increase the alignment; but you
+     can decrease it by specifying `packed' as well.  See below.
+
+     Note that the effectiveness of `aligned' attributes may be limited
+     by inherent limitations in your linker.  On many systems, the
+     linker is only able to arrange for variables to be aligned up to a
+     certain maximum alignment.  (For some linkers, the maximum
+     supported alignment may be very very small.)  If your linker is
+     only able to align variables up to a maximum of 8 byte alignment,
+     then specifying `aligned(16)' in an `__attribute__' will still
+     only provide you with 8 byte alignment.  See your linker
+     documentation for further information.
+
+`packed'
+     This attribute, attached to an `enum', `struct', or `union' type
+     definition, specified that the minimum required memory be used to
+     represent the type.
+
+     Specifying this attribute for `struct' and `union' types is
+     equivalent to specifying the `packed' attribute on each of the
+     structure or union members.  Specifying the `-fshort-enums' flag
+     on the line is equivalent to specifying the `packed' attribute on
+     all `enum' definitions.
+
+     You may only specify this attribute after a closing curly brace on
+     an `enum' definition, not in a `typedef' declaration, unless that
+     declaration also contains the definition of the `enum'.
+
+`transparent_union'
+     This attribute, attached to a `union' type definition, indicates
+     that any function parameter having that union type causes calls to
+     that function to be treated in a special way.
+
+     First, the argument corresponding to a transparent union type can
+     be of any type in the union; no cast is required.  Also, if the
+     union contains a pointer type, the corresponding argument can be a
+     null pointer constant or a void pointer expression; and if the
+     union contains a void pointer type, the corresponding argument can
+     be any pointer expression.  If the union member type is a pointer,
+     qualifiers like `const' on the referenced type must be respected,
+     just as with normal pointer conversions.
+
+     Second, the argument is passed to the function using the calling
+     conventions of first member of the transparent union, not the
+     calling conventions of the union itself.  All members of the union
+     must have the same machine representation; this is necessary for
+     this argument passing to work properly.
+
+     Transparent unions are designed for library functions that have
+     multiple interfaces for compatibility reasons.  For example,
+     suppose the `wait' function must accept either a value of type
+     `int *' to comply with Posix, or a value of type `union wait *' to
+     comply with the 4.1BSD interface.  If `wait''s parameter were
+     `void *', `wait' would accept both kinds of arguments, but it
+     would also accept any other pointer type and this would make
+     argument type checking less useful.  Instead, `<sys/wait.h>' might
+     define the interface as follows:
+
+          typedef union
+            {
+              int *__ip;
+              union wait *__up;
+            } wait_status_ptr_t __attribute__ ((__transparent_union__));
+          
+          pid_t wait (wait_status_ptr_t);
+
+     This interface allows either `int *' or `union wait *' arguments
+     to be passed, using the `int *' calling convention.  The program
+     can call `wait' with arguments of either type:
+
+          int w1 () { int w; return wait (&w); }
+          int w2 () { union wait w; return wait (&w); }
+
+     With this interface, `wait''s implementation might look like this:
+
+          pid_t wait (wait_status_ptr_t p)
+          {
+            return waitpid (-1, p.__ip, 0);
+          }
+
+`unused'
+     When attached to a type (including a `union' or a `struct'), this
+     attribute means that variables of that type are meant to appear
+     possibly unused.  GCC will not produce a warning for any variables
+     of that type, even if the variable appears to do nothing.  This is
+     often the case with lock or thread classes, which are usually
+     defined and then not referenced, but contain constructors and
+     destructors that have nontrivial bookkeeping functions.
+
+`deprecated'
+     The `deprecated' attribute results in a warning if the type is
+     used anywhere in the source file.  This is useful when identifying
+     types that are expected to be removed in a future version of a
+     program.  If possible, the warning also includes the location of
+     the declaration of the deprecated type, to enable users to easily
+     find further information about why the type is deprecated, or what
+     they should do instead.  Note that the warnings only occur for
+     uses and then only if the type is being applied to an identifier
+     that itself is not being declared as deprecated.
+
+          typedef int T1 __attribute__ ((deprecated));
+          T1 x;
+          typedef T1 T2;
+          T2 y;
+          typedef T1 T3 __attribute__ ((deprecated));
+          T3 z __attribute__ ((deprecated));
+
+     results in a warning on line 2 and 3 but not lines 4, 5, or 6.  No
+     warning is issued for line 4 because T2 is not explicitly
+     deprecated.  Line 5 has no warning because T3 is explicitly
+     deprecated.  Similarly for line 6.
+
+     The `deprecated' attribute can also be used for functions and
+     variables (*note Function Attributes::, *note Variable
+     Attributes::.)
+
+   To specify multiple attributes, separate them by commas within the
+double parentheses: for example, `__attribute__ ((aligned (16),
+packed))'.
 
 
-File: gcc.info,  Node: Incomplete Enums,  Next: Function Names,  Prev: Alternate Keywords,  Up: C Extensions
+File: gcc.info,  Node: Inline,  Next: Extended Asm,  Prev: Alignment,  Up: C Extensions
 
-Incomplete `enum' Types
-=======================
-
-   You can define an `enum' tag without specifying its possible values.
-This results in an incomplete type, much like what you get if you write
-`struct foo' without describing the elements.  A later declaration
-which does specify the possible values completes the type.
-
-   You can't allocate variables or storage using the type while it is
-incomplete.  However, you can work with pointers to that type.
-
-   This extension may not be very useful, but it makes the handling of
-`enum' more consistent with the way `struct' and `union' are handled.
-
-   This extension is not supported by GNU C++.
-
-
-File: gcc.info,  Node: Function Names,  Next: Return Address,  Prev: Incomplete Enums,  Up: C Extensions
-
-Function Names as Strings
-=========================
-
-   GCC predefines two magic identifiers to hold the name of the current
-function.  The identifier `__FUNCTION__' holds the name of the function
-as it appears in the source.  The identifier `__PRETTY_FUNCTION__'
-holds the name of the function pretty printed in a language specific
-fashion.
-
-   These names are always the same in a C function, but in a C++
-function they may be different.  For example, this program:
-
-     extern "C" {
-     extern int printf (char *, ...);
-     }
-     
-     class a {
-      public:
-       sub (int i)
-         {
-           printf ("__FUNCTION__ = %s\n", __FUNCTION__);
-           printf ("__PRETTY_FUNCTION__ = %s\n", __PRETTY_FUNCTION__);
-         }
-     };
-     
-     int
-     main (void)
-     {
-       a ax;
-       ax.sub (0);
-       return 0;
-     }
-
-gives this output:
-
-     __FUNCTION__ = sub
-     __PRETTY_FUNCTION__ = int  a::sub (int)
-
-   The compiler automagically replaces the identifiers with a string
-literal containing the appropriate name.  Thus, they are neither
-preprocessor macros, like `__FILE__' and `__LINE__', nor variables.
-This means that they catenate with other string literals, and that they
-can be used to initialize char arrays.  For example
-
-     char here[] = "Function " __FUNCTION__ " in " __FILE__;
-
-   On the other hand, `#ifdef __FUNCTION__' does not have any special
-meaning inside a function, since the preprocessor does not do anything
-special with the identifier `__FUNCTION__'.
-
-   Note that these semantics are deprecated, and that GCC 3.2 will
-handle `__FUNCTION__' and `__PRETTY_FUNCTION__' the same way as
-`__func__'.  `__func__' is defined by the ISO standard C99:
-
-     The identifier `__func__' is implicitly declared by the translator
-     as if, immediately following the opening brace of each function
-     definition, the declaration
-          static const char __func__[] = "function-name";
-     
-     appeared, where function-name is the name of the lexically-enclosing
-     function.  This name is the unadorned name of the function.
-
-   By this definition, `__func__' is a variable, not a string literal.
-In particular, `__func__' does not catenate with other string literals.
-
-   In `C++', `__FUNCTION__' and `__PRETTY_FUNCTION__' are variables,
-declared in the same way as `__func__'.
-
-
-File: gcc.info,  Node: Return Address,  Next: Other Builtins,  Prev: Function Names,  Up: C Extensions
-
-Getting the Return or Frame Address of a Function
-=================================================
-
-   These functions may be used to get information about the callers of a
-function.
-
- - Built-in Function: void * __builtin_return_address (unsigned int
-          LEVEL)
-     This function returns the return address of the current function,
-     or of one of its callers.  The LEVEL argument is number of frames
-     to scan up the call stack.  A value of `0' yields the return
-     address of the current function, a value of `1' yields the return
-     address of the caller of the current function, and so forth.
-
-     The LEVEL argument must be a constant integer.
-
-     On some machines it may be impossible to determine the return
-     address of any function other than the current one; in such cases,
-     or when the top of the stack has been reached, this function will
-     return `0'.
-
-     This function should only be used with a nonzero argument for
-     debugging purposes.
-
- - Built-in Function: void * __builtin_frame_address (unsigned int
-          LEVEL)
-     This function is similar to `__builtin_return_address', but it
-     returns the address of the function frame rather than the return
-     address of the function.  Calling `__builtin_frame_address' with a
-     value of `0' yields the frame address of the current function, a
-     value of `1' yields the frame address of the caller of the current
-     function, and so forth.
-
-     The frame is the area on the stack which holds local variables and
-     saved registers.  The frame address is normally the address of the
-     first word pushed on to the stack by the function.  However, the
-     exact definition depends upon the processor and the calling
-     convention.  If the processor has a dedicated frame pointer
-     register, and the function has a frame, then
-     `__builtin_frame_address' will return the value of the frame
-     pointer register.
-
-     The caveats that apply to `__builtin_return_address' apply to this
-     function as well.
-
-
-File: gcc.info,  Node: Other Builtins,  Prev: Return Address,  Up: C Extensions
-
-Other built-in functions provided by GCC
+An Inline Function is As Fast As a Macro
 ========================================
 
-   GCC provides a large number of built-in functions other than the ones
-mentioned above.  Some of these are for internal use in the processing
-of exceptions or variable-length argument lists and will not be
-documented here because they may change from time to time; we do not
-recommend general use of these functions.
+   By declaring a function `inline', you can direct GCC to integrate
+that function's code into the code for its callers.  This makes
+execution faster by eliminating the function-call overhead; in
+addition, if any of the actual argument values are constant, their known
+values may permit simplifications at compile time so that not all of the
+inline function's code needs to be included.  The effect on code size is
+less predictable; object code may be larger or smaller with function
+inlining, depending on the particular case.  Inlining of functions is an
+optimization and it really "works" only in optimizing compilation.  If
+you don't use `-O', no function is really inline.
 
-   The remaining functions are provided for optimization purposes.
+   Inline functions are included in the ISO C99 standard, but there are
+currently substantial differences between what GCC implements and what
+the ISO C99 standard requires.
 
-   GCC includes built-in versions of many of the functions in the
-standard C library.  The versions prefixed with `__builtin_' will
-always be treated as having the same meaning as the C library function
-even if you specify the `-fno-builtin' (*note C Dialect Options::)
-option.  Many of these functions are only optimized in certain cases; if
-not optimized in a particular case, a call to the library function will
-be emitted.
+   To declare a function inline, use the `inline' keyword in its
+declaration, like this:
 
-   The functions `abort', `exit', `_Exit' and `_exit' are recognized
-and presumed not to return, but otherwise are not built in.  `_exit' is
-not recognized in strict ISO C mode (`-ansi', `-std=c89' or
-`-std=c99').  `_Exit' is not recognized in strict C89 mode (`-ansi' or
-`-std=c89').
+     inline int
+     inc (int *a)
+     {
+       (*a)++;
+     }
 
-   Outside strict ISO C mode, the functions `alloca', `bcmp', `bzero',
-`index', `rindex' and `ffs' may be handled as built-in functions.
-Corresponding versions `__builtin_alloca', `__builtin_bcmp',
-`__builtin_bzero', `__builtin_index', `__builtin_rindex' and
-`__builtin_ffs' are also recognized in strict ISO C mode.
+   (If you are writing a header file to be included in ISO C programs,
+write `__inline__' instead of `inline'.  *Note Alternate Keywords::.)
+You can also make all "simple enough" functions inline with the option
+`-finline-functions'.
 
-   The ISO C99 functions `conj', `conjf', `conjl', `creal', `crealf',
-`creall', `cimag', `cimagf', `cimagl', `llabs' and `imaxabs' are
-handled as built-in functions except in strict ISO C89 mode.  There are
-also built-in versions of the ISO C99 functions `cosf', `cosl',
-`fabsf', `fabsl', `sinf', `sinl', `sqrtf', and `sqrtl', that are
-recognized in any mode since ISO C89 reserves these names for the
-purpose to which ISO C99 puts them.  All these functions have
-corresponding versions prefixed with `__builtin_'.
+   Note that certain usages in a function definition can make it
+unsuitable for inline substitution.  Among these usages are: use of
+varargs, use of alloca, use of variable sized data types (*note
+Variable Length::), use of computed goto (*note Labels as Values::),
+use of nonlocal goto, and nested functions (*note Nested Functions::).
+Using `-Winline' will warn when a function marked `inline' could not be
+substituted, and will give the reason for the failure.
 
-   The following ISO C89 functions are recognized as built-in functions
-unless `-fno-builtin' is specified: `abs', `cos', `fabs', `fprintf',
-`fputs', `labs', `memcmp', `memcpy', `memset', `printf', `sin', `sqrt',
-`strcat', `strchr', `strcmp', `strcpy', `strcspn', `strlen', `strncat',
-`strncmp', `strncpy', `strpbrk', `strrchr', `strspn', and `strstr'.  All
-of these functions have corresponding versions prefixed with
-`__builtin_'.
+   Note that in C and Objective-C, unlike C++, the `inline' keyword
+does not affect the linkage of the function.
 
-   GCC provides built-in versions of the ISO C99 floating point
-comparison macros (that avoid raising exceptions for unordered
-operands): `__builtin_isgreater', `__builtin_isgreaterequal',
-`__builtin_isless', `__builtin_islessequal', `__builtin_islessgreater',
-and `__builtin_isunordered'.
+   GCC automatically inlines member functions defined within the class
+body of C++ programs even if they are not explicitly declared `inline'.
+(You can override this with `-fno-default-inline'; *note Options
+Controlling C++ Dialect: C++ Dialect Options..)
 
- - Built-in Function: int __builtin_constant_p (EXP)
-     You can use the built-in function `__builtin_constant_p' to
-     determine if a value is known to be constant at compile-time and
-     hence that GCC can perform constant-folding on expressions
-     involving that value.  The argument of the function is the value
-     to test.  The function returns the integer 1 if the argument is
-     known to be a compile-time constant and 0 if it is not known to be
-     a compile-time constant.  A return of 0 does not indicate that the
-     value is _not_ a constant, but merely that GCC cannot prove it is
-     a constant with the specified value of the `-O' option.
+   When a function is both inline and `static', if all calls to the
+function are integrated into the caller, and the function's address is
+never used, then the function's own assembler code is never referenced.
+In this case, GCC does not actually output assembler code for the
+function, unless you specify the option `-fkeep-inline-functions'.
+Some calls cannot be integrated for various reasons (in particular,
+calls that precede the function's definition cannot be integrated, and
+neither can recursive calls within the definition).  If there is a
+nonintegrated call, then the function is compiled to assembler code as
+usual.  The function must also be compiled as usual if the program
+refers to its address, because that can't be inlined.
 
-     You would typically use this function in an embedded application
-     where memory was a critical resource.  If you have some complex
-     calculation, you may want it to be folded if it involves
-     constants, but need to call a function if it does not.  For
-     example:
+   When an inline function is not `static', then the compiler must
+assume that there may be calls from other source files; since a global
+symbol can be defined only once in any program, the function must not
+be defined in the other source files, so the calls therein cannot be
+integrated.  Therefore, a non-`static' inline function is always
+compiled on its own in the usual fashion.
 
-          #define Scale_Value(X)      \
-            (__builtin_constant_p (X) \
-            ? ((X) * SCALE + OFFSET) : Scale (X))
+   If you specify both `inline' and `extern' in the function
+definition, then the definition is used only for inlining.  In no case
+is the function compiled on its own, not even if you refer to its
+address explicitly.  Such an address becomes an external reference, as
+if you had only declared the function, and had not defined it.
 
-     You may use this built-in function in either a macro or an inline
-     function.  However, if you use it in an inlined function and pass
-     an argument of the function as the argument to the built-in, GCC
-     will never return 1 when you call the inline function with a
-     string constant or compound literal (*note Compound Literals::)
-     and will not return 1 when you pass a constant numeric value to
-     the inline function unless you specify the `-O' option.
+   This combination of `inline' and `extern' has almost the effect of a
+macro.  The way to use it is to put a function definition in a header
+file with these keywords, and put another copy of the definition
+(lacking `inline' and `extern') in a library file.  The definition in
+the header file will cause most calls to the function to be inlined.
+If any uses of the function remain, they will refer to the single copy
+in the library.
 
-     You may also use `__builtin_constant_p' in initializers for static
-     data.  For instance, you can write
+   For future compatibility with when GCC implements ISO C99 semantics
+for inline functions, it is best to use `static inline' only.  (The
+existing semantics will remain available when `-std=gnu89' is
+specified, but eventually the default will be `-std=gnu99' and that
+will implement the C99 semantics, though it does not do so yet.)
 
-          static const int table[] = {
-             __builtin_constant_p (EXPRESSION) ? (EXPRESSION) : -1,
-             /* ... */
-          };
+   GCC does not inline any functions when not optimizing unless you
+specify the `always_inline' attribute for the function, like this:
 
-     This is an acceptable initializer even if EXPRESSION is not a
-     constant expression.  GCC must be more conservative about
-     evaluating the built-in in this case, because it has no
-     opportunity to perform optimization.
-
-     Previous versions of GCC did not accept this built-in in data
-     initializers.  The earliest version where it is completely safe is
-     3.0.1.
-
- - Built-in Function: long __builtin_expect (long EXP, long C)
-     You may use `__builtin_expect' to provide the compiler with branch
-     prediction information.  In general, you should prefer to use
-     actual profile feedback for this (`-fprofile-arcs'), as
-     programmers are notoriously bad at predicting how their programs
-     actually perform.  However, there are applications in which this
-     data is hard to collect.
-
-     The return value is the value of EXP, which should be an integral
-     expression.  The value of C must be a compile-time constant.  The
-     semantics of the built-in are that it is expected that EXP == C.
-     For example:
-
-          if (__builtin_expect (x, 0))
-            foo ();
-
-     would indicate that we do not expect to call `foo', since we
-     expect `x' to be zero.  Since you are limited to integral
-     expressions for EXP, you should use constructions such as
-
-          if (__builtin_expect (ptr != NULL, 1))
-            error ();
-
-     when testing pointer or floating-point values.
+     /* Prototype.  */
+     inline void foo (const char) __attribute__((always_inline));
 
 
-File: gcc.info,  Node: C++ Extensions,  Next: Objective C,  Prev: C Extensions,  Up: Top
+File: gcc.info,  Node: Extended Asm,  Next: Constraints,  Prev: Inline,  Up: C Extensions
 
-Extensions to the C++ Language
-******************************
+Assembler Instructions with C Expression Operands
+=================================================
 
-   The GNU compiler provides these extensions to the C++ language (and
-you can also use most of the C language extensions in your C++
-programs).  If you want to write code that checks whether these
-features are available, you can test for the GNU compiler the same way
-as for C programs: check for a predefined macro `__GNUC__'.  You can
-also use `__GNUG__' to test specifically for GNU C++ (*note Standard
-Predefined Macros: (cpp.info)Standard Predefined.).
+   In an assembler instruction using `asm', you can specify the
+operands of the instruction using C expressions.  This means you need
+not guess which registers or memory locations will contain the data you
+want to use.
+
+   You must specify an assembler instruction template much like what
+appears in a machine description, plus an operand constraint string for
+each operand.
+
+   For example, here is how to use the 68881's `fsinx' instruction:
+
+     asm ("fsinx %1,%0" : "=f" (result) : "f" (angle));
+
+Here `angle' is the C expression for the input operand while `result'
+is that of the output operand.  Each has `"f"' as its operand
+constraint, saying that a floating point register is required.  The `='
+in `=f' indicates that the operand is an output; all output operands'
+constraints must use `='.  The constraints use the same language used
+in the machine description (*note Constraints::).
+
+   Each operand is described by an operand-constraint string followed by
+the C expression in parentheses.  A colon separates the assembler
+template from the first output operand and another separates the last
+output operand from the first input, if any.  Commas separate the
+operands within each group.  The total number of operands is currently
+limited to 30; this limitation may be lifted in some future version of
+GCC.
+
+   If there are no output operands but there are input operands, you
+must place two consecutive colons surrounding the place where the output
+operands would go.
+
+   As of GCC version 3.1, it is also possible to specify input and
+output operands using symbolic names which can be referenced within the
+assembler code.  These names are specified inside square brackets
+preceding the constraint string, and can be referenced inside the
+assembler code using `%[NAME]' instead of a percentage sign followed by
+the operand number.  Using named operands the above example could look
+like:
+
+     asm ("fsinx %[angle],%[output]"
+          : [output] "=f" (result)
+          : [angle] "f" (angle));
+
+Note that the symbolic operand names have no relation whatsoever to
+other C identifiers.  You may use any name you like, even those of
+existing C symbols, but must ensure that no two operands within the same
+assembler construct use the same symbolic name.
+
+   Output operand expressions must be lvalues; the compiler can check
+this.  The input operands need not be lvalues.  The compiler cannot
+check whether the operands have data types that are reasonable for the
+instruction being executed.  It does not parse the assembler instruction
+template and does not know what it means or even whether it is valid
+assembler input.  The extended `asm' feature is most often used for
+machine instructions the compiler itself does not know exist.  If the
+output expression cannot be directly addressed (for example, it is a
+bit-field), your constraint must allow a register.  In that case, GCC
+will use the register as the output of the `asm', and then store that
+register into the output.
+
+   The ordinary output operands must be write-only; GCC will assume that
+the values in these operands before the instruction are dead and need
+not be generated.  Extended asm supports input-output or read-write
+operands.  Use the constraint character `+' to indicate such an operand
+and list it with the output operands.
+
+   When the constraints for the read-write operand (or the operand in
+which only some of the bits are to be changed) allows a register, you
+may, as an alternative, logically split its function into two separate
+operands, one input operand and one write-only output operand.  The
+connection between them is expressed by constraints which say they need
+to be in the same location when the instruction executes.  You can use
+the same C expression for both operands, or different expressions.  For
+example, here we write the (fictitious) `combine' instruction with
+`bar' as its read-only source operand and `foo' as its read-write
+destination:
+
+     asm ("combine %2,%0" : "=r" (foo) : "0" (foo), "g" (bar));
+
+The constraint `"0"' for operand 1 says that it must occupy the same
+location as operand 0.  A number in constraint is allowed only in an
+input operand and it must refer to an output operand.
+
+   Only a number in the constraint can guarantee that one operand will
+be in the same place as another.  The mere fact that `foo' is the value
+of both operands is not enough to guarantee that they will be in the
+same place in the generated assembler code.  The following would not
+work reliably:
+
+     asm ("combine %2,%0" : "=r" (foo) : "r" (foo), "g" (bar));
+
+   Various optimizations or reloading could cause operands 0 and 1 to
+be in different registers; GCC knows no reason not to do so.  For
+example, the compiler might find a copy of the value of `foo' in one
+register and use it for operand 1, but generate the output operand 0 in
+a different register (copying it afterward to `foo''s own address).  Of
+course, since the register for operand 1 is not even mentioned in the
+assembler code, the result will not work, but GCC can't tell that.
+
+   As of GCC version 3.1, one may write `[NAME]' instead of the operand
+number for a matching constraint.  For example:
+
+     asm ("cmoveq %1,%2,%[result]"
+          : [result] "=r"(result)
+          : "r" (test), "r"(new), "[result]"(old));
+
+   Some instructions clobber specific hard registers.  To describe this,
+write a third colon after the input operands, followed by the names of
+the clobbered hard registers (given as strings).  Here is a realistic
+example for the VAX:
+
+     asm volatile ("movc3 %0,%1,%2"
+                   : /* no outputs */
+                   : "g" (from), "g" (to), "g" (count)
+                   : "r0", "r1", "r2", "r3", "r4", "r5");
+
+   You may not write a clobber description in a way that overlaps with
+an input or output operand.  For example, you may not have an operand
+describing a register class with one member if you mention that register
+in the clobber list.  There is no way for you to specify that an input
+operand is modified without also specifying it as an output operand.
+Note that if all the output operands you specify are for this purpose
+(and hence unused), you will then also need to specify `volatile' for
+the `asm' construct, as described below, to prevent GCC from deleting
+the `asm' statement as unused.
+
+   If you refer to a particular hardware register from the assembler
+code, you will probably have to list the register after the third colon
+to tell the compiler the register's value is modified.  In some
+assemblers, the register names begin with `%'; to produce one `%' in the
+assembler code, you must write `%%' in the input.
+
+   If your assembler instruction can alter the condition code register,
+add `cc' to the list of clobbered registers.  GCC on some machines
+represents the condition codes as a specific hardware register; `cc'
+serves to name this register.  On other machines, the condition code is
+handled differently, and specifying `cc' has no effect.  But it is
+valid no matter what the machine.
+
+   If your assembler instruction modifies memory in an unpredictable
+fashion, add `memory' to the list of clobbered registers.  This will
+cause GCC to not keep memory values cached in registers across the
+assembler instruction.  You will also want to add the `volatile'
+keyword if the memory affected is not listed in the inputs or outputs
+of the `asm', as the `memory' clobber does not count as a side-effect
+of the `asm'.
+
+   You can put multiple assembler instructions together in a single
+`asm' template, separated by the characters normally used in assembly
+code for the system.  A combination that works in most places is a
+newline to break the line, plus a tab character to move to the
+instruction field (written as `\n\t').  Sometimes semicolons can be
+used, if the assembler allows semicolons as a line-breaking character.
+Note that some assembler dialects use semicolons to start a comment.
+The input operands are guaranteed not to use any of the clobbered
+registers, and neither will the output operands' addresses, so you can
+read and write the clobbered registers as many times as you like.  Here
+is an example of multiple instructions in a template; it assumes the
+subroutine `_foo' accepts arguments in registers 9 and 10:
+
+     asm ("movl %0,r9\n\tmovl %1,r10\n\tcall _foo"
+          : /* no outputs */
+          : "g" (from), "g" (to)
+          : "r9", "r10");
+
+   Unless an output operand has the `&' constraint modifier, GCC may
+allocate it in the same register as an unrelated input operand, on the
+assumption the inputs are consumed before the outputs are produced.
+This assumption may be false if the assembler code actually consists of
+more than one instruction.  In such a case, use `&' for each output
+operand that may not overlap an input.  *Note Modifiers::.
+
+   If you want to test the condition code produced by an assembler
+instruction, you must include a branch and a label in the `asm'
+construct, as follows:
+
+     asm ("clr %0\n\tfrob %1\n\tbeq 0f\n\tmov #1,%0\n0:"
+          : "g" (result)
+          : "g" (input));
+
+This assumes your assembler supports local labels, as the GNU assembler
+and most Unix assemblers do.
+
+   Speaking of labels, jumps from one `asm' to another are not
+supported.  The compiler's optimizers do not know about these jumps, and
+therefore they cannot take account of them when deciding how to
+optimize.
+
+   Usually the most convenient way to use these `asm' instructions is to
+encapsulate them in macros that look like functions.  For example,
+
+     #define sin(x)       \
+     ({ double __value, __arg = (x);   \
+        asm ("fsinx %1,%0": "=f" (__value): "f" (__arg));  \
+        __value; })
+
+Here the variable `__arg' is used to make sure that the instruction
+operates on a proper `double' value, and to accept only those arguments
+`x' which can convert automatically to a `double'.
+
+   Another way to make sure the instruction operates on the correct data
+type is to use a cast in the `asm'.  This is different from using a
+variable `__arg' in that it converts more different types.  For
+example, if the desired type were `int', casting the argument to `int'
+would accept a pointer with no complaint, while assigning the argument
+to an `int' variable named `__arg' would warn about using a pointer
+unless the caller explicitly casts it.
+
+   If an `asm' has output operands, GCC assumes for optimization
+purposes the instruction has no side effects except to change the output
+operands.  This does not mean instructions with a side effect cannot be
+used, but you must be careful, because the compiler may eliminate them
+if the output operands aren't used, or move them out of loops, or
+replace two with one if they constitute a common subexpression.  Also,
+if your instruction does have a side effect on a variable that otherwise
+appears not to change, the old value of the variable may be reused later
+if it happens to be found in a register.
+
+   You can prevent an `asm' instruction from being deleted, moved
+significantly, or combined, by writing the keyword `volatile' after the
+`asm'.  For example:
+
+     #define get_and_set_priority(new)              \
+     ({ int __old;                                  \
+        asm volatile ("get_and_set_priority %0, %1" \
+                      : "=g" (__old) : "g" (new));  \
+        __old; })
+
+If you write an `asm' instruction with no outputs, GCC will know the
+instruction has side-effects and will not delete the instruction or
+move it outside of loops.
+
+   The `volatile' keyword indicates that the instruction has important
+side-effects.  GCC will not delete a volatile `asm' if it is reachable.
+(The instruction can still be deleted if GCC can prove that
+control-flow will never reach the location of the instruction.)  In
+addition, GCC will not reschedule instructions across a volatile `asm'
+instruction.  For example:
+
+     *(volatile int *)addr = foo;
+     asm volatile ("eieio" : : );
+
+Assume `addr' contains the address of a memory mapped device register.
+The PowerPC `eieio' instruction (Enforce In-order Execution of I/O)
+tells the CPU to make sure that the store to that device register
+happens before it issues any other I/O.
+
+   Note that even a volatile `asm' instruction can be moved in ways
+that appear insignificant to the compiler, such as across jump
+instructions.  You can't expect a sequence of volatile `asm'
+instructions to remain perfectly consecutive.  If you want consecutive
+output, use a single `asm'.  Also, GCC will perform some optimizations
+across a volatile `asm' instruction; GCC does not "forget everything"
+when it encounters a volatile `asm' instruction the way some other
+compilers do.
+
+   An `asm' instruction without any operands or clobbers (an "old
+style" `asm') will be treated identically to a volatile `asm'
+instruction.
+
+   It is a natural idea to look for a way to give access to the
+condition code left by the assembler instruction.  However, when we
+attempted to implement this, we found no way to make it work reliably.
+The problem is that output operands might need reloading, which would
+result in additional following "store" instructions.  On most machines,
+these instructions would alter the condition code before there was time
+to test it.  This problem doesn't arise for ordinary "test" and
+"compare" instructions because they don't have any output operands.
+
+   For reasons similar to those described above, it is not possible to
+give an assembler instruction access to the condition code left by
+previous instructions.
+
+   If you are writing a header file that should be includable in ISO C
+programs, write `__asm__' instead of `asm'.  *Note Alternate Keywords::.
+
+i386 floating point asm operands
+--------------------------------
+
+   There are several rules on the usage of stack-like regs in
+asm_operands insns.  These rules apply only to the operands that are
+stack-like regs:
+
+  1. Given a set of input regs that die in an asm_operands, it is
+     necessary to know which are implicitly popped by the asm, and
+     which must be explicitly popped by gcc.
+
+     An input reg that is implicitly popped by the asm must be
+     explicitly clobbered, unless it is constrained to match an output
+     operand.
+
+  2. For any input reg that is implicitly popped by an asm, it is
+     necessary to know how to adjust the stack to compensate for the
+     pop.  If any non-popped input is closer to the top of the
+     reg-stack than the implicitly popped reg, it would not be possible
+     to know what the stack looked like--it's not clear how the rest of
+     the stack "slides up".
+
+     All implicitly popped input regs must be closer to the top of the
+     reg-stack than any input that is not implicitly popped.
+
+     It is possible that if an input dies in an insn, reload might use
+     the input reg for an output reload.  Consider this example:
+
+          asm ("foo" : "=t" (a) : "f" (b));
+
+     This asm says that input B is not popped by the asm, and that the
+     asm pushes a result onto the reg-stack, i.e., the stack is one
+     deeper after the asm than it was before.  But, it is possible that
+     reload will think that it can use the same reg for both the input
+     and the output, if input B dies in this insn.
+
+     If any input operand uses the `f' constraint, all output reg
+     constraints must use the `&' earlyclobber.
+
+     The asm above would be written as
+
+          asm ("foo" : "=&t" (a) : "f" (b));
+
+  3. Some operands need to be in particular places on the stack.  All
+     output operands fall in this category--there is no other way to
+     know which regs the outputs appear in unless the user indicates
+     this in the constraints.
+
+     Output operands must specifically indicate which reg an output
+     appears in after an asm.  `=f' is not allowed: the operand
+     constraints must select a class with a single reg.
+
+  4. Output operands may not be "inserted" between existing stack regs.
+     Since no 387 opcode uses a read/write operand, all output operands
+     are dead before the asm_operands, and are pushed by the
+     asm_operands.  It makes no sense to push anywhere but the top of
+     the reg-stack.
+
+     Output operands must start at the top of the reg-stack: output
+     operands may not "skip" a reg.
+
+  5. Some asm statements may need extra stack space for internal
+     calculations.  This can be guaranteed by clobbering stack registers
+     unrelated to the inputs and outputs.
+
+
+   Here are a couple of reasonable asms to want to write.  This asm
+takes one input, which is internally popped, and produces two outputs.
+
+     asm ("fsincos" : "=t" (cos), "=u" (sin) : "0" (inp));
+
+   This asm takes two inputs, which are popped by the `fyl2xp1' opcode,
+and replaces them with one output.  The user must code the `st(1)'
+clobber for reg-stack.c to know that `fyl2xp1' pops both inputs.
+
+     asm ("fyl2xp1" : "=t" (result) : "0" (x), "u" (y) : "st(1)");
+
+
+File: gcc.info,  Node: Constraints,  Next: Asm Labels,  Prev: Extended Asm,  Up: C Extensions
+
+Constraints for `asm' Operands
+==============================
+
+   Here are specific details on what constraint letters you can use with
+`asm' operands.  Constraints can say whether an operand may be in a
+register, and which kinds of register; whether the operand can be a
+memory reference, and which kinds of address; whether the operand may
+be an immediate constant, and which possible values it may have.
+Constraints can also require two operands to match.
 
 * Menu:
 
-* Min and Max::		C++ Minimum and maximum operators.
-* Volatiles::		What constitutes an access to a volatile object.
-* Restricted Pointers:: C99 restricted pointers and references.
-* Vague Linkage::       Where G++ puts inlines, vtables and such.
-* C++ Interface::       You can use a single C++ header file for both
-                        declarations and definitions.
-* Template Instantiation:: Methods for ensuring that exactly one copy of
-                        each needed template instantiation is emitted.
-* Bound member functions:: You can extract a function pointer to the
-                        method denoted by a `->*' or `.*' expression.
-* C++ Attributes::      Variable, function, and type attributes for C++ only.
-* Java Exceptions::     Tweaking exception handling to work with Java.
-* Deprecated Features:: Things might disappear from g++.
-* Backwards Compatibility:: Compatibilities with earlier definitions of C++.
+* Simple Constraints::  Basic use of constraints.
+* Multi-Alternative::   When an insn has two alternative constraint-patterns.
+* Modifiers::           More precise control over effects of constraints.
+* Machine Constraints:: Special constraints for some particular machines.
 
 
-File: gcc.info,  Node: Min and Max,  Next: Volatiles,  Up: C++ Extensions
+File: gcc.info,  Node: Simple Constraints,  Next: Multi-Alternative,  Up: Constraints
 
-Minimum and Maximum Operators in C++
-====================================
+Simple Constraints
+------------------
 
-   It is very convenient to have operators which return the "minimum"
-or the "maximum" of two arguments.  In GNU C++ (but not in GNU C),
+   The simplest kind of constraint is a string full of letters, each of
+which describes one kind of operand that is permitted.  Here are the
+letters that are allowed:
 
-`A <? B'
-     is the "minimum", returning the smaller of the numeric values A
-     and B;
+whitespace
+     Whitespace characters are ignored and can be inserted at any
+     position except the first.  This enables each alternative for
+     different operands to be visually aligned in the machine
+     description even if they have different number of constraints and
+     modifiers.
 
-`A >? B'
-     is the "maximum", returning the larger of the numeric values A and
-     B.
+`m'
+     A memory operand is allowed, with any kind of address that the
+     machine supports in general.
 
-   These operations are not primitive in ordinary C++, since you can
-use a macro to return the minimum of two things in C++, as in the
-following example.
+`o'
+     A memory operand is allowed, but only if the address is
+     "offsettable".  This means that adding a small integer (actually,
+     the width in bytes of the operand, as determined by its machine
+     mode) may be added to the address and the result is also a valid
+     memory address.
 
-     #define MIN(X,Y) ((X) < (Y) ? : (X) : (Y))
+     For example, an address which is constant is offsettable; so is an
+     address that is the sum of a register and a constant (as long as a
+     slightly larger constant is also within the range of
+     address-offsets supported by the machine); but an autoincrement or
+     autodecrement address is not offsettable.  More complicated
+     indirect/indexed addresses may or may not be offsettable depending
+     on the other addressing modes that the machine supports.
 
-You might then use `int min = MIN (i, j);' to set MIN to the minimum
-value of variables I and J.
+     Note that in an output operand which can be matched by another
+     operand, the constraint letter `o' is valid only when accompanied
+     by both `<' (if the target machine has predecrement addressing)
+     and `>' (if the target machine has preincrement addressing).
 
-   However, side effects in `X' or `Y' may cause unintended behavior.
-For example, `MIN (i++, j++)' will fail, incrementing the smaller
-counter twice.  A GNU C extension allows you to write safe macros that
-avoid this kind of problem (*note Naming an Expression's Type: Naming
-Types.).  However, writing `MIN' and `MAX' as macros also forces you to
-use function-call notation for a fundamental arithmetic operation.
-Using GNU C++ extensions, you can write `int min = i <? j;' instead.
+`V'
+     A memory operand that is not offsettable.  In other words,
+     anything that would fit the `m' constraint but not the `o'
+     constraint.
 
-   Since `<?' and `>?' are built into the compiler, they properly
-handle expressions with side-effects;  `int min = i++ <? j++;' works
-correctly.
+`<'
+     A memory operand with autodecrement addressing (either
+     predecrement or postdecrement) is allowed.
 
-
-File: gcc.info,  Node: Volatiles,  Next: Restricted Pointers,  Prev: Min and Max,  Up: C++ Extensions
+`>'
+     A memory operand with autoincrement addressing (either
+     preincrement or postincrement) is allowed.
 
-When is a Volatile Object Accessed?
-===================================
+`r'
+     A register operand is allowed provided that it is in a general
+     register.
 
-   Both the C and C++ standard have the concept of volatile objects.
-These are normally accessed by pointers and used for accessing
-hardware.  The standards encourage compilers to refrain from
-optimizations concerning accesses to volatile objects that it might
-perform on non-volatile objects.  The C standard leaves it
-implementation defined as to what constitutes a volatile access.  The
-C++ standard omits to specify this, except to say that C++ should
-behave in a similar manner to C with respect to volatiles, where
-possible.  The minimum either standard specifies is that at a sequence
-point all previous accesses to volatile objects have stabilized and no
-subsequent accesses have occurred.  Thus an implementation is free to
-reorder and combine volatile accesses which occur between sequence
-points, but cannot do so for accesses across a sequence point.  The use
-of volatiles does not allow you to violate the restriction on updating
-objects multiple times within a sequence point.
+`i'
+     An immediate integer operand (one with constant value) is allowed.
+     This includes symbolic constants whose values will be known only at
+     assembly time.
 
-   In most expressions, it is intuitively obvious what is a read and
-what is a write.  For instance
+`n'
+     An immediate integer operand with a known numeric value is allowed.
+     Many systems cannot support assembly-time constants for operands
+     less than a word wide.  Constraints for these operands should use
+     `n' rather than `i'.
 
-     volatile int *dst = SOMEVALUE;
-     volatile int *src = SOMEOTHERVALUE;
-     *dst = *src;
+`I', `J', `K', ... `P'
+     Other letters in the range `I' through `P' may be defined in a
+     machine-dependent fashion to permit immediate integer operands with
+     explicit integer values in specified ranges.  For example, on the
+     68000, `I' is defined to stand for the range of values 1 to 8.
+     This is the range permitted as a shift count in the shift
+     instructions.
 
-will cause a read of the volatile object pointed to by SRC and stores
-the value into the volatile object pointed to by DST.  There is no
-guarantee that these reads and writes are atomic, especially for objects
-larger than `int'.
+`E'
+     An immediate floating operand (expression code `const_double') is
+     allowed, but only if the target floating point format is the same
+     as that of the host machine (on which the compiler is running).
 
-   Less obvious expressions are where something which looks like an
-access is used in a void context.  An example would be,
+`F'
+     An immediate floating operand (expression code `const_double') is
+     allowed.
 
-     volatile int *src = SOMEVALUE;
-     *src;
+`G', `H'
+     `G' and `H' may be defined in a machine-dependent fashion to
+     permit immediate floating operands in particular ranges of values.
 
-   With C, such expressions are rvalues, and as rvalues cause a read of
-the object, GCC interprets this as a read of the volatile being pointed
-to.  The C++ standard specifies that such expressions do not undergo
-lvalue to rvalue conversion, and that the type of the dereferenced
-object may be incomplete.  The C++ standard does not specify explicitly
-that it is this lvalue to rvalue conversion which is responsible for
-causing an access.  However, there is reason to believe that it is,
-because otherwise certain simple expressions become undefined.  However,
-because it would surprise most programmers, G++ treats dereferencing a
-pointer to volatile object of complete type in a void context as a read
-of the object.  When the object has incomplete type, G++ issues a
-warning.
+`s'
+     An immediate integer operand whose value is not an explicit
+     integer is allowed.
 
-     struct S;
-     struct T {int m;};
-     volatile S *ptr1 = SOMEVALUE;
-     volatile T *ptr2 = SOMEVALUE;
-     *ptr1;
-     *ptr2;
+     This might appear strange; if an insn allows a constant operand
+     with a value not known at compile time, it certainly must allow
+     any known value.  So why use `s' instead of `i'?  Sometimes it
+     allows better code to be generated.
 
-   In this example, a warning is issued for `*ptr1', and `*ptr2' causes
-a read of the object pointed to.  If you wish to force an error on the
-first case, you must force a conversion to rvalue with, for instance a
-static cast, `static_cast<S>(*ptr1)'.
+     For example, on the 68000 in a fullword instruction it is possible
+     to use an immediate operand; but if the immediate value is between
+     -128 and 127, better code results from loading the value into a
+     register and using the register.  This is because the load into
+     the register can be done with a `moveq' instruction.  We arrange
+     for this to happen by defining the letter `K' to mean "any integer
+     outside the range -128 to 127", and then specifying `Ks' in the
+     operand constraints.
 
-   When using a reference to volatile, G++ does not treat equivalent
-expressions as accesses to volatiles, but instead issues a warning that
-no volatile is accessed.  The rationale for this is that otherwise it
-becomes difficult to determine where volatile access occur, and not
-possible to ignore the return value from functions returning volatile
-references.  Again, if you wish to force a read, cast the reference to
-an rvalue.
+`g'
+     Any register, memory or immediate integer operand is allowed,
+     except for registers that are not general registers.
 
-
-File: gcc.info,  Node: Restricted Pointers,  Next: Vague Linkage,  Prev: Volatiles,  Up: C++ Extensions
+`X'
+     Any operand whatsoever is allowed.
 
-Restricting Pointer Aliasing
-============================
+`0', `1', `2', ... `9'
+     An operand that matches the specified operand number is allowed.
+     If a digit is used together with letters within the same
+     alternative, the digit should come last.
 
-   As with gcc, g++ understands the C99 feature of restricted pointers,
-specified with the `__restrict__', or `__restrict' type qualifier.
-Because you cannot compile C++ by specifying the `-std=c99' language
-flag, `restrict' is not a keyword in C++.
+     This number is allowed to be more than a single digit.  If multiple
+     digits are encountered consecutavely, they are interpreted as a
+     single decimal integer.  There is scant chance for ambiguity,
+     since to-date it has never been desirable that `10' be interpreted
+     as matching either operand 1 _or_ operand 0.  Should this be
+     desired, one can use multiple alternatives instead.
 
-   In addition to allowing restricted pointers, you can specify
-restricted references, which indicate that the reference is not aliased
-in the local context.
+     This is called a "matching constraint" and what it really means is
+     that the assembler has only a single operand that fills two roles
+     which `asm' distinguishes.  For example, an add instruction uses
+     two input operands and an output operand, but on most CISC
+     machines an add instruction really has only two operands, one of
+     them an input-output operand:
 
-     void fn (int *__restrict__ rptr, int &__restrict__ rref)
-     {
-       ...
-     }
+          addl #35,r12
 
-In the body of `fn', RPTR points to an unaliased integer and RREF
-refers to a (different) unaliased integer.
+     Matching constraints are used in these circumstances.  More
+     precisely, the two operands that match must include one input-only
+     operand and one output-only operand.  Moreover, the digit must be a
+     smaller number than the number of the operand that uses it in the
+     constraint.
 
-   You may also specify whether a member function's THIS pointer is
-unaliased by using `__restrict__' as a member function qualifier.
+`p'
+     An operand that is a valid memory address is allowed.  This is for
+     "load address" and "push address" instructions.
 
-     void T::fn () __restrict__
-     {
-       ...
-     }
+     `p' in the constraint must be accompanied by `address_operand' as
+     the predicate in the `match_operand'.  This predicate interprets
+     the mode specified in the `match_operand' as the mode of the memory
+     reference for which the address would be valid.
 
-Within the body of `T::fn', THIS will have the effective definition `T
-*__restrict__ const this'.  Notice that the interpretation of a
-`__restrict__' member function qualifier is different to that of
-`const' or `volatile' qualifier, in that it is applied to the pointer
-rather than the object.  This is consistent with other compilers which
-implement restricted pointers.
-
-   As with all outermost parameter qualifiers, `__restrict__' is
-ignored in function definition matching.  This means you only need to
-specify `__restrict__' in a function definition, rather than in a
-function prototype as well.
-
-
-File: gcc.info,  Node: Vague Linkage,  Next: C++ Interface,  Prev: Restricted Pointers,  Up: C++ Extensions
-
-Vague Linkage
-=============
-
-   There are several constructs in C++ which require space in the object
-file but are not clearly tied to a single translation unit.  We say that
-these constructs have "vague linkage".  Typically such constructs are
-emitted wherever they are needed, though sometimes we can be more
-clever.
-
-Inline Functions
-     Inline functions are typically defined in a header file which can
-     be included in many different compilations.  Hopefully they can
-     usually be inlined, but sometimes an out-of-line copy is
-     necessary, if the address of the function is taken or if inlining
-     fails.  In general, we emit an out-of-line copy in all translation
-     units where one is needed.  As an exception, we only emit inline
-     virtual functions with the vtable, since it will always require a
-     copy.
-
-     Local static variables and string constants used in an inline
-     function are also considered to have vague linkage, since they
-     must be shared between all inlined and out-of-line instances of
-     the function.
-
-VTables
-     C++ virtual functions are implemented in most compilers using a
-     lookup table, known as a vtable.  The vtable contains pointers to
-     the virtual functions provided by a class, and each object of the
-     class contains a pointer to its vtable (or vtables, in some
-     multiple-inheritance situations).  If the class declares any
-     non-inline, non-pure virtual functions, the first one is chosen as
-     the "key method" for the class, and the vtable is only emitted in
-     the translation unit where the key method is defined.
-
-     _Note:_ If the chosen key method is later defined as inline, the
-     vtable will still be emitted in every translation unit which
-     defines it.  Make sure that any inline virtuals are declared
-     inline in the class body, even if they are not defined there.
-
-type_info objects
-     C++ requires information about types to be written out in order to
-     implement `dynamic_cast', `typeid' and exception handling.  For
-     polymorphic classes (classes with virtual functions), the type_info
-     object is written out along with the vtable so that `dynamic_cast'
-     can determine the dynamic type of a class object at runtime.  For
-     all other types, we write out the type_info object when it is
-     used: when applying `typeid' to an expression, throwing an object,
-     or referring to a type in a catch clause or exception
-     specification.
-
-Template Instantiations
-     Most everything in this section also applies to template
-     instantiations, but there are other options as well.  *Note
-     Where's the Template?: Template Instantiation.
-
-   When used with GNU ld version 2.8 or later on an ELF system such as
-Linux/GNU or Solaris 2, or on Microsoft Windows, duplicate copies of
-these constructs will be discarded at link time.  This is known as
-COMDAT support.
-
-   On targets that don't support COMDAT, but do support weak symbols,
-GCC will use them.  This way one copy will override all the others, but
-the unused copies will still take up space in the executable.
-
-   For targets which do not support either COMDAT or weak symbols, most
-entities with vague linkage will be emitted as local symbols to avoid
-duplicate definition errors from the linker.  This will not happen for
-local statics in inlines, however, as having multiple copies will
-almost certainly break things.
-
-   *Note Declarations and Definitions in One Header: C++ Interface, for
-another way to control placement of these constructs.
+OTHER-LETTERS
+     Other letters can be defined in machine-dependent fashion to stand
+     for particular classes of registers or other arbitrary operand
+     types.  `d', `a' and `f' are defined on the 68000/68020 to stand
+     for data, address and floating point registers.
 
 
-File: gcc.info,  Node: C++ Interface,  Next: Template Instantiation,  Prev: Vague Linkage,  Up: C++ Extensions
+File: gcc.info,  Node: Multi-Alternative,  Next: Modifiers,  Prev: Simple Constraints,  Up: Constraints
 
-Declarations and Definitions in One Header
-==========================================
+Multiple Alternative Constraints
+--------------------------------
 
-   C++ object definitions can be quite complex.  In principle, your
-source code will need two kinds of things for each object that you use
-across more than one source file.  First, you need an "interface"
-specification, describing its structure with type declarations and
-function prototypes.  Second, you need the "implementation" itself.  It
-can be tedious to maintain a separate interface description in a header
-file, in parallel to the actual implementation.  It is also dangerous,
-since separate interface and implementation definitions may not remain
-parallel.
+   Sometimes a single instruction has multiple alternative sets of
+possible operands.  For example, on the 68000, a logical-or instruction
+can combine register or an immediate value into memory, or it can
+combine any kind of operand into a register; but it cannot combine one
+memory location into another.
 
-   With GNU C++, you can use a single header file for both purposes.
+   These constraints are represented as multiple alternatives.  An
+alternative can be described by a series of letters for each operand.
+The overall constraint for an operand is made from the letters for this
+operand from the first alternative, a comma, the letters for this
+operand from the second alternative, a comma, and so on until the last
+alternative.
 
-     _Warning:_ The mechanism to specify this is in transition.  For the
-     nonce, you must use one of two `#pragma' commands; in a future
-     release of GNU C++, an alternative mechanism will make these
-     `#pragma' commands unnecessary.
+   If all the operands fit any one alternative, the instruction is
+valid.  Otherwise, for each alternative, the compiler counts how many
+instructions must be added to copy the operands so that that
+alternative applies.  The alternative requiring the least copying is
+chosen.  If two alternatives need the same amount of copying, the one
+that comes first is chosen.  These choices can be altered with the `?'
+and `!' characters:
 
-   The header file contains the full definitions, but is marked with
-`#pragma interface' in the source code.  This allows the compiler to
-use the header file only as an interface specification when ordinary
-source files incorporate it with `#include'.  In the single source file
-where the full implementation belongs, you can use either a naming
-convention or `#pragma implementation' to indicate this alternate use
-of the header file.
+`?'
+     Disparage slightly the alternative that the `?' appears in, as a
+     choice when no alternative applies exactly.  The compiler regards
+     this alternative as one unit more costly for each `?' that appears
+     in it.
 
-`#pragma interface'
-`#pragma interface "SUBDIR/OBJECTS.h"'
-     Use this directive in _header files_ that define object classes,
-     to save space in most of the object files that use those classes.
-     Normally, local copies of certain information (backup copies of
-     inline member functions, debugging information, and the internal
-     tables that implement virtual functions) must be kept in each
-     object file that includes class definitions.  You can use this
-     pragma to avoid such duplication.  When a header file containing
-     `#pragma interface' is included in a compilation, this auxiliary
-     information will not be generated (unless the main input source
-     file itself uses `#pragma implementation').  Instead, the object
-     files will contain references to be resolved at link time.
-
-     The second form of this directive is useful for the case where you
-     have multiple headers with the same name in different directories.
-     If you use this form, you must specify the same string to `#pragma
-     implementation'.
-
-`#pragma implementation'
-`#pragma implementation "OBJECTS.h"'
-     Use this pragma in a _main input file_, when you want full output
-     from included header files to be generated (and made globally
-     visible).  The included header file, in turn, should use `#pragma
-     interface'.  Backup copies of inline member functions, debugging
-     information, and the internal tables used to implement virtual
-     functions are all generated in implementation files.
-
-     If you use `#pragma implementation' with no argument, it applies to
-     an include file with the same basename(1) as your source file.
-     For example, in `allclass.cc', giving just `#pragma implementation'
-     by itself is equivalent to `#pragma implementation "allclass.h"'.
-
-     In versions of GNU C++ prior to 2.6.0 `allclass.h' was treated as
-     an implementation file whenever you would include it from
-     `allclass.cc' even if you never specified `#pragma
-     implementation'.  This was deemed to be more trouble than it was
-     worth, however, and disabled.
-
-     If you use an explicit `#pragma implementation', it must appear in
-     your source file _before_ you include the affected header files.
-
-     Use the string argument if you want a single implementation file to
-     include code from multiple header files.  (You must also use
-     `#include' to include the header file; `#pragma implementation'
-     only specifies how to use the file--it doesn't actually include
-     it.)
-
-     There is no way to split up the contents of a single header file
-     into multiple implementation files.
-
-   `#pragma implementation' and `#pragma interface' also have an effect
-on function inlining.
-
-   If you define a class in a header file marked with `#pragma
-interface', the effect on a function defined in that class is similar to
-an explicit `extern' declaration--the compiler emits no code at all to
-define an independent version of the function.  Its definition is used
-only for inlining with its callers.
-
-   Conversely, when you include the same header file in a main source
-file that declares it as `#pragma implementation', the compiler emits
-code for the function itself; this defines a version of the function
-that can be found via pointers (or by callers compiled without
-inlining).  If all calls to the function can be inlined, you can avoid
-emitting the function by compiling with `-fno-implement-inlines'.  If
-any calls were not inlined, you will get linker errors.
-
-   ---------- Footnotes ----------
-
-   (1) A file's "basename" was the name stripped of all leading path
-information and of trailing suffixes, such as `.h' or `.C' or `.cc'.
+`!'
+     Disparage severely the alternative that the `!' appears in.  This
+     alternative can still be used if it fits without reloading, but if
+     reloading is needed, some other alternative will be used.
 
 
-File: gcc.info,  Node: Template Instantiation,  Next: Bound member functions,  Prev: C++ Interface,  Up: C++ Extensions
-
-Where's the Template?
-=====================
-
-   C++ templates are the first language feature to require more
-intelligence from the environment than one usually finds on a UNIX
-system.  Somehow the compiler and linker have to make sure that each
-template instance occurs exactly once in the executable if it is needed,
-and not at all otherwise.  There are two basic approaches to this
-problem, which I will refer to as the Borland model and the Cfront
-model.
-
-Borland model
-     Borland C++ solved the template instantiation problem by adding
-     the code equivalent of common blocks to their linker; the compiler
-     emits template instances in each translation unit that uses them,
-     and the linker collapses them together.  The advantage of this
-     model is that the linker only has to consider the object files
-     themselves; there is no external complexity to worry about.  This
-     disadvantage is that compilation time is increased because the
-     template code is being compiled repeatedly.  Code written for this
-     model tends to include definitions of all templates in the header
-     file, since they must be seen to be instantiated.
-
-Cfront model
-     The AT&T C++ translator, Cfront, solved the template instantiation
-     problem by creating the notion of a template repository, an
-     automatically maintained place where template instances are
-     stored.  A more modern version of the repository works as follows:
-     As individual object files are built, the compiler places any
-     template definitions and instantiations encountered in the
-     repository.  At link time, the link wrapper adds in the objects in
-     the repository and compiles any needed instances that were not
-     previously emitted.  The advantages of this model are more optimal
-     compilation speed and the ability to use the system linker; to
-     implement the Borland model a compiler vendor also needs to
-     replace the linker.  The disadvantages are vastly increased
-     complexity, and thus potential for error; for some code this can be
-     just as transparent, but in practice it can been very difficult to
-     build multiple programs in one directory and one program in
-     multiple directories.  Code written for this model tends to
-     separate definitions of non-inline member templates into a
-     separate file, which should be compiled separately.
-
-   When used with GNU ld version 2.8 or later on an ELF system such as
-Linux/GNU or Solaris 2, or on Microsoft Windows, g++ supports the
-Borland model.  On other systems, g++ implements neither automatic
-model.
-
-   A future version of g++ will support a hybrid model whereby the
-compiler will emit any instantiations for which the template definition
-is included in the compile, and store template definitions and
-instantiation context information into the object file for the rest.
-The link wrapper will extract that information as necessary and invoke
-the compiler to produce the remaining instantiations.  The linker will
-then combine duplicate instantiations.
-
-   In the mean time, you have the following options for dealing with
-template instantiations:
-
-  1. Compile your template-using code with `-frepo'.  The compiler will
-     generate files with the extension `.rpo' listing all of the
-     template instantiations used in the corresponding object files
-     which could be instantiated there; the link wrapper, `collect2',
-     will then update the `.rpo' files to tell the compiler where to
-     place those instantiations and rebuild any affected object files.
-     The link-time overhead is negligible after the first pass, as the
-     compiler will continue to place the instantiations in the same
-     files.
-
-     This is your best option for application code written for the
-     Borland model, as it will just work.  Code written for the Cfront
-     model will need to be modified so that the template definitions
-     are available at one or more points of instantiation; usually this
-     is as simple as adding `#include <tmethods.cc>' to the end of each
-     template header.
-
-     For library code, if you want the library to provide all of the
-     template instantiations it needs, just try to link all of its
-     object files together; the link will fail, but cause the
-     instantiations to be generated as a side effect.  Be warned,
-     however, that this may cause conflicts if multiple libraries try
-     to provide the same instantiations.  For greater control, use
-     explicit instantiation as described in the next option.
-
-  2. Compile your code with `-fno-implicit-templates' to disable the
-     implicit generation of template instances, and explicitly
-     instantiate all the ones you use.  This approach requires more
-     knowledge of exactly which instances you need than do the others,
-     but it's less mysterious and allows greater control.  You can
-     scatter the explicit instantiations throughout your program,
-     perhaps putting them in the translation units where the instances
-     are used or the translation units that define the templates
-     themselves; you can put all of the explicit instantiations you
-     need into one big file; or you can create small files like
-
-          #include "Foo.h"
-          #include "Foo.cc"
-          
-          template class Foo<int>;
-          template ostream& operator <<
-                          (ostream&, const Foo<int>&);
-
-     for each of the instances you need, and create a template
-     instantiation library from those.
-
-     If you are using Cfront-model code, you can probably get away with
-     not using `-fno-implicit-templates' when compiling files that don't
-     `#include' the member template definitions.
-
-     If you use one big file to do the instantiations, you may want to
-     compile it without `-fno-implicit-templates' so you get all of the
-     instances required by your explicit instantiations (but not by any
-     other files) without having to specify them as well.
-
-     g++ has extended the template instantiation syntax outlined in the
-     Working Paper to allow forward declaration of explicit
-     instantiations (with `extern'), instantiation of the compiler
-     support data for a template class (i.e. the vtable) without
-     instantiating any of its members (with `inline'), and
-     instantiation of only the static data members of a template class,
-     without the support data or member functions (with (`static'):
-
-          extern template int max (int, int);
-          inline template class Foo<int>;
-          static template class Foo<int>;
-
-  3. Do nothing.  Pretend g++ does implement automatic instantiation
-     management.  Code written for the Borland model will work fine, but
-     each translation unit will contain instances of each of the
-     templates it uses.  In a large program, this can lead to an
-     unacceptable amount of code duplication.
-
-  4. Add `#pragma interface' to all files containing template
-     definitions.  For each of these files, add `#pragma implementation
-     "FILENAME"' to the top of some `.C' file which `#include's it.
-     Then compile everything with `-fexternal-templates'.  The
-     templates will then only be expanded in the translation unit which
-     implements them (i.e. has a `#pragma implementation' line for the
-     file where they live); all other files will use external
-     references.  If you're lucky, everything should work properly.  If
-     you get undefined symbol errors, you need to make sure that each
-     template instance which is used in the program is used in the file
-     which implements that template.  If you don't have any use for a
-     particular instance in that file, you can just instantiate it
-     explicitly, using the syntax from the latest C++ working paper:
-
-          template class A<int>;
-          template ostream& operator << (ostream&, const A<int>&);
-
-     This strategy will work with code written for either model.  If
-     you are using code written for the Cfront model, the file
-     containing a class template and the file containing its member
-     templates should be implemented in the same translation unit.
-
-     A slight variation on this approach is to instead use the flag
-     `-falt-external-templates'; this flag causes template instances to
-     be emitted in the translation unit that implements the header
-     where they are first instantiated, rather than the one which
-     implements the file where the templates are defined.  This header
-     must be the same in all translation units, or things are likely to
-     break.
-
-     *Note Declarations and Definitions in One Header: C++ Interface,
-     for more discussion of these pragmas.
-
-
-File: gcc.info,  Node: Bound member functions,  Next: C++ Attributes,  Prev: Template Instantiation,  Up: C++ Extensions
-
-Extracting the function pointer from a bound pointer to member function
-=======================================================================
-
-   In C++, pointer to member functions (PMFs) are implemented using a
-wide pointer of sorts to handle all the possible call mechanisms; the
-PMF needs to store information about how to adjust the `this' pointer,
-and if the function pointed to is virtual, where to find the vtable, and
-where in the vtable to look for the member function.  If you are using
-PMFs in an inner loop, you should really reconsider that decision.  If
-that is not an option, you can extract the pointer to the function that
-would be called for a given object/PMF pair and call it directly inside
-the inner loop, to save a bit of time.
-
-   Note that you will still be paying the penalty for the call through a
-function pointer; on most modern architectures, such a call defeats the
-branch prediction features of the CPU.  This is also true of normal
-virtual function calls.
-
-   The syntax for this extension is
-
-     extern A a;
-     extern int (A::*fp)();
-     typedef int (*fptr)(A *);
-     
-     fptr p = (fptr)(a.*fp);
-
-   For PMF constants (i.e. expressions of the form `&Klasse::Member'),
-no object is needed to obtain the address of the function.  They can be
-converted to function pointers directly:
-
-     fptr p1 = (fptr)(&A::foo);
-
-   You must specify `-Wno-pmf-conversions' to use this extension.
-
-
-File: gcc.info,  Node: C++ Attributes,  Next: Java Exceptions,  Prev: Bound member functions,  Up: C++ Extensions
-
-C++-Specific Variable, Function, and Type Attributes
-====================================================
-
-   Some attributes only make sense for C++ programs.
-
-`init_priority (PRIORITY)'
-     In Standard C++, objects defined at namespace scope are guaranteed
-     to be initialized in an order in strict accordance with that of
-     their definitions _in a given translation unit_.  No guarantee is
-     made for initializations across translation units.  However, GNU
-     C++ allows users to control the order of initialization of objects
-     defined at namespace scope with the `init_priority' attribute by
-     specifying a relative PRIORITY, a constant integral expression
-     currently bounded between 101 and 65535 inclusive.  Lower numbers
-     indicate a higher priority.
-
-     In the following example, `A' would normally be created before
-     `B', but the `init_priority' attribute has reversed that order:
-
-          Some_Class  A  __attribute__ ((init_priority (2000)));
-          Some_Class  B  __attribute__ ((init_priority (543)));
-
-     Note that the particular values of PRIORITY do not matter; only
-     their relative ordering.
-
-`java_interface'
-     This type attribute informs C++ that the class is a Java
-     interface.  It may only be applied to classes declared within an
-     `extern "Java"' block.  Calls to methods declared in this
-     interface will be dispatched using GCJ's interface table
-     mechanism, instead of regular virtual table dispatch.
-
-
-File: gcc.info,  Node: Java Exceptions,  Next: Deprecated Features,  Prev: C++ Attributes,  Up: C++ Extensions
-
-Java Exceptions
-===============
-
-   The Java language uses a slightly different exception handling model
-from C++.  Normally, GNU C++ will automatically detect when you are
-writing C++ code that uses Java exceptions, and handle them
-appropriately.  However, if C++ code only needs to execute destructors
-when Java exceptions are thrown through it, GCC will guess incorrectly.
-Sample problematic code:
-
-       struct S { ~S(); };
-       extern void bar();    // is implemented in Java and may throw exceptions
-       void foo()
-       {
-         S s;
-         bar();
-       }
-
-The usual effect of an incorrect guess is a link failure, complaining of
-a missing routine called `__gxx_personality_v0'.
-
-   You can inform the compiler that Java exceptions are to be used in a
-translation unit, irrespective of what it might think, by writing
-`#pragma GCC java_exceptions' at the head of the file.  This `#pragma'
-must appear before any functions that throw or catch exceptions, or run
-destructors when exceptions are thrown through them.
-
-   You cannot mix Java and C++ exceptions in the same translation unit.
-It is believed to be safe to throw a C++ exception from one file
-through another file compiled for the for the Java exception model, or
-vice versa, but there may be bugs in this area.
-
-
-File: gcc.info,  Node: Deprecated Features,  Next: Backwards Compatibility,  Prev: Java Exceptions,  Up: C++ Extensions
-
-Deprecated Features
-===================
-
-   In the past, the GNU C++ compiler was extended to experiment with new
-features, at a time when the C++ language was still evolving.  Now that
-the C++ standard is complete, some of those features are superseded by
-superior alternatives.  Using the old features might cause a warning in
-some cases that the feature will be dropped in the future.  In other
-cases, the feature might be gone already.
-
-   While the list below is not exhaustive, it documents some of the
-options that are now deprecated:
-
-`-fexternal-templates'
-`-falt-external-templates'
-     These are two of the many ways for g++ to implement template
-     instantiation.  *Note Template Instantiation::.  The C++ standard
-     clearly defines how template definitions have to be organized
-     across implementation units.  g++ has an implicit instantiation
-     mechanism that should work just fine for standard-conforming code.
-
-`-fstrict-prototype'
-`-fno-strict-prototype'
-     Previously it was possible to use an empty prototype parameter
-     list to indicate an unspecified number of parameters (like C),
-     rather than no parameters, as C++ demands.  This feature has been
-     removed, except where it is required for backwards compatibility
-     *Note Backwards Compatibility::.
-
-   The named return value extension has been deprecated, and will be
-removed from g++ at some point.
-
-   The use of initializer lists with new expressions has been
-deprecated, and will be removed from g++ at some point.
-
-   Floating point and complex template constant parameters are
-deprecated, and will be removed from g++ at some point.
-
-
-File: gcc.info,  Node: Backwards Compatibility,  Prev: Deprecated Features,  Up: C++ Extensions
-
-Backwards Compatibility
-=======================
-
-   Now that there is a definitive ISO standard C++, G++ has a
-specification to adhere to.  The C++ language evolved over time, and
-features that used to be acceptable in previous drafts of the standard,
-such as the ARM [Annotated C++ Reference Manual], are no longer
-accepted.  In order to allow compilation of C++ written to such drafts,
-G++ contains some backwards compatibilities.  _All such backwards
-compatibility features are liable to disappear in future versions of
-G++._ They should be considered deprecated *Note Deprecated Features::.
-
-`For scope'
-     If a variable is declared at for scope, it used to remain in scope
-     until the end of the scope which contained the for statement
-     (rather than just within the for scope).  G++ retains this, but
-     issues a warning, if such a variable is accessed outside the for
-     scope.
-
-`implicit C language'
-     Old C system header files did not contain an `extern "C" {...}'
-     scope to set the language.  On such systems, all header files are
-     implicitly scoped inside a C language scope.  Also, an empty
-     prototype `()' will be treated as an unspecified number of
-     arguments, rather than no arguments, as C++ demands.
-
-
-File: gcc.info,  Node: Objective C,  Next: Gcov,  Prev: C++ Extensions,  Up: Top
-
-GNU Objective-C runtime features
-********************************
-
-   This document is meant to describe some of the GNU Objective-C
-runtime features.  It is not intended to teach you Objective-C, there
-are several resources on the Internet that present the language.
-Questions and comments about this document to Ovidiu Predescu
-<ovidiu@cup.hp.com>.
-
-* Menu:
-
-* Executing code before main::
-* Type encoding::
-* Garbage Collection::
-* Constant string objects::
-* compatibility_alias::
-
-
-File: gcc.info,  Node: Executing code before main,  Next: Type encoding,  Prev: Objective C,  Up: Objective C
-
-`+load': Executing code before main
-===================================
-
-   The GNU Objective-C runtime provides a way that allows you to execute
-code before the execution of the program enters the `main' function.
-The code is executed on a per-class and a per-category basis, through a
-special class method `+load'.
-
-   This facility is very useful if you want to initialize global
-variables which can be accessed by the program directly, without
-sending a message to the class first.  The usual way to initialize
-global variables, in the `+initialize' method, might not be useful
-because `+initialize' is only called when the first message is sent to a
-class object, which in some cases could be too late.
-
-   Suppose for example you have a `FileStream' class that declares
-`Stdin', `Stdout' and `Stderr' as global variables, like below:
-
-
-     FileStream *Stdin = nil;
-     FileStream *Stdout = nil;
-     FileStream *Stderr = nil;
-     
-     @implementation FileStream
-     
-     + (void)initialize
-     {
-         Stdin = [[FileStream new] initWithFd:0];
-         Stdout = [[FileStream new] initWithFd:1];
-         Stderr = [[FileStream new] initWithFd:2];
-     }
-     
-     /* Other methods here */
-     @end
-
-   In this example, the initialization of `Stdin', `Stdout' and
-`Stderr' in `+initialize' occurs too late.  The programmer can send a
-message to one of these objects before the variables are actually
-initialized, thus sending messages to the `nil' object.  The
-`+initialize' method which actually initializes the global variables is
-not invoked until the first message is sent to the class object.  The
-solution would require these variables to be initialized just before
-entering `main'.
-
-   The correct solution of the above problem is to use the `+load'
-method instead of `+initialize':
-
-
-     @implementation FileStream
-     
-     + (void)load
-     {
-         Stdin = [[FileStream new] initWithFd:0];
-         Stdout = [[FileStream new] initWithFd:1];
-         Stderr = [[FileStream new] initWithFd:2];
-     }
-     
-     /* Other methods here */
-     @end
-
-   The `+load' is a method that is not overridden by categories.  If a
-class and a category of it both implement `+load', both methods are
-invoked.  This allows some additional initializations to be performed in
-a category.
-
-   This mechanism is not intended to be a replacement for `+initialize'.
-You should be aware of its limitations when you decide to use it
-instead of `+initialize'.
-
-* Menu:
-
-* What you can and what you cannot do in +load::
+File: gcc.info,  Node: Modifiers,  Next: Machine Constraints,  Prev: Multi-Alternative,  Up: Constraints
+
+Constraint Modifier Characters
+------------------------------
+
+   Here are constraint modifier characters.
+
+`='
+     Means that this operand is write-only for this instruction: the
+     previous value is discarded and replaced by output data.
+
+`+'
+     Means that this operand is both read and written by the
+     instruction.
+
+     When the compiler fixes up the operands to satisfy the constraints,
+     it needs to know which operands are inputs to the instruction and
+     which are outputs from it.  `=' identifies an output; `+'
+     identifies an operand that is both input and output; all other
+     operands are assumed to be input only.
+
+     If you specify `=' or `+' in a constraint, you put it in the first
+     character of the constraint string.
+
+`&'
+     Means (in a particular alternative) that this operand is an
+     "earlyclobber" operand, which is modified before the instruction is
+     finished using the input operands.  Therefore, this operand may
+     not lie in a register that is used as an input operand or as part
+     of any memory address.
+
+     `&' applies only to the alternative in which it is written.  In
+     constraints with multiple alternatives, sometimes one alternative
+     requires `&' while others do not.  See, for example, the `movdf'
+     insn of the 68000.
+
+     An input operand can be tied to an earlyclobber operand if its only
+     use as an input occurs before the early result is written.  Adding
+     alternatives of this form often allows GCC to produce better code
+     when only some of the inputs can be affected by the earlyclobber.
+     See, for example, the `mulsi3' insn of the ARM.
+
+     `&' does not obviate the need to write `='.
+
+`%'
+     Declares the instruction to be commutative for this operand and the
+     following operand.  This means that the compiler may interchange
+     the two operands if that is the cheapest way to make all operands
+     fit the constraints.
+
+`#'
+     Says that all following characters, up to the next comma, are to be
+     ignored as a constraint.  They are significant only for choosing
+     register preferences.
+
+`*'
+     Says that the following character should be ignored when choosing
+     register preferences.  `*' has no effect on the meaning of the
+     constraint as a constraint, and no effect on reloading.
 

@@ -1,21 +1,18 @@
-This is doc/gcc.info, produced by makeinfo version 4.0b from
+This is doc/gcc.info, produced by makeinfo version 4.2 from
 doc/gcc.texi.
 
 INFO-DIR-SECTION Programming
 START-INFO-DIR-ENTRY
 * gcc: (gcc).                  The GNU Compiler Collection.
 END-INFO-DIR-ENTRY
-   This file documents the use and the internals of the GNU compiler.
-
+   This file documents the use of the GNU compilers.
 
    Published by the Free Software Foundation
 59 Temple Place - Suite 330
 Boston, MA 02111-1307 USA
 
-
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001 Free Software Foundation, Inc.
-
+1999, 2000, 2001, 2002 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -36,6 +33,812 @@ software.  Copies published by the Free Software Foundation raise
 funds for GNU development.
 
 
+File: gcc.info,  Node: Function Attributes,  Next: Attribute Syntax,  Prev: Mixed Declarations,  Up: C Extensions
+
+Declaring Attributes of Functions
+=================================
+
+   In GNU C, you declare certain things about functions called in your
+program which help the compiler optimize function calls and check your
+code more carefully.
+
+   The keyword `__attribute__' allows you to specify special attributes
+when making a declaration.  This keyword is followed by an attribute
+specification inside double parentheses.  The following attributes are
+currently defined for functions on all targets: `noreturn', `noinline',
+`always_inline', `pure', `const', `format', `format_arg',
+`no_instrument_function', `section', `constructor', `destructor',
+`used', `unused', `deprecated', `weak', `malloc', and `alias'.  Several
+other attributes are defined for functions on particular target
+systems.  Other attributes, including `section' are supported for
+variables declarations (*note Variable Attributes::) and for types
+(*note Type Attributes::).
+
+   You may also specify attributes with `__' preceding and following
+each keyword.  This allows you to use them in header files without
+being concerned about a possible macro of the same name.  For example,
+you may use `__noreturn__' instead of `noreturn'.
+
+   *Note Attribute Syntax::, for details of the exact syntax for using
+attributes.
+
+`noreturn'
+     A few standard library functions, such as `abort' and `exit',
+     cannot return.  GCC knows this automatically.  Some programs define
+     their own functions that never return.  You can declare them
+     `noreturn' to tell the compiler this fact.  For example,
+
+          void fatal () __attribute__ ((noreturn));
+          
+          void
+          fatal (...)
+          {
+            ... /* Print error message. */ ...
+            exit (1);
+          }
+
+     The `noreturn' keyword tells the compiler to assume that `fatal'
+     cannot return.  It can then optimize without regard to what would
+     happen if `fatal' ever did return.  This makes slightly better
+     code.  More importantly, it helps avoid spurious warnings of
+     uninitialized variables.
+
+     Do not assume that registers saved by the calling function are
+     restored before calling the `noreturn' function.
+
+     It does not make sense for a `noreturn' function to have a return
+     type other than `void'.
+
+     The attribute `noreturn' is not implemented in GCC versions
+     earlier than 2.5.  An alternative way to declare that a function
+     does not return, which works in the current version and in some
+     older versions, is as follows:
+
+          typedef void voidfn ();
+          
+          volatile voidfn fatal;
+
+`noinline'
+     This function attribute prevents a function from being considered
+     for inlining.
+
+`always_inline'
+     Generally, functions are not inlined unless optimization is
+     specified.  For functions declared inline, this attribute inlines
+     the function even if no optimization level was specified.
+
+`pure'
+     Many functions have no effects except the return value and their
+     return value depends only on the parameters and/or global
+     variables.  Such a function can be subject to common subexpression
+     elimination and loop optimization just as an arithmetic operator
+     would be.  These functions should be declared with the attribute
+     `pure'.  For example,
+
+          int square (int) __attribute__ ((pure));
+
+     says that the hypothetical function `square' is safe to call fewer
+     times than the program says.
+
+     Some of common examples of pure functions are `strlen' or `memcmp'.
+     Interesting non-pure functions are functions with infinite loops
+     or those depending on volatile memory or other system resource,
+     that may change between two consecutive calls (such as `feof' in a
+     multithreading environment).
+
+     The attribute `pure' is not implemented in GCC versions earlier
+     than 2.96.
+
+`const'
+     Many functions do not examine any values except their arguments,
+     and have no effects except the return value.  Basically this is
+     just slightly more strict class than the `pure' attribute above,
+     since function is not allowed to read global memory.
+
+     Note that a function that has pointer arguments and examines the
+     data pointed to must _not_ be declared `const'.  Likewise, a
+     function that calls a non-`const' function usually must not be
+     `const'.  It does not make sense for a `const' function to return
+     `void'.
+
+     The attribute `const' is not implemented in GCC versions earlier
+     than 2.5.  An alternative way to declare that a function has no
+     side effects, which works in the current version and in some older
+     versions, is as follows:
+
+          typedef int intfn ();
+          
+          extern const intfn square;
+
+     This approach does not work in GNU C++ from 2.6.0 on, since the
+     language specifies that the `const' must be attached to the return
+     value.
+
+`format (ARCHETYPE, STRING-INDEX, FIRST-TO-CHECK)'
+     The `format' attribute specifies that a function takes `printf',
+     `scanf', `strftime' or `strfmon' style arguments which should be
+     type-checked against a format string.  For example, the
+     declaration:
+
+          extern int
+          my_printf (void *my_object, const char *my_format, ...)
+                __attribute__ ((format (printf, 2, 3)));
+
+     causes the compiler to check the arguments in calls to `my_printf'
+     for consistency with the `printf' style format string argument
+     `my_format'.
+
+     The parameter ARCHETYPE determines how the format string is
+     interpreted, and should be `printf', `scanf', `strftime' or
+     `strfmon'.  (You can also use `__printf__', `__scanf__',
+     `__strftime__' or `__strfmon__'.)  The parameter STRING-INDEX
+     specifies which argument is the format string argument (starting
+     from 1), while FIRST-TO-CHECK is the number of the first argument
+     to check against the format string.  For functions where the
+     arguments are not available to be checked (such as `vprintf'),
+     specify the third parameter as zero.  In this case the compiler
+     only checks the format string for consistency.  For `strftime'
+     formats, the third parameter is required to be zero.
+
+     In the example above, the format string (`my_format') is the second
+     argument of the function `my_print', and the arguments to check
+     start with the third argument, so the correct parameters for the
+     format attribute are 2 and 3.
+
+     The `format' attribute allows you to identify your own functions
+     which take format strings as arguments, so that GCC can check the
+     calls to these functions for errors.  The compiler always (unless
+     `-ffreestanding' is used) checks formats for the standard library
+     functions `printf', `fprintf', `sprintf', `scanf', `fscanf',
+     `sscanf', `strftime', `vprintf', `vfprintf' and `vsprintf'
+     whenever such warnings are requested (using `-Wformat'), so there
+     is no need to modify the header file `stdio.h'.  In C99 mode, the
+     functions `snprintf', `vsnprintf', `vscanf', `vfscanf' and
+     `vsscanf' are also checked.  Except in strictly conforming C
+     standard modes, the X/Open function `strfmon' is also checked as
+     are `printf_unlocked' and `fprintf_unlocked'.  *Note Options
+     Controlling C Dialect: C Dialect Options.
+
+`format_arg (STRING-INDEX)'
+     The `format_arg' attribute specifies that a function takes a format
+     string for a `printf', `scanf', `strftime' or `strfmon' style
+     function and modifies it (for example, to translate it into
+     another language), so the result can be passed to a `printf',
+     `scanf', `strftime' or `strfmon' style function (with the
+     remaining arguments to the format function the same as they would
+     have been for the unmodified string).  For example, the
+     declaration:
+
+          extern char *
+          my_dgettext (char *my_domain, const char *my_format)
+                __attribute__ ((format_arg (2)));
+
+     causes the compiler to check the arguments in calls to a `printf',
+     `scanf', `strftime' or `strfmon' type function, whose format
+     string argument is a call to the `my_dgettext' function, for
+     consistency with the format string argument `my_format'.  If the
+     `format_arg' attribute had not been specified, all the compiler
+     could tell in such calls to format functions would be that the
+     format string argument is not constant; this would generate a
+     warning when `-Wformat-nonliteral' is used, but the calls could
+     not be checked without the attribute.
+
+     The parameter STRING-INDEX specifies which argument is the format
+     string argument (starting from 1).
+
+     The `format-arg' attribute allows you to identify your own
+     functions which modify format strings, so that GCC can check the
+     calls to `printf', `scanf', `strftime' or `strfmon' type function
+     whose operands are a call to one of your own function.  The
+     compiler always treats `gettext', `dgettext', and `dcgettext' in
+     this manner except when strict ISO C support is requested by
+     `-ansi' or an appropriate `-std' option, or `-ffreestanding' is
+     used.  *Note Options Controlling C Dialect: C Dialect Options.
+
+`no_instrument_function'
+     If `-finstrument-functions' is given, profiling function calls will
+     be generated at entry and exit of most user-compiled functions.
+     Functions with this attribute will not be so instrumented.
+
+`section ("SECTION-NAME")'
+     Normally, the compiler places the code it generates in the `text'
+     section.  Sometimes, however, you need additional sections, or you
+     need certain particular functions to appear in special sections.
+     The `section' attribute specifies that a function lives in a
+     particular section.  For example, the declaration:
+
+          extern void foobar (void) __attribute__ ((section ("bar")));
+
+     puts the function `foobar' in the `bar' section.
+
+     Some file formats do not support arbitrary sections so the
+     `section' attribute is not available on all platforms.  If you
+     need to map the entire contents of a module to a particular
+     section, consider using the facilities of the linker instead.
+
+`constructor'
+`destructor'
+     The `constructor' attribute causes the function to be called
+     automatically before execution enters `main ()'.  Similarly, the
+     `destructor' attribute causes the function to be called
+     automatically after `main ()' has completed or `exit ()' has been
+     called.  Functions with these attributes are useful for
+     initializing data that will be used implicitly during the
+     execution of the program.
+
+     These attributes are not currently implemented for Objective-C.
+
+`unused'
+     This attribute, attached to a function, means that the function is
+     meant to be possibly unused.  GCC will not produce a warning for
+     this function.  GNU C++ does not currently support this attribute
+     as definitions without parameters are valid in C++.
+
+`used'
+     This attribute, attached to a function, means that code must be
+     emitted for the function even if it appears that the function is
+     not referenced.  This is useful, for example, when the function is
+     referenced only in inline assembly.
+
+`deprecated'
+     The `deprecated' attribute results in a warning if the function is
+     used anywhere in the source file.  This is useful when identifying
+     functions that are expected to be removed in a future version of a
+     program.  The warning also includes the location of the declaration
+     of the deprecated function, to enable users to easily find further
+     information about why the function is deprecated, or what they
+     should do instead.  Note that the warnings only occurs for uses:
+
+          int old_fn () __attribute__ ((deprecated));
+          int old_fn ();
+          int (*fn_ptr)() = old_fn;
+
+     results in a warning on line 3 but not line 2.
+
+     The `deprecated' attribute can also be used for variables and
+     types (*note Variable Attributes::, *note Type Attributes::.)
+
+`weak'
+     The `weak' attribute causes the declaration to be emitted as a weak
+     symbol rather than a global.  This is primarily useful in defining
+     library functions which can be overridden in user code, though it
+     can also be used with non-function declarations.  Weak symbols are
+     supported for ELF targets, and also for a.out targets when using
+     the GNU assembler and linker.
+
+`malloc'
+     The `malloc' attribute is used to tell the compiler that a function
+     may be treated as if it were the malloc function.  The compiler
+     assumes that calls to malloc result in a pointers that cannot
+     alias anything.  This will often improve optimization.
+
+`alias ("TARGET")'
+     The `alias' attribute causes the declaration to be emitted as an
+     alias for another symbol, which must be specified.  For instance,
+
+          void __f () { /* do something */; }
+          void f () __attribute__ ((weak, alias ("__f")));
+
+     declares `f' to be a weak alias for `__f'.  In C++, the mangled
+     name for the target must be used.
+
+     Not all target machines support this attribute.
+
+`regparm (NUMBER)'
+     On the Intel 386, the `regparm' attribute causes the compiler to
+     pass up to NUMBER integer arguments in registers EAX, EDX, and ECX
+     instead of on the stack.  Functions that take a variable number of
+     arguments will continue to be passed all of their arguments on the
+     stack.
+
+`stdcall'
+     On the Intel 386, the `stdcall' attribute causes the compiler to
+     assume that the called function will pop off the stack space used
+     to pass arguments, unless it takes a variable number of arguments.
+
+     The PowerPC compiler for Windows NT currently ignores the `stdcall'
+     attribute.
+
+`cdecl'
+     On the Intel 386, the `cdecl' attribute causes the compiler to
+     assume that the calling function will pop off the stack space used
+     to pass arguments.  This is useful to override the effects of the
+     `-mrtd' switch.
+
+     The PowerPC compiler for Windows NT currently ignores the `cdecl'
+     attribute.
+
+`longcall'
+     On the RS/6000 and PowerPC, the `longcall' attribute causes the
+     compiler to always call the function via a pointer, so that
+     functions which reside further than 64 megabytes (67,108,864
+     bytes) from the current location can be called.
+
+`long_call/short_call'
+     This attribute allows to specify how to call a particular function
+     on ARM.  Both attributes override the `-mlong-calls' (*note ARM
+     Options::) command line switch and `#pragma long_calls' settings.
+     The `long_call' attribute causes the compiler to always call the
+     function by first loading its address into a register and then
+     using the contents of that register.   The `short_call' attribute
+     always places the offset to the function from the call site into
+     the `BL' instruction directly.
+
+`dllimport'
+     On the PowerPC running Windows NT, the `dllimport' attribute causes
+     the compiler to call the function via a global pointer to the
+     function pointer that is set up by the Windows NT dll library.
+     The pointer name is formed by combining `__imp_' and the function
+     name.
+
+`dllexport'
+     On the PowerPC running Windows NT, the `dllexport' attribute causes
+     the compiler to provide a global pointer to the function pointer,
+     so that it can be called with the `dllimport' attribute.  The
+     pointer name is formed by combining `__imp_' and the function name.
+
+`exception (EXCEPT-FUNC [, EXCEPT-ARG])'
+     On the PowerPC running Windows NT, the `exception' attribute causes
+     the compiler to modify the structured exception table entry it
+     emits for the declared function.  The string or identifier
+     EXCEPT-FUNC is placed in the third entry of the structured
+     exception table.  It represents a function, which is called by the
+     exception handling mechanism if an exception occurs.  If it was
+     specified, the string or identifier EXCEPT-ARG is placed in the
+     fourth entry of the structured exception table.
+
+`function_vector'
+     Use this attribute on the H8/300 and H8/300H to indicate that the
+     specified function should be called through the function vector.
+     Calling a function through the function vector will reduce code
+     size, however; the function vector has a limited size (maximum 128
+     entries on the H8/300 and 64 entries on the H8/300H) and shares
+     space with the interrupt vector.
+
+     You must use GAS and GLD from GNU binutils version 2.7 or later for
+     this attribute to work correctly.
+
+`interrupt'
+     Use this attribute on the ARM, AVR, M32R/D and Xstormy16 ports to
+     indicate that the specified function is an interrupt handler.  The
+     compiler will generate function entry and exit sequences suitable
+     for use in an interrupt handler when this attribute is present.
+
+     Note, interrupt handlers for the H8/300, H8/300H and SH processors
+     can be specified via the `interrupt_handler' attribute.
+
+     Note, on the AVR interrupts will be enabled inside the function.
+
+     Note, for the ARM you can specify the kind of interrupt to be
+     handled by adding an optional parameter to the interrupt attribute
+     like this:
+
+          void f () __attribute__ ((interrupt ("IRQ")));
+
+     Permissible values for this parameter are: IRQ, FIQ, SWI, ABORT
+     and UNDEF.
+
+`interrupt_handler'
+     Use this attribute on the H8/300, H8/300H and SH to indicate that
+     the specified function is an interrupt handler.  The compiler will
+     generate function entry and exit sequences suitable for use in an
+     interrupt handler when this attribute is present.
+
+`sp_switch'
+     Use this attribute on the SH to indicate an `interrupt_handler'
+     function should switch to an alternate stack.  It expects a string
+     argument that names a global variable holding the address of the
+     alternate stack.
+
+          void *alt_stack;
+          void f () __attribute__ ((interrupt_handler,
+                                    sp_switch ("alt_stack")));
+
+`trap_exit'
+     Use this attribute on the SH for an `interrupt_handle' to return
+     using `trapa' instead of `rte'.  This attribute expects an integer
+     argument specifying the trap number to be used.
+
+`eightbit_data'
+     Use this attribute on the H8/300 and H8/300H to indicate that the
+     specified variable should be placed into the eight bit data
+     section.  The compiler will generate more efficient code for
+     certain operations on data in the eight bit data area.  Note the
+     eight bit data area is limited to 256 bytes of data.
+
+     You must use GAS and GLD from GNU binutils version 2.7 or later for
+     this attribute to work correctly.
+
+`tiny_data'
+     Use this attribute on the H8/300H to indicate that the specified
+     variable should be placed into the tiny data section.  The
+     compiler will generate more efficient code for loads and stores on
+     data in the tiny data section.  Note the tiny data area is limited
+     to slightly under 32kbytes of data.
+
+`signal'
+     Use this attribute on the AVR to indicate that the specified
+     function is an signal handler.  The compiler will generate function
+     entry and exit sequences suitable for use in an signal handler
+     when this attribute is present.  Interrupts will be disabled
+     inside function.
+
+`naked'
+     Use this attribute on the ARM or AVR ports to indicate that the
+     specified function do not need prologue/epilogue sequences
+     generated by the compiler.  It is up to the programmer to provide
+     these sequences.
+
+`model (MODEL-NAME)'
+     Use this attribute on the M32R/D to set the addressability of an
+     object, and the code generated for a function.  The identifier
+     MODEL-NAME is one of `small', `medium', or `large', representing
+     each of the code models.
+
+     Small model objects live in the lower 16MB of memory (so that their
+     addresses can be loaded with the `ld24' instruction), and are
+     callable with the `bl' instruction.
+
+     Medium model objects may live anywhere in the 32-bit address space
+     (the compiler will generate `seth/add3' instructions to load their
+     addresses), and are callable with the `bl' instruction.
+
+     Large model objects may live anywhere in the 32-bit address space
+     (the compiler will generate `seth/add3' instructions to load their
+     addresses), and may not be reachable with the `bl' instruction
+     (the compiler will generate the much slower `seth/add3/jl'
+     instruction sequence).
+
+   You can specify multiple attributes in a declaration by separating
+them by commas within the double parentheses or by immediately
+following an attribute declaration with another attribute declaration.
+
+   Some people object to the `__attribute__' feature, suggesting that
+ISO C's `#pragma' should be used instead.  At the time `__attribute__'
+was designed, there were two reasons for not doing this.
+
+  1. It is impossible to generate `#pragma' commands from a macro.
+
+  2. There is no telling what the same `#pragma' might mean in another
+     compiler.
+
+   These two reasons applied to almost any application that might have
+been proposed for `#pragma'.  It was basically a mistake to use
+`#pragma' for _anything_.
+
+   The ISO C99 standard includes `_Pragma', which now allows pragmas to
+be generated from macros.  In addition, a `#pragma GCC' namespace is
+now in use for GCC-specific pragmas.  However, it has been found
+convenient to use `__attribute__' to achieve a natural attachment of
+attributes to their corresponding declarations, whereas `#pragma GCC'
+is of use for constructs that do not naturally form part of the
+grammar.  *Note Miscellaneous Preprocessing Directives: (cpp)Other
+Directives.
+
+
+File: gcc.info,  Node: Attribute Syntax,  Next: Function Prototypes,  Prev: Function Attributes,  Up: C Extensions
+
+Attribute Syntax
+================
+
+   This section describes the syntax with which `__attribute__' may be
+used, and the constructs to which attribute specifiers bind, for the C
+language.  Some details may vary for C++ and Objective-C.  Because of
+infelicities in the grammar for attributes, some forms described here
+may not be successfully parsed in all cases.
+
+   There are some problems with the semantics of attributes in C++.  For
+example, there are no manglings for attributes, although they may affect
+code generation, so problems may arise when attributed types are used in
+conjunction with templates or overloading.  Similarly, `typeid' does
+not distinguish between types with different attributes.  Support for
+attributes in C++ may be restricted in future to attributes on
+declarations only, but not on nested declarators.
+
+   *Note Function Attributes::, for details of the semantics of
+attributes applying to functions.  *Note Variable Attributes::, for
+details of the semantics of attributes applying to variables.  *Note
+Type Attributes::, for details of the semantics of attributes applying
+to structure, union and enumerated types.
+
+   An "attribute specifier" is of the form `__attribute__
+((ATTRIBUTE-LIST))'.  An "attribute list" is a possibly empty
+comma-separated sequence of "attributes", where each attribute is one
+of the following:
+
+   * Empty.  Empty attributes are ignored.
+
+   * A word (which may be an identifier such as `unused', or a reserved
+     word such as `const').
+
+   * A word, followed by, in parentheses, parameters for the attribute.
+     These parameters take one of the following forms:
+
+        * An identifier.  For example, `mode' attributes use this form.
+
+        * An identifier followed by a comma and a non-empty
+          comma-separated list of expressions.  For example, `format'
+          attributes use this form.
+
+        * A possibly empty comma-separated list of expressions.  For
+          example, `format_arg' attributes use this form with the list
+          being a single integer constant expression, and `alias'
+          attributes use this form with the list being a single string
+          constant.
+
+   An "attribute specifier list" is a sequence of one or more attribute
+specifiers, not separated by any other tokens.
+
+   An attribute specifier list may appear after the colon following a
+label, other than a `case' or `default' label.  The only attribute it
+makes sense to use after a label is `unused'.  This feature is intended
+for code generated by programs which contains labels that may be unused
+but which is compiled with `-Wall'.  It would not normally be
+appropriate to use in it human-written code, though it could be useful
+in cases where the code that jumps to the label is contained within an
+`#ifdef' conditional.
+
+   An attribute specifier list may appear as part of a `struct',
+`union' or `enum' specifier.  It may go either immediately after the
+`struct', `union' or `enum' keyword, or after the closing brace.  It is
+ignored if the content of the structure, union or enumerated type is
+not defined in the specifier in which the attribute specifier list is
+used--that is, in usages such as `struct __attribute__((foo)) bar' with
+no following opening brace.  Where attribute specifiers follow the
+closing brace, they are considered to relate to the structure, union or
+enumerated type defined, not to any enclosing declaration the type
+specifier appears in, and the type defined is not complete until after
+the attribute specifiers.
+
+   Otherwise, an attribute specifier appears as part of a declaration,
+counting declarations of unnamed parameters and type names, and relates
+to that declaration (which may be nested in another declaration, for
+example in the case of a parameter declaration), or to a particular
+declarator within a declaration.  Where an attribute specifier is
+applied to a parameter declared as a function or an array, it should
+apply to the function or array rather than the pointer to which the
+parameter is implicitly converted, but this is not yet correctly
+implemented.
+
+   Any list of specifiers and qualifiers at the start of a declaration
+may contain attribute specifiers, whether or not such a list may in that
+context contain storage class specifiers.  (Some attributes, however,
+are essentially in the nature of storage class specifiers, and only make
+sense where storage class specifiers may be used; for example,
+`section'.)  There is one necessary limitation to this syntax: the
+first old-style parameter declaration in a function definition cannot
+begin with an attribute specifier, because such an attribute applies to
+the function instead by syntax described below (which, however, is not
+yet implemented in this case).  In some other cases, attribute
+specifiers are permitted by this grammar but not yet supported by the
+compiler.  All attribute specifiers in this place relate to the
+declaration as a whole.  In the obsolescent usage where a type of `int'
+is implied by the absence of type specifiers, such a list of specifiers
+and qualifiers may be an attribute specifier list with no other
+specifiers or qualifiers.
+
+   An attribute specifier list may appear immediately before a
+declarator (other than the first) in a comma-separated list of
+declarators in a declaration of more than one identifier using a single
+list of specifiers and qualifiers.  Such attribute specifiers apply
+only to the identifier before whose declarator they appear.  For
+example, in
+
+     __attribute__((noreturn)) void d0 (void),
+         __attribute__((format(printf, 1, 2))) d1 (const char *, ...),
+          d2 (void)
+
+the `noreturn' attribute applies to all the functions declared; the
+`format' attribute only applies to `d1'.
+
+   An attribute specifier list may appear immediately before the comma,
+`=' or semicolon terminating the declaration of an identifier other
+than a function definition.  At present, such attribute specifiers apply
+to the declared object or function, but in future they may attach to the
+outermost adjacent declarator.  In simple cases there is no difference,
+but, for example, in
+
+     void (****f)(void) __attribute__((noreturn));
+
+at present the `noreturn' attribute applies to `f', which causes a
+warning since `f' is not a function, but in future it may apply to the
+function `****f'.  The precise semantics of what attributes in such
+cases will apply to are not yet specified.  Where an assembler name for
+an object or function is specified (*note Asm Labels::), at present the
+attribute must follow the `asm' specification; in future, attributes
+before the `asm' specification may apply to the adjacent declarator,
+and those after it to the declared object or function.
+
+   An attribute specifier list may, in future, be permitted to appear
+after the declarator in a function definition (before any old-style
+parameter declarations or the function body).
+
+   Attribute specifiers may be mixed with type qualifiers appearing
+inside the `[]' of a parameter array declarator, in the C99 construct by
+which such qualifiers are applied to the pointer to which the array is
+implicitly converted.  Such attribute specifiers apply to the pointer,
+not to the array, but at present this is not implemented and they are
+ignored.
+
+   An attribute specifier list may appear at the start of a nested
+declarator.  At present, there are some limitations in this usage: the
+attributes correctly apply to the declarator, but for most individual
+attributes the semantics this implies are not implemented.  When
+attribute specifiers follow the `*' of a pointer declarator, they may
+be mixed with any type qualifiers present.  The following describes the
+formal semantics of this syntax.  It will make the most sense if you
+are familiar with the formal specification of declarators in the ISO C
+standard.
+
+   Consider (as in C99 subclause 6.7.5 paragraph 4) a declaration `T
+D1', where `T' contains declaration specifiers that specify a type TYPE
+(such as `int') and `D1' is a declarator that contains an identifier
+IDENT.  The type specified for IDENT for derived declarators whose type
+does not include an attribute specifier is as in the ISO C standard.
+
+   If `D1' has the form `( ATTRIBUTE-SPECIFIER-LIST D )', and the
+declaration `T D' specifies the type "DERIVED-DECLARATOR-TYPE-LIST
+TYPE" for IDENT, then `T D1' specifies the type
+"DERIVED-DECLARATOR-TYPE-LIST ATTRIBUTE-SPECIFIER-LIST TYPE" for IDENT.
+
+   If `D1' has the form `* TYPE-QUALIFIER-AND-ATTRIBUTE-SPECIFIER-LIST
+D', and the declaration `T D' specifies the type
+"DERIVED-DECLARATOR-TYPE-LIST TYPE" for IDENT, then `T D1' specifies
+the type "DERIVED-DECLARATOR-TYPE-LIST
+TYPE-QUALIFIER-AND-ATTRIBUTE-SPECIFIER-LIST TYPE" for IDENT.
+
+   For example,
+
+     void (__attribute__((noreturn)) ****f) (void);
+
+specifies the type "pointer to pointer to pointer to pointer to
+non-returning function returning `void'".  As another example,
+
+     char *__attribute__((aligned(8))) *f;
+
+specifies the type "pointer to 8-byte-aligned pointer to `char'".  Note
+again that this does not work with most attributes; for example, the
+usage of `aligned' and `noreturn' attributes given above is not yet
+supported.
+
+   For compatibility with existing code written for compiler versions
+that did not implement attributes on nested declarators, some laxity is
+allowed in the placing of attributes.  If an attribute that only applies
+to types is applied to a declaration, it will be treated as applying to
+the type of that declaration.  If an attribute that only applies to
+declarations is applied to the type of a declaration, it will be treated
+as applying to that declaration; and, for compatibility with code
+placing the attributes immediately before the identifier declared, such
+an attribute applied to a function return type will be treated as
+applying to the function type, and such an attribute applied to an array
+element type will be treated as applying to the array type.  If an
+attribute that only applies to function types is applied to a
+pointer-to-function type, it will be treated as applying to the pointer
+target type; if such an attribute is applied to a function return type
+that is not a pointer-to-function type, it will be treated as applying
+to the function type.
+
+
+File: gcc.info,  Node: Function Prototypes,  Next: C++ Comments,  Prev: Attribute Syntax,  Up: C Extensions
+
+Prototypes and Old-Style Function Definitions
+=============================================
+
+   GNU C extends ISO C to allow a function prototype to override a later
+old-style non-prototype definition.  Consider the following example:
+
+     /* Use prototypes unless the compiler is old-fashioned.  */
+     #ifdef __STDC__
+     #define P(x) x
+     #else
+     #define P(x) ()
+     #endif
+     
+     /* Prototype function declaration.  */
+     int isroot P((uid_t));
+     
+     /* Old-style function definition.  */
+     int
+     isroot (x)   /* ??? lossage here ??? */
+          uid_t x;
+     {
+       return x == 0;
+     }
+
+   Suppose the type `uid_t' happens to be `short'.  ISO C does not
+allow this example, because subword arguments in old-style
+non-prototype definitions are promoted.  Therefore in this example the
+function definition's argument is really an `int', which does not match
+the prototype argument type of `short'.
+
+   This restriction of ISO C makes it hard to write code that is
+portable to traditional C compilers, because the programmer does not
+know whether the `uid_t' type is `short', `int', or `long'.  Therefore,
+in cases like these GNU C allows a prototype to override a later
+old-style definition.  More precisely, in GNU C, a function prototype
+argument type overrides the argument type specified by a later
+old-style definition if the former type is the same as the latter type
+before promotion.  Thus in GNU C the above example is equivalent to the
+following:
+
+     int isroot (uid_t);
+     
+     int
+     isroot (uid_t x)
+     {
+       return x == 0;
+     }
+
+GNU C++ does not support old-style function definitions, so this
+extension is irrelevant.
+
+
+File: gcc.info,  Node: C++ Comments,  Next: Dollar Signs,  Prev: Function Prototypes,  Up: C Extensions
+
+C++ Style Comments
+==================
+
+   In GNU C, you may use C++ style comments, which start with `//' and
+continue until the end of the line.  Many other C implementations allow
+such comments, and they are likely to be in a future C standard.
+However, C++ style comments are not recognized if you specify `-ansi',
+a `-std' option specifying a version of ISO C before C99, or
+`-traditional', since they are incompatible with traditional constructs
+like `dividend//*comment*/divisor'.
+
+
+File: gcc.info,  Node: Dollar Signs,  Next: Character Escapes,  Prev: C++ Comments,  Up: C Extensions
+
+Dollar Signs in Identifier Names
+================================
+
+   In GNU C, you may normally use dollar signs in identifier names.
+This is because many traditional C implementations allow such
+identifiers.  However, dollar signs in identifiers are not supported on
+a few target machines, typically because the target assembler does not
+allow them.
+
+
+File: gcc.info,  Node: Character Escapes,  Next: Variable Attributes,  Prev: Dollar Signs,  Up: C Extensions
+
+The Character <ESC> in Constants
+================================
+
+   You can use the sequence `\e' in a string or character constant to
+stand for the ASCII character <ESC>.
+
+
+File: gcc.info,  Node: Alignment,  Next: Inline,  Prev: Type Attributes,  Up: C Extensions
+
+Inquiring on Alignment of Types or Variables
+============================================
+
+   The keyword `__alignof__' allows you to inquire about how an object
+is aligned, or the minimum alignment usually required by a type.  Its
+syntax is just like `sizeof'.
+
+   For example, if the target machine requires a `double' value to be
+aligned on an 8-byte boundary, then `__alignof__ (double)' is 8.  This
+is true on many RISC machines.  On more traditional machine designs,
+`__alignof__ (double)' is 4 or even 2.
+
+   Some machines never actually require alignment; they allow reference
+to any data type even at an odd addresses.  For these machines,
+`__alignof__' reports the _recommended_ alignment of a type.
+
+   If the operand of `__alignof__' is an lvalue rather than a type, its
+value is the required alignment for its type, taking into account any
+minimum alignment specified with GCC's `__attribute__' extension (*note
+Variable Attributes::).  For example, after this declaration:
+
+     struct foo { int x; char y; } foo1;
+
+the value of `__alignof__ (foo1.y)' is 1, even though its actual
+alignment is probably 2 or 4, the same as `__alignof__ (int)'.
+
+   It is an error to ask for the alignment of an incomplete type.
+
+
 File: gcc.info,  Node: Variable Attributes,  Next: Type Attributes,  Prev: Character Escapes,  Up: C Extensions
 
 Specifying Attributes of Variables
@@ -43,14 +846,14 @@ Specifying Attributes of Variables
 
    The keyword `__attribute__' allows you to specify special attributes
 of variables or structure fields.  This keyword is followed by an
-attribute specification inside double parentheses.  Eight attributes
-are currently defined for variables: `aligned', `mode', `nocommon',
-`packed', `section', `transparent_union', `unused', and `weak'.  Some
-other attributes are defined for variables on particular target
-systems.  Other attributes are available for functions (*note Function
-Attributes::) and for types (*note Type Attributes::).  Other front
-ends might define more attributes (*note Extensions to the C++
-Language: C++ Extensions.).
+attribute specification inside double parentheses.  Ten attributes are
+currently defined for variables: `aligned', `mode', `nocommon',
+`packed', `section', `transparent_union', `unused', `deprecated',
+`vector_size', and `weak'.  Some other attributes are defined for
+variables on particular target systems.  Other attributes are available
+for functions (*note Function Attributes::) and for types (*note Type
+Attributes::).  Other front ends might define more attributes (*note
+Extensions to the C++ Language: C++ Extensions.).
 
    You may also specify attributes with `__' preceding and following
 each keyword.  This allows you to use them in header files without
@@ -79,11 +882,6 @@ attributes.
 
      This is an alternative to creating a union with a `double' member
      that forces the union to be double-word aligned.
-
-     It is not possible to specify the alignment of functions; the
-     alignment of functions is determined by the machine's requirements
-     and cannot be changed.  You cannot specify alignment for a typedef
-     name because such a name is just an alias, not a distinct type.
 
      As in the preceding examples, you can explicitly specify the
      alignment (in bytes) that you wish the compiler to use for a given
@@ -235,6 +1033,48 @@ attributes.
      meant to be possibly unused.  GCC will not produce a warning for
      this variable.
 
+`deprecated'
+     The `deprecated' attribute results in a warning if the variable is
+     used anywhere in the source file.  This is useful when identifying
+     variables that are expected to be removed in a future version of a
+     program.  The warning also includes the location of the declaration
+     of the deprecated variable, to enable users to easily find further
+     information about why the variable is deprecated, or what they
+     should do instead.  Note that the warnings only occurs for uses:
+
+          extern int old_var __attribute__ ((deprecated));
+          extern int old_var;
+          int new_fn () { return old_var; }
+
+     results in a warning on line 3 but not line 2.
+
+     The `deprecated' attribute can also be used for functions and
+     types (*note Function Attributes::, *note Type Attributes::.)
+
+`vector_size (BYTES)'
+     This attribute specifies the vector size for the variable,
+     measured in bytes.  For example, the declaration:
+
+          int foo __attribute__ ((vector_size (16)));
+
+     causes the compiler to set the mode for `foo', to be 16 bytes,
+     divided into `int' sized units.  Assuming a 32-bit int (a vector of
+     4 units of 4 bytes), the corresponding mode of `foo' will be V4SI.
+
+     This attribute is only applicable to integral and float scalars,
+     although arrays, pointers, and function return values are allowed
+     in conjunction with this construct.
+
+     Aggregates with this attribute are invalid, even if they are of
+     the same size as a corresponding scalar.  For example, the
+     declaration:
+
+          struct S { int a; };
+          struct S  __attribute__ ((vector_size (16))) foo;
+
+     is invalid even if the size of the structure is the same as the
+     size of the `int'.
+
 `weak'
      The `weak' attribute is described in *Note Function Attributes::.
 
@@ -253,828 +1093,4 @@ attributes.
    To specify multiple attributes, separate them by commas within the
 double parentheses: for example, `__attribute__ ((aligned (16),
 packed))'.
-
-
-File: gcc.info,  Node: Type Attributes,  Next: Alignment,  Prev: Variable Attributes,  Up: C Extensions
-
-Specifying Attributes of Types
-==============================
-
-   The keyword `__attribute__' allows you to specify special attributes
-of `struct' and `union' types when you define such types.  This keyword
-is followed by an attribute specification inside double parentheses.
-Four attributes are currently defined for types: `aligned', `packed',
-`transparent_union', and `unused'.  Other attributes are defined for
-functions (*note Function Attributes::) and for variables (*note
-Variable Attributes::).
-
-   You may also specify any one of these attributes with `__' preceding
-and following its keyword.  This allows you to use these attributes in
-header files without being concerned about a possible macro of the same
-name.  For example, you may use `__aligned__' instead of `aligned'.
-
-   You may specify the `aligned' and `transparent_union' attributes
-either in a `typedef' declaration or just past the closing curly brace
-of a complete enum, struct or union type _definition_ and the `packed'
-attribute only past the closing brace of a definition.
-
-   You may also specify attributes between the enum, struct or union
-tag and the name of the type rather than after the closing brace.
-
-   *Note Attribute Syntax::, for details of the exact syntax for using
-attributes.
-
-`aligned (ALIGNMENT)'
-     This attribute specifies a minimum alignment (in bytes) for
-     variables of the specified type.  For example, the declarations:
-
-          struct S { short f[3]; } __attribute__ ((aligned (8)));
-          typedef int more_aligned_int __attribute__ ((aligned (8)));
-
-     force the compiler to insure (as far as it can) that each variable
-     whose type is `struct S' or `more_aligned_int' will be allocated
-     and aligned _at least_ on a 8-byte boundary.  On a Sparc, having
-     all variables of type `struct S' aligned to 8-byte boundaries
-     allows the compiler to use the `ldd' and `std' (doubleword load and
-     store) instructions when copying one variable of type `struct S' to
-     another, thus improving run-time efficiency.
-
-     Note that the alignment of any given `struct' or `union' type is
-     required by the ISO C standard to be at least a perfect multiple of
-     the lowest common multiple of the alignments of all of the members
-     of the `struct' or `union' in question.  This means that you _can_
-     effectively adjust the alignment of a `struct' or `union' type by
-     attaching an `aligned' attribute to any one of the members of such
-     a type, but the notation illustrated in the example above is a
-     more obvious, intuitive, and readable way to request the compiler
-     to adjust the alignment of an entire `struct' or `union' type.
-
-     As in the preceding example, you can explicitly specify the
-     alignment (in bytes) that you wish the compiler to use for a given
-     `struct' or `union' type.  Alternatively, you can leave out the
-     alignment factor and just ask the compiler to align a type to the
-     maximum useful alignment for the target machine you are compiling
-     for.  For example, you could write:
-
-          struct S { short f[3]; } __attribute__ ((aligned));
-
-     Whenever you leave out the alignment factor in an `aligned'
-     attribute specification, the compiler automatically sets the
-     alignment for the type to the largest alignment which is ever used
-     for any data type on the target machine you are compiling for.
-     Doing this can often make copy operations more efficient, because
-     the compiler can use whatever instructions copy the biggest chunks
-     of memory when performing copies to or from the variables which
-     have types that you have aligned this way.
-
-     In the example above, if the size of each `short' is 2 bytes, then
-     the size of the entire `struct S' type is 6 bytes.  The smallest
-     power of two which is greater than or equal to that is 8, so the
-     compiler sets the alignment for the entire `struct S' type to 8
-     bytes.
-
-     Note that although you can ask the compiler to select a
-     time-efficient alignment for a given type and then declare only
-     individual stand-alone objects of that type, the compiler's
-     ability to select a time-efficient alignment is primarily useful
-     only when you plan to create arrays of variables having the
-     relevant (efficiently aligned) type.  If you declare or use arrays
-     of variables of an efficiently-aligned type, then it is likely
-     that your program will also be doing pointer arithmetic (or
-     subscripting, which amounts to the same thing) on pointers to the
-     relevant type, and the code that the compiler generates for these
-     pointer arithmetic operations will often be more efficient for
-     efficiently-aligned types than for other types.
-
-     The `aligned' attribute can only increase the alignment; but you
-     can decrease it by specifying `packed' as well.  See below.
-
-     Note that the effectiveness of `aligned' attributes may be limited
-     by inherent limitations in your linker.  On many systems, the
-     linker is only able to arrange for variables to be aligned up to a
-     certain maximum alignment.  (For some linkers, the maximum
-     supported alignment may be very very small.)  If your linker is
-     only able to align variables up to a maximum of 8 byte alignment,
-     then specifying `aligned(16)' in an `__attribute__' will still
-     only provide you with 8 byte alignment.  See your linker
-     documentation for further information.
-
-`packed'
-     This attribute, attached to an `enum', `struct', or `union' type
-     definition, specified that the minimum required memory be used to
-     represent the type.
-
-     Specifying this attribute for `struct' and `union' types is
-     equivalent to specifying the `packed' attribute on each of the
-     structure or union members.  Specifying the `-fshort-enums' flag
-     on the line is equivalent to specifying the `packed' attribute on
-     all `enum' definitions.
-
-     You may only specify this attribute after a closing curly brace on
-     an `enum' definition, not in a `typedef' declaration, unless that
-     declaration also contains the definition of the `enum'.
-
-`transparent_union'
-     This attribute, attached to a `union' type definition, indicates
-     that any function parameter having that union type causes calls to
-     that function to be treated in a special way.
-
-     First, the argument corresponding to a transparent union type can
-     be of any type in the union; no cast is required.  Also, if the
-     union contains a pointer type, the corresponding argument can be a
-     null pointer constant or a void pointer expression; and if the
-     union contains a void pointer type, the corresponding argument can
-     be any pointer expression.  If the union member type is a pointer,
-     qualifiers like `const' on the referenced type must be respected,
-     just as with normal pointer conversions.
-
-     Second, the argument is passed to the function using the calling
-     conventions of first member of the transparent union, not the
-     calling conventions of the union itself.  All members of the union
-     must have the same machine representation; this is necessary for
-     this argument passing to work properly.
-
-     Transparent unions are designed for library functions that have
-     multiple interfaces for compatibility reasons.  For example,
-     suppose the `wait' function must accept either a value of type
-     `int *' to comply with Posix, or a value of type `union wait *' to
-     comply with the 4.1BSD interface.  If `wait''s parameter were
-     `void *', `wait' would accept both kinds of arguments, but it
-     would also accept any other pointer type and this would make
-     argument type checking less useful.  Instead, `<sys/wait.h>' might
-     define the interface as follows:
-
-          typedef union
-            {
-              int *__ip;
-              union wait *__up;
-            } wait_status_ptr_t __attribute__ ((__transparent_union__));
-          
-          pid_t wait (wait_status_ptr_t);
-
-     This interface allows either `int *' or `union wait *' arguments
-     to be passed, using the `int *' calling convention.  The program
-     can call `wait' with arguments of either type:
-
-          int w1 () { int w; return wait (&w); }
-          int w2 () { union wait w; return wait (&w); }
-
-     With this interface, `wait''s implementation might look like this:
-
-          pid_t wait (wait_status_ptr_t p)
-          {
-            return waitpid (-1, p.__ip, 0);
-          }
-
-`unused'
-     When attached to a type (including a `union' or a `struct'), this
-     attribute means that variables of that type are meant to appear
-     possibly unused.  GCC will not produce a warning for any variables
-     of that type, even if the variable appears to do nothing.  This is
-     often the case with lock or thread classes, which are usually
-     defined and then not referenced, but contain constructors and
-     destructors that have nontrivial bookkeeping functions.
-
-   To specify multiple attributes, separate them by commas within the
-double parentheses: for example, `__attribute__ ((aligned (16),
-packed))'.
-
-
-File: gcc.info,  Node: Inline,  Next: Extended Asm,  Prev: Alignment,  Up: C Extensions
-
-An Inline Function is As Fast As a Macro
-========================================
-
-   By declaring a function `inline', you can direct GCC to integrate
-that function's code into the code for its callers.  This makes
-execution faster by eliminating the function-call overhead; in
-addition, if any of the actual argument values are constant, their known
-values may permit simplifications at compile time so that not all of the
-inline function's code needs to be included.  The effect on code size is
-less predictable; object code may be larger or smaller with function
-inlining, depending on the particular case.  Inlining of functions is an
-optimization and it really "works" only in optimizing compilation.  If
-you don't use `-O', no function is really inline.
-
-   Inline functions are included in the ISO C99 standard, but there are
-currently substantial differences between what GCC implements and what
-the ISO C99 standard requires.
-
-   To declare a function inline, use the `inline' keyword in its
-declaration, like this:
-
-     inline int
-     inc (int *a)
-     {
-       (*a)++;
-     }
-
-   (If you are writing a header file to be included in ISO C programs,
-write `__inline__' instead of `inline'.  *Note Alternate Keywords::.)
-You can also make all "simple enough" functions inline with the option
-`-finline-functions'.
-
-   Note that certain usages in a function definition can make it
-unsuitable for inline substitution.  Among these usages are: use of
-varargs, use of alloca, use of variable sized data types (*note
-Variable Length::), use of computed goto (*note Labels as Values::),
-use of nonlocal goto, and nested functions (*note Nested Functions::).
-Using `-Winline' will warn when a function marked `inline' could not be
-substituted, and will give the reason for the failure.
-
-   Note that in C and Objective C, unlike C++, the `inline' keyword
-does not affect the linkage of the function.
-
-   GCC automatically inlines member functions defined within the class
-body of C++ programs even if they are not explicitly declared `inline'.
-(You can override this with `-fno-default-inline'; *note Options
-Controlling C++ Dialect: C++ Dialect Options..)
-
-   When a function is both inline and `static', if all calls to the
-function are integrated into the caller, and the function's address is
-never used, then the function's own assembler code is never referenced.
-In this case, GCC does not actually output assembler code for the
-function, unless you specify the option `-fkeep-inline-functions'.
-Some calls cannot be integrated for various reasons (in particular,
-calls that precede the function's definition cannot be integrated, and
-neither can recursive calls within the definition).  If there is a
-nonintegrated call, then the function is compiled to assembler code as
-usual.  The function must also be compiled as usual if the program
-refers to its address, because that can't be inlined.
-
-   When an inline function is not `static', then the compiler must
-assume that there may be calls from other source files; since a global
-symbol can be defined only once in any program, the function must not
-be defined in the other source files, so the calls therein cannot be
-integrated.  Therefore, a non-`static' inline function is always
-compiled on its own in the usual fashion.
-
-   If you specify both `inline' and `extern' in the function
-definition, then the definition is used only for inlining.  In no case
-is the function compiled on its own, not even if you refer to its
-address explicitly.  Such an address becomes an external reference, as
-if you had only declared the function, and had not defined it.
-
-   This combination of `inline' and `extern' has almost the effect of a
-macro.  The way to use it is to put a function definition in a header
-file with these keywords, and put another copy of the definition
-(lacking `inline' and `extern') in a library file.  The definition in
-the header file will cause most calls to the function to be inlined.
-If any uses of the function remain, they will refer to the single copy
-in the library.
-
-   For future compatibility with when GCC implements ISO C99 semantics
-for inline functions, it is best to use `static inline' only.  (The
-existing semantics will remain available when `-std=gnu89' is
-specified, but eventually the default will be `-std=gnu99' and that
-will implement the C99 semantics, though it does not do so yet.)
-
-   GCC does not inline any functions when not optimizing.  It is not
-clear whether it is better to inline or not, in this case, but we found
-that a correct implementation when not optimizing was difficult.  So we
-did the easy thing, and turned it off.
-
-
-File: gcc.info,  Node: Extended Asm,  Next: Asm Labels,  Prev: Inline,  Up: C Extensions
-
-Assembler Instructions with C Expression Operands
-=================================================
-
-   In an assembler instruction using `asm', you can specify the
-operands of the instruction using C expressions.  This means you need
-not guess which registers or memory locations will contain the data you
-want to use.
-
-   You must specify an assembler instruction template much like what
-appears in a machine description, plus an operand constraint string for
-each operand.
-
-   For example, here is how to use the 68881's `fsinx' instruction:
-
-     asm ("fsinx %1,%0" : "=f" (result) : "f" (angle));
-
-Here `angle' is the C expression for the input operand while `result'
-is that of the output operand.  Each has `"f"' as its operand
-constraint, saying that a floating point register is required.  The `='
-in `=f' indicates that the operand is an output; all output operands'
-constraints must use `='.  The constraints use the same language used
-in the machine description (*note Constraints::).
-
-   Each operand is described by an operand-constraint string followed by
-the C expression in parentheses.  A colon separates the assembler
-template from the first output operand and another separates the last
-output operand from the first input, if any.  Commas separate the
-operands within each group.  The total number of operands is limited to
-ten or to the maximum number of operands in any instruction pattern in
-the machine description, whichever is greater.
-
-   If there are no output operands but there are input operands, you
-must place two consecutive colons surrounding the place where the output
-operands would go.
-
-   Output operand expressions must be lvalues; the compiler can check
-this.  The input operands need not be lvalues.  The compiler cannot
-check whether the operands have data types that are reasonable for the
-instruction being executed.  It does not parse the assembler instruction
-template and does not know what it means or even whether it is valid
-assembler input.  The extended `asm' feature is most often used for
-machine instructions the compiler itself does not know exist.  If the
-output expression cannot be directly addressed (for example, it is a
-bit-field), your constraint must allow a register.  In that case, GCC
-will use the register as the output of the `asm', and then store that
-register into the output.
-
-   The ordinary output operands must be write-only; GCC will assume that
-the values in these operands before the instruction are dead and need
-not be generated.  Extended asm supports input-output or read-write
-operands.  Use the constraint character `+' to indicate such an operand
-and list it with the output operands.
-
-   When the constraints for the read-write operand (or the operand in
-which only some of the bits are to be changed) allows a register, you
-may, as an alternative, logically split its function into two separate
-operands, one input operand and one write-only output operand.  The
-connection between them is expressed by constraints which say they need
-to be in the same location when the instruction executes.  You can use
-the same C expression for both operands, or different expressions.  For
-example, here we write the (fictitious) `combine' instruction with
-`bar' as its read-only source operand and `foo' as its read-write
-destination:
-
-     asm ("combine %2,%0" : "=r" (foo) : "0" (foo), "g" (bar));
-
-The constraint `"0"' for operand 1 says that it must occupy the same
-location as operand 0.  A digit in constraint is allowed only in an
-input operand and it must refer to an output operand.
-
-   Only a digit in the constraint can guarantee that one operand will
-be in the same place as another.  The mere fact that `foo' is the value
-of both operands is not enough to guarantee that they will be in the
-same place in the generated assembler code.  The following would not
-work reliably:
-
-     asm ("combine %2,%0" : "=r" (foo) : "r" (foo), "g" (bar));
-
-   Various optimizations or reloading could cause operands 0 and 1 to
-be in different registers; GCC knows no reason not to do so.  For
-example, the compiler might find a copy of the value of `foo' in one
-register and use it for operand 1, but generate the output operand 0 in
-a different register (copying it afterward to `foo''s own address).  Of
-course, since the register for operand 1 is not even mentioned in the
-assembler code, the result will not work, but GCC can't tell that.
-
-   Some instructions clobber specific hard registers.  To describe this,
-write a third colon after the input operands, followed by the names of
-the clobbered hard registers (given as strings).  Here is a realistic
-example for the VAX:
-
-     asm volatile ("movc3 %0,%1,%2"
-                   : /* no outputs */
-                   : "g" (from), "g" (to), "g" (count)
-                   : "r0", "r1", "r2", "r3", "r4", "r5");
-
-   You may not write a clobber description in a way that overlaps with
-an input or output operand.  For example, you may not have an operand
-describing a register class with one member if you mention that register
-in the clobber list.  There is no way for you to specify that an input
-operand is modified without also specifying it as an output operand.
-Note that if all the output operands you specify are for this purpose
-(and hence unused), you will then also need to specify `volatile' for
-the `asm' construct, as described below, to prevent GCC from deleting
-the `asm' statement as unused.
-
-   If you refer to a particular hardware register from the assembler
-code, you will probably have to list the register after the third colon
-to tell the compiler the register's value is modified.  In some
-assemblers, the register names begin with `%'; to produce one `%' in the
-assembler code, you must write `%%' in the input.
-
-   If your assembler instruction can alter the condition code register,
-add `cc' to the list of clobbered registers.  GCC on some machines
-represents the condition codes as a specific hardware register; `cc'
-serves to name this register.  On other machines, the condition code is
-handled differently, and specifying `cc' has no effect.  But it is
-valid no matter what the machine.
-
-   If your assembler instruction modifies memory in an unpredictable
-fashion, add `memory' to the list of clobbered registers.  This will
-cause GCC to not keep memory values cached in registers across the
-assembler instruction.  You will also want to add the `volatile'
-keyword if the memory affected is not listed in the inputs or outputs
-of the `asm', as the `memory' clobber does not count as a side-effect
-of the `asm'.
-
-   You can put multiple assembler instructions together in a single
-`asm' template, separated by the characters normally used in assembly
-code for the system.  A combination that works in most places is a
-newline to break the line, plus a tab character to move to the
-instruction field (written as `\n\t').  Sometimes semicolons can be
-used, if the assembler allows semicolons as a line-breaking character.
-Note that some assembler dialects use semicolons to start a comment.
-The input operands are guaranteed not to use any of the clobbered
-registers, and neither will the output operands' addresses, so you can
-read and write the clobbered registers as many times as you like.  Here
-is an example of multiple instructions in a template; it assumes the
-subroutine `_foo' accepts arguments in registers 9 and 10:
-
-     asm ("movl %0,r9\n\tmovl %1,r10\n\tcall _foo"
-          : /* no outputs */
-          : "g" (from), "g" (to)
-          : "r9", "r10");
-
-   Unless an output operand has the `&' constraint modifier, GCC may
-allocate it in the same register as an unrelated input operand, on the
-assumption the inputs are consumed before the outputs are produced.
-This assumption may be false if the assembler code actually consists of
-more than one instruction.  In such a case, use `&' for each output
-operand that may not overlap an input.  *Note Modifiers::.
-
-   If you want to test the condition code produced by an assembler
-instruction, you must include a branch and a label in the `asm'
-construct, as follows:
-
-     asm ("clr %0\n\tfrob %1\n\tbeq 0f\n\tmov #1,%0\n0:"
-          : "g" (result)
-          : "g" (input));
-
-This assumes your assembler supports local labels, as the GNU assembler
-and most Unix assemblers do.
-
-   Speaking of labels, jumps from one `asm' to another are not
-supported.  The compiler's optimizers do not know about these jumps, and
-therefore they cannot take account of them when deciding how to
-optimize.
-
-   Usually the most convenient way to use these `asm' instructions is to
-encapsulate them in macros that look like functions.  For example,
-
-     #define sin(x)       \
-     ({ double __value, __arg = (x);   \
-        asm ("fsinx %1,%0": "=f" (__value): "f" (__arg));  \
-        __value; })
-
-Here the variable `__arg' is used to make sure that the instruction
-operates on a proper `double' value, and to accept only those arguments
-`x' which can convert automatically to a `double'.
-
-   Another way to make sure the instruction operates on the correct data
-type is to use a cast in the `asm'.  This is different from using a
-variable `__arg' in that it converts more different types.  For
-example, if the desired type were `int', casting the argument to `int'
-would accept a pointer with no complaint, while assigning the argument
-to an `int' variable named `__arg' would warn about using a pointer
-unless the caller explicitly casts it.
-
-   If an `asm' has output operands, GCC assumes for optimization
-purposes the instruction has no side effects except to change the output
-operands.  This does not mean instructions with a side effect cannot be
-used, but you must be careful, because the compiler may eliminate them
-if the output operands aren't used, or move them out of loops, or
-replace two with one if they constitute a common subexpression.  Also,
-if your instruction does have a side effect on a variable that otherwise
-appears not to change, the old value of the variable may be reused later
-if it happens to be found in a register.
-
-   You can prevent an `asm' instruction from being deleted, moved
-significantly, or combined, by writing the keyword `volatile' after the
-`asm'.  For example:
-
-     #define get_and_set_priority(new)              \
-     ({ int __old;                                  \
-        asm volatile ("get_and_set_priority %0, %1" \
-                      : "=g" (__old) : "g" (new));  \
-        __old; })
-
-If you write an `asm' instruction with no outputs, GCC will know the
-instruction has side-effects and will not delete the instruction or
-move it outside of loops.
-
-   The `volatile' keyword indicates that the instruction has important
-side-effects.  GCC will not delete a volatile `asm' if it is reachable.
-(The instruction can still be deleted if GCC can prove that
-control-flow will never reach the location of the instruction.)  In
-addition, GCC will not reschedule instructions across a volatile `asm'
-instruction.  For example:
-
-     *(volatile int *)addr = foo;
-     asm volatile ("eieio" : : );
-
-Assume `addr' contains the address of a memory mapped device register.
-The PowerPC `eieio' instruction (Enforce In-order Execution of I/O)
-tells the CPU to make sure that the store to that device register
-happens before it issues any other I/O.
-
-   Note that even a volatile `asm' instruction can be moved in ways
-that appear insignificant to the compiler, such as across jump
-instructions.  You can't expect a sequence of volatile `asm'
-instructions to remain perfectly consecutive.  If you want consecutive
-output, use a single `asm'.  Also, GCC will perform some optimizations
-across a volatile `asm' instruction; GCC does not "forget everything"
-when it encounters a volatile `asm' instruction the way some other
-compilers do.
-
-   An `asm' instruction without any operands or clobbers (an "old
-style" `asm') will be treated identically to a volatile `asm'
-instruction.
-
-   It is a natural idea to look for a way to give access to the
-condition code left by the assembler instruction.  However, when we
-attempted to implement this, we found no way to make it work reliably.
-The problem is that output operands might need reloading, which would
-result in additional following "store" instructions.  On most machines,
-these instructions would alter the condition code before there was time
-to test it.  This problem doesn't arise for ordinary "test" and
-"compare" instructions because they don't have any output operands.
-
-   For reasons similar to those described above, it is not possible to
-give an assembler instruction access to the condition code left by
-previous instructions.
-
-   If you are writing a header file that should be includable in ISO C
-programs, write `__asm__' instead of `asm'.  *Note Alternate Keywords::.
-
-i386 floating point asm operands
---------------------------------
-
-   There are several rules on the usage of stack-like regs in
-asm_operands insns.  These rules apply only to the operands that are
-stack-like regs:
-
-  1. Given a set of input regs that die in an asm_operands, it is
-     necessary to know which are implicitly popped by the asm, and
-     which must be explicitly popped by gcc.
-
-     An input reg that is implicitly popped by the asm must be
-     explicitly clobbered, unless it is constrained to match an output
-     operand.
-
-  2. For any input reg that is implicitly popped by an asm, it is
-     necessary to know how to adjust the stack to compensate for the
-     pop.  If any non-popped input is closer to the top of the
-     reg-stack than the implicitly popped reg, it would not be possible
-     to know what the stack looked like--it's not clear how the rest of
-     the stack "slides up".
-
-     All implicitly popped input regs must be closer to the top of the
-     reg-stack than any input that is not implicitly popped.
-
-     It is possible that if an input dies in an insn, reload might use
-     the input reg for an output reload.  Consider this example:
-
-          asm ("foo" : "=t" (a) : "f" (b));
-
-     This asm says that input B is not popped by the asm, and that the
-     asm pushes a result onto the reg-stack, i.e., the stack is one
-     deeper after the asm than it was before.  But, it is possible that
-     reload will think that it can use the same reg for both the input
-     and the output, if input B dies in this insn.
-
-     If any input operand uses the `f' constraint, all output reg
-     constraints must use the `&' earlyclobber.
-
-     The asm above would be written as
-
-          asm ("foo" : "=&t" (a) : "f" (b));
-
-  3. Some operands need to be in particular places on the stack.  All
-     output operands fall in this category--there is no other way to
-     know which regs the outputs appear in unless the user indicates
-     this in the constraints.
-
-     Output operands must specifically indicate which reg an output
-     appears in after an asm.  `=f' is not allowed: the operand
-     constraints must select a class with a single reg.
-
-  4. Output operands may not be "inserted" between existing stack regs.
-     Since no 387 opcode uses a read/write operand, all output operands
-     are dead before the asm_operands, and are pushed by the
-     asm_operands.  It makes no sense to push anywhere but the top of
-     the reg-stack.
-
-     Output operands must start at the top of the reg-stack: output
-     operands may not "skip" a reg.
-
-  5. Some asm statements may need extra stack space for internal
-     calculations.  This can be guaranteed by clobbering stack registers
-     unrelated to the inputs and outputs.
-
-
-   Here are a couple of reasonable asms to want to write.  This asm
-takes one input, which is internally popped, and produces two outputs.
-
-     asm ("fsincos" : "=t" (cos), "=u" (sin) : "0" (inp));
-
-   This asm takes two inputs, which are popped by the `fyl2xp1' opcode,
-and replaces them with one output.  The user must code the `st(1)'
-clobber for reg-stack.c to know that `fyl2xp1' pops both inputs.
-
-     asm ("fyl2xp1" : "=t" (result) : "0" (x), "u" (y) : "st(1)");
-
-
-File: gcc.info,  Node: Asm Labels,  Next: Explicit Reg Vars,  Prev: Extended Asm,  Up: C Extensions
-
-Controlling Names Used in Assembler Code
-========================================
-
-   You can specify the name to be used in the assembler code for a C
-function or variable by writing the `asm' (or `__asm__') keyword after
-the declarator as follows:
-
-     int foo asm ("myfoo") = 2;
-
-This specifies that the name to be used for the variable `foo' in the
-assembler code should be `myfoo' rather than the usual `_foo'.
-
-   On systems where an underscore is normally prepended to the name of
-a C function or variable, this feature allows you to define names for
-the linker that do not start with an underscore.
-
-   It does not make sense to use this feature with a non-static local
-variable since such variables do not have assembler names.  If you are
-trying to put the variable in a particular register, see *Note Explicit
-Reg Vars::.  GCC presently accepts such code with a warning, but will
-probably be changed to issue an error, rather than a warning, in the
-future.
-
-   You cannot use `asm' in this way in a function _definition_; but you
-can get the same effect by writing a declaration for the function
-before its definition and putting `asm' there, like this:
-
-     extern func () asm ("FUNC");
-     
-     func (x, y)
-          int x, y;
-     ...
-
-   It is up to you to make sure that the assembler names you choose do
-not conflict with any other assembler symbols.  Also, you must not use a
-register name; that would produce completely invalid assembler code.
-GCC does not as yet have the ability to store static variables in
-registers.  Perhaps that will be added.
-
-
-File: gcc.info,  Node: Explicit Reg Vars,  Next: Alternate Keywords,  Prev: Asm Labels,  Up: C Extensions
-
-Variables in Specified Registers
-================================
-
-   GNU C allows you to put a few global variables into specified
-hardware registers.  You can also specify the register in which an
-ordinary register variable should be allocated.
-
-   * Global register variables reserve registers throughout the program.
-     This may be useful in programs such as programming language
-     interpreters which have a couple of global variables that are
-     accessed very often.
-
-   * Local register variables in specific registers do not reserve the
-     registers.  The compiler's data flow analysis is capable of
-     determining where the specified registers contain live values, and
-     where they are available for other uses.  Stores into local
-     register variables may be deleted when they appear to be dead
-     according to dataflow analysis.  References to local register
-     variables may be deleted or moved or simplified.
-
-     These local variables are sometimes convenient for use with the
-     extended `asm' feature (*note Extended Asm::), if you want to
-     write one output of the assembler instruction directly into a
-     particular register.  (This will work provided the register you
-     specify fits the constraints specified for that operand in the
-     `asm'.)
-
-* Menu:
-
-* Global Reg Vars::
-* Local Reg Vars::
-
-
-File: gcc.info,  Node: Global Reg Vars,  Next: Local Reg Vars,  Up: Explicit Reg Vars
-
-Defining Global Register Variables
-----------------------------------
-
-   You can define a global register variable in GNU C like this:
-
-     register int *foo asm ("a5");
-
-Here `a5' is the name of the register which should be used.  Choose a
-register which is normally saved and restored by function calls on your
-machine, so that library routines will not clobber it.
-
-   Naturally the register name is cpu-dependent, so you would need to
-conditionalize your program according to cpu type.  The register `a5'
-would be a good choice on a 68000 for a variable of pointer type.  On
-machines with register windows, be sure to choose a "global" register
-that is not affected magically by the function call mechanism.
-
-   In addition, operating systems on one type of cpu may differ in how
-they name the registers; then you would need additional conditionals.
-For example, some 68000 operating systems call this register `%a5'.
-
-   Eventually there may be a way of asking the compiler to choose a
-register automatically, but first we need to figure out how it should
-choose and how to enable you to guide the choice.  No solution is
-evident.
-
-   Defining a global register variable in a certain register reserves
-that register entirely for this use, at least within the current
-compilation.  The register will not be allocated for any other purpose
-in the functions in the current compilation.  The register will not be
-saved and restored by these functions.  Stores into this register are
-never deleted even if they would appear to be dead, but references may
-be deleted or moved or simplified.
-
-   It is not safe to access the global register variables from signal
-handlers, or from more than one thread of control, because the system
-library routines may temporarily use the register for other things
-(unless you recompile them specially for the task at hand).
-
-   It is not safe for one function that uses a global register variable
-to call another such function `foo' by way of a third function `lose'
-that was compiled without knowledge of this variable (i.e. in a
-different source file in which the variable wasn't declared).  This is
-because `lose' might save the register and put some other value there.
-For example, you can't expect a global register variable to be
-available in the comparison-function that you pass to `qsort', since
-`qsort' might have put something else in that register.  (If you are
-prepared to recompile `qsort' with the same global register variable,
-you can solve this problem.)
-
-   If you want to recompile `qsort' or other source files which do not
-actually use your global register variable, so that they will not use
-that register for any other purpose, then it suffices to specify the
-compiler option `-ffixed-REG'.  You need not actually add a global
-register declaration to their source code.
-
-   A function which can alter the value of a global register variable
-cannot safely be called from a function compiled without this variable,
-because it could clobber the value the caller expects to find there on
-return.  Therefore, the function which is the entry point into the part
-of the program that uses the global register variable must explicitly
-save and restore the value which belongs to its caller.
-
-   On most machines, `longjmp' will restore to each global register
-variable the value it had at the time of the `setjmp'.  On some
-machines, however, `longjmp' will not change the value of global
-register variables.  To be portable, the function that called `setjmp'
-should make other arrangements to save the values of the global register
-variables, and to restore them in a `longjmp'.  This way, the same
-thing will happen regardless of what `longjmp' does.
-
-   All global register variable declarations must precede all function
-definitions.  If such a declaration could appear after function
-definitions, the declaration would be too late to prevent the register
-from being used for other purposes in the preceding functions.
-
-   Global register variables may not have initial values, because an
-executable file has no means to supply initial contents for a register.
-
-   On the Sparc, there are reports that g3 ... g7 are suitable
-registers, but certain library functions, such as `getwd', as well as
-the subroutines for division and remainder, modify g3 and g4.  g1 and
-g2 are local temporaries.
-
-   On the 68000, a2 ... a5 should be suitable, as should d2 ... d7.  Of
-course, it will not do to use more than a few of those.
-
-
-File: gcc.info,  Node: Local Reg Vars,  Prev: Global Reg Vars,  Up: Explicit Reg Vars
-
-Specifying Registers for Local Variables
-----------------------------------------
-
-   You can define a local register variable with a specified register
-like this:
-
-     register int *foo asm ("a5");
-
-Here `a5' is the name of the register which should be used.  Note that
-this is the same syntax used for defining global register variables,
-but for a local variable it would appear within a function.
-
-   Naturally the register name is cpu-dependent, but this is not a
-problem, since specific registers are most often useful with explicit
-assembler instructions (*note Extended Asm::).  Both of these things
-generally require that you conditionalize your program according to cpu
-type.
-
-   In addition, operating systems on one type of cpu may differ in how
-they name the registers; then you would need additional conditionals.
-For example, some 68000 operating systems call this register `%a5'.
-
-   Defining such a register variable does not reserve the register; it
-remains available for other uses in places where flow control determines
-the variable's value is not live.  However, these registers are made
-unavailable for use in the reload pass; excessive use of this feature
-leaves the compiler too few available registers to compile certain
-functions.
-
-   This option does not guarantee that GCC will generate code that has
-this variable in the register you specify at all times.  You may not
-code an explicit reference to this register in an `asm' statement and
-assume it will always refer to this variable.
-
-   Stores into local register variables may be deleted when they appear
-to be dead according to dataflow analysis.  References to local
-register variables may be deleted or moved or simplified.
 

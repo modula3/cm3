@@ -1,4 +1,4 @@
-This is doc/cpp.info, produced by makeinfo version 4.0b from
+This is doc/cpp.info, produced by makeinfo version 4.2 from
 doc/cpp.texi.
 
 INFO-DIR-SECTION Programming
@@ -29,7 +29,9 @@ useful on its own.
 * Traditional Mode::
 * Implementation Details::
 * Invocation::
+* Environment Variables::
 * GNU Free Documentation License::
+* Option Index::
 * Index of Directives::
 * Concept Index::
 
@@ -723,6 +725,12 @@ if `/usr/include/sys/stat.h' contains `#include "types.h"', GCC looks
 for `types.h' first in `/usr/include/sys', then in its usual search
 path.
 
+   If you name a search directory with `-IDIR' that is also a system
+include directory, the `-I' wins; the directory will be searched
+according to the `-I' ordering, and it will not be treated as a system
+include directory. GCC will warn you when a system include directory is
+hidden in this way.
+
    `#line' (*note Line Control::) does not change GCC's idea of the
 directory containing the current file.
 
@@ -941,7 +949,7 @@ in that directory will be considered system headers.
 directories named by `-I', no matter what their order was on the
 command line.  If the same directory is named by both `-I' and
 `-isystem', `-I' wins; it is as if the `-isystem' option had never been
-specified at all.
+specified at all. GCC warns you when this happens.
 
    There is also a directive, `#pragma GCC system_header', which tells
 GCC to consider the rest of the current include file a system header,

@@ -19,8 +19,6 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-#include "sparc/sparc.h"
-#include "aoutos.h"
 
 #undef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (sparc64-aout)")
@@ -28,11 +26,8 @@ Boston, MA 02111-1307, USA.  */
 #undef TARGET_DEFAULT
 #define TARGET_DEFAULT \
   (MASK_V9 + MASK_PTR64 + MASK_64BIT + MASK_HARD_QUAD \
-   + MASK_APP_REGS + MASK_EPILOGUE + MASK_FPU + MASK_STACK_BIAS)
+   + MASK_APP_REGS + MASK_FPU + MASK_STACK_BIAS)
 
 /* The only code model supported is Medium/Low.  */
 #undef SPARC_DEFAULT_CMODEL
 #define SPARC_DEFAULT_CMODEL CM_MEDLOW
-
-#undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Dsparc -Acpu=sparc -Amachine=sparc"

@@ -55,14 +55,12 @@ Boston, MA 02111-1307, USA.  */
   {							\
     { GPLUSPLUS_INCLUDE_DIR, "G++", 1, 1 },		\
     { GPLUSPLUS_INCLUDE_DIR, 0, 1, 1 },			\
-    { LOCAL_INCLUDE_DIR, 0, 0, 1 },			\
     { GCC_INCLUDE_DIR, "GCC", 0, 0 },			\
     { GCC_INCLUDE_DIR "/ansi", 0, 0, 0 },		\
     { GCC_INCLUDE_DIR "/bsd", 0, 0, 0 },		\
     { TOOL_INCLUDE_DIR, "BINUTILS", 0, 1 },		\
     { TOOL_INCLUDE_DIR "/ansi", 0, 0, 0 },		\
     { TOOL_INCLUDE_DIR "/bsd", 0, 0, 0 },		\
-    { STANDARD_INCLUDE_DIR, 0, 0, 0 },			\
     { "/usr/include/bsd", 0, 0, 0 },			\
     { 0, 0, 0, 0 }					\
   }
@@ -160,10 +158,10 @@ Boston, MA 02111-1307, USA.  */
 #undef	STARTFILE_SPEC
 #define STARTFILE_SPEC  \
     "%{!posix*:%{pg:-lgcrt0.o}%{!pg: \
-     %{p:%e-p profiling is no longer supported.  Use -pg instead.} \
+     %{p:%e-p profiling is no longer supported.  Use -pg instead} \
      %{!p:-lcrt0.o}}}\
      %{posix*:%{pg:-lgposixcrt0.o}%{!pg: \
-     %{p:%e-p profiling is no longer supported.  Use -pg instead.} \
+     %{p:%e-p profiling is no longer supported.  Use -pg instead} \
      %{!p:-lposixcrt0.o}}} \
      -lcrtbegin.o"
 
@@ -212,28 +210,13 @@ Boston, MA 02111-1307, USA.  */
 #define INIT_SECTION_ASM_OP
 #undef	INVOKE__main
 
-#undef	ASM_OUTPUT_CONSTRUCTOR
-#define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)                       \
-  do { constructor_section ();                                  \
-       ASM_OUTPUT_ALIGN (FILE, 1);                              \
-       fprintf (FILE, "\t.long ");                              \
-       assemble_name (FILE, NAME);                              \
-       fprintf (FILE, "\n");                                    \
-       fprintf (FILE, ".reference .constructors_used\n");       \
-      } while (0)
+#define TARGET_ASM_CONSTRUCTOR  nextstep_asm_out_constructor
+#define TARGET_ASM_DESTRUCTOR   nextstep_asm_out_destructor
 
-#undef	ASM_OUTPUT_DESTRUCTOR
-#define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)                        \
-  do { destructor_section ();                                   \
-       ASM_OUTPUT_ALIGN (FILE, 1);                              \
-       fprintf (FILE, "\t.long ");                              \
-       assemble_name (FILE, NAME);                              \
-       fprintf (FILE, "\n");                                    \
-       fprintf (FILE, ".reference .destructors_used\n");        \
-      } while (0)
+#define TARGET_ASM_EXCEPTION_SECTION nextstep_exception_section
 
-#define EH_FRAME_SECTION_ASM_OP "\t.section __TEXT,__eh_frame,regular"
-
+#define TARGET_ASM_EH_FRAME_SECTION nextstep_eh_frame_section
+  
 /* Don't output a .file directive.  That is only used by the assembler for
    error reporting.  */
 #undef	ASM_FILE_START
@@ -242,7 +225,7 @@ Boston, MA 02111-1307, USA.  */
 #undef	ASM_FILE_END
 #define ASM_FILE_END(FILE)					\
   do {								\
-    if (strcmp (language_string, "GNU C++") == 0)		\
+    if (strcmp (lang_hooks.name, "GNU C++") == 0)		\
       {								\
 	constructor_section ();					\
 	destructor_section ();					\
@@ -254,7 +237,6 @@ Boston, MA 02111-1307, USA.  */
 
 #undef	HANDLE_PRAGMA
 #define HANDLE_PRAGMA(GETC, UNGETC, NAME) handle_pragma (GETC, UNGETC, NAME)
-extern int handle_pragma PARAMS ((int(*)(void), void (*)(int), const char *));
 
 /* Give methods pretty symbol names on NeXT. */
 
@@ -336,6 +318,7 @@ FUNCTION ()								\
 #define EXTRA_SECTIONS					\
   in_const, in_cstring, in_literal4, in_literal8,	\
   in_constructor, in_destructor,			\
+  in_nextstep_exception, in_nextstep_eh_frame,		\
   in_objc_class, in_objc_meta_class, in_objc_category,	\
   in_objc_class_vars, in_objc_instance_vars,		\
   in_objc_cls_meth, in_objc_inst_meth,			\
@@ -367,6 +350,12 @@ SECTION_FUNCTION (constructor_section,		\
 SECTION_FUNCTION (destructor_section,		\
 		  in_destructor,		\
 		  ".destructor", 0, 0)		\
+SECTION_FUNCTION (nextstep_exception_section,	\
+		  in_nextstep_exception,	\
+		  ".section __TEXT,__gcc_except_tab,regular", 0, 0)	\
+SECTION_FUNCTION (nextstep_eh_frame_section,	\
+		  in_nextstep_eh_frame,		\
+		  ".section __TEXT,__eh_frame,regular", 0, 0)		\
 SECTION_FUNCTION (objc_class_section,		\
 		  in_objc_class,		\
 		  ".objc_class", 0, 1)		\
@@ -455,7 +444,7 @@ objc_section_init ()				\
 #define READONLY_DATA_SECTION const_section
 
 #undef	SELECT_SECTION
-#define SELECT_SECTION(exp,reloc)				\
+#define SELECT_SECTION(exp,reloc,align)				\
   do								\
     {								\
       if (TREE_CODE (exp) == STRING_CST)			\
@@ -573,7 +562,7 @@ objc_section_init ()				\
   while (0)
 
 #undef	SELECT_RTX_SECTION
-#define SELECT_RTX_SECTION(mode, rtx)					\
+#define SELECT_RTX_SECTION(mode, rtx, align)				\
   do									\
     {									\
       if (GET_MODE_SIZE(mode) == 8)					\

@@ -23,9 +23,6 @@ Boston, MA 02111-1307, USA.  */
 #include "halfpic.h"
 #include "i386/gstabs.h"
 
-/* Get perform_* macros to build libgcc.a.  */
-#include "i386/perform.h"
-
 #define OSF_OS
 
 #undef  WORD_SWITCH_TAKES_ARG
@@ -61,7 +58,7 @@ Boston, MA 02111-1307, USA.  */
 #define SUBTARGET_SWITCHES						\
      { "half-pic",		 MASK_HALF_PIC,				\
        N_("Emit half-PIC code") },					\
-     { "no-half-pic",		-MASK_HALF_PIC, "" }			\
+     { "no-half-pic",		-MASK_HALF_PIC, "" },			\
      { "debug-half-pic",	 MASK_HALF_PIC_DEBUG,			\
        0 /* intentionally undoc */ },					\
      { "debugb",		 MASK_HALF_PIC_DEBUG,			\
@@ -179,24 +176,12 @@ Boston, MA 02111-1307, USA.  */
 /* Define this macro if the system header files support C++ as well
    as C.  This macro inhibits the usual method of using system header
    files in C++, which is to pretend that the file's contents are
-   enclosed in `extern "C" {...}'. */
+   enclosed in `extern "C" {...}'.  */
 #define NO_IMPLICIT_EXTERN_C
 
 /* Turn off long double being 96 bits.  */
 #undef LONG_DOUBLE_TYPE_SIZE
 #define LONG_DOUBLE_TYPE_SIZE 64
-
-/* This macro generates the assembly code for function entry.
-   FILE is a stdio stream to output the code to.
-   SIZE is an int: how many units of temporary storage to allocate.
-   Refer to the array `regs_ever_live' to determine which registers
-   to save; `regs_ever_live[I]' is nonzero if register number I
-   is ever used in the function.  This macro is responsible for
-   knowing which registers should not be saved even if used.
-
-   We override it here to allow for the new profiling code to go before
-   the prologue and the old mcount code to go after the prologue (and
-   after %ebx has been set up for ELF shared library support).  */
 
 #define OSF_PROFILE_BEFORE_PROLOGUE					\
   (!TARGET_MCOUNT							\
@@ -205,56 +190,6 @@ Boston, MA 02111-1307, USA.  */
        || !frame_pointer_needed						\
        || (!current_function_uses_pic_offset_table			\
 	   && !current_function_uses_const_pool)))
-
-#undef	FUNCTION_PROLOGUE
-#define FUNCTION_PROLOGUE(FILE, SIZE)					\
-do									\
-  {									\
-    char *prefix = (TARGET_UNDERSCORES) ? "_" : "";			\
-    char *lprefix = LPREFIX;						\
-    int labelno = profile_label_no;					\
-									\
-    if (profile_flag && OSF_PROFILE_BEFORE_PROLOGUE)			\
-      {									\
-	if (!flag_pic && !HALF_PIC_P ())				\
-	  {								\
-	    fprintf (FILE, "\tmovl $%sP%d,%%edx\n", lprefix, labelno);	\
-	    fprintf (FILE, "\tcall *%s_mcount_ptr\n", prefix);		\
-	  }								\
-									\
-	else if (HALF_PIC_P ())						\
-	  {								\
-	    rtx symref;							\
-									\
-	    HALF_PIC_EXTERNAL ("_mcount_ptr");				\
-	    symref = HALF_PIC_PTR (gen_rtx_SYMBOL_REF (Pmode,		\
-						       "_mcount_ptr"));	\
-									\
-	    fprintf (FILE, "\tmovl $%sP%d,%%edx\n", lprefix, labelno);	\
-	    fprintf (FILE, "\tmovl %s%s,%%eax\n", prefix,		\
-		     XSTR (symref, 0));					\
-	    fprintf (FILE, "\tcall *(%%eax)\n");			\
-	  }								\
-									\
-	else								\
-	  {								\
-	    static int call_no = 0;					\
-									\
-	    fprintf (FILE, "\tcall %sPc%d\n", lprefix, call_no);	\
-	    fprintf (FILE, "%sPc%d:\tpopl %%eax\n", lprefix, call_no);	\
-	    fprintf (FILE, "\taddl $_GLOBAL_OFFSET_TABLE_+[.-%sPc%d],%%eax\n", \
-		     lprefix, call_no++);				\
-	    fprintf (FILE, "\tleal %sP%d@GOTOFF(%%eax),%%edx\n",	\
-		     lprefix, labelno);					\
-	    fprintf (FILE, "\tmovl %s_mcount_ptr@GOT(%%eax),%%eax\n",	\
-		     prefix);						\
-	    fprintf (FILE, "\tcall *(%%eax)\n");			\
-	  }								\
-      }									\
-									\
-    function_prologue (FILE, SIZE);					\
-  }									\
-while (0)
 
 /* A C statement or compound statement to output to FILE some assembler code to
    call the profiling subroutine `mcount'.  Before calling, the assembler code
@@ -266,7 +201,7 @@ while (0)
    The details of how the address should be passed to `mcount' are determined
    by your operating system environment, not by GNU CC.  To figure them out,
    compile a small program for profiling using the system's installed C
-   compiler and look at the assembler code that results. */
+   compiler and look at the assembler code that results.  */
 
 #undef  FUNCTION_PROFILER
 #define FUNCTION_PROFILER(FILE, LABELNO)				\
@@ -274,8 +209,8 @@ do									\
   {									\
     if (!OSF_PROFILE_BEFORE_PROLOGUE)					\
       {									\
-	char *prefix = (TARGET_UNDERSCORES) ? "_" : "";			\
-	char *lprefix = LPREFIX;					\
+	const char *const prefix = (TARGET_UNDERSCORES) ? "_" : "";	\
+	const char *const lprefix = LPREFIX;				\
 	int labelno = LABELNO;						\
 									\
 	/* Note that OSF/rose blew it in terms of calling mcount,	\
@@ -359,8 +294,8 @@ while (0)
 
 #undef	ASM_GENERATE_INTERNAL_LABEL
 #define ASM_GENERATE_INTERNAL_LABEL(BUF,PREFIX,NUMBER)			\
-    sprintf ((BUF), "*%s%s%d", (TARGET_UNDERSCORES) ? "" : ".",		\
-	     (PREFIX), (NUMBER))
+    sprintf ((BUF), "*%s%s%ld", (TARGET_UNDERSCORES) ? "" : ".",	\
+	     (PREFIX), (long)(NUMBER))
 
 /* This is how to output an internal numbered label where
    PREFIX is the class of label and NUM is the number within the class.  */
@@ -370,7 +305,7 @@ while (0)
   fprintf (FILE, "%s%s%d:\n", (TARGET_UNDERSCORES) ? "" : ".",		\
 	   PREFIX, NUM)
 
-/* The prefix to add to user-visible assembler symbols. */
+/* The prefix to add to user-visible assembler symbols.  */
 
 /* target_flags is not accessible by the preprocessor */
 #undef USER_LABEL_PREFIX
@@ -384,7 +319,7 @@ while (0)
 
 /* This is how to output an element of a case-vector that is relative.
    This is only used for PIC code.  See comments by the `casesi' insn in
-   i386.md for an explanation of the expression this outputs. */
+   i386.md for an explanation of the expression this outputs.  */
 
 #undef ASM_OUTPUT_ADDR_DIFF_ELT
 #define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL) \
@@ -511,7 +446,7 @@ while (0)
 
    You can also check the information stored in the `symbol_ref' in
    the definition of `GO_IF_LEGITIMATE_ADDRESS' or
-   `PRINT_OPERAND_ADDRESS'. */
+   `PRINT_OPERAND_ADDRESS'.  */
 
 #undef	ENCODE_SECTION_INFO
 #define ENCODE_SECTION_INFO(DECL)					\
@@ -571,7 +506,7 @@ while (0)
    and select that section.  */
 
 #undef	SELECT_RTX_SECTION
-#define SELECT_RTX_SECTION(MODE, RTX)					\
+#define SELECT_RTX_SECTION(MODE, RTX, ALIGN)				\
 do									\
   {									\
     if (MODE == Pmode && HALF_PIC_P () && HALF_PIC_ADDRESS_P (RTX))	\
@@ -582,7 +517,7 @@ do									\
 while (0)
 
 #undef	SELECT_SECTION
-#define SELECT_SECTION(DECL, RELOC)					\
+#define SELECT_SECTION(DECL, RELOC, ALIGN)				\
 {									\
   if (RELOC && HALF_PIC_P ())						\
     data_section ();							\
@@ -689,7 +624,7 @@ do {									 \
        }								 \
    } while (0)
 
-/* This is how to declare a function name. */
+/* This is how to declare a function name.  */
 
 #undef	ASM_DECLARE_FUNCTION_NAME
 #define ASM_DECLARE_FUNCTION_NAME(STREAM,NAME,DECL)			\
@@ -769,7 +704,7 @@ while (0)
    to do the search */
 #define LINK_LIBGCC_SPECIAL
 
-/* Generate calls to memcpy, etc., not bcopy, etc. */
+/* Generate calls to memcpy, etc., not bcopy, etc.  */
 #define TARGET_MEM_FUNCTIONS
 
 /* Don't default to pcc-struct-return, because gcc is the only compiler, and

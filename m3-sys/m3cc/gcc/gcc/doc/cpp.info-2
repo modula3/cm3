@@ -1,4 +1,4 @@
-This is doc/cpp.info, produced by makeinfo version 4.0b from
+This is doc/cpp.info, produced by makeinfo version 4.2 from
 doc/cpp.texi.
 
 INFO-DIR-SECTION Programming
@@ -444,6 +444,11 @@ underscores.
 
      Many people find this form easier to understand.
 
+`__OBJC__'
+     This macro is defined, with value 1, when the Objective-C compiler
+     is in use.  You can use `__OBJC__' to test whether a header is
+     compiled by a C compiler or a Objective-C compiler.
+
 `__GNUG__'
      The GNU C++ compiler defines this.  Testing it is equivalent to
      testing `(__GNUC__ && __cplusplus)'.
@@ -526,6 +531,10 @@ underscores.
      `stddef.h' and `wchar.h' work correctly.  You should not use these
      macros directly; instead, include the appropriate headers and use
      the typedefs.
+
+`__USING_SJLJ_EXCEPTIONS__'
+     This macro is defined, with value 1, if the compiler uses the old
+     mechanism based on `setjmp' and `longjmp' for exception handling.
 
 
 File: cpp.info,  Node: System-specific Predefined Macros,  Next: C++ Named Operators,  Prev: Common Predefined Macros,  Up: Predefined Macros
