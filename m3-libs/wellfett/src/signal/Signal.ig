@@ -17,14 +17,20 @@ TYPE
               getNumber (): IndexType;
               getData   (): P.T;
 
+              offset (): R.T;
+
               upsample   (factor: IndexType): T;
               downsample (factor: IndexType): T;
               wrapCyclic (length: IndexType): T;
-              reverse    (): T;
-              adjoint    (): T;
+              slice      (num: IndexType): REF ARRAY OF T;
+              interleave (READONLY slice: ARRAY OF T):
+                          T;     (*invocation like init()*)
+              reverse (): T;
+              adjoint (): T;
 
-              scale (factor: R.T): T;
-              raise (offset: R.T): T;
+              translate (dist: IndexType): T;
+              scale     (factor: R.T): T;
+              raise     (offset: R.T): T;
 
               (*inplace operations*)
               translateD (dist: IndexType);

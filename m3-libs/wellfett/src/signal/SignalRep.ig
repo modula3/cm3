@@ -1,12 +1,12 @@
 
-GENERIC INTERFACE SignalRep(R,Signal,SignalFmtLex);
+GENERIC INTERFACE SignalRep(V,Signal,SignalFmtLex);
 
 REVEAL
   Signal.T <: TPrivate;
 
 TYPE
   TPrivate = SignalFmtLex.T OBJECT
-	data  : REF ARRAY OF R.T;
+	data  : V.T;
 	first : Signal.IndexType;
   END;
 

@@ -10,7 +10,7 @@ VAR
   wr:=NEW(TextWr.T).init();
 BEGIN
   Wr.PutText(wr,"Signal["
-     & F.Int(SELF.getFirst()) & ","
+     & F.Int(SELF.getFirst()) & ".."
      & F.Int(SELF.getLast()) & "]{");
   FOR i:=FIRST(SELF.data^) TO LAST(SELF.data^) DO
     Wr.PutText(wr,RF.Fmt(SELF.data[i],style.elemStyle));
