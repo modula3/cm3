@@ -2,7 +2,7 @@
 (* All rights reserved.                                          *)
 (* See the file COPYRIGHT for a full description.                *)
 
-(* portions Copyright 1997, Critical Mass, Inc.                  *)
+(* portions Copyright 1996-2000, Critical Mass, Inc.                  *)
 
 UNSAFE MODULE Scanner;
 

@@ -1,4 +1,5 @@
-(* Copyright 1997, Critical Mass, Inc.  All rights reserved. *)
+(* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 MODULE InfoModule;
 
@@ -10,12 +11,14 @@ CONST
   OS_names = ARRAY [0..1] OF TEXT { "POSIX", "WIN32" };
 
 CONST
-  Platform_names = ARRAY [0..25] OF TEXT {
+  Platform_names = ARRAY [0..31] OF TEXT {
     "AIX386", "ALPHA_OSF", "AP3000", "ARM", "DS3100",
     "FreeBSD", "FreeBSD2", "HP300", "HPPA", "IBMR2",
     "IBMRT", "IRIX5", "LINUX", "LINUXELF", "NEXT",
     "NT386", "OKI", "OS2", "SEQUENT", "SOLgnu", "SOLsun",
-    "SPARC", "SUN3", "SUN386", "UMAX", "VAX" };
+    "SPARC", "SUN3", "SUN386", "UMAX", "VAX", "FreeBSD3", 
+    "FreeBSD4", "FBSD_ALPHA", "LINUXLIBC6", "I386_DARWIN", 
+    "PPC_DARWIN" };
 
 PROCEDURE Initialize () =
   VAR zz: Scope.T;  os_type, platform_type: Type.T;  enum: Value.T;  nm: TEXT;
