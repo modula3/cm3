@@ -3,12 +3,12 @@ import("libm3")
 template("polar")
 
 
-generic_module("PolarBasic")
+Generic_module("PolarBasic")
 Polar("Real",     "Basic", "RealBasic")
 Polar("LongReal", "Basic", "LongRealBasic")
 Polar("Extended", "Basic", "ExtendedBasic")
 
-generic_module("PolarFmtLex")
+Generic_module("PolarFmtLex")
 PolarFmtLex("Real",     "RealBasic")
 PolarFmtLex("LongReal", "LongRealBasic")
 PolarFmtLex("Extended", "ExtendedBasic")

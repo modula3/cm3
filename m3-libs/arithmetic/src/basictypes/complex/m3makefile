@@ -3,9 +3,9 @@ import("libm3")
 template("complex")
 
 
-generic_module("ComplexBasic")
+Generic_module("ComplexBasic")
 
-generic_module("ComplexFast")
+Generic_module("ComplexFast")
 Complex("Real",       "Fast",  "RealBasic")
 Complex("LongReal",   "Fast",  "LongRealBasic")
 Complex("Extended",   "Fast",  "ExtendedBasic")
@@ -13,12 +13,12 @@ Complex("Integer32",  "Basic", "Integer32Basic")
 Complex("BigInteger", "Basic", "BigInteger")
 
 
-generic_module("ComplexTrans")
+Generic_module("ComplexTrans")
 ComplexTrans("Real",     "RealBasic")
 ComplexTrans("LongReal", "LongRealBasic")
 ComplexTrans("Extended", "ExtendedBasic")
 
-generic_module("ComplexFmtLex")
+Generic_module("ComplexFmtLex")
 ComplexFmtLex("Real",	    "RealBasic")
 ComplexFmtLex("LongReal",   "LongRealBasic")
 ComplexFmtLex("Extended",   "ExtendedBasic")

@@ -1,2 +1,2 @@
 include_dir("text")
-include_dir("graphic")
+%include_dir("graphic")

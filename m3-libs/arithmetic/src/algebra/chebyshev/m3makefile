@@ -3,8 +3,8 @@ import("libm3")
 template("chebypolynomial")
 
 
-generic_module("ChebyPolynomial")
-generic_module("ChebyPolynomialFast")
+Generic_module("ChebyPolynomial")
+Generic_module("ChebyPolynomialFast")
 ChebyPolynomial("Real",     "Fast", "RealBasic")
 ChebyPolynomial("LongReal", "Fast", "LongRealBasic")
 ChebyPolynomial("Extended", "Fast", "ExtendedBasic")

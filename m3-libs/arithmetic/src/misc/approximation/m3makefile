@@ -5,12 +5,12 @@ template("interpolation")
 template("eulersum")
 
 
-generic_module("FindZero")
+Generic_module("FindZero")
 FindZero("Real",     "RealBasic")
 FindZero("LongReal", "LongRealBasic")
 FindZero("Extended", "ExtendedBasic")
 
-generic_module("Interpolation")
+Generic_module("Interpolation")
 Interpolation("Real",               "Real",     "Basic", "Basic")
 Interpolation("LongReal",           "LongReal", "Basic", "Basic")
 Interpolation("Extended",           "Extended", "Basic", "Basic")
@@ -19,7 +19,7 @@ Interpolation("LongRealVector",     "LongReal", "Basic", "")
 Interpolation("LongRealMatrix",     "LongReal", "Basic", "")
 Interpolation("LongRealPolynomial", "LongReal", "Basic", "")
 
-generic_module("EulerSum")
+Generic_module("EulerSum")
 EulerSum("Real",     "Real",     "Basic")
 EulerSum("LongReal", "LongReal", "Basic")
 EulerSum("Extended", "Extended", "Basic")

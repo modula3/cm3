@@ -6,9 +6,9 @@ include_dir("algebra")
 include_dir("inout")
 include_dir("misc")
 
-module("NADefinitions")
+Module("NADefinitions")
 
 % if the statement is given twice, no quake error is thrown
 % but the .M3EXPORT file remain incomplete and thus modules
 % will not be found, if importing this library somewhere
-library("m3na")
+Library("m3na")
