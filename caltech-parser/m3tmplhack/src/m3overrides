@@ -1,6 +1,2 @@
 /* $Id$ */
-override("cit_common", ROOT & "/caltech-parser")
-m3tk = ROOT & "/m3-tools/m3tk"
-if not stale(m3tk, m3tk)
-  override("m3tk", ROOT & "/m3-tools")
-end
+include("../../m3overrides")
