@@ -4,8 +4,10 @@
 WORKDIR = ROOT & "/m3-sys"
 LIBDIR = ROOT & "/m3-libs"
 
-override ("m3core", LIBDIR)
-override ("libm3", LIBDIR)
+if not defined("BOOT")
+  override ("m3core", LIBDIR)
+  override ("libm3", LIBDIR)
+end
 override ("m3middle",  WORKDIR)
 override ("m3front",   WORKDIR)
 override ("m3linker",  WORKDIR)
