@@ -47,13 +47,13 @@ TYPE
 
 VAR verbosity: [0 .. 3];
 
-PROCEDURE debug (level: [0 .. 3]; ftn, str: TEXT);
+PROCEDURE Debug (level: [0 .. 3]; ftn, str: TEXT);
 (* RAISES {Thread.Alerted, Wr.Failure};
 
    These exceptions may be raised but because debug output shouldn't be
    present in the final product there is no sense to adapt all procedure
    signatures to the additional exceptions. *)
 
-PROCEDURE err (ftn: TEXT; code: Err; errmsg: TEXT := NIL) RAISES {Error};
+PROCEDURE Raise (ftn: TEXT; code: Err; errmsg: TEXT := NIL) RAISES {Error};
 
 END NADefinitions.
