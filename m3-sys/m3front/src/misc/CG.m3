@@ -991,6 +991,7 @@ PROCEDURE Init_int (o: Offset;  s: Size;  READONLY value: Target.Int;
       PushPending (NEW (IntNode, o := o, s := s, v := value), is_const);
       RETURN;
     END;
+    (* TInt.OutInt("CG.Init_int.value", value); *)
 
     AdvanceInit (o);
     IF Target.Little_endian
