@@ -1,5 +1,5 @@
 
-GENERIC INTERFACE Signal(R);
+GENERIC INTERFACE Signal(R,P);
 
 TYPE
   IndexType = INTEGER;
@@ -8,13 +8,14 @@ TYPE
   TPublic = OBJECT
 	METHODS
 	init(first, number : IndexType) : T;
-	fromArray(READONLY arr : ARRAY OF R.T; first : IndexType := 0) : T;
+	fromArray(READONLY arr : P.TBody; first : IndexType := 0) : T;
 	copy() : T;
 
     (*simply 'first' would collide with a instance variable*)
 	getFirst()  : IndexType;
 	getLast()   : IndexType;
 	getNumber() : IndexType;
+	getData()   : P.T;
 
 	upsample   (factor : IndexType) : T;
 	downsample (factor : IndexType) : T;
