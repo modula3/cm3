@@ -7,6 +7,8 @@ Pseudo-random number generator by Warren D. Smith.
 
 IMPORT RandomBasic,
        LongRealBasic AS R,
+       LongRealTrans AS RT,
+       LongReal      AS RSpec,
        Word;
 IMPORT RandomRep;
 
@@ -66,8 +68,8 @@ PROCEDURE Engine(SELF:T) : R.T =
   VAR
     x : R.T := R.Zero;
   BEGIN
-    FOR i:=0 TO 57 DO
-      x := 0.5D0 * (x + FLOAT(ORD(GenerateBoolean(SELF)), R.T));
+    FOR i:=0 TO RSpec.Precision-1 DO
+      x := RT.Half * (x + FLOAT(ORD(GenerateBoolean(SELF)), R.T));
     END;
     <* ASSERT R.Zero <= x *>
     <* ASSERT x < R.One *>
