@@ -1161,7 +1161,7 @@ call_get_eh_context ()
 
   expr = build1 (ADDR_EXPR, build_pointer_type (TREE_TYPE (fn)), fn);
   expr = build (CALL_EXPR, TREE_TYPE (TREE_TYPE (fn)),
-		expr, NULL_TREE, NULL_TREE);
+		expr, NULL_TREE, NULL_TREE, NULL_TREE);
   TREE_SIDE_EFFECTS (expr) = 1;
 
   return copy_to_reg (expand_expr (expr, NULL_RTX, VOIDmode, 0));

@@ -288,11 +288,13 @@ calls_function_1 (exp, which)
    CALL_INSN_FUNCTION_USAGE information.  */
 
 rtx
-prepare_call_address (funexp, fndecl, call_fusage, reg_parm_seen)
+prepare_call_address (funexp, fndecl, call_fusage, reg_parm_seen,
+		      static_chain_expr)
      rtx funexp;
      tree fndecl;
      rtx *call_fusage;
      int reg_parm_seen;
+     tree static_chain_expr;
 {
   rtx static_chain_value = 0;
 
@@ -320,6 +322,12 @@ prepare_call_address (funexp, fndecl, call_fusage, reg_parm_seen)
 	  funexp = force_reg (Pmode, funexp);
 #endif
     }
+
+  if (static_chain_expr != 0) {
+    static_chain_value = expand_expr (static_chain_expr,
+				      static_chain_rtx, VOIDmode, 0);
+    static_chain_value = protect_from_queue (static_chain_value, 0);
+  }
 
   if (static_chain_value != 0)
     {
@@ -2275,7 +2283,8 @@ expand_call (exp, target, ignore)
 	  use_reg (&call_fusage, struct_value_rtx);
     }
 
-  funexp = prepare_call_address (funexp, fndecl, &call_fusage, reg_parm_seen);
+  funexp = prepare_call_address (funexp, fndecl, &call_fusage, reg_parm_seen,
+				 CALL_EXPR_CHAIN (exp));
 
   load_register_parameters (args, num_actuals, &call_fusage);
 
@@ -2929,7 +2938,7 @@ emit_library_call VPROTO((rtx orgfun, int no_queue, enum machine_mode outmode,
   argnum = 0;
 #endif
 
-  fun = prepare_call_address (fun, NULL_TREE, &call_fusage, 0);
+  fun = prepare_call_address (fun, NULL_TREE, &call_fusage, 0, NULL_TREE);
 
   /* Now load any reg parms into their regs.  */
 
@@ -3493,7 +3502,7 @@ emit_library_call_value VPROTO((rtx orgfun, rtx value, int no_queue,
   argnum = 0;
 #endif
 
-  fun = prepare_call_address (fun, NULL_TREE, &call_fusage, 0);
+  fun = prepare_call_address (fun, NULL_TREE, &call_fusage, 0, NULL_TREE);
 
   /* Now load any reg parms into their regs.  */
 
