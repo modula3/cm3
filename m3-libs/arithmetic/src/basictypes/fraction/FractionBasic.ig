@@ -6,7 +6,7 @@ Abstract: Generic fraction type
 
 *)
 
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 
 (*==========================*)
 

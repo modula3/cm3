@@ -6,7 +6,7 @@ Abstract: Integers of arbitrary size
 Daniel Beer
 *)
 
-FROM xUtils IMPORT Error, Err;
+FROM NADefinitions IMPORT Error, Err;
 IMPORT BigIntegerRep AS Rep;
 
 <*UNUSED*> CONST Module = "BigIntegerBasic.";

@@ -7,7 +7,7 @@ Daniel Beer
 *)
 
 IMPORT Word AS W, WordEx AS Wx;
-FROM xUtils IMPORT Error, Err;
+FROM NADefinitions IMPORT Error, Err;
 FROM BigIntegerBasic  IMPORT Zero;
 (*
 IMPORT IO,Fmt,BigIntegerFmtLex AS BF;

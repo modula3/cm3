@@ -5,7 +5,7 @@ Abstract: Generic wrapper routines for basic operations of float types
 
 *)
 
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 
 (*==========================*)
 

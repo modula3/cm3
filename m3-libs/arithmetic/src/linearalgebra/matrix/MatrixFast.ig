@@ -5,7 +5,7 @@ Abstract: Direct access to matrix functions
 
 2/17/96  Harry George    Convert from OO to ADT
 *)
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 (*==========================*)
 (*-----------------*)
 TYPE

@@ -5,7 +5,7 @@ Abstract:  Tests for LongRealMatrixBasic module.
 1/1/96    <name>   Initial version
 
 *)
-(*FROM xUtils IMPORT Error,Err;*)
+(*FROM NADefinitions IMPORT Error,Err;*)
 IMPORT (*IO,Wr,Fmt,*)
        LongRealBasic AS R,
        LongRealVectorBasic  AS V,

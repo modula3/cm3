@@ -7,7 +7,7 @@ Abstract: Test driver for LongRealMatrixDecomposition
 2/17/96   Harry George   Converted to m3na format
 
 *)
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 IMPORT LongRealBasic  AS R,
        LongRealFmtLex AS RF,
        LongRealVectorFast AS V,

@@ -20,9 +20,9 @@ IMPORT LongRealBasic  AS R,
        RandomQuaternaryFibo     AS QuaFibo,
        RandomImprovedMcGill     AS McGill,
        RandomWolframCA          AS Wolf;
-IMPORT Statistic,Fmt,xUtils;
+IMPORT Statistic,Fmt,NADefinitions;
 
-<*FATAL xUtils.Error*>
+<*FATAL NADefinitions.Error*>
 
 (*=======================*)
 CONST

@@ -12,7 +12,7 @@ IMPORT LongRealEigenSystem    AS EigenSys,
        LongRealBasic          AS R,
        LongRealMatrixFmtLex     AS MF,
        LongRealPolynomialFmtLex AS PF;
-IMPORT Wr, Stdio, Thread, Fmt, xUtils;
+IMPORT Wr, Stdio, Thread, Fmt, NADefinitions;
 
 <* FATAL Wr.Failure *>
 <* FATAL Thread.Alerted *>
@@ -189,7 +189,7 @@ PROCEDURE RunTestA() RAISES {}=
   END RunTestA;
 
 PROCEDURE TestCharPolynomial()=
-  <*FATAL xUtils.Error*>
+  <*FATAL NADefinitions.Error*>
   VAR
     p,cp:P.T;
     m:M.T;

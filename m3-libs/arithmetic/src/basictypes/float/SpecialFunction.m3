@@ -7,7 +7,7 @@ Abstract: Special Functions
 2/17/96  Harry George    Export to xReal64
 
 *)
-FROM xUtils IMPORT Error,Err;
+FROM NADefinitions IMPORT Error,Err;
 FROM LongRealTrans IMPORT Zero, Half, One, Two, Eps, Tiny, Exp, Ln;
 
 CONST Module = "xSpecFtn.";

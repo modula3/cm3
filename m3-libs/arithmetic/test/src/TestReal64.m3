@@ -9,12 +9,13 @@ Abstract: Test driver for numerical analysis
 
 IMPORT SpecialFunction AS SF,
        LongRealBasic   AS R,
-       LongRealFmtLex  AS RF;
+       LongRealFmtLex  AS RF,
+       NADefinitions;
 FROM SF IMPORT T;
+<*FATAL NADefinitions.Error*>
 (*=======================*)
 CONST
   Module = "TestReal64.";
-VAR
 (*=======================*)
 
 (*----------------------*)
@@ -110,7 +111,7 @@ BEGIN
 END TestGammaQ;
 (*-------------------------*)
 PROCEDURE TestReal64():BOOLEAN=
-CONST ftn = Module & "TestReal64";
+<*UNUSED*>CONST ftn = Module & "TestReal64";
 VAR result:=TRUE;
 BEGIN
   NewLine(); EVAL TestLnGamma();

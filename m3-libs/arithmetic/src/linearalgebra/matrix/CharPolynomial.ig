@@ -4,7 +4,7 @@ GENERIC INTERFACE CharPolynomial(M,Rt);
 Abstract: Characteristic polynomial of a matrix
 
 *)
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 (*==========================*)
 (*-----------------*)
 

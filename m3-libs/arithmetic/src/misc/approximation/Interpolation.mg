@@ -8,7 +8,7 @@ Abstract: Interpolation routines.
 1/29/96   Harry George    converted to m3na format
 2/17/96   Harry George    converted to ADT format
 *)
-FROM xUtils IMPORT Error,Err;
+FROM NADefinitions IMPORT Error,Err;
 
 CONST Module = "Interpolation.";
 (*==========================*)

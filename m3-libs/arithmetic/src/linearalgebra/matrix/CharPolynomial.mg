@@ -4,7 +4,7 @@ Abstract: Characteristic polynomial of a matrix
 
 *)
 
-FROM xUtils IMPORT Error,Err;
+FROM NADefinitions IMPORT Error,Err;
 
 <*UNUSED*> CONST Module = "CharPolynomial.";
 

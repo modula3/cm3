@@ -20,7 +20,7 @@ Abstract:
 2/17/96   Harry George   ...and back to ADT format
 *)
 
-FROM xUtils IMPORT Error,Err;
+FROM NADefinitions IMPORT Error,Err;
 
 CONST Module = "MatrixBasic.";
 

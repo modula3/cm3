@@ -11,7 +11,7 @@ Abstract: Complex numbers in polar coordinates
                           The ones with beginning caps are wds's
 *)
 
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 
 <*UNUSED*> CONST Module = "PolarBasic.";
 

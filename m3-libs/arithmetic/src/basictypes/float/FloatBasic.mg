@@ -5,7 +5,7 @@ Abstract: Generic wrapper routines for basic operations of float types
 
 *)
 
-FROM xUtils IMPORT Error, Err;
+FROM NADefinitions IMPORT Error, Err;
 
 <*UNUSED*> CONST Module = "FloatBasic.";
 (*==========================*)

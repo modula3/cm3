@@ -20,7 +20,7 @@ Abstract:
 2/17/96   Harry George   Converted from OO to ADT format
 *)
 (*
-FROM xUtils IMPORT Error,Err;
+FROM NADefinitions IMPORT Error,Err;
 *)
 IMPORT Wr,TextWr,Fmt AS F,Thread;
 

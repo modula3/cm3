@@ -7,7 +7,7 @@ Abstract:  Chebyshev polynomials and
 1/22/96    Harry George      Change to m3na project
 *)
 
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 
 (*=================================*)
 (* Chebyshev Approximations        *)

@@ -6,7 +6,7 @@ Abstract: Implementation of Root.
 1/28/96    Harry George    Initial version, from earlier work
 2/17/96    Harry George    Converted from OO to ADT format
 *)
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 (*
 IMPORT LongRealComplexVectorFmtLex AS VF,
        LongRealComplexFmtLex AS CF,

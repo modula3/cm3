@@ -8,7 +8,7 @@ Abstract: Integers of arbitrary size
 IMPORT Rd, Thread, FloatMode, Lex AS L, Fmt AS F, Text, TextRd, Word;
 IMPORT BigIntegerRep   AS BR;
 IMPORT BigIntegerBasic AS BB;
-FROM xUtils IMPORT Error, Err;
+FROM NADefinitions IMPORT Error, Err;
 
 <*UNUSED*> CONST Module = "BigIntegerFmtLex.";
 (*==========================*)

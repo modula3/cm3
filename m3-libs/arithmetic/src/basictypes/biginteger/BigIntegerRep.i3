@@ -7,7 +7,7 @@ Daniel Beer
 *)
 
 IMPORT Word AS W, BigIntegerBasic AS BI;
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 
 (*==========================*)
 

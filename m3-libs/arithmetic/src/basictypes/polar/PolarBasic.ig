@@ -8,7 +8,7 @@ Abstract: Complex numbers in polar coordinates
 3/23/96 Harry George    Incorporated Warren Smith's implementations
 *)
 
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 
 TYPE
    (*polar angles are in radians*)

@@ -11,17 +11,6 @@ IMPORT WordEx;
 CONST
   Module = "TestWordEx.";
 (*----------------------*)
-PROCEDURE TestABC():BOOLEAN=
-CONST
-  ftn = Module & "TestABC";
-VAR
-  result:=TRUE;
-BEGIN
-  Debug(1,ftn,"begin\n");
-
-  RETURN result;
-END TestABC;
-(*----------------------*)
 PROCEDURE TestWordex():BOOLEAN=
 CONST
   ftn = Module & "TestWordex";
@@ -35,7 +24,7 @@ BEGIN
 END TestWordex;
 (*-------------------------*)
 PROCEDURE TestWordEx():BOOLEAN=
-CONST ftn = Module & "TestWordEx";
+<*UNUSED*> CONST ftn = Module & "TestWordEx";
 VAR result:=TRUE;
 BEGIN
   NewLine(); EVAL TestWordex();

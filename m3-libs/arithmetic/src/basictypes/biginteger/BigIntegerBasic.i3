@@ -11,7 +11,7 @@ Daniel Beer
 
 (*==========================*)
 
-FROM xUtils IMPORT Error;
+FROM NADefinitions IMPORT Error;
 
 (*
 BigIntegers are immutable, do not change them manually,
