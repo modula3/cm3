@@ -8,9 +8,9 @@ Abstract:  Tests for XYZ module.
 
 IMPORT Fmt,Wr,Thread;
 IMPORT LongRealBasic              AS R,
-       LongRealVectorBasic        AS V,
-       (*LongRealComplexVectorBasic AS CV,*)
-       (*LongRealMatrixFast         AS M,*)
+       LongRealVector             AS V,
+       (*LongRealComplexVector      AS CV,*)
+       (*LongRealMatrix             AS M,*)
        LongRealEigenSystem        AS ES,
        LongRealMatrixLapack       AS LA,
        LongRealCharPolynomial     AS MCP,

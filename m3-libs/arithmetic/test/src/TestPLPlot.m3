@@ -49,7 +49,7 @@ PROCEDURE TestCurve (): BOOLEAN =
     Debug(1, ftn, "begin\n");
 
     (* Initialize plplot *)
-    PL.SetEnvironment(-RT.TwoPi, RT.TwoPi, -1.1D0, 1.1D0, 0, 0);
+    PL.SetEnvironment(-RT.TwoPi, RT.TwoPi, -1.1D0, 1.1D0);
 
     VAR
       x     := NEW(REF ARRAY OF RT.T, 2047);

@@ -16,8 +16,8 @@ INTERFACE PLPlot;
 
 IMPORT NADefinitions AS NA;
 IMPORT LongRealBasic AS R;
-IMPORT LongRealVectorFast AS V;
-IMPORT LongRealMatrixFast AS M;
+IMPORT LongRealVector AS V;
+IMPORT LongRealMatrix AS M;
 
 TYPE
   Option = {enabled, arg, nodelete, invisible, disabled, dummy5, dummy6,
@@ -121,13 +121,13 @@ PROCEDURE Advance (page: INTEGER; );
 
 (* plaxes: "This functions similarly to plbox() except that the origin of
    the axes is placed at the user-specified point (x0, y0)." *)
-PROCEDURE DrawAxes (    x0, y0: LONGREAL;
-                    VAR xopt  : TEXT;
-                        xtick : LONGREAL;
-                        nxsub : INTEGER;
-                    VAR yopt  : TEXT;
-                        ytick : LONGREAL;
-                        nysub : INTEGER;  );
+PROCEDURE DrawAxes (x0, y0: LONGREAL;
+                    xopt  : TEXT;
+                    xtick : LONGREAL;
+                    nxsub : INTEGER;
+                    yopt  : TEXT;
+                    ytick : LONGREAL;
+                    nysub : INTEGER;  );
 
 (* plbin: "Plot a histogram using x to store data values and y to store
    frequencies." *)
@@ -138,23 +138,23 @@ PROCEDURE PlotBins (READONLY x, y: V.TBody; center: INTEGER; )
 PROCEDURE StartPage ();
 
 (* plbox: "Draw a box around the current viewport." *)
-PROCEDURE DrawBox (VAR xopt : TEXT;
-                       xtick: LONGREAL;
-                       nxsub: INTEGER;
-                   VAR yopt : TEXT;
-                       ytick: LONGREAL;
-                       nysub: INTEGER;  );
+PROCEDURE DrawBox (xopt : TEXT;
+                   xtick: LONGREAL;
+                   nxsub: INTEGER;
+                   yopt : TEXT;
+                   ytick: LONGREAL;
+                   nysub: INTEGER;  );
 
 (* plbox3: "This is the 3-d analogue of plbox()." *)
-PROCEDURE DrawBox3D (VAR xopt, xlabel: TEXT;
-                         xtick       : LONGREAL;
-                         nsubx       : INTEGER;
-                     VAR yopt, ylabel: TEXT;
-                         ytick       : LONGREAL;
-                         nsuby       : INTEGER;
-                     VAR zopt, zlabel: TEXT;
-                         ztick       : LONGREAL;
-                         nsubz       : INTEGER;  );
+PROCEDURE DrawBox3D (xopt, xlabel: TEXT;
+                     xtick       : LONGREAL;
+                     nsubx       : INTEGER;
+                     yopt, ylabel: TEXT;
+                     ytick       : LONGREAL;
+                     nsuby       : INTEGER;
+                     zopt, zlabel: TEXT;
+                     ztick       : LONGREAL;
+                     nsubz       : INTEGER;  );
 
 (* plPLFLTMatrix: "Calculate world coordinates and subpage from relative
    device coordinates." *)
@@ -339,7 +339,7 @@ PROCEDURE Init ();
 PROCEDURE PlotLineSegment (x1, y1, x2, y2: LONGREAL; );
 
 (* pllab: "Label graphs." *)
-PROCEDURE SetLabels (VAR xlabel, ylabel, tlabel: TEXT; );
+PROCEDURE SetLabels (xlabel, ylabel, tlabel: TEXT; );
 
 (* pllightsource: "Set position of the light source." *)
 PROCEDURE SetLightPos (x, y, z: LONGREAL; );
@@ -369,9 +369,7 @@ PROCEDURE PlotMeshColored (READONLY x, y  : V.TBody;
 PROCEDURE CreateStream (): INTEGER;
 
 (* plmtex: "Print \"text\" at specified position relative to viewport." *)
-PROCEDURE PrintTextVP (VAR side           : TEXT;
-                           disp, pos, just: LONGREAL;
-                       VAR text           : TEXT;     );
+PROCEDURE PrintTextVP (side: TEXT; disp, pos, just: LONGREAL; text: TEXT; );
 
 (* plot3d: "Plot a 3-d representation of the function z[x][y]." *)
 PROCEDURE Plot3D (READONLY x, y     : V.TBody;
@@ -419,7 +417,7 @@ PROCEDURE SetLabelPrecision (setp, prec: INTEGER; );
 PROCEDURE SetFillStyle (patt: INTEGER; );
 
 (* plptex: "Print \"text\" at world coordinate (x,y)." *)
-PROCEDURE PrintTextWorld (x, y, dx, dy, just: LONGREAL; VAR text: TEXT; );
+PROCEDURE PrintTextWorld (x, y, dx, dy, just: LONGREAL; text: TEXT; );
 
 (* plreplot: "Replay contents of plot buffer to current device/file." *)
 PROCEDURE Replot ();
@@ -462,7 +460,7 @@ PROCEDURE ToggleColor (color: INTEGER; );
 PROCEDURE SetCompression (compression: INTEGER; );
 
 (* plsdev: "Set the device (keyword) name." *)
-PROCEDURE SetDevice (VAR devname: TEXT; );
+PROCEDURE SetDevice (devname: TEXT; );
 
 (* plsdidev: "Set window into device space using margin, aspect ratio, and
    justification." *)
@@ -494,7 +492,7 @@ PROCEDURE SetOption (opt, optarg: TEXT; ): INTEGER;
 PROCEDURE SetFamilyFile (fam, num, bmax: INTEGER; );
 
 (* plsfnam: "Set the output file name." *)
-PROCEDURE SetFileName (VAR fnam: TEXT; );
+PROCEDURE SetFileName (fnam: TEXT; );
 
 (* plshades: "Shade regions with continuous range of colours." *)
 PROCEDURE ShadeRegions (READONLY a                     : M.TBody;
@@ -545,7 +543,7 @@ PROCEDURE Start (nx, ny: INTEGER; );
 
 (* plstart: "Initialize PLplot, passing the device name and windows/page
    settings." *)
-PROCEDURE StartDev (VAR devname: TEXT; nx, ny: INTEGER; );
+PROCEDURE StartDev (devname: TEXT; nx, ny: INTEGER; );
 
 (* plstripa: "Add a point to a stripchart.  " *)
 PROCEDURE AddStripchartPoint (id, pen: INTEGER; x, y: LONGREAL; );

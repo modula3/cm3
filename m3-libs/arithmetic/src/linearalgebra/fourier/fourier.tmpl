@@ -2,12 +2,11 @@
 %  Quake functions to instantiate fourier transform on generic float types.
 %
 
-readonly proc FourierTransform (nm, field, rimpl, cimpl) is
-  local basic = nm & "FourierTransform"
-  local rfield = field & rimpl
-  local rtrans = field & "Trans"
-  local cfield = field & "Complex" & cimpl
-  local ctrans = field & "ComplexTrans"
-  build_generic_intf (basic, "FourierTransform", [                cfield], VISIBLE)
-  build_generic_impl (basic, "FourierTransform", [rfield, rtrans, cfield, ctrans])
+readonly proc FourierTransform (nm, rfield) is
+  local base   = nm & "FourierTransform"
+  local rtrans = nm & "Trans"
+  local cfield = nm & "Complex"
+  local ctrans = nm & "ComplexTrans"
+  build_generic_intf (base, "FourierTransform", [                cfield], VISIBLE)
+  build_generic_impl (base, "FourierTransform", [rfield, rtrans, cfield, ctrans])
 end

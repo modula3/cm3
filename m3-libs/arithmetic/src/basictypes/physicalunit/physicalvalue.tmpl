@@ -2,9 +2,8 @@
 %  Quake functions to instantiate operations on generic physical entities.
 %
 
-readonly proc PhysicalValue (nm, field, rimpl) is
+readonly proc PhysicalValue (nm, rfield) is
   local basic  = nm & "PhysicalValue"
-  local rfield = field & rimpl
   build_generic_intf (basic, "PhysicalValue", [rfield], VISIBLE)
   build_generic_impl (basic, "PhysicalValue", [rfield])
 end
@@ -38,7 +37,7 @@ readonly proc SIUnit (nm, field, rimpl) is
 end
 
 
-readonly proc PhysicalValueFmtLex (nm, field, rimpl, complex, cimpl) is
+readonly proc PhysicalValueFmtLex (nm, field, rimpl, cimpl) is
   local fmt     = nm & "PhysicalValueFmtLex"
   local rfield  = field & rimpl
   local rtrans  = field & "Trans"

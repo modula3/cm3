@@ -1,7 +1,8 @@
 GENERIC INTERFACE RootBasic(R,P);
-(*Copyright (c) 1996, m3na project
+(**Copyright (c) 1996, m3na project
 
 Abstract: Arithmetic on the roots of polynomials
+
           E.g. from given polynomials x and y
           with the roots X={x1,...,xn} and
           Y={y1,...,ym} respectively,
@@ -11,7 +12,7 @@ Abstract: Arithmetic on the roots of polynomials
           {xi*eta : xi in X and eta in Y}
           {xi^n   : xi in X}
           etc.
-*)
+**)
 
 FROM NADefinitions IMPORT Error;
 (*==========================*)
@@ -25,13 +26,13 @@ TYPE
   TBody = P.TBody;
   T     = P.T;
 
-(* It's not possible to obtain a pointer to a constant array.
+(**It's not possible to obtain a pointer to a constant array.
    We can not turn T from a reference type to an array type,
    because some routines have to return a result via a VAR parameter.
 CONST
   Zero    =  TBody{R.Zero,R.One};
   One     =  TBody{R.MinusOne,R.One};
-*)
+**)
 
 VAR
   (*CONST*) Zero : T;

@@ -1,67 +1,12 @@
-GENERIC MODULE MatrixFast(R, V);
-(**
-Abstract:
-
-6/6/87    hgeorge
-          Initial version.
-
-2/11/89   hgeorge
-          To work with generic matrices.
-
-11/20/94  Harry George
-          Converted to Modula3 dynamic arrays.
-
-12/18/95  Harry George
-          ...and back to fully instantiated for REAL32.
-
-1/27/96   Harry George
-          Converted to OO format and R.T
-
-2/17/96   Harry George   ...and back to ADT format
-**)
+GENERIC MODULE MatrixFast(R, V, VS);
+(*Copyright (c) 1996, m3na project*)
 
 FROM NADefinitions IMPORT Error, Err;
 
 CONST Module = "MatrixFast.";
 
-(*
-(*-----------------*)
-PROCEDURE Zero(
-                x:T)=
-(*set all zeros*)
-VAR
-  m:=NUMBER(x^);    mf:=0; ml:=m-1;
-  n:=NUMBER(x[0]); nf:=0; nl:=n-1;
-BEGIN
-  FOR i:=mf TO ml DO
-    FOR j:=nf TO nl DO
-      x[i,j]:=R.Zero;
-    END;
-  END;
-END Zero;
-(*-----------------*)
-PROCEDURE One(
-               x:T) RAISES {Error} =
-(*set all zeros except diagonal to 1's*)
-<*UNUSED*> <*UNUSED*> CONST ftn = "Midentity";
-VAR
-  m:=NUMBER(x^);    mf:=0; ml:=m-1;
-  n:=NUMBER(x[0]); nf:=0; nl:=n-1;
-BEGIN
-  IF m # n THEN
-    RAISE Error(Err.bad_size);
-  END;
-  FOR i:=mf TO ml DO
-    FOR j:=nf TO nl DO
-      x[i,j]:=R.Zero;
-    END;
-  END;
-  FOR i:=mf TO ml DO
-    x[i,i]:=R.One;
-  END;
-END One;
-*)
-
+<*UNUSED*>
+CONST Dummy = VS.Inner;
 
 (*-----------------*)
 <*INLINE*>
@@ -74,14 +19,11 @@ PROCEDURE AssertEqualSize (x, y: T) RAISES {Error} =
 
 (*----------------*)
 PROCEDURE IsZero (x: T): BOOLEAN =
-  VAR
-    mf := 0;
-    ml := LAST(x^);
-    nf := 0;
-    nl := LAST(x[0]);
   BEGIN
-    FOR i := mf TO ml DO
-      FOR j := nf TO nl DO IF x[i, j] # R.Zero THEN RETURN FALSE; END; END;
+    FOR i := FIRST(x^) TO LAST(x^) DO
+      FOR j := FIRST(x[0]) TO LAST(x[0]) DO
+        IF x[i, j] # R.Zero THEN RETURN FALSE; END;
+      END;
     END;
     RETURN TRUE;
   END IsZero;
@@ -89,16 +31,11 @@ PROCEDURE IsZero (x: T): BOOLEAN =
 PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Error} =
   <*UNUSED*>
   CONST ftn = Module & "Equal";
-  VAR
-    mf := 0;
-    ml := LAST(x^);
-    nf := 0;
-    nl := LAST(x[0]);
   BEGIN
     AssertEqualSize(x, y);
 
-    FOR i := mf TO ml DO
-      FOR j := nf TO nl DO
+    FOR i := FIRST(x^) TO LAST(x^) DO
+      FOR j := FIRST(x[0]) TO LAST(x[0]) DO
         IF x[i, j] # y[i, j] THEN RETURN FALSE; END;
       END;
     END;
@@ -110,19 +47,17 @@ PROCEDURE Add (x, y: T): T RAISES {Error} =
   <*UNUSED*>
   CONST ftn = Module & "Add";
   VAR
-    m     := NUMBER(x^);
-    mf    := 0;
-    ml    := LAST(x^);
-    n     := NUMBER(x[0]);
-    nf    := 0;
-    nl    := LAST(x[0]);
-    z : T;
+    m    := NUMBER(x^);
+    n    := NUMBER(x[0]);
+    z: T;
   BEGIN
     AssertEqualSize(x, y);
 
     z := NEW(T, m, n);
-    FOR i := mf TO ml DO
-      FOR j := nf TO nl DO z[i, j] := x[i, j] + y[i, j]; END;
+    FOR i := FIRST(x^) TO LAST(x^) DO
+      FOR j := FIRST(x[0]) TO LAST(x[0]) DO
+        z[i, j] := x[i, j] + y[i, j];
+      END;
     END;
     RETURN z;
   END Add;
@@ -131,19 +66,17 @@ PROCEDURE Sub (x, y: T): T RAISES {Error} =
   <*UNUSED*>
   CONST ftn = Module & "Sub";
   VAR
-    m     := NUMBER(x^);
-    mf    := 0;
-    ml    := LAST(x^);
-    n     := NUMBER(x[0]);
-    nf    := 0;
-    nl    := LAST(x[0]);
-    z : T;
+    m    := NUMBER(x^);
+    n    := NUMBER(x[0]);
+    z: T;
   BEGIN
     AssertEqualSize(x, y);
 
     z := NEW(T, m, n);
-    FOR i := mf TO ml DO
-      FOR j := nf TO nl DO z[i, j] := x[i, j] - y[i, j]; END;
+    FOR i := FIRST(x^) TO LAST(x^) DO
+      FOR j := FIRST(x[0]) TO LAST(x[0]) DO
+        z[i, j] := x[i, j] - y[i, j];
+      END;
     END;
     RETURN z;
   END Sub;
@@ -163,98 +96,81 @@ PROCEDURE Mul (x, y: T): T RAISES {Error} =
   <*UNUSED*>
   CONST ftn = "Mul";
   VAR
-    m        := NUMBER(x^);
-    mf       := 0;
-    ml       := m - 1;
-    n        := NUMBER(x[0]);
-    nf       := 0;
-    nl       := n - 1;
-    p        := NUMBER(y[0]);
-    pf       := 0;
-    pl       := p - 1;
-    z  : T;
-    sum: R.T;
+    m    := NUMBER(x^);
+    n    := NUMBER(x[0]);
+    p    := NUMBER(y[0]);
+    z: T;
 
   BEGIN
     IF NUMBER(y^) # n THEN RAISE Error(Err.bad_size); END;
     z := NEW(T, m, p);
-    FOR i := mf TO ml DO
-      FOR j := pf TO pl DO
-        sum := R.Zero;
-        FOR k := nf TO nl DO sum := sum + x[i, k] * y[k, j]; END;
-        z[i, j] := sum;
+    FOR i := FIRST(x^) TO LAST(x^) DO
+      FOR j := FIRST(y[0]) TO LAST(y[0]) DO
+        VAR sum := R.Zero;
+        BEGIN
+          FOR k := FIRST(x[0]) TO LAST(x[0]) DO
+            sum := sum + x[i, k] * y[k, j];
+          END;
+          z[i, j] := sum;
+        END;
       END;
     END;
     RETURN z;
   END Mul;
 
 (*----------------*)
-PROCEDURE MulV (A: T; b: V.T): V.T RAISES {Error} =
+PROCEDURE MulV (x: T; y: V.T): V.T RAISES {Error} =
   <*UNUSED*>
   CONST ftn = Module & "MulV";
-  VAR
-    m        := NUMBER(A^);
-    mf       := 0;
-    ml       := m - 1;
-    n        := NUMBER(A[0]);
-    nf       := 0;
-    nl       := n - 1;
-    c        := NEW(V.T, m);
-    sum: R.T;
+  VAR z := NEW(V.T, NUMBER(x^));
   BEGIN
-    IF NUMBER(b^) # n THEN RAISE Error(Err.bad_size); END;
+    IF NUMBER(x[0]) # NUMBER(y^) THEN RAISE Error(Err.bad_size); END;
 
-    FOR i := mf TO ml DO
-      sum := R.Zero;
-      FOR j := nf TO nl DO sum := sum + b[j] * A[i, j]; END;
-      c[i] := sum;
+    FOR i := FIRST(x^) TO LAST(x^) DO
+      VAR sum := R.Zero;
+      BEGIN
+        FOR j := FIRST(x[0]) TO LAST(x[0]) DO
+          sum := sum + y[j] * x[i, j];
+        END;
+        z[i] := sum;
+      END;
     END;
-    RETURN c;
+    RETURN z;
   END MulV;
 
 (*-----------------*)
-PROCEDURE MulTV (A: T; b: V.T): V.T RAISES {Error} =
+PROCEDURE MulTV (x: T; y: V.T): V.T RAISES {Error} =
   <*UNUSED*>
   CONST ftn = Module & "MulTV";
-  VAR
-    mf := 0;
-    ml := LAST(A^);
-    nf := 0;
-    nl := LAST(A[0]);
-    c  := NEW(V.T, NUMBER(A[0]));
+  VAR z := NEW(V.T, NUMBER(x[0]));
   BEGIN
-    IF NUMBER(b^) # NUMBER(A^) THEN RAISE Error(Err.bad_size); END;
+    IF NUMBER(x^) # NUMBER(y^) THEN RAISE Error(Err.bad_size); END;
 
-    FOR i := nf TO nl DO
+    FOR i := FIRST(x[0]) TO LAST(x[0]) DO
       VAR sum := R.Zero;
       BEGIN
-        FOR j := mf TO ml DO sum := sum + A[j, i] * b[j]; END;
-        c[i] := sum;
+        FOR j := FIRST(x^) TO LAST(x^) DO sum := sum + x[j, i] * y[j]; END;
+        z[i] := sum;
       END;
     END;
-    RETURN c;
+    RETURN z;
   END MulTV;
 
 (*-----------------*)
 PROCEDURE Transpose (x: T): T =
   <*UNUSED*>
   CONST ftn = Module & "mTranspose";
-  VAR
-    m  := NUMBER(x^);
-    mf := 0;
-    ml := m - 1;
-    n  := NUMBER(x[0]);
-    nf := 0;
-    nl := n - 1;
-    z  := NEW(T, n, m);
+  VAR z := NEW(T, NUMBER(x[0]), NUMBER(x^));
   BEGIN
-    FOR i := nf TO nl DO FOR j := mf TO ml DO z[i, j] := x[j, i]; END; END;
+    FOR i := FIRST(x[0]) TO LAST(x[0]) DO
+      FOR j := FIRST(x^) TO LAST(x^) DO z[i, j] := x[j, i]; END;
+    END;
     RETURN z;
   END Transpose;
 
 (*-----------------*)
 PROCEDURE MulMAM (x: T): T =
-  VAR z := New(NUMBER(x[0]), NUMBER(x[0]));
+  VAR z := NEW(T, NUMBER(x[0]), NUMBER(x[0]));
   BEGIN
     FOR i := 0 TO LAST(x[0]) DO
       FOR j := i TO LAST(x[0]) DO
@@ -271,7 +187,7 @@ PROCEDURE MulMAM (x: T): T =
 
 (*-----------------*)
 PROCEDURE MulMMA (x: T): T =
-  VAR z := New(NUMBER(x^), NUMBER(x^));
+  VAR z := NEW(T, NUMBER(x^), NUMBER(x^));
   BEGIN
     FOR i := 0 TO LAST(x^) DO
       FOR j := i TO LAST(x^) DO
@@ -288,7 +204,7 @@ PROCEDURE MulMMA (x: T): T =
 
 (*-----------------*)
 PROCEDURE Trace (x: T): R.T =
-  VAR y: R.T := R.Zero;
+  VAR y := R.Zero;
   BEGIN
     FOR j := 0 TO MIN(LAST(x^), LAST(x[0])) DO y := y + x[j, j]; END;
     RETURN y;

@@ -6,7 +6,7 @@ Abstract: Formatting of integers of arbitrary size
 *)
 
 IMPORT (*Lex AS L, FloatMode, Rd, Thread,*)
-       BigIntegerBasic AS B, Fmt AS F;
+       BigInteger AS B, Fmt AS F;
 
 FROM FmtLexSupport IMPORT Precedence;
 
