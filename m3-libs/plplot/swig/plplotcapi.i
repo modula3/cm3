@@ -54,6 +54,7 @@ typedef void* PLPointer;
 typedef PLINT  PLArraySize;
 
 typedef const PLFLT* PLFLTArray;
+typedef PLFLTArray PLFLTArraySzd;
 typedef PLFLTArray PLFLTArrayFst;
 typedef PLFLTArray PLFLTArrayCk;
 typedef PLFLTArray PLFLTArrayX;
@@ -236,7 +237,7 @@ plcol1(PLFLT col1);
 DOC(plcont, "Draw a contour plot.")
 void
 plcont(PLFLTMatrixFst z, PLArraySize nx, PLArraySize ny, PLINT kx, PLINT lx,
-	 PLINT ky, PLINT ly, PLFLTArrayFst x, PLArraySize n,
+	 PLINT ky, PLINT ly, PLFLTArraySzd x, PLArraySize n,
 	 pltr_func pltr,
 	 PLPointer OBJECT_DATA);
 
@@ -395,7 +396,7 @@ plgzax(PLINTOutput digmax, PLINTOutput digits);
 
 DOC(plhist, "Draw histogram.")
 void
-plhist(PLArraySize n, PLFLTArrayFst x, PLFLT datmin, PLFLT datmax,
+plhist(PLArraySize n, PLFLTArraySzd x, PLFLT datmin, PLFLT datmax,
 	 PLINT nbin, PLINT oldwin);
 
 DOC(plhls, "Set current color (map 0) by hue, lightness, and saturation.")
@@ -438,7 +439,7 @@ plmesh(PLFLTArrayX x, PLFLTArrayY y, PLFLTMatrixCk z,
 DOC(plmeshc, "Plot a 3-d contoured mesh representation of the function z[x][y].")
 void
 plmeshc(PLFLTArrayX x, PLFLTArrayY y, PLFLTMatrixCk z,
-	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArrayFst clevel, PLArraySize n);
+	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArraySzd clevel, PLArraySize n);
 
 DOC(plmkstrm, "Create a new stream and makes it the default.")
 void
@@ -457,12 +458,12 @@ plot3d(PLFLTArrayX x, PLFLTArrayY y, PLFLTMatrixCk z,
 DOC(plot3dc, "Plot a 3-d contoured representation of the function z[x][y].")
 void
 plot3dc(PLFLTArrayX x, PLFLTArrayY y, PLFLTMatrixCk z,
-	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArrayFst clevel, PLArraySize n);
+	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArraySzd clevel, PLArraySize n);
 
 DOC(plsurf3d, "Plot a 3-d contoured surface representation of the function z[x][y].")
 void
 plsurf3d(PLFLTArrayX x, PLFLTArrayY y, PLFLTMatrixCk z,
-	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArrayFst clevel, PLArraySize n);
+	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArraySzd clevel, PLArraySize n);
 
 DOC(plpat, "Set fill pattern directly.")
 void
@@ -584,7 +585,7 @@ DOC(plshades, "Shade regions with continuous range of colours.")
 void 
 plshades( PLFLTMatrixFst a, PLArraySize nx, PLArraySize ny, defined_func df,
 	  PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
-	  PLFLTArrayFst x, PLArraySize n, PLINT fill_width,
+	  PLFLTArraySzd x, PLArraySize n, PLINT fill_width,
 	  PLINT cont_color, PLINT cont_width,
 	  fill_func ff, PLINT rectangular,
 	  pltr_func pltr,
