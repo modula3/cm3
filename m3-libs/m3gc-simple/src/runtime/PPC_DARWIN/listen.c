@@ -5,10 +5,5 @@
 int
 m3_listen(int s, int backlog)
 {
-  int result;
-
-  ENTER_CRITICAL;
-  result = listen(s, backlog);
-  EXIT_CRITICAL;
-  return result;
+  return listen(s, backlog);
 }

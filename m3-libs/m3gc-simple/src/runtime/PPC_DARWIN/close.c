@@ -4,10 +4,5 @@
 int
 m3_close(int d)
 {
-  int result;
-
-  ENTER_CRITICAL;
-  result = close(d);
-  EXIT_CRITICAL;
-  return result;
+  return close(d);
 }

@@ -5,10 +5,5 @@
 int
 m3_shutdown(int s, int how)
 {
-  int result;
-
-  ENTER_CRITICAL;
-  result = shutdown(s, how);
-  EXIT_CRITICAL;
-  return result;
+  return shutdown(s, how);
 }

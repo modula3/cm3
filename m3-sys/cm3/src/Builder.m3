@@ -118,7 +118,6 @@ TYPE
     has_loader    : BOOLEAN;            (* gen loader info file *)
     skip_link     : BOOLEAN;            (* don't bother linking final exe *)
     keep_resolved : BOOLEAN;            (* pass resolved library names to linker *)
-    split_if_shared: BOOLEAN;   (* pass resolved library names to linker only if linking static *)
     m3main_in_c   : BOOLEAN;            (* generate a C main program *)
     gui           : BOOLEAN;            (* generate a Windows GUI subsystem prog *)
     do_coverage   : BOOLEAN;            (* compile and link for coverage *)
@@ -196,7 +195,6 @@ PROCEDURE CompileUnits (main     : TEXT;
     s.has_loader     := GetConfigBool (s, "SYS_HAS_LOADER");
     s.skip_link      := GetConfigBool (s, "M3_SKIP_LINK");
     s.keep_resolved  := NOT GetConfigBool (s, "M3_SPLIT_LIBNAMES");
-    s.split_if_shared:= GetConfigBool (s, "M3_SPLIT_LIBNAMES_IF_SHARED", FALSE);
     s.m3main_in_c    := GetConfigBool (s, "M3_MAIN_IN_C");
     s.gui            := GetConfigBool (s, "M3_WINDOWS_GUI");
     s.do_coverage    := GetConfigBool (s, "M3_COVERAGE");
@@ -1997,13 +1995,10 @@ PROCEDURE BuildCProgram (s: State;  shared: BOOLEAN) =
       Arg.Append (pgm_objects, s.link_coverage);
     END;
 
-    IF s.split_if_shared AND shared THEN
-      s.keep_resolved := FALSE;
-    END;
     IF s.skip_link
-      THEN import_libs := GetLibraries (s, pgmTime, pgmValid, NIL, NIL, FALSE);
+      THEN import_libs := GetLibraries (s, pgmTime, pgmValid, NIL, NIL, FALSE, shared);
       ELSE import_libs := GetLibraries (s, pgmTime, pgmValid, "linking ", pgm_file,
-                                        NOT shared AND s.broken_linker);
+                                        NOT shared AND s.broken_linker, shared);
     END;
 
     IF pgmValid OR s.skip_link THEN
@@ -2061,13 +2056,10 @@ PROCEDURE BuildProgram (s: State;  shared: BOOLEAN) =
       Arg.Append (pgm_objects, s.link_coverage);
     END;
 
-    IF s.split_if_shared AND shared THEN
-      s.keep_resolved := FALSE;
-    END;
     IF s.skip_link
-      THEN import_libs := GetLibraries (s, pgmTime, pgmValid, NIL, NIL, FALSE);
+      THEN import_libs := GetLibraries (s, pgmTime, pgmValid, NIL, NIL, FALSE, shared);
       ELSE import_libs := GetLibraries (s, pgmTime, pgmValid, "linking ", pgm_file,
-                                        NOT shared AND s.broken_linker);
+                                        NOT shared AND s.broken_linker, shared);
     END;
 
     IF pgmValid THEN
@@ -2137,7 +2129,7 @@ PROCEDURE GetObjects (s: State;  result_time: INTEGER;
 
 PROCEDURE GetLibraries (s: State;  result_time: INTEGER;
                          VAR valid: BOOLEAN;  verb, result: TEXT;
-                         use_links: BOOLEAN): Arg.List =
+                         use_links: BOOLEAN; shared: BOOLEAN): Arg.List =
   VAR
     u := s.units.head;
     libs := Arg.NewList ();
@@ -2170,7 +2162,7 @@ PROCEDURE GetLibraries (s: State;  result_time: INTEGER;
             Utils.LinkFile (lib_file, lib_link);
           END;
           Arg.Prepend (libs, "-l" & M3ID.ToText (u.name));
-        ELSIF (s.keep_resolved) THEN
+        ELSIF (NOT shared OR s.keep_resolved) THEN
           Arg.Prepend (libs, lib_file);
         ELSE
           Arg.Prepend (libs, "-l" & M3ID.ToText (u.name));
@@ -2379,12 +2371,9 @@ PROCEDURE BuildLibrary (s: State;  shared: BOOLEAN) =
       libValid := FALSE;
     END;
 
-    IF s.split_if_shared AND shared THEN
-      s.keep_resolved := FALSE;
-    END;
     lib_objects := GetObjects   (s, lib_time, libValid, "archiving ", lib_file);
     import_libs := GetLibraries (s, lib_time, libValid, "archiving ", lib_file,
-                                 FALSE);
+                                 FALSE, shared);
 
     IF libValid THEN
       DontBuildLibrary (s, name.base, shared);
