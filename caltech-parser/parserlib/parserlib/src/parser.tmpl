@@ -1,4 +1,12 @@
-include ("../../.parsertop")
+if not defined("ROOT")
+  ROOT = PKG_INSTALL
+end
+if not defined("TOP")
+  TOP = ROOT & "/caltech-parser"
+end
+if not defined("_PARSER_TOP")
+  _PARSER_TOP = TOP & "/parserlib"
+end
 
 if not defined("_PARSER_CMDS")
 	local _TOK = _PARSER_TOP & "/ktok/" & BUILD_DIR & "/tok"
