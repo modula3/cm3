@@ -33,7 +33,7 @@ PROCEDURE MatchPattern (target                               : S.T;
     hdual := BSpl.GeneratorMask(smooth);
     gdual := BSpl.WaveletMask(smooth, vanishing);
     vancore := SIntPow.MulPower(
-                 hdual, NEW(S.T).fromArray(ARRAY OF R.T{0.5D0, -0.5D0},-1),
+                 hdual, NEW(S.T).fromArray(ARRAY OF R.T{1.0D0, -1.0D0},-1),
                  vanishing);
     phivan := Refn.Refine(vancore.scale(RT.SqRtTwo), hdual, levels);
     psi    := Refn.Refine(gdual.scale(R.One / RT.SqRtTwo), hdual, levels);
@@ -81,16 +81,25 @@ PROCEDURE MatchPattern (target                               : S.T;
                     TEXT{Fmt.Int(translates), Fmt.Int(size),
                          RF.Fmt(coef.res), VF.Fmt(coef.x)}));
 
+    PL.SetColor0(4);
+    PL.PlotLines(abscissa^, M.MulTV(basis,coef.x)^);
+
     PL.Exit();
   END MatchPattern;
 
 PROCEDURE Test () =
   <*FATAL BSpl.DifferentParity*>
   BEGIN
-    CASE 0 OF
+    CASE 2 OF
     | 0 =>
         MatchPattern(
-          Refn.Refine(S.One, BSpl.GeneratorMask(4), 7), 6, 4, 0, 5);
+          Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50), 6, 4, 0, 5);
+    | 1 =>
+        MatchPattern(
+          Refn.Refine(S.One, BSpl.GeneratorMask(1), 7).translate(10), 6, 4, 2, 5);
+    | 2 =>
+        MatchPattern(
+          NEW(S.T).fromArray(V.ArithSeq(512,-0.01D0,0.02D0/512.0D0)^,-256), 6, 4, 2, 5);
     ELSE
       <*ASSERT FALSE*>
     END;
