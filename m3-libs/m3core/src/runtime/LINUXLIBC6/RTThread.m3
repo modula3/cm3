@@ -73,15 +73,15 @@ PROCEDURE UpdateStateForNewSP (VAR s: State; offset: INTEGER) =
   BEGIN
     INC (s.sp, offset);
     INC (s.bp, offset);
-  END UpdateStateForNewSP;
-
-PROCEDURE UpdateFrameForNewSP (a: ADDRESS;
-                               <*UNUSED*> offset: INTEGER) =
-  BEGIN
     (* Zero the return address and previous frame pointer to mark the
        thread stack end. *)
-    LOOPHOLE(a,UNTRACED REF Word.T)^ := 0;
-    LOOPHOLE(a + BYTESIZE(ADDRESS),UNTRACED REF Word.T)^ := 0;
+    LOOPHOLE(s.bp, UNTRACED REF Word.T)^ := 0;
+    LOOPHOLE(s.bp + BYTESIZE(ADDRESS), UNTRACED REF Word.T)^ := 0;
+  END UpdateStateForNewSP;
+
+PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
+                               <*UNUSED*> offset: INTEGER) =
+  BEGIN
   END UpdateFrameForNewSP;
 
 (*------------------------------------ manipulating the SIGVTALRM handler ---*)
