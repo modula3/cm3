@@ -154,14 +154,15 @@ SYSTEM_LIBS = {
                        13 "/usr/lib"
                    END_CONFIG, "-lGLU", "-lGL", "-lXext" ],
   "ODBC"       : [ BEGIN_CONFIG
-                     "Where are the Postgress 95 libraries?"
-                       11 "libpq.a"
-                       12 "/usr/lib"
+                     "Where are the ODBC libraries?"
+                       11 "libodbc.a"
                        12 "/usr/local/lib"
+                       12 "/usr/lib"
+                       12 "/usr/local/pgsql/lib"
                        12 "/usr/local/postgres95/lib"
-                       13 "/usr/lib"
-                   END_CONFIG, "-lpq",
-                     PKG_USE & "/pgodbc/LINUXELF/libpgodbc.a" ],
+                       13 "/usr/local/lib"
+                   END_CONFIG, "-lodbc" ],
+% FIXME: What is this?  PKG_USE & "/pgodbc/LINUXELF/libpgodbc.a" ],
   "MOTIF"      : [ BEGIN_CONFIG
                      "Where are the Motif libraries?"
                        11 "libXm.a"

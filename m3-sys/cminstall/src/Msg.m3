@@ -74,6 +74,11 @@ PROCEDURE AskChoice (question: TEXT; choices : TextSeq.T): TEXT =
     IF choices.size() = 0 THEN
       RETURN Ask(question, NIL);
     END;
+    FOR i := 0 TO choices.size() - 1 DO
+      WITH c = choices.get(i) DO
+        Out(Fmt.Int(i + 1), ": ", c);
+      END;
+    END;
     WHILE result = NIL OR Text.Equal(result, ".") OR
       Text.Equal(result, "+") OR Text.Equal(result, "-") DO
       IF result # NIL THEN
@@ -119,6 +124,14 @@ PROCEDURE Out (a, b, c, d, e, f: TEXT := NIL) =
     OutX (Wr.EOL);
     FlushX ();
   END Out;
+
+PROCEDURE OutS (a, b, c, d, e, f: TEXT := NIL) =
+  BEGIN
+    OutX (a);  OutX (b);
+    OutX (c);  OutX (d);
+    OutX (e);  OutX (f);
+    FlushX ();
+  END OutS;
 
 PROCEDURE OutX (a: TEXT) =
   <*FATAL Wr.Failure, Thread.Alerted *>
