@@ -35,9 +35,6 @@ TYPE
   ErrorNeedMoreData =
     ErrorBadParameters BRANDED OBJECT END; (*e.g., more data points in
                                               statistics*)
-  ErrorNotBracketed =
-    ErrorBadParameters BRANDED OBJECT END; (*given x1,x2 do not bracket
-                                              root*)
 
   ErrorOverflow = ErrorOperationAborted BRANDED OBJECT END;
   ErrorIndivisible =

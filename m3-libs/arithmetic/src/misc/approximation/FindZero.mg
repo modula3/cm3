@@ -3,119 +3,119 @@ GENERIC MODULE FindZero(R, RT);
 IMPORT Arithmetic AS Arith;
 
 CONST Module = "FindZero.";
-(*==========================*)
 
-(*----------------*)
-PROCEDURE BracketOut (func: Ftn;  (*find brackets for this function*)
-                      VAR xb: Bracket;  (*starting with these points*)
-                      maxiter: CARDINAL := 55 (*growing maxiter times*)
-  ): BOOLEAN RAISES {Arith.Error} = (*true if successful*)
-  (*Given xb.l,xb.r, search for points (returned in xb.l, xb.r) for which
-     func(xb.l) is opposite sign from func(xb.r).  Grow outward from the
-     original xb.l,xb.r by golden ratio, for geometric growth.  Return true
-     if a good xb.l,xb.r can be found before getting to maxiter, else
-     return false.
 
-     requires: xb.l<xb.r. *)
+PROCEDURE AreBracketing (y1, y2: R.T; ): BOOLEAN =
+  BEGIN
+    RETURN
+      (y1 <= R.Zero AND y2 >= R.Zero) OR (y1 >= R.Zero AND y2 <= R.Zero);
+  END AreBracketing;
+
+<* INLINE *>
+PROCEDURE AssertBracketing (y1, y2: R.T; ) =
+  BEGIN
+    <* ASSERT AreBracketing(y1, y2),
+                "The given values have the same sign and thus may not include a zero." *>
+  END AssertBracketing;
+
+PROCEDURE AssertXOrder (READONLY xb: Bracket; ) =
+  BEGIN
+    <* ASSERT xb.l + RT.Tiny < xb.r *>
+  END AssertXOrder;
+
+
+
+PROCEDURE BracketOut (func: Ftn; VAR xb: Bracket; maxiter: CARDINAL := 55; ):
+  BOOLEAN =
+
   <* UNUSED *>
   CONST
     ftn = Module & "BracketOut";
-  VAR f1, f2, diff: R.T;
+
   BEGIN
-    IF xb.r - xb.l < RT.Tiny THEN
-      (*need xb.l<xb.r*)
-      RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
-    END;
-    (*---initialize---*)
-    f1 := func(xb.l);
-    f2 := func(xb.r);
-    (*---loop to completion---*)
-    FOR i := 1 TO maxiter DO
-      (*---check exit criteria---*)
-      IF (f1 < R.Zero AND f2 > R.Zero) OR (f1 > R.Zero AND f2 < R.Zero) THEN
-        RETURN TRUE;
-      END;
-      diff := xb.r - xb.l;
-      (*---grow the smallest one---*)
-      IF ABS(f1) < ABS(f2) THEN
-        xb.l := xb.l - RT.GoldenRatio * diff; (*xb.l gets more negative*)
-        f1 := func(xb.l);
-      ELSE
-        xb.r := xb.r + RT.GoldenRatio * diff; (*xb.r gets more positive*)
-        f2 := func(xb.r);
+    AssertXOrder(xb);
+
+    VAR
+      (*---initialize---*)
+      f1 := func(xb.l);
+      f2 := func(xb.r);
+    BEGIN
+      (*---loop to completion---*)
+      FOR i := 1 TO maxiter DO
+        (*---check exit criteria---*)
+        IF AreBracketing(f1, f2) THEN RETURN TRUE; END;
+        WITH diff = xb.r - xb.l DO
+          (*---grow the smallest one---*)
+          IF ABS(f1) < ABS(f2) THEN
+            xb.l :=
+              xb.l - RT.GoldenRatio * diff; (*xb.l gets more negative*)
+            f1 := func(xb.l);
+          ELSE
+            xb.r :=
+              xb.r + RT.GoldenRatio * diff; (*xb.r gets more positive*)
+            f2 := func(xb.r);
+          END;
+        END;
       END;
     END;
     RETURN FALSE;
   END BracketOut;
 
-(*----------------*)
-PROCEDURE BracketIn (func: Ftn;  (*find brackets for this function*)
-                     READONLY xb: Bracket;  (*starting with these points*)
-                     n: CARDINAL;  (*using n equi-sized segments*)
-                     VAR (*OUT*) xs: ARRAY OF Bracket;  (*returning pairs
-                                                           here*)
-  ): CARDINAL                    (*with this count of valid pairs, the rest
-                                    of the array won't be touched*)
-  RAISES {Arith.Error} =
+
+PROCEDURE BracketIn (         func: Ftn;
+                     READONLY xb  : Bracket;
+                              n   : [1 .. LAST(CARDINAL)]; ):
+  REF ARRAY OF Bracket =
   <* UNUSED *>
   CONST
     ftn = Module & "BracketIn";
   VAR
     h, x, xh, y, yh: R.T;
     ns             : CARDINAL := 0;
+    xs                        := NEW(REF ARRAY OF Bracket, n);
+
   BEGIN
-    IF xb.l >= xb.r THEN
-      (*need xb.l<xb.r*)
-      RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
-    END;
-    IF NUMBER(xs) < 1 THEN
-      (*need 1 <= ns <= size of xb1 and xb2*)
-      RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
-    END;
+    AssertXOrder(xb);
 
     h := (xb.r - xb.l) / FLOAT(n, R.T);
     x := xb.l;
     y := func(x);
-    ns := 0;
     FOR i := 1 TO n DO
       xh := x + h;
       yh := func(xh);
-      IF (y < R.Zero AND yh > R.Zero) OR (y > R.Zero AND yh < R.Zero) THEN
+      IF AreBracketing(y, yh) THEN
         xs[ns].l := x;
         xs[ns].r := xh;
         INC(ns);
-        IF ns = NUMBER(xs) THEN RETURN ns; END;
       END;
       x := xh;
       y := yh;
     END;
-    RETURN ns;
+
+    WITH xs0 = NEW(REF ARRAY OF Bracket, ns) DO
+      xs0^ := SUBARRAY(xs^, 0, ns);
+      RETURN xs0;
+    END;
   END BracketIn;
 
-(*----------------*)
-PROCEDURE Bisection (func: Ftn;  (*find root of this function*)
-                     READONLY xb : Bracket;  (*between these brackets*)
-                              tol: R.T;      (*to within +/- tolerance*)
-                     maxiter := 45 (*but no more than maxiter cuts*)
-  ): R.T RAISES {Arith.Error} =  (*returning the root*)
-  (*Given brackets xb.l,xb.r, find a root via bisection, and refine it to
-     within +/- tol *)
+
+PROCEDURE Bisection (         func   : Ftn;
+                     READONLY xb     : Bracket;
+                              tol    : R.T;
+                              maxiter            := 45; ): R.T
+  RAISES {Arith.Error} =
+
   <* UNUSED *>
   CONST
     ftn = Module & "Bisection";
   VAR h, x, y1, y2, y: R.T;
   BEGIN
-    (*---check preconditions---*)
-    IF xb.r - xb.l < RT.Tiny THEN
-      (*need xb.l<xb.r*)
-      RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
-    END;
+    AssertXOrder(xb);
+
     y1 := func(xb.l);
     y2 := func(xb.r);
-    IF (y1 > R.Zero AND y2 > R.Zero) OR (y1 < R.Zero AND y2 < R.Zero) THEN
-      (*xb.l and xb.r do not bracket a root*)
-      RAISE Arith.Error(NEW(Arith.ErrorNotBracketed).init());
-    END;
+
+    AssertBracketing(y1, y2);
 
     (*---initialize---*)
     IF y1 > R.Zero THEN
@@ -144,14 +144,8 @@ PROCEDURE Bisection (func: Ftn;  (*find root of this function*)
     RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
   END Bisection;
 
-(*----------------*)
-PROCEDURE Brent (func: Ftn;      (*find a root of this function*)
-                 READONLY xb : Bracket;  (*between these bracket points*)
-                          tol: R.T;      (*to this tolerance*)
-                 maxiter := 100  (*with <= maxiter iterations*)
-  ): R.T RAISES {Arith.Error} =
-  (*Use Brent's algorithm to find the real root between the bracket points.
-     xb.l and xb.r must be of opposite signs. *)
+PROCEDURE Brent (func: Ftn; READONLY xb: Bracket; tol: R.T; maxiter := 100):
+  R.T RAISES {Arith.Error} =
   <* UNUSED *>
   CONST
     ftn = Module & "Brent";
@@ -168,11 +162,7 @@ PROCEDURE Brent (func: Ftn;      (*find a root of this function*)
     fb := func(b);
     IF ABS(fb) < RT.Tiny THEN RETURN b; END;
 
-    (*---check for bad bracketing---*)
-    IF fa * fb > R.Zero THEN
-      (*xb.l and xb.r do not bracket root*)
-      RAISE Arith.Error(NEW(Arith.ErrorNotBracketed).init());
-    END;
+    AssertBracketing(fa, fb);
 
     (*---set c at a---*)
     c := xb.l;
@@ -182,10 +172,7 @@ PROCEDURE Brent (func: Ftn;      (*find a root of this function*)
     FOR i := 1 TO maxiter DO
       (*---establish preconditions for loop---*)
       (*1.  a and c are same side, with b opposite*)
-      IF (fb < R.Zero AND fc < R.Zero) OR (fb > R.Zero AND fc > R.Zero) THEN
-        c := a;
-        fc := fa;
-      END;
+      IF NOT AreBracketing(fb, fc) THEN c := a; fc := fa; END;
       (*2.  fb is smallest of the three*)
       IF ABS(fc) < ABS(fb) THEN
         (*use the smallest one for b*)
@@ -251,18 +238,13 @@ PROCEDURE Brent (func: Ftn;      (*find a root of this function*)
     RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
   END Brent;
 
-(*---------------------*)
-PROCEDURE NewtonRaphson (func: DifFtn;  (*this ftn*)
-                         READONLY xb: Bracket;  (*bracketed by these
-                                                   points*)
-                         xtol: R.T;  (*find root to this x precision*)
-                         maxiter := 25 (*with no more than maxiter loops*)
-  ): R.T RAISES {Arith.Error} =  (*returning root*)
-  (*Given a function which returns both f(x) and df(x), and brackets xb.l
-     and xb.r, find the root to xtol precision.  Works via newton-raphson
-     and bisection.
 
-     *)
+PROCEDURE NewtonRaphson (         func   : DifFtn;
+                         READONLY xb     : Bracket;
+                                  xtol   : R.T;
+                                  maxiter            := 25; ): R.T
+  RAISES {Arith.Error} =
+
   <* UNUSED *>
   CONST
     ftn = Module & "NewtonRaphson";
@@ -271,10 +253,7 @@ PROCEDURE NewtonRaphson (func: DifFtn;  (*this ftn*)
     delta, root, rootnext: R.T;
     a, b, tmp            : R.T;
   BEGIN
-    IF xb.l >= xb.r THEN
-      (*need xb.l<xb.r*)
-      RAISE Arith.Error(NEW(Arith.ErrorNotBracketed).init());
-    END;
+    AssertXOrder(xb);
 
     VAR y1, y2: R.T;
     BEGIN
@@ -284,9 +263,7 @@ PROCEDURE NewtonRaphson (func: DifFtn;  (*this ftn*)
       y := func(xb.r);
       IF y[0] = R.Zero THEN RETURN xb.r; END;
       y2 := y[0];
-      IF (y1 < R.Zero AND y2 < R.Zero) OR (y1 > R.Zero AND y2 > R.Zero) THEN
-        RAISE Arith.Error(NEW(Arith.ErrorNotBracketed).init());
-      END;
+      AssertBracketing(y1, y2);
 
       (*---orient for fa<0, fb>0---*)
       IF y1 < R.Zero THEN
@@ -321,6 +298,6 @@ PROCEDURE NewtonRaphson (func: DifFtn;  (*this ftn*)
     END;
     RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
   END NewtonRaphson;
-(*==========================*)
+
 BEGIN
 END FindZero.
