@@ -6,20 +6,24 @@ Abstract:  Tests for Tex module.
 
 *)
 
-IMPORT FileWr, Wr, Process;
+IMPORT FileWr, Wr, Fmt, Process;
 IMPORT Thread, OSError;
 IMPORT TempFiles AS Tmp;
 
-IMPORT LongRealBasic         AS R,
-       LongRealComplexFast   AS C,
-       LongRealPolarBasic    AS Polar,
-       LongRealVectorFast    AS V,
-       LongRealMatrixFast    AS M,
-       LongRealFmtLex        AS RF,
-       LongRealComplexFmtLex AS CF,
-       LongRealPolarFmtLex   AS PolarF,
-       LongRealVectorFmtLex  AS VF,
-       LongRealMatrixFmtLex  AS MF;
+IMPORT LongRealBasic            AS R,
+       LongRealComplexFast      AS C,
+       LongRealPolarBasic       AS Polar,
+       BigIntegerBasic          AS B,
+       BigIntegerFractionBasic  AS Fr,
+       LongRealVectorFast       AS V,
+       LongRealMatrixFast       AS M,
+       LongRealFmtLex           AS RF,
+       LongRealComplexFmtLex    AS CF,
+       LongRealPolarFmtLex      AS PolarF,
+       BigIntegerFmtLex         AS BF,
+       BigIntegerFractionFmtLex AS FrF,
+       LongRealVectorFmtLex     AS VF,
+       LongRealMatrixFmtLex     AS MF;
 
 
 (*=======================*)
@@ -30,19 +34,9 @@ PROCEDURE TestTexVector():BOOLEAN=
 CONST
   ftn = Module & "TestTexVector";
   filename = "test";
-  y  = ARRAY OF R.T{1.3D0,-0.4D0,-0.2D0,3.6D0,-2.3D0};
-  yc = ARRAY OF C.T{
-         C.T{0.0D20,0.0D0},
-         C.T{1.0D20,0.0D0},
-         C.T{3.0D23,-4.0D23},
-         C.T{-1.0D23,-1.0D23},
-         C.T{0.0D0,2.5D0}
-       };
 VAR
   result:=TRUE;
   out := FileWr.Open(filename & ".tex");
-  x := V.FromArray(ARRAY OF R.T{1.0D0,1.5D0,-0.3D0,0.7D0,-2.3D0});
-  A := M.New(NUMBER(x^),NUMBER(x^));
 
 <*FATAL OSError.E, Thread.Alerted, Wr.Failure *>
 BEGIN
@@ -50,26 +44,72 @@ BEGIN
 
   Tmp.Note(filename&".tex");
 
-  FOR i:=0 TO LAST(y) DO
-    FOR j:=0 TO LAST(y) DO
-      A[i,j] := y[ABS(i-j)];
-    END;
-  END;
-
   Wr.PutText(out,"\\documentclass[a4paper]{article}\n");
   Wr.PutText(out,"\\begin{document}\n");
-  Wr.PutText(out,"$$\n");
-  Wr.PutText(out,RF.Tex(V.Inner(x,M.MulV(A,x))) & "\n");
-  Wr.PutText(out,"=" & VF.Tex(x,style:=VF.TexStyle{dir:=VF.TexDirection.horizontal}));
-  Wr.PutText(out,"\\cdot" & MF.Tex(A));
-  Wr.PutText(out,"\\cdot" & VF.Tex(x,style:=VF.TexStyle{dir:=VF.TexDirection.vertical}));
-  Wr.PutText(out,"$$\n");
-  Wr.PutText(out,"\\begin{eqnarray*}\n");
-  FOR j:=0 TO LAST(yc) DO
-    Wr.PutText(out,CF.Tex(yc[j])&"&=&");
-    Wr.PutText(out,PolarF.Tex(Polar.FromComplex(yc[j]))&"\\\\\n");
+
+  CONST
+    y  = ARRAY OF R.T{1.3D0,-0.4D0,-0.2D0,3.6D0,-2.3D0};
+  VAR
+    x := V.FromArray(ARRAY OF R.T{1.0D0,1.5D0,-0.3D0,0.7D0,-2.3D0});
+    A := M.New(NUMBER(x^),NUMBER(x^));
+  BEGIN
+    FOR i:=0 TO LAST(y) DO
+      FOR j:=0 TO LAST(y) DO
+        A[i,j] := y[ABS(i-j)];
+      END;
+    END;
+
+    Wr.PutText(out,"$$\n");
+    Wr.PutText(out,RF.Tex(V.Inner(x,M.MulV(A,x))) & "\n");
+    Wr.PutText(out,"=" & VF.Tex(x,style:=VF.TexStyle{flags:=VF.TexFlagSet{}}));
+    Wr.PutText(out,"\\cdot" & MF.Tex(A));
+    Wr.PutText(out,"\\cdot" & VF.Tex(x,style:=VF.TexStyle{flags:=VF.TexFlagSet{VF.TexFlag.vertical}}));
+    Wr.PutText(out,"$$\n");
   END;
-  Wr.PutText(out,"\\end{eqnarray*}\n");
+
+  CONST
+    yc = ARRAY OF C.T{
+           C.T{0.0D20,0.0D0},
+           C.T{1.0D20,0.0D0},
+           C.T{3.0D23,-4.0D23},
+           C.T{-1.0D23,-1.0D23},
+           C.T{0.0D0,2.5D0}
+         };
+  BEGIN
+    Wr.PutText(out,"\\begin{eqnarray*}\n");
+    FOR j:=0 TO LAST(yc) DO
+      Wr.PutText(out,CF.Tex(yc[j])&"&=&");
+      Wr.PutText(out,PolarF.Tex(Polar.FromComplex(yc[j]))&"\\\\\n");
+    END;
+    Wr.PutText(out,"\\end{eqnarray*}\n");
+  END;
+
+  VAR
+(*
+    x := B.FromInteger(12345679);
+    y := x;
+*)
+    x := B.FromInteger( 987654321);
+    y := B.FromInteger(1608040201);
+    billard := B.FromInteger(1000000000);
+  BEGIN
+    Wr.PutText(out,"$$\n");
+    Wr.PutText(out,"\\begin{array}{rcrcl}\n");
+    FOR j:=0 TO 20 DO
+      Wr.PutText(out,FrF.Tex(Fr.T{y,x}) & "&=&");
+      Wr.PutText(out,FrF.Tex(Fr.T{y,x},style:=FrF.TexStyle{flags:=FrF.TexFlagSet{FrF.TexFlag.fraction}})&"&=&");
+      VAR
+        r : B.T;
+      BEGIN
+        Wr.PutText(out,BF.Tex(B.DivMod(y,x,r))&"."&
+                       Fmt.Pad(BF.Tex(B.DivMod(B.Mul(billard,r),x,r)),9,'0')&"\\\\\n");
+      END;
+      VAR z := B.Add(x,y); BEGIN x:=y; y:=z; END;
+    END;
+    Wr.PutText(out,"\\end{array}\n");
+    Wr.PutText(out,"$$\n");
+  END;
+
   Wr.PutText(out,"\\end{document}\n");
 
   Wr.Close(out);
