@@ -34,10 +34,12 @@ PROCEDURE Copy (src, dest: TEXT) RAISES {OSError.E} =
     rd, wr : File.T := NIL;
     len    : INTEGER;
     buf    : ARRAY [0..4095] OF File.Byte;
+    status  : File.Status;
   BEGIN
     TRY
       rd := FS.OpenFileReadonly (src);
       wr := OpenDestination (dest, rd);
+      status := FS.Status(src);
       LOOP
         len := rd.read (buf);
         IF (len <= 0) THEN EXIT; END;
@@ -46,6 +48,7 @@ PROCEDURE Copy (src, dest: TEXT) RAISES {OSError.E} =
     FINALLY
       IF (wr # NIL) THEN wr.close (); END;
       IF (rd # NIL) THEN rd.close (); END;
+      FS.SetModificationTime(dest, status.modificationTime);
     END;
   END Copy;
 
@@ -59,12 +62,14 @@ PROCEDURE CopyText (src, dest: TEXT;  eol: TEXT) RAISES {OSError.E} =
     out_buf : ARRAY [0..1023] OF File.Byte;
     eol_buf : ARRAY [0..7] OF File.Byte;
     eol_last: INTEGER;
+    status  : File.Status;
   BEGIN
     eol_last := Text.Length (eol) - 1;
     FOR i := 0 TO eol_last DO eol_buf[i] := ORD(Text.GetChar (eol, i)); END;
     TRY
       rd := FS.OpenFileReadonly (src);
       wr := OpenDestination (dest, rd);
+      status := FS.Status(src);
       out_len := 0;
       LOOP
         in_len := rd.read (in_buf);
@@ -96,6 +101,7 @@ PROCEDURE CopyText (src, dest: TEXT;  eol: TEXT) RAISES {OSError.E} =
     FINALLY
       IF (wr # NIL) THEN wr.close (); END;
       IF (rd # NIL) THEN rd.close (); END;
+      FS.SetModificationTime(dest, status.modificationTime);
     END;
   END CopyText;
 
