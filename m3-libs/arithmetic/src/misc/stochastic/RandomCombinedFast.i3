@@ -19,7 +19,7 @@ Usage:  You can call these directly, or use the T OBJECTS:
 3/23/96  Warren Smith    Initial version
 *)
 
-IMPORT Word,RandomBasic;
+IMPORT RandomBasic;
 
 (** The below are faster than the slow variant
 but less-random versions based on combining

@@ -102,8 +102,7 @@ PROCEDURE Uniform(SELF:T;
                   min:R.T:=R.Zero;  (*from min*)
                   max:R.T:=R.One;   (*up to but not including max*)
                   ):R.T             (*return uniform deviate*)
-                  (* RAISES{xUtils.Error}  using this here and in the methods declarations let the compiler believe that procedure and method definitions do not match and thus it leads to the error: "procedure redefined (Uniform)" *)
-                  =
+                  RAISES{Error} =
 VAR
   t:R.T;
 BEGIN
@@ -155,24 +154,25 @@ END Gaussian1;
  * G.Marsaglia & T.A. Bray: A convenient method for
  * generating normal random variables, SIAM Review 6 (1964) 260-264.**)
 PROCEDURE NormalDev(SELF:T) : R.T =
+  <*FATAL Error*> (*we preserve, that it is always min<=max*)
   VAR
     v,u,w,x,sum : R.T;
   BEGIN
-    u := SELF.uniform();
+    u := SELF.generateReal();
     IF u <= 0.8638D0 THEN
       v := SELF.uniform(-R.One, R.One);
       w := SELF.uniform(-R.One, R.One);
       x := 2.3153508D0 * u - R.One + v + w;
       RETURN x;
     ELSIF u <= 0.9745D0 THEN
-      v := SELF.uniform();
+      v := SELF.generateReal();
       x := 1.5D0 * (v-R.One + 9.0334237D0 * (u - 0.8638D0));
       RETURN x;
       (* we only get here with probability 0.0255: *)
     ELSIF u > 0.9973002D0 THEN
       REPEAT
-        v := SELF.uniform();
-        w := SELF.uniform();
+        v := SELF.generateReal();
+        w := SELF.generateReal();
         x := 4.5D0 - RT.Ln(w);
       UNTIL x*v*v <= 4.5D0;
       x := LongFloat.CopySign( RT.SqRt(x+x) , u - 0.9986501D0 );
@@ -252,8 +252,8 @@ PROCEDURE GammaDev(SELF:T;
         u0,u1,x : R.T;
       BEGIN
         LOOP
-          u0 :=  SELF.uniform();
-          u1 :=  SELF.uniform();
+          u0 :=  SELF.generateReal();
+          u1 :=  SELF.generateReal();
           IF (a+RT.E)*u0>RT.E THEN
             x := -RT.Ln((a+RT.E)*(R.One-u0)/(a*RT.E));
             IF u1 <= RT.Pow(x, a-R.One) THEN
@@ -281,8 +281,8 @@ PROCEDURE GammaDev(SELF:T;
       BEGIN
         LOOP
           REPEAT
-            u1 :=  SELF.uniform();
-            u2 :=  SELF.uniform();
+            u1 :=  SELF.generateReal();
+            u2 :=  SELF.generateReal();
             IF a>2.5D0 THEN
               u1 := u2 + c5*(R.One-1.86D0*u1);
             END;
@@ -298,7 +298,7 @@ PROCEDURE GammaDev(SELF:T;
         END; (*LOOP*)
       END;
     ELSE (* a=1, just use exponential: *)
-      RETURN -RT.Ln( SELF.uniform() );
+      RETURN -RT.Ln( SELF.generateReal() );
     END;
   END GammaDev;
 (*----------------------*)

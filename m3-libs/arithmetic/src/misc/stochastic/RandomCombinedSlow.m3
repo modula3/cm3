@@ -302,7 +302,7 @@ IMPORT RandomBasic,
        RandomQuaternaryFibo     AS QuaFibo,
        RandomImprovedMcGill     AS McGill,
        RandomWolframCA          AS Wolf,
-       Word;
+       Word, FloatMode;
 IMPORT RandomRep;
 
 <*UNUSED*>
@@ -355,6 +355,7 @@ PROCEDURE GenerateWord(SELF:T):Word.T =
   END GenerateWord;
 
 PROCEDURE GenerateReal(SELF:T):R.T=
+  <*FATAL FloatMode.Trap*>
   VAR
     x : R.T;
   BEGIN

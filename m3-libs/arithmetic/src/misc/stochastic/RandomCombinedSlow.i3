@@ -19,7 +19,7 @@ Usage:  You can call these directly, or use the T OBJECTS:
 3/23/96  Warren Smith    Initial version
 *)
 
-IMPORT Word,RandomBasic;
+IMPORT RandomBasic;
 
 (** The random words output by these generators ought to be extremely
 random since the engine is a combination of 5 generators, each pretty good by
@@ -42,8 +42,5 @@ If TRUE will use a particular fixed seed.
 *************************************************************)
 PROCEDURE New(fixed : BOOLEAN := FALSE):T;
 
-(*-----------------------*)
-PROCEDURE Test();
-(*internal test loop for 10,000,000 samples*)
 (*==========================*)
 END RandomCombinedSlow.

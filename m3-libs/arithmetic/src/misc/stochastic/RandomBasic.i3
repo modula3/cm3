@@ -41,7 +41,7 @@ TYPE
     uniform(min:R.T:=Min;  (*from min*)
             max:R.T:=Max   (*to max*)
               ):R.T
-              (*RAISES{xUtils.Error}*);        (*return uniform deviate*)
+              RAISES{Error};        (*return uniform deviate*)
 
     exponential():R.T;   (*exponential, mean=1 *)
 

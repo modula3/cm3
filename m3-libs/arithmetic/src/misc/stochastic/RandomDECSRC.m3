@@ -12,6 +12,7 @@ IMPORT Random;
 FROM RandomBasic IMPORT Min,Max;
 IMPORT RandomRep, RandomBasic;
 
+<*UNUSED*>
 CONST Module = "RandomDECSRC.";
 (*==========================*)
 (*---------------------*)
