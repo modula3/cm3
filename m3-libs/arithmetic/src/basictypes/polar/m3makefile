@@ -7,7 +7,7 @@ PolarBasic("Real",     "RealComplexBasic",     "RealComplexTrans",     "RealBasi
 PolarBasic("LongReal", "LongRealComplexBasic", "LongRealComplexTrans", "LongRealBasic", "LongRealTrans")
 PolarBasic("Extended", "ExtendedComplexBasic", "ExtendedComplexTrans", "ExtendedBasic", "ExtendedTrans")
 
-%generic_module("PolarFmtLex")
-%PolarFmtLex("Real",     "RealPolarBasic",     "RealBasic",     "RealFmtLex")
-%PolarFmtLex("LongReal", "LongRealPolarBasic", "LongRealBasic", "LongRealFmtLex")
-%PolarFmtLex("Extended", "ExtendedPolarBasic", "ExtendedBasic", "ExtendedFmtLex")
+generic_module("PolarFmtLex")
+PolarFmtLex("Real",     "RealPolarBasic",     "RealFmtLex")
+PolarFmtLex("LongReal", "LongRealPolarBasic", "LongRealFmtLex")
+PolarFmtLex("Extended", "ExtendedPolarBasic", "ExtendedFmtLex")
