@@ -12,82 +12,95 @@ IMPORT PLPlot AS PL;
 
 FROM NADefinitions IMPORT Error;
 
-PROCEDURE PlotWavelets (hdual, gdual: S.T; levels: CARDINAL) =
+TYPE
+  Basis = {primal, dual};
+  Filter = {lowpass, highpass};
+  BasisFunctions = ARRAY Basis, Filter OF S.T;
+
+PROCEDURE ComputeBasisFunctions (hdual, gdual: S.T; levels: CARDINAL):
+  BasisFunctions =
   VAR
-    twopow  := RIntPow.Power(R.Two, levels);
-    grid    := 1.0D0 / twopow;
-    hprimal := gdual.alternate();
-    gprimal := hdual.alternate();
-
-    phiprimal := Refn.Refine(hprimal, hprimal, levels).scale(twopow);
-    psiprimal := Refn.Refine(gprimal, hprimal, levels).scale(twopow);
-    phidual   := Refn.Refine(hdual, hdual, levels).scale(twopow);
-    psidual   := Refn.Refine(gdual, hdual, levels).scale(twopow);
-
-    ymin := MIN(
-              MIN(V.Min(phiprimal.getData()^), V.Min(psiprimal.getData()^)),
-              MIN(V.Min(phidual.getData()^), V.Min(psidual.getData()^)));
-    ymax := MAX(
-              MAX(V.Max(phiprimal.getData()^), V.Max(psiprimal.getData()^)),
-              MAX(V.Max(phidual.getData()^), V.Max(psidual.getData()^)));
+    hprimal  := gdual.alternate();
+    gprimal  := hdual.alternate();
+    hdual2   := hdual.scale(R.Two);
+    hprimal2 := hprimal.scale(R.Two);
 
   BEGIN
-    DoPlot(phiprimal, psiprimal, phidual, psidual, ymin, ymax,grid);
+    RETURN BasisFunctions{ARRAY Filter OF
+                            S.T{Refn.Refine(hprimal, hprimal2, levels),
+                                Refn.Refine(gprimal, hprimal2, levels)},
+                          ARRAY Filter OF
+                            S.T{Refn.Refine(hdual, hdual2, levels),
+                                Refn.Refine(gdual, hdual2, levels)}};
+  END ComputeBasisFunctions;
+
+PROCEDURE PlotWavelets (hdual, gdual: S.T; levels: CARDINAL) =
+  VAR
+    grid  := 1.0D0 / RIntPow.Power(R.Two, levels);
+    basis := ComputeBasisFunctions(hdual, gdual, levels);
+
+    ymin := MIN(
+              MIN(V.Min(basis[Basis.primal, Filter.lowpass].getData()^),
+                  V.Min(basis[Basis.primal, Filter.highpass].getData()^)),
+              MIN(V.Min(basis[Basis.dual, Filter.lowpass].getData()^),
+                  V.Min(basis[Basis.dual, Filter.highpass].getData()^)));
+    ymax := MAX(
+              MAX(V.Max(basis[Basis.primal, Filter.lowpass].getData()^),
+                  V.Max(basis[Basis.primal, Filter.highpass].getData()^)),
+              MAX(V.Max(basis[Basis.dual, Filter.lowpass].getData()^),
+                  V.Max(basis[Basis.dual, Filter.highpass].getData()^)));
+
+  BEGIN
+    DoPlot(basis, ymin, ymax, grid);
   END PlotWavelets;
 
 PROCEDURE PlotWaveletsYLim (hdual, gdual: S.T;
                             levels      : CARDINAL;
                             ymin, ymax  : R.T       ) =
   VAR
-    twopow  := RIntPow.Power(R.Two, levels);
-    grid    := 1.0D0 / twopow;
-    hprimal := gdual.alternate();
-    gprimal := hdual.alternate();
-
-    phiprimal := Refn.Refine(hprimal, hprimal, levels).scale(twopow);
-    psiprimal := Refn.Refine(gprimal, hprimal, levels).scale(twopow);
-    phidual   := Refn.Refine(hdual, hdual, levels).scale(twopow);
-    psidual   := Refn.Refine(gdual, hdual, levels).scale(twopow);
+    grid  := 1.0D0 / RIntPow.Power(R.Two, levels);
+    basis := ComputeBasisFunctions(hdual, gdual, levels);
   BEGIN
-    DoPlot(phiprimal, psiprimal, phidual, psidual, ymin, ymax,grid);
+    DoPlot(basis, ymin, ymax, grid);
   END PlotWaveletsYLim;
 
-PROCEDURE DoPlot (phiprimal, psiprimal, phidual, psidual: S.T;
-                  ymin, ymax                            : R.T;
-                  grid                                  : R.T  ) =
+TYPE Interval = RECORD left, right: R.T END;
+
+PROCEDURE GetSignalInterval (x: S.T; grid: R.T): Interval =
+  BEGIN
+    RETURN Interval{FLOAT(x.getFirst(), R.T) * grid,
+                    FLOAT(x.getLast(), R.T) * grid};
+  END GetSignalInterval;
+
+PROCEDURE DoPlot (basis: BasisFunctions; ymin, ymax: R.T; grid: R.T) =
   VAR
-    leftphiprimal  := FLOAT(phiprimal.getFirst(), R.T) * grid;
-    rightphiprimal := FLOAT(phiprimal.getLast(), R.T) * grid;
-    leftpsiprimal  := FLOAT(psiprimal.getFirst(), R.T) * grid;
-    rightpsiprimal := FLOAT(psiprimal.getLast(), R.T) * grid;
-    leftprimal     := MIN(leftphiprimal, leftpsiprimal);
-    rightprimal    := MAX(rightphiprimal, rightpsiprimal);
-
-    leftphidual  := FLOAT(phidual.getFirst(), R.T) * grid;
-    rightphidual := FLOAT(phidual.getLast(), R.T) * grid;
-    leftpsidual  := FLOAT(psidual.getFirst(), R.T) * grid;
-    rightpsidual := FLOAT(psidual.getLast(), R.T) * grid;
-    leftdual     := MIN(leftphidual, leftpsidual);
-    rightdual    := MAX(rightphidual, rightpsidual);
-
+    bounds : ARRAY Basis, Filter OF Interval;
+    boundsa: ARRAY Basis OF Interval;
+  (*PlotLines may complain about inconsistent vector sizes but we won't
+     give it a reason for complaints.*)
   <*FATAL Error*>
   BEGIN
-    (*PlotLines may complain about inconsistent vector sizes but we won't
-       give it a reason for complaints.*)
-    PL.SetSubWindows(2, 2);
-    PL.SetEnvironment(leftprimal, rightprimal, ymin, ymax);
-    PL.PlotLines(V.ArithSeq(phiprimal.getNumber(), leftphiprimal, grid)^,
-                 phiprimal.getData()^);
-    PL.SetEnvironment(leftdual, rightdual, ymin, ymax);
-    PL.PlotLines(V.ArithSeq(phidual.getNumber(), leftphidual, grid)^,
-                 phidual.getData()^);
+    FOR b := FIRST(basis) TO LAST(basis) DO
+      FOR f := FIRST(basis[b]) TO LAST(basis[b]) DO
+        bounds[b, f] := GetSignalInterval(basis[b, f], grid);
+      END;
+      boundsa[b].left := MIN(bounds[b, Filter.lowpass].left,
+                             bounds[b, Filter.highpass].left);
+      boundsa[b].right := MAX(bounds[b, Filter.lowpass].right,
+                              bounds[b, Filter.highpass].right);
+    END;
 
-    PL.SetEnvironment(leftprimal, rightprimal, ymin, ymax);
-    PL.PlotLines(V.ArithSeq(psiprimal.getNumber(), leftpsiprimal, grid)^,
-                 psiprimal.getData()^);
-    PL.SetEnvironment(leftdual, rightdual, ymin, ymax);
-    PL.PlotLines(V.ArithSeq(psidual.getNumber(), leftpsidual, grid)^,
-                 psidual.getData()^);
+    PL.SetSubWindows(2, 2);
+    FOR f := FIRST(basis[Basis.primal]) TO LAST(basis[Basis.primal]) DO
+      FOR b := FIRST(basis) TO LAST(basis) DO
+        PL.SetFGColorDiscr(1);
+        PL.SetEnvironment(boundsa[b].left, boundsa[b].right, ymin, ymax);
+        PL.SetFGColorDiscr(2);
+        PL.PlotLines(
+          V.ArithSeq(basis[b, f].getNumber(), bounds[b, f].left, grid)^,
+          basis[b, f].getData()^);
+      END;
+    END;
   END DoPlot;
 
 BEGIN
