@@ -5,8 +5,7 @@ Abstract:
 Pseudo-random number generator by Warren D. Smith.
 *)
 
-IMPORT RandomBasic,
-       LongRealBasic AS R,
+IMPORT LongRealBasic AS R,
        LongRealTrans AS RT,
        Word, Tick, TimeStamp;
 IMPORT RandomRep;
@@ -24,17 +23,16 @@ CONST
   DefaultSeed2 = 2718280;
   DefaultXis = 243213.0D0;
 
-REVEAL T = RandomBasic.TBoolean BRANDED OBJECT
+REVEAL T = TPublic BRANDED OBJECT
     xis : R.T;
     seedbitind : INTEGER := 3;
     seed1, seed2 : Word.T;
   OVERRIDES
+    init:=Init;
     engine:=Engine;
   END;
 
-PROCEDURE New(fixed : BOOLEAN):T=
-  VAR
-    SELF:=NEW(T);
+PROCEDURE Init(SELF:T;fixed : BOOLEAN):T=
   BEGIN
     IF NOT fixed THEN
       SELF.seed1 := TimeStamp.Hash(TimeStamp.New());
@@ -47,7 +45,7 @@ PROCEDURE New(fixed : BOOLEAN):T=
       SELF.xis := DefaultXis;
     END;
     RETURN SELF;
-  END New;
+  END Init;
 
 (** Note: period of the bit sequence this produces is
  * only 23658471. However, that should be adequate for its

@@ -17,21 +17,21 @@ CONST
   wolfnum = 5;
   MSbit = Word.LeftShift(2_1, Word.Size-1);
 
-REVEAL T = RandomBasic.TBoolean BRANDED OBJECT
+REVEAL T = TPublic BRANDED OBJECT
     wolfarr : ARRAY [0 .. wolfnum-1] OF Word.T; (* initialize with random bits *)
   OVERRIDES
+    init:=Init;
     engine:=Engine;
   END;
 
-PROCEDURE New(initrng:RandomBasic.T):T=
+PROCEDURE Init(SELF:T;initrng:RandomBasic.T):T=
   VAR
-    SELF:=NEW(T);
-  BEGIN
+    BEGIN
     FOR i:=wolfnum-1 TO 0 BY -1 DO
       SELF.wolfarr[i] := initrng.generateWord();
     END;
     RETURN SELF;
-  END New;
+  END Init;
 
 (*************************************************************
 S.Wolfram: Advances Applied Math 7 (1986) 123- had proposed the following

@@ -16,21 +16,20 @@ IMPORT RandomRep, RandomBasic;
 CONST Module = "RandomDECSRC.";
 (*==========================*)
 (*---------------------*)
-REVEAL T = RandomBasic.T BRANDED OBJECT
+REVEAL T = TPublic BRANDED OBJECT
     rand:Random.T;
   OVERRIDES
+    init:=Init;
     generateBoolean:=GenerateBoolean;
     generateWord:=GenerateWord;
     generateReal:=GenerateReal;
   END;
 
-PROCEDURE New():T =
-VAR
-  t:=NEW(T);
+PROCEDURE Init(t:T):T =
 BEGIN
   t.rand:=NEW(Random.Default).init();
   RETURN t;
-END New;
+END Init;
 
 PROCEDURE GenerateBoolean(SELF:T):BOOLEAN=
 BEGIN

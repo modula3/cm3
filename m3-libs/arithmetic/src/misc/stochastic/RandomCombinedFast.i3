@@ -32,17 +32,16 @@ statistical evidence of flaws in any of these generators, please
 tell me at wds@research.NJ.NEC.COM.
 ************************************************************)
 
-TYPE
-  T <: RandomBasic.T;
-
-
 (*==========================*)
 (*** Initializes all random number generators here. Quite slow.
 If fixed=FALSE (the default) will incorporate the
    time into the seed.
 If TRUE will use a particular fixed seed.
 *************************************************************)
-PROCEDURE New(fixed : BOOLEAN := FALSE):T;
+TYPE
+  T <: TPublic;
+
+  TPublic = RandomBasic.T OBJECT METHODS init (fixed : BOOLEAN := FALSE): T; END;
 
 (*==========================*)
 END RandomCombinedFast.

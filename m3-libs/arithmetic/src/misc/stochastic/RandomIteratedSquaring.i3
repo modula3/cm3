@@ -12,9 +12,9 @@ IMPORT RandomBasic;
 
 (*==========================*)
 TYPE
-  T <: RandomBasic.TBoolean;
+  T <: TPublic;
 
-PROCEDURE New(fixed : BOOLEAN := FALSE):T;
+  TPublic = RandomBasic.TBoolean OBJECT METHODS init (fixed : BOOLEAN := FALSE): T; END;
 
 (*==========================*)
 END RandomIteratedSquaring.

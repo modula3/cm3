@@ -21,25 +21,25 @@ CONST
   TwoTo32Minus1 = 16_ffffffff;
 *)
 
-REVEAL T = RandomBasic.TWord BRANDED OBJECT
+REVEAL T = TPublic BRANDED OBJECT
     isf2 := asf2;
     jsf2 := bsf2;
     arrsf2 : ARRAY [0..asf2-1] OF INTEGER;
          (* initialize to random Word.Ts mod TwoTo32Minus5 *)
   OVERRIDES
+    init:=Init;
     engine:=Engine;
   END;
 
-PROCEDURE New(initrng:RandomBasic.T):T=
+PROCEDURE Init(SELF:T;initrng:RandomBasic.T):T=
   VAR
-    SELF:=NEW(T);
-  BEGIN
+    BEGIN
     FOR i:=asf2-1 TO 0 BY -1 DO
       SELF.arrsf2[i] := initrng.generateWord();
     END;
     SELF.arrsf2[0] := Word.Or(initrng.generateWord(), 2_1);
     RETURN SELF;
-  END New;
+  END Init;
 
 (* Generates a new random word, mod 2^32 - 5 (a prime): *)
 PROCEDURE Engine(SELF:T):Word.T=

@@ -18,10 +18,11 @@ CONST Module = "RandomParkMiller.";
 CONST
   TableSize = 32; (*for Bayes-Durham shuffle*)
 
-REVEAL T = RandomBasic.TReal BRANDED OBJECT
+REVEAL T = TPublic BRANDED OBJECT
     z1,table_z:INTEGER;
     table:ARRAY[0..TableSize-1] OF INTEGER;
   OVERRIDES
+    init:=Init;
     engine:=Engine;
   END;
 
@@ -32,10 +33,9 @@ CONST
   q = 44488;
   r  = 3399;
 
-PROCEDURE New(seed:[1..LAST(INTEGER)]:=1;
+PROCEDURE Init(SELF:T;seed:[1..LAST(INTEGER)]:=1;
                  ):T =
 VAR
-  SELF:=NEW(T);
   z1,tmp:INTEGER;
 BEGIN
   SELF.z1:=seed;
@@ -49,7 +49,7 @@ BEGIN
   SELF.z1:=z1;
   SELF.table_z:=SELF.table[2];
   RETURN SELF;
-END New;
+END Init;
 
 PROCEDURE Engine(SELF:T):R.T=
 <*UNUSED*> CONST ftn= Module & "Engine";

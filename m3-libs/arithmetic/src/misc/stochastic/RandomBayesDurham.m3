@@ -13,21 +13,20 @@ IMPORT RandomRep, RandomBasic;
 CONST Module = "RandomBayesDurham.";
 (*==========================*)
 (*---------------------*)
-REVEAL T = RandomBasic.TReal BRANDED OBJECT
+REVEAL T = TPublic BRANDED OBJECT
     z1:INTEGER;
   OVERRIDES
+    init:=Init;
     engine:=Engine;
   END;
 
-PROCEDURE New(seed:[1..LAST(INTEGER)]:=1;
+PROCEDURE Init(SELF:T;seed:[1..LAST(INTEGER)]:=1;
                  ):T =
-VAR
-  t:=NEW(T);
 BEGIN
-  t.z1:=seed;
-  EVAL t.engine();
-  RETURN t;
-END New;
+  SELF.z1:=seed;
+  EVAL SELF.engine();
+  RETURN SELF;
+END Init;
 
 PROCEDURE Engine(SELF:T):R.T=
 <*UNUSED*> CONST ftn= Module & "Engine";

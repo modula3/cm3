@@ -19,26 +19,26 @@ CONST
   dsf3 = 5;   (* x^89 + x^57 + x^14 + x^5 + 1 primitive mod 2 *)
 
 (*------------------*)
-REVEAL T = RandomBasic.TWord BRANDED OBJECT
+REVEAL T = TPublic BRANDED OBJECT
     isf3 := asf3;
     jsf3 := bsf3;
     ksf3 := csf3;
     msf3 := dsf3;
     arrsf3 : ARRAY [0..asf3-1] OF Word.T; (* initialize to random words, not all even *)
   OVERRIDES
+    init:=Init;
     engine:=Engine;
   END;
 
-PROCEDURE New(initrng:RandomBasic.T):T=
+PROCEDURE Init(SELF:T;initrng:RandomBasic.T):T=
   VAR
-    SELF:=NEW(T);
-  BEGIN
+    BEGIN
     FOR i:=asf3-1 TO 0 BY -1 DO
       SELF.arrsf3[i] := initrng.generateWord();
     END;
     SELF.arrsf3[0] := Word.Or(initrng.generateWord(), 2_1);
     RETURN SELF;
-  END New;
+  END Init;
 
 (** Generates a new random Word.T; period at least 2^asf3 - 1;
  * uses both XOR and [- mod 2^wordsize] in the recurrence, hence may

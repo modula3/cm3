@@ -12,9 +12,9 @@ IMPORT RandomBasic;
 
 (*==========================*)
 TYPE
-  T <: RandomBasic.TWord;
+  T <: TPublic;
 
-PROCEDURE New(initrng:RandomBasic.T):T;
+  TPublic = RandomBasic.TWord OBJECT METHODS init (initrng:RandomBasic.T): T; END;
 
 (*==========================*)
 END RandomQuaternaryFibo.
