@@ -566,8 +566,6 @@ extern rtx trampoline_address PARAMS ((tree));
 extern rtx hard_function_value PARAMS ((tree, tree, int));
 
 extern rtx prepare_call_address	PARAMS ((rtx, tree, rtx *, int, int));
-extern rtx prepare_call_address_nested PARAMS ((rtx, tree, rtx *, int, int,
-                                                tree));
 
 extern rtx expand_call PARAMS ((tree, rtx, int));
 
