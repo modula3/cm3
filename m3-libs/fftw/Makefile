@@ -9,6 +9,9 @@ all:	fftw
 install:
 	cm3 -ship
 
+runtest:
+	cd test && cm3 && LINUXLIBC6/test
+
 fftw:	src/m3makefile $(patsubst %, src/%, $(M3FILES))
 	cm3
 

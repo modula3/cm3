@@ -171,21 +171,33 @@ PROCEDURE CleanupPlan(<*UNUSED*> READONLY w: WeakRef.T; r: REFANY) =
 
 %typemap(m3wrapintype,numinputs=0) int n, int nx, int ny, int nz %{%}
 
-%typemap(m3wrapargvar) FPREF(complex_array_1d) *in, FPREF(real_array_1d) *in
+%typemap(m3wrapargvar) FPREF(complex_array_1d) *in
   %{n := NUMBER($input^);%};
-%typemap(m3wrapargvar) FPREF(complex_array_2d) *in, FPREF(real_array_2d) *in
+%typemap(m3wrapargvar) FPREF(real_array_1d) *in
+  %{n := NUMBER($input^) DIV 2 + 1;%};
+%typemap(m3wrapargvar) FPREF(complex_array_2d) *in
   %{nx := NUMBER($input^); ny := NUMBER($input[0]);%};
-%typemap(m3wrapargvar) FPREF(complex_array_3d) *in, FPREF(real_array_3d) *in
+%typemap(m3wrapargvar) FPREF(real_array_2d) *in
+  %{nx := NUMBER($input^); ny := NUMBER($input[0]) DIV 2 + 1;%};
+%typemap(m3wrapargvar) FPREF(complex_array_3d) *in
   %{nx := NUMBER($input^); ny := NUMBER($input[0]); nz := NUMBER($input[0,0]);%};
-%typemap(m3wrapargvar) FPREF(complex_tensor)   *in, FPREF(real_tensor)   *in
+%typemap(m3wrapargvar) FPREF(real_array_3d) *in
+  %{nx := NUMBER($input^); ny := NUMBER($input[0]); nz := NUMBER($input[0,0]) DIV 2 + 1;%};
+%typemap(m3wrapargvar) FPREF(complex_tensor) *in, FPREF(real_tensor) *in
   %{$input%};
 
-%typemap(m3wrapincheck) FPREF(complex_array_1d) *out, FPREF(real_array_1d) *out
+%typemap(m3wrapincheck) FPREF(complex_array_1d) *out
   %{IF n # NUMBER($input^) THEN RAISE SizeMismatch; END;%};
-%typemap(m3wrapincheck) FPREF(complex_array_2d) *out, FPREF(real_array_2d) *out
+%typemap(m3wrapincheck) FPREF(real_array_1d) *out
+  %{IF n # NUMBER($input^) DIV 2 + 1 THEN RAISE SizeMismatch; END;%};
+%typemap(m3wrapincheck) FPREF(complex_array_2d) *out
   %{IF nx # NUMBER($input^) OR ny # NUMBER($input[0]) THEN RAISE SizeMismatch; END;%};
-%typemap(m3wrapincheck) FPREF(complex_array_3d) *out, FPREF(real_array_3d) *out
+%typemap(m3wrapincheck) FPREF(real_array_2d) *out
+  %{IF nx # NUMBER($input^) OR ny # NUMBER($input[0]) DIV 2 + 1 THEN RAISE SizeMismatch; END;%};
+%typemap(m3wrapincheck) FPREF(complex_array_3d) *out
   %{IF nx # NUMBER($input^) OR ny # NUMBER($input[0]) OR nz # NUMBER($input[0,0]) THEN RAISE SizeMismatch; END;%};
+%typemap(m3wrapincheck) FPREF(real_array_3d) *out
+  %{IF nx # NUMBER($input^) OR ny # NUMBER($input[0]) OR nz # NUMBER($input[0,0]) DIV 2 + 1 THEN RAISE SizeMismatch; END;%};
 %typemap(m3wrapincheck) FPREF(complex_tensor)   *out, FPREF(real_tensor)   *out
   %{$input%};
 

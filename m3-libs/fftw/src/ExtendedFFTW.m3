@@ -93,7 +93,7 @@ PROCEDURE PlanDFTR2C1D (in : REF ARRAY OF R.T;
   RAISES {SizeMismatch} =
   VAR
     plan := NEW(Plan);
-    n    := NUMBER(in^);
+    n    := NUMBER(in^) DIV 2 + 1;
   BEGIN
     IF n # NUMBER(out^) THEN RAISE SizeMismatch; END;
     plan^ := ExtendedFFTWRaw.PlanDFTR2C1D(
@@ -109,7 +109,7 @@ PROCEDURE PlanDFTR2C2D (in : REF ARRAY OF ARRAY OF R.T;
   VAR
     plan := NEW(Plan);
     nx   := NUMBER(in^);
-    ny   := NUMBER(in[0]);
+    ny   := NUMBER(in[0]) DIV 2 + 1;
   BEGIN
     IF nx # NUMBER(out^) OR ny # NUMBER(out[0]) THEN
       RAISE SizeMismatch;
@@ -128,7 +128,7 @@ PROCEDURE PlanDFTR2C3D (in : REF ARRAY OF ARRAY OF ARRAY OF R.T;
     plan := NEW(Plan);
     nx   := NUMBER(in^);
     ny   := NUMBER(in[0]);
-    nz   := NUMBER(in[0, 0]);
+    nz   := NUMBER(in[0, 0]) DIV 2 + 1;
   BEGIN
     IF nx # NUMBER(out^) OR ny # NUMBER(out[0]) OR nz # NUMBER(out[0, 0]) THEN
       RAISE SizeMismatch;
@@ -148,7 +148,7 @@ PROCEDURE PlanDFTC2R1D (in : REF ARRAY OF Complex;
     plan := NEW(Plan);
     n    := NUMBER(in^);
   BEGIN
-    IF n # NUMBER(out^) THEN RAISE SizeMismatch; END;
+    IF n # NUMBER(out^) DIV 2 + 1 THEN RAISE SizeMismatch; END;
     plan^ := ExtendedFFTWRaw.PlanDFTC2R1D(
                n, in[0], out[0], LOOPHOLE(flags, C.unsigned_int));
     EVAL WeakRef.FromRef(plan, CleanupPlan);
@@ -164,7 +164,7 @@ PROCEDURE PlanDFTC2R2D (in : REF ARRAY OF ARRAY OF Complex;
     nx   := NUMBER(in^);
     ny   := NUMBER(in[0]);
   BEGIN
-    IF nx # NUMBER(out^) OR ny # NUMBER(out[0]) THEN
+    IF nx # NUMBER(out^) OR ny # NUMBER(out[0]) DIV 2 + 1 THEN
       RAISE SizeMismatch;
     END;
     plan^ := ExtendedFFTWRaw.PlanDFTC2R2D(nx, ny, in[0, 0], out[0, 0],
@@ -183,7 +183,8 @@ PROCEDURE PlanDFTC2R3D (in : REF ARRAY OF ARRAY OF ARRAY OF Complex;
     ny   := NUMBER(in[0]);
     nz   := NUMBER(in[0, 0]);
   BEGIN
-    IF nx # NUMBER(out^) OR ny # NUMBER(out[0]) OR nz # NUMBER(out[0, 0]) THEN
+    IF nx # NUMBER(out^) OR ny # NUMBER(out[0])
+         OR nz # NUMBER(out[0, 0]) DIV 2 + 1 THEN
       RAISE SizeMismatch;
     END;
     plan^ :=
@@ -199,9 +200,9 @@ PROCEDURE PlanR2R1D (in, out: REF ARRAY OF R.T;
   RAISES {SizeMismatch} =
   VAR
     plan := NEW(Plan);
-    n    := NUMBER(in^);
+    n    := NUMBER(in^) DIV 2 + 1;
   BEGIN
-    IF n # NUMBER(out^) THEN RAISE SizeMismatch; END;
+    IF n # NUMBER(out^) DIV 2 + 1 THEN RAISE SizeMismatch; END;
     plan^ := ExtendedFFTWRaw.PlanR2R1D(n, in[0], out[0], ORD(kind),
                                        LOOPHOLE(flags, C.unsigned_int));
     EVAL WeakRef.FromRef(plan, CleanupPlan);
@@ -215,9 +216,9 @@ PROCEDURE PlanR2R2D (in, out     : REF ARRAY OF ARRAY OF R.T;
   VAR
     plan := NEW(Plan);
     nx   := NUMBER(in^);
-    ny   := NUMBER(in[0]);
+    ny   := NUMBER(in[0]) DIV 2 + 1;
   BEGIN
-    IF nx # NUMBER(out^) OR ny # NUMBER(out[0]) THEN
+    IF nx # NUMBER(out^) OR ny # NUMBER(out[0]) DIV 2 + 1 THEN
       RAISE SizeMismatch;
     END;
     plan^ := ExtendedFFTWRaw.PlanR2R2D(
@@ -235,9 +236,10 @@ PROCEDURE PlanR2R3D (in, out: REF ARRAY OF ARRAY OF ARRAY OF R.T;
     plan := NEW(Plan);
     nx   := NUMBER(in^);
     ny   := NUMBER(in[0]);
-    nz   := NUMBER(in[0, 0]);
+    nz   := NUMBER(in[0, 0]) DIV 2 + 1;
   BEGIN
-    IF nx # NUMBER(out^) OR ny # NUMBER(out[0]) OR nz # NUMBER(out[0, 0]) THEN
+    IF nx # NUMBER(out^) OR ny # NUMBER(out[0])
+         OR nz # NUMBER(out[0, 0]) DIV 2 + 1 THEN
       RAISE SizeMismatch;
     END;
     plan^ := ExtendedFFTWRaw.PlanR2R3D(
