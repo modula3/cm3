@@ -54,8 +54,8 @@ VAR
   initial_cfg       : TEXT;
   cm3_cfg           : TEXT;
   cminstall_root    : TEXT := NIL;
-  gzip              : TEXT := OS.MakePath (cminstall_root, GZIP_EXE);
-  tar               : TEXT := OS.MakePath (cminstall_root, TAR_EXE);
+  gzip              : TEXT (* = OS.MakePath (cminstall_root, GZIP_EXE) *);
+  tar               : TEXT (* = OS.MakePath (cminstall_root, TAR_EXE) *);
 
 PROCEDURE DoIt () =
   BEGIN
@@ -153,8 +153,16 @@ PROCEDURE DoIt () =
     Out ("This may take a few minutes...");
     Unpack ("system");
     FOR i := FIRST(ARCHIVES) TO LAST(ARCHIVES) DO
-      IF OS.IsExecutable(ARCHIVES[i]) THEN
-        Unpack(ARCHIVES[i]);
+      WITH archive_name = ARCHIVES[i],
+           archive_path1 = OS.MakePath(cminstall_root, ARCHIVES[i] & ".tgz"),
+           archive_path2 = OS.MakePath(cminstall_root, ARCHIVES[i] & ".tar") DO
+        IF OS.IsExecutable(archive_path1) THEN
+          Unpack(archive_name);
+        ELSIF OS.IsExecutable(archive_path2) THEN
+          Unpack(archive_name);
+        ELSE
+          Msg.Debug ("not found: ", archive_name);
+        END;
       END;
     END;
     (* Unpack (OS.MakePath ("..", "DOCS")); *)
@@ -535,6 +543,8 @@ PROCEDURE ID2Txt (i: Quake.ID): TEXT =
 (*------------------------------------------- decompression and unpacking ---*)
 PROCEDURE UtilsFound() : BOOLEAN =
   BEGIN
+    gzip := OS.MakePath (cminstall_root, GZIP_EXE);
+    tar  := OS.MakePath (cminstall_root, TAR_EXE);
     IF NOT OS.IsExecutable(gzip) THEN
       gzip := OS.FindExecutable(GZIP_EXE);
       IF gzip = NIL THEN
@@ -544,6 +554,7 @@ PROCEDURE UtilsFound() : BOOLEAN =
         RETURN FALSE;
       END;
     END;
+    Msg.Debug ("GZIP_EXE = ", gzip);
     IF NOT OS.IsExecutable(tar) THEN
       tar := OS.FindExecutable(TAR_EXE);
       IF tar = NIL THEN
@@ -553,19 +564,28 @@ PROCEDURE UtilsFound() : BOOLEAN =
         RETURN FALSE;
       END;
     END;
+    Msg.Debug ("TAR_EXE = ", tar);
     RETURN TRUE;
   END UtilsFound; 
 
 CONST
-  GZipArgs = ARRAY [0..0] OF TEXT { "-d" };
+  GZipArgs = ARRAY [0..0] OF TEXT { "-dc" };
   TarArgs  = ARRAY [0..1] OF TEXT { "-xmf", "-" };
 
 PROCEDURE Unpack (archive: TEXT) =
   VAR data: TEXT := OS.MakePath (cminstall_root, archive);
   BEGIN
-    IF OS.IsExecutable (data & ".tar")
-      THEN UnpackTAR (data & ".tar");
-      ELSE UnpackTGZ (data & ".tgz");
+    IF OS.IsExecutable (data & ".tar") THEN 
+      UnpackTAR (data & ".tar");
+    ELSE
+      IF OnUnix THEN
+        UnpackTGZ (data & ".tgz");
+      ELSE
+        UnpackTGZ (data & ".tgz");
+        (* does not work, too... 
+        UnpackTGZWin32 (data & ".tgz");
+        *)
+      END;
     END;
   END Unpack;
 
@@ -609,6 +629,48 @@ PROCEDURE UnpackTAR (data: TEXT) =
     Msg.Debug ("unpacking done.");
   END UnpackTAR;
 
+PROCEDURE UnpackTGZWin32 (data: TEXT) =
+  CONST
+    TarArgs  = ARRAY [0..1] OF TEXT { "-zxmf", "-" };
+  VAR
+    tar_process    : Process.T;
+    input, stdin   : File.T;
+    stdout, stderr : File.T;
+  BEGIN
+    Msg.Debug ("unpacking:  archive = ", data);
+
+    (* get the default file handles *)
+    Process.GetStandardFileHandles (stdin, stdout, stderr);
+
+    (* open the tar file *)
+    TRY
+      input := FS.OpenFileReadonly (data);
+    EXCEPT OSError.E (ec) =>
+      Msg.Error (ec, "Unable to open archive: ", data);
+    END;
+
+    (* create the tar process *)
+    TRY
+      tar_process := Process.Create (tar, TarArgs, stdin := input,
+                                      stdout := stdout, stderr := stderr,
+                                      wd := install_root);
+    EXCEPT OSError.E (ec) =>
+      Msg.Error (ec, "Unable to create unpacking process: ", tar);
+    END;
+
+    (* close our copy of the input file *)
+    TRY
+      input.close ();
+    EXCEPT OSError.E (ec) =>
+      Msg.Error (ec, "Trouble closing archive: ", data);
+    END;
+
+    (* wait for everybody to finish *)
+    Msg.Debug ("waiting for process completion...");
+    EVAL Process.Wait (tar_process);
+    Msg.Debug ("unpacking done.");
+  END UnpackTGZWin32;
+
 PROCEDURE UnpackTGZ (data: TEXT) =
   VAR
     gzip_process   : Process.T;
@@ -640,6 +702,7 @@ PROCEDURE UnpackTGZ (data: TEXT) =
     TRY
       gzip_process := Process.Create (gzip, GZipArgs, stdin := input,
                                       stdout := p_in, stderr := stderr);
+      Msg.Debug (gzip, " ", GZipArgs[0]);
     EXCEPT OSError.E (ec) =>
       Msg.Error (ec, "Unable to create decompression process: ", gzip);
     END;
@@ -649,6 +712,8 @@ PROCEDURE UnpackTGZ (data: TEXT) =
       tar_process := Process.Create (tar, TarArgs, stdin := p_out,
                                       stdout := stdout, stderr := stderr,
                                       wd := install_root);
+      Msg.Debug (tar, " " & TarArgs[0] & " " & TarArgs[1] & " wd = ",
+                 install_root);
     EXCEPT OSError.E (ec) =>
       Msg.Error (ec, "Unable to create unpacking process: ", tar);
     END;
