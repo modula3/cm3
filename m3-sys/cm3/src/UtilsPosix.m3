@@ -10,11 +10,11 @@ PROCEDURE LinkFile (from, to: TEXT) =
     Remove (to);
     MakeRelative (from, to);
     Msg.Commands ("link -s ", from, " ", to);
-    s_from := M3toC.SharedTtoS (from);
-    s_to   := M3toC.SharedTtoS (to);
+    s_from := M3toC.TtoS (from);
+    s_to   := M3toC.TtoS (to);
     EVAL Unix.symlink (s_from, s_to);
-    M3toC.FreeSharedS (from, s_from);
-    M3toC.FreeSharedS (to, s_to);
+    M3toC.FreeCopiedS (s_from);
+    M3toC.FreeCopiedS (s_to);
   END LinkFile;
 
 PROCEDURE MakeRelative (VAR from: TEXT;  to: TEXT) =

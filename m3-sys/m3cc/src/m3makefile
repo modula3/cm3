@@ -13,6 +13,8 @@ readonly Platform_info = {
   "DS3100"    : "decstation",
   "FreeBSD"   : "i486-unknown-bsd",
   "FreeBSD2"  : "i486-unknown-bsd",
+  "FreeBSD3"  : "i486-unknown-bsd",
+  "FreeBSD4"  : "i486-unknown-bsd",
   "HP300"     : "m68k-hp-hpux",
   "HPPA"      : "hppa1.1-hp-hpux",
   "IBMR2"     : "rs6000-ibm-aix3.2",
