@@ -9,8 +9,8 @@ readonly proc FloatBasic (nm, field, fieldc) is
   build_generic_impl (basic, "FloatBasic", [])
 end
 
-readonly proc FloatTrans (nm, field) is
+readonly proc FloatTrans (nm, field, fieldb) is
   local trans = nm & "Trans"
-  build_generic_intf (trans, "FloatTrans", [field], VISIBLE)
-  build_generic_impl (trans, "FloatTrans", [])
+  build_generic_intf (trans, "FloatTrans", [field, fieldb], VISIBLE)
+  build_generic_impl (trans, "FloatTrans", [field])
 end

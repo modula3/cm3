@@ -1,4 +1,4 @@
-GENERIC INTERFACE FloatTrans(R);
+GENERIC INTERFACE FloatTrans(R,Rb);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Generic wrapper routines for (mainly) transcendent functions
@@ -12,8 +12,6 @@ If R.T is
 
 (*==========================*)
 
-(*IMPORT Fmt;*)
-
 TYPE T = R.T;
 
 (*=================*)
@@ -22,7 +20,11 @@ TYPE
   
 CONST
   (*---distinguished elements---*)
+  Zero        = Rb.Zero;
   Half        = FLOAT(0.5D0,T);
+  One         = Rb.One;
+  MinusOne    = Rb.MinusOne;
+  Two         = Rb.Two;
   SqrtTwo     = FLOAT(1.414213562373095D0,T);
   LnTwo       = FLOAT(0.693147180559945D0,T);  (*ln(2) *)
 
@@ -84,6 +86,29 @@ TYPE Array = REF ARRAY OF T;
 (*============================*)
 (* Other Functions            *)
 (*============================*)
+
+<*INLINE*> PROCEDURE Sgn   (x: T): T; (*returns One if x is positive, MinusOne if x is negative, Zero if x is zero *)
+
+
+(*---- Floating point representations ----*)
+
+<*INLINE*> PROCEDURE FrExp (x: T;  VAR exp: INTEGER): T;
+(* returns a value y and sets exp such that x = y * 2^exp,
+    where ABS(X) is in the interval [0.5, 1). *)
+
+<*INLINE*> PROCEDURE LdExp (x: T; exp: INTEGER): T;
+(* returns x * 2^exp. *)
+
+<*INLINE*> PROCEDURE ModF (x: T; VAR(*OUT*) i: T): T;
+(* splits the argument "x" into an integer part "i" and a fractional part "f"
+   such that "f + i = x" and such that "f" and "i" both have the same sign as
+   "x", and returns "f". Although "i" is a LONGREAL, it is set to an integral
+   value. *)
+
+(* Should be a constant in LongReal.i3 etc. ! *)
+VAR
+  Eps : T;  (*approx relative machine precision*)
+
 
 (*==========================*)
 END FloatTrans.
