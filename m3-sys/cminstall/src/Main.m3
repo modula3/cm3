@@ -263,8 +263,10 @@ TYPE
   LibFile = REF RECORD file: TEXT;  next: LibFile; END;
 
 PROCEDURE LibFilesToText(l : LibFile) : TEXT =
-  VAR res := l.file;
+  VAR res : TEXT;
   BEGIN
+    IF l = NIL THEN RETURN "(none)" END;
+    res := l.file;
     l := l.next;
     WHILE l # NIL DO
       res := res & " " & l.file;
@@ -442,7 +444,7 @@ PROCEDURE GenConfig (): TEXT =
         | 10 => (* env-variable *)
             v0 := GetTxt (scan);
             v1 := Env.Get (v0);
-            OutS ("checking for executable " & v1 & 
+            OutS ("checking for executable " & 
               " with environment variable " & v0 & "...");
             IF (v1 # NIL) THEN
               result := OS.FindExecutable (v1);
@@ -555,8 +557,8 @@ PROCEDURE GenConfig (): TEXT =
                     FOR i := 0 TO lib_dirs.size() - 1 DO
                       WITH dir = lib_dirs.get(i) DO
                         OutS ("checking in directory ", dir, "...");
-                        IF OS.IsDirectory (dir)
-                          AND FilesPresent (dir, lib_files) THEN
+                        IF OS.IsDirectory (dir) AND lib_files # NIL AND
+                          FilesPresent (dir, lib_files) THEN
                           OutResult (dir);
                           IF NOT MemberOfTextSeq(choices, dir) THEN
                             choices.addhi(dir);
@@ -567,6 +569,10 @@ PROCEDURE GenConfig (): TEXT =
                       END;
                     END;
                   ELSE
+                    IF AskBool("Would you like to continue nonetheless?",
+                               "yes") THEN
+                      EXIT;
+                    END;
                     Out ();
                     Out ("Please enter the name of a directory.");
                   END;

@@ -10,10 +10,10 @@ readonly BUILD_DIR    = TARGET            % directory for results
 readonly OS_TYPE      = "POSIX"           % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"          % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "i486--linuxelf"  % "cpu-vendor-os" string for GNU
-readonly INSTALL_KEY  = BEGIN_CONFIG
-  "What is your installation key?"
-    14 %-- user specified key
-END_CONFIG
+%readonly INSTALL_KEY  = BEGIN_CONFIG
+%  "What is your installation key?"
+%    14 %-- user specified key
+%END_CONFIG
 
 readonly NAMING_CONVENTIONS = "0"
 %                                        object files       libraries
