@@ -57,6 +57,12 @@ BEGIN
   RETURN z;
 END Conj;
 
+(*----------------*)
+PROCEDURE Equal(READONLY x,y:T):BOOLEAN =
+BEGIN
+  RETURN R.Equal(x.re,y.re) AND R.Equal(x.im,y.im);
+END Equal;
+
 
 (*----------------*)
 PROCEDURE Mul(READONLY x,y:T):T=

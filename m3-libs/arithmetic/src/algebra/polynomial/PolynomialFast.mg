@@ -106,6 +106,22 @@ BEGIN
 END Sub;
 
 (*---------------------*)
+PROCEDURE Equal(p1,p2:T):BOOLEAN =
+VAR
+  p1nn:=LAST(p1^);
+  p2nn:=LAST(p2^);
+BEGIN
+  IF p1nn>=p2nn THEN
+    FOR i:=0 TO p2nn      DO IF NOT p1[i]#p2[i]  THEN RETURN FALSE END END;
+    FOR i:=p2nn+1 TO p1nn DO IF NOT p1[i]#R.Zero THEN RETURN FALSE END END;
+  ELSE
+    FOR i:=0 TO p1nn      DO IF NOT p1[i]#p2[i]  THEN RETURN FALSE END END;
+    FOR i:=p1nn+1 TO p2nn DO IF NOT R.Zero#p2[i] THEN RETURN FALSE END END;
+  END;
+  RETURN TRUE;
+END Equal;
+
+(*---------------------*)
 PROCEDURE Mul( 
                p1,p2:T):T=
 VAR

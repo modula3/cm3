@@ -11,7 +11,7 @@ Abstract: Complex numbers in polar coordinates
                           The ones with beginning caps are wds's
 *)
 
-FROM xUtils IMPORT Error, Err;
+FROM xUtils IMPORT Error;
 
 <*UNUSED*> CONST Module = "PolarBasic.";
 
@@ -25,6 +25,12 @@ BEGIN
   p.angle:=Rt.ArcTan2(c.im,c.re);
   RETURN p;
 END FromComplex;
+
+(*----------------*)
+PROCEDURE Equal(READONLY x,y:T):BOOLEAN =
+BEGIN
+  RETURN R.Equal(x.radius,y.radius) AND R.Equal(x.angle,y.angle);
+END Equal;
 
 (*----------------*)
 PROCEDURE ToComplex( 

@@ -17,6 +17,8 @@ TYPE
 PROCEDURE FromComplex(READONLY c:C.T):T;
 PROCEDURE ToComplex(READONLY c:T):C.T;
 
+PROCEDURE Equal(READONLY x,y:T):BOOLEAN;  (*return x=y*)
+
 PROCEDURE Mul(READONLY p1,p2:T):T;     (*return p1*p2*)
 PROCEDURE Div(READONLY p1,p2:T):T RAISES {Error};     (*return p1/p2*)
 
