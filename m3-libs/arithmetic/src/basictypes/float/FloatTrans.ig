@@ -22,10 +22,7 @@ TYPE
   
 CONST
   (*---distinguished elements---*)
-  Zero        = FLOAT(0.0D0,T);
   Half        = FLOAT(0.5D0,T);
-  One         = FLOAT(1.0D0,T);
-  Two         = FLOAT(2.0D0,T);
   SqrtTwo     = FLOAT(1.414213562373095D0,T);
   LnTwo       = FLOAT(0.693147180559945D0,T);  (*ln(2) *)
 
