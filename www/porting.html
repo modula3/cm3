@@ -114,7 +114,7 @@
     </p>
 
     <dl>
-      <dt><tt>m3-sys/m3middle/src/Target.m3</tt></dt>
+      <dt><tt>m3-sys/m3middle/src/Target.{i3,m3}</tt></dt>
       <dd>
         Add the new target name <tt>GREATOS</tt> to the
         <tt>Systems</tt> array. In the <tt>Init</tt> procedure, append
@@ -127,6 +127,8 @@
       <dt><tt>m3-sys/m3front/src/builtinInfo/InfoModule.m3</tt></dt>
       <dd>
         Add <tt>GREATOS</tt> to <tt>Platform_names</tt>.
+        (This should no longer be necessary in current versions, as
+        the platform list is now imported from Target.i3.)
         <p></p>
       </dd>
 
@@ -213,7 +215,7 @@
         <p></p>
       </dd>
 
-      <dt><tt>m3-libs/m3core/src/runtime/LINUXLIBC6</tt></dt>
+      <dt><tt>m3-libs/m3core/src/runtime/GREATOS</tt></dt>
       <dd>
         <p>
           This directory contains the basic system dependent runtime
@@ -227,6 +229,18 @@
           write up something on this topic later.) You can add this
           feature later. Comment all things not needed in the
           accompanying <tt>m3makefile</tt>.
+        </p>
+        <p></p>
+      </dd>
+
+      <dt><tt>m3-libs/m3gc-simple/src/runtime/GREATOS</tt></dt>
+      <dd>
+        <p>
+          This directory contains the runtime support that is needed
+          even for simple garbage collection (non-imcremental,
+          non-generational). These are usually some wrapper routines
+          for system calls. Have a look at the other platforms for
+          examples.
         </p>
         <p></p>
       </dd>
@@ -307,6 +321,15 @@
         </p>
         <p></p>
       </dd>
+
+      <dt><tt>m3-libs/libm3/src/os/POSIX/OSConfigPosix</tt></dt>
+      <dd>
+        <p>
+          Add entries for architecture and operating system name for
+          GREATOS.
+        </p>
+        <p></p>
+      </dd>
     </dl>
 
 
@@ -359,6 +382,17 @@
       Backup the existing compiler in
       <tt>/usr/local/cm3/bin/cm3-old</tt>, and install the new
       compiler as <tt>/usr/local/cm3/bin/cm3</tt>.
+    </p>
+
+    <p>
+      <b>Note:</b> You can only compile some platform specific code in
+      m3core and libm3 with a compiler that includes exactly the same
+      list of target platforms in Target.i3, InfoModule.m3 and
+      Compiler.i3; otherwise version stamps will get messed up. So you
+      have to make all the changes, build and ship the compiler
+      packages m3middle, m3front, m3quake, cm3, install the compiler,
+      and then build the libraries m3core and libm3 and the compiler
+      packages again (do-cm3-core.sh).
     </p>
 
     <hr>
@@ -453,7 +487,7 @@
     <address><a href="mailto:m3-support@elego.de">m3-support@elego.de</a></address>
 <!-- Created: Fri Feb 16 15:27:10 MET 2001 -->
 <!-- hhmts start -->
-Last modified: Wed Feb 21 22:30:40 MET 2001
+Last modified: Fri Jun 27 15:51:50 CEST 2003
 <!-- hhmts end -->
   </body>
 </html>
