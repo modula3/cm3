@@ -2502,7 +2502,7 @@ PROCEDURE GrowHeap (pp: INTEGER): BOOLEAN =
       VAR pages := bytes DIV BytesPerPage;
       BEGIN
         firstNewPage := Word.RightShift(LOOPHOLE(newChunk, INTEGER),
-                                        LogBytesPerPage;
+                                        LogBytesPerPage);
         lastNewPage := firstNewPage + pages - 1;
         fragment0 :=
           LOOPHOLE((firstNewPage + pages) * BytesPerPage, ADDRESS);
