@@ -8,6 +8,8 @@ todo:
     keeping a list of machine size integer factors
   - Bits, SLE (MatrixDecomposition), eigensystem, FFT (FourierTransform), Random/RNG01/RNG02, Root, Stat
   - ODE
+  - Hash routines
+  - Tex output of numbers
   - (overflow check in integer modules)
 
 

@@ -19,7 +19,7 @@ PROCEDURE GCD(u,v:T):T;
 PROCEDURE LCM(u,v:T):T;
 (*returns the least common multiple for u and v.*)
 
-PROCEDURE BezoutGCD(u,v:T; VAR (*OUT*) x,y : T);
+PROCEDURE BezoutGCD(u,v:T; VAR (*OUT*) x,y : T) : T;
 (*returns factors x and y such that u*x+v*y=GCD(u,v).*)
 
 PROCEDURE Bezout(u,v,w:T; VAR (*OUT*) x,y : T) RAISES {Error};
