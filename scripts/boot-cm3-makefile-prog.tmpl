@@ -25,12 +25,13 @@ OBJ_MO   := $(addsuffix .mo, $(BASES_MC))
 OBJ_O    := $(addsuffix .o, $(BASES_C))
 OBJECTS  := $(OBJ_IO) $(OBJ_MO) $(OBJ_O)
 LIBFILES := $(shell for f in $(LIBS); do if [ -f "$${f}" ] ; then  echo $${f}; fi; done)
+LINKFLAGS:=
 
 .PHONY: all clean clean-as clean-obj
 
 all: $(PROGNAME)
 $(PROGNAME): $(OBJECTS) $(LIBFILES)
-	$(CC) $(STATIC) -o $(PROGNAME) $(OBJECTS) $(LIBS)
+	$(CC) $(STATIC) -o $(PROGNAME) $(LINKFLAGS) $(OBJECTS) $(LIBS)
 
 %.o: %.c
 	$(CC) $(CCOPTS) -o $@ -c $<

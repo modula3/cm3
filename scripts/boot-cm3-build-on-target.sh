@@ -46,8 +46,8 @@ L="${L} m3-sys/m3linker"
 L="${L} m3-sys/m3front"
 L="${L} m3-sys/m3quake"
 P="${P} m3-sys/cm3"
-L="${L} m3-sys/m3scanner"
-L="${L} m3-sys/m3tools"
+#L="${L} m3-sys/m3scanner"
+#L="${L} m3-sys/m3tools"
 #P="${P} m3-sys/m3cgcat"
 #P="${P} m3-sys/m3cggen"
 P="${P} m3-tools/m3bundle"
@@ -133,6 +133,7 @@ for p in ${P}; do
   if [ "$DOCLEAN" = obj ] ; then
     ${GMAKE} PROGNAME="${pkg}" LIBS="`get_libs ${pkg}`" clean-obj
   fi
-  ${GMAKE} PROGNAME="${pkg}" LIBS="`get_libs ${pkg}`" all
+  ${GMAKE} PROGNAME="${pkg}" LINKFLAGS="${GCWRAPFLAGS}" \
+           LIBS="`get_libs ${pkg}`" all
 done
 
