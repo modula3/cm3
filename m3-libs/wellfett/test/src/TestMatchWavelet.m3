@@ -325,6 +325,7 @@ PROCEDURE DeriveWSSE (hdual, gdual0, s: S.T; c: R.T): Deriv2
   END DeriveWSSE;
 
 PROCEDURE TestDeriveWSSE () =
+  <*FATAL NA.Error*>
   CONST delta = 1.0D-8;
   VAR
     hdual  := NEW(S.T).fromArray(ARRAY OF R.T{0.23D0, 1.678D0, -0.85D0});
@@ -360,6 +361,7 @@ PROCEDURE ScaleDerv (READONLY x: Deriv2; y: R.T): Deriv2 =
 PROCEDURE PutDervDif (READONLY der   : Deriv2;
                       READONLY derArr: ARRAY OF Deriv2;
                                delta : R.T              ) =
+  <*FATAL Thread.Alerted, Wr.Failure, NA.Error *>
   BEGIN
     (*compare first derivative (gradient) with the first difference*)
     IO.Put(VF.Fmt(V.Scale(der.first, delta)) & "\n");
@@ -391,7 +393,8 @@ PROCEDURE ExtendDervTarget (READONLY x        : Deriv2;
                                      targetAmp: R.T;
                                      target   : V.T;
                                      targetCor: V.T;
-                                     wavelet0 : V.T     ): Deriv2 =
+                                     wavelet0 : V.T     ): Deriv2
+  RAISES {NA.Error} =
   BEGIN
     RETURN
       Deriv2{
@@ -446,7 +449,7 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
   MatchCoef RAISES {NA.Error} =
 
   <*UNUSED*>
-  PROCEDURE CheckDerivatives () =
+  PROCEDURE CheckDerivatives () RAISES {NA.Error} =
     CONST
       delta = 1.0D-8;
       cf    = 0.7D0;
@@ -587,8 +590,10 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
             y := y.superpose(NEW(S.T).fromArray(SUBARRAY(vec^, FIRST(vec^),
                                                          NUMBER(vec^) - 1),
                                                 yfirst));
+            (*
             IO.Put(
               Fmt.FN("y %s, cf %s\n", ARRAY OF TEXT{SF.Fmt(y), RF.Fmt(cf)}));
+            *)
           END;
         END;
       END;
@@ -643,8 +648,9 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
     CASE 1 OF
     | 0 => WP.PlotWavelets(hdual, gdual, levels);
     | 1 =>
-        PL.SetEnvironment(MIN(lefttarget, leftpsidual),
-                          MAX(righttarget, rightpsidual), ymin, ymax);
+        PL.SetEnvironment(
+          MIN(lefttarget, MIN(leftpsidual, leftpsidual0)),
+          MAX(righttarget, MAX(rightpsidual, rightpsidual0)), ymin, ymax);
         PL.SetColor0(3);
         PL.PlotLines(V.ArithSeq(target.getNumber(), lefttarget, grid)^,
                      target.getData()^);
@@ -661,10 +667,10 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
   END TestMatchPatternSmooth;
 
 (*create symmetric clip of the sin x / x curve*)
-PROCEDURE SincVector (size, width : CARDINAL): V.T =
+PROCEDURE SincVector (size, width: CARDINAL): V.T =
   VAR
     z := V.New(2 * size + 1);
-    k := RT.Pi / FLOAT(2*width, R.T);
+    k := RT.Pi / FLOAT(2 * width, R.T);
   BEGIN
     z[size] := R.One;
     FOR i := 1 TO size - 1 DO
@@ -707,8 +713,8 @@ PROCEDURE Test () =
                                  V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^,
                                  -256), 6, 4, 2, 5, 0.0D0);
     | 4 =>
-        MatchPattern(NEW(S.T).fromArray(SincVector(1024, 64)^, 64-1024), 6, 4,
-                     2, 5);
+        MatchPattern(
+          NEW(S.T).fromArray(SincVector(1024, 64)^, 64 - 1024), 6, 4, 2, 5);
     | 5 =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(
