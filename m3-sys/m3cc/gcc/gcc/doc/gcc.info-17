@@ -232,11 +232,11 @@ value of variables I and J.
 
    However, side effects in `X' or `Y' may cause unintended behavior.
 For example, `MIN (i++, j++)' will fail, incrementing the smaller
-counter twice.  A GNU C extension allows you to write safe macros that
-avoid this kind of problem (*note Naming an Expression's Type: Naming
-Types.).  However, writing `MIN' and `MAX' as macros also forces you to
-use function-call notation for a fundamental arithmetic operation.
-Using GNU C++ extensions, you can write `int min = i <? j;' instead.
+counter twice.  The GNU C `typeof' extension allows you to write safe
+macros that avoid this kind of problem (*note Typeof::).  However,
+writing `MIN' and `MAX' as macros also forces you to use function-call
+notation for a fundamental arithmetic operation.  Using GNU C++
+extensions, you can write `int min = i <? j;' instead.
 
    Since `<?' and `>?' are built into the compiler, they properly
 handle expressions with side-effects;  `int min = i++ <? j++;' works
@@ -889,7 +889,7 @@ G++._ They should be considered deprecated *Note Deprecated Features::.
      arguments, rather than no arguments, as C++ demands.
 
 
-File: gcc.info,  Node: Objective-C,  Next: Gcov,  Prev: C++ Extensions,  Up: Top
+File: gcc.info,  Node: Objective-C,  Next: Compatibility,  Prev: C++ Extensions,  Up: Top
 
 GNU Objective-C runtime features
 ********************************

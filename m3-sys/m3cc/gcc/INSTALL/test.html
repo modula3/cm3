@@ -86,7 +86,18 @@ To get a list of the possible <code>*.exp</code> files, pipe the
 output of <code>make check</code> into a file and look at the
 <code>Running <small>...</small>  .exp</code> lines.
 
-<h3><a name="TOC1"></a>How to interpret test results</h3>
+<p>To run only the tests for a library, run <code>make check</code> from the
+the library's testsuite in a subdirectory of the object directory:
+<code>libstdc++-v3/testsuite</code> or <code>libcgj/testsuite</code>.
+
+<h3><a name="TOC1"></a>Additional testing for Java Class Libraries</h3>
+
+<p>The <a href="http://sources.redhat.com/mauve/">Mauve Project</a> provides
+a suite of tests for the Java Class Libraries.  This suite can be run
+as part of libgcj testing by specifying the location of the Mauve tree
+when invoking <code>make</code>, as in <code>make MAUVEDIR=~/mauve check</code>.
+
+<h3><a name="TOC2"></a>How to interpret test results</h3>
 
 <p>After the testsuite has run you'll find various <code>*.sum</code> and <code>*.log</code>
 files in the testsuite subdirectories.  The <code>*.log</code> files contain a
@@ -109,7 +120,7 @@ current time our testing harness does not allow fine grained control
 over whether or not a test is expected to fail.  We expect to fix this
 problem in future releases.
 
-<h3><a name="TOC2"></a>Submitting test results</h3>
+<h3><a name="TOC3"></a>Submitting test results</h3>
 
 <p>If you want to report the results to the GCC project, use the
 <code>contrib/test_summary</code> shell script.  Start it in the <var>objdir</var> with
@@ -130,7 +141,7 @@ behave on different platforms and compare them with your results.  A
 few failing testcases are possible even on released versions and you
 should look here first if you think your results are unreasonable.
 
-<hr>
+<hr />
 <p>
 <a href="./index.html">Return to the GCC Installation page</a>
 

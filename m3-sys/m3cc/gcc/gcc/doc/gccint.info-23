@@ -495,6 +495,7 @@ Index
 * DBX_OUTPUT_MAIN_SOURCE_DIRECTORY:      File Names and DBX.
 * DBX_OUTPUT_MAIN_SOURCE_FILE_END:       File Names and DBX.
 * DBX_OUTPUT_MAIN_SOURCE_FILENAME:       File Names and DBX.
+* DBX_OUTPUT_NFUN:                       DBX Hooks.
 * DBX_OUTPUT_RBRAC:                      DBX Hooks.
 * DBX_OUTPUT_SOURCE_FILENAME:            File Names and DBX.
 * DBX_OUTPUT_STANDARD_TYPES:             DBX Hooks.

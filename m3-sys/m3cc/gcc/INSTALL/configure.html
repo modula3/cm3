@@ -88,8 +88,7 @@ subdirectory of <var>objdir</var> or vice versa.
 <p>These additional options control where certain parts of the distribution
 are installed.  Normally you should not need to use these options.
 <dl>
-
-<br><dt><code>--exec-prefix=<var>dirname</var></code>
+<dt><code>--exec-prefix=<var>dirname</var></code>
 <dd>Specify the toplevel installation directory for architecture-dependent
 files.  The default is <code><var>prefix</var></code>.
 
@@ -155,9 +154,9 @@ complex conversion patterns. As a basic rule, <var>prefix</var> (and
 <var>suffix</var>) are prepended (appended) before further transformations
 can happen with a special transformation script <var>pattern</var>.
 
-<p>As currently implemented, this options only take effect for native
+<p>As currently implemented, these options only take effect for native
 builds; cross compiler binaries' names are not transformed even when a
-transformation is explicitly asked for by one of this options.
+transformation is explicitly asked for by one of these options.
 
 <p>For native builds, some of the installed programs are also installed
 with the target alias in front of their name, as in
@@ -192,6 +191,43 @@ GCC</em>.  The local header files in <code>/usr/local/include</code>--if you put
 any in that directory--are not part of GCC.  They are part of other
 programs--perhaps many others.  (GCC installs its own header files in
 another directory which is based on the <code>--prefix</code> value.)
+
+<p>Both the local-prefix include directory and the GCC-prefix include
+directory are part of GCC's "system include" directories.  Although these
+two directories are not fixed, they need to be searched in the proper
+order for the correct processing of the include_next directive.  The
+local-prefix include directory is searched before the GCC-prefix
+include directory.  Another characteristic of system include directories
+is that pedantic warnings are turned off for headers in these directories.
+
+<p>Some autoconf macros add <code>-I <var>directory</var></code> options to the
+compiler command line, to ensure that directories containing installed
+packages' headers are searched.  When <var>directory</var> is one of GCC's
+system include directories, GCC will ignore the option so that system
+directories continue to be processed in the correct order.  This
+may result in a search order different from what was specified but the
+directory will still be searched.
+
+<p>GCC automatically searches for ordinary libraries using
+<code>GCC_EXEC_PREFIX</code>.  Thus, when the same installation prefix is
+used for both GCC and packages, GCC will automatically search for
+both headers and libraries.  This provides a configuration that is
+easy to use.  GCC behaves in a manner similar to that when it is
+installed as a system compiler in <code>/usr</code>.
+
+<p>Sites that need to install multiple versions of GCC may not want to
+use the above simple configuration.  It is possible to use the
+<code>--program-prefix</code>, <code>--program-suffix</code> and
+<code>--program-transform-name</code> options to install multiple versions
+into a single directory, but it may be simpler to use different prefixes
+and the <code>--with-local-prefix</code> option to specify the location of the
+site-specific files for each version.  It will then be necessary for
+users to specify explicitly the location of local site libraries
+(e.g., with <code>LIBRARY_PATH</code>).
+
+<p>The same value can be used for both <code>--with-local-prefix</code> and
+<code>--prefix</code> provided it is not <code>/usr</code>.  This can be used
+to avoid the default search of <code>/usr/local/include</code>.
 
 <p><strong>Do not</strong> specify <code>/usr</code> as the <code>--with-local-prefix</code>! 
 The directory you use for <code>--with-local-prefix</code> <strong>must not</strong>
@@ -236,15 +272,25 @@ configured with <code>--with-gnu-as</code>.)  If you have more than one
 assembler installed on your system, you may want to use this option in
 connection with <code>--with-as=<var>pathname</var></code>.
 
-<p>The systems where it makes a difference whether you use the GNU assembler are
-<code>hppa1.0-<var>any</var>-<var>any</var></code>, <code>hppa1.1-<var>any</var>-<var>any</var></code>,
-<code>i386-<var>any</var>-sysv</code>, <code>i386-<var>any</var>-isc</code>,
-<code>i860-<var>any</var>-bsd</code>, <code>m68k-bull-sysv</code>,
-<code>m68k-hp-hpux</code>, <code>m68k-sony-bsd</code>,
-<code>m68k-altos-sysv</code>, <code>m68000-hp-hpux</code>,
-<code>m68000-att-sysv</code>, <code><var>any</var>-lynx-lynxos</code>,
-and <code>mips-<var>any</var></code>. 
-On any other system, <code>--with-gnu-as</code> has no effect.
+<p>The following systems are the only ones where it makes a difference
+whether you use the GNU assembler.  On any other system,
+<code>--with-gnu-as</code> has no effect.
+
+<ul>
+<li><code>hppa1.0-<var>any</var>-<var>any</var></code>
+<li><code>hppa1.1-<var>any</var>-<var>any</var></code>
+<li><code>i386-<var>any</var>-sysv</code>
+<li><code>i386-<var>any</var>-isc</code>
+<li><code>i860-<var>any</var>-bsd</code>
+<li><code>m68k-bull-sysv</code>
+<li><code>m68k-hp-hpux</code>
+<li><code>m68k-sony-bsd</code>
+<li><code>m68k-altos-sysv</code>
+<li><code>m68000-hp-hpux</code>
+<li><code>m68000-att-sysv</code>
+<li><code><var>any</var>-lynx-lynxos</code>
+<li><code>mips-<var>any</var></code>
+</ul>
 
 <p>On the systems listed above (except for the HP-PA, for ISC on the
 386, and for <code>mips-sgi-irix5.*</code>), if you use the GNU assembler,
@@ -318,8 +364,7 @@ predefined set of them.
 <p>Some targets provide finer-grained control over which multilibs are built
 (e.g., <code>--disable-softfloat</code>):
 <dl>
-
-<br><dt><code>arc-*-elf*</code>
+<dt><code>arc-*-elf*</code>
 <dd>biendian.
 
 <br><dt><code>arm-*-*</code>
@@ -544,10 +589,10 @@ forward to maintain the port.
 <dt><code>--with-headers=<var>dir</var></code>
 <dd>Specifies a directory
 which has target include files. 
-<em>This options is required</em> when building a cross
+<em>This option is required</em> when building a cross
 compiler, if <code><var>prefix</var>/<var>target</var>/sys-include</code> doesn't pre-exist. 
 These include files will be copied into the <code>gcc</code> install directory. 
-Fixincludes will be run on these files to make them compatible with
+<code>fixincludes</code> will be run on these files to make them compatible with
 GCC. 
 <br><dt><code>--with-libs=``<var>dir1</var> <var>dir2</var> <small>...</small> <var>dirN</var>''</code>
 <dd>Specifies a list of directories which contain the target runtime
@@ -564,7 +609,7 @@ omitted from <code>libgcc.a</code> on the assumption that it will be provided by
 <code>--disable</code> option and that each <code>--with</code> option has a
 corresponding <code>--without</code> option.
 
-<hr>
+<hr />
 <p>
 <a href="./index.html">Return to the GCC Installation page</a>
 

@@ -752,23 +752,18 @@ expand_binop (mode, binoptab, op0, op1, target, unsignedp, methods)
 	}
 
       /* In case the insn wants input operands in modes different from
-	 the result, convert the operands.  It would seem that we
-	 don't need to convert CONST_INTs, but we do, so that they're
-	 a properly sign-extended for their modes; we choose the
-	 widest mode between mode and mode[01], so that, in a widening
-	 operation, we call convert_modes with different FROM and TO
-	 modes, which ensures the value is sign-extended.  Shift
-	 operations are an exception, because the second operand needs
-	 not be extended to the mode of the result.  */
+	 those of the actual operands, convert the operands.  It would
+	 seem that we don't need to convert CONST_INTs, but we do, so
+	 that they're properly zero-extended or sign-extended for their
+	 modes; shift operations are an exception, because the second
+	 operand needs not be extended to the mode of the result.  */
 
       if (GET_MODE (op0) != mode0
 	  && mode0 != VOIDmode)
 	xop0 = convert_modes (mode0,
 			      GET_MODE (op0) != VOIDmode
 			      ? GET_MODE (op0)
-			      : GET_MODE_SIZE (mode) > GET_MODE_SIZE (mode0)
-			      ? mode
-			      : mode0,
+			      : mode,
 			      xop0, unsignedp);
 
       if (GET_MODE (xop1) != mode1
@@ -776,8 +771,7 @@ expand_binop (mode, binoptab, op0, op1, target, unsignedp, methods)
 	xop1 = convert_modes (mode1,
 			      GET_MODE (op1) != VOIDmode
 			      ? GET_MODE (op1)
-			      : (GET_MODE_SIZE (mode) > GET_MODE_SIZE (mode1)
-				 && ! shift_op)
+			      : ! shift_op
 			      ? mode
 			      : mode1,
 			      xop1, unsignedp);
@@ -1192,9 +1186,9 @@ expand_binop (mode, binoptab, op0, op1, target, unsignedp, methods)
     {
       int i;
       optab otheroptab = binoptab == add_optab ? sub_optab : add_optab;
-      unsigned int nwords = GET_MODE_BITSIZE (mode) / BITS_PER_WORD;
+      int nwords = GET_MODE_BITSIZE (mode) / BITS_PER_WORD;
       rtx carry_in = NULL_RTX, carry_out = NULL_RTX;
-      rtx xop0, xop1;
+      rtx xop0, xop1, xtarget;
 
       /* We can handle either a 1 or -1 value for the carry.  If STORE_FLAG
 	 value is one of those, use it.  Otherwise, use 1 since it is the
@@ -1209,19 +1203,20 @@ expand_binop (mode, binoptab, op0, op1, target, unsignedp, methods)
       xop0 = force_reg (mode, op0);
       xop1 = force_reg (mode, op1);
 
-      if (target == 0 || GET_CODE (target) != REG
-	  || target == xop0 || target == xop1)
-	target = gen_reg_rtx (mode);
+      xtarget = gen_reg_rtx (mode);
+
+      if (target == 0 || GET_CODE (target) != REG)
+	target = xtarget;
 
       /* Indicate for flow that the entire target reg is being set.  */
       if (GET_CODE (target) == REG)
-	emit_insn (gen_rtx_CLOBBER (VOIDmode, target));
+	emit_insn (gen_rtx_CLOBBER (VOIDmode, xtarget));
 
       /* Do the actual arithmetic.  */
       for (i = 0; i < nwords; i++)
 	{
 	  int index = (WORDS_BIG_ENDIAN ? nwords - i - 1 : i);
-	  rtx target_piece = operand_subword (target, index, 1, mode);
+	  rtx target_piece = operand_subword (xtarget, index, 1, mode);
 	  rtx op0_piece = operand_subword_force (xop0, index, mode);
 	  rtx op1_piece = operand_subword_force (xop1, index, mode);
 	  rtx x;
@@ -1281,7 +1276,7 @@ expand_binop (mode, binoptab, op0, op1, target, unsignedp, methods)
 	{
 	  if (mov_optab->handlers[(int) mode].insn_code != CODE_FOR_nothing)
 	    {
-	      rtx temp = emit_move_insn (target, target);
+	      rtx temp = emit_move_insn (target, xtarget);
 
 	      set_unique_reg_note (temp,
 	      			   REG_EQUAL,
@@ -1443,6 +1438,9 @@ expand_binop (mode, binoptab, op0, op1, target, unsignedp, methods)
 	  rtx temp = expand_binop (word_mode, binoptab, op0_low, op1_xhigh,
 				   NULL_RTX, 0, OPTAB_DIRECT);
 
+	  if (!REG_P (product_high))
+	    product_high = force_reg (word_mode, product_high);
+
 	  if (temp != 0)
 	    temp = expand_binop (word_mode, add_optab, temp, product_high,
 				 product_high, 0, next_methods);
@@ -1461,6 +1459,8 @@ expand_binop (mode, binoptab, op0, op1, target, unsignedp, methods)
 
 	  if (temp != 0 && temp != product_high)
 	    emit_move_insn (product_high, temp);
+
+	  emit_move_insn (operand_subword (product, high, 1, mode), product_high);
 
 	  if (temp != 0)
 	    {

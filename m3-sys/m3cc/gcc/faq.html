@@ -34,13 +34,11 @@ Information page</a>.</p>
      <li><a href="#open-development">What is an open development model?</a></li>
      <li><a href="#bugreport">How do I report a bug?</a></li>
      <li><a href="#support">How do I get a bug fixed or a feature added?</a></li>
-     <li><a href="#noncvs">How can I get a development environment for GCC without using CVS?</a></li>
      <li><a href="#platforms">Does GCC work on my platform?</a></li>
   </ol></li> 
 
   <li><a href="#installation">Installation</a>
   <ol>
-    <li><a href="#fortran">Problems building the Fortran compiler</a></li>
     <li><a href="#multiple">How to install multiple versions of GCC</a></li>
     <li><a href="#rpath">Dynamic linker is unable to find GCC libraries</a></li>
     <li><a href="#rpath">libstdc++/libio tests fail badly with --enable-shared</a></li>
@@ -212,14 +210,6 @@ disadvantages.</p>
 
 <hr />
 
-<h2><a name="noncvs">How can I get a development environment for GCC
-without using CVS?</a></h2>
-
-<p>GCC snapshots are available from the FTP server and its mirrors;
-see the <a href="mirrors.html">GCC mirror list</a>.</p>
-
-<hr />
-
 <h2><a name="platforms">Does GCC work on my platform?</a></h2>
 
 <p>The host/target specific installation notes for GCC include information
@@ -227,27 +217,13 @@ about known problems with installing or using GCC on particular platforms.
 These are included in the sources for a release in INSTALL/specific.html,
 and the <a href="http://gcc.gnu.org/install/specific.html">latest version</a>
 is always available at the GCC web site.
-Reports of successful builds for GCC versions
-<a href="http://gcc.gnu.org/gcc-3.0/buildstat.html">3.0</a> and
-<a href="http://gcc.gnu.org/gcc-2.95/buildstat.html">2.95</a>
-are also available at the web site.</p>
+Reports of <a href="http://gcc.gnu.org/buildstat.html">successful builds</a>
+for several versions of GCC are also available at the web site.</p>
 
 <hr />
 <a name="installation"></a>
 <h1>Installation</h1>
 
-<h2><a name="fortran">Problems building the Fortran compiler</a></h2>
-
-<p>The Fortran front end can not be built with most vendor compilers;
-it must be built with GCC.  As a result, you may get an error if you
-do not follow the install instructions carefully.</p>
-
-<p>In particular, instead of using "make" to build GCC, you should use
-"make bootstrap" if you are building a native compiler or "make cross"
-if you are building a cross compiler.</p>
-
-
-<hr />
 <h2><a name="multiple">How to install multiple versions of GCC</a></h2>
 
 <p>It may be desirable to install multiple versions of the compiler on

@@ -157,7 +157,7 @@ in the following sections.
 @xref{Overall Options,,Options Controlling the Kind of Output}.
 @gccoptlist{
 -c  -S  -E  -o @var{file}  -pipe  -pass-exit-codes  -x @var{language} @gol
--v  -###  --target-help  --help}
+-v  -###  --help  --target-help  --version}
 
 @item C Language Options
 @xref{C Dialect Options,,Options Controlling C Dialect}.
@@ -169,7 +169,7 @@ in the following sections.
 -fallow-single-precision  -fcond-mismatch @gol
 -fsigned-bitfields  -fsigned-char @gol
 -funsigned-bitfields  -funsigned-char @gol
--fwritable-strings  -fshort-wchar}
+-fwritable-strings}
 
 @item C++ Language Options
 @xref{C++ Dialect Options,,Options Controlling C++ Dialect}.
@@ -187,7 +187,7 @@ in the following sections.
 -fno-optional-diags  -fpermissive @gol
 -frepo  -fno-rtti  -fstats  -ftemplate-depth-@var{n} @gol
 -fuse-cxa-atexit  -fvtable-gc  -fno-weak  -nostdinc++ @gol
--fno-default-inline  -Wctor-dtor-privacy @gol
+-fno-default-inline -Wabi -Wctor-dtor-privacy @gol
 -Wnon-virtual-dtor  -Wreorder @gol
 -Weffc++  -Wno-deprecated @gol
 -Wno-non-template-friend  -Wold-style-cast @gol
@@ -211,7 +211,7 @@ in the following sections.
 @xref{Warning Options,,Options to Request or Suppress Warnings}.
 @gccoptlist{
 -fsyntax-only  -pedantic  -pedantic-errors @gol
--w  -W  -Wall  -Waggregate-return @gol
+-w  -W  -Wall -Waggregate-return @gol
 -Wcast-align  -Wcast-qual  -Wchar-subscripts  -Wcomment @gol
 -Wconversion  -Wno-deprecated-declarations @gol
 -Wdisabled-optimization  -Wdiv-by-zero  -Werror @gol
@@ -222,7 +222,7 @@ in the following sections.
 -Werror-implicit-function-declaration @gol
 -Wimport  -Winline @gol
 -Wlarger-than-@var{len}  -Wlong-long @gol
--Wmain  -Wmissing-braces  -Wmissing-declarations @gol
+-Wmain  -Wmissing-braces @gol
 -Wmissing-format-attribute  -Wmissing-noreturn @gol
 -Wmultichar  -Wno-format-extra-args  -Wno-format-y2k @gol
 -Wno-import  -Wpacked  -Wpadded @gol
@@ -236,7 +236,8 @@ in the following sections.
 
 @item C-only Warning Options
 @gccoptlist{
--Wbad-function-cast  -Wmissing-prototypes  -Wnested-externs @gol
+-Wbad-function-cast  -Wmissing-declarations @gol
+-Wmissing-prototypes  -Wnested-externs @gol
 -Wstrict-prototypes  -Wtraditional}
 
 @item Debugging Options
@@ -248,7 +249,8 @@ in the following sections.
 -fdump-tree-original@r{[}-@var{n}@r{]} -fdump-tree-optimized@r{[}-@var{n}@r{]} @gol
 -fdump-tree-inlined@r{[}-@var{n}@r{]} @gol
 -fmem-report  -fpretend-float @gol
--fprofile-arcs  -ftest-coverage  -ftime-report @gol
+-fprofile-arcs  -fsched-verbose=@var{n} @gol
+-ftest-coverage  -ftime-report @gol
 -g  -g@var{level}  -gcoff  -gdwarf  -gdwarf-1  -gdwarf-1+  -gdwarf-2 @gol
 -ggdb  -gstabs  -gstabs+  -gvms  -gxcoff  -gxcoff+ @gol
 -p  -pg  -print-file-name=@var{library}  -print-libgcc-file-name @gol
@@ -261,6 +263,7 @@ in the following sections.
 @gccoptlist{
 -falign-functions=@var{n}  -falign-jumps=@var{n} @gol
 -falign-labels=@var{n}  -falign-loops=@var{n}  @gol
+-fbounds-check @gol
 -fbranch-probabilities  -fcaller-saves -fcprop-registers @gol
 -fcse-follow-jumps  -fcse-skip-blocks  -fdata-sections @gol
 -fdelayed-branch  -fdelete-null-pointer-checks @gol
@@ -269,7 +272,8 @@ in the following sections.
 -fgcse  -fgcse-lm  -fgcse-sm @gol
 -finline-functions  -finline-limit=@var{n}  -fkeep-inline-functions @gol
 -fkeep-static-consts  -fmerge-constants  -fmerge-all-constants @gol
--fmove-all-movables  -fno-default-inline  -fno-defer-pop @gol
+-fmove-all-movables  -fno-branch-count-reg @gol
+-fno-default-inline  -fno-defer-pop @gol
 -fno-function-cse  -fno-guess-branch-probability @gol
 -fno-inline  -fno-math-errno  -fno-peephole  -fno-peephole2 @gol
 -funsafe-math-optimizations -fno-trapping-math @gol
@@ -278,9 +282,11 @@ in the following sections.
 -freduce-all-givs -fregmove  -frename-registers @gol
 -frerun-cse-after-loop  -frerun-loop-opt @gol
 -fschedule-insns  -fschedule-insns2 @gol
+-fno-sched-interblock  -fno-sched-spec @gol
+-fsched-spec-load  -fsched-spec-load-dangerous @gol
 -fsingle-precision-constant  -fssa -fssa-ccp -fssa-dce @gol
--fstrength-reduce  -fstrict-aliasing  -fthread-jumps  -ftrapv @gol
--funroll-all-loops  -funroll-loops  @gol
+-fstrength-reduce  -fstrict-aliasing  -fthread-jumps @gol
+-ftrapv -funroll-all-loops  -funroll-loops  @gol
 --param @var{name}=@var{value}
 -O  -O0  -O1  -O2  -O3  -Os}
 
@@ -444,7 +450,7 @@ in the following sections.
 -mno-relocatable  -mrelocatable-lib  -mno-relocatable-lib @gol
 -mtoc  -mno-toc -mlittle  -mlittle-endian  -mbig  -mbig-endian @gol
 -mcall-aix -mcall-sysv -mcall-netbsd @gol
--maix-struct-return -msvr4-struct-return
+-maix-struct-return -msvr4-struct-return @gol
 -mabi=altivec -mabi=no-altivec @gol
 -mprototype  -mno-prototype @gol
 -msim  -mmvme  -mads  -myellowknife  -memb -msdata @gol
@@ -481,11 +487,12 @@ in the following sections.
 -mno-fp-ret-in-387  -msoft-float  -msvr3-shlib @gol
 -mno-wide-multiply  -mrtd  -malign-double @gol
 -mpreferred-stack-boundary=@var{num} @gol
--mmmx  -msse -msse2 -msse-math -m3dnow @gol
+-mmmx  -msse -msse2 -m3dnow @gol
 -mthreads  -mno-align-stringops  -minline-all-stringops @gol
 -mpush-args  -maccumulate-outgoing-args  -m128bit-long-double @gol
 -m96bit-long-double  -mregparm=@var{num}  -momit-leaf-frame-pointer @gol
 -mno-red-zone@gol
+-mcmodel=@var{code-model} @gol
 -m32 -m64}
 
 @emph{HPPA Options}
@@ -609,8 +616,8 @@ in the following sections.
 
 @emph{D30V Options}
 @gccoptlist{
--mextmem  -mextmemory  -monchip  -mno-asm-optimize  -masm-optimize @gol
--mbranch-cost=@var{n} -mcond-exec=@var{n}}
+-mextmem  -mextmemory  -monchip  -mno-asm-optimize @gol
+-masm-optimize -mbranch-cost=@var{n} -mcond-exec=@var{n}}
 
 @emph{S/390 and zSeries Options}
 @gccoptlist{
@@ -669,7 +676,7 @@ in the following sections.
 -fno-common  -fno-ident  -fno-gnu-linker @gol
 -fpcc-struct-return  -fpic  -fPIC @gol
 -freg-struct-return  -fshared-data  -fshort-enums @gol
--fshort-double  -fvolatile @gol
+-fshort-double  -fshort-wchar -fvolatile @gol
 -fvolatile-global  -fvolatile-static @gol
 -fverbose-asm  -fpack-struct  -fstack-check @gol
 -fstack-limit-register=@var{reg}  -fstack-limit-symbol=@var{sym} @gol
@@ -914,6 +921,10 @@ be displayed.
 @opindex target-help
 Print (on the standard output) a description of target specific command
 line options for each tool.
+
+@item --version
+@opindex version
+Display the version number and copyrights of the invoked GCC.
 @end table
 
 @node Invoking G++
@@ -1296,12 +1307,6 @@ than double precision.   If you must use @option{-traditional}, but want
 to use single precision operations when the operands are single
 precision, use this option.   This option has no effect when compiling
 with ISO or GNU C conventions (the default).
-
-@item -fshort-wchar
-@opindex fshort-wchar
-Override the underlying type for @samp{wchar_t} to be @samp{short
-unsigned int} instead of the default for the target.  This option is
-useful for building programs to run under WINE@.
 @end table
 
 @node C++ Dialect Options
@@ -1549,6 +1554,58 @@ Do not assume @samp{inline} for functions defined inside a class scope.
 @xref{Optimize Options,,Options That Control Optimization}.  Note that these
 functions will have linkage like inline functions; they just won't be
 inlined by default.
+
+@item -Wabi @r{(C++ only)}
+@opindex Wabi
+Warn when G++ generates code that is probably not compatible with the
+vendor-neutral C++ ABI.  Although an effort has been made to warn about
+all such cases, there are probably some cases that are not warned about, 
+even though G++ is generating incompatible code.  There may also be
+cases where warnings are emitted even though the code that is generated
+will be compatible.
+
+You should rewrite your code to avoid these warnings if you are
+concerned about the fact that code generated by G++ may not be binary
+compatible with code generated by other compilers.
+
+The known incompatibilites at this point include:
+
+@itemize @bullet
+
+@item
+Incorrect handling of tail-padding for bit-fields.  G++ may attempt to
+pack data into the same byte as a base class.  For example:
+
+@smallexample
+struct A @{ virtual void f(); int f1 : 1; @};
+struct B : public A @{ int f2 : 1; @};
+@end smallexample
+
+@noindent
+In this case, G++ will place @code{B::f2} into the same byte
+as@code{A::f1}; other compilers will not.  You can avoid this problem 
+by explicitly padding @code{A} so that its size is a multiple of the
+byte size on your platform; that will cause G++ and other compilers to
+layout @code{B} identically.
+
+@item
+Incorrect handling of tail-padding for virtual bases.  G++ does not use
+tail padding when laying out virtual bases.  For example:
+
+@smallexample
+struct A @{ virtual void f(); char c1; @};
+struct B @{ B(); char c2; @};
+struct C : public A, public virtual B @{@};
+@end smallexample
+
+@noindent
+In this case, G++ will not place @code{B} into the tail-padding for
+@code{A}; other compilers will.  You can avoid this problem by
+explicitly padding @code{A} so that its size is a multiple of its
+alignment (ignoring virtual base classes); that will cause G++ and other
+compilers to layout @code{C} identically.
+
+@end itemize
 
 @item -Wctor-dtor-privacy @r{(C++ only)}
 @opindex Wctor-dtor-privacy
@@ -2876,18 +2933,7 @@ optimization and code generation options plus
 Control Optimization}).
 
 The other use of @option{-fprofile-arcs} is for use with @code{gcov},
-when it is used with the @option{-ftest-coverage} option.  GCC
-supports two methods of determining code coverage: the options that
-support @code{gcov}, and options @option{-a} and @option{-ax}, which
-write information to text files.  The options that support @code{gcov}
-do not need to instrument every arc in the program, so a program compiled
-with them runs faster than a program compiled with @option{-a}, which
-adds instrumentation code to every basic block in the program.  The
-tradeoff: since @code{gcov} does not have execution counts for all
-branches, it must start with the execution counts for the instrumented
-branches, and then iterate over the program flow graph until the entire
-graph has been solved.  Hence, @code{gcov} runs a little more slowly than
-a program which uses information from @option{-a} and @option{-ax}.
+when it is used with the @option{-ftest-coverage} option.
 
 With @option{-fprofile-arcs}, for each function of your program GCC
 creates a program flow graph, then finds a spanning tree for the graph.
@@ -2896,11 +2942,6 @@ compiler adds code to count the number of times that these arcs are
 executed.  When an arc is the only exit or only entrance to a block, the
 instrumentation code can be added to the block; otherwise, a new basic
 block must be created to hold the instrumentation code.
-
-This option makes it possible to estimate branch probabilities and to
-calculate basic block execution counts.  In general, basic block
-execution counts as provided by @option{-a} do not give enough
-information to estimate all branch probabilities.
 
 @need 2000
 @item -ftest-coverage
@@ -3132,6 +3173,23 @@ Dump after all tree based optimization, to @file{@var{file}.optimized}.
 @item inlined
 Dump after function inlining, to @file{@var{file}.inlined}.
 @end table
+
+@item -fsched-verbose=@var{n}
+@opindex fsched-verbose
+On targets that use instruction scheduling, this option controls the
+amount of debugging output the scheduler prints.  This information is
+written to standard error, unless @option{-dS} or @option{-dR} is
+specified, in which case it is output to the usual dump
+listing file, @file{.sched} or @file{.sched2} respectively.  However
+for @var{n} greater than nine, the output is always printed to standard
+error.
+
+For @var{n} greater than zero, @option{-fsched-verbose} outputs the
+same information as @option{-dRS}.  For @var{n} greater than one, it
+also output basic block probabilities, detailed ready list information
+and unit/insn info.  For @var{n} greater than two, it includes RTL
+at abort point, control-flow and regions info.  And for @var{n} over
+four, @option{-fsched-verbose} also includes dependence info.
 
 @item -fpretend-float
 @opindex fpretend-float
@@ -3437,6 +3495,14 @@ types.  Languages like C or C++ require each non-automatic variable to
 have distinct location, so using this option will result in non-conforming
 behavior.
 
+@item -fno-branch-count-reg
+@opindex fno-branch-count-reg
+Do not use ``decrement and branch'' instructions on a count register,
+but instead generate a sequence of instructions that decrement a
+register, compare it against zero, then branch based upon the result.
+This option is only meaningful on architectures that support such
+instructions, which include x86, PowerPC, IA-64 and S/390.
+
 @item -fno-function-cse
 @opindex fno-function-cse
 Do not put function addresses in registers; make each instruction that
@@ -3499,6 +3565,14 @@ an exact implementation of IEEE or ISO rules/specifications for
 math functions.
 
 The default is @option{-ftrapping-math}.
+
+@item -fbounds-check
+@opindex fbounds-check
+For front-ends that support it, generate additional code to check that
+indices used to access arrays are within the declared range.  This is
+currenly only supported by the Java and Fortran 77 front-ends, where
+this option defaults to true and false respectively.
+
 @end table
 
 The following options control specific optimizations.  The @option{-O2}
@@ -3625,6 +3699,30 @@ Similar to @option{-fschedule-insns}, but requests an additional pass of
 instruction scheduling after register allocation has been done.  This is
 especially useful on machines with a relatively small number of
 registers and where memory load instructions take more than one cycle.
+
+@item -fno-sched-interblock
+@opindex fno-sched-interblock
+Don't schedule instructions across basic blocks.  This is normally
+enabled by default when scheduling before register allocation, i.e.@:
+with @option{-fschedule-insns} or at @option{-O2} or higher.
+
+@item -fno-sched-spec
+@opindex fno-sched-spec
+Don't allow speculative motion of non-load instructions.  This is normally
+enabled by default when scheduling before register allocation, i.e.@:
+with @option{-fschedule-insns} or at @option{-O2} or higher.
+
+@item -fsched-spec-load
+@opindex fsched-spec-load
+Allow speculative motion of some load instructions.  This only makes
+sense when scheduling before register allocation, i.e.@: with
+@option{-fschedule-insns} or at @option{-O2} or higher.
+
+@item -fsched-spec-load-dangerous
+@opindex fsched-spec-load-dangerous
+Allow speculative motion of more load instructions.  This only makes
+sense when scheduling before register allocation, i.e.@: with
+@option{-fschedule-insns} or at @option{-O2} or higher.
 
 @item -ffunction-sections
 @itemx -fdata-sections
@@ -4199,15 +4297,13 @@ one @option{-I} option, the directories are scanned in left-to-right
 order; the standard system directories come after.
 
 If a standard system include directory, or a directory specified with
-@option{-isystem}, is also specified with @option{-I}, it will be
-searched only in the position requested by @option{-I}.  Also, it will
-not be considered a system include directory.  If that directory really
-does contain system headers, there is a good chance that they will
-break.  For instance, if GCC's installation procedure edited the headers
-in @file{/usr/include} to fix bugs, @samp{-I/usr/include} will cause the
-original, buggy headers to be found instead of the corrected ones.  GCC
-will issue a warning when a system include directory is hidden in this
-way.
+@option{-isystem}, is also specified with @option{-I}, the @option{-I}
+option will be ignored.  The directory will still be searched but as a
+system directory at its normal position in the system include chain.
+This is to ensure that GCC's procedure to fix buggy system headers and
+the ordering for the include_next directive are not inadvertantly changed.
+If you really need to change the search order for system directories,
+use the @option{-nostdinc} and/or @option{-isystem} options.
 
 @item -I-
 @opindex I-
@@ -7530,6 +7626,9 @@ direct access to the MMX, SSE and 3Dnow extensions of the instruction set.
 @xref{X86 Built-in Functions}, for details of the functions enabled
 and disabled by these switches.
 
+To have SSE/SSE2 instructions generated automatically from floating-point code,
+see @option{-mfpmath=sse}.
+
 @item -mpush-args
 @itemx -mno-push-args
 @opindex mpush-args
@@ -7598,6 +7697,32 @@ by the x86-64 ABI, it is a 128-byte area beyond the location of the
 stack pointer that will not be modified by signal or interrupt handlers
 and therefore can be used for temporary data without adjusting the stack
 pointer.  The flag @option{-mno-red-zone} disables this red zone.
+
+@item -mcmodel=small
+@opindex mcmodel=small
+Generate code for the small code model: the program and its symbols must
+be linked in the lower 2 GB of the address space.  Pointers are 64 bits.
+Programs can be statically or dynamically linked.  This is the default
+code model.
+
+@item -mcmodel=kernel
+@opindex mcmodel=kernel
+Generate code for the kernel code model.  The kernel runs in the
+negative 2 GB of the address space.
+This model has to be used for Linux kernel code.
+
+@item -mcmodel=medium
+@opindex mcmodel=medium
+Generate code for the medium model: The program is linked in the lower 2
+GB of the address space but symbols can be located anywhere in the
+address space.  Programs can be statically or dynamically linked, but
+building of shared libraries are not supported with the medium model.
+
+@item -mcmodel=large
+@opindex mcmodel=large
+Generate code for the large model: This model makes no assumptions
+about addresses and sizes of sections.  Currently GCC does not implement
+this model.
 @end table
 
 @node HPPA Options
@@ -9637,13 +9762,19 @@ unwinding from asynchronous events (such as debugger or garbage collector).
 Return ``short'' @code{struct} and @code{union} values in memory like
 longer ones, rather than in registers.  This convention is less
 efficient, but it has the advantage of allowing intercallability between
-GCC-compiled files and files compiled with other compilers.
+GCC-compiled files and files compiled with other compilers, particularly
+the Portable C Compiler (pcc).
 
 The precise convention for returning structures in memory depends
 on the target configuration macros.
 
 Short structures and unions are those whose size and alignment match
 that of some integer type.
+
+@strong{Warning:} code compiled with the @option{-fpcc-struct-return}
+switch is not binary compatible with code compiled with the
+@option{-freg-struct-return} switch.
+Use it to conform to a non-default application binary interface.
 
 @item -freg-struct-return
 @opindex freg-struct-return
@@ -9658,15 +9789,38 @@ defaults to @option{-fpcc-struct-return}, except on targets where GCC is
 the principal compiler.  In those cases, we can choose the standard, and
 we chose the more efficient register return alternative.
 
+@strong{Warning:} code compiled with the @option{-freg-struct-return}
+switch is not binary compatible with code compiled with the
+@option{-fpcc-struct-return} switch.
+Use it to conform to a non-default application binary interface.
+
 @item -fshort-enums
 @opindex fshort-enums
 Allocate to an @code{enum} type only as many bytes as it needs for the
 declared range of possible values.  Specifically, the @code{enum} type
 will be equivalent to the smallest integer type which has enough room.
 
+@strong{Warning:} the @option{-fshort-enums} switch causes GCC to generate
+code that is not binary compatible with code generated without that switch.
+Use it to conform to a non-default application binary interface.
+
 @item -fshort-double
 @opindex fshort-double
 Use the same size for @code{double} as for @code{float}.
+
+@strong{Warning:} the @option{-fshort-double} switch causes GCC to generate
+code that is not binary compatible with code generated without that switch.
+Use it to conform to a non-default application binary interface.
+
+@item -fshort-wchar
+@opindex fshort-wchar
+Override the underlying type for @samp{wchar_t} to be @samp{short
+unsigned int} instead of the default for the target.  This option is
+useful for building programs to run under WINE@.
+
+@strong{Warning:} the @option{-fshort-wchar} switch causes GCC to generate
+code that is not binary compatible with code generated without that switch.
+Use it to conform to a non-default application binary interface.
 
 @item -fshared-data
 @opindex fshared-data
@@ -9809,9 +9963,12 @@ three-way choice.
 
 @item -fpack-struct
 @opindex fpack-struct
-Pack all structure members together without holes.  Usually you would
-not want to use this option, since it makes the code suboptimal, and
-the offsets of structure members won't agree with system libraries.
+Pack all structure members together without holes.
+
+@strong{Warning:} the @option{-fpack-struct} switch causes GCC to generate
+code that is not binary compatible with code generated without that switch.
+Additionally, it makes the code suboptimial.
+Use it to conform to a non-default application binary interface.
 
 @item -finstrument-functions
 @opindex finstrument-functions
@@ -9908,8 +10065,10 @@ This option and its counterpart, @option{-fno-leading-underscore}, forcibly
 change the way C symbols are represented in the object file.  One use
 is to help link with legacy assembly code.
 
-Be warned that you should know what you are doing when invoking this
-option, and that not all targets provide complete support for it.
+@strong{Warning:} the @option{-fleading-underscore} switch causes GCC to
+generate code that is not binary compatible with code generated without that
+switch.  Use it to conform to a non-default application binary interface.
+Not all targets provide complete support for this switch.
 @end table
 
 @c man end

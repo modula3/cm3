@@ -203,19 +203,7 @@ your program or GCC:
      Optimize Options.).
 
      The other use of `-fprofile-arcs' is for use with `gcov', when it
-     is used with the `-ftest-coverage' option.  GCC supports two
-     methods of determining code coverage: the options that support
-     `gcov', and options `-a' and `-ax', which write information to
-     text files.  The options that support `gcov' do not need to
-     instrument every arc in the program, so a program compiled with
-     them runs faster than a program compiled with `-a', which adds
-     instrumentation code to every basic block in the program.  The
-     tradeoff: since `gcov' does not have execution counts for all
-     branches, it must start with the execution counts for the
-     instrumented branches, and then iterate over the program flow
-     graph until the entire graph has been solved.  Hence, `gcov' runs
-     a little more slowly than a program which uses information from
-     `-a' and `-ax'.
+     is used with the `-ftest-coverage' option.
 
      With `-fprofile-arcs', for each function of your program GCC
      creates a program flow graph, then finds a spanning tree for the
@@ -225,11 +213,6 @@ your program or GCC:
      only entrance to a block, the instrumentation code can be added to
      the block; otherwise, a new basic block must be created to hold
      the instrumentation code.
-
-     This option makes it possible to estimate branch probabilities and
-     to calculate basic block execution counts.  In general, basic block
-     execution counts as provided by `-a' do not give enough
-     information to estimate all branch probabilities.
 
 `-ftest-coverage'
      Create data files for the `gcov' code-coverage utility (*note
@@ -454,6 +437,21 @@ your program or GCC:
 
     `inlined'
           Dump after function inlining, to `FILE.inlined'.
+
+`-fsched-verbose=N'
+     On targets that use instruction scheduling, this option controls
+     the amount of debugging output the scheduler prints.  This
+     information is written to standard error, unless `-dS' or `-dR' is
+     specified, in which case it is output to the usual dump listing
+     file, `.sched' or `.sched2' respectively.  However for N greater
+     than nine, the output is always printed to standard error.
+
+     For N greater than zero, `-fsched-verbose' outputs the same
+     information as `-dRS'.  For N greater than one, it also output
+     basic block probabilities, detailed ready list information and
+     unit/insn info.  For N greater than two, it includes RTL at abort
+     point, control-flow and regions info.  And for N over four,
+     `-fsched-verbose' also includes dependence info.
 
 `-fpretend-float'
      When running a cross-compiler, pretend that the target machine
@@ -728,6 +726,14 @@ other form by either removing `no-' or adding it.
      variable to have distinct location, so using this option will
      result in non-conforming behavior.
 
+`-fno-branch-count-reg'
+     Do not use "decrement and branch" instructions on a count register,
+     but instead generate a sequence of instructions that decrement a
+     register, compare it against zero, then branch based upon the
+     result.  This option is only meaningful on architectures that
+     support such instructions, which include x86, PowerPC, IA-64 and
+     S/390.
+
 `-fno-function-cse'
      Do not put function addresses in registers; make each instruction
      that calls a constant function contain the function's address
@@ -787,6 +793,13 @@ other form by either removing `no-' or adding it.
      functions.
 
      The default is `-ftrapping-math'.
+
+`-fbounds-check'
+     For front-ends that support it, generate additional code to check
+     that indices used to access arrays are within the declared range.
+     This is currenly only supported by the Java and Fortran 77
+     front-ends, where this option defaults to true and false
+     respectively.
 
    The following options control specific optimizations.  The `-O2'
 option turns on all of these optimizations except `-funroll-loops' and
@@ -899,6 +912,26 @@ control them.
      This is especially useful on machines with a relatively small
      number of registers and where memory load instructions take more
      than one cycle.
+
+`-fno-sched-interblock'
+     Don't schedule instructions across basic blocks.  This is normally
+     enabled by default when scheduling before register allocation, i.e.
+     with `-fschedule-insns' or at `-O2' or higher.
+
+`-fno-sched-spec'
+     Don't allow speculative motion of non-load instructions.  This is
+     normally enabled by default when scheduling before register
+     allocation, i.e.  with `-fschedule-insns' or at `-O2' or higher.
+
+`-fsched-spec-load'
+     Allow speculative motion of some load instructions.  This only
+     makes sense when scheduling before register allocation, i.e. with
+     `-fschedule-insns' or at `-O2' or higher.
+
+`-fsched-spec-load-dangerous'
+     Allow speculative motion of more load instructions.  This only
+     makes sense when scheduling before register allocation, i.e. with
+     `-fschedule-insns' or at `-O2' or higher.
 
 `-ffunction-sections'
 `-fdata-sections'
