@@ -8,7 +8,7 @@
     <META HTTP-EQUIV="Distribution" CONTENT="global"> 
     <META HTTP-EQUIV="Keywords" CONTENT="m3, modula-3, modula3, M3, Modula-3, modula-3, cm3, CM3, FreeCM3">
     <META HTTP-EQUIV="Reply-to" CONTENT="webmaster@m3.org"> 
-    <LINK HREF="../style/normal.css" REL="stylesheet" TYPE="text/css">
+    <LINK HREF="normal.css" REL="stylesheet" TYPE="text/css">
     <title>Known Problems with CM3 5.1 and 5.2</title>
   </head>
 
@@ -29,14 +29,20 @@
       &nbsp;&nbsp;
       <a href="#p_1_4">1.4 Assembler problem on LINUXLIBC6 (filds 
         instrcution)</a><br>
+      &nbsp;&nbsp;
+      <a href="#p_1_5">1.5 Version stamp mismatch during upgrading</a><br>
       <br>
+
+
       <a href="#p_2">2 Release 5.1.0</a><br>
       &nbsp;&nbsp;
       <a href="#p_2_1">2.1 Installation on NT386 fails because of
         missing cygwin.dll</a><br>
       <br>
+
       <a href="#p_3">3 Release 5.1.1</a><br>
       <br>
+
       <a href="#p_4">4 Release 5.1.2-5.1.8</a><br>
       &nbsp;&nbsp;
       <a href="#p_4_1">4.1 Linkage failure: missing -L before library
@@ -46,6 +52,7 @@
         platforms due to wrong paths (/pub/lang/m3/cm3-dist) in binary
         installation archives
       </a><br><br>
+
       <a href="#p_5">5 Release 5.2.X</a><br>
       &nbsp;&nbsp;
       <a href="#p_5_1">5.1 Problems building the core distribution
@@ -234,6 +241,44 @@
       the problem, but haven't asserted this yet, nor do can I name
       the version that is needed. More information from people working
       on (RedHat) Linux systems would be welcome.
+    </p>
+
+    <a name="p_1_5">
+    <h4>
+      1.5 Version stamp mismatch during upgrading
+    </h4>
+
+    <p>
+      <b>Platforms:</b> all
+    </p>
+
+    <p>
+      <b>Description:</b>
+      The compiler reports version stamp mismatches in libm3
+      like this:
+      <pre>
+ new source -> compiling ProcessPosix.m3
+ new source -> compiling SocketPosix.m3
+
+ Fatal Error: bad version stamps: SocketPosix.m3 
+ 
+ version stamp mismatch: Compiler.Platform 
+   <00df7acd080d2be7> => SocketPosix.m3 
+    => Compiler.i3 
+ version stamp mismatch: Compiler.ThisPlatform 
+   <4d31a453f94cbb46> => SocketPosix.m3 
+    => Compiler.i3 
+  *** execution of  failed ***</pre>
+    </p>
+
+    <p>
+      <b>Solution:</b>
+      This only occurs on rare occasions when new target platforms
+      have been added to the compiler. The solution is to first build
+      a compiler who knows about the news platforms with the existing
+      m3core and libm3 packages, and then build everything again. For
+      a detailed description, see <a href="upgrading.html">Upgrading
+        CM3</a>.
     </p>
 
     <a name="p_2">
@@ -724,7 +769,7 @@ SYSTEM_LIBS = {
     <address><a href="mailto:m3-support@elego.de">m3-support@elego.de</a></address>
 <!-- Created: Fri Mar  2 10:51:41 MET 2001 -->
 <!-- hhmts start -->
-Last modified: Sat Apr  5 14:53:08 CEST 2003
+Last modified: Sat Jul 19 23:01:11 CEST 2003
 <!-- hhmts end -->
   </body>
 </html>
