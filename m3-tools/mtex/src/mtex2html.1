@@ -1,0 +1,54 @@
+.\" This file generated automatically by mtextoman(1)
+.nh
+.TH "mtex2html" "1"
+.SH "NAME"
+.PP
+mtex2html \- translate mtex(7) files to HTML format
+.SH "SYNTAX"
+.PP
+\fBmtex2html\fR
+.SH "DESCRIPTION"
+.PP
+\fImtex2html\fR is a filter that reads a file in mtex(7) format from its standard input, and writes an
+HTML
+(HyperText Markup Language) file to standard output suitable for
+viewing with World\-Wide Web browsers like Netscape(1), Mosaic(1), or
+lynx(1).
+.PP
+\fImtex2html\fR is written entirely in LIM (see lim(1)).
+.SH "SPECIAL CHARACTERS"
+.PP
+There are three special characters for the HTML output format. Here
+are the characters and the strings they are translated to by
+mtex2html(1):
+.PP
+\*(lq<\*(rq becomes \*(lq&lt;\*(rq
+.br
+\*(lq>\*(rq becomes \*(lq&gt;\*(rq
+.br
+\*(lq&\*(rq becomes \*(lq&amp;\*(rq
+.BR
+.PP
+To prevent these characters from being translated within the
+scope of an \fIhtml\fR environment, you must escape them with a
+\\ (backslash) character.
+.SH "DIAGNOSTICS"
+.PP
+See the Diagnostics section of the
+mtex(7) manpage for a complete description.
+.SH "SEE ALSO"
+.PP
+mtex(7),
+mtex2man(1),
+mtex2tex(1),
+Netscape(1), Mosaic(1), lynx(1).
+
+This man page is also available as a hypertext document under Mosaic at URL
+http://src\-www.pa.dec.com/SRC/man/DS/mtex2html.1.html.
+.PP
+.SH "AUTHOR OF PROGRAM AND DOCUMENTATION"
+.PP
+Allan Heydon (heydon@src.dec.com)
+.EX
+Last modified on Fri Jun 16 13:59:41 PDT 1995 by heydon
+.EE

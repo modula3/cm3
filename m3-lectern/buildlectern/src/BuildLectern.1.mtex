@@ -1,0 +1,518 @@
+\begin{html}
+\<IMG SRC="../vpLogo36.gif" ALIGN=middle ALT=""\>\<P\>
+\end{html}
+\manpage{BuildLectern}{BuildLectern}{1}
+
+\section{NAME}
+BuildLectern - building or editing Lectern files
+
+\section{SYNTAX}
+\bf{BuildLectern options... dest}
+
+\section{DESCRIPTION}
+This program constructs in the file named \bf{dest} a Lectern document composed
+of page images, attributes and other data, suitable for viewing with
+\link{Lectern.1.html}{Lectern(1)},
+and suitable for indexing with 
+\link{BuildLecternIndex.1.html}{BuildLecternIndex(1)}.
+The page images
+come from files each containing a single image, or from a file containing a
+PostScript job, or from pre-existing Lectern documents.  The resulting
+documents include computed copies of the images at reduced scales, and derived
+OCR data.
+
+Note: the arguments to BuildLectern are processed sequentially (as
+described below): an argument such as \link{#-PScolor}{\bf{-PScolor}}
+affects only input files later in the argument list.
+
+Caution: it is surprisingly easy to forget the \bf{dest} argument, and
+this can cause BuildLectern to think that the name of your last input
+file is the intended destination, and so to write the output there.
+
+The program constructs the document in a temporary file in the same
+directory as the final destination; on success the temporary file is
+renamed as the destination, and on failure the temporary file is
+deleted.  So it is acceptable to use this program to modify a file
+in-place by naming the same destination file in an
+\link{#-images}{\bf{-images}},
+\link{#-include}{\bf{-include}} or
+\link{#-rescale}{\bf{-rescale}}
+option.
+
+Uncolored Lectern documents generally occupy about 100 KBytes per
+page, if you use the \link{#-noUnscaled}{\bf{-noUnscaled}} option.
+The unscaled images (not normally included for PostScript jobs) add
+about 100 KBytes per page, and color roughly doubles the size.  If you
+use the \link{#-only}{\bf{-only 3}} option, the size is reduced to
+about 35 KBytes per page.
+
+This program constructs various temporary files in the same directory as the
+final destination file.  These include a temporary copy of the output, and a
+temporary copy of one image if the image is color or in TIFF format or comes
+from standard input or PostScript.  The temporary output file is the same size
+as the final output, and the temporary image copy can be up to 32 MBytes (for
+300 DPI 24-bit color plus the corresponding black and white).  You need to
+have this much disk space available!
+
+For the purposes of describing the behavior of this program, the
+images within a Lectern document should be viewed as being numbered
+sequentially from 1, regardless of the user's notion of how pages are
+numbered.  The \link{#-page1}{\bf{-page1}} option allows you to
+specify the user's notion of page numbering, but does not affect the
+\it{image numbers} considered by this program.  (Programmers should
+note that the internal format of a Lectern document uses yet another
+numbering system for pages, starting from 0; but that need not concern
+users of this program.)
+
+The program constructs the document by processing its arguments
+sequentially.  While doing so, it maintains a \it{current image
+number} (initially 1), a \it{mode} (initially \it{simplex}), a
+\it{current gamma value} (initially 1.0), a \it{current resolution} (initially
+300 DPI), a flag indicating whether to include the unscaled images in
+the output file (initially set), and an \link{#-realOCR}{\it{OCR
+flag}} (initially \it{clear} unless BuildLectern was linked with an
+OCR library, in which case it is \it{real}).  The destination document
+initially has no images, no attributes and no
+\link{#-original}{\it{original}}; its \link{#-contents}{\it{contents}}
+is 0 (meaning \it{undefined}), its \link{#-page1}{\it{page1}} is 1
+(meaning the first image), and its \link{#-index}{\it{index}} is 0
+(meaning \it{undefined}).
+
+If an argument is not one of the options described below, it should be
+a file's pathname.  The named file should contain either the image of
+a single page at the current resolution, in PBM, PGM, PPM, or TIFF
+format, a Lectern file, or a PostScript job.  It is also possible to
+read a PostScript job from standard input, by specifying - as the file
+name on the command line.
+
+When the program encounters an image file, it copies the image into
+the document at the current image number, and updates the current
+image number: if the mode is \link{#-simplex}{\it{simplex}} it adds 1,
+if the mode is \link{#-recto}{\it{recto}} it adds 2 and if the mode is
+\link{#-verso}{\it{verso}} it subtracts 2 (subject to a minimum of 1).
+While copying the image, the program creates copies of the image at
+reduced scales (using the current gamma value), and applies an OCR
+algorithm to the image unless the \link{#-noOCR}{\it{OCR flag}} is
+not real.  The reduced images are scaled down by the integer nearest to
+(\link{#-resolution}{\it{current resolution}} * \it{n} / 300),
+for \it{n} equal to 2, 3, and 4 (but see \link{#-only}{\bf{-only}}).
+The original image is copied to the output only if the
+\link{#-includeUnscaled}{\it{include unscaled flag}} is set.  Note the
+\link{#-stdin}{\bf{-stdin}} option, which provides an alternative way
+to process a sequence of images without keeping them all in files.
+
+When the program encounters a Lectern file, its contents are included as if
+\bf{-include file 1 999999} had been specified.
+
+When the program encounters a PostScript job, the Ghostscript
+interpreter is run to produce a sequence of images and OCR data (if
+the \link{#-noOCR}{\it{OCR flag}} is not cleared), which are copied
+into the document in the normal way.  While processing a PostScript
+job, the program consults these additional variables: an image type
+(initially \it{black&white}), an orientation (initially
+\it{portrait}), a scale (initially 1.0), and a flag indicating whether
+to include the PostScript in the final document (initially set).
+Also, different defaults are used for several normal variables:
+\link{#-gamma}{\it{gamma}} is 0.454, the
+\link{#-includeUnscaled}{\it{include unscaled flag}} is cleared, and
+the \it{OCR flag} is \link{#-PSfakeOCR}{\it{fake}}.  The image type
+enforces an upper bound on the kind of images that will be produced by
+the PostScript interpreter, with \it{black&white} < \it{grayscale} <
+\it{color}.
+
+Whenever the program is placing a color image into \bf{dest}, it reduces the
+set of colors in the image to a small set, chosen from a 4 by 4 by 4 color
+cube (i.e., 64 colors), so that the image will be suitable for color
+mapped monitors.  Similarly, it reduces the set of grays in a grayscale
+image to 16 gray levels.  Note that this means that any subsequent
+rescaling or other image processing will be based on an image from which
+information has been lost, so the image quality might then suffer.  There
+is no loss of information for black-and-white images.
+
+\section{EXAMPLES}
+
+The simplest use is to invoke the program with a PostScript job constituting
+the entire document.
+
+This will construct in \bf{dest} a Lectern document consisting of the pages
+produced by the PostScript job, each scaled to the various resolutions, with
+no imaging adjustments and no attributes.  When you view such a document with
+Lectern, the pages will be numbered from 1 and the \bf{Contents} and \bf{Index}
+commands will not work.  For example:
+
+\begin{verbatim}
+   BuildLectern a.ps a.lect
+\end{verbatim}
+
+You can assemble a document from several PostScript files:
+
+\begin{verbatim}
+   BuildLectern cover.ps chap1.ps chap2.ps chap3.ps index.ps book.lect
+\end{verbatim}
+
+Note that concatenating PostScript files is non-trivial, so
+BuildLectern doesn't try; instead it just keeps the first PostScript
+file it encounters as the document's \it{original}.  In this case, it
+may be better to specify \link{#-PSnoOriginal}{\bf{-PSnoOriginal}}
+before the first PostScript argument.
+
+If you have a set of image files resulting from scanning a document, you can
+use BuildLectern to build a document from them like this:
+
+\begin{verbatim}
+   BuildLectern *.tif a.lect
+\end{verbatim}
+
+Alternatively, if the document was scanned from two-sided originals you might
+use a command line such as the following:
+
+\begin{verbatim}
+   BuildLectern -recto *.fronts.tif -verso *.backs.tif a.lect
+\end{verbatim}
+
+If you just want to preview or display images, and the images were created
+at 300 DPI and you want to display at 100 DPI, you could use:
+
+\begin{verbatim}
+   BuildLectern -only 3 *.pbm a.lect
+\end{verbatim}
+
+A third common usage pattern is to construct a new document from
+an existing one, adding attributes, specifying the location of contents
+and index pages, or modifying the images' gamma adjustments.  You could
+do these in a single run of BuildLectern, or incrementally in several
+separate runs.  For example:
+
+\begin{verbatim}
+   BuildLectern a.lect -contents 3 -index 57 b.lect
+\end{verbatim}
+
+or, equivalently:
+
+\begin{verbatim}
+   BuildLectern -include a.lect 1 9999 -contents 3 -index 57 b.lect
+\end{verbatim}
+
+or:
+
+\begin{verbatim}
+   BuildLectern b.lect -author: "Andrew Birrell" c.lect
+\end{verbatim}
+
+or:
+
+\begin{verbatim}
+   BuildLectern -gamma 0.45 -rescale a.lect 1 9999 -index 59 d.lect
+\end{verbatim}
+
+There are a few additional options, described below.  You can also use
+the options to perform detailed re-arrangements, such as replacing a single
+page of a document, or constructing a single document from multiple documents,
+or selectively modifying the gamma adjustments of individual pages.
+
+\section{THE OPTIONS}
+
+The complete set of options is as follows.  (BuildLectern ignores case when
+checking for options.)
+
+\begin{description}
+\item{\anchor{-contents}{\bf{-contents integer}}}
+Specifies that the image containing the start of the document's 
+table of contents is the image numbered \bf{integer}, counting from 
+1 (regardless of the user's notion of page numbering).
+
+
+\item{\anchor{-gamma}{\bf{-gamma number}}}
+Sets the current gamma value to the given \bf{number}, which should 
+be in the range [0.1 .. 10.0].  The current gamma value affects 
+the appearance of the reduced scale images that the program creates.  
+Gamma adjustment alters the mid-tones of an image, leaving pure 
+white and pure black unchanged.  Gamma values greater 
+than 1.0 lighten the image, and values less than 1.0 darken it.  
+See also the 
+\link{#rescale}{\bf{-rescale}}
+ option, which lets you iterate on the 
+choice of gamma values.  The current gamma value has no effect 
+on the unscaled images of the document.  On most documents a 
+gamma value somewhere in the range 0.4 to 1.0 is satisfactory. 
+
+
+\item{\anchor{-image}{\bf{-image integer}}}
+Sets the current image number to be the given integer (which
+must be no less than 1). 
+
+\item{\anchor{-images}{\bf{-images file from for}}}
+This option is the same as the \link{#-include}{\bf{-include}} option,
+except that only the images (and their scaled versions and OCR data)
+are copied.  None of the source file's attributes and miscellaneous
+data (\it{page1}, \it{contents}, \it{index} and \it{original} values)
+is copied, only the images.
+
+\item{\anchor{-include}{\bf{-include file from for}}}
+Includes the contents of a pre-existing Lectern document residing in
+\bf{file} into the current document, by copying.  All the
+miscellaneous data are copied: the \it{page1} value, the \it{contents}
+value, the \it{index} value, the \it{original}, and the attributes,
+unless the corresponding datum is already defined for the destination
+document.  (In other words, any miscellaneous data specified by an
+explicit command line option, or by an earlier
+\link{#-include}{\bf{-include}} or \link{#rescale}{\bf{-rescale}} will
+dominate data from \bf{file}).
+
+The images in \bf{file} starting at the image numbered \bf{from}
+(counting from 1) are copied into the current document starting at the
+current image number (even if there is already such an image); after
+each image is copied, the current image number is modified in the same
+way as it is after processing an image file, with due regard to the
+current mode (\link{#recto}{\it{recto}}, \link{#verso}{\it{verso}}, or
+\link{#simplex}{\it{simplex}}).  Images are copied until \bf{for}
+images have been copied or until the last image in \bf{file} has been
+copied.  The relevant scaled images and OCR data are copied from
+\bf{file} intact along with the original unscaled images (except that
+the unscaled images are omitted if the
+\link{#-includeUnscaled}{\it{include unscaled flag}} is not currently
+set).  See also the \link{#rescale}{\bf{-rescale}} option, which is
+similar, but recreates the scaled images using the current gamma
+value; and the \link{#-images}{\bf{-images}} option, which is similar
+but does not copy the miscellaneous data.
+
+
+\item{\anchor{-includeUnscaled}{\bf{-includeUnscaled}}}
+Sets the \it{include unscaled flag}, which controls whether original, unscaled,
+images are written to \bf{dest}.
+
+
+\item{\anchor{-index}{\bf{-index integer}}}
+Specifies that the image containing the start of the document's 
+index pages is the image numbered \bf{integer}, in the user's notion
+of page numbering.  For example, if you have used the option
+\bf{-page1 3}, and the document hardcopy has the first index page with
+a page number of 17 printed on it, you would say \bf{-index 17} (in
+this example, the index starts on the 20th image, counting from 1).
+Note that the meaning of this option is affected by any previous
+use of the \bf{-page1}, 
+\link{#-include}{\bf{-include}}
+or
+\link{#-rescale}{\bf{-rescale}}
+options.
+
+\item{\anchor{-key}{\bf{-key: value}}}
+For any string \bf{key}, adds a key-value pair to the document
+with the given key and value.  For example, the option
+\bf{-author: Andrew} specifies that the attribute \bf{author} has the value
+\bf{Andrew}.  Adding an attribute with a given key implicitly removes any
+previous attribute with the identical key (case is significant).
+
+
+\item{\anchor{-noAttribute}{\bf{-noAttribute key}}}
+If there is an attribute in the document with a key identical 
+to \bf{key} (case is significant), remove it.  This is useful primarily 
+to remove attributes that were copied in by using the
+\link{#-include}{\bf{-include}}
+option. 
+
+\item{\anchor{-noOCR}{\bf{-noOCR}}}
+Clears the \it{OCR flag}, thus preventing any OCR data from being
+generated (either by running the \link{#-realOCR}{\it{real}} OCR
+algorithm or by doing \link{#-PSfakeOCR}{\it{fake}} OCR as part of
+interpreting PostScript) for subsequent images.
+
+\item{\anchor{-noUnscaled}{\bf{-noUnscaled}}}
+Clears the \it{include unscaled flag}, which controls whether original,
+unscaled, images are written to \bf{dest}.
+
+\item{\anchor{-only}{\bf{-only n}}}
+For subsequent pages, BuildLectern will compute only one version of
+the image, being the original image scaled down by a factor of \bf{n}.
+(By default, BuildLectern includes three versions: the original image
+scaled down by factors of 4, 3, and 2.)  With this option, OCR
+processing is disabled.  This option also affects images processed by
+the
+\link{#-rescale}{\bf{-rescale}}
+option, but not those copied by the 
+\link{#-include}{\bf{-include}}
+or 
+\link{#-images}{\bf{-images}},
+options. The purpose of this option is to permit fast document
+construction when only one scale and no OCR is needed, for example to
+proof PostScript files or to present slides.  If both \bf{-only} and
+\link{#-resolution}{\bf{-resolution}} are used, \bf{-only} must come
+first, since \bf{-resolution} alters the exact scale values used.
+
+\item{\anchor{-original}{\bf{-original file}}}
+Copy the contents of \bf{file} into the document as the document's 
+\it{original}.  This is intended to be the PostScript that was used 
+to create the document, and if it is available it will be used 
+by 
+\link{Lectern.1.html}{Lectern(1)},
+for printing the document, in preference to printing 
+the images themselves.  (Potentially it could also be used to 
+generate images at other resolutions, but certainly not today 
+and probably never.) 
+
+
+\item{\anchor{-page1}{\bf{-page1 integer}}}
+Specifies that the image which the user thinks of as the document's 
+page 1 (i.e. the image whose hardcopy page has the digit ``1'' printed
+on it) is the image numbered \bf{integer}, counting from 1.
+
+
+\item{\anchor{-PSblackAndWhite}{\bf{-PSblackAndWhite}}}
+Sets the image type used for processing a PostScript job to black&white.
+
+
+\item{\anchor{-PScolor}{\bf{-PScolor}}}
+Sets the image type used for processing a PostScript job to color.
+
+
+\item{\anchor{-PSfakeOCR}{\bf{-PSfakeOCR}}}
+Sets the \it{OCR flag} to \it{fake}, which means that when PostScript is being
+interpreted, OCR data will be derived as a side-effect, rather than by running
+the actual OCR algorithm.
+
+
+\item{\anchor{-PSgray}{\bf{-PSgray}}}
+Sets the image type used for processing a PostScript job to grayscale.
+
+
+\item{\anchor{-PSgs}{\bf{-PSgs}}}
+Specifies the pathname of the Ghostscript executable (by default, \it{gs}).
+
+
+\item{\anchor{-PSincludeOriginal}{\bf{-PSincludeOriginal}}}
+
+Sets the \it{include original flag}, which controls whether a PostScript
+job is included as the \it{original} in \bf{dest}.
+
+
+\item{\anchor{-PSlandscape}{\bf{-PSlandscape}}}
+Sets the orientation to \it{landscape}, which causes output from a
+PostScript job to be rotated 90 degrees clockwise.  If this results in
+upside-down images, use \bf{-PSlandscapeOther} instead.
+
+
+\item{\anchor{-PSlandscapeOther}{\bf{-PSlandscapeOther}}}
+Sets the orientation to \it{upside-down landscape}, which causes output from a
+PostScript job to be rotated 90 degrees counter-clockwise.  If this results in
+upside-down images, use \bf{-PSlandscape} instead.
+
+
+\item{\anchor{-PSportrait}{\bf{-PSportrait}}}
+Sets the orientation \it{portrait}, which causes output from a PostScript job to
+be used as-is.
+
+
+\item{\anchor{-PSnoOriginal}{\bf{-PSnoOriginal}}}
+Clears the \it{include original flag}, which controls whether a PostScript job is
+included as the \it{original} in dest.
+
+
+\item{\anchor{-PSscale}{\bf{-PSscale number}}}
+Sets the scale factor to \bf{number}, which causes PostScript jobs to
+generate images of \bf{number}*300DPI (which are then reduced in the
+normal way).  For example, \bf{-PSScale 1.1} increases the final image size by 10%.
+
+
+\item{\anchor{-realOCR}{\bf{-realOCR}}}
+Sets the \it{OCR flag} to \it{real}, which causes OCR data for
+subsequent images to be acquired by running the OCR algorithm (even
+when processing PostScript files).
+
+
+\item{\anchor{-recto}{\bf{-recto}}}
+Sets the mode to \it{recto}.  In this mode the current image number 
+increases by 2 after processing an image file or while processing 
+an \link{#-include}{\bf{-include}}
+option.  The expectation is that while in \it{recto} 
+mode the program will be processing the recto (odd-numbered or 
+front) pages of the document, in ascending order, and that \it{recto} 
+mode will be followed by an equal number of images in \it{verso} 
+mode. 
+
+\item{\anchor{-resolution}{\bf{-resolution integer}}}
+Sets the current resolution of image files (PNM and TIFF) to
+\bf{integer} instead of the default, 300 DPI.  If both
+\link{#-only}{\bf{-only}} and \bf{-resolution} are used, \bf{-only}
+must come first, since \bf{-resolution} alters the exact scale values
+used.
+
+\item{\anchor{-rescale}{\bf{-rescale file from for}}}
+This option is the same as the 
+\link{#-include}{\bf{-include}} option, except that 
+while copying images from \bf{file}, the existing scaled images 
+are discarded and replaced by new ones created with the current 
+gamma value.  This allows you to iterate on the gamma value for 
+a document, or for particular images in a document. 
+
+
+\item{\anchor{-simplex}{\bf{-simplex}}}
+Sets the mode to \it{simplex}.  In this mode the current image number 
+increases by 1 after processing an image file or while processing 
+an \link{#-include}{\bf{-include}} option.  This contrasts with 
+\link{#-recto}{\it{recto}} and 
+\link{#-verso}{\it{verso}} 
+modes. 
+
+
+\item{\anchor{-stdin}{\bf{-stdin}}}
+Processes a sequence of images from standard input, as if the images
+had been presented in separate files. The images should be in PPM, PGM or PBM
+raw (binary) format, and should appear sequentially on standard input,
+optionally separated by white space. The sequence is terminated by end of
+file on standard input.  Note that TIFF images and non-raw PNM images are
+not yet supported in this option. This option
+is intended primarily for passing images produced by gs(1)
+into BuildLectern through a pipe. This avoids the use of a large amount
+of temporary disk storage for the complete set of images, since this
+option keeps only one image on disk at a time. Note that you can't just pipe
+the standard output of gs(1) into BuildLectern, since gs writes status messages
+on its standard output. Instead, give gs(1) an option such as
+\begin{verbatim}
+   "-sOutputFile=|BuildLectern foo.lect -stdin"
+\end{verbatim}
+including the quotes.
+
+
+\item{\anchor{-verbose}{\bf{-verbose}}}
+Writes details of the image scaling and OCR operations to the standard
+error stream.
+
+
+\item{\anchor{-verso}{\bf{-verso}}}
+Sets the mode to \it{verso} and immediately subtracts 1 from the current image
+number (recall that the current image number will have been increased by 2
+after processing the final \it{recto} image).  In this mode the current image
+number decreases by 2 after processing an image file or while processing an
+\link{#-include}{\bf{-include}} option.  You will get an error message if this process would result in
+an image having a number less than 1.  The expectation is that
+\it{verso} mode will be set immediately after \it{recto} mode, and
+that while in \it{verso} mode the program will be processing the verso
+(even-numbered or back) pages of the document, in descending order.
+\end{description}
+
+\section{SEE ALSO}
+
+\link{EditLectern.1.html}{EditLectern(1)},
+\link{Lectern.1.html}{Lectern(1)},
+\link{pstotext.1.html}{pstotext(1)}
+
+\section{PROGRAMS INVOKED AS SUB-PROGRAMS}
+gs(1), pgmtopbm(1), ppmtopgm(1), tifftopnm(1).
+
+\section{AUTHORS}
+\link{http://www.research.digital.com/SRC/people/Andrew_Birrell/bio.html}{Andrew D. Birrell} and 
+\link{http://www.research.digital.com/SRC/people/Paul_McJones/bio.html}{Paul McJones}
+
+\section{COPYRIGHT}
+
+\begin{flushleft}
+Copyright 1994 Digital Equipment Corporation.\newline
+Distributed only by permission.\newline
+\end{flushleft}
+
+
+\begin{verbatim}
+Last modified on Fri Jun  7 14:16:12 PDT 1996 by mcjones 
+     modified on Wed Jun  7 17:09:13 PDT 1995 by birrell 
+     modified on Sun Jan  1 16:18:32 PST 1995 by glassman
+\end{verbatim}

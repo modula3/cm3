@@ -1,0 +1,8 @@
+  Prop_BadMethod: Exception          
+  Prop_BadInterval: Exception        
+TYPES                                
+  Prop     <: ProxiedObj              
+  PropName <: ProxiedObj              
+  PropVal  <: ProxiedObj              
+  PropBeh  <: ProxiedObj              
+  PropRequest <: ProxiedObj & { start: () => Real, dur: () => Real } 

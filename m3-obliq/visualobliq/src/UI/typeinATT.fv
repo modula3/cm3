@@ -1,0 +1,12 @@
+ (Shape %typeinatt (Height 200)
+   (VBox 
+     (Glue 10)
+     (Title "Type In")
+     (Glue 10)
+     (HBox (Boolean %tyReadOnly "Read Only")  Fill (Boolean %tyExpand "Expand On Demand"))
+     (Glue 10)
+     (LField "Initial Value :" 150 (TypeIn (TabTo name) %tyInit (BgColor "White") (Value "Text")))
+     Fill
+     
+   )
+  )

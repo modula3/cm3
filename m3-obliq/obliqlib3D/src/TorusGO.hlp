@@ -1,0 +1,10 @@
+  TorusGO_New(center normal: PointVal, rad1 rad2: RealVal): TorusGO    
+  TorusGO_NewWithPrec(c n: PointVal, r1 r2: RealVal, prec: Int): TorusGO
+  TorusGO_Center: PointPropName                                        
+  TorusGO_Normal: PointPropName                                        
+  TorusGO_Radius1: RealPropName                                        
+  TorusGO_Radius2: RealPropName                                        
+WHERE                                                                  
+  TorusGO <: SurfaceGO                                                  
+  PointVal = PointPropVal + Point3                                     
+  RealVal = RealPropVal + Real + Int

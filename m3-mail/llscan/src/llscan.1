@@ -1,0 +1,62 @@
+.\" Copyright (C) 1992, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.\" Last modified on Thu Jun  2 15:48:25 PDT 1994 by kalsow 
+.\"      modified on Wed Aug  5 12:16:02 1992 by hisgen
+.\"      modified on Fri Nov 28 09:38:32 1986 by mcvl
+.nh
+.TH llscan 1
+.SH NAME
+llscan  \-  scan a mail folder for Postcard
+
+.\"------------------------------------------------------------------------
+.SH SYNTAX
+.B llscan
+[switches] folder
+
+.\"------------------------------------------------------------------------
+.SH DESCRIPTION 
+
+.PP
+The llscan program is used internally by Postcard to
+create an internal cache of message headers.  When opening a very
+large folder for the first time, it is often useful to perform this
+operation outside of lauralee, since it can then be done in the
+background.  The llscan command takes a folder name (optionally
+preceded by a + for compatibility with the mh programs) and creates
+the cache file for that folder.  In its internal mode, i.e., when
+called by lauralee or Postcard, llscan also accepts a variety of
+option switches before the folder name, but these are mostly not
+intended for users who invoke llscan directly.
+
+.PP
+The switches are:
+.TP
+.B \-i
+Do a mail "incorporate", adding new mail to the folder, 
+by calling the mh inc(1) program.  Meaningful only if the 
+folder is "+inbox".
+.TP
+.B \-p
+Purge dangling symbolic links.  Meaningful only if the
+folder is a bulletin board folder.  For each symbolic
+link in the folder, if the link refers to a file that
+no longer exists in the public /usr/spool/news tree,
+the symbolic link is deleted.
+.TP	  
+.B \-v
+Verbose.  Print debugging output.  Useful for mail wizards.
+
+.\"------------------------------------------------------------------------
+.SH SEE ALSO
+.BR inc (1),
+.BR scan (1),
+.BR Postcard (1).
+
+.SH AUTHOR OF OBJECT
+    Eric Roberts
+
+.SH AUTHOR OF DOCUMENTATION
+    Eric Roberts
+

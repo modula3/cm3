@@ -1,0 +1,22 @@
+  [e1, ..., en]: [T]
+    (for e1...en: T)
+  All(T) array_new(size: Int, init: T): [T]
+    An array of size 'size', all filled with 'init'.
+  All(T) array_gen(size: Int, proc: (Int)->T): [T]
+    An array of size 'size', filled with 'proc(i)' for 'i' between '0' and 
+    'size-1'.
+  All(T) array_#(a: [T]): Int ! net_failure
+    (also '#(a)') Size of an array.
+  All(T) array_get(a: [T], i: Int): T ! net_failure
+    (also 'a[i]') The i-th element (if it exists), zero-based.
+  All(T) array_set(a: [T], i: Int, b: T): Ok ! net_failure
+    (also 'a[i]:=b') Update the i-th element (if it exists).
+  All(T) array_sub(a: [T], i: Int, n: Int): [T] ! net_failure
+    (also 'a[i for n]') A new array, filled with the elements of 'a' beginning 
+    at 'i', and of size 'n' (if it exists).
+  All(T) array_upd(a: [T], i: Int, n: Int, b: [T]): Ok ! net_failure	
+    (also 'a[i for n]:=b') Same as 'a[n+i]:=b[n]; ... ; a[i]:=b[0]'. 
+    I.e. 'a[i for n]' gets 'b[0 for n]'.
+  All(T) array_@(a1: [T], a2: [T]): [T] ! net_failure
+    (also infix '@') A new array, filled with the concatenation of the elements 
+    of 'a1' and 'a2'.

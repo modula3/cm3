@@ -1,0 +1,62 @@
+\manpage{mtex2html Man Page}{mtex2html}{1}
+
+\section{NAME}
+
+mtex2html - translate mtex(7) files to HTML format
+
+\section{SYNTAX}
+
+\bf{mtex2html}
+
+\section{DESCRIPTION}
+
+\it{mtex2html} is a filter that reads a file in \link{mtex.7.html}
+{mtex(7)} format from its standard input, and writes an
+\link{http://www.ncsa.uiuc.edu/General/Internet/WWW/HTMLPrimer.html}{HTML
+(HyperText Markup Language)} file to standard output suitable for
+viewing with World-Wide Web browsers like Netscape(1), Mosaic(1), or
+lynx(1).
+
+\it{mtex2html} is written entirely in LIM (see lim(1)).
+
+\section{SPECIAL CHARACTERS}
+
+There are three special characters for the HTML output format. Here
+are the characters and the strings they are translated to by
+mtex2html(1):
+
+\begin{flushleft}
+``\tt{<}'' becomes ``\tt{&lt;}''\newline
+``\tt{>}'' becomes ``\tt{&gt;}''\newline
+``\tt{&}'' becomes ``\tt{&amp;}''
+\end{flushleft}
+
+To prevent these characters from being translated within the
+scope of an \it{html} environment, you must escape them with a
+\tt{\\} (backslash) character.
+
+\section{DIAGNOSTICS}
+
+See the \link{mtex.7.html#Diagnostics}{Diagnostics} section of the
+mtex(7) manpage for a complete description.
+
+\section{SEE ALSO}
+
+\link{mtex.7.html}{mtex(7)},
+\link{mtex2man.1.html}{mtex2man(1)},
+\link{mtex2tex.1.html}{mtex2tex(1)},
+Netscape(1), Mosaic(1), lynx(1).
+\begin{roff}
+
+This man page is also available as a hypertext document under Mosaic at URL
+\tt{http://src-www.pa.dec.com/SRC/man/DS/mtex2html.1.html}.
+\end{roff}
+
+\section{AUTHOR OF PROGRAM AND DOCUMENTATION}
+
+\link{http://src-www.pa.dec.com/SRC/people/Allan_Heydon/bio.html}
+{Allan Heydon} (\tt{heydon@src.dec.com})
+
+\begin{verbatim}
+Last modified on Fri Jun 16 13:59:41 PDT 1995 by heydon
+\end{verbatim}

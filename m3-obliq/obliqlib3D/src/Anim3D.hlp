@@ -1,0 +1,4 @@
+  Anim3D_lock: Mutex 
+  Anim3D_changeClock(c: Clock): Ok
+WHERE
+  Clock = () -> Real

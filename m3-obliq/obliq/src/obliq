@@ -1,0 +1,12 @@
+#! /bin/sh
+# PATH=/usr/ucb:/bin:/usr/bin:/proj/mips/bin
+
+case $1 in
+	-min)	exec obliq-min ;;
+	-std)	exec obliq-std ;;
+	-ui)	exec obliq-ui ;;
+	-anim)	exec obliq-anim ;;
+	"")     exec obliq-std ;;
+	*)      /bin/echo "Bad flag for obliq"
+	        /bin/echo "Usage: obliq [ -min | -std | -ui | -anim ]" ;;
+esac

@@ -1,0 +1,37 @@
+  wr_failure: Exception
+  wr_new(): Wr
+    A writer to a text (a Modula-3 TextWr).
+  wr_toText(w: Wr): Text
+    Emptying a writer to a text..
+  wr_stdout: Wr
+    The standard output (the Modula-3 Stdio.Stdout).
+  wr_stderr: Wr
+    The standard error (the Modula-3 Stdio.Stderr).
+  wr_open(fs: FileSystem, t: Text): Wr ! wr_failure
+    Given a file system and a file name, returns a writer to the beginning of 
+    a file (a Modula-3 FileWr, open for write). The local file system is 
+    available through the predefined lexically scoped identifier "fileSys".
+  wr_openAppend(fs: FileSystem, t: Text): Wr ! wr_failure
+    Given a file system and a file name, returns a writer to the end of file 
+    (a Modula-3 FileWr, open for append). The local file system is available
+    through the predefined lexically scoped identifier "fileSys".
+  wr_putChar(w: Wr, c: Char): Ok ! wr_failure thread_alerted
+    Put a character to a writer .
+  wr_putText(w: Wr, t: Text): Ok ! wr_failure thread_alerted
+    Put a text to a writer .
+  wr_flush(w: Wr): Ok ! wr_failure thread_alerted
+    Flush a writer: all buffered writes to their final destination.
+  wr_index(w: Wr): Int
+    The current writer position
+  wr_length(w: Wr): Int ! wr_failure thread_alerted
+    Length of a writer.
+  wr_seek(w: Wr, n: Int): Ok ! wr_failure thread_alerted
+    Reposition a writer.
+  wr_close(w: Wr): Ok ! wr_failure thread_alerted
+    Close a writer.
+  wr_buffered(w: Wr): Bool
+    Whether the writer is buffered.
+  wr_seekable(w: Wr): Bool
+    Whether the writer can be repositioned.
+  wr_closed(w: Wr): Bool
+    Whether the writer is closed.

@@ -1,0 +1,20 @@
+(Shape
+  (Width 250)
+  (Insert "shared.fv")
+  (Macro bgMain1 () `(BgColor 1.0 0.25 0.25))
+  (Macro bgMain2 () `(BgColor 1.0 0.5 0.5))
+  (DarkShadow 0.15 0.075 0.075)
+  (LightShadow 1.0 0.625 0.625)
+  (bgActive)
+  (Frame
+    (zDecorate
+      (VBox
+        (Text "Click on the \"Move\" button to")
+        (Text "move the window to this screen.")
+        (Glue 9)
+        (HBox
+          (Shape (Width 0 + 10000) (Fill))
+          (btn %Confirm "Move")
+          (Shape (Width 0 + 10000) (Fill))
+          (btn %Cancel "Cancel")
+          (Shape (Width 0 + 10000) (Fill)))))))

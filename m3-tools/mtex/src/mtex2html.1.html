@@ -1,0 +1,86 @@
+<!-- This file generated automatically by mtextohtml(1) -->
+<HTML>
+<HEAD>
+<TITLE>mtex2html Man Page</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#ffffff" VLINK="#006633">
+<H2>mtex2html(1)</H2>
+
+<H3>NAME</H3>
+<BLOCKQUOTE>
+<P>
+
+mtex2html - translate mtex(7) files to HTML format
+</BLOCKQUOTE>
+
+<H3>SYNTAX</H3>
+<BLOCKQUOTE>
+<P>
+
+<B>mtex2html</B>
+</BLOCKQUOTE>
+
+<H3>DESCRIPTION</H3>
+<BLOCKQUOTE>
+<P>
+
+<I>mtex2html</I> is a filter that reads a file in <A HREF="mtex.7.html">mtex(7)</A> format from its standard input, and writes an
+<A HREF="http://www.ncsa.uiuc.edu/General/Internet/WWW/HTMLPrimer.html">HTML
+(HyperText Markup Language)</A> file to standard output suitable for
+viewing with World-Wide Web browsers like Netscape(1), Mosaic(1), or
+lynx(1).<P>
+
+<I>mtex2html</I> is written entirely in LIM (see lim(1)).
+</BLOCKQUOTE>
+
+<H3>SPECIAL CHARACTERS</H3>
+<BLOCKQUOTE>
+<P>
+
+There are three special characters for the HTML output format. Here
+are the characters and the strings they are translated to by
+mtex2html(1):<P>
+
+"<TT>&lt;</TT>" becomes "<TT>&amp;lt;</TT>"<BR>
+"<TT>&gt;</TT>" becomes "<TT>&amp;gt;</TT>"<BR>
+"<TT>&amp;</TT>" becomes "<TT>&amp;amp;</TT>"
+<BR>
+<P>
+
+To prevent these characters from being translated within the
+scope of an <I>html</I> environment, you must escape them with a
+<TT>\</TT> (backslash) character.
+</BLOCKQUOTE>
+
+<H3>DIAGNOSTICS</H3>
+<BLOCKQUOTE>
+<P>
+
+See the <A HREF="mtex.7.html#Diagnostics">Diagnostics</A> section of the
+mtex(7) manpage for a complete description.
+</BLOCKQUOTE>
+
+<H3>SEE ALSO</H3>
+<BLOCKQUOTE>
+<P>
+
+<A HREF="mtex.7.html">mtex(7)</A>,
+<A HREF="mtex2man.1.html">mtex2man(1)</A>,
+<A HREF="mtex2tex.1.html">mtex2tex(1)</A>,
+Netscape(1), Mosaic(1), lynx(1).
+</BLOCKQUOTE>
+
+<H3>AUTHOR OF PROGRAM AND DOCUMENTATION</H3>
+<BLOCKQUOTE>
+<P>
+
+<A HREF="http://src-www.pa.dec.com/SRC/people/Allan_Heydon/bio.html">Allan Heydon</A> (<TT>heydon@src.dec.com</TT>)
+<PRE>
+Last modified on Fri Jun 16 13:59:41 PDT 1995 by heydon
+</PRE>
+
+</BLOCKQUOTE>
+
+</BODY>
+</HTML>

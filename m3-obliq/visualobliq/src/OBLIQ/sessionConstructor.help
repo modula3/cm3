@@ -1,0 +1,40 @@
+	Editing the Session Constructor
+	*******************************
+
+What is the Session Constructor ?
+---------------------------------
+
+The Session Constructor is a procedure that causes a host to join a session. It creates the forms needed by the host to be part of the session. Think of it as a ticket that allows a host to join the session. A host wishing to join a session can either import the session constructor from a known repository or be handed the session constructor by a peer host.
+
+Configuring the Session Constructor
+-----------------------------------
+
+The Session Constructor gets executed at all hosts including the server. Shown below is the session constructor for your program. You may edit this to configure the start-up process. You can use HOSTNAME, SERVERSITE and SERVERNAME to create forms conditionally.
+
+SERVERSITE is a flag that is set only at the
+           server site  
+
+HOSTNAME   is the name of the host that will be
+ 	   executing this procedure.
+
+SERVERNAME is the HOSTNAME of the server.
+
+LOCAL      is bound to the local Visual Obliq
+           library, which contains useful methods
+           that get executed at the local host.
+
+Creation of forms :-
+
+To create one instance of a form named 'foo' use 
+	
+	fooNew(LOCAL);	
+
+Creating one instance of each form :-
+
+To create one instance of each form defined by you use
+
+	CreateEachFormOnce(LOCAL);
+
+The default session constructor creates one instance of each form defined at each site.
+
+

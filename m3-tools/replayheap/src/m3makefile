@@ -1,0 +1,11 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Fri Jan 14 09:55:20 PST 1994 by kalsow
+%      modified on Tue Jun 16 19:07:03 PDT 1992 by muller
+
+import ("ui")
+implementation ("Main")
+Program ("replayheap")
+ManPage ("replayheap", 1)

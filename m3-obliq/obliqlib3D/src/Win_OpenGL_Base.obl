@@ -1,0 +1,18 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* Digital Internal Use Only                                                 *)
+(* All rights reserved.                                                      *)
+(*                                                                           *)
+(* Last modified on Mon Oct  9 13:29:28 PDT 1995 by najork                   *)
+(*       Created on Tue May 31 11:43:38 PDT 1994 by najork                   *)
+
+
+module Win`OpenGL`BaseWrap for Win`OpenGL`Base;
+
+let TProto = clone (GraphicsBase_TProto, {
+  changeTitle => 
+    meth (self, title) Win`OpenGL`Base_ChangeTitle (self, title) end,
+  awaitDelete => meth (self) Win`OpenGL`Base_AwaitDelete (self) end,
+  destroy     => meth (self) Win`OpenGL`Base_Destroy (self) end
+});
+
+end module;

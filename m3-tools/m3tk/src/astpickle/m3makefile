@@ -1,0 +1,16 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Wed May  5 21:00:20 PDT 1993 by mjordan                  */
+
+Module("M3ASTPickle")
+Module("M3ASTPickleTool")
+
+
+Interface("M3AST_SC")
+Interface("M3AST_SC_F")
+
+Seq("SC", "Exported_node")
+Seq("SC", "Unit_stub")
+

@@ -1,0 +1,65 @@
+grammar ::=
+     clauseSeq
+clauseSeq ::=
+     [ 	gramExpIde _1
+	"::=" 
+	clauseExtends_2 
+	gramExp_3
+	clauseRest_4 
+	] :: ClauseList
+clauseRest ::=
+     { "EOF" clauseSeq  }
+clauseExtends ::=
+     { [ "." "." "." 
+        { [ "*" { [ "_" int_3 ] :: ClauseExtendsIterPos 
+	          []            :: ClauseExtendIterNoPos 
+                }_2 ]  :: ClauseExtendsIter 
+          []           :: ClauseExtendsChoice
+        }_1 
+       ]   :: ClauseExtendsYes
+       []  :: ClauseExtendsNo
+     }_1
+
+gramExpIde ::=
+     ide
+
+gramExp ::=
+     [ gramExpBase_1 
+	{ [ "_" int_3 ]::Storage [ "::" sum_3 ]::caction []::select1 }_2 
+     ]::select2
+
+
+gramExpBase ::=
+     { ide_1    :: GramIde
+       string_1 :: GramString
+       "ide"    :: GramKeyIde
+       "int"    :: GramKeyInt
+       "EOF"    :: GramKeyEof
+       "real"   :: GramKeyReal
+       "char"   :: GramKeyChar
+       "string" :: GramKeyString 
+       gramExpSequence 
+       gramExpChoice   
+       gramExpParens 
+     }
+
+gramExpSequence ::=
+     [ "[" gramExpList "]" ]   :: GramExpSequence
+  
+gramExpChoice ::=
+     [ "{" gramExpList_1 "}" ] :: GramExpChoice
+  
+gramExpParens ::=
+     [ "(" gramExp_1
+     { [ "*" { [ "_" int_4 gramExp_3  ] :: GramExpIterPos
+               gramExp_3                :: GramExpIterNoPos  
+             }_5 ]  :: GramExpIter
+       []           :: GramExpBase   }_6
+     ")" ]  :: GramExpParens
+  
+gramExpList ::=
+     { [ gramExp_1 gramExpList_2 ]::GramList [] }
+  
+  
+
+

@@ -1,0 +1,38 @@
+% Copyright 1994 Digital Equipment Corporation.
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Tue Nov  1 09:55:43 PST 1994 by kalsow 
+%      modified on Tue May 24 11:03:44 PDT 1994 by birrell
+
+resource ("Postcard.1")
+resource ("browseMenu.txt")
+resource ("builtInCompose.fv")
+resource ("builtInDisplay.fv")
+resource ("compose.txt")
+resource ("composeWindow.fv")
+resource ("config.fv")
+resource ("editing.txt")
+resource ("foldersMenu.txt")
+resource ("help.fv")
+resource ("inc.pbm")
+resource ("logo.pbm")
+resource ("mailIcon.pbm")
+resource ("menuArrow.pbm")
+resource ("middle.pbm")
+resource ("news.pbm")
+resource ("nextArrow.pbm")
+resource ("niBrowser.fv")
+resource ("niItem.fv")
+resource ("noMailIcon.pbm")
+resource ("popup.fv")
+resource ("postcard.fv")
+resource ("prevArrow.pbm")
+resource ("rescreen.fv")
+resource ("right.pbm")
+resource ("shared.fv")
+resource ("upArrow.pbm")
+resource ("wait.1.pbm")
+resource ("wait.2.pbm")
+
+bundle ("PostcardBundle")

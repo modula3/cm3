@@ -1,0 +1,13 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* Digital Internal Use Only                                                 *)
+(* All rights reserved.                                                      *)
+(*                                                                           *)
+(* Last modified on Wed Jul 20 17:45:56 PDT 1994 by najork                   *)
+(*       Created on Tue May 31 17:30:50 PDT 1994 by najork                   *)
+
+
+module MarkerGOWrap for MarkerGO;
+
+let TProto = clone (GO_TProto, {});
+
+end module;

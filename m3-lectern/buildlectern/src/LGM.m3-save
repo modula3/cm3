@@ -1,0 +1,990 @@
+(* Copyright 1990 Digital Equipment Corporation. *)
+(* Distributed only by permission. *)
+
+(* Lectern: a user interface for viewing documents stored as images *)
+(* Filter for converting pbm files to Lectern's own lgm format *)
+
+(* Last modified on Thu Oct 20 17:00:14 PDT 1994 by mcjones   *)
+(*      modified on Mon Oct  3 16:48:03 PDT 1994 by birrell   *)
+
+UNSAFE MODULE LGM;
+
+IMPORT FileWr, Fmt, FS, ImageRd, Images, Math, OSError, OSUtils,
+       PaintPrivate, Pipe, Rd, Rect, RegularFile, ScrnPixmap, Stdio,
+       TempFiles, Thread, Word, Wr;
+
+
+(* *)
+(* Types *)
+(* *)
+
+REVEAL T = ImageRd.T BRANDED OBJECT
+    file: RegularFile.T;
+    start, length: INTEGER;
+    dupRd: Rd.T;
+    vanilla: Images.Contents;
+  END;
+
+
+(* *)
+(* Bit fiddling *)
+(* *)
+
+VAR reversedBits, plainBits, rawToLGM: ARRAY CHAR OF CHAR;
+  (* reverses bit order: m.s. first to l.s. first, or vice versa *)
+
+PROCEDURE InitReversedBits() =
+  VAR b: Word.T;
+  BEGIN
+    FOR i := 0 TO 255 DO
+      plainBits[VAL(i,CHAR)] := VAL(i, CHAR);
+      b := 0;
+      FOR j := 0 TO 7 DO
+        b := Word.Insert(b, Word.Extract(i, j, 1), 7-j, 1)
+      END;
+      reversedBits[VAL(i,CHAR)] := VAL(b, CHAR);
+    END;
+  END InitReversedBits;
+
+VAR bitsIn: ARRAY [0..255] OF INTEGER; (* count of 1 bits in each byte *)
+
+PROCEDURE InitBitsIn() =
+    VAR done := 1;
+  BEGIN
+    bitsIn[0] := 0;
+    WHILE done < 256 DO
+      FOR i := 0 TO done-1 DO bitsIn[done+i] := 1 + bitsIn[i] END;
+      done := done * 2;
+    END;
+  END InitBitsIn;
+
+
+(* *)
+(* Lazy PPM reading *)
+(* *)
+
+TYPE LazyPPMContents = Images.Contents OBJECT
+  (* This is an improper sub-class of Images.Contents.  The "map" field is
+     valid only after a call of "getLine", and is valid only for pixels in
+     that line.  Pixel values in other lines might have other values.
+     Further, "getLine" must be called sequentially, starting at v=0. *)
+    rd: Rd.T;
+    maxVal: INTEGER;
+    prevLine: INTEGER;
+    chars: REF ARRAY OF CHAR;
+  METHODS
+    init(rd: Rd.T): LazyPPMContents RAISES { Images.Error } := InitLazyPPM;
+    getRawLine() := GetLazyPPMRawLine;
+      (* Just gets the next scan line into "chars" *)
+  OVERRIDES
+    getLine := GetLazyPPMLine;
+  END;
+
+PROCEDURE ScanInt(rd: Rd.T): INTEGER
+                  RAISES{Thread.Alerted, Rd.Failure, Images.Error} =
+  (* Return value of next integer in rd; skip any
+     whitespace or comments before the first digit. *)
+  (* Stolen from Image.m3 by Steve Glassman *)
+  CONST
+    Digits = SET OF CHAR{'0'.. '9'};
+    Spaces  = SET OF CHAR{' ', '\t', '\n', '\r'};
+    Comment = '#';
+  VAR
+    res: INTEGER;
+    ch : CHAR;
+  BEGIN
+    TRY
+      ch := Rd.GetChar(rd);
+      WHILE (ch = Comment) OR (ch IN Spaces) DO
+        IF ch = Comment THEN EVAL Rd.GetLine(rd) END;
+        ch := Rd.GetChar(rd)
+      END;
+    EXCEPT Rd.EndOfFile =>
+      RAISE Images.Error("Syntax error in PNM file header")
+    END;
+    IF ch IN Digits THEN
+      res := ORD(ch) - ORD('0')
+    ELSE
+      RAISE Images.Error("Syntax error in PNM file header")
+    END;
+    TRY
+      LOOP
+        ch := Rd.GetChar(rd);
+        IF ch IN Digits THEN
+          res := 10 * res + ORD(ch) - ORD('0')
+        ELSE
+          EXIT
+        END
+      END;
+    EXCEPT
+    | Rd.EndOfFile =>
+    END;
+    Rd.UnGetChar(rd);
+    RETURN res
+  END ScanInt;
+
+PROCEDURE InitLazyPPM(lc: LazyPPMContents; rd: Rd.T): LazyPPMContents
+                      RAISES { Images.Error } =
+  BEGIN
+    TRY
+      IF Rd.GetChar(rd) # 'P' OR Rd.GetChar(rd) # '6' THEN
+        RAISE Images.Error("Not a ppmraw file");
+      END;
+      lc.rd := rd;
+      lc.width := ScanInt(rd);
+      lc.height := ScanInt(rd);
+      lc.maxVal := ScanInt(rd);
+      IF lc.maxVal # 255 THEN RAISE Images.Error("Unsuitable PPM file") END;
+      lc.map := NEW(Images.RGBMap, lc.width);
+      lc.isBW := FALSE;
+      lc.isGray := FALSE;
+      lc.isGrayRamp := FALSE;
+      lc.prevLine := -1;
+      lc.chars := NEW(REF ARRAY OF CHAR, 3*lc.width);
+      WHILE Rd.GetChar(rd) # '\n' DO END;
+    EXCEPT Rd.EndOfFile, Rd.Failure, Thread.Alerted =>
+      RAISE Images.Error("Syntax error in ppmraw file");
+    END;
+    RETURN lc;
+  END InitLazyPPM;
+
+PROCEDURE GetLazyPPMRawLine(lc: LazyPPMContents) =
+  BEGIN
+    TRY
+      WITH n = Rd.GetSub(lc.rd, lc.chars^) DO
+        <* ASSERT n = NUMBER(lc.chars^) *>
+      END;
+    EXCEPT
+      Rd.Failure, Thread.Alerted => <*ASSERT FALSE*>
+    END;
+    INC(lc.prevLine);
+  END GetLazyPPMRawLine;
+
+PROCEDURE GetLazyPPMLine(lc: LazyPPMContents;
+                         v: INTEGER;
+                         VAR line: ARRAY OF INTEGER) =
+  BEGIN
+    <* ASSERT v = lc.prevLine+1 *>
+    TRY
+      EVAL Rd.GetSub(lc.rd, lc.chars^);
+    EXCEPT
+      Rd.Failure, Thread.Alerted => (* ignore? *)
+    END;
+    FOR i := 0 TO lc.width-1 DO
+(* The following works on 32-bit machines, but not 64:
+      SUBARRAY(LOOPHOLE(lc.map[i], UNTRACED REF ARRAY [0..3] OF CHAR)^,
+               0, 3) := SUBARRAY(lc.chars^, i*3, 3);
+*)
+      lc.map[i] := Images.RGB{r := ORD(lc.chars[i*3]),
+                              g := ORD(lc.chars[i*3+1]),
+                              b := ORD(lc.chars[i*3+2])};
+      line[i] := i;
+    END;
+  END GetLazyPPMLine;
+
+
+(* *)
+(* Dithering: Floyd-Steinberg error diffusion dither, with alternating
+              directions. *)
+(* *)
+
+TYPE DitherRGB = INTEGER;
+  (* Represents RGB packed 3 to a word by multiplying up by DitherPacking.
+     Also used for RGB deltas, which might be in [-128..255+128].  The
+     offset DitherRGBBias is used to make RGB deltas positive during
+     some arithmetic operations.  *)
+
+CONST DitherPacking = 512;
+  (* Packed RGB = r + g*DitherPacking + b*DitherPacking*DitherPacking *)
+
+CONST DitherRGBBias = 128 +
+                      128*DitherPacking +
+                      128*DitherPacking*DitherPacking;
+
+CONST DitherFraction = 16;
+  (* Amount by which we will divide accumulated error. This is the total
+     of the error weights used in accumulating propagated error.  Assumed
+     to be a power of two, to allow MOD by masking. *)
+
+CONST DitherFractionMask = (DitherPacking-DitherFraction) +
+                           (DitherPacking-DitherFraction)*DitherPacking +
+                           (DitherPacking-DitherFraction)*DitherPacking*
+                                                          DitherPacking;
+  (* Mask to avoid propagating across fields when dividing by DitherFraction *)
+
+CONST DitherRound = (DitherFraction +
+                     DitherFraction*DitherPacking +
+                     DitherFraction*DitherPacking*DitherPacking) DIV 2;
+  (* To ensure unbiased rounding when dividing by DitherFraction *)
+
+TYPE DitheredPixel = BITS 8 FOR [0..255];
+  (* A dithered pixel value, as stored in the resulting .pixels *)
+
+CONST NullDitheredPixel = LAST(DitheredPixel);
+  (* An unused value for DitheredPixel, used in .posterizedToDithered *)
+
+TYPE DitheredPixels = ARRAY OF DitheredPixel;
+  (* Used for storing the resulting dithered pixels *)
+
+TYPE DitheredContents = Images.Contents OBJECT
+    undithered: Images.Contents;
+    unditheredLine: REF ARRAY OF INTEGER;
+      (* Buffer for line from "undithered" if it's not a LazyPPMContents *)
+    lc: LazyPPMContents;
+    levels: INTEGER;
+    posterize: ARRAY [0 .. LAST(Images.Channel)+128+128] OF INTEGER;
+      (* indexed by a biased RGB delta: index=128 for RGB=0.  Value
+         is in [0..levels) *)
+    posterizedToDitheredPixel: ARRAY [0..255] OF DitheredPixel;
+      (* Indexed by posterized RGB in [0..levels^3), returns pixel or Null *)
+    posterizedToDitherRGB: ARRAY [0..255] OF DitherRGB;
+      (* Indexed by posterized RGB, returns DitherRGB *)
+    nextValue: DitheredPixel;
+      (* Next unused value of DitheredPixel *)
+    prevLineError: REF ARRAY OF DitherRGB;
+      (* packed RGB deltas from previous line *)
+    pixels: REF DitheredPixels;
+      (* the dithered image *)
+  METHODS
+    init(undithered: Images.Contents;
+         levels: INTEGER): DitheredContents := InitDitheredContents;
+      (* Initializes this Contents to deliver a version of "undithered"
+         whose pixels are restricted to having the given number of
+         levels in each channel.  Implemented by a simple error diffusion
+         algorithm. *)
+    doLine(v: INTEGER; VAR line: DitheredPixels) := DoDitheredLine;
+      (* Assembles one dithered line into "line"; private. *)
+  OVERRIDES
+    getLine := GetDitheredLine;
+  END;
+
+PROCEDURE InitDitheredContents(dc: DitheredContents;
+                               undithered: Images.Contents;
+                               levels: INTEGER): DitheredContents =
+  VAR
+    distance := 255.0 / FLOAT(levels-1); (* distance between result rgb's *)
+  BEGIN
+    dc.undithered := undithered;
+    TYPECASE undithered OF
+    | LazyPPMContents(lc) =>
+        dc.lc := lc;
+    ELSE
+        dc.lc := NIL;
+        dc.unditheredLine := NEW(REF ARRAY OF INTEGER, undithered.width);
+    END;
+    dc.levels := levels;
+    dc.width := undithered.width;
+    dc.height := undithered.height;
+    dc.isBW := undithered.isBW;
+    dc.isGray := undithered.isGray;
+    dc.isGrayRamp := FALSE;
+    dc.map := NEW(Images.RGBMap, 0);
+    FOR i := -128 TO LAST(Images.Channel)+128 DO
+      dc.posterize[i+128] := MAX(0, MIN(levels-1, ROUND(FLOAT(i)/distance)));
+    END;
+    FOR i := FIRST(DitheredPixel) TO LAST(DitheredPixel) DO
+      dc.posterizedToDitheredPixel[i] := NullDitheredPixel;
+    END;
+    dc.nextValue := 0;
+    dc.pixels := NEW(REF DitheredPixels, dc.width*dc.height);
+    dc.prevLineError := NEW(REF ARRAY OF DitherRGB, dc.width+1);
+    FOR i := 0 TO LAST(dc.prevLineError^) DO dc.prevLineError[i] := 0 END;
+    FOR v := 0 TO dc.height-1 DO
+      dc.doLine(v, SUBARRAY(dc.pixels^, v*dc.width, dc.width));
+    END;
+    (* Reduce the map array to the correct size *)
+    VAR oldMap := dc.map;
+    BEGIN
+      dc.map := NEW(Images.RGBMap, dc.nextValue);
+      dc.map^ := SUBARRAY(oldMap^, 0, dc.nextValue);
+    END;
+    RETURN dc;
+  END InitDitheredContents;
+
+PROCEDURE GetDitheredLine(dc: DitheredContents;
+                          v: INTEGER;
+                          VAR line: ARRAY OF INTEGER) =
+  VAR
+    offset := v * dc.width;
+  BEGIN
+    FOR i := 0 TO dc.width-1 DO line[i] := dc.pixels[i+offset] END;
+  END GetDitheredLine;
+
+PROCEDURE DoDitheredLine(dc: DitheredContents;
+                          v: INTEGER;
+                          VAR line: DitheredPixels) =
+  VAR
+    prevLinePrev, prevLineCurr, prevLineNext: DitherRGB;
+    newError: DitherRGB := 0;
+    levels := dc.levels;
+    chars: REF ARRAY OF CHAR;
+    from, to, by: INTEGER;
+  BEGIN
+    IF dc.lc # NIL THEN
+      dc.lc.getRawLine(); (* faster than .getLine *)
+      chars := dc.lc.chars;
+    ELSE
+      dc.undithered.getLine(v, dc.unditheredLine^);
+      chars := NIL;
+    END;
+    IF v MOD 2 = 0 THEN
+      from := 0; to := dc.width-1; by := 1;
+    ELSE
+      from := dc.width-1; to := 0; by := -1;
+    END;
+    prevLineCurr := 0;
+    IF dc.width # 0 THEN prevLineNext := dc.prevLineError[from] END;
+    FOR i := from TO to BY by DO
+      VAR
+        rawRGB: Images.RGB;
+        correctedRGB: DitherRGB;
+        posterizedRGB: INTEGER;
+        newPixel: DitheredPixel;
+      BEGIN
+        (* shuffle copies of error values from previous line *)
+        prevLinePrev := prevLineCurr;
+        prevLineCurr := prevLineNext;
+        IF i = to THEN
+          prevLineNext := 0;
+        ELSE
+          prevLineNext := dc.prevLineError[i+by];
+        END;
+        (* compute ideal RGB for current pixel, folding in accumulated error *)
+        IF chars # NIL THEN
+          correctedRGB := ORD(chars[i*3]) +
+                          ORD(chars[i*3+1]) * DitherPacking +
+                          ORD(chars[i*3+2]) * DitherPacking*DitherPacking +
+                          prevLinePrev * 3 +
+                          prevLineCurr * 5 +
+                          prevLineNext * 1 +
+                          newError * 7 +
+                          DitherRGBBias;
+        ELSE
+          rawRGB := dc.undithered.map[dc.unditheredLine[i]];
+          correctedRGB := rawRGB.r +
+                          rawRGB.g * DitherPacking +
+                          rawRGB.b * DitherPacking*DitherPacking +
+                          prevLinePrev * 3 +
+                          prevLineCurr * 5 +
+                          prevLineNext * 1 +
+                          newError * 7 +
+                          DitherRGBBias;
+        END;
+        (* compute closest available RGB, and pixel value *)
+        posterizedRGB := dc.posterize[correctedRGB MOD DitherPacking] +
+          dc.posterize[(correctedRGB DIV DitherPacking) MOD DitherPacking] *
+                                                               levels +
+          dc.posterize[correctedRGB DIV (DitherPacking*DitherPacking)] *
+                                                               levels * levels;
+        newPixel := dc.posterizedToDitheredPixel[posterizedRGB];
+        IF newPixel = NullDitheredPixel THEN
+          (* First pixel with this posterizedRGB value.  Set up the
+             .map, .posterizedToDitherRGB and .posterizedToDitheredPixel
+             arrays *)
+          newPixel := dc.nextValue; INC(dc.nextValue);
+          IF LAST(dc.map^) < newPixel THEN
+            (* Extend the map, generously.  At end, caller will truncate it *)
+            VAR oldMap := dc.map;
+            BEGIN
+              dc.map := NEW(Images.RGBMap, NUMBER(oldMap^)*2+1);
+              SUBARRAY(dc.map^, 0, NUMBER(oldMap^)) := oldMap^;
+            END;
+          END;
+          WITH
+            distance = 255.0 / FLOAT(levels-1),
+            r = posterizedRGB MOD levels,
+            g = (posterizedRGB DIV levels) MOD levels,
+            b = posterizedRGB DIV (levels*levels),
+            rgb = Images.RGB{r := ROUND(FLOAT(r)*distance),
+                             g := ROUND(FLOAT(g)*distance),
+                             b := ROUND(FLOAT(b)*distance)} DO
+            dc.map[newPixel] := rgb;
+            dc.posterizedToDitherRGB[posterizedRGB] :=
+                              rgb.r +
+                              rgb.g*DitherPacking +
+                              rgb.b*DitherPacking*DitherPacking;
+          END;
+          dc.posterizedToDitheredPixel[posterizedRGB] := newPixel;
+        END;
+        line[i] := newPixel;
+        (* compute and record error in pixel's actual RGB *)
+        newError := Word.And(correctedRGB -
+                             dc.posterizedToDitherRGB[posterizedRGB] +
+                             DitherRound,
+                             DitherFractionMask) DIV DitherFraction -
+                    DitherRGBBias DIV DitherFraction;
+        (* Note: "newError" is required for next loop iteration *)
+        (* Note: we have prev line's error in "prevLineCurr", so we can
+                 overwrite that cell to record this line's error. *)
+        dc.prevLineError[i] := newError;
+      END;
+    END;
+  END DoDitheredLine;
+
+
+(* *)
+(* Scaling *)
+(* *)
+
+TYPE ScaledContents = Images.Contents OBJECT
+    (* An Images.Contents object that scales a given Images.Contents object. *)
+    unscaled: Images.RawContents;
+    scale: INTEGER;
+    toGray: Images.GrayMap;
+    factor: INTEGER;
+    toDestPixel: REF ARRAY OF INTEGER;
+  METHODS
+    init(unscaled: Images.RawContents;
+         scale: INTEGER;
+         gamma: REAL): ScaledContents := InitScaledContents;
+      (* Initializes this Contents to deliver a version of "unscaled" that
+         is scaled by "scale", converted to grayscale, and adjusted by "gamma"
+         (gamma < 1.0 moves pixel values toward white). *)
+  OVERRIDES
+    getLine := GetScaledLine;
+  END;
+    
+PROCEDURE InitScaledContents(sc: ScaledContents;
+                             unscaled: Images.RawContents;
+                             scale: INTEGER;
+                             gamma: REAL): ScaledContents =
+  (* Sets up the various fields of "sc" so that GetScaledLine will work.
+     The plan is to do as much as possible here, to speed up GetScaledLine.
+     In particular, sc.toDestPixel is set up as an array indexed by
+     accumulated value, yielding a pixel "p" such that sc.map[p] is the
+     appropriate RGB value.  The "accumulated value" used by GetScaledLine
+     is the total brightness, or the total number of "1" bits, depending
+     on unscaled.raw.bitsPerPixel; divided by sc.factor to keep the size of
+     sc.toDestPixel reasonable.  Sets up sc.toGray to yield the brightness
+     of pixels in unscaled.raw. *)
+  VAR
+    raw := unscaled.raw;
+    scaledMax: INTEGER;  (* the maximum value that will be accumulated *)
+    maxVal: INTEGER;     (* the largest resulting pixel value *)
+    gray, lastGray, zeroBit, oneBit: REAL;
+  BEGIN
+    <* ASSERT raw.westRounded = 0 AND
+              raw.pixelOrder = PaintPrivate.HostByteOrder *>
+    sc.width := Rect.HorSize(raw.bounds) DIV scale;
+    sc.height := Rect.VerSize(raw.bounds) DIV scale;
+    sc.unscaled := unscaled;
+    sc.scale := scale;
+    sc.toGray := Images.GrayMapFromRGBMap(unscaled.map);
+    IF unscaled.raw.bitsPerPixel = 1 THEN
+      scaledMax := scale * scale;
+      IF scale = 1 THEN
+        maxVal := 1; (* we're not adding any colors *)
+      ELSIF sc.width * sc.height < 100000 THEN
+        maxVal := 15; (* sufficient; same as we use for grayscale images *)
+      ELSE
+        maxVal := 3; (* conserve file size; factor of grayscale maxVal *)
+      END;
+      zeroBit := FLOAT(sc.toGray[0]) / 255.0;
+      oneBit := FLOAT(sc.toGray[1]) / 255.0;
+    ELSE
+      scaledMax := scale * scale * 255;
+      maxVal := 15;
+    END;
+    sc.factor := (scaledMax+1+255) DIV 256; (* brings index into [0..255] *)
+    sc.toDestPixel := NEW(REF ARRAY OF INTEGER, (scaledMax DIV sc.factor)+1);
+    lastGray := FLOAT(LAST(sc.toDestPixel^));
+    FOR i := 0 TO LAST(sc.toDestPixel^) DO
+      gray := FLOAT(i) / lastGray; (* gray level of accumulation *)
+      IF unscaled.raw.bitsPerPixel = 1 THEN
+        gray := oneBit * gray + zeroBit * (1.0-gray);
+      END;
+      IF gamma # 1.0 THEN
+        gray := FLOAT(Math.pow(FLOAT(gray, LONGREAL),
+                               FLOAT(1.0/gamma, LONGREAL)));
+      END;
+      (* convert to [0..maxVal] with white=0 *)
+      sc.toDestPixel[i] := ROUND((1.0-gray) * FLOAT(maxVal));
+    END;
+    sc.map := NEW(Images.RGBMap, maxVal+1);
+    FOR i := 0 TO LAST(sc.map^) DO
+      WITH gray255 = 255 - ROUND((FLOAT(i) / FLOAT(maxVal)) * 255.0) DO
+        sc.map[i] := Images.RGB{ r := gray255, g := gray255, b := gray255 };
+      END;
+    END;
+    sc.isBW := NUMBER(sc.map^) = 2;
+    sc.isGray := TRUE;
+    sc.isGrayRamp := TRUE;
+    RETURN sc
+  END InitScaledContents;
+
+PROCEDURE GetScaledLine(sc: ScaledContents;
+                        v: INTEGER;
+                        VAR line: ARRAY OF INTEGER) =
+  (* "getLine" method for ScaledContents. *)
+  VAR
+    raw := sc.unscaled.raw;
+    scale := sc.scale;
+    toGray := sc.toGray;
+    factor := sc.factor;
+    toDestPixel := sc.toDestPixel;
+    scaledWidth := Rect.HorSize(raw.bounds) DIV scale;
+    rowStart := (v*scale-raw.bounds.north)*raw.wordsPerRow + raw.offset;
+    wordsPerRow := raw.wordsPerRow;
+    bitsPerPixel := raw.bitsPerPixel;
+    pixelsPerWord := BITSIZE(ScrnPixmap.PixWord) DIV bitsPerPixel;
+    sourceBitDelta, sourceBitOrigin: INTEGER;
+  BEGIN
+    IF raw.pixelOrder = PaintPrivate.ByteOrder.LSBFirst THEN
+      sourceBitDelta := raw.bitsPerPixel;
+      sourceBitOrigin := 0;
+    ELSE
+      sourceBitDelta := - raw.bitsPerPixel;
+      sourceBitOrigin := (pixelsPerWord-1) * raw.bitsPerPixel;
+    END;
+    FOR p := 0 TO scaledWidth - 1 DO line[p] := 0 END;
+    FOR vdelta := 0 TO scale-1 DO
+      VAR
+        pixels := LOOPHOLE(ADR(raw.pixels[rowStart+vdelta*wordsPerRow]),
+                           UNTRACED REF ARRAY [0..999999] OF ScrnPixmap.PixWord);
+        sourceWord := 0;
+        sourceBit := sourceBitOrigin;
+        sourceCount := pixelsPerWord;
+        source := pixels[0];
+      BEGIN
+        FOR destH := 0 TO scaledWidth - 1 DO
+          VAR
+            total := 0;
+          BEGIN
+            IF bitsPerPixel = 1 THEN
+              IF scale = 2 OR scale = 4 THEN
+                INC(total, bitsIn[Word.Extract(source, sourceBit, scale)]);
+                INC(sourceBit, scale*sourceBitDelta);
+                DEC(sourceCount, scale);
+                IF sourceCount = 0 THEN
+                  INC(sourceWord);
+                  source := pixels[sourceWord];
+                  sourceBit := sourceBitOrigin;
+                  sourceCount := pixelsPerWord;
+                END;
+              ELSE
+                FOR hdelta := 0 TO scale-1 DO
+                  INC(total, Word.Extract(source, sourceBit, bitsPerPixel));
+                  INC(sourceBit, sourceBitDelta);
+                  DEC(sourceCount);
+                  IF sourceCount = 0 THEN
+                    INC(sourceWord);
+                    source := pixels[sourceWord];
+                    sourceBit := sourceBitOrigin;
+                    sourceCount := pixelsPerWord;
+                  END;
+                END;
+              END;
+            ELSE (* bitsperpixel # 1 *)
+              FOR hdelta := 0 TO scale-1 DO
+                INC(total, toGray[Word.Extract(source,
+                                               sourceBit,
+                                               bitsPerPixel)]);
+                INC(sourceBit, sourceBitDelta);
+                DEC(sourceCount);
+                IF sourceCount = 0 THEN
+                  INC(sourceWord);
+                  source := pixels[sourceWord];
+                  sourceBit := sourceBitOrigin;
+                  sourceCount := pixelsPerWord;
+                END;
+              END;
+            END;
+            INC(line[destH], total);
+          END;
+        END;
+      END;
+    END;
+    FOR p := 0 TO scaledWidth - 1 DO
+      line[p] := toDestPixel[line[p] DIV factor];
+    END;
+  END GetScaledLine;
+
+
+(* *)
+(* Compression algorithm *)
+(* *)
+
+PROCEDURE ComputePacking(maxVal: INTEGER): INTEGER =
+  (* Determines how many pixels in [0..maxVal] will fit in one byte. *)
+  VAR pixelsPerGroup: INTEGER;
+  BEGIN
+    IF maxVal <= 1 THEN
+      pixelsPerGroup := 8;
+    ELSIF maxVal <= 2 THEN
+      pixelsPerGroup := 5;
+    ELSIF maxVal <= 3 THEN
+      pixelsPerGroup := 4;
+    ELSIF maxVal <= 5 THEN
+      pixelsPerGroup := 3;
+    ELSIF maxVal <= 15 THEN
+      pixelsPerGroup := 2;
+    ELSIF maxVal > 255 THEN
+      <* ASSERT FALSE *> (* Can't pack into a byte *)
+    ELSE
+      pixelsPerGroup := 1;
+    END;
+    RETURN pixelsPerGroup
+  END ComputePacking;
+
+PROCEDURE Compress(contents: Images.Contents; scale: INTEGER; wr: Wr.T)
+                RAISES { Wr.Failure, Thread.Alerted } =
+  (* Write a compressed form of "contents" on "wr". The parameter "scale"
+     is recorded in the output file, but has no other effect.
+
+     Uses a simple two-dimensional run-encoding scheme.  Output is byte
+     oriented, to allow fast decompression.  The algorithm run-encodes
+     pixel groups whose value is "Zero", and pixel groups that equal
+     the corresponding groups of the previous scan-line.
+
+     The resulting compression ratios are similar to GNU zip applied to
+     typical 300 DPI B&W text image data, and better than LZW.  If the output
+     image has pixel depth 1, the resulting compression ratios are roughly a
+     factor of two worse than group 4 fax, but decompression can be much
+     faster.  The output can profitable be re-compressed by a program such as
+     GNU zip, gaining another factor of roughly 1.3, at the cost of slightly
+     slower decompression.
+
+     Output format is byte = P = FirstNonLiteral+n, where n means:
+       n=[0..13]  => run of n+1 groups, value=Zero
+       n=14       => next byte = Q => run of Q+15 groups, value=Zero
+       n=[15..28] => run of n-14 groups equal to previous line
+       n=29       => next byte = Q => run of Q+15 groups equal to previous line
+       n=30       => next byte = Q => literal group, value=Q
+       n=31       => end of file marker (there are two)
+       n=other    => literal group, value=P
+
+     "FirstNonLiteral" is chosen to maximize pixel groups whose value can
+     be represented as a non-escaped literal, heuristically.  For scale=1,
+     the maximum group value is 255, but the range [160..190] are somewhat
+     unlikely values.  (The top 3 pixels in a group whose value is in
+     [160..191] are BWB, corresponding to an isolated white pixel.)
+     *)
+  CONST
+    SimpleRunMax = 14;                 (* longest run encoded in first byte *)
+    EscapeRunMax = 14+256;             (* longest run encoded in second byte *)
+    FirstNonLiteral = 160;             (* first byte value used for encoding *)
+    RunZBase = FirstNonLiteral;        (* runs of zeroes *)
+    RunZEscape = RunZBase+SimpleRunMax;(* second byte is run length *)
+    RunPBase = RunZEscape+1;           (* runs of matches to prev. scan-line *)
+    RunPEscape = RunPBase+SimpleRunMax;(* second byte is run length *)
+    LiteralEscape = RunPEscape+1;      (* second byte is literal byte value *)
+    EOF = LiteralEscape+1;             (* end-of-file marker *)
+    LastNonLiteral = EOF;              (* last byte value used for encoding *)
+    Zero = VAL(0, CHAR);               (* zero pixel group *)
+  VAR
+    unscaledBitmap: BOOLEAN;           (* for optimization/hack below *)
+    raw: ScrnPixmap.Raw;               (* ditto *)
+    maxVal: INTEGER;                   (* largest pixel from contents.getLine *)
+    line: REF ARRAY OF INTEGER;        (* buffer for contents.getLine *)
+    pixelsPerGroup: INTEGER;           (* pixels in packing group *)
+    wGroups: INTEGER;                  (* groups per scan-line *)
+    this, prev: REF ARRAY OF CHAR;     (* buffers for compressed lines *)
+  CONST
+    CharBuffLen = 1000;
+  VAR
+    charBuff := NEW(REF ARRAY OF CHAR, CharBuffLen);
+    charBuffPos := 0;
+  PROCEDURE FlushCharBuff() RAISES { Wr.Failure, Thread.Alerted } =
+    BEGIN
+      Wr.PutString(wr, SUBARRAY(charBuff^, 0, charBuffPos));
+      charBuffPos := 0;
+    END FlushCharBuff;
+  PROCEDURE PutChar(c: [0..255]) RAISES { Wr.Failure, Thread.Alerted } =
+    BEGIN
+      IF charBuffPos = CharBuffLen THEN FlushCharBuff() END;
+      charBuff[charBuffPos] := VAL(c, CHAR);
+      INC(charBuffPos);
+    END PutChar;
+  (* statistics *)
+  VAR
+    runZCount, runZEscCount, runZBytes,
+    runPCount, runPEscCount, runPBytes,
+    literalCount, literalEscCount: INTEGER := 0;
+  BEGIN
+    maxVal := LAST(contents.map^);
+    TYPECASE contents OF
+    | ScaledContents(sc) =>
+        raw := sc.unscaled.raw;
+        unscaledBitmap := (maxVal = 1 AND sc.scale = 1 AND
+                                          raw.bitsPerPixel = 1);
+    ELSE
+      raw := NIL;
+      unscaledBitmap := FALSE;
+    END;
+    line := NEW(REF ARRAY OF INTEGER, contents.width);
+    pixelsPerGroup := ComputePacking(maxVal);
+    wGroups := contents.width DIV pixelsPerGroup;
+    this := NEW(REF ARRAY OF CHAR, wGroups);
+    prev := NEW(REF ARRAY OF CHAR, wGroups);
+    Wr.PutChar(wr, 'L');
+    IF contents.isGrayRamp THEN
+      Wr.PutChar(wr, 'G');
+    ELSE
+      Wr.PutChar(wr, 'M');
+    END;
+    Wr.PutText(wr, "\n" & Fmt.Int(wGroups * pixelsPerGroup) & "\n" &
+                          Fmt.Int(contents.height) & "\n" &
+                          Fmt.Int(scale) & "\n" &
+                          Fmt.Int(maxVal) & "\n");
+    IF NOT contents.isGrayRamp THEN
+      FOR i := 0 TO LAST(contents.map^) DO
+        PutChar(contents.map[i].r);
+        PutChar(contents.map[i].g);
+        PutChar(contents.map[i].b);
+      END;
+    END;
+    FOR v := 0 TO contents.height-1 DO
+      VAR
+        h := 0;
+        temp := prev;
+      PROCEDURE PutRun(run, base, escape: INTEGER) RAISES { Wr.Failure,
+                                                            Thread.Alerted } =
+        BEGIN
+          IF run <= SimpleRunMax THEN
+            PutChar(base+run-1);
+          ELSE
+            PutChar(escape);
+            PutChar(run-SimpleRunMax-1);
+          END;
+          INC(h, run);
+        END PutRun;
+      BEGIN
+        prev := this; this := temp;
+        (* Get the pixel groups for this scan line ... *)
+        IF unscaledBitmap THEN
+          WITH
+            rowStart = (v - raw.bounds.north) * raw.wordsPerRow + raw.offset,
+            row = LOOPHOLE(ADR(raw.pixels[rowStart]),
+                           UNTRACED REF ARRAY [0..999999] OF CHAR) DO
+            FOR h := 0 TO wGroups-1 DO this[h] := rawToLGM[row[h]] END;
+          END;
+        ELSE
+          contents.getLine(v, line^);
+          (* Pack into groups *)
+          VAR
+            lineH := 0;
+          BEGIN
+            FOR packedH := 0 TO wGroups-1 DO
+              VAR
+                value := 0;
+              BEGIN
+                FOR i := 0 TO pixelsPerGroup-1 DO
+                  value := value * (maxVal+1) + line[lineH+i];
+                END;
+                INC(lineH, pixelsPerGroup);
+                this[packedH] := VAL(value, CHAR);
+              END;
+            END;
+          END;
+        END;
+        (* Compress the groups ... *)
+        WHILE h < wGroups DO
+          VAR runZ := 0; runP := 0;
+          BEGIN
+            LOOP (* find longest run of zero starting at "h" *)
+              IF this[h+runZ] # Zero THEN EXIT END;
+              INC(runZ);
+              IF h+runZ = wGroups THEN EXIT END;
+              IF runZ = EscapeRunMax THEN EXIT END;
+            END;
+            IF v > 0 THEN
+              LOOP (* find longest run of equal to prev starting at "h" *)
+                IF this[h+runP] # prev[h+runP] THEN EXIT END;
+                INC(runP);
+                IF h+runP = wGroups THEN EXIT END;
+                IF runP = EscapeRunMax THEN EXIT END;
+              END;
+            END;
+            IF runZ > runP THEN
+              INC(runZCount);
+              IF runZ > SimpleRunMax THEN INC(runZEscCount) END;
+              INC(runZBytes, runZ);
+              PutRun(runZ, RunZBase, RunZEscape);
+            ELSIF runP > 0 THEN
+              INC(runPCount);
+              IF runP > SimpleRunMax THEN INC(runPEscCount) END;
+              INC(runPBytes, runP);
+              PutRun(runP, RunPBase, RunPEscape);
+            ELSE
+              WITH x = this[h] DO
+                INC(literalCount);
+                IF ORD(x) >=FirstNonLiteral AND ORD(x) <= LastNonLiteral THEN
+                  INC(literalEscCount);
+                  PutChar(LiteralEscape);
+                  PutChar(ORD(x));
+                ELSE
+                  PutChar(ORD(x));
+                END;
+              END;
+              INC(h);
+            END;
+          END;
+        END;
+      END;
+    END;
+    FOR i := 1 TO 2 DO PutChar(EOF) END;
+    FlushCharBuff();
+    IF FALSE THEN
+      Wr.PutText(Stdio.stderr,
+                 Fmt.Int(runZCount) & " zero runs, including " &
+                 Fmt.Int(runZEscCount) & " escaped; " &
+                 Fmt.Int(runZBytes) & " total bytes\n");
+      Wr.PutText(Stdio.stderr,
+                 Fmt.Int(runPCount) & " prev runs, including " &
+                 Fmt.Int(runPEscCount) & " escaped; " &
+                 Fmt.Int(runPBytes) & " total bytes\n");
+      Wr.PutText(Stdio.stderr,
+                 Fmt.Int(literalCount) & " literals, including " &
+                 Fmt.Int(literalEscCount) & " escaped\n");
+    END;
+    Wr.Flush(Stdio.stderr);
+  END Compress;
+
+
+(* *)
+(* Exported Procedures *)
+(* *)
+
+PROCEDURE ReadImage(file: RegularFile.T; start, length: INTEGER; VAR t: T)
+                    RAISES { Error } =
+  BEGIN
+    IF t = NIL THEN t := NEW(T) END;
+    IF t.dupRd # NIL THEN
+      TRY Rd.Close(t.dupRd) EXCEPT Rd.Failure, Thread.Alerted => END;
+    END;
+    t.file := file;
+    t.start := start;
+    t.length := length;
+    TRY
+      EVAL file.seek(RegularFile.Origin.Beginning, 0);
+      t.dupRd := NEW(OSUtils.DupRd).init(file);
+      IF Rd.Index(t.dupRd) # start THEN Rd.Seek(t.dupRd, start) END;
+      TRY
+        t.vanilla := NEW(LazyPPMContents).init(t.dupRd);
+      EXCEPT Images.Error =>
+        t.vanilla := t.init(t.dupRd, start, length).contents();
+      END;
+    EXCEPT
+      | OSError.E, Rd.Failure, Thread.Alerted =>
+          RAISE Error("Can't read image file");
+      | Images.Error(msg) => RAISE Error(msg);
+    END;
+  END ReadImage;
+
+PROCEDURE GetFormat(t: T): Format =
+  BEGIN
+    TYPECASE t.vanilla OF
+    | ImageRd.Contents(iv) => RETURN iv.format;
+    ELSE
+      RETURN Format.PPM
+    END;
+  END GetFormat;
+
+PROCEDURE GetHeight(t: T): CARDINAL =
+  BEGIN
+    RETURN t.vanilla.height;
+  END GetHeight;
+
+PROCEDURE Write(t: T; scale: INTEGER; gamma: REAL; wr: Wr.T; verbose: BOOLEAN)
+                RAISES { Error, Wr.Failure, Thread.Alerted } =
+  (* Generate compressed LGM from "t" with given scale and gamma. *)
+  VAR
+    processed: Images.Contents;
+    rd1: Rd.T := NIL;
+    pnmSrc: RegularFile.T;
+    tempFileName: TEXT;
+    tempFile: RegularFile.T;
+    tempFileWr: Wr.T := NIL;
+    pipe1: Pipe.T := NIL;
+   scaledContents: Images.Contents;
+  BEGIN
+    TRY
+      IF verbose THEN
+        Wr.PutText(Stdio.stderr, "  Scale by " & Fmt.Int(scale) & " ... ");
+        Wr.Flush(Stdio.stderr);
+      END;
+      IF NOT t.vanilla.isGray THEN
+        IF scale # 1 THEN
+          IF GetFormat(t) = Format.PPM THEN
+            (* We can feed the original file into pnmscale, yielding PPM. *)
+            pnmSrc := t.file;
+            <* ASSERT t.start = 0 *>
+          ELSE
+            (* Write a temporary PPM file *)
+            TRY
+              tempFileName := TempFiles.Get(part := ",LGM-PPM-");
+              tempFile := FS.OpenFile(tempFileName);
+              tempFileWr := NEW(FileWr.T).init(tempFile);
+              TempFiles.Note(tempFileName);
+              Images.ToPNM(t.vanilla, tempFileWr);
+              Wr.Flush(tempFileWr);
+              EVAL tempFile.seek(RegularFile.Origin.Beginning, 0);
+            EXCEPT OSError.E, Wr.Failure =>
+              RAISE Error("Can't write \"" & tempFileName & "\"");
+            END;
+            pnmSrc := tempFile;
+          END;
+          EVAL pnmSrc.seek(RegularFile.Origin.Beginning, 0);
+          rd1 := OSUtils.RunFilter(ARRAY OF TEXT{"pnmscale",
+                                                 Fmt.Real(1.0/FLOAT(scale))},
+                                   pnmSrc,
+                                   pipe1);
+          scaledContents := NEW(LazyPPMContents).init(rd1);
+        ELSE
+          scaledContents := t.vanilla;
+        END;
+        processed := NEW(DitheredContents).init(scaledContents, 4);
+      ELSE
+        processed := NEW(ScaledContents).init(t.vanilla, scale, gamma);
+      END;
+    EXCEPT
+    | OSError.E =>
+       RAISE Error("Can't run \"pnmscale\" or \"ppmdither\"");
+    | Images.Error(msg) =>
+       RAISE Error(msg);
+    END;
+    IF verbose THEN
+      IF processed.isBW THEN
+        Wr.PutText(Stdio.stderr, "black & white");
+      ELSE
+        Wr.PutText(Stdio.stderr,  Fmt.Int(NUMBER(processed.map^)));
+        IF processed.isGray THEN
+          Wr.PutText(Stdio.stderr, " grays");
+        ELSE
+          Wr.PutText(Stdio.stderr, " colors");
+        END;
+      END;
+      Wr.PutText(Stdio.stderr, "; compress ... ");
+      Wr.Flush(Stdio.stderr);
+    END;
+    Compress(processed, scale, wr);
+    TRY
+      IF rd1 # NIL THEN Rd.Close(rd1) END;
+    EXCEPT
+      Rd.Failure =>
+    END;
+    IF tempFileWr # NIL THEN
+      TRY
+        Wr.Close(tempFileWr);
+        TempFiles.Forget(tempFileName);
+        FS.DeleteFile(tempFileName);
+      EXCEPT OSError.E, Wr.Failure =>
+        RAISE Error("Can't delete \"" & tempFileName & "\"");
+      END;
+    END;
+  END Write;
+
+
+(* *)
+(* Initialization *)
+(* *)
+
+BEGIN
+  InitBitsIn();
+  InitReversedBits();
+  IF PaintPrivate.HostByteOrder = PaintPrivate.ByteOrder.MSBFirst THEN
+    rawToLGM := plainBits;
+  ELSE
+    rawToLGM := reversedBits;
+  END;
+END LGM.

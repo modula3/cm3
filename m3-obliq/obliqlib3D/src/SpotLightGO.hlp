@@ -1,0 +1,19 @@
+  SpotLightGO_New(c: ColorVal, orig dir: PointVal, 
+                  conc spread att0 att1: Real): SpotLightGO 
+  SpotLightGO_Origin: PointPropName                                    
+  SpotLightGO_SetOrigin(go: GO, orig: PointVal): Ok                    
+  SpotLightGO_Direction: PointPropName                                 
+  SpotLightGO_SetDirection(go: GO, dir: PointVal): Ok                  
+  SpotLightGO_Concentration: RealPropName                              
+  SpotLightGO_SetConcentration(go: GO, conc: RealVal): Ok              
+  SpotLightGO_SpreadAngle: RealPropName                                
+  SpotLightGO_SetSpreadAngle(go: GO, spread: RealVal): Ok              
+  SpotLightGO_Attenuation0: RealPropName                               
+  SpotLightGO_SetAttenuation0(go: GO, att: RealVal): Ok                
+  SpotLightGO_Attenuation1: RealPropName                               
+  SpotLightGO_SetAttenuation1(go: GO, att: RealVal): Ok                
+WHERE                                                                  
+  SpotLightGO <: LightGO                                                
+  PointVal = PointPropVal + Point3                                     
+  RealVal = RealPropVal + Real + Int                                   
+  ColorVal = ColorPropVal + Color + Text                               

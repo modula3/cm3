@@ -1,0 +1,10 @@
+  PositionCB_New(invoke: M): PositionCB
+WHERE
+  PositionCB <: ProxiedObj & { invoke: M }
+  M = Self (X <: PositionCB) (PositionRec) => Ok
+  PositionRec = { pos: Point2, modifiers: [Modifier] }
+  Point2 = [2*Int]
+  Modifier = Text (one of "Left", "Middle", "Right",
+                   "Shift", "Lock", "Control", "Option")
+
+

@@ -1,0 +1,412 @@
+{% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Thu Jan  7 10:51:40 PST 1993 by muller
+%
+\font\ttslant=cmsltt10
+\font\ttstraight=cmtt10
+\font\rmslant=cmsl10
+\def\tt{\ttstraight}
+\def\indentation{24pt}
+\def\tab{$ $\hbox to \indentation{\hss}}
+\long\def\procspec#1{{\advance\leftskip by \indentation
+  \noindent\rightskip = 0pt plus2em\rmslant\def\tt{\ttslant}\ignorerm#1}}
+\def\ignorerm\rm{}
+\def\display{\tab\parskip=0pt\advance\baselineskip by -0.5pt\tt }
+\def\progmode{\advance\baselineskip by -0.5pt}
+\par{\tt\parskip=0pt\parindent=0pt\progmode
+\par\medskip \par
+\tab INTERFACE~AST;}\par\medskip\noindent
+{\rm  The traditional method for specifying the syntax of a programming
+language is in some variant of Backus-Naur form, or BNF. In this
+method, one specifies the syntax by a grammar consisting of {\it
+productions}. Each production defines the syntax of one element of the
+language, say, a statement. For example, the Modula-3 {\tt WHILE}
+statement is defined as follows:
+\par
+\par\medskip {\display ~WhileSt~=~WHILE~Expr~DO~S~END.}\noindent\par
+{\display ~S~=~[~Stmt~\char'173{}~";"~Stmt~\char'175{}~[";"]~].}\noindent\par
+{\display ~Expr~=~...~.}\noindent\par
+\medskip\noindent%
+Names that appear to the left of the {\tt =} sign are called
+{\tt non-terminals}.  Names, like {\tt WHILE}, that only appear on the
+right-hand side are called {\tt terminals}. A terminal may denote a
+language keyword like {\tt WHILE} or an entity that is defined elsewhere,
+for example a {\tt TEXT} literal defined by the Modula-3 token grammar.
+\par
+Such grammars define the {\it external} form of programs, and are
+therefore biased towards the ease of reading and writing by
+programmers and parsing by compilers. As a result they tend to obscure
+the {\it essential} structure of the language. For example, what is
+really important about a {\tt WHILE} statement is that it contains an
+{\tt Expr} and an {\tt S} construct; the keywords {\tt WHILE}, {\tt DO} and {\tt END}
+could be altered without changing the meaning, as indeed could the
+order of occurrence of the constructs. It should be obvious that the
+details of the external syntax are of no help in analysing or
+reasoning on the essential properties of programs. Therefore, we seek
+a more abstract representation of programs that carries only the
+essential information.
+\par
+We will refer to the syntax of the external form of a language as the
+{\it concrete} syntax. If we abstract from the representational
+details of the concrete syntax, what we are left with is an {\it
+abstract} syntax for the language, defined by an {\it abstract
+grammar}.
+\par
+Like the grammar for the concrete syntax, the abstract grammar is also
+defined in terms of productions, terminals and non-terminals. In order
+to distinguish the abstract grammar from the concrete grammar we will
+use a different syntax for productions, one that is, in fact, closer
+to the syntax of aggregate types (e.g. {\tt RECORD}) in programming
+languages.  This decision also facilitates the mapping of the abstract
+syntax into Modula-3 data types.
+\par
+A production, defined using EBNF, has the form:
+\par
+\par\medskip {\display ~Production~=~ConstructName~"="~Aggregate~|~Choice~.}\noindent\par
+{\display ~Aggregate~=~\char'173{}~AttributeName~":"~AttributeType~";"~\char'175{}~.}\noindent\par
+{\display ~Choice~=~ConstructName~\char'173{}~"|"~ConstructName~\char'175{}~.}\noindent\par
+{\display ~AttributeType~=~ConstructName~|~"\char'173{}"~ConstructName~"\char'175{}"~.}\noindent\par
+\medskip\noindent%
+The {\tt AttributeName} and {\tt ConstructName} constructs are terminals,
+playing the same role as identifiers in programming languages, and
+allow the individual members of an aggregate to be unambiguously
+identified, which is particularly useful in the case of repeated
+constructs.
+\par
+The abstract grammar production for a {\tt WhileSt} might be defined as:
+\par
+\par\medskip {\display ~WhileSt~=~as\char'137{}expr:~Expr;~as\char'137{}s:~S~.}\noindent\par
+{\display ~S~=~as\char'137{}stmt\char'137{}s:~\char'173{}~Stmt~\char'175{}~.}\noindent\par
+{\display ~Stmt~=~WhileSt~|~...~.}\noindent\par
+\medskip\noindent%
+In the same way that a program defined by the concrete grammar has an
+associated representation as a {\it parse tree}, so the equivalent
+program defined in terms of the abstract grammar has a representation
+as an {\it abstract syntax tree}. The leaves of the tree denote
+terminal constructs, the interior nodes represent non-terminal
+constructs, and the attribute names label the branches. The above
+definition of the abstract grammar permits a node to have either a
+fixed number of descendent nodes, a variable number, or a combination.
+Some abstract grammar definitions restrict a node to have either a
+fixed number of descendents or a variable number but not both.
+However, this requires more constructs in the grammar. Indeed the
+{\tt WhileSt} production can be rewritten more compactly as follows:
+\par
+\par\medskip {\display ~WhileSt~=~as\char'137{}expr:~Expr;~as\char'137{}stmt\char'137{}s:~\char'173{}~Stmt~\char'175{}~.}\noindent\par
+{\display ~Stmt~=~WhileSt~|~...~.}\noindent\par
+\medskip\noindent%
+The acronym {\tt AST} is widely used in place of abstract syntax tree. An
+AST and its associated parse tree will always be similar in form;
+however, the AST will usually contain less nodes, due to the reduction
+in the number of constructs.
+\par
+It is important to note that when we talk of a {\it tree}, we are
+referring to the {\it abstraction} of a tree. It is not implied
+that there is an actual data structure containing records and
+pointers. Such a structure is only one possible representation,
+although a convenient and common choice.
+\par
+\subsection{Specifying an AST in Modula-3}
+\par
+This section describes in general terms how the definition of a
+language in terms of an abstract grammar, and its associated AST, is
+mapped into an abstraction using the Modula-3 programming language.
+\par
+There is an an obvious mapping from an {\tt Aggregate} construct into
+either a {\tt RECORD} type or an {\tt OBJECT} type. We choose the latter
+because it supports abstraction better (the representation of
+the components can more easily be hidden from a client) and
+because the subtyping of {\tt OBJECT} types directly supports the
+{\tt Choice} construct. For example, the production:
+\par
+\par\medskip {\display ~T~=~A~|~B~|~C.}\noindent\par
+\medskip\noindent%
+can be expressed using objects as:
+\par
+\par\medskip {\display ~TYPE~T~<:~ROOT;~A~<:~T;~B~<:~T;~C~<:~T;}\noindent\par
+\medskip\noindent%
+Modula-3 not only supports abstraction directly through interfaces and
+opaque object types, it is also augmented with a formal specification
+language called Larch/Modula-3, or LM3 for short. Amongst other things
+LM3 allows object types to be annotated with {\tt abstract} or
+{\tt specification} fields, thus permitting one to reason about these fields
+without having to commit to a representation as an actual object
+field. We will use specification fields to denote the attributes of an
+aggregate production. LM3 also provides the notion of a {\it sequence}
+as a primitive, again allowing the representation to be deferred.  We
+will use this facility to denote attributes that represent sequences
+of nodes.
+\par
+In this formalism, the {\tt WhileSt} example would be defined as:
+\par
+\par\medskip {\display ~TYPE~WhileSt~<:~STMT;}\noindent\par
+{\display ~<\char'052{}~FIELDS~OF~WhileSt}\noindent\par
+{\display ~~~~~~as\char'137{}expr:~Expr;}\noindent\par
+{\display ~~~~~~as\char'137{}stmt\char'137{}s:~SEQUENCE~OF~STMT;~\char'052{}>}\noindent\par
+\medskip\noindent%
+This is a simple, clear and concise notation in which to define an AST
+for a given programming language. Furthermore, because it is defined
+by a formal language, it offers the prospect of the automatic
+generation of some components of a programming environment for the
+given language. For example, one could generate code that would
+systematically visit every node in an AST. Note that the {\tt type} of an
+attribute must either be an object type denoting an abstract grammar
+construct, or a sequence of such types. Later we will see how to add
+additional attributes that can be of any Modula-3 type.
+\par
+The {\tt WhileSt} node is an example of a situation that occurs frequently
+in which all the members of a {\tt choice} construct in the grammar
+share a common attribute. 
+\par
+Ultimately, this abstract definition of an AST node must be given a
+concrete representation. There are many possible representation for
+such a tree and there are trade-offs to be made between storage
+requirements and processing time. It is not the role of this interface
+to make those choices, only to provide mechanisms and standards to
+support them.
+\par
+\subsection{Augmenting an AST}
+\par
+There are many reasons why we might want to augment an AST definition
+with additional constructs and attributes. Primarily this is rooted in
+the inability of an abstract grammar to completely define a legal
+program. Many of the trees that can be generated from the grammar in
+fact represent illegal programs. There is no easy way in such a
+context free grammar to express the fact that, for example, the type
+of the {\tt Expr} construct of the {\tt WhileSt} must be {\tt BOOLEAN}. Nor that
+all identifier uses must be bound to a declaration in scope.  Such
+constraints are defined by what is referred to as the {\tt static
+semantics} of the language, as opposed to the {\tt dynamic semantics}
+which define the meaning of the program when it is executed.
+\par
+So, in order to analyse programs in a useful way we need, at the very
+least, some way to represent the results of the static semantic
+analysis.  The obvious way to do this is to augment certain nodes in
+an AST with additional attributes that specify this information, for
+example the type of expressions.  Choosing which nodes to annotate
+and precisely what information to represent is a tricky task and
+beyond the scope of this discussion. We can observe, however, that the
+formalism that we have chosen is quite capable of specifying these
+additional attributes, merely by adding them to the {\tt FIELDS}
+declaration. The result is an AST augmented with the additional
+attributes. In truth the term augmented AST is somewhat of a misnomer
+since there is nothing to prevent the augmented attributes in several
+nodes having as value a reference to the same node, thus forming a
+directed graph structure. However, it is conventional to continue to
+use the term {\tt AST} to refer to the entire structure. Note also that, unlike
+the the attributes that denote the {\it pure} abstract syntax tree,
+the additional attributes can be of any type that is provided by the
+Modula-3 language.
+\par
+Finally we can observe that practically all analyses of an AST will
+generate additional information that is of potential use by other
+tools.  It is generally very much easier to attach this information
+directly to the AST than to create a separate data structure.
+\par
+\subsection{AST Layers}
+\par
+The previous section suggested augmenting the AST with attributes that
+capture the result of an analysis by a given tool. In a rich
+programming environment, consisting of many tools, many additional
+sets of attributes might be defined. If these attributes are all
+declared in the same interface, the result will be overwhelming. In
+addition, the scope for separate development will be greatly reduced.
+Previous AST designs, for example, DIANA, have specified the
+attributes for a fixed set of tools, thus placing additional tools at
+a disadvantage. One solution is to define a {\it property set}
+attribute on each node, that is capable of storing many attributes of
+different types, but this has the disadvantages of storage and access
+time overheads plus a more complex programming interface.
+\par
+The basic idea is to define each set of nodes and attributes independently,
+and then define an AST as a combination of some or all of these
+sets. We refer to each set as an AST {\em layer} or, occasionally,
+a {\em view}. 
+\par
+\subsection{AST Layers in Modula-3}
+\par
+This section describes how the notion of separate layers of an AST
+is mapped into the facilities available in Modula-3. The solution
+makes extensive use of {\it interfaces} and {\it partial revelations}. 
+\par
+An AST for a specific language is specified as a set of interfaces,
+which share the naming convention {\tt LLAST}, where {\tt LL} is a
+language-specific prefix, e.g. {\tt M3}, for the Modula-3 AST. Each AST
+layer is defined in an interface named {\tt LLAST\char'137{}VV}, where {\tt VV} is a tag
+denoting the layer, for example. {\tt AS} for the syntactic layer. This
+interface defines the attributes available on a given node using the
+{\tt FIELDS OF} mechanism introduced previously. In order to quickly
+relate an attribute to the layer in which is declared, attribute names
+are given a prefix of the form {\tt vv\char'137{}}, for example, {\tt as\char'137{}exp}.
+\par
+All AST nodes are declared to be subtypes of the {\tt AST.NODE} class,
+defined by this interface. Some standard methods that support
+common actions, such as tree walks, are defined for this class.
+\par
+Non-terminals that are defined as a set of alternatives using the
+{\tt Choice} construct in the abstract grammar are named using all upper
+case characters. There are never any instances of these nodes in an
+AST.
+\par
+Sequence attributes are named with a suffix {\tt \char'137{}s}, to distinguish them
+from other attributes.
+\par
+Because of the prevalence of prefixes and suffixes in attribute names,
+the standard Modula-3 capitalisation rules for multiword identifiers
+are modified. Instead of {\tt WhileSt}, we write {\tt While\char'137{}st}, and an
+attribute of such a type in the {\tt AS} layer would be named
+{\tt as\char'137{}while\char'137{}st}, rather than {\tt as\char'137{}whileSt}.
+\par
+Using these conventions, interfaces are constructed as follows. The 
+{\tt WhileSt} grammar fragment is used as an example.
+\par
+\par\medskip {\display ~INTERFACE~LLAST\char'137{}AS;}\noindent\par
+{\display ~IMPORT~AST;}\noindent\par
+{\display ~TYPE}\noindent\par
+{\display ~~~STMT~<:~AST.NODE;~EXPR~<:~AST.NODE;}\noindent\par
+{\display ~~~WhileSt~<:~STMT;}\noindent\par
+{\display ~~~<\char'052{}~FIELDS~OF~WhileSt}\noindent\par
+{\display ~~~~~~~~as\char'137{}expr:~EXPR;}\noindent\par
+{\display ~~~~~~~~as\char'137{}stmt\char'137{}s:~SEQUENCE~OF~STM;~\char'052{}>}\noindent\par
+{\display }\noindent\par
+\medskip\noindent%
+Now consider a {\em static semantic} layer for the above grammer, in which
+all {\tt EXPR} nodes are given a {\tt type}, denoted by the class {\tt LTYPE}.
+\par
+\par\medskip {\display ~INTERFACE~LLAST\char'137{}SM;}\noindent\par
+{\display ~IMPORT~AST,~LLAST\char'137{}AS;}\noindent\par
+{\display ~TYPE}\noindent\par
+{\display ~~~LTYPE~<:~AST.NODE;}\noindent\par
+{\display }\noindent\par
+{\display ~<\char'052{}~FIELDS~OF~LLAST\char'137{}AS.EXPR}\noindent\par
+{\display ~~~~~~sm\char'137{}ltype:~LTYPE;~\char'052{}>}\noindent\par
+\medskip\noindent%
+\par
+\subsubsection{Defining the concrete representation}
+\par
+In practice there are two ways in which to represent the abstract
+attributes defined in the {\tt FIELDS} specifications, either directly as
+fields of the object type, or indirectly through methods that set or
+get the value. The convention is to reveal these access methods in
+interfaces called {\tt LLAST\char'137{}VV\char'137{}F} and {\tt LLAST\char'137{}VV\char'137{}M}, respectively. In
+either case this interface will contain, for each node to be
+attributed, an object type with the same name as the abstract type,
+plus a partial revelation that the abstract type is a subtype of this
+new object type.
+\par
+\par
+\par\medskip {\display ~INTERFACE~LLAST\char'137{}AS\char'137{}F;}\noindent\par
+{\display ~IMPORT~AST,~LLAST\char'137{}AS;}\noindent\par
+{\display ~TYPE}\noindent\par
+{\display ~~~While\char'137{}st~=~LLAST\char'137{}AS.STMT~OBJECT}\noindent\par
+{\display ~~~~~as\char'137{}expr:~LLAST\char'137{}AS.EXPR;}\noindent\par
+{\display ~~~~~as\char'137{}stmt\char'137{}s~:=~SeqLLAST\char'137{}AS\char'137{}STMT.Null;}\noindent\par
+{\display ~~~END;}\noindent\par
+\medskip\noindent%
+\par\medskip {\display ~REVEAL}\noindent\par
+{\display ~~~LLAST\char'137{}AS.While\char'137{}st~<:~While\char'137{}st;}\noindent\par
+\medskip\noindent%
+\par\medskip {\display ~TYPE~EXPR~=~LLAST\char'137{}AS.EXPR;~STMT~=~LLAST\char'137{}AS.STMT;}\noindent\par
+{\display ~END~LLAST\char'137{}AS\char'137{}F.}\noindent\par
+\medskip\noindent%
+The interface {\tt SeqLLAST\char'137{}AS\char'137{}STMT} is a instantiation of the generic
+interface {\tt SeqElem}, which is an implementation of the sequence
+abstraction.  Since Modula-3 generics are parameterised by interfaces,
+we have to create the trivial interface {\tt LLAST\char'137{}AS\char'137{}STMT} that just
+contains the declaration {\tt TYPE T = LLAST\char'137{}AS.STMT}.  It would be quite
+permissible, although not very convenient for a parser, to define the
+sequence as a {\tt REF ARRAY OF LLAST\char'137{}AS.STMT}.
+\par
+When the {\tt LLAST\char'137{}AS\char'137{}F} interface is imported, it allows access to
+{\tt as\char'137{}expr} and {\tt as\char'137{}stmt\char'137{}s}, and the {\tt REVEAL} statement tells the
+compiler that the actual node will have all of these fields, and
+possibly some more. It is conventional to {\tt pass through} the node and
+class types that are not revealed, for example {\tt EXPR} in the above, to
+ensure that the next layer can access all the node names by referrring
+to this layer alone.
+\par
+The static semantic attributes can be given a similar concrete
+representation as follows:
+\par
+\par\medskip {\display ~INTERFACE~LLAST\char'137{}SM\char'137{}F;}\noindent\par
+{\display ~IMPORT~AST,~LLAST\char'137{}AS,~LLAST\char'137{}SM;}\noindent\par
+{\display ~IMPORT~LLAST\char'137{}AS\char'137{}F~AS~Previous\char'137{}View;}\noindent\par
+\medskip\noindent%
+\par\medskip {\display ~TYPE~}\noindent\par
+{\display ~~~EXPR~=~Previous\char'137{}View.EXPR~OBJECT}\noindent\par
+{\display ~~~~~sm\char'137{}ltype:~LLAST\char'137{}SM.LTYPE;}\noindent\par
+{\display ~~~END;}\noindent\par
+\medskip\noindent%
+\par\medskip {\display ~REVEAL~}\noindent\par
+{\display ~~~LLAST\char'137{}AS.EXPR~<:~EXPR;}\noindent\par
+{\display ~TYPE}\noindent\par
+{\display ~~~While\char'137{}st~=~Previous\char'137{}View.While\char'137{}st;}\noindent\par
+{\display ~~~STMT~=~Previous\char'137{}View.STMT;}\noindent\par
+{\display ~~~LTYPE~=~LLAST\char'137{}SM.LTYPE;}\noindent\par
+{\display ~END~LLAST\char'137{}SM\char'137{}F.}\noindent\par
+\medskip\noindent%
+Notice that in this layer the supertype is inherited from the previous
+view, in this case, {\tt LLAST\char'137{}AS\char'137{}F}.
+\par
+Owing to the constraints of Modula-3 object subtyping, it is necessary
+to know the name of the layer that last added attributes to the node.
+If you get this wrong you will get an error message complaining about
+incompatible revelations at some point. However, whether this occurs
+at compile, link, or run-time depends on the Modula-3 implementation.
+\par
+Ultimately, there must be an interface or module that chooses which layers
+will actually exist in a given program, by making a concrete revelation
+containing the corresponding declaration in the lowest layer that
+is to be included. The is conventionally named {\tt LLAST\char'137{}all}. E.g.
+\par
+\par\medskip {\display ~INTERFACE~LLAST\char'137{}all;}\noindent\par
+{\display ~IMPORT~LLAST\char'137{}AS,~LLAST\char'137{}SM;}\noindent\par
+{\display ~IMPORT~LLAST\char'137{}SM\char'137{}F~AS~Last\char'137{}View;}\noindent\par
+\medskip\noindent%
+\par\medskip {\display ~REVEAL~LLAST\char'137{}AS.STMT~=~Last\char'137{}View.STMT~BRANDED~OBJECT~END;}\noindent\par
+{\display ~REVEAL~LLAST\char'137{}AS.EXPR~=~Last\char'137{}View.EXPR~BRANDED~OBJECT~END;}\noindent\par
+{\display ~REVEAL~LLAST\char'137{}AS.While\char'137{}st~=~Last\char'137{}View.While\char'137{}st~BRANDED~OBJECT~END;}\noindent\par
+{\display ~REVEAL~LLAST\char'137{}SM.LTYPE~=~Last\char'137{}View.LTYPE~BRANDED~OBJECT~END;}\noindent\par
+{\display ~END~LLAST\char'137{}all;}\noindent\par
+\medskip\noindent%
+So what is the point of all this? There are two reasons. First, since
+AST specifications for real compilers and tools are inherently
+complex, there is much value to be gained in separating the
+specification into more manageable pieces. For example, the syntactic,
+semantic and code-generator attributes can be specified independently.
+To understand the syntactic specification, there is no need to see or
+understand the other two. Secondly, it is possible to replace a layer
+without affecting any of its ancestors, or add a completely new layer,
+for example to support a new programming environment tool. The key
+point to note is that although there may be many layers of a node,
+there is only one actual node type. Whenever an instance of a node is
+created it has the sum total of all the attributes that were specified
+in the contributing layers. So, although a parser might be separately
+compiled against the syntactic layer, it need only be relinked to
+incorporate a new tool with its own layer. This greatly facilitates
+the extensibility of the environment. It is perhaps unfortunate that
+Modula-3 does not support multiple inheritance, which would avoid the
+nuisance of the layer linearisation.  \par}\par{\tt\parskip=0pt\parindent=0pt\progmode
+}\par\medskip\noindent
+{\rm  \subsection{Basic Definitions} \par}\par{\tt\parskip=0pt\parindent=0pt\progmode
+\par\medskip \par\medskip
+\tab ~~TYPE~NODE~<:~ROOT;}\par\medskip\noindent
+{\rm  An {\tt AST.T} is denoted by the node that defines the root of the tree. \par}\par{\tt\parskip=0pt\parindent=0pt\progmode
+\par\medskip \par\medskip
+\tab ~~TYPE~T~=~NODE;}\par\medskip\noindent
+{\rm  See {\tt AST\char'137{}LAYER} for the set of standard (abstract) methods on a {\tt NODE},
+   where {\tt LAYER} is one of:
+   \par
+\par\medskip {\display ~~~Init~~~~~~~~~~~~(dynamic)~node~initialisation}\noindent\par
+{\display ~~~Name~~~~~~~~~~~~return~a~print~name~for~a~node~type}\noindent\par
+{\display ~~~Iter~~~~~~~~~~~~attribute~iterator}\noindent\par
+{\display ~~~WalkRep,~~~~~~~~support~for~tree~walks}\noindent\par
+{\display ~~~DisplayRep,~~~~~support~for~tree~display}\noindent\par
+{\display ~~~CopyRep~~~~~~~~~support~for~tree~copy}\noindent\par
+\par}\par{\tt\parskip=0pt\parindent=0pt\progmode
+\par\medskip \par\medskip
+\tab END~AST.}\par\medskip\noindent
+
+}

@@ -1,0 +1,12 @@
+  CameraGO_From: PointPropName
+  CameraGO_To: PointPropName
+  CameraGO_Up: PointPropName
+  CameraGO_Aspect: PointPropName
+  CameraGO_SetFrom(go: GO, PointVal): Ok
+  CameraGO_SetTo(go: GO, PointVal): Ok
+  CameraGO_SetUp(go: GO, PointVal): Ok
+  CameraGO_SetAspect(go: GO, RealVal): Ok
+TYPE                                   
+  CameraGO <: GO                        
+  PointVal = PointPropVal + Point3
+  RealVal = RealPropVal + Real + Int

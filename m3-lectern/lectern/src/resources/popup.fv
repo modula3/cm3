@@ -1,0 +1,249 @@
+(Border
+  (Pen 1)
+  (Insert "shared.fv")
+  (Macro closeBtn BOA (name)
+    `(Button ,name (Rim (Pen 3) (Pixmap "upArrow.pbm"))))
+  (Macro
+    dlgT
+    BOA
+    (Name close title body)
+    `(VBox
+       (HBox ,close (ZMove ,title))
+       (Frame (zDecorate ,body))))
+  (Macro
+    binary
+    BOA
+    (nameA a nameB b)
+    `(Radio
+       (HBox
+         (Filter
+           (Shape
+             (Width 0 + Infinity)
+             (Choice
+               ,nameA
+               =TRUE
+               (Text LeftAlign ,a))))
+         (Glue 6)
+         (Filter
+           (Shape
+             (Width 0 + Infinity)
+             (Choice ,nameB (Text LeftAlign ,b)))))))
+  (TSplit
+    %DlgTSplit
+    Flex
+    =1
+    (dlgT
+      %AboutDlg
+      (closeBtn %AboutClose)
+      "About Lectern ..."
+      (VBox
+        (Text %Version LeftAlign "Version ?")
+        (Text
+          LeftAlign
+          "Send comments to Birrell@src.dec.com")
+        (Glue 6)
+        (menuSep)
+        (Glue 9)
+        (Pixmap %Logo (Color 0.256 0.0 0.029) "logo")))
+    (dlgT
+      %GotoDlg
+      (closeBtn %GotoClose)
+      "Go ..."
+      (VBox
+        (Text LeftAlign
+          "Use [CR] to go to a page number.")
+        (Text LeftAlign
+          "Use + and - keys to move by a number of pages.")
+        (Glue 6)
+        (param %GotoCount 6 72 "Number:")
+        (HBox
+          (Fill)
+          (btnDefault %GotoPage "To Page")
+          (Fill)
+          (btn %GoForward
+            (HBox (Text LeftAlign "Fwd")
+              (Text RightAlign "+")))
+          (Fill)
+          (btn %GoBackward
+            (HBox (Text LeftAlign "Back")
+              (Text RightAlign "-")));
+          (Fill)
+          (btn %GotoCancel "Cancel")
+          (Fill))))
+    (dlgT
+      %FileDlg
+      (closeBtn %FileClose)
+      (TSplit
+        %FileDlgLabel
+        =0
+        "Open document ..."
+        "Print ...")
+      (Shape
+        (Width 300 + Inf)
+        (VBox
+          (TSplit =0 %PrintDest Flex
+            (Glue 0)
+            (VBox
+              (binary
+                %PrintToPrinter
+                "To Printer"
+                %PrintToFile
+                "To File"
+                )
+              (Glue 6)
+              )
+            )
+          (TSplit
+            =0
+            %FileDest
+            Flex
+            (VBox
+              (HBox
+                (Shape
+                  (Width 0 + Inf)
+                  (Generic %DirMenu))
+                (Glue 3)
+                (Shape
+                  (Width + 0)
+                  (Pixmap "menuArrow.pbm"))
+                (Glue 3))
+              (barIf2D)
+              (Shape
+                (Height 72 + Inf)
+                (Frame
+                  Lowered
+                  (Generic %File (bgInput))))
+              (Glue 6)
+              (HBox
+                (Text
+                  (Margin 0)
+                  LeftAlign
+                  "File:")
+                (Glue 6)
+                (input
+                  (Generic %FileHelper))))
+            (HBox
+              (Text
+                (Margin 0)
+                LeftAlign
+                "Command:")
+              (Glue 6)
+              (input
+                (TypeIn %PrintCommand 
+                  (TabTo FileFrom) ="lpr"))))
+          (Glue 6)
+          (TSplit
+            %FilePostScript
+            Flex
+            =0
+            (Glue 0)
+            (VBox
+              (binary
+                %Original
+                "Original PostScript"
+                %Images
+                "Images")
+              (TSplit
+                %FileImages
+                Flex
+                =1
+                (Glue 0)
+                (VBox
+                  (Glue 6)
+                  (TSplit
+                    %FileEPSF
+                    Flex
+                    =1
+                    (Glue 0)
+                    (VBox
+                      (binary
+                        %SingleFile
+                        "Single File"
+                        %EPSFFiles
+                        "EPSF Files")
+                      (Glue 6)))
+                  (binary
+                    %Ascii
+                    "ASCII (more portable)"
+                    %Binary
+                    "Binary (smaller)")
+                  (Glue 6)
+                  (HBox
+                    (Shape
+                      (Width + 0)
+                      (Text
+                        (Margin 0)
+                        "From page: "))
+                    (num
+                      %FileFrom
+                      -999
+                      9999
+                      72
+                      ((TabTo FileTo)))
+                    (Fill)
+                    (Shape
+                      (Width + 0)
+                      (Text
+                        (Margin 0)
+                        "To page: "))
+                    (num
+                      %FileTo
+                      -999
+                      9999
+                      72)
+                    (Fill))))))
+          (Glue 6)
+          (menuSep)
+          (Glue 6)
+          (HBox
+            (Fill)
+            (TSplit Flex
+              %FileConfirmLabel
+              =0
+              (HBox
+                (Shape (Width + 0) "Open:") (Glue 3)
+                (btnDefault %OpenHere "Here")
+                (Glue 6)
+                (btn %OpenNew "New"))
+              (btnDefault %PrintConfirm "Print")
+              (btnDefault %SaveConfirm "Save"))
+            (Fill)
+            (btn %FileCancel "Cancel")
+            (Fill)))))
+    (dlgT
+      %ErrorDlg
+      (closeBtn %ErrorClose)
+      "Error ..."
+      (message %ErrorText))
+    (dlgT
+      %ProgressDlg
+      (Glue 0)
+      "Progress ..."
+      (VBox
+        (Text %Action LeftAlign "Working on Something")
+        (Glue 6)
+        (HBox
+          (VBox
+            (Fill)
+            (Frame
+              Lowered
+              (Shape
+                (Width 144 + Infinity)
+                (Height 8)
+                (Generic %Progress)))
+            (Fill))
+          (Glue 12)
+          (btn %Stop "Stop"))))
+    (dlgT
+      %ConfirmDlg
+      (Glue 0)
+      "Please confirm ..."
+      (VBox
+        (message %ConfirmText)
+        (Glue 9)
+        (HBox
+          (Fill)
+          (btnDefault %Yes (Text %YesText "Yes"))
+          (Fill)
+          (btn %No (Text %NoText "No"))
+          (Fill))))))

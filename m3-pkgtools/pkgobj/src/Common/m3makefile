@@ -1,0 +1,41 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Makefile for pkgtool libraries
+%
+% Last modified on Thu Sep  1 08:39:01 PDT 1994 by kalsow
+%      modified on Mon Apr  4 10:56:10 PDT 1994 by wobber
+
+Module ("FileSys")
+Interface ("OpSys")
+Module ("PkgErr")
+Interface("PackageEvents")
+Module("PackageObj")
+Module("Siphon")
+Module("NetPath")
+Interface("PkgProt")
+Interface("LockMethods")
+Module ("LockOps")
+Module ("PackageLib")
+Module ("Site")
+Interface ("SiteObj")
+
+netobjrv1("LockOps","T","LockMethods")
+netobj("PackageObj","T")
+netobj("PackageObj","Source")
+netobj("PackageObj","Ship")
+netobj("PackageObj","Monitor")
+netobj("SiteObj","ST")
+netobj("Siphon","T")
+
+/*
+module("LockOps_T_v1")
+module("PackageObj_T_v1")
+module("PackageObj_Ship_v1")
+module("PackageObj_Source_v1")
+module("PackageObj_Monitor_v1")
+module("Siphon_T_v1")
+module("SiteObj_ST_v1")
+*/
+

@@ -1,0 +1,22 @@
+  net_failure: Exception
+  All(T)  net_who(o: T): Text ! net_failure thread_alerted
+    Return a text indicating where a network object or engine is registered, or 
+    the empty text if the argument is an object that has not been registered 
+    with a name server.
+  All(T<:{}) net_export(name: Text, server: Text, o: T): T 
+    ! net_failure thread_alerted
+    Export an object under name 'name', to the name server at IP address 
+    'server'. The empty text denotes the local IP address.
+  Some(T<:{}) net_import(name: Text, server: Text): T 
+    ! net_failure thread_alerted
+    Import the object of name 'name', from the name server at IP address 
+    'server'. The empty text denotes the local IP address.
+  All(T) net_exportEngine(name: Text, server: Text, arg: T): Ok 
+    ! net_failure thread_alerted
+    Export an engine under name 'name', to the name server at IP address 
+    'server'. The empty text denotes the local IP address. The 'arg' is given 
+    as an argument to all procedures received by the engine to execute.
+  Some(T)All(U) net_importEngine(name: Text, server: Text): ((T)->U)->U 
+    ! net_failure thread_alerted
+    Import the object of name 'name', from the name server at IP 
+    address 'server'. The empty text denotes the local IP address.

@@ -1,0 +1,169 @@
+(ZChild %buildpopup FixedHV
+
+ (ZSplit %buildformzsplit
+ (ZBackground %buildformzback
+  
+  (Shape %buildformshape (Width 324 + 0 - 0) (Height 168 + 0 - 0)
+  
+    (BgColor "Grey81") (Color "  Black")
+    (LabelFont "-*-helvetica-bold-*R-*120-*")
+    
+    
+    
+     (Rim %buildformrim (Pen 1) 
+      (Border %buildformborder (Pen 1)
+      
+         (VBox
+         
+          (Shape %buildformtitle (Height 20)
+             (Frame Raised 
+               (BgColor "VerySlightlyReddishGrey74") (Color "Black")
+
+
+
+               (HBox (Shape (Width 15) (CloseButton (ShadowSize 0) 
+     (Pixmap "close.pbm"))) Chisel
+                     (Shape (Width + 1000)  (ZMove (ShadowSize 0) (Text %buildformtitlestring "Specify Program Name and Destination")))    
+               Chisel (Shape (Width 15) (ZGrow (ShadowSize 0) (Pixmap "grow.pbm")))   )
+                
+                 
+                   ))
+          
+          (Texture  %buildformbackground "blank.pbm" )
+              
+             
+         )
+       ))
+    )
+   
+ )
+(ZChild (At 12  34  NW Absolute) Open
+ 
+ 
+  (Shape %text1shape (Width 100 + Inf - 20) (Height 22 + Inf - 20)
+  
+    (BgColor "SlightlyYellowishGrey74") (Color "Black")
+     (LabelFont "-*-helvetica-medium-*R-*120-*")  
+     
+     (Frame Chiseled  
+      (Rim %text1rim (Pen 0) (ShadowSize 1.5)
+       (Border %text1border (Pen 0)
+
+        (Text Center %text1 "Program Name")
+         
+        )
+           
+        )
+      )
+   
+ )
+  
+
+
+    )
+(ZChild (At 120  34  NW Absolute) Open
+ 
+ 
+  (Shape %prognameshape (Width 185 + Inf - 20) (Height 22 + Inf - 20)
+  
+    (BgColor "SlightlyYellowishGrey92") (Color "Black")
+     (Font "-*-courier-bold-*R-*120-*")  
+     
+     (Frame Lowered  
+      (Rim %prognamerim (Pen 0) (ShadowSize 1.5)
+       (Border %prognameborder (Pen 1)
+
+        (TypeIn %progname (TabTo destdir) ExpandOnDemand
+            (Value "")
+         )
+         
+        )
+           
+        )
+      )
+    
+ )
+  
+
+
+    )
+(ZChild (At 12  71  NW Absolute) Open
+  
+ 
+  (Shape %text2shape (Width 293 + Inf - 20) (Height 22 + Inf - 20)
+  
+    (BgColor "SlightlyYellowishGrey74") (Color "Black")
+     (LabelFont "-*-helvetica-medium-*R-*120-*")  
+     
+     (Frame Chiseled  
+      (Rim %text2rim (Pen 0) (ShadowSize 1.5)
+       (Border %text2border (Pen 0)
+
+        (Text Center %text2 "Directory To Build In")
+         
+        )
+           
+        )
+      )
+  
+ )
+  
+
+
+    )
+(ZChild (At 8  112  NW Absolute) Open
+ 
+ 
+  (Shape %destdirshape (Width 297 + Inf - 20) (Height 22 + Inf - 20)
+  
+    (BgColor "SlightlyYellowishGrey92") (Color "Black")
+     (Font "-*-courier-bold-*R-*120-*")  
+     
+     (Frame Lowered  
+      (Rim %destdirrim (Pen 0) (ShadowSize 1.5)
+       (Border %destdirborder (Pen 1)
+
+        (TypeIn %destdir  (TabTo progname) ExpandOnDemand
+            (Value "")
+         )
+         
+        )
+           
+        )
+      )
+   
+ )
+  
+
+
+    )
+(ZChild (At 131  142  NW Absolute) Open
+  
+ 
+  (Shape %buildbtnshape (Width 50 + Inf - 20) (Height 19 + Inf - 20)
+  
+    (BgColor "RatherYellowishGrey92") (Color "Black")
+     (LabelFont "-*-helvetica-bold-*R-*120-*")  
+     
+     (Frame (ShadowSize 0)  
+      (Rim %buildbtnrim (Pen 0) (ShadowSize 1.5)
+       (Border %buildbtnborder (Pen 1)
+        
+          (CloseButton  (For buildpopup) %buildbtn
+          (Text %buildbtntext "Build")
+          )
+        
+        )
+           
+        )
+      )
+   
+ )
+  
+
+
+    )
+)
+        
+ 
+)
