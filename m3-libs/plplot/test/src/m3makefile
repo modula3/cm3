@@ -1,6 +1,6 @@
 
 import("plplot")
-import("m3na")
+import("arithmetic")
 
 implementation("Main")
 program("test")
