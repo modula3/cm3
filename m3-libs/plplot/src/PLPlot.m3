@@ -8,12 +8,8 @@
 
 UNSAFE MODULE PLPlot;
 
-IMPORT LongRealBasic AS R;
-IMPORT LongRealVector AS V;
-IMPORT NADefinitions AS NA;
 IMPORT PLPlotRaw;
 IMPORT M3toC;
-IMPORT LongRealMatrix AS M;
 IMPORT Ctypes AS C;
 
 
@@ -37,7 +33,7 @@ PROCEDURE SetContLabelFormat (lexp, sigdig: INTEGER; ) =
     PLPlotRaw.SetContLabelFormat(lexp, sigdig);
   END SetContLabelFormat;
 
-PROCEDURE SetContLabelParam (offset, size, spacing: R.T; active: INTEGER; ) =
+PROCEDURE SetContLabelParam (offset, size, spacing: Float; active: INTEGER; ) =
   BEGIN
     PLPlotRaw.SetContLabelParam(offset, size, spacing, active);
   END SetContLabelParam;
@@ -47,12 +43,12 @@ PROCEDURE Advance (page: INTEGER; ) =
     PLPlotRaw.Advance(page);
   END Advance;
 
-PROCEDURE DrawAxes (x0, y0: R.T;
+PROCEDURE DrawAxes (x0, y0: Float;
                     xopt  : DirTileSet;
-                    xtick : R.T;
+                    xtick : Float;
                     nxsub : INTEGER;
                     yopt  : DirTileSet;
-                    ytick : R.T;
+                    ytick : Float;
                     nysub : INTEGER;    ) =
   VAR
     arg3 : ARRAY [0 .. ORD(LAST(Tile)) + 1] OF CHAR;
@@ -76,11 +72,11 @@ PROCEDURE DrawAxes (x0, y0: R.T;
 
   END DrawAxes;
 
-PROCEDURE PlotBins (READONLY x, y: V.TBody; center: INTEGER; )
-  RAISES {NA.Error} =
+PROCEDURE PlotBins (READONLY x, y: FloatVector; center: INTEGER; )
+  RAISES {SizeMismatch} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE SizeMismatch END;
     PLPlotRaw.PlotBins(n, x[0], y[0], center);
   END PlotBins;
 
@@ -90,10 +86,10 @@ PROCEDURE StartPage () =
   END StartPage;
 
 PROCEDURE DrawBox (xopt : DirTileSet;
-                   xtick: R.T;
+                   xtick: Float;
                    nxsub: INTEGER;
                    yopt : DirTileSet;
-                   ytick: R.T;
+                   ytick: Float;
                    nysub: INTEGER;    ) =
   VAR
     arg1 : ARRAY [0 .. ORD(LAST(Tile)) + 1] OF CHAR;
@@ -118,15 +114,15 @@ PROCEDURE DrawBox (xopt : DirTileSet;
 
 PROCEDURE DrawBox3D (xopt  : DirTileSet;
                      xlabel: TEXT;
-                     xtick : R.T;
+                     xtick : Float;
                      nsubx : INTEGER;
                      yopt  : DirTileSet;
                      ylabel: TEXT;
-                     ytick : R.T;
+                     ytick : Float;
                      nsuby : INTEGER;
                      zopt  : DirTileSet;
                      zlabel: TEXT;
-                     ztick : R.T;
+                     ztick : Float;
                      nsubz : INTEGER;    ) =
   VAR
     arg1 : ARRAY [0 .. ORD(LAST(Tile)) + 1] OF CHAR;
@@ -167,7 +163,7 @@ PROCEDURE DrawBox3D (xopt  : DirTileSet;
     M3toC.FreeSharedS(zlabel, arg10);
   END DrawBox3D;
 
-PROCEDURE CalcWorld (rx, ry: R.T; ): CalcWorldResult =
+PROCEDURE CalcWorld (rx, ry: Float; ): CalcWorldResult =
   VAR
     result: CalcWorldResult;
     arg5  : C.int;
@@ -187,14 +183,14 @@ PROCEDURE SetFGColorDiscr (icol0: INTEGER; ) =
     PLPlotRaw.SetFGColorDiscr(icol0);
   END SetFGColorDiscr;
 
-PROCEDURE SetFGColorCont (col1: R.T; ) =
+PROCEDURE SetFGColorCont (col1: Float; ) =
   BEGIN
     PLPlotRaw.SetFGColorCont(col1);
   END SetFGColorCont;
 
-PROCEDURE PlotContour (READONLY z             : M.TBody;
+PROCEDURE PlotContour (READONLY z             : FloatMatrix;
                                 kx, lx, ky, ly: INTEGER;
-                       READONLY x             : V.TBody;
+                       READONLY x             : FloatVector;
                                 pltr          : CallbackM3Proc;
                                 OBJECT_DATA   : REFANY;         ) =
   VAR
@@ -226,7 +222,7 @@ PROCEDURE Exit () =
     PLPlotRaw.Exit();
   END Exit;
 
-PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: R.T;
+PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: Float;
                           just: AxesScaling := AxesScaling.independent;
                           axis: TileSet := TileSet{Tile.box, Tile.ticks}; ) =
   VAR arg6: C.int;
@@ -261,21 +257,21 @@ PROCEDURE StopPage () =
     PLPlotRaw.StopPage();
   END StopPage;
 
-PROCEDURE PlotErrorX (READONLY xmin, xmax, y: V.TBody; )
-  RAISES {NA.Error} =
+PROCEDURE PlotErrorX (READONLY xmin, xmax, y: FloatVector; )
+  RAISES {SizeMismatch} =
   VAR n := NUMBER(xmin);
   BEGIN
-    IF NUMBER(xmax) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(xmax) # n THEN RAISE SizeMismatch END;
+    IF NUMBER(y) # n THEN RAISE SizeMismatch END;
     PLPlotRaw.PlotErrorX(n, xmin[0], xmax[0], y[0]);
   END PlotErrorX;
 
-PROCEDURE PlotErrorY (READONLY x, ymin, ymax: V.TBody; )
-  RAISES {NA.Error} =
+PROCEDURE PlotErrorY (READONLY x, ymin, ymax: FloatVector; )
+  RAISES {SizeMismatch} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(ymin) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(ymax) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(ymin) # n THEN RAISE SizeMismatch END;
+    IF NUMBER(ymax) # n THEN RAISE SizeMismatch END;
     PLPlotRaw.PlotErrorY(n, x[0], ymin[0], ymax[0]);
   END PlotErrorY;
 
@@ -284,18 +280,20 @@ PROCEDURE AdvanceFamily () =
     PLPlotRaw.AdvanceFamily();
   END AdvanceFamily;
 
-PROCEDURE FillPolygon (READONLY x, y: V.TBody; ) RAISES {NA.Error} =
+PROCEDURE FillPolygon (READONLY x, y: FloatVector; )
+  RAISES {SizeMismatch} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE SizeMismatch END;
     PLPlotRaw.FillPolygon(n, x[0], y[0]);
   END FillPolygon;
 
-PROCEDURE FillPolygon3D (READONLY x, y, z: V.TBody; ) RAISES {NA.Error} =
+PROCEDURE FillPolygon3D (READONLY x, y, z: FloatVector; )
+  RAISES {SizeMismatch} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(z) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE SizeMismatch END;
+    IF NUMBER(z) # n THEN RAISE SizeMismatch END;
     PLPlotRaw.FillPolygon3D(n, x[0], y[0], z[0]);
   END FillPolygon3D;
 
@@ -367,8 +365,8 @@ PROCEDURE GetWindowDevice (): GetWindowDeviceResult =
     RETURN result;
   END GetWindowDevice;
 
-PROCEDURE GetOrientation (): R.T =
-  VAR rot: R.T;
+PROCEDURE GetOrientation (): Float =
+  VAR rot: Float;
   BEGIN
     PLPlotRaw.GetOrientation(rot);
     RETURN rot;
@@ -498,16 +496,16 @@ PROCEDURE GetZLabelParam (): GetZLabelParamResult =
     RETURN result;
   END GetZLabelParam;
 
-PROCEDURE PlotHistogram (READONLY x             : V.TBody;
-                                  datmin, datmax: R.T;
+PROCEDURE PlotHistogram (READONLY x             : FloatVector;
+                                  datmin, datmax: Float;
                                   nbin          : INTEGER;
-                                  oldwin        : INTEGER   := 0; ) =
+                                  oldwin        : INTEGER       := 0; ) =
   VAR n := NUMBER(x);
   BEGIN
     PLPlotRaw.PlotHistogram(n, x[0], datmin, datmax, nbin, oldwin);
   END PlotHistogram;
 
-PROCEDURE SetColorHLS (h, l, s: R.T; ) =
+PROCEDURE SetColorHLS (h, l, s: Float; ) =
   BEGIN
     PLPlotRaw.SetColorHLS(h, l, s);
   END SetColorHLS;
@@ -517,7 +515,7 @@ PROCEDURE Init () =
     PLPlotRaw.Init();
   END Init;
 
-PROCEDURE PlotLineSegment (x1, y1, x2, y2: R.T; ) =
+PROCEDURE PlotLineSegment (x1, y1, x2, y2: Float; ) =
   BEGIN
     PLPlotRaw.PlotLineSegment(x1, y1, x2, y2);
   END PlotLineSegment;
@@ -537,23 +535,24 @@ PROCEDURE SetLabels (xlabel, ylabel, tlabel: TEXT; ) =
     M3toC.FreeSharedS(tlabel, arg3);
   END SetLabels;
 
-PROCEDURE SetLightPos (x, y, z: R.T; ) =
+PROCEDURE SetLightPos (x, y, z: Float; ) =
   BEGIN
     PLPlotRaw.SetLightPos(x, y, z);
   END SetLightPos;
 
-PROCEDURE PlotLines (READONLY x, y: V.TBody; ) RAISES {NA.Error} =
+PROCEDURE PlotLines (READONLY x, y: FloatVector; ) RAISES {SizeMismatch} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE SizeMismatch END;
     PLPlotRaw.PlotLines(n, x[0], y[0]);
   END PlotLines;
 
-PROCEDURE PlotLines3D (READONLY x, y, z: V.TBody; ) RAISES {NA.Error} =
+PROCEDURE PlotLines3D (READONLY x, y, z: FloatVector; )
+  RAISES {SizeMismatch} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(z) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE SizeMismatch END;
+    IF NUMBER(z) # n THEN RAISE SizeMismatch END;
     PLPlotRaw.PlotLines3D(n, x[0], y[0], z[0]);
   END PlotLines3D;
 
@@ -562,33 +561,34 @@ PROCEDURE SetLineStyle (lin: [LineStyle.continuous .. LAST(LineStyle)]; ) =
     PLPlotRaw.SetLineStyle(ORD(lin));
   END SetLineStyle;
 
-PROCEDURE PlotMesh (READONLY x, y: V.TBody;
-                    READONLY z   : M.TBody;
-                             opt : INTEGER; ) RAISES {NA.Error} =
+PROCEDURE PlotMesh (READONLY x, y: FloatVector;
+                    READONLY z   : FloatMatrix;
+                             opt : INTEGER;     ) RAISES {SizeMismatch} =
   VAR
     nx                         := NUMBER(x);
     ny                         := NUMBER(y);
     arg3: REF ARRAY OF ADDRESS;
   BEGIN
-    IF NUMBER(z) # nx THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(z[0]) # ny THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(z) # nx THEN RAISE SizeMismatch END;
+    IF NUMBER(z[0]) # ny THEN RAISE SizeMismatch END;
     arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
     PLPlotRaw.PlotMesh(x[0], y[0], arg3[0], nx, ny, opt);
   END PlotMesh;
 
-PROCEDURE PlotMeshColored (READONLY x, y  : V.TBody;
-                           READONLY z     : M.TBody;
+PROCEDURE PlotMeshColored (READONLY x, y  : FloatVector;
+                           READONLY z     : FloatMatrix;
                                     opt   : INTEGER;
-                           READONLY clevel: V.TBody; ) RAISES {NA.Error} =
+                           READONLY clevel: FloatVector; )
+  RAISES {SizeMismatch} =
   VAR
     nx                         := NUMBER(x);
     ny                         := NUMBER(y);
     arg3: REF ARRAY OF ADDRESS;
     n                          := NUMBER(clevel);
   BEGIN
-    IF NUMBER(z) # nx THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(z[0]) # ny THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(z) # nx THEN RAISE SizeMismatch END;
+    IF NUMBER(z[0]) # ny THEN RAISE SizeMismatch END;
     arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
     PLPlotRaw.PlotMeshColored(
@@ -605,7 +605,7 @@ PROCEDURE CreateStream (): INTEGER =
     RETURN strm;
   END CreateStream;
 
-PROCEDURE PrintTextVP (side: TEXT; disp, pos, just: R.T; text: TEXT; ) =
+PROCEDURE PrintTextVP (side: TEXT; disp, pos, just: Float; text: TEXT; ) =
   VAR
     arg1: C.char_star;
     arg5: C.char_star;
@@ -617,89 +617,91 @@ PROCEDURE PrintTextVP (side: TEXT; disp, pos, just: R.T; text: TEXT; ) =
     M3toC.FreeSharedS(text, arg5);
   END PrintTextVP;
 
-PROCEDURE Plot3D (READONLY x, y     : V.TBody;
-                  READONLY z        : M.TBody;
-                           opt, side: INTEGER; ) RAISES {NA.Error} =
+PROCEDURE Plot3D (READONLY x, y     : FloatVector;
+                  READONLY z        : FloatMatrix;
+                           opt, side: INTEGER;     )
+  RAISES {SizeMismatch} =
   VAR
     nx                         := NUMBER(x);
     ny                         := NUMBER(y);
     arg3: REF ARRAY OF ADDRESS;
   BEGIN
-    IF NUMBER(z) # nx THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(z[0]) # ny THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(z) # nx THEN RAISE SizeMismatch END;
+    IF NUMBER(z[0]) # ny THEN RAISE SizeMismatch END;
     arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
     PLPlotRaw.Plot3D(x[0], y[0], arg3[0], nx, ny, opt, side);
   END Plot3D;
 
-PROCEDURE Plot3DC (READONLY x, y  : V.TBody;
-                   READONLY z     : M.TBody;
+PROCEDURE Plot3DC (READONLY x, y  : FloatVector;
+                   READONLY z     : FloatMatrix;
                             opt   : INTEGER;
-                   READONLY clevel: V.TBody; ) RAISES {NA.Error} =
+                   READONLY clevel: FloatVector; ) RAISES {SizeMismatch} =
   VAR
     nx                         := NUMBER(x);
     ny                         := NUMBER(y);
     arg3: REF ARRAY OF ADDRESS;
     n                          := NUMBER(clevel);
   BEGIN
-    IF NUMBER(z) # nx THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(z[0]) # ny THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(z) # nx THEN RAISE SizeMismatch END;
+    IF NUMBER(z[0]) # ny THEN RAISE SizeMismatch END;
     arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
     PLPlotRaw.Plot3DC(x[0], y[0], arg3[0], nx, ny, opt, clevel[0], n);
   END Plot3DC;
 
-PROCEDURE Surface3D (READONLY x, y  : V.TBody;
-                     READONLY z     : M.TBody;
+PROCEDURE Surface3D (READONLY x, y  : FloatVector;
+                     READONLY z     : FloatMatrix;
                               opt   : INTEGER;
-                     READONLY clevel: V.TBody; ) RAISES {NA.Error} =
+                     READONLY clevel: FloatVector; )
+  RAISES {SizeMismatch} =
   VAR
     nx                         := NUMBER(x);
     ny                         := NUMBER(y);
     arg3: REF ARRAY OF ADDRESS;
     n                          := NUMBER(clevel);
   BEGIN
-    IF NUMBER(z) # nx THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(z[0]) # ny THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(z) # nx THEN RAISE SizeMismatch END;
+    IF NUMBER(z[0]) # ny THEN RAISE SizeMismatch END;
     arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
     PLPlotRaw.Surface3D(x[0], y[0], arg3[0], nx, ny, opt, clevel[0], n);
   END Surface3D;
 
 PROCEDURE SetFillPattern (READONLY inc, del: ARRAY OF INTEGER; )
-  RAISES {NA.Error} =
+  RAISES {SizeMismatch} =
   VAR n := NUMBER(inc);
   BEGIN
-    IF NUMBER(del) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(del) # n THEN RAISE SizeMismatch END;
     PLPlotRaw.SetFillPattern(n, inc[0], del[0]);
   END SetFillPattern;
 
-PROCEDURE PlotPoints (READONLY x, y: V.TBody; code: INTEGER; )
-  RAISES {NA.Error} =
+PROCEDURE PlotPoints (READONLY x, y: FloatVector; code: INTEGER; )
+  RAISES {SizeMismatch} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE SizeMismatch END;
     PLPlotRaw.PlotPoints(n, x[0], y[0], code);
   END PlotPoints;
 
-PROCEDURE PlotPoints3D (READONLY x, y, z: V.TBody; code: INTEGER; )
-  RAISES {NA.Error} =
+PROCEDURE PlotPoints3D (READONLY x, y, z: FloatVector; code: INTEGER; )
+  RAISES {SizeMismatch} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(z) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE SizeMismatch END;
+    IF NUMBER(z) # n THEN RAISE SizeMismatch END;
     PLPlotRaw.PlotPoints3D(n, x[0], y[0], z[0], code);
   END PlotPoints3D;
 
-PROCEDURE PlotPolygon3D (READONLY x, y, z: V.TBody;
+PROCEDURE PlotPolygon3D (READONLY x, y, z: FloatVector;
                          READONLY draw   : ARRAY OF INTEGER;
                                   flag   : INTEGER;          )
-  RAISES {NA.Error} =
+  RAISES {SizeMismatch} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(z) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(draw) # n - 1 THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE SizeMismatch END;
+    IF NUMBER(z) # n THEN RAISE SizeMismatch END;
+    IF NUMBER(draw) # n - 1 THEN RAISE SizeMismatch END;
     PLPlotRaw.PlotPolygon3D(n, x[0], y[0], z[0], draw[0], flag);
   END PlotPolygon3D;
 
@@ -713,7 +715,7 @@ PROCEDURE SetFillStyle (patt: INTEGER; ) =
     PLPlotRaw.SetFillStyle(patt);
   END SetFillStyle;
 
-PROCEDURE PrintTextWorld (x, y, dx, dy, just: R.T; text: TEXT; ) =
+PROCEDURE PrintTextWorld (x, y, dx, dy, just: Float; text: TEXT; ) =
   VAR arg6: C.char_star;
   BEGIN
     arg6 := M3toC.SharedTtoS(text);
@@ -726,17 +728,17 @@ PROCEDURE Replot () =
     PLPlotRaw.Replot();
   END Replot;
 
-PROCEDURE SetCharacterHeight (def, scale: R.T; ) =
+PROCEDURE SetCharacterHeight (def, scale: Float; ) =
   BEGIN
     PLPlotRaw.SetCharacterHeight(def, scale);
   END SetCharacterHeight;
 
 PROCEDURE SetColorMapDiscr (READONLY r, g, b: ARRAY OF INTEGER; )
-  RAISES {NA.Error} =
+  RAISES {SizeMismatch} =
   VAR n := NUMBER(r);
   BEGIN
-    IF NUMBER(g) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(b) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(g) # n THEN RAISE SizeMismatch END;
+    IF NUMBER(b) # n THEN RAISE SizeMismatch END;
     PLPlotRaw.SetColorMapDiscr(r[0], g[0], b[0], n);
   END SetColorMapDiscr;
 
@@ -746,24 +748,24 @@ PROCEDURE SetColorMapDiscrSize (ncol0: INTEGER; ) =
   END SetColorMapDiscrSize;
 
 PROCEDURE SetColorMapCont (READONLY r, g, b: ARRAY OF INTEGER; )
-  RAISES {NA.Error} =
+  RAISES {SizeMismatch} =
   VAR n := NUMBER(r);
   BEGIN
-    IF NUMBER(g) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(b) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(g) # n THEN RAISE SizeMismatch END;
+    IF NUMBER(b) # n THEN RAISE SizeMismatch END;
     PLPlotRaw.SetColorMapCont(r[0], g[0], b[0], n);
   END SetColorMapCont;
 
 PROCEDURE SetColorCont (         itype                      : INTEGER;
-                        READONLY pos, coord1, coord2, coord3: V.TBody;
+                        READONLY pos, coord1, coord2, coord3: FloatVector;
                         READONLY rev: ARRAY OF INTEGER; )
-  RAISES {NA.Error} =
+  RAISES {SizeMismatch} =
   VAR n := NUMBER(pos);
   BEGIN
-    IF NUMBER(coord1) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(coord2) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(coord3) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
-    IF NUMBER(rev) # n - 1 THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(coord1) # n THEN RAISE SizeMismatch END;
+    IF NUMBER(coord2) # n THEN RAISE SizeMismatch END;
+    IF NUMBER(coord3) # n THEN RAISE SizeMismatch END;
+    IF NUMBER(rev) # n - 1 THEN RAISE SizeMismatch END;
     PLPlotRaw.SetColorCont(
       itype, n, pos[0], coord1[0], coord2[0], coord3[0], rev[0]);
   END SetColorCont;
@@ -801,29 +803,29 @@ PROCEDURE SetDevice (devname: TEXT; ) =
     M3toC.FreeSharedS(devname, arg1);
   END SetDevice;
 
-PROCEDURE SetWindowDevice (mar, aspect, jx, jy: R.T; ) =
+PROCEDURE SetWindowDevice (mar, aspect, jx, jy: Float; ) =
   BEGIN
     PLPlotRaw.SetWindowDevice(mar, aspect, jx, jy);
   END SetWindowDevice;
 
 PROCEDURE LoadTransformation (dimxmin, dimxmax, dimymin, dimymax: INTEGER;
-                              dimxpmm, dimypmm                  : R.T;     ) =
+                              dimxpmm, dimypmm                  : Float;   ) =
   BEGIN
     PLPlotRaw.LoadTransformation(
       dimxmin, dimxmax, dimymin, dimymax, dimxpmm, dimypmm);
   END LoadTransformation;
 
-PROCEDURE SetOrientation (rot: R.T; ) =
+PROCEDURE SetOrientation (rot: Float; ) =
   BEGIN
     PLPlotRaw.SetOrientation(rot);
   END SetOrientation;
 
-PROCEDURE SetWindowPlot (xmin, ymin, xmax, ymax: R.T; ) =
+PROCEDURE SetWindowPlot (xmin, ymin, xmax, ymax: Float; ) =
   BEGIN
     PLPlotRaw.SetWindowPlot(xmin, ymin, xmax, ymax);
   END SetWindowPlot;
 
-PROCEDURE ZoomWindow (xmin, ymin, xmax, ymax: R.T; ) =
+PROCEDURE ZoomWindow (xmin, ymin, xmax, ymax: Float; ) =
   BEGIN
     PLPlotRaw.ZoomWindow(xmin, ymin, xmax, ymax);
   END ZoomWindow;
@@ -860,9 +862,9 @@ PROCEDURE SetFileName (fnam: TEXT; ) =
     M3toC.FreeSharedS(fnam, arg1);
   END SetFileName;
 
-PROCEDURE ShadeRegions (READONLY a                     : M.TBody;
-                                 xmin, xmax, ymin, ymax: R.T;
-                        READONLY x                     : V.TBody;
+PROCEDURE ShadeRegions (READONLY a                     : FloatMatrix;
+                                 xmin, xmax, ymin, ymax: Float;
+                        READONLY x                     : FloatVector;
                         fill_width, cont_color, cont_width, rectangular: INTEGER;
                         pltr       : CallbackM3Proc;
                         OBJECT_DATA: REFANY;         ) =
@@ -882,10 +884,10 @@ PROCEDURE ShadeRegions (READONLY a                     : M.TBody;
         REF CallbackM3Data, callback := pltr, callbackData := OBJECT_DATA));
   END ShadeRegions;
 
-PROCEDURE ShadeRegion (READONLY a: M.TBody;
-                       left, right, bottom, top, shade_min, shade_max: R.T;
+PROCEDURE ShadeRegion (READONLY a: FloatMatrix;
+                       left, right, bottom, top, shade_min, shade_max: Float;
                        sh_cmap : INTEGER;
-                       sh_color: R.T;
+                       sh_color: Float;
                        sh_width, min_color, min_width, max_color,
                          max_width, rectangular: INTEGER;
                        pltr       : CallbackM3Proc;
@@ -905,12 +907,12 @@ PROCEDURE ShadeRegion (READONLY a: M.TBody;
                                    callbackData := OBJECT_DATA));
   END ShadeRegion;
 
-PROCEDURE SetMajorTickSize (def, scale: R.T; ) =
+PROCEDURE SetMajorTickSize (def, scale: Float; ) =
   BEGIN
     PLPlotRaw.SetMajorTickSize(def, scale);
   END SetMajorTickSize;
 
-PROCEDURE SetMinorTickSize (def, scale: R.T; ) =
+PROCEDURE SetMinorTickSize (def, scale: Float; ) =
   BEGIN
     PLPlotRaw.SetMinorTickSize(def, scale);
   END SetMinorTickSize;
@@ -920,7 +922,7 @@ PROCEDURE SetGlobalOrientation (ori: INTEGER; ) =
     PLPlotRaw.SetGlobalOrientation(ori);
   END SetGlobalOrientation;
 
-PROCEDURE SetOutputDeviceParam (xp, yp                  : R.T;
+PROCEDURE SetOutputDeviceParam (xp, yp                  : Float;
                                 xleng, yleng, xoff, yoff: INTEGER; ) =
   BEGIN
     PLPlotRaw.SetOutputDeviceParam(xp, yp, xleng, yleng, xoff, yoff);
@@ -941,7 +943,7 @@ PROCEDURE SetSubWindows (nx, ny: INTEGER; ) =
     PLPlotRaw.SetSubWindows(nx, ny);
   END SetSubWindows;
 
-PROCEDURE SetSymbolHeight (def, scale: R.T; ) =
+PROCEDURE SetSymbolHeight (def, scale: Float; ) =
   BEGIN
     PLPlotRaw.SetSymbolHeight(def, scale);
   END SetSymbolHeight;
@@ -959,18 +961,18 @@ PROCEDURE StartDev (devname: TEXT; nx, ny: INTEGER; ) =
     M3toC.FreeSharedS(devname, arg1);
   END StartDev;
 
-PROCEDURE AddStripchartPoint (id, pen: INTEGER; x, y: R.T; ) =
+PROCEDURE AddStripchartPoint (id, pen: INTEGER; x, y: Float; ) =
   BEGIN
     PLPlotRaw.AddStripchartPoint(id, pen, x, y);
   END AddStripchartPoint;
 
 PROCEDURE CreateStripchart (xspec, yspec: TEXT;
-                            xmin, xmax, xjump, ymin, ymax, xlpos, ylpos: R.T;
+                            xmin, xmax, xjump, ymin, ymax, xlpos, ylpos: Float;
                             y_ascl, acc, colbox, collab: INTEGER;
                             READONLY colline, styline: ARRAY OF INTEGER;
                             VAR legline: ARRAY [0 .. 3] OF TEXT;
                             labx, laby, labtop: TEXT; ): INTEGER
-  RAISES {NA.Error} =
+  RAISES {SizeMismatch} =
   VAR
     id   : INTEGER;
     arg1 : C.int;
@@ -983,7 +985,7 @@ PROCEDURE CreateStripchart (xspec, yspec: TEXT;
     arg20: C.char_star;
   BEGIN
     TRY
-      IF NUMBER(styline) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+      IF NUMBER(styline) # n THEN RAISE SizeMismatch END;
       arg2 := M3toC.SharedTtoS(xspec);
       arg3 := M3toC.SharedTtoS(yspec);
       FOR i := FIRST(legline) TO LAST(legline) DO
@@ -1016,14 +1018,14 @@ PROCEDURE DeleteStripchart (id: INTEGER; ) =
   END DeleteStripchart;
 
 PROCEDURE SetNewLineStyle (READONLY mark, space: ARRAY OF INTEGER; )
-  RAISES {NA.Error} =
+  RAISES {SizeMismatch} =
   VAR n := NUMBER(mark);
   BEGIN
-    IF NUMBER(space) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(space) # n THEN RAISE SizeMismatch END;
     PLPlotRaw.SetNewLineStyle(n, mark[0], space[0]);
   END SetNewLineStyle;
 
-PROCEDURE SetVPAbsolute (xmin, xmax, ymin, ymax: R.T; ) =
+PROCEDURE SetVPAbsolute (xmin, xmax, ymin, ymax: Float; ) =
   BEGIN
     PLPlotRaw.SetVPAbsolute(xmin, xmax, ymin, ymax);
   END SetVPAbsolute;
@@ -1038,11 +1040,11 @@ PROCEDURE SetYLabelParam (digmax, digits: INTEGER; ) =
     PLPlotRaw.SetYLabelParam(digmax, digits);
   END SetYLabelParam;
 
-PROCEDURE PlotSymbols (READONLY x, y: V.TBody; code: INTEGER; )
-  RAISES {NA.Error} =
+PROCEDURE PlotSymbols (READONLY x, y: FloatVector; code: INTEGER; )
+  RAISES {SizeMismatch} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE SizeMismatch END;
     PLPlotRaw.PlotSymbols(n, x[0], y[0], code);
   END PlotSymbols;
 
@@ -1056,17 +1058,17 @@ PROCEDURE ShowTextScreen () =
     PLPlotRaw.ShowTextScreen();
   END ShowTextScreen;
 
-PROCEDURE SetVPAspect (aspect: R.T; ) =
+PROCEDURE SetVPAspect (aspect: Float; ) =
   BEGIN
     PLPlotRaw.SetVPAspect(aspect);
   END SetVPAspect;
 
-PROCEDURE CreateVPAspect (xmin, xmax, ymin, ymax, aspect: R.T; ) =
+PROCEDURE CreateVPAspect (xmin, xmax, ymin, ymax, aspect: Float; ) =
   BEGIN
     PLPlotRaw.CreateVPAspect(xmin, xmax, ymin, ymax, aspect);
   END CreateVPAspect;
 
-PROCEDURE CreateVP (xmin, xmax, ymin, ymax: R.T; ) =
+PROCEDURE CreateVP (xmin, xmax, ymin, ymax: Float; ) =
   BEGIN
     PLPlotRaw.CreateVP(xmin, xmax, ymin, ymax);
   END CreateVP;
@@ -1077,7 +1079,7 @@ PROCEDURE SetStandardVP () =
   END SetStandardVP;
 
 PROCEDURE Init3DWindow (basex, basey, height, xmin0, xmax0, ymin0, ymax0,
-                          zmin0, zmax0, alt, az: R.T; ) =
+                          zmin0, zmax0, alt, az: Float; ) =
   BEGIN
     PLPlotRaw.Init3DWindow(basex, basey, height, xmin0, xmax0, ymin0,
                            ymax0, zmin0, zmax0, alt, az);
@@ -1088,7 +1090,7 @@ PROCEDURE SetPenWidth (width: INTEGER; ) =
     PLPlotRaw.SetPenWidth(width);
   END SetPenWidth;
 
-PROCEDURE SetWindow (xmin, xmax, ymin, ymax: R.T; ) =
+PROCEDURE SetWindow (xmin, xmax, ymin, ymax: Float; ) =
   BEGIN
     PLPlotRaw.SetWindow(xmin, xmax, ymin, ymax);
   END SetWindow;
