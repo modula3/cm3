@@ -132,7 +132,11 @@ PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
       (* the scalar crossing can't be any worse than in the full structure *)
       RETURN Type.IsAlignedOk (p.baseType, offset);
     ELSE
-      z0 := offset DIV Target.Integer.align * Target.Integer.align;
+    	IF Target.Allow_packed_byte_aligned THEN
+	      z0 := offset DIV 8 * 8;
+    	ELSE
+	      z0 := offset DIV Target.Integer.align * Target.Integer.align;
+    	END;
       RETURN (offset + sz) <= (z0 + Target.Integer.size);
     END;
   END CheckAlign;
