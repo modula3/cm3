@@ -30,8 +30,8 @@ REVEAL
         translateD := TranslateD;
         scaleD     := ScaleD;
 
-        convolve  := Convolve;
-        superpose := Superpose;
+        convolve  := Mul;
+        superpose := Add;
       END;
 
 
@@ -235,7 +235,7 @@ PROCEDURE Raise (x: T; offset: R.T; first, number: IndexType): T =
   END Raise;
 
 
-PROCEDURE Convolve (x: T; y: T): T =
+PROCEDURE Mul (x: T; y: T): T =
   VAR z := NEW(T).init(x.first + y.first, NUMBER(x.data^) + LAST(y.data^));
   BEGIN
     FOR i := 0 TO LAST(x.data^) DO
@@ -246,9 +246,9 @@ PROCEDURE Convolve (x: T; y: T): T =
       END;
     END;
     RETURN z;
-  END Convolve;
+  END Mul;
 
-PROCEDURE Superpose (x: T; y: T): T =
+PROCEDURE Add (x: T; y: T): T =
   VAR
     first := MIN(x.getFirst(), y.getFirst());
     last  := MAX(x.getLast(), y.getLast());
@@ -266,7 +266,7 @@ PROCEDURE Superpose (x: T; y: T): T =
       END;
     END;
     RETURN z;
-  END Superpose;
+  END Add;
 
 
 BEGIN
