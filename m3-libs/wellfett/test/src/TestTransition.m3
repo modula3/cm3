@@ -93,7 +93,7 @@ PROCEDURE CurveTransitionEV(READONLY maskcoef0,maskcoef1:ARRAY OF R.T)=
       VAR
         t:=FLOAT(fr,R.T)*delta;
         mask:=mask0.scale(R.One-t).superpose(mask1.scale(t));
-        ev := Eigen.EigenValuesGen(
+        ev := Eigen.EigenValues(
                 Refn.TransitionMatrix(
                   mask.adjoint().convolve(mask)
                 )
