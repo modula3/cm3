@@ -1,4 +1,8 @@
 import("libm3")
+% needed for blas and lapack, part of the f2c package, I guess
+import_lib("g2c","/usr/lib")
+import_lib("blas","/usr/lib")
+import_lib("lapack","/usr/lib")
 
 template("matrix")
 
