@@ -1,3 +1,0 @@
-%override("arithmetic",WDROOT)
-%override("arithmetic",ROOT)
-override("arithmetic","/home/thielema/programming/m3/pkg")
