@@ -1,9 +1,8 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.13 2001-02-16 21:39:02 wagner Exp $
+# $Id: sysinfo.sh,v 1.14 2001-02-19 16:03:32 wagner Exp $
 
-if [ "$SYSINFO_DONE" = "yes" ] ; then
-  return 0
-fi
+if [ "$SYSINFO_DONE" != "yes" ] ; then
+
 SYSINFO_DONE="yes"
 
 UNAME=`uname`
@@ -237,3 +236,4 @@ export GREP TMPDIR EXE SL CM3VERSION SYSLIBDIR SYSLIB DEV_BIN DEV_LIB TAR
 export CM3LIBSEARCHPATH CM3BINSEARCHPATH
 export SYSINFO_DONE
 
+fi
