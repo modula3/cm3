@@ -33,6 +33,8 @@ Module("AutoFlushWr")
 Module("Stdio")
 Module("RdUtils")
 
+Module("RdExtras")
+
 Interface("MsgRd")
 Interface("MsgWr")
 

@@ -12,6 +12,7 @@
 UNSAFE MODULE Env;
 
 IMPORT Cstdlib, M3toC, RTArgs, Text;
+(* IMPORT IO; *)
 
 PROCEDURE Get(nm: TEXT): TEXT =
   VAR
@@ -30,14 +31,25 @@ EXCEPTION FatalError; <* FATAL FatalError *>
 PROCEDURE GetNth(n: CARDINAL; VAR (*OUT*) nm, val: TEXT) =
   VAR
     env: TEXT;
-    i: CARDINAL;
+    i, l: CARDINAL;
   BEGIN
     IF n >= Count THEN RAISE FatalError END;
     env := RTArgs.GetEnv(n);
     i := 0;
-    WHILE Text.GetChar(env, i) # '=' DO INC(i) END;
+    l := Text.Length(env);
+    WHILE i < l AND Text.GetChar(env, i) # '=' DO INC(i) END;
     nm := Text.Sub(env, 0, i);
-    val := Text.Sub(env, i + 1, Text.Length(env)-(i+1));
+    IF i < l THEN
+      val := Text.Sub(env, i + 1, Text.Length(env)-(i+1));
+    ELSE
+      (* This actually happened on my Win2000 installation :-( ow 2003-07-09 *)
+      val := "";
+      (*
+      IO.Put("env. error: " & nm & "\n");
+      IO.PutInt(n);
+      IO.Put("\n");
+      *)
+    END;
   END GetNth;
 
 BEGIN

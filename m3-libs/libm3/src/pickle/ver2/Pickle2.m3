@@ -712,6 +712,7 @@ PROCEDURE ExpandSpecials() =
         FOR i := NUMBER (specials^) TO LAST (new_sp^) DO
           new_sp[i] := FindBestSpecial (i);
         END;
+	specials := new_sp;
       END;
     END;
   END ExpandSpecials;

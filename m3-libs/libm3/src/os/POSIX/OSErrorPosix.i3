@@ -13,7 +13,7 @@ PROCEDURE ErrnoAtom(n: CARDINAL): Atom.T;
 (* Return an atom for "errno" value "n". *)
 
 PROCEDURE Raise() RAISES {OSError.E};
-(* == Raise0(Uerror.errno)) *)
+(* == Raise0(Cerrno.GetErrno())) *)
 
 PROCEDURE Raise0(errno: INTEGER) RAISES {OSError.E};
 (* == RAISE OSError.E(AtomList.List1(ErrnoAtom(errno))) *)
