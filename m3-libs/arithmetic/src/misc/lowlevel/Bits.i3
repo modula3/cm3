@@ -35,14 +35,14 @@ TYPE
   LittleEndian=
     RECORD b1,b2,b3,b4:BYTE; END;
 
-PROCEDURE whichend():[-1..+1];
+PROCEDURE WhichEndian():[-1..+1];
 (*-1 means little-endian, +1 means big-endian.*)
 
 (*============================*)
 (* Other Functions            *)
 (*============================*)
-PROCEDURE fmt(x:Word.T;
-              nbits:CARDINAL:=32;
+PROCEDURE Fmt(x:Word.T;
+              nbits:[1..Word.Size]:=32;
               base :CARDINAL:=2   (*typically 2 or 16*)
               ):TEXT;
 (*returns text for x, left padded
@@ -50,21 +50,21 @@ to nbits length by "0" if necessary.
 *)
 
 
-PROCEDURE reverse(x:CARDINAL;       (*given this number*)
-                  nbits:CARDINAL    (*using the low n bits*)
-                  ):CARDINAL;       (*return reversed bit pattern*)
+PROCEDURE Reverse(x:Word.T;               (*given this number*)
+                  nbits:[1..Word.Size];   (*using the low n bits*)
+                  ):Word.T;               (*return reversed bit pattern*)
 (*E.g., nbits = 4 ==> 00001011 becomes 00001101
 NOTE: There are better ways to do this if you need to do a whole array,
 as in FFT.  See xFFT.m3.*)
 
-PROCEDURE hash_pjw(READONLY str: ARRAY OF CHAR; (*given this string*)
+PROCEDURE HashPJW(READONLY str: ARRAY OF CHAR; (*given this string*)
                           n1,nn:CARDINAL        (*using n1..nn*)
                               ):CARDINAL;       (*return hash value*)
 (*P. Weinberger's hash.
 From the str buffer, using str[n1]..str[nn], make a hash value
 *)
 
-PROCEDURE hash_elf(READONLY str: ARRAY OF CHAR; (*given this string*)
+PROCEDURE HashELF(READONLY str: ARRAY OF CHAR; (*given this string*)
                           n1,nn:CARDINAL        (*using n1..nn*)
                               ):CARDINAL;       (*return hash value*)
 (*ELF hash
