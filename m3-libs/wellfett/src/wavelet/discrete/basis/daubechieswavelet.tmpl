@@ -1,9 +1,0 @@
-%
-%  Quake functions to instantiate operations on Daubechies wavelets for generic float types.
-%
-
-readonly proc DaubechiesWavelet (nm, field, signal) is
-  local basic = nm & "DaubechiesWavelet"
-  build_generic_intf (basic, "DaubechiesWavelet", [signal], VISIBLE)
-  build_generic_impl (basic, "DaubechiesWavelet", [field, signal])
-end
