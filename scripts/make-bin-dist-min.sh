@@ -33,7 +33,7 @@ header "building CM3 installation in ${INSTALLROOT}"
 header "stage 1: building cm3 compiler"
 P=""
 [ ${TARGET} != NT386 ] && P="${P} m3gc-simple"
-if syscall_wrappers_exist ; then
+if syscall_wrappers_exist && [ -z "M3GC_SIMPLE" ] ; then
   [ ${TARGET} != NT386 ] && P="${P} m3gc-enhanced"
 fi
 P="${P} m3core"
