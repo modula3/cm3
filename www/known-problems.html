@@ -21,6 +21,8 @@
       <a href="#p_1">1 General Problems</a><br>
       &nbsp;&nbsp;    
       <a href="#p_1_1">1.1 Linkage failure: cannot find -lXaw</a><br>
+      &nbsp;&nbsp;    
+      <a href="#p_1_2">1.2 Filenames with spaces</a><br>
       <br>
       <a href="#p_2">2 Release 5.1.0</a><br>
       &nbsp;&nbsp;    
@@ -74,6 +76,39 @@
       <b>Solution:</b>
       Usually it is possible to install the missing libraries without
       much effort.
+    </p>
+
+    <a name="p_1_2">
+    <h4>1.2 Filenames with spaces</h4>
+
+    <p>
+      <b>Platforms:</b> all, especially WIN32
+    </p>
+
+    <p>
+      <b>Description:</b>
+      CM3 currently cannot handle filenames containing spaces very
+      well. This will probably not be an issue on POSIX platforms, but
+      it is very annoying on WIN32, as many standard installation path
+      names contain spaces there.
+    </p>
+
+    <p>
+      The problem cannot be easily resolved. This is due to the broken
+      process creation interface on WIN32 platforms, which does not
+      allow transparent passing of parameters, and some standard
+      <tt>quake</tt> functions, which have to be replaced by more
+      general equivalents, like <tt>exec, arglist</tt> (probably more).
+    </p>
+
+    <p>
+      <b>Solution:</b>
+      There is no easy solution to this problem. As a temporary
+      workaround, the installer has been modified to replace pathnames
+      with spaces by their 8.3 style equivalent on WIN32. If you
+      cannot avoid using spaces in your CM3 projects, the 8.3 style
+      short form should be a possible though ugly workaround for that,
+      too. Voluntary contributions in this area are more very welcome.
     </p>
 
     <a name="p_2">
@@ -147,7 +182,7 @@
     <address><a href="mailto:m3-support@elego.de">Olaf Wagner</a></address>
 <!-- Created: Fri Mar  2 10:51:41 MET 2001 -->
 <!-- hhmts start -->
-Last modified: Fri Mar  2 14:39:09 MET 2001
+Last modified: Wed Mar  7 00:23:41 MET 2001
 <!-- hhmts end -->
   </body>
 </html>
