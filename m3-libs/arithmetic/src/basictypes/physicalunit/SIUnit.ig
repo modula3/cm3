@@ -2,7 +2,6 @@ GENERIC INTERFACE SIUnit(UDB);
 
 IMPORT PhysicalUnit AS U;
 
-(* Default values added by AddDefaultConstants *)
 TYPE
   SIUnit = ARRAY OF U.ExpType;
 

@@ -192,6 +192,30 @@ PROCEDURE ScaleReal (x : T; y : R.T) : T RAISES {Error} =
     RETURN z;
   END ScaleReal;
 
+PROCEDURE Norm1   (x : T) : ExpType =
+  VAR
+    it := x.iterate();
+    unit,exp : ExpType;
+    sum : ExpType := 0;
+  BEGIN
+    WHILE it.next(unit,exp) DO
+      sum := sum+ABS(exp);
+    END;
+    RETURN sum;
+  END Norm1;
+
+PROCEDURE NormInf (x : T) : ExpType =
+  VAR
+    it := x.iterate();
+    unit,exp : ExpType;
+    max : ExpType := 0;
+  BEGIN
+    WHILE it.next(unit,exp) DO
+      max := MAX(max,ABS(exp));
+    END;
+    RETURN max;
+  END NormInf;
+
 (*==========================*)
 BEGIN
 END PhysicalUnit.

@@ -1,5 +1,10 @@
 GENERIC MODULE SIUnit(RT,UU,DB);
 
+(*
+  I have collected some more units
+  that are not suited for output
+  but may be used for input in future
+*)
 
 PROCEDURE CreateDatabase():DB.T=
 VAR

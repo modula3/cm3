@@ -1,21 +1,28 @@
 GENERIC MODULE UnitDatabase(UU,UUList,CU,CUList);
 
-IMPORT PhysicalUnit AS U;
+IMPORT PhysicalUnit       AS U,
+       PhysicalUnitFmtLex AS UF;
 
 IMPORT IO, Fmt;
 
-PROCEDURE FmtUnit(unit:U.T):TEXT =
-  VAR
-    it:=unit.iterate();
-    dim:INTEGER;
-    exp:U.ExpType;
-    res:TEXT:="{";
+(*
+PROCEDURE NextItem(VAR uu:UU.T):BOOLEAN=
   BEGIN
-    WHILE it.next(dim,exp) DO
-      res:=res&"("&Fmt.Int(dim)&","&Fmt.Int(exp)&")";
-    END;
-    RETURN res&"}";
-  END FmtUnit;
+    uu:=uu.next;
+    RETURN uu#NIL;
+  END NextItem;
+*)
+
+(*should be part of the List module*)
+PROCEDURE RemoveFirst(VAR l:CUList.T):CUList.T=
+  VAR
+    fst:CUList.T;
+  BEGIN
+    fst:=l;
+    l:=l.tail;
+    fst.tail:=NIL;
+    RETURN fst;
+  END RemoveFirst;
 
 
 PROCEDURE AddUnit(VAR db:T;
@@ -62,120 +69,84 @@ BEGIN
       db.first);
 END AddUnit;
 
-(*
-PROCEDURE NextItem(VAR uu:UU.T):BOOLEAN=
-  BEGIN
-    uu:=uu.next;
-    RETURN uu#NIL;
-  END NextItem;
-*)
-
-PROCEDURE RemoveFirst(VAR l:CUList.T):CUList.T=
+(*approximate a scaling for which the source unit matches the target unit best
+  return the approximation error*)
+PROCEDURE Approx (target, source : U.T; VAR exp:U.ExpType) : U.ExpType =
   VAR
-    fst:CUList.T;
+    zeroDiff := U.Norm1(target);
+    diff, lastDiff : U.ExpType;
   BEGIN
-    fst:=l;
-    l:=l.tail;
-    fst.tail:=NIL;
-    RETURN fst;
-  END RemoveFirst;
+    <*ASSERT NOT U.IsZero(source)*>
+    (*the mapping x->norm(target-x*source) is a norm along an affine function
+      and thus this mapping is convex and has at most one interval
+      where it is minimal,
+      of all those x where norm(target-x*source) is minimal,
+      choose the one with least absolute value*)
+    diff := U.Norm1(U.Sub(target,source));
+    IF zeroDiff > diff THEN
+      exp := 1;
+      REPEAT
+        lastDiff := diff;
+        INC(exp);
+        diff := U.Norm1(U.Sub(target,U.Scale(source,exp)));
+      UNTIL lastDiff <= diff;
+      DEC(exp);
+      RETURN lastDiff;
+    ELSIF zeroDiff < diff THEN
+      diff := zeroDiff;
+      exp := 0;
+      REPEAT
+        lastDiff := diff;
+        DEC(exp);
+        diff := U.Norm1(U.Sub(target,U.Scale(source,exp)));
+      UNTIL lastDiff <= diff;
+      INC(exp);
+      RETURN lastDiff;
+    ELSE
+      exp := 0;
+      RETURN diff;
+    END;
+  END Approx;
 
 (*find the usual unit incl. exponent which matches best to the given unit*)
 PROCEDURE FindBestUU(READONLY db:T;remain:U.T;isFirst:BOOLEAN):CU.T=
   VAR
-    maxUU  : UUList.T := NIL;
-    uu     := db.first;
-    minDiff: U.ExpType := LAST(U.ExpType);
-    maxExp : U.ExpType := 0;
+    bestUU  : UUList.T := NIL;
+    uu      := db.first;
+    exp,
+    diff    : U.ExpType;
+    minDiff : U.ExpType := LAST(U.ExpType);
+    minExp  : U.ExpType := LAST(U.ExpType);
   BEGIN
-IO.Put("find unit closest to " & FmtUnit(remain) & "\n");
+IO.Put("find unit closest to " & UF.Fmt(remain) & "\n");
     WHILE uu#NIL DO
-IO.Put(FmtUnit(uu.head.unit)&"  ");
-      (*find the maximum sensible exponent for the current usual unit*)
-      VAR
-        minAbsExp  :U.ExpType:=LAST(U.ExpType);
-        minExp     :U.ExpType:=0;
-      BEGIN
-        VAR
-          it:=uu.head.unit.iterate();
-          dim:INTEGER;
-          uuExp,rmExp,
-          exp        :U.ExpType;
-          expPos:BOOLEAN;
-        BEGIN
-          WHILE minAbsExp>0 AND it.next(dim,uuExp) DO
-            <*ASSERT dim>=0*> (*we cannot use CARDINAL, since it.next expects INTEGER*)
-            <*ASSERT uuExp#0*>
-            rmExp := 0;
-            EVAL remain.get(dim,rmExp);
-            (* divide and round to zero *)
-            exp := ABS(rmExp) DIV ABS(uuExp);
-            expPos := (rmExp>0) = (uuExp>0);
-            (* exp = 0 does not necessary mean that rmExp = 0 *)
-            IF exp=0 OR (minExp#0 AND (minExp>0) # expPos) THEN
-              minAbsExp := 0;
-              minExp    := 0;
-            ELSIF expPos THEN
-              IF minAbsExp>exp THEN
-                minAbsExp := exp;
-                minExp    := exp;
-              END
-            ELSE
-              IF minAbsExp>exp THEN
-                minAbsExp :=  exp;
-                minExp    := -exp;
-              END
-            END;
-          END;
-        END;
-IO.Put(Fmt.Int(minExp) & "\n");
-
-        IF minAbsExp>0 THEN
-          VAR
-            it:=remain.iterate();
-            diff:U.ExpType:=0;
-            dim:INTEGER;
-            uuExp,rmExp:U.ExpType;
-          BEGIN
-            WHILE it.next(dim,rmExp) DO
-              <*ASSERT dim>=0*>
-              <*ASSERT rmExp#0*>
-              uuExp:=0;
-              EVAL uu.head.unit.get(dim,uuExp);
-              <*ASSERT uuExp=0 OR (rmExp>0)=(uuExp*minExp>0)*>
-              IF rmExp>0 THEN
-                INC (diff, rmExp - uuExp * minExp);
-              ELSE
-                DEC (diff, rmExp - uuExp * minExp);
-              END;
-            END;
-IO.Put("   diff " & Fmt.Int(diff) & "\n");
-            (*WriteFormat ("%s, minExp %ld, diff %ld, mindiff %ld, component? %ld"+&10, data := uu.mainUnit.name.data'ADR, minExp, diff, minDiff, CAST(SHORTINT,uu.isComponent)); *)
-
-            IF (diff<minDiff OR
-                (maxExp<=0 AND minExp>0 AND diff<=minDiff)) AND
-               (NOT UU.Flags.independent IN uu.head.flags OR
-                (isFirst AND diff=0))  THEN
-              minDiff := diff;
-              maxUU   := uu;
-              maxExp  := minExp;
-            END;
-          END;
-
-        END;
+IO.Put(UF.Fmt(uu.head.unit)&"  ");
+      diff := Approx(remain,uu.head.unit,exp);
+IO.Put("   exp " & Fmt.Int(exp));
+IO.Put("   diff " & Fmt.Int(diff));
+IO.Put("   indep " & Fmt.Bool(UU.Flags.independent IN uu.head.flags));
+IO.Put("   isFirst " & Fmt.Bool(isFirst) & "\n");
+      IF (diff<minDiff OR
+          (diff<=minDiff AND ABS(exp)<ABS(minExp))) AND
+         (NOT UU.Flags.independent IN uu.head.flags OR
+          (isFirst AND diff=0)) THEN
+        minDiff := diff;
+        bestUU  := uu;
+        minExp  := exp;
       END;
-
       uu := uu.tail;
     END;
 
-    RETURN CU.T{uu := maxUU, exp := maxExp};
+    RETURN CU.T{uu := bestUU, exp := minExp};
   END FindBestUU;
 
 
 PROCEDURE DecomposeUnit(READONLY db:T;unit:U.T):CUList.T=
 VAR
-  ucList : CUList.T := NIL;
-  remain := U.Copy(unit);
+  ucList     : CUList.T := NIL;
+  remainNorm := U.Norm1(unit);
+  newNorm    :  U.ExpType;
+  remain     := U.Copy(unit);
 
 BEGIN
   WHILE NOT U.IsZero (remain) DO
@@ -183,11 +154,16 @@ BEGIN
     ucList:=CUList.Cons(FindBestUU(db,remain,ucList=NIL),ucList);
 
     (* extract the found usual unit from the given one *)
-IO.Put("best unit " & FmtUnit(ucList.head.uu.head.unit) & "\n");
-IO.Put("scaled by " & Fmt.Int(ucList.head.exp) & ": " & FmtUnit(U.Scale(ucList.head.uu.head.unit,ucList.head.exp)) & "\n");
-IO.Put("remain before Sub " & FmtUnit(remain) & "\n");
+IO.Put("best unit " & UF.Fmt(ucList.head.uu.head.unit) & "\n");
+IO.Put("scaled by " & Fmt.Int(ucList.head.exp) & ": " & UF.Fmt(U.Scale(ucList.head.uu.head.unit,ucList.head.exp)) & "\n");
+IO.Put("remain before Sub " & UF.Fmt(remain) & "\n");
     remain:=U.Sub(remain,U.Scale(ucList.head.uu.head.unit,ucList.head.exp));
-IO.Put("remain after Sub " & FmtUnit(remain) & "\n");
+IO.Put("remain after Sub " & UF.Fmt(remain) & "\n");
+    newNorm := U.Norm1(remain);
+    (*the database must contain all unit vectors so that every composed unit can be decomposed
+      into unit vectors from the database*)
+    <*ASSERT newNorm < remainNorm *>
+    remainNorm := newNorm;
   END;
 
   (*reverse order and

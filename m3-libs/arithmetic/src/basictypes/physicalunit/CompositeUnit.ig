@@ -1,4 +1,7 @@
 GENERIC INTERFACE CompositeUnit(UUList);
+(*
+  Component of a unit that is composed of usual units.
+*)
 
 IMPORT PhysicalUnit AS U;
 

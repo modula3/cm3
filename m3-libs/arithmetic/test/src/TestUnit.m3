@@ -52,9 +52,9 @@ BEGIN
   Msg(Fmt.FN("%s, %s\n", ARRAY OF TEXT
       {PVF.Fmt(x,style), PVF.Fmt(y,style)}));
 
-  x:=PV.T{1.0D-11,U.FromArray(SI.mass)};
-  y:=PV.T{10.0D0,U.FromArray(SI.noUnit)};
-  FOR n:=0 TO 20 DO
+  x:=PV.T{1.0D0,U.FromArray(SI.mass)};
+  y:=PV.T{1.0D0,U.FromArray(SI.speed)};
+  FOR n:=0 TO 5 DO
     Msg(Fmt.FN("%s: %s\n", ARRAY OF TEXT
         {Fmt.Int(n), PVF.Fmt(x,style)}));
     x:=PV.Mul(x,y);
@@ -66,6 +66,21 @@ BEGIN
   Msg(Fmt.FN("%s / %s = %s\n", ARRAY OF TEXT
       {PVF.Fmt(x,style), PVF.Fmt(y,style),
        PVF.Fmt(PV.Div(x,y),style)}));
+
+  x:=PV.T{330.0D0,U.FromArray(SI.speed)};
+  y:=PV.T{0.1D0,U.FromArray(SI.length)};
+
+  Msg(Fmt.FN("%s / %s = %s\n", ARRAY OF TEXT
+      {PVF.Fmt(x,style), PVF.Fmt(y,style),
+       PVF.Fmt(PV.Div(x,y),style)}));
+
+  x:=PV.T{1.0D-11,U.FromArray(SI.mass)};
+  y:=PV.T{10.0D0,U.FromArray(SI.noUnit)};
+  FOR n:=0 TO 20 DO
+    Msg(Fmt.FN("%s: %s\n", ARRAY OF TEXT
+        {Fmt.Int(n), PVF.Fmt(x,style)}));
+    x:=PV.Mul(x,y);
+  END;
 
   RETURN result;
 END TestFmt;

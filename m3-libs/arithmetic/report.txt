@@ -3,6 +3,9 @@ for myself:
 todo:
   - ODE
   - physical units
+     - unit norms, cleaner FindBestUU
+     - complex values
+     - predefined values for each usual SI unit, problem with complex values
   - Hash routines
   - BRANDED strings
   - (*OUT*) for remainder of DivMod
