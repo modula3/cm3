@@ -98,10 +98,10 @@ PROCEDURE PlotComplex (s: CS.T; l: CARDINAL; ) =
       MAX(VFs.Max(vre^), VFs.Max(vim^)) / magnify);
     WITH abscissa = V.ArithSeq(s.getNumber(),
                                FLOAT(s.getFirst(), R.T) * grid, grid)^ DO
-      PL.SetFGColorDiscr(2);
-      PL.PlotLines(abscissa, vre^);
       PL.SetFGColorDiscr(3);
       PL.PlotLines(abscissa, vim^);
+      PL.SetFGColorDiscr(2);
+      PL.PlotLines(abscissa, vre^);
     END;
   END PlotComplex;
 
@@ -149,7 +149,7 @@ PROCEDURE BSplineNorm () =
 PROCEDURE MulVecC (VAR (*OUT*) z   : ARRAY OF C.T;
                    READONLY    x, y: ARRAY OF C.T; ) =
   BEGIN
-    <* ASSERT 2 * (NUMBER(x) - 1) = NUMBER(y) *>
+    <* ASSERT NUMBER(y) = 2 * (NUMBER(x) - 1) *>
     <* ASSERT NUMBER(y) = NUMBER(z) *>
     FOR i := FIRST(x) TO LAST(x) DO z[i] := C.Mul(x[i], y[i]); END;
     FOR i := FIRST(x) + 1 TO LAST(x) - 1 DO
@@ -226,6 +226,12 @@ PROCEDURE FourierDecay () =
             curBandWidth           := bandWidth;
             decaySpec              := CV.New(NUMBER(genSpec^));
             k           : CARDINAL := l - 1;
+            (* we like to compare our naive interpolations with an
+               interpolation found by transforming a generator that is zero
+               padded to the double length *)
+            genDoubSpec := DFTR2C1D(generator.wrapCyclic(newsize * 2)^);
+            bandDoub := band;    (* initialize it with something different
+                                    from NIL *)
           BEGIN
             PlotComplex(NEW(CS.T).fromVector(maskSpec), 0);
             (*CVS.Clear(SUBARRAY(decaySpec^, 0, bandWidth));*)
@@ -234,30 +240,59 @@ PROCEDURE FourierDecay () =
             LOOP
               WITH genBand = SUBARRAY(genSpec^, curBandWidth, curBandWidth),
                    (*remove spare value at the end*)
-                   decayBand = SUBARRAY(band^, 0, curBandWidth),
-                   sum       = CVS.Sum(genBand).re,
-                   decaySum  = CVS.Sum(decayBand).re             DO
+                   decayBand     = SUBARRAY(band^, 0, curBandWidth),
+                   decayBandDoub = SUBARRAY(bandDoub^, 0, curBandWidth),
+                   sum           = CVS.Sum(genBand).re,
+                   decaySum      = CVS.Sum(decayBand).re,
+                   decayDoubSum  = CVS.Sum(decayBandDoub).re             DO
                 SUBARRAY(decaySpec^, curBandWidth, curBandWidth) :=
                   decayBand;
                 IO.Put(
+                  Fmt.FN("%s: sum (%s) %s <-> %s <-> %s\n",
+                         ARRAY OF
+                           TEXT{Fmt.Int(k),
+                                (*RF.Fmt(CVT.Norm2(CVB.Sub(decayBand,
+                                   genBand))),*)
+                                RF.Fmt(sum / decayDoubSum), RF.Fmt(sum),
+                                RF.Fmt(decayDoubSum), RF.Fmt(decaySum)}));
+                IO.Put(
                   Fmt.FN(
-                    "diff %s: %s, sum (%s) %s <-> %s\n",
+                    "diff: upsampled %s, Fourier interpolated %s\n",
                     ARRAY OF
-                      TEXT{Fmt.Int(k),
-                           RF.Fmt(CVT.Norm2(CVB.Sub(decayBand, genBand))),
-                           RF.Fmt(sum / decaySum), RF.Fmt(sum),
-                           RF.Fmt(decaySum)}));
+                      TEXT{
+                      RF.Fmt(CVT.Norm2(CVB.Sub(genBand, decayBand))),
+                      RF.Fmt(CVT.Norm2(CVB.Sub(genBand, decayBandDoub)))}));
                 DEC(k);
               END;
               IF k = 0 THEN EXIT END;
               band := UpSample2(band^);
+              bandDoub :=
+                CV.FromArray(SUBARRAY(genDoubSpec^, curBandWidth * 2,
+                                      curBandWidth * 2 + 1));
+              (* IO.Put(Fmt.FN( "diff upsampled - Fourier interpolated:
+                 %s\n", ARRAY OF TEXT{RF.Fmt(CVT.Norm2(CV.Sub(band,
+                 bandDoub)))})); *)
+
               FOR i := 0 TO rep - 1 DO
                 WITH bandSpec = SUBARRAY(band^, bandWidth * i, bandWidth) DO
+                  MulVecC(bandSpec, maskSpec^, bandSpec);
+                END;
+                WITH bandSpec = SUBARRAY(
+                                  bandDoub^, bandWidth * i, bandWidth) DO
                   MulVecC(bandSpec, maskSpec^, bandSpec);
                 END;
               END;
               <* ASSERT LAST(band^) = bandWidth * rep *>
               band[LAST(band^)] := C.Mul(maskSpec[0], band[LAST(band^)]);
+              bandDoub[LAST(band^)] :=
+                C.Mul(maskSpec[0], bandDoub[LAST(band^)]);
+
+              (* IO.Put(Fmt.FN("diff upsampled - Fourier interpolated" & "
+                 after multiplication: %s\n", ARRAY OF
+                 TEXT{RF.Fmt(CVT.Norm2( CVB.Sub( bandDoub^, SUBARRAY(
+                 genSpec^, curBandWidth * 2, curBandWidth * 2 +
+                 1))))})); *)
+
               rep := rep * 2;
               curBandWidth := curBandWidth * 2;
             END;
@@ -320,7 +355,7 @@ PROCEDURE TestUpsampleB () =
     spec1                            := CV.NewZero(NUMBER(spec0) + 1);
     vec0, vec1, vec0up, vec1up: V.T;
     spec0up, spec1up          : CV.T;
-    k0,k1                         : R.T;
+    k0, k1                    : R.T;
   BEGIN
     SUBARRAY(spec1^, 0, NUMBER(spec0)) := spec0;
     vec0 := DFTC2R1D(spec0, 0);
@@ -342,7 +377,7 @@ PROCEDURE TestUpsampleB () =
 PROCEDURE Test () =
   BEGIN
     PL.Init();
-    CASE 3 OF
+    CASE 1 OF
     | 0 => BSplineNorm();
     | 1 => FourierDecay();
     | 2 => TestUpsampleA();
