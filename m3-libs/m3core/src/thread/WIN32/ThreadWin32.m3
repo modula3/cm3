@@ -12,7 +12,7 @@
 (*      modified on Fri Mar 26 15:04:39 PST 1993 by birrell        *)
 
 UNSAFE MODULE ThreadWin32
-  EXPORTS Scheduler, Thread, ThreadF, RTThreadInit;
+EXPORTS Scheduler, Thread, ThreadF, RTThreadInit, RTOS;
 
 IMPORT RTError, WinBase, WinDef, WinGDI, WinNT;
 IMPORT ThreadContext, Word, MutexRep;
@@ -877,13 +877,13 @@ PROCEDURE MyId(): Id RAISES {}=
 
 PROCEDURE Die(msg: TEXT) =
   BEGIN
-    RTError.Msg ("ThreadWin32.m3", 879, "Thread client error: ", msg);
+    RTError.Msg ("ThreadWin32.m3", 880, "Thread client error: ", msg);
   END Die;
 
 PROCEDURE Choke() =
   BEGIN
     RTError.MsgI (
-        "ThreadWin32.m3, line 885: Windows OS failure, GetLastError = ",
+        "ThreadWin32.m3, line 886: Windows OS failure, GetLastError = ",
         WinBase.GetLastError ());
   END Choke;
 
@@ -957,6 +957,49 @@ PROCEDURE InitialStackBase (start: ADDRESS): ADDRESS =
       info.BaseAddress := last_good;
     END;
   END InitialStackBase;
+
+(*------------------------------------------------------------- collector ---*)
+(* These procedures provide synchronization primitives for the allocator
+   and collector. *)
+
+VAR
+  cs        : WinBase.LPCRITICAL_SECTION := NIL;
+  csstorage : WinNT.RTL_CRITICAL_SECTION;
+  lock_cnt  := 0;      (* LL = cs *)
+  do_signal := FALSE;  (* LL = cs *)
+  mutex     := NEW(MUTEX);
+  condition := NEW(Condition);
+
+PROCEDURE LockHeap () =
+  BEGIN
+    IF (cs = NIL) THEN
+      cs := ADR(csstorage);
+      WinBase.InitializeCriticalSection(cs);
+    END;
+    WinBase.EnterCriticalSection(cs);
+    INC(lock_cnt);
+  END LockHeap;
+
+PROCEDURE UnlockHeap () =
+  VAR sig := FALSE;
+  BEGIN
+    DEC(lock_cnt);
+    IF (lock_cnt = 0) AND (do_signal) THEN sig := TRUE; do_signal := FALSE; END;
+    WinBase.LeaveCriticalSection(cs);
+    IF (sig) THEN Broadcast(condition); END;
+  END UnlockHeap;
+
+PROCEDURE WaitHeap () =
+  (* LL = 0 *)
+  BEGIN
+    LOCK mutex DO Wait(mutex, condition); END;
+  END WaitHeap;
+
+PROCEDURE BroadcastHeap () =
+  (* LL = inCritical *)
+  BEGIN
+    do_signal := TRUE;
+  END BroadcastHeap;
 
 BEGIN
 END ThreadWin32.

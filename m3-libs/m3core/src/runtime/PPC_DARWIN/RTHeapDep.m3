@@ -6,7 +6,7 @@
 
 UNSAFE MODULE RTHeapDep;
 
-IMPORT RT0u, RTHeapRep, RTCollectorSRC, RTHeapDepC;
+IMPORT ThreadF, RTHeapRep, RTCollectorSRC, RTHeapDepC;
 IMPORT Ctypes, Umman, Unix, Uresource, Usignal, Utime, Utypes, Word, Uucontext;
 FROM Usignal IMPORT SIGQUIT, SIGILL, SIGTRAP, SIGEMT, SIGFPE, SIGIOT;
 FROM Usignal IMPORT SIGBUS, SIGSEGV, SIGSYS, SIGVTALRM, SIG_DFL;
@@ -51,7 +51,7 @@ PROCEDURE Core (             sig : Ctypes.int;
    debug, and avoids an Ultrix bug that creates incomplete core files if
    heap pages are read-protected. *)
   BEGIN
-    INC(RT0u.inCritical);
+    ThreadF.SuspendOthers();
     IF NOT dumped_core THEN
       (* indicate that this thread will dump core *)
       dumped_core := TRUE;
@@ -66,7 +66,7 @@ PROCEDURE Core (             sig : Ctypes.int;
       END;
       RETURN;
     END;
-    DEC(RT0u.inCritical);
+    ThreadF.ResumeOthers();
   END Core;
 
 PROCEDURE Init () =
