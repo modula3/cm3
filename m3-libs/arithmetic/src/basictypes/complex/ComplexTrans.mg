@@ -182,30 +182,24 @@ BEGIN
 END ArcTan;
 
 
-(*
-PROCEDURE Abs (READONLY x : T) : R.T =
+PROCEDURE Abs (READONLY x0 : T) : R.T =
 VAR
-  expr, expi, exp : INTEGER;
+  exp : INTEGER;
+  x : T;
   y : R.T;
 BEGIN
-  TYPECASE R.T OF
   (*a workaround to prevent NaNs and Zeros*)
-  | REAL, LONGREAL, EXTENDED =>
-    EVAL RT.FrExp(x.re, expr);
-    EVAL RT.FrExp(x.im, expi);
-    exp := (expr+expi) DIV 2;
-    y := RT.SqRt(AbsSqr(T{RT.LdExp(x.re,-exp),RT.LdExp(x.im,-exp)}));
-    RETURN RT.LdExp(y,exp);
-  ELSE
-    RETURN RT.SqRt(AbsSqr(x));
-  END;
+  x := C.FrExp(x0, exp);
+  y := RT.SqRt(AbsSqr(x));
+  RETURN R.LdExp(y,exp);
 END Abs;
-*)
 
+(*
 PROCEDURE Abs (READONLY x : T) : R.T =
 BEGIN
   RETURN RT.SqRt(AbsSqr(x));
 END Abs;
+*)
 
 PROCEDURE AbsSqr (READONLY x : T) : R.T =
 BEGIN
@@ -219,23 +213,23 @@ VAR
   z : T;
 BEGIN
   TRY
-	  r := Abs(x);
-	  z.re := R.Add (r, x.re);
-	  IF R.Compare(z.re, R.Zero) < 0 THEN (* mathematically impossible, can be caused by rounding *)
-        z.re := R.Zero;
-	  ELSE
-        z.re := RT.SqRt (R.Div(z.re,R.Two));
-	  END;
+    r := Abs(x);
+    z.re := R.Add (r, x.re);
+    IF R.Compare(z.re, R.Zero) < 0 THEN (* mathematically impossible, can be caused by rounding *)
+      z.re := R.Zero;
+    ELSE
+      z.re := RT.SqRt (R.Div(z.re,R.Two));
+    END;
 
-	  z.im := R.Sub (r, x.re);
-	  IF R.Compare(z.im, R.Zero) < 0 THEN (* mathematically impossible, can be caused by rounding *)
-        z.im := R.Zero;
-	  ELSE
-        z.im := RT.SqRt (R.Div(z.im,R.Two));
-        IF R.Compare(x.im, R.Zero) < 0 THEN  (* instead of using the Sgn function *)
-    	  z.im := R.Neg (z.im);
-        END;
-	  END;
+    z.im := R.Sub (r, x.re);
+    IF R.Compare(z.im, R.Zero) < 0 THEN (* mathematically impossible, can be caused by rounding *)
+      z.im := R.Zero;
+    ELSE
+      z.im := RT.SqRt (R.Div(z.im,R.Two));
+      IF R.Compare(x.im, R.Zero) < 0 THEN  (* instead of using the Sgn function *)
+        z.im := R.Neg (z.im);
+      END;
+    END;
     (* Root is on the same side as the radicand with respect to the real axis. *)
 
   EXCEPT
