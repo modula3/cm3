@@ -32,6 +32,9 @@ todo:
                   VectorBasic or VectorFast
       VectorBasic - operations on READONLY ARRAYs using Add, Mul, etc. from the entry type
       VectorFast - operations on READONLY ARRAYs using +, *, etc. of the entry type
+     - making Vector.T an opaque type disallows x^, NUMBER(x^) and x[i],
+       you must either import VectorRep (more effort) or
+       write accessor functions (inefficient without INLINE)
   - Hash routines
   - ODE by Simon Hood
   - Lex routines (I have not needed them so far)
