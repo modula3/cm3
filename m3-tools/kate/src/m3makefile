@@ -1,15 +1,22 @@
 % $Id$
 
 % Here are syntax highlighting patterns for Kate and other KDE editors.
-% They allow for a nice look in konqueror, etc.
+% They allow for a nice look in Konqueror, etc.
 
 % If a syntax highlighting description is found for the first time
 % some information is copied to
 % .kde/share/config/katesyntaxhighlightingrc
 % It is not updated later though.
 
-% You are adviced to copy or link the files to
+% You may copy or link the syntax files to
 %    /opt/kde3/share/apps/katepart/syntax
-
 source("m3quake.xml")
 source("modula3.xml")
+
+% Here are some Mimetypes that allow Konqueror
+% to detect Modula-3 related files.
+
+% they should go to
+%    .kde/share/mimelnk/text/
+source("x-m3quake.desktop")
+source("x-modula3.desktop")
