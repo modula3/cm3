@@ -1,5 +1,5 @@
 /* Lexical analyzer for C and Objective C.
-   Copyright (C) 1987, 88, 89, 92, 94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 88, 89, 92, 94, 95, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -398,14 +398,30 @@ check_newline ()
 	      && getc (finput) == 'a'
 	      && ((c = getc (finput)) == ' ' || c == '\t' || c == '\n'))
 	    {
+	      while (c == ' ' || c == '\t')
+		c = getc (finput);
+	      if (c == '\n')
+		return c;
 #ifdef HANDLE_SYSV_PRAGMA
-	      return handle_sysv_pragma (finput, c);
+	      ungetc (c, finput);
+	      token = yylex ();
+	      if (token != IDENTIFIER)
+		goto skipline;
+	      return handle_sysv_pragma (finput, token);
 #else /* !HANDLE_SYSV_PRAGMA */
 #ifdef HANDLE_PRAGMA
-	      HANDLE_PRAGMA (finput);
+	      ungetc (c, finput);
+	      token = yylex ();
+	      if (token != IDENTIFIER)
+		goto skipline;
+	      if (HANDLE_PRAGMA (finput, yylval.ttype))
+		{
+		  c = getc (finput);
+		  return c;
+		}
 #endif /* HANDLE_PRAGMA */
-	      goto skipline;
 #endif /* !HANDLE_SYSV_PRAGMA */
+	      goto skipline;
 	    }
 	}
 
@@ -419,7 +435,8 @@ check_newline ()
 	      && ((c = getc (finput)) == ' ' || c == '\t' || c == '\n'))
 	    {
 #ifdef DWARF_DEBUGGING_INFO
-	      if ((debug_info_level == DINFO_LEVEL_VERBOSE)
+	      if (c != '\n'
+		  && (debug_info_level == DINFO_LEVEL_VERBOSE)
 		  && (write_symbols == DWARF_DEBUG))
 	        dwarfout_define (lineno, get_directive_line (finput));
 #endif /* DWARF_DEBUGGING_INFO */
@@ -435,7 +452,8 @@ check_newline ()
 	      && ((c = getc (finput)) == ' ' || c == '\t' || c == '\n'))
 	    {
 #ifdef DWARF_DEBUGGING_INFO
-	      if ((debug_info_level == DINFO_LEVEL_VERBOSE)
+	      if (c != '\n'
+		  && (debug_info_level == DINFO_LEVEL_VERBOSE)
 		  && (write_symbols == DWARF_DEBUG))
 	        dwarfout_undef (lineno, get_directive_line (finput));
 #endif /* DWARF_DEBUGGING_INFO */
@@ -590,6 +608,10 @@ linenum:
 	      p->name = input_filename;
 	      input_file_stack = p;
 	      input_file_stack_tick++;
+#ifdef DBX_DEBUGGING_INFO
+	      if (write_symbols == DBX_DEBUG)
+		dbxout_start_new_source_file (input_filename);
+#endif
 #ifdef DWARF_DEBUGGING_INFO
 	      if (debug_info_level == DINFO_LEVEL_VERBOSE
 		  && write_symbols == DWARF_DEBUG)
@@ -607,6 +629,10 @@ linenum:
 		  input_file_stack = p->next;
 		  free (p);
 		  input_file_stack_tick++;
+#ifdef DBX_DEBUGGING_INFO
+		  if (write_symbols == DBX_DEBUG)
+		    dbxout_resume_previous_source_file ();
+#endif
 #ifdef DWARF_DEBUGGING_INFO
 		  if (debug_info_level == DINFO_LEVEL_VERBOSE
 		      && write_symbols == DWARF_DEBUG)
@@ -666,37 +692,30 @@ linenum:
 
   /* skip the rest of this line.  */
  skipline:
-  if (c == '\n')
-    return c;
-  while ((c = getc (finput)) != EOF && c != '\n');
+  while (c != '\n' && c != EOF)
+    c = getc (finput);
   return c;
 }
 
 #ifdef HANDLE_SYSV_PRAGMA
 
 /* Handle a #pragma directive.  INPUT is the current input stream,
-   and C is a character to reread.  Processes the entire input line
-   and returns a character for the caller to reread: either \n or EOF.  */
+   and TOKEN is the token we read after `#pragma'.  Processes the entire input
+   line and returns a character for the caller to reread: either \n or EOF.  */
 
 /* This function has to be in this file, in order to get at
    the token types.  */
 
 int
-handle_sysv_pragma (input, c)
+handle_sysv_pragma (input, token)
      FILE *input;
-     int c;
+     register int token;
 {
+  register int c;
+
   for (;;)
     {
-      while (c == ' ' || c == '\t')
-	c = getc (input);
-      if (c == '\n' || c == EOF)
-	{
-	  handle_pragma_token (0, 0);
-	  return c;
-	}
-      ungetc (c, input);
-      switch (yylex ())
+      switch (token)
 	{
 	case IDENTIFIER:
 	case TYPENAME:
@@ -707,10 +726,21 @@ handle_sysv_pragma (input, c)
 	default:
 	  handle_pragma_token (token_buffer, 0);
 	}
+
       if (nextchar >= 0)
 	c = nextchar, nextchar = -1;
       else
 	c = getc (input);
+
+      while (c == ' ' || c == '\t')
+	c = getc (input);
+      if (c == '\n' || c == EOF)
+	{
+	  handle_pragma_token (0, 0);
+	  return c;
+	}
+      ungetc (c, input);
+      token = yylex ();
     }
 }
 
@@ -913,6 +943,11 @@ yylex ()
   int wide_flag = 0;
   int objc_flag = 0;
 
+/* CYGNUS LOCAL mpw */
+#ifdef PROGRESS
+  PROGRESS (1);
+#endif /* PROGRESS */
+/* END CYGNUS LOCAL */
   if (nextchar >= 0)
     c = nextchar, nextchar = -1;
   else
@@ -1109,7 +1144,23 @@ yylex ()
 
       break;
 
-    case '0':  case '1':  case '2':  case '3':  case '4':
+    case '0':  case '1':
+      {
+	int next_c;
+	/* Check first for common special case:  single-digit 0 or 1.  */
+
+	next_c = getc (finput);
+	ungetc (next_c, finput);	/* Always undo this lookahead.  */
+	if (!isalnum (next_c) && next_c != '.')
+	  {
+	    token_buffer[0] = (char)c,  token_buffer[1] = '\0';
+	    yylval.ttype = (c == '0') ? integer_zero_node : integer_one_node;
+	    value = CONSTANT;
+	    break;
+	  }
+	/*FALLTHRU*/
+      }
+    case '2':  case '3':  case '4':
     case '5':  case '6':  case '7':  case '8':  case '9':
     case '.':
       {
@@ -1274,7 +1325,7 @@ yylex ()
 	if (floatflag != NOT_FLOAT)
 	  {
 	    tree type = double_type_node;
-	    int garbage_chars = 0, exceeds_double = 0;
+	    int exceeds_double = 0;
 	    int imag = 0;
 	    REAL_VALUE_TYPE value;
 	    jmp_buf handler;
@@ -1410,19 +1461,6 @@ yylex ()
 		  }
 	      }
 #endif
-	    garbage_chars = 0;
-	    while (isalnum (c) || c == '.' || c == '_'
-		   || (!flag_traditional && (c == '+' || c == '-')
-		       && (p[-1] == 'e' || p[-1] == 'E')))
-	      {
-		if (p >= token_buffer + maxtoken - 3)
-		  p = extend_token_buffer (p);
-		*p++ = c;
-		c = getc (finput);
-		garbage_chars++;
-	      }
-	    if (garbage_chars > 0)
-	      error ("garbage at end of number");
 
 	    /* If the result is not a number, assume it must have been
 	       due to some error message above, so silently convert
@@ -1436,9 +1474,6 @@ yylex ()
 					    build_real (type, value));
 	    else
 	      yylval.ttype = build_real (type, value);
-
-	    ungetc (c, finput);
-	    *p = 0;
 	  }
 	else
 	  {
@@ -1479,31 +1514,12 @@ yylex ()
 		    spec_imag = 1;
 		  }
 		else
-		  {
-		    if (isalnum (c) || c == '.' || c == '_'
-			|| (!flag_traditional && (c == '+' || c == '-')
-			    && (p[-1] == 'e' || p[-1] == 'E')))
-		      {
-			error ("garbage at end of number");
-			while (isalnum (c) || c == '.' || c == '_'
-			       || (!flag_traditional && (c == '+' || c == '-')
-				   && (p[-1] == 'e' || p[-1] == 'E')))
-			  {
-			    if (p >= token_buffer + maxtoken - 3)
-			      p = extend_token_buffer (p);
-			    *p++ = c;
-			    c = getc (finput);
-			  }
-		      }
-		    break;
-		  }
+		  break;
 		if (p >= token_buffer + maxtoken - 3)
 		  p = extend_token_buffer (p);
 		*p++ = c;
 		c = getc (finput);
 	      }
-
-	    ungetc (c, finput);
 
 	    /* If the constant is not long long and it won't fit in an
 	       unsigned long, or if the constant is long long and won't fit
@@ -1640,9 +1656,15 @@ yylex ()
 	      }
 	    else
 	      TREE_TYPE (yylval.ttype) = type;
-
-	    *p = 0;
 	  }
+
+	ungetc (c, finput);
+	*p = 0;
+
+	if (isalnum (c) || c == '.' || c == '_'
+	    || (!flag_traditional && (c == '-' || c == '+')
+		&& (p[-1] == 'e' || p[-1] == 'E')))
+	  error ("missing white space after number `%s'", token_buffer);
 
 	value = CONSTANT; break;
       }

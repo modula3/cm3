@@ -1584,7 +1584,8 @@ option @code{BITS_BIG_ENDIAN} says which end of the memory unit
 If @var{loc} is in memory, its mode must be a single-byte integer mode.
 If @var{loc} is in a register, the mode to use is specified by the
 operand of the @code{insv} or @code{extv} pattern
-(@pxref{Standard Names}) and is usually a full-word integer mode.
+(@pxref{Standard Names}) and is usually a full-word integer mode,
+which is the default if none is specified.
 
 The mode of @var{pos} is machine-specific and is also specified
 in the @code{insv} or @code{extv} pattern.
@@ -2289,6 +2290,14 @@ delete insns by altering them into notes of this kind.
 These types of notes indicate the position of the beginning and end
 of a level of scoping of variable names.  They control the output
 of debugging information.
+
+@findex NOTE_INSN_EH_REGION_BEG
+@findex NOTE_INSN_EH_REGION_END
+@item NOTE_INSN_EH_REGION_BEG
+@itemx NOTE_INSN_EH_REGION_END
+These types of notes indicate the position of the beginning and end of a
+level of scoping for exception handling.  @code{NOTE_BLOCK_NUMBER}
+identifies which @code{CODE_LABEL} is associated with the given region.
 
 @findex NOTE_INSN_LOOP_BEG
 @findex NOTE_INSN_LOOP_END

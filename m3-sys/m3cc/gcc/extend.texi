@@ -1,4 +1,4 @@
-@c Copyright (C) 1988, 1989, 1992, 1993, 1994 Free Software Foundation, Inc.
+@c Copyright (C) 1988,89,92,93,94,96 Free Software Foundation, Inc.
 @c This is part of the GCC manual.
 @c For copying conditions, see the file gcc.texi.
 
@@ -16,6 +16,11 @@ features in conditional compilation, check for a predefined macro
 These extensions are available in C and Objective C.  Most of them are
 also available in C++.  @xref{C++ Extensions,,Extensions to the
 C++ Language}, for extensions that apply @emph{only} to C++.
+
+@c CYGNUS LOCAL Interrupt Functions
+@c The entry "Interrupt Functions" in the following menu are needed for
+@c Cygnus-only sections of the doc.  Unfortunately makeinfo gets confused if
+@c comments to this effect are inside the menu.
 
 @c The only difference between the two versions of this menu is that the
 @c version for clear INTERNALS has an extra node, "Constraints" (which
@@ -47,6 +52,7 @@ C++ Language}, for extensions that apply @emph{only} to C++.
 * Function Attributes:: Declaring that functions have no side effects,
                          or that they can never return.
 * Function Prototypes:: Prototype declarations and old-style definitions.
+* Interrupt Functions:: Compiling functions for interrupt calls
 * C++ Comments::        C++ comments are recognized.
 * Dollar Signs::        Dollar sign is allowed in identifiers.
 * Character Escapes::   @samp{\e} stands for the character @key{ESC}.
@@ -62,6 +68,7 @@ C++ Language}, for extensions that apply @emph{only} to C++.
 * Incomplete Enums::    @code{enum foo;}, with details to follow.
 * Function Names::	Printable strings which are the name of the current
 			 function.
+* Return Address::      Getting the return or frame address of a function.
 @end menu
 @end ifset
 @ifclear INTERNALS
@@ -91,6 +98,7 @@ C++ Language}, for extensions that apply @emph{only} to C++.
 * Function Attributes:: Declaring that functions have no side effects,
                          or that they can never return.
 * Function Prototypes:: Prototype declarations and old-style definitions.
+* Interrupt Functions:: Compiling functions for interrupt calls
 * C++ Comments::        C++ comments are recognized.
 * Dollar Signs::        Dollar sign is allowed in identifiers.
 * Character Escapes::   @samp{\e} stands for the character @key{ESC}.
@@ -107,6 +115,7 @@ C++ Language}, for extensions that apply @emph{only} to C++.
 * Incomplete Enums::    @code{enum foo;}, with details to follow.
 * Function Names::	Printable strings which are the name of the current
 			 function.
+* Return Address::      Getting the return or frame address of a function.
 @end menu
 @end ifclear
 
@@ -235,12 +244,12 @@ example:
 @section Labels as Values
 @cindex labels as values
 @cindex computed gotos
-@cindex goto with computed label 
+@cindex goto with computed label
 @cindex address of a label
 
 You can get the address of a label defined in the current function
 (or a containing function) with the unary operator @samp{&&}.  The
-value has type @code{void *}.  This value is a constant and can be used 
+value has type @code{void *}.  This value is a constant and can be used
 wherever a constant of that type is valid.  For example:
 
 @example
@@ -286,7 +295,7 @@ use that rather than an array unless the problem does not fit a
 
 Another use of label values is in an interpreter for threaded code.
 The labels within the interpreter function can be stored in the
-threaded code for super-fast dispatching.  
+threaded code for super-fast dispatching.
 
 You can use this mechanism to jump to code in a different function.  If
 you do that, totally unpredictable things will happen.  The best way to
@@ -727,11 +736,11 @@ effects of recomputing it.
 @cindex multiprecision arithmetic
 
 GNU C supports data types for integers that are twice as long as
-@code{long int}.  Simply write @code{long long int} for a signed
-integer, or @code{unsigned long long int} for an unsigned integer.
-To make an integer constant of type @code{long long int}, add the suffix
-@code{LL} to the integer.  To make an integer constant of type
-@code{unsigned long long int}, add the suffix @code{ULL} to the integer.
+@code{int}.  Simply write @code{long long int} for a signed integer, or
+@code{unsigned long long int} for an unsigned integer.  To make an
+integer constant of type @code{long long int}, add the suffix @code{LL}
+to the integer.  To make an integer constant of type @code{unsigned long
+long int}, add the suffix @code{ULL} to the integer.
 
 You can use these types in arithmetic like any other integer types.
 Addition, subtraction, and bitwise boolean operations on these types
@@ -783,7 +792,7 @@ the imaginary part is on the stack (or vice-versa).  None of the
 supported debugging info formats has a way to represent noncontiguous
 allocation like this, so GNU CC describes a noncontiguous complex
 variable as if it were two separate variables of noncomplex type.
-If the variable's actual name is @code{foo}, the two fictitious 
+If the variable's actual name is @code{foo}, the two fictitious
 variables are named @code{foo$real} and @code{foo$imag}.  You can
 examine and set these two fictitious variables with your debugger.
 
@@ -1017,7 +1026,7 @@ foo (float f, float g)
 @cindex constructor expressions
 @cindex initializations in expressions
 @cindex structures, constructor expression
-@cindex expressions, constructor 
+@cindex expressions, constructor
 
 GNU C supports constructor expressions.  A constructor looks like
 a cast containing an initializer.  Its value is an object of the
@@ -1118,7 +1127,7 @@ plus one.
 
 In a structure initializer, specify the name of a field to initialize
 with @samp{@var{fieldname}:} before the element value.  For example,
-given the following structure, 
+given the following structure,
 
 @example
 struct point @{ int x, y; @};
@@ -1217,7 +1226,7 @@ write this:
 case 1 ... 5:
 @end example
 
-@noindent 
+@noindent
 rather than this:
 
 @example
@@ -1227,7 +1236,7 @@ case 1...5:
 @node Cast to Union
 @section Cast to a Union Type
 @cindex cast to a union
-@cindex union, casting to a 
+@cindex union, casting to a
 
 A cast to union type is similar to other casts, except that the type
 specified is a union type.  You can specify the type either with
@@ -1333,7 +1342,7 @@ earlier than 2.5.  An alternative way to declare that a function does
 not return, which works in the current version and in some older
 versions, is as follows:
 
-@smallexample  
+@smallexample
 typedef void voidfn ();
 
 volatile voidfn fatal;
@@ -1416,6 +1425,34 @@ for the ANSI library functions @code{printf}, @code{fprintf},
 warnings are requested (using @samp{-Wformat}), so there is no need to
 modify the header file @file{stdio.h}.
 
+@item format_arg (@var{string-index})
+@cindex @code{format_arg} function attribute
+The @code{format_arg} attribute specifies that a function takes
+@code{printf} or @code{scanf} style arguments, modifies it (for example,
+to translate it into another language), and passes it to a @code{printf}
+or @code{scanf} style function.  For example, the declaration:
+
+@smallexample
+extern char *
+my_dgettext (char *my_domain, const char *my_format)
+      __attribute__ ((format_arg (2)));
+@end smallexample
+
+@noindent
+causes the compiler to check the arguments in calls to
+@code{my_dgettext} whose result is passed to a @code{printf} or
+@code{scanf} type function for consistency with the @code{printf} style
+format string argument @code{my_format}.
+
+The parameter @var{string-index} specifies which argument is the format
+string argument (starting from 1).
+
+The @code{format-arg} attribute allows you to identify your own
+functions which modify format strings, so that GNU CC can check the
+calls to @code{printf} and @code{scanf} function whose operands are a
+call to one of your own function.  The compiler always treats
+@code{gettext}, @code{dgettext}, and @code{dcgettext} in this manner.
+
 @item section ("section-name")
 @cindex @code{section} function attribute
 Normally, the compiler places the code it generates in the @code{text} section.
@@ -1453,7 +1490,8 @@ These attributes are not currently implemented for Objective C.
 @item unused
 This attribute, attached to a function, means that the function is meant
 to be possibly unused.  GNU CC will not produce a warning for this
-function.
+function.  GNU C++ does not currently support this attribute as
+definitions without parameters are valid in C++.
 
 @item weak
 @cindex @code{weak} attribute
@@ -1491,12 +1529,87 @@ On the Intel 386, the @code{stdcall} attribute causes the compiler to
 assume that the called function will pop off the stack space used to
 pass arguments, unless it takes a variable number of arguments.
 
+The PowerPC compiler for Windows NT currently ignores the @code{stdcall}
+attribute.
+
 @item cdecl
 @cindex functions that do pop the argument stack on the 386
 On the Intel 386, the @code{cdecl} attribute causes the compiler to
-assume that the called function will pop off the stack space used to
-pass arguments, unless it takes a variable number of arguments.  This is
+assume that the calling function will pop off the stack space used to
+pass arguments.  This is
 useful to override the effects of the @samp{-mrtd} switch.
+
+The PowerPC compiler for Windows NT currently ignores the @code{cdecl}
+attribute.
+
+@item longcall
+@cindex functions called via pointer on the RS/6000 and PowerPC
+On the RS/6000 and PowerPC, the @code{longcall} attribute causes the
+compiler to always call the function via a pointer, so that functions
+which reside further than 64 megabytes (67,108,864 bytes) from the
+current location can be called.
+
+@item dllimport
+@cindex functions which are imported from a dll on PowerPC Windows NT
+On the PowerPC running Windows NT, the @code{dllimport} attribute causes
+the compiler to call the function via a global pointer to the function
+pointer that is set up by the Windows NT dll library.  The pointer name
+is formed by combining @code{__imp_} and the function name.
+
+@item dllexport
+@cindex functions which are exported from a dll on PowerPC Windows NT
+On the PowerPC running Windows NT, the @code{dllexport} attribute causes
+the compiler to provide a global pointer to the function pointer, so
+that it can be called with the @code{dllimport} attribute.  The pointer
+name is formed by combining @code{__imp_} and the function name.
+
+@item exception (@var{except-func} [, @var{except-arg}])
+@cindex functions which specify exception handling on PowerPC Windows NT
+On the PowerPC running Windows NT, the @code{exception} attribute causes
+the compiler to modify the structured exception table entry it emits for
+the declared function.  The string or identifier @var{except-func} is
+placed in the third entry of the structured exception table.  It
+represents a function, which is called by the exception handling
+mechanism if an exception occurs.  If it was specified, the string or
+identifier @var{except-arg} is placed in the fourth entry of the
+structured exception table.
+
+@item function_vector
+@cindex calling functions through the function vector on the H8/300 processors
+Use this option on the H8/300 and H8/300H to indicate that the specified
+function should be called through the function vector.  Calling a
+function through the function vector will reduce code size, however;
+the function vector has a limited size (maximum 128 entries on the H8/300
+and 64 entries on the H8/300H) and shares space with the interrupt vector.
+
+You must use GAS and GLD from GNU binutils version 2.7 or later for
+this option to work correctly.
+
+@item interrupt_handler
+@cindex interrupt handler functions on the H8/300 processors
+Use this option on the H8/300 and H8/300H to indicate that the specified
+function is an interrupt handler.  The compiler will generate function
+entry and exit sequences suitable for use in an interrupt handler when this
+attribute is present.
+
+@item eightbit_data
+@cindex
+Use this option on the H8/300 and H8/300H to indicate that the specified
+variable should be placed into the eight bit data section.
+The compiler will generate more efficient code for certain operations
+on data in the eight bit data area.  Note the eight bit data area is limited to
+256 bytes of data.
+
+You must use GAS and GLD from GNU binutils version 2.7 or later for
+this option to work correctly.
+
+@item tiny_data
+@cindex
+Use this option on the H8/300H to indicate that the specified
+variable should be placed into the tiny data section.
+The compiler will generate more efficient code for loads and stores
+on data in the tiny data section.  Note the tiny data area is limited to
+slightly under 32kbytes of data.
 @end table
 
 You can specify multiple attributes in a declaration by separating them
@@ -1579,6 +1692,34 @@ isroot (uid_t x)
 
 GNU C++ does not support old-style function definitions, so this
 extension is irrelevant.
+
+@c CYGNUS LOCAL Interrupt Functions
+@node Interrupt Functions
+@section Compiling Functions for Interrupt Calls
+@cindex interrupts, functions compiled for
+@kindex #pragma interrupt
+@cindex calling conventions for interrupts
+
+When compiling code for certain platforms (currently the Hitachi H8/300
+and the Tandem ST-2000), you can instruct @code{@value{GCC}} that certain functions are
+meant to be called from hardware interrupts.
+
+To mark a function as callable from interrupt, include the line
+@samp{#pragma interrupt} somewhere before the beginning of the
+function's definition.  (For maximum readability, you might place it
+immediately before the definition of the appropriate function.)
+@samp{#pragma interrupt} will affect only the next function defined; if
+you want to define more than one function with this property, include
+@samp{#pragma interrupt} before each of them.
+
+When you define a function with @samp{#pragma interrupt}, @code{@value{GCC}} alters its
+usual calling convention, to provide the right environment when the
+function is called from an interrupt.  @emph{Such functions cannot be
+called in the usual way from your program}.
+
+You must use other facilities to actually associate these functions with
+particular interrupts; @code{@value{GCC}} can only compile them in the appropriate way.
+@c END CYGNUS LOCAL
 
 @node C++ Comments
 @section C++ Style Comments
@@ -1797,7 +1938,7 @@ section.  For example, this small program uses several specific section names:
 struct duart a __attribute__ ((section ("DUART_A"))) = @{ 0 @};
 struct duart b __attribute__ ((section ("DUART_B"))) = @{ 0 @};
 char stack[10000] __attribute__ ((section ("STACK"))) = @{ 0 @};
-int init_data_copy __attribute__ ((section ("INITDATACOPY"))) = 0;
+int init_data __attribute__ ((section ("INITDATA"))) = 0;
 
 main()
 @{
@@ -1805,7 +1946,7 @@ main()
   init_sp (stack + sizeof (stack));
 
   /* Initialize initialized data */
-  memcpy (&init_data_copy, &data, &edata - &data);
+  memcpy (&init_data, &data, &edata - &data);
 
   /* Turn on the serial ports */
   init_duart (&a);
@@ -1833,11 +1974,12 @@ If you need to map the entire contents of a module to a particular
 section, consider using the facilities of the linker instead.
 
 @item transparent_union
-This attribute, attached to a function argument variable which is a
-union, means to pass the argument in the same way that the first union
-member would be passed.  You can also use this attribute on a
-@code{typedef} for a union data type; then it applies to all function
-arguments with that type.
+This attribute, attached to a function parameter which is a union, means
+that the corresponding argument may have the type of any union member,
+but the argument is passed as if its type were that of the first union
+member.  For more details see @xref{Type Attributes}.  You can also use
+this attribute on a @code{typedef} for a union data type; then it
+applies to all function parameters with that type.
 
 @item unused
 This attribute, attached to a variable, means that the variable is meant
@@ -1973,16 +2115,60 @@ You may only specify this attribute after a closing curly brace on an
 
 @item transparent_union
 This attribute, attached to a @code{union} type definition, indicates
-that any variable having that union type should, if passed to a
-function, be passed in the same way that the first union member would be
-passed.  For example:
+that any function parameter having that union type causes calls to that
+function to be treated in a special way.
+
+First, the argument corresponding to a transparent union type can be of
+any type in the union; no cast is required.  Also, if the union contains
+a pointer type, the corresponding argument can be a null pointer
+constant or a void pointer expression; and if the union contains a void
+pointer type, the corresponding argument can be any pointer expression.
+If the union member type is a pointer, qualifiers like @code{const} on
+the referenced type must be respected, just as with normal pointer
+conversions.
+
+Second, the argument is passed to the function using the calling
+conventions of first member of the transparent union, not the calling
+conventions of the union itself.  All members of the union must have the
+same machine representation; this is necessary for this argument passing
+to work properly.
+
+Transparent unions are designed for library functions that have multiple
+interfaces for compatibility reasons.  For example, suppose the
+@code{wait} function must accept either a value of type @code{int *} to
+comply with Posix, or a value of type @code{union wait *} to comply with
+the 4.1BSD interface.  If @code{wait}'s parameter were @code{void *},
+@code{wait} would accept both kinds of arguments, but it would also
+accept any other pointer type and this would make argument type checking
+less useful.  Instead, @code{<sys/wait.h>} might define the interface
+as follows:
+
+@smallexample
+typedef union
+  @{
+    int *__ip;
+    union wait *__up;
+  @} wait_status_ptr_t __attribute__ ((__transparent_union__));
+
+pid_t wait (wait_status_ptr_t);
+@end smallexample
+
+This interface allows either @code{int *} or @code{union wait *}
+arguments to be passed, using the @code{int *} calling convention.
+The program can call @code{wait} with arguments of either type:
 
 @example
-union foo
+int w1 () @{ int w; return wait (&w); @}
+int w2 () @{ union wait w; return wait (&w); @}
+@end example
+
+With this interface, @code{wait}'s implementation might look like this:
+
+@example
+pid_t wait (wait_status_ptr_t p)
 @{
-  char a;
-  int x[2];
-@} __attribute__ ((transparent_union));
+  return waitpid (-1, p.__ip, 0);
+@}
 @end example
 @end table
 
@@ -2495,7 +2681,7 @@ Of course, it will not do to use more than a few of those.
 
 @node Local Reg Vars
 @subsection Specifying Registers for Local Variables
-@cindex local variables, specifying registers 
+@cindex local variables, specifying registers
 @cindex specifying registers for local variables
 @cindex registers for local variables
 
@@ -2631,6 +2817,49 @@ For example, @samp{#ifdef __FUNCTION__} does not have any special
 meaning inside a function, since the preprocessor does not do anything
 special with the identifier @code{__FUNCTION__}.
 
+@node Return Address
+@section Getting the Return or Frame Address of a Function
+
+These functions may be used to get information about the callers of a
+function.
+
+@table @code
+@item __builtin_return_address (@var{level})
+This function returns the return address of the current function, or of
+one of its callers.  The @var{level} argument is number of frames to
+scan up the call stack.  A value of @code{0} yields the return address
+of the current function, a value of @code{1} yields the return address
+of the caller of the current function, and so forth.
+
+The @var{level} argument must be a constant integer.
+
+On some machines it may be impossible to determine the return address of
+any function other than the current one; in such cases, or when the top
+of the stack has been reached, this function will return @code{0}.
+
+This function should only be used with a non-zero argument for debugging
+purposes.
+
+@item __builtin_frame_address (@var{level})
+This function is similar to @code{__builtin_return_address}, but it
+returns the address of the function frame rather than the return address
+of the function.  Calling @code{__builtin_frame_address} with a value of
+@code{0} yields the frame address of the current function, a value of
+@code{1} yields the frame address of the caller of the current function,
+and so forth.
+
+The frame is the area on the stack which holds local variables and saved
+registers.  The frame address is normally the address of the first word
+pushed on to the stack by the function.  However, the exact definition
+depends upon the processor and the calling convention.  If the processor
+has a dedicated frame pointer register, and the function has a frame,
+then @code{__builtin_frame_address} will return the value of the frame
+pointer register.
+
+The caveats that apply to @code{__builtin_return_address} apply to this
+function as well.
+@end table
+
 @node C++ Extensions
 @chapter Extensions to the C++ Language
 @cindex extensions, C++ language
@@ -2672,7 +2901,7 @@ C++ programs:
 @group
 @var{type}
 @var{functionname} (@var{args}) return @var{resultname};
-@{ 
+@{
   @dots{}
   @var{body}
   @dots{}
@@ -2691,7 +2920,7 @@ m ()
 @{
   X b;
   b.a = 23;
-  return b; 
+  return b;
 @}
 @end example
 
@@ -2720,7 +2949,7 @@ at the outset, and assigning to its @code{a} field directly:
 X
 m () return r;
 @{
-  r.a = 23; 
+  r.a = 23;
 @}
 @end example
 
@@ -2731,13 +2960,13 @@ are executed @strong{before} any of the body of @code{m}.
 Functions of this type impose no additional restrictions; in particular,
 you can execute @code{return} statements, or return implicitly by
 reaching the end of the function body (``falling off the edge'').
-Cases like 
+Cases like
 
 @example
 X
 m () return r (23);
 @{
-  return; 
+  return;
 @}
 @end example
 
@@ -2751,7 +2980,7 @@ X
 m () return r;
 @{
   X b;
-  return b; 
+  return b;
 @}
 @end example
 
@@ -2807,7 +3036,7 @@ behavior.  For example, @code{MIN (i++, j++)} will fail, incrementing
 the smaller counter twice.  A GNU C extension allows you to write safe
 macros that avoid this kind of problem (@pxref{Naming Types,,Naming an
 Expression's Type}).  However, writing @code{MIN} and @code{MAX} as
-macros also forces you to use function-call notation notation for a
+macros also forces you to use function-call notation for a
 fundamental arithmetic operation.  Using GNU C++ extensions, you can
 write @w{@samp{int min = i <? j;}} instead.
 
@@ -2822,9 +3051,7 @@ works correctly.
 @cindex destructors vs @code{goto}
 In C++ programs, you can safely use the @code{goto} statement.  When you
 use it to exit a block which contains aggregates requiring destructors,
-the destructors will run before the @code{goto} transfers control.  (In
-ANSI C++, @code{goto} is restricted to targets within the current
-block.)
+the destructors will run before the @code{goto} transfers control.
 
 @cindex constructors vs @code{goto}
 The compiler still forbids using @code{goto} to @emph{enter} a scope
@@ -2901,7 +3128,8 @@ If you use @samp{#pragma implementation} with no argument, it applies to
 an include file with the same basename@footnote{A file's @dfn{basename}
 was the name stripped of all leading path information and of trailing
 suffixes, such as @samp{.h} or @samp{.C} or @samp{.cc}.} as your source
-file.  For example, in @file{allclass.cc}, @samp{#pragma implementation}
+file.  For example, in @file{allclass.cc}, giving just
+@samp{#pragma implementation}
 by itself is equivalent to @samp{#pragma implementation "allclass.h"}.
 
 In versions of GNU C++ prior to 2.6.0 @file{allclass.h} was treated as
@@ -2992,6 +3220,77 @@ Currently, g++ implements neither automatic model.  In the mean time,
 you have three options for dealing with template instantiations:
 
 @enumerate
+@c CYGNUS LOCAL -frepo
+@item
+Compile your template-using code with @samp{-frepo}.  The compiler will
+generate files with the extension @samp{.rpo} listing all of the
+template instantiations used in the corresponding object files which
+could be instantiated there; the link wrapper, @samp{collect2}, will
+then update the @samp{.rpo} files to tell the compiler where to place
+those instantiations and rebuild any affected object files.  The
+link-time overhead is negligible after the first pass, as the compiler
+will continue to place the instantiations in the same files.
+
+This is your best option for application code written for the Borland
+model, as it will just work.  Code written for the Cfront model will
+need to be modified so that the template definitions are available at
+one or more points of instantiation; usually this is as simple as adding
+@code{#include <tmethods.cc>} to the end of each template header.
+
+For library code, if you want the library to provide all of the template
+instantiations it needs, just try to link all of its object files
+together; the link will fail, but cause the instantiations to be
+generated as a side effect.  Be warned, however, that this may cause
+conflicts if multiple libraries try to provide the same instantiations.
+For greater control, use explicit instantiation as described in the next
+option.
+
+@c END CYGNUS LOCAL -frepo
+@item
+Compile your code with @samp{-fno-implicit-templates} to disable the
+implicit generation of template instances, and explicitly instantiate
+all the ones you use.  This approach requires more knowledge of exactly
+which instances you need than do the others, but it's less
+mysterious and allows greater control.  You can scatter the explicit
+instantiations throughout your program, perhaps putting them in the
+translation units where the instances are used or the translation units
+that define the templates themselves; you can put all of the explicit
+instantiations you need into one big file; or you can create small files
+like
+
+@example
+#include "Foo.h"
+#include "Foo.cc"
+
+template class Foo<int>;
+template ostream& operator <<
+                (ostream&, const Foo<int>&);
+@end example
+
+for each of the instances you need, and create a template instantiation
+library from those.
+
+If you are using Cfront-model code, you can probably get away with not
+using @samp{-fno-implicit-templates} when compiling files that don't
+@samp{#include} the member template definitions.
+
+If you use one big file to do the instantiations, you may want to
+compile it without @samp{-fno-implicit-templates} so you get all of the
+instances required by your explicit instantiations (but not by any
+other files) without having to specify them as well.
+
+g++ has extended the template instantiation syntax outlined in the
+Working Paper to allow forward declaration of explicit instantiations,
+explicit instantiation of members of template classes and instantiation
+of the compiler support data for a template class (i.e. the vtable)
+without instantiating any of its members:
+
+@example
+extern template int max (int, int);
+template void Foo<int>::f ();
+inline template class Foo<int>;
+@end example
+
 @item
 Do nothing.  Pretend g++ does implement automatic instantiation
 management.  Code written for the Borland model will work fine, but
@@ -3003,16 +3302,16 @@ duplication.
 Add @samp{#pragma interface} to all files containing template
 definitions.  For each of these files, add @samp{#pragma implementation
 "@var{filename}"} to the top of some @samp{.C} file which
-@samp{#include}s it.  Then compile everything with -fexternal-templates.
-The templates will then only be expanded in the translation unit which
-implements them (i.e. has a @samp{#pragma implementation} line for the
-file where they live); all other files will use external references.  If
-you're lucky, everything should work properly.  If you get undefined
-symbol errors, you need to make sure that each template instance which
-is used in the program is used in the file which implements that
-template.  If you don't have any use for a particular instance in that
-file, you can just instantiate it explicitly, using the syntax from the
-latest C++ working paper:
+@samp{#include}s it.  Then compile everything with
+@samp{-fexternal-templates}.  The templates will then only be expanded
+in the translation unit which implements them (i.e. has a @samp{#pragma
+implementation} line for the file where they live); all other files will
+use external references.  If you're lucky, everything should work
+properly.  If you get undefined symbol errors, you need to make sure
+that each template instance which is used in the program is used in the
+file which implements that template.  If you don't have any use for a
+particular instance in that file, you can just instantiate it
+explicitly, using the syntax from the latest C++ working paper:
 
 @example
 template class A<int>;
@@ -3024,37 +3323,15 @@ using code written for the Cfront model, the file containing a class
 template and the file containing its member templates should be
 implemented in the same translation unit.
 
-A slight variation on this approach is to use the flag
--falt-external-templates instead; this flag causes template instances to
-be emitted in the translation unit that implements the header where they
-are first instantiated, rather than the one which implements the file
-where the templates are defined.  This header must be the same in all
-translation units, or things are likely to break.
+A slight variation on this approach is to instead use the flag
+@samp{-falt-external-templates}; this flag causes template
+instances to be emitted in the translation unit that implements the
+header where they are first instantiated, rather than the one which
+implements the file where the templates are defined.  This header must
+be the same in all translation units, or things are likely to break.
 
 @xref{C++ Interface,,Declarations and Definitions in One Header}, for
 more discussion of these pragmas.
-
-@item
-Explicitly instantiate all the template instances you use, and compile
-with -fno-implicit-templates.  This is probably your best bet; it may
-require more knowledge of exactly which templates you are using, but
-it's less mysterious than the previous approach, and it doesn't require
-any @samp{#pragma}s or other g++-specific code.  You can scatter the
-instantiations throughout your program, you can create one big file to
-do all the instantiations, or you can create tiny files like
-
-@example
-#include "Foo.h"
-#include "Foo.cc"
-
-template class Foo<int>;
-@end example
-
-for each instance you need, and create a template instantiation library
-from those.  I'm partial to the last, but your mileage may vary.  If you
-are using Cfront-model code, you can probably get away with not using
--fno-implicit-templates when compiling files that don't @samp{#include}
-the member template definitions.
 @end enumerate
 
 @node C++ Signatures
@@ -3128,7 +3405,7 @@ S * p = &obj;
 
 @noindent
 defines a signature pointer @code{p} and initializes it to point to an
-object of type @code{C}.  
+object of type @code{C}.
 The member function call @w{@samp{int i = p->foo ();}}
 executes @samp{obj.foo ()}.
 

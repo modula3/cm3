@@ -1,5 +1,5 @@
 /* Output routines for GCC for Hitachi Super-H.
-   Copyright (C) 1993, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1994, 1995, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -33,6 +33,7 @@ Boston, MA 02111-1307, USA.  */
 #include "regs.h"
 #include "hard-reg-set.h"
 #include "output.h"
+#include "insn-attr.h"
 
 #define MSW (TARGET_LITTLE_ENDIAN ? 1 : 0)
 #define LSW (TARGET_LITTLE_ENDIAN ? 0 : 1)
@@ -45,6 +46,13 @@ int pragma_interrupt;
 /* This is set by #pragma trapa, and is similar to the above, except that
    the compiler doesn't emit code to preserve all registers.  */
 static int pragma_trapa;
+
+/* This is set by #pragma nosave_low_regs.  This is useful on the SH3,
+   which has a separate set of low regs for User and Supervisor modes.
+   This should only be used for the lowest level of interrupts.  Higher levels
+   of interrupts must save the registers in case they themselves are
+   interrupted.  */
+int pragma_nosave_low_regs;
 
 /* This is used for communication between SETUP_INCOMING_VARARGS and
    sh_expand_prologue.  */
@@ -76,7 +84,11 @@ int regno_reg_class[FIRST_PSEUDO_REGISTER] =
   GENERAL_REGS, GENERAL_REGS, GENERAL_REGS, GENERAL_REGS,
   GENERAL_REGS, GENERAL_REGS, GENERAL_REGS, GENERAL_REGS,
   GENERAL_REGS, PR_REGS, T_REGS, NO_REGS,
-  MAC_REGS, MAC_REGS,
+  MAC_REGS, MAC_REGS, FPUL_REGS, GENERAL_REGS,
+  FP0_REGS,FP_REGS, FP_REGS, FP_REGS,
+  FP_REGS, FP_REGS, FP_REGS, FP_REGS,
+  FP_REGS, FP_REGS, FP_REGS, FP_REGS,
+  FP_REGS, FP_REGS, FP_REGS, FP_REGS,
 };
 
 /* Provide reg_class from a letter such as appears in the machine
@@ -85,12 +97,12 @@ int regno_reg_class[FIRST_PSEUDO_REGISTER] =
 enum reg_class reg_class_from_letter[] =
 {
   /* a */ NO_REGS, /* b */ NO_REGS, /* c */ NO_REGS, /* d */ NO_REGS,
-  /* e */ NO_REGS, /* f */ NO_REGS, /* g */ NO_REGS, /* h */ NO_REGS,
+  /* e */ NO_REGS, /* f */ FP_REGS, /* g */ NO_REGS, /* h */ NO_REGS,
   /* i */ NO_REGS, /* j */ NO_REGS, /* k */ NO_REGS, /* l */ PR_REGS,
   /* m */ NO_REGS, /* n */ NO_REGS, /* o */ NO_REGS, /* p */ NO_REGS,
   /* q */ NO_REGS, /* r */ NO_REGS, /* s */ NO_REGS, /* t */ T_REGS,
-  /* u */ NO_REGS, /* v */ NO_REGS, /* w */ NO_REGS, /* x */ MAC_REGS,
-  /* y */ NO_REGS, /* z */ R0_REGS
+  /* u */ NO_REGS, /* v */ NO_REGS, /* w */ FP0_REGS, /* x */ MAC_REGS,
+  /* y */ FPUL_REGS, /* z */ R0_REGS
 };
 
 /* Print the operand address in x to the stream.  */
@@ -303,11 +315,23 @@ prepare_move_operands (operands, mode)
      rtx operands[];
      enum machine_mode mode;
 {
-  /* Copy the source to a register if both operands aren't registers.  */
-  if (! reload_in_progress && ! reload_completed
-      && ! register_operand (operands[0], mode)
-      && ! register_operand (operands[1], mode))
-    operands[1] = copy_to_mode_reg (mode, operands[1]);
+  if (! reload_in_progress && ! reload_completed)
+    {
+      /* Copy the source to a register if both operands aren't registers.  */
+      if (! register_operand (operands[0], mode)
+	  && ! register_operand (operands[1], mode))
+	operands[1] = copy_to_mode_reg (mode, operands[1]);
+
+      /* This case can happen while generating code to move the result
+	 of a library call to the target.  Reject `st r0,@(rX,rY)' because
+	 reload will fail to find a spill register for rX, since r0 is already
+	 being used for the source.  */
+      else if (GET_CODE (operands[1]) == REG && REGNO (operands[1]) == 0
+	       && GET_CODE (operands[0]) == MEM
+	       && GET_CODE (XEXP (operands[0], 0)) == PLUS
+	       && GET_CODE (XEXP (XEXP (operands[0], 0), 1)) == REG)
+	operands[1] = copy_to_mode_reg (mode, operands[1]);
+    }
 
   return 0;
 }
@@ -358,6 +382,8 @@ prepare_scc_operands (code)
 	  || code == GTU  || code == GEU || code == LTU || code == LEU))
     sh_compare_op1 = force_reg (mode, sh_compare_op1);
 
+  /* ??? This should be `mode' not `SImode' in the compare, but that would
+     require fixing the branch patterns too.  */
   emit_insn (gen_rtx (SET, VOIDmode, t_reg,
 		      gen_rtx (code, SImode, sh_compare_op0,
 			       sh_compare_op1)));
@@ -374,11 +400,15 @@ from_compare (operands, code)
 {
   if (code != EQ && code != NE)
     {
+      enum machine_mode mode = GET_MODE (sh_compare_op0);
+      if (mode == VOIDmode)
+	mode = GET_MODE (sh_compare_op1);
+
       /* Force args into regs, since we can't use constants here.  */
-      sh_compare_op0 = force_reg (SImode, sh_compare_op0);
+      sh_compare_op0 = force_reg (mode, sh_compare_op0);
       if (sh_compare_op1 != const0_rtx
 	  || code == GTU  || code == GEU || code == LTU || code == LEU)
-	sh_compare_op1 = force_reg (SImode, sh_compare_op1);
+	sh_compare_op1 = force_reg (mode, sh_compare_op1);
     }
   operands[1] = sh_compare_op0;
   operands[2] = sh_compare_op1;
@@ -522,8 +552,22 @@ output_branch (logic, insn, operands)
      rtx *operands;
 {
   int label = lf++;
+  int length = get_attr_length (insn);
+  int adjusted_length;
 
-  switch (get_attr_length (insn))
+  /* Undo the effects of ADJUST_INSN_LENGTH, so that we get the real
+     length.  If NEXT_INSN (PREV_INSN (insn)) != insn, then the insn
+     is inside a sequence, and ADJUST_INSN_LENGTH was not called on
+     it.  */
+  if (PREV_INSN (insn) == NULL
+      || NEXT_INSN (PREV_INSN (insn)) == insn)
+    {
+      adjusted_length = length;
+      ADJUST_INSN_LENGTH (insn, adjusted_length);
+      length -= (adjusted_length - length);
+    }
+
+  switch (length)
     {
     case 2:
       /* A branch with an unfilled delay slot.  */
@@ -596,102 +640,15 @@ output_branch (logic, insn, operands)
       }
       return "";
     }
-  return "bad";
+
+  abort ();
 }
 
-/* A copy of the option structure defined in toplev.c.  */
-
-struct option
-{
-  char *string;
-  int *variable;
-  int on_value;
-};
-
-/* Output a single output option string NAME to FILE, without generating
-   lines longer than MAX.  */
-
-static int
-output_option (file, sep, type, name, indent, pos, max)
-     FILE *file;
-     char *sep;
-     char *type;
-     char *name;
-     char *indent;
-     int pos;
-     int max;
-{
-  if (strlen (sep) + strlen (type) + strlen (name) + pos > max)
-    {
-      fprintf (file, indent);
-      return fprintf (file, "%s%s", type, name);
-    }
-  return pos + fprintf (file, "%s%s%s", sep, type, name);
-}
-
-/* A copy of the target_switches variable in toplev.c.  */
-
-static struct
-{
-  char *name;
-  int value;
-} m_options[] = TARGET_SWITCHES;
-
-/* Output all options to the assembly language file.  */
-
-static void
-output_options (file, f_options, f_len, W_options, W_len,
-		pos, max, sep, indent, term)
-     FILE *file;
-     struct option *f_options;
-     struct option *W_options;
-     int f_len, W_len;
-     int pos;
-     int max;
-     char *sep;
-     char *indent;
-     char *term;
-{
-  register int j;
-
-  if (optimize)
-    pos = output_option (file, sep, "-O", "", indent, pos, max);
-  if (write_symbols != NO_DEBUG)
-    pos = output_option (file, sep, "-g", "", indent, pos, max);
-  if (profile_flag)
-    pos = output_option (file, sep, "-p", "", indent, pos, max);
-  if (profile_block_flag)
-    pos = output_option (file, sep, "-a", "", indent, pos, max);
-
-  for (j = 0; j < f_len; j++)
-    if (*f_options[j].variable == f_options[j].on_value)
-      pos = output_option (file, sep, "-f", f_options[j].string,
-			   indent, pos, max);
-
-  for (j = 0; j < W_len; j++)
-    if (*W_options[j].variable == W_options[j].on_value)
-      pos = output_option (file, sep, "-W", W_options[j].string,
-			   indent, pos, max);
-
-  for (j = 0; j < sizeof m_options / sizeof m_options[0]; j++)
-    if (m_options[j].name[0] != '\0'
-	&& m_options[j].value > 0
-	&& ((m_options[j].value & target_flags)
-	    == m_options[j].value))
-      pos = output_option (file, sep, "-m", m_options[j].name,
-			   indent, pos, max);
-
-  fprintf (file, term);
-}
-
 /* Output to FILE the start of the assembler file.  */
 
 void
-output_file_start (file, f_options, f_len, W_options, W_len)
+output_file_start (file)
      FILE *file;
-     struct option *f_options;
-     struct option *W_options;
-     int f_len, W_len;
 {
   register int pos;
 
@@ -700,10 +657,6 @@ output_file_start (file, f_options, f_len, W_options, W_len)
   /* Switch to the data section so that the coffsem symbol and the
      gcc2_compiled. symbol aren't in the text section.  */
   data_section ();
-
-  pos = fprintf (file, "\n! Hitachi SH cc1 (%s) arguments:", version_string);
-  output_options (file, f_options, f_len, W_options, W_len,
-		  pos, 75, " ", "\n! ", "\n\n");
 
   if (TARGET_LITTLE_ENDIAN)
     fprintf (file, "\t.little\n");
@@ -773,7 +726,13 @@ shiftcosts (x)
 
   /* Otherwise, return the true cost in instructions.  */
   if (GET_CODE (x) == ASHIFTRT)
-    return ashiftrt_insns[value];
+    {
+      int cost = ashiftrt_insns[value];
+      /* If SH3, then we put the constant in a reg and use shad.  */
+      if (TARGET_SH3 && cost > 3)
+	cost = 3;
+      return cost;
+    }
   else
     return shift_insns[value];
 }
@@ -869,9 +828,6 @@ gen_ashift (type, n, reg)
 /* Output RTL to split a constant shift into its component SH constant
    shift instructions.  */
    
-/* ??? For SH3, should reject constant shifts when slower than loading the
-   shift count into a register?  */
-
 int
 gen_shifty_op (code, operands)
      int code;
@@ -880,6 +836,9 @@ gen_shifty_op (code, operands)
   int value = INTVAL (operands[2]);
   int max, i;
 
+  /* Truncate the shift count in case it is out of bounds.  */
+  value = value & 0x1f;
+ 
   if (value == 31)
     {
       if (code == LSHIFTRT)
@@ -900,6 +859,14 @@ gen_shifty_op (code, operands)
 	    }
 	}
     }
+  else if (value == 0)
+    {
+      /* This can happen when not optimizing.  We must output something here
+	 to prevent the compiler from aborting in final.c after the try_split
+	 call.  */
+      emit_insn (gen_nop ());
+      return;
+    }
 
   max = shift_insns[value];
   for (i = 0; i < max; i++)
@@ -919,12 +886,21 @@ expand_ashiftrt (operands)
   tree func_name;
   int value;
 
-  if (TARGET_SH3 && GET_CODE (operands[2]) != CONST_INT)
+  if (TARGET_SH3)
     {
-      rtx count = copy_to_mode_reg (SImode, operands[2]);
-      emit_insn (gen_negsi2 (count, count));
-      emit_insn (gen_ashrsi3_d (operands[0], operands[1], count));
-      return 1;
+      if (GET_CODE (operands[2]) != CONST_INT)
+	{
+	  rtx count = copy_to_mode_reg (SImode, operands[2]);
+	  emit_insn (gen_negsi2 (count, count));
+	  emit_insn (gen_ashrsi3_d (operands[0], operands[1], count));
+	  return 1;
+	}
+      else if (ashiftrt_insns[INTVAL (operands[2])] > 3)
+	{
+	  rtx count = force_reg (SImode, GEN_INT (- INTVAL (operands[2])));
+	  emit_insn (gen_ashrsi3_d (operands[0], operands[1], count));
+	  return 1;
+	}
     }
   if (GET_CODE (operands[2]) != CONST_INT)
     return 0;
@@ -1179,6 +1155,12 @@ broken_move (insn)
 	 order bits end up as.  */
       && GET_MODE (SET_DEST (PATTERN (insn))) != QImode
       && CONSTANT_P (SET_SRC (PATTERN (insn)))
+      && ! (GET_CODE (SET_SRC (PATTERN (insn))) == CONST_DOUBLE
+	    && (fp_zero_operand (SET_SRC (PATTERN (insn)))
+		|| fp_one_operand (SET_SRC (PATTERN (insn))))
+	    && GET_CODE (SET_DEST (PATTERN (insn))) == REG
+	    && REGNO (SET_DEST (PATTERN (insn))) >= FIRST_FP_REG
+	    && REGNO (SET_DEST (PATTERN (insn))) <= LAST_FP_REG)
       && (GET_CODE (SET_SRC (PATTERN (insn))) != CONST_INT
 	  || ! CONST_OK_FOR_I (INTVAL (SET_SRC (PATTERN (insn))))))
     return 1;
@@ -1208,15 +1190,59 @@ find_barrier (from)
   int found_si = 0;
   rtx found_barrier = 0;
   rtx found_mova = 0;
+  int si_limit;
+  int hi_limit;
 
   /* For HImode: range is 510, add 4 because pc counts from address of
      second instruction after this one, subtract 2 for the jump instruction
-     that we may need to emit before the table.  This gives 512.
+     that we may need to emit before the table, subtract 2 for the instruction
+     that fills the jump delay slot (in very rare cases, reorg will take an
+     instruction from after the constant pool or will leave the delay slot
+     empty).  This gives 510.
      For SImode: range is 1020, add 4 because pc counts from address of
      second instruction after this one, subtract 2 in case pc is 2 byte
      aligned, subtract 2 for the jump instruction that we may need to emit
-     before the table.  This gives 1020.  */
-  while (from && count_si < 1020 && count_hi < 512)
+     before the table, subtract 2 for the instruction that fills the jump
+     delay slot.  This gives 1018.  */
+
+  /* If not optimizing, then it is possible that the jump instruction we add
+     won't be shortened, and thus will have a length of 14 instead of 2.
+     We must adjust the limits downwards to account for this, giving a limit
+     of 1008 for SImode and 500 for HImode.  */
+
+  if (optimize)
+    {
+      si_limit = 1018;
+      hi_limit = 510;
+    }
+  else
+    {
+      si_limit = 1008;
+      hi_limit = 500;
+    }
+
+  /* If not optimizing for space, then the constant pool will be
+     aligned to a 4 to 16 byte boundary.  We must make room for that
+     alignment that by reducing the limits.
+     ??? It would be better to not align the constant pool, but
+     ASM_OUTPUT_ALIGN_CODE does not make any provision for basing the
+     alignment on the instruction.  */
+
+  if (! TARGET_SMALLCODE)
+    {
+      if (TARGET_SH3 || TARGET_SH3E)
+	{
+	  si_limit -= 14;
+	  hi_limit -= 14;
+	}
+      else
+	{
+	  si_limit -= 2;
+	  hi_limit -= 2;
+	}
+    }
+
+  while (from && count_si < si_limit && count_hi < hi_limit)
     {
       int inc = get_attr_length (from);
 
@@ -1225,9 +1251,15 @@ find_barrier (from)
 
       if (broken_move (from))
 	{
-	  rtx src = SET_SRC (PATTERN (from));
+	  rtx pat = PATTERN (from);
+	  rtx src = SET_SRC (pat);
+	  rtx dst = SET_DEST (pat);
+	  enum machine_mode mode = GET_MODE (dst);
 
-	  if (hi_const (src))
+	  /* We must explicitly check the mode, because sometimes the
+	     front end will generate code to load unsigned constants into
+	     HImode targets without properly sign extending them.  */
+	  if (mode == HImode || (mode == SImode && hi_const (src)))
 	    {
 	      found_hi = 1;
 	      /* We put the short constants before the long constants, so
@@ -1272,7 +1304,7 @@ find_barrier (from)
       /* If we exceeded the range, then we must back up over the last
 	 instruction we looked at.  Otherwise, we just need to undo the
 	 NEXT_INSN at the end of the loop.  */
-      if (count_hi > 512 || count_si > 1020)
+      if (count_hi > hi_limit || count_si > si_limit)
 	from = PREV_INSN (PREV_INSN (from));
       else
 	from = PREV_INSN (from);
@@ -1296,16 +1328,300 @@ find_barrier (from)
   return found_barrier;
 }
 
+/* See if the only way in which INSN uses REG is by calling it, or by
+   setting it while calling it.  Set *SET to a SET rtx if the register
+   is set by INSN.  */
+
+static int
+noncall_uses_reg (reg, insn, set)
+     rtx reg;
+     rtx insn;
+     rtx *set;
+{
+  rtx pattern;
+
+  *set = NULL_RTX;
+
+  if (GET_CODE (insn) != CALL_INSN)
+    {
+      /* We don't use rtx_equal_p because we don't care if the mode is
+	 different.  */
+      pattern = single_set (insn);
+      if (pattern
+	  && GET_CODE (SET_DEST (pattern)) == REG
+	  && REGNO (reg) == REGNO (SET_DEST (pattern)))
+	{
+	  *set = pattern;
+	  return 0;
+	}
+
+      return 1;
+    }
+
+  pattern = PATTERN (insn);
+
+  if (GET_CODE (pattern) == PARALLEL)
+    {
+      int i;
+
+      for (i = XVECLEN (pattern, 0) - 1; i >= 1; i--)
+	if (reg_mentioned_p (reg, XVECEXP (pattern, 0, i)))
+	  return 1;
+      pattern = XVECEXP (pattern, 0, 0);
+    }
+
+  if (GET_CODE (pattern) == SET)
+    {
+      if (reg_mentioned_p (reg, SET_DEST (pattern)))
+	{
+	  /* We don't use rtx_equal_p, because we don't care if the
+             mode is different.  */
+	  if (GET_CODE (SET_DEST (pattern)) != REG
+	      || REGNO (reg) != REGNO (SET_DEST (pattern)))
+	    return 1;
+
+	  *set = pattern;
+	}
+
+      pattern = SET_SRC (pattern);
+    }
+
+  if (GET_CODE (pattern) != CALL
+      || GET_CODE (XEXP (pattern, 0)) != MEM
+      || ! rtx_equal_p (reg, XEXP (XEXP (pattern, 0), 0)))
+    return 1;
+
+  return 0;
+}
+
 /* Exported to toplev.c.
 
-   Scan the function looking for move instructions which have to be changed to
-   pc-relative loads and insert the literal tables.  */
+   Do a final pass over the function, just before delayed branch
+   scheduling.  */
 
 void
 machine_dependent_reorg (first)
      rtx first;
 {
   rtx insn;
+
+  /* If relaxing, generate pseudo-ops to associate function calls with
+     the symbols they call.  It does no harm to not generate these
+     pseudo-ops.  However, when we can generate them, it enables to
+     linker to potentially relax the jsr to a bsr, and eliminate the
+     register load and, possibly, the constant pool entry.  */
+
+  if (TARGET_RELAX)
+    {
+      /* Remove all REG_LABEL notes.  We want to use them for our own
+	 purposes.  This works because none of the remaining passes
+	 need to look at them.
+
+	 ??? But it may break in the future.  We should use a machine
+	 dependent REG_NOTE, or some other approach entirely.  */
+      for (insn = first; insn; insn = NEXT_INSN (insn))
+	{
+	  if (GET_RTX_CLASS (GET_CODE (insn)) == 'i')
+	    {
+	      rtx note;
+
+	      while ((note = find_reg_note (insn, REG_LABEL, NULL_RTX)) != 0)
+		remove_note (insn, note);
+	    }
+	}
+
+      for (insn = first; insn; insn = NEXT_INSN (insn))
+	{
+	  rtx pattern, reg, link, set, scan, dies, label;
+	  int rescan = 0, foundinsn = 0;
+
+	  if (GET_CODE (insn) != CALL_INSN)
+	    continue;
+
+	  pattern = PATTERN (insn);
+
+	  if (GET_CODE (pattern) == PARALLEL)
+	    pattern = XVECEXP (pattern, 0, 0);
+	  if (GET_CODE (pattern) == SET)
+	    pattern = SET_SRC (pattern);
+
+	  if (GET_CODE (pattern) != CALL
+	      || GET_CODE (XEXP (pattern, 0)) != MEM)
+	    continue;
+
+	  reg = XEXP (XEXP (pattern, 0), 0);
+	  if (GET_CODE (reg) != REG)
+	    continue;
+
+	  /* This is a function call via REG.  If the only uses of REG
+	     between the time that it is set and the time that it dies
+	     are in function calls, then we can associate all the
+	     function calls with the setting of REG.  */
+
+	  for (link = LOG_LINKS (insn); link; link = XEXP (link, 1))
+	    {
+	      if (REG_NOTE_KIND (link) != 0)
+		continue;
+	      set = single_set (XEXP (link, 0));
+	      if (set && rtx_equal_p (reg, SET_DEST (set)))
+		{
+		  link = XEXP (link, 0);
+		  break;
+		}
+	    }
+
+	  if (! link)
+	    {
+	      /* ??? Sometimes global register allocation will have
+                 deleted the insn pointed to by LOG_LINKS.  Try
+                 scanning backward to find where the register is set.  */
+	      for (scan = PREV_INSN (insn);
+		   scan && GET_CODE (scan) != CODE_LABEL;
+		   scan = PREV_INSN (scan))
+		{
+		  if (GET_RTX_CLASS (GET_CODE (scan)) != 'i')
+		    continue;
+
+		  if (! reg_mentioned_p (reg, scan))
+		    continue;
+
+		  if (noncall_uses_reg (reg, scan, &set))
+		    break;
+
+		  if (set)
+		    {
+		      link = scan;
+		      break;
+		    }
+		}
+	    }
+
+	  if (! link)
+	    continue;
+
+	  /* The register is set at LINK.  */
+
+	  /* We can only optimize the function call if the register is
+             being set to a symbol.  In theory, we could sometimes
+             optimize calls to a constant location, but the assembler
+             and linker do not support that at present.  */
+	  if (GET_CODE (SET_SRC (set)) != SYMBOL_REF
+	      && GET_CODE (SET_SRC (set)) != LABEL_REF)
+	    continue;
+
+	  /* Scan forward from LINK to the place where REG dies, and
+             make sure that the only insns which use REG are
+             themselves function calls.  */
+
+	  /* ??? This doesn't work for call targets that were allocated
+	     by reload, since there may not be a REG_DEAD note for the
+	     register.  */
+
+	  dies = NULL_RTX;
+	  for (scan = NEXT_INSN (link); scan; scan = NEXT_INSN (scan))
+	    {
+	      rtx scanset;
+
+	      /* Don't try to trace forward past a CODE_LABEL if we haven't
+		 seen INSN yet.  Ordinarily, we will only find the setting insn
+		 in LOG_LINKS if it is in the same basic block.  However,
+		 cross-jumping can insert code labels in between the load and
+		 the call, and can result in situations where a single call
+		 insn may have two targets depending on where we came from.  */
+
+	      if (GET_CODE (scan) == CODE_LABEL && ! foundinsn)
+		break;
+
+	      if (GET_RTX_CLASS (GET_CODE (scan)) != 'i')
+		continue;
+
+	      /* Don't try to trace forward past a JUMP.  To optimize
+                 safely, we would have to check that all the
+                 instructions at the jump destination did not use REG.  */
+
+	      if (GET_CODE (scan) == JUMP_INSN)
+		break;
+
+	      if (! reg_mentioned_p (reg, scan))
+		continue;
+
+	      if (noncall_uses_reg (reg, scan, &scanset))
+		break;
+
+	      if (scan == insn)
+		foundinsn = 1;
+
+	      if (scan != insn && GET_CODE (scan) == CALL_INSN)
+		{
+		  /* There is a function call to this register other
+                     than the one we are checking.  If we optimize
+                     this call, we need to rescan again below.  */
+		  rescan = 1;
+		}
+
+	      /* ??? We shouldn't have to worry about SCANSET here.
+		 We should just be able to check for a REG_DEAD note
+		 on a function call.  However, the REG_DEAD notes are
+		 apparently not dependable around libcalls; c-torture
+		 execute/920501-2 is a test case.  If SCANSET is set,
+		 then this insn sets the register, so it must have
+		 died earlier.  Unfortunately, this will only handle
+		 the cases in which the register is, in fact, set in a
+		 later insn.  */
+
+	      /* ??? We shouldn't have to use FOUNDINSN here.
+		 However, the LOG_LINKS fields are apparently not
+		 entirely reliable around libcalls;
+		 newlib/libm/math/e_pow.c is a test case.  Sometimes
+		 an insn will appear in LOG_LINKS even though it is
+		 not the most recent insn which sets the register. */
+
+	      if (foundinsn
+		  && (scanset
+		      || find_reg_note (scan, REG_DEAD, reg)))
+		{
+		  dies = scan;
+		  break;
+		}
+	    }
+
+	  if (! dies)
+	    {
+	      /* Either there was a branch, or some insn used REG
+                 other than as a function call address.  */
+	      continue;
+	    }
+
+	  /* Create a code label, and put it in a REG_LABEL note on
+             the insn which sets the register, and on each call insn
+             which uses the register.  In final_prescan_insn we look
+             for the REG_LABEL notes, and output the appropriate label
+             or pseudo-op.  */
+
+	  label = gen_label_rtx ();
+	  REG_NOTES (link) = gen_rtx (EXPR_LIST, REG_LABEL, label,
+				      REG_NOTES (link));
+	  REG_NOTES (insn) = gen_rtx (EXPR_LIST, REG_LABEL, label,
+				      REG_NOTES (insn));
+	  if (rescan)
+	    {
+	      scan = link;
+	      do
+		{
+		  scan = NEXT_INSN (scan);
+		  if (scan != insn
+		      && GET_CODE (scan) == CALL_INSN
+		      && reg_mentioned_p (reg, scan))
+		    REG_NOTES (scan) = gen_rtx (EXPR_LIST, REG_LABEL,
+						label, REG_NOTES (scan));
+		}
+	      while (scan != dies);
+	    }
+	}
+    }
+
+  /* Scan the function looking for move instructions which have to be
+     changed to pc-relative loads and insert the literal tables.  */
 
   for (insn = first; insn; insn = NEXT_INSN (insn))
     {
@@ -1348,8 +1664,19 @@ machine_dependent_reorg (first)
 		  RTX_UNCHANGING_P (newsrc) = 1;
 		  newinsn = emit_insn_after (gen_rtx (SET, VOIDmode,
 						      dst, newsrc), scan);
-
-		  delete_insn (scan);
+		  REG_NOTES (newinsn) = REG_NOTES (scan);
+		  REG_NOTES (scan) = NULL_RTX;
+		  /* If not optimizing, then delete_insn doesn't remove the
+		     insn from the chain, and hence is not useful.  We
+		     convert the instruction to a NOTE in that case.  */
+		  if (optimize)
+		    delete_insn (scan);
+		  else
+		    {
+		      PUT_CODE (scan, NOTE);
+		      NOTE_LINE_NUMBER (scan) = NOTE_INSN_DELETED;
+		      NOTE_SOURCE_FILE (insn) = 0;
+		    }
 		  scan = newinsn;
 		}
 	    }
@@ -1359,7 +1686,10 @@ machine_dependent_reorg (first)
 }
 
 /* Dump out instruction addresses, which is useful for debugging the
-   constant pool table stuff.  */
+   constant pool table stuff.
+
+   If relaxing, output the label and pseudo-ops used to link together
+   calls and the instruction which set the registers.  */
 
 /* ??? This is unnecessary, and probably should be deleted.  This makes
    the insn_addresses declaration above unnecessary.  */
@@ -1377,6 +1707,31 @@ final_prescan_insn (insn, opvec, noperands)
 {
   if (TARGET_DUMPISIZE)
     fprintf (asm_out_file, "\n! at %04x\n", insn_addresses[INSN_UID (insn)]);
+
+  if (TARGET_RELAX)
+    {
+      rtx note;
+
+      note = find_reg_note (insn, REG_LABEL, NULL_RTX);
+      if (note)
+	{
+	  rtx pattern;
+
+	  pattern = PATTERN (insn);
+	  if (GET_CODE (pattern) == PARALLEL)
+	    pattern = XVECEXP (pattern, 0, 0);
+	  if (GET_CODE (pattern) == CALL
+	      || (GET_CODE (pattern) == SET
+		  && GET_CODE (SET_SRC (pattern)) == CALL))
+	    fprintf (asm_out_file, "\t.uses L%d\n",
+		     CODE_LABEL_NUMBER (XEXP (note, 0)));
+	  else if (GET_CODE (pattern) == SET)
+	    ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "L",
+				       CODE_LABEL_NUMBER (XEXP (note, 0)));
+	  else
+	    abort ();
+	}
+    }
 }
 
 /* Dump out any constants accumulated in the final pass.  These will
@@ -1459,7 +1814,12 @@ push (rn)
      int rn;
 {
   rtx x;
-  x = emit_insn (gen_push (gen_rtx (REG, SImode, rn)));
+  if ((rn >= FIRST_FP_REG && rn <= LAST_FP_REG)
+      || rn == FPUL_REG)
+    x = emit_insn (gen_push_e (gen_rtx (REG, SFmode, rn)));
+  else
+    x = emit_insn (gen_push (gen_rtx (REG, SImode, rn)));
+
   REG_NOTES (x) = gen_rtx (EXPR_LIST, REG_INC,
 			   gen_rtx(REG, SImode, STACK_POINTER_REGNUM), 0);
 }
@@ -1471,7 +1831,12 @@ pop (rn)
      int rn;
 {
   rtx x;
-  x = emit_insn (gen_pop (gen_rtx (REG, SImode, rn)));
+  if ((rn >= FIRST_FP_REG && rn <= LAST_FP_REG)
+      || rn == FPUL_REG)
+    x = emit_insn (gen_pop_e (gen_rtx (REG, SFmode, rn)));
+  else
+    x = emit_insn (gen_pop (gen_rtx (REG, SImode, rn)));
+    
   REG_NOTES (x) = gen_rtx (EXPR_LIST, REG_INC,
 			   gen_rtx(REG, SImode, STACK_POINTER_REGNUM), 0);
 }
@@ -1480,13 +1845,16 @@ pop (rn)
    the number of bytes the insns take.  */
 
 static void
-push_regs (mask)
-     int mask;
+push_regs (mask, mask2)
+     int mask, mask2;
 {
   int i;
 
-  for (i = 0; i < FIRST_PSEUDO_REGISTER; i++)
+  for (i = 0; i < 32; i++)
     if (mask & (1 << i))
+      push (i);
+  for (i = 32; i < FIRST_PSEUDO_REGISTER; i++)
+    if (mask2 & (1 << (i - 32)))
       push (i);
 }
 
@@ -1498,24 +1866,32 @@ push_regs (mask)
    make sure that all the regs it clobbers are safe too.  */
 
 static int
-calc_live_regs (count_ptr)
+calc_live_regs (count_ptr, live_regs_mask2)
      int *count_ptr;
+     int *live_regs_mask2;
 {
   int reg;
   int live_regs_mask = 0;
   int count = 0;
 
+  *live_regs_mask2 = 0;
   for (reg = 0; reg < FIRST_PSEUDO_REGISTER; reg++)
     {
       if (pragma_interrupt && ! pragma_trapa)
 	{
 	  /* Need to save all the regs ever live.  */
 	  if ((regs_ever_live[reg]
-	       || (call_used_regs[reg] && regs_ever_live[PR_REG]))
+	       || (call_used_regs[reg] && ! fixed_regs[reg]
+		   && regs_ever_live[PR_REG])
+	       || reg == MACH_REG
+	       || reg == MACL_REG)
 	      && reg != STACK_POINTER_REGNUM && reg != ARG_POINTER_REGNUM
 	      && reg != T_REG && reg != GBR_REG)
 	    {
-	      live_regs_mask |= 1 << reg;
+	      if (reg >= 32)
+		*live_regs_mask2 |= 1 << (reg - 32);
+	      else
+		live_regs_mask |= 1 << reg;
 	      count++;
 	    }
 	}
@@ -1524,7 +1900,10 @@ calc_live_regs (count_ptr)
 	  /* Only push those regs which are used and need to be saved.  */
 	  if (regs_ever_live[reg] && ! call_used_regs[reg])
 	    {
-	      live_regs_mask |= (1 << reg);
+	      if (reg >= 32)
+		*live_regs_mask2 |= 1 << (reg - 32);
+	      else
+		live_regs_mask |= (1 << reg);
 	      count++;
 	    }
 	}
@@ -1541,7 +1920,8 @@ sh_expand_prologue ()
 {
   int live_regs_mask;
   int d, i;
-  live_regs_mask = calc_live_regs (&d);
+  int live_regs_mask2;
+  live_regs_mask = calc_live_regs (&d, &live_regs_mask2);
 
   /* We have pretend args if we had an object sent partially in registers
      and partially on the stack, e.g. a large structure.  */
@@ -1550,23 +1930,30 @@ sh_expand_prologue ()
   extra_push = 0;
 
   /* This is set by SETUP_VARARGS to indicate that this is a varargs
-     routine.  Clear it here so that the next function isn't affected.  */
+     routine.  Clear it here so that the next function isn't affected. */
   if (current_function_anonymous_args)
     {
       current_function_anonymous_args = 0;
 
-      /* Push arg regs as if they'd been provided by caller in stack.  */
-      for (i = 0; i < NPARM_REGS; i++)
-	{
-	  int rn = NPARM_REGS + FIRST_PARM_REG - i - 1;
-	  if (i > (NPARM_REGS - current_function_args_info
-		   - current_function_varargs))
-	    break;
-	  push (rn);
-	  extra_push += 4;
-	}
+      /* This is not used by the SH3E calling convention  */
+      if (!TARGET_SH3E)
+        {
+	  /* Push arg regs as if they'd been provided by caller in stack.  */
+	  for (i = 0; i < NPARM_REGS(SImode); i++)
+	    {
+	      int rn = NPARM_REGS(SImode) + FIRST_PARM_REG - i - 1;
+	      if (i > (NPARM_REGS(SImode) 
+		       - current_function_args_info.arg_count[(int) SH_ARG_INT]
+		       - current_function_varargs))
+		break;
+	      push (rn);
+	      extra_push += 4;
+	    }
+        }
     }
-  push_regs (live_regs_mask);
+
+  push_regs (live_regs_mask, live_regs_mask2);
+
   output_stack_adjust (-get_frame_size (), stack_pointer_rtx);
 
   if (frame_pointer_needed)
@@ -1579,7 +1966,8 @@ sh_expand_epilogue ()
   int live_regs_mask;
   int d, i;
 
-  live_regs_mask = calc_live_regs (&d);
+  int live_regs_mask2;
+  live_regs_mask = calc_live_regs (&d, &live_regs_mask2);
 
   if (frame_pointer_needed)
     {
@@ -1598,7 +1986,9 @@ sh_expand_epilogue ()
   for (i = 0; i < FIRST_PSEUDO_REGISTER; i++)
     {
       int j = (FIRST_PSEUDO_REGISTER - 1) - i;
-      if (live_regs_mask & (1 << j))
+      if (j < 32 && (live_regs_mask & (1 << j)))
+	pop (j);
+      else if (j >= 32 && (live_regs_mask2 & (1 << (j - 32))))
 	pop (j);
     }
 
@@ -1613,7 +2003,63 @@ function_epilogue (stream, size)
      FILE *stream;
      int size;
 {
-  pragma_interrupt = pragma_trapa = 0;
+  pragma_interrupt = pragma_trapa = pragma_nosave_low_regs = 0;
+}
+
+rtx
+sh_builtin_saveregs (arglist)
+     tree arglist;
+{
+  tree fntype = TREE_TYPE (current_function_decl);
+  /* First unnamed integer register.  */
+  int first_intreg = current_function_args_info.arg_count[(int) SH_ARG_INT];
+  /* Number of integer registers we need to save.  */
+  int n_intregs = MAX (0, NPARM_REGS (SImode) - first_intreg);
+  /* First unnamed SFmode float reg */
+  int first_floatreg = current_function_args_info.arg_count[(int) SH_ARG_FLOAT];
+  /* Number of SFmode float regs to save.  */
+  int n_floatregs = MAX (0, NPARM_REGS (SFmode) - first_floatreg);
+  int ptrsize = GET_MODE_SIZE (Pmode);
+  rtx valist, regbuf, fpregs;
+  int bufsize, regno;
+
+  /* Allocate block of memory for the regs. */
+  /* ??? If n_intregs + n_floatregs == 0, should we allocate at least 1 byte?
+     Or can assign_stack_local accept a 0 SIZE argument?  */
+  bufsize = (n_intregs * UNITS_PER_WORD) + (n_floatregs * UNITS_PER_WORD);
+
+  regbuf = assign_stack_local (BLKmode, bufsize, 0);
+  MEM_IN_STRUCT_P (regbuf) = 1;
+
+  /* Save int args.
+     This is optimized to only save the regs that are necessary.  Explicitly
+     named args need not be saved.  */
+  if (n_intregs > 0)
+    move_block_from_reg (BASE_ARG_REG (SImode) + first_intreg,
+			 gen_rtx (MEM, BLKmode, 
+			 	plus_constant (XEXP (regbuf, 0),
+					n_floatregs * UNITS_PER_WORD)), 
+			 n_intregs, n_intregs * UNITS_PER_WORD);
+
+  /* Save float args.
+     This is optimized to only save the regs that are necessary.  Explicitly
+     named args need not be saved.
+     We explicitly build a pointer to the buffer because it halves the insn
+     count when not optimizing (otherwise the pointer is built for each reg
+     saved).  */
+
+  fpregs = gen_reg_rtx (Pmode);
+  emit_move_insn (fpregs, XEXP (regbuf, 0));
+  for (regno = first_floatreg; regno < NPARM_REGS (SFmode); regno ++)
+    emit_move_insn (gen_rtx (MEM, SFmode,
+			     plus_constant (fpregs,
+					    GET_MODE_SIZE (SFmode)
+					    * (regno - first_floatreg))),
+		    gen_rtx (REG, SFmode,
+			     BASE_ARG_REG (SFmode) + regno));
+
+  /* Return the address of the regbuf.  */
+  return XEXP (regbuf, 0);
 }
 
 /* Define the offset between two registers, one to be eliminated, and
@@ -1628,7 +2074,9 @@ initial_elimination_offset (from, to)
   int total_saved_regs_space;
   int total_auto_space = get_frame_size ();
 
-  calc_live_regs (&regs_saved);
+  int live_regs_mask, live_regs_mask2;
+  live_regs_mask = calc_live_regs (&regs_saved, &live_regs_mask2);
+
   total_saved_regs_space = (regs_saved) * 4;
 
   if (from == ARG_POINTER_REGNUM && to == FRAME_POINTER_REGNUM)
@@ -1641,6 +2089,19 @@ initial_elimination_offset (from, to)
   if (from == FRAME_POINTER_REGNUM && to == STACK_POINTER_REGNUM)
     return 0;
 
+  if (from == RETURN_ADDRESS_POINTER_REGNUM
+      && (to == FRAME_POINTER_REGNUM || to == STACK_POINTER_REGNUM))
+    {
+      int i, n = 0;
+      for (i = PR_REG+1; i < 32; i++)
+	if (live_regs_mask & (1 << i))
+	  n += 4;
+      for (i = 32; i < FIRST_PSEUDO_REGISTER; i++)
+	if (live_regs_mask2 & (1 << (i - 32)))
+	  n += 4;
+      return n + total_auto_space;
+    }
+
   abort ();
 }
 
@@ -1648,36 +2109,25 @@ initial_elimination_offset (from, to)
    compiler.  */
 
 int
-handle_pragma (file)
+handle_pragma (file, t)
      FILE *file;
+     tree t;
 {
-  int c;
-  char pbuf[200];
-  int psize = 0;
+  int retval = 0;
+  register char *pname;
 
-  c = getc (file);
-  while (c == ' ' || c == '\t')
-    c = getc (file);
+  if (TREE_CODE (t) != IDENTIFIER_NODE)
+    return 0;
 
-  if (c == '\n' || c == EOF)
-    return c;
+  pname = IDENTIFIER_POINTER (t);
+  if (strcmp (pname, "interrupt") == 0)
+    pragma_interrupt = retval = 1;
+  else if (strcmp (pname, "trapa") == 0)
+    pragma_interrupt = pragma_trapa = retval = 1;
+  else if (strcmp (pname, "nosave_low_regs") == 0)
+    pragma_nosave_low_regs = retval = 1;
 
-  while (psize < sizeof (pbuf) - 1 && c != '\n')
-    {
-      pbuf[psize++] = c;
-      if (psize == 9 && strncmp (pbuf, "interrupt", 9) == 0)
-	{
-	  pragma_interrupt = 1;
-	  return ' ';
-	}
-      if (psize == 5 && strncmp (pbuf, "trapa", 5) == 0)
-	{
-	  pragma_interrupt = pragma_trapa = 1;
-	  return ' ';
-	}
-      c = getc (file);
-    }
-  return c;
+  return retval;
 }
 
 /* Predicates used by the templates.  */
@@ -1761,12 +2211,17 @@ arith_reg_operand (op, mode)
 {
   if (register_operand (op, mode))
     {
+      int regno;
+
       if (GET_CODE (op) == REG)
-	return (REGNO (op) != T_REG
-		&& REGNO (op) != PR_REG
-		&& REGNO (op) != MACH_REG
-		&& REGNO (op) != MACL_REG);
-      return 1;
+	regno = REGNO (op);
+      else if (GET_CODE (op) == SUBREG && GET_CODE (SUBREG_REG (op)) == REG)
+	regno = REGNO (SUBREG_REG (op));
+      else
+	return 1;
+
+      return (regno != T_REG && regno != PR_REG && regno != FPUL_REG
+	      && regno != MACH_REG && regno != MACL_REG);
     }
   return 0;
 }
@@ -1818,65 +2273,40 @@ logical_operand (op, mode)
 
   return 0;
 }
-
-/* Determine where to put an argument to a function.
-   Value is zero to push the argument on the stack,
-   or a hard register in which to store the argument.
 
-   MODE is the argument's machine mode.
-   TYPE is the data type of the argument (as a tree).
-    This is null for libcalls where that information may
-    not be available.
-   CUM is a variable of type CUMULATIVE_ARGS which gives info about
-    the preceding args and about the function being called.
-   NAMED is nonzero if this argument is a named parameter
-    (otherwise it is an extra parameter matching an ellipsis).  */
-
-rtx
-sh_function_arg (cum, mode, type, named)
-     CUMULATIVE_ARGS cum;
-     enum machine_mode mode;
-     tree type;
-     int named;
-{
-  if (named)
-    {
-      int rr = (ROUND_REG (cum, mode));
-
-      if (rr < NPARM_REGS)
-	return ((type == 0 || ! TREE_ADDRESSABLE (type))
-		? gen_rtx (REG, mode, FIRST_PARM_REG + rr) : 0);
-    }
-  return 0;
-}
-
-/* For an arg passed partly in registers and partly in memory,
-   this is the number of registers used.
-   For args passed entirely in registers or entirely in memory, zero.
-   Any arg that starts in the first 4 regs but won't entirely fit in them
-   needs partial registers on the SH.  */
+/* Nonzero if OP is a floating point value with value 0.0.  */
 
 int
-sh_function_arg_partial_nregs (cum, mode, type, named)
-     CUMULATIVE_ARGS cum;
-     enum machine_mode mode;
-     tree type;
-     int named;
+fp_zero_operand (op)
+     rtx op;
 {
-  if (cum < NPARM_REGS)
-    {
-      if ((type == 0 || ! TREE_ADDRESSABLE (type))
-	  && (cum + (mode == BLKmode
-		     ? ROUND_ADVANCE (int_size_in_bytes (type))
-		     : ROUND_ADVANCE (GET_MODE_SIZE (mode))) - NPARM_REGS > 0))
-	return NPARM_REGS - cum;
-    }
-  return 0;
+  REAL_VALUE_TYPE r;
+
+  if (GET_MODE (op) != SFmode)
+    return 0;
+
+  REAL_VALUE_FROM_CONST_DOUBLE (r, op);
+  return REAL_VALUES_EQUAL (r, dconst0) && ! REAL_VALUE_MINUS_ZERO (r);
+}
+
+/* Nonzero if OP is a floating point value with value 1.0.  */
+
+int
+fp_one_operand (op)
+     rtx op;
+{
+  REAL_VALUE_TYPE r;
+
+  if (GET_MODE (op) != SFmode)
+    return 0;
+
+  REAL_VALUE_FROM_CONST_DOUBLE (r, op);
+  return REAL_VALUES_EQUAL (r, dconst1);
 }
 
 /* Return non-zero if REG is not used after INSN.
    We assume REG is a reload reg, and therefore does
-   not live past labels or calls or jumps.  */
+   not live past labels.  It may live past calls or jumps though.  */
 int
 reg_unused_after (reg, insn)
      rtx reg;
@@ -1907,11 +2337,14 @@ reg_unused_after (reg, insn)
       /* else */
 #endif
 
+      if (code == JUMP_INSN)
+	return 0;
+
       /* If this is a sequence, we must handle them all at once.
 	 We could have for instance a call that sets the target register,
 	 and a insn in a delay slot that uses the register.  In this case,
 	 we must return 0.  */
-      if (code == INSN && GET_CODE (PATTERN (insn)) == SEQUENCE)
+      else if (code == INSN && GET_CODE (PATTERN (insn)) == SEQUENCE)
 	{
 	  int i;
 	  int retval = 0;
@@ -1923,6 +2356,12 @@ reg_unused_after (reg, insn)
 
 	      if (GET_CODE (this_insn) == CALL_INSN)
 		code = CALL_INSN;
+	      else if (GET_CODE (this_insn) == JUMP_INSN)
+		{
+		  if (INSN_ANNULLED_BRANCH_P (this_insn))
+		    return 0;
+		  code = JUMP_INSN;
+		}
 
 	      if (set && reg_overlap_mentioned_p (reg, SET_SRC (set)))
 		return 0;
@@ -1939,6 +2378,8 @@ reg_unused_after (reg, insn)
 	    }
 	  if (retval == 1)
 	    return 1;
+	  else if (code == JUMP_INSN)
+	    return 0;
 	}
       else if (GET_RTX_CLASS (code) == 'i')
 	{

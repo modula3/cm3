@@ -1,5 +1,5 @@
 /* Common subexpression elimination for GNU compiler.
-   Copyright (C) 1987, 88, 89, 92, 93, 94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 88, 89, 92-5, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -534,7 +534,7 @@ static int constant_pool_entries_cost;
 
 struct write_data
 {
-  int sp : 1;			/* Invalidate stack pointer. */
+  int sp : 1;			/* Invalidate stack pointer.  */
   int var : 1;			/* Invalidate variable addresses.  */
   int nonscalar : 1;		/* Invalidate all but scalar variables.  */
   int all : 1;			/* Invalidate all memory refs.  */
@@ -559,7 +559,7 @@ struct cse_basic_block_data {
   int path_size;
   /* Current branch path, indicating which branches will be taken.  */
   struct branch_path {
-    /* The branch insn. */
+    /* The branch insn.  */
     rtx branch;
     /* Whether it should be taken or not.  AROUND is the same as taken
        except that it is used when the destination label is not preceded
@@ -1466,7 +1466,7 @@ merge_equiv_classes (class1, class2)
 
       /* Remove old entry, make a new one in CLASS1's class.
 	 Don't do this for invalid entries as we cannot find their
-	 hash code (it also isn't necessary). */
+	 hash code (it also isn't necessary).  */
       if (GET_CODE (exp) == REG || exp_equiv_p (exp, exp, 1, 0))
 	{
 	  hash_arg_in_memory = 0;
@@ -1886,7 +1886,7 @@ canon_hash (x, mode)
 	/* On some machines, we can't record any non-fixed hard register,
 	   because extending its life will cause reload problems.  We
 	   consider ap, fp, and sp to be fixed for this purpose.
-	   On all machines, we can't record any global registers. */
+	   On all machines, we can't record any global registers.  */
 
 	if (regno < FIRST_PSEUDO_REGISTER
 	    && (global_regs[regno]
@@ -2660,9 +2660,21 @@ find_best_addr (insn, loc)
      sometimes simplify the expression.  Many simplifications
      will not be valid, but some, usually applying the associative rule, will
      be valid and produce better code.  */
-  if (GET_CODE (addr) != REG
-      && validate_change (insn, loc, fold_rtx (addr, insn), 0))
-    addr = *loc;
+  if (GET_CODE (addr) != REG)
+    {
+      rtx folded = fold_rtx (copy_rtx (addr), NULL_RTX);
+
+      if (1
+#ifdef ADDRESS_COST
+	  && (ADDRESS_COST (folded) < ADDRESS_COST (addr)
+	      || (ADDRESS_COST (folded) == ADDRESS_COST (addr)
+		  && rtx_cost (folded) > rtx_cost (addr)))
+#else
+	  && rtx_cost (folded) < rtx_cost (addr)
+#endif
+	  && validate_change (insn, loc, folded, 0))
+	addr = folded;
+    }
 	
   /* If this address is not in the hash table, we can't look for equivalences
      of the whole address.  Also, ignore if volatile.  */
@@ -3016,7 +3028,7 @@ simplify_unary_operation (code, mode, op, op_mode)
 	lv = CONST_DOUBLE_LOW (op),  hv = CONST_DOUBLE_HIGH (op);
 
 #ifdef REAL_ARITHMETIC
-      REAL_VALUE_FROM_INT (d, lv, hv);
+      REAL_VALUE_FROM_INT (d, lv, hv, mode);
 #else
       if (hv < 0)
 	{
@@ -3061,7 +3073,7 @@ simplify_unary_operation (code, mode, op, op_mode)
 	hv = 0, lv &= GET_MODE_MASK (op_mode);
 
 #ifdef REAL_ARITHMETIC
-      REAL_VALUE_FROM_UNSIGNED_INT (d, lv, hv);
+      REAL_VALUE_FROM_UNSIGNED_INT (d, lv, hv, mode);
 #else
 
       d = (double) (unsigned HOST_WIDE_INT) hv;
@@ -3167,7 +3179,7 @@ simplify_unary_operation (code, mode, op, op_mode)
     }
 
   /* We can do some operations on integer CONST_DOUBLEs.  Also allow
-     for a DImode operation on a CONST_INT. */
+     for a DImode operation on a CONST_INT.  */
   else if (GET_MODE (op) == VOIDmode && width <= HOST_BITS_PER_INT * 2
 	   && (GET_CODE (op) == CONST_DOUBLE || GET_CODE (op) == CONST_INT))
     {
@@ -3513,7 +3525,7 @@ simplify_binary_operation (code, mode, op0, op1)
 	  neg_double (l2, h2, &lv, &hv);
 	  l2 = lv, h2 = hv;
 
-	  /* .. fall through ... */
+	  /* .. fall through ...  */
 
 	case PLUS:
 	  add_double (l1, h1, l2, h2, &lv, &hv);
@@ -3866,6 +3878,11 @@ simplify_binary_operation (code, mode, op0, op1)
 	     we are still generating RTL.  This test is a kludge.  */
 	  if (GET_CODE (op1) == CONST_INT
 	      && (val = exact_log2 (INTVAL (op1))) >= 0
+	      /* If the mode is larger than the host word size, and the
+		 uppermost bit is set, then this isn't a power of two due
+		 to implicit sign extension.  */
+	      && (width <= HOST_BITS_PER_WIDE_INT
+		  || val != HOST_BITS_PER_WIDE_INT - 1)
 	      && ! rtx_equal_function_value_matters)
 	    return gen_rtx (ASHIFT, mode, op0, GEN_INT (val));
 
@@ -3945,7 +3962,7 @@ simplify_binary_operation (code, mode, op0, op1)
 	      && (arg1 = exact_log2 (INTVAL (op1))) > 0)
 	    return gen_rtx (LSHIFTRT, mode, op0, GEN_INT (arg1));
 
-	  /* ... fall through ... */
+	  /* ... fall through ...  */
 
 	case DIV:
 	  if (op1 == CONST1_RTX (mode))
@@ -3991,7 +4008,7 @@ simplify_binary_operation (code, mode, op0, op1)
 	      && exact_log2 (INTVAL (op1)) > 0)
 	    return gen_rtx (AND, mode, op0, GEN_INT (INTVAL (op1) - 1));
 
-	  /* ... fall through ... */
+	  /* ... fall through ...  */
 
 	case MOD:
 	  if ((op0 == const0_rtx || op1 == const1_rtx)
@@ -4007,7 +4024,7 @@ simplify_binary_operation (code, mode, op0, op1)
 	      && ! side_effects_p (op1))
 	    return op0;
 
-	  /* ... fall through ... */
+	  /* ... fall through ...  */
 
 	case ASHIFT:
 	case ASHIFTRT:
@@ -5364,12 +5381,14 @@ fold_rtx (x, insn)
 	  if (mode_arg0 == VOIDmode || GET_MODE_CLASS (mode_arg0) == MODE_CC)
 	    break;
 
-	  /* If we do not now have two constants being compared, see if we
-	     can nevertheless deduce some things about the comparison.  */
+	  /* If we do not now have two constants being compared, see
+	     if we can nevertheless deduce some things about the
+	     comparison.  */
 	  if (const_arg0 == 0 || const_arg1 == 0)
 	    {
-	      /* Is FOLDED_ARG0 frame-pointer plus a constant?  Or non-explicit
-		 constant?  These aren't zero, but we don't know their sign. */
+	      /* Is FOLDED_ARG0 frame-pointer plus a constant?  Or
+		 non-explicit constant?  These aren't zero, but we
+		 don't know their sign.  */
 	      if (const_arg1 == const0_rtx
 		  && (NONZERO_BASE_PLUS_P (folded_arg0)
 #if 0  /* Sad to say, on sysvr4, #pragma weak can make a symbol address
@@ -5547,7 +5566,13 @@ fold_rtx (x, insn)
 	  if (const_arg1 && GET_CODE (const_arg1) == CONST_INT
 	      && INTVAL (const_arg1) < 0 && GET_CODE (folded_arg1) == REG)
 	    {
-	      rtx new_const = GEN_INT (- INTVAL (const_arg1));
+	      HOST_WIDE_INT val = INTVAL (const_arg1);
+	      /* CYGNUS LOCAL dje negate INT_MIN */
+	      rtx new_const = (GET_MODE_BITSIZE (mode) > HOST_BITS_PER_WIDE_INT
+			       && val == -val)
+			       ? immed_double_const (val, 0, mode)
+			       : GEN_INT (- val);
+	      /* END CYGNUS LOCAL */
 	      struct table_elt *p
 		= lookup (new_const, safe_hash (new_const, mode) % NBUCKETS,
 			  mode);
@@ -5572,7 +5597,7 @@ fold_rtx (x, insn)
 				 NULL_RTX);
 	    }
 
-	  /* ... fall through ... */
+	  /* ... fall through ...  */
 
 	from_plus:
 	case SMIN:    case SMAX:      case UMIN:    case UMAX:
@@ -6152,7 +6177,7 @@ cse_insn (insn, in_libcall_block)
 	 someplace else, so it isn't worth cse'ing (and on 80386 is unsafe)!
 	 Ensure we invalidate the destination register.  On the 80386 no
 	 other code would invalidate it since it is a fixed_reg.
-	 We need not check the return of apply_change_group; see canon_reg. */
+	 We need not check the return of apply_change_group; see canon_reg.  */
 
       else if (GET_CODE (SET_SRC (x)) == CALL)
 	{
@@ -6724,7 +6749,7 @@ cse_insn (insn, in_libcall_block)
          that are when they are equal cost.  Note that we can never
          worsen an insn as the current contents will also succeed.
 	 If we find an equivalent identical to the destination, use it as best,
-	 since this insn will probably be eliminated in that case. */
+	 since this insn will probably be eliminated in that case.  */
       if (src)
 	{
 	  if (rtx_equal_p (src, dest))
@@ -7546,7 +7571,7 @@ note_mem_written (written, writes_ptr)
     *writes_ptr = everything;
   else if (GET_CODE (written) == MEM)
     {
-      /* Pushing or popping the stack invalidates just the stack pointer. */
+      /* Pushing or popping the stack invalidates just the stack pointer.  */
       rtx addr = XEXP (written, 0);
       if ((GET_CODE (addr) == PRE_DEC || GET_CODE (addr) == PRE_INC
 	   || GET_CODE (addr) == POST_DEC || GET_CODE (addr) == POST_INC)
@@ -7558,19 +7583,21 @@ note_mem_written (written, writes_ptr)
 	}
       else if (GET_MODE (written) == BLKmode)
 	*writes_ptr = everything;
-      /* (mem (scratch)) means clobber everything.  */
-      else if (GET_CODE (addr) == SCRATCH)
-	*writes_ptr = everything;
       else if (cse_rtx_addr_varies_p (written))
 	{
 	  /* A varying address that is a sum indicates an array element,
 	     and that's just as good as a structure element
 	     in implying that we need not invalidate scalar variables.
 	     However, we must allow QImode aliasing of scalars, because the
-	     ANSI C standard allows character pointers to alias anything.  */
+	     ANSI C standard allows character pointers to alias anything.
+	     We must also allow AND addresses, because they may generate
+	     accesses outside the object being referenced.  This is used to
+	     generate aligned addresses from unaligned addresses, for instance,
+	     the alpha storeqi_unaligned pattern.  */
 	  if (! ((MEM_IN_STRUCT_P (written)
 		  || GET_CODE (XEXP (written, 0)) == PLUS)
-		 && GET_MODE (written) != QImode))
+		 && GET_MODE (written) != QImode
+		 && GET_CODE (XEXP (written, 0)) != AND))
 	    writes_ptr->all = 1;
 	  writes_ptr->nonscalar = 1;
 	}
@@ -7680,6 +7707,9 @@ cse_process_notes (x, object)
 
     case EXPR_LIST:
     case INSN_LIST:
+      /* CYGNUS LOCAL: gcov */
+    case INT_LIST:
+      /* END CYGNUS LOCAL */
       if (REG_NOTE_KIND (x) == REG_EQUAL)
 	XEXP (x, 0) = cse_process_notes (XEXP (x, 0), NULL_RTX);
       if (XEXP (x, 1))
@@ -7688,6 +7718,7 @@ cse_process_notes (x, object)
 
     case SIGN_EXTEND:
     case ZERO_EXTEND:
+    case SUBREG:
       {
 	rtx new = cse_process_notes (XEXP (x, 0), object);
 	/* We don't substitute VOIDmode constants into these rtx,
@@ -7811,13 +7842,6 @@ invalidate_skipped_set (dest, set)
      rtx set;
      rtx dest;
 {
-  if (GET_CODE (set) == CLOBBER
-#ifdef HAVE_cc0
-      || dest == cc0_rtx
-#endif
-      || dest == pc_rtx)
-    return;
-
   if (GET_CODE (dest) == MEM)
     note_mem_written (dest, &skipped_writes_memory);
 
@@ -7826,6 +7850,13 @@ invalidate_skipped_set (dest, set)
      the proper equivalences.  So promote "nonscalar" to be "all".  */
   if (skipped_writes_memory.nonscalar)
     skipped_writes_memory.all = 1;
+
+  if (GET_CODE (set) == CLOBBER
+#ifdef HAVE_cc0
+      || dest == cc0_rtx
+#endif
+      || dest == pc_rtx)
+    return;
 
   if (GET_CODE (dest) == REG || GET_CODE (dest) == SUBREG
       || (! skipped_writes_memory.all && ! cse_rtx_addr_varies_p (dest)))
@@ -7980,7 +8011,8 @@ cse_set_around_loop (x, insn, loop_start)
   if (writes_memory.var)
     invalidate_memory (&writes_memory);
 
-  /* See comment on similar code in cse_insn for explanation of these tests. */
+  /* See comment on similar code in cse_insn for explanation of these
+     tests.  */
   if (GET_CODE (SET_DEST (x)) == REG || GET_CODE (SET_DEST (x)) == SUBREG
       || (GET_CODE (SET_DEST (x)) == MEM && ! writes_memory.all
 	  && ! cse_rtx_addr_varies_p (SET_DEST (x))))

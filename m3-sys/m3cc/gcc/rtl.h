@@ -1,5 +1,5 @@
 /* Register Transfer Language (RTL) definitions for GNU C-Compiler
-   Copyright (C) 1987, 91, 92, 93, 94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 91-95, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -39,7 +39,14 @@ enum rtx_code  {
 #include "rtl.def"		/* rtl expressions are documented here */
 #undef DEF_RTL_EXPR
 
-  LAST_AND_UNUSED_RTX_CODE};	/* A convenient way to get a value for
+  LAST_AND_UNUSED_RTX_CODE
+/* CYGNUS LOCAL mpw */
+#ifdef MPW_C
+  /* Work around an enum bug by forcing the enum to be int-sized. */  
+  , rtx_code_intifier = 1000000
+#endif /* MPW_C */
+/* END CYGNUS LOCAL */
+};	/* A convenient way to get a value for
 				   NUM_RTX_CODE.
 				   Assumes default enum value assignment.  */
 
@@ -47,16 +54,16 @@ enum rtx_code  {
 				/* The cast here, saves many elsewhere.  */
 
 extern int rtx_length[];
-#define GET_RTX_LENGTH(CODE)		(rtx_length[(int)(CODE)])
+#define GET_RTX_LENGTH(CODE)		(rtx_length[(int) (CODE)])
 
 extern char *rtx_name[];
-#define GET_RTX_NAME(CODE)		(rtx_name[(int)(CODE)])
+#define GET_RTX_NAME(CODE)		(rtx_name[(int) (CODE)])
 
 extern char *rtx_format[];
-#define GET_RTX_FORMAT(CODE)		(rtx_format[(int)(CODE)])
+#define GET_RTX_FORMAT(CODE)		(rtx_format[(int) (CODE)])
 
 extern char rtx_class[];
-#define GET_RTX_CLASS(CODE)		(rtx_class[(int)(CODE)])
+#define GET_RTX_CLASS(CODE)		(rtx_class[(int) (CODE)])
 
 /* Common union for an element of an rtx.  */
 
@@ -138,7 +145,11 @@ typedef struct rtx_def
   unsigned int used : 1;
   /* Nonzero if this rtx came from procedure integration.
      In a REG, nonzero means this reg refers to the return value
-     of the current function.  */
+     of the current function.
+     CYGNUS LOCAL unaligned-pointers
+     In a MEM, nonzero means that this address may be unaligned.
+     END CYGNUS LOCAL
+     */
   unsigned integrated : 1;
   /* The first element of the operands of this rtx.
      The number of operands and their types are controlled
@@ -146,55 +157,9 @@ typedef struct rtx_def
   rtunion fld[1];
 } *rtx;
 
-
-/* Add prototype support.  */
-#ifndef PROTO
-#if defined (USE_PROTOTYPES) ? USE_PROTOTYPES : defined (__STDC__)
-#define PROTO(ARGS) ARGS
-#else
-#define PROTO(ARGS) ()
-#endif
-#endif
-
-#ifndef VPROTO
-#ifdef __STDC__
-#define PVPROTO(ARGS)		ARGS
-#define VPROTO(ARGS)		ARGS
-#define VA_START(va_list,var)	va_start(va_list,var)
-#else
-#define PVPROTO(ARGS)		()
-#define VPROTO(ARGS)		(va_alist) va_dcl
-#define VA_START(va_list,var)	va_start(va_list)
-#endif
-#endif
-
-#ifndef STDIO_PROTO
-#ifdef BUFSIZ
-#define STDIO_PROTO(ARGS) PROTO(ARGS)
-#else
-#define STDIO_PROTO(ARGS) ()
-#endif
-#endif
+#include "gansidecl.h"
 
 #define NULL_RTX (rtx) 0
-
-/* Define a generic NULL if one hasn't already been defined.  */
-
-#ifndef NULL
-#define NULL 0
-#endif
-
-#ifndef GENERIC_PTR
-#if defined (USE_PROTOTYPES) ? USE_PROTOTYPES : defined (__STDC__)
-#define GENERIC_PTR void *
-#else
-#define GENERIC_PTR char *
-#endif
-#endif
-
-#ifndef NULL_PTR
-#define NULL_PTR ((GENERIC_PTR)0)
-#endif
 
 /* Define macros to access the `code' field of the rtx.  */
 
@@ -340,6 +305,15 @@ typedef struct rtvec_def{
    dependencies.  REG_DEP_OUTPUT is used in LOG_LINKS which represent output
    (write after write) dependencies.  Data dependencies, which are the only
    type of LOG_LINK created by flow, are represented by a 0 reg note kind.  */
+/* CYGNUS LOCAL: gcov */
+/*   REG_BR_PROB is attached to JUMP_INSNs and CALL_INSNs when the flag
+   -fbranch-probabilities is given.  It has an integer value.  For jumps,
+   it is the probability that this is a taken branch.  For calls, it is the
+   probability that this call won't return.
+     REG_EXEC_COUNT is attached to the first insn of each basic block, and
+   the first insn after each CALL_INSN.  It indicates how many times this
+   block was executed.  */
+/* END CYGNUS LOCAL */
 
 #define REG_NOTES(INSN)	((INSN)->fld[6].rtx)
 
@@ -348,7 +322,11 @@ enum reg_note { REG_DEAD = 1, REG_INC = 2, REG_EQUIV = 3, REG_WAS_0 = 4,
 		REG_EQUAL = 5, REG_RETVAL = 6, REG_LIBCALL = 7,
 		REG_NONNEG = 8, REG_NO_CONFLICT = 9, REG_UNUSED = 10,
 		REG_CC_SETTER = 11, REG_CC_USER = 12, REG_LABEL = 13,
-		REG_DEP_ANTI = 14, REG_DEP_OUTPUT = 15 };
+		  /* CYGNUS LOCAL: gcov */
+		REG_DEP_ANTI = 14, REG_DEP_OUTPUT = 15, REG_BR_PROB = 16,
+		REG_EXEC_COUNT = 17 };
+/* The base value for branch probability notes.  */
+#define REG_BR_PROB_BASE  10000
 
 /* Define macros to extract and insert the reg-note kind in an EXPR_LIST.  */
 #define REG_NOTE_KIND(LINK) ((enum reg_note) GET_MODE (LINK))
@@ -357,7 +335,7 @@ enum reg_note { REG_DEAD = 1, REG_INC = 2, REG_EQUIV = 3, REG_WAS_0 = 4,
 /* Names for REG_NOTE's in EXPR_LIST insn's.  */
 
 extern char *reg_note_name[];
-#define GET_REG_NOTE_NAME(MODE) (reg_note_name[(int)(MODE)])
+#define GET_REG_NOTE_NAME(MODE) (reg_note_name[(int) (MODE)])
 
 /* This field is only present on CALL_INSNs.  It holds a chain of EXPR_LIST of
    USE and CLOBBER expressions.
@@ -430,6 +408,15 @@ extern char *reg_note_name[];
    i.e. the point just after all of the parms have been moved into
    their homes, etc.  */
 #define NOTE_INSN_FUNCTION_BEG -13
+/* These note where exception handling regions begin and end.  */
+#define NOTE_INSN_EH_REGION_BEG -14
+#define NOTE_INSN_EH_REGION_END -15
+/* CYGNUS LOCAL: gcov */
+/* Generated whenever a duplicate line number note is output.  For example,
+   one is output after the end of an inline function, in order to prevent
+   the line containing the inline call from being counted twice in gcov. */
+#define NOTE_REPEATED_LINE_NUMBER -16
+/* END CYGNUS LOCAL */
 
 
 #if 0 /* These are not used, and I don't know what they were for. --rms.  */
@@ -540,6 +527,11 @@ extern char *note_insn_name[];
 /* For a MEM rtx, 1 if it refers to a structure or union component.  */
 #define MEM_IN_STRUCT_P(RTX) ((RTX)->in_struct)
 
+/* CYGNUS LOCAL unaligned-pointers */
+/* For a MEM rtx, 1 if it may be an unaligned address.  */
+#define MEM_UNALIGNED_P(RTX) ((RTX)->integrated)
+/* END CYGNUS LOCAL */
+
 /* For a LABEL_REF, 1 means that this reference is to a label outside the
    loop containing the reference.  */
 #define LABEL_OUTSIDE_LOOP_P(RTX) ((RTX)->in_struct)
@@ -604,6 +596,8 @@ extern char *note_insn_name[];
     for the function arguments.
    ORIGINAL_DECL_INITIAL is a pointer to the original DECL_INITIAL for the
     function.
+   INLINE_REGNO_REG_RTX, INLINE_REGNO_POINTER_FLAG, and
+    INLINE_REGNO_POINTER_ALIGN are pointers to the corresponding arrays.
 
    We want this to lay down like an INSN.  The PREV_INSN field
    is always NULL.  The NEXT_INSN field always points to the
@@ -623,6 +617,9 @@ extern char *note_insn_name[];
 #define OUTGOING_ARGS_SIZE(RTX) ((RTX)->fld[13].rtint)
 #define ORIGINAL_ARG_VECTOR(RTX) ((RTX)->fld[14].rtvec)
 #define ORIGINAL_DECL_INITIAL(RTX) ((RTX)->fld[15].rtx)
+#define INLINE_REGNO_REG_RTX(RTX) ((RTX)->fld[16].rtvec)
+#define INLINE_REGNO_POINTER_FLAG(RTX) ((RTX)->fld[17].rtstr)
+#define INLINE_REGNO_POINTER_ALIGN(RTX) ((RTX)->fld[18].rtstr)
 
 /* In FUNCTION_FLAGS we save some variables computed when emitting the code
    for the function and which must be `or'ed into the current flag values when
@@ -720,7 +717,8 @@ extern rtx gen_reg_rtx			PROTO((enum machine_mode));
 extern rtx gen_label_rtx		PROTO((void));
 extern rtx gen_inline_header_rtx	PROTO((rtx, rtx, int, int, int, int,
 					       int, int, rtx, rtx, int, int,
-					       rtvec, rtx));
+					       rtvec, rtx,
+					       rtvec, char *, char *));
 extern rtx gen_lowpart_common		PROTO((enum machine_mode, rtx));
 extern rtx gen_lowpart			PROTO((enum machine_mode, rtx));
 extern rtx gen_lowpart_if_possible	PROTO((enum machine_mode, rtx));
@@ -749,6 +747,8 @@ extern int get_pool_offset		PROTO((rtx));
 extern rtx simplify_subtraction		PROTO((rtx));
 extern rtx assign_stack_local		PROTO((enum machine_mode, int, int));
 extern rtx assign_stack_temp		PROTO((enum machine_mode, int, int));
+extern rtx assign_temp			PROTO((union tree_node *, int,
+					       int, int));
 extern rtx protect_from_queue		PROTO((rtx, int));
 extern void emit_queue			PROTO((void));
 extern rtx emit_move_insn		PROTO((rtx, rtx));
@@ -960,6 +960,11 @@ extern int cse_not_expected;
 /* Indexed by pseudo register number, gives the rtx for that pseudo.
    Allocated in parallel with regno_pointer_flag.  */
 extern rtx *regno_reg_rtx;
+
+/* Vector indexed by regno; contains the alignment in bytes for a
+   register that contains a pointer, if known.  */
+extern char *regno_pointer_align;
+#define REGNO_POINTER_ALIGN(REGNO) regno_pointer_align[REGNO]
 
 /* Translates rtx code to tree code, for those codes needed by
    REAL_ARITHMETIC.  The function returns an int because the caller may not

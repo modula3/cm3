@@ -1,5 +1,5 @@
 /* Definitions for Linux with ELF format
-   Copyright (C) 1995 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996 Free Software Foundation, Inc.
    Contributed by Eric Youngdale.
    Modified for stabs-in-ELF by H.J. Lu.
 
@@ -45,6 +45,8 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_APP_OFF
 #define ASM_APP_OFF "#NO_APP\n"
 
+#define SET_ASM_OP	".set"
+
 /* Use stabs instead of DWARF debug format.  */
 #define PREFERRED_DEBUGGING_TYPE DBX_DEBUG
 #include "svr4.h"
@@ -61,11 +63,6 @@ Boston, MA 02111-1307, USA.  */
 	fprintf (FILE, "\t.version\t\"01.01\"\n");			\
   } while (0)
 
-#undef	LIBGCC_SPEC
-#define LIBGCC_SPEC \
-  "%{!shared:-lgcc}"
-
-
 /* Provide a STARTFILE_SPEC appropriate for Linux.  Here we add
    the Linux magical crtbegin.o file (see crtstuff.c) which
    provides part of the support for getting C++ file-scope static
@@ -74,7 +71,9 @@ Boston, MA 02111-1307, USA.  */
 #undef	STARTFILE_SPEC
 #define STARTFILE_SPEC \
   "%{!shared: \
-     %{pg:gcrt1.o%s} %{!pg:%{p:gcrt1.o%s} %{!p:crt1.o%s}}}\
+     %{pg:gcrt1.o%s} %{!pg:%{p:gcrt1.o%s} \
+		       %{!p:%{profile:gcrt1.o%s} \
+			 %{!profile:crt1.o%s}}}} \
    crti.o%s %{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}"
 
 /* Provide a ENDFILE_SPEC appropriate for Linux.  Here we tack on
@@ -86,3 +85,23 @@ Boston, MA 02111-1307, USA.  */
 #undef	ENDFILE_SPEC
 #define ENDFILE_SPEC \
   "%{!shared:crtend.o%s} %{shared:crtendS.o%s} crtn.o%s"
+
+/* This is for -profile to use -lc_p instead of -lc. */
+#undef  CC1_SPEC
+#define CC1_SPEC "%{profile:-p}"
+
+#undef	LIB_SPEC
+#if 1
+/* We no longer link with libc_p.a or libg.a by default. If you
+ * want to profile or debug the Linux C library, please add
+ * -profile or -ggdb to LDFLAGS at the link time, respectively.
+ */
+#define LIB_SPEC \
+  "%{!shared: %{p:-lgmon} %{pg:-lgmon} %{profile:-lgmon -lc_p} \
+     %{!profile:%{!ggdb:-lc} %{ggdb:-lg}}}"
+#else
+#define LIB_SPEC \
+  "%{!shared: \
+     %{p:-lgmon -lc_p} %{pg:-lgmon -lc_p} \
+       %{!p:%{!pg:%{!g*:-lc} %{g*:-lg}}}}"
+#endif

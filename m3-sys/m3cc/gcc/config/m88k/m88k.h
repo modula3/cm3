@@ -1,9 +1,8 @@
 /* Definitions of target machine for GNU compiler for
    Motorola m88100 in an 88open OCS/BCS environment.
-   Copyright (C) 1988, 89, 90, 91, 93, 94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
    Contributed by Michael Tiemann (tiemann@cygnus.com)
-   Enhanced by Michael Meissner (meissner@cygnus.com)
-   Version 2 port by Tom Wood (twood@pets.sps.mot.com)
+   Currently maintained by (gcc@dg-rtp.dg.com)
 
 This file is part of GNU CC.
 
@@ -197,7 +196,7 @@ extern char * reg_names[];
 
 /* Print subsidiary information on the compiler version in use.
    Redefined in sysv4.h, and luna.h.  */
-#define VERSION_INFO1	"88open OCS/BCS, "
+#define VERSION_INFO1	"m88k, "
 #ifndef VERSION_INFO2
 #define VERSION_INFO2   "$Revision$"
 #endif
@@ -295,6 +294,7 @@ extern char * reg_names[];
     { "no-serialize-volatile",		 MASK_NO_SERIALIZE_VOLATILE }, \
     { "serialize-volatile",		-MASK_NO_SERIALIZE_VOLATILE }, \
     { "omit-leaf-frame-pointer",	 MASK_OMIT_LEAF_FRAME_POINTER }, \
+    { "no-omit-leaf-frame-pointer",     -MASK_OMIT_LEAF_FRAME_POINTER }, \
     SUBTARGET_SWITCHES \
     /* Default switches */ \
     { "",				 TARGET_DEFAULT }, \
@@ -361,6 +361,8 @@ extern char * reg_names[];
 	if (flag_pic)							     \
 	  error ("-mshort-data-%s and PIC are incompatible", m88k_short_data); \
       }									     \
+    if (TARGET_OMIT_LEAF_FRAME_POINTER)       /* keep nonleaf frame pointers */    \
+      flag_omit_frame_pointer = 1;                                         \
   } while (0)
 
 /*** Storage Layout ***/
@@ -1046,7 +1048,7 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
 
 /* Initialize a variable CUM of type CUMULATIVE_ARGS for a call to a
    function whose data type is FNTYPE.  For a library call, FNTYPE is 0. */
-#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME) ((CUM) = 0)
+#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME,INDIRECT) ((CUM) = 0)
 
 /* A C statement (sans semicolon) to update the summarizer variable
    CUM to advance past an argument in the argument list.  The values
@@ -1716,6 +1718,11 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
 /*** Output of Assembler Code ***/
 
 /* Control the assembler format that we output.  */
+
+/* A C string constant describing how to begin a comment in the target
+   assembler language.  The compiler assumes that the comment will end at
+   the end of the line.  */
+#define ASM_COMMENT_START ";"
 
 /* Allow pseudo-ops to be overridden.  Override these in svr[34].h.  */
 #undef	INT_ASM_OP

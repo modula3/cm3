@@ -1,4 +1,4 @@
-@c Copyright (C) 1988, 89, 92, 93, 94, 1995 Free Software Foundation, Inc.
+@c Copyright (C) 1988, 89, 92, 93, 94, 1995, 1996 Free Software Foundation, Inc.
 @c This is part of the GCC manual.
 @c For copying conditions, see the file gcc.texi.
 
@@ -87,14 +87,14 @@ in the following sections.
 @item Overall Options
 @xref{Overall Options,,Options Controlling the Kind of Output}.
 @smallexample
--c  -S  -E  -o @var{file}  -pipe  -v  -x @var{language} 
+-c  -S  -E  -o @var{file}  -pipe  -v  -x @var{language}
 @end smallexample
 
 @item C Language Options
 @xref{C Dialect Options,,Options Controlling C Dialect}.
 @smallexample
 -ansi  -fallow-single-precision -fcond-mismatch  -fno-asm
--fno-builtin  -fsigned-bitfields  -fsigned-char 
+-fno-builtin  -fsigned-bitfields  -fsigned-char
 -funsigned-bitfields  -funsigned-char  -fwritable-strings
 -traditional  -traditional-cpp  -trigraphs
 @end smallexample
@@ -115,21 +115,24 @@ in the following sections.
 -fsyntax-only  -pedantic  -pedantic-errors
 -w  -W  -Wall  -Waggregate-return  -Wbad-function-cast
 -Wcast-align -Wcast-qual  -Wchar-subscript  -Wcomment
--Wconversion -Wenum-clash  -Werror  -Wformat
+-Wconversion  -Werror  -Wformat
 -Wid-clash-@var{len}  -Wimplicit  -Wimport  -Winline
 -Wlarger-than-@var{len}  -Wmissing-declarations
 -Wmissing-prototypes  -Wnested-externs
 -Wno-import  -Woverloaded-virtual -Wparentheses
 -Wpointer-arith  -Wredundant-decls -Wreorder -Wreturn-type -Wshadow
--Wstrict-prototypes  -Wswitch  -Wsynth  -Wtemplate-debugging
--Wtraditional  -Wtrigraphs -Wuninitialized  -Wunused
--Wwrite-strings
+-Wsign-compare -Wstrict-prototypes  -Wswitch  -Wsynth
+-Wtemplate-debugging  -Wtraditional  -Wtrigraphs
+-Wuninitialized  -Wunused  -Wwrite-strings
 @end smallexample
 
 @item Debugging Options
 @xref{Debugging Options,,Options for Debugging Your Program or GCC}.
 @smallexample
--a  -d@var{letters}  -fpretend-float 
+-a  -ax  -d@var{letters}  -fpretend-float
+@c CYGNUS LOCAL: gcov
+-fprofile-arcs  -ftest-coverage
+@c END CYGNUS LOCAL
 -g  -g@var{level} -gcoff  -gdwarf  -gdwarf+
 -ggdb  -gstabs  -gstabs+  -gxcoff  -gxcoff+
 -p  -pg  -print-file-name=@var{library}  -print-libgcc-file-name
@@ -139,15 +142,24 @@ in the following sections.
 @item Optimization Options
 @xref{Optimize Options,,Options that Control Optimization}.
 @smallexample
+@c CYGNUS LOCAL: gcov
+-fbranch-probabilities
+@c END CYGNUS LOCAL
 -fcaller-saves  -fcse-follow-jumps  -fcse-skip-blocks
--fdelayed-branch   -fexpensive-optimizations  
+-fdelayed-branch   -fexpensive-optimizations
 -ffast-math  -ffloat-store  -fforce-addr  -fforce-mem
--finline-functions  -fkeep-inline-functions  
--fno-default-inline  -fno-defer-pop  -fno-function-cse
--fno-inline  -fno-peephole  -fomit-frame-pointer  
--frerun-cse-after-loop  -fschedule-insns  
--fschedule-insns2  -fstrength-reduce  -fthread-jumps 
+-ffunction-sections -finline-functions
+-fkeep-inline-functions -fno-default-inline
+-fno-defer-pop  -fno-function-cse
+-fno-inline  -fno-peephole  -fomit-frame-pointer
+-frerun-cse-after-loop  -fschedule-insns
+@c CYGNUS LOCAL mentoropt/law
+-fschedule-insns2  -fshorten-lifetimes
+-fstrength-reduce  -fthread-jumps
 -funroll-all-loops  -funroll-loops
+@c CYGNUS LOCAL: regmove
+-fregmove
+@c END CYGNUS LOCAL: regmove
 -O  -O0  -O1  -O2  -O3
 @end smallexample
 
@@ -174,8 +186,8 @@ in the following sections.
 @xref{Link Options,,Options for Linking}.
 @smallexample
 @var{object-file-name}  -l@var{library}
--nostartfiles  -nodefaultlibs  -nostdlib  
--s  -static  -shared  -symbolic  
+-nostartfiles  -nodefaultlibs  -nostdlib
+-s  -static  -shared  -symbolic
 -Wl,@var{option}  -Xlinker @var{option}
 -u @var{symbol}
 @end smallexample
@@ -197,26 +209,25 @@ in the following sections.
 @xref{Submodel Options,,Hardware Models and Configurations}.
 @smallexample
 @emph{M680x0 Options}
--m68000  -m68020  -m68020-40  -m68030  -m68040  -m68881  
--mbitfield  -mc68000  -mc68020  -mfpa  -mnobitfield  
--mrtd  -mshort  -msoft-float 
+-m68000  -m68020  -m68020-40  -m68030  -m68040  -m68060
+-m68881 -mbitfield  -mc68000  -mc68020  -mfpa
+-mnobitfield  -mrtd  -mshort  -msoft-float
 
 @emph{VAX Options}
 -mg  -mgnu  -munix
 
 @emph{SPARC Options}
--mapp-regs  -mcypress  -mepilogue  -mflat  -mfpu  -mhard-float
--mhard-quad-float  -mno-app-regs  -mno-flat  -mno-fpu
--mno-epilogue  -mno-unaligned-doubles
--msoft-float  -msoft-quad-float
--msparclite  -msupersparc  -munaligned-doubles  -mv8
-
-SPARC V9 compilers support the following options
-in addition to the above:
-
--mmedlow  -mmedany
--mint32  -mint64  -mlong32  -mlong64
--mno-stack-bias  -mstack-bias
+-mcpu=@var{cpu  type}
+-mtune=@var{cpu  type}
+-mapp-regs  -mbroken-saverestore  -mcypress  -mepilogue
+-mflat  -mfpu  -mfullany  -mhard-float  -mhard-quad-float
+-mimpure-text  -mint32  -mint64  -mlive-g0
+-mlong32  -mlong64  -mmedlow  -mmedany
+-mno-app-regs  -mno-epilogue
+-mno-flat  -mno-fpu  -mno-impure-text
+-mno-stack-bias  -mno-unaligned-doubles
+-msoft-float  -msoft-quad-float  -msparclite  -mstack-bias
+-msupersparc  -munaligned-doubles  -mv8
 
 @emph{Convex Options}
 -mc1  -mc2  -mc32  -mc34  -mc38
@@ -224,7 +235,7 @@ in addition to the above:
 -mlong32  -mlong64
 -mvolatile-cache  -mvolatile-nocache
 
-@emph{AMD29K Options} 
+@emph{AMD29K Options}
 -m29000  -m29050  -mbw  -mnbw  -mdw  -mndw
 -mlarge  -mnormal  -msmall
 -mkernel-registers  -mno-reuse-arg-regs
@@ -233,34 +244,42 @@ in addition to the above:
 -mstorem-bug  -muser-registers
 
 @emph{ARM Options}
--mapcs -m2 -m3 -m6 -mbsd -mxopen -mno-symrename
+-mapcs-frame -mapcs-26 -mapcs-32
+-mlittle-endian -mbig-endian -mwords-little-endian
+-mshort-load-bytes -mno-short-load-bytes
+-msoft-float -mhard-float
+-mbsd -mxopen -mno-symrename
 
 @emph{M88K Options}
--m88000  -m88100  -m88110  -mbig-pic  
--mcheck-zero-division  -mhandle-large-shift 
--midentify-revision  -mno-check-zero-division 
--mno-ocs-debug-info  -mno-ocs-frame-position 
+-m88000  -m88100  -m88110  -mbig-pic
+-mcheck-zero-division  -mhandle-large-shift
+-midentify-revision  -mno-check-zero-division
+-mno-ocs-debug-info  -mno-ocs-frame-position
 -mno-optimize-arg-area  -mno-serialize-volatile
 -mno-underscores  -mocs-debug-info
 -mocs-frame-position  -moptimize-arg-area
--mserialize-volatile  -mshort-data-@var{num}  -msvr3 
--msvr4  -mtrap-large-shift  -muse-div-instruction 
+-mserialize-volatile  -mshort-data-@var{num}  -msvr3
+-msvr4  -mtrap-large-shift  -muse-div-instruction
 -mversion-03.00  -mwarn-passed-structs
 
 @emph{RS/6000 and PowerPC Options}
 -mcpu=@var{cpu  type}
+-mtune=@var{cpu  type}
 -mpower  -mno-power  -mpower2  -mno-power2
 -mpowerpc  -mno-powerpc
 -mpowerpc-gpopt  -mno-powerpc-gpopt
 -mpowerpc-gfxopt  -mno-powerpc-gfxopt
 -mnew-mnemonics  -mno-new-mnemonics
 -mfull-toc   -mminimal-toc  -mno-fop-in-toc  -mno-sum-in-toc
--msoft-float  -mhard-float -mmultiple -mno-multiple
--mstring -mno-string -mbit-align -mno-bit-align
--mstrict-align -mno-strict-align -mrelocatable -mno-relocatable
--mtoc -mno-toc -mtraceback -mno-traceback
--mlittle -mlittle-endian -mbig -mbig-endian
--mcall-aix -mcall-sysv -mprototype
+-mxl-call  -mno-xl-call
+-msoft-float  -mhard-float  -mmultiple  -mno-multiple
+-mstring  -mno-string  -mbit-align  -mno-bit-align
+-mstrict-align  -mno-strict-align  -mrelocatable
+-mno-relocatable  -mrelocatable-lib  -mno-relocatable-lib
+-mtoc  -mno-toc  -mtraceback  -mno-traceback
+-mlittle  -mlittle-endian  -mbig  -mbig-endian
+-mcall-aix  -mcall-sysv  -mprototype  -mno-prototype
+-msim  -mmvme  -memb  -msdata  -msdata=@var{opt}  -G @var{num}
 
 @emph{RT Options}
 -mcall-lib-mul  -mfp-arg-in-fpregs  -mfp-arg-in-gregs
@@ -276,25 +295,27 @@ in addition to the above:
 -mno-embedded-data  -mno-embedded-pic
 -mno-gpopt  -mno-long-calls
 -mno-memcpy  -mno-mips-tfile  -mno-rnames  -mno-stats
--mrnames -msoft-float  
+-mrnames -msoft-float
 -m4650 -msingle-float -mmad
 -mstats  -EL  -EB  -G @var{num}  -nocpp
 
 @emph{i386 Options}
 -m486  -m386 -mieee-fp  -mno-fancy-math-387
--mno-fp-ret-in-387  -msoft-float  -msvr3-shlib  
+-mno-fp-ret-in-387  -msoft-float  -msvr3-shlib
 -mno-wide-multiply -mrtd -malign-double
 -mreg-alloc=@var{list} -mregparm=@var{num}
 -malign-jumps=@var{num} -malign-loops=@var{num}
 -malign-functions=@var{num}
 
 @emph{HPPA Options}
--mdisable-fpregs  -mdisable-indexing  -mfast-indirect-calls
--mgas  -mjump-in-delay -mlong-millicode-calls -mno-disable-fpregs
+-mdisable-fpregs  -mdisable-indexing -mfast-indirect-calls
+-mgas  -mjump-in-delay -mlong-load-store -mno-disable-fpregs
 -mno-disable-indexing -mno-fast-indirect-calls -mno-gas
--mno-jump-in-delay -mno-millicode-long-calls
--mno-portable-runtime -mno-soft-float -msoft-float
--mpa-risc-1-0  -mpa-risc-1-1  -mportable-runtime -mschedule=@var{list}
+-mno-jump-in-delay
+-mno-long-load-store
+-mno-portable-runtime -mno-soft-float -mno-space -mno-space-regs -msoft-float
+-mpa-risc-1-0  -mpa-risc-1-1  -mportable-runtime
+-mschedule=@var{list} -mspace -mspace-regs
 
 @emph{Intel 960 Options}
 -m@var{cpu type}  -masm-compat  -mclean-linkage
@@ -307,29 +328,42 @@ in addition to the above:
 -mtail-call
 
 @emph{DEC Alpha Options}
--mfp-regs  -mno-fp-regs  -mno-soft-float
--msoft-float
+-mfp-regs  -mno-fp-regs
+-mno-soft-float -msoft-float
+-mieee -mieee-with-inexact -mieee-conformant
+-mfp-trap-mode -mfp-rounding-mode -mtrap-precision
+-mbuild-constants
 
 @emph{Clipper Options}
 -mc300 -mc400
 
 @emph{H8/300 Options}
--mrelax  -mh
+-mrelax  -mh  -mint32  -malign-300
 
 @emph{System V Options}
 -Qy  -Qn  -YP,@var{paths}  -Ym,@var{dir}
+
+@c CYGNUS LOCAL: z8k docs
+@emph{Z8000 Option}
+-mz8001
+@c END CYGNUS LOCAL
+
+
 @end smallexample
 
 @item Code Generation Options
 @xref{Code Gen Options,,Options for Code Generation Conventions}.
 @smallexample
--fcall-saved-@var{reg}  -fcall-used-@var{reg} 
--ffixed-@var{reg}  -finhibit-size-directive 
+-fcall-saved-@var{reg}  -fcall-used-@var{reg}
+-ffixed-@var{reg}  -finhibit-size-directive
 -fno-common  -fno-ident  -fno-gnu-linker
--fpcc-struct-return  -fpic  -fPIC 
+-fpcc-struct-return  -fpic  -fPIC
 -freg-struct-return  -fshared-data  -fshort-enums
 -fshort-double  -fvolatile  -fvolatile-global
--fverbose-asm -fpack-struct +e0  +e1
+@c CYGNUS LOCAL unaligned-pointers, unaligned-struct-hack
+-funaligned-pointers  -funaligned-struct-hack
+@c END CYGNUS LOCAL
+-fverbose-asm -fpack-struct  +e0  +e1
 @end smallexample
 @end table
 
@@ -389,7 +423,7 @@ C++ source code which must be preprocessed.  Note that in @samp{.cxx},
 the last two letters must both be literally @samp{x}.  Likewise,
 @samp{.C} refers to a literal capital C.
 
-@item @var{file}.s 
+@item @var{file}.s
 Assembler code.
 
 @item @var{file}.S
@@ -754,6 +788,15 @@ Note that this is equivalent to @samp{-fno-unsigned-char}, which is
 the negative form of @samp{-funsigned-char}.  Likewise, the option
 @samp{-fno-signed-char} is equivalent to @samp{-funsigned-char}.
 
+You may wish to use @samp{-fno-builtin} as well as @samp{-traditional}
+if your program uses names that are normally GNU C builtin functions for
+other purposes of its own.
+
+You cannot use @samp{-traditional} if you include any header files that
+rely on ANSI C features.  Some vendors are starting to ship systems with
+ANSI C header files and you cannot use @samp{-traditional} on such
+systems to compile files that include any system headers.
+
 @item -fsigned-bitfields
 @itemx -funsigned-bitfields
 @itemx -fno-signed-bitfields
@@ -979,6 +1022,13 @@ Recognize the operator name keywords @code{and}, @code{bitand},
 synonyms for the symbols they refer to.  @samp{-ansi} implies
 @samp{-foperator-names}.
 
+@c CYGNUS LOCAL -frepo
+@item -frepo
+Enable automatic template instantiation.  This option also implies
+@samp{-fno-implicit-templates}.  @xref{Template Instantiation}, for more
+information.
+
+@c END CYGNUS LOCAL -frepo
 @item -fthis-is-variable
 Permit assignment to @code{this}.  The incorporation of user-defined
 free store management into C++ has made assignment to @samp{this} an
@@ -1020,8 +1070,7 @@ have meanings only for C++ programs:
 Do not assume @samp{inline} for functions defined inside a class scope.
 @xref{Optimize Options,,Options That Control Optimization}.
 
-@item -Wenum-clash
-@itemx -Woverloaded-virtual
+@item -Woverloaded-virtual
 @itemx -Wtemplate-debugging
 Warnings that apply only to C++ programs.  @xref{Warning
 Options,,Options to Request or Suppress Warnings}.
@@ -1060,7 +1109,7 @@ Check the code for syntax errors, but don't do anything beyond that.
 
 @item -pedantic
 Issue all the warnings demanded by strict ANSI standard C; reject
-all programs that use forbidden extensions.  
+all programs that use forbidden extensions.
 
 Valid ANSI standard C programs should compile properly with or without
 this option (though a rare few will require @samp{-ansi}).  However,
@@ -1107,7 +1156,8 @@ of error, as programmers often forget that this type is signed on some
 machines.
 
 @item -Wcomment
-Warn whenever a comment-start sequence @samp{/*} appears in a comment.
+Warn whenever a comment-start sequence @samp{/*} appears in a @samp{/*}
+comment, or whenever a Backslash-Newline appears in a @samp{//} comment.
 
 @item -Wformat
 Check calls to @code{printf} and @code{scanf}, etc., to make sure that
@@ -1208,12 +1258,6 @@ Some spurious warnings can be avoided if you declare all the functions
 you use that never return as @code{noreturn}.  @xref{Function
 Attributes}.
 
-@item -Wenum-clash
-@cindex enumeration clash warnings
-@cindex warning for enumeration conversions
-Warn about conversion between different enumeration types.
-(C++ only).
-
 @item -Wreorder (C++ only)
 @cindex reordering, warning
 @cindex warning for reordering of member initializers
@@ -1232,20 +1276,31 @@ Here the compiler will warn that the member initializers for @samp{i}
 and @samp{j} will be rearranged to match the declaration order of the
 members.
 
+@item -Wsign-compare
+@cindex warning for comparison of signed and unsigned values
+@cindex comparison of signed and unsigned values, warning
+@cindex signed and unsigned values, comparison warning
+Warn when a comparison between signed and unsigned values could produce
+an incorrect result when the signed value is converted to unsigned.
+
 @item -Wtemplate-debugging
 @cindex template debugging
 When using templates in a C++ program, warn if debugging is not yet
 fully available (C++ only).
 
 @item -Wall
-All of the above @samp{-W} options combined.  These are all the
-options which pertain to usage that we recommend avoiding and that we
-believe is easy to avoid, even in conjunction with macros.
+All of the above @samp{-W} options combined.  This enables all the
+warnings about constructions that some users consider questionable, and
+that are easy to avoid (or modify to prevent the warning), even in
+conjunction with macros.
 @end table
 
-The remaining @samp{-W@dots{}} options are not implied by @samp{-Wall}
-because they warn about constructions that we consider reasonable to
-use, on occasion, in clean programs.
+The following @samp{-W@dots{}} options are not implied by @samp{-Wall}.
+Some of them warn about constructions that users generally do not
+consider questionable, but which occasionally you might wish to check
+for; others warn about constructions that are necessary or hard to avoid
+in some cases, and there is no simple way to modify the code to suppress
+the warning.
 
 @table @code
 @item -W
@@ -1282,7 +1337,7 @@ foo (a)
 
 @item
 An expression-statement or the left-hand side of a comma expression
-contains no side effects. 
+contains no side effects.
 To suppress the warning, cast the unused expression to void.
 For example, an expression such as @samp{x[i,j]} will cause a warning,
 but @samp{x[(void)i,j]} will not.
@@ -1582,6 +1637,129 @@ This data could be analyzed by a program like @code{tcov}.  Note,
 however, that the format of the data is not what @code{tcov} expects.
 Eventually GNU @code{gprof} should be extended to process this data.
 
+@item -ax
+Generate extra code to profile basic blocks.  Your executable will
+produce output that is a superset of that produced when @samp{-a} is
+used.  Additional output is the source and target address of the basic
+blocks where a jump takes place, the number of times a jump is executed,
+and (optionally) the complete sequence of basic blocks being executed.
+The output is appended to file @file{bb.out}.
+
+You can examine different profiling aspects without recompilation.  Your
+execuable will read a list of function names from file @file{bb.in}.
+Profiling starts when a function on the list is entered and stops when
+that invocation is exited.  To exclude a function from profiling, prefix
+its name with `-'.  If a function name is not unique, you can
+disambiguate it by writing it in the form
+@samp{/path/filename.d:functionname}.  Your executable will write the
+available paths and filenames in file @file{bb.out}.
+
+Several function names have a special meaning:
+@table @code
+@item __bb_jumps__
+Write source, target and frequency of jumps to file @file{bb.out}.
+@item __bb_hidecall__
+Exclude function calls from frequency count.
+@item __bb_showret__
+Include function returns in frequency count.
+@item __bb_trace__
+Write the sequence of basic blocks executed to file @file{bbtrace.gz}.
+The file will be compressed using the program @samp{gzip}, which must
+exist in your @code{PATH}.  On systems without the @samp{popen}
+function, the file will be named @file{bbtrace} and will not be
+compressed.  @strong{Profiling for even a few seconds on these systems
+will produce a very large file.}  Note: @code{__bb_hidecall__} and
+@code{__bb_showret__} will not affect the sequence written to
+@file{bbtrace.gz}.
+@end table
+
+Here's a short example using different profiling parameters
+in file @file{bb.in}.  Assume function @code{foo} consists of basic blocks
+1 and 2 and is called twice from block 3 of function @code{main}.  After
+the calls, block 3 transfers control to block 4 of @code{main}.
+
+With @code{__bb_trace__} and @code{main} contained in file @file{bb.in},
+the following sequence of blocks is written to file @file{bbtrace.gz}:
+0 3 1 2 1 2 4.  The return from block 2 to block 3 is not shown, because
+the return is to a point inside the block and not to the top.  The
+block address 0 always indicates, that control is transferred
+to the trace from somewhere outside the observed functions.  With
+@samp{-foo} added to @file{bb.in}, the blocks of function
+@code{foo} are removed from the trace, so only 0 3 4 remains.
+
+With @code{__bb_jumps__} and @code{main} contained in file @file{bb.in},
+jump frequencies will be written to file @file{bb.out}.  The
+frequencies are obtained by constructing a trace of blocks
+and incrementing a counter for every neighbouring pair of blocks
+in the trace.  The trace 0 3 1 2 1 2 4 displays the following
+frequencies:
+
+@example
+Jump from block 0x0 to block 0x3 executed 1 time(s)
+Jump from block 0x3 to block 0x1 executed 1 time(s)
+Jump from block 0x1 to block 0x2 executed 2 time(s)
+Jump from block 0x2 to block 0x1 executed 1 time(s)
+Jump from block 0x2 to block 0x4 executed 1 time(s)
+@end example
+
+With @code{__bb_hidecall__}, control transfer due to call instructions
+is removed from the trace, that is the trace is cut into three parts: 0
+3 4, 0 1 2 and 0 1 2.  With @code{__bb_showret__}, control transfer due
+to return instructions is added to the trace.  The trace becomes: 0 3 1
+2 3 1 2 3 4.  Note, that this trace is not the same, as the sequence
+written to @file{bbtrace.gz}.  It is solely used for counting jump
+frequencies.
+
+@c CYGNUS LOCAL: gcov
+@item -fprofile-arcs
+Instrument @dfn{arcs} during compilation.  For each function of your
+program, GNU CC creates a program flow graph, then finds a spanning tree
+for the graph.  Only arcs that are not on the spanning tree have to be
+instrumented: the compiler adds code to count the number of times that these
+arcs are executed.  When an arc is the only exit or only entrance to a
+block, the instrumentation code can be added to the block; otherwise, a
+new basic block must be created to hold the instrumentation code.
+
+Since not every arc in the program must be instrumented, programs
+compiled with this option run faster than programs compiled with
+@samp{-a}, which adds instrumentation code to every basic block in the
+program.  The tradeoff: since @code{gcov} does not have
+execution counts for all branches, it must start with the execution
+counts for the instrumented branches, and then iterate over the program
+flow graph until the entire graph has been solved.  Hence, @code{gcov}
+runs a little more slowly than a program which uses information from
+@samp{-a}.
+
+@samp{-fprofile-arcs} also makes it possible to estimate branch
+probabilities, and to calculate basic block execution counts.  In
+general, basic block execution counts do not give enough information to
+estimate all branch probabilities.  When the compiled program exits, it
+saves the arc execution counts to a file called
+@file{@var{sourcename}.da}.  Use the compiler option
+@samp{-fbranch-probabilities} (@pxref{Optimize Options,,Options that
+Control Optimization}) when recompiling, to optimize using estimated
+branch probabilities.
+
+@need 2000
+@item -ftest-coverage
+Create data files for the @code{gcov} code-coverage utility
+(@pxref{Gcov,, @code{gcov}: a GNU CC Test Coverage Program}).
+The data file names begin with the name of your source file:
+
+@table @code
+@item @var{sourcename}.bb
+A mapping from basic blocks to line numbers, which @code{gcov} uses to
+associate basic block execution counts with line numbers.
+
+@item @var{sourcename}.bbg
+A list of all arcs in the program flow graph.  This allows @code{gcov}
+to reconstruct the program flow graph, so that it can compute all basic
+block and arc execution counts from the information in the
+@code{@var{sourcename}.da} file (this last file is the output from
+@samp{-fprofile-arcs}).
+@end table
+@c END CYGNUS LOCAL
+
 @item -d@var{letters}
 Says to make debugging dumps during compilation at times specified by
 @var{letters}.  This is used for debugging the compiler.  The file names
@@ -1646,6 +1824,8 @@ standard error.
 @item p
 Annotate the assembler output with a comment indicating which
 pattern and alternative was used.
+@item A
+Annotate the assembler output with miscellaneous debugging information.
 @end table
 
 @item -fpretend-float
@@ -1734,10 +1914,12 @@ perform loop unrolling or function inlining when you specify @samp{-O2}.
 As compared to @samp{-O}, this option increases both compilation time
 and the performance of the generated code.
 
+@c CYGNUS LOCAL mentoropt/law
 @samp{-O2} turns on all optional optimizations except for loop unrolling
-and function inlining.  It also turns on the @samp{-fforce-mem} option
-on all machines and frame pointer elimination on machines where doing so
-does not interfere with debugging.
+function inlining, and life shortening.
+It also turns on frame pointer elimination on machines where doing so does
+not interfere with debugging.
+@c END CYGNUS LOCAL
 
 @item -O3
 Optimize yet more.  @samp{-O3} turns on all optimizations specified by
@@ -1835,7 +2017,16 @@ assembler code in its own right.
 @item -fkeep-inline-functions
 Even if all calls to a given function are integrated, and the function
 is declared @code{static}, nevertheless output a separate run-time
-callable version of the function.
+callable version of the function.  This switch does not affect
+@code{extern inline} functions.
+
+@item -fkeep-static-consts
+Emit variables declared @code{static const} when optimization isn't turned
+on, even if the variables aren't referenced.
+
+GNU CC enables this option by default.  If you want to force the compiler to
+check if the variable was referenced, regardless of whether or not
+optimization is turned on, use the @samp{-fno-keep-static-consts} option.
 
 @item -fno-function-cse
 Do not put function addresses in registers; make each instruction that
@@ -1852,8 +2043,8 @@ example, it allows the compiler to assume arguments to the @code{sqrt}
 function are non-negative numbers and that no floating-point values
 are NaNs.
 
-This option should never be turned on by any @samp{-O} option since 
-it can result in incorrect output for programs which depend on 
+This option should never be turned on by any @samp{-O} option since
+it can result in incorrect output for programs which depend on
 an exact implementation of IEEE or ANSI rules/specifications for
 math functions.
 @end table
@@ -1897,7 +2088,7 @@ body of the @code{if}.
 
 @item -frerun-cse-after-loop
 Re-run common subexpression elimination after loop optimizations has been
-performed.  
+performed.
 
 @item -fexpensive-optimizations
 Perform a number of minor optimizations that are relatively expensive.
@@ -1919,6 +2110,31 @@ Similar to @samp{-fschedule-insns}, but requests an additional pass of
 instruction scheduling after register allocation has been done.  This is
 especially useful on machines with a relatively small number of
 registers and where memory load instructions take more than one cycle.
+
+@c CYGNUS LOCAL mentoropt/law
+@item -fshorten-lifetimes
+Shorten lifetimes of pseudo registers which must be allocated into
+specific hard registers.  On some machines this avoids spilling
+those specific hard registers and improves code.
+@c END CYGNUS LOCAL 
+
+@item -ffunction-sections
+Place each function into its own section in the output file if the
+target supports arbitrary sections.  The function's name determines
+the section's name in the output file.
+
+Use this option on systems where the linker can perform optimizations
+to improve locality of reference in the instruction space.  HPPA
+processors running HP-UX and Sparc processors running Solaris 2 have
+linkers with such optimizations.  Other systems using the ELF object format
+as well as AIX may have these optimizations in the future.
+
+Only use this option when there are significant benefits from doing
+so.  When you specify this option, the assembler and linker will
+create larger object and executable files and will also be slower.
+You will not be able to use @code{gprof} on all systems if you
+specify this option and you may have problems with debugging if
+you specify both this option and @samp{-g}.
 
 @item -fcaller-saves
 Enable values to be allocated in registers that will be clobbered by
@@ -1942,6 +2158,38 @@ implies @samp{-fstrength-reduce} as well as @samp{-frerun-cse-after-loop}.
 
 @item -fno-peephole
 Disable any machine-specific peephole optimizations.
+
+@c CYGNUS LOCAL: gcov
+@item -fbranch-probabilities
+After running a program compiled with @samp{-fprofile-arcs}
+(@pxref{Debugging Options,, Options for Debugging Your Program or
+@code{gcc}}), you can compile it a second time using
+@samp{-fbranch-probabilities}, to improve optimizations based on
+guessing the path a branch might take.
+
+@ifset INTERNALS
+With @samp{-fbranch-probabilities}, GNU CC puts a @samp{REG_EXEC_COUNT}
+note on the first instruction of each basic block, and a
+@samp{REG_BR_PROB} note on each @samp{JUMP_INSN} and @samp{CALL_INSN}.
+These can be used to improve optimization.  Currently, they are only
+used in one place: in @file{reorg.c}, instead of guessing which path a
+branch is mostly to take, the @samp{REG_BR_PROB} values are used to
+exactly determine which path is taken more often.
+@end ifset
+@c END CYGNUS LOCAL
+
+@c CYGNUS LOCAL: regmove
+@item -fregmove
+Some machines only support 2 operands per instruction.  On such
+machines, GNU CC might have to do extra copies.  The @samp{-fregmove}
+option overrides the default for the machine to do the copy before
+register allocation.
+
+@ifset INTERNALS
+The default for @samp{-fregmove} is controlled by whether
+@samp{ENABLE_REGMOVE_PASS} is defined.
+@end ifset
+@c END CYGNUS LOCAL: regmove
 @end table
 
 @node Preprocessor Options
@@ -2233,7 +2481,9 @@ libraries.  On other systems, this option has no effect.
 
 @item -shared
 Produce a shared object which can then be linked with other objects to
-form an executable.  Only a few systems support this option.
+form an executable.  Not all systems support this option.  You must
+also specify @samp{-fpic} or @samp{-fPIC} on some systems when
+you specify this option.
 
 @item -symbolic
 Bind references to global symbols when building a shared object.  Warn
@@ -2449,6 +2699,8 @@ machine description.  The default for the options is also defined by
 that macro, which enables you to change the defaults.
 @end ifset
 
+@c CYGNUS LOCAL: z8k docs
+
 @menu
 * M680x0 Options::
 * VAX Options::
@@ -2467,6 +2719,7 @@ that macro, which enables you to change the defaults.
 * Clipper Options::
 * H8/300 Options::
 * System V Options::
+* Z8000 Option::
 @end menu
 
 @node M680x0 Options
@@ -2505,6 +2758,14 @@ configured for 68040-based systems.
 This option inhibits the use of 68881/68882 instructions that have to be
 emulated by software on the 68040.  If your 68040 does not have code to
 emulate those instructions, use @samp{-m68040}.
+
+@item -m68060
+Generate output for a 68060.  This is the default when the compiler is
+configured for 68060-based systems.
+
+This option inhibits the use of 68020 and 68881/68882 instructions that
+have to be emulated by software on the 68060.  If your 68060 does not
+have code to emulate those instructions, use @samp{-m68060}.
 
 @item -m68020-40
 Generate output for a 68040, without using any of the new instructions.
@@ -2649,10 +2910,9 @@ at every function exit.
 With @samp{-mflat}, the compiler does not generate save/restore instructions
 and will use a "flat" or single register window calling convention.
 This model uses %i7 as the frame pointer and is compatible with the normal
-register window model.  Code from either may be intermixed although
-debugger support is still incomplete.  The local registers and the input
-registers (0-5) are still treated as "call saved" registers and will be
-saved on the stack as necessary.
+register window model.  Code from either may be intermixed.
+The local registers and the input registers (0-5) are still treated as
+"call saved" registers and will be saved on the stack as necessary.
 
 With @samp{-mno-flat} (the default), the compiler emits save/restore
 instructions (except for leaf functions) and is the normal mode of operation.
@@ -2683,6 +2943,9 @@ divide instructions which exist in SPARC v8 but not in SPARC v7.
 multiply, integer divide step and scan (@code{ffs}) instructions which
 exist in SPARClite but not in SPARC v7.
 
+These options are deprecated and will be deleted in GNU CC 2.9.
+They have been replaced with @samp{-mcpu=xxx}.
+
 @item -mcypress
 @itemx -msupersparc
 These two options select the processor for which the code is optimised.
@@ -2694,13 +2957,49 @@ This is also appropriate for the older SparcStation 1, 2, IPX etc.
 With @samp{-msupersparc} the compiler optimizes code for the SuperSparc cpu, as
 used in the SparcStation 10, 1000 and 2000 series. This flag also enables use
 of the full SPARC v8 instruction set.
+
+These options are deprecated and will be deleted in GNU CC 2.9.
+They have been replaced with @samp{-mcpu=xxx}.
+
+@item -mcpu=@var{cpu_type}
+Set architecture type and instruction scheduling parameters for machine
+type @var{cpu_type}.  Supported values for @var{cpu_type} are
+@samp{common}, @samp{cypress}, @samp{v8}, @samp{supersparc},
+@samp{sparclite}, @samp{f930}, @samp{f934},
+@samp{sparclet}, @samp{90c701}, @samp{v8plus}, @samp{v9},
+and @samp{ultrasparc}.  Specifying @samp{v9} is only supported on true
+64 bit targets.
+
+@item -mtune=@var{cpu_type}
+Set the instruction scheduling parameters for machine type
+@var{cpu_type}, but do not set the architecture type as the option
+@samp{-mcpu=}@var{cpu_type} would.  The same values for
+@samp{-mcpu=}@var{cpu_type} are used for @samp{-tune=}@var{cpu_type}.
+
 @end table
 
-In a future version of GCC, these options will very likely be
-renamed to @samp{-mcpu=cypress} and @samp{-mcpu=supersparc}.
+These @samp{-m} switches are supported in addition to the above
+on the SPARCLET processor.
+
+@table @code
+@item -mlive-g0
+Treat register @code{%g0} as a normal register.
+GCC will continue to clobber it as necessary but will not assume
+it always reads as 0.
+
+@item -mbroken-saverestore
+Generate code that does not use non-trivial forms of the @code{save} and
+@code{restore} instructions.  Early versions of the SPARCLET processor do
+not correctly handle @code{save} and @code{restore} instructions used with
+arguments.  They correctly handle them used without arguments.  A @code{save}
+instruction used without arguments increments the current window pointer
+but does not allocate a new stack frame.  It is assumed that the window
+overflow trap handler will properly handle this case as will interrupt
+handlers.
+@end table
 
 These @samp{-m} switches are supported in addition to the above
-on SPARC V9 processors:
+on SPARC V9 processors in 64 bit environments.
 
 @table @code
 @item -mmedlow
@@ -2712,9 +3011,15 @@ It is very likely that a future version of GCC will rename this option.
 
 @item -mmedany
 Generate code for the Medium/Anywhere code model: assume a 32 bit text
-segment starting at offset 0, and a 32 bit data segment starting anywhere
-(determined at link time).  Programs are statically linked, PIC is not
-supported.  Pointers are still 64 bits.
+and a 32 bit data segment, both starting anywhere (determined at link time).
+Programs are statically linked, PIC is not supported.  Pointers are still
+64 bits.
+
+It is very likely that a future version of GCC will rename this option.
+
+@item -mfullany
+Generate code for the Full/Anywhere code model: assume a full 64 bit
+address space.  PIC is not supported.
 
 It is very likely that a future version of GCC will rename this option.
 
@@ -2888,6 +3193,14 @@ to date, but not the 29050).
 registers for copying out arguments.  This helps detect calling a function
 with fewer arguments than it was declared with.
 
+@c CYGNUS LOCAL brendan/mentor
+@item -mno-impure-text
+@itemx -mimpure-text
+@kindex -mimpure-text
+@samp{-mimpure-text}, used in addition to @samp{-shared}, tells the compiler to
+not pass @samp{-assert pure-text} to the linker when linking a shared object.
+@c END CYGNUS LOCAL
+
 @item -msoft-float
 @kindex -msoft-float
 Generate output containing library calls for floating point.
@@ -2906,25 +3219,72 @@ These @samp{-m} options are defined for Advanced RISC Machines (ARM)
 architectures:
 
 @table @code
-@item -m2
-@itemx -m3
-@kindex -m2
-@kindex -m3
-These options are identical.  Generate code for the ARM2 and ARM3
-processors.  This option is the default.  You should also use this
-option to generate code for ARM6 processors that are running with a
-26-bit program counter.
-
-@item -m6
-@kindex -m6
-Generate code for the ARM6 processor when running with a 32-bit program
-counter.
-
-@item -mapcs
-@kindex -mapcs
-Generate a stack frame that is compliant with the ARM Procedure Call 
+@item -mapcs-frame
+@kindex -mapcs-frame
+Generate a stack frame that is compliant with the ARM Procedure Call
 Standard for all functions, even if this is not strictly necessary for
 correct execution of the code.
+
+@item -mapcs-26
+@kindex -mapcs-26
+Generate code for a processor running with a 26-bit program counter,
+and conforming to the function calling standards for the APCS 26-bit
+option.  This option replaces the @samp{-m2} and @samp{-m3} options
+of previous releases of the compiler.
+
+@item -mapcs-32
+@kindex -mapcs-32
+Generate code for a processor running with a 32-bit program counter,
+and conforming to the function calling standards for the APCS 32-bit
+option.  This option replaces the @samp{-m6} option of previous releases
+of the compiler.
+
+@item -mhard-float
+Generate output containing floating point instructions.  This is the
+default.
+
+@item -msoft-float
+Generate output containing library calls for floating point.
+@strong{Warning:} the requisite libraries are not available for all ARM
+targets.  Normally the facilities of the machine's usual C compiler are
+used, but this cannot be done directly in cross-compilation.  You must make
+your own arrangements to provide suitable library functions for
+cross-compilation.
+
+@samp{-msoft-float} changes the calling convention in the output file;
+therefore, it is only useful if you compile @emph{all} of a program with
+this option.  In particular, you need to compile @file{libgcc.a}, the
+library that comes with GNU CC, with @samp{-msoft-float} in order for
+this to work.
+
+@item -mlittle-endian
+Generate code for a processor running in little-endian mode.  This is
+the default for all standard configurations.
+
+@item -mbig-endian
+Generate code for a processor running in big-endian mode; the default is
+to compile code for a little-endian processor.
+
+@item -mwords-little-endian
+This option only applies when generating code for big-endian processors.
+Generate code for a little-endian word order but a big-endian byte
+order.  That is, a byte order of the form @samp{32107654}.  Note: this
+option should only be used if you require compatibility with code for
+big-endian ARM processors generated by versions of the compiler prior to
+2.8.
+
+@item -mshort-load-bytes
+@kindex -mshort-load-bytes
+Do not try to load half-words (eg @samp{short}s) by loading a word from
+an unaligned address.  For some targets the MMU is configured to trap
+unaligned loads; use this option to generate code that is safe in these
+environments.
+
+@item -mno-short-load-bytes
+@kindex -mno-short-load-bytes
+Use unaligned word loads to load half-words (eg @samp{short}s).  This
+option produces more efficient code, but the MMU is sometimes configured
+to trap these instructions.
 
 @item -mbsd
 @kindex -mbsd
@@ -3083,14 +3443,14 @@ Turn on (@samp{-msvr4}) or off (@samp{-msvr3}) compiler extensions
 related to System V release 4 (SVr4).  This controls the following:
 
 @enumerate
-@item 
+@item
 Which variant of the assembler syntax to emit.
 @item
 @samp{-msvr4} makes the C preprocessor recognize @samp{#pragma weak}
 that is used on System V release 4.
 @item
 @samp{-msvr4} makes GNU CC issue additional declaration directives used in
-SVr4.  
+SVr4.
 @end enumerate
 
 @samp{-msvr4} is the default for the m88k-motorola-sysv4 and
@@ -3122,7 +3482,7 @@ GNU C assumes that the MC88110 processor correctly detects all
 instances of integer division by zero.  When @samp{-m88110} is
 specified, both @samp{-mcheck-zero-division} and
 @samp{-mno-check-zero-division} are ignored, and no explicit checks for
-zero-valued divisors are generated. 
+zero-valued divisors are generated.
 
 @item -muse-div-instruction
 @kindex -muse-div-instruction
@@ -3258,35 +3618,52 @@ normally not specify either @samp{-mnew-mnemonics} or
 @samp{-mold-mnemonics}, but should instead accept the default.
 
 @item -mcpu=@var{cpu_type}
-Set architecture type, register usage, choice of mnemonics, and instruction
-scheduling parameters for machine type @var{cpu_type}.  By default,
-@var{cpu_type} is the target system defined when GNU CC was configured.
-Supported values for @var{cpu_type} are @samp{rios1}, @samp{rios2}, @samp{rsc},
-@samp{601}, @samp{603}, @samp{604}, @samp{power}, @samp{powerpc}, @samp{403},
-and @samp{common}.  @samp{-mcpu=power} and @samp{-mcpu=powerpc} specify generic
-POWER and pure PowerPC (i.e., not MPC601) architecture machine types, with an
-appropriate, generic processor model assumed for scheduling purposes.@refill
+Set architecture type, register usage, choice of mnemonics, and
+instruction scheduling parameters for machine type @var{cpu_type}.
+Supported values for @var{cpu_type} are @samp{rs6000}, @samp{rios1},
+@samp{rios2}, @samp{rsc}, @samp{601}, @samp{602}, @samp{603},
+@samp{603e}, @samp{604}, @samp{620}, @samp{power}, @samp{power2},
+@samp{powerpc}, @samp{403}, @samp{505}, @samp{821}, and @samp{860} and
+@samp{common}.  @samp{-mcpu=power}, @samp{-mcpu=power2}, and
+@samp{-mcpu=powerpc} specify generic POWER, POWER2 and pure PowerPC
+(i.e., not MPC601) architecture machine types, with an appropriate,
+generic processor model assumed for scheduling purposes.@refill
 
-Specifying @samp{-mcpu=rios1}, @samp{-mcpu=rios2}, @samp{-mcpu=rsc}, or
-@samp{-mcpu=power} enables the @samp{-mpower} option and disables the
-@samp{-mpowerpc} option; @samp{-mcpu=601} enables both the @samp{-mpower} and
-@samp{-mpowerpc} options; @samp{-mcpu=603}, @samp{-mcpu=604}, @samp{-mcpu=403},
-and @samp{-mcpu=powerpc} enable the @samp{-mpowerpc} option and disable the
-@samp{-mpower} option; @samp{-mcpu=common} disables both the @samp{-mpower} and
-@samp{-mpowerpc} options.@refill
+Specifying any of the @samp{-mcpu=rios1}, @samp{-mcpu=rios2}, @samp{-mcpu=rsc},
+@samp{-mcpu=power}, or @samp{-mcpu=power2} options enables the @samp{-mpower}
+option and disables the @samp{-mpowerpc} option; @samp{-mcpu=601}
+enables both the @samp{-mpower} and @samp{-mpowerpc} options;
+all of @samp{-mcpu=602}, @samp{-mcpu=603}, @samp{-mcpu=603e}, @samp{-mcpu=604},
+@samp{-mcpu=620}, @samp{-mcpu=403}, @samp{-mcpu=505}, @samp{-mcpu=821},
+@samp{-mcpu=860} and @samp{-mcpu=powerpc} enable the @samp{-mpowerpc}
+option and disable the @samp{-mpower} option; @samp{-mcpu=common}
+disables both the @samp{-mpower} and @samp{-mpowerpc} options.@refill
 
-To generate code that will operate on all members of the RS/6000 and
-PowerPC families, specify @samp{-mcpu=common}.  In that case, GNU CC
-will use only the instructions in the common subset of both
-architectures plus some special AIX common-mode calls, and will not use
-the MQ register.  GNU CC assumes a generic processor model for scheduling
-purposes.
+AIX versions 4 or greater selects @samp{-mcpu=common} by default, so
+that code will operate on all members of the RS/6000 and PowerPC
+families.  In that case, GNU CC will use only the instructions in the
+common subset of both architectures plus some special AIX common-mode
+calls, and will not use the MQ register.  GNU CC assumes a generic
+processor model for scheduling purposes.
 
-Specifying @samp{-mcpu=rios1}, @samp{-mcpu=rios2}, @samp{-mcpu=rsc}, or
-@samp{-mcpu=power} also disables the @samp{new-mnemonics} option.
-Specifying @samp{-mcpu=601}, @samp{-mcpu=603}, @samp{-mcpu=604},
-@samp{403}, or @samp{-mcpu=powerpc} also enables the @samp{new-mnemonics}
-option.@refill
+Specifying any of the options @samp{-mcpu=rios1}, @samp{-mcpu=rios2},
+@samp{-mcpu=rsc}, @samp{-mcpu=power}, or @samp{-mcpu=power2} also
+disables the @samp{new-mnemonics} option.  Specifying @samp{-mcpu=601},
+@samp{-mcpu=602}, @samp{-mcpu=603}, @samp{-mcpu=603e}, @samp{-mcpu=604},
+@samp{620}, @samp{403}, or @samp{-mcpu=powerpc} also enables the
+@samp{new-mnemonics} option.@refill
+
+Specifying @samp{-mcpu=403}, @samp{-mcpu=821}, or @samp{-mcpu=860} also
+enables the @samp{-msoft-float} option.
+
+@item -mtune=@var{cpu_type}
+Set the instruction scheduling parameters for machine type
+@var{cpu_type}, but do not set the architecture type, register usage,
+choice of mnemonics like @samp{-mcpu=}@var{cpu_type} would.  The same
+values for @var{cpu_type} are used for @samp{-mtune=}@var{cpu_type} as
+for @samp{-mcpu=}@var{cpu_type}.  The @samp{-mtune=}@var{cpu_type}
+option overrides the @samp{-mcpu=}@var{cpu_type} option in terms of
+instruction scheduling parameters.
 
 @item -mfull-toc
 @itemx -mno-fp-in-toc
@@ -3315,6 +3692,20 @@ GNU CC to make only one TOC entry for every file.  When you specify this
 option, GNU CC will produce code that is slower and larger but which
 uses extremely little TOC space.  You may wish to use this option
 only on files that contain less frequently executed code. @refill
+
+@item -mxl-call
+@itemx -mno-xl-call
+On AIX, pass floating-point arguments to prototyped functions beyond the
+register save area (RSA) on the stack in addition to argument FPRs.  The
+AIX calling convention was extended but not initially documented to
+handle an obscure K&R C case of calling a function that takes the
+address of its arguments with fewer arguments than declared.  AIX XL
+compilers assume that floating point arguments which do not fit in the
+RSA are on the stack when they compile a subroutine without
+optimization.  Because always storing floating-point arguments on the
+stack is inefficient and rarely needed, this option is not enabled by
+default and only is necessary when calling subroutines compiled by AIX
+XL compilers without optimization.
 
 @item -msoft-float
 @itemx -mhard-float
@@ -3360,7 +3751,17 @@ unaligned memory references will be handled by the system.
 @item -mrelocatable
 @itemx -mno-relocatable
 On embedded PowerPC systems generate code that allows (does not allow)
-the program to be relocated to a different address at runtime.
+the program to be relocated to a different address at runtime.  If you
+use @samp{-mrelocatable} on any module, all objects linked together must
+be compiled with @samp{-mrelocatable} or @samp{-mrelocatable-lib}.
+
+@item -mrelocatable-lib
+@itemx -mno-relocatable-lib
+On embedded PowerPC systems generate code that allows (does not allow)
+the program to be relocated to a different address at runtime.  Modules
+compiled with @samp{-mreloctable-lib} can be linked with either modules
+compiled without @samp{-mrelocatable} and @samp{-mrelocatable-lib} or
+with modules compiled with the @samp{-mrelocatable} options.
 
 @item -mno-toc
 @itemx -mtoc
@@ -3392,10 +3793,24 @@ conventions that adheres to the March 1995 draft of the System V
 Application Binary Interface, PowerPC processor supplement.  This is the
 default unless you configured GCC using @samp{powerpc-*-eabiaix}.
 
+@item -mcall-sysv-eabi
+Specify both @samp{-mcall-sysv} and @samp{-meabi} options.
+
+@item -mcall-sysv-noeabi
+Specify both @samp{-mcall-sysv} and @samp{-mno-eabi} options.
+
 @item -mcall-aix
 On System V.4 and embedded PowerPC systems compile code using calling
 conventions that are similar to those used on AIX.  This is the
 default if you configured GCC using @samp{powerpc-*-eabiaix}.
+
+@item -mcall-solaris
+On System V.4 and embedded PowerPC systems compile code for the Solaris
+operating system.
+
+@item -mcall-linux
+On System V.4 and embedded PowerPC systems compile code for the Linux
+operating system.
 
 @item -mprototype
 @item -mno-prototype
@@ -3407,6 +3822,88 @@ indicate whether floating point values were passed in the floating point
 registers in case the function takes a variable arguments.  With
 @samp{-mprototype}, only calls to prototyped variable argument functions
 will set or clear the bit.
+
+@item -msim
+On embedded PowerPC systems, assume that the startup module is called
+@file{sim-crt0.o} and that the standard C libraries are @file{libsim.a} and
+@file{libc.a}.  This is the default for @samp{powerpc-*-eabisim}.
+configurations.
+
+@item -mmvme
+On embedded PowerPC systems, assume that the startup module is called
+@file{mvme-crt0.o} and the standard C libraries are @file{libmvme.a} and
+@file{libc.a}.
+
+@item -memb
+On embedded PowerPC systems, set the @var{PPC_EMB} bit in the ELF flags
+header to indicate that @samp{eabi} extended relocations are used.
+
+@item -meabi
+@itemx -mno-eabi
+On System V.4 and embedded PowerPC systems do (do not) adhere to the
+Embedded Applications Binary Interface (eabi) which is a set of
+modifications to the System V.4 specifications.  Selecting @code{-meabi}
+means that the stack is aligned to an 8 byte boundary, a function
+@code{__eabi} is called to from @code{main} to set up the eabi
+environment, and the @samp{-msdata} option can use both @code{r2} and
+@code{r13} to point to two separate small data areas.  Selecting
+@code{-mno-eabi} means that the stack is aligned to a 16 byte boundary,
+do not call an initialization function from @code{main}, and the
+@samp{-msdata} option will only use @code{r13} to point to a single
+small data area.  The @samp{-meabi} option is on by default if you
+configured GCC using one of the @samp{powerpc*-*-eabi*} options.
+
+@item -msdata=eabi
+On System V.4 and embedded PowerPC systems, put small initialized
+@code{const} global and static data in the @samp{.sdata2} section, which
+is pointed to by register @code{r2}.  Put small initialized
+non-@code{const} global and static data in the @samp{.sdata} section,
+which is pointed to by register @code{r13}.  Put small uninitialized
+global and static data in the @samp{.sbss} section, which is adjacent to
+the @samp{.sdata} section.  The @samp{-msdata=eabi} option is
+incompatible with the @samp{-mrelocatable} option.  The
+@samp{-msdata=eabi} option also sets the @samp{-memb} option.
+
+@item -msdata=sysv
+On System V.4 and embedded PowerPC systems, put small global and static
+data in the @samp{.sdata} section, which is pointed to by register
+@code{r13}.  Put small uninitialized global and static data in the
+@samp{.sbss} section, which is adjacent to the @samp{.sdata} section.
+The @samp{-msdata=sysv} option is incompatible with the
+@samp{-mrelocatable} option.
+
+@item -msdata=default
+@itemx -msdata
+On System V.4 and embedded PowerPC systems, if @samp{-meabi} is used,
+compile code the same as @samp{-msdata=eabi}, otherwise compile code the
+same as @samp{-msdata=sysv}.
+
+@item -msdata-data
+On System V.4 and embedded PowerPC systems, put small global and static
+data in the @samp{.sdata} section.  Put small uninitialized global and
+static data in the @samp{.sbss} section.  Do not use register @code{r13}
+to address small data however.  This is the default behavior unless
+other @samp{-msdata} options are used.
+
+@item -msdata=none
+@itemx -mno-sdata
+On embedded PowerPC systems, put all initialized global and static data
+in the @samp{.data} section, and all uninitialized data in the
+@samp{.bss} section.
+
+@item -G @var{num}
+@cindex smaller data references (PowerPC)
+@cindex .sdata/.sdata2 references (PowerPC)
+On embbeded PowerPC systems, put global and static items less than or
+equal to @var{num} bytes into the small data or bss sections instead of
+the normal data or bss section.  By default, @var{num} is 8.  The
+@samp{-G @var{num}} switch is also passed to the linker.
+All modules should be compiled with the same @samp{-G @var{num}} value.
+
+@item -mregnames
+@itemx -mno-regnames
+On System V.4 and embedded PowerPC systems do (do not) emit register
+names in the assembly language output using symbolic forms.
 @end table
 @node RT Options
 @subsection IBM RT Options
@@ -3805,13 +4302,6 @@ Fill delay slots of function calls with unconditional jump instructions
 by modifying the return pointer for the function call to be the target
 of the conditional jump.
 
-@item -mmillicode-long-calls
-Generate code which assumes millicode routines can not be reached
-by the standard millicode call sequence, linker-generated long-calls,
-or linker-modified millicode calls.  In practice this should only be
-needed for dynamicly linked executables with extremely large SHLIB_INFO
-sections.
-
 @item -mdisable-fpregs
 Prevent floating point registers from being used in any manner.  This is
 necessary for compiling kernels which perform lazy context switching of
@@ -3822,11 +4312,28 @@ floating point operations, the compiler will abort.
 Prevent the compiler from using indexing address modes.  This avoids some
 rather obscure problems when compiling MIG generated code under MACH.
 
+@item -mno-space-regs
+Generate code that assumes the target has no space registers.  This allows
+GCC to generate faster indirect calls and use unscaled index address modes.
+
+Such code is suitable for level 0 PA systems and kernels.
+
 @item -mfast-indirect-calls
-Generate code which performs faster indirect calls.  Such code is suitable
-for kernels and for static linking.  The fast indirect call code will fail
-miserably if it's part of a dynamically linked executable and in the presense
-of nested functions.
+Generate code that assumes calls never cross space boundaries.  This
+allows GCC to emit code which performs faster indirect calls.
+
+This option will not work in the presense of shared libraries or nested
+functions.
+
+@item -mspace
+Optimize for space rather than execution time.  Currently this only
+enables out of line function prologues and epilogues.  This option is
+incompatable with PIC code generation and profiling.
+
+@item -mlong-load-store
+Generate 3-instruction load and store sequences as sometimes required by
+the HP-UX 10 linker.  This is equivalent to the @samp{+k} option to
+the HP compilers.
 
 @item -mportable-runtime
 Use the portable calling conventions proposed by HP for ELF systems.
@@ -3838,11 +4345,16 @@ Enable the use of assembler directives only GAS understands.
 Schedule code according to the constraints for the machine type
 @var{cpu type}.  The choices for @var{cpu type} are @samp{700} for
 7@var{n}0 machines, @samp{7100} for 7@var{n}5 machines, and @samp{7100}
-for 7@var{n}2 machines.  @samp{700} is the default for @var{cpu type}.
+for 7@var{n}2 machines.  @samp{7100} is the default for @var{cpu type}.
 
 Note the @samp{7100LC} scheduling information is incomplete and using
 @samp{7100LC} often leads to bad schedules.  For now it's probably best
 to use @samp{7100} instead of @samp{7100LC} for the 7@var{n}2 machines.
+
+@item -mlinker-opt
+Enable the optimization pass in the HPUX linker.  Note this makes symbolic
+debugging impossible.  It also triggers a bug in the HPUX 8 and HPUX 9 linkers
+in which they give bogus error messages when linking some programs.
 
 @item -msoft-float
 Generate output containing library calls for floating point.
@@ -3850,7 +4362,7 @@ Generate output containing library calls for floating point.
 targets.  Normally the facilities of the machine's usual C compiler are
 used, but this cannot be done directly in cross-compilation.  You must make
 your own arrangements to provide suitable library functions for
-cross-compilation.  The embedded target @samp{hppa1.1-*-pro} 
+cross-compilation.  The embedded target @samp{hppa1.1-*-pro}
 does provide software floating point support.
 
 @samp{-msoft-float} changes the calling convention in the output file;
@@ -3970,6 +4482,125 @@ option.
 
 A typical use of this option is building a kernel that does not use,
 and hence need not save and restore, any floating-point registers.
+
+@item -mieee
+The Alpha architecture implements floating-point hardware optimized for
+maximum performance.  It is mostly compliant with the IEEE floating
+point standard.  However, for full compliance, software assistance is
+required.  This option generates code fully IEEE compliant code
+@emph{except} that the @var{inexact flag} is not maintained (see below).
+If this option is turned on, the CPP macro @code{_IEEE_FP} is defined
+during compilation.  The option is a shorthand for: @samp{-D_IEEE_FP
+-mfp-trap-mode=su -mtrap-precision=i -mieee-conformant}.  The resulting
+code is less efficient but is able to correctly support denormalized
+numbers and exceptional IEEE values such as not-a-number and plus/minus
+infinity.  Other Alpha compilers call this option
+@code{-ieee_with_no_inexact}.
+
+@item -mieee-with-inexact
+This is like @samp{-mieee} except the generated code also maintains the
+IEEE @var{inexact flag}.  Turning on this option causes the generated
+code to implement fully-compliant IEEE math.  The option is a shorthand
+for @samp{-D_IEEE_FP -D_IEEE_FP_INEXACT} plus @samp{-mieee-conformant} and
+@samp{-mfp-trap-mode=sui -mtrap-precision=i}.  On some Alpha implementations
+the resulting code may execute significantly slower than the code
+generated by default.  Since there is very little code that depends on
+the @var{inexact flag}, you should normally not specify this option.
+Other Alpha compilers call this option @samp{-ieee_with_inexact}.
+
+@item -mfp-trap-mode=@var{trap mode}
+This option controls what floating-point related traps are enabled.
+Other Alpha compilers call this option @samp{-fptm }@var{trap mode}.
+The trap mode can be set to one of four values:
+
+@table @samp
+@item n
+This is the default (normal) setting.  The only traps that are enabled
+are the ones that cannot be disabled in software (e.g., division by zero
+trap).
+
+@item u
+In addition to the traps enabled by @samp{n}, underflow traps are enabled
+as well.
+
+@item su
+Like @samp{su}, but the instructions are marked to be safe for software
+completion (see Alpha architecture manual for details).
+
+@item sui
+Like @samp{su}, but inexact traps are enabled as well.
+@end table
+
+@item -mfp-rounding-mode=@var{rounding mode}
+Selects the IEEE rounding mode.  Other Alpha compilers call this option
+@samp{-fprm }@var{rounding mode}.  The @var{rounding mode} can be one
+of:
+
+@table @samp
+@item n
+Normal IEEE rounding mode.  Floating point numbers are rounded towards
+the nearest machine number or towards the even machine number in case
+of a tie.
+
+@item m
+Round towards minus infinity.
+
+@item c
+Chopped rounding mode.  Floating point numbers are rounded towards zero.
+
+@item d
+Dynamic rounding mode.  A field in the floating point control register
+(@var{fpcr}, see Alpha architecture reference manual) controls the
+rounding mode in effect.  The C library initializes this register for
+rounding towards plus infinity.  Thus, unless your program modifies the
+@var{fpcr}, @samp{d} corresponds to round towards plus infinity.@end table
+
+@item -mtrap-precision=@var{trap precision}
+In the Alpha architecture, floating point traps are imprecise.  This
+means without software assistance it is impossible to recover from a
+floating trap and program execution normally needs to be terminated.
+GNU CC can generate code that can assist operating system trap handlers
+in determining the exact location that caused a floating point trap.
+Depending on the requirements of an application, different levels of
+precisions can be selected:
+
+@table @samp
+@item p
+Program precision.  This option is the default and means a trap handler
+can only identify which program caused a floating point exception.
+
+@item f
+Function precision.  The trap handler can determine the function that
+caused a floating point exception.
+
+@item i
+Instruction precision.  The trap handler can determine the exact
+instruction that caused a floating point exception.
+@end table
+
+Other Alpha compilers provide the equivalent options called
+@samp{-scope_safe} and @samp{-resumption_safe}.
+
+@item -mieee-conformant
+This option marks the generated code as IEEE conformant.  You must not
+use this option unless you also specify @samp{-mtrap-precision=i} and either
+@samp{-mfp-trap-mode=su} or @samp{-mfp-trap-mode=sui}.  Its only effect
+is to emit the line @samp{.eflag 48} in the function prologue of the
+generated assembly file.  Under DEC Unix, this has the effect that
+IEEE-conformant math library routines will be linked in.
+
+@item -mbuild-constants
+Normally GNU CC examines a 32- or 64-bit integer constant to
+see if it can construct it from smaller constants in two or three
+instructions.  If it cannot, it will output the constant as a literal and
+generate code to load it from the data segement at runtime.
+
+Use this option to require GNU CC to construct @emph{all} integerconstants
+using code, even if it takes more instructions (the maximum is six).
+
+You would typically use this option to build a shared library dynamic
+loader.  Itself a shared library, it must relocate itself in memory
+before it can find its variables and constants in its own data segment.
 @end table
 
 @node Clipper Options
@@ -3999,6 +4630,15 @@ ld.info, Using ld}, for a fuller description.
 
 @item -mh
 Generate code for the H8/300H.
+
+@item -mint32
+Make @code{int} data 32 bits by default.
+
+@item -malign-300
+On the h8/300h, use the same alignment rules as for the h8/300.
+The default for the h8/300h is to align longs and floats on 4 byte boundaries.
+@samp{-malign-300} causes them to be aligned on 2 byte boundaries.
+This option has no effect on the h8/300.
 @end table
 
 @node System V Options
@@ -4034,14 +4674,31 @@ specified with @samp{-l}.
 @item -Ym,@var{dir}
 Look in the directory @var{dir} to find the M4 preprocessor.
 The assembler uses this option.
-@c This is supposed to go with a -Yd for predefined M4 macro files, but 
+@c This is supposed to go with a -Yd for predefined M4 macro files, but
 @c the generic assembler that comes with Solaris takes just -Ym.
 @end table
+
+@c CYGNUS LOCAL: z8k docs
+@c (not yet submitted to FSF)
+@node Z8000 Option
+@subsection Zilog Z8000 Option
+
+GNU CC recognizes one special option when configured to generate
+code for the Z8000 family:
+
+@table @code
+@item -mz8001
+Generate code for the segmented variant of the Z8000 architecture.
+(Without this option, @code{gcc} generates unsegmented Z8000 code;
+suitable, for example, for the Z8002.)
+@end table
+@c END CYGNUS LOCAL
+
 
 @node Code Gen Options
 @section Options for Code Generation Conventions
 @cindex code generation conventions
-@cindex options, code generation 
+@cindex options, code generation
 @cindex run-time options
 
 These machine-independent options control the interface conventions
@@ -4116,7 +4773,7 @@ compiler driver @code{gcc} is configured to do this automatically.
 
 @item -finhibit-size-directive
 Don't output a @code{.size} assembler directive, or anything else that
-would cause trouble if the function is split in the middle, and the 
+would cause trouble if the function is split in the middle, and the
 two halves are placed at locations far apart in memory.  This option is
 used when compiling @file{crtstuff.c}; you should not need to use it
 for anything else.
@@ -4126,6 +4783,10 @@ Put extra commentary information in the generated assembly code to
 make it more readable.  This option is generally only of use to those
 who actually need to read the generated assembly code (perhaps while
 debugging the compiler itself).
+
+@samp{-fverbose-asm} is the default.  @samp{-fno-verbose-asm} causes the
+extra information to be omitted and is useful when comparing two assembler
+files.
 
 @item -fvolatile
 Consider all memory references through pointers to be volatile.
@@ -4159,7 +4820,7 @@ to figure out what the assembler must do differently.
 @item -fPIC
 If supported for the target machine, emit position-independent code,
 suitable for dynamic linking and avoiding any limit on the size of the
-global offset table.  This option makes a difference on the m68k, m88k
+global offset table.  This option makes a difference on the m68k, m88k,
 and the Sparc.
 
 Position-independent code requires special support, and therefore works
@@ -4228,6 +4889,27 @@ compilation).
 
 With @samp{+e1}, G++ actually generates the code implementing virtual
 functions defined in the code, and makes them publicly visible.
+
+@c CYGNUS LOCAL unaligned-pointers
+@item -funaligned-pointers
+Assume that all pointers contain unaligned addresses.  On machines where
+unaligned memory accesses trap, this will result in much larger and slower
+code for all pointer dereferences, but the code will work even if addresses
+are unaligned.
+@c END CYGNUS LOCAL
+
+@c CYGNUS LOCAL unaligned-struct-hack
+@item -funaligned-struct-hack
+Always access structure fields using loads and stores of the declared size.
+This option is useful for code that derefences pointers to unaligned
+structures, but only accesses fields that are themselves aligned.  Without
+this option, gcc may try to use a memory access larger than the field.
+This might give an unaligned access fault on some hardware.
+
+This option makes some invalid code work at the expense of disabling
+some optimizations.  It is strongly recommended that this option not be
+used.  
+@c END CYGNUS LOCAL
 @end table
 
 @node Environment Variables
@@ -4243,7 +4925,7 @@ Note that you can also specify places to search using options such as
 @samp{-B}, @samp{-I} and @samp{-L} (@pxref{Directory Options}).  These
 take precedence over places specified using environment variables, which
 in turn take precedence over those specified by the configuration of GNU
-CC. 
+CC.
 @end ifclear
 @ifset INTERNALS
 Note that you can also specify places to search using options such as
@@ -4324,7 +5006,7 @@ file directories.
 
 @item DEPENDENCIES_OUTPUT
 @findex DEPENDENCIES_OUTPUT
-@cindex dependencies for make as output 
+@cindex dependencies for make as output
 If this variable is set, its value specifies how to output dependencies
 for Make based on the header files processed by the compiler.  This
 output looks much like the output from the @samp{-M} option
@@ -4385,7 +5067,7 @@ with @samp{-q}.
 
 The output from @code{protoize} or @code{unprotoize} replaces the
 original source file.  The original file is renamed to a name ending
-with @samp{.save}.  If the @samp{.save} file already exists, then 
+with @samp{.save}.  If the @samp{.save} file already exists, then
 the source file is simply discarded.
 
 @code{protoize} and @code{unprotoize} both depend on GNU CC itself to

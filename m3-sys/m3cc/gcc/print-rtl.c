@@ -94,7 +94,9 @@ print_rtx (in_rtx)
   if (GET_MODE (in_rtx) != VOIDmode)
     {
       /* Print REG_NOTE names for EXPR_LIST and INSN_LIST.  */
-      if (GET_CODE (in_rtx) == EXPR_LIST || GET_CODE (in_rtx) == INSN_LIST)
+      /* CYGNUS LOCAL: gcov */
+      if (GET_CODE (in_rtx) == EXPR_LIST || GET_CODE (in_rtx) == INSN_LIST
+	  || GET_CODE (in_rtx) == INT_LIST)
 	fprintf (outfile, ":%s", GET_REG_NOTE_NAME (GET_MODE (in_rtx)));
       else
 	fprintf (outfile, ":%s", GET_MODE_NAME (GET_MODE (in_rtx)));
@@ -108,6 +110,14 @@ print_rtx (in_rtx)
       {
       case 'S':
       case 's':
+	if (i == 3 && GET_CODE (in_rtx) == NOTE
+	    && (NOTE_LINE_NUMBER (in_rtx) == NOTE_INSN_EH_REGION_BEG
+		|| NOTE_LINE_NUMBER (in_rtx) == NOTE_INSN_EH_REGION_END))
+	  {
+	    fprintf (outfile, " %d", NOTE_BLOCK_NUMBER (in_rtx));
+	    sawclose = 1;
+	    break;
+	  }
 	if (XSTR (in_rtx, i) == 0)
 	  fprintf (outfile, " \"\"");
 	else
