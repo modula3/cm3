@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-core.sh,v 1.4 2003-02-07 13:50:33 wagner Exp $
+# $Id: do-cm3-core.sh,v 1.5 2003-03-09 15:12:34 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -22,7 +22,9 @@ fi
 
 P=""
 P="${P} m3gc-simple"
-#P="${P} m3gc-enhanced"
+if syscall_wrappers_exist && [ -z "$M3GC_SIMPLE" ] ; then
+  [ ${TARGET} != NT386 ] && P="${P} m3gc-enhanced"
+fi
 P="${P} m3core"
 P="${P} libm3"
 P="${P} m3middle"
