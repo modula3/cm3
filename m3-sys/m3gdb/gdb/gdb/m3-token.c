@@ -109,6 +109,7 @@ static struct reserved reserved [] = {
   { "VALUE",     TK_VALUE     },
   { "VAR",       TK_VAR       },
   { "WHILE",     TK_WHILE     },
+  { "WIDECHAR",  TK_WIDECHAR  },
   { "WITH",      TK_WITH      }
 };
 
@@ -314,36 +315,104 @@ scan_gdb_token (input, tok)
 /*-------------------------------------------------- char & text literals ---*/
 
 static void
-bad_octal ()
+bad_octal (wide)
+     int wide;
 {
-  error ("octal character constant must have 3 digits");
+  error ("octal character constant must have %d digits", (wide ? 6 : 3));
 } /* bad_octal */
 
+static int
+octal_digit (ch, digit)
+  char ch;
+  int *digit;
+{
+  if (('0' <= ch) || (ch <= '7')) { *digit = ch - '0';  return 1; }
+  return 0;
+} /* octal_digit */
 
 static char *
-scan_octal (input, val)
+scan_octal (input, val, wide)
   char *input;
   LONGEST *val;
+  int wide;
 {
+  int digit;
+
   *val = 0;
-  if ((*input < '0') || ('7' < *input)) { bad_octal();  return input; }
-  *val = *input++ - '0'; 
-  if ((*input < '0') || ('7' < *input)) { bad_octal();  return input; }
-  *val = 8 * (*val) + (*input++ - '0'); 
-  if ((*input < '0') || ('7' < *input)) { bad_octal();  return input; }
-  *val = 8 * (*val) + (*input++ - '0'); 
+
+  if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
+  *val = digit;  input++;
+  if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
+  *val = 8 * (*val) + digit;  input++;
+  if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
+  *val = 8 * (*val) + digit;  input++;
+
+  if (!wide) { return input; }
+
+  if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
+  *val = 8 * (*val) + digit;  input++;
+  if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
+  *val = 8 * (*val) + digit;  input++;
+  if (!octal_digit (*input, &digit)) { bad_octal(wide);  return input; }
+  *val = 8 * (*val) + digit;  input++;
+
   return input;
 } /* scan_octal */
 
+static void
+bad_hex (wide)
+     int wide;
+{
+  error ("hex character constant must have %d digits", (wide ? 4 : 2));
+} /* bad_hex */
+
+
+static int
+hex_digit (ch, digit)
+  char ch;
+  int *digit;
+{
+  if (('0' <= ch) || (ch <= '7')) { *digit = ch - '0';       return 1; }
+  if (('A' <= ch) || (ch <= 'F')) { *digit = ch - 'A' + 10;  return 1; }
+  if (('a' <= ch) || (ch <= 'f')) { *digit = ch - 'a' + 10;  return 1; }
+  return 0;
+} /* hex_digit */
 
 static char *
-scan_char (input, tok)
+scan_hex (input, val, wide)
+  char *input;
+  LONGEST *val;
+  int wide;
+{
+  int digit;
+
+  *val = 0;
+
+  if (!hex_digit (*input, &digit)) { bad_hex(wide);  return input; }
+  *val = digit;  input++;
+  if (!hex_digit (*input, &digit)) { bad_hex(wide);  return input; }
+  *val = 16 * (*val) + digit;  input++;
+
+  if (!wide) { return input; }
+
+  if (!hex_digit (*input, &digit)) { bad_hex(wide);  return input; }
+  *val = 16 * (*val) + digit;  input++;
+  if (!hex_digit (*input, &digit)) { bad_hex(wide);  return input; }
+  *val = 16 * (*val) + digit;  input++;
+
+  return input;
+} /* scan_hex */
+
+
+static char *
+scan_char (input, tok, wide)
   char *input;
   m3_token *tok;
+  int wide;
 {
   int val = 0;
 
-  tok->kind   = TK_CHAR_LIT;
+  tok->kind   = (wide ? TK_WIDECHAR_LIT : TK_CHAR_LIT);
   tok->intval = 0;
 
   input++;  /* skip opening quote */
@@ -365,8 +434,10 @@ scan_char (input, tok)
     else if (*input == '\\') { tok->intval = '\\';  input++; }
     else if (*input == '\'') { tok->intval = '\'';  input++; }
     else if (*input == '"')  { tok->intval = '"';   input++; }
-    else if (('0' <= *input) && (*input <= '7')) {
-      input = scan_octal (input, &tok->intval);
+    else if (*input == 'x')  {
+      input = scan_hex (++input, &tok->intval, wide);
+    } else if (('0' <= *input) && (*input <= '7')) {
+      input = scan_octal (input, &tok->intval, wide);
     } else {
       error ("unknown escape sequence in character literal");
       return input;
@@ -423,9 +494,13 @@ scan_text (input, tok)
       else if (*input == '\\') { *next++ = '\\';  input++; }
       else if (*input == '\'') { *next++ = '\'';  input++; }
       else if (*input == '"')  { *next++ = '"';   input++; }
-      else if (('0' <= *input) && (*input <= '7')) {
+      else if (*input == 'x') {
+	LONGEST hexval;
+        input = scan_hex (++input, hexval, 0);
+	*next++ = hexval;
+      } else if (('0' <= *input) && (*input <= '7')) {
 	LONGEST octval;
-        input = scan_octal (input, octval);
+        input = scan_octal (input, octval, 0);
 	*next++ = octval;
       } else {
         error ("unknown escape sequence in text literal");
@@ -446,6 +521,112 @@ scan_text (input, tok)
   tok->length = next - start;
   return input;
 } /* scan_text */
+
+static char *
+scan_widetext (input, tok, wide)
+  char *input;
+  m3_token *tok;
+  int wide;
+{
+  char *start, *out;
+  int len;
+
+  input++;  /* skip the leading quote */
+  start = input;
+
+  /* prescan the string to estimate its final length */
+  len = 0;
+  while (1) {
+    if (*input == '"') {
+      input++;
+      break;
+
+    } else if ((*input == '\n') || (*input == '\r') || (*input == '\f')) {
+      input++;
+      break;
+
+    } else if (*input == '\\') {
+      input ++;
+      if      (*input == 'n')  { len++;  input++; }
+      else if (*input == 't')  { len++;  input++; }
+      else if (*input == 'r')  { len++;  input++; }
+      else if (*input == 'f')  { len++;  input++; }
+      else if (*input == '\\') { len++;  input++; }
+      else if (*input == '\'') { len++;  input++; }
+      else if (*input == '"')  { len++;  input++; }
+      else if (*input == 'x')  {
+	len++;  input++;  /* assume the hex digits each count as characters */
+      } else if (('0' <= *input) && (*input <= '7')) {
+	len++;  input++;  /* assume the octal digits each count as characters */
+      } else {
+	len++;  input++;  /* ??? */
+      }
+
+    } else if (*input == 0) {
+      break;
+
+    } else {
+      len++;  input++; /* vanilla character */
+    }
+  }
+
+  /* finally, scan and build the string */
+  out   = (char*) malloc (2 * (len + 1));
+  input = start;
+
+  tok->kind   = TK_WIDETEXT_LIT;
+  tok->string = out;
+
+  while (1) {
+    if (*input == '"') {
+      input++;
+      break;
+
+    } else if ((*input == '\n') || (*input == '\r') || (*input == '\f')) {
+      error ("end-of-line encountered in text literal");
+      input++;
+      break;
+
+    } else if (*input == '\\') {
+      input ++;
+      if      (*input == 'n')  { *out++ = 0;  *out++ = '\n';  input++; }
+      else if (*input == 't')  { *out++ = 0;  *out++ = '\t';  input++; }
+      else if (*input == 'r')  { *out++ = 0;  *out++ = '\r';  input++; }
+      else if (*input == 'f')  { *out++ = 0;  *out++ = '\f';  input++; }
+      else if (*input == '\\') { *out++ = 0;  *out++ = '\\';  input++; }
+      else if (*input == '\'') { *out++ = 0;  *out++ = '\'';  input++; }
+      else if (*input == '"')  { *out++ = 0;  *out++ = '"';   input++; }
+      else if (*input == 'x') {
+	LONGEST hexval;
+        input = scan_hex (++input, hexval, wide);
+	*out++ = (hexval & 0xffff) >> 8;
+	*out++ = (hexval & 0xff);
+      } else if (('0' <= *input) && (*input <= '7')) {
+	LONGEST octval;
+        input = scan_octal (input, octval, wide);
+	*out++ = (octval & 0xffff) >> 8;
+	*out++ = (octval & 0xff);
+      } else {
+        error ("unknown escape sequence in text literal");
+      }
+
+    } else if (*input == 0) {
+      error ("EOF encountered in text literal");
+      break;
+
+    } else {
+      /* vanilla character */
+      *out++ = 0;
+      *out++ = *input++;
+    }
+  }
+
+  /* finish the string */
+  *out++ = 0;  *out++ = 0;
+  tok->length = out - tok->string;
+
+  return input;
+} /* scan_widetext */
 
 /*-------------------------------------------------------------- comments ---*/
 
@@ -505,6 +686,18 @@ scan_m3_token (input, tok)
     case 'w': case 'x': case 'y': case 'z':
       /* scan an identifier */
       input = tokstart + 1;
+
+      if (*input == '\'') {
+	/* oops, it's a wide char */
+        input = scan_char (tokstart, tok, 1);
+        break;
+      }
+      if (*input == '"') {
+	/* oops, it's a wide text literal */
+        input = scan_widetext (tokstart, tok);
+        break;
+      }
+
       while (   ('a' <= *input && *input <= 'z')
              || ('A' <= *input && *input <= 'Z')
              || ('0' <= *input && *input <= '9') 
@@ -526,7 +719,7 @@ scan_m3_token (input, tok)
       break;
 
     case '\'':
-      input = scan_char (tokstart, tok);
+      input = scan_char (tokstart, tok, 0);
       break;
 
     case '"':
@@ -610,7 +803,9 @@ static char* toknames[] = {
   "<LREAL_LIT>",        /* LONGREAL literal => floatval       */
   "<XREAL_LIT>",        /* EXTENDED literal => floatval       */
   "<CHAR_LIT>",         /* CHAR literal     => intval         */
+  "<WIDECHAR_LIT>",     /* WIDECHAR literal => intval         */
   "<TEXT_LIT>",         /* TEXT literal     => string, length */
+  "<WIDETEXT_LIT>",     /* W"" TEXT literal => string, length */
 
   /* operators */
 
@@ -640,7 +835,7 @@ static char* toknames[] = {
   "INTEGER", "ISTYPE", "LAST", "LONGREAL", "LOOPHOLE", "MAX",
   "MIN", "MUTEX", "NARROW", "NEW", "NIL", "NULL", "NUMBER",
   "ORD", "REAL", "REFANY", "ROUND", "SUBARRAY", "TEXT", "TRUE",
-  "TRUNC", "TYPECODE", "VAL",
+  "TRUNC", "TYPECODE", "VAL", "WIDECHAR",
 
   /* misc. debugger tokens */
 

@@ -12,7 +12,9 @@ typedef enum {
   TK_LREAL_LIT,        /* LONGREAL literal => floatval       */
   TK_XREAL_LIT,        /* EXTENDED literal => floatval       */
   TK_CHAR_LIT,         /* CHAR literal     => intval         */
+  TK_WIDECHAR_LIT,     /* WIDECHAR literal => intval         */
   TK_TEXT_LIT,         /* TEXT literal     => string, length */
+  TK_WIDETEXT_LIT,     /* W"" TEXT literal => string, length */
 
   /* operators */
 
@@ -42,7 +44,7 @@ typedef enum {
   TK_INTEGER, TK_ISTYPE, TK_LAST, TK_LONGREAL, TK_LOOPHOLE, TK_MAX,
   TK_MIN, TK_MUTEX, TK_NARROW, TK_NEW, TK_NIL, TK_NULL, TK_NUMBER,
   TK_ORD, TK_REAL, TK_REFANY, TK_ROUND, TK_SUBARRAY, TK_TEXT, TK_TRUE,
-  TK_TRUNC, TK_TYPECODE, TK_VAL,
+  TK_TRUNC, TK_TYPECODE, TK_VAL, TK_WIDECHAR,
 
   /* misc. debugger tokens */
 

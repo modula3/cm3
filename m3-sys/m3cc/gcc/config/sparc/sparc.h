@@ -1529,15 +1529,20 @@ extern int leaf_function;
 
 #define FUNCTION_PROFILER(FILE, LABELNO)  			\
   do {								\
-    fputs ("\tsethi %hi(", (FILE));				\
-    ASM_OUTPUT_INTERNAL_LABELREF (FILE, "LP", LABELNO);		\
-    fputs ("),%o0\n", (FILE));					\
-    if (TARGET_MEDANY)						\
-      fprintf (FILE, "\tadd %%o0,%s,%%o0\n",			\
-	       MEDANY_BASE_REG);				\
+    if (current_function_needs_context)				\
+      fputs ("\tmov %g2, %l2\n", (FILE));			\
+    fputs ("\tsethi %hi(RT0u__inCritical),%o1\n", (FILE));	\
+    fputs ("\tld [%o1+%lo(RT0u__inCritical)],%o2\n", (FILE));	\
+    fputs ("\tadd %o2,1,%o2\n", (FILE));			\
+    fputs ("\tst %o2,[%o1+%lo(RT0u__inCritical)]\n", (FILE));	\
     fputs ("\tcall mcount\n\tadd %lo(", (FILE));		\
-    ASM_OUTPUT_INTERNAL_LABELREF (FILE, "LP", LABELNO);		\
-    fputs ("),%o0,%o0\n", (FILE));				\
+    fputs ("\tnop\n", (FILE));					\
+    fputs ("\tsethi %hi(RT0u__inCritical),%o1\n", (FILE));	\
+    fputs ("\tld [%o1+%lo(RT0u__inCritical)],%o2\n", (FILE));	\
+    fputs ("\tadd %o2,-1,%o2\n", (FILE));			\
+    fputs ("\tst %o2,[%o1+%lo(RT0u__inCritical)]\n", (FILE));	\
+    if (current_function_needs_context)				\
+      fputs ("\tmov %l2, %g2\n", (FILE));			\
   } while (0)
 
 /* Output assembler code to FILE to initialize this source file's
