@@ -4,11 +4,11 @@
 MODULE Main;
 
 IMPORT M3Timers, Pathname, Process, Quake;
-IMPORT RTCollector, RTCollectorSRC, RTParams, RTutils, Thread;
+IMPORT RTCollector, RTCollectorSRC, RTParams, RTutils, Thread, Wr;
 
 IMPORT Builder, Dirs, M3Build, M3Options, Makefile, Msg, Utils, WebFile;
 IMPORT MxConfig AS M3Config(*, CMKey, CMCurrent *);
-(* IMPORT Fmt, Time, Wr; only needed for key and expiration check *)
+(* IMPORT Fmt, Time; only needed for key and expiration check *)
 
 VAR
   config    : TEXT          := NIL;
@@ -93,6 +93,9 @@ PROCEDURE DoIt () =
         Msg.FatalError (NIL, "interrupted");
     END;
 
+    IF M3Options.exit_code # 0 THEN
+      Msg.Out("Fatal Error: package build failed", Wr.EOL);
+    END;
     Process.Exit (M3Options.exit_code);
   END DoIt;
 
