@@ -29,7 +29,8 @@ readonly _UnixPieces = {
   "IRIX5"      : [ "irix-5.2" ],
   "LINUX"      : [ "linux" ],
   "LINUXELF"   : [ "linux" ],
-  "LINUXLIBC6" : [ "linux-libc6", "linux-libc6-le" ],
+  %"LINUXLIBC6" : [ "linux-libc6", "linux-libc6-le" ],
+  "LINUXLIBC6" : [ "linux-libc6" ],
   "NEXT"       : [ "ultrix-3-1.generic", "ultrix-3-1.NEXT" ],
   "NT386"      : [ ], % doesn't define a "Unix" interface
   "NT386GNU"   : [ "cygwin" ],
