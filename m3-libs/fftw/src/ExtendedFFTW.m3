@@ -27,6 +27,30 @@ PROCEDURE CleanupPlan (<* UNUSED *> READONLY w: WeakRef.T; r: REFANY) =
     Raw.DestroyPlan(NARROW(r, Plan)^);
   END CleanupPlan;
 
+PROCEDURE DFTR2C1D (READONLY x: ARRAY OF R.T;
+                    flags := FlagSet{Flag.Estimate}; ):
+  REF ARRAY OF Complex =
+  VAR
+    z := NEW(REF ARRAY OF Complex, NUMBER(x) DIV 2 + 1);
+    plan := Raw.PlanDFTR2C1D(
+              NUMBER(x), x[0], z[0], LOOPHOLE(flags, C.unsigned_int));
+  BEGIN
+    TRY Raw.Execute(plan); FINALLY Raw.DestroyPlan(plan); END;
+    RETURN z;
+  END DFTR2C1D;
+
+PROCEDURE DFTC2R1D (READONLY x     : ARRAY OF Complex;
+                             parity: [0 .. 1];
+                    flags := FlagSet{Flag.Estimate}; ): REF ARRAY OF R.T =
+  VAR
+    z := NEW(REF ARRAY OF R.T, NUMBER(x) * 2 - 2 + parity);
+    plan := Raw.PlanDFTC2R1D(
+              NUMBER(z^), x[0], z[0], LOOPHOLE(flags, C.unsigned_int));
+  BEGIN
+    TRY Raw.Execute(plan); FINALLY Raw.DestroyPlan(plan); END;
+    RETURN z;
+  END DFTC2R1D;
+
 
 PROCEDURE Execute (p: Plan; ) =
   BEGIN
