@@ -1,6 +1,6 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Mon Jul 15 14:55:28 PDT 1996 by steveg *)
+(* Last modified on Tue Mar 18 15:47:53 PST 1997 by steveg *)
 
 INTERFACE HTTPApp;
 
@@ -12,7 +12,7 @@ INTERFACE HTTPApp;
   *)
 
 IMPORT
-  App, HTTP, IP, Rd, TextList, Wr;
+  App, HTTP, IP, Rd, Wr;
 
 TYPE 
   RequestPriority = {High, Normal, Low};
@@ -49,11 +49,6 @@ TYPE
     *)
   END;
 
-PROCEDURE PostRd(request: HTTP.Request; rd: Rd.T; log: App.Log): Rd.T 
-  RAISES {App.Error};
-  (* Use the "Content-Length" field of "request" to convert "rd" into
-     a reader that returns EOF after "Content-Length" bytes *)
-
 TYPE
   ReplyHandler <: ReplyHandlerPublic;
   ReplyHandlerPublic = OBJECT
@@ -83,55 +78,80 @@ TYPE
   METHODS
     init(server: TEXT; port: INTEGER; log: App.Log): Server 
       RAISES {App.Error};
-    (* initializes server, port and noProxy and sets the endpoint *)
+    (* initializes server, port and sets the endpoint.  If
+       "server" = "DIRECT" then the server will not
+       proxy but will go directly to the true destination *)
     initParse(serverAndPort: TEXT; log: App.Log): Server
       RAISES {App.Error};
     (* "serverAndPort" is in <server>[:<port>] or
        http://<server>[:port]/" format (the latter is for compatibility
        with Mosaic environment variables).  If the port is
-       not given, then "defaultPort" is used.  "noProxy" is a 
-       no proxy list that will be parsed by ParseNoProxy.  *)
+       not given, then "defaultPort" is used.  
+       If serverAndPort = "DIRECT" then the server will not
+       proxy but will go directly to the true destination
+    *)
   END;
 
 TYPE
   ServerList = REF RECORD
-    head: Server;
-    tail: ServerList := NIL;
-  END;
+                     head: Server;
+                     tail: ServerList := NIL;
+                   END;
+
+  ProxyRules = REF RECORD
+                    hostPattern: TEXT;
+                    proxy     : ServerList;
+                    tail      : ProxyRules;
+                  END;
 
   Proxy <: ProxyPublic;
-  ProxyPublic = OBJECT
-    proxies: ServerList;
-    noProxy: TextList.T;
-  METHODS
-    init(noProxy: TEXT): Proxy;
-    (* inititialize the proxy with the "noProxy" text - a comma separated
-       list of server name suffixes. *)
-    addProxy(server: Server);
-    (* add a proxy server to the end of the list.  Proxy servers added
-       first have priority. *)
-  END;  
+  (* a "proxy" is a list of proxy rules: host patterns and proxies.
+     When proxying, a host is matched against each pattern in order and
+     the first matching pattern wins.  Each proxy in the proxy server
+     list is tried in turn.  If the proxy server is "DIRECT" then a
+     direct connection to the URL's server is tried.  If any
+     connection fails, the next proxy server is tried.
 
-PROCEDURE ParseNoProxy(noProxy: TEXT): TextList.T;
-(* "noProxy" is a comma separated list of server name suffixes.  The result
-   is a text list where each server suffix is parsed into a separate
-   list element *)
+     There is a "*:DIRECT" proxy rule as the last rule (set by "init").
+  *)
+  ProxyPublic =
+    OBJECT
+      rules, tail: ProxyRules;
+    METHODS
+      init (): Proxy;
+      add (rule: TEXT; log: App.Log) RAISES {App.Error};
+      (* "add" adds a new proxy rule to the end of the proxy rules
 
-PROCEDURE Serve(port: INTEGER; log: App.Log := NIL; serverData: REFANY := NIL) 
+         "rule" is a text formatted:
+         <hostPattern> <server>[,<server>]*
+
+         "hostPattern" is a simple pattern including '?' to match
+         any one character and '*' to match any sequence of 0 or more
+         characters
+
+         if any "server" is "DIRECT" then it corresponds to
+         a non-proxy direct connection
+      *)
+    END;
+
+PROCEDURE Serve (port, serviceValue: INTEGER;
+                 log               : App.Log   := NIL;
+                 serverData        : REFANY    := NIL  )
   RAISES {App.Error};
 (* "Listen" sits in a loop waiting for HTTP requests on "port".
    Messages written to "log" should be presented to the user
    of the application (as desired).
 
    "serverData" is passed to the "accept" and "request" methods of
-   the RequestHandlers when requests are made.
+   the RequestHandlers when requests are made.  Any request handler
+   that matches the port or the serviceValue may be called.
 
    If "log" = NIL then the log handler will write to stdout
    and to the wr of the request
 *)
 
-PROCEDURE ServerPort(port: INTEGER): BOOLEAN;
-(* Return TRUE if there has been a call on "Serve" for "port" *)
+PROCEDURE ServerPort(port, service: INTEGER): BOOLEAN;
+(* Return TRUE if there has been a call on "Serve" for "port" and "service" *)
 
 PROCEDURE Client(request: HTTP.Request;
                  proxy: Proxy;
@@ -139,10 +159,11 @@ PROCEDURE Client(request: HTTP.Request;
                  rd: Rd.T;
                  wr: Wr.T;
                  handler: ReplyHandler;
+                 service: INTEGER;
                  log: App.Log := NIL) RAISES {App.Error};
 (* Make a client request or proxy a client request.  
    The request is made directly if there is no proxy given or
-   if the destination server does not match against "proxy.noProxy").
+   the proxy rule matching the URL specifies "DIRECT".
 
    If "style" is NIL, then DefaultStyle() is used.
 
@@ -157,13 +178,28 @@ PROCEDURE Client(request: HTTP.Request;
    reply is parsed and "handler.reply" is called with "wr" for
    its output.
 
+   "service" is the number of the service associated with a "Serve"
+   call.  It is used to determine if the request is to a port
+   associated with the current service or another.  If you didn't
+   make a "Serve" call then use "AnyService".
+
    If log = NIL then log := App.defaultLog 
  *)
 
-PROCEDURE RegisterRequestHandler(handler: RequestHandler);
+CONST
+  AnyPort = 0;
+  AnyService = 0;
+
+PROCEDURE RegisterRequestHandler(port: INTEGER; handler: RequestHandler);
 (*  Adds "handler" to the handlers known to the
     server.  When the server gets a request, it invokes the
-    handlers until one services the request.
+    handlers until one services the request.  The handler will only
+    get called if "port" matches the server's port or "port = AnyPort"
+    or if "port" < 0 then "port" represents a service type, and 
+    the request handler is invoked if "port" matches the server's 
+    service type.  (Make sure the services have different values, :-)
+
+    NOTE: a given request handler can only listen on a single port
 *)
 
 CONST
@@ -181,8 +217,7 @@ PROCEDURE DefaultProxy(log: App.Log := NIL): Proxy RAISES {App.Error};
    called AFTER App.InitializeArguments):
 
    switch   env          config   default
-   -proxy   http_proxy   proxy:   "www-proxy.pa.dec.com:8080"
-   -noProxy no_proxy     noProxy: ".dec.com"
+   -pac     HTTP_PAC     pac:     "*: DIRECT"
 
    If log = NIL then DefaultLog will be used.
  *)

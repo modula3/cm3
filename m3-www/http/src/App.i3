@@ -1,6 +1,6 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Tue Aug 27 16:02:17 PDT 1996 by steveg *)
+(* Last modified on Thu Oct 24 14:08:55 PDT 1996 by steveg *)
 
 INTERFACE App;
 
@@ -10,7 +10,8 @@ EXCEPTION
                   with an Error status *)
 
 CONST
-  LogStatusText = ARRAY LogStatus OF TEXT{"Verbose", "Debug", "Status", "Error"};
+  LogStatusText = ARRAY LogStatus OF
+                    TEXT{"Verbose", "Debug", "Status", "Error"};
 
 TYPE
   LogStatus = {Verbose, Debug, Status, Error};
@@ -124,5 +125,9 @@ PROCEDURE GetHostName(ipAddr: BOOLEAN := FALSE): TEXT;
 (* if "ipAddr" then the local IP address is returned 
    (i.e. 16.0.1.135).  Otherwise the host name is return
    (i.e. reddog.pa.dec.com). *)
+
+PROCEDURE SameHost(host: TEXT): BOOLEAN;
+(* if "host" appears to be the same host as the local
+   machine, then return "TRUE".  Otherwise return "FALSE" *)
 
 END App.

@@ -1,11 +1,11 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Wed Aug 21 09:05:34 PDT 1996 by steveg *)
+(* Last modified on Wed Feb 12 14:15:57 PST 1997 by steveg *)
 
 MODULE HTTP;
 
 IMPORT
-  App, Atom, Date, FastLex, FloatMode, Fmt, HTTPApp, Lex, Rd, RdCopy,
+  App, Atom, Date, FastLex, FloatMode, Fmt, HTTPApp, IO, Lex, Rd, RdCopy,
   Text, TextExtras, TextRd, TextWr, Thread, Time, UnsafeRd, Word, Wr;
 
 VAR
@@ -325,25 +325,43 @@ PROCEDURE ParseHeaderFields (self        : Header;
 PROCEDURE ParseRequest (self: Request; rd: Rd.T; log: App.Log): Request
   RAISES {App.Error} =
   VAR
-    ch : CHAR;
-    foo: [0 .. 4];
+    ch                : CHAR;
+    foo               : [0 .. 4];
+    contentLengthField: Field;
   BEGIN
     TRY
       self.method := LookupMethod(FastLex.Scan(rd), log);
       FastLex.Skip(rd, Spaces);
       self.url := NEW(URL).init(FastLex.Scan(rd), log);
-      IF UnsafeRd.FastEOF(rd) THEN
+      FastLex.Skip(rd, Spaces);
+      ch := UnsafeRd.FastGetChar(rd);
+      IF (ch = '\n' OR (ch = '\r' AND UnsafeRd.FastGetChar(rd) = '\n')) THEN
         self.version := Version0_9
       ELSE
+        UnsafeRd.FastUnGetChar(rd);
         FastLex.Skip(rd);
         self.version := ParseVersion(rd, foo, log);
+        ch := UnsafeRd.FastGetChar(rd);
+        IF NOT (ch = '\n'
+                  OR (ch = '\r' AND UnsafeRd.FastGetChar(rd) = '\n')) THEN
+          log.log("Bad request header", App.LogStatus.Error);
+        END;
       END;
-      ch := UnsafeRd.FastGetChar(rd);
-      IF NOT (ch = '\n' OR (ch = '\r' AND UnsafeRd.FastGetChar(rd) = '\n')) THEN
-        log.log("Bad request header", App.LogStatus.Error);
+      ParseHeaderFields(self, rd, DefaultStyle(self.version), log);
+
+      IF self.method = Method.Post THEN
+        contentLengthField :=
+          self.lookupField(FieldName[FieldType.Content_Length]);
+        TRY
+          IF contentLengthField # NIL THEN
+            self.postData :=
+              Rd.GetText(
+                rd, IO.GetInt(TextRd.New(contentLengthField.value)));
+          END;
+        EXCEPT
+        | IO.Error =>
+        END;
       END;
-      ParseHeaderFields(
-        self, rd, DefaultStyle(self.version), log);
     EXCEPT
     | Rd.EndOfFile, Rd.Failure, Thread.Alerted =>
         log.log("Read failure in ParseRequest", App.LogStatus.Error);
@@ -491,6 +509,31 @@ PROCEDURE WriteSimpleReplyHeader (wr     : Wr.T;
     END;
   END WriteSimpleReplyHeader;
 
+PROCEDURE WriteRedirectReply (wr: Wr.T; url, htmlMsg: TEXT; log: App.Log)
+  RAISES {App.Error} =
+  BEGIN
+    (* redirect request back to the original request *)
+    TRY
+      WriteSimpleReplyHeader(
+        wr, NIL, log, StatusCode[StatusType.Moved_Temporarily],
+        StatusReason[StatusType.Moved_Temporarily]);
+      Wr.PutText(
+        wr, Fmt.F("%s: %s\r\n", FieldName[FieldType.Location], url));
+      Wr.PutText(wr, "Content-type: text/html\r\n\r\n");
+      IF htmlMsg = NIL THEN
+        htmlMsg :=
+          Fmt.F(
+            "<HTML><HEAD><TITLE>Resource has moved</TITLE></HEAD><BODY><H1>Resource has moved</H1>You may now find it here: <A HREF=\"%s\">%s</A>.</BODY></HTML>",
+            url, url);
+      END;
+      Wr.PutText(wr, htmlMsg);
+    EXCEPT
+    | Wr.Failure, Thread.Alerted =>
+        log.log("TempAccess: unexpected error", App.LogStatus.Error);
+    END;
+
+  END WriteRedirectReply;
+
 PROCEDURE WriteReply (self: Reply; wr: Wr.T; style: Style; log: App.Log)
   RAISES {App.Error} =
   BEGIN
@@ -568,12 +611,11 @@ PROCEDURE URLDerelativize (self, base: URL): URL =
     END;
   END URLDerelativize;
 
-PROCEDURE URLLocal (self: URL): BOOLEAN =
+PROCEDURE URLLocal (self: URL; service: INTEGER): BOOLEAN =
   BEGIN
     RETURN Text.Length(self.host) = 0
-             OR HTTPApp.ServerPort(self.port)
-                  AND (Text.Equal(self.host, App.GetHostName(FALSE))
-                         OR Text.Equal(self.host, App.GetHostName(TRUE)));
+             OR HTTPApp.ServerPort(self.port, service)
+                  AND App.SameHost(self.host)
   END URLLocal;
 
 PROCEDURE URLEquivalent (self, other: URL): BOOLEAN =
@@ -724,7 +766,7 @@ PROCEDURE InitURLFromRd1 (self: URL; rd: Rd.T; log: App.Log): URL
       (* ...[#fragment]... *)
       ch := Rd.GetChar(rd);
       IF ch = '#' THEN
-        self.params := UnescapeURLEntry(Lex.Scan(rd, NotBlanks), log);
+        self.fragment := UnescapeURLEntry(Lex.Scan(rd, NotBlanks), log);
       ELSE
         Rd.UnGetChar(rd);
       END;
@@ -820,12 +862,12 @@ PROCEDURE EscapeURLEntry(body: TEXT): TEXT =
   END EscapeURLEntry;
 
 PROCEDURE UnescapeURLEntry(body: TEXT; log: App.Log): TEXT RAISES {App.Error} =
-  <* FATAL Wr.Failure, Thread.Alerted *>
-  VAR trd: TextRd.T;  twr: TextWr.T;  ch: CHAR;
-  BEGIN
-    IF body = NIL THEN RETURN NIL; END;
+  VAR
     trd := TextRd.New(body);
     twr := TextWr.New();
+    ch: CHAR;
+    <* FATAL Wr.Failure, Thread.Alerted *>
+  BEGIN
     TRY
       WHILE NOT UnsafeRd.FastEOF(trd) DO
         ch := UnsafeRd.FastGetChar(trd);
@@ -966,8 +1008,10 @@ REVEAL
 
 PROCEDURE InitFormQueryFromURL (self: FormQuery; query: TEXT): FormQuery
   RAISES {BadFormQuery} =
-  VAR rd := TextRd.New(query);
+  VAR rd: TextRd.T;
   BEGIN
+    IF query = NIL THEN RETURN self END;
+    rd := TextRd.New(query);
     RETURN InitFormQueryFromRd(self, rd);
   END InitFormQueryFromURL;
 
@@ -1077,6 +1121,9 @@ PROCEDURE DecodeAuthorization(scheme: TEXT; msg: TEXT; log: App.Log): TEXT
          END;
       END;
       RETURN TextWr.ToText(res);
+    ELSIF Text.Equal(scheme, "") THEN
+      (* MSIE 3.0 does this *)
+      RETURN NIL;
     ELSE
       log.log(Fmt.F("unknown authorization scheme: %s\n", scheme),
               App.LogStatus.Error);
@@ -1084,10 +1131,9 @@ PROCEDURE DecodeAuthorization(scheme: TEXT; msg: TEXT; log: App.Log): TEXT
     END;
   END DecodeAuthorization;
 
-PROCEDURE AuthorizedRequest (request: Request;
-                             auth   : AuthType;
-                             account: TEXT;
-                             log    : App.Log   ): BOOLEAN
+PROCEDURE AuthorizationAccount (request: Request;
+                                auth   : AuthType;
+                                log    : App.Log   ): TEXT
   RAISES {App.Error} =
   VAR
     rd         : Rd.T;
@@ -1096,43 +1142,55 @@ PROCEDURE AuthorizedRequest (request: Request;
   BEGIN
     TRY
       IF auth = AuthType.None THEN
-         RETURN TRUE;
+        RETURN NIL;
       ELSIF auth = AuthType.Server THEN
         field := request.lookupField(FieldName[FieldType.Authorization]);
       ELSE
-        field :=
-          request.lookupField(FieldName[FieldType.Proxy_Authorization]);
+        field := request.lookupField(FieldName[FieldType.Proxy_Authorization]); 
+        (* doesn't work with Netscape 3.0? 
+        field := request.lookupField(FieldName[FieldType.Authorization]);
+        *)
       END;
-      IF field = NIL THEN RETURN FALSE; END;
+      IF field = NIL THEN RETURN NIL; END;
 
       rd := TextRd.New(field.value);
       FastLex.Skip(rd, Spaces);
       scheme := FastLex.Scan(rd);
       FastLex.Skip(rd, Spaces);
       msg := FastLex.Scan(rd);
-      msg := DecodeAuthorization(scheme, msg, log);
-      IF Text.Equal(account, msg) THEN
-        IF App.Debug() THEN
-          log.log(
-            Fmt.F("GOOD authorization: %s", msg), App.LogStatus.Debug);
-        END;
-        RETURN TRUE;
-      ELSE
-        log.log(Fmt.F("BAD authorization: %s", msg), App.LogStatus.Status);
-        RETURN FALSE;
-      END;
+      RETURN DecodeAuthorization(scheme, msg, log);
     EXCEPT
     | Rd.Failure, Thread.Alerted =>
-        log.log("Unexpected problem in HTTPControl.AuthorizedRequest",
+        log.log("Unexpected problem in HTTP.AuthorizedRequest",
                 App.LogStatus.Error);
-        RETURN FALSE
+    END;
+    RETURN NIL;
+  END AuthorizationAccount;
+
+PROCEDURE AuthorizedRequest (request: Request;
+                             auth   : AuthType;
+                             account: TEXT;
+                             log    : App.Log   ): BOOLEAN
+  RAISES {App.Error} =
+  VAR msg := AuthorizationAccount(request, auth, log);
+  BEGIN
+    IF Text.Equal(account, msg) THEN
+      IF App.Debug() THEN
+        log.log(Fmt.F("GOOD authorization: %s", msg), App.LogStatus.Debug);
+      END;
+      RETURN TRUE;
+    ELSE
+      log.log(Fmt.F("BAD authorization: %s", msg), App.LogStatus.Status);
+      RETURN FALSE;
     END;
   END AuthorizedRequest;
 
-PROCEDURE ReplyUnauthorized (wr   : Wr.T;
-                             auth : AuthType;
-                             realm: TEXT;
-                             log  : App.Log   ) RAISES {App.Error} =
+PROCEDURE ReplyUnauthorized (wr        : Wr.T;
+                             auth      : AuthType;
+                             realm     : TEXT;
+                             log       : App.Log;
+                             defaultMsg: BOOLEAN    := TRUE)
+  RAISES {App.Error} =
   VAR
     st   : StatusType;
     ft   : FieldType;
@@ -1150,10 +1208,24 @@ PROCEDURE ReplyUnauthorized (wr   : Wr.T;
     EVAL reply.addField(
            NEW(Field).init(
              FieldName[ft], Fmt.F("Basic realm=\"%s\"", realm)));
+    EVAL
+      reply.addField(
+        NEW(Field).init(FieldName[FieldType.Content_Type], "text/html"));
     IF App.Verbose() THEN
       log.log(reply.toText(NIL, log), App.LogStatus.Verbose);
     END;
     reply.write(wr, NIL, log);
+    IF defaultMsg THEN
+      TRY
+        Wr.PutText(
+          wr,
+          "HTTP Error 407.  Proxy Authentication Required\nUnauthorized request.  Must give password\n");
+      EXCEPT
+      | Wr.Failure, Thread.Alerted =>
+          log.log("HTTP.ReplyUnauthorized: unexpected reply error",
+                  App.LogStatus.Error);
+      END;
+    END;
   END ReplyUnauthorized;
 
 CONST
@@ -1211,11 +1283,16 @@ PROCEDURE EncodeBasicAuth (account: TEXT): TEXT =
     TRY
       Wr.PutText(res, "Basic ");
       FOR i := 0 TO (Rd.Length(rd) DIV 3) - 1 DO
-        AddEncoding(res, UnsafeRd.FastGetChar(rd),
-                    UnsafeRd.FastGetChar(rd), UnsafeRd.FastGetChar(rd))
+        c0 := UnsafeRd.FastGetChar(rd);
+          c1 := UnsafeRd.FastGetChar(rd);
+          c2 := UnsafeRd.FastGetChar(rd);
+        AddEncoding(res, c0, c1, c2)
       END;
 
       IF Rd.Length(rd) MOD 3 # 0 THEN
+        c0 := ChNull;
+        c1 := ChNull;
+        c2 := ChNull;
         TRY
           c0 := UnsafeRd.FastGetChar(rd);
           c1 := UnsafeRd.FastGetChar(rd);
@@ -1239,6 +1316,10 @@ PROCEDURE BasicAuthField(account: TEXT; auth: AuthType): Field =
     ELSE
       RETURN NEW(Field).init(FieldName[FieldType.Proxy_Authorization],
                            EncodeBasicAuth(account));
+(* Doesn't work with Netscape 3.0?
+      RETURN NEW(Field).init(FieldName[FieldType.Authorization],
+                           EncodeBasicAuth(account));
+ *)
     END;
   END BasicAuthField;
 
@@ -1390,8 +1471,7 @@ PROCEDURE ReadBody (header: Header; rd: Rd.T; dest: Dest; log: App.Log)
       dest.copy(a);
     END ToProc;
   BEGIN
-    field :=
-      header.lookupField(FieldName[FieldType.Content_Encoding]);
+    field := header.lookupField(FieldName[FieldType.Content_Encoding]);
     IF field # NIL THEN
       IF TextExtras.CIEqual(field.value, "chunked") THEN
         WHILE ReadChunk(rd, dest, log) DO END;
@@ -1400,8 +1480,7 @@ PROCEDURE ReadBody (header: Header; rd: Rd.T; dest: Dest; log: App.Log)
                       field.value), App.LogStatus.Error);
       END;
     ELSE
-      field :=
-        header.lookupField(FieldName[FieldType.Content_Length]);
+      field := header.lookupField(FieldName[FieldType.Content_Length]);
       TRY
         IF field # NIL THEN
           TRY
@@ -1598,6 +1677,40 @@ PROCEDURE ReadTime (rd: Rd.T; log: App.Log): Time.T RAISES {App.Error} =
         RETURN 0.0D0;
     END;
   END ReadTime;
+
+PROCEDURE GetUserAgent (req: Request; VAR (* out *) version: INTEGER):
+  UserAgent =
+  VAR
+    userAgentField := req.lookupField(FieldName[FieldType.User_Agent]);
+    rd : TextRd.T;
+    tok: TEXT;
+  BEGIN
+    TRY
+      version := NoVersion;
+      IF userAgentField # NIL THEN
+        rd := TextRd.New(userAgentField.value);
+        tok := Lex.Scan(rd, Lex.NonBlanks - SET OF CHAR{'/'});
+        IF Text.Equal(tok, "Mozilla") THEN
+          IF Rd.GetChar(rd) = '/' THEN version := Lex.Int(rd); END;
+
+          WHILE NOT Rd.EOF(rd) DO
+            Lex.Skip(rd);
+            tok := Lex.Scan(rd);
+            IF Text.Equal(tok, "MSIE") THEN
+              Lex.Skip(rd);
+              version := Lex.Int(rd);
+              RETURN UserAgent.InternetExplorer;
+            END;
+          END;
+          RETURN UserAgent.Netscape;
+        END;
+      END;
+    EXCEPT
+    | Thread.Alerted, Rd.EndOfFile, Rd.Failure, FloatMode.Trap,
+          Lex.Error =>
+    END;
+    RETURN UserAgent.Other;
+  END GetUserAgent;
 
 PROCEDURE SetProgramInfo(READONLY info: ProgramInfo) =
   BEGIN
