@@ -52,7 +52,7 @@ PROCEDURE FreeLog (self: Public) RAISES {StableError.E} =
       self.log := NIL;
     EXCEPT
       Wr.Failure (err) => RAISE StableError.E(err);
-    END
+    END;
   END FreeLog;
 
 (* \subsection{Procedure Init}
@@ -97,9 +97,9 @@ PROCEDURE Init (    self       : Public;
           self := Recover(self);
           recovered := TRUE;
         ELSE
-          recovered := FALSE
+          recovered := FALSE;
         END;
-        IF NOT recovered OR NOT emptyLog THEN Checkpoint(self) END;
+        IF NOT recovered OR NOT emptyLog THEN Checkpoint(self); END;
         self.forceToDisk := forceToDisk;
         RETURN NARROW(self, StableData.T)
       END
@@ -139,22 +139,30 @@ PROCEDURE Recover (t: StableData.T): StableData.T
       t := t.readCheckpoint(cp);
       Rd.Close(cp);
     EXCEPT
-      Rd.Failure (err) =>
+    | Rd.Failure (err) =>
+        CloseLog(log);  (* close the log if it's opened *)
         RAISE StableError.E(
                 AtomList.Cons(
                   Atom.FromText("error reading checkpoint"),
                   err));
+    | StableError.E (err) =>
+        CloseLog(log);
+        RAISE StableError.E(err);
     END;
     IF log # NIL THEN 
-      t.replayLog(log); 
-      TRY
-        Rd.Close(log) (* get rid of the file handle *)
-      EXCEPT
-        Rd.Failure => (* well, it's not the end of the world *)
-      END
+      t.replayLog(log);
+      CloseLog(log);
     END; 
     RETURN t;
   END Recover;
+
+PROCEDURE CloseLog (log: Rd.T) =
+  BEGIN
+    IF (log = NIL) THEN RETURN; END;
+    TRY Rd.Close(log); (* get rid of the file handle *)
+    EXCEPT Rd.Failure, Thread.Alerted => (* well, it's not the end of the world *)
+    END;
+  END CloseLog;
 
 (* \subsection{Procedure Checkpoint}
    Free the log and use the protocoll described in "LogManager.i3"
