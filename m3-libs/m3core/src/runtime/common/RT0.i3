@@ -161,9 +161,9 @@ CONST
 
 CONST (* Type UIDs for the builtin types *)
   MutexID       = 16_1541f475;
-  TextLiteralID = ARRAY BOOLEAN OF INTEGER { 1837570855 (*16_6d871b27*),
-                                             16_72558b22 }
-                      [BITSIZE (INTEGER) = 64];
+  TextLiteralID = 1837570855 (*16_6d871b27*);
+    (* ARRAY BOOLEAN OF INTEGER { 1837570855 (*16_6d871b27*), 16_72558b22 }
+       [BITSIZE (INTEGER) = 64]; *)
 
 CONST
   SB = BITSIZE (ADDRESS) - 24;  (* # spare bits in a ref header *)

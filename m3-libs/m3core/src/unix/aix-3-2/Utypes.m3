@@ -8,7 +8,7 @@
 MODULE Utypes;
 
 IMPORT Word;
-FROM Ctypes IMPORT int;
+FROM Ctypes IMPORT int, long;
 
 PROCEDURE major (x: int): int =
   BEGIN 
@@ -56,6 +56,11 @@ PROCEDURE FD_ZERO (p: UNTRACED REF fd_set) =
       FOR i := FIRST (a) TO LAST (a) DO
         a[i] := 0; END; END;
   END FD_ZERO;
+
+PROCEDURE asLong (val: off_t): long =
+  BEGIN
+    RETURN val;
+  END asLong;
 
 BEGIN
 END Utypes.
