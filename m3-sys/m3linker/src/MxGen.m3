@@ -220,13 +220,13 @@ PROCEDURE ImportTopUnits (VAR s: State) =
     DumpUnits("Top Units:", s.top_units);
 
     (* concatenate main and other top units *)
-    ui := s.main_units;
+    ui := s.top_units;
     IF ui # NIL THEN
       WHILE ui.next # NIL DO
         ui := ui.next;
       END;
-      ui.next := s.top_units;
-      s.top_units := s.main_units;
+      ui.next := s.main_units;
+      s.main_units := s.top_units;
     END;
 
     ui := s.main_units;
