@@ -3,6 +3,9 @@
 
 import("libm3")
 
+
+Module("ExtendedType")
+
 readonly proc FloatBasic (nm, mod, modt) is
   local basic = nm & "Basic"
   build_generic_intf (basic, "FloatBasic", [mod, modt], VISIBLE)
