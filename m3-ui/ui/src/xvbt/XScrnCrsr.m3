@@ -176,7 +176,7 @@ PROCEDURE CursorLookup (orc: CursorOracle; name: TEXT): ScrnCursor.T
 
 PROCEDURE CursorBuiltIn (orc: CursorOracle; cs: Cursor.Predefined):
   ScrnCursor.T =
-  VAR xid: X.Cursor;
+  VAR ret: ScrnCursor.T := ScrnCursor.DontCare;
   BEGIN
     WITH st   = orc.st,
          trsl = st.trsl,
@@ -185,22 +185,24 @@ PROCEDURE CursorBuiltIn (orc: CursorOracle; cs: Cursor.Predefined):
         TrestleOnX.Enter(trsl);
         TRY
           CASE cs OF
-            Cursor.DontCare.cs => RETURN ScrnCursor.DontCare
+          | Cursor.DontCare.cs =>
           | Cursor.TextPointer.cs =>
-              xid := X.XCreateFontCursor(dpy, 68 (*X.XC_left_ptr*))
+            ret := NEW(XCursor,
+                       id := X.XCreateFontCursor(dpy, 68 (*X.XC_left_ptr*)));
           | Cursor.NotReady.cs =>
-              xid := X.XCreateFontCursor(dpy, 150 (*X.XC_watch*))
+            ret := NEW(XCursor,
+                       id := X.XCreateFontCursor(dpy, 150 (*X.XC_watch*)));
           ELSE
-            xid := X.None
+            ret := NEW(XCursor, id := X.None);
           END
         FINALLY
           TrestleOnX.Exit(trsl)
         END
       EXCEPT
-        X.Error, TrestleComm.Failure => RETURN ScrnCursor.DontCare
+      | X.Error, TrestleComm.Failure =>
       END
     END;
-    RETURN NEW(XCursor, id := xid)
+    RETURN ret;
   END CursorBuiltIn;
 
 PROCEDURE CursorLocalize (<*UNUSED*> cs: XCursor): ScrnCursor.Raw
