@@ -52,18 +52,21 @@ PROCEDURE Create(
       envp := ADR(envx[0])
     ELSE
       envx := NIL;
-      envp := LOOPHOLE(RTLinker.info.envp, Ctypes.char_star_star)
+      envp := LOOPHOLE(RTLinker.envp, Ctypes.char_star_star)
     END;
     IF wd # NIL AND NOT Text.Empty(wd) THEN
-      wdstr := M3toC.TtoS(wd)
+      wdstr := M3toC.SharedTtoS(wd)
     ELSE
      wdstr := NIL
     END;
 
     (* grab the file descriptors from inside the traced File.Ts so
        we don't trigger a GC after the vfork() call. *)
+    stdin_fd  := NoFileDescriptor;  
     IF (stdin  # NIL) THEN stdin_fd  := stdin.fd;  END;
+    stdout_fd := NoFileDescriptor;
     IF (stdout # NIL) THEN stdout_fd := stdout.fd; END;
+    stderr_fd := NoFileDescriptor;
     IF (stderr # NIL) THEN stderr_fd := stderr.fd; END;
 
     (* Turn off the interval timer (so it won't be running in child). *)
@@ -103,6 +106,7 @@ PROCEDURE Create(
 
     FreeArgs(argx);
     IF envx # NIL THEN FreeEnv(envx) END;
+    IF wdstr # NIL THEN M3toC.FreeSharedS(wd, wdstr); END;
 
     IF forkResult < 0 THEN OSErrorPosix.Raise0(forkErrno) END;
 
@@ -125,6 +129,7 @@ PROCEDURE GetPathToExec(pn: Pathname.T): Pathname.T RAISES {OSError.E} =
     path, prog: TEXT;
     start, i, end, result, uid, gid: INTEGER;
     statBuf: Ustat.struct_stat;
+    pname: Ctypes.char_star;
   CONST MaskXXX = Ustat.S_IEXEC + Ustat.S_GEXEC + Ustat.S_OEXEC;
   BEGIN
     IF Text.FindChar(pn, '/') < 0 THEN
@@ -135,13 +140,12 @@ PROCEDURE GetPathToExec(pn: Pathname.T): Pathname.T RAISES {OSError.E} =
       LOOP
         i := Text.FindChar(path, ':', start);
         IF i < 0 THEN end := Text.Length(path) ELSE end := i END;
-        prog := Pathname.Join(
-          Text.Sub(path, start, end - start),
-          pn,
-          NIL);
-        result := Ustat.stat(M3toC.TtoS(prog), ADR(statBuf));
-        IF result = 0 AND
-           Word.And(statBuf.st_mode, Ustat.S_IFMT) = Ustat.S_IFREG THEN
+        prog := Pathname.Join(Text.Sub(path, start, end - start), pn, NIL);
+        pname := M3toC.SharedTtoS(prog);
+        result := Ustat.stat(pname, ADR(statBuf));
+        M3toC.FreeSharedS(prog, pname);
+        IF result = 0 AND 
+          Word.And(statBuf.st_mode, Ustat.S_IFMT) = Ustat.S_IFREG THEN
           statBuf.st_mode := Word.And(statBuf.st_mode, MaskXXX);
           IF statBuf.st_mode # 0 THEN
             IF statBuf.st_mode = MaskXXX THEN RETURN prog END;
@@ -164,9 +168,13 @@ PROCEDURE GetPathToExec(pn: Pathname.T): Pathname.T RAISES {OSError.E} =
       END;
       OSErrorPosix.Raise0(Uerror.ENOENT)
     ELSE (* pn contains '/' *)
-      IF Ustat.stat(M3toC.TtoS(pn), ADR(statBuf)) < 0 THEN
-        OSErrorPosix.Raise()
-      END
+      pname := M3toC.SharedTtoS(pn);
+      IF Ustat.stat(pname, ADR(statBuf)) < 0 THEN
+        result := Uerror.errno;
+        M3toC.FreeSharedS(pn, pname);
+        OSErrorPosix.Raise0(result)
+      END;
+      M3toC.FreeSharedS(pn, pname);
     END;
     RETURN pn
   END GetPathToExec;
@@ -218,8 +226,8 @@ PROCEDURE FreeEnv(VAR envx: ArrCStr) =
   END FreeEnv;
 
 VAR (*CONST*)
-  BinSh := M3toC.TtoS("/bin/sh");
-  Sh := M3toC.TtoS("sh");
+  BinSh := M3toC.FlatTtoS("/bin/sh");
+  Sh := M3toC.FlatTtoS("sh");
 
 PROCEDURE ExecChild(
     argx: ArrCStr; (* see "AllocArgs" for layout *)
@@ -231,21 +239,8 @@ PROCEDURE ExecChild(
    "argx" and "envp".  Do not invoke scheduler, allocator, or
    exceptions.  Return only if a fatal Unix error is encountered, in
    which case Uerror.errno is set. *)
-
-  PROCEDURE SetFd(fd: INTEGER; h: INTEGER(*File.T*)): BOOLEAN =
-  (* Make file descriptor "fd" refer to file "h", or set "fd"'s
-     close-on-exec flag if "h = NoFileDescriptor". Return "TRUE"
-     iff successful. *)
-    VAR res: BOOLEAN; BEGIN
-      IF h # NoFileDescriptor
-        THEN res := Unix.dup2(h, fd) >= 0
-        ELSE res := Unix.fcntl(fd, Unix.F_SETFD, 1) >= 0
-                    OR Uerror.errno = Uerror.EBADF;
-      END;
-      RETURN res
-    END SetFd;
-
-  VAR res := 0; t: Ctypes.char_star; BEGIN
+  VAR res := 0; t: Ctypes.char_star;
+  BEGIN
     IF wdstr # NIL THEN
       IF Unix.chdir(wdstr) < 0 THEN RETURN -1; END
     END;
@@ -266,6 +261,19 @@ PROCEDURE ExecChild(
     END;
     RETURN res;
   END ExecChild;
+
+PROCEDURE SetFd(fd: INTEGER; h: INTEGER(*File.T*)): BOOLEAN =
+  (* Make file descriptor "fd" refer to file "h", or set "fd"'s
+     close-on-exec flag if "h=NoFile".  Return "TRUE" if succesful. *)
+  BEGIN
+    IF h # NoFile THEN
+      RETURN NOT Unix.dup2(h, fd) < 0
+    ELSIF Unix.fcntl(fd, Unix.F_SETFD, 1) >= 0 THEN
+      RETURN TRUE;
+    ELSE (* EBADF => "fd" was already closed, don't panic *)
+      RETURN (Uerror.errno = Uerror.EBADF);
+    END;
+  END SetFd;
 
 EXCEPTION WaitAlreadyCalled;
 
@@ -350,11 +358,17 @@ PROCEDURE GetWorkingDirectory(): Pathname.T RAISES {OSError.E} =
   END GetWorkingDirectory;
 
 PROCEDURE SetWorkingDirectory(pn: Pathname.T) RAISES {OSError.E} =
+  VAR fname := M3toC.SharedTtoS(pn);  err: INTEGER;
   BEGIN
     LOCK wdCacheMutex DO
-      IF Unix.chdir(M3toC.TtoS(pn)) < 0 THEN OSErrorPosix.Raise() END;
+      IF Unix.chdir(fname) < 0 THEN
+        err := Uerror.errno;
+        M3toC.FreeSharedS(pn, fname);
+        OSErrorPosix.Raise0(err);
+      END;
       wdCache := NIL
-    END
+    END;
+    M3toC.FreeSharedS(pn, fname);
   END SetWorkingDirectory;
 
 
