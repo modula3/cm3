@@ -8,10 +8,10 @@ TYPE
   SizeType = CARDINAL;
   ScalingType = [1 .. LAST(CARDINAL)]; (*might be a scaling matrix for high
                                           dimensional signals*)
-  SignalPP = ARRAY OF T;         (*VS.TBody*)(*discrete parallelepiped
-                                                containing signals, it is a
-                                                plain ARRAY in one
-                                                dimension*)
+
+  SignalPP = ARRAY OF T;         (*VS.TBody*)
+  (*discrete parallelepiped containing signals, it is a plain ARRAY in one
+     dimension*)
 
   T <: TPublic;
   TPublic =
