@@ -136,9 +136,11 @@ backup_old()
 
 rm_curent()
 {
-  rm -f "${FRONTEND}"
-  if [ "${GCC_BACKEND}" = yes ] ; then
-    rm -f "${BACKEND}"
+  if [ "${NOACTION}" != yes ] ; then
+    rm -f "${FRONTEND}"
+    if [ "${GCC_BACKEND}" = yes ] ; then
+      rm -f "${BACKEND}"
+    fi
   fi
 }
 
