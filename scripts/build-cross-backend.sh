@@ -26,7 +26,7 @@ if [ -z "$1" ] ; then
   echo "please specify a cross compilation target platform" 1>&2
   exit 1
 fi
-BUILDARGS="-DM3CC_HOST=${CM3_TARGET} -DM3CC_TARGET=$1"
+BUILDARGS="-DM3CC_HOST=${TARGET} -DM3CC_TARGET=$1"
 if [ "$FORCE" = yes ] ; then
   BUILDARGS="${BUILDARGS} -DFORCE=1"
 fi

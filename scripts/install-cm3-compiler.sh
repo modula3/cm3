@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: install-cm3-compiler.sh,v 1.3 2003-07-19 21:23:00 wagner Exp $
+# $Id: install-cm3-compiler.sh,v 1.4 2004-01-02 11:37:57 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -20,8 +20,8 @@ fi
 
 FRONTEND="${INSTALLROOT}/bin/cm3"
 BACKEND="${INSTALLROOT}/bin/cm3cg"
-FRONTEND_SRC="${ROOT}/m3-sys/cm3/${CM3_TARGET}/cm3"
-BACKEND_SRC="${ROOT}/m3-sys/m3cc/${CM3_TARGET}/cm3cg"
+FRONTEND_SRC="${ROOT}/m3-sys/cm3/${TARGET}/cm3"
+BACKEND_SRC="${ROOT}/m3-sys/m3cc/${TARGET}/cm3cg"
 
 usage()
 {
