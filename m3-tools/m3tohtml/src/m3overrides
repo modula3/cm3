@@ -1,4 +1,0 @@
-override ("libm3", ROOT & "/m3-libs")
-override ("m3tools", ROOT & "/m3-sys")
-override ("mtex", ROOT & "/m3-tools")
-override ("parseparams", ROOT & "/m3-libs")
