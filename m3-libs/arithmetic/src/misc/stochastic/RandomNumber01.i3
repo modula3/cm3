@@ -12,9 +12,9 @@ IMPORT RandomBasic;
 
 (*==========================*)
 TYPE
-  DECSRC <: RandomBasic.RandomGen;  (*wrapper for DEC SRC Random.Default*)
-  ran0   <: RandomBasic.RandomGen;  (*inspired by NR92 ran0*)
-  ran1   <: RandomBasic.RandomGen;  (*inspired by NR92 ran1*)
+  DECSRC <: RandomBasic.T;  (*wrapper for DEC SRC Random.Default*)
+  ran0   <: RandomBasic.T;  (*inspired by NR92 ran0*)
+  ran1   <: RandomBasic.T;  (*inspired by NR92 ran1*)
 
 (*==========================*)
 END RandomNumber01.

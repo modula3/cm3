@@ -8,7 +8,7 @@ Runtimes (in 100 MHz pentium clock ticks per call, roughly):
     FasterUni01         80
     FasterRandWord      80
 
-Usage:  You can call these directly, or use the RandomGen OBJECTS:
+Usage:  You can call these directly, or use the T OBJECTS:
     VAR
       myrand:=NEW(RandomNumber02.slow).init();
     BEGIN
@@ -27,8 +27,8 @@ thread in which RNG02 was called.
 IMPORT Word,RandomBasic;
 
 TYPE
-  slow <: RandomBasic.RandomGen;
-  fast <: RandomBasic.RandomGen;
+  slow <: RandomBasic.T;
+  fast <: RandomBasic.T;
 
 
 
@@ -42,7 +42,7 @@ PROCEDURE Init(NonReproducible : BOOLEAN := TRUE);
 
 (** The random words output by these generators ought to be extremely
 random since RandWord is a combination of 5 generators, each pretty good by
-itself, and all 5 work according to different principles. I think
+itSELF, and all 5 work according to different principles. I think
 they will be good enough for any application except cryptography, and
 quite likely good enough even for that. Its only
 disadvantage is it is too slow for applications which do
