@@ -4,7 +4,7 @@
 MODULE Makefile;
 
 IMPORT FS, M3File, M3Timers, OSError, Params, Process, Text, Thread, Wr;
-IMPORT Arg, M3Options, M3Path, Msg, Utils, TextTextTbl;
+IMPORT Arg, M3Options, M3Path, Msg, Utils, TextSeq, TextTextTbl;
 IMPORT MxConfig AS M3Config;
 
 TYPE
@@ -25,6 +25,8 @@ TYPE
     use_overrides : BOOLEAN  := FALSE;
     mode_set      : BOOLEAN  := FALSE;
     found_work    : BOOLEAN  := FALSE;
+    prepend_files : TextSeq.T;
+    append_files  : TextSeq.T;
   END;
 
 PROCEDURE Build (src_dir: TEXT): TEXT =
@@ -61,7 +63,13 @@ PROCEDURE Build (src_dir: TEXT): TEXT =
       CASE M3Options.major_mode OF
       | MM.Build, MM.Clean, MM.Find, MM.Depend =>
           IncludeOverrides (s, src_overrides);
+          FOR i := 0 TO s.prepend_files.size() - 1 DO
+            IncludeFile (s, s.prepend_files.get(i));
+          END;
           IncludeMakefile (s, src_makefile, src_dir);
+          FOR i := 0 TO s.append_files.size() - 1 DO
+            IncludeFile (s, s.append_files.get(i));
+          END;
 
       | MM.Ship =>
         IF M3File.IsReadable (".M3OVERRIDES") THEN
@@ -78,6 +86,8 @@ PROCEDURE Build (src_dir: TEXT): TEXT =
 
   BEGIN
     s.args := Arg.NewList ();
+    s.prepend_files := NEW(TextSeq.T).init();
+    s.append_files := NEW(TextSeq.T).init();
     FOR i := 1 TO Params.Count - 1 DO
       Arg.Append (s.args, Params.Get (i));
     END;
@@ -127,6 +137,11 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
                Out (wr, "library (\"", GetArg (arg, s.args), "\")");
                ok := TRUE;
                s.found_work := TRUE;
+             ELSIF Text.Equal(arg, "-append") THEN
+               ok := TRUE;
+               WITH fn = GetArg (arg, s.args) DO
+                 s.append_files.addhi(fn);
+               END;
              END;
 
     | 'A' => IF (arg_len = 2) THEN
@@ -168,6 +183,19 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
                s.found_work := TRUE;
              END;
 
+    | 'F' => IF Text.Equal(arg, "-F") (* for backward compatibility *) OR
+                Text.Equal(arg, "-FP") THEN
+               ok := TRUE;
+               WITH fn = GetArg (arg, s.args) DO
+                 s.prepend_files.addhi(fn);
+               END;
+             ELSIF Text.Equal(arg, "-FA") THEN
+               ok := TRUE;
+               WITH fn = GetArg (arg, s.args) DO
+                 s.append_files.addhi(fn);
+               END;
+             END;
+
     | 'g' => IF (arg_len = 2) THEN
                Out (wr, "m3_debug (TRUE)");  ok := TRUE;
              ELSIF Text.Equal(arg, "-gui") THEN
@@ -204,6 +232,11 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
     | 'p' => IF Text.Equal(arg, "-pretend") OR 
                 Text.Equal(arg, "-profile") THEN
                ok := TRUE;
+             ELSIF Text.Equal(arg, "-prepend") THEN
+               ok := TRUE;
+               WITH fn = GetArg (arg, s.args) DO
+                 s.prepend_files.addhi(fn);
+               END;
              END;
 
     | 'O' => IF (arg_len = 2) THEN
@@ -384,7 +417,7 @@ PROCEDURE IncludeOverrides (VAR s: State;  overrides: TEXT)
         IF (M3Options.major_mode = MM.Depend) THEN
           Msg.Verbose ("ignoring ", overrides, Wr.EOL);
         ELSE
-          Msg.Out ("ignoring ", overrides, Wr.EOL);
+          Msg.Info ("ignoring ", overrides, Wr.EOL);
         END;
       END;
     ELSE
@@ -399,6 +432,21 @@ PROCEDURE IncludeOverrides (VAR s: State;  overrides: TEXT)
       END;
     END;
   END IncludeOverrides;
+
+PROCEDURE IncludeFile (VAR s: State;  file: TEXT)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  BEGIN
+    IF M3File.IsReadable (file) THEN
+      Out (s.wr, "include (\"", M3Path.Escape (file), "\")");
+      s.found_work := TRUE;
+    ELSE
+      IF (M3Options.major_mode = MM.Depend) THEN
+        Msg.Verbose ("unable to read ", file, Wr.EOL);
+      ELSE
+        Msg.Out ("unable to read ", file, Wr.EOL);
+      END;
+    END;
+  END IncludeFile;
 
 PROCEDURE IncludeMakefile (VAR s: State;  makefile, dir: TEXT)
   RAISES {Wr.Failure, Thread.Alerted} =
@@ -525,6 +573,11 @@ CONST
     "  -x             include the \".m3overrides\" file",
     "  -D<symbol>     define <symbol> with the value TRUE",
     "  -D<sym>=<val>  define <sym> with the value <val>",
+    "  -F <fn>        prepend the quake code of file <fn>",
+    "  -FP <fn>        \"",
+    "  -prepend <fn>   \"",
+    "  -FA <fn>       append the quake code of file <fn>",
+    "  -append <fn>    \"",
     "  -console       produce a Windows CONSOLE subsystem program",
     "  -gui           produce a Windows GUI subsystem program",
     "  -windows       produce a Windows GUI subsystem program",
@@ -555,9 +608,9 @@ PROCEDURE Val(name: TEXT) : TEXT =
 VAR
   defs := NEW(TextTextTbl.Default).init();
 BEGIN
-  EVAL defs.put("CM3_RELEASE", "5.2.1");       (* readable release version *)
-  EVAL defs.put("CM3_VERSION", "050201");      (* version as number *)
-  EVAL defs.put("CM3_CREATED", "2003-02-22");  (* date of last change *)
+  EVAL defs.put("CM3_RELEASE", "5.2.2");       (* readable release version *)
+  EVAL defs.put("CM3_VERSION", "050202");      (* version as number *)
+  EVAL defs.put("CM3_CREATED", "2003-03-08");  (* date of last change *)
   EVAL defs.put("M3_PROFILING", "");           (* no profiling by default *)
   EVAL defs.put("EOL", Wr.EOL);
 END Makefile.

@@ -77,6 +77,11 @@ PROCEDURE Explain (a, b, c, d: TEXT := NIL) =
     END;
   END Explain;
 
+PROCEDURE Info (a, b, c, d, e, f: TEXT := NIL) =
+  BEGIN
+    IF (level > Level.Silent) THEN Out (a, b, c, d, e, f, Wr.EOL) END;
+  END Info;
+
 PROCEDURE OutL (a, b: TEXT;  l: Arg.List) =
   VAR gap: TEXT := NIL;
   BEGIN

@@ -79,8 +79,8 @@ PROCEDURE SetUp (target: TEXT) =
         Msg.Verbose ("--- ", ModeVerb [M3Options.major_mode], to_derived, 
                      " ---", Wr.EOL);
       ELSE
-        Msg.Out ("--- ", ModeVerb [M3Options.major_mode], to_derived, 
-                 " ---", Wr.EOL);
+        Msg.Info ("--- ", ModeVerb [M3Options.major_mode], to_derived, 
+                  " ---", Wr.EOL);
       END;
       ChDir (to_derived);
     END;
