@@ -1,8 +1,8 @@
 for myself:
 
 todo:
-  - shipping of .tmpl files with 'template'
-  - convert different prototypes to such with x, y, z as variable names
+  - introduce IsZero and replace all comparisons with Zero by that
+  - (overflow check in integer modules)
   - generic Fmt with a FmtStyle record
 
 
