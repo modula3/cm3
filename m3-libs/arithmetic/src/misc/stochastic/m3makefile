@@ -1,0 +1,7 @@
+import("libm3")
+
+module("RandomBasic")
+interface("RandomRep")
+module("RandomNumber01")
+module("RandomNumber02")
+module("Statistic")

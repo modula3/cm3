@@ -4,6 +4,8 @@
 import("libm3")
 
 
+include_dir("lowlevel")
+
 include_dir("integer")
 include_dir("biginteger")
 include_dir("fraction")
@@ -21,8 +23,7 @@ include_dir("root")
 include_dir("algebra")
 
 include_dir("nonlinear")
-include_dir("lowlevel")
-
+include_dir("stochastic")
 
 module("xUtils")
 export_interface("xUtils")
@@ -87,9 +88,6 @@ export_interface("xStat")
 
 module("xFFT")
 export_interface("xFFT")
-
-%module("xStat")
-%export_interface("xStat")
 
 % this is also given in the m3makefile in the directory above
 % if the statement is given twice, no quake error is thrown
