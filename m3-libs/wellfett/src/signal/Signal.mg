@@ -1,4 +1,4 @@
-GENERIC MODULE Signal(R,(*Signal,*)SignalRep);
+GENERIC MODULE Signal(R,(*Signal,*)SignalRep,P);
 
 REVEAL
   T = SignalRep.TPrivate BRANDED OBJECT
@@ -10,6 +10,7 @@ REVEAL
 	getFirst  := GetFirst;
 	getLast   := GetLast;
 	getNumber := GetNumber;
+	getData   := GetData;
 
 	upsample   := UpSample;
 	downsample := DownSample;
@@ -74,6 +75,11 @@ PROCEDURE GetNumber (SELF : T) : IndexType =
   BEGIN
 	RETURN NUMBER(SELF.data^);
   END GetNumber;
+
+PROCEDURE GetData (SELF : T) : P.T =
+  BEGIN
+	RETURN SELF.data;
+  END GetData;
 
 
 PROCEDURE TranslateD (SELF : T; dist : IndexType) =

@@ -1,0 +1,9 @@
+%
+%  Quake functions to instantiate operations on Daubechies wavelets for generic float types.
+%
+
+readonly proc RefinableFunc (nm, field, signal, vector, matrix) is
+  local basic = nm & "RefinableFunc"
+  build_generic_intf (basic, "RefinableFunc", [field, signal,         matrix], VISIBLE)
+  build_generic_impl (basic, "RefinableFunc", [field, signal, vector, matrix])
+end
