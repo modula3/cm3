@@ -15,8 +15,8 @@ readonly Platform_info = {
   "FBSD_ALPHA": "alpha-unknown-freebsd",
   "FreeBSD"   : "i486-unknown-bsd",
   "FreeBSD2"  : "i486-unknown-freebsd",
-  "FreeBSD3"  : "i486-unknown-freebsdelf",
-  "FreeBSD4"  : "i486-unknown-freebsdelf",
+  "FreeBSD3"  : "i386-unknown-freebsd3",
+  "FreeBSD4"  : "i386-unknown-freebsd4",
   "HP300"     : "m68k-hp-hpux",
   "HPPA"      : "hppa1.1-hp-hpux",
   "IBMR2"     : "rs6000-ibm-aix3.2",
@@ -39,7 +39,7 @@ readonly Platform_info = {
   "UMAX"      : "encore-bsd",
   "VAX"       : "vax-dec-ultrix",
   "I386_DARWIN" : "i486-unknown-bsd",
-  "PPC_DARWIN"  : "powerpc-apple-linux-gnu"
+  "PPC_DARWIN"  : "powerpc-apple-darwin5.4"
 }
 
 if not defined("SL")
@@ -100,6 +100,9 @@ if not defined ("M3CC_CFLAGS")  M3CC_CFLAGS = GNU_CFLAGS end
 if not defined ("M3CC_MAKE")    M3CC_MAKE   = GNU_MAKE   end
 if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
+% HACK: avoid the use of DW_FORM_strp debugging information for the time being
+M3CC_CFLAGS = M3CC_CFLAGS & " -DAVOID_DW_FORM_STRP"
+
 % figure out where we're going to build the beast
 local build_dir = "."  % let m3build set the build directory
 if not equal (M3CC_HOST, M3CC_TARGET)
@@ -137,17 +140,17 @@ ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
 
 % build commands
 cmds = "cd " & build_dir & "; "
-postcp = cmds & "cp -p gcc" & SL & "cm3cg ."
+postcp = cmds & "cp -p gcc" & SL & "m3cgc1 cm3cg"
 cmds = cmds & "cd libiberty; " & M3CC_MAKE & "; "
 cmds = cmds & "cd .." & SL & "gcc; " & M3CC_MAKE & " " & 
-       ARG0 & " " & ARG1 & " cm3cg"
+       ARG0 & " " & ARG1 & " m3cg"
 
 if equal (M3CC_HOST, M3CC_TARGET)
   BindExport ("cm3cg")
   if equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF")
     pgms = "LANGUAGES='m3cg mips-tfile'"
     BindExport ("mips-tfile")
-    postcp = "cp -p gcc" & SL & "cm3cg . && cp -p gcc" & SL & "mips-tfile ."
+    postcp = "cp -p gcc" & SL & "m3cgc1 cm3cg && cp -p gcc" & SL & "mips-tfile ."
   end
 end
 
