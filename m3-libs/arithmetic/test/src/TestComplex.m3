@@ -3,14 +3,13 @@ MODULE TestComplex EXPORTS Test;
 Abstract: Test driver for Complex
 
 1/27/96  Harry George   Initial version
-
 *)
 
 IMPORT Fmt,
        LongRealComplexFast   AS C,
        LongRealComplexTrans  AS CT,
        LongRealComplexFmtLex AS CF,
-       LongRealPolarBasic  AS P,
+       LongRealPolar       AS P,
        LongRealPolarFmtLex AS PF;
 (*=======================*)
 CONST Module = "TestComplex.";

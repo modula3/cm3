@@ -11,7 +11,7 @@ IMPORT
   BigInteger                 AS B,
   BigIntegerComplexBasic     AS BC,
   BigIntegerComplexGCD       AS BCG,
-  BigIntegerFractionBasic         AS BFr,
+  BigIntegerFraction              AS BFr,
   BigIntegerFractionPolynomial    AS BFrP,
   BigIntegerFractionPolynomialGCD AS BFrPG,
 (*
