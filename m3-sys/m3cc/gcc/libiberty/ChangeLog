@@ -1,3 +1,39 @@
+2003-02-05  Release Manager
+
+	* GCC 3.2.2 Released.
+
+2003-02-02  Christian Cornelssen  <ccorn@cs.tu-berlin.de>
+
+	* Makefile.in (libiberty_topdir): New subst.
+	(mkinstalldirs): Redefine in terms of the above.
+	* configure.in: AC_SUBST it.
+	* configure: Regenerate.
+
+2003-01-28  Christian Cornelssen  <ccorn@cs.tu-berlin.de>
+
+	* Makefile.in (all-subdir, check-subdir, installcheck-subdir)
+	(info-subdir, install-info-subdir, clean-info-subdir)
+	(dvi-subdir, install-subdir, etags-subdir, mostlyclean-subdir)
+	(clean-subdir, distclean-subdir, maintainer-clean-subdir):
+	Pass $(FLAGS_TO_PASS).
+
+2003-01-28  Christian Cornelssen  <ccorn@cs.tu-berlin.de>
+
+	* Makefile.in (mkinstalldirs): New variable.
+	(FLAGS_TO_PASS): Also pass DESTDIR.
+	(install_to_libdir, install_to_tooldir): Add $(mkinstalldirs)
+	command.  Prepend $(DESTDIR) to destination paths.
+	Cd to destination directory for post-install work.
+
+2003-01-27  Alexandre Oliva  <aoliva@redhat.com>
+
+	* Makefile.in (install_to_tooldir): Instead of $(MULTISUBDIR), use
+	/`$$CC -print-multi-os-directory`.
+
+2003-01-20  Josef Zlomek  <zlomekj@suse.cz>
+
+	* hashtab.c (htab_expand): Fix allocation of new entries.
+
 2002-11-19  Release Manager
 
 	* GCC 3.2.1 Released.
