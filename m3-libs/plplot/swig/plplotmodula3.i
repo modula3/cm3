@@ -405,7 +405,7 @@ END;%}
 
 %insert(m3wrapintf) %{TYPE
 AxesScaling = {none, independent, equal, square};
-Tile = {box, ticks, axes, gridMinor, gridMajor, xTicksLog, yTicksLog};
+Tile = {box, ticks, axes, gridMajor, gridMinor, xTicksLog, yTicksLog};
 TileSet = SET OF Tile;
 %}
 %typemap(m3intype)    PLINT just %{AxesScaling%}
@@ -431,8 +431,8 @@ END;
 $1_name := $1_name - TileSet{Tile.xTicksLog,Tile.yTicksLog};
 IF    $1_name = TileSet{Tile.box,Tile.ticks} THEN INC($1,0);
 ELSIF $1_name = TileSet{Tile.box,Tile.ticks,Tile.axes} THEN INC($1,1);
-ELSIF $1_name = TileSet{Tile.box,Tile.ticks,Tile.axes,Tile.gridMinor} THEN INC($1,2);
-ELSIF $1_name = TileSet{Tile.box,Tile.ticks,Tile.axes,Tile.gridMinor,Tile.gridMajor} THEN INC($1,3);
+ELSIF $1_name = TileSet{Tile.box,Tile.ticks,Tile.axes,Tile.gridMajor} THEN INC($1,2);
+ELSIF $1_name = TileSet{Tile.box,Tile.ticks,Tile.axes,Tile.gridMajor,Tile.gridMinor} THEN INC($1,3);
 ELSE
 <*ASSERT FALSE*> (*combination not supported by PLPlot :-( *)
 END;
