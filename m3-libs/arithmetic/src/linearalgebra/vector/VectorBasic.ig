@@ -21,7 +21,7 @@ PROCEDURE Zero(v:T);                   (*set to zero*)
 
 PROCEDURE Add(v1,v2:T):T RAISES {Error};   (*v1+v2*)
 PROCEDURE Sub(v1,v2:T):T RAISES {Error};   (*v1-v2*)
-PROCEDURE Equal(v1,v2:T):BOOLEAN;  (*return v1=v2*)
+PROCEDURE Equal(v1,v2:T):BOOLEAN RAISES {Error};  (*return v1=v2*)
 
 PROCEDURE Scale(v:T; factor:R.T);            (*v1:=v1*factor*)
 PROCEDURE Inner(v1,v2:T):R.T RAISES {Error};   (*<v1,v2>*)
