@@ -1,5 +1,5 @@
 /* install-info -- create Info directory entry(ies) for an Info file.
-   $Id: install-info.c,v 1.1.3.1 2001-02-05 15:32:59 wagner Exp $
+   $Id: install-info.c,v 1.1.3.1.2.1 2001-02-06 00:10:57 wagner Exp $
 
    Copyright (C) 1996, 97, 98 Free Software Foundation, Inc.
 

@@ -1,5 +1,5 @@
 /* footnotes.h -- Some functions for manipulating footnotes.
-   $Id: footnotes.h,v 1.1.3.1 2001-02-05 15:32:56 wagner Exp $
+   $Id: footnotes.h,v 1.1.3.1.2.1 2001-02-06 00:10:47 wagner Exp $
 
    This file is part of GNU Info, a program for reading online documentation
    stored in Info format.

@@ -1,5 +1,5 @@
 /* infodoc.c -- Functions which build documentation nodes.
-   $Id: infodoc.c,v 1.1.3.1 2001-02-05 15:32:56 wagner Exp $
+   $Id: infodoc.c,v 1.1.3.1.2.1 2001-02-06 00:10:48 wagner Exp $
 
    Copyright (C) 1993, 97 Free Software Foundation, Inc.
 

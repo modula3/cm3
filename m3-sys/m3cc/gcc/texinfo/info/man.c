@@ -1,5 +1,5 @@
 /*  man.c: How to read and format man files.
-    $Id: man.c,v 1.1.3.1 2001-02-05 15:32:56 wagner Exp $
+    $Id: man.c,v 1.1.3.1.2.1 2001-02-06 00:10:49 wagner Exp $
 
    Copyright (C) 1995, 97 Free Software Foundation, Inc.
 
