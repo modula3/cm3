@@ -1,4 +1,4 @@
-GENERIC MODULE ComplexTrans(C,R,Rt);
+GENERIC MODULE ComplexTrans(C,R,RT);
 (*Copyright (x) 1996, m3na project
 
 Abstract: Transcendental functions of complex numbers.
@@ -18,7 +18,7 @@ FROM xUtils IMPORT Error,Err;
 PROCEDURE Arg( 
                READONLY x:C.T):R.T=
 BEGIN
-  RETURN Rt.ArcTan2(x.im,x.re);
+  RETURN RT.ArcTan2(x.im,x.re);
 END Arg;
 
 (*----------------*)
@@ -52,7 +52,7 @@ END Pow;
 PROCEDURE Exp( 
                 READONLY x:C.T):C.T=
 BEGIN
-  RETURN C.Scale(C.T{Rt.Cos(x.im),Rt.Sin(x.im)},Rt.Exp(x.re));
+  RETURN C.Scale(C.T{RT.Cos(x.im),RT.Sin(x.im)},RT.Exp(x.re));
 END Exp;
 
 (*----------------*)
@@ -61,8 +61,8 @@ PROCEDURE Ln(
 VAR
   z:C.T;
 BEGIN
-  (*z.re:= R.Div(Rt.Ln(AbsSqr(x)),R.Two);*)
-  z.re:= Rt.Ln(AbsSqr(x)) / R.Two;
+  (*z.re:= R.Div(RT.Ln(AbsSqr(x)),R.Two);*)
+  z.re:= RT.Ln(AbsSqr(x)) / R.Two;
   z.im:= Arg(x);
   RETURN z;
 END Ln;
@@ -76,8 +76,8 @@ BEGIN
   IF ABS(x.re) > FLOAT(18.0D0,R.T) OR ABS(x.im) > FLOAT(18.0D0,R.T) THEN
     RAISE Error(Err.out_of_range);
   END;
-  z.re:=+Rt.Cos(x.re)*Rt.CosH(x.im);
-  z.im:=-Rt.Sin(x.re)*Rt.SinH(x.im);
+  z.re:=+RT.Cos(x.re)*RT.CosH(x.im);
+  z.im:=-RT.Sin(x.re)*RT.SinH(x.im);
   RETURN z;
 END Cos;
 (*----------------*)
@@ -89,8 +89,8 @@ BEGIN
   IF ABS(x.re) > FLOAT(18.0D0,R.T) OR ABS(x.im) > FLOAT(18.0D0,R.T) THEN
     RAISE Error(Err.out_of_range);
   END;
-  z.re:=+Rt.Sin(x.re)*Rt.CosH(x.im);
-  z.im:=+Rt.Cos(x.re)*Rt.SinH(x.im);
+  z.re:=+RT.Sin(x.re)*RT.CosH(x.im);
+  z.im:=+RT.Cos(x.re)*RT.SinH(x.im);
   RETURN z;
 END Sin;
 (*----------------*)
@@ -178,14 +178,33 @@ VAR
 BEGIN
   (* arctan x := 1/2i ln ((i-x)/(i+x)) *)
   y := C.Div(C.Sub(C.I,x),C.Add(C.I,x));
-  RETURN C.Mul (Ln (y),C.T{R.Zero,Rt.Half});
+  RETURN C.Mul (Ln (y),C.T{R.Zero,RT.Half});
 END ArcTan;
 
 
+(*
+PROCEDURE Abs (READONLY x : C.T) : R.T =
+VAR
+  expr, expi, exp : INTEGER;
+  y : R.T;
+BEGIN
+  TYPECASE R.T OF
+  (*a workaround to prevent NaNs and Zeros*)
+  | REAL, LONGREAL, EXTENDED =>
+    EVAL RT.FrExp(x.re, expr);
+    EVAL RT.FrExp(x.im, expi);
+    exp := (expr+expi) DIV 2;
+    y := RT.SqRt(AbsSqr(C.T{RT.LdExp(x.re,-exp),RT.LdExp(x.im,-exp)}));
+    RETURN RT.LdExp(y,exp);
+  ELSE
+    RETURN RT.SqRt(AbsSqr(x));
+  END;
+END Abs;
+*)
 
 PROCEDURE Abs (READONLY x : C.T) : R.T =
 BEGIN
-  RETURN Rt.SqRt(AbsSqr(x));
+  RETURN RT.SqRt(AbsSqr(x));
 END Abs;
 
 PROCEDURE AbsSqr (READONLY x : C.T) : R.T =
@@ -205,14 +224,14 @@ BEGIN
 	  IF R.Compare(z.re, R.Zero) < 0 THEN (* mathematically impossible, can be caused by rounding *)
         z.re := R.Zero;
 	  ELSE
-        z.re := Rt.SqRt (R.Div(z.re,R.Two));
+        z.re := RT.SqRt (R.Div(z.re,R.Two));
 	  END;
 
 	  z.im := R.Sub (r, x.re);
 	  IF R.Compare(z.im, R.Zero) < 0 THEN (* mathematically impossible, can be caused by rounding *)
         z.im := R.Zero;
 	  ELSE
-        z.im := Rt.SqRt (R.Div(z.im,R.Two));
+        z.im := RT.SqRt (R.Div(z.im,R.Two));
         IF R.Compare(x.im, R.Zero) < 0 THEN  (* instead of using the Sgn function *)
     	  z.im := R.Neg (z.im);
         END;

@@ -192,5 +192,24 @@ BEGIN
 END Sgn;
 
 
+PROCEDURE FrExp (x: T;  VAR exp: INTEGER): T =
+  BEGIN
+    RETURN FLOAT(Math.frexp(FLOAT(x,LONGREAL),exp),T);
+  END FrExp;
+
+PROCEDURE LdExp (x: T; exp: INTEGER): T =
+  BEGIN
+    RETURN FLOAT(Math.ldexp(FLOAT(x,LONGREAL),exp),T);
+  END LdExp;
+
+PROCEDURE ModF (x: T; VAR(*OUT*) i: T): T =
+  VAR
+    y, z : LONGREAL;
+  BEGIN
+    z := Math.modf(FLOAT(x,LONGREAL),y);
+    i := FLOAT(y,T);
+    RETURN FLOAT(z,T);
+  END ModF;
+
 BEGIN
 END FloatTrans.
