@@ -2,11 +2,11 @@ INTERFACE FloatMatrixLapack;
 (*Copyright (c) 1996, m3na project
 
    Abstract: Low level interfaces to LAPACK
-             Using them directly is very unsafe,
-             please use the safe wrappers from
-             EigenSystem
 
-   1/1/96 <name> Initial version *)
+   Using them directly is very unsafe, please use the safe wrappers from
+   EigenSystem
+
+   *)
 
 (*==========================*)
 
@@ -36,27 +36,27 @@ PROCEDURE GEES (READONLY JOBVS : CHAR;
                 VAR      WORK  : (*ARRAY OF*) R.T;
                 READONLY LWORK : INTEGER;
                 VAR      BWORK : (*ARRAY OF*) BOOLEAN;
-                VAR      INFO  : INTEGER                     );
+                VAR      INFO  : INTEGER                    );
 
 <*EXTERNAL xgees_*>
 PROCEDURE GEES_ADDR (READONLY JOBVS : CHAR;
-                READONLY SORT  : CHAR;
-                         SELECT: SelectProc;
-                READONLY N     : INTEGER;
-                         A     : ADDRESS; (*  READONLY A     : ARRAY OF ARRAY OF R.T;*)
-                READONLY LDA   : INTEGER;
-                VAR      SDIM  : INTEGER;
-                         WR    : ADDRESS; (*  VAR      WR    : ARRAY OF R.T;*)
-                         WI    : ADDRESS; (*  VAR      WI    : ARRAY OF R.T;*)
-                         VS    : ADDRESS; (*  VAR      VS    : ARRAY OF ARRAY OF R.T;*)
-                READONLY LDVS  : INTEGER;
-                         WORK  : ADDRESS; (*  VAR      WORK  : ARRAY OF R.T;*)
-                READONLY LWORK : INTEGER;
-                         BWORK : ADDRESS; (*  VAR      BWORK : ARRAY OF BOOLEAN;*)
-                VAR      INFO  : INTEGER                     );
+                     READONLY SORT  : CHAR;
+                              SELECT: SelectProc;
+                     READONLY N     : INTEGER;
+                     A: ADDRESS;  (* READONLY A : ARRAY OF ARRAY OF R.T;*)
+                     READONLY LDA : INTEGER;
+                     VAR      SDIM: INTEGER;
+                              WR  : ADDRESS;  (* VAR WR : ARRAY OF R.T;*)
+                              WI  : ADDRESS;  (* VAR WI : ARRAY OF R.T;*)
+                     VS: ADDRESS;  (* VAR VS : ARRAY OF ARRAY OF R.T;*)
+                     READONLY LDVS: INTEGER;
+                              WORK: ADDRESS;  (* VAR WORK : ARRAY OF R.T;*)
+                     READONLY LWORK: INTEGER;
+                     BWORK: ADDRESS;  (* VAR BWORK : ARRAY OF BOOLEAN;*)
+                     VAR INFO: INTEGER);
 
 <*EXTERNAL xlamch_*>
-PROCEDURE GetMachineParameter(READONLY cmach : CHAR):LONGREAL;
+PROCEDURE GetMachineParameter (READONLY cmach: CHAR): LONGREAL;
 
 (*==========================*)
 END FloatMatrixLapack.
