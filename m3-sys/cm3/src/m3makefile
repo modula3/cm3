@@ -14,7 +14,7 @@ import ("m3middle")
 import ("m3linker")
 import ("m3front")
 import ("m3quake")
-import ("cmkey")
+%import ("cmkey")
 
 if equal (OS_TYPE, "POSIX")
   interface ("M3Backend")
@@ -46,8 +46,8 @@ build_standalone () %-- we don't want to depend on the shared libraries...
 program ("cm3")
 
 %% install a fresh copy of the configuration file too...
-cp_if (format ("..%ssrc%sconfig%s%s", SL, SL, SL, TARGET), "cm3.cfg")
-BindExport ("cm3.cfg")
+%cp_if (format ("..%ssrc%sconfig%s%s", SL, SL, SL, TARGET), "cm3.cfg")
+%BindExport ("cm3.cfg")
 
 %-- the man page is *very* stale, don't bother.
 % ManPage ("m3","1")
