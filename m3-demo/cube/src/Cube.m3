@@ -411,7 +411,7 @@ PROCEDURE BuildPath (p: Path.T; READONLY obj: Object) =
 
 PROCEDURE DegToRadians (deg: REAL): LONGREAL =
   BEGIN
-    RETURN FLOAT (Math.Degree * deg, LONGREAL);
+    RETURN Math.Degree * FLOAT (deg, LONGREAL);
   END DegToRadians;
 
 PROCEDURE InitCRM (VAR crm: CRM) =

@@ -620,7 +620,7 @@ PROCEDURE PerspProjMatrix (fovy, distance, aspect, near, far: REAL): T =
     eyedist := distance - near;
     depth   := near - far;
     frac    := 1.0 + near / eyedist;
-    fovy2   := MIN (ABS(fovy), Math.Pi) / 2.0;
+    fovy2   := MIN (ABS(fovy), FLOAT (Math.Pi, REAL)) / 2.0;
     height  := 2.0 * eyedist * FLOAT (Math.tan (FLOAT (fovy2, LONGREAL)));
     width   := height * aspect;
   BEGIN

@@ -312,7 +312,7 @@ PROCEDURE Furthest (pt: R2.T; bounds: R2Box.T): R2.T =
   END Furthest;
 
 CONST
-  DToR = Math.Pi / 180.0;
+  DToR = FLOAT(Math.Pi, REAL) / 180.0;
 
 (* 2 * pi * r * angle / 360 *)
 PROCEDURE LengthRotate (t: Rotate; v: MG.V; mg: MG.T): INTEGER =

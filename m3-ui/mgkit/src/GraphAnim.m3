@@ -38,7 +38,8 @@ PROCEDURE DoStepRotate (             anim          : RotateAnimation;
     center                    := anim.center.pos;
     m := Matrix2D.Concat3(
            Matrix2D.Translate(-center[0], -center[1]),
-           Matrix2D.Rotate((time - timePrev) * -anim.angle * Math.Degree),
+           Matrix2D.Rotate((time - timePrev) * -anim.angle *
+             FLOAT(Math.Degree, REAL)),
            Matrix2D.Translate(center[0], center[1]));
   BEGIN
     LOCK anim.center.graph.mu DO

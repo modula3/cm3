@@ -1599,7 +1599,7 @@ PROCEDURE Rotate(t: T; v: V; angle: REAL; READONLY origin:= R2.Origin) =
   END Rotate;
 
 CONST
-  DToR = Math.Pi / 180.0;
+  DToR = FLOAT(Math.Degree, REAL);
 
 PROCEDURE RotateLocked (         t     : T;
                                  v     : V;

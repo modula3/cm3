@@ -241,7 +241,7 @@ PROCEDURE Shear (t: T; p1, p2, from, to: Id) RAISES {Thread.Alerted} =
   END Shear;
 
 CONST
-  TwoPi = 2.0 * Math.Pi;
+  TwoPi = FLOAT(2.0D0 * Math.Pi, REAL);
 
 PROCEDURE RotationAngle (t: T; pivot, pFrom: Id; pTo: Id): REAL =
   VAR
@@ -273,7 +273,7 @@ PROCEDURE RotateLine (t: T; pivot, pFrom: Id; pTo: Id)
   BEGIN
     MGV.AddAnimation(
       t.v, NEW(Animate.Rotate, origin := MGPublic.Pos(t.pts[pivot], t.v),
-               angle := (180.0 / Math.Pi) * ang).init(), line);
+               angle := ang / FLOAT(Math.Degree, REAL)).init(), line);
     MGV.Animation(t.v);
   END RotateLine;
 
@@ -289,7 +289,7 @@ PROCEDURE RotateTriangle (             t            : T;
   BEGIN
     MGV.AddAnimation(
       t.v, NEW(Animate.Rotate, origin := MGPublic.Pos(t.pts[pivot], t.v),
-               angle := (180.0 / Math.Pi) * ang).init(), triangle);
+               angle := ang / FLOAT(Math.Degree, REAL)).init(), triangle);
     MGV.Animation(t.v);
   END RotateTriangle;
 
@@ -305,7 +305,7 @@ PROCEDURE RotateAngle (             t            : T;
   BEGIN
     MGV.AddAnimation(
       t.v, NEW(Animate.Rotate, origin := MGPublic.Pos(t.pts[pivot], t.v),
-               angle := (180.0 / Math.Pi) * ang).init(), angle);
+               angle := ang / FLOAT(Math.Degree, REAL)).init(), angle);
     MGV.Animation(t.v);
   END RotateAngle;
 

@@ -147,8 +147,8 @@ PROCEDURE ConvertToPathArc(self: ConvertToPathClosure;
     (* Do as if the center was 0,0 and simply make the correction
        just before issuing the points.
        Get the first end point and line to it*)
-    p1[0] := radius *FLOAT(Math.cos(DegToRad * FLOAT(theta1,LONGREAL)),REAL);
-    p1[1] := radius *FLOAT(Math.sin(DegToRad * FLOAT(theta1,LONGREAL)),REAL);
+    p1[0] := radius *FLOAT(Math.cos(Math.Degree * FLOAT(theta1,LONGREAL)),REAL);
+    p1[1] := radius *FLOAT(Math.sin(Math.Degree * FLOAT(theta1,LONGREAL)),REAL);
     Path.LineTo(self.path,self.transformPoint(RealPoint.Add(p1,center)));
 
     (* perhaps the arc is longer than 180 degrees. In this case P2 is
@@ -175,8 +175,8 @@ PROCEDURE ConvertToPathArc(self: ConvertToPathClosure;
     END;
 
     (* the remaining arc is smaller that 180 degrees *)
-    p4[0] := radius *FLOAT(Math.cos(DegToRad * FLOAT(theta2,LONGREAL)),REAL);
-    p4[1] := radius *FLOAT(Math.sin(DegToRad * FLOAT(theta2,LONGREAL)),REAL);
+    p4[0] := radius *FLOAT(Math.cos(Math.Degree * FLOAT(theta2,LONGREAL)),REAL);
+    p4[1] := radius *FLOAT(Math.sin(Math.Degree * FLOAT(theta2,LONGREAL)),REAL);
 
     (* p2 and p3 are perpendicular to p1 and p4. Length? *)
     VAR
@@ -186,11 +186,11 @@ PROCEDURE ConvertToPathArc(self: ConvertToPathClosure;
       IF theta >= 180.0 THEN length := 4.0/3.0;
       ELSIF theta < 90.0 THEN
         length := 2.0/3.0 * 
-          FLOAT((1.0D0 - Math.sqrt(1.0D0 - Math.sin(DegToRad *
+          FLOAT((1.0D0 - Math.sqrt(1.0D0 - Math.sin(Math.Degree *
                  FLOAT(theta,LONGREAL)))),REAL);
       ELSE
         length := 2.0/3.0 *
-          FLOAT((1.0D0 + Math.sqrt(1.0D0 - Math.sin(DegToRad * 
+          FLOAT((1.0D0 + Math.sqrt(1.0D0 - Math.sin(Math.Degree * 
                  FLOAT(theta,LONGREAL)))),REAL);
       END;
       p2[0] := -length * p1[1];
@@ -218,7 +218,6 @@ PROCEDURE RealPathToPath(READONLY realPath: RealPath.T;
     RETURN path;
   END RealPathToPath;
 
-CONST DegToRad = FLOAT(2.0 * Math.Pi / 360.0, LONGREAL);
 BEGIN
 END PathExtra.
 

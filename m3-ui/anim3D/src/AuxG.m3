@@ -36,7 +36,7 @@ PROCEDURE GetUnitCirclePoints (prec : INTEGER) : REF ARRAY OF Point3.T =
 
     (* So far, we have not computed a circle at this resolution ... *)
     WITH v = NEW (REF ARRAY OF Point3.T, prec + 1),
-         Dang = 2.0 * Math.Pi / FLOAT (prec) DO
+         Dang = 2.0 * FLOAT(Math.Pi, REAL) / FLOAT (prec) DO
 
       FOR i := 0 TO prec - 1 DO
         v[i] := Point3.T {Mth.sin(ang), Mth.cos(ang), 0.0};

@@ -17,7 +17,7 @@ PROCEDURE RegularPolygon(sides: CARDINAL := 3; radius := 1.0): R2Path.T =
   BEGIN
     path.init();
     FOR i := 1 TO sides DO
-      WITH theta = 2.0 * Math.Pi * FLOAT(i) / FLOAT(sides),
+      WITH theta = 2.0 * FLOAT(Math.Pi, REAL) * FLOAT(i) / FLOAT(sides),
            x = radius * FLOAT(Math.cos(FLOAT(theta, LONGREAL))),
            y = radius * FLOAT(Math.sin(FLOAT(theta, LONGREAL))),
            p = R2.T{x, y} DO
