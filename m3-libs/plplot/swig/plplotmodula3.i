@@ -55,6 +55,10 @@ typedef int PLINT;
 %enddef
 
 %pragma(modula3) enumitem="Escape,PLESC_";
+%pragma(modula3) setitem="DrawMode,DRAW_";
+%pragma(modula3) setitem="Option,PL_OPT_";
+%pragma(modula3) setitem="Parse,PL_PARSE_";
+%pragma(modula3) enumitem="Buffering,PLESPLFLTBUFFERING_";
 
 %rename("arrows") plarrows;
 %rename("sxwin") plsxwin;
