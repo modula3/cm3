@@ -9,7 +9,6 @@ IMPORT Text       AS Tx,
        TextExtras AS Txe;
 FROM FmtLexSupport IMPORT Precedence, Parenthesize;
 
-(*----------------------*)
 PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}) : TEXT =
   BEGIN
     RETURN FI.Fmt (x, style.style, style.prec, style.literal);

@@ -14,7 +14,6 @@ FROM FmtLexSupport IMPORT Precedence;
 FROM NADefinitions IMPORT Error, Err;
 
 <*UNUSED*> CONST Module = "BigIntegerFmtLex.";
-(*==========================*)
 
 (*
 <*FATAL Rd.Failure, Thread.Alerted*>
@@ -129,6 +128,5 @@ PROCEDURE Tex (x : T; READONLY style := TexStyle{}; <*UNUSED*> within : Preceden
     END;
   END Tex;
 
-(*==========================*)
 BEGIN
 END BigIntegerFmtLex.

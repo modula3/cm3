@@ -2,11 +2,13 @@ INTERFACE BigIntegerFmtLex;
 (*Copyright (c) 1996, m3na project*)
 
 IMPORT BigInteger AS B;
+IMPORT Rd, Wr, Thread;
 IMPORT Fmt AS F;
+IMPORT Lex AS L;
+IMPORT FloatMode;
 
 FROM FmtLexSupport IMPORT Precedence;
 
-(*==========================*)
 
 TYPE T = B.T;
 
@@ -19,5 +21,9 @@ TYPE TexStyle = FmtStyle;
 PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within := Precedence.sum):
   TEXT;
 
-(*==========================*)
+TYPE LexStyle = RECORD END;
+
+PROCEDURE Lex (rd: Rd.T; READONLY style := LexStyle{}; ): T
+  RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted};
+
 END BigIntegerFmtLex.

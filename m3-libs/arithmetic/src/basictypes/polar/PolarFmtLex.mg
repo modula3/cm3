@@ -6,7 +6,6 @@ FROM FmtLexSupport IMPORT Precedence, Parenthesize;
 <*UNUSED*>
 CONST Module = "PolarFmtLex.";
 
-(*----------------*)
 PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT =
   VAR t: TEXT;
   BEGIN
@@ -32,6 +31,5 @@ PROCEDURE Tex (READONLY x     : T;
     RETURN t;
   END Tex;
 
-(*==========================*)
 BEGIN
 END PolarFmtLex.

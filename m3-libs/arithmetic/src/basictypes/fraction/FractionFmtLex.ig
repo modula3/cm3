@@ -3,10 +3,12 @@ GENERIC INTERFACE FractionFmtLex(RF, Fr);
 
 (* Abstract: Formatting and parsing fraction numbers *)
 
+IMPORT Rd, Wr, Thread;
+IMPORT Lex AS L;
+IMPORT FloatMode;
 (*FROM NADefinitions IMPORT Error;*)
 FROM FmtLexSupport IMPORT Precedence;
 
-(*==========================*)
 TYPE T = Fr.T;
 
 TYPE FmtStyle = RECORD elemStyle := RF.FmtStyle{};  END;
@@ -28,5 +30,13 @@ PROCEDURE Tex (READONLY x     : T;
                READONLY style       := TexStyle{};
                         within      := Precedence.sum): TEXT;
 
-(*==========================*)
+TYPE
+  LexStyle = RECORD
+               sep       := ' ';
+               elemStyle := RF.LexStyle{};
+             END;
+
+PROCEDURE Lex (rd: Rd.T; READONLY style := LexStyle{}; ): T
+  RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted};
+
 END FractionFmtLex.

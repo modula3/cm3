@@ -8,7 +8,6 @@ IMPORT PhysicalUnit       AS U,
        Fmt                AS F;
 
 <*UNUSED*> CONST Module = "PhysicalUnitFmtLex.";
-(*==========================*)
 
 PROCEDURE Fmt(unit:T):TEXT =
   VAR
@@ -23,6 +22,5 @@ PROCEDURE Fmt(unit:T):TEXT =
     RETURN res&"}";
   END Fmt;
 
-(*==========================*)
 BEGIN
 END PhysicalUnitFmtLex.

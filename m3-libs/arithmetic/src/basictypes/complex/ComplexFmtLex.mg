@@ -15,7 +15,6 @@ FROM FmtLexSupport IMPORT Precedence, Parenthesize;
 
 <*UNUSED*> CONST Module = "ComplexFmtLex.";
 
-(*------------------------*)
 (*
 PROCEDURE Lex(
                str:TEXT):C.T RAISES {Error}=
@@ -23,7 +22,6 @@ BEGIN
   RAISE Error(Err.not_implemented);
 END Lex;
 *)
-(*----------------------------*)
 PROCEDURE Fmt (READONLY x : T; READONLY style := FmtStyle{}) : TEXT =
 (*Generate in format "COMPLEX{re:=1.0,im:=2.0}"
 Uses simple F.Real if c.im=0.0.
@@ -57,6 +55,5 @@ BEGIN
   RETURN t;
 END Tex;
 
-(*==========================*)
 BEGIN
 END ComplexFmtLex.
