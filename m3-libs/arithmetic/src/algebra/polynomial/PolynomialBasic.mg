@@ -44,7 +44,7 @@ BEGIN
   VAR
     q:=NEW(T,n+1);
   BEGIN
-    q^:=SUBARRAY(p^,0,n);
+    q^:=SUBARRAY(p^,0,NUMBER(q^));
 (*
   WHILE n>=FIRST(p^) DO
     q[n]:=p[n];
