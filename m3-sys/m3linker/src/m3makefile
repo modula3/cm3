@@ -23,7 +23,6 @@ module ("MxSet")
 module ("MxVSSet")
 module ("MxIO")
 
-include("../../../compat.quake")
 build_standalone ()
 Library ("m3link")
 

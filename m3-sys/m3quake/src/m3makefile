@@ -25,6 +25,5 @@ Module   ("QMachine")
 Module   ("QVal")
 Module   ("MxConfig")
 
-include("../../../compat.quake")
 build_standalone ()
 Library("m3quake")

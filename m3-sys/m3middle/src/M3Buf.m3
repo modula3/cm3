@@ -8,7 +8,7 @@
 
 MODULE M3Buf;
 
-IMPORT Wr, Convert, Text, (* FIXME: Text8 *) TextF, Thread, Target, TInt, M3FP;
+IMPORT Wr, Convert, Text, Text8, Thread, Target, TInt, M3FP;
 
 CONST
   ChunkSize = 2 * 1024 - 3 * BYTESIZE (INTEGER);
@@ -79,10 +79,7 @@ PROCEDURE PutSubText (t: T;  txt: TEXT;  start, len: CARDINAL) =
     buf : ARRAY [0..255] OF CHAR;
   BEGIN
     WHILE (cnt > 0) DO
-(* FIXME
       Text.SetChars (buf, txt, start);
-*)
-      Text.SetChars (buf, Text.Sub(txt, start));
       PutSub (t, SUBARRAY (buf, 0, MIN (NUMBER (buf), cnt)));
       INC (start, NUMBER (buf));  DEC (cnt, NUMBER (buf));
     END;
@@ -173,26 +170,17 @@ PROCEDURE ToText (t: T): TEXT =
 PROCEDURE MessyToText (t: T): TEXT =
   VAR
     len := t.nFull * ChunkSize + t.next;
-(* FIXME:
     txt := Text8.Create (len);
-*)
-    txt := TextF.New(len);
     c := t.head;
     n := 0;
   BEGIN
     FOR i := 1 TO t.nFull DO
-(* FIXME
       SUBARRAY (txt.contents^, n, ChunkSize) := c.buf;
-*)
-      SUBARRAY (txt^, n, ChunkSize) := c.buf;
       c := c.next;
       INC (n, ChunkSize);
     END;
     IF (t.next # 0) THEN
-(* FIXME
       SUBARRAY (txt.contents^, n, t.next) := SUBARRAY (c.buf, 0, t.next);
-*)
-      SUBARRAY (txt^, n, t.next) := SUBARRAY (c.buf, 0, t.next);
     END;
     RETURN txt;
   END MessyToText;

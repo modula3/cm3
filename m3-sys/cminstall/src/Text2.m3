@@ -1,5 +1,4 @@
-(* Copyright 1996-2000 Critical Mass, Inc. All rights reserved. *)
-(* See file COPYRIGHT-CMASS for details. *)
+(* Copyright 1995-96 Critical Mass, Inc. All rights reserved. *)
 
 (* This interface defines misc. TEXT manipulation routines. *)
 

@@ -1,33 +1,30 @@
 MODULE Main;
 
-IMPORT Bundle, (* CMKey, CMCurrent, *) CoffTime, Env, File, Fmt, FS;
+IMPORT Bundle, CMKey, CMCurrent, CoffTime, Env, File, Fmt, FS;
 IMPORT M3ID, Msg, OS, OSError, Params, Pathname, Pipe, Process;
 IMPORT Quake, QScanner, QToken, Registry, Setup, Text, Text2;
-IMPORT TextSeq, TextWr, Thread, Wr;
-FROM Msg IMPORT Out, Ask, AskBool, AskChoice;
+IMPORT TextWr, Thread, Time, Wr;
+FROM Msg IMPORT Out, Ask, AskBool;
 
 CONST
   OnUnix = (CoffTime.EpochAdjust = 0.0d0);
 
   DefaultInstallDir = ARRAY BOOLEAN OF TEXT
-    { "c:\\cm3", "/usr/local/cm3" } [OnUnix];
+    { "C:\\Reactor", "/usr/local/Reactor" } [OnUnix];
 
   MinDiskSpace = 75; (* megabytes *)
 
   REACTOR_EXE = ARRAY BOOLEAN OF TEXT
     { "reactor.exe", "reactor" } [OnUnix];
 
-  CM3_EXE = ARRAY BOOLEAN OF TEXT
-    { "cm3.exe", "cm3" } [OnUnix];
-
   GZIP_EXE = ARRAY BOOLEAN OF TEXT
-    { "gzip.exe", "gzip" } [OnUnix];
+    { "GZIP.EXE", "GZIP" } [OnUnix];
 
   TAR_EXE = ARRAY BOOLEAN OF TEXT
-    { "tar.exe", "tar" } [OnUnix];
+    { "TAR.EXE", "TAR" } [OnUnix];
 
   FIXUP_EXE = ARRAY BOOLEAN OF TEXT
-    { "fixup.bat", "fixup" } [OnUnix];
+    { "FIXUP.BAT", "FIXUP" } [OnUnix];
 
 VAR
   install_passwd    : TEXT;
@@ -37,48 +34,24 @@ VAR
   initial_cfg       : TEXT;
   cm3_cfg           : TEXT;
   cminstall_root    : TEXT := NIL;
-  gzip              : TEXT := OS.MakePath (cminstall_root, GZIP_EXE);
-  tar               : TEXT := OS.MakePath (cminstall_root, TAR_EXE);
 
 PROCEDURE DoIt () =
   BEGIN
     ParseParams ();
-
-    IF NOT UtilsFound() THEN
-      RETURN;
-    END;
-
-    Out ();
-    Out ("Thank you for using Critical Mass CM3.  This program");
+    
+    Out ("Thank you for using Critical Mass Reactor.  This program");
     Out ("will configure and install the system.");
     Out ();
-    Out ("cminstall_root is set to ", cminstall_root);
-    Out ("If this is not correct, please restart the installer with");
-    Out ("-root <directory-of-installer-and-system-archive>");
-    Out ();
-    Out ("The installer will ask you some questions about the locations",
-         " of programs");
-    Out ("and libraries. Usually it will display a default inside [],",
-         " which can be");
-    Out ("accepted with <Enter>.");
-    Out ("If the installer has found several choices, you may cycle through",
-         " them");
-    Out ("with `+' or `.' for the next and `-' for the previous one.");
-    Out ("You may of course also enter a completely different value.");
-    Out ();
 
-    (* disabled
     (* verify license *)
     Out ("The use of this software is subject to the license agreement");
-    Out ("in the file COPYRIGHT-CMASS.  Please read it now.");
+    Out ("in the file LICENSE.TXT on your CD.  Please read it now.");
     Out ();
     IF NOT AskBool ("Do you agree to the terms of the license?", "Y") THEN
       RETURN;
     END;
-    *)
 
     (* get the install key *)
-    (* disabled
     LOOP
       Out ();
       install_passwd := Ask ("Please enter your installation key: ", NIL);
@@ -86,7 +59,6 @@ PROCEDURE DoIt () =
       Out ();
       Out ("Sorry, that is an invalid installation key, please reenter it.");
     END;
-    *)
 
     (* get the install directory *)
     LOOP
@@ -109,7 +81,7 @@ PROCEDURE DoIt () =
         IF disk_space >= MinDiskSpace THEN EXIT; END;
         Out ("It appears that there is only about ", Fmt.Int (disk_space),
              " megabytes of space");
-        Out ("in that directory.  CM3 requires about ",
+        Out ("in that directory.  Reactor requires about ",
              Fmt.Int (MinDiskSpace), "MB of disk space.");
         IF AskBool ("Do you want to use this directory anyway?", "N") THEN
           EXIT;
@@ -132,10 +104,10 @@ PROCEDURE DoIt () =
 
     (* uncompress and copy the bits *)
     Out ();
-    Out ("Installing CM3 in: ", install_root);
+    Out ("Installing Reactor in: ", install_root);
     Out ("This may take a few minutes...");
-    Unpack ("system");
-    (* Unpack (OS.MakePath ("..", "DOCS")); *)
+    Unpack ("SYSTEM");
+    Unpack (OS.MakePath ("..", "DOCS"));
 
     (* reinstall the new cm3.cfg file to make sure we've got the right one *)
     OS.WriteFile (cm3_cfg, initial_cfg);
@@ -143,7 +115,7 @@ PROCEDURE DoIt () =
 (*******
     (* check out networking *)
     Out ();
-    Out ("CM3 uses TCP/IP to communicate between a World-Wide Web browser");
+    Out ("Reactor uses TCP/IP to communicate between a World-Wide Web browser");
     Out ("and the server.  I'll test that networking is installed, now.  This");
     Out ("test may take up to 20 seconds, please wait.");
     TestTCP ();
@@ -154,25 +126,25 @@ PROCEDURE DoIt () =
 
     (* reminders *)
     Out ();
-    Out ("CM3 is now installed.");
+    Out ("Reactor is now installed.");
     Out ();
     Out ("Before you begin, here's a few reminders:");
     Out ();
-    Out ("  1) The CM3 compiler executable is in:");
-    Out ("        ", OS.MakePath (install_root, "bin", CM3_EXE));
+    Out ("  1) The Reactor executable is in:");
+    Out ("        ", OS.MakePath (install_root, "bin", REACTOR_EXE));
     Out ("     You may need to modify your PATH environment variable to find it.");
   IF OnUnix THEN
     Out ("     And on Unix, you may need to type \"rehash\" to your shell.");
   END;
     Out ();
   IF OnUnix THEN
-    Out ("  2) CM3's shared libraries and any you create and ship are in:");
+    Out ("  2) Reactor's shared libraries and any you create and ship are in:");
     Out ("        ", OS.MakePath (install_root, "lib"));
     Out ("     On most Unix systems you need to set the LD_LIBRARAY_PATH");
     Out ("     environment variable before running programs that use");
     Out ("     these shared libraries.");
   ELSE
-    Out ("  2) CM3's shared libraries and any you create and ship are in:");
+    Out ("  2) Reactor's shared libraries and any you create and ship are in:");
     Out ("        ", OS.MakePath (install_root, "bin"));
     Out ("     As long as that directory is on your PATH, Windows will be able");
     Out ("     to find and use these libraries.");
@@ -183,18 +155,16 @@ PROCEDURE DoIt () =
     Out ("     At any point in time, you may edit it to modify or update your");
     Out ("     installation.");
     Out ();
-    (* disabled
-    Out ("  4) CM3 will keep your personal configuration information");
+    Out ("  4) Reactor will keep your personal configuration information");
     Out ("     and private packages in \"HOME/proj\".  Be sure to set your");
-    Out ("     HOME environment variable before running CM3.");
+    Out ("     HOME environment variable before running Reactor.");
     Out ();
-    *)
-    Out ("  4) A copy of this installation dialogue is in:");
+    Out ("  5) A copy of this installation dialogue is in:");
     Out ("        ", install_log);
     Out ();
-    Out ("  5) If you had trouble with this installation or need more assistance,");
+    Out ("  6) If you had trouble with this installation or need more assistance,");
     Out ("     please send us a transcript of this installation via e-mail at");
-    Out ("     \"m3-support@elego.de\".");
+    Out ("     \"support@cmass.com\".");
     Out ();
     Out ("Thank you.");
 
@@ -251,7 +221,6 @@ PROCEDURE GenConfig (): TEXT =
     rule       : INTEGER;
     kind       : Kind;
     lib_files  : LibFile;
-    choices    : TextSeq.T := NEW(TextSeq.T);
   BEGIN
     scan.next (); (* prime the token stream *)
 
@@ -270,7 +239,6 @@ PROCEDURE GenConfig (): TEXT =
       scan.next (); (* BEGIN_CONFIG *)
 
       IF (done >= len) THEN EXIT; END;
-      EVAL choices.init();
 
       (* get the config item's title *)
       IF (scan.token # TK.String) THEN
@@ -281,10 +249,9 @@ PROCEDURE GenConfig (): TEXT =
 
       Msg.Debug ("configure: ", title);
 
-      kind := Kind.Any;  lib_files := NIL;
-      WHILE (scan.token = TK.Cardinal) DO
+      result := NIL;  kind := Kind.Any;  lib_files := NIL;
+      WHILE (scan.token = TK.Cardinal) AND (result = NIL) DO
         confirm := TRUE;
-        result := NIL;
 
         rule := scan.cardinal;
         Msg.Debug (" => ", Fmt.Int (rule));
@@ -299,7 +266,6 @@ PROCEDURE GenConfig (): TEXT =
         | 1 => (* file-extension *)
             v0 := GetTxt (scan);
             result := Registry.LookupByExtension (v0);
-            IF result # NIL THEN choices.addhi(result) END;
             kind := Kind.Exe;
 
         | 2, 3 => (* file-extension, dir-name *)
@@ -374,8 +340,7 @@ PROCEDURE GenConfig (): TEXT =
             END;
 
         | 11 => (* file-name *)
-            lib_files := NEW (LibFile, next := lib_files, 
-                              file := GetTxt (scan));
+            lib_files := NEW (LibFile, next := lib_files, file := GetTxt (scan));
 
         | 12 => (* dir-name *)
             v0 := GetTxt (scan);
@@ -399,17 +364,15 @@ PROCEDURE GenConfig (): TEXT =
 
         ELSE
             ConfigErr (scan, "unknown key: " & Fmt.Int (scan.cardinal));
+
         END; (* CASE *)
-        IF result # NIL AND NOT MemberOfTextSeq(choices, result) THEN
-          choices.addhi(result)
-        END;
       END; (* WHILE *)
 
       (* confirm with the user and stick it into the config file *)
       IF confirm THEN
         LOOP
           Out ();
-          v0 := AskChoice (title, choices);
+          v0 := Ask (title, result);
           CASE kind OF
           | Kind.Any =>
               EXIT;
@@ -456,19 +419,7 @@ PROCEDURE FilesPresent (dir: TEXT;   files: LibFile): BOOLEAN =
     RETURN TRUE;
   END FilesPresent;
 
-PROCEDURE MemberOfTextSeq(tl : TextSeq.T; elem : TEXT) : BOOLEAN =
-  BEGIN
-    FOR i := 0 TO tl.size() - 1 DO
-      WITH act = tl.get(i) DO
-        IF Text.Equal(act, elem) THEN
-          RETURN TRUE;
-        END;
-      END;
-    END;
-    RETURN FALSE;
-  END MemberOfTextSeq;
-
-(*--------------------------------------------- low-level quake support ---- *)
+(*---------------------------------------------- low-level quake support ---- *)
 
 VAR
   quake_id_map := Quake.NewIDMap (Str2ID, Txt2ID, ID2Txt);
@@ -511,28 +462,6 @@ PROCEDURE ID2Txt (i: Quake.ID): TEXT =
   END ID2Txt;
 
 (*------------------------------------------- decompression and unpacking ---*)
-PROCEDURE UtilsFound() : BOOLEAN =
-  BEGIN
-    IF NOT OS.IsExecutable(gzip) THEN
-      gzip := OS.FindExecutable(GZIP_EXE);
-      IF gzip = NIL THEN
-        Msg.Out("Cannot find gzip.");
-        Msg.Out("A workable gzip (de)compression program must be installed",
-                "and found via PATH.");
-        RETURN FALSE;
-      END;
-    END;
-    IF NOT OS.IsExecutable(tar) THEN
-      tar := OS.FindExecutable(TAR_EXE);
-      IF tar = NIL THEN
-        Msg.Out("Cannot find tar.");
-        Msg.Out("A workable tar archiving program must be installed",
-                "and found via PATH.");
-        RETURN FALSE;
-      END;
-    END;
-    RETURN TRUE;
-  END UtilsFound; 
 
 CONST
   GZipArgs = ARRAY [0..0] OF TEXT { "-d" };
@@ -541,14 +470,15 @@ CONST
 PROCEDURE Unpack (archive: TEXT) =
   VAR data: TEXT := OS.MakePath (cminstall_root, archive);
   BEGIN
-    IF OS.IsExecutable (data & ".tar")
-      THEN UnpackTAR (data & ".tar");
-      ELSE UnpackTGZ (data & ".tgz");
+    IF OS.IsExecutable (data & ".TAR")
+      THEN UnpackTAR (data & ".TAR");
+      ELSE UnpackTGZ (data & ".TGZ");
     END;
   END Unpack;
 
 PROCEDURE UnpackTAR (data: TEXT) =
   VAR
+    tar            : TEXT := OS.MakePath (cminstall_root, TAR_EXE);
     tar_process    : Process.T;
     input, stdin   : File.T;
     stdout, stderr : File.T;
@@ -589,6 +519,8 @@ PROCEDURE UnpackTAR (data: TEXT) =
 
 PROCEDURE UnpackTGZ (data: TEXT) =
   VAR
+    gzip           : TEXT := OS.MakePath (cminstall_root, GZIP_EXE);
+    tar            : TEXT := OS.MakePath (cminstall_root, TAR_EXE);
     gzip_process   : Process.T;
     tar_process    : Process.T;
     p_in, p_out    : Pipe.T;
@@ -596,7 +528,7 @@ PROCEDURE UnpackTGZ (data: TEXT) =
     stdout, stderr : File.T;
   BEGIN
     Msg.Debug ("unpacking:  archive = ", data);
-      
+
     (* get the default file handles *)
     Process.GetStandardFileHandles (stdin, stdout, stderr);
 
@@ -690,7 +622,7 @@ PROCEDURE RunFixups () =
   END RunFixups;
 
 (*------------------------------------------------------------ decryption ---*)
-(* disabled
+
 PROCEDURE KeyCheck (passwd: TEXT): BOOLEAN =
   CONST Day = 24.0d0 * 3600.0d0;
   CONST FirstWarning = 7.0d0 * Day;
@@ -702,7 +634,7 @@ PROCEDURE KeyCheck (passwd: TEXT): BOOLEAN =
       RETURN FALSE;
     END;
 
-    Out ("CM3 Installation: ", key.banner);
+    Out ("Reactor Installation: ", key.banner);
 
     IF (key.usage = CMKey.Usage.Demo) THEN
       expire := key.expiration - Time.Now ();
@@ -710,12 +642,12 @@ PROCEDURE KeyCheck (passwd: TEXT): BOOLEAN =
         (* ok *)
       ELSIF (expire <= 0.0d0) THEN
         Out ("---");
-        Out ("--- This preview copy of CM3 has already expired.");
+        Out ("--- This preview copy of Reactor has already expired.");
         BuyIt ();
         Process.Exit (1);
       ELSE
         Out ("---");
-        Out ("--- Warning: this preview copy of CM3 will expire in ",
+        Out ("--- Warning: this preview copy of Reactor will expire in ",
                     Fmt.Int (ROUND (expire / Day)), " days.");
         BuyIt ();
       END;
@@ -726,7 +658,7 @@ PROCEDURE KeyCheck (passwd: TEXT): BOOLEAN =
 
 CONST
   BuyMsg = ARRAY OF TEXT {
-    "To purchase a non-expiring copy of CM3, please contact:",
+    "To purchase a non-expiring copy of Reactor, please contact:",
     "",
     "    Critical Mass, Inc.",
     "    1770 Massachusetts Ave.",
@@ -743,11 +675,10 @@ PROCEDURE BuyIt () =
       Out ("--- ", BuyMsg[i]);
     END;
   END BuyIt;
-*)
 
 (*---------------------------------------------------------- network test ---*)
 
-<* UNUSED *> PROCEDURE TestTCP () =
+PROCEDURE TestTCP () =
   BEGIN
     Msg.Debug ("Testing network connections");
     Msg.Debug ("Network test done.");

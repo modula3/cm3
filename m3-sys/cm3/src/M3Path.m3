@@ -252,12 +252,8 @@ PROCEDURE RegionMatch (a: TEXT;  start_a: INTEGER;
     IF (start_a + len > len_a) THEN RETURN FALSE; END;
     IF (start_b + len > len_b) THEN RETURN FALSE; END;
     WHILE (len > 0) DO
-(* FIXME:
       Text.SetChars (buf_a, a, start_a);
       Text.SetChars (buf_b, b, start_b);
-*)
-      Text.SetChars (buf_a, Text.Sub(a, start_a));
-      Text.SetChars (buf_b, Text.Sub(b, start_b));
       IF ignore_case THEN
         FOR i := 0 TO MIN (N, len) - 1 DO
           IF lcase[buf_a[i]] # lcase[buf_b[i]] THEN RETURN FALSE; END;
