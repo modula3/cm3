@@ -1,3 +1,4 @@
+override ("libm3", ROOT & "/m3-libs")
 override ("formsvbt", ROOT & "/m3-ui")
 override ("web", ROOT & "/m3-www")
 override ("http", ROOT & "/m3-www")
