@@ -4,7 +4,6 @@
 
 % Last modified on Mon Jan 15 13:15:27 PST 1996 by heydon
 
-override	("ui", "../../../..")
 
 import		("libm3")
 import		("ui")
