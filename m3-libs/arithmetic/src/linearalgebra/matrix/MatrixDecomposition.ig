@@ -86,6 +86,10 @@ PROCEDURE LUInverse (LU: LUFactors; ): M.T RAISES {Error};
 PROCEDURE LUDet (LU: LUFactors; ): R.T RAISES {Error};
 (*after LUFactor on A and no backsubs, returns determinant *)
 
+PROCEDURE Inverse (A: M.T; ): M.T RAISES {Error};
+
+
+(* destructive low-level routines *)
 
 PROCEDURE LUFactorD (VAR A: M.TBody;  (* in: matrix to factorize, out:
                                          merged lower and upper triangular
@@ -100,7 +104,7 @@ PROCEDURE LUBackSubstD (VAR A: M.TBody;
                         VAR B: V.TBody;  (* in: right hand side b, out:
                                             solution vector x *)
                         READONLY index: IndexArray) RAISES {Error};
-(*After LUfactor on A, solves A dot x = b. *)
+(* After LUfactor on A, solves A dot x = b. *)
 
 PROCEDURE LUInverseD (VAR A: M.TBody;  (* A must be LU factorized inplace,
                                           it will be destroyed *)
@@ -108,7 +112,18 @@ PROCEDURE LUInverseD (VAR A: M.TBody;  (* A must be LU factorized inplace,
 
 
 
-PROCEDURE Inverse (A: M.T; ): M.T RAISES {Error};
+(* Rational Cholesky decomposition.  LU decomposition specialized to
+   symmetric matrices.  It is proven to work on symmetric positive definite
+   matrices. *)
+
+TYPE
+  CholeskyResult = RECORD
+                     L: M.T;
+                     D: V.T;
+                   END;
+
+PROCEDURE Cholesky (A: M.T): CholeskyResult;
+
 
 
 (* QR Factoring *)
