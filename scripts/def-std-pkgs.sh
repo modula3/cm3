@@ -43,6 +43,8 @@ P="${P} embutils"
 P="${P} m3tk-misc"
 P="${P} http"
 P="${P} binIO"
+P="${P} deepcopy"
+P="${P} sgml"
 
 # some CM3 communication extensions
 [ "${M3OSTYPE}" = "WIN32" -o -n "${CM3_ALL}" ] && P="${P} tapi"
@@ -146,5 +148,5 @@ P="${P} shownew"
 P="${P} cube"
 P="${P} calculator"
 P="${P} fisheye"
-[ "${M3OSTYPE}" != "WIN32" -o -n "${CM3_ALL}" ] && P="${P} mentor"
+P="${P} mentor"
 
