@@ -54,6 +54,7 @@ REVEAL
         convolveDown  := ConvolveDown;
         upConvolve    := UpConvolve;
         convolveShort := ConvolveShort;
+        extractPeaks  := ExtractPeaks;
       END;
 
 
@@ -530,7 +531,7 @@ PROCEDURE UpConvolve (x, y: T; factor: ScalingType): T =
     RETURN z;
   END UpConvolve;
 
-PROCEDURE ConvolveShort (x, y: T): T =
+PROCEDURE ConvolveShort (x, y: T; ): T =
   VAR
     z := NEW(T, first := x.first,
              data := NEW(V.T, NUMBER(x.data^) - NUMBER(y.data^) + 1));
@@ -552,6 +553,30 @@ PROCEDURE ConvolveShort (x, y: T): T =
     RETURN z;
   END ConvolveShort;
 
+PROCEDURE ExtractPeaks (x: T; factor: ScalingType; ): T =
+  VAR
+    xFirst := x.first;
+    xLast  := x.first + LAST(x.data^);
+    zFirst := xFirst + (-xFirst MOD factor);
+    zLast  := xLast - xLast MOD factor;
+    z      := NEW(T);
+  BEGIN
+    IF zFirst <= zLast THEN
+      z := z.initFL(zFirst, zLast);
+      (*z is already cleared, copy the peaks*)
+      VAR i := zFirst - xFirst;
+      BEGIN
+        FOR j := FIRST(z.data^) TO LAST(z.data^) BY factor DO
+          z.data[j] := x.data[i];
+          INC(i, factor);
+        END;
+      END;
+      <*ASSERT z.equal(x.downsample(factor).upsample(factor))*>
+      RETURN z;
+    ELSE
+      RETURN z.init(zFirst, 1);
+    END;
+  END ExtractPeaks;
 
 BEGIN
   Zero := NEW(T).fromArray(ARRAY OF R.T{R.Zero});

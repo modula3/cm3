@@ -80,6 +80,9 @@ TYPE
                   T;             (*convolve with upsampled 'with'*)
       convolveShort (with: T): T; (*convolve only in the interval where
                                      with 'with' is covered by the signal*)
+      extractPeaks (factor: ScalingType):
+                    T;           (*keep values at grid points, set the
+                                    remaining values to zero*)
     END;
 
 (*interface compatible to the arithmetic modules*)
