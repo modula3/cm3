@@ -423,8 +423,9 @@ PROCEDURE SetMode (VAR cnt: INTEGER;  mode: MM) =
 
 PROCEDURE PrintVersion (exit: BOOLEAN) =
   BEGIN
-    Msg.Out ("Critical Mass Modula-3 version 5.1.0", Wr.EOL);
-    Msg.Out ("  last updated:  Feb 25, 2001", Wr.EOL);
+    (* If you change the version, don't forget to change it in Main.m3, too *)
+    Msg.Out ("Critical Mass Modula-3 version 5.1.1", Wr.EOL);
+    Msg.Out ("  last updated:  Mar 01, 2001", Wr.EOL);
     Msg.Out ("  configuration: ", M3Config.FindFile(), Wr.EOL);
     Msg.Out (Wr.EOL);
     IF exit THEN Process.Exit (0); END;

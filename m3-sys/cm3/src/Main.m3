@@ -6,9 +6,9 @@ MODULE Main;
 IMPORT M3Timers, Pathname, Process, Quake;
 IMPORT RTCollector, RTCollectorSRC, RTParams, RTutils, Thread;
 
-IMPORT Builder, Dirs, M3Build, M3Options, Makefile, Msg, Utils, WebFile;
+IMPORT Builder, Dirs, M3Build, M3Options, Makefile, Msg, Utils, WebFile, Wr;
 IMPORT MxConfig AS M3Config(*, CMKey, CMCurrent *);
-(* IMPORT Fmt, Time, Wr; only needed for key and expiration check *)
+(* IMPORT Fmt, Time; only needed for key and expiration check *)
 
 VAR
   config    : TEXT          := NIL;
@@ -43,6 +43,11 @@ PROCEDURE DoIt () =
 
         (* define the site configuration *)
         Msg.Verbose ("EVAL (\"", config, "\")");
+        (* If you change the version, don't forget to change it in 
+           Makefile.m3, too *)
+        Quake.Define(mach, "CM3_VERSION", "050101");
+        Quake.Define(mach, "CM3_CREATED", "2001-03-01");
+        Quake.Define(mach, "EOL", Wr.EOL);
         Quake.Run (mach, config);
 
         (* -- disabled 
