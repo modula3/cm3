@@ -39,7 +39,7 @@ CONST
 
 <*INLINE*> PROCEDURE Square(READONLY x:T):T;         (*return x*x*)
 <*INLINE*> PROCEDURE Scale (READONLY x:T; y:R.T):T;  (*return x*y*)
-<*INLINE*> PROCEDURE ScaleInt(x:T;y:INTEGER):T;  (*return x*y*)
+<*OBSOLETE*> PROCEDURE ScaleInt(x:T;y:INTEGER):T;  (*return x*y*)
 
 (*==========================*)
 END ComplexBasic.

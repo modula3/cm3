@@ -10,11 +10,10 @@ FROM xUtils IMPORT Error, Err;
 <*UNUSED*> CONST Module = "FloatBasic.";
 (*==========================*)
 
-(*TYPE T = R.T;*)
-
 PROCEDURE Add(x,y:T):T = BEGIN RETURN x+y END Add;
 PROCEDURE Sub(x,y:T):T = BEGIN RETURN x-y END Sub;
 PROCEDURE Neg(x:T):T   = BEGIN RETURN -x  END Neg;
+PROCEDURE Conj(x:T):T  = BEGIN RETURN  x  END Conj;
 
 PROCEDURE Mul(x,y:T):T = BEGIN RETURN x*y END Mul;
 PROCEDURE Div(x,y:T):T RAISES {Error} = BEGIN IF y=Zero THEN RAISE Error(Err.divide_by_zero) END; RETURN x/y END Div;
