@@ -660,9 +660,11 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Structure_size_boundary   := 8;
                  Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 4096 * Char.size;
-                 Jumpbuf_size              := 11 * Address.size;
-                 Jumpbuf_align             := Address.align;
-                 Fixed_frame_size          := 4 * Address.size;
+                 Jumpbuf_size              := (26 + 36 + 129 + 1) * 
+                                              Address.size;
+                 Jumpbuf_align             := Word64.align;
+                 Fixed_frame_size          := 8 * Address.size;
+                                           (* + 244 bytes for registers? *)
                  Guard_page_size           := 0 * Char.size;
                  All_floats_legal          := TRUE;
                  Has_stack_walker          := FALSE;
