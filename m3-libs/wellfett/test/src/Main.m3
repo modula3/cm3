@@ -1,7 +1,7 @@
 MODULE Main;
 
-IMPORT PlotWavelets;
+FROM TestMatchWavelet IMPORT Test;
 
 BEGIN
-  PlotWavelets.Test();
+  Test();
 END Main.
