@@ -7,7 +7,7 @@
 MODULE HTMLDir;
 
 IMPORT Pathname, Fmt, Text, Wr, FileWr, FilePath, OSError, FSUtils;
-FROM Msg IMPORT M, D;
+FROM Msg IMPORT M, D, F;
 
 TYPE
   Node = RECORD
@@ -87,9 +87,21 @@ PROCEDURE RemoveDuplicates (VAR s: State;  start, len: INTEGER) =
   <*FATAL ANY*>
   VAR
     file  := FName (s, s.next_id);
-    wr    := FileWr.Open (file & ".html");
+    wr    :  FileWr.T;
     key   := s.elts[start].key;
   BEGIN
+    WITH dir = Pathname.Prefix(file) DO
+      IF dir # NIL THEN
+        IF NOT FSUtils.IsDir(dir) THEN
+          FSUtils.MakeDir(dir);
+        END;
+      END;
+    END; 
+    TRY
+      wr := FileWr.Open (file & ".html");
+    EXCEPT ELSE
+      F("cannot open ", file & ".html");
+    END;
     INC (s.next_id);
     Out (wr, "<HTML>\n<HEAD>\n<TITLE>", key, " locations</TITLE>\n</HEAD>\n");
     Out (wr, "<BODY bgcolor=\"#eeeeee\">\n<H2>", key, 
