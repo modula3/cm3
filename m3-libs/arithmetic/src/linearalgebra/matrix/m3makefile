@@ -31,6 +31,8 @@ EigenSystem("Real",     "Fast")
 EigenSystem("LongReal", "Fast")
 EigenSystem("Extended", "Fast")
 
+module("LongRealMatrixLapack")
+
 generic_module("CharPolynomial")
 CharPolynomial("Real",            "Fast",  "Basic")
 CharPolynomial("LongReal",        "Fast",  "Basic")
