@@ -53,5 +53,9 @@ PROCEDURE Sum(READONLY x:TBody):R.T;
 PROCEDURE Max(READONLY x:TBody):R.T;
 PROCEDURE Min(READONLY x:TBody):R.T;
 
+PROCEDURE ArithSeq(num:CARDINAL;from:=R.Zero;by:=R.One):T;
+PROCEDURE GeomSeq(num:CARDINAL;from:=R.One;by:=R.Two):T;
+CONST RecursiveSeq = VB.RecursiveSeq;
+
 (*==========================*)
 END VectorFast.
