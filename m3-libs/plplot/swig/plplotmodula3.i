@@ -55,6 +55,21 @@ typedef int PLINT;
 %wrapper %{#define _doc_ ## func string %}
 %enddef
 
+%rename("Init")  plinit;
+%rename("Exit")  plend;
+%rename("PlotLines")  plline;
+%rename("PlotPoints") plpoin;
+
+%typemap("m3intype") (PLINT n, PLFLT *Array) %{READONLY data: ARRAY OF R.T%}
+%typemap("m3rawarg") (PLINT n, PLFLT *Array) %{NUMBER(data), data[0]%}
+
+%typemap("m3intype") (PLINT n, PLFLT *Array, PLFLT *ArrayCk) %{READONLY x, y: ARRAY OF R.T%}
+%typemap("m3in")     (PLINT n, PLFLT *Array, PLFLT *ArrayCk) %{IF NUMBER(x) # NUMBER(y) THEN RAISE NA.Error(Err.bad_size) END;%}
+%typemap("m3rawarg") (PLINT n, PLFLT *Array, PLFLT *ArrayCk) %{NUMBER(x), x[0], y[0]%}
+
+%typemap("m3intype") (PLINT n, PLFLT *Array, PLFLT *ArrayCk, PLFLT *ArrayCk) %{READONLY x, y, z: ARRAY OF R.T%}
+%typemap("m3in")     (PLINT n, PLFLT *Array, PLFLT *ArrayCk, PLFLT *ArrayCk) %{IF NUMBER(x) # NUMBER(y) OR NUMBER(x) # NUMBER(z) THEN RAISE NA.Error(Err.bad_size) END;%}
+%typemap("m3rawarg") (PLINT n, PLFLT *Array, PLFLT *ArrayCk, PLFLT *ArrayCk) %{NUMBER(x), x[0], y[0], z[0]%}
 
 /* swig compatible PLplot API definitions from here on. */
 %include plplotcapi.i
