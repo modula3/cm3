@@ -3,7 +3,6 @@ INTERFACE TestMatchWavelet;
 IMPORT LongRealBasic AS R;
 
 IMPORT LongRealSignal AS S;
-IMPORT LongRealBSplineWavelet AS BSpl;
 IMPORT LongRealDyadicFilterBank AS FB;
 
 PROCEDURE Test ();
