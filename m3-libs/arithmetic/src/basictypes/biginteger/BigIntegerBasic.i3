@@ -43,8 +43,6 @@ PROCEDURE Mul (READONLY x, y : T) : T;
 PROCEDURE Div (READONLY x, y : T) : T RAISES {Error};
 PROCEDURE Mod (READONLY x, y : T) : T RAISES {Error};
 PROCEDURE DivMod (READONLY x, y : T; VAR r : T) : T RAISES {Error};
-PROCEDURE Write (READONLY x : T);
-PROCEDURE WriteDC (READONLY x : T);
 
 (*==========================*)
 END BigIntegerBasic.

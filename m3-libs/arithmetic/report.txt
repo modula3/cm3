@@ -1,3 +1,11 @@
+for myself:
+
+todo:
+  - shipping of .tmpl files with 'template'
+  - convert different prototypes to such with x, y, z as variable names
+  - generic Fmt with a FmtStyle record
+
+
 for Harry:
 
  What's advantage of using REAL64 instead of LONGREAL and REAL32 instead of REAL?
@@ -37,6 +45,10 @@ the compiler should give a more precise error diagnostic.
 
 Modula-3 definition says: MOD (x, y: Float) : Float
 but cm3 expects: infix    MOD (x, y: Float) : Float
+
+---------------
+
+quake should complain about doubly given 'library' statement
 
 ---------------
 

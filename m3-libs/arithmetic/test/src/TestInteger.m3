@@ -140,7 +140,7 @@ BEGIN
   newline(); EVAL test_isprime();
   newline(); EVAL test_sqrt();
   newline(); EVAL test_cordic();
-  
+
   RETURN result;
 END test_Integer;
 (*=======================*)

@@ -58,7 +58,8 @@ BEGIN
   (*newline(); EVAL test_Poly();*)
   (*newline(); EVAL test_Root();*)
   (*newline(); EVAL test_Interp();*)
-  newline(); EVAL test_SLE();
+  (*newline(); EVAL test_SLE();*)
   (*newline(); EVAL test_Rand();*)
   (*newline(); EVAL test_FFT();*)
+  newline(); EVAL test_BigInteger();
 END test.
