@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkginfo.sh,v 1.5 2001-12-19 14:37:16 wagner Exp $
+# $Id: pkginfo.sh,v 1.6 2003-01-31 19:34:18 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -47,6 +47,17 @@ pkgpath() {
     return 0
   else
     return 1
+  fi
+}
+
+listpkgs() {
+  if [ -n "$1" ] ; then
+    while [ -n "$1" ] ; do
+      egrep "$1" "$PKGSDB"
+      shift
+    done | sed -e "s;^;${ROOT}/;"
+  else
+    cat "$PKGSDB" | sed -e "s;^;${ROOT}/;"
   fi
 }
 
