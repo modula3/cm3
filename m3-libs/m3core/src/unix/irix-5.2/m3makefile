@@ -24,11 +24,9 @@ Interface ("Uresource")
 Module    ("Usignal")   % BSDsigpause, BSDsignal are NOT the default
 Interface ("Usocket")
 Interface ("Ustat")
-Interface ("Utermio")
 Module    ("Utime")
 Module    ("Utypes")
 Interface ("Uugid")
 Interface ("Uuio")
 Interface ("Uutmp")
-Interface ("Uutsname")
 

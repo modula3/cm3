@@ -102,26 +102,22 @@ PROCEDURE Rem(s: TextSeq.T; i: CARDINAL) =
 PROCEDURE CheckLink(arcs: Pathname.Arcs): Pathname.Arcs
   RAISES {OSError.E, Pathname.Invalid} =
   VAR
-    path  := Pathname.Compose(arcs);
-    fname := M3toC.SharedTtoS(path);
-    cc    := Unix.readlink(fname, ADR(buf [0]), NUMBER(buf));
-    p_buf : ADDRESS := ADR (buf[0]);
-    buf   : ARRAY [0 .. 1023] OF CHAR;
+    buf: ARRAY [0 .. 1023] OF CHAR;
+    path := Pathname.Compose(arcs);
+    cc := Unix.readlink(M3toC.TtoS(path), ADR(buf [0]), NUMBER(buf));
+    p_buf: ADDRESS := ADR (buf[0]);
   BEGIN
-    IF cc > 0 THEN
-      M3toC.FreeSharedS(path, fname);
-      buf[cc] := '\000'; (* terminate the string *)
-      RETURN Pathname.Decompose(M3toC.CopyStoT(p_buf))
-    ELSIF Uerror.errno = Uerror.EINVAL THEN (* not a symbolic link *)
-      M3toC.FreeSharedS(path, fname);
-      RETURN NIL;
-    ELSE
+    IF cc <= 0 THEN
+      IF Uerror.errno = Uerror.EINVAL THEN (* not a symbolic link *)
+        RETURN NIL
+      END;
       (* Some component is not a directory, or the file doesn't exist, or too
          many links (shouldn't happen, since we're expanding them one by one),
          or timeout, or ... *)
-      Fail(path, fname);
-      RETURN NIL;
+      OSErrorPosix.Raise()
     END;
+    buf[cc] := '\000'; (* terminate the string *)
+    RETURN Pathname.Decompose(M3toC.CopyStoT(p_buf))
   END CheckLink;
 
 TYPE ABW = ARRAY BOOLEAN OF Word.T;
@@ -150,33 +146,29 @@ PROCEDURE OpenFile(pn: Pathname.T; truncate: BOOLEAN := TRUE;
     access: AccessOption := AccessOption.Default
     ): File.T RAISES {OSError.E}=
   VAR
-    fd      : INTEGER;
-    statBuf : Ustat.struct_stat;
-    mode    : Ctypes.int;
-    fname   := M3toC.SharedTtoS(pn);
+    fd: INTEGER;
+    statBuf: Ustat.struct_stat;
+    mode: Ctypes.int;
   BEGIN
     IF template # NIL THEN
       IF Ustat.fstat(template.fd, ADR(statBuf)) < 0 THEN
-         Fail(pn, fname);
+         OSErrorPosix.Raise()
       END;
       mode := Word.And(statBuf.st_mode, AllAccessModes)
     ELSE
       mode := OpenMode[access]
     END;
-    fd := Unix.open(fname, OpenFlags[create, truncate], mode);
-    IF fd < 0 THEN Fail(pn, fname); END;
-    M3toC.FreeSharedS(pn, fname);
+    fd := Unix.open(M3toC.TtoS(pn), OpenFlags[create, truncate], mode);
+    IF fd < 0 THEN OSErrorPosix.Raise() END;
     RETURN FilePosix.New(fd, FilePosix.ReadWrite)
   END OpenFile;
 
 PROCEDURE OpenFileReadonly(pn: Pathname.T): File.T RAISES {OSError.E}=
-  VAR
-    fname := M3toC.SharedTtoS(pn);
-    fd    := Unix.open(fname, Unix.O_RDONLY, Unix.Mrwrwrw);
   BEGIN
-    IF fd < 0 THEN Fail(pn, fname); END;
-    M3toC.FreeSharedS(pn, fname);
-    RETURN FilePosix.New(fd, FilePosix.Read)
+    WITH fd = Unix.open(M3toC.TtoS(pn), Unix.O_RDONLY, Unix.Mrwrwrw) DO
+      IF fd < 0 THEN OSErrorPosix.Raise() END;
+      RETURN FilePosix.New(fd, FilePosix.Read)
+    END
   END OpenFileReadonly;
 
 PROCEDURE CreateDirectory(pn: Pathname.T) RAISES {OSError.E}=
@@ -185,40 +177,27 @@ PROCEDURE CreateDirectory(pn: Pathname.T) RAISES {OSError.E}=
     RWXRWXRWX = Ustat.S_IREAD + Ustat.S_IWRITE + Ustat.S_IEXEC +
         Ustat.S_GREAD + Ustat.S_GWRITE + Ustat.S_GEXEC +
         Ustat.S_OREAD + Ustat.S_OWRITE + Ustat.S_OEXEC;
-  VAR fname := M3toC.SharedTtoS(pn);
   BEGIN
-    IF Unix.mkdir(fname, RWXRWXRWX) < 0 THEN Fail(pn, fname); END;
-    M3toC.FreeSharedS(pn, fname);
+    IF Unix.mkdir(M3toC.TtoS(pn), RWXRWXRWX) < 0 THEN
+      OSErrorPosix.Raise()
+    END
   END CreateDirectory;
 
 PROCEDURE DeleteDirectory(pn: Pathname.T) RAISES {OSError.E}=
-  VAR fname := M3toC.SharedTtoS(pn);
   BEGIN
-    IF Unix.rmdir(fname) < 0 THEN Fail(pn, fname); END;
-    M3toC.FreeSharedS(pn, fname);
+    IF Unix.rmdir(M3toC.TtoS(pn)) < 0 THEN OSErrorPosix.Raise() END
   END DeleteDirectory;
 
 PROCEDURE DeleteFile(pn: Pathname.T) RAISES {OSError.E}=
-  VAR fname := M3toC.SharedTtoS(pn);
   BEGIN
-    IF Unix.unlink(fname) < 0 THEN Fail(pn, fname); END;
-    M3toC.FreeSharedS(pn, fname);
+    IF Unix.unlink(M3toC.TtoS(pn)) < 0 THEN OSErrorPosix.Raise() END
   END DeleteFile;
 
 PROCEDURE Rename(pn0, pn1: Pathname.T) RAISES {OSError.E}=
-  VAR
-    err : INTEGER;
-    f0  := M3toC.SharedTtoS(pn0);
-    f1  := M3toC.SharedTtoS(pn1);
   BEGIN
-    IF Unix.rename(f0, f1) < 0 THEN
-      err := Uerror.errno;
-      M3toC.FreeSharedS(pn0, f0);
-      M3toC.FreeSharedS(pn1, f1);
-      OSErrorPosix.Raise0(err)
-    END;
-    M3toC.FreeSharedS(pn0, f0);
-    M3toC.FreeSharedS(pn1, f1);
+    IF Unix.rename(M3toC.TtoS(pn0), M3toC.TtoS(pn1)) < 0 THEN
+      OSErrorPosix.Raise()
+    END
   END Rename;
 
 REVEAL Iterator = PublicIterator BRANDED OBJECT
@@ -234,17 +213,15 @@ REVEAL Iterator = PublicIterator BRANDED OBJECT
 EXCEPTION IterClosed; <* FATAL IterClosed *>
 
 PROCEDURE Iterate(pn: Pathname.T): Iterator RAISES {OSError.E} =
-  VAR d: Udir.DIR_star;  fname: Ctypes.char_star;
+  VAR d: Udir.DIR_star;
   BEGIN
     IF NOT Pathname.Absolute(pn) THEN
       pn := Pathname.Join(Process.GetWorkingDirectory(), pn, NIL)
     END;
-    fname := M3toC.SharedTtoS(pn);
-    RTOS.LockHeap ();(*HACK -- opendir() calls malloc() => not thread safe *)
-      d := Udir.opendir(fname);
+    RTOS.LockHeap (); (* HACK: opendir()->malloc() => not threadsafe *)
+    d := Udir.opendir(M3toC.TtoS(pn));
     RTOS.UnlockHeap ();
-    IF d = NIL THEN Fail(pn, fname); END;
-    M3toC.FreeSharedS(pn, fname);
+    IF d = NIL THEN OSErrorPosix.Raise() END;
     RETURN NEW(Iterator, d := d, pn := pn)
   END Iterate;
 
@@ -257,13 +234,11 @@ PROCEDURE IterNext(iter: Iterator; VAR (*OUT*) name: TEXT): BOOLEAN =
 PROCEDURE IterNextWithStatus(
     iter: Iterator; VAR (*OUT*) name: TEXT; VAR (*OUT*) status: File.Status)
   : BOOLEAN RAISES {OSError.E} =
-  VAR p: TEXT;  fname: Ctypes.char_star;
   BEGIN
     IF IterRaw(iter, name) THEN
-      p := Pathname.Join(iter.pn, name, NIL);
-      fname := M3toC.SharedTtoS(p);
-      IF CStatus(fname, status) < 0 THEN Fail(p, fname); END;
-      M3toC.FreeSharedS(p, fname);
+      IF CStatus(M3toC.TtoS(Pathname.Join(iter.pn, name, NIL)), status) < 0
+        THEN OSErrorPosix.Raise()
+      END;
       RETURN TRUE
     END;
     RETURN FALSE
@@ -279,7 +254,7 @@ PROCEDURE IterRaw(iter: Iterator; VAR (*OUT*) name: TEXT): BOOLEAN =
       ELSE
         WITH e = Udir.readdir(iter.d) DO
           IF e = NIL THEN
-            RTOS.LockHeap ();(*HACK -- closedir() calls free() => not thread safe *)
+            RTOS.LockHeap (); (* HACK: closedir()->free() => not threadsafe *)
             EVAL Udir.closedir(iter.d);
             RTOS.UnlockHeap ();
             iter.d := NIL;
@@ -306,7 +281,7 @@ PROCEDURE DotOrDotDot(n: NamePrefix): BOOLEAN =
 PROCEDURE IterClose(iter: Iterator) =
   BEGIN
     IF iter.d # NIL THEN
-      RTOS.LockHeap ();(*HACK -- closedir() calls free() => not thread safe *)
+      RTOS.LockHeap (); (* HACK: closedir()->free() => not threadsafe *)
       EVAL Udir.closedir(iter.d);
       RTOS.UnlockHeap ();
       iter.d := NIL;
@@ -315,10 +290,9 @@ PROCEDURE IterClose(iter: Iterator) =
   END IterClose;
 
 PROCEDURE Status(pn: Pathname.T): File.Status RAISES {OSError.E} =
-  VAR status: File.Status;  fname := M3toC.SharedTtoS(pn);
+  VAR status: File.Status;
   BEGIN
-    IF CStatus(fname, status) < 0 THEN Fail(pn, fname); END;
-    M3toC.FreeSharedS(pn, fname);
+    IF CStatus(M3toC.TtoS(pn), status) < 0 THEN OSErrorPosix.Raise() END;
     RETURN status
   END Status;
 
@@ -344,20 +318,11 @@ PROCEDURE SetModificationTime(pn: Pathname.T; READONLY t: Time.T)
   RAISES {OSError.E}=
   CONST Accessed = 0; Updated = 1;
   VAR u: ARRAY [Accessed .. Updated] OF Utime.struct_timeval;
-      fname := M3toC.SharedTtoS(pn);
   BEGIN
     u[Updated].tv_sec := ROUND(t); u[Updated].tv_usec := 0;
     u[Accessed].tv_sec := ROUND(Time.Now()); u[Accessed].tv_usec := 0;
-    IF Unix.utimes(fname, ADR(u)) < 0 THEN Fail(pn, fname); END;
-    M3toC.FreeSharedS(pn, fname);
+    IF Unix.utimes(M3toC.TtoS(pn), ADR(u)) < 0 THEN OSErrorPosix.Raise() END
   END SetModificationTime;
-
-PROCEDURE Fail(p: Pathname.T;  f: Ctypes.char_star) RAISES {OSError.E} =
-  VAR err := Uerror.errno;
-  BEGIN
-    M3toC.FreeSharedS(p, f);
-    OSErrorPosix.Raise0(err);
-  END Fail;
 
 BEGIN
 END FSPosix.

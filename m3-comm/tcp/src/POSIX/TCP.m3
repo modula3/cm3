@@ -7,7 +7,7 @@
 (*      modified on Sun Jan 12 16:16:54 PST 1992 by meehan *)
 (*      modified on Sat Jan 11 16:55:00 PST 1992 by gnelson *)
 
-UNSAFE MODULE TCP EXPORTS TCP, TCPSpecial;
+UNSAFE MODULE TCP EXPORTS TCP, TCPSpecial, Uin;
 
 IMPORT Atom, AtomList, ConnFD, IP, IPError, Rd, Wr, Thread;
 IMPORT Usocket, Cerrno, Uerror, Uin, Unix, Uuio, Utypes,
@@ -209,14 +209,9 @@ PROCEDURE Accept (c: Connector): T
     RETURN NEW(T, fd := fd, ep := IP.NullEndPoint);
   END Accept;
 
-PROCEDURE CloseConnector(c: Connector) =
+PROCEDURE CloseConnector(<*UNUSED*> c: Connector) =
   BEGIN
-    LOCK c DO
-      IF NOT c.closed THEN
-        EVAL Unix.close(c.fd);
-        c.closed := TRUE;
-      END;
-    END;
+    IPError.Die();
   END CloseConnector;
   
 

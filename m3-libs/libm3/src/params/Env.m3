@@ -14,14 +14,12 @@ UNSAFE MODULE Env;
 IMPORT Cstdlib, M3toC, RTArgs, Text;
 
 PROCEDURE Get(nm: TEXT): TEXT =
-  VAR
-    cnm  := M3toC.SharedTtoS(nm);
-    cRes := Cstdlib.getenv(cnm);
+  VAR cRes := Cstdlib.getenv(M3toC.TtoS(nm));
   BEGIN
-    M3toC.FreeSharedS(nm, cnm);
-    IF cRes = NIL
-      THEN RETURN NIL
-      ELSE RETURN M3toC.CopyStoT(cRes)
+    IF cRes = NIL THEN
+      RETURN NIL
+    ELSE
+      RETURN M3toC.CopyStoT(cRes)
     END
   END Get;
 

@@ -20,8 +20,8 @@ VAR env_c : CARDINAL := 0;
 
 PROCEDURE ArgC (): CARDINAL =
   BEGIN
-    IF (RTLinker.argc < 0) THEN ParseArgs (); END;
-    RETURN RTLinker.argc;
+    IF (RTLinker.info.argc < 0) THEN ParseArgs (); END;
+    RETURN RTLinker.info.argc;
   END ArgC;
 
 PROCEDURE ParseArgs () =
@@ -29,7 +29,7 @@ PROCEDURE ParseArgs () =
      its command line unparsed.  This code is executed before the
      runtime type system is initialized. *)
   VAR
-    cp       : Ctypes.char_star := RTLinker.argv;
+    cp       : Ctypes.char_star := RTLinker.info.argv;
     n_args   : INTEGER;
     n_chars  : INTEGER;
     next     : Ctypes.char_star_star;
@@ -41,7 +41,7 @@ PROCEDURE ParseArgs () =
     is_blank : ARRAY Ctypes.char OF BOOLEAN;
   BEGIN
     IF (cp = NIL) THEN
-      RTLinker.argc := 0;
+      RTLinker.info.argc := 0;
       RETURN;
     END;
 
@@ -60,7 +60,7 @@ PROCEDURE ParseArgs () =
       INC (n_args);
       WHILE (NOT is_blank[cp^]) AND (cp^ # NUL) DO INC (cp, ADRSIZE (cp^)); END;
     END;
-    n_chars := cp - RTLinker.argv;
+    n_chars := cp - RTLinker.info.argv;
 
     (* try getting the file name *)
     fn_len := MAX (0, WinBase.GetModuleFileName (NIL, ADR (filename[0]),
@@ -82,7 +82,7 @@ PROCEDURE ParseArgs () =
     args^ := NUL;  INC (args, ADRSIZE (args^));
 
     (* parse the command line *)
-    cp := RTLinker.argv;
+    cp := RTLinker.info.argv;
     WHILE (cp^ # NUL) DO
 
       (* skip blanks *)
@@ -124,15 +124,15 @@ PROCEDURE ParseArgs () =
     END;
     next^ := NIL;
 
-    RTLinker.argv := argv;
-    RTLinker.argc := n_args;
+    RTLinker.info.argv := argv;
+    RTLinker.info.argc := n_args;
   END ParseArgs;
 
 PROCEDURE GetArg (n: CARDINAL): TEXT =
-  VAR p: Ctypes.char_star_star := RTLinker.argv + n * ADRSIZE (ADDRESS);
+  VAR p: Ctypes.char_star_star := RTLinker.info.argv + n * ADRSIZE (ADDRESS);
       a: ARRAY [0..1] OF INTEGER;
   BEGIN
-    IF (n >= RTLinker.argc) THEN
+    IF (n >= RTLinker.info.argc) THEN
       n := 2;  n := a[n];  (* force a subscript fault *)
     END;
     RETURN M3toC.StoT (p^);
@@ -141,7 +141,7 @@ PROCEDURE GetArg (n: CARDINAL): TEXT =
 PROCEDURE EnvC (): CARDINAL =
   VAR
     cnt  : CARDINAL := 0; 
-    envp : Ctypes.char_star := RTLinker.envp;
+    envp : Ctypes.char_star := RTLinker.info.envp;
   BEGIN
     IF (env_c = 0) AND (envp # NIL) THEN
       WHILE envp^ # NUL DO
@@ -156,7 +156,7 @@ PROCEDURE EnvC (): CARDINAL =
   END EnvC;
 
 PROCEDURE GetEnv (n: CARDINAL): TEXT =
-  VAR envp : Ctypes.char_star := RTLinker.envp;
+  VAR envp : Ctypes.char_star := RTLinker.info.envp;
       a: ARRAY [0..1] OF INTEGER;
   BEGIN
     IF (n >= EnvC ()) THEN

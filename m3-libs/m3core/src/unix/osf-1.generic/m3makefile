@@ -19,11 +19,10 @@ Interface ("Uresource")
 Interface ("Usem")
 Interface ("Ushm")
 Interface ("Usocket")
-Interface ("Ustat")
 Interface ("Uugid")
 Interface ("Uuio")
 Interface ("Uutmp")
-Interface ("Uutsname")
+Interface ("Ustat")
 
 
 
