@@ -19,7 +19,6 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-#include "sparc/sparc.h"
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
@@ -77,7 +76,7 @@ Boston, MA 02111-1307, USA.  */
 /* similar to default, but allows for the table defined by ld with gcc.ifile. 
    nptrs is always 0.  So we need to instead check that __DTOR_LIST__[1] != 0.
    The old check is left in so that the same macro can be used if and when  
-   a future version of gas does support section directives. */
+   a future version of gas does support section directives.  */
 
 #define DO_GLOBAL_DTORS_BODY {int nptrs = *(int *)__DTOR_LIST__; int i; \
   if (nptrs == -1 || (__DTOR_LIST__[0] == 0 && __DTOR_LIST__[1] != 0))  \
@@ -102,7 +101,7 @@ Boston, MA 02111-1307, USA.  */
   }
  */
 
-/* The prefix to add to user-visible assembler symbols. */
+/* The prefix to add to user-visible assembler symbols.  */
 
 #undef USER_LABEL_PREFIX
 #define USER_LABEL_PREFIX ""
@@ -112,6 +111,9 @@ Boston, MA 02111-1307, USA.  */
  *  Internal labels are prefixed with a period.
  */
 
+#undef  LOCAL_LABEL_PREFIX
+#define LOCAL_LABEL_PREFIX  "."
+
 /* This is how to store into the string LABEL
    the symbol_ref name of an internal numbered label where
    PREFIX is the class of label and NUM is the number within the class.
@@ -120,7 +122,7 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_GENERATE_INTERNAL_LABEL
 
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL,PREFIX,NUM)                   \
-        sprintf (LABEL, "*.%s%d", PREFIX, NUM)
+        sprintf (LABEL, "*.%s%ld", PREFIX, (long)(NUM))
 
 
 /* This is how to output an internal numbered label where
@@ -146,7 +148,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* This is needed for SunOS 4.0, and should not hurt for 3.2
    versions either.  */
-#undef ASM_OUTPUT_SOURCE_LINE(file, line) 
+#undef ASM_OUTPUT_SOURCE_LINE
 #define ASM_OUTPUT_SOURCE_LINE(file, line)		\
   { static int sym_lineno = 1;				\
     fprintf (file, ".stabn 68,0,%d,.LM%d\n.LM%d:\n",	\

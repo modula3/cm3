@@ -1,7 +1,7 @@
 /* Definitions of target machine for GNU compiler.  AT&T DSP1600.
-   Copyright (C) 1994, 1995, 1996, 1997, 1998, 2000, 2001
+   Copyright (C) 1994, 1995, 1996, 1997, 1998, 2000, 2001, 2002
    Free Software Foundation, Inc.
-   Contributed by Michael Collison (collison@world.std.com).
+   Contributed by Michael Collison (collison@isisinc.net).
 
 This file is part of GNU CC.
 
@@ -74,7 +74,9 @@ extern struct rtx_def *dsp16xx_lshrhi3_libcall;
 #ifdef  CC1_SPEC
 #undef  CC1_SPEC
 #endif
-#define CC1_SPEC       ""
+#define CC1_SPEC       "%{!O*:-O}"
+
+#define CPP_SPEC       "%{!O*:-D__OPTIMIZE__}"
 
 /* Define this as a spec to call the AT&T assembler */
 
@@ -92,13 +94,13 @@ extern struct rtx_def *dsp16xx_lshrhi3_libcall;
    circumstances */
 #define LIB_SPEC "-lc"
 
-/* Specify the startup file to link with. */
+/* Specify the startup file to link with.  */
 #define STARTFILE_SPEC "%{mmap1:m1_crt0.o%s}  \
 %{mmap2:m2_crt0.o%s}                          \
 %{mmap3:m3_crt0.o%s}                          \
 %{mmap4:m4_crt0.o%s}                          \
 %{!mmap*: %{!ifile*: m4_crt0.o%s} %{ifile*:     \
-%eA -ifile option requires a -map option}}"
+%ea -ifile option requires a -map option}}"
 
 /* Specify the end file to link with */
 
@@ -107,26 +109,33 @@ extern struct rtx_def *dsp16xx_lshrhi3_libcall;
 %{mmap3:m3_crtn.o%s}                          \
 %{mmap4:m4_crtn.o%s}                          \
 %{!mmap*: %{!ifile*: m4_crtn.o%s} %{ifile*:     \
-%eA -ifile option requires a -map option}}"
+%ea -ifile option requires a -map option}}"
 
 
 /* Tell gcc where to look for the startfile */
-#define STANDARD_STARTFILE_PREFIX   "/d1600/lib"
+/*#define STANDARD_STARTFILE_PREFIX   "/d1600/lib"*/
 
-/* Tell gcc where to look for its executables */
-#define STANDARD_EXEC_PREFIX  "/d1600/bin"
+/* Tell gcc where to look for it's executables */
+/*#define STANDARD_EXEC_PREFIX  "/d1600/bin"*/
 
 /* Command line options to the AT&T assembler */
-#define ASM_SPEC  "%{v:-V} %{g*:-g}"
+#define ASM_SPEC  "%{V} %{v:%{!V:-V}} %{g*:-g}"
 
 /* Command line options for the AT&T linker */
-#define LINK_SPEC "%{v:-V} %{minit:-i}  \
-%{!ifile*:%{mmap1:-ifile m1_deflt.if%s}         \
-          %{mmap2:-ifile m2_deflt.if%s}         \
-          %{mmap3:-ifile m3_deflt.if%s}         \
-          %{mmap4:-ifile m4_deflt.if%s}         \
-          %{!mmap*:-ifile m4_deflt.if%s}}       \
-%{ifile*} %{!r:-a}"
+
+#define LINK_SPEC "%{V} %{v:%{!V:-V}} %{minit:-i}  \
+%{!ifile*:%{mmap1:m1_deflt.if%s}         \
+          %{mmap2:m2_deflt.if%s}         \
+          %{mmap3:m3_deflt.if%s}         \
+          %{mmap4:m4_deflt.if%s}         \
+          %{!mmap*:m4_deflt.if%s}}       \
+%{ifile*:%*} %{r}"
+
+/* Include path is determined from the environment variable */
+#define INCLUDE_DEFAULTS     \
+{                            \
+  { 0, 0, 0 }                \
+}
 
 /* Names to predefine in the preprocessor for this target machine.  */
 #ifdef __MSDOS__
@@ -145,8 +154,6 @@ extern int target_flags;
 #define MASK_NEAR_CALL       0x00000002    /* The call is on the same 4k page */
 #define MASK_NEAR_JUMP       0x00000004    /* The jump is on the same 4k page */
 #define MASK_BMU             0x00000008    /* Use the 'bmu' shift instructions */
-#define MASK_OPTIMIZE_MEMORY 0x00000010    /* Optimize to conserve memory */
-#define MASK_OPTIMIZE_SPEED  0x00000020    /* Optimize for speed */
 #define MASK_MAP1            0x00000040    /* Link with map1 */
 #define MASK_MAP2            0x00000080    /* Link with map2 */
 #define MASK_MAP3            0x00000100    /* Link with map3 */
@@ -154,8 +161,9 @@ extern int target_flags;
 #define MASK_YBASE_HIGH      0x00000400    /* The ybase register window starts high */
 #define MASK_INIT	     0x00000800    /* Have the linker generate tables to
 					      initialize data at startup */
-#define MASK_INLINE_MULT     0x00001000    /* Inline 32 bit multiplies */
 #define MASK_RESERVE_YBASE   0x00002000    /* Reserved the ybase registers */
+#define MASK_DEBUG           0x00004000	   /* Debugging turned on*/
+#define MASK_SAVE_TEMPS      0x00008000    /* Save temps. option seen */
 
 /* Compile passing first two args in regs 0 and 1.
    This exists only to test compiler features that will
@@ -174,14 +182,8 @@ extern int target_flags;
 #define TARGET_NEAR_JUMP (target_flags & MASK_NEAR_JUMP)
 
 /* Generate shift instructions to use the 1610 Bit Manipulation
-   Unit. */
+   Unit.  */
 #define TARGET_BMU (target_flags & MASK_BMU)
-
-/* Optimize to conserve memory */
-#define TARGET_OPTIMIZE_MEMORY (target_flags & MASK_OPTIMIZE_MEMORY)
-
-/* Optimize for maximum speed */
-#define TARGET_OPTIMIZE_SPEED   (target_flags & MASK_OPTIMIZE_SPEED)
 
 #define TARGET_YBASE_HIGH (target_flags & MASK_YBASE_HIGH)
 
@@ -193,6 +195,13 @@ extern int target_flags;
 /* Reserve the ybase registers *(0) - *(31) */
 #define TARGET_RESERVE_YBASE (target_flags & MASK_RESERVE_YBASE)
 
+/* We turn this option on internally after seeing "-g" */
+#define TARGET_DEBUG            (target_flags & MASK_DEBUG)
+
+/* We turn this option on internally after seeing "-save-temps */
+#define TARGET_SAVE_TEMPS       (target_flags & MASK_SAVE_TEMPS)
+
+
 /* Macro to define tables used to set the flags.
    This is a list in braces of pairs in braces,
    each pair being { "NAME", VALUE }
@@ -200,57 +209,60 @@ extern int target_flags;
    An empty string NAME is used to identify the default VALUE.  */
 
 
-#define TARGET_SWITCHES                        \
-  {				               \
-    { "regparm",       MASK_REGPARM},	       \
-    { "no-regparm",   -MASK_REGPARM},	       \
-    { "no-near-call", -MASK_NEAR_CALL},        \
-    { "near-jump",     MASK_NEAR_JUMP},        \
-    { "no-near-jump", -MASK_NEAR_JUMP},        \
-    { "bmu",           MASK_BMU},              \
-    { "no-bmu",       -MASK_BMU},              \
-    { "Om",            MASK_OPTIMIZE_MEMORY},  \
-    { "Os",            MASK_OPTIMIZE_SPEED},   \
-    { "map1",          MASK_MAP1},             \
-    { "map2",          MASK_MAP2},             \
-    { "map3",          MASK_MAP3},             \
-    { "map4",          MASK_MAP4},             \
-    { "ybase-high",    MASK_YBASE_HIGH},       \
-    { "init",          MASK_INIT},             \
-    { "inline-mult",   MASK_INLINE_MULT},      \
-    { "reserve-ybase", MASK_RESERVE_YBASE},    \
-    { "",              TARGET_DEFAULT}         \
+#define TARGET_SWITCHES                                           \
+  {				                                  \
+    { "regparm",       MASK_REGPARM,                              \
+      N_("Pass parameters in registers (default)") },             \
+    { "no-regparm",   -MASK_REGPARM,	                          \
+      N_("Don't pass parameters in registers") },                 \
+    { "near-call",     MASK_NEAR_JUMP,                            \
+      N_("Generate code for near calls") },                       \
+    { "no-near-call", -MASK_NEAR_CALL,                            \
+      N_("Don't generate code for near calls") },                 \
+    { "near-jump",     MASK_NEAR_JUMP,                            \
+      N_("Generate code for near jumps") },                       \
+    { "no-near-jump", -MASK_NEAR_JUMP,                            \
+      N_("Don't generate code for near jumps") },                 \
+    { "bmu",           MASK_BMU,                                  \
+      N_("Generate code for a bit-manipulation unit") },          \
+    { "no-bmu",       -MASK_BMU,                                  \
+      N_("Don't generate code for a bit-manipulation unit") },    \
+    { "map1",          MASK_MAP1,                                 \
+      N_("Generate code for memory map1") },                      \
+    { "map2",          MASK_MAP2,                                 \
+      N_("Generate code for memory map2") },                      \
+    { "map3",          MASK_MAP3,                                 \
+      N_("Generate code for memory map3") },                      \
+    { "map4",          MASK_MAP4,                                 \
+      N_("Generate code for memory map4") },                      \
+    { "init",          MASK_INIT,                                 \
+      N_("Ouput extra code for initialized data") },              \
+    { "reserve-ybase", MASK_RESERVE_YBASE,                        \
+      N_("Don't let reg. allocator use ybase registers") },       \
+    { "debug",         MASK_DEBUG,                                \
+      N_("Output extra debug info in Luxworks environment") },    \
+    { "save-temporaries",    MASK_SAVE_TEMPS,                     \
+      N_("Save temp. files in Luxworks environment") },           \
+    { "",              TARGET_DEFAULT, ""}                        \
   }
 
 /* Default target_flags if no switches are specified */
 #ifndef TARGET_DEFAULT
-#define TARGET_DEFAULT  MASK_OPTIMIZE_MEMORY|MASK_REGPARM|MASK_YBASE_HIGH
+#define TARGET_DEFAULT  MASK_REGPARM|MASK_YBASE_HIGH
 #endif
-
-/* This macro is similar to `TARGET_SWITCHES' but defines names of
-   command options that have values.  Its definition is an
-   initializer with a subgrouping for each command option.
-
-   Each subgrouping contains a string constant, that defines the
-   fixed part of the option name, and the address of a variable. 
-   The variable, type `char *', is set to the variable part of the
-   given option if the fixed part matches.  The actual option name
-   is made by appending `-m' to the specified name.
-
-   Here is an example which defines `-mshort-data-NUMBER'.  If the
-   given option is `-mshort-data-512', the variable `m88k_short_data'
-   will be set to the string `"512"'.
-
-	extern char *m88k_short_data;
-	#define TARGET_OPTIONS { { "short-data-", &m88k_short_data } }  */
 
 #define TARGET_OPTIONS						\
 {								\
-  { "text=",	&text_seg_name	},				\
-  { "data=",	&data_seg_name	},				\
-  { "bss=",	&bss_seg_name	},				\
-  { "const=",   &const_seg_name },                              \
-  { "chip=",    &chip_name      }                               \
+  { "text=",	&text_seg_name,				        \
+    N_("Specify alternate name for text section") },            \
+  { "data=",	&data_seg_name,				        \
+    N_("Specify alternate name for data section") },            \
+  { "bss=",	&bss_seg_name,				        \
+    N_("Specify alternate name for bss section") },             \
+  { "const=",   &const_seg_name,                                \
+    N_("Specify alternate name for constant section") },        \
+  { "chip=",    &chip_name,                                     \
+    N_("Specify alternate name for dsp16xx chip") },            \
 }
 
 /* Sometimes certain combinations of command options do not make sense
@@ -264,38 +276,41 @@ extern int target_flags;
 
 #define OVERRIDE_OPTIONS override_options ()
 
-#define OPTIMIZATION_OPTIONS(LEVEL,SIZE)		\
-do							\
-  {							\
-    flag_gnu_linker             = FALSE;		\
-							\
-    if (SIZE)						\
-      {							\
-	flag_strength_reduce    = FALSE;		\
-	flag_inline_functions   = FALSE;		\
-      }							\
-  }							\
-while (0)
+#define OPTIMIZATION_OPTIONS(LEVEL,SIZE)              \
+{                                                     \
+    flag_gnu_linker             = FALSE;              \
+                                                      \
+    if (LEVEL >= 2)                                   \
+    {                                                 \
+        /* The dsp16xx family has so few registers    \
+         * that running the first instruction         \
+         * scheduling is bad for reg. allocation      \
+         * since it increases lifetimes of pseudos.   \
+         * So turn of first scheduling pass.          \
+         */                                           \
+        flag_schedule_insns          = FALSE;         \
+    }                                                 \
+}
 
 /* STORAGE LAYOUT */
 
 /* Define if you don't want extended real, but do want to use the
    software floating point emulator for REAL_ARITHMETIC and
-   decimal <-> binary conversion. */
+   decimal <-> binary conversion.  */
 #define REAL_ARITHMETIC
 
 /* Define this if most significant bit is lowest numbered
    in instructions that operate on numbered bit-fields.
  */
-#define BITS_BIG_ENDIAN  1
+#define BITS_BIG_ENDIAN  0
 
 /* Define this if most significant byte of a word is the lowest numbered.
    We define big-endian, but since the 1600 series cannot address bytes
-   it does not matter. */
+   it does not matter.  */
 #define BYTES_BIG_ENDIAN 1
 
 /* Define this if most significant word of a multiword number is numbered.
-   For the 1600 we can decide arbitrarily since there are no machine instructions for them. */
+   For the 1600 we can decide arbitrarily since there are no machine instructions for them.  */
 #define WORDS_BIG_ENDIAN 1
 
 /* number of bits in an addressable storage unit */
@@ -307,7 +322,7 @@ while (0)
    But on a machine with 16-bit registers, this would be 16.  */
 #define BITS_PER_WORD 16
 
-/* Maximum number of bits in a word. */
+/* Maximum number of bits in a word.  */
 #define MAX_BITS_PER_WORD 16
 
 /* Width of a word, in units (bytes).  */
@@ -348,7 +363,7 @@ while (0)
 
 /* An integer expression for the size in bits of the largest integer machine mode that
    should actually be used. All integer machine modes of this size or smaller can be
-   used for structures and unions with the appropriate sizes. */
+   used for structures and unions with the appropriate sizes.  */
 #define MAX_FIXED_MODE_SIZE 32
 
 /* LAYOUT OF SOURCE LANGUAGE DATA TYPES */
@@ -363,34 +378,26 @@ while (0)
 #define LONG_DOUBLE_TYPE_SIZE  32
 
 /* An expression whose value is 1 or 0, according to whether the type char should be
-   signed or unsigned by default. */
+   signed or unsigned by default.  */
 
 #define DEFAULT_SIGNED_CHAR 1
 
 /* A C expression to determine whether to give an enum type only as many bytes
    as it takes to represent the range of possible values of that type. A nonzero
    value means to do that; a zero value means all enum types should be allocated
-   like int. */
+   like int.  */
 
 #define DEFAULT_SHORT_ENUMS 0
 
 /* A C expression for a string describing the name of the data type to use for
-   size values. */
+   size values.  */
 
-#define SIZE_TYPE    "long unsigned int"
+#define SIZE_TYPE    "unsigned int"
 
-/* A C expression for a string describing the name of the datat type to use for the
+/* A C expression for a string describing the name of the data type to use for the
    result of subtracting two pointers */
 
-#define PTRDIFF_TYPE "long int"
-
-#define TARGET_BELL     '\a'
-#define TARGET_BS       '\b'
-#define TARGET_TAB      '\t'
-#define TARGET_NEWLINE  '\n'
-#define TARGET_VT       '\v'
-#define TARGET_FF       '\f'
-#define TARGET_CR       '\r'
+#define PTRDIFF_TYPE "int"
 
 
 /* REGISTER USAGE.  */
@@ -416,7 +423,7 @@ while (0)
 
    We reserve r2 for the Stack Pointer.
    We specify r3 for the Frame Pointer but allow the compiler
-   to omit it when possible since we have so few pointer registers. */
+   to omit it when possible since we have so few pointer registers.  */
 
 #define REG_A0     0
 #define REG_A0L    1
@@ -477,12 +484,16 @@ while (0)
 #define REG_YBASE30 56
 #define REG_YBASE31 57
 
-/* Do we have a accumulator register? */
-#define IS_ACCUM_REG(REGNO) ((REGNO) >= REG_A0 && (REGNO) <= REG_A1L)
+/* Do we have an accumulator register? */
+#define IS_ACCUM_REG(REGNO) IN_RANGE ((REGNO), REG_A0, REG_A1L)
 #define IS_ACCUM_LOW_REG(REGNO) ((REGNO) == REG_A0L || (REGNO) == REG_A1L)
 
 /* Do we have a virtual ybase register */
 #define IS_YBASE_REGISTER_WINDOW(REGNO) ((REGNO) >= REG_YBASE0 && (REGNO) <= REG_YBASE31)
+
+#define IS_YBASE_ELIGIBLE_REG(REGNO) (IS_ACCUM_REG (REGNO) || IS_ADDRESS_REGISTER(REGNO) \
+                                      || REGNO == REG_X || REGNO == REG_Y || REGNO == REG_YL \
+                                      || REGNO == REG_PROD || REGNO == REG_PRODL)
 
 #define IS_ADDRESS_REGISTER(REGNO) ((REGNO) >= REG_R0 && (REGNO) <= REG_R3)
 
@@ -492,7 +503,7 @@ while (0)
  1,                         \
  0, 0, 0, 0,                \
  1, 1, 1,                   \
- 0, 0,                      \
+ 1, 0,                      \
  0, 0, 0, 0, 0, 0, 0, 0,    \
  0, 0, 0, 0, 0, 0, 0, 0,    \
  0, 0, 0, 0, 0, 0, 0, 0,    \
@@ -510,17 +521,17 @@ while (0)
    bit manipulation registers.  */
 
 
-#define CALL_USED_REGISTERS   \
-{1, 1, 1, 1, 0, 1, 1, 1, 1,   \
- 1, 0, 0, 1, 1, 1, 1,         \
- 1,                           \
- 0, 0, 1, 1,                  \
- 1, 1, 1,                     \
- 0, 1,                        \
- 0, 0, 0, 0, 0, 0, 0, 0,      \
- 0, 0, 0, 0, 0, 0, 0, 0,      \
- 0, 0, 0, 0, 0, 0, 0, 0,      \
- 0, 0, 0, 0, 0, 0, 0, 0}
+#define CALL_USED_REGISTERS			\
+{1, 1, 1, 1, 0, 1, 1, 1, 1,	/* 0-8 */	\
+ 1, 0, 0, 1, 1, 1, 1,		/* 9-15 */	\
+ 1,                             /* 16 */	\
+ 0, 0, 1, 1,			/* 17-20 */	\
+ 1, 1, 1,			/* 21-23 */	\
+ 1, 1,				/* 24-25 */	\
+ 0, 0, 0, 0, 0, 0, 0, 0,	/* 26-33 */	\
+ 0, 0, 0, 0, 0, 0, 0, 0,	/* 34-41 */	\
+ 0, 0, 0, 0, 0, 0, 0, 0,	/* 42-49 */	\
+ 0, 0, 0, 0, 0, 0, 0, 0}	/* 50-57 */
 
 /* List the order in which to allocate registers.  Each register must be
    listed once, even those in FIXED_REGISTERS.
@@ -528,6 +539,7 @@ while (0)
    We allocate in the following order:
  */
 
+#if 0
 #define REG_ALLOC_ORDER					\
 { REG_R0, REG_R1, REG_R2, REG_PROD, REG_Y, REG_X,       \
   REG_PRODL, REG_YL, REG_AR0, REG_AR1,                  \
@@ -543,7 +555,24 @@ while (0)
   REG_YBASE20, REG_YBASE21, REG_YBASE22, REG_YBASE23,   \
   REG_YBASE24, REG_YBASE25, REG_YBASE26, REG_YBASE27,   \
   REG_YBASE28, REG_YBASE29, REG_YBASE30, REG_YBASE31 }
-
+#else
+#define REG_ALLOC_ORDER                                 \
+{                                                       \
+  REG_A0, REG_A0L, REG_A1, REG_A1L, REG_Y, REG_YL,      \
+  REG_PROD,                                             \
+  REG_PRODL, REG_R0, REG_J, REG_K, REG_AR2, REG_AR3,    \
+  REG_X, REG_R1, REG_R2, REG_RB, REG_AR0, REG_AR1,      \
+  REG_YBASE0, REG_YBASE1, REG_YBASE2, REG_YBASE3,       \
+  REG_YBASE4, REG_YBASE5, REG_YBASE6, REG_YBASE7,       \
+  REG_YBASE8, REG_YBASE9, REG_YBASE10, REG_YBASE11,     \
+  REG_YBASE12, REG_YBASE13, REG_YBASE14, REG_YBASE15,   \
+  REG_YBASE16, REG_YBASE17, REG_YBASE18, REG_YBASE19,   \
+  REG_YBASE20, REG_YBASE21, REG_YBASE22, REG_YBASE23,   \
+  REG_YBASE24, REG_YBASE25, REG_YBASE26, REG_YBASE27,   \
+  REG_YBASE28, REG_YBASE29, REG_YBASE30, REG_YBASE31,   \
+  REG_R3, REG_YBASE, REG_PT, REG_C0, REG_C1, REG_C2,    \
+  REG_PR }
+#endif
 /* Zero or more C statements that may conditionally modify two
    variables `fixed_regs' and `call_used_regs' (both of type `char
    []') after they have been initialized from the two preceding
@@ -598,12 +627,12 @@ while (0)
 /* Return number of consecutive hard regs needed starting at reg REGNO
    to hold something of mode MODE.
    This is ordinarily the length in words of a value of mode MODE
-   but can be less for certain modes in special long registers. */
+   but can be less for certain modes in special long registers.  */
 
 #define HARD_REGNO_NREGS(REGNO, MODE)                                 \
   (GET_MODE_SIZE(MODE))
 
-/* Value is 1 if hard register REGNO can hold a value of machine-mode MODE. */
+/* Value is 1 if hard register REGNO can hold a value of machine-mode MODE.  */
 
 #define HARD_REGNO_MODE_OK(REGNO, MODE) hard_regno_mode_ok(REGNO, MODE)
 
@@ -743,7 +772,7 @@ enum reg_class
 
 #define N_REG_CLASSES (int) LIM_REG_CLASSES
 
-/* Give names of register classes as strings for dump file.   */
+/* Give names of register classes as strings for dump file.  */
 
 #define REG_CLASS_NAMES        \
 {                              \
@@ -900,7 +929,7 @@ enum reg_class
 #define INDEX_REG_CLASS NO_REGS
 #define BASE_REG_CLASS  Y_ADDR_REGS
 
-/* Get reg_class from a letter such as appears in the machine description. */
+/* Get reg_class from a letter such as appears in the machine description.  */
 
 #define REG_CLASS_FROM_LETTER(C) \
   dsp16xx_reg_class_from_letter(C)
@@ -910,7 +939,7 @@ enum reg_class
 
 /* When defined, the compiler allows registers explicitly used in the
    rtl to be used as spill registers but prevents the compiler from
-   extending the lifetime of these registers. */
+   extending the lifetime of these registers.  */
 
 #define SMALL_REGISTER_CLASSES 1
 
@@ -966,7 +995,7 @@ enum reg_class
      smaller class.
 
      Don't define this macro unless the target machine has limitations
-     which require the macro to do something nontrivial. */
+     which require the macro to do something nontrivial.  */
 
 #if 0
 #define LIMIT_RELOAD_CLASS(MODE, CLASS) dsp16xx_limit_reload_class (MODE, CLASS)
@@ -987,23 +1016,32 @@ enum reg_class
    'I' requires a non-negative 16-bit value.
    'J' requires a non-negative 9-bit value
    'K' requires a constant 0 operand.
-   'L' requires 16-bit value
+   'L' constant for use in add or sub from low 16-bits
    'M' 32-bit value -- low 16-bits zero
+   'N' constant for use incrementing or decrementing an address register
+   'O' constant for use with and'ing only high 16-bit
+   'P' constant for use with and'ing only low 16-bit
  */
 
 #define SMALL_INT(X) (SMALL_INTVAL (INTVAL (X)))
 #define SMALL_INTVAL(I) ((unsigned) (I) < 0x10000)
 #define SHORT_IMMEDIATE(X)  (SHORT_INTVAL (INTVAL(X)))
 #define SHORT_INTVAL(I)     ((unsigned) (I) < 0x100)
+#define ADD_LOW_16(I)       ((I) >= 0 && (I) <= 32767)
+#define ADD_HIGH_16(I)      (((I) & 0x0000ffff) == 0)
+#define AND_LOW_16(I)       ((I) >= 0 && (I) <= 32767)
+#define AND_HIGH_16(I)      (((I) & 0x0000ffff) == 0)
 
 #define CONST_OK_FOR_LETTER_P(VALUE, C)                           \
    ((C) == 'I' ? (SMALL_INTVAL(VALUE))                            \
     : (C) == 'J' ? (SHORT_INTVAL(VALUE))                          \
     : (C) == 'K' ? ((VALUE) == 0)                                 \
-    : (C) == 'L' ? ! ((VALUE) & ~0x0000ffff)	                  \
-    : (C) == 'M' ? ! ((VALUE) & ~0xffff0000)	                  \
-    : (C) == 'N' ? ((VALUE) == -1 || (VALUE) == 1 ||              \
-                    (VALUE) == -2 || (VALUE) == 2)                \
+    : (C) == 'L' ? ((VALUE) >= 0 && (VALUE) <= 32767)             \
+    : (C) == 'M' ? (((VALUE) & 0x0000ffff) == 0)                  \
+    : (C) == 'N' ? ((VALUE) == -1 || (VALUE) == 1                 \
+                    || (VALUE) == -2 || (VALUE) == 2)             \
+    : (C) == 'O' ? (((VALUE) & 0xffff0000) == 0xffff0000)         \
+    : (C) == 'P' ? (((VALUE) & 0x0000ffff) == 0xffff)             \
     : 0)
 
 #define CONST_DOUBLE_OK_FOR_LETTER_P(VALUE, C)   1
@@ -1030,7 +1068,7 @@ enum reg_class
 /* We use post decrement on the 1600 because there isn't
    a pre-decrement addressing mode. This means that we
    assume the stack pointer always points at the next
-   FREE location on the stack. */
+   FREE location on the stack.  */
 #define STACK_PUSH_CODE POST_INC
 
 /* Offset within stack frame to start allocating local variables at.
@@ -1040,7 +1078,7 @@ enum reg_class
 #define STARTING_FRAME_OFFSET  0
 
 /* Offset from the stack pointer register to the first
-   location at which outgoing arguments are placed. */
+   location at which outgoing arguments are placed.  */
 #define STACK_POINTER_OFFSET (0)
 
 struct dsp16xx_frame_info
@@ -1052,6 +1090,7 @@ struct dsp16xx_frame_info
   unsigned int  reg_size;	/* # bytes needed to store regs */
   long		fp_save_offset;	/* offset from vfp to store registers */
   unsigned long sp_save_offset;	/* offset from new sp to store registers */
+  int		pr_save_offset;	/* offset to saved PR */
   int		initialized;	/* != 0 if frame size already calculated */
   int		num_regs;	/* number of registers saved */
   int           function_makes_calls;  /* Does the function make calls */
@@ -1059,8 +1098,10 @@ struct dsp16xx_frame_info
 
 extern struct dsp16xx_frame_info current_frame_info;
 
+#define RETURN_ADDR_OFF current_frame_info.pr_save_offset
+
 /* If we generate an insn to push BYTES bytes,
-   this says how many the stack pointer really advances by. */
+   this says how many the stack pointer really advances by.  */
 /* #define PUSH_ROUNDING(BYTES) ((BYTES)) */
 
 /* If defined, the maximum amount of space required for outgoing
@@ -1070,11 +1111,11 @@ extern struct dsp16xx_frame_info current_frame_info;
    increase the stack frame size by this amount.
 
    It is not proper to define both 'PUSH_ROUNDING' and
-   'ACCUMULATE_OUTGOING_ARGS'. */
+   'ACCUMULATE_OUTGOING_ARGS'.  */
 #define ACCUMULATE_OUTGOING_ARGS 1
 
 /* Offset of first parameter from the argument pointer
-   register value. */
+   register value.  */
 
 #define FIRST_PARM_OFFSET(FNDECL)   (0)
 
@@ -1082,7 +1123,7 @@ extern struct dsp16xx_frame_info current_frame_info;
    pops the arguments described by the number-of-args field in the call.
    FUNDECL is the declaration node of the function (as a tree),
    FUNTYPE is the data type of the function (as a tree),
-   or for a library call it is an identifier node for the subroutine name. */
+   or for a library call it is an identifier node for the subroutine name.  */
 
 #define RETURN_POPS_ARGS(FUNDECL,FUNTYPE,SIZE) 0
 
@@ -1091,7 +1132,7 @@ extern struct dsp16xx_frame_info current_frame_info;
    If the precise function being called is known, FUNC is its FUNCTION_DECL;
    otherwise, FUNC is 0. On the 1610 all function return their values
    in a0 (i.e. the upper 16 bits). If the return value is 32-bits the
-   entire register is significant. */
+   entire register is significant.  */
 
 #define VALUE_REGNO(MODE)  (REG_Y)
 
@@ -1102,7 +1143,7 @@ extern struct dsp16xx_frame_info current_frame_info;
    assuming the value has mode MODE.  */
 #define LIBCALL_VALUE(MODE)  gen_rtx_REG (MODE, VALUE_REGNO(MODE))
 
-/* 1 if N is a possible register number for a function value. */
+/* 1 if N is a possible register number for a function value.  */
 #define FUNCTION_VALUE_REGNO_P(N) ((N) == REG_Y)
 
 
@@ -1120,7 +1161,7 @@ extern struct dsp16xx_frame_info current_frame_info;
     (otherwise it is an extra parameter matching an ellipsis).  */
 
 /* On the 1610 all args are pushed, except if -mregparm is specified
-   then the first two words of arguments are passed in a0, a1. */
+   then the first two words of arguments are passed in a0, a1.  */
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED) \
   dsp16xx_function_arg (CUM, MODE, TYPE, NAMED)
 
@@ -1130,7 +1171,7 @@ extern struct dsp16xx_frame_info current_frame_info;
 /* Define the profitability of saving registers around calls.
    NOTE: For now we turn this off because of a bug in the
    caller-saves code and also because i'm not sure it is helpful
-   on the 1610. */
+   on the 1610.  */
 
 #define CALLER_SAVE_PROFITABLE(REFS,CALLS) 0
 
@@ -1152,12 +1193,12 @@ extern struct dsp16xx_frame_info current_frame_info;
    during the scan of that argument list.  This data type should
    hold all necessary information about the function itself
    and about the args processed so far, enough to enable macros
-   such as FUNCTION_ARG to determine where the next arg should go. */
+   such as FUNCTION_ARG to determine where the next arg should go.  */
 #define CUMULATIVE_ARGS int
 
 /* Initialize a variable CUM of type CUMULATIVE_ARGS
    for a call to a function whose data type is FNTYPE.
-   For a library call, FNTYPE is 0. */
+   For a library call, FNTYPE is 0.  */
 #define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME,INDIRECT)  ((CUM) = 0)
 
 /* Update the data in CUM to advance over an argument
@@ -1167,36 +1208,15 @@ extern struct dsp16xx_frame_info current_frame_info;
 #define FUNCTION_ARG_ADVANCE(CUM, MODE, TYPE, NAMED)	\
   dsp16xx_function_arg_advance (&CUM, MODE,TYPE, NAMED)
 
-/* 1 if N is a possible register number for function argument passing. */
+/* 1 if N is a possible register number for function argument passing.  */
 #define FUNCTION_ARG_REGNO_P(N)   \
   ((N) == REG_Y || (N) == REG_YL || (N) == REG_PROD || (N) == REG_PRODL)
 
-/* This macro generates the assembly code for function entry.
-   FILE is a stdio stream to output the code to.
-   SIZE is an int: how many units of temporary storage to allocate.
-   Refer to the array `regs_ever_live' to determine which registers
-   to save; `regs_ever_live[I]' is nonzero if register number I
-   is ever used in the function.  This macro is responsible for
-   knowing which registers should not be saved even if used. */
-
-#define FUNCTION_PROLOGUE(FILE, SIZE)     function_prologue(FILE, SIZE)
-
 /* Output assembler code to FILE to increment profiler label # LABELNO
-   for profiling a function entry. */
+   for profiling a function entry.  */
 
 #define FUNCTION_PROFILER(FILE, LABELNO)        \
-  internal_error ("Profiling not implemented yet.")
-
-/* Output assembler code to FILE to initialize this source file's
-   basic block profiling info, if that has not already been done. */
-#define FUNCTION_BLOCK_PROFILER(FILE, LABELNO)  \
-  internal_error ("Profiling not implemented yet.")
-
-/* Output assembler code to FILE to increment the entry-count for
-   the BLOCKNO'th basic block in this source file. */
-#define BLOCK_PROFILER(FILE, BLOCKNO)	        \
-  internal_error ("Profiling not implemented yet.")
-
+  internal_error ("profiling not implemented yet")
 
 /* EXIT_IGNORE_STACK should be nonzero if, when returning from a function,
    the stack pointer does not matter.  The value is tested only in
@@ -1206,7 +1226,7 @@ extern struct dsp16xx_frame_info current_frame_info;
 #define EXIT_IGNORE_STACK  (0)
 
 #define TRAMPOLINE_TEMPLATE(FILE) \
-  internal_error ("Trampolines not yet implemented");
+  internal_error ("trampolines not yet implemented");
 
 /* Length in units of the trampoline for entering a nested function.
    This is a dummy value  */
@@ -1215,31 +1235,19 @@ extern struct dsp16xx_frame_info current_frame_info;
 
 /* Emit RTL insns to initialize the variable parts of a trampoline.
    FNADDR is an RTX for the address of the function's pure code.
-   CXT is an RTX for the static chain value for the function. */
+   CXT is an RTX for the static chain value for the function.  */
 
 #define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT)			\
-  internal_error ("Trampolines not yet implemented");
-
-/* This macro generates the assembly code for function exit,
-   on machines that need it.  If FUNCTION_EPILOGUE is not defined
-   then individual return instructions are generated for each
-   return statement.  Args are same as for FUNCTION_PROLOGUE.
-
-   The function epilogue should not depend on the current stack pointer!
-   It should use the frame pointer only.  This is mandatory because
-   of alloca; we also take advantage of it to omit stack adjustments
-   before returning. */
-
-#define FUNCTION_EPILOGUE(FILE, SIZE)   function_epilogue(FILE, SIZE)
+  internal_error ("trampolines not yet implemented");
 
 /* A C expression which is nonzero if a function must have and use a
    frame pointer. If its value is nonzero the functions will have a
-   frame pointer. */
+   frame pointer.  */
 #define FRAME_POINTER_REQUIRED  (current_function_calls_alloca)
 
 /* A C statement to store in the variable 'DEPTH' the difference
    between the frame pointer and the stack pointer values immediately
-   after the function prologue. */
+   after the function prologue.  */
 #define INITIAL_FRAME_POINTER_OFFSET(DEPTH)                     \
 {  (DEPTH) = initial_frame_pointer_offset();	                \
 }
@@ -1271,7 +1279,7 @@ extern struct dsp16xx_frame_info current_frame_info;
 #define LSHLHI3_LIBCALL     "__Emulate_lshlhi3"   /* NOT USED */
 
 /* Define this macro if calls to the ANSI C library functions memcpy and
-   memset should be generated instead of the BSD function bcopy & bzero. */
+   memset should be generated instead of the BSD function bcopy & bzero.  */
 #define TARGET_MEM_FUNCTIONS
 
 
@@ -1420,7 +1428,7 @@ extern struct dsp16xx_frame_info current_frame_info;
 /* Store in cc_status the expressions
    that the condition codes will describe
    after execution of an instruction whose pattern is EXP.
-   Do not alter them if the instruction would not alter the cc's. */
+   Do not alter them if the instruction would not alter the cc's.  */
 
 #define NOTICE_UPDATE_CC(EXP, INSN) \
    notice_update_cc( (EXP) )
@@ -1430,10 +1438,10 @@ extern struct dsp16xx_frame_info current_frame_info;
 /* Compute the cost of computing a constant rtl expression RTX
    whose rtx-code is CODE.  The body of this macro is a portion
    of a switch statement.  If the code is computed here,
-   return it with a return statement. */
+   return it with a return statement.  */
 #define CONST_COSTS(RTX,CODE,OUTER_CODE)                                \
   case CONST_INT:						        \
-    return 0;                                                           \
+    return (unsigned) INTVAL (RTX) < 65536 ? 0 : 2;                     \
   case LABEL_REF:						        \
   case SYMBOL_REF:						        \
   case CONST:								\
@@ -1444,7 +1452,7 @@ extern struct dsp16xx_frame_info current_frame_info;
 
 /* Like CONST_COSTS but applies to nonconstant RTL expressions.
    This can be used, for example to indicate how costly a multiply
-   instruction is. */
+   instruction is.  */
 #define RTX_COSTS(X,CODE,OUTER_CODE)                            \
   case MEM:                                                     \
     return GET_MODE (X) == QImode ? COSTS_N_INSNS (2) :         \
@@ -1458,45 +1466,21 @@ extern struct dsp16xx_frame_info current_frame_info;
     else                                                        \
         return COSTS_N_INSNS (38);                              \
   case PLUS:                                                    \
-    if (GET_MODE_CLASS (GET_MODE (X)) == MODE_INT)              \
-    {                                                           \
-        if (GET_CODE (XEXP (X,1)) == CONST_INT)                 \
-        {                                                       \
-            int number = INTVAL(XEXP (X,1));                    \
-            if (number == 1)                                    \
-               return COSTS_N_INSNS (1);                        \
-            if (INT_FITS_16_BITS(number))                       \
-                return COSTS_N_INSNS (2);                       \
-            else                                                \
-                return COSTS_N_INSNS (4);                       \
-        }                                                       \
-        return COSTS_N_INSNS (1);                               \
-    }                                                           \
-    else                                                        \
-        return COSTS_N_INSNS (38);                              \
   case MINUS:                                                   \
     if (GET_MODE_CLASS (GET_MODE (X)) == MODE_INT)              \
-    {                                                           \
-        if (GET_CODE (XEXP (X,1)) == CONST_INT)                 \
         {                                                       \
-            if (INT_FITS_16_BITS(INTVAL(XEXP(X,1))))            \
-                return COSTS_N_INSNS (2);                       \
-            else                                                \
-                return COSTS_N_INSNS (4);                       \
+          return (1 +                                           \
+                  rtx_cost (XEXP (X, 0), CODE) +                \
+                  rtx_cost (XEXP (X, 1), CODE));                \
         }                                                       \
-        return COSTS_N_INSNS (1);                               \
-    }                                                           \
     else                                                        \
         return COSTS_N_INSNS (38);                              \
+                                                                \
   case AND: case IOR: case XOR:                                 \
-    if (GET_CODE (XEXP (X,1)) == CONST_INT)                     \
-      {                                                         \
-        if (INT_FITS_16_BITS(INTVAL(XEXP(X,1))))                \
-            return COSTS_N_INSNS (2);                           \
-        else                                                    \
-            return COSTS_N_INSNS (4);                           \
-      }                                                         \
-    return COSTS_N_INSNS (1);                                   \
+        return (1 +                                             \
+                rtx_cost (XEXP (X, 0), CODE) +                  \
+                rtx_cost (XEXP (X, 1), CODE));                  \
+                                                                \
   case NEG: case NOT:                                           \
     return COSTS_N_INSNS (1);                                   \
   case ASHIFT:                                                  \
@@ -1509,45 +1493,49 @@ extern struct dsp16xx_frame_info current_frame_info;
             number == 16)                                       \
             return COSTS_N_INSNS (1);                           \
         else                                                    \
+	{                                                       \
+          if (TARGET_BMU)                                       \
             return COSTS_N_INSNS (2);                           \
+          else                                                  \
+            return COSTS_N_INSNS (num_1600_core_shifts(number)); \
+	}                                                       \
       }                                                         \
-    return COSTS_N_INSNS (1);
+    if (TARGET_BMU)                                             \
+      return COSTS_N_INSNS (1);                                 \
+    else                                                        \
+      return COSTS_N_INSNS (15);
 
 /* An expression giving the cost of an addressing mode that contains
-   address. */
+   address.  */
 #define ADDRESS_COST(ADDR)  dsp16xx_address_cost (ADDR)
 
 /* A c expression for the cost of moving data from a register in
    class FROM to one in class TO. The classes are expressed using
    the enumeration values such as GENERAL_REGS. A value of 2 is
-   the default. */
+   the default.  */
 #define REGISTER_MOVE_COST(MODE,FROM,TO)  dsp16xx_register_move_cost (FROM, TO)
 
 /* A C expression for the cost of moving data of mode MODE between
-   a register and memory. A value of 2 is the default. */
+   a register and memory. A value of 2 is the default.  */
 #define MEMORY_MOVE_COST(MODE,CLASS,IN)                          \
   (GET_MODE_CLASS(MODE) == MODE_INT && MODE == QImode ? 12       \
    : 16)
 
 /* A C expression for the cost of a branch instruction. A value of
    1 is the default; */
-#define BRANCH_COST 2
+#define BRANCH_COST 1
 
 
 /* Define this because otherwise gcc will try to put the function address
-   in any old pseudo register. We can only use pt. */
+   in any old pseudo register. We can only use pt.  */
 #define NO_FUNCTION_CSE
 
 /* Define this macro as a C expression which is nonzero if accessing less
    than a word of memory (i.e a char or short) is no faster than accessing
    a word of memory, i.e if such access require more than one instruction
    or if ther is no difference in cost between byte and (aligned) word
-   loads. */
+   loads.  */
 #define SLOW_BYTE_ACCESS 1
-
-/* Define this macro if zero-extension (of a char or short to an int) can
-   be done faster if the destination is a register that is know to be zero. */
-/* #define SLOW_ZERO_EXTEND */
 
 /* Define this macro if unaligned accesses have a cost many times greater than
    aligned accesses, for example if they are emulated in a trap handler */
@@ -1576,14 +1564,15 @@ extern struct dsp16xx_frame_info current_frame_info;
 #define BSS_SECTION_ASM_OP rsect_bss
 
 /* We will default to using 1610 if the user doesn't
-   specify it. */
+   specify it.  */
 #define DEFAULT_CHIP_NAME "1610"
 
 /* A list of names for sections other than the standard ones, which are
-   'in_text' and 'in_data' (and .bss if BSS_SECTION_ASM_OP is defined). */
+   'in_text' and 'in_data' (and .bss if BSS_SECTION_ASM_OP is defined).  */
 #define EXTRA_SECTIONS in_const
 
 #define EXTRA_SECTION_FUNCTIONS  \
+extern void const_section PARAMS ((void));                         \
 void                                                               \
 const_section ()                                                   \
 {                                                                  \
@@ -1597,11 +1586,12 @@ const_section ()                                                   \
 /* THE OVERALL FRAMEWORK OF AN ASSEMBLER FILE */
 
 /* Output at beginning of assembler file.  */
-#define ASM_FILE_START(FILE) dsp16xx_file_start () 
+#define ASM_FILE_START(FILE) coff_dsp16xx_file_start (FILE) 
 
 /* A C string constant describing how to begin a comment in the target
-   assembler language. */
-/* define ASM_COMMENT_START */
+   assembler language.  */
+#define ASM_COMMENT_START ""
+#define ASM_COMMENT_END ""
 
 /* Output to assembler file text saying following lines
    may contain character constants, extra white space, comments, etc.  */
@@ -1612,33 +1602,6 @@ const_section ()                                                   \
 #define ASM_APP_OFF ""
 
 /* OUTPUT OF DATA */
-
-/* This is how to output an assembler line defining a `double' constant.  */
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)  asm_output_float (FILE,VALUE)
-
-/* This is how to output an assembler line defining a `float' constant.  */
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)  asm_output_float (FILE, VALUE)
-
-/* This is how to output an assembler line defining a 'float' constant of
-   size HFmode. */
-#define ASM_OUTPUT_SHORT_FLOAT(FILE,VALUE)  asm_output_float (FILE, VALUE)
-
-/* This is how to output an assembler line defining an `char' constant.  */
-#define ASM_OUTPUT_CHAR(FILE,VALUE)              \
-( fprintf (FILE, "\tint "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* This is how to output an assembler line defining an `short' constant.  */
-#define ASM_OUTPUT_SHORT(FILE,EXP)   asm_output_long(FILE,INTVAL(EXP))
-
-/* This is how to output an assembler line defining a 'int' constant. */
-#define ASM_OUTPUT_INT(FILE, EXP)    asm_output_long(FILE,INTVAL(EXP))
-
-/* This is how to output an assembler line for a numeric constant byte.  */
-#define ASM_OUTPUT_BYTE(FILE,VALUE) \
-  fprintf ((FILE), "\tint %ld\n", (long)(VALUE))
-
 
 /* This is how we output a 'c' character string. For the 16xx
    assembler we have to do it one letter at a time */
@@ -1677,8 +1640,7 @@ const_section ()                                                   \
 		 The Vax assembler fails to stop reading the escape	      \
 		 after three digits, so this is the only way we		      \
 		 can get it to parse the data properly.  		      \
-	      if (i < thissize - 1					      \
-		  && p[i + 1] >= '0' && p[i + 1] <= '9')		      \
+	      if (i < thissize - 1 && ISDIGIT (p[i + 1]))		      \
 		fprintf (asm_out_file, "\'\n\tint \'");		              \
 		*/ \
 	  }								      \
@@ -1701,7 +1663,7 @@ const_section ()                                                   \
 /* Store in OUTPUT a string (made with alloca) containing
    an assembler-name for a local static variable or function
    named NAME. LABELNO is an integer which is different for
-   each call. */
+   each call.  */
 
 #define ASM_FORMAT_PRIVATE_NAME(OUTPUT, NAME, LABELNO)			\
   do {									\
@@ -1714,10 +1676,6 @@ const_section ()                                                   \
     (OUTPUT) = (char *) alloca (strlen (NAME) + 11);			\
     ASM_GENERATE_INTERNAL_LABEL (OUTPUT, temp, LABELNO);		\
   } while (0)
-
-#define ASM_OPEN_PAREN "("
-#define ASM_CLOSE_PAREN ")"
-
 
 /* OUTPUT OF UNINITIALIZED VARIABLES */
 
@@ -1748,7 +1706,7 @@ const_section ()                                                   \
 
 /* A C statement to output to the stdio stream any text necessary
    for declaring the name of an external symbol named name which
-   is referenced in this compilation but not defined. */
+   is referenced in this compilation but not defined.  */
 
 #define ASM_OUTPUT_EXTERNAL(FILE, DECL, NAME)   \
 {					\
@@ -1757,7 +1715,7 @@ const_section ()                                                   \
 	fprintf (FILE, "\n");		\
 }
 /* A C statement to output on stream an assembler pseudo-op to
-   declare a library function named external. */
+   declare a library function named external.  */
 
 #define ASM_OUTPUT_EXTERNAL_LIBCALL(FILE, FUN)    \
 {						\
@@ -1766,7 +1724,7 @@ const_section ()                                                   \
 	fprintf (FILE, "\n");			\
 }
 
-/* The prefix to add to user-visible assembler symbols. */
+/* The prefix to add to user-visible assembler symbols.  */
 
 #define USER_LABEL_PREFIX "_"
 
@@ -1830,29 +1788,29 @@ const_section ()                                                   \
 #define PRINT_OPERAND(FILE, X, CODE) print_operand(FILE, X, CODE)
 
 
-/* Print a memory address as an operand to reference that memory location. */
+/* Print a memory address as an operand to reference that memory location.  */
 
 #define PRINT_OPERAND_ADDRESS(FILE, ADDR)  print_operand_address (FILE, ADDR)
 
 /* This is how to output an insn to push a register on the stack.
    It need not be very fast code since it is used only for profiling  */
 #define ASM_OUTPUT_REG_PUSH(FILE,REGNO)    \
-  internal_error ("Profiling not implemented yet.");
+  internal_error ("profiling not implemented yet");
 
 /* This is how to output an insn to pop a register from the stack.
    It need not be very fast code since it is used only for profiling  */
 #define ASM_OUTPUT_REG_POP(FILE,REGNO)     \
-  internal_error ("Profiling not implemented yet."); 
+  internal_error ("profiling not implemented yet"); 
 
 /* OUTPUT OF DISPATCH TABLES */
 
 /* This macro should be provided on machines where the addresses in a dispatch
-   table are relative to the table's own address. */
+   table are relative to the table's own address.  */
 #define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL)  \
   fprintf (FILE, "\tint L%d-L%d\n", VALUE, REL)
 
 /* This macro should be provided on machines where the addresses in a dispatch
-   table are absolute. */
+   table are absolute.  */
 #define ASM_OUTPUT_ADDR_VEC_ELT(FILE, VALUE)  \
   fprintf (FILE, "\tint L%d\n", VALUE)
 
@@ -1860,11 +1818,11 @@ const_section ()                                                   \
 
 /* This is how to output an assembler line that says to advance 
    the location counter to a multiple of 2**LOG bytes. We should
-   not have to do any alignment since the 1610 is a word machine. */
+   not have to do any alignment since the 1610 is a word machine.  */
 #define ASM_OUTPUT_ALIGN(FILE,LOG)
 
 /* Define this macro if ASM_OUTPUT_SKIP should not be used in the text section
-   because it fails to put zero1 in the bytes that are skipped. */
+   because it fails to put zero1 in the bytes that are skipped.  */
 #define ASM_NO_SKIP_IN_TEXT 1
 
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
@@ -1872,17 +1830,17 @@ const_section ()                                                   \
 
 /* CONTROLLING DEBUGGING INFORMATION FORMAT */
 
-/* Define this macro if GCC should produce COFF-style debugging output
-   for SDB in response to the '-g' option */
-#define SDB_DEBUGGING_INFO
+#define PREFERRED_DEBUGGING_TYPE DWARF2_DEBUG
 
-/* Support generating stabs for the listing file generator */
-#define DBX_DEBUGGING_INFO
+#define ASM_OUTPUT_DEF(asm_out_file, LABEL1, LABEL2) \
+         do {						\
+	 fprintf (asm_out_file, ".alias " ); \
+         ASM_OUTPUT_LABELREF(asm_out_file, LABEL1);  \
+	 fprintf (asm_out_file, "=" ); \
+         ASM_OUTPUT_LABELREF(asm_out_file, LABEL2); \
+	 fprintf (asm_out_file, "\n" );			\
+	 } while (0)
 
-/* The default format when -g is given is still COFF debug info */
-#define PREFERRED_DEBUGGING_TYPE SDB_DEBUG
-
-#define DBX_REGISTER_NUMBER(REGNO)   (REGNO)
 
 /* MISCELLANEOUS PARAMETERS */
 
@@ -1893,14 +1851,8 @@ const_section ()                                                   \
 /* Define as C expression which evaluates to nonzero if the tablejump
    instruction expects the table to contain offsets from the address of the
    table.
-   Do not define this if the table should contain absolute addresses. */
+   Do not define this if the table should contain absolute addresses.  */
 /* #define CASE_VECTOR_PC_RELATIVE 1 */
-
-/* Specify the tree operation to be used to convert reals to integers.  */
-#define IMPLICIT_FIX_EXPR FIX_ROUND_EXPR
-
-/* This is the kind of divide that is easiest to do in the general case.  */
-#define EASY_DIV_EXPR TRUNC_DIV_EXPR
 
 /* Max number of bytes we can move from memory to memory
    in one reasonably fast instruction.  */
@@ -1910,7 +1862,7 @@ const_section ()                                                   \
    or bitwise 'and' instruction that truncates the count of a shift operation
    to a width equal to the number of bits needed to represent the size of the
    object being shifted. Do not define this macro unless the truncation applies
-   to both shift operations and bit-field operations (if any). */
+   to both shift operations and bit-field operations (if any).  */
 /* #define SHIFT_COUNT_TRUNCATED */
 
 /* Value is 1 if truncating an integer of INPREC bits to OUTPREC bits
@@ -1934,18 +1886,13 @@ const_section ()                                                   \
 #define TARGET_VERSION fprintf (stderr, " (%s, %s)", VERSION_INFO1, __DATE__)
 #endif
 
-#define VERSION_INFO1 "AT&T DSP16xx C Cross Compiler, version 1.2.0"
+#define VERSION_INFO1 "Lucent DSP16xx C Cross Compiler, version 1.3.0b"
 
 
 /* Define this as 1 if `char' should by default be signed; else as 0.  */
 #define DEFAULT_SIGNED_CHAR 1
 
-/* If this macro is defined, GNU CC gathers statistics about the number and
-   kind of tree node it allocates during each run. The option '-fstats' will
-   tell the compiler to print these statistics about the sizes of it obstacks. */
-#define GATHER_STATISTICS
-
 /* Define this so gcc does not output a call to __main, since we
-   are not currently supporting c++. */
+   are not currently supporting c++.  */
 #define INIT_SECTION_ASM_OP  1
 

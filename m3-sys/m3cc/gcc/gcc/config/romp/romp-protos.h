@@ -47,6 +47,7 @@ extern int reg_15_operand PARAMS ((rtx, enum machine_mode));
 extern int float_binary PARAMS ((rtx, enum machine_mode));
 extern int float_unary PARAMS ((rtx, enum machine_mode));
 extern int float_conversion PARAMS ((rtx, enum machine_mode));
+extern void romp_initialize_trampoline PARAMS ((rtx, rtx, rtx));
 #endif /* RTX_CODE */
 
 extern int first_reg_to_save PARAMS ((void));
@@ -55,9 +56,7 @@ extern int romp_using_r14 PARAMS ((void));
 extern int null_epilogue PARAMS ((void));
 extern int romp_sa_size PARAMS ((void));
 extern int romp_makes_calls PARAMS ((void));
-extern void output_prolog PARAMS ((FILE *, int));
 extern void output_encoded_offset PARAMS ((FILE *, unsigned));
-extern void output_epilog PARAMS ((FILE *, int));
 extern int romp_debugger_auto_correction PARAMS ((int));
 extern int romp_debugger_arg_correction PARAMS ((int));
 extern const char *output_in_line_mul PARAMS ((void));

@@ -164,7 +164,7 @@ emit_gnu_type ( text, rm )
 typedef __%s_TYPE__ %s_t;\n\
 #endif\n";
 
-    const char* pz_guard = (strcmp (z_type, "wchar") == 0)
+    const char *const pz_guard = (strcmp (z_type, "wchar") == 0)
                            ? " && ! defined(__cplusplus)" : "";
 
     printf (z_fmt, z_TYPE, pz_guard, z_TYPE, z_TYPE, z_type);
@@ -374,7 +374,7 @@ FIX_PROC_HEAD( char_macro_use_fix )
 	continue;
       if (!ISALPHA (*p))
 	continue;
-      if (ISALNUM (p[1]) || p[1] == '_')
+      if (ISIDNUM (p[1]))
 	continue;
 
       /* Splat all preceding text into the output buffer,
@@ -447,7 +447,7 @@ FIX_PROC_HEAD( char_macro_def_fix )
 	    goto found;
 	  p++;
 	}
-      while (ISALPHA (*p) || ISALNUM (*p) || *p == '_');
+      while (ISIDNUM (*p));
       /* Hit end of macro name without finding the string.  */
       continue;
 
@@ -461,7 +461,7 @@ FIX_PROC_HEAD( char_macro_def_fix )
 	continue;
       if (!ISALPHA (*p))
 	continue;
-      if (ISALNUM (p[1]) || p[1] == '_')
+      if (ISIDNUM (p[1]))
 	continue;
 
       /* The character at P is the one to look for in the following

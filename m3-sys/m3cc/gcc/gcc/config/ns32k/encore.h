@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler.  ENCORE NS32000 version.
-   Copyright (C) 1988, 1993, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1993, 2000, 2001, 2002 Free Software Foundation, Inc.
    Adapted by Robert Brown (brown@harvard.harvard.edu) from the Sequent
    version by Michael Tiemann (tiemann@mcc.com).
 
@@ -39,8 +39,6 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_OUTPUT_ADDR_DIFF_ELT
 #undef ASM_OUTPUT_ALIGN
 #undef ASM_OUTPUT_ASCII
-#undef ASM_OUTPUT_DOUBLE
-#undef ASM_OUTPUT_INT
 #undef ASM_OUTPUT_INTERNAL_LABEL
 #undef ASM_OUTPUT_LOCAL
 #undef CPP_PREDEFINES
@@ -49,7 +47,6 @@ Boston, MA 02111-1307, USA.  */
 #undef PRINT_OPERAND_ADDRESS
 #undef TARGET_VERSION
 #undef FUNCTION_PROFILER
-#undef ASM_OUTPUT_LABELREF_AS_INT
 
 #define TARGET_DEFAULT 9  /* 32332 with 32081.  */
 #define TARGET_VERSION fprintf (stderr, " (32000, Encore syntax)");
@@ -87,7 +84,7 @@ output_file_directive ((FILE), main_input_filename)
  */
 
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL,PREFIX,NUM)			\
-	sprintf (LABEL, "*.%s%d", PREFIX, NUM)
+	sprintf (LABEL, "*.%s%ld", PREFIX, (long)(NUM))
 #define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)			\
 	fprintf (FILE, ".%s%d:\n", PREFIX, NUM)
 #define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL)		\
@@ -97,22 +94,6 @@ output_file_directive ((FILE), main_input_filename)
  *  Different syntax for integer constants, double constants, and
  *  uninitialized locals.
  */
-
-#define ASM_OUTPUT_INT(FILE,VALUE)				\
-( fprintf (FILE, "\t.double "),					\
-  output_addr_const (FILE, (VALUE)),				\
-  fprintf (FILE, "\n"))
-
-#define ASM_OUTPUT_LABELREF_AS_INT(STREAM, NAME)			\
-do {									\
-  fprintf (STREAM, "\t.double\t");					\
-  ASM_OUTPUT_LABELREF (STREAM, NAME);					\
-  fprintf (STREAM, "\n");						\
-} while (0)
-
-
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)				\
- fprintf (FILE, "\t.long 0f%.20e\n", (VALUE))
 
 #define ASM_OUTPUT_LOCAL(FILE, NAME, SIZE, ROUNDED)		\
 ( fputs ("\t.bss ", (FILE)),					\
@@ -128,15 +109,17 @@ do {									\
 
 #define ASM_OUTPUT_ASCII(file, p, size)			\
 do {							\
-  int i;						\
-  for (i = 0; i < (size); i++)				\
+  size_t i, limit = (size);				\
+  for (i = 0; i < limit; i++)				\
     {							\
       register int c = (p)[i];				\
       if ((i / 40) * 40 == i)				\
-      if (i == 0)					\
-        fprintf ((file), "\t.ascii \"");		\
-      else						\
-        fprintf ((file), "\"\n\t.ascii \"");		\
+        {						\
+          if (i == 0)					\
+            fprintf ((file), "\t.ascii \"");		\
+          else						\
+            fprintf ((file), "\"\n\t.ascii \"");	\
+        }						\
       if (c == '\"' || c == '\\')			\
         putc ('\\', (file));				\
       if (c >= ' ' && c < 0177)				\
@@ -144,8 +127,7 @@ do {							\
       else						\
         {						\
           fprintf ((file), "\\%o", c);			\
-          if (i < (size) - 1 				\
-              && (p)[i + 1] >= '0' && (p)[i + 1] <= '9')\
+          if (i < limit - 1 && ISDIGIT ((p)[i + 1]))	\
           fprintf ((file), "\"\n\t.ascii \"");		\
         }						\
     }							\

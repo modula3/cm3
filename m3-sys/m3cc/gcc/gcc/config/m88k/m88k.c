@@ -1,6 +1,6 @@
 /* Subroutines for insn-output.c for Motorola 88000.
-   Copyright (C) 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000
-   Free Software Foundation, Inc. 
+   Copyright (C) 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
+   2001 Free Software Foundation, Inc. 
    Contributed by Michael Tiemann (tiemann@mcc.com)
    Currently maintained by (gcc@dg-rtp.dg.com)
 
@@ -33,12 +33,15 @@ Boston, MA 02111-1307, USA.  */
 #include "insn-attr.h"
 #include "tree.h"
 #include "function.h"
-#include "c-tree.h"
 #include "expr.h"
+#include "libfuncs.h"
+#include "c-tree.h"
 #include "flags.h"
 #include "recog.h"
 #include "toplev.h"
 #include "tm_p.h"
+#include "target.h"
+#include "target-def.h"
 
 extern int flag_traditional;
 extern FILE *asm_out_file;
@@ -60,6 +63,43 @@ rtx m88k_compare_op0;		/* cmpsi operand 0 */
 rtx m88k_compare_op1;		/* cmpsi operand 1 */
 
 enum processor_type m88k_cpu;	/* target cpu */
+
+static void m88k_output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
+static void m88k_output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
+static void m88k_output_function_end_prologue PARAMS ((FILE *));
+static void m88k_output_function_begin_epilogue PARAMS ((FILE *));
+#if defined (CTOR_LIST_BEGIN) && !defined (OBJECT_FORMAT_ELF)
+static void m88k_svr3_asm_out_constructor PARAMS ((rtx, int));
+static void m88k_svr3_asm_out_destructor PARAMS ((rtx, int));
+#endif
+
+static int m88k_adjust_cost PARAMS ((rtx, rtx, rtx, int));
+
+/* Initialize the GCC target structure.  */
+#undef TARGET_ASM_BYTE_OP
+#define TARGET_ASM_BYTE_OP "\tbyte\t"
+#undef TARGET_ASM_ALIGNED_HI_OP
+#define TARGET_ASM_ALIGNED_HI_OP "\thalf\t"
+#undef TARGET_ASM_ALIGNED_SI_OP
+#define TARGET_ASM_ALIGNED_SI_OP "\tword\t"
+#undef TARGET_ASM_UNALIGNED_HI_OP
+#define TARGET_ASM_UNALIGNED_HI_OP "\tuahalf\t"
+#undef TARGET_ASM_UNALIGNED_SI_OP
+#define TARGET_ASM_UNALIGNED_SI_OP "\tuaword\t"
+
+#undef TARGET_ASM_FUNCTION_PROLOGUE
+#define TARGET_ASM_FUNCTION_PROLOGUE m88k_output_function_prologue
+#undef TARGET_ASM_FUNCTION_END_PROLOGUE
+#define TARGET_ASM_FUNCTION_END_PROLOGUE m88k_output_function_end_prologue
+#undef TARGET_ASM_FUNCTION_BEGIN_EPILOGUE
+#define TARGET_ASM_FUNCTION_BEGIN_EPILOGUE m88k_output_function_begin_epilogue
+#undef TARGET_ASM_FUNCTION_EPILOGUE
+#define TARGET_ASM_FUNCTION_EPILOGUE m88k_output_function_epilogue
+
+#undef TARGET_SCHED_ADJUST_COST
+#define TARGET_SCHED_ADJUST_COST m88k_adjust_cost
+
+struct gcc_target targetm = TARGET_INITIALIZER;
 
 /* Determine what instructions are needed to manufacture the integer VALUE
    in the given MODE.  */
@@ -362,7 +402,7 @@ legitimize_address (pic, orig, reg, scratch)
 	  if (GET_CODE (addr) == CONST_INT)
 	    {
 	      if (ADD_INT (addr))
-		return plus_constant_for_output (base, INTVAL (addr));
+		return plus_constant (base, INTVAL (addr));
 	      else if (! reload_in_progress && ! reload_completed)
 		addr = force_reg (Pmode, addr);
 	      /* We can't create any new registers during reload, so use the
@@ -456,15 +496,15 @@ legitimize_address (pic, orig, reg, scratch)
 #define MOVSTR_SI_LIMIT_88110   72
 #define MOVSTR_DI_LIMIT_88110   72
 
-static enum machine_mode mode_from_align[] =
+static const enum machine_mode mode_from_align[] =
 			      {VOIDmode, QImode, HImode, VOIDmode, SImode,
 			       VOIDmode, VOIDmode, VOIDmode, DImode};
-static int max_from_align[] = {0, MOVSTR_QI, MOVSTR_HI, 0, MOVSTR_SI,
-			       0, 0, 0, MOVSTR_DI};
-static int all_from_align[] = {0, MOVSTR_QI, MOVSTR_ODD_HI, 0, MOVSTR_ODD_SI,
-			       0, 0, 0, MOVSTR_ODD_DI};
+static const int max_from_align[] = {0, MOVSTR_QI, MOVSTR_HI, 0, MOVSTR_SI,
+				     0, 0, 0, MOVSTR_DI};
+static const int all_from_align[] = {0, MOVSTR_QI, MOVSTR_ODD_HI, 0,
+				     MOVSTR_ODD_SI, 0, 0, 0, MOVSTR_ODD_DI};
 
-static int best_from_align[3][9] = {
+static const int best_from_align[3][9] = {
   {0, MOVSTR_QI_LIMIT_88100, MOVSTR_HI_LIMIT_88100, 0, MOVSTR_SI_LIMIT_88100,
    0, 0, 0, MOVSTR_DI_LIMIT_88100},
   {0, MOVSTR_QI_LIMIT_88110, MOVSTR_HI_LIMIT_88110, 0, MOVSTR_SI_LIMIT_88110,
@@ -857,7 +897,7 @@ output_call (operands, addr)
 			   - 2);
 #if (MONITOR_GCC & 0x2) /* How often do long branches happen?  */
 	  if ((unsigned) (delta + 0x8000) >= 0x10000)
-	    warning ("Internal gcc monitor: short-branch(%x)", delta);
+	    warning ("internal gcc monitor: short-branch(%x)", delta);
 #endif
 
 	  /* Delete the jump.  */
@@ -1474,16 +1514,16 @@ pc_or_label_ref (op, mode)
 /* This definition must match lang_independent_options from toplev.c.  */
 struct m88k_lang_independent_options
 {
-  const char *string;
-  int *variable;
-  int on_value;
-  const char *description;
+  const char *const string;
+  int *const variable;
+  const int on_value;
+  const char *const description;
 };
 
 static void output_options PARAMS ((FILE *,
-				    struct m88k_lang_independent_options *,
+				    const struct m88k_lang_independent_options *,
 				    int,
-				    struct m88k_lang_independent_options *,
+				    const struct m88k_lang_independent_options *,
 				    int, int, int, const char *, const char *,
 				    const char *));
 
@@ -1505,14 +1545,15 @@ output_option (file, sep, type, name, indent, pos, max)
   return pos + fprintf (file, "%s%s%s", sep, type, name);
 }
 
-static struct { const char *name; int value; } m_options[] = TARGET_SWITCHES;
+static const struct { const char *const name; const int value; } m_options[] =
+TARGET_SWITCHES;
 
 static void
 output_options (file, f_options, f_len, W_options, W_len,
 		pos, max, sep, indent, term)
      FILE *file;
-     struct m88k_lang_independent_options *f_options;
-     struct m88k_lang_independent_options *W_options;
+     const struct m88k_lang_independent_options *f_options;
+     const struct m88k_lang_independent_options *W_options;
      int f_len, W_len;
      int pos;
      int max;
@@ -1530,9 +1571,6 @@ output_options (file, f_options, f_len, W_options, W_len,
     pos = output_option (file, sep, "-traditional", "", indent, pos, max);
   if (profile_flag)
     pos = output_option (file, sep, "-p", "", indent, pos, max);
-  if (profile_block_flag)
-    pos = output_option (file, sep, "-a", "", indent, pos, max);
-
   for (j = 0; j < f_len; j++)
     if (*f_options[j].variable == f_options[j].on_value)
       pos = output_option (file, sep, "-f", f_options[j].string,
@@ -1561,8 +1599,8 @@ output_options (file, f_options, f_len, W_options, W_len,
 void
 output_file_start (file, f_options, f_len, W_options, W_len)
      FILE *file;
-     struct m88k_lang_independent_options *f_options;
-     struct m88k_lang_independent_options *W_options;
+     const struct m88k_lang_independent_options *f_options;
+     const struct m88k_lang_independent_options *W_options;
      int f_len, W_len;
 {
   register int pos;
@@ -1605,7 +1643,7 @@ output_ascii (file, opcode, max, p, size)
      FILE *file;
      const char *opcode;
      int max;
-     const unsigned char *p;
+     const char *p;
      int size;
 {
   int i;
@@ -1616,7 +1654,7 @@ output_ascii (file, opcode, max, p, size)
   fprintf (file, "%s\"", opcode);
   for (i = 0; i < size; i++)
     {
-      register int c = p[i];
+      register int c = (unsigned char) p[i];
 
       if (num > max)
 	{
@@ -1632,9 +1670,9 @@ output_ascii (file, opcode, max, p, size)
 	  num += 2;
 	  in_escape = 0;
 	}
-      else if (in_escape && c >= '0' && c <= '9')
+      else if (in_escape && ISDIGIT (c))
 	{
-	  /* If a digit follows an octal-escape, the Vax assembler fails
+	  /* If a digit follows an octal-escape, the VAX assembler fails
 	     to stop reading the escape after three digits.  Continue to
 	     output the values as an octal-escape until a non-digit is
 	     found.  */
@@ -1775,7 +1813,8 @@ static int  prologue_marked;
   (((BYTES) + (STACK_UNIT_BOUNDARY - 1)) & ~(STACK_UNIT_BOUNDARY - 1))
 
 /* Establish the position of the FP relative to the SP.  This is done
-   either during FUNCTION_PROLOGUE or by INITIAL_ELIMINATION_OFFSET.  */
+   either during output_function_prologue() or by
+   INITIAL_ELIMINATION_OFFSET.  */
 
 void
 m88k_layout_frame ()
@@ -1789,7 +1828,7 @@ m88k_layout_frame ()
   frame_size = get_frame_size ();
 
   /* Since profiling requires a call, make sure r1 is saved.  */
-  if (profile_flag || profile_block_flag)
+  if (current_function_profile)
     save_regs[1] = 1;
 
   /* If we are producing debug information, store r1 and r30 where the
@@ -1871,15 +1910,10 @@ m88k_layout_frame ()
     int need
       = ((m88k_stack_size ? STACK_UNIT_BOUNDARY - STARTING_FRAME_OFFSET : 0)
 	 - (frame_size % STACK_UNIT_BOUNDARY));
-    if (need)
-      {
-	if (need < 0)
-	  need += STACK_UNIT_BOUNDARY;
-	(void) assign_stack_local (BLKmode, need, BITS_PER_UNIT);
-	frame_size = get_frame_size ();
-      }
+    if (need < 0)
+      need += STACK_UNIT_BOUNDARY;
     m88k_stack_size
-      = ROUND_CALL_BLOCK_SIZE (m88k_stack_size + frame_size
+      = ROUND_CALL_BLOCK_SIZE (m88k_stack_size + frame_size + need
 			       + current_function_pretend_args_size);
   }
 }
@@ -1929,10 +1963,10 @@ uses_arg_area_p ()
   return 0;
 }
 
-void
-m88k_begin_prologue (stream, size)
+static void
+m88k_output_function_prologue (stream, size)
      FILE *stream ATTRIBUTE_UNUSED;
-     int size ATTRIBUTE_UNUSED;
+     HOST_WIDE_INT size ATTRIBUTE_UNUSED;
 {
   if (TARGET_OMIT_LEAF_FRAME_POINTER && ! quiet_flag && leaf_function_p ())
     fprintf (stderr, "$");
@@ -1940,8 +1974,8 @@ m88k_begin_prologue (stream, size)
   m88k_prologue_done = 1;	/* it's ok now to put out ln directives */
 }
 
-void
-m88k_end_prologue (stream)
+static void
+m88k_output_function_end_prologue (stream)
      FILE *stream;
 {
   if (TARGET_OCS_DEBUG_INFO && !prologue_marked)
@@ -1991,7 +2025,7 @@ m88k_expand_prologue ()
     {
       rtx return_reg = gen_rtx_REG (SImode, 1);
       rtx label = gen_label_rtx ();
-      rtx temp_reg;
+      rtx temp_reg = NULL_RTX;
 
       if (! save_regs[1])
 	{
@@ -2005,20 +2039,20 @@ m88k_expand_prologue ()
       if (! save_regs[1])
 	emit_move_insn (return_reg, temp_reg);
     }
-  if (profile_flag || profile_block_flag)
+  if (current_function_profile)
     emit_insn (gen_blockage ());
 }
 
 /* This function generates the assembly code for function exit,
-   on machines that need it.  Args are same as for FUNCTION_PROLOGUE.
+   on machines that need it.
 
    The function epilogue should not depend on the current stack pointer!
    It should use the frame pointer only, if there is a frame pointer.
    This is mandatory because of alloca; we also take advantage of it to
    omit stack adjustments before returning.  */
 
-void
-m88k_begin_epilogue (stream)
+static void
+m88k_output_function_begin_epilogue (stream)
      FILE *stream;
 {
   if (TARGET_OCS_DEBUG_INFO && !epilogue_marked && prologue_marked)
@@ -2028,10 +2062,10 @@ m88k_begin_epilogue (stream)
   epilogue_marked = 1;
 }
 
-void
-m88k_end_epilogue (stream, size)
+static void
+m88k_output_function_epilogue (stream, size)
      FILE *stream;
-     int size ATTRIBUTE_UNUSED;
+     HOST_WIDE_INT size ATTRIBUTE_UNUSED;
 {
   rtx insn = get_last_insn ();
 
@@ -2263,7 +2297,7 @@ m88k_debugger_offset (reg, offset)
 #if (MONITOR_GCC & 0x10) /* Watch for suspicious symbolic locations.  */
       if (! (GET_CODE (reg) == REG
 	     && REGNO (reg) >= FIRST_PSEUDO_REGISTER))
-	warning ("Internal gcc error: Can't express symbolic location");
+	warning ("internal gcc error: Can't express symbolic location");
 #endif
       return 0;
     }
@@ -2341,7 +2375,8 @@ output_tdesc (file, offset)
 
   tdesc_section ();
 
-  fprintf (file, "%s%d,%d", INT_ASM_OP, /* 8:0,22:(20 or 16),2:2 */
+  /* 8:0,22:(20 or 16),2:2 */
+  fprintf (file, "%s%d,%d", integer_asm_op (4, TRUE),
 	   (((xmask != 0) ? 20 : 16) << 2) | 2,
 	   flag_pic ? 2 : 1);
 
@@ -2382,7 +2417,7 @@ output_function_profiler (file, labelno, name, savep)
 {
   char label[256];
   char dbi[256];
-  const char *temp = (savep ? reg_names[2] : reg_names[10]);
+  const char *const temp = (savep ? reg_names[2] : reg_names[10]);
 
   /* Remember to update FUNCTION_PROFILER_LENGTH.  */
 
@@ -2432,73 +2467,6 @@ output_function_profiler (file, labelno, name, savep)
       fprintf (file, "\tld.d\t %s,%s,56\n", reg_names[8], reg_names[31]);
       fprintf (file, "\taddu\t %s,%s,64\n", reg_names[31], reg_names[31]);
     }
-}
-
-/* Output assembler code to FILE to initialize basic-block profiling for
-   the current module.  LABELNO is unique to each instance.  */
-
-void
-output_function_block_profiler (file, labelno)
-     FILE *file;
-     int labelno;
-{
-  char block[256];
-  char label[256];
-
-  /* Remember to update FUNCTION_BLOCK_PROFILER_LENGTH.  */
-
-  ASM_GENERATE_INTERNAL_LABEL (block, "LPBX", 0);
-  ASM_GENERATE_INTERNAL_LABEL (label, "LPY", labelno);
-
-  /* @@ Need to deal with PIC.  I'm not sure what the requirements are on
-     register usage, so I used r26/r27 to be safe.  */
-  fprintf (file, "\tor.u\t %s,%s,%shi16(%s)\n", reg_names[27], reg_names[0],
-		 m88k_pound_sign, &block[1]);
-  fprintf (file, "\tld\t %s,%s,%slo16(%s)\n", reg_names[26], reg_names[27],
-		 m88k_pound_sign, &block[1]);
-  fprintf (file, "\tbcnd\t %sne0,%s,%s\n",
-		 m88k_pound_sign, reg_names[26], &label[1]);
-  fprintf (file, "\tsubu\t %s,%s,64\n", reg_names[31], reg_names[31]);
-  fprintf (file, "\tst.d\t %s,%s,32\n", reg_names[2], reg_names[31]);
-  fprintf (file, "\tst.d\t %s,%s,40\n", reg_names[4], reg_names[31]);
-  fprintf (file, "\tst.d\t %s,%s,48\n", reg_names[6], reg_names[31]);
-  fprintf (file, "\tst.d\t %s,%s,56\n", reg_names[8], reg_names[31]);
-  fputs ("\tbsr.n\t ", file);
-  ASM_OUTPUT_LABELREF (file, "__bb_init_func");
-  putc ('\n', file);
-  fprintf (file, "\tor\t %s,%s,%slo16(%s)\n", reg_names[2], reg_names[27],
-		 m88k_pound_sign, &block[1]);
-  fprintf (file, "\tld.d\t %s,%s,32\n", reg_names[2], reg_names[31]);
-  fprintf (file, "\tld.d\t %s,%s,40\n", reg_names[4], reg_names[31]);
-  fprintf (file, "\tld.d\t %s,%s,48\n", reg_names[6], reg_names[31]);
-  fprintf (file, "\tld.d\t %s,%s,56\n", reg_names[8], reg_names[31]);
-  fprintf (file, "\taddu\t %s,%s,64\n", reg_names[31], reg_names[31]);
-  ASM_OUTPUT_INTERNAL_LABEL (file, "LPY", labelno);
-}
-
-/* Output assembler code to FILE to increment the count associated with
-   the basic block number BLOCKNO.  */
-
-void
-output_block_profiler (file, blockno)
-     FILE *file;
-     int blockno;
-{
-  char block[256];
-
-  /* Remember to update BLOCK_PROFILER_LENGTH.  */
-
-  ASM_GENERATE_INTERNAL_LABEL (block, "LPBX", 2);
-
-  /* @@ Need to deal with PIC.  I'm not sure what the requirements are on
-     register usage, so I used r26/r27 to be safe.  */
-  fprintf (file, "\tor.u\t %s,%s,%shi16(%s+%d)\n", reg_names[27], reg_names[0],
-	   m88k_pound_sign, &block[1], 4 * blockno);
-  fprintf (file, "\tld\t %s,%s,%slo16(%s+%d)\n", reg_names[26], reg_names[27],
-	   m88k_pound_sign, &block[1], 4 * blockno);
-  fprintf (file, "\taddu\t %s,%s,1\n", reg_names[26], reg_names[26]);
-  fprintf (file, "\tst\t %s,%s,%slo16(%s+%d)\n", reg_names[26], reg_names[27],
-	   m88k_pound_sign, &block[1], 4 * blockno);
 }
 
 /* Determine whether a function argument is passed in a register, and
@@ -2581,7 +2549,7 @@ m88k_function_arg (args_so_far, mode, type, named)
 struct rtx_def *
 m88k_builtin_saveregs ()
 {
-  rtx addr, dest;
+  rtx addr;
   tree fntype = TREE_TYPE (current_function_decl);
   int argadj = ((!(TYPE_ARG_TYPES (fntype) != 0
 		   && (TREE_VALUE (tree_last (TYPE_ARG_TYPES (fntype)))
@@ -2592,37 +2560,22 @@ m88k_builtin_saveregs ()
   variable_args_p = 1;
 
   fixed = 0;
-  if (CONSTANT_P (current_function_arg_offset_rtx))
-    {
-      fixed = (XINT (current_function_arg_offset_rtx, 0)
-	       + argadj) / UNITS_PER_WORD;
-    }
+  if (GET_CODE (current_function_arg_offset_rtx) == CONST_INT)
+    fixed = ((INTVAL (current_function_arg_offset_rtx) + argadj)
+	     / UNITS_PER_WORD);
 
   /* Allocate the register space, and store it as the __va_reg member.  */
   addr = assign_stack_local (BLKmode, 8 * UNITS_PER_WORD, -1);
-  MEM_ALIAS_SET (addr) = get_varargs_alias_set ();
+  set_mem_alias_set (addr, get_varargs_alias_set ());
   RTX_UNCHANGING_P (addr) = 1;
   RTX_UNCHANGING_P (XEXP (addr, 0)) = 1;
 
   /* Now store the incoming registers.  */
   if (fixed < 8)
-    {
-      dest = change_address (addr, Pmode,
-			     plus_constant (XEXP (addr, 0),
-					    fixed * UNITS_PER_WORD));
-      move_block_from_reg (2 + fixed, dest, 8 - fixed,
-			   UNITS_PER_WORD * (8 - fixed));
-
-      if (current_function_check_memory_usage)
-	{
-	  emit_library_call (chkr_set_right_libfunc, 1, VOIDmode, 3,
-			     dest, ptr_mode,
-			     GEN_INT (UNITS_PER_WORD * (8 - fixed)),
-			     TYPE_MODE (sizetype),
-			     GEN_INT (MEMORY_USE_RW),
-			     TYPE_MODE (integer_type_node));
-	}
-    }
+    move_block_from_reg (2 + fixed,
+			 adjust_address (addr, Pmode, fixed * UNITS_PER_WORD),
+			 8 - fixed,
+			 UNITS_PER_WORD * (8 - fixed));
 
   /* Return the address of the save area, but don't put it in a
      register.  This fails when not optimizing and produces worse code
@@ -2859,7 +2812,7 @@ print_operand (file, x, code)
   if (sequencep)
     {
       if (code < 'B' || code > 'E')
-	output_operand_lossage ("%R not followed by %B/C/D/E");
+	output_operand_lossage ("%%R not followed by %%B/C/D/E");
       if (reversep)
 	xc = reverse_condition (xc);
       sequencep = 0;
@@ -2927,43 +2880,43 @@ print_operand (file, x, code)
       value >>= 16;
     case 'x': /* print the lower 16 bits of the integer constant in hex */
       if (xc != CONST_INT)
-	output_operand_lossage ("invalid %x/X value");
+	output_operand_lossage ("invalid %%x/X value");
       fprintf (file, "0x%x", value & 0xffff); return;
 
     case 'H': /* print the low 16 bits of the negated integer constant */
       if (xc != CONST_INT)
-	output_operand_lossage ("invalid %H value");
+	output_operand_lossage ("invalid %%H value");
       value = -value;
     case 'h': /* print the register or low 16 bits of the integer constant */
       if (xc == REG)
 	goto reg;
       if (xc != CONST_INT)
-	output_operand_lossage ("invalid %h value");
+	output_operand_lossage ("invalid %%h value");
       fprintf (file, "%d", value & 0xffff);
       return;
 
     case 'Q': /* print the low 8 bits of the negated integer constant */
       if (xc != CONST_INT)
-	output_operand_lossage ("invalid %Q value");
+	output_operand_lossage ("invalid %%Q value");
       value = -value;
     case 'q': /* print the register or low 8 bits of the integer constant */
       if (xc == REG)
 	goto reg;
       if (xc != CONST_INT)
-	output_operand_lossage ("invalid %q value");
+	output_operand_lossage ("invalid %%q value");
       fprintf (file, "%d", value & 0xff);
       return;
 
     case 'w': /* print the integer constant (X == 32 ? 0 : 32 - X) */
       if (xc != CONST_INT)
-	output_operand_lossage ("invalid %o value");
+	output_operand_lossage ("invalid %%o value");
       fprintf (file, "%d", value == 32 ? 0 : 32 - value);
       return;
 
     case 'p': /* print the logarithm of the integer constant */
       if (xc != CONST_INT
 	  || (value = exact_log2 (value)) < 0)
-	output_operand_lossage ("invalid %p value");
+	output_operand_lossage ("invalid %%p value");
       fprintf (file, "%d", value);
       return;
 
@@ -2976,12 +2929,12 @@ print_operand (file, x, code)
 	register int top, bottom;
 
 	if (xc != CONST_INT)
-	  output_operand_lossage ("invalid %s/S value");
+	  output_operand_lossage ("invalid %%s/S value");
 	/* All the "one" bits must be contiguous.  If so, MASK will be
 	   a power of two or zero.  */
 	mask = (uval | (uval - 1)) + 1;
 	if (!(uval && POWER_OF_2_or_0 (mask)))
-	  output_operand_lossage ("invalid %s/S value");
+	  output_operand_lossage ("invalid %%s/S value");
 	top = mask ? exact_log2 (mask) : 32;
 	bottom = exact_log2 (uval & ~(uval - 1));
 	fprintf (file,"%d<%d>", top - bottom, bottom);
@@ -2992,7 +2945,7 @@ print_operand (file, x, code)
       if (xc == LABEL_REF)
 	output_addr_const (file, x);
       else if (xc != PC)
-	output_operand_lossage ("invalid %P operand");
+	output_operand_lossage ("invalid %%P operand");
       return;
 
     case 'L': /* print 0 or 1 if operand is label_ref and then...  */
@@ -3023,7 +2976,7 @@ print_operand (file, x, code)
 	case LE: fputs ("le0", file); return;
 	case LT: fputs ("lt0", file); return;
 	case GE: fputs ("ge0", file); return;
-	default: output_operand_lossage ("invalid %B value");
+	default: output_operand_lossage ("invalid %%B value");
 	}
 
     case 'C': /* bb0/bb1 branch values for comparisons */
@@ -3040,7 +2993,7 @@ print_operand (file, x, code)
 	case LEU: fputs ("ls", file); return;
 	case LTU: fputs ("lo", file); return;
 	case GEU: fputs ("hs", file); return;
-	default:  output_operand_lossage ("invalid %C value");
+	default:  output_operand_lossage ("invalid %%C value");
 	}
 
     case 'D': /* bcnd branch values for float comparisons */
@@ -3053,7 +3006,7 @@ print_operand (file, x, code)
 	case LE: fputs ("0xe", file); return;
 	case LT: fputs ("0x4", file); return;
 	case GE: fputs ("0xb", file); return;
-	default: output_operand_lossage ("invalid %D value");
+	default: output_operand_lossage ("invalid %%D value");
 	}
 
     case 'E': /* bcnd branch values for special integers */
@@ -3061,12 +3014,12 @@ print_operand (file, x, code)
 	{
 	case EQ: fputs ("0x8", file); return;
 	case NE: fputs ("0x7", file); return;
-	default: output_operand_lossage ("invalid %E value");
+	default: output_operand_lossage ("invalid %%E value");
 	}
 
     case 'd': /* second register of a two register pair */
       if (xc != REG)
-	output_operand_lossage ("`%d' operand isn't a register");
+	output_operand_lossage ("`%%d' operand isn't a register");
       fputs (reg_names[REGNO (x) + 1], file);
       return;
 
@@ -3077,7 +3030,7 @@ print_operand (file, x, code)
 	  return;
 	}
       else if (xc != REG)
-	output_operand_lossage ("invalid %r value");
+	output_operand_lossage ("invalid %%r value");
     case 0:
     name:
       if (xc == REG)
@@ -3268,4 +3221,62 @@ symbolic_operand (op, mode)
     default:
       return 0;
     }
+}
+
+#if defined (CTOR_LIST_BEGIN) && !defined (OBJECT_FORMAT_ELF)
+static void
+m88k_svr3_asm_out_constructor (symbol, priority)
+     rtx symbol;
+     int priority ATTRIBUTE_UNUSED;
+{
+  const char *name = XSTR (symbol, 0);
+
+  init_section ();
+  fprintf (asm_out_file, "\tor.u\t r13,r0,hi16(");
+  assemble_name (asm_out_file, name);
+  fprintf (asm_out_file, ")\n\tor\t r13,r13,lo16(");
+  assemble_name (asm_out_file, name);
+  fprintf (asm_out_file, ")\n\tsubu\t r31,r31,%d\n\tst\t r13,r31,%d\n",
+	   STACK_BOUNDARY / BITS_PER_UNIT, REG_PARM_STACK_SPACE (0));
+}
+
+static void
+m88k_svr3_asm_out_destructor (symbol, priority)
+     rtx symbol;
+     int priority ATTRIBUTE_UNUSED;
+{
+  int i;
+
+  fini_section ();
+  assemble_integer (symbol, UNITS_PER_WORD, BITS_PER_WORD, 1);
+  for (i = 1; i < 4; i++)
+    assemble_integer (constm1_rtx, UNITS_PER_WORD, BITS_PER_WORD, 1);
+}
+#endif /* INIT_SECTION_ASM_OP && ! OBJECT_FORMAT_ELF */
+
+/* Adjust the cost of INSN based on the relationship between INSN that
+   is dependent on DEP_INSN through the dependence LINK.  The default
+   is to make no adjustment to COST.
+
+   On the m88k, ignore the cost of anti- and output-dependencies.  On
+   the m88100, a store can issue two cycles before the value (not the
+   address) has finished computing.  */
+
+static int
+m88k_adjust_cost (insn, link, dep, cost)
+     rtx insn;
+     rtx link;
+     rtx dep;
+     int cost;
+{
+  if (REG_NOTE_KIND (link) != 0)
+    return 0;  /* Anti or output dependence.  */
+
+  if (! TARGET_88100
+      && recog_memoized (insn) >= 0
+      && get_attr_type (insn) == TYPE_STORE
+      && SET_SRC (PATTERN (insn)) == SET_DEST (PATTERN (dep)))
+    return cost - 4;  /* 88110 store reservation station.  */
+
+  return cost;
 }

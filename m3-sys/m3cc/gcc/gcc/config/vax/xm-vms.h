@@ -1,5 +1,6 @@
-/* Configuration for GNU C-compiler for Vax.
-   Copyright (C) 1987, 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
+/* Configuration for GNU C-compiler for VAX.
+   Copyright (C) 1987, 1994, 1995, 1996, 1997, 2001
+   Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -39,19 +40,6 @@ Boston, MA 02111-1307, USA.  */
 #undef FILE_TYPE
 #endif
 
-/* target machine dependencies.
-   tm.h is a symbolic link to the actual target specific file.   */
-#include "tm.h"
-
-/* This describes the machine the compiler is hosted on.  */
-#define HOST_BITS_PER_CHAR 8
-#define HOST_BITS_PER_SHORT 16
-#define HOST_BITS_PER_INT 32
-#define HOST_BITS_PER_LONG 32
-#define HOST_BITS_PER_LONGLONG 64
-
-#define HOST_FLOAT_FORMAT VAX_FLOAT_FORMAT
-
 #define SUCCESS_EXIT_CODE 1
 #define FATAL_EXIT_CODE (44 | 0x10000000)  /* Abort, and no DCL message.  */
 
@@ -60,25 +48,10 @@ Boston, MA 02111-1307, USA.  */
 #define VMS
 #endif
 
-#ifndef __GNUC__
-/* not present, at least in VAX-11 C (VMS) v2.2 */
-#define R_OK 4
-#define W_OK 2
-#define X_OK 1
-#define F_OK 0
-#endif
-
 #define GCC_INCLUDE_DIR "///not used with VMS///"	/* nonsense string for now */
 
 /* and define a local equivalent (sort of) for unlink */
 #define unlink remove
-
-/* Used by the preprocessor to limit size of disk I/O chunks.
-   64K - 1 is the maximum supported by VAXCRTL.  Amounts in excess
-   of 35 blocks will bypass the VMS V6.x VIOC [Virtual I/O Cache],
-   so we'll pick a limit of 16K (32 blocks).  */
-#define MAX_READ_LEN	(32 * 512)
-#define MAX_WRITE_LEN	(32 * 512)
 
 /* Under VMS a directory specification can be enclosed either in square
    brackets or in angle brackets.  Thus we need to check both.  This
@@ -93,7 +66,7 @@ Boston, MA 02111-1307, USA.  */
    char * pnt_ = (C), * pnt1_;					\
    pnt1_ = pnt_ - 1;						\
    while (*++pnt1_)						\
-     if ((*pnt1_ >= 'A' && *pnt1_ <= 'Z')) *pnt1_ |= 0x20;	\
+     if (ISUPPER (*pnt1_)) *pnt1_ = TOLOWER (*pnt1_);		\
    pnt1_ = strrchr (pnt_, ']'); 				\
    pnt1_ = (pnt1_ == 0 ? strrchr (pnt_, '>') : pnt1_);		\
    pnt1_ = (pnt1_ == 0 ? strrchr (pnt_, ':') : pnt1_);		\
@@ -128,14 +101,20 @@ Boston, MA 02111-1307, USA.  */
 /* vprintf() has been available since VMS V4.6.  */
 
 #define HAVE_VPRINTF
+
+/* Early versions of VAX C for VMS do not have putenv.  Comment out
+   the following define if your system doesn't have putenv.  */
+#define HAVE_PUTENV
+
+#ifndef HAVE_PUTENV
+#define putenv(x)
+#endif
 
 #if defined(VAXC) || defined(__DECC)
 
 /* Customizations/kludges for building with DEC's VAX C compiler
    rather than GCC.  */
 
-#define NO_SYS_PARAMS_H		/* don't have <sys/params.h> */
-#define USE_C_ALLOCA		/* using alloca.c */
 #define QSORT_WORKAROUND	/* do not use VAXCRTL's qsort */
 
 /* use ANSI/SYSV style byte manipulation routines instead of BSD ones */
@@ -175,7 +154,6 @@ Boston, MA 02111-1307, USA.  */
    after having previously sorted something that was a multiple of 4
    can produce wrong results and result in data corruption.)  We'll
    use our own substitute (in vax.c) instead.  */
-/* #define QSORT_WORKAROUND */
 #ifdef QSORT_WORKAROUND
 #define qsort not_qsort
 #endif
@@ -192,14 +170,5 @@ Boston, MA 02111-1307, USA.  */
  #pragma message disable (undefescap)
 #endif
 
-#if defined(USE_C_ALLOCA) && !defined(alloca)
-/* Declare alloca() using similar logic to that in alloca.c.  */
-#ifdef __STDC__
-extern void *alloca(unsigned);
-#else
-extern char *alloca();
-#endif
-#endif
-
-#define OBJECT_SUFFIX ".obj"
-#define EXECUTABLE_SUFFIX ".exe"
+#define HOST_EXECUTABLE_SUFFIX ".exe"
+#define HOST_OBJECT_SUFFIX ".obj"

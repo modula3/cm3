@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler for Intel 80386
    running FreeBSD.
-   Copyright (C) 1988, 1992, 1994, 1996, 1997, 1999, 2000 Free Software
+   Copyright (C) 1988, 1992, 1994, 1996, 1997, 1999, 2000, 2002 Free Software
    Foundation, Inc.
    Contributed by Poul-Henning Kamp <phk@login.dkuug.dk>
 
@@ -24,14 +24,14 @@ Boston, MA 02111-1307, USA.  */
 /* This is tested by i386gas.h.  */
 #define YES_UNDERSCORES
 
-/* Don't assume anything about the header files. */
+/* Don't assume anything about the header files.  */
 #define NO_IMPLICIT_EXTERN_C
 
 #include "i386/gstabs.h"
 
 /* This goes away when the math-emulator is fixed */
-#undef TARGET_DEFAULT
-#define TARGET_DEFAULT \
+#undef TARGET_SUBTARGET_DEFAULT
+#define TARGET_SUBTARGET_DEFAULT \
   (MASK_80387 | MASK_IEEE_FP | MASK_FLOAT_RETURNS | MASK_NO_FANCY_MATH_387)
 
 /* The macro defined in i386.h doesn't work with the old gas of
@@ -76,28 +76,12 @@ Boston, MA 02111-1307, USA.  */
 /* FreeBSD using a.out does not support DWARF2 unwinding mechanisms.  */
 #define DWARF2_UNWIND_INFO 0
 
-/* The following macros are stolen from i386v4.h */
-/* These have to be defined to get PIC code correct */
-
-/* This is how to output an element of a case-vector that is relative.
-   This is only used for PIC code.  See comments by the `casesi' insn in
-   i386.md for an explanation of the expression this outputs. */
-
-#undef ASM_OUTPUT_ADDR_DIFF_ELT
-#define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL) \
-  fprintf (FILE, "\t.long _GLOBAL_OFFSET_TABLE_+[.-%s%d]\n", LPREFIX, VALUE)
-
-/* Indicate that jump tables go in the text section.  This is
-   necessary when compiling PIC code.  */
-
-#define JUMP_TABLES_IN_TEXT_SECTION 1
-
 /* Don't default to pcc-struct-return, because in FreeBSD we prefer the
    superior nature of the older gcc way.  */
 #define DEFAULT_PCC_STRUCT_RETURN 0
 
 /* Ensure we the configuration knows our system correctly so we can link with
-   libraries compiled with the native cc. */
+   libraries compiled with the native cc.  */
 #undef NO_DOLLAR_IN_LABEL
 
 /* i386 freebsd still uses old binutils that don't insert nops by default
@@ -252,3 +236,7 @@ do {                                                                    \
 
 /* Define this so we can compile MS code for use with WINE.  */
 #define HANDLE_PRAGMA_PACK_PUSH_POP
+
+/* FreeBSD 2.2.7's assembler does not support .quad properly.  Do not
+   use it.  */
+#undef ASM_QUAD

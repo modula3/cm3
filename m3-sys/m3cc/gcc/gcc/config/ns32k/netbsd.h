@@ -66,6 +66,7 @@ Boston, MA 02111-1307, USA.
 
 /* Get generic NetBSD definitions. */
 #include <netbsd.h>
+#include <netbsd-aout.h>
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
@@ -79,15 +80,6 @@ Boston, MA 02111-1307, USA.
 
 #undef PTRDIFF_TYPE
 #define PTRDIFF_TYPE "int"
-
-#undef WCHAR_TYPE
-#define WCHAR_TYPE	"int"
-
-#undef WCHAR_UNSIGNED
-#define WCHAR_UNSIGNED	0
-
-#undef WCHAR_TYPE_SIZE
-#define WCHAR_TYPE_SIZE	32
 
 /* This is BSD, so it wants DBX format.  */
 

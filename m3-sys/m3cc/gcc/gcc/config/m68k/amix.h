@@ -36,7 +36,7 @@ Boston, MA 02111-1307, USA.  */
 /* Names to predefine in the preprocessor for this target machine.  For the
    Amiga, these definitions match those of the native AT&T compiler.  Note
    that we override the definition in m68kv4.h, where SVR4 is defined and
-   AMIX isn't. */
+   AMIX isn't.  */
 
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES \
@@ -95,15 +95,15 @@ do {									\
 /* This definition of ASM_OUTPUT_ASCII is the same as the one in m68k/sgs.h,
    which has been overridden by the one in svr4.h.  However, we can't use
    the one in svr4.h because the amix assembler croaks on some of the
-   strings that it emits (such as .string "\"%s\"\n"). */
+   strings that it emits (such as .string "\"%s\"\n").  */
 
 #undef ASM_OUTPUT_ASCII
 #define ASM_OUTPUT_ASCII(FILE,PTR,LEN)				\
 do {								\
-  register int sp = 0, lp = 0, ch;				\
-  fprintf ((FILE), "%s", BYTE_ASM_OP);				\
+  register size_t sp = 0, limit = (LEN);			\
+  fputs (integer_asm_op (1, TRUE), (FILE));			\
   do {								\
-    ch = (PTR)[sp];						\
+    int ch = (PTR)[sp];						\
     if (ch > ' ' && ! (ch & 0x80) && ch != '\\')		\
       {								\
 	fprintf ((FILE), "'%c", ch);				\
@@ -112,18 +112,18 @@ do {								\
       {								\
 	fprintf ((FILE), "0x%x", ch);				\
       }								\
-    if (++sp < (LEN))						\
+    if (++sp < limit)						\
       {								\
 	if ((sp % 10) == 0)					\
 	  {							\
-	    fprintf ((FILE), "\n%s", BYTE_ASM_OP);		\
+	    fprintf ((FILE), "\n%s", integer_asm_op (1, TRUE));	\
 	  }							\
 	else							\
 	  {							\
 	    putc (',', (FILE));					\
 	  }							\
       }								\
-  } while (sp < (LEN));						\
+  } while (sp < limit);						\
   putc ('\n', (FILE));						\
 } while (0)
 
@@ -136,10 +136,12 @@ do {								\
 
 #undef ASM_GENERATE_INTERNAL_LABEL
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL,PREFIX,NUM)	\
+do {							\
   if (flag_pic && !strcmp(PREFIX,"LC"))			\
-    sprintf (LABEL, "*%s%%%d", PREFIX, NUM);		\
+    sprintf (LABEL, "*%s%%%ld", PREFIX, (long)(NUM));	\
   else							\
-    sprintf (LABEL, "*%s%s%d", LOCAL_LABEL_PREFIX, PREFIX, NUM)
+    sprintf (LABEL, "*%s%s%ld", LOCAL_LABEL_PREFIX, PREFIX, (long)(NUM)); \
+} while (0)
 
 #undef ASM_OUTPUT_INTERNAL_LABEL
 #define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)	\

@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler.  System/370 version.
-   Copyright (C) 1989, 1993, 1995, 1996, 1997, 1998, 1999, 2000
+   Copyright (C) 1989, 1993, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002
    Free Software Foundation, Inc.
    Contributed by Jan Stein (jan@cd.chalmers.se).
    Modified for OS/390 LanguageEnvironment C by Dave Pitts (dpitts@cozx.com)
@@ -22,8 +22,8 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-#ifndef __I370_H__
-#define __I370_H__
+#ifndef GCC_I370_H
+#define GCC_I370_H
 /* Run-time compilation parameters selecting different hardware subsets.  */
 
 extern int target_flags;
@@ -629,16 +629,16 @@ enum reg_class
 
 #define TRAMPOLINE_TEMPLATE(FILE)					\
 {									\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x05E0));				\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x5800 | STATIC_CHAIN_REGNUM << 4)); \
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0xE00A));				\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x58F0)); 				\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0xE00E));				\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x07FF));				\
-  ASM_OUTPUT_SHORT (FILE, const0_rtx);					\
-  ASM_OUTPUT_SHORT (FILE, const0_rtx);					\
-  ASM_OUTPUT_SHORT (FILE, const0_rtx);					\
-  ASM_OUTPUT_SHORT (FILE, const0_rtx);					\
+  assemble_aligned_integer (2, GEN_INT (0x05E0));			\
+  assemble_aligned_integer (2, GEN_INT (0x5800 | STATIC_CHAIN_REGNUM << 4)); \
+  assemble_aligned_integer (2, GEN_INT (0xE00A));			\
+  assemble_aligned_integer (2, GEN_INT (0x58F0)); 			\
+  assemble_aligned_integer (2, GEN_INT (0xE00E));			\
+  assemble_aligned_integer (2, GEN_INT (0x07FF));			\
+  assemble_aligned_integer (2, const0_rtx);				\
+  assemble_aligned_integer (2, const0_rtx);				\
+  assemble_aligned_integer (2, const0_rtx);				\
+  assemble_aligned_integer (2, const0_rtx);				\
 }
 
 /* Length in units of the trampoline for entering a nested function.  */
@@ -861,10 +861,6 @@ enum reg_class
 
 /* #define CASE_VECTOR_PC_RELATIVE */
 
-/* Specify the tree operation to be used to convert reals to integers.  */
-
-#define IMPLICIT_FIX_EXPR FIX_ROUND_EXPR
-
 /* Define this if fixuns_trunc is the same as fix_trunc.  */
 
 #define FIXUNS_TRUNC_LIKE_FIX_TRUNC
@@ -873,18 +869,10 @@ enum reg_class
 
 #define DEFAULT_SIGNED_CHAR 0
 
-/* This is the kind of divide that is easiest to do in the general case.  */
-
-#define EASY_DIV_EXPR TRUNC_DIV_EXPR
-
 /* Max number of bytes we can move from memory to memory in one reasonably
    fast instruction.  */
 
 #define MOVE_MAX 256
-
-/* Define this if zero-extension is slow (more than one real instruction).  */
-
-#define SLOW_ZERO_EXTEND 1
 
 /* Nonzero if access to memory by bytes is slow and undesirable.  */
 
@@ -1009,7 +997,7 @@ enum reg_class
 	      case MULT:  /* case UMULT: */ case DIV:      case UDIV: 	\
               /* and, or and xor set the cc's the wrong way !! */	\
 	      case AND:   case IOR:    case XOR:  			\
-              /* some shifts set the CC some don't. */			\
+              /* some shifts set the CC some don't.  */			\
               case ASHIFT: 	 case ASHIFTRT:  			\
                  do {} while (0);					\
               default:							\
@@ -1036,13 +1024,8 @@ enum reg_class
 /* ------------------------------------------ */
 /* Control the assembler format that we output.  */
 
-/* Define the parentheses used to group arithmetic operations
-   in assembler code.  */
-
-#define ASM_OPEN_PAREN "("
-#define ASM_CLOSE_PAREN ")"
-
-/* Define results of standard character escape sequences.  */
+/* Define standard character escape sequences for non-ASCII targets
+   only.  */
 
 #ifdef TARGET_EBCDIC
 #define TARGET_ESC	39
@@ -1053,14 +1036,6 @@ enum reg_class
 #define TARGET_VT	11
 #define TARGET_FF	12
 #define TARGET_CR	13
-#else 
-#define TARGET_BELL	007
-#define TARGET_BS	010
-#define TARGET_TAB	011
-#define TARGET_NEWLINE	012
-#define TARGET_VT	013
-#define TARGET_FF	014
-#define TARGET_CR	015
 #endif
 
 /* ======================================================== */
@@ -1082,9 +1057,6 @@ enum reg_class
   "8",  "9", "10", "11", "12", "13", "14", "15",			\
   "0",  "2",  "4",  "6"							\
 }
-
-/* How to renumber registers for dbx and gdb.  */
-#define DBX_REGISTER_NUMBER(REGNO)  (REGNO)
 
 #define ASM_FILE_START(FILE)						\
 { fputs ("\tRMODE\tANY\n", FILE);					\
@@ -1156,7 +1128,7 @@ enum reg_class
 
 /* Generate case label.  For HLASM we can change to the data CSECT
    and put the vectors out of the code body. The assembler just
-   concatenates CSECTs with the same name. */
+   concatenates CSECTs with the same name.  */
 
 #define ASM_OUTPUT_CASE_LABEL(FILE, PREFIX, NUM, TABLE)			\
   fprintf (FILE, "\tDS\t0F\n");                                         \
@@ -1199,47 +1171,6 @@ enum reg_class
   fprintf (FILE, "\tL\t%s,%d(13)\n\tLA\t13,4(13)\n",			\
      reg_names[REGNO], STACK_POINTER_OFFSET)
 
-/* This is how to output an assembler line defining a `double' constant.  */
-#define ASM_OUTPUT_DOUBLE(FILE, VALUE)					\
-  fprintf (FILE, "\tDC\tD'%.18G'\n", (VALUE))
-
-/* This is how to output an assembler line defining a `float' constant.  */
-#define ASM_OUTPUT_FLOAT(FILE, VALUE)					\
-  fprintf (FILE, "\tDC\tE'%.9G'\n", (VALUE))
-
-/* This outputs an integer, if not a CONST_INT must be address constant.  */
-
-#define ASM_OUTPUT_INT(FILE, EXP)					\
-{ 									\
-  if (GET_CODE (EXP) == CONST_INT)					\
-    {									\
-      fprintf (FILE, "\tDC\tF'");					\
-      output_addr_const (FILE, EXP);					\
-      fprintf (FILE, "'\n");						\
-    }									\
-  else									\
-    {									\
-      fprintf (FILE, "\tDC\tA(");					\
-      output_addr_const (FILE, EXP);					\
-      fprintf (FILE, ")\n");						\
-    }									\
-}
-
-/* This outputs a short integer.  */
-
-#define ASM_OUTPUT_SHORT(FILE, EXP)					\
-{									\
-  fprintf (FILE, "\tDC\tX'%04X'\n", INTVAL(EXP) & 0xFFFF);		\
-}
-
-/* This outputs a byte sized integer.  */
-
-#define ASM_OUTPUT_CHAR(FILE, EXP)					\
-  fprintf (FILE, "\tDC\tX'%02X'\n", INTVAL (EXP) )
-
-#define ASM_OUTPUT_BYTE(FILE, VALUE)					\
-  fprintf (FILE, "\tDC\tX'%02X'\n", VALUE)
-
 /* This outputs a text string.  The string are chopped up to fit into
    an 80 byte record.  Also, control and special characters, interpreted
    by the IBM assembler, are output numerically.  */
@@ -1248,11 +1179,11 @@ enum reg_class
 
 #define ASM_OUTPUT_ASCII(FILE, PTR, LEN)				\
 {									\
-  int i, j;								\
-  int c;								\
-  for (j = 0, i = 0; i < LEN; j++, i++)					\
+  size_t i, limit = (LEN);						\
+  int j;								\
+  for (j = 0, i = 0; i < limit; j++, i++)				\
     {									\
-      c = PTR[i];							\
+      int c = (PTR)[i];							\
       if (ISCNTRL (c) || c == '&')					\
 	{								\
 	  if (j % MVS_ASCII_TEXT_LENGTH != 0 )				\
@@ -1355,7 +1286,7 @@ enum reg_class
 
 /* Print operand XV (an rtx) in assembler syntax to file FILE.
    CODE is a letter or dot (`z' in `%z0') or 0 if no letter was specified.
-   For `%' followed by punctuation, CODE is the punctuation and XV is null. */
+   For `%' followed by punctuation, CODE is the punctuation and XV is null.  */
 
 #define PRINT_OPERAND(FILE, XV, CODE)					\
 {									\
@@ -1597,10 +1528,6 @@ enum reg_class
     }									\
 }
 
-/* This macro generates the assembly code for function entry.
-   All of the C/370 environment is preserved.  */
-#define FUNCTION_PROLOGUE(FILE, LSIZE) i370_function_prolog ((FILE), (LSIZE));
-
 #define ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL)			\
 {									\
   if (strlen (NAME) + 1 > mvs_function_name_length)			\
@@ -1625,62 +1552,6 @@ enum reg_class
   fputs ("\tCSECT\n", FILE);						\
 }
 
-/* This macro generates the assembly code for function exit, on machines
-   that need it.  If FUNCTION_EPILOGUE is not defined then individual
-   return instructions are generated for each return statement.  Args are
-   same as for FUNCTION_PROLOGUE.
-
-   The function epilogue should not depend on the current stack pointer!
-   It should use the frame pointer only.  This is mandatory because
-   of alloca; we also take advantage of it to omit stack adjustments
-   before returning.  */
-
-#if MACROEPILOGUE == 1
-#define FUNCTION_EPILOGUE(FILE, LSIZE)					\
-{									\
-  int i;								\
-  check_label_emit();							\
-  mvs_check_page (FILE,14,0);						\
-  fprintf (FILE, "* Function %s epilogue\n", mvs_function_name);	\
-  fprintf (FILE, "\tEDCEPIL\n");					\
-  mvs_page_num++;							\
-  fprintf (FILE, "* Function %s literal pool\n", mvs_function_name);	\
-  fprintf (FILE, "\tDS\t0F\n" );					\
-  fprintf (FILE, "\tLTORG\n");						\
-  fprintf (FILE, "* Function %s page table\n", mvs_function_name);	\
-  fprintf (FILE, "\tDS\t0F\n");						\
-  fprintf (FILE, "PGT%d\tEQU\t*\n", function_base_page);		\
-  mvs_free_label_list();						\
-  for ( i = function_base_page; i < mvs_page_num; i++ )			\
-    fprintf (FILE, "\tDC\tA(PG%d)\n", i);				\
-}
-#else /* MACROEPILOGUE != 1 */
-#define FUNCTION_EPILOGUE(FILE, LSIZE)					\
-{									\
-  int i;								\
-  check_label_emit();							\
-  mvs_check_page (FILE,14,0);						\
-  fprintf (FILE, "* Function %s epilogue\n", mvs_function_name);	\
-  fprintf (FILE, "\tL\t13,4(,13)\n");					\
-  fprintf (FILE, "\tL\t14,12(,13)\n");					\
-  fprintf (FILE, "\tLM\t2,12,28(13)\n");				\
-  fprintf (FILE, "\tBALR\t1,14\n");					\
-  fprintf (FILE, "\tDC\tA(");						\
-  mvs_page_num++;							\
-  assemble_name (FILE, mvs_function_name);				\
-  fprintf (FILE, ")\n" );						\
-  fprintf (FILE, "* Function %s literal pool\n", mvs_function_name);	\
-  fprintf (FILE, "\tDS\t0F\n" );					\
-  fprintf (FILE, "\tLTORG\n");						\
-  fprintf (FILE, "* Function %s page table\n", mvs_function_name);	\
-  fprintf (FILE, "\tDS\t0F\n");						\
-  fprintf (FILE, "PGT%d\tEQU\t*\n", function_base_page);		\
-  mvs_free_label_list();						\
-  for ( i = function_base_page; i < mvs_page_num; i++ )			\
-    fprintf (FILE, "\tDC\tA(PG%d)\n", i);				\
-}
-#endif /* MACROEPILOGUE */
-
 /* Output assembler code to FILE to increment profiler label # LABELNO
    for profiling a function entry.  */
 
@@ -1702,12 +1573,9 @@ enum reg_class
   "f0",  "f2",  "f4",  "f6"						\
 }
 
-/* How to renumber registers for dbx and gdb.  */
-#define DBX_REGISTER_NUMBER(REGNO)  (REGNO)
-
 /* Print operand XV (an rtx) in assembler syntax to file FILE.
    CODE is a letter or dot (`z' in `%z0') or 0 if no letter was specified.
-   For `%' followed by punctuation, CODE is the punctuation and XV is null. */
+   For `%' followed by punctuation, CODE is the punctuation and XV is null.  */
 
 #define PRINT_OPERAND(FILE, XV, CODE)					\
 {									\
@@ -1822,7 +1690,7 @@ enum reg_class
 		mvs_page_lit += 8;					\
 		fprintf (FILE, "=D'%s'", buf);				\
 	      }								\
-	    else /* VOIDmode !?!? strange but true ... */		\
+	    else /* VOIDmode !?!? strange but true ...  */		\
 	      {								\
 		mvs_page_lit += 8;					\
 		fprintf (FILE, "=XL8'%08X%08X'", 			\
@@ -1958,40 +1826,6 @@ abort(); \
     }									\
 }
 
-/* This macro generates the assembly code for function exit, on machines
-   that need it.  If FUNCTION_EPILOGUE is not defined then individual
-   return instructions are generated for each return statement.  Args are
-   same as for FUNCTION_PROLOGUE.
-
-   The function epilogue should not depend on the current stack pointer!
-   It should use the frame pointer only.  This is mandatory because
-   of alloca; we also take advantage of it to omit stack adjustments
-   before returning.  */
-
-#define FUNCTION_EPILOGUE(FILE, LSIZE)					\
-{									\
-  int i;								\
-  check_label_emit();							\
-  mvs_check_page (FILE,14,0);						\
-  fprintf (FILE, "# Function epilogue\n");				\
-  fprintf (FILE, "\tL\tsp,4(0,sp)\n");					\
-  fprintf (FILE, "\tL\tlr,12(0,sp)\n");					\
-  fprintf (FILE, "\tLM\t2,12,28(sp)\n");				\
-  fprintf (FILE, "\tBASR\t1,lr\n");					\
-  mvs_page_num++;							\
-  fprintf (FILE, "# Function literal pool\n");				\
-  fprintf (FILE, "\t.balign\t4\n");					\
-  fprintf (FILE, "\t.ltorg\n");						\
-  fprintf (FILE, "# Function page table\n");				\
-  fprintf (FILE, "\t.balign\t4\n");					\
-  fprintf (FILE, ".LPGT%d:\n", function_base_page);			\
-  mvs_free_label_list();						\
-  for ( i = function_base_page; i < mvs_page_num; i++ )			\
-    fprintf (FILE, "\t.long\t.LPG%d\n", i);				\
-}
-
-#define FUNCTION_PROLOGUE(FILE, LSIZE) i370_function_prolog ((FILE), (LSIZE));
-
 /* Output assembler code to FILE to increment profiler label # LABELNO
    for profiling a function entry.  */
 /* Make it a no-op for now, so we can at least compile glibc */
@@ -2011,50 +1845,7 @@ abort(); \
 #undef ASM_OUTPUT_EXTERNAL
 
 #define ASM_DOUBLE "\t.double"     
-#define ASM_LONG "\t.long"
-#define ASM_SHORT "\t.short"
-#define ASM_BYTE "\t.byte"
 
-/* Argument to the flt pt. macros is a REAL_VALUE_TYPE which 
-   may or may not be a float/double, depending on whther we
-   are running in cross-compiler mode.  */
-/* This is how to output an assembler line defining a `double' constant.  */
-#define ASM_OUTPUT_DOUBLE(FILE, RVAL) {					\
-  char buf[50];								\
-  REAL_VALUE_TO_DECIMAL (RVAL,  HOST_WIDE_INT_PRINT_DOUBLE_HEX, buf);	\
-  fprintf (FILE, "\tDC\tD'%s'\n", buf);					\
-}
-
-/* This is how to output an assembler line defining a `float' constant.  */
-#define ASM_OUTPUT_FLOAT(FILE, RVAL) {					\
-  char buf[50];								\
-  REAL_VALUE_TO_DECIMAL (RVAL,  HOST_WIDE_INT_PRINT_DEC, buf);		\
-  fprintf (FILE, "\tDC\tE'%s'\n", buf); 				\
-}
-
-
-/* This is how to output an assembler line defining an `int' constant.  */
-#define ASM_OUTPUT_INT(FILE,VALUE)  \
-( fprintf (FILE, "%s ", ASM_LONG),              \
-  output_addr_const (FILE,(VALUE)),             \
-  putc('\n',FILE))
-
-/* Likewise for `char' and `short' constants.  */
-#define ASM_OUTPUT_SHORT(FILE,VALUE)  \
-( fprintf (FILE, "%s ", ASM_SHORT),             \
-  output_addr_const (FILE,(VALUE)),             \
-  putc('\n',FILE))
-
-
-#define ASM_OUTPUT_CHAR(FILE,VALUE)  \
-( fprintf (FILE, "%s", ASM_BYTE_OP),            \
-  output_addr_const (FILE, (VALUE)),            \
-  putc ('\n', FILE))
-
-/* This is how to output an assembler line for a numeric constant byte.  */
-#define ASM_OUTPUT_BYTE(FILE,VALUE)  \
-  fprintf ((FILE), "%s0x%x\n", ASM_BYTE_OP, (VALUE))
- 
 /* This is how to output the definition of a user-level label named NAME,
    such as the label on a static function or variable NAME.  */
 #define ASM_OUTPUT_LABEL(FILE,NAME)     \
@@ -2064,7 +1855,7 @@ abort(); \
 
 /* Generate internal label.  Since we can branch here from off page, we
    must reload the base register.  Note that internal labels are generated
-   for loops, goto's and case labels.   */
+   for loops, goto's and case labels.  */
 #undef ASM_OUTPUT_INTERNAL_LABEL
 #define ASM_OUTPUT_INTERNAL_LABEL(FILE, PREFIX, NUM) 			\
 {									\
@@ -2106,7 +1897,7 @@ abort(); \
    count is in %cl.  Some assemblers require %cl as an argument;
    some don't.
 
-   GAS requires the %cl argument, so override i386/unix.h. */
+   GAS requires the %cl argument, so override i386/unix.h.  */
 
 #undef SHIFT_DOUBLE_OMITS_COUNT
 #define SHIFT_DOUBLE_OMITS_COUNT 0
@@ -2165,4 +1956,4 @@ abort(); \
   fprintf ((FILE), ",%u\n", (ROUNDED)))
 
 #endif /* TARGET_ELF_ABI */
-#endif /* __I370_H__ */
+#endif /* ! GCC_I370_H */

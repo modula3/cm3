@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler, for Intel 80960
-   Copyright (C) 1992, 1993, 1995, 1996, 1998, 1999, 2000
+   Copyright (C) 1992, 1993, 1995, 1996, 1998, 1999, 2000, 2001, 2002
    Free Software Foundation, Inc.
    Contributed by Steven McGeady, Intel Corp.
    Additional Work by Glenn Colon-Bonet, Jonathan Shapiro, Andy Wilson
@@ -30,8 +30,9 @@ Boston, MA 02111-1307, USA.  */
 /* Names to predefine in the preprocessor for this target machine.  */
 #define CPP_PREDEFINES "-Di960 -Di80960 -DI960 -DI80960 -Acpu=i960 -Amachine=i960"
 
-/* Name to predefine in the preprocessor for processor variations.  */
-#define	CPP_SPEC "%{mic*:-D__i960\
+/* Name to predefine in the preprocessor for processor variations.
+   -mic* options make characters signed by default.  */
+#define	CPP_SPEC "%{mic*:-D__i960 -fsigned-char\
 			%{mka:-D__i960KA}%{mkb:-D__i960KB}\
 			%{mja:-D__i960JA}%{mjd:-D__i960JD}%{mjf:-D__i960JF}\
 			%{mrp:-D__i960RP}\
@@ -52,20 +53,13 @@ Boston, MA 02111-1307, USA.  */
 		%{!mcc:%{!mcf:-D__i960_KB -D__i960KB__ %{mic*:-D__i960KB}}}}}}}}}\
 	%{mlong-double-64:-D__LONG_DOUBLE_64__}"
 
-/* -mic* options make characters signed by default.  */
-/* Use #if rather than ?: because MIPS C compiler rejects ?: in
-   initializers.  */
-#if DEFAULT_SIGNED_CHAR
-#define SIGNED_CHAR_SPEC "%{funsigned-char:-D__CHAR_UNSIGNED__}"
-#else
-#define SIGNED_CHAR_SPEC "%{!fsigned-char:%{!mic*:-D__CHAR_UNSIGNED__}}"
-#endif
-
 /* Specs for the compiler, to handle processor variations. 
    If the user gives an explicit -gstabs or -gcoff option, then do not
-   try to add an implicit one, as this will fail.  */
+   try to add an implicit one, as this will fail. 
+   -mic* options make characters signed by default.  */
 #define CC1_SPEC \
-	"%{!mka:%{!mkb:%{!msa:%{!msb:%{!mmc:%{!mca:%{!mcc:%{!mcf:%{!mja:%{!mjd:%{!mjf:%{!mrp:-mka}}}}}}}}}}}}\
+	"%{mic*:-fsigned-char}\
+%{!mka:%{!mkb:%{!msa:%{!msb:%{!mmc:%{!mca:%{!mcc:%{!mcf:%{!mja:%{!mjd:%{!mjf:%{!mrp:-mka}}}}}}}}}}}}\
 	 %{!gs*:%{!gc*:%{mbout:%{g*:-gstabs}}\
 		       %{mcoff:%{g*:-gcoff}}\
 		       %{!mbout:%{!mcoff:%{g*:-gstabs}}}}}"
@@ -100,7 +94,7 @@ Boston, MA 02111-1307, USA.  */
    that -O means FP elimination.  Addressing through sp requires
    negative offset and more one word addressing in the most cases
    (offsets except for 0-4095 require one more word).  Therefore we've
-   not defined the macro. */
+   not defined the macro.  */
 /*#define CAN_DEBUG_WITHOUT_FP*/
 
 /* Do leaf procedure and tail call optimizations for -O2 and higher.  */
@@ -132,6 +126,10 @@ Boston, MA 02111-1307, USA.  */
   fprintf (asm_out_file, "\t.type\t0x%x;", A)
 
 /* Handle pragmas for compatibility with Intel's compilers.  */
+
+extern int i960_maxbitalignment;
+extern int i960_last_maxbitalignment;
+
 #define REGISTER_TARGET_PRAGMAS(PFILE) do {			\
   cpp_register_pragma (PFILE, 0, "align", i960_pr_align);	\
   cpp_register_pragma (PFILE, 0, "noalign", i960_pr_noalign);	\
@@ -150,7 +148,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* The following three are mainly used to provide a little sanity checking
    against the -mARCH flags given. The Jx series, for the purposes of
-   gcc, is a Kx with a data cache. */
+   gcc, is a Kx with a data cache.  */
 
 /* Nonzero if we should generate code for the KA and similar processors.
    No FPU, no microcode instructions.  */
@@ -372,7 +370,7 @@ extern int target_flags;
     }								\
   /* ??? See the LONG_DOUBLE_TYPE_SIZE definition below.  */	\
   if (TARGET_LONG_DOUBLE_64)					\
-    warning ("The -mlong-double-64 option does not work yet.");\
+    warning ("the -mlong-double-64 option does not work yet");\
   i960_initialize ();						\
 }
 
@@ -418,7 +416,7 @@ extern int target_flags;
 #define POINTER_SIZE 32
 
 /* Width in bits of a long double.  Define to 96, and let
-   ROUND_TYPE_ALIGN adjust the alignment for speed. */
+   ROUND_TYPE_ALIGN adjust the alignment for speed.  */
 #define	LONG_DOUBLE_TYPE_SIZE (TARGET_LONG_DOUBLE_64 ? 64 : 96)
 
 /* ??? This must be a constant, because real.c and real.h test it with #if.  */
@@ -500,7 +498,7 @@ extern int target_flags;
    ? bitsize_int (128) : round_up (COMPUTED, SPECIFIED))
 #define ROUND_TYPE_SIZE_UNIT(TYPE, COMPUTED, SPECIFIED)		\
   ((TREE_CODE (TYPE) == REAL_TYPE && TYPE_MODE (TYPE) == XFmode)	\
-   ? bitsize_int (16) : round_up (COMPUTED, SPECIFIED))
+   ? size_int (16) : round_up (COMPUTED, SPECIFIED))
 
 
 /* Standard register usage.  */
@@ -618,14 +616,19 @@ extern int target_flags;
 /* ??? It isn't clear to me why this is here.  Perhaps because of a bug (since
    fixed) in the definition of INITIAL_FRAME_POINTER_OFFSET which would have
    caused this to fail.  */
-#define FRAME_POINTER_REQUIRED (! leaf_function_p ())
+/* ??? Must check current_function_has_nonlocal_goto, otherwise frame pointer
+  elimination messes up nonlocal goto sequences.  I think this works for other
+  targets because they use indirect jumps for the return which disables fp
+  elimination.  */
+#define FRAME_POINTER_REQUIRED \
+  (! leaf_function_p () || current_function_has_nonlocal_goto)
 
 /* Definitions for register eliminations.
 
    This is an array of structures.  Each structure initializes one pair
    of eliminable registers.  The "from" register number is given first,
    followed by "to".  Eliminations of the same "from" register are listed
-   in order of preference.. */
+   in order of preference..  */
 
 #define ELIMINABLE_REGS	 {{FRAME_POINTER_REGNUM, STACK_POINTER_REGNUM}}
 
@@ -989,16 +992,6 @@ struct cum_args { int ca_nregparms; int ca_nstackparms; };
 #define ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL)	\
   i960_function_name_declare (FILE, NAME, DECL)
 
-/* This macro generates the assembly code for function entry.
-   FILE is a stdio stream to output the code to.
-   SIZE is an int: how many units of temporary storage to allocate.
-   Refer to the array `regs_ever_live' to determine which registers
-   to save; `regs_ever_live[I]' is nonzero if register number I
-   is ever used in the function.  This macro is responsible for
-   knowing which registers should not be saved even if used.  */
-
-#define FUNCTION_PROLOGUE(FILE, SIZE) i960_function_prologue ((FILE), (SIZE))
-
 /* Output assembler code to FILE to increment profiler label # LABELNO
    for profiling a function entry.  */
 
@@ -1011,18 +1004,6 @@ struct cum_args { int ca_nregparms; int ca_nstackparms; };
    No definition is equivalent to always zero.  */
 
 #define	EXIT_IGNORE_STACK 1
-
-/* This macro generates the assembly code for function exit,
-   on machines that need it.  If FUNCTION_EPILOGUE is not defined
-   then individual return instructions are generated for each
-   return statement.  Args are same as for FUNCTION_PROLOGUE.
-
-   The function epilogue should not depend on the current stack pointer!
-   It should use the frame pointer only.  This is mandatory because
-   of alloca; we also take advantage of it to omit stack adjustments
-   before returning.  */
-
-#define FUNCTION_EPILOGUE(FILE, SIZE) i960_function_epilogue (FILE, SIZE)
 
 /* Addressing modes, and classification of registers for them.  */
 
@@ -1131,7 +1112,7 @@ struct cum_args { int ca_nregparms; int ca_nstackparms; };
 
 	In each case, scale can be 1, 2, 4, 8, or 16.  */
 
-/* Returns 1 if the scale factor of an index term is valid. */
+/* Returns 1 if the scale factor of an index term is valid.  */
 #define SCALE_TERM_P(X)							\
   (GET_CODE (X) == CONST_INT						\
    && (INTVAL (X) == 1 || INTVAL (X) == 2 || INTVAL (X) == 4 		\
@@ -1180,14 +1161,8 @@ struct cum_args { int ca_nregparms; int ca_nstackparms; };
 /* Define as C expression which evaluates to nonzero if the tablejump
    instruction expects the table to contain offsets from the address of the
    table.
-   Do not define this if the table should contain absolute addresses. */
+   Do not define this if the table should contain absolute addresses.  */
 /* #define CASE_VECTOR_PC_RELATIVE 1 */
-
-/* Specify the tree operation to be used to convert reals to integers.  */
-#define IMPLICIT_FIX_EXPR FIX_ROUND_EXPR
-
-/* This is the kind of divide that is easiest to do in the general case.  */
-#define EASY_DIV_EXPR TRUNC_DIV_EXPR
 
 /* Define this as 1 if `char' should by default be signed; else as 0.  */
 #define DEFAULT_SIGNED_CHAR 0
@@ -1211,14 +1186,9 @@ struct cum_args { int ca_nregparms; int ca_nstackparms; };
 
 /* Nonzero if access to memory by bytes is no faster than for words.
    Value changed to 1 after reports of poor bitfield code with g++.
-   Indications are that code is usually as good, sometimes better. */   
+   Indications are that code is usually as good, sometimes better.  */   
 
 #define SLOW_BYTE_ACCESS 1
-
-/* Force sizeof(bool) == 1 to maintain binary compatibility; otherwise, the
-   change in SLOW_BYTE_ACCESS would have changed it to 4.  */
-
-#define BOOL_TYPE_SIZE CHAR_TYPE_SIZE
 
 /* We assume that the store-condition-codes instructions store 0 for false
    and some other value for true.  This is the value stored for true.  */
@@ -1226,7 +1196,7 @@ struct cum_args { int ca_nregparms; int ca_nstackparms; };
 #define STORE_FLAG_VALUE 1
 
 /* Define this to be nonzero if shift instructions ignore all but the low-order
-   few bits. */
+   few bits.  */
 #define SHIFT_COUNT_TRUNCATED 0
 
 /* Value is 1 if truncating an integer of INPREC bits to OUTPREC bits
@@ -1358,7 +1328,7 @@ extern struct rtx_def *i960_compare_op0, *i960_compare_op1;
 #define DBX_CONTIN_LENGTH 1500
 
 /* This is how to output a note to DBX telling it the line number
-   to which the following sequence of instructions corresponds. */
+   to which the following sequence of instructions corresponds.  */
 
 #define ASM_OUTPUT_SOURCE_LINE(FILE, LINE)			\
 { if (write_symbols == SDB_DEBUG) {				\
@@ -1383,7 +1353,7 @@ extern struct rtx_def *i960_compare_op0, *i960_compare_op1;
   assemble_name (FILE, NAME);			\
   fputs ("\n", FILE); }
 
-/* The prefix to add to user-visible assembler symbols. */
+/* The prefix to add to user-visible assembler symbols.  */
 
 #define USER_LABEL_PREFIX "_"
 
@@ -1400,43 +1370,6 @@ extern struct rtx_def *i960_compare_op0, *i960_compare_op1;
 
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL,PREFIX,NUM)	\
   sprintf (LABEL, "*%s%d", PREFIX, NUM)
-
-/* This is how to output an assembler line defining a `long double'
-   constant.  */
-
-#define ASM_OUTPUT_LONG_DOUBLE(FILE,VALUE) i960_output_long_double(FILE, VALUE)
-
-/* This is how to output an assembler line defining a `double' constant.  */
-
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)  i960_output_double(FILE, VALUE)
-
-/* This is how to output an assembler line defining a `float' constant.  */
-
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)  i960_output_float(FILE, VALUE)
-
-/* This is how to output an assembler line defining an `int' constant.  */
-
-#define ASM_OUTPUT_INT(FILE,VALUE)  \
-( fprintf (FILE, "\t.word "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* Likewise for `char' and `short' constants.  */
-
-#define ASM_OUTPUT_SHORT(FILE,VALUE)  \
-( fprintf (FILE, "\t.short "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-#define ASM_OUTPUT_CHAR(FILE,VALUE)  \
-( fprintf (FILE, "\t.byte "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* This is how to output an assembler line for a numeric constant byte.  */
-
-#define ASM_OUTPUT_BYTE(FILE,VALUE)	\
-  fprintf (FILE, "\t.byte 0x%x\n", (VALUE))
 
 #define ASM_OUTPUT_REG_PUSH(FILE,REGNO)  \
   fprintf (FILE, "\tst\t%s,(sp)\n\taddo\t4,sp,sp\n", reg_names[REGNO])
@@ -1522,40 +1455,6 @@ extern struct rtx_def *i960_compare_op0, *i960_compare_op1;
 #define ASM_FORMAT_PRIVATE_NAME(OUTPUT, NAME, LABELNO)	\
 	( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 10),	\
 	  sprintf ((OUTPUT), "%s.%d", (NAME), (LABELNO)))
-
-/* Define the parentheses used to group arithmetic operations
-   in assembler code.  */
-
-#define ASM_OPEN_PAREN "("
-#define ASM_CLOSE_PAREN ")"
-
-/* Define results of standard character escape sequences.  */
-#define TARGET_BELL	007
-#define TARGET_BS	010
-#define TARGET_TAB	011
-#define TARGET_NEWLINE	012
-#define TARGET_VT	013
-#define TARGET_FF	014
-#define TARGET_CR	015
-
-/* Output assembler code to FILE to initialize this source file's
-   basic block profiling info, if that has not already been done.  */
-
-#define FUNCTION_BLOCK_PROFILER(FILE, LABELNO) \
-{ fprintf (FILE, "\tld	LPBX0,g12\n");			\
-  fprintf (FILE, "\tcmpobne	0,g12,LPY%d\n",LABELNO);\
-  fprintf (FILE, "\tlda	LPBX0,g12\n");			\
-  fprintf (FILE, "\tcall	___bb_init_func\n");	\
-  fprintf (FILE, "LPY%d:\n",LABELNO); }
-
-/* Output assembler code to FILE to increment the entry-count for
-   the BLOCKNO'th basic block in this source file.  */
-
-#define BLOCK_PROFILER(FILE, BLOCKNO) \
-{ int blockn = (BLOCKNO);				\
-  fprintf (FILE, "\tld	LPBX2+%d,g12\n", 4 * blockn);	\
-  fprintf (FILE, "\taddo	g12,1,g12\n");		\
-  fprintf (FILE, "\tst	g12,LPBX2+%d\n", 4 * blockn); }
 
 /* Print operand X (an rtx) in assembler syntax to file FILE.
    CODE is a letter or dot (`z' in `%z0') or 0 if no letter was specified.
@@ -1586,11 +1485,11 @@ extern struct rtx_def *i960_compare_op0, *i960_compare_op1;
 
 #define TRAMPOLINE_TEMPLATE(FILE)					\
 {									\
-  ASM_OUTPUT_INT (FILE, GEN_INT (0x8C203000));	\
-  ASM_OUTPUT_INT (FILE, GEN_INT (0x00000000));	\
-  ASM_OUTPUT_INT (FILE, GEN_INT (0x8CE03000));	\
-  ASM_OUTPUT_INT (FILE, GEN_INT (0x00000000));	\
-  ASM_OUTPUT_INT (FILE, GEN_INT (0x84212000));	\
+  assemble_aligned_integer (UNITS_PER_WORD, GEN_INT (0x8C203000));	\
+  assemble_aligned_integer (UNITS_PER_WORD, GEN_INT (0x00000000));	\
+  assemble_aligned_integer (UNITS_PER_WORD, GEN_INT (0x8CE03000));	\
+  assemble_aligned_integer (UNITS_PER_WORD, GEN_INT (0x00000000));	\
+  assemble_aligned_integer (UNITS_PER_WORD, GEN_INT (0x84212000));	\
 }
 
 /* Length in units of the trampoline for entering a nested function.  */

@@ -101,8 +101,6 @@ output_file_directive ((FILE), main_input_filename)
 
 #undef TARGET_VERSION
 #undef ASM_FORMAT_PRIVATE_NAME
-#undef ASM_OUTPUT_DOUBLE
-#undef ASM_OUTPUT_FLOAT
 #undef ASM_OUTPUT_ALIGN
 #undef ASM_OUTPUT_SOURCE_FILENAME
 #undef ASM_OUTPUT_SOURCE_LINE
@@ -127,34 +125,13 @@ output_file_directive ((FILE), main_input_filename)
 ( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 12),	\
   sprintf ((OUTPUT), "%s_%%%d", (NAME), (LABELNO)))
 
-/* The unixpc doesn't know about double's and float's */
-
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)  \
-do { long l[2];						\
-     REAL_VALUE_TO_TARGET_DOUBLE (VALUE, l);		\
-     fprintf (FILE, "\tlong 0x%x,0x%x\n", l[0], l[1]); \
-   } while (0)
-
-#undef ASM_OUTPUT_LONG_DOUBLE
-#define ASM_OUTPUT_LONG_DOUBLE(FILE,VALUE)  				\
-do { long l[3];								\
-     REAL_VALUE_TO_TARGET_LONG_DOUBLE (VALUE, l);			\
-     fprintf (FILE, "\tlong 0x%x,0x%x,0x%x\n", l[0], l[1], l[2]);	\
-   } while (0)
-
-/* This is how to output an assembler line defining a `float' constant.  */
-
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)  \
-do { long l;					\
-     REAL_VALUE_TO_TARGET_SINGLE (VALUE, l);	\
-     fprintf ((FILE), "\tlong 0x%x\n", l);	\
-   } while (0)
-
 #define ASM_OUTPUT_ALIGN(FILE,LOG)	\
+do {					\
   if ((LOG) == 1)			\
     fprintf (FILE, "\teven\n");	\
   else if ((LOG) != 0)			\
-    abort ();
+    abort ();				\
+} while (0)
 
 /* This is how to output an assembler line
    that says to advance the location counter by SIZE bytes.  */
@@ -167,7 +144,7 @@ do { long l;					\
 
 #define ASM_NO_SKIP_IN_TEXT 1
 
-/* The beginnings of sdb support... */
+/* The beginnings of sdb support...  */
 
 #define ASM_OUTPUT_SOURCE_FILENAME(FILE, FILENAME) \
   do {	fprintf (FILE, "\tfile\t");		\
@@ -178,12 +155,12 @@ do { long l;					\
 #define ASM_OUTPUT_SOURCE_LINE(FILE, LINENO)	\
   fprintf (FILE, "\tln\t%d\n",			\
 	   (sdb_begin_function_line		\
-	    ? last_linenum - sdb_begin_function_line : 1))
+	    ? (LINENO) - sdb_begin_function_line : 1))
 
-/* Yet another null terminated string format. */
+/* Yet another null terminated string format.  */
 
 #define ASM_OUTPUT_ASCII(FILE,PTR,LEN) \
-  do { register int sp = 0, lp = 0; \
+  do { register size_t sp = 0, lp = 0, limit = (LEN); \
     fprintf ((FILE), "\tbyte\t"); \
   loop: \
     if ((PTR)[sp] > ' ' && ! ((PTR)[sp] & 0x80) && (PTR)[sp] != '\\') \
@@ -192,7 +169,7 @@ do { long l;					\
     else \
       { lp += 5; \
 	fprintf ((FILE), "0x%x", (PTR)[sp]); } \
-    if (++sp < (LEN)) \
+    if (++sp < limit) \
       {	if (lp > 60) \
 	  { lp = 0; \
 	    fprintf ((FILE), "\n%s", ASCII_DATA_ASM_OP); }	\
@@ -348,7 +325,7 @@ do { long l;					\
     }}
 
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL, PREFIX, NUM)	\
-  sprintf ((LABEL), "%s%%%d", (PREFIX), (NUM))
+  sprintf ((LABEL), "%s%%%ld", (PREFIX), (long)(NUM))
 
 #define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)	\
     fprintf (FILE, "%s%%%d:\n", PREFIX, NUM)
@@ -380,7 +357,7 @@ do { long l;					\
    we want.  This difference can be accommodated by making the assembler
    define such "LDnnn" to be either "Lnnn-LInnn-2.b", "Lnnn", or any other
    string, as necessary.  This is accomplished via the ASM_OUTPUT_CASE_END
-   macro. */
+   macro.  */
 
 #define ASM_OUTPUT_CASE_END(FILE,NUM,TABLE)				\
 { if (switch_table_difference_label_flag)				\

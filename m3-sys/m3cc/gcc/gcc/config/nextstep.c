@@ -23,7 +23,10 @@ Boston, MA 02111-1307, USA.  */
 #include "system.h"
 #include "flags.h"
 #include "tree.h"
+#include "rtl.h"
 #include "toplev.h"
+#include "output.h"
+#include "tm_p.h"
 
 /* Make everything that used to go in the text section really go there.  */
 
@@ -89,3 +92,26 @@ handle_pragma (p_getc, p_ungetc, pname)
 
   return retval;
 }
+
+void
+nextstep_asm_out_constructor (symbol, priority)
+     rtx symbol;
+     int priority ATTRIBUTE_UNUSED;
+{
+  constructor_section ();
+  assemble_align (POINTER_SIZE);
+  assemble_integer (symbol, POINTER_SIZE / BITS_PER_UNIT, POINTER_SIZE, 1);
+  fprintf (asm_out_file, ".reference .constructors_used\n");
+}
+
+void
+nextstep_asm_out_destructor (symbol, priority)
+     rtx symbol;
+     int priority ATTRIBUTE_UNUSED;
+{
+  destructor_section ();
+  assemble_align (POINTER_SIZE);
+  assemble_integer (symbol, POINTER_SIZE / BITS_PER_UNIT, POINTER_SIZE, 1);
+  fprintf (asm_out_file, ".reference .destructors_used\n");
+}
+

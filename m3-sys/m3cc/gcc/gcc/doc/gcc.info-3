@@ -1,21 +1,18 @@
-This is doc/gcc.info, produced by makeinfo version 4.0b from
+This is doc/gcc.info, produced by makeinfo version 4.2 from
 doc/gcc.texi.
 
 INFO-DIR-SECTION Programming
 START-INFO-DIR-ENTRY
 * gcc: (gcc).                  The GNU Compiler Collection.
 END-INFO-DIR-ENTRY
-   This file documents the use and the internals of the GNU compiler.
-
+   This file documents the use of the GNU compilers.
 
    Published by the Free Software Foundation
 59 Temple Place - Suite 330
 Boston, MA 02111-1307 USA
 
-
    Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001 Free Software Foundation, Inc.
-
+1999, 2000, 2001, 2002 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -52,8 +49,9 @@ beginning `-Wno-' to turn off warnings; for example, `-Wno-implicit'.
 This manual lists only one of the two forms, whichever is not the
 default.
 
-   These options control the amount and kinds of warnings produced by
-GCC:
+   The following options control the amount and kinds of warnings
+produced by GCC; for further, language-specific options also refer to
+*Note C++ Dialect Options:: and *Note Objective-C Dialect Options::.
 
 `-fsyntax-only'
      Check the code for syntax errors, but don't do anything beyond
@@ -156,6 +154,15 @@ GCC:
      `printf' or `scanf' format function.  The C standard specifies
      that such arguments are ignored.
 
+     Where the unused arguments lie between used arguments that are
+     specified with `$' operand number specifications, normally
+     warnings are still given, since the implementation could not know
+     what type to pass to `va_arg' to skip the unused arguments.
+     However, in the case of `scanf' formats, this option will suppress
+     the warning if the unused arguments are all pointers, since the
+     Single Unix Specification says that such unused arguments are
+     allowed.
+
 `-Wformat-nonliteral'
      If `-Wformat' is specified, also warn if the format string is not a
      string literal and so cannot be checked, unless the format function
@@ -200,12 +207,6 @@ GCC:
 
           int a[2][2] = { 0, 1, 2, 3 };
           int b[2][2] = { { 0, 1 }, { 2, 3 } };
-
-`-Wmultichar'
-     Warn if a multicharacter constant (`'FOOF'') is used.  Usually they
-     indicate a typo in the user's code, as they have
-     implementation-defined values, and should not be used in portable
-     code.
 
 `-Wparentheses'
      Warn if parentheses are omitted in certain contexts, such as when
@@ -286,10 +287,11 @@ GCC:
      The present implementation of this option only works for C
      programs.  A future implementation may also work for C++ programs.
 
-     There is some controversy over the precise meaning of the sequence
-     point rules in subtle cases.  Links to papers with alternative
-     formal definitions and other related discussions may be found on
-     our readings page `http://gcc.gnu.org/readings.html'.
+     The C standard is worded confusingly, therefore there is some
+     debate over the precise meaning of the sequence point rules in
+     subtle cases.  Links to discussions of the problem, including
+     proposed formal definitions, may be found on our readings page, at
+     `http://gcc.gnu.org/readings.html'.
 
 `-Wreturn-type'
      Warn whenever a function is defined with a return-type that
@@ -432,6 +434,19 @@ GCC:
      questionable, and that are easy to avoid (or modify to prevent the
      warning), even in conjunction with macros.
 
+`-Wdiv-by-zero'
+     Warn about compile-time integer division by zero.  This is
+     default.  To inhibit the warning messages, use `-Wno-div-by-zero'.
+     Floating point division by zero is not warned about, as it can be
+     a legitimate way of obtaining infinities and NaNs.
+
+`-Wmultichar'
+     Warn if a multicharacter constant (`'FOOF'') is used.  This is
+     default.  To inhibit the warning messages, use `-Wno-multichar'.
+     Usually they indicate a typo in the user's code, as they have
+     implementation-defined values, and should not be used in portable
+     code.
+
 `-Wsystem-headers'
      Print warning messages for constructs found in system header files.
      Warnings from system headers are normally suppressed, on the
@@ -544,7 +559,7 @@ the warning.
           does not appear as the first character on the line.  It also
           suggests you hide directives like `#pragma' not understood by
           traditional C by indenting them.  Some traditional
-          implementations would not recognise `#elif', so it suggests
+          implementations would not recognize `#elif', so it suggests
           avoiding it altogether.
 
         * A function-like macro that appears without arguments.
@@ -601,11 +616,6 @@ the warning.
      Warn whenever a local variable shadows another local variable,
      parameter or global variable or whenever a built-in function is
      shadowed.
-
-`-Wid-clash-LEN'
-     Warn whenever two distinct identifiers match in the first LEN
-     characters.  This may help you prepare a program that will compile
-     with certain obsolete, brain-damaged compilers.
 
 `-Wlarger-than-LEN'
      Warn whenever an object of larger than LEN bytes is defined.
@@ -702,6 +712,12 @@ the warning.
      appropriate may not be detected.  This option has no effect unless
      `-Wformat' is enabled (possibly by `-Wall').
 
+`-Wno-deprecated-declarations'
+     Do not warn about uses of functions, variables, and types marked as
+     deprecated by using the `deprecated' attribute.  (*note Function
+     Attributes::, *note Variable Attributes::, *note Type
+     Attributes::.)
+
 `-Wpacked'
      Warn if a structure is given the packed attribute, but the packed
      attribute has no effect on the layout or size of the structure.
@@ -754,7 +770,7 @@ the warning.
      version of a program there is often substantial code which checks
      correct functioning of the program and is, hopefully, unreachable
      because the program does work.  Another common use of unreachable
-     code is to provide behaviour which is selectable at compile-time.
+     code is to provide behavior which is selectable at compile-time.
 
 `-Winline'
      Warn if a function can not be inlined and it was declared as

@@ -1,5 +1,5 @@
 /* Subroutines for insn-output.c for System/370.
-   Copyright (C) 1989, 1993, 1995, 1997, 1998, 1999, 2000
+   Copyright (C) 1989, 1993, 1995, 1997, 1998, 1999, 2000, 2002
    Free Software Foundation, Inc.
    Contributed by Jan Stein (jan@cd.chalmers.se).
    Modified for OS/390 LanguageEnvironment C by Dave Pitts (dpitts@cozx.com)
@@ -34,13 +34,14 @@ Boston, MA 02111-1307, USA.  */
 #include "output.h"
 #include "insn-attr.h"
 #include "function.h"
+#include "expr.h"
 #include "flags.h"
 #include "recog.h"
 #include "toplev.h"
 #include "cpplib.h"
-#include "c-pragma.h"
-#include "c-lex.h"
 #include "tm_p.h"
+#include "target.h"
+#include "target-def.h"
 
 extern FILE *asm_out_file;
 
@@ -51,7 +52,7 @@ extern FILE *asm_out_file;
    The first_ref_page is the page on which the true first ref appears.
    The label_addr is an estimate of its location in the current routine,
    The label_first & last_ref are estimates of where the earliest and
-      latest references to this label occur.                                     */
+      latest references to this label occur.  */
 
 typedef struct label_node
   {
@@ -98,6 +99,14 @@ static FILE *assembler_source = 0;
 
 static label_node_t * mvs_get_label PARAMS ((int));
 static void i370_label_scan PARAMS ((void));
+#ifdef TARGET_HLASM
+static bool i370_hlasm_assemble_integer PARAMS ((rtx, unsigned int, int));
+#endif
+static void i370_output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
+static void i370_output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
+#ifdef LONGEXTERNAL
+static int mvs_hash_alias PARAMS ((const char *));
+#endif
 
 /* ===================================================== */
 /* defines and functions specific to the HLASM assembler */
@@ -131,9 +140,6 @@ alias_node_t;
 
 /* Alias node list anchor.  */
 static alias_node_t *alias_anchor = 0;
-
-/* Alias number */
-static int alias_number = 0;
 
 /* Define the length of the internal MVS function table.  */
 #define MVS_FUNCTION_TABLE_LENGTH 32
@@ -283,7 +289,26 @@ static const unsigned char ebcasc[256] =
  /*F8   8     9                                     */
      0x38, 0x39, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF
 };
+
+/* Initialize the GCC target structure.  */
+#ifdef TARGET_HLASM
+#undef TARGET_ASM_BYTE_OP
+#define TARGET_ASM_BYTE_OP NULL
+#undef TARGET_ASM_ALIGNED_HI_OP
+#define TARGET_ASM_ALIGNED_HI_OP NULL
+#undef TARGET_ASM_ALIGNED_SI_OP
+#define TARGET_ASM_ALIGNED_SI_OP NULL
+#undef TARGET_ASM_INTEGER
+#define TARGET_ASM_INTEGER i370_hlasm_assemble_integer
+#endif
 
+#undef TARGET_ASM_FUNCTION_PROLOGUE
+#define TARGET_ASM_FUNCTION_PROLOGUE i370_output_function_prologue
+#undef TARGET_ASM_FUNCTION_EPILOGUE
+#define TARGET_ASM_FUNCTION_EPILOGUE i370_output_function_epilogue
+
+struct gcc_target targetm = TARGET_INITIALIZER;
+
 /* Map characters from one character set to another.
    C is the character to be translated.  */
 
@@ -400,7 +425,7 @@ i370_short_branch (insn)
 	if (addr > lp -> label_last_ref) lp->label_last_ref = addr;	\
 }
 
-void 
+static void 
 i370_label_scan () 
 {
    rtx insn;
@@ -417,7 +442,7 @@ i370_label_scan ()
        here += tablejump_offset;
        INSN_ADDRESSES (INSN_UID (insn)) = here;
 
-       /* check to see if this insn is a label ... */
+       /* check to see if this insn is a label ...  */
        if (CODE_LABEL == code)
          {
            int labelno = CODE_LABEL_NUMBER (insn);
@@ -444,7 +469,7 @@ i370_label_scan ()
 
            /* If there is no label for this jump, then this
               had better be a ADDR_VEC or an ADDR_DIFF_VEC
-              and there had better be a vector of labels.   */
+              and there had better be a vector of labels.  */
            if (!label) 
              {
                int j;
@@ -493,7 +518,7 @@ i370_label_scan ()
                else 
                  {
 /* XXX hack alert.
-   Compiling the execption handling (L_eh) in libgcc2.a will trip
+   Compiling the exception handling (L_eh) in libgcc2.a will trip
    up right here, with something that looks like
    (set (pc) (mem:SI (plus:SI (reg/v:SI 1 r1) (const_int 4))))
       {indirect_jump} 
@@ -579,13 +604,13 @@ check_label_emit ()
    allocated from memory.
    ID is the label number of the label being added to the list.  */
 
-label_node_t *
+static label_node_t *
 mvs_get_label (id)
      int id;
 {
   label_node_t *lp;
 
-  /* first, lets see if we already go one, if so, use that. */
+  /* first, lets see if we already go one, if so, use that.  */
   for (lp = label_anchor; lp; lp = lp->label_next)
     {
       if (lp->label_id == id) return lp;
@@ -630,7 +655,7 @@ mvs_add_label (id)
   if ((-1 != lp->first_ref_page) && 
       (lp->first_ref_page != mvs_page_num)) 
     {
-      /* Yep; the first label_ref was on a different page. */
+      /* Yep; the first label_ref was on a different page.  */
       mvs_need_base_reload ++;
       return;
     }
@@ -691,6 +716,7 @@ mvs_check_label (id)
 /* Get the page on which the label sits.  This will be used to 
    determine is a register reload is really needed.  */
 
+#if 0
 int
 mvs_get_label_page(int id)
 {
@@ -703,6 +729,7 @@ mvs_get_label_page(int id)
     }
   return -1;
 }
+#endif
 
 /* The label list for the current page freed by linking the list onto the free
    label element chain.  */
@@ -749,7 +776,7 @@ mvs_check_page (file, code, lit)
       fprintf (assembler_source, "\tDROP\t%d\n", BASE_REGISTER);
       mvs_page_num++;
       /* Safe to use BASR not BALR, since we are
-       * not switching addressing mode here ... */
+       * not switching addressing mode here ...  */
       fprintf (assembler_source, "\tBASR\t%d,0\n", BASE_REGISTER);
       fprintf (assembler_source, "PG%d\tEQU\t*\n", mvs_page_num);
       fprintf (assembler_source, "\tUSING\t*,%d\n", BASE_REGISTER);
@@ -785,7 +812,7 @@ mvs_check_page (file, code, lit)
       fprintf (assembler_source, "\t.LTORG\n");
       fprintf (assembler_source, "\t.balign\t4\n");
 
-      /* we continue execution here ... */
+      /* we continue execution here ...  */
       fprintf (assembler_source, ".LPGE%d:\n", mvs_page_num);
       fprintf (assembler_source, "\t.DROP\t%d\n", BASE_REGISTER);
       mvs_page_num++;
@@ -836,11 +863,12 @@ mvs_function_check (name)
   return 0;
 }
 
-/* Generate a hash for a given key. */
+/* Generate a hash for a given key.  */
 
+#ifdef LONGEXTERNAL
 static int
 mvs_hash_alias (key)
-     char *key;
+     const char *key;
 {
   int h;
   int i;
@@ -851,7 +879,7 @@ mvs_hash_alias (key)
     h = ((h * MVS_SET_SIZE) + key[i]) % MVS_HASH_PRIME;
   return (h);
 }
-
+#endif
 
 /* Add the alias to the current alias list.  */
 
@@ -1018,33 +1046,6 @@ mvs_check_alias (realname, aliasname)
   return 0;
 }
 
-/* #pragma map (name, alias) -
-   In this implementation both name and alias are required to be
-   identifiers.  The older code seemed to be more permissive.  Can
-   anyone clarify?  */
-
-void
-i370_pr_map (pfile)
-     cpp_reader *pfile ATTRIBUTE_UNUSED;
-{
-  tree name, alias, x;
-
-  if (c_lex (&x)        == CPP_OPEN_PAREN
-      && c_lex (&name)  == CPP_NAME
-      && c_lex (&x)     == CPP_COMMA
-      && c_lex (&alias) == CPP_NAME
-      && c_lex (&x)     == CPP_CLOSE_PAREN)
-    {
-      if (c_lex (&x) != CPP_EOF)
-	warning ("junk at end of #pragma map");
-
-      mvs_add_alias (IDENTIFIER_POINTER (name), IDENTIFIER_POINTER (alias), 1);
-      return;
-    }
-
-  warning ("malformed #pragma map, ignored");
-}
-
 /* defines and functions specific to the HLASM assembler */
 #endif /* TARGET_HLASM */
 /* ===================================================== */
@@ -1189,13 +1190,67 @@ unsigned_jump_follows_p (insn)
     }
 }
 
-
 #ifdef TARGET_HLASM
 
-void
-i370_function_prolog (f, l)
+/* Target hook for assembling integer objects.  This version handles all
+   objects when TARGET_HLASM is defined.  */
+
+static bool
+i370_hlasm_assemble_integer (x, size, aligned_p)
+     rtx x;
+     unsigned int size;
+     int aligned_p;
+{
+  const char *int_format = NULL;
+
+  if (aligned_p)
+    switch (size)
+      {
+      case 1:
+	int_format = "\tDC\tX'%02X'\n";
+	break;
+
+      case 2:
+	int_format = "\tDC\tX'%04X'\n";
+	break;
+
+      case 4:
+	if (GET_CODE (x) == CONST_INT)
+	  {
+	    fputs ("\tDC\tF'", asm_out_file);
+	    output_addr_const (asm_out_file, x);
+	    fputs ("'\n", asm_out_file);
+	  }
+	else
+	  {
+	    fputs ("\tDC\tA(", asm_out_file);
+	    output_addr_const (asm_out_file, x);
+	    fputs (")\n", asm_out_file);
+	  }
+	return true;
+      }
+
+  if (int_format && GET_CODE (x) == CONST_INT)
+    {
+      fprintf (asm_out_file, int_format, INTVAL (x));
+      return true;
+    }
+  return default_assemble_integer (x, size, aligned_p);
+}
+
+/* Generate the assembly code for function entry.  FILE is a stdio
+   stream to output the code to.  SIZE is an int: how many units of
+   temporary storage to allocate.
+
+   Refer to the array `regs_ever_live' to determine which registers to
+   save; `regs_ever_live[I]' is nonzero if register number I is ever
+   used in the function.  This function is responsible for knowing
+   which registers should not be saved even if used.  */
+
+static void
+i370_output_function_prologue (f, l)
      FILE *f;
-     int l;
+     HOST_WIDE_INT l;
 {
 #if MACROPROLOGUE == 1
   fprintf (f, "* Function %s prologue\n", mvs_function_name);
@@ -1382,10 +1437,10 @@ i370_function_prolog (f, l)
    also, to quite using addresses 136, 140, etc.
  */
 
-void
-i370_function_prolog (f, frame_size)
+static void
+i370_output_function_prologue (f, frame_size)
      FILE *f;
-     int frame_size;
+     HOST_WIDE_INT frame_size;
 {
   static int function_label_index = 1;
   static int function_first = 0;
@@ -1405,7 +1460,7 @@ i370_function_prolog (f, frame_size)
 
   fprintf (f, "\t.using\t.,r15\n");
 
-  /* Branch to exectuable part of prologue. */
+  /* Branch to exectuable part of prologue.  */
   fprintf (f, "\tB\t.LFENT%03d\n", function_label_index);
 
   /* write the length of the stackframe */
@@ -1428,7 +1483,7 @@ i370_function_prolog (f, frame_size)
   fprintf (f, "\tLR\tr11,r2\n");
 
   /* store callee stack pointer at 8(sp) */
-  /* fprintf (f, "\tST\tsp,8(,r3)\n ");  wasted cycles, no one uses this ... */
+  /* fprintf (f, "\tST\tsp,8(,r3)\n ");  wasted cycles, no one uses this ...  */
 
   /* backchain -- store caller sp at 4(callee_sp)  */
   fprintf (f, "\tST\tr3,4(,sp)\n ");
@@ -1455,3 +1510,47 @@ i370_function_prolog (f, frame_size)
   i370_label_scan ();
 }
 #endif /* TARGET_ELF_ABI */
+
+/* This function generates the assembly code for function exit.
+   Args are as for output_function_prologue ().
+
+   The function epilogue should not depend on the current stack
+   pointer!  It should use the frame pointer only.  This is mandatory
+   because of alloca; we also take advantage of it to omit stack
+   adjustments before returning.  */
+
+static void
+i370_output_function_epilogue (file, l)
+     FILE *file;
+     HOST_WIDE_INT l ATTRIBUTE_UNUSED;
+{
+  int i;
+
+  check_label_emit ();
+  mvs_check_page (file, 14, 0);
+  fprintf (file, "* Function %s epilogue\n", mvs_function_name);
+  mvs_page_num++;
+
+#if MACROEPILOGUE == 1
+  fprintf (file, "\tEDCEPIL\n");
+#else /* MACROEPILOGUE != 1 */
+  fprintf (file, "\tL\t13,4(,13)\n");
+  fprintf (file, "\tL\t14,12(,13)\n");
+  fprintf (file, "\tLM\t2,12,28(13)\n");
+  fprintf (file, "\tBALR\t1,14\n");
+  fprintf (file, "\tDC\tA(");
+  assemble_name (file, mvs_function_name);
+  fprintf (file, ")\n" );
+#endif /* MACROEPILOGUE */
+
+  fprintf (file, "* Function %s literal pool\n", mvs_function_name);
+  fprintf (file, "\tDS\t0F\n" );
+  fprintf (file, "\tLTORG\n");
+  fprintf (file, "* Function %s page table\n", mvs_function_name);
+  fprintf (file, "\tDS\t0F\n");
+  fprintf (file, "PGT%d\tEQU\t*\n", function_base_page);
+
+  mvs_free_label_list();
+  for (i = function_base_page; i < mvs_page_num; i++)
+    fprintf (file, "\tDC\tA(PG%d)\n", i);
+}

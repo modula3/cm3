@@ -1,5 +1,5 @@
 /* Output routines for GCC for picoJava II
-   Copyright (C) 2000 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2001, 2002 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -78,7 +78,6 @@ Boston, MA 02111-1307, USA.  */
    order, so nothing more needs to be done.  */
 
 
-#include <setjmp.h>
 #include "config.h"
 #include "system.h"
 #include "rtl.h"
@@ -96,9 +95,12 @@ Boston, MA 02111-1307, USA.  */
 #include "function.h"
 #include "recog.h"
 #include "expr.h"
+#include "optabs.h"
 #include "toplev.h"
 #include "basic-block.h"
 #include "ggc.h"
+#include "target.h"
+#include "target-def.h"
 
 /* Compare insns in pj.md store the information needed to generate
    branch instructions here.  */
@@ -108,6 +110,14 @@ enum machine_mode pj_cmp_mode;
 
 static void pj_output_rval PARAMS ((rtx, enum machine_mode, rtx));
 static void pj_output_store_into_lval PARAMS ((enum machine_mode mode, rtx op));
+static void pj_output_push_int PARAMS ((int));
+static void pj_output_load PARAMS ((enum machine_mode, int));
+static void pj_output_inc PARAMS ((rtx, int));
+static void pj_output_cnv_op PARAMS ((enum insn_code, rtx));
+static char mode_to_char PARAMS ((enum machine_mode));
+static void pj_output_varidx PARAMS ((enum machine_mode, int, int));
+static void pj_print_cond PARAMS ((enum rtx_code));
+static rtx *unique_src_operand PARAMS ((rtx *, rtx));
 
 /* These vectors turn a register number into an offset from the vars
    pointer register.  */
@@ -122,7 +132,11 @@ static int nfakes;
 /* Whether anything has been printed to the current assembly output
    line. */
 int pj_stuff_on_line;
+
+/* Initialize the GCC target structure.  */
 
+struct gcc_target targetm = TARGET_INITIALIZER;
+
 /* printf to the asm_out_file, with special format control characters
    for decoding operands.  
 
@@ -134,18 +148,12 @@ int pj_stuff_on_line;
 static void
 pj_printf VPARAMS ((const char *template, ...))
 {
-#ifndef ANSI_PROTOTYPES
-  const char *template;
-#endif
   register int c;
-
-  va_list argptr;
   int ops_read = 0;
   rtx operands[10];
-  VA_START (argptr, template);
-#ifndef ANSI_PROTOTYPES
-  template = va_arg (argptr, const char *);
-#endif
+
+  VA_OPEN (argptr, template);
+  VA_FIXEDARG (argptr, const char *, template);
 
   while ((c = *template++))
     {
@@ -223,7 +231,7 @@ pj_printf VPARAMS ((const char *template, ...))
 	  }
 	}
     }
-  va_end (argptr);
+  VA_CLOSE (argptr);
 }
 
 /* Output code to efficiently push a single word integer constant onto
@@ -400,7 +408,7 @@ pj_output_rval (op, mode, outer_op)
     }
   else if (tab && tab->handlers[mode].insn_code != CODE_FOR_nothing)
     {
-      const char *template =
+      const char *const template =
 	(const char *) insn_data[tab->handlers[mode].insn_code].output;
       if (code == NEG)
 	pj_printf (template, 0, XEXP (op, 0));
@@ -501,7 +509,7 @@ pj_output_rval (op, mode, outer_op)
 	break;
 
       case SUBREG:
-	pj_output_rval (alter_subreg (op), mode, outer_op);
+	pj_output_rval (alter_subreg (&op), mode, outer_op);
 	break;
 
       case POST_INC:
@@ -568,7 +576,7 @@ pj_output_rval (op, mode, outer_op)
 
 /* Store the top of stack into the lval operand OP.  */
 
-void
+static void
 pj_output_store_into_lval (mode, op)
      enum machine_mode mode;
      rtx op;
@@ -829,7 +837,7 @@ pj_function_incoming_arg (cum, mode, passed_type, named_arg)
       int i;
       if (mode == DImode || mode == DFmode)
 	{
-	  cum->arg_adjust[cum->total_words + 0] = +1;
+	  cum->arg_adjust[cum->total_words + 0] = 1;
 	  cum->arg_adjust[cum->total_words + 1] = -1;
 	}
       else
@@ -844,7 +852,7 @@ pj_function_incoming_arg (cum, mode, passed_type, named_arg)
 /* Output code to add two SImode values.  Deals carefully with the the common
    case of moving the optop.  */
 
-char *
+const char *
 pj_output_addsi3 (operands)
      rtx *operands;
 {

@@ -25,6 +25,9 @@ Boston, MA 02111-1307, USA.  */
 #define TARGET_DEFAULT MASK_FLOAT64|MASK_64BIT
 #define MIPS_ISA_DEFAULT 3
 
+/* This should change to n32 when it is supported in gas.  */
+#define MIPS_ABI_DEFAULT ABI_O64
+
 /* Until we figure out what MIPS ELF targets normally use, just do
    stabs in ELF.  */
 #ifndef PREFERRED_DEBUGGING_TYPE
@@ -63,7 +66,9 @@ Boston, MA 02111-1307, USA.  */
 #define PUT_SDB_SIZE(a)					\
 do {							\
   extern FILE *asm_out_text_file;			\
-  fprintf (asm_out_text_file, "\t.esize\t%d;", (a));	\
+  fprintf (asm_out_text_file, "\t.esize\t");		\
+  fprintf (asm_out_text_file, HOST_WIDE_INT_PRINT_DEC, (HOST_WIDE_INT) (a)); \
+  fprintf (asm_out_text_file, ";");		       	\
 } while (0)
 
 #undef PUT_SDB_TYPE
@@ -73,23 +78,21 @@ do {							\
   fprintf (asm_out_text_file, "\t.etype\t0x%x;", (a));	\
 } while (0)
 
-/* A C statement to output something to the assembler file to switch to section
-   NAME for object DECL which is either a FUNCTION_DECL, a VAR_DECL or
-   NULL_TREE.  Some target formats do not support arbitrary sections.  Do not
-   define this macro in such cases.  */
+/* Switch into a generic section.  */
+#undef TARGET_ASM_NAMED_SECTION
+#define TARGET_ASM_NAMED_SECTION  default_elf_asm_named_section
 
-#undef ASM_OUTPUT_SECTION_NAME
-#define ASM_OUTPUT_SECTION_NAME(F, DECL, NAME, RELOC) \
-do {								\
-  extern FILE *asm_out_text_file;				\
-  if ((DECL) && TREE_CODE (DECL) == FUNCTION_DECL)		\
-    fprintf (asm_out_text_file, "\t.section %s,\"ax\",@progbits\n", (NAME)); \
-  else if ((DECL) && DECL_READONLY_SECTION (DECL, RELOC))	\
-    fprintf (F, "\t.section %s,\"a\",@progbits\n", (NAME));	\
-  else if (! strcmp (NAME, ".bss"))				\
-    fprintf (F, "\t.section %s,\"aw\",@nobits\n", (NAME));	\
-  else								\
-    fprintf (F, "\t.section %s,\"aw\",@progbits\n", (NAME));	\
+/* Given that Irix has it's own headers, not having TARGET_GAS here
+   seems a mistake.  If we actually need to be prepared for file
+   switching, then we need a custom TARGET_ASM_NAMED_SECTION too.  */
+
+#undef TEXT_SECTION
+#define TEXT_SECTION()				\
+do {						\
+  if (TARGET_FILE_SWITCHING)			\
+    abort ();					\
+  fputs (TEXT_SECTION_ASM_OP, asm_out_file);	\
+  fputc ('\n', asm_out_file);			\
 } while (0)
 
 /* The following macro defines the format used to output the second
@@ -132,7 +135,10 @@ do {								\
 	size_directive_output = 1;					\
 	fprintf (FILE, "%s", SIZE_ASM_OP);				\
 	assemble_name (FILE, NAME);					\
-	fprintf (FILE, ",%d\n",  int_size_in_bytes (TREE_TYPE (DECL)));	\
+	fprintf (FILE, ",");						\
+	fprintf (FILE, HOST_WIDE_INT_PRINT_DEC,				\
+	  int_size_in_bytes (TREE_TYPE (DECL)));			\
+	fprintf (FILE, "\n");						\
       }									\
     mips_declare_object (FILE, NAME, "", ":\n", 0);			\
   } while (0)
@@ -155,7 +161,10 @@ do {									 \
 	 size_directive_output = 1;					 \
 	 fprintf (FILE, "%s", SIZE_ASM_OP);				 \
 	 assemble_name (FILE, name);					 \
-	 fprintf (FILE, ",%d\n", int_size_in_bytes (TREE_TYPE (DECL)));  \
+	 fprintf (FILE, ",");						 \
+	 fprintf (FILE, HOST_WIDE_INT_PRINT_DEC,			 \
+		  int_size_in_bytes (TREE_TYPE (DECL)));		 \
+	 fprintf (FILE, "\n");						 \
        }								 \
    } while (0)
 
@@ -172,7 +181,7 @@ do {									 \
    mips-elf gas supports .weak, but not .weakext.
    mips-elf gas has been changed to support both .weak and .weakext,
    but until that support is generally available, the 'if' below
-   should serve. */
+   should serve.  */
 
 #undef ASM_WEAKEN_LABEL
 #define ASM_WEAKEN_LABEL(FILE,NAME) ASM_OUTPUT_WEAK_ALIAS(FILE,NAME,0)
@@ -192,14 +201,13 @@ do {									 \
  } while (0)
 
 #define MAKE_DECL_ONE_ONLY(DECL) (DECL_WEAK (DECL) = 1)
-#undef UNIQUE_SECTION_P
-#define UNIQUE_SECTION_P(DECL) (DECL_ONE_ONLY (DECL))
 #undef UNIQUE_SECTION
 #define UNIQUE_SECTION(DECL,RELOC)					   \
 do {									   \
   int len, size, sec;							   \
-  char *name, *string, *prefix;						   \
-  static char *prefixes[4][2] = {					   \
+  const char *name, *prefix;						   \
+  char *string;								   \
+  static const char *const prefixes[4][2] = {				   \
     { ".text.", ".gnu.linkonce.t." },					   \
     { ".rodata.", ".gnu.linkonce.r." },					   \
     { ".data.", ".gnu.linkonce.d." },					   \
@@ -260,47 +268,15 @@ do {									   \
   DECL_SECTION_NAME (DECL) = build_string (len, string);		   \
 } while (0)
 
-/* Support the ctors/dtors and other sections.  */
- 
-/* Define the names of and pseudo-ops used to switch to the .ctors and
-   .dtors sections.
- 
-   Note that we want to give these sections the SHF_WRITE attribute
-   because these sections will actually contain data (i.e. tables of
-   addresses of functions in the current root executable or shared library
-   file) and, in the case of a shared library, the relocatable addresses
-   will have to be properly resolved/relocated (and then written into) by
-   the dynamic linker when it actually attaches the given shared library
-   to the executing process.  (Note that on SVR4, you may wish to use the
-   `-z text' option to the ELF linker, when building a shared library, as
-   an additional check that you are doing everything right.  But if you do
-   use the `-z text' option when building a shared library, you will get
-   errors unless the .ctors and .dtors sections are marked as writable
-   via the SHF_WRITE attribute.)  */
-
-#define CTORS_SECTION_NAME      ".ctors"
-#define CTORS_SECTION_ASM_OP    "\t.section\t.ctors,\"aw\""
-#define DTORS_SECTION_NAME      ".dtors"
-#define DTORS_SECTION_ASM_OP    "\t.section\t.dtors,\"aw\""
- 
-/* There's no point providing a default definition of __CTOR_LIST__
-   since people are expected either to use crtbegin.o, or an equivalent,
-   or provide their own definition.  */
-#define CTOR_LISTS_DEFINED_EXTERNALLY
-
 /* A list of other sections which the compiler might be "in" at any
    given time.  */
 #undef EXTRA_SECTIONS
-#define EXTRA_SECTIONS in_sdata, in_rdata, in_ctors, in_dtors
- 
-#define INVOKE__main
+#define EXTRA_SECTIONS in_sdata, in_rdata
 
 #undef EXTRA_SECTION_FUNCTIONS
 #define EXTRA_SECTION_FUNCTIONS                                         \
   SECTION_FUNCTION_TEMPLATE(sdata_section, in_sdata, SDATA_SECTION_ASM_OP) \
-  SECTION_FUNCTION_TEMPLATE(rdata_section, in_rdata, RDATA_SECTION_ASM_OP) \
-  SECTION_FUNCTION_TEMPLATE(ctors_section, in_ctors, CTORS_SECTION_ASM_OP) \
-  SECTION_FUNCTION_TEMPLATE(dtors_section, in_dtors, DTORS_SECTION_ASM_OP)
+  SECTION_FUNCTION_TEMPLATE(rdata_section, in_rdata, RDATA_SECTION_ASM_OP)
 
 #define SECTION_FUNCTION_TEMPLATE(FN, ENUM, OP)                               \
 void FN ()                                                            \
@@ -312,52 +288,23 @@ void FN ()                                                            \
     }                                                                 \
 }
 
+/* On elf, we *do* have support for the .init and .fini sections, and we
+   can put stuff in there to be executed before and after `main'.  We let
+   crtstuff.c and other files know this by defining the following symbols.
+   The definitions say how to change sections to the .init and .fini
+   sections.  This is the same for all known elf assemblers.  */
 
-/* A C statement (sans semicolon) to output an element in the table of
-   global constructors.  */
-#undef ASM_OUTPUT_CONSTRUCTOR
-#define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)                             \
-  do {                                                                \
-    ctors_section ();                                                 \
-    fprintf (FILE, "\t%s\t", (Pmode == SImode) ? ".word" : ".dword"); \
-    assemble_name (FILE, NAME);                                       \
-    fprintf (FILE, "\n");                                             \
-  } while (0)
-
-
-/* A C statement (sans semicolon) to output an element in the table of
-   global destructors.  */
-#undef ASM_OUTPUT_DESTRUCTOR
-#define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)                              \
-  do {                                                                \
-    dtors_section ();                                                 \
-    fprintf (FILE, "\t%s\t", (Pmode == SImode) ? ".word" : ".dword"); \
-    assemble_name (FILE, NAME);                                       \
-    fprintf (FILE, "\n");                                             \
-  } while (0)
-
-#define CTOR_LIST_BEGIN                                               \
-func_ptr __CTOR_LIST__ __attribute__((section(CTORS_SECTION_NAME))) = \
-  (func_ptr) (-1)
- 
-#define CTOR_LIST_END                                                 \
-func_ptr __CTOR_END__ __attribute__((section(CTORS_SECTION_NAME))) =  \
-  (func_ptr) 0
- 
-#define DTOR_LIST_BEGIN                                               \
-func_ptr __DTOR_LIST__ __attribute__((section(DTORS_SECTION_NAME))) = \
-  (func_ptr) (-1)
-
-#define DTOR_LIST_END                                                 \
-func_ptr __DTOR_END__ __attribute__((section(DTORS_SECTION_NAME))) =  \
-  (func_ptr) 0
+#undef  INIT_SECTION_ASM_OP
+#define INIT_SECTION_ASM_OP     "\t.section\t.init"
+#undef  FINI_SECTION_ASM_OP
+#define FINI_SECTION_ASM_OP     "\t.section\t.fini"
 
 /* Don't set the target flags, this is done by the linker script */
 #undef LIB_SPEC
 #define LIB_SPEC ""
 
 #undef  STARTFILE_SPEC
-#define STARTFILE_SPEC "crtbegin%O%s %{!mno-crt0:crt0%O%s}"
+#define STARTFILE_SPEC "crti%O%s crtbegin%O%s %{!mno-crt0:crt0%O%s}"
 
 #undef  ENDFILE_SPEC
-#define ENDFILE_SPEC "crtend%O%s"
+#define ENDFILE_SPEC "crtend%O%s crtn%O%s"

@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler, for Intel 860.
-   Copyright (C) 1989, 1991, 1993, 1995, 1996, 1997, 1998, 1999, 2000
-   Free Software Foundation, Inc.
+   Copyright (C) 1989, 1991, 1993, 1995, 1996, 1997, 1998, 1999, 2000,
+   2001, 2002 Free Software Foundation, Inc.
    Hacked substantially by Ron Guilmette (rfg@monkeys.com) to cater to
    the whims of the System V Release 4 assembler.
 
@@ -126,7 +126,7 @@ extern int target_flags;
    when given unaligned data.  */
 #define STRICT_ALIGNMENT 1
 
-/* If bit field type is int, dont let it cross an int,
+/* If bit field type is int, don't let it cross an int,
    and give entire struct the alignment of an int.  */
 #define PCC_BITFIELD_TYPE_MATTERS 1
 
@@ -557,14 +557,6 @@ struct cumulative_args { int ints, floats; };
       ? PARM_BOUNDARY						\
       : GET_MODE_ALIGNMENT(MODE)))
 
-/* This macro generates the assembly code for function entry.
-
-   FILE is a stdio stream to output the code to.
-   SIZE is an int: how many units of temporary storage to allocate.
-*/
-
-#define FUNCTION_PROLOGUE(FILE, SIZE) function_prologue ((FILE), (SIZE))
-
 /* Output a no-op just before the beginning of the function,
    to ensure that there does not appear to be a delayed branch there.
    Such a thing would confuse interrupt recovery.  */
@@ -583,19 +575,6 @@ struct cumulative_args { int ints, floats; };
    No definition is equivalent to always zero.  */
 
 #define EXIT_IGNORE_STACK 1
-
-/* This macro generates the assembly code for function exit.
-
-   FILE is a stdio stream to output the code to.
-   SIZE is an int: how many units of temporary storage to allocate.
-
-   The function epilogue should not depend on the current stack pointer!
-   It should use the frame pointer only.  This is mandatory because
-   of alloca; we also take advantage of it to omit stack adjustments
-   before returning.
-*/
-
-#define FUNCTION_EPILOGUE(FILE, SIZE) function_epilogue ((FILE), (SIZE))
 
 /* Generate necessary RTL for __builtin_saveregs().  */
 #define EXPAND_BUILTIN_SAVEREGS() \
@@ -635,11 +614,11 @@ struct cumulative_args { int ints, floats; };
      or #BOTTOM_OF_STATIC,r29,r29  */
 #define TRAMPOLINE_TEMPLATE(FILE)					\
 {									\
-  ASM_OUTPUT_INT (FILE, GEN_INT (0xec1f0000));	\
-  ASM_OUTPUT_INT (FILE, GEN_INT (0xe7ff0000));	\
-  ASM_OUTPUT_INT (FILE, GEN_INT (0xec1d0000));	\
-  ASM_OUTPUT_INT (FILE, GEN_INT (0x4000f800));	\
-  ASM_OUTPUT_INT (FILE, GEN_INT (0xe7bd0000));	\
+  assemble_aligned_integer (UNITS_PER_WORD, GEN_INT (0xec1f0000));	\
+  assemble_aligned_integer (UNITS_PER_WORD, GEN_INT (0xe7ff0000));	\
+  assemble_aligned_integer (UNITS_PER_WORD, GEN_INT (0xec1d0000));	\
+  assemble_aligned_integer (UNITS_PER_WORD, GEN_INT (0x4000f800));	\
+  assemble_aligned_integer (UNITS_PER_WORD, GEN_INT (0xe7bd0000));	\
 }
 
 /* Length in units of the trampoline for entering a nested function.  */
@@ -865,12 +844,6 @@ struct cumulative_args { int ints, floats; };
    Do not define this if the table should contain absolute addresses. */
 /* #define CASE_VECTOR_PC_RELATIVE 1 */
 
-/* Specify the tree operation to be used to convert reals to integers.  */
-#define IMPLICIT_FIX_EXPR FIX_ROUND_EXPR
-
-/* This is the kind of divide that is easiest to do in the general case.  */
-#define EASY_DIV_EXPR TRUNC_DIV_EXPR
-
 /* Must pass floats to libgcc functions as doubles.  */
 #define LIBGCC_NEEDS_DOUBLE 1
 
@@ -996,9 +969,6 @@ struct cumulative_args { int ints, floats; };
 
 /* Assembler pseudos to introduce constants of various size.  */
 
-#define ASM_BYTE_OP "\t.byte\t"
-#define ASM_SHORT "\t.short"
-#define ASM_LONG "\t.long"
 #define ASM_DOUBLE "\t.double"
 
 /* Output at beginning of assembler file.  */
@@ -1044,10 +1014,6 @@ struct cumulative_args { int ints, floats; };
  "f10", "f11", "f12", "f13", "f14", "f15", "f16", "f17", "f18", "f19",	\
  "f20", "f21", "f22", "f23", "f24", "f25", "f26", "f27", "f28", "f29",	\
  "f30", "f31" }
-
-/* How to renumber registers for dbx and gdb.  */
-
-#define DBX_REGISTER_NUMBER(REGNO) (REGNO)
 
 /* This is how to output the definition of a user-level label named NAME,
    such as the label on a static function or variable NAME.  */
@@ -1099,40 +1065,6 @@ do { ASM_OUTPUT_ALIGN ((FILE), 2);					\
 
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL,PREFIX,NUM)	\
   sprintf (LABEL, "*.%s%d", PREFIX, NUM)
-
-/* This is how to output an assembler line defining a `double' constant.  */
-
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)  \
-  fprintf (FILE, "\t.double %.20e\n", (VALUE))
-
-/* This is how to output an assembler line defining a `float' constant.  */
-
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)  \
-  fprintf (FILE, "\t.float %.12e\n", (VALUE))
-
-/* This is how to output an assembler line defining an `int' constant.  */
-
-#define ASM_OUTPUT_INT(FILE,VALUE)  \
-( fprintf (FILE, "\t.long "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* Likewise for `char' and `short' constants.  */
-
-#define ASM_OUTPUT_SHORT(FILE,VALUE)  \
-( fprintf (FILE, "\t.short "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-#define ASM_OUTPUT_CHAR(FILE,VALUE)  \
-( fprintf (FILE, "\t.byte "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* This is how to output an assembler line for a numeric constant byte.  */
-
-#define ASM_OUTPUT_BYTE(FILE,VALUE)  \
-  fprintf (FILE, "\t.byte 0x%x\n", (VALUE))
 
 /* This is how to output code to push a register on the stack.
    It need not be very fast code.  */
@@ -1200,21 +1132,6 @@ do { ASM_OUTPUT_ALIGN ((FILE), 2);					\
 #define ASM_FORMAT_PRIVATE_NAME(OUTPUT, NAME, LABELNO)	\
 ( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 10),	\
   sprintf ((OUTPUT), "%s.%d", (NAME), (LABELNO)))
-
-/* Define the parentheses used to group arithmetic operations
-   in assembler code.  */
-
-#define ASM_OPEN_PAREN "("
-#define ASM_CLOSE_PAREN ")"
-
-/* Define results of standard character escape sequences.  */
-#define TARGET_BELL 007
-#define TARGET_BS 010
-#define TARGET_TAB 011
-#define TARGET_NEWLINE 012
-#define TARGET_VT 013
-#define TARGET_FF 014
-#define TARGET_CR 015
 
 /* Print operand X (an rtx) in assembler syntax to file FILE.
    CODE is a letter or dot (`z' in `%z0') or 0 if no letter was specified.
@@ -1371,24 +1288,6 @@ extern const char *i860_reg_prefix;
       output_addr_const (FILE, addr);				\
     }								\
 }
-
-/* The following #defines are used when compiling the routines in
-   libgcc1.c.  Since the i860 calling conventions require single
-   precision floats to be passed in the floating-point registers
-   (rather than in the general registers) we have to build the
-   libgcc1.c routines in such a way that they know the actual types
-   of their formal arguments and the actual types of their return
-   values.  Otherwise, gcc will generate calls to the libgcc1.c
-   routines, passing arguments in the floating-point registers,
-   but the libgcc1.c routines will expect their arguments on the
-   stack (where the i860 calling conventions require structs &
-   unions to be passed).  */
-
-#define FLOAT_VALUE_TYPE	float
-#define INTIFY(FLOATVAL)	(FLOATVAL)
-#define FLOATIFY(INTVAL)	(INTVAL)
-#define FLOAT_ARG_TYPE		float
-
 
 /* Optionally define this if you have added predicates to
    `MACHINE.c'.  This macro is called within an initializer of an

@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler, for AMD Am29000 CPU.
    Copyright (C) 1988, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-   2000, 2001 Free Software Foundation, Inc.
+   2000, 2001, 2002 Free Software Foundation, Inc.
    Contributed by Richard Kenner (kenner@nyu.edu)
 
 This file is part of GNU CC.
@@ -88,7 +88,7 @@ extern int target_flags;
 #define TARGET_NO_REUSE_ARGS	(target_flags & 256)
 
 /* This means that neither builtin nor emulated float operations are
-   available, and that GCC should generate libcalls instead. */
+   available, and that GCC should generate libcalls instead.  */
 
 #define TARGET_SOFT_FLOAT	(target_flags & 512)
 
@@ -162,7 +162,7 @@ extern int target_flags;
    numbered. 
 
    For 29k we can decide arbitrarily since there are no machine instructions
-   for them.  Might as well be consistent with bytes. */
+   for them.  Might as well be consistent with bytes.  */
 #define WORDS_BIG_ENDIAN 1
 
 /* number of bits in an addressable storage unit */
@@ -525,7 +525,7 @@ enum reg_class { NO_REGS, LR0_REGS, GENERAL_REGS, BP_REGS, FC_REGS, CR_REGS,
 
 #define N_REG_CLASSES (int) LIM_REG_CLASSES
 
-/* Give names of register classes as strings for dump file.   */
+/* Give names of register classes as strings for dump file.  */
 
 #define REG_CLASS_NAMES				\
  {"NO_REGS", "LR0_REGS", "GENERAL_REGS", "BP_REGS", "FC_REGS", "CR_REGS", \
@@ -679,15 +679,6 @@ enum reg_class { NO_REGS, LR0_REGS, GENERAL_REGS, BP_REGS, FC_REGS, CR_REGS,
    most expensive register-register copy.  */
 
 #define MEMORY_MOVE_COST(MODE,CLASS,IN) 6
-
-/* A C statement (sans semicolon) to update the integer variable COST
-   based on the relationship between INSN that is dependent on
-   DEP_INSN through the dependence LINK.  The default is to make no
-   adjustment to COST.  On the a29k, ignore the cost of anti- and
-   output-dependencies.  */
-#define ADJUST_COST(INSN,LINK,DEP_INSN,COST)				\
-  if (REG_NOTE_KIND (LINK) != 0)					\
-    (COST) = 0; /* Anti or output dependence.  */
 
 /* Stack layout; function entry, exit and calling.  */
 
@@ -935,16 +926,6 @@ extern const char *a29k_function_name;
   a29k_function_name = NAME; \
   a29k_compute_reg_names ();
 
-/* This macro generates the assembly code for function entry.
-   FILE is a stdio stream to output the code to.
-   SIZE is an int: how many units of temporary storage to allocate.
-   Refer to the array `regs_ever_live' to determine which registers
-   to save; `regs_ever_live[I]' is nonzero if register number I
-   is ever used in the function.  This macro is responsible for
-   knowing which registers should not be saved even if used.  */
-
-#define FUNCTION_PROLOGUE(FILE, SIZE)  output_prolog (FILE, SIZE)
-
 /* Output assembler code to FILE to increment profiler label # LABELNO
    for profiling a function entry.  */
 
@@ -956,18 +937,6 @@ extern const char *a29k_function_name;
    No definition is equivalent to always zero.  */
 
 #define EXIT_IGNORE_STACK 1
-
-/* This macro generates the assembly code for function exit,
-   on machines that need it.  If FUNCTION_EPILOGUE is not defined
-   then individual return instructions are generated for each
-   return statement.  Args are same as for FUNCTION_PROLOGUE.
-
-   The function epilogue should not depend on the current stack pointer!
-   It should use the frame pointer only.  This is mandatory because
-   of alloca; we also take advantage of it to omit stack adjustments
-   before returning.  */
-
-#define FUNCTION_EPILOGUE(FILE, SIZE)	output_epilog (FILE, SIZE)
 
 /* Define the number of delay slots needed for the function epilogue.
 
@@ -1207,14 +1176,8 @@ extern const char *a29k_function_name;
 /* Define as C expression which evaluates to nonzero if the tablejump
    instruction expects the table to contain offsets from the address of the
    table.
-   Do not define this if the table should contain absolute addresses. */
+   Do not define this if the table should contain absolute addresses.  */
 /* #define CASE_VECTOR_PC_RELATIVE 1 */
-
-/* Specify the tree operation to be used to convert reals to integers.  */
-#define IMPLICIT_FIX_EXPR FIX_ROUND_EXPR
-
-/* This is the kind of divide that is easiest to do in the general case.  */
-#define EASY_DIV_EXPR TRUNC_DIV_EXPR
 
 /* Define this as 1 if `char' should by default be signed; else as 0.  */
 #define DEFAULT_SIGNED_CHAR 0
@@ -1300,7 +1263,7 @@ extern const char *a29k_function_name;
 #define NO_FUNCTION_CSE
 
 /* Define this to be nonzero if shift instructions ignore all but the low-order
-   few bits. */
+   few bits.  */
 #define SHIFT_COUNT_TRUNCATED 1
 
 /* Compute the cost of computing a constant rtl expression RTX
@@ -1347,7 +1310,7 @@ extern const char *a29k_function_name;
 /* Output at beginning of assembler file.  */
 
 #define ASM_FILE_START(FILE)					\
-{ char *p, *after_dir = main_input_filename;			\
+{ const char *p, *after_dir = main_input_filename;		\
   if (TARGET_29050)						\
     fprintf (FILE, "\t.cputype 29050\n");			\
   for (p = main_input_filename; *p; p++)			\
@@ -1447,14 +1410,11 @@ literal_section ()						\
 
 /* How to renumber registers for dbx and gdb.  */
 
-extern int a29k_debug_reg_map[];
+extern int a29k_debug_reg_map[FIRST_PSEUDO_REGISTER];
 #define DBX_REGISTER_NUMBER(REGNO) a29k_debug_reg_map[REGNO]
 
-/* This how to write an assembler directive to FILE to switch to
-   section NAME for DECL.  */
-
-#define ASM_OUTPUT_SECTION_NAME(FILE, DECL, NAME, RELOC) \
-  fprintf (FILE, "\t.sect %s, bss\n\t.use %s\n", NAME, NAME)
+/* Switch into a generic section.  */
+#define TARGET_ASM_NAMED_SECTION a29k_asm_named_section
 
 /* This is how to output the definition of a user-level label named NAME,
    such as the label on a static function or variable NAME.  */
@@ -1468,7 +1428,7 @@ extern int a29k_debug_reg_map[];
 #define ASM_GLOBALIZE_LABEL(FILE,NAME)	\
   do { fputs ("\t.global ", FILE); assemble_name (FILE, NAME); fputs ("\n", FILE);} while (0)
 
-/* The prefix to add to user-visible assembler symbols. */
+/* The prefix to add to user-visible assembler symbols.  */
 
 #undef USER_LABEL_PREFIX
 #define USER_LABEL_PREFIX "_"
@@ -1481,7 +1441,7 @@ extern int a29k_debug_reg_map[];
 
 /* This is how to output a label for a jump table.  Arguments are the same as
    for ASM_OUTPUT_INTERNAL_LABEL, except the insn for the jump table is
-   passed. */
+   passed.  */
 
 #define ASM_OUTPUT_CASE_LABEL(FILE,PREFIX,NUM,TABLEINSN)	\
 { ASM_OUTPUT_ALIGN (FILE, 2); ASM_OUTPUT_INTERNAL_LABEL (FILE, PREFIX, NUM); }
@@ -1493,35 +1453,6 @@ extern int a29k_debug_reg_map[];
 
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL,PREFIX,NUM)	\
   sprintf (LABEL, "*%s%d", PREFIX, NUM)
-
-/* This is how to output an assembler line defining a `double' constant.  */
-
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)		\
-  fprintf (FILE, "\t.double %.20e\n", (VALUE))
-
-/* This is how to output an assembler line defining a `float' constant.  */
-
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)		\
-  fprintf (FILE, "\t.float %.20e\n", (VALUE))
-
-/* This is how to output an assembler line defining an `int' constant.  */
-
-#define ASM_OUTPUT_INT(FILE,VALUE)  \
-( fprintf (FILE, "\t.word "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* Likewise for `char' and `short' constants.  */
-
-#define ASM_OUTPUT_SHORT(FILE,VALUE)  \
-( fprintf (FILE, "\t.hword "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-#define ASM_OUTPUT_CHAR(FILE,VALUE)  \
-( fprintf (FILE, "\t.byte "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
 
 /* This is how to output an insn to push a register on the stack.
    It need not be very fast code.  */
@@ -1539,18 +1470,13 @@ extern int a29k_debug_reg_map[];
            reg_names[REGNO], reg_names[R_MSP], reg_names[R_MSP],	\
 	   reg_names[R_MSP]);
 
-/* This is how to output an assembler line for a numeric constant byte.  */
-
-#define ASM_OUTPUT_BYTE(FILE,VALUE)  \
-  fprintf (FILE, "\t.byte 0x%x\n", (VALUE))
-
 /* This is how to output an element of a case-vector that is absolute.  */
 
 #define ASM_OUTPUT_ADDR_VEC_ELT(FILE, VALUE)  \
   fprintf (FILE, "\t.word L%d\n", VALUE)
 
 /* This is how to output an element of a case-vector that is relative.
-   Don't define this if it is not supported. */
+   Don't define this if it is not supported.  */
 
 /* #define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, VALUE, REL) */
 
@@ -1589,21 +1515,6 @@ extern int a29k_debug_reg_map[];
 ( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 10),	\
   sprintf ((OUTPUT), "%s.%d", (NAME), (LABELNO)))
 
-/* Define the parentheses used to group arithmetic operations
-   in assembler code.  */
-
-#define ASM_OPEN_PAREN "("
-#define ASM_CLOSE_PAREN ")"
-
-/* Define results of standard character escape sequences.  */
-#define TARGET_BELL 007
-#define TARGET_BS 010
-#define TARGET_TAB 011
-#define TARGET_NEWLINE 012
-#define TARGET_VT 013
-#define TARGET_FF 014
-#define TARGET_CR 015
-
 /* Print operand X (an rtx) in assembler syntax to file FILE.
    CODE is a letter or dot (`z' in `%z0') or 0 if no letter was specified.
    For `%' followed by punctuation, CODE is the punctuation and X is null.  */
@@ -1635,7 +1546,6 @@ extern int a29k_debug_reg_map[];
   {"cint_16_operand", {CONST_INT}},				\
   {"long_const_operand", {CONST_INT, CONST, CONST_DOUBLE,	\
 			  LABEL_REF, SYMBOL_REF}},		\
-  {"shift_constant_operand", {CONST_INT, ASHIFT}},		\
   {"const_0_operand", {CONST_INT, ASHIFT}},			\
   {"const_8_operand", {CONST_INT, ASHIFT}},			\
   {"const_16_operand", {CONST_INT, ASHIFT}},			\

@@ -1,5 +1,5 @@
 /* Subroutines for insn-output.c for Intel 860
-   Copyright (C) 1989, 1991, 1997, 1998, 1999, 2000
+   Copyright (C) 1989, 1991, 1997, 1998, 1999, 2000, 2001, 2002
    Free Software Foundation, Inc.
    Derived from sparc.c.
 
@@ -42,6 +42,8 @@ Boston, MA 02111-1307, USA.  */
 #include "function.h"
 #include "expr.h"
 #include "tm_p.h"
+#include "target.h"
+#include "target-def.h"
 
 static rtx find_addr_reg PARAMS ((rtx));
 static int reg_clobbered_p PARAMS ((rtx, rtx));
@@ -49,6 +51,8 @@ static const char *singlemove_string PARAMS ((rtx *));
 static const char *load_opcode PARAMS ((enum machine_mode, const char *, rtx));
 static const char *store_opcode PARAMS ((enum machine_mode, const char *, rtx));
 static void output_size_for_block_move PARAMS ((rtx, rtx, rtx));
+static void i860_output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
+static void i860_output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
 
 #ifndef I860_REG_PREFIX
 #define I860_REG_PREFIX ""
@@ -59,6 +63,14 @@ const char *i860_reg_prefix = I860_REG_PREFIX;
 /* Save information from a "cmpxx" operation until the branch is emitted.  */
 
 rtx i860_compare_op0, i860_compare_op1;
+
+/* Initialize the GCC target structure.  */
+#undef TARGET_ASM_FUNCTION_PROLOGUE
+#define TARGET_ASM_FUNCTION_PROLOGUE i860_output_function_prologue
+#undef TARGET_ASM_FUNCTION_EPILOGUE
+#define TARGET_ASM_FUNCTION_EPILOGUE i860_output_function_epilogue
+
+struct gcc_target targetm = TARGET_INITIALIZER;
 
 /* Return non-zero if this pattern, can be evaluated safely, even if it
    was not asked for.  */
@@ -340,7 +352,7 @@ single_insn_src_p (op, mode)
       return 1;
 
     case SUBREG:
-      if (SUBREG_WORD (op) != 0)
+      if (SUBREG_BYTE (op) != 0)
 	return 0;
       return single_insn_src_p (SUBREG_REG (op), mode);
 
@@ -454,7 +466,7 @@ load_operand (op, mode)
   return (memory_operand (op, mode) || indexed_operand (op, mode));
 }
 
-/* Return truth value of whether OP is a integer which fits the
+/* Return truth value of whether OP is an integer which fits the
    range constraining immediate operands in add/subtract insns.  */
 
 int
@@ -465,7 +477,7 @@ small_int (op, mode)
   return (GET_CODE (op) == CONST_INT && SMALL_INT (op));
 }
 
-/* Return truth value of whether OP is a integer which fits the
+/* Return truth value of whether OP is an integer which fits the
    range constraining immediate operands in logic insns.  */
 
 int
@@ -637,14 +649,14 @@ output_move_double (operands)
   if (optype0 == REGOP)
     latehalf[0] = gen_rtx_REG (SImode, REGNO (operands[0]) + 1);
   else if (optype0 == OFFSOP)
-    latehalf[0] = adj_offsettable_operand (operands[0], 4);
+    latehalf[0] = adjust_address (operands[0], SImode, 4);
   else
     latehalf[0] = operands[0];
 
   if (optype1 == REGOP)
     latehalf[1] = gen_rtx_REG (SImode, REGNO (operands[1]) + 1);
   else if (optype1 == OFFSOP)
-    latehalf[1] = adj_offsettable_operand (operands[1], 4);
+    latehalf[1] = adjust_address (operands[1], SImode, 4);
   else if (optype1 == CNSTOP)
     {
       if (GET_CODE (operands[1]) == CONST_DOUBLE)
@@ -702,7 +714,7 @@ output_move_double (operands)
 	  xops[1] = operands[0];
 	  output_asm_insn ("adds %1,%0,%1", xops);
 	  operands[1] = gen_rtx_MEM (DImode, operands[0]);
-	  latehalf[1] = adj_offsettable_operand (operands[1], 4);
+	  latehalf[1] = adjust_address (operands[1], SImode, 4);
 	  addreg1 = 0;
 	  highest_first = 1;
 	}
@@ -1451,14 +1463,14 @@ output_delayed_branch (template, operands, insn)
 	 We must do this after outputting the branch insn,
 	 since operands may just be a pointer to `recog_data.operand'.  */
       INSN_CODE (delay_insn) = insn_code_number
-	= recog (pat, delay_insn, NULL_PTR);
+	= recog (pat, delay_insn, NULL);
       if (insn_code_number == -1)
 	abort ();
 
       for (i = 0; i < insn_data[insn_code_number].n_operands; i++)
 	{
 	  if (GET_CODE (recog_data.operand[i]) == SUBREG)
-	    recog_data.operand[i] = alter_subreg (recog_data.operand[i]);
+	    alter_subreg (&recog_data.operand[i]);
 	}
 
       insn_extract (delay_insn);
@@ -1499,7 +1511,7 @@ output_delay_insn (delay_insn)
   for (i = 0; i < insn_data[insn_code_number].n_operands; i++)
     {
       if (GET_CODE (recog_data.operand[i]) == SUBREG)
-	recog_data.operand[i] = alter_subreg (recog_data.operand[i]);
+	alter_subreg (&recog_data.operand[i]);
     }
 
   if (! constrain_operands (1))
@@ -1551,7 +1563,6 @@ sfmode_constant_to_ulong (x)
 }
 
 /* This function generates the assembly code for function entry.
-   The macro FUNCTION_PROLOGUE in i860.h is defined to call this function.
 
    ASM_FILE is a stdio stream to output the code to.
    SIZE is an int: how many units of temporary storage to allocate.
@@ -1650,21 +1661,19 @@ sfmode_constant_to_ulong (x)
 #define STACK_ALIGNMENT	16
 #endif
 
-extern char call_used_regs[];
-
-char *current_function_original_name;
+const char *current_function_original_name;
 
 static int must_preserve_r1;
 static unsigned must_preserve_bytes;
 
-void
-function_prologue (asm_file, local_bytes)
+static void
+i860_output_function_prologue (asm_file, local_bytes)
      register FILE *asm_file;
-     register unsigned local_bytes;
+     register HOST_WIDE_INT local_bytes;
 {
-  register unsigned frame_lower_bytes;
-  register unsigned frame_upper_bytes;
-  register unsigned total_fsize;
+  register HOST_WIDE_INT frame_lower_bytes;
+  register HOST_WIDE_INT frame_upper_bytes;
+  register HOST_WIDE_INT total_fsize;
   register unsigned preserved_reg_bytes = 0;
   register unsigned i;
   register unsigned preserved_so_far = 0;
@@ -1923,7 +1932,6 @@ function_prologue (asm_file, local_bytes)
 }
 
 /* This function generates the assembly code for function exit.
-   The macro FUNCTION_EPILOGUE in i860.h is defined to call this function.
 
    ASM_FILE is a stdio stream to output the code to.
    SIZE is an int: how many units of temporary storage to allocate.
@@ -1979,20 +1987,23 @@ typedef struct TDESC {
 	unsigned int negative_frame_size;	/* same as frame_lower_bytes */
 } TDESC;
 
-void
-function_epilogue (asm_file, local_bytes)
+static void
+i860_output_function_epilogue (asm_file, local_bytes)
      register FILE *asm_file;
-     register unsigned local_bytes;
+     register HOST_WIDE_INT local_bytes;
 {
-  register unsigned frame_upper_bytes;
-  register unsigned frame_lower_bytes;
-  register unsigned preserved_reg_bytes = 0;
+  register HOST_WIDE_INT frame_upper_bytes;
+  register HOST_WIDE_INT frame_lower_bytes;
+  register HOST_WIDE_INT preserved_reg_bytes = 0;
   register unsigned i;
   register unsigned restored_so_far = 0;
   register unsigned int_restored;
   register unsigned mask;
   unsigned intflags=0;
   register TDESC_flags *flags = (TDESC_flags *) &intflags;
+#ifdef	OUTPUT_TDESC	/* Output an ABI-compliant TDESC entry */
+  const char *long_op = integer_asm_op (4, TRUE);
+#endif
 
   flags->version = 4;
   flags->reg_packing = 1;
@@ -2082,23 +2093,23 @@ function_epilogue (asm_file, local_bytes)
   }
   assemble_name(asm_file,current_function_original_name);
   fputs(".TDESC:\n", asm_file);
-  fprintf(asm_file, "%s 0x%0x\n", ASM_LONG, intflags);
-  fprintf(asm_file, "%s %d\n", ASM_LONG,
+  fprintf(asm_file, "%s 0x%0x\n", long_op, intflags);
+  fprintf(asm_file, "%s %d\n", long_op,
 	int_restored ? must_preserve_bytes : 0);
   if (flags->version > 1) {
-    fprintf(asm_file, "%s %d\n", ASM_LONG,
+    fprintf(asm_file, "%s %d\n", long_op,
 	(restored_so_far == int_restored) ? 0 : must_preserve_bytes +
 	  (4 * int_restored));
     if (flags->version > 2) {
-      fprintf(asm_file, "%s %d\n", ASM_LONG, frame_upper_bytes);
+      fprintf(asm_file, "%s %d\n", long_op, frame_upper_bytes);
       if (flags->version > 3)
-	fprintf(asm_file, "%s %d\n", ASM_LONG, frame_lower_bytes);
+	fprintf(asm_file, "%s %d\n", long_op, frame_lower_bytes);
     }
   }
   tdesc_section();
-  fprintf(asm_file, "%s ", ASM_LONG);
+  fprintf(asm_file, "%s ", long_op);
   assemble_name(asm_file, current_function_original_name);
-  fprintf(asm_file, "\n%s ", ASM_LONG);
+  fprintf(asm_file, "\n%s ", long_op);
   assemble_name(asm_file, current_function_original_name);
   fputs(".TDESC\n", asm_file);
   text_section();
@@ -2302,7 +2313,7 @@ i860_va_arg (valist, type)
       emit_cmp_and_jump_insns (expand_expr (field, NULL_RTX, 0, 0),
 			       GEN_INT (nparm - incr), GT, const0_rtx,
 			       TYPE_MODE (TREE_TYPE (field)),
-			       TREE_UNSIGNED (field), 0, lab_false);
+			       TREE_UNSIGNED (field), lab_false);
 
       t = fold (build (POSTINCREMENT_EXPR, TREE_TYPE (field), field,
 		       build_int_2 (incr, 0)));

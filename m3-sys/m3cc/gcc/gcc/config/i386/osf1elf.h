@@ -1,12 +1,13 @@
 /* OSF/1 1.3 now is compitable with SVR4, so include sysv4.h, and
    put difference here.
-   Copyright (C) 2000 Free Software Foundation, Inc. */
+   Copyright (C) 2000 Free Software Foundation, Inc.  */
 
 #include <stdio.h>
-#include "i386/sysv4.h"	/* Base i386 target machine definitions */
 
 #undef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (i386 OSF/1)");
+
+#define TARGET_OSF1ELF
 
 /* WORD_SWITCH_TAKES_ARG defined in svr4 is not correct. We also
  need an extra -soname */
@@ -133,41 +134,6 @@
 #else
 #define OSF_PROFILE_BEFORE_PROLOGUE 0
 #endif
-#undef	FUNCTION_PROLOGUE
-#define FUNCTION_PROLOGUE(FILE, SIZE)					\
-do									\
-  {									\
-    char *prefix = "";			\
-    char *lprefix = LPREFIX;						\
-    int labelno = profile_label_no;					\
-									\
-    if (profile_flag && OSF_PROFILE_BEFORE_PROLOGUE)			\
-      {									\
-	if (!flag_pic)				\
-	  {								\
-	    fprintf (FILE, "\tmovl $%sP%d,%%edx\n", lprefix, labelno);	\
-	    fprintf (FILE, "\tcall *%s_mcount_ptr\n", prefix);		\
-	  }								\
-									\
-	else								\
-	  {								\
-	    static int call_no = 0;					\
-									\
-	    fprintf (FILE, "\tcall %sPc%d\n", lprefix, call_no);	\
-	    fprintf (FILE, "%sPc%d:\tpopl %%eax\n", lprefix, call_no);	\
-	    fprintf (FILE, "\taddl $_GLOBAL_OFFSET_TABLE_+[.-%sPc%d],%%eax\n", \
-		     lprefix, call_no++);				\
-	    fprintf (FILE, "\tleal %sP%d@GOTOFF(%%eax),%%edx\n",	\
-		     lprefix, labelno);					\
-	    fprintf (FILE, "\tmovl %s_mcount_ptr@GOT(%%eax),%%eax\n",	\
-		     prefix);						\
-	    fprintf (FILE, "\tcall *(%%eax)\n");			\
-	  }								\
-      }									\
-									\
-    function_prologue (FILE, SIZE);					\
-  }									\
-while (0)
 
 /* A C statement or compound statement to output to FILE some assembler code to
    call the profiling subroutine `mcount'.  Before calling, the assembler code
@@ -179,7 +145,7 @@ while (0)
    The details of how the address should be passed to `mcount' are determined
    by your operating system environment, not by GNU CC.  To figure them out,
    compile a small program for profiling using the system's installed C
-   compiler and look at the assembler code that results. */
+   compiler and look at the assembler code that results.  */
 
 #undef  FUNCTION_PROFILER
 #define FUNCTION_PROFILER(FILE, LABELNO)				\
@@ -187,9 +153,9 @@ do									\
   {									\
     if (!OSF_PROFILE_BEFORE_PROLOGUE)					\
       {									\
-	char *prefix = "";			\
-	char *lprefix = LPREFIX;					\
-	int labelno = LABELNO;					\
+	const char *const prefix = "";					\
+	const char *const lprefix = LPREFIX;				\
+	int labelno = LABELNO;						\
 									\
 	/* Note that OSF/rose blew it in terms of calling mcount,	\
 	   since OSF/rose prepends a leading underscore, but mcount's	\
