@@ -1,3 +1,5 @@
 fftw3base.h
 *_wrap.c
 fftw3rename.i
+m3makefile
+fftw3.prepro
