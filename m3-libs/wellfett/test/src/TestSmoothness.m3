@@ -83,11 +83,23 @@ TYPE
                                         peak represented by a value *)
                         END;
 
+  VectorPair = RECORD re, im: V.T;  END;
+
+PROCEDURE SplitComplexVector (READONLY x: CV.TBody; ): VectorPair =
+  VAR v := VectorPair{NEW(V.T, NUMBER(x)), NEW(V.T, NUMBER(x))};
+  BEGIN
+    FOR k := FIRST(x) TO LAST(x) DO
+      v.re[k] := x[k].re;
+      v.im[k] := x[k].im;
+    END;
+    RETURN v;
+  END SplitComplexVector;
+
 PROCEDURE PlotComplex (READONLY s: ARRAY OF ScaledComplexSignal; ) =
   CONST magnify = 1.0D0;
 
   VAR
-    v           := NEW(REF ARRAY OF RECORD re, im: V.T;  END, NUMBER(s));
+    v           := NEW(REF ARRAY OF VectorPair, NUMBER(s));
     left, right := NEW(V.T, NUMBER(s));
     min, max    := R.Zero;
     color       := 2;
@@ -97,18 +109,11 @@ PROCEDURE PlotComplex (READONLY s: ARRAY OF ScaledComplexSignal; ) =
     FOR i := FIRST(s) TO LAST(s) DO
       left[i] := FLOAT(s[i].sig.getFirst(), R.T) * s[i].res;
       right[i] := FLOAT(s[i].sig.getLast(), R.T) * s[i].res;
-      v[i].re := NEW(V.T, s[i].sig.getNumber());
-      v[i].im := NEW(V.T, s[i].sig.getNumber());
-      WITH sig = s[i].sig.getData()^ DO
-        FOR k := FIRST(sig) TO LAST(sig) DO
-          v[i].re[k] := sig[k].re;
-          v[i].im[k] := sig[k].im;
-        END;
-        min := MIN(min, VFs.Min(v[i].re^));
-        min := MIN(min, VFs.Min(v[i].im^));
-        max := MAX(max, VFs.Max(v[i].re^));
-        max := MAX(max, VFs.Max(v[i].im^));
-      END;
+      v[i] := SplitComplexVector(s[i].sig.getData()^);
+      min := MIN(min, VFs.Min(v[i].re^));
+      min := MIN(min, VFs.Min(v[i].im^));
+      max := MAX(max, VFs.Max(v[i].re^));
+      max := MAX(max, VFs.Max(v[i].im^));
     END;
     PL.SetFGColorDiscr(1);
     PL.SetEnvironment(
@@ -230,7 +235,27 @@ PROCEDURE UpSample2Cubic (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
     RETURN z;
   END UpSample2Cubic;
 
-CONST UpSample2 = UpSample2Cubic;
+(* interpolate piecewise cubic *)
+PROCEDURE UpSample2Fourier (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
+  VAR
+    pair := SplitComplexVector(x);
+    s    := DFTR2C1D(pair.re^);
+    sl   := CV.NewZero(NUMBER(s^) * 2);
+    k    := R.One / FLOAT(NUMBER(x), R.T);
+  BEGIN
+    SUBARRAY(sl^, 0, NUMBER(s^)) := CV.Scale(s, C.T{k, R.Zero})^;
+    WITH (* we must extend to an even number of samples to get an exact
+            doubling *) zr = DFTC2R1D(sl^, 0)^,
+                        z  = CV.New(NUMBER(zr) - 1) (* ignore last value *) DO
+      FOR i := FIRST(z^) TO LAST(z^) DO
+        z[i].re := zr[i];
+        z[i].im := R.Zero;
+      END;
+      RETURN z;
+    END;
+  END UpSample2Fourier;
+
+CONST UpSample2 = UpSample2Fourier;
 
 PROCEDURE FourierDecay () =
   VAR
@@ -239,11 +264,11 @@ PROCEDURE FourierDecay () =
                ARRAY OF R.T{0.25D0, 0.5D0, 0.25D0}, -1).autocorrelate();
     mask1 := NEW(S.T).fromArray(
                ARRAY OF R.T{0.26D0, 0.5D0, 0.24D0}, -1).autocorrelate();
-    mask2 := NEW(S.T).fromArray(
+    mask := NEW(S.T).fromArray(
                ARRAY OF R.T{0.3D0, 0.5D0, 0.2D0}, -1).autocorrelate();
     mask3 := NEW(S.T).fromArray(
                ARRAY OF R.T{0.23D0, 0.54D0, 0.23D0}, -1).autocorrelate();
-    mask := NEW(S.T).fromArray(ARRAY OF R.T{0.5D0, 0.5D0}).autocorrelate();
+    mask4 := NEW(S.T).fromArray(ARRAY OF R.T{0.5D0, 0.5D0}).autocorrelate();
     mask5 := NEW(S.T).fromArray(ARRAY OF R.T{0.2D0, 0.8D0}).autocorrelate();
     mask6 := NEW(S.T).fromArray(ARRAY OF R.T{0.23D0, 0.54D0, 0.23D0}, -1);
     generator           := mask;
@@ -304,7 +329,7 @@ PROCEDURE FourierDecay () =
                            TEXT{Fmt.Int(k),
                                 (*RF.Fmt(CVT.Norm2(CVB.Sub(decayBand,
                                    genBand))),*)
-                                RF.Fmt(sum / decayDoubSum), RF.Fmt(sum),
+                                RF.Fmt(sum / decaySum), RF.Fmt(sum),
                                 RF.Fmt(decayDoubSum), RF.Fmt(decaySum)}));
                 IO.Put(
                   Fmt.FN(
