@@ -1,20 +1,33 @@
 
-GENERIC INTERFACE DiscreteWaveletTransform(S, VS, MS);
+GENERIC INTERFACE DiscreteWaveletTransform(S, VS, VSR, MS);
 
 IMPORT NADefinitions AS NA;
 
 CONST Brand = "DiscreteWaveletTransform";
 
-PROCEDURE FilterBankToPolyphase (READONLY x: VS.TBody; ): MS.T;
-PROCEDURE PolyphaseToFilterBank (READONLY x: MS.TBody; ): VS.T
-  RAISES {NA.Error};
+PROCEDURE FilterBankToPolyphase (READONLY x: VS.TBody; step: CARDINAL; ):
+  MS.T;
+(*'step' is the factor of sub-sampling which may differ from the number of
+   channels, in that case the polyphase matrix is not square.*)
 
-PROCEDURE FilterBankAnalysisSingle (x: S.T; READONLY y: VS.TBody; ): VS.T;
-(*Transform signal x into NUMBER(y) downsampled channels*)
+PROCEDURE PolyphaseToFilterBank (READONLY x: MS.TBody; ): VS.T;
+(*step=NUMBER(x[0])*)
 
-PROCEDURE FilterBankSynthesisSingle (READONLY x, y: VS.TBody; ): S.T
+PROCEDURE FilterBankAnalysisSingle (         x   : S.T;
+                                    READONLY y   : VS.TBody;
+                                             step: CARDINAL; ): VS.T;
+(*Transform signal x into NUMBER(y) channels downsampled by 'step'*)
+
+PROCEDURE FilterBankSynthesisSingle (READONLY x, y: VS.TBody;
+                                              step: CARDINAL; ): S.T
   RAISES {NA.Error};
 (*Transform NUMBER(y) downsampled channels into one signal*)
+
+CONST
+  FilterBankAnalysisTISingle = VSR.Scale; (*the order of operands is not
+                                             natural*)
+  FilterBankSynthesisTISingle = VSR.Inner; (*there is an adjoint too much
+                                              in it*)
 
 TYPE
   WaveletCoeffs = RECORD
