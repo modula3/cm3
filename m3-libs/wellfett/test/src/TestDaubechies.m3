@@ -24,9 +24,10 @@ IMPORT LongRealBasic               AS R,
 PROCEDURE Test()=
 
   VAR
-    x     : S.T;
-    v     : V.T;
+    x, y  : S.T;
+    v, yv : V.T;
     trans : M.T;
+    sqr0, sqr1,
     specrad : R.T;
     eig   : REF CRt.RootArray;
   <*FATAL Thread.Alerted, Wr.Failure, FloatMode.Trap, NADefinitions.Error*>
@@ -53,9 +54,29 @@ PROCEDURE Test()=
     FOR n:=1 TO 45 DO
       x := Daub.FilterPureAbsSqr(n);
       trans := Refn.TransitionMatrix(x);
+      y := x.wrapCyclic(3);
+      yv  := y.getData();
+(*
+      sqr0 := yv[0]+yv[1]+yv[2];
+      sqr1 := M.Trace(trans);
+      IO.Put(Fmt.FN("%s: sum of the eigenvalues: %s ~ %s\n",
+        ARRAY OF TEXT{Fmt.Int(n),RF.Fmt(sqr0),RF.Fmt(sqr1)}));
+      <*ASSERT ABS(sqr0-sqr1)<1.0D0*sqr0*>
+*)
+      sqr0 := yv[0]*yv[0]+yv[1]*yv[1]+yv[2]*yv[2];
+      sqr1 := M.Trace(M.Mul(trans,trans));
+(*
+      IO.Put(Fmt.FN("%s: sum of the eigenvalue squares: %s ~ %s\n",
+        ARRAY OF TEXT{Fmt.Int(n),RF.Fmt(sqr0),RF.Fmt(sqr1)}));
+      <*ASSERT ABS(sqr0-sqr1)<1.0D-10*sqr0*>
+*)
       specrad := Eigen.SquareMethod(trans,v,tol:=1.0D-5);
-      IO.Put(Fmt.FN("%s: spectral radius %s\n",
-        ARRAY OF TEXT{Fmt.Int(n),RF.Fmt(specrad)}));
+      IO.Put(Fmt.FN("%s: spectral radius %s ~ estimation %s\n",
+        ARRAY OF TEXT{
+	  Fmt.Int(n),
+	  RF.Fmt(specrad),
+	  RF.Fmt(RT.SqRt(sqr0/FLOAT(x.getNumber(),R.T)))
+	}));
     END;
   END Test;
 
