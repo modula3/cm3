@@ -4,7 +4,6 @@
 (*                                                            *)
 (*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)
 (*      modified on Tue Mar  2 17:18:02 PST 1993 by muller    *)
-(* ow 03.10.1994 *)
 
 INTERFACE Usignal;
 
@@ -21,19 +20,22 @@ CONST
   SIGIOT    =  6;      (* IOT instruction *)
   SIGEMT    =  7;      (* EMT instruction *)
   SIGFPE    =  8;      (* floating point exception *)
-      FPE_INTOVF_TRAP      =  1;  (* integer overflow *)
-      FPE_INTDIV_TRAP      =  2;  (* integer divide by zero *)
-      FPE_FLTDIV_TRAP      =  3;  (* floating/decimal divide by zero *)
-      FPE_FLTOVF_TRAP      =  4;  (* floating overflow *)
-      FPE_FLTUND_TRAP      =  5;  (* floating underflow *)
-      FPE_FPU_NP_TRAP      =  6;  (* floating point unit not present *)
-      FPE_SUBRNG_TRAP      =  7;  (* subrange out of bounds *)
+      FPE_NOOP      = 0;      (* if only I knew... *)
+      FPE_FLTDIV    = 1;      (* floating point divide by zero *)
+      FPE_FLTOVF    = 2;      (* floating point overflow *)
+      FPE_FLTUND    = 3;      (* floating point underflow *)
+      FPE_FLTRES    = 4;      (* floating point inexact result *)
+      FPE_FLTINV    = 5;      (* invalid floating point operation *)
   SIGKILL   =  9;      (* kill (cannot be caught or ignored) *)
   SIGBUS    =  10;     (* bus error *)
-      BUS_PAGE_FAULT       = 12;  (* page fault protection base *)
-      BUS_SEGNP_FAULT      = 26;  (* segment not present *)
-      BUS_STK_FAULT        = 27;  (* stack fault *)
+      BUS_NOOP      = 0;      (* if only I knew... *)
+      BUS_ADRALN    = 1;      (* invalid address alignment *)
+
   SIGSEGV   =  11;     (* segmentation violation *)
+      SEGV_NOOP     = 0;      (* if only I knew... *)
+      SEGV_MAPERR   = 1;      (* address not mapped to object *)
+      SEGV_ACCERR   = 2;      (* invalid permissions for mapped to object *)
+
   SIGSYS    =  12;     (* bad argument to system call *)
   SIGPIPE   =  13;     (* write on a pipe with no one to read it *)
   SIGALRM   =  14;     (* alarm clock *)
@@ -43,6 +45,16 @@ CONST
   SIGTSTP   =  18;     (* stop signal from tty *)
   SIGCONT   =  19;     (* continue a stopped process *)
   SIGCHLD   =  20;     (* to parent on child stop or exit *)
+      CLD_NOOP      = 0;      (* if only I knew... *)
+      CLD_EXITED    = 1;      (* child has exited *)
+      CLD_KILLED    = 2;      
+        (* child has terminated abnormally and did not create a core file *)
+      CLD_DUMPED    = 3;      
+        (* child has terminated abnormally and create a core file *)
+      CLD_TRAPPED   = 4;      (* traced child has trapped *)
+      CLD_STOPPED   = 5;      (* child has stopped *)
+      CLD_CONTINUED = 6;      (* stopped child has continued *)
+
   SIGTTIN   =  21;     (* to readers pgrp upon background tty read *)
   SIGTTOU   =  22;     (* like TTIN for output if (tp->t_local&LTOSTOP) *)
   SIGIO     =  23;     (* input/output possible signal *)
@@ -126,25 +138,10 @@ TYPE
   struct_sigcontext = RECORD
     sc_onstack: int;   (* sigstack state to restore *)
     sc_mask: int;      (* signal mask to restore *)
-    sc_esp: int;       (* stack pinter *)
-    sc_ebp: int;       (* frame pointer *)
-    sc_isp: int;
-    sc_eip: int;       (* program counter *)
-    sc_efl: int;       (* program status word *)
-    sc_es: int;
-    sc_ds: int;
-    sc_cs: int;
-    sc_ss: int;
-    sc_edi: int;
-    sc_esi: int;
-    sc_ebx: int;
-    sc_edx: int;
-    sc_ecx: int;
-    sc_eax: int;
-    sc_gs: int;
-    sc_fs: int;
-    sc_trapno: int;
-    sc_err: int;
+    sc_ir: int;        (* program counter *)
+    sc_psw: int;       (* program status word *)
+    sc_sp: int;        (* stack pointer if sc_regs == NULL*)
+    sc_regs: ADDRESS;  (* (kernel private) saved state *)
   END;
 
 (* Do not modifiy these variables *)

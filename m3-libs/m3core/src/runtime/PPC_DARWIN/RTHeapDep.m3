@@ -97,8 +97,8 @@ PROCEDURE Fault (sig : Ctypes.int;
                  code: Ctypes.int;
                  scp : UNTRACED REF Usignal.struct_sigcontext) =
   VAR
-    sf_addr := LOOPHOLE(scp.sc_err, ADDRESS);
-
+    (* sf_addr := LOOPHOLE(scp.sc_err, ADDRESS); *)
+    sf_addr: ADDRESS := NIL; (* FIXME: to be done for Darwin... *)
   BEGIN
     IF RTHeapRep.Fault(sf_addr) THEN
       RETURN;
