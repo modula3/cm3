@@ -1,54 +1,53 @@
-MODULE RandomBasic EXPORTS RandomBasic,RandomRep;
-(*Copyright (c) 1996, m3na project
+MODULE RandomBasic EXPORTS RandomBasic, RandomRep;
+(*
+   Copyright (c) 1996, m3na project
 
-Abstract: Random number generators
+   Abstract: Random number generators
 
-3/16/96  Harry George    Initial version (basic structure)
-3/17/96  Warren Smith    Gamma, Gaussian, Dirichlet deviates
+   3/16/96 Harry George Initial version (basic structure)
+   3/17/96 Warren Smith Gamma, Gaussian, Dirichlet deviates
 *)
 
 IMPORT LongFloat;
-IMPORT LongRealBasic AS R,
-       LongRealTrans AS RT,
-       LongReal      AS RSpec,
+IMPORT LongRealBasic        AS R,
+       LongRealTrans        AS RT,
+       LongReal             AS RSpec,
        LongRealIntegerPower AS RP,
-       Word AS W;
-FROM NADefinitions IMPORT Error,Err;
+       Word                 AS W,
+       NADefinitions        AS NA;
 
 CONST Module = "RandomBasic.";
 
 (*======================================*)
 REVEAL
   TBoolean = TBooleanPublic BRANDED OBJECT
-  OVERRIDES
-    generateBoolean:=GenerateBooleanFromBoolean;
-    generateWord:=GenerateWordFromBoolean;
-    generateReal:=GenerateRealFromBoolean;
-  END;
+             OVERRIDES
+               generateBoolean := GenerateBooleanFromBoolean;
+               generateWord    := GenerateWordFromBoolean;
+               generateReal    := GenerateRealFromBoolean;
+             END;
 
-<*INLINE*>
-PROCEDURE GenerateBooleanFromBoolean(SELF:TBoolean) : BOOLEAN =
+<* INLINE *>
+PROCEDURE GenerateBooleanFromBoolean (SELF: TBoolean): BOOLEAN =
   BEGIN
     RETURN SELF.engine();
   END GenerateBooleanFromBoolean;
 
 (* Generates a word, bit by bit *)
-PROCEDURE GenerateWordFromBoolean(SELF:TBoolean) : W.T =
-  VAR
-    x : W.T := 0;
+PROCEDURE GenerateWordFromBoolean (SELF: TBoolean): W.T =
+  VAR x: W.T := 0;
   BEGIN
-    FOR i:=0 TO W.Size DO
-      x := W.Plus( W.LeftShift(x,1), ORD(SELF.engine()));
+    FOR i := 0 TO W.Size DO
+      x := W.Plus(W.LeftShift(x, 1), ORD(SELF.engine()));
     END;
     RETURN x;
   END GenerateWordFromBoolean;
 
 (* Generates a longreal, bit by bit *)
-PROCEDURE GenerateRealFromBoolean(SELF:TBoolean) : R.T =
-  VAR
-    x : R.T := R.Zero;
+PROCEDURE GenerateRealFromBoolean (SELF: TBoolean): R.T =
+  VAR x: R.T := R.Zero;
   BEGIN
-    FOR i:=0 TO RSpec.Precision-1 DO
+    FOR i := 0 TO RSpec.Precision - 1 DO
       x := RT.Half * (x + FLOAT(ORD(SELF.engine()), R.T));
     END;
     <* ASSERT R.Zero <= x *>
@@ -59,12 +58,12 @@ PROCEDURE GenerateRealFromBoolean(SELF:TBoolean) : R.T =
 (*======================================*)
 REVEAL
   TWord = TWordPublic BRANDED OBJECT
-  OVERRIDES
-    generateWord:=GenerateWordFromWord;
-  END;
+          OVERRIDES
+            generateWord := GenerateWordFromWord;
+          END;
 
-<*INLINE*>
-PROCEDURE GenerateWordFromWord(SELF:TWord) : W.T =
+<* INLINE *>
+PROCEDURE GenerateWordFromWord (SELF: TWord): W.T =
   BEGIN
     RETURN SELF.engine();
   END GenerateWordFromWord;
@@ -72,12 +71,12 @@ PROCEDURE GenerateWordFromWord(SELF:TWord) : W.T =
 (*======================================*)
 REVEAL
   TReal = TRealPublic BRANDED OBJECT
-  OVERRIDES
-    generateReal:=GenerateRealFromReal;
-  END;
+          OVERRIDES
+            generateReal := GenerateRealFromReal;
+          END;
 
-<*INLINE*>
-PROCEDURE GenerateRealFromReal(SELF:TReal) : R.T =
+<* INLINE *>
+PROCEDURE GenerateRealFromReal (SELF: TReal): R.T =
   BEGIN
     RETURN SELF.engine();
   END GenerateRealFromReal;
@@ -85,42 +84,39 @@ PROCEDURE GenerateRealFromReal(SELF:TReal) : R.T =
 (*======================================*)
 REVEAL
   T = TPrivate BRANDED OBJECT
-  OVERRIDES
-    uniform:=Uniform;
-    exponential:=Exponential;
-    gaussian:=NormalDev;
-    gamma:=GammaDev;
-    dirichlet:=Dirichlet;
-(*
-    poisson:=Poisson;
-*)
-    binomial:=Binomial;
-  END;
+      OVERRIDES
+        uniform     := Uniform;
+        exponential := Exponential;
+        gaussian    := NormalDev;
+        gamma       := GammaDev;
+        dirichlet   := Dirichlet;
+        (*
+            poisson:=Poisson;
+        *)
+        binomial := Binomial;
+      END;
 (*========================================*)
 (*-------------------*)
-PROCEDURE Uniform(SELF:T;
-                  min:R.T:=R.Zero;  (*from min*)
-                  max:R.T:=R.One;   (*up to but not including max*)
-                  ):R.T             (*return uniform deviate*)
-                  RAISES{Error} =
-VAR
-  t:R.T;
-BEGIN
-  t:=SELF.generateReal();
-  IF min=Min AND max=Max THEN RETURN t; END;
+PROCEDURE Uniform (SELF: T;
+                   min : R.T := R.Zero; (*from min*)
+                   max : R.T := R.One; (*up to but not including max*)
+  ): R.T                         (*return uniform deviate*)
+  RAISES {NA.Error} =
+  VAR t: R.T;
+  BEGIN
+    t := SELF.generateReal();
+    IF min = Min AND max = Max THEN RETURN t; END;
 
-  IF min>=max THEN
-    RAISE Error(Err.out_of_range);
-  END;
+    IF min >= max THEN RAISE NA.Error(NA.Err.out_of_range); END;
 
-  RETURN min + t*(max-min);
-END Uniform;
+    RETURN min + t * (max - min);
+  END Uniform;
 (*-------------------*)
-PROCEDURE Exponential(SELF:T):R.T=
-(*exponential, mean=1 *)
-BEGIN
-  RETURN -RT.Ln(SELF.generateReal());
-END Exponential;
+PROCEDURE Exponential (SELF: T): R.T =
+  (*exponential, mean=1 *)
+  BEGIN
+    RETURN -RT.Ln(SELF.generateReal());
+  END Exponential;
 (*-------------------*)
 (**********************
 PROCEDURE Gaussian1(SELF:T):R.T=
@@ -153,10 +149,11 @@ END Gaussian1;
  * using Marsaglia-Bray method on page 390 Devroye, see
  * G.Marsaglia & T.A. Bray: A convenient method for
  * generating normal random variables, SIAM Review 6 (1964) 260-264.**)
-PROCEDURE NormalDev(SELF:T) : R.T =
-  <*FATAL Error*> (*we preserve, that it is always min<=max*)
+PROCEDURE NormalDev (SELF: T): R.T =
+  <* FATAL NA.Error *>           (*we preserve, that it is always
+                                    min<=max*)
   VAR
-    v,u,w,x,sum : R.T;
+    v, u, w, x, sum: R.T;
   BEGIN
     u := SELF.generateReal();
     IF u <= 0.8638D0 THEN
@@ -166,7 +163,7 @@ PROCEDURE NormalDev(SELF:T) : R.T =
       RETURN x;
     ELSIF u <= 0.9745D0 THEN
       v := SELF.generateReal();
-      x := 1.5D0 * (v-R.One + 9.0334237D0 * (u - 0.8638D0));
+      x := 1.5D0 * (v - R.One + 9.0334237D0 * (u - 0.8638D0));
       RETURN x;
       (* we only get here with probability 0.0255: *)
     ELSIF u > 0.9973002D0 THEN
@@ -174,20 +171,22 @@ PROCEDURE NormalDev(SELF:T) : R.T =
         v := SELF.generateReal();
         w := SELF.generateReal();
         x := 4.5D0 - RT.Ln(w);
-      UNTIL x*v*v <= 4.5D0;
-      x := LongFloat.CopySign( RT.SqRt(x+x) , u - 0.9986501D0 );
+      UNTIL x * v * v <= 4.5D0;
+      x := LongFloat.CopySign(RT.SqRt(x + x), u - 0.9986501D0);
       RETURN x;
     ELSE
       REPEAT
         x := SELF.uniform(-3.0D0, 3.0D0);
         u := SELF.uniform();
         v := ABS(x);
-        w := 3.0D0-v;
-        w := 6.6313339D0 * w*w;
+        w := 3.0D0 - v;
+        w := 6.6313339D0 * w * w;
         sum := R.Zero;
         IF v < 1.5D0 THEN sum := 6.0432809D0 * (1.5D0 - v); END;
-        IF v < R.One THEN sum := sum + 13.2626678D0 * (3.0D0 - v*v) - w; END;
-      UNTIL u <= 49.0024445D0 * RT.Exp(-v*v*0.5D0) - sum - w;
+        IF v < R.One THEN
+          sum := sum + 13.2626678D0 * (3.0D0 - v * v) - w;
+        END;
+      UNTIL u <= 49.0024445D0 * RT.Exp(-v * v * 0.5D0) - sum - w;
       RETURN x;
     END;
   END NormalDev;
@@ -243,62 +242,57 @@ END Gamma1;
  * p88-90. It appears to work now
  * according to mean and variance tests at a=.3,.5,.6,.9,1,2,3.
 ***************************************)
-PROCEDURE GammaDev(SELF:T;
-                   a : R.T) : R.T =
+PROCEDURE GammaDev (SELF: T; a: R.T): R.T =
   BEGIN
-    <* ASSERT a>R.Zero *>
-    IF a<R.One THEN
-      VAR
-        u0,u1,x : R.T;
+    <* ASSERT a > R.Zero *>
+    IF a < R.One THEN
+      VAR u0, u1, x: R.T;
       BEGIN
         LOOP
-          u0 :=  SELF.generateReal();
-          u1 :=  SELF.generateReal();
-          IF (a+RT.E)*u0>RT.E THEN
-            x := -RT.Ln((a+RT.E)*(R.One-u0)/(a*RT.E));
-            IF u1 <= RT.Pow(x, a-R.One) THEN
-              <* ASSERT x>=R.Zero *>
+          u0 := SELF.generateReal();
+          u1 := SELF.generateReal();
+          IF (a + RT.E) * u0 > RT.E THEN
+            x := -RT.Ln((a + RT.E) * (R.One - u0) / (a * RT.E));
+            IF u1 <= RT.Pow(x, a - R.One) THEN
+              <* ASSERT x >= R.Zero *>
               RETURN x;
             END;
           ELSE
-            x := RT.Pow((a+RT.E)*u0/RT.E, R.One/a);
-            IF u1<=RT.Exp(-x) THEN
-              <* ASSERT x>=R.Zero *>
+            x := RT.Pow((a + RT.E) * u0 / RT.E, R.One / a);
+            IF u1 <= RT.Exp(-x) THEN
+              <* ASSERT x >= R.Zero *>
               RETURN x;
             END;
           END;
-        END; (*LOOP*)
+        END;                     (*LOOP*)
       END;
-    ELSIF a>R.One THEN
+    ELSIF a > R.One THEN
       (* Cheng+Feast algorithm [CACM 23,7 (1980) 389-394?] for a>1: *)
       VAR
-        c1 := a-R.One;
-        c2 := (a-R.One/(6.0D0*a))/c1;
-        c3 := 2.0D0/c1;
-        c4 := c3+2.0D0;
-        c5 := R.One/RT.SqRt(a);
+        c1             := a - R.One;
+        c2             := (a - R.One / (6.0D0 * a)) / c1;
+        c3             := 2.0D0 / c1;
+        c4             := c3 + 2.0D0;
+        c5             := R.One / RT.SqRt(a);
         u1, u2, w: R.T;
       BEGIN
         LOOP
           REPEAT
-            u1 :=  SELF.generateReal();
-            u2 :=  SELF.generateReal();
-            IF a>2.5D0 THEN
-              u1 := u2 + c5*(R.One-1.86D0*u1);
-            END;
-          UNTIL R.Zero<u1 AND u1<R.One;
-          w := c2*u2/u1;
-          IF c3*u1+w+R.One/w <= c4
-             OR
-             c3*RT.Ln(u1) - RT.Ln(w) + w < R.One THEN
-            w := w*c1;
-            <* ASSERT w>=R.Zero *>
+            u1 := SELF.generateReal();
+            u2 := SELF.generateReal();
+            IF a > 2.5D0 THEN u1 := u2 + c5 * (R.One - 1.86D0 * u1); END;
+          UNTIL R.Zero < u1 AND u1 < R.One;
+          w := c2 * u2 / u1;
+          IF c3 * u1 + w + R.One / w <= c4
+               OR c3 * RT.Ln(u1) - RT.Ln(w) + w < R.One THEN
+            w := w * c1;
+            <* ASSERT w >= R.Zero *>
             RETURN w;
           END;
-        END; (*LOOP*)
+        END;                     (*LOOP*)
       END;
-    ELSE (* a=1, just use exponential: *)
-      RETURN -RT.Ln( SELF.generateReal() );
+    ELSE                         (* a=1, just use exponential: *)
+      RETURN -RT.Ln(SELF.generateReal());
     END;
   END GammaDev;
 (*----------------------*)
@@ -307,22 +301,20 @@ PROCEDURE GammaDev(SELF:T;
  * Follows L.Devroye: Non-uniform random variate generation,
  * Springer 1986.   p[] is overwritten by the Dirichlet deviate.
  *)
-PROCEDURE Dirichlet(SELF:T;
-                    p:R.Array) =
+PROCEDURE Dirichlet (SELF: T; p: R.Array) =
   VAR
-    t, sum : R.T;
-    n1:=FIRST(p^); nn:=LAST(p^);
+    t, sum: R.T;
+    n1          := FIRST(p^);
+    nn          := LAST(p^);
   BEGIN
     sum := R.Zero;
-    FOR n:=nn TO n1 BY -1 DO
-      t := GammaDev(SELF, p[n] );
+    FOR n := nn TO n1 BY -1 DO
+      t := GammaDev(SELF, p[n]);
       p[n] := t;
       sum := sum + t;
     END;
-    t := R.One/sum;
-    FOR n:=nn TO n1 BY -1 DO
-      p[n] := p[n] * t;
-    END;
+    t := R.One / sum;
+    FOR n := nn TO n1 BY -1 DO p[n] := p[n] * t; END;
   END Dirichlet;
 
 (*
@@ -336,64 +328,60 @@ BEGIN
 END Poisson;
 *)
 (*-------------------*)
-(*an alternative for Binomial which is probably slower than Binomial
-  but has the potential to be sped up
-  if one can sum up the first n binomial coefficients fast*)
-(*partition the interval [0,1] into pieces
-  with sizes according to the probabilities *)
-<*UNUSED*>
-PROCEDURE BinomialIntervalPartition
-                 (SELF:T;
-                     p:R.T;
-                     n:CARDINAL
-                     ):CARDINAL=
+(*an alternative for Binomial which is probably slower than Binomial but
+   has the potential to be sped up if one can sum up the first n binomial
+   coefficients fast*)
+(*partition the interval [0,1] into pieces with sizes according to the
+   probabilities *)
+<* UNUSED *>
+PROCEDURE BinomialIntervalPartition (SELF: T; p: R.T; n: CARDINAL):
+  CARDINAL =
 
-  PROCEDURE Calc(p,q:R.T):CARDINAL =
-  VAR
-    pq:=p/q;
-    prob:=RP.Power(q,n);
-    rnd:=SELF.generateReal();
-    den:=R.Zero;
-    num:=FLOAT(n,R.T);
-    k:CARDINAL:=0;
+  PROCEDURE Calc (p, q: R.T): CARDINAL =
+    <* FATAL NA.Error *>         (*bad_size can't be raised by RP.Power*)
+    VAR
+      pq             := p / q;
+      prob           := RP.Power(q, n);
+      rnd            := SELF.generateReal();
+      den            := R.Zero;
+      num            := FLOAT(n, R.T);
+      k   : CARDINAL := 0;
+    BEGIN
+      WHILE prob < rnd DO
+        rnd := rnd - prob;
+        den := den + R.One;
+        prob := prob * pq * num / den;
+        num := num - R.One;
+        INC(k);
+      END;
+      RETURN k;
+    END Calc;
+
+  <* UNUSED *>
+  CONST
+    ftn = Module & "Binomial";
   BEGIN
-    WHILE prob<rnd DO
-      rnd:=rnd-prob;
-      den:=den+R.One;
-      prob:=prob*pq*num/den;
-      num:=num-R.One;
-      INC(k);
+    IF n = 0 THEN
+      RETURN 0;
+    ELSIF p < RT.Half THEN
+      RETURN n - Calc(R.One - p, p);
+    ELSE
+      RETURN Calc(p, R.One - p);
     END;
-    RETURN k;
-  END Calc;
-
-<*UNUSED*> CONST ftn = Module & "Binomial";
-BEGIN
-  IF n=0 THEN
-    RETURN 0;
-  ELSIF p<RT.Half THEN
-    RETURN n-Calc(R.One-p,p);
-  ELSE
-    RETURN   Calc(p,R.One-p);
-  END;
-END BinomialIntervalPartition;
+  END BinomialIntervalPartition;
 
 (*-------------------*)
-PROCEDURE Binomial(SELF:T;
-                     p:R.T;
-                     n:CARDINAL
-                     ):CARDINAL=
-<*UNUSED*> CONST ftn = Module & "Binomial";
-VAR
-  cnt:CARDINAL:=0;
-BEGIN
-  FOR i:=0 TO n-1 DO
-    IF SELF.generateReal()<=p THEN
-      INC(cnt);
+PROCEDURE Binomial (SELF: T; p: R.T; n: CARDINAL): CARDINAL =
+  <* UNUSED *>
+  CONST
+    ftn = Module & "Binomial";
+  VAR cnt: CARDINAL := 0;
+  BEGIN
+    FOR i := 0 TO n - 1 DO
+      IF SELF.generateReal() <= p THEN INC(cnt); END;
     END;
-  END;
-  RETURN cnt;
-END Binomial;
+    RETURN cnt;
+  END Binomial;
 
 (*==========================*)
 BEGIN
