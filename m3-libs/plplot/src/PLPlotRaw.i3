@@ -18,17 +18,17 @@ TYPE
 
 
 
-<* EXTERNAL c_pl_setcontlabelformat *>
+<* EXTERNAL pl_setcontlabelformat *>
 PROCEDURE pl_setcontlabelformat (lexp, sigdig: C.int; );
 
-<* EXTERNAL c_pl_setcontlabelparam *>
+<* EXTERNAL pl_setcontlabelparam *>
 PROCEDURE pl_setcontlabelparam (offset, size, spacing: C.double;
                                 active               : C.int;    );
 
-<* EXTERNAL c_pladv *>
+<* EXTERNAL pladv *>
 PROCEDURE pladv (page: C.int; );
 
-<* EXTERNAL c_plaxes *>
+<* EXTERNAL plaxes *>
 PROCEDURE plaxes (         x0, y0: C.double;
                   READONLY xopt  : (*ARRAY OF*) CHAR;
                            xtick : C.double;
@@ -37,15 +37,15 @@ PROCEDURE plaxes (         x0, y0: C.double;
                            ytick : C.double;
                            nysub : C.int;             );
 
-<* EXTERNAL c_plbin *>
+<* EXTERNAL plbin *>
 PROCEDURE plbin (         n     : C.int;
                  READONLY x, y  : (*ARRAY OF*) C.double;
                           center: C.int;                 );
 
-<* EXTERNAL c_plbop *>
+<* EXTERNAL plbop *>
 PROCEDURE plbop ();
 
-<* EXTERNAL c_plbox *>
+<* EXTERNAL plbox *>
 PROCEDURE plbox (READONLY xopt : (*ARRAY OF*) CHAR;
                           xtick: C.double;
                           nxsub: C.int;
@@ -53,7 +53,7 @@ PROCEDURE plbox (READONLY xopt : (*ARRAY OF*) CHAR;
                           ytick: C.double;
                           nysub: C.int;             );
 
-<* EXTERNAL c_plbox3 *>
+<* EXTERNAL plbox3 *>
 PROCEDURE plbox3 (READONLY xopt  : (*ARRAY OF*) CHAR;
                            xlabel: C.char_star;
                            xtick : C.double;
@@ -67,21 +67,21 @@ PROCEDURE plbox3 (READONLY xopt  : (*ARRAY OF*) CHAR;
                            ztick : C.double;
                            nsubz : C.int;             );
 
-<* EXTERNAL c_plcalc_world *>
+<* EXTERNAL plcalc_world *>
 PROCEDURE plcalc_world (    rx, ry: C.double;
                         VAR wx, wy: C.double;
                         VAR window: C.int;    );
 
-<* EXTERNAL c_plclear *>
+<* EXTERNAL plclear *>
 PROCEDURE plclear ();
 
-<* EXTERNAL c_plcol0 *>
+<* EXTERNAL plcol0 *>
 PROCEDURE plcol0 (icol0: C.int; );
 
-<* EXTERNAL c_plcol1 *>
+<* EXTERNAL plcol1 *>
 PROCEDURE plcol1 (col1: C.double; );
 
-<* EXTERNAL c_plcont *>
+<* EXTERNAL plcont *>
 PROCEDURE plcont (READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*);
                            nx, ny, kx, lx, ky, ly: C.int;
                   READONLY x                     : (*ARRAY OF*) C.double;
@@ -89,264 +89,264 @@ PROCEDURE plcont (READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*);
                            pltr                  : PlotterFunc;
                            OBJECT_DATA           : REFANY;                );
 
-<* EXTERNAL c_plcpstrm *>
+<* EXTERNAL plcpstrm *>
 PROCEDURE plcpstrm (iplsr, flags: C.int; );
 
-<* EXTERNAL c_plend *>
+<* EXTERNAL plend *>
 PROCEDURE plend ();
 
-<* EXTERNAL c_plend1 *>
+<* EXTERNAL plend1 *>
 PROCEDURE plend1 ();
 
-<* EXTERNAL c_plenv *>
+<* EXTERNAL plenv *>
 PROCEDURE plenv (xmin, xmax, ymin, ymax: C.double; just, axis: C.int; );
 
-<* EXTERNAL c_pleop *>
+<* EXTERNAL pleop *>
 PROCEDURE pleop ();
 
-<* EXTERNAL c_plerrx *>
+<* EXTERNAL plerrx *>
 PROCEDURE plerrx (n: C.int; READONLY xmin, xmax, y: (*ARRAY OF*) C.double; );
 
-<* EXTERNAL c_plerry *>
+<* EXTERNAL plerry *>
 PROCEDURE plerry (n: C.int; READONLY x, ymin, ymax: (*ARRAY OF*) C.double; );
 
-<* EXTERNAL c_plfamadv *>
+<* EXTERNAL plfamadv *>
 PROCEDURE plfamadv ();
 
-<* EXTERNAL c_plfill *>
+<* EXTERNAL plfill *>
 PROCEDURE plfill (n: C.int; READONLY x, y: (*ARRAY OF*) C.double; );
 
-<* EXTERNAL c_plfill3 *>
+<* EXTERNAL plfill3 *>
 PROCEDURE plfill3 (n: C.int; READONLY x, y, z: (*ARRAY OF*) C.double; );
 
-<* EXTERNAL c_plflush *>
+<* EXTERNAL plflush *>
 PROCEDURE plflush ();
 
-<* EXTERNAL c_plfont *>
+<* EXTERNAL plfont *>
 PROCEDURE plfont (ifont: C.int; );
 
-<* EXTERNAL c_plfontld *>
+<* EXTERNAL plfontld *>
 PROCEDURE plfontld (fnt: C.int; );
 
-<* EXTERNAL c_plgchr *>
+<* EXTERNAL plgchr *>
 PROCEDURE plgchr (VAR def, ht: C.double; );
 
-<* EXTERNAL c_plgcol0 *>
+<* EXTERNAL plgcol0 *>
 PROCEDURE plgcol0 (icol0: C.int; VAR r, g, b: C.int; );
 
-<* EXTERNAL c_plgcolbg *>
+<* EXTERNAL plgcolbg *>
 PROCEDURE plgcolbg (VAR r, g, b: C.int; );
 
-<* EXTERNAL c_plgcompression *>
+<* EXTERNAL plgcompression *>
 PROCEDURE plgcompression (VAR compression: C.int; );
 
-<* EXTERNAL c_plgdidev *>
+<* EXTERNAL plgdidev *>
 PROCEDURE plgdidev (VAR mar, aspect, jx, jy: C.double; );
 
-<* EXTERNAL c_plgdiori *>
+<* EXTERNAL plgdiori *>
 PROCEDURE plgdiori (VAR rot: C.double; );
 
-<* EXTERNAL c_plgdiplt *>
+<* EXTERNAL plgdiplt *>
 PROCEDURE plgdiplt (VAR xmin, ymin, xmax, ymax: C.double; );
 
-<* EXTERNAL c_plgfam *>
+<* EXTERNAL plgfam *>
 PROCEDURE plgfam (VAR fam, num, bmax: C.int; );
 
-<* EXTERNAL c_plglevel *>
+<* EXTERNAL plglevel *>
 PROCEDURE plglevel (VAR level: C.int; );
 
-<* EXTERNAL c_plgpage *>
+<* EXTERNAL plgpage *>
 PROCEDURE plgpage (VAR xp, yp                  : C.double;
                    VAR xleng, yleng, xoff, yoff: C.int;    );
 
-<* EXTERNAL c_plgra *>
+<* EXTERNAL plgra *>
 PROCEDURE plgra ();
 
-<* EXTERNAL c_plgspa *>
+<* EXTERNAL plgspa *>
 PROCEDURE plgspa (VAR xmin, xmax, ymin, ymax: C.double; );
 
-<* EXTERNAL c_plgstrm *>
+<* EXTERNAL plgstrm *>
 PROCEDURE plgstrm (VAR strm: C.int; );
 
-<* EXTERNAL c_plgvpd *>
+<* EXTERNAL plgvpd *>
 PROCEDURE plgvpd (VAR xmin, xmax, ymin, ymax: C.double; );
 
-<* EXTERNAL c_plgvpw *>
+<* EXTERNAL plgvpw *>
 PROCEDURE plgvpw (VAR xmin, xmax, ymin, ymax: C.double; );
 
-<* EXTERNAL c_plgxax *>
+<* EXTERNAL plgxax *>
 PROCEDURE plgxax (VAR digmax, digits: C.int; );
 
-<* EXTERNAL c_plgyax *>
+<* EXTERNAL plgyax *>
 PROCEDURE plgyax (VAR digmax, digits: C.int; );
 
-<* EXTERNAL c_plgzax *>
+<* EXTERNAL plgzax *>
 PROCEDURE plgzax (VAR digmax, digits: C.int; );
 
-<* EXTERNAL c_plhist *>
+<* EXTERNAL plhist *>
 PROCEDURE plhist (         n             : C.int;
                   READONLY x             : (*ARRAY OF*) C.double;
                            datmin, datmax: C.double;
                            nbin, oldwin  : C.int;                 );
 
-<* EXTERNAL c_plhls *>
+<* EXTERNAL plhls *>
 PROCEDURE plhls (h, l, s: C.double; );
 
-<* EXTERNAL c_plinit *>
+<* EXTERNAL plinit *>
 PROCEDURE plinit ();
 
-<* EXTERNAL c_pljoin *>
+<* EXTERNAL pljoin *>
 PROCEDURE pljoin (x1, y1, x2, y2: C.double; );
 
-<* EXTERNAL c_pllab *>
+<* EXTERNAL pllab *>
 PROCEDURE pllab (xlabel, ylabel, tlabel: C.char_star; );
 
-<* EXTERNAL c_pllightsource *>
+<* EXTERNAL pllightsource *>
 PROCEDURE pllightsource (x, y, z: C.double; );
 
-<* EXTERNAL c_plline *>
+<* EXTERNAL plline *>
 PROCEDURE plline (n: C.int; READONLY x, y: (*ARRAY OF*) C.double; );
 
-<* EXTERNAL c_plline3 *>
+<* EXTERNAL plline3 *>
 PROCEDURE plline3 (n: C.int; READONLY x, y, z: (*ARRAY OF*) C.double; );
 
-<* EXTERNAL c_pllsty *>
+<* EXTERNAL pllsty *>
 PROCEDURE pllsty (lin: C.int; );
 
-<* EXTERNAL c_plmesh *>
+<* EXTERNAL plmesh *>
 PROCEDURE plmesh (READONLY x, y: (*ARRAY OF*) C.double;
                   READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*);
                   nx, ny, opt: C.int; );
 
-<* EXTERNAL c_plmeshc *>
+<* EXTERNAL plmeshc *>
 PROCEDURE plmeshc (READONLY x, y: (*ARRAY OF*) C.double;
                    READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*);
                             nx, ny, opt: C.int;
                    READONLY clevel     : (*ARRAY OF*) C.double;
                             n          : C.int;                 );
 
-<* EXTERNAL c_plmkstrm *>
+<* EXTERNAL plmkstrm *>
 PROCEDURE plmkstrm (VAR strm: C.int; );
 
-<* EXTERNAL c_plmtex *>
+<* EXTERNAL plmtex *>
 PROCEDURE plmtex (side           : C.char_star;
                   disp, pos, just: C.double;
                   text           : C.char_star; );
 
-<* EXTERNAL c_plot3d *>
+<* EXTERNAL plot3d *>
 PROCEDURE plot3d (READONLY x, y: (*ARRAY OF*) C.double;
                   READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*);
                   nx, ny, opt, side: C.int; );
 
-<* EXTERNAL c_plot3dc *>
+<* EXTERNAL plot3dc *>
 PROCEDURE plot3dc (READONLY x, y: (*ARRAY OF*) C.double;
                    READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*);
                             nx, ny, opt: C.int;
                    READONLY clevel     : (*ARRAY OF*) C.double;
                             n          : C.int;                 );
 
-<* EXTERNAL c_plsurf3d *>
+<* EXTERNAL plsurf3d *>
 PROCEDURE plsurf3d (READONLY x, y: (*ARRAY OF*) C.double;
                     READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*);
                              nx, ny, opt: C.int;
                     READONLY clevel     : (*ARRAY OF*) C.double;
                              n          : C.int;                 );
 
-<* EXTERNAL c_plpat *>
+<* EXTERNAL plpat *>
 PROCEDURE plpat (n: C.int; READONLY inc, del: C.int; );
 
-<* EXTERNAL c_plpoin *>
+<* EXTERNAL plpoin *>
 PROCEDURE plpoin (         n   : C.int;
                   READONLY x, y: (*ARRAY OF*) C.double;
                            code: C.int;                 );
 
-<* EXTERNAL c_plpoin3 *>
+<* EXTERNAL plpoin3 *>
 PROCEDURE plpoin3 (         n      : C.int;
                    READONLY x, y, z: (*ARRAY OF*) C.double;
                             code   : C.int;                 );
 
-<* EXTERNAL c_plpoly3 *>
+<* EXTERNAL plpoly3 *>
 PROCEDURE plpoly3 (         n      : C.int;
                    READONLY x, y, z: (*ARRAY OF*) C.double;
                    READONLY draw   : C.int;
                             flag   : C.int;                 );
 
-<* EXTERNAL c_plprec *>
+<* EXTERNAL plprec *>
 PROCEDURE plprec (setp, prec: C.int; );
 
-<* EXTERNAL c_plpsty *>
+<* EXTERNAL plpsty *>
 PROCEDURE plpsty (patt: C.int; );
 
-<* EXTERNAL c_plptex *>
+<* EXTERNAL plptex *>
 PROCEDURE plptex (x, y, dx, dy, just: C.double; text: C.char_star; );
 
-<* EXTERNAL c_plreplot *>
+<* EXTERNAL plreplot *>
 PROCEDURE plreplot ();
 
-<* EXTERNAL c_plschr *>
+<* EXTERNAL plschr *>
 PROCEDURE plschr (def, scale: C.double; );
 
-<* EXTERNAL c_plscmap0 *>
+<* EXTERNAL plscmap0 *>
 PROCEDURE plscmap0 (READONLY r, g, b: C.int; n: C.int; );
 
-<* EXTERNAL c_plscmap0n *>
+<* EXTERNAL plscmap0n *>
 PROCEDURE plscmap0n (ncol0: C.int; );
 
-<* EXTERNAL c_plscmap1 *>
+<* EXTERNAL plscmap1 *>
 PROCEDURE plscmap1 (READONLY r, g, b: C.int; n: C.int; );
 
-<* EXTERNAL c_plscmap1l *>
+<* EXTERNAL plscmap1l *>
 PROCEDURE plscmap1l (itype, n: C.int;
                      READONLY pos, coord1, coord2, coord3: (*ARRAY OF*) C.double;
                      READONLY rev: C.int; );
 
-<* EXTERNAL c_plscmap1n *>
+<* EXTERNAL plscmap1n *>
 PROCEDURE plscmap1n (ncol1: C.int; );
 
-<* EXTERNAL c_plscol0 *>
+<* EXTERNAL plscol0 *>
 PROCEDURE plscol0 (icol0, r, g, b: C.int; );
 
-<* EXTERNAL c_plscolbg *>
+<* EXTERNAL plscolbg *>
 PROCEDURE plscolbg (r, g, b: C.int; );
 
-<* EXTERNAL c_plscolor *>
+<* EXTERNAL plscolor *>
 PROCEDURE plscolor (color: C.int; );
 
-<* EXTERNAL c_plscompression *>
+<* EXTERNAL plscompression *>
 PROCEDURE plscompression (compression: C.int; );
 
-<* EXTERNAL c_plsdev *>
+<* EXTERNAL plsdev *>
 PROCEDURE plsdev (devname: C.char_star; );
 
-<* EXTERNAL c_plsdidev *>
+<* EXTERNAL plsdidev *>
 PROCEDURE plsdidev (mar, aspect, jx, jy: C.double; );
 
-<* EXTERNAL c_plsdimap *>
+<* EXTERNAL plsdimap *>
 PROCEDURE plsdimap (dimxmin, dimxmax, dimymin, dimymax: C.int;
                     dimxpmm, dimypmm                  : C.double; );
 
-<* EXTERNAL c_plsdiori *>
+<* EXTERNAL plsdiori *>
 PROCEDURE plsdiori (rot: C.double; );
 
-<* EXTERNAL c_plsdiplt *>
+<* EXTERNAL plsdiplt *>
 PROCEDURE plsdiplt (xmin, ymin, xmax, ymax: C.double; );
 
-<* EXTERNAL c_plsdiplz *>
+<* EXTERNAL plsdiplz *>
 PROCEDURE plsdiplz (xmin, ymin, xmax, ymax: C.double; );
 
-<* EXTERNAL c_plsesc *>
+<* EXTERNAL plsesc *>
 PROCEDURE plsesc (esc: C.char; );
 
-<* EXTERNAL c_plsetopt *>
+<* EXTERNAL plsetopt *>
 PROCEDURE plsetopt (opt, optarg: C.char_star; ): C.int;
 
-<* EXTERNAL c_plsfam *>
+<* EXTERNAL plsfam *>
 PROCEDURE plsfam (fam, num, bmax: C.int; );
 
-<* EXTERNAL c_plsfnam *>
+<* EXTERNAL plsfnam *>
 PROCEDURE plsfnam (fnam: C.char_star; );
 
-<* EXTERNAL c_plshades *>
+<* EXTERNAL plshades *>
 PROCEDURE plshades (READONLY a: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*);
                     nx, ny                : C.int;
                     df                    : PlotterFunc;
@@ -358,7 +358,7 @@ PROCEDURE plshades (READONLY a: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*);
                     pltr                                 : PlotterFunc;
                     OBJECT_DATA                          : REFANY;      );
 
-<* EXTERNAL c_plshade *>
+<* EXTERNAL plshade *>
 PROCEDURE plshade (READONLY a: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*);
                    nx, ny: C.int;
                    df    : PlotterFunc;
@@ -371,40 +371,40 @@ PROCEDURE plshade (READONLY a: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*);
                    pltr       : PlotterFunc;
                    OBJECT_DATA: REFANY;      );
 
-<* EXTERNAL c_plsmaj *>
+<* EXTERNAL plsmaj *>
 PROCEDURE plsmaj (def, scale: C.double; );
 
-<* EXTERNAL c_plsmin *>
+<* EXTERNAL plsmin *>
 PROCEDURE plsmin (def, scale: C.double; );
 
-<* EXTERNAL c_plsori *>
+<* EXTERNAL plsori *>
 PROCEDURE plsori (ori: C.int; );
 
-<* EXTERNAL c_plspage *>
+<* EXTERNAL plspage *>
 PROCEDURE plspage (xp, yp: C.double; xleng, yleng, xoff, yoff: C.int; );
 
-<* EXTERNAL c_plspause *>
+<* EXTERNAL plspause *>
 PROCEDURE plspause (pause: C.int; );
 
-<* EXTERNAL c_plsstrm *>
+<* EXTERNAL plsstrm *>
 PROCEDURE plsstrm (strm: C.int; );
 
-<* EXTERNAL c_plssub *>
+<* EXTERNAL plssub *>
 PROCEDURE plssub (nx, ny: C.int; );
 
-<* EXTERNAL c_plssym *>
+<* EXTERNAL plssym *>
 PROCEDURE plssym (def, scale: C.double; );
 
-<* EXTERNAL c_plstar *>
+<* EXTERNAL plstar *>
 PROCEDURE plstar (nx, ny: C.int; );
 
-<* EXTERNAL c_plstart *>
+<* EXTERNAL plstart *>
 PROCEDURE plstart (devname: C.char_star; nx, ny: C.int; );
 
-<* EXTERNAL c_plstripa *>
+<* EXTERNAL plstripa *>
 PROCEDURE plstripa (id, pen: C.int; x, y: C.double; );
 
-<* EXTERNAL c_plstripc *>
+<* EXTERNAL plstripc *>
 PROCEDURE plstripc (VAR id          : C.int;
                         xspec, yspec: C.char_star;
                     xmin, xmax, xjump, ymin, ymax, xlpos, ylpos: C.double;
@@ -413,55 +413,55 @@ PROCEDURE plstripc (VAR id          : C.int;
                     VAR legline           : ARRAY [0 .. 3] OF C.char_star;
                         labx, laby, labtop: C.char_star;                   );
 
-<* EXTERNAL c_plstripd *>
+<* EXTERNAL plstripd *>
 PROCEDURE plstripd (id: C.int; );
 
-<* EXTERNAL c_plstyl *>
+<* EXTERNAL plstyl *>
 PROCEDURE plstyl (n: C.int; READONLY mark, space: C.int; );
 
-<* EXTERNAL c_plsvpa *>
+<* EXTERNAL plsvpa *>
 PROCEDURE plsvpa (xmin, xmax, ymin, ymax: C.double; );
 
-<* EXTERNAL c_plsxax *>
+<* EXTERNAL plsxax *>
 PROCEDURE plsxax (digmax, digits: C.int; );
 
-<* EXTERNAL c_plsyax *>
+<* EXTERNAL plsyax *>
 PROCEDURE plsyax (digmax, digits: C.int; );
 
-<* EXTERNAL c_plsym *>
+<* EXTERNAL plsym *>
 PROCEDURE plsym (         n   : C.int;
                  READONLY x, y: (*ARRAY OF*) C.double;
                           code: C.int;                 );
 
-<* EXTERNAL c_plszax *>
+<* EXTERNAL plszax *>
 PROCEDURE plszax (digmax, digits: C.int; );
 
-<* EXTERNAL c_pltext *>
+<* EXTERNAL pltext *>
 PROCEDURE pltext ();
 
-<* EXTERNAL c_plvasp *>
+<* EXTERNAL plvasp *>
 PROCEDURE plvasp (aspect: C.double; );
 
-<* EXTERNAL c_plvpas *>
+<* EXTERNAL plvpas *>
 PROCEDURE plvpas (xmin, xmax, ymin, ymax, aspect: C.double; );
 
-<* EXTERNAL c_plvpor *>
+<* EXTERNAL plvpor *>
 PROCEDURE plvpor (xmin, xmax, ymin, ymax: C.double; );
 
-<* EXTERNAL c_plvsta *>
+<* EXTERNAL plvsta *>
 PROCEDURE plvsta ();
 
-<* EXTERNAL c_plw3d *>
+<* EXTERNAL plw3d *>
 PROCEDURE plw3d (basex, basey, height, xmin0, xmax0, ymin0, ymax0, zmin0,
                    zmax0, alt, az: C.double; );
 
-<* EXTERNAL c_plwid *>
+<* EXTERNAL plwid *>
 PROCEDURE plwid (width: C.int; );
 
-<* EXTERNAL c_plwind *>
+<* EXTERNAL plwind *>
 PROCEDURE plwind (xmin, xmax, ymin, ymax: C.double; );
 
-<* EXTERNAL c_plxormod *>
+<* EXTERNAL plxormod *>
 PROCEDURE plxormod (mode: C.int; VAR status: C.int; );
 
 <* EXTERNAL plClearOpts *>
