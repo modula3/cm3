@@ -1,7 +1,6 @@
 for myself:
 
 todo:
-  - adapt test routines for generic polynomials, matrices, vectors
   - physical units
   - Bits, SLE (MatrixDecomposition), eigensystem, FFT (FourierTransform), Interpolation, Random/RNG01/RNG02, Root, Stat
   - ODE
