@@ -38,6 +38,10 @@ PROCEDURE Copy (src, dest: TEXT) RAISES {OSError.E} =
   BEGIN
     TRY
       rd := FS.OpenFileReadonly (src);
+      (* delete in case someone else is reading *)
+      TRY FS.DeleteFile (dest);
+      EXCEPT OSError.E => (* nope *)
+      END;
       wr := OpenDestination (dest, rd);
       status := FS.Status(src);
       LOOP
@@ -70,6 +74,10 @@ PROCEDURE CopyText (src, dest: TEXT;  eol: TEXT) RAISES {OSError.E} =
     FOR i := 0 TO eol_last DO eol_buf[i] := ORD(Text.GetChar (eol, i)); END;
     TRY
       rd := FS.OpenFileReadonly (src);
+      (* delete in case someone else is reading *)
+      TRY FS.DeleteFile (dest);
+      EXCEPT OSError.E => (* nope *)
+      END;
       wr := OpenDestination (dest, rd);
       status := FS.Status(src);
       out_len := 0;
