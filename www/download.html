@@ -19,6 +19,20 @@
       function of your browser.
     </p>
 
+    <p>
+      <b>Note:</b> Please always get the archives with the latest
+      patch levels. Older archives and updates may be referenced in
+      these pages for the convenience of people who downloaded (large)
+      packages some time ago (or simply for hysterical reasons :-),
+      but are not recommended for a fresh installation. 
+    </p>
+    <p>
+      <b>Note:</b> Please verify the integrity of the downloaded
+      archives by using the checksums and md5 hashes provided 
+      <a href="checksums.html">here</a>. This list also includes the
+      exact sizes of all the archives.
+    </p>
+
     <h3>Installation Archives</h3>
     <p>
       These are the currently available minimal binary installation
@@ -26,8 +40,8 @@
     </p>
 
     <p>
-      <a href="cm3-min-POSIX-FreeBSD3-5.1.3.tgz"
-      type="application/octet-stream">cm3-min-POSIX-FreeBSD3-5.1.3.tgz</a><br> 
+      <a href="cm3-min-POSIX-FreeBSD3-5.1.4.tgz"
+      type="application/octet-stream">cm3-min-POSIX-FreeBSD3-5.1.4.tgz</a><br> 
       <a href="cm3-min-POSIX-LINUXLIBC6-5.1.3.tgz"
       type="application/octet-stream">cm3-min-POSIX-LINUXLIBC6-5.1.3.tgz</a><br>
       <a href="cm3-min-WIN32-NT386-5.1.3.tgz"
@@ -81,13 +95,17 @@
     </p>
 
     <p>
-      <a href="cm3-src-std-5.1.3.tgz"
-      type="application/octet-stream">cm3-src-std-5.1.3.tgz</a><br> 
-      This archive contains a set of standard packages (libraries and
-      tools) that are currently compilable and form a useful system
-      including network communication and graphical user interface.
-      It is not as big as the other archives (about 5 MB :-). The
-      packages contained can be built with <tt>scripts/do-cm3-std.sh</tt>.
+      <a href="cm3-src-std-5.1.4.tgz"
+      type="application/octet-stream">cm3-src-std-5.1.4.tgz</a><br> 
+      This archive contains a set of 
+      <a href="cm3-src-std-contents.html">standard packages</a>
+      (libraries and tools) that are currently compilable and form a
+      useful system including network communication and graphical user
+      interface (Trestle, FormsVBT). It is not as big as the other
+      archives (about 5 MB :-). The packages contained can be built
+      with <tt>scripts/do-cm3-std.sh</tt>. <b>This is the recommended
+      choice for a standard CM3 installation.</b> Here is a <a
+      href="cm3-src-std-contents.html">short list of contents</a>.
     </p>
 
     <p>
@@ -177,7 +195,8 @@
       <a href="cminstall.exe.gz"
          type="application/octet-stream">cminstall.exe.gz</a><br>
       A new binary installer for WIN32 which mangles pathnames with
-      spaces into their 8.3 equivalent. Experimental :-)
+      spaces into their 8.3 equivalent. (Though experimental, this has
+      been included in all releases after 5.1.1.)
     </p>
 
     <p>
@@ -187,6 +206,17 @@
       for some POSIX systems), cminstall (win32 improvements), libm3
       (changed ProcessWin32 module), m3core (FreeBSD4 dtoa fix),
       scripts, and CMASS copyright texts.
+    </p>
+
+
+    <h4>Release 5.1.3</h4>
+
+    <p>
+      <a href="src-update-2001-05-12.tgz"
+         type="application/octet-stream">src-update-2001-05-12.tgz</a><br>
+      Fix for m3core/src/text/TextSub.m3, addition of Juno-2 packages,
+      do-cm3-std.bat script (untested), several minor script fixes and
+      improvements. New version number is 5.1.4.
     </p>
       <!--
       <a href=""></a><br>
@@ -200,7 +230,7 @@
     <address><a href="mailto:m3-support@elego.de">Olaf Wagner</a></address>
 <!-- Created: Fri Feb 16 15:27:10 MET 2001 -->
 <!-- hhmts start -->
-Last modified: Wed Apr 11 01:23:44 MET DST 2001
+Last modified: Sun Jun 10 13:50:14 MET DST 2001
 <!-- hhmts end -->
   </body>
 </html>
