@@ -6,9 +6,9 @@ INTERFACE Csetjmp;		(* for I386_DARWIN *)
 FROM Ctypes IMPORT int;
 
 TYPE 
-  jmp_buf = ARRAY [0..191] OF int; (* actually, this is a sigjmp_buf,
+  jmp_buf = ARRAY [0..192] OF int; (* actually, this is a sigjmp_buf,
                                      just in case *)
-  fpjmp_buf = ARRAY [0..191] OF int;
+  fpjmp_buf = ARRAY [0..192] OF int;
 
 <*EXTERNAL "setjmp"   *> PROCEDURE setjmp (VAR env: jmp_buf): int;
 <*EXTERNAL "longjmp"  *> PROCEDURE longjmp (VAR env: jmp_buf; val: int);
