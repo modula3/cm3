@@ -80,6 +80,30 @@ BEGIN
   RETURN z;
 END Mul;
 
+(*----------------*)
+(*
+Use Karatsuba's trick
+tend to produce truncation errors
+
+xr yr - xi yi
+xr yi + xi yr
+
+(xr - xi) (yr + yi) - xr yi + xi yr
+*)
+<*UNUSED*>
+PROCEDURE FastMul(READONLY x,y:T):T=
+VAR
+  z:T;
+  xyri, xryi, xiyr : R.T;
+BEGIN
+  xyri := R.Mul(R.Sub(x.re,x.im),R.Add(y.re,y.im));
+  xryi := R.Mul(x.re,y.im);
+  xiyr := R.Mul(x.im,y.re);
+  z.re := R.Add(R.Sub(xyri,xryi),xiyr);
+  z.im := R.Add(xryi,xiyr);
+  RETURN z;
+END FastMul;
+
 PROCEDURE DivScale(READONLY x,y:T;):T RAISES {Error} =
 VAR
   denom : R.T;
@@ -110,11 +134,11 @@ PROCEDURE Mod(READONLY x,y:T):T RAISES {Error} =
     r     : T;
   BEGIN
     denom := R.Add(R.Mul(x.re,x.re),R.Mul(y.im,y.im));
-    (* Err.divide_by_zero will be thrown by Div*)
+    (* Err.divide_by_zero will be thrown by Mod*)
     r.re := R.Mod(x.re,denom);
-	r.im := R.Mod(x.im,denom);
-	r := Mul(r,Conj(y));  (*in fact, r is now AbsSqr(y) as big as before*)
-	r.re := R.Div(r.re,denom);  (*is always divisible*)
+    r.im := R.Mod(x.im,denom);
+    r := Mul(r,Conj(y));  (*in fact, r is now AbsSqr(y) as big as before*)
+    r.re := R.Div(r.re,denom);  (*is always divisible*)
     r.im := R.Div(r.im,denom);
     RETURN r;
   END Mod;
@@ -128,9 +152,9 @@ PROCEDURE DivMod(READONLY x,y:T;VAR r:T):T RAISES {Error} =
     denom := R.Add(R.Mul(x.re,x.re),R.Mul(y.im,y.im));
     (* Err.divide_by_zero will be thrown by Div*)
     q.re := R.DivMod(x.re,denom,r.re);
-	q.im := R.DivMod(x.im,denom,r.im);
-	r := Mul(r,Conj(y));  (*in fact, r is now AbsSqr(y) as big as before*)
-	r.re := R.Div(r.re,denom);  (*is always divisible*)
+    q.im := R.DivMod(x.im,denom,r.im);
+    r := Mul(r,Conj(y));  (*in fact, r is now AbsSqr(y) as big as before*)
+    r.re := R.Div(r.re,denom);  (*is always divisible*)
     r.im := R.Div(r.im,denom);
     RETURN q;
   END DivMod;

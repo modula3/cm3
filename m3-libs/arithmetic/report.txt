@@ -4,12 +4,14 @@ todo:
   - (overflow check in integer modules)
   - generic Fmt with a FmtStyle record
   - physical units
+  - combinatorics and number theory with bigintegers
 
 
 for Harry:
 
  What's advantage of using REAL64 instead of LONGREAL and REAL32 instead of REAL?
  Why are there constants like 'Module' and 'ftn' ? Are they for documentation or  debugging purposes?
+ truncation errors for div and abs in xCmplx, they cannot be resolved by extracting a factor; the only thing one can prevent are roundings to zero
 
 
 for comp.lang.modula3 :
