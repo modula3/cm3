@@ -193,7 +193,7 @@ BEGIN
         RETURN InterpolatePiece(SUBARRAY(xa,j-2,4),SUBARRAY(ya,j-2,4));
       END;
     END;
-    RETURN InterpolateQuadratic(SUBARRAY(xa,LAST(xa)-2,3),SUBARRAY(xa,LAST(xa)-2,3));
+    RETURN InterpolateQuadratic(SUBARRAY(xa,LAST(xa)-2,3),SUBARRAY(ya,LAST(xa)-2,3));
   END;
 END CubicHermite;
 

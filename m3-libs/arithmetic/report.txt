@@ -119,6 +119,23 @@ seems that the lower bound is too small
 
 ---------------
 
+"../LINUXLIBC6/RealInterpolation.m3 => ../src/na/nonlinear/Interpolation.mg", line 191: SUBARRAY: first argument must be an array
+
+
+***
+*** runtime error:
+***    <*ASSERT*> failed.
+***    file "../src/exprs/Expr.m3", line 337
+***
+
+in m3-sys/m3front/src/exprs/Expr.m3:
+PROCEDURE NotAddressable (<*UNUSED*> t: T) =
+  BEGIN
+    <*ASSERT FALSE*>
+  END NotAddressable;
+
+---------------
+
 Design question:
 
 Is it better to create a pair interface,module for every set of functions for the same datatype
