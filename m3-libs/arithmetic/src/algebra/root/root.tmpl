@@ -2,23 +2,21 @@
 %  Quake functions to instantiate operations on generic roots.
 %
 
-readonly proc Root (nm, field, rimpl) is
+readonly proc Root (nm, rfield) is
   local base   = nm & "Root"
-  local rfield = field & rimpl
-  local pfield = field & "Polynomial"
+  local pfield = nm & "Polynomial"
   build_generic_intf (base, "RootBasic", [rfield, pfield], VISIBLE)
   build_generic_impl (base, "RootBasic", [rfield, pfield])
 end
 
-readonly proc RootApproximation (nm, field, rimpl, cimpl) is
+readonly proc RootApproximation (nm, rfield) is
   local base   = nm & "RootApproximation"
-  local rfield = field & rimpl
-  local rtrans = field & "Trans"
-  local rroot  = field & "Root"
-  local cfield = field & "Complex" & cimpl
-  local ctrans = field & "ComplexTrans"
-  local cpoly  = field & "ComplexPolynomial"
-  local croot  = field & "ComplexRoot"
+  local rtrans = nm & "Trans"
+  local rroot  = nm & "Root"
+  local cfield = nm & "Complex"
+  local ctrans = nm & "ComplexTrans"
+  local cpoly  = nm & "ComplexPolynomial"
+  local croot  = nm & "ComplexRoot"
   build_generic_intf (base, "RootApproximation", [rfield,         rroot, cfield,                croot], VISIBLE)
   build_generic_impl (base, "RootApproximation", [rfield, rtrans, rroot, cfield, ctrans, cpoly, croot])
 end

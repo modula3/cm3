@@ -36,16 +36,18 @@ PROCEDURE ToComplex (READONLY x: T): C.T =
       C.Scale(C.T{re := RT.Cos(x.angle), im := RT.Sin(x.angle)}, x.radius);
   END ToComplex;
 (*----------------*)
-PROCEDURE NormalizeAngle (VAR x: T) =
+PROCEDURE NormalizeAngle (READONLY x: T): T =
+  VAR angle := x.angle;
   BEGIN
     (*---normalize to -pi..+pi---*)
     (*if it was normalized before, the loops should run at most one cycle*)
-    WHILE R.Compare(x.angle, RT.Pi) > 0 DO
-      x.angle := R.Sub(x.angle, RT.TwoPi);
+    WHILE R.Compare(angle, RT.Pi) > 0 DO
+      angle := R.Sub(angle, RT.TwoPi);
     END;
-    WHILE R.Compare(x.angle, R.Neg(RT.Pi)) < 0 DO
-      x.angle := R.Add(x.angle, RT.TwoPi);
+    WHILE R.Compare(angle, R.Neg(RT.Pi)) < 0 DO
+      angle := R.Add(angle, RT.TwoPi);
     END;
+    RETURN T{x.radius, angle};
   END NormalizeAngle;
 (*----------------*)
 PROCEDURE Mul (READONLY x, y: T): T =
@@ -53,8 +55,7 @@ PROCEDURE Mul (READONLY x, y: T): T =
   BEGIN
     z.radius := R.Mul(x.radius, y.radius);
     z.angle := R.Add(x.angle, y.angle);
-    NormalizeAngle(z);
-    RETURN z;
+    RETURN NormalizeAngle(z);
   END Mul;
 (*----------------*)
 PROCEDURE Div (READONLY x, y: T): T RAISES {Error} =
@@ -62,8 +63,7 @@ PROCEDURE Div (READONLY x, y: T): T RAISES {Error} =
   BEGIN
     z.radius := R.Div(x.radius, y.radius);
     z.angle := R.Sub(x.angle, y.angle);
-    NormalizeAngle(z);
-    RETURN z;
+    RETURN NormalizeAngle(z);
   END Div;
 
 

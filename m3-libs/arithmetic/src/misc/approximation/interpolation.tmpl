@@ -2,8 +2,11 @@
 %  Quake functions to instantiate generic zero finders.
 %
 
-readonly proc Interpolation (nm, vfield, trans, field) is
-  local basic = nm & "Interpolation"
-  build_generic_intf (basic, "Interpolation", [vfield, field], VISIBLE)
-  build_generic_impl (basic, "Interpolation", [vfield, trans, field])
+readonly proc Interpolation (nm, field, rimpl, vimpl) is
+  local base   = nm & "Interpolation"
+  local rfield = field & rimpl
+  local rtrans = field & "Trans"
+  local vfield = nm & vimpl
+  build_generic_intf (base, "Interpolation", [rfield,         vfield], VISIBLE)
+  build_generic_impl (base, "Interpolation", [rfield, rtrans, vfield])
 end

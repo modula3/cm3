@@ -8,13 +8,13 @@ IMPORT FileWr, Wr, Fmt, Process;
 IMPORT Thread, OSError;
 IMPORT TempFiles AS Tmp;
 
-IMPORT LongRealBasic            AS R,
-       LongRealComplexFast      AS C,
-       LongRealPolar            AS Polar,
-       BigInteger               AS B,
-       BigIntegerFraction       AS Fr,
-       LongRealVector           AS V,
-       LongRealMatrix           AS M,
+IMPORT LongRealBasic             AS R,
+       LongRealComplex           AS C,
+       LongRealPolar             AS Polar,
+       BigInteger                AS B,
+       BigIntegerFraction        AS Fr,
+       LongRealVector            AS V,
+       LongRealMatrix            AS M,
        LongRealComplexPolynomial AS P,
 
        LongRealFmtLex           AS RF,
