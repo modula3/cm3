@@ -290,7 +290,7 @@ static char *scan_quoted_string (length)
   if (length) *length = len;
   if (len <= 0) return 0;
 
-  result = (char*) malloc (len + 1);
+  result = (char*) xmalloc (len + 1);
   for (x = 0; x < len; x++) {
     result[x] = (char) get_byte ();
   }
@@ -2692,7 +2692,7 @@ m3cg_do_begin_procedure () /* GCC32OK */
   }
 
   current_function_decl = p;
-  
+
   init_function_start (p, input_filename, lineno);
   expand_function_start (p, 0);
 
