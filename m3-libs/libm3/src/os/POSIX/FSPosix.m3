@@ -12,7 +12,7 @@ UNSAFE MODULE FSPosix EXPORTS FS;
 
 IMPORT Atom, AtomList, Cerrno, Ctypes, File, FilePosix, M3toC, OSError,
        OSErrorPosix, Pathname, Process, RTOS, Time, Text, TextSeq, Unix,
-       Udir, Uerror, Ustat, Utime, Word;
+       Udir, Uerror, Ustat, Utime, Word, Utypes;
 
 FROM Unix IMPORT O_RDWR, O_CREAT, O_TRUNC, O_EXCL;
 
@@ -326,19 +326,13 @@ PROCEDURE CStatus(s: Ctypes.char_star; VAR status: File.Status): INTEGER =
   VAR statBuf: Ustat.struct_stat;
   BEGIN
     IF Ustat.stat(s, ADR(statBuf)) < 0 THEN RETURN -1 END;
-    StatBufToStatus(statBuf, status);
-    RETURN 0
-  END CStatus;
-
-<*INLINE*>
-PROCEDURE StatBufToStatus(
-    READONLY statBuf: Ustat.struct_stat; VAR (*OUT*) status: File.Status) =
-  BEGIN
     status.type := FilePosix.FileTypeFromStatbuf(statBuf);
     (* Could make following assignments conditional on type: *)
     status.modificationTime := FLOAT(statBuf.st_mtime, LONGREAL);
-    status.size := statBuf.st_size
-  END StatBufToStatus;
+    status.size := Utypes.asLong(statBuf.st_size);
+    IF status.size < 0 THEN RETURN -1 END;
+    RETURN 0
+  END CStatus;
 
 PROCEDURE SetModificationTime(pn: Pathname.T; READONLY t: Time.T)
   RAISES {OSError.E}=

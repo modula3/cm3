@@ -56,5 +56,10 @@ PROCEDURE FD_ZERO (p: UNTRACED REF fd_set) =
         a[i] := 0; END; END;
   END FD_ZERO;
 
+PROCEDURE asLong (val: off_t): long =
+  BEGIN
+    RETURN val;
+  END asLong;
+
 BEGIN
 END Utypes.

@@ -9,6 +9,7 @@
 INTERFACE Uresource;
 
 FROM Ctypes IMPORT int, long;
+FROM Utypes IMPORT rlim_t, fixpt_t;
 IMPORT Utime;
 
 (*** <sys/resource.h> ***)
@@ -33,9 +34,6 @@ TYPE
     ru_stime: Utime.struct_timeval;  (* system time used *)
     ru_maxrss: long;
     ru_ixrss: long;            (* integral shared text size *)
-    (* Unsupported in Linux 1.0:
-    ru_ismrss: long;           (* integral shared memory size*)
-    ******************************)
     ru_idrss: long;            (* integral unshared data " *)
     ru_isrss: long;            (* integral unshared stack " *)
     ru_minflt: long;           (* page reclaims *)
@@ -54,48 +52,36 @@ TYPE
 (* Resource limits *)
 
 CONST
-  RLIMIT_CPU   = 0;		(* cpu time in milliseconds *)
-  RLIMIT_FSIZE = 1;		(* maximum file size *)
-  RLIMIT_DATA  = 2;		(* data size *)
-  RLIMIT_STACK = 3;		(* stack size *)
-  RLIMIT_CORE  = 4;		(* core file size *)
-  RLIMIT_RSS   = 5;		(* resident set size *)
-  RLIMIT_MEMLOCK = 6;           (* locked-in-memory address space *)
-  RLIMIT_NPROC   = 7;           (* number of processes *)
-  RLIMIT_OFILE   = 8;           (* number of open files *)
+  RLIMIT_CPU     = 0;			 (* cpu time in milliseconds *)
+  RLIMIT_FSIZE   = 1;			 (* maximum file size *)
+  RLIMIT_DATA    = 2;			 (* data size *)
+  RLIMIT_STACK   = 3;			 (* stack size *)
+  RLIMIT_CORE    = 4;			 (* core file size *)
+  RLIMIT_RSS     = 5;			 (* resident set size *)
+  RLIMIT_MEMLOCK = 6;			 (* locked-in-memory address space *)
+  RLIMIT_NPROC   = 7;			 (* number of processes *)
+  RLIMIT_NOFILE  = 8;			 (* number of open files *)
   
-
-  RLIM_NLIMITS = 9;		(* number of resource limits *)
+  RLIM_NLIMITS   = 9;			 (* number of resource limits *)
 
   RLIM_INFINITY	= 16_7fffffff;
 
 TYPE
   struct_rlimit = RECORD
-	            rlim_cur: int;     (* current (soft) limit *)
- 	            rlim_max: int;     (* maximum value for rlim_cur *)
-                    END;
+    rlim_cur: rlim_t;			 (* current (soft) limit *)
+    rlim_max: rlim_t;			 (* maximum value for rlim_cur *)
+  END;
 
-
-(*** getpriority(2), setpriority(2) - get/set program scheduling priority ***)
+  (* Load average structure. *)
+  struct_loadavg = RECORD
+    ldavg: ARRAY [0..2] OF fixpt_t;
+    fscale: long;
+  END;
 
 <*EXTERNAL*> PROCEDURE getpriority (which, who: int): int;
+<*EXTERNAL*> PROCEDURE getrlimit   (res: int; VAR r: struct_rlimit): int;
+<*EXTERNAL*> PROCEDURE getrusage   (who: int; VAR r: struct_rusage): int;
 <*EXTERNAL*> PROCEDURE setpriority (which, who, prio: int): int;
-
-
-(*** getrlimit(2), setrlimit(2) - control maximum system resource
-                                  consumption ***)
-
-<*EXTERNAL*> PROCEDURE getrlimit (resource: int; VAR rlp: struct_rlimit): int;
-<*EXTERNAL*> PROCEDURE setrlimit (resource: int; VAR rlp: struct_rlimit): int;
-
-
-(*** getrusage(2) - get information about resource utilization ***)
-
-<*EXTERNAL*> PROCEDURE getrusage (who: int; rus: struct_rusage_star): int;
-
-
-(*** nice(3) - set program priority ***)
-
-<*EXTERNAL*> PROCEDURE nice (incr: int): int;
+<*EXTERNAL*> PROCEDURE setrlimit   (res: int; READONLY r: struct_rlimit): int;
 
 END Uresource.

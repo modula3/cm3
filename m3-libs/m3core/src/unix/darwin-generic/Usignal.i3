@@ -7,17 +7,26 @@
 
 INTERFACE Usignal;
 
-FROM Ctypes IMPORT int, unsigned_int;
+IMPORT Uucontext;
+FROM Ctypes IMPORT long, int, unsigned_int, void_star, char_star;
+FROM Uucontext IMPORT struct_ucontext_star;
 
-(*** <signal.h> ***)
+(*** <sys/signal.h> ***)
 
 CONST
+  NSIG = 32;			  (* counting 0; could be 33 (mask is 1-32) *)
+
   SIGHUP    =  1;      (* hangup *)
   SIGINT    =  2;      (* interrupt *)
   SIGQUIT   =  3;      (* quit *)
   SIGILL    =  4;      (* illegal instruction (not reset when caught) *)
+      ILL_NOOP 	    = 0;      (* if only I knew... *)
+      ILL_ILLOPC    = 1;      (* illegal opcode *)
+      ILL_ILLTRP    = 2;      (* illegal trap *)
+      ILL_PRVOPC    = 3;      (* privileged opcode *)
   SIGTRAP   =  5;      (* trace trap (not reset when caught) *)
-  SIGIOT    =  6;      (* IOT instruction *)
+  SIGABRT   =  6;      (* abort() *)
+   SIGIOT = SIGABRT;   (* IOT instruction *)
   SIGEMT    =  7;      (* EMT instruction *)
   SIGFPE    =  8;      (* floating point exception *)
       FPE_NOOP      = 0;      (* if only I knew... *)
@@ -30,12 +39,10 @@ CONST
   SIGBUS    =  10;     (* bus error *)
       BUS_NOOP      = 0;      (* if only I knew... *)
       BUS_ADRALN    = 1;      (* invalid address alignment *)
-
   SIGSEGV   =  11;     (* segmentation violation *)
       SEGV_NOOP     = 0;      (* if only I knew... *)
       SEGV_MAPERR   = 1;      (* address not mapped to object *)
       SEGV_ACCERR   = 2;      (* invalid permissions for mapped to object *)
-
   SIGSYS    =  12;     (* bad argument to system call *)
   SIGPIPE   =  13;     (* write on a pipe with no one to read it *)
   SIGALRM   =  14;     (* alarm clock *)
@@ -54,7 +61,6 @@ CONST
       CLD_TRAPPED   = 4;      (* traced child has trapped *)
       CLD_STOPPED   = 5;      (* child has stopped *)
       CLD_CONTINUED = 6;      (* stopped child has continued *)
-
   SIGTTIN   =  21;     (* to readers pgrp upon background tty read *)
   SIGTTOU   =  22;     (* like TTIN for output if (tp->t_local&LTOSTOP) *)
   SIGIO     =  23;     (* input/output possible signal *)
@@ -67,153 +73,118 @@ CONST
   SIGUSR1   =  30;     (* user defined signal 1 *)
   SIGUSR2   =  31;     (* user defined signal 2 *)
 
-  (* System V definitions *)
-  SIGCLD    = SIGCHLD;
-  SIGABRT   = SIGIOT;
+(* Do not modifiy these variables *)
+VAR (*CONST*)
+  SIG_DFL, SIG_IGN, SIG_ERR, BADSIG : SignalHandler;
 
-
-(* Signal vector "template" used in sigaction call. *)
 TYPE
-  SignalHandler = PROCEDURE (sig, code: int;
-                             scp: UNTRACED REF struct_sigcontext);
-
-  sigset_t = unsigned_int;
-
-  struct_sigvec  = RECORD
-    sv_handler: SignalHandler;     (* signal handler *)
-    sv_mask:    int;               (* signal mask to apply *)
-    sv_flags:   int;               (* see signal options below *)
+  struct_siginfo = RECORD
+    si_signo: int;		(* signal number *)
+    si_errno: int;		(* errno association *)
+    si_code: int;		(* signal code *)
+    si_pid: int;		(* sending process *)
+    si_uid: unsigned_int;	(* sender's ruid *)
+    si_status: int;		(* exit value *)
+    si_addr: void_star;		(* faulting instruction *)
+    sigval_ptr: void_star;	(* signal value *)
+    si_band: long;		(* band event for SIGPOLL *)
+    pad: ARRAY[0..6] OF int;	(* RFU *)
   END;
-    
+  struct_siginfo_star = UNTRACED REF struct_siginfo;
+  siginfo_t = struct_siginfo;
+  
+  SignalHandler = PROCEDURE (sig: int;
+  		  	     sip: struct_siginfo_star;
+                             scp: struct_ucontext_star);
+
+  sigset_t = Uucontext.sigset_t;
+
+  struct_sigaction = RECORD
+    sa_sigaction: SignalHandler;        (* signal handler *)
+    sa_mask     : sigset_t;             (* signals to block while in handler *)
+    sa_flags    : int;                  (* signal action flags *)
+  END;
+  struct_sigaction_star = UNTRACED REF struct_sigaction;
 
 CONST
-  empty_sigset_t : sigset_t = 0;
-  empty_sv_mask  : int = 0;
+  SA_ONSTACK     = 16_0001;   (* take signal on signal stack *)
+  SA_RESTART     = 16_0002;   (* restart system on signal return *)
+  SA_DISABLE	 = 16_0004;   (* disable taking signals on alternate stack *)
+  SA_RESETHAND   = 16_0004;   (* reset to SIG_DFL when taking signal *)
+  SA_NOCLDSTOP   = 16_0008;   (* do not generate SIGCHLD on child stop *)
+  SA_NODEFER     = 16_0010;   (* don't mask the signal we're delivering *)
+  SA_NOCLDWAIT   = 16_0020;   (* don't keep zombies around *)
+  SA_SIGINFO     = 16_0040;   (* signal handler with SA_SIGINFO args *)
+  SA_USERTRAMP	 = 16_0100;   (* do not bounce off kernel's sigtramp *)
 
 CONST
- (* Valid flags defined for sv_flags field of sigvec structure. *)
-  SV_ONSTACK     = 16_0001;   (* run on special signal stack *)
-  SV_RESTART     = 16_0002;   (* restart system calls on sigs *)
-  SV_RESETHAND   = 16_0004;   (* reset to SIG_DFL when taking signal *)
-  SV_NOCLDSTOP   = 16_0008;   (* do not generate SIGCHLD on child stop *)
-  SV_NODEFER     = 16_0010;   (* don't mask the signal we're delivering *)
-
-  (* Defines for sigprocmask() call. POSIX. *)
+  (* Flags for sigprocmask: *)
   SIG_BLOCK    = 1;    (* Add these signals to block mask *)
   SIG_UNBLOCK  = 2;    (* Remove these signals from block mask *)
   SIG_SETMASK  = 3;    (* Set block mask to this mask *)
 
-TYPE
-  struct_sigaction = RECORD
-    sa_handler  : SignalHandler;        (* signal handler *)
-    sa_mask     : sigset_t;             (* signals to block while in handler *)
-    sa_flags    : int;                  (* signal action flags *)
-  END;
+CONST
+  (* POSIX 1003.1b required values. *)
+  SI_USER      = 16_10001;
+  SI_QUEUE     = 16_10002;
+  SI_TIMER     = 16_10003;
+  SI_ASYNCIO   = 16_10004;
+  SI_MESGQ     = 16_10005;
 
-  struct_sigaction_star = UNTRACED REF struct_sigaction;
+TYPE
+  (* Structure used in sigaltstack call. *)
+  struct_sigaltstack = RECORD
+    ss_sp:    char_star;   (* signal stack base *)
+    ss_size:  int;	   (* signal stack length *)
+    ss_flags: int;	   (* SA_DISABLE and/or SA_ONSTACK *)
+  END;
+  stack_t = struct_sigaltstack;
 
 CONST
- (* Valid flags defined for sa_flags field of sigaction structure. *)
-  SA_ONSTACK     = 16_0001;   (* run on special signal stack *)
-  SA_RESTART     = 16_0002;   (* restart system calls on sigs *)
-  SA_RESETHAND   = 16_0004;   (* reset to SIG_DFL when taking signal *)
-  SA_NOCLDSTOP   = 16_0008;   (* do not generate SIGCHLD on child stop *)
-  SA_NODEFER     = 16_0010;   (* don't mask the signal we're delivering *)
+  SS_ONSTACK   = 16_0001;  (* take signal on signal stack *)
+  SS_DISABLE   = 16_0004;  (* disable taking signals on alternate stack *)
+  MINSIGSTKSZ  = 8192;     (* minimum allowable stack *)
+  SIGSTKSZ     = MINSIGSTKSZ + 32768; (* recommended stack size *)
+
+(* 4.3 compatibility: Signal vector "template" used in sigvec call. *)
+TYPE
+  struct_sigvec = RECORD
+    sv_handler: PROCEDURE (sig: int); (* signal handler *)
+    sv_mask:    int;  	  	 (* signal mask to apply *)
+    sv_flags:	int;		 (* see signal options below *)
+  END;
+
+CONST
+  SV_ONSTACK   = SA_ONSTACK;
+  SV_INTERRUPT = SA_RESTART;     (* same bit, opposite sense *)
+  SV_RESETHAND = SA_RESETHAND;
+  SV_NODEFER   = SA_NODEFER;
+  SV_NOCLDSTOP = SA_NOCLDSTOP;
+  SV_SIGINFO   = SA_SIGINFO;
 
 TYPE
+  (* Structure used in sigstack call. *)
   struct_sigstack = RECORD 
-    ss_sp:      ADDRESS; (* signal stack pointer *)
-    ss_onstack: int;     (* current status *)
+    ss_sp:      char_star;	(* signal stack pointer *)
+    ss_onstack: int;		(* current status *)
   END;
-
-(*
- * Information pushed on stack when a signal is delivered.
- * This is used by the kernel to restore state following
- * execution of the signal handler.  It is also made available
- * to the handler to allow it to properly restore state if
- * a non-standard exit is performed.
- *)
-
-TYPE
-  struct_sigcontext = RECORD
-    sc_onstack: int;   (* sigstack state to restore *)
-    sc_mask: int;      (* signal mask to restore *)
-    sc_ir: int;        (* program counter *)
-    sc_psw: int;       (* program status word *)
-    sc_sp: int;        (* stack pointer if sc_regs == NULL*)
-    sc_regs: ADDRESS;  (* (kernel private) saved state *)
-  END;
-
-(* Do not modifiy these variables *)
-VAR (*CONST*)
-  BADSIG, SIG_ERR, SIG_DFL, SIG_IGN, SIG_HOLD: SignalHandler;
-
 
 (* Convert a signal number to a mask suitable for sigblock(). *)
 <*INLINE*> PROCEDURE sigmask (n: int): int;
 
+(*** <signal.h> ***)
+
+(*** raise(2) - send a signal to the current process ***)
+<*EXTERNAL*> PROCEDURE raise (sig: int): int;
 
 (*** kill(2) - send signal to a process ***)
-
 <*EXTERNAL*> PROCEDURE kill (pid, sig: int): int;
 
-
-(*** killpg(2) - send signal to a process or process group ***)
-
-<*EXTERNAL*> PROCEDURE killpg (pgrp, sig: int): int;
-
-
-(*** sigblock(2) - block signals ***)
-
-<*EXTERNAL*> PROCEDURE sigblock (mask: int): int;
-
-
-(*** sigpause(2) - atomically release blocked signals and wait for
-                   interrupt ***)
-
-<*EXTERNAL*> PROCEDURE sigpause (sigmask: int): int;
-
-
-(*** sigpending(2) - examine pending signals ***)
-
-<*EXTERNAL*> PROCEDURE sigpending (VAR set: sigset_t): int;
-
-
-(*** sigsetmask(2) - set current signal mask ***)
-
-<*EXTERNAL*> PROCEDURE sigsetmask (mask: int): unsigned_int;
-
-
-(*** sigstack(2) - set and/or get signal stack context ***)
-
-(* FIXME - It is OK for ss and/or oss to be NIL, so we shouldn't use VAR *)
-<*EXTERNAL*> PROCEDURE sigstack (VAR ss, oss: struct_sigstack): int;
-
-(*** sigsuspend(2) - release blocked signals and wait for interrupt ***)
-
-<*EXTERNAL*>
-PROCEDURE sigsuspend (VAR sigmask: sigset_t): int;
-
 (*** sigaction(2) - software signal facilities ***)
-
-<*EXTERNAL*>
-PROCEDURE sigaction (sig: int;  act, oact: struct_sigaction_star): int;
-
-(*** sigvec(2) - software signal facilities ***)
-
-(* FIXME - It is OK for vec and/or ovec to be NIL, so we shouldn't use VAR *)
-<*EXTERNAL*>
-PROCEDURE sigvec (sig: int; VAR vec, ovec: struct_sigvec): int;
-
-(* FIXME - It is OK for vec and/or ovec to be NIL, so we shouldn't use VAR *)
-<*EXTERNAL*>
-PROCEDURE sigprocmask (how: int; VAR set, oldset: sigset_t) : int;
-
-<*EXTERNAL*>
-PROCEDURE sigemptyset (VAR set: sigset_t) : int;
-
-<*EXTERNAL*>
-PROCEDURE sigfillset (VAR set: sigset_t) : int;
+<*EXTERNAL m3_sigaction*>
+PROCEDURE sigaction (sig: int;
+                     READONLY new: struct_sigaction;
+                     VAR old: struct_sigaction): int;
 
 <*EXTERNAL*>
 PROCEDURE sigaddset (VAR set: sigset_t; signo: int) : int;
@@ -222,6 +193,44 @@ PROCEDURE sigaddset (VAR set: sigset_t; signo: int) : int;
 PROCEDURE sigdelset (VAR set: sigset_t; signo: int) : int;
 
 <*EXTERNAL*>
+PROCEDURE sigemptyset (VAR set: sigset_t) : int;
+
+<*EXTERNAL*>
+PROCEDURE sigfillset (VAR set: sigset_t) : int;
+
+<*EXTERNAL*>
 PROCEDURE sigismember(VAR set: sigset_t; signo: int) : int;
+
+(*** sigpending(2) - examine pending signals ***)
+<*EXTERNAL*> PROCEDURE sigpending (VAR set: sigset_t): int;
+
+(* FIXME - It is OK for vec and/or ovec to be NIL, so we shouldn't use VAR *)
+<*EXTERNAL*>
+PROCEDURE sigprocmask (how: int; READONLY new: sigset_t;
+                       old: UNTRACED REF sigset_t := NIL) : int;
+
+(*** sigsuspend(2) - release blocked signals and wait for interrupt ***)
+<*EXTERNAL*>
+PROCEDURE sigsuspend (VAR sigmask: sigset_t): int;
+
+(*** killpg(2) - send signal to a process or process group ***)
+<*EXTERNAL*> PROCEDURE killpg (pgrp, sig: int): int;
+
+(*** sigblock(2) - block signals ***)
+<*EXTERNAL*> PROCEDURE sigblock (mask: int): int;
+
+(*** siginterrupt(3) - allow signals to interrupt system calls ***)
+<*EXTERNAL*> PROCEDURE siginterrupt (sig, flag: int): int;
+
+(*** sigpause(2) - atomically release blocked signals and wait for
+                   interrupt ***)
+<*EXTERNAL*> PROCEDURE sigpause (sigmask: int): int;
+
+(*** sigsetmask(2) - set current signal mask ***)
+<*EXTERNAL*> PROCEDURE sigsetmask (mask: int): unsigned_int;
+
+(*** sigvec(2) - software signal facilities ***)
+(* FIXME - It is OK for vec and/or ovec to be NIL, so we shouldn't use VAR *)
+<*EXTERNAL*> PROCEDURE sigvec (sig: int; VAR vec, ovec: struct_sigvec): int;
 
 END Usignal.

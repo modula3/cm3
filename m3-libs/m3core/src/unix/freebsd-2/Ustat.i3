@@ -52,7 +52,6 @@ TYPE
     st_ctime  : time_t;
     st_spare3 : u_long;
     st_size   : off_t;
-    st_pad1   : long;
     st_blocks : quad_t;
     st_blksize: u_long;
     st_flags  : u_long;

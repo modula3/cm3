@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.36 2003-08-02 15:08:54 wagner Exp $
+# $Id: sysinfo.sh,v 1.37 2003-11-18 06:16:47 hosking Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -170,12 +170,14 @@ case "${UNAME}" in
   Darwin*)
     CM3_OSTYPE=POSIX
     case "`uname -p`" in
-      powerpc*) CM3_TARGET=PPC_DARWIN;;
-      i[3456]86*) CM3_TARGET=I386_DARWIN;;
+      powerpc*)
+	    CM3_TARGET=PPC_DARWIN;;
+      i[3456]86*)
+            M3GC_SIMPLE=yes
+            export M3GC_SIMPLE
+            CM3_TARGET=I386_DARWIN;;
     esac
     GMAKE=${GMAKE:-make}
-    M3GC_SIMPLE=yes
-    export M3GC_SIMPLE
   ;;
 
   SunOS*)

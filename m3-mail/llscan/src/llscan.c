@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 #include <ctype.h>
-#include <varargs.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include <sys/param.h>
 #include <sys/stat.h>
@@ -40,8 +40,6 @@
 #include <inttable.h>
 
 extern int errno;
-
-extern int sys_nerr;
 
 /***************************************************************/
 /* Package constants                                           */
@@ -181,7 +179,7 @@ static int BBCompare(/* dp1, dp2 */);
 static string GetFolder(/* name */);
 static bool FolderIsBBoard(/* name */);
 static bool IsAMessage(/* name */);
-static void warning(/* msg, arg0 */);
+static void warning(string msg, ...);
 static const char *errno2str(/* err */);
 static void ErrorHelp();
 
@@ -1770,15 +1768,12 @@ string name;
 /* If the -w option is used, no warnings are generated.        */
 /***************************************************************/
 
-static void warning(va_alist) 
-va_dcl
+static void warning(string msg, ...) 
 {
-  string msg;
   va_list args;
 
   if (warnings) {
-    va_start(args);
-    msg = va_arg(args, string);
+    va_start(args, msg);
     fprintf(stderr, "llscan: Warning: ");
     vfprintf(stderr, msg, args);
     va_end(args);

@@ -142,10 +142,8 @@ CONST (* fd flags *)
 
 TYPE
   struct_flock = RECORD
-    l_start:  off_t := 0;
-    l_pad1:   long  := 0;  (* assume zero sign extension of l_start *)
-    l_len:    off_t := 0;
-    l_pad2:   long  := 0;  (* assume zero sign extension of l_len *)
+    l_start := off_t{};
+    l_len   := off_t{};
     l_pid:    pid_t := 0;
     l_type:   short; (* see below *)
     l_whence: short;

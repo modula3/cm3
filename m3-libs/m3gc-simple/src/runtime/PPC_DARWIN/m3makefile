@@ -1,4 +1,7 @@
-c_source("sysdeps")
+c_source("RTHeapDepC")
+
+% These wrappers were extracted from RTHeapDepC.c and modified slightly,
+% in order to make it possible to support SOCKS.
 h_source("socksconf")
 h_source("wrap")
 c_source("accept")

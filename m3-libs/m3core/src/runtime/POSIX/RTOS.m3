@@ -6,12 +6,7 @@
 
 UNSAFE MODULE RTOS;
 
-IMPORT Unix, Uuio, Cstdlib, RT0u, Thread;
-IMPORT RTIO, RTParams;
-
-VAR 
-  debugAlloc := FALSE;
-  use_sbrk   := FALSE;
+IMPORT Unix, Uuio, Cstdlib, RT0u, Thread, Umman, Word;
 
 (*--------------------------------------------------- process termination ---*)
 
@@ -30,37 +25,11 @@ PROCEDURE Crash () =
 
 PROCEDURE GetMemory (size: INTEGER): ADDRESS =
   (* Return the address of "size" bytes of unused storage *)
-  (* It seems that on modern Unix systems sbrk is considered to be
-     an anachronism that is supported for compatibility reasons at least,
-     The 4.4BSD manual page says:
-
-     The brk() and sbrk() functions are legacy interfaces from before the
-     advent of modern virtual memory management.
-
-     Indeed, on some systems (like Darwin), sbrk is not supported at all,
-     i.e. its implementation is broken or it is not implemented at all.
-     So I think it may be time to switch to malloc even for the traced 
-     heap. If we need the old behaviour on some systems, we must
-     introduce another Target parameter. (ow 2003-02-02)
-  *)
-  VAR res : ADDRESS;
   BEGIN
-    IF use_sbrk THEN
-      res := LOOPHOLE(Unix.sbrk(size), ADDRESS);
-    ELSE
-      LockHeap();
-      res := LOOPHOLE(Cstdlib.malloc(size), ADDRESS);
-      UnlockHeap();
+    WITH addr = LOOPHOLE(0, ADDRESS),
+         prot = Word.Or(Umman.PROT_READ, Umman.PROT_WRITE) DO
+      RETURN Umman.mmap(addr, size, prot, Umman.MAP_ANON, -1, 0);
     END;
-    IF debugAlloc THEN
-      RTIO.PutText("GetMemory(");
-      RTIO.PutInt(size, 0);
-      RTIO.PutText(") --> ");
-      RTIO.PutAddr(res, 0);
-      RTIO.PutText("\r\n");
-      RTIO.Flush();
-    END;
-    RETURN res;
   END GetMemory;
 
 (*------------------------------------------------------------- collector ---*)
@@ -148,5 +117,4 @@ PROCEDURE Write (a: ADDRESS;  n: INTEGER) =
   END Write;
 
 BEGIN
-  IF RTParams.IsPresent("alloc") THEN debugAlloc := TRUE; END;
 END RTOS.

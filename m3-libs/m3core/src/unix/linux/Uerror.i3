@@ -151,6 +151,8 @@ CONST
   EISNAM          = 120;   (* Is a named type file *)
   EREMOTEIO       = 121;   (* Remote I/O error *)
   EDQUOT          = 122;   (* Disc quota exceeded *)
+  ENOMEDIUM       = 123;  (* No medium found *)
+  EMEDIUMTYPE     = 124;  (* Wrong medium type *)
 
   (* Should never be seen by user programs *)
   ERESTARTSYS     = 512;

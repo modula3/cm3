@@ -187,6 +187,7 @@ CONST
 
 (*** getwd - get current working directory pathname ***)
 <*EXTERNAL*> PROCEDURE getwd (pathname: char_star): char_star;
+<*EXTERNAL*> PROCEDURE getcwd (pathname: char_star; size: size_t): char_star;
 
 (*** ioctl - control device ***)
 
@@ -743,7 +744,7 @@ CONST (* mode *)
 
   (* lower bits used for the access permissions *)
 
-<*EXTERNAL*> PROCEDURE mknod (path: char_star; mode, dev: int): int;
+<*EXTERNAL*> PROCEDURE mknod (path: char_star; mode: int; dev: dev_t): int;
 
 (*** mount, umount - mount or unmount a file system ***)
 CONST (* rwflag *)
@@ -768,8 +769,7 @@ CONST (* flags *)
   O_EXCL =      FEXCL;          (* error on create if file exists *)
   O_FYNC =      FSYNCRON;       (* syncronous write *)
 
-  (*M3_NONBLOCK = O_NONBLOCK;*) (* -1 => would block, 0 => EOF *)
-  M3_NONBLOCK = O_NDELAY; (* -1 => would block, 0 => EOF *)
+  M3_NONBLOCK = O_NDELAY;       (* -1 => would block, 0 => EOF *)
 
 <*EXTERNAL*> PROCEDURE open (name: char_star; flags, mode: int): int;
 

@@ -11,9 +11,6 @@ FROM Ctypes IMPORT char_star, int, long, unsigned_long, unsigned_short;
 
 <*UNUSED*> CONST
   UdirCopyright = "Copyright (C) by IBM Corporation, 1990-91.";  
-  UdirRCSHeader = "$Header: /opt/cvs/cm3/m3-libs/m3core/src/unix/aix-ps2-1-2/Udir.i3,v 1.1.1.1 2001-01-24 12:24:35 wagner Exp $";
-  UdirDate = "$Date: 2001-01-24 12:24:35 $";
-  UdirRevision = "$Revision: 1.1.1.1 $";
 
 (* For documentation of this interface (except NameToText) see Calls and Subroutines Reference: Base Operating System, Volume 1, IBM Form number SC23-2198-00, pp 1-522 to 1-524. *)
 
@@ -55,12 +52,3 @@ PROCEDURE NameToText (READONLY name: D_name): TEXT RAISES {};
 (* Converts the d_name field of a struct_dirent to a TEXT and returns it.  *)
   
 END Udir.
-
-(* Change Log
-
-  $Log: not supported by cvs2svn $
-Revision 1.3  1991/03/18  22:38:18  muller
-*** empty log message ***
-
-
-*)

@@ -10,6 +10,14 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 
+long
+m3_asLong (off_t val)
+{
+  long v = (off_t)val;
+  if (v != val) return -1;
+  return v;
+}
+
 caddr_t m3_mmap(caddr_t addr, size_t len, int prot, int flags, int fd, long offset)
 {
   off_t off = (off_t) offset;
@@ -19,7 +27,7 @@ caddr_t m3_mmap(caddr_t addr, size_t len, int prot, int flags, int fd, long offs
 long m3_lseek(int fildes, long offset, int whence)
 {
   off_t off = (off_t) offset;
-  return (long) lseek(fildes, off, whence);
+  return m3_asLong(lseek(fildes, off, whence));
 }
 
 int m3_truncate(const char *path, long length)

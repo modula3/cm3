@@ -57,6 +57,7 @@ TYPE
   time_t       = long;
   dev_t        = long_long_uint;
   off_t        = long;
+  rlim_t       = u_long;
   paddr_t      = long;                (* sys V compatibility *)
   key_t        = long;                (* sys V compatibility *)
   clock_t      = long;                (* POSIX compliance    *)
@@ -100,5 +101,7 @@ PROCEDURE FD_SET   (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_CLEAR (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_ISSET (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_ZERO  (p: UNTRACED REF fd_set);
+
+PROCEDURE asLong(val: off_t): long;
 
 END Utypes.

@@ -6,8 +6,8 @@
 (* ow Sat Oct 29 14:10:19 MET 1994 adapted for FreeBSD                       *)
 INTERFACE Umman;
 
-FROM Ctypes IMPORT int;
-FROM Utypes IMPORT caddr_t, size_t, off_t;
+FROM Ctypes IMPORT int, void_star;
+FROM Utypes IMPORT caddr_t, size_t;
 
 (*** sys/mman.h ***)
 
@@ -37,9 +37,9 @@ CONST
   MADV_WILLNEED    = 3;
   MADV_DONTNEED    = 4;
 
-<*EXTERNAL "m3_mmap" *>
-PROCEDURE mmap (addr: caddr_t; len: size_t; prot,flags,fd: int; off: off_t)
-  : caddr_t;
+<*EXTERNAL "m3_mmap"*>
+PROCEDURE mmap (addr: caddr_t; len: size_t; prot,flags,fd: int;
+                off: int): void_star;
 
 <*EXTERNAL*>
 PROCEDURE munmap (addr: caddr_t; len: size_t): int;

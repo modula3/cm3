@@ -28,6 +28,12 @@ PROCEDURE execvp(
     : Ctypes.int
     RAISES {};
     
+<*EXTERNAL*>
+PROCEDURE execve(
+    name : Ctypes.char_star;
+    arg : Ctypes.char_star_star;
+    envp : Ctypes.char_star_star) : Ctypes.int;
+
 <*EXTERNAL*> 
 PROCEDURE exect(
     name: Ctypes.char_star;
@@ -49,6 +55,13 @@ TYPE
       w_Termsig : BITS  7 FOR [0..16_7F];  (* termination signal *)
       w_Coredump: BITS  1 FOR [0..16_01];  (* core dump indicator *)
       w_Retcode : BITS  8 FOR [0..16_FF];  (* exit code if w_termsig == 0 *)
+      w_Filler  : BITS 16 FOR [0..16_FFFF]; END;
+
+  (* M3 view of return code *)
+  w_M3 = RECORD
+      w_Retcode : BITS  8 FOR [0..16_FF];  (* exit code if w_termsig == 0 *)
+      w_Termsig : BITS  7 FOR [0..16_7F];  (* termination signal *)
+      w_Coredump: BITS  1 FOR [0..16_01];  (* core dump indicator *)
       w_Filler  : BITS 16 FOR [0..16_FFFF]; END;
 
   (* stopped process status *)

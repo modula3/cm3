@@ -10,7 +10,7 @@ UNSAFE MODULE FilePosix;
 
 IMPORT Cerrno, Ctypes, File, FS, M3toC, OSError, OSErrorPosix, Pipe,
   RegularFile, SchedulerPosix, Terminal, Uerror, Unix, Ustat, Uuio,
-  Word;
+  Word, Utypes;
 
 REVEAL 
   File.T = T BRANDED OBJECT OVERRIDES
@@ -100,7 +100,10 @@ PROCEDURE FileStatus(h: File.T): File.Status RAISES {OSError.E} =
     ELSE <* ASSERT FALSE *>
     END;
     status.modificationTime := FLOAT(statBuf.st_mtime, LONGREAL);
-    status.size := statBuf.st_size;
+    WITH size = Utypes.asLong(statBuf.st_size) DO
+      IF size < 0 THEN OSErrorPosix.Raise() END;
+      status.size := size;
+    END;
     RETURN status
   END FileStatus;  
 
@@ -163,8 +166,6 @@ PROCEDURE RegularFileLock(h: RegularFile.T): BOOLEAN RAISES {OSError.E} =
   VAR flock := Unix.struct_flock {
     l_type := Unix.F_WRLCK,
     l_whence := Unix.L_SET,
-    l_start := 0,
-    l_len := 0, (* i.e., whole file *)
     l_pid := 0}; (* don't care *)
   BEGIN
     IF Unix.fcntl(h.fd, Unix.F_SETLK, LOOPHOLE(ADR(flock), Ctypes.long)) < 0
@@ -187,8 +188,6 @@ PROCEDURE RegularFileUnlock(h: RegularFile.T) RAISES {OSError.E} =
   VAR flock := Unix.struct_flock {
     l_type := Unix.F_UNLCK,
     l_whence := Unix.L_SET,
-    l_start := 0,
-    l_len := 0, (* i.e., whole file *)
     l_pid := 0}; (* don't care *)
   BEGIN
     IF Unix.fcntl(h.fd, Unix.F_SETLK, LOOPHOLE(ADR(flock), Ctypes.long)) < 0

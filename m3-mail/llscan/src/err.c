@@ -12,7 +12,7 @@
 /***************************************************************/
 
 #include <stdio.h>
-#include <varargs.h>
+#include <stdarg.h>
 #include <errno.h>
 #include "SRCstdlib.h"
 #include "err.h"
@@ -25,8 +25,6 @@
 
 static char errfmt[MAXERRMSG];
 static char errbuf[MAXERRMSG];
-
-extern int sys_nerr, errno;
 
 /***************************************************************/
 /* Local function declarations                                 */
@@ -52,17 +50,12 @@ static void preprocess(/* msg */);
 /* status 1.                                                   */
 /***************************************************************/
 
-/* VARARGS1 */
-/* void error(msg, arg0) */
-void error(va_alist)
-va_dcl
+void error(string msg, ...)
 {
-    string msg;
     int res;
     va_list args;
 
-    va_start(args);
-    msg = va_arg(args, string);
+    va_start(args, msg);
     preprocess(msg);
     res = (int) sprintf(errbuf, errfmt, args);
     if (res < 0) abort();

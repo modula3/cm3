@@ -9,7 +9,7 @@
 INTERFACE Ustat;
 
 FROM Ctypes IMPORT int, char_star, long;
-FROM Utypes IMPORT u_short, u_long, dev_t, ino_t, off_t, off_pad_t;
+FROM Utypes IMPORT u_short, u_long, dev_t, ino_t, off_t;
 FROM Utypes IMPORT mode_t, nlink_t, uid_t, gid_t, time_t, int32_t,
   u_int32_t, int64_t;
 
@@ -53,7 +53,6 @@ TYPE
     st_ctime     : time_t;
     st_ctimensec : long;
     st_size      : off_t;
-    st_pad1      : off_pad_t;
     st_blocks    : int64_t;
     st_blksize   : u_int32_t;
     st_flags     : u_int32_t;
