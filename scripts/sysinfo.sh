@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.29 2003-03-25 21:56:43 wagner Exp $
+# $Id: sysinfo.sh,v 1.30 2003-04-01 12:28:40 wagner Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -159,6 +159,8 @@ case "${UNAME}" in
       i[3456]86*) CM3_TARGET=I386_DARWIN;;
     esac
     GMAKE=${GMAKE:-make}
+    M3GC_SIMPLE=yes
+    export M3GC_SIMPLE
   ;;
 
   SunOS*)
