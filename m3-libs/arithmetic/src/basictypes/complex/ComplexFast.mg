@@ -87,33 +87,39 @@ BEGIN
 END Mul;
 
 (*-------------------*)
-PROCEDURE Div(READONLY x,y : T) : T RAISES {Error} =
+PROCEDURE Div(READONLY x0,y0 : T) : T RAISES {Error} =
   VAR
-    z : T;
-    denom : R.T;
+    x, y, z : T;
+    denom   : R.T;
+    exp     : INTEGER;
   BEGIN
+    (*avoid overflow and underflow by conditioning*)
+    y := FrExp(y0,exp);
+    x := LdExp(x0,-exp);
     denom := y.re*y.re + y.im*y.im;
     IF denom=R.Zero THEN
-	  RAISE Error(Err.divide_by_zero);
-	END;
+      RAISE Error(Err.divide_by_zero);
+    END;
     z.re := (  x.re * y.re + x.im * y.im) / denom;
     z.im := (- x.re * y.im + x.im * y.re) / denom;
     RETURN z;
   END Div;
 
 (*-------------------*)
-PROCEDURE Rec(READONLY x : T) : T RAISES{Error} =
+PROCEDURE Rec(READONLY x0 : T) : T RAISES{Error} =
   VAR
-    z : T;
+    x, z  : T;
     denom : R.T;
+    exp   : INTEGER;
   BEGIN
+    x := FrExp(x0,exp);
     denom := x.re*x.re + x.im*x.im;
     IF denom=R.Zero THEN
-	  RAISE Error(Err.divide_by_zero);
-	END;
+      RAISE Error(Err.divide_by_zero);
+    END;
     z.re :=  x.re / denom;
     z.im := -x.im / denom;
-    RETURN z;
+    RETURN LdExp(z,exp);
   END Rec;
 
 (*-------------------*)

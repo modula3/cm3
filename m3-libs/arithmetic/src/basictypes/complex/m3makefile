@@ -17,9 +17,9 @@ ComplexFast("Extended", "ExtendedBasic")
 
 
 generic_module("ComplexTrans")
-ComplexTrans("Real",     "RealComplexBasic",	 "RealBasic",	  "RealTrans")
-ComplexTrans("LongReal", "LongRealComplexBasic", "LongRealBasic", "LongRealTrans")
-ComplexTrans("Extended", "ExtendedComplexBasic", "ExtendedBasic", "ExtendedTrans")
+ComplexTrans("Real",     "RealComplexFast",      "RealBasic",	  "RealTrans")
+ComplexTrans("LongReal", "LongRealComplexFast", "LongRealBasic", "LongRealTrans")
+ComplexTrans("Extended", "ExtendedComplexFast", "ExtendedBasic", "ExtendedTrans")
 
 generic_module("ComplexFmtLex")
 ComplexFmtLex("Real",	    "RealComplexBasic",       "RealBasic",       "RealFmtLex")
