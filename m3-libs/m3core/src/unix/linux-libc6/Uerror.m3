@@ -7,12 +7,15 @@
 
 UNSAFE MODULE Uerror;
 
-IMPORT Ctypes;
+IMPORT Ctypes, Cstring;
 
 PROCEDURE GetFrom_sys_errlist(n: INTEGER): Ctypes.char_star RAISES {}=
   BEGIN
+    (*
     <* ASSERT 0 <= n AND n <= Max *>
     RETURN sys_errlist[n]
+    *)
+    RETURN Cstring.strerror(n);
   END GetFrom_sys_errlist;
 
 BEGIN
