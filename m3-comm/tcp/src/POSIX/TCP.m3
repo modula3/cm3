@@ -48,10 +48,12 @@ PROCEDURE NewConnector (ep: IP.Endpoint): Connector RAISES {IP.Error} =
   BEGIN
     res.fd := Usocket.socket(Usocket.AF_INET, Usocket.SOCK_STREAM, 0 (* TCP*));
     IF res.fd = -1 THEN
-      IF Cerrno.errno = Uerror.EMFILE OR Cerrno.errno = Uerror.ENFILE THEN
-        IPError.Raise(IP.NoResources);
-      ELSE
-        IPError.RaiseUnexpected();
+      WITH errno = Cerrno.GetErrno() DO
+        IF errno = Uerror.EMFILE OR errno = Uerror.ENFILE THEN
+          IPError.Raise(IP.NoResources);
+        ELSE
+          IPError.RaiseUnexpected();
+        END
       END
     END;
     MakeNonBlocking (res.fd);
@@ -64,7 +66,7 @@ PROCEDURE NewConnector (ep: IP.Endpoint): Connector RAISES {IP.Error} =
     name.sin_zero := Sin_Zero;
     status := Usocket.bind(res.fd, ADR(name), BYTESIZE(SockAddrIn));
     IF status # 0 THEN
-      IF Cerrno.errno = Uerror.EADDRINUSE THEN
+      IF Cerrno.GetErrno() = Uerror.EADDRINUSE THEN
         IPError.Raise(IP.PortBusy);
       ELSE
         IPError.RaiseUnexpected();
@@ -115,10 +117,12 @@ PROCEDURE StartConnect(ep: IP.Endpoint): T
   BEGIN
     fd := Usocket.socket(Usocket.AF_INET, Usocket.SOCK_STREAM, 0 (* TCP*));
     IF fd < 0 THEN
-      IF Cerrno.errno = Uerror.EMFILE OR Cerrno.errno = Uerror.ENFILE THEN
-        IPError.Raise(IP.NoResources);
-      ELSE
-        IPError.RaiseUnexpected();
+      WITH errno = Cerrno.GetErrno() DO
+        IF errno = Uerror.EMFILE OR errno = Uerror.ENFILE THEN
+          IPError.Raise(IP.NoResources);
+        ELSE
+          IPError.RaiseUnexpected();
+        END;
       END;
     END;
     InitFD(fd);
@@ -159,14 +163,16 @@ PROCEDURE CheckConnect(fd: INTEGER; ep: IP.Endpoint) : BOOLEAN
     name.sin_zero := Sin_Zero;
     status := Usocket.connect(fd, ADR(name), BYTESIZE(SockAddrIn));
     IF status = 0 THEN RETURN TRUE; END;
-    IF Cerrno.errno = Uerror.EINVAL THEN
-      (* special hack to try to get real errno, hidden due to NBIO bug in connect *)
-      EVAL TCPHack.RefetchError(fd);
-    ELSIF Cerrno.errno = Uerror.EBADF THEN
-      (* we'll try the same for EBADF, which we've seen on Alpha *)
-      IF TCPHack.RefetchError(fd) THEN seenBadFBug := TRUE END;
+    WITH errno = Cerrno.GetErrno() DO
+      IF errno = Uerror.EINVAL THEN
+        (* special hack to try to get real errno, hidden due to NBIO bug in connect *)
+        EVAL TCPHack.RefetchError(fd);
+      ELSIF errno = Uerror.EBADF THEN
+        (* we'll try the same for EBADF, which we've seen on Alpha *)
+        IF TCPHack.RefetchError(fd) THEN seenBadFBug := TRUE END;
+      END;
     END;
-    CASE Cerrno.errno OF
+    CASE Cerrno.GetErrno() OF
     | Uerror.EISCONN => RETURN TRUE;
     | Uerror.EADDRNOTAVAIL,  Uerror.ECONNREFUSED, Uerror.EINVAL,
                Uerror.ECONNRESET, Uerror.EBADF =>
@@ -193,16 +199,16 @@ PROCEDURE Accept (c: Connector): T
         IF c.closed THEN IPError.Raise(Closed); END;
         fd := Usocket.accept(c.fd, ADR(name), ADR(nameSize));
       END;
-      IF fd >= 0 THEN
-        EXIT
-      ELSIF Cerrno.errno = Uerror.EMFILE OR Cerrno.errno = Uerror.ENFILE THEN
-        IPError.Raise(IP.NoResources);
-      ELSIF
-        Cerrno.errno = Uerror.EWOULDBLOCK OR Cerrno.errno = Uerror.EAGAIN
-        THEN
-        EVAL SchedulerPosix.IOAlertWait(c.fd, TRUE);
-      ELSE
-        IPError.RaiseUnexpected();
+      WITH errno = Cerrno.GetErrno() DO
+        IF fd >= 0 THEN
+          EXIT
+        ELSIF errno = Uerror.EMFILE OR errno = Uerror.ENFILE THEN
+          IPError.Raise(IP.NoResources);
+        ELSIF errno = Uerror.EWOULDBLOCK OR errno = Uerror.EAGAIN THEN
+          EVAL SchedulerPosix.IOAlertWait(c.fd, TRUE);
+        ELSE
+          IPError.RaiseUnexpected();
+        END
       END
     END;
     InitFD(fd);
@@ -294,7 +300,7 @@ PROCEDURE GetBytesFD(
       IF len >= 0 THEN
         RETURN len;
       ELSE
-        CASE Cerrno.errno OF
+        CASE Cerrno.GetErrno() OF
         | Uerror.ECONNRESET => RETURN 0;
         | Uerror.EPIPE, Uerror.ENETRESET => SetError(t,ConnLost);
         | Uerror.ETIMEDOUT => SetError(t,Timeout);
@@ -326,7 +332,7 @@ PROCEDURE PutBytesFD(t: T; VAR arr: ARRAY OF CHAR)
       IF len >= 0 THEN
         INC(pos, len)
       ELSE
-        CASE Cerrno.errno OF
+        CASE Cerrno.GetErrno() OF
         | Uerror.EPIPE, Uerror.ECONNRESET, Uerror.ENETRESET => SetError(t,ConnLost);
         | Uerror.ETIMEDOUT => SetError(t,Timeout);
         | Uerror.ENETUNREACH, Uerror.EHOSTUNREACH,
@@ -348,11 +354,13 @@ VAR lastErrorMu := NEW(MUTEX);
 PROCEDURE SetError(t: T; atom: Atom.T) =
   BEGIN
     LOCK t DO
-      t.error := AtomList.List2(atom, Atom.FromText(Fmt.Int(Cerrno.errno)));
-      LOCK lastErrorMu DO
-        lastErrors[lastErrorPos] := Cerrno.errno;
-        INC(lastErrorPos);
-        IF lastErrorPos >= NUMBER(lastErrors) THEN lastErrorPos := 0; END;
+      WITH errno = Cerrno.GetErrno() DO
+        t.error := AtomList.List2(atom, Atom.FromText(Fmt.Int(errno)));
+        LOCK lastErrorMu DO
+          lastErrors[lastErrorPos] := errno;
+          INC(lastErrorPos);
+          IF lastErrorPos >= NUMBER(lastErrors) THEN lastErrorPos := 0; END;
+        END;
       END;
     END;
   END SetError;

@@ -12,7 +12,7 @@ UNSAFE MODULE OSUtils EXPORTS OSUtils, UtimeExtra;
 
 IMPORT Atom, FileRd, FileWr, Fmt, OSError, OSErrorPosix, Pipe, Process, Rd,
        TextList, Text, Thread, Time, Word, Wr;
-IMPORT M3toC, Uerror, Unix, Ustat, Utime;
+IMPORT Cerrno, M3toC, Uerror, Unix, Ustat, Utime;
 
 FROM Ctypes IMPORT char_star, int, long;
 
@@ -40,7 +40,7 @@ PROCEDURE ErrorMessage (ec: EC): Text.T =
     p: char_star;
   BEGIN
     IF ec <= Uerror.Max THEN
-      p := Uerror.GetFrom_sys_errlist(ec);
+      p := Cstring.strerror(ec);
       RETURN M3toC.StoT(p);  (* assumes sys err list is static *)
     ELSE
       RETURN "Error code " & Fmt.Int(ec);
@@ -78,10 +78,10 @@ PROCEDURE GetInfo(path: TEXT; VAR (*OUT*) mtime: Time.T): FileType
   BEGIN
     status := Ustat.stat(p, ADR(statBuf));
     IF status = -1 THEN
-      IF ClassifyError(Uerror.errno) = ErrorClass.LookupError THEN
+      IF ClassifyError(Cerrno.GetErrno()) = ErrorClass.LookupError THEN
         RAISE FileNotFound
       ELSE
-        RAISE FileError(ErrorMessage(Uerror.errno));
+        RAISE FileError(ErrorMessage(Cerrno.GetErrno()));
       END
     END;
     micro := statBuf.st_spare2;
@@ -132,7 +132,7 @@ PROCEDURE Delete(path: TEXT) RAISES { FileError } =
   BEGIN
     status := Unix.unlink(p);
     IF status = -1 THEN
-      RAISE FileError(ErrorMessage(Uerror.errno));
+      RAISE FileError(ErrorMessage(Cerrno.GetErrno()));
     END;
   END Delete;
   
@@ -144,7 +144,7 @@ PROCEDURE Rename(srce, dest: TEXT) RAISES { FileError } =
   BEGIN
     status := Unix.rename(pSrce, pDest);
     IF status = -1 THEN
-      RAISE FileError(ErrorMessage(Uerror.errno));
+      RAISE FileError(ErrorMessage(Cerrno.GetErrno()));
     END;
   END Rename;
 
@@ -155,7 +155,7 @@ PROCEDURE MakeDir(path: TEXT) RAISES { FileError } =
   BEGIN
     status := Unix.mkdir(p, 8_0777); (* masked by process's mode mask *)
     IF status = -1 THEN
-      RAISE FileError(ErrorMessage(Uerror.errno));
+      RAISE FileError(ErrorMessage(Cerrno.GetErrno()));
     END;
   END MakeDir;
 

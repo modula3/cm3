@@ -11,7 +11,7 @@ UNSAFE MODULE LecternClientPosix EXPORTS LecternClient;
 
 FROM Ctypes IMPORT int;
 
-IMPORT Atom, FilePosix, FileWr, Fmt, OSError, OSErrorPosix, Process,
+IMPORT Atom, Cerrno, FilePosix, FileWr, Fmt, OSError, OSErrorPosix, Process,
   Text, Thread, Uerror, Unix, Usocket, Ustat, Uugid, Word, Wr;
 
 PROCEDURE PutInt(wr: Wr.T; n: INTEGER) RAISES {Wr.Failure, Thread.Alerted} =
@@ -67,11 +67,11 @@ PROCEDURE Send(READONLY params: ARRAY OF TEXT) RAISES {Error} =
 		 LOOPHOLE(ADR(addr), UNTRACED REF Usocket.struct_sockaddr),
 		 BYTESIZE(addr.sun_family) + Text.Length(name)) = 0 THEN
               EXIT (* connection to Lectern established *)
-            ELSIF Uerror.errno # Uerror.ECONNREFUSED THEN
+            ELSIF Cerrno.GetErrno() # Uerror.ECONNREFUSED THEN
 	      OSErrorPosix.Raise()
 	    END
           ELSE
-	    IF Uerror.errno # Uerror.ENOENT THEN
+	    IF Cerrno.GetErrno() # Uerror.ENOENT THEN
 	      OSErrorPosix.Raise()
 	    END
 	  END;

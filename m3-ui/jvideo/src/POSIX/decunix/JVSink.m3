@@ -7,10 +7,11 @@
 
 UNSAFE MODULE JVSink;
 
-IMPORT Atom, AtomList, Ctypes, ConnFD, IP, JVBuffer, JvsBuffer, JVConverter,
-       JVConverterF, JVFromSource, jvprotocol, OSError, OSErrorPosix,
-       Process, Rd, RdUtils, TCP, TCPPosix, Thread, Tick, Uerror,
-       Uin (*, Unix *), Usocket, WeakRef, Wr;
+IMPORT Atom, AtomList, Cerrno, Ctypes, ConnFD, IP, JVBuffer,
+       JvsBuffer, JVConverter, JVConverterF, JVFromSource,
+       jvprotocol, OSError, OSErrorPosix, Process, Rd, RdUtils,
+       TCP, TCPPosix, Thread, Tick, Uerror, Uin (*, Unix *),
+       Usocket, WeakRef, Wr;
 
 (**IMPORT Stdio;**)
 
@@ -558,7 +559,7 @@ PROCEDURE OpenRemoteConnection (t: T) RAISES {OSError.E, Thread.Alerted} =
                OR Usocket.setsockopt(
                     tcp.fd, Usocket.SOL_SOCKET, Usocket.SO_KEEPALIVE,
                     ADR(arg), BYTESIZE(arg)) < 0 THEN
-            Crash(Uerror.errno);
+            Crash(Cerrno.GetErrno());
           END;
 
           (* set rcv buffer as large as possible *)
@@ -566,10 +567,10 @@ PROCEDURE OpenRemoteConnection (t: T) RAISES {OSError.E, Thread.Alerted} =
           WHILE Usocket.setsockopt(
                   tcp.fd, Usocket.SOL_SOCKET, Usocket.SO_RCVBUF, ADR(arg),
                   BYTESIZE(arg)) < 0 DO
-            IF Uerror.errno = Uerror.ENOBUFS THEN
+            IF Cerrno.GetErrno() = Uerror.ENOBUFS THEN
               DEC(arg, 1024);
             ELSE
-              Crash(Uerror.errno);
+              Crash(Cerrno.GetErrno());
             END;
           END;
         END;

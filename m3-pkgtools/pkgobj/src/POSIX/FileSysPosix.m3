@@ -7,7 +7,7 @@
 UNSAFE MODULE FileSysPosix EXPORTS FileSys;
 
 IMPORT Atom, AtomList, M3toC, Text, Uerror, Unix, Ustat, Word;
-IMPORT Pathname, OSError, OSErrorPosix, Udir;
+IMPORT Cerrno, (* Cstring, *) Pathname, OSError, OSErrorPosix, Udir;
 
 FROM Ctypes IMPORT char_star, int;
 
@@ -147,7 +147,7 @@ PROCEDURE CheckAccess (path: Text.T; write: BOOLEAN; fail: BOOLEAN): BOOLEAN
     status := Unix.access(p, mode);
     FreePath (path, p);
     IF status = -1 THEN
-      IF NOT fail AND Uerror.errno = Uerror.EACCES THEN
+      IF NOT fail AND Cerrno.GetErrno() = Uerror.EACCES THEN
         RETURN FALSE;
       ELSE
         RaiseError();
@@ -248,13 +248,13 @@ PROCEDURE GetPath(path: TEXT): Text.T RAISES {OSError.E} =
 PROCEDURE RaiseError() RAISES {OSError.E} =
   BEGIN
     OSErrorPosix.Raise();
-    (* RAISE OSError.E(AtomList.Cons(ErrnoAtom(Uerror.errno), NIL)); *)
+    (* RAISE OSError.E(AtomList.Cons(ErrnoAtom(Cerrno.GetErrno()), NIL)); *)
   END RaiseError;
 
 PROCEDURE ErrnoAtom(i: int) : Atom.T =
   BEGIN
     RETURN OSErrorPosix.ErrnoAtom(i);
-    (* RETURN Atom.FromText(M3toC.StoT(Uerror.GetFrom_sys_errlist(i))); *)
+    (* RETURN Atom.FromText(M3toC.StoT(Cstring.strerror(i))); *)
   END ErrnoAtom;
 
 BEGIN

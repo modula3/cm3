@@ -3,7 +3,7 @@
 
 UNSAFE MODULE SocketPosix EXPORTS Socket;
 
-IMPORT Atom, AtomList, Compiler, Ctypes, File, FilePosix;
+IMPORT Atom, AtomList, Compiler, Cerrno, Ctypes, File, FilePosix;
 IMPORT OSError, OSErrorPosix, SchedulerPosix, Thread, Unix;
 IMPORT Uin, Uuio, Uerror, Usocket, Ustat, Unetdb, Utypes, Word;
 
@@ -45,8 +45,10 @@ PROCEDURE Create (reliable: BOOLEAN): T
     t.fd := Usocket.socket (Usocket.AF_INET, Map[reliable], 0);
     IF t.fd = -1 THEN
       VAR err := Unexpected; BEGIN
-        IF Uerror.errno = Uerror.EMFILE OR Uerror.errno = Uerror.ENFILE THEN
-          err := NoResources;
+        WITH errno = Cerrno.GetErrno() DO
+          IF errno = Uerror.EMFILE OR errno = Uerror.ENFILE THEN
+            err := NoResources;
+          END;
         END;
         IOError (err);
       END;
@@ -88,7 +90,7 @@ PROCEDURE Bind (t: T;  READONLY ep: EndPoint)
     status := Usocket.bind (t.fd, ADR (name), BYTESIZE (name));
     IF status # 0 THEN
       VAR err := Unexpected; BEGIN
-        IF Uerror.errno = Uerror.EADDRINUSE THEN err := PortBusy; END;
+        IF Cerrno.GetErrno() = Uerror.EADDRINUSE THEN err := PortBusy; END;
         IOError (err);
       END;
     END;
@@ -115,15 +117,17 @@ PROCEDURE Connect (t: T;  READONLY ep: EndPoint)
       status := Usocket.connect (t.fd, ADR(name), BYTESIZE(name));
       IF status = 0 THEN EXIT; END;
 
-      IF Uerror.errno = Uerror.EINVAL THEN
-        (* hack to try to get real errno, hidden due to NBIO bug in connect *)
-        RefetchError (t.fd);
-      ELSIF Uerror.errno = Uerror.EBADF THEN
-        (* we'll try the same for EBADF, which we've seen on Alpha *)
-        RefetchError (t.fd);
+      WITH errno = Cerrno.GetErrno() DO
+        IF errno = Uerror.EINVAL THEN
+          (* hack to try to get real errno, hidden due to NBIO bug in connect *)
+          RefetchError (t.fd);
+        ELSIF errno = Uerror.EBADF THEN
+          (* we'll try the same for EBADF, which we've seen on Alpha *)
+          RefetchError (t.fd);
+        END;
       END;
 
-      CASE Uerror.errno OF
+      CASE Cerrno.GetErrno() OF
       | Uerror.EISCONN =>
           EXIT;
       | Uerror.EADDRNOTAVAIL,
@@ -164,7 +168,7 @@ PROCEDURE Accept (t: T): T
       fd := Usocket.accept (t.fd, ADR (name), ADR (len));
       IF fd >= 0 THEN EXIT; END;
 
-      CASE Uerror.errno OF
+      CASE Cerrno.GetErrno() OF
       | Uerror.EMFILE,
         Uerror.ENFILE =>
           IOError (NoResources);
@@ -203,7 +207,7 @@ PROCEDURE ReceiveFrom (t: T;  VAR(*OUT*) ep: EndPoint;
         RETURN len;
       END;
 
-      CASE Uerror.errno OF
+      CASE Cerrno.GetErrno() OF
       | Uerror.ECONNRESET =>
           RETURN 0;
       | Uerror.EPIPE,
@@ -235,7 +239,7 @@ PROCEDURE Read (t: T;  VAR(*OUT*) b: ARRAY OF File.Byte;  mayBlock := TRUE): INT
       len := Uuio.read (t.fd, p_b, NUMBER (b));
       IF len >= 0 THEN RETURN len; END;
 
-      CASE Uerror.errno OF
+      CASE Cerrno.GetErrno() OF
       | Uerror.ECONNRESET =>
           RETURN 0;
       | Uerror.EPIPE,
@@ -275,7 +279,7 @@ PROCEDURE SendTo (t: T;  READONLY ep: EndPoint;
       IF len >= 0 THEN
         INC (p, len);  DEC (n, len);
       ELSE
-        CASE Uerror.errno OF
+        CASE Cerrno.GetErrno() OF
         | Uerror.EPIPE,
           Uerror.ECONNRESET,
           Uerror.ENETRESET =>
@@ -315,7 +319,7 @@ PROCEDURE Write (t: T;  READONLY b: ARRAY OF File.Byte)
       IF len >= 0 THEN
         INC (p, len);  DEC (n, len);
       ELSE
-        CASE Uerror.errno OF
+        CASE Cerrno.GetErrno() OF
         | Uerror.EPIPE,
           Uerror.ECONNRESET,
           Uerror.ENETRESET =>
@@ -488,7 +492,7 @@ PROCEDURE MakeNonBlocking (fd: INTEGER)
 PROCEDURE RefetchError(fd: INTEGER) =
 (* Awful hack to retrieve a meaningful error from a TCP accept
    socket.  Only works on Ultrix and OSF.  Leaves result
-   in Uerror.errno.  *)
+   in Cerrno.GetErrno().  *)
   VAR optbuf: INTEGER := 0;   optlen := BYTESIZE(optbuf);
   BEGIN
     IF Compiler.ThisPlatform = Compiler.Platform.ALPHA_OSF
@@ -501,8 +505,8 @@ PROCEDURE RefetchError(fd: INTEGER) =
 PROCEDURE IOError (a: Atom.T) RAISES {OSError.E} =
   VAR ec: AtomList.T := NIL;
   BEGIN
-    IF (Uerror.errno # 0) THEN
-      ec := AtomList.List1 (OSErrorPosix.ErrnoAtom (Uerror.errno));
+    IF (Cerrno.GetErrno() # 0) THEN
+      ec := AtomList.List1 (OSErrorPosix.ErrnoAtom (Cerrno.GetErrno()));
     END;
     RAISE OSError.E (AtomList.Cons (a, ec));
   END IOError;

@@ -7,7 +7,7 @@ IMPORT Atom, Cerrno, IP;
 
 PROCEDURE RaiseOS (a: Atom.T) RAISES {IP.Error} =
   BEGIN
-    Raise (a, Cerrno.errno);
+    Raise (a, Cerrno.GetErrno());
   END RaiseOS;
 
 BEGIN

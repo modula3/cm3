@@ -7,7 +7,7 @@ UNSAFE MODULE LecternServerPosix EXPORTS LecternServer;
 
 FROM Ctypes IMPORT int;
 
-IMPORT Atom, (*Cstring,*) FilePosix, FileRd, Fmt, FS, OSError,
+IMPORT Atom, Cerrno, (*Cstring,*) FilePosix, FileRd, Fmt, FS, OSError,
    OSErrorPosix, Rd, SchedulerPosix, Text, Thread, Uerror, Unix,
    Usocket, Uugid, Word;
 
@@ -90,9 +90,12 @@ PROCEDURE Accept(s: int): int RAISES {OSError.E} =
 	s,
 	LOOPHOLE(ADR(addr), UNTRACED REF Usocket.struct_sockaddr), 
 	ADR(addrlen));
-      IF fd < 0
-	AND Uerror.errno # Uerror.EWOULDBLOCK
-	AND Uerror.errno # Uerror.EAGAIN THEN OSErrorPosix.Raise()
+      IF fd < 0 THEN
+        WITH errno = Cerrno.GetErrno() DO
+          IF errno # Uerror.EWOULDBLOCK AND errno # Uerror.EAGAIN THEN
+            OSErrorPosix.Raise()
+          END
+        END
       ELSIF fd >= 0 THEN EXIT
       END;
       EVAL SchedulerPosix.IOWait(s, TRUE)

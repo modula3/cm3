@@ -6,7 +6,7 @@
 UNSAFE MODULE Midic;
 
 IMPORT M3toC, Midi, MidiPrivate, Word;
-IMPORT Ctypes, Uerror, Unix, Uuio;
+IMPORT Cerrno, Cstring, Ctypes, Uerror, Unix, Uuio;
 FROM Midi IMPORT Failure;
 
 REVEAL
@@ -81,8 +81,7 @@ PROCEDURE Play (         t     : T;
 PROCEDURE UnixFail (msg: TEXT) RAISES {Failure} =
   BEGIN
     RAISE Failure (msg & ": unix error: "
-                     & M3toC.StoT (Uerror.GetFrom_sys_errlist (
-                                     Uerror.errno)));
+                     & M3toC.StoT (Cstring.strerror(Cerrno.GetErrno())));
   END UnixFail;
 
 BEGIN

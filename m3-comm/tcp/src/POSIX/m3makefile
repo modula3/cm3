@@ -5,6 +5,7 @@
 
 Interface("TCPPosix")
 interface("Herrno")
+c_source("HerrnoC")
 implementation("IP")
 implementation("IPErrorPosix")
 implementation("TCP")
