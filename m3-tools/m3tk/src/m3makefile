@@ -10,8 +10,8 @@
 % m3_option("-times")
 
 import("libm3")
+import("m3tk-misc")
 
-include_dir("misc")
 include_dir("files")
 include_dir("ast")
 include_dir("gast")
