@@ -8,55 +8,48 @@ IMPORT LongRealEigenSystem      AS EigenSys,
        LongRealPolynomial       AS P,
        LongRealMatrixFmtLex     AS MF,
        LongRealPolynomialFmtLex AS PF;
-IMPORT Wr, Stdio, Thread, Fmt, Arithmetic;
+IMPORT Wr, IO, Thread, Fmt, Arithmetic AS Arith;
 
 <* FATAL Wr.Failure *>
 <* FATAL Thread.Alerted *>
-<* FATAL EigenSys.NoConvergence *>
-<* FATAL EigenSys.ArraySizesDontMatch *>
 
-(*=======================*)
-CONST Module = "TestEigenSystem.";
+  (*=======================*)
+CONST
+  Module = "TestEigenSystem.";
 
-PROCEDURE Print2 (d, e: V.T; READONLY dWR, eWR: V.TBody) RAISES {} =
+PROCEDURE Print2 (d, e: V.T; READONLY dWR, eWR: V.TBody) =
   BEGIN
-    Wr.PutText(Stdio.stdout, Fmt.Pad("i", 4) & Fmt.Pad("Diagonale", 18)
-                               & Fmt.Pad("Sub-Diagonale", 18) & "\n");
+    IO.Put(Fmt.Pad("i", 4) & Fmt.Pad("Diagonal", 18)
+             & Fmt.Pad("Sub-Diagonal", 18) & "\n");
     FOR i := FIRST(d^) TO LAST(d^) DO
-      Wr.PutText(
-        Stdio.stdout,
-        Fmt.Pad(Fmt.Int(i), 2)
-          & Fmt.Pad(Fmt.LongReal(d[i], Fmt.Style.Sci, 12), 19)
-          & Fmt.Pad(Fmt.LongReal(e[i], Fmt.Style.Sci, 12), 19) & "\n");
+      IO.Put(Fmt.Pad(Fmt.Int(i), 2)
+               & Fmt.Pad(Fmt.LongReal(d[i], Fmt.Style.Sci, 12), 19)
+               & Fmt.Pad(Fmt.LongReal(e[i], Fmt.Style.Sci, 12), 19) & "\n");
     END;                         (* for *)
-    Wr.PutText(Stdio.stdout, "\nVergleich mit Wilkinson-Reinsch:\n");
+    IO.Put("\nComparison with Wilkinson-Reinsch:\n");
     FOR i := FIRST(d^) TO LAST(d^) DO
-      Wr.PutText(
-        Stdio.stdout,
+      IO.Put(
         Fmt.Pad(Fmt.Int(i), 4) & Fmt.Pad(Fmt.LongReal(d[i] - dWR[i]), 18)
           & Fmt.Pad(Fmt.LongReal(e[i] - eWR[i]), 18) & "\n");
     END;                         (* for *)
 
   END Print2;
 
-PROCEDURE Print3 (d, e, e2: V.T; READONLY dWR, eWR, e2WR: V.TBody)
-  RAISES {} =
+PROCEDURE Print3 (d, e, e2: V.T; READONLY dWR, eWR, e2WR: V.TBody) =
   BEGIN
-    Wr.PutText(Stdio.stdout, Fmt.Pad("i", 4) & Fmt.Pad("Diagonale", 18)
-                               & Fmt.Pad("Sub-Diagonale", 18)
-                               & Fmt.Pad("Sub-Diagonale**2", 18) & "\n");
+    IO.Put(Fmt.Pad("i", 4) & Fmt.Pad("Diagonal", 18)
+             & Fmt.Pad("Sub-Diagonal", 18) & Fmt.Pad("Sub-Diagonal**2", 18)
+             & "\n");
     FOR i := FIRST(d^) TO LAST(d^) DO
-      Wr.PutText(
-        Stdio.stdout,
+      IO.Put(
         Fmt.Pad(Fmt.Int(i), 2)
           & Fmt.Pad(Fmt.LongReal(d[i], Fmt.Style.Sci, 12), 19)
           & Fmt.Pad(Fmt.LongReal(e[i], Fmt.Style.Sci, 12), 19)
           & Fmt.Pad(Fmt.LongReal(e2[i], Fmt.Style.Sci, 12), 19) & "\n");
     END;                         (* for *)
-    Wr.PutText(Stdio.stdout, "\nVergleich mit Wilkinson-Reinsch:\n");
+    IO.Put("\nComparison with Wilkinson-Reinsch:\n");
     FOR i := FIRST(d^) TO LAST(d^) DO
-      Wr.PutText(
-        Stdio.stdout,
+      IO.Put(
         Fmt.Pad(Fmt.Int(i), 4) & Fmt.Pad(Fmt.LongReal(d[i] - dWR[i]), 18)
           & Fmt.Pad(Fmt.LongReal(e[i] - eWR[i]), 18)
           & Fmt.Pad(Fmt.LongReal(e2[i] - e2WR[i]), 18) & "\n");
@@ -65,27 +58,27 @@ PROCEDURE Print3 (d, e, e2: V.T; READONLY dWR, eWR, e2WR: V.TBody)
   END Print3;
 
 
-PROCEDURE RunTql1 (VAR d, e: V.T) RAISES {} =
+PROCEDURE RunTql1 (VAR d, e: V.T) =
+  <* FATAL Arith.Error *>
   BEGIN
     EigenSys.Tql1(d, e);
-    Wr.PutText(Stdio.stdout, "Eigenwerte\n");
+    IO.Put("Eigenvalues\n");
     FOR i := FIRST(d^) TO LAST(d^) DO
-      Wr.PutText(
-        Stdio.stdout, Fmt.Pad(Fmt.LongReal(d[i], prec := 12), 20) & "\n");
+      IO.Put(Fmt.Pad(Fmt.LongReal(d[i], prec := 12), 20) & "\n");
     END;                         (* for *)
   END RunTql1;
 
-PROCEDURE RunTql2 (VAR d, e: V.T; VAR z: M.T) RAISES {} =
+PROCEDURE RunTql2 (VAR d, e: V.T; VAR z: M.T) =
+  <* FATAL Arith.Error *>
   BEGIN
     EigenSys.Tql2(d, e, z);
-    Wr.PutText(Stdio.stdout, "Eigenwerte\n");
+    IO.Put("Eigenvalues\n");
     FOR i := FIRST(d^) TO LAST(d^) DO
-      Wr.PutText(
-        Stdio.stdout, Fmt.Pad(Fmt.LongReal(d[i], prec := 12), 20) & "\n");
+      IO.Put(Fmt.Pad(Fmt.LongReal(d[i], prec := 12), 20) & "\n");
     END;                         (* for *)
   END RunTql2;
 
-PROCEDURE RunTred1 (a: M.T; READONLY dWR, eWR, e2WR: V.TBody) RAISES {} =
+PROCEDURE RunTred1 (a: M.T; READONLY dWR, eWR, e2WR: V.TBody) =
   VAR
     z  := M.Copy(a);
     d  := NEW(V.T, NUMBER(a^));
@@ -97,7 +90,7 @@ PROCEDURE RunTred1 (a: M.T; READONLY dWR, eWR, e2WR: V.TBody) RAISES {} =
     RunTql1(d, e);
   END RunTred1;
 
-PROCEDURE RunTred2 (a: M.T; READONLY dWR, eWR: V.TBody; ) RAISES {} =
+PROCEDURE RunTred2 (a: M.T; READONLY dWR, eWR: V.TBody; ) =
   VAR
     aLocal := M.Copy(a);
     dWR2   := V.FromArray(dWR);
@@ -108,20 +101,19 @@ PROCEDURE RunTred2 (a: M.T; READONLY dWR, eWR: V.TBody; ) RAISES {} =
     dWR2[1] := -dWR2[1];
     Print2(d, e, dWR2^, eWR);
     dWR2[1] := -dWR2[1];
-    Wr.PutText(Stdio.stdout, "Transformationsmatrix\n");
+    IO.Put("Transformation matrix\n");
     FOR i := FIRST(a^) TO LAST(a^) DO
       FOR j := FIRST(a[0]) TO LAST(a[0]) DO
-        Wr.PutText(Stdio.stdout,
-                   Fmt.Pad(Fmt.LongReal(aLocal[i, j], prec := 10), 15));
+        IO.Put(Fmt.Pad(Fmt.LongReal(aLocal[i, j], prec := 10), 15));
       END;                       (* for *)
-      Wr.PutText(Stdio.stdout, "\n");
+      IO.Put("\n");
     END;                         (* for *)
     RunTql2(d, e, aLocal);
   END RunTred2;
 
 
 
-PROCEDURE RunTestA () RAISES {} =
+PROCEDURE RunTestA () =
   CONST
     aWR = M.TBody{M.TRow{10.0D0, 1.0D0, 2.0D0, 3.0D0, 4.0D0},
                   M.TRow{1.0D0, 9.0D0, -1.0D0, 2.0D0, -3.0D0},
@@ -139,28 +131,27 @@ PROCEDURE RunTestA () RAISES {} =
   BEGIN
     a^ := aWR;
 
-    Wr.PutText(Stdio.stdout, "Test: Tred1\n");
+    IO.Put("Test: Tred1\n");
     FOR i := FIRST(a^) TO LAST(a^) DO
       FOR j := FIRST(a[0]) TO LAST(a[0]) DO
-        Wr.PutText(Stdio.stdout, Fmt.Pad(Fmt.LongReal(a[i, j]), 12));
+        IO.Put(Fmt.Pad(Fmt.LongReal(a[i, j]), 12));
       END;                       (* for *)
-      Wr.PutText(Stdio.stdout, "\n");
+      IO.Put("\n");
     END;                         (* for *)
     RunTred1(a, dWR, eWR, e2WR);
 
-    Wr.PutText(Stdio.stdout, "Test: Tred2\n");
+    IO.Put("Test: Tred2\n");
     FOR i := FIRST(a^) TO LAST(a^) DO
       FOR j := FIRST(a[0]) TO LAST(a[0]) DO
-        Wr.PutText(Stdio.stdout, Fmt.Pad(Fmt.LongReal(a[i, j]), 12));
+        IO.Put(Fmt.Pad(Fmt.LongReal(a[i, j]), 12));
       END;                       (* for *)
-      Wr.PutText(Stdio.stdout, "\n");
+      IO.Put("\n");
     END;                         (* for *)
     RunTred2(a, dWR, eWR);
 
   END RunTestA;
 
 PROCEDURE TestCharPolynomial () =
-  <*FATAL Arithmetic.Error*>
   VAR
     p, cp: P.T;
     m    : M.T;
@@ -181,13 +172,14 @@ PROCEDURE TestCharPolynomial () =
     cp := CP.CharPolynomial(m);
     Msg(
       Fmt.FN("Characteristic polynomial %s\n", ARRAY OF TEXT{PF.Fmt(cp)}));
-    <*ASSERT P.Equal(p,cp)*>
+    <* ASSERT P.Equal(p, cp) *>
   END TestCharPolynomial;
 
 (*-------------------------*)
 PROCEDURE TestEigenSystem (): BOOLEAN =
-  <*UNUSED*>
-  CONST ftn = Module & "TestEigenSystem";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "TestEigenSystem";
   VAR result := TRUE;
   BEGIN
     NewLine();

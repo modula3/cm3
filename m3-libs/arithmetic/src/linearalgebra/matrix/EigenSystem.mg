@@ -1,12 +1,21 @@
 GENERIC MODULE EigenSystem(R, RT, V, M);
+
 (*
 IMPORT Wr, Stdio, IO, Fmt,
        LongRealVectorFmtLex AS VF,
        LongRealFmtLex AS RF;
 *)
+
 IMPORT Arithmetic AS Arith;
 
 EXCEPTION NormalTermination;
+
+PROCEDURE NoConvergence (noConvergence: BOOLEAN; ) RAISES {Arith.Error} =
+  BEGIN
+    IF noConvergence THEN
+      RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
+    END;
+  END NoConvergence;
 
 PROCEDURE PowerMethod (A: M.T; tol: R.T; maxiter: CARDINAL; ): EigenPair
   RAISES {Arith.Error} =
@@ -20,9 +29,7 @@ PROCEDURE PowerMethod (A: M.T; tol: R.T; maxiter: CARDINAL; ): EigenPair
     x^ := A[0];                  (*is this initialization random enough?*)
     x2 := V.Inner(x, x);
     REPEAT
-      IF maxiter = 0 THEN
-        RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
-      END;
+      NoConvergence(maxiter = 0);
       DEC(maxiter);
 
       (*turn new into old*)
@@ -143,16 +150,17 @@ PROCEDURE Jacobi (VAR a        : M.T;
                   VAR d        : V.T;
                   VAR v        : M.T;
                   VAR nrot     : INTEGER;
-                      eigenVect            := FALSE)
-  RAISES {ArrayTooSmall} =
+                      eigenVect            := FALSE) =
   VAR
     tresh, theta, tau, t, sm, s, h, g, c: R.T;
     b                                         := NEW(V.T, n);
     z                                         := NEW(V.T, n);
   BEGIN
-    IF NUMBER(a^) < n OR NUMBER(a[0]) < n THEN RAISE ArrayTooSmall END;
-    IF NUMBER(d^) < n THEN RAISE ArrayTooSmall END;
-    IF NUMBER(v^) < n OR NUMBER(v[0]) < n THEN RAISE ArrayTooSmall END;
+    <* ASSERT NUMBER(a^) >= n AND NUMBER(a[0]) >= n,
+                "Matrix a is too small." *>
+    <* ASSERT NUMBER(d^) >= n, "Vector d is too small." *>
+    <* ASSERT NUMBER(v^) >= n AND NUMBER(v[0]) >= n,
+                "Matrix v is too small." *>
     IF eigenVect THEN
       FOR p := 0 TO n - 1 DO
         FOR q := 0 TO n - 1 DO v[p, q] := R.Zero; END;
@@ -327,13 +335,10 @@ BEGIN
 END;
 *)
 
-PROCEDURE EigenSort (VAR vects: M.T; VAR vals: V.T)
-  RAISES {ArraySizesDontMatch} =
+PROCEDURE EigenSort (VAR vects: M.T; VAR vals: V.T) =
   VAR p, q: R.T;
   BEGIN
-    IF NUMBER(vals^) # NUMBER(vects[0]) THEN
-      RAISE ArraySizesDontMatch;
-    END;
+    <* ASSERT NUMBER(vals^) = NUMBER(vects[0]), "Array sizes don't match." *>
     FOR i := FIRST(vals^) TO LAST(vals^) - 1 DO
       p := vals[i];
       FOR j := i + 1 TO LAST(vals^) DO
@@ -356,16 +361,15 @@ PROCEDURE EigenSort (VAR vects: M.T; VAR vals: V.T)
  Implementation of the tred[1234] Householder reductions of a real
  symmetric matrix. Translation of the original ALGOL procedures.
 *)
-PROCEDURE Tred1 (n: CARDINAL; VAR a: M.T; VAR d, e, e2: V.T; )
-  RAISES {ArraySizesDontMatch} =
+PROCEDURE Tred1 (n: CARDINAL; VAR a: M.T; VAR d, e, e2: V.T; ) =
   VAR
     l      : INTEGER;
     f, g, h: R.T;
   BEGIN
-    IF NUMBER(a[0]) < n OR NUMBER(a^) < n OR NUMBER(d^) < n
-         OR NUMBER(e^) < n OR NUMBER(e2^) < n THEN
-      RAISE ArraySizesDontMatch;
-    END;                         (* if *)
+    (* Test for array sizes. *)
+    <* ASSERT NUMBER(a[0]) >= n AND NUMBER(a^) >= n AND NUMBER(d^) >= n
+                AND NUMBER(e^) >= n AND NUMBER(e2^) >= n,
+                "Some arrays are too small" *>
     FOR i := FIRST(d^) TO LAST(d^) DO d[i] := a[i, i]; END; (* for *)
     FOR i := LAST(d^) TO FIRST(d^) BY -1 DO
       l := i - 1;
@@ -421,18 +425,15 @@ PROCEDURE Tred1 (n: CARDINAL; VAR a: M.T; VAR d, e, e2: V.T; )
     END;                         (* for *)
   END Tred1;
 
-PROCEDURE Tred2 (n: CARDINAL; VAR a: M.T; VAR d, e: V.T)
-  RAISES {ArraySizesDontMatch} =
+PROCEDURE Tred2 (n: CARDINAL; VAR a: M.T; VAR d, e: V.T) =
   VAR
     l          : INTEGER;
     firstD               := FIRST(d^);
     f, g, h, hh: R.T;
   BEGIN
     (* Test for array sizes. *)
-    IF NUMBER(a[0]) # n OR NUMBER(a^) # n OR NUMBER(d^) # n
-         OR NUMBER(e^) # n THEN
-      RAISE ArraySizesDontMatch;
-    END;                         (* if *)
+    <* ASSERT NUMBER(a[0]) = n AND NUMBER(a^) = n AND NUMBER(d^) = n
+                AND NUMBER(e^) = n, "Array size don't match." *>
 
     FOR i := n - 1 TO 1 BY -1 DO
       l := i - 2;
@@ -513,17 +514,15 @@ PROCEDURE Trbak1 (    n     : CARDINAL;
                       a     : M.T;
                       d, e  : V.T;
                   VAR z     : M.T;
-                      m1, m2: CARDINAL  ) RAISES {ArraySizesDontMatch} =
+                      m1, m2: CARDINAL  ) =
   VAR
     l   : INTEGER;
     h, s: R.T;
   BEGIN
     (* Test for array sizes. *)
-    IF NUMBER(a[0]) # n OR NUMBER(a^) # n OR NUMBER(d^) # n
-         OR NUMBER(e^) # n OR NUMBER(z[0]) # n OR NUMBER(z^) # n OR m1 > n
-         OR m2 > n THEN
-      RAISE ArraySizesDontMatch;
-    END;                         (* if *)
+    <* ASSERT NUMBER(a[0]) = n AND NUMBER(a^) = n AND NUMBER(d^) = n
+                AND NUMBER(e^) = n AND NUMBER(z[0]) = n AND NUMBER(z^) = n
+                AND m1 <= n AND m2 <= n, "Array size don't match." *>
 
     FOR i := FIRST(e^) + 1 TO LAST(e^) DO
       IF e[i] # R.Zero THEN
@@ -547,16 +546,15 @@ PROCEDURE Trbak3 (    n     : CARDINAL;
                       a     : V.T;
                       d, e  : V.T;
                   VAR z     : M.T;
-                      m1, m2: CARDINAL  ) RAISES {ArraySizesDontMatch} =
+                      m1, m2: CARDINAL  ) =
   VAR
     l, iz: INTEGER;
     h, s : R.T;
   BEGIN
     (* Test for array sizes. *)
-    IF NUMBER(a^) # (n * (n + 1) DIV 2) OR NUMBER(d^) # n OR NUMBER(e^) # n
-         OR NUMBER(z[0]) # n OR NUMBER(z^) # n OR m1 > n OR m2 > n THEN
-      RAISE ArraySizesDontMatch;
-    END;                         (* if *)
+    <* ASSERT NUMBER(a^) = (n * (n + 1) DIV 2) AND NUMBER(d^) = n
+                AND NUMBER(e^) = n AND NUMBER(z[0]) = n AND NUMBER(z^) = n
+                AND m1 <= n AND m2 <= n, "Array size don't match." *>
 
     FOR i := FIRST(e^) + 1 TO LAST(e^) DO
       l := i - 1;
@@ -577,15 +575,13 @@ PROCEDURE Trbak3 (    n     : CARDINAL;
     END;                         (* for *)
   END Trbak3;
 
-PROCEDURE Tql1 (VAR d, e: V.T)
-  RAISES {ArraySizesDontMatch, NoConvergence} =
+PROCEDURE Tql1 (VAR d, e: V.T) RAISES {Arith.Error} =
   VAR
     iter, m               : INTEGER;
     b, c, f, g, h, p, r, s: R.T;
   BEGIN
-    IF NUMBER(d^) # NUMBER(e^) THEN
-      RAISE ArraySizesDontMatch;
-    END;                         (* if *)
+    <* ASSERT NUMBER(d^) = NUMBER(e^), "Array sizes don't match." *>
+
     FOR i := FIRST(e^) + 1 TO LAST(e^) DO e[i - 1] := e[i]; END; (* for *)
     f := R.Zero;
     b := R.Zero;
@@ -600,7 +596,7 @@ PROCEDURE Tql1 (VAR d, e: V.T)
       IF m # l AND l < LAST(d^) THEN
         iter := 0;
         REPEAT
-          IF iter > 30 THEN RAISE NoConvergence; END; (* if *)
+          NoConvergence(iter > 30);
           INC(iter);
           (* form shift *)
           g := d[l];
@@ -653,16 +649,13 @@ PROCEDURE Tql1 (VAR d, e: V.T)
     END;                         (* for *)
   END Tql1;
 
-PROCEDURE Tql2 (VAR d, e: V.T; VAR z: M.T)
-  RAISES {ArraySizesDontMatch, NoConvergence} =
+PROCEDURE Tql2 (VAR d, e: V.T; VAR z: M.T) RAISES {Arith.Error} =
   VAR
     k, m, iter            : INTEGER;
     b, c, f, g, h, r, s, p: R.T;
   BEGIN
-    IF NUMBER(d^) # NUMBER(e^) OR NUMBER(d^) # NUMBER(z^)
-         OR NUMBER(d^) # NUMBER(z[0]) THEN
-      RAISE ArraySizesDontMatch;
-    END;                         (* if *)
+    <* ASSERT NUMBER(d^) = NUMBER(e^) AND NUMBER(d^) = NUMBER(z^)
+                AND NUMBER(d^) = NUMBER(z[0]), "Array sizes don't match." *>
 
     FOR i := FIRST(e^) + 1 TO LAST(e^) DO e[i - 1] := e[i]; END; (* for *)
     f := R.Zero;
@@ -678,7 +671,7 @@ PROCEDURE Tql2 (VAR d, e: V.T; VAR z: M.T)
       IF m # l AND l < LAST(d^) THEN
         iter := 0;
         REPEAT
-          IF iter > 30 THEN RAISE NoConvergence; END; (* if *)
+          NoConvergence(iter > 30);
           INC(iter);
           (* form shift *)
           g := d[l];
