@@ -203,11 +203,11 @@ header() {
 # uncomment these if they interfere with your environment
 if [ "${M3OSTYPE}" = "POSIX" -a \
      "`domainname 2>/dev/null`" = "iceflower" ] ; then
-  STAGE=/t/wagner/cm3
+  STAGE=${STAGE:-/t/wagner/cm3}
   export STAGE
 fi
 if [ "${M3OSTYPE}" = "WIN32" -a "${HOSTNAME}" = "FIR" ] ; then
-  STAGE=//luthien/t/wagner/cm3
+  STAGE=${STAGE:-e:/home/wagner/tmp/cm3stage}
   export STAGE
 fi
 
