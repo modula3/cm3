@@ -256,6 +256,8 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
 
     | 't' => IF Text.Equal (arg, "-times") THEN
                M3Timers.Start ();  ok := TRUE;
+             ELSIF Text.Equal (arg, "-trace") THEN
+               Out (wr, "TRACE_INSTR()");  ok := TRUE;
              END;
 
     | 'v' => IF Text.Equal (arg, "-verbose") THEN
@@ -583,6 +585,7 @@ CONST
     "  -commands      list system commands as they are performed",
     "  -verbose       list internal steps as they are performed",
     "  -debug         dump internal debugging information",
+    "  -trace         trace quake code execution",
     "",
     "information and help:",
     "  -help          print this help message",
@@ -606,7 +609,14 @@ CONST
     "  -gui           produce a Windows GUI subsystem program",
     "  -windows       produce a Windows GUI subsystem program",
     "  -pretend <val> pretend to run as CM3_Version <val>",
-    ""
+    "",
+    "environment variables:",
+    "  M3CONFIG       platform dependent configuration file to use (cm3.cfg)",
+    "                 used if no suitable file is found in the local package",
+    "  QUAKE_SHELL    shell to be used by the quake interpreter for exec()",
+    "  QUAKE_SHELL_OPTION command option for quake shell (-c, /c)",
+    "  QUAKE_TMPDIR   directory for temporary files used by quake",
+    "  "
   };
 
 (*---------------------------------------------------------- misc ---*)
@@ -632,9 +642,9 @@ PROCEDURE Val(name: TEXT) : TEXT =
 VAR
   defs := NEW(TextTextTbl.Default).init();
 BEGIN
-  EVAL defs.put("CM3_RELEASE", "5.2.5");       (* readable release version *)
-  EVAL defs.put("CM3_VERSION", "050205");      (* version as number *)
-  EVAL defs.put("CM3_CREATED", "2003-05-22");  (* date of last change *)
+  EVAL defs.put("CM3_RELEASE", "5.2.6");       (* readable release version *)
+  EVAL defs.put("CM3_VERSION", "050206");      (* version as number *)
+  EVAL defs.put("CM3_CREATED", "2003-06-25");  (* date of last change *)
   EVAL defs.put("M3_PROFILING", "");           (* no profiling by default *)
   EVAL defs.put("EOL", Wr.EOL);
 END Makefile.
