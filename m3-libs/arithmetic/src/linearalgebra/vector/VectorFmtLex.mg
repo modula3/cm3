@@ -1,14 +1,13 @@
 GENERIC MODULE VectorFmtLex(RF);
 
 (*FROM NADefinitions IMPORT Error,Err;*)
-IMPORT Wr, TextWr, Thread;
+IMPORT Rd, Wr, TextWr, Thread;
 IMPORT Fmt AS F;
 FROM FmtLexSupport IMPORT Precedence;
 
 <*UNUSED*>
 CONST Module = "VectorFmt.";
 
-(*-----------------*)
 PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT
   RAISES {Thread.Alerted, Wr.Failure} =
   VAR wr := TextWr.New();
@@ -22,7 +21,6 @@ PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT
     RETURN TextWr.ToText(wr);
   END Fmt;
 
-(*-----------------*)
 PROCEDURE Tex (         x     : T;
                READONLY style       := TexStyle{}; <*UNUSED*>
                         within      := Precedence.sum         ): TEXT
@@ -51,6 +49,5 @@ PROCEDURE Tex (         x     : T;
   END Tex;
 
 
-(*-----------------*)
 BEGIN
 END VectorFmtLex.

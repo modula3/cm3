@@ -1,9 +1,10 @@
 GENERIC INTERFACE PolynomialFmtLex(RF, P);
 (*Copyright (c) 1996, m3na project*)
 
-IMPORT Wr, Thread;
+IMPORT Rd, Wr, Thread;
+IMPORT Lex AS L;
+IMPORT FloatMode;
 FROM FmtLexSupport IMPORT Precedence;
-(*==========================*)
 TYPE T = P.T;
 
 TYPE FmtStyle = RECORD elemStyle := RF.FmtStyle{};  END;
@@ -29,5 +30,13 @@ TYPE
 PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within := Precedence.sum):
   TEXT RAISES {Thread.Alerted, Wr.Failure};
 
-(*==========================*)
+TYPE
+  LexStyle = RECORD
+               sep       := ' ';
+               elemStyle := RF.LexStyle{};
+             END;
+
+PROCEDURE Lex (rd: Rd.T; READONLY style := LexStyle{}; ): T
+  RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted};
+
 END PolynomialFmtLex.

@@ -4,8 +4,10 @@ GENERIC INTERFACE FloatFmtLex(R);
 (* Abstract: Generic interface for formatting and parsing of float
    numbers *)
 
+IMPORT Rd, Thread;
 IMPORT Fmt AS F;
-(*IMPORT Lex AS L;*)
+IMPORT Lex AS L;
+IMPORT FloatMode;
 FROM FmtLexSupport IMPORT Precedence;
 
 TYPE T = R.T;
@@ -28,5 +30,10 @@ TYPE
 
 PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within := Precedence.sum):
   TEXT;
+
+TYPE LexStyle = RECORD END;
+
+PROCEDURE Lex (rd: Rd.T; READONLY style := LexStyle{}; ): T
+  RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted};
 
 END FloatFmtLex.

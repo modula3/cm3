@@ -9,7 +9,6 @@ FROM FmtLexSupport IMPORT Precedence, Parenthesize;
 <*UNUSED*>
 CONST Module = "FractionFmtLex.";
 
-(*------------------------*)
 (*
 PROCEDURE Lex(
                str:TEXT):Fr.T RAISES {Error}=
@@ -17,7 +16,6 @@ BEGIN
   RAISE Error(Err.not_implemented);
 END Lex;
 *)
-(*----------------------------*)
 PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT =
   VAR t: TEXT;
   BEGIN
@@ -41,6 +39,5 @@ PROCEDURE Tex (READONLY x     : T;
     RETURN Parenthesize(t, Precedence.product, within);
   END Tex;
 
-(*==========================*)
 BEGIN
 END FractionFmtLex.

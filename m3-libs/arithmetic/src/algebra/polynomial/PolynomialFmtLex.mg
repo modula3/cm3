@@ -14,7 +14,6 @@ FROM FmtLexSupport IMPORT Precedence;
 <* UNUSED *>
 CONST Module = "PolynomialFmtLex.";
 
-(*--------------------*)
 (*
 PROCEDURE Lex(
                str:TEXT):T =
@@ -23,7 +22,6 @@ BEGIN
 END Lex;
 *)
 
-(*----------------------*)
 PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}):TEXT
                RAISES {Thread.Alerted, Wr.Failure} =
 (*Generate a text object for the polynomial poly, in form:
@@ -143,6 +141,5 @@ BEGIN
   RETURN TextWr.ToText(wr);
 END Tex;
 
-(*==========================*)
 BEGIN
 END PolynomialFmtLex.

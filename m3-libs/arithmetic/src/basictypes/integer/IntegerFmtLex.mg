@@ -10,15 +10,12 @@ FROM FmtLexSupport IMPORT Precedence;
 
 
 <*UNUSED*>CONST Module = "IntegerFmtLex.";
-(*==========================*)
 
-(*----------------------*)
 PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}) : TEXT =
 BEGIN
   RETURN F.Int (x, style.base);
 END Fmt;
 
-(*----------------------*)
 PROCEDURE FmtArray(READONLY a:ARRAY OF I.T;
                    style     :=FmtStyle{};
                    cellwidth :CARDINAL:=4;
@@ -51,6 +48,5 @@ PROCEDURE Tex (x : T; READONLY style := TexStyle{}; <*UNUSED*>within : Precedenc
     END;
   END Tex;
 
-(*==========================*)
 BEGIN
 END IntegerFmtLex.

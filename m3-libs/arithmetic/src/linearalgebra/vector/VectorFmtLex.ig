@@ -1,8 +1,11 @@
 GENERIC INTERFACE VectorFmtLex(RF, V);
 (*Copyright (c) 1996, m3na project*)
-IMPORT Wr, Thread;
+
+IMPORT Rd, Wr, Thread;
+IMPORT Lex AS L;
+IMPORT FloatMode;
 FROM FmtLexSupport IMPORT Precedence;
-(*==========================*)
+
 TYPE T = V.T;
 
 TYPE
@@ -19,13 +22,21 @@ TYPE
             };
   TexFlagSet = SET OF TexFlag;
   TexStyle = RECORD
-               flags           := TexFlagSet{};
-               sep      : TEXT := " \\quad ";
-               elemStyle       := RF.TexStyle{};
+               flags     := TexFlagSet{};
+               sep       := " \\quad ";
+               elemStyle := RF.TexStyle{};
              END;
 
 PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within := Precedence.sum):
   TEXT RAISES {Thread.Alerted, Wr.Failure};
 
-(*==========================*)
+TYPE
+  LexStyle = RECORD
+               sep       := ' ';
+               elemStyle := RF.LexStyle{};
+             END;
+
+PROCEDURE Lex (rd: Rd.T; READONLY style := LexStyle{}; ): T
+  RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted};
+
 END VectorFmtLex.

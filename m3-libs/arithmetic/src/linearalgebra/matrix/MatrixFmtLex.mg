@@ -20,12 +20,11 @@ Abstract:
 2/17/96   Harry George   ...and back to ADT format
 *)
 
-IMPORT Wr,TextWr,Fmt AS F,Thread;
+IMPORT Rd, Wr,TextWr,Fmt AS F,Thread;
 
 <*UNUSED*>
 CONST Module = "MatrixFmtLex.";
 
-(*-----------------*)
 (*
 PROCEDURE Lex(
                str:TEXT):T RAISES {Error}=
@@ -34,7 +33,6 @@ BEGIN
 END Lex;
 *)
 
-(*-----------------*)
 PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}):TEXT
                RAISES {Thread.Alerted, Wr.Failure} =
 VAR
@@ -68,7 +66,6 @@ PROCEDURE Dup (str:TEXT; n:CARDINAL):TEXT
     RETURN TextWr.ToText(wr);
   END Dup;
 
-(*-----------------*)
 PROCEDURE Tex (x : T; READONLY style := TexStyle{}):TEXT
                RAISES {Thread.Alerted, Wr.Failure} =
 VAR
@@ -88,6 +85,5 @@ BEGIN
   RETURN TextWr.ToText(wr);
 END Tex;
 
-(*-----------------*)
 BEGIN
 END MatrixFmtLex.
