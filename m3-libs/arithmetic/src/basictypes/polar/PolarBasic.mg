@@ -1,4 +1,4 @@
-GENERIC MODULE PolarBasic(C,CT,R,RT);
+GENERIC MODULE PolarBasic(R,RT,C,CT);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Complex numbers in polar coordinates
