@@ -462,6 +462,24 @@ BEGIN
   END;
 END BitPosEndToBegin;
 
+PROCEDURE GetMSBPos (READONLY x : T) : BitPos =
+BEGIN
+  RETURN BitPos{x.size-1, Wx.FindMostSignifBit(x.data[x.size-1])};
+END GetMSBPos;
+
+(*grab bits from sh to sh+W.Size-1*)
+PROCEDURE GetSubword (READONLY x : T; sh : BitPos) : W.T =
+VAR
+  lo : W.T;
+BEGIN
+  IF sh.word<0 THEN
+    lo := 0;
+  ELSE
+    lo := W.RightShift(x.data[sh.word],sh.bit);
+  END;
+  RETURN W.Or (lo, W.LeftShift(x.data[sh.word+1],W.Size-sh.bit));
+END GetSubword;
+
 
 (*x := x-SHL(y*z,sh)   (inplace, make sure that x.data has enough space) *)
 PROCEDURE SubShiftedProd(VAR x : T; READONLY y : T; z : W.T; sh : BitPos) =
@@ -503,32 +521,20 @@ PROCEDURE AddShifted(VAR x : T; y : W.T; sh : BitPos) =
 VAR
   carry := FALSE;
 BEGIN
-  x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], W.Shift(y,sh.bit), carry);
+  x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], W.LeftShift(y,sh.bit), carry);
   INC(sh.word);
-  x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], W.Shift(y,sh.bit-W.Size), carry);
+  x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], W.RightShift(y,W.Size-sh.bit), carry);
   WHILE carry DO
     INC(sh.word);
     x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], 0, carry);
   END;
 END AddShifted;
 
-(*grab the W.Size bits from sh downwards*)
-PROCEDURE GetSubword (READONLY x : T; sh : BitPos) : W.T =
-BEGIN
-  RETURN W.Or (W.Shift(x.data[sh.word-1],-sh.bit), W.Shift(x.data[sh.word],W.Size-sh.bit));
-END GetSubword;
-
-PROCEDURE GetMSWord (READONLY x : T; VAR xmswpos : BitPos) : W.T =
-BEGIN
-  xmswpos.bit  := Wx.FindMostSignifBit(x.data[x.size-1]);
-  xmswpos.word := x.size-1;
-  RETURN GetSubword(x,BitPosEndToBegin(xmswpos));
-END GetMSWord;
-
 PROCEDURE DivModU (READONLY x, y : T; VAR r : T) : T RAISES {Error} =
 VAR
   q : T;
-  qmswpos, rmswpos, ymswpos : BitPos;
+  qmswstartpos : BitPos;
+  qmsbpos, rmsbpos, ymsbpos : BitPos;
   qmsw,    rmsw,    ymsw    : W.T;
 BEGIN
   IF y.size = 0 THEN
@@ -541,17 +547,21 @@ BEGIN
 
   (*normalize remainder and divisor temporarily
     divide most significant 32 bit of r by the most significant 16 bit of y*)
-  ymsw := GetMSWord(y,ymswpos);
+  ymsbpos := GetMSBPos(y);
+  ymsw    := GetSubword(y,BitPosEndToBegin(ymsbpos));
+  ymsw    := W.RightShift (ymsw, W.Size DIV 2);  (*the division algorithm is fastest if the divisor is clipped to the half number of bits compared with the approximation of the dividend*)
   INC(ymsw);  (*round up to get a lower estimate for quotient*)
 
-  rmsw := GetMSWord(r,rmswpos);
-  (*round down by neglecting the following bits to get a lower estimate for quotient*)
-  WHILE CompareBitPos (rmswpos, ymswpos) > 0 DO
+  rmsbpos := GetMSBPos(r);
+  WHILE CompareBitPos (rmsbpos, ymsbpos) > 0 DO
+    rmsw := GetSubword(r,BitPosEndToBegin(rmsbpos));
+    (*round down by neglecting the following bits to get a lower estimate for quotient*)
     qmsw    := rmsw DIV ymsw;
-    qmswpos := SubBitPos(rmswpos,ymswpos);
-    AddShifted     (q, qmsw, BitPosEndToBegin(qmswpos));
-    SubShiftedProd (r, y, qmsw, BitPosEndToBegin(qmswpos));
-    rmsw := GetMSWord(r,rmswpos);
+    qmsbpos := SubBitPos(rmsbpos,ymsbpos);
+    qmswstartpos := SubBitPos(qmsbpos,BitPos{0,W.Size DIV 2-1});
+    AddShifted     (q,    qmsw, qmswstartpos);
+    SubShiftedProd (r, y, qmsw, qmswstartpos);
+    rmsbpos := GetMSBPos(r);
   END;
   (*CorrectSize (q, LAST(q.data));*)
 
@@ -561,7 +571,7 @@ BEGIN
     r := SubU (r, y);
     q := AddU (q, One);
     *)
-    AddShifted     (q, 1, BitPos{0,0});
+    AddShifted     (q,    1, BitPos{0,0});
     SubShiftedProd (r, y, 1, BitPos{0,0});
   END;
 
