@@ -5,59 +5,60 @@ Abstract: Bits and Bytes
 
 2/17/96  Harry George    Initial version
 *)
-IMPORT Word, Fmt;
+IMPORT Word, Fmt AS F;
 FROM Word IMPORT And,Xor,Not,LeftShift,RightShift;
+(*
 FROM xUtils IMPORT debug;
+*)
 
 CONST Module = "Bits.";
 (*==========================*)
 (*============================*)
 (* Which Endian?              *)
 (*============================*)
-VAR WhichEnd:[-1..+1]:=0;
-
-PROCEDURE whichend():[-1..+1]=
+PROCEDURE WhichEndian():[-1..+1]=
 (*-1 means little-endian, +1 means big-endian.*)
+<*UNUSED*>
 CONST
-  ftn = Module & "whichend";
+  ftn = Module & "WhichEndian";
 VAR
   datum:=16_40ACB139;
   any:AnyEndian;
 BEGIN
-  IF WhichEnd # 0 THEN RETURN WhichEnd; END;
-
   (*---need to check---*)
   any:=LOOPHOLE(datum,AnyEndian);
   IF    any.data[0]=16_40 THEN
-    WhichEnd:=+1;
+    RETURN +1;
   ELSIF any.data[0]=16_39 THEN
-    WhichEnd:=-1;
+    RETURN -1;
   ELSE
+    <*ASSERT FALSE*>
+    (*
     debug(1,ftn,"huh?");
+    *)
   END;
-  RETURN WhichEnd;
-END whichend;
+END WhichEndian;
 
 (*============================*)
 (* Other Functions            *)
 (*============================*)
 
 (*-------------------------*)
-PROCEDURE fmt(x:Word.T;
-              nbits:CARDINAL:=32;
-              base:CARDINAL:=2   (*typically 2 or 16*)
+PROCEDURE Fmt(x:Word.T;
+              nbits:[1..Word.Size]:=32;
+              base :CARDINAL:=2   (*typically 2 or 16*)
               ):TEXT=
 BEGIN
-  RETURN Fmt.Int(base) & "_" &
-         Fmt.Pad(Fmt.Int(x,base:=base),
+  RETURN F.Int(base) & "_" &
+         F.Pad(F.Int(x,base:=base),
                  length:=nbits,
                  padChar:='0',
-                 align:=Fmt.Align.Right);
-END fmt;
+                 align:=F.Align.Right);
+END Fmt;
 (*----------------*)
-PROCEDURE reverse(x:CARDINAL;       (*given this number*)
-                  nbits:CARDINAL    (*using the low n bits*)
-                  ):CARDINAL=       (*return reversed bit pattern*)
+PROCEDURE Reverse(x:Word.T;               (*given this number*)
+                  nbits:[1..Word.Size];   (*using the low n bits*)
+                  ):Word.T=               (*return reversed bit pattern*)
 (*The idea is to let the least bit rotate to the
 negative bit of a 2's complement integer, and test
 for <0.  If <0, then increment the tmp2.  Negative
@@ -73,9 +74,9 @@ BEGIN
   END;
   IF tmp1<0 THEN INC(tmp2); END;
   RETURN tmp2;
-END reverse;
+END Reverse;
 (*--------------------*)
-PROCEDURE hash_pjw(READONLY str: ARRAY OF CHAR; (*given this string*)
+PROCEDURE HashPJW(READONLY str: ARRAY OF CHAR; (*given this string*)
                           n1,nn:CARDINAL        (*using n1..nn*)
                               ):CARDINAL=       (*return hash value*)
 (*P. Weinberger's hash*)
@@ -98,9 +99,9 @@ BEGIN
     END;
   END;
   RETURN hash_value;
-END hash_pjw;
+END HashPJW;
 (*--------------------*)
-PROCEDURE hash_elf(READONLY str: ARRAY OF CHAR; (*given this string*)
+PROCEDURE HashELF(READONLY str: ARRAY OF CHAR; (*given this string*)
                           n1,nn:CARDINAL        (*using n1..nn*)
                               ):CARDINAL=       (*return hash value*)
 (*ELF hash*)
@@ -117,7 +118,7 @@ BEGIN
     h:=And(h,Not(g));
   END;
   RETURN h;
-END hash_elf;
+END HashELF;
 (*==========================*)
 BEGIN
 END Bits.
