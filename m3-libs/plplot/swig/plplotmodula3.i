@@ -281,9 +281,9 @@ FOR i:=0 TO LAST(matrix) DO tmpmat[i] := ADR(matrix[i,0]) END;%}
 %rename("objectData") OBJECT_DATA;
 
 %typemap(m3intype) (pltr_func pltr, PLPointer OBJECT_DATA)
-%{$1_name: PROCEDURE (data: REF CallbackM3Data); $2_name: REFANY%}
+%{plotter: PROCEDURE (data: REF CallbackM3Data); objectData: REFANY%}
 %typemap(m3rawarg) (pltr_func pltr, PLPointer OBJECT_DATA)
-%{CallbackM3, NEW(REF CallbackM3Data,callback:=$1_name,callbackData:=$2_name)%}
+%{CallbackM3, NEW(REF CallbackM3Data,callback:=plotter,callbackData:=objectData)%}
 
 %typemap(m3intype) defined_func df
 %{$1_name: PROCEDURE (x: R.T): R.T%}
