@@ -123,6 +123,131 @@ m3_print_scalar (valaddr, bitpos, bitsize, stream, format, sign_extend)
     default:  fprintf_filtered (stream, "%ld", v);    break; }
 }
 
+
+char *
+m3_read_object_fields_bits (ref)
+     CORE_ADDR ref;
+{
+  CORE_ADDR tc_addr;
+  int dataSize;
+  char *bits;
+
+  if (ref == 0) { return 0; }
+  tc_addr = find_m3_heap_tc_addr (ref);
+  dataSize = tc_address_to_dataSize (tc_addr);
+  bits = (char*) malloc (dataSize);
+  target_read_memory (ref, bits, dataSize);
+  return bits;
+}
+
+typedef struct {
+  char *      type_name;
+  CORE_ADDR   tc_addr;
+  int         len_size,  len_offset;
+  int         data_size, data_offset;
+  int         wide_mode;  /* 0=CHAR, 1=WIDECHAR, 2=both */
+} text_info;
+
+static text_info  textliteral;
+static text_info  text8short;
+static text_info  text16short;
+
+static void
+get_text_info (nm, wide_mode, info)
+     char*      nm;
+     int        wide_mode;
+     text_info *info;
+{
+  struct type *t;
+
+  if (info->tc_addr) { return; }
+
+  t = find_m3_type_named (nm);
+
+  info->type_name = nm;
+  info->tc_addr   = find_tc_from_m3_type (t);
+  info->wide_mode = wide_mode;
+
+  /*** doesn't work on object types! ****
+  find_m3_rec_field (t, "len", &(info->len_size), &(info->len_offset), 0);
+  find_m3_rec_field (t, "contents", &(info->data_size), &(info->data_offset), 0);
+  ***************************************/
+
+  /* HACK ALERT... */
+  info->len_offset  = TARGET_PTR_BIT;  /* skip the method pointer */
+  info->len_size    = TARGET_LONG_BIT;
+  info->data_offset = TARGET_PTR_BIT + TARGET_LONG_BIT;
+  info->data_size   = (~ ((-1L) << (TARGET_LONG_BIT-1))) - info->data_offset;
+}
+
+
+static void
+init_m3_text_info ()
+{
+  if (!textliteral.tc_addr)  get_text_info ("TextLiteral.T",   2, &textliteral);
+  if (!text8short.tc_addr)   get_text_info ("Text8Short.T",    0, &text8short);
+  if (!text16short.tc_addr)  get_text_info ("Text16Short.T",   1, &text16short);
+}
+
+static 
+m3_print_text (ref, info, stream)
+     CORE_ADDR ref;
+     text_info* info;
+     FILE *stream;
+{
+     char buf[16];
+     char *str;
+     unsigned short *wstr;
+     int i, len, n_bytes, is_wide;
+
+     /* read the "len" field */
+     n_bytes = info->len_size / 8;
+     if (n_bytes > 16) n_bytes = 16;
+     target_read_memory (ref + info->len_offset/HOST_CHAR_BIT, buf, n_bytes);
+     len = m3_unpack_ord (buf, 0, n_bytes*8, 0);
+
+     /* 1 or 2 byte characters ? */
+     if (info->wide_mode == 0) { /* 1-byte characters */
+       is_wide = 0;
+     } else if (info->wide_mode == 1) { /* 2-byte characters */
+       is_wide = 1;
+     } else /* info->wide_mode == 2 */ {
+       /* either 1 or 2-byte characters, depends on the sign of the length */
+       if (len >= 0) { /* 1-byte characters */
+	 is_wide = 0;
+       } else { /* 2-byte characters */
+	 is_wide = 1;
+	 len = -len;
+       };
+     };
+
+     /* make sure we don't print a ridiculous number of characters */
+     n_bytes = (len > 2048 ? 2048 : len);
+     if (is_wide) { n_bytes += n_bytes; };
+
+     /* inhale the string characters */
+     str = (char *) malloc (n_bytes);
+     wstr = (unsigned short *) str;
+     target_read_memory (ref + info->data_offset/HOST_CHAR_BIT, str, n_bytes);
+     
+     if (is_wide) {
+       fputs_filtered ("W\"", stream);
+       for (i = 0; i < len && i < 2048; i++) {
+	 m3_emit_widechar (wstr[i], stream, '"');
+       }
+       fputs_filtered ("\"", stream);
+     } else {
+       fputs_filtered ("\"", stream);
+       for (i = 0; i < len && i < 2048; i++) {
+	 m3_emit_char (str[i], stream, '"');
+       }
+       fputs_filtered ("\"", stream);
+     }     
+
+     if (i < len) fputs_filtered ("...", stream);
+     free (str);
+}
+
 static 
 m3_print_object_1 (valaddr, tc_addr, stream, format)
      char *valaddr;
@@ -148,11 +273,13 @@ m3_print_object_1 (valaddr, tc_addr, stream, format)
 
   data_offset = tc_address_to_dataOffset (tc_addr);
 
+  /*****
   if (TYPE_M3_OBJ_NFIELDS (this_obj) > 0) {
     fputs_filtered ("(* ", stream);
     m3_print_type(this_obj, 0, stream, 0, 0);
     fputs_filtered (" *) ", stream);
   }
+  *****/
 
   for (i = 0; i < TYPE_M3_OBJ_NFIELDS (this_obj); i++) {
     if (i != 0) {
@@ -171,29 +298,6 @@ m3_print_object_1 (valaddr, tc_addr, stream, format)
     wrap_here ("    "); }
 }
 
-void m3_read_object_fields_bits (ref, type, tc_addr_res, bits)
-     CORE_ADDR ref;
-     struct type *type;
-     CORE_ADDR *tc_addr_res;
-     char **bits;
-{
-  int typecode;
-  CORE_ADDR typecode_addr, tc_addr;
-  int dataSize, dataOffset;
-
-  if (ref == 0) {
-    if (tc_addr_res != 0) { *tc_addr_res = 0; }
-    *bits = 0;
-    return;
-  }
-
-  tc_addr = find_m3_heap_tc_addr (ref);
-  dataSize = tc_address_to_dataSize (tc_addr);
-  *bits = malloc (dataSize);
-  target_read_memory (ref, *bits, dataSize);
-  if (tc_addr_res != 0) { *tc_addr_res = tc_addr; }
-}
-
 static void
 m3_print_object (valaddr, bitpos, type, stream, format)
      char *valaddr;
@@ -205,18 +309,59 @@ m3_print_object (valaddr, bitpos, type, stream, format)
   char *bits;
   CORE_ADDR ref, tc_addr;
 
-  ref = m3_unpack_pointer (valaddr, bitpos);
-  m3_read_object_fields_bits (ref, type, &tc_addr, &bits);
+  init_m3_text_info ();
 
-  if (bits == 0) {
+  /* grab the pointer */
+  ref = m3_unpack_pointer (valaddr, bitpos);
+  if (ref == 0) {
     fputs_filtered ("NIL", stream);
     return;
   }
 
-  fputs_filtered ("OBJECT ", stream);
-  m3_print_object_1 (bits, tc_addr, stream, format);
-  fputs_filtered (" END", stream);
+  /* find the corresponding runtime type cell */
+  tc_addr = find_m3_heap_tc_addr (ref);
+  if (tc_addr == 0) {
+    fputs_filtered ("<??missing type info??>", stream);
+    return;
+  }
+
+  if (tc_addr == textliteral.tc_addr) {
+    m3_print_text (ref, &textliteral, stream);
+  } else if (tc_addr == text8short.tc_addr) {
+    m3_print_text (ref, &text8short, stream);
+  } else if (tc_addr == text16short.tc_addr) {
+    m3_print_text (ref, &text16short, stream);
+  } else {
+    /* generic object */
+    bits = m3_read_object_fields_bits (ref);
+    if (bits == 0) {
+      fputs_filtered ("NIL", stream);
+      return;
+    }
+    fputs_filtered ("OBJECT ", stream);
+    m3_print_object_1 (bits, tc_addr, stream, format);
+    fputs_filtered (" END", stream);
+    free (bits);
+  }
 }
+
+/**********
+      struct type *target = TYPE_M3_POINTER_TARGET (type);
+      if (TYPE_CODE (target) == TYPE_CODE_M3_OPEN_ARRAY
+	  && TYPE_CODE (TYPE_M3_OPEN_ARRAY_ELEM (target)) == TYPE_CODE_M3_CHAR) {
+	CORE_ADDR chars_addr;
+	CORE_ADDR text_value;
+	text_value = m3_unpack_pointer (valaddr, bitpos);
+	if (text_value == 0) {
+	  fputs_filtered ("NIL", stream); }
+	else {
+	  target_read_memory (text_value, &chars_addr, TYPE_M3_SIZE (type));
+	  val_print_string (chars_addr, 0, stream); }}
+      else
+	m3_print_scalar (valaddr, bitpos, bitsize, stream, 
+			 format ? format : 'x', 0);
+************/
+
 
 
 /* Print data of type TYPE located at VALADDR (within GDB), which came from
@@ -511,6 +656,10 @@ m3_val_print2 (type, valaddr, bitpos, bitsize, stream, format, deref_ref, toplev
       m3_printchar (m3_unpack_ord (valaddr, bitpos, 8, 0), stream);
       break;
 
+    case TYPE_CODE_M3_WIDECHAR:
+      m3_printwidechar (m3_unpack_ord (valaddr, bitpos, 16, 0), stream);
+      break;
+
     case TYPE_CODE_M3_INTEGER:
     case TYPE_CODE_M3_CARDINAL:
     case TYPE_CODE_M3_NULL:
@@ -534,21 +683,8 @@ m3_val_print2 (type, valaddr, bitpos, bitsize, stream, format, deref_ref, toplev
       break; }
 
     case TYPE_CODE_M3_POINTER: {
-      struct type *target = TYPE_M3_POINTER_TARGET (type);
-      if (TYPE_CODE (target) == TYPE_CODE_M3_OPEN_ARRAY
-	  && TYPE_CODE (TYPE_M3_OPEN_ARRAY_ELEM (target)) == TYPE_CODE_M3_CHAR) {
-	CORE_ADDR chars_addr;
-	CORE_ADDR text_value;
-	text_value = m3_unpack_pointer (valaddr, bitpos);
-	if (text_value == 0) {
-	  fputs_filtered ("NIL", stream); }
-	else {
-	  target_read_memory (text_value, &chars_addr, TYPE_M3_SIZE (type));
-	  val_print_string (chars_addr, 0, stream); }}
-      else
-	m3_print_scalar (valaddr, bitpos, bitsize, stream, 
-			 format ? format : 'x', 0);
-
+      m3_print_scalar (valaddr, bitpos, bitsize, stream, 
+		       format ? format : 'x', 0);
       break; }
 
     case TYPE_CODE_FLT: {
@@ -603,6 +739,10 @@ m3_value_print (val, stream, format, pretty)
 
   /* on top-level, prefix pointer value with (type) if it's not a text */
     if (TYPE_CODE (type) == TYPE_CODE_M3_POINTER) {
+      fprintf_filtered (stream, "(* ");
+      m3_print_type (type, "", stream, 0, 0);
+      fprintf_filtered (stream, " *) ");
+      /***********************************
       struct type *target = TYPE_M3_POINTER_TARGET (type);
       if (TYPE_CODE (target) != TYPE_CODE_M3_OPEN_ARRAY
 	  || TYPE_CODE (TYPE_M3_OPEN_ARRAY_ELEM (target)) != TYPE_CODE_M3_CHAR) {
@@ -610,6 +750,7 @@ m3_value_print (val, stream, format, pretty)
 	m3_print_type (type, "", stream, 0, 0);
 	fprintf_filtered (stream, " *) ");
       }
+      ************************************/
     }
 
   return (val_print (type, VALUE_CONTENTS (val),

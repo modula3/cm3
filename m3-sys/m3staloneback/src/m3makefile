@@ -1,0 +1,13 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Wed Dec 14 14:43:03 PST 1994 by kalsow 
+%      modified on Wed Sep 28 09:13:44 PDT 1994 by isard 
+
+m3_option ("-times")
+
+import ("m3back")
+implementation ("Main")
+program ("m3back")
+

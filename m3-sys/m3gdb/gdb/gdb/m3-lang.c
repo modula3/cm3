@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
-#include <string.h>
 #include "defs.h"
 #include "symtab.h"
 #include "gdbtypes.h"
@@ -36,8 +35,8 @@ struct symbol * find_m3_ir ();
    string whose delimiter is QUOTER.  Note that that format for printing
    characters and strings is language specific. */
 
-static void
-emit_char (c, stream, quoter)
+void
+m3_emit_char (c, stream, quoter)
      register int c;
      FILE *stream;
      int quoter;
@@ -72,14 +71,51 @@ emit_char (c, stream, quoter)
 	case '\r':
 	  fputs_filtered ("\\r", stream);
 	  break;
-	case '\033':
-	  fputs_filtered ("\\e", stream);
-	  break;
-	case '\007':
-	  fputs_filtered ("\\a", stream);
-	  break;
 	default:
 	  fprintf_filtered (stream, "\\%.3o", (unsigned int) c);
+	  break;
+	}
+    }
+}
+
+void
+m3_emit_widechar (c, stream, quoter)
+     register int c;
+     FILE *stream;
+     int quoter;
+{
+
+  c &= 0xFFFF;			/* Avoid sign bit follies */
+
+  if ((c <= 0xFF) && PRINT_LITERAL_FORM (c))
+    {
+      if (c == '\\' || c == quoter)
+	{
+	  fputs_filtered ("\\", stream);
+	}
+      fprintf_filtered (stream, "%c", c);
+    }
+  else
+    {
+      switch (c)
+	{
+	case '\n':
+	  fputs_filtered ("\\n", stream);
+	  break;
+	case '\b':
+	  fputs_filtered ("\\b", stream);
+	  break;
+	case '\t':
+	  fputs_filtered ("\\t", stream);
+	  break;
+	case '\f':
+	  fputs_filtered ("\\f", stream);
+	  break;
+	case '\r':
+	  fputs_filtered ("\\r", stream);
+	  break;
+	default:
+	  fprintf_filtered (stream, "\\x%.4x", (unsigned int) c);
 	  break;
 	}
     }
@@ -91,7 +127,17 @@ m3_printchar (c, stream)
      FILE *stream;
 {
   fputs_filtered ("'", stream);
-  emit_char (c, stream, '\'');
+  m3_emit_char (c, stream, '\'');
+  fputs_filtered ("'", stream);
+}
+
+void
+m3_printwidechar (c, stream)
+     int c;
+     FILE *stream;
+{
+  fputs_filtered ("W'", stream);
+  m3_emit_widechar (c, stream, '\'');
   fputs_filtered ("'", stream);
 }
 
@@ -177,7 +223,105 @@ m3_printstr (stream, string, length, force_ellipses)
 		fputs_filtered ("\"", stream);
 	      in_quotes = 1;
 	    }
-	  emit_char (string[i], stream, '"');
+	  m3_emit_char (string[i], stream, '"');
+	  ++things_printed;
+	}
+    }
+
+  /* Terminate the quotes if necessary.  */
+  if (in_quotes)
+    {
+      if (inspect_it)
+	fputs_filtered ("\\\"", stream);
+      else
+	fputs_filtered ("\"", stream);
+    }
+
+  if (force_ellipses || i < length)
+    fputs_filtered ("...", stream);
+}
+
+void
+m3_printwidestr (stream, string, length, force_ellipses)
+     FILE *stream;
+     char *string;
+     unsigned int length;
+     int force_ellipses;
+{
+  register unsigned int i;
+  unsigned int things_printed = 0;
+  int in_quotes = 0;
+  int need_comma = 0;
+  extern int inspect_it;
+  extern int repeat_count_threshold;
+  extern int print_max;
+
+  /* If the string was not truncated due to `set print elements', and
+     the last byte of it is a null, we don't print that, in traditional C
+     style.  */
+  if ((!force_ellipses) && length > 0
+      && (string[length-2] == '\0')
+      && (string[length-1] == '\0'))
+    length = length - 2;
+
+  if (length == 0)
+    {
+      fputs_filtered ("W\"\"", stdout);
+      return;
+    }
+
+  for (i = 0; i < length && things_printed < print_max; i += 2)
+    {
+      /* Position of the character we are examining
+	 to see whether it is repeated.  */
+      unsigned int rep1;
+      /* Number of repetitions we have detected so far.  */
+      unsigned int reps;
+
+      QUIT;
+
+      if (need_comma)
+	{
+	  fputs_filtered (", ", stream);
+	  need_comma = 0;
+	}
+
+      rep1 = i + 2;
+      reps = 1;
+      while (rep1 < length && string[rep1] == string[i]
+	                   && string[rep1+1] == string[i+1])
+	{
+	  rep1 += 2;
+	  ++reps;
+	}
+
+      if (reps > repeat_count_threshold)
+	{
+	  if (in_quotes)
+	    {
+	      if (inspect_it)
+		fputs_filtered ("\\\", ", stream);
+	      else
+		fputs_filtered ("\", ", stream);
+	      in_quotes = 0;
+	    }
+	  m3_printwidechar ((string[i]&0xff)<<8 + (string[i+1]&0xff), stream);
+	  fprintf_filtered (stream, " <repeats %u times>", reps);
+	  i = rep1 - 1;
+	  things_printed += repeat_count_threshold;
+	  need_comma = 1;
+	}
+      else
+	{
+	  if (!in_quotes)
+	    {
+	      if (inspect_it)
+		fputs_filtered ("\\\"", stream);
+	      else
+		fputs_filtered ("W\"", stream);
+	      in_quotes = 1;
+	    }
+	  m3_emit_widechar ((string[i]&0xff)<<8 + (string[i+1]&0xff), stream, '"');
 	  ++things_printed;
 	}
     }
@@ -383,6 +527,7 @@ struct type ** const (m3_builtin_types[]) =
   &builtin_type_long,
   &builtin_type_short,
   &builtin_type_char,
+  &builtin_type_m3_widechar,
   &builtin_type_float,
   &builtin_type_double,
   &builtin_type_void,
@@ -535,103 +680,12 @@ static int regno_to_jmpbuf [] = {
 /* see config/i386/tm-i386.h/REGISTER_NAMES */
 #define HAVE_REGISTER_MAP
 static int regno_to_jmpbuf [] = {
- -1 /* eax */,  -1 /* ecx */,   -1 /* edx */,   0 /* ebx */,
-  4 /* esp */,   3 /* ebp */,    1 /* esi */,   2 /* edi */,
-  5 /* eip */,  -1 /* eflags */,-1 /* cs */,   -1 /* ss */,
- -1 /* ds */,   -1 /* es */,    -1 /* fs */,   -1 /* gs */,
- -1 /* st0 */,  -1 /* st1 */,   -1 /* st2 */,  -1 /* st3 */,
- -1 /* st4 */,  -1 /* st5 */,   -1 /* st6 */,  -1 /* st7 */,
-};
-#endif
-
-#if defined(sparc)
-/* see config/sparc/tm-sparc.h/REGISTER_NAMES */
-#define HAVE_REGISTER_MAP
-static int regno_to_jmpbuf [] = {
-  -1 /* g0 */,   6 /* g1 */,  -1 /* g2 */,  -1 /* g3 */,
-  -1 /* g4 */,  -1 /* g5 */,  -1 /* g6 */,  -1 /* g7 */,
-   7 /* o0 */,  -1 /* o1 */,  -1 /* o2 */,  -1 /* o3 */,
-  -1 /* o4 */,  -1 /* o5 */,   2 /* sp */,  -1 /* o7 */,
-  -1 /* l0 */,  -1 /* l1 */,  -1 /* l2 */,  -1 /* l3 */,
-  -1 /* l4 */,  -1 /* l5 */,  -1 /* l6 */,  -1 /* l7 */,
-  -1 /* i0 */,  -1 /* i1 */,  -1 /* i2 */,  -1 /* i3 */,
-  -1 /* i4 */,  -1 /* i5 */,  -1 /* fp */,  -1 /* i7 */,
-
-  -1 /* f0 */,  -1 /* f1 */,  -1 /* f2 */,  -1 /* f3 */,
-  -1 /* f4 */,  -1 /* f5 */,  -1 /* f6 */,  -1 /* f7 */,
-  -1 /* f8 */,  -1 /* f9 */,  -1 /* f10 */, -1 /* f11 */,
-  -1 /* f12 */, -1 /* f13 */, -1 /* f14 */, -1 /* f15 */,
-  -1 /* f16 */, -1 /* f17 */, -1 /* f18 */, -1 /* f19 */,
-  -1 /* f20 */, -1 /* f21 */, -1 /* f22 */, -1 /* f23 */,
-  -1 /* f24 */, -1 /* f25 */, -1 /* f26 */, -1 /* f27 */,
-  -1 /* f28 */, -1 /* f29 */, -1 /* f30 */, -1 /* f31 */,
-
-  -1 /* y */,    5 /* psr */, -1 /* wim */, -1 /* tbr */,
-   3 /* pc */,   4 /* npc */, -1 /* fpsr */,-1 /* cpsr */
-};
-#endif
-
-#if defined(mips) && defined(sgi)
-/* see config/mips/tm-irix3.h/REGISTER_NAMES */
-#define HAVE_REGISTER_MAP
-static int regno_to_jmpbuf [] = {
-   0 /* zero */,  0 /* at */,    0 /* v0 */,    0 /* v1 */,
-   0 /* a0 */,    0 /* a1 */,    0 /* a2 */,    0 /* a3 */,
-   0 /* t0 */,    0 /* t1 */,    0 /* t2 */,    0 /* t3 */,
-   0 /* t4 */,    0 /* t5 */,    0 /* t6 */,    0 /* t7 */,
-   0 /* s0 */,    0 /* s1 */,    0 /* s2 */,    0 /* s3 */,
-   0 /* s4 */,    0 /* s5 */,    0 /* s6 */,    0 /* s7 */,
-   0 /* t8 */,    0 /* t9 */,    0 /* k0 */,    0 /* k1 */,
-   0 /* gp */,    0 /* sp */,    0 /* fp */,    0 /* ra */,
-   0 /* f0 */,    0 /* f1 */,    0 /* f2 */,    0 /* f3 */,
-   0 /* f4 */,    0 /* f5 */,    0 /* f6 */,    0 /* f7 */,
-   0 /* f8 */,    0 /* f9 */,    0 /* f10 */,   0 /* f11 */,
-   0 /* f12 */,   0 /* f13 */,   0 /* f14 */,   0 /* f15 */,
-   0 /* f16 */,   0 /* f17 */,   0 /* f18 */,   0 /* f19 */,
-   0 /* f20 */,   0 /* f21 */,   0 /* f22 */,   0 /* f23 */,
-   0 /* f24 */,   0 /* f25 */,   0 /* f26 */,   0 /* f27 */,
-   0 /* f28 */,   0 /* f29 */,   0 /* f30 */,   0 /* f31 */,
-   0 /* pc */,    0 /* cause */, 0 /* bad */,   0 /* hi */,
-   0 /* lo */,    0 /* fsr */,   0 /* fir */
-};
-#endif
-
-#if defined(hppa)
-/* see config/mips/tm-hppa.h/REGISTER_NAMES */
-#define HAVE_REGISTER_MAP
-static int regno_to_jmpbuf [] = {
-  0 /* flags */,   0 /* r1 */,      0 /* rp */,      0 /* r3 */, 
-  0 /* r4 */,      0 /* r5 */,      0 /* r6 */,      0 /* r7 */, 
-  0 /* r8 */,      0 /* r9 */,      0 /* r10 */,     0 /* r11 */, 
-  0 /* r12 */,     0 /* r13 */,     0 /* r14 */,     0 /* r15 */, 
-  0 /* r16 */,     0 /* r17 */,     0 /* r18 */,     0 /* r19 */, 
-  0 /* r20 */,     0 /* r21 */,     0 /* r22 */,     0 /* r23 */, 
-  0 /* r24 */,     0 /* r25 */,     0 /* r26 */,     0 /* dp */, 
-  0 /* ret0 */,    0 /* ret1 */,    0 /* sp */,      0 /* r31 */, 
-  0 /* sar */,     0 /* pcoqh */,   0 /* pcsqh */,   0 /* pcoqt */, 
-  0 /* pcsqt */,   0 /* eiem */,    0 /* iir */,     0 /* isr */, 
-  0 /* ior */,     0 /* ipsw */,    0 /* goto */,    0 /* sr4 */, 
-  0 /* sr0 */,     0 /* sr1 */,     0 /* sr2 */,     0 /* sr3 */, 
-  0 /* sr5 */,     0 /* sr6 */,     0 /* sr7 */,     0 /* cr0 */, 
-  0 /* cr8 */,     0 /* cr9 */,     0 /* ccr */,     0 /* cr12 */, 
-  0 /* cr13 */,    0 /* cr24 */,    0 /* cr25 */,    0 /* cr26 */, 
-  0 /* mpsfu_high */, 0 /* mpsfu_low */, 0 /* mpsfu_ovflo */,   0 /* pad */, 
-  0 /* fpsr */,    0 /* fpe1 */,    0 /* fpe2 */,    0 /* fpe3 */, 
-  0 /* fpe4 */,    0 /* fpe5 */,    0 /* fpe6 */,    0 /* fpe7 */, 
-  0 /* fr4 */,     0 /* fr4R */,    0 /* fr5 */,     0 /* fr5R */, 
-  0 /* fr6 */,     0 /* fr6R */,    0 /* fr7 */,     0 /* fr7R */, 
-  0 /* fr8 */,     0 /* fr8R */,    0 /* fr9 */,     0 /* fr9R */, 
-  0 /* fr10 */,    0 /* fr10R */,   0 /* fr11 */,    0 /* fr11R */, 
-  0 /* fr12 */,    0 /* fr12R */,   0 /* fr13 */,    0 /* fr13R */, 
-  0 /* fr14 */,    0 /* fr14R */,   0 /* fr15 */,    0 /* fr15R */, 
-  0 /* fr16 */,    0 /* fr16R */,   0 /* fr17 */,    0 /* fr17R */, 
-  0 /* fr18 */,    0 /* fr18R */,   0 /* fr19 */,    0 /* fr19R */, 
-  0 /* fr20 */,    0 /* fr20R */,   0 /* fr21 */,    0 /* fr21R */, 
-  0 /* fr22 */,    0 /* fr22R */,   0 /* fr23 */,    0 /* fr23R */, 
-  0 /* fr24 */,    0 /* fr24R */,   0 /* fr25 */,    0 /* fr25R */, 
-  0 /* fr26 */,    0 /* fr26R */,   0 /* fr27 */,    0 /* fr27R */, 
-  0 /* fr28 */,    0 /* fr28R */,   0 /* fr29 */,    0 /* fr29R */, 
-  0 /* fr30 */,    0 /* fr30R */,   0 /* fr31 */,    0 /* fr31R */
+  0 /* eax */,   0 /* ecx */,    0 /* edx */,   0 /* ebx */, \
+  4 /* esp */,   3 /* ebp */,    1 /* esi */,   2 /* edi */, \
+  5 /* eip */,   0 /* eflags */, 0 /* cs */,    0 /* ss */, \
+  0 /* ds */,    0 /* es */,     0 /* fs */,    0 /* gs */, \
+  0 /* st0 */,   0 /* st1 */,    0 /* st2 */,   0 /* st3 */, \
+  0 /* st4 */,   0 /* st5 */,    0 /* st6 */,   0 /* st7 */, \
 };
 #endif
 
@@ -655,7 +709,7 @@ get_m3_thread (ref, t)
 
     if (!ref) return;
 
-    m3_read_object_fields_bits (ref, thread__t, 0, &(t->bits));
+    t->bits = m3_read_object_fields_bits (ref);
     if (!t->bits) return;
 
     t->id = m3_unpack_ord (t->bits, thread__t__id_offset,thread__t__id_size,0);
@@ -690,46 +744,28 @@ static void
 look_in_thread (regno)
      int regno;
 {
-  static char* NO_REG_MSG =
-    "%s, line %d: don't know where to find register \"%s\" in stopped thread";
-  static char* NO_REGS_MSG =
-    "%s, line %d: don't know where to find registers in stopped thread";
 #ifdef HAVE_REGISTER_MAP
-  int reg_offset, reg_index;
+  int reg_offset;
 
   if (cur_m3_thread.ref == 0) { first_m3_thread (&cur_m3_thread); }
 
   if (cur_m3_thread.bits) {
-    if (regno < 0) {
-      for (regno = 0; regno < NUM_REGS; regno++) {
-	reg_index = regno_to_jmpbuf [regno];
-	if (reg_index >= 0) {
-          reg_offset = thread__t__buf_offset / HOST_CHAR_BIT
-	             + reg_index * TARGET_PTR_BIT / HOST_CHAR_BIT;
-          supply_register (regno, cur_m3_thread.bits + reg_offset);
-        }
-      }
-    } else if (regno < NUM_REGS) { /* we only need one register */
-      reg_index = regno_to_jmpbuf [regno];
-      if (reg_index >= 0) {
-	reg_offset = thread__t__buf_offset / HOST_CHAR_BIT
-	           + reg_index * TARGET_PTR_BIT / HOST_CHAR_BIT;
-	supply_register (regno, cur_m3_thread.bits + reg_offset);
-      } else {
-        error (NO_REG_MSG, __FILE__, __LINE__, reg_names[regno]);
-      }
-    } else { /* bogus register number? */
-      error (NO_REGS_MSG, __FILE__, __LINE__);
+    int first_reg = regno;
+    int last_reg  = regno+1;
+    if (regno < 0) { first_reg = 0; last_reg = NUM_REGS; }
+    for (regno = first_reg; regno < last_reg; regno++) {
+      reg_offset = thread__t__buf_offset / HOST_CHAR_BIT
+	+ regno_to_jmpbuf [regno] * TARGET_PTR_BIT / HOST_CHAR_BIT;
+      supply_register (regno, cur_m3_thread.bits + reg_offset);
     }
-  } else {
-    error ("%s, line %d: no Modula-3 thread information is available.",
-	   __FILE__, __LINE__);
   }
 #else
   if ((regno >= 0) && (regno < NUM_REGS)) {
-    error (NO_REG_MSG, __FILE__, __LINE__, reg_names[regno]);
+    error ("%s, line %d: don't know where to find register \"%s\" in stopped thread",
+	   __FILE__, __LINE__, reg_names[regno]);
   } else {
-    error (NO_REGS_MSG, __FILE__, __LINE__);
+    error ("%s, line %d: don't know where to find registers in stopped thread",
+	   __FILE__, __LINE__);
   }
 #endif
 }
@@ -890,6 +926,7 @@ struct type *builtin_type_m3_mutex;
 struct type *builtin_type_m3_text;
 struct type *builtin_type_m3_untraced_root;
 struct type *builtin_type_m3_void;
+struct type *builtin_type_m3_widechar;
 
 void
 _initialize_m3_language ()
@@ -935,6 +972,11 @@ _initialize_m3_language ()
     init_type (TYPE_CODE_M3_CHAR, TARGET_CHAR_BIT / HOST_CHAR_BIT, 0,
 	       "CHAR", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_char) = TARGET_CHAR_BIT;
+
+  builtin_type_m3_widechar =
+    init_type (TYPE_CODE_M3_WIDECHAR, (2*TARGET_CHAR_BIT) / HOST_CHAR_BIT, 0,
+	       "WIDECHAR", (struct objfile *) NULL);
+  TYPE_M3_SIZE (builtin_type_m3_widechar) = 2*TARGET_CHAR_BIT;
 
   builtin_type_m3_real =
     init_type (TYPE_CODE_FLT, TARGET_FLOAT_BIT / TARGET_CHAR_BIT, 0,
@@ -1376,6 +1418,7 @@ m3_resolve_type (uid)
     else if (uid_val == 0x08402063) { return builtin_type_m3_address; }
     else if (uid_val == 0x9d8fb489) { return builtin_type_m3_root; }
     else if (uid_val == 0x56e16863) { return builtin_type_m3_char; }
+    else if (uid_val == 0xb0830411) { return builtin_type_m3_widechar; }
     else if (uid_val == 0x48e16572) { return builtin_type_m3_real; }
     else if (uid_val == 0x94fe32f6) { return builtin_type_m3_longreal; }
     else if (uid_val == 0x9ee024e3) { return builtin_type_m3_extended; }
@@ -1461,45 +1504,84 @@ find_m3_type_name (t)
 }
 
 static int rt0_tc_selfID_size,          rt0_tc_selfID_offset;
-static int rt0_tc_dataOffset_size,      rt0_tc_dataOffset_offset;
-static int rt0_tc_methodOffset_size,    rt0_tc_methodOffset_offset;
 static int rt0_tc_dataSize_size,        rt0_tc_dataSize_offset;
-static int rt0_tc_parent_size,          rt0_tc_parent_offset;
-static int rt0_tc_defaultMethods_size,  rt0_tc_defaultMethods_offset;
-static CORE_ADDR rt0u_types_value;
+static int rt0_tc_kind_size,            rt0_tc_kind_offset;
+
+static int rt0_otc_dataOffset_size,      rt0_otc_dataOffset_offset;
+static int rt0_otc_methodOffset_size,    rt0_otc_methodOffset_offset;
+static int rt0_otc_parent_size,          rt0_otc_parent_offset;
+static int rt0_otc_defaultMethods_size,  rt0_otc_defaultMethods_offset;
+
+static CORE_ADDR rttype_types_addr;
+static int rttype_info_def_size,      rttype_info_def_offset;
+static int rttype_infomap_map_size,   rttype_infomap_map_offset;
+static int rttype_infomap_cnt_size,   rttype_infomap_cnt_offset;
+
+static int constant_init_done;
 
 void
 init_m3_constants ()
 {
-  struct type* rt0_tc;
-  struct symbol *rt0u;
-  int rt0u_types_size, rt0u_types_offset;
+  if (constant_init_done) { return; }
 
-  if (rt0u_types_value) { return; }
+  { struct type* rt0_tc;
 
-  rt0_tc = find_m3_type_named ("RT0.Typecell");
+    rt0_tc = find_m3_type_named ("RT0.Typecell");
 
-  find_m3_rec_field (rt0_tc, "selfID",
+    find_m3_rec_field (rt0_tc, "selfID",
 		     &rt0_tc_selfID_size, &rt0_tc_selfID_offset, 0);
-  find_m3_rec_field (rt0_tc, "dataOffset", 
-		     &rt0_tc_dataOffset_size, &rt0_tc_dataOffset_offset, 0);
-  find_m3_rec_field (rt0_tc, "methodOffset", 
-		     &rt0_tc_methodOffset_size, &rt0_tc_methodOffset_offset, 0);
-  find_m3_rec_field (rt0_tc, "dataSize",
+    find_m3_rec_field (rt0_tc, "dataSize",
 		     &rt0_tc_dataSize_size, &rt0_tc_dataSize_offset, 0);
-  find_m3_rec_field (rt0_tc, "parent",
-		     &rt0_tc_parent_size, &rt0_tc_parent_offset, 0);
-  find_m3_rec_field (rt0_tc, "defaultMethods", 
-		     &rt0_tc_defaultMethods_size, 
-		     &rt0_tc_defaultMethods_offset, 0);
+    find_m3_rec_field (rt0_tc, "kind",
+		     &rt0_tc_kind_size, &rt0_tc_kind_offset, 0);
+  }
 
-  rt0u = find_m3_ir ('I', "RT0u");
+  { struct type* rt0_otc;
 
-  find_m3_rec_field (SYMBOL_TYPE (rt0u), "types", 
-		     &rt0u_types_size, &rt0u_types_offset, 0);
-  
-  target_read_memory (SYMBOL_VALUE_ADDRESS (rt0u) + rt0u_types_offset / 8,
-		      (char *)&rt0u_types_value, rt0u_types_size / 8);
+    rt0_otc = find_m3_type_named ("RT0.ObjectTypecell");
+
+    find_m3_rec_field (rt0_otc, "dataOffset", 
+		     &rt0_otc_dataOffset_size, &rt0_otc_dataOffset_offset, 0);
+    find_m3_rec_field (rt0_otc, "methodOffset", 
+		     &rt0_otc_methodOffset_size, &rt0_otc_methodOffset_offset, 0);
+    find_m3_rec_field (rt0_otc, "parent",
+		     &rt0_otc_parent_size, &rt0_otc_parent_offset, 0);
+    find_m3_rec_field (rt0_otc, "defaultMethods", 
+		     &rt0_otc_defaultMethods_size, 
+		     &rt0_otc_defaultMethods_offset, 0);
+  }
+
+  { struct symbol *rttype;
+    int types_size, types_offset;
+
+    rttype = find_m3_ir ('M', "RTType");
+
+    find_m3_rec_field (SYMBOL_TYPE (rttype), "types", 
+	 	       &types_size, &types_offset, 0);
+
+    rttype_types_addr = SYMBOL_VALUE_ADDRESS (rttype) + types_offset / 8;
+  }
+
+  { struct type* t;
+
+    t = find_m3_type_named ("RTType.InfoMap");
+
+    find_m3_rec_field (t, "map", 
+      &rttype_infomap_map_size, &rttype_infomap_map_offset, 0);
+    find_m3_rec_field (t, "cnt", 
+      &rttype_infomap_cnt_size, &rttype_infomap_cnt_offset, 0);
+  }
+
+
+  { struct type* t;
+
+    t = find_m3_type_named ("RTType.Info");
+
+    find_m3_rec_field (t, "def", 
+      &rttype_info_def_size, &rttype_info_def_offset, 0);
+  }
+
+  constant_init_done = 1;
 }
 
 /*
@@ -1509,26 +1591,116 @@ CORE_ADDR
 find_m3_heap_tc_addr (addr)
      CORE_ADDR addr;
 {
-  LONGEST typecode;
-  CORE_ADDR result;
+  LONGEST typecode, n_types;
+  CORE_ADDR result, map_ptr;
 
   init_m3_constants ();
+
+  if (!addr) { return 0; }
 
   target_read_memory (addr - (TARGET_PTR_BIT / TARGET_CHAR_BIT), 
 		      (char *)&typecode, 
 		      TARGET_PTR_BIT / TARGET_CHAR_BIT);
 
   /* the typecode is in Modula-3 bits 1..21 */
+  /* BUG: this code will break on a big-endian 64-bit machine...  */
 #if TARGET_BYTE_ORDER == BIG_ENDIAN
   typecode = (typecode >> 11) & 0xfffff;
 #else
   typecode = (typecode >> 1) & 0xfffff;
 #endif
 
-  target_read_memory (rt0u_types_value 
+  n_types = 0;
+  target_read_memory (rttype_types_addr + rttype_infomap_cnt_offset / 8,
+		      (char*)&n_types, rttype_infomap_cnt_size / 8);
+
+  if (typecode >= n_types) {
+    warning ("encountered out-of-range typecode: %d (ref: 16_%lx),  good typecodes: [0..%d]",
+	     typecode, addr, n_types-1  );
+    return 0;
+  }
+
+  map_ptr = 0;
+  target_read_memory (rttype_types_addr + rttype_infomap_map_offset / 8,
+		      (char*)&map_ptr, rttype_infomap_map_size / 8);
+  if (map_ptr == 0) {
+    warning ("no allocated typecell map (typecode: %d, ref: 16_%lx)",
+	     typecode, addr);
+    return 0;
+  }
+
+  target_read_memory (map_ptr
 		      + typecode * TARGET_PTR_BIT / TARGET_CHAR_BIT,
 		      (char *)&result, TARGET_PTR_BIT / TARGET_CHAR_BIT);
+  if (result == 0) {
+    warning ("typecode %d (ref: 16_%lx) has NIL RTType.InfoPtr value",
+	     typecode, addr);
+    return 0;
+  }
+
+  target_read_memory (result + rttype_info_def_offset / 8,
+		      (char*)&result, TARGET_PTR_BIT / TARGET_CHAR_BIT);
+  if (result == 0) {
+    warning ("typecode %d (ref: 16_%lx) has no associated typecell",
+	     typecode, addr);
+    return 0;
+  }
+
   return result;
+}
+
+/*
+ *  Return the address of the runtime typecell that corresponds to type "t".
+ */
+CORE_ADDR
+find_tc_from_m3_type (t)
+     struct type *t;
+{
+  LONGEST typecode, n_types;
+  CORE_ADDR map_ptr, info_ptr, tc_addr;
+  int selfID, uid;
+
+  init_m3_constants ();
+
+  if ((TYPE_CODE(t) != TYPE_CODE_M3_OBJECT)
+      && (TYPE_CODE(t) != TYPE_CODE_M3_POINTER)) {
+    return 0;  /* not an OBJECT or REF type */
+  }
+
+  if (!m3uid_to_int (TYPE_TAG_NAME (t), &uid)) {
+    return 0; /* no name or bad format */
+  }
+
+  n_types = 0;
+  target_read_memory (rttype_types_addr + rttype_infomap_cnt_offset / 8,
+		      (char*)&n_types, rttype_infomap_cnt_size / 8);
+
+  map_ptr = 0;
+  target_read_memory (rttype_types_addr + rttype_infomap_map_offset / 8,
+		      (char*)&map_ptr, rttype_infomap_map_size / 8);
+  if (map_ptr == 0) {
+    return 0;  /* no mapped typecells yet */
+  }
+
+  for (typecode = 0;  typecode < n_types;  typecode++) {
+    /* get the InfoPtr */
+    target_read_memory (map_ptr
+		      + typecode * TARGET_PTR_BIT / TARGET_CHAR_BIT,
+		      (char *)&info_ptr, TARGET_PTR_BIT / TARGET_CHAR_BIT);
+    if (!info_ptr) { continue; }
+
+    /* get the typecell pointer */
+    target_read_memory (info_ptr + rttype_info_def_offset / 8,
+		      (char*)&tc_addr, TARGET_PTR_BIT / TARGET_CHAR_BIT);
+    if (!tc_addr) { continue; }
+
+    /* get the type's UID */
+    target_read_memory (tc_addr + rt0_tc_selfID_offset / TARGET_CHAR_BIT,
+		      (char *)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
+    if (selfID == uid) { return tc_addr; }
+  }
+
+  return 0;
 }
 
 struct type *
@@ -1553,16 +1725,24 @@ find_m3_heap_type (addr)
 }
 
 
-/* return LOOPHOLE (tc_addr, RT0.TypeDefn).dataOffset */
+/* return LOOPHOLE (tc_addr, RT0.ObjectTypeDefn).dataOffset */
 int 
 tc_address_to_dataOffset (tc_addr)
      CORE_ADDR tc_addr;
 {
   int result;
+  char kind;
+
   init_m3_constants ();
 
-  target_read_memory (tc_addr + rt0_tc_dataOffset_offset / 8,
-		      (char *)&result, rt0_tc_dataOffset_size / 8);
+  kind = 0;
+  target_read_memory (tc_addr + rt0_tc_kind_offset / 8,
+		      (char *)&kind, sizeof(kind));
+
+  if (kind != 2/*RT0.TypeKind.Obj*/) { return 0; }
+
+  target_read_memory (tc_addr + rt0_otc_dataOffset_offset / 8,
+		      (char *)&result, rt0_otc_dataOffset_size / 8);
   return result;
 }
 
@@ -1571,9 +1751,18 @@ tc_address_to_methodOffset (tc_addr)
      CORE_ADDR tc_addr;
 {
   int result;
+  char kind;
+
   init_m3_constants ();
-  target_read_memory (tc_addr + rt0_tc_methodOffset_offset / TARGET_CHAR_BIT,
-		      (char *)&result, rt0_tc_methodOffset_size / TARGET_CHAR_BIT);
+
+  kind = 0;
+  target_read_memory (tc_addr + rt0_tc_kind_offset / 8,
+		      (char *)&kind, sizeof(kind));
+
+  if (kind != 2/*RT0.TypeKind.Obj*/) { return 0; }
+
+  target_read_memory (tc_addr + rt0_otc_methodOffset_offset / TARGET_CHAR_BIT,
+		      (char *)&result, rt0_otc_methodOffset_size / TARGET_CHAR_BIT);
   return result;
 }
 		      
@@ -1592,10 +1781,19 @@ CORE_ADDR
 tc_address_to_parent_tc_address (tc_addr)
      CORE_ADDR tc_addr;
 {
+  char kind;
   CORE_ADDR  result;
+
   init_m3_constants ();
-  target_read_memory (tc_addr + rt0_tc_parent_offset / TARGET_CHAR_BIT,
-		      (char *)&result, rt0_tc_parent_size / TARGET_CHAR_BIT);
+
+  kind = 0;
+  target_read_memory (tc_addr + rt0_tc_kind_offset / 8,
+		      (char *)&kind, sizeof(kind));
+
+  if (kind != 2/*RT0.TypeKind.Obj*/) { return 0; }
+
+  target_read_memory (tc_addr + rt0_otc_parent_offset / TARGET_CHAR_BIT,
+		      (char *)&result, rt0_otc_parent_size / TARGET_CHAR_BIT);
   return result;
 }
 		      
@@ -1603,10 +1801,18 @@ CORE_ADDR
 tc_address_to_defaultMethods (tc_addr)
      CORE_ADDR tc_addr;
 {
+  char kind;
   CORE_ADDR result;
   init_m3_constants ();
-  target_read_memory (tc_addr + rt0_tc_defaultMethods_offset / TARGET_CHAR_BIT,
-		      (char *)&result, rt0_tc_defaultMethods_size / TARGET_CHAR_BIT);
+
+  kind = 0;
+  target_read_memory (tc_addr + rt0_tc_kind_offset / 8,
+		      (char *)&kind, sizeof(kind));
+
+  if (kind != 2/*RT0.TypeKind.Obj*/) { return 0; }
+
+  target_read_memory (tc_addr + rt0_otc_defaultMethods_offset / TARGET_CHAR_BIT,
+		      (char *)&result, rt0_otc_defaultMethods_size / TARGET_CHAR_BIT);
   return result;
 }
 
@@ -1703,6 +1909,7 @@ is_m3_ordinal_type (type)
     case TYPE_CODE_M3_ENUM:
     case TYPE_CODE_M3_BOOLEAN:
     case TYPE_CODE_M3_CHAR:
+    case TYPE_CODE_M3_WIDECHAR:
     case TYPE_CODE_M3_CARDINAL:
     case TYPE_CODE_M3_INTEGER:
       return 1;
@@ -1741,6 +1948,10 @@ m3_ordinal_bounds (type, lower, upper)
     case TYPE_CODE_M3_CHAR:
       *lower = 0;
       *upper = 255;
+      break;
+    case TYPE_CODE_M3_WIDECHAR:
+      *lower = 0;
+      *upper = 0xffff;
       break;
     case TYPE_CODE_M3_CARDINAL:
       /* assumes a 2's complement machine... */
