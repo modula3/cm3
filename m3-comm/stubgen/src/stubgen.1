@@ -1,0 +1,261 @@
+.nh
+.TH stubgen 1
+.SH NAME
+stubgen \- stub generator for Modula-3 network objects
+.SH SYNTAX
+stubgen    [\-i interfaces] [\-sno network_objects] [options]
+.br
+stubgenv1  [\-i interfaces] [\-sno network_objects] [options]
+.SH DESCRIPTION
+.PP
+Stubgen is a program that generates stubs for Modula-3 network
+objects.  Network objects are Modula-3 objects whose methods may
+be invoked from multiple address spaces.  They thus provide an
+object-based form of remote procedure call.  For a description of
+network objects and examples of their use, see the network objects
+paper available from "printdoc netobj".
+.PP
+A network object type is a subtype of NetObj.T.  There are
+restrictions on the subtypes of NetObj.T for which stubgen can
+produce stubs; these are described in the RESTRICTIONS section
+below.  A network object type that obeys those restrictions is
+said to be valid.  
+.PP
+As discussed below, multiple versions of the stub generator may 
+sometimes exist.  The command stubgenv<n> invokes version n of 
+the stub generator, if that version is currently available.  The
+command stubgen invokes the most recent version.  At present only
+version 1 exists.  
+.PP
+The stubs for a network object of type Test.T consist of two
+files: Test_T_v<n>.i3 and Test_T_v<n>.m3, where <n> indicates the
+version number of the stub generator that produced the files.
+These files must be compiled and linked with any application that
+uses objects of type Test.T as network objects.  Failure to link
+in the stubs will most likely result in a run-time NARROW fault
+the first time an object of type Test.T is received as an argument
+or result.
+.PP
+The rest of this section describes direct invocation of the stub
+generator from the command line.  Users who expect to invoke the
+stub generator from m3build can skip this material on first
+reading. 
+.PP
+The arguments to stubgen determine the set of types for which 
+stubs are produced.  The command
+.IP "" 4
+stubgen \-i Intf1 Intf2 Intf3
+.PP
+produces stubs for all valid network object types declared in the
+listed interfaces.   
+.PP
+The command
+.IP "" 4
+stubgen \-sno Intf1.Type1 Intf2.Type2
+.PP
+produces stubs for the named network object types.  Thus if the
+only valid  network object types declared in Intf1 are T1 and T2,
+and the only one in Intf2 is T1,  
+.IP "" 4
+stubgen
+.PP
+is equivalent to
+.IP "" 4
+stubgen \-sno Intf1.T1 Intf2.T2 Intf2.T1.
+.PP
+When stubgen is invoked with both interface and network object
+arguments, it produces stubs for the named network objects,
+making use of any relevant revelations in the given interfaces.
+For example, if T is defined opaquely in interface Opaque,
+with a revelation in interface Reveal, its stubs can be produced with
+the command
+.IP "" 4
+stubgen \-sno Opaque.T \-i Reveal
+.PP
+Note that the command would not succeed without the \-i argument.
+As explained under RESTRICTIONS, stubs for an opaque network object 
+type can only be generated when its revelations are available to 
+the stub generator.
+.PP
+Since the stub generator is based on the Modula 3 toolkit, other
+options defined by the toolkit are available.  See the manpage
+for m3fe for a list of these options.  In particular, it is
+possible to set the search path used by the stub generator with
+the \-Tx option, where "x" is the name of a map file generated
+by m3build.  The name of the map file associated with package
+"P" and build directory "B" is "P/B/.M3IMPORTS". It is also
+possible to set an specific search path with the "\-D" option.
+.SH "RESTRICTIONS"
+.PP
+As mentioned before, not all subtypes of NetObj.T are valid for
+stub generation.  The following restrictions apply.  The
+stub generator will not produce stubs for types that violate any
+of the restrictions.
+.PP
+Named Types:  Stubs can only be generated for named types.  For 
+example, suppose interface Foo contains the following declarations:
+.EX
+    TYPE N1 = NetObj.T OBJECT METHODS m1() END;
+    TYPE N2 = RECORD x: NetObj.T OBJECT METHODS m2() END; END;
+    VAR n: NetObj.T OBJECT METHODS m3() END;
+.EE
+If stubgen is invoked with the argument \-i Foo, it
+will produce stubs for N1 but not for the anonymous subtypes of 
+network object given as the types of x and n in the second and 
+third declarations.
+.PP
+Opaque objects: To generate stubs for a network object I.T, the
+interfaces listed in the \-i argument must include complete
+revelations for all the opaque supertypes of I.T (including I.T
+itself, if it is opaque) up to NetObj.T.
+.PP
+Methods: The methods of the type and its supertypes must have
+distinct names.  A method argument may not be of type PROCEDURE
+or have a component of type PROCEDURE.  A method may not have a
+RAISES ANY clause.   
+.PP
+Fields:  A valid network object type does not contain data
+fields, either in its declaration or in a revelation.
+.PP
+Brands: Branded types that are used, directly or indirectly, in a
+network object declaration must have explicit brands.  This is
+necessary so that programs linked separately will have the same
+brands for the types.  The stub generator will not generate stubs
+for a network object type if it can detect that this rule is
+violated.  If an argument or result of such a type is supplied at
+runtime, there is likely to be a NARROW fault if the receiver
+tries to NARROW the value to the branded type.
+.SH "ARGUMENTS AND RESULTS"
+.PP
+With network objects, the semantics of remote and local method
+invocations are as similar as possible.  However, there are
+some differences in the way parameters and results are passed,
+due to the lack of shared memory.
+.PP
+For remote invocations, all parameters are passed by copying.
+Value and READONLY parameters are copied only once, from
+the caller to the owner of the object.  VAR parameters are
+normally copied from caller to owner on the call, and from owner
+to caller when the call returns.  The pragma <* OUT *> on
+a VAR parameter in a method declaration indicates that the
+parameter may be given an arbitrary legal value when the method
+is invoked.  The stub generator may use this information to
+optimize method invocation by not copying the parameter's value
+from caller to owner.  At present, the stub generator does not
+make this optimization.
+.PP
+Objects and references are normally passed as pickles (see
+Pickle.i3).  New storage is allocated at the owner to store a new
+copy of the data structure.  Changes made in this storage are not
+reflected back to the caller, except for VAR parameters.  For
+VAR parameters, the final data structure on the owner's side
+is returned as a pickle.
+.SH "GENERATING STUBS USING m3build"
+.PP
+It is possible to manage stub generation using m3build(1), although
+the present implementation is not completely satisfactory.
+Currently, stub generation is triggered only when the interface
+defining the network object type is changed.  It is not triggered
+when the type of the network object changes because of changes to
+an imported interface.  (Note that in this case, there will be a
+link-time error).  You can force stubs to be built by deleting any
+previous stub generator output from your build directory.
+.PP
+To generate stubs from m3build, you must put the following line
+in your m3makefile, prior to any occurrences of the macros
+that follow:
+.IP "" 4
+import(netobj-ip)
+.PP
+Then for each network object type Foo.T for which you want stubs,
+include one of the following predefined macros.  
+.IP "" 4
+netobjv<n>(intf,type)  
+.IP "" 8
+generate stubs for intf.type, using version <n> of the
+stub generator.  Compile and link the stubs as if the
+m3makefile included the macro module(intf_type_v<n>). 
+Example: netobjv1(Foo,T).
+.IP "" 4
+Netobjv<n>(intf,type)  
+.IP "" 8
+like netobjv<n>, but also exports intf_type_v<n>.i3 to /pub.
+Example: Netobjv1(Foo,T).
+.IP "" 4
+netobjrv<n>(intf,type,revintf)  
+.IP "" 8
+generate stubs for intf.type, using version <n> of the
+stub generator.  revintf is the name of an interface that
+contains or imports all revelations needed for stub
+generation (see the discussion of opaque types in the
+RESRICTIONS section above). Compile and link the stubs as if
+the m3makefile included the macro module(intf_type_v<n>). 
+Example: netobjrv1(Foo,T,FooFriend).
+.IP "" 4
+Netobjrv<n>(intf,type,revintf)  
+.IP "" 8
+like netobjrv<n>, but also exports intf_type_v<n>.i3 to /pub.
+Example: Netobjrv1(Foo,T,FooFriend).
+.IP "" 4
+netobj(intf,type), Netobj(intf,type),
+.br
+netobjr(intf,type,revintf), Netobjr(intf,type,revintf)  
+.IP "" 8
+like the corresponding macros above, but using the most
+recent version of the stub generator.
+.PP
+The rules for importing interfaces during stub generation are
+the same as those for compilation under m3build.  See the 
+m3build manpage for further detail.
+.SH "VERSION NUMBERS"
+.PP
+Version numbers provide a mechanism for minimizing disruption to
+applications when the protocol for method invocation changes.
+Any change that would make stubs incompatible is implemented
+as a new version of the stub generator.  Typically, the previous
+version will continue to be supported for some time.  
+.PP
+Stubs for multiple versions may be linked into the same program.
+Method invocation between two programs is possible so long as the
+owner and the caller have at least one common version of the stubs for
+the network object in question.  The network object runtime will
+use the most recent version of the protocol that is available in
+both programs. 
+.PP
+This allows gradual migration of applications from the old to the
+new protocol.  When version <n+1> is released, applications can be
+linked with stubs for both versions <n> and <n+1>, that is, with 
+Foo_T_v<n>.i3, Foo_T_v<n+1>.i3, Foo_T_v<n>.m3, and
+Foo_T_v<n+1>.m3.  Re-linked instances of the application will
+communicate with each other using the new protocol, and with other
+instances of the appplication using the older protocol.  When all
+instances of the application include the new protocols, it is safe
+to relink using only version <n+1>. 
+.SH "BUGS"
+<* OUT *> VAR parameters are not yet implemented.
+.SH "SEE ALSO"
+"Network Objects" - SRC Research Report 115
+.br
+.MS m3fe 1
+.br
+.MS m3build 1
+.br
+Pickle.i3
+.SH "FILES"
+Intf_netobj_v<n>.i3
+.br
+Intf_netobj_v<n>.m3
+.br
+/proj/m3/pkg/netobj/src/netobj.tmpl
+.SH "AUTHOR OF DOCUMENTATION"
+Sue Owicki and Ted Wobber
+.SH "AUTHOR OF OBJECT"
+Sue Owicki
+.PP
+Copyright 1994 Digital Equipment Corporation.
+.br
+Distributed only by permission.
+
+Last modified on Thu May 12 16:17:23 PDT 1994 by wobber  
+     modified on Wed May 19 10:53:17 PDT 1993 by mjordan 
+     modified on Mon Apr 12 17:07:15 PDT 1993 by owicki 

@@ -1,0 +1,8 @@
+% Copyright (C) 1995, Digital Equipment Corporation        
+% Digital Internal Use Only                                
+% All rights reserved.                                     
+%                                                          
+% Last modified on Wed Oct 11 15:08:47 PDT 1995 by najork  
+%       Created on Wed Oct 11 15:08:01 PDT 1995 by najork  
+
+implementation ("FSError")

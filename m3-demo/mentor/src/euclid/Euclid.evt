@@ -1,0 +1,64 @@
+(* Copyright (C) 1992, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+
+
+IMPORT Euclid;
+
+OUTPUT SetupTriangle(a, b: REAL [Fmt.Real]);
+(* Create the points for the proof using sides of length "a" and "b".
+   Display the base triangle.
+ *)
+
+OUTPUT SetupSquare(p1, p2, p3, p4: Euclid.Id[Fmt.Int]);
+(* Create and display the square defined by "p1", "p2", "p3" and "p4". *)
+
+OUTPUT LineAL(show: BOOLEAN[Fmt.Bool]);
+(* Create and display the line between the two points "A" and "L".
+   If "show" then the display is updated after
+   the event.  Otherwise, the change is displayed after the next "show".*)
+
+OUTPUT Triangle(p1, p2, p3: Euclid.Id[Fmt.Int]; color: INTEGER[Fmt.Int]);
+(* Display the triangle with the given vertices in "color". *)
+
+OUTPUT Quad(p1, p2, p3, p4: Euclid.Id[Fmt.Int]; color: INTEGER[Fmt.Int]);
+(* Display the quadrilateral with the given vertices in "color".  *)
+
+OUTPUT Shear(p1, p2, from, to: Euclid.Id[Fmt.Int]);
+(* Transform the triangle "from", "p1" "p2" by
+   moving the vertex at "from" to "to". *)
+
+OUTPUT RotateTriangle(pivot, p1From, p1To, p2From, pt2To: Euclid.Id[Fmt.Int]);
+(* Rotate the triangle "pivot", "p1From", "p2From" by rotating
+   "p1From" to "p1To" and "p2From" to "p2To".  The angle of rotation
+    is determined by the angle of "p1From" to "p1To". *)
+
+OUTPUT RotateLine(pivot, pFrom, pTo: Euclid.Id[Fmt.Int]);
+(* Rotate the line "pivot", "pFrom" by rotating "pFrom" to "pTo". *)
+
+OUTPUT RotateAngle(pivot, p1From, p1To, p2From, pt2To: Euclid.Id[Fmt.Int]);
+(* Rotate the angle "p1From", "pivot", "p2From" by rotating
+   "p1From" to "p1To" and "p2From" to "p2To".  The angle of rotation
+    is determined by the angle of "p1From" to "p1To". *)
+
+OUTPUT HighlightLine(p1, p2: Euclid.Id[Fmt.Int];
+                     value: INTEGER[Fmt.Int]; show: BOOLEAN [Fmt.Bool]);
+(* Highlight the line "p1" to "p2" using "value".  A value 
+   of 0 indicates the highlighting should be removed.  If "show"
+   then the display is updated after the event.  Otherwise, the change 
+   is displayed after the next "show". *)
+
+OUTPUT HighlightAngle(p1, vertex, p2: Euclid.Id[Fmt.Int];
+                      value: INTEGER[Fmt.Int]; show: BOOLEAN [Fmt.Bool]);
+(* Highlight the positive angle "p1", "vertex", "p2" using "value".  
+   A "value" of 0 indicates the highlighting 
+   should be removed.  If "show" then the display is updated after
+   the event.  Otherwise, the change is displayed after the next "show". *)
+
+OUTPUT Remove(p1, p2, p3, p4: Euclid.Id[Fmt.Int]; show: BOOLEAN[Fmt.Bool]);
+(* Remove the object identified by "p1", "p2", "p3", "p4".  Lines
+   may be removed by setting "p3" and "p4" to -1.  Triangles and
+   anmgles may be removed by setting "p4" to -1. *)
+
+OUTPUT Step();
+(* An event that is better than code view events for stepping *)

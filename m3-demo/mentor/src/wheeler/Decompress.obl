@@ -1,0 +1,402 @@
+(* Copyright (C) 1993, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+(*                                                                           *)
+(* Last modified on Mon Jan  9 12:14:14 PST 1995 by najork                   *)
+(*      modified on Wed Oct 13 19:41:10 PDT 1993 by mann                     *)
+(*      modified on Mon Jul 19 11:59:36 PDT 1993 by perl                     *)
+
+let codesColor = color_named("White");
+let codesLabelColor = color_named("Black");
+let codesHiliteLabelColor = color_named("DarkRed");
+let arrowColor = color_named("DarkRed");
+let rowIndexColor = color_named("Pink");
+let rowIndexLabelColor = color_named("Black");
+let otherIndexColor = color_named("White");
+let otherIndexLabelColor = color_named("DarkGray");
+let alphaColor = color_named("LightYellow");
+let alphaLabelColor = color_named("Black");
+let initialColor = color_named("DarkGray");
+let initialLabelColor = color_named("Black");
+(*!! let shadowColor = color_named("LightGray");*)
+let shadowColor = color_named("VerySlightlyLightGray");
+let shadowLabelColor = color_named("Black");
+let ghostColor = color_named("White");
+let ghostLabelColor = color_named("Gray");
+let duplColor = color_named("LightGray");
+let duplLabelColor = color_named("VeryDarkGray");
+
+(***
+let charColorNames = ["LightVividBlue",
+                      "VerySlightlyLightQuiteVividRed",
+                      "VerySlightlyLightVividGreen",
+                      "Yellow",
+                      "VerySlightlyLightPurple",
+                      "VividReddishOrange"];
+***)
+let charColorNames = ["VerySlightlyLightQuiteVividRed",
+                      "VerySlightlyDarkVividGreen",
+                      "SlightlyLightVividBlue",
+                      "ReddishVividOrange",
+                      "VerySlightlyLightPurple",
+                      "VerySlightlyDarkVeryVividYellow"];
+
+let charColors = foreach c in charColorNames map color_named(c) end;
+
+let makeDippingPath = proc(startX, endX, y, dip)
+    proc(t)
+        [ (startX * (1.0 - t)) + (endX * t),
+	  y + (dip * (0.25 - ((t - 0.5) * (t - 0.5))))]
+    end
+end;
+
+let view =
+  {
+    graphvbt => graph_new(),
+    vertexFont => ok,
+    codes => {array => ok, vtx => ok},
+    last => {chars => ok, vtx => ok},
+    xlast => {chars => ok, vtx => ok},
+    first => {chars => ok, vtx => ok, vtxColor => ok, pendingMoves => ok},
+    n => 0,
+    alphalen => 0,
+    colorIndex => -1,
+    rowIndices => ok,
+    rowIndex => ok,
+    rowIndexVtx => ok,
+    codeSearchArrow => ok,
+
+    InitDecode => meth(self, alpha, codes, rowIndex)
+    (* Start of phase where we reconstruct lastchars from codes. *)
+        self.n := #(codes);
+	self.xlast.chars := alpha;
+	self.alphalen := text_length(alpha);
+        self.vertexFont := graph_newFont(self.graphvbt, "Helvetica",
+                                         0.5, "Roman", "bold", "*");
+	let north = ~5.25,
+            south = float(self.n),
+            west = -(float(self.alphalen) + 1.0),
+            east = float(self.n) + 1.0;
+	graph_setWorld(self.graphvbt, west, east, north, south);
+	graph_setAspect(self.graphvbt, (south - north) / (east - west));
+	graph_setPixelSizeDivisor(self.graphvbt,
+                                  round(east - west),
+			          round(south - north));
+
+        self.xlast.vtx := array_new(self.alphalen + self.n, ok);
+        for i = 0 to self.alphalen - 1 do
+            let v = graph_newVertex(self.graphvbt);
+            self.xlast.vtx[i] := v;
+	    graph_setVertexSize(v, 0.0, 0.0); (*avoid glitches*)
+            graph_setVertexLabel(v, text_sub(self.xlast.chars, i, 1));
+            graph_setVertexFont(v, self.vertexFont);
+            graph_setVertexColor(v, alphaColor);
+            graph_setVertexLabelColor(v, alphaLabelColor);
+            graph_setVertexBorder(v, 0.05);
+            graph_moveVertex(v, float(i - (2 * self.alphalen)) - 4.0, ~2.0,
+                             false);
+        end;
+
+        self.codes.array := codes;
+        self.codes.vtx := array_new(self.n, ok);
+        for i = 0 to self.n - 1 do
+            let v = graph_newVertex(self.graphvbt);
+            self.codes.vtx[i] := v;
+            graph_setVertexLabel(v, fmt_int(codes[i]));
+            graph_setVertexFont(v, self.vertexFont);
+            graph_setVertexColor(v, codesColor);
+            graph_setVertexLabelColor(v, codesLabelColor);
+            graph_setVertexBorder(v, 0.05);
+            graph_moveVertex(v, float(i), ~4.25, false);
+	    graph_setVertexSize(v, 0.95, 0.95);
+        end;
+
+	let v = graph_newVertex(self.graphvbt);
+	self.rowIndex := rowIndex;
+	self.rowIndexVtx := v;
+	graph_setVertexShape(v, "ellipse");
+	graph_setVertexLabel(v, fmt_int(self.rowIndex));
+	graph_setVertexFont(v, self.vertexFont);
+	graph_setVertexColor(v, rowIndexColor);
+	graph_setVertexLabelColor(v, rowIndexLabelColor);
+	graph_setVertexBorder(v, 0.05);
+	graph_moveVertex(v, float(self.n), ~4.25, false);
+	graph_setVertexSize(v, 0.95, 0.95);
+
+        graph_redisplay(self.graphvbt);
+    end,
+	
+    StartDecode => meth(self)
+        for i = 0 to self.alphalen - 1 do
+	    graph_setVertexSize(self.xlast.vtx[i], 0.95, 0.95);
+            graph_moveVertex(self.xlast.vtx[i],
+                             float(i - self.alphalen), ~2.0, true);
+	end;
+
+	zeus_animate(self.graphvbt, 0.0, 1.0);
+
+	self.rowIndices := array_new(self.n, ok);
+    end,
+
+    DecodeNextCode => meth(self, i)
+    (* Looking at i'th code, before starting to find its corresponding
+       character.
+     *)
+	let v = self.codes.vtx[i];
+	graph_setVertexLabelColor(v, codesHiliteLabelColor);
+	graph_setVertexBorder(v, 0.12);
+
+	let v = graph_newVertex(self.graphvbt);
+	self.codeSearchArrow := v;
+	graph_setVertexFont(v, self.vertexFont);
+	graph_setVertexColor(v, codesColor);
+	graph_setVertexLabelColor(v, codesHiliteLabelColor);
+	graph_setVertexBorder(v, 0.12);
+	graph_setVertexSize(v, 0.95, 0.95);
+	graph_setVertexLabel(self.codeSearchArrow, "0");
+  	graph_moveVertex(self.codeSearchArrow, float(i), ~3.0, false);
+        graph_redisplay(self.graphvbt);
+    end,
+
+    DecodeDistinctCount => meth(self, i, k, n)
+    (* Found another distinct character at position k in xchars while looking 
+       for the character corresponding to code i. The number of distinct 
+       characters found so far is n. *)
+
+  	graph_moveVertex(self.codeSearchArrow, float(k - self.alphalen),
+                         ~3.0, true);
+	zeus_animate(self.graphvbt, 0.0, 1.0);
+	graph_setVertexLabel(self.codeSearchArrow, fmt_int(n));
+        graph_redisplay(self.graphvbt);
+    end,
+
+    DecodeFoundChar => meth(self, i, k, c)
+    (* Found that the character for code i is at position k in the
+       concatenated alphabet and current string and its value is c. *)
+
+  	graph_moveVertex(self.codeSearchArrow, float(k - self.alphalen),
+                         ~3.0, true);
+	zeus_animate(self.graphvbt, 0.0, 1.0);
+
+        self.xlast.chars := self.xlast.chars &
+                            text_sub(self.xlast.chars, k, 1);
+        let v = graph_newVertex(self.graphvbt);
+        self.xlast.vtx[i + self.alphalen] := v;
+        graph_setVertexLabel(v, text_sub(self.xlast.chars, k, 1));
+	graph_setVertexFont(v, self.vertexFont);
+	graph_setVertexSize(v, 0.95, 0.95);
+	graph_setVertexBorder(v, 0.05);
+        graph_vertexToFront(v);
+  	graph_setVertexColor(v, alphaColor);
+  	graph_setVertexLabelColor(v, alphaLabelColor);
+
+        graph_setVertexColor(self.xlast.vtx[k], duplColor);
+        graph_setVertexLabelColor(self.xlast.vtx[k], duplLabelColor);
+
+	let pathfunc = makeDippingPath(float(k - self.alphalen),
+                                       float(i), ~2.0, 2.0);
+	graph_moveVertexOnPath(v, pathfunc);
+        zeus_animate(self.graphvbt, 1.0, 2.0);
+	graph_removeVertex(self.codeSearchArrow);
+        self.codeSearchArrow := ok;
+	let v = self.codes.vtx[i];
+  	graph_setVertexColor(v, ghostColor);
+  	graph_setVertexLabelColor(v, ghostLabelColor);
+	graph_setVertexBorder(v, 0.05);
+	graph_redisplay(self.graphvbt);
+    end,
+
+    DecodeDone => meth(self, t, rowIndex)
+    (* Declare computed lastchars array. *)
+        self.last.chars := t;
+        self.last.vtx := array_sub(self.xlast.vtx, self.alphalen, self.n);
+
+(*****
+        for m = 0 to self.alphalen-1 do
+	    graph_moveVertex(self.xlast.vtx[m],
+                             float(m - (2 *self.alphalen)) - 4.0,
+			     ~2.0, true);
+        end;
+*****)
+        (* ghost alpha vertices *)
+        for m = 0 to self.alphalen-1 do
+	    graph_setVertexColor(self.xlast.vtx[m], ghostColor);
+	    graph_setVertexLabelColor(self.xlast.vtx[m], ghostLabelColor);
+        end;
+	zeus_animate(self.graphvbt, 0.0, 2.0 (*!!*));
+(****
+        for m = 0 to self.alphalen-1 do
+            graph_removeVertex(self.xlast.vtx[m]);
+        end;
+****)
+	graph_redisplay(self.graphvbt);
+    end,
+
+    StartReconstruct => meth(self, lastchars, rowIndex)
+    (* Start of phase where we reconstruct the original string from
+       lastchars and rowIndex.
+     *)
+        for i = 0 to self.n-1 do
+            let v = self.last.vtx[i];
+	    graph_setVertexColor(self.last.vtx[i], initialColor);
+	    graph_setVertexLabelColor(self.last.vtx[i], initialLabelColor);
+            graph_moveVertex(v, ~1.0, float(i), true);
+
+	    let w = graph_newVertex(self.graphvbt);
+            graph_moveVertex(w, float(i), ~2.0, false);
+	    graph_setVertexLabel(w, text_sub(self.last.chars, i, 1));
+	    graph_setVertexSize(w, 0.95, 0.95);
+	    graph_setVertexColor(w, ghostColor);
+            graph_setVertexLabelColor(w, ghostLabelColor);
+            graph_setVertexFont(w, self.vertexFont);
+            graph_setVertexBorder(w, 0.05);
+
+            zeus_animate(self.graphvbt, float(i)/float(self.n),
+                         (float(i)+1.0)/float(self.n));
+        end;
+    end,
+
+    FirstChars => meth(self, t)
+    (* Declare sorted firstchars array. *)
+        self.first.vtx := array_new(self.n, ok);
+        self.first.pendingMoves := [];
+        self.first.vtxColor := array_new(self.n, ok);
+        self.first.chars := t;
+        let tmp = array_new(self.n, ok);
+        for i = 0 to self.n-1 do
+            let v = graph_newVertex(self.graphvbt);
+            graph_moveVertex(v, ~1.0, float(i), false);
+	    graph_setVertexLabel(v, text_sub(self.last.chars, i, 1));
+	    graph_setVertexShape(v, "rectangle");
+	    graph_setVertexSize(v, 0.95, 0.95);
+	    graph_setVertexColor(v, initialColor);
+            graph_setVertexLabelColor(v, initialLabelColor);
+            graph_setVertexFont(v, self.vertexFont);
+            graph_setVertexBorder(v, 0.05);
+            graph_setVertexColor(self.last.vtx[i], shadowColor);
+            graph_setVertexLabelColor(self.last.vtx[i], shadowLabelColor);
+            tmp[i] := v;
+         end;
+         let moved = array_new(self.n, false);
+         for i = 0 to self.n-1 do
+             for j = 0 to self.n-1 do
+                 if not(moved[j]) and
+                    (text_char(self.first.chars, i) is
+                      text_char(self.last.chars, j))
+                 then
+                     graph_vertexToFront(tmp[j]);
+                     graph_moveVertex(tmp[j], 0.0, float(i), true);
+                     self.first.vtx[i] := tmp[j];
+                     moved[j] := true;
+                     zeus_animate(self.graphvbt,
+                         (float(i)) / 2.0,
+                         (float(i)+1.0) / 2.0 );
+                     exit;
+                 end;
+             end;
+         end;
+    end,
+
+    ConsiderChar => meth(self, i)
+    (* About to look for match for element i for firstchars *)
+	self.colorIndex := (self.colorIndex + 1) % #(charColors);
+	let c = charColors[self.colorIndex];
+	let v = self.first.vtx[i];
+	graph_setVertexColor(v, c);
+	graph_redisplay(self.graphvbt);
+    end,
+
+
+    EqualChars => meth(self, i, j)
+    (* Decided element i of firstchars matches element j of lastchars. *)
+	let c = charColors[self.colorIndex];
+	let v = self.last.vtx[j];
+	graph_setVertexColor(v, c);
+        graph_redisplay(self.graphvbt);
+    end,
+
+    FinishCharRun => meth(self)
+    (* Done with a run of identical chars in firstchar column. *)
+	ok
+    end,
+
+    StartResult => meth(self)
+    (* Setup to pick off result chars. *)
+	for i = 0 to self.n - 1 do
+	    let v = graph_newVertex(self.graphvbt);
+	    self.rowIndices[i] := v;
+	    graph_setVertexLabel(v, fmt_int(i));
+	    graph_setVertexFont(v, self.vertexFont);
+	    graph_setVertexColor(v, otherIndexColor);
+	    graph_setVertexLabelColor(v, otherIndexLabelColor);
+	    graph_moveVertex(v, ~2.0, float(i), false);
+	    graph_setVertexSize(v, 0.95, 0.95);
+	end;
+	graph_redisplay(self.graphvbt);
+
+        let v = graph_newVertex(self.graphvbt);
+	graph_setVertexLabel(v, fmt_int(self.rowIndex));
+	graph_setVertexFont(v, self.vertexFont);
+	graph_setVertexColor(v, ghostColor);
+	graph_setVertexLabelColor(v, ghostLabelColor);
+	graph_setVertexShape(v, "ellipse");
+	graph_moveVertex(v, float(self.n), ~4.25, false);
+	graph_setVertexBorder(v, 0.05);
+	graph_vertexToFront(self.rowIndexVtx);
+	graph_setVertexSize(v, 0.95, 0.95);
+	graph_moveVertex(self.rowIndexVtx, ~2.0, float(self.rowIndex), true);
+	zeus_animate(self.graphvbt, 0.0, 1.0);
+    end,
+
+    ResultNextChar => meth(self, pos, k)
+    (* Pick off the pos'th element of firstchars and put into the
+       k'th position in the result string. *)
+       if pos is self.rowIndex then
+	    (* Just gray out the extra copy of the last character *)
+    	    let v = self.last.vtx[self.rowIndex];
+	    graph_setVertexColor(v, ghostColor);
+	    graph_setVertexLabelColor(v, ghostLabelColor);
+       else
+           let sv1 = self.last.vtx[pos];
+           self.last.vtx[pos] := graph_newVertex(self.graphvbt);
+           let sv2 = self.first.vtx[pos];
+           self.first.vtx[pos] := graph_newVertex(self.graphvbt);
+           graph_moveVertex(self.last.vtx[pos], ~1.0, float(pos), false);
+           graph_setVertexLabel(self.last.vtx[pos],
+                                text_sub(self.last.chars, pos, 1));
+           graph_setVertexSize(self.last.vtx[pos], 0.95, 0.95);
+           graph_setVertexColor(self.last.vtx[pos], ghostColor);
+           graph_setVertexLabelColor(self.last.vtx[pos], ghostLabelColor);
+           graph_setVertexFont(self.last.vtx[pos], self.vertexFont);
+           graph_setVertexBorder(self.last.vtx[pos], 0.05);
+           graph_moveVertex(self.first.vtx[pos], 0.0, float(pos), false);
+           graph_setVertexLabel(self.first.vtx[pos],
+                                text_sub(self.first.chars, pos, 1));
+           graph_setVertexSize(self.first.vtx[pos], 0.95, 0.95);
+           graph_setVertexColor(self.first.vtx[pos], ghostColor);
+           graph_setVertexLabelColor(self.first.vtx[pos], ghostLabelColor);
+           graph_setVertexFont(self.first.vtx[pos], self.vertexFont);
+           graph_setVertexBorder(self.first.vtx[pos], 0.05);
+
+           graph_vertexToFront(sv1);
+           graph_vertexToFront(sv2);
+           graph_moveVertex(sv1, float(k-1), float(self.rowIndex),
+                            true);
+           graph_moveVertex(sv2, float(k), float(self.rowIndex),
+                            true);
+       end;
+       zeus_animate(self.graphvbt, 0.0, 1.0);
+    end,
+
+    EndResult => meth(self)
+    (* Done *)
+	for i = 0 to self.n - 1 do
+	    graph_setVertexColor(self.rowIndices[i], ghostColor);
+   	    graph_setVertexLabelColor(self.rowIndices[i], ghostLabelColor);
+        end;
+	graph_setVertexColor(self.rowIndexVtx, ghostColor);
+	graph_setVertexLabelColor(self.rowIndexVtx, ghostLabelColor);
+	graph_redisplay(self.graphvbt);
+    end
+
+  };

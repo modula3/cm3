@@ -1,0 +1,80 @@
+(* Copyright 1992 Digital Equipment Corporation.             *)
+(* Distributed only by permission.                           *)
+(* Last modified on Tue May  3 23:10:39 PDT 1994 by najork   *)
+(*      modified on Sat Oct 17 11:49:52 PDT 1992 by ramshaw  *)
+(*      modified on Tue Jul 28 21:21:43 1992 by saxe         *)
+
+IMPORT IntList, HullFmt, SiteList;
+
+OUTPUT Setup(trueSites, auxSites: SiteList.T[HullFmt.SiteList]);
+(* Both arguments are lists of lists in Sx-style.  
+
+   A true site is one of the points whose convex hull we are computing;
+   it is encoded as a four-element list, giving
+       the uid of the site (a nonnegative integer),
+       its text label (a text), and
+       its x and y coordinates (two reals).
+   The true sites must have uids in the range [1 .. nTrueSites], and 
+   their coords must be in the range [-1.0 .. 1.0].  Uids 0 and 
+   nTrueSites+1 are reserved for sentinels.  
+   
+   Some algorithms want to define auxiliary sites.  Each of them is 
+   encoded as a five-element list -- the four elements above plus 
+   a boolean flag.  When the flag is set, the position of that 
+   auxiliary site is relative to the true site with which it is 
+   paired.  The uids of auxiliary sites must be in the range 
+   [nTrueSites+2 .. nTrueSites+1+nAuxSites]. *)
+
+OUTPUT SetHalfPlane(tail, head: INTEGER[Fmt.Int]);
+(* Prepare to test against a half-plane whose edge is directed from 
+   the site with uid "tail" to the site with uid "head". We hope that 
+   the hull lies to the left of this directed edge. *)
+
+OUTPUT ClearHead();
+
+OUTPUT TestSite(i: INTEGER[Fmt.Int]);
+(* Test the site with uid "i" against the current half-plane. *)
+
+OUTPUT ClearTest();
+
+OUTPUT SetTail(i: INTEGER[Fmt.Int]);
+(* Put up or move "tail" hightlight to vertex with UID i. *)
+
+OUTPUT ClearTail();
+
+OUTPUT MoveHalfPlane(tail, head: INTEGER[Fmt.Int]);
+(* Change the current half-plane so that its edge is directed from 
+   "tail" to "head". *) 
+
+OUTPUT Confirm(tail, head: INTEGER[Fmt.Int]);
+(* Mark the half-plane from "tail" to "head" as being exterior to 
+   the hull. *)
+
+OUTPUT Deny(tail, head: INTEGER[Fmt.Int]);
+(* Retract the exterior marking for the half-plane from "tail" to 
+   "head". *)
+(* IMPLEMENTATION RESTRICTION:  Confirmed and denied half-planes must
+   behave like a stack. *)
+
+OUTPUT Swap(i, j: INTEGER[Fmt.Int]);
+(* Swap the sites with uids "i" and "j" in the array *)
+
+OUTPUT Sentinel(i, j: INTEGER[Fmt.Int]);
+(* Set sentinel "i" to be the site with uid "j".  "i" should be either 
+   0, for the left sentinel, or nTrueSites+1, for the right sentinel. *)
+
+OUTPUT ReOrder(l: IntList.T[HullFmt.IntList]);
+(* "l" is a list of uids of length nTrueSites.  Reset the array to 
+   contain the sites in the order specified by "l". *)
+
+OUTPUT Stretch(hullSites, otherSites: IntList.T[HullFmt.IntList]);
+OUTPUT Snap(hullSites, otherSites: IntList.T[HullFmt.IntList]);
+OUTPUT Shuffle(hullSites, otherSites: IntList.T[HullFmt.IntList]);
+(* The convex hull has been computed all in one step, as if by magic. 
+   "hullSites" is a list of the uids of the vertices of the convex 
+   hull in order, while "otherSites" is the rest of the true sites,
+   in some order. Show a movie of stretching a rubber band, letting
+   it snap into place, and then shuffling the array to put the hull
+   vertices in order at the left. *)
+
+

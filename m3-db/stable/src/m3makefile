@@ -1,0 +1,35 @@
+% Copyright (C) 1994, Digital Equipment Corporation.
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Created by Carsten Weich
+%
+% Last modified on Wed Oct 11 15:09:25 PDT 1995 by najork
+%      modified on Thu Jan 19 13:00:20 PST 1995 by kalsow
+%      modified on Fri Sep 23 10:29:51 PDT 1994 by weich
+%
+% Makefile for stable object library
+
+import("libm3")
+
+template("stableobj")
+
+/* For testing:
+   The code of the LogManager still contains calls to procedures used
+   by the test program of this packages. They simulated program
+   crashes. The default LogManager can be made to log its actions to
+   Stdio.stderr by setting "Log.level" to 1 (see Log.i3). This feature
+   is also used by the test program. Therefor we need the following
+   module: */
+Module("Log")
+
+Module("StableLog")
+Module("LogManager")
+Module("StableError")
+Generic_interface("Stable")
+Generic_module("StableRep")
+
+interface ("FSError")
+include_dir (OS_TYPE)
+
+Library("stable")

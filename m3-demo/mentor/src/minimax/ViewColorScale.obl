@@ -1,0 +1,23 @@
+(* Copyright (C) 1993, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+
+
+let view = {
+  graphvbt => graph_new(),
+
+  Setup =>
+    meth (self)
+      graph_setWorld(self.graphvbt, ~11.0, 11.0, 0.0, 2.0);
+      graph_setAspect(self.graphvbt, 2.0 / 23.0);
+      for c = -10 to 10 do
+        (let v = graph_newVertex(self.graphvbt);
+         graph_setVertexSize(v, 1.0, 1.0);
+         graph_setVertexColor(v, 
+             color_hsv(((float(c+10)) / 21.0) * 0.7, 1.0, 1.0));
+         graph_setVertexBorder(v, 0.0);
+         graph_moveVertex(v, float(c), 1.0, false);)
+      end;
+      graph_redisplay(self.graphvbt);
+    end,
+  };

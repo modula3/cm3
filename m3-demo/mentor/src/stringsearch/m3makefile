@@ -1,0 +1,33 @@
+/* Copyright (C) 1994, Digital Equipment Corporation         */
+/* All rights reserved.                                      */
+/* See the file COPYRIGHT for a full description.            */
+/*                                                           */
+/* Last modified on Thu Jun 20 15:44:13 PDT 1996 by heydon   */
+/*      modified on Tue May 24 09:16:20 PDT 1994 by najork   */
+/*      modified on Thu Sep 24 13:04:48 PDT 1992 by mhb      */
+/*      modified on Wed Aug  5 00:30:03 PDT 1992 by broder   */
+/*      modified on Tue Aug  4 20:03:18 PDT 1992 by guarino  */
+
+import    ("zeus")
+
+zume      ("StringSearch")
+resource  ("stringsearchinput.fv")
+resource  ("stringsearchtextview.fv")
+resource  ("stringsearchautoview.fv")
+
+module    ("AlgsBase")
+module    ("BruteForce")
+module    ("KMP")
+module    ("BM") 
+module    ("ViewsBase")
+module    ("TouchView")
+module    ("TextView")
+module    ("SliderView")
+module    ("AutoView")
+module    ("PrefixView")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation ("Main")
+  bundle         ("StringSearchBundle")
+  program        ("stringsearch")
+end

@@ -1,0 +1,45 @@
+(* Copyright 1992 Digital Equipment Corporation.        *)
+(* Distributed only by permission.                      *)
+(* Last modified on Wed Aug  5 08:51:56 PDT 1992 by kalsow  *)
+
+IMPORT Parse;
+
+OUTPUT Setup (s: Parse.State[Parse.FmtState]);
+(* Called once initially to identify for views the entire parser state. *)
+
+OUTPUT Push (id: INTEGER[Fmt.Int];  tag: TEXT[]);
+OUTPUT Pop  (id: INTEGER[Fmt.Int]);
+(* parse stack manipulation *)
+
+OUTPUT Scan (token: TEXT[]);
+(* read 'token' from the input stream *)
+
+OUTPUT NoteError ();
+(* the current token caused an error *)
+
+OUTPUT Goto (state: INTEGER[Fmt.Int]);
+(* goto node 'state' in the transition graph *)
+
+OUTPUT NewNode (id: INTEGER[Fmt.Int];  op: TEXT[]);
+(* create a new internal node of the parse tree with label 'op'. *)
+
+OUTPUT NewTerm (id: INTEGER[Fmt.Int];  op: TEXT[]);
+(* create a new "terminal" node of the parse tree with label 'op'. *)
+
+OUTPUT NewEdge (child, parent: INTEGER[Fmt.Int]);
+(* add an edge from 'child' to 'parent' *)
+
+OUTPUT DeleteLeaf (id: INTEGER[Fmt.Int]);
+(* delete the leaf node 'id' *)
+
+OUTPUT UpdateDone ();
+(* called to signal that a logical group of NewNode and NewEdge calls
+   have been made and that the view should be updated *)
+
+(* Note: tree node ids [0..Parse.State.n_tokens] correspond to
+   to the leaf nodes (i.e. the input stream), node id's beyond
+   Parse.State.n_tokens correspond to the internal nodes of the
+   tree and are allocated sequentially by the algorithms. *)
+   
+
+

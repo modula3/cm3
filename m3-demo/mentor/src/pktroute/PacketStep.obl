@@ -1,0 +1,266 @@
+(* Copyright 1993 Digital Equipment Corporation.                             *)
+(* Distributed only by permission.                                           *)
+(*                                                                           *)
+(* Last modified on Thu Oct 14 17:08:38 PDT 1993 by heydon                   *)
+(*      modified on Thu Aug  5 09:58:52 PDT 1993 by rsanchez                 *)
+
+(* This view shows the total number of steps that each packet needs to
+   traverse to go from its source to its destination node. *)
+
+let moveColor = color_named("Green");
+let blockedColor = color_named("Red");
+let nomoveColor = color_named("Yellow");
+let finishedColor = color_named("Black");
+let labelColor = color_named("Black");
+let backgroundColor = color_named("White");
+let edgeColor = color_named("Black");
+
+let view =
+  {
+    graphvbt => graph_new(),
+    g => meth (self) self.graphvbt end,
+    vertexFont => ok,
+    pktCnt => ok,
+    steps => 0,
+    maxSteps => ok,
+    hopsT => [],
+    border => ok,
+    fntVSize => ok,
+    yLab1 => ok,
+    yLab2 => ok,
+    east => ok,
+    west => ok,
+    north => ok,
+    south => ok,
+
+
+    StartGraph => meth (self, nodeCnt, maxQS, bounded, xMax, yMax)
+      ok;
+    end,
+
+    NewNode => meth (self, id, x, y)
+      ok;
+    end,
+
+    NewStraightEdge => meth (self, id1, id2)
+      ok;
+    end,
+
+    NewCurvedEdge => meth (self, id1, id2, x1, y1, x2, y2)
+      ok;
+    end,
+
+    NewLabel => meth (self, label, x, y)
+      ok;
+    end,
+
+    EndGraph => meth (self)
+      ok;
+    end,
+
+    StartPackets => meth (self, pktCnt)
+      self.east := ~1.0;
+      self.west := float(pktCnt);
+      self.north := 11.0;
+      self.south := ~2.0;
+      self.maxSteps := 10;
+      self.border := 0.0;
+      self.fntVSize := 1.0;
+      self.yLab1 := ~0.5;
+      self.yLab2 := ~1.5;
+
+      graph_setWorld(self.graphvbt,
+	             self.east, self.west, self.north, self.south);
+      self.vertexFont := 
+	 graph_newFont(self.graphvbt, "Helvetica", 0.2, "Roman", "bold","*");
+
+      self.pktCnt := pktCnt;
+      for i = 0 to pktCnt-1 do
+        let vtx1 = graph_newVertex(self.graphvbt);
+        let vtx2 = graph_newVertex(self.graphvbt);
+        let vtx3 = graph_newVertex(self.graphvbt);
+	self.hopsT :=
+	    self.hopsT @
+		[{minNumHops => 0,
+		  congested => 0.0,
+		  moved => false,
+		  blocked => false,
+		  progress => true,
+		  finished => false,
+		  src => ok,
+		  dst => ok,
+		  vmove => vtx1,
+		  vlastnomove => ok,
+		  nomovecnt => 0,
+		  vlastblocked => ok,
+		  blockedcnt => 0,
+		  vlab1 => vtx2,
+		  vlab2 => vtx3}];
+        graph_vertexToBack(vtx1);
+	graph_setVertexBorder(vtx1, self.border);
+	graph_setVertexBorderColor(vtx1, color_rgb(0.0, 0.0, 0.0)); 
+	graph_setVertexColor(vtx1, moveColor);
+	graph_moveVertex(vtx1, float(i), self.border/2.0, false);
+	graph_setVertexSize(vtx1, 0.95, self.border);
+
+	graph_setVertexFont(vtx2, self.vertexFont);
+	graph_setVertexColor(vtx2, backgroundColor);
+	graph_setVertexLabelColor(vtx2, labelColor);
+	graph_moveVertex(vtx2, float(i), self.yLab1, false);
+	graph_setVertexSize(vtx2, 0.95, self.fntVSize);
+
+	graph_setVertexLabel(vtx3, "0%");
+	graph_setVertexFont(vtx3, self.vertexFont);
+	graph_setVertexColor(vtx3, backgroundColor);
+        graph_setVertexLabelColor(vtx3, labelColor);
+	graph_moveVertex(vtx3, float(i), self.yLab2, false);
+	graph_setVertexSize(vtx3, 0.95, self.fntVSize);
+      end;
+    end,
+
+    NewPacket => meth (self, id, source, dest, fewestHops, name)
+      self.hopsT[id].minNumHops := fewestHops;
+      self.hopsT[id].src := source;
+      self.hopsT[id].dst := dest;
+      graph_setVertexLabel(self.hopsT[id].vlab1, name);
+    end,
+
+    EndPackets => meth (self)
+      graph_redisplay(self.graphvbt);
+    end,
+
+    Blocked => meth(self, id, fromN, toN)
+      self.hopsT[id].blocked := true;
+    end,
+
+    MovePacket => meth(self, id, fromN, toN) 
+      self.hopsT[id].moved := true;
+    end,
+
+    Absorb => meth(self, id, node)
+      self.hopsT[id].progress := false;
+    end,
+
+    QueueSizes => meth(self, queueSizes)
+      ok;
+    end,
+
+    Step => meth (self)
+      let fmtReal = proc (txt, dec)
+	var auxtxt = txt;
+	let index = text_findFirstChar('.', txt, 0);
+	if index isnot ~1 then
+	  auxtxt := text_sub(txt, 0, index+dec);
+        end;
+	auxtxt
+      end;
+
+      self.steps := self.steps + 1;
+      if self.steps >self.maxSteps then
+        self.maxSteps := self.maxSteps * 2;
+        self.north := self.north * 2.0;
+	self.south := self.south * 2.0;
+	self.fntVSize := self.fntVSize * 2.0;
+	self.border := self.border * 2.0;
+	self.yLab1 := self.yLab1 * 2.0;
+	self.yLab2 := self.yLab2 * 2.0;
+
+        graph_setWorld(self.graphvbt,
+		       self.east, self.west, self.north, self.south);
+
+        for i = 0 to self.pktCnt-1 do
+          graph_moveVertex(self.hopsT[i].vlab1,
+			   float(i), self.yLab1, false);
+	  graph_setVertexSize(self.hopsT[i].vlab1,
+			      0.95, self.fntVSize);
+          graph_moveVertex(self.hopsT[i].vlab2,
+	                   float(i), self.yLab2, false);
+          graph_setVertexSize(self.hopsT[i].vlab2,
+	                      0.95, self.fntVSize);
+        end;
+      end;
+
+      for i = 0 to self.pktCnt-1 do
+	if self.hopsT[i].finished is false then
+          if self.hopsT[i].moved is false then
+            if self.hopsT[i].blocked is true then
+	      self.hopsT[i].blocked := false;
+              self.hopsT[i].congested := self.hopsT[i].congested + 1.0;
+	      if self.hopsT[i].vlastnomove isnot ok then
+		self.hopsT[i].vlastnomove := ok;
+		self.hopsT[i].nomovecnt := 0;
+              end;
+	      if self.hopsT[i].vlastblocked is ok then
+	        let vblocked = graph_newVertex(self.graphvbt);
+                graph_setVertexBorder(vblocked, self.border);
+		graph_setVertexBorderColor(vblocked, color_rgb(0.0, 0.0, 0.0));
+                graph_setVertexColor(vblocked, blockedColor);
+		graph_moveVertex(vblocked, 
+				  float(i), float(self.steps) - 0.5, false);
+                graph_setVertexSize(vblocked,  0.95, 1.0);
+		self.hopsT[i].vlastblocked:= vblocked;
+		self.hopsT[i].blockedcnt := 1;
+              else
+                self.hopsT[i].blockedcnt := self.hopsT[i].blockedcnt + 1;
+		graph_moveVertex(self.hopsT[i].vblocked,
+				  float(i),
+				  float(self.steps) -
+				    (float(self.hopsT[i].blockedcnt)/2.0),
+                                  false);
+                graph_setVertexSize(self.hopsT[i].vlastblocked,
+				     0.95, float(self.hopsT[i].blockedcnt));
+
+	      end;
+            else
+	      if self.hopsT[i].vlastblocked isnot ok then
+		self.hopsT[i].vlastblocked := ok;
+		self.hopsT[i].blockedcnt := 0;
+              end;
+	      if self.hopsT[i].vlastnomove is ok then
+	        let vnomove = graph_newVertex(self.graphvbt);
+	        graph_setVertexBorder(vnomove, self.border);
+	        graph_setVertexBorderColor(vnomove, color_rgb(0.0, 0.0, 0.0)); 
+	        graph_setVertexColor(vnomove, nomoveColor);
+	        graph_moveVertex(vnomove, float(i), 
+			         float(self.steps) - 0.5, false);
+                graph_setVertexSize(vnomove, 0.95, 1.0); 
+	        self.hopsT[i].vlastnomove := vnomove;
+	                      else
+	        self.hopsT[i].nomovecnt := self.hopsT[i].nomovecnt + 1;
+                graph_moveVertex(self.hopsT[i].vlastnomove,
+			         float(i),  
+			         float(self.steps) - 
+				     (float(self.hopsT[i].nomovecnt)/2.0),
+			         false);
+                graph_setVertexSize(self.hopsT[i].vlastnomove, 
+				    0.95, float(self.hopsT[i].nomovecnt));
+              end;
+	    end;
+          else
+	    self.hopsT[i].moved := false;
+	    self.hopsT[i].vlastnomove := ok;
+	    self.hopsT[i].nomovecnt := 0;
+	    self.hopsT[i].vlastblocked := ok;
+	    self.hopsT[i].blockedcnt := 0;
+            graph_moveVertex( self.hopsT[i].vmove, 
+			      float(i), float(self.steps)/2.0, false);
+            graph_setVertexSize( self.hopsT[i].vmove, 0.95, float(self.steps));
+          end;
+          graph_setVertexLabel( self.hopsT[i].vlab2,
+              fmtReal(
+	          fmt_real( 100.0 * self.hopsT[i].congested /
+	          float(self.steps)), 2)  & "%" );
+          if self.hopsT[i].progress isnot true then
+	    self.hopsT[i].finished := true;
+            let vtx = graph_newVertex(self.graphvbt);
+            graph_setVertexColor(vtx, finishedColor);
+	    graph_moveVertex(vtx, float(i),
+			     float(self.steps+1) - 0.75, false);
+            graph_setVertexSize(vtx, 0.96, 0.5);
+          end;
+	end;
+      end;
+      graph_redisplay(self.graphvbt);
+    end,
+
+  };

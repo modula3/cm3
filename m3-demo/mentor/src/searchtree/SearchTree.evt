@@ -1,0 +1,91 @@
+(* Copyright (C) 1992, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+(*                                                                           *)
+(* Last modified on Mon Aug  3 22:25:51 PDT 1992 by heydon                   *)
+
+(* Event file for binary search tree algorithms.
+
+   A node in the view is denoted by its INTEGER index. The root of a tree
+   always has index 0.
+
+   The children of a node are denoted by a CARDINAL; the leftmost child is
+   child 0.
+*)
+
+IMPORT RedBlackAlg;
+
+(* INSERT ------------------------------------------------------------------ *)
+
+OUTPUT NewNode(node: INTEGER[Fmt.Int]; key: INTEGER[Fmt.Int]);
+(* Assert that the algorithm is adding a new node with index "node" and key
+   value "key". *)
+
+OUTPUT CompareKeys(node: INTEGER[Fmt.Int]);
+(* Compares the key of the newest node with that of node "node". *)
+
+OUTPUT AddLeaf(node: INTEGER[Fmt.Int]; childNum: CARDINAL[Fmt.Int]);
+(* Adds the newest node as child "childNum" of node "node". *)
+
+(* SEARCH ------------------------------------------------------------------ *)
+
+OUTPUT NewSearchKey(key: INTEGER[Fmt.Int]);
+(* Assert that "key" is a new key value for a search. This will create a new
+   rectangle in the view for use by subsequent CompareKey events. This event
+   is analogous to NewNode in the insertion case. *)
+
+(* In between a NewSearchKey event and a SearchEnd event may appear any number
+   of CompareKeys events. *)
+
+OUTPUT SearchEnd(node: INTEGER[Fmt.Int]);
+(* End a search at node "node"; if "node = 0", then the search failed. This
+   event is analogous to the AddLeaf event in the insertion case. *)
+
+(* FIND-MIN ---------------------------------------------------------------- *)
+
+OUTPUT GoLeft(node: INTEGER[Fmt.Int]);
+(* Mark that we are moving down to the left child of "node"; if "node = 0",
+   then "node" has no left child, so clean up any markings. *)
+
+(* DELETE ------------------------------------------------------------------ *)
+
+OUTPUT SpliceOut(parent, child: INTEGER[Fmt.Int]; save: BOOLEAN[Fmt.Bool]);
+(* Splice the "parent" out of the tree, replacing its subtree by the one
+   rooted at "child". If "child = 0", then "parent" is a leaf. Node that if
+   "parent" is the root of the tree, then "child" will become the new root.
+   If "save = TRUE", then "parent" should be saved in the view for a future
+   Copy of "parent" to some destination; otherwise, "parent" should be removed
+   from the view. *)
+
+OUTPUT Copy(source, dest: INTEGER[Fmt.Int]);
+(* Move node with index "source" to node with index "dest", updating the label
+   of "dest" to be the label of "source". *)
+
+(* RED-BLACK TREES --------------------------------------------------------- *)
+
+OUTPUT CurrentNode(node: INTEGER[Fmt.Int]);
+(* Assert that the algorithm's "current" node is "node". This turns off the
+   highlighting on the previous current node (if there was one), and
+   highlights the node with index "node" if "node # 0". If "node = 0", then no
+   new node is highlit. *)
+
+OUTPUT SetType(
+  node: INTEGER[Fmt.Int];
+  type, pType: RedBlackAlg.NodeType[RedBlackAlg.NodeTypeToText]);
+(* Changes the "type" of "node" to the value "type", given that the parent of
+   "node" (if it has one), is of type "pType". If "node" is the root, then
+   "pType" must be "RedBlackAlg.NodeType.Red". *)
+
+OUTPUT RedRedClash(child, parent: INTEGER[Fmt.Int]; on: BOOLEAN[Fmt.Bool]);
+(* If "on", assert that there is a clash between the child and the parent,
+   which both have "type" RegBlackAlg.NodeType.Red. If "NOT on", then turn off
+   the visual indication of a previous red-red clash. *)
+
+OUTPUT CheckUncle(child: INTEGER[Fmt.Int]);
+(* Highlight the path (set of edges) from "child" to its uncle. If "child =
+   0", then restore the previous path to thin weights. *)
+
+OUTPUT Rotate(child, parent: INTEGER[Fmt.Int]);
+(* Rotate the "child" and "parent" nodes. The visual indication for a red-red
+   clash between "parent" and "child" should be maintained in the new
+   configuration of the tree. *)

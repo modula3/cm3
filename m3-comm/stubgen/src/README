@@ -1,0 +1,35 @@
+m3tk-gast.2 package -- created Fri Mar 20 09:20:13 PST 1992 by mjordan
+current owner mjordan
+
+This package provides basic facilities for specifying an Abstract Syntax
+Tree. It defines a basic node type AST.NODE, and in separate interfaces,
+specifies a set of standard methods applicable to an AST node.
+Language specific ASTs are defined by subtyping AST.NODE and providing
+implementations for the standard methods. 
+
+AST             defines AST.NODE and explains the basic framework
+AST_Init        adds an "init" method to AST.NODE
+AST_Name        adds a "name" method to AST.NODE
+AST_Iter        adds an iterator for node children
+AST_WalkRep     adds support for tree walks with client callback
+AST_CopyRep     adds support for tree copies with client callback
+AST_DisplayRep  adds support for "displaying" a tree node
+AST_LAST        defines the "last" interface to extend AST.NODE
+
+The interfaces AST_{Walk.Copy,Display}Rep are not intended to be
+used by AST clients, they provide support for the following interfaces:
+
+ASTWalk         walk a tree with callback to client
+ASTCopy         copy a tree with callback to client
+
+Display is inherently language specific, so does not appear at this level.
+
+ASTName         just a veneer on the "name" method.
+
+ASTNodeArray    presents the children of a node as an array
+
+
+
+
+
+

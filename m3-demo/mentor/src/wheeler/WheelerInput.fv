@@ -1,0 +1,24 @@
+; Copyright (C) 1993, Digital Equipment Corporation 
+; All rights reserved.                              
+; See the file COPYRIGHT for a full description.    
+
+(Shape
+  (Height + 0)
+  (VBox
+    (HBox
+      (Shape (Width + 0) (Text LeftAlign "String to compress: "))
+      (Frame Lowered (TypeIn %string ="abraca")))
+    (Glue 2)
+    (HBox
+      (Shape (Width + 0) (Text LeftAlign "Alphabet: "))
+      (Frame Lowered (TypeIn %alphabet ="abcr")))
+    (Glue 2)
+    (HBox
+      (Shape (Width + 999) (Boolean
+        %pause
+        (Text LeftAlign "Pause after each phase"))))
+    (Glue 2)
+    (HBox
+      (Shape (Width + 999) (Boolean
+        %finalOnly
+        (Text LeftAlign "Final decompress phase only"))))))

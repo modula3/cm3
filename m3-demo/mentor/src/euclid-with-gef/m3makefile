@@ -1,0 +1,22 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Thu Jun 20 15:33:33 PDT 1996 by heydon
+%      modified on Thu Feb  9 07:54:39 PST 1995 by kalsow
+%      modified on Mon Feb 22 10:23:02 PST 1993 by steveg
+%      modified on Thu Sep 24 12:13:49 PDT 1992 by mhb
+
+module   ("Euclid")
+resource ("EuclidAlg.gef")
+resource ("EuclidView.gef")
+resource ("proof")
+
+if not defined ("MENTOR_UMBRELLA") 
+  import_lib     ("m3slisp")
+  import_lib     ("m3gef")
+  implementation ("Main")
+  bundle         ("EuclidBundle")
+  program        ("euclid")
+end
+

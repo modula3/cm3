@@ -1,0 +1,349 @@
+(* Copyright (C) 1993, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+(*                                                                           *)
+(* Last modified on Mon Jan  9 12:13:42 PST 1995 by najork                   *)
+(*      modified on Wed Oct 13 19:41:11 PDT 1993 by mann                     *)
+(*      modified on Thu Jul 22 14:27:15 PDT 1993 by perl                     *)
+
+let stringColor = color_named("Pink");
+let stringLabelColor = color_named("Black");
+let matrixColor = color_named("QuiteLightSlightlyGreenishVividBlue");
+let matrixLabelColor = color_named("Black");
+let rowIndexColor = stringColor;
+let rowIndexLabelColor = stringLabelColor;
+let otherIndexColor = color_named("White");
+let otherIndexLabelColor = color_named("DarkGray");
+let shadowColor = color_named("LightGray");
+let shadowLabelColor = color_named("Black");
+let alphaColor = color_named("LightYellow");
+let alphaLabelColor = color_named("Black");
+let permutedColor = alphaColor;
+let permutedLabelColor = alphaLabelColor;
+let codesColor = color_named("White");
+let codesLabelColor = color_named("Black");
+let codesHiliteLabelColor = color_named("DarkRed");
+let arrowColor = color_named("DarkRed");
+let duplColor = color_named("LightGray");
+let duplLabelColor = color_named("VeryDarkGray");
+
+let makeDippingPath = proc(startX, endX, y, dip)
+    proc(t)
+        [ (startX * (1.0 - t)) + (endX * t),
+	  y + (dip * (0.25 - ((t - 0.5) * (t - 0.5))))]
+    end
+end;
+
+let view =
+  {
+    graphvbt => graph_new(),
+    vertexFont => ok,
+    n => ok,
+    string => {chars => ok, vtx => ok},
+    xlast => {chars => ok, vtx => ok},
+    alphalen => ok,
+    matrix => ok,
+    rowIndex => ok,
+    rowIndexVtx => ok,
+    rowIndexGhostVtx => ok,
+    codes => {array => ok, vtx => ok},
+    codeSearchArrow => ok,
+    rowIndices => ok,
+
+    StartPermute => meth(self, string, alpha)
+    (* Start of first phase of compression, in which we permute the
+       original string.
+     *)
+        self.vertexFont := graph_newFont(self.graphvbt, "Helvetica",
+                                         0.5, "Roman", "bold", "*");
+        self.n := text_length(string);
+	self.alphalen := text_length(alpha);
+
+	self.string.chars := string;
+	self.xlast.chars := alpha;
+
+	self.codes.array := array_new(self.n, ok);
+        self.codes.vtx := array_new(self.n, ok);
+
+	let north = ~3.0,
+            south = float(self.n) + 4.25,
+            west = -(float(self.alphalen) + 1.0),
+            east = float(self.n) + 1.0;
+	graph_setWorld(self.graphvbt, west, east, north, south);
+	graph_setAspect(self.graphvbt, (south - north) / (east - west));
+	graph_setPixelSizeDivisor(self.graphvbt,
+                                  round(east - west),
+			          round(south - north));
+
+        self.xlast.vtx := array_new(self.alphalen + self.n, ok);
+        for i = 0 to self.alphalen - 1 do
+            let v = graph_newVertex(self.graphvbt);
+            self.xlast.vtx[i] := v;
+	    graph_setVertexSize(v, 0.0, 0.0); (*invisible for now*)
+            graph_setVertexLabel(v, text_sub(self.xlast.chars, i, 1));
+            graph_setVertexFont(v, self.vertexFont);
+            graph_setVertexColor(v, alphaColor);
+            graph_setVertexLabelColor(v, alphaLabelColor);
+            graph_setVertexBorder(v, 0.05);
+            graph_moveVertex(v, float(i - (2 * self.alphalen)) - 4.0,
+                                float(self.n + 1), false);
+        end;
+
+        self.string.vtx := array_new(self.n, ok);
+        for i = 0 to self.n - 1 do
+            let v = graph_newVertex(self.graphvbt);
+            self.string.vtx[i] := v;
+            graph_setVertexLabel(v, text_sub(string, i, 1));
+            graph_setVertexFont(v, self.vertexFont);
+            graph_setVertexColor(v, stringColor);
+            graph_setVertexLabelColor(v, stringLabelColor);
+            graph_setVertexBorder(v, 0.05);
+            graph_moveVertex(v, float(i), ~2.0, false);
+	    graph_setVertexSize(v, 0.95, 0.95);
+        end;
+
+	graph_redisplay(self.graphvbt);
+
+        self.matrix := array_new(self.n, ok);
+	self.rowIndices := array_new(self.n, ok);
+    end,
+
+    NextRotation => meth(self, i, string)
+    (* Forming the matrix of rotations.  The ith row of the matrix is string.
+       The 0th row does cause an event, with string equal to the initial
+       string.
+    *)
+
+        self.matrix[i] := { vtx => array_new(self.n, ok),
+                            chars => string };
+        for j = 0 to self.n - 1 do
+            let v = graph_newVertex(self.graphvbt);
+            self.matrix[i].vtx[j] := v;
+            graph_setVertexLabel(v, text_sub(string, j, 1));
+            graph_setVertexFont(v, self.vertexFont);
+            graph_setVertexBorder(v, 0.05);
+	    if i is 0 then
+  	        graph_setVertexColor(v, stringColor);
+                graph_setVertexLabelColor(v, stringLabelColor);
+                graph_moveVertex(v, float(j), ~2.0, false);
+                graph_moveVertex(v, float(j), 0.0, true);
+	    else
+  	        graph_setVertexColor(v, matrixColor);
+                graph_setVertexLabelColor(v, matrixLabelColor);
+                graph_moveVertex(v, float((j+1) % self.n),
+                                    float(i-1), false);
+                graph_moveVertex(v, float(((j+1) % self.n) - 1),
+                                    float(i), true);
+	    end;
+	    graph_setVertexSize(v, 0.95, 0.95);
+        end;
+
+	if i is 0 then
+   	    zeus_animate(self.graphvbt, 0.0, 1.0);
+	else
+   	    zeus_animate(self.graphvbt, 0.0, 0.75);
+	    graph_moveVertexOnPath(self.matrix[i].vtx[self.n - 1],
+		    	           makeDippingPath(~1.0, float(self.n - 1),
+                                                   float(i), 2.0));
+	    zeus_animate(self.graphvbt, 0.75, 1.0);
+	end;
+
+	let v = graph_newVertex(self.graphvbt);
+	self.rowIndices[i] := v;
+	graph_setVertexLabel(v, fmt_int(i));
+	graph_setVertexFont(v, self.vertexFont);
+	graph_setVertexColor(v, otherIndexColor);
+	graph_setVertexLabelColor(v, otherIndexLabelColor);
+	graph_moveVertex(v, float(self.n), float(i), false);
+	graph_setVertexSize(v, 0.95, 0.95);
+	graph_redisplay(self.graphvbt);
+    end,
+
+    RotationsSorted => meth(self, rotations, rowIndex)
+    (* The matrix of rotations, in sorted order; rowIndex is the index
+       where the original string landed.
+    *)
+        let moved = array_new(self.n, false),
+            newMatrix = array_new(self.n, ok);
+
+        for i = 0 to self.n-1 do
+            for j = 0 to self.n-1 do
+                if not(moved[j]) and
+                   text_equal(rotations[i],
+                              self.matrix[j].chars)
+                then
+		    newMatrix[i] := self.matrix[j];
+		    moved[j] := true;
+		    for k = 0 to self.n-1 do
+			let v = newMatrix[i].vtx[k];
+			if j > i then
+			    graph_vertexToBack(v);
+                        else
+                            graph_vertexToFront(v);
+		        end;
+			graph_moveVertex(v, float(k), float(i), true);
+	            end;
+		    exit;
+		end;
+	    end;
+	end;
+
+	self.matrix := newMatrix;
+	zeus_animate(self.graphvbt, 0.0, 2.0);
+
+	self.rowIndex := rowIndex;
+	let v = graph_newVertex(self.graphvbt);
+	self.rowIndexVtx := v;
+	graph_setVertexShape(v, "ellipse");
+	graph_setVertexLabel(v, fmt_int(self.rowIndex));
+	graph_setVertexFont(v, self.vertexFont);
+	graph_setVertexColor(v, rowIndexColor);
+	graph_setVertexLabelColor(v, rowIndexLabelColor);
+	graph_setVertexBorder(v, 0.05);
+	graph_moveVertex(v, float(self.n), float(rowIndex), false);
+	graph_setVertexSize(v, 0.95, 0.95);
+	graph_redisplay(self.graphvbt);	
+    end,
+
+    PermuteDone => meth(self, lastchars, rowIndex)
+    (* Done with first phase of compression.  The permuted string (last column
+       of the sorted matrix of rotations) is lastchars.  The row index of the
+       original string in the matrix is rowIndex.
+    *)
+
+	self.xlast.chars := self.xlast.chars & lastchars;
+	for ii = 0 to self.n - 1 do
+	    let i = (self.n - 1) - ii;
+            let v = graph_newVertex(self.graphvbt),
+	        w = self.matrix[i].vtx[self.n-1];
+
+	    graph_vertexToBack(v);
+            graph_setVertexLabel(v, text_sub(lastchars, i, 1));
+            graph_setVertexFont(v, self.vertexFont);
+            graph_setVertexColor(v, duplColor);
+            graph_setVertexLabelColor(v, duplLabelColor);
+            graph_setVertexBorder(v, 0.05);
+            graph_moveVertex(v, float(self.n - 1), float(i), false);
+	    graph_setVertexSize(v, 0.95, 0.95);
+
+	    graph_vertexToFront(w);
+            graph_moveVertex(w, float(i), float(self.n + 1), true);
+
+            self.xlast.vtx[i+self.alphalen] := w;
+            self.matrix[i].vtx[self.n - 1] := v;
+	end;
+
+    	zeus_animate(self.graphvbt, 0.0, 2.0 (*!!*));
+    end,
+
+    StartEncode => meth(self, alphabet)
+    (* Ready to start encoding the permuted string using alphabet.
+    *)
+        for i = 0 to self.alphalen - 1 do
+	    graph_setVertexSize(self.xlast.vtx[i], 0.95, 0.95);
+            graph_moveVertex(self.xlast.vtx[i],
+                             float(i - self.alphalen),
+                             float(self.n + 1), true);
+	end;
+
+	zeus_animate(self.graphvbt, 0.0, 1.0);
+
+	for i = 0 to self.n - 1 do
+	    let v = self.xlast.vtx[i + self.alphalen];
+            graph_setVertexColor(v, alphaColor);
+            graph_setVertexLabelColor(v, alphaLabelColor);
+	end;
+	graph_redisplay(self.graphvbt);
+    end,
+
+    EncodeNextChar => meth(self, i, c)
+    (* About to find the code for character number i in the permuted string.
+       The character value is c.
+    *)
+	let v = graph_newVertex(self.graphvbt);
+	self.codeSearchArrow := v;
+	graph_setVertexFont(v, self.vertexFont);
+	graph_setVertexColor(v, duplColor);
+	graph_setVertexLabelColor(v, duplLabelColor);
+	graph_setVertexBorder(v, 0.05);
+	graph_setVertexSize(v, 0.95, 0.95);
+	graph_setVertexLabel(self.codeSearchArrow, text_new(1, c));
+  	graph_moveVertex(self.codeSearchArrow, float(i),
+                         float(self.n + 1), false);
+  	graph_moveVertex(self.codeSearchArrow, float(i),
+                         float(self.n + 2), true);
+	zeus_animate(self.graphvbt, 0.0, 1.0);
+
+        let v = graph_newVertex(self.graphvbt);
+        self.codes.vtx[i] := v;
+        graph_setVertexFont(v, self.vertexFont);
+        graph_setVertexColor(v, codesColor);
+        graph_setVertexLabelColor(v, codesHiliteLabelColor);
+        graph_setVertexBorder(v, 0.12);
+        graph_moveVertex(v, float(i), float(self.n) + 3.25, false);
+        graph_setVertexLabel(v, "0");
+	graph_setVertexSize(v, 0.95, 0.95);
+	graph_redisplay(self.graphvbt);
+    end,
+
+    EncodeDistinctCount => meth(self, i, k, n, c)
+    (* Found another distinct character at position k in (alphabet & string) 
+       while computing the code corresponding to character i in (string).  The 
+       number of distinct characters found so far is n.  The character value
+       is c.
+    *)
+  	graph_moveVertex(self.codeSearchArrow, float(k - self.alphalen),
+                         float(self.n + 2), true);
+	zeus_animate(self.graphvbt, 0.0, 1.0);
+	graph_setVertexLabel(self.codes.vtx[i], fmt_int(n));
+        graph_redisplay(self.graphvbt);
+    end,
+
+    EncodeFoundCode => meth(self, i, k, code, c)
+    (* Found that the code for character i in (string) is code; the closest
+       previous occurrence of the same character was at position k in
+       (alphabet & string).  The character value is c. 
+    *)
+  	graph_moveVertex(self.codeSearchArrow, float(k - self.alphalen),
+                         float(self.n + 2), true);
+	zeus_animate(self.graphvbt, 0.0, 0.75);
+	graph_moveVertex(self.codeSearchArrow, float(k - self.alphalen),
+			 float(self.n + 1), true);
+	zeus_animate(self.graphvbt, 0.75, 1.0);
+	graph_removeVertex(self.xlast.vtx[k]);
+	self.xlast.vtx[k] := self.codeSearchArrow;
+
+	self.codeSearchArrow := ok;
+
+	let w = self.codes.vtx[i];
+	graph_setVertexLabelColor(w, codesLabelColor);
+	graph_setVertexBorder(w, 0.05);
+
+	self.codes.array[i] := code;
+
+	graph_redisplay(self.graphvbt);	
+    end,
+
+    EncodeDone => meth(self, alphabet, codes, rowIndex)
+    (* End of encode phase; (codes, rowIndex) are now ready to be compressed
+       by Huffman coding, arithmetic coding, or whatever; not shown in this
+       animation.  
+    *)
+	let v = graph_newVertex(self.graphvbt);
+	self.rowIndexGhostVtx := v;
+	graph_setVertexShape(v, "ellipse");
+	graph_setVertexLabel(v, fmt_int(self.rowIndex));
+	graph_setVertexFont(v, self.vertexFont);
+	graph_setVertexColor(v, duplColor);
+	graph_setVertexLabelColor(v, duplLabelColor);
+	graph_setVertexBorder(v, 0.05);
+	graph_moveVertex(v, float(self.n), float(rowIndex), false);
+	graph_setVertexSize(v, 0.95, 0.95);
+
+	let w = self.rowIndexVtx;
+	graph_moveVertex(w, float(self.n), float(self.n) + 3.25, true);
+
+	zeus_animate(self.graphvbt, 0.0, 1.0);
+    end,
+
+  };

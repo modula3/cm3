@@ -1,0 +1,46 @@
+(* Copyright (C) 1994, Digital Equipment Corporation *)
+(* All rights reserved.                              *)
+(* See the file COPYRIGHT for a full description.    *)
+
+let view = { 
+	graphvbt => graph_new(),
+	font => ok,
+	binWidth => ok,
+        nBins => ok,
+	currWt => ok,
+	currVertex => ok,
+
+ 	Setup => meth (self, nBins, nWts)
+	   graph_setWorld(self.graphvbt, 
+	      ~2.0, float(nBins), 1.0, 0.0);
+	   graph_setMargin(self.graphvbt, 2.0);
+	   if (self.font is ok) then
+	     self.font := graph_newFont (self.graphvbt, 
+	        "Helvetica", 0.5, "Roman", "Bold", "*") end;
+	   end,
+
+	NewWeight => meth (self, id, wt) 
+	   let v = graph_newVertex (self.graphvbt);
+	   graph_setVertexSize(v, 1.0, wt);
+	   graph_moveVertex(v, ~1.0, 0.5, false);
+	   graph_setVertexFont(v, self.font);
+	   graph_setVertexBorder(v, 0.01);
+	   graph_setVertexLabel(v, fmt_int(id));
+	   graph_setVertexColor(v, color_rgb(0.5, 1.0, 0.5));
+	   graph_setVertexLabelColor(v, color_rgb(0.0, 0.0, 0.0));
+	   graph_redisplay(self.graphvbt);
+  	   self.currVertex := v;
+	   self.currWt := wt;
+	   end,
+
+	Probe => meth (self, id, wt) 
+	   ok;
+	   end,
+
+	Pack => meth (self, bin, total) 
+	   let xpos = 0.5 + float(bin);
+	   let ypos = total - (float(self.currWt) / 2.0);
+	   graph_moveVertex(self.currVertex, xpos, ypos, true);
+	   graph_animate(self.graphvbt, 0.0, 1.0);
+	   end,
+};

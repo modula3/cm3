@@ -1,0 +1,14 @@
+% Copyright (C) 1993, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Makefile for smalldb library
+% Last modified on Wed Dec 22 16:25:31 PST 1993 by kalsow
+%      modified on Thu Jul 29 16:49:55 PDT 1993 by wobber
+
+import("libm3")
+
+Module("SmallDB")
+module("OSSupport")
+
+Library("m3smalldb")

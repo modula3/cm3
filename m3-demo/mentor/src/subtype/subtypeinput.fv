@@ -1,0 +1,45 @@
+#| Copyright 1993 Digital Equipment Corporation. |#
+#| Distributed only by permission. |#
+#| Last modified on Tue Sep 21 14:51:34 PDT 1993 by hania |#
+#|      modified on Wed Jul 14 23:01:32 PDT 1993 by mhb |#
+
+(Rim (Pen 5) (Shape (Width + 300)
+  (VBox
+    (HBox 
+    (Menu "Canned Examples"
+      (VBox 
+        (MButton %ex1 "Example 1") 
+        (MButton %ex2 "Example 2")
+        (MButton %ex3 "Example 3") 
+        (MButton %ex4 "Example 4")
+        (MButton %ex5 "Example 5") 
+        (MButton %ex6 "Example 6")
+        (MButton %ex7 "Example 7") 
+        (MButton %ex8 "Example 8")
+        (MButton %ex9 "Example 9") 
+        (MButton %ex10 "Example 10")
+        ))
+    (Glue 10)
+    (Menu "Canned Non-Examples"
+      (VBox 
+        (MButton %nonex1 "Example 1") 
+        (MButton %nonex2 "Example 2")
+        (MButton %nonex3 "Example 3") 
+        (MButton %nonex4 "Example 4")
+        (MButton %nonex5 "Example 5") 
+        (MButton %nonex6 "Example 6")
+        (MButton %nonex7 "Example 7") 
+        (MButton %nonex8 "Example 8")
+        (MButton %nonex9 "Example 9") 
+        (MButton %nonex10 "Example 10")
+        )) Fill )
+  (Glue 10)
+  (HBox 
+    (Text "Left type:   ") 
+    (Border (Rim (TypeIn %typeleft))))
+  (Glue 10)
+  (HBox 
+    (Text "Right type: ") 
+    (Border (Rim (TypeIn %typeright)))))))
+
+

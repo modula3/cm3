@@ -1,0 +1,32 @@
+/* Copyright (C) 1994, Digital Equipment Corporation         */
+/* All rights reserved.                                      */
+/* See the file COPYRIGHT for a full description.            */
+/*                                                           */
+/* Last modified on Thu Jun 20 15:39:19 PDT 1996 by heydon   */
+/*      modified on Tue Jan 31 14:53:32 PST 1995 by kalsow   */
+/*      modified on Tue Jan 24 15:19:08 PST 1995 by mhb      */
+/*      modified on Tue May 24 09:11:03 PDT 1994 by najork   */
+
+import   ("zeus")
+zume     ("Maxflow")
+
+module   ("MFGraph")
+module   ("MFFmt")
+module   ("MFAlgs")
+module   ("MFViews")
+module   ("MFViews2")
+module   ("MFBarView")
+module   ("MFLegendView")
+module   ("MFEdgeView")
+
+resource ("maxflowinput.fv")
+resource ("maxflowdata.fv")
+resource ("maxflowcode.m3")
+
+include_dir ("misc")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation ("Main")
+  bundle         ("MaxflowBundle")
+  program        ("maxflow")
+end

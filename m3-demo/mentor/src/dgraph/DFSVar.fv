@@ -1,0 +1,29 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(Scale
+  (HScale 1)
+  (VScale 1)
+  (LabelFont (Family "Courier"))
+  (Rim
+    (Pen 10)
+    (VBox
+      (Shape
+        (Height + 0)
+        (HBox
+          (Shape
+            (Width + 0)
+            (HBox
+              (VBox (Text "Vertex: ") (Text RightAlign "val: "))
+              (VBox
+                (Font (Family "Courier"))
+                (Text
+                  LeftAlign
+                  "A B C D E F G H I J K L M")
+                (Text
+                  LeftAlign
+                  %val
+                  "* * * * * * * * * * * * *"))))
+          Fill))
+      Fill)))
