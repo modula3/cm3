@@ -15,8 +15,8 @@ CONST Module = "Interpolation.";
 
 (*------------------*)
 PROCEDURE Linear(
-                 READONLY xa,ya:ARRAY OF R.T;(*interp table*)
-                 x:R.T;                      (*the input*)
+                 READONLY xa,ya:ARRAY OF R.T;
+                 x:R.T;
                  ):R.T=
 (*Given an interpolation table with xa input and ya output,
 do linear interpolation for x.
@@ -59,10 +59,9 @@ END Linear;
 
 (*------------------*)
 PROCEDURE Newton(
-                 READONLY xa,ya:ARRAY OF R.T;(*interp table*)
-                 x:R.T;             (*the input*)
-                 VAR dy:R.T;        (*the error estimate*)
-                 start,len:CARDINAL:=0 (*for partial access*)
+                 READONLY xa,ya:ARRAY OF R.T;
+                 x:R.T;
+                 VAR dy:R.T;
                  ):R.T  RAISES {Error}=
 (*Given an interpolation table with xa input and ya output,
 do Newton polynomial interpolation for x.  Report error estimate as dy.
@@ -72,7 +71,8 @@ Partial access: Give the starting index and the length to be used.
 CONST ftn = Module & "Newton";
 VAR
   xn,xn1,xnn,n,col_n:CARDINAL;
-  c,d:REF ARRAY OF R.T;
+  c:=NEW(REF ARRAY OF R.T,NUMBER(xa)+1);
+  d:=NEW(REF ARRAY OF R.T,NUMBER(xa)+1);
   ndx:CARDINAL:=1;
   y,xi,xim,den,factor,diff,difftmp:R.T;
 BEGIN
@@ -80,21 +80,10 @@ BEGIN
     RAISE Error(Err.bad_size);
   END;
 
-  IF len # 0 THEN
-    (*use the start and len data for partial access*)
-    IF start+len >= NUMBER(xa) THEN
-      (*partial interp exceeds table length*)
-      RAISE Error(Err.bad_size);
-    END;
-    xn:=len; xn1:=start; xnn:=xn1+xn-1;
-  ELSE
-    (*use the full tables*)
-    xn:=NUMBER(xa); xn1:=0; xnn:=xn-1;
-  END;
+  (*use the full tables*)
+  xn:=NUMBER(xa); xn1:=0; xnn:=xn-1;
   (*either way, c and d are 0..n but we use 1..n*)
   n:=xn;
-  c:=NEW(REF ARRAY OF R.T,n+1);
-  d:=NEW(REF ARRAY OF R.T,n+1);
 
   (*---find starting y---*)
   ndx:=xnn;              (*get a starter x*)

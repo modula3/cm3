@@ -87,7 +87,7 @@ BEGIN
   FOR i:=5 TO 7 DO
     x:=xa[i]+offset;
     y1:=Sin(x);
-    y2:=Ip.Newton(xa^,ya^,x,dy,start:=5, len:=4);
+    y2:=Ip.Newton(SUBARRAY(xa^,5,4),SUBARRAY(ya^,5,4),x,dy);
     Msg("4-point: x=" & RF.Fmt(x)
     & "\n y1=" & RF.Fmt(y1)
     & "\n y2=" & RF.Fmt(y2)
