@@ -501,13 +501,11 @@ PROCEDURE ConvolveDown (x, y: T; factor: ScalingType): T =
            (-(x.first + y.first)) DIV factor, (xlast + ylast) DIV factor);
     *)
     sliceX := Slice(x, factor);
-    sliceY := Slice(y, factor);
-    z      := sliceX[0].convolve(sliceY[0]);
-    j      := factor;
+    sliceY := SliceRev(y, factor);
+    z      := Zero;
   BEGIN
-    FOR i := 1 TO factor - 1 DO
-      DEC(j);
-      z := z.superpose(sliceX[i].convolve(sliceY[j]).translate(1));
+    FOR i := 0 TO factor - 1 DO
+      z := z.superpose(sliceX[i].convolve(sliceY[i]));
     END;
     <*ASSERT z.equal(x.convolve(y).downsample(factor))*>
     RETURN z;
