@@ -75,22 +75,28 @@ does not foo", "objc crashes when doing bar".</dd>
     Currently, it can be one of
   <dl>
   <dt>ada</dt>
-  <dd>A problem with the Ada compiler, libraries or tools.</dd>
+  <dd>A problem with the Ada compiler front end, libraries or tools.</dd>
   <dt>bootstrap</dt>
   <dd>GCC fails to bootstrap. This should be filed <em>only</em> if a
   bootstrap failure prevails for an extended period of time (at least
   one week) on any platform (and possibly not-so-common conditions like
   a read-only srcdir), or non-mainstream platforms.</dd>
   <dt>c++</dt>
-  <dd>A problem with the C++ compiler.</dd>
+  <dd>A problem with the C++ compiler front end.</dd>
   <dt>c</dt>
-  <dd>A problem with the C compiler.</dd>
+  <dd>A problem with the C compiler front end.</dd>
   <dt>debug</dt>
   <dd>A problem with generating debugging information.</dd>
+  <dt>driver</dt>
+  <dd>A problem with a compiler driver, namely <code>gcc</code>,
+   <code>g++</code>, <code>g77</code>, <code>gcj</code> or
+   <code>gnat</code>.</dd>
   <dt>fortran</dt>
-  <dd>A problem with the Fortran compiler.</dd>
+  <dd>A problem with the Fortran compiler front end.</dd>
+  <dt>inline-asm</dt>
+  <dd>A problem caused by use of inline assembly.</dd>
   <dt>java</dt>
-  <dd>A problem with the Java compiler.</dd>
+  <dd>A problem with the Java compiler front end.</dd>
   <dt>libf2c</dt>
   <dd>A problem in the Fortran runtime library.</dd>
   <dt>libgcj</dt>
