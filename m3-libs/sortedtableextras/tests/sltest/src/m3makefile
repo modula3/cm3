@@ -1,5 +1,0 @@
-import ("libm3")
-import ("sortedtableextras")
-
-implementation ("SLTest")
-program ("SLTest")
