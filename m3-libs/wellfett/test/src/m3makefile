@@ -9,6 +9,7 @@ module("TestBSpline")
 module("TestMatchWavelet")
 module("TestCDFLifting")
 module("TestTransform")
+module("PlotWavelets")
 implementation("Main")
 
 program("test")
