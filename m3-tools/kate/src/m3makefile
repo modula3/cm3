@@ -13,10 +13,16 @@
 source("m3quake.xml")
 source("modula3.xml")
 
+exec("cd ../src; install modula3.xml m3quake.xml /opt/kde3/share/apps/katepart/syntax")
+
 % Here are some Mimetypes that allow Konqueror
 % to detect Modula-3 related files.
 
 % they should go to
+%    /opt/kde3/share/apps/katepart/syntax
+% or
 %    .kde/share/mimelnk/text/
 source("x-m3quake.desktop")
 source("x-modula3.desktop")
+
+exec("cd ../src; install x-modula3.desktop x-m3quake.desktop /opt/kde3/share/mimelnk/text")
