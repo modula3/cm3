@@ -10,27 +10,13 @@
 
 UNSAFE INTERFACE Udir;
 
-(*** <dir.h> ***)
+FROM Utypes IMPORT u_int32_t, u_int16_t, u_int8_t;
+FROM Ctypes IMPORT char, char_star, int, void_star;
 
-IMPORT Ctypes;
-
-CONST
-  MAXNAMLEN = 255;   (* maximum length of component of file path name *)
-  MAXPATHLEN = 1024; (* maximum length of file path name *)
-
-  (* file types *)
-  DT_UNKNOWN =      0;
-  DT_FIFO    =      1;
-  DT_CHR     =      2;
-  DT_DIR     =      4;
-  DT_BLK     =      6;
-  DT_REG     =      8;
-  DT_LNK     =     10;
-  DT_SOCK    =     12;
-  DT_WHT     =     14;
+(*** <sys/dirent.h> ***)
 
 (*
- * The dirent structure defines the format of directory entries returned by
+ * The dirent structure defines the format of directory entries returned by 
  * the getdirentries(2) system call.
  *
  * A directory entry has a struct dirent at the front of it, containing its
@@ -39,41 +25,46 @@ CONST
  * byte boundary with null bytes.  All names are guaranteed null terminated.
  * The maximum length of a name in a directory is MAXNAMLEN.
  *)
+
+CONST
+  MAXNAMLEN = 255;
+
 TYPE
-  dirent = RECORD                    (* describes directory entry *)
-    d_fileno:   Ctypes.unsigned_long;  (* inode number of entry *)
-    d_reclen:   Ctypes.unsigned_short; (* record length in bytes *)
-    d_type:     Ctypes.unsigned_char;  (* file types, see above *)
-    d_namelen:  Ctypes.unsigned_char;  (* name length in bytes *)
-    d_name:     ARRAY [0..MAXNAMLEN] OF Ctypes.char;  (* name *)
+  struct_dirent = RECORD
+    d_fileno:   u_int32_t;		 (* file number of entry *)
+    d_reclen:   u_int16_t;		 (* length of this record *)
+    d_type:     u_int8_t;		 (* file type, see below *)
+    d_namelen:  u_int8_t;		 (* length of string in d_name *)
+    d_name:     ARRAY [0..MAXNAMLEN] OF char;
+					 (* name must be no longer than his *)
   END;
+  struct_dirent_star = UNTRACED REF struct_dirent;
 
-  direct = dirent;                    (* backwards compatibility *)
+(*
+ * File types
+ *)
+CONST
+  DT_UNKNOWN =      0;
+  DT_FIFO    =      1;
+  DT_CHR     =      2;
+  DT_DIR     =      4;
+  DT_BLK     =      6;
+  DT_REG     =      8;
+  DT_LNK     =     10;
+  DT_SOCK    =     12;
 
-  DIR = RECORD
-    dd_fd:     Ctypes.int; (* file descriptor associated with directory *)
-    dd_loc:    Ctypes.long; (* offset in current buffer *)
-    dd_size:   Ctypes.long; (* amount of data returned by getdirentries *)
-    dd_buf:    Ctypes.char_star; (* data buffer *)
-    dd_len:    Ctypes.int; (* size of data buffer *)
-    dd_seek:   Ctypes.long (* magic cookie returned by getdirentries *);
-    dd_rewind: Ctypes.long; (* magic cookie for rewinding *)
-    dd_flags:  Ctypes.int; (* file descriptor associated with directory *)
-  END;
+(*** <dirent.h> ***)
 
+CONST
+  DIRBLKSIZ = 1024;
+
+TYPE
+  DIR = void_star;
   DIR_star = UNTRACED REF DIR;
 
-  direct_star = UNTRACED REF direct;
-
-<*EXTERNAL*> PROCEDURE opendir (filename: Ctypes.char_star): DIR_star;
-<*EXTERNAL*> PROCEDURE readdir (dirp: DIR_star): direct_star;
-<*EXTERNAL*> PROCEDURE telldir (dirp: DIR_star): Ctypes.long;
-<*EXTERNAL*> PROCEDURE seekdir (dirp: DIR_star; loc: Ctypes.long);
+<*EXTERNAL*> PROCEDURE opendir (filename: char_star): DIR_star;
+<*EXTERNAL*> PROCEDURE readdir (dirp: DIR_star): struct_dirent_star;
 <*EXTERNAL*> PROCEDURE rewinddir (dirp: DIR_star);
-<*EXTERNAL*> PROCEDURE closedir(dirp: DIR_star): Ctypes.int;
-<*EXTERNAL*> PROCEDURE getdirentries(fd  : Ctypes.int;
-                                     buf : UNTRACED REF Ctypes.char;
-                                     nbytes : Ctypes.int;
-                                     basep  : UNTRACED REF Ctypes.long): Ctypes.int;
+<*EXTERNAL*> PROCEDURE closedir(dirp: DIR_star): int;
 
 END Udir.

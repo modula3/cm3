@@ -170,12 +170,14 @@ case "${UNAME}" in
   Darwin*)
     CM3_OSTYPE=POSIX
     case "`uname -p`" in
-      powerpc*) CM3_TARGET=PPC_DARWIN;;
-      i[3456]86*) CM3_TARGET=I386_DARWIN;;
+      powerpc*)
+	    CM3_TARGET=PPC_DARWIN;;
+      i[3456]86*)
+            M3GC_SIMPLE=yes
+            export M3GC_SIMPLE
+            CM3_TARGET=I386_DARWIN;;
     esac
     GMAKE=${GMAKE:-make}
-    M3GC_SIMPLE=yes
-    export M3GC_SIMPLE
   ;;
 
   SunOS*)

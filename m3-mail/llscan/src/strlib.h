@@ -36,6 +36,6 @@ char *sconc(/* s1, s2 */);
 char *substr(/* s, p1, p2 */);
 int findstr(/* text, pat */);
 
-char *format(/* control, ... */);
+char *format(string control, ...);
 
 #endif

@@ -42,7 +42,7 @@ TYPE
   u_int16_t = u_short;
   int32_t   = int;
   u_int32_t = u_int;
-  int64_t   = RECORD val: ARRAY [0..1] OF int32_t; END;
+  int64_t   = RECORD val := ARRAY [0..1] OF int32_t {0,0}; END;
   u_int64_t = int64_t;
 
 (* #ifdef vax *)
@@ -62,8 +62,7 @@ TYPE
   size_t       = unsigned_int;
   time_t       = long;
   dev_t        = u_int32_t;
-  off_t        = int32_t;       (* Really int64_t, but we wrap all uses *)
-  off_pad_t    = int32_t;       (* Padding to fill out off_t to 64 bits *)
+  off_t        = int64_t;
   key_t        = long;
   clock_t      = u_long;
   mode_t       = u_int16_t;
@@ -113,5 +112,8 @@ PROCEDURE FD_SET   (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_CLEAR (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_ISSET (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_ZERO  (p: UNTRACED REF fd_set);
+
+<*EXTERNAL "m3_asLong"*>
+PROCEDURE asLong(val: off_t): long;
 
 END Utypes.

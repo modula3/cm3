@@ -29,6 +29,6 @@
 #ifndef _err_h
 #define _err_h
 
-void error(/* msg, ... */);
+void error(string msg, ...);
 
 #endif

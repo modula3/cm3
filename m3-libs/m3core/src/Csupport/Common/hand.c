@@ -163,9 +163,9 @@ static long tables_built = 0L;
 static unsigned long LoBits[SET_GRAIN];  /* LoBits [i] = SET { 0..i } */
 static unsigned long HiBits[SET_GRAIN];  /* HiBits [i] = SET { i..GRAIN-1 } */
 
-BuildTables ()
+void BuildTables ()
 {
-  long i, j, k;
+  long i, j;
 
   tables_built = 1L;
 

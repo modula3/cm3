@@ -29,7 +29,7 @@
 /***************************************************************/
 
 #include <stdio.h>
-#include <varargs.h>
+#include <stdarg.h>
 #include "SRCstdlib.h"
 #include "strlib.h"
 
@@ -159,17 +159,12 @@ string text, pat;
 
 
 
-/* VARARGS1 */
-/* string format(control, arg0) */
-string format(va_alist)
-va_dcl
+string format(string control, ...)
 {
-    string control;
     int res;
     va_list args;
 
-    va_start(args);
-    control = va_arg(args, string);
+    va_start(args, control);
     res = (int) sprintf(fmtbuf, control, args);
     if (res < 0) abort();
     va_end(args);

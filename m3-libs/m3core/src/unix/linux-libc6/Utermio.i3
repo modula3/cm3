@@ -147,33 +147,33 @@ TYPE
 	c_ospeed:  speed_t  := 0;	 (* output speed *)
   END;
 
-<*EXTERNAL "tcgetattr"*> 
+<*EXTERNAL*> 
 PROCEDURE tcgetattr (fildes: int; 
                      termios_p: UNTRACED REF struct_termios): int; 
 
-<*EXTERNAL "tcsetattr"*> 
+<*EXTERNAL*> 
 PROCEDURE tcsetattr(fildes, optional_actions: int;
                     termios_p: UNTRACED REF struct_termios) : int;
 
-<*EXTERNAL "tcsendbreak"*> PROCEDURE tcsendbreak(fildes, duration: int): int;
+<*EXTERNAL*> PROCEDURE tcsendbreak(fildes, duration: int): int;
 
-<*EXTERNAL "tcdrain"*> PROCEDURE tcdrain(fildes: int): int;
+<*EXTERNAL*> PROCEDURE tcdrain(fildes: int): int;
 
-<*EXTERNAL "tcflush"*> PROCEDURE tcflush(fildes, queue_selector: int): int;
+<*EXTERNAL*> PROCEDURE tcflush(fildes, queue_selector: int): int;
 
-<*EXTERNAL "tcflow"*> PROCEDURE  tcflow(fildes, action: int): int;
+<*EXTERNAL*> PROCEDURE  tcflow(fildes, action: int): int;
 
-<*EXTERNAL "cfgetospeed"*> 
+<*EXTERNAL*> 
 PROCEDURE cfgetospeed(termios_p: UNTRACED REF struct_termios): speed_t;
 
-<*EXTERNAL "cfsetospeed"*> 
+<*EXTERNAL*> 
 PROCEDURE cfsetospeed(termios_p: UNTRACED REF struct_termios;
                       speed: speed_t): int;
 
-<*EXTERNAL "cfgetispeed"*> 
+<*EXTERNAL*> 
 PROCEDURE cfgetispeed(termios_p: UNTRACED REF struct_termios): speed_t;
 
-<*EXTERNAL "cfsetispeed"*> 
+<*EXTERNAL*> 
 PROCEDURE cfsetispeed(termios_p: UNTRACED REF struct_termios;
                       speed: speed_t): int;
 

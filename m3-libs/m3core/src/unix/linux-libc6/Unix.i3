@@ -203,10 +203,9 @@ CONST
 
 (*** getdirentries - gets directory entries in a generic directory format ***)
 
-(* FIXME: disabled
 <*EXTERNAL*> PROCEDURE getdirentries (fd: int; buf: ADDRESS;
                                   nbytes: int; VAR basep: long): int;
-*)
+
 
 (*** getdomainname, setdomainname - get or set name of current domain ***)
 

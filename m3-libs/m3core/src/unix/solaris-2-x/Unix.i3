@@ -21,31 +21,34 @@ CONST
 (*** file flags ***)
 
 CONST
-  FREAD =      16_000001;        (* descriptor read/receive'able *)
-  FWRITE =     16_000002;        (* descriptor write/send'ale *)
-  FNDELAY =    16_000004;        (* no delay *)
-  FAPPEND =    16_000008;        (* append on each write *)
-  FSYNC   =    16_000010;
-  FREVOKED =   16_000020;	 (*C2 Security - Revoke Subsystem *)
-  FNONBLOCK =  16_000080;		
-  FNBLOCK =    FNONBLOCK;        (* POSIX no delay *)
-  FMASK     =  16_0000FF;
+  FREAD      = 16_000001;        (* descriptor read/receive'able *)
+  FWRITE     = 16_000002;        (* descriptor write/send'ale *)
+  FNDELAY    = 16_000004;        (* no delay *)
+  FAPPEND    = 16_000008;        (* append on each write *)
+  FSYNC      = 16_000010;        (* file (data+inode) integrity while writing *)
+  FREVOKED   = 16_000020;	 (* C2 Security - Revoke Subsystem *)
+  FDSYNC     = 16_000040;        (* file data only integrity while writing *)
+  FRSYNC     = 16_008000;        (* sync flag for read operations *)
+                                 (* combined with FSYNC or FDSYNC, it has *)
+                                 (* effect on read same as write         *)
+                                 (* Should be within first 8 bits but *)
+                                 (* no space, so we change FMASK also *)
+  FOFFMAX    = 16_002000;        (* Large file *)
+                                 (* Cannot be within first eight bits *)
+                                 (* So we change FMASK also *)
+  FNONBLOCK  = 16_000080;		
+  FNBLOCK    = FNONBLOCK;        (* POSIX no delay *)
+  FMASK      = 16_00a0FF;        (* should be disjoint from FASYNC *)
+                                 (* should include FRSYNC also *)
 
-  FCREAT =     16_000100;        (* create if nonexistant *)
-  FTRUNC  =    16_000200;        (* truncate to zero length *)
-  FASYNC =     16_001000;        (* signal pgrp when data ready *)
-  FEXCL =      16_000400;        (* error if already created *)
+  (* open-only modes *)
+  FCREAT     = 16_000100;        (* create if nonexistant *)
+  FTRUNC     = 16_000200;        (* truncate to zero length *)
+  FEXCL      = 16_000400;        (* error if already created *)
+  FASYNC     = 16_001000;        (* asyncio is in progress *)
 
- (* FMARK =      16_000020;*)        (* makr during gc() *)
-
-  (*FDEFER =     16_000040;*)        (* fefer for next gc pass *)
-  (*FSHLOCK =    16_000200;*)        (* shared lock present *)
-  (*FEXLOCK =    16_000400;*)        (* exclusive lock present *)
-  FBLKINUSE =  16_010000;        (* block if "in use" *)
-  FBLKANDSET = 16_030000;        (* block, test and set "in use" *)
-  FSYNCRON =   16_100000;        (* write file syncronously *)
-  (*FNBUF =      16_200000;*)        (* file used for n-buffering *)
-
+  (* fsync pseudo flag *)
+  FNODSYNC   = 16_010000;
 
 CONST
   MSETUID = 8_4000;
@@ -121,14 +124,15 @@ CONST   (* request *)
   F_SETFD =  2;   (* Set close-on-exec flag *)
   F_GETFL =  3;   (* Get fd status flags *)
   F_SETFL =  4;   (* Set fd status flags *)
-  F_GETOWN = 23;   (* Get owner *)
-  F_SETOWN = 24;   (* Set owner *)
+  F_GETOWN = 23;  (* Get owner *)
+  F_SETOWN = 24;  (* Set owner *)
 
   (* in these three cases, you need to pass LOOPHOLE (ADR (v), int) 
      for arg, where v is a variable of type struct_flock *)
-  F_GETLK  = 14;   (* Get file lock *)
-  F_SETLK  = 6;   (* Set file lock *)
-  F_SETLKW = 7;   (* Set file lock and wait *)
+  F_SETLK  =  6;  (* Set file lock *)
+  F_SETLKW =  7;  (* Set file lock and wait *)
+  F_FREESP = 11;  (* Free file space *)
+  F_GETLK  = 14;  (* Get file lock *)
 
 CONST (* fd flags *)
   FD_CLOEXEC = 1;    (* Close file descriptor on exec() *)
@@ -141,10 +145,7 @@ TYPE
     l_len:    off_t := 0;
     l_sysid:  int   := 0;
     l_pid:    int   := 0;
-    l_pad0:   long  := 0;
-    l_pad1:   long  := 0;
-    l_pad2:   long  := 0;
-    l_pad3:   long  := 0;
+    l_pad :=  ARRAY [0..3] OF long {0,0,0,0};
   END;
 
 (*
@@ -171,9 +172,10 @@ CONST
   LOCK_UN = 8;   (* unlock *)
 
 CONST (* l_type values -- more conventional names... *)
-  F_RDLCK = 01; (* Read lock *) 
-  F_WRLCK = 02; (* Write lock *)
-  F_UNLCK = 03; (* Remove lock(s) *)
+  F_RDLCK   = 01; (* Read lock *) 
+  F_WRLCK   = 02; (* Write lock *)
+  F_UNLCK   = 03; (* Remove lock(s) *)
+  F_UNLKSYS = 04; (* remove remote locks for a given system *)
 
 <*EXTERNAL*> PROCEDURE flock (fd, operation: int): int;
 

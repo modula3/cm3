@@ -36,6 +36,6 @@ typedef int (*proc)();
 char *malloc();
 string getenv();
 
-extern void error();
+extern void error(string msg, ...);
 
 #endif

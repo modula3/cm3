@@ -130,6 +130,7 @@ CONST
   SA_RESTART     = 16_10000000;
   SA_INTERRUPT   = 16_20000000;
   SA_NOMASK      = 16_40000000;
+  SA_NODEFER     = SA_NOMASK;
   SA_ONESHOT     = 16_80000000;
 
   SA_ONSTACK     = 16_0001;   (* run on special signal stack *)

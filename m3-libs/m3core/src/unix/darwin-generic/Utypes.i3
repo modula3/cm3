@@ -29,55 +29,57 @@ PROCEDURE minor (x: int): int;
 PROCEDURE makedev (x, y: int): dev_t;
 
 TYPE
+  int8_t    = char;
+  u_int8_t  = unsigned_char;
+  int16_t   = short;
+  u_int16_t = unsigned_short;
+  int32_t   = int;
+  u_int32_t = unsigned_int;
+  int64_t   = RECORD val := ARRAY [0..1] OF int32_t {0,0}; END;
+  u_int64_t = int64_t;
+
+  register_t = int32_t;
+
+  intptr_t   = long;
+  uintptr_t  = unsigned_long;
+
   u_char  = unsigned_char;
   u_short = unsigned_short;
   u_int   = unsigned_int;
-  uint    = unsigned_int;               (* sys V compatibility *)
   u_long  = unsigned_long;
-  ushort  = unsigned_short;             (* sys III compat *)
+  ushort  = unsigned_short;             (* Sys V compatibility *)
+  uint    = unsigned_int;               (* Sys V compatibility *)
 
-  int8_t    = char;
-  u_int8_t  = u_char;
-  int16_t   = short;
-  u_int16_t = u_short;
-  int32_t   = int;
-  u_int32_t = u_int;
-  int64_t   = RECORD val: ARRAY [0..1] OF int32_t; END;
-  u_int64_t = int64_t;
-
-(* #ifdef vax *)
-  struct__physadr = RECORD r: ARRAY [0..0] OF int; END;
-  physadr         = UNTRACED REF struct__physadr;
-
-  struct_label_t = RECORD val: ARRAY [0..13] OF int; END;
-  label_t        = struct_label_t;
-(*#endif*)
-
-  quad         = int64_t;
+  u_quad_t     = u_int64_t;		 (* quads *)
   quad_t       = int64_t;
-  daddr_t      = int32_t; 
-  caddr_t      = ADDRESS;
-  ino_t        = u_int32_t;
-  swblk_t      = int32_t;
-  size_t       = unsigned_int;
-  time_t       = long;
-  dev_t        = u_int32_t;
-  off_t        = int32_t;       (* Really int64_t, but we wrap all uses *)
-  off_pad_t    = int32_t;       (* Padding to fill out off_t to 64 bits *)
-  key_t        = long;
-  clock_t      = u_long;
-  mode_t       = u_int16_t;
-  nlink_t      = u_int16_t;
-  uid_t        = u_int32_t;
-  pid_t        = int;
-  gid_t        = u_int32_t;
+  qaddr_t      = UNTRACED REF quad_t;
 
-  tcflag_t     = u_long;
-  cc_t         = u_char;
-  speed_t      = long;
+  caddr_t      = UNTRACED REF char;	 (* core address *)
+  daddr_t      = int32_t;		 (* disk address *)
+  dev_t        = int32_t;		 (* device number *)
+  fixpt_t      = u_int32_t;		 (* fixed point number *)
+  gid_t        = u_int32_t;		 (* group id *)
+  in_addr_t    = u_int32_t;		 (* base type for internet address *)
+  in_port_t    = u_int16_t;
+  ino_t        = u_int32_t;		 (* inode number *)
+  key_t        = long;			 (* IPC key (for Sys V IPC) *)
+  mode_t       = u_int16_t;		 (* permissions *)
+  nlink_t      = u_int16_t;		 (* link count *)
+  off_t        = int64_t;           	 (* file offset *)
+  pid_t        = int;			 (* process id *)
+  rlim_t       = quad_t;		 (* resource limit *)
+  segsz_t      = int32_t;		 (* segment size *)
+  swblk_t      = int32_t;		 (* swap offset *)
+  uid_t        = u_int32_t;		 (* user id *)
+  useconds_t   = u_int32_t;		 (* microseconds (unsigned) *)
+
+  clock_t      = u_long;
+  size_t       = unsigned_int;
+  ssize_t      = unsigned_int;
+  time_t       = long;
 
 CONST
-  NBBY = 8;                           (* number of bits in a byte *)
+  NBBY = 8;				 (* number of bits in a byte *)
 
   (*
    * Select uses bit masks of file descriptors in longs.
@@ -85,30 +87,29 @@ CONST
    * FD_SETSIZE may be defined by the user, but the default here
    * should be >= NOFILE (param.h).
    *)
-  FD_SETSIZE = 256;
-
-  (* How many things we'll allow select to use. 0 if unlimited *)
-  MAXSELFD = 256;
+  FD_SETSIZE = 1024;
 
 TYPE
-  fd_mask        = long;
- 
+  fd_mask        = int32_t;
+
 CONST
-  NFDBITS = BYTESIZE (fd_mask) * NBBY;      (* bits per mask (power of 2!)*)
+  NFDBITS = BYTESIZE (fd_mask) * NBBY;      (* bits per mask *)
   NFDSHIFT = 5;                             (* Shift based on above *)
 
 PROCEDURE howmany (x, y: int): int;
 
 TYPE
   struct_fd_set = RECORD
-       fds_bits: ARRAY [0 .. 
-                        (FD_SETSIZE + NFDBITS - 1) DIV NFDBITS -1] OF fd_mask;
-    END;
+    fds_bits: ARRAY [0..(FD_SETSIZE + NFDBITS - 1) DIV NFDBITS -1] OF fd_mask;
+  END;
   fd_set = struct_fd_set;
 
 PROCEDURE FD_SET   (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_CLEAR (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_ISSET (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_ZERO  (p: UNTRACED REF fd_set);
+
+<*EXTERNAL "m3_asLong"*>
+PROCEDURE asLong(val: off_t): long;
 
 END Utypes.

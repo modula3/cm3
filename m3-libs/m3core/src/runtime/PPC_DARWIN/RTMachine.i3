@@ -10,11 +10,11 @@ IMPORT Csetjmp;
 (*--------------------------------------------------------- thread state ---*)
 
 TYPE
-  State = Csetjmp.fpjmp_buf;
+  State = Csetjmp.jmp_buf;
   (* The machine state is saved in a "State".  This type is really
      opaque to the client, i.e. it does not need to be an array. *)
 
-<*EXTERNAL "_setjmp" *>
+<*EXTERNAL "setjmp" *>
 PROCEDURE SaveState (VAR s: State): INTEGER;
 (* Capture the currently running thread's state *)
 
@@ -31,15 +31,10 @@ CONST
    reasonable page size.  The page size must be a power of two. *)
 
 CONST
-  BytesPerHeapPage    = 4096;        (* bytes per page *)
-  LogBytesPerHeapPage = 12;
-  AdrPerHeapPage      = 4096;        (* addresses per page *)
-  LogAdrPerHeapPage   = 12;
-
-(*** hooks for the C wrapper functions ***)
-
-<*EXTERNAL *> VAR RTHeapRep_Fault: ADDRESS;  (* => RTHeapRep.Fault *)
-<*EXTERNAL *> VAR RTCSRC_FinishVM: ADDRESS;  (* => RTCollectorSRC.FinishVM *)
+  BytesPerHeapPage    = 8192;        (* bytes per page *)
+  LogBytesPerHeapPage = 13;
+  AdrPerHeapPage      = 8192;        (* addresses per page *)
+  LogAdrPerHeapPage   = 13;
 
 (*--------------------------------------------------------- thread stacks ---*)
 
@@ -68,11 +63,4 @@ CONST
 
 TYPE FrameInfo = RECORD pc, sp: ADDRESS END;
 
-<*EXTERNAL "set_RTHEAPREP_FAULT_PROC"*>
-PROCEDURE set_RTHeapRep_Fault_Proc(p: ADDRESS);
-
-<*EXTERNAL "set_RTCSRC_FINISHVM_PROC"*>
-PROCEDURE set_RTCSRC_FinishVM_Proc(p: ADDRESS);
-
 END RTMachine.
-

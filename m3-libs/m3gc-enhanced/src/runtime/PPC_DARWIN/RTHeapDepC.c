@@ -4,7 +4,6 @@
 
 /*      modified on Tue Feb  2 11:15:57 PST 1993 by jdd */
 
-/* This is RTHeapDepC.c for FreeBSD running on 386/486 processors. */
 /*
  * ow Sat Oct 29 14:10:19 MET 1994
  * ow Sun Nov  6 16:39:26 MET 1994
@@ -71,7 +70,7 @@
    pointer must reference only one object.  Therefore, it is not
    possible to write the heap contents with a single write. */
 
-#define MFS
+#define MFS 1
 #define NFS
 #include <stdarg.h>
 #include <sys/types.h>
@@ -79,13 +78,9 @@
 #include <sys/syscall.h>
 #include <sys/file.h>
 #include <sys/param.h>
-#if __FreeBSD__ >= 2
 #include <sys/sysctl.h>
-#include <osreldate.h>
-#endif
 #include <sys/mount.h>
 #include <sys/ipc.h>
-#include <sys/msg.h>
 #include <sys/sem.h>
 #include <ufs/ufs/quota.h>
 #include <sys/signal.h>
@@ -93,14 +88,11 @@
 #include <sys/stat.h>
 #include <sys/uio.h>
 #include <sys/wait.h>
-
-#if __FreeBSD__ >= 3
 #include <sys/time.h>
 #include <nfs/rpcv2.h>
 #include <nfs/nfsproto.h>
 #include <nfs/nfs.h>
 #include <ufs/ufs/ufsmount.h>
-#endif
 
 #include <string.h>
 #include <unistd.h>
@@ -119,26 +111,20 @@ extern long RT0u__inCritical;
 #define ENTER_CRITICAL RT0u__inCritical++
 #define EXIT_CRITICAL  RT0u__inCritical--
 
-void (*RTHeapRep_Fault)(char*);
-void (*RTCSRC_FinishVM)();
+static int (*RTHeapRep_Fault)(void *);
+static void (*RTCSRC_FinishVM)();
+
+void set_RTHeapRep_Fault(void *p) {
+  RTHeapRep_Fault = p;
+}
+
+void set_RTCSRC_FinishVM(void *p) {
+  RTCSRC_FinishVM = p;
+}
 
 static char RTHeapDepC__c;
 #define MAKE_READABLE(x) if (x != 0) { RTHeapDepC__c = *(char*)(x); }
 #define MAKE_WRITABLE(x) if (x != 0) { *(char*)(x) = RTHeapDepC__c = *(char*)(x); }
-
-/*
- * Modula-3 compilation units are always compiled PIC.  This causes
- * the a.out linker to complain that there is no reference to
- * _DYNAMIC if the program is linked with "-static".  Provide a
- * weak reference to it here so that static linking will work.
- *
- * This has nothing to do with the heap, so it doesn't really belong
- * here.  But it needs to be someplace that is guaranteed to be pulled
- * into every executable.
- */
-#pragma weak _DYNAMIC
-extern int _DYNAMIC;
-static int *i __unused = &_DYNAMIC;
 
 /* Unless otherwise noted, all the following wrappers have the same
    structure. */
@@ -167,11 +153,7 @@ const char *file;
 }
 
 int adjtime(delta, olddelta)   /* ok */
-#if __FreeBSD__ >= 2
 const struct timeval *delta;
-#else
-struct timeval *delta;
-#endif
 struct timeval *olddelta;
 { int result;
 
@@ -437,6 +419,7 @@ long *basep;
   return result;
 }
 
+#if 0
 int getdomainname(name, namelen)   /* ok */
 char *name;
 int namelen;
@@ -444,37 +427,26 @@ int namelen;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(name);
-  result = syscall(SYS_getdomainname, name, namelen);
+  result = _getdomainname(name, namelen);
   EXIT_CRITICAL;
   return result;
 }
+#endif
 
+#if 0
 int gethostname(name, namelen)   /* ok */
 char *name;
 int namelen;
-{ int result;
-#if __FreeBSD__ >= 2
-  int mib[2];
-  size_t size;
-#endif
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(name);
-#if __FreeBSD__ >= 2
-  mib[0] = CTL_KERN;
-  mib[1] = KERN_HOSTNAME; 
-  size = namelen;
-  if (sysctl(mib, 2, name, &size, NULL, 0) == -1){
-    result = -1; 
-  }else{
-    result = 0;
-  }
-#else
-  result = syscall(SYS_gethostname, name, namelen);
-#endif
+  result = _gethostname(name, namelen);
   EXIT_CRITICAL;
   return result;
 }
+#endif
 
 int getgroups(gidsetsize, grouplist)   /* ok */
 int gidsetsize;
@@ -581,8 +553,15 @@ struct timezone *tzp;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(tp);
-  MAKE_WRITABLE(tzp);
-  result = syscall(SYS_gettimeofday, tp, tzp);
+  /*
+   * Some callers pass an invalid second argument
+   * e.g., InitTimes in libXt
+   */
+  if (tzp) {
+    if (RTHeapRep_Fault) RTHeapRep_Fault(tzp); /* make it readable */
+    if (RTHeapRep_Fault) RTHeapRep_Fault(tzp); /* make it writable */
+  }
+  result = __ppc_gettimeofday(tp, tzp);
   EXIT_CRITICAL;
   return result;
 }
@@ -684,14 +663,14 @@ dev_t dev;
   return result;
 }
 
-#if __FreeBSD_version >= 300001		/* New form of mount(2) */
 int
 mount(type, dir, flags, data)
-  const char *type;
-  const char *dir;
-  int flags;
-  void *data;
-{ int result;
+     const char *type;
+     const char *dir;
+     int flags;
+     void *data;
+{
+  int result;
   struct ufs_args *u_data;
   struct mfs_args *m_data;
   struct nfs_args *n_data;
@@ -726,46 +705,6 @@ mount(type, dir, flags, data)
   }
   return result;
 }
-
-#else /* __FreeBSD_version >= 300001 */
-
-int mount(type, dir, flags, data)
-int type;
-const char *dir;
-int flags;
-void *data;
-{ int result;
-  struct ufs_args *u_data;
-  struct mfs_args *m_data;
-  struct nfs_args *n_data;
-
-  ENTER_CRITICAL;
-  MAKE_READABLE(dir);
-  switch(type) {
-     case MOUNT_UFS:  u_data = (struct ufs_args*) data;
-                      MAKE_READABLE(u_data);
-                      MAKE_READABLE(u_data->fspec); break;
-     case MOUNT_MFS:  m_data = (struct mfs_args*) data;
-                      MAKE_READABLE(m_data);
-#if __FreeBSD__ >= 2
-                      MAKE_READABLE(m_data->fspec); break;
-#else
-                      MAKE_READABLE(m_data->name); break;
-#endif
-     case MOUNT_NFS:  n_data = (struct nfs_args*) data;
-                      MAKE_READABLE(n_data);
-                      MAKE_READABLE(n_data->addr); 
-                      MAKE_READABLE(n_data->fh);
-                      MAKE_READABLE(n_data->hostname); break;
-  }
-  result = syscall(SYS_mount, type, dir, flags, data);
-  EXIT_CRITICAL;
-  if (result != -1) {
-    result = 0;
-  }
-  return result;
-}
-#endif /* __FreeBSD_version >= 300001 */
 
 int msgctl(msqid, cmd, buf)   /* ok */
 int msqid, cmd;
@@ -836,14 +775,11 @@ int uopen(const char* path, int flags, mode_t mode)   /* ok */
 }
 
 int quotactl(path, cmd, uid, addr)   /* ok */
-  const char *path;
-  int cmd, uid;
-#if __FreeBSD_version >= 400002
-  void *addr;
-#else
-  char *addr;
-#endif
-{ int result;
+     char *path;
+     int cmd, uid;
+     caddr_t addr;
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
@@ -945,23 +881,15 @@ const char *path;
 }
 
 int
-#if (227002 <= __FreeBSD_version && __FreeBSD_version < 300000) || \
-  __FreeBSD_version >= 300002
 semctl(int semid, int semnum, int cmd, ...)
-#else
-semctl(int semid, int semnum, int cmd, union semun arg)
-#endif
 {
   int result;
-#if (227002 <= __FreeBSD_version && __FreeBSD_version < 300000) || \
-  __FreeBSD_version >= 300002
   union semun arg;
   va_list ap;
 
   va_start(ap, cmd);
   arg = va_arg(ap, union semun);
   va_end(ap);
-#endif
 
   ENTER_CRITICAL;
   switch (cmd) {
@@ -1025,17 +953,20 @@ int flags;
   return result;
 }
 
+#if 0
 int setdomainname(name, namelen)   /* ok */
-const char *name;
-int namelen;
-{ int result;
+     const char *name;
+     int namelen;
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(name);
-  result = syscall(SYS_setdomainname, name, namelen);
+  result = _setdomainname(name, namelen);
   EXIT_CRITICAL;
   return result;
 }
+#endif
 
 int setgroups(ngroups, gidset)   /* ok */
 int ngroups;
@@ -1049,40 +980,27 @@ const gid_t *gidset;
   return result;
 }
 
+#if 0
 int sethostname(name, namelen)   /* ok */
-const char *name;
-int namelen;
-{ int result;
-#if __FreeBSD__ >= 2
-  int mib[2];
-#endif
+     const char *name;
+     int namelen;
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(name);
-#if __FreeBSD__ >= 2
-  mib[0] = CTL_KERN; 
-  mib[1] = KERN_HOSTNAME;
-  if (sysctl(mib, 2, NULL, NULL, (void *)name, namelen) == -1){
-    result = -1;
-  }else{
-    result = 0;
-  }
-#else
-  result = syscall(SYS_sethostname, name, namelen);
-#endif
+  result = _sethostname(name, namelen);
   EXIT_CRITICAL;
   return result;
 }
+#endif
 
 int setitimer(which, value, ovalue)   /* ok */
-int which;
-#if __FreeBSD__ >= 2
-const struct itimerval *value;
-#else
-struct itimerval *value;
-#endif
-struct itimerval *ovalue;
-{ int result;
+     int which;
+     const struct itimerval *value;
+     struct itimerval *ovalue;
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(value);
@@ -1149,14 +1067,10 @@ unsigned flag;
 */
 
 int settimeofday(tp, tzp)   /* ok */
-#if __FreeBSD__ >= 2
 const struct timeval *tp;
 const struct timezone *tzp;
-#else
-struct timeval *tp;
-struct timezone *tzp;
-#endif
-{ int result;
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(tp);
@@ -1166,7 +1080,7 @@ struct timezone *tzp;
   return result;
 }
 
-int sigaction(sig, act, oact)
+int m3_sigaction(sig, act, oact)
 int sig;
 const struct sigaction *act;
 struct sigaction *oact;
@@ -1175,7 +1089,8 @@ struct sigaction *oact;
   ENTER_CRITICAL;
   MAKE_READABLE(act);
   MAKE_WRITABLE(oact);
-  result = syscall(SYS_sigaction, sig, act, oact);
+  /* result = syscall(SYS_sigaction, sig, act, oact) */
+  result = sigaction(sig, act, oact);
   EXIT_CRITICAL;
   return result;
 }
@@ -1249,22 +1164,23 @@ off_t length;
 
   ENTER_CRITICAL;
   MAKE_READABLE(path);
-  /* The casts below pad "path" out to a 64-bit value as required. */
-  result = __syscall(SYS_truncate, (u_quad_t)(u_long)path, length);
+  result = syscall(SYS_truncate, path, length);
   EXIT_CRITICAL;
   return result;
 }
 
+#if 0
 int uname(name)   /* ok */
 struct utsname *name;
 { int result;
 
   ENTER_CRITICAL;
   MAKE_WRITABLE(name);
-  result = syscall(SYS_uname, name);
+  result = _uname(name);
   EXIT_CRITICAL;
   return result;
 }
+#endif
 
 int unlink(path)   /* ok */
 const char *path;
@@ -1292,14 +1208,10 @@ struct ustat *buf;
 */
 
 int utimes(file, tvp)   /* ok */
-#if __FreeBSD__ >= 2
 const char *file;
 const struct timeval *tvp;
-#else
-char *file;
-struct timeval *tvp;
-#endif
-{ int result;
+{
+  int result;
 
   ENTER_CRITICAL;
   MAKE_READABLE(file);

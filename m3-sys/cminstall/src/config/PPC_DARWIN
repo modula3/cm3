@@ -1,24 +1,24 @@
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
 % 
-% Standard configuration file for FreeBSD 3.x with ELF object files
+% Standard configuration file for FreeBSD with ELF object files
 %
 
 %-------------------------------------------------- compilation environment ---
 
-%M3_PROFILING = TRUE  % set by cm3 since 5.1.2 (-profile option)
+%M3_PROFILING = TRUE  % set by cm3 since 5.1.2
 %M3_PROFILING = FALSE
 
-readonly TARGET       = "PPC_DARWIN"      % code generation target
+readonly TARGET       = "PPC_DARWIN"     % code generation target
 if M3_PROFILING 
-  readonly BUILD_DIR  = TARGET & "p"      % code generation target
+  readonly BUILD_DIR  = TARGET & "p"     % code generation target
 else
-  readonly BUILD_DIR  = TARGET            % directory for results
+  readonly BUILD_DIR  = TARGET           % directory for results
 end
-readonly OS_TYPE      = "POSIX"           % { "WIN32" or "POSIX" }
-readonly WORD_SIZE    = "32BITS"          % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "powerpc-apple-darwin6.3" 
-                                          % "cpu-vendor-os" string for GNU
+readonly OS_TYPE      = "POSIX"          % { "WIN32" or "POSIX" }
+readonly WORD_SIZE    = "32BITS"         % { "32BITS" or "64BITS" }
+readonly GNU_PLATFORM = "powerpc-apple-darwin6.3"
+                                         % "cpu-vendor-os" string for GNU
 %readonly INSTALL_KEY  = BEGIN_CONFIG
 %  "What is your installation key?"
 %    14 %-- user specified key
@@ -89,7 +89,7 @@ END_CONFIG
 % at <line>.
 
 %------------------------------------------------------------- export paths ---
-% During the installation, destination directories that do not exists 
+% During the installation, destination directories that do not exist
 % will be created. You need the necessary permissions to do so; otherwise,
 % the installation will fail, but can be restarted after you have 
 % fixed the permissions.
@@ -272,7 +272,7 @@ END_CONFIG % Assembler
 readonly m3back = "@" & BIN_USE & "/cm3cg"
 
 proc m3_backend (source, object, optimize, debug) is
-  local args = [ "-quiet", source, "-o", object, "-fPIC" ]
+  local args = [ "-quiet", source, "-o", object, "-fPIC", "-gstabs" ]
   if optimize  args += "-O"  end
   if debug     args += "-g"  end
   if M3_PROFILING args += "-p" end
@@ -330,12 +330,12 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   if not equal (ret_code, 0) return ret_code end
 
   if shared
-    % build the shared library   
+    % build the shared library
     ret_code = try_exec ("@libtool -dynamic -flat_namespace",
                          "-undefined suppress -compatibility_version", vmaj,
                          "-current_version", version, "-install_name", lib_pn,
-                         "-o", lib_soxx, objects, "-lcc_dynamic")
-    if not equal (ret_code, 0)
+                         "-lgcc", "-o", lib_soxx, objects)
+    if not equal (ret_code, 0) 
       delete_file (lib_a)
       return ret_code
     end
@@ -390,8 +390,6 @@ proc skip_lib (lib, shared) is
   end
 
   return 0
-
-  return 0
 end
 
 %------------------------------------------------------------------- linker ---
@@ -402,7 +400,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
   local args = []
   if M3_PROFILING args += "-pg" end
   args += [ "-o", prog, "-fPIC", options, objects, imported_libs ]
-  args += [ "-shared-libgcc" ]
+  args += [ "-shared-libgcc", "-multiply_defined suppress" ]
   return try_exec ("@" & SYSTEM_CC, args)
 end
 
@@ -491,5 +489,5 @@ end
 %
 
 GNU_CC     = "gcc"
-GNU_CFLAGS = "-g"
+GNU_CFLAGS = "-O2 -g"
 GNU_MAKE   = "make"

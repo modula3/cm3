@@ -56,7 +56,7 @@ TYPE
   size_t       = u_int;
   time_t       = long;
   dev_t        = u_long;
-  off_t        = long;           (*!!! SHOULD BE quad_t !!!*)
+  off_t        = int64_t;
   paddr_t      = long;                (* sys V compatibility *)
   key_t        = long;                (* sys V compatibility *)
   clock_t      = u_long;                 (* POSIX compliance    *)
@@ -104,5 +104,8 @@ PROCEDURE FD_SET   (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_CLEAR (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_ISSET (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_ZERO  (p: UNTRACED REF fd_set);
+
+<*EXTERNAL "m3_asLong"*>
+PROCEDURE asLong(val: off_t): long;
 
 END Utypes.

@@ -8,16 +8,19 @@
 UNSAFE MODULE FSPosixExtras EXPORTS FSPosix;
 
 IMPORT Atom, File, FS, M3toC, OSError, OSErrorPosix, Pathname, Pipe,
-  RegularFile, Terminal, Unix, Ustat, Word;
+  RegularFile, Terminal, Unix, Ustat, Word, Utypes;
 
 PROCEDURE LinkStatus(p: Pathname.T): File.Status RAISES {OSError.E} = 
   VAR status: File.Status; statBuf: Ustat.struct_stat;
+      p_str := M3toC.SharedTtoS(p);
+      result := Ustat.lstat(p_str, ADR(statBuf));
   BEGIN
-    IF Ustat.lstat(M3toC.TtoS(p), ADR(statBuf)) < 0 THEN OSErrorPosix.Raise() END;
+    M3toC.FreeSharedS(p, p_str);
+    IF result < 0 THEN OSErrorPosix.Raise() END;
     (* StatBufToStatus(statBuf, status); *)
       status.type := (*FilePosix.*)FileTypeFromStatbuf(statBuf);
       status.modificationTime := FLOAT(statBuf.st_mtime, LONGREAL);
-      status.size := statBuf.st_size;
+      status.size := Utypes.asLong(statBuf.st_size);
     RETURN status
   END LinkStatus;
 
@@ -55,7 +58,7 @@ PROCEDURE IsDevNull(READONLY statbuf: Ustat.struct_stat): BOOLEAN RAISES {} =
     IF NOT null_done THEN
       null_done := TRUE;
       null_fd := Unix.open(
-        M3toC.TtoS("/dev/null"), Unix.O_RDONLY, Unix.Mrwrwrw);
+        M3toC.FlatTtoS("/dev/null"), Unix.O_RDONLY, Unix.Mrwrwrw);
       IF null_fd < 0 THEN RETURN FALSE END;
       result := Ustat.fstat(null_fd, ADR(null_stat));
       EVAL Unix.close(null_fd);
