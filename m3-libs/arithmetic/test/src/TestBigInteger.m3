@@ -12,11 +12,11 @@ IMPORT
   BigIntegerFmtLex       AS BF,
   BigIntegerMatrixBasic  AS BM,
   BigIntegerMatrixFmtLex AS BMF,
-  xInteger   AS I,
+  NumberTheory AS NT,
   xWordEx AS Wx,
   Word AS W,
   Fmt AS F,
-  Text;
+  Text,Wr,Thread,xUtils;
 FROM BigIntegerMatrixIntegerPower IMPORT IntegerPower;
 (*=======================*)
 CONST
@@ -26,6 +26,7 @@ CONST
   base2Style  = BF.FmtStyle{base:=2};
   base16Style = BF.FmtStyle{base:=16};
 (*----------------------*)
+<*FATAL xUtils.Error*>
 PROCEDURE TestBasic():BOOLEAN=
 CONST
   ftn = Module & "TestBasic";
@@ -168,6 +169,7 @@ BEGIN
   RETURN result;
 END TestAddshift;
 (*----------------------*)
+<*FATAL Wr.Failure, Thread.Alerted*>
 PROCEDURE TestFibonacci():BOOLEAN=
 CONST
   ftn = Module & "TestFibonacci";
@@ -239,7 +241,7 @@ BEGIN
     (*Msg(F.FN("%s / %s\n", ARRAY OF TEXT {BF.Fmt(x[3],base16Style), F.Int(j,16)}));*)
     mod := B.Mod(x[3],B.FromInteger(j));
     prime0 := B.IsZero(mod);
-    prime1 := I.isprime(j);
+    prime1 := NT.IsPrime(j);
     (*
     Msg(F.FN("%2s: %s, mod %s prime %s vs. %s\n",
       ARRAY OF TEXT {F.Int(j), BF.Fmt(x[3],10), BF.Fmt(mod,10), F.Bool(prime0), F.Bool(prime1)}));
@@ -253,6 +255,7 @@ BEGIN
 END TestPseudoprime;
 (*-------------------------*)
 PROCEDURE TestBigInteger():BOOLEAN=
+<*UNUSED*>
 CONST ftn = Module & "TestBigInteger";
 VAR result:=TRUE;
 BEGIN
