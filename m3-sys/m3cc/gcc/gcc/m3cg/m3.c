@@ -1261,13 +1261,13 @@ static void m3_store (v, o, src_t, dest_t)
 {
   tree lhs, rhs;
 
-  if (TREE_TYPE (stack [tos-1]) == TREE_TYPE(src_t)) {
+  if (TREE_TYPE (stack [tos-1]) == src_t) {
     rhs = stack [tos-1];
   } else {
     rhs = m3_cast (src_t, stack [tos-1]);
   }
 
-  if (o == 0 && TREE_TYPE (v) == TREE_TYPE(dest_t)) {
+  if (o == 0 && TREE_TYPE (v) == dest_t) {
     lhs = v;
   } else {
     tree f = make_node (FIELD_DECL);
