@@ -1,0 +1,66 @@
+(* Copyright (C) 1993 Digital Equipment Corporation                *)
+(* All rights reserved.                                            *)
+(* See the file COPYRIGHT for a full description.                  *)
+(* Last modified on Tue Jun 22 12:13:15 PDT 1993 by horning        *)
+
+GENERIC INTERFACE Sequence(Elem);
+<* 
+TRAITS string(Elem.T)
+
+FIELDS OF T  val: String$Elem.T
+
+METHOD T.init(sizeHint: CARDINAL := 5): T;
+  MODIFIES SELF.val
+  ENSURES SELF.val' = empty
+
+METHOD T.fromArray(READONLY a: ARRAY OF Elem.T): T;
+  MODIFIES SELF.val
+  ENSURES SELF.val' = a /\ RESULT = SELF
+
+METHOD T.addhi(READONLY x: Elem.T);
+  MODIFIES SELF.val
+  ENSURES SELF.val' = SELF.val |- x
+
+METHOD T.addlo(READONLY x: Elem.T);
+  MODIFIES SELF.val
+  ENSURES SELF.val' = x -| SELF.val
+  
+METHOD T.remhi(): Elem.T;
+  CHECKS len(SELF.val) > 0
+  MODIFIES SELF.val
+  ENSURES SELF.val' |- RESULT = SELF.val
+
+METHOD T.remlo(): Elem.T;
+  CHECKS len(SELF.val) > 0
+  MODIFIES SELF.val
+  ENSURES RESULT -| SELF.val' = SELF.val
+
+METHOD T.put(i: CARDINAL; READONLY x: Elem.T);
+  CHECKS i < len(SELF.val)
+  MODIFIES SELF.val
+  ENSURES SELF.val' = put(SELF.val, i, x)
+
+METHOD T.size(): CARDINAL;
+  ENSURES RESULT = len(SELF.val)
+
+METHOD T.gethi(): Elem.T;
+  CHECKS len(SELF.val) > 0
+  ENSURES RESULT = last(SELF.val)
+
+METHOD T.getlo(): Elem.T;
+  CHECKS len(SELF.val) > 0
+  ENSURES RESULT = head(SELF.val)
+
+METHOD T.get(i: CARDINAL): Elem.T
+  CHECKS i < len(SELF.val)
+  ENSURES RESULT = SELF.val[i]
+
+PROCEDURE Cat(s, t: T): T;
+  CHECKS s \neq NIL /\ t \neq NIL
+  ENSURES NEW(RESULT) /\ RESULT.val' = s.val || t.val 
+
+PROCEDURE Sub(s: T; start: CARDINAL; length: CARDINAL := LAST(CARDINAL)): T;
+  CHECKS s \neq NIL
+  ENSURES NEW(RESULT) /\ RESULT.val' = substring(s.val, start, length)
+*>
+END Sequence.

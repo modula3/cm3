@@ -1,0 +1,13 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+% Last modified on Wed Jun  9 17:03:31 PDT 1993 by harrison
+%      modified on Mon Apr 12 23:17:29 PDT 1993 by muller
+
+Module (Usignal)
+Module (Uin)
+Module (Utypes)
+Interface (Umman)
+Interface (Unix)
+Interface (Utime)

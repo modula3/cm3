@@ -1,0 +1,59 @@
+> fromelts e d c b a z y x w
+"e" => 1
+"d" => 2
+"c" => 3
+"b" => 4
+"a" => 5
+"z" => 6
+"y" => 7
+"x" => 8
+"w" => 9
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 9
+pq.heap = Elts{NIL, "a", "b", "c", "e", "d", "z", "y", "x", "w"}
+> d 5
+"a" => deleted
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 8
+pq.heap = Elts{NIL, "b", "d", "c", "e", "w", "z", "y", "x", NIL}
+> d 1
+"e" => deleted
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 7
+pq.heap = Elts{NIL, "b", "d", "c", "x", "w", "z", "y", NIL (X2)}
+> d 2
+"d" => deleted
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 6
+pq.heap = Elts{NIL, "b", "w", "c", "x", "y", "z", NIL (X3)}
+> d 3
+"c" => deleted
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 5
+pq.heap = Elts{NIL, "b", "w", "z", "x", "y", NIL (X4)}
+> d 9
+"w" => deleted
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 4
+pq.heap = Elts{NIL, "b", "x", "z", "y", NIL (X5)}
+> d 8
+"x" => deleted
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 3
+pq.heap = Elts{NIL, "b", "y", "z", NIL (X6)}
+> d 7
+"y" => deleted
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 2
+pq.heap = Elts{NIL, "b", "z", NIL (X7)}
+> d 4 
+"b" => deleted
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 1
+pq.heap = Elts{NIL, "z", NIL (X8)}
+> d 6
+"z" => deleted
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 0
+pq.heap = Elts{NIL (X10)}
+> ^D

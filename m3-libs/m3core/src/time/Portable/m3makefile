@@ -1,0 +1,8 @@
+% Copyright (C) 1993, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+% Last modified on Tue Jun 15 21:54:21 PDT 1993 by harrison
+%      modified on Tue May  4 10:15:33 PDT 1993 by mjordan
+
+implementation("TickPortable")

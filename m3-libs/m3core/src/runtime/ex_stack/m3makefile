@@ -1,0 +1,9 @@
+% Copyright (C) 1993, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Mon Dec  6 15:19:28 PST 1993 by kalsow
+
+implementation ("RTException")
+interface ("RTExRep")
+

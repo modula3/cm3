@@ -1,0 +1,14 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Mon Nov 21 10:57:21 PST 1994 by kalsow
+%      modified on Mon Dec 14 19:59:03 PST 1992 by jdd
+%      modified on Wed May 20 17:21:29 PDT 1992 by muller
+
+Interface      ("RTMachine")
+implementation ("RTHeapDep")
+implementation ("RTSignal")
+implementation ("RTThread")
+c_source       ("RTThreadC")
+

@@ -1,0 +1,9 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Tue Nov  1 08:59:57 PST 1994 by kalsow
+
+import(libm3)
+implementation(RandomTest)
+program(RandomTest)

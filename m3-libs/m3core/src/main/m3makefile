@@ -1,0 +1,8 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+% Last modified on Thu Jun 17 19:26:02 PDT 1993 by harrison
+%      modified on Tue Feb 11 16:36:27 PST 1992 by muller
+
+Interface("Main")

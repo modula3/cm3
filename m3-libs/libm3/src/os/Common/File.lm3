@@ -1,0 +1,59 @@
+(* Copyright (C) 1993, Digital Equipment Corporation. *)
+(* All rights reserved.                               *)
+(* See the file COPYRIGHT for a full description. *)
+(* Last modified on Tue Jun 22 17:20:33 PDT 1993 by horning *)
+
+INTERFACE File;
+<* 
+TYPE Seq = REF SEQUENCE OF Byte;
+
+FIELDS OF T
+  type: Type;
+  readable, writable, eof: BOOLEAN;
+  src, snk: Seq;
+  srcCur, snkCur: INTEGER;
+
+METHOD T.read(VAR (*OUT*) b: ARRAY OF Byte;
+      mayBlock: BOOLEAN := TRUE): INTEGER RAISES {OSError.E}
+  VAR i: CARDINAL := 0
+  CHECKS SELF.readable /\ NUMBER(b) > 0
+  MODIFIES b, SELF.srcCur, SELF.eof
+  COMPOSITION OF MoveByte*; Return END
+  ACTION MoveByte
+    REQUIRES SELF.readable
+    WHEN i < NUMBER(b) /\ ~SELF.eof
+      ENSURES i' = i + 1 /\ SELF.srcCur' = SELF.srcCur + 1
+        /\ b' = assign(b, i, SELF.src^[SELF.srcCur])
+  ACTION Return
+    WHEN i > 0 \/ SELF.eof \/ ~mayblock
+      ENSURES
+        RESULT = (IF i > 0 THEN i
+                  ELSE IF SELF.eof THEN 0 ELSE -1)  
+        /\ UNCHANGED(ALL)
+    UNLESS RAISES OSError.E
+
+METHOD T.write(READONLY b: ARRAY OF Byte) RAISES {OSError.E};
+  VAR i: CARDINAL := 0
+  CHECKS SELF.writable /\ NUMBER(b) > 0
+  MODIFIES SELF.snk^, SELF.snkCur
+  COMPOSITION OF MoveByte*; Return END
+  ACTION MoveByte
+    REQUIRES SELF.writable
+    WHEN i < NUMBER(b)
+      ENSURES i' = i + 1/\ SELF.snkCur' = SELF.snkCur + 1
+        /\ SELF.snk^' = assign(SELF.snk^, SELF.snkCur, b[i])
+  ACTION Return
+    WHEN i = NUMBER(b)
+      ENSURES UNCHANGED(ALL)
+    UNLESS RAISES OSError.E
+
+METHOD T.status(): Status RAISES {OSError.E};
+  ENSURES RESULT.type = SELF.type
+  UNLESS RAISES OSError.E
+
+METHOD T.close() RAISES {OSError.E};
+  MODIFIES SELF.readable, SELF.writable
+  ENSURES ~SELF.readable /\ ~SELF.writable
+  UNLESS RAISES OSError.E
+*> 
+END File.

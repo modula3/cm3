@@ -1,0 +1,17 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Sat Jan  7 14:58:01 PST 1995 by kalsow  
+%      modified on Thu Jul 14 13:10:18 PDT 1994 by mcjones 
+%      modified on Thu Jun 17 19:14:47 PDT 1993 by harrison
+%      modified on Thu May  6 21:38:22 PDT 1993 by mjordan
+
+Module("OSErrorPosix")
+Module("FilePosix")
+
+implementation("FSPosix")
+implementation("PipePosix")
+implementation("PathnamePosix")
+implementation("ProcessPosix")
+ 
