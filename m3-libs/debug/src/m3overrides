@@ -1,4 +1,2 @@
 %override("m3core", "/proj/graphics/software/src/modula3-3.5.3/m3")
 %override("libm3", "/proj/graphics/software/src/modula3-3.5.3/m3")
-override ("m3core", ROOT & "/m3-libs")
-override ("libm3", ROOT & "/m3-libs")

@@ -7,7 +7,6 @@
  *                                                                        
  * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
  * City of New York.  Blair MacIntyre, Computer Science Department.       
- * See file COPYRIGHT-COLUMBIA for details.
  * 
  * Author          : Blair MacIntyre
  * Created On      : Sat Apr 15 17:39:20 1995
@@ -21,9 +20,6 @@
  * $Revision$
  * 
  * $Log$
- * Revision 1.1.1.1  2001/12/02 00:06:45  wagner
- * Blair MacIntyre's events library
- *
  * Revision 1.7  1998/07/02 21:41:13  bm
  * small bug fixes
  *
@@ -52,9 +48,9 @@ UNSAFE MODULE EventStubLib EXPORTS EventStubLib, EventProtocol, EventIO;
    
 IMPORT Pickle2 AS Pickle, Event, EventRd, EventWr, EventHandle, EventNumber, 
 	EventNumberF;
-IMPORT Atom, AtomList, Rd, RTType, Wr, Text, (* TextF, *)
+IMPORT Atom, AtomList, Rd, RTType, Wr, Text, TextF,
        Thread, RdClass, WrClass, UnsafeRd, UnsafeWr,
-       FloatMode, Swap, Text8; 
+       FloatMode, Swap; 
 (* IMPORT IO, Fmt;*)
 
 REVEAL RdClass.Private <: MUTEX;
@@ -390,12 +386,6 @@ PROCEDURE OutChars(c: Handle; READONLY arr: ARRAY OF CHAR)
   BEGIN
     c.wr.putString(arr);
   END OutChars;
-
-PROCEDURE OutTextI(c: Handle; READONLY t: TEXT)
-    RAISES {Wr.Failure, Thread.Alerted} =
-  BEGIN
-    Wr.PutText(c.wr, t);
-  END OutTextI; 
 
 PROCEDURE InBytes(c: Handle; VAR arr: ARRAY OF Byte8)
     RAISES {Event.Error, Rd.Failure, Thread.Alerted} =
@@ -783,7 +773,6 @@ PROCEDURE InText(c: Handle) : TEXT
    RAISES {Event.Error, Rd.Failure, Thread.Alerted} =
   VAR len: INTEGER;
   VAR text: TEXT;
-  VAR buf: REF ARRAY OF CHAR;
   BEGIN
     len := InInt32(c);
     IF len = -1 THEN
@@ -791,10 +780,9 @@ PROCEDURE InText(c: Handle) : TEXT
     ELSIF len < 0 THEN
       RaiseUnmarshalFailure();
     ELSE
-      buf := NEW(REF ARRAY OF CHAR, len+1);
-      InChars(c, buf^);
-      buf[len] := '\000';
-      text := Text8.New(buf^);
+      text := NEW(TEXT, len+1);
+      InChars(c, SUBARRAY(text^, 0, len));
+      text[len] := '\000';
     END;
     RETURN text;
   END InText;
@@ -809,7 +797,7 @@ PROCEDURE OutText(c: Handle; text: TEXT)
       len := -1;
     END;
     OutInt32(c, len);
-    IF len > 0 THEN OutTextI(c, text); END;
+    IF len > 0 THEN OutChars(c, SUBARRAY(text^, 0, len)); END;
   END OutText;
 
 PROCEDURE InTexts(c: Handle) : REF ARRAY OF TEXT
