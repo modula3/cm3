@@ -449,7 +449,7 @@ END;%}
 %typemap(m3intype)  PLINT mode    %{BOOLEAN%}
 %typemap(m3argraw)  PLINT mode    %{ORD($1_name)%}
 
-%typemap(m3out)     PLINTOutput status %{$1#0%}
+%typemap(m3outconv) PLINTOutput status %{$1#0%}
 %typemap(m3outtype) PLINTOutput status %{BOOLEAN%}
 
 %typemap(m3inmode)  PLINT *p_argc %{VAR%}
@@ -466,8 +466,11 @@ END;%}
 %typemap(m3intype,numinputs=0) PLINTOutput ""
 %typemap(m3argdecl) PLINTOutput %{$1: C.int;%}
 %typemap(m3argraw)  PLINTOutput %{$1%}
-%typemap(m3out)     PLINTOutput %{$1%}
+%typemap(m3outconv) PLINTOutput %{$1%}
 %typemap(m3outtype) PLINTOutput %{INTEGER%}
+/*this is a workaround and can be removed sometimes, I hope*/
+%typemap(m3outdecl) PLINTOutput %{$1_name:C.int%}
+%typemap(m3outname) PLINTOutput %{$1_name%}
 
 %typemap(m3argraw) char %{ORD($1_name)%}
 
