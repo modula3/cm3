@@ -1,0 +1,15 @@
+%
+%  Quake functions to instantiate operations on generic polar numbers.
+%
+
+readonly proc PolarBasic (nm, cfield, ctrans, rfield, rtrans) is
+  local basic = nm & "PolarBasic"
+  build_generic_intf (basic, "PolarBasic", [cfield, rfield], VISIBLE)
+  build_generic_impl (basic, "PolarBasic", [cfield, ctrans, rtrans])
+end
+
+readonly proc PolarFmtLex (nm, cfield, rfield, rfmt) is
+  local basic = nm & "PolarFmtLex"
+  build_generic_intf (basic, "PolarFmtLex", [cfield], VISIBLE)
+  build_generic_impl (basic, "PolarFmtLex", [cfield, rfield, rfmt])
+end
