@@ -29,6 +29,6 @@ TYPE
 
 PROCEDURE Tex (READONLY x     : T;
                READONLY style       := TexStyle{};
-                        within      := Precedence.sum; ): TEXT;
+                        within      := Precedence.Sum; ): TEXT;
 
 END ResidueClassFmtLex.

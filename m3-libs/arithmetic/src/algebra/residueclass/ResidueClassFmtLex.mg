@@ -15,12 +15,12 @@ PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}; ): TEXT =
 
 PROCEDURE Tex (             READONLY x     : T;
                             READONLY style       := TexStyle{};
-               <* UNUSED *>          within      := Precedence.sum; ):
+               <* UNUSED *>          within      := Precedence.Sum; ):
   TEXT =
-  VAR t := "[" & RF.Tex(x.r, style.elemStyle, Precedence.sum) & "]";
+  VAR t := "[" & RF.Tex(x.r, style.elemStyle, Precedence.Sum) & "]";
   BEGIN
     IF TexFlag.ShowDivisor IN style.flags THEN
-      t := t & "_{" & RF.Tex(x.d, style.elemStyle, Precedence.sum) & "}";
+      t := t & "_{" & RF.Tex(x.d, style.elemStyle, Precedence.Sum) & "}";
     END;
     RETURN t;
   END Tex;

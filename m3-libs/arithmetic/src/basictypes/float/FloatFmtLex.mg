@@ -24,7 +24,7 @@ PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within: Precedence):
       RETURN Parenthesize(
                Tx.Sub(result, 0, epos) & "\\cdot 10^{"
                  & Tx.Sub(result, epos + 1, Tx.Length(result) - epos - 1)
-                 & "}", Precedence.product, within);
+                 & "}", Precedence.Product, within);
     ELSE
       RETURN result;
     END;

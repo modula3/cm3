@@ -1,16 +1,14 @@
 GENERIC MODULE FloatMatrixLapack(R, C, V, VR, CV, M, LA);
-(*Arithmetic for Modula-3, see doc for details
-
-   Abstract: <describe> *)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT Arithmetic AS Arith;
 
 <* UNUSED *>
 CONST
   Module = "FloatMatrixLapack.";
-(*==========================*)
 
-PROCEDURE EigenValues (A: M.T; flags := EVFlagSet{}): EV
+
+PROCEDURE EigenValues (A: M.T; flags := EVFlagSet{}; ): EV
   RAISES {Arith.Error} =
   VAR
     eigRe            := V.New(NUMBER(A^));
@@ -27,7 +25,7 @@ PROCEDURE EigenValues (A: M.T; flags := EVFlagSet{}): EV
 
     result.eigenvalues := CV.New(NUMBER(A^));
 
-    IF EVFlag.schurVectors IN flags THEN
+    IF EVFlag.SchurVectors IN flags THEN
       job := 'V';
       result.schur := M.New(NUMBER(A^), NUMBER(A[0]));
     ELSE
@@ -40,11 +38,11 @@ PROCEDURE EigenValues (A: M.T; flags := EVFlagSet{}): EV
             eigIm[0], result.schur[0, 0], NUMBER(result.schur^), work[0],
             NUMBER(work^), bwork[0], success);
 
-    (*A finer error analysis is possible!  In some cases partial results
+    (* A finer error analysis is possible!  In some cases partial results
        should be returned*)
     IF success < 0 THEN
       RAISE
-        Arith.Error(NEW(Arith.ErrorAlmostZero).init()); (*nonsense :-)*)
+        Arith.Error(NEW(Arith.ErrorAlmostZero).init()); (* nonsense :-)*)
     ELSIF success > 0 THEN
       RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
     END;
@@ -58,29 +56,30 @@ PROCEDURE EigenValues (A: M.T; flags := EVFlagSet{}): EV
     RETURN result;
   END EigenValues;
 
-PROCEDURE LeastSquares (A: M.T; READONLY B: ARRAY OF V.T; flags: LSFlagSet):
-  REF ARRAY OF LS RAISES {Arith.Error} =
+PROCEDURE LeastSquares
+  (A: M.T; READONLY B: ARRAY OF V.T; flags: LSFlagSet; ): REF ARRAY OF LS
+  RAISES {Arith.Error} =
   VAR
     ls    := NEW(REF ARRAY OF LS, NUMBER(B));
     minmn := MIN(NUMBER(A^), NUMBER(A[0]));
     maxmn := MAX(NUMBER(A^), NUMBER(A[0]));
     X     := M.New(NUMBER(B), maxmn);
-    Atmp := M.Copy(A);           (*The information returned in Atmp is too
+    Atmp := M.Copy(A);           (* The information returned in Atmp is too
                                     much implementation specific and is
                                     ignored for now until one finds a
                                     sophisticated way of utilizing it*)
-    bsize  : CARDINAL;           (*size of a target vector from 'b'*)
-    xsize  : CARDINAL;           (*size of a solution vector*)
+    bsize  : CARDINAL;           (* size of a target vector from 'b'*)
+    xsize  : CARDINAL;           (* size of a solution vector*)
     success: INTEGER;
     trans  : CHAR;
     work := NEW(REF ARRAY OF R.T, MAX(1, minmn + MAX(minmn, NUMBER(B))));
   BEGIN
-    IF LSFlag.transposed IN flags THEN
+    IF LSFlag.Transposed IN flags THEN
       bsize := NUMBER(A[0]);
       xsize := NUMBER(A^);
-      trans := 'N';              (*we have to think inverse because FORTRAN
-                                    always considers the matrices to be
-                                    transposed*)
+      trans := 'N';              (* we have to think inverse because
+                                    FORTRAN always considers the matrices
+                                    to be transposed*)
     ELSE
       bsize := NUMBER(A^);
       xsize := NUMBER(A[0]);
@@ -97,8 +96,8 @@ PROCEDURE LeastSquares (A: M.T; READONLY B: ARRAY OF V.T; flags: LSFlagSet):
             success);
 
     IF success < 0 THEN
-      RAISE
-        Arith.Error(NEW(Arith.ErrorNoConvergence).init()); (*nonsense :-)*)
+      RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init()); (* nonsense
+                                                                  :-)*)
     END;
 
     FOR j := 0 TO LAST(X^) DO
@@ -110,7 +109,7 @@ PROCEDURE LeastSquares (A: M.T; READONLY B: ARRAY OF V.T; flags: LSFlagSet):
     RETURN ls;
   END LeastSquares;
 
-PROCEDURE GetMachineParameter (param: MachParam): R.T =
+PROCEDURE GetMachineParameter (param: MachParam; ): R.T =
   CONST
     chars = ARRAY MachParam OF
               CHAR{'E', 'S', 'B', 'P', 'N', 'R', 'M', 'U', 'L', 'O'};
@@ -119,6 +118,6 @@ PROCEDURE GetMachineParameter (param: MachParam): R.T =
   END GetMachineParameter;
 
 
-(*==========================*)
+
 BEGIN
 END FloatMatrixLapack.

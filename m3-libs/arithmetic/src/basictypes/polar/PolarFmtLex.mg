@@ -21,17 +21,17 @@ PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT =
 
 PROCEDURE Tex (READONLY x     : T;
                READONLY style       := TexStyle{};
-                        within      := Precedence.sum): TEXT =
+                        within      := Precedence.Sum): TEXT =
   VAR t: TEXT;
   BEGIN
     IF R.IsZero(x.radius) OR R.IsZero(x.angle) THEN
       t := RF.Tex(x.radius, style.elemStyle, within);
     ELSE
       t := FSup.Parenthesize(
-             RF.Tex(x.radius, style.elemStyle, Precedence.product)
+             RF.Tex(x.radius, style.elemStyle, Precedence.Product)
                & " \\cdot e^{"
-               & RF.Tex(x.angle, style.elemStyle, Precedence.sum) & " i}",
-             Precedence.product, within);
+               & RF.Tex(x.angle, style.elemStyle, Precedence.Sum) & " i}",
+             Precedence.Product, within);
     END;
     RETURN t;
   END Tex;

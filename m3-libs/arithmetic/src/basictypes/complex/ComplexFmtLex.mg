@@ -29,20 +29,20 @@ PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT =
 
 PROCEDURE Tex (READONLY x     : T;
                READONLY style       := TexStyle{};
-                        within      := Precedence.sum): TEXT =
+                        within      := Precedence.Sum): TEXT =
   VAR t: TEXT;
   BEGIN
     IF R.IsZero(x.im) THEN
       t := RF.Tex(x.re, style.elemStyle, within);
     ELSIF R.IsZero(x.re) THEN
       t :=
-        FSup.Parenthesize(RF.Tex(x.im, style.elemStyle, Precedence.product)
-                            & " i", Precedence.product, within);
+        FSup.Parenthesize(RF.Tex(x.im, style.elemStyle, Precedence.Product)
+                            & " i", Precedence.Product, within);
     ELSE
       t := FSup.Parenthesize(
-             RF.Tex(x.re, style.elemStyle, Precedence.sum) & " + "
-               & RF.Tex(x.im, style.elemStyle, Precedence.product) & " i",
-             Precedence.sum, within);
+             RF.Tex(x.re, style.elemStyle, Precedence.Sum) & " + "
+               & RF.Tex(x.im, style.elemStyle, Precedence.Product) & " i",
+             Precedence.Sum, within);
     END;
     RETURN t;
   END Tex;

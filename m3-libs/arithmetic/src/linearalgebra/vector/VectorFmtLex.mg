@@ -27,13 +27,13 @@ PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}; ): TEXT
 
 PROCEDURE Tex (                      x     : T;
                             READONLY style       := TexStyle{};
-               <* UNUSED *>          within      := Precedence.sum): TEXT
+               <* UNUSED *>          within      := Precedence.Sum; ): TEXT
   RAISES {Thread.Alerted, Wr.Failure} =
   VAR
     wr        := TextWr.New();
     sep: TEXT;
   BEGIN
-    IF TexFlag.vertical IN style.flags THEN
+    IF TexFlag.Vertical IN style.flags THEN
       sep := " \\\\\n";
       Wr.PutText(wr, "\\left(\\begin{array}{c}\n");
     ELSE
@@ -41,10 +41,10 @@ PROCEDURE Tex (                      x     : T;
       Wr.PutText(wr, "\\left(");
     END;
     FOR i := FIRST(x^) TO LAST(x^) DO
-      Wr.PutText(wr, RF.Tex(x[i], style.elemStyle, Precedence.sum));
+      Wr.PutText(wr, RF.Tex(x[i], style.elemStyle, Precedence.Sum));
       IF i # LAST(x^) THEN Wr.PutText(wr, sep); END;
     END;
-    IF TexFlag.vertical IN style.flags THEN
+    IF TexFlag.Vertical IN style.flags THEN
       Wr.PutText(wr, "\\end{array}\\right)\n");
     ELSE
       Wr.PutText(wr, "\\right)\n");

@@ -19,7 +19,7 @@ PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}; ): TEXT;
 TYPE TexStyle = FmtStyle;
 
 PROCEDURE Tex
-  (x: T; READONLY style := TexStyle{}; within := Precedence.sum; ): TEXT;
+  (x: T; READONLY style := TexStyle{}; within := Precedence.Sum; ): TEXT;
 
 TYPE LexStyle = RECORD END;
 

@@ -1,5 +1,5 @@
 GENERIC INTERFACE VectorFmtLex(RF, V);
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT Rd, Wr, Thread;
 IMPORT Lex AS L;
@@ -15,11 +15,11 @@ TYPE
                elemStyle           := RF.FmtStyle{};
              END;
 
-PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT
+PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}; ): TEXT
   RAISES {Thread.Alerted, Wr.Failure};
 
 TYPE
-  TexFlag = {vertical            (*row or column vector?*)
+  TexFlag = {Vertical            (* row or column vector? *)
             };
   TexFlagSet = SET OF TexFlag;
   TexStyle = RECORD
@@ -28,8 +28,9 @@ TYPE
                elemStyle := RF.TexStyle{};
              END;
 
-PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within := Precedence.sum):
-  TEXT RAISES {Thread.Alerted, Wr.Failure};
+PROCEDURE Tex
+  (x: T; READONLY style := TexStyle{}; within := Precedence.Sum; ): TEXT
+  RAISES {Thread.Alerted, Wr.Failure};
 
 TYPE
   LexStyle = RECORD

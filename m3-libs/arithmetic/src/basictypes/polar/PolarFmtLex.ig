@@ -21,7 +21,7 @@ TYPE TexStyle = RECORD elemStyle := RF.TexStyle{};  END;
 
 PROCEDURE Tex (READONLY x     : T;
                READONLY style       := TexStyle{};
-                        within      := Precedence.sum): TEXT;
+                        within      := Precedence.Sum): TEXT;
 
 TYPE
   LexStyle = RECORD

@@ -1,5 +1,5 @@
 GENERIC INTERFACE FractionFmtLex(RF, Fr);
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
 (* Abstract: Formatting and parsing fraction numbers *)
 
@@ -15,11 +15,11 @@ TYPE T = Fr.T;
 TYPE FmtStyle = RECORD elemStyle := RF.FmtStyle{};  END;
 
 
-PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT;
-(*outputs as "FRACTION{re:=<r>; im:=<r>}" Uses simple F.Real if x.im=0.0.*)
+PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}; ): TEXT;
+(* outputs as "FRACTION{re:=<r>; im:=<r>}" Uses simple F.Real if x.im=0.0. *)
 
 TYPE
-  TexFlag = {fraction            (*slash or fraction with bar?*)
+  TexFlag = {Fraction            (* slash or fraction with bar? *)
             };
   TexFlagSet = SET OF TexFlag;
   TexStyle = RECORD
@@ -29,7 +29,7 @@ TYPE
 
 PROCEDURE Tex (READONLY x     : T;
                READONLY style       := TexStyle{};
-                        within      := Precedence.sum): TEXT;
+                        within      := Precedence.Sum; ): TEXT;
 
 TYPE
   LexStyle = RECORD

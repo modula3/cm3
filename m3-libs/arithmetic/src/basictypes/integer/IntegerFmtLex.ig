@@ -23,7 +23,7 @@ PROCEDURE FmtArray (READONLY a        : ARRAY OF T;
 
 TYPE TexStyle = RECORD base: F.Base := 10;  END;
 
-PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within := Precedence.sum):
+PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within := Precedence.Sum):
   TEXT;
 
 TYPE LexStyle = RECORD base: F.Base := 10;  END;

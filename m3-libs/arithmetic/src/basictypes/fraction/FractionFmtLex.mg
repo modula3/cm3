@@ -1,7 +1,5 @@
 GENERIC MODULE FractionFmtLex(RF);
-(*Arithmetic for Modula-3, see doc for details
-
-   Abstract: Formatting and parsing fraction numbers *)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT Rd, Thread;
 (*IMPORT Fmt AS F;*)
@@ -11,10 +9,11 @@ IMPORT FloatMode;
 IMPORT FmtLexSupport AS FSup;
 FROM FmtLexSupport IMPORT Precedence;
 
-<*UNUSED*>
-CONST Module = "FractionFmtLex.";
+<* UNUSED *>
+CONST
+  Module = "FractionFmtLex.";
 
-PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT =
+PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}; ): TEXT =
   BEGIN
     RETURN "Fraction{n:=" & RF.Fmt(x.n, style.elemStyle) & "," & "d:="
              & RF.Fmt(x.d, style.elemStyle) & "}";
@@ -22,17 +21,17 @@ PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT =
 
 PROCEDURE Tex (READONLY x     : T;
                READONLY style       := TexStyle{};
-                        within      := Precedence.sum): TEXT =
+                        within      := Precedence.Sum; ): TEXT =
   VAR t: TEXT;
   BEGIN
-    IF TexFlag.fraction IN style.flags THEN
-      t := "\\frac{" & RF.Tex(x.n, style.elemStyle, Precedence.sum) & "}{"
-             & RF.Tex(x.d, style.elemStyle, Precedence.sum) & "}";
+    IF TexFlag.Fraction IN style.flags THEN
+      t := "\\frac{" & RF.Tex(x.n, style.elemStyle, Precedence.Sum) & "}{"
+             & RF.Tex(x.d, style.elemStyle, Precedence.Sum) & "}";
     ELSE
-      t := RF.Tex(x.n, style.elemStyle, Precedence.product) & " / "
-             & RF.Tex(x.d, style.elemStyle, Precedence.power);
+      t := RF.Tex(x.n, style.elemStyle, Precedence.Product) & " / "
+             & RF.Tex(x.d, style.elemStyle, Precedence.Power);
     END;
-    RETURN FSup.Parenthesize(t, Precedence.product, within);
+    RETURN FSup.Parenthesize(t, Precedence.Product, within);
   END Tex;
 
 PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
@@ -40,7 +39,7 @@ PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
   VAR z: T;
   BEGIN
     z.n := RF.Lex(rd);
-    FSup.AssertChar(rd,style.sep);
+    FSup.AssertChar(rd, style.sep);
     z.d := RF.Lex(rd);
     RETURN z;
   END Lex;
