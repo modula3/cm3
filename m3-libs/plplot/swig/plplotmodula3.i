@@ -60,6 +60,27 @@ typedef int PLINT;
 %pragma(modula3) setitem="Parse,PL_PARSE_";
 %pragma(modula3) enumitem="Buffering,PLESPLFLTBUFFERING_";
 
+%pragma(modula3) wrapintfcode=%{
+  Option = {enabled, arg, nodelete, invisible, disabled, dummy5, dummy6,
+            dummy7, func, bool, int, float, string};
+  OptionSet = SET OF Option;
+
+  Parse =
+    {full, quiet, nodelete, showall, override, noprogram, nodash, skip};
+  ParseSet = SET OF Parse;
+
+  Escape = {dummy0, setRgb, allocNcol, setLpb, expose, resize, redraw,
+            text, graph, fill, di, flush, eh, getc, swin, plfltbuffering,
+            xormod, setCompression, clear, dash, hasText, image, imageops};
+
+  Buffering = {dummy0, enable, disable, query};
+
+  DrawMode = {linex, liney, magColor, baseCont, topCont, surfCont, sides,
+              faceted, mesh};
+  DrawModeSet = SET OF DrawMode;
+%}
+
+
 %rename("arrows") plarrows;
 %rename("sxwin") plsxwin;
 %rename("SetContLabelFormat") pl_setcontlabelformat;
@@ -350,6 +371,26 @@ END;%}
 
 %typemap("m3intype",numinputs=0) PLINT *OUTPUT ""
 %typemap("m3argouttype") PLINT *OUTPUT "INTEGER"
+
+
+/* Test of new interface style. */
+typedef PLINT  PLFLT_ARRAY_SIZE;
+typedef PLFLT *PLFLT_ARRAY;
+typedef PLFLT *PLFLT_ARRAY_CK;
+
+%typemap("m3intype",numinputs=0) PLINT n %{%}
+
+%typemap("m3intype") PLFLT_ARRAY %{READONLY $1_name: V.TBody%}
+%typemap("m3indecl") PLFLT_ARRAY %{n:=NUMBER($1_name);%}
+%typemap("m3rawarg") PLFLT_ARRAY %{$1_name[0]%}
+
+%typemap("m3intype") PLFLT_ARRAY_CK %{READONLY $1_name: V.TBody%}
+%typemap("m3in")     PLFLT_ARRAY_CK %{IF NUMBER($1_name) # n THEN RAISE NA.Error(Err.bad_size) END;%}
+%typemap("m3rawarg") PLFLT_ARRAY_CK %{$1_name[0]%}
+
+void
+plline_new(PLFLT_ARRAY_SIZE n, PLFLT_ARRAY x, PLFLT_ARRAY_CK y);
+
 
 /* swig compatible PLplot API definitions from here on. */
 %include plplotcapi.i
