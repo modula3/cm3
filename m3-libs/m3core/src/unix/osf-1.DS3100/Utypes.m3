@@ -9,6 +9,8 @@ MODULE Utypes;
 
 IMPORT Word;
 
+FROM Ctypes IMPORT long;
+
 PROCEDURE major (x: dev_t): major_t =
   BEGIN 
     RETURN Word.And (Word.Shift (x, -20), 8_07777);
@@ -58,6 +60,11 @@ PROCEDURE FD_ZERO (p: UNTRACED REF fd_set) =
       FOR i := FIRST (a) TO LAST (a) DO  a[i] := 0;  END;
     END;
   END FD_ZERO;
+
+PROCEDURE asLong (val: off_t): long =
+  BEGIN
+    RETURN val;
+  END asLong;
 
 BEGIN
 END Utypes.

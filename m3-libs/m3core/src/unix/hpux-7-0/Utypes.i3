@@ -97,4 +97,6 @@ PROCEDURE FD_CLEAR (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_ISSET (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_ZERO  (p: UNTRACED REF fd_set);
 
+PROCEDURE asLong(val: off_t): long;
+
 END Utypes.

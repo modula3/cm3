@@ -6,7 +6,7 @@
 
 UNSAFE MODULE RTOS;
 
-IMPORT Unix, Uuio, Cstdlib, RT0u, Thread;
+IMPORT Unix, Uuio, Cstdlib, RT0u, Thread, Umman, Word;
 
 (*--------------------------------------------------- process termination ---*)
 
@@ -26,7 +26,11 @@ PROCEDURE Crash () =
 PROCEDURE GetMemory (size: INTEGER): ADDRESS =
   (* Return the address of "size" bytes of unused storage *)
   BEGIN
-    RETURN LOOPHOLE(Unix.sbrk(size), ADDRESS);
+    WITH addr = LOOPHOLE(0, ADDRESS),
+         prot = Word.Or(Umman.PROT_READ, Umman.PROT_WRITE),
+         flags = Word.Or(Umman.MAP_ANON, Umman.MAP_PRIVATE) DO
+      RETURN LOOPHOLE(Umman.mmap(addr, size, prot, flags, -1, 0), ADDRESS);
+    END;
   END GetMemory;
 
 (*------------------------------------------------------------- collector ---*)

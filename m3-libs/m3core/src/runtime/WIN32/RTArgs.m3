@@ -5,7 +5,13 @@
 (*      modified on Fri May  7 22:57:08 PDT 1993 by mjordan    *)
 
 (* In Windows/NT, "envp" points at a null-terminated block of
-   null-terminated strings *)
+   null-terminated strings.
+   This seems to have changed recently, as the original algorithms
+   of this module break for the environment calculations, while the
+   standard POSIX ones work. As I don't have any reasonable criterium
+   when to use the old and standard POSIX algorithms, now the environment
+   variable USE_FLAT_ENV is checked to decide this.
+*)
 
 UNSAFE MODULE RTArgs;
 
@@ -139,6 +145,15 @@ PROCEDURE GetArg (n: CARDINAL): TEXT =
   END GetArg;
 
 PROCEDURE EnvC (): CARDINAL =
+  BEGIN
+    IF useFlatEnv THEN
+      RETURN EnvC_Flat ();
+    ELSE
+      RETURN EnvC_Posix ();
+    END;
+  END EnvC;
+
+PROCEDURE EnvC_Flat (): CARDINAL =
   VAR
     cnt  : CARDINAL := 0; 
     envp : Ctypes.char_star := RTLinker.envp;
@@ -153,9 +168,33 @@ PROCEDURE EnvC (): CARDINAL =
       env_c := cnt;
     END;
     RETURN env_c;
-  END EnvC;
+  END EnvC_Flat;
+
+PROCEDURE EnvC_Posix (): CARDINAL =
+  VAR
+    cnt  : CARDINAL := 0;
+    envp : Ctypes.char_star_star := RTLinker.envp;
+  BEGIN
+    IF (env_c = 0) THEN
+      WHILE envp^ # NIL DO
+        INC (envp, ADRSIZE (ADDRESS));
+        INC (cnt);
+      END;
+      env_c := cnt;
+    END;
+    RETURN env_c;
+  END EnvC_Posix;
 
 PROCEDURE GetEnv (n: CARDINAL): TEXT =
+  BEGIN
+    IF useFlatEnv THEN
+      RETURN GetEnv_Flat (n);
+    ELSE
+      RETURN GetEnv_Posix (n);
+    END;
+  END GetEnv;
+
+PROCEDURE GetEnv_Flat (n: CARDINAL): TEXT =
   VAR envp : Ctypes.char_star := RTLinker.envp;
       a: ARRAY [0..1] OF INTEGER;
   BEGIN
@@ -167,8 +206,25 @@ PROCEDURE GetEnv (n: CARDINAL): TEXT =
       INC (envp, ADRSIZE (CHAR));
     END;
     RETURN M3toC.StoT (envp);
-  END GetEnv;
+  END GetEnv_Flat;
 
+PROCEDURE GetEnv_Posix (n: CARDINAL): TEXT =
+  VAR p: Ctypes.char_star_star := RTLinker.envp + n * ADRSIZE (ADDRESS);
+      a: ARRAY [0..1] OF INTEGER;
+  BEGIN
+    IF (n >= EnvC ()) THEN
+      n := 2;  n := a[n];  (* force a subscript fault *)
+    END;
+    RETURN M3toC.StoT (p^);
+  END GetEnv_Posix;
+
+VAR
+  useFlatEnv := FALSE;
+  ufe_str := M3toC.SharedTtoS("USE_FLAT_ENV");
+  ufe := Cstdlib.getenv(ufe_str);
 BEGIN
+  useFlatEnv := ufe # NIL AND 
+    (ufe^ = ORD('y') OR ufe^ = ORD('Y') OR
+     ufe^ = ORD('t') OR ufe^ = ORD('T') OR ufe^ = ORD('1'));
 END RTArgs.
 
