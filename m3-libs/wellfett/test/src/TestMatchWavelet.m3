@@ -85,8 +85,11 @@ PROCEDURE MatchPattern (target                               : S.T;
 
   BEGIN
     PL.Init();
+    PL.SetFGColorDiscr(7);
     PL.SetEnvironment(
-      abscissa[FIRST(abscissa^)], abscissa[LAST(abscissa^)], ymin, ymax);
+      abscissa[FIRST(abscissa^)], abscissa[LAST(abscissa^)], ymin, ymax,
+      axis := PL.TileSet{PL.Tile.box, PL.Tile.ticks, PL.Tile.axes,
+                         PL.Tile.gridMajor, PL.Tile.gridMinor});
 
     psi.scale(wavescale).clipToArray(first, basis[LAST(basis^)]);
     PL.SetFGColorDiscr(1);
@@ -723,8 +726,8 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
       smoothFac  = 2.5D0;
       maxSubIter = 30;
 
-      ymin = -1.5D0;
-      ymax = 1.5D0;
+      ymin = -3.5D0;
+      ymax = 3.5D0;
 
       tol     = 1.0D-4;
       difdist = 1.0D-5;
@@ -905,7 +908,7 @@ PROCEDURE Test () =
                matchRamp, matchRampSmooth, matchSincSmooth, matchLongRamp,
                testSSE, testInverseDSSE, testDeriveWSSE};
   BEGIN
-    CASE Example.matchSincSmooth OF
+    CASE Example.matchLongRamp OF
     | Example.matchBSpline =>
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50), 6,
@@ -939,10 +942,10 @@ PROCEDURE Test () =
                                  -256), 6, 4, 6, 5, 5.0D0);
     | Example.matchBSplineWavelet =>
         (*
-                MatchPattern(
-                  Refn.Refine(
-                    BSpl.WaveletMask(2, 8), BSpl.GeneratorMask(2), 6).scale(
-                    64.0D0).translate(10), 6, 2, 8, 5);
+          MatchPattern(
+            Refn.Refine(
+              BSpl.WaveletMask(2, 8), BSpl.GeneratorMask(2), 6).scale(
+              64.0D0).translate(10), 6, 2, 8, 5);
         *)
         TestMatchPatternSmooth(Refn.Refine(BSpl.WaveletMask(2, 8),
                                            BSpl.GeneratorMask(2), 6).scale(
@@ -952,10 +955,17 @@ PROCEDURE Test () =
           NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
           4, 6, 10, 1.0D-3);
     | Example.matchLongRamp =>
-        TestMatchPatternSmooth(
-          NEW(S.T).fromArray(
-            V.ArithSeq(2048, -1.0D0, 2.0D0 / 2048.0D0)^, -1024), 6, 3, 9,
-          1, 100.0D0);
+        (*matching a pattern with 1 vanishing moment with a wavelet of 9
+           vanishing moments can't work obviously*)
+        MatchPattern(NEW(S.T).fromArray(
+                       V.ArithSeq(2048, -1.0D0, 2.0D0 / 2048.0D0)^,
+                       64 - 1024), 6, 3, 9, 5);
+      (*
+      TestMatchPatternSmooth(
+        NEW(S.T).fromArray(
+          V.ArithSeq(2048, -1.0D0, 2.0D0 / 2048.0D0)^,32 -1024), 6, 3, 1,
+        5, 0.0D-4);
+      *)
     | Example.testSSE =>
         TestSSE(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
         TestSSE(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0}));
