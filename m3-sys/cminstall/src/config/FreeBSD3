@@ -164,7 +164,7 @@ SYSTEM_LIBS = {
                        13 "/usr/X11R6/lib"
                    END_CONFIG, "-lGLU", "-lGL", "-lXext" ],
   "ODBC"       : [ BEGIN_CONFIG
-                     "Where are the Postgres95 libraries?"
+                     "Where are the ODBC libraries?"
                        11 "libiodbc.a"
                        12 "/usr/local/lib"
                        12 "/usr/lib"
