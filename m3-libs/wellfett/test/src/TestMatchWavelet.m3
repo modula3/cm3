@@ -427,6 +427,17 @@ PROCEDURE TranslatesBasis (generatorvan: S.T;
     RETURN basis;
   END TranslatesBasis;
 
+
+PROCEDURE GetLiftedPrimalGeneratorMask (         hdual, gdual0: S.T;
+                                        READONLY mc           : MatchCoef):
+  S.T =
+  VAR
+    hsdual := mc.lift.upsample(2).convolve(hdual);
+    gdual  := gdual0.superpose(hsdual.scale(R.Two / mc.amp));
+  BEGIN
+    RETURN gdual.alternate();
+  END GetLiftedPrimalGeneratorMask;
+
 TYPE
   MatchCoef = RECORD
                 lift: S.T;
@@ -435,6 +446,7 @@ TYPE
 
 PROCEDURE MatchPatternSmooth (target                 : S.T;
                               hdual, gdual0, hdualvan: S.T;
+                              hdualnovan, gdual0novan: S.T;
                               levels, translates     : CARDINAL;
                               smoothWeight           : R.T;      ):
   MatchCoef RAISES {NA.Error} =
@@ -524,14 +536,6 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
                     x[LAST(x^)]};
       END SplitParamVec;
 
-    PROCEDURE GetPrimalGeneratorMask (READONLY mc: MatchCoef): S.T =
-      VAR
-        hsdual := mc.lift.upsample(2).convolve(hdual);
-        gdual  := gdual0.superpose(hsdual.scale(1.0D0 / mc.amp));
-      BEGIN
-        RETURN gdual.alternate();
-      END GetPrimalGeneratorMask;
-
     <*UNUSED*>
     PROCEDURE ComputeOptCritDeriv (x: V.T): FnD.T RAISES {NA.Error} =
       VAR
@@ -553,7 +557,8 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
 
       PROCEDURE SquareSmoothEstimate (x: V.T): R.T =
         VAR
-          hsums := GetPrimalGeneratorMask(SplitParamVec(x)).wrapCyclic(
+          hsums := GetLiftedPrimalGeneratorMask(
+                     hdualnovan, gdual0novan, SplitParamVec(x)).wrapCyclic(
                      3).getData();
 
         BEGIN
@@ -562,7 +567,9 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         END SquareSmoothEstimate;
 
       PROCEDURE TransitionSpecRad (x: V.T): R.T RAISES {NA.Error} =
-        VAR hprimal := GetPrimalGeneratorMask(SplitParamVec(x));
+        VAR
+          hprimal := GetLiftedPrimalGeneratorMask(
+                       hdualnovan, gdual0novan, SplitParamVec(x));
         BEGIN
           (*
           IO.Put("TransitionSpecRad "&Fmt.Int(ncall)&"\n");
@@ -610,7 +617,7 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
 
 
     CONST
-      maxIter   = 20;
+      maxIter   = 3;
       smoothFac = 1.5D0;
 
     VAR
@@ -677,11 +684,24 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
                   hdual,
                   NEW(S.T).fromArray(ARRAY OF R.T{1.0D0, 0.0D0, -1.0D0}),
                   vanishing).translate(2 - smooth - vanishing);
-    mc := MatchPatternSmooth(target, hdual, gdual0, hdualvan, levels,
-                             translates, smoothWeight);
+    hdualnovan := BSpl.GeneratorMask(smooth + vanishing).translate(
+                    2 - smooth - vanishing).scale(
+                    RIntPow.Power(R.Two, vanishing)); (*compensate factors
+                                                         (0.5,0.5) from the
+                                                         mask*)
+    gdual0novan := BSpl.WaveletMask(smooth + vanishing, 0).scale(
+                     R.One / RIntPow.Power(R.Two, vanishing));
+
+    mc := MatchCoef{NEW(S.T).fromArray(
+                      ARRAY OF R.T{1.0D0, 0.0D0, 0.0D0, 1.0D0}), 1.5D0};
+    (*
+        mc := MatchPatternSmooth(target, hdual, gdual0, hdualvan, hdualnovan,
+                                 gdual0novan, levels, translates, smoothWeight);
+    *)
+    vanatom := NEW(S.T).fromArray(ARRAY OF R.T{1.0D0, -1.0D0});
     s := SIntPow.MulPower(
-           mc.lift.translate((2 - smooth - vanishing) DIV 2),
-           NEW(S.T).fromArray(ARRAY OF R.T{1.0D0, -1.0D0}), vanishing);
+           mc.lift.translate((2 - smooth - vanishing) DIV 2), vanatom,
+           vanishing);
     gdual0a := gdual0.scale(mc.amp / RT.SqRtTwo);
     gduala := gdual0a.superpose(
                 s.upsample(2).convolve(hdual.scale(RT.SqRtTwo)));
@@ -705,13 +725,26 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
 
   BEGIN
     IO.Put(
-      Fmt.FN(
-        "optimal lift %s,\ncyclic wrap of gdual %s\n",
-        ARRAY OF TEXT{SF.Fmt(s), SF.Fmt(gdual.alternate().wrapCyclic(3))}));
-    PL.Init();
-    CASE 0 OF
-    | 0 => WP.PlotWavelets(hdual, gdual, levels);
+      Fmt.FN("optimal lift %s,\ncyclic wrap of gdual %s\n\n"
+               & "hsdual\n%s\n%s\n\n" & "gdual0\n%s\n%s\n\n"
+               & "gdual\n%s\n%s\n",
+             ARRAY OF
+               TEXT{
+               SF.Fmt(s), SF.Fmt(gdual.alternate().wrapCyclic(3)),
+               SF.Fmt(s.upsample(2).convolve(hdual)),
+               SF.Fmt(SIntPow.MulPower(mc.lift.upsample(2).convolve(
+                                         hdualnovan), vanatom, vanishing)),
+               SF.Fmt(gdual0),
+               SF.Fmt(SIntPow.MulPower(gdual0novan, vanatom, vanishing)),
+               SF.Fmt(gdual),
+               SF.Fmt(SIntPow.MulPower(
+                        GetLiftedPrimalGeneratorMask(
+                          hdualnovan, gdual0novan, mc).alternate(),
+                        vanatom, vanishing))}));
+    CASE 2 OF
+    | 0 => PL.Init(); WP.PlotWavelets(hdual, gdual, levels); PL.Exit();
     | 1 =>
+        PL.Init();
         PL.SetEnvironment(
           MIN(lefttarget, MIN(leftpsidual, leftpsidual0)),
           MAX(righttarget, MAX(rightpsidual, rightpsidual0)), ymin, ymax);
@@ -724,10 +757,11 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
         PL.SetColor0(4);
         PL.PlotLines(V.ArithSeq(psidual.getNumber(), leftpsidual, grid)^,
                      psidual.getData()^);
+        PL.Exit();
+    | 2 =>
     ELSE
       <*ASSERT FALSE*>
     END;
-    PL.Exit();
   END TestMatchPatternSmooth;
 
 (*create symmetric clip of the sin x / x curve*)
@@ -797,7 +831,7 @@ PROCEDURE Test () =
         *)
         TestMatchPatternSmooth(Refn.Refine(BSpl.WaveletMask(2, 8),
                                            BSpl.GeneratorMask(2), 6).scale(
-                                 64.0D0).translate(60), 6, 2, 8, 5, 10.0D0);
+                                 64.0D0).translate(0), 6, 2, 8, 5, 1.0D0);
     | Example.matchSincSmooth =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
