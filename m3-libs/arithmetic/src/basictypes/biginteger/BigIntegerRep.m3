@@ -1,17 +1,14 @@
 MODULE BigIntegerRep;
-(*Arithmetic for Modula-3, see doc for details
-
-   Abstract: Integers of arbitrary size
-
-   Daniel Beer *)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT Word AS W;
 IMPORT WordEx AS Wx;
 IMPORT Arithmetic AS Arith;
 FROM BigInteger IMPORT Zero;
+
 (*
-IMPORT IO,Fmt,BigIntegerFmtLex AS BF;
-CONST base16Style = BF.FmtStyle{base:=16};
+IMPORT IO, Fmt, BigIntegerFmtLex AS BF;
+CONST base16Style = BF.FmtStyle{base := 16};
 *)
 
 <* UNUSED *>
@@ -20,21 +17,21 @@ CONST
 (*==========================*)
 
 
-PROCEDURE Clear ( (*OUT*)v: Value) =
+PROCEDURE Clear ( (*OUT*)v: Value; ) =
   BEGIN
     FOR j := FIRST(v^) TO LAST(v^) DO v[j] := 0; END;
   END Clear;
 
 
 <* INLINE *>
-PROCEDURE MinMax (VAR min, max: INTEGER; a, b: INTEGER) =
+PROCEDURE MinMax (VAR min, max: INTEGER; a, b: INTEGER; ) =
   BEGIN
     IF a < b THEN min := a; max := b; ELSE min := b; max := a; END;
   END MinMax;
 
 
 
-PROCEDURE CorrectSize (VAR x: T; start: INTEGER) =
+PROCEDURE CorrectSize (VAR x: T; start: INTEGER; ) =
   VAR j := start;
 
   BEGIN
@@ -43,10 +40,10 @@ PROCEDURE CorrectSize (VAR x: T; start: INTEGER) =
   END CorrectSize;
 
 
-(*unsigned arithmetic, 'sign' entry is ignored; the signed arithmetic is
-   build on the unsigned arithmetic routines*)
+(* unsigned arithmetic, 'sign' entry is ignored; the signed arithmetic is
+   build on the unsigned arithmetic routines *)
 
-PROCEDURE AddU (READONLY x, y: T): T =
+PROCEDURE AddU (READONLY x, y: T; ): T =
   VAR
     carry             := FALSE;
     min, max: INTEGER;
@@ -78,7 +75,7 @@ PROCEDURE AddU (READONLY x, y: T): T =
   END AddU;
 
 (* You must make sure that x >= y *)
-PROCEDURE SubU (READONLY x, y: T): T =
+PROCEDURE SubU (READONLY x, y: T; ): T =
   VAR
     carry             := FALSE;
     min, max: INTEGER;
@@ -103,13 +100,13 @@ PROCEDURE SubU (READONLY x, y: T): T =
         z.data[j] := Wx.MinusWithBorrow(0, y.data[j], carry);
       END;
     END;
-    <* ASSERT NOT carry *>       (*otherwise it was x<y*)
+    <* ASSERT NOT carry *>       (* otherwise it was x<y *)
 
     CorrectSize(z, max - 1);
     RETURN z;
   END SubU;
 
-PROCEDURE CompareU (READONLY x, y: T): [-1 .. 1] =
+PROCEDURE CompareU (READONLY x, y: T; ): [-1 .. 1] =
   BEGIN
     IF x.size < y.size THEN
       RETURN -1
@@ -128,18 +125,18 @@ PROCEDURE CompareU (READONLY x, y: T): [-1 .. 1] =
   END CompareU;
 
 
-PROCEDURE MulU (READONLY x, y: T): T =
+PROCEDURE MulU (READONLY x, y: T; ): T =
   VAR
     m, lo, hi, oldhi: W.T;
     carry           : BOOLEAN;
     z               : T;
 
   BEGIN
-    IF (x.size = 0) OR (y.size = 0) THEN RETURN Zero; END;
+    IF x.size = 0 OR y.size = 0 THEN RETURN Zero; END;
 
     z.data := NEW(Value, x.size + y.size);
 
-    (*initialize result data*)
+    (* initialize result data *)
     m := x.data[0];
     hi := 0;
     FOR k := 0 TO y.size - 1 DO
@@ -247,15 +244,17 @@ BEGIN
             ARRAY OF TEXT {Fmt.Int(sh.word),Fmt.Int(sh.bit)});
 END FmtBitPos;
 
-PROCEDURE FmtBig (x : T) : TEXT =
-BEGIN
-  RETURN Fmt.FN("(size %s) 16_%s",
-       ARRAY OF TEXT {Fmt.Int(x.size),BF.Fmt(x,style:=base16Style)});
-END FmtBig;
+PROCEDURE FmtBig (x: T): TEXT =
+  BEGIN
+    RETURN
+      Fmt.FN(
+        "(size %s) 16_%s",
+        ARRAY OF TEXT{Fmt.Int(x.size), BF.Fmt(x, style := base16Style)});
+  END FmtBig;
 *)
 
 
-PROCEDURE SubBitPos (READONLY x, y: BitPos): BitPos =
+PROCEDURE SubBitPos (READONLY x, y: BitPos; ): BitPos =
   BEGIN
     IF x.bit >= y.bit THEN
       RETURN BitPos{x.word - y.word, x.bit - y.bit};
@@ -264,7 +263,7 @@ PROCEDURE SubBitPos (READONLY x, y: BitPos): BitPos =
     END;
   END SubBitPos;
 
-PROCEDURE AddBitPos (READONLY x, y: BitPos): BitPos =
+PROCEDURE AddBitPos (READONLY x, y: BitPos; ): BitPos =
   BEGIN
     IF x.bit + y.bit < W.Size THEN
       RETURN BitPos{x.word + y.word, x.bit + y.bit};
@@ -274,7 +273,7 @@ PROCEDURE AddBitPos (READONLY x, y: BitPos): BitPos =
   END AddBitPos;
 
 <* INLINE *>
-PROCEDURE CompareBitPos (READONLY x, y: BitPos): [-1 .. 1] =
+PROCEDURE CompareBitPos (READONLY x, y: BitPos; ): [-1 .. 1] =
   BEGIN
     IF x.word < y.word THEN
       RETURN -1;
@@ -289,7 +288,7 @@ PROCEDURE CompareBitPos (READONLY x, y: BitPos): [-1 .. 1] =
     END;
   END CompareBitPos;
 
-PROCEDURE BitPosEndToBegin (READONLY x: BitPos): BitPos =
+PROCEDURE BitPosEndToBegin (READONLY x: BitPos; ): BitPos =
   BEGIN
     IF x.bit < W.Size - 1 THEN
       RETURN BitPos{x.word - 1, x.bit + 1};
@@ -298,11 +297,11 @@ PROCEDURE BitPosEndToBegin (READONLY x: BitPos): BitPos =
     END;
   END BitPosEndToBegin;
 
-PROCEDURE GetMSBPos (READONLY x: T): BitPos =
+PROCEDURE GetMSBPos (READONLY x: T; ): BitPos =
   BEGIN
     (*
-    IO.Put(Fmt.FN("GetMSBPos (size %s) 16_%s\t",
-           ARRAY OF TEXT {Fmt.Int(x.size),BF.Fmt(x,style:=base16Style)}));
+    IO.Put(Fmt.FN("GetMSBPos %s\t",
+           ARRAY OF TEXT {FmtBig(x)}));
     IO.Put(Fmt.FN("MSB of %s: %s\n",
            ARRAY OF TEXT {Fmt.Unsigned(x.data[x.size-1]),
                           Fmt.Int(Wx.FindMostSignifBit(x.data[x.size-1]))}));
@@ -310,14 +309,14 @@ PROCEDURE GetMSBPos (READONLY x: T): BitPos =
     RETURN BitPos{x.size - 1, Wx.FindMostSignifBit(x.data[x.size - 1])};
   END GetMSBPos;
 
-(*grab bits from sh to sh+W.Size-1*)
-PROCEDURE GetSubword (READONLY x: T; sh: BitPos): W.T =
+(* grab bits from sh to sh+W.Size-1 *)
+PROCEDURE GetSubword (READONLY x: T; sh: BitPos; ): W.T =
   VAR probs: W.T := 0;
   BEGIN
     (*
     IO.Put(Fmt.FN("GetSubword of %s at %s\n",ARRAY OF TEXT{FmtBig(x),FmtBitPos(sh)}));
     *)
-    IF sh.bit > 0 THEN           (*avoid access to non-existing fields*)
+    IF sh.bit > 0 THEN           (* avoid access to non-existing fields *)
       EVAL Wx.RightShiftWithProbscosis(x.data[sh.word + 1], sh.bit, probs);
     END;
     IF sh.word < 0 THEN
@@ -328,8 +327,8 @@ PROCEDURE GetSubword (READONLY x: T; sh: BitPos): W.T =
   END GetSubword;
 
 
-(*x := x-SHL(y*z,sh) (inplace, make sure that x.data has enough space) *)
-PROCEDURE SubShiftedProd (VAR x: T; READONLY y: T; z: W.T; sh: BitPos) =
+(* x := x-SHL(y*z,sh) (inplace, make sure that x.data has enough space) *)
+PROCEDURE SubShiftedProd (VAR x: T; READONLY y: T; z: W.T; sh: BitPos; ) =
   VAR
     lo, hi, oldhi, probs, loshft: W.T;
     carry                                 := FALSE;
@@ -372,8 +371,8 @@ PROCEDURE SubShiftedProd (VAR x: T; READONLY y: T; z: W.T; sh: BitPos) =
     *)
   END SubShiftedProd;
 
-(*x := x+SHL(y,sh) (inplace, make sure that x.data has enough space)*)
-PROCEDURE AddShifted (VAR x: T; y: W.T; sh: BitPos) =
+(* x := x+SHL(y,sh) (inplace, make sure that x.data has enough space) *)
+PROCEDURE AddShifted (VAR x: T; y: W.T; sh: BitPos; ) =
   VAR
     carry      := FALSE;
     probs: W.T := 0;
@@ -386,8 +385,8 @@ PROCEDURE AddShifted (VAR x: T; y: W.T; sh: BitPos) =
     x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word],
                                         Wx.LeftShiftWithProbscosis(
                                           y, sh.bit, probs), carry);
-    (*don't access fields that we need not really because they may not
-       exist*)
+    (* don't access fields that we need not really because they may not
+       exist *)
     IF probs # 0 OR carry THEN
       INC(sh.word);
       x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], probs, carry);
@@ -398,29 +397,29 @@ PROCEDURE AddShifted (VAR x: T; y: W.T; sh: BitPos) =
     END;
   END AddShifted;
 
-(*x and y cannot be READONLY parameters, otherwise conflicts arise, when
-   someone passes the same variable to x and r*)
-PROCEDURE DivModU (x, y: T): QuotRem RAISES {Arith.Error} =
+(* x and y cannot be READONLY parameters, otherwise conflicts arise, when
+   someone passes the same variable to x and r *)
+PROCEDURE DivModU (x, y: T; ): QuotRem RAISES {Arith.Error} =
   VAR
     q, r                     : T;
     qmswstartpos             : BitPos;
     qmsbpos, rmsbpos, ymsbpos: BitPos;
     qmsw, rmsw, ymsw         : W.T;
+
   BEGIN
     (*
-    IO.Put(Fmt.FN("DivModU (size %s) 16_%s by (size %s) 16_%s\n",
-           ARRAY OF TEXT {Fmt.Int(x.size),BF.Fmt(x,style:=base16Style),
-                          Fmt.Int(y.size),BF.Fmt(y,style:=base16Style)}));
+    IO.Put(
+      Fmt.FN("DivModU %s by %s\n", ARRAY OF TEXT{FmtBig(x), FmtBig(y)}));
     *)
     IF y.size = 0 THEN
       RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init());
     END;
 
-    (*this check is necessary, we would access non-existing data
-       otherwise*)
+    (* this check is necessary, we would access non-existing data
+       otherwise *)
     IF x.size = 0 THEN
-      RETURN QuotRem{x, x};      (*the quotient and remainder are zero,
-                                    too*)
+      RETURN QuotRem{x, x};      (* the quotient and remainder are zero,
+                                    too *)
     END;
 
     r.data := NEW(Value, x.size + 2);
@@ -431,31 +430,33 @@ PROCEDURE DivModU (x, y: T): QuotRem RAISES {Arith.Error} =
     r.data[r.size + 1] := 0;
     Clear(q.data);
 
-    (*normalize remainder and divisor temporarily divide most significant
-       32 bit of r by the most significant 16 bit of y*)
-    (*IO.Put("GetMSBPos (y)\t");*)
+    (* normalize remainder and divisor temporarily divide most significant
+       32 bit of r by the most significant 16 bit of y *)
+    (* IO.Put("GetMSBPos (y)\t"); *)
     ymsbpos := GetMSBPos(y);
     ymsw := GetSubword(y, BitPosEndToBegin(ymsbpos));
     ymsw :=
-      W.RightShift(ymsw, W.Size DIV 2); (*the division algorithm is fastest
-                                           if the divisor is clipped to the
-                                           half number of bits compared
-                                           with the approximation of the
-                                           dividend*)
-    INC(ymsw);                   (*round up to get a lower estimate for
-                                    quotient*)
+      W.RightShift(ymsw, W.Size DIV 2); (* the division algorithm is
+                                           fastest if the divisor is
+                                           clipped to the half number of
+                                           bits compared with the
+                                           approximation of the dividend *)
+    INC(ymsw);                   (* round up to get a lower estimate for
+                                    quotient *)
 
-    (*IO.Put("GetMSBPos (r)\t");*)
+    (* IO.Put("GetMSBPos (r)\t"); *)
     rmsbpos := GetMSBPos(r);
     WHILE CompareBitPos(rmsbpos, ymsbpos) > 0 DO
       rmsw := GetSubword(r, BitPosEndToBegin(rmsbpos));
-      (*round down by neglecting the following bits to get a lower estimate
-         for quotient*)
+      (* round down by neglecting the following bits to get a lower
+         estimate for quotient *)
       qmsw := W.Divide(rmsw, ymsw);
       (*
       IO.Put(Fmt.FN("rmsw %s, ymsw %s, qmsw %s, ymsw*qmsw %s\n",
-        ARRAY OF TEXT{Fmt.Unsigned(rmsw),Fmt.Unsigned(ymsw),Fmt.Unsigned(qmsw),
-                      Fmt.Unsigned(W.Times(ymsw,qmsw))}));
+                    ARRAY OF
+                      TEXT{Fmt.Unsigned(rmsw), Fmt.Unsigned(ymsw),
+                           Fmt.Unsigned(qmsw),
+                           Fmt.Unsigned(W.Times(ymsw, qmsw))}));
       *)
       qmsbpos := SubBitPos(rmsbpos, ymsbpos);
       qmswstartpos := SubBitPos(qmsbpos, BitPos{0, W.Size DIV 2});
@@ -470,10 +471,18 @@ PROCEDURE DivModU (x, y: T): QuotRem RAISES {Arith.Error} =
       SubShiftedProd(r, y, qmsw, qmswstartpos);
       rmsbpos := GetMSBPos(r);
     END;
-    (*CorrectSize (q, LAST(q.data));*)
+    (* CorrectSize (q, LAST(q.data)); *)
 
-    (*this loop will run at most three times*)
+    (* this loop will run at most three times *)
     WHILE CompareU(r, y) >= 0 DO
+      (*
+      IO.Put(Fmt.FN("Final reduction loop: q 16_%s, r 16_%s, y 16_%s\n",
+                    ARRAY OF
+                      TEXT{BF.Fmt(q, style := base16Style),
+                           BF.Fmt(r, style := base16Style),
+                           BF.Fmt(y, style := base16Style)}));
+      *)
+
       (*
       r := SubU (r, y);
       q := AddU (q, One);
