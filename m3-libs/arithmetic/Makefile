@@ -3,7 +3,7 @@ TARGET = LINUXLIBC6
 
 .PHONY:	all clean install lib test doc runtest
 
-all:	lib test doc
+all:	lib install test doc
 
 install:
 	cm3 -ship
