@@ -2288,7 +2288,7 @@ m3cg_do_declare_local () /* GCC32OK */
   if (debug_vars)
     fprintf(stderr, "  local var %s type %d size %ld alignment %ld\n",
             IDENTIFIER_POINTER(DECL_NAME(v)), t, s, a);
-  DECL_NONLOCAL (v) = up_level;
+  DECL_NONLOCAL (v) = up_level || in_memory;
   TREE_ADDRESSABLE (v) = in_memory;
   DECL_CONTEXT (v) = current_function_decl; 
   fix_type (v, t, s, a);
@@ -2302,12 +2302,7 @@ m3cg_do_declare_local () /* GCC32OK */
     BLOCK_VARS (subblocks) = v;
   }
 
-  if (compiling_body) {
-    compile_local (v);
-    /* force to memory
-       -- necessary for init_offset vars (for exception scope tables) */
-    if (TREE_ADDRESSABLE(v)) flush_addressof (DECL_RTL(v));
-  }
+  if (compiling_body) { compile_local (v); }
 }
 
 static void
@@ -2329,7 +2324,7 @@ m3cg_do_declare_param () /* GCC32OK */
   if (debug_procs)
     fprintf(stderr, "  param %s type %d typeid %ld\n",
 	    IDENTIFIER_POINTER(DECL_NAME(v)), t, id);
-  DECL_NONLOCAL (v) = up_level;
+  DECL_NONLOCAL (v) = up_level || in_memory;
   TREE_ADDRESSABLE (v) = in_memory;
   fix_type (v, t, s, a);
   DECL_ARG_TYPE (v) = TREE_TYPE (v);
