@@ -12,9 +12,10 @@
 # used within the Modula-3 runtime.
 #
 	.text
-	.align 2
+	.align 4
  
 	.globl _setjmp
+	.type  _setjmp,@function
 _setjmp:
 	movl 4(%esp), %eax		# address of env argument in %eax
 	movl %ebx, 0(%eax)		# save %ebx in jmp_buf
@@ -28,5 +29,5 @@ _setjmp:
         movl $0x0, 24(%eax)		# note that signal masks not saved
 	xorl %eax, %eax			# return 0
 	ret
-
-
+.Lfe1:
+	.size  _setjmp,.Lfe1-_setjmp
