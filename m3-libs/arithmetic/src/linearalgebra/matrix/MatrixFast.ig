@@ -1,10 +1,7 @@
-GENERIC INTERFACE MatrixFast(R, V);
+GENERIC INTERFACE MatrixFast(R, V, MS);
 (* Arithmetic for Modula-3, see doc for details *)
 
-TYPE
-  TRow = ARRAY OF R.T;
-  TBody = ARRAY OF TRow;
-  T = REF TBody;
+TYPE T = MS.T;
 
 PROCEDURE Add (x, y: T; ): T;    (* x + y *)
 PROCEDURE Sub (x, y: T; ): T;    (* x - y *)
@@ -18,10 +15,9 @@ PROCEDURE MulTV (x: T; y: V.T; ): V.T; (* A^T * b or b^T*A *)
 PROCEDURE MulMMA (x: T; ): T;    (* x*x^* *)
 PROCEDURE MulMAM (x: T; ): T;    (* x^**x *)
 
-<*INLINE*>
-PROCEDURE Adjoint (x: T; ): T;   (* x^* *)
+CONST Adjoint = MS.Transpose;
 
 PROCEDURE Trace (x: T; ): R.T;   (* sum of the diagonal elements *)
-PROCEDURE Determinant(x:T;):R.T;
+PROCEDURE Determinant (x: T; ): R.T;
 
 END MatrixFast.

@@ -4,6 +4,7 @@ template("matrix")
 
 
 Generic_module("Matrix")
+Generic_module("MatrixSupport")
 
 Generic_module("MatrixFast")
 Generic_module("MatrixBasic")
