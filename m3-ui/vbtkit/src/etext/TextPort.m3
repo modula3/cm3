@@ -255,8 +255,8 @@ PROCEDURE SetFont (v: T; font: Font.T) =
       vFont := vOptions.vFontxxx;
       TRY
         vOptions.vFontxxx :=
-          VText.MakeVFont (font := font, printable := vFont.vFont.printable,
-                           whiteTabs := vFont.vFont.whiteTabs);
+          VText.MakeVFont (font := font, printable := vFont.printable,
+                           whiteTabs := vFont.whiteTabs);
         v.font := font;          (* For convenience only *)
         VText.ChangeVOptions (vtext, vOptions);
         SetFontDimensions (v);
@@ -396,7 +396,7 @@ PROCEDURE SetFontDimensions (v: T) =
                         st, v.font).metrics.maxBounds,
              box = bounds.boundingBox DO
           v.fontHeight := Rect.VerSize (box);
-          v.charWidth := bounds.printWidth
+          v.charWidth := bounds.printWidth;
           (* not "Rect.HorSize (box)", alas *)
         END
       END

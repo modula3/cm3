@@ -7,7 +7,7 @@
 
 MODULE Template;
 
-IMPORT Wr, Thread, EventFile, Text, TextF, Process, TextTextTbl;
+IMPORT Wr, Thread, EventFile, Text, Process, TextTextTbl;
 
 TYPE
   OutBuf = RECORD
@@ -95,8 +95,8 @@ PROCEDURE Generate (READONLY evt: EventFile.T;  algorithm, view: TEXT;
     buf.wr := wr;
 
     WHILE (cur < len) DO
-      IF (template[cur] # '#') THEN
-        Out (buf, template[cur]);  INC (cur);
+      IF (Text.GetChar(template,cur) # '#') THEN
+        Out (buf, Text.GetChar(template,cur));  INC (cur);
       ELSE
         CASE Classify (template, cur, restart) OF
 
@@ -267,7 +267,7 @@ PROCEDURE Generate (READONLY evt: EventFile.T;  algorithm, view: TEXT;
                 cur := restart;
 
         ELSE (* unrecognized '#' *)
-                Out (buf, template[cur]);  INC (cur);
+                Out (buf, Text.GetChar(template,cur));  INC (cur);
         END;
       END;
     END;
@@ -344,7 +344,7 @@ PROCEDURE SkipLoop (tmp: TEXT;  cur: INTEGER): INTEGER =
   VAR len := Text.Length (tmp);  depth := 1;  restart: INTEGER;
   BEGIN
     WHILE (cur < len) DO
-      IF (tmp[cur] # '#') THEN
+      IF (Text.GetChar(tmp,cur) # '#') THEN
         INC (cur);
       ELSE
         CASE Classify (tmp, cur, restart) OF
@@ -379,15 +379,18 @@ PROCEDURE Classify (tmp: TEXT;  cur: INTEGER;
       full := Markers[i].full_line;
       nx   := 0;
       tx   := cur;
-      IF (NOT full) OR (cur = 0) OR (tmp[cur-1] = '\n') THEN
-        WHILE (nx < nlen) AND (tx < tlen) AND (tmp[tx] = nm[nx]) DO
+      IF (NOT full) OR (cur = 0) OR (Text.GetChar(tmp,cur-1) = '\n') THEN
+        WHILE (nx < nlen) AND (tx < tlen) AND 
+              (Text.GetChar(tmp,tx) = Text.GetChar(nm,nx)) DO
           INC (tx); INC (nx);
         END;
         IF (nx >= nlen) THEN
           (* we found a match! *)
           IF full THEN
             (* scan to the beginning of the next line *)
-            WHILE (tx < tlen) AND (tmp[tx] # '\n') DO INC (tx); END;
+            WHILE (tx < tlen) AND (Text.GetChar(tmp,tx) # '\n') DO
+              INC (tx); 
+            END;
             INC (tx);
           END;
           restart := tx;
@@ -403,7 +406,7 @@ PROCEDURE Classify (tmp: TEXT;  cur: INTEGER;
 PROCEDURE OutT (VAR b: OutBuf;  t: TEXT)
   RAISES {Wr.Failure, Thread.Alerted} =
   BEGIN
-    FOR i := 0 TO LAST (t^)-1 DO Out (b, t[i]) END;
+    FOR i := 0 TO Text.Length(t)-1 DO Out (b, Text.GetChar(t,i)) END;
   END OutT;
 
 PROCEDURE Out (VAR b: OutBuf;  c: CHAR)

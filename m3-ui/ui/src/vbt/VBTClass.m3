@@ -324,7 +324,7 @@ TYPE RepaintClosure =
   OVERRIDES 
     apply := NotifyRepaint
   END;
-  
+
 PROCEDURE ForceRepaint(v: VBT.T; READONLY rgn: Region.T; 
   deliver := TRUE) RAISES {} =
   VAR br: Region.T;

@@ -17,5 +17,6 @@ CONST (* Trestle extensions to the standard Windows messages *)
   ICONIZE_VBT          = WinUser.WM_USER + 6;
   OVERLAP_VBT          = WinUser.WM_USER + 7;
   RETITLE_VBT          = WinUser.WM_USER + 8;
+  PAINTBATCH_VBT       = WinUser.WM_USER + 9;
 
 END WinMsg.

@@ -5,22 +5,19 @@
 (* Last modified on Mon Nov  4 14:11:07 PST 1996 by najork                   *)
 (*       Created on Mon Jun 26 09:33:27 PDT 1995 by najork                   *)
 
-
-UNSAFE MODULE WinPaint;   (* unsafe because of M3toC *)
-
+UNSAFE MODULE WinPaint;
 
 IMPORT Batch, BatchRep, BatchUtil, Ctypes, M3toC, OSWin32, PaintExt, 
        PaintPrivate, Path, PathPrivate, Point, PolyRegion, Rect, Region, 
        ScrnFont, Trapezoid, Trestle, TrestleImpl, VBT, VBTRep, WinContext, 
        WinDef, WinGDI, WinScreenType, WinScreenTypePrivate, WinScrnFont, 
-       WinScrnPaintOp, WinScrnPixmap, Word;
+       WinScrnPaintOp, WinScrnPixmap, WinUser, Word;
 
 TYPE 
   PC = PaintPrivate.PaintCommand;
 
 CONST
-  (** False = 0; **)
-  True  = 1;
+  False = 0;  (* Win32 BOOL return value *)
   
   ComSize = ADRSIZE (PaintPrivate.CommandRec);
 
@@ -28,15 +25,17 @@ VAR
   Chicago            := OSWin32.Win95();
   Bug95_PatternBrush := Chicago;
 
-PROCEDURE PaintBatch (self: Trestle.T; v: VBT.T; ba: Batch.T;  hdc: WinDef.HDC) =
+PROCEDURE PaintBatch (self: Trestle.T; v: VBT.T; ba: Batch.T;
+                      hdc: WinDef.HDC;  badR: Region.T): Region.T =
   VAR
     cmdP  := LOOPHOLE (ADR (ba.b[0]), PaintPrivate.CommandPtr);
     endP  : PaintPrivate.CommandPtr := ba.next;
     st    : WinScreenType.T := v.st;
+    buf   : RGBSpace;
   BEGIN
     IF ba.clip.west >= ba.clip.east OR st = NIL THEN
       Batch.Free (ba);
-      RETURN;
+      RETURN badR;
     END;
     IF ba.clipped = BatchUtil.ClipState.Unclipped THEN
       BatchUtil.Clip (ba);
@@ -47,11 +46,11 @@ PROCEDURE PaintBatch (self: Trestle.T; v: VBT.T; ba: Batch.T;  hdc: WinDef.HDC) 
         | PC.TintCom => 
           cmdP := TintCom (cmdP, endP, hdc, st);
         | PC.TextureCom => 
-          cmdP := TextureCom (cmdP, endP, hdc, st);
+          cmdP := TextureCom (cmdP, endP, hdc, st, buf);
         | PC.PixmapCom => 
-          cmdP := PixmapCom (cmdP, endP, hdc, st);
+          cmdP := PixmapCom (cmdP, endP, hdc, st, buf);
         | PC.ScrollCom => 
-          cmdP := ScrollCom (cmdP, hdc, st);
+          cmdP := ScrollCom (cmdP, hdc, st, badR);
         | PC.TrapCom => 
           cmdP := TrapCom (cmdP, endP, hdc, st);
         | PC.TextCom => 
@@ -66,8 +65,26 @@ PROCEDURE PaintBatch (self: Trestle.T; v: VBT.T; ba: Batch.T;  hdc: WinDef.HDC) 
       END;
       Batch.Free(ba);
     END;
+    RETURN badR;
   END PaintBatch;
 
+TYPE
+  RGBSpace = RECORD
+    flat : ARRAY [0..255] OF WinGDI.RGBQUAD;
+    ref  : REF ARRAY OF WinGDI.RGBQUAD := NIL;
+  END;
+
+PROCEDURE GetRGBSpace (VAR buf: RGBSpace;  area: INTEGER): ADDRESS =
+  BEGIN
+    IF (area <= NUMBER (buf.flat)) THEN
+      RETURN ADR (buf.flat[0]);
+    ELSIF (buf.ref # NIL) AND (area <= NUMBER (buf.ref^)) THEN
+      RETURN ADR (buf.ref[0]);
+    ELSE
+      buf.ref := NEW (REF ARRAY OF WinGDI.RGBQUAD, area);
+      RETURN ADR (buf.ref[0]);
+    END;
+  END GetRGBSpace;
 
 (*****************************************************************************)
 (* Painting Tints                                                            *)
@@ -99,7 +116,8 @@ PROCEDURE TintCom (cmdP, endP: PaintPrivate.CommandPtr;
 
 PROCEDURE TextureCom (cmdP, endP: PaintPrivate.CommandPtr;
                       hdc       : WinDef.HDC;
-                      st        : WinScreenType.T): PaintPrivate.CommandPtr =
+                      st        : WinScreenType.T;
+                  VAR buf       : RGBSpace): PaintPrivate.CommandPtr =
   
   PROCEDURE TileWithBitmap (hdc  : WinDef.HDC;
                             clip : Rect.T;
@@ -137,9 +155,9 @@ PROCEDURE TextureCom (cmdP, endP: PaintPrivate.CommandPtr;
          "clip.east - clip.west" and height "clip.south - clip.north", the 
          rectangle "clip" of page space is mapped onto the device. *)
       status := WinGDI.SetWindowOrgEx (comdc, clip.west, clip.north, NIL);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
       status := WinGDI.SetViewportOrgEx (comdc, 0, 0, NIL);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
       
       (* I dabbled a bit around with "SetWorldTransform", but could not get it 
          to work. Anyways, "SetWordTransform" is supported under Windows NT, 
@@ -159,7 +177,7 @@ PROCEDURE TextureCom (cmdP, endP: PaintPrivate.CommandPtr;
                                         delta.h - clip.west, 
                                         delta.v - clip.north, 
                                         NIL); 
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
         
         oldBrush := WinGDI.SelectObject (comdc, brush);
         <* ASSERT oldBrush # NIL *>
@@ -182,16 +200,16 @@ PROCEDURE TextureCom (cmdP, endP: PaintPrivate.CommandPtr;
         <* ASSERT oldBrush = brush *>
         
         status := WinGDI.DeleteObject (brush);
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
       END;
       
       BitBltFill (hdc, pat0, brop, clip, comdc);
       BitBltFill (hdc, pat1, frop, clip, comdc);
       
       status := WinGDI.DeleteDC (comdc);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
       status := WinGDI.DeleteObject (bitmap);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
     END TileWithBitmap;
     
     
@@ -215,12 +233,12 @@ PROCEDURE TextureCom (cmdP, endP: PaintPrivate.CommandPtr;
                                  rect.east - rect.west, 
                                  rect.south - rect.north, 
                                  comdc, rect.west, rect.north, rop);
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
         
         oldBrush := WinGDI.SelectObject (hdc, oldBrush);
         <* ASSERT oldBrush = solBrush *>
         status := WinGDI.DeleteObject (solBrush);
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
       END;
     END BitBltFill;
     
@@ -239,7 +257,7 @@ PROCEDURE TextureCom (cmdP, endP: PaintPrivate.CommandPtr;
     WITH op = LOOPHOLE (cmdP, PaintPrivate.PixmapPtr)^ DO
 
       IF Bug95_PatternBrush AND NOT PixmapIs8x8 (op.pm, st) THEN
-        RETURN ChicagoTextureCom (cmdP, endP, hdc, st);
+        RETURN ChicagoTextureCom (cmdP, endP, hdc, st, buf);
       END;
 
       (* First, determine if we can use a fast path.  
@@ -335,7 +353,8 @@ PROCEDURE TextureCom (cmdP, endP: PaintPrivate.CommandPtr;
 
 PROCEDURE ChicagoTextureCom (cmdP, endP: PaintPrivate.CommandPtr;
                              hdc       : WinDef.HDC;
-                             st        : WinScreenType.T): PaintPrivate.CommandPtr =
+                             st        : WinScreenType.T;
+                         VAR buf       : RGBSpace): PaintPrivate.CommandPtr =
 
   PROCEDURE BitBlt (hdc   : WinDef.HDC;
                     col   : WinDef.COLORREF;
@@ -367,7 +386,7 @@ PROCEDURE ChicagoTextureCom (cmdP, endP: PaintPrivate.CommandPtr;
 
               status := WinGDI.BitBlt (hdc, x, y, width, height, 
                                        comdc, 0, 0, rop);
-              <* ASSERT status = True *>
+              <* ASSERT status # False *>
             END;
           END;
         END;
@@ -375,7 +394,7 @@ PROCEDURE ChicagoTextureCom (cmdP, endP: PaintPrivate.CommandPtr;
         oldBrush := WinGDI.SelectObject (hdc, oldBrush);
         <* ASSERT oldBrush = solBrush *>
         status := WinGDI.DeleteObject (solBrush);
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
       END;
     END BitBlt;
 
@@ -384,7 +403,8 @@ PROCEDURE ChicagoTextureCom (cmdP, endP: PaintPrivate.CommandPtr;
                          rect : Rect.T;
                          op   : PaintPrivate.PaintOp;
                          pm   : PaintPrivate.Pixmap;
-                         delta: Point.T) =
+                         delta: Point.T;
+                     VAR buf  : RGBSpace) =
     VAR
       pst     : WinScreenType.T;
       comdc   : WinDef.HDC;
@@ -407,7 +427,7 @@ PROCEDURE ChicagoTextureCom (cmdP, endP: PaintPrivate.CommandPtr;
              spm    = pst.pmtable[pm],
              height = Rect.VerSize (spm.domain),
              width  = Rect.HorSize (spm.domain),
-             pixels = NEW (REF ARRAY OF WinGDI.RGBQUAD, height * width) DO
+             pixels = GetRGBSpace (buf, height * width) DO
 
           comdc := WinGDI.CreateCompatibleDC (hdc);
           <* ASSERT comdc # NIL *>
@@ -428,7 +448,7 @@ PROCEDURE ChicagoTextureCom (cmdP, endP: PaintPrivate.CommandPtr;
                                       spm.hbmp,      
                                       0,             (* start at scan line 0 *)
                                       height,        (* copy "height" lines *)
-                                      ADR(pixels[0]),(* into "pixels" *)
+                                      pixels,        (* into "pixels" *)
                                       ADR (bmi),
                                       WinGDI.DIB_RGB_COLORS);
           <* ASSERT status = height *>
@@ -441,7 +461,7 @@ PROCEDURE ChicagoTextureCom (cmdP, endP: PaintPrivate.CommandPtr;
                                       hbmp,
                                       0,      
                                       height, 
-                                      ADR(pixels[0]),
+                                      pixels,
                                       ADR (bmi),
                                       WinGDI.DIB_RGB_COLORS);
           <* ASSERT status = height *>
@@ -455,9 +475,9 @@ PROCEDURE ChicagoTextureCom (cmdP, endP: PaintPrivate.CommandPtr;
                   comdc, width, height);
 
           status := WinGDI.DeleteDC (comdc);
-          <* ASSERT status = True *>
+          <* ASSERT status # False *>
           status := WinGDI.DeleteObject (hbmp);
-          <* ASSERT status = True *>
+          <* ASSERT status # False *>
         END;
       ELSE
         (* "op" not in "st.optable", or "pm" not in "pst.pmtable".
@@ -480,25 +500,25 @@ PROCEDURE ChicagoTextureCom (cmdP, endP: PaintPrivate.CommandPtr;
       END;
 
       dci := WinGDI.SaveDC (hdc);
-      <* ASSERT dci # 0 *>
+      <* ASSERT dci # False *>
 
       ClipToRect (hdc, op.clip);
-      ChicagoFill (hdc, st, op.clip, op.op, op.pm, delta);
+      ChicagoFill (hdc, st, op.clip, op.op, op.pm, delta, buf);
 
       status := WinGDI.RestoreDC (hdc, -1);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
 
       INC (cmdP, ADRSIZE(op));
       WHILE cmdP < endP AND cmdP.command = PC.RepeatCom DO
 
         dci := WinGDI.SaveDC (hdc);
-        <* ASSERT dci # 0 *>
+        <* ASSERT dci # False *>
 
         ClipToRect (hdc, cmdP.clip);
-        ChicagoFill (hdc, st, cmdP.clip, op.op, op.pm, delta);
+        ChicagoFill (hdc, st, cmdP.clip, op.op, op.pm, delta, buf);
 
         status := WinGDI.RestoreDC (hdc, -1);
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
 
         INC (cmdP, ComSize);
       END;
@@ -525,7 +545,8 @@ PROCEDURE ChicagoTextureCom (cmdP, endP: PaintPrivate.CommandPtr;
 
 PROCEDURE PixmapCom (cmdP, endP: PaintPrivate.CommandPtr;
                      hdc       : WinDef.HDC;
-                     st        : WinScreenType.T): PaintPrivate.CommandPtr =
+                     st        : WinScreenType.T;
+                 VAR buf       : RGBSpace): PaintPrivate.CommandPtr =
   VAR
     fastPath : BOOLEAN;
     status   : WinDef.BOOL;
@@ -565,12 +586,12 @@ PROCEDURE PixmapCom (cmdP, endP: PaintPrivate.CommandPtr;
                                rect.west, rect.north, 
                                rect.east - rect.west, rect.south - rect.north,
                                comdc, 0, 0, rop);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
             
       oldBrush := WinGDI.SelectObject (hdc, oldBrush);
       <* ASSERT oldBrush = solBrush *>
       status := WinGDI.DeleteObject (solBrush);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
     END;
   END BitBltFill;
 
@@ -578,7 +599,7 @@ PROCEDURE PixmapCom (cmdP, endP: PaintPrivate.CommandPtr;
     WITH op = LOOPHOLE (cmdP, PaintPrivate.PixmapPtr)^ DO
 
       IF Bug95_PatternBrush AND NOT PixmapIs8x8 (op.pm, st) THEN
-        RETURN ChicagoPixmapCom (cmdP, endP, hdc, st);
+        RETURN ChicagoPixmapCom (cmdP, endP, hdc, st, buf);
       END;
 
       IF op.op >= 0 AND st.optable # NIL AND op.op < NUMBER(st.optable^) THEN
@@ -680,12 +701,12 @@ PROCEDURE PixmapCom (cmdP, endP: PaintPrivate.CommandPtr;
         brush := WinGDI.SelectObject (hdc, oldBrush);
         <* ASSERT brush # NIL *>
         status := WinGDI.DeleteObject (brush);
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
         
         status := WinGDI.DeleteDC (comdc);
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
         status := WinGDI.DeleteObject (bitmap);
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
         
       ELSE (* fastPath = TRUE *)
         WITH ctxt = WinContext.PushPixmap (hdc, st, op.op, op.pm, op.delta) DO
@@ -707,7 +728,8 @@ PROCEDURE PixmapCom (cmdP, endP: PaintPrivate.CommandPtr;
 PROCEDURE ChicagoPixmapCom (
                 cmdP, endP: PaintPrivate.CommandPtr;
                 hdc       : WinDef.HDC;
-                st        : WinScreenType.T): PaintPrivate.CommandPtr =
+                st        : WinScreenType.T;
+            VAR buf       : RGBSpace): PaintPrivate.CommandPtr =
 
   PROCEDURE BitBlt (hdc   : WinDef.HDC;
                     col   : WinDef.COLORREF;
@@ -732,21 +754,21 @@ PROCEDURE ChicagoPixmapCom (
 
         status := WinGDI.BitBlt (hdc, rect.west, rect.north, width, height,
                                  comdc, 0, 0, rop);
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
         
         oldBrush := WinGDI.SelectObject (hdc, oldBrush);
         <* ASSERT oldBrush = solBrush *>
         status := WinGDI.DeleteObject (solBrush);
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
       END;
     END BitBlt;
-
 
 PROCEDURE ChicagoFill (hdc  : WinDef.HDC;
                        st   : WinScreenType.T;
                        rect : Rect.T;
                        op   : PaintPrivate.PaintOp;
-                       pm   : PaintPrivate.Pixmap) =
+                       pm   : PaintPrivate.Pixmap;
+                   VAR buf  : RGBSpace) =
   VAR
     pst     : WinScreenType.T;
     comdc   : WinDef.HDC;
@@ -769,7 +791,7 @@ PROCEDURE ChicagoFill (hdc  : WinDef.HDC;
            spm    = pst.pmtable[pm],
            height = Rect.VerSize (spm.domain),
            width  = Rect.HorSize (spm.domain),
-           pixels = NEW (REF ARRAY OF WinGDI.RGBQUAD, height * width) DO
+           pixels = GetRGBSpace (buf, height * width) DO
 
         comdc := WinGDI.CreateCompatibleDC (hdc);
         <* ASSERT comdc # NIL *>
@@ -790,7 +812,7 @@ PROCEDURE ChicagoFill (hdc  : WinDef.HDC;
                                     spm.hbmp,      
                                     0,             (* start at scan line 0 *)
                                     height,        (* copy "height" lines *)
-                                    ADR(pixels[0]),(* into "pixels" *)
+                                    pixels,        (* into "pixels" *)
                                     ADR (bmi),
                                     WinGDI.DIB_RGB_COLORS);
         <* ASSERT status = height *>
@@ -803,7 +825,7 @@ PROCEDURE ChicagoFill (hdc  : WinDef.HDC;
                                     hbmp,
                                     0,      
                                     height, 
-                                    ADR(pixels[0]),
+                                    pixels,
                                     ADR (bmi),
                                     WinGDI.DIB_RGB_COLORS);
         <* ASSERT status = height *>
@@ -815,9 +837,9 @@ PROCEDURE ChicagoFill (hdc  : WinDef.HDC;
         BitBlt (hdc, tbl.fop.col, tbl.frop3, rect, comdc, width, height);
 
         status := WinGDI.DeleteDC (comdc);
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
         status := WinGDI.DeleteObject (hbmp);
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
       END;
     ELSE
       (* "op" not in "st.optable", or "pm" not in "pst.pmtable" - do nothing *)
@@ -831,12 +853,12 @@ PROCEDURE ChicagoFill (hdc  : WinDef.HDC;
       pmRect := Rect.Add (WinScrnPixmap.PixmapDomain (st, op.pm), op.delta);
 
       ClipToRect (hdc, op.clip);
-      ChicagoFill (hdc, st, pmRect, op.op, op.pm);
+      ChicagoFill (hdc, st, pmRect, op.op, op.pm, buf);
       INC (cmdP, ADRSIZE(op));
 
       WHILE cmdP < endP AND cmdP.command = PC.RepeatCom DO
         ClipToRect (hdc, cmdP.clip);
-        ChicagoFill (hdc, st, pmRect, op.op, op.pm);
+        ChicagoFill (hdc, st, pmRect, op.op, op.pm, buf);
         INC (cmdP, ComSize);
       END;
 
@@ -857,66 +879,160 @@ PROCEDURE ChicagoFill (hdc  : WinDef.HDC;
  * not 1. 
  *)
 
-PROCEDURE ScrollCom (cmdP: PaintPrivate.CommandPtr;
-                     hdc : WinDef.HDC;
-                     st  : WinScreenType.T): PaintPrivate.CommandPtr =
+PROCEDURE ScrollCom (cmdP : PaintPrivate.CommandPtr;
+                     hdc  : WinDef.HDC;
+                     st   : WinScreenType.T;
+       VAR(*IN/OUT*) badR : Region.T): PaintPrivate.CommandPtr =
   VAR
-    trop := 16_00AA0029;  (* Ternary raster op code for NO-OP *)
+    trop        := 16_00AA0029;  (* Ternary raster op code for NO-OP *)
+    copy_mode   := FALSE;
+    status      : WinDef.BOOL;
+    hwnd        : WinDef.HWND;
+    tmp         : WinDef.HWND;
+    screen      : WinDef.RECT;
+    desktop     : WinDef.RECT;
+    other       : WinDef.RECT;
+    delta       : Point.T;
+    dest        : Rect.T;
+    src         : Rect.T;
+    bad_src     : Rect.T;
+    limit       : INTEGER;
   BEGIN
     WITH op = LOOPHOLE (cmdP, PaintPrivate.ScrollPtr)^ DO
       IF op.op >= 0 AND st.optable # NIL AND op.op < NUMBER (st.optable^) THEN
         WITH tbl = st.optable[op.op] DO
-          IF tbl.bop.mode = WinScrnPaintOp.Mode.Copy THEN
-            trop := tbl.brop3;
-          END;
+          copy_mode := (tbl.bop.mode = WinScrnPaintOp.Mode.Copy);
+          trop := tbl.brop3;
         END;
       END;
-
+      dest := op.clip;
+      delta := op.delta;
       INC (cmdP, ADRSIZE (op));
-      IF CopyRectWithinDC (hdc, trop, op.clip, op.delta) THEN
-(*
- * At this point, the xvbt counterpart has the following code:
- *
- *      XScrollQueue.Insert (ur.scrollQ, op^);
- *      IF Region.OverlapRect (Rect.Sub (op.clip, op.delta), ur.badR)
- *           AND NOT Region.SubsetRect (op.clip, ur.badR) THEN
- *        ur.badR := Region.Join (Region.MeetRect (op.clip, 
- *                                                 Region.Add (ur.badR, 
- *                                                             op.delta)), 
- *                                ur.badR)
- *      END;
- *)
+    END;
+
+    IF (NOT copy_mode) THEN
+      (* don't know how to do this one! *)
+      badR := Region.Join (badR, Region.FromRect (dest));
+      RETURN cmdP;
+    END;
+
+    IF (dest.east <= dest.west)
+    OR (dest.south <= dest.north)
+    OR (delta.h = 0 AND delta.v = 0) THEN
+      (* no bits actually moved... *)
+      RETURN cmdP;
+    END;
+
+    (* locate the source bits *)
+    src := Rect.Sub (dest, delta);
+      
+    (* if any of them are already bad, then the
+       corresponding destination bits will be bad too. *)
+    IF Region.OverlapRect (src, badR) AND NOT Region.SubsetRect (src, badR) THEN
+      badR := Region.Join (badR, Region.MeetRect (dest, Region.Add (badR, delta)));
+    END;
+
+    (* get this window's screen coordinates *)
+    hwnd := WinUser.WindowFromDC (hdc);
+    status := WinUser.GetClientRect (hwnd, ADR (screen));
+    <*ASSERT status # False *>
+    status := WinUser.ClientToScreen (hwnd, ADR (screen.left));
+    <*ASSERT status # False *>
+    status := WinUser.ClientToScreen (hwnd, ADR (screen.right));
+    <*ASSERT status # False *>
+
+    (* get the desktop screen coordinates *)
+    tmp := WinUser.GetDesktopWindow ();
+    status := WinUser.GetWindowRect (tmp, ADR (desktop));
+    <*ASSERT status # False *>
+
+    (* check for clipping by the window or desktop on the south *)
+    limit := MIN (desktop.bottom, screen.bottom) - screen.top;
+    IF (src.south > limit) THEN
+      bad_src := src;   bad_src.north := limit;
+      ExpandBad (badR, bad_src, delta);
+      src.south := limit;
+      dest.south := src.south + delta.v;
+      IF (src.south <= src.north) THEN (* nothing left to move *) RETURN cmdP; END;
+    END;
+
+    (* check for clipping by the window or desktop on the north *)
+    limit := MAX (desktop.top, screen.top) - screen.top;
+    IF (src.north < limit) THEN
+      bad_src := src;   bad_src.south := limit;
+      ExpandBad (badR, bad_src, delta);
+      src.north := limit;
+      dest.north := src.north + delta.v;
+      IF (src.south <= src.north) THEN (* nothing left to move *) RETURN cmdP; END;
+    END;
+
+    (* check for clipping by the window or desktop on the east *)
+    limit := MIN (desktop.right, screen.right) - screen.left;
+    IF (src.east > limit) THEN
+      bad_src := src;   bad_src.west := limit;
+      ExpandBad (badR, bad_src, delta);
+      src.east := limit;
+      dest.east := src.east + delta.h;
+      IF (src.east <= src.west) THEN (* nothing left to move *) RETURN cmdP; END;
+    END;
+
+    (* check for clipping by the window or desktop on the west *)
+    limit := MIN (desktop.left, screen.left) - screen.left;
+    IF (src.west < limit) THEN
+      bad_src := src;   bad_src.east := limit;
+      ExpandBad (badR, bad_src, delta);
+      src.west := limit;
+      dest.west := src.west + delta.h;
+      IF (src.east <= src.west) THEN (* nothing left to move *) RETURN cmdP; END;
+    END;
+
+
+    (* check for clipping by other overlapping windows *)
+    (* Note: according to KB article #Q75236, windows are chained in
+       Z-order and only our predecessors may overlap us... *)
+    tmp := hwnd;
+    LOOP
+      tmp := WinUser.GetWindow (tmp, WinUser.GW_HWNDPREV);
+      IF (tmp = NIL) THEN EXIT; END;
+      IF WinUser.IsWindowVisible (tmp) # False THEN
+        IF WinUser.GetWindowRect (tmp, ADR (other)) # False THEN
+          bad_src.north := other.top    - screen.top;
+          bad_src.south := other.bottom - screen.top;
+          bad_src.east  := other.right  - screen.left;
+          bad_src.west  := other.left   - screen.left;
+          ExpandBad (badR, Rect.Meet (bad_src, src), delta);
+        END;
       END;
     END;
+
+    (* finally, scroll the remaining bits *)
+    IF (dest.north < dest.south) AND (dest.west < dest.east) THEN
+      status := WinGDI.BitBlt (hdc,
+                               dest.west,
+                               dest.north,
+                               dest.east - dest.west,
+                               dest.south - dest.north,
+                               hdc,
+                               src.west,
+                               src.north,
+                               trop);
+      <* ASSERT status # False *>
+    END;
+
     RETURN cmdP;
   END ScrollCom;
 
-
-PROCEDURE CopyRectWithinDC (         hdc  : WinDef.HDC; 
-                                     trop : WinDef.DWORD;
-                            READONLY clip : Rect.T;
-                            READONLY delta: Point.T): BOOLEAN =
-  VAR
-    status: WinDef.BOOL;
+PROCEDURE ExpandBad (VAR(*IN/OUT*) bad   : Region.T;
+                          READONLY bogus : Rect.T;
+                          READONLY delta : Point.T) =
+  VAR new_bogus: Rect.T;
   BEGIN
-    IF clip.west < clip.east + 1 AND clip.north < clip.south + 1 THEN
-      status := WinGDI.BitBlt (hdc, 
-                               clip.west, 
-                               clip.north,
-                               clip.east - clip.west,
-                               clip.south - clip.north,
-                               hdc,
-                               clip.west - delta.h,
-
-                               clip.north - delta.v,
-                               trop);
-      <* ASSERT status = True *>
-      RETURN TRUE;
-    ELSE
-      RETURN FALSE;
-    END;
-  END CopyRectWithinDC;
-
+    IF Rect.IsEmpty (bogus) THEN RETURN; END;
+    new_bogus := Rect.Add (bogus, delta);
+    IF Region.SubsetRect (new_bogus, bad) THEN RETURN; END;
+    (* some of the "bogus" bits are new "bad" bits... *)
+    bad := Region.Join (bad, Region.FromRect (new_bogus));
+  END ExpandBad;
 
 (*****************************************************************************)
 (* Painting Trapezoids                                                       *)
@@ -1150,7 +1266,7 @@ PROCEDURE TextCom (cmd       : PaintPrivate.CommandPtr;
       oldBrush := WinGDI.SelectObject (hdc, oldBrush);
       <* ASSERT oldBrush = brush *>
       status := WinGDI.DeleteObject (brush);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
     END;
 
     oldFont := WinGDI.SelectObject (hdc, oldFont);
@@ -1172,8 +1288,8 @@ PROCEDURE PaintString (hdc: WinDef.HDC;
   PROCEDURE FontIdToScrnFont (st: WinScreenType.T; id: INTEGER): ScrnFont.T =
     BEGIN
       FOR i := FIRST(st.fonts^) TO LAST(st.fonts^) DO
-        IF st.fonts[i].id = id THEN
-          RETURN st.fonts[i];
+        VAR fnt := st.fonts[i]; BEGIN
+          IF fnt # NIL AND fnt.id = id THEN RETURN fnt; END;
         END;
       END;
       <* ASSERT FALSE *>  
@@ -1187,7 +1303,7 @@ PROCEDURE PaintString (hdc: WinDef.HDC;
     endp  : UNTRACED REF VBT.Displacement := 
                                      dlp + ADRSIZE(VBT.Displacement) * op.dlsz;
     txtp  := LOOPHOLE (endp, Ctypes.char_star);
-    blank := M3toC.TtoS(" ");
+    blank := M3toC.FlatTtoS(" ");
     delta : Ctypes.int;
     status: Ctypes.int;
   BEGIN
@@ -1205,7 +1321,7 @@ PROCEDURE PaintString (hdc: WinDef.HDC;
       status := WinGDI.SetTextAlign (hdc, WinGDI.TA_UPDATECP);
       <* ASSERT status # WinGDI.GDI_ERROR *>
       status := WinGDI.MoveToEx (hdc, pt.h, pt.v, NIL);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
 
       WHILE i < sz DO
 
@@ -1218,7 +1334,7 @@ PROCEDURE PaintString (hdc: WinDef.HDC;
         (* Emit a blank character of width "delta" *)
         IF delta > 0 THEN
           status := WinGDI.ExtTextOut(hdc, 0, 0, 0, NIL, blank, 1, ADR(delta));
-          <* ASSERT status = True *>
+          <* ASSERT status # False *>
         END;
 
         IF dlp = endp OR dlp.index >= sz THEN
@@ -1229,7 +1345,7 @@ PROCEDURE PaintString (hdc: WinDef.HDC;
 
         (* Draw characters "i" to "newi" - 1 *)
         status := WinGDI.TextOut (hdc, 0, 0, txtp + i, newi - i);
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
         i := newi;
       END;
     END;
@@ -1241,7 +1357,6 @@ PROCEDURE PaintString (hdc: WinDef.HDC;
 (*                                                                           *)
 (* The xvbt version also handles pictures                                    *)
 (*****************************************************************************)
-
 
 PROCEDURE ExtensionCom (cmdP, endP: PaintPrivate.CommandPtr;
                         hdc       : WinDef.HDC;
@@ -1309,9 +1424,9 @@ PROCEDURE ExtensionCom (cmdP, endP: PaintPrivate.CommandPtr;
                 IF op.subCommand = PaintExt.LineCommand THEN
                   DrawLine (hdc, lineP.p, lineP.q);
                 ELSIF op.subCommand = PaintExt.FillCommand THEN
-                  FillPath(trsl, hdc, path)
+                  FillPath(trsl, hdc, path);
                 ELSE
-                  StrokePath(trsl, hdc, path)
+                  StrokePath(trsl, hdc, path);
                 END;
                 DisableClipping (hdc);
               END
@@ -1327,9 +1442,9 @@ PROCEDURE ExtensionCom (cmdP, endP: PaintPrivate.CommandPtr;
             IF op.subCommand = PaintExt.LineCommand THEN
               DrawLine (hdc, lineP.p, lineP.q);
             ELSIF op.subCommand = PaintExt.FillCommand THEN
-              FillPath(trsl, hdc, path)
+              FillPath(trsl, hdc, path);
             ELSE
-              StrokePath(trsl, hdc, path)
+              StrokePath(trsl, hdc, path);
             END;
             DisableClipping (hdc);
           END
@@ -1360,7 +1475,7 @@ PROCEDURE DrawLine (hdc: WinDef.HDC; a, b: Point.T) =
     status: WinDef.BOOL;
   BEGIN
     status := WinGDI.Polyline (hdc, ADR(points[0]), 2);
-    <* ASSERT status = True *>
+    <* ASSERT status # False *>
   END DrawLine;
 
 
@@ -1432,7 +1547,7 @@ PROCEDURE EmitStroke (sm: StrokeMap) =
       sm.n := 2 
     END;
     status := WinGDI.Polyline (sm.hdc, ADR(sm.a[0]), sm.n);
-    <* ASSERT status = True *>
+    <* ASSERT status # False *>
     sm.n := 0;
   END EmitStroke;
 
@@ -1463,7 +1578,7 @@ PROCEDURE FillPath (trsl: Trestle.T; hdc: WinDef.HDC; path: Path.T) =
         (* We leave the "polygon fill mode" at its default value of "WINDING".
            This means that complex polygons can contain "islands". *)
         status := WinGDI.Polygon (hdc, ADR(sm.a[0]), sm.n);
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
       END;
     FINALLY
       DISPOSE (sm.a);
@@ -1534,7 +1649,7 @@ PROCEDURE FillRect (hdc: WinDef.HDC; READONLY r: Rect.T) =
 
       (* "WinGDI.Rectangle" uses both the current pen and the current brush *)
       status := WinGDI.Rectangle (hdc, r.west, r.north, r.east+1, r.south+1);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
 
       pen := WinGDI.SelectObject (hdc, oldPen);
       <* ASSERT pen # NIL *>
@@ -1564,7 +1679,7 @@ PROCEDURE StrokeRect (hdc: WinDef.HDC; READONLY r: Rect.T) =
       <* ASSERT oldBr # NIL *>
       (* "WinGDI.Rectangle" uses both the current pen and the current brush *)
       status := WinGDI.Rectangle (hdc, r.west, r.north, r.east+1, r.south+1);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
       oldBr := WinGDI.SelectObject (hdc, oldBr);
       oldPen := WinGDI.SelectObject (hdc, oldPen);
     END;
@@ -1632,13 +1747,13 @@ PROCEDURE FromRegion (READONLY rgn: Region.T): WinDef.HRGN =
       FOR i := FIRST(rects^) TO LAST (rects^) DO
         WITH r  = rects[i] DO
           status := WinGDI.SetRectRgn (rr, r.west, r.north, r.east, r.south);
-          <* ASSERT status = True *>
+          <* ASSERT status # False *>
           status := WinGDI.CombineRgn (hrgn, hrgn, rr, WinGDI.RGN_OR);
           <* ASSERT status # WinGDI.ERROR *>
         END;
       END;
       status := WinGDI.DeleteObject (rr);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
     END;
     RETURN hrgn;
   END FromRegion;
@@ -1652,7 +1767,7 @@ PROCEDURE ClipToRegion (hdc: WinDef.HDC; rgn: Region.T) =
     status := WinGDI.SelectClipRgn (hdc, hrgn);
     <* ASSERT status # WinGDI.ERROR *>
     status := WinGDI.DeleteObject (hrgn);
-    <* ASSERT status = True *>
+    <* ASSERT status # False *>
   END ClipToRegion;
 
 
@@ -1669,7 +1784,7 @@ PROCEDURE ClipToRect (hdc: WinDef.HDC; clip: Rect.T) =
     <* ASSERT status # WinGDI.ERROR *>
 
     status := WinGDI.DeleteObject (hrgn);
-    <* ASSERT status = True *>
+    <* ASSERT status # False *>
   END ClipToRect;
 
 

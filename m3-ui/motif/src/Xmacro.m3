@@ -55,9 +55,10 @@ PROCEDURE ShortVal(value:short):Xt.ArgVal=
 ****************************************)
 
 (*-----------------*)
-PROCEDURE TextVal(value:TEXT):Xt.ArgVal=
+PROCEDURE TextVal(value:TEXT;  VAR(*OUT*) str: char_star):Xt.ArgVal=
 BEGIN
-  RETURN LOOPHOLE(M3toC.TtoS(value), Xt.ArgVal);
+  str := M3toC.CopyTtoS(value);
+  RETURN LOOPHOLE(str, Xt.ArgVal);
 END TextVal;
 
 (*-----------------*)

@@ -12,7 +12,7 @@
 MODULE ScrollerVBTClass;
 
 IMPORT AutoRepeat, Axis, Cursor, PaintOp, Pixmap, Point, Rect,
-         Region, VBT, VBTKitResources;
+         Region, VBT, VBTKitResources, Shadow, Trapezoid;
 
 TYPE
   State = {ListenState, JumpEOFState, JumpSOFState, ContEOFState,
@@ -22,6 +22,16 @@ TYPE
           pixels: INTEGER;
           millimeters: REAL
         END;
+
+CONST
+  Shadows = TRUE;
+  ShadowSize = 2;
+
+VAR (* CONST *)
+  ScrollShadow := Shadow.New(bg := PaintOp.FromRGB(0.4, 0.4, 0.4),
+                             fg := PaintOp.FromRGB(0.65, 0.65, 0.65),
+                             light := PaintOp.FromRGB(0.8, 0.8, 0.8),
+                             dark := PaintOp.FromRGB(0.15, 0.15, 0.15));
 
 REVEAL
   T =
@@ -194,6 +204,78 @@ PROCEDURE Colorize (v: T; colors: PaintOp.ColorQuad) =
 
 PROCEDURE PaintView (v: T) =
   (* LL = mu. *)
+  BEGIN
+    IF Shadows AND Shadow.Supported(ScrollShadow, v) THEN
+      PaintViewWithShadows(v);
+    ELSE
+      PaintViewAsBefore(v);
+    END;
+  END PaintView;
+
+PROCEDURE PaintViewWithShadows (v: T) =
+  VAR
+    dom   : Rect.T;
+    stripe: Rect.T;
+  BEGIN
+    dom := VBT.Domain(v);
+    stripe := ComputeStripe(v, dom);
+    
+    (* paint scroll *)
+    PaintShadow(v, dom, inwards := TRUE, raised := FALSE);
+    
+    (* paint stripe *)
+    PaintShadow(v, stripe, inwards := FALSE, raised := TRUE);
+  END PaintViewWithShadows;
+
+PROCEDURE PaintShadow (         v                : T;
+                       READONLY rect             : Rect.T;
+                                inwards          : BOOLEAN;
+                                raised           : BOOLEAN ) =
+  VAR
+    top, bottom, front: PaintOp.T;
+    in, out: Rect.T;
+  BEGIN
+    IF (inwards) THEN
+      out := rect;
+      in := rect;
+      INC(in.west, ShadowSize);
+      DEC(in.east, ShadowSize);
+      INC(in.north, ShadowSize);
+      DEC(in.south, ShadowSize);
+    ELSE
+      in := rect;
+      out := rect;
+      DEC(out.west, ShadowSize);
+      INC(out.east, ShadowSize);
+      DEC(out.north, ShadowSize);
+      INC(out.south, ShadowSize);
+    END;
+    IF (raised) THEN
+      top := ScrollShadow.light;
+      bottom := ScrollShadow.dark;
+      front := ScrollShadow.fg;
+    ELSE
+      top := ScrollShadow.dark;
+      bottom := ScrollShadow.light;
+      front := ScrollShadow.bg;
+    END;
+    VBT.PaintTint(v,
+                  Rect.FromEdges(out.west, in.west, out.north, out.south), top);
+    VBT.PaintTint(v,
+                  Rect.FromEdges(in.west, out.east, out.north, in.north), top);
+    VBT.PaintTrapezoid(v, Rect.Full, Trapezoid.FromTriangle(
+                                         Rect.NorthEast(in), Rect.NorthEast(out),
+                                         Point.T{out.east, in.north}), bottom);
+    VBT.PaintTint(v,
+                  Rect.FromEdges(in.east, out.east, in.north, out.south), bottom);
+    VBT.PaintTrapezoid(v, Rect.Full, Trapezoid.FromEdges(
+                                         in.south, in.west, in.east, out.south,
+                                         out.west, in.east), bottom);
+    VBT.PaintTexture(v, in, front, Pixmap.Solid);
+  END PaintShadow;
+  
+  
+PROCEDURE PaintViewAsBefore (v: T) =
   VAR
     dom:    Rect.T;
     stripe: Rect.T;
@@ -229,7 +311,7 @@ PROCEDURE PaintView (v: T) =
       VBT.PaintTexture(v, parts[4], textureP, texture);
     END;
 
-  END PaintView;
+  END PaintViewAsBefore;
 
 
 PROCEDURE ComputeStripe (v: T; r: Rect.T): Rect.T =
@@ -245,6 +327,9 @@ PROCEDURE ComputeStripe (v: T; r: Rect.T): Rect.T =
       IF r.south - r.north < v.stripeWidth.pixels THEN
         r.south := r.north + v.stripeWidth.pixels;
       END;
+      IF (Shadows) THEN
+        INC(r.west, 2 * ShadowSize); DEC(r.east, 2 * ShadowSize);
+      END;
       lo := r.west;
       hi := r.east;
     ELSE
@@ -252,6 +337,9 @@ PROCEDURE ComputeStripe (v: T; r: Rect.T): Rect.T =
       r.east := r.east - v.scrollMargin.pixels;
       IF r.east - r.west < v.stripeWidth.pixels THEN
         r.east := r.west + v.stripeWidth.pixels;
+      END;
+      IF (Shadows) THEN
+        INC(r.north, 2 * ShadowSize); DEC(r.south, 2 * ShadowSize);
       END;
       lo := r.north;
       hi := r.south;
@@ -589,8 +677,8 @@ CONST
   DefaultMinStripeLen = 4.0;
 
 VAR
-  globalLock: MUTEX;
-  graphicsInited: BOOLEAN;
+  globalLock: MUTEX := NEW (MUTEX);
+  graphicsInited: BOOLEAN := FALSE;
   Cursors: ARRAY State, Axis.T OF Cursor.T;
   ScrollPixmap: ARRAY Axis.T OF Pixmap.T;
   
@@ -598,6 +686,7 @@ PROCEDURE InitGraphics () =
   BEGIN
     LOCK globalLock DO
       IF graphicsInited THEN RETURN END;
+      graphicsInited := TRUE;
 
       WITH a = Axis.T.Hor DO
         XCLoad(State.ThumbState, a, "XC_sb_up_arrow");
@@ -639,7 +728,5 @@ PROCEDURE XCLoad (state: State; axis: Axis.T; cursor: TEXT) =
   END XCLoad;
 
 BEGIN
-  graphicsInited := FALSE;
-  globalLock := NEW(MUTEX);
 END ScrollerVBTClass.
 

@@ -1,13 +1,14 @@
-(* Copyright (C) 1992, Digital Equipment Corporation *)
-(* All rights reserved. *)
-(* See the file COPYRIGHT for a full description. *)
-(* *)
-(* by Steve Glassman, Mark Manasse and Greg Nelson *)
-(* Last modified on Tue Jan 31 10:09:55 PST 1995 by kalsow  *)
+(* Copyright (C) 1992, Digital Equipment Corporation        *)
+(* All rights reserved.                                     *)
+(* See the file COPYRIGHT for a full description.           *)
+(*                                                          *)
+(* by Steve Glassman, Mark Manasse and Greg Nelson          *)
+(* Last modified on Mon Jun 23 22:05:10 PDT 1997 by heydon  *)
+(*      modified on Tue Jan 31 10:09:55 PST 1995 by kalsow  *)
 (*      modified on Fri May 20 11:45:02 PDT 1994 by msm     *)
 (*      modified on Mon Nov 22 14:00:08 PST 1993 by steveg  *)
 (*      modified on Fri May  7 17:28:54 PDT 1993 by mjordan *)
-(*      modified on Mon Feb 24 13:59:53 PST 1992 by muller *)
+(*      modified on Mon Feb 24 13:59:53 PST 1992 by muller  *)
 <*PRAGMA LL*>
 
 UNSAFE MODULE XScrnFont;
@@ -39,7 +40,8 @@ TYPE
       slants  : ARRAY [0 .. 5] OF X.Atom;
       spacings: ARRAY [0 .. 2] OF X.Atom;
     METHODS
-      init (st: XScreenType.T): FontOracle RAISES {TrestleComm.Failure} := InitFontOracle;
+      init (st: XScreenType.T): FontOracle RAISES {TrestleComm.Failure}
+        := InitFontOracle;
       (* LL = st.trsl *)
     OVERRIDES
       list    := FontList;
@@ -142,7 +144,7 @@ PROCEDURE FontList (orc: FontOracle; pat: TEXT; maxResults: INTEGER):
     TRY
       TrestleOnX.Enter(orc.st.trsl);
       TRY
-        s := M3toC.TtoS(pat);
+        s := M3toC.SharedTtoS(pat);
         VAR
           xcount: Ctypes.int;
           fonts := X.XListFonts(orc.st.trsl.dpy, s, MIN(maxResults, 32767),
@@ -151,6 +153,7 @@ PROCEDURE FontList (orc: FontOracle; pat: TEXT; maxResults: INTEGER):
           fp                       := fonts;
           res  : REF ARRAY OF TEXT;
         BEGIN
+          M3toC.FreeSharedS(pat, s);
           IF fonts = NIL THEN RETURN NIL END;
           res := NEW(REF ARRAY OF TEXT, count);
           FOR i := 0 TO count - 1 DO
@@ -193,14 +196,19 @@ PROCEDURE DeepFontLookup (orc: DeepFontOracle; name: TEXT): ScrnFont.T
 
 PROCEDURE FontLookup (orc: FontOracle; name: TEXT): ScrnFont.T
   RAISES {ScrnFont.Failure, TrestleComm.Failure} =
-  VAR s: Ctypes.char_star;
+  VAR
+    s: Ctypes.char_star;
+    uname: TEXT;
   BEGIN
     TRY
     TrestleOnX.Enter(orc.st.trsl);
     TRY
-      s := M3toC.TtoS(name);
+      uname := FindUnscaled(orc.st.trsl.dpy, name); (* Prefer unscaled font *)
+      IF uname = NIL THEN uname := name END;
+      s := M3toC.SharedTtoS(uname);
       VAR xfs := X.XLoadQueryFont(orc.st.trsl.dpy, s);
       BEGIN
+        M3toC.FreeSharedS(uname, s);
         IF xfs = NIL THEN RAISE ScrnFont.Failure END;
         RETURN FontFromXStruct(orc, xfs)
       END
@@ -209,6 +217,66 @@ PROCEDURE FontLookup (orc: FontOracle; name: TEXT): ScrnFont.T
     END;
     EXCEPT X.Error => RAISE TrestleComm.Failure END;
   END FontLookup;
+
+PROCEDURE FindUnscaled(dpy: X.DisplayStar; pat: TEXT): TEXT RAISES {X.Error} =
+  (* Return the first matching unscaled font, if any.  Otherwise return NIL. *)
+  VAR
+    s := M3toC.SharedTtoS(pat);
+    xcount: Ctypes.int;
+    fonts := X.XListFonts(dpy, s, 32767, ADR(xcount));
+    fp := fonts;
+    count: INTEGER := xcount;
+    xmatch: Ctypes.char_star := NIL;
+    match: TEXT := NIL;
+  BEGIN
+    M3toC.FreeSharedS(pat, s);
+    IF count = 0 THEN
+      IF fonts # NIL THEN X.XFreeFontNames(fonts) END;
+      RETURN NIL;
+    END;
+
+    FOR i := 0 TO count - 1 DO	(* Search for an unscaled font *)
+      IF NOT IsScaled(M3toC.StoT(fp^)) THEN
+	xmatch := fp^;
+	EXIT;
+      END;
+      fp := fp + ADRSIZE(fp^);
+    END;
+
+    IF xmatch # NIL THEN	(* Found an unscaled font *)
+	match := M3toC.CopyStoT(xmatch);
+    END;
+    X.XFreeFontNames(fonts);
+    RETURN match;
+  END FindUnscaled;
+
+PROCEDURE IsScaled(name: TEXT): BOOLEAN =
+  (* Return true if font is scaled. *)
+  VAR
+    len := Text.Length(name);
+    fieldNum := 0;
+    found0 := FALSE;
+    hyphenPos: INTEGER;
+  BEGIN
+    (* A font is scaled if:
+	a. it is in canonical form (starts with '-', and all 14 XLFD fields
+	   are present), and
+	b. any of the fields pixel size, point size, or average width is 0. *)
+    hyphenPos := Text.FindChar(name, '-', 0);
+    WHILE hyphenPos # -1 DO
+      INC(fieldNum);
+      IF fieldNum = 7 OR fieldNum = 8 OR fieldNum = 12 THEN
+	IF hyphenPos+2 < len AND
+	Text.GetChar(name, hyphenPos+1) = '0' AND
+	Text.GetChar(name, hyphenPos+2) = '-' THEN
+	  found0 := TRUE;
+	END;
+      END;
+      hyphenPos := Text.FindChar(name, '-', hyphenPos+1);
+    END;
+
+    RETURN fieldNum = 14 AND Text.GetChar(name, 0) = '-' AND found0;
+  END IsScaled;
 
 CONST
   BuiltInNames = ARRAY OF
@@ -241,7 +309,7 @@ PROCEDURE FontBuiltIn (orc: FontOracle; id: Font.Predefined): ScrnFont.T =
           FOR i := FIRST(BuiltInNames) TO LAST(BuiltInNames) DO
             VAR s: Ctypes.char_star;
             BEGIN
-              s := M3toC.TtoS(BuiltInNames[i]);
+              s := M3toC.FlatTtoS(BuiltInNames[i]);
               xfont := X.XLoadQueryFont(dpy, s);
             END;
             IF xfont # NIL THEN RETURN FontFromXStruct(orc, xfont) END

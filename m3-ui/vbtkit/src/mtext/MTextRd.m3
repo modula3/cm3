@@ -13,7 +13,7 @@
 
 MODULE MTextRd;
 
-IMPORT RdClass, MText, MTextDs, MTextPrivate, Rd, Text, TextF, Thread;
+IMPORT RdClass, MText, MTextDs, MTextPrivate, Rd, Text, Thread;
 
 FROM MTextPrivate IMPORT Node, NodeType;
 
@@ -119,8 +119,7 @@ PROCEDURE ForwardSeek (rd: T; n: CARDINAL; <* UNUSED *> dontBlock: BOOLEAN):
     count := MIN (MIN (beginN.length - beginI, BufferSize), rd.len - n);
     CASE beginN.type OF
     | NodeType.text =>
-        SUBARRAY (rd.buff^, 0, count) :=
-          SUBARRAY (beginN.text^, beginI, count);
+        Text.SetChars (SUBARRAY (rd.buff^, 0, count), beginN.text, beginI);
     | NodeType.buf =>
         SUBARRAY (rd.buff^, 0, count) :=
           SUBARRAY (beginN.buffer^, beginI, count);
@@ -153,13 +152,19 @@ PROCEDURE RevSeek (rd: T; n: CARDINAL; <* UNUSED *> dontBlock: BOOLEAN):
     BEGIN
       FOR i := 1 TO count DO rd.buff [count - i] := v [first + i - 1] END
     END RevCopy;
+  PROCEDURE RevCopyText (READONLY t: TEXT) =
+    BEGIN
+      FOR i := 1 TO count DO rd.buff [count - i] := 
+                   Text.GetChar(t,first + i - 1)
+      END;
+    END RevCopyText; 
   BEGIN
     MTextDs.Locate (rd.m, rd.last + 1 - n, beginN, beginI);
     count := MIN (MIN (beginI, BufferSize), rd.len - n);
     first := beginI - count;
     CASE beginN.type OF
     | NodeType.text =>
-        RevCopy (SUBARRAY (beginN.text^, 0, Text.Length (beginN.text)))
+        RevCopyText (beginN.text);
     | NodeType.file =>
         Rd.Seek (beginN.file, beginN.start + first);
         i := 0;

@@ -19,7 +19,7 @@ MODULE MText EXPORTS MText, MTextPrivate;
    reading the mtext concurrently. The reason is that a read to a file node
    causes the mtext data structure to change. *)
 
-IMPORT MTextDs, Rd, Text, TextF, Thread;
+IMPORT MTextDs, Rd, Text, Thread;
 
 (*********************************************************************)
 (* Creating Mutable Texts *)
@@ -93,9 +93,19 @@ PROCEDURE Check (VAR start, end: CARDINAL; actualLength: CARDINAL) =
 
 
 PROCEDURE Replace (m: T; begin, end: CARDINAL; newtext: TEXT) =
+  VAR
+    len := Text.Length(newtext);
+    ref : REF ARRAY OF CHAR;
+    buf : ARRAY [0..63] OF CHAR;
   BEGIN
-    ReplaceInternal (
-      m, begin, end, SUBARRAY (newtext^, 0, NUMBER (newtext^) - 1), newtext)
+    IF (len <= NUMBER (buf)) THEN
+      Text.SetChars (buf, newtext);
+      ReplaceInternal (m, begin, end, SUBARRAY (buf, 0, len), newtext);
+    ELSE
+      ref := NEW (REF ARRAY OF CHAR, len);
+      Text.SetChars (ref^, newtext);
+      ReplaceInternal (m, begin, end, ref^, newtext);
+    END;
   END Replace;
 
 PROCEDURE ReplaceChars (         m         : T;

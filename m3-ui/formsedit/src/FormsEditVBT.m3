@@ -438,9 +438,9 @@ PROCEDURE Realize (ed: Editor; type, name: TEXT): VBT.T
     RETURN FormsVBT.T.realize (ed, type, name)
   END Realize;
 
-PROCEDURE FBinit (fb    : JustFVfileBrowser;
-                  font  : Font.T              := Font.BuiltIn;
-                  colors: PaintOp.ColorQuad   := NIL           ):
+PROCEDURE FBinit (fb     : JustFVfileBrowser;
+                  font   : Font.T              := Font.BuiltIn;
+                  colors : PaintOp.ColorQuad   := NIL          ):
   FileBrowserVBT.T =
   BEGIN
     EVAL FVTypes.FVFileBrowser.init (fb, font, colors);

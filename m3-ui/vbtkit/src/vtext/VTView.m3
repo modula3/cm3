@@ -33,7 +33,7 @@ PROCEDURE New (         vt      : T;
     WITH leading = Pts.ToScreenPixels (
                      vbt, vOptions.leadingPts, Axis.T.Ver),
          vScreenFont = MakeVScreenFont (vOptions.vFontxxx, vbt, leading),
-         box         = vScreenFont.vScreenFont.box,
+         box         = vScreenFont.box,
          view = NEW (View, vt := vt, vbt := vbt, vOptions := vOptions,
                      vScreenFont := vScreenFont,
                      lineSpacing := box.south - box.north + leading) DO
@@ -58,7 +58,7 @@ PROCEDURE New (         vt      : T;
 VAR
   vFontList      : RefList.T := NIL;
   vScreenFontList: RefList.T := NIL;
-  vFontMutex              := NEW(MUTEX);
+  vFontMutex                 := NEW(MUTEX);
   (* vFontQ: ObjectCleanUp.Q; *)
   timeToCleanup := NEW(Thread.Condition);
   handouts      := 0;
@@ -78,8 +78,8 @@ PROCEDURE MakeVFont (         font     : Font.T;
       vL := vFontList;
       WHILE vL # NIL DO
         WITH v = NARROW (vL.head, VFont) DO
-          IF v.vFont.font.fnt = font.fnt AND v.vFont.printable = printable
-               AND v.vFont.whiteTabs = whiteTabs THEN
+          IF v.font.fnt = font.fnt AND v.printable = printable
+               AND v.whiteTabs = whiteTabs THEN
             INC (v.handedOut);
             INC (handouts);
             IF handouts > handoutMax THEN
@@ -92,9 +92,9 @@ PROCEDURE MakeVFont (         font     : Font.T;
         vL := vL.tail;
       END;
       WITH vFont = NEW (VFont, handedOut := 0) DO
-        vFont.vFont.font := font;
-        vFont.vFont.printable := printable;
-        vFont.vFont.whiteTabs := whiteTabs;
+        vFont.font := font;
+        vFont.printable := printable;
+        vFont.whiteTabs := whiteTabs;
         vFontList := RefList.Cons (vFont, vFontList);
         RETURN vFont
       END
@@ -141,7 +141,7 @@ PROCEDURE MakeVOptions (vFont: VFont;
                         wrap                   : BOOLEAN;
                         eob                    : BOOLEAN;
                         intervalStylePrecedence: IntervalStylePrecedence):
-  VOptions RAISES {} =
+  VOptions =
   VAR vOptions: VOptions;
   BEGIN
     vOptions.vFontxxx := vFont;
@@ -159,7 +159,7 @@ PROCEDURE MakeVOptions (vFont: VFont;
     RETURN vOptions;
   END MakeVOptions;
 
-PROCEDURE Close (view: View) RAISES {} =
+PROCEDURE Close (view: View) =
   BEGIN
     WITH z_111 = view^ DO
       LOCK z_111.vt.caret.mutex DO
@@ -231,8 +231,7 @@ PROCEDURE Rescreen (view: View; <* UNUSED *> READONLY cd: VBT.RescreenRec) =
     view.vScreenFont :=
       MakeVScreenFont (view.vOptions.vFontxxx, view.vbt, leading);
     view.lineSpacing :=
-      view.vScreenFont.vScreenFont.box.south
-        - view.vScreenFont.vScreenFont.box.north + leading
+      view.vScreenFont.box.south - view.vScreenFont.box.north + leading;
   END Rescreen;
 
 (* UTILITY ROUTINES *)
@@ -248,7 +247,7 @@ PROCEDURE SetPixelOptions (VAR vo: VOptions; v: VBT.T) =
     vo.leftOffset := Pts.ToScreenPixels (v, vo.leftOffsetPts, Axis.T.Hor);
   END SetPixelOptions;
 
-PROCEDURE SetLocation (view: View; READONLY full, bad: Rect.T) RAISES {} =
+PROCEDURE SetLocation (view: View; READONLY full, bad: Rect.T) =
   VAR
     nLines0, nLines1: INTEGER;
     newRealLine     : RealLines;
@@ -304,7 +303,7 @@ PROCEDURE SetLocation (view: View; READONLY full, bad: Rect.T) RAISES {} =
   END SetLocation;
 
 PROCEDURE MakeVScreenFont (vFont: VFont; vbt: VBT.T; leading: CARDINAL):
-  VScreenFont RAISES {} =
+  VScreenFont =
   VAR
     vScreenFont: VScreenFont;
     metrics    : ScrnFont.Metrics;
@@ -316,7 +315,7 @@ PROCEDURE MakeVScreenFont (vFont: VFont; vbt: VBT.T; leading: CARDINAL):
           VAR x: VScreenFont := list.head;
           BEGIN
             list := list.tail;
-            IF x.vScreenFont.vFont = vFont AND x.vScreenFont.metrics = metrics THEN
+            IF x.vFont = vFont AND x.metrics = metrics THEN
               RETURN x
             END
           END
@@ -325,7 +324,7 @@ PROCEDURE MakeVScreenFont (vFont: VFont; vbt: VBT.T; leading: CARDINAL):
       RETURN NIL
     END Find;
   BEGIN
-    metrics := FontMetrics (vbt, vFont.vFont.font);
+    metrics := FontMetrics (vbt, vFont.font);
     IF metrics = NIL THEN RETURN MakeBadVScreenFont (vFont); END;
 
     IF (metrics.maxBounds.boundingBox.south
@@ -350,87 +349,91 @@ PROCEDURE MakeVScreenFont (vFont: VFont; vbt: VBT.T; leading: CARDINAL):
   END MakeVScreenFont;
 
 PROCEDURE UncachedMakeVScreenFont (vFont: VFont; metrics: ScrnFont.Metrics):
-  VScreenFont RAISES {} =
+  VScreenFont =
   VAR
     vScreenFont: VScreenFont;
     bsWidth    : INTEGER;
+    oneChar    : SET OF CHAR;
   BEGIN
     vScreenFont := NEW(VScreenFont);
-    vScreenFont.vScreenFont.vFont := vFont;
-    vScreenFont.vScreenFont.box := metrics.maxBounds.boundingBox;
-    vScreenFont.vScreenFont.paintOpaque :=
-      metrics.selfClearing
-        AND NOT (metrics.leftKerning OR metrics.rightKerning);
+    vScreenFont.vFont := vFont;
+    vScreenFont.box := metrics.maxBounds.boundingBox;
+    vScreenFont.paintOpaque := metrics.selfClearing
+                     AND NOT (metrics.leftKerning OR metrics.rightKerning);
+
     FOR c := FIRST(CHAR) TO LAST(CHAR) DO
-      vScreenFont.vScreenFont.width[c] := 0;
+      vScreenFont.width[c] := 0;
     END;
-    vScreenFont.vScreenFont.defined := SET OF CHAR{};
-    FOR i := metrics.firstChar TO MIN(metrics.lastChar, ORD(LAST(CHAR))) DO
-      VAR c := VAL(i, CHAR);
+    vScreenFont.defined := SET OF CHAR{};
+
+    FOR i := ORD(FIRST(CHAR)) TO ORD(LAST(CHAR)) DO
+      VAR c := VAL(i, CHAR);  print_i := i;
       BEGIN
-        IF c IN vFont.vFont.printable THEN
-          IF metrics.charMetrics # NIL THEN
-            vScreenFont.vScreenFont.width[c] :=
-              metrics.charMetrics[i - metrics.firstChar].printWidth;
-          ELSE
-            vScreenFont.vScreenFont.width[c] :=
-              metrics.maxBounds.printWidth;
+        IF c IN vFont.printable THEN
+          IF (ORD(c) < metrics.firstChar) OR (metrics.lastChar < ORD(c)) THEN
+            print_i := metrics.defaultChar;
           END;
-          IF vScreenFont.vScreenFont.width[c] # 0 THEN
-            vScreenFont.vScreenFont.defined :=
-              vScreenFont.vScreenFont.defined + SET OF CHAR{c}
+          IF (print_i < metrics.firstChar) OR (metrics.lastChar < print_i) THEN
+            vScreenFont.width[c] := 0;
+          ELSIF metrics.charMetrics # NIL THEN
+            vScreenFont.width[c] :=
+                metrics.charMetrics[print_i - metrics.firstChar].printWidth;
+          ELSE
+            vScreenFont.width[c] := metrics.maxBounds.printWidth;
+          END;
+          IF vScreenFont.width[c] # 0 THEN
+            oneChar := SET OF CHAR{c};  (* temp to work around compiler bug *)
+            vScreenFont.defined := vScreenFont.defined + oneChar;
           END;
         END;
       END;
     END;
-    IF SET OF CHAR{' ', '\\', '0'.. '9'} - vScreenFont.vScreenFont.defined
-         # SET OF CHAR{} THEN
-      RETURN MakeBadVScreenFont(vFont);
-    END;
-    bsWidth := vScreenFont.vScreenFont.width['\\'];
-    FOR c := FIRST(CHAR) TO LAST(CHAR) DO
-      IF NOT (c IN vScreenFont.vScreenFont.defined) THEN
-        vScreenFont.vScreenFont.width[c] :=
-          bsWidth + vScreenFont.vScreenFont.width[
-                      VAL(ORD(c) DIV 64 + ORD('0'), CHAR)]
-            + vScreenFont.vScreenFont.width[
-                VAL(ORD(c) DIV 8 MOD 8 + ORD('0'), CHAR)]
-            + vScreenFont.vScreenFont.width[
-                VAL(ORD(c) MOD 8 + ORD('0'), CHAR)];
+
+    WITH fnt = vScreenFont DO
+      IF SET OF CHAR{' ', '\\', '0'.. '7'} - fnt.defined # SET OF CHAR{} THEN
+        RETURN MakeBadVScreenFont(vFont);
       END;
-      vScreenFont.vScreenFont.width['\n'] := 1;
-      vScreenFont.vScreenFont.defined :=
-        vScreenFont.vScreenFont.defined - SET OF CHAR{'\n'};
-      IF '\t' IN vFont.vFont.printable THEN
-        vScreenFont.vScreenFont.width['\t'] :=
-          8 * vScreenFont.vScreenFont.width[' '];
-        vScreenFont.vScreenFont.defined :=
-          vScreenFont.vScreenFont.defined - SET OF CHAR{'\t'}
+
+      bsWidth := fnt.width['\\'];
+      FOR c := FIRST(CHAR) TO LAST(CHAR) DO
+        IF NOT (c IN fnt.defined) THEN
+          fnt.width[c] :=
+            bsWidth + fnt.width[VAL(ORD(c) DIV 64 + ORD('0'), CHAR)]
+                    + fnt.width[VAL(ORD(c) DIV 8 MOD 8 + ORD('0'), CHAR)]
+                    + fnt.width[VAL(ORD(c) MOD 8 + ORD('0'), CHAR)];
+        END;
       END;
+
+      fnt.width['\n'] := 1;
+      fnt.defined := fnt.defined - SET OF CHAR{'\n'};
+
+
+      IF '\t' IN vFont.printable THEN
+        fnt.width['\t'] := 8 * fnt.width[' '];
+        fnt.defined := fnt.defined - SET OF CHAR{'\t'};
+      END;
+
+      fnt.metrics := metrics;
     END;
-    vScreenFont.vScreenFont.metrics := metrics;
     RETURN vScreenFont;
   END UncachedMakeVScreenFont;
 
-PROCEDURE MakeBadVScreenFont (vFont: VFont): VScreenFont RAISES {} =
+PROCEDURE MakeBadVScreenFont (vFont: VFont): VScreenFont =
+  CONST A = FIRST(INTEGER) DIV 4;  B = LAST(INTEGER) DIV 4;
   VAR vScreenFont := NEW(VScreenFont);
   BEGIN
-    vScreenFont.vScreenFont.vFont := vFont;
-    vScreenFont.vScreenFont.box :=
-      Rect.FromEdges(FIRST(INTEGER) DIV 4, LAST(INTEGER) DIV 4,
-                     FIRST(INTEGER) DIV 4, LAST(INTEGER) DIV 4);
+    vScreenFont.vFont := vFont;
+    vScreenFont.box := Rect.FromEdges(A, B, A, B);
     FOR c := FIRST(CHAR) TO LAST(CHAR) DO
-      vScreenFont.vScreenFont.width[c] :=
-        LAST(INTEGER) DIV 4 - FIRST(INTEGER) DIV 4;
+      vScreenFont.width[c] := B - A;
     END;
-    vScreenFont.vScreenFont.defined :=
-      SET OF CHAR{FIRST(CHAR).. LAST(CHAR)};
-    vScreenFont.vScreenFont.paintOpaque := TRUE;
-    vScreenFont.vScreenFont.metrics := NIL;
+    vScreenFont.defined := SET OF CHAR{FIRST(CHAR) .. LAST(CHAR)};
+    vScreenFont.paintOpaque := TRUE;
+    vScreenFont.metrics := NIL;
     RETURN vScreenFont;
   END MakeBadVScreenFont;
 
-PROCEDURE FontMetrics (v: VBT.T; fnt: Font.T): ScrnFont.Metrics RAISES {} =
+PROCEDURE FontMetrics (v: VBT.T; fnt: Font.T): ScrnFont.Metrics =
   BEGIN
     WITH screentype = VBT.ScreenTypeOf(v) DO
       IF screentype = NIL THEN
@@ -441,7 +444,7 @@ PROCEDURE FontMetrics (v: VBT.T; fnt: Font.T): ScrnFont.Metrics RAISES {} =
     END
   END FontMetrics;
 
-PROCEDURE Init () RAISES {} =
+PROCEDURE Init () =
   BEGIN
     (* -- vFontQ := ObjectCleanUp.NewQ (); ObjectCleanUp.EstablishCleanUp
        (TYPECODE (VFont), 1, vFontQ); -- *)
