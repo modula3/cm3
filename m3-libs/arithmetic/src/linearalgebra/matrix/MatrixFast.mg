@@ -1,21 +1,27 @@
 GENERIC MODULE MatrixFast(R, V, VS);
 (*Arithmetic for Modula-3, see doc for details*)
 
-IMPORT Arithmetic AS Arith;
 
 CONST Module = "MatrixFast.";
 
-<*UNUSED*>
-CONST Dummy = VS.Inner;
+<* UNUSED *>
+CONST
+  Dummy = VS.Inner;
+(* Suppress warning about unused VS *)
 
 (*-----------------*)
-<*INLINE*>
-PROCEDURE AssertEqualSize (x, y: T) RAISES {Arith.Error} =
+<* INLINE *>
+PROCEDURE AssertEqualSize (x, y: T; ) =
   BEGIN
-    IF NUMBER(x^) # NUMBER(y^) OR NUMBER(x[0]) # NUMBER(y[0]) THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    <* ASSERT NUMBER(x^) = NUMBER(y^) AND NUMBER(x[0]) = NUMBER(y[0]),
+                "Sizes of matrices must match." *>
   END AssertEqualSize;
+
+<* INLINE *>
+PROCEDURE AssertEqualWidth (n, m: CARDINAL; ) =
+  BEGIN
+    <* ASSERT n = m, "Width or height of operands don't match." *>
+  END AssertEqualWidth;
 
 (*----------------*)
 PROCEDURE IsZero (x: T): BOOLEAN =
@@ -28,9 +34,10 @@ PROCEDURE IsZero (x: T): BOOLEAN =
     RETURN TRUE;
   END IsZero;
 (*----------------*)
-PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Arith.Error} =
-  <*UNUSED*>
-  CONST ftn = Module & "Equal";
+PROCEDURE Equal (x, y: T): BOOLEAN =
+  <* UNUSED *>
+  CONST
+    ftn = Module & "Equal";
   BEGIN
     AssertEqualSize(x, y);
 
@@ -43,9 +50,10 @@ PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Arith.Error} =
   END Equal;
 
 (*----------------*)
-PROCEDURE Add (x, y: T): T RAISES {Arith.Error} =
-  <*UNUSED*>
-  CONST ftn = Module & "Add";
+PROCEDURE Add (x, y: T): T =
+  <* UNUSED *>
+  CONST
+    ftn = Module & "Add";
   VAR
     m    := NUMBER(x^);
     n    := NUMBER(x[0]);
@@ -62,9 +70,10 @@ PROCEDURE Add (x, y: T): T RAISES {Arith.Error} =
     RETURN z;
   END Add;
 (*----------------*)
-PROCEDURE Sub (x, y: T): T RAISES {Arith.Error} =
-  <*UNUSED*>
-  CONST ftn = Module & "Sub";
+PROCEDURE Sub (x, y: T): T =
+  <* UNUSED *>
+  CONST
+    ftn = Module & "Sub";
   VAR
     m    := NUMBER(x^);
     n    := NUMBER(x[0]);
@@ -92,9 +101,10 @@ PROCEDURE Scale (x: T; y: R.T): T =
   END Scale;
 
 (*-----------------*)
-PROCEDURE Mul (x, y: T): T RAISES {Arith.Error} =
-  <*UNUSED*>
-  CONST ftn = "Mul";
+PROCEDURE Mul (x, y: T): T =
+  <* UNUSED *>
+  CONST
+    ftn = "Mul";
   VAR
     m    := NUMBER(x^);
     n    := NUMBER(x[0]);
@@ -102,7 +112,7 @@ PROCEDURE Mul (x, y: T): T RAISES {Arith.Error} =
     z: T;
 
   BEGIN
-    IF NUMBER(y^) # n THEN RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init()); END;
+    AssertEqualWidth(NUMBER(y^), n);
     z := NEW(T, m, p);
     FOR i := FIRST(x^) TO LAST(x^) DO
       FOR j := FIRST(y[0]) TO LAST(y[0]) DO
@@ -119,12 +129,13 @@ PROCEDURE Mul (x, y: T): T RAISES {Arith.Error} =
   END Mul;
 
 (*----------------*)
-PROCEDURE MulV (x: T; y: V.T): V.T RAISES {Arith.Error} =
-  <*UNUSED*>
-  CONST ftn = Module & "MulV";
+PROCEDURE MulV (x: T; y: V.T): V.T =
+  <* UNUSED *>
+  CONST
+    ftn = Module & "MulV";
   VAR z := NEW(V.T, NUMBER(x^));
   BEGIN
-    IF NUMBER(x[0]) # NUMBER(y^) THEN RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init()); END;
+    AssertEqualWidth(NUMBER(x[0]), NUMBER(y^));
 
     FOR i := FIRST(x^) TO LAST(x^) DO
       VAR sum := R.Zero;
@@ -139,12 +150,13 @@ PROCEDURE MulV (x: T; y: V.T): V.T RAISES {Arith.Error} =
   END MulV;
 
 (*-----------------*)
-PROCEDURE MulTV (x: T; y: V.T): V.T RAISES {Arith.Error} =
-  <*UNUSED*>
-  CONST ftn = Module & "MulTV";
+PROCEDURE MulTV (x: T; y: V.T): V.T =
+  <* UNUSED *>
+  CONST
+    ftn = Module & "MulTV";
   VAR z := NEW(V.T, NUMBER(x[0]));
   BEGIN
-    IF NUMBER(x^) # NUMBER(y^) THEN RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init()); END;
+    AssertEqualWidth(NUMBER(x^), NUMBER(y^));
 
     FOR i := FIRST(x[0]) TO LAST(x[0]) DO
       VAR sum := R.Zero;
@@ -158,8 +170,9 @@ PROCEDURE MulTV (x: T; y: V.T): V.T RAISES {Arith.Error} =
 
 (*-----------------*)
 PROCEDURE Transpose (x: T): T =
-  <*UNUSED*>
-  CONST ftn = Module & "mTranspose";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "mTranspose";
   VAR z := NEW(T, NUMBER(x[0]), NUMBER(x^));
   BEGIN
     FOR i := FIRST(x[0]) TO LAST(x[0]) DO

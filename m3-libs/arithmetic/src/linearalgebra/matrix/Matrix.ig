@@ -2,7 +2,7 @@ GENERIC INTERFACE Matrix(R, V, MI);
 (*Arithmetic for Modula-3, see doc for details
 
    Abstract: Matrix math*)
-FROM Arithmetic IMPORT Error;
+
 (*==========================*)
 
 CONST Brand = R.Brand & "Matrix";
@@ -26,13 +26,13 @@ PROCEDURE FromArray (READONLY x: TBody): T;
 PROCEDURE RowFromArray (READONLY x: V.TBody): T;
 PROCEDURE ColumnFromArray (READONLY x: V.TBody): T;
 PROCEDURE DiagonalFromArray (READONLY x: V.TBody): T;
-<*INLINE*>
+<* INLINE *>
 PROCEDURE RowFromVector (x: V.T): T;
-<*INLINE*>
+<* INLINE *>
 PROCEDURE ColumnFromVector (x: V.T): T;
-<*INLINE*>
+<* INLINE *>
 PROCEDURE DiagonalFromVector (x: V.T): T;
-PROCEDURE FromMatrixArray (READONLY x: TMBody): T RAISES {Error};
+PROCEDURE FromMatrixArray (READONLY x: TMBody): T;
 PROCEDURE FromScalar (x: R.T): T;
 PROCEDURE Copy (x: T): T;
 

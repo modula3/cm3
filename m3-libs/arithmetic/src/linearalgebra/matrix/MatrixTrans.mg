@@ -3,8 +3,9 @@ GENERIC MODULE MatrixTrans(R, RT, CT, CVR, M, Eigen);
 
 FROM Arithmetic IMPORT Error;
 
-<*UNUSED*>
-CONST Module = "MatrixTrans.";
+<* UNUSED *>
+CONST
+  Module = "MatrixTrans.";
 
 PROCEDURE Norm1 (x: T): R.T =
   VAR max := R.Zero;
@@ -44,7 +45,6 @@ PROCEDURE NormFrob (x: T): R.T =
 
 PROCEDURE NormFrobSqr (x: T): R.T =
   VAR sum := R.Zero;
-  <*FATAL Error*> (*CVR.Inner can't complain about mismatching sizes*)
   BEGIN
     FOR i := FIRST(x^) TO LAST(x^) DO
       sum := R.Add(sum, CVR.Inner(x[i], x[i]));

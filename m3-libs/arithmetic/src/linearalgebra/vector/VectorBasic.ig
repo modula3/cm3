@@ -1,20 +1,20 @@
 GENERIC INTERFACE VectorBasic(R, V);
 (*Arithmetic for Modula-3, see doc for details *)
-FROM Arithmetic IMPORT Error;
+
 (*==========================*)
 
 TYPE T = V.TBody;
 
 PROCEDURE IsZero (READONLY x: T): BOOLEAN;
-PROCEDURE Equal (READONLY x, y: T): BOOLEAN RAISES {Error};
+PROCEDURE Equal (READONLY x, y: T): BOOLEAN ;
 
-PROCEDURE Add (READONLY x, y: T): V.T RAISES {Error};
-PROCEDURE Sub (READONLY x, y: T): V.T RAISES {Error};
+PROCEDURE Add (READONLY x, y: T): V.T ;
+PROCEDURE Sub (READONLY x, y: T): V.T ;
 PROCEDURE Neg (READONLY x: T): V.T;
 
 PROCEDURE Scale (READONLY x: T; y: R.T): V.T;
-PROCEDURE Inner (READONLY x, y: T): R.T RAISES {Error}; (*adjoint x*)
-PROCEDURE Dot(READONLY x, y: T): R.T RAISES {Error};
+PROCEDURE Inner (READONLY x, y: T): R.T ; (*adjoint x*)
+PROCEDURE Dot(READONLY x, y: T): R.T ;
 
 PROCEDURE Sum (READONLY x: T): R.T;
 

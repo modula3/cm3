@@ -1,10 +1,10 @@
 GENERIC MODULE Matrix(R, V);
 (*Arithmetic for Modula-3, see doc for details*)
 
-IMPORT Arithmetic AS Arith;
 
-<*UNUSED*>
-CONST Module = "Matrix.";
+<* UNUSED *>
+CONST
+  Module = "Matrix.";
 
 (*-----------------*)
 PROCEDURE New (m, n: CARDINAL): T =
@@ -24,7 +24,7 @@ PROCEDURE FromArray (READONLY x: TBody): T =
   END FromArray;
 
 (*-----------------*)
-PROCEDURE FromMatrixArray (READONLY x: TMBody): T RAISES {Arith.Error} =
+PROCEDURE FromMatrixArray (READONLY x: TMBody): T =
   BEGIN
     IF NUMBER(x) = 0 OR NUMBER(x[0]) = 0 THEN
       RETURN New(0, 0);
@@ -33,24 +33,19 @@ PROCEDURE FromMatrixArray (READONLY x: TMBody): T RAISES {Arith.Error} =
       BEGIN
         (*check matching row numbers and sum them up*)
         FOR i := 0 TO LAST(x) DO
-          VAR size := NUMBER(x[i, 0]^);
-          BEGIN
+          WITH size = NUMBER(x[i, 0]^) DO
             FOR j := 1 TO LAST(x[0]) DO
-              IF size # NUMBER(x[i, j]^) THEN
-                RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-              END;
+              <* ASSERT size = NUMBER(x[i, j]^), "Row numbers don't match." *>
             END;
             INC(m, size);
           END;
         END;
         (*check matching column numbers and sum them up*)
         FOR j := 0 TO LAST(x[0]) DO
-          VAR size := NUMBER(x[0, j][0]);
-          BEGIN
+          WITH size = NUMBER(x[0, j][0]) DO
             FOR i := 1 TO LAST(x) DO
-              IF size # NUMBER(x[i, j][0]) THEN
-                RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-              END;
+              <* ASSERT size = NUMBER(x[i, j][0]),
+                          "Column numbers don't match." *>
             END;
             INC(n, size);
           END;

@@ -1,18 +1,21 @@
 GENERIC MODULE MatrixBasic(R, V, VR);
 (*Arithmetic for Modula-3, see doc for details*)
 
-IMPORT Arithmetic AS Arith;
-
 CONST Module = "MatrixBasic.";
 
 (*-----------------*)
-<*INLINE*>
-PROCEDURE AssertEqualSize (x, y: T) RAISES {Arith.Error} =
+<* INLINE *>
+PROCEDURE AssertEqualSize (x, y: T; ) =
   BEGIN
-    IF NUMBER(x^) # NUMBER(y^) OR NUMBER(x[0]) # NUMBER(y[0]) THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    <* ASSERT NUMBER(x^) = NUMBER(y^) AND NUMBER(x[0]) = NUMBER(y[0]),
+                "Sizes of matrices must match." *>
   END AssertEqualSize;
+
+<* INLINE *>
+PROCEDURE AssertEqualWidth (n, m: CARDINAL; ) =
+  BEGIN
+    <* ASSERT n = m, "Width or height of operands don't match." *>
+  END AssertEqualWidth;
 
 (*----------------*)
 PROCEDURE IsZero (x: T): BOOLEAN =
@@ -31,11 +34,12 @@ PROCEDURE IsZero (x: T): BOOLEAN =
   END IsZero;
 
 (*----------------*)
-PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Arith.Error} =
+PROCEDURE Equal (x, y: T): BOOLEAN =
   (*return x=y*)
   (*each is mxn*)
-  <*UNUSED*>
-  CONST ftn = Module & "Equal";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "Equal";
   VAR
     mf := 0;
     ml := LAST(x^);
@@ -53,11 +57,12 @@ PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Arith.Error} =
   END Equal;
 
 (*----------------*)
-PROCEDURE Add (x, y: T): T RAISES {Arith.Error} =
+PROCEDURE Add (x, y: T): T =
   (*return x+y*)
   (*each is mxn*)
-  <*UNUSED*>
-  CONST ftn = Module & "Add";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "Add";
   VAR
     m     := NUMBER(x^);
     mf    := 0;
@@ -76,11 +81,12 @@ PROCEDURE Add (x, y: T): T RAISES {Arith.Error} =
     RETURN z;
   END Add;
 (*----------------*)
-PROCEDURE Sub (x, y: T): T RAISES {Arith.Error} =
+PROCEDURE Sub (x, y: T): T =
   (*return x-y*)
   (*each is mxn*)
-  <*UNUSED*>
-  CONST ftn = Module & "Sub";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "Sub";
   VAR
     m     := NUMBER(x^);
     mf    := 0;
@@ -112,11 +118,12 @@ PROCEDURE Scale (x: T; y: R.T): T =
   END Scale;
 
 (*-----------------*)
-PROCEDURE Mul (x, y: T): T RAISES {Arith.Error} =
+PROCEDURE Mul (x, y: T): T =
   (*return x*y*)
   (* x:mxn y:nxp return:mxp*)
-  <*UNUSED*>
-  CONST ftn = "Mul";
+  <* UNUSED *>
+  CONST
+    ftn = "Mul";
   VAR
     m     := NUMBER(x^);
     mf    := 0;
@@ -130,7 +137,7 @@ PROCEDURE Mul (x, y: T): T RAISES {Arith.Error} =
     z : T;
 
   BEGIN
-    IF NUMBER(y^) # n THEN RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init()); END;
+    AssertEqualWidth(NUMBER(y^), n);
     z := NEW(T, m, p);
     FOR i := mf TO ml DO
       FOR j := pf TO pl DO
@@ -147,27 +154,29 @@ PROCEDURE Mul (x, y: T): T RAISES {Arith.Error} =
   END Mul;
 
 (*-----------------*)
-PROCEDURE MulV (A: T; b: V.T): V.T RAISES {Arith.Error} =
+PROCEDURE MulV (A: T; b: V.T): V.T =
 
-  <*UNUSED*>
-  CONST ftn = Module & "MulV";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "MulV";
   VAR
     m  := NUMBER(A^);
     mf := 0;
     ml := m - 1;
     c  := NEW(V.T, m);
   BEGIN
-    IF NUMBER(A[0]) # NUMBER(b^) THEN RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init()); END;
+    AssertEqualWidth(NUMBER(A[0]), NUMBER(b^));
 
     FOR i := mf TO ml DO c[i] := VR.Dot(A[i], b^); END;
     RETURN c;
   END MulV;
 
 (*-----------------*)
-PROCEDURE MulTV (A: T; b: V.T): V.T RAISES {Arith.Error} =
+PROCEDURE MulTV (A: T; b: V.T): V.T =
 
-  <*UNUSED*>
-  CONST ftn = Module & "MulTV";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "MulTV";
   VAR
     mf := 0;
     ml := LAST(A^);
@@ -175,7 +184,7 @@ PROCEDURE MulTV (A: T; b: V.T): V.T RAISES {Arith.Error} =
     nl := LAST(A[0]);
     c  := NEW(V.T, NUMBER(A[0]));
   BEGIN
-    IF NUMBER(A^) # NUMBER(b^) THEN RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init()); END;
+    AssertEqualWidth(NUMBER(A^), NUMBER(b^));
 
     FOR i := nf TO nl DO
       VAR sum := R.Zero;
@@ -189,8 +198,9 @@ PROCEDURE MulTV (A: T; b: V.T): V.T RAISES {Arith.Error} =
 
 (*-----------------*)
 PROCEDURE Transpose (x: T): T =
-  <*UNUSED*>
-  CONST ftn = Module & "Transpose";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "Transpose";
   VAR
     m     := NUMBER(x^);
     mf    := 0;
@@ -207,8 +217,9 @@ PROCEDURE Transpose (x: T): T =
 
 (*-----------------*)
 PROCEDURE Adjoint (x: T): T =
-  <*UNUSED*>
-  CONST ftn = Module & "Adjoint";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "Adjoint";
   VAR
     m     := NUMBER(x^);
     mf    := 0;
@@ -250,10 +261,7 @@ PROCEDURE MulMMA (x: T): T =
   BEGIN
     FOR i := 0 TO LAST(x^) DO
       FOR j := i TO LAST(x^) DO
-        <*FATAL Arith.Error*>(*x[i] and x[j] will have the same size*)
-        BEGIN
-          z[i, j] := VR.Dot(x[i], x[j]);
-        END;
+        z[i, j] := VR.Dot(x[i], x[j]);
         z[j, i] := R.Conj(z[i, j]);
       END;
     END;

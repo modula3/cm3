@@ -27,31 +27,31 @@ PROCEDURE FromScalar (x: R.T): T;
 <* INLINE *>
 PROCEDURE Copy (x: T): T;
 <* INLINE *>
-PROCEDURE Reverse (x: T): T;        (* reverse the order of the components *)
+PROCEDURE Reverse (x: T): T;     (* reverse the order of the components *)
 
 <* INLINE *>
 PROCEDURE IsZero (x: T): BOOLEAN;
 <* INLINE *>
-PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Error}; (*return x=y*)
+PROCEDURE Equal (x, y: T): BOOLEAN; (*return x=y*)
 
 <* INLINE *>
-PROCEDURE Add (x, y: T): T RAISES {Error}; (*x+y*)
+PROCEDURE Add (x, y: T): T;      (*x+y*)
 <* INLINE *>
-PROCEDURE Sub (x, y: T): T RAISES {Error}; (*x-y*)
+PROCEDURE Sub (x, y: T): T;      (*x-y*)
 <* INLINE *>
 PROCEDURE Neg (x: T): T;         (*return -x *)
 
 <* INLINE *>
 PROCEDURE Scale (x: T; y: R.T): T; (*x:=x*factor*)
 <* INLINE *>
-PROCEDURE Inner (x, y: T): R.T RAISES {Error}; (*<x,y>*)
+PROCEDURE Inner (x, y: T): R.T;  (*<x,y>*)
 <* INLINE *>
-PROCEDURE Dot (x, y: T): R.T RAISES {Error}; (*x^T*y*)
+PROCEDURE Dot (x, y: T): R.T;    (*x^T*y*)
 
 (* should be generalized to finding an orthonormal basis of the space
    orthogonal to a given set of vectors
 
-   PROCEDURE Cross(x,y:T):T RAISES {Error}; (*x x y*) *)
+   PROCEDURE Cross(x,y:T):T ; (*x x y*) *)
 
 TYPE
   ApplyFtn = PROCEDURE (x: R.T) RAISES {Error};

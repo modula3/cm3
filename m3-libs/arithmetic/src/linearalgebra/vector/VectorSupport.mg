@@ -1,6 +1,5 @@
 GENERIC MODULE VectorSupport(R);
 (*Arithmetic for Modula-3, see doc for details *)
-IMPORT Arithmetic AS Arith;
 
 <* UNUSED *>
 CONST
@@ -8,11 +7,9 @@ CONST
 
 
 <* INLINE *>
-PROCEDURE AssertEqualSize (READONLY x, y: T) RAISES {Arith.Error} =
+PROCEDURE AssertEqualSize (READONLY x, y: T) =
   BEGIN
-    IF NUMBER(x) # NUMBER(y) THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    <* ASSERT NUMBER(x) = NUMBER(y), "Sizes of vectors must match." *>
   END AssertEqualSize;
 
 PROCEDURE Clear (VAR z: T) =
@@ -20,7 +17,7 @@ PROCEDURE Clear (VAR z: T) =
     FOR i := 0 TO LAST(z) DO z[i] := R.Zero; END;
   END Clear;
 
-PROCEDURE Add (VAR z: T; READONLY x, y: T) RAISES {Arith.Error} =
+PROCEDURE Add (VAR z: T; READONLY x, y: T) =
   BEGIN
     AssertEqualSize(z, x);
     AssertEqualSize(z, y);
@@ -28,7 +25,7 @@ PROCEDURE Add (VAR z: T; READONLY x, y: T) RAISES {Arith.Error} =
   END Add;
 
 (*-----------------*)
-PROCEDURE Sub (VAR z: T; READONLY x, y: T) RAISES {Arith.Error} =
+PROCEDURE Sub (VAR z: T; READONLY x, y: T) =
   BEGIN
     AssertEqualSize(z, x);
     AssertEqualSize(z, y);
@@ -36,7 +33,7 @@ PROCEDURE Sub (VAR z: T; READONLY x, y: T) RAISES {Arith.Error} =
   END Sub;
 
 (*---------------------*)
-PROCEDURE Neg (VAR z: T; READONLY x: T) RAISES {Arith.Error} =
+PROCEDURE Neg (VAR z: T; READONLY x: T) =
   BEGIN
     AssertEqualSize(z, x);
     FOR i := FIRST(z) TO LAST(z) DO z[i] := R.Neg(x[i]); END;
@@ -44,7 +41,7 @@ PROCEDURE Neg (VAR z: T; READONLY x: T) RAISES {Arith.Error} =
 
 
 (*-----------------*)
-PROCEDURE Scale (VAR z: T; READONLY x: T; y: R.T) RAISES {Arith.Error} =
+PROCEDURE Scale (VAR z: T; READONLY x: T; y: R.T) =
   BEGIN
     AssertEqualSize(z, x);
     FOR i := FIRST(z) TO LAST(z) DO z[i] := R.Mul(x[i], y); END;
@@ -52,7 +49,7 @@ PROCEDURE Scale (VAR z: T; READONLY x: T; y: R.T) RAISES {Arith.Error} =
 
 
 (*-----------------*)
-PROCEDURE Inner (READONLY x, y: T): R.T RAISES {Arith.Error} =
+PROCEDURE Inner (READONLY x, y: T): R.T =
   VAR sum: R.T;
   BEGIN
     AssertEqualSize(x, y);

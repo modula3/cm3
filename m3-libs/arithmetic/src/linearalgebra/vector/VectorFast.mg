@@ -1,6 +1,5 @@
 GENERIC MODULE VectorFast(R, V);
 (*Arithmetic for Modula-3, see doc for details *)
-IMPORT Arithmetic AS Arith;
 
 (*VR is needed to reveal the structure of V.T*)
 
@@ -10,11 +9,9 @@ CONST
 
 (*-----------------*)
 <* INLINE *>
-PROCEDURE AssertEqualSize (READONLY x, y: T) RAISES {Arith.Error} =
+PROCEDURE AssertEqualSize (READONLY x, y: T) =
   BEGIN
-    IF NUMBER(x) # NUMBER(y) THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    <* ASSERT NUMBER(x) = NUMBER(y), "Vectors must have the same size." *>
   END AssertEqualSize;
 
 (*---------------------*)
@@ -27,7 +24,7 @@ PROCEDURE IsZero (READONLY x: T): BOOLEAN =
   END IsZero;
 
 (*---------------------*)
-PROCEDURE Equal (READONLY x, y: T): BOOLEAN RAISES {Arith.Error} =
+PROCEDURE Equal (READONLY x, y: T): BOOLEAN =
   BEGIN
     AssertEqualSize(x, y);
     FOR i := FIRST(x) TO LAST(x) DO
@@ -37,7 +34,7 @@ PROCEDURE Equal (READONLY x, y: T): BOOLEAN RAISES {Arith.Error} =
   END Equal;
 
 (*-----------------*)
-PROCEDURE Add (READONLY x, y: T): V.T RAISES {Arith.Error} =
+PROCEDURE Add (READONLY x, y: T): V.T =
   VAR z := NEW(V.T, NUMBER(x));
   BEGIN
     AssertEqualSize(x, y);
@@ -46,7 +43,7 @@ PROCEDURE Add (READONLY x, y: T): V.T RAISES {Arith.Error} =
   END Add;
 
 (*-----------------*)
-PROCEDURE Sub (READONLY x, y: T): V.T RAISES {Arith.Error} =
+PROCEDURE Sub (READONLY x, y: T): V.T =
   VAR z := NEW(V.T, NUMBER(x));
   BEGIN
     AssertEqualSize(x, y);
@@ -73,7 +70,7 @@ PROCEDURE Scale (READONLY x: T; y: R.T): V.T =
 
 
 (*-----------------*)
-PROCEDURE Inner (READONLY x, y: T): R.T RAISES {Arith.Error} =
+PROCEDURE Inner (READONLY x, y: T): R.T =
   VAR sum := R.Zero;
   BEGIN
     AssertEqualSize(x, y);
@@ -84,7 +81,7 @@ PROCEDURE Inner (READONLY x, y: T): R.T RAISES {Arith.Error} =
 (*-----------------*)
 (*
 PROCEDURE Cross(
-                x,y:T):T RAISES {Arith.Error}=
+                x,y:T):T =
 BEGIN
   RAISE Error(Err.not_implemented);
 END Cross;

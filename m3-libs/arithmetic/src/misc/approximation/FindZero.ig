@@ -25,7 +25,7 @@ PROCEDURE BracketOut (func: Ftn;  (*find brackets for this function*)
                       VAR (*INOUT*) x: Bracket;  (*starting with these
                                                     points*)
                       maxiter: CARDINAL := 55 (*growing maxiter times*)
-  ): BOOLEAN RAISES {Error};     (*true if successful*)
+  ): BOOLEAN;                    (*true if successful*)
 (* Given x.l,x.r, search for points (returned in x.l, x.r) for which
    func(x.l) is opposite sign from func(x.r).  Grow outward from the
    original x.l,x.r by golden ratio, for geometric growth.  Return true if
