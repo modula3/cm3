@@ -14,15 +14,15 @@ PROCEDURE SP (READONLY s: State): ADDRESS =
     RETURN LOOPHOLE (s.sp, ADDRESS);
   END SP;
 
+(*--------------------------------------------------------- thread stacks ---*)
+
 VAR page_bytes : CARDINAL := 0;
 VAR stack_slop : CARDINAL;
-
-(*--------------------------------------------------------- thread stacks ---*)
 
 PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
   VAR i: INTEGER; start: ADDRESS;
   BEGIN
-    IF (page_bytes = 0) THEN
+    IF page_bytes = 0 THEN
       page_bytes := Unix.getpagesize ();
       stack_slop := 2 * (page_bytes DIV BYTESIZE (INTEGER));
     END;
@@ -30,10 +30,6 @@ PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
     (* allocate enough so that we're guaranteed to get a full, aligned page *)
     INC (size, stack_slop);
     s.words := NEW (StackSpace, size);
-    (* 
-    s.first := ADR (s.words[0]);
-    s.last  := s.first + size * ADRSIZE (s.words[0]);
-    *)
 
     (* find the aligned page and unmap it *)
     start := RTMisc.Align (ADR (s.words[0]), page_bytes);
@@ -86,27 +82,29 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
 
 (*------------------------------------ manipulating the SIGVTALRM handler ---*)
 
+VAR
+  ThreadSwitchSignal: Usignal.sigset_t;
+
 PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
-  VAR x: Usignal.struct_sigaction;
   BEGIN
-    x.sa_handler := LOOPHOLE (handler, Usignal.SignalActionHandler);
-    x.sa_mask := Usignal.empty_sigset_t;
-    x.sa_flags := Usignal.SA_RESTART;
-    EVAL Usignal.sigaction (Usignal.SIGVTALRM, ADR (x), NIL);
+    EVAL Usignal.signal(Usignal.SIGVTALRM, handler);
   END setup_sigvtalrm;
 
 PROCEDURE allow_sigvtalrm () =
   BEGIN
-    EVAL Usignal.sigprocmask(Usignal.SIG_UNBLOCK,ADR(sigvtalrmMask),NIL);
+    WITH i = Usignal.sigprocmask(Usignal.SIG_UNBLOCK,
+                                 ADR(ThreadSwitchSignal), NIL) DO
+      <* ASSERT i = 0 *>
+    END;
   END allow_sigvtalrm;
 
 PROCEDURE disallow_sigvtalrm () =
   BEGIN
-    EVAL Usignal.sigprocmask(Usignal.SIG_BLOCK,ADR(sigvtalrmMask),NIL);
+    WITH i = Usignal.sigprocmask(Usignal.SIG_BLOCK,
+                                 ADR(ThreadSwitchSignal), NIL) DO
+      <* ASSERT i = 0 *>
+    END;
   END disallow_sigvtalrm;
-
-VAR
-  sigvtalrmMask: Usignal.sigset_t;
 
 (*--------------------------------------------- exception handling support --*)
 
@@ -136,5 +134,10 @@ PROCEDURE PopEFrame (frame: ADDRESS) =
   END PopEFrame;
 
 BEGIN
-  sigvtalrmMask.val[0] := Usignal.sigmask(Usignal.SIGVTALRM);
+  WITH i = Usignal.sigemptyset(ADR(ThreadSwitchSignal)) DO
+    <* ASSERT i = 0 *>
+  END;
+  WITH i = Usignal.sigaddset(ADR(ThreadSwitchSignal), Usignal.SIGVTALRM) DO
+    <* ASSERT i = 0 *>
+  END;
 END RTThread.

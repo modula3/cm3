@@ -474,6 +474,14 @@ int fcntl(int fd, int cmd, ...)
     result = syscall(SYS_fcntl, fd, cmd, arg);
     va_end(ap);
     break;
+  case F_SETLK64:
+  case F_SETLKW64:
+    va_start(ap,cmd);
+    arg = va_arg(ap,long);
+    MAKE_READABLE(arg);
+    result = syscall(SYS_fcntl64, fd, cmd, arg);
+    va_end(ap);
+    break;
   case F_SETFD:
   case F_SETFL:
   case F_DUPFD:
@@ -1369,7 +1377,7 @@ int sigaction(int signum, const struct sigaction *act,
   ENTER_CRITICAL;
   if(oldact != NULL) MAKE_WRITABLE(oldact);
   MAKE_READABLE(act);
-  result = syscall(SYS_sigaction, signum, act, oldact);
+  result = __sigaction(signum, act, oldact);
   EXIT_CRITICAL;
   return result;
 }

@@ -7,13 +7,16 @@
 
 UNSAFE MODULE RTHeapDep;
 
-IMPORT RT0u, RTMachine, RTHeapRep, RTCollectorSRC, RTVM;
-IMPORT Cstdlib, Ctypes, Umman, Unix, Uresource, Usignal, Utypes, Word;
+IMPORT RT0u, RTHeapRep, RTCollectorSRC, RTMachine, RTVM;
+IMPORT Cstdlib, Ctypes, Umman, Unix, Uresource, Usignal;
+IMPORT Utime, Utypes, Uucontext, Word;
 
 VAR
-  initialized                           := FALSE;
-  defaultActionSIGSEGV: Usignal.SignalActionHandler := NIL;
-  defaultSIGSEGV: Usignal.SignalHandler := NIL; (* previous handler *)
+  initialized := FALSE;
+  (* true iff "Init" has been called *)
+
+  defaultSIGSEGV: Usignal.SignalActionHandler := NIL;
+  (* original handler for "SIGSEGV" signal; set by "Init" *)
 
 PROCEDURE Protect (p: Page; n: CARDINAL; readable, writable: BOOLEAN) =
   BEGIN
@@ -24,8 +27,8 @@ PROCEDURE Protect (p: Page; n: CARDINAL; readable, writable: BOOLEAN) =
       IF readable THEN prot := Word.Or(prot, Umman.PROT_READ); END;
       IF writable THEN prot := Word.Or(prot, Umman.PROT_WRITE); END;
       VAR
-        ret := Umman.mprotect(LOOPHOLE(p * BytesPerPage, Utypes.caddr_t),
-                              n * BytesPerPage, prot);
+        addr := LOOPHOLE(p * BytesPerPage, Utypes.caddr_t);
+        ret := Umman.mprotect(addr, n * BytesPerPage, prot);
       BEGIN
         <* ASSERT ret = 0 *>
       END;
@@ -37,7 +40,7 @@ PROCEDURE Protect (p: Page; n: CARDINAL; readable, writable: BOOLEAN) =
 
 PROCEDURE Init () =
   BEGIN
-    (* sanity check *)
+    (* check that "BytesPerPage" is an acceptable value *)
     VAR vmPageBytes := Unix.getpagesize();
     BEGIN
       <* ASSERT BytesPerPage >= vmPageBytes *>
@@ -46,50 +49,45 @@ PROCEDURE Init () =
 
     (* establish SIGSEGV handler; remember previous handler *)
     VAR
-      newHandler := LOOPHOLE(Fault,Usignal.SignalActionHandler);
-      vec := Usignal.struct_sigaction{
-               sa_handler := newHandler, 
-               sa_mask := Usignal.empty_sigset_t,
-               sa_flags := Usignal.SA_RESTART,
-               sa_restorer := NIL};
-      ovec: Usignal.struct_sigaction;
-      ret, tmp: Ctypes.int;
-
+      vec, ovec : Usignal.struct_sigaction;
+      ret: Ctypes.int;
     BEGIN
-      vec.sa_mask.val[0] := Word.LeftShift(1, Usignal.SIGVTALRM - 1);
-      tmp := Usignal.SA_RESTART;
+      vec.sa_flags := Word.Or(Usignal.SA_NODEFER,
+                              Word.Or(Usignal.SA_RESTART, Usignal.SA_SIGINFO));
+      vec.sa_sigaction := LOOPHOLE(Fault, Usignal.SignalActionHandler);
+      EVAL Usignal.sigemptyset(ADR(vec.sa_mask));
+      (* block the "SIGVTALRM" signal when signal handlers are called *)
+      EVAL Usignal.sigaddset(ADR(vec.sa_mask), Usignal.SIGVTALRM);
       ret := Usignal.sigaction(Usignal.SIGSEGV, ADR(vec), ADR(ovec));
       <* ASSERT ret = 0 *>
-      defaultActionSIGSEGV := ovec.sa_handler;
-      defaultSIGSEGV := LOOPHOLE(defaultActionSIGSEGV,Usignal.SignalHandler);
+      defaultSIGSEGV := ovec.sa_sigaction;
     END;
 
     (* establish signal handler for all other signals that dump core, if no
        handler exists *)
     PROCEDURE OverrideDefault (sig: Ctypes.int) =
       VAR
-        newHandler := LOOPHOLE(Core,Usignal.SignalActionHandler);
-        vec := Usignal.struct_sigaction{
-                 sa_handler := newHandler, 
-                 sa_mask := Usignal.empty_sigset_t,
-                 sa_flags := Usignal.SA_RESTART,
-                 sa_restorer := NIL};
-        ovec: Usignal.struct_sigaction;
-        ret := Usignal.sigaction(sig, ADR(vec), ADR(ovec));
+        vec, ovec: Usignal.struct_sigaction;
+        ret: Ctypes.int;
       BEGIN
-        vec.sa_mask.val[0] := Word.LeftShift(1, Usignal.SIGVTALRM - 1);
+        vec.sa_flags := Usignal.SA_SIGINFO;
+        vec.sa_sigaction := Core;
+        EVAL Usignal.sigemptyset(ADR(vec.sa_mask));
+        EVAL Usignal.sigaddset(ADR(vec.sa_mask), Usignal.SIGVTALRM);
+        ret := Usignal.sigaction(sig, ADR(vec), ADR(ovec));
         <* ASSERT ret = 0 *>
-        IF ovec.sa_handler # Usignal.SIG_DFL THEN
+        (* If the old handler was not the default, restore it. *)
+        IF ovec.sa_sigaction # Usignal.SIG_DFL THEN
           ret := Usignal.sigaction(sig, ADR(ovec), ADR(vec));
           <* ASSERT ret = 0 *>
         END;
       END OverrideDefault;
     BEGIN
+      (* override signal handling for all signals that normally dump core *)
       OverrideDefault(Usignal.SIGQUIT);
       OverrideDefault(Usignal.SIGILL);
       OverrideDefault(Usignal.SIGTRAP);
       OverrideDefault(Usignal.SIGIOT);
-      OverrideDefault(Usignal.SIGEMT);
       OverrideDefault(Usignal.SIGFPE);
       OverrideDefault(Usignal.SIGBUS);
       OverrideDefault(Usignal.SIGSYS);
@@ -101,17 +99,17 @@ PROCEDURE Init () =
    action. *)
 
 PROCEDURE Fault (sig : Ctypes.int;
-                 scp : Usignal.struct_sigcontext;
-                 code: Ctypes.int) =
+                 sip : Usignal.siginfo_t_fault_star;
+                 uap : Uucontext.ucontext_t_star) =
   BEGIN
-    IF RTHeapRep.Fault(LOOPHOLE(scp.cr2, ADDRESS)) THEN
+    (* try handling memory fault using "RTHeapRep.Fault" *)
+    IF RTHeapRep.Fault(LOOPHOLE(uap.uc_mcontext.cr2, ADDRESS), mode) THEN
       RETURN;
     END;
-    IF defaultActionSIGSEGV = Usignal.SIG_IGN THEN RETURN; END;
-    IF defaultActionSIGSEGV = Usignal.SIG_DFL THEN
-      Core(sig, scp, code);
-    ELSE
-      defaultSIGSEGV(sig, scp, code);
+    (* otherwise, use "defaultSIGSEGV" to handle the fault *)
+    IF defaultSIGSEGV = Usignal.SIG_IGN THEN RETURN;
+    ELSIF defaultSIGSEGV = Usignal.SIG_DFL THEN Core(sig, sip, uap);
+    ELSE defaultSIGSEGV(sig, sip, uap);
     END;
   END Fault;
 
@@ -122,23 +120,37 @@ PROCEDURE Fault (sig : Ctypes.int;
 
 VAR dumped_core := FALSE;
 
-PROCEDURE Core (             sig : Ctypes.int;
-                <* UNUSED *> scp : Usignal.struct_sigcontext;
-                <* UNUSED *> code: Ctypes.int) =
-  VAR
-    ovec: Usignal.struct_sigaction;
-    vec := Usignal.struct_sigaction{sa_handler := Usignal.SIG_DFL,
-        sa_mask := Usignal.empty_sigset_t,
-        sa_flags := Usignal.SA_RESTART, sa_restorer := NIL};
+PROCEDURE Core (sig : Ctypes.int;
+     <*UNUSED*> sip : Usignal.siginfo_t_star;
+     <*UNUSED*> uap : Uucontext.ucontext_t_star) =
   BEGIN
     INC(RT0u.inCritical);
     IF NOT dumped_core THEN
+      (* indicate that this thread will dump core *)
       dumped_core := TRUE;
-      EVAL RTHeapRep.Crash();      (* clean up the heap *)
-      EVAL Usignal.sigaction(sig, ADR(vec), ADR(ovec)); (* establish default action *)
-      EVAL Usignal.sigsetmask(0);
-      (** EVAL Usignal.kill(Uprocess.getpid(), sig); (* dump core *) **)
-      Cstdlib.abort (); (* dump core *)
+
+      (* clean up the heap *)
+      EVAL RTHeapRep.Crash();
+
+      (* establish default action *)
+      VAR
+        vec: Usignal.struct_sigaction;
+      BEGIN
+        vec.sa_flags := 0;
+        vec.sa_sigaction := Usignal.SIG_DFL;
+        EVAL Usignal.sigemptyset(ADR(vec.sa_mask));
+        EVAL Usignal.sigaction(sig, ADR(vec), NIL);
+      END;
+
+      (* unblock signals *)
+      VAR set: Uucontext.sigset_t;
+      BEGIN
+        EVAL Usignal.sigemptyset(ADR(set));
+        EVAL Usignal.sigprocmask(Usignal.SIG_SETMASK, ADR(set), NIL);
+      END;
+
+      (* now, dump core *)
+      Cstdlib.abort ();
       <* ASSERT FALSE *>
     END;
     DEC(RT0u.inCritical);
@@ -146,17 +158,18 @@ PROCEDURE Core (             sig : Ctypes.int;
 
 (* System-call faults are handled in RTHeapDepC.c *)
 
-PROCEDURE TimeUsed (): REAL =
-  VAR usage: Uresource.struct_rusage;
+PROCEDURE TimevalSecs(READONLY t: Utime.struct_timeval): REAL =
   BEGIN
-    VAR ret := Uresource.getrusage(Uresource.RUSAGE_SELF, usage);
-    BEGIN
-      <* ASSERT ret # -1 *>
-    END;
-    RETURN (FLOAT(usage.ru_utime.tv_sec)
-              + FLOAT(usage.ru_utime.tv_usec) / 1000000.0)
-             + (FLOAT(usage.ru_utime.tv_sec)
-                  + FLOAT(usage.ru_utime.tv_usec) / 1000000.0);
+    RETURN FLOAT(t.tv_sec) + (FLOAT(t.tv_usec) / 1.0e6)
+  END TimevalSecs;
+
+PROCEDURE TimeUsed (): REAL =
+  VAR
+    usage: Uresource.struct_rusage;
+    ret := Uresource.getrusage(Uresource.RUSAGE_SELF, usage);
+  BEGIN
+    <* ASSERT ret = 0 *>
+    RETURN TimevalSecs(usage.ru_utime) + TimevalSecs(usage.ru_stime);
   END TimeUsed;
 
 PROCEDURE VMFaultTime (): REAL =
