@@ -49,6 +49,14 @@ find . \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
           \( -name 'CVS' -a -type d \) \) -print | \
   sed -e 's;^./;;' >> .tar-exclude
 
+TARGETS=`cd ${ROOT}/m3-sys/cm3/src/config; echo *`
+
+for p in ${PKGS}; do
+  for t in ${TARGETS}; do
+    echo ${p}/${t} >> .tar-exclude
+  done
+done
+
 echo "archiving..."
 export GZIP="-9 -v"
 ${TAR} -czf ${ARCHIVE} --files-from .tar-include --exclude-from .tar-exclude \
