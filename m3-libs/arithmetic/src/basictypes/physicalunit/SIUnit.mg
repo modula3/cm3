@@ -1,4 +1,4 @@
-GENERIC MODULE SIUnit(RT,UU,DB);
+GENERIC MODULE SIUnit(RT,UU,UUList,DB);
 
 (*
   I have collected some more units
@@ -67,20 +67,20 @@ BEGIN
     SU{"¾",     threefourth}
   });
 
-  DB.AddUnit(db,voltage,scales:=SUA{
-    SU{"mV",    milli,                    flags := isUnit},
-    SU{"V",     one,                      flags := isUnit+defScale},
-    SU{"kV",    kilo,                     flags := isUnit},
-    SU{"MV",    mega,                     flags := isUnit},
-    SU{"GV",    giga,                     flags := isUnit}
-  });
-
   DB.AddUnit(db,angle,scales:=SUA{
     SU{"''",    radPerDeg/(sixty*sixty),  flags := isUnit},
     SU{"'",     radPerDeg/(sixty),        flags := isUnit},
     SU{"grad",  radPerGrad},
     SU{"°",     radPerDeg,                flags := isUnit+defScale},
     SU{"rad",   one}
+  });
+
+  DB.AddUnit(db,frequency,flags:=independent,scales:=SUA{
+    SU{"bpm",   one/sixty},
+    SU{"Hz",    one,                      flags := isUnit+defScale},
+    SU{"kHz",   kilo,                     flags := isUnit},
+    SU{"MHz",   mega,                     flags := isUnit},
+    SU{"GHz",   giga,                     flags := isUnit}
   });
 
   DB.AddUnit(db,time,scales:=SUA{
@@ -91,14 +91,6 @@ BEGIN
     SU{"h",     sixty*sixty,              flags := isUnit},
     SU{"d",     daySecs,                  flags := isUnit},
     SU{"a",     yearSecs,                 flags := isUnit}
-  });
-
-  DB.AddUnit(db,frequency,flags:=independent,scales:=SUA{
-    SU{"bpm",   one/sixty},
-    SU{"Hz",    one,                      flags := isUnit+defScale},
-    SU{"kHz",   kilo,                     flags := isUnit},
-    SU{"MHz",   mega,                     flags := isUnit},
-    SU{"GHz",   giga,                     flags := isUnit}
   });
 
   DB.AddUnit(db,length,scales:=SUA{
@@ -178,6 +170,14 @@ BEGIN
     SU{"A",     one,                      flags := isUnit+defScale}
   });
 
+  DB.AddUnit(db,voltage,scales:=SUA{
+    SU{"mV",    milli,                    flags := isUnit},
+    SU{"V",     one,                      flags := isUnit+defScale},
+    SU{"kV",    kilo,                     flags := isUnit},
+    SU{"MV",    mega,                     flags := isUnit},
+    SU{"GV",    giga,                     flags := isUnit}
+  });
+
   DB.AddUnit(db,resistance,scales:=SUA{
     SU{"Ohm",   one,                      flags := isUnit+defScale},
     SU{"kOhm",  kilo,                     flags := isUnit},
@@ -211,6 +211,8 @@ BEGIN
     SU{"Gbaud", K2*K2*K2,                 flags := isUnit}
   });
 
+  (*put the list in the right order*)
+  db.first := UUList.ReverseD(db.first);
   RETURN db;
 END CreateDatabase;
 

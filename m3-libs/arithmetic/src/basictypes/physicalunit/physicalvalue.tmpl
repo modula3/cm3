@@ -29,9 +29,10 @@ readonly proc SIUnit (nm, field) is
   local rfield  = nm & "Basic"
   local rtrans  = nm & "Trans"
   local ruu     = nm & "UsualUnit"
+  local ruulist = ruu & "List"
   local rudb    = nm & "UnitDatabase"
   build_generic_intf (siunit, "SIUnit", [rudb], VISIBLE)
-  build_generic_impl (siunit, "SIUnit", [rtrans, ruu, rudb])
+  build_generic_impl (siunit, "SIUnit", [rtrans, ruu, ruulist, rudb])
 end
 
 
