@@ -34,11 +34,29 @@ P="${P} tcp"
 [ "${M3OSTYPE}" = "WIN32" -o -n "${CM3_ALL}" ] && P="${P} tapi"
 [ "${HAVE_SERIAL}" = "yes" -o -n "${CM3_ALL}" ] && P="${P} serial"
 
+# tools
+P="${P} m3tk"
+P="${P} mtex"
+P="${P} m3totex"
+P="${P} m3tohtml"
+P="${P} cmpdir"
+P="${P} cmpfp"
+P="${P} dirfp"
+P="${P} uniq"
+P="${P} pp"
+
 # network objects -- distributed programming
 P="${P} netobj"
 P="${P} netobjd"
-P="${P} m3tk"
 P="${P} stubgen"
+
+# database packages
+P="${P} odbc"
+P="${P} postgres95"
+P="${P} db"
+P="${P} smalldb"
+P="${P} stable"
+P="${P} stablegen"
 
 # the standard graphical user interface: trestle and formsvbt
 [ "${M3OSTYPE}" != "WIN32" -o -n "${CM3_ALL}" ] && P="${P} X11R4"
@@ -54,3 +72,10 @@ P="${P} formsvbt"
 P="${P} formsview"
 P="${P} formsedit"
 
+# more tools
+P="${P} recordheap"
+P="${P} rehearsecode"
+P="${P} replayheap"
+P="${P} showheap"
+P="${P} shownew"
+P="${P} showthread"

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.4 2001-02-13 23:31:49 wagner Exp $
+# $Id: pkgmap.sh,v 1.5 2001-02-24 15:41:52 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -37,10 +37,10 @@ while [ -n "$1" ] ; do
       PKG_ACTION="${PKG_ACTION} ; $2"
     fi
     shift
-  elif [ -d "$1" ] ; then
-    PKGS="${PKGS} $1"
   elif [ -d "$ROOT/$1" ] ; then
     PKGS="${PKGS} $ROOT/$1"
+  elif [ -d "$1" ] ; then
+    PKGS="${PKGS} $1"
   else
     p=`pkgpath $1`
     if [ -d "$p" ] ; then
