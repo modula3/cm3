@@ -1,4 +1,4 @@
-GENERIC INTERFACE RootBasic(P,R);
+GENERIC INTERFACE RootBasic(R,P);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Arithmetic on the roots of polynomials

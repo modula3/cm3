@@ -229,6 +229,21 @@ BEGIN
 
 END EvalDerivative;
 
+(*--------------------*)
+(*Horner's scheme with polynomial as argument*)
+PROCEDURE Compose(x,y:T;           (*y(x) - apply y on the values of x*)
+                 ):T=
+VAR
+  z:=NEW(T,1);
+BEGIN
+  z[0]:=y[LAST(y^)];
+  FOR i:=LAST(y^)-1 TO 0 BY -1 DO
+    z:=Mul(x,z);
+    z[0]:=z[0]+y[i];
+  END;
+  RETURN z;
+END Compose;
+
 (*==========================*)
 BEGIN
   Zero:=NEW(T,1); Zero[0] := R.Zero;

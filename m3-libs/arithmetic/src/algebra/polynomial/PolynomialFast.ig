@@ -67,5 +67,9 @@ PROCEDURE EvalDerivative
               xi:R.T;               (*for this argument*)
           VAR pd:ARRAY OF R.T;      (*returning x(xi), x'(xi)...*)
                );
+
+PROCEDURE Compose(x,y:T;           (*y(x) - apply y on the values of x*)
+                 ):T;
+
 (*==========================*)
 END PolynomialFast.

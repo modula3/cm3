@@ -4,6 +4,6 @@ template("chebypolynomial")
 
 
 generic_module("ChebyPolynomialFast")
-ChebyPolynomialFast("Real",     "Real")
-ChebyPolynomialFast("LongReal", "LongReal")
-ChebyPolynomialFast("Extended", "Extended")
+ChebyPolynomialFast("Real",     "Real",     "Basic", "Fast")
+ChebyPolynomialFast("LongReal", "LongReal", "Basic", "Fast")
+ChebyPolynomialFast("Extended", "Extended", "Basic", "Fast")

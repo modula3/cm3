@@ -1,4 +1,4 @@
-GENERIC INTERFACE RootApproximation(CRt,C,RRt,R);
+GENERIC INTERFACE RootApproximation(R,RRt,C,CRt);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Direct access to root finders
