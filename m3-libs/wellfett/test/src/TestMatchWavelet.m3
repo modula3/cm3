@@ -89,9 +89,9 @@ PROCEDURE MatchPattern (target                               : S.T;
       abscissa[FIRST(abscissa^)], abscissa[LAST(abscissa^)], ymin, ymax);
 
     psi.scale(wavescale).clipToArray(first, basis[LAST(basis^)]);
-    PL.SetColor0(1);
+    PL.SetFGColorDiscr(1);
     PL.PlotLines(abscissa^, basis[LAST(basis^)]);
-    PL.SetColor0(2);
+    PL.SetFGColorDiscr(2);
     FOR j := -translates TO translates - 1 DO
       phivan.scale(wavescale).clipToArray(
         first - twonit * j, basis[j + translates]);
@@ -99,7 +99,7 @@ PROCEDURE MatchPattern (target                               : S.T;
     END;
 
     target.clipToArray(first, targetvec^);
-    PL.SetColor0(3);
+    PL.SetFGColorDiscr(3);
     PL.PlotLines(abscissa^, targetvec^);
 
     (*
@@ -118,7 +118,7 @@ PROCEDURE MatchPattern (target                               : S.T;
                     TEXT{Fmt.Int(translates), Fmt.Int(size),
                          RF.Fmt(coef.res), VF.Fmt(coef.x)}));
 
-    PL.SetColor0(4);
+    PL.SetFGColorDiscr(4);
     PL.PlotLines(abscissa^, M.MulTV(basis, coef.x)^);
 
     PL.Exit();
@@ -671,6 +671,14 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
           RETURN EigenDistBSpline(Refn.TransitionEV(hprimal).eigenvalues);
         END TransitionBSpline;
 
+      PROCEDURE TransitionATATrace (x: V.T): R.T =
+        VAR
+          hprimal := GetLiftedPrimalGeneratorMask(
+                       hdualnovan, gdual0novan, SplitParamVec(x));
+        BEGIN
+          RETURN M.Trace(M.MulMMA(Refn.TransitionMatrix(hprimal)));
+        END TransitionATATrace;
+
       VAR
         mc := SplitParamVec(x);
         derdist := DeriveDist(normalMat, targetCor, targetNormSqr, mc.lift);
@@ -687,11 +695,12 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         IO.Put(
           Fmt.FN("ComputeOptCritDiff for x=%s", ARRAY OF TEXT{VF.Fmt(x)}));
         FOR i := FIRST(dx^) TO LAST(dx^) DO dx[i] := dxv END;
-        CASE 2 OF
+        CASE 3 OF
         | 0 =>
             dersmooth := Fn.EvalCentralDiff2(SquareSmoothEstimate, x, dx);
         | 1 => dersmooth := Fn.EvalCentralDiff2(TransitionSpecRad, x, dx);
         | 2 => dersmooth := Fn.EvalCentralDiff2(TransitionBSpline, x, dx);
+        | 3 => dersmooth := Fn.EvalCentralDiff2(TransitionATATrace, x, dx);
         ELSE
           <*ASSERT FALSE*>
         END;
@@ -710,8 +719,8 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
 
 
     CONST
-      maxIter    = 10;
-      smoothFac  = 1.5D0;
+      maxIter    = 30;
+      smoothFac  = 2.5D0;
       maxSubIter = 30;
 
       tol     = 1.0D-4;
@@ -744,17 +753,18 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
       smoothWeightFade := smoothWeight / RIntPow.Power(smoothFac, maxIter);
 
     BEGIN
+      PL.Init();
       (*IO.Put(Fmt.FN("targetCor %s", ARRAY OF TEXT{VF.Fmt(targetCor)}));*)
       FOR iter := 0 TO maxIter DO
         VAR
           precOk            := FALSE;
-          subiter: CARDINAL := 0;
+          subIter: CARDINAL := 0;
         BEGIN
           WHILE NOT precOk DO
-            IF subiter >= maxSubIter THEN
+            IF subIter >= maxSubIter THEN
               RAISE NA.Error(NA.Err.not_converging);
             END;
-            INC(subiter);
+            INC(subIter);
             VAR der := ComputeOptCritDiff(x);
             BEGIN
               x := V.Sub(x, LA.LeastSquares(
@@ -763,8 +773,19 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
             END;
           END;
         END;
+        VAR
+          mc := SplitParamVec(x);
+          gdual := gdual0.superpose(
+                     hdualvan.convolve(
+                       mc.lift.scale(R.One / mc.amp).upsample(2)));
+        BEGIN
+          PL.StartPage();
+          WP.PlotWavelets(hdual, gdual, levels);
+          (*PL.StopPage();*)
+        END;
         smoothWeightFade := smoothWeightFade * smoothFac;
       END;
+      PL.Exit();
       RETURN SplitParamVec(x);
     END;
   END MatchPatternSmooth;
@@ -832,20 +853,20 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
                   vanishing)), SF.Fmt(gdual), SF.Fmt(SIntPow.MulPower(
                   GetLiftedPrimalGeneratorMask( hdualnovan, gdual0novan,
                   mc).alternate(), vanatom, vanishing))*)}));
-    CASE 0 OF
+    CASE 2 OF
     | 0 => PL.Init(); WP.PlotWavelets(hdual, gdual, levels); PL.Exit();
     | 1 =>
         PL.Init();
         PL.SetEnvironment(
           MIN(lefttarget, MIN(leftpsidual, leftpsidual0)),
           MAX(righttarget, MAX(rightpsidual, rightpsidual0)), ymin, ymax);
-        PL.SetColor0(3);
+        PL.SetFGColorDiscr(3);
         PL.PlotLines(V.ArithSeq(target.getNumber(), lefttarget, grid)^,
                      target.getData()^);
-        PL.SetColor0(1);
+        PL.SetFGColorDiscr(1);
         PL.PlotLines(V.ArithSeq(psidual0.getNumber(), leftpsidual0, grid)^,
                      psidual0.getData()^);
-        PL.SetColor0(4);
+        PL.SetFGColorDiscr(4);
         PL.PlotLines(V.ArithSeq(psidual.getNumber(), leftpsidual, grid)^,
                      psidual.getData()^);
         PL.Exit();
@@ -922,7 +943,7 @@ PROCEDURE Test () =
         *)
         TestMatchPatternSmooth(Refn.Refine(BSpl.WaveletMask(2, 8),
                                            BSpl.GeneratorMask(2), 6).scale(
-                                 64.0D0).translate(0), 6, 2, 8, 5, 1.0D-5);
+                                 64.0D0).translate(50), 6, 2, 8, 5, 1.0D-4);
     | Example.matchSincSmooth =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
