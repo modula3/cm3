@@ -1,8 +1,9 @@
 GENERIC MODULE VectorTrans(R, RT, CT);
 (*Copyright (c) 1996, m3na project *)
 
-<*UNUSED*>
-CONST Module = "VectorTrans.";
+<* UNUSED *>
+CONST
+  Module = "VectorTrans.";
 
 (*-----------------*)
 PROCEDURE Norm1 (x: T): R.T =
@@ -21,6 +22,16 @@ PROCEDURE Norm2 (x: T): R.T =
     END;
     RETURN RT.SqRt(sum);
   END Norm2;
+
+(*-----------------*)
+PROCEDURE Norm2Sqr (x: T): R.T =
+  VAR sum := R.Zero;
+  BEGIN
+    FOR i := FIRST(x^) TO LAST(x^) DO
+      sum := R.Add(sum, CT.AbsSqr(x[i]));
+    END;
+    RETURN sum;
+  END Norm2Sqr;
 
 (*-----------------*)
 PROCEDURE NormInf (x: T): R.T =
