@@ -20,6 +20,8 @@ include_dir("polynomial")
 include_dir("root")
 include_dir("algebra")
 
+include_dir("nonlinear")
+
 
 module("xUtils")
 export_interface("xUtils")

@@ -18,32 +18,17 @@ IMPORT Fmt,
        LongRealComplexPolynomialBasic AS CP,
        LongRealComplexRootBasic       AS Rt,
        LongRealRootApproximation      AS RtA,
+       LongRealFindZero      AS FZ,
        Integer32Basic        AS I,
        Integer32RootBasic    AS IR,
        Integer32PolynomialBasic  AS IP,
        Integer32PolynomialFmtLex AS IPF,
        Thread,Wr;
-FROM xReal64 IMPORT Array,Ftn;
-IMPORT xRoot;
 (*=======================*)
 CONST
   Module = "TestRoot.";
-(*---------------------*)
-VAR (*globally visible*)
-  r1:=-10.0D0; r2:=2.0D0; r3:=10.0D0;
 
 (*---------------------*)
-PROCEDURE myfun(x:R.T):R.T=
-BEGIN
-  RETURN (x-r1)*(x-r2)*(x-r3);
-END myfun;
-(*---------------------*)
-PROCEDURE myfun2(x:R.T; VAR f,df:R.T)=
-BEGIN
-  f:=(x-r1)*(x-r2)*(x-r3);
-  df:=(x-r2)*(x-r3)+(x-r1)*(x-r3)+(x-r1)*(x-r2);
-END myfun2;
-
 PROCEDURE TestPolyRoots (p:CP.T; READONLY rt:Rt.RootArray) =
 BEGIN
 (*
@@ -129,17 +114,35 @@ CONST
   prec3Style = RF.FmtStyle{style:=Fmt.Style.Fix,prec:=3};
   prec5Style = RF.FmtStyle{style:=Fmt.Style.Fix,prec:=5};
 
+(*---------------------*)
+VAR (*globally visible*)
+  r1:=-10.0D0; r2:=2.0D0; r3:=10.0D0;
+
+(*---------------------*)
+PROCEDURE MyFun(x:R.T):R.T=
+BEGIN
+  RETURN (x-r1)*(x-r2)*(x-r3);
+END MyFun;
+(*---------------------*)
+PROCEDURE MyFun2(x:R.T):FZ.DerivativeArray2=
+BEGIN
+  RETURN FZ.DerivativeArray2{
+           (x-r1)*(x-r2)*(x-r3),
+           (x-r2)*(x-r3)+(x-r1)*(x-r3)+(x-r1)*(x-r2)
+         };
+END MyFun2;
+
 (*=========================*)
 (* NonLinears              *)
 (*=========================*)
 (*----------------------*)
-PROCEDURE TestBracket_out():BOOLEAN=
+PROCEDURE TestBracketOut():BOOLEAN=
 CONST
-  ftn = Module & "TestBracket_out";
+  ftn = Module & "TestBracketOut";
   maxiter=10;
 VAR
   result:=TRUE;
-  x1,x2:R.T;
+  x:FZ.Bracket;
 BEGIN
   Debug(1,ftn,"begin\n");
   Msg("true roots: r1=" & RF.Fmt(r1)
@@ -148,13 +151,13 @@ BEGIN
                & " maxiter=" & Fmt.Int(maxiter)
                & "\n");
   FOR i:=1 TO 50 DO
-    x1:=5.0D0*FLOAT(i,R.T)-50.0D0; x2:=x1+1.0D0;
-    Msg("start at x1=" & RF.Fmt(x1,prec3Style)
-              & " x2=" & RF.Fmt(x2,prec3Style));
+    x.l:=5.0D0*FLOAT(i,R.T)-50.0D0; x.r:=x.l+1.0D0;
+    Msg("start at x.l=" & RF.Fmt(x.l,prec3Style)
+              & " x.r=" & RF.Fmt(x.r,prec3Style));
     TRY
-      IF xRoot.bracket_out(myfun,x1,x2,maxiter:=maxiter) THEN
-         Msg(" end at x1=" & RF.Fmt(x1,prec3Style)
-                  & " x2=" & RF.Fmt(x2,prec3Style)
+      IF FZ.BracketOut(MyFun,x,maxiter:=maxiter) THEN
+         Msg(" end at x.l=" & RF.Fmt(x.l,prec3Style)
+                  & " x.r=" & RF.Fmt(x.r,prec3Style)
                   & "\n");
       ELSE Msg(" not found\n");
       END;
@@ -163,89 +166,90 @@ BEGIN
     END;
   END;
   RETURN result;
-END TestBracket_out;
+END TestBracketOut;
 (*----------------------*)
-PROCEDURE TestBracket_in():BOOLEAN=
+PROCEDURE TestBracketIn():BOOLEAN=
 CONST
-  ftn = Module & "TestBracket_in";
+  ftn = Module & "TestBracketIn";
 VAR
   result:=TRUE;
-  x1,x2:R.T;
+  x:FZ.Bracket;
   nb:CARDINAL:=5;
-  xb1:=NEW(Array,nb);
-  xb2:=NEW(Array,nb);
-  n,nbtmp:CARDINAL;
+  xb:=NEW(REF ARRAY OF FZ.Bracket,nb);
+  n:CARDINAL;
 BEGIN
   Debug(1,ftn,"begin\n");
   Msg("true roots: r1=" & RF.Fmt(r1)
                & " r2=" & RF.Fmt(r2)
                & " r3=" & RF.Fmt(r3)
                & "\n");
-  x1:=-50.0D0; x2:=+50.0D0;
-  Msg("start at x1=" & RF.Fmt(x1,prec3Style)
-            & " x2=" & RF.Fmt(x2,prec3Style)
+  x.l:=-50.0D0; x.r:=+50.0D0;
+  Msg("start at x.l=" & RF.Fmt(x.l,prec3Style)
+            & " x.r=" & RF.Fmt(x.r,prec3Style)
             & " nb=" & Fmt.Int(nb)
             & "\n");
   FOR i:=10 TO 100 BY 10 DO
     n:=i; Msg("n=" & Fmt.Int(n) & "\n");
-    nbtmp:=nb; (*so we don't overwrite nb*)
     TRY
-      IF xRoot.bracket_in(func:=myfun,x1:=x1,x2:=x2,n:=n,
-      xb1:=xb1,xb2:=xb2,nb:=nbtmp) THEN
-         FOR j:=0 TO nbtmp-1 DO
-         Msg(" found  x1=" & RF.Fmt(xb1[j],prec3Style)
-                  & " x2=" & RF.Fmt(xb2[j],prec3Style)
-                  & "\n");
-         END;
-      ELSE Msg(" not found\n");
+      nb:=FZ.BracketIn(func:=MyFun,x:=x,n:=n,xb:=xb^);
+      IF nb>0 THEN
+        FOR j:=0 TO nb-1 DO
+          Msg(" found  x.l=" & RF.Fmt(xb[j].l,prec3Style)
+                   & " x.r=" & RF.Fmt(xb[j].r,prec3Style)
+                   & "\n");
+        END;
+      ELSE
+        Msg(" not found\n");
       END;
     EXCEPT
     | Error(err) => EVAL err;
     END;
   END;
   RETURN result;
-END TestBracket_in;
+END TestBracketIn;
 (*----------------------*)
-PROCEDURE TestBisect():BOOLEAN=
+PROCEDURE TestBisection():BOOLEAN=
 CONST
-  ftn = Module & "TestBisect";
+  ftn = Module & "TestBisection";
 VAR
   result:=TRUE;
-  x1,x2,tol,root:R.T;
+  x:FZ.Bracket;
+  tol,root:R.T;
 BEGIN
   Debug(1,ftn,"begin\n");
   Msg("true roots: r1=" & RF.Fmt(r1)
                & " r2=" & RF.Fmt(r2)
                & " r3=" & RF.Fmt(r3)
                & "\n");
-  x1:=-1.0D0; x2:=2.9D0; tol:=0.001D0;
-  Msg("start at x1=" & RF.Fmt(x1,prec3Style)
-            & " x2=" & RF.Fmt(x2,prec3Style)
+  x.l:=-1.0D0; x.r:=2.9D0; tol:=0.001D0;
+  Msg("start at x.l=" & RF.Fmt(x.l,prec3Style)
+            & " x.r=" & RF.Fmt(x.r,prec3Style)
             & " tol=" & RF.Fmt(tol));
-  root:=xRoot.bisect(myfun,x1,x2,tol);
+  root:=FZ.Bisection(MyFun,x,tol);
   Msg(" found  root=" & RF.Fmt(root,prec3Style)
     & "\n");
   RETURN result;
-END TestBisect;
+END TestBisection;
 (*----------------------*)
 PROCEDURE TestBrent():BOOLEAN=
 CONST
   ftn = Module & "TestBrent";
 VAR
   result:=TRUE;
-  x1,x2,tol,root:R.T;
+  x:FZ.Bracket;
+  tol,root:R.T;
 BEGIN
   Debug(1,ftn,"begin\n");
   Msg("true roots: r1=" & RF.Fmt(r1)
                & " r2=" & RF.Fmt(r2)
                & " r3=" & RF.Fmt(r3)
                & "\n");
-  x1:=-12.0D0; x2:=1.0D0; tol:=0.001D0;
-  Msg("start at x1=" & RF.Fmt(x1,prec3Style)
-            & " x2=" & RF.Fmt(x2,prec3Style)
+  x.l:=-12.0D0; x.r:=1.0D0; tol:=0.001D0;
+  Msg("start at x.l=" & RF.Fmt(x.l,prec3Style)
+            & " x.r=" & RF.Fmt(x.r,prec3Style)
             & " tol=" & RF.Fmt(tol));
   TRY
-    root:=xRoot.brent(myfun,x1,x2,tol:=tol);
+    root:=FZ.Brent(MyFun,x,tol:=tol);
   EXCEPT
   | Error(err) => EVAL err;
   ELSE
@@ -256,12 +260,13 @@ BEGIN
   RETURN result;
 END TestBrent;
 (*----------------------*)
-PROCEDURE TestNewtraph():BOOLEAN=
+PROCEDURE TestNewtonRaphson():BOOLEAN=
 CONST
-  ftn = Module & "TestNewtraph";
+  ftn = Module & "TestNewtonRaphson";
 VAR
   result:=TRUE;
-  x1,x2,tol,root:R.T;
+  x:FZ.Bracket;
+  tol,root:R.T;
   maxiter:CARDINAL;
 BEGIN
   Debug(1,ftn,"begin\n");
@@ -269,31 +274,31 @@ BEGIN
                & " r2=" & RF.Fmt(r2)
                & " r3=" & RF.Fmt(r3)
                & "\n");
-  x1:=6.0D0; x2:=5.0D0; tol:=0.001D0; maxiter:=15;
-FOR i:=0 TO 10 DO
-  x2:=x2+1.1D0;
-  Msg("start at x1=" & RF.Fmt(x1,prec3Style)
-            & " x2=" & RF.Fmt(x2,prec3Style)
-            & " tol=" & RF.Fmt(tol)
-            & " maxiter=" & Fmt.Int(maxiter));
-  TRY
-    root:=xRoot.newtraph(myfun2,x1,x2,tol,maxiter);
-    Msg(" found  root=" & RF.Fmt(root,prec5Style)
-      & "\n");
-  EXCEPT
-  | Error(err) => CASE err OF
-                      | Err.not_bracketed=>Msg(" not bracketed\n");
-                      | Err.out_of_range=>Msg(" jumped out\n");
-                      | Err.not_converging=>Msg(" not converging\n");
-                      ELSE
-                        <*ASSERT FALSE*>
-                      END;
-  ELSE
-    Msg(" other error\n");
+  x.l:=6.0D0; x.r:=5.0D0; tol:=0.001D0; maxiter:=15;
+  FOR i:=0 TO 10 DO
+    x.r:=x.r+1.1D0;
+    Msg("start at x.l=" & RF.Fmt(x.l,prec3Style)
+              & " x.r=" & RF.Fmt(x.r,prec3Style)
+              & " tol=" & RF.Fmt(tol)
+              & " maxiter=" & Fmt.Int(maxiter));
+    TRY
+      root:=FZ.NewtonRaphson(MyFun2,x,tol,maxiter);
+      Msg(" found  root=" & RF.Fmt(root,prec5Style)
+        & "\n");
+    EXCEPT
+    | Error(err) => CASE err OF
+                        | Err.not_bracketed=>Msg(" not bracketed\n");
+                        | Err.out_of_range=>Msg(" jumped out\n");
+                        | Err.not_converging=>Msg(" not converging\n");
+                        ELSE
+                          <*ASSERT FALSE*>
+                        END;
+    ELSE
+      Msg(" other error\n");
+    END;
   END;
-END;
   RETURN result;
-END TestNewtraph;
+END TestNewtonRaphson;
 
 
 
@@ -646,11 +651,11 @@ CONST ftn = Module & "TestCh09_root";
 VAR result:=TRUE;
 BEGIN
   NewLine(); EVAL TestQuadratic();
-  (*NewLine(); EVAL TestBracket_out();*)
-  (*NewLine(); EVAL TestBracket_in();*)
-  (*NewLine(); EVAL TestBisect();*)
-  (*NewLine(); EVAL TestBrent();*)
-  (*NewLine(); EVAL TestNewtraph();*)
+  NewLine(); EVAL TestBracketOut();
+  NewLine(); EVAL TestBracketIn();
+  NewLine(); EVAL TestBisection();
+  NewLine(); EVAL TestBrent();
+  NewLine(); EVAL TestNewtonRaphson();
   NewLine(); EVAL TestPowerSeq();
   NewLine(); EVAL TestRootOp();
 
