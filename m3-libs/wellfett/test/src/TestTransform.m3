@@ -1,20 +1,10 @@
 MODULE TestTransform;
 
 IMPORT LongRealBasic AS R;
-IMPORT LongRealTrans AS RT;
 IMPORT Integer32IntegerPower AS IIntPow;
-IMPORT LongRealIntegerPower AS RIntPow;
 
 IMPORT LongRealVector AS V;
-IMPORT LongRealVectorRep AS VR;
 IMPORT LongRealVectorFast AS VFs;
-IMPORT LongRealVectorTrans AS VT;
-
-IMPORT LongRealMatrix AS M;
-IMPORT LongRealMatrixLapack AS LA;
-
-IMPORT LongRealFunctional AS Fn;
-IMPORT LongRealFunctionalDeriv2 AS FnD;
 
 IMPORT LongRealSignal AS S;
 IMPORT LongRealSignalVector AS SV;
@@ -22,16 +12,10 @@ IMPORT LongRealSignalIntegerPower AS SIntPow;
 IMPORT LongRealDiscreteWaveletTransform AS DWT;
 IMPORT LongRealDyadicFilterBank AS FB;
 
-IMPORT LongRealRefinableFunc AS Refn;
-IMPORT LongRealRefinableSmooth AS RefnSm;
 IMPORT LongRealBSplineWavelet AS BSpl;
 
-IMPORT LongRealFmtLex AS RF;
-IMPORT LongRealVectorFmtLex AS VF;
-(*IMPORT LongRealComplexVectorFmtLex AS CVF;*)
-IMPORT LongRealMatrixFmtLex AS MF;
+(*IMPORT LongRealFmtLex AS RF;*)
 IMPORT LongRealSignalFmtLex AS SF;
-IMPORT LongRealWaveletPlot AS WP;
 IMPORT PLPlot AS PL;
 IMPORT IO, Fmt, Wr, Thread;
 
@@ -55,13 +39,18 @@ PROCEDURE DyadicFilterBankAnalysis (         x        : S.T;
   END DyadicFilterBankAnalysis;
 
 PROCEDURE DyadicFilterBankSynthesis (READONLY x: DWT.DyadicWaveletCoeffs;
-                                     READONLY y: FB.T;                    ):
-  S.T =
-  VAR z := x.low;
-  <*FATAL NA.Error*>(*Number of filters and channels will always match*)
+                                     READONLY y: FB.T;
+                                     van1: CARDINAL; ): S.T =
+  VAR
+    z       := x.low;
+    vanAtom := NEW(S.T).fromArray(ARRAY OF R.T{R.Half, -R.Half});
   BEGIN
     FOR i := LAST(x.high^) TO FIRST(x.high^) BY -1 DO
-      z := y[0].upConvolve(z, 2).superpose(x.high[i].convolve(y[1]));
+      VAR xVan := SIntPow.MulPower(x.high[i], vanAtom, van1);
+      BEGIN
+        z := y[0].upConvolve(z, 2).superpose(
+               xVan.downsample(2).upsample(2).convolve(y[1]));
+      END;
     END;
     RETURN z;
   END DyadicFilterBankSynthesis;
@@ -82,6 +71,7 @@ PROCEDURE PlotSWT (         x        : S.T;
     right := FLOAT(xrec.getLast(), R.T) * grid;
 
   PROCEDURE PlotBand (x: S.T; ) =
+    <*FATAL NA.Error*>(*Number of filters and channels will always match*)
     BEGIN
       PL.SetFGColorDiscr(1);
       PL.SetEnvironment(
@@ -103,6 +93,7 @@ PROCEDURE PlotSWT (         x        : S.T;
 
 PROCEDURE PlotDWT (         x        : S.T;
                    READONLY bank     : ARRAY [0 .. 1] OF FB.T;
+                            van1     : CARDINAL;
                             numLevels: CARDINAL;               ) =
   VAR
     unit     := IIntPow.MulPower(1, 2, numLevels);
@@ -112,11 +103,12 @@ PROCEDURE PlotDWT (         x        : S.T;
   (*role of primal and dual filters is swapped here*)
   VAR
     wt    := DyadicFilterBankAnalysis(x, bank[1], numLevels);
-    xrec  := DyadicFilterBankSynthesis(wt, bank[0]);
+    xrec  := DyadicFilterBankSynthesis(wt, bank[0], van1);
     left  := FLOAT(xrec.getFirst(), R.T) * grid;
     right := FLOAT(xrec.getLast(), R.T) * grid;
 
   PROCEDURE PlotBand (x: S.T; grid: R.T; ) =
+    <*FATAL NA.Error*>(*Number of filters and channels will always match*)
     BEGIN
       PL.SetFGColorDiscr(1);
       PL.SetEnvironment(
@@ -161,7 +153,6 @@ PROCEDURE Test () =
           van0      = 1;
           van1      = 6;
         VAR
-          vanAtom := NEW(S.T).fromArray(ARRAY OF R.T{R.Half, -R.Half});
           bank := TestMatchPatternSmooth(
                     NEW(S.T).fromArray(
                       V.ArithSeq(size, -1.0D0, 2.0D0 / FLOAT(size, R.T))^,
@@ -171,6 +162,7 @@ PROCEDURE Test () =
           reconBank := ARRAY [0 .. 1] OF
                          FB.T{bank[0], FB.T{bank[1, 0].scale(R.Two),
                                             bank[1, 1].scale(R.Two)}};
+        <*FATAL Thread.Alerted, Wr.Failure*>
         BEGIN
           IO.Put(
             Fmt.FN(
@@ -178,7 +170,7 @@ PROCEDURE Test () =
               ARRAY OF
                 TEXT{SF.Fmt(reconBank[0, 0].convolve(reconBank[1, 0])),
                      SF.Fmt(reconBank[0, 1].convolve(reconBank[1, 1]))}));
-          PlotDWT(S.One, reconBank, 1);
+          PlotDWT(S.One, reconBank, van1, 4);
         END;
     ELSE
       <*ASSERT FALSE*>
