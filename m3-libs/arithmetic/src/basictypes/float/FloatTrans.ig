@@ -27,8 +27,13 @@ CONST
   One         = RB.One;
   MinusOne    = RB.MinusOne;
   Two         = RB.Two;
-  SqRtTwo     = FLOAT(1.414213562373095D0,T);
-  LnTwo       = FLOAT(0.693147180559945D0,T);  (*ln(2) *)
+
+  E           = FLOAT(2.71828182845904523536028747135266249776X0,T); (* e *)
+  LnFour      = FLOAT(1.38629436111989061883446424291635313615X0,T); (* ln(4) *)
+  SqRt2ByE    = FLOAT(0.85776388496070679648018964127877247812X0,T); (* sqrt(2/e) *)
+  SqRtTwo     = FLOAT(1.41421356237309504880168872420969807857X0,T); (* sqrt(2) *)
+
+  LnTwo       = LnFour*Half; (*FLOAT(0.693147180559945D0,T);*) (* ln(2) *)
 
   Pi          = FLOAT(3.141592653589793D0,T);
   TwoPi       = FLOAT(6.283185307179586D0,T);
@@ -37,11 +42,12 @@ CONST
   FourOverPi  = FLOAT(1.273239544735163D0,T);
   LnPi        = FLOAT(1.144729885849400D0,T);  (*ln(pi) *)
 
-  E           = FLOAT(2.718281828459045D0,T);  (*natural log base "e"*)
-  EulersGamma = FLOAT(0.577215632901532D0,T);  (*Euler's constant "gamma"*)
-  Golden      = FLOAT(1.618033988749894D0,T);  (*golden ratio*)
+  EulerGamma  = FLOAT(0.577215632901532D0,T);  (*Euler's constant "gamma"*)
+  GoldenRatio = FLOAT(1.618033988749894D0,T);  (*golden ratio*)
   DegPerRad   = FLOAT(57.29577951308232D0,T);  (*degrees per radian*)
   RadPerDeg   = FLOAT(0.017453292519943D0,T);  (*radians per degree*)
+
+CONST
 
 CONST
   Base            = R.Base;

@@ -14,15 +14,6 @@ IMPORT LongRealBasic AS R,
 FROM xUtils IMPORT Error,Err;
 
 CONST Module = "RandomBasic.";
-CONST
-  EulerE =     2.71828182845904523536028747135266249776D0; (* e *)
-
-
-<* UNUSED *>
-CONST
-  LN4 =        1.38629436111989061883446424291635313615D0; (* ln(4) *)
-  Root2ByE =   0.85776388496070679648018964127877247812D0; (* sqrt(2/e) *)
-  Root2 =      1.41421356237309504880168872420969807857D0; (* sqrt(2) *)
 
 (*======================================*)
 REVEAL
@@ -198,14 +189,14 @@ PROCEDURE GammaDev(SELF:T;
         LOOP
           u0 :=  SELF.uniform();
           u1 :=  SELF.uniform();
-          IF (a+EulerE)*u0>EulerE THEN
-            x := -RT.Ln((a+EulerE)*(R.One-u0)/(a*EulerE));
+          IF (a+RT.E)*u0>RT.E THEN
+            x := -RT.Ln((a+RT.E)*(R.One-u0)/(a*RT.E));
             IF u1 <= RT.Pow(x, a-R.One) THEN
               <* ASSERT x>=R.Zero *>
               RETURN x;
             END;
           ELSE
-            x := RT.Pow((a+EulerE)*u0/EulerE, R.One/a);
+            x := RT.Pow((a+RT.E)*u0/RT.E, R.One/a);
             IF u1<=RT.Exp(-x) THEN
               <* ASSERT x>=R.Zero *>
               RETURN x;

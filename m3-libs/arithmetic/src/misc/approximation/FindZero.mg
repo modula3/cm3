@@ -47,10 +47,10 @@ BEGIN
     diff:=xb.r-xb.l;
     (*---grow the smallest one---*)
     IF ABS(f1) < ABS(f2) THEN
-      xb.l:=xb.l-RT.Golden*diff; (*xb.l gets more negative*)
+      xb.l:=xb.l-RT.GoldenRatio*diff; (*xb.l gets more negative*)
       f1:=func(xb.l);
     ELSE
-      xb.r:=xb.r+RT.Golden*diff; (*xb.r gets more positive*)
+      xb.r:=xb.r+RT.GoldenRatio*diff; (*xb.r gets more positive*)
       f2:=func(xb.r);
     END;
   END;
