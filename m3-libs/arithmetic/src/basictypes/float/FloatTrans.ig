@@ -1,4 +1,4 @@
-GENERIC INTERFACE FloatTrans(R,Rb);
+GENERIC INTERFACE FloatTrans(R,RB);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Generic wrapper routines for (mainly) transcendent functions
@@ -12,7 +12,8 @@ If R.T is
 
 (*==========================*)
 
-TYPE T = R.T;
+TYPE
+  T = R.T;
 
 (*=================*)
 TYPE
@@ -20,11 +21,11 @@ TYPE
 
 CONST
   (*---distinguished elements---*)
-  Zero        = Rb.Zero;
+  Zero        = RB.Zero;
   Half        = FLOAT(0.5D0,T);
-  One         = Rb.One;
-  MinusOne    = Rb.MinusOne;
-  Two         = Rb.Two;
+  One         = RB.One;
+  MinusOne    = RB.MinusOne;
+  Two         = RB.Two;
   SqrtTwo     = FLOAT(1.414213562373095D0,T);
   LnTwo       = FLOAT(0.693147180559945D0,T);  (*ln(2) *)
 
@@ -46,6 +47,9 @@ CONST
   Huge = R.MaxFinite/FLOAT(1000.0,T); (*nearly infinite*)
   (*Eps  = Pow(FLOAT(R.Base,T),-FLOAT(R.Precision,T));  (*approx relative machine precision*)  *)
   (*Eps  = LongFloat.Scalb(One,-R.Precision);*)
+
+VAR
+  Eps : T;
 
 <*INLINE*> PROCEDURE Abs   (c:T):T;       (*return magnitude*)
 <*INLINE*> PROCEDURE AbsSqr(c:T):T;       (*return square of the magnitude*)

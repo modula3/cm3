@@ -1,4 +1,4 @@
-GENERIC INTERFACE FloatBasic(R,RTy);
+GENERIC INTERFACE FloatBasic(R,RTy,RFl);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Generic wrapper routines for basic operations of float types
@@ -39,18 +39,9 @@ CONST
 
 (*---- Floating point representations ----*)
 
-<*INLINE*> PROCEDURE FrExp (x: T; VAR exp: INTEGER): T;
-(* returns a value y and sets exp such that x = y * 2^exp,
-    where ABS(y) is in the interval [0.5, 1). *)
-
-<*INLINE*> PROCEDURE LdExp (x: T; exp: INTEGER): T;
-(* returns x * 2^exp. *)
-
-<*INLINE*> PROCEDURE ModF (x: T; VAR(*OUT*) i: T): T;
-(* splits the argument "x" into an integer part "i" and a fractional part "f"
-   such that "f + i = x" and such that "f" and "i" both have the same sign as
-   "x", and returns "f". Although "i" is a LONGREAL, it is set to an integral
-   value. *)
+CONST
+  Scalb = RFl.Scalb;
+  ILogb = RFl.ILogb;
 
 (*==========================*)
 END FloatBasic.

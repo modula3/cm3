@@ -8,9 +8,9 @@ template("float")
 Module("ExtendedType")
 
 generic_module("FloatBasic")
-FloatBasic("Real",     "Real",     "RealType")
-FloatBasic("LongReal", "LongReal", "LongrealType")
-FloatBasic("Extended", "Extended", "ExtendedType")
+FloatBasic("Real",     "Real",     "RealType",     "RealFloat")
+FloatBasic("LongReal", "LongReal", "LongrealType", "LongFloat")
+FloatBasic("Extended", "Extended", "ExtendedType", "ExtendedFloat")
 
 generic_module("FloatTrans")
 FloatTrans("Real",     "Real",     "RealBasic")
