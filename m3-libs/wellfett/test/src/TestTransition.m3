@@ -30,6 +30,9 @@ IMPORT LongRealBasic               AS R,
        IO, Fmt, Wr, Thread,
        NADefinitions AS NA;
 
+CONST
+  AThird = 1.0D0/3.0D0;
+
 
 PROCEDURE TransitionEV (mask : S.T) : Eigen.EV
     RAISES {NA.Error}=
@@ -208,14 +211,19 @@ PROCEDURE EstimateSpecRad(mask:S.T):R.T=
     END;
   END EstimateSpecRad;
 
+PROCEDURE ComputeSpecRad(mask:S.T):R.T RAISES {NA.Error}=
+  BEGIN
+    RETURN CVT.NormInf(TransitionEV(mask).eigenvalues);
+  END ComputeSpecRad;
+
 PROCEDURE CompareEstimate(mask:S.T)=
   <*FATAL NA.Error, Thread.Alerted, Wr.Failure *>
-  VAR
-    specRad:=CVT.NormInf(TransitionEV(mask).eigenvalues);
-    specRadUpper:=EstimateSpecRad(mask);
   BEGIN
     IO.Put(Fmt.FN("%s: %s < %s ?\n",ARRAY OF TEXT
-      {SF.Fmt(mask),RF.Fmt(specRad),RF.Fmt(specRadUpper)}));
+      {SF.Fmt(mask),
+       RF.Fmt(ComputeSpecRad(mask)),
+       RF.Fmt(EstimateSpecRad(mask))
+      }));
   END CompareEstimate;
 
 PROCEDURE RandomMaskWithLeastEstimate():S.T=
@@ -231,8 +239,7 @@ PROCEDURE RandomMaskWithLeastEstimate():S.T=
       slice:=NEW(S.T).fromArray(rndArr).slice(3);
     BEGIN
       FOR j:=FIRST(slice^) TO LAST(slice^) DO
-	slice[j].raiseD((1.0D0/3.0D0-slice[j].offset())/
-                           FLOAT(slice[j].getNumber(),R.T));
+	slice[j].raiseD(AThird/FLOAT(slice[j].getNumber(),R.T)-slice[j].offset());
       END;
       RETURN NEW(S.T).interleave(slice^);
     END;
@@ -240,7 +247,7 @@ PROCEDURE RandomMaskWithLeastEstimate():S.T=
 
 PROCEDURE EstimateChecks()=
   BEGIN
-    CASE 1 OF
+    CASE 2 OF
     | 0 =>
       FOR n:=0 TO 10 DO
         CompareEstimate(RandomMaskWithLeastEstimate());
@@ -248,12 +255,36 @@ PROCEDURE EstimateChecks()=
     | 1 =>
       (* This example shows that the estimation can be arbitrarily bad. *)
       VAR
-        maskArr := ARRAY [0..3] OF R.T{0.0D0,1.0D0/3.0D0,1.0D0/3.0D0,0.0D0};
+        maskArr := ARRAY [0..3] OF R.T{0.0D0,AThird,AThird,0.0D0};
       BEGIN
         FOR n:=0 TO 10 DO
           maskArr[0]:=FLOAT(n,R.T);
-          maskArr[3]:=1.0D0/3.0D0-maskArr[0];
+          maskArr[3]:=AThird-maskArr[0];
           CompareEstimate(NEW(S.T).fromArray(maskArr));
+        END;
+      END;
+    | 2 =>
+      (* Check the same coefficients in different positions.
+         The estimation will remain constant,
+	 what do the real eigenvalues? *)
+      VAR
+        mask0Arr := ARRAY [0..1] OF R.T{AThird,AThird};
+        mask1Arr := ARRAY [0..0] OF R.T{AThird};
+	mask0    := NEW(S.T).fromArray(mask0Arr,0);
+	mask1    := NEW(S.T).fromArray(mask1Arr,2);
+      BEGIN
+        FOR n:=0 TO 10 DO
+          CompareEstimate(mask1.translate(3*n).superpose(mask0));
+        END;
+      END;
+      VAR
+        mask0Arr := ARRAY [0..2] OF R.T{AThird,R.Zero,AThird};
+        mask1Arr := ARRAY [0..0] OF R.T{AThird};
+	mask0    := NEW(S.T).fromArray(mask0Arr,0);
+	mask1    := NEW(S.T).fromArray(mask1Arr,1);
+      BEGIN
+        FOR n:=0 TO 10 DO
+          CompareEstimate(mask1.translate(3*n).superpose(mask0));
         END;
       END;
     ELSE <*ASSERT FALSE*>
@@ -263,7 +294,7 @@ PROCEDURE EstimateChecks()=
 
 PROCEDURE Test()=
   BEGIN
-    CASE 1 OF
+    CASE 2 OF
     | 0 => AnimateTransitionEV();
     | 1 => CurveExamples();
     | 2 => EstimateChecks();
