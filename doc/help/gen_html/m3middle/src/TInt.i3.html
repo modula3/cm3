@@ -1,0 +1,108 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: m3middle/src/TInt.i3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>m3middle/src/TInt.i3</H2></A><HR>
+<inInterface>
+<PRE></PRE> Copyright (C) 1993, Digital Equipment Corporation           
+ All rights reserved.                                        
+ See the file COPYRIGHT for a full description.              
+                                                             
+ File: TInt.i3                                               
+ Last Modified On Thu Mar 10 13:42:53 PST 1994 By kalsow     
+      Modified On Thu May 20 08:20:38 PDT 1993 By muller     
+
+<P><PRE>INTERFACE <interface><A HREF="TInt.m3.html">TInt</A></interface>;
+</PRE>  Modula-3 target description
+<P>
+    This interface provides simulations of the target machine's
+    signed integer operations.
+<P>
+    Unless otherwise specified, the arithmetic operations defined
+    below return TRUE if they succeed in producing a new target value,
+    otherwise they return FALSE.
+
+
+<P><PRE>FROM <A HREF="Target.i3.html">Target</A> IMPORT Int, IChunks;
+
+CONST
+  Zero = Int { IChunks {16_0000, 16_0000, 16_0000, 16_0000}};
+  One  = Int { IChunks {16_0001, 16_0000, 16_0000, 16_0000}};
+  MOne = Int { IChunks {16_ffff, 16_ffff, 16_ffff, 16_ffff}};
+
+PROCEDURE <A HREF="TInt.m3.html#FromInt">FromInt</A> (x: INTEGER;  VAR i: Int): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> converts a host integer 'x' to a target integer 'i' </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="TInt.m3.html#ToInt">ToInt</A> (READONLY i: Int;  VAR x: INTEGER): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> converts a target integer 'i' to a host integer 'x' </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="TInt.m3.html#New">New</A> (READONLY chars: ARRAY OF CHAR;  VAR i: Int): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> converts the string of decimal characters in 'chars' to an integer
+   value in 'i' </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="TInt.m3.html#Add">Add</A> (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> returns 'a + b' unless there's an overflow </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="TInt.m3.html#Subtract">Subtract</A> (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> returns 'a - b' unless there's an overflow </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="TInt.m3.html#Multiply">Multiply</A> (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> returns 'a * b' unless there's an overflow </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="TInt.m3.html#Div">Div</A> (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> returns 'a DIV b' unless there's an overflow </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="TInt.m3.html#Mod">Mod</A> (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> returns 'a MOD b' unless there's an overflow </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="TInt.m3.html#EQ">EQ</A> (READONLY a, b: Int): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> returns 'a = b' </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="TInt.m3.html#LT">LT</A> (READONLY a, b: Int): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> returns 'a &lt; b' </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="TInt.m3.html#LE">LE</A> (READONLY a, b: Int): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> returns 'a &lt;= b' </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="TInt.m3.html#ToChars">ToChars</A> (READONLY i: Int;  VAR buf: ARRAY OF CHAR): INTEGER;
+</PRE><BLOCKQUOTE><EM> converts 'i' to a printable string in 'buf'.  Returns the
+   number of characters in the string.  Returns -1 if 'buf' is too short. </EM></BLOCKQUOTE><PRE>
+
+TYPE ByteArray = ARRAY [0..7] OF [0..255];
+PROCEDURE <A HREF="TInt.m3.html#ToBytes">ToBytes</A> (READONLY i: Int;  VAR buf: ByteArray): INTEGER;
+</PRE><BLOCKQUOTE><EM> converts 'i' to the shortest sequence of bytes in little-endian order
+   which when sign-extended equal 'i'.  Returns the number of
+   significant bytes in the result. </EM></BLOCKQUOTE><PRE>
+
+END TInt.
+</PRE>
+</inInterface>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

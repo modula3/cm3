@@ -1,0 +1,66 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: m3quake/src/MxConfig.i3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>m3quake/src/MxConfig.i3</H2></A><HR>
+<inInterface>
+<PRE></PRE> Copyright 1996 Critical Mass, Inc. All rights reserved.    
+
+<P><PRE>INTERFACE <interface><A HREF="MxConfig.m3.html">MxConfig</A></interface>;
+
+CONST Filename = &quot;cm3.cfg&quot;;
+
+PROCEDURE <A HREF="MxConfig.m3.html#FindFile">FindFile</A> (): TEXT;
+</PRE><BLOCKQUOTE><EM> Returns a path to the current configuration file.  If no
+   configuration file is found, <CODE>NIL</CODE> is returned. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="MxConfig.m3.html#Get">Get</A> (param: TEXT): TEXT;
+</PRE><BLOCKQUOTE><EM> Returns the defined value of <CODE>param</CODE> in current configuration file.
+   If no configuration file is found, <CODE>param</CODE> is not defined, or it
+   cannot be converted to a text value, <CODE>NIL</CODE> is returned. </EM></BLOCKQUOTE><PRE>
+
+END MxConfig.
+</PRE> The configuration file is located by finding the first
+   readable instance of <CODE>Filename</CODE> in the following places:
+   \begin{enumerate}
+   \item the current directory (<CODE>.</CODE>)
+   \item the immediate source directory (<CODE>./src</CODE>)
+   \item a sibling source directory (<CODE>../src</CODE>)
+   \item the directory specified by the M3CONFIG environment variable.
+   \item the directory containing the current executable (if $argv[0]$
+         contains any path elements)
+   \item the directories named by the PATH environment variable.
+   \end{enumerate}
+
+
+<P>
+</inInterface>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

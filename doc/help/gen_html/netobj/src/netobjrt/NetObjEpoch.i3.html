@@ -1,0 +1,60 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: netobj/src/netobjrt/NetObjEpoch.i3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>netobj/src/netobjrt/NetObjEpoch.i3</H2></A><HR>
+<inInterface>
+<PRE></PRE> Copyright (C) 1995, Digital Equipment Corporation        
+ All rights reserved.                                     
+ See the file COPYRIGHT for a full description.           
+                                                          
+ Last modified on Thu Apr 13 13:46:40 PDT 1995 by kalsow  
+
+<P><PRE>INTERFACE <interface>NetObjEpoch</interface>;
+
+IMPORT <A HREF="#x1">OSConfig</A>;
+
+CONST T = OSConfig.UnixEpoch;
+</PRE><BLOCKQUOTE><EM> <CODE>X - T</CODE> gives the network object time that corresponds to a
+   <CODE>Time.T</CODE> of <CODE>X</CODE>.  The base of network object time is Jan 1, 1970.
+   The conventional Unix epoch is also Jan 1, 1970. </EM></BLOCKQUOTE><PRE>
+
+END NetObjEpoch.
+</PRE>
+</inInterface>
+<HR>
+<A NAME="x1">interface OSConfig is in:
+</A><UL>
+<LI><A HREF="../../../libm3/src/os/POSIX/OSConfig.i3.html#0TOP0">libm3/src/os/POSIX/OSConfig.i3</A>
+<LI><A HREF="../../../libm3/src/os/WIN32/OSConfig.i3.html#0TOP0">libm3/src/os/WIN32/OSConfig.i3</A>
+</UL>
+<P>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

@@ -1,0 +1,81 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: libm3/src/pickle/ver2/PackingTypeCode.m3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>libm3/src/pickle/ver2/PackingTypeCode.m3</H2></A><HR>
+<inModule>
+<PRE></PRE> <P>
+ * For more information on this program, contact Blair MacIntyre          
+ * (bm@cs.columbia.edu) or Steven Feiner (feiner@cs.columbia.edu)         
+ * at the Computer Science Dept., Columbia University,                    
+ * 500 W 120th St, Room 450, New York, NY, 10027.                         
+ *                                                                        
+ * Copyright (C) Blair MacIntyre 1995, Columbia University 1995           
+ * 
+ 
+
+<P><PRE>MODULE <module><implements><A HREF="PackingTypeCode.i3.html">PackingTypeCode</A></implements></module>;
+
+IMPORT <A HREF="../../../../m3core/src/word/Word.i3.html">Word</A>;
+
+PROCEDURE <A NAME="Equal"><procedure>Equal</procedure></A>(a, b: T): BOOLEAN =
+  BEGIN
+    RETURN a.from = b.from AND a.to = b.to AND a.tc = b.tc;
+  END Equal;
+
+PROCEDURE <A NAME="Hash"><procedure>Hash</procedure></A>(a: T): Word.T =
+  BEGIN
+    RETURN Word.Xor(Word.Xor(a.to, a.from), a.tc);
+  END Hash;
+
+PROCEDURE <A NAME="Compare"><procedure>Compare</procedure></A>(a, b: T): [-1..1] =
+  BEGIN
+    IF a.from &gt; b.from THEN
+      RETURN 1;
+    ELSIF a.from &lt; b.from THEN
+      RETURN -1;
+    ELSIF a.to &gt; b.to THEN
+      RETURN 1;
+    ELSIF a.to &lt; b.to THEN
+      RETURN -1;
+    ELSIF a.tc &gt; b.tc THEN
+      RETURN 1;
+    ELSIF a.tc &lt; b.tc THEN
+      RETURN -1;
+    END;
+    RETURN 0;
+  END Compare;
+
+BEGIN
+END PackingTypeCode.
+</PRE>
+</inModule>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

@@ -1,0 +1,54 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: libm3/src/pickle/ver2/PickleRd.i3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>libm3/src/pickle/ver2/PickleRd.i3</H2></A><HR>
+<inInterface>
+<PRE>UNSAFE INTERFACE <interface><A HREF="Pickle2.m3.html">PickleRd</A></interface>;
+
+IMPORT <A HREF="../../../../m3core/src/runtime/common/RTPacking.i3.html">RTPacking</A>, <A HREF="Pickle2.i3.html">Pickle2</A> AS Pickle, <A HREF="ConvertPacking.i3.html">ConvertPacking</A>;
+
+REVEAL
+  Pickle.Reader &lt;: Private;
+
+TYPE
+  Private = Pickle.ReaderPublic OBJECT
+      packing: RTPacking.T;
+      packingCode: INTEGER;
+      conversion: ConvertPacking.Kind;
+    END;
+
+VAR myPacking: RTPacking.T;       (* our local packing. *)
+
+END PickleRd.
+</PRE>
+</inInterface>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>
