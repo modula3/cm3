@@ -64,14 +64,14 @@ PROCEDURE DiracTransform () =
   VAR
     y := CWT.Analysis(
            S.One, MexicanHat, width,
-           V.GeomSeq(numScales, 30.0D0, RT.Pow(R.Half, R.One / 10.0D0))^);
+           V.GeomSeq(numScales, 30.0D0, RT.Pow(R.Half, R.One / 20.0D0))^);
     m := NEW(M.T, numScales, width);
   BEGIN
     PL.Init();
     PL.SetEnvironment(xmin, xmax, ymin, ymax);
     FOR i := FIRST(m^) TO LAST(m^) DO m[i] := y[i].getData()^; END;
-    PL.PlotImage(M.Transpose(m)^, xmin, xmax, ymin, ymax, -300.0D0, 300.0D0,
-                 xmin, xmax, ymin, ymax);
+    PL.PlotImage(M.Transpose(m)^, xmin, xmax, ymin, ymax, -200.0D0,
+                 200.0D0, xmin, xmax, ymin, ymax);
     PL.Exit();
   END DiracTransform;
 

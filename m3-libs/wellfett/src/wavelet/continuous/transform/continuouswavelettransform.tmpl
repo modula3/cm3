@@ -8,6 +8,7 @@ readonly proc ContinuousWaveletTransform (nm, stem, impl) is
   local rfield   = stem & impl
   local signal   = stem & "Signal"
   local vector   = stem & "Vector"
+  local rtrans   = stem & "Trans"
   local rvector  = stem & "VectorFast"
   local vsupport = stem & "VectorSupport"
   local complex  = stem & "Complex"
@@ -16,5 +17,5 @@ readonly proc ContinuousWaveletTransform (nm, stem, impl) is
 
   build_generic_intf (base, "ContinuousWaveletTransform", [rfield, rvector, signal], VISIBLE)
   build_generic_impl (base, "ContinuousWaveletTransform",
-     [field, vector, vsupport, rvector, signal, complex, cvector, fourier])
+     [field, vector, vsupport, rtrans, rvector, signal, complex, cvector, fourier])
 end
