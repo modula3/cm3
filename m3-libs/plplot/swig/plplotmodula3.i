@@ -429,11 +429,10 @@ IF Tile.yTicksLog IN $1_name THEN
   INC($1,20);
 END;
 $1_name := $1_name - TileSet{Tile.xTicksLog,Tile.yTicksLog};
-CASE $1_name OF
-| TileSet{Tile.box,Tile.ticks} => INC($1,0);
-| TileSet{Tile.box,Tile.ticks,Tile.axes} => INC($1,1);
-| TileSet{Tile.box,Tile.ticks,Tile.axes,Tile.gridMinor} => INC($1,2);
-| TileSet{Tile.box,Tile.ticks,Tile.axes,Tile.gridMinor,Tile.gridMajor} => INC($1,3);
+IF    $1_name = TileSet{Tile.box,Tile.ticks} THEN INC($1,0);
+ELSIF $1_name = TileSet{Tile.box,Tile.ticks,Tile.axes} THEN INC($1,1);
+ELSIF $1_name = TileSet{Tile.box,Tile.ticks,Tile.axes,Tile.gridMinor} THEN INC($1,2);
+ELSIF $1_name = TileSet{Tile.box,Tile.ticks,Tile.axes,Tile.gridMinor,Tile.gridMajor} THEN INC($1,3);
 ELSE
 <*ASSERT FALSE*> (*combination not supported by PLPlot :-( *)
 END;
