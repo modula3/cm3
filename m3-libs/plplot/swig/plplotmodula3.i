@@ -403,6 +403,42 @@ END;%}
 
 %typemap(m3indefault) PLINT oldwin "0"
 
+%insert(m3wrapintf) %{TYPE
+AxesScaling = {none, independent, equal, square};
+Tile = {box, ticks, axes, gridMinor, gridMajor, xTicksLog, yTicksLog};
+TileSet = SET OF Tile;
+%}
+%typemap(m3intype)    PLINT just %{AxesScaling%}
+%typemap(m3indefault) PLINT just %{AxesScaling.independent%}
+%typemap(m3rawarg)    PLINT just %{ORD($1_name)-1%}
+%typemap(m3intype)    PLINT axis %{TileSet%}
+%typemap(m3indefault) PLINT axis %{TileSet{Tile.box,Tile.ticks}%}
+%typemap(m3indecl)    PLINT axis %{$1: C.int;%}
+%typemap(m3rawarg)    PLINT axis %{$1%}
+%typemap(m3in) PLINT axis
+%{IF $1_name = TileSet{} THEN
+$1:=-2;
+ELSIF $1_name = TileSet{Tile.box} THEN
+$1:=-1;
+ELSE
+$1:=0;
+IF Tile.xTicksLog IN $1_name THEN
+  INC($1,10);
+END;
+IF Tile.yTicksLog IN $1_name THEN
+  INC($1,20);
+END;
+$1_name := $1_name - TileSet{Tile.xTicksLog,Tile.yTicksLog};
+CASE $1_name OF
+| TileSet{Tile.box,Tile.ticks} => INC($1,0);
+| TileSet{Tile.box,Tile.ticks,Tile.axes} => INC($1,1);
+| TileSet{Tile.box,Tile.ticks,Tile.axes,Tile.gridMinor} => INC($1,2);
+| TileSet{Tile.box,Tile.ticks,Tile.axes,Tile.gridMinor,Tile.gridMajor} => INC($1,3);
+ELSE
+<*ASSERT FALSE*> (*combination not supported by PLPlot :-( *)
+END;
+END;%}
+
 %typemap(m3inmode)  PLINT *p_argc %{VAR%}
 %typemap(m3intype)  PLINT *p_argc %{CARDINAL%}
 
