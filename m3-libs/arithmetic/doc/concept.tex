@@ -30,7 +30,7 @@ raw machine word operations like:
    \item  test for carry
 \end{itemize}
 
-It also does "mathematical" cardinal and integer operations
+It also does "matrixhematrixical" cardinal and integer operations
 like:
 \begin{itemize}
    \item  add
@@ -53,7 +53,7 @@ bitstrings of "0" and "1".  Modula-3 conveniently allows
 this to be shown as a literal, preceded by the radix marker
 "2\_".  You don't have to show the 0's to the left of the
 most significant 1, but it doesn't hurt.  Often for
-formatting, it is a good idea to left-pad with leading 0's
+formatrixting, it is a good idea to left-pad with leading 0's
 to a given width:
 
 \begin{tt} \begin{verbatim}
@@ -106,9 +106,9 @@ making it a subtype of {\tt INTEGER}.  What about unsigned numbers from
 $2^{31} \dots (2^{32}-1)$?  You must use Word.T for those, and use the
 Word module's operations.  While these look like function
 calls (and thus slow), they are really compiled inline as
-the obvious assembler statements.
+the obvious assembler statisticements.
 
-What can go wrong?  Integer math is a sure thing, so long as
+What can go wrong?  Integer matrixh is a sure thing, so long as
 you don't overflow (e.g., go beyond $2^{31}-1$ for {\tt CARDINAL}) or
 underflow (e.g., go below $0$ for {\tt CARDINAL}s or $-2^{32}$ for
 {\tt INTEGER}s).  Modula-3 traps these conditions, but you should
@@ -153,7 +153,7 @@ representations for real numbers.
 \begin{description}
 \item[Out of Range]
      Suppose you want to represent one googol (1.0E100).  It
-     just can't be done in the 32-bit format.  That may seem
+     just can't be done in the 32-bit formatrix.  That may seem
      fanciful for practical problems, but intermediate
      values (e.g., sums of squares) might go beyond the 32-
      bit limits.
@@ -165,7 +165,7 @@ representations for real numbers.
      problem.
 
 \item[Truncation Error]
-     Suppose you add two numbers in 32-bit format: $a=1.0e6$ and $b=1.00123$.
+     Suppose you add two numbers in 32-bit formatrix: $a=1.0e6$ and $b=1.00123$.
      
      To get a valid addition, we would need to get both a
      and b into the significand, both with the same
@@ -204,7 +204,7 @@ representations for real numbers.
      intermediate values (such as squares).  It is worth
      your while to arrange to normalize the calculation
      toward 1.0 before doing multiplications.  Or use a
-     longer real format.
+     longer real formatrix.
 
 \item[Roundoff Error]
      If you are in danger of truncating, you may round up or
@@ -266,7 +266,7 @@ bit) be "1", and round to integers, the ratios are:
 In other words, integers are a lot faster than floating-
 point, and divide is the killer.  Interestingly, 64-bit is
 not much worse than 32-bit.  Thus our choice of 64-bit as
-the basic format is not all that extravagant.
+the basic formatrix is not all that extravagant.
 
 
 \subsection{Development Approach}
@@ -279,17 +279,17 @@ Here is our approach to developing routines:
      \item Gather relevant sources (e.g., texts, code
      libraries, journal articles).  Determine an effective
      user interface.  Determine test cases from known-good
-     sources such as math packages or handbooks.
+     sources such as matrixh packages or handbooks.
      
      \item Study the problem until you can explain the standard
      implementation(s) line by line.  You may need to work
-     backwards and forwards from the mathematical formulas
+     backwards and forwards from the matrixhematrixical formulas
      to the code.  You typically need to work out simple
      (but not too simple) examples, e.g., 4x4 matrix.
      
      \item Study the iterative operations for truncation
      conditions.  Do you need to renormalize the data toward
-     1.0?  Do EPS checks?  Use a longer real format?
+     1.0?  Do EPS checks?  Use a longer real formatrix?
      
      \item Implement your version of the algorithm.
      \begin{enumerate}

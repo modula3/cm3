@@ -6,7 +6,7 @@ Reinstalled last night, but haven't been able to try the new m3 yet.
 
 Let's see.  Biography.  Here's the one I give to journals:
 
-   Mike received a Bachelor of Science degree in Mathematics from the
+   Mike received a Bachelor of Science degree in Mathematrixics from the
    South Dakota School of Mines and Technology. After working for a
    few years as a mining engineer and computer programmer, he obtained
    a Master of Science degree and a Ph.D. in Computer Science from the
@@ -31,7 +31,7 @@ I'd say that to start with we mostly need LU decomposition
 plus a few auxiliary routines to do iterative refinement, back
 substitution, and return determinants and inverses, etc., goes a long
 ways.  Some basic stuff for sparse systems would be good.  (I haven't
-started working on banded matrices yet, but will soon.) 
+started working on banded matrixrices yet, but will soon.) 
 
 Re. TeX.  I don't know how much you know about TeX, so I may be
 insulting you intelligence here.  An .mf file is a metafont file.

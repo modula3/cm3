@@ -234,7 +234,7 @@ modulo $2^{N/2}+1$
 \end{equation}
 [Which makes possible the calculation of discrete convolutions in $N\ln N$ time]
 still holds). [See also R.Agrawal\&C.Burrus: NTTs to implement fast digital
-convolutions, ProcIEEE 63 (1975) 550; articles by H.Nussbaumer on "Fermat"
+convolutions, ProcIEEE 63 (1975) 550; articles by H.Nussbaumer on "Fermatrix"
 and "Mersenne" transforms, IBMJR\&D 21 (1976) 282 and 498.]
 
 These FFFFTs are of use in applications where it is desirable
@@ -243,7 +243,7 @@ e.g. all-integer convolutions. However, as you can see, NTTs have severe
 word length and transform length limitations; the need for high precision
 modular arithmetic can be a major stumbling block. On the other hand,
 multiplications by W=2 are easy, while modular arithmetic modulo a
-Fermat number is not that hard. Thus using N=16, modulo 65537 arithmetic,
+Fermatrix number is not that hard. Thus using N=16, modulo 65537 arithmetic,
 W=2 [left shift and modulo], Winverse=32769 [right shift; modular
 addition correction if inexact], and all numbers in 0..89 allows
 computation of CC(16) in 16*, many bit shifts and additions.
@@ -288,7 +288,7 @@ time are also discussed in AHU. (This may also be done for Chebyshev
 series...) Given the N roots of a polynomial, you can find its
 coefficients (as Chebyshev or as regular) in $N(\ln N)^2$ time by fast
 polynomial multiplications on a binary tree. On the other hand,
-you can perform a "root squaring" transformation on a polynomial
+you can perform a "root squaring" transformatrixion on a polynomial
 in (Chebyshev or power form)
 \begin{equation}
    P(y) = -P(x)*P(-x)  \mbox{ where }y = x^2

@@ -1,4 +1,8 @@
 *.aux
 *.log
 *.dvi
-
+*.toc
+*.pdf
+*.dvi
+*.ps
+section_*

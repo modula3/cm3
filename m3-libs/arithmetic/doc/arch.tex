@@ -76,7 +76,7 @@ M. Dagenais's ftp site.
 \subsection{Packaging}
 The library is a collection of interface and implementation
 modules (x{\it name}.i3/m3).  [Originally, names were in the DOS 8.3
-format, but as Spencer Allain noted, we can use long names
+formatrix, but as Spencer Allain noted, we can use long names
 if we can tar it all up -- which is now the approach.]
 
 The library is documented with an analysis paper for each
@@ -159,7 +159,7 @@ those, here are the desired operations:
    \item fmt (use one to make a text string)
    \item eq,ne,gt,ge,lt,le (relational operators) [possibly not
      relevant]
-   \item add,sub,mul,div (math operators)
+   \item add,sub,mul,div (matrixh operators)
 \end{itemize}
 
 A group usually also has several distinguished elements,
@@ -219,7 +219,7 @@ operations such as evaluate at x, or take the derivative.
 
 We could distinguish these special uses of arrays by
 BRANDing them.  [I tried that for a while.]  But it is
-convenient to allow structural type matching, so that one
+convenient to allow structural type matrixching, so that one
 "fmt" command works for simple arrays as well as Vectors and
 rows of Matrices.  Therefore all these types are being
 implemented as arrays.  Modula-3 provides several ways to
@@ -229,7 +229,7 @@ dynamic linking, and some for allocation, but the payoff in
 readability is high.
 
 In a few cases (e.g., interpolation tables), we can expect
-the array to be a static or constant.  So the appropriate
+the array to be a statisticic or constant.  So the appropriate
 formal is an open array of REAL64.  If a dynamic array
 happens to be used as the actual parm, it can be
 dereferenced prior to the call:
@@ -238,7 +238,7 @@ dereferenced prior to the call:
      y:=xInterp.linear(xarr^,yarr^,x);
 \end{verbatim} \end{tt}
 
-Modula-3's dynamic arrays only range 0..n-1.  But many math
+Modula-3's dynamic arrays only range 0..n-1.  But many matrixh
 notations call for 1..n or perhaps some offset into the
 array.  To provide syntactic support for the semantics, we
 use this convention:
@@ -286,7 +286,7 @@ If an offset and/or limited length is needed:
 \end{verbatim} \end{tt}
 
 If you seriously need to eliminate the overhead of the
-dynamic references, then you can convert to static arrays:
+dynamic references, then you can convert to statisticic arrays:
 \begin{itemize}
    \item Copy the offending code to a new module
    \item Make a new hardcoded type:
@@ -302,19 +302,19 @@ dynamic references, then you can convert to static arrays:
 The conventions for Matrices are similar to those for
 arrays:
 \begin{tt} \begin{verbatim}
-     PROCEDURE myproc(mat1,mat2:Matrix;.......
-     (*mat1 and mat2 should be mxn Matrices*)
+     PROCEDURE myproc(matrix1,matrix2:Matrix;.......
+     (*matrix1 and matrix2 should be mxn Matrices*)
      VAR
        m:=NUMBER(m1^);    m1:=0;  mm:=m-1;
        n:=NUMBER(m1[0]);  n1:=0;  nn:=n-1;
      BEGIN
-       IF NUMBER(mat2^)#m OR NUMBER(mat2[0])#n THEN
+       IF NUMBER(matrix2^)#m OR NUMBER(matrix2[0])#n THEN
          RAISE Error(Err.bad_size);
        END;
      
        FOR i:=m1 TO mm DO
          FOR j:=n1 TO nn DO
-           (*do something to mat1 and mat2*)
+           (*do something to matrix1 and matrix2*)
          END;
        END;
      END;
