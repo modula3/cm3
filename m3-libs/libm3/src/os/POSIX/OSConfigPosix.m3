@@ -60,7 +60,7 @@ PROCEDURE Init () =
       host_arch  := M3toC.CopyStoT (ADR (uts.machine[0]));
       os_name    := M3toC.CopyStoT (ADR (uts.sysname[0]));
       os_version := M3toC.CopyStoT (ADR (uts.release[0]));
-    ELSE 
+    ELSE
       host_name  := "<unknown>";
       host_arch  := DefaultArch [ORD(Compiler.ThisPlatform)];
       os_name    := DefaultOSName [ORD(Compiler.ThisPlatform)];
