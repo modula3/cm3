@@ -1,0 +1,107 @@
+Each line you enter will be parsed into tokens.
+
+> ;
+Op(;)
+EndMarker()
+
+> .
+Op(.)
+EndMarker()
+
+> ,
+Op(,)
+EndMarker()
+
+> :
+Op(:)
+EndMarker()
+
+> ~
+Op(~)
+EndMarker()
+
+> =
+Op(=)
+EndMarker()
+
+> :=
+Op(:=)
+EndMarker()
+
+> ::
+Op(::)
+EndMarker()
+
+> (
+Op(()
+EndMarker()
+
+> )
+Op())
+EndMarker()
+
+> {
+Op({)
+EndMarker()
+
+> }
+Op(})
+EndMarker()
+
+> [
+Op([)
+EndMarker()
+
+> ]
+Op(])
+EndMarker()
+
+> |
+Op(|)
+EndMarker()
+
+> ->
+Op(->)
+EndMarker()
+
+> #
+Op(#)
+EndMarker()
+
+> <
+Op(<)
+EndMarker()
+
+> >
+Op(>)
+EndMarker()
+
+> >=
+Op(>=)
+EndMarker()
+
+> <=
+Op(<=)
+EndMarker()
+
+> +
+Op(+)
+EndMarker()
+
+> -
+Op(-)
+EndMarker()
+
+> *
+Op(*)
+EndMarker()
+
+> /
+Op(/)
+EndMarker()
+
+> &
+Op(&)
+EndMarker()
+
+> ^D
