@@ -14,13 +14,20 @@ PROCEDURE GenerateMain (base       : Mx.LinkSet;
                         c_output   : Wr.T;
                         cg_output  : M3CG.T;
                         verbose    : BOOLEAN;
-                        windowsGUI : BOOLEAN);
+                        windowsGUI : BOOLEAN;
+                        lazy       : BOOLEAN := FALSE);
 (* write the list of compilation units in 'base' on 'c_output' or
    'cg_output' in a correct Modula-3 initialization order.  If 'c_output'
    is non-NIL, a C source program is generated.  If 'cg_output' is
    non-NIL, a Modula-3 intermediate code file (M3CG) is generated.
    It is a an checked runtime error for both or neither of 'c_output'
    and 'cg_output' to be non-NIL.  It is an error to pass a 'base'
-   that hasn't successfully passed through 'MxCheck.IsProgram'. *)
+   that hasn't successfully passed through 'MxCheck.IsProgram'.
+   If `lazy' is true, only the module(s) exporting Main will be initalially
+   linked (and thus their transitive hull initialized), otherwise all
+   modules will be linked.
+*)
+
+VAR debugLevel: INTEGER;
 
 END MxGen.
