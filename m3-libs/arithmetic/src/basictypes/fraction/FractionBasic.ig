@@ -37,7 +37,7 @@ VAR
 <*INLINE*> PROCEDURE Div(READONLY x,y:T):T RAISES {Error};  (*return x/y*)
 <*INLINE*> PROCEDURE Rec(READONLY x:T):T RAISES {Error};    (*return 1/x*)
 <*INLINE*> PROCEDURE Mod(READONLY x,y:T):T RAISES {Error};  (*return x mod y*)
-<*INLINE*> PROCEDURE DivMod(READONLY x,y:T;VAR r:T):T RAISES {Error};  (*return x/y and write the remainder (0) in r*)
+<*INLINE*> PROCEDURE DivMod(x,y:T;VAR r:T):T RAISES {Error};  (*return x/y and write the remainder (0) in r*)
 <*INLINE*> PROCEDURE IntMod(READONLY x,y:T):T RAISES {Error};  (*return x mod y*)
 
 <*INLINE*> PROCEDURE Square(READONLY x:T):T;         (*return x*x*)
