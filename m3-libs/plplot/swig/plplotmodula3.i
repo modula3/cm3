@@ -303,11 +303,11 @@ IMPORT Ctypes AS C;
 %typemap("m3inmode")  PLFLTArray %{READONLY%}
 %typemap("rawintype") PLFLTArray %{(*ARRAY OF*) C.double%}
 %typemap("m3intype")  PLFLTArray %{V.TBody%}
-%typemap("m3rawarg")  PLFLTArray %{$1_name[0]%}
+%typemap("m3argraw")  PLFLTArray %{$1_name[0]%}
 
-%typemap("m3indecl")  PLFLTArrayFst %{n:=NUMBER($1_name);%}
-%typemap("m3indecl")  PLFLTArrayX   %{nx:=NUMBER($1_name);%}
-%typemap("m3indecl")  PLFLTArrayY   %{ny:=NUMBER($1_name);%}
+%typemap("m3argdecl") PLFLTArrayFst %{n:=NUMBER($1_name);%}
+%typemap("m3argdecl") PLFLTArrayX   %{nx:=NUMBER($1_name);%}
+%typemap("m3argdecl") PLFLTArrayY   %{ny:=NUMBER($1_name);%}
 //%typemap("m3incheck") PLFLTArrayX   %{IF NUMBER($1_name) # nx THEN RAISE NA.Error(Err.bad_size) END;%}
 //%typemap("m3incheck") PLFLTArrayY   %{IF NUMBER($1_name) # ny THEN RAISE NA.Error(Err.bad_size) END;%}
 %typemap("m3incheck") PLFLTArrayCk  %{IF NUMBER($1_name) # n THEN RAISE NA.Error(Err.bad_size) END;%}
@@ -318,9 +318,9 @@ IMPORT Ctypes AS C;
 %typemap("m3inmode")  PLINTArray %{READONLY%}
 %typemap("rawintype") PLINTArray %{C.int%}
 %typemap("m3intype")  PLINTArray %{ARRAY OF INTEGER%}
-%typemap("m3rawarg")  PLINTArray %{$1_name[0]%}
+%typemap("m3argraw")  PLINTArray %{$1_name[0]%}
 
-%typemap("m3indecl")  PLINTArrayFst %{n:=NUMBER($1_name);%}
+%typemap("m3argdecl") PLINTArrayFst %{n:=NUMBER($1_name);%}
 %typemap("m3incheck") PLINTArrayCk  %{IF NUMBER($1_name) # n THEN RAISE NA.Error(Err.bad_size) END;%}
 %typemap("m3incheck") PLINTArrayCkInterim %{IF NUMBER($1_name) # n-1 THEN RAISE NA.Error(Err.bad_size) END;%}
 %typemap("m3incheck:throws") PLINTArrayCk        %{NA.Error%}
@@ -331,20 +331,20 @@ IMPORT Ctypes AS C;
 %typemap("m3inmode")  PLFLTMatrix %{READONLY%}
 %typemap("rawintype") PLFLTMatrix %{(*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*)%}
 %typemap("m3intype")  PLFLTMatrix %{M.TBody%}
-%typemap("m3rawarg")  PLFLTMatrix %{$1[0]%}
+%typemap("m3argraw")  PLFLTMatrix %{$1[0]%}
 
 %typemap("m3intype",numinputs=0) PLArraySize nx %{%}
 %typemap("m3intype",numinputs=0) PLArraySize ny %{%}
 
-%typemap("m3indecl")  PLFLTMatrixFst %{$1:REF ARRAY OF ADDRESS;
+%typemap("m3argdecl") PLFLTMatrixFst %{$1:REF ARRAY OF ADDRESS;
 nx:=NUMBER($1_name);
 ny:=NUMBER($1_name[0]);%}
-%typemap("m3in")      PLFLTMatrixFst
+%typemap("m3inconv")  PLFLTMatrixFst
 %{$1:=NEW(REF ARRAY OF ADDRESS,NUMBER($1_name));
 FOR i:=0 TO LAST($1_name) DO $1[i] := ADR($1_name[i,0]) END;%}
 
-%typemap("m3indecl")  PLFLTMatrixCk %{$1:REF ARRAY OF ADDRESS;%}
-%typemap("m3in")      PLFLTMatrixCk
+%typemap("m3argdecl") PLFLTMatrixCk %{$1:REF ARRAY OF ADDRESS;%}
+%typemap("m3inconv")  PLFLTMatrixCk
 %{$1:=NEW(REF ARRAY OF ADDRESS,NUMBER($1_name));
 FOR i:=0 TO LAST($1_name) DO $1[i] := ADR($1_name[i,0]) END;%}
 %typemap("m3incheck") PLFLTMatrixCk
@@ -381,28 +381,28 @@ PROCEDURE CallbackM3()=BEGIN END CallbackM3;
 %typemap(m3intype)  PLPointer %{REFANY%}
 %typemap(m3inmode)  PLPointer %{%}
 
-%typemap(m3rawarg) (pltr_func pltr, PLPointer OBJECT_DATA)
+%typemap(m3argraw) (pltr_func pltr, PLPointer OBJECT_DATA)
 %{CallbackM3, NEW(REF CallbackM3Data,callback:=$1_name,callbackData:=$2_name)%}
 
 %typemap(rawintype) defined_func %{PlotterFunc%}
 %typemap(m3intype,numinputs=0)  defined_func %{PROCEDURE (x: R.T): R.T%}
-%typemap(m3rawarg)  defined_func %{NIL (*not yet supported*)%}
+%typemap(m3argraw)  defined_func %{NIL (*not yet supported*)%}
 
 %typemap(rawintype) fill_func %{PlotterFunc%}
 %typemap(m3intype,numinputs=0)  fill_func %{PROCEDURE ()%}
-%typemap(m3rawarg)  fill_func %{NIL (*not yet supported*)%}
+%typemap(m3argraw)  fill_func %{NIL (*not yet supported*)%}
 
 
 %typemap(rawintype) char *legline[4] %{READONLY%}
 %typemap(m3intype)  char *legline[4] %{READONLY%}
 %typemap(rawintype) char *legline[4] %{ARRAY [0..3] OF C.char_star%}
 %typemap(m3intype)  char *legline[4] %{ARRAY [0..3] OF TEXT%}
-%typemap(m3indecl)  char *legline[4] %{$1: ARRAY [0..3] OF C.char_star;%}
-%typemap(m3in)      char *legline[4]
+%typemap(m3argdecl) char *legline[4] %{$1: ARRAY [0..3] OF C.char_star;%}
+%typemap(m3inconv)  char *legline[4]
 %{FOR i:=FIRST($1_name) TO LAST($1_name) DO
 $1[i]:=M3toC.SharedTtoS($1_name[i]);
 END;%}
-%typemap(m3rawarg)  char *legline[4]
+%typemap(m3argraw)  char *legline[4]
 %{$1%}
 %typemap(m3freearg) char *legline[4]
 %{FOR i:=FIRST($1_name) TO LAST($1_name) DO
@@ -418,12 +418,12 @@ TileSet = SET OF Tile;
 %}
 %typemap(m3intype)    PLINT just %{AxesScaling%}
 %typemap(m3indefault) PLINT just %{AxesScaling.independent%}
-%typemap(m3rawarg)    PLINT just %{ORD($1_name)-1%}
+%typemap(m3argraw)    PLINT just %{ORD($1_name)-1%}
 %typemap(m3intype)    PLINT axis %{TileSet%}
 %typemap(m3indefault) PLINT axis %{TileSet{Tile.box,Tile.ticks}%}
-%typemap(m3indecl)    PLINT axis %{$1: C.int;%}
-%typemap(m3rawarg)    PLINT axis %{$1%}
-%typemap(m3in) PLINT axis
+%typemap(m3argdecl)   PLINT axis %{$1: C.int;%}
+%typemap(m3argraw)    PLINT axis %{$1%}
+%typemap(m3inconv) PLINT axis
 %{IF $1_name = TileSet{} THEN
 $1:=-2;
 ELSIF $1_name = TileSet{Tile.box} THEN
@@ -447,10 +447,10 @@ END;
 END;%}
 
 %typemap(m3intype)  PLINT mode    %{BOOLEAN%}
-%typemap(m3rawarg)  PLINT mode    %{ORD($1_name)%}
+%typemap(m3argraw)  PLINT mode    %{ORD($1_name)%}
 
-%typemap(m3argout)     PLINTOutput status %{$1#0%}
-%typemap(m3argouttype) PLINTOutput status %{BOOLEAN%}
+%typemap(m3out)     PLINTOutput status %{$1#0%}
+%typemap(m3outtype) PLINTOutput status %{BOOLEAN%}
 
 %typemap(m3inmode)  PLINT *p_argc %{VAR%}
 %typemap(m3intype)  PLINT *p_argc %{CARDINAL%}
@@ -461,15 +461,15 @@ END;%}
 %typemap(m3intype)  char **argv   %{ARRAY OF TEXT%}
 
 %typemap(m3intype,numinputs=0) PLFLTOutput ""
-%typemap(m3argouttype) PLFLTOutput "R.T"
+%typemap(m3outtype) PLFLTOutput "R.T"
 
 %typemap(m3intype,numinputs=0) PLINTOutput ""
-%typemap(m3indecl) PLINTOutput %{$1: C.int;%}
-%typemap(m3rawarg) PLINTOutput %{$1%}
-%typemap(m3argout) PLINTOutput %{$1%}
-%typemap(m3argouttype) PLINTOutput %{INTEGER%}
+%typemap(m3argdecl) PLINTOutput %{$1: C.int;%}
+%typemap(m3argraw)  PLINTOutput %{$1%}
+%typemap(m3out)     PLINTOutput %{$1%}
+%typemap(m3outtype) PLINTOutput %{INTEGER%}
 
-%typemap(m3rawarg) char %{ORD($1_name)%}
+%typemap(m3argraw) char %{ORD($1_name)%}
 
 
 
