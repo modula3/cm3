@@ -14,6 +14,17 @@ Basic("Real",     "Real")
 Basic("LongReal", "LongReal")
 Basic("Extended", "Extended")
 
+readonly proc Trans (nm, elt) is
+  local trans = nm & "Trans"
+  build_generic_intf (trans, "FloatTrans", [elt], VISIBLE)
+  build_generic_impl (trans, "FloatTrans", [])
+end
+
+generic_module("FloatTrans")
+Trans("Real",     "Real")
+Trans("LongReal", "LongReal")
+Trans("Extended", "Extended")
+
 module("xUtils")
 export_interface("xUtils")
 

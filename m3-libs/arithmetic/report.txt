@@ -26,3 +26,9 @@ It would be of great help, if the compiler tells me with which (implicitly given
 "Rand.m3", line 123: procedure redefined (Uniform), in
 "Rand.i3", line 234: defined as Uniform (blabla : TEXT)
 exception list differs
+
+When IMPORT is used after the first declaration,
+the compiler should give a more precise error diagnostic.
+
+Modula-3 definition says: MOD (x, y: Float) : Float
+but cm3 expects: infix    MOD (x, y: Float) : Float
