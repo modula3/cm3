@@ -37,18 +37,14 @@ readonly Platform_info = {
   "SUN386"    : "i386-sun-sunos4.1",
   "Tru64v5"   : "alpha-dec-osf1",
   "UMAX"      : "encore-bsd",
-  "VAX"       : "vax-dec-ultrix",
-  "I386_DARWIN" : "i486-unknown-bsd",
-  "PPC_DARWIN"  : "powerpc-apple-darwin5.4"
+  "VAX"       : "vax-dec-ultrix"
 }
 
-if not defined("SL")
-  if equal(TARGET, "NT386")
-    % we assume that we use cygwin for everything under NT386GNU
-    SL = "\\"
-  else
-    SL = "/"
-  end
+if equal(TARGET, "NT386")
+  % we assume that we use cygwin for everything under NT386GNU
+  SL = "\\"
+else
+  SL = "/"
 end
 
 readonly proc GNU_platform (x) is
@@ -88,7 +84,7 @@ readonly proc get_overrides (nm, ov) is
   if equal (ov, "*")
     return ""
   else
-    return format ("%s=\"%s\" ", nm, ov)
+    return format ("%s=\"%s\"", nm, ov)
   end
 end
 
@@ -111,19 +107,13 @@ if stale (build_dir, build_dir)
   exec ("mkdir", build_dir)
 end
 
-done  = ".configure-done"
-donep = build_dir & SL & done
-if defined ("FORCE")
-  exec("-cd " & build_dir & " && test -f Makefile && gmake distclean")
-  exec("-cd " & build_dir & " && rm -f cm3cg")
-  exec("-rm -f " & donep)
-end
-
 if not defined ("no_config")
   % configure the sources
+  done  = ".configure-done"
+  donep = build_dir & SL & done
   if stale(donep, donep)
-    exec ("cd", build_dir, "; .." & SL & "gcc" & SL & "configure", M3CC_CONFIG,
-             "--srcdir=.." & SL & "gcc",
+    exec ("cd", build_dir, "; ../gcc/configure", M3CC_CONFIG,
+             "--srcdir=../gcc",
              "--host=" & GNU_platform (M3CC_HOST),
              "--build=" & GNU_platform (M3CC_HOST),
              "--target=" & GNU_platform (M3CC_TARGET),
@@ -131,31 +121,27 @@ if not defined ("no_config")
   end
 end
 
-% check for non-default flags
-ARG0 = get_overrides ("CC", M3CC_CC)
-ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
-
-% build commands
-cmds = "cd " & build_dir & "; "
-postcp = cmds & "cp -p gcc" & SL & "cm3cg ."
-cmds = cmds & "cd libiberty; " & M3CC_MAKE & "; "
-cmds = cmds & "cd .." & SL & "gcc; " & M3CC_MAKE & " " & 
-       ARG0 & " " & ARG1 & " cm3cg"
-
+% misc fixups & ship commands
+pgms = "LANGUAGES=m3cg"
+postcp = "cp -p gcc/cm3cg ."
 if equal (M3CC_HOST, M3CC_TARGET)
   BindExport ("cm3cg")
   if equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF")
     pgms = "LANGUAGES='m3cg mips-tfile'"
     BindExport ("mips-tfile")
-    postcp = "cp -p gcc" & SL & "cm3cg . && cp -p gcc" & SL & "mips-tfile ."
+    postcp = "cp -p gcc/cm3cg . && cp -p gcc/mips-tfile ."
   end
 end
 
+% check for non-default flags
+ARG0 = get_overrides ("CC", M3CC_CC)
+ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
+
 % finally, compile it
-exec (cmds)
-%write (cmds & EOL)
-%write (postcp & EOL)
+exec ("cd", build_dir, ";", M3CC_MAKE, ARG0, ARG1, pgms)
 if defined("postcp")
   exec(postcp)
 end
+
+
 

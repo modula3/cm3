@@ -2589,12 +2589,8 @@ emit_move_insn (x, y)
   x = protect_from_queue (x, 1);
   y = protect_from_queue (y, 0);
 
-  if (mode == BLKmode || (GET_MODE (y) != mode && GET_MODE (y) != VOIDmode)) {
-    if (mode == BLKmode) { printf("target mode BLKmode\n"); }
-    printf("target mode %s, source mode %s\n", GET_MODE_NAME(mode), 
-           GET_MODE_NAME(GET_MODE(y)));
+  if (mode == BLKmode || (GET_MODE (y) != mode && GET_MODE (y) != VOIDmode))
     abort ();
-  }
 
   /* Never force constant_p_rtx to memory.  */
   if (GET_CODE (y) == CONSTANT_P_RTX)
