@@ -9,7 +9,7 @@
 
 UNSAFE MODULE StableLog;
 
-IMPORT Rd, Wr, WrClass, RdClass, Text, TextF, 
+IMPORT Rd, Wr, WrClass, RdClass, Text, Text8,
        Thread, Pickle, 
        StableError, RdUtils, Word;
 
@@ -84,7 +84,7 @@ PROCEDURE InRef(log: Rd.T): REFANY RAISES {Error} =
       | Pickle.Error, Rd.EndOfFile => RAISE Error
       | Rd.Failure (err) =>
         StableError.Halt(
-            "Can not read log file: " & RdUtils.FailureText(err))
+            "InRef: Can not read log file: " & RdUtils.FailureText(err))
       END
     ELSIF code = Mtext THEN
       r:= InText(log)
@@ -185,7 +185,7 @@ PROCEDURE OutExtended (log: Wr.T; r: EXTENDED) =
   END OutExtended;
 
 PROCEDURE OutText(log: Wr.T; text: TEXT) =
-  VAR len: INTEGER;
+  VAR len, start: INTEGER;  buf: ARRAY [0..255] OF CHAR;
   BEGIN
     IF text # NIL THEN
       len := Text.Length(text)
@@ -193,7 +193,12 @@ PROCEDURE OutText(log: Wr.T; text: TEXT) =
       len := -1
     END;
     OutInteger(log, len);
-    IF len > 0 THEN OutChars(log, SUBARRAY(text^, 0, len)) END
+    start := 0;
+    WHILE start < len DO
+      Text.SetChars(buf, text, start);
+      OutChars(log, SUBARRAY(buf, 0, MIN(NUMBER(buf), len - start)));
+      INC (start, NUMBER(buf));
+    END;
   END OutText;
 
 
@@ -208,7 +213,7 @@ PROCEDURE InChar (log: Rd.T): CHAR RAISES {Error} =
       Rd.EndOfFile => RAISE Error
     | Rd.Failure (err) =>
         <*NOWARN*> StableError.Halt(
-          "Can not read log file: " & RdUtils.FailureText(err))
+          "InChar: Can not read log file: " & RdUtils.FailureText(err))
     END
   END InChar;
 
@@ -232,7 +237,7 @@ PROCEDURE InChars (    log  : Rd.T;
     EXCEPT
       Rd.EndOfFile => RAISE Error
     | Rd.Failure (err) =>
-        StableError.Halt("Can not read log file: "
+        StableError.Halt("InChars: Can not read log file: "
                            & RdUtils.FailureText(err))
     END
   END InChars;
@@ -251,7 +256,7 @@ PROCEDURE InInteger (log: Rd.T;
       END;
     EXCEPT
     | Rd.Failure (err) =>
-        StableError.Halt("Can not read log file: "
+        StableError.Halt("InInteger: Can not read log file: "
                            & RdUtils.FailureText(err))
     END;
 
@@ -277,7 +282,7 @@ PROCEDURE InBoolean (log: Rd.T): BOOLEAN RAISES {Error} =
       Rd.EndOfFile => RAISE Error
     | Rd.Failure (err) =>
         <*NOWARN*> StableError.Halt(
-          "Can not read log file: " & RdUtils.FailureText(err))
+          "InBoolean: Can not read log file: " & RdUtils.FailureText(err))
     END
   END InBoolean;
 
@@ -292,7 +297,7 @@ PROCEDURE InReal (log: Rd.T): REAL RAISES {Error} =
       END;
     EXCEPT
     | Rd.Failure (err) =>
-        StableError.Halt("Can not read log file: "
+        StableError.Halt("InReal: Can not read log file: "
                            & RdUtils.FailureText(err))
     END;
     RETURN r;
@@ -309,7 +314,7 @@ PROCEDURE InLongreal (log: Rd.T): LONGREAL RAISES {Error} =
       END;
     EXCEPT
     | Rd.Failure (err) =>
-        StableError.Halt("Can not read log file: "
+        StableError.Halt("InLongreal: Can not read log file: "
                            & RdUtils.FailureText(err))
     END;
     RETURN r;
@@ -326,7 +331,7 @@ PROCEDURE InExtended (log: Rd.T): EXTENDED RAISES {Error} =
       END;
     EXCEPT
     | Rd.Failure (err) =>
-        StableError.Halt("Can not read log file: "
+        StableError.Halt("InExtended: Can not read log file: "
                            & RdUtils.FailureText(err))
     END;
     RETURN r;
@@ -335,18 +340,23 @@ PROCEDURE InExtended (log: Rd.T): EXTENDED RAISES {Error} =
 PROCEDURE InText(log: Rd.T) : TEXT
    RAISES {Error} =
   VAR len: INTEGER;
-      text: TEXT;
+      txt: Text8.T;
+      buf: ARRAY [0..255] OF CHAR;
   BEGIN
     len := InInteger(log);
     IF len = -1 THEN
       RETURN NIL
     ELSIF len < 0 THEN
       RAISE Error
+    ELSIF len = 0 THEN
+      RETURN "";
+    ELSIF len <= NUMBER(buf) THEN
+      InChars(log, SUBARRAY(buf, 0, len));
+      RETURN Text.FromChars(SUBARRAY(buf, 0, len));
     ELSE
-      text := NEW(TEXT, len+1);
-      InChars(log, SUBARRAY(text^, 0, len));
-      text[len] := '\000';
-      RETURN text
+      txt := Text8.Create(len);
+      InChars(log, SUBARRAY(txt.contents^, 0, len));
+      RETURN txt
     END
   END InText;
 
