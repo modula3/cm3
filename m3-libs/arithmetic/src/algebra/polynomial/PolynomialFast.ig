@@ -8,7 +8,6 @@ Abstract: Direct access to Polynomial functions
 *)
 
 FROM xUtils IMPORT Error;
-IMPORT Thread,Wr,Fmt AS F;
 (*==========================*)
 
 TYPE
@@ -24,12 +23,6 @@ CONST
 
 PROCEDURE New(n:CARDINAL):T;    (*make a poly for a0..an*)
 PROCEDURE Copy(p:T):T;       (*copy p to a New poly*)
-<*UNUSED*>
-PROCEDURE Lex(str:TEXT):T;
-PROCEDURE Fmt(p:T;
-              style:F.Style:=F.Style.Fix;
-              prec:CARDINAL:=1):TEXT RAISES {Thread.Alerted, Wr.Failure};
-
 (*
 PROCEDURE Zero(p:T);          (*set p to zeros*)
 PROCEDURE One (p:T);          (*set p to 1*)

@@ -30,40 +30,6 @@ END Copy;
 
 (*--------------------*)
 (*
-<* UNUSED *>
-PROCEDURE Lex( 
-               str:TEXT):T =
-BEGIN
-  RAISE Error(Err.not_implemented);
-END Lex;
-*)
-
-(*----------------------*)
-(*
-PROCEDURE Fmt( 
-               p:T;
-               style:F.Style:=F.Style.Fix;
-               prec:CARDINAL:=1
-               ):TEXT RAISES {Thread.Alerted, Wr.Failure} =
-(*Generate a text object for the polynomial poly, in form:
- T3{a0,a1,a2}
-*)
-VAR
-  n:=NUMBER(p^); n1:=0; nn:=n-1;
-  wr:=NEW(TextWr.T).init(); 
-BEGIN
-  Wr.PutText(wr,"T"
-     & F.Int(n) & "{");
-  FOR i:=n1 TO nn DO
-    Wr.PutText(wr,R.Fmt(p[i],style,prec));
-    IF i#nn THEN Wr.PutText(wr,", "); END;
-  END;
-  Wr.PutText(wr,"}");
-  RETURN TextWr.ToText(wr);
-END Fmt;
-*)
-(*--------------------*)
-(*
 PROCEDURE Zero( 
                p:T)=
 VAR
@@ -160,6 +126,7 @@ END Mul;
 PROCEDURE DivMod( 
                p1,p2:T;
            VAR r:T):T=
+<*UNUSED*>
 CONST ftn = Module & "DivMod";
 VAR
   p1n:=NUMBER(p1^);                  p1nn:=LAST(p1^); 
