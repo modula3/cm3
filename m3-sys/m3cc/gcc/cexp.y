@@ -1,5 +1,5 @@
 /* Parse C expressions for CCCP.
-   Copyright (C) 1987, 1992, 1994, 1995 Free Software Foundation.
+   Copyright (C) 1987, 1992, 1994, 1995, 1996 Free Software Foundation.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
@@ -29,8 +29,30 @@ Boston, MA 02111-1307, USA.
 #include <setjmp.h>
 /* #define YYDEBUG 1 */
 
+/* The following symbols should be autoconfigured:
+	HAVE_STDLIB_H
+	STDC_HEADERS
+   In the mean time, we'll get by with approximations based
+   on existing GCC configuration symbols.  */
+
+#ifdef POSIX
+# ifndef HAVE_STDLIB_H
+# define HAVE_STDLIB_H 1
+# endif
+# ifndef STDC_HEADERS
+# define STDC_HEADERS 1
+# endif
+#endif /* defined (POSIX) */
+
+#if STDC_HEADERS
+# include <string.h>
+#endif
+
+#if HAVE_STDLIB_H || defined (MULTIBYTE_CHARS)
+# include <stdlib.h>
+#endif
+
 #ifdef MULTIBYTE_CHARS
-#include <stdlib.h>
 #include <locale.h>
 #endif
 
@@ -60,7 +82,12 @@ struct arglist {
 #endif
 #endif
 
-/* Find the largest host integer type and set its size and type.  */
+#ifndef NULL_PTR
+#define NULL_PTR ((GENERIC_PTR) 0)
+#endif
+
+/* Find the largest host integer type and set its size and type.
+   Don't blindly use `long'; on some crazy hosts it is shorter than `int'.  */
 
 #ifndef HOST_BITS_PER_WIDE_INT
 
@@ -74,13 +101,47 @@ struct arglist {
 
 #endif
 
-#ifndef NULL_PTR
-#define NULL_PTR ((GENERIC_PTR)0)
+#if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 6)
+# define __attribute__(x)
 #endif
 
-int yylex ();
-void yyerror ();
-HOST_WIDE_INT expression_value;
+#ifndef PROTO
+# if defined (USE_PROTOTYPES) ? USE_PROTOTYPES : defined (__STDC__)
+#  define PROTO(ARGS) ARGS
+# else
+#  define PROTO(ARGS) ()
+# endif
+#endif
+
+#if defined (__STDC__) && defined (HAVE_VPRINTF)
+# include <stdarg.h>
+# define VA_START(va_list, var) va_start (va_list, var)
+# define PRINTF_ALIST(msg) char *msg, ...
+# define PRINTF_DCL(msg)
+# define PRINTF_PROTO(ARGS, m, n) PROTO (ARGS) __attribute__ ((format (printf, m, n)))
+#else
+# include <varargs.h>
+# define VA_START(va_list, var) va_start (va_list)
+# define PRINTF_ALIST(msg) msg, va_alist
+# define PRINTF_DCL(msg) char *msg; va_dcl
+# define PRINTF_PROTO(ARGS, m, n) () __attribute__ ((format (printf, m, n)))
+# define vfprintf(file, msg, args) \
+    { \
+      char *a0 = va_arg(args, char *); \
+      char *a1 = va_arg(args, char *); \
+      char *a2 = va_arg(args, char *); \
+      char *a3 = va_arg(args, char *); \
+      fprintf (file, msg, a0, a1, a2, a3); \
+    }
+#endif
+
+#define PRINTF_PROTO_1(ARGS) PRINTF_PROTO(ARGS, 1, 2)
+
+HOST_WIDE_INT parse_c_expression PROTO((char *));
+
+static int yylex PROTO((void));
+static void yyerror PROTO((char *)) __attribute__ ((noreturn));
+static HOST_WIDE_INT expression_value;
 
 static jmp_buf parse_return_error;
 
@@ -93,8 +154,6 @@ static int skip_evaluation;
 
 /* some external tables of character types */
 extern unsigned char is_idstart[], is_idchar[], is_hor_space[];
-
-extern char *xmalloc ();
 
 /* Flag for -pedantic.  */
 extern int pedantic;
@@ -134,17 +193,50 @@ extern int traditional;
 #define MAX_WCHAR_TYPE_SIZE WCHAR_TYPE_SIZE
 #endif
 
-/* Yield nonzero if adding two numbers with A's and B's signs can yield a
-   number with SUM's sign, where A, B, and SUM are all C integers.  */
-#define possible_sum_sign(a, b, sum) ((((a) ^ (b)) | ~ ((a) ^ (sum))) < 0)
+#if MAX_CHAR_TYPE_SIZE < HOST_BITS_PER_WIDE_INT
+#define MAX_CHAR_TYPE_MASK (~ (~ (HOST_WIDE_INT) 0 << MAX_CHAR_TYPE_SIZE))
+#else
+#define MAX_CHAR_TYPE_MASK (~ (HOST_WIDE_INT) 0)
+#endif
 
-static void integer_overflow ();
-static long left_shift ();
-static long right_shift ();
+#if MAX_WCHAR_TYPE_SIZE < HOST_BITS_PER_WIDE_INT
+#define MAX_WCHAR_TYPE_MASK (~ (~ (HOST_WIDE_INT) 0 << MAX_WCHAR_TYPE_SIZE))
+#else
+#define MAX_WCHAR_TYPE_MASK (~ (HOST_WIDE_INT) 0)
+#endif
+
+/* Suppose A1 + B1 = SUM1, using 2's complement arithmetic ignoring overflow.
+   Suppose A, B and SUM have the same respective signs as A1, B1, and SUM1.
+   Suppose SIGNEDP is negative if the result is signed, zero if unsigned.
+   Then this yields nonzero if overflow occurred during the addition.
+   Overflow occurs if A and B have the same sign, but A and SUM differ in sign,
+   and SIGNEDP is negative.
+   Use `^' to test whether signs differ, and `< 0' to isolate the sign.  */
+#define overflow_sum_sign(a, b, sum, signedp) \
+	((~((a) ^ (b)) & ((a) ^ (sum)) & (signedp)) < 0)
+
+struct constant;
+
+GENERIC_PTR xmalloc PROTO((size_t));
+HOST_WIDE_INT parse_escape PROTO((char **, HOST_WIDE_INT));
+int check_assertion PROTO((U_CHAR *, int, int, struct arglist *));
+struct hashnode *lookup PROTO((U_CHAR *, int, int));
+void error PRINTF_PROTO_1((char *, ...));
+void pedwarn PRINTF_PROTO_1((char *, ...));
+void warning PRINTF_PROTO_1((char *, ...));
+
+static int parse_number PROTO((int));
+static HOST_WIDE_INT left_shift PROTO((struct constant *, unsigned HOST_WIDE_INT));
+static HOST_WIDE_INT right_shift PROTO((struct constant *, unsigned HOST_WIDE_INT));
+static void integer_overflow PROTO((void));
+
+/* `signedp' values */
+#define SIGNED (~0)
+#define UNSIGNED 0
 %}
 
 %union {
-  struct constant {long value; int unsignedp;} integer;
+  struct constant {HOST_WIDE_INT value; int signedp;} integer;
   struct name {U_CHAR *address; int length;} name;
   struct arglist *keywords;
 }
@@ -188,45 +280,46 @@ exp1	:	exp
 /* Expressions, not including the comma operator.  */
 exp	:	'-' exp    %prec UNARY
 			{ $$.value = - $2.value;
-			  if (($$.value & $2.value) < 0 && ! $2.unsignedp)
-			    integer_overflow ();
-			  $$.unsignedp = $2.unsignedp; }
+			  $$.signedp = $2.signedp;
+			  if (($$.value & $2.value & $$.signedp) < 0)
+			    integer_overflow (); }
 	|	'!' exp    %prec UNARY
 			{ $$.value = ! $2.value;
-			  $$.unsignedp = 0; }
+			  $$.signedp = SIGNED; }
 	|	'+' exp    %prec UNARY
 			{ $$ = $2; }
 	|	'~' exp    %prec UNARY
 			{ $$.value = ~ $2.value;
-			  $$.unsignedp = $2.unsignedp; }
+			  $$.signedp = $2.signedp; }
 	|	'#' NAME
   			{ $$.value = check_assertion ($2.address, $2.length,
 						      0, NULL_PTR);
-			  $$.unsignedp = 0; }
+			  $$.signedp = SIGNED; }
 	|	'#' NAME
 			{ keyword_parsing = 1; }
 		'(' keywords ')'
   			{ $$.value = check_assertion ($2.address, $2.length,
 						      1, $5);
 			  keyword_parsing = 0;
-			  $$.unsignedp = 0; }
+			  $$.signedp = SIGNED; }
 	|	'(' exp1 ')'
 			{ $$ = $2; }
 	;
 
 /* Binary operators in order of decreasing precedence.  */
 exp	:	exp '*' exp
-			{ $$.unsignedp = $1.unsignedp || $3.unsignedp;
-			  if ($$.unsignedp)
-			    $$.value = (unsigned long) $1.value * $3.value;
-			  else
+			{ $$.signedp = $1.signedp & $3.signedp;
+			  if ($$.signedp)
 			    {
 			      $$.value = $1.value * $3.value;
 			      if ($1.value
 				  && ($$.value / $1.value != $3.value
 				      || ($$.value & $1.value & $3.value) < 0))
 				integer_overflow ();
-			    } }
+			    }
+			  else
+			    $$.value = ((unsigned HOST_WIDE_INT) $1.value
+					* $3.value); }
 	|	exp '/' exp
 			{ if ($3.value == 0)
 			    {
@@ -234,15 +327,16 @@ exp	:	exp '*' exp
 				error ("division by zero in #if");
 			      $3.value = 1;
 			    }
-			  $$.unsignedp = $1.unsignedp || $3.unsignedp;
-			  if ($$.unsignedp)
-			    $$.value = (unsigned long) $1.value / $3.value;
-			  else
+			  $$.signedp = $1.signedp & $3.signedp;
+			  if ($$.signedp)
 			    {
 			      $$.value = $1.value / $3.value;
 			      if (($$.value & $1.value & $3.value) < 0)
 				integer_overflow ();
-			    } }
+			    }
+			  else
+			    $$.value = ((unsigned HOST_WIDE_INT) $1.value
+					/ $3.value); }
 	|	exp '%' exp
 			{ if ($3.value == 0)
 			    {
@@ -250,88 +344,91 @@ exp	:	exp '*' exp
 				error ("division by zero in #if");
 			      $3.value = 1;
 			    }
-			  $$.unsignedp = $1.unsignedp || $3.unsignedp;
-			  if ($$.unsignedp)
-			    $$.value = (unsigned long) $1.value % $3.value;
+			  $$.signedp = $1.signedp & $3.signedp;
+			  if ($$.signedp)
+			    $$.value = $1.value % $3.value;
 			  else
-			    $$.value = $1.value % $3.value; }
+			    $$.value = ((unsigned HOST_WIDE_INT) $1.value
+					% $3.value); }
 	|	exp '+' exp
 			{ $$.value = $1.value + $3.value;
-			  $$.unsignedp = $1.unsignedp || $3.unsignedp;
-			  if (! $$.unsignedp
-			      && ! possible_sum_sign ($1.value, $3.value,
-						      $$.value))
+			  $$.signedp = $1.signedp & $3.signedp;
+			  if (overflow_sum_sign ($1.value, $3.value,
+						 $$.value, $$.signedp))
 			    integer_overflow (); }
 	|	exp '-' exp
 			{ $$.value = $1.value - $3.value;
-			  $$.unsignedp = $1.unsignedp || $3.unsignedp;
-			  if (! $$.unsignedp
-			      && ! possible_sum_sign ($$.value, $3.value,
-						      $1.value))
+			  $$.signedp = $1.signedp & $3.signedp;
+			  if (overflow_sum_sign ($$.value, $3.value,
+						 $1.value, $$.signedp))
 			    integer_overflow (); }
 	|	exp LSH exp
-			{ $$.unsignedp = $1.unsignedp;
-			  if ($3.value < 0 && ! $3.unsignedp)
+			{ $$.signedp = $1.signedp;
+			  if (($3.value & $3.signedp) < 0)
 			    $$.value = right_shift (&$1, -$3.value);
 			  else
 			    $$.value = left_shift (&$1, $3.value); }
 	|	exp RSH exp
-			{ $$.unsignedp = $1.unsignedp;
-			  if ($3.value < 0 && ! $3.unsignedp)
+			{ $$.signedp = $1.signedp;
+			  if (($3.value & $3.signedp) < 0)
 			    $$.value = left_shift (&$1, -$3.value);
 			  else
 			    $$.value = right_shift (&$1, $3.value); }
 	|	exp EQUAL exp
 			{ $$.value = ($1.value == $3.value);
-			  $$.unsignedp = 0; }
+			  $$.signedp = SIGNED; }
 	|	exp NOTEQUAL exp
 			{ $$.value = ($1.value != $3.value);
-			  $$.unsignedp = 0; }
+			  $$.signedp = SIGNED; }
 	|	exp LEQ exp
-			{ $$.unsignedp = 0;
-			  if ($1.unsignedp || $3.unsignedp)
-			    $$.value = (unsigned long) $1.value <= $3.value;
+			{ $$.signedp = SIGNED;
+			  if ($1.signedp & $3.signedp)
+			    $$.value = $1.value <= $3.value;
 			  else
-			    $$.value = $1.value <= $3.value; }
+			    $$.value = ((unsigned HOST_WIDE_INT) $1.value
+					<= $3.value); }
 	|	exp GEQ exp
-			{ $$.unsignedp = 0;
-			  if ($1.unsignedp || $3.unsignedp)
-			    $$.value = (unsigned long) $1.value >= $3.value;
+			{ $$.signedp = SIGNED;
+			  if ($1.signedp & $3.signedp)
+			    $$.value = $1.value >= $3.value;
 			  else
-			    $$.value = $1.value >= $3.value; }
+			    $$.value = ((unsigned HOST_WIDE_INT) $1.value
+					>= $3.value); }
 	|	exp '<' exp
-			{ $$.unsignedp = 0;
-			  if ($1.unsignedp || $3.unsignedp)
-			    $$.value = (unsigned long) $1.value < $3.value;
+			{ $$.signedp = SIGNED;
+			  if ($1.signedp & $3.signedp)
+			    $$.value = $1.value < $3.value;
 			  else
-			    $$.value = $1.value < $3.value; }
+			    $$.value = ((unsigned HOST_WIDE_INT) $1.value
+					< $3.value); }
 	|	exp '>' exp
-			{ $$.unsignedp = 0;
-			  if ($1.unsignedp || $3.unsignedp)
-			    $$.value = (unsigned long) $1.value > $3.value;
+			{ $$.signedp = SIGNED;
+			  if ($1.signedp & $3.signedp)
+			    $$.value = $1.value > $3.value;
 			  else
-			    $$.value = $1.value > $3.value; }
+			    $$.value = ((unsigned HOST_WIDE_INT) $1.value
+					> $3.value); }
 	|	exp '&' exp
 			{ $$.value = $1.value & $3.value;
-			  $$.unsignedp = $1.unsignedp || $3.unsignedp; }
+			  $$.signedp = $1.signedp & $3.signedp; }
 	|	exp '^' exp
 			{ $$.value = $1.value ^ $3.value;
-			  $$.unsignedp = $1.unsignedp || $3.unsignedp; }
+			  $$.signedp = $1.signedp & $3.signedp; }
 	|	exp '|' exp
 			{ $$.value = $1.value | $3.value;
-			  $$.unsignedp = $1.unsignedp || $3.unsignedp; }
+			  $$.signedp = $1.signedp & $3.signedp; }
 	|	exp AND
 			{ skip_evaluation += !$1.value; }
 		exp
 			{ skip_evaluation -= !$1.value;
 			  $$.value = ($1.value && $4.value);
-			  $$.unsignedp = 0; }
+			  $$.signedp = SIGNED; }
 	|	exp OR
 			{ skip_evaluation += !!$1.value; }
 		exp
 			{ skip_evaluation -= !!$1.value;
 			  $$.value = ($1.value || $4.value);
-			  $$.unsignedp = 0; }
+			  $$.signedp = SIGNED; }
 	|	exp '?'
 			{ skip_evaluation += !$1.value; }
 	        exp ':'
@@ -339,14 +436,14 @@ exp	:	exp '*' exp
 		exp
 			{ skip_evaluation -= !!$1.value;
 			  $$.value = $1.value ? $4.value : $7.value;
-			  $$.unsignedp = $4.unsignedp || $7.unsignedp; }
+			  $$.signedp = $4.signedp & $7.signedp; }
 	|	INT
 			{ $$ = yylval.integer; }
 	|	CHAR
 			{ $$ = yylval.integer; }
 	|	NAME
 			{ $$.value = 0;
-			  $$.unsignedp = 0; }
+			  $$.signedp = SIGNED; }
 	;
 
 keywords :
@@ -383,37 +480,37 @@ static char *lexptr;
 
 /* maybe needs to actually deal with floating point numbers */
 
-int
+static int
 parse_number (olen)
      int olen;
 {
   register char *p = lexptr;
   register int c;
-  register unsigned long n = 0, nd, ULONG_MAX_over_base;
+  register unsigned HOST_WIDE_INT n = 0, nd, max_over_base;
   register int base = 10;
   register int len = olen;
   register int overflow = 0;
   register int digit, largest_digit = 0;
   int spec_long = 0;
 
-  for (c = 0; c < len; c++)
-    if (p[c] == '.') {
-      /* It's a float since it contains a point.  */
-      yyerror ("floating point numbers not allowed in #if expressions");
-      return ERROR;
-    }
+  yylval.integer.signedp = SIGNED;
 
-  yylval.integer.unsignedp = 0;
-
-  if (len >= 3 && (!strncmp (p, "0x", 2) || !strncmp (p, "0X", 2))) {
-    p += 2;
-    base = 16;
-    len -= 2;
-  }
-  else if (*p == '0')
+  if (*p == '0') {
     base = 8;
+    if (len >= 3 && (p[1] == 'x' || p[1] == 'X')) {
+      p += 2;
+      base = 16;
+      len -= 2;
+    }
+  }
 
-  ULONG_MAX_over_base = (unsigned long) -1 / base;
+  max_over_base = (unsigned HOST_WIDE_INT) -1 / base;
+/* CYGNUS LOCAL mpw */
+  /* Work around yet another MPW C bug. */
+#ifdef MPW_C
+  max_over_base = ((unsigned HOST_WIDE_INT) -1) / ((unsigned HOST_WIDE_INT) base);
+#endif /* MPW_C */
+/* END CYGNUS LOCAL */
 
   for (; len > 0; len--) {
     c = *p++;
@@ -429,18 +526,26 @@ parse_number (olen)
       while (1) {
 	if (c == 'l' || c == 'L')
 	  {
-	    if (spec_long)
-	      yyerror ("two `l's in integer constant");
-	    spec_long = 1;
+	    if (!pedantic < spec_long)
+	      yyerror ("too many `l's in integer constant");
+	    spec_long++;
 	  }
 	else if (c == 'u' || c == 'U')
 	  {
-	    if (yylval.integer.unsignedp)
+	    if (! yylval.integer.signedp)
 	      yyerror ("two `u's in integer constant");
-	    yylval.integer.unsignedp = 1;
+	    yylval.integer.signedp = UNSIGNED;
 	  }
-	else
-	  break;
+	else {
+	  if (c == '.' || c == 'e' || c == 'E')
+	    yyerror ("Floating point numbers not allowed in #if expressions");
+	  else {
+	    char *buf = (char *) alloca (p - lexptr + 40);
+	    sprintf (buf, "missing white space after number `%.*s'",
+		     (int) (p - lexptr - 1), lexptr);
+	    yyerror (buf);
+	  }
+	}
 
 	if (--len == 0)
 	  break;
@@ -452,13 +557,8 @@ parse_number (olen)
     if (largest_digit < digit)
       largest_digit = digit;
     nd = n * base + digit;
-    overflow |= ULONG_MAX_over_base < n | nd < n;
+    overflow |= (max_over_base < n) | (nd < n);
     n = nd;
-  }
-
-  if (len != 0) {
-    yyerror ("Invalid number in #if expression");
-    return ERROR;
   }
 
   if (base <= largest_digit)
@@ -468,11 +568,11 @@ parse_number (olen)
     warning ("integer constant out of range");
 
   /* If too big to be signed, consider it unsigned.  */
-  if ((long) n < 0 && ! yylval.integer.unsignedp)
+  if (((HOST_WIDE_INT) n & yylval.integer.signedp) < 0)
     {
       if (base == 10)
 	warning ("integer constant is so large that it is unsigned");
-      yylval.integer.unsignedp = 1;
+      yylval.integer.signedp = UNSIGNED;
     }
 
   lexptr = p;
@@ -501,7 +601,7 @@ static struct token tokentab2[] = {
 
 /* Read one token, getting characters through lexptr.  */
 
-int
+static int
 yylex ()
 {
   register int c;
@@ -509,6 +609,7 @@ yylex ()
   register unsigned char *tokstart;
   register struct token *toktab;
   int wide_flag;
+  HOST_WIDE_INT mask;
 
  retry:
 
@@ -529,13 +630,12 @@ yylex ()
       }
 
   switch (c) {
-  case 0:
+  case '\n':
     return 0;
     
   case ' ':
   case '\t':
   case '\r':
-  case '\n':
     lexptr++;
     goto retry;
     
@@ -545,18 +645,21 @@ yylex ()
       {
 	lexptr++;
 	wide_flag = 1;
+	mask = MAX_WCHAR_TYPE_MASK;
 	goto char_constant;
       }
     if (lexptr[1] == '"')
       {
 	lexptr++;
 	wide_flag = 1;
+	mask = MAX_WCHAR_TYPE_MASK;
 	goto string_constant;
       }
     break;
 
   case '\'':
     wide_flag = 0;
+    mask = MAX_CHAR_TYPE_MASK;
   char_constant:
     lexptr++;
     if (keyword_parsing) {
@@ -564,7 +667,7 @@ yylex ()
       while (1) {
 	c = *lexptr++;
 	if (c == '\\')
-	  c = parse_escape (&lexptr);
+	  c = parse_escape (&lexptr, mask);
 	else if (c == '\'')
 	  break;
       }
@@ -577,7 +680,7 @@ yylex ()
        handles multicharacter constants and wide characters.
        It is mostly copied from c-lex.c.  */
     {
-      register int result = 0;
+      register HOST_WIDE_INT result = 0;
       register num_chars = 0;
       unsigned width = MAX_CHAR_TYPE_SIZE;
       int max_chars;
@@ -606,19 +709,16 @@ yylex ()
 
 	  if (c == '\\')
 	    {
-	      c = parse_escape (&lexptr);
-	      if (width < HOST_BITS_PER_INT
-		  && (unsigned) c >= (1 << width))
-		pedwarn ("escape sequence out of range for character");
+	      c = parse_escape (&lexptr, mask);
 	    }
 
 	  num_chars++;
 
 	  /* Merge character into result; ignore excess chars.  */
-	  if (num_chars < max_chars + 1)
+	  if (num_chars <= max_chars)
 	    {
-	      if (width < HOST_BITS_PER_INT)
-		result = (result << width) | (c & ((1 << width) - 1));
+	      if (width < HOST_BITS_PER_WIDE_INT)
+		result = (result << width) | c;
 	      else
 		result = c;
 	      token_buffer[num_chars - 1] = c;
@@ -647,10 +747,12 @@ yylex ()
 	  if (lookup ("__CHAR_UNSIGNED__", sizeof ("__CHAR_UNSIGNED__")-1, -1)
 	      || ((result >> (num_bits - 1)) & 1) == 0)
 	    yylval.integer.value
-	      = result & ((unsigned long) ~0 >> (HOST_BITS_PER_LONG - num_bits));
+	      = result & (~ (unsigned HOST_WIDE_INT) 0
+			  >> (HOST_BITS_PER_WIDE_INT - num_bits));
 	  else
 	    yylval.integer.value
-	      = result | ~((unsigned long) ~0 >> (HOST_BITS_PER_LONG - num_bits));
+	      = result | ~(~ (unsigned HOST_WIDE_INT) 0
+			   >> (HOST_BITS_PER_WIDE_INT - num_bits));
 	}
       else
 	{
@@ -675,7 +777,7 @@ yylex ()
     }
 
     /* This is always a signed type.  */
-    yylval.integer.unsignedp = 0;
+    yylval.integer.signedp = SIGNED;
     
     return CHAR;
 
@@ -712,6 +814,7 @@ yylex ()
     return c;
 
   case '"':
+    mask = MAX_CHAR_TYPE_MASK;
   string_constant:
     if (keyword_parsing) {
       char *start_ptr = lexptr;
@@ -719,7 +822,7 @@ yylex ()
       while (1) {
 	c = *lexptr++;
 	if (c == '\\')
-	  c = parse_escape (&lexptr);
+	  c = parse_escape (&lexptr, mask);
 	else if (c == '"')
 	  break;
       }
@@ -733,10 +836,14 @@ yylex ()
 
   if (c >= '0' && c <= '9' && !keyword_parsing) {
     /* It's a number */
-    for (namelen = 0;
-	 c = tokstart[namelen], is_idchar[c] || c == '.'; 
-	 namelen++)
-      ;
+    for (namelen = 1; ; namelen++) {
+      int d = tokstart[namelen];
+      if (! ((is_idchar[d] || d == '.')
+	     || ((d == '-' || d == '+') && (c == 'e' || c == 'E')
+		 && ! traditional)))
+	break;
+      c = d;
+    }
     return parse_number (namelen);
   }
 
@@ -773,6 +880,9 @@ yylex ()
    is updated past the characters we use.  The value of the
    escape sequence is returned.
 
+   RESULT_MASK is used to mask out the result;
+   an error is reported if bits are lost thereby.
+
    A negative value means the sequence \ newline was seen,
    which is supposed to be equivalent to nothing at all.
 
@@ -782,9 +892,10 @@ yylex ()
    If \ is followed by 000, we return 0 and leave the string pointer
    after the zeros.  A value of 0 does not mean end of string.  */
 
-int
-parse_escape (string_ptr)
+HOST_WIDE_INT
+parse_escape (string_ptr, result_mask)
      char **string_ptr;
+     HOST_WIDE_INT result_mask;
 {
   register int c = *(*string_ptr)++;
   switch (c)
@@ -823,7 +934,7 @@ parse_escape (string_ptr)
     case '6':
     case '7':
       {
-	register int i = c - '0';
+	register HOST_WIDE_INT i = c - '0';
 	register int count = 0;
 	while (++count < 3)
 	  {
@@ -836,16 +947,17 @@ parse_escape (string_ptr)
 		break;
 	      }
 	  }
-	if ((i & ~((1 << MAX_CHAR_TYPE_SIZE) - 1)) != 0)
+	if (i != (i & result_mask))
 	  {
-	    i &= (1 << MAX_CHAR_TYPE_SIZE) - 1;
-	    warning ("octal character constant does not fit in a byte");
+	    i &= result_mask;
+	    pedwarn ("octal escape sequence out of range");
 	  }
 	return i;
       }
     case 'x':
       {
-	register unsigned i = 0, overflow = 0, digits_found = 0, digit;
+	register unsigned HOST_WIDE_INT i = 0, overflow = 0;
+	register int digits_found = 0, digit;
 	for (;;)
 	  {
 	    c = *(*string_ptr)++;
@@ -866,10 +978,10 @@ parse_escape (string_ptr)
 	  }
 	if (!digits_found)
 	  yyerror ("\\x used with no following hex digits");
-	if (overflow | (i & ~((1 << BITS_PER_UNIT) - 1)))
+	if (overflow | (i != (i & result_mask)))
 	  {
-	    i &= (1 << BITS_PER_UNIT) - 1;
-	    warning ("hex character constant does not fit in a byte");
+	    i &= result_mask;
+	    pedwarn ("hex escape sequence out of range");
 	  }
 	return i;
       }
@@ -878,11 +990,11 @@ parse_escape (string_ptr)
     }
 }
 
-void
+static void
 yyerror (s)
      char *s;
 {
-  error (s);
+  error ("%s", s);
   skip_evaluation = 0;
   longjmp (parse_return_error, 1);
 }
@@ -894,39 +1006,39 @@ integer_overflow ()
     pedwarn ("integer overflow in preprocessor expression");
 }
 
-static long
+static HOST_WIDE_INT
 left_shift (a, b)
      struct constant *a;
-     unsigned long b;
+     unsigned HOST_WIDE_INT b;
 {
    /* It's unclear from the C standard whether shifts can overflow.
       The following code ignores overflow; perhaps a C standard
       interpretation ruling is needed.  */
-  if (b >= HOST_BITS_PER_LONG)
+  if (b >= HOST_BITS_PER_WIDE_INT)
     return 0;
-  else if (a->unsignedp)
-    return (unsigned long) a->value << b;
   else
-    return a->value << b;
+    return (unsigned HOST_WIDE_INT) a->value << b;
 }
 
-static long
+static HOST_WIDE_INT
 right_shift (a, b)
      struct constant *a;
-     unsigned long b;
+     unsigned HOST_WIDE_INT b;
 {
-  if (b >= HOST_BITS_PER_LONG)
-    return a->unsignedp ? 0 : a->value >> (HOST_BITS_PER_LONG - 1);
-  else if (a->unsignedp)
-    return (unsigned long) a->value >> b;
-  else
+  if (b >= HOST_BITS_PER_WIDE_INT)
+    return a->signedp ? a->value >> (HOST_BITS_PER_WIDE_INT - 1) : 0;
+  else if (a->signedp)
     return a->value >> b;
+  else
+    return (unsigned HOST_WIDE_INT) a->value >> b;
 }
 
 /* This page contains the entry point to this file.  */
 
 /* Parse STRING as an expression, and complain if this fails
    to use up all of the contents of STRING.  */
+/* STRING may contain '\0' bytes; it is terminated by the first '\n'
+   outside a string constant, so that we can diagnose '\0' properly.  */
 /* We do not support C comments.  They should be removed before
    this function is called.  */
 
@@ -950,36 +1062,48 @@ parse_c_expression (string)
   if (yyparse ())
     return 0;			/* actually this is never reached
 				   the way things stand. */
-  if (*lexptr)
+  if (*lexptr != '\n')
     error ("Junk after end of expression.");
 
   return expression_value;	/* set by yyparse () */
 }
 
 #ifdef TEST_EXP_READER
+
+#if YYDEBUG
 extern int yydebug;
+#endif
+
+int pedantic;
+int traditional;
+
+int main PROTO((int, char **));
+static void initialize_random_junk PROTO((void));
 
 /* Main program for testing purposes.  */
 int
-main ()
+main (argc, argv)
+     int argc;
+     char **argv;
 {
   int n, c;
   char buf[1024];
 
-/*
-  yydebug = 1;
-*/
+  pedantic = 1 < argc;
+  traditional = 2 < argc;
+#if YYDEBUG
+  yydebug = 3 < argc;
+#endif
   initialize_random_junk ();
 
   for (;;) {
     printf ("enter expression: ");
     n = 0;
-    while ((buf[n] = getchar ()) != '\n' && buf[n] != EOF)
+    while ((buf[n] = c = getchar ()) != '\n' && c != EOF)
       n++;
-    if (buf[n] == EOF)
+    if (c == EOF)
       break;
-    buf[n] = '\0';
-    printf ("parser returned %ld\n", parse_c_expression (buf));
+    printf ("parser returned %ld\n", (long) parse_c_expression (buf));
   }
 
   return 0;
@@ -991,11 +1115,12 @@ unsigned char is_idchar[256];
 unsigned char is_idstart[256];
 /* table to tell if c is horizontal space.  isspace () thinks that
    newline is space; this is not a good idea for this program. */
-char is_hor_space[256];
+unsigned char is_hor_space[256];
 
 /*
  * initialize random junk in the hash table and maybe other places
  */
+static void
 initialize_random_junk ()
 {
   register int i;
@@ -1026,22 +1151,68 @@ initialize_random_junk ()
   ++is_hor_space['\t'];
 }
 
-error (msg)
+void
+error (PRINTF_ALIST (msg))
+     PRINTF_DCL (msg)
 {
-  printf ("error: %s\n", msg);
+  va_list args;
+
+  VA_START (args, msg);
+  fprintf (stderr, "error: ");
+  vfprintf (stderr, msg, args);
+  fprintf (stderr, "\n");
+  va_end (args);
 }
 
-warning (msg)
+void
+pedwarn (PRINTF_ALIST (msg))
+     PRINTF_DCL (msg)
 {
-  printf ("warning: %s\n", msg);
+  va_list args;
+
+  VA_START (args, msg);
+  fprintf (stderr, "pedwarn: ");
+  vfprintf (stderr, msg, args);
+  fprintf (stderr, "\n");
+  va_end (args);
+}
+
+void
+warning (PRINTF_ALIST (msg))
+     PRINTF_DCL (msg)
+{
+  va_list args;
+
+  VA_START (args, msg);
+  fprintf (stderr, "warning: ");
+  vfprintf (stderr, msg, args);
+  fprintf (stderr, "\n");
+  va_end (args);
+}
+
+int
+check_assertion (name, sym_length, tokens_specified, tokens)
+     U_CHAR *name;
+     int sym_length;
+     int tokens_specified;
+     struct arglist *tokens;
+{
+  return 0;
 }
 
 struct hashnode *
 lookup (name, len, hash)
-     char *name;
+     U_CHAR *name;
      int len;
      int hash;
 {
   return (DEFAULT_SIGNED_CHAR) ? 0 : ((struct hashnode *) -1);
+}
+
+GENERIC_PTR
+xmalloc (size)
+     size_t size;
+{
+  return (GENERIC_PTR) malloc (size);
 }
 #endif

@@ -7,3 +7,9 @@
 # routines in crtstuff.c.
 
 CRTSTUFF_T_CFLAGS = -fPIC -fno-omit-frame-pointer
+TARGET_LIBGCC2_CFLAGS = -fPIC
+
+# CYGNUS LOCAL
+# Don't build libgcc1.a, so that we can build cross compilers to unixware.
+LIBGCC1 =
+CROSS_LIBGCC1 =

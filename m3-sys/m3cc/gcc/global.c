@@ -1,5 +1,5 @@
 /* Allocate registers for pseudo-registers that span basic blocks.
-   Copyright (C) 1987, 1988, 1991, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1988, 1991, 1994, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -75,7 +75,7 @@ static int max_allocno;
 /* Indexed by (pseudo) reg number, gives the allocno, or -1
    for pseudo registers already allocated by local_allocate.  */
 
-static int *reg_allocno;
+int *reg_allocno;
 
 /* Indexed by allocno, gives the reg number.  */
 
@@ -1085,7 +1085,14 @@ find_reg (allocno, losers, alt_regs_p, accept_call_clobbered, retrying)
 	  && CALLER_SAVE_PROFITABLE (allocno_n_refs[allocno],
 				     allocno_calls_crossed[allocno]))
 	{
-	  find_reg (allocno, losers, alt_regs_p, 1, retrying);
+	  HARD_REG_SET new_losers;
+	  if (! losers)
+	    CLEAR_HARD_REG_SET (new_losers);
+	  else
+	    COPY_HARD_REG_SET (new_losers, losers);
+	    
+	  IOR_HARD_REG_SET(new_losers, losing_caller_save_reg_set);
+	  find_reg (allocno, new_losers, alt_regs_p, 1, retrying);
 	  if (reg_renumber[allocno_reg[allocno]] >= 0)
 	    {
 	      caller_save_needed = 1;

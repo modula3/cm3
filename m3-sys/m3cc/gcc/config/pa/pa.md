@@ -1,5 +1,5 @@
 ;;- Machine description for HP PA-RISC architecture for GNU C compiler
-;;   Copyright (C) 1992, 1993, 1994, 1995 Free Software Foundation, Inc.
+;;   Copyright (C) 1992, 1993, 1994, 1995, 1996 Free Software Foundation, Inc.
 ;;   Contributed by the Center for Software Science at the University
 ;;   of Utah.
 
@@ -31,7 +31,7 @@
 ;; type "binary" insns have two input operands (1,2) and one output (0)
 
 (define_attr "type"
-  "move,unary,binary,shift,nullshift,compare,load,store,uncond_branch,branch,cbranch,fbranch,call,dyncall,fpload,fpstore,fpalu,fpcc,fpmulsgl,fpmuldbl,fpdivsgl,fpdivdbl,fpsqrtsgl,fpsqrtdbl,multi,milli"
+  "move,unary,binary,shift,nullshift,compare,load,store,uncond_branch,branch,cbranch,fbranch,call,dyncall,fpload,fpstore,fpalu,fpcc,fpmulsgl,fpmuldbl,fpdivsgl,fpdivdbl,fpsqrtsgl,fpsqrtdbl,multi,milli,parallel_branch"
   (const_string "binary"))
 
 ;; Processor type (for scheduling, not code generation) -- this attribute
@@ -69,7 +69,7 @@
 
 ;; For conditional branches.
 (define_attr "in_branch_delay" "false,true"
-  (if_then_else (and (eq_attr "type" "!uncond_branch,branch,cbranch,fbranch,call,dyncall,multi,milli")
+  (if_then_else (and (eq_attr "type" "!uncond_branch,branch,cbranch,fbranch,call,dyncall,multi,milli,parallel_branch")
 		     (eq_attr "length" "4"))
 		(const_string "true")
 		(const_string "false")))
@@ -77,7 +77,7 @@
 ;; Disallow instructions which use the FPU since they will tie up the FPU
 ;; even if the instruction is nullified.
 (define_attr "in_nullified_branch_delay" "false,true"
-  (if_then_else (and (eq_attr "type" "!uncond_branch,branch,cbranch,fbranch,call,dyncall,multi,milli,fpcc,fpalu,fpmulsgl,fpmuldbl,fpdivsgl,fpdivdbl,fpsqrtsgl,fpsqrtdbl")
+  (if_then_else (and (eq_attr "type" "!uncond_branch,branch,cbranch,fbranch,call,dyncall,multi,milli,fpcc,fpalu,fpmulsgl,fpmuldbl,fpdivsgl,fpdivdbl,fpsqrtsgl,fpsqrtdbl,parallel_branch")
 		     (eq_attr "length" "4"))
 		(const_string "true")
 		(const_string "false")))
@@ -85,7 +85,7 @@
 ;; For calls and millicode calls.  Allow unconditional branches in the
 ;; delay slot.
 (define_attr "in_call_delay" "false,true"
-  (cond [(and (eq_attr "type" "!uncond_branch,branch,cbranch,fbranch,call,dyncall,multi,milli")
+  (cond [(and (eq_attr "type" "!uncond_branch,branch,cbranch,fbranch,call,dyncall,multi,milli,parallel_branch")
 	      (eq_attr "length" "4"))
 	   (const_string "true")
 	 (eq_attr "type" "uncond_branch")
@@ -96,24 +96,31 @@
 	(const_string "false")))
 
 
-;; Unconditional branch and call delay slot description.
-(define_delay (eq_attr "type" "uncond_branch,branch,call")
+;; CYGNUS LOCAL mentoropt/law
+;; Call delay slot description.
+(define_delay (and (eq_attr "type" "call")
+		   (eq (symbol_ref "first_reorg_pass") (const_int 0)))
   [(eq_attr "in_call_delay" "true") (nil) (nil)])
 
 ;; millicode call delay slot description.  Note it disallows delay slot
-;; when TARGET_PORTABLE_RUNTIME or TARGET_MILLICODE_LONG_CALLS is true.
-(define_delay (eq_attr "type" "milli")
+;; when TARGET_PORTABLE_RUNTIME is true.
+;; CYGNUS LOCAL mentoropt/law
+(define_delay (and (eq_attr "type" "milli")
+		   (eq (symbol_ref "first_reorg_pass") (const_int 0)))
   [(and (eq_attr "in_call_delay" "true")
-	(and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME") (const_int 0))
-	     (eq (symbol_ref "TARGET_MILLICODE_LONG_CALLS") (const_int 0))))
+	(eq (symbol_ref "TARGET_PORTABLE_RUNTIME") (const_int 0)))
    (nil) (nil)])
 
 ;; Unconditional branch, return and other similar instructions.
-(define_delay (eq_attr "type" "uncond_branch,branch")
+;; CYGNUS LOCAL mentoropt/law
+(define_delay (and (eq_attr "type" "uncond_branch,branch,parallel_branch")
+		   (eq (symbol_ref "first_reorg_pass") (const_int 0)))
   [(eq_attr "in_branch_delay" "true") (nil) (nil)])
 
 ;; Floating point conditional branch delay slot description and
-(define_delay (eq_attr "type" "fbranch")
+;; CYGNUS LOCAL mentoropt/law
+(define_delay (and (eq_attr "type" "fbranch")
+		   (eq (symbol_ref "first_reorg_pass") (const_int 0)))
   [(eq_attr "in_branch_delay" "true")
    (eq_attr "in_nullified_branch_delay" "true")
    (nil)])
@@ -123,12 +130,57 @@
 ;; direction of the branch.  Forward branches nullify true and
 ;; backward branches nullify false.  If the direction is unknown
 ;; then nullification is not allowed.
-(define_delay (eq_attr "type" "cbranch")
+;; CYGNUS LOCAL mentoropt/law
+(define_delay (and (eq_attr "type" "cbranch")
+		   (eq (symbol_ref "first_reorg_pass") (const_int 0)))
   [(eq_attr "in_branch_delay" "true")
    (and (eq_attr "in_nullified_branch_delay" "true")
 	(attr_flag "forward"))
    (and (eq_attr "in_nullified_branch_delay" "true")
 	(attr_flag "backward"))])
+
+;; CYGNUS LOCAL mentoropt/law
+;; "delay" slot descriptions for use in the PA specific reorg pass
+;; which combines unrelated insns.
+
+;; This one is used to combine a unconditional branch with an insn
+;; which loads a register from a small int or other register.
+(define_attr "combinable_with_uncond_jump" "false,true"
+  (cond [(and (eq_attr "length" "4")
+	      (ior (eq (symbol_ref "combinable_add (insn)") (const_int 1))
+		   (eq (symbol_ref "combinable_copy (insn)") (const_int 1))))
+	   (const_string "true")]
+	(const_string "false")))
+
+;; Note that this loses on newer machines for forward
+;; unconditional jumps because new machines can multi-issue.
+;; The backwards/forward test could be conditional on the
+;; scheduling type as well as a "space vs time" flag.
+(define_delay (and (eq_attr "type" "uncond_branch")
+		   (and (eq (symbol_ref "first_reorg_pass")
+			    (const_int 1))
+			(eq (symbol_ref "following_call (insn)")
+			    (const_int 0))))
+  [(and (attr_flag "backward")
+	(eq_attr "combinable_with_uncond_jump" "true")) (nil) (nil)])
+
+;; This one is used to combine a a floating pointer multiply
+;; with either a floating point add or floating point subtract.
+(define_attr "combinable_with_fmpy" "false,true"
+  (cond [(and (eq_attr "length" "4")
+	      (ior (eq (symbol_ref "combinable_fadd (insn)")
+		       (const_int 1))
+		   (eq (symbol_ref "combinable_fsub (insn)")
+		       (const_int 1))))
+	   (const_string "true")]
+	(const_string "false")))
+
+(define_delay (and (eq_attr "type" "fpmuldbl,fpmulsgl")
+		   (and (eq (symbol_ref "first_reorg_pass") (const_int 1))
+			(eq (symbol_ref "combinable_fmpy (insn)")
+			    (const_int 1))))
+  [(eq_attr "combinable_with_fmpy" "true") (nil) (nil)])
+;; END CYGNUS LOCAL
 
 ;; Function units of the HPPA. The following data is for the 700 CPUs
 ;; (Mustang CPU + Timex FPU aka PA-89) because that's what I have the docs for.
@@ -386,7 +438,71 @@
 			     [(match_operand:SF 0 "reg_or_0_operand" "fG")
 			      (match_operand:SF 1 "reg_or_0_operand" "fG")]))]
   "! TARGET_SOFT_FLOAT"
-  "fcmp,sgl,%Y2 %r0,%r1"
+  "*
+{
+  rtx next_insn;
+
+  /* See if this is later used in a reversed FP branch.  If so, reverse our
+     condition and the branch.  Doing so avoids a useless add,tr. 
+
+     Don't do this if fcmp is in a delay slot since it's too much of a
+     headache to track down things on multiple paths.  */
+  if (dbr_sequence_length ())
+    next_insn = NULL;
+  else
+    next_insn = NEXT_INSN (insn);
+  while (next_insn)
+    {
+      /* Jumps, calls and labels stop our search.  */
+      if (GET_CODE (next_insn) == JUMP_INSN
+	  || GET_CODE (next_insn) == CALL_INSN
+	  || GET_CODE (next_insn) == CODE_LABEL)
+	break;
+
+      /* As does another fcmp insn.  */
+      if (GET_CODE (next_insn) == INSN
+	  && GET_CODE (PATTERN (next_insn)) == SET
+	  && GET_CODE (SET_DEST (PATTERN (next_insn))) == REG
+	  && REGNO (SET_DEST (PATTERN (next_insn))) == 0)
+	break;
+
+      if (GET_CODE (next_insn) == INSN
+	  && GET_CODE (PATTERN (next_insn)) == SEQUENCE)
+	next_insn = XVECEXP (PATTERN (next_insn), 0, 0);
+      else
+	next_insn = NEXT_INSN (next_insn);
+    }
+
+  /* Is NEXT_INSN a branch?  */
+  if (next_insn
+      && GET_CODE (next_insn) == JUMP_INSN)
+    {
+      rtx pattern = PATTERN (next_insn);
+
+      /* Is it a reversed fp conditional branch (eg uses add,tr) and
+	 CCFP dies, then reverse our conditional and the branch to
+	 avoid the add,tr.  */
+      if (GET_CODE (pattern) == SET
+	  && SET_DEST (pattern) == pc_rtx
+	  && GET_CODE (SET_SRC (pattern)) == IF_THEN_ELSE
+	  && GET_CODE (XEXP (SET_SRC (pattern), 0)) == NE
+	  && GET_CODE (XEXP (XEXP (SET_SRC (pattern), 0), 0)) == REG
+	  && REGNO (XEXP (XEXP (SET_SRC (pattern), 0), 0)) == 0
+	  && GET_CODE (XEXP (SET_SRC (pattern), 1)) == PC
+	  && find_regno_note (next_insn, REG_DEAD, 0))
+
+	{
+	  rtx tmp;
+
+	  tmp = XEXP (SET_SRC (pattern), 1);
+	  XEXP (SET_SRC (pattern), 1) = XEXP (SET_SRC (pattern), 2);
+	  XEXP (SET_SRC (pattern), 2) = tmp;
+	  INSN_CODE (next_insn) = -1;
+	  return \"fcmp,sgl,%y2 %r0,%r1\";
+	}
+    }
+  return \"fcmp,sgl,%Y2 %r0,%r1\";
+}"
   [(set_attr "length" "4")
    (set_attr "type" "fpcc")])
 
@@ -396,7 +512,71 @@
 			     [(match_operand:DF 0 "reg_or_0_operand" "fG")
 			      (match_operand:DF 1 "reg_or_0_operand" "fG")]))]
   "! TARGET_SOFT_FLOAT"
-  "fcmp,dbl,%Y2 %r0,%r1"
+  "*
+{
+  rtx next_insn;
+
+  /* See if this is later used in a reversed FP branch.  If so, reverse our
+     condition and the branch.  Doing so avoids a useless add,tr. 
+
+     Don't do this if fcmp is in a delay slot since it's too much of a
+     headache to track down things on multiple paths.  */
+  if (dbr_sequence_length ())
+    next_insn = NULL;
+  else
+    next_insn = NEXT_INSN (insn);
+  while (next_insn)
+    {
+      /* Jumps, calls and labels stop our search.  */
+      if (GET_CODE (next_insn) == JUMP_INSN
+	  || GET_CODE (next_insn) == CALL_INSN
+	  || GET_CODE (next_insn) == CODE_LABEL)
+	break;
+
+      /* As does another fcmp insn.  */
+      if (GET_CODE (next_insn) == INSN
+	  && GET_CODE (PATTERN (next_insn)) == SET
+	  && GET_CODE (SET_DEST (PATTERN (next_insn))) == REG
+	  && REGNO (SET_DEST (PATTERN (next_insn))) == 0)
+	break;
+
+      if (GET_CODE (next_insn) == INSN
+	  && GET_CODE (PATTERN (next_insn)) == SEQUENCE)
+	next_insn = XVECEXP (PATTERN (next_insn), 0, 0);
+      else
+	next_insn = NEXT_INSN (next_insn);
+    }
+
+  /* Is NEXT_INSN a branch?  */
+  if (next_insn
+      && GET_CODE (next_insn) == JUMP_INSN)
+    {
+      rtx pattern = PATTERN (next_insn);
+
+      /* Is it a reversed fp conditional branch (eg uses add,tr) and
+	 CCFP dies, then reverse our conditional and the branch to
+	 avoid the add,tr.  */
+      if (GET_CODE (pattern) == SET
+	  && SET_DEST (pattern) == pc_rtx
+	  && GET_CODE (SET_SRC (pattern)) == IF_THEN_ELSE
+	  && GET_CODE (XEXP (SET_SRC (pattern), 0)) == NE
+	  && GET_CODE (XEXP (XEXP (SET_SRC (pattern), 0), 0)) == REG
+	  && REGNO (XEXP (XEXP (SET_SRC (pattern), 0), 0)) == 0
+	  && GET_CODE (XEXP (SET_SRC (pattern), 1)) == PC
+	  && find_regno_note (next_insn, REG_DEAD, 0))
+
+	{
+	  rtx tmp;
+
+	  tmp = XEXP (SET_SRC (pattern), 1);
+	  XEXP (SET_SRC (pattern), 1) = XEXP (SET_SRC (pattern), 2);
+	  XEXP (SET_SRC (pattern), 2) = tmp;
+	  INSN_CODE (next_insn) = -1;
+	  return \"fcmp,dbl,%y2 %r0,%r1\";
+	}
+    }
+  return \"fcmp,dbl,%Y2 %r0,%r1\";
+}"
   [(set_attr "length" "4")
    (set_attr "type" "fpcc")])
 
@@ -761,6 +941,15 @@
   comiclr,<< %2,%0,0\;ldi %2,%0"
 [(set_attr "type" "multi,multi")
  (set_attr "length" "8,8")])
+
+(define_insn "abssi2"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	(abs:SI (match_operand:SI 1 "register_operand" "r")))]
+  ""
+  "or,>= %%r0,%1,%0\;subi 0,%0,%0"
+  [(set_attr "type" "multi")
+   (set_attr "length" "8")])
+
 ;;; Experimental conditional move patterns
 
 (define_expand "movsicc"
@@ -1017,7 +1206,7 @@
 [(set_attr "type" "cbranch")
  (set (attr "length")
     (if_then_else (lt (abs (minus (match_dup 0) (plus (pc) (const_int 8))))
-		      (const_int 8188))
+		      (const_int 8184))
            (const_int 4)
 	   (const_int 8)))])
 
@@ -1040,7 +1229,7 @@
 [(set_attr "type" "cbranch")
  (set (attr "length")
     (if_then_else (lt (abs (minus (match_dup 0) (plus (pc) (const_int 8))))
-		      (const_int 8188))
+		      (const_int 8184))
            (const_int 4)
 	   (const_int 8)))])
 
@@ -1063,7 +1252,7 @@
 [(set_attr "type" "cbranch")
  (set (attr "length")
     (if_then_else (lt (abs (minus (match_dup 2) (plus (pc) (const_int 8))))
-		      (const_int 8188))
+		      (const_int 8184))
            (const_int 4)
 	   (const_int 8)))])
 
@@ -1085,7 +1274,7 @@
 [(set_attr "type" "cbranch")
  (set (attr "length")
     (if_then_else (lt (abs (minus (match_dup 2) (plus (pc) (const_int 8))))
-		      (const_int 8188))
+		      (const_int 8184))
            (const_int 4)
 	   (const_int 8)))])
 
@@ -1107,7 +1296,7 @@
 [(set_attr "type" "cbranch")
  (set (attr "length")
     (if_then_else (lt (abs (minus (match_dup 2) (plus (pc) (const_int 8))))
-		      (const_int 8188))
+		      (const_int 8184))
            (const_int 4)
 	   (const_int 8)))])
 
@@ -1129,7 +1318,96 @@
 [(set_attr "type" "cbranch")
  (set (attr "length")
     (if_then_else (lt (abs (minus (match_dup 2) (plus (pc) (const_int 8))))
-		      (const_int 8188))
+		      (const_int 8184))
+           (const_int 4)
+	   (const_int 8)))])
+
+;; Branch on Variable Bit patterns.
+(define_insn ""
+  [(set (pc)
+	(if_then_else
+	 (ne (zero_extract:SI (match_operand:SI 0 "register_operand" "r")
+			      (const_int 1)
+			      (match_operand:SI 1 "register_operand" "q"))
+	     (const_int 0))
+	 (label_ref (match_operand 2 "" ""))
+	 (pc)))]
+  ""
+  "*
+{
+  return output_bvb (operands, INSN_ANNULLED_BRANCH_P (insn),
+		     get_attr_length (insn), 0, insn, 0);
+}"
+[(set_attr "type" "cbranch")
+ (set (attr "length")
+    (if_then_else (lt (abs (minus (match_dup 2) (plus (pc) (const_int 8))))
+		      (const_int 8184))
+           (const_int 4)
+	   (const_int 8)))])
+
+(define_insn ""
+  [(set (pc)
+	(if_then_else
+	 (ne (zero_extract:SI (match_operand:SI 0 "register_operand" "r")
+			      (const_int 1)
+			      (match_operand:SI 1 "register_operand" "q"))
+	     (const_int 0))
+	 (pc)
+	 (label_ref (match_operand 2 "" ""))))]
+  ""
+  "*
+{
+  return output_bvb (operands, INSN_ANNULLED_BRANCH_P (insn),
+		     get_attr_length (insn), 1, insn, 0);
+}"
+[(set_attr "type" "cbranch")
+ (set (attr "length")
+    (if_then_else (lt (abs (minus (match_dup 2) (plus (pc) (const_int 8))))
+		      (const_int 8184))
+           (const_int 4)
+	   (const_int 8)))])
+
+(define_insn ""
+  [(set (pc)
+	(if_then_else
+	 (eq (zero_extract:SI (match_operand:SI 0 "register_operand" "r")
+			      (const_int 1)
+			      (match_operand:SI 1 "register_operand" "q"))
+	     (const_int 0))
+	 (label_ref (match_operand 2 "" ""))
+	 (pc)))]
+  ""
+  "*
+{
+  return output_bvb (operands, INSN_ANNULLED_BRANCH_P (insn),
+		     get_attr_length (insn), 0, insn, 1);
+}"
+[(set_attr "type" "cbranch")
+ (set (attr "length")
+    (if_then_else (lt (abs (minus (match_dup 2) (plus (pc) (const_int 8))))
+		      (const_int 8184))
+           (const_int 4)
+	   (const_int 8)))])
+
+(define_insn ""
+  [(set (pc)
+	(if_then_else
+	 (eq (zero_extract:SI (match_operand:SI 0 "register_operand" "r")
+			      (const_int 1)
+			      (match_operand:SI 1 "register_operand" "q"))
+	     (const_int 0))
+	 (pc)
+	 (label_ref (match_operand 2 "" ""))))]
+  ""
+  "*
+{
+  return output_bvb (operands, INSN_ANNULLED_BRANCH_P (insn),
+		     get_attr_length (insn), 1, insn, 1);
+}"
+[(set_attr "type" "cbranch")
+ (set (attr "length")
+    (if_then_else (lt (abs (minus (match_dup 2) (plus (pc) (const_int 8))))
+		      (const_int 8184))
            (const_int 4)
 	   (const_int 8)))])
 
@@ -1224,7 +1502,7 @@
   [(set (match_operand:SI 0 "reg_or_nonsymb_mem_operand"
 				"=r,r,r,r,r,Q,*q,!f,f,*T")
 	(match_operand:SI 1 "move_operand"
-				"r,J,N,K,Q,rM,rM,!fM,*T,f"))]
+				"r,J,N,K,RQ,rM,rM,!fM,*RT,f"))]
   "(register_operand (operands[0], SImode)
     || reg_or_0_operand (operands[1], SImode))
    && ! TARGET_SOFT_FLOAT"
@@ -1237,8 +1515,8 @@
    stw%M0 %r1,%0
    mtsar %r1
    fcpy,sgl %r1,%0
-   fldws%F1 %1,%0
-   fstws%F0 %1,%0"
+   fldw%F1 %1,%0
+   fstw%F0 %1,%0"
   [(set_attr "type" "move,move,move,shift,load,store,move,fpalu,fpload,fpstore")
    (set_attr "length" "4,4,4,4,4,4,4,4,4,4")])
 
@@ -1246,7 +1524,7 @@
   [(set (match_operand:SI 0 "reg_or_nonsymb_mem_operand"
 				"=r,r,r,r,r,Q,*q")
 	(match_operand:SI 1 "move_operand"
-				"r,J,N,K,Q,rM,rM"))]
+				"r,J,N,K,RQ,rM,rM"))]
   "(register_operand (operands[0], SImode)
     || reg_or_0_operand (operands[1], SImode))
    && TARGET_SOFT_FLOAT"
@@ -1261,109 +1539,106 @@
   [(set_attr "type" "move,move,move,move,load,store,move")
    (set_attr "length" "4,4,4,4,4,4,4")])
 
-;; Load indexed.  We don't use unscaled modes since they can't be used
-;; unless we can tell which of the registers is the base and which is
-;; the index, due to PA's idea of segment selection using the top bits
-;; of the base register.
-
 (define_insn ""
   [(set (match_operand:SI 0 "register_operand" "=r")
-	(mem:SI (plus:SI (mult:SI (match_operand:SI 1 "register_operand" "r")
-				  (const_int 4))
+	(mem:SI (plus:SI (match_operand:SI 1 "basereg_operand" "r")
 			 (match_operand:SI 2 "register_operand" "r"))))]
   "! TARGET_DISABLE_INDEXING"
-  "ldwx,s %1(0,%2),%0"
+  "*
+{
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[2] == hard_frame_pointer_rtx
+      || operands[2] == stack_pointer_rtx)
+    return \"ldwx %1(0,%2),%0\";
+  else
+    return \"ldwx %2(0,%1),%0\";
+}"
   [(set_attr "type" "load")
    (set_attr "length" "4")])
 
-;; This variant of the above insn can occur if the second operand
-;; is the frame pointer.  This is a kludge, but there doesn't
-;; seem to be a way around it.  Only recognize it while reloading.
-;; Note how operand 3 uses a predicate of "const_int_operand", but 
-;; has constraints allowing a register.  I don't know how this works,
-;; but it somehow makes sure that out-of-range constants are placed
-;; in a register which somehow magically is a "const_int_operand".
-;; (this was stolen from alpha.md, I'm not going to try and change it.)
 (define_insn ""
-  [(set (match_operand:SI 0 "register_operand" "&=r")
-	(mem:SI (plus:SI (plus:SI
-			    (mult:SI (match_operand:SI 1 "register_operand" "r")
-				     (const_int 4))
-			    (match_operand:SI 2 "register_operand" "r"))
-			 (match_operand:SI 3 "const_int_operand" "rI"))))]
-  "! TARGET_DISABLE_INDEXING && reload_in_progress"
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	(mem:SI (plus:SI (match_operand:SI 1 "register_operand" "r")
+			 (match_operand:SI 2 "basereg_operand" "r"))))]
+  "! TARGET_DISABLE_INDEXING"
   "*
 {
-  if (GET_CODE (operands[3]) == CONST_INT)
-    return \"sh2addl %1,%2,%0\;ldw %3(0,%0),%0\";
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[1] == hard_frame_pointer_rtx
+      || operands[1] == stack_pointer_rtx)
+    return \"ldwx %2(0,%1),%0\";
   else
-    return \"sh2addl %1,%2,%0\;ldwx %3(0,%0),%0\";
+    return \"ldwx %1(0,%2),%0\";
 }"
   [(set_attr "type" "load")
-   (set_attr "length" "8")])
+   (set_attr "length" "4")])
 
 ;; Load or store with base-register modification.
 
 (define_insn "pre_ldwm"
-  [(set (match_operand:SI 3 "register_operand" "=r")
-	(mem:SI (plus:SI (match_operand:SI 1 "register_operand" "0")
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	(mem:SI (plus:SI (match_operand:SI 1 "register_operand" "=r")
 			 (match_operand:SI 2 "pre_cint_operand" ""))))
-   (set (match_operand:SI 0 "register_operand" "=r")
+   (set (match_dup 1)
 	(plus:SI (match_dup 1) (match_dup 2)))]
   ""
   "*
 {
   if (INTVAL (operands[2]) < 0)
-    return \"ldwm %2(0,%0),%3\";
-  return \"ldws,mb %2(0,%0),%3\";
+    return \"ldwm %2(0,%1),%0\";
+  return \"ldws,mb %2(0,%1),%0\";
 }"
   [(set_attr "type" "load")
    (set_attr "length" "4")])
 
 (define_insn "pre_stwm"
-  [(set (mem:SI (plus:SI (match_operand:SI 1 "register_operand" "0")
-			 (match_operand:SI 2 "pre_cint_operand" "")))
-	(match_operand:SI 3 "reg_or_0_operand" "rM"))
-   (set (match_operand:SI 0 "register_operand" "=r")
-	(plus:SI (match_dup 1) (match_dup 2)))]
+  [(set (mem:SI (plus:SI (match_operand:SI 0 "register_operand" "=r")
+			 (match_operand:SI 1 "pre_cint_operand" "")))
+	(match_operand:SI 2 "reg_or_0_operand" "rM"))
+   (set (match_dup 0)
+	(plus:SI (match_dup 0) (match_dup 1)))]
   ""
   "*
 {
-  if (INTVAL (operands[2]) < 0)
-    return \"stwm %r3,%2(0,%0)\";
-  return \"stws,mb %r3,%2(0,%0)\";
+  if (INTVAL (operands[1]) < 0)
+    return \"stwm %r2,%1(0,%0)\";
+  return \"stws,mb %r2,%1(0,%0)\";
 }"
   [(set_attr "type" "store")
    (set_attr "length" "4")])
 
 (define_insn "post_ldwm"
-  [(set (match_operand:SI 3 "register_operand" "r")
-	(mem:SI (match_operand:SI 1 "register_operand" "0")))
-   (set (match_operand:SI 0 "register_operand" "=r")
-	(plus:SI (match_dup 1)
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	(mem:SI (match_operand:SI 1 "register_operand" "=r")))
+   (set (match_dup 0)
+	(plus:SI (match_dup 0)
 		 (match_operand:SI 2 "post_cint_operand" "")))]
   ""
   "*
 {
   if (INTVAL (operands[2]) > 0)
-    return \"ldwm %2(0,%0),%3\";
-  return \"ldws,ma %2(0,%0),%3\";
+    return \"ldwm %2(0,%1),%0\";
+  return \"ldws,ma %2(0,%1),%1\";
 }"
   [(set_attr "type" "load")
    (set_attr "length" "4")])
 
 (define_insn "post_stwm"
-  [(set (mem:SI (match_operand:SI 1 "register_operand" "0"))
-	(match_operand:SI 3 "reg_or_0_operand" "rM"))
-   (set (match_operand:SI 0 "register_operand" "=r")
-	(plus:SI (match_dup 1)
+  [(set (mem:SI (match_operand:SI 0 "register_operand" "=r"))
+	(match_operand:SI 1 "reg_or_0_operand" "rM"))
+   (set (match_dup 0)
+	(plus:SI (match_dup 0)
 		 (match_operand:SI 2 "post_cint_operand" "")))]
   ""
   "*
 {
   if (INTVAL (operands[2]) > 0)
-    return \"stwm %r3,%2(0,%0)\";
-  return \"stws,ma %r3,%2(0,%0)\";
+    return \"stwm %r1,%2(0,%0)\";
+  return \"stws,ma %r1,%2(0,%0)\";
 }"
   [(set_attr "type" "store")
    (set_attr "length" "4")])
@@ -1449,9 +1724,19 @@
    && ! function_label_operand (operands[1])
    && ! read_only_operand (operands[1])
    && ! flag_pic"
-  "addil NLR'%G1,%%r27\;ldo N'%G1(%0),%0"
+  "*
+{
+  if (TARGET_LONG_LOAD_STORE)
+    return \"addil NLR'%H1,%%r27\;ldo N'%H1(%%r1),%%r1\";
+  else
+    return \"addil LR'%H1,%%r27\";
+}"
   [(set_attr "type" "binary")
-   (set_attr "length" "4")])
+   (set (attr "length")
+      (if_then_else (eq (symbol_ref "TARGET_LONG_LOAD_STORE") (const_int 0))
+		    (const_int 4)
+		    (const_int 8)))])
+
 
 ;; This is for use in the prologue/epilogue code.  We need it
 ;; to add large constants to a stack pointer or frame pointer.
@@ -1496,7 +1781,7 @@
   "*
 {
   if (symbolic_operand (operands[1], Pmode))
-    return \"ldil LR'%G1,%0\";
+    return \"ldil LR'%H1,%0\";
   else
     return \"ldil L'%G1,%0\";
 }"
@@ -1572,7 +1857,7 @@
 
 (define_insn ""
   [(set (match_operand:HI 0 "reg_or_nonsymb_mem_operand" "=r,r,r,r,r,Q,*q,!f")
-	(match_operand:HI 1 "move_operand" "r,J,N,K,Q,rM,rM,!fM"))]
+	(match_operand:HI 1 "move_operand" "r,J,N,K,RQ,rM,rM,!fM"))]
   "register_operand (operands[0], HImode)
    || reg_or_0_operand (operands[1], HImode)"
   "@
@@ -1589,59 +1874,118 @@
 
 (define_insn ""
   [(set (match_operand:HI 0 "register_operand" "=r")
-	(mem:HI (plus:SI (mult:SI (match_operand:SI 2 "register_operand" "r")
-				  (const_int 2))
-			 (match_operand:SI 1 "register_operand" "r"))))]
+	(mem:HI (plus:SI (match_operand:SI 1 "basereg_operand" "r")
+			 (match_operand:SI 2 "register_operand" "r"))))]
   "! TARGET_DISABLE_INDEXING"
-  "ldhx,s %2(0,%1),%0"
-  [(set_attr "type" "load")
-   (set_attr "length" "4")])
-
-;; This variant of the above insn can occur if the second operand
-;; is the frame pointer.  This is a kludge, but there doesn't
-;; seem to be a way around it.  Only recognize it while reloading.
-;; Note how operand 3 uses a predicate of "const_int_operand", but 
-;; has constraints allowing a register.  I don't know how this works,
-;; but it somehow makes sure that out-of-range constants are placed
-;; in a register which somehow magically is a "const_int_operand".
-;; (this was stolen from alpha.md, I'm not going to try and change it.
-(define_insn ""
-  [(set (match_operand:HI 0 "register_operand" "=&r")
-	(mem:HI (plus:SI (plus:SI
-			    (mult:SI (match_operand:SI 2 "register_operand" "r")
-				     (const_int 2))
-			    (match_operand:SI 1 "register_operand" "r"))
-			 (match_operand:SI 3 "const_int_operand" "rI"))))]
-  "! TARGET_DISABLE_INDEXING && reload_in_progress"
   "*
 {
-  if (GET_CODE (operands[3]) == CONST_INT)
-    return \"sh1addl %2,%1,%0\;ldh %3(0,%0),%0\";
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[2] == hard_frame_pointer_rtx
+      || operands[2] == stack_pointer_rtx)
+    return \"ldhx %1(0,%2),%0\";
   else
-    return \"sh1addl %2,%1,%0\;ldhx %3(0,%0),%0\";
+    return \"ldhx %2(0,%1),%0\";
 }"
-  [(set_attr "type" "load")
-   (set_attr "length" "8")])
-
-(define_insn ""
-  [(set (match_operand:HI 3 "register_operand" "=r")
-	(mem:HI (plus:SI (match_operand:SI 1 "register_operand" "0")
-			 (match_operand:SI 2 "int5_operand" "L"))))
-   (set (match_operand:SI 0 "register_operand" "=r")
-	(plus:SI (match_dup 1) (match_dup 2)))]
-  ""
-  "ldhs,mb %2(0,%0),%3"
   [(set_attr "type" "load")
    (set_attr "length" "4")])
 
 (define_insn ""
-  [(set (mem:HI (plus:SI (match_operand:SI 1 "register_operand" "0")
-			 (match_operand:SI 2 "int5_operand" "L")))
-	(match_operand:HI 3 "reg_or_0_operand" "rM"))
-   (set (match_operand:SI 0 "register_operand" "=r")
+  [(set (match_operand:HI 0 "register_operand" "=r")
+	(mem:HI (plus:SI (match_operand:SI 1 "register_operand" "r")
+			 (match_operand:SI 2 "basereg_operand" "r"))))]
+  "! TARGET_DISABLE_INDEXING"
+  "*
+{
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[1] == hard_frame_pointer_rtx
+      || operands[1] == stack_pointer_rtx)
+    return \"ldhx %2(0,%1),%0\";
+  else
+    return \"ldhx %1(0,%2),%0\";
+}"
+  [(set_attr "type" "load")
+   (set_attr "length" "4")])
+
+; Now zero extended variants.
+(define_insn ""
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	(zero_extend:SI (mem:HI
+			  (plus:SI
+			    (match_operand:SI 1 "basereg_operand" "r")
+			    (match_operand:SI 2 "register_operand" "r")))))]
+  "! TARGET_DISABLE_INDEXING"
+  "*
+{
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[2] == hard_frame_pointer_rtx
+      || operands[2] == stack_pointer_rtx)
+    return \"ldhx %1(0,%2),%0\";
+  else
+    return \"ldhx %2(0,%1),%0\";
+}"
+  [(set_attr "type" "load")
+   (set_attr "length" "4")])
+
+(define_insn ""
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	(zero_extend:SI (mem:HI
+			  (plus:SI
+			     (match_operand:SI 1 "register_operand" "r")
+			     (match_operand:SI 2 "basereg_operand" "r")))))]
+  "! TARGET_DISABLE_INDEXING"
+  "*
+{
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[1] == hard_frame_pointer_rtx
+      || operands[1] == stack_pointer_rtx)
+    return \"ldhx %2(0,%1),%0\";
+  else
+    return \"ldhx %1(0,%2),%0\";
+}"
+  [(set_attr "type" "load")
+   (set_attr "length" "4")])
+
+(define_insn ""
+  [(set (match_operand:HI 0 "register_operand" "=r")
+	(mem:HI (plus:SI (match_operand:SI 1 "register_operand" "=r")
+			 (match_operand:SI 2 "int5_operand" "L"))))
+   (set (match_dup 1)
 	(plus:SI (match_dup 1) (match_dup 2)))]
   ""
-  "sths,mb %r3,%2(0,%0)"
+  "ldhs,mb %2(0,%1),%0"
+  [(set_attr "type" "load")
+   (set_attr "length" "4")])
+
+; And a zero extended variant.
+(define_insn ""
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	(zero_extend:SI (mem:HI
+			  (plus:SI
+			    (match_operand:SI 1 "register_operand" "=r")
+			    (match_operand:SI 2 "int5_operand" "L")))))
+   (set (match_dup 1)
+	(plus:SI (match_dup 1) (match_dup 2)))]
+  ""
+  "ldhs,mb %2(0,%1),%0"
+  [(set_attr "type" "load")
+   (set_attr "length" "4")])
+
+(define_insn ""
+  [(set (mem:HI (plus:SI (match_operand:SI 0 "register_operand" "=r")
+			 (match_operand:SI 1 "int5_operand" "L")))
+	(match_operand:HI 2 "reg_or_0_operand" "rM"))
+   (set (match_dup 0)
+	(plus:SI (match_dup 0) (match_dup 1)))]
+  ""
+  "sths,mb %r2,%1(0,%0)"
   [(set_attr "type" "store")
    (set_attr "length" "4")])
 
@@ -1674,7 +2018,7 @@
 
 (define_insn ""
   [(set (match_operand:QI 0 "reg_or_nonsymb_mem_operand" "=r,r,r,r,r,Q,*q,!f")
-	(match_operand:QI 1 "move_operand" "r,J,N,K,Q,rM,rM,!fM"))]
+	(match_operand:QI 1 "move_operand" "r,J,N,K,RQ,rM,rM,!fM"))]
   "register_operand (operands[0], QImode)
    || reg_or_0_operand (operands[1], QImode)"
   "@
@@ -1690,24 +2034,169 @@
    (set_attr "length" "4,4,4,4,4,4,4,4")])
 
 (define_insn ""
-  [(set (match_operand:QI 3 "register_operand" "=r")
-	(mem:QI (plus:SI (match_operand:SI 1 "register_operand" "0")
-			 (match_operand:SI 2 "int5_operand" "L"))))
-   (set (match_operand:SI 0 "register_operand" "=r")
-	(plus:SI (match_dup 1) (match_dup 2)))]
-  ""
-  "ldbs,mb %2(0,%0),%3"
+  [(set (match_operand:QI 0 "register_operand" "=r")
+	(mem:QI (plus:SI (match_operand:SI 1 "basereg_operand" "r")
+			 (match_operand:SI 2 "register_operand" "r"))))]
+  "! TARGET_DISABLE_INDEXING"
+  "*
+{
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[2] == hard_frame_pointer_rtx
+      || operands[2] == stack_pointer_rtx)
+    return \"ldbx %1(0,%2),%0\";
+  else
+    return \"ldbx %2(0,%1),%0\";
+}"
   [(set_attr "type" "load")
    (set_attr "length" "4")])
 
 (define_insn ""
-  [(set (mem:QI (plus:SI (match_operand:SI 1 "register_operand" "0")
-			 (match_operand:SI 2 "int5_operand" "L")))
-	(match_operand:QI 3 "reg_or_0_operand" "rM"))
-   (set (match_operand:SI 0 "register_operand" "=r")
-	(plus:SI (match_dup 1) (match_dup 2)))]
+  [(set (match_operand:QI 0 "register_operand" "=r")
+	(mem:QI (plus:SI (match_operand:SI 1 "register_operand" "r")
+			 (match_operand:SI 2 "basereg_operand" "r"))))]
+  "! TARGET_DISABLE_INDEXING"
+  "*
+{
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[1] == hard_frame_pointer_rtx
+      || operands[1] == stack_pointer_rtx)
+    return \"ldbx %2(0,%1),%0\";
+  else
+    return \"ldbx %1(0,%2),%0\";
+}"
+  [(set_attr "type" "load")
+   (set_attr "length" "4")])
+
+; Indexed byte load with zero extension to SImode or HImode.
+(define_insn ""
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	(zero_extend:SI (mem:QI
+			  (plus:SI
+			    (match_operand:SI 1 "basereg_operand" "r")
+			    (match_operand:SI 2 "register_operand" "r")))))]
+  "! TARGET_DISABLE_INDEXING"
+  "*
+{
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[2] == hard_frame_pointer_rtx
+      || operands[2] == stack_pointer_rtx)
+    return \"ldbx %1(0,%2),%0\";
+  else
+    return \"ldbx %2(0,%1),%0\";
+}"
+  [(set_attr "type" "load")
+   (set_attr "length" "4")])
+
+(define_insn ""
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	(zero_extend:SI (mem:QI
+			  (plus:SI
+			    (match_operand:SI 1 "register_operand" "r")
+			    (match_operand:SI 2 "basereg_operand" "r")))))]
+  "! TARGET_DISABLE_INDEXING"
+  "*
+{
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[1] == hard_frame_pointer_rtx
+      || operands[1] == stack_pointer_rtx)
+    return \"ldbx %2(0,%1),%0\";
+  else
+    return \"ldbx %1(0,%2),%0\";
+}"
+  [(set_attr "type" "load")
+   (set_attr "length" "4")])
+
+(define_insn ""
+  [(set (match_operand:HI 0 "register_operand" "=r")
+	(zero_extend:HI (mem:QI
+			  (plus:SI
+			    (match_operand:SI 1 "basereg_operand" "r")
+			    (match_operand:SI 2 "register_operand" "r")))))]
+  "! TARGET_DISABLE_INDEXING"
+  "*
+{
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[2] == hard_frame_pointer_rtx
+      || operands[2] == stack_pointer_rtx)
+    return \"ldbx %1(0,%2),%0\";
+  else
+    return \"ldbx %2(0,%1),%0\";
+}"
+  [(set_attr "type" "load")
+   (set_attr "length" "4")])
+
+(define_insn ""
+  [(set (match_operand:HI 0 "register_operand" "=r")
+	(zero_extend:HI (mem:QI
+			  (plus:SI
+			    (match_operand:SI 1 "register_operand" "r")
+			    (match_operand:SI 2 "basereg_operand" "r")))))]
+  "! TARGET_DISABLE_INDEXING"
+  "*
+{
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[1] == hard_frame_pointer_rtx
+      || operands[1] == stack_pointer_rtx)
+    return \"ldbx %2(0,%1),%0\";
+  else
+    return \"ldbx %1(0,%2),%0\";
+}"
+  [(set_attr "type" "load")
+   (set_attr "length" "4")])
+
+(define_insn ""
+  [(set (match_operand:QI 0 "register_operand" "=r")
+	(mem:QI (plus:SI (match_operand:SI 1 "register_operand" "=r")
+			 (match_operand:SI 2 "int5_operand" "L"))))
+   (set (match_dup 1) (plus:SI (match_dup 1) (match_dup 2)))]
   ""
-  "stbs,mb %r3,%2(0,%0)"
+  "ldbs,mb %2(0,%1),%0"
+  [(set_attr "type" "load")
+   (set_attr "length" "4")])
+
+; Now the same thing with zero extensions.
+(define_insn ""
+  [(set (match_operand:SI 0 "register_operand" "=r")
+	(zero_extend:SI (mem:QI (plus:SI
+				  (match_operand:SI 1 "register_operand" "=r")
+				  (match_operand:SI 2 "int5_operand" "L")))))
+   (set (match_dup 1) (plus:SI (match_dup 1) (match_dup 2)))]
+  ""
+  "ldbs,mb %2(0,%1),%0"
+  [(set_attr "type" "load")
+   (set_attr "length" "4")])
+
+(define_insn ""
+  [(set (match_operand:HI 0 "register_operand" "=r")
+	(zero_extend:HI (mem:QI (plus:SI
+				  (match_operand:SI 1 "register_operand" "=r")
+				  (match_operand:SI 2 "int5_operand" "L")))))
+   (set (match_dup 1) (plus:SI (match_dup 1) (match_dup 2)))]
+  ""
+  "ldbs,mb %2(0,%1),%0"
+  [(set_attr "type" "load")
+   (set_attr "length" "4")])
+
+(define_insn ""
+  [(set (mem:QI (plus:SI (match_operand:SI 0 "register_operand" "=r")
+			 (match_operand:SI 1 "int5_operand" "L")))
+	(match_operand:QI 2 "reg_or_0_operand" "rM"))
+   (set (match_dup 0)
+	(plus:SI (match_dup 0) (match_dup 1)))]
+  ""
+  "stbs,mb %r2,%1(0,%0)"
   [(set_attr "type" "store")
    (set_attr "length" "4")])
 
@@ -1727,19 +2216,55 @@
   ""
   "
 {
-  /* If the blocks are not at least word-aligned and rather big (>16 items),
-     or the size is indeterminate, don't inline the copy code.  A
-     procedure call is better since it can check the alignment at
-     runtime and make the optimal decisions.  */
-     if (INTVAL (operands[3]) < 4
-	 && (GET_CODE (operands[2]) != CONST_INT
-	     || (INTVAL (operands[2]) / INTVAL (operands[3]) > 8)))
-       FAIL;
+  int size, align;
+  /* HP provides very fast block move library routine for the PA;
+     this routine includes:
 
+	4x4 byte at a time block moves,
+	1x4 byte at a time with alignment checked at runtime with
+	    attempts to align the source and destination as needed
+	1x1 byte loop
+
+     With that in mind, here's the heuristics to try and guess when
+     the inlined block move will be better than the library block
+     move:
+
+	If the size isn't constant, then always use the library routines.
+
+	If the size is large in respect to the known alignment, then use
+	the library routines.
+
+	If the size is small in repsect to the known alignment, then open
+	code the copy (since that will lead to better scheduling).
+
+        Else use the block move pattern.   */
+
+  /* Undetermined size, use the library routine.  */
+  if (GET_CODE (operands[2]) != CONST_INT)
+    FAIL;
+
+  size = INTVAL (operands[2]);
+  align = INTVAL (operands[3]);
+  align = align > 4 ? 4 : align;
+
+  /* If size/alignment > 8 (eg size is large in respect to alignment),
+     then use the library routines.  */
+  if (size/align > 16)
+    FAIL;
+
+  /* This does happen, but not often enough to worry much about.  */
+  if (size/align < MOVE_RATIO)
+    FAIL;
+  
+  /* Fall through means we're going to use our block move pattern.  */
   operands[0] = copy_to_mode_reg (SImode, XEXP (operands[0], 0));
   operands[1] = copy_to_mode_reg (SImode, XEXP (operands[1], 0));
   operands[4] = gen_reg_rtx (SImode);
   operands[5] = gen_reg_rtx (SImode);
+  emit_insn (gen_movstrsi_internal (operands[0], operands[1], operands[4],
+				     operands[5], operands[2], operands[3],
+				     gen_reg_rtx (SImode)));
+  DONE;
 }")
 
 ;; The operand constraints are written like this to support both compile-time
@@ -1747,13 +2272,14 @@
 ;; the register with the byte count is clobbered by the copying code, and
 ;; therefore it is forced to operand 2.  If the count is compile-time
 ;; determined, we need two scratch registers for the unrolled code.
-(define_insn ""
+(define_insn "movstrsi_internal"
   [(set (mem:BLK (match_operand:SI 0 "register_operand" "+r,r"))
 	(mem:BLK (match_operand:SI 1 "register_operand" "+r,r")))
    (clobber (match_dup 0))
    (clobber (match_dup 1))
    (clobber (match_operand:SI 2 "register_operand" "=r,r"))	;loop cnt/tmp
    (clobber (match_operand:SI 3 "register_operand" "=&r,&r"))	;item tmp
+   (clobber (match_operand:SI 6 "register_operand" "=&r,&r"))	;item tmp2
    (use (match_operand:SI 4 "arith_operand" "J,2"))	 ;byte count
    (use (match_operand:SI 5 "const_int_operand" "n,n"))] ;alignment
   ""
@@ -1772,13 +2298,13 @@
 ;; This must come before the movdf pattern, and it must be present
 ;; to handle obscure reloading cases.
 (define_insn ""
-  [(set (match_operand:DF 0 "general_operand" "=?r,f")
+  [(set (match_operand:DF 0 "register_operand" "=?r,f")
 	(match_operand:DF 1 "" "?F,m"))]
   "GET_CODE (operands[1]) == CONST_DOUBLE
    && operands[1] != CONST0_RTX (DFmode)
    && ! TARGET_SOFT_FLOAT"
   "* return (which_alternative == 0 ? output_move_double (operands)
-				    : \" fldds%F1 %1,%0\");"
+				    : \"fldd%F1 %1,%0\");"
   [(set_attr "type" "move,fpload")
    (set_attr "length" "16,4")])
 
@@ -1827,9 +2353,9 @@
 
 (define_insn ""
   [(set (match_operand:DF 0 "reg_or_nonsymb_mem_operand"
-			  "=f,*r,Q,?o,?Q,f,*&r,*&r")
+			  "=f,*r,RQ,?o,?Q,f,*r,*r")
 	(match_operand:DF 1 "reg_or_0_or_nonsymb_mem_operand"
-			  "fG,*rG,f,*r,*r,Q,o,Q"))]
+			  "fG,*rG,f,*r,*r,RQ,o,Q"))]
   "(register_operand (operands[0], DFmode)
     || reg_or_0_operand (operands[1], DFmode))
    && ! TARGET_SOFT_FLOAT"
@@ -1845,7 +2371,7 @@
 
 (define_insn ""
   [(set (match_operand:DF 0 "reg_or_nonsymb_mem_operand"
-			  "=r,?o,?Q,&r,&r")
+			  "=r,?o,?Q,r,r")
 	(match_operand:DF 1 "reg_or_0_or_nonsymb_mem_operand"
 			  "rG,r,r,o,Q"))]
   "(register_operand (operands[0], DFmode)
@@ -1859,82 +2385,80 @@
    (set_attr "length" "8,8,16,8,16")])
 
 (define_insn ""
-  [(set (match_operand:DF 0 "register_operand" "=f")
-	(mem:DF (plus:SI (mult:SI (match_operand:SI 1 "register_operand" "r")
-				  (const_int 8))
+  [(set (match_operand:DF 0 "register_operand" "=fx")
+	(mem:DF (plus:SI (match_operand:SI 1 "basereg_operand" "r")
 			 (match_operand:SI 2 "register_operand" "r"))))]
   "! TARGET_DISABLE_INDEXING && ! TARGET_SOFT_FLOAT"
-  "flddx,s %1(0,%2),%0"
+  "*
+{
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[2] == hard_frame_pointer_rtx
+      || operands[2] == stack_pointer_rtx)
+    return \"flddx %1(0,%2),%0\";
+  else
+    return \"flddx %2(0,%1),%0\";
+}"
   [(set_attr "type" "fpload")
    (set_attr "length" "4")])
 
-;; This variant of the above insn can occur if the second operand
-;; is the frame pointer.  This is a kludge, but there doesn't
-;; seem to be a way around it.  Only recognize it while reloading.
-;; Note how operand 3 uses a predicate of "const_int_operand", but 
-;; has constraints allowing a register.  I don't know how this works,
-;; but it somehow makes sure that out-of-range constants are placed
-;; in a register which somehow magically is a "const_int_operand".
-;; (this was stolen from alpha.md, I'm not going to try and change it.
-;; Ugh. Output is a FP register; so we need to earlyclobber something
-;; else as a temporary.
 (define_insn ""
-  [(set (match_operand:DF 0 "register_operand" "=f")
-	(mem:DF (plus:SI
-		  (plus:SI
-		    (mult:SI (match_operand:SI 1 "register_operand" "+&r")
-			     (const_int 8))
-		    (match_operand:SI 2 "register_operand" "r"))
-		  (match_operand:SI 3 "const_int_operand" "rL"))))]
-  "! TARGET_DISABLE_INDEXING && ! TARGET_SOFT_FLOAT && reload_in_progress"
-  "*
-{
-  if (GET_CODE (operands[3]) == CONST_INT)
-    return \"sh3addl %1,%2,%1\;fldds %3(0,%1),%0\";
-  else
-    return \"sh3addl %1,%2,%1\;flddx %3(0,%1),%0\";
-}"
-  [(set_attr "type" "fpload")
-   (set_attr "length" "8")])
-
-(define_insn ""
-  [(set (mem:DF (plus:SI (mult:SI (match_operand:SI 1 "register_operand" "r")
-				  (const_int 8))
-			 (match_operand:SI 2 "register_operand" "r")))
-	(match_operand:DF 0 "register_operand" "f"))]
+  [(set (match_operand:DF 0 "register_operand" "=fx")
+	(mem:DF (plus:SI (match_operand:SI 1 "register_operand" "r")
+			 (match_operand:SI 2 "basereg_operand" "r"))))]
   "! TARGET_DISABLE_INDEXING && ! TARGET_SOFT_FLOAT"
-  "fstdx,s %0,%1(0,%2)"
+  "*
+{
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[1] == hard_frame_pointer_rtx
+      || operands[1] == stack_pointer_rtx)
+    return \"flddx %2(0,%1),%0\";
+  else
+    return \"flddx %1(0,%2),%0\";
+}"
+  [(set_attr "type" "fpload")
+   (set_attr "length" "4")])
+
+(define_insn ""
+  [(set (mem:DF (plus:SI (match_operand:SI 1 "basereg_operand" "r")
+			 (match_operand:SI 2 "register_operand" "r")))
+	(match_operand:DF 0 "register_operand" "fx"))]
+  "! TARGET_DISABLE_INDEXING && ! TARGET_SOFT_FLOAT"
+  "*
+{
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[2] == hard_frame_pointer_rtx
+      || operands[2] == stack_pointer_rtx)
+    return \"fstdx %0,%1(0,%2)\";
+  else
+    return \"fstdx %0,%2(0,%1)\";
+}"
   [(set_attr "type" "fpstore")
    (set_attr "length" "4")])
 
-;; This variant of the above insn can occur if the second operand
-;; is the frame pointer.  This is a kludge, but there doesn't
-;; seem to be a way around it.  Only recognize it while reloading.
-;; Note how operand 3 uses a predicate of "const_int_operand", but 
-;; has constraints allowing a register.  I don't know how this works,
-;; but it somehow makes sure that out-of-range constants are placed
-;; in a register which somehow magically is a "const_int_operand".
-;; (this was stolen from alpha.md, I'm not going to try and change it.
-;; Ugh. Output is a FP register; so we need to earlyclobber something
-;; else as a temporary.
 (define_insn ""
-  [(set (mem:DF (plus:SI
-		  (plus:SI
-		     (mult:SI (match_operand:SI 1 "register_operand" "+&r")
-			      (const_int 8))
-		     (match_operand:SI 2 "register_operand" "r"))
-		  (match_operand:SI 3 "const_int_operand" "rL")))
-	(match_operand:DF 0 "register_operand" "f"))]
-  "! TARGET_DISABLE_INDEXING && ! TARGET_SOFT_FLOAT && reload_in_progress"
+  [(set (mem:DF (plus:SI (match_operand:SI 1 "register_operand" "r")
+			 (match_operand:SI 2 "basereg_operand" "r")))
+	(match_operand:DF 0 "register_operand" "fx"))]
+  "! TARGET_DISABLE_INDEXING && ! TARGET_SOFT_FLOAT"
   "*
 {
-  if (GET_CODE (operands[3]) == CONST_INT)
-    return \"sh3addl %1,%2,%1\;fstds %0,%3(0,%1)\";
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[1] == hard_frame_pointer_rtx
+      || operands[1] == stack_pointer_rtx)
+    return \"fstdx %0,%2(0,%1)\";
   else
-    return \"sh3addl %1,%2,%1\;fstdx %0,%3(0,%1)\";
+    return \"fstdx %0,%1(0,%2)\";
 }"
   [(set_attr "type" "fpstore")
-   (set_attr "length" "8")])
+   (set_attr "length" "4")])
 
 (define_expand "movdi"
   [(set (match_operand:DI 0 "reg_or_nonsymb_mem_operand" "")
@@ -2018,7 +2542,7 @@
 
 (define_insn ""
   [(set (match_operand:DI 0 "reg_or_nonsymb_mem_operand"
-			  "=r,o,Q,&r,&r,&r,f,f,*T")
+			  "=r,o,Q,r,r,r,f,f,*T")
 	(match_operand:DI 1 "general_operand"
 			  "rM,r,r,o,Q,i,fM,*T,f"))]
   "(register_operand (operands[0], DImode)
@@ -2036,7 +2560,7 @@
 
 (define_insn ""
   [(set (match_operand:DI 0 "reg_or_nonsymb_mem_operand"
-			  "=r,o,Q,&r,&r,&r")
+			  "=r,o,Q,r,r,r")
 	(match_operand:DI 1 "general_operand"
 			  "rM,r,r,o,Q,i"))]
   "(register_operand (operands[0], DImode)
@@ -2077,13 +2601,13 @@
 ;; This must come before the movsf pattern, and it must be present
 ;; to handle obscure reloading cases.
 (define_insn ""
-  [(set (match_operand:SF 0 "general_operand" "=?r,f")
+  [(set (match_operand:SF 0 "register_operand" "=?r,f")
 	(match_operand:SF 1 "" "?F,m"))]
   "GET_CODE (operands[1]) == CONST_DOUBLE
    && operands[1] != CONST0_RTX (SFmode)
    && ! TARGET_SOFT_FLOAT"
   "* return (which_alternative == 0 ? singlemove_string (operands)
-				    : \" fldws%F1 %1,%0\");"
+				    : \" fldw%F1 %1,%0\");"
   [(set_attr "type" "move,fpload")
    (set_attr "length" "8,4")])
 
@@ -2132,18 +2656,18 @@
 
 (define_insn ""
   [(set (match_operand:SF 0 "reg_or_nonsymb_mem_operand"
-			  "=f,r,f,r,Q,Q")
+			  "=f,r,f,r,RQ,Q")
 	(match_operand:SF 1 "reg_or_0_or_nonsymb_mem_operand"
-			  "fG,rG,Q,Q,f,rG"))]
+			  "fG,rG,RQ,Q,f,rG"))]
   "(register_operand (operands[0], SFmode)
     || reg_or_0_operand (operands[1], SFmode))
    && ! TARGET_SOFT_FLOAT"
   "@
    fcpy,sgl %r1,%0
    copy %r1,%0
-   fldws%F1 %1,%0
+   fldw%F1 %1,%0
    ldw%M1 %1,%0
-   fstws%F0 %r1,%0
+   fstw%F0 %r1,%0
    stw%M0 %r1,%0"
   [(set_attr "type" "fpalu,move,fpload,load,fpstore,store")
    (set_attr "length" "4,4,4,4,4,4")])
@@ -2164,83 +2688,82 @@
    (set_attr "length" "4,4,4")])
 
 (define_insn ""
-  [(set (match_operand:SF 0 "register_operand" "=f")
-	(mem:SF (plus:SI (mult:SI (match_operand:SI 1 "register_operand" "r")
-				  (const_int 4))
+  [(set (match_operand:SF 0 "register_operand" "=fx")
+	(mem:SF (plus:SI (match_operand:SI 1 "basereg_operand" "r")
 			 (match_operand:SI 2 "register_operand" "r"))))]
   "! TARGET_DISABLE_INDEXING && ! TARGET_SOFT_FLOAT"
-  "fldwx,s %1(0,%2),%0"
+  "*
+{
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[2] == hard_frame_pointer_rtx
+      || operands[2] == stack_pointer_rtx)
+    return \"fldwx %1(0,%2),%0\";
+  else
+    return \"fldwx %2(0,%1),%0\";
+}"
   [(set_attr "type" "fpload")
    (set_attr "length" "4")])
 
-;; This variant of the above insn can occur if the second operand
-;; is the frame pointer.  This is a kludge, but there doesn't
-;; seem to be a way around it.  Only recognize it while reloading.
-;; Note how operand 3 uses a predicate of "const_int_operand", but 
-;; has constraints allowing a register.  I don't know how this works,
-;; but it somehow makes sure that out-of-range constants are placed
-;; in a register which somehow magically is a "const_int_operand".
-;; (this was stolen from alpha.md, I'm not going to try and change it.
-;; Ugh. Output is a FP register; so we need to earlyclobber something
-;; else as a temporary.
 (define_insn ""
-  [(set (match_operand:SF 0 "register_operand" "=f")
-	(mem:SF (plus:SI
-		  (plus:SI
-		    (mult:SI (match_operand:SI 1 "register_operand" "+&r")
-			     (const_int 4))
-		    (match_operand:SI 2 "register_operand" "r"))
-		  (match_operand:SI 3 "const_int_operand" "rL"))))]
-  "! TARGET_DISABLE_INDEXING && ! TARGET_SOFT_FLOAT && reload_in_progress"
-  "*
-{
-  if (GET_CODE (operands[3]) == CONST_INT)
-    return \"sh2addl %1,%2,%1\;fldws %3(0,%1),%0\";
-  else
-    return \"sh2addl %1,%2,%1\;fldwx %3(0,%1),%0\";
-}"
-  [(set_attr "type" "fpload")
-   (set_attr "length" "8")])
-
-(define_insn ""
-  [(set (mem:SF (plus:SI (mult:SI (match_operand:SI 1 "register_operand" "r")
-				  (const_int 4))
-			 (match_operand:SI 2 "register_operand" "r")))
-	(match_operand:SF 0 "register_operand" "f"))]
+  [(set (match_operand:SF 0 "register_operand" "=fx")
+	(mem:SF (plus:SI (match_operand:SI 1 "register_operand" "r")
+			 (match_operand:SI 2 "basereg_operand" "r"))))]
   "! TARGET_DISABLE_INDEXING && ! TARGET_SOFT_FLOAT"
-  "fstwx,s %0,%1(0,%2)"
-  [(set_attr "type" "fpstore")
-   (set_attr "length" "4")])
-
-;; This variant of the above insn can occur if the second operand
-;; is the frame pointer.  This is a kludge, but there doesn't
-;; seem to be a way around it.  Only recognize it while reloading.
-;; Note how operand 3 uses a predicate of "const_int_operand", but 
-;; has constraints allowing a register.  I don't know how this works,
-;; but it somehow makes sure that out-of-range constants are placed
-;; in a register which somehow magically is a "const_int_operand".
-;; (this was stolen from alpha.md, I'm not going to try and change it.
-;; Ugh. Output is a FP register; so we need to earlyclobber something
-;; else as a temporary.
-(define_insn ""
-  [(set (mem:SF (plus:SI
-		  (plus:SI
-		     (mult:SI (match_operand:SI 1 "register_operand" "+&r")
-			      (const_int 4))
-		     (match_operand:SI 2 "register_operand" "r"))
-		  (match_operand:SI 3 "const_int_operand" "rL")))
-	(match_operand:SF 0 "register_operand" "f"))]
-  "! TARGET_DISABLE_INDEXING && ! TARGET_SOFT_FLOAT && reload_in_progress"
   "*
 {
-  if (GET_CODE (operands[3]) == CONST_INT)
-    return \"sh2addl %1,%2,%1\;fstws %0,%3(0,%1)\";
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[1] == hard_frame_pointer_rtx
+      || operands[1] == stack_pointer_rtx)
+    return \"fldwx %2(0,%1),%0\";
   else
-    return \"sh2addl %1,%2,%1\;fstwx %0,%3(0,%1)\";
+    return \"fldwx %1(0,%2),%0\";
+}"
+  [(set_attr "type" "fpload")
+   (set_attr "length" "4")])
+
+(define_insn ""
+  [(set (mem:SF (plus:SI (match_operand:SI 1 "basereg_operand" "r")
+			 (match_operand:SI 2 "register_operand" "r")))
+      (match_operand:SF 0 "register_operand" "fx"))]
+  "! TARGET_DISABLE_INDEXING && ! TARGET_SOFT_FLOAT"
+  "*
+{
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[2] == hard_frame_pointer_rtx
+      || operands[2] == stack_pointer_rtx)
+    return \"fstwx %0,%1(0,%2)\";
+  else
+    return \"fstwx %0,%2(0,%1)\";
 }"
   [(set_attr "type" "fpstore")
-   (set_attr "length" "8")])
+   (set_attr "length" "4")])
 
+(define_insn ""
+  [(set (mem:SF (plus:SI (match_operand:SI 1 "register_operand" "r")
+			 (match_operand:SI 2 "basereg_operand" "r")))
+      (match_operand:SF 0 "register_operand" "fx"))]
+  "! TARGET_DISABLE_INDEXING && ! TARGET_SOFT_FLOAT"
+  "*
+{
+  /* Reload can create backwards (relative to cse) unscaled index
+     address modes when eliminating registers and possibly for
+     pseudos that don't get hard registers.  Deal with it.  */
+  if (operands[1] == hard_frame_pointer_rtx
+      || operands[1] == stack_pointer_rtx)
+    return \"fstwx %0,%2(0,%1)\";
+  else
+    return \"fstwx %0,%1(0,%2)\";
+}"
+  [(set_attr "type" "fpstore")
+   (set_attr "length" "4")])
+
+
 ;;- zero extension instructions
 
 (define_insn "zero_extendhisi2"
@@ -2334,15 +2857,15 @@
 ;; to be reloaded by putting the constant into memory.
 ;; It must come before the more general floatsisf2 pattern.
 (define_insn ""
-  [(set (match_operand:SF 0 "general_operand" "=f")
+  [(set (match_operand:SF 0 "register_operand" "=f")
 	(float:SF (match_operand:SI 1 "const_int_operand" "m")))]
   "! TARGET_SOFT_FLOAT"
-  "fldws %1,%0\;fcnvxf,sgl,sgl %0,%0"
+  "fldw%F1 %1,%0\;fcnvxf,sgl,sgl %0,%0"
   [(set_attr "type" "fpalu")
    (set_attr "length" "8")])
 
 (define_insn "floatsisf2"
-  [(set (match_operand:SF 0 "general_operand" "=f")
+  [(set (match_operand:SF 0 "register_operand" "=f")
 	(float:SF (match_operand:SI 1 "register_operand" "f")))]
   "! TARGET_SOFT_FLOAT"
   "fcnvxf,sgl,sgl %1,%0"
@@ -2353,15 +2876,15 @@
 ;; to be reloaded by putting the constant into memory.
 ;; It must come before the more general floatsidf2 pattern.
 (define_insn ""
-  [(set (match_operand:DF 0 "general_operand" "=f")
+  [(set (match_operand:DF 0 "register_operand" "=f")
 	(float:DF (match_operand:SI 1 "const_int_operand" "m")))]
   "! TARGET_SOFT_FLOAT"
-  "fldws %1,%0\;fcnvxf,sgl,dbl %0,%0"
+  "fldw%F1 %1,%0\;fcnvxf,sgl,dbl %0,%0"
   [(set_attr "type" "fpalu")
    (set_attr "length" "8")])
 
 (define_insn "floatsidf2"
-  [(set (match_operand:DF 0 "general_operand" "=f")
+  [(set (match_operand:DF 0 "register_operand" "=f")
 	(float:DF (match_operand:SI 1 "register_operand" "f")))]
   "! TARGET_SOFT_FLOAT"
   "fcnvxf,sgl,dbl %1,%0"
@@ -2373,7 +2896,7 @@
 	(match_operand:SI 1 "register_operand" ""))
    (set (subreg:SI (match_dup 2) 0)
 	(const_int 0))
-   (set (match_operand:SF 0 "general_operand" "")
+   (set (match_operand:SF 0 "register_operand" "")
 	(float:SF (match_dup 2)))]
   "TARGET_SNAKE && ! TARGET_SOFT_FLOAT"
   "operands[2] = gen_reg_rtx (DImode);")
@@ -2383,13 +2906,13 @@
 	(match_operand:SI 1 "register_operand" ""))
    (set (subreg:SI (match_dup 2) 0)
 	(const_int 0))
-   (set (match_operand:DF 0 "general_operand" "")
+   (set (match_operand:DF 0 "register_operand" "")
 	(float:DF (match_dup 2)))]
   "TARGET_SNAKE && ! TARGET_SOFT_FLOAT"
   "operands[2] = gen_reg_rtx (DImode);")
 
 (define_insn "floatdisf2"
-  [(set (match_operand:SF 0 "general_operand" "=f")
+  [(set (match_operand:SF 0 "register_operand" "=f")
 	(float:SF (match_operand:DI 1 "register_operand" "f")))]
   "TARGET_SNAKE && ! TARGET_SOFT_FLOAT"
   "fcnvxf,dbl,sgl %1,%0"
@@ -2397,7 +2920,7 @@
    (set_attr "length" "4")])
 
 (define_insn "floatdidf2"
-  [(set (match_operand:DF 0 "general_operand" "=f")
+  [(set (match_operand:DF 0 "register_operand" "=f")
 	(float:DF (match_operand:DI 1 "register_operand" "f")))]
   "TARGET_SNAKE && ! TARGET_SOFT_FLOAT"
   "fcnvxf,dbl,dbl %1,%0"
@@ -2506,7 +3029,10 @@
 
   /* Try dividing the constant by 2, then 4, and finally 8 to see
      if we can get a constant which can be loaded into a register
-     in a single instruction (cint_ok_for_move).  */
+     in a single instruction (cint_ok_for_move). 
+
+     If that fails, try to negate the constant and subtract it
+     from our input operand.  */
   if (intval % 2 == 0 && cint_ok_for_move (intval / 2))
     {
       operands[2] = GEN_INT (intval / 2);
@@ -2521,6 +3047,12 @@
     {
       operands[2] = GEN_INT (intval / 8);
       operands[3] = GEN_INT (8);
+    }
+  else if (cint_ok_for_move (-intval))
+    {
+      emit_insn (gen_rtx (SET, VOIDmode, operands[4], GEN_INT (-intval)));
+      emit_insn (gen_subsi3 (operands[0], operands[1], operands[4]));
+      DONE;
     }
   else
     FAIL;
@@ -2635,12 +3167,29 @@
   "* return output_mul_insn (0, insn);"
   [(set_attr "type" "milli")
    (set (attr "length")
-     (if_then_else (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
-			    (const_int 0))
-			(eq (symbol_ref "TARGET_MILLICODE_LONG_CALLS")
-			    (const_int 0)))
-		   (const_int 4)
-		   (const_int 24)))])
+     (cond [
+;; Target (or stub) within reach
+            (and (lt (plus (symbol_ref "total_code_bytes") (pc))
+                     (const_int 240000))
+                 (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                     (const_int 0)))
+            (const_int 4)
+
+;; NO_SPACE_REGS
+            (ne (symbol_ref "TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS")
+                (const_int 0))
+            (const_int 8)
+
+;; Out of reach, but not PIC or PORTABLE_RUNTIME
+;; same as NO_SPACE_REGS code
+            (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                     (const_int 0))
+                 (eq (symbol_ref "flag_pic")
+                     (const_int 0)))
+            (const_int 8)]
+
+;; Out of range and either PIC or PORTABLE_RUNTIME
+	  (const_int 24)))])
 
 ;;; Division and mod.
 (define_expand "divsi3"
@@ -2672,12 +3221,29 @@
    return output_div_insn (operands, 0, insn);"
   [(set_attr "type" "milli")
    (set (attr "length")
-     (if_then_else (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
-			    (const_int 0))
-			(eq (symbol_ref "TARGET_MILLICODE_LONG_CALLS")
-			    (const_int 0)))
-		   (const_int 4)
-		   (const_int 24)))])
+     (cond [
+;; Target (or stub) within reach
+            (and (lt (plus (symbol_ref "total_code_bytes") (pc))
+                     (const_int 240000))
+                 (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                     (const_int 0)))
+            (const_int 4)
+
+;; NO_SPACE_REGS
+            (ne (symbol_ref "TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS")
+                (const_int 0))
+            (const_int 8)
+
+;; Out of reach, but not PIC or PORTABLE_RUNTIME
+;; same as NO_SPACE_REGS code
+            (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                     (const_int 0))
+                 (eq (symbol_ref "flag_pic")
+                     (const_int 0)))
+            (const_int 8)]
+
+;; Out of range and either PIC or PORTABLE_RUNTIME
+	  (const_int 24)))])
 
 (define_expand "udivsi3"
   [(set (reg:SI 26) (match_operand:SI 1 "move_operand" ""))
@@ -2708,12 +3274,29 @@
    return output_div_insn (operands, 1, insn);"
   [(set_attr "type" "milli")
    (set (attr "length")
-     (if_then_else (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
-			    (const_int 0))
-			(eq (symbol_ref "TARGET_MILLICODE_LONG_CALLS")
-			    (const_int 0)))
-		   (const_int 4)
-		   (const_int 24)))])
+     (cond [
+;; Target (or stub) within reach
+            (and (lt (plus (symbol_ref "total_code_bytes") (pc))
+                     (const_int 240000))
+                 (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                     (const_int 0)))
+            (const_int 4)
+
+;; NO_SPACE_REGS
+            (ne (symbol_ref "TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS")
+                (const_int 0))
+            (const_int 8)
+
+;; Out of reach, but not PIC or PORTABLE_RUNTIME
+;; same as NO_SPACE_REGS code
+            (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                     (const_int 0))
+                 (eq (symbol_ref "flag_pic")
+                     (const_int 0)))
+            (const_int 8)]
+
+;; Out of range and either PIC or PORTABLE_RUNTIME
+	  (const_int 24)))])
 
 (define_expand "modsi3"
   [(set (reg:SI 26) (match_operand:SI 1 "move_operand" ""))
@@ -2741,12 +3324,29 @@
   return output_mod_insn (0, insn);"
   [(set_attr "type" "milli")
    (set (attr "length")
-     (if_then_else (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
-			    (const_int 0))
-			(eq (symbol_ref "TARGET_MILLICODE_LONG_CALLS")
-			    (const_int 0)))
-		   (const_int 4)
-		   (const_int 24)))])
+     (cond [
+;; Target (or stub) within reach
+            (and (lt (plus (symbol_ref "total_code_bytes") (pc))
+                     (const_int 240000))
+                 (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                     (const_int 0)))
+            (const_int 4)
+
+;; NO_SPACE_REGS
+            (ne (symbol_ref "TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS")
+                (const_int 0))
+            (const_int 8)
+
+;; Out of reach, but not PIC or PORTABLE_RUNTIME
+;; same as NO_SPACE_REGS code
+            (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                     (const_int 0))
+                 (eq (symbol_ref "flag_pic")
+                     (const_int 0)))
+            (const_int 8)]
+
+;; Out of range and either PIC or PORTABLE_RUNTIME
+	  (const_int 24)))])
 
 (define_expand "umodsi3"
   [(set (reg:SI 26) (match_operand:SI 1 "move_operand" ""))
@@ -2774,12 +3374,29 @@
   return output_mod_insn (1, insn);"
   [(set_attr "type" "milli")
    (set (attr "length")
-     (if_then_else (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
-			    (const_int 0))
-			(eq (symbol_ref "TARGET_MILLICODE_LONG_CALLS")
-			    (const_int 0)))
-		   (const_int 4)
-		   (const_int 24)))])
+     (cond [
+;; Target (or stub) within reach
+            (and (lt (plus (symbol_ref "total_code_bytes") (pc))
+                     (const_int 240000))
+                 (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                     (const_int 0)))
+            (const_int 4)
+
+;; NO_SPACE_REGS
+            (ne (symbol_ref "TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS")
+                (const_int 0))
+            (const_int 8)
+
+;; Out of reach, but not PIC or PORTABLE_RUNTIME
+;; same as NO_SPACE_REGS code
+            (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                     (const_int 0))
+                 (eq (symbol_ref "flag_pic")
+                     (const_int 0)))
+            (const_int 8)]
+
+;; Out of range and either PIC or PORTABLE_RUNTIME
+	  (const_int 24)))])
 
 ;;- and instructions
 ;; We define DImode `and` so with DImode `not` we can get
@@ -3300,19 +3917,6 @@
   [(set_attr "type" "shift")
    (set_attr "length" "4")])
 
-(define_insn "rotlsi3"
-  [(set (match_operand:SI 0 "register_operand" "=r")
-	(rotate:SI (match_operand:SI 1 "register_operand" "r")
-		   (match_operand:SI 2 "const_int_operand" "n")))]
-  ""
-  "*
-{
-  operands[2] = GEN_INT ((32 - INTVAL (operands[2])) & 31);
-  return \"shd %1,%1,%2,%0\";
-}"
-  [(set_attr "type" "shift")
-   (set_attr "length" "4")])
-
 (define_insn ""
   [(set (match_operand:SI 0 "register_operand" "=r")
 	(match_operator:SI 5 "plus_xor_ior_operator"
@@ -3430,7 +4034,7 @@
 ;; on whether or not we can add the proper offset to %r2 with an ldo
 ;; instruction.
 	   (lt (abs (minus (match_dup 0) (plus (pc) (const_int 8))))
-		    (const_int 8188))
+		    (const_int 8184))
            (const_int 4)]
 	  (const_int 8)))])
 
@@ -3524,8 +4128,11 @@
   if (GET_CODE (op) == SYMBOL_REF)
     call_insn = emit_call_insn (gen_call_internal_symref (op, operands[1]));
   else
-    call_insn = emit_call_insn (gen_call_internal_reg (force_reg (SImode, op),
-						       operands[1]));
+    {
+      rtx tmpreg = gen_rtx (REG, SImode, 22);
+      emit_move_insn (tmpreg, force_reg (SImode, op));
+      call_insn = emit_call_insn (gen_call_internal_reg (operands[1]));
+    }
 
   if (flag_pic)
     {
@@ -3539,6 +4146,16 @@
       emit_move_insn (pic_offset_table_rtx,
 		      gen_rtx (REG, SImode, PIC_OFFSET_TABLE_REGNUM_SAVED));
       emit_insn (gen_rtx (USE, VOIDmode, pic_offset_table_rtx));
+
+      /* Gross.  We have to keep the scheduler from moving the restore
+	 of the PIC register away from the call.  SCHED_GROUP_P is
+	 supposed to do this, but for some reason the compiler will
+	 go into an infinite loop when we use that.
+
+	 This method (blockage insn) may make worse code (then again
+	 it may not since calls are nearly blockages anyway), but at
+	 least it should work.  */
+      emit_insn (gen_blockage ());
     }
   DONE;
 }")
@@ -3556,39 +4173,91 @@
 }"
   [(set_attr "type" "call")
    (set (attr "length")
+;;       If we're sure that we can either reach the target or that the
+;;	 linker can use a long-branch stub, then the length is 4 bytes.
+;;
+;;	 For long-calls the length will be either 52 bytes (non-pic)
+;;	 or 68 bytes (pic).  */
+;;	 Else we have to use a long-call;
       (if_then_else (lt (plus (symbol_ref "total_code_bytes") (pc))
 			(const_int 240000))
 		    (const_int 4)
-		    (if_then_else (ne (symbol_ref "TARGET_MILLICODE_LONG_CALLS")
+		    (if_then_else (eq (symbol_ref "flag_pic")
 				      (const_int 0))
-				  (const_int 64)
-				  (const_int 52))))])
+				  (const_int 52)
+				  (const_int 68))))])
 
 (define_insn "call_internal_reg"
-  [(call (mem:SI (match_operand:SI 0 "register_operand" "r"))
-	 (match_operand 1 "" "i"))
+  [(call (mem:SI (reg:SI 22))
+	 (match_operand 0 "" "i"))
    (clobber (reg:SI 2))
    (use (const_int 1))]
   ""
   "*
 {
-  if (TARGET_FAST_INDIRECT_CALLS)
-    return \"ble 0(%%sr4,%r0)\;copy %%r31,%%r2\";
+  rtx xoperands[2];
 
-  /* Yuk!  bl may not be able to reach $$dyncall.  */
-  if (TARGET_PORTABLE_RUNTIME || TARGET_MILLICODE_LONG_CALLS)
-    return \"copy %r0,%%r22\;ldil L%%$$dyncall,%%r31\;ldo R%%$$dyncall(%%r31),%%r31\;blr 0,%%r2\;bv,n 0(%%r31)\;nop\";
-  else
-    return \"copy %r0,%%r22\;.CALL\\tARGW0=GR\;bl $$dyncall,%%r31\;copy %%r31,%%r2\";
+  /* First the special case for kernels, level 0 systems, etc.  */
+  if (TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS)
+    return \"ble 0(%%sr4,%%r22)\;copy %%r31,%%r2\";
+
+  /* Now the normal case -- we can reach $$dyncall directly or
+     we're sure that we can get there via a long-branch stub. 
+
+     No need to check target flags as the length uniquely identifies
+     the remaining cases.  */
+  if (get_attr_length (insn) == 8)
+    return \".CALL\\tARGW0=GR\;bl $$dyncall,%%r31\;copy %%r31,%%r2\";
+
+  /* Long millicode call, but we are not generating PIC or portable runtime
+     code.  */
+  if (get_attr_length (insn) == 12)
+    return \"CALL\\tARGW0=GR\;ldil L%%$$dyncall,%%r2\;ble R%%$$dyncall(%%sr4,%%r2)\;copy %%r31,%%r2\";
+
+  /* Long millicode call for portable runtime.  */
+  if (get_attr_length (insn) == 20)
+    return \"ldil L%%$$dyncall,%%r31\;ldo R%%$$dyncall(%%r31),%%r31\;blr 0,%%r2\;bv,n 0(%%r31)\;nop\";
+
+  /* If we're generating PIC code.  */
+  xoperands[0] = operands[0];
+  xoperands[1] = gen_label_rtx ();
+  output_asm_insn (\"bl .+8,%%r1\", xoperands);
+  output_asm_insn (\"addil L%%$$dyncall-%1,%%r1\", xoperands);
+  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, \"L\",
+			     CODE_LABEL_NUMBER (xoperands[1]));
+  output_asm_insn (\"ldo R%%$$dyncall-%1(%%r1),%%r1\", xoperands);
+  output_asm_insn (\"blr 0,%%r2\", xoperands);
+  output_asm_insn (\"bv,n 0(%%r1)\\n\\tnop\", xoperands);
+  return \"\";
 }"
   [(set_attr "type" "dyncall")
    (set (attr "length")
-     (if_then_else (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
-			    (const_int 0))
-			(eq (symbol_ref "TARGET_MILLICODE_LONG_CALLS")
-			    (const_int 0)))
-		   (const_int 12)
-		   (const_int 24)))])
+     (cond [
+;; First NO_SPACE_REGS
+	    (ne (symbol_ref "TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS")
+		(const_int 0))
+	    (const_int 8)
+
+;; Target (or stub) within reach
+	    (and (lt (plus (symbol_ref "total_code_bytes") (pc))
+		     (const_int 240000))
+		 (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
+		     (const_int 0)))
+	    (const_int 8)
+
+;; Out of reach, but not PIC or PORTABLE_RUNTIME
+	    (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
+		     (const_int 0))
+		 (eq (symbol_ref "flag_pic")
+		     (const_int 0)))
+	    (const_int 12)
+
+	    (ne (symbol_ref "TARGET_PORTABLE_RUNTIME")
+		(const_int 0))
+	    (const_int 20)]
+
+;; Out of range PIC case
+	  (const_int 24)))])
 
 (define_expand "call_value"
   [(parallel [(set (match_operand 0 "" "")
@@ -3616,10 +4285,12 @@
 								op,
 								operands[2]));
   else
-    call_insn = emit_call_insn (gen_call_value_internal_reg (operands[0],
-							     force_reg (SImode, op),
-							     operands[2]));
-
+    {
+      rtx tmpreg = gen_rtx (REG, SImode, 22);
+      emit_move_insn (tmpreg, force_reg (SImode, op));
+      call_insn = emit_call_insn (gen_call_value_internal_reg (operands[0],
+							       operands[2]));
+    }
   if (flag_pic)
     {
       use_reg (&CALL_INSN_FUNCTION_USAGE (call_insn), pic_offset_table_rtx);
@@ -3632,16 +4303,6 @@
       emit_move_insn (pic_offset_table_rtx,
 		      gen_rtx (REG, SImode, PIC_OFFSET_TABLE_REGNUM_SAVED));
       emit_insn (gen_rtx (USE, VOIDmode, pic_offset_table_rtx));
-
-      /* Gross.  We have to keep the scheduler from moving the restore
-	 of the PIC register away from the call.  SCHED_GROUP_P is
-	 supposed to do this, but for some reason the compiler will
-	 go into an infinite loop when we use that.
-
-	 This method (blockage insn) may make worse code (then again
-	 it may not since calls are nearly blockages anyway), but at
-	 least it should work.  */
-      emit_insn (gen_blockage ());
 
       /* Gross.  We have to keep the scheduler from moving the restore
 	 of the PIC register away from the call.  SCHED_GROUP_P is
@@ -3671,40 +4332,92 @@
 }"
   [(set_attr "type" "call")
    (set (attr "length")
+;;       If we're sure that we can either reach the target or that the
+;;	 linker can use a long-branch stub, then the length is 4 bytes.
+;;
+;;	 For long-calls the length will be either 52 bytes (non-pic)
+;;	 or 68 bytes (pic).  */
+;;	 Else we have to use a long-call;
       (if_then_else (lt (plus (symbol_ref "total_code_bytes") (pc))
 			(const_int 240000))
 		    (const_int 4)
-		    (if_then_else (ne (symbol_ref "TARGET_MILLICODE_LONG_CALLS")
+		    (if_then_else (eq (symbol_ref "flag_pic")
 				      (const_int 0))
-				  (const_int 64)
-				  (const_int 52))))])
+				  (const_int 52)
+				  (const_int 68))))])
 
 (define_insn "call_value_internal_reg"
   [(set (match_operand 0 "" "=rf")
-	(call (mem:SI (match_operand:SI 1 "register_operand" "r"))
-	      (match_operand 2 "" "i")))
+	(call (mem:SI (reg:SI 22))
+	      (match_operand 1 "" "i")))
    (clobber (reg:SI 2))
    (use (const_int 1))]
   ""
   "*
 {
-  if (TARGET_FAST_INDIRECT_CALLS)
-    return \"ble 0(%%sr4,%r1)\;copy %%r31,%%r2\";
+  rtx xoperands[2];
 
-  /* Yuk!  bl may not be able to reach $$dyncall.  */
-  if (TARGET_PORTABLE_RUNTIME || TARGET_MILLICODE_LONG_CALLS)
-    return \"copy %r1,%%r22\;ldil L%%$$dyncall,%%r31\;ldo R%%$$dyncall(%%r31),%%r31\;blr 0,%%r2\;bv,n 0(%%r31)\;nop\";
-  else
-    return \"copy %r1,%%r22\;.CALL\\tARGW0=GR\;bl $$dyncall,%%r31\;copy %%r31,%%r2\";
+  /* First the special case for kernels, level 0 systems, etc.  */
+  if (TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS)
+    return \"ble 0(%%sr4,%%r22)\;copy %%r31,%%r2\";
+
+  /* Now the normal case -- we can reach $$dyncall directly or
+     we're sure that we can get there via a long-branch stub. 
+
+     No need to check target flags as the length uniquely identifies
+     the remaining cases.  */
+  if (get_attr_length (insn) == 8)
+    return \".CALL\\tARGW0=GR\;bl $$dyncall,%%r31\;copy %%r31,%%r2\";
+
+  /* Long millicode call, but we are not generating PIC or portable runtime
+     code.  */
+  if (get_attr_length (insn) == 12)
+    return \".CALL\\tARGW0=GR\;ldil L%%$$dyncall,%%r2\;ble R%%$$dyncall(%%sr4,%%r2)\;copy %%r31,%%r2\";
+
+  /* Long millicode call for portable runtime.  */
+  if (get_attr_length (insn) == 20)
+    return \"ldil L%%$$dyncall,%%r31\;ldo R%%$$dyncall(%%r31),%%r31\;blr 0,%%r2\;bv,n 0(%%r31)\;nop\";
+
+  /* If we're generating PIC code.  */
+  xoperands[0] = operands[1];
+  xoperands[1] = gen_label_rtx ();
+  output_asm_insn (\"bl .+8,%%r1\", xoperands);
+  output_asm_insn (\"addil L%%$$dyncall-%1,%%r1\", xoperands);
+  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, \"L\",
+			     CODE_LABEL_NUMBER (xoperands[1]));
+  output_asm_insn (\"ldo R%%$$dyncall-%1(%%r1),%%r1\", xoperands);
+  output_asm_insn (\"blr 0,%%r2\", xoperands);
+  output_asm_insn (\"bv,n 0(%%r1)\\n\\tnop\", xoperands);
+  return \"\";
 }"
   [(set_attr "type" "dyncall")
    (set (attr "length")
-     (if_then_else (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
-			    (const_int 0))
-			(eq (symbol_ref "TARGET_MILLICODE_LONG_CALLS")
-			    (const_int 0)))
-		   (const_int 12)
-		   (const_int 24)))])
+     (cond [
+;; First NO_SPACE_REGS
+	    (ne (symbol_ref "TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS")
+		(const_int 0))
+	    (const_int 8)
+
+;; Target (or stub) within reach
+	    (and (lt (plus (symbol_ref "total_code_bytes") (pc))
+		     (const_int 240000))
+		 (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
+		     (const_int 0)))
+	    (const_int 8)
+
+;; Out of reach, but not PIC or PORTABLE_RUNTIME
+	    (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
+		     (const_int 0))
+		 (eq (symbol_ref "flag_pic")
+		     (const_int 0)))
+	    (const_int 12)
+
+	    (ne (symbol_ref "TARGET_PORTABLE_RUNTIME")
+		(const_int 0))
+	    (const_int 20)]
+
+;; Out of range PIC case
+	  (const_int 24)))])
 
 ;; Call subroutine returning any type.
 
@@ -3740,6 +4453,22 @@
   "nop"
   [(set_attr "type" "move")
    (set_attr "length" "4")])
+
+;; These are just placeholders so we know where branch tables
+;; begin and end.
+(define_insn "begin_brtab"
+  [(const_int 1)]
+  "TARGET_GAS"
+  ".begin_brtab"
+  [(set_attr "type" "move")
+   (set_attr "length" "0")])
+
+(define_insn "end_brtab"
+  [(const_int 2)]
+  "TARGET_GAS"
+  ".end_brtab"
+  [(set_attr "type" "move")
+   (set_attr "length" "0")])
 
 ;;; Hope this is only within a function...
 (define_insn "indirect_jump"
@@ -3845,7 +4574,7 @@
 ;; Short branch has length of 4
 ;; Long branch has length of 8
 	(if_then_else (lt (abs (minus (match_dup 3) (plus (pc) (const_int 8))))
-		      (const_int 8188))
+		      (const_int 8184))
            (const_int 4)
 	   (const_int 8))
 
@@ -3855,12 +4584,12 @@
 	  (if_then_else (lt (match_dup 3) (pc))
 	    (if_then_else
 	      (lt (abs (minus (match_dup 3) (plus (pc) (const_int 24))))
-		  (const_int 8188))
+		  (const_int 8184))
 	      (const_int 24)
 	      (const_int 28))
 	    (if_then_else
 	      (lt (abs (minus (match_dup 3) (plus (pc) (const_int 8))))
-		  (const_int 8188))
+		  (const_int 8184))
 	      (const_int 24)
 	      (const_int 28)))
 ;; Loop counter in memory case.
@@ -3868,12 +4597,12 @@
 	(if_then_else (lt (match_dup 3) (pc))
 	  (if_then_else
 	    (lt (abs (minus (match_dup 3) (plus (pc) (const_int 12))))
-		(const_int 8188))
+		(const_int 8184))
 	    (const_int 12)
 	    (const_int 16))
 	  (if_then_else
 	    (lt (abs (minus (match_dup 3) (plus (pc) (const_int 8))))
-		(const_int 8188))
+		(const_int 8184))
 	    (const_int 12)
 	    (const_int 16))))))])
 
@@ -3901,7 +4630,7 @@
 ;; Short branch has length of 4
 ;; Long branch has length of 8
 	(if_then_else (lt (abs (minus (match_dup 3) (plus (pc) (const_int 8))))
-		      (const_int 8188))
+		      (const_int 8184))
            (const_int 4)
 	   (const_int 8))
 
@@ -3911,12 +4640,12 @@
 	  (if_then_else (lt (match_dup 3) (pc))
 	    (if_then_else
 	      (lt (abs (minus (match_dup 3) (plus (pc) (const_int 24))))
-		  (const_int 8188))
+		  (const_int 8184))
 	      (const_int 24)
 	      (const_int 28))
 	    (if_then_else
 	      (lt (abs (minus (match_dup 3) (plus (pc) (const_int 8))))
-		  (const_int 8188))
+		  (const_int 8184))
 	      (const_int 24)
 	      (const_int 28)))
 ;; Loop counter in memory case.
@@ -3924,12 +4653,12 @@
 	(if_then_else (lt (match_dup 3) (pc))
 	  (if_then_else
 	    (lt (abs (minus (match_dup 3) (plus (pc) (const_int 12))))
-		(const_int 8188))
+		(const_int 8184))
 	    (const_int 12)
 	    (const_int 16))
 	  (if_then_else
 	    (lt (abs (minus (match_dup 3) (plus (pc) (const_int 8))))
-		(const_int 8188))
+		(const_int 8184))
 	    (const_int 12)
 	    (const_int 16))))))])
 
@@ -3937,22 +4666,22 @@
   [(set (pc)
 	(if_then_else
 	  (match_operator 2 "movb_comparison_operator"
-	   [(match_operand:SI 1 "register_operand" "r,r,r") (const_int 0)])
+	   [(match_operand:SI 1 "register_operand" "r,r,r,r") (const_int 0)])
 	  (label_ref (match_operand 3 "" ""))
 	  (pc)))
-   (set (match_operand:SI 0 "register_operand" "=!r,!*f,!*m")
+   (set (match_operand:SI 0 "register_operand" "=!r,!*f,!*m,!*q")
 	(match_dup 1))]
   ""
 "* return output_movb (operands, insn, which_alternative, 0); "
 ;; Do not expect to understand this the first time through.
-[(set_attr "type" "cbranch,multi,multi")
+[(set_attr "type" "cbranch,multi,multi,multi")
  (set (attr "length")
       (if_then_else (eq_attr "alternative" "0")
 ;; Loop counter in register case
 ;; Short branch has length of 4
 ;; Long branch has length of 8
 	(if_then_else (lt (abs (minus (match_dup 3) (plus (pc) (const_int 8))))
-		      (const_int 8188))
+		      (const_int 8184))
            (const_int 4)
 	   (const_int 8))
 
@@ -3962,19 +4691,19 @@
 	  (if_then_else (lt (match_dup 3) (pc))
 	    (if_then_else
 	      (lt (abs (minus (match_dup 3) (plus (pc) (const_int 12))))
-		  (const_int 8188))
+		  (const_int 8184))
 	      (const_int 12)
 	      (const_int 16))
 	    (if_then_else
 	      (lt (abs (minus (match_dup 3) (plus (pc) (const_int 8))))
-		  (const_int 8188))
+		  (const_int 8184))
 	      (const_int 12)
 	      (const_int 16)))
-;; Loop counter in memory case.
+;; Loop counter in memory or sar case.
 ;; Extra goo to deal with additional reload insns.
 	(if_then_else
 	  (lt (abs (minus (match_dup 3) (plus (pc) (const_int 8))))
-	      (const_int 8188))
+	      (const_int 8184))
 	  (const_int 8)
 	  (const_int 12)))))])
 
@@ -3983,22 +4712,22 @@
   [(set (pc)
 	(if_then_else
 	  (match_operator 2 "movb_comparison_operator"
-	   [(match_operand:SI 1 "register_operand" "r,r,r") (const_int 0)])
+	   [(match_operand:SI 1 "register_operand" "r,r,r,r") (const_int 0)])
 	  (pc)
 	  (label_ref (match_operand 3 "" ""))))
-   (set (match_operand:SI 0 "register_operand" "=!r,!*f,!*m")
+   (set (match_operand:SI 0 "register_operand" "=!r,!*f,!*m,!*q")
 	(match_dup 1))]
   ""
 "* return output_movb (operands, insn, which_alternative, 1); "
 ;; Do not expect to understand this the first time through.
-[(set_attr "type" "cbranch,multi,multi")
+[(set_attr "type" "cbranch,multi,multi,multi")
  (set (attr "length")
       (if_then_else (eq_attr "alternative" "0")
 ;; Loop counter in register case
 ;; Short branch has length of 4
 ;; Long branch has length of 8
 	(if_then_else (lt (abs (minus (match_dup 3) (plus (pc) (const_int 8))))
-		      (const_int 8188))
+		      (const_int 8184))
            (const_int 4)
 	   (const_int 8))
 
@@ -4008,21 +4737,159 @@
 	  (if_then_else (lt (match_dup 3) (pc))
 	    (if_then_else
 	      (lt (abs (minus (match_dup 3) (plus (pc) (const_int 12))))
-		  (const_int 8188))
+		  (const_int 8184))
 	      (const_int 12)
 	      (const_int 16))
 	    (if_then_else
 	      (lt (abs (minus (match_dup 3) (plus (pc) (const_int 8))))
-		  (const_int 8188))
+		  (const_int 8184))
 	      (const_int 12)
 	      (const_int 16)))
-;; Loop counter in memory case.
+;; Loop counter in memory or SAR case.
 ;; Extra goo to deal with additional reload insns.
 	(if_then_else
 	  (lt (abs (minus (match_dup 3) (plus (pc) (const_int 8))))
-	      (const_int 8188))
+	      (const_int 8184))
 	  (const_int 8)
 	  (const_int 12)))))])
+
+;; The next several patterns (parallel_addb, parallel_movb, fmpyadd and
+;; fmpysub aren't currently used by the FSF sources, but will be soon.
+;;
+;; They're in the FSF tree for documentation and to make Cygnus<->FSF
+;; merging easier.
+(define_insn ""
+  [(set (pc) (label_ref (match_operand 3 "" "" )))
+   (set (match_operand:SI 0 "register_operand" "=r")
+	(plus:SI (match_operand:SI 1 "register_operand" "r")
+		 (match_operand:SI 2 "ireg_or_int5_operand" "rL")))]
+  "reload_completed && operands[0] == operands[1] || operands[0] == operands[2]"
+  "*
+{
+  return output_parallel_addb (operands, get_attr_length (insn));
+}"
+  [(set_attr "type" "parallel_branch")
+   (set (attr "length")
+    (if_then_else (lt (abs (minus (match_dup 3) (plus (pc) (const_int 8))))
+		      (const_int 8184))
+           (const_int 4)
+	   (const_int 8)))])
+
+(define_insn ""
+  [(set (pc) (label_ref (match_operand 2 "" "" )))
+   (set (match_operand:SF 0 "register_operand" "=r")
+	(match_operand:SF 1 "ireg_or_int5_operand" "rL"))]
+  "reload_completed"
+  "*
+{
+  return output_parallel_movb (operands, get_attr_length (insn));
+}"
+  [(set_attr "type" "parallel_branch")
+   (set (attr "length")
+    (if_then_else (lt (abs (minus (match_dup 2) (plus (pc) (const_int 8))))
+		      (const_int 8184))
+           (const_int 4)
+	   (const_int 8)))])
+
+(define_insn ""
+  [(set (pc) (label_ref (match_operand 2 "" "" )))
+   (set (match_operand:SI 0 "register_operand" "=r")
+	(match_operand:SI 1 "ireg_or_int5_operand" "rL"))]
+  "reload_completed"
+  "*
+{
+  return output_parallel_movb (operands, get_attr_length (insn));
+}"
+  [(set_attr "type" "parallel_branch")
+   (set (attr "length")
+    (if_then_else (lt (abs (minus (match_dup 2) (plus (pc) (const_int 8))))
+		      (const_int 8184))
+           (const_int 4)
+	   (const_int 8)))])
+
+(define_insn ""
+  [(set (pc) (label_ref (match_operand 2 "" "" )))
+   (set (match_operand:HI 0 "register_operand" "=r")
+	(match_operand:HI 1 "ireg_or_int5_operand" "rL"))]
+  "reload_completed"
+  "*
+{
+  return output_parallel_movb (operands, get_attr_length (insn));
+}"
+  [(set_attr "type" "parallel_branch")
+   (set (attr "length")
+    (if_then_else (lt (abs (minus (match_dup 2) (plus (pc) (const_int 8))))
+		      (const_int 8184))
+           (const_int 4)
+	   (const_int 8)))])
+
+(define_insn ""
+  [(set (pc) (label_ref (match_operand 2 "" "" )))
+   (set (match_operand:QI 0 "register_operand" "=r")
+	(match_operand:QI 1 "ireg_or_int5_operand" "rL"))]
+  "reload_completed"
+  "*
+{
+  return output_parallel_movb (operands, get_attr_length (insn));
+}"
+  [(set_attr "type" "parallel_branch")
+   (set (attr "length")
+    (if_then_else (lt (abs (minus (match_dup 2) (plus (pc) (const_int 8))))
+		      (const_int 8184))
+           (const_int 4)
+	   (const_int 8)))])
+
+;; These insns will replace fmpyadd and fmpysub peepholes when the
+;; independent insn combination code is installed at the FSF.  Until
+;; then these patterns aren't used by the FSF compiler and are only
+;; here for documentation purposes.
+(define_insn ""
+  [(set (match_operand 0 "register_operand" "=f")
+	(mult (match_operand 1 "register_operand" "f")
+	      (match_operand 2 "register_operand" "f")))
+   (set (match_operand 3 "register_operand" "+f")
+	(plus (match_operand 4 "register_operand" "f")
+	      (match_operand 5 "register_operand" "f")))]
+  "TARGET_SNAKE && ! TARGET_SOFT_FLOAT
+   && reload_completed && fmpyaddoperands (operands)"
+  "*
+{
+  if (GET_MODE (operands[0]) == DFmode)
+    {
+      if (rtx_equal_p (operands[3], operands[5]))
+	return \"fmpyadd,dbl %1,%2,%0,%4,%3\";
+      else
+	return \"fmpyadd,dbl %1,%2,%0,%5,%3\";
+    }
+  else
+    {
+      if (rtx_equal_p (operands[3], operands[5]))
+	return \"fmpyadd,sgl %1,%2,%0,%4,%3\";
+      else
+	return \"fmpyadd,sgl %1,%2,%0,%5,%3\";
+    }
+}"
+  [(set_attr "type" "fpalu")
+   (set_attr "length" "4")])
+
+(define_insn ""
+  [(set (match_operand 0 "register_operand" "=f")
+	(mult (match_operand 1 "register_operand" "f")
+	      (match_operand 2 "register_operand" "f")))
+   (set (match_operand 3 "register_operand" "+f")
+	(minus (match_operand 4 "register_operand" "f")
+	       (match_operand 5 "register_operand" "f")))]
+  "TARGET_SNAKE && ! TARGET_SOFT_FLOAT
+   && reload_completed && fmpysuboperands (operands)"
+  "*
+{
+  if (GET_MODE (operands[0]) == DFmode)
+    return \"fmpysub,dbl %1,%2,%0,%5,%3\";
+  else
+    return \"fmpysub,sgl %1,%2,%0,%5,%3\";
+}"
+  [(set_attr "type" "fpalu")
+   (set_attr "length" "4")])
 
 ;; The next four peepholes take advantage of the new 5 operand
 ;; fmpy{add,sub} instructions available on 1.1 CPUS.  Basically
@@ -4037,7 +4904,7 @@
    (set (match_operand 3 "register_operand" "+f")
 	(plus (match_operand 4 "register_operand" "f")
 	      (match_operand 5 "register_operand" "f")))]
-  "TARGET_SNAKE && fmpyaddoperands (operands)"
+  "! TARGET_SOFT_FLOAT && TARGET_SNAKE && fmpyaddoperands (operands)"
   "*
 {
   if (GET_MODE (operands[0]) == DFmode)
@@ -4063,7 +4930,7 @@
    (set (match_operand 0 "register_operand" "=f")
 	(mult (match_operand 1 "register_operand" "f")
 	      (match_operand 2 "register_operand" "f")))]
-  "TARGET_SNAKE && fmpyaddoperands (operands)"
+  "! TARGET_SOFT_FLOAT && TARGET_SNAKE && fmpyaddoperands (operands)"
   "*
 {
   if (GET_MODE (operands[0]) == DFmode)
@@ -4091,7 +4958,7 @@
    (set (match_operand 3 "register_operand" "+f")
 	(minus (match_operand 4 "register_operand" "f")
 	       (match_operand 5 "register_operand" "f")))]
-  "TARGET_SNAKE && fmpysuboperands (operands)"
+  "! TARGET_SOFT_FLOAT && TARGET_SNAKE && fmpysuboperands (operands)"
   "*
 {
   if (GET_MODE (operands[0]) == DFmode)
@@ -4107,13 +4974,85 @@
    (set (match_operand 0 "register_operand" "=f")
 	(mult (match_operand 1 "register_operand" "f")
 	      (match_operand 2 "register_operand" "f")))]
-  "TARGET_SNAKE && fmpysuboperands (operands)"
+  "! TARGET_SOFT_FLOAT && TARGET_SNAKE && fmpysuboperands (operands)"
   "*
 {
   if (GET_MODE (operands[0]) == DFmode)
     return \"fmpysub,dbl %1,%2,%0,%5,%3\";
   else
     return \"fmpysub,sgl %1,%2,%0,%5,%3\";
+}")
+
+;; Clean up turds left by reload.
+(define_peephole
+  [(set (match_operand 0 "reg_or_nonsymb_mem_operand" "")
+	(match_operand 1 "register_operand" "f"))
+   (set (match_operand 2 "register_operand" "f")
+	(match_dup 0))]
+  "! TARGET_SOFT_FLOAT
+   && GET_CODE (operands[0]) == MEM
+   && ! MEM_VOLATILE_P (operands[0])
+   && GET_MODE (operands[0]) == GET_MODE (operands[1])
+   && GET_MODE (operands[0]) == GET_MODE (operands[2])
+   && GET_MODE (operands[0]) == DFmode
+   && REGNO_REG_CLASS (REGNO (operands[1]))
+      == REGNO_REG_CLASS (REGNO (operands[2]))"
+  "*
+{
+  enum machine_mode mode = GET_MODE (operands[0]);
+  rtx xoperands[2];
+
+  if (FP_REG_P (operands[1]))
+    output_asm_insn (output_fp_move_double (operands), operands);
+  else
+    output_asm_insn (output_move_double (operands), operands);
+
+  if (rtx_equal_p (operands[1], operands[2]))
+    return \"\";
+
+  xoperands[0] = operands[2];
+  xoperands[1] = operands[1];
+      
+  if (FP_REG_P (xoperands[1]))
+    output_asm_insn (output_fp_move_double (xoperands), xoperands);
+  else
+    output_asm_insn (output_move_double (xoperands), xoperands);
+
+  return \"\";
+}")
+
+(define_peephole
+  [(set (match_operand 0 "register_operand" "f")
+	(match_operand 1 "reg_or_nonsymb_mem_operand" ""))
+   (set (match_operand 2 "register_operand" "f")
+	(match_dup 1))]
+  "! TARGET_SOFT_FLOAT
+   && GET_CODE (operands[1]) == MEM
+   && ! MEM_VOLATILE_P (operands[1])
+   && GET_MODE (operands[0]) == GET_MODE (operands[1])
+   && GET_MODE (operands[0]) == GET_MODE (operands[2])
+   && GET_MODE (operands[0]) == DFmode
+   && REGNO_REG_CLASS (REGNO (operands[1]))
+      == REGNO_REG_CLASS (REGNO (operands[2]))"
+  "*
+{
+  enum machine_mode mode = GET_MODE (operands[0]);
+  rtx xoperands[2];
+
+  if (FP_REG_P (operands[0]))
+    output_asm_insn (output_fp_move_double (operands), operands);
+  else
+    output_asm_insn (output_move_double (operands), operands);
+
+  xoperands[0] = operands[2];
+  xoperands[1] = operands[0];
+      
+  if (FP_REG_P (xoperands[1]))
+    output_asm_insn (output_fp_move_double (xoperands), xoperands);
+  else
+    output_asm_insn (output_move_double (xoperands), xoperands);
+
+  return \"\";
 }")
 
 ;; Flush the I and D cache line found at the address in operand 0.
@@ -4141,3 +5080,211 @@
   "mfsp %%sr0,%4\;ldsid (0,%2),%3\;mtsp %3,%%sr0\;fic 0(%%sr0,%0)\;fic 0(%%sr0,%1)\;sync\;mtsp %4,%%sr0\;nop\;nop\;nop\;nop\;nop\;nop"
   [(set_attr "type" "multi")
    (set_attr "length" "52")])
+
+;; An out-of-line prologue.
+(define_insn "outline_prologue_call"
+  [(unspec_volatile [(const_int 0)] 0)
+   (clobber (reg:SI 31))
+   (clobber (reg:SI 22))
+   (clobber (reg:SI 21))
+   (clobber (reg:SI 20))
+   (clobber (reg:SI 19))
+   (clobber (reg:SI 1))]
+  ""
+  "*
+{
+  extern int frame_pointer_needed;
+
+  /* We need two different versions depending on whether or not we
+     need a frame pointer.   Also note that we return to the instruction
+     immediately after the branch rather than two instructions after the
+     break as normally is the case.  */
+  if (frame_pointer_needed)
+    {
+      /* Must import the magic millicode routine(s).  */
+      output_asm_insn (\".IMPORT __outline_prologue_fp,MILLICODE\", NULL);
+
+      if (TARGET_PORTABLE_RUNTIME)
+	{
+	  output_asm_insn (\"ldil L'__outline_prologue_fp,%%r31\", NULL);
+	  output_asm_insn (\"ble,n R'__outline_prologue_fp(%%sr0,%%r31)\",
+			   NULL);
+	}
+      else
+	output_asm_insn (\"bl,n __outline_prologue_fp,%%r31\", NULL);
+    }
+  else
+    {
+      /* Must import the magic millicode routine(s).  */
+      output_asm_insn (\".IMPORT __outline_prologue,MILLICODE\", NULL);
+
+      if (TARGET_PORTABLE_RUNTIME)
+	{
+	  output_asm_insn (\"ldil L'__outline_prologue,%%r31\", NULL);
+	  output_asm_insn (\"ble,n R'__outline_prologue(%%sr0,%%r31)\", NULL);
+	}
+      else
+	output_asm_insn (\"bl,n __outline_prologue,%%r31\", NULL);
+    }
+  return \"\";
+}"
+  [(set_attr "type" "multi")
+   (set_attr "length" "8")])
+
+;; An out-of-line epilogue.
+(define_insn "outline_epilogue_call"
+  [(unspec_volatile [(const_int 1)] 0)
+   (use (reg:SI 29))
+   (use (reg:SI 28))
+   (clobber (reg:SI 31))
+   (clobber (reg:SI 22))
+   (clobber (reg:SI 21))
+   (clobber (reg:SI 20))
+   (clobber (reg:SI 19))
+   (clobber (reg:SI 2))
+   (clobber (reg:SI 1))]
+  ""
+  "*
+{
+  extern int frame_pointer_needed;
+
+  /* We need two different versions depending on whether or not we
+     need a frame pointer.   Also note that we return to the instruction
+     immediately after the branch rather than two instructions after the
+     break as normally is the case.  */
+  if (frame_pointer_needed)
+    {
+      /* Must import the magic millicode routine.  */
+      output_asm_insn (\".IMPORT __outline_epilogue_fp,MILLICODE\", NULL);
+
+      /* The out-of-line prologue will make sure we return to the right
+	 instruction.  */
+      if (TARGET_PORTABLE_RUNTIME)
+	{
+	  output_asm_insn (\"ldil L'__outline_epilogue_fp,%%r31\", NULL);
+	  output_asm_insn (\"ble,n R'__outline_epilogue_fp(%%sr0,%%r31)\",
+			   NULL);
+	}
+      else
+	output_asm_insn (\"bl,n __outline_epilogue_fp,%%r31\", NULL);
+    }
+  else
+    {
+      /* Must import the magic millicode routine.  */
+      output_asm_insn (\".IMPORT __outline_epilogue,MILLICODE\", NULL);
+
+      /* The out-of-line prologue will make sure we return to the right
+	 instruction.  */
+      if (TARGET_PORTABLE_RUNTIME)
+	{
+	  output_asm_insn (\"ldil L'__outline_epilogue,%%r31\", NULL);
+	  output_asm_insn (\"ble,n R'__outline_epilogue(%%sr0,%%r31)\", NULL);
+	}
+      else
+	output_asm_insn (\"bl,n __outline_epilogue,%%r31\", NULL);
+    }
+  return \"\";
+}"
+  [(set_attr "type" "multi")
+   (set_attr "length" "8")])
+
+;; Given a function pointer, canonicalize it so it can be 
+;; reliably compared to another function pointer.  */
+(define_expand "canonicalize_funcptr_for_compare"
+  [(set (reg:SI 26) (match_operand:SI 1 "register_operand" ""))
+   (parallel [(set (reg:SI 29) (unspec:SI [(reg:SI 26)] 0))
+	      (clobber (match_dup 2))
+	      (clobber (reg:SI 26))
+	      (clobber (reg:SI 22))
+	      (clobber (reg:SI 31))])
+   (set (match_operand:SI 0 "register_operand" "")
+	(reg:SI 29))]
+  "! TARGET_PORTABLE_RUNTIME"
+  "
+{
+  operands[2] = gen_reg_rtx (SImode);
+  if (GET_CODE (operands[1]) != REG)
+    {
+      rtx tmp = gen_reg_rtx (Pmode);
+      emit_move_insn (tmp, operands[1]);
+      operands[1] = tmp;
+    }
+}")
+
+(define_insn ""
+  [(set (reg:SI 29) (unspec:SI [(reg:SI 26)] 0))
+   (clobber (match_operand:SI 0 "register_operand" "=a"))
+   (clobber (reg:SI 26))
+   (clobber (reg:SI 22))
+   (clobber (reg:SI 31))]
+  ""
+  "*
+{
+  /* Must import the magic millicode routine.  */
+  output_asm_insn (\".IMPORT $$sh_func_adrs,MILLICODE\", NULL);
+
+  /* This is absolutely fucking amazing.
+
+     First, copy our input parameter into %r29 just in case we don't
+     need to call $$sh_func_adrs.  */
+  output_asm_insn (\"copy %%r26,%%r29\", NULL);
+
+  /* Next, examine the low two bits in %r26, if they aren't 0x2, then
+     we use %r26 unchanged.  */
+  if (get_attr_length (insn) == 32)
+    output_asm_insn (\"extru %%r26,31,2,%%r31\;comib,<>,n 2,%%r31,.+24\", NULL);
+  else if (get_attr_length (insn) == 40)
+    output_asm_insn (\"extru %%r26,31,2,%%r31\;comib,<>,n 2,%%r31,.+32\", NULL);
+  else if (get_attr_length (insn) == 44)
+    output_asm_insn (\"extru %%r26,31,2,%%r31\;comib,<>,n 2,%%r31,.+36\", NULL);
+  else
+    output_asm_insn (\"extru %%r26,31,2,%%r31\;comib,<>,n 2,%%r31,.+20\", NULL);
+
+  /* Next, compare %r26 with 4096, if %r26 is less than or equal to
+     4096, then we use %r26 unchanged.  */
+  if (get_attr_length (insn) == 32)
+    output_asm_insn (\"ldi 4096,%%r31\;comb,<<,n %%r26,%%r31,.+16\", NULL);
+  else if (get_attr_length (insn) == 40)
+    output_asm_insn (\"ldi 4096,%%r31\;comb,<<,n %%r26,%%r31,.+24\", NULL);
+  else if (get_attr_length (insn) == 44)
+    output_asm_insn (\"ldi 4096,%%r31\;comb,<<,n %%r26,%%r31,.+28\", NULL);
+  else
+    output_asm_insn (\"ldi 4096,%%r31\;comb,<<,n %%r26,%%r31,.+12\", NULL);
+
+  /* Else call $$sh_func_adrs to extract the function's real add24.  */
+  return output_millicode_call (insn,
+				gen_rtx (SYMBOL_REF, SImode,
+					 \"$$sh_func_adrs\"));
+}"
+  [(set_attr "type" "multi")
+   (set (attr "length")
+     (cond [
+;; Target (or stub) within reach
+            (and (lt (plus (symbol_ref "total_code_bytes") (pc))
+                     (const_int 240000))
+                 (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                     (const_int 0)))
+            (const_int 28)
+
+;; NO_SPACE_REGS
+            (ne (symbol_ref "TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS")
+                (const_int 0))
+            (const_int 32)
+
+;; Out of reach, but not PIC or PORTABLE_RUNTIME
+;; same as NO_SPACE_REGS code
+            (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                     (const_int 0))
+                 (eq (symbol_ref "flag_pic")
+                     (const_int 0)))
+            (const_int 32)
+
+;; PORTABLE_RUTNIME
+	    (ne (symbol_ref "TARGET_PORTABLE_RUNTIME")
+		(const_int 0))
+	    (const_int 40)]
+
+;; Out of range and PIC 
+	  (const_int 44)))])
+
+

@@ -1,5 +1,5 @@
 /* Fold a constant sub-tree into a single node for C-compiler
-   Copyright (C) 1987, 88, 92, 93, 94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 88, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -44,6 +44,22 @@ Boston, MA 02111-1307, USA.  */
 #include "flags.h"
 #include "tree.h"
 
+/* CYGNUS LOCAL mpw */
+#ifdef MPW_C
+/* MPW C loses on expressions that include FLOAT_TYPE_P, so put it
+   in a function and use that instead.  */
+
+int
+float_type_p (type)
+     tree type;
+{
+  return FLOAT_TYPE_P(type);
+}
+#undef FLOAT_TYPE_P
+#define FLOAT_TYPE_P(TYPE) float_type_p(TYPE)
+#endif /* MPW_C */
+/* END CYGNUS LOCAL */
+
 /* Handle floating overflow for `const_binop'.  */
 static jmp_buf float_error;
 
@@ -83,9 +99,6 @@ static tree strip_compound_expr PROTO((tree, tree));
 #ifndef BRANCH_COST
 #define BRANCH_COST 1
 #endif
-
-/* Yield nonzero if a signed left shift of A by B bits overflows.  */
-#define left_shift_overflows(a, b)  ((a)  !=  ((a) << (b)) >> (b))
 
 /* Suppose A1 + B1 = SUM1, using 2's complement arithmetic ignoring overflow.
    Suppose A, B and SUM have the same respective signs as A1, B1, and SUM1.
@@ -966,6 +979,15 @@ const_binop (code, arg1, arg2, notrunc)
      register tree arg1, arg2;
      int notrunc;
 {
+  /* CYGNUS LOCAL -- FIX for 8764 */
+  /* non_lvalue wraps zeroes in NOP_EXPR.  */
+  if (TREE_CODE (arg1) == NOP_EXPR
+      && TREE_TYPE (arg1) == TREE_TYPE (TREE_OPERAND (arg1, 0)))
+    arg1 = TREE_OPERAND (arg1, 0);
+  if (TREE_CODE (arg2) == NOP_EXPR
+      && TREE_TYPE (arg2) == TREE_TYPE (TREE_OPERAND (arg2, 0)))
+    arg2 = TREE_OPERAND (arg2, 0);
+  /* END CYGNUS LOCAL -- FIX for 8764 */
   if (TREE_CODE (arg1) == INTEGER_CST)
     {
       register HOST_WIDE_INT int1l = TREE_INT_CST_LOW (arg1);
@@ -1413,10 +1435,11 @@ fold_convert (t, arg1)
 	  REAL_VALUE_TYPE x;
 	  REAL_VALUE_TYPE l;
 	  REAL_VALUE_TYPE u;
+	  tree type1 = TREE_TYPE (arg1);
 
 	  x = TREE_REAL_CST (arg1);
-	  l = real_value_from_int_cst (TYPE_MIN_VALUE (type));
-	  u = real_value_from_int_cst (TYPE_MAX_VALUE (type));
+	  l = real_value_from_int_cst (type1, TYPE_MIN_VALUE (type));
+	  u = real_value_from_int_cst (type1, TYPE_MAX_VALUE (type));
 	  /* See if X will be in range after truncation towards 0.
 	     To compensate for truncation, move the bounds away from 0,
 	     but reject if X exactly equals the adjusted bounds.  */
@@ -1481,7 +1504,11 @@ fold_convert (t, arg1)
       if (TREE_CODE (arg1) == REAL_CST)
 	{
 	  if (REAL_VALUE_ISNAN (TREE_REAL_CST (arg1)))
-	    return arg1;
+	    {
+	      t = arg1;
+	      TREE_TYPE (arg1) = type;
+	      return t;
+	    }
 	  else if (setjmp (float_error))
 	    {
 	      overflow = 1;
@@ -2613,15 +2640,21 @@ range_test (jcode, type, lo_code, hi_code, var, lo_cst, hi_cst)
   if (! TREE_UNSIGNED (utype))
     {
       utype = unsigned_type (utype);
-      var = convert (utype, var);
-      lo_cst = convert (utype, lo_cst);
-      hi_cst = convert (utype, hi_cst);
+      return fold (convert (type,
+			    build (rcode, utype,
+				   convert (utype,
+					    build (MINUS_EXPR, TREE_TYPE (var),
+						   var, lo_cst)),
+				   convert (utype,
+					    const_binop (MINUS_EXPR, hi_cst,
+							 lo_cst, 0)))));
     }
-
-  return fold (convert (type,
-			build (rcode, utype,
-			       build (MINUS_EXPR, utype, var, lo_cst),
-			       const_binop (MINUS_EXPR, hi_cst, lo_cst, 0))));
+  else
+      return fold (convert (type,
+			    build (rcode, utype,
+				   build (MINUS_EXPR, utype, var, lo_cst),
+				   const_binop (MINUS_EXPR, hi_cst,
+						lo_cst, 0))));
 }
 
 /* Subroutine for fold_truthop: C is an INTEGER_CST interpreted as a P
@@ -3090,8 +3123,9 @@ fold (expr)
 
   int wins = 1;
 
-  /* Don't try to process an RTL_EXPR since its operands aren't trees.  */
-  if (code == RTL_EXPR)
+  /* Don't try to process an RTL_EXPR since its operands aren't trees. 
+     Likewise for a SAVE_EXPR that's already been evaluated.  */
+  if (code == RTL_EXPR || (code == SAVE_EXPR && SAVE_EXPR_RTL (t)) != 0)
     return t;
 
   /* Return right away if already constant.  */
@@ -3549,7 +3583,7 @@ fold (expr)
 	      TREE_TYPE (t) = type;
 	      TREE_OVERFLOW (t)
 		= (TREE_OVERFLOW (arg0)
-		   | force_fit_type (t, overflow));
+		   | force_fit_type (t, overflow && !TREE_UNSIGNED (type)));
 	      TREE_CONSTANT_OVERFLOW (t)
 		= TREE_OVERFLOW (t) | TREE_CONSTANT_OVERFLOW (arg0);
 	    }
@@ -3898,6 +3932,9 @@ fold (expr)
 
     case BIT_IOR_EXPR:
     bit_ior:
+      {
+      register enum tree_code code0, code1;
+
       if (integer_all_onesp (arg1))
 	return omit_one_operand (type, arg1, arg0);
       if (integer_zerop (arg1))
@@ -3906,28 +3943,53 @@ fold (expr)
       if (t1 != NULL_TREE)
 	return t1;
 
-      /* (a << C1) | (a >> C2) if A is unsigned and C1+C2 is the size of A
+      /* (A << C1) | (A >> C2) if A is unsigned and C1+C2 is the size of A
 	 is a rotate of A by C1 bits.  */
+      /* (A << B) | (A >> (Z - B)) if A is unsigned and Z is the size of A
+	 is a rotate of A by B bits.  */
 
-      if ((TREE_CODE (arg0) == RSHIFT_EXPR
-	   || TREE_CODE (arg0) == LSHIFT_EXPR)
-	  && (TREE_CODE (arg1) == RSHIFT_EXPR
-	      || TREE_CODE (arg1) == LSHIFT_EXPR)
-	  && TREE_CODE (arg0) != TREE_CODE (arg1)
+      code0 = TREE_CODE (arg0);
+      code1 = TREE_CODE (arg1);
+      if (((code0 == RSHIFT_EXPR && code1 == LSHIFT_EXPR)
+	  || (code1 == RSHIFT_EXPR && code0 == LSHIFT_EXPR))
 	  && operand_equal_p (TREE_OPERAND (arg0, 0), TREE_OPERAND (arg1,0), 0)
-	  && TREE_UNSIGNED (TREE_TYPE (TREE_OPERAND (arg0, 0)))
-	  && TREE_CODE (TREE_OPERAND (arg0, 1)) == INTEGER_CST
-	  && TREE_CODE (TREE_OPERAND (arg1, 1)) == INTEGER_CST
-	  && TREE_INT_CST_HIGH (TREE_OPERAND (arg0, 1)) == 0
-	  && TREE_INT_CST_HIGH (TREE_OPERAND (arg1, 1)) == 0
-	  && ((TREE_INT_CST_LOW (TREE_OPERAND (arg0, 1))
-	       + TREE_INT_CST_LOW (TREE_OPERAND (arg1, 1)))
+	  && TREE_UNSIGNED (TREE_TYPE (TREE_OPERAND (arg0, 0))))
+	{
+	  register tree tree01, tree11;
+	  register enum tree_code code01, code11;
+
+	  tree01 = TREE_OPERAND (arg0, 1);
+	  tree11 = TREE_OPERAND (arg1, 1);
+	  code01 = TREE_CODE (tree01);
+	  code11 = TREE_CODE (tree11);
+	  if (code01 == INTEGER_CST
+	    && code11 == INTEGER_CST
+	    && TREE_INT_CST_HIGH (tree01) == 0
+	    && TREE_INT_CST_HIGH (tree11) == 0
+	    && ((TREE_INT_CST_LOW (tree01) + TREE_INT_CST_LOW (tree11))
 	      == TYPE_PRECISION (TREE_TYPE (TREE_OPERAND (arg0, 0)))))
-	return build (LROTATE_EXPR, type, TREE_OPERAND (arg0, 0),
-		      TREE_CODE (arg0) == LSHIFT_EXPR
-		      ? TREE_OPERAND (arg0, 1) : TREE_OPERAND (arg1, 1));
+	    return build (LROTATE_EXPR, type, TREE_OPERAND (arg0, 0),
+		      code0 == LSHIFT_EXPR ? tree01 : tree11);
+	  else if (code11 == MINUS_EXPR
+		&& TREE_CODE (TREE_OPERAND (tree11, 0)) == INTEGER_CST
+		&& TREE_INT_CST_HIGH (TREE_OPERAND (tree11, 0)) == 0
+		&& TREE_INT_CST_LOW (TREE_OPERAND (tree11, 0))
+		  == TYPE_PRECISION (TREE_TYPE (TREE_OPERAND (arg0, 0)))
+		&& operand_equal_p (tree01, TREE_OPERAND (tree11, 1), 0))
+	    return build (code0 == LSHIFT_EXPR ? LROTATE_EXPR : RROTATE_EXPR,
+			type, TREE_OPERAND (arg0, 0), tree01);
+	  else if (code01 == MINUS_EXPR
+		&& TREE_CODE (TREE_OPERAND (tree01, 0)) == INTEGER_CST
+		&& TREE_INT_CST_HIGH (TREE_OPERAND (tree01, 0)) == 0
+		&& TREE_INT_CST_LOW (TREE_OPERAND (tree01, 0))
+		  == TYPE_PRECISION (TREE_TYPE (TREE_OPERAND (arg0, 0)))
+		&& operand_equal_p (tree11, TREE_OPERAND (tree01, 1), 0))
+	    return build (code0 != LSHIFT_EXPR ? LROTATE_EXPR : RROTATE_EXPR,
+			type, TREE_OPERAND (arg0, 0), tree11);
+	}
 
       goto associate;
+      }
 
     case BIT_XOR_EXPR:
       if (integer_zerop (arg1))
@@ -4048,7 +4110,7 @@ fold (expr)
 	  tree c2 = integer_zero_node;
 	  tree xarg0 = arg0;
 
-	  if (TREE_CODE (xarg0) == SAVE_EXPR)
+	  if (TREE_CODE (xarg0) == SAVE_EXPR && SAVE_EXPR_RTL (xarg0) == 0)
 	    have_save_expr = 1, xarg0 = TREE_OPERAND (xarg0, 0);
 
 	  STRIP_NOPS (xarg0);
@@ -4066,7 +4128,7 @@ fold (expr)
 	      xarg0 = TREE_OPERAND (xarg0, 0);
 	    }
 
-	  if (TREE_CODE (xarg0) == SAVE_EXPR)
+	  if (TREE_CODE (xarg0) == SAVE_EXPR && SAVE_EXPR_RTL (xarg0) == 0)
 	    have_save_expr = 1, xarg0 = TREE_OPERAND (xarg0, 0);
 
 	  STRIP_NOPS (xarg0);
@@ -4390,6 +4452,24 @@ fold (expr)
 				 constop, TREE_OPERAND (varop, 1)));
 		TREE_SET_CODE (varop, PREINCREMENT_EXPR);
 
+		/* If VAROP is a reference to a bitfield, we must mask
+		   the constant by the width of the field.  */
+		if (TREE_CODE (TREE_OPERAND (varop, 0)) == COMPONENT_REF
+		    && DECL_BIT_FIELD(TREE_OPERAND
+				      (TREE_OPERAND (varop, 0), 1)))
+		  {
+		    int size
+		      = TREE_INT_CST_LOW (DECL_SIZE
+					  (TREE_OPERAND
+					   (TREE_OPERAND (varop, 0), 1)));
+
+		    newconst = fold (build (BIT_AND_EXPR,
+					    TREE_TYPE (varop), newconst,
+					    convert (TREE_TYPE (varop),
+						     build_int_2 (size, 0))));
+		  }
+							 
+
 		t = build (code, type, TREE_OPERAND (t, 0),
 			   TREE_OPERAND (t, 1));
 		TREE_OPERAND (t, constopnum) = newconst;
@@ -4406,6 +4486,23 @@ fold (expr)
 		  = fold (build (MINUS_EXPR, TREE_TYPE (varop),
 				 constop, TREE_OPERAND (varop, 1)));
 		TREE_SET_CODE (varop, PREDECREMENT_EXPR);
+
+		if (TREE_CODE (TREE_OPERAND (varop, 0)) == COMPONENT_REF
+		    && DECL_BIT_FIELD(TREE_OPERAND
+				      (TREE_OPERAND (varop, 0), 1)))
+		  {
+		    int size
+		      = TREE_INT_CST_LOW (DECL_SIZE
+					  (TREE_OPERAND
+					   (TREE_OPERAND (varop, 0), 1)));
+
+		    newconst = fold (build (BIT_AND_EXPR,
+					    TREE_TYPE (varop), newconst,
+					    convert (TREE_TYPE (varop),
+						     build_int_2 (size, 0))));
+		  }
+							 
+
 		t = build (code, type, TREE_OPERAND (t, 0),
 			   TREE_OPERAND (t, 1));
 		TREE_OPERAND (t, constopnum) = newconst;
@@ -4552,7 +4649,7 @@ fold (expr)
 	      /* For NE, we can only do this simplification if integer.  */
 	      if (! INTEGRAL_TYPE_P (TREE_TYPE (arg0)))
 		break;
-	      /* ... fall through ... */
+	      /* ... fall through ...  */
 	    case GT_EXPR:
 	    case LT_EXPR:
 	      t = build_int_2 (0, 0);
@@ -5088,7 +5185,7 @@ fold (expr)
          appropriate.  */
     case CLEANUP_POINT_EXPR:
       if (! TREE_SIDE_EFFECTS (arg0))
-	return convert (type, arg0);
+	return TREE_OPERAND (t, 0);
 
       {
 	enum tree_code code0 = TREE_CODE (arg0);

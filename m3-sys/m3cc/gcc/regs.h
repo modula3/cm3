@@ -1,5 +1,5 @@
 /* Define per-register tables for data flow info and register allocation.
-   Copyright (C) 1987, 1993, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1993, 1994, 1995 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -136,12 +136,18 @@ extern int *regno_last_uid;
 
 extern int *regno_last_note_uid;
 
+/* This is reset to LAST_VIRTUAL_REGISTER + 1 at the start of each function.
+   After rtl generation, it is 1 plus the largest register number used.  */
+
+extern int reg_rtx_no;
+
 /* Vector indexed by regno; contains 1 for a register is considered a pointer.
    Reloading, etc. will use a pointer register rather than a non-pointer
    as the base register in an address, when there is a choice of two regs.  */
 
 extern char *regno_pointer_flag;
 #define REGNO_POINTER_FLAG(REGNO) regno_pointer_flag[REGNO]
+extern int regno_pointer_flag_length;
 
 /* List made of EXPR_LIST rtx's which gives pairs of pseudo registers
    that have to go in the same hard reg.  */
@@ -163,6 +169,12 @@ extern int caller_save_needed;
 
 #ifndef CALLER_SAVE_PROFITABLE
 #define CALLER_SAVE_PROFITABLE(REFS, CALLS)  (4 * (CALLS) < (REFS))
+#endif
+
+/* On most machines a register class is likely to be spilled if it
+   only has one register.  */
+#ifndef CLASS_LIKELY_SPILLED_P
+#define CLASS_LIKELY_SPILLED_P(CLASS) (reg_class_size[(int) (CLASS)] == 1)
 #endif
 
 /* Allocated in local_alloc.  */

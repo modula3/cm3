@@ -1,5 +1,5 @@
 /* Analyze RTL for C-Compiler
-   Copyright (C) 1987, 88, 91, 92, 93, 94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 88, 9-5, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -177,8 +177,17 @@ rtx_addr_varies_p (x)
   fmt = GET_RTX_FORMAT (code);
   for (i = GET_RTX_LENGTH (code) - 1; i >= 0; i--)
     if (fmt[i] == 'e')
-      if (rtx_addr_varies_p (XEXP (x, i)))
-	return 1;
+      {
+	if (rtx_addr_varies_p (XEXP (x, i)))
+	  return 1;
+      }
+    else if (fmt[i] == 'E')
+      {
+	int j;
+	for (j = 0; j < XVECLEN (x, i); j++)
+	  if (rtx_addr_varies_p (XVECEXP (x, i, j)))
+	    return 1;
+      }
   return 0;
 }
 
@@ -384,7 +393,7 @@ reg_referenced_p (x, body)
 
 /* Nonzero if register REG is referenced in an insn between
    FROM_INSN and TO_INSN (exclusive of those two).  Sets of REG do
-   not count. */
+   not count.  */
 
 int
 reg_referenced_between_p (reg, from_insn, to_insn)
@@ -915,7 +924,7 @@ reg_set_last (x, insn)
   return 0;
 }
 
-/* This is 1 until after reload pass.  */
+/* This is 1 until after the rtl generation pass.  */
 int rtx_equal_function_value_matters;
 
 /* Return 1 if X and Y are identical-looking rtx's.

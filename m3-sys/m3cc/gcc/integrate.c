@@ -1,5 +1,5 @@
 /* Procedure integration for GNU CC.
-   Copyright (C) 1988, 1991, 1993, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1988, 91, 93, 94, 95, 1996 Free Software Foundation, Inc.
    Contributed by Michael Tiemann (tiemann@cygnus.com)
 
 This file is part of GNU CC.
@@ -25,6 +25,7 @@ Boston, MA 02111-1307, USA.  */
 #include "config.h"
 #include "rtl.h"
 #include "tree.h"
+#include "regs.h"
 #include "flags.h"
 #include "insn-config.h"
 #include "insn-flags.h"
@@ -32,6 +33,7 @@ Boston, MA 02111-1307, USA.  */
 #include "output.h"
 #include "integrate.h"
 #include "real.h"
+#include "except.h"
 #include "function.h"
 #include "bytecode.h"
 
@@ -66,6 +68,7 @@ static void note_modified_parmregs PROTO((rtx, rtx));
 static rtx copy_for_inline	PROTO((rtx));
 static void integrate_parm_decls PROTO((tree, struct inline_remap *, rtvec));
 static void integrate_decl_tree	PROTO((tree, int, struct inline_remap *));
+static void save_constants_in_decl_trees PROTO ((tree));
 static void subst_constants	PROTO((rtx *, rtx, struct inline_remap *));
 static void restore_constants	PROTO((rtx *));
 static void set_block_origin_self PROTO((tree));
@@ -107,14 +110,6 @@ function_cannot_inline_p (fndecl)
     return "function too large to be inline";
 
 #if 0
-  /* Large stacks are OK now that inlined functions can share them.  */
-  /* Don't inline functions with large stack usage,
-     since they can make other recursive functions burn up stack.  */
-  if (!DECL_INLINE (fndecl) && get_frame_size () > 100)
-    return "function stack frame for inlining";
-#endif
-
-#if 0
   /* Don't inline functions which do not specify a function prototype and
      have BLKmode argument or take the address of a parameter.  */
   for (parms = DECL_ARGUMENTS (fndecl); parms; parms = TREE_CHAIN (parms))
@@ -152,12 +147,11 @@ function_cannot_inline_p (fndecl)
 
   if (!DECL_INLINE (fndecl) && get_max_uid () > max_insns)
     {
-      for (ninsns = 0, insn = get_first_nonparm_insn (); insn && ninsns < max_insns;
+      for (ninsns = 0, insn = get_first_nonparm_insn ();
+	   insn && ninsns < max_insns;
 	   insn = NEXT_INSN (insn))
-	{
-	  if (GET_RTX_CLASS (GET_CODE (insn)) == 'i')
-	    ninsns++;
-	}
+	if (GET_RTX_CLASS (GET_CODE (insn)) == 'i')
+	  ninsns++;
 
       if (ninsns >= max_insns)
 	return "function too large to be inline";
@@ -176,6 +170,19 @@ function_cannot_inline_p (fndecl)
   /* We cannot inline a nested function that jumps to a nonlocal label.  */
   if (current_function_has_nonlocal_goto)
     return "function with nonlocal goto cannot be inline";
+
+  /* This is a hack, until the inliner is taught about eh regions at
+     the start of the function.  */
+  for (insn = get_insns ();
+       insn &&
+         ! (GET_CODE (insn) == NOTE
+	    && NOTE_LINE_NUMBER (insn) == NOTE_INSN_FUNCTION_BEG);
+       insn = NEXT_INSN (insn))
+    {
+      if (insn && GET_CODE (insn) == NOTE
+	  && NOTE_LINE_NUMBER (insn) == NOTE_INSN_EH_REGION_BEG)
+	return "function with complex parameters cannot be inline";
+    }
 
   return 0;
 }
@@ -316,10 +323,12 @@ initialize_for_inline (fndecl, min_labelno, max_labelno, max_reg, copy)
      the size of the incoming stack area for parameters,
      the number of bytes popped on return,
      the stack slot list,
+     the labels that are forced to exist,
      some flags that are used to restore compiler globals,
      the value of current_function_outgoing_args_size,
      the original argument vector,
-     and the original DECL_INITIAL.  */
+     the original DECL_INITIAL,
+     and pointers to the table of psuedo regs, pointer flags, and alignment. */
 
   return gen_inline_header_rtx (NULL_RTX, NULL_RTX, min_labelno, max_labelno,
 				max_parm_reg, max_reg,
@@ -327,7 +336,9 @@ initialize_for_inline (fndecl, min_labelno, max_labelno, max_reg, copy)
 				current_function_pops_args,
 				stack_slot_list, forced_labels, function_flags,
 				current_function_outgoing_args_size,
-				arg_vector, (rtx) DECL_INITIAL (fndecl));
+				arg_vector, (rtx) DECL_INITIAL (fndecl),
+				(rtvec) regno_reg_rtx, regno_pointer_flag,
+				regno_pointer_align);
 }
 
 /* Subroutine for `save_for_inline{copying,nocopy}'.  Finishes up the
@@ -339,7 +350,7 @@ finish_inline (fndecl, head)
      tree fndecl;
      rtx head;
 {
-  NEXT_INSN (head) = get_first_nonparm_insn ();
+  FIRST_FUNCTION_INSN (head) = get_first_nonparm_insn ();
   FIRST_PARM_INSN (head) = get_insns ();
   DECL_SAVED_INSNS (fndecl) = head;
   DECL_FRAME_SIZE (fndecl) = get_frame_size ();
@@ -395,9 +406,10 @@ save_for_inline_copying (fndecl)
   int max_reg;
   int max_uid;
   rtx first_nonparm_insn;
+  char *new, *new1;
 
   /* Make and emit a return-label if we have not already done so. 
-     Do this before recording the bounds on label numbers. */
+     Do this before recording the bounds on label numbers.  */
 
   if (return_label == 0)
     {
@@ -433,6 +445,10 @@ save_for_inline_copying (fndecl)
 	    if (REG_NOTES (insn))
 	      save_constants (&REG_NOTES (insn));
 	  }
+
+      /* Also scan all decls, and replace any constant pool references with the
+	 actual constant.  */
+      save_constants_in_decl_trees (DECL_INITIAL (fndecl));
 
       /* Clear out the constant pool so that we can recreate it with the
 	 copied constants below.  */
@@ -473,16 +489,20 @@ save_for_inline_copying (fndecl)
      Make these new rtx's now, and install them in regno_reg_rtx, so they
      will be the official pseudo-reg rtx's for the rest of compilation.  */
 
-  reg_map = (rtx *) alloca ((max_reg + 1) * sizeof (rtx));
+  reg_map = (rtx *) savealloc (regno_pointer_flag_length * sizeof (rtx));
 
   len = sizeof (struct rtx_def) + (GET_RTX_LENGTH (REG) - 1) * sizeof (rtunion);
   for (i = max_reg - 1; i > LAST_VIRTUAL_REGISTER; i--)
     reg_map[i] = (rtx)obstack_copy (function_maybepermanent_obstack,
 				    regno_reg_rtx[i], len);
 
-  bcopy ((char *) (reg_map + LAST_VIRTUAL_REGISTER + 1),
-	 (char *) (regno_reg_rtx + LAST_VIRTUAL_REGISTER + 1),
-	 (max_reg - (LAST_VIRTUAL_REGISTER + 1)) * sizeof (rtx));
+  regno_reg_rtx = reg_map;
+
+  /* Put copies of all the virtual register rtx into the new regno_reg_rtx.  */
+  regno_reg_rtx[VIRTUAL_INCOMING_ARGS_REGNUM] = virtual_incoming_args_rtx;
+  regno_reg_rtx[VIRTUAL_STACK_VARS_REGNUM] = virtual_stack_vars_rtx;
+  regno_reg_rtx[VIRTUAL_STACK_DYNAMIC_REGNUM] = virtual_stack_dynamic_rtx;
+  regno_reg_rtx[VIRTUAL_OUTGOING_ARGS_REGNUM] = virtual_outgoing_args_rtx;
 
   /* Likewise each label rtx must have a unique rtx as its copy.  */
 
@@ -560,6 +580,16 @@ save_for_inline_copying (fndecl)
 	      NOTE_SOURCE_FILE (insn) = (char *) copy;
 	      NOTE_SOURCE_FILE (copy) = 0;
 	    }
+	  if (NOTE_LINE_NUMBER (copy) == NOTE_INSN_EH_REGION_BEG
+	      || NOTE_LINE_NUMBER (copy) == NOTE_INSN_EH_REGION_END)
+	    {
+	      /* We have to forward these both to match the new exception
+		 region.  */
+	      NOTE_BLOCK_NUMBER (copy)
+		= CODE_LABEL_NUMBER (label_map[NOTE_BLOCK_NUMBER (copy)]);
+	      
+	    }
+	  RTX_INTEGRATED_P (copy) = RTX_INTEGRATED_P (insn);
 	  break;
 
 	case INSN:
@@ -608,6 +638,15 @@ save_for_inline_copying (fndecl)
   NEXT_INSN (last_insn) = NULL;
 
   finish_inline (fndecl, head);
+
+  /* Make new versions of the register tables.  */
+  new = (char *) savealloc (regno_pointer_flag_length);
+  bcopy (regno_pointer_flag, new, regno_pointer_flag_length);
+  new1 = (char *) savealloc (regno_pointer_flag_length);
+  bcopy (regno_pointer_align, new1, regno_pointer_flag_length);
+
+  regno_pointer_flag = new;
+  regno_pointer_align = new1;
 
   set_new_first_and_last_insn (first_insn, last_insn);
 }
@@ -779,6 +818,10 @@ save_for_inline_nocopy (fndecl)
 	  note_stores (PATTERN (insn), note_modified_parmregs);
 	}
     }
+
+  /* Also scan all decls, and replace any constant pool references with the
+     actual constant.  */
+  save_constants_in_decl_trees (DECL_INITIAL (fndecl));
 
   /* We have now allocated all that needs to be allocated permanently
      on the rtx obstack.  Set our high-water mark, so that we
@@ -1151,7 +1194,8 @@ int global_const_equiv_map_size;
    else an rtx for where the value is stored.  */
 
 rtx
-expand_inline_function (fndecl, parms, target, ignore, type, structure_value_addr)
+expand_inline_function (fndecl, parms, target, ignore, type,
+			structure_value_addr)
      tree fndecl, parms;
      rtx target;
      int ignore;
@@ -1190,11 +1234,9 @@ expand_inline_function (fndecl, parms, target, ignore, type, structure_value_add
      passed.  Since the appropriate conversions or default promotions have
      already been applied, the machine modes should match exactly.  */
 
-  for (formal = DECL_ARGUMENTS (fndecl),
-       actual = parms;
+  for (formal = DECL_ARGUMENTS (fndecl), actual = parms;
        formal;
-       formal = TREE_CHAIN (formal),
-       actual = TREE_CHAIN (actual))
+       formal = TREE_CHAIN (formal), actual = TREE_CHAIN (actual))
     {
       tree arg;
       enum machine_mode mode;
@@ -1203,13 +1245,15 @@ expand_inline_function (fndecl, parms, target, ignore, type, structure_value_add
 	return (rtx) (HOST_WIDE_INT) -1;
 
       arg = TREE_VALUE (actual);
-      mode= TYPE_MODE (DECL_ARG_TYPE (formal));
+      mode = TYPE_MODE (DECL_ARG_TYPE (formal));
 
       if (mode != TYPE_MODE (TREE_TYPE (arg))
 	  /* If they are block mode, the types should match exactly.
 	     They don't match exactly if TREE_TYPE (FORMAL) == ERROR_MARK_NODE,
 	     which could happen if the parameter has incomplete type.  */
-	  || (mode == BLKmode && TREE_TYPE (arg) != TREE_TYPE (formal)))
+	  || (mode == BLKmode
+	      && (TYPE_MAIN_VARIANT (TREE_TYPE (arg))
+		  != TYPE_MAIN_VARIANT (TREE_TYPE (formal)))))
 	return (rtx) (HOST_WIDE_INT) -1;
     }
 
@@ -1303,6 +1347,12 @@ expand_inline_function (fndecl, parms, target, ignore, type, structure_value_add
 		 handle SUBREGs in addresses.  */
 	      || (GET_CODE (arg_vals[i]) == SUBREG)))
 	arg_vals[i] = copy_to_mode_reg (GET_MODE (loc), arg_vals[i]);
+
+      if (arg_vals[i] != 0 && GET_CODE (arg_vals[i]) == REG
+	  && TREE_CODE (TREE_TYPE (formal)) == POINTER_TYPE)
+	mark_reg_pointer (arg_vals[i],
+			  (TYPE_ALIGN (TREE_TYPE (TREE_TYPE (formal)))
+			   / BITS_PER_UNIT));
     }
 	
   /* Allocate the structures we use to remap things.  */
@@ -1352,6 +1402,9 @@ expand_inline_function (fndecl, parms, target, ignore, type, structure_value_add
   /* Record the current insn in case we have to set up pointers to frame
      and argument memory blocks.  */
   map->insns_at_start = get_last_insn ();
+
+  map->regno_pointer_flag = INLINE_REGNO_POINTER_FLAG (header);
+  map->regno_pointer_align = INLINE_REGNO_POINTER_ALIGN (header);
 
   /* Update the outgoing argument size to allow for those in the inlined
      function.  */
@@ -1437,7 +1490,7 @@ expand_inline_function (fndecl, parms, target, ignore, type, structure_value_add
 	     that flag set if it is a register.
 
 	     Also, don't allow hard registers here; they might not be valid
-	     when substituted into insns. */
+	     when substituted into insns.  */
 
 	  if ((GET_CODE (copy) != REG && GET_CODE (copy) != SUBREG)
 	      || (GET_CODE (copy) == REG && REG_USERVAR_P (loc)
@@ -1468,7 +1521,7 @@ expand_inline_function (fndecl, parms, target, ignore, type, structure_value_add
 	     that flag set if it is a register.
 
 	     Also, don't allow hard registers here; they might not be valid
-	     when substituted into insns. */
+	     when substituted into insns.  */
 	  rtx locreal = gen_realpart (GET_MODE (XEXP (loc, 0)), loc);
 	  rtx locimag = gen_imagpart (GET_MODE (XEXP (loc, 0)), loc);
 	  rtx copyreal = gen_realpart (GET_MODE (locreal), copy);
@@ -1570,7 +1623,8 @@ expand_inline_function (fndecl, parms, target, ignore, type, structure_value_add
 
       if (GET_CODE (XEXP (loc, 0)) == REG)
 	{
-	  temp = force_reg (Pmode, structure_value_addr);
+	  temp = force_reg (Pmode,
+			    force_operand (structure_value_addr, NULL_RTX));
 	  map->reg_map[REGNO (XEXP (loc, 0))] = temp;
 	  if ((CONSTANT_P (structure_value_addr)
 	       || (GET_CODE (structure_value_addr) == PLUS
@@ -1842,7 +1896,18 @@ expand_inline_function (fndecl, parms, target, ignore, type, structure_value_add
 	  if (NOTE_LINE_NUMBER (insn) != NOTE_INSN_FUNCTION_END
 	      && NOTE_LINE_NUMBER (insn) != NOTE_INSN_FUNCTION_BEG
 	      && NOTE_LINE_NUMBER (insn) != NOTE_INSN_DELETED)
-	    copy = emit_note (NOTE_SOURCE_FILE (insn), NOTE_LINE_NUMBER (insn));
+	    {
+	      copy = emit_note (NOTE_SOURCE_FILE (insn), NOTE_LINE_NUMBER (insn));
+	      if (copy && (NOTE_LINE_NUMBER (copy) == NOTE_INSN_EH_REGION_BEG
+			   || NOTE_LINE_NUMBER (copy) == NOTE_INSN_EH_REGION_END))
+		{
+		  rtx label = map->label_map[NOTE_BLOCK_NUMBER (copy)];
+
+		  /* We have to forward these both to match the new exception
+		     region.  */
+		  NOTE_BLOCK_NUMBER (copy) = CODE_LABEL_NUMBER (label);
+		}
+	    }
 	  else
 	    copy = 0;
 	  break;
@@ -1900,6 +1965,18 @@ expand_inline_function (fndecl, parms, target, ignore, type, structure_value_add
   BLOCK_ABSTRACT_ORIGIN (block) = (DECL_ABSTRACT_ORIGIN (fndecl) == NULL
 				   ? fndecl : DECL_ABSTRACT_ORIGIN (fndecl));
   poplevel (0, 0, 0);
+
+  /* CYGNUS LOCAL: gcov */
+  /* Must mark the line number note after inlined functions as a repeat, so
+     that the test coverage code can avoid counting the call twice.  This
+     just tells the code to ignore the immediately following line note, since
+     there already exists a copy of this note before the expanded inline call.
+     This line number note is still needed for debugging though, so we can't
+     delete it.  */
+  if (flag_test_coverage)
+    emit_note (0, NOTE_REPEATED_LINE_NUMBER);
+  /* END CYGNUS LOCAL */
+
   emit_line_note (input_filename, lineno);
 
   if (structure_value_addr)
@@ -1973,7 +2050,6 @@ integrate_decl_tree (let, level, map)
   for (t = BLOCK_VARS (let); t; t = TREE_CHAIN (t))
     {
       tree d;
-      tree newd;
 
       push_obstacks_nochange ();
       saveable_allocation ();
@@ -1992,28 +2068,13 @@ integrate_decl_tree (let, level, map)
 	}
       /* These args would always appear unused, if not for this.  */
       TREE_USED (d) = 1;
+      /* Prevent warning for shadowing with these.  */
+      DECL_ABSTRACT_ORIGIN (d) = t;
 
       if (DECL_LANG_SPECIFIC (d))
 	copy_lang_decl (d);
 
-      /* Must set DECL_ABSTRACT_ORIGIN here for local variables, to ensure
-	 that we don't get -Wshadow warnings.  But don't set it here if
-	 pushdecl might return a duplicate decl, as that will result in
-	 incorrect DWARF debug info.  */
-      if (! DECL_EXTERNAL (d) || ! TREE_PUBLIC (d))
-	/* Prevent warning for shadowing with these.  */
-	DECL_ABSTRACT_ORIGIN (d) = t;
-
-      newd = pushdecl (d);
-
-      /* If we didn't set DECL_ABSTRACT_ORIGIN above, then set it now.
-	 Simpler to just set it always rather than checking.
-	 If the decl we get back is the copy of 't' that we started with,
-	 then set the DECL_ABSTRACT_ORIGIN.  Otherwise, we must have a
-	 duplicate decl, and we got the older one back.  In that case, setting
-	 DECL_ABSTRACT_ORIGIN is not appropriate.  */
-      if (newd == d)
-	DECL_ABSTRACT_ORIGIN (d) = t;
+      pushdecl (d);
     }
 
   for (t = BLOCK_SUBBLOCKS (let); t; t = TREE_CHAIN (t))
@@ -2028,6 +2089,23 @@ integrate_decl_tree (let, level, map)
 	  BLOCK_ABSTRACT_ORIGIN (node) = let;
 	}
     }
+}
+
+/* Given a BLOCK node LET, search for all DECL_RTL fields, and pass them
+   through save_constants.  */
+
+static void
+save_constants_in_decl_trees (let)
+     tree let;
+{
+  tree t;
+
+  for (t = BLOCK_VARS (let); t; t = TREE_CHAIN (t))
+    if (DECL_RTL (t) != 0)
+      save_constants (&DECL_RTL (t));
+
+  for (t = BLOCK_SUBBLOCKS (let); t; t = TREE_CHAIN (t))
+    save_constants_in_decl_trees (t);
 }
 
 /* Create a new copy of an rtx.
@@ -2102,6 +2180,11 @@ copy_rtx_and_substitute (orig, map)
 	      map->reg_map[regno] = temp
 		= force_reg (Pmode, force_operand (loc, NULL_RTX));
 
+#ifdef STACK_BOUNDARY
+	      mark_reg_pointer (map->reg_map[regno],
+				STACK_BOUNDARY / BITS_PER_UNIT);
+#endif
+
 	      if (REGNO (temp) < map->const_equiv_map_size)
 		{
 		  map->const_equiv_map[REGNO (temp)] = loc;
@@ -2116,7 +2199,7 @@ copy_rtx_and_substitute (orig, map)
 	  else if (regno == VIRTUAL_INCOMING_ARGS_REGNUM)
 	    {
 	      /* Do the same for a block to contain any arguments referenced
-		 in memory. */
+		 in memory.  */
 	      rtx loc, seq;
 	      int size = FUNCTION_ARGS_SIZE (DECL_SAVED_INSNS (map->fndecl));
 
@@ -2125,12 +2208,17 @@ copy_rtx_and_substitute (orig, map)
 	      loc = XEXP (loc, 0);
 	      /* When arguments grow downward, the virtual incoming 
 		 args pointer points to the top of the argument block,
-		 so the remapped location better do the same. */
+		 so the remapped location better do the same.  */
 #ifdef ARGS_GROW_DOWNWARD
 	      loc = plus_constant (loc, size);
 #endif
 	      map->reg_map[regno] = temp
 		= force_reg (Pmode, force_operand (loc, NULL_RTX));
+
+#ifdef STACK_BOUNDARY
+	      mark_reg_pointer (map->reg_map[regno],
+				STACK_BOUNDARY / BITS_PER_UNIT);
+#endif
 
 	      if (REGNO (temp) < map->const_equiv_map_size)
 		{
@@ -2166,6 +2254,10 @@ copy_rtx_and_substitute (orig, map)
 	  REG_LOOP_TEST_P (map->reg_map[regno]) = REG_LOOP_TEST_P (orig);
 	  RTX_UNCHANGING_P (map->reg_map[regno]) = RTX_UNCHANGING_P (orig);
 	  /* A reg with REG_FUNCTION_VALUE_P true will never reach here.  */
+
+	  if (map->regno_pointer_flag[regno])
+	    mark_reg_pointer (map->reg_map[regno],
+			      map->regno_pointer_align[regno]);
 	}
       return map->reg_map[regno];
 
@@ -2300,7 +2392,7 @@ copy_rtx_and_substitute (orig, map)
 	 will not have valid reg_map entries.  This can cause try_constants()
 	 to fail because assumes that all registers in the rtx have valid
 	 reg_map entries, and it may end up replacing one of these new
-	 registers with junk. */
+	 registers with junk.  */
 
       if (! memory_address_p (GET_MODE (temp), XEXP (temp, 0)))
 	temp = change_address (temp, GET_MODE (temp), XEXP (temp, 0));
@@ -2612,8 +2704,6 @@ subst_constants (loc, insn, map)
 	src = SET_SRC (x);
 
 	while (GET_CODE (*dest_loc) == ZERO_EXTRACT
-	       /* By convention, we always use ZERO_EXTRACT in the dest.  */
-/*	       || GET_CODE (*dest_loc) == SIGN_EXTRACT */
 	       || GET_CODE (*dest_loc) == SUBREG
 	       || GET_CODE (*dest_loc) == STRICT_LOW_PART)
 	  {
@@ -2948,25 +3038,20 @@ set_block_abstract_flags (stmt, setting)
      register tree stmt;
      register int setting;
 {
+  register tree local_decl;
+  register tree subblock;
+
   BLOCK_ABSTRACT (stmt) = setting;
 
-  {
-    register tree local_decl;
+  for (local_decl = BLOCK_VARS (stmt);
+       local_decl != NULL_TREE;
+       local_decl = TREE_CHAIN (local_decl))
+    set_decl_abstract_flags (local_decl, setting);
 
-    for (local_decl = BLOCK_VARS (stmt);
-	 local_decl != NULL_TREE;
-	 local_decl = TREE_CHAIN (local_decl))
-      set_decl_abstract_flags (local_decl, setting);
-  }
-
-  {
-    register tree subblock;
-
-    for (subblock = BLOCK_SUBBLOCKS (stmt);
-	 subblock != NULL_TREE;
-	 subblock = BLOCK_CHAIN (subblock))
-      set_block_abstract_flags (subblock, setting);
-  }
+  for (subblock = BLOCK_SUBBLOCKS (stmt);
+       subblock != NULL_TREE;
+       subblock = BLOCK_CHAIN (subblock))
+    set_block_abstract_flags (subblock, setting);
 }
 
 /* Given a pointer to some ..._DECL node, and a boolean value to set the
@@ -3028,8 +3113,13 @@ output_inline_function (fndecl)
   /* Set stack frame size.  */
   assign_stack_local (BLKmode, DECL_FRAME_SIZE (fndecl), 0);
 
-  restore_reg_data (FIRST_PARM_INSN (head));
-
+  /* The first is a bit of a lie (the array may be larger), but doesn't
+     matter too much and it isn't worth saving the actual bound.  */
+  reg_rtx_no = regno_pointer_flag_length = MAX_REGNUM (head);
+  regno_reg_rtx = (rtx *) INLINE_REGNO_REG_RTX (head);
+  regno_pointer_flag = INLINE_REGNO_POINTER_FLAG (head);
+  regno_pointer_align = INLINE_REGNO_POINTER_ALIGN (head);
+  
   stack_slot_list = STACK_SLOT_LIST (head);
   forced_labels = FORCED_LABELS (head);
 

@@ -1,5 +1,5 @@
 /* Subroutines for manipulating rtx's in semantically interesting ways.
-   Copyright (C) 1987, 1991, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1991, 1994, 1995, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -304,8 +304,11 @@ convert_memory_address (to_mode, x)
      enum machine_mode to_mode;
      rtx x;
 {
+  enum machine_mode from_mode = to_mode == ptr_mode ? Pmode : ptr_mode;
   rtx temp;
 
+  /* Here we handle some special cases.  If none of them apply, fall through
+     to the default case.  */
   switch (GET_CODE (x))
     {
     case CONST_INT:
@@ -320,21 +323,27 @@ convert_memory_address (to_mode, x)
       SYMBOL_REF_FLAG (temp) = SYMBOL_REF_FLAG (x);
       return temp;
 
-    case PLUS:
-    case MULT:
-      return gen_rtx (GET_CODE (x), to_mode, 
-		      convert_memory_address (to_mode, XEXP (x, 0)),
-		      convert_memory_address (to_mode, XEXP (x, 1)));
-
     case CONST:
       return gen_rtx (CONST, to_mode, 
 		      convert_memory_address (to_mode, XEXP (x, 0)));
 
-    default:
-      return convert_modes (to_mode,
-			    to_mode == ptr_mode ? Pmode : ptr_mode,
-			    x, POINTERS_EXTEND_UNSIGNED);
+    case PLUS:
+    case MULT:
+      /* For addition the second operand is a small constant, we can safely
+	 permute the converstion and addition operation.  We can always safely
+	 permute them if we are making the address narrower.  In addition,
+	 always permute the operations if this is a constant.  */
+      if (GET_MODE_SIZE (to_mode) < GET_MODE_SIZE (from_mode)
+	  || (GET_CODE (x) == PLUS && GET_CODE (XEXP (x, 1)) == CONST_INT
+	      && (INTVAL (XEXP (x, 1)) + 20000 < 40000
+		  || CONSTANT_P (XEXP (x, 0)))))
+	return gen_rtx (GET_CODE (x), to_mode, 
+			convert_memory_address (to_mode, XEXP (x, 0)),
+			convert_memory_address (to_mode, XEXP (x, 1)));
     }
+
+  return convert_modes (to_mode, from_mode,
+			x, POINTERS_EXTEND_UNSIGNED);
 }
 #endif
 
@@ -493,11 +502,11 @@ memory_address (mode, x)
   if (oldx == x)
     return x;
   else if (GET_CODE (x) == REG)
-    mark_reg_pointer (x);
+    mark_reg_pointer (x, 1);
   else if (GET_CODE (x) == PLUS
 	   && GET_CODE (XEXP (x, 0)) == REG
 	   && GET_CODE (XEXP (x, 1)) == CONST_INT)
-    mark_reg_pointer (XEXP (x, 0));
+    mark_reg_pointer (XEXP (x, 0), 1);
 
   /* OLDX may have been the address on a temporary.  Update the address
      to indicate that X is now used.  */
@@ -564,6 +573,9 @@ stabilize (x)
       MEM_IN_STRUCT_P (mem) = MEM_IN_STRUCT_P (x) || GET_CODE (addr) == PLUS;
       RTX_UNCHANGING_P (mem) = RTX_UNCHANGING_P (x);
       MEM_VOLATILE_P (mem) = MEM_VOLATILE_P (x);
+      /* CYGNUS LOCAL unaligned-pointers */
+      MEM_UNALIGNED_P (mem) = MEM_UNALIGNED_P (x);
+      /* END CYGNUS LOCAL */
       return mem;
     }
   return x;
@@ -734,12 +746,17 @@ promote_mode (type, mode, punsignedp, for_call)
   return mode;
 }
 
+/* CYGNUS LOCAL sac/win32 */
 /* Adjust the stack pointer by ADJUST (an rtx for a number of bytes).
-   This pops when ADJUST is positive.  ADJUST need not be constant.  */
+   If UP is non-zero then it pops when ADJUST is positive.
+   If UP is zero then it pushes when ADJUST is positive.
+   ADJUST need not be constant.  */
 
+static 
 void
-adjust_stack (adjust)
+adjust_stack_worker (adjust, up)
      rtx adjust;
+     int up;
 {
   rtx temp;
   adjust = protect_from_queue (adjust, 0);
@@ -747,17 +764,36 @@ adjust_stack (adjust)
   if (adjust == const0_rtx)
     return;
 
-  temp = expand_binop (Pmode,
-#ifdef STACK_GROWS_DOWNWARD
-		       add_optab,
-#else
-		       sub_optab,
+#ifdef HAVE_adjust_stack
+  if (HAVE_adjust_stack) 
+    {
+      emit_insn (gen_adjust_stack (adjust, GEN_INT(up)));
+    }
+  else
 #endif
-		       stack_pointer_rtx, adjust, stack_pointer_rtx, 0,
-		       OPTAB_LIB_WIDEN);
+    {
+      temp = expand_binop (Pmode,
+#ifdef STACK_GROWS_DOWNWARD
+			   up ? add_optab : sub_optab,
+#else
+			   up ? sub_optab : add_optab,
+#endif
+			   stack_pointer_rtx, adjust, stack_pointer_rtx, 0,
+			   OPTAB_LIB_WIDEN);
 
-  if (temp != stack_pointer_rtx)
-    emit_move_insn (stack_pointer_rtx, temp);
+      if (temp != stack_pointer_rtx)
+	emit_move_insn (stack_pointer_rtx, temp);
+    }
+}
+
+/* Adjust the stack pointer by ADJUST (an rtx for a number of bytes).
+   This pops when ADJUST is positive.  ADJUST need not be constant.  */
+
+void
+adjust_stack (adjust)
+     rtx adjust;
+{
+  adjust_stack_worker (adjust, 1);
 }
 
 /* Adjust the stack pointer by minus ADJUST (an rtx for a number of bytes).
@@ -767,25 +803,9 @@ void
 anti_adjust_stack (adjust)
      rtx adjust;
 {
-  rtx temp;
-  adjust = protect_from_queue (adjust, 0);
-
-  if (adjust == const0_rtx)
-    return;
-
-  temp = expand_binop (Pmode,
-#ifdef STACK_GROWS_DOWNWARD
-		       sub_optab,
-#else
-		       add_optab,
-#endif
-		       stack_pointer_rtx, adjust, stack_pointer_rtx, 0,
-		       OPTAB_LIB_WIDEN);
-
-  if (temp != stack_pointer_rtx)
-    emit_move_insn (stack_pointer_rtx, temp);
+  adjust_stack_worker (adjust, 0);
 }
-
+/* END CYGNUS LOCAL sac/win32 */
 /* Round the size of a block to be pushed up to the boundary required
    by this machine.  SIZE is the desired size, which need not be constant.  */
 
@@ -806,7 +826,8 @@ round_push (size)
   else
     {
       /* CEIL_DIV_EXPR needs to worry about the addition overflowing,
-	 but we know it can't.  So add ourselves and then do TRUNC_DIV_EXPR. */
+	 but we know it can't.  So add ourselves and then do
+	 TRUNC_DIV_EXPR.  */
       size = expand_binop (Pmode, add_optab, size, GEN_INT (align - 1),
 			   NULL_RTX, 1, OPTAB_LIB_WIDEN);
       size = expand_divmod (0, TRUNC_DIV_EXPR, Pmode, size, GEN_INT (align),
@@ -1063,6 +1084,7 @@ allocate_dynamic_stack_space (size, target, known_align)
     size = round_push (size);
 #endif
 
+
   do_pending_stack_adjust ();
 
   /* Don't use a TARGET that isn't a pseudo.  */
@@ -1070,7 +1092,7 @@ allocate_dynamic_stack_space (size, target, known_align)
       || REGNO (target) < FIRST_PSEUDO_REGISTER)
     target = gen_reg_rtx (Pmode);
 
-  mark_reg_pointer (target);
+  mark_reg_pointer (target, known_align / BITS_PER_UNIT);
 
 #ifndef STACK_GROWS_DOWNWARD
   emit_move_insn (target, virtual_stack_dynamic_rtx);
@@ -1108,7 +1130,8 @@ allocate_dynamic_stack_space (size, target, known_align)
   if (MUST_ALIGN)
     {
       /* CEIL_DIV_EXPR needs to worry about the addition overflowing,
-	 but we know it can't.  So add ourselves and then do TRUNC_DIV_EXPR. */
+	 but we know it can't.  So add ourselves and then do
+	 TRUNC_DIV_EXPR.  */
       target = expand_binop (Pmode, add_optab, target,
 			     GEN_INT (BIGGEST_ALIGNMENT / BITS_PER_UNIT - 1),
 			     NULL_RTX, 1, OPTAB_LIB_WIDEN);

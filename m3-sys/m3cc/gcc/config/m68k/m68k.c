@@ -1,5 +1,5 @@
 /* Subroutines for insn-output.c for Motorola 68000 family.
-   Copyright (C) 1987, 1993, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1993, 1994, 1995, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -146,7 +146,7 @@ output_function_prologue (stream, size)
   else if (fsize)
     {
       /* Adding negative number is faster on the 68040.  */
-      if (fsize + 4 < 0x8000)
+      if (fsize + 4 < 0x8000 && ! TARGET_5200)
 	{
 	/* asm_fprintf() cannot handle %. */
 #ifdef MOTOROLA
@@ -290,6 +290,7 @@ output_function_epilogue (stream, size)
   int fsize = (size + 3) & -4;
   int big = 0;
   rtx insn = get_last_insn ();
+  int restore_from_sp = 0;
   
   /* If the last insn was a BARRIER, we don't have to write any code.  */
   if (GET_CODE (insn) == NOTE)
@@ -301,6 +302,13 @@ output_function_epilogue (stream, size)
       asm_fprintf (stream, "\tnop\n");
       return;
     }
+
+#ifdef FUNCTION_BLOCK_PROFILER_EXIT
+  if (profile_block_flag == 2)
+    {
+      FUNCTION_BLOCK_PROFILER_EXIT (stream);
+    }
+#endif
 
 #ifdef FUNCTION_EXTRA_EPILOGUE
   FUNCTION_EXTRA_EPILOGUE (stream, size);
@@ -330,8 +338,10 @@ output_function_epilogue (stream, size)
 	mask |= 1 << regno;
       }
   offset = foffset + nregs * 4;
+  restore_from_sp = ! frame_pointer_needed
+	     || (! current_function_calls_alloca && leaf_function_p ());
   if (offset + fsize >= 0x8000
-      && frame_pointer_needed
+      && ! restore_from_sp
       && (mask || fmask || fpoffset))
     {
 #ifdef MOTOROLA
@@ -367,7 +377,7 @@ output_function_epilogue (stream, size)
 			     offset + fsize, reg_names[i]);
 #endif
 	      }
-            else if (! frame_pointer_needed)
+            else if (restore_from_sp)
 	      {
 #ifdef MOTOROLA
 		asm_fprintf (stream, "\t%Omove.l (%Rsp)+,%s\n",
@@ -408,7 +418,7 @@ output_function_epilogue (stream, size)
 		       offset + fsize, mask);
 #endif
 	}
-      else if (! frame_pointer_needed)
+      else if (restore_from_sp)
 	{
 #ifdef MOTOROLA
 	  asm_fprintf (stream, "\tmovm.l (%Rsp)+,%0I0x%x\n", mask);
@@ -445,7 +455,7 @@ output_function_epilogue (stream, size)
 		       foffset + fsize, fmask);
 #endif
 	}
-      else if (! frame_pointer_needed)
+      else if (restore_from_sp)
 	{
 #ifdef MOTOROLA
 	  asm_fprintf (stream, "\tfmovm (%Rsp)+,%0I0x%x\n", fmask);
@@ -484,7 +494,7 @@ output_function_epilogue (stream, size)
 			   fpoffset + fsize, reg_names[regno]);
 #endif
 	    }
-	  else if (! frame_pointer_needed)
+	  else if (restore_from_sp)
 	    {
 #ifdef MOTOROLA
 	      asm_fprintf (stream, "\tfpmovd (%Rsp)+,%s\n",
@@ -514,7 +524,7 @@ output_function_epilogue (stream, size)
 	     reg_names[FRAME_POINTER_REGNUM]);
   else if (fsize)
     {
-      if (fsize + 4 < 0x8000)
+      if (fsize + 4 < 0x8000 && ! TARGET_5200)
 	{
 	/* asm_fprintf() cannot handle %. */
 #ifdef MOTOROLA
@@ -562,13 +572,8 @@ valid_dbcc_comparison_p (x, mode)
      rtx x;
      enum machine_mode mode;
 {
-  /* We could add support for these in the future */
-  if (cc_prev_status.flags & CC_IN_68881)
-    return 0;
-
   switch (GET_CODE (x))
     {
-
       case EQ: case NE: case GTU: case LTU:
       case GEU: case LEU:
         return 1;
@@ -582,16 +587,23 @@ valid_dbcc_comparison_p (x, mode)
     }
 }
 
+/* Return non-zero if flags are currently in the 68881 flag register.  */
+int
+flags_in_68881 ()
+{
+  /* We could add support for these in the future */
+  return cc_status.flags & CC_IN_68881;
+}
+
 /* Output a dbCC; jCC sequence.  Note we do not handle the 
    floating point version of this sequence (Fdbcc).  We also
    do not handle alternative conditions when CC_NO_OVERFLOW is
-   set.  It is assumed that valid_dbcc_comparison_p will kick
-   those out before we get here.  */
+   set.  It is assumed that valid_dbcc_comparison_p and flags_in_68881 will
+   kick those out before we get here.  */
 
 output_dbcc_and_branch (operands)
      rtx *operands;
 {
- 
   switch (GET_CODE (operands[3]))
     {
       case EQ:
@@ -1042,11 +1054,7 @@ legitimize_pic_address (orig, mode, reg)
 
 typedef enum { MOVL, SWAP, NEGW, NOTW, NOTB, MOVQ } CONST_METHOD;
 
-use_movq (i)
-     int i;
-{
-  return (i >= -128 && i <= 127);
-}
+#define USE_MOVQ(i)	((unsigned)((i) + 128) <= 255)
 
 CONST_METHOD
 const_method (constant)
@@ -1056,22 +1064,28 @@ const_method (constant)
   unsigned u;
 
   i = INTVAL (constant);
-  if (use_movq (i))
+  if (USE_MOVQ (i))
     return MOVQ;
-  /* if -256 < N < 256 but N is not in range for a moveq
-     N^ff will be, so use moveq #N^ff, dreg; not.b dreg. */
-  if (use_movq (i ^ 0xff))
-    return NOTB;
-  /* Likewise, try with not.w */
-  if (use_movq (i ^ 0xffff))
-    return NOTW;
-  /* This is the only value where neg.w is useful */
-  if (i == -65408)
-    return NEGW;
-  /* Try also with swap */
-  u = i;
-  if (use_movq ((u >> 16) | (u << 16)))
-    return SWAP;
+
+  /* The Coldfire doesn't have byte or word operations. */
+  /* FIXME: This may not be useful for the m68060 either */
+  if (!TARGET_5200) 
+    {
+      /* if -256 < N < 256 but N is not in range for a moveq
+	 N^ff will be, so use moveq #N^ff, dreg; not.b dreg. */
+      if (USE_MOVQ (i ^ 0xff))
+	return NOTB;
+      /* Likewise, try with not.w */
+      if (USE_MOVQ (i ^ 0xffff))
+	return NOTW;
+      /* This is the only value where neg.w is useful */
+      if (i == -65408)
+	return NEGW;
+      /* Try also with swap */
+      u = i;
+      if (USE_MOVQ ((u >> 16) | (u << 16)))
+	return SWAP;
+    }
   /* Otherwise, use move.l */
   return MOVL;
 }
@@ -1150,6 +1164,34 @@ output_move_const_into_data_reg (operands)
     }
 }
 
+char *
+output_move_simode_const (operands)
+     rtx *operands;
+{
+  if (operands[1] == const0_rtx
+      && (DATA_REG_P (operands[0])
+	  || GET_CODE (operands[0]) == MEM)
+      /* clr insns on 68000 read before writing.
+	 This isn't so on the 68010, but we have no alternative for it.  */
+      && (TARGET_68020
+	  || !(GET_CODE (operands[0]) == MEM
+	       && MEM_VOLATILE_P (operands[0]))))
+    return "clr%.l %0";
+  else if (DATA_REG_P (operands[0]))
+    return output_move_const_into_data_reg (operands);
+  else if (ADDRESS_REG_P (operands[0])
+	   && INTVAL (operands[1]) < 0x8000
+	   && INTVAL (operands[1]) >= -0x8000)
+    return "move%.w %1,%0";
+  else if (GET_CODE (operands[0]) == MEM
+      && GET_CODE (XEXP (operands[0], 0)) == PRE_DEC
+      && REGNO (XEXP (XEXP (operands[0], 0), 0)) == STACK_POINTER_REGNUM
+	   && INTVAL (operands[1]) < 0x8000
+	   && INTVAL (operands[1]) >= -0x8000)
+    return "pea %a1";
+  return "move%.l %1,%0";
+}
+
 /* Return the best assembler insn template
    for moving operands[1] into operands[0] as a fullword.  */
 
@@ -1161,14 +1203,9 @@ singlemove_string (operands)
   if (FPA_REG_P (operands[0]) || FPA_REG_P (operands[1]))
     return "fpmoves %1,%0";
 #endif
-  if (DATA_REG_P (operands[0])
-      && GET_CODE (operands[1]) == CONST_INT)
-      return output_move_const_into_data_reg (operands);
-  if (operands[1] != const0_rtx)
-    return "move%.l %1,%0";
-  if (! ADDRESS_REG_P (operands[0]))
-    return "clr%.l %0";
-  return "sub%.l %0,%0";
+  if (GET_CODE (operands[1]) == CONST_INT)
+    return output_move_simode_const (operands);
+  return "move%.l %1,%0";
 }
 
 
@@ -1644,8 +1681,10 @@ notice_update_cc (exp, insn)
       {
       case PLUS: case MINUS: case MULT:
       case DIV: case UDIV: case MOD: case UMOD: case NEG:
+#if 0 /* These instructions always clear the overflow bit */
       case ASHIFT: case ASHIFTRT: case LSHIFTRT:
       case ROTATE: case ROTATERT:
+#endif
 	if (GET_MODE (cc_status.value2) != VOIDmode)
 	  cc_status.flags |= CC_NO_OVERFLOW;
 	break;
@@ -1776,11 +1815,11 @@ init_68881_table ()
   REAL_VALUE_TYPE r;
   enum machine_mode mode;
 
-  mode = DFmode;
+  mode = SFmode;
   for (i = 0; i < 7; i++)
     {
       if (i == 6)
-        mode = SFmode;
+        mode = DFmode;
       r = REAL_VALUE_ATOF (strings_68881[i], mode);
       values_68881[i] = r;
     }
@@ -2174,7 +2213,11 @@ print_operand (file, op, letter)
 	       && INTVAL (XEXP (op, 0)) < 0x8000
 	       && INTVAL (XEXP (op, 0)) >= -0x8000))
 	{
+#ifdef MOTOROLA
+	  fprintf (file, ".l");
+#else
 	  fprintf (file, ":l");
+#endif
 	}
     }
 #ifdef SUPPORT_SUN_FPA

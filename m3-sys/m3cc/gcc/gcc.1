@@ -2125,6 +2125,25 @@ Eventually GNU \c
 .B gprof\c
 \& should be extended to process this data.
 .TP
+.B \-ax
+Generate extra code to read basic block profiling parameters from 
+file `bb.in' and write profiling results to file `bb.out'.
+`bb.in' contains a list of functions. Whenever a function on the list
+is entered, profiling is turned on. When the outmost function is left,
+profiling is turned off. If a function name is prefixed with `-'
+the function is excluded from profiling. If a function name is not
+unique it can be disambiguated by writing
+`/path/filename.d:functionname'. `bb.out' will list some available
+filenames.
+Four function names have a special meaning:
+`__bb_jumps__' will cause jump frequencies to be written to `bb.out'.
+`__bb_trace__' will cause the sequence of basic blocks to be piped 
+into `gzip' and written to file `bbtrace.gz'.
+`__bb_hidecall__' will cause call instructions to be excluded from
+the trace.
+`__bb_showret__' will cause return instructions to be included in
+the trace.
+.TP
 .BI "\-d" "letters"
 Says to make debugging dumps during compilation at times specified by
 .I letters\c

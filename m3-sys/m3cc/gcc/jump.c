@@ -1,5 +1,5 @@
 /* Optimize jump instructions, for GNU compiler.
-   Copyright (C) 1987, 88, 89, 91-94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 88, 89, 91-95, 1996 Free Software Foundation, Inc.b
 
 This file is part of GNU CC.
 
@@ -60,7 +60,14 @@ Boston, MA 02111-1307, USA.  */
 #include "insn-flags.h"
 #include "expr.h"
 #include "real.h"
+#include "except.h"
 
+/* CYGNUS LOCAL mpw */
+#ifdef MPW
+/* This is a reserved word in MPW.  */
+#define comp comp_
+#endif
+/* END CYGNUS LOCAL */
 /* ??? Eventually must record somehow the labels used by jumps
    from nested functions.  */
 /* Pre-record the next or previous real insn for each label?
@@ -100,7 +107,7 @@ int can_reach_end;
    Normally they are not significant, because of A and B jump to C,
    and R dies in A, it must die in B.  But this might not be true after
    stack register conversion, and we must compare death notes in that
-   case. */
+   case.  */
 
 static int cross_jump_death_matters = 0;
 
@@ -114,6 +121,10 @@ static void delete_computation		PROTO((rtx));
 static void delete_from_jump_chain	PROTO((rtx));
 static int delete_labelref_insn		PROTO((rtx, rtx, int));
 static void redirect_tablejump		PROTO((rtx, rtx));
+/* CYGNUS LOCAL -- branch prediction */
+static rtx branch_predict_move		PROTO((rtx, rtx, rtx, rtx));
+static void branch_predict_reorg	PROTO((rtx));
+/* END CYGNUS LOCAL */
 
 /* Delete no-op jumps and optimize jumps to jumps
    and jumps around jumps.
@@ -148,6 +159,15 @@ jump_optimize (f, cross_jump, noop_moves, after_regscan)
   rtx last_insn;
 
   cross_jump_death_matters = (cross_jump == 2);
+
+/* CYGNUS LOCAL -- branch prediction */
+  /* Do any branch prediction reorganization if desired on the last pass
+     (branch prediction needs combine to be run).  We do it now, so that
+     the cross jump deletion/merging will also affect code moved by the
+     reorganization.  */
+  if (cross_jump && current_function_uses_expect)
+    branch_predict_reorg (f);
+/* END CYGNUS LOCAL */
 
   /* Initialize LABEL_NUSES and JUMP_LABEL fields.  Delete any REG_LABEL
      notes whose labels don't occur in the insn any more.  */
@@ -233,6 +253,16 @@ jump_optimize (f, cross_jump, noop_moves, after_regscan)
 
   for (insn = forced_labels; insn; insn = XEXP (insn, 1))
     LABEL_NUSES (XEXP (insn, 0))++;
+
+  check_exception_handler_labels ();
+
+  /* Keep track of labels used for marking handlers for exception
+     regions; they cannot usually be deleted.  */
+
+  for (insn = exception_handler_labels; insn; insn = XEXP (insn, 1))
+    LABEL_NUSES (XEXP (insn, 0))++;
+
+  exception_optimize ();
 
   /* Delete all labels already not referenced.
      Also find the last insn.  */
@@ -499,7 +529,7 @@ jump_optimize (f, cross_jump, noop_moves, after_regscan)
 	    else if (GET_CODE (body) == PARALLEL)
 	      {
 		/* If each part is a set between two identical registers or
-		   a USE or CLOBBER, delete the insn. */
+		   a USE or CLOBBER, delete the insn.  */
 		int i, sreg, dreg;
 		rtx tem;
 
@@ -682,7 +712,15 @@ jump_optimize (f, cross_jump, noop_moves, after_regscan)
 	      && (temp1 = prev_nonnote_insn (JUMP_LABEL (insn))) != 0
 	      && (GET_CODE (temp1) == BARRIER
 		  || (GET_CODE (temp1) == INSN
-		      && rtx_equal_p (PATTERN (temp), PATTERN (temp1)))))
+		      && rtx_equal_p (PATTERN (temp), PATTERN (temp1))))
+	      /* Don't do this optimization if we have a loop containing only
+		 the USE instruction, and the loop start label has a usage
+		 count of 1.  This is because we will redo this optimization
+		 everytime through the outer loop, and jump opt will never
+		 exit.  */
+	      && ! ((temp2 = prev_nonnote_insn (temp)) != 0
+		    && temp2 == JUMP_LABEL (insn)
+		    && LABEL_NUSES (temp2) == 1))
 	    {
 	      if (GET_CODE (temp1) == BARRIER)
 		{
@@ -935,7 +973,7 @@ jump_optimize (f, cross_jump, noop_moves, after_regscan)
 
 	  /* Finally, handle the case where two insns are used to 
 	     compute EXP but a temporary register is used.  Here we must
-	     ensure that the temporary register is not used anywhere else. */
+	     ensure that the temporary register is not used anywhere else.  */
 
 	  if (! reload_completed
 	      && after_regscan
@@ -1505,7 +1543,7 @@ jump_optimize (f, cross_jump, noop_moves, after_regscan)
 		  else if (ultimate && GET_CODE (ultimate) != RETURN)
 		    ultimate = XEXP (ultimate, 0);
 
-		  if (ultimate)
+		  if (ultimate && JUMP_LABEL(insn) != ultimate)
 		    changed |= redirect_jump (insn, ultimate);
 		}
 	    }
@@ -1730,9 +1768,22 @@ jump_optimize (f, cross_jump, noop_moves, after_regscan)
 		   && (next_active_insn (JUMP_LABEL (insn))
 		       == next_active_insn (JUMP_LABEL (temp))))
 	    {
-	      delete_jump (insn);
-	      changed = 1;
-	      continue;
+	      /* CYGNUS LOCAL: gcov */
+	      rtx tem = temp;
+
+	      /* ??? Optional.  Disables some optimizations, but makes
+		 gcov output more accurate with -O.  */
+	      if (flag_test_coverage && !reload_completed)
+		for (tem = insn; tem != temp; tem = NEXT_INSN (tem))
+		  if (GET_CODE (tem) == NOTE && NOTE_LINE_NUMBER (tem) > 0)
+		    break;
+
+	      if (tem == temp)
+		{
+		  delete_jump (insn);
+		  changed = 1;
+		  continue;
+		}
 	    }
 	  /* Detect a conditional jump jumping over an unconditional jump.  */
 
@@ -1916,7 +1967,7 @@ jump_optimize (f, cross_jump, noop_moves, after_regscan)
 
 	      /* Now that the jump has been tensioned,
 		 try cross jumping: check for identical code
-		 before the jump and before its target label. */
+		 before the jump and before its target label.  */
 
 	      /* First, cross jumping of conditional jumps:  */
 
@@ -1951,7 +2002,7 @@ jump_optimize (f, cross_jump, noop_moves, after_regscan)
 		      INSN_CODE (insn) = -1;
 		      emit_barrier_after (insn);
 		      /* Add to jump_chain unless this is a new label
-			 whose UID is too large. */
+			 whose UID is too large.  */
 		      if (INSN_UID (JUMP_LABEL (insn)) < max_jump_chain)
 			{
 			  jump_chain[INSN_UID (insn)]
@@ -2433,13 +2484,13 @@ find_cross_jump (e1, e2, minimum, f1, f2)
 #ifdef STACK_REGS
       /* If cross_jump_death_matters is not 0, the insn's mode
 	 indicates whether or not the insn contains any stack-like
-	 regs. */
+	 regs.  */
 
       if (!lose && cross_jump_death_matters && GET_MODE (i1) == QImode)
 	{
 	  /* If register stack conversion has already been done, then
 	     death notes must also be compared before it is certain that
-	     the two instruction streams match. */
+	     the two instruction streams match.  */
 
 	  rtx note;
 	  HARD_REG_SET i1_regset, i2_regset;
@@ -2999,6 +3050,87 @@ condjump_in_parallel_p (insn)
   return 0;
 }
 
+/* CYGNUS LOCAL -- branch prediction */
+/* Return 0 if this is not a conditional jump with an expected
+   result, 1 if the jump expects to happen, and -1 if the jump
+   expects to fail.  */
+
+int
+condjump_expect_p (insn)
+     rtx insn;
+{
+  register rtx x;
+  register rtx src;
+  register rtx cond;
+  register rtx lab1;
+  register rtx lab2;
+  register rtx expect;
+  register rtx cmp_const;
+  int retval;
+  HOST_WIDE_INT exp_value;
+  HOST_WIDE_INT cmp_value;
+  unsigned HOST_WIDE_INT exp_uns;
+  unsigned HOST_WIDE_INT cmp_uns;
+
+  if (GET_CODE (insn) != JUMP_INSN)
+    return 0;
+
+  x = PATTERN (insn);
+  if (GET_CODE (x) != SET)
+    return 0;
+  if (GET_CODE (SET_DEST (x)) != PC)
+    return 0;
+
+  src = SET_SRC (x);
+  if (GET_CODE (src) != IF_THEN_ELSE)
+    return 0;
+
+  cond = XEXP (src, 0);
+  if (GET_RTX_CLASS (GET_CODE (cond)) != '<')
+    return 0;
+
+  expect = XEXP (cond, 0);
+  if (GET_CODE (expect) != EXPECT)
+    return 0;
+
+  cmp_const = XEXP (cond, 1);
+  if (GET_CODE (cmp_const) != CONST_INT)
+    return 0;
+
+  exp_uns = exp_value = INTVAL (XEXP (expect, 1));
+  cmp_uns = cmp_value = INTVAL (cmp_const);
+  switch (GET_CODE (cond))
+    {
+    default:  return 0;
+    case EQ:  retval = (exp_value == cmp_value); break;
+    case NE:  retval = (exp_value != cmp_value); break;
+    case LT:  retval = (exp_value <  cmp_value); break;
+    case LE:  retval = (exp_value <= cmp_value); break;
+    case GT:  retval = (exp_value >  cmp_value); break;
+    case GE:  retval = (exp_value >= cmp_value); break;
+    case LTU: retval = (exp_uns   <  cmp_uns);	 break;
+    case LEU: retval = (exp_uns   <= cmp_uns);	 break;
+    case GTU: retval = (exp_uns   >  cmp_uns);	 break;
+    case GEU: retval = (exp_uns   >= cmp_uns);	 break;
+    }
+
+  if (!retval)
+    retval = -1;
+
+  lab1 = XEXP (src, 1);
+  lab2 = XEXP (src, 2);
+  if (lab2 == pc_rtx
+      && (GET_CODE (lab1) == LABEL_REF || GET_CODE (lab1) == RETURN))
+    return retval;
+
+  if (lab1 == pc_rtx
+      && (GET_CODE (lab2) == LABEL_REF || GET_CODE (lab2) == RETURN))
+    return -retval;
+
+  return 0;
+}
+/* END CYGNUS LOCAL -- branch prediction */
+
 /* Return 1 if X is an RTX that does nothing but set the condition codes
    and CLOBBER or USE registers.
    Return -1 if X does explicitly set the condition codes,
@@ -3054,7 +3186,8 @@ follow_jumps (label)
        (depth < 10
 	&& (insn = next_active_insn (value)) != 0
 	&& GET_CODE (insn) == JUMP_INSN
-	&& (JUMP_LABEL (insn) != 0 || GET_CODE (PATTERN (insn)) == RETURN)
+	&& ((JUMP_LABEL (insn) != 0 && simplejump_p (insn))
+	    || GET_CODE (PATTERN (insn)) == RETURN)
 	&& (next = NEXT_INSN (insn))
 	&& GET_CODE (next) == BARRIER);
        depth++)
@@ -3067,7 +3200,11 @@ follow_jumps (label)
       if (!reload_completed)
 	for (tem = value; tem != insn; tem = NEXT_INSN (tem))
 	  if (GET_CODE (tem) == NOTE
-	      && NOTE_LINE_NUMBER (tem) == NOTE_INSN_LOOP_BEG)
+	      /* CYGNUS LOCAL: gcov */
+	      && (NOTE_LINE_NUMBER (tem) == NOTE_INSN_LOOP_BEG
+		  /* ??? Optional.  Disables some optimizations, but makes
+		     gcov output more accurate with -O.  */
+		  || (flag_test_coverage && NOTE_LINE_NUMBER (tem) > 0)))
 	    return value;
 
       /* If we have found a cycle, make the insn jump to itself.  */
@@ -3188,7 +3325,11 @@ mark_jump_label (x, insn, cross_jump)
 	      break;
 	    else if (! cross_jump
 		     && (NOTE_LINE_NUMBER (next) == NOTE_INSN_LOOP_BEG
-			 || NOTE_LINE_NUMBER (next) == NOTE_INSN_FUNCTION_END))
+			 /* CYGNUS LOCAL: gcov */
+			 || NOTE_LINE_NUMBER (next) == NOTE_INSN_FUNCTION_END
+			 /* ??? Optional.  Disables some optimizations, but
+			    makes gcov output more accurate with -O.  */
+			 || (flag_test_coverage && NOTE_LINE_NUMBER (next) > 0)))
 	      break;
 	  }
 
@@ -3603,7 +3744,22 @@ invert_jump (jump, nlabel)
     return 0;
 
   if (redirect_jump (jump, nlabel))
-    return 1;
+    /* CYGNUS LOCAL: gcov */
+    {
+      if (flag_branch_probabilities)
+	{
+	  rtx note = find_reg_note (jump, REG_BR_PROB, 0);
+
+	  /* An inverted jump means that a probability taken becomes a
+	     probability not taken.  Subtract the branch probability from the
+	     probability base to convert it back to a taken probability.
+	     (We don't flip the probability on a branch that's never taken.  */
+	  if (note && XINT (note, 0) >= 0)
+	    XINT (note, 0) = REG_BR_PROB_BASE - XINT (note, 0);
+	}
+
+      return 1;
+    }
 
   if (! invert_exp (PATTERN (jump), jump))
     /* This should just be putting it back the way it was.  */
@@ -4413,7 +4569,7 @@ rtx_equal_for_thread_p (x, y, yinsn)
 
     case MEM:
       /* If memory modified or either volatile, not equivalent.
-	 Else, check address. */
+	 Else, check address.  */
       if (modified_mem || MEM_VOLATILE_P (x) || MEM_VOLATILE_P (y))
 	return 0;
 
@@ -4511,3 +4667,177 @@ rtx_equal_for_thread_p (x, y, yinsn)
     }
   return 1;
 }
+
+/* CYGNUS LOCAL -- Branch Prediction */
+/* Reorganize simple jumps with branch prediction.  At present this looks
+   for code of the form:
+
+	if (test_expected_to_fail) {
+		simple insns
+		barrier
+	}
+
+   and change it into:
+
+	if (test_expected_to_fail)
+		goto end of program
+
+   and put the simple insns after the end of the program.  */
+
+#ifdef DEBUG_BRANCH_PREDICT
+#include <stdio.h>
+#endif
+
+static rtx
+branch_predict_move (insn, cur_line, orig_last, new_last)
+     rtx insn;
+     rtx cur_line;
+     rtx orig_last;
+     rtx new_last;
+{
+  rtx ifrtx = SET_SRC (PATTERN (insn));		/* IF_THEN_ELSE */
+  int label_arg = (GET_CODE (XEXP (ifrtx, 1)) == LABEL_REF) ? 1 : 2;
+  rtx label = XEXP (XEXP (ifrtx, label_arg), 0);
+  rtx after_insn = NEXT_INSN (insn);
+  rtx prev_label = PREV_INSN (label);
+  int barrier_p = (GET_CODE (prev_label) == BARRIER);
+  rtx new_label;
+  rtx label_ref;
+  rtx tmp;
+  rtx tmp_next;
+
+  /* Search for the label in the following insns.  */
+  for (tmp = insn; tmp != label; tmp = NEXT_INSN (tmp))
+    if (!tmp || tmp == orig_last)	/* label not found */
+      return new_last;
+
+  new_label = gen_label_rtx ();
+  label_ref = gen_rtx (LABEL_REF, VOIDmode, new_label);
+
+#ifdef DEBUG_BRANCH_PREDICT
+  fprintf (stderr, "Found some code we can move%s\n",
+	   (barrier_p) ? " (barrier)" : "");
+#endif
+
+  /* Make the label next after this branch.  */
+  NEXT_INSN (insn) = label;
+  PREV_INSN (label) = insn;
+  LABEL_NUSES (label)--;
+
+  /* Change jump to jump to the new label if the condition is false */
+  LABEL_NUSES (new_label)++;
+  XEXP (ifrtx, label_arg) = label_ref;
+  PUT_CODE (XEXP (ifrtx, 0), reverse_condition (GET_CODE (XEXP (ifrtx, 0))));
+  INSN_CODE (insn) = -1;	/* re memoize the insn */
+  recog_memoized (insn);
+
+  new_last = emit_label_after (new_label, new_last);
+
+  /* Add a line number note, if the first insn in the moved insns
+     is not one.  */
+  if (cur_line
+      && (GET_CODE (after_insn) != NOTE
+	  || NOTE_LINE_NUMBER (after_insn) <= 0))
+    {
+      new_last = emit_line_note_after (NOTE_SOURCE_FILE (cur_line),
+				       NOTE_LINE_NUMBER (cur_line),
+				       new_last);
+    }
+
+  NEXT_INSN (prev_label) = NEXT_INSN (new_last);
+  NEXT_INSN (new_last) = after_insn;
+  PREV_INSN (after_insn) = new_last;
+  if (NEXT_INSN (prev_label))
+    PREV_INSN (NEXT_INSN (prev_label)) = prev_label;
+  else
+    set_last_insn (prev_label);
+
+  new_last = prev_label;
+
+  /* If there was not a barrier, add a jump back to the label & a new barrier.  */
+  if (!barrier_p)
+    {
+      new_last = emit_jump_insn_after (gen_rtx (SET, VOIDmode, pc_rtx,
+						gen_rtx (LABEL_REF, VOIDmode, label)),
+				       new_last);
+      new_last = emit_barrier_after (new_last);
+    }
+
+  return new_last;
+}
+
+static void
+branch_predict_reorg (f)
+     rtx f;
+{
+  rtx insn;
+  rtx last_insn;
+  rtx new_last;
+  rtx cur_line = NULL_RTX;
+  int changed;
+
+  if (!optimize)
+    return;
+
+  /* If the last insn is not a BARRIER, insert a jump and a trailing label */
+  new_last = last_insn = prev_nonnote_insn (get_last_insn ());
+  if (!last_insn)
+    return;
+
+  if (GET_CODE (last_insn) != BARRIER)
+    {
+      rtx label = gen_label_rtx ();
+      new_last = emit_jump_insn_after (gen_rtx (SET, VOIDmode,
+						pc_rtx,
+						gen_rtx (LABEL_REF, VOIDmode, label)),
+				       new_last);
+
+      new_last = last_insn = emit_label_after (label, new_last);
+    }
+
+  /* Loop moving code we don't expect to execute to the end of the function.  Each loop
+     after the first selects the code that was moved for further branch selections
+     until there were no more changes.  */
+  do
+    {
+      changed = 0;
+      for (insn = f; insn && insn != last_insn; insn = NEXT_INSN (insn))
+	{
+	  int branch_predict_p;
+
+	  /* Save current line number note */
+	  if (GET_CODE (insn) == NOTE && NOTE_LINE_NUMBER (insn) > 0)
+	    cur_line = insn;
+
+	  /* Skip insns that can't possibly be a branch prediction */
+	  if (GET_CODE (insn) != JUMP_INSN)
+	    continue;
+
+	  branch_predict_p = condjump_expect_p (insn);
+
+#ifdef DEBUG_BRANCH_PREDICT
+	  if (branch_predict_p)
+	    {
+	      fprintf (stderr, "\nBranch is expected to %s\n",
+		       (branch_predict_p < 0) ? "fail" : "succeed");
+	      debug_rtx (insn);
+	    }
+#endif
+
+	  /* Found a branch that is expected to succeed?  See if we can move the
+	     code around.  */
+	  if (branch_predict_p > 0)
+	    {
+	      rtx old_last = new_last;
+	      new_last = branch_predict_move (insn, cur_line, last_insn, new_last);
+	      if (old_last != new_last)
+		changed = 1;
+	    }
+	}
+
+      f = last_insn;
+      last_insn = new_last;
+    }
+  while (changed);
+}
+/* END CYGNUS LOCAL -- Branch Prediction */

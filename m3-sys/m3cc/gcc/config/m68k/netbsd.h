@@ -4,16 +4,16 @@
 
 #include <netbsd.h>
 
-
-/* See m68k.h.  7 means 68020 with 68881.  */
-
-#define TARGET_DEFAULT 7
+#define TARGET_DEFAULT (MASK_BITFIELD|MASK_68881|MASK_68020)
 
 /* Define __HAVE_68881__ in preprocessor, unless -msoft-float is specified.
    This will control the use of inline 68881 insns in certain macros.  */
 
 #undef CPP_SPEC
 #define CPP_SPEC "%{!msoft-float:-D__HAVE_68881__ -D__HAVE_FPU__} %{posix:-D_POSIX_SOURCE}"
+
+#undef ASM_SPEC
+#define ASM_SPEC " %| %{m68030} %{m68040} %{fpic:-k} %{fPIC:-k -K}"
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
@@ -52,11 +52,6 @@
    continuation back on).  */
 
 #define DBX_CONTIN_CHAR '?'
-
-/* Don't use the `xsfoo;' construct in DBX output; this system
-   doesn't support it.  */
-
-#define DBX_NO_XREFS
 
 /* Don't default to pcc-struct-return, because gcc is the only compiler, and
    we want to retain compatibility with older gcc versions.  */

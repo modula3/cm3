@@ -1,5 +1,5 @@
 /* Compiler driver program that can handle many languages.
-   Copyright (C) 1987, 89, 92, 93, 94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 89, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -37,16 +37,14 @@ compilation is specified by a string called a "spec".  */
 #include <sys/stat.h>
 #include <errno.h>
 
-#ifndef _WIN32
+#ifndef NO_SYS_FILE_H
 #include <sys/file.h>   /* May get R_OK, etc. on some systems.  */
-#else
-#include <process.h>
-int __spawnv ();
-int __spawnvp ();
 #endif
 
 #include "config.h"
 #include "obstack.h"
+#include "gansidecl.h"
+
 #ifdef __STDC__
 #include <stdarg.h>
 #else
@@ -54,14 +52,26 @@ int __spawnvp ();
 #endif
 #include <stdio.h>
 
-/* Include multi-lib information.  */
-#include "multilib.h"
-
 #ifndef R_OK
 #define R_OK 4
 #define W_OK 2
 #define X_OK 1
 #endif
+
+/* ??? Need to find a GCC header to put these in.  */
+extern int pexecute PROTO ((const char *, char * const *, const char *,
+			    const char *, char **, char **, int));
+extern int pwait PROTO ((int, int *, int));
+/* Flag arguments to pexecute.  */
+#define PEXECUTE_FIRST   1
+#define PEXECUTE_LAST    2
+#define PEXECUTE_SEARCH  4
+#define PEXECUTE_VERBOSE 8
+/* CYGNUS LOCAL mpw */
+#ifdef MPW
+#define PEXECUTE_PFINISH
+#endif
+/* END CYGNUS LOCAL */
 
 #ifndef WIFSIGNALED
 #define WIFSIGNALED(S) (((S) & 0xff) != 0 && ((S) & 0xff) != 0x7f)
@@ -76,61 +86,21 @@ int __spawnvp ();
 #define WEXITSTATUS(S) (((S) & 0xff00) >> 8)
 #endif
 
-/* Add prototype support.  */
-#ifndef PROTO
-#if defined (USE_PROTOTYPES) ? USE_PROTOTYPES : defined (__STDC__)
-#define PROTO(ARGS) ARGS
-#else
-#define PROTO(ARGS) ()
-#endif
-#endif
-
-#ifndef VPROTO
-#ifdef __STDC__
-#define PVPROTO(ARGS)		ARGS
-#define VPROTO(ARGS)		ARGS
-#define VA_START(va_list,var)	va_start(va_list,var)
-#else
-#define PVPROTO(ARGS)		()
-#define VPROTO(ARGS)		(va_alist) va_dcl
-#define VA_START(va_list,var)	va_start(va_list)
-#endif
-#endif
-
-/* Define a generic NULL if one hasn't already been defined.  */
-
-#ifndef NULL
-#define NULL 0
-#endif
-
-/* Define O_RDONLY if the system hasn't defined it for us. */
+/* Define O_RDONLY if the system hasn't defined it for us.  */
 #ifndef O_RDONLY
 #define O_RDONLY 0
-#endif
-
-#ifndef GENERIC_PTR
-#if defined (USE_PROTOTYPES) ? USE_PROTOTYPES : defined (__STDC__)
-#define GENERIC_PTR void *
-#else
-#define GENERIC_PTR char *
-#endif
-#endif
-
-#ifndef NULL_PTR
-#define NULL_PTR ((GENERIC_PTR)0)
 #endif
 
 #ifdef USG
 #define vfork fork
 #endif /* USG */
 
-/* On MSDOS, write temp files in current dir
-   because there's no place else we can expect to use.  */
-#ifdef __MSDOS__
-#ifndef P_tmpdir
-#define P_tmpdir "."
+/* CYGNUS LOCAL mpw */
+#ifdef MPW
+/* This is a reserved word in MPW.  */
+#define comp comp_
 #endif
-#endif
+/* END CYGNUS LOCAL */
 
 /* Test if something is a normal file.  */
 #ifndef S_ISREG
@@ -147,7 +117,7 @@ int __spawnvp ();
 #define EXECUTABLE_SUFFIX ""
 #endif
 
-/* By default, the suffix for object files is ".o". */
+/* By default, the suffix for object files is ".o".  */
 #ifdef OBJECT_SUFFIX
 #define HAVE_OBJECT_SUFFIX
 #else
@@ -171,12 +141,14 @@ static char dir_separator_str[] = {DIR_SEPARATOR, 0};
 extern void free ();
 extern char *getenv ();
 
+extern char *choose_temp_base PROTO((void));
+
 #ifndef errno
 extern int errno;
 #endif
 
-extern int sys_nerr;
 #ifndef HAVE_STRERROR
+extern int sys_nerr;
 #if defined(bsd4_4)
 extern const char *const sys_errlist[];
 #else
@@ -185,8 +157,6 @@ extern char *sys_errlist[];
 #else
 extern char *strerror();
 #endif
-
-extern int execv (), execvp ();
 
 /* If a stage of compilation returns an exit status >= 1,
    compilation of that file ceases.  */
@@ -203,7 +173,7 @@ static int print_search_dirs;
 
 static char *print_file_name = NULL;
 
-/* As print_file_name, but search for executable file. */
+/* As print_file_name, but search for executable file.  */
 
 static char *print_prog_name = NULL;
 
@@ -279,16 +249,10 @@ static void delete_if_ordinary	PROTO((char *));
 static void delete_temp_files	PROTO((void));
 static void delete_failure_queue PROTO((void));
 static void clear_failure_queue PROTO((void));
-static char *choose_temp_base_try PROTO((char *, char *));
-static void choose_temp_base	PROTO((void));
 static int check_live_switch	PROTO((int, int));
 static char *handle_braces	PROTO((char *));
 static char *save_string	PROTO((char *, int));
-static char *concat		PROTO((char *, char *));
-static char *concat3		PROTO((char *, char *, char *));
-static char *concat4		PROTO((char *, char *, char *, char *));
-static char *concat6		PROTO((char *, char *, char *, char *, char *, \
-                                       char *));
+static char *concat		PVPROTO((char *, ...));
 static int do_spec		PROTO((char *));
 static int do_spec_1		PROTO((char *, int, char *));
 static char *find_file		PROTO((char *));
@@ -302,7 +266,7 @@ static void set_multilib_dir	PROTO((void));
 static void print_multilib_info	PROTO((void));
 static void pfatal_with_name	PROTO((char *));
 static void perror_with_name	PROTO((char *));
-static void perror_exec		PROTO((char *));
+static void pfatal_pexecute	PROTO((char *, char *));
 #ifdef HAVE_VPRINTF
 static void fatal		PVPROTO((char *, ...));
 static void error		PVPROTO((char *, ...));
@@ -490,9 +454,9 @@ proper position among the other output files.  */
 #ifndef LIBGCC_SPEC
 #if defined(LINK_LIBGCC_SPECIAL) || defined(LINK_LIBGCC_SPECIAL_1)
 /* Have gcc do the search for libgcc.a.  */
-#define LIBGCC_SPEC "%{!shared:libgcc.a%s}"
+#define LIBGCC_SPEC "libgcc.a%s"
 #else
-#define LIBGCC_SPEC "%{!shared:-lgcc}"
+#define LIBGCC_SPEC "-lgcc"
 #endif
 #endif
 
@@ -502,8 +466,8 @@ proper position among the other output files.  */
   "%{!shared:%{pg:gcrt0%O%s}%{!pg:%{p:mcrt0%O%s}%{!p:crt0%O%s}}}"
 #endif
 
-/* config.h can define SWITCHES_NEED_SPACES to control passing -o and -L.
-   Make the string nonempty to require spaces there.  */
+/* config.h can define SWITCHES_NEED_SPACES to control which options
+   require spaces between the option and the argument.  */
 #ifndef SWITCHES_NEED_SPACES
 #define SWITCHES_NEED_SPACES ""
 #endif
@@ -524,13 +488,6 @@ proper position among the other output files.  */
 #endif
 #endif
 
-/* MULTILIB_SELECT comes from multilib.h.  It gives a
-   string interpreted by set_multilib_dir to select a library
-   subdirectory based on the compiler options.  */
-#ifndef MULTILIB_SELECT
-#define MULTILIB_SELECT ". ;"
-#endif
-
 static char *cpp_spec = CPP_SPEC;
 static char *cpp_predefines = CPP_PREDEFINES;
 static char *cc1_spec = CC1_SPEC;
@@ -544,16 +501,41 @@ static char *libgcc_spec = LIBGCC_SPEC;
 static char *endfile_spec = ENDFILE_SPEC;
 static char *startfile_spec = STARTFILE_SPEC;
 static char *switches_need_spaces = SWITCHES_NEED_SPACES;
-static char *multilib_select = MULTILIB_SELECT;
+
+/* Some compilers have limits on line lengths, and the multilib_select
+   and/or multilib_matches strings can be very long, so we build them at
+   run time.  */
+static struct obstack multilib_obstack;
+static char *multilib_select;
+static char *multilib_matches;
+static char *multilib_defaults;
+#include "multilib.h"
+
+/* Check whether a particular argument is a default argument.  */
+
+#ifndef MULTILIB_DEFAULTS
+#define MULTILIB_DEFAULTS { "" }
+#endif
+
+static char *multilib_defaults_raw[] = MULTILIB_DEFAULTS;
+
+#ifdef EXTRA_SPECS
+static struct { char *name, *spec; } extra_specs[] = { EXTRA_SPECS };
+#endif
 
 /* This defines which switch letters take arguments.  */
 
-#ifndef SWITCH_TAKES_ARG
-#define SWITCH_TAKES_ARG(CHAR)      \
+/* CYGNUS LOCAL tlink jason */
+#define DEFAULT_SWITCH_TAKES_ARG(CHAR) \
   ((CHAR) == 'D' || (CHAR) == 'U' || (CHAR) == 'o' \
    || (CHAR) == 'e' || (CHAR) == 'T' || (CHAR) == 'u' \
    || (CHAR) == 'I' || (CHAR) == 'm' || (CHAR) == 'x' \
-   || (CHAR) == 'L' || (CHAR) == 'A')
+   || (CHAR) == 'L' || (CHAR) == 'A' || (CHAR) == 'V' \
+   || (CHAR) == 'B' || (CHAR) == 'b')
+/* END CYGNUS LOCAL */
+
+#ifndef SWITCH_TAKES_ARG
+#define SWITCH_TAKES_ARG(CHAR) DEFAULT_SWITCH_TAKES_ARG(CHAR)
 #endif
 
 /* This defines which multi-letter switches take arguments.  */
@@ -600,6 +582,14 @@ static int n_compilers;
 
 static struct compiler default_compilers[] =
 {
+  /* Add lists of suffixes of known languages here.  If those languages
+     were no present when we built the driver, we will hit these copies
+     and given a more meaningful error than "file not used since
+     linking is not done".  */
+  {".cc", "#C++"}, {".cxx", "#C++"}, {".cpp", "#C++"}, {".c++", "#C++"},
+  {".C", "#C++"}, {".ads", "#Ada"}, {".adb", "#Ada"}, {".ada", "#Ada"},
+  {".f", "#Fortran"},
+  /* Next come the entries for C.  */
   {".c", "@c"},
   {"@c",
    "cpp -lang-c%{ansi:89} %{nostdinc*} %{C} %{v} %{A*} %{I*} %{P} %I\
@@ -613,7 +603,7 @@ static struct compiler default_compilers[] =
 	%{g*} %{W*} %{w} %{pedantic*} %{H} %{d*} %C %{D*} %{U*} %{i*} %Z\
         %i %{!M:%{!MM:%{!E:%{!pipe:%g.i}}}}%{E:%W{o*}}%{M:%W{o*}}%{MM:%W{o*}} |\n",
    "%{!M:%{!MM:%{!E:cc1 %{!pipe:%g.i} %1 \
-		   %{!Q:-quiet} -dumpbase %b.c %{d*} %{m*} %{a}\
+		   %{!Q:-quiet} -dumpbase %b.c %{d*} %{m*} %{a*}\
 		   %{g*} %{O*} %{W*} %{w} %{pedantic*} %{ansi} \
 		   %{traditional} %{v:-version} %{pg:-p} %{p} %{f*}\
 		   %{aux-info*}\
@@ -647,7 +637,7 @@ static struct compiler default_compilers[] =
 	%{g*} %{W*} %{w} %{pedantic*} %{H} %{d*} %C %{D*} %{U*} %{i*} %Z\
         %i %{!M:%{!MM:%{!E:%{!pipe:%g.i}}}}%{E:%W{o*}}%{M:%W{o*}}%{MM:%W{o*}} |\n",
    "%{!M:%{!MM:%{!E:cc1obj %{!pipe:%g.i} %1 \
-		   %{!Q:-quiet} -dumpbase %b.m %{d*} %{m*} %{a}\
+		   %{!Q:-quiet} -dumpbase %b.m %{d*} %{m*} %{a*}\
 		   %{g*} %{O*} %{W*} %{w} %{pedantic*} %{ansi} \
 		   %{traditional} %{v:-version} %{pg:-p} %{p} %{f*} \
     		   -lang-objc %{gen-decls} \
@@ -672,7 +662,7 @@ static struct compiler default_compilers[] =
         %i %W{o*}"},
   {".i", "@cpp-output"},
   {"@cpp-output",
-   "%{!M:%{!MM:%{!E:cc1 %i %1 %{!Q:-quiet} %{d*} %{m*} %{a}\
+   "%{!M:%{!MM:%{!E:cc1 %i %1 %{!Q:-quiet} %{d*} %{m*} %{a*}\
 			%{g*} %{O*} %{W*} %{w} %{pedantic*} %{ansi}\
 			%{traditional} %{v:-version} %{pg:-p} %{p} %{f*}\
 			%{aux-info*}\
@@ -863,11 +853,61 @@ translate_options (argcp, argvp)
   int i, j, k;
   int argc = *argcp;
   char **argv = *argvp;
-  char **newv = (char **) xmalloc ((argc + 2) * 2 * sizeof (char *));
+  char **newv; /* CYGNUS LOCAL default-options */
   int newindex = 0;
+  /* CYGNUS LOCAL default-options */
+  char *default_options = getenv ("GCC_DEFAULT_OPTIONS");
+  int default_options_count = 0;
+  char *p;
 
+  /* Make a rough estimate of the number of options.  */
+  if (default_options)
+    {
+      default_options_count = 1;
+      for (p = default_options; *p; p++)
+	if (*p == ' ')
+	  default_options_count++;
+    }
+
+  newv = (char **) xmalloc ((argc + default_options_count + 2)
+			    * 2 * sizeof (char *));
+  /* END CYGNUS LOCAL */
   i = 0;
   newv[newindex++] = argv[i++];
+
+  /* CYGNUS LOCAL default-options */
+  /* Insert default options at the beginning of the command, so that they
+     can be overriden by the user if desired.  */
+
+  if (default_options)
+    {
+      char *q;
+
+      /* Make a copy of default_options, so that we can safely modify it.
+	 If we modify it in place, then a subsequent getenv call may get
+	 the modified string.  */
+      q = xmalloc (strlen (default_options) + 1);
+      strcpy (q, default_options);
+      default_options = q;
+
+      q = default_options;
+      for (p = default_options; *p; p++)
+	if (*p == ' ')
+	  {
+	    *p = '\0';
+	    if (*q != '\0')
+	      newv[newindex++] = q;
+	    if (*++p == ' ')
+	      while (*p == ' ')
+		p++;
+	    q = p;
+	  }
+      if (*q != '\0')
+	newv[newindex++] = q;
+    }
+
+  /* Now add options from the command line.  */
+  /* END CYGNUS LOCAL */
 
   while (i < argc)
     {
@@ -955,7 +995,8 @@ translate_options (argcp, argvp)
 
 		  /* Store the translation as one argv elt or as two.  */
 		  if (arg != 0 && index (arginfo, 'j') != 0)
-		    newv[newindex++] = concat (option_map[j].equivalent, arg);
+		    newv[newindex++] = concat (option_map[j].equivalent, arg,
+					       NULL_PTR);
 		  else if (arg != 0)
 		    {
 		      newv[newindex++] = option_map[j].equivalent;
@@ -1015,15 +1056,15 @@ char *
 my_strerror(e)
      int e;
 {
-
 #ifdef HAVE_STRERROR
+
   return strerror(e);
 
 #else
 
   static char buffer[30];
   if (!e)
-    return "";
+    return "cannot access";
 
   if (e > 0 && e < sys_nerr)
     return sys_errlist[e];
@@ -1177,23 +1218,24 @@ skip_whitespace (p)
   return p;
 }
 
-/* Structure to keep track of the specs that have been defined so far.  These
-   are accessed using %(specname) or %[specname] in a compiler or link spec. */
+/* Structure to keep track of the specs that have been defined so far.
+   These are accessed using %(specname) or %[specname] in a compiler
+   or link spec.  */
 
 struct spec_list
 {
-  char *name;                 /* Name of the spec. */
-  char *spec;                 /* The spec itself. */
-  struct spec_list *next;     /* Next spec in linked list. */
+  char *name;                 /* Name of the spec.  */
+  char *spec;                 /* The spec itself.  */
+  struct spec_list *next;     /* Next spec in linked list.  */
 };
 
-/* List of specs that have been defined so far. */
+/* List of specs that have been defined so far.  */
 
 static struct spec_list *specs = (struct spec_list *) 0;
 
 /* Change the value of spec NAME to SPEC.  If SPEC is empty, then the spec is
    removed; If the spec starts with a + then SPEC is added to the end of the
-   current spec. */
+   current spec.  */
 
 static void
 set_spec (name, spec)
@@ -1220,7 +1262,7 @@ set_spec (name, spec)
 
   old_spec = sl->spec;
   if (name && spec[0] == '+' && isspace (spec[1]))
-    sl->spec = concat (old_spec, spec + 1);
+    sl->spec = concat (old_spec, spec + 1, NULL_PTR);
   else
     sl->spec = save_string (spec, strlen (spec));
 
@@ -1254,6 +1296,29 @@ set_spec (name, spec)
     cross_compile = atoi (sl->spec);
   else if (! strcmp (name, "multilib"))
     multilib_select = sl->spec;
+  else if (! strcmp (name, "multilib_matches"))
+    multilib_matches = sl->spec;
+  else if (! strcmp (name, "multilib_extra"))
+    multilib_extra = sl->spec;
+  else if (! strcmp (name, "multilib_defaults"))
+    multilib_defaults = sl->spec;
+  else if (! strcmp (name, "version"))
+    compiler_version = sl->spec;
+#ifdef EXTRA_SPECS
+  else
+    {
+      int i;
+      for (i = 0; i < sizeof (extra_specs) / sizeof (extra_specs[0]); i++)
+	{
+	  if (! strcmp (name, extra_specs[i].name))
+	    {
+	      extra_specs[i].spec = sl->spec;
+	      break;
+	    }
+	}
+    }
+#endif
+
   /* Free the old spec */
   if (old_spec)
     free (old_spec);
@@ -1297,12 +1362,12 @@ static int signal_count;
 
 static char *programname;
 
-/* Structures to keep track of prefixes to try when looking for files. */
+/* Structures to keep track of prefixes to try when looking for files.  */
 
 struct prefix_list
 {
-  char *prefix;               /* String to prepend to the path. */
-  struct prefix_list *next;   /* Next in linked list. */
+  char *prefix;               /* String to prepend to the path.  */
+  struct prefix_list *next;   /* Next in linked list.  */
   int require_machine_suffix; /* Don't use without machine_suffix.  */
   /* 2 means try both machine_suffix and just_machine_suffix.  */
   int *used_flag_ptr;	      /* 1 if a file was found with this prefix.  */
@@ -1315,11 +1380,11 @@ struct path_prefix
   char *name;                 /* Name of this list (used in config stuff) */
 };
 
-/* List of prefixes to try when looking for executables. */
+/* List of prefixes to try when looking for executables.  */
 
 static struct path_prefix exec_prefixes = { 0, 0, "exec" };
 
-/* List of prefixes to try when looking for startup (crt0) files. */
+/* List of prefixes to try when looking for startup (crt0) files.  */
 
 static struct path_prefix startfile_prefixes = { 0, 0, "startfile" };
 
@@ -1427,7 +1492,8 @@ store_arg (arg, delete_always, delete_failure)
 
    This prefix comes from the envvar TMPDIR if it is defined;
    otherwise, from the P_tmpdir macro if that is defined;
-   otherwise, in /usr/tmp or /tmp.  */
+   otherwise, in /usr/tmp or /tmp;
+   or finally the current directory if all else fails.  */
 
 static char *temp_filename;
 
@@ -1497,6 +1563,9 @@ static void
 delete_if_ordinary (name)
      char *name;
 {
+/* CYGNUS LOCAL mpw */
+#ifndef MPW
+/* END CYGNUS LOCAL */
   struct stat st;
 #ifdef DEBUG
   int i, c;
@@ -1512,6 +1581,11 @@ delete_if_ordinary (name)
       if (unlink (name) < 0)
 	if (verbose_flag)
 	  perror_with_name (name);
+/* CYGNUS LOCAL mpw */
+#else /* MPW */
+  printf ("Delete -i -y \"%s\"\n", name);
+#endif /* MPW */
+/* END CYGNUS LOCAL */
 }
 
 static void
@@ -1540,65 +1614,7 @@ clear_failure_queue ()
 {
   failure_delete_queue = 0;
 }
-
-/* Compute a string to use as the base of all temporary file names.
-   It is substituted for %g.  */
-
-static char *
-choose_temp_base_try (try, base)
-     char *try;
-     char *base;
-{
-  char *rv;
-  if (base)
-    rv = base;
-  else if (try == (char *)0)
-    rv = 0;
-  else if (access (try, R_OK | W_OK) != 0)
-    rv = 0;
-  else
-    rv = try;
-  return rv;
-}
-
-static void
-choose_temp_base ()
-{
-  char *base = 0;
-  int len;
-
-  base = choose_temp_base_try (getenv ("TMPDIR"), base);
-  base = choose_temp_base_try (getenv ("TMP"), base);
-  base = choose_temp_base_try (getenv ("TEMP"), base);
-
-#ifdef P_tmpdir
-  base = choose_temp_base_try (P_tmpdir, base);
-#endif
-
-  base = choose_temp_base_try (concat4 (dir_separator_str, "usr", 
-                                        dir_separator_str, "tmp"), 
-                                base);
-  base = choose_temp_base_try (concat (dir_separator_str, "tmp"), base);
- 
-  /* If all else fails, use the current directory! */  
-  if (base == (char *)0) base = concat(".", dir_separator_str);
-
-  len = strlen (base);
-  temp_filename = xmalloc (len + strlen (concat (dir_separator_str, 
-                                                 "ccXXXXXX")) + 1);
-  strcpy (temp_filename, base);
-  if (len > 0 && temp_filename[len-1] != '/'
-      && temp_filename[len-1] != DIR_SEPARATOR)
-    temp_filename[len++] = DIR_SEPARATOR;
-  strcpy (temp_filename + len, "ccXXXXXX");
-
-  mktemp (temp_filename);
-  temp_filename_length = strlen (temp_filename);
-  if (temp_filename_length == 0)
-    abort ();
-}
 
-
 /* Routine to add variables to the environment.  We do this to pass
    the pathname of the gcc driver, and the directories search to the
    collect2 program, which is being run as ld.  This way, we can be
@@ -1717,7 +1733,8 @@ build_search_list (paths, prefix, check_dir_p)
   return obstack_finish (&collect_obstack);
 }
 
-/* Rebuild the COMPILER_PATH and LIBRARY_PATH environment variables for collect.  */
+/* Rebuild the COMPILER_PATH and LIBRARY_PATH environment variables
+   for collect.  */
 
 static void
 putenv_from_prefixes (paths, env_var)
@@ -1729,7 +1746,7 @@ putenv_from_prefixes (paths, env_var)
 
 /* Search for NAME using the prefix list PREFIXES.  MODE is passed to
    access to check permissions.
-   Return 0 if not found, otherwise return its name, allocated with malloc. */
+   Return 0 if not found, otherwise return its name, allocated with malloc.  */
 
 static char *
 find_a_file (pprefix, name, mode)
@@ -1918,8 +1935,12 @@ unused_prefix_warnings (pprefix)
     {
       if (pl->used_flag_ptr != 0 && !*pl->used_flag_ptr)
 	{
-	  error ("file path prefix `%s' never used",
-		 pl->prefix);
+	  if (pl->require_machine_suffix && machine_suffix)
+	    error ("file path prefix `%s%s' never used", pl->prefix,
+		   machine_suffix);
+	  else
+	    error ("file path prefix `%s' never used", pl->prefix);
+
 	  /* Prevent duplicate warnings.  */
 	  *pl->used_flag_ptr = 1;
 	}
@@ -1927,7 +1948,7 @@ unused_prefix_warnings (pprefix)
     }
 }
 
-/* Get rid of all prefixes built up so far in *PLISTP. */
+/* Get rid of all prefixes built up so far in *PLISTP.  */
 
 static void
 free_path_prefix (pprefix)
@@ -1945,201 +1966,6 @@ free_path_prefix (pprefix)
     }
   pprefix->plist = (struct prefix_list *) 0;
 }
-
-/* stdin file number.  */
-#define STDIN_FILE_NO 0
-
-/* stdout file number.  */
-#define STDOUT_FILE_NO 1
-
-/* value of `pipe': port index for reading.  */
-#define READ_PORT 0
-
-/* value of `pipe': port index for writing.  */
-#define WRITE_PORT 1
-
-/* Pipe waiting from last process, to be used as input for the next one.
-   Value is STDIN_FILE_NO if no pipe is waiting
-   (i.e. the next command is the first of a group).  */
-
-static int last_pipe_input;
-
-/* Fork one piped subcommand.  FUNC is the system call to use
-   (either execv or execvp).  ARGV is the arg vector to use.
-   NOT_LAST is nonzero if this is not the last subcommand
-   (i.e. its output should be piped to the next one.)  */
-
-#ifdef __MSDOS__
-
-#include <process.h>
-static int
-pexecute (search_flag, program, argv, not_last)
-     int search_flag;
-     char *program;
-     char *argv[];
-     int not_last;
-{
-#ifdef __GO32__
-  int i = (search_flag ? spawnv : spawnvp) (1, program, argv);
-#else
-  char *scmd, *rf;
-  FILE *argfile;
-  int i, el = search_flag ? 0 : 4;
-
-  scmd = (char *)malloc (strlen (program) + strlen (temp_filename) + 6 + el);
-  rf = scmd + strlen(program) + 2 + el;
-  sprintf (scmd, "%s%s @%s.gp", program,
-	   (search_flag ? "" : ".exe"), temp_filename);
-  argfile = fopen (rf, "w");
-  if (argfile == 0)
-    pfatal_with_name (rf);
-
-  for (i=1; argv[i]; i++)
-    {
-      char *cp;
-      for (cp = argv[i]; *cp; cp++)
-	{
-	  if (*cp == '"' || *cp == '\'' || *cp == '\\' || isspace (*cp))
-	    fputc ('\\', argfile);
-	  fputc (*cp, argfile);
-	}
-      fputc ('\n', argfile);
-    }
-  fclose (argfile);
-
-  i = system (scmd);
-
-  remove (rf);
-#endif
-  
-  if (i == -1)
-    {
-      perror_exec (program);
-      return MIN_FATAL_STATUS << 8;
-    }
-  return i << 8;
-}
-
-#endif
-
-#if !defined(__MSDOS__) && !defined(OS2) && !defined(_WIN32)
-
-static int
-pexecute (search_flag, program, argv, not_last)
-     int search_flag;
-     char *program;
-     char *argv[];
-     int not_last;
-{
-  int (*func)() = (search_flag ? execv : execvp);
-  int pid;
-  int pdes[2];
-  int input_desc = last_pipe_input;
-  int output_desc = STDOUT_FILE_NO;
-  int retries, sleep_interval;
-
-  /* If this isn't the last process, make a pipe for its output,
-     and record it as waiting to be the input to the next process.  */
-
-  if (not_last)
-    {
-      if (pipe (pdes) < 0)
-	pfatal_with_name ("pipe");
-      output_desc = pdes[WRITE_PORT];
-      last_pipe_input = pdes[READ_PORT];
-    }
-  else
-    last_pipe_input = STDIN_FILE_NO;
-
-  /* Fork a subprocess; wait and retry if it fails.  */
-  sleep_interval = 1;
-  for (retries = 0; retries < 4; retries++)
-    {
-      pid = vfork ();
-      if (pid >= 0)
-	break;
-      sleep (sleep_interval);
-      sleep_interval *= 2;
-    }
-
-  switch (pid)
-    {
-    case -1:
-#ifdef vfork
-      pfatal_with_name ("fork");
-#else
-      pfatal_with_name ("vfork");
-#endif
-      /* NOTREACHED */
-      return 0;
-
-    case 0: /* child */
-      /* Move the input and output pipes into place, if nec.  */
-      if (input_desc != STDIN_FILE_NO)
-	{
-	  close (STDIN_FILE_NO);
-	  dup (input_desc);
-	  close (input_desc);
-	}
-      if (output_desc != STDOUT_FILE_NO)
-	{
-	  close (STDOUT_FILE_NO);
-	  dup (output_desc);
-	  close (output_desc);
-	}
-
-      /* Close the parent's descs that aren't wanted here.  */
-      if (last_pipe_input != STDIN_FILE_NO)
-	close (last_pipe_input);
-
-      /* Exec the program.  */
-      (*func) (program, argv);
-      perror_exec (program);
-      exit (-1);
-      /* NOTREACHED */
-      return 0;
-
-    default:
-      /* In the parent, after forking.
-	 Close the descriptors that we made for this child.  */
-      if (input_desc != STDIN_FILE_NO)
-	close (input_desc);
-      if (output_desc != STDOUT_FILE_NO)
-	close (output_desc);
-
-      /* Return child's process number.  */
-      return pid;
-    }
-}
-
-#endif /* not __MSDOS__ and not OS2 and not _WIN32 */
-
-#if defined(OS2)
-
-static int
-pexecute (search_flag, program, argv, not_last)
-     int search_flag;
-     char *program;
-     char *argv[];
-     int not_last;
-{
-  return (search_flag ? spawnv : spawnvp) (1, program, argv);
-}
-#endif /* OS2 */
-
-#if defined(_WIN32)
-
-static int
-pexecute (search_flag, program, argv, not_last)
-     int search_flag;
-     char *program;
-     char *argv[];
-     int not_last;
-{
-  return (search_flag ? __spawnv : __spawnvp) (1, program, argv);
-}
-#endif /* _WIN32 */
-
 
 /* Execute the command specified by the arguments on the current line of spec.
    When using pipes, this includes several piped-together commands
@@ -2184,8 +2010,8 @@ execute ()
   for (n_commands = 1, i = 0; i < argbuf_index; i++)
     if (strcmp (argbuf[i], "|") == 0)
       {				/* each command.  */
-#ifdef __MSDOS__
-        fatal ("-pipe not supported under MS-DOS");
+#if defined (__MSDOS__) || (defined (_WIN32) && ! defined (__CYGWIN32__)) || defined (OS2)
+        fatal ("-pipe not supported");
 #endif
 	argbuf[i] = 0;	/* termination of command args.  */
 	commands[n_commands].prog = argbuf[i + 1];
@@ -2202,6 +2028,10 @@ execute ()
 
   if (verbose_flag)
     {
+/* CYGNUS LOCAL mpw */
+#ifndef MPW
+      /* Don't print commands here, is done when script executed.  */
+/* END CYGNUS LOCAL */
       /* Print each piped command as a separate line.  */
       for (i = 0; i < n_commands ; i++)
 	{
@@ -2216,6 +2046,9 @@ execute ()
 	  fprintf (stderr, "\n");
 	}
       fflush (stderr);
+/* CYGNUS LOCAL mpw */
+#endif /* ! MPW */
+/* END CYGNUS LOCAL */
 #ifdef DEBUG
       fprintf (stderr, "\nGo ahead? (y or n) ");
       fflush (stderr);
@@ -2229,14 +2062,22 @@ execute ()
 
   /* Run each piped subprocess.  */
 
-  last_pipe_input = STDIN_FILE_NO;
   for (i = 0; i < n_commands; i++)
     {
+      char *errmsg_fmt, *errmsg_arg;
       char *string = commands[i].argv[0];
 
-      commands[i].pid = pexecute (string != commands[i].prog,
-				  string, commands[i].argv,
-				  i + 1 < n_commands);
+      commands[i].pid = pexecute (string, commands[i].argv,
+				  programname, temp_filename,
+				  &errmsg_fmt, &errmsg_arg,
+				  ((i == 0 ? PEXECUTE_FIRST : 0)
+				   | (i + 1 == n_commands ? PEXECUTE_LAST : 0)
+				   | (string == commands[i].prog
+				      ? PEXECUTE_SEARCH : 0)
+				   | (verbose_flag ? PEXECUTE_VERBOSE : 0)));
+
+      if (commands[i].pid == -1)
+	pfatal_pexecute (errmsg_fmt, errmsg_arg);
 
       if (string != commands[i].prog)
 	free (string);
@@ -2259,15 +2100,7 @@ execute ()
 	int status;
 	int pid;
 
-#ifdef __MSDOS__
-        status = pid = commands[i].pid;
-#else
-#ifdef _WIN32
-	pid = cwait (&status, commands[i].pid, WAIT_CHILD);
-#else
-	pid = wait (&status);
-#endif
-#endif
+	pid = pwait (commands[i].pid, &status, 0);
 	if (pid < 0)
 	  abort ();
 
@@ -2334,6 +2167,15 @@ static int n_infiles;
 
 static char **outfiles;
 
+/* Used to track if none of the -B paths are used.  */
+static int warn_B;
+
+/* Used to track if standard path isn't used and -b or -V is specified.  */
+static int warn_std;
+
+/* Gives value to pass as "warn" to add_prefix for standard prefixes.  */
+static int *warn_std_ptr = 0;
+
 /* Create the vector `switches' and its contents.
    Store its length in `n_switches'.  */
 
@@ -2346,6 +2188,9 @@ process_command (argc, argv)
   char *temp;
   char *spec_lang = 0;
   int last_language_n_infiles;
+  int have_c = 0;
+  int have_o = 0;
+  int lang_n_infiles = 0;
 
   gcc_exec_prefix = getenv ("GCC_EXEC_PREFIX");
 
@@ -2388,7 +2233,7 @@ process_command (argc, argv)
 	    {
 	      strncpy (nstore, startp, endp-startp);
 	      if (endp == startp)
-		strcpy (nstore, concat (".", dir_separator_str));
+		strcpy (nstore, concat (".", dir_separator_str, NULL_PTR));
 	      else if (endp[-1] != '/' && endp[-1] != DIR_SEPARATOR)
 		{
 		  nstore[endp-startp] = DIR_SEPARATOR;
@@ -2397,6 +2242,11 @@ process_command (argc, argv)
 	      else
 		nstore[endp-startp] = 0;
 	      add_prefix (&exec_prefixes, nstore, 0, 0, NULL_PTR);
+	      /* CYGNUS LOCAL tlink jason */
+	      add_prefix (&include_prefixes,
+			  concat (nstore, "include", NULL_PTR),
+			  0, 0, NULL_PTR);
+	      /* END CYGNUS LOCAL */
 	      if (*endp == 0)
 		break;
 	      endp = startp = endp + 1;
@@ -2419,7 +2269,7 @@ process_command (argc, argv)
 	    {
 	      strncpy (nstore, startp, endp-startp);
 	      if (endp == startp)
-		strcpy (nstore, concat (".", dir_separator_str));
+		strcpy (nstore, concat (".", dir_separator_str, NULL_PTR));
 	      else if (endp[-1] != '/' && endp[-1] != DIR_SEPARATOR)
 		{
 		  nstore[endp-startp] = DIR_SEPARATOR;
@@ -2451,7 +2301,7 @@ process_command (argc, argv)
 	    {
 	      strncpy (nstore, startp, endp-startp);
 	      if (endp == startp)
-		strcpy (nstore, concat (".", dir_separator_str));
+		strcpy (nstore, concat (".", dir_separator_str, NULL_PTR));
 	      else if (endp[-1] != '/' && endp[-1] != DIR_SEPARATOR)
 		{
 		  nstore[endp-startp] = DIR_SEPARATOR;
@@ -2494,8 +2344,20 @@ process_command (argc, argv)
 	  printf ("*signed_char:\n%s\n\n", signed_char_spec);
 	  printf ("*predefines:\n%s\n\n", cpp_predefines);
 	  printf ("*cross_compile:\n%d\n\n", cross_compile);
+	  printf ("*version:\n%s\n\n", compiler_version);
 	  printf ("*multilib:\n%s\n\n", multilib_select);
+	  printf ("*multilib_defaults:\n%s\n\n", multilib_defaults);
+	  printf ("*multilib_extra:\n%s\n\n", multilib_extra);
+	  printf ("*multilib_matches:\n%s\n\n", multilib_matches);
 
+#ifdef EXTRA_SPECS
+	  {
+	    int j;
+	    for (j = 0; j < sizeof (extra_specs) / sizeof (extra_specs[0]); j++)
+	      printf ("*%s:\n%s\n\n", extra_specs[j].name,
+		      (extra_specs[j].spec) ? extra_specs[j].spec : "");
+	  }
+#endif
 	  exit (0);
 	}
       else if (! strcmp (argv[i], "-dumpversion"))
@@ -2600,6 +2462,11 @@ process_command (argc, argv)
 	}
       else if (strncmp (argv[i], "-l", 2) == 0)
 	n_infiles++;
+      else if (strcmp (argv[i], "-save-temps") == 0)
+	{
+	  save_temps_flag = 1;
+	  n_switches++;
+	}
       else if (argv[i][0] == '-' && argv[i][1] != 0)
 	{
 	  register char *p = &argv[i][1];
@@ -2608,12 +2475,17 @@ process_command (argc, argv)
 	  switch (c)
 	    {
 	    case 'b':
+	      /* CYGNUS LOCAL tlink jason */
+              n_switches++;
+	      /* END CYGNUS LOCAL */
 	      if (p[1] == 0 && i + 1 == argc)
 		fatal ("argument to `-b' is missing");
 	      if (p[1] == 0)
 		spec_machine = argv[++i];
 	      else
 		spec_machine = p + 1;
+
+	      warn_std_ptr = &warn_std;
 	      break;
 
 	    case 'B':
@@ -2626,10 +2498,10 @@ process_command (argc, argv)
 		  value = argv[++i];
 		else
 		  value = p + 1;
-		add_prefix (&exec_prefixes, value, 1, 0, temp);
-		add_prefix (&startfile_prefixes, value, 1, 0, temp);
-		add_prefix (&include_prefixes, concat (value, "include"),
-			    1, 0, 0);
+		add_prefix (&exec_prefixes, value, 1, 0, &warn_B);
+		add_prefix (&startfile_prefixes, value, 1, 0, &warn_B);
+		add_prefix (&include_prefixes, concat (value, "include", NULL_PTR),
+			    1, 0, NULL_PTR);
 
 		/* As a kludge, if the arg is "[foo/]stageN/", just add
 		   "[foo/]include" to the include prefix.  */
@@ -2645,16 +2517,21 @@ process_command (argc, argv)
 			  || value[len - 1] == DIR_SEPARATOR))
 		    {
 		      if (len == 7)
-			add_prefix (&include_prefixes, "include", 1, 0, 0);
+			add_prefix (&include_prefixes, "include",
+				    1, 0, NULL_PTR);
 		      else
 			{
 			  char *string = xmalloc (len + 1);
 			  strncpy (string, value, len-7);
 			  strcat (string, "include");
-			  add_prefix (&include_prefixes, string, 1, 0, 0);
+			  add_prefix (&include_prefixes, string,
+				      1, 0, NULL_PTR);
 			}
 		    }
 		}
+		/* CYGNUS LOCAL tlink jason */
+                n_switches++;
+		/* END CYGNUS LOCAL */
 	      }
 	      break;
 
@@ -2668,6 +2545,9 @@ process_command (argc, argv)
 	      break;
 
 	    case 'V':
+	      /* CYGNUS LOCAL tlink jason */
+	      n_switches++;
+	      /* END CYGNUS LOCAL */
 	      if (p[1] == 0 && i + 1 == argc)
 		fatal ("argument to `-V' is missing");
 	      if (p[1] == 0)
@@ -2675,16 +2555,24 @@ process_command (argc, argv)
 	      else
 		spec_version = p + 1;
 	      compiler_version = spec_version;
+	      warn_std_ptr = &warn_std;
 	      break;
 
-	    case 's':
-	      if (!strcmp (p, "save-temps"))
+	    case 'c':
+	      if (p[1] == 0)
 		{
-		  save_temps_flag = 1;
+		  have_c = 1;
 		  n_switches++;
 		  break;
 		}
+	      goto normal_switch;
+
+	    case 'o':
+	      have_o = 1;
+	      goto normal_switch;
+
 	    default:
+	    normal_switch:
 	      n_switches++;
 
 	      if (SWITCH_TAKES_ARG (c) > (p[1] != 0))
@@ -2694,8 +2582,14 @@ process_command (argc, argv)
 	    }
 	}
       else
-	n_infiles++;
+	{
+	  n_infiles++;
+	  lang_n_infiles++;
+	}
     }
+
+  if (have_c && have_o && lang_n_infiles > 1)
+    fatal ("cannot specify -o with -c and multiple compilations");
 
   /* Set up the search paths before we go looking for config files.  */
 
@@ -2704,15 +2598,15 @@ process_command (argc, argv)
   /* Use 2 as fourth arg meaning try just the machine as a suffix,
      as well as trying the machine and the version.  */
 #ifndef OS2
-  add_prefix (&exec_prefixes, standard_exec_prefix, 0, 2, NULL_PTR);
-  add_prefix (&exec_prefixes, standard_exec_prefix_1, 0, 2, NULL_PTR);
+  add_prefix (&exec_prefixes, standard_exec_prefix, 0, 2, warn_std_ptr);
+  add_prefix (&exec_prefixes, standard_exec_prefix_1, 0, 2, warn_std_ptr);
 #endif
 
-  add_prefix (&startfile_prefixes, standard_exec_prefix, 0, 1, NULL_PTR);
-  add_prefix (&startfile_prefixes, standard_exec_prefix_1, 0, 1, NULL_PTR);
+  add_prefix (&startfile_prefixes, standard_exec_prefix, 0, 1, warn_std_ptr);
+  add_prefix (&startfile_prefixes, standard_exec_prefix_1, 0, 1, warn_std_ptr);
 
-  tooldir_prefix = concat3 (tooldir_base_prefix, spec_machine, 
-                            dir_separator_str);
+  tooldir_prefix = concat (tooldir_base_prefix, spec_machine, 
+			   dir_separator_str, NULL_PTR);
 
   /* If tooldir is relative, base it on exec_prefixes.  A relative
      tooldir lets us move the installed tree as a unit.
@@ -2726,29 +2620,29 @@ process_command (argc, argv)
       if (gcc_exec_prefix)
 	{
 	  char *gcc_exec_tooldir_prefix
-	    = concat6 (gcc_exec_prefix, spec_machine, dir_separator_str,
-		      spec_version, dir_separator_str, tooldir_prefix);
+	    = concat (gcc_exec_prefix, spec_machine, dir_separator_str,
+		      spec_version, dir_separator_str, tooldir_prefix, NULL_PTR);
 
 	  add_prefix (&exec_prefixes,
-		      concat3 (gcc_exec_tooldir_prefix, "bin", 
-                               dir_separator_str),
+		      concat (gcc_exec_tooldir_prefix, "bin", 
+			      dir_separator_str, NULL_PTR),
 		      0, 0, NULL_PTR);
 	  add_prefix (&startfile_prefixes,
-		      concat3 (gcc_exec_tooldir_prefix, "lib", 
-                               dir_separator_str),
+		      concat (gcc_exec_tooldir_prefix, "lib", 
+			      dir_separator_str, NULL_PTR),
 		      0, 0, NULL_PTR);
 	}
 
-      tooldir_prefix = concat6 (standard_exec_prefix, spec_machine,
-			        dir_separator_str, spec_version, 
-                                dir_separator_str, tooldir_prefix);
+      tooldir_prefix = concat (standard_exec_prefix, spec_machine,
+			       dir_separator_str, spec_version, 
+			       dir_separator_str, tooldir_prefix, NULL_PTR);
     }
 
   add_prefix (&exec_prefixes, 
-              concat3 (tooldir_prefix, "bin", dir_separator_str),
+              concat (tooldir_prefix, "bin", dir_separator_str, NULL_PTR),
 	      0, 0, NULL_PTR);
   add_prefix (&startfile_prefixes,
-	      concat3 (tooldir_prefix, "lib", dir_separator_str),
+	      concat (tooldir_prefix, "lib", dir_separator_str, NULL_PTR),
 	      0, 0, NULL_PTR);
 
   /* More prefixes are enabled in main, after we read the specs file
@@ -2832,13 +2726,8 @@ process_command (argc, argv)
 	  register char *p = &argv[i][1];
 	  register int c = *p;
 
-	  if (c == 'B' || c == 'b' || c == 'V')
-	    {
-	      /* Skip a separate arg, if any.  */
-	      if (p[1] == 0)
-		i++;
-	      continue;
-	    }
+	  /* CYGNUS LOCAL tlink jason */
+	  /* END CYGNUS LOCAL */
 	  if (c == 'x')
 	    {
 	      if (p[1] == 0 && i + 1 == argc)
@@ -2878,11 +2767,15 @@ process_command (argc, argv)
 	      /* Null-terminate the vector.  */
 	      switches[n_switches].args[j] = 0;
 	    }
-	  else if (*switches_need_spaces != 0 && (c == 'o' || c == 'L'))
+	  else if (index (switches_need_spaces, c))
 	    {
-	      /* On some systems, ld cannot handle -o or -L without space.
-		 So split the -o or -L from its argument.  */
-	      switches[n_switches].part1 = (c == 'o' ? "o" : "L");
+	      /* On some systems, ld cannot handle some options without
+		 a space.  So split the option from its argument.  */
+	      char *part1 = (char *) xmalloc (2);
+	      part1[0] = c;
+	      part1[1] = '\0';
+	      
+	      switches[n_switches].part1 = part1;
 	      switches[n_switches].args = (char **) xmalloc (2 * sizeof (char *));
 	      switches[n_switches].args[0] = xmalloc (strlen (p));
 	      strcpy (switches[n_switches].args[0], &p[1]);
@@ -2896,7 +2789,15 @@ process_command (argc, argv)
 	  /* This is always valid, since gcc.c itself understands it.  */
 	  if (!strcmp (p, "save-temps"))
 	    switches[n_switches].valid = 1;
+	  /* CYGNUS LOCAL tlink jason */
+          else
+            {
+              char ch = switches[n_switches].part1[0];
+              if (ch == 'V' || ch == 'b' || ch == 'B')
+                switches[n_switches].valid = 1;
+            }
 	  n_switches++;
+	  /* END CYGNUS LOCAL */
 	}
       else
 	{
@@ -3304,7 +3205,8 @@ do_spec_1 (spec, inswitch, soft_matched_part)
 		    t->length = p - suffix;
 		    t->suffix = save_string (suffix, p - suffix);
 		    t->unique = (c != 'g');
-		    choose_temp_base ();
+		    temp_filename = choose_temp_base ();
+		    temp_filename_length = strlen (temp_filename);
 		    t->filename = temp_filename;
 		    t->filename_length = temp_filename_length;
 		  }
@@ -3377,7 +3279,7 @@ do_spec_1 (spec, inswitch, soft_matched_part)
 
 	  case 'W':
 	    {
-	      int index = argbuf_index;
+	      int cur_index = argbuf_index;
 	      /* Handle the {...} following the %W.  */
 	      if (*p != '{')
 		abort ();
@@ -3386,7 +3288,7 @@ do_spec_1 (spec, inswitch, soft_matched_part)
 		return -1;
 	      /* If any args were output, mark the last one for deletion
 		 on failure.  */
-	      if (argbuf_index != index)
+	      if (argbuf_index != cur_index)
 		record_temp_file (argbuf[argbuf_index - 1], 0, 1);
 	      break;
 	    }
@@ -3702,7 +3604,7 @@ do_spec_1 (spec, inswitch, soft_matched_part)
 	      int len;
 
 	      /* The string after the S/P is the name of a spec that is to be
-		 processed. */
+		 processed.  */
 	      while (*p && *p != ')' && *p != ']')
 		p++;
 
@@ -3770,26 +3672,35 @@ do_spec_1 (spec, inswitch, soft_matched_part)
 	    {
 	      int c1 = *p++;  /* Select first or second version number.  */
 	      char *v = compiler_version;
-	      char *q, *copy;
+	      char *q;
+
+	      /* The format of the version string is
+		 ([^0-9]*-)?[0-9]+[.][0-9]+([.][0-9]+)?([- ].*)?  */
+
+	      /* Ignore leading non-digits.  i.e. "foo-" in "foo-2.7.2".  */
+	      while (! isdigit (*v))
+		v++;
+	      if (v > compiler_version && v[-1] != '-')
+		abort ();
+
 	      /* If desired, advance to second version number.  */
 	      if (c1 == '2')
 		{
-		  /* Set P after the first period.  */
-		  while (*v != 0 && *v != ' ' && *v != '.')
+		  /* Set V after the first period.  */
+		  while (isdigit (*v))
 		    v++;
-		  if (*v == '.')
-		    v++;
+		  if (*v != '.')
+		    abort ();
+		  v++;
 		}
+
 	      /* Set Q at the next period or at the end.  */
 	      q = v;
-	      while (*q != 0 && *q != ' ' && *q != '.')
+	      while (isdigit (*q))
 		q++;
-	      /* Empty string means zero.  */
-	      if (p == q)
-		{
-		  v = "0";
-		  q = v + 1;
-		}
+	      if (*q != 0 && *q != ' ' && *q != '.' && *q != '-')
+		abort ();
+
 	      /* Put that part into the command.  */
 	      obstack_grow (&obstack, v, q - v);
 	      arg_going = 1;
@@ -3828,7 +3739,7 @@ handle_braces (p)
 {
   register char *q;
   char *filter;
-  int pipe = 0;
+  int pipe_p = 0;
   int negate = 0;
   int suffix = 0;
 
@@ -3836,7 +3747,7 @@ handle_braces (p)
     /* A `|' after the open-brace means,
        if the test fails, output a single minus sign rather than nothing.
        This is used in %{|!pipe:...}.  */
-    pipe = 1, ++p;
+    pipe_p = 1, ++p;
 
   if (*p == '!')
     /* A `!' after the open-brace negates the condition:
@@ -3846,7 +3757,7 @@ handle_braces (p)
   if (*p == '.')
     /* A `.' after the open-brace means test against the current suffix.  */
     {
-      if (pipe)
+      if (pipe_p)
 	abort ();
 
       suffix = 1;
@@ -3987,7 +3898,7 @@ handle_braces (p)
 		return 0;
 	    }
 	}
-      else if (pipe)
+      else if (pipe_p)
 	{
 	  /* Here if a %{|...} conditional fails: output a minus sign,
 	     which means "standard output" or "standard input".  */
@@ -4041,7 +3952,7 @@ check_live_switch (switchnum, prefix_length)
     case 'W':  case 'f':  case 'm':
       if (! strncmp (name + 1, "no-", 3))
 	{
-	  /* We have Xno-YYY, search for XYYY. */
+	  /* We have Xno-YYY, search for XYYY.  */
 	  for (i = switchnum + 1; i < n_switches; i++)
 	    if (switches[i].part1[0] == name[0]
 		&& ! strcmp (&switches[i].part1[1], &name[4]))
@@ -4173,12 +4084,12 @@ is_directory (path1, path2, linker)
   /* Exclude directories that the linker is known to search.  */
   if (linker
       && ((cp - path == 6
-	   && strcmp (path, concat4 (dir_separator_str, "lib", 
-                                     dir_separator_str, ".")) == 0)
+	   && strcmp (path, concat (dir_separator_str, "lib", 
+				    dir_separator_str, ".", NULL_PTR)) == 0)
 	  || (cp - path == 10
-	      && strcmp (path, concat6 (dir_separator_str, "usr", 
-                                        dir_separator_str, "lib", 
-                                        dir_separator_str, ".")) == 0)))
+	      && strcmp (path, concat (dir_separator_str, "usr", 
+				       dir_separator_str, "lib", 
+				       dir_separator_str, ".", NULL_PTR)) == 0)))
     return 0;
 
   return (stat (path, &st) >= 0 && S_ISDIR (st.st_mode));
@@ -4233,6 +4144,43 @@ main (argc, argv)
 
   obstack_init (&obstack);
 
+  /* Build multilib_select, et. al from the separate lines that make up each
+     multilib selection.  */
+  {
+    char **q = multilib_raw;
+    int need_space;
+
+    obstack_init (&multilib_obstack);
+    while ((p = *q++) != (char *) 0)
+      obstack_grow (&multilib_obstack, p, strlen (p));
+
+    obstack_1grow (&multilib_obstack, 0);
+    multilib_select = obstack_finish (&multilib_obstack);
+
+    q = multilib_matches_raw;
+    while ((p = *q++) != (char *) 0)
+      obstack_grow (&multilib_obstack, p, strlen (p));
+
+    obstack_1grow (&multilib_obstack, 0);
+    multilib_matches = obstack_finish (&multilib_obstack);
+
+    need_space = FALSE;
+    for (i = 0;
+	 i < sizeof (multilib_defaults_raw) / sizeof (multilib_defaults_raw[0]);
+	 i++)
+      {
+	if (need_space)
+	  obstack_1grow (&multilib_obstack, ' ');
+	obstack_grow (&multilib_obstack,
+		      multilib_defaults_raw[i],
+		      strlen (multilib_defaults_raw[i]));
+	need_space = TRUE;
+      }
+
+    obstack_1grow (&multilib_obstack, 0);
+    multilib_defaults = obstack_finish (&multilib_obstack);
+  }
+
   /* Set up to remember the pathname of gcc and any options
      needed for collect.  We use argv[0] instead of programname because
      we need the complete pathname.  */
@@ -4248,13 +4196,54 @@ main (argc, argv)
 
   /* Choose directory for temp files.  */
 
-  choose_temp_base ();
+  temp_filename = choose_temp_base ();
+  temp_filename_length = strlen (temp_filename);
 
   /* Make a table of what switches there are (switches, n_switches).
      Make a table of specified input files (infiles, n_infiles).
      Decode switches that are handled locally.  */
 
   process_command (argc, argv);
+
+  /* CYGNUS LOCAL COLLECT_GCC_OPTIONS jason */
+  {
+    int i;
+    int first_time;
+
+    /* Build COLLECT_GCC_OPTIONS to have all of the options specified to
+       the compiler.  */
+    obstack_grow (&collect_obstack, "COLLECT_GCC_OPTIONS=",
+		  sizeof ("COLLECT_GCC_OPTIONS=")-1);
+
+    first_time = TRUE;
+    for (i = 0; i < n_switches; i++)
+      {
+	char **args;
+	char *p, *q;
+	if (!first_time)
+	  obstack_grow (&collect_obstack, " ", 1);
+
+	first_time = FALSE;
+	obstack_grow (&collect_obstack, "-", 1);
+        q = switches[i].part1;
+	while (p = (char *) index (q,'"'))
+          {
+            obstack_grow (&collect_obstack, q, p-q);
+            obstack_grow (&collect_obstack, "\\\"", 2);
+            q = ++p;
+          }
+        obstack_grow (&collect_obstack, q, strlen (q));
+
+	for (args = switches[i].args; args && *args; args++)
+	  {
+	    obstack_grow (&collect_obstack, " ", 1);
+	    obstack_grow (&collect_obstack, *args, strlen (*args));
+	  }
+      }
+    obstack_grow (&collect_obstack, "\0", 1);
+    putenv (obstack_finish (&collect_obstack));
+  }
+  /* END CYGNUS LOCAL */
 
   /* Initialize the vector of specs to just the default.
      This means one element containing 0s, as a terminator.  */
@@ -4266,14 +4255,23 @@ main (argc, argv)
 
   /* Read specs from a file if there is one.  */
 
-  machine_suffix = concat4 (spec_machine, dir_separator_str,
-                            spec_version, dir_separator_str);
-  just_machine_suffix = concat (spec_machine, dir_separator_str);
+  machine_suffix = concat (spec_machine, dir_separator_str,
+			   spec_version, dir_separator_str, NULL_PTR);
+  just_machine_suffix = concat (spec_machine, dir_separator_str, NULL_PTR);
 
   specs_file = find_a_file (&startfile_prefixes, "specs", R_OK);
   /* Read the specs file unless it is a default one.  */
   if (specs_file != 0 && strcmp (specs_file, "specs"))
     read_specs (specs_file);
+
+#ifdef EXTRA_SPECS
+  else
+    {
+      int k;
+      for (k = 0; k < sizeof (extra_specs) / sizeof (extra_specs[0]); k++)
+	set_spec (extra_specs[k].name, extra_specs[k].spec);
+    }
+#endif
 
   /* If not cross-compiling, look for startfiles in the standard places.  */
   /* The fact that these are done here, after reading the specs file,
@@ -4306,13 +4304,13 @@ main (argc, argv)
 	{
 	  if (gcc_exec_prefix)
 	    add_prefix (&startfile_prefixes,
-			concat3 (gcc_exec_prefix, machine_suffix,
-				 standard_startfile_prefix),
+			concat (gcc_exec_prefix, machine_suffix,
+				standard_startfile_prefix, NULL_PTR),
 			0, 0, NULL_PTR);
 	  add_prefix (&startfile_prefixes,
-		      concat3 (standard_exec_prefix,
-			       machine_suffix,
-			       standard_startfile_prefix),
+		      concat (standard_exec_prefix,
+			      machine_suffix,
+			      standard_startfile_prefix, NULL_PTR),
 		      0, 0, NULL_PTR);
 	}		       
 
@@ -4328,8 +4326,8 @@ main (argc, argv)
     {
       if (*standard_startfile_prefix != DIR_SEPARATOR && gcc_exec_prefix)
 	add_prefix (&startfile_prefixes,
-		    concat3 (gcc_exec_prefix, machine_suffix,
-			     standard_startfile_prefix),
+		    concat (gcc_exec_prefix, machine_suffix,
+			    standard_startfile_prefix, NULL_PTR),
 		    0, 0, NULL_PTR);
     }
 
@@ -4407,6 +4405,16 @@ main (argc, argv)
       else
 	fprintf (stderr, "gcc driver version %s executing gcc version %s\n",
 		 version_string, compiler_version);
+      /* CYGNUS LOCAL default-options */
+      {
+	/* We can't do this in translate_options, where we handle the environment
+	   variable, because the -v flag won't have been seen yet, so we handle
+	   it here instead.  */
+	char *opts = getenv ("GCC_DEFAULT_OPTIONS");
+	if (opts)
+	  fprintf (stderr, "GCC_DEFAULT_OPTIONS=%s\n", opts);
+      }
+      /* END CYGNUS LOCAL */
 
       if (n_infiles == 0)
 	exit (0);
@@ -4452,6 +4460,10 @@ main (argc, argv)
 	  /* First say how much of input_filename to substitute for %b  */
 	  register char *p;
 	  int len;
+
+	  if (cp->spec[0][0] == '#')
+	    error ("%s: %s compiler not installed on this system",
+		   input_filename, &cp->spec[0][1]);
 
 	  input_basename = input_filename;
 	  for (p = input_filename; *p; p++)
@@ -4523,31 +4535,7 @@ main (argc, argv)
       putenv_from_prefixes (&exec_prefixes, "COMPILER_PATH=");
       putenv_from_prefixes (&startfile_prefixes, "LIBRARY_PATH=");
 
-      /* Build COLLECT_GCC_OPTIONS to have all of the options specified to
-	 the compiler.  */
-      obstack_grow (&collect_obstack, "COLLECT_GCC_OPTIONS=",
-		    sizeof ("COLLECT_GCC_OPTIONS=")-1);
-
-      first_time = TRUE;
-      for (i = 0; i < n_switches; i++)
-	{
-	  char **args;
-	  if (!first_time)
-	    obstack_grow (&collect_obstack, " ", 1);
-
-	  first_time = FALSE;
-	  obstack_grow (&collect_obstack, "-", 1);
-	  obstack_grow (&collect_obstack, switches[i].part1,
-			strlen (switches[i].part1));
-
-	  for (args = switches[i].args; args && *args; args++)
-	    {
-	      obstack_grow (&collect_obstack, " ", 1);
-	      obstack_grow (&collect_obstack, *args, strlen (*args));
-	    }
-	}
-      obstack_grow (&collect_obstack, "\0", 1);
-      putenv (obstack_finish (&collect_obstack));
+      /* CYGNUS LOCAL COLLECT_GCC_OPTIONS jason */
 
       value = do_spec (link_command_spec);
       if (value < 0)
@@ -4573,6 +4561,12 @@ main (argc, argv)
   if (error_count)
     delete_failure_queue ();
   delete_temp_files ();
+
+/* CYGNUS LOCAL mpw */
+#ifdef PEXECUTE_PFINISH
+  pfinish ();
+#endif
+/* END CYGNUS LOCAL */
 
   exit (error_count > 0 ? (signal_count ? 2 : 1) : 0);
   /* NOTREACHED */
@@ -4668,42 +4662,58 @@ xrealloc (ptr, size)
   return value;
 }
 
-/* Return a newly-allocated string whose contents concatenate those of s1, s2 */
+/* This function is based on the one in libiberty.  */
 
 static char *
-concat (s1, s2)
-     char *s1, *s2;
+concat VPROTO((char *first, ...))
 {
-  int len1 = strlen (s1);
-  int len2 = strlen (s2);
-  char *result = xmalloc (len1 + len2 + 1);
+  register int length;
+  register char *newstr;
+  register char *end;
+  register char *arg;
+  va_list args;
+#ifndef __STDC__
+  char *first;
+#endif
 
-  strcpy (result, s1);
-  strcpy (result + len1, s2);
-  *(result + len1 + len2) = 0;
+  /* First compute the size of the result and get sufficient memory.  */
 
-  return result;
-}
+  VA_START (args, first);
+#ifndef __STDC__
+  first = va_arg (args, char *);
+#endif
 
-static char *
-concat3 (s1, s2, s3)
-     char *s1, *s2, *s3;
-{
-  return concat (concat (s1, s2), s3);
-}
+  arg = first;
+  length = 0;
 
-static char *
-concat4 (s1, s2, s3, s4)
-     char *s1, *s2, *s3, *s4;
-{
-  return concat (concat (s1, s2), concat (s3, s4));
-}
+  while (arg != 0)
+    {
+      length += strlen (arg);
+      arg = va_arg (args, char *);
+    }
 
-static char *
-concat6 (s1, s2, s3, s4, s5, s6)
-     char *s1, *s2, *s3, *s4, *s5, *s6;
-{
-  return concat3 (concat (s1, s2), concat (s3, s4), concat (s5, s6));
+  newstr = (char *) xmalloc (length + 1);
+  va_end (args);
+
+  /* Now copy the individual pieces to the result string.  */
+
+  VA_START (args, first);
+#ifndef __STDC__
+  first = va_arg (args, char *);
+#endif
+
+  end = newstr;
+  arg = first;
+  while (arg != 0)
+    {
+      while (*arg)
+	*end++ = *arg++;
+      arg = va_arg (args, char *);
+    }
+  *end = '\000';
+  va_end (args);
+
+  return (newstr);
 }
 
 static char *
@@ -4722,40 +4732,30 @@ static void
 pfatal_with_name (name)
      char *name;
 {
-  char *s;
-
-  if (errno < sys_nerr)
-    s = concat ("%s: ", my_strerror( errno ));
-  else
-    s = "cannot open `%s'";
-  fatal (s, name);
+  fatal ("%s: %s", name, my_strerror (errno));
 }
 
 static void
 perror_with_name (name)
      char *name;
 {
-  char *s;
-
-  if (errno < sys_nerr)
-    s = concat ("%s: ", my_strerror( errno ));
-  else
-    s = "cannot open `%s'";
-  error (s, name);
+  error ("%s: %s", name, my_strerror (errno));
 }
 
 static void
-perror_exec (name)
-     char *name;
+pfatal_pexecute (errmsg_fmt, errmsg_arg)
+     char *errmsg_fmt;
+     char *errmsg_arg;
 {
-  char *s;
+  if (errmsg_arg)
+    {
+      /* Space for trailing '\0' is in %s.  */
+      char *msg = xmalloc (strlen (errmsg_fmt) + strlen (errmsg_arg));
+      sprintf (msg, errmsg_fmt, errmsg_arg);
+      errmsg_fmt = msg;
+    }
 
-  if (errno < sys_nerr)
-    s = concat ("installation problem, cannot exec `%s': ",
-		my_strerror (errno));
-  else
-    s = "installation problem, cannot exec `%s'";
-  error (s, name);
+  fatal ("%s: %s", errmsg_fmt, my_strerror (errno));
 }
 
 /* More 'friendly' abort that prints the line and file.
@@ -4782,7 +4782,7 @@ fatal VPROTO((char *format, ...))
   VA_START (ap, format);
 
 #ifndef __STDC__
-  format = va_arg (ap, char*);
+  format = va_arg (ap, char *);
 #endif
 
   fprintf (stderr, "%s: ", programname);
@@ -4804,7 +4804,7 @@ error VPROTO((char *format, ...))
   VA_START (ap, format);
 
 #ifndef __STDC__
-  format = va_arg (ap, char*);
+  format = va_arg (ap, char *);
 #endif
 
   fprintf (stderr, "%s: ", programname);
@@ -4935,6 +4935,21 @@ validate_all_switches ()
     if (c == '%' && *p == '{')
       /* We have a switch spec.  */
       validate_switches (p + 1);
+
+#ifdef EXTRA_SPECS
+  {
+    int i;
+    for (i = 0; i < sizeof (extra_specs) / sizeof (extra_specs[0]); i++)
+      {
+	p = extra_specs[i].spec;
+	while (c = *p++)
+	  if (c == '%' && *p == '{')
+	    /* We have a switch spec.  */
+	    validate_switches (p + 1);
+      }
+  }
+#endif
+
 }
 
 /* Look at the switch-name that comes after START
@@ -4983,43 +4998,114 @@ validate_switches (start)
     }
 }
 
-/* Check whether a particular argument was used.  */
+/* Check whether a particular argument was used.  The first time we
+   canonialize the switches to keep only the ones we care about.  */
 
 static int
 used_arg (p, len)
      char *p;
      int len;
 {
-  int i;
+  struct mswitchstr {
+    char *str;
+    char *replace;
+    int len;
+    int rep_len;
+  };
 
-  for (i = 0; i < n_switches; i++)
-    if (! strncmp (switches[i].part1, p, len)
-	&& strlen (switches[i].part1) == len)
+  static struct mswitchstr *mswitches;
+  static int n_mswitches;
+  int i, j;
+
+  if (!mswitches)
+    {
+      struct mswitchstr *matches;
+      char *q;
+      int cnt = 0;
+
+      /* Break multilib_matches into the component strings of string and replacement
+         string */
+      for (p = multilib_matches; *p != '\0'; p++)
+	if (*p == ';')
+	  cnt++;
+
+      matches = (struct mswitchstr *) alloca ((sizeof (struct mswitchstr)) * cnt);
+      i = 0;
+      q = multilib_matches;
+      while (*q != '\0')
+	{
+	  matches[i].str = q;
+	  while (*q != ' ')
+	    {
+	      if (*q == '\0')
+		abort ();
+	      q++;
+	    }
+	  *q = '\0';
+	  matches[i].len = q - matches[i].str;
+
+	  matches[i].replace = ++q;
+	  while (*q != ';' && *q != '\0')
+	    {
+	      if (*q == ' ')
+		abort ();
+	      q++;
+	    }
+	  matches[i].rep_len = q - matches[i].replace;
+	  i++;
+	  if (*q == ';')
+	    *q++ = '\0';
+	  else
+	    break;
+	}
+
+      /* Now build a list of the replacement string for switches that we care about */
+      mswitches = (struct mswitchstr *) xmalloc ((sizeof (struct mswitchstr)) * n_switches);
+      for (i = 0; i < n_switches; i++)
+	{
+	  int xlen = strlen (switches[i].part1);
+	  for (j = 0; j < cnt; j++)
+	    if (xlen == matches[j].len && ! strcmp (switches[i].part1, matches[j].str))
+	      {
+		mswitches[n_mswitches].str = matches[j].replace;
+		mswitches[n_mswitches].len = matches[j].rep_len;
+		mswitches[n_mswitches].replace = (char *)0;
+		mswitches[n_mswitches].rep_len = 0;
+		n_mswitches++;
+		break;
+	      }
+	}
+    }
+
+  for (i = 0; i < n_mswitches; i++)
+    if (len == mswitches[i].len && ! strncmp (p, mswitches[i].str, len))
       return 1;
+
   return 0;
 }
-
-/* Check whether a particular argument is a default argument.  */
-
-#ifndef MULTILIB_DEFAULTS
-#define MULTILIB_DEFAULTS { NULL }
-#endif
-
-static char *multilib_defaults[] = MULTILIB_DEFAULTS;
 
 static int
 default_arg (p, len)
      char *p;
      int len;
 {
-  int count = sizeof multilib_defaults / sizeof multilib_defaults[0];
+  char *start, *end;
   int i;
 
-  for (i = 0; i < count; i++)
-    if (multilib_defaults[i] != NULL
-	&& strncmp (multilib_defaults[i], p, len) == 0
-	&& multilib_defaults[i][len] == '\0')
-      return 1;
+  for (start = multilib_defaults; *start != '\0'; start = end+1)
+    {
+      while (*start == ' ' || *start == '\t')
+	start++;
+
+      if (*start == '\0')
+	break;
+
+      for (end = start+1; *end != ' ' && *end != '\t' && *end != '\0'; end++)
+	;
+
+      if ((end - start) == len && strncmp (p, start, len) == 0)
+	return 1;
+    }
 
   return 0;
 }
@@ -5247,7 +5333,28 @@ print_multilib_info ()
 	}
 
       if (! skip)
-	putchar ('\n');
+	{
+	  /* If there are extra options, print them now */
+	  if (multilib_extra && *multilib_extra)
+	    {
+	      int print_at = TRUE;
+	      char *q;
+
+	      for (q = multilib_extra; *q != '\0'; q++)
+		{
+		  if (*q == ' ')
+		    print_at = TRUE;
+		  else
+		    {
+		      if (print_at)
+			putchar ('@');
+		      putchar (*q);
+		      print_at = FALSE;
+		    }
+		}
+	    }
+	  putchar ('\n');
+	}
 
       ++p;
     }

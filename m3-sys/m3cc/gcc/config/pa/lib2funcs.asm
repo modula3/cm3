@@ -1,5 +1,6 @@
 ;  Subroutines for calling unbound dynamic functions from within GDB for HPPA.
-;  Copyright (C) 1994, 1995 Free Software Foundation, Inc.
+;  Subroutines for out of line prologues and epilogues on for the HPPA
+;  Copyright (C) 1994, 1995, 1996 Free Software Foundation, Inc.
 
 ;  This file is part of GNU CC.
 
@@ -24,6 +25,8 @@
 	.SPACE $TEXT$
 	.SUBSPA $LIT$,QUAD=0,ALIGN=8,ACCESS=44
 	.SUBSPA $CODE$,QUAD=0,ALIGN=8,ACCESS=44,CODE_ONLY
+	.SUBSPA $MILLICODE$,QUAD=0,ALIGN=8,ACCESS=44,SORT=8
+
 	.IMPORT $$dyncall,MILLICODE
 ; gcc_compiled.:
 	.SPACE $TEXT$

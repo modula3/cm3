@@ -1,5 +1,5 @@
 # Makefile for GNU C compiler.
-#   Copyright (C) 1987, 88, 90-94, 1995 Free Software Foundation, Inc.
+#   Copyright (C) 1987, 88, 90-95, 1996 Free Software Foundation, Inc.
 
 #This file is part of GNU CC.
 
@@ -35,7 +35,12 @@ SUBDIRS =
 
 # Selection of languages to be made.
 # This is overridden by configure.
-LANGUAGES = c objective-c proto cm3cg
+# CYGNUS LOCAL gcov
+LANGUAGES = c objective-c proto gcov cm3cg
+
+# Selection of languages to be made during stage1 build.
+# This is overridden by configure.
+BOOT_LANGUAGES = c
 
 ALLOCA =
 ALLOCA_FLAGS =
@@ -46,7 +51,9 @@ ALLOCA_FINISH = true
 # BOOT_CFLAGS is the value of CFLAGS to pass
 # to the stage2 and stage3 compilations
 # XCFLAGS is used for most compilations but not when using the GCC just built.
+# TCFLAGS is used for compilations with the GCC just built.
 XCFLAGS =
+TCFLAGS =
 CFLAGS = -g
 BOOT_CFLAGS = -O $(CFLAGS)
 # These exists to be overridden by the x-* and t-* files, respectively.
@@ -57,9 +64,11 @@ X_CPPFLAGS =
 T_CPPFLAGS =
 
 CC = cc
-BISON = bison
+# CYGNUS LOCAL: we use byacc instead of bison, DO NOT SEND TO RMS
+BISON = `if [ -f $(objdir)/../byacc/byacc ] ; then echo $(objdir)/../byacc/byacc ; else echo byacc ; fi`
 BISONFLAGS =
-LEX = flex
+# CYGNUS LOCAL: use flex in build tree if it exists
+LEX = `if [ -f $(objdir)/../flex/flex ] ; then echo $(objdir)/../flex/flex ; else echo flex ; fi`
 LEXFLAGS =
 AR = ar
 OLDAR_FLAGS = qc
@@ -71,6 +80,7 @@ INSTALL = install -c
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL)
 MAKEINFO = makeinfo
+MAKEINFOFLAGS =
 TEXI2DVI = texi2dvi
 # For GNUmake: let us decide what gets passed to recursive makes.
 MAKEOVERRIDES =
@@ -112,7 +122,7 @@ USER_H = $(srcdir)/ginclude/stdarg.h $(srcdir)/ginclude/stddef.h \
     $(srcdir)/ginclude/va-pyr.h $(srcdir)/ginclude/va-sparc.h \
     $(srcdir)/ginclude/va-clipper.h $(srcdir)/ginclude/va-spur.h \
     $(srcdir)/ginclude/iso646.h $(srcdir)/ginclude/va-ppc.h \
-    $(srcdir)/ginclude/proto.h $(EXTRA_HEADERS)
+    $(srcdir)/ginclude/proto.h $(srcdir)/ginclude/va-sh.h $(EXTRA_HEADERS)
 
 # Target to use whe installing assert.h.  Some systems may
 # want to set this empty.
@@ -126,7 +136,7 @@ GCC_FOR_TARGET = ./xgcc -B./
 # This is used instead of ALL_CFLAGS when compiling with GCC_FOR_TARGET.
 # It omits XCFLAGS, and specifies -B./.
 # It also specifies -I./include to find, e.g., stddef.h.
-GCC_CFLAGS=$(INTERNAL_CFLAGS) $(X_CFLAGS) $(T_CFLAGS) $(CFLAGS) -I./include
+GCC_CFLAGS=$(INTERNAL_CFLAGS) $(X_CFLAGS) $(T_CFLAGS) $(CFLAGS) -I./include $(TCFLAGS)
 
 # Special flags for compiling enquire.
 # We disable optimization to make floating point more reliable.
@@ -135,17 +145,54 @@ ENQUIRE_LDFLAGS = $(LDFLAGS)
 
 # Sed command to transform gcc to installed name.  Overwritten by configure.
 program_transform_name = -e s,x,x,
-program_transform_cross_name = -e s,^,$(target)-,
+program_transform_cross_name = -e s,^,$(target_alias)-,
 
 # Tools to use when building a cross-compiler.
 # These are used because `configure' appends `cross-make'
 # to the makefile when making a cross-compiler.
 
-TARGET_TOOLPREFIX = $(tooldir)/bin/
-AR_FOR_TARGET = $(TARGET_TOOLPREFIX)ar
+# CYGNUS LOCAL: Use the tools from the build tree, if they are available.
+
+# objdir is set by configure.
+objdir = .
+
+AR_FOR_TARGET = ` \
+  if [ -f $(objdir)/../binutils/ar ] ; then \
+    echo $(objdir)/../binutils/ar ; \
+  else \
+    if [ "$(host_canonical)" = "$(target)" ] ; then \
+      echo ar; \
+    else \
+       t='$(program_transform_name)'; echo ar | sed -e '' $$t ; \
+    fi; \
+  fi`
 AR_FOR_TARGET_FLAGS = rc
-RANLIB_FOR_TARGET = $(TARGET_TOOLPREFIX)ranlib
-RANLIB_TEST_FOR_TARGET = [ -f $(TARGET_TOOLPREFIX)ranlib ]
+RANLIB_FOR_TARGET = ` \
+  if [ -f $(objdir)/../binutils/ranlib ] ; then \
+    echo $(objdir)/../binutils/ranlib ; \
+  else \
+    if [ "$(host_canonical)" = "$(target)" ] ; then \
+      echo ranlib; \
+    else \
+       t='$(program_transform_name)'; echo ranlib | sed -e '' $$t ; \
+    fi; \
+  fi`
+RANLIB_TEST_FOR_TARGET = \
+  [ -f $(RANLIB_FOR_TARGET) ] \
+  || ( [ "$(host_canonical)" = "$(target)" ] \
+       && [ -f /usr/bin/ranlib -o -f /bin/ranlib ] )
+
+# CYGNUS LOCAL: we always act like a cross-compiler, even when we're
+# compiling native.  This is because we want to use our own tools if
+# we can.  We don't just set RANLIB to a complicated expression,
+# because the top level Makefile.in might override RANLIB_FOR_TARGET.
+# These are from the FSF file "cross-make".
+AR = $(AR_FOR_TARGET)
+AR_FLAGS = $(AR_FOR_TARGET_FLAGS)
+OLDAR = $(AR_FOR_TARGET)
+OLDAR_FLAGS = $(AR_FOR_TARGET_FLAGS)
+RANLIB = $(RANLIB_FOR_TARGET)
+RANLIB_TEST = $(RANLIB_TEST_FOR_TARGET)
 
 # Dir to search for system headers.  Overridden by cross-make.
 SYSTEM_HEADER_DIR = /usr/include
@@ -164,6 +211,7 @@ PREMADE_ATTRTAB_MD = Makefile  # Guaranteed not to cmp equal to md.
 PREMADE_ATTRTAB = 
 
 target= ... `configure' substitutes actual target name here.
+target_alias= ... `configure' substitutes specified target name here.
 xmake_file= ... `configure' substitutes actual x- file name here.
 tmake_file= ... `configure' substitutes actual t- file name here.
 out_file= ... `configure' substitutes actual out file name here.
@@ -174,6 +222,7 @@ build_xm_file= ... `configure' substitutes actual build xm- file name here.
 host_xm_file= ... `configure' substitutes actual host xm- file name here.
 lang_specs_files= ... `configure' substitutes actual lang spec file names here.
 lang_options_files= ... `configure' puts actual lang options file names here.
+OBJC_THREAD_FILE= ... `configure' puts actual objc thread file name here.
 version=`sed -e 's/.*\"\([^ \"]*\)[ \"].*/\1/' < $(srcdir)/version.c`
 mainversion=`sed -e 's/.*\"\([0-9]*\.[0-9]*\).*/\1/' < $(srcdir)/version.c`
 
@@ -194,14 +243,19 @@ bindir = $(exec_prefix)/bin
 # Directory in which to put the directories used by the compiler.
 libdir = $(exec_prefix)/lib
 # Directory in which the compiler finds executables, libraries, etc.
-libsubdir = $(libdir)/gcc-lib/$(target)/$(version)
+libsubdir = $(libdir)/gcc-lib/$(target_alias)/$(version)
+# CYGNUS LOCAL: used to produce a relative $(tooldir) in gcc.o.
+unlibsubdir = ../../..
+# END CYGNUS LOCAL
 # Directory in which the compiler finds g++ includes.
-gxx_include_dir= $(libdir)/g++-include
+gxx_include_dir= $(prefix)/include/g++
+# Directory in which the old g++ header files may be found.
+old_gxx_include_dir= $(libdir)/g++-include
 # Directory to search for site-specific includes.
 includedir = $(local_prefix)/include
+# CYGNUS LOCAL: value for assertdir is different from FSF.
 # assertdir is overridden in cross-make.
-# (But this currently agrees with what is in cross-make.)
-assertdir = $(tooldir)/include
+assertdir = $(includedir)
 # where the info files go
 infodir = $(prefix)/info
 # Extension (if any) to put in installed man-page filename.
@@ -210,12 +264,19 @@ objext = .o
 exeext =
 
 # Directory in which to put man pages.
-mandir = $(prefix)/man/man1
+# CYGNUS LOCAL: define mandir and man1dir
+mandir = $(prefix)/man
+man1dir = $(mandir)/man1
 # Directory in which to find other cross-compilation tools and headers.
 # Used in install-cross.
-tooldir = $(exec_prefix)/$(target)
+tooldir = $(exec_prefix)/$(target_alias)
 # Dir for temp files.
 tmpdir = /tmp
+
+# CYGNUS LOCAL texinfo
+# Directory where texinfo.tex lives
+texidir = $(srcdir)/../texinfo
+# END CYGNUS LOCAL
 
 # Additional system libraries to link with.
 CLIB=
@@ -245,7 +306,7 @@ LIBGCC2 = libgcc2.a
 # -g1 causes output of debug info only for file-scope entities.
 # we use this here because that should be enough, and also
 # so that -g1 will be tested.
-LIBGCC2_CFLAGS = -O2 $(LIBGCC2_INCLUDES) $(GCC_CFLAGS) $(TARGET_LIBGCC2_CFLAGS) -g1
+LIBGCC2_CFLAGS = -O2 $(LIBGCC2_INCLUDES) $(GCC_CFLAGS) $(TARGET_LIBGCC2_CFLAGS) -g1 -DIN_LIBGCC2 -D__GCC_FLOAT_NOT_NEEDED
 
 # Additional options to use when compiling libgcc2.a.
 # Some targets override this to -Iinclude
@@ -289,10 +350,9 @@ EXTRA_GCC_OBJS =
 # Often this is edited directly by `configure'.
 EXTRA_HEADERS =
 
+# CYGNUS LOCAL: Always use collect2.  jason
 # Set this to `ld' to enable use of collect2.
-# USE_COLLECT2 =
-# It is convenient for configure to add the assignment at the beginning,
-# so don't override it here.
+USE_COLLECT2 = ld
 
 # List of extra C and assembler files to add to libgcc1.a.
 # Assembler files should have names ending in `.asm'.
@@ -303,6 +363,7 @@ LIB1FUNCS_EXTRA =
 LIB2FUNCS_EXTRA = 
 
 # Default float.h source to use for cross-compiler.
+# This is overidden by configure.
 CROSS_FLOAT_H=float.h-cross
 
 # Program to convert libraries.
@@ -374,11 +435,26 @@ INSTALL_TARGET=install-normal
 # Source for float.h.  Overridden by cross-make.
 FLOAT_H=float.h-nat
 
+# CYGNUS LOCAL dejagnu
+# Setup the testing framework, if you have one
+EXPECT = `if [ -f $${rootme}/../expect/expect ] ; then \
+            echo $${rootme}/../expect/expect ; \
+          else echo expect ; fi`
+
+RUNTEST = `if [ -f $${srcdir}/../dejagnu/runtest ] ; then \
+	       echo $${srcdir}/../dejagnu/runtest ; \
+	    else echo runtest; fi`
+RUNTESTFLAGS =
+# END CYGNUS LOCAL
+
 # Extra symbols for fixproto to define when parsing headers.
 FIXPROTO_DEFINES = 
 
 # Extra flags to use when compiling crt{begin,end}.o.
 CRTSTUFF_T_CFLAGS = 
+
+# Extra flags to use when compiling [m]crt0.o.
+CRT0STUFF_T_CFLAGS = 
 
 # End of variables for you to override.
 
@@ -396,6 +472,9 @@ all: all.indirect
 ####host overrides
 ####cross overrides
 ####build overrides
+# CYGNUS LOCAL --site
+####site overrides
+# END CYGNUS LOCAL
 
 # Now figure out from those variables how to compile and link.
 
@@ -406,14 +485,20 @@ all.indirect: $(ALL)
 INTERNAL_CFLAGS = $(CROSS) -DIN_GCC
 
 # This is the variable actually used when we compile.
-ALL_CFLAGS = $(INTERNAL_CFLAGS) $(X_CFLAGS) $(T_CFLAGS) $(CFLAGS) $(XCFLAGS)
+# CYGNUS LOCAL -- SCHED_CFLAGS
+ALL_CFLAGS = $(INTERNAL_CFLAGS) $(X_CFLAGS) $(T_CFLAGS) $(CFLAGS) $(XCFLAGS) $(SCHED_CFLAGS)
+# END CYGNUS LOCAL
 
 # Likewise.
 ALL_CPPFLAGS = $(CPPFLAGS) $(X_CPPFLAGS) $(T_CPPFLAGS)
 
+# CYGNUS LOCAL: USE_ALLOCA and USE_HOST_ALLOCA different from FSF.
 # Even if ALLOCA is set, don't use it if compiling with GCC.
-USE_ALLOCA= ` case "${CC}" in "${OLDCC}") echo "${ALLOCA}" ;; esac `
-USE_HOST_ALLOCA= ` case "${HOST_CC}"@"${HOST_ALLOCA}" in "${OLDCC}"@?*) echo ${HOST_PREFIX}${HOST_ALLOCA} ;; esac `
+#USE_ALLOCA= ` case "${CC}" in "${OLDCC}") echo "" ${ALLOCA} ;; esac `
+USE_ALLOCA= ${ALLOCA}
+#USE_HOST_ALLOCA= ` case "${HOST_CC}"@"${HOST_ALLOCA}" in "${OLDCC}"@?*) echo ${HOST_PREFIX}${HOST_ALLOCA} ;; esac `
+#USE_HOST_ALLOCA= ${HOST_PREFIX}${HOST_ALLOCA}
+USE_HOST_ALLOCA= ` case "${HOST_ALLOCA}" in ?*) echo ${HOST_PREFIX}${HOST_ALLOCA} ;; esac `
 USE_HOST_MALLOC= ` case "${HOST_MALLOC}" in ?*) echo ${HOST_PREFIX}${HOST_MALLOC} ;; esac `
 USE_HOST_OBSTACK= ` case "${HOST_OBSTACK}" in ?*) echo ${HOST_PREFIX}${HOST_OBSTACK} ;; esac `
 
@@ -514,15 +599,27 @@ BC_ALL = bc-arity.h bc-opcode.h bc-opname.h
 # Language-specific object files for cm3cg
 CM3CG_OBJS = c-convert.o m3.o
 
+# CYGNUS LOCAL haifa
+SCHED_PREFIX =
+SCHED_CFLAGS =
+# END CYGNUS LOCAL
+
 # Language-independent object files.
 OBJS = toplev.o version.o tree.o print-tree.o stor-layout.o fold-const.o \
- function.o stmt.o expr.o calls.o expmed.o explow.o optabs.o varasm.o \
- rtl.o print-rtl.o rtlanal.o emit-rtl.o real.o \
- dbxout.o sdbout.o dwarfout.o xcoffout.o \
+ function.o stmt.o except.o expr.o calls.o expmed.o explow.o optabs.o \
+ varasm.o rtl.o print-rtl.o rtlanal.o emit-rtl.o real.o \
+ dbxout.o sdbout.o dwarfout.o dwarf2out.o xcoffout.o \
  integrate.o jump.o cse.o loop.o unroll.o flow.o stupid.o combine.o \
  regclass.o local-alloc.o global.o reload.o reload1.o caller-save.o \
- insn-peep.o reorg.o sched.o final.o recog.o reg-stack.o \
+ $(CYGNUS-LOCAL-haifa) \
+ insn-peep.o reorg.o $(SCHED_PREFIX)sched.o final.o recog.o reg-stack.o \
  insn-opinit.o insn-recog.o insn-extract.o insn-output.o insn-emit.o \
+ $(CYGNUS-LOCAL-gcov) \
+ profile.o \
+ $(CYGNUS-LOCAL-mentoropt) \
+ shorten-life.o \
+ $(CYGNUS-LOCAL-regmove) \
+ regmove.o \
  insn-attrtab.o $(out_object_file) getpwd.o convert.o $(EXTRA_OBJS)
 
 # GEN files are listed separately, so they can be built before doing parallel
@@ -539,8 +636,9 @@ STAGESTUFF = *$(objext) insn-flags.h insn-config.h insn-codes.h \
  insn-output.c insn-recog.c insn-emit.c insn-extract.c insn-peep.c \
  insn-attr.h insn-attrtab.c insn-opinit.c \
  stamp-flags stamp-config stamp-codes \
+ $(CYGNUS-LOCAL-multilib) stamp-mlib \
  stamp-output stamp-recog stamp-emit stamp-extract stamp-peep \
- stamp-attr stamp-attrtab stamp-opinit stamp-proto stamp-crt stamp-crtS \
+ stamp-attr stamp-attrtab stamp-opinit stamp-proto stamp-crt stamp-crtS stamp-crt0 \
  genemit$(exeext) genoutput$(exeext) genrecog$(exeext) genextract$(exeext) \
  genflags$(exeext) gencodes$(exeext) genconfig$(exeext) genpeep$(exeext) \
  genattrtab$(exeext) genattr$(exeext) genopinit$(exeext) \
@@ -551,6 +649,9 @@ STAGESTUFF = *$(objext) insn-flags.h insn-config.h insn-codes.h \
  $(CCCP)$(exeext) cc1obj$(exeext) enquire$(exeext) \
  protoize$(exeext) unprotoize$(exeext) \
  specs collect2$(exeext) $(USE_COLLECT2) underscore.c \
+ $(CYGNUS-LOCAL-gcov) gcov$(exeext) *.bp \
+ $(CYGNUS-LOCAL-regmove) *.regmove \
+ $(CYGNUS-LOCAL-mentoropt) *.shorten \
  *.greg *.lreg *.combine *.flow *.cse *.jump *.rtl *.tree *.loop \
  *.dbr *.jump2 *.sched *.cse2 *.sched2 *.stack \
  *.[si] \
@@ -572,9 +673,9 @@ LIB2FUNCS = _muldi3 _divdi3 _moddi3 _udivdi3 _umoddi3 _negdi2 \
     _fixunsdfsi _fixunssfsi _fixunsdfdi _fixdfdi _fixunssfdi _fixsfdi \
     _fixxfdi _fixunsxfdi _floatdixf _fixunsxfsi \
     _fixtfdi _fixunstfdi _floatditf \
-    __gcc_bcmp _varargs _eprintf _op_new _op_vnew _new_handler _op_delete \
-    _op_vdel _bb _shtab _clear_cache _trampoline __main _exit _ctors _eh \
-    _pure
+    __gcc_bcmp _varargs __dummy _eprintf _op_new _op_vnew _new_handler \
+    _op_delete _op_vdel _bb _shtab _clear_cache _trampoline __main _exit \
+    _ctors _eh  _pure
 
 # The files that "belong" in CONFIG_H are deliberately omitted
 # because having them there would not be useful in actual practice.
@@ -614,7 +715,7 @@ BYTECODE_H = bytecode.h bc-emit.h bc-optab.h
 .SUFFIXES: .in .def
 
 Makefile: $(srcdir)/Makefile.in $(srcdir)/configure $(srcdir)/version.c \
-   $(srcdir)/config/$(xmake_file) $(srcdir)/config/$(tmake_file) \
+   $(xmake_file) $(tmake_file) \
    $(LANG_MAKEFILES)
 	cp config.status config.run
 	$(SHELL) config.run
@@ -638,8 +739,9 @@ native: config.status cpp $(LANGUAGES) $(EXTRA_PASSES) $(EXTRA_PROGRAMS) $(USE_C
 
 # Define the names for selecting languages in LANGUAGES.
 C c: cc1
-OBJC objc: cc1obj objc-runtime
-OBJECTIVE-C objective-c: cc1obj objc-runtime
+# CYGNUS LOCAL: Don't build objc-runtime.
+OBJC objc: cc1obj
+OBJECTIVE-C objective-c: cc1obj
 PROTO: proto
 M3CG m3cg: cm3cg
 
@@ -682,8 +784,9 @@ stamp-objlist: Makefile $(OBJS) $(BC_OBJS)
 # We call this executable `xgcc' rather than `gcc'
 # to avoid confusion if the current directory is in the path
 # and CC is `gcc'.  It is renamed to `gcc' when it is installed.
-xgcc: gcc.o version.o $(LIBDEPS) $(EXTRA_GCC_OBJS)
-	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ gcc.o version.o $(EXTRA_GCC_OBJS) $(LIBS)
+xgcc: gcc.o version.o choose-temp.o pexecute.o $(LIBDEPS) $(EXTRA_GCC_OBJS)
+	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ gcc.o version.o \
+	  choose-temp.o pexecute.o $(EXTRA_GCC_OBJS) $(LIBS)
 
 # Dump a specs file to make -B./ read these specs over installed ones.
 specs: xgcc
@@ -716,8 +819,12 @@ float.h-nat: enquire
 	mv tmp-float.h float.h-nat
 
 # Create a dummy float.h source for a cross-compiler.
+# ??? This isn't used anymore.  Should we create config/float-unkn.h
+# and make that the default float_format in configure?
 float.h-cross:
-	echo "#error float.h values not known for cross-compiler" > t-float.h-cross
+	echo "#ifndef	__GCC_FLOAT_NOT_NEEDED" > t-float.h-cross
+	echo "#error float.h values not known for cross-compiler" >> t-float.h-cross
+	echo "#endif" >> t-float.h-cross
 	mv t-float.h-cross float.h-cross
 
 # Used to compile enquire with standard cc, but have forgotten why.
@@ -767,6 +874,10 @@ libgcc1.cross:
 # Compile the library of arithmetic subroutines with the native compiler.
 # Don't compile it with GCC!
 # (That would cause most arithmetic functions to call themselves.)
+#
+# NOTE: If you modify these rules substantially, please be sure to
+# check at least config/i386/t-sco5 and possibly other makefile
+# fragments.
 libgcc1.a: libgcc1.c $(CONFIG_H) $(LIB1FUNCS_EXTRA) config.status
 	-rm -f tmplibgcc1.a
 # Actually build it in tmplibgcc1.a, then rename at end,
@@ -781,7 +892,7 @@ libgcc1.a: libgcc1.c $(CONFIG_H) $(LIB1FUNCS_EXTRA) config.status
 	do \
 	  echo $${name}; \
 	  rm -f $${name}$(objext); \
-	  $(OLDCC) $(CCLIBFLAGS) $(INCLUDES) -c -DL$${name} $(srcdir)/libgcc1.c; \
+	  $(OLDCC) -DIN_LIBGCC1 $(CCLIBFLAGS) $(INCLUDES) -c -DL$${name} $(srcdir)/libgcc1.c; \
 	  if [ $$? -eq 0 ] ; then true; else exit 1; fi; \
 	  mv libgcc1$(objext) $${name}$(objext); \
 	  $(OLDAR) $(OLDAR_FLAGS) tmplibgcc1.a $${name}$(objext); \
@@ -801,7 +912,7 @@ libgcc1.a: libgcc1.c $(CONFIG_H) $(LIB1FUNCS_EXTRA) config.status
 	    if [ $${name}.asm = $${file} ]; then \
 	      cp $${file} $${name}.s || exit 1; file=$${name}.s; \
 	    else true; fi; \
-	    $(OLDCC) $(CCLIBFLAGS) $(INCLUDES) -c $${file}; \
+	    $(OLDCC) -DIN_LIBGCC1 $(CCLIBFLAGS) $(INCLUDES) -c $${file}; \
 	    if [ $$? -eq 0 ] ; then true; else exit 1; fi; \
 	    $(OLDAR) $(OLDAR_FLAGS) tmplibgcc1.a $${name}$(objext); \
 	    if [ $$? -eq 0 ] ; then true; else exit 1; fi; \
@@ -847,7 +958,7 @@ libgcc1.S: libgcc1.c $(CONFIG_H) config.status
 	for name in $(LIB1FUNCS); \
 	do \
 	  echo $${name}; \
-	  $(OLDCC) $(CCLIBFLAGS) $(INCLUDES) -S -DL$${name} $(srcdir)/libgcc1.c; \
+	  $(OLDCC) -DIN_LIBGCC1 $(CCLIBFLAGS) $(INCLUDES) -S -DL$${name} $(srcdir)/libgcc1.c; \
 	  if [ $$? -eq 0 ] ; then true; else exit 1; fi; \
 	  echo '#ifdef ' L$${name} >> libgcc1.S; \
 	  cat  libgcc1.s >> libgcc1.S; \
@@ -938,9 +1049,16 @@ libgcc.a: $(LIBGCC1) $(LIBGCC2)
 # Use the genmultilib shell script to generate the information the gcc
 # driver program needs to select the library directory based on the
 # switches.
-multilib.h: $(srcdir)/genmultilib Makefile
-	$(SHELL) $(srcdir)/genmultilib "$(MULTILIB_OPTIONS)" \
-	  "$(MULTILIB_DIRNAMES)" "$(MULTILIB_MATCHES)" > multilib.h
+multilib.h: stamp-mlib; @true
+stamp-mlib: $(srcdir)/genmultilib Makefile
+	$(SHELL) $(srcdir)/genmultilib \
+	  "$(MULTILIB_OPTIONS)" \
+	  "$(MULTILIB_DIRNAMES)" \
+	  "$(MULTILIB_MATCHES)" \
+	  "$(MULTILIB_EXCEPTIONS)" \
+	  "$(MULTILIB_EXTRA_OPTS)" > tmp-mlib.h
+	$(srcdir)/move-if-change tmp-mlib.h multilib.h
+	touch stamp-mlib
 
 # Build multiple copies of libgcc.a, one for each target switch.
 stmp-multilib: $(LIBGCC1) libgcc2.c libgcc2.ready $(CONFIG_H) \
@@ -994,7 +1112,7 @@ stmp-multilib-sub:
 objc-runtime: libobjc.a
 
 # Build the Objective C runtime library.
-libobjc.a: cc1obj stmp-int-hdrs libgcc2.ready $(USE_COLLECT2) $(EXTRA_PARTS)
+libobjc.a: cc1obj specs stmp-int-hdrs libgcc2.ready $(USE_COLLECT2) $(EXTRA_PARTS)
 	if [ -d objc ]; then true; else mkdir objc; fi
 	thisdir1=`pwd`; \
 	srcdir1=`cd $(srcdir); pwd`; \
@@ -1002,20 +1120,20 @@ libobjc.a: cc1obj stmp-int-hdrs libgcc2.ready $(USE_COLLECT2) $(EXTRA_PARTS)
 	$(MAKE) -f $${srcdir1}/objc/Makefile libobjc.a \
 	  srcdir=$${srcdir1} tooldir=$(tooldir) AR="$(AR)" AR_FLAGS="$(AR_FLAGS)" \
 	  GCC_FOR_TARGET="$${thisdir1}/xgcc -B$${thisdir1}/" \
-	  GCC_CFLAGS="$(GCC_CFLAGS)"
+	  GCC_CFLAGS="$(GCC_CFLAGS)" OBJC_THREAD_FILE="$(OBJC_THREAD_FILE)"
 	-rm -f libobjc.a
 	ln objc/libobjc.a . >/dev/null 2>&1 || cp objc/libobjc.a .
 	-if $(RANLIB_TEST) ; then $(RANLIB) libobjc.a; else true; fi
 
 # This is used by objc/Makefile if the user runs that directly.
-sublibobjc.a: cc1obj stmp-int-hdrs libgcc2.ready
+sublibobjc.a: cc1obj specs stmp-int-hdrs libgcc2.ready
 	thisdir1=`pwd`; \
 	srcdir1=`cd $(srcdir); pwd`; \
 	cd objc; \
 	$(MAKE) -f $$srcdir1/objc/Makefile libobjc.a \
 	  srcdir=$$srcdir1 tooldir=$(tooldir) AR="$(AR)" AR_FLAGS="$(AR_FLAGS)" \
 	  GCC_FOR_TARGET="$$thisdir1/xgcc -B$$thisdir1/" \
-	  GCC_CFLAGS="$(GCC_CFLAGS)"
+	  GCC_CFLAGS="$(GCC_CFLAGS)" OBJC_THREAD_FILE="$(OBJC_THREAD_FILE)"
 
 # Compile two additional files that are linked with every program
 # linked using GCC on systems using COFF or ELF, for the sake of C++
@@ -1030,8 +1148,7 @@ stamp-crt:	crtstuff.c $(GCC_PASSES) $(CONFIG_H) gbl-ctors.h
 	mv crtstuff$(objext) crtbegin$(objext)
 	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(INCLUDES) $(CRTSTUFF_T_CFLAGS) \
 	  -DCRT_END -finhibit-size-directive -fno-inline-functions \
-	  -g0 -c $(srcdir)/crtstuff.c
-	mv crtstuff$(objext) crtend$(objext)
+	  -g0 -c $(srcdir)/crtstuff.c -o crtend$(objext)
 	touch stamp-crt
 
 # On some systems we also want to install versions of these files
@@ -1039,15 +1156,25 @@ stamp-crt:	crtstuff.c $(GCC_PASSES) $(CONFIG_H) gbl-ctors.h
 crtbeginS.o crtendS.o: stamp-crtS ; @true
 
 stamp-crtS:	crtstuff.c $(GCC_PASSES) $(CONFIG_H) gbl-ctors.h
-	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(INCLUDES) $(CRTSTUFF_T_CFLAGS) \
+	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(INCLUDES) $(CRTSTUFF_T_CFLAGS_S) \
 	  -DCRT_BEGIN -finhibit-size-directive -fno-inline-functions \
-	  -g0 -c $(srcdir)/crtstuff.c -fPIC
+	  -g0 -c $(srcdir)/crtstuff.c 
 	mv crtstuff$(objext) crtbeginS$(objext)
-	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(INCLUDES) $(CRTSTUFF_T_CFLAGS) \
+	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(INCLUDES) $(CRTSTUFF_T_CFLAGS_S) \
 	  -DCRT_END -finhibit-size-directive -fno-inline-functions \
-	  -g0 -c $(srcdir)/crtstuff.c -fPIC
-	mv crtstuff$(objext) crtendS$(objext)
+	  -g0 -c $(srcdir)/crtstuff.c -o crtendS$(objext)
 	touch stamp-crtS
+
+# Compile the start modules crt0.o and mcrt0.o that are linked with every program
+crt0.o: stamp-crt0 ; @true
+mcrt0.o: stamp-crt0; @true
+
+stamp-crt0:	$(CRT0_S) $(MCRT0_S) $(GCC_PASSES) $(CONFIG_H)
+	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(CRT0STUFF_T_CFLAGS) \
+	  -o crt0.o -c $(CRT0_S)
+	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(CRT0STUFF_T_CFLAGS) \
+	  -o mcrt0.o -c $(MCRT0_S)
+	touch stamp-crt0
 
 # Compiling object files from source files.
 
@@ -1056,19 +1183,28 @@ stamp-crtS:	crtstuff.c $(GCC_PASSES) $(CONFIG_H) gbl-ctors.h
 
 # C language specific files.
 
-c-parse.o : $(srcdir)/c-parse.c $(CONFIG_H) $(TREE_H) c-lex.h \
-    $(srcdir)/c-parse.h c-tree.h input.h flags.h
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) -c $(srcdir)/c-parse.c
-$(srcdir)/c-parse.h: $(srcdir)/c-parse.c
-$(srcdir)/c-parse.c: $(srcdir)/c-parse.y
-	cd $(srcdir); $(BISON) $(BISONFLAGS) -d c-parse.y -o c-parse.c
-$(srcdir)/c-parse.y: c-parse.in
+# CYGNUS LOCAL: built in build directory
+c-parse.o : c-parse.c $(CONFIG_H) $(TREE_H) c-lex.h c-parse.h \
+    c-tree.h input.h flags.h
+	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) -c c-parse.c
+c-parse.h : c-parse.c
+# CYGNUS LOCAL dje prefix attributes
+c-parse.c : c-parse.y
+	@echo expect 45 shift/reduce conflicts.
+	$(BISON) $(BISONFLAGS) -d c-parse.y
+	mv -f y.tab.c c-parse.c
+	mv -f y.tab.h c-parse.h
+#	for GDB debugging
+	cp c-parse.c y.tab.c
+c-parse.y : $(srcdir)/c-parse.in
+	echo '/*WARNING: This file is automatically generated!*/' >tmp-c-parse.y
 	sed -e "/^ifobjc$$/,/^end ifobjc$$/d" \
 	  -e "/^ifc$$/d" -e "/^end ifc$$/d" \
-	  $(srcdir)/c-parse.in >tmp-c-parse.y
-	$(srcdir)/move-if-change tmp-c-parse.y $(srcdir)/c-parse.y
+	  $(srcdir)/c-parse.in >>tmp-c-parse.y
+	$(srcdir)/move-if-change tmp-c-parse.y c-parse.y
 
-$(srcdir)/c-gperf.h: c-parse.gperf
+# CYGNUS LOCAL: c-gperf.h really depends on c-parse.gperf.
+$(srcdir)/c-gperf.h:
 	gperf -p -j1 -i 1 -g -o -t -G -N is_reserved_word -k1,3,$$ \
 	   $(srcdir)/c-parse.gperf >tmp-gperf.h
 	 $(srcdir)/move-if-change tmp-gperf.h $(srcdir)/c-gperf.h
@@ -1076,8 +1212,9 @@ $(srcdir)/c-gperf.h: c-parse.gperf
 c-decl.o : c-decl.c $(CONFIG_H) $(TREE_H) c-tree.h c-lex.h flags.h output.h
 c-typeck.o : c-typeck.c $(CONFIG_H) $(TREE_H) c-tree.h flags.h output.h
 c-lang.o : c-lang.c $(CONFIG_H) $(TREE_H)
-c-lex.o : c-lex.c $(CONFIG_H) $(TREE_H) c-lex.h c-tree.h $(srcdir)/c-parse.h \
-    input.h flags.h $(srcdir)/c-gperf.h c-pragma.h
+# CYGNUS LOCAL: built in build directory
+c-lex.o : c-lex.c $(CONFIG_H) $(TREE_H) c-lex.h c-tree.h c-parse.h \
+    input.h flags.h c-gperf.h c-pragma.h
 c-aux-info.o : c-aux-info.c  $(CONFIG_H) $(TREE_H) c-tree.h flags.h
 c-convert.o : c-convert.c $(CONFIG_H) $(TREE_H) flags.h
 c-pragma.o: c-pragma.c $(CONFIG_H) $(TREE_H) c-pragma.h
@@ -1089,17 +1226,23 @@ ld: collect2
 	ln collect2$(exeext) ld$(exeext) > /dev/null 2>&1 \
 	   || cp collect2$(exeext) ld$(exeext)
 
-collect2 : collect2.o cplus-dem.o underscore.o version.o $(LIBDEPS)
+# CYGNUS LOCAL: tlink etc.  jason
+collect2: collect2.o tlink.o hash.o cplus-dem.o underscore.o version.o \
+	choose-temp.o $(LIBDEPS)
 # Don't try modifying collect2 (aka ld) in place--it might be linking this.
 	-rm -f collect2$(exeext)
-	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ collect2.o \
-	  cplus-dem.o underscore.o version.o $(LIBS)
+	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ collect2.o tlink.o hash.o \
+	  cplus-dem.o underscore.o version.o choose-temp.o $(LIBS)
 
 collect2.o : collect2.c $(CONFIG_H) gstab.h obstack.h demangle.h
 	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES)  \
-	-DTARGET_MACHINE=\"$(target)\" $(MAYBE_USE_COLLECT2) \
+	-DTARGET_MACHINE=\"$(target_alias)\" $(MAYBE_USE_COLLECT2) \
 	-c `echo $(srcdir)/collect2.c | sed 's,^\./,,'`
 
+# CYGNUS LOCAL: tlink etc.  jason
+tlink.o: tlink.c demangle.h hash.h $(CONFIG_H)
+hash.o: hash.c hash.h
+# END CYGNUS LOCAL
 cplus-dem.o: cplus-dem.c demangle.h
 
 underscore.c: stamp-under ; @true
@@ -1119,19 +1262,24 @@ stamp-under: $(GCC_PASSES)
 
 # Objective C language specific files.
 
-objc-parse.o : $(srcdir)/objc-parse.c $(CONFIG_H) $(TREE_H) c-lex.h \
+# CYGNUS LOCAL: built in build directory
+objc-parse.o : objc-parse.c $(CONFIG_H) $(TREE_H) c-lex.h \
    c-tree.h input.h flags.h objc-act.h
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) -c $(srcdir)/objc-parse.c
-$(srcdir)/objc-parse.c : $(srcdir)/objc-parse.y
-	cd $(srcdir); $(BISON) $(BISONFLAGS) objc-parse.y -o objc-parse.c
-$(srcdir)/objc-parse.y: $(srcdir)/c-parse.in
+	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) -c objc-parse.c
+# CYGNUS LOCAL dje prefix attributes
+objc-parse.c : objc-parse.y
+	@echo expect 62 shift/reduce conflicts.
+	$(BISON) $(BISONFLAGS) objc-parse.y
+	mv -f y.tab.c objc-parse.c
+objc-parse.y : $(srcdir)/c-parse.in
+	echo '/*WARNING: This file is automatically generated!*/' >tmp-c-parse.y
 	sed -e "/^ifc$$/,/^end ifc$$/d" \
 	  -e "/^ifobjc$$/d" -e "/^end ifobjc$$/d" \
-	  $(srcdir)/c-parse.in >tmp-objc-prs.y
-	$(srcdir)/move-if-change tmp-objc-prs.y $(srcdir)/objc-parse.y
+	  $(srcdir)/c-parse.in >>tmp-objc-prs.y
+	$(srcdir)/move-if-change tmp-objc-prs.y objc-parse.y
 
 objc-act.o : objc-act.c $(CONFIG_H) $(TREE_H) $(RTL_H) c-tree.h c-lex.h \
-   flags.h objc-act.h input.h function.h $(srcdir)/c-parse.h
+   flags.h objc-act.h input.h function.h c-parse.h
 
 # A file used by all variants of C.
 
@@ -1143,32 +1291,38 @@ m3.o : m3.c m3cg.h $(CONFIG_H) $(RTL_H) $(TREE_H) input.h flags.h insn-codes.h e
 
 # Language-independent files.
 
+# CYGNUS LOCAL: We use relative paths for TOOLDIR_BASE_PREFIX and
+# STANDARD_STARTFILE_PREFIX so that we can move the installed tree.
 gcc.o: gcc.c $(CONFIG_H) multilib.h config.status $(lang_specs_files)
 	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) \
-  -DSTANDARD_STARTFILE_PREFIX=\"$(libdir)/\" \
+  -DSTANDARD_STARTFILE_PREFIX=\"$(unlibsubdir)/\" \
   -DSTANDARD_EXEC_PREFIX=\"$(libdir)/gcc-lib/\" \
   -DDEFAULT_TARGET_VERSION=\"$(version)\" \
-  -DDEFAULT_TARGET_MACHINE=\"$(target)\" \
-  -DTOOLDIR_BASE_PREFIX=\"$(exec_prefix)/\" \
-  $(MAYBE_TARGET_DEFAULT) \
+  -DDEFAULT_TARGET_MACHINE=\"$(target_alias)\" \
+  -DTOOLDIR_BASE_PREFIX=\"$(unlibsubdir)/../\" \
   -c `echo $(srcdir)/gcc.c | sed 's,^\./,,'`
 
 dumpvers: dumpvers.c
 
 version.o: version.c
 obstack.o: obstack.c
+choose-temp.o: choose-temp.c
+pexecute.o: pexecute.c
 
 convert.o: convert.c $(CONFIG_H) $(TREE_H) flags.h convert.h
 
 tree.o : tree.c $(CONFIG_H) $(TREE_H) flags.h function.h
+# CYGNUS LOCAL mentoropt/law
+shorten-life.o: shorten-life.c $(CONFIG_H) $(RTL_H) basic-block.h regs.h
+# END CYGNUS LOCAL
 print-tree.o : print-tree.c $(CONFIG_H) $(TREE_H)
 stor-layout.o : stor-layout.c $(CONFIG_H) $(TREE_H) flags.h function.h
 fold-const.o : fold-const.c $(CONFIG_H) $(TREE_H) flags.h 
 toplev.o : toplev.c $(CONFIG_H) $(TREE_H) $(RTL_H) bytecode.h bc-emit.h \
    flags.h input.h insn-attr.h xcoffout.h defaults.h output.h \
    $(lang_options_files)
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) \
-	  $(MAYBE_TARGET_DEFAULT) $(MAYBE_USE_COLLECT2) \
+	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $(MAYBE_USE_COLLECT2) \
+	  -DTARGET_NAME=\"$(target_alias)\" \
 	  -c `echo $(srcdir)/toplev.c | sed 's,^\./,,'`
 
 rtl.o : rtl.c $(CONFIG_H) $(RTL_H)
@@ -1181,15 +1335,18 @@ varasm.o : varasm.c $(CONFIG_H) $(TREE_H) $(RTL_H) flags.h function.h \
    output.h bytecode.h c-pragma.h
 function.o : function.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h function.h  \
    insn-flags.h insn-codes.h expr.h regs.h hard-reg-set.h insn-config.h \
-   recog.h output.h bytecode.h
+   recog.h output.h bytecode.h bc-emit.h
 stmt.o : stmt.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h function.h  \
-   insn-flags.h insn-config.h insn-codes.h hard-reg-set.h expr.h loop.h \
-   recog.h bytecode.h bc-typecd.h bc-typecd.def bc-opcode.h bc-optab.h \
-   bc-emit.h
+   insn-flags.h insn-config.h insn-codes.h hard-reg-set.h expr.h except.h \
+   loop.h recog.h bytecode.h bc-typecd.h bc-typecd.def bc-opcode.h \
+   bc-optab.h bc-emit.h
+except.o : except.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h function.h  \
+   insn-flags.h insn-codes.h expr.h regs.h hard-reg-set.h insn-config.h \
+   recog.h output.h except.h
 expr.o : expr.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h function.h regs.h \
    insn-flags.h insn-codes.h expr.h insn-config.h recog.h output.h \
    typeclass.h bytecode.h bc-opcode.h bc-typecd.h bc-typecd.def bc-optab.h \
-   bc-emit.h modemap.def
+   bc-emit.h modemap.def hard-reg-set.h
 calls.o : calls.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h expr.h insn-codes.h \
    insn-flags.h
 expmed.o : expmed.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h  \
@@ -1204,6 +1361,8 @@ sdbout.o : sdbout.c $(CONFIG_H) $(TREE_H) $(RTL_H) gsyms.h flags.h \
    insn-config.h reload.h
 dwarfout.o : dwarfout.c $(CONFIG_H) $(TREE_H) $(RTL_H) dwarf.h flags.h \
    insn-config.h reload.h output.h defaults.h
+dwarf2out.o : dwarf2out.c $(CONFIG_H) $(TREE_H) $(RTL_H) dwarf2.h flags.h \
+   insn-config.h reload.h output.h defaults.h hard-reg-set.h regs.h
 xcoffout.o : xcoffout.c $(CONFIG_H) $(TREE_H) $(RTL_H) xcoffout.h flags.h
 emit-rtl.o : emit-rtl.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h \
    function.h regs.h insn-config.h insn-codes.h real.h expr.h bytecode.h \
@@ -1212,7 +1371,7 @@ real.o : real.c $(CONFIG_H) $(TREE_H)
 getpwd.o : getpwd.c $(CONFIG_H)
 
 integrate.o : integrate.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h integrate.h \
-   insn-flags.h insn-config.h insn-codes.h expr.h real.h function.h \
+   insn-flags.h insn-config.h insn-codes.h expr.h real.h regs.h function.h \
    bytecode.h
 
 jump.o : jump.c $(CONFIG_H) $(RTL_H) flags.h hard-reg-set.h regs.h \
@@ -1221,6 +1380,9 @@ stupid.o : stupid.c $(CONFIG_H) $(RTL_H) regs.h hard-reg-set.h flags.h
 
 cse.o : cse.c $(CONFIG_H) $(RTL_H) regs.h hard-reg-set.h flags.h real.h \
    insn-config.h recog.h
+# CYGNUS LOCAL: gcov
+profile.o : profile.c $(CONFIG_H) $(RTL_H) flags.h insn-flags.h
+# END CYGNUS LOCAL
 loop.o : loop.c $(CONFIG_H) $(RTL_H) flags.h loop.h insn-config.h \
    insn-flags.h insn-codes.h regs.h hard-reg-set.h recog.h expr.h real.h
 unroll.o : unroll.c $(CONFIG_H) $(RTL_H) insn-config.h insn-codes.h \
@@ -1230,6 +1392,10 @@ flow.o : flow.c $(CONFIG_H) $(RTL_H) flags.h insn-config.h \
 combine.o : combine.c $(CONFIG_H) $(RTL_H) flags.h  \
    insn-config.h insn-flags.h insn-codes.h insn-attr.h regs.h expr.h \
    basic-block.h recog.h real.h hard-reg-set.h
+# CYGNUS LOCAL: regmove
+regmove.o : regmove.c $(CONFIG_H) $(RTL_H) insn-config.h recog.h \
+   output.h reload.h regs.h
+# END CYGNUS LOCAL
 regclass.o : regclass.c $(CONFIG_H) $(RTL_H) hard-reg-set.h flags.h \
    basic-block.h regs.h insn-config.h recog.h reload.h real.h bytecode.h
 local-alloc.o : local-alloc.c $(CONFIG_H) $(RTL_H) flags.h basic-block.h \
@@ -1248,16 +1414,16 @@ caller-save.o : caller-save.c $(CONFIG_H) $(RTL_H) flags.h \
 reorg.o : reorg.c $(CONFIG_H) $(RTL_H) conditions.h hard-reg-set.h \
    basic-block.h regs.h insn-config.h insn-attr.h insn-flags.h recog.h \
    flags.h output.h
-sched.o : sched.c $(CONFIG_H) $(RTL_H) basic-block.h regs.h hard-reg-set.h \
+$(SCHED_PREFIX)sched.o : $(SCHED_PREFIX)sched.c $(CONFIG_H) $(RTL_H) basic-block.h regs.h hard-reg-set.h \
    flags.h insn-config.h insn-attr.h
 final.o : final.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h regs.h \
-   recog.h conditions.h insn-config.h insn-attr.h real.h output.h \
+   recog.h conditions.h insn-config.h insn-attr.h except.h real.h output.h \
    hard-reg-set.h insn-flags.h insn-codes.h gstab.h xcoffout.h defaults.h
 recog.o : recog.c $(CONFIG_H) $(RTL_H)  \
    regs.h recog.h hard-reg-set.h flags.h insn-config.h insn-attr.h \
    insn-flags.h insn-codes.h real.h
 reg-stack.o : reg-stack.c $(CONFIG_H) $(RTL_H) $(TREE_H) \
-   regs.h hard-reg-set.h flags.h insn-config.h
+   regs.h hard-reg-set.h flags.h insn-config.h insn-flags.h
 
 $(out_object_file): $(out_file) $(CONFIG_H) $(TREE_H) \
    $(RTL_H) regs.h hard-reg-set.h real.h insn-config.h conditions.h \
@@ -1561,14 +1727,16 @@ bi-opname: bi-opname.o $(BI_OBJ) $(HOST_LIBDEPS)
 	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
 	 bi-opname.o $(BI_OBJ) $(HOST_LIBS)
 
-$(srcdir)/bi-parser.h: $(srcdir)/bi-parser.c
-$(srcdir)/bi-parser.c: $(srcdir)/bi-parser.y
-	cd $(srcdir); $(BISON) $(BISONFLAGS) -d bi-parser.y -o bi-parser.c
-
-bi-parser.o: $(srcdir)/bi-parser.c bi-defs.h $(build_xm_file)
+# CYGNUS LOCAL: built in build directory
+bi-parser.h: bi-parser.c
+bi-parser.c: $(srcdir)/bi-parser.y
+	$(BISON) $(BISONFLAGS) -d $(srcdir)/bi-parser.y
+	mv -f y.tab.c bi-parser.c
+	mv -f y.tab.h bi-parser.h
+bi-parser.o: bi-parser.c bi-defs.h $(build_xm_file)
 	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) \
-	   $(srcdir)/bi-parser.c
-bi-lexer.o: bi-lexer.c $(srcdir)/bi-parser.h $(build_xm_file)
+	   bi-parser.c
+bi-lexer.o: $(srcdir)/bi-lexer.c bi-parser.h $(build_xm_file)
 	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) \
 	   $(srcdir)/bi-lexer.c
 bi-arity.o: bi-arity.c bi-defs.h $(build_xm_file)
@@ -1604,6 +1772,11 @@ stamp-bcopname : $(srcdir)/bytecode.def bi-opname $(srcdir)/move-if-change
 
 bytecode.mostlyclean:
 	-rm -f bc-arity.h bc-opcode.h bc-opname.h
+# CYGNUS LOCAL: built in build directory
+# Delete these files here instead of in realclean because they are now created
+# in the build subdirectories.
+	-rm -f bi-parser.c bi-parser.h
+# END CYGNUS LOCAL
 
 bytecode.distclean bytecode.clean:	bytecode.mostlyclean
 	-rm -f bi-arity bi-opcode bi-opname bi-lexer
@@ -1622,20 +1795,25 @@ cpp: $(CCCP)
 cccp: cccp.o cexp.o version.o $(LIBDEPS)
 	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ cccp.o cexp.o \
 	  version.o $(LIBS)
-cexp.o: $(srcdir)/cexp.c $(CONFIG_H)
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) -c $(srcdir)/cexp.c
-$(srcdir)/cexp.c: $(srcdir)/cexp.y
-	cd $(srcdir); $(BISON) -o cexp.c cexp.y
-
+# CYGNUS LOCAL: built in build directory
+cexp.o: cexp.c $(CONFIG_H)
+	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) -c cexp.c
+cexp.c: $(srcdir)/cexp.y
+	$(BISON) $(BISONFLAGS) $(srcdir)/cexp.y
+	mv -f y.tab.c cexp.c
 cccp.o: cccp.c $(CONFIG_H) pcp.h version.c config.status
 # The reason we use $(libdir)/g++-include rather than using libsubdir
 # is for compatibility with the current version of libg++.
+# CYGNUS LOCAL: We use $(libsubdir)/$(unlibsubdir) to match the
+# -iprefix argument which gcc will pass if GCC_EXEC_PREFIX is used.
+# CYGNUS LOCAL: CROSS_INCLUDE_DIR is in tooldir not libsubdir.
 	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) \
 	  -DGCC_INCLUDE_DIR=\"$(libsubdir)/include\" \
 	  -DGPLUSPLUS_INCLUDE_DIR=\"$(gxx_include_dir)\" \
-	  -DLOCAL_INCLUDE_DIR=\"$(includedir)\" \
-	  -DCROSS_INCLUDE_DIR=\"$(libsubdir)/sys-include\" \
-	  -DTOOL_INCLUDE_DIR=\"$(tooldir)/include\" \
+	  -DOLD_GPLUSPLUS_INCLUDE_DIR=\"$(old_gxx_include_dir)\" \
+	  -DLOCAL_INCLUDE_DIR=\"$(libsubdir)/$(unlibsubdir)/..`echo $(exec_prefix) | sed -e 's|^$(prefix)||' -e 's|/[^/]*|/..|g'`/include\" \
+	  -DCROSS_INCLUDE_DIR=\"$(libsubdir)/$(unlibsubdir)/../$(target_alias)/sys-include\" \
+	  -DTOOL_INCLUDE_DIR=\"$(libsubdir)/$(unlibsubdir)/../$(target_alias)/include\" \
 	  -c `echo $(srcdir)/cccp.c | sed 's,^\./,,'`
 
 cppmain: cppmain.o cpplib.o cpphash.o cppalloc.o cpperror.o cppexp.o \
@@ -1644,12 +1822,16 @@ cppmain: cppmain.o cpplib.o cpphash.o cppalloc.o cpperror.o cppexp.o \
 	  cppalloc.o cpperror.o cppexp.o version.o $(LIBS)
 
 cpplib.o: cpplib.c $(CONFIG_H) cpplib.h cpphash.h config.status
+# CYGNUS LOCAL: We use $(libsubdir)/$(unlibsubdir) to match the
+# -iprefix argument which gcc will pass if GCC_EXEC_PREFIX is used.
+# CYGNUS LOCAL: CROSS_INCLUDE_DIR is in tooldir not libsubdir.
 	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) \
 	  -DGCC_INCLUDE_DIR=\"$(libsubdir)/include\" \
 	  -DGPLUSPLUS_INCLUDE_DIR=\"$(gxx_include_dir)\" \
-	  -DLOCAL_INCLUDE_DIR=\"$(includedir)\" \
-	  -DCROSS_INCLUDE_DIR=\"$(libsubdir)/sys-include\" \
-	  -DTOOL_INCLUDE_DIR=\"$(tooldir)/include\" \
+	  -DOLD_GPLUSPLUS_INCLUDE_DIR=\"$(old_gxx_include_dir)\" \
+	  -DLOCAL_INCLUDE_DIR=\"$(libsubdir)/$(unlibsubdir)/..`echo $(exec_prefix) | sed -e 's|^$(prefix)||' -e 's|/[^/]*|/..|g'`/include\" \
+	  -DCROSS_INCLUDE_DIR=\"$(libsubdir)/$(unlibsubdir)/../$(target_alias)/sys-include\" \
+	  -DTOOL_INCLUDE_DIR=\"$(libsubdir)/$(unlibsubdir)/../$(target_alias)/include\" \
 	  -c `echo $(srcdir)/cpplib.c | sed 's,^\./,,'`
 
 cpperror.o: cpperror.c $(CONFIG_H) cpplib.h
@@ -1665,21 +1847,26 @@ cppalloc.o: cppalloc.c $(CONFIG_H)
 
 proto: config.status protoize unprotoize SYSCALLS.c.X
 
-protoize: protoize.o getopt.o getopt1.o getpwd.o version.o $(LIBDEPS)
+protoize: protoize.o getopt.o getopt1.o getpwd.o version.o \
+    pexecute.o choose-temp.o $(LIBDEPS)
 	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ \
-	  protoize.o getopt.o getopt1.o getpwd.o version.o $(LIBS)
+	  protoize.o getopt.o getopt1.o getpwd.o version.o \
+	  pexecute.o choose-temp.o $(LIBS)
 protoize.o: stamp-proto ; @true
 
-unprotoize: unprotoize.o getopt.o getopt1.o getpwd.o version.o $(LIBDEPS)
+unprotoize: unprotoize.o getopt.o getopt1.o getpwd.o version.o \
+    pexecute.o choose-temp.o $(LIBDEPS)
 	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ \
-	  unprotoize.o getopt.o getopt1.o getpwd.o version.o $(LIBS)
+	  unprotoize.o getopt.o getopt1.o getpwd.o version.o \
+	  pexecute.o choose-temp.o $(LIBS)
 unprotoize.o:	stamp-proto ; @true
 
+# CYGNUS LOCAL: CROSS_INCLUDE_DIR is in tooldir not libsubdir.
 stamp-proto: protoize.c getopt.h $(CONFIG_H)
 	$(CC) -c $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) \
           -DGCC_INCLUDE_DIR=\"$(libsubdir)/include\" \
 	  -DGPLUSPLUS_INCLUDE_DIR=\"$(gxx_include_dir)\" \
-          -DCROSS_INCLUDE_DIR=\"$(libsubdir)/sys-include\" \
+          -DCROSS_INCLUDE_DIR=\"$(libsubdir)/$(unlibsubdir)/../$(target_alias)/sys-include\" \
 	  -DTOOL_INCLUDE_DIR=\"$(tooldir)/include\" \
 	  -DLOCAL_INCLUDE_DIR=\"$(includedir)\" \
 	  -DSTD_PROTO_DIR=\"$(libsubdir)\" \
@@ -1688,7 +1875,7 @@ stamp-proto: protoize.c getopt.h $(CONFIG_H)
 	$(CC) -c $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) \
           -DGCC_INCLUDE_DIR=\"$(libsubdir)/include\" \
 	  -DGPLUSPLUS_INCLUDE_DIR=\"$(gxx_include_dir)\" \
-          -DCROSS_INCLUDE_DIR=\"$(libsubdir)/sys-include\" \
+          -DCROSS_INCLUDE_DIR=\"$(libsubdir)/$(unlibsubdir)/../$(target_alias)/sys-include\" \
 	  -DTOOL_INCLUDE_DIR=\"$(tooldir)/include\" \
 	  -DLOCAL_INCLUDE_DIR=\"$(includedir)\" \
 	  -DSTD_PROTO_DIR=\"$(libsubdir)\" \
@@ -1734,6 +1921,13 @@ test-protoize-simple: ./protoize ./unprotoize $(GCC_PASSES)
 	@echo Expect zero differences.
 	diff $(srcdir)/protoize.c tmp-proto.c | cat
 	-rm -f tmp-proto.[cs] tmp-proto$(objext)
+
+# CYGNUS LOCAL: gcov
+gcov.o: gcov.c
+
+gcov: gcov.o $(LIBDEPS)
+	$(CC) $(ALL_CFLAGS) $(LDFLAGS) gcov.o $(LIBS) -o $@
+# END CYGNUS LOCAL
 
 # Build the include directory.  The stamp files are stmp-* rather than
 # stamp-* so that mostlyclean does not force the include directory to
@@ -1793,6 +1987,19 @@ stmp-fixinc: $(FIXINCLUDES) gsyslimits.h
 	  cp $(srcdir)/gsyslimits.h include/syslimits.h; \
 	fi
 	chmod a+r include/syslimits.h
+# CYGNUS LOCAL: If $(SYSTEM_HEADER_DIR) is $(tooldir)/sys-include, and
+# that directory exists, then make sure that $(libsubdir) exists.
+# This is because cpp is compiled to find $(tooldir)/include via
+# $(libsubdir)/$(unlibsubdir), which will only work if $(libsubdir)
+# exists.
+	if [ "$(SYSTEM_HEADER_DIR)" = "$(tooldir)/sys-include" ] \
+	   && [ -d $(tooldir)/sys-include ]; then \
+	  if [ -d $(libdir) ] ; then true ; else mkdir $(libdir) ; fi; \
+	  if [ -d $(libdir)/gcc-lib ] ; then true ; else mkdir $(libdir)/gcc-lib ; fi; \
+	  if [ -d $(libdir)/gcc-lib/$(target_alias) ] ; then true ; else mkdir $(libdir)/gcc-lib/$(target_alias) ; fi; \
+	  if [ -d $(libdir)/gcc-lib/$(target_alias)/$(version) ] ; then true ; else mkdir $(libdir)/gcc-lib/$(target_alias)/$(version) ; fi; \
+	else true; fi
+# END CYGNUS LOCAL
 	touch stmp-fixinc
 
 # copy objc header files into build directory
@@ -1811,10 +2018,17 @@ objc-headers: stmp-fixinc
 # Files related to the fixproto script.
 
 deduced.h: $(GCC_PASSES) $(srcdir)/scan-types.sh stmp-int-hdrs
-	CC="$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(ALL_CPPFLAGS) -I. -I$(srcdir) -Iinclude -I${SYSTEM_HEADER_DIR}"; \
+# CYGNUS LOCAL: build-make/STMP_FIXPROTO
+	if [ -d $(SYSTEM_HEADER_DIR) ]; \
+	then \
+	  CC="$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(ALL_CPPFLAGS) -I. -I$(srcdir) -Iinclude -I${SYSTEM_HEADER_DIR}"; \
 	  export CC; \
-	  $(SHELL) $(srcdir)/scan-types.sh "$(srcdir)" >tmp-deduced.h
-	mv tmp-deduced.h deduced.h
+	  $(SHELL) $(srcdir)/scan-types.sh "$(srcdir)" >tmp-deduced.h; \
+	  mv tmp-deduced.h deduced.h; \
+	else \
+	  touch deduced.h; \
+	fi
+# END CYGNUS LOCAL
 
 gen-protos: gen-protos.o scan.o cppalloc.o $(HOST_LIBDEPS)
 	${HOST_CC} $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
@@ -1868,37 +2082,64 @@ stmp-fixproto: fixhdr.ready fixproto stmp-headers
 	else \
 	  : This line works around a 'make' bug in BSDI 1.1.; \
 	  FIXPROTO_DEFINES="$(FIXPROTO_DEFINES)"; export FIXPROTO_DEFINES; \
-	  $(SHELL) ${srcdir}/fixproto include include $(SYSTEM_HEADER_DIR); \
+	  : CYGNUS LOCAL: build-make/STMP_FIXPROTO; \
+	  if [ -d $(SYSTEM_HEADER_DIR) ] ; then \
+	    $(SHELL) ${srcdir}/fixproto include include $(SYSTEM_HEADER_DIR); \
+	  else true; fi; \
+	  : END CYGNUS LOCAL; \
 	  touch include/fixed; \
 	fi
 	touch stmp-fixproto
 
 # Remake the info files.
+# CYGNUS LOCAL: built in build directory
 
-doc: info
-info: $(srcdir)/cpp.info $(srcdir)/gcc.info lang.info
+doc: info INSTALL
+info: cpp.info gcc.info lang.info
 
-$(srcdir)/cpp.info: cpp.texi
-	cd $(srcdir); $(MAKEINFO) cpp.texi
+cpp.info: $(srcdir)/cpp.texi
+	$(MAKEINFO) -I$(srcdir) $(srcdir)/cpp.texi -o ./cpp.info
 
-$(srcdir)/gcc.info: gcc.texi extend.texi install.texi invoke.texi \
-		md.texi rtl.texi tm.texi 
-	cd $(srcdir); $(MAKEINFO) gcc.texi
+gcc.info: $(srcdir)/gcc.texi extend.texi install.texi invoke.texi \
+		md.texi rtl.texi tm.texi \
+		$(CYGNUS-LOCAL-gcov) gcov.texi
+	$(MAKEINFO) -I$(srcdir) $(srcdir)/gcc.texi -o ./gcc.info
 
-dvi: $(srcdir)/gcc.dvi $(srcdir)/cpp.dvi lang.dvi
+dvi: gcc.dvi cpp.dvi lang.dvi
 
-# This works with GNU Make's default rule.
-$(srcdir)/gcc.dvi: gcc.texi extend.texi install.texi invoke.texi \
-		md.texi rtl.texi tm.texi 
-	$(TEXI2DVI) $<
+gcc.dvi: $(srcdir)/gcc.texi $(srcdir)/extend.texi $(srcdir)/invoke.texi $(srcdir)/md.texi $(srcdir)/rtl.texi $(srcdir)/tm.texi \
+		$(CYGNUS-LOCAL-gcov) gcov.texi
+	TEXINPUTS=${texidir}:$(srcdir):$$TEXINPUTS tex gcc.texi
+	texindex gcc.??
+	TEXINPUTS=${texidir}:$(srcdir):$$TEXINPUTS tex gcc.texi
 
-# This works with GNU Make's default rule.
-$(srcdir)/cpp.dvi: cpp.texi
-	$(TEXI2DVI) $<
+cpp.dvi: $(srcdir)/cpp.texi
+	TEXINPUTS=${texidir}:$(srcdir):$$TEXINPUTS tex cpp.texi
+	texindex cpp.??
+	TEXINPUTS=${texidir}:$(srcdir):$$TEXINPUTS tex cpp.texi
 
-$(srcdir)/INSTALL: install1.texi install.texi
-	$(MAKEINFO) -D INSTALLONLY --no-header --no-split \
-	  `echo $(srcdir)/install1.texi | sed 's,^\./,,'`
+usegcc.dvi: usegcc.texi $(srcdir)/extend.texi $(srcdir)/invoke.texi $(srcdir)/md.texi \
+		$(CYGNUS-LOCAL-gcov) gcov.texi
+	TEXINPUTS=${texidir}:$(srcdir):$$TEXINPUTS tex usegcc.texi
+	texindex usegcc.??
+	TEXINPUTS=${texidir}:$(srcdir):$$TEXINPUTS tex usegcc.texi
+
+# CYGNUS LOCAL: don't rebuild gcc/INSTALL, ever.
+#$(srcdir)/INSTALL: install1.texi install.texi
+#	$(MAKEINFO) -I$(srcdir) -D INSTALLONLY --no-header --no-split \
+#	  $(srcdir)/install1.texi
+
+# CYGNUS LOCAL doc
+usegcc.texi: $(srcdir)/gcc.texi
+	sed 	-e '/@setfilename gcc.info/d' \
+		-e '/@c @setfilename usegcc.info/s/@c //' \
+		-e '/@set INTERNALS/s/@/@c @/' \
+		-e '/@c @clear INTERNALS/s/@c //' \
+		$(srcdir)/gcc.texi > usegcc.texi
+
+usegcc.info: usegcc.texi  $(srcdir)/extend.texi $(srcdir)/invoke.texi \
+		$(CYGNUS-LOCAL-gcov) gcov.texi
+	$(MAKEINFO) -I$(srcdir) -o usegcc.info usegcc.texi
 
 # Deletion of files made during compilation.
 # There are four levels of this:
@@ -1956,6 +2197,23 @@ mostlyclean: bytecode.mostlyclean lang.mostlyclean
 	-rm -f gcc.vrs gcc.kys gcc.tps gcc.pgs gcc.fns
 # Delete core dumps.
 	-rm -f core */core
+# CYGNUS LOCAL: built in build directory
+	-rm -f y.tab.c y.tab.h y.output
+# Delete these files here instead of in realclean because they are now created
+# in the build subdirectories.
+	-rm -f objc-parse.c objc-parse.output
+	-rm -f c-parse.c c-parse.output c-parse.h
+	-rm -f cexp.c cexp.output $(BUILD_SO1) $(BUILD_SO2) $(BUILD_SO3)
+# END CYGNUS LOCAL
+# CYGNUS LOCAL: regmove
+	-rm -f *.regmove */*.regmove
+# END CYGNUS LOCAL
+# CYGNUS LOCAL: mentoropt/meissner
+	-rm -f *.shorten */*.shorten
+# END CYGNUS LOCAL: mentoropt/meissner
+# CYGNUS LOCAL: gcov/meissner
+	-rm -f *.bp */*.bp
+# END CYGNUS LOCAL: gcov/meissner
 
 # Delete all files made by compilation
 # that don't exist in the distribution.
@@ -1981,6 +2239,9 @@ clean: mostlyclean bytecode.clean lang.clean
 	else if [ "x$(MULTILIB_OPTIONS)" != x ] ; then \
 	  rm -rf `echo $(MULTILIB_OPTIONS) | sed -e 's/\// /g'`; \
 	fi ; fi
+# CYGNUS LOCAL: built in build directory
+	-rm -f c-parse.y objc-parse.y
+# END CYGNUS LOCAL
 
 # Delete all files that users would normally create
 # while building and installing GCC.
@@ -1993,6 +2254,7 @@ distclean: clean bytecode.distclean lang.distclean
 	-rm -f objc-parse.output
 	-rm -f c-parse.output
 	-rm -f *.asm
+	-rm -f float.h
 
 # Delete anything likely to be found in the source directory
 # that shouldn't be in the distribution.
@@ -2020,6 +2282,13 @@ maintainer-clean: distclean bytecode.maintainer-clean lang.maintainer-clean
 	-rm -f cexp.c cexp.output TAGS 
 	-rm -f cpp.info* cpp.??s cpp.*aux
 	-rm -f gcc.info* gcc.??s gcc.*aux
+# CYGNUS LOCAL: Delete locally created files.
+	-rm -f *.as cp-hash.h
+# END CYGNUS LOCAL
+
+# CYGNUS LOCAL: realclean
+realclean: maintainer-clean
+# END CYGNUS LOCAL
 
 # Entry points `install' and `uninstall'.
 # Also use `install-collect2' to install collect2 when the config files don't.
@@ -2032,8 +2301,9 @@ install: $(INSTALL_TARGET) ; @true
 # Copy the compiler files into directories where they will be run.
 # Install the driver last so that the window when things are
 # broken is small.
+# CYGNUS LOCAL: install-info done separately.
 install-normal: install-common $(INSTALL_HEADERS) $(INSTALL_LIBGCC) \
-    install-libobjc install-man install-info lang.install-normal install-driver
+    install-libobjc install-man lang.install-normal install-driver
 
 # Do nothing while making gcc with a cross-compiler. The person who
 # makes gcc for the target machine has to know how to put a complete
@@ -2062,9 +2332,9 @@ install-dir:
 	-if [ -d $(libdir)/gcc-lib ] ; then true ; else mkdir $(libdir)/gcc-lib ; chmod a+rx $(libdir)/gcc-lib ; fi
 # This dir isn't currently searched by cpp.
 #	-if [ -d $(libdir)/gcc-lib/include ] ; then true ; else mkdir $(libdir)/gcc-lib/include ; chmod a+rx $(libdir)/gcc-lib/include ; fi
-	-if [ -d $(libdir)/gcc-lib/$(target) ] ; then true ; else mkdir $(libdir)/gcc-lib/$(target) ; chmod a+rx $(libdir)/gcc-lib/$(target) ; fi
-	-if [ -d $(libdir)/gcc-lib/$(target)/$(version) ] ; then true ; else mkdir $(libdir)/gcc-lib/$(target)/$(version) ; chmod a+rx $(libdir)/gcc-lib/$(target)/$(version) ; fi
-	-if [ -d $(libdir)/gcc-lib/$(target)/$(version)/include ] ; then true ; else mkdir $(libdir)/gcc-lib/$(target)/$(version)/include ; chmod a+rx $(libdir)/gcc-lib/$(target)/$(version)/include ; fi
+	-if [ -d $(libdir)/gcc-lib/$(target_alias) ] ; then true ; else mkdir $(libdir)/gcc-lib/$(target_alias) ; chmod a+rx $(libdir)/gcc-lib/$(target_alias) ; fi
+	-if [ -d $(libdir)/gcc-lib/$(target_alias)/$(version) ] ; then true ; else mkdir $(libdir)/gcc-lib/$(target_alias)/$(version) ; chmod a+rx $(libdir)/gcc-lib/$(target_alias)/$(version) ; fi
+	-if [ -d $(libdir)/gcc-lib/$(target_alias)/$(version)/include ] ; then true ; else mkdir $(libdir)/gcc-lib/$(target_alias)/$(version)/include ; chmod a+rx $(libdir)/gcc-lib/$(target_alias)/$(version)/include ; fi
 	-if [ -d $(bindir) ] ; then true ; else mkdir $(bindir) ; chmod a+rx $(bindir) ; fi
 	-if [ -d $(includedir) ] ; then true ; else mkdir $(includedir) ; chmod a+rx $(includedir) ; fi
 	-if [ -d $(tooldir) ] ; then true ; else mkdir $(tooldir) ; chmod a+rx $(tooldir) ; fi
@@ -2076,6 +2346,9 @@ install-dir:
 	-parent=`echo $(mandir)|sed -e 's@/[^/]*$$@@'`; \
 	if [ -d $$parent ] ; then true ; else mkdir $$parent ; chmod a+rx $$parent ; fi
 	-if [ -d $(mandir) ] ; then true ; else mkdir $(mandir) ; chmod a+rx $(mandir) ; fi
+# CYGNUS LOCAL: We use man1dir instead of mandir.
+	-if [ -d $(man1dir) ] ; then true ; else mkdir $(man1dir) ; chmod a+rx $(mandir) ; fi
+# END CYGNUS LOCAL
 
 # Install the compiler executables built during cross compilation.
 install-common: native install-dir $(EXTRA_PARTS) lang.install-common
@@ -2116,8 +2389,41 @@ install-common: native install-dir $(EXTRA_PARTS) lang.install-common
 	fi
 	-rm -f $(libsubdir)/cpp$(exeext)
 	$(INSTALL_PROGRAM) cpp$(exeext) $(libsubdir)/cpp$(exeext)
+# CYGNUS LOCAL: gcov
+# Install gcov if it was compiled.
+	-if [ -f gcov$(exeext) ]; \
+	then \
+	    rm -f $(bindir)/gcov$(exeext); \
+	    $(INSTALL_PROGRAM) gcov$(exeext) $(bindir)/gcov$(exeext); \
+	    chmod a+x $(bindir)/gcov$(exeext); \
+	fi
+# END CYGNUS LOCAL
+# CYGNUS LOCAL: binary installation
+# This is for the sake of binary installation.
+# If newlib exists, then we don't want to run fixincludes or fix-header.
+# Otherwise, install them if they exist and should be run.
+	if [ -d $(objdir)/../$(target_alias)/newlib ] ; then \
+	  true ; \
+	else \
+	  if [ -d $(tooldir)/install-tools ] ; then true ; else mkdir $(tooldir)/install-tools ; fi ; \
+	  if [ x$(FIXINCLUDES) != xMakefile.in ] ; then \
+	    $(INSTALL_PROGRAM) $(srcdir)/$(FIXINCLUDES) $(tooldir)/install-tools/fixincludes ; \
+	  else true; fi; \
+	  if [ -f fix-header ] ; then \
+	    $(INSTALL_PROGRAM) fix-header $(tooldir)/install-tools/fix-header ; \
+	    $(INSTALL_PROGRAM) $(srcdir)/fixproto $(tooldir)/install-tools/fixproto ; \
+	    rm -f tmp-def ; \
+	    echo "#!/bin/sh" > tmp-def ; \
+	    echo "# Print FIXPROTO_DEFINES needed by fixproto." >> tmp-def ; \
+	    echo "echo '$(FIXPROTO_DEFINES)'" >> tmp-def ; \
+	    chmod +x tmp-def ; \
+	    $(INSTALL_PROGRAM) tmp-def $(tooldir)/install-tools/fixproto-defines ; \
+	    rm -f tmp-def ; \
+	  else true; fi; \
+	fi
+# END CYGNUS LOCAL
 
-# Install the driver program as $(target)-gcc
+# Install the driver program as $(target_alias)-gcc
 # and also as either gcc (if native) or $(tooldir)/bin/gcc.
 install-driver: xgcc
 	-if [ -f gcc-cross$(exeext) ] ; then \
@@ -2130,34 +2436,55 @@ install-driver: xgcc
 	else \
 	  rm -f $(bindir)/$(GCC_INSTALL_NAME)$(exeext); \
 	  $(INSTALL_PROGRAM) xgcc$(exeext) $(bindir)/$(GCC_INSTALL_NAME)$(exeext); \
-	  rm -f $(bindir)/$(target)-gcc-1$(exeext); \
-	  ln $(bindir)/$(GCC_INSTALL_NAME)$(exeext) $(bindir)/$(target)-gcc-1$(exeext) \
+	  rm -f $(bindir)/$(target_alias)-gcc-1$(exeext); \
+	  ln $(bindir)/$(GCC_INSTALL_NAME)$(exeext) $(bindir)/$(target_alias)-gcc-1$(exeext) \
 	    > /dev/null 2>&1 \
-	    || cp $(bindir)/$(GCC_INSTALL_NAME)$(exeext) $(bindir)/$(target)-gcc-1$(exeext); \
-	  mv $(bindir)/$(target)-gcc-1$(exeext) $(bindir)/$(target)-gcc$(exeext); \
+	    || cp $(bindir)/$(GCC_INSTALL_NAME)$(exeext) $(bindir)/$(target_alias)-gcc-1$(exeext); \
+	  mv $(bindir)/$(target_alias)-gcc-1$(exeext) $(bindir)/$(target_alias)-gcc$(exeext); \
 	fi
+
+# CYGNUS LOCAL: compile-man-sysv
+# Some system V machines don't come with nroff so we'll work out the
+# pages here for them.
+compile-man-sysv:
+	for i in gcc cccp protoize unprotoize ; do \
+		nroff -man $$i.1 | col -b > $$i.t ; \
+		pack $$i.t ; rm -f $$i.t; \
+		mv $$i.t.z $$i.z ;\
+	done
+# END CYGNUS LOCAL
 
 # Install the info files.
+# CYGNUS LOCAL: Handle an arbitrary set of .info files.
 install-info: doc install-dir lang.install-info
-	-rm -f $(infodir)/cpp.info* $(infodir)/gcc.info*
-	cd $(srcdir); for f in cpp.info* gcc.info*; \
-	do $(INSTALL_DATA) $$f $(infodir)/$$f; done
-	-chmod a-x $(infodir)/cpp.info* $(infodir)/gcc.info*
+	-for i in *.info*; do \
+	  rm -f $(infodir)/$$i; \
+	  $(INSTALL_DATA) $$i $(infodir)/$$i; \
+	done
+
+# CYGNUS LOCAL: clean-info
+clean-info:
+	-rm -f *.info*
 
 # Install the man pages.
-install-man: install-dir $(srcdir)/gcc.1 $(srcdir)/cccp.1 lang.install-man
+# CYGNUS LOCAL: We use man1dir instead of mandir.
+install-man: install-dir $(srcdir)/gcc.1 $(srcdir)/cccp.1 \
+	$(srcdir)/cpp.1 lang.install-man
 	-if [ -f gcc-cross ] ; then \
-	  rm -f $(mandir)/$(GCC_CROSS_NAME)$(manext); \
-	  $(INSTALL_DATA) $(srcdir)/gcc.1 $(mandir)/$(GCC_CROSS_NAME)$(manext); \
-	  chmod a-x $(mandir)/$(GCC_CROSS_NAME)$(manext); \
+	  rm -f $(man1dir)/$(GCC_CROSS_NAME)$(manext); \
+	  $(INSTALL_DATA) $(srcdir)/gcc.1 $(man1dir)/$(GCC_CROSS_NAME)$(manext); \
+	  chmod a-x $(man1dir)/$(GCC_CROSS_NAME)$(manext); \
 	else \
-	  rm -f $(mandir)/$(GCC_INSTALL_NAME)$(manext); \
-	  $(INSTALL_DATA) $(srcdir)/gcc.1 $(mandir)/$(GCC_INSTALL_NAME)$(manext); \
-	  chmod a-x $(mandir)/$(GCC_INSTALL_NAME)$(manext); \
+	  rm -f $(man1dir)/$(GCC_INSTALL_NAME)$(manext); \
+	  $(INSTALL_DATA) $(srcdir)/gcc.1 $(man1dir)/$(GCC_INSTALL_NAME)$(manext); \
+	  chmod a-x $(man1dir)/$(GCC_INSTALL_NAME)$(manext); \
 	fi
-	-rm -f $(mandir)/cccp$(manext)
-	-$(INSTALL_DATA) $(srcdir)/cccp.1 $(mandir)/cccp$(manext)
-	-chmod a-x $(mandir)/cccp$(manext)
+	-rm -f $(man1dir)/cccp$(manext)
+	-$(INSTALL_DATA) $(srcdir)/cccp.1 $(man1dir)/cccp$(manext)
+	-chmod a-x $(man1dir)/cccp$(manext)
+	-rm -f $(man1dir)/cpp$(manext)
+	-$(INSTALL_DATA) $(srcdir)/cpp.1 $(man1dir)/cpp$(manext)
+	-chmod a-x $(man1dir)/cpp$(manext)
 
 # Install the library.
 install-libgcc: libgcc.a install-dir
@@ -2261,11 +2588,110 @@ uninstall: lang.uninstall
 	-rm -rf $(bindir)/$(GCC_CROSS_NAME)$(exeext)
 	-rm -rf $(bindir)/protoize$(exeext)
 	-rm -rf $(bindir)/unprotoize$(exeext)
-	-rm -rf $(mandir)/$(GCC_INSTALL_NAME)$(manext)
-	-rm -rf $(mandir)/$(GCC_CROSS_NAME)$(manext)
-	-rm -rf $(mandir)/cccp$(manext)
-	-rm -rf $(mandir)/protoize$(manext)
-	-rm -rf $(mandir)/unprotoize$(manext)
+# CYGNUS LOCAL: We use man1dir instead of mandir.
+	-rm -rf $(man1dir)/$(GCC_INSTALL_NAME)$(manext)
+	-rm -rf $(man1dir)/$(GCC_CROSS_NAME)$(manext)
+	-rm -rf $(man1dir)/cccp$(manext)
+	-rm -rf $(man1dir)/protoize$(manext)
+	-rm -rf $(man1dir)/unprotoize$(manext)
+	-rm -rf $(man1dir)/cpp$(manext)
+
+# CYGNUS LOCAL: dejagnu
+# These targets are for the dejagnu testsuites. The file site.exp 
+# contains global variables that all the testsuites will use.
+
+# Gets overridden to $(target_alias)/ for cross.
+target_subdir =
+
+site.exp: ./config.status Makefile
+	@echo "Making a new config file..."
+	-@rm -f ./tmp?
+	@touch site.exp
+	-@mv site.exp site.bak
+	@echo "## these variables are automatically generated by make ##" > ./tmp0
+	@echo "# Do not edit here. If you wish to override these values" >> ./tmp0
+	@echo "# add them to the last section" >> ./tmp0
+	@echo "set rootme \"`pwd`\"" >> ./tmp0
+	@echo "set srcdir \"`cd ${srcdir}; pwd`\"" >> ./tmp0
+	@echo "set host_triplet $(host_canonical)" >> ./tmp0
+	@echo "set build_triplet $(build_canonical)" >> ./tmp0
+	@echo "set target_triplet $(target)" >> ./tmp0
+	@echo "set target_alias $(target_alias)" >> ./tmp0
+# CFLAGS is set even though it's empty to show we reserve the right to set it.
+	@echo "set CFLAGS \"\"" >> ./tmp0
+	@echo "set CXXFLAGS \"-I$(objdir)/../$(target_subdir)libio -I\$$srcdir/../libg++/src -I\$$srcdir/../libio -I\$$srcdir/../libstdc++ -I\$$srcdir/../libstdc++/stl -L$(objdir)/../$(target_subdir)libg++ -L$(objdir)/../$(target_subdir)libstdc++\"" >> ./tmp0
+# If newlib has been configured, we need to pass -B to gcc so it can find
+# newlib's crt0.o if it exists.  This will cause a "path prefix not used"
+# message if it doesn't, but the testsuite is supposed to ignore the message -
+# it's too difficult to tell when to and when not to pass -B (not all targets
+# have crt0's).  We could only add the -B if ../newlib/crt0.o exists, but that
+# seems like too selective a test.
+# ??? Another way to solve this might be to rely on linker scripts.  Then
+# theoretically the -B won't be needed.
+# We also need to pass -L ../ld so that the linker can find ldscripts.
+	@if [ -d $(objdir)/../$(target_subdir)newlib ] ; then \
+	  echo "set newlib_cflags \"-I$(objdir)/../$(target_subdir)newlib/targ-include -I\$$srcdir/../newlib/libc/include\"" >> ./tmp0; \
+	  echo "set newlib_ldflags \"-B$(objdir)/../$(target_subdir)newlib/\"" >> ./tmp0; \
+	  echo "append CFLAGS \" \$$newlib_cflags\"" >> ./tmp0; \
+	  echo "append CXXFLAGS \" \$$newlib_cflags\"" >> ./tmp0; \
+	  echo "append LDFLAGS \" \$$newlib_ldflags\"" >> ./tmp0; \
+	else true; \
+	fi
+	@if [ -d $(objdir)/../ld ] ; then \
+	  echo "append LDFLAGS \" -L$(objdir)/../ld\"" >> ./tmp0; \
+	else true; \
+	fi
+	@if  [ $(build_canonical) != $(host_canonical) ] ; then \
+	  echo "set tmpdir /tmp" >> ./tmp0 ; \
+	else echo "set tmpdir $(objdir)/testsuite" >> ./tmp0 ; \
+	fi
+	@echo "set srcdir \"\$${srcdir}/testsuite\"" >> ./tmp0
+	@echo "## All variables above are generated by configure. Do Not Edit ##" >> ./tmp0
+	@cat ./tmp0 > site.exp
+	@cat site.bak | sed \
+		-e '1,/^## All variables above are.*##/ d' >> site.exp
+	-@rm -f ./tmp?
+
+CHECK_TARGETS = check-gcc check-g++
+
+check: $(CHECK_TARGETS)
+
+check-g++: site.exp
+	if [ -d testsuite ]; then \
+	  true; \
+	else \
+	  mkdir testsuite; \
+	fi
+	rm -rf testsuite/site.exp
+	cp site.exp testsuite/site.exp
+	rootme=`pwd`; export rootme; \
+	srcdir=`cd ${srcdir}; pwd` ; export srcdir ; \
+	cd testsuite; \
+	EXPECT=${EXPECT} ; export EXPECT ; \
+	if [ -f $${rootme}/../expect/expect ] ; then  \
+	   TCL_LIBRARY=$${srcdir}/../tcl/library ; \
+	    export TCL_LIBRARY ; fi ; \
+	$(RUNTEST) --tool g++ $(RUNTESTFLAGS)
+
+check-gcc: site.exp
+	if [ -d testsuite ]; then \
+	  true; \
+	else \
+	  mkdir testsuite; \
+	fi
+	rm -rf testsuite/site.exp
+	cp site.exp testsuite/site.exp
+	rootme=`pwd`; export rootme; \
+	srcdir=`cd ${srcdir}; pwd` ; export srcdir ; \
+	cd testsuite; \
+	EXPECT=${EXPECT} ; export EXPECT ; \
+	if [ -f $${rootme}/../expect/expect ] ; then  \
+	   TCL_LIBRARY=$${srcdir}/../tcl/library ; \
+	   export TCL_LIBRARY ; fi ; \
+	$(RUNTEST) --tool gcc $(RUNTESTFLAGS)
+
+# END CYGNUS LOCAL
+
 
 # These exist for maintenance purposes.
 
@@ -2296,9 +2722,8 @@ gcc.xtar: distdir
 
 # This target exists to do the initial work before the language specific
 # stuff gets done.
-distdir-start: doc $(srcdir)/INSTALL $(srcdir)/c-parse.y $(srcdir)/c-gperf.h \
-  $(srcdir)/objc-parse.y $(srcdir)/c-parse.c $(srcdir)/objc-parse.c \
-  $(srcdir)/cexp.c
+distdir-start: doc $(srcdir)/INSTALL c-parse.y $(srcdir)/c-gperf.h objc-parse.y \
+  c-parse.c objc-parse.c cexp.c
 	@if grep -s "for version ${mainversion}" gcc.texi > /dev/null; \
 	then true; \
 	else echo "You must update the version number in \`gcc.texi'"; sleep 10;\
@@ -2371,7 +2796,7 @@ bootstrap: force
 # Only build the C compiler for stage1, because that is the only one that
 # we can guarantee will build with the native compiler, and also it is the
 # only thing useful for building stage2.
-	$(MAKE) CC="$(CC)" libdir=$(libdir) LANGUAGES=c
+	$(MAKE) CC="$(CC)" libdir=$(libdir) LANGUAGES="$(BOOT_LANGUAGES)"
 	$(MAKE) stage1
 # This used to define ALLOCA as empty, but that would lead to bad results
 # for a subsequent `make install' since that would not have ALLOCA empty.

@@ -1,5 +1,5 @@
 /* Output variables, constants and external declarations, for GNU compiler.
-   Copyright (C) 1988, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1994, 1995, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -31,7 +31,7 @@ Boston, MA 02111-1307, USA.  */
 
 #undef LIB_SPEC
 #undef CPP_PREDEFINES
-#undef TARGET_VERSION
+#undef TARGET_NAME
 #undef TARGET_DEFAULT
 #undef CALL_USED_REGISTERS
 #undef MAYBE_VMS_FUNCTION_PROLOGUE
@@ -46,9 +46,10 @@ Boston, MA 02111-1307, USA.  */
 
 /* These match the definitions used in VAXCRTL, the VMS C run-time library */
 
-#define SIZE_TYPE "unsigned int"
-#define PTRDIFF_TYPE "int"
+#define SIZE_TYPE	"unsigned int"
+#define PTRDIFF_TYPE	"int"
 #define WCHAR_TYPE	"unsigned int"
+#define WCHAR_TYPE_SIZE	32	/* in bits */
 
 /* Use memcpy for structure copying, and so forth.  */
 #define TARGET_MEM_FUNCTIONS
@@ -62,7 +63,7 @@ Boston, MA 02111-1307, USA.  */
 #define DOLLARS_IN_IDENTIFIERS 2
 
 #define TARGET_DEFAULT 1
-#define TARGET_VERSION fprintf (stderr, " (vax vms)");
+#define TARGET_NAME "vax/vms"
 
 /* The structure return address arrives as an "argument" on VMS.  */
 #undef STRUCT_VALUE_REGNUM
@@ -184,11 +185,7 @@ Boston, MA 02111-1307, USA.  */
    is explicitly defined, then ASM_FINISH_DECLARE_OBJECT will be used.  */
 
 #define ASM_DECLARE_OBJECT_NAME(ASM_OUT_FILE,NAME,DECL)		\
-{ if (output_bytecode)						\
-    BC_OUTPUT_LABEL ((ASM_OUT_FILE), (NAME));				\
-  else								\
-    ASM_OUTPUT_LABEL ((ASM_OUT_FILE), (NAME));			\
-}
+  ASM_OUTPUT_LABEL ((ASM_OUT_FILE), (NAME))
 
 /* We don't need to do anything special to finish the current object, but it
    should now be safe to output any deferred external global declarations.  */

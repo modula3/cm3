@@ -1,5 +1,5 @@
 /* Compilation switch flag definitions for GNU CC.
-   Copyright (C) 1987, 1988, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1988, 1994, 1995, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -131,6 +131,20 @@ extern int profile_flag;
 /* Nonzero if generating code to do profiling on the basis of basic blocks.  */
 
 extern int profile_block_flag;
+
+/* CYGNUS LOCAL: gcov */
+/* Nonzero if generating code to profile program flow graph arcs. */
+
+extern int profile_arc_flag;
+
+/* Nonzero if generating info for gcov to calculate line test coverage. */
+
+extern int flag_test_coverage;
+
+/* Nonzero indicates that branch taken probabilities should be calculated. */
+
+extern int flag_branch_probabilities;
+/* END CYGNUS LOCAL */
 
 /* Nonzero for -pedantic switch: warn about anything
    that standard C forbids.  */
@@ -291,6 +305,32 @@ extern int flag_shared_data;
 extern int flag_schedule_insns;
 extern int flag_schedule_insns_after_reload;
 
+/* CYGNUS LOCAL -- Haifa scheduler */
+#ifdef HAIFA
+/* the following flags have effect only under scheduling before local_alloc.
+   flag_schedule_interblock means schedule insns accross basic blocks.
+   flag_schedule_speculative means allow speculative motion of non-load insns.
+   flag_schedule_speculative_load means allow speculative motion of some load insns.
+   flag_schedule_speculative_load_dangerous allows speculative motion of more load insns.
+   flag_schedule_reverse_before_reload means try to reverse original order of insns (S).
+   flag_schedule_reverse_after_reload means try to reverse original order of insns (R).
+   */
+
+extern int flag_schedule_interblock;
+extern int flag_schedule_speculative;
+extern int flag_schedule_speculative_load;
+extern int flag_schedule_speculative_load_dangerous;
+extern int flag_schedule_reverse_before_reload;
+extern int flag_schedule_reverse_after_reload;
+
+
+/* flag_on_branch_count_reg means try to replace add-1,compare,branch tupple by a 
+   cheaper branch, on a count register. */
+   
+extern int flag_branch_on_count_reg;
+#endif	/* HAIFA */
+/* END CYGNUS LOCAL -- Haifa scheduler */
+
 /* Nonzero means put things in delayed-branch slots if supported. */
 
 extern int flag_delayed_branch;
@@ -315,7 +355,13 @@ extern int flag_pedantic_errors;
 
 extern int flag_pic;
 
-/* Nonzero means place uninitialized global data in the bss section.  */
+/* Nonzero means generate extra code for exception handling and enable
+   exception handling.  */
+
+extern int flag_exceptions;
+
+/* Nonzero means don't place uninitialized global data in common storage
+   by default.  */
 
 extern int flag_no_common;
 
@@ -325,19 +371,59 @@ extern int flag_no_common;
    needed for crtstuff.c on other systems.  */
 extern int flag_inhibit_size_directive;
 
+/* CYGNUS LOCAL mentoropt/law */
+/* Nonzero for -fshorten-lifetimes:
+   shorten lifetimes of certain registers to reduce spillage during reload.  */
+extern int flag_shorten_lifetimes;
+/* END CYGNUS LOCAL */
+
+/* Nonzero means place each function into its own section on those platforms
+   which support arbitrary section names and unlimited numbers of sections.  */
+
+extern int flag_function_sections;
+
 /* -fverbose-asm causes extra commentary information to be produced in
    the generated assembly code (to make it more readable).  This option
    is generally only of use to those who actually need to read the
-   generated assembly code (perhaps while debugging the compiler itself).  */
+   generated assembly code (perhaps while debugging the compiler itself).
+   -fverbose-asm is the default.  -fno-verbose-asm causes the extra information
+   to not be added and is useful when comparing two assembler files.  */
 
 extern int flag_verbose_asm;
+
+/* -dA causes debug information to be produced in
+   the generated assembly code (to make it more readable).  This option
+   is generally only of use to those who actually need to read the
+   generated assembly code (perhaps while debugging the compiler itself).
+   Currently, this switch is only used by dwarfout.c; however, it is intended
+   to be a catchall for printing debug information in the assembler file.  */
+
+extern int flag_debug_asm;
 
 /* -fgnu-linker specifies use of the GNU linker for initializations.
    -fno-gnu-linker says that collect will be used.  */
 extern int flag_gnu_linker;
 
+/* CYGNUS LOCAL unaligned-struct-hack */
+/* This is a hack.  Disable the effect of SLOW_BYTE_ACCESS, so that references
+   to aligned fields inside of unaligned structures can work.  That is, we
+   want to always access fields with their declared size, because using a
+   larger load may result in an unaligned access.  This makes some invalid
+   code work at the expense of losing some optimizations.  */
+
+extern int flag_unaligned_struct_hack;
+/* END CYGNUS LOCAL */
+
+/* CYGNUS LOCAL unaligned-pointers */
+/* Assume that pointers may have unaligned addresses, and thus treat any
+   pointer indirection like a bitfield access.  */
+
+extern int flag_unaligned_pointers;
+/* END CYGNUS LOCAL */
+
 /* Tag all structures with __attribute__(packed) */
 extern int flag_pack_struct;
+
 
 /* Other basic status info about current function.  */
 

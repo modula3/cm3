@@ -1,5 +1,5 @@
 /* Output sdb-format symbol table information from GNU compiler.
-   Copyright (C) 1988, 1992, 1993, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1988, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -52,17 +52,19 @@ AT&T C compiler.  From the example below I would conclude the following:
 #include "insn-config.h"
 #include "reload.h"
 
-/* Mips systems use the SDB functions to dump out symbols, but
-   do not supply usable syms.h include files.  */
-#if defined(USG) && !defined(MIPS) && !defined (hpux) && !defined(_WIN32) && !defined(__linux__)
+/* Mips systems use the SDB functions to dump out symbols, but do not
+   supply usable syms.h include files.  Which syms.h file to use is a
+   target parameter so don't use the native one if we're cross compiling.  */
+
+#if defined(USG) && !defined(MIPS) && !defined (hpux) && !defined(_WIN32) && !defined(__linux__) && !defined(CROSS_COMPILE)
 #include <syms.h>
 /* Use T_INT if we don't have T_VOID.  */
 #ifndef T_VOID
 #define T_VOID T_INT
 #endif
-#else /* not USG, or MIPS */
+#else
 #include "gsyms.h"
-#endif /* not USG, or MIPS */
+#endif
 
 /* #include <storclass.h>  used to be this instead of syms.h.  */
 
@@ -73,6 +75,20 @@ AT&T C compiler.  From the example below I would conclude the following:
 
 /* A C expression for the integer offset value of an automatic variable
    (C_AUTO) having address X (an RTX).  */
+/* CYGNUS LOCAL mpw */
+#ifdef MPW_C
+/* MPW's lame preprocessor loses on some multiple-macro expressions,
+   so use a function call instead.  */
+#ifndef DEBUGGER_AUTO_OFFSET
+#define DEBUGGER_AUTO_OFFSET(X) debugger_auto_offset (X)
+#endif
+int
+debugger_auto_offset (rtx X)
+{
+  return (GET_CODE (X) == PLUS ? INTVAL (XEXP (X, 1)) : 0);
+}
+#endif /* MPW_C */
+/* END CYGNUS LOCAL */
 #ifndef DEBUGGER_AUTO_OFFSET
 #define DEBUGGER_AUTO_OFFSET(X) \
   (GET_CODE (X) == PLUS ? INTVAL (XEXP (X, 1)) : 0)
@@ -101,12 +117,20 @@ void sdbout_init ();
 void sdbout_symbol ();
 void sdbout_types();
 
-static void sdbout_typedefs ();
-static void sdbout_syms ();
-static void sdbout_one_type ();
-static void sdbout_queue_anonymous_type ();
-static void sdbout_dequeue_anonymous_types ();
-static int plain_type_1 ();
+static char *gen_fake_label		PROTO((void));
+static int plain_type			PROTO((tree));
+static int template_name_p		PROTO((tree));
+static void sdbout_record_type_name	PROTO((tree));
+static int plain_type_1			PROTO((tree, int));
+static void sdbout_block		PROTO((tree));
+static void sdbout_syms			PROTO((tree));
+static void sdbout_queue_anonymous_type	PROTO((tree));
+static void sdbout_dequeue_anonymous_types PROTO((void));
+static void sdbout_type			PROTO((tree));
+static void sbdout_field_types		PROTO((tree));
+static void sdbout_one_type		PROTO((tree));
+static void sdbout_parms		PROTO((tree));
+static void sdbout_reg_parms		PROTO((tree));
 
 /* Define the default sizes for various types.  */
 
@@ -293,13 +317,6 @@ sdbout_init (asm_file, input_file_name, syms)
 	&& !strcmp (IDENTIFIER_POINTER (DECL_NAME (t)), "__vtbl_ptr_type"))
       sdbout_symbol (t, 0);
 #endif  
-
-#if 0 /* Nothing need be output for the predefined types.  */
-  /* Get all permanent types that have typedef names,
-     and output them all, except for those already output.  */
-
-  sdbout_typedefs (syms);
-#endif
 }
 
 #if 0
@@ -520,11 +537,15 @@ plain_type_1 (type, level)
 
     case REAL_TYPE:
       {
-	int size = int_size_in_bytes (type) * BITS_PER_UNIT;
-	if (size == FLOAT_TYPE_SIZE)
+	int precision = TYPE_PRECISION (type);
+	if (precision == FLOAT_TYPE_SIZE)
 	  return T_FLOAT;
-	if (size == DOUBLE_TYPE_SIZE)
+	if (precision == DOUBLE_TYPE_SIZE)
 	  return T_DOUBLE;
+#ifdef EXTENDED_SDB_BASIC_TYPES
+	if (precision == LONG_DOUBLE_TYPE_SIZE)
+	  return T_LNGDBL;
+#endif
 	return 0;
       }
 
@@ -538,7 +559,8 @@ plain_type_1 (type, level)
 	if (sdb_n_dims < SDB_MAX_DIM)
 	  sdb_dims[sdb_n_dims++]
 	    = (TYPE_DOMAIN (type)
-	       ? TREE_INT_CST_LOW (TYPE_MAX_VALUE (TYPE_DOMAIN (type))) + 1
+	       ? (TREE_INT_CST_LOW (TYPE_MAX_VALUE (TYPE_DOMAIN (type)))
+		  - TREE_INT_CST_LOW (TYPE_MIN_VALUE (TYPE_DOMAIN (type))) + 1)
 	       : 0);
 	return PUSH_DERIVED_LEVEL (DT_ARY, m);
       }
@@ -564,8 +586,8 @@ plain_type_1 (type, level)
 	       only if the .def has already been finished.
 	       At least on 386, the Unix assembler
 	       cannot handle forward references to tags.  */
-	    /* But the 88100, it requires them, sigh... */
-	    /* And the MIPS requires unknown refs as well... */
+	    /* But the 88100, it requires them, sigh...  */
+	    /* And the MIPS requires unknown refs as well...  */
 	    tag = KNOWN_TYPE_TAG (type);
 	    PUT_SDB_TAG (tag);
 	    /* These 3 lines used to follow the close brace.
@@ -691,7 +713,10 @@ sdbout_symbol (decl, local)
       context = decl_function_context (decl);
       if (context == current_function_decl)
 	return;
-      if (DECL_EXTERNAL (decl))
+      /* Check DECL_INITIAL to distinguish declarations from definitions.
+	 Don't output debug info here for declarations; they will have
+	 a DECL_INITIAL value of 0.  */
+      if (! DECL_INITIAL (decl))
 	return;
       if (GET_CODE (DECL_RTL (decl)) != MEM
 	  || GET_CODE (XEXP (DECL_RTL (decl), 0)) != SYMBOL_REF)
@@ -945,7 +970,7 @@ sdbout_toplevel_data (decl)
 
 #ifdef SDB_ALLOW_FORWARD_REFERENCES
 
-/* Machinery to record and output anonymous types. */
+/* Machinery to record and output anonymous types.  */
 
 static tree anonymous_types;
 
@@ -1324,7 +1349,7 @@ sdbout_parms (parms)
 	    PUT_SDB_DEF (name);
 	    PUT_SDB_INT_VAL (DBX_REGISTER_NUMBER (REGNO (best_rtl)));
 	    PUT_SDB_SCL (C_REGPARM);
-	    PUT_SDB_TYPE (plain_type (TREE_TYPE (parms), 0));
+	    PUT_SDB_TYPE (plain_type (TREE_TYPE (parms)));
 	    PUT_SDB_ENDEF;
 	  }
 	else if (GET_CODE (DECL_RTL (parms)) == MEM
@@ -1347,7 +1372,7 @@ sdbout_parms (parms)
 	    PUT_SDB_INT_VAL (DEBUGGER_ARG_OFFSET (current_sym_value,
 						  XEXP (DECL_RTL (parms), 0)));
 	    PUT_SDB_SCL (C_ARG);
-	    PUT_SDB_TYPE (plain_type (TREE_TYPE (parms), 0));
+	    PUT_SDB_TYPE (plain_type (TREE_TYPE (parms)));
 	    PUT_SDB_ENDEF;
 	  }
       }
@@ -1385,7 +1410,7 @@ sdbout_reg_parms (parms)
 	    PUT_SDB_DEF (name);
 	    PUT_SDB_INT_VAL (DBX_REGISTER_NUMBER (REGNO (DECL_RTL (parms))));
 	    PUT_SDB_SCL (C_REG);
-	    PUT_SDB_TYPE (plain_type (TREE_TYPE (parms), 0));
+	    PUT_SDB_TYPE (plain_type (TREE_TYPE (parms)));
 	    PUT_SDB_ENDEF;
 	  }
 	/* Report parms that live in memory but not where they were passed.  */

@@ -1,5 +1,5 @@
 /* Top level of GNU C compiler
-   Copyright (C) 1987, 88, 89, 92, 93, 94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 88, 89, 92-5, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -35,8 +35,9 @@ Boston, MA 02111-1307, USA.  */
 #include <sys/types.h>
 #include <ctype.h>
 #include <sys/stat.h>
-
-#ifndef _WIN32
+/* CYGNUS LOCAL sac/win32 */
+#if !defined (_WIN32) || defined (HAVE_RUSAGE)
+/* END CYGNUS LOCAL sac/win32 */
 #ifdef USG
 #undef FLOAT
 #include <sys/param.h>
@@ -62,6 +63,7 @@ Boston, MA 02111-1307, USA.  */
 #include "output.h"
 #include "bytecode.h"
 #include "bc-emit.h"
+#include "except.h"
 
 #ifdef XCOFF_DEBUGGING_INFO
 #include "xcoffout.h"
@@ -91,6 +93,15 @@ vms_fopen (fname, type)
 #ifndef DEFAULT_GDB_EXTENSIONS
 #define DEFAULT_GDB_EXTENSIONS 1
 #endif
+
+
+/* CYGNUS LOCAL mpw */
+#ifndef PROGRESS
+#define START_PROGRESS(PROG, X)
+#define END_PROGRESS(PROG)
+#define PROGRESS(X)
+#endif /* PROGRESS */
+/* END CYGNUS LOCAL */
 
 extern int rtx_equal_function_value_matters;
 
@@ -138,8 +149,13 @@ void fancy_abort ();
 void abort ();
 #endif
 void set_target_switch ();
-static void print_switch_values ();
 static char *decl_name ();
+
+void print_version ();
+int print_single_switch ();
+void print_switch_values ();
+/* Length of line when printing switch values.  */
+#define MAX_LINE 75
 
 #ifdef __alpha
 extern char *sbrk ();
@@ -201,8 +217,14 @@ int jump_opt_dump = 0;
 int cse_dump = 0;
 int loop_dump = 0;
 int cse2_dump = 0;
+/* CYGNUS LOCAL: gcov */
+int branch_prob_dump = 0;
+/* END CYGNUS LOCAL */
 int flow_dump = 0;
 int combine_dump = 0;
+/* CYGNUS LOCAL: regmove */
+int regmove_dump = 0;
+/* END CYGNUS LOCAL */
 int sched_dump = 0;
 int local_reg_dump = 0;
 int global_reg_dump = 0;
@@ -211,6 +233,9 @@ int jump2_opt_dump = 0;
 int dbr_sched_dump = 0;
 int flag_print_asm_name = 0;
 int stack_reg_dump = 0;
+/* CYGNUS LOCAL mentoropt/law */
+int shorten_lifetimes_dump = 0;
+/* END CYGNUS LOCAL */
 
 /* Name for output file of assembly code, specified with -o.  */
 
@@ -266,11 +291,9 @@ struct rtx_def *(*lang_expand_expr) ();
 
 void (*incomplete_decl_finalize_hook) () = 0;
 
-/* Pointer to function for interim exception handling implementation.
-   This interface will change, and it is only here until a better interface
-   replaces it.  */
+/* Highest label number used at the end of reload.  */
 
-void (*interim_eh_hook)	PROTO((tree));
+int max_label_num_after_reload;
 
 /* Nonzero if generating code to do profiling.  */
 
@@ -279,6 +302,20 @@ int profile_flag = 0;
 /* Nonzero if generating code to do profiling on a line-by-line basis.  */
 
 int profile_block_flag;
+
+/* CYGNUS LOCAL: gcov */
+/* Nonzero if generating code to profile program flow graph arcs.  */
+
+int profile_arc_flag = 0;
+
+/* Nonzero if generating info for gcov to calculate line test coverage.  */
+
+int flag_test_coverage = 0;
+
+/* Nonzero indicates that branch taken probabilities should be calculated.  */
+
+int flag_branch_probabilities = 0;
+/* END CYGNUS LOCAL */
 
 /* Nonzero for -pedantic switch: warn about anything
    that standard spec forbids.  */
@@ -403,6 +440,18 @@ int flag_no_function_cse = 0;
 
 int flag_omit_frame_pointer = 0;
 
+/* CYGNUS LOCAL mentoropt/law */
+/* Nonzero for -fshorten-lifetimes:
+   shorten lifetimes of certain registers to reduce spillage during reload.  */
+
+int flag_shorten_lifetimes = 0;
+/* END CYGNUS LOCAL */
+
+/* Nonzero means place each function into its own section on those platforms
+   which support arbitrary section names and unlimited numbers of sections.  */
+
+int flag_function_sections = 0;
+
 /* Nonzero to inhibit use of define_optimization peephole opts.  */
 
 int flag_no_peephole = 0;
@@ -410,7 +459,7 @@ int flag_no_peephole = 0;
 /* Nonzero allows GCC to violate some IEEE or ANSI rules regarding math
    operations in the interest of optimization.  For example it allows
    GCC to assume arguments to sqrt are nonnegative numbers, allowing
-   faster code for sqrt to be generated. */
+   faster code for sqrt to be generated.  */
 
 int flag_fast_math = 0;
 
@@ -446,6 +495,11 @@ int flag_keep_inline_functions;
 
 int flag_no_inline;
 
+/* Nonzero means that we should emit static const variables
+   regardless of whether or not optimization is turned on.  */
+
+int flag_keep_static_consts = 1;
+
 /* Nonzero means we should be saving declaration info into a .X file.  */
 
 int flag_gen_aux_info = 0;
@@ -473,7 +527,15 @@ int flag_short_temps;
 
 int flag_pic;
 
-/* Nonzero means place uninitialized global data in the bss section. */
+/* Nonzero means generate extra code for exception handling and enable
+   exception handling.  */
+
+int flag_exceptions = 0;	/* CYGNUS LOCAL EH off/mrs */
+
+int flag_exceptions_old = 0;    /* CYGNUS LOCAL support for old exceptions flag/manson */
+
+/* Nonzero means don't place uninitialized global data in common storage
+   by default.  */
 
 int flag_no_common;
 
@@ -496,6 +558,32 @@ int flag_pedantic_errors = 0;
 int flag_schedule_insns = 0;
 int flag_schedule_insns_after_reload = 0;
 
+/* CYGNUS LOCAL haifa */
+#ifdef HAIFA
+/* the following flags have effect only under scheduling before local_alloc.
+   flag_schedule_interblock means schedule insns accross basic blocks.
+   flag_schedule_speculative means allow speculative motion of non-load insns.
+   flag_schedule_speculative_load means allow speculative motion of some load insns.
+   flag_schedule_speculative_load_dangerous allows speculative motion of more load insns.
+   flag_schedule_reverse_before_reload means try to reverse original order of insns (S).
+   flag_schedule_reverse_after_reload means try to reverse original order of insns (R).
+   */
+
+int flag_schedule_interblock = 1;
+int flag_schedule_speculative = 1;
+int flag_schedule_speculative_load = 0;
+int flag_schedule_speculative_load_dangerous = 0;
+int flag_schedule_reverse_before_reload = 0;
+int flag_schedule_reverse_after_reload = 0;
+
+
+/* flag_on_branch_count_reg means try to replace add-1,compare,branch tupple by a 
+   cheaper branch, on a count register.  */
+   
+int flag_branch_on_count_reg = 1;
+#endif	/* HAIFA */
+/* END CYGNUS LOCAL haifa */
+
 /* -finhibit-size-directive inhibits output of .size for ELF.
    This is used only for compiling crtstuff.c, 
    and it may be extended to other effects
@@ -505,9 +593,20 @@ int flag_inhibit_size_directive = 0;
 /* -fverbose-asm causes extra commentary information to be produced in
    the generated assembly code (to make it more readable).  This option
    is generally only of use to those who actually need to read the
-   generated assembly code (perhaps while debugging the compiler itself).  */
+   generated assembly code (perhaps while debugging the compiler itself).
+   -fverbose-asm is the default.  -fno-verbose-asm causes the extra information
+   to be omitted and is useful when comparing two assembler files.  */
 
-int flag_verbose_asm = 0;
+int flag_verbose_asm = 1;
+
+/* -dA causes debug commentary information to be produced in
+   the generated assembly code (to make it more readable).  This option
+   is generally only of use to those who actually need to read the
+   generated assembly code (perhaps while debugging the compiler itself).
+   Currently, this switch is only used by dwarfout.c; however, it is intended
+   to be a catchall for printing debug information in the assembler file.  */
+
+int flag_debug_asm = 0;
 
 /* -fgnu-linker specifies use of the GNU linker for initializations.
    (Or, more generally, a linker that handles initializations.)
@@ -518,8 +617,33 @@ int flag_gnu_linker = 0;
 int flag_gnu_linker = 1;
 #endif
 
+/* CYGNUS LOCAL unaligned-struct-hack */
+/* This is a hack.  Disable the effect of SLOW_BYTE_ACCESS, so that references
+   to aligned fields inside of unaligned structures can work.  That is, we
+   want to always access fields with their declared size, because using a
+   larger load may result in an unaligned access.  This makes some invalid
+   code work at the expense of losing some optimizations.  */
+
+int flag_unaligned_struct_hack = 0;
+/* END CYGNUS LOCAL */
+
+/* CYGNUS LOCAL unaligned-pointers */
+/* Assume that pointers may have unaligned addresses, and thus treat any
+   pointer indirection like a bitfield access.  */
+
+int flag_unaligned_pointers = 0;
+/* END CYGNUS LOCAL */
+
 /* Tag all structures with __attribute__(packed) */
 int flag_pack_struct = 0;
+
+/* CYGNUS LOCAL -- regmove/meissner */
+#ifdef ENABLE_REGMOVE_PASS
+int flag_regmove = 1;
+#else
+int flag_regmove = 0;
+#endif
+/* END CYGNUS LOCAL -- regmove/meissner */
 
 /* Table of language-independent -f options.
    STRING is the option name.  VARIABLE is the address of the variable.
@@ -549,6 +673,7 @@ struct { char *string; int *variable; int on_value;} f_options[] =
   {"inline-functions", &flag_inline_functions, 1},
   {"keep-inline-functions", &flag_keep_inline_functions, 1},
   {"inline", &flag_no_inline, 0},
+  {"keep-static-consts", &flag_keep_static_consts, 1},
   {"syntax-only", &flag_syntax_only, 1},
   {"shared-data", &flag_shared_data, 1},
   {"caller-saves", &flag_caller_saves, 1},
@@ -559,14 +684,47 @@ struct { char *string; int *variable; int on_value;} f_options[] =
   {"pretend-float", &flag_pretend_float, 1},
   {"schedule-insns", &flag_schedule_insns, 1},
   {"schedule-insns2", &flag_schedule_insns_after_reload, 1},
+/* CYGNUS LOCAL haifa */
+#ifdef HAIFA
+  {"sched-interblock",&flag_schedule_interblock, 1}, 
+  {"sched-spec",&flag_schedule_speculative, 1}, 
+  {"sched-spec-load",&flag_schedule_speculative_load, 1}, 
+  {"sched-spec-load-dangerous",&flag_schedule_speculative_load_dangerous, 1}, 
+  {"sched-reverse-S",&flag_schedule_reverse_before_reload, 1}, 
+  {"sched-reverse-R",&flag_schedule_reverse_after_reload, 1}, 
+  {"branch-count-reg",&flag_branch_on_count_reg, 1}, 
+#endif	/* HAIFA */
+/* END CYGNUS LOCAL haifa */
   {"pic", &flag_pic, 1},
   {"PIC", &flag_pic, 2},
+  {"exceptions", &flag_exceptions, 1},
+  /* CYGNUS LOCAL: support for old exceptions flag/manson */
+  {"handle-exceptions", &flag_exceptions_old, 1},
+  /* END CYGNUS LOCAL */
+  /* CYGNUS LOCAL: gcov */
+  {"profile-arcs", &profile_arc_flag, 1},
+  {"test-coverage", &flag_test_coverage, 1},
+  {"branch-probabilities", &flag_branch_probabilities, 1},
+  /* END CYGNUS LOCAL */
   {"fast-math", &flag_fast_math, 1},
   {"common", &flag_no_common, 0},
   {"inhibit-size-directive", &flag_inhibit_size_directive, 1},
+  /* CYGNUS LOCAL mentoropt/law */
+  {"shorten-lifetimes", &flag_shorten_lifetimes, 1},
+  /* END CYGNUS LOCAL */
+  {"function-sections", &flag_function_sections, 1},
   {"verbose-asm", &flag_verbose_asm, 1},
   {"gnu-linker", &flag_gnu_linker, 1},
+  /* CYGNUS LOCAL unaligned-struct-hack */
+  {"unaligned-struct-hack", &flag_unaligned_struct_hack, 1},
+  /* END CYGNUS LOCAL */
+  /* CYGNUS LOCAL unaligned-pointers */
+  {"unaligned-pointers", &flag_unaligned_pointers, 1},
+  /* END CYGNUS LOCAL */
   {"pack-struct", &flag_pack_struct, 1},
+  /* CYGNUS LOCAL -- regmove/meissner */
+  {"regmove", &flag_regmove, 1},
+  /* END CYGNUS LOCAL -- regmove/meissner */
   {"bytecode", &output_bytecode, 1}
 };
 
@@ -639,6 +797,8 @@ char *lang_options[] =
   "-Wno-pointer-arith",
   "-Wredundant-decls",
   "-Wno-redundant-decls",
+  "-Wsign-compare",
+  "-Wno-sign-compare",
   "-Wstrict-prototypes",
   "-Wno-strict-prototypes",
   "-Wtraditional",
@@ -751,8 +911,14 @@ FILE *jump_opt_dump_file;
 FILE *cse_dump_file;
 FILE *loop_dump_file;
 FILE *cse2_dump_file;
+/* CYGNUS LOCAL: gcov */
+FILE *branch_prob_dump_file;
+/* END CYGNUS LOCAL */
 FILE *flow_dump_file;
 FILE *combine_dump_file;
+/* CYGNUS LOCAL: regmove */
+FILE *regmove_dump_file;
+/* END CYGNUS LOCAL */
 FILE *sched_dump_file;
 FILE *local_reg_dump_file;
 FILE *global_reg_dump_file;
@@ -760,6 +926,9 @@ FILE *sched2_dump_file;
 FILE *jump2_opt_dump_file;
 FILE *dbr_sched_dump_file;
 FILE *stack_reg_dump_file;
+/* CYGNUS LOCAL mentoropt/law */
+FILE *shorten_lifetimes_dump_file;
+/* END CYGNUS LOCAL */
 
 /* Time accumulators, to count the total time spent in various passes.  */
 
@@ -770,8 +939,14 @@ int jump_time;
 int cse_time;
 int loop_time;
 int cse2_time;
+/* CYGNUS LOCAL: gcov */
+int branch_prob_time;
+/* END CYGNUS LOCAL */
 int flow_time;
 int combine_time;
+/* CYGNUS LOCAL: regmove */
+int regmove_time;
+/* END CYGNUS LOCAL */
 int sched_time;
 int local_alloc_time;
 int global_alloc_time;
@@ -782,13 +957,18 @@ int stack_reg_time;
 int final_time;
 int symout_time;
 int dump_time;
+/* CYGNUS LOCAL mentoropt/law */
+int shorten_lifetime_time;
+/* END CYGNUS LOCAL */
 
 /* Return time used so far, in microseconds.  */
 
 int
 get_run_time ()
 {
-#ifndef _WIN32
+/* CYGNUS LOCAL sac/win32 */
+#if !defined(_WIN32) || defined(HAVE_RUSAGE)
+/* END CYGNUS LOCAL sac/win32 */
 #ifdef USG
   struct tms tms;
 #else
@@ -808,7 +988,9 @@ get_run_time ()
 
   if (quiet_flag)
     return 0;
-#ifdef _WIN32
+/* CYGNUS LOCAL sac/win32 */
+#if defined(_WIN32) && !defined (HAVE_RUSAGE)
+/* END CYGNUS LOCAL sac/win32 */
   if (clock() < 0)
     return 0;
   else
@@ -920,6 +1102,10 @@ fatal_insn (message, insn)
     fflush (flow_dump_file);
   if (combine_dump_file)
     fflush (combine_dump_file);
+  /* CYGNUS LOCAL: regmove */
+  if (regmove_dump_file)
+    fflush (regmove_dump_file);
+  /* END CYGNUS LOCAL */
   if (sched_dump_file)
     fflush (sched_dump_file);
   if (local_reg_dump_file)
@@ -934,6 +1120,12 @@ fatal_insn (message, insn)
     fflush (dbr_sched_dump_file);
   if (stack_reg_dump_file)
     fflush (stack_reg_dump_file);
+  /* CYGNUS LOCAL mentoropt/law */
+  if (shorten_lifetimes_dump_file)
+    fflush (shorten_lifetimes_dump_file);
+  /* END CYGNUS LOCAL */
+  fflush (stdout);
+  fflush (stderr);
   abort ();
 }
 
@@ -959,15 +1151,6 @@ decl_name (decl, kind)
      char **kind;
 {
   return IDENTIFIER_POINTER (DECL_NAME (decl));
-}
-
-/* This is the default interim_eh_hook function.  */
-
-void
-interim_eh (finalization)
-     tree finalization;
-{
-  /* Don't do anything by default.  */
 }
 
 static int need_error_newline;
@@ -1030,9 +1213,9 @@ default_print_error_function (file)
 }
 
 /* Called by report_error_function to print out function name.
- * Default may be overridden by language front-ends. */
+ * Default may be overridden by language front-ends.  */
 
-void (*print_error_function) PROTO((char*)) = default_print_error_function;
+void (*print_error_function) PROTO((char *)) = default_print_error_function;
 
 /* Prints out, if necessary, the name of the current function
   that caused an error.  Called from all error and warning functions.  */
@@ -1092,6 +1275,17 @@ vmessage (prefix, s, ap)
 }
 
 /* Print a message relevant to line LINE of file FILE.  */
+/* CYGNUS LOCAL print macros */
+#ifndef PRINT_FILE_AND_LINE
+#define PRINT_FILE_AND_LINE(FILE,LINE) \
+  fprintf (stderr, "%s:%d: ", (FILE), (LINE))
+#endif
+
+#ifndef PRINT_PROGNAME
+#define PRINT_PROGNAME(PROGNAME) \
+  fprintf (stderr, "%s: ", (PROGNAME))
+#endif
+/* END CYGNUS LOCAL */
 
 static void
 v_message_with_file_and_line (file, line, prefix, s, ap)
@@ -1102,9 +1296,9 @@ v_message_with_file_and_line (file, line, prefix, s, ap)
      va_list ap;
 {
   if (file)
-    fprintf (stderr, "%s:%d: ", file, line);
+    PRINT_FILE_AND_LINE (file, line); /* CYGNUS LOCAL print macros */
   else
-    fprintf (stderr, "%s: ", progname);
+    PRINT_PROGNAME (progname); /* CYGNUS LOCAL print macros */
 
   vmessage (prefix, s, ap);
   fputc ('\n', stderr);
@@ -1121,8 +1315,8 @@ v_message_with_decl (decl, prefix, s, ap)
 {
   char *n, *p, *junk;
 
-  fprintf (stderr, "%s:%d: ",
-	   DECL_SOURCE_FILE (decl), DECL_SOURCE_LINE (decl));
+  /* CYGNUS LOCAL print macros */
+  PRINT_FILE_AND_LINE (DECL_SOURCE_FILE (decl), DECL_SOURCE_LINE (decl));
 
   if (prefix)
     fprintf (stderr, "%s: ", prefix);
@@ -1753,6 +1947,20 @@ xrealloc (ptr, size)
     fatal ("virtual memory exhausted");
   return result;
 }
+
+/* Same as `strdup' but report error if no memory available.  */
+
+char *
+xstrdup (s)
+     register char *s;
+{
+  register char *result = (char *) malloc (strlen (s) + 1);
+
+  if (! result)
+    fatal ("virtual memory exhausted");
+  strcpy (result, s);
+  return result;
+}
 
 /* Return the logarithm of X, base 2, considering X unsigned,
    if X is a power of 2.  Otherwise, returns -1.
@@ -1881,6 +2089,7 @@ strip_off_ending (name, len)
 }
 
 /* Output a quoted string.  */
+
 void
 output_quoted_string (asm_file, string)
      FILE *asm_file;
@@ -1929,7 +2138,8 @@ output_file_directive (asm_file, input_name)
 #endif
 }
 
-/* Routine to build language identifier for object file. */
+/* Routine to build language identifier for object file.  */
+
 static void
 output_lang_identify (asm_out_file)
      FILE *asm_out_file;
@@ -1941,6 +2151,7 @@ output_lang_identify (asm_out_file)
 }
 
 /* Routine to open a dump file.  */
+
 static FILE *
 open_dump_file (base_name, suffix)
      char *base_name;
@@ -1979,8 +2190,14 @@ compile_file (name)
   cse_time = 0;
   loop_time = 0;
   cse2_time = 0;
+  /* CYGNUS LOCAL: gcov */
+  branch_prob_time = 0;
+  /* END CYGNUS LOCAL */
   flow_time = 0;
   combine_time = 0;
+  /* CYGNUS LOCAL: regmove */
+  regmove_time = 0;
+  /* END CYGNUS LOCAL */
   sched_time = 0;
   local_alloc_time = 0;
   global_alloc_time = 0;
@@ -1991,6 +2208,9 @@ compile_file (name)
   final_time = 0;
   symout_time = 0;
   dump_time = 0;
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
 
   /* Open input file.  */
 
@@ -2017,7 +2237,9 @@ compile_file (name)
      but the options would have to be parsed first to know that. -bson */
   init_rtl ();
   init_emit_once (debug_info_level == DINFO_LEVEL_NORMAL
-		  || debug_info_level == DINFO_LEVEL_VERBOSE);
+		  /* CYGNUS LOCAL: gcov */
+		  || debug_info_level == DINFO_LEVEL_VERBOSE
+		  || flag_test_coverage);
   init_regs ();
   init_decl_processing ();
   init_optabs ();
@@ -2029,6 +2251,10 @@ compile_file (name)
 
   if (flag_caller_saves)
     init_caller_save ();
+
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
 
   /* If auxiliary info generation is desired, open the output file.
      This goes in the same directory as the source file--unlike
@@ -2060,6 +2286,12 @@ compile_file (name)
   if (cse2_dump)
     cse2_dump_file = open_dump_file (dump_base_name, ".cse2");
 
+  /* CYGNUS LOCAL: gcov */
+  /* If branch_prob dump desired, open the output file.  */
+  if (branch_prob_dump)
+    branch_prob_dump_file = open_dump_file (dump_base_name, ".bp");
+  /* END CYGNUS LOCAL */
+
   /* If flow dump desired, open the output file.  */
   if (flow_dump)
     flow_dump_file = open_dump_file (dump_base_name, ".flow");
@@ -2067,6 +2299,12 @@ compile_file (name)
   /* If combine dump desired, open the output file.  */
   if (combine_dump)
     combine_dump_file = open_dump_file (dump_base_name, ".combine");
+
+  /* CYGNUS LOCAL: regmove */
+  /* If regmove dump desired, open the output file.  */
+  if (regmove_dump)
+    regmove_dump_file = open_dump_file (dump_base_name, ".regmove");
+  /* END CYGNUS LOCAL */
 
   /* If scheduling dump desired, open the output file.  */
   if (sched_dump)
@@ -2100,6 +2338,11 @@ compile_file (name)
 
 #endif
 
+  /* CYGNUS LOCAL mentoropt/law */
+  if (shorten_lifetimes_dump)
+    shorten_lifetimes_dump_file = open_dump_file (dump_base_name, ".shorten");
+  /* END CYGNUS LOCAL */
+
   /* Open assembler code output file.  */
 
   if (! name_specified && asm_file_name == 0)
@@ -2131,6 +2374,10 @@ compile_file (name)
 
   input_filename = name;
 
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
+
   /* Put an entry on the input file stack for the main input file.  */
   input_file_stack
     = (struct file_stack *) xmalloc (sizeof (struct file_stack));
@@ -2149,10 +2396,23 @@ compile_file (name)
   if (!output_bytecode)
     {
       ASM_FILE_START (asm_out_file);
+
+#ifdef ASM_COMMENT_START
+      if (flag_verbose_asm)
+	{
+	  /* Print the list of options in effect.  */
+	  print_version (asm_out_file, ASM_COMMENT_START);
+	  print_switch_values (asm_out_file, 0, MAX_LINE,
+			       ASM_COMMENT_START, " ", "\n");
+	  /* Add a blank line here so it appears in assembler output but not
+	     screen output.  */
+	  fprintf (asm_out_file, "\n");
+	}
+#endif
     }
 
   /* Output something to inform GDB that this compilation was by GCC.  Also
-     serves to tell GDB file consists of bytecodes. */
+     serves to tell GDB file consists of bytecodes.  */
   if (output_bytecode)
     fprintf (asm_out_file, "bc_gcc2_compiled.:\n");
   else
@@ -2164,10 +2424,28 @@ compile_file (name)
 #endif
     }
 
-  /* Output something to identify which front-end produced this file. */
+  /* Output something to identify which front-end produced this file.  */
 #ifdef ASM_IDENTIFY_LANGUAGE
   ASM_IDENTIFY_LANGUAGE (asm_out_file);
 #endif
+
+#ifndef ASM_OUTPUT_SECTION_NAME
+  if (flag_function_sections)
+    {
+      warning ("-ffunction-sections not supported for this target.");
+      flag_function_sections = 0;
+    }
+#endif
+
+  if (flag_function_sections
+      && (profile_flag || profile_block_flag))
+    {
+      warning ("-ffunction-sections disabled; it makes profiling impossible.");
+      flag_function_sections = 0;
+    }
+
+  if (flag_function_sections && write_symbols != NO_DEBUG)
+    warning ("-ffunction-sections may affect debugging on some targets.");
 
   if (output_bytecode)
     {
@@ -2213,8 +2491,15 @@ compile_file (name)
 
   if (!output_bytecode)
     init_final (main_input_filename);
+  /* CYGNUS LOCAL: gcov */
+  init_branch_prob (dump_base_name);
+  /* END CYGNUS LOCAL */
 
   start_time = get_run_time ();
+
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
 
   /* Call the parser, which parses the entire file
      (calling rest_of_compilation for each function).  */
@@ -2229,6 +2514,10 @@ compile_file (name)
       while (! global_bindings_p ())
 	poplevel (0, 0, 0);
     }
+
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
 
   /* Compilation is now finished except for writing
      what's left of the symbol table output.  */
@@ -2277,6 +2566,10 @@ compile_file (name)
 	reconsider = 0;
 	for (i = 0; i < len; i++)
 	  {
+	    /* CYGNUS LOCAL mpw */
+	    PROGRESS (1);
+	    /* END CYGNUS LOCAL */
+
 	    decl = vec[i];
 
 	    if (TREE_ASM_WRITTEN (decl) || DECL_EXTERNAL (decl))
@@ -2284,7 +2577,8 @@ compile_file (name)
 
 	    /* Don't write out static consts, unless we still need them.
 
-	       We also keep static consts if not optimizing (for debugging).
+	       We also keep static consts if not optimizing (for debugging),
+	       unless the user specified -fno-keep-static-consts.
 	       ??? They might be better written into the debug information.
 	       This is possible when using DWARF.
 
@@ -2304,12 +2598,12 @@ compile_file (name)
 
 	       ??? A tempting alternative (for both C and C++) would be
 	       to force a constant to be written if and only if it is
-	       defined in a main file, as opposed to an include file. */
+	       defined in a main file, as opposed to an include file.  */
 
 	    if (TREE_CODE (decl) == VAR_DECL && TREE_STATIC (decl)
 		&& (! TREE_READONLY (decl)
 		    || TREE_PUBLIC (decl)
-		    || !optimize
+		    || (!optimize && flag_keep_static_consts)
 		    || TREE_SYMBOL_REFERENCED (DECL_ASSEMBLER_NAME (decl))))
 	      {
 		reconsider = 1;
@@ -2330,8 +2624,18 @@ compile_file (name)
 	  }
       }
 
+    /* Now that all possible functions have been output, we can dump
+       the exception table.  */
+
+    if (exception_table_p ())
+      output_exception_table ();
+
     for (i = 0; i < len; i++)
       {
+	/* CYGNUS LOCAL mpw */
+	PROGRESS (1);
+	/* END CYGNUS LOCAL */
+
 	decl = vec[i];
 
 	if (TREE_CODE (decl) == VAR_DECL && TREE_STATIC (decl)
@@ -2351,6 +2655,7 @@ compile_file (name)
 		|| TREE_SYMBOL_REFERENCED (DECL_ASSEMBLER_NAME (decl)))
 	    && DECL_INITIAL (decl) == 0
 	    && DECL_EXTERNAL (decl)
+	    && ! DECL_ARTIFICIAL (decl)
 	    && ! TREE_PUBLIC (decl))
 	  {
 	    pedwarn_with_decl (decl, 
@@ -2370,7 +2675,7 @@ compile_file (name)
 	    && ! DECL_EXTERNAL (decl)
 	    && ! TREE_PUBLIC (decl)
 	    && ! TREE_USED (decl)
-	    && ! DECL_REGISTER (decl)
+	    && (TREE_CODE (decl) == FUNCTION_DECL || ! DECL_REGISTER (decl))
 	    /* The TREE_USED bit for file-scope decls
 	       is kept in the identifier, to handle multiple
 	       external decls in different scopes.  */
@@ -2389,7 +2694,7 @@ compile_file (name)
 	  TIMEVAR (symout_time, sdbout_symbol (decl, 0));
 
 	/* Output COFF information for non-global
-	   file-scope initialized variables. */
+	   file-scope initialized variables.  */
 	if (write_symbols == SDB_DEBUG
 	    && TREE_CODE (decl) == VAR_DECL
 	    && DECL_INITIAL (decl)
@@ -2436,12 +2741,19 @@ compile_file (name)
 
   if (!output_bytecode)
     {
-      end_final (main_input_filename);
+      /* CYGNUS LOCAL: gcov */
+      end_final (dump_base_name);
+      end_branch_prob (branch_prob_dump_file);
+      /* END CYGNUS LOCAL */
 
 #ifdef ASM_FILE_END
       ASM_FILE_END (asm_out_file);
 #endif
     }
+
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
 
   /* Language-specific end of compilation actions.  */
 
@@ -2474,6 +2786,11 @@ compile_file (name)
   if (cse2_dump)
     fclose (cse2_dump_file);
 
+  /* CYGNUS LOCAL: gcov */
+  if (branch_prob_dump)
+    fclose (branch_prob_dump_file);
+  /* END CYGNUS LOCAL */
+
   if (flow_dump)
     fclose (flow_dump_file);
 
@@ -2482,6 +2799,11 @@ compile_file (name)
       dump_combine_total_stats (combine_dump_file);
       fclose (combine_dump_file);
     }
+
+  /* CYGNUS LOCAL: regmove */
+  if (regmove_dump)
+    fclose (regmove_dump_file);
+  /* END CYGNUS LOCAL */
 
   if (sched_dump)
     fclose (sched_dump_file);
@@ -2506,6 +2828,11 @@ compile_file (name)
     fclose (stack_reg_dump_file);
 #endif
 
+  /* CYGNUS LOCAL mentoropt/law */
+  if (shorten_lifetimes_dump)
+    fclose (shorten_lifetimes_dump_file);
+  /* END CYGNUS LOCAL */
+
   /* Close non-debugging input and output files.  Take special care to note
      whether fclose returns an error, since the pages might still be on the
      buffer chain while the file is open.  */
@@ -2528,8 +2855,14 @@ compile_file (name)
 	  print_time ("cse", cse_time);
 	  print_time ("loop", loop_time);
 	  print_time ("cse2", cse2_time);
+	  /* CYGNUS LOCAL: gcov */
+	  print_time ("branch-probabilities", branch_prob_time);
+	  /* END CYGNUS LOCAL */
 	  print_time ("flow", flow_time);
 	  print_time ("combine", combine_time);
+	  /* CYGNUS LOCAL: regmove */
+	  print_time ("regmove", regmove_time);
+	  /* END CYGNUS LOCAL */
 	  print_time ("sched", sched_time);
 	  print_time ("local-alloc", local_alloc_time);
 	  print_time ("global-alloc", global_alloc_time);
@@ -2565,6 +2898,10 @@ rest_of_decl_compilation (decl, asmspec, top_level, at_end)
 {
   /* Declarations of variables, and of functions defined elsewhere.  */
 
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
+
 /* The most obvious approach, to put an #ifndef around where
    this macro is used, doesn't work since it's inside a macro call.  */
 #ifndef ASM_FINISH_DECLARE_OBJECT
@@ -2592,7 +2929,8 @@ rest_of_decl_compilation (decl, asmspec, top_level, at_end)
 			&& (DECL_INITIAL (decl) == 0
 			    || DECL_INITIAL (decl) == error_mark_node)))
 		   assemble_variable (decl, top_level, at_end, 0);
-	       if (decl == last_assemble_variable_decl)
+	       if (!output_bytecode
+		   && decl == last_assemble_variable_decl)
 		 {
 		   ASM_FINISH_DECLARE_OBJECT (asm_out_file, decl,
 					      top_level, at_end);
@@ -2658,6 +2996,10 @@ rest_of_compilation (decl)
   tree saved_arguments = 0;
   int failure = 0;
 
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
+
   if (output_bytecode)
     return;
 
@@ -2666,21 +3008,18 @@ rest_of_compilation (decl)
 
   if (DECL_SAVED_INSNS (decl) == 0)
     {
-      int specd = DECL_INLINE (decl);
+      int inlineable = 0;
       char *lose;
 
       /* If requested, consider whether to make this function inline.  */
-      if (specd || flag_inline_functions)
+      if (DECL_INLINE (decl) || flag_inline_functions)
 	TIMEVAR (integration_time,
 		 {
 		   lose = function_cannot_inline_p (decl);
-		   /* If not optimizing, then make sure the DECL_INLINE
-		      bit is off.  */
 		   if (lose || ! optimize)
 		     {
-		       if (warn_inline && specd)
+		       if (warn_inline && DECL_INLINE (decl))
 			 warning_with_decl (decl, lose);
-		       DECL_INLINE (decl) = 0;
 		       DECL_ABSTRACT_ORIGIN (decl) = 0;
 		       /* Don't really compile an extern inline function.
 			  If we can't make it inline, pretend
@@ -2692,7 +3031,11 @@ rest_of_compilation (decl)
 			 }
 		     }
 		   else
-		     DECL_INLINE (decl) = 1;
+		     /* ??? Note that this has the effect of making it look
+			like "inline" was specified for a function if we choose
+			to inline it.  This isn't quite right, but it's
+			probably not worth the trouble to fix.  */
+		     inlineable = DECL_INLINE (decl) = 1;
 		 });
 
       insns = get_insns ();
@@ -2714,13 +3057,16 @@ rest_of_compilation (decl)
 	 compile it by itself, defer decision till end of compilation.
 	 finish_compilation will call rest_of_compilation again
 	 for those functions that need to be output.  Also defer those
-	 functions that we are supposed to defer.  */
+	 functions that we are supposed to defer.  We cannot defer
+	 functions containing nested functions since the nested function
+	 data is in our non-saved obstack.  */
 
-      if (DECL_DEFER_OUTPUT (decl)
-	  || ((specd || DECL_INLINE (decl))
-	      && ((! TREE_PUBLIC (decl) && ! TREE_ADDRESSABLE (decl)
-		   && ! flag_keep_inline_functions)
-		  || DECL_EXTERNAL (decl))))
+      if (! current_function_contains_functions
+	  && (DECL_DEFER_OUTPUT (decl)
+	      || (DECL_INLINE (decl)
+		  && ((! TREE_PUBLIC (decl) && ! TREE_ADDRESSABLE (decl)
+		       && ! flag_keep_inline_functions)
+		      || DECL_EXTERNAL (decl)))))
 	{
 	  DECL_DEFER_OUTPUT (decl) = 1;
 
@@ -2739,13 +3085,14 @@ rest_of_compilation (decl)
 		}
 #endif
 	      TIMEVAR (integration_time, save_for_inline_nocopy (decl));
+	      RTX_INTEGRATED_P (DECL_SAVED_INSNS (decl)) = inlineable;
 	      goto exit_rest_of_compilation;
 	    }
 	}
 
       /* If we have to compile the function now, save its rtl and subdecls
 	 so that its compilation will not affect what others get.  */
-      if (DECL_INLINE (decl) || DECL_DEFER_OUTPUT (decl))
+      if (inlineable || DECL_DEFER_OUTPUT (decl))
 	{
 #ifdef DWARF_DEBUGGING_INFO
 	  /* Generate the DWARF info for the "abstract" instance of
@@ -2762,11 +3109,12 @@ rest_of_compilation (decl)
 	  saved_block_tree = DECL_INITIAL (decl);
 	  saved_arguments = DECL_ARGUMENTS (decl);
 	  TIMEVAR (integration_time, save_for_inline_copying (decl));
+	  RTX_INTEGRATED_P (DECL_SAVED_INSNS (decl)) = inlineable;
 	}
 
       /* If specified extern inline but we aren't inlining it, we are
 	 done.  */
-      if (specd && DECL_EXTERNAL (decl))
+      if (DECL_INLINE (decl) && DECL_EXTERNAL (decl))
 	goto exit_rest_of_compilation;
     }
 
@@ -2800,6 +3148,9 @@ rest_of_compilation (decl)
     FINALIZE_PIC;
 #endif
 
+  /* Add an unwinder for exception handling, if needed.  */
+  emit_unwinder ();
+
   insns = get_insns ();
 
   /* Copy any shared structure that should not be shared.  */
@@ -2815,17 +3166,14 @@ rest_of_compilation (decl)
      for all references to such slots.  */
 /*   fixup_stack_slots (); */
 
-  /* Do jump optimization the first time, if -opt.
-     Also do it if -W, but in that case it doesn't change the rtl code,
-     it only computes whether control can drop off the end of the function.  */
+  /* Find all the EH handlers.  */
+  find_exception_handler_labels ();
 
-  if (optimize > 0 || extra_warnings || warn_return_type
-      /* If function is `noreturn', we should warn if it tries to return.  */
-      || TREE_THIS_VOLATILE (decl))
-    {
-      TIMEVAR (jump_time, reg_scan (insns, max_reg_num (), 0));
-      TIMEVAR (jump_time, jump_optimize (insns, 0, 0, 1));
-    }
+  /* Always do one jump optimization pass to ensure that JUMP_LABEL fields
+     are initialized and to compute whether control can drop off the end
+     of the function.  */
+  TIMEVAR (jump_time, reg_scan (insns, max_reg_num (), 0));
+  TIMEVAR (jump_time, jump_optimize (insns, 0, 0, 1));
 
   /* Now is when we stop if -fsyntax-only and -Wreturn-type.  */
   if (rtl_dump_and_exit || flag_syntax_only || DECL_DEFER_OUTPUT (decl))
@@ -2841,6 +3189,10 @@ rest_of_compilation (decl)
 	       print_rtl (jump_opt_dump_file, insns);
 	       fflush (jump_opt_dump_file);
 	     });
+
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
 
   /* Perform common subexpression elimination.
      Nonzero value from `cse_main' means that jumps were simplified
@@ -2879,6 +3231,10 @@ rest_of_compilation (decl)
 	       fflush (cse_dump_file);
 	     });
 
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
+
   if (loop_dump)
     TIMEVAR (dump_time,
 	     {
@@ -2904,6 +3260,10 @@ rest_of_compilation (decl)
 	       print_rtl (loop_dump_file, insns);
 	       fflush (loop_dump_file);
 	     });
+
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
 
   if (cse2_dump)
     TIMEVAR (dump_time,
@@ -2942,6 +3302,36 @@ rest_of_compilation (decl)
 	       print_rtl (cse2_dump_file, insns);
 	       fflush (cse2_dump_file);
 	     });
+
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
+
+  /* CYGNUS LOCAL: gcov */
+  if (branch_prob_dump)
+    TIMEVAR (dump_time,
+	     {
+	       fprintf (branch_prob_dump_file, "\n;; Function %s\n\n",
+			IDENTIFIER_POINTER (DECL_NAME (decl)));
+	     });
+
+  if (profile_arc_flag || flag_test_coverage || flag_branch_probabilities)
+    TIMEVAR (branch_prob_time,
+	     {
+	       branch_prob (insns, branch_prob_dump_file);
+	     });
+
+  if (branch_prob_dump)
+    TIMEVAR (dump_time,
+	     {
+	       print_rtl (branch_prob_dump_file, insns);
+	       fflush (branch_prob_dump_file);
+	     });
+  /* END CYGNUS LOCAL */
+
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
 
   /* We are no longer anticipating cse in this function, at least.  */
 
@@ -2998,6 +3388,10 @@ rest_of_compilation (decl)
 	       fflush (flow_dump_file);
 	     });
 
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
+
   /* If -opt, try combining insns through substitution.  */
 
   if (optimize > 0)
@@ -3014,6 +3408,54 @@ rest_of_compilation (decl)
 	       print_rtl (combine_dump_file, insns);
 	       fflush (combine_dump_file);
 	     });
+
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
+
+  /* CYGNUS LOCAL mentoropt/law */
+  /* Make an attempt to reduce lifetimes of certain pseudo registers
+     to avoid later spillage during register reloading.  */
+  if (optimize && flag_shorten_lifetimes)
+    TIMEVAR (shorten_lifetime_time, shorten_lifetimes (insns));
+
+  if (shorten_lifetimes_dump)
+    TIMEVAR (dump_time,
+	     {
+	       fprintf (shorten_lifetimes_dump_file, "\n;; Function %s\n\n",
+			IDENTIFIER_POINTER (DECL_NAME (decl)));
+	       dump_flow_info (shorten_lifetimes_dump_file);
+	       print_rtl (shorten_lifetimes_dump_file, insns);
+	       fflush (shorten_lifetimes_dump_file);
+	     });
+  /* END CYGNUS LOCAL */
+
+  /* CYGNUS LOCAL: regmove */
+  /* Currently, this is used by the SH/H8300 ports.  */
+  if (regmove_dump)
+    TIMEVAR (dump_time,
+	     {
+	       fprintf (regmove_dump_file, "\n;; Function %s\n\n",
+			IDENTIFIER_POINTER (DECL_NAME (decl)));
+	     });
+
+  /* Register allocation pre-pass, to reduce number of moves
+     necessary for two-address machines.  */
+  if (optimize > 0 && flag_regmove)
+    TIMEVAR (regmove_time, regmove_optimize (insns, max_reg_num (),
+					     regmove_dump_file));
+
+  if (regmove_dump)
+    TIMEVAR (dump_time,
+	     {
+	       print_rtl (regmove_dump_file, insns);
+	       fflush (regmove_dump_file);
+	     });
+  /* END CYGNUS LOCAL */
+
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
 
   /* Print function header into sched dump now
      because doing the sched analysis makes some of the dump.  */
@@ -3032,6 +3474,10 @@ rest_of_compilation (decl)
 
       TIMEVAR (sched_time, schedule_insns (sched_dump_file));
     }
+
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
 
   /* Dump rtl after instruction scheduling.  */
 
@@ -3070,6 +3516,10 @@ rest_of_compilation (decl)
 	     fprintf (global_reg_dump_file, "\n;; Function %s\n\n",
 		      IDENTIFIER_POINTER (DECL_NAME (decl))));
 
+  /* Save the last label number used so far, so reorg can tell
+     when it's safe to kill spill regs.  */
+  max_label_num_after_reload = max_label_num ();
+
   /* Unless we did stupid register allocation,
      allocate remaining pseudo-regs, then do the reload pass
      fixing up any insns that are invalid.  */
@@ -3081,6 +3531,10 @@ rest_of_compilation (decl)
 	     else
 	       failure = reload (insns, 0, global_reg_dump_file);
 	   });
+
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
 
   if (global_reg_dump)
     TIMEVAR (dump_time,
@@ -3132,6 +3586,10 @@ rest_of_compilation (decl)
     leaf_function = 1;
 #endif
 
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
+
   /* One more attempt to remove jumps to .+1
      left by dead-store-elimination.
      Also do cross-jumping this time
@@ -3141,6 +3599,10 @@ rest_of_compilation (decl)
     {
       TIMEVAR (jump_time, jump_optimize (insns, 1, 1, 0));
     }
+
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
 
   /* Dump rtl code after jump, if we are doing that.  */
 
@@ -3158,8 +3620,12 @@ rest_of_compilation (decl)
    MACHINE_DEPENDENT_REORG (insns);
 #endif
 
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
+
   /* If a scheduling pass for delayed branches is to be done,
-     call the scheduling code. */
+     call the scheduling code.  */
 
 #ifdef DELAY_SLOTS
   if (optimize > 0 && flag_delayed_branch)
@@ -3178,6 +3644,10 @@ rest_of_compilation (decl)
     }
 #endif
 
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
+
   /* Shorten branches.  */
   TIMEVAR (shorten_branch_time,
 	   {
@@ -3186,6 +3656,9 @@ rest_of_compilation (decl)
 
 #ifdef STACK_REGS
   TIMEVAR (stack_reg_time, reg_to_stack (insns, stack_reg_dump_file));
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
   if (stack_reg_dump)
     {
       TIMEVAR (dump_time,
@@ -3224,6 +3697,10 @@ rest_of_compilation (decl)
 	     assemble_end_function (decl, fnname);
 	     fflush (asm_out_file);
 	   });
+
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
 
   /* Write DBX symbols if requested */
 
@@ -3267,6 +3744,10 @@ rest_of_compilation (decl)
 
   reload_completed = 0;
 
+  /* CYGNUS LOCAL mpw */
+  PROGRESS (1);
+  /* END CYGNUS LOCAL */
+
   /* Clear out the insn_length contents now that they are no longer valid.  */
   init_insn_lengths ();
 
@@ -3278,6 +3759,10 @@ rest_of_compilation (decl)
   /* Cancel the effect of rtl_in_current_obstack.  */
 
   resume_temporary_allocation ();
+
+  /* Show no temporary slots allocated.  */
+
+  init_temp_slots ();
 
   /* The parsing time is all the time spent in yyparse
      *except* what is spent in this function.  */
@@ -3319,7 +3804,7 @@ main (argc, argv, envp)
   {
     struct rlimit rlim;
 
-    /* Set the stack limit huge so that alloca does not fail. */
+    /* Set the stack limit huge so that alloca does not fail.  */
     getrlimit (RLIMIT_STACK, &rlim);
     rlim.rlim_cur = rlim.rlim_max;
     setrlimit (RLIMIT_STACK, &rlim);
@@ -3332,9 +3817,12 @@ main (argc, argv, envp)
   signal (SIGPIPE, pipe_closed);
 #endif
 
+  /* CYGNUS LOCAL mpw */
+  START_PROGRESS (progname, 0);
+  /* END CYGNUS LOCAL */
+
   decl_printable_name = decl_name;
   lang_expand_expr = (struct rtx_def *(*)()) do_abort;
-  interim_eh_hook = interim_eh;
 
   /* Initialize whether `char' is signed.  */
   flag_signed_char = DEFAULT_SIGNED_CHAR;
@@ -3404,6 +3892,11 @@ main (argc, argv, envp)
       flag_inline_functions = 1;
     }
 
+  /* Initialize target_flags before OPTIMIZATION_OPTIONS so the latter can
+     modify it.  */
+  target_flags = 0;
+  set_target_switch ("");
+
 #ifdef OPTIMIZATION_OPTIONS
   /* Allow default optimizations to be specified on a per-machine basis.  */
   OPTIMIZATION_OPTIONS (optimize);
@@ -3412,18 +3905,75 @@ main (argc, argv, envp)
   /* Initialize register usage now so switches may override.  */
   init_reg_sets ();
 
-  target_flags = 0;
-  set_target_switch ("");
-
   for (i = 1; i < argc; i++)
     {
       int j;
       /* If this is a language-specific option,
 	 decode it in a language-specific way.  */
       for (j = 0; lang_options[j] != 0; j++)
-	if (!strncmp (argv[i], lang_options[j],
-		      strlen (lang_options[j])))
-	  break;
+	{
+	  /* CYGNUS LOCAL, don't accept a lang option, if it matches a normal
+	     -f option.  Chill defines a -fpack, but we want to support
+	     -fpack-struct.  */
+	  if (!strcmp (argv[i], lang_options[j]))
+	    break;
+
+	  if (!strncmp (argv[i], lang_options[j],
+			strlen (lang_options[j])))
+	    {
+	      if (argv[i][0] == '-' && argv[i][1] == 'f')
+		{
+		  register char *p = &argv[i][1];
+		  int found = 0, k;
+
+		  /* Some kind of -f option.
+		     P's value is the option sans `-f'.
+		     Search for it in the table of options.  */
+
+		  for (k = 0;
+		       !found && k < sizeof (f_options) / sizeof (f_options[0]);
+		       k++)
+		    {
+		      if (!strcmp (p, f_options[k].string)
+			  || (p[0] == 'n' && p[1] == 'o' && p[2] == '-'
+			      && !strcmp (p, f_options[k].string)))
+			{
+			  found = 1;
+			  break;
+			}
+		    }
+		  if (found)
+		    break;
+		}
+	      else if (argv[i][0] == '-' && argv[i][1] == 'W')
+		{
+		  register char *p = &argv[i][1];
+		  int found = 0, k;
+
+		  /* Some kind of -W option.
+		     P's value is the option sans `-W'.
+		     Search for it in the table of options.  */
+
+		  for (k = 0;
+		       !found && k < sizeof (W_options) / sizeof (W_options[0]);
+		       k++)
+		    {
+		      if (!strcmp (p, W_options[k].string)
+			  || (p[0] == 'n' && p[1] == 'o' && p[2] == '-'
+			      && !strcmp (p, W_options[k].string)))
+			{
+			  found = 1;
+			  break;
+			}
+		    }
+		  if (found)
+		    break;
+		}
+	      else		/* not a -f or a -W option */
+		break;
+	    }
+	  /* END CYGNUS LOCAL */
+	}
       if (lang_options[j] != 0)
 	/* If the option is valid for *some* language,
 	   treat it as valid even if this language doesn't understand it.  */
@@ -3447,6 +3997,9 @@ main (argc, argv, envp)
 		switch (*p++)
 		  {
  		  case 'a':
+		    /* CYGNUS LOCAL: gcov */
+		    branch_prob_dump = 1;
+		    /* END CYGNUS LOCAL */
  		    combine_dump = 1;
  		    dbr_sched_dump = 1;
  		    flow_dump = 1;
@@ -3455,12 +4008,23 @@ main (argc, argv, envp)
  		    jump2_opt_dump = 1;
  		    local_reg_dump = 1;
  		    loop_dump = 1;
+		    /* CYGNUS LOCAL: regmove */
+		    regmove_dump = 1;
+		    /* END CYGNUS LOCAL */
  		    rtl_dump = 1;
  		    cse_dump = 1, cse2_dump = 1;
  		    sched_dump = 1;
  		    sched2_dump = 1;
 		    stack_reg_dump = 1;
+		    /* CYGNUS LOCAL mentoropt/law */
+		    shorten_lifetimes_dump = 1;
+		    /* END CYGNUS LOCAL */
 		    break;
+		    /* CYGNUS LOCAL: gcov */
+		  case 'b':
+		    branch_prob_dump = 1;
+		    break;
+		    /* END CYGNUS LOCAL */
 		  case 'k':
 		    stack_reg_dump = 1;
 		    break;
@@ -3503,18 +4067,31 @@ main (argc, argv, envp)
 		  case 't':
 		    cse2_dump = 1;
 		    break;
+		    /* CYGNUS LOCAL: regmove */
+		  case 'N':
+		    regmove_dump = 1;
+		    break;
+		    /* END CYGNUS LOCAL */
 		  case 'S':
 		    sched_dump = 1;
 		    break;
 		  case 'R':
 		    sched2_dump = 1;
 		    break;
+		  /* CYGNUS LOCAL mentoropt/law */
+		  case 'G':
+		    shorten_lifetimes_dump = 1;
+		    break;
+		  /* END CYGNUS LOCAL */
+
 		  case 'y':
 		    set_yydebug (1);
 		    break;
-
 		  case 'x':
 		    rtl_dump_and_exit = 1;
+		    break;
+		  case 'A':
+		    flag_debug_asm = 1;
 		    break;
 		  }
 	    }
@@ -3548,6 +4125,20 @@ main (argc, argv, envp)
 
 	      if (found)
 		;
+/* CYGNUS LOCAL haifa */
+#ifdef HAIFA
+#ifdef INSN_SCHEDULING
+	      else if (!strncmp (p, "sched-verbose-",14))
+		fix_sched_param("verbose",&p[14]);
+	      else if (!strncmp (p, "sched-max-",10))
+		fix_sched_param("max",&p[10]);
+	      else if (!strncmp (p, "sched-inter-max-b-",18))
+		fix_sched_param("interblock-max-blocks",&p[18]);
+	      else if (!strncmp (p, "sched-inter-max-i-",18))
+		fix_sched_param("interblock-max-insns",&p[18]);
+#endif
+#endif	/* HAIFA */
+/* END CYGNUS LOCAL haifa */
 	      else if (!strncmp (p, "fixed-", 6))
 		fix_register (&p[6], 1, 1);
 	      else if (!strncmp (p, "call-used-", 10))
@@ -3657,17 +4248,23 @@ main (argc, argv, envp)
 	    }
 	  else if (!strcmp (str, "p"))
 	    {
-	      if (!output_bytecode)
-		profile_flag = 1;
-	      else
-		error ("profiling not supported in bytecode compilation");
+	      profile_flag = 1;
 	    }
 	  else if (!strcmp (str, "a"))
 	    {
 #if !defined (BLOCK_PROFILER) || !defined (FUNCTION_BLOCK_PROFILER)
 	      warning ("`-a' option (basic block profile) not supported");
 #else
-	      profile_block_flag = 1;
+              profile_block_flag = (profile_block_flag < 2) ? 1 : 3;
+#endif
+	    }
+	  else if (!strcmp (str, "ax"))
+	    {
+#if !defined (FUNCTION_BLOCK_PROFILER_EXIT) || !defined (BLOCK_PROFILER) || !defined (FUNCTION_BLOCK_PROFILER)
+	      warning ("`-ax' option (jump profiling) not supported");
+#else
+	      profile_block_flag = (!profile_block_flag 
+	                               || profile_block_flag == 2) ? 2 : 3;
 #endif
 	    }
 	  else if (str[0] == 'g')
@@ -3775,6 +4372,8 @@ You Lose!  You must define PREFERRED_DEBUGGING_TYPE!
 		write_symbols = XCOFF_DEBUG;
 	      else if (!strncmp (str, "gxcoff", len))
 		write_symbols = XCOFF_DEBUG;
+	      else if (!strncmp (str, "gxcoff+", len))
+		write_symbols = XCOFF_DEBUG;
 
 	      /* Always enable extensions for -ggdb or -gxcoff+,
 		 always disable for -gxcoff.
@@ -3820,9 +4419,16 @@ You Lose!  You must define PREFERRED_DEBUGGING_TYPE!
       else
 	filename = argv[i];
     }
+   /* CYGNUS LOCAL: support for old exceptions flag/manson */
+   if (flag_exceptions_old)
+    {
+      flag_exceptions = 1;
+      warning ("-fhandle-exceptions is going away; please use -fexceptions instead");
+    }
+   /* END CYGNUS LOCAL */
 
   /* Initialize for bytecode output.  A good idea to do this as soon as
-     possible after the "-f" options have been parsed. */
+     possible after the "-f" options have been parsed.  */
   if (output_bytecode)
     {
 #ifndef TARGET_SUPPORTS_BYTECODE
@@ -3861,6 +4467,12 @@ You Lose!  You must define PREFERRED_DEBUGGING_TYPE!
   OVERRIDE_OPTIONS;
 #endif
 
+  if (profile_block_flag == 3)
+    {
+      warning ("`-ax' and `-a' are conflicting options. `-a' ignored.");
+      profile_block_flag = 2;
+    }
+
   /* Unrolling all loops implies that standard loop unrolling must also
      be done.  */
   if (flag_unroll_all_loops)
@@ -3889,25 +4501,18 @@ You Lose!  You must define PREFERRED_DEBUGGING_TYPE!
      option flags in use.  */
   if (version_flag)
     {
-      fprintf (stderr, "%s version %s", language_string, version_string);
-#ifdef TARGET_VERSION
-      TARGET_VERSION;
-#endif
-#ifdef __GNUC__
-#ifndef __VERSION__
-#define __VERSION__ "[unknown]"
-#endif
-      fprintf (stderr, " compiled by GNU C version %s.\n", __VERSION__);
-#else
-      fprintf (stderr, " compiled by CC.\n");
-#endif
+      print_version (stderr, "");
       if (! quiet_flag)
-	print_switch_values ();
+	print_switch_values (stderr, 0, MAX_LINE, "", " ", "\n");
     }
 
   compile_file (filename);
 
-#if !defined(OS2) && !defined(VMS) && !defined(_WIN32)
+  /* CYGNUS LOCAL mpw */
+  END_PROGRESS (progname);
+  /* END CYGNUS LOCAL */
+
+#if !defined(OS2) && !defined(VMS) && (!defined(_WIN32) || defined (__CYGWIN32__))
   if (flag_print_mem)
     {
       char *lim = (char *) sbrk (0);
@@ -3922,7 +4527,7 @@ You Lose!  You must define PREFERRED_DEBUGGING_TYPE!
       system ("ps v");
 #endif /* not USG */
     }
-#endif /* not OS2 and not VMS and not _WIN32 */
+#endif /* ! OS2 && ! VMS && (! _WIN32 || CYGWIN32) */
 
   if (errorcount)
     exit (FATAL_EXIT_CODE);
@@ -3986,51 +4591,133 @@ set_target_switch (name)
     error ("Invalid option `%s'", name);
 }
 
-/* Variable used for communication between the following two routines.  */
+/* Print version information to FILE.
+   Each line begins with INDENT (for the case where FILE is the
+   assembler output file).  */
 
-static int line_position;
-
-/* Print an option value and adjust the position in the line.  */
-
-static void
-print_single_switch (type, name)
-     char *type, *name;
+void
+print_version (file, indent)
+     FILE *file;
+     char *indent;
 {
-  fprintf (stderr, " %s%s", type, name);
+  fprintf (file, "%s%s%s version %s", indent, *indent != 0 ? " " : "",
+	   language_string, version_string);
+  /* CYGNUS LOCAL -- Haifa scheduler */
+#ifdef HAIFA
+  fprintf (file, " using the Haifa scheduler");
+#endif
+  /* END CYGNUS LOCAL -- Haifa scheduler */
+  fprintf (file, " (%s)", TARGET_NAME);
+#ifdef __GNUC__
+#ifndef __VERSION__
+#define __VERSION__ "[unknown]"
+#endif
+  fprintf (file, " compiled by GNU C version %s.\n", __VERSION__);
+#else
+  fprintf (file, " compiled by CC.\n");
+#endif
+}
 
-  line_position += strlen (type) + strlen (name) + 1;
+/* Print an option value and return the adjusted position in the line.
+   ??? We don't handle error returns from fprintf (disk full).  */
 
-  if (line_position > 65)
+int
+print_single_switch (file, pos, max, indent, sep, term, type, name)
+     FILE *file;
+     int pos, max;
+     char *indent, *sep, *term, *type, *name;
+{
+  if (pos != 0
+      && pos + strlen (sep) + strlen (type) + strlen (name) > max)
     {
-      fprintf (stderr, "\n\t");
-      line_position = 8;
+      fprintf (file, "%s", term);
+      pos = 0;
     }
+  if (pos == 0)
+    {
+      pos = fprintf (file, "%s", indent);
+    }
+  pos += fprintf (file, "%s%s%s", sep, type, name);
+  return pos;
 }
      
-/* Print default target switches for -version.  */
+/* Print active target switches to FILE.
+   POS is the current cursor position and MAX is the size of a "line".
+   Each line begins with INDENT and ends with TERM.
+   Each switch is separated from the next by SEP.  */
 
-static void
-print_switch_values ()
+void
+print_switch_values (file, pos, max, indent, sep, term)
+     FILE *file;
+     int pos, max;
+     char *indent, *sep, *term;
 {
-  register int j;
+  int j, flags;
+  char **p;
 
-  fprintf (stderr, "enabled:");
-  line_position = 8;
+  /* Print the options as passed.  */
+
+  pos = print_single_switch (file, pos, max, indent, *indent ? " " : "", term,
+			     "options passed: ", "");
+
+  for (p = &save_argv[1]; *p != NULL; p++)
+    if (**p == '-')
+      {
+	/* Ignore these.  */
+	if (strcmp (*p, "-o") == 0)
+	  {
+	    if (p[1] != NULL)
+	      p++;
+	    continue;
+	  }
+	if (strcmp (*p, "-quiet") == 0)
+	  continue;
+	if (strcmp (*p, "-version") == 0)
+	  continue;
+	if ((*p)[1] == 'd')
+	  continue;
+
+	pos = print_single_switch (file, pos, max, indent, sep, term, *p, "");
+      }
+  if (pos > 0)
+    fprintf (file, "%s", term);
+
+  /* Print the -f and -m options that have been enabled.
+     We don't handle language specific options but printing argv
+     should suffice.  */
+
+  pos = print_single_switch (file, 0, max, indent, *indent ? " " : "", term,
+			     "options enabled: ", "");
 
   for (j = 0; j < sizeof f_options / sizeof f_options[0]; j++)
     if (*f_options[j].variable == f_options[j].on_value)
-      print_single_switch ("-f", f_options[j].string);
+      pos = print_single_switch (file, pos, max, indent, sep, term,
+				 "-f", f_options[j].string);
 
-  for (j = 0; j < sizeof W_options / sizeof W_options[0]; j++)
-    if (*W_options[j].variable == W_options[j].on_value)
-      print_single_switch ("-W", W_options[j].string);
+  /* Print target specific options.  */
 
+  flags = target_flags;
   for (j = 0; j < sizeof target_switches / sizeof target_switches[0]; j++)
     if (target_switches[j].name[0] != '\0'
 	&& target_switches[j].value > 0
 	&& ((target_switches[j].value & target_flags)
 	    == target_switches[j].value))
-      print_single_switch ("-m", target_switches[j].name);
+      {
+	pos = print_single_switch (file, pos, max, indent, sep, term,
+				   "-m", target_switches[j].name);
+	flags &= ~ target_switches[j].value;
+      }
 
-  fprintf (stderr, "\n");
+#ifdef TARGET_OPTIONS
+  for (j = 0; j < sizeof target_options / sizeof target_options[0]; j++)
+    if (*target_options[j].variable != NULL)
+      {
+	char prefix[256];
+	sprintf (prefix, "-m%s", target_options[j].prefix);
+	pos = print_single_switch (file, pos, max, indent, sep, term,
+				   prefix, *target_options[j].variable);
+      }
+#endif
+
+  fprintf (file, "%s", term);
 }
