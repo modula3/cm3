@@ -1,92 +1,91 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Mon Aug 12 20:50:13 PDT 1996 by steveg *)
+(* Last modified on Sat Jan 11 22:04:17 PST 1997 by steveg *)
 
 MODULE HTTPControl EXPORTS HTTPControl;
 
-IMPORT
-  App, Fmt, HTTP, HTTPApp, HTTPControlValue, 
-  Rd, Text, Thread, Wr;
+IMPORT App, Fmt, HTTP, HTTPApp, HTTPControlValue, Rd, Text, TextWr, Thread,
+       Wr;
 
 <* PRAGMA LL *>
 
 VAR
   rootForm: StaticForm;
-  mu := NEW(MUTEX);
+  mu                   := NEW(MUTEX);
 
 REVEAL
   Form = FormPublic BRANDED OBJECT
-    nameF: TEXT;
-  OVERRIDES
-    init := FormInitDefault;
-    accept := FormAcceptDefault;
-    respond := FormRespondDefault;
-    name := FormNameDefault;
-  END;
+           nameF: TEXT;
+         OVERRIDES
+           init    := FormInitDefault;
+           accept  := FormAcceptDefault;
+           respond := FormRespondDefault;
+           name    := FormNameDefault;
+         END;
 
-PROCEDURE FormInitDefault(self: Form; name: TEXT): Form =
+PROCEDURE FormInitDefault (self: Form; name: TEXT): Form =
   BEGIN
     self.nameF := name;
     RETURN self;
   END FormInitDefault;
 
-PROCEDURE FormNameDefault(self: Form): TEXT =
+PROCEDURE FormNameDefault (self: Form): TEXT =
   BEGIN
     RETURN self.nameF;
   END FormNameDefault;
 
 
-PROCEDURE FormAcceptDefault(<* UNUSED *> self: Form;
-                            <* UNUSED *> request: HTTP.Request; 
-                            <* UNUSED *> path: TEXT;
-                            <* UNUSED *> VAR (* OUT *) acceptState: REFANY): BOOLEAN =
+PROCEDURE FormAcceptDefault (<* UNUSED *> self   : Form;
+                             <* UNUSED *> request: HTTP.Request;
+                             <* UNUSED *> path   : TEXT;
+                             <* UNUSED *> VAR (* OUT *) acceptState: REFANY):
+  BOOLEAN =
   BEGIN
     RETURN FALSE;
   END FormAcceptDefault;
 
-PROCEDURE FormRespondDefault(<* UNUSED *> self: Form;
-                             <* UNUSED *> request: HTTP.Request;
-                             <* UNUSED *> query: HTTP.FormQuery; 
-                             <* UNUSED *> wr: Wr.T; 
-                             <* UNUSED *> log: App.Log;
-                             <* UNUSED *>  READONLY acceptState: REFANY) =
+PROCEDURE FormRespondDefault (<* UNUSED *> self   : Form;
+                              <* UNUSED *> request: HTTP.Request;
+                              <* UNUSED *> query  : HTTP.FormQuery;
+                              <* UNUSED *> wr     : Wr.T;
+                              <* UNUSED *> log    : App.Log;
+                              <* UNUSED *> READONLY acceptState: REFANY) =
   BEGIN
   END FormRespondDefault;
 
 REVEAL
   Iterator = IteratorPublic BRANDED OBJECT
-  OVERRIDES
-    next := IteratorDefaultNext;
-  END;
+             OVERRIDES
+               next := IteratorDefaultNext;
+             END;
 
-PROCEDURE IteratorDefaultNext(<* UNUSED *> self: Iterator): Value =
+PROCEDURE IteratorDefaultNext (<* UNUSED *> self: Iterator): Value =
   BEGIN
     RETURN NIL;
   END IteratorDefaultNext;
 
 TYPE
   ValuesList = REF RECORD
-    head: Value;
-    tail: ValuesList;
-  END;
+                     head: Value;
+                     tail: ValuesList;
+                   END;
 
   Values = OBJECT
-    head, tail: ValuesList;
-  METHODS
-    init(): Values := ValuesInit;
-    add(value: Value; tail: BOOLEAN := TRUE) := ValuesAddValue;
-  END;
+             head, tail: ValuesList;
+           METHODS
+             init (): Values                            := ValuesInit;
+             add  (value: Value; tail: BOOLEAN := TRUE) := ValuesAddValue;
+           END;
 
-PROCEDURE ValuesInit(self: Values): Values =
+PROCEDURE ValuesInit (self: Values): Values =
   BEGIN
     self.head := NIL;
     self.tail := NIL;
     RETURN self;
   END ValuesInit;
 
-PROCEDURE ValuesAddValue(self: Values; value: Value; tail: BOOLEAN) =
-  VAR
-    elem := NEW(ValuesList, head := value);
+PROCEDURE ValuesAddValue (self: Values; value: Value; tail: BOOLEAN) =
+  VAR elem := NEW(ValuesList, head := value);
   BEGIN
     LOCK mu DO
       IF self.head = NIL THEN
@@ -94,7 +93,7 @@ PROCEDURE ValuesAddValue(self: Values; value: Value; tail: BOOLEAN) =
         self.tail := elem;
       ELSIF tail THEN
         self.tail.tail := elem;
-       self.tail := elem;
+        self.tail := elem;
       ELSE
         elem.tail := self.head;
         self.head := elem;
@@ -104,47 +103,44 @@ PROCEDURE ValuesAddValue(self: Values; value: Value; tail: BOOLEAN) =
 
 REVEAL
   StaticForm = StaticFormPublic BRANDED OBJECT
-    values: Values;
-    urlSF, urlSet: TEXT;
-  OVERRIDES
-    init := StaticFormInit;
-    url := StaticFormURL;
-    addValue := StaticFormAddValue;
-    accept := StaticFormAccept;
-    respond := StaticFormRespond;
-    iterate := StaticFormIterate;
-  END;
+                 values       : Values;
+                 urlSF, urlSet: TEXT;
+               OVERRIDES
+                 init     := StaticFormInit;
+                 url      := StaticFormURL;
+                 addValue := StaticFormAddValue;
+                 accept   := StaticFormAccept;
+                 respond  := StaticFormRespond;
+                 iterate  := StaticFormIterate;
+               END;
 
-PROCEDURE StaticFormInit(self: StaticForm; name, url: TEXT;
-                         register: BOOLEAN): StaticForm =
+PROCEDURE StaticFormInit (self     : StaticForm;
+                          name, url: TEXT;
+                          register : BOOLEAN     ): StaticForm =
   BEGIN
-    IF Text.GetChar(url, 0) = '/' THEN
-      url := Text.Sub(url, 1);
-    END;
+    IF Text.GetChar(url, 0) = '/' THEN url := Text.Sub(url, 1); END;
     self.urlSF := url;
     self.urlSet := url & "Set";
     self.values := NEW(Values).init();
     EVAL Form.init(self, name);
-    IF register THEN
-      RegisterForm(self, name, url, TRUE);
-    END;
+    IF register THEN RegisterForm(self, name, url, TRUE); END;
     RETURN self;
   END StaticFormInit;
 
-PROCEDURE StaticFormURL(self: StaticForm): TEXT =
+PROCEDURE StaticFormURL (self: StaticForm): TEXT =
   BEGIN
     RETURN self.urlSF;
   END StaticFormURL;
 
-PROCEDURE StaticFormAddValue(self: StaticForm; value: Value) =
+PROCEDURE StaticFormAddValue (self: StaticForm; value: Value) =
   BEGIN
     self.values.add(value);
   END StaticFormAddValue;
 
-PROCEDURE StaticFormAccept(self: StaticForm;
-                           <* UNUSED *> request: HTTP.Request;
-                           path: TEXT; 
-                           VAR (* OUT *) acceptState: REFANY): BOOLEAN =
+PROCEDURE StaticFormAccept (             self   : StaticForm;
+                            <* UNUSED *> request: HTTP.Request;
+                                         path   : TEXT;
+                            VAR (* OUT *) acceptState: REFANY): BOOLEAN =
   BEGIN
     IF Text.Equal(path, self.urlSF) THEN
       acceptState := NEW(StaticFormAcceptState, set := FALSE);
@@ -157,55 +153,61 @@ PROCEDURE StaticFormAccept(self: StaticForm;
   END StaticFormAccept;
 
 REVEAL
-  Value = ValuePublic BRANDED OBJECT 
-  OVERRIDES
-    setText := SetTextNull;
-    getText := GetTextNull;
-    setDefault := SetDefaultNull;
-    writeFormItem := WriteFormItemNull;
-  END;
+  Value = ValuePublic BRANDED OBJECT
+          OVERRIDES
+            setText       := SetTextNull;
+            getText       := GetTextNull;
+            setDefault    := SetDefaultNull;
+            writeFormItem := WriteFormItemNull;
+          END;
 
-PROCEDURE SetTextNull(<* UNUSED *> self: Value; 
-                      <* UNUSED *> v: TEXT; 
-                      <* UNUSED *> log: App.Log) =
+PROCEDURE SetTextNull (<* UNUSED *> self: Value;
+                       <* UNUSED *> req : HTTP.Request;
+                       <* UNUSED *> v   : TEXT;
+                       <* UNUSED *> log : App.Log       ) =
   BEGIN
     <* ASSERT FALSE *>
   END SetTextNull;
 
-PROCEDURE GetTextNull(<* UNUSED *> self: Value): TEXT =
+PROCEDURE GetTextNull (<* UNUSED *> self: Value;
+                       <* UNUSED *> req : HTTP.Request): TEXT =
   BEGIN
     <* ASSERT FALSE *>
   END GetTextNull;
 
-PROCEDURE SetDefaultNull(value: Value; log: App.Log) RAISES {App.Error} =
+PROCEDURE SetDefaultNull (             value: Value;
+                          <* UNUSED *> req  : HTTP.Request;
+                                       log  : App.Log       )
+  RAISES {App.Error} =
   BEGIN
-    log.log(Fmt.F("No default value for: %s", value.label), 
-              App.LogStatus.Error);
+    log.log(
+      Fmt.F("No default value for: %s", value.label), App.LogStatus.Error);
   END SetDefaultNull;
 
-PROCEDURE WriteFormItemNull(<* UNUSED *> value: Value; 
-                            <* UNUSED *> wr: Wr.T; 
-                            <* UNUSED *> log: App.Log) =
+PROCEDURE WriteFormItemNull (<* UNUSED *> value: Value;
+                             <* UNUSED *> req  : HTTP.Request;
+                             <* UNUSED *> wr   : Wr.T;
+                             <* UNUSED *> log  : App.Log       ) =
   BEGIN
     <* ASSERT FALSE *>
   END WriteFormItemNull;
 
 REVEAL
   ContainerValue = ContainerValuePublic BRANDED OBJECT
-  OVERRIDES
-    setValues := ContainerValueSetValuesNull;
-  END;
+                   OVERRIDES
+                     setValues := ContainerValueSetValuesNull;
+                   END;
 
-PROCEDURE ContainerValueSetValuesNull(<* UNUSED *> self: ContainerValue;
-                                      <* UNUSED *> query: HTTP.FormQuery;
-                                      <* UNUSED *> log: App.Log) =
+PROCEDURE ContainerValueSetValuesNull (<* UNUSED *> self : ContainerValue;
+                                       <* UNUSED *> req  : HTTP.Request;
+                                       <* UNUSED *> query: HTTP.FormQuery;
+                                       <* UNUSED *> log  : App.Log         ) =
   BEGIN
   END ContainerValueSetValuesNull;
 
 (* return the next editable value in the list *)
-PROCEDURE NextEditableValue(iterator: Iterator): Value =
-  VAR
-    value: Value := iterator.next();
+PROCEDURE NextEditableValue (iterator: Iterator): Value =
+  VAR value: Value := iterator.next();
   BEGIN
     LOCK mu DO
       WHILE value # NIL AND NOT value.editable DO
@@ -215,48 +217,49 @@ PROCEDURE NextEditableValue(iterator: Iterator): Value =
     RETURN value;
   END NextEditableValue;
 
-PROCEDURE SetValues(form: Form; query: HTTP.FormQuery; log: App.Log)
-  RAISES {App.Error} =
+PROCEDURE SetValues (req  : HTTP.Request;
+                     form : Form;
+                     query: HTTP.FormQuery;
+                     log  : App.Log         )
+  RAISES {App.Error, NotAuthorized} =
   VAR
-    field: HTTP.Field;
-    iterValues := form.iterate();
-    value := NextEditableValue(iterValues);
+    field     : HTTP.Field;
+    iterValues             := form.iterate();
+    value                  := NextEditableValue(iterValues);
   BEGIN
-    (* Plan:
-         Iterate through the editable values.
-         If there is a matching query value the set it from 
-           that or else default it...
-    *)
+    (* Plan: Iterate through the editable values.  If there is a matching
+       query value the set it from that or else default it... *)
     WHILE value # NIL DO
       IF ISTYPE(value, ContainerValue) THEN
-        NARROW(value, ContainerValue).setValues(query, log);
-      ELSIF value.id # NIL THEN
+        NARROW(value, ContainerValue).setValues(req, query, log);
+      ELSE
         field := query.lookupField(value.id);
         IF field # NIL THEN
-          value.setText(field.value, log);
+          value.setText(req, field.value, log);
           IF App.Verbose() THEN
-            log.log(Fmt.F("field: %s value: %s setting value: %s",
-                        field.name, field.value, value.label),
-                    App.LogStatus.Verbose);
+            log.log(
+              Fmt.F("field: %s value: %s setting value: %s", field.name,
+                    field.value, value.label), App.LogStatus.Verbose);
           END;
         ELSE
-          value.setDefault(log);
+          value.setDefault(req, log);
         END;
-      ELSE (* ID-less value *)
       END;
       value := NextEditableValue(iterValues);
     END;
   END SetValues;
 
-PROCEDURE StaticFormRespond(form: StaticForm;
-                            <* UNUSED *> request: HTTP.Request; 
-                            query: HTTP.FormQuery; 
-                            wr: Wr.T; log: App.Log;
-                            READONLY acceptState: REFANY) RAISES {App.Error} =
+PROCEDURE StaticFormRespond (         form       : StaticForm;
+                                      request    : HTTP.Request;
+                                      query      : HTTP.FormQuery;
+                                      wr         : Wr.T;
+                                      log        : App.Log;
+                             READONLY acceptState: REFANY          )
+  RAISES {App.Error, NotAuthorized} =
   VAR
-    set := FALSE;
+    set        := FALSE;
     iterValues := form.iterate();
-    value := iterValues.next();
+    value      := iterValues.next();
   BEGIN
     IF acceptState # NIL THEN
       set := NARROW(acceptState, StaticFormAcceptState).set;
@@ -267,7 +270,7 @@ PROCEDURE StaticFormRespond(form: StaticForm;
         log.log(Fmt.F("Query request: %s", query.toText()),
                 App.LogStatus.Verbose);
       END;
-      SetValues(form, query, log);
+      SetValues(request, form, query, log);
     END;
     TRY
       IF form.title = NIL THEN
@@ -279,64 +282,59 @@ PROCEDURE StaticFormRespond(form: StaticForm;
 
       Wr.PutText(wr, Fmt.F("<FORM METHOD=POST Action=%s>\n", form.urlSet));
       WHILE value # NIL DO
-        value.writeFormItem(wr, log);
-        LOCK mu DO
-          value := iterValues.next();
-        END;
+        value.writeFormItem(request, wr, log);
+        LOCK mu DO value := iterValues.next(); END;
       END;
-
       IF form.hasSubmitButton THEN
         Wr.PutText(wr, "<P><INPUT TYPE=submit VALUE=Submit><INPUT TYPE=reset>");
       END;
       Wr.PutText(wr, "</FORM></BODY></HTML>");
-
     EXCEPT
     | Wr.Failure, Thread.Alerted =>
-       log.log("Problem writing form to browser", App.LogStatus.Error);
+        log.log("Problem writing form to browser", App.LogStatus.Error);
     END;
   END StaticFormRespond;
 
 TYPE
   StaticFormIterator = Iterator OBJECT
-    set: BOOLEAN;
-    values: ValuesList;
-    row, col: INTEGER;
-  OVERRIDES
-    next := StaticFormNext;
-  END;
+                         set     : BOOLEAN;
+                         values  : ValuesList;
+                         row, col: INTEGER;
+                       OVERRIDES
+                         next := StaticFormNext;
+                       END;
 
-PROCEDURE StaticFormIterate(self: StaticForm): Iterator =
+PROCEDURE StaticFormIterate (self: StaticForm): Iterator =
   BEGIN
     RETURN NEW(StaticFormIterator, values := self.values.head, row := -1);
   END StaticFormIterate;
 
-PROCEDURE StaticFormNext(self: StaticFormIterator): Value =
-  VAR
-    res: Value;
+PROCEDURE StaticFormNext (self: StaticFormIterator): Value =
+  VAR res: Value;
   BEGIN
     IF self.values = NIL THEN
       RETURN NIL
-(*
-    ELSIF self.set AND 
-          TYPEOF(self.values.head) = HTTPControlValue.TableValue THEN
-      table := self.values.head;
-      IF self.row = -1 THEN
-        self.row := 0;
-        self.col := 0;
-      ELSE
-        INC(self.col);
-      END;
-      IF self.col > LAST(table.table[self.row]^) THEN
-        INC(self.row);
-        self.col := 0;
-      END;
-      IF self.row > LAST(table.table^) THEN
-        self.row := -1;
-        self.values := self.values.tail;
-        RETURN StaticFormNext(self);
-      END;
-      RETURN table.table[self.row, self.col];
-*)
+      (*
+          ELSIF self.set AND
+                TYPEOF(self.values.head) = HTTPControlValue.TableValue THEN
+            table := self.values.head;
+            IF self.row = -1 THEN
+              self.row := 0;
+              self.col := 0;
+            ELSE
+              INC(self.col);
+            END;
+            IF self.col > LAST(table.table[self.row]^) THEN
+              INC(self.row);
+              self.col := 0;
+            END;
+            IF self.row > LAST(table.table^) THEN
+              self.row := -1;
+              self.values := self.values.tail;
+              RETURN StaticFormNext(self);
+            END;
+            RETURN table.table[self.row, self.col];
+      *)
     ELSE
       res := self.values.head;
       self.values := self.values.tail;
@@ -346,27 +344,26 @@ PROCEDURE StaticFormNext(self: StaticFormIterator): Value =
 
 TYPE
   FormsList = REF RECORD
-    head: Form;
-    tail: FormsList;
-  END;
+                    head: Form;
+                    tail: FormsList;
+                  END;
 
   Forms = OBJECT
-    head, tail: FormsList;
-  METHODS
-    init(): Forms := FormsInit;
-    add(form: Form; tail: BOOLEAN := TRUE) := FormsAddForm;
-  END;
+            head, tail: FormsList;
+          METHODS
+            init (): Forms                           := FormsInit;
+            add  (form: Form; tail: BOOLEAN := TRUE) := FormsAddForm;
+          END;
 
-PROCEDURE FormsInit(self: Forms): Forms =
+PROCEDURE FormsInit (self: Forms): Forms =
   BEGIN
     self.head := NIL;
     self.tail := NIL;
     RETURN self;
   END FormsInit;
 
-PROCEDURE FormsAddForm(self: Forms; form: Form; tail: BOOLEAN) =
-  VAR
-    elem := NEW(FormsList, head := form);
+PROCEDURE FormsAddForm (self: Forms; form: Form; tail: BOOLEAN) =
+  VAR elem := NEW(FormsList, head := form);
   BEGIN
     LOCK mu DO
       IF self.head = NIL THEN
@@ -382,8 +379,7 @@ PROCEDURE FormsAddForm(self: Forms; form: Form; tail: BOOLEAN) =
     END;
   END FormsAddForm;
 
-VAR
-  registeredForms := NEW(Forms).init();
+VAR registeredForms := NEW(Forms).init();
 
 PROCEDURE RegisterForm (form: Form; name, url: TEXT; addToRoot: BOOLEAN) =
   VAR value: HTTPControlValue.FormValue;
@@ -398,14 +394,15 @@ PROCEDURE RegisterForm (form: Form; name, url: TEXT; addToRoot: BOOLEAN) =
 
 TYPE
   RequestHandler = HTTPApp.RequestHandler OBJECT
-  OVERRIDES
-    accept := Accept;
-    request := Request;
-  END;
+                   OVERRIDES
+                     accept  := Accept;
+                     request := Request;
+                   END;
 
-PROCEDURE FindForm(request: HTTP.Request; path: TEXT; VAR (* OUT *) fas: REFANY): Form =
-  VAR
-    forms: FormsList;
+PROCEDURE FindForm (              request: HTTP.Request;
+                                  path   : TEXT;
+                    VAR (* OUT *) fas    : REFANY        ): Form =
+  VAR forms: FormsList;
   BEGIN
     LOCK mu DO
       forms := registeredForms.head;
@@ -419,16 +416,13 @@ PROCEDURE FindForm(request: HTTP.Request; path: TEXT; VAR (* OUT *) fas: REFANY)
     RETURN NIL;
   END FindForm;
 
-PROCEDURE FormLookup(name: TEXT): Form =
-  VAR
-    forms: FormsList;
+PROCEDURE FormLookup (name: TEXT): Form =
+  VAR forms: FormsList;
   BEGIN
     LOCK mu DO
       forms := registeredForms.head;
       WHILE forms # NIL DO
-        IF Text.Equal(forms.head.name(), name) THEN
-          RETURN forms.head;
-        END;
+        IF Text.Equal(forms.head.name(), name) THEN RETURN forms.head; END;
         forms := forms.tail;
       END;
     END;
@@ -437,10 +431,10 @@ PROCEDURE FormLookup(name: TEXT): Form =
 
 TYPE
   AcceptState = REF RECORD
-    query: HTTP.FormQuery;
-    form: Form;
-    formAcceptState: REFANY;
-  END;
+                      query          : HTTP.FormQuery;
+                      form           : Form;
+                      formAcceptState: REFANY;
+                    END;
 
 PROCEDURE Accept (<* UNUSED *>               self       : RequestHandler;
                                              request    : HTTP.Request;
@@ -454,13 +448,13 @@ PROCEDURE Accept (<* UNUSED *>               self       : RequestHandler;
     form           : Form;
     formAcceptState: REFANY;
   BEGIN
-    IF request.url.local() THEN
+    IF request.url.local(HTTPApp.AnyService) THEN
       IF request.method = HTTP.Method.Get
            OR request.method = HTTP.Method.Head THEN
         TRY
           query := NEW(HTTP.FormQuery).init(request.url.query);
         EXCEPT
-        | HTTP.BadFormQuery => 
+        | HTTP.BadFormQuery =>
         END;
       END;
       path := request.url.path;
@@ -474,53 +468,57 @@ PROCEDURE Accept (<* UNUSED *>               self       : RequestHandler;
     RETURN FALSE;
   END Accept;
 
-(* form fields are named val<i> and correspond to the i'th editable
-   value in the form. *)
+(* form fields are named val<i> and correspond to the i'th editable value
+   in the form. *)
 PROCEDURE Request (<* UNUSED *> self       : RequestHandler;
                                 request    : HTTP.Request;
                    <* UNUSED *> serverData : REFANY;
                                 acceptState: REFANY;
-                                rd         : Rd.T;
+                   <* UNUSED *> rd         : Rd.T;
                                 wr         : Wr.T;
                                 log        : App.Log         )
   RAISES {App.Error} =
   VAR
-    as: AcceptState := acceptState;
-    pi              := HTTP.GetProgramInfo();
+    as    : AcceptState := acceptState;
+    tempWr              := TextWr.New();
   BEGIN
-    IF NOT HTTP.AuthorizedRequest(request, pi.authType, pi.authAccount, log) THEN
-      HTTP.ReplyUnauthorized(wr, pi.authType, pi.authRealm, log);
-    ELSE
-      WITH reply = NEW(HTTP.Reply,
-                       code := HTTP.StatusCode[HTTP.StatusType.OK],
-                       reason := HTTP.StatusReason[HTTP.StatusType.OK]) DO
-        EVAL
-          reply.addField(
-            NEW(HTTP.Field).init(
-              HTTP.FieldName[HTTP.FieldType.Content_Type], "text/html"));
-        IF App.Verbose() THEN
-          log.log(reply.toText(NIL, log), App.LogStatus.Verbose);
-        END;
-        reply.write(wr, HTTP.DefaultStyle(reply.version), log);
+    WITH reply = NEW(
+                   HTTP.Reply, code := HTTP.StatusCode[HTTP.StatusType.OK],
+                   reason := HTTP.StatusReason[HTTP.StatusType.OK]) DO
+      EVAL reply.addField(
+             NEW(HTTP.Field).init(
+               HTTP.FieldName[HTTP.FieldType.Content_Type], "text/html"));
+      IF App.Verbose() THEN
+        log.log(reply.toText(NIL, log), App.LogStatus.Verbose);
       END;
-      IF request.method = HTTP.Method.Post THEN
-        TRY
-          as.query := NEW(HTTP.FormQuery).initFromRd(
-                        HTTPApp.PostRd(request, rd, log));
-        EXCEPT
-        | HTTP.BadFormQuery =>
-            log.log(
-              Fmt.F("Bad form query in request: %s",
-                    request.toText(
-                      HTTP.DefaultStyle(request.version), TRUE, log)),
-              App.LogStatus.Error);
-        END;
+      reply.write(tempWr, HTTP.DefaultStyle(reply.version), log);
+    END;
+    IF request.method = HTTP.Method.Post THEN
+      TRY
+        as.query := NEW(HTTP.FormQuery).init(request.postData);
+      EXCEPT
+      | HTTP.BadFormQuery =>
+          log.log(Fmt.F("Bad form query in request: %s",
+                        request.toText(
+                          HTTP.DefaultStyle(request.version), TRUE, log)),
+                  App.LogStatus.Error);
       END;
-      as.form.respond(request, as.query, wr, log, as.formAcceptState);
+    END;
+    TRY
+      as.form.respond(request, as.query, tempWr, log, as.formAcceptState);
+      Wr.PutText(wr, TextWr.ToText(tempWr));
+    EXCEPT
+    | Thread.Alerted, Wr.Failure =>
+        log.log(
+          "HTTPControl.Request: unexpected error", App.LogStatus.Error);
+    | NotAuthorized =>
+        WITH pi = HTTP.GetProgramInfo() DO
+          HTTP.ReplyUnauthorized(wr, pi.authType, pi.authRealm, log);
+        END;
     END;
   END Request;
 
-PROCEDURE RootForm(): StaticForm =
+PROCEDURE RootForm (): StaticForm =
   BEGIN
     RETURN rootForm;
   END RootForm;
@@ -534,6 +532,7 @@ PROCEDURE AddToForm (form: StaticForm; subForm: Form; name, url: TEXT) =
 BEGIN
   rootForm := NEW(StaticForm).init("", "/");
 
-  HTTPApp.RegisterRequestHandler(NEW(RequestHandler, 
-                                     priority := HTTPApp.RequestPriority.Low));
+  HTTPApp.RegisterRequestHandler(HTTPApp.AnyPort, 
+    NEW(RequestHandler, priority := HTTPApp.RequestPriority.Low));
 END HTTPControl.
+

@@ -1,6 +1,6 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Tue Jun 25 21:48:27 PDT 1996 by steveg *)
+(* Last modified on Fri Jan 17 16:05:29 PST 1997 by steveg *)
 
 MODULE HTTPPayment;
 
@@ -148,7 +148,7 @@ PROCEDURE InitRequest (self: Request; request: HTTP.Request; log: App.Log):
 PROCEDURE ToRequest (self: Request; <* UNUSED *> log: App.Log): HTTP.Request =
   VAR
     req := NEW(HTTP.Request, method := self.request.method,
-               url := self.request.url);
+               url := self.request.url, postData := self.request.postData);
   BEGIN
     self.request.copyFields(req);
     IF self.protocols # NIL THEN

@@ -1,14 +1,14 @@
 (* Copyright (C) 1995, Digital Equipment Corporation. *)
 (* All rights reserved. *)
-(* Last modified on Tue Aug 27 16:13:37 PDT 1996 by steveg *)
+(* Last modified on Thu Mar 20 15:57:07 PST 1997 by steveg *)
 
 MODULE App;
 
 <* PRAGMA LL *>
 
 IMPORT
-  Atom, Env, FileRd, Fmt, IP, Lex, OSError, Params,
-  Rd, Stdio, Text, TextRd, TextWr, Thread, Wr;
+  Atom, Env, FileRd, FileWr, Fmt, FmtTime, IP, Lex, OSError, Params,
+  Rd, RdUtils, Stdio, Text, TextRd, TextWr, Thread, Time, Wr;
 
 VAR
   readWriteMu := NEW(MUTEX);
@@ -28,6 +28,17 @@ VAR
   *)
 
   hostName, hostIP: TEXT;
+
+VAR
+  argMu := NEW(MUTEX);
+  debug := FALSE; <* LL = argMu *>
+  verbose := FALSE; <* LL = argMu *>
+  noDebug := TRUE; <* LL = argMu *>
+  noVerbose := TRUE; <* LL = argMu *>
+
+VAR
+  logFile: TEXT;  <* LL = argMu *>
+  wrLogFile: Wr.T;  <* LL = argMu *>
 
 PROCEDURE ReadLock() =
   BEGIN
@@ -79,51 +90,71 @@ PROCEDURE LogMsg(<* UNUSED *> self: Log;
     END;
   END LogMsg;
 
-PROCEDURE GetHostName (ipAddr: BOOLEAN := FALSE): TEXT =
-  VAR addr: IP.Address;
-  <* FATAL IP.Error *>
+PROCEDURE FormatIPAddress(addr: IP.Address): TEXT =
   BEGIN
-    IF hostName = NIL THEN
-      addr := IP.GetHostAddr();
-      hostIP :=
-        Fmt.F("%s.%s.%s.%s", Fmt.Int(addr.a[0]), Fmt.Int(addr.a[1]),
-              Fmt.Int(addr.a[1]), Fmt.Int(addr.a[1]));
-      hostName := IP.GetCanonicalByAddr(addr);
+    RETURN Fmt.F("%s.%s.%s.%s", Fmt.Int(addr.a[0]), Fmt.Int(addr.a[1]),
+                Fmt.Int(addr.a[1]), Fmt.Int(addr.a[1]));
+  END FormatIPAddress;
+
+PROCEDURE LockedGetHostName (ipAddr: BOOLEAN := FALSE): TEXT =
+  VAR addr: IP.Address;
+  BEGIN
+    TRY
+      IF hostName = NIL OR Text.Length(hostName) = 0 THEN
+        addr := IP.GetHostAddr();
+        hostIP := FormatIPAddress(addr);
+        hostName := IP.GetCanonicalByAddr(addr);
+      END;
+    EXCEPT
+    | IP.Error =>
+        hostName := "localhost";
+        hostIP := "127.0.0.1";
     END;
-    IF ipAddr THEN
-      RETURN hostIP;
-    ELSE
-      RETURN hostName;
-    END;
+    IF ipAddr THEN RETURN hostIP; ELSE RETURN hostName; END;
+  END LockedGetHostName;
+
+PROCEDURE GetHostName (ipAddr: BOOLEAN := FALSE): TEXT =
+  BEGIN
+    LOCK hostMu DO RETURN LockedGetHostName(ipAddr) END
   END GetHostName;
 
-TYPE
-  Arg = {Debug, NoDebug, Verbose, NoVerbose};
+TYPE hostEnt = RECORD host: TEXT; same: BOOLEAN END;
+VAR hostMu := NEW(MUTEX);
+    hostTab := ARRAY [0..9] OF hostEnt{hostEnt{"", FALSE}, ..};
+    victim := 0;
 
-  AppArgHandler = ArgHandler OBJECT
-  OVERRIDES
-    set := SetArg;
-  END;
-
-VAR
-  argMu := NEW(MUTEX);
-  debug := FALSE; <* LL = argMu *>
-  verbose := FALSE; <* LL = argMu *>
-  noDebug := TRUE; <* LL = argMu *>
-  noVerbose := TRUE; <* LL = argMu *>
-
-PROCEDURE SetArg(self: ArgHandler; <* UNUSED *> src: ArgSource; 
-                 value: TEXT; <* UNUSED *> log: Log) =
+PROCEDURE IPCanonical(host: TEXT): TEXT =
+  VAR res: TEXT;
   BEGIN
-    LOCK argMu DO
-      CASE VAL(self.id, Arg) OF
-      | Arg.Debug => debug := Text.Equal(value, "TRUE");
-      | Arg.Verbose => verbose := Text.Equal(value, "TRUE");
-      | Arg.NoDebug => noDebug := Text.Equal(value, "TRUE");
-      | Arg.NoVerbose => noVerbose := Text.Equal(value, "TRUE");
-      END;
+    TRY
+      res := IP.GetCanonicalByName(host);
+    EXCEPT
+      IP.Error => res := NIL;
     END;
-  END SetArg;
+    IF res = NIL THEN res := host END;
+    RETURN res
+  END IPCanonical;
+
+PROCEDURE SameHost(host: TEXT): BOOLEAN =
+  VAR res: BOOLEAN;
+  BEGIN
+    LOCK hostMu DO
+      FOR i := FIRST(hostTab) TO LAST(hostTab) DO
+        IF Text.Equal(hostTab[i].host, host) THEN RETURN hostTab[i].same END;
+      END;
+      hostTab[victim].host := host;
+      res := Text.Equal(host, "localhost") OR
+         Text.Equal(host, "127.0.0.1") OR
+         Text.Equal(host, LockedGetHostName(TRUE)) OR
+         Text.Equal(host, LockedGetHostName(FALSE)) OR
+         Text.Equal(IPCanonical(host), LockedGetHostName(TRUE));
+      hostTab[victim].same := res;
+      INC(victim);
+      IF victim = NUMBER(hostTab) THEN victim := 0 END;
+      RETURN res
+    END
+  END SameHost;
+
 
 PROCEDURE Debug(): BOOLEAN =
   BEGIN
@@ -157,20 +188,31 @@ TYPE
     log := DefaultLogMsg;
   END;
 
-PROCEDURE DefaultLogMsg(self: Log; msg: TEXT; 
-                      status: LogStatus) RAISES {Error} =
-  <* FATAL Wr.Failure, Thread.Alerted *>
-  VAR
-    wr: Wr.T;
+PROCEDURE DefaultLogMsg (self: Log; msg: TEXT; status: LogStatus)
+  RAISES {Error} =
+  VAR wr: Wr.T;
   BEGIN
-    IF status IN SET OF LogStatus{LogStatus.Verbose..LogStatus.Status} THEN
+    IF status IN SET OF LogStatus{LogStatus.Verbose.. LogStatus.Status} THEN
       wr := Stdio.stdout;
     ELSE
       wr := Stdio.stderr;
     END;
-    Wr.PutText(wr, Fmt.F("%s: %s\n", LogStatusText[status], msg));
-    Wr.Flush(wr);
-    Log.log(self, msg, status);
+    WITH lmsg = Fmt.F("%s %s: %s\n", FmtTime.Short(Time.Now()),
+                      LogStatusText[status], msg) DO
+      TRY
+        LOCK argMu DO
+          Wr.PutText(wr, lmsg);
+          Wr.Flush(wr);
+          IF wrLogFile # NIL THEN
+            Wr.PutText(wrLogFile, lmsg);
+            Wr.Flush(wrLogFile);
+          END;
+        END;
+      EXCEPT
+      | Thread.Alerted, Wr.Failure =>
+      END;
+      Log.log(self, msg, status);
+    END;
   END DefaultLogMsg;
 
 TYPE
@@ -242,7 +284,7 @@ EXCEPTION
 CONST
   DefaultConfigFile = ".app_config";
   ConfigSwitch = "-config";
-  ConfigEnv = "HTTP_CONFIG";
+  ConfigEnv = "APP_CONFIG";
 
 VAR
   defaultConfigFile: TEXT;
@@ -398,7 +440,9 @@ PROCEDURE ParseConfig (configFile      : TEXT;
       END;
       rd := FileRd.Open(configFile);
       LOOP
-        line := Rd.GetLine(rd);
+        REPEAT
+          line := Rd.GetLine(rd);
+        UNTIL Rd.EOF(rd) OR Text.Length(line) > 0;
         trd := TextRd.New(line);
         field := Lex.Scan(trd, NonColon);
         IF Rd.EOF(trd) OR Rd.GetChar(trd) = ':' THEN
@@ -429,10 +473,10 @@ PROCEDURE ParseConfig (configFile      : TEXT;
       END;
     EXCEPT
     | Rd.EndOfFile => Rd.Close(rd); <* NOWARN *>
-    | OSError.E =>
+    | OSError.E(reason) =>
         IF configFile # defaultConfigFile THEN
-          log.log(Fmt.F("Can't open config file %s", configFile),
-                  LogStatus.Error);
+          log.log(Fmt.F("Can't open config file \"%s\" (%s)", configFile,
+                  RdUtils.FailureText(reason)),  LogStatus.Error);
         END;
     | Rd.Failure, Thread.Alerted =>
         log.log(Fmt.F("Problems reading config file %s", configFile),
@@ -540,6 +584,50 @@ PROCEDURE InitializeArguments(log: Log;
   END InitializeArguments;
 
 
+
+TYPE
+  Arg = {Debug, NoDebug, Verbose, NoVerbose, LogFile, HostName, Comment};
+
+  AppArgHandler = ArgHandler OBJECT
+  OVERRIDES
+    set := SetArg;
+  END;
+
+PROCEDURE SetArg (             self : ArgHandler;
+                  <* UNUSED *> src  : ArgSource;
+                               value: TEXT;
+                  <* UNUSED *> log  : Log         ) =
+  BEGIN
+    LOCK argMu DO
+      CASE VAL(self.id, Arg) OF
+      | Arg.Debug => debug := Text.Equal(value, "TRUE");
+      | Arg.Verbose => verbose := Text.Equal(value, "TRUE");
+      | Arg.NoDebug => noDebug := Text.Equal(value, "TRUE");
+      | Arg.NoVerbose => noVerbose := Text.Equal(value, "TRUE");
+      | Arg.Comment =>
+      | Arg.LogFile =>
+          logFile := value;
+          IF wrLogFile = NIL AND logFile # NIL
+               AND NOT Text.Equal(logFile, "") THEN
+            TRY
+              wrLogFile := FileWr.OpenAppend(logFile);
+            EXCEPT
+            | OSError.E (reason) =>
+                TRY
+                  Wr.PutText(
+                    Stdio.stderr,
+                    Fmt.F("*************\nERROR (%s) OPENING LOG FILE: %s",
+                          logFile, RdUtils.FailureText(reason)));
+                EXCEPT
+                | Wr.Failure, Thread.Alerted =>
+                END;
+            END;
+          END;
+      | Arg.HostName => hostName := value;
+      END;
+    END;
+  END SetArg;
+
 BEGIN
   EVAL NEW(AppArgHandler, id := ORD(Arg.Debug), hasParam:= FALSE).init(
                                      switchName := "debug", 
@@ -553,6 +641,12 @@ BEGIN
   EVAL NEW(AppArgHandler, id := ORD(Arg.NoVerbose), hasParam:= FALSE).init(
                                      switchName := "noVerbose", 
                                      envName := "APP_NOVERBOSE");
+  EVAL NEW(AppArgHandler, id := ORD(Arg.Comment), 
+           paramName := "comment", default := "").init(switchName := "comment");
+  EVAL NEW(AppArgHandler, id := ORD(Arg.LogFile), 
+           paramName := "log filename", default := "").init(switchName := "logFile");
+  EVAL NEW(AppArgHandler, id := ORD(Arg.HostName), 
+           paramName := "host IP name", default := "").init(switchName := "hostname");
 
   defaultLog := NEW(DefaultLog);
   nullLog := NEW(NullLog);
