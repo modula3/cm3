@@ -50,7 +50,7 @@ readonly proc EigenSystem (nm, impl) is
   local vfield  = nm & "Vector" & impl
   local cvfield = nm & "ComplexVectorBasic"
   local mfield  = nm & "Matrix" & impl
-  local mlap    = nm & "MatrixLapack"
+  local mlap    = nm & "MatrixLapackRaw"
   build_generic_intf (basic, "EigenSystem", [        rtrans,         vfield, cvfield, mfield], VISIBLE)
   build_generic_impl (basic, "EigenSystem", [rfield, rtrans, cfield, vfield, cvfield, mfield, mlap])
 end
@@ -72,19 +72,7 @@ readonly proc MatrixFmtLex (nm, mimpl) is
   build_generic_impl (mfmt, "MatrixFmtLex", [rfmt])
 end
 
-readonly proc InstantiateFortranPart (nm, field, src, ext, prefix) is
-  local floatsrc = "Float" & src & ext
-  local target   = nm      & src & ext
-  local fullsrc  = path()&SL&floatsrc
-  source(floatsrc)
-  if stale(target,fullsrc)
-    exec("perl -p -e \"s/Float/"&field&"/;s/EXTERNAL x/EXTERNAL "&prefix&"/\"", fullsrc, ">" & target)
-  end
-end
-
-readonly proc InstantiateFortran (nm, field, src, prefix) is
-  InstantiateFortranPart (nm, field, src, ".i3", prefix)
-  InstantiateFortranPart (nm, field, src, ".m3", prefix)
-  derived_interface      (nm & src, VISIBLE)
-  derived_implementation (nm & src)
+readonly proc LAPACKToModula3 (nm, field, src, prefix, Prefix) is
+  local raw = nm & src
+  exec(path()&SL&"lapack2i3.sh",raw,prefix,Prefix,">"&path()&SL&raw&".i3")
 end

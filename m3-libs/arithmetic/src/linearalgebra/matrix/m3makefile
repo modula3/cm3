@@ -33,8 +33,10 @@ EigenSystem("Real",     "Fast")
 EigenSystem("LongReal", "Fast")
 %EigenSystem("Extended", "Fast")
 
-InstantiateFortran("Real",     "Real",     "MatrixLapack", "s")
-InstantiateFortran("LongReal", "LongReal", "MatrixLapack", "d")
+LAPACKToModula3("Real",     "Real",     "MatrixLapackRaw", "s", "S")
+LAPACKToModula3("LongReal", "LongReal", "MatrixLapackRaw", "d", "D")
+module("RealMatrixLapackRaw")
+module("LongRealMatrixLapackRaw")
 
 generic_module("CharPolynomial")
 CharPolynomial("Real",            "Fast",  "Basic")
