@@ -11,6 +11,8 @@ IMPORT LongRealMatrix AS M;
 
 IMPORT LongRealFmtLex AS RF, LongRealSignalFmtLex AS SF;
 
+IMPORT LongRealContinuousWaveletTransform AS CWT;
+
 IMPORT PLPlot AS PL, PLPlotRaw AS PLRaw;
 IMPORT IO, Fmt, Wr, Thread;
 IMPORT Arithmetic AS Arith;
@@ -42,14 +44,41 @@ PROCEDURE TestShades () =
     PL.Exit();
   END TestShades;
 
-PROCEDURE DiracTransform () =
+PROCEDURE MexicanHat (t: R.T; ): R.T =
   BEGIN
+    WITH t2 = t * t DO
+      RETURN R.Two / RT.SqRt(3.0D0 * RT.SqRtPi) * (R.One - t2) * RT.Exp(
+               -t2 / R.Two);
+    END;
+  END MexicanHat;
+
+PROCEDURE DiracTransform () =
+  CONST
+    width     = 201;
+    numScales = 100;
+
+    xmin = 0.0D0;
+    xmax = FLOAT(width, R.T);
+    ymin = 0.0D0;
+    ymax = FLOAT(numScales, R.T);
+  VAR
+    y := CWT.Analysis(
+           S.One, MexicanHat, width,
+           V.GeomSeq(numScales, 30.0D0, RT.Pow(R.Half, R.One / 10.0D0))^);
+    m := NEW(M.T, numScales, width);
+  BEGIN
+    PL.Init();
+    PL.SetEnvironment(xmin, xmax, ymin, ymax);
+    FOR i := FIRST(m^) TO LAST(m^) DO m[i] := y[i].getData()^; END;
+    PL.PlotImage(M.Transpose(m)^, xmin, xmax, ymin, ymax, -300.0D0, 300.0D0,
+                 xmin, xmax, ymin, ymax);
+    PL.Exit();
   END DiracTransform;
 
 
 PROCEDURE Test () =
   BEGIN
-    CASE 0 OF
+    CASE 1 OF
     | 0 => TestShades();
     | 1 => DiracTransform();
     ELSE
