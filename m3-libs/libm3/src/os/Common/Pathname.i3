@@ -99,7 +99,7 @@ PROCEDURE Base(pn: T): T;
 (* Return a pathname equal to "pn" except with "Last(pn)" replaced by
    its base. *)
 
-PROCEDURE Join(pn, base: T; ext: TEXT): T;
+PROCEDURE Join(pn, base: T; ext: TEXT := NIL): T;
 (* Return a pathname formed by prepending "pn" to "base" (if "pn" is
    not "NIL") and appending "ext" to "base" (if "ext" is not "NIL").
    More precisely, this is equivalent to the following, in which "a"

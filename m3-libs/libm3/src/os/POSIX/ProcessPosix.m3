@@ -17,6 +17,10 @@ REVEAL T = BRANDED REF RECORD
     waitOk := TRUE
   END;
 
+CONST
+  NoFileDescriptor: INTEGER = -1;
+  (* A non-existent file descriptor *)
+
 PROCEDURE Create(
     cmd: Pathname.T;
     READONLY params: ARRAY OF TEXT; 
@@ -33,9 +37,14 @@ PROCEDURE Create(
     forkResult, execResult: INTEGER;
     forkErrno, execErrno: Ctypes.int;
     waitStatus: Uexec.w_A;
-    stdin_fd, stdout_fd, stderr_fd: INTEGER;
+    stdin_fd, stdout_fd, stderr_fd: INTEGER := NoFileDescriptor;
   BEGIN
-    WITH path = GetPathToExec(cmd) DO
+    VAR path := GetPathToExec(cmd); BEGIN
+      (* make sure the result is an absolute pathname if "wd # NIL" *)
+      IF wd # NIL AND NOT Text.Empty(wd) AND NOT Pathname.Absolute(path) THEN
+        path := Pathname.Join(GetWorkingDirectory(), path, ext := NIL);
+        <* ASSERT Pathname.Absolute(path) *>
+      END;
       argx := AllocArgs(path, Pathname.Base(cmd), params)
     END;
     IF env # NIL THEN
@@ -53,9 +62,9 @@ PROCEDURE Create(
 
     (* grab the file descriptors from inside the traced File.Ts so
        we don't trigger a GC after the vfork() call. *)
-    stdin_fd  := -1;  IF (stdin  # NIL) THEN stdin_fd  := stdin.fd;  END;
-    stdout_fd := -1;  IF (stdout # NIL) THEN stdout_fd := stdout.fd; END;
-    stderr_fd := -1;  IF (stderr # NIL) THEN stderr_fd := stderr.fd; END;
+    IF (stdin  # NIL) THEN stdin_fd  := stdin.fd;  END;
+    IF (stdout # NIL) THEN stdout_fd := stdout.fd; END;
+    IF (stderr # NIL) THEN stderr_fd := stderr.fd; END;
 
     (* Turn off the interval timer (so it won't be running in child). *)
     nit := Utime.struct_itimerval {
@@ -71,11 +80,11 @@ PROCEDURE Create(
     execResult := 0;
     forkResult := Unix.vfork();
     IF forkResult = 0 THEN (* in the child *)
-      ExecChild(argx, envp, wdstr, stdin_fd, stdout_fd, stderr_fd);
-     (* If ExecChild returns, the execve.  Let's try to leave a note
-        for our parent, in case we're still sharing their address
-        space. *)
-      execResult := -1;
+      execResult := ExecChild(argx, envp, wdstr, stdin_fd, stdout_fd,
+          stderr_fd);
+      (* If ExecChild returns, the execve failed. Let's try to leave
+        a note for our parent, in case we're still sharing their
+        address space. *)
       execErrno := Uerror.errno;
       Unix.underscore_exit(99)
     END;
@@ -131,7 +140,8 @@ PROCEDURE GetPathToExec(pn: Pathname.T): Pathname.T RAISES {OSError.E} =
           pn,
           NIL);
         result := Ustat.stat(M3toC.TtoS(prog), ADR(statBuf));
-        IF result = 0 AND Word.And(statBuf.st_mode, Ustat.S_IFMT) = Ustat.S_IFREG THEN
+        IF result = 0 AND
+           Word.And(statBuf.st_mode, Ustat.S_IFMT) = Ustat.S_IFREG THEN
           statBuf.st_mode := Word.And(statBuf.st_mode, MaskXXX);
           IF statBuf.st_mode # 0 THEN
             IF statBuf.st_mode = MaskXXX THEN RETURN prog END;
@@ -215,26 +225,32 @@ PROCEDURE ExecChild(
     argx: ArrCStr; (* see "AllocArgs" for layout *)
     envp: Ctypes.char_star_star;
     wdstr: Ctypes.char_star;
-    stdin, stdout, stderr: INTEGER)
+    stdin, stdout, stderr: INTEGER) : INTEGER
   RAISES {} =
 (* Modify Unix state using "stdin", ..., and invoke execve using
    "argx" and "envp".  Do not invoke scheduler, allocator, or
    exceptions.  Return only if a fatal Unix error is encountered, in
    which case Uerror.errno is set. *)
+
   PROCEDURE SetFd(fd: INTEGER; h: INTEGER(*File.T*)): BOOLEAN =
   (* Make file descriptor "fd" refer to file "h", or set "fd"'s
-     close-on-exec flag if "h=NIL".  Return "TRUE" if succesful. *)
-    BEGIN
-      IF h >= 0 THEN RETURN NOT Unix.dup2(h, fd) < 0 END;
-      RETURN NOT Unix.fcntl(fd, Unix.F_SETFD, 1) < 0
+     close-on-exec flag if "h = NoFileDescriptor". Return "TRUE"
+     iff successful. *)
+    VAR res: BOOLEAN; BEGIN
+      IF h # NoFileDescriptor
+        THEN res := Unix.dup2(h, fd) >= 0
+        ELSE res := Unix.fcntl(fd, Unix.F_SETFD, 1) >= 0
+                    OR Uerror.errno = Uerror.EBADF;
+      END;
+      RETURN res
     END SetFd;
-  VAR res := 0; t: Ctypes.char_star;
-  BEGIN
+
+  VAR res := 0; t: Ctypes.char_star; BEGIN
     IF wdstr # NIL THEN
-      IF Unix.chdir(wdstr) < 0 THEN RETURN END
+      IF Unix.chdir(wdstr) < 0 THEN RETURN -1; END
     END;
     IF NOT (SetFd(0, stdin) AND SetFd(1, stdout) AND SetFd(2, stderr)) THEN
-      RETURN
+      RETURN -1;
     END;
     FOR fd := 3 TO Unix.getdtablesize() - 1 DO
       EVAL Unix.close(fd) (* ignore errors *)
@@ -247,30 +263,34 @@ PROCEDURE ExecChild(
       t := argx[0]; argx[0] := argx[2]; argx[2] := t;
       res := Unix.execve(BinSh, ADR(argx[1]), envp);
       <* ASSERT res < 0 *>
-    END
+    END;
+    RETURN res;
   END ExecChild;
 
 EXCEPTION WaitAlreadyCalled;
 
 PROCEDURE Wait(p: T): ExitCode = <* FATAL WaitAlreadyCalled *> 
-  VAR result: Ctypes.int;  status: Uexec.w_A;
-  CONST Delay = 0.2D0;
+  VAR
+    result: Ctypes.int;
+    statusT: Uexec.w_T;
+    statusM3: Uexec.w_M3;
+  CONST Delay = 0.1D0;
   BEGIN
     IF NOT p.waitOk THEN RAISE WaitAlreadyCalled END;
     p.waitOk := FALSE;
     (* By rights, the SchedulerPosix interface should have a WaitPID
        procedure that is integrated with the thread scheduler. *)
     LOOP
-      result := Uexec.waitpid(p.pid, ADR(status), Uexec.WNOHANG);
+      result := Uexec.waitpid(p.pid, ADR(statusT), Uexec.WNOHANG);
       IF result # 0 THEN EXIT END;
       Thread.Pause(Delay)
     END;
     <* ASSERT result > 0 *>
-    IF Word.And(status, LAST(ExitCode)) = status THEN
-      RETURN status
-    ELSE
-      RETURN LAST(ExitCode)
-    END
+    statusM3.w_Filler := 0;
+    statusM3.w_Coredump := statusT.w_Coredump;
+    statusM3.w_Termsig := statusT.w_Termsig;
+    statusM3.w_Retcode := statusT.w_Retcode;
+    RETURN MIN(LAST(ExitCode),LOOPHOLE(statusM3,Uexec.w_A));
   END Wait;
 
 PROCEDURE Exit(n: ExitCode) =
@@ -316,7 +336,7 @@ PROCEDURE GetWorkingDirectory(): Pathname.T RAISES {OSError.E} =
   BEGIN
     LOCK wdCacheMutex DO
       IF wdCache = NIL THEN
-        rc := Unix.getwd(ADR(buffer[0]));
+        rc := Unix.getcwd(ADR(buffer[0]), Unix.MaxPathLen+1);
         IF rc = NIL THEN
           RAISE OSError.E(
             NEW(AtomList.T,
