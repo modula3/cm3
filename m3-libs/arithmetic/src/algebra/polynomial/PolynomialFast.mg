@@ -12,23 +12,6 @@ FROM NADefinitions IMPORT Error,Err;
 CONST Module = "PolynomialFast.";
 
 (*--------------------*)
-PROCEDURE New(
-               n:CARDINAL):T=
-BEGIN
-  RETURN NEW(T,n+1);
-END New;
-(*--------------------*)
-PROCEDURE Copy(
-               x:T):T=
-VAR
-  n:=NUMBER(x^);
-  z:=NEW(T,n);
-BEGIN
-  z^:=x^;
-  RETURN z;
-END Copy;
-
-(*--------------------*)
 PROCEDURE Eval(
                 x:T;
                 xi:R.T

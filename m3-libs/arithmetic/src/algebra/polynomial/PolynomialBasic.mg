@@ -19,16 +19,6 @@ BEGIN
 END New;
 
 (*--------------------*)
-PROCEDURE Copy(
-               x:T):T=
-VAR
-  y:=NEW(T,NUMBER(x^));
-BEGIN
-  y^:=x^;
-  RETURN y;
-END Copy;
-
-(*--------------------*)
 PROCEDURE Strip(
                 x:T):T=
 VAR
@@ -314,9 +304,8 @@ END EvalDerivative;
 PROCEDURE Compose(x,y:T;           (*y(x) - apply y on the values of x*)
                  ):T=
 VAR
-  z:=NEW(T,1);
+  z:=FromArray(ARRAY OF R.T{y[LAST(y^)]});
 BEGIN
-  z[0]:=y[LAST(y^)];
   FOR i:=LAST(y^)-1 TO 0 BY -1 DO
     z:=Mul(x,z);
     z[0]:=R.Add(z[0],y[i]);

@@ -33,12 +33,10 @@ VAR
   Zero    : T;
   One     : T;
 
-PROCEDURE New(n:CARDINAL):T;    (*make a poly for a0..an*)
-PROCEDURE Copy(x:T):T;       (*copy x to a New poly*)
-(*
-PROCEDURE Zero(x:T);          (*set x to zeros*)
-PROCEDURE One (x:T);          (*set x to 1*)
-*)
+CONST
+  New       = PB.New;
+  FromArray = PB.FromArray;
+  Copy      = PB.Copy;
 
 PROCEDURE IsZero(x:T):BOOLEAN;
 PROCEDURE Equal(x,y:T):BOOLEAN;  (*return x=y*)
