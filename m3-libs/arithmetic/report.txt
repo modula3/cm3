@@ -18,6 +18,7 @@ todo:
        What about objects?
      - overflow check (at least in integer modules)
 
+  - remove VAR parameters where unnecessary
   - Hash routines
   - ODE by Simon Hood
   - Lex routines (I have not needed them so far)

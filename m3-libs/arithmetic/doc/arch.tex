@@ -199,6 +199,14 @@ Don't rely on order of RECORD entries,
 e.g. in TexStyle, FmtStyle,
 but access them by name.
 
+Avoid VAR parameters for output of results,
+because the user has to provide dummy variables,
+if he doesn't need the result.
+Furthermore VAR paramaters don't make clear
+that it is only a result.
+Use RECORD results instead.
+(DivMod?)
+
 \subsection{Arrays}
 An array is a collection of items, all of the same type,
 which can be accessed by an index into the array.
