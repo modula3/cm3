@@ -43,8 +43,14 @@
       archives you want. You can then use the minimal binary
       installation to build any of the packages contained in the
       source distributions. Some useful scripts have been added in the
-      <tt>scripts</tt> subdirectory to help with the installation and
+      <tt>scripts</tt> subdirectory (contained in all the source and
+      scripts distribution archives) to help with the installation and
       package build management.
+    </p>
+    <p>
+      <b>Note:</b> Please verify the integrity of the downloaded
+      archives by using the checksums and md5 hashes provided 
+      <a href="checksums.html">here</a>.
     </p>
     <p>
       If you have got the binary installation package, unpack it using
@@ -54,10 +60,13 @@
   gzip -c -d cm3-min-OSTYPE-TARGET-CM3VERSION.tgz | tar xf -
     </pre>
     <p>
-      You will then get the installation program, a copyright notice,
-      and the installation program. You can place additional archives,
-      e.g. the doc distribution (cm3-doc-CM3VERSION.tgz) in the same
-      directory. Start the installer with
+      You will then get the installation program
+      (<tt>cminstall(.exe)</tt>), a copyright notice, a system archive
+      (<tt>system.tgz</tt>) with the 
+      precompiled standard libraries <tt>m3core</tt> and <tt>libm3</tt>.
+      You can place additional archives,
+      e.g. the doc distribution (<tt>cm3-doc-CM3VERSION.tgz</tt>) in
+      the same directory. Start the installer with
     </p>
     <pre>
   ./cminstall
@@ -99,6 +108,10 @@
     <h3>WIN32</h3>
 
     <p>
+      CM3 (like any other currently available Modula-3 distribution)
+      does not provide its own linker, as this is a standard system
+      utility. Unfortunaltey, on WIN32 systems no linker is installed
+      by default if you don't buy the Microsoft development tools.
       The NT386 target (which is the only one currently supported for the
       WIN32 platform) needs the Microsoft linker (and C compiler if
       you compile C sources) to be operable. It seems that the Borland
@@ -128,11 +141,13 @@
     </p>
 
     <p>
-      Recent versions of WinZip should be fine to unpack the gzipped
-      tar archives of the distribution. The cygwin environment
-      mentionend above also contains gnu tar and gzip that can be used
-      to unpack the archive. As a last resort, here are some links to
-      the (old versions of) 
+      I have been told that recent versions of WinZip should be fine
+      to unpack the gzipped tar archives of the distribution. However,
+      there has been at least one report of failure and I haven't
+      tried it myself, so I would recommend using the cygwin tools
+      anyway. The cygwin environment mentionend above contains gnu tar
+      and gzip that can be used to unpack the archive. As a last
+      resort, here are some links to the (old versions of)
       <a href="win32-tools/gzip.exe" 
          type="application/octet-stream">gzip.exe</a>,
       <a href="win32-tools/tar.exe" 
@@ -167,7 +182,7 @@
     <address><a href="mailto:m3-support@elego.de">Olaf Wagner</a></address>
 <!-- Created: Fri Feb 16 15:27:10 MET 2001 -->
 <!-- hhmts start -->
-Last modified: Wed Apr 11 00:31:09 MET DST 2001
+Last modified: Sun Jun 10 13:49:32 MET DST 2001
 <!-- hhmts end -->
   </body>
 </html>
