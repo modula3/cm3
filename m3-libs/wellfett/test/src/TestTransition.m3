@@ -17,10 +17,11 @@ IMPORT LongRealBasic               AS R,
        LongRealComplexVectorFmtLex AS CVF,
        LongRealMatrixFmtLex        AS MF,
        PLPlot AS PL,
-       IO, Fmt, Thread, Wr, FloatMode,
+       IO, Fmt, Thread, Wr,
        NADefinitions;
 
 PROCEDURE PlotTransitionEV (mask : S.T) =
+  <*FATAL NADefinitions.Error*>
   VAR
     ev := Eigen.EigenValuesGen(
             Refn.TransitionMatrix(
@@ -46,16 +47,14 @@ PROCEDURE PlotTransitionEV (mask : S.T) =
 *)
   END PlotTransitionEV;
 
-PROCEDURE Test()=
+PROCEDURE AnimateTransitionEV()=
   CONST
     frames = 20;
   VAR
     mask0 := NEW(S.T).fromArray(ARRAY OF R.T{-2.0D0,0.0D0,1.0D0});
     mask1 := NEW(S.T).fromArray(ARRAY OF R.T{ 2.0D0,0.0D0,1.0D0});
     delta := R.One/FLOAT(frames,R.T);
-  <*FATAL Thread.Alerted, Wr.Failure, FloatMode.Trap, NADefinitions.Error*>
   BEGIN
-    PL.Init();
     (*PL.SetColor0(1);*)
     FOR fr:=0 TO frames DO
       VAR
@@ -64,8 +63,16 @@ PROCEDURE Test()=
 	PlotTransitionEV(mask0.scale(R.One-t).superpose(mask1.scale(t)));
       END;
     END;
+  END AnimateTransitionEV;
+
+PROCEDURE Test()=
+  BEGIN
+    PL.Init();
+    AnimateTransitionEV();
     PL.Exit();
   END Test;
+ 
+
 
 BEGIN
 END TestTransition.
