@@ -5,20 +5,20 @@ import("logitech")
 build_standalone()
 
 % what the programmer would write
-Module (TrackerPosition)
-interface (TrackerPositionF)
+Module ("TrackerPosition")
+interface ("TrackerPositionF")
 
 % a call to
 %    sharedobj(TrackerPosition, TrackerPositionF, T) 
 % (where we have "interface module, revelation module, type in interface")
 % would generate these:
-Interface (TrackerPositionProxy)
-Module (TrackerPositionCB)
-implementation (TrackerPositionSO)
+Interface ("TrackerPositionProxy")
+Module ("TrackerPositionCB")
+implementation ("TrackerPositionSO")
 
-implementation (Echo)
+implementation ("Echo")
 
-netobj (TrackerPositionProxy, T)
-% netobj (TrackerPosition, Public)
+netobj ("TrackerPositionProxy", "T")
+% netobj ("TrackerPosition", "Public")
 
-program(echotest)
+program("echotest")

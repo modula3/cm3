@@ -1,3 +1,6 @@
+(*
+ * See file COPYRIGHT-COLUMBIA for details.
+ *)
 MODULE ObjectSpace_T_v2 EXPORTS ObjectSpace, ObjectSpace_T_v2;
 
 IMPORT IP, Rd, EventNumber, StubLib, SharedObjRep, EventWireRep, Wr,

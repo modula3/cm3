@@ -7,6 +7,7 @@
  *                                                                        
  * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
  * City of New York.  Blair MacIntyre, Computer Science Department.       
+ * See file COPYRIGHT-COLUMBIA for details.
  * 
  * Author          : Blair MacIntyre
  * Created On      : Thu Mar 30 17:21:53 1995
@@ -20,6 +21,9 @@
  * $Revision$
  * 
  * $Log$
+ * Revision 1.1.1.1  2001/12/02 13:14:14  wagner
+ * Blair MacIntyre's sharedobj package
+ *
  * Revision 1.4  1998/05/11 02:34:15  bm
  * bug fixes, added SharedObj.Wait
  *

@@ -1,6 +1,9 @@
+(*
+ * See file COPYRIGHT-COLUMBIA for details.
+ *)
 INTERFACE ObjectSpace_T_v2;
 
-IMPORT Rd, IP, StubLib, EventNumber, SharedObjRep, Wr, EventWireRep,
+IMPORT Rd, IP, StubLib, EventNumber, Wr, EventWireRep,
        NetObj, SharedObj, Fingerprint, Thread, ObjectSpace;
 TYPE Surrogate_ObjectSpace_T = ObjectSpace.T OBJECT
       OVERRIDES

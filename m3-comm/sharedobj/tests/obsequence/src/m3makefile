@@ -1,4 +1,4 @@
-import (obliq)
+import ("obliq")
 import("sharedobj")
 
 %m3_option("-verbose")

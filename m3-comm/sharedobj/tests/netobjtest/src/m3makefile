@@ -9,20 +9,20 @@
 import("netobj")
 import("libm3")
 
-Interface (SharedObj)
-Module (SharedObjRep)
+Interface ("SharedObj")
+Module ("SharedObjRep")
 
-Interface (ObjectSpace)
-Module (WeakerRef)
+Interface ("ObjectSpace")
+Module ("WeakerRef")
 
-List	 (WeakRef, WeakerRef)
-%ListFuncs (WeakRef, WeakerRef, WeakRefList)
+List	 ("WeakRef", "WeakerRef")
+%ListFuncs ("WeakRef", "WeakerRef", "WeakRefList")
 
-netobj(ObjectSpace, T)
+netobj("ObjectSpace", "T")
 % won't generate it properly with the field
 %    callbacks: WeakRefList.T := NIL;
 % in the SharedObjRep.T
-%Module   (ObjectSpace_T_v1)
+%Module   ("ObjectSpace_T_v1")
 
 Library("testnetobj")
 

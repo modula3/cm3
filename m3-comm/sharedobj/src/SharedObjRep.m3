@@ -7,6 +7,7 @@
  *                                                                        
  * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
  * City of New York.  Blair MacIntyre, Computer Science Department.       
+ * See file COPYRIGHT-COLUMBIA for details.
  * 
  * Author          : Blair MacIntyre
  * Created On      : Wed Sep 13 11:53:29 1995
@@ -20,6 +21,9 @@
  * $Revision$
  * 
  * $Log$
+ * Revision 1.1.1.1  2001/12/02 13:14:14  wagner
+ * Blair MacIntyre's sharedobj package
+ *
  * Revision 1.3  1997/01/23 15:27:19  bm
  * Lot's of little bug fixes.
  *
