@@ -8,14 +8,12 @@
 
 UNSAFE MODULE PLPlot;
 
-IMPORT PLPlotRaw;
-
-FROM NADefinitions IMPORT Err;
-IMPORT NADefinitions AS NA;
 IMPORT LongRealBasic AS R;
 IMPORT LongRealVector AS V;
-IMPORT LongRealMatrix AS M;
+IMPORT NADefinitions AS NA;
+IMPORT PLPlotRaw;
 IMPORT M3toC;
+IMPORT LongRealMatrix AS M;
 IMPORT Ctypes AS C;
 
 
@@ -29,13 +27,17 @@ PROCEDURE CallbackM3 () =
   BEGIN
   END CallbackM3;
 
+CONST
+  tileToChar = ARRAY DirTile OF
+                 CHAR{'a', 'b', 'c', 'f', 'g', 'h', 'i', 'l', 'm', 'n',
+                      's', 't'};
+
 PROCEDURE SetContLabelFormat (lexp, sigdig: INTEGER; ) =
   BEGIN
     PLPlotRaw.pl_setcontlabelformat(lexp, sigdig);
   END SetContLabelFormat;
 
-PROCEDURE SetContLabelParam (offset, size, spacing: LONGREAL;
-                             active               : INTEGER;  ) =
+PROCEDURE SetContLabelParam (offset, size, spacing: R.T; active: INTEGER; ) =
   BEGIN
     PLPlotRaw.pl_setcontlabelparam(offset, size, spacing, active);
   END SetContLabelParam;
@@ -45,29 +47,39 @@ PROCEDURE Advance (page: INTEGER; ) =
     PLPlotRaw.pladv(page);
   END Advance;
 
-PROCEDURE DrawAxes (x0, y0: LONGREAL;
-                    xopt  : TEXT;
-                    xtick : LONGREAL;
+PROCEDURE DrawAxes (x0, y0: R.T;
+                    xopt  : DirTileSet;
+                    xtick : R.T;
                     nxsub : INTEGER;
-                    yopt  : TEXT;
-                    ytick : LONGREAL;
-                    nysub : INTEGER;  ) =
+                    yopt  : DirTileSet;
+                    ytick : R.T;
+                    nysub : INTEGER;    ) =
   VAR
-    arg3: C.char_star;
-    arg6: C.char_star;
+    arg3 : ARRAY [0 .. ORD(LAST(Tile)) + 1] OF CHAR;
+    arg3i: CARDINAL                                 := 0;
+    arg6 : ARRAY [0 .. ORD(LAST(Tile)) + 1] OF CHAR;
+    arg6i: CARDINAL                                 := 0;
   BEGIN
-    arg3 := M3toC.SharedTtoS(xopt);
-    arg6 := M3toC.SharedTtoS(yopt);
-    PLPlotRaw.plaxes(x0, y0, arg3, xtick, nxsub, arg6, ytick, nysub);
-    M3toC.FreeSharedS(xopt, arg3);
-    M3toC.FreeSharedS(yopt, arg6);
+    FOR t := FIRST(DirTile) TO LAST(DirTile) DO
+      IF t IN xopt THEN arg3[arg3i] := tileToChar[t]; INC(arg3i); END;
+    END;
+    arg3[arg3i] := '\000';
+
+    FOR t := FIRST(DirTile) TO LAST(DirTile) DO
+      IF t IN yopt THEN arg6[arg6i] := tileToChar[t]; INC(arg6i); END;
+    END;
+    arg6[arg6i] := '\000';
+
+    PLPlotRaw.plaxes(x0, y0, arg3[0], xtick, nxsub, arg6[0], ytick, nysub);
+
+
   END DrawAxes;
 
 PROCEDURE PlotBins (READONLY x, y: V.TBody; center: INTEGER; )
   RAISES {NA.Error} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
     PLPlotRaw.plbin(n, x[0], y[0], center);
   END PlotBins;
 
@@ -76,57 +88,85 @@ PROCEDURE StartPage () =
     PLPlotRaw.plbop();
   END StartPage;
 
-PROCEDURE DrawBox (xopt : TEXT;
-                   xtick: LONGREAL;
+PROCEDURE DrawBox (xopt : DirTileSet;
+                   xtick: R.T;
                    nxsub: INTEGER;
-                   yopt : TEXT;
-                   ytick: LONGREAL;
-                   nysub: INTEGER;  ) =
+                   yopt : DirTileSet;
+                   ytick: R.T;
+                   nysub: INTEGER;    ) =
   VAR
-    arg1: C.char_star;
-    arg4: C.char_star;
+    arg1 : ARRAY [0 .. ORD(LAST(Tile)) + 1] OF CHAR;
+    arg1i: CARDINAL                                 := 0;
+    arg4 : ARRAY [0 .. ORD(LAST(Tile)) + 1] OF CHAR;
+    arg4i: CARDINAL                                 := 0;
   BEGIN
-    arg1 := M3toC.SharedTtoS(xopt);
-    arg4 := M3toC.SharedTtoS(yopt);
-    PLPlotRaw.plbox(arg1, xtick, nxsub, arg4, ytick, nysub);
-    M3toC.FreeSharedS(xopt, arg1);
-    M3toC.FreeSharedS(yopt, arg4);
+    FOR t := FIRST(DirTile) TO LAST(DirTile) DO
+      IF t IN xopt THEN arg1[arg1i] := tileToChar[t]; INC(arg1i); END;
+    END;
+    arg1[arg1i] := '\000';
+
+    FOR t := FIRST(DirTile) TO LAST(DirTile) DO
+      IF t IN yopt THEN arg4[arg4i] := tileToChar[t]; INC(arg4i); END;
+    END;
+    arg4[arg4i] := '\000';
+
+    PLPlotRaw.plbox(arg1[0], xtick, nxsub, arg4[0], ytick, nysub);
+
+
   END DrawBox;
 
-PROCEDURE DrawBox3D (xopt, xlabel: TEXT;
-                     xtick       : LONGREAL;
-                     nsubx       : INTEGER;
-                     yopt, ylabel: TEXT;
-                     ytick       : LONGREAL;
-                     nsuby       : INTEGER;
-                     zopt, zlabel: TEXT;
-                     ztick       : LONGREAL;
-                     nsubz       : INTEGER;  ) =
+PROCEDURE DrawBox3D (xopt  : DirTileSet;
+                     xlabel: TEXT;
+                     xtick : R.T;
+                     nsubx : INTEGER;
+                     yopt  : DirTileSet;
+                     ylabel: TEXT;
+                     ytick : R.T;
+                     nsuby : INTEGER;
+                     zopt  : DirTileSet;
+                     zlabel: TEXT;
+                     ztick : R.T;
+                     nsubz : INTEGER;    ) =
   VAR
-    arg1 : C.char_star;
+    arg1 : ARRAY [0 .. ORD(LAST(Tile)) + 1] OF CHAR;
+    arg1i: CARDINAL                                 := 0;
     arg2 : C.char_star;
-    arg5 : C.char_star;
+    arg5 : ARRAY [0 .. ORD(LAST(Tile)) + 1] OF CHAR;
+    arg5i: CARDINAL                                 := 0;
     arg6 : C.char_star;
-    arg9 : C.char_star;
+    arg9 : ARRAY [0 .. ORD(LAST(Tile)) + 1] OF CHAR;
+    arg9i: CARDINAL                                 := 0;
     arg10: C.char_star;
   BEGIN
-    arg1 := M3toC.SharedTtoS(xopt);
+    FOR t := FIRST(DirTile) TO LAST(DirTile) DO
+      IF t IN xopt THEN arg1[arg1i] := tileToChar[t]; INC(arg1i); END;
+    END;
+    arg1[arg1i] := '\000';
+
     arg2 := M3toC.SharedTtoS(xlabel);
-    arg5 := M3toC.SharedTtoS(yopt);
+    FOR t := FIRST(DirTile) TO LAST(DirTile) DO
+      IF t IN yopt THEN arg5[arg5i] := tileToChar[t]; INC(arg5i); END;
+    END;
+    arg5[arg5i] := '\000';
+
     arg6 := M3toC.SharedTtoS(ylabel);
-    arg9 := M3toC.SharedTtoS(zopt);
+    FOR t := FIRST(DirTile) TO LAST(DirTile) DO
+      IF t IN zopt THEN arg9[arg9i] := tileToChar[t]; INC(arg9i); END;
+    END;
+    arg9[arg9i] := '\000';
+
     arg10 := M3toC.SharedTtoS(zlabel);
-    PLPlotRaw.plbox3(arg1, arg2, xtick, nsubx, arg5, arg6, ytick, nsuby,
-                     arg9, arg10, ztick, nsubz);
-    M3toC.FreeSharedS(xopt, arg1);
+    PLPlotRaw.plbox3(arg1[0], arg2, xtick, nsubx, arg5[0], arg6, ytick,
+                     nsuby, arg9[0], arg10, ztick, nsubz);
+
     M3toC.FreeSharedS(xlabel, arg2);
-    M3toC.FreeSharedS(yopt, arg5);
+
     M3toC.FreeSharedS(ylabel, arg6);
-    M3toC.FreeSharedS(zopt, arg9);
+
     M3toC.FreeSharedS(zlabel, arg10);
   END DrawBox3D;
 
-PROCEDURE CalcWorld (rx, ry: LONGREAL; ): CalcWorldResult =
+PROCEDURE CalcWorld (rx, ry: R.T; ): CalcWorldResult =
   VAR
     result: CalcWorldResult;
     arg5  : C.int;
@@ -146,7 +186,7 @@ PROCEDURE SetFGColorDiscr (icol0: INTEGER; ) =
     PLPlotRaw.plcol0(icol0);
   END SetFGColorDiscr;
 
-PROCEDURE SetFGColorCont (col1: LONGREAL; ) =
+PROCEDURE SetFGColorCont (col1: R.T; ) =
   BEGIN
     PLPlotRaw.plcol1(col1);
   END SetFGColorCont;
@@ -184,7 +224,7 @@ PROCEDURE Exit () =
     PLPlotRaw.plend1();
   END Exit;
 
-PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: LONGREAL;
+PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: R.T;
                           just: AxesScaling := AxesScaling.independent;
                           axis: TileSet := TileSet{Tile.box, Tile.ticks}; ) =
   VAR arg6: C.int;
@@ -223,8 +263,8 @@ PROCEDURE PlotErrorX (READONLY xmin, xmax, y: V.TBody; )
   RAISES {NA.Error} =
   VAR n := NUMBER(xmin);
   BEGIN
-    IF NUMBER(xmax) # n THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(y) # n THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(xmax) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
     PLPlotRaw.plerrx(n, xmin[0], xmax[0], y[0]);
   END PlotErrorX;
 
@@ -232,8 +272,8 @@ PROCEDURE PlotErrorY (READONLY x, ymin, ymax: V.TBody; )
   RAISES {NA.Error} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(ymin) # n THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(ymax) # n THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(ymin) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(ymax) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
     PLPlotRaw.plerry(n, x[0], ymin[0], ymax[0]);
   END PlotErrorY;
 
@@ -245,15 +285,15 @@ PROCEDURE AdvanceFamily () =
 PROCEDURE FillPolygon (READONLY x, y: V.TBody; ) RAISES {NA.Error} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
     PLPlotRaw.plfill(n, x[0], y[0]);
   END FillPolygon;
 
 PROCEDURE FillPolygon3D (READONLY x, y, z: V.TBody; ) RAISES {NA.Error} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(z) # n THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(z) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
     PLPlotRaw.plfill3(n, x[0], y[0], z[0]);
   END FillPolygon3D;
 
@@ -288,6 +328,8 @@ PROCEDURE GetFGColorDiscrRGB (icol0: INTEGER; ): GetFGColorDiscrRGBResult =
   BEGIN
     PLPlotRaw.plgcol0(icol0, arg2, arg3, arg4);
     result.r := arg2;
+    result.g := arg3;
+    result.b := arg4;
     RETURN result;
   END GetFGColorDiscrRGB;
 
@@ -300,6 +342,8 @@ PROCEDURE GetBGColorDiscrRGB (): GetBGColorDiscrRGBResult =
   BEGIN
     PLPlotRaw.plgcolbg(arg1, arg2, arg3);
     result.r := arg1;
+    result.g := arg2;
+    result.b := arg3;
     RETURN result;
   END GetBGColorDiscrRGB;
 
@@ -343,6 +387,8 @@ PROCEDURE GetFamilyFile (): GetFamilyFileResult =
   BEGIN
     PLPlotRaw.plgfam(arg1, arg2, arg3);
     result.fam := arg1;
+    result.num := arg2;
+    result.bmax := arg3;
     RETURN result;
   END GetFamilyFile;
 
@@ -366,6 +412,9 @@ PROCEDURE GetOutputDeviceParam (): GetOutputDeviceParamResult =
   BEGIN
     PLPlotRaw.plgpage(result.xp, result.yp, arg3, arg4, arg5, arg6);
     result.xleng := arg3;
+    result.yleng := arg4;
+    result.xoff := arg5;
+    result.yoff := arg6;
     RETURN result;
   END GetOutputDeviceParam;
 
@@ -413,6 +462,7 @@ PROCEDURE GetXLabelParam (): GetXLabelParamResult =
   BEGIN
     PLPlotRaw.plgxax(arg1, arg2);
     result.digmax := arg1;
+    result.digits := arg2;
     RETURN result;
   END GetXLabelParam;
 
@@ -424,6 +474,7 @@ PROCEDURE GetYLabelParam (): GetYLabelParamResult =
   BEGIN
     PLPlotRaw.plgyax(arg1, arg2);
     result.digmax := arg1;
+    result.digits := arg2;
     RETURN result;
   END GetYLabelParam;
 
@@ -435,19 +486,20 @@ PROCEDURE GetZLabelParam (): GetZLabelParamResult =
   BEGIN
     PLPlotRaw.plgzax(arg1, arg2);
     result.digmax := arg1;
+    result.digits := arg2;
     RETURN result;
   END GetZLabelParam;
 
 PROCEDURE PlotHistogram (READONLY x             : V.TBody;
-                                  datmin, datmax: LONGREAL;
+                                  datmin, datmax: R.T;
                                   nbin          : INTEGER;
-                                  oldwin        : INTEGER    := 0; ) =
+                                  oldwin        : INTEGER   := 0; ) =
   VAR n := NUMBER(x);
   BEGIN
     PLPlotRaw.plhist(n, x[0], datmin, datmax, nbin, oldwin);
   END PlotHistogram;
 
-PROCEDURE SetColorHLS (h, l, s: LONGREAL; ) =
+PROCEDURE SetColorHLS (h, l, s: R.T; ) =
   BEGIN
     PLPlotRaw.plhls(h, l, s);
   END SetColorHLS;
@@ -457,7 +509,7 @@ PROCEDURE Init () =
     PLPlotRaw.plinit();
   END Init;
 
-PROCEDURE PlotLineSegment (x1, y1, x2, y2: LONGREAL; ) =
+PROCEDURE PlotLineSegment (x1, y1, x2, y2: R.T; ) =
   BEGIN
     PLPlotRaw.pljoin(x1, y1, x2, y2);
   END PlotLineSegment;
@@ -477,7 +529,7 @@ PROCEDURE SetLabels (xlabel, ylabel, tlabel: TEXT; ) =
     M3toC.FreeSharedS(tlabel, arg3);
   END SetLabels;
 
-PROCEDURE SetLightPos (x, y, z: LONGREAL; ) =
+PROCEDURE SetLightPos (x, y, z: R.T; ) =
   BEGIN
     PLPlotRaw.pllightsource(x, y, z);
   END SetLightPos;
@@ -485,21 +537,21 @@ PROCEDURE SetLightPos (x, y, z: LONGREAL; ) =
 PROCEDURE PlotLines (READONLY x, y: V.TBody; ) RAISES {NA.Error} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
     PLPlotRaw.plline(n, x[0], y[0]);
   END PlotLines;
 
 PROCEDURE PlotLines3D (READONLY x, y, z: V.TBody; ) RAISES {NA.Error} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(z) # n THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(z) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
     PLPlotRaw.plline3(n, x[0], y[0], z[0]);
   END PlotLines3D;
 
-PROCEDURE SetLineStyle (lin: INTEGER; ) =
+PROCEDURE SetLineStyle (lin: [LineStyle.continuous .. LAST(LineStyle)]; ) =
   BEGIN
-    PLPlotRaw.pllsty(lin);
+    PLPlotRaw.pllsty(ORD(lin));
   END SetLineStyle;
 
 PROCEDURE PlotMesh (READONLY x, y: V.TBody;
@@ -510,8 +562,8 @@ PROCEDURE PlotMesh (READONLY x, y: V.TBody;
     ny                         := NUMBER(y);
     arg3: REF ARRAY OF ADDRESS;
   BEGIN
-    IF NUMBER(z) # nx THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(z[0]) # ny THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(z) # nx THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(z[0]) # ny THEN RAISE NA.Error(NA.Err.bad_size) END;
     arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
     PLPlotRaw.plmesh(x[0], y[0], arg3[0], nx, ny, opt);
@@ -527,8 +579,8 @@ PROCEDURE PlotMeshColored (READONLY x, y  : V.TBody;
     arg3: REF ARRAY OF ADDRESS;
     n                          := NUMBER(clevel);
   BEGIN
-    IF NUMBER(z) # nx THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(z[0]) # ny THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(z) # nx THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(z[0]) # ny THEN RAISE NA.Error(NA.Err.bad_size) END;
     arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
     PLPlotRaw.plmeshc(x[0], y[0], arg3[0], nx, ny, opt, clevel[0], n);
@@ -544,7 +596,7 @@ PROCEDURE CreateStream (): INTEGER =
     RETURN strm;
   END CreateStream;
 
-PROCEDURE PrintTextVP (side: TEXT; disp, pos, just: LONGREAL; text: TEXT; ) =
+PROCEDURE PrintTextVP (side: TEXT; disp, pos, just: R.T; text: TEXT; ) =
   VAR
     arg1: C.char_star;
     arg5: C.char_star;
@@ -564,8 +616,8 @@ PROCEDURE Plot3D (READONLY x, y     : V.TBody;
     ny                         := NUMBER(y);
     arg3: REF ARRAY OF ADDRESS;
   BEGIN
-    IF NUMBER(z) # nx THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(z[0]) # ny THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(z) # nx THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(z[0]) # ny THEN RAISE NA.Error(NA.Err.bad_size) END;
     arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
     PLPlotRaw.plot3d(x[0], y[0], arg3[0], nx, ny, opt, side);
@@ -581,8 +633,8 @@ PROCEDURE Plot3DC (READONLY x, y  : V.TBody;
     arg3: REF ARRAY OF ADDRESS;
     n                          := NUMBER(clevel);
   BEGIN
-    IF NUMBER(z) # nx THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(z[0]) # ny THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(z) # nx THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(z[0]) # ny THEN RAISE NA.Error(NA.Err.bad_size) END;
     arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
     PLPlotRaw.plot3dc(x[0], y[0], arg3[0], nx, ny, opt, clevel[0], n);
@@ -598,8 +650,8 @@ PROCEDURE Surface3D (READONLY x, y  : V.TBody;
     arg3: REF ARRAY OF ADDRESS;
     n                          := NUMBER(clevel);
   BEGIN
-    IF NUMBER(z) # nx THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(z[0]) # ny THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(z) # nx THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(z[0]) # ny THEN RAISE NA.Error(NA.Err.bad_size) END;
     arg3 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
     FOR i := 0 TO LAST(z) DO arg3[i] := ADR(z[i, 0]) END;
     PLPlotRaw.plsurf3d(x[0], y[0], arg3[0], nx, ny, opt, clevel[0], n);
@@ -609,7 +661,7 @@ PROCEDURE SetFillPattern (READONLY inc, del: ARRAY OF INTEGER; )
   RAISES {NA.Error} =
   VAR n := NUMBER(inc);
   BEGIN
-    IF NUMBER(del) # n THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(del) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
     PLPlotRaw.plpat(n, inc[0], del[0]);
   END SetFillPattern;
 
@@ -617,7 +669,7 @@ PROCEDURE PlotPoints (READONLY x, y: V.TBody; code: INTEGER; )
   RAISES {NA.Error} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
     PLPlotRaw.plpoin(n, x[0], y[0], code);
   END PlotPoints;
 
@@ -625,8 +677,8 @@ PROCEDURE PlotPoints3D (READONLY x, y, z: V.TBody; code: INTEGER; )
   RAISES {NA.Error} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(z) # n THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(z) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
     PLPlotRaw.plpoin3(n, x[0], y[0], z[0], code);
   END PlotPoints3D;
 
@@ -636,9 +688,9 @@ PROCEDURE PlotPolygon3D (READONLY x, y, z: V.TBody;
   RAISES {NA.Error} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(z) # n THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(draw) # n - 1 THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(z) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(draw) # n - 1 THEN RAISE NA.Error(NA.Err.bad_size) END;
     PLPlotRaw.plpoly3(n, x[0], y[0], z[0], draw[0], flag);
   END PlotPolygon3D;
 
@@ -652,7 +704,7 @@ PROCEDURE SetFillStyle (patt: INTEGER; ) =
     PLPlotRaw.plpsty(patt);
   END SetFillStyle;
 
-PROCEDURE PrintTextWorld (x, y, dx, dy, just: LONGREAL; text: TEXT; ) =
+PROCEDURE PrintTextWorld (x, y, dx, dy, just: R.T; text: TEXT; ) =
   VAR arg6: C.char_star;
   BEGIN
     arg6 := M3toC.SharedTtoS(text);
@@ -665,7 +717,7 @@ PROCEDURE Replot () =
     PLPlotRaw.plreplot();
   END Replot;
 
-PROCEDURE SetCharacterHeight (def, scale: LONGREAL; ) =
+PROCEDURE SetCharacterHeight (def, scale: R.T; ) =
   BEGIN
     PLPlotRaw.plschr(def, scale);
   END SetCharacterHeight;
@@ -674,8 +726,8 @@ PROCEDURE SetColorMapDiscr (READONLY r, g, b: ARRAY OF INTEGER; )
   RAISES {NA.Error} =
   VAR n := NUMBER(r);
   BEGIN
-    IF NUMBER(g) # n THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(b) # n THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(g) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(b) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
     PLPlotRaw.plscmap0(r[0], g[0], b[0], n);
   END SetColorMapDiscr;
 
@@ -688,8 +740,8 @@ PROCEDURE SetColorMapCont (READONLY r, g, b: ARRAY OF INTEGER; )
   RAISES {NA.Error} =
   VAR n := NUMBER(r);
   BEGIN
-    IF NUMBER(g) # n THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(b) # n THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(g) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(b) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
     PLPlotRaw.plscmap1(r[0], g[0], b[0], n);
   END SetColorMapCont;
 
@@ -699,10 +751,10 @@ PROCEDURE SetColorCont (         itype                      : INTEGER;
   RAISES {NA.Error} =
   VAR n := NUMBER(pos);
   BEGIN
-    IF NUMBER(coord1) # n THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(coord2) # n THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(coord3) # n THEN RAISE NA.Error(Err.bad_size) END;
-    IF NUMBER(rev) # n - 1 THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(coord1) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(coord2) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(coord3) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
+    IF NUMBER(rev) # n - 1 THEN RAISE NA.Error(NA.Err.bad_size) END;
     PLPlotRaw.plscmap1l(
       itype, n, pos[0], coord1[0], coord2[0], coord3[0], rev[0]);
   END SetColorCont;
@@ -740,29 +792,29 @@ PROCEDURE SetDevice (devname: TEXT; ) =
     M3toC.FreeSharedS(devname, arg1);
   END SetDevice;
 
-PROCEDURE SetWindowDevice (mar, aspect, jx, jy: LONGREAL; ) =
+PROCEDURE SetWindowDevice (mar, aspect, jx, jy: R.T; ) =
   BEGIN
     PLPlotRaw.plsdidev(mar, aspect, jx, jy);
   END SetWindowDevice;
 
 PROCEDURE LoadTransformation (dimxmin, dimxmax, dimymin, dimymax: INTEGER;
-                              dimxpmm, dimypmm: LONGREAL; ) =
+                              dimxpmm, dimypmm                  : R.T;     ) =
   BEGIN
     PLPlotRaw.plsdimap(
       dimxmin, dimxmax, dimymin, dimymax, dimxpmm, dimypmm);
   END LoadTransformation;
 
-PROCEDURE SetOrientation (rot: LONGREAL; ) =
+PROCEDURE SetOrientation (rot: R.T; ) =
   BEGIN
     PLPlotRaw.plsdiori(rot);
   END SetOrientation;
 
-PROCEDURE SetWindowPlot (xmin, ymin, xmax, ymax: LONGREAL; ) =
+PROCEDURE SetWindowPlot (xmin, ymin, xmax, ymax: R.T; ) =
   BEGIN
     PLPlotRaw.plsdiplt(xmin, ymin, xmax, ymax);
   END SetWindowPlot;
 
-PROCEDURE ZoomWindow (xmin, ymin, xmax, ymax: LONGREAL; ) =
+PROCEDURE ZoomWindow (xmin, ymin, xmax, ymax: R.T; ) =
   BEGIN
     PLPlotRaw.plsdiplz(xmin, ymin, xmax, ymax);
   END ZoomWindow;
@@ -800,7 +852,7 @@ PROCEDURE SetFileName (fnam: TEXT; ) =
   END SetFileName;
 
 PROCEDURE ShadeRegions (READONLY a                     : M.TBody;
-                                 xmin, xmax, ymin, ymax: LONGREAL;
+                                 xmin, xmax, ymin, ymax: R.T;
                         READONLY x                     : V.TBody;
                         fill_width, cont_color, cont_width, rectangular: INTEGER;
                         pltr       : CallbackM3Proc;
@@ -822,9 +874,9 @@ PROCEDURE ShadeRegions (READONLY a                     : M.TBody;
   END ShadeRegions;
 
 PROCEDURE ShadeRegion (READONLY a: M.TBody;
-                       left, right, bottom, top, shade_min, shade_max: LONGREAL;
+                       left, right, bottom, top, shade_min, shade_max: R.T;
                        sh_cmap : INTEGER;
-                       sh_color: LONGREAL;
+                       sh_color: R.T;
                        sh_width, min_color, min_width, max_color,
                          max_width, rectangular: INTEGER;
                        pltr       : CallbackM3Proc;
@@ -844,12 +896,12 @@ PROCEDURE ShadeRegion (READONLY a: M.TBody;
                                    callbackData := OBJECT_DATA));
   END ShadeRegion;
 
-PROCEDURE SetMajorTickSize (def, scale: LONGREAL; ) =
+PROCEDURE SetMajorTickSize (def, scale: R.T; ) =
   BEGIN
     PLPlotRaw.plsmaj(def, scale);
   END SetMajorTickSize;
 
-PROCEDURE SetMinorTickSize (def, scale: LONGREAL; ) =
+PROCEDURE SetMinorTickSize (def, scale: R.T; ) =
   BEGIN
     PLPlotRaw.plsmin(def, scale);
   END SetMinorTickSize;
@@ -859,8 +911,8 @@ PROCEDURE SetGlobalOrientation (ori: INTEGER; ) =
     PLPlotRaw.plsori(ori);
   END SetGlobalOrientation;
 
-PROCEDURE SetOutputDeviceParam (xp, yp                  : LONGREAL;
-                                xleng, yleng, xoff, yoff: INTEGER;  ) =
+PROCEDURE SetOutputDeviceParam (xp, yp                  : R.T;
+                                xleng, yleng, xoff, yoff: INTEGER; ) =
   BEGIN
     PLPlotRaw.plspage(xp, yp, xleng, yleng, xoff, yoff);
   END SetOutputDeviceParam;
@@ -880,7 +932,7 @@ PROCEDURE SetSubWindows (nx, ny: INTEGER; ) =
     PLPlotRaw.plssub(nx, ny);
   END SetSubWindows;
 
-PROCEDURE SetSymbolHeight (def, scale: LONGREAL; ) =
+PROCEDURE SetSymbolHeight (def, scale: R.T; ) =
   BEGIN
     PLPlotRaw.plssym(def, scale);
   END SetSymbolHeight;
@@ -898,13 +950,13 @@ PROCEDURE StartDev (devname: TEXT; nx, ny: INTEGER; ) =
     M3toC.FreeSharedS(devname, arg1);
   END StartDev;
 
-PROCEDURE AddStripchartPoint (id, pen: INTEGER; x, y: LONGREAL; ) =
+PROCEDURE AddStripchartPoint (id, pen: INTEGER; x, y: R.T; ) =
   BEGIN
     PLPlotRaw.plstripa(id, pen, x, y);
   END AddStripchartPoint;
 
 PROCEDURE CreateStripchart (xspec, yspec: TEXT;
-                            xmin, xmax, xjump, ymin, ymax, xlpos, ylpos: LONGREAL;
+                            xmin, xmax, xjump, ymin, ymax, xlpos, ylpos: R.T;
                             y_ascl, acc, colbox, collab: INTEGER;
                             READONLY colline, styline: ARRAY OF INTEGER;
                             VAR legline: ARRAY [0 .. 3] OF TEXT;
@@ -922,7 +974,7 @@ PROCEDURE CreateStripchart (xspec, yspec: TEXT;
     arg20: C.char_star;
   BEGIN
     TRY
-      IF NUMBER(styline) # n THEN RAISE NA.Error(Err.bad_size) END;
+      IF NUMBER(styline) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
       arg2 := M3toC.SharedTtoS(xspec);
       arg3 := M3toC.SharedTtoS(yspec);
       FOR i := FIRST(legline) TO LAST(legline) DO
@@ -958,11 +1010,11 @@ PROCEDURE SetNewLineStyle (READONLY mark, space: ARRAY OF INTEGER; )
   RAISES {NA.Error} =
   VAR n := NUMBER(mark);
   BEGIN
-    IF NUMBER(space) # n THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(space) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
     PLPlotRaw.plstyl(n, mark[0], space[0]);
   END SetNewLineStyle;
 
-PROCEDURE SetVPAbsolute (xmin, xmax, ymin, ymax: LONGREAL; ) =
+PROCEDURE SetVPAbsolute (xmin, xmax, ymin, ymax: R.T; ) =
   BEGIN
     PLPlotRaw.plsvpa(xmin, xmax, ymin, ymax);
   END SetVPAbsolute;
@@ -981,7 +1033,7 @@ PROCEDURE PlotSymbols (READONLY x, y: V.TBody; code: INTEGER; )
   RAISES {NA.Error} =
   VAR n := NUMBER(x);
   BEGIN
-    IF NUMBER(y) # n THEN RAISE NA.Error(Err.bad_size) END;
+    IF NUMBER(y) # n THEN RAISE NA.Error(NA.Err.bad_size) END;
     PLPlotRaw.plsym(n, x[0], y[0], code);
   END PlotSymbols;
 
@@ -995,17 +1047,17 @@ PROCEDURE ShowTextScreen () =
     PLPlotRaw.pltext();
   END ShowTextScreen;
 
-PROCEDURE SetVPAspect (aspect: LONGREAL; ) =
+PROCEDURE SetVPAspect (aspect: R.T; ) =
   BEGIN
     PLPlotRaw.plvasp(aspect);
   END SetVPAspect;
 
-PROCEDURE CreateVPAspect (xmin, xmax, ymin, ymax, aspect: LONGREAL; ) =
+PROCEDURE CreateVPAspect (xmin, xmax, ymin, ymax, aspect: R.T; ) =
   BEGIN
     PLPlotRaw.plvpas(xmin, xmax, ymin, ymax, aspect);
   END CreateVPAspect;
 
-PROCEDURE CreateVP (xmin, xmax, ymin, ymax: LONGREAL; ) =
+PROCEDURE CreateVP (xmin, xmax, ymin, ymax: R.T; ) =
   BEGIN
     PLPlotRaw.plvpor(xmin, xmax, ymin, ymax);
   END CreateVP;
@@ -1016,7 +1068,7 @@ PROCEDURE SetStandardVP () =
   END SetStandardVP;
 
 PROCEDURE Init3DWindow (basex, basey, height, xmin0, xmax0, ymin0, ymax0,
-                          zmin0, zmax0, alt, az: LONGREAL; ) =
+                          zmin0, zmax0, alt, az: R.T; ) =
   BEGIN
     PLPlotRaw.plw3d(basex, basey, height, xmin0, xmax0, ymin0, ymax0,
                     zmin0, zmax0, alt, az);
@@ -1027,7 +1079,7 @@ PROCEDURE SetPenWidth (width: INTEGER; ) =
     PLPlotRaw.plwid(width);
   END SetPenWidth;
 
-PROCEDURE SetWindow (xmin, xmax, ymin, ymax: LONGREAL; ) =
+PROCEDURE SetWindow (xmin, xmax, ymin, ymax: R.T; ) =
   BEGIN
     PLPlotRaw.plwind(xmin, xmax, ymin, ymax);
   END SetWindow;

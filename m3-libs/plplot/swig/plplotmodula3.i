@@ -85,25 +85,6 @@ improper types.
 whereever possible to increase safety for parameter passing.
 We should use exceptions to indicate errors.
 * * * *)
-
-TYPE
-  Option = {enabled, arg, nodelete, invisible, disabled, dummy5, dummy6,
-            dummy7, func, bool, int, float, string};
-  OptionSet = SET OF Option;
-
-  Parse =
-    {full, quiet, nodelete, showall, override, noprogram, nodash, skip};
-  ParseSet = SET OF Parse;
-
-  Escape = {dummy0, setRgb, allocNcol, setLpb, expose, resize, redraw,
-            text, graph, fill, di, flush, eh, getc, swin, plfltbuffering,
-            xormod, setCompression, clear, dash, hasText, image, imageops};
-
-  Buffering = {dummy0, enable, disable, query};
-
-  DrawMode = {linex, liney, magColor, baseCont, topCont, surfCont, sides,
-              faceted, mesh};
-  DrawModeSet = SET OF DrawMode;
 %}
 
 
@@ -277,6 +258,24 @@ TYPE
 %rename("RGB_HLS") plRGB_HLS;
 %rename("GetCursor") plGetCursor;
 %rename("TranslateCursor") plTranslateCursor;
+
+%pragma(modula3) enumitem="prefix=PLESPLFLTBUFFERING_;int;srcstyle=underscore;Buffering";
+%pragma(modula3) enumitem="prefix=PLESC_;set;srcstyle=underscore;Escape";
+%pragma(modula3) enumitem="prefix=PLSWIN_;int;srcstyle=underscore;Window";
+%pragma(modula3) constint="prefix=PL_MAX;int;srcstyle=underscore,prefix=max;CARDINAL";
+%ignore PL_NOTSET;
+
+%pragma(modula3) enumitem="prefix=DRAW_;set;srcstyle=underscore;DrawMode";
+%pragma(modula3) makesetofenum="DrawMode";
+%pragma(modula3) constset="prefix=DRAW_;set;srcstyle=underscore,prefix=draw;DrawModeSet,DrawMode";
+
+%pragma(modula3) enumitem="prefix=PL_OPT_;set;srcstyle=underscore;Option";
+%pragma(modula3) makesetofenum="Option";
+%pragma(modula3) constset="prefix=PL_OPT_;set;srcstyle=underscore,prefix=opt;OptionSet,Option";
+
+%pragma(modula3) enumitem="prefix=PL_PARSE_;set;srcstyle=underscore;Parse";
+%pragma(modula3) makesetofenum="Parse";
+%pragma(modula3) constset="prefix=PL_PARSE_;set;srcstyle=underscore,prefix=parse;ParseSet,Parse";
 
 
 %typemap("rawintype") PLINT  * %{C.int%}
@@ -464,6 +463,16 @@ $1[$1i]:='\000';
 %}
 %typemap(m3freearg)  const char *xopt, const char *yopt, const char *zopt %{%}
 
+
+
+%insert(m3wrapintf) %{
+TYPE
+  LineStyle = {none, continuous, shortDash, longDash, longDashShortGap,
+                  dotDash, complex0, complex1, complex2};
+%}
+%typemap(m3intype)  PLINT lin     %{[LineStyle.continuous..LAST(LineStyle)]%}
+%typemap(m3argraw)  PLINT lin     %{ORD($1_name)%}
+
 %typemap(m3intype)  PLINT mode    %{BOOLEAN%}
 %typemap(m3argraw)  PLINT mode    %{ORD($1_name)%}
 
@@ -500,22 +509,22 @@ $1[$1i]:='\000';
 
 
 
-%feature("m3:multiretval") plcalc_world;
-%feature("m3:multiretval") plgchr;
-%feature("m3:multiretval") plgcol0;
-%feature("m3:multiretval") plgcolbg;
-%feature("m3:multiretval") plgdidev;
-%feature("m3:multiretval") plgdiplt;
-%feature("m3:multiretval") plgfam;
-%feature("m3:multiretval") plgpage;
-%feature("m3:multiretval") plgspa;
-%feature("m3:multiretval") plgvpd;
-%feature("m3:multiretval") plgvpw;
-%feature("m3:multiretval") plgxax;
-%feature("m3:multiretval") plgyax;
-%feature("m3:multiretval") plgzax;
-%feature("m3:multiretval") plHLS_RGB;
-%feature("m3:multiretval") plRGB_HLS;
+%feature("modula3:multiretval") plcalc_world;
+%feature("modula3:multiretval") plgchr;
+%feature("modula3:multiretval") plgcol0;
+%feature("modula3:multiretval") plgcolbg;
+%feature("modula3:multiretval") plgdidev;
+%feature("modula3:multiretval") plgdiplt;
+%feature("modula3:multiretval") plgfam;
+%feature("modula3:multiretval") plgpage;
+%feature("modula3:multiretval") plgspa;
+%feature("modula3:multiretval") plgvpd;
+%feature("modula3:multiretval") plgvpw;
+%feature("modula3:multiretval") plgxax;
+%feature("modula3:multiretval") plgyax;
+%feature("modula3:multiretval") plgzax;
+%feature("modula3:multiretval") plHLS_RGB;
+%feature("modula3:multiretval") plRGB_HLS;
 
 
 /* swig compatible PLplot API definitions from here on. */

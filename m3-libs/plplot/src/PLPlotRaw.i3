@@ -17,6 +17,7 @@ TYPE
   PLFLT = C.double;
 
 
+
 <* EXTERNAL c_pl_setcontlabelformat *>
 PROCEDURE pl_setcontlabelformat (lexp, sigdig: C.int; );
 
@@ -28,13 +29,13 @@ PROCEDURE pl_setcontlabelparam (offset, size, spacing: C.double;
 PROCEDURE pladv (page: C.int; );
 
 <* EXTERNAL c_plaxes *>
-PROCEDURE plaxes (x0, y0: C.double;
-                  xopt  : C.char_star;
-                  xtick : C.double;
-                  nxsub : C.int;
-                  yopt  : C.char_star;
-                  ytick : C.double;
-                  nysub : C.int;       );
+PROCEDURE plaxes (         x0, y0: C.double;
+                  READONLY xopt  : (*ARRAY OF*) CHAR;
+                           xtick : C.double;
+                           nxsub : C.int;
+                  READONLY yopt  : (*ARRAY OF*) CHAR;
+                           ytick : C.double;
+                           nysub : C.int;             );
 
 <* EXTERNAL c_plbin *>
 PROCEDURE plbin (         n     : C.int;
@@ -45,23 +46,26 @@ PROCEDURE plbin (         n     : C.int;
 PROCEDURE plbop ();
 
 <* EXTERNAL c_plbox *>
-PROCEDURE plbox (xopt : C.char_star;
-                 xtick: C.double;
-                 nxsub: C.int;
-                 yopt : C.char_star;
-                 ytick: C.double;
-                 nysub: C.int;       );
+PROCEDURE plbox (READONLY xopt : (*ARRAY OF*) CHAR;
+                          xtick: C.double;
+                          nxsub: C.int;
+                 READONLY yopt : (*ARRAY OF*) CHAR;
+                          ytick: C.double;
+                          nysub: C.int;             );
 
 <* EXTERNAL c_plbox3 *>
-PROCEDURE plbox3 (xopt, xlabel: C.char_star;
-                  xtick       : C.double;
-                  nsubx       : C.int;
-                  yopt, ylabel: C.char_star;
-                  ytick       : C.double;
-                  nsuby       : C.int;
-                  zopt, zlabel: C.char_star;
-                  ztick       : C.double;
-                  nsubz       : C.int;       );
+PROCEDURE plbox3 (READONLY xopt  : (*ARRAY OF*) CHAR;
+                           xlabel: C.char_star;
+                           xtick : C.double;
+                           nsubx : C.int;
+                  READONLY yopt  : (*ARRAY OF*) CHAR;
+                           ylabel: C.char_star;
+                           ytick : C.double;
+                           nsuby : C.int;
+                  READONLY zopt  : (*ARRAY OF*) CHAR;
+                           zlabel: C.char_star;
+                           ztick : C.double;
+                           nsubz : C.int;             );
 
 <* EXTERNAL c_plcalc_world *>
 PROCEDURE plcalc_world (    rx, ry: C.double;
@@ -222,7 +226,7 @@ PROCEDURE plmeshc (READONLY x, y: (*ARRAY OF*) C.double;
                             n          : C.int;                 );
 
 <* EXTERNAL c_plmkstrm *>
-PROCEDURE plmkstrm (VAR arg0: C.int; );
+PROCEDURE plmkstrm (VAR strm: C.int; );
 
 <* EXTERNAL c_plmtex *>
 PROCEDURE plmtex (side           : C.char_star;
@@ -334,7 +338,7 @@ PROCEDURE plsdiplz (xmin, ymin, xmax, ymax: C.double; );
 PROCEDURE plsesc (esc: C.char; );
 
 <* EXTERNAL c_plsetopt *>
-PROCEDURE plsetopt (VAR opt, optarg: C.char_star; ): C.int;
+PROCEDURE plsetopt (opt, optarg: C.char_star; ): C.int;
 
 <* EXTERNAL c_plsfam *>
 PROCEDURE plsfam (fam, num, bmax: C.int; );
@@ -402,12 +406,12 @@ PROCEDURE plstripa (id, pen: C.int; x, y: C.double; );
 
 <* EXTERNAL c_plstripc *>
 PROCEDURE plstripc (VAR id          : C.int;
-                    VAR xspec, yspec: C.char_star;
+                        xspec, yspec: C.char_star;
                     xmin, xmax, xjump, ymin, ymax, xlpos, ylpos: C.double;
                     y_ascl, acc, colbox, collab                : C.int;
                     READONLY colline, styline: C.int;
                     VAR legline           : ARRAY [0 .. 3] OF C.char_star;
-                    VAR labx, laby, labtop: C.char_star;                   );
+                        labx, laby, labtop: C.char_star;                   );
 
 <* EXTERNAL c_plstripd *>
 PROCEDURE plstripd (id: C.int; );
@@ -467,7 +471,7 @@ PROCEDURE plClearOpts ();
 PROCEDURE plResetOpts ();
 
 <* EXTERNAL plSetUsage *>
-PROCEDURE plSetUsage (VAR program_string, usage_string: C.char_star; );
+PROCEDURE plSetUsage (program_string, usage_string: C.char_star; );
 
 <* EXTERNAL plOptUsage *>
 PROCEDURE plOptUsage ();
