@@ -62,7 +62,7 @@ REVEAL
 
 
 %insert(m3wrapintf) %{
-FROM FFTWLongRealRaw IMPORT R2RKind, IODim;
+FROM FFTWLongRealRaw IMPORT R2RKind;
 
 TYPE
   Plan    <: REFANY;
@@ -75,19 +75,27 @@ EXCEPTION
 %}
 
 %insert(m3wrapimpl) %{
-FROM FFTWLongRealRaw IMPORT R2RKind, IODim;
+FROM FFTWLongRealRaw IMPORT R2RKind;
 
 REVEAL
   Plan = BRANDED REF FFTWLongRealRaw.Plan;
+
+PROCEDURE CleanupPlan(<*UNUSED*> READONLY w: WeakRef.T; r: REFANY) =
+  BEGIN
+    FFTWLongRealRaw.DestroyPlan(NARROW(r,Plan)^);
+  END CleanupPlan;
+
 %}
 
-%typemap(m3wrapintype)  fftw_plan       %{Plan%};
-%typemap(m3wrapinmode)  fftw_plan       %{%};
-%typemap(m3wraprettype) fftw_plan       %{Plan%};
-%typemap(m3wrapargraw)  fftw_plan       %{$input^%};
-%typemap(m3wrapretvar)  fftw_plan       %{plan:=NEW(Plan);%};
-%typemap(m3wrapretraw)  fftw_plan       %{plan^%};
-%typemap(m3wrapretconv) fftw_plan       %{plan%};
+%typemap(m3wrapintype)   fftw_plan       %{Plan%};
+%typemap(m3wrapinmode)   fftw_plan       %{%};
+%typemap(m3wraprettype)  fftw_plan       %{Plan%};
+%typemap(m3wrapargraw)   fftw_plan       %{$input^%};
+%typemap(m3wrapretvar)   fftw_plan       %{plan:=NEW(Plan);%};
+%typemap(m3wrapretraw)   fftw_plan       %{plan^%};
+%typemap(m3wrapretcheck) fftw_plan       %{EVAL WeakRef.FromRef(plan,CleanupPlan);%};
+%typemap(m3wrapretconv)  fftw_plan       %{plan%};
+%typemap("m3wrapretcheck:import") fftw_plan %{WeakRef%};
 
 %typemap(m3wrapintype)  double *        %{LONGREAL%};
 %typemap(m3wrapintype)  fftw_iodim *    %{IODim%};
@@ -244,14 +252,8 @@ REVEAL
 %ignore fftw_execute_split_dft;
 %ignore fftw_plan_many_dft_r2c;
 %ignore fftw_plan_dft_r2c;
-//%ignore fftw_plan_dft_r2c_1d;
-//%ignore fftw_plan_dft_r2c_2d;
-//%ignore fftw_plan_dft_r2c_3d;
 %ignore fftw_plan_many_dft_c2r;
 %ignore fftw_plan_dft_c2r;
-//%ignore fftw_plan_dft_c2r_1d;
-//%ignore fftw_plan_dft_c2r_2d;
-//%ignore fftw_plan_dft_c2r_3d;
 %ignore fftw_plan_guru_dft_r2c;
 %ignore fftw_plan_guru_dft_c2r;
 %ignore fftw_plan_guru_split_dft_r2c;
@@ -262,14 +264,8 @@ REVEAL
 %ignore fftw_execute_split_dft_c2r;
 %ignore fftw_plan_many_r2r;
 %ignore fftw_plan_r2r;
-//%ignore fftw_plan_r2r_1d;
-//%ignore fftw_plan_r2r_2d;
-//%ignore fftw_plan_r2r_3d;
 %ignore fftw_plan_guru_r2r;
 %ignore fftw_execute_r2r;
-%ignore fftw_destroy_plan;
-%ignore fftw_forget_wisdom;
-%ignore fftw_cleanup;
 %ignore fftw_plan_with_nthreads;
 %ignore fftw_init_threads;
 %ignore fftw_cleanup_threads;
