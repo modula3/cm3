@@ -51,6 +51,19 @@ PROCEDURE DFTC2R1D (READONLY x     : ARRAY OF Complex;
     RETURN z;
   END DFTC2R1D;
 
+PROCEDURE DFTC2C1D (READONLY x   : ARRAY OF Complex;
+                             sign: Dir                := Dir.Backward;
+                    flags := FlagSet{Flag.Estimate}; ):
+  REF ARRAY OF Complex =
+  VAR
+    z := NEW(REF ARRAY OF Complex, NUMBER(x));
+    plan := Raw.PlanDFT1D(NUMBER(x), x[0], z[0], dirToSign[sign],
+                          LOOPHOLE(flags, C.unsigned_int));
+  BEGIN
+    TRY Raw.Execute(plan); FINALLY Raw.DestroyPlan(plan); END;
+    RETURN z;
+  END DFTC2C1D;
+
 
 PROCEDURE Execute (p: Plan; ) =
   BEGIN

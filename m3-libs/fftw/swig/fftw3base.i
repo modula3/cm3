@@ -115,6 +115,10 @@ PROCEDURE DFTC2R1D (READONLY x: ARRAY OF Complex;
     parity: [0 .. 1];  (* even or odd output size *)
     flags := FlagSet{Flag.Estimate};): REF ARRAY OF R.T;
 
+PROCEDURE DFTC2C1D (READONLY x: ARRAY OF Complex;
+    sign : Dir     := Dir.Backward;
+    flags := FlagSet{Flag.Estimate};): REF ARRAY OF Complex;
+
 
 
 (* medium comfort routines *)
@@ -151,6 +155,18 @@ PROCEDURE DFTC2R1D (READONLY x: ARRAY OF Complex; parity: [0 .. 1];
     TRY Raw.Execute(plan); FINALLY Raw.DestroyPlan(plan); END;
     RETURN z;
   END DFTC2R1D;
+
+PROCEDURE DFTC2C1D (READONLY x: ARRAY OF Complex;
+    sign : Dir     := Dir.Backward;
+    flags := FlagSet{Flag.Estimate};): REF ARRAY OF Complex =
+  VAR
+    z    := NEW(REF ARRAY OF Complex, NUMBER(x));
+    plan := Raw.PlanDFT1D(NUMBER(x), x[0], z[0],
+      dirToSign[sign], LOOPHOLE(flags,C.unsigned_int));
+  BEGIN
+    TRY Raw.Execute(plan); FINALLY Raw.DestroyPlan(plan); END;
+    RETURN z;
+  END DFTC2C1D;
 
 %}
 

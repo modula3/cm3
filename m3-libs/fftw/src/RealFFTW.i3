@@ -54,6 +54,11 @@ PROCEDURE DFTC2R1D (READONLY x: ARRAY OF Complex;
                     flags              := FlagSet{Flag.Estimate};   ):
   REF ARRAY OF R.T;
 
+PROCEDURE DFTC2C1D (READONLY x   : ARRAY OF Complex;
+                             sign: Dir                := Dir.Backward;
+                    flags := FlagSet{Flag.Estimate}; ):
+  REF ARRAY OF Complex;
+
 
 
 (* medium comfort routines *)
