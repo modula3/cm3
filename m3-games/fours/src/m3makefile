@@ -7,6 +7,7 @@
 
 
 m3_option ("-times")
+import ("libbuf")
 import ("vbtkit")
 
 
@@ -30,7 +31,6 @@ end
 cp_if ("ScoreDir.i0", "ScoreDir.i3")
 derived_interface ("ScoreDir", HIDDEN)
 
-module ("Buf")
 module ("ScoreFile")
 module ("Config")
 implementation ("Main")
