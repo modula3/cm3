@@ -38,7 +38,7 @@ PROCEDURE TestTexVector (): BOOLEAN =
     result := TRUE;
     out    := FileWr.Open(filename & ".tex");
 
-  <*FATAL OSError.E, Thread.Alerted, Wr.Failure, Arith.Error *>
+  <* FATAL OSError.E, Thread.Alerted, Wr.Failure *>
   BEGIN
     Debug(1, ftn, "begin\n");
 
@@ -103,8 +103,9 @@ PROCEDURE TestTexVector (): BOOLEAN =
                  style := FrF.TexStyle{
                             flags := FrF.TexFlagSet{FrF.TexFlag.fraction}})
                  & "&=&");
-        <*FATAL Arith.Error*>
-        VAR qr := B.DivMod(y, x);
+        <* FATAL Arith.Error *>
+        VAR
+          qr := B.DivMod(y, x);
         BEGIN
           Wr.PutText(
             out, BF.Tex(qr.quot) & "."
@@ -167,8 +168,9 @@ PROCEDURE TestTexVector (): BOOLEAN =
   END TestTexVector;
 (*-------------------------*)
 PROCEDURE TestTex (): BOOLEAN =
-  <*UNUSED*>
-  CONST ftn = Module & "TestTex";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "TestTex";
   VAR result := TRUE;
   BEGIN
     NewLine();

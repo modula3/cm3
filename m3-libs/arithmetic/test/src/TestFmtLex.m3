@@ -12,7 +12,6 @@ IMPORT IO, Lex, TextRd;
 
 IMPORT Rd, Wr, Thread;
 IMPORT FloatMode;
-IMPORT Arithmetic AS Arith;
 
 (*=======================*)
 CONST Module = "TestFmtLex.";
@@ -31,8 +30,8 @@ PROCEDURE TestMatrixIO (): BOOLEAN =
     result := TRUE;
     text   := "";
 
-  <*FATAL FloatMode.Trap, Lex.Error, Rd.Failure, Wr.Failure,
-          Thread.Alerted, Arith.Error*>
+  <* FATAL FloatMode.Trap, Lex.Error, Rd.Failure, Wr.Failure,
+           Thread.Alerted *>
   BEGIN
     Debug(1, ftn, "begin\n");
 
@@ -51,7 +50,7 @@ PROCEDURE TestMatrixIO (): BOOLEAN =
     BEGIN
       IO.Put(MF.Fmt(newMat) & "\n");
       (* <*ASSERT MS.Equal(mat,newMat^)*> *)
-      <*ASSERT M.Equal(M.FromArray(mat),newMat)*>
+      <* ASSERT M.Equal(M.FromArray(mat), newMat) *>
       Rd.Close(rd);
     END;
 
@@ -59,8 +58,9 @@ PROCEDURE TestMatrixIO (): BOOLEAN =
   END TestMatrixIO;
 (*-------------------------*)
 PROCEDURE TestFmtLex (): BOOLEAN =
-  <*UNUSED*>
-  CONST ftn = Module & "TestFmtLex";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "TestFmtLex";
   VAR result := TRUE;
   BEGIN
     NewLine();

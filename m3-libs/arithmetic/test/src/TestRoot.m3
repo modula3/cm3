@@ -223,14 +223,11 @@ PROCEDURE TestBracketOut (): BOOLEAN =
       x.r := x.l + 1.0D0;
       Msg("start at x.l=" & RF.Fmt(x.l, prec3Style) & " x.r="
             & RF.Fmt(x.r, prec3Style));
-      <* FATAL ANY *>
-      BEGIN
-        IF FZ.BracketOut(MyFun, x, maxiter := maxiter) THEN
-          Msg(" end at x.l=" & RF.Fmt(x.l, prec3Style) & " x.r="
-                & RF.Fmt(x.r, prec3Style) & "\n");
-        ELSE
-          Msg(" not found\n");
-        END;
+      IF FZ.BracketOut(MyFun, x, maxiter := maxiter) THEN
+        Msg(" end at x.l=" & RF.Fmt(x.l, prec3Style) & " x.r="
+              & RF.Fmt(x.r, prec3Style) & "\n");
+      ELSE
+        Msg(" not found\n");
       END;
     END;
     RETURN result;

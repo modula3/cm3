@@ -84,9 +84,6 @@ PROCEDURE Equal (x, y: T): BOOLEAN =
   VAR
     xn := NUMBER(x^);
     yn := NUMBER(y^);
-  <* FATAL Arith.Error *>        (*we won't give VR.Equal a chance to
-                                    complain about mismatching vector
-                                    sizes*)
   BEGIN
     IF xn >= yn THEN
       RETURN VR.Equal(SUBARRAY(x^, 0, yn), SUBARRAY(y^, 0, yn))

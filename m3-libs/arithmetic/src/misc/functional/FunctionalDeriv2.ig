@@ -1,11 +1,8 @@
-GENERIC INTERFACE FunctionalDeriv2(R,V,M);
+GENERIC INTERFACE FunctionalDeriv2(R, V, M);
 (* Arithmetic for Modula-3, see doc for details
 
-   Abstract:
-
-   <describe> *)
-
-IMPORT Arithmetic AS Arith;
+   Abstract: Up to the second derivative of a functional on a finite vector
+   space *)
 
 (*==========================*)
 
@@ -16,7 +13,7 @@ TYPE
         second: M.T;
       END;
 
-PROCEDURE Add (READONLY x, y: T): T RAISES {Arith.Error};
+PROCEDURE Add (READONLY x, y: T): T;
 PROCEDURE Scale (READONLY x: T; y: R.T): T;
 
 (*==========================*)

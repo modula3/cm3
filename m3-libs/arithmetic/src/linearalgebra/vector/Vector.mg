@@ -87,19 +87,19 @@ PROCEDURE IsZero (x: T): BOOLEAN =
   END IsZero;
 
 (*---------------------*)
-PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Error} =
+PROCEDURE Equal (x, y: T): BOOLEAN =
   BEGIN
     RETURN VR.Equal(x^, y^);
   END Equal;
 
 (*-----------------*)
-PROCEDURE Add (x, y: T): T RAISES {Error} =
+PROCEDURE Add (x, y: T): T =
   BEGIN
     RETURN VR.Add(x^, y^);
   END Add;
 
 (*-----------------*)
-PROCEDURE Sub (x, y: T): T RAISES {Error} =
+PROCEDURE Sub (x, y: T): T =
   BEGIN
     RETURN VR.Sub(x^, y^);
   END Sub;
@@ -119,13 +119,13 @@ PROCEDURE Scale (x: T; y: R.T): T =
 
 
 (*-----------------*)
-PROCEDURE Inner (x, y: T): R.T RAISES {Error} =
+PROCEDURE Inner (x, y: T): R.T =
   BEGIN
     RETURN VR.Inner(x^, y^);
   END Inner;
 
 (*-----------------*)
-PROCEDURE Dot (x, y: T): R.T RAISES {Error} =
+PROCEDURE Dot (x, y: T): R.T =
   BEGIN
     RETURN VR.Dot(x^, y^);
   END Dot;
@@ -145,7 +145,7 @@ PROCEDURE Dot (x, y: T): R.T RAISES {Error} =
    by a QR factorization
 
 PROCEDURE Cross(
-                x,y:T):T RAISES {Error}=
+                x,y:T):T =
 BEGIN
   RAISE Error(Err.not_implemented);
 END Cross;
