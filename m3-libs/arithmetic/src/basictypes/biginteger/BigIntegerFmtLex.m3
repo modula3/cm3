@@ -1,10 +1,9 @@
 MODULE BigIntegerFmtLex;
 (*Copyright (c) 1996, m3na project*)
 
-IMPORT Rd, Wr, Thread;
+IMPORT Rd, Thread;
 IMPORT Fmt AS F;
 IMPORT Lex AS L;
-IMPORT FloatMode;
 IMPORT Word, Text;
 IMPORT BigIntegerRep AS BR;
 IMPORT BigInteger AS BB;
@@ -13,46 +12,6 @@ FROM NADefinitions IMPORT Error, Err;
 
 <*UNUSED*>
 CONST Module = "BigIntegerFmtLex.";
-
-(*
-<*FATAL Rd.Failure, Thread.Alerted*>
-PROCEDURE Skip (txt: TEXT;  len, start: INTEGER;  blanks: BOOLEAN): INTEGER =
-  (* Return the index of the first character of "txt" at or beyond "start"
-     that's not in "chars". *)
-  VAR
-    i   : CARDINAL := NUMBER(buf);
-    buf : ARRAY [0..63] OF CHAR;
-  BEGIN
-    LOOP
-      IF (start >= len) THEN RETURN len; END;
-      IF (i >= NUMBER (buf)) THEN i := 0; Text.SetChars (buf, txt, start);  END;
-      IF (buf[i] IN Lex.Blanks) # blanks THEN RETURN start; END;
-      INC (start);  INC (i);
-    END;
-  END Skip;
-
-PROCEDURE ScanWord (txt: TEXT): Rd.T RAISES {Lex.Error} =
-  (* Ensure that "txt" contains exactly one non-blank substring,
-     and return its span [start..stop) *)
-  VAR
-    len    := Text.Length (txt);
-    start  := Skip (txt, len, 0,     blanks := TRUE);
-    stop   := Skip (txt, len, start, blanks := FALSE);
-    finish := Skip (txt, len, stop,  blanks := TRUE);
-  BEGIN
-    IF finish < len THEN RAISE Lex.Error; END;
-    RETURN TextRd.New (Text.Sub (txt, start, stop-start));
-  END ScanWord;
-
-PROCEDURE Lex(txt: TEXT; defaultBase: [2..16]): INTEGER
-    RAISES {Lex.Error, FloatMode.Trap} =
-  VAR rd := ScanWord(txt); res := Lex.Int(rd, defaultBase);
-  BEGIN
-    IF NOT Rd.EOF(rd) THEN RAISE Lex.Error END;
-    RETURN res
-  END Lex;
-*)
-
 
 
 PROCEDURE FastFmtU (READONLY x: T; base: F.Base; pad: [1 .. Word.Size]):
@@ -123,9 +82,31 @@ PROCEDURE Tex (         x     : T;
     END;
   END Tex;
 
-PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
-  RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted} =
+PROCEDURE Lex (rd: Rd.T;  <*UNUSED*>READONLY style: LexStyle; ): T
+  RAISES {L.Error, Rd.Failure, Thread.Alerted} =
+  VAR
+    z            := BB.Zero;
+    b            := BB.FromInteger(10);
+    neg: BOOLEAN;
   BEGIN
+    TRY
+      neg := Rd.GetChar(rd) = '-';
+      IF NOT neg THEN Rd.UnGetChar(rd); END;
+    EXCEPT
+    | Rd.EndOfFile => RAISE L.Error;
+    END;
+    TRY
+      LOOP
+        VAR c := Rd.GetChar(rd);
+        BEGIN
+          IF NOT c IN SET OF CHAR{'0'.. '9'} THEN EXIT END;
+          z := BB.Add(BB.Mul(z, b), BB.FromInteger(ORD(c) - ORD('0')));
+        END;
+      END;
+    EXCEPT
+    | Rd.EndOfFile =>
+    END;
+    IF neg THEN RETURN BB.Neg(z); ELSE RETURN z; END;
   END Lex;
 
 BEGIN

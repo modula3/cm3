@@ -26,7 +26,8 @@ PROCEDURE Tex (x: T; READONLY style := TexStyle{}): TEXT
 
 TYPE
   LexStyle = RECORD
-               sep       := ' ';
+               colSep    := ' ';
+               rowSep    := '\n';
                elemStyle := RF.LexStyle{};
              END;
 

@@ -56,11 +56,13 @@ readonly proc CharPolynomial (nm, rfield) is
 end
 
 readonly proc MatrixFmtLex (nm, rfield) is
+  local rfmt   = nm & "FmtLex"
+  local vfield = nm & "Vector"
+  local vfmt   = nm & "VectorFmtLex"
   local mfield = nm & "Matrix"
   local mfmt   = nm & "MatrixFmtLex"
-  local rfmt   = nm & "FmtLex"
-  build_generic_intf (mfmt, "MatrixFmtLex", [rfmt, mfield], VISIBLE)
-  build_generic_impl (mfmt, "MatrixFmtLex", [rfmt])
+  build_generic_intf (mfmt, "MatrixFmtLex", [rfmt,               mfield], VISIBLE)
+  build_generic_impl (mfmt, "MatrixFmtLex", [rfmt, vfield, vfmt, mfield])
 end
 
 readonly proc LAPACKToModula3 (nm, field, src, prefix, Prefix) is

@@ -1,7 +1,7 @@
 GENERIC INTERFACE PolarFmtLex(P, RF);
 (*Copyright (c) 1996, m3na project*)
 
-IMPORT Rd, Wr, Thread;
+IMPORT Rd, Thread;
 IMPORT Lex AS L;
 IMPORT FloatMode;
 FROM FmtLexSupport IMPORT Precedence;
@@ -25,7 +25,7 @@ PROCEDURE Tex (READONLY x     : T;
 
 TYPE
   LexStyle = RECORD
-               sep       := ' ';
+               sep       := ',';
                elemStyle := RF.LexStyle{};
              END;
 

@@ -1,4 +1,4 @@
-GENERIC MODULE VectorFmtLex(RF);
+GENERIC MODULE VectorFmtLex(R, RF,V);
 (*Copyright (c) 1996, m3na project*)
 
 (*FROM NADefinitions IMPORT Error,Err;*)
@@ -6,6 +6,7 @@ IMPORT Rd, Wr, TextWr, Thread;
 IMPORT Fmt AS F;
 IMPORT Lex AS L;
 IMPORT FloatMode;
+IMPORT FmtLexSupport AS FSup;
 FROM FmtLexSupport IMPORT Precedence;
 
 <*UNUSED*>
@@ -54,7 +55,31 @@ PROCEDURE Tex (         x     : T;
 
 PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
   RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted} =
+  TYPE
+    List = REF RECORD
+                 prev: List;
+                 data: R.T;
+               END;
+  VAR
+    item: List := NIL;
+    n          := 0;
   BEGIN
+    (*read the values into a list*)
+    REPEAT
+      item := NEW(List, prev := item, data := RF.Lex(rd, style.elemStyle));
+      INC(n);
+    UNTIL NOT FSup.CheckSeparator(rd, style.sep);
+
+    (*copy the list elements into the vector's array*)
+    VAR z := NEW(V.T, n);
+    BEGIN
+      FOR i := n - 1 TO 0 BY -1 DO
+        z[i] := item.data;
+        item := item.prev;
+      END;
+      <*ASSERT item=NIL*>
+      RETURN z;
+    END;
   END Lex;
 
 BEGIN
