@@ -36,5 +36,8 @@ CONST
 <*INLINE*> PROCEDURE DivMod(x,y:T;VAR r:T):T RAISES {Error};  (*return x/y and write the remainder in r*)
 <*OBSOLETE*>CONST ScaleInt = Mul;
 
+PROCEDURE GCD(x,y:T):T;
+(*greatest common divisor for machines with slow division*)
+
 (*==========================*)
 END IntegerBasic.
