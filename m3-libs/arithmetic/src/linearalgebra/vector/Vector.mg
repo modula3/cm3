@@ -11,6 +11,20 @@ PROCEDURE New (n: CARDINAL): T =
     RETURN NEW(T, n);
   END New;
 
+PROCEDURE NewZero (n: CARDINAL): T =
+  VAR z := NEW(T, n);
+  BEGIN
+    FOR i := FIRST(z^) TO LAST(z^) DO z[i] := R.Zero; END;
+    RETURN z;
+  END NewZero;
+
+PROCEDURE NewUniform (n: CARDINAL; x: R.T): T =
+  VAR z := NEW(T, n);
+  BEGIN
+    FOR i := FIRST(z^) TO LAST(z^) DO z[i] := x; END;
+    RETURN z;
+  END NewUniform;
+
 (*-----------------*)
 PROCEDURE FromArray (READONLY x: TBody): T =
   VAR
@@ -158,7 +172,8 @@ PROCEDURE GeomSeq (num: CARDINAL; from: R.T; by: R.T): T =
   END GeomSeq;
 
 (*-----------------*)
-PROCEDURE RecursiveSeq (num: CARDINAL; from: R.T; by: MapFtn): T RAISES {Error} =
+PROCEDURE RecursiveSeq (num: CARDINAL; from: R.T; by: MapFtn): T
+  RAISES {Error} =
   VAR x := NEW(T, num);
   BEGIN
     FOR j := 0 TO num - 1 DO
