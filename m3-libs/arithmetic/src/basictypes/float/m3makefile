@@ -15,3 +15,7 @@ generic_module("FloatTrans")
 FloatTrans("Real",     "Real")
 FloatTrans("LongReal", "LongReal")
 FloatTrans("Extended", "Extended")
+
+Module("RealFmtLex")
+Module("LongRealFmtLex")
+Module("ExtendedFmtLex")

@@ -3,14 +3,14 @@
 %  Quake functions to instantiate operations on generic float numbers.
 %
 
-readonly proc FloatBasic (nm, mod, modt) is
+readonly proc FloatBasic (nm, field, fieldc) is
   local basic = nm & "Basic"
-  build_generic_intf (basic, "FloatBasic", [mod, modt], VISIBLE)
+  build_generic_intf (basic, "FloatBasic", [field, fieldc], VISIBLE)
   build_generic_impl (basic, "FloatBasic", [])
 end
 
-readonly proc FloatTrans (nm, mod) is
+readonly proc FloatTrans (nm, field) is
   local trans = nm & "Trans"
-  build_generic_intf (trans, "FloatTrans", [mod], VISIBLE)
+  build_generic_intf (trans, "FloatTrans", [field], VISIBLE)
   build_generic_impl (trans, "FloatTrans", [])
 end
