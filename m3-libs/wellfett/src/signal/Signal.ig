@@ -44,8 +44,10 @@ TYPE
       downsample (factor: CARDINAL): T;
       wrapCyclic (length: CARDINAL): T;
       slice      (num: CARDINAL): REF ARRAY OF T;
-      interleave (READONLY slice: ARRAY OF T):
-                  T;             (*invocation like init()*)
+      sliceRev   (num: CARDINAL): REF ARRAY OF T;
+      interleave (READONLY slice: ARRAY OF T): T;
+      interleaveRev (READONLY slice: ARRAY OF T):
+                     T;          (*invocation like init()*)
       reverse (): T;
       adjoint (): T;
 

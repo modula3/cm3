@@ -27,13 +27,15 @@ REVEAL
         sum   := Sum;
         inner := Inner;
 
-        upsample   := UpSample;
-        downsample := DownSample;
-        wrapCyclic := WrapCyclic;
-        slice      := Slice;
-        interleave := Interleave;
-        reverse    := Reverse;
-        adjoint    := Conj;
+        upsample      := UpSample;
+        downsample    := DownSample;
+        wrapCyclic    := WrapCyclic;
+        slice         := Slice;
+        sliceRev      := SliceRev;
+        interleave    := Interleave;
+        interleaveRev := InterleaveRev;
+        reverse       := Reverse;
+        adjoint       := Conj;
 
         translate := Translate;
         scale     := Scale;
@@ -310,6 +312,15 @@ PROCEDURE Slice (x: T; num: CARDINAL): REF ARRAY OF T =
     RETURN slice;
   END Slice;
 
+PROCEDURE SliceRev (x: T; num: CARDINAL): REF ARRAY OF T =
+  VAR slice := NEW(REF ARRAY OF T, num);
+  BEGIN
+    FOR j := 0 TO LAST(slice^) DO
+      slice[j] := x.translate(j).downsample(num);
+    END;
+    RETURN slice;
+  END SliceRev;
+
 PROCEDURE Interleave (x: T; READONLY slice: ARRAY OF T): T =
   VAR
     first := NUMBER(slice) * slice[0].getFirst();
@@ -333,6 +344,22 @@ PROCEDURE Interleave (x: T; READONLY slice: ARRAY OF T): T =
     END;
     RETURN x;
   END Interleave;
+
+(*convert slices from forward to backward order*)
+PROCEDURE ReverseSlices (READONLY slice: ARRAY OF T): REF ARRAY OF T =
+  VAR revSlice := NEW(REF ARRAY OF T, NUMBER(slice));
+  BEGIN
+    revSlice[0] := slice[0];
+    FOR i := 1 TO LAST(slice) DO
+      revSlice[NUMBER(slice) - i] := slice[i].translate(1);
+    END;
+    RETURN revSlice;
+  END ReverseSlices;
+
+PROCEDURE InterleaveRev (x: T; READONLY slice: ARRAY OF T): T =
+  BEGIN
+    RETURN Interleave(x, ReverseSlices(slice)^);
+  END InterleaveRev;
 
 PROCEDURE ReverseV (x: V.T): V.T =
   VAR
