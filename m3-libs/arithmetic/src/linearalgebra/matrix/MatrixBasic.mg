@@ -1,4 +1,4 @@
-GENERIC MODULE MatrixBasic(R,V);
+GENERIC MODULE MatrixBasic(R,V,VS);
 (*
 Abstract:
 
@@ -81,7 +81,23 @@ BEGIN
   END;
   RETURN z;
 END NewOne;
-
+(*-----------------*)
+PROCEDURE Cyclic(x:V.T;size:CARDINAL;shift:INTEGER):T=
+  VAR
+    z:=New(size,NUMBER(x^));
+    rem:CARDINAL;
+  BEGIN
+    shift:=shift MOD NUMBER(x^);
+    rem:=NUMBER(x^)-shift;
+    IF size>0 THEN
+      z[0]:=x^;
+      FOR i:=1 TO LAST(z^) DO
+        SUBARRAY(z[i],0,shift):=SUBARRAY(z[i-1],rem,shift);
+        SUBARRAY(z[i],shift,rem):=SUBARRAY(z[i-1],0,rem);
+      END;
+    END;
+    RETURN z;
+  END Cyclic;
 
 (*-----------------*)
 <*INLINE*>
@@ -264,7 +280,7 @@ BEGIN
       sum:=R.Zero;
     BEGIN
       FOR j:=mf TO ml DO
-	sum:=R.Add(sum,R.Mul(A[j,i],b[j]));
+        sum:=R.Add(sum,R.Mul(A[j,i],b[j]));
       END;
       c[i]:=sum;
     END;
@@ -291,9 +307,9 @@ BEGIN
 END Transpose;
 
 (*-----------------*)
-PROCEDURE Adjungate(
+PROCEDURE Adjoint(
                      x:T):T =
-<*UNUSED*> CONST ftn = Module & "Adjungate";
+<*UNUSED*> CONST ftn = Module & "Adjoint";
 VAR
   m:=NUMBER(x^);   mf:=0; ml:=m-1;
   n:=NUMBER(x[0]); nf:=0; nl:=n-1;
@@ -306,7 +322,45 @@ BEGIN
     END;
   END;
   RETURN z;
-END Adjungate;
+END Adjoint;
+
+(*-----------------*)
+PROCEDURE MAM(x:T):T=
+  VAR
+    z:=New(NUMBER(x[0]),NUMBER(x[0]));
+  BEGIN
+    FOR i:=0 TO LAST(x[0]) DO
+      FOR j:=i TO LAST(x[0]) DO
+        VAR
+          sum:=R.Mul(R.Conj(x[0,i]),x[0,j]);
+        BEGIN
+          FOR k:=1 TO LAST(x^) DO
+            sum:=R.Add(sum,R.Mul(R.Conj(x[k,i]),x[k,j]));
+          END;
+          z[i,j]:=sum;
+          z[j,i]:=R.Conj(sum);
+        END;
+      END;
+    END;
+    RETURN z;
+  END MAM;
+
+(*-----------------*)
+PROCEDURE MMA(x:T):T=
+  VAR
+    z:=New(NUMBER(x^),NUMBER(x^));
+  BEGIN
+    FOR i:=0 TO LAST(x^) DO
+      FOR j:=i TO LAST(x^) DO
+        <*FATAL Error*> (*x[i] and x[j] will have the same size*)
+        BEGIN
+          z[i,j]:=VS.Inner(x[i],x[j]);
+        END;
+        z[j,i]:=R.Conj(z[i,j]);
+      END;
+    END;
+    RETURN z;
+  END MMA;
 
 (*-----------------*)
 PROCEDURE Trace(x:T):R.T=

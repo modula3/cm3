@@ -272,6 +272,48 @@ BEGIN
 END Transpose;
 
 (*-----------------*)
+PROCEDURE MAM(x:T):T=
+  VAR
+    z:=New(NUMBER(x[0]),NUMBER(x[0]));
+  BEGIN
+    FOR i:=0 TO LAST(x[0]) DO
+      FOR j:=i TO LAST(x[0]) DO
+        VAR
+          sum:=R.Zero;
+        BEGIN
+          FOR k:=0 TO LAST(x^) DO
+            sum:=sum+x[k,i]*x[k,j];
+          END;
+          z[i,j]:=sum;
+          z[j,i]:=sum;
+        END;
+      END;
+    END;
+    RETURN z;
+  END MAM;
+
+(*-----------------*)
+PROCEDURE MMA(x:T):T=
+  VAR
+    z:=New(NUMBER(x^),NUMBER(x^));
+  BEGIN
+    FOR i:=0 TO LAST(x^) DO
+      FOR j:=i TO LAST(x^) DO
+        VAR
+          sum:=R.Zero;
+        BEGIN
+          FOR k:=0 TO LAST(x[0]) DO
+            sum:=sum+x[i,k]*x[j,k];
+          END;
+          z[i,j]:=sum;
+          z[j,i]:=sum;
+        END;
+      END;
+    END;
+    RETURN z;
+  END MMA;
+
+(*-----------------*)
 PROCEDURE Trace(x:T):R.T=
 VAR
   y:R.T:=R.Zero;

@@ -29,6 +29,7 @@ PROCEDURE Copy(x:T):T;
 
 PROCEDURE NewZero(m,n:CARDINAL):T;               (*create zero matrix*)
 PROCEDURE NewOne (n  :CARDINAL):T;               (*create identity matrix*)
+PROCEDURE Cyclic(x:V.T;size:CARDINAL;shift:INTEGER:=1):T; (*each row is 'x' shifted by 'shift' to the right compared to the row above*)
 
 PROCEDURE Add(x,y:T):T RAISES {Error};   (*x + y*)
 PROCEDURE Sub(x,y:T):T RAISES {Error};   (*x - y*)
@@ -40,7 +41,9 @@ PROCEDURE Mul(x,y:T):T RAISES {Error};   (*x * y*)
 PROCEDURE MulV(A:T;b:V.T):V.T RAISES {Error};  (*A * b*)
 PROCEDURE MulTV(A:T;b:V.T):V.T RAISES {Error};  (*A^T * b or b^T*A *)
 PROCEDURE Transpose(x:T):T;                  (*x^T*)
-PROCEDURE Adjungate(x:T):T;                  (*x^**)
+PROCEDURE Adjoint(x:T):T;                  (*x^**)
+PROCEDURE MMA(x:T):T;  (*x*x^**)
+PROCEDURE MAM(x:T):T;  (*x^**x*)
 
 PROCEDURE Trace(x:T):R.T;    (*sum of the diagonal elements*)
 (*PROCEDURE Determinant(x:T):R.T;*)
