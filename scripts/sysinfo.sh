@@ -17,6 +17,8 @@ CM3_GDB=no
 CM3_INSTALL=/usr/local/cm3
 EXE=""
 SL="/"
+SYSLIBDIR="/usr/local/cm3/lib"
+SYSLIBS=""
 
 if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
   if [ -n "$TMP" -a -d "$TMP" ] ; then
@@ -46,7 +48,30 @@ if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
     exit 1
   fi
 fi
-  
+
+find_dir() {
+  for d in $@ ; do
+    if [ -d "$d" ] ; then
+      echo "$d"
+      return 0
+    fi
+  done
+  return 1
+}
+
+find_file() {
+  f="$1"
+  shift
+  for d in $@ ; do
+    if [ -f "$d/$f" ] ; then
+      echo "$d/$f"
+      return 0
+    fi
+  done
+  echo "$f"
+  return 1
+}
+
 # evaluate uname information
 case "${UNAME}" in
 
@@ -58,6 +83,17 @@ case "${UNAME}" in
     HAVE_SERIAL=yes
     EXE=".exe"
     SL="\\"
+    SYSLIBS="ADVAPI32.LIB GDI32.LIB KERNEL32.LIB ODBC32.LIB"
+    SYSLIBS="${SYSLIBS} OPENGL32.LIB WSOCK32.LIB COMDLG32.LIB"
+    SYSLIBS="${SYSLIBS} GLU32.LIB NETAPI32.LIB ODBCCP32.LIB USER32.LIB"
+    L="c:/cm3/lib d:/cm3/lib e:/cm3/lib c:/reactor/lib d:/reactor/lib"
+    L="${L} e:/reactor/lib /usr/local/cm3/lib /usr/local/reactor/lib"
+    L="${L} /usr/cm3/lib /usr/reactor/lib"
+    if f="`find_file KERNEL32.LIB ${L}`" ; then
+      SYSLIBDIR="`basename $f`"
+    else
+      SYSLIBDIR="unknown"
+    fi
   ;;
 
   FreeBSD*)
@@ -132,8 +168,10 @@ debug "GREP        = $GREP"
 debug "TMPDIR      = $TMPDIR"
 debug "EXE         = $EXE"
 debug "SL          = $SL"
+debug "SYSLIBDIR   = $SYSLIBDIR"
+debug "SYSLIBS     = $SYSLIBS"
 
 export ROOT SCRIPTS M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB QGREP
-export GREP TMPDIR EXE SL CM3VERSION
+export GREP TMPDIR EXE SL CM3VERSION SYSLIBDIR SYSLIB
 export SYSINFO_DONE
 

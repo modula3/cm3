@@ -39,7 +39,9 @@ sysinfo.sh [include]
   defines variables containing general system information, specifying
   the M3OSTYPE (WIN32|POSIX), compiler TARGET, if a GCC_BACKEND is used,
   the INSTALLROOT etc. This script needs to be adapted for every new
-  supported platform.
+  supported platform. Also exports find_dir() and find_file() for the
+  location of directories and files, and some other general useful
+  functions like debug() and head().
 
 find-packages.sh [include | callable ]
 ----------------
@@ -152,3 +154,11 @@ do-pkg.sh [callable]
 ---------
   builds / ships / cleans one or more CM3 packages passed as arguments
   on the command line. Recognizes generic options and commands.
+
+make-bin-dist-min.sh [callable]
+--------------------
+  Builds a minimal binary distribution archive for one platform
+  containing the compiler, low-level system libraries, m3core, libm3,
+  and the installation program. Uses STAGE [TMPDIR] as working
+  area. You only need this if you want to create your own CM3
+  distributions. 

@@ -17,7 +17,9 @@ else
 fi
 . "$sysinfo"
 
-INSTALLROOT="${TMPDIR}/cm3"
+STAGE="${STAGE:-${TMPDIR}}"
+[ -d "${STAGE}" ] || mkdir "${STAGE}" || mkdir -p "${STAGE}" || exit 1
+INSTALLROOT="${STAGE}/cm3"
 head "building CM3 installation in ${INSTALLROOT}"
 
 # create the basic directories
@@ -34,6 +36,18 @@ cp "${ROOT}/m3-sys/cm3/${TARGET}/cm3${EXE}" "${INSTALLROOT}/bin"
 [ "${GCC_BACKEND}" = yes ] && \
   echo "installing ${INSTALLROOT}/bin/cm3cg${EXE}" && \
   cp "${ROOT}/m3-sys/m3cc/${TARGET}/cm3cg${EXE}" "${INSTALLROOT}/bin"
+if [ -n "${SYSLIBS}" ] ; then
+  echo "installing low-level system libraries"
+  for f in ${SYSLIBS} ; do
+    if [ -f "${SYSLIBDIR}/${f}" ] ; then
+      echo "${SYSLIBDIR}/${f} -->" "${INSTALLROOT}/lib/${f}"
+      cp "${SYSLIBDIR}/${f}" "${INSTALLROOT}/lib/${f}"
+    else
+      echo "${SYSLIBDIR}/${f} not found" 1>&2
+      exit 1
+    fi
+  done
+fi
 
 # configure a temporary config file
 echo configuring temporary config file "${INSTALLROOT}/bin/cm3.cfg"
@@ -69,15 +83,16 @@ cp "${ROOT}/m3-sys/cm3/src/config/${TARGET}" \
 ARCHIVE1="system.tgz"
 ARCHIVE2="cm3-min-${M3OSTYPE}-${TARGET}-${CM3VERSION}.tgz"
 head "stage 6: building archive in ${ARCHIVE2}"
-echo "creating system archive in ${TMPDIR}/${ARCHIVE1}"
-tar -C "${INSTALLROOT}" -czf "${TMPDIR}/${ARCHIVE1}" . || exit 1
-echo ".../cminstall/${TARGET}/cminstall${EXE} -->" "${TMPDIR}"
-cp "${ROOT}/m3-sys/cminstall/${TARGET}/cminstall${EXE}" "${TMPDIR}" ||  exit 1
-echo "creating distribution archive ${TMPDIR}/${ARCHIVE2}"
-tar -C "${TMPDIR}" -czf "${TMPDIR}/${ARCHIVE2}" cminstall${EXE} ${ARCHIVE1} \
-  || exit 1
-ls -l "${TMPDIR}/${ARCHIVE2}"
+echo "creating system archive in ${STAGE}/${ARCHIVE1}"
+tar -C "${INSTALLROOT}" -czf "${STAGE}/${ARCHIVE1}" . || exit 1
+echo ".../cminstall/${TARGET}/cminstall${EXE} -->" "${STAGE}"
+cp "${ROOT}/m3-sys/cminstall/${TARGET}/cminstall${EXE}" "${STAGE}" ||  exit 1
+cp "${ROOT}/m3-sys/COPYRIGHT-CMASS" "${STAGE}" || exit 1
+echo "creating distribution archive ${STAGE}/${ARCHIVE2}"
+tar -C "${STAGE}" -czf "${STAGE}/${ARCHIVE2}" cminstall${EXE} \
+  COPYRIGHT-CMASS ${ARCHIVE1} || exit 1
+ls -l "${STAGE}/${ARCHIVE2}"
 echo "cleaning up"
-rm -f "${TMPDIR}/cminstall${EXE}"
+rm -f "${STAGE}/cminstall${EXE}"
 rm -rf "${INSTALLROOT}"
-rm -f "${TMPDIR}/${ARCHIVE1}"
+rm -f "${STAGE}/${ARCHIVE1}"
