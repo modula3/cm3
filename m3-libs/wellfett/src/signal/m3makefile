@@ -16,3 +16,6 @@ IntegerPower("RealSignal",            "RealSignal",            "")
 IntegerPower("LongRealSignal",        "LongRealSignal",        "")
 IntegerPower("ExtendedSignal",        "ExtendedSignal",        "")
 IntegerPower("LongRealComplexSignal", "LongRealComplexSignal", "")
+
+VectorBasic("LongRealSignal", "LongRealSignal", "")
+MatrixBasic("LongRealSignal", "LongRealSignal", "", "Basic")
