@@ -2,6 +2,9 @@ INTERFACE BigIntegerBasic;
 (*Copyright (c) 1996, m3na project
 
 Abstract: Integers of arbitrary size
+          DragonInt seems to be less flexible and
+					lacks some essential operations like
+					multiplication and division.
 
 Daniel Beer
 *)
