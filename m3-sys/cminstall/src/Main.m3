@@ -3,8 +3,8 @@ MODULE Main;
 IMPORT Bundle, (* CMKey, CMCurrent, *) CoffTime, Env, File, Fmt, FS;
 IMPORT M3ID, Msg, OS, OSError, Params, Pathname, Pipe, Process;
 IMPORT Quake, QScanner, QToken, Registry, Setup, Text, Text2;
-IMPORT TextWr, Thread, Time, Wr;
-FROM Msg IMPORT Out, Ask, AskBool;
+IMPORT TextSeq, TextWr, Thread, Wr;
+FROM Msg IMPORT Out, Ask, AskBool, AskChoice;
 
 CONST
   OnUnix = (CoffTime.EpochAdjust = 0.0d0);
@@ -37,13 +37,30 @@ VAR
   initial_cfg       : TEXT;
   cm3_cfg           : TEXT;
   cminstall_root    : TEXT := NIL;
+  gzip              : TEXT := OS.MakePath (cminstall_root, GZIP_EXE);
+  tar               : TEXT := OS.MakePath (cminstall_root, TAR_EXE);
 
 PROCEDURE DoIt () =
   BEGIN
     ParseParams ();
-    
+
+    IF NOT UtilsFound() THEN
+      RETURN;
+    END;
+
+    Out ();
     Out ("Thank you for using Critical Mass CM3.  This program");
     Out ("will configure and install the system.");
+    Out ();
+    Out ("The installer will ask you some questions about the locations",
+         " of programs");
+    Out ("and libraries. Usually it will display a default inside [],",
+         " which can be");
+    Out ("accepted with <Enter>.");
+    Out ("If the installer has found several choices, you may cycle through",
+         " them");
+    Out ("with `+' or `.' for the next and `-' for the previous one.");
+    Out ("You may of course also enter a completely different value.");
     Out ();
 
     (* disabled
@@ -230,6 +247,7 @@ PROCEDURE GenConfig (): TEXT =
     rule       : INTEGER;
     kind       : Kind;
     lib_files  : LibFile;
+    choices    : TextSeq.T := NEW(TextSeq.T);
   BEGIN
     scan.next (); (* prime the token stream *)
 
@@ -248,6 +266,7 @@ PROCEDURE GenConfig (): TEXT =
       scan.next (); (* BEGIN_CONFIG *)
 
       IF (done >= len) THEN EXIT; END;
+      EVAL choices.init();
 
       (* get the config item's title *)
       IF (scan.token # TK.String) THEN
@@ -258,9 +277,10 @@ PROCEDURE GenConfig (): TEXT =
 
       Msg.Debug ("configure: ", title);
 
-      result := NIL;  kind := Kind.Any;  lib_files := NIL;
-      WHILE (scan.token = TK.Cardinal) AND (result = NIL) DO
+      kind := Kind.Any;  lib_files := NIL;
+      WHILE (scan.token = TK.Cardinal) DO
         confirm := TRUE;
+        result := NIL;
 
         rule := scan.cardinal;
         Msg.Debug (" => ", Fmt.Int (rule));
@@ -275,6 +295,7 @@ PROCEDURE GenConfig (): TEXT =
         | 1 => (* file-extension *)
             v0 := GetTxt (scan);
             result := Registry.LookupByExtension (v0);
+            IF result # NIL THEN choices.addhi(result) END;
             kind := Kind.Exe;
 
         | 2, 3 => (* file-extension, dir-name *)
@@ -349,7 +370,8 @@ PROCEDURE GenConfig (): TEXT =
             END;
 
         | 11 => (* file-name *)
-            lib_files := NEW (LibFile, next := lib_files, file := GetTxt (scan));
+            lib_files := NEW (LibFile, next := lib_files, 
+                              file := GetTxt (scan));
 
         | 12 => (* dir-name *)
             v0 := GetTxt (scan);
@@ -373,15 +395,17 @@ PROCEDURE GenConfig (): TEXT =
 
         ELSE
             ConfigErr (scan, "unknown key: " & Fmt.Int (scan.cardinal));
-
         END; (* CASE *)
+        IF result # NIL AND NOT MemberOfTextSeq(choices, result) THEN
+          choices.addhi(result)
+        END;
       END; (* WHILE *)
 
       (* confirm with the user and stick it into the config file *)
       IF confirm THEN
         LOOP
           Out ();
-          v0 := Ask (title, result);
+          v0 := AskChoice (title, choices);
           CASE kind OF
           | Kind.Any =>
               EXIT;
@@ -428,7 +452,19 @@ PROCEDURE FilesPresent (dir: TEXT;   files: LibFile): BOOLEAN =
     RETURN TRUE;
   END FilesPresent;
 
-(*---------------------------------------------- low-level quake support ---- *)
+PROCEDURE MemberOfTextSeq(tl : TextSeq.T; elem : TEXT) : BOOLEAN =
+  BEGIN
+    FOR i := 0 TO tl.size() - 1 DO
+      WITH act = tl.get(i) DO
+        IF Text.Equal(act, elem) THEN
+          RETURN TRUE;
+        END;
+      END;
+    END;
+    RETURN FALSE;
+  END MemberOfTextSeq;
+
+(*--------------------------------------------- low-level quake support ---- *)
 
 VAR
   quake_id_map := Quake.NewIDMap (Str2ID, Txt2ID, ID2Txt);
@@ -471,6 +507,28 @@ PROCEDURE ID2Txt (i: Quake.ID): TEXT =
   END ID2Txt;
 
 (*------------------------------------------- decompression and unpacking ---*)
+PROCEDURE UtilsFound() : BOOLEAN =
+  BEGIN
+    IF NOT OS.IsExecutable(gzip) THEN
+      gzip := OS.FindExecutable(GZIP_EXE);
+      IF gzip = NIL THEN
+        Msg.Out("Cannot find gzip.");
+        Msg.Out("A workable gzip (de)compression program must be installed",
+                "and found via PATH.");
+        RETURN FALSE;
+      END;
+    END;
+    IF NOT OS.IsExecutable(tar) THEN
+      tar := OS.FindExecutable(TAR_EXE);
+      IF tar = NIL THEN
+        Msg.Out("Cannot find tar.");
+        Msg.Out("A workable tar archiving program must be installed",
+                "and found via PATH.");
+        RETURN FALSE;
+      END;
+    END;
+    RETURN TRUE;
+  END UtilsFound; 
 
 CONST
   GZipArgs = ARRAY [0..0] OF TEXT { "-d" };
@@ -487,14 +545,10 @@ PROCEDURE Unpack (archive: TEXT) =
 
 PROCEDURE UnpackTAR (data: TEXT) =
   VAR
-    tar            : TEXT := OS.MakePath (cminstall_root, TAR_EXE);
     tar_process    : Process.T;
     input, stdin   : File.T;
     stdout, stderr : File.T;
   BEGIN
-    IF OnUnix THEN
-      tar := TAR_EXE;
-    END;
     Msg.Debug ("unpacking:  archive = ", data);
 
     (* get the default file handles *)
@@ -531,8 +585,6 @@ PROCEDURE UnpackTAR (data: TEXT) =
 
 PROCEDURE UnpackTGZ (data: TEXT) =
   VAR
-    gzip           : TEXT := OS.MakePath (cminstall_root, GZIP_EXE);
-    tar            : TEXT := OS.MakePath (cminstall_root, TAR_EXE);
     gzip_process   : Process.T;
     tar_process    : Process.T;
     p_in, p_out    : Pipe.T;
@@ -540,11 +592,7 @@ PROCEDURE UnpackTGZ (data: TEXT) =
     stdout, stderr : File.T;
   BEGIN
     Msg.Debug ("unpacking:  archive = ", data);
-    IF OnUnix THEN
-      tar := TAR_EXE;
-      gzip := GZIP_EXE;
-    END;
-
+      
     (* get the default file handles *)
     Process.GetStandardFileHandles (stdin, stdout, stderr);
 
@@ -695,7 +743,7 @@ PROCEDURE BuyIt () =
 
 (*---------------------------------------------------------- network test ---*)
 
-PROCEDURE TestTCP () =
+<* UNUSED *> PROCEDURE TestTCP () =
   BEGIN
     Msg.Debug ("Testing network connections");
     Msg.Debug ("Network test done.");
