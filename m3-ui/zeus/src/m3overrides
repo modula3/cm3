@@ -1,0 +1,4 @@
+override ("netobj", ROOT & "/m3-comm")
+override ("codeview", ROOT & "/m3-ui")
+override ("mg", ROOT & "/m3-ui")
+override ("mgkit", ROOT & "/m3-ui")
