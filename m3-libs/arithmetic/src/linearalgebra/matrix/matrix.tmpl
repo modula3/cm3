@@ -6,8 +6,9 @@ readonly proc MatrixBasic (nm, field, rimpl, vimpl) is
   local basic  = nm & "MatrixBasic"
   local rfield = field & rimpl
   local vfield = field & "Vector" & vimpl
+  local vecsup = field & "VectorSupport"
   build_generic_intf (basic, "MatrixBasic", [rfield, vfield], VISIBLE)
-  build_generic_impl (basic, "MatrixBasic", [rfield, vfield])
+  build_generic_impl (basic, "MatrixBasic", [rfield, vfield, vecsup])
 end
 
 readonly proc MatrixFast (nm, field, rimpl, vimpl) is
@@ -15,8 +16,9 @@ readonly proc MatrixFast (nm, field, rimpl, vimpl) is
   local fast   = nm & "MatrixFast"
   local rfield = field & rimpl
   local vfield = field & "Vector" & vimpl
+  local vecsup = field & "VectorSupport"
   build_generic_intf (basic, "MatrixBasic", [rfield, vfield], VISIBLE)
-  build_generic_impl (basic, "MatrixBasic", [rfield, vfield])
+  build_generic_impl (basic, "MatrixBasic", [rfield, vfield, vecsup])
   build_generic_intf (fast,  "MatrixFast",  [rfield, vfield, basic], VISIBLE)
   build_generic_impl (fast,  "MatrixFast",  [rfield, vfield])
 end

@@ -29,9 +29,14 @@ END Norm1;
 PROCEDURE Norm2(
                 x:T):R.T RAISES {Error}=
 VAR
-  specrad:=Eigen.SquareMethod(M.Mul(M.Adjungate(x),x)).value;
+  xax:T;
 BEGIN
-  RETURN RT.SqRt(specrad);
+  IF NUMBER(x^)<NUMBER(x[0]) THEN
+    xax:=M.MMA(x);
+  ELSE
+    xax:=M.MAM(x);
+  END;
+  RETURN RT.SqRt(Eigen.SquareMethod(xax).value);
 END Norm2;
 
 (*-----------------*)
