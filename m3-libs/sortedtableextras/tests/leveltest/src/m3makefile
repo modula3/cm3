@@ -1,3 +1,0 @@
-import ("libm3")
-implementation ("LevelTest")
-program ("LevelTest")
