@@ -1,6 +1,0 @@
-
-import("plplot")
-import("m3na")
-
-implementation("Main")
-program("test")
