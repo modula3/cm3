@@ -58,7 +58,9 @@ PROCEDURE DivMod(x,y:T;                 (*compute x/y *)
 PROCEDURE FromRoots(READONLY root : ARRAY OF R.T):T;
 (*Create polynomial which has the roots as specified in array 'root'*)
 
+(*
 PROCEDURE ElimMultRoots(x:T):T;
+*)
 (*Eliminate multiple roots
   Can be used for simplifying polynomials after some basic operations.*)
 

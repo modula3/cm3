@@ -7,7 +7,7 @@ Abstract: Roots.
 2/3/96    Harry George    Converted to m3na format.
 2/17/96   Harry George    Converted from OO to ADT format.
 *)
-FROM xUtils IMPORT Error;
+FROM xUtils IMPORT Error,Err;
 IMPORT NumberTheory AS NT;
 
 <*UNUSED*> CONST Module = "RootBasic.";
@@ -208,6 +208,7 @@ BEGIN
 END IsZero;
 
 (*---------------------*)
+(*the temporary values can become very large compared with the resulting values*)
 PROCEDURE Mul(
                x,y:T):T=
 <*FATAL Error*> (*'indivisible' cannot occur*)
@@ -253,6 +254,7 @@ PROCEDURE Rec(READONLY x:T):T RAISES {Error}=
 VAR
   y:=NEW(T,NUMBER(x^));
 BEGIN
+  IF R.IsZero(x[0]) THEN RAISE Error(Err.divide_by_zero) END;
   FOR j:=0 TO LAST(x^) DO
     y[j]:=x[LAST(x^)-j];
   END;
@@ -269,25 +271,11 @@ BEGIN
 END DivMod;
 
 (*--------------------*)
-PROCEDURE Mod(x,y:T):T RAISES {Error} =
+PROCEDURE Mod(<*UNUSED*>x:T;y:T):T RAISES {Error} =
 BEGIN
+  IF IsZero(y) THEN RAISE Error(Err.divide_by_zero) END;
   RETURN Zero;
 END Mod;
-
-(*--------------------*)
-PROCEDURE GCD(x,y:T):T=
-VAR
-  z:T;
-BEGIN
-  WHILE NOT IsZero(y) DO
-(*
-    z:=P.Reduce(x,y);
-*)
-    x:=y;
-    y:=z;
-  END;
-  RETURN x;
-END GCD;
 
 (*--------------------*)
 (*simple and inefficient method: successively multiply linear factors*)
@@ -304,13 +292,35 @@ BEGIN
   RETURN z;
 END FromRoots;
 
+(*
+(*--------------------*)
+(*find common roots*)
+PROCEDURE GCD(x,y:T):T=
+VAR
+  z:T;
+BEGIN
+  WHILE NOT IsZero(y) DO
+(*
+Reduce should work like Mod,
+but is allowed to multiply the dividend x
+by a 'scalar'
+But do we really get a greatest common divisor by this?
+E.g. is GCD(3x+2,2x+1) equal to 1 or to 3 ?
+    z:=P.Reduce(x,y);
+*)
+    x:=y;
+    y:=z;
+  END;
+  RETURN x;
+END GCD;
+
 (*--------------------*)
 PROCEDURE ElimMultRoots(x:T):T=
 BEGIN
   (*we need a special GCD for this purpose*)
   RETURN (GCD(x,P.Derive(x)));
 END ElimMultRoots;
-
+*)
 
 (*--------------------*)
 (*given the sequence x of power sums,
@@ -341,6 +351,7 @@ VAR
   j,k,l,m:CARDINAL;
   cp,cx,powcx:R.T;
   qx,qz:T;
+<*FATAL Error*> (*'indivisible' cannot occur*)
 BEGIN
   IF y=0 THEN
     RETURN One;
