@@ -1,6 +1,9 @@
 
 %module FFTWLongReal
 
+%pragma(modula3) unsafe="true";
+%pragma(modula3) library="m3fftw";
+
 %ignore fftw_iodim_do_not_use_me;
 %ignore fftw_r2r_kind_do_not_use_me;
 
@@ -17,14 +20,20 @@ TYPE
   };
 %}
 
+%insert(m3rawimpl) %{
+REVEAL
+  Plan = UNTRACED BRANDED REF RECORD END;
+%}
+
 %typemap(m3rawintype)  fftw_plan       %{Plan%};
+%typemap(m3rawinmode)  fftw_plan       %{%};
 %typemap(m3rawintype)  fftw_complex *  %{ARRAY OF Complex%};
 %typemap(m3rawintype)  fftw_iodim *    %{IODim%};
 %typemap(m3rawintype)  fftw_r2r_kind * %{R2RKind%};
 %typemap(m3rawrettype) fftw_plan       %{Plan%};
 
 
-%typemap(m3rawintype)  void    %{ADDRESS%};
+%typemap(m3rawintype)  void  * %{ADDRESS%};
 // fftw_export_wisdom
 %typemap(m3rawintype)  void (*)(char c, void *)
   %{PROCEDURE (c:CHAR; buf:ADDRESS;)%};
@@ -32,6 +41,33 @@ TYPE
 %typemap(m3rawintype)  int (*)(void *)
   %{PROCEDURE (buf:ADDRESS;):CARDINAL%};
 
+
+%insert(m3wrapintf) %{
+FROM FFTWLongRealRaw IMPORT R2RKind, IODim, FILE;
+
+TYPE
+  Plan    <: REFANY;
+  Complex = RECORD r, i: LONGREAL; END;
+%}
+
+%typemap(m3wrapintype)  fftw_plan       %{Plan%};
+%typemap(m3wrapinmode)  fftw_plan       %{%};
+%typemap(m3wrapintype)  fftw_complex *  %{ARRAY OF Complex%};
+%typemap(m3wrapintype)  double *        %{LONGREAL%};
+%typemap(m3wrapintype)  fftw_iodim *    %{IODim%};
+%typemap(m3wrapintype)  fftw_r2r_kind * %{ARRAY OF R2RKind%};
+%typemap(m3wrapintype)  fftw_r2r_kind   %{R2RKind%};
+%typemap(m3wraprettype) fftw_plan       %{Plan%};
+
+%typemap(m3wrapintype)  void  * %{REFANY%};
+%typemap(m3wraprettype) void  * %{REFANY%};
+
+// fftw_export_wisdom
+%typemap(m3wrapintype)  void (*)(char c, void *)
+  %{PROCEDURE (c:CHAR; buf:ADDRESS;)%};
+// fftw_import_wisdom
+%typemap(m3wrapintype)  int (*)(void *)
+  %{PROCEDURE (buf:ADDRESS;):CARDINAL%};
 
 
 %ignore FFTW_FORWARD;

@@ -4,4 +4,4 @@ import("libm3")
 module("FFTWLongRealRaw")
 module("FFTWLongReal")
 
-library("m3FFTWLongReal")
+library("m3fftw")
