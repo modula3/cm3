@@ -37,8 +37,8 @@ VAR
   (*CONST*) Zero : T;
   (*CONST*) One  : T;
 
-PROCEDURE New(n:CARDINAL):T;  (*make a poly for a0..an*)
-PROCEDURE Copy(x:T):T;        (*copy x to a New poly*)
+CONST New  = P.New;
+CONST Copy = P.Copy;
 
 <*INLINE*>
 PROCEDURE IsZero(x:T):BOOLEAN;
@@ -50,6 +50,7 @@ PROCEDURE Neg(x:T):T;    (*return -x *)
 
 PROCEDURE Mul(x,y:T):T;  (*return x*y*)
 PROCEDURE Div(x,y:T):T RAISES {Error};  (*return x/y if possible, will fail for floating point numbers often*)
+PROCEDURE Rec(READONLY x:T):T RAISES {Error};    (*return 1/x*)
 PROCEDURE Mod(x,y:T):T RAISES {Error};  (*return x mod y*)
 PROCEDURE DivMod(x,y:T;                 (*compute x/y *)
               VAR r:T):T RAISES {Error};   (*giving quotient with remainder r (always zero)*)
@@ -67,7 +68,10 @@ PROCEDURE PowN(READONLY x:T;
 CONST RootOf = P.Compose;
 (**)
 
-PROCEDURE ToPowerSumSeq(x:T):REF ARRAY OF R.T;
+TYPE
+  PowerSumSeq = ARRAY OF R.T;
+
+PROCEDURE ToPowerSumSeq(x:T):REF PowerSumSeq;
 (*For a given set of roots x1,...,xn (represented by a polynomial)
   calculate the sum x1^j+...+xn^j for j from 1 to n
   Since for any of xi holds 0=a[0]+a[1]*xi+a[2]*xi^2+...+a[n]*xi^n,
@@ -76,7 +80,7 @@ PROCEDURE ToPowerSumSeq(x:T):REF ARRAY OF R.T;
   by a linear recurrence.
   *)
 
-PROCEDURE FromPowerSumSeq(READONLY x:ARRAY OF R.T):T RAISES{Error};
+PROCEDURE FromPowerSumSeq(READONLY x:PowerSumSeq):T RAISES{Error};
 (*Inverse to ToPowerSumSeq
   Err.indivisible is raised if x is not a sequence of power sums*)
 

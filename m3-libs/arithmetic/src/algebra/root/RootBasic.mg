@@ -1,4 +1,4 @@
-GENERIC MODULE RootBasic(R);
+GENERIC MODULE RootBasic(P,R);
 (*Copyright (c) 1995, Harry George
 
 Abstract: Roots.
@@ -7,235 +7,133 @@ Abstract: Roots.
 2/3/96    Harry George    Converted to m3na format.
 2/17/96   Harry George    Converted from OO to ADT format.
 *)
-FROM xUtils IMPORT Error,Err;
+FROM xUtils IMPORT Error;
 
-CONST Module = "RootBasic.";
-
-(*--------------------*)
-PROCEDURE New(
-               n:CARDINAL):T=
-BEGIN
-  RETURN NEW(T,n+1);
-END New;
-
-(*--------------------*)
-PROCEDURE Copy(
-               x:T):T=
-VAR
-  y:=NEW(T,NUMBER(x^));
-BEGIN
-  y^:=x^;
-  RETURN y;
-END Copy;
-
-(*--------------------*)
-PROCEDURE Strip(
-                x:T):T=
-VAR
-  n:=LAST(x^);
-BEGIN
-  IF NOT R.IsZero(x[n]) THEN
-    RETURN x;
-  ELSE
-    REPEAT
-      DEC(n);
-    UNTIL n=FIRST(x^) OR NOT R.IsZero(x[n]);
-  END;
-  VAR
-    y:=NEW(T,n+1);
-  BEGIN
-    y^:=SUBARRAY(x^,0,NUMBER(y^));
-    RETURN y;
-  END;
-END Strip;
+<*UNUSED*> CONST Module = "RootBasic.";
 
 
 (*-----------------*)
 PROCEDURE Add(
                x,y:T):T=
+<*FATAL Error*> (*'indivisible' cannot occur*)
 VAR
-  xl:=LAST(x^);
-  yl:=LAST(y^);
-  zn:=MAX(NUMBER(x^),NUMBER(y^));
-  z:=NEW(T,zn);
+  px,py:REF PowerSumSeq;
 BEGIN
-  IF xl>=yl THEN
-    FOR i:=0    TO yl DO z[i]:=R.Add(x[i],y[i]); END;
-    FOR i:=yl+1 TO xl DO z[i]:=      x[i];       END;
-  ELSE
-    FOR i:=0    TO xl DO z[i]:=R.Add(x[i],y[i]); END;
-    FOR i:=xl+1 TO yl DO z[i]:=           y[i];  END;
-  END;
-  RETURN Strip(z);
+  px:=ToPowerSumSeq(x);
+  py:=ToPowerSumSeq(y);
+  RETURN FromPowerSumSeq(px^);
 END Add;
 (*-----------------*)
 PROCEDURE Sub(
                x,y:T):T=
-VAR
-  xl:=LAST(x^);
-  yl:=LAST(y^);
-  zn:=MAX(NUMBER(x^),NUMBER(y^));
-  z:=NEW(T,zn);
 BEGIN
-  IF xl>=yl THEN
-    FOR i:=0    TO yl DO z[i]:=R.Sub(x[i],y[i]); END;
-    FOR i:=yl+1 TO xl DO z[i]:=      x[i];       END;
-  ELSE
-    FOR i:=0    TO xl DO z[i]:=R.Sub(x[i],y[i]); END;
-    FOR i:=xl+1 TO yl DO z[i]:=     R.Neg(y[i]); END;
-  END;
-  RETURN Strip(z);
+  RETURN Add(x,Neg(y));
 END Sub;
 
 (*---------------------*)
-PROCEDURE Neg(x:T):T =    (*return -x *)
+PROCEDURE Neg(x:T):T =
 VAR
   y:=NEW(T,NUMBER(x^));
 BEGIN
-  FOR i:=FIRST(x^) TO LAST(x^) DO
-    y[i] := R.Neg(x[i]);
+  FOR i:=LAST(x^)-1 TO 0 BY -2 DO
+    y[i+1] :=       x[i+1];
+    y[i  ] := R.Neg(x[i  ]);
+  END;
+  IF NUMBER(x^) MOD 2 # 0 THEN
+    y[0] := x[0];
   END;
   RETURN y;
 END Neg;
 
 (*---------------------*)
 PROCEDURE IsZero(x:T):BOOLEAN =
+VAR
+  nonzerofound := FALSE;
 BEGIN
-  RETURN x=NIL OR NUMBER(x^)=0 OR R.IsZero(x[0]);
+  IF x=NIL OR NUMBER(x^)<=1 THEN
+    RETURN FALSE;
+  END;
+  FOR j:=0 TO LAST(x^) DO
+    IF NOT R.IsZero(x[j]) THEN
+      IF nonzerofound THEN
+        (*two non-zero coefficients found,
+          there must be roots different from zero*)
+        RETURN FALSE;
+      ELSE
+        nonzerofound:=TRUE;
+      END;
+    END;
+  END;
+  (*at least one non-zero coefficient must found,
+    if we arrive here it was exactly one no-zero coefficient*)
+  RETURN nonzerofound;
 END IsZero;
 
 (*---------------------*)
 PROCEDURE Mul(
                x,y:T):T=
+<*FATAL Error*> (*'indivisible' cannot occur*)
 VAR
-  z:=NEW(T,NUMBER(x^)+NUMBER(y^)-1);
+  px,py:REF PowerSumSeq;
 BEGIN
-  FOR i:=FIRST(z^) TO LAST(z^) DO z[i]:=R.Zero; END;
-
-  FOR i:=FIRST(x^) TO LAST(x^) DO
-    FOR j:=FIRST(y^) TO LAST(y^) DO
-      z[i+j]:=R.Add(z[i+j],R.Mul(x[i],y[j]));
-    END;
-  END;
-  RETURN Strip(z);
+  px:=ToPowerSumSeq(x);
+  py:=ToPowerSumSeq(y);
+  RETURN FromPowerSumSeq(px^);
 END Mul;
 
 (*---------------------*)
 PROCEDURE Div(
                x,y:T):T RAISES {Error}=
-<*UNUSED*>
-CONST ftn = Module & "Div";
-VAR
-  xn:=NUMBER(x^);                xl:=LAST(x^);
-  yn:=NUMBER(y^); y0:=FIRST(y^); yl:=LAST(y^);
-  q,r:T;
-  qtmp,ymax:R.T;
-  qn,q0,ql,qi,ri2:CARDINAL;
 BEGIN
-  (*---Copy numerator into r---*)
-  r:=NEW(T,xn); r^:=x^;
-
-  (*---check for quick exit---*)
-  IF xl<yl THEN
-    (*can't do any Divides at all*)
-    q:=NEW(T,1); q[0]:=R.Zero;
-    RETURN q;
-  END;
-
-  (*---setup quotient---*)
-  qn:=xn-yn+1;
-  q:=NEW(T,qn); q0:=FIRST(q^); ql:=LAST(q^);
-
-  (*---find the dominant denominator term---*)
-  ymax:=y[yl];
-
-
-  (*---compute---*)
-  qi:=ql+1;
-  FOR ri:=xl TO (xl-ql) BY-1 DO
-    DEC(qi);
-    qtmp:=R.Div(r[ri],ymax);
-    q[qi]:=qtmp;
-    ri2:=ri;
-    r[ri2]:=R.Zero;  (*subtraction of values that should be equal does not work for floating point numbers*)
-    FOR yi:=yl-1 TO y0 BY -1 DO
-      DEC(ri2);
-      r[ri2]:=R.Sub(r[ri2],R.Mul(qtmp,y[yi]));
-    END;
-  END;
-  (*This check will probably fail on floating point numbers*)
-  FOR ri:=(xl-ql)-1 TO 0 BY -1 DO
-    IF NOT R.Equal(r[ri],R.Zero) THEN
-      RAISE Error(Err.indivisible);
-    END;
-  END;
-  RETURN q;
+  RETURN Mul(x,Rec(y));
 END Div;
+
+(*---------------------*)
+PROCEDURE Rec(READONLY x:T):T RAISES {Error}=
+VAR
+  y:=NEW(T,NUMBER(x^));
+BEGIN
+  FOR j:=0 TO LAST(x^) DO
+    y[j]:=x[LAST(x^)-j];
+  END;
+  RETURN y;
+END Rec;
 
 (*---------------------*)
 PROCEDURE DivMod(
                x,y:T;
            VAR r:T):T RAISES {Error} =
-<*UNUSED*>
-CONST ftn = Module & "DivMod";
-VAR
-  xn:=NUMBER(x^);                xl:=LAST(x^);
-  yn:=NUMBER(y^); y0:=FIRST(y^); yl:=LAST(y^);
-  q:T;
-  qtmp,ymax:R.T;
-  qn,q0,ql,qi,ri2:CARDINAL;
 BEGIN
-  (*---Copy numerator into r---*)
-  r:=NEW(T,xn); r^:=x^;
-
-  (*---check for quick exit---*)
-  IF xl<yl THEN
-    (*can't do any Divides at all*)
-    q:=NEW(T,1); q[0]:=R.Zero;
-    RETURN q;
-  END;
-
-  (*---setup quotient---*)
-  qn:=xn-yn+1;
-  q:=NEW(T,qn); q0:=FIRST(q^); ql:=LAST(q^);
-
-  (*---find the dominant denominator term---*)
-  ymax:=y[yl];
-
-
-  (*---compute---*)
-  qi:=ql+1;
-  FOR ri:=xl TO (xl-ql) BY-1 DO
-    DEC(qi);
-    qtmp:=R.DivMod(r[ri],ymax,r[ri]);
-    q[qi]:=qtmp;
-    ri2:=ri;
-    FOR yi:=yl-1 TO y0 BY -1 DO
-      DEC(ri2);
-      r[ri2]:=R.Sub(r[ri2],R.Mul(qtmp,y[yi]));
-    END;
-  END;
-  r := Strip(r);
-  RETURN Strip(q);
+  r:=Zero;
+  RETURN Mul(x,Rec(y));
 END DivMod;
 
 (*--------------------*)
 PROCEDURE Mod(x,y:T):T RAISES {Error} =
-(*Using DivMod is not optimal.
-  One may save a bit space for the quotient.*)
+BEGIN
+  RETURN Zero;
+END Mod;
+
+(*--------------------*)
+PROCEDURE GCD(x,y:T):T=
 VAR
   z:T;
 BEGIN
-  EVAL DivMod(x,y,z);
-  RETURN z;
-END Mod;
+  WHILE NOT IsZero(y) DO
+(*
+    z:=P.Reduce(x,y);
+*)
+    x:=y;
+    y:=z;
+  END;
+  RETURN x;
+END GCD;
 
 (*--------------------*)
 PROCEDURE ElimMultRoots(x:T):T=
 BEGIN
   (*we need a special GCD for this purpose*)
-  (*RETURN (GCD(x,P.Derive(x)));*)
-  RETURN x;
+  RETURN (GCD(x,P.Derive(x)));
 END ElimMultRoots;
 
 PROCEDURE PowN(READONLY x:T;
@@ -267,7 +165,7 @@ END PowN;
   but have alternating signs, too.
 *)
 
-PROCEDURE ToPowerSumSeq(x:T):REF ARRAY OF R.T=
+PROCEDURE ToPowerSumSeq(x:T):REF PowerSumSeq=
 VAR
   y:=NEW(T,NUMBER(x^)-1);
 BEGIN
@@ -275,7 +173,7 @@ BEGIN
   RETURN y;
 END ToPowerSumSeq;
 
-PROCEDURE FromPowerSumSeq(READONLY x:ARRAY OF R.T):T RAISES{Error}=
+PROCEDURE FromPowerSumSeq(READONLY x:PowerSumSeq):T RAISES{Error}=
 VAR
   y:=NEW(T,NUMBER(x)+1);
   sum:R.T;
