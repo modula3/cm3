@@ -2,15 +2,34 @@
 #include <stdarg.h>
 #include <sys/types.h>
 #include <errno.h>
-#if __FreeBSD__ >= 2
-#include <sys/sysctl.h>
-#include <osreldate.h>
-#endif
 #include <stdio.h>
 #include <sys/uio.h>
 
-void (*RTHeapRep_Fault)(char*);
-void (*RTCSRC_FinishVM)();
+typedef void (*RTHEAPREP_FAULT_PROC)(char*);
+typedef void (*RTCSRC_FINISHVM_PROC)();
+
+static RTHEAPREP_FAULT_PROC fault_proc;
+static RTCSRC_FINISHVM_PROC finishvm_proc;
+
+RTHEAPREP_FAULT_PROC get_RTHEAPREP_FAULT_PROC()
+{
+  return fault_proc;
+}
+
+void set_RTHEAPREP_FAULT_PROC(RTHEAPREP_FAULT_PROC p)
+{
+  fault_proc = p;
+}
+
+RTCSRC_FINISHVM_PROC get_RTCSRC_FINISHVM_PROC()
+{
+  return finishvm_proc;
+}
+
+void set_RTCSRC_FINISHVM_PROC(RTCSRC_FINISHVM_PROC p)
+{
+  finishvm_proc = p;
+}
 
 int uopen(const char* path, int flags, mode_t mode)
 { int result;
