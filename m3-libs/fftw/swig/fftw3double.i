@@ -93,14 +93,14 @@ REVEAL
 %typemap(m3wrapintype)  fftw_r2r_kind   %{R2RKind%};
 %typemap(m3wrapargraw)  fftw_r2r_kind   %{ORD($input)%};
 
-%typemap(m3wrapintype)  fftw_complex_array_1d *  %{ARRAY OF Complex%};
-%typemap(m3wrapintype)  fftw_complex_array_2d *  %{ARRAY OF ARRAY OF Complex%};
-%typemap(m3wrapintype)  fftw_complex_array_3d *  %{ARRAY OF ARRAY OF ARRAY OF Complex%};
+%typemap(m3wrapintype)  fftw_complex_array_1d *  %{REF ARRAY OF Complex%};
+%typemap(m3wrapintype)  fftw_complex_array_2d *  %{REF ARRAY OF ARRAY OF Complex%};
+%typemap(m3wrapintype)  fftw_complex_array_3d *  %{REF ARRAY OF ARRAY OF ARRAY OF Complex%};
 %typemap(m3wrapintype)  fftw_complex_tensor   *  %{REFANY (* Tensor of Complex *) %};
 
-%typemap(m3wrapintype)  fftw_real_array_1d *  %{ARRAY OF LONGREAL%};
-%typemap(m3wrapintype)  fftw_real_array_2d *  %{ARRAY OF ARRAY OF LONGREAL%};
-%typemap(m3wrapintype)  fftw_real_array_3d *  %{ARRAY OF ARRAY OF ARRAY OF LONGREAL%};
+%typemap(m3wrapintype)  fftw_real_array_1d *  %{REF ARRAY OF LONGREAL%};
+%typemap(m3wrapintype)  fftw_real_array_2d *  %{REF ARRAY OF ARRAY OF LONGREAL%};
+%typemap(m3wrapintype)  fftw_real_array_3d *  %{REF ARRAY OF ARRAY OF ARRAY OF LONGREAL%};
 %typemap(m3wrapintype)  fftw_real_tensor   *  %{REFANY (* Tensor of LONGREAL *) %};
 
 %typemap(m3wrapargraw)  fftw_complex_array_1d *, fftw_real_array_1d *  %{$input[0]%};
@@ -108,13 +108,13 @@ REVEAL
 %typemap(m3wrapargraw)  fftw_complex_array_3d *, fftw_real_array_3d *  %{$input[0,0,0]%};
 %typemap(m3wrapargraw)  fftw_complex_tensor   *, fftw_real_tensor   *  %{$input%};
 
-%typemap(m3wrapinmode)  fftw_complex_array_1d *in,
-                        fftw_complex_array_2d *in,
-                        fftw_complex_array_3d *in,
-			fftw_real_array_1d *in,
-                        fftw_real_array_2d *in,
-                        fftw_real_array_3d *in
-			  %{READONLY%};
+%typemap(m3wrapinmode)  fftw_complex_array_1d *,
+                        fftw_complex_array_2d *,
+                        fftw_complex_array_3d *,
+			fftw_real_array_1d *,
+                        fftw_real_array_2d *,
+                        fftw_real_array_3d *
+			  "";
 
 
 %typemap(m3wrapintype)  void  * %{REFANY%};
