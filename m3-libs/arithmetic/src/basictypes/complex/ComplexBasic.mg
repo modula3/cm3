@@ -163,10 +163,12 @@ PROCEDURE DivMod(READONLY x,y:T;VAR r:T):T RAISES {Error} =
 (*-------------------*)
 PROCEDURE Square(READONLY x : T) : T =
   VAR
-    z : T;
+    xri : R.T;
+    z   : T;
   BEGIN
     z.re := R.Sub(R.Mul(x.re,x.re), R.Mul(x.im,x.im));
-    z.im := R.Mul(R.Mul(x.im,x.re), R.Two);
+    xri  := R.Mul(x.re,x.im);
+    z.im := R.Add(xri,xri);  (*double*)
     RETURN z;
   END Square;
 
@@ -193,4 +195,8 @@ END ScaleInt;
 
 (*==========================*)
 BEGIN
+  Zero     := T{re:=R.Zero,     im:=R.Zero};
+  One      := T{re:=R.One,      im:=R.Zero};
+  I        := T{re:=R.Zero,     im:=R.One};
+  MinusOne := T{re:=R.MinusOne, im:=R.Zero};
 END ComplexBasic.

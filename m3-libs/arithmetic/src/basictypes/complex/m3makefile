@@ -4,9 +4,11 @@ template("complex")
 
 
 generic_module("ComplexBasic")
-ComplexBasic("Real",     "RealBasic")
-ComplexBasic("LongReal", "LongRealBasic")
-ComplexBasic("Extended", "ExtendedBasic")
+ComplexBasic("Real",       "RealBasic")
+ComplexBasic("LongReal",   "LongRealBasic")
+ComplexBasic("Extended",   "ExtendedBasic")
+ComplexBasic("Integer32",  "Integer32Basic")
+ComplexBasic("BigInteger", "BigIntegerBasic")
 
 generic_module("ComplexFast")
 ComplexFast("Real",     "RealBasic")
@@ -20,6 +22,8 @@ ComplexTrans("LongReal", "LongRealComplexBasic", "LongRealBasic", "LongRealTrans
 ComplexTrans("Extended", "ExtendedComplexBasic", "ExtendedBasic", "ExtendedTrans")
 
 generic_module("ComplexFmtLex")
-ComplexFmtLex("Real",	  "RealComplexBasic",	  "RealBasic",     "RealFmtLex")
-ComplexFmtLex("LongReal", "LongRealComplexBasic", "LongRealBasic", "LongRealFmtLex")
-ComplexFmtLex("Extended", "ExtendedComplexBasic", "ExtendedBasic", "ExtendedFmtLex")
+ComplexFmtLex("Real",	    "RealComplexBasic",       "RealBasic",       "RealFmtLex")
+ComplexFmtLex("LongReal",   "LongRealComplexBasic",   "LongRealBasic",   "LongRealFmtLex")
+ComplexFmtLex("Extended",   "ExtendedComplexBasic",   "ExtendedBasic",   "ExtendedFmtLex")
+ComplexFmtLex("Integer32",  "Integer32ComplexBasic",  "Integer32Basic",  "Integer32FmtLex")
+ComplexFmtLex("BigInteger", "BigIntegerComplexBasic", "BigIntegerBasic", "BigIntegerFmtLex")
