@@ -15,7 +15,9 @@ IMPORT Fmt,
        LongRealComplexFmtLex AS CF,
        Integer32Basic        AS I,
        Integer32RootBasic    AS IR,
-       Integer32PolynomialFmtLex AS IPF;
+       Integer32PolynomialBasic  AS IP,
+       Integer32PolynomialFmtLex AS IPF,
+       Thread,Wr;
 FROM xReal64 IMPORT Array,Ftn;
 IMPORT xRoot;
 (*=======================*)
@@ -354,6 +356,15 @@ BEGIN
   RETURN result;
 END TestZRoots;
 ******************************)
+PROCEDURE WritePowerSeq(s : REF IR.PowerSumSeq) =
+BEGIN
+  FOR j:=0 TO LAST(s^) DO
+    Msg(Fmt.Int(s[j]) & ", ");
+  END;
+  Msg("\n");
+END WritePowerSeq;
+
+<*FATAL Thread.Alerted, Wr.Failure*>
 (*-----------------------*)
 PROCEDURE TestPowerSeq():BOOLEAN=
 
@@ -364,7 +375,8 @@ PROCEDURE TestPowerSeq():BOOLEAN=
   BEGIN
     p := IR.FromPowerSumSeq(x);
     Msg(IPF.Fmt(p) & "\n");
-    y := IR.ToPowerSumSeq(p);
+    y := IR.ToPowerSumSeq(p,NUMBER(x));
+    <*ASSERT NUMBER(x)=NUMBER(y^)*>
     FOR j:=0 TO LAST(y^) DO
       Msg(Fmt.Int(y[j]) & ", ");
       <*ASSERT x[j]=y[j]*>
@@ -377,11 +389,8 @@ PROCEDURE TestPowerSeq():BOOLEAN=
     y : IR.T;
     s : REF IR.PowerSumSeq;
   BEGIN
-    s := IR.ToPowerSumSeq(x);
-    FOR j:=0 TO LAST(s^) DO
-      Msg(Fmt.Int(s[j]) & ", ");
-    END;
-    Msg("\n");
+    s := IR.ToPowerSumSeq(x,LAST(x^));
+    WritePowerSeq(s);
     y := IR.FromPowerSumSeq(s^);
     Msg(IPF.Fmt(y) & "\n");
     <*ASSERT IR.Equal(x,y)*>
@@ -414,6 +423,148 @@ BEGIN
 
   RETURN result;
 END TestPowerSeq;
+(*----------------------*)
+PROCEDURE TestRootOp():BOOLEAN=
+
+  PROCEDURE TestSingle(READONLY rootx, rooty : ARRAY OF I.T;
+                       op :PROCEDURE(x,y:I. T):I. T;
+                       opr:PROCEDURE(x,y:IR.T):IR.T) =
+  VAR
+    x,y,z : IR.T;
+  BEGIN
+    x:=IR.FromRoots(rootx);
+    y:=IR.FromRoots(rooty);
+    z:=opr(x,y);
+    Msg("x-poly " & IPF.Fmt(x) & "\t");
+    Msg("y-poly " & IPF.Fmt(y) & "\n");
+    Msg("z-poly " & IPF.Fmt(z) & "\n");
+    WritePowerSeq(IR.ToPowerSumSeq(x,LAST(z^)));
+    WritePowerSeq(IR.ToPowerSumSeq(y,LAST(z^)));
+    WritePowerSeq(IR.ToPowerSumSeq(z,LAST(z^)));
+    Msg("test zeroes ");
+    FOR j:=0 TO LAST(rootx) DO
+      FOR k:=0 TO LAST(rooty) DO
+        Msg(Fmt.Int(j) & "," & Fmt.Int(k) & "  ");
+        <*ASSERT I.IsZero(IP.Eval(z,op(rootx[j],rooty[k])))*>
+      END;
+    END;
+    Msg("\n");
+  END TestSingle;
+
+  PROCEDURE TestPower(READONLY root : ARRAY OF I.T; n:I.T;) =
+  VAR
+    x,z : IR.T;
+  BEGIN
+    x:=IR.FromRoots(root);
+    z:=IR.PowN(x,n);
+    Msg("x-poly " & IPF.Fmt(x) & "\t");
+    Msg("pow-poly " & IPF.Fmt(z) & "\n");
+    WritePowerSeq(IR.ToPowerSumSeq(x,LAST(z^)));
+    WritePowerSeq(IR.ToPowerSumSeq(z,LAST(z^)));
+    Msg("test zeroes ");
+    FOR j:=0 TO LAST(root) DO
+      VAR
+        pow:I.T:=I.One;
+      BEGIN
+        FOR k:=0 TO n-1 DO
+          pow:=I.Mul(pow,root[j]);
+        END;
+        Msg(Fmt.Int(j) & "  ");
+        <*ASSERT I.IsZero(IP.Eval(z,pow))*>
+      END;
+    END;
+    Msg("\n");
+  END TestPower;
+
+CONST
+  ftn = Module & "TestRootOp";
+VAR
+  result:=TRUE;
+BEGIN
+  Debug(1,ftn,"begin\n");
+  TestSingle(ARRAY OF I.T{2},ARRAY OF I.T{3},I.Mul,IR.Mul);
+  TestSingle(ARRAY OF I.T{1,1,1,1},ARRAY OF I.T{3},I.Mul,IR.Mul);
+  TestSingle(ARRAY OF I.T{1,1},ARRAY OF I.T{3},I.Mul,IR.Mul);
+  TestSingle(ARRAY OF I.T{1,1},ARRAY OF I.T{2,2},I.Mul,IR.Mul);
+  TestSingle(ARRAY OF I.T{1,-1,2},ARRAY OF I.T{0,2},I.Mul,IR.Mul);
+  TestSingle(ARRAY OF I.T{1,-1,2},ARRAY OF I.T{1,-1},I.Mul,IR.Mul);
+  TestSingle(ARRAY OF I.T{2,2},ARRAY OF I.T{3,3},I.Mul,IR.Mul);
+
+  VAR
+    x,y,z:IR.T;
+  BEGIN
+    FOR j:=1 TO 7 DO
+      x:=IR.New(j);
+      FOR l:=0 TO j-1 DO
+        x[l]:=1;
+      END;
+      x[j]:=2;
+      (*Msg("x"&IPF.Fmt(x));*)
+      FOR k:=1 TO 7 DO
+        IF j+k<8 THEN (*otherwise internal overflow*)
+          y:=IR.New(k);
+          FOR l:=0 TO k-1 DO
+            y[l]:=1;
+          END;
+          y[k]:=3;
+          (*Msg("y"&IPF.Fmt(y));*)
+          z:=IR.Mul(x,y);
+          Msg(Fmt.FN("%s,%s - %s x %s = %s\n", ARRAY OF TEXT
+            {Fmt.Int(j), Fmt.Int(k), IPF.Fmt(x), IPF.Fmt(y), IPF.Fmt(z)}));
+        END;
+      END;
+    END;
+  END;
+
+  Msg("(1+6t)^4 " & IPF.Fmt(IR.FromRoots(ARRAY OF I.T{6,6,6,6})) & "\t");
+  VAR
+    x,y,z:IR.T;
+  BEGIN
+    x:=IR.New(2); x^:=IR.TBody{1,-4,4};
+    y:=IR.New(2); y^:=IR.TBody{1,-6,9};
+    z:=IR.Mul(x,y);
+    Msg(IPF.Fmt(z) & "\n");
+
+    x:=IR.New(2); x^:=IR.TBody{1,-5,6}; (* 1/2, 1/3 *)
+(*  y:=IR.New(2); y^:=IR.TBody{1,-6,5}; (* 1, 1/5 - 5^2 6^2*) *)
+  y:=IR.New(3); y^:=IR.TBody{-1,7,-11,5}; (* 1, 1, 1/5 - 5^4 6^3 *)
+(*    y:=IR.New(4); y^:=IR.TBody{1,-8,18,-16,5}; (* 1, 1, 1, 1/5 - 5^6 6^4*) *)
+(*
+  (2,2) -> (2,2)
+  (2,3) -> (4,3)
+  (2,4) -> (6,4)
+*)
+    z:=IR.Mul(x,y);
+    Msg(IPF.Fmt(z) & "\n");
+
+    x:=IR.New(1); x^:=IR.TBody{-1,3}; (* 1/3 *)
+(*    x:=IR.New(2); x^:=IR.TBody{1,-8,15}; (* 1/3, 1/5 *)  *)
+    y:=IR.New(2); y^:=IR.TBody{1,-9,14}; (* 1/2, 1/7*)
+    (*7^2 3^2 2^2 5^2*)
+(*    y:=IR.New(3); y^:=IR.TBody{-1,20,-113,154}; (* 1/2, 1/7, 1/11*)  *)
+(*    y:=IR.New(3); y^:=IR.TBody{-1,11,-32,28}; (* 1/2, 1/2, 1/7*)  *)
+(*    y:=IR.New(3); y^:=IR.TBody{0,1,-9,14}; (* 1/2, 1/7*)  *)
+    z:=IR.Mul(x,y);
+    Msg(IPF.Fmt(z) & "\n");
+  END;
+
+  TestPower(ARRAY OF I.T{1,1,1},3);
+  TestPower(ARRAY OF I.T{2,2,2,2},1);
+  TestPower(ARRAY OF I.T{2,2,2,2},2);
+  TestPower(ARRAY OF I.T{2,2,2,2},3);
+  TestPower(ARRAY OF I.T{3,2,1},2);
+  TestPower(ARRAY OF I.T{3,2,1},3);
+
+  VAR
+    x,z:IR.T;
+  BEGIN
+    x:=IR.New(2); x^:=IR.TBody{1,-4,4};
+    z:=IR.PowN(x,1);
+    Msg(Fmt.FN("%s^2 = %s\n", ARRAY OF TEXT{IPF.Fmt(x), IPF.Fmt(z)}));
+  END;
+
+  RETURN result;
+END TestRootOp;
 
 (*-------------------------*)
 PROCEDURE TestRoot():BOOLEAN=
@@ -428,6 +579,7 @@ BEGIN
   (*NewLine(); EVAL TestBrent();*)
   (*NewLine(); EVAL TestNewtraph();*)
   NewLine(); EVAL TestPowerSeq();
+  NewLine(); EVAL TestRootOp();
 
   RETURN result;
 END TestRoot;
