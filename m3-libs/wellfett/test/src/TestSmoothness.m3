@@ -44,7 +44,6 @@ PROCEDURE PlotReal (s: S.T; l: CARDINAL; ) =
     grid  := R.One / FLOAT(unit, R.T);
     left  := FLOAT(s.getFirst(), R.T) * grid;
     right := FLOAT(s.getLast(), R.T) * grid;
-  <* FATAL PL.SizeMismatch *>
   BEGIN
     PL.SetFGColorDiscr(1);
     PL.SetEnvironment(
@@ -83,7 +82,6 @@ PROCEDURE PlotComplex (READONLY s: ARRAY OF ScaledComplexSignal; ) =
     min, max    := R.Zero;
     color       := 2;
 
-  <* FATAL PL.SizeMismatch *>
   BEGIN
     FOR i := FIRST(s) TO LAST(s) DO
       left[i] := FLOAT(s[i].sig.getFirst(), R.T) * s[i].res;
@@ -187,6 +185,7 @@ PROCEDURE UpSample2Geom (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
   END UpSample2Geom;
 
 (* square average *)
+<* UNUSED *>
 PROCEDURE UpSample2Quad (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
   VAR z := NEW(CV.T, 2 * NUMBER(x) - 1);
   BEGIN
@@ -201,11 +200,11 @@ PROCEDURE UpSample2Quad (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
   END UpSample2Quad;
 
 (* interpolate piecewise cubic *)
+<* UNUSED *>
 PROCEDURE UpSample2Cubic (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
   VAR
     z := NEW(CV.T, 2 * NUMBER(x) - 1);
     y := V.ArithSeq(NUMBER(x), R.Zero, R.One);
-  <* FATAL Arith.Error *>        (*y and x will always have the same size*)
   BEGIN
     FOR i := FIRST(x) TO LAST(x) - 1 DO
       z[2 * i] := x[i];
@@ -237,20 +236,38 @@ PROCEDURE UpSample2Fourier (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
 
 CONST UpSample2 = UpSample2Fourier;
 
+
+PROCEDURE ExampleMask (num: [0 .. 6]; ): S.T =
+  BEGIN
+    CASE num OF
+      (* A mask close to the one of the hat function. *)
+    | 0 =>
+        RETURN NEW(S.T).fromArray(
+                 ARRAY OF R.T{0.25D0, 0.5D0, 0.25D0}, -1).autocorrelate();
+    | 1 =>
+        RETURN NEW(S.T).fromArray(
+                 ARRAY OF R.T{0.26D0, 0.5D0, 0.24D0}, -1).autocorrelate();
+    | 2 =>
+        RETURN NEW(S.T).fromArray(
+                 ARRAY OF R.T{0.3D0, 0.5D0, 0.2D0}, -1).autocorrelate();
+    | 3 =>
+        RETURN NEW(S.T).fromArray(
+                 ARRAY OF R.T{0.23D0, 0.54D0, 0.23D0}, -1).autocorrelate();
+    | 4 =>
+        RETURN
+          NEW(S.T).fromArray(ARRAY OF R.T{0.5D0, 0.5D0}).autocorrelate();
+    | 5 =>
+        RETURN
+          NEW(S.T).fromArray(ARRAY OF R.T{0.2D0, 0.8D0}).autocorrelate();
+    | 6 =>
+        RETURN
+          NEW(S.T).fromArray(ARRAY OF R.T{0.23D0, 0.54D0, 0.23D0}, -1);
+    END;
+  END ExampleMask;
+
 PROCEDURE FourierDecay () =
   VAR
-    (* A mask close to the one of the hat function. *)
-    mask0 := NEW(S.T).fromArray(
-               ARRAY OF R.T{0.25D0, 0.5D0, 0.25D0}, -1).autocorrelate();
-    mask1 := NEW(S.T).fromArray(
-               ARRAY OF R.T{0.26D0, 0.5D0, 0.24D0}, -1).autocorrelate();
-    mask := NEW(S.T).fromArray(
-              ARRAY OF R.T{0.3D0, 0.5D0, 0.2D0}, -1).autocorrelate();
-    mask3 := NEW(S.T).fromArray(
-               ARRAY OF R.T{0.23D0, 0.54D0, 0.23D0}, -1).autocorrelate();
-    mask4 := NEW(S.T).fromArray(ARRAY OF R.T{0.5D0, 0.5D0}).autocorrelate();
-    mask5 := NEW(S.T).fromArray(ARRAY OF R.T{0.2D0, 0.8D0}).autocorrelate();
-    mask6 := NEW(S.T).fromArray(ARRAY OF R.T{0.23D0, 0.54D0, 0.23D0}, -1);
+    mask                := ExampleMask(2);
     generator           := mask;
     twopow   : CARDINAL := 1;
 

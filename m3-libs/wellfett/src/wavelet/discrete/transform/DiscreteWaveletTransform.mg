@@ -2,6 +2,7 @@ GENERIC MODULE DiscreteWaveletTransform(R, S, SV, SVR, SM);
 
 IMPORT Arithmetic AS Arith;
 IMPORT Integer32IntegerPower AS IIntPow;
+IMPORT Fmt;
 
 PROCEDURE FilterBankToPolyphase (READONLY x      : SV.TBody;
                                           scaling: ScalingType; ): SM.T =
@@ -37,9 +38,10 @@ PROCEDURE FilterBankSynthesisSingle (READONLY x, y   : SV.TBody;
   RAISES {Arith.Error} =
   VAR z := S.Zero;
   BEGIN
-    IF NUMBER(x) # NUMBER(y) THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    <* ASSERT NUMBER(x) = NUMBER(y),
+                "The number of channels (" & Fmt.Int(NUMBER(x))
+                  & ") is different from the number of filters ("
+                  & Fmt.Int(NUMBER(y)) & ")." *>
     FOR i := FIRST(x) TO LAST(x) DO
       z := z.superpose(y[i].upConvolve(x[i], scaling));
     END;

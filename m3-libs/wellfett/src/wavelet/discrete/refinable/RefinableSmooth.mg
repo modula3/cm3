@@ -1,5 +1,5 @@
-GENERIC MODULE RefinableSmooth(
-R, C, CT, V, VS, VT, CVT, M, Eigen, S, Refn, BSpl);
+GENERIC MODULE RefinableSmooth(R, C, CT, V, VS, VT, CVT, M, Eigen, S, Refn,
+                               BSpl);
 
 IMPORT Arithmetic AS Arith;
 IMPORT IntBiList;
@@ -85,7 +85,6 @@ CONST
   Twelve = FLOAT(12.0, R.T);
 
 PROCEDURE ComputeSSE (READONLY y: ARRAY [0 .. 2] OF R.T): R.T =
-  <* FATAL Arith.Error *>
   VAR
     p1  := VS.Sum(y);
     p2  := VS.Inner(y, y);
@@ -96,7 +95,6 @@ PROCEDURE ComputeSSE (READONLY y: ARRAY [0 .. 2] OF R.T): R.T =
   END ComputeSSE;
 
 PROCEDURE ComputeDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): V.T =
-  <* FATAL Arith.Error *>
   VAR
     p1  := VS.Sum(y);
     p2  := VS.Inner(y, y);
@@ -111,8 +109,7 @@ PROCEDURE ComputeDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): V.T =
   END ComputeDSSE;
 
 PROCEDURE ComputeDDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
-  <* FATAL Arith.Error *>
-    (*derived with mathematica*)
+  (*derived with mathematica*)
   VAR
     p1 := VS.Sum(y);
     p2 := VS.Inner(y, y);

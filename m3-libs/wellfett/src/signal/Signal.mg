@@ -1,7 +1,5 @@
 GENERIC MODULE Signal(R, SignalRep, V, VS, P);
 
-FROM Arithmetic IMPORT Error;
-
 REVEAL
   T = SignalRep.TPrivate BRANDED OBJECT
       OVERRIDES
@@ -182,7 +180,6 @@ PROCEDURE IsZero (x: T): BOOLEAN =
   END IsZero;
 
 PROCEDURE Equal (x, y: T): BOOLEAN =
-  <* FATAL Error *>
   BEGIN
     RETURN V.Equal(x.data, y.data); (* this is nonsense but I haven't yet
                                        access to Vector Rep *)
@@ -241,12 +238,8 @@ PROCEDURE Inner (x, y: T): R.T =
     number := last - first + 1;
   BEGIN
     IF number > 0 THEN
-      TRY
-        RETURN VS.Inner(SUBARRAY(x.data^, first - x.first, number),
-                        SUBARRAY(y.data^, first - y.first, number));
-      EXCEPT
-      | Error (err) => EVAL err; <* ASSERT FALSE *>
-      END;
+      RETURN VS.Inner(SUBARRAY(x.data^, first - x.first, number),
+                      SUBARRAY(y.data^, first - y.first, number));
     ELSE
       RETURN R.Zero;
     END;
@@ -466,15 +459,11 @@ PROCEDURE Add (x, y: T): T =
     z     := NEW(T).initFL(first, last);
 
   BEGIN
-    TRY
-      WITH zdata = SUBARRAY(z.data^, x.first - z.first, NUMBER(x.data^)) DO
-        VS.Add(zdata, zdata, x.data^);
-      END;
-      WITH zdata = SUBARRAY(z.data^, y.first - z.first, NUMBER(y.data^)) DO
-        VS.Add(zdata, zdata, y.data^);
-      END;
-    EXCEPT
-    | Error (err) => EVAL err; <* ASSERT FALSE *>
+    WITH zdata = SUBARRAY(z.data^, x.first - z.first, NUMBER(x.data^)) DO
+      VS.Add(zdata, zdata, x.data^);
+    END;
+    WITH zdata = SUBARRAY(z.data^, y.first - z.first, NUMBER(y.data^)) DO
+      VS.Add(zdata, zdata, y.data^);
     END;
     RETURN z;
   END Add;
@@ -520,7 +509,6 @@ PROCEDURE UpConvolve (x, y: T; factor: ScalingType): T =
     xlast := x.first + LAST(x.data^);
     ylast := y.first + LAST(y.data^);
     z := NEW(T).initFL(x.first + y.first * factor, xlast + ylast * factor);
-  <* FATAL Error *>              (*size mismatches can't occur*)
   BEGIN
     FOR i := FIRST(y.data^) TO LAST(y.data^) DO
       WITH zdata = SUBARRAY(z.data^, i * factor, NUMBER(x.data^)) DO
