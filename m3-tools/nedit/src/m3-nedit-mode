@@ -1,6 +1,13 @@
 !- nedit modula-3 mode
 !- start nedit with: 'nedit -import m3-nedit-mode' and then save preferences
 
+nedit.shellCommands: \
+	make Modula 3 @Modula-3:Alt+3:3:DS:\n\
+		cm3\n\
+	make Modula 3 @PM3:Alt+3:3:DS:\n\
+		m3build\n\
+	indent @Modula-3:Shift+Alt+I::AX:\n\
+		m3pp\n
 nedit.highlightPatterns: \
 	Modula-3:1:0{\n\
 		Pseudo Identifier:"<(Main|RESULT|SELF|T)>":::Storage Type::\n\
@@ -12,13 +19,25 @@ nedit.highlightPatterns: \
 		String Escape:"\\\\.":::String1:String:\n\
 		Fmt Specifier:"%\\d*s":::String2:String:\n\
 		Comment:"\\(\\*":"\\*\\)"::Comment::\n\
+		CommentLevel1:"\\(\\*":"\\*\\)"::Comment:Comment:\n\
+		CommentLevel2:"\\(\\*":"\\*\\)"::Comment:CommentLevel1:\n\
 		Pragma:"\\<\\*":"\\*\\>"::Preprocessor::\n\
 		Character:"'":"'":"[^\\\\][^']":String::\n\
 		Number:"<[+-]?((2_[01]+)|(8_[0-7]+)|((\\d+)(\\.[\\dedxEDX]+)?)|(16_[\\da-fA-F]+))>":::Numeric Const::\n\
 		Module Or Type:"<[A-Z]\\w*\\.":::Module::\n\
+	}\n\
+	Modula-3 Makefile:1:0{\n\
+		Comment:"%":"\\n"::Comment::\n\
+		Keyword:"<(and|contains|else|end|foreach|if|in|is|local|not|or|proc|readonly|return)>":::Keyword::\n\
+		String:"""":"""":"\\n":String::\n\
+		Builtin:"<(write|error|include|exec|cp_if|arglist|defined|empty|equal|escape|format|normalize|path|stale|unlink_file)>":::Identifier::\n\
+		MakeFunction:"<(BinExport|BindExport|CompiledGnuemacs|DocExport|DocdExport|EmacsExport|EmacsdExport|Gnuemacs|HtmlExport|LibExport|LibdExport|Library|ManExport|ManExport|ManPage|MandExport|MandExport|Netobj|Noweb|Program|build_standalone|bundle|c_source|derived_c|derived_h|derived_implementation|derived_interface|export_interface|[Gg]eneric_implementation|[Gg]eneric_interface|[Gg]eneric_module|h_source|hide_interface|implementation|import|import_lib|import_obj|import_version|include_dir|include_pkg|interface|library|m3_option|manPage|module|netobj|noweb|noweb_doc|override|pgm_source|program|remove_m3_option|resource|resource_named|s_source|source|template|build_generic_intf|build_generic_impl)>":::Subroutine::\n\
+		LibM3:"<(array_sort|Array_sort|list|List|list_sort|List_sort|pqueue|Pqueue|sequence|Sequence|sorted_table|Sorted_table|table|Table)>":::Subroutine1::\n\
+		Constant:"<(HIDDEN|VISIBLE|SL)>":::Numeric Const::\n\
 	}\n
 nedit.languageModes: \
-	Modula-3:.i3 .m3 .ig .mg::Smart::::\n
+	Modula-3:.i3 .m3 .ig .mg .atg .frm::Smart::::\n\
+	Modula-3 Makefile:.tmpl m3makefile m3overrides::::::\n
 nedit.styles: \
 	Module:#eaa95e:Plain\n
 nedit.smartIndentInit: \
