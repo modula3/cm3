@@ -748,6 +748,17 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
           RETURN hh.inner(hh);
         END TransitionSimpFrobenius;
 
+      PROCEDURE TransitionSumNorm (x: V.T): R.T =
+        VAR
+          hprimal := GetLiftedPrimalGeneratorMask(
+                       hdualnovan, gdual0novan,
+                       SplitParamVec(x, initWavelet0Amp));
+          hh := hprimal.autocorrelate();
+        BEGIN
+          (*the computation could be sped-up because 'hh' is symmetric*)
+          RETURN VT.Norm1(hh.getData());
+        END TransitionSumNorm;
+
       VAR
         mc := SplitParamVec(x, initWavelet0Amp);
         derdist := DeriveDist(normalMat, targetCor, targetNormSqr, mc.lift);
@@ -786,17 +797,20 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         IO.Put(
           Fmt.FN("ComputeOptCritDiff for x=%s", ARRAY OF TEXT{VF.Fmt(x)}));
         FOR i := FIRST(dx^) TO LAST(dx^) DO dx[i] := dxv END;
-        CASE 4 OF
+        CASE 6 OF
         | 0 =>
             dersmooth := Fn.EvalCentralDiff2(SquareSmoothEstimate, x, dx);
         | 1 => dersmooth := Fn.EvalCentralDiff2(TransitionSpecRad, x, dx);
         | 2 => dersmooth := Fn.EvalCentralDiff2(TransitionBSpline, x, dx);
-        | 3 =>
-            dersmooth := Fn.EvalCentralDiff2(TransitionFrobenius, x, dx);
+        | 3 => dersmooth := Fn.EvalCentralDiff2(TransitionBinomial, x, dx);
         | 4 =>
+            dersmooth := Fn.EvalCentralDiff2(TransitionFrobenius, x, dx);
+        | 5 =>
             dersmooth :=
               Fn.EvalCentralDiff2(TransitionSimpFrobenius, x, dx);
-        | 5 => dersmooth := Fn.EvalCentralDiff2(TransitionBinomial, x, dx);
+        | 6 =>
+            dersmooth :=
+              Fn.EvalCentralDiff2(TransitionSumNorm, x, dx);
         ELSE
           <*ASSERT FALSE*>
         END;
@@ -1043,7 +1057,7 @@ PROCEDURE Test () =
         *)
         TestMatchPatternSmooth(Refn.Refine(BSpl.WaveletMask(2, 8),
                                            BSpl.GeneratorMask(2), 6).scale(
-                                 64.0D0).translate(50), 6, 2, 8, 5, 1.0D-8);
+                                 64.0D0).translate(50), 6, 2, 8, 5, 1.0D-10);
     | Example.matchSincSmooth =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
