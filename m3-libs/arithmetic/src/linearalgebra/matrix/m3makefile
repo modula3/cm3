@@ -1,0 +1,20 @@
+import("libm3")
+
+include("matrix.tmpl")
+
+%generic_module("MatrixBasic")
+%MatrixBasic("Real",            "RealBasic")
+%MatrixBasic("LongReal",        "LongRealBasic")
+%MatrixBasic("Extended",        "ExtendedBasic")
+%MatrixBasic("Integer32",       "Integer32Basic")
+%MatrixBasic("LongRealComplex", "LongRealComplexBasic")
+
+generic_module("MatrixFast")
+MatrixFast("Real",     "RealVectorFast",     "RealBasic")
+MatrixFast("LongReal", "LongRealVectorFast", "LongRealBasic")
+MatrixFast("Extended", "ExtendedVectorFast", "ExtendedBasic")
+
+%generic_module("MatrixFmtLex")
+%MatrixFmtLex("Real",     "RealMatrixFast",     "RealFmtLex")
+%MatrixFmtLex("LongReal", "LongRealMatrixFast", "LongRealFmtLex")
+%MatrixFmtLex("Extended", "ExtendedMatrixFast", "ExtendedFmtLex")

@@ -11,6 +11,7 @@ include_dir("complex")
 include_dir("polar")
 
 include_dir("vector")
+include_dir("matrix")
 include_dir("polynomial")
 
 
