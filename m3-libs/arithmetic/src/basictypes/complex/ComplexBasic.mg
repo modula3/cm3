@@ -81,6 +81,17 @@ BEGIN
 END Mul;
 
 (*----------------*)
+(*multiply x by the conjugate of y*)
+PROCEDURE MulConj(READONLY x,y:T):T=
+VAR
+  z:T;
+BEGIN
+  z.re:=R.Add(R.Mul(x.re,y.re),R.Mul(x.im,y.im));
+  z.im:=R.Sub(R.Mul(x.im,y.re),R.Mul(x.re,y.im));
+  RETURN z;
+END MulConj;
+
+(*----------------*)
 (*
 Use Karatsuba's trick
 tend to produce truncation errors
@@ -126,18 +137,28 @@ PROCEDURE Rec(READONLY x : T) : T RAISES {Error} =
   END Rec;
 
 (*-------------------*)
-(*I have not found a measure which matches the needs
-  of the Euclidean algorithm, it may work for Gaussian numbers though*)
+(*I have not found a method which
+   a) is generic (works without comparisons)
+   b) matches the needs of the Euclidean algorithm for determining
+      the greatest common divisor (that is, there must be a magnitude
+      indicator which is reduced by a modulo operation).
+  It work for some Gaussian numbers though,
+  but not for all, e.g. GCD(-3-3i,-1-4i)
+  (the order is important, the opposite would work!).
+  The last example lead to a cycle:
+   -3-3i,-1-4i,1-4i,3-3i,4-i,4+i,3+3i,... *)
 PROCEDURE Mod(READONLY x,y:T):T RAISES {Error} =
   VAR
     denom : R.T;
+    xbig,
     r     : T;
   BEGIN
-    denom := R.Add(R.Mul(x.re,x.re),R.Mul(y.im,y.im));
+    denom := R.Add(R.Mul(y.re,y.re),R.Mul(y.im,y.im));
     (* Err.divide_by_zero will be thrown by Mod*)
-    r.re := R.Mod(x.re,denom);
-    r.im := R.Mod(x.im,denom);
-    r := Mul(r,Conj(y));  (*in fact, r is now AbsSqr(y) as big as before*)
+    xbig := MulConj(x,y);
+    r.re := R.Mod(xbig.re,denom);
+    r.im := R.Mod(xbig.im,denom);
+    r := Mul(r,y);  (*in fact, r is now AbsSqr(y) as big as before*)
     r.re := R.Div(r.re,denom);  (*is always divisible*)
     r.im := R.Div(r.im,denom);
     RETURN r;
@@ -147,15 +168,18 @@ PROCEDURE Mod(READONLY x,y:T):T RAISES {Error} =
 PROCEDURE DivMod(READONLY x,y:T;VAR r:T):T RAISES {Error} =
   VAR
     denom : R.T;
+    xbig,
     q     : T;
   BEGIN
-    denom := R.Add(R.Mul(x.re,x.re),R.Mul(y.im,y.im));
+    denom := R.Add(R.Mul(y.re,y.re),R.Mul(y.im,y.im));
     (* Err.divide_by_zero will be thrown by Div*)
-    q.re := R.DivMod(x.re,denom,r.re);
-    q.im := R.DivMod(x.im,denom,r.im);
-    r := Mul(r,Conj(y));  (*in fact, r is now AbsSqr(y) as big as before*)
+    xbig := MulConj(x,y);
+    q.re := R.DivMod(xbig.re,denom,r.re);
+    q.im := R.DivMod(xbig.im,denom,r.im);
+    r := Mul(r,y);  (*in fact, r is now AbsSqr(y) as big as before*)
     r.re := R.Div(r.re,denom);  (*is always divisible*)
     r.im := R.Div(r.im,denom);
+    <*ASSERT Equal(r,Mod(x,y))*>
     RETURN q;
   END DivMod;
 
