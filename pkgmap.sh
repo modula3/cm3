@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ROOT=${ROOT:-$(pwd)}
+ROOT=${ROOT:-`pwd`}
 
 BUILDLOCAL="${BUILDLOCAL:-cm3 -build -override -DROOT=${ROOT} ${BUILDARGS}}"
 CLEANLOCAL="${CLEANLOCAL:-cm3 -clean -override -DROOT=${ROOT} ${CLEANARGS}}"
@@ -31,7 +31,7 @@ exec_cmd() {
 }
 
 usage() {
-  ME=$(basename $0)
+  ME=`basename $0`
   echo "usage:"
   echo "  $ME -buildlocal|-build"
   echo "      build and import from workspace (default action)"

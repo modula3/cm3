@@ -3,13 +3,13 @@
 GCC_BACKEND=${GCC_BACKEND:-no}
 WIN32=${WIN32:-yes}
 M3GDB=${M3GDB:-no}
-export BUILDARGS="-DBOOT"
-UNAME=$(uname)
+BUILDARGS="-DBOOT"
+UNAME=`uname`
 
-if [ "${UNAME}" = FreeBSD ] ; then
+if [ "${UNAME}" = FreeBSD -o "${UNAME}" = SunOS ] ; then
   GCC_BACKEND=yes
   WIN32=no
-  ROOT=${ROOT:-$(pwd)}
+  ROOT=${ROOT:-`pwd`}
   BUILDLOCAL="${BUILDLOCAL:-m3build -O -DROOT=${ROOT} ${BUILDARGS}}"
   CLEANLOCAL="${CLEANLOCAL:-m3build clean -O -DROOT=${ROOT} ${CLEANARGS}}"
   BUILDGLOBAL="${BUILDGLOBAL:-m3build -DROOT=${ROOT} ${BUILDARGS}}"

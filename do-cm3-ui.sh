@@ -1,14 +1,15 @@
 #!/bin/sh
 
 WIN32=${WIN32:-yes}
-SERIAL=${SERIAL:-yes}
 
-UNAME=$(uname)
+UNAME=`uname`
 
 if [ "${UNAME}" = FreeBSD ] ; then
   WIN32=no
-  SERIAL=no
-  ROOT=${ROOT:-$(pwd)}
+  ROOT=${ROOT:-`pwd`}
+elif [ "${UNAME}" = SunOS ] ; then
+  WIN32=no
+  ROOT=${ROOT:-`pwd`}
 fi
 
 export WIN32 ROOT

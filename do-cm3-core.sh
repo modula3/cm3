@@ -4,12 +4,16 @@ GCC_BACKEND=${GCC_BACKEND:-no}
 WIN32=${WIN32:-yes}
 M3GDB=${M3GDB:-no}
 
-UNAME=$(uname)
+UNAME=`uname`
 
 if [ "${UNAME}" = FreeBSD ] ; then
   GCC_BACKEND=yes
   WIN32=no
-  ROOT=${ROOT:-$(pwd)}
+  ROOT=${ROOT:-`pwd`}
+elif [ "${UNAME}" = SunOS ] ; then
+  GCC_BACKEND=yes
+  WIN32=no
+  ROOT=${ROOT:-`pwd`}
 fi
 
 export GCC_BACKEND WIN32 M3GDB BUILDARGS ROOT
