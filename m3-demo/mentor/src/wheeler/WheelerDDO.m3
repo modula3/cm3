@@ -8,7 +8,7 @@
 
 MODULE WheelerDDO EXPORTS WheelerDDO;
 
-IMPORT Char, CharArraySort, IO, RefList, Text, TextArraySort, TextF, VBT;
+IMPORT Char, CharArraySort, IO, RefList, Text, TextArraySort, VBT;
 IMPORT Thread, FormsVBT;
 
 (* Zeus stuff *)

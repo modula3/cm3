@@ -13,7 +13,7 @@ oblume("Wheeler", "Compress")
 oblume("Wheeler", "Decompress")
 oblume("Wheeler", "WhyDecompressWorks")
 
-% module("Wheeler") % does not compile currently
+module("Wheeler") % does not compile currently
 module("CharArraySort")
 
 resource("Decompress.pcode")
