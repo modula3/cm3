@@ -14,8 +14,10 @@ CONST
 
   MinDiskSpace = 75; (* megabytes *)
 
+  (* until we get the permission...
   REACTOR_EXE = ARRAY BOOLEAN OF TEXT <*NOWARN*>
     { "reactor.exe", "reactor" } [OnUnix];
+  *)
 
   CM3_EXE = ARRAY BOOLEAN OF TEXT
     { "cm3.exe", "cm3" } [OnUnix];
@@ -706,7 +708,7 @@ PROCEDURE UtilsFound() : BOOLEAN =
 
 CONST
   GZipArgs = ARRAY [0..0] OF TEXT { "-dc" };
-  TarArgs  = ARRAY [0..1] OF TEXT { "-xmf", "-" };
+  TarArgs  = ARRAY [0..1] OF TEXT { "-xf", "-" };
 
 PROCEDURE Unpack (archive: TEXT) =
   VAR data: TEXT := OS.MakePath (cminstall_root, archive);
@@ -772,7 +774,7 @@ PROCEDURE UnpackTAR (data: TEXT) =
     Msg.Debug ("unpacking done.");
   END UnpackTAR;
 
-PROCEDURE UnpackTGZWin32 (data: TEXT) <*NOWARN*> =
+<*UNUSED*> PROCEDURE UnpackTGZWin32 (data: TEXT) =
   CONST
     TarArgs  = ARRAY [0..1] OF TEXT { "-zxmf", "-" };
   VAR
