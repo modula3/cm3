@@ -29,7 +29,7 @@ IMPORT Arithmetic AS Arith;
 CONST AThird = 1.0D0 / 3.0D0;
 
 PROCEDURE PlotTransitionEV (mask: S.T) =
-  <* FATAL Arith.Error, PL.SizeMismatch *>
+  <* FATAL Arith.Error *>
   VAR
     ev := RefnSm.Eigenvalues(mask);
     x  := NEW(V.T, NUMBER(ev.eigenvalues^));
@@ -72,7 +72,7 @@ PROCEDURE AnimateTransitionEV () =
 
 
 PROCEDURE CurveTransitionEV (READONLY maskcoef0, maskcoef1: ARRAY OF R.T) =
-  <* FATAL Arith.Error, PL.SizeMismatch *>
+  <* FATAL Arith.Error *>
   CONST
     frames = 50;
   VAR
@@ -301,7 +301,7 @@ PROCEDURE PlotEstimates () =
     lowerSqrEst  := V.New(numOrder);
     upperSqrEst  := V.New(numOrder);
     upperFrobEst := V.New(numOrder);
-  <* FATAL Arith.Error, PL.SizeMismatch *>
+  <* FATAL Arith.Error *>
   BEGIN
     PL.Init();
     FOR j := FIRST(order^) TO LAST(order^) DO

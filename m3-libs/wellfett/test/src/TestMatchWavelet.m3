@@ -56,7 +56,6 @@ PROCEDURE PlotFrame (READONLY abscissa       : V.TBody;
 
   VAR ymin, ymax: R.T;
 
-  <* FATAL PL.SizeMismatch *>    (*vector size mismatch can't occur*)
   BEGIN
     IF normalizeHeight THEN
       ymin := -1.1D0;
@@ -97,8 +96,7 @@ PROCEDURE TestMatchPattern (target: S.T;
   RAISES {BSpl.DifferentParity} =
   (*The degree of freedom, i.e.  the number of parameters to minimize for,
      is 2*numTranslates*)
-  <* FATAL PL.SizeMismatch,
-    Arith.Error *>               (*MulPower can't fail for signals*)
+  <* FATAL Arith.Error *>        (*MulPower can't fail for signals*)
   VAR
     hdual := BSpl.GeneratorMask(smooth).scale(R.Two).translate(2);
     gdual := BSpl.WaveletMask(smooth, vanishing).scale(R.Two);
@@ -277,7 +275,7 @@ PROCEDURE TestSSE (x: V.T) =
     dx0 := V.FromArray(ARRAY OF R.T{1.0D-8, 0.0D0, 0.0D0});
     dx1 := V.FromArray(ARRAY OF R.T{0.0D0, 1.0D-8, 0.0D0});
     dx2 := V.FromArray(ARRAY OF R.T{0.0D0, 0.0D0, 1.0D-8});
-  <* FATAL Arith.Error, Thread.Alerted, Wr.Failure *>
+  <* FATAL Thread.Alerted, Wr.Failure *>
   BEGIN
     VAR
       rho     := RefnSm.ComputeSSE(x^);
@@ -344,7 +342,7 @@ PROCEDURE TestInverseDSSE (READONLY x0: ARRAY [0 .. 2] OF R.T) =
 PROCEDURE DeriveDist (normalMat    : M.T;
                       targetCor    : V.T;
                       targetNormSqr: R.T;
-                      s            : S.T; ): FnD.T RAISES {Arith.Error} =
+                      s            : S.T; ): FnD.T =
   VAR
     normals := M.MulV(normalMat, s.getData());
     dist := V.Inner(s.getData(), V.Sub(normals, V.Scale(targetCor, R.Two)))
@@ -356,7 +354,7 @@ PROCEDURE DeriveDist (normalMat    : M.T;
                  M.Scale(normalMat, R.Two)};
   END DeriveDist;
 
-PROCEDURE DeriveSSE (hdual, gdual0, s: S.T; ): FnD.T RAISES {Arith.Error} =
+PROCEDURE DeriveSSE (hdual, gdual0, s: S.T; ): FnD.T =
   VAR
     gdual   := gdual0.superpose(hdual.upConvolve(s, 2));
     hprimal := gdual.alternate();
@@ -376,8 +374,7 @@ PROCEDURE DeriveSSE (hdual, gdual0, s: S.T; ): FnD.T RAISES {Arith.Error} =
                        M.Transpose(dsums))};
   END DeriveSSE;
 
-PROCEDURE DeriveWSSE (hdual, gdual0, s: S.T; c: R.T): FnD.T
-  RAISES {Arith.Error} =
+PROCEDURE DeriveWSSE (hdual, gdual0, s: S.T; c: R.T): FnD.T =
   (* In the fitting routine the expression hdual*s+gdual0*c is fitted to
      the target.  But the wavelet won't be smoother if s and c becomes
      smaller.  Instead hdual/c*s+gdual0, or more precisely
@@ -435,9 +432,7 @@ PROCEDURE DeriveWSSE (hdual, gdual0, s: S.T; c: R.T): FnD.T
   END DeriveWSSE;
 
 PROCEDURE TestDeriveWSSE () =
-  <* FATAL Arith.Error *>
-  CONST
-    delta = 1.0D-8;
+  CONST delta = 1.0D-8;
   VAR
     hdual  := NEW(S.T).fromArray(ARRAY OF R.T{0.23D0, 1.678D0, -0.85D0});
     gdual0 := NEW(S.T).fromArray(ARRAY OF R.T{0.723D0, -1.078D0, 0.585D0});
@@ -459,7 +454,7 @@ PROCEDURE TestDeriveWSSE () =
 PROCEDURE PutDervDif (READONLY der   : FnD.T;
                       READONLY derArr: ARRAY OF FnD.T;
                                delta : R.T             ) =
-  <* FATAL Thread.Alerted, Wr.Failure, Arith.Error *>
+  <* FATAL Thread.Alerted, Wr.Failure *>
   BEGIN
     (*compare first derivative (gradient) with the first difference*)
     IO.Put(VF.Fmt(V.Scale(der.first, delta)) & "\n");
@@ -491,8 +486,7 @@ PROCEDURE ExtendDervTarget (READONLY x        : FnD.T;
                                      targetAmp: R.T;
                                      target   : V.T;
                                      targetCor: V.T;
-                                     wavelet0 : V.T    ): FnD.T
-  RAISES {Arith.Error} =
+                                     wavelet0 : V.T    ): FnD.T =
   BEGIN
     RETURN
       FnD.T{zeroth :=
@@ -582,7 +576,6 @@ PROCEDURE VarDeriveRegularized (<* UNUSED *> SELF   : VarWavAmpMatching;
                                 READONLY mc: MatchCoef;
                                 waveletVec, waveletCor, targetVec: V.T; ):
   FnD.T =
-  <* FATAL Arith.Error *>        (*size mismatches can't occur*)
   BEGIN
     RETURN ExtendDervTarget(derdist, mc.lift.getData(), mc.wavelet0Amp,
                             waveletVec, waveletCor, targetVec);
@@ -601,9 +594,7 @@ PROCEDURE FixDeriveRegularized (<* UNUSED *> SELF   : FixedWavAmpMatching;
                                 READONLY mc: MatchCoef;
                                 <* UNUSED *> waveletVec, waveletCor,
                                                targetVec: V.T; ): FnD.T =
-  <* FATAL Arith.Error *>        (*size mismatches can't occur*)
-  VAR
-    zerovec := V.NewZero(mc.lift.getNumber());
+  VAR zerovec := V.NewZero(mc.lift.getNumber());
   BEGIN
     RETURN
       FnD.T{
@@ -792,7 +783,7 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
   MatchCoef RAISES {Arith.Error} =
 
   <* UNUSED *>
-  PROCEDURE CheckDerivatives () RAISES {Arith.Error} =
+  PROCEDURE CheckDerivatives () =
     CONST
       delta = 1.0D-8;
       cf    = 0.7D0;
@@ -880,7 +871,7 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
       matching: Matching;
 
     <* UNUSED *>
-    PROCEDURE ComputeOptCritDeriv (x: V.T): FnD.T RAISES {Arith.Error} =
+    PROCEDURE ComputeOptCritDeriv (x: V.T): FnD.T =
       VAR
         (*SplitParamVec may return initWavelet0Amp as waveletAmp and this
            won't work if we compute the real derivative instead of a finite
@@ -1035,7 +1026,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
                                     smallVanishing, numTranslates: CARDINAL;
                                   smoothWeight: R.T):
   ARRAY [0 .. 1] OF FB.T RAISES {BSpl.DifferentParity} =
-  <* FATAL Arith.Error, PL.SizeMismatch, Thread.Alerted, Wr.Failure *>
+  <* FATAL Arith.Error, Thread.Alerted, Wr.Failure *>
   VAR
     shiftVan      := 2 - smooth - vanishing;
     shiftSmallVan := (vanishing - smallVanishing) DIV 2 - 1;
@@ -1507,7 +1498,7 @@ PROCEDURE Test () =
           clipFirst  = 15500;
           clipNumber = 2500;
         <* FATAL OSError.E, FloatMode.Trap, Lex.Error, Rd.Failure,
-          Thread.Alerted *>
+                 Thread.Alerted *>
         VAR
           rd := FileRd.Open(
                   "/home/thielema/projects/industry/bruker/data/Datasets"
@@ -1517,7 +1508,6 @@ PROCEDURE Test () =
           dataY := M.GetColumn(data, 1);
           clipX := V.FromArray(SUBARRAY(dataX^, clipFirst, clipNumber));
           clipY := V.FromArray(SUBARRAY(dataY^, clipFirst, clipNumber));
-        <* FATAL PL.SizeMismatch *>
         BEGIN
           PL.Init();
           PL.SetEnvironment(dataX[FIRST(dataX^)], dataX[LAST(dataX^)],
