@@ -39,7 +39,7 @@ readonly Platform_info = {
   "UMAX"      : "encore-bsd",
   "VAX"       : "vax-dec-ultrix",
   "I386_DARWIN" : "i486-unknown-bsd",
-  "PPC_DARWIN"  : "powerpc-apple-darwin6.3"
+  "PPC_DARWIN"  : "powerpc-apple-darwin5.4"
 }
 
 if not defined("SL")
@@ -49,16 +49,6 @@ if not defined("SL")
   else
     SL = "/"
   end
-end
-
-if equal(TARGET, "PPC_DARWIN")
-  write(EOL)
-  write("  Please note that you need a bootstrapped gcc 3.2.1 in order to" &
-        EOL)
-  write("  compile this package. All attempts to build cm3cg with Apple's" &
-        EOL)
-  write("  native version of gcc 3.1 have failed so far." & EOL)
-  write(EOL)
 end
 
 readonly proc GNU_platform (x) is
@@ -150,18 +140,10 @@ ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
 
 % build commands
 cmds = "cd " & build_dir & "; "
+postcp = cmds & "cp -p gcc" & SL & "m3cgc1 cm3cg"
 cmds = cmds & "cd libiberty; " & M3CC_MAKE & "; "
 cmds = cmds & "cd .." & SL & "gcc; " & M3CC_MAKE & " " & 
        ARG0 & " " & ARG1 & " m3cg"
-
-readonly proc postcp() is
-  pSrc  = build_dir & SL & "gcc" & SL & "m3cgc1"
-  pDest = build_dir & SL & "cm3cg"
-  if stale(pDest, pSrc)
-    cp_if(pSrc, pDest)
-  end
-end
-
 
 if equal (M3CC_HOST, M3CC_TARGET)
   BindExport ("cm3cg")
@@ -175,7 +157,8 @@ end
 % finally, compile it
 exec (cmds)
 %write (cmds & EOL)
+%write (postcp & EOL)
 if defined("postcp")
-  postcp()
+  exec(postcp)
 end
 
