@@ -41,6 +41,7 @@ readonly proc simple_c_program(nm, c_sources) is
   if defined ("_all")
     if stale (pgm, sources)
       toss = compile_c (sources, [], options, FALSE, FALSE)
+      GCWRAPFLAGS=""
       toss = m3_link (pgm, [], objects, SYSTEM_LIBS {"LIBC"}, FALSE)
     end
   end
