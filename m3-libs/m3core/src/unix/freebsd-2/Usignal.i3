@@ -12,8 +12,6 @@ FROM Ctypes IMPORT int, unsigned_int;
 
 (*** <signal.h> ***)
 
-  (* I don't know about all the indented values below from the 
-     Linux implementation *)
 CONST
   SIGHUP    =  1;      (* hangup *)
   SIGINT    =  2;      (* interrupt *)
@@ -23,27 +21,19 @@ CONST
   SIGIOT    =  6;      (* IOT instruction *)
   SIGEMT    =  7;      (* EMT instruction *)
   SIGFPE    =  8;      (* floating point exception *)
-      FPE_INTDIV_TRAP      = 20;  (* integer divide by zero *)
-      FPE_INTOVF_TRAP      = 21;  (* integer overflow *)
-      FPE_FLTOPERR_TRAP    =  1;  (* [floating operand error] *)
-      FPE_FLTDEN_TRAP      =  2;  (* [floating denormalized operand] *)
-      FPE_FLTDIV_TRAP      =  3;  (* [floating divide by zero] *)
-      FPE_FLTOVF_TRAP      =  4;  (* [floating overflow] *)
-      FPE_FLTUND_TRAP      =  5;  (* [floating underflow] *)
-      FPE_FLTINEX_TRAP     =  6;  (* [floating inexact result] *)
-      FPE_UUOP_TRAP        =  7;  (* [floating undefined opcode] *)
-      FPE_DATACH_TRAP      =  8;  (* [floating data chain exception] *)
-      FPE_FLTSTK_TRAP      = 16;  (* [floating stack fault] *)
-      FPE_FPA_ENABLE       = 17;  (* [FPA not enabled] *)
-      FPE_FPA_ERROR        = 18;  (* [FPA arithmetic exception] *)
+      FPE_INTOVF_TRAP      =  1;  (* integer overflow *)
+      FPE_INTDIV_TRAP      =  2;  (* integer divide by zero *)
+      FPE_FLTDIV_TRAP      =  3;  (* floating/decimal divide by zero *)
+      FPE_FLTOVF_TRAP      =  4;  (* floating overflow *)
+      FPE_FLTUND_TRAP      =  5;  (* floating underflow *)
+      FPE_FPU_NP_TRAP      =  6;  (* floating point unit not present *)
+      FPE_SUBRNG_TRAP      =  7;  (* subrange out of bounds *)
   SIGKILL   =  9;      (* kill (cannot be caught or ignored) *)
   SIGBUS    =  10;     (* bus error *)
-      BUS_HWERR	  = 1;     (* misc hardware error (e.g. timeout) *)
-      BUS_ALIGN	  = 2;     (* hardware alignment error *)
+      BUS_PAGE_FAULT       = 12;  (* page fault protection base *)
+      BUS_SEGNP_FAULT      = 26;  (* segment not present *)
+      BUS_STK_FAULT        = 27;  (* stack fault *)
   SIGSEGV   =  11;     (* segmentation violation *)
-      SEGV_NOMAP  = 3;     (* no mapping at the fault address *)
-      SEGV_PROT   = 4;      (* access exceeded protections *)
-      SEGV_OBJERR = 5;    (* object returned errno value *)
   SIGSYS    =  12;     (* bad argument to system call *)
   SIGPIPE   =  13;     (* write on a pipe with no one to read it *)
   SIGALRM   =  14;     (* alarm clock *)
@@ -61,9 +51,9 @@ CONST
   SIGVTALRM =  26;     (* virtual time alarm *)
   SIGPROF   =  27;     (* profiling time alarm *)
   SIGWINCH  =  28;     (* window size changes *)
-  SIGLOST   =  29;     (* Sys-V rec lock: notify user upon server crash *)
-  SIGUSR1   =  30;     (* User signal 1 (from SysV) *)
-  SIGUSR2   =  31;     (* User signal 2 (from SysV) *)
+  SIGINFO   =  29;     (* information request *)
+  SIGUSR1   =  30;     (* user defined signal 1 *)
+  SIGUSR2   =  31;     (* user defined signal 2 *)
 
   (* System V definitions *)
   SIGCLD    = SIGCHLD;
@@ -80,7 +70,8 @@ TYPE
   struct_sigvec  = RECORD
     sv_handler: SignalHandler;     (* signal handler *)
     sv_mask:    sigset_t;          (* signal mask to apply *)
-    sv_flags:   int;               (* see signal options below *) END;
+    sv_flags:   int;               (* see signal options below *)
+  END;
     
 
 CONST
@@ -88,7 +79,7 @@ CONST
   empty_sv_mask  : sigset_t = 0;
 
 CONST
-  (* Valid flags defined for sv_flags field of sigvec structure. *)
+ (* Valid flags defined for sv_flags field of sigvec structure. *)
   SV_ONSTACK     = 16_0001;   (* run on special signal stack *)
   SV_RESTART     = 16_0002;   (* restart system calls on sigs *)
   SV_RESETHAND   = 16_0004;   (* reset to SIG_DFL when taking signal *)
@@ -101,22 +92,16 @@ CONST
   SIG_SETMASK  = 3;    (* Set block mask to this mask *)
 
 TYPE
-  SignalActionHandler  = PROCEDURE (sig: int);
-  SignalRestoreHandler = PROCEDURE ();
-
   struct_sigaction = RECORD
-    sa_handler  : SignalActionHandler;  (* signal handler *)
+    sa_handler  : SignalHandler;        (* signal handler *)
     sa_mask     : sigset_t;             (* signals to block while in handler *)
     sa_flags    : int;                  (* signal action flags *)
-    (* ow
-    sa_restorer : SignalRestoreHandler; (* restores interrupted state *)
-    *)
   END;
 
   struct_sigaction_star = UNTRACED REF struct_sigaction;
 
 CONST
-  (* Valid flags defined for sa_flags field of sigaction structure. *)
+ (* Valid flags defined for sa_flags field of sigaction structure. *)
   SA_ONSTACK     = 16_0001;   (* run on special signal stack *)
   SA_RESTART     = 16_0002;   (* restart system calls on sigs *)
   SA_RESETHAND   = 16_0004;   (* reset to SIG_DFL when taking signal *)
@@ -206,9 +191,15 @@ VAR (*CONST*)
 
 <*EXTERNAL*> PROCEDURE sigstack (VAR ss, oss: struct_sigstack): int;
 
+(*** sigsuspend(2) - release blocked signals and wait for interrupt ***)
+
+<*EXTERNAL*>
+PROCEDURE sigsuspend (VAR sigmask: sigset_t): int;
 
 (*** sigaction(2) - software signal facilities ***)
 
+(* FIXME - This should probably use the VAR construct like the other
+   platforms use. *)
 <*EXTERNAL*>
 PROCEDURE sigaction (sig: int;  act, oact: struct_sigaction_star): int;
 
