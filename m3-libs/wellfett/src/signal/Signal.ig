@@ -24,6 +24,7 @@ TYPE
               getLast   (): IndexType;
               getNumber (): IndexType;
               getData   (): V.T;
+              getValue  (pos: IndexType): R.T;
 
               sum (): R.T;       (*asking for the offset is non-sense since
                                     we are working with a finite supported
@@ -52,8 +53,9 @@ TYPE
 
               alternate (): T;
 
-              convolve  (with: T): T;
-              superpose (with: T): T;
+              superpose     (with: T): T;
+              convolve      (with: T): T;
+              autocorrelate (): T;
             END;
 
 VAR Zero, One: T;

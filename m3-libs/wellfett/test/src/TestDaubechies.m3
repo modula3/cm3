@@ -41,7 +41,7 @@ PROCEDURE Test()=
     END;
 
     x := Daub.FilterPureAbsSqr(3);
-    trans := Refn.TransitionMatrix(x);
+    trans := Refn.RadicBandMatrix(x);
     IO.Put(Fmt.FN("transition matrix:\n%s",
       ARRAY OF TEXT{MF.Fmt(trans)}));
     eig := RootAppr.RealNewtonMaehli(
@@ -59,7 +59,7 @@ PROCEDURE Test()=
 
     FOR n:=1 TO 45 DO
       x := Daub.FilterPureAbsSqr(n);
-      trans := Refn.TransitionMatrix(x);
+      trans := Refn.RadicBandMatrix(x);
       y := x.wrapCyclic(3);
       yv  := y.getData();
       sqr0 := yv[0]+yv[1]+yv[2];
