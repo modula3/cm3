@@ -22,3 +22,5 @@ CVS/Entries
 CVS/Entries.Log
 CVS/Repository
 CVS/Root
+test/src/Main.m3
+m3makefile
