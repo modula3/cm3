@@ -1,9 +1,0 @@
-FUNC res = Area(a, b, c) IS 
-  (E d ~ (0.5, 0) REL (a, b), ab, cd :: 
-    Geometry.RightAngle(c, d, b) AND 
-    Geometry.RightAngle(c, d, a) AND 
-    ab = Geometry.Dist(a, b) AND 
-    cd = Geometry.Dist(c, d) AND 
-    2 * res = ab * cd) 
-END;
-
