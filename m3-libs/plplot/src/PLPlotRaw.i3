@@ -61,6 +61,11 @@ PROCEDURE plenv (xmin: PLFLT;
                  axis: PLINT  );
 (* Simple interface for defining viewport and window. *)
 
+<*EXTERNAL c_plclear*>
+PROCEDURE plclear ();
+(* Clear current subpage. *)
+
+
 <*EXTERNAL c_plxormod*>
 PROCEDURE plxormod (mode: PLINT; VAR status: PLINT);
 (* set xor mode; mode = 1-enter, 0-leave, status = 0 if not interactive
@@ -134,7 +139,7 @@ PROCEDURE c_pllab(xlabel:C.const_char_star; ylabel:C.const_char_star; tlabel:C.c
 END PLPlotRaw.
 
 (*
-/* $Id: PLPlotRaw.i3,v 1.5 2003-08-06 13:23:32 thielema Exp $
+/* $Id: PLPlotRaw.i3,v 1.6 2003-09-14 12:51:26 thielema Exp $
 
     Copyright (C) 1992 by
     Maurice J. LeBrun, Geoff Furnish, Tony Richardson.

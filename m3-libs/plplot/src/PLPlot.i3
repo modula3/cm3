@@ -38,6 +38,10 @@ PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: R.T;
 (* Simple interface for defining viewport and window. *)
 
 <*INLINE*>
+PROCEDURE Clear ();
+(* Clear current subpage. *)
+
+<*INLINE*>
 PROCEDURE SetXORMode (mode: BOOLEAN): BOOLEAN;
 (* set xor mode; mode = TRUE-enter, FALSE-leave, return TRUE if interactive
    device *)
