@@ -9,6 +9,8 @@ INTERFACE ClientInfoX;
 
 IMPORT ClientInfo, Callback;
 
+CONST Brand = "ClientInfoX 1.0";
+
 TYPE T <: Public;
      Public = ClientInfo.T OBJECT
      METHODS
