@@ -1,0 +1,33 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Wed Dec 14 14:51:39 PST 1994 by kalsow 
+%      modified on Wed Nov  9 17:25:33 PST 1994 by isard  
+
+if not equal (OS_TYPE, "WIN32")
+  %--- hack to get Win32 interfaces while compiling on Unix
+  override ("winlib", WDROOT)
+  import ("winlib")
+end
+
+m3_option ("-times")
+
+import ("libm3")
+import ("m3middle")
+
+interface ("M3LoaderObjRep")
+interface ("M3LoaderRd")
+interface ("M3LoaderAccess")
+interface ("M3LoaderUnsafe")
+interface ("M3LoaderProcess")
+
+module ("M3Loader")
+module ("M3LoaderObj")
+module ("M3LoaderDebug")
+
+include_dir ("WIN32")
+
+implementation ("Main")
+
+Program ("m3loader")

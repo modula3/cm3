@@ -1,0 +1,35 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+% File: m3makefile
+% Last modified on Thu Apr  6 09:41:25 PDT 1995 by kalsow
+%      modified on Fri Feb  7 00:38:19 PST 1992 by muller
+
+module ("Abs")
+module ("Adr")
+module ("AdrSize")
+module ("BitSize")
+module ("BuiltinOps")
+module ("ByteSize")
+module ("Ceiling")
+module ("Dec")
+module ("Dispose")
+module ("First")
+module ("Floatt")
+module ("Floor")
+module ("Inc")
+module ("IsType")
+module ("Last")
+module ("Loophole")
+module ("Max")
+module ("Min")
+module ("Narrow")
+module ("New")
+module ("Number")
+module ("Ord")
+module ("Round")
+module ("Subarray")
+module ("Trunc")
+module ("Typecode")
+module ("Val")

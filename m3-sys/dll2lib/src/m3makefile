@@ -1,0 +1,12 @@
+
+override ("m3tools", "h:\\m3-sys")
+import ("m3tools")
+
+module ("DLL")
+module ("GlueObj")
+module ("LibFile")
+implementation ("Main")
+
+build_standalone ()
+program ("dll2lib")
+
