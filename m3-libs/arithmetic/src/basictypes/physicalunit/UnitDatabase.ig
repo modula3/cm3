@@ -1,4 +1,4 @@
-GENERIC INTERFACE UnitDatabase(R,CU,CUList);
+GENERIC INTERFACE UnitDatabase(R,UU,UUList,CUList);
 
 IMPORT PhysicalUnit AS U;
 
@@ -7,33 +7,10 @@ TYPE
      where each one holds an array of (prefixed)units for different scales *)
   T =
     RECORD
-      first : UsualUnit := NIL;
-    END;
-
-  UsualUnitFlags = {
-    independent   (* don't use this unit as component of a composed unit, e.g. Hz *)
-    };
-  UsualUnitFlagSet = SET OF UsualUnitFlags;
-
-REVEAL
-  CU.UsualUnit=BRANDED REF RECORD
-      next     : UsualUnit;
-      unit     : U.T;
-      scales   : REF ARRAY OF ScaledUnit;
-      defScale : CARDINAL; (* index of the default scale *)
-      flags    : SET OF UsualUnitFlags;
+      first : UUList.T := NIL;
     END;
 
 TYPE
-  UsualUnit = CU.UsualUnit;
-
-  ScaledUnit =
-    RECORD
-      symbol : TEXT;
-      mag    : R.T;
-    END;
-
-
   ScaledUnitFlags = {
     isUnit,       (* use this constant for unit output,
                      if not set, this unit is ignored
@@ -53,7 +30,7 @@ TYPE
 (*scales must be given in increasing order!*)
 PROCEDURE AddUnit(VAR db:T;
                   READONLY unit:ARRAY OF U.ExpType;
-                  flags:=UsualUnitFlagSet{};
+                  flags:=UU.FlagSet{};
                   READONLY scales:ScaledUnitInitArray);
 
 PROCEDURE DecomposeUnit(READONLY db:T;unit:U.T):CUList.T;

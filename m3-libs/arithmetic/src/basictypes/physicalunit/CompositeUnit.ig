@@ -1,4 +1,4 @@
-GENERIC INTERFACE CompositeUnit();
+GENERIC INTERFACE CompositeUnit(UUList);
 
 IMPORT PhysicalUnit AS U;
 
@@ -6,10 +6,9 @@ CONST
   Brand = "CompositeUnit";
 
 TYPE
-  UsualUnit<:REFANY;
   T =
     RECORD
-      uu   : UsualUnit;
+      uu   : UUList.T;   (*only the single entry is meant*)
       exp  : U.ExpType;
     END;
 
