@@ -12,7 +12,6 @@ TYPE
   Plan    <: ADDRESS;
   Complex = RECORD r, i: LONGREAL; END;
   IODim   = RECORD n, is, os: CARDINAL; END;
-  FILE    = ADDRESS;
   R2RKind = {
     R2HC,    HC2R,    DHT,
     REDFT00, REDFT01, REDFT10, REDFT11,
@@ -31,7 +30,7 @@ REVEAL
 %typemap(m3rawintype)  fftw_iodim *    %{IODim%};
 %typemap(m3rawintype)  fftw_r2r_kind * %{R2RKind%};
 %typemap(m3rawrettype) fftw_plan       %{Plan%};
-
+ 
 
 %typemap(m3rawintype)  void  * %{ADDRESS%};
 // fftw_export_wisdom
@@ -43,7 +42,7 @@ REVEAL
 
 
 %insert(m3wrapintf) %{
-FROM FFTWLongRealRaw IMPORT R2RKind, IODim, FILE;
+FROM FFTWLongRealRaw IMPORT R2RKind, IODim;
 
 TYPE
   Plan    <: REFANY;
