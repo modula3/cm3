@@ -220,6 +220,7 @@ typedef struct rtvec_def{
   (GET_CODE (X) == LABEL_REF || GET_CODE (X) == SYMBOL_REF		\
    || GET_CODE (X) == CONST_INT || GET_CODE (X) == CONST_DOUBLE		\
    || GET_CODE (X) == CONST || GET_CODE (X) == HIGH			\
+   || GET_CODE (X) == CONST_VECTOR					\
    || GET_CODE (X) == CONSTANT_P_RTX)
 
 /* General accessor macros for accessing the fields of an rtx.  */
@@ -1273,6 +1274,7 @@ extern rtx *find_single_use		PROTO((rtx, rtx, rtx *));
 
 extern rtx output_constant_def		PROTO((union tree_node *));
 extern rtx immed_real_const		PROTO((union tree_node *));
+extern rtx immed_vector_const		PROTO((union tree_node *));
 extern union tree_node *make_tree	PROTO((union tree_node *, rtx));
 
 /* Define a default value for STORE_FLAG_VALUE.  */

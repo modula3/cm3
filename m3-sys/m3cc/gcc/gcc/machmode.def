@@ -100,6 +100,9 @@ DEF_MACHMODE (CDImode, "CDI", MODE_COMPLEX_INT, 16, 8, CTImode)
 DEF_MACHMODE (CTImode, "CTI", MODE_COMPLEX_INT, 32, 16, COImode)
 DEF_MACHMODE (COImode, "COI", MODE_COMPLEX_INT, 64, 32, VOIDmode)
 
+/* Vector mode.  */
+DEF_MACHMODE (SVmode, "SV", MODE_VECTOR, 16, 16, VOIDmode)
+
 /* BLKmode is used for structures, arrays, etc.
    that fit no more specific mode.  */
 DEF_MACHMODE (BLKmode, "BLK", MODE_RANDOM, 0, 0, VOIDmode)

@@ -2175,6 +2175,14 @@ canon_hash (x, mode)
 		 + (unsigned) CONST_DOUBLE_HIGH (x));
       return hash;
 
+    case CONST_VECTOR:
+      hash += (unsigned) code + (unsigned) GET_MODE (x);
+      hash += (unsigned) CONST_VECTOR_0 (x);
+      hash += (unsigned) CONST_VECTOR_1 (x);
+      hash += (unsigned) CONST_VECTOR_2 (x);
+      hash += (unsigned) CONST_VECTOR_3 (x);
+      return hash;
+
       /* Assume there is only one rtx object for any given label.  */
     case LABEL_REF:
       hash
@@ -7487,7 +7495,7 @@ cse_insn (insn, libcall_insn)
 
 	  p = insn;
 
-	  while (NEXT_INSN (p) != 0
+	  while (p != 0 && NEXT_INSN (p) != 0
 		 && GET_CODE (NEXT_INSN (p)) != BARRIER
 		 && GET_CODE (NEXT_INSN (p)) != CODE_LABEL)
 	    {
@@ -7496,7 +7504,11 @@ cse_insn (insn, libcall_insn)
 		 if NEXT_INSN (p) had INSN_DELETED_P set.  */
 	      if (GET_CODE (NEXT_INSN (p)) != NOTE
 		  || NOTE_LINE_NUMBER (NEXT_INSN (p)) == NOTE_INSN_DELETED)
-		p = PREV_INSN (delete_insn (NEXT_INSN (p)));
+		{
+		  p = delete_insn (NEXT_INSN (p));
+		  if (p)
+		    p = PREV_INSN (p);
+		}
 	      else
 		p = NEXT_INSN (p);
 	    }
@@ -7512,7 +7524,7 @@ cse_insn (insn, libcall_insn)
 	  /* We might have two BARRIERs separated by notes.  Delete the second
 	     one if so.  */
 
-	  if (p != insn && NEXT_INSN (p) != 0
+	  if (p != 0 && p != insn && NEXT_INSN (p) != 0
 	      && GET_CODE (NEXT_INSN (p)) == BARRIER)
 	    delete_insn (NEXT_INSN (p));
 
@@ -7938,6 +7950,9 @@ cse_insn (insn, libcall_insn)
      if the libcall is deleted.  */
 
   if (n_sets == 1 && sets[0].rtl && GET_CODE (SET_DEST (sets[0].rtl)) == REG
+#ifdef NEXT_SEMANTICS
+      && PREV_INSN(insn)
+#endif
       && NEXT_INSN (PREV_INSN (insn)) == insn
       && GET_CODE (SET_SRC (sets[0].rtl)) == REG
       && REGNO (SET_SRC (sets[0].rtl)) >= FIRST_PSEUDO_REGISTER

@@ -214,6 +214,10 @@ struct function
   rtx const_double_chain;
 };
 
+/* For objc-act.c, so hack_method_prototype can initialize temp_slots
+   without calling init_function_start.  */
+struct temp_slot *temp_slots;
+
 /* The FUNCTION_DECL for an inline function currently being expanded.  */
 extern tree inline_function_decl;
 

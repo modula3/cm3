@@ -29,6 +29,18 @@ Boston, MA 02111-1307, USA.  */
 #include "system.h"
 #include <signal.h>
 #include <setjmp.h>
+#include <sys/types.h>
+#include <ctype.h>
+#ifdef REPORT_EVENT
+#include <errno.h>
+#include "apple/make-support.h"
+#endif /* REPORT_EVENT */
+
+#ifdef NEXT_FAT_OUTPUT
+#include <mach-o/arch.h>
+#endif
+
+#include <sys/stat.h>
 
 #ifdef HAVE_SYS_RESOURCE_H
 # include <sys/resource.h>
@@ -73,6 +85,10 @@ Boston, MA 02111-1307, USA.  */
 #ifdef XCOFF_DEBUGGING_INFO
 #include "xcoffout.h"
 #endif
+
+#ifdef _WIN32
+char *exportNamesForDLL = NULL;
+#endif /* _WIN32 */
 
 #ifdef VMS
 /* The extra parameters substantially improve the I/O performance.  */
@@ -136,6 +152,10 @@ You Lose!  You must define PREFERRED_DEBUGGING_TYPE!
 #define DIR_SEPARATOR '/'
 #endif
 
+#ifdef EXIT_FROM_TOPLEV
+#define	exit(status) EXIT_FROM_TOPLEV (status)
+#endif
+
 extern int rtx_equal_function_value_matters;
 
 #if ! (defined (VMS) || defined (OS2))
@@ -168,6 +188,11 @@ extern void print_rtl ();
 extern void print_rtl_with_bb ();
 
 void rest_of_decl_compilation ();
+
+#ifdef NEXT_FAT_OUTPUT
+void set_target_architecture PROTO((const char *));
+#endif
+
 void error_with_file_and_line PVPROTO((const char *file,
 				       int line, const char *s, ...));
 void error_with_decl PVPROTO((tree decl, const char *s, ...));
@@ -295,6 +320,9 @@ int flow_dump = 0;
 int combine_dump = 0;
 int regmove_dump = 0;
 int sched_dump = 0;
+#ifdef NEXT_SEMANTICS
+int fppc_dump = 0;
+#endif
 int local_reg_dump = 0;
 int global_reg_dump = 0;
 int flow2_dump = 0;
@@ -417,6 +445,12 @@ int in_system_header = 0;
 
 int obey_regdecls = 0;
 
+#ifdef NEXT_FAT_OUTPUT
+/* The name of the architecture we are compiling. -arch */
+
+static char *architecture = 0;
+#endif /* NEXT_FAT_OUTPUT */
+
 /* Don't print functions as they are compiled and don't print
    times taken by the various passes.  -quiet.  */
 
@@ -441,6 +475,26 @@ int flag_caller_saves = 1;
 #else
 int flag_caller_saves = 0;
 #endif
+
+#ifdef NEXT_SEMANTICS
+/* Nonzero if the floating point precision controll pass should
+   be performed.   */
+
+#if defined (DEFAULT_FPPC)
+int flag_fppc = 1;
+#else
+int flag_fppc = 0;
+#endif
+
+int flag_check_mem = 0;
+
+/* Nonzero if we should generate dave-style indirections. */
+int flag_dave_indirect = 0;
+
+/* Function pointer to determine whether to inline a function.  */
+
+char *(*maybe_inline_func_p) PROTO ((tree)) = 0; 
+#endif /* NEXT_SEMANTICS */
 
 /* Nonzero if structures and unions should be returned in memory.
 
@@ -587,6 +641,23 @@ int flag_volatile_static;
 
 int flag_syntax_only = 0;
 
+/* Nonzero means dump symbol records from the parser to stdout.  */
+
+/* Flag to indicate, if indexing information needs to be generated */
+int flag_dump_symbols = 0;
+int flag_gen_index = 0;
+/* Socket is used to put indexing information.  */
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+int index_socket_fd = -1;
+static char *index_host_name = 0;       /* Hostname, used for indexing */
+static char *index_port_string = 0;     /* Port, used for indexing */
+static unsigned index_port_number = 0;  /* Port, used for indexing */
+void dump_symbol_info PROTO((char *, char *, int));
+int connect_to_socket PROTO((char *, unsigned));
+
+
 /* Nonzero means perform global cse.  */
 
 static int flag_gcse;
@@ -642,6 +713,59 @@ int flag_delayed_branch;
    only perform register offsets.  */
 
 int flag_pic;
+
+#ifdef HAVE_COALESCED_SYMBOLS
+
+/* Turn off DBX output for coalesced symbols as gdb is broken.  $$$  */
+static int old_write_symbols = NO_DEBUG;
+
+/* Nonzero if we're allowing coalescing of appropriate code/data.  */
+
+int flag_coalescing_enabled = 1;
+
+/* We coalesce template functions/methods by default.  */
+
+int flag_coalesce_templates = 1;
+
+/* We coalesce static vtables by default.  */
+
+int flag_coalesce_static_vtables = 1;
+
+/* Nonzero if we want to coalesce out-of-line non-external copies of
+   inline functions declared in header files.  */
+
+int flag_coalesce_out_of_line_inlines = 1;
+
+/* Nonzero if we should avoid outputting unreferenced static aggregates.  */
+
+int flag_ignore_unused_static_aggregates = 1;
+
+/* Nonzero if we're coalescing static RTTI functions/data.   */
+
+int flag_coalesce_rtti = 1;
+
+/* Nonzero to mark coalesced items as private_extern.  */
+
+int flag_privatize_coalesced = 1;
+
+/* FLAG_FORCE_COALESCED is currently settable only by a pragma.  The
+   effect is to cause the DECL_COALESCED bit to be set for all declarations
+   (vars + functions) found while this var is nonzero.  */
+
+int flag_force_coalesced = 0;
+
+/* Nonzero means we try to instantiate "pending" templates even if they
+   haven't been referenced.  This should never be needed, it's just an
+   escape route for turly's hackery -- sorry :-)  */
+
+int flag_instantiate_unreferenced_templates = 0;
+
+#endif /* HAVE_COALESCED_SYMBOLS */
+
+/* Nonzero if we attempt to put compiler-generated EH cleanup code in
+   a separate "__TEXT __eh_cleanup" section.  */
+
+int flag_separate_eh_cleanup_section = 1;
 
 /* Nonzero means generate extra code for exception handling and enable
    exception handling.  */
@@ -886,6 +1010,8 @@ lang_independent_options f_options[] =
    "Emit static const variables even if they are not used" },
   {"syntax-only", &flag_syntax_only, 1,
    "Check for syntax errors, then stop" },
+  {"dump-syms", &flag_dump_symbols, 1,
+   "Dump ascii description of the parse to stdout" },
   {"shared-data", &flag_shared_data, 1,
    "Mark data as shared rather than private" },
   {"caller-saves", &flag_caller_saves, 1,
@@ -923,6 +1049,27 @@ lang_independent_options f_options[] =
   {"pic", &flag_pic, 1,
    "Generate position independent code, if possible"},
   {"PIC", &flag_pic, 2, ""},
+#ifdef HAVE_COALESCED_SYMBOLS
+  {"coalesce", &flag_coalescing_enabled, 1,
+   "Enavble coalescing of certain functions and data"},
+  {"coalesce-templates", &flag_coalesce_templates, 1,
+   "Coalesce C++ template functions"},
+  {"privatize-coalesced", &flag_privatize_coalesced, 1,
+   "Mark coalesced symbols as private_extern"},
+  {"coalesce-rtti", &flag_coalesce_rtti, 1,
+   "[EXPERIMENTAL] (defaults on)"},
+  {"coalesce-static-vtables", &flag_coalesce_static_vtables, 1,
+   "[EXPERIMENTAL] (defaults on)"},
+  {"coalesce-out-of-line-inlines", &flag_coalesce_out_of_line_inlines, 1,
+   "[EXPERIMENTAL] (defaults on)"},
+  {"ignore-unused-static-aggregates", &flag_ignore_unused_static_aggregates, 1,
+   "[EXPERIMENTAL] (defaults on)"},
+  {"instantiate-unreferenced-templates",
+    &flag_instantiate_unreferenced_templates, 1, "instantiate pending "
+    "template decls even\n\t\t\t\t\tif it looks like they're unreferenced"},
+#endif
+  {"eh-cleanup-section", &flag_separate_eh_cleanup_section, 1,
+   "emit compiler-generated exception cleanup code in a separate section"},
   {"exceptions", &flag_exceptions, 1,
    "Enable exception handling" },
   {"new-exceptions", &flag_new_exceptions, 1,
@@ -979,6 +1126,10 @@ lang_independent_options f_options[] =
    "External symbols have a leading underscore" },
   {"ident", &flag_no_ident, 0,
    "Process #ident directives"}
+#ifdef NEXT_SEMANTICS
+, {"fppc", &flag_fppc, 1,
+   "Perform floating-point precision-control pass"}
+#endif
 };
 
 #define NUM_ELEM(a)  (sizeof (a) / sizeof ((a)[0]))
@@ -1033,7 +1184,28 @@ documented_lang_options[] =
   { "-fshort-enums", "Use the smallest fitting integer to hold enums"},
   { "-fno-short-enums", "" },
 
+#ifdef ENABLE_NEWLINE_MAPPING
+  {"-fmap-newline-to-cr", "Interpret \\n as carriage return (0x0D)"},
+  {"-fno-map-newline-to-cr", ""},
+#endif
+
+#ifdef PASCAL_STRINGS
+  {"-fpascal-strings", "Allow pascal-style strings - \"\\pexample\" "},
+  {"-fno-pascal-strings", ""},
+#endif
+
+#ifdef NEXT_SEMANTICS
+  { "-faltivec", "Enable SIMD programming model (vector extensions)" },
+  { "-fno-altivec", ""},
+#else
+  { "-fvec", "Enable SIMD programming model (vector extensions)" },
+  { "-fno-vec", ""},
+#endif
+
   { "-Wall", "Enable most warning messages" },
+#if defined (NEXT_SEMANTICS) || defined (NEXT_PDO)
+  {"-Wmost", "Enable most warning messages (without unused params warning)"},
+#endif
   { "-Wbad-function-cast",
     "Warn about casting functions to incompatible types" },
   { "-Wno-bad-function-cast", "" },
@@ -1052,6 +1224,9 @@ documented_lang_options[] =
   { "-Wno-conversion", "" },
   { "-Wformat", "Warn about printf format anomalies" },
   { "-Wno-format", "" },
+#ifdef NEXT_SEMANTICS
+  {"-Wnoformat", ""},
+#endif
   { "-Wimplicit-function-declaration",
     "Warn about implicit function declarations" },
   { "-Wno-implicit-function-declaration", "" },
@@ -1062,6 +1237,8 @@ documented_lang_options[] =
   { "-Wno-implicit", "" },
   { "-Wimport", "Warn about the use of the #import directive" },
   { "-Wno-import", "" },
+  { "-Wlong-double","" },
+  { "-Wno-long-double", "Do not warn about using 'long double'" },
   { "-Wlong-long","" },
   { "-Wno-long-long", "Do not warn about using 'long long' when -pedantic" },
   { "-Wmain", "Warn about suspicious declarations of main" },
@@ -1100,6 +1277,11 @@ documented_lang_options[] =
   { "-Wwrite-strings", "Mark strings as 'const char *'"},
   { "-Wno-write-strings", "" },
 
+#ifdef FOUR_CHAR_CONSTANTS
+  {"-Wfour-char-constants", "Allow MacOS-style four-char constants like 'APPL'"},
+  {"-Wno-four-char-constants", ""},
+#endif
+
   /* These are for languages with USE_CPPLIB.  */
   /* These options are already documented in cpplib.c */
   { "--help", "" },
@@ -1135,18 +1317,41 @@ documented_lang_options[] =
   /* These are for obj c.  */
   DEFINE_LANG_NAME ("Objective C")
   
+#if defined (NEXT_SEMANTICS) || defined(NEXT_PDO)
+  {"-fobjc", "" },
+  {"-fno-objc", "" },
+#else
   { "-lang-objc", "" },
+#endif
   { "-gen-decls", "Dump decls to a .decl file" },
   { "-fgnu-runtime", "Generate code for GNU runtime environment" },
   { "-fno-gnu-runtime", "" },
   { "-fnext-runtime", "Generate code for NeXT runtime environment" },
   { "-fno-next-runtime", "" },
+
+#ifdef MODERN_OBJC_SYNTAX
+  {"-fmodern-objc-syntax", "Enable 'modern' Objective-C syntax" },
+  {"-fno-modern-objc-syntax", ""},
+#endif
+
   { "-Wselector", "Warn if a selector has multiple methods" },
   { "-Wno-selector", "" },
   { "-Wprotocol", "" },
   { "-Wno-protocol", "Do not warn if inherited methods are unimplemented"},
   { "-print-objc-runtime-info",
     "Generate C header of platform specific features" },
+
+
+#ifdef NEXT_SEMANTICS
+  /* These are for objective-c */
+  /* NeXT should change to use the -fobjc and -fobjc++ ones above */
+  {"-ObjC++", "" },
+  {"-ObjC", "" },
+  {"-dynamic", "" },
+  {"-bundle", "" },
+  {"-static", "" },
+  {"-threeThreeMethodEncoding", "" },
+#endif
 
 #include "options.h"
   
@@ -1241,10 +1446,32 @@ int warn_inline;
 
 int warn_aggregate_return;
 
+/* Nonzero to warn about "poor" field alignment.  */
+int warn_poor_field_align = 0;
+
+#ifdef APPLE_ALIGN_CHECK
+/* warn_osx1_size_align - one of
+    1: warn about struct field size changes
+    2: (1) + warn about field alignment changes and struct size changes  */
+
+int warn_osx1_size_align = 0;
+#endif
+
 /* Likewise for -W.  */
 
 lang_independent_options W_options[] =
 {
+#ifdef NEXT_CPP_PRECOMP
+  {"precomp", NULL, 1, "$$$ what's -Wprecomp do?"},
+#endif
+#ifdef APPLE_ALIGN_CHECK
+  {"field-size-changed-macosx1", &warn_osx1_size_align, 1,
+   "Warn about struct fields whose sizes have changed due to the new post-OS X 10.0 gcc alignment rules"},
+  {"align-changed-macosx1", &warn_osx1_size_align, 2,
+   "Warn about structs and fields whose sizes or alignments have changed from the OS X 10.0 gcc"},
+#endif
+  {"poor-field-align", &warn_poor_field_align, 1,
+   "Warn about poor struct field alignment (e.g., badly aligned doubles)" },
   {"unused", &warn_unused, 1, "Warn when a variable is unused" },
   {"error", &warnings_are_errors, 1, ""},
   {"shadow", &warn_shadow, 1, "Warn when one local variable shadows another" },
@@ -1409,6 +1636,68 @@ print_time (str, total)
 	   str, total / 1000000, total % 1000000);
 }
 
+#ifdef REPORT_EVENT
+#include "c-tree.h"
+void
+v_report_event (type, decl, file, line, msg, ap)
+      int type;
+      tree decl;
+      char *file;
+      int line;
+      const char *msg;
+      va_list ap;
+{
+  char *name;
+  tree method_name = maybe_objc_method_name (decl);
+
+  if (decl == NULL)
+    name = "top level";
+  else if (method_name)
+    name = IDENTIFIER_POINTER (method_name);
+  else
+    name = (*decl_printable_name) (decl, 2);
+
+  V_REPORT_EVENT (type, name, file, line, msg, ap);
+}
+
+void
+v_report_event_with_prefix (type, decl, file, line, prefix, msg, ap)
+      int type;
+      tree decl;
+      char *file;
+      int line;
+      char *prefix;
+      char *msg;
+      va_list ap;
+{
+  char *temp;
+  if (!prefix)
+    temp = msg;
+  else if (!msg)
+    temp = prefix;
+  else
+    {
+      temp = (char *) malloc (strlen (prefix) + (msg ? strlen (msg) : 0) + 1);
+      if (temp)
+	strcat (strcpy (temp, prefix), msg);
+    }
+
+  v_report_event (type, decl, file, line, temp ? temp : prefix, ap);
+
+  if (prefix && msg)
+    free (temp);
+}
+
+void
+report_event (int type, tree decl, char *file, int line, char *msg, ...)
+{
+  va_list ap;
+  va_start (ap, msg);
+  v_report_event (type, decl, file, line, msg, ap);
+  va_end (ap);
+}
+#endif /* REPORT_EVENT */
+
 /* Count an error or warning.  Return 1 if the message should be printed.  */
 
 int
@@ -1417,6 +1706,32 @@ count_error (warningp)
 {
   if (warningp && inhibit_warnings)
     return 0;
+
+#ifdef NEXT_FAT_OUTPUT
+  if (!warningcount && !errorcount && architecture)
+    {
+      const char *a;
+
+      if (! strcmp (architecture, "i386"))
+	a = "Intel";
+      else if (! strcmp (architecture, "hppa"))
+	a = "HPPA";
+      else if (! strcmp (architecture, "m68k"))
+	a = "NeXT";
+      else if (! strcmp (architecture, "sparc"))
+	a = "Sparc";
+      else if (! strcmp (architecture, "ppc"))
+	a = "PowerPC";
+      else
+	a = architecture;
+
+#ifdef REPORT_EVENT
+      report_event (1, current_function_decl, input_filename, lineno,
+		    "For architecture %s:", a);
+#endif
+      fprintf (stderr, "For architecture %s:\n", architecture);
+    }
+#endif /* NEXT_FAT_OUTPUT */
 
   if (warningp && !warnings_are_errors)
     warningcount++;
@@ -1442,6 +1757,10 @@ void
 pfatal_with_name (name)
   const char *name;
 {
+#ifdef REPORT_EVENT
+  report_event (0, current_function_decl, input_filename, lineno,
+		"%s: %s", name, strerror (errno));
+#endif
   fprintf (stderr, "%s: ", progname);
   perror (name);
   exit (FATAL_EXIT_CODE);
@@ -1451,6 +1770,10 @@ void
 fatal_io_error (name)
   const char *name;
 {
+#ifdef REPORT_EVENT
+  report_event (0, current_function_decl, input_filename, lineno,
+		"%s: I/O error", name);
+#endif
   notice ("%s: %s: I/O error\n", progname, name);
   exit (FATAL_EXIT_CODE);
 }
@@ -1683,6 +2006,9 @@ v_message_with_file_and_line (file, line, warn, msgid, ap)
      const char *msgid;
      va_list ap;
 {
+#ifdef REPORT_EVENT
+  v_report_event (warn, current_function_decl, file, line, msgid, ap);
+#endif
   report_file_and_line (file, line, warn);
   vnotice (stderr, msgid, ap);
   fputc ('\n', stderr);
@@ -1698,6 +2024,11 @@ v_message_with_decl (decl, warn, msgid, ap)
      va_list ap;
 {
   const char *p;
+#ifdef REPORT_EVENT
+  char *msg = (char *) malloc ((size_t) 512);
+  if (msg)
+    *msg = '\0';
+#endif
 
   report_file_and_line (DECL_SOURCE_FILE (decl),
 			DECL_SOURCE_LINE (decl), warn);
@@ -1726,6 +2057,10 @@ v_message_with_decl (decl, warn, msgid, ap)
              
       if (width > 255L) width = 255L;	/* arbitrary */
       sprintf (fmt, "%%.%lds", width);
+#ifdef REPORT_EVENT
+      if (msg)
+	sprintf (msg, fmt, _(msgid));
+#endif
       fprintf (stderr, fmt, _(msgid));
     }
 
@@ -1734,6 +2069,18 @@ v_message_with_decl (decl, warn, msgid, ap)
       const char *n = (DECL_NAME (decl)
 		 ? (*decl_printable_name) (decl, 2)
 		 : "((anonymous))");
+#ifdef REPORT_EVENT
+      char *temp = msg;
+      msg = (char *) malloc ((msg ? strlen (msg) : 0) + strlen (n) + 1);
+      if (msg)
+	{
+	  *msg = '\0';
+	  if (temp)
+	    strcpy (msg, temp);
+	  strcat (msg, n);
+	}
+      free (temp);
+#endif
       fputs (n, stderr);
       while (*p)
 	{
@@ -1742,6 +2089,14 @@ v_message_with_decl (decl, warn, msgid, ap)
 	    break;
 	}
     }
+
+#ifdef REPORT_EVENT
+  v_report_event_with_prefix (warn,
+			      current_function_decl,
+			      DECL_SOURCE_FILE (decl), DECL_SOURCE_LINE (decl),
+			      msg, p, ap);
+  free (msg);
+#endif
 
   if (*p)			/* Print the rest of the message.  */
     vmessage ((char *)NULL, p, ap);
@@ -2217,6 +2572,10 @@ vsorry (msgid, ap)
      va_list ap;
 {
   sorrycount++;
+#ifdef REPORT_EVENT
+  v_report_event_with_prefix (0, current_function_decl, input_filename, lineno,
+			      "sorry, not implemented:", msgid, ap);
+#endif
   if (input_filename)
     fprintf (stderr, "%s:%d: ", input_filename, lineno);
   else
@@ -2777,6 +3136,12 @@ wrapup_global_declarations (vec, len)
 	    {
 	      reconsider = 1;
 	      temporary_allocation ();
+
+#if 0
+#ifdef HAVE_COALESCED_SYMBOLS
+	      MARK_OUT_OF_INLINE_FUNCTION_COALESCED (decl);
+#endif
+#endif
 	      output_inline_function (decl);
 	      permanent_allocation (1);
 	    }
@@ -2896,6 +3261,68 @@ check_global_declarations (vec, len)
     }
 }
 
+/* Establish socket connection to put the indexing information.  */
+int 
+connect_to_socket (hostname, port_number)
+    char *hostname;
+    unsigned port_number;
+{
+    int socket_fd;
+    struct sockaddr_in addr;
+   
+    bzero ((char *)&addr, sizeof (addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = (hostname == NULL) ? 
+                           INADDR_LOOPBACK : 
+                           inet_addr (hostname);
+    addr.sin_port = htons (port_number);
+    
+    socket_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (socket_fd < 0)
+      {
+         warning("Can not create socket: %s", strerror (errno));
+         return -1;
+      }
+    if (connect (socket_fd, (struct sockaddr *)&addr, sizeof (addr)) < 0)
+      {
+         warning("Can not connect to socket: %s", strerror (errno));
+         return -1;
+      }
+    return socket_fd;
+}
+
+/* Dump the indexing information using already established socket connection.  */
+void 
+dump_symbol_info (info, name, number)
+    char *info; /* symbol information */
+    char *name; /* name of the symbol */
+    int  number; /* line number */
+{
+    char buf[25];
+
+    if (info)
+      {
+        write (index_socket_fd, (void *) info, strlen(info));
+        sprintf(&buf[0],"%d ",c_language); 
+        write (index_socket_fd, (void *) buf, strlen(buf));
+      }
+
+    if (!name && number == -1)
+      return;
+
+    if (name)
+      write (index_socket_fd, (void *) name, strlen(name));
+
+    if (!info && number == -1)
+      return;
+
+    if (number != -1)
+      sprintf(&buf[0]," %u\n",number); /* Max buf length is 25 */
+    else
+      sprintf(&buf[0],"\n"); 
+    write (index_socket_fd, (void *) buf, strlen (buf));
+}
+
 /* Compile an entire file of output from cpp, named NAME.
    Write a file of assembly output and various debugging dumps.  */
 
@@ -2905,8 +3332,10 @@ compile_file (name)
 {
   tree globals;
   int start_time;
-
   int name_specified = name != 0;
+#ifdef DWARF2_UNWIND_INFO
+  int dwarf2_framing;
+#endif
 
   if (dump_base_name == 0)
     dump_base_name = name ? name : "gccdump";
@@ -3144,6 +3573,40 @@ compile_file (name)
   if (main_input_filename == 0)
     main_input_filename = name;
 
+  if (flag_gen_index)
+  {
+    /* open the socket */
+    index_socket_fd = connect_to_socket(index_host_name, index_port_number);
+    if (index_socket_fd == -1)
+     {
+       /* can not open the socket */
+       warning ("Indexing information is not produced.");
+     }
+    else
+      {   
+        char *buf = NULL;
+        int length;
+        if (main_input_filename)
+          length = strlen (main_input_filename);
+        else
+          length = 1;
+        buf = (char *) malloc (sizeof (char) * (40 + length));
+        /* Put the index begin marker */
+        /* 2, 2 = 2nd Part of 2-part info */
+        sprintf (buf, "pbxindex-begin v1.1 0x%08lX %02u/%02u %s\n",
+                (unsigned long) getppid(), 2, 2, main_input_filename);
+        write (index_socket_fd, buf, strlen (buf));
+        free (buf);
+      }
+  }
+
+  if (flag_dump_symbols)
+    /* Print file resume record.  */
+    printf ("<Fm %s\n", main_input_filename);
+  if (flag_gen_index)
+    /* Print file resume record.  */
+    dump_symbol_info ("<Fm ", main_input_filename, -1);
+
   if (flag_syntax_only)
     {
       write_symbols = NO_DEBUG;
@@ -3244,7 +3707,8 @@ compile_file (name)
     TIMEVAR (symout_time, dwarfout_init (asm_out_file, main_input_filename));
 #endif
 #ifdef DWARF2_UNWIND_INFO
-  if (dwarf2out_do_frame ())
+  dwarf2_framing = dwarf2out_do_frame ();
+  if (dwarf2_framing)
     dwarf2out_frame_init ();
 #endif
 #ifdef DWARF2_DEBUGGING_INFO
@@ -3273,9 +3737,46 @@ compile_file (name)
 	poplevel (0, 0, 0);
     }
 
+#if defined (NEXT_PDO) && defined (_WIN32)
+  /* If the exportNamesForDLL variable is non-NULL, then there are exported
+     symbols and a .drectve section needs to be put out.  All that has to be
+     done is to write a ".section .drectve" followed by a ".ascii "xxx\0"" 
+     statement where xxx is a comma separated list of what symbols to export.
+     The rest of the work is done by the linker.  */
+  if (exportNamesForDLL && *exportNamesForDLL)
+    {
+      /* I added the "s" section flag to gas to generate the right 
+	 characteristics flags.  This is a non-standard flag and 
+	 is only used on Windows.  */
+      fprintf (asm_out_file, ".section\t.drectve , \"s\"\n");
+
+      /* We sneak the -dll linker flag in here so that nothing else
+	 in the compiler needs to change.  The effect is that if you
+	 have something declared as __declspec(dllexport) you are
+	 implicitly making a dll and that's what the compiler will 
+	 do for you.  */
+      /* However, doing so causes the following problem: If you are unfortunate
+	 enough to include a header file that declares a function to be
+	 __declspec(dllimport), and you later define that function in your
+	 file, the compiler silently changes the __declspec(dllimport) to a
+	 __declspec(dllexport), and also tells the linker that it's supposed
+	 to create a dll, even if the file in question has a main() in it,
+	 meaning that the compiler should really be creating an executable
+	 instead.  Therefore, the -dll flag is no longer sneaked in here;
+	 the user MUST specify the -dll flag explicitly when linking.  */
+      fprintf (asm_out_file, "\t.ascii \"%s\\0\"\n", exportNamesForDLL);
+    }
+#endif /* NEXT_PDO && _WIN32 */
+
   /* Compilation is now finished except for writing
      what's left of the symbol table output.  */
 
+  if (flag_dump_symbols)
+    /* Write out file end record.  */
+    printf ("-Fm %s\n", main_input_filename);
+  if (flag_gen_index)
+    /* Write out file end record.  */
+    dump_symbol_info ("-Fm ", main_input_filename, -1);
   parse_time += get_run_time () - start_time;
 
   parse_time -= integration_time;
@@ -3317,7 +3818,6 @@ compile_file (name)
        the exception table.  */
 
     output_exception_table ();
-
     check_global_declarations (vec, len);
   }
 
@@ -3343,7 +3843,7 @@ compile_file (name)
 #endif
 
 #ifdef DWARF2_UNWIND_INFO
-  if (dwarf2out_do_frame ())
+  if (dwarf2_framing)
     dwarf2out_frame_finish ();
 #endif
 
@@ -3352,6 +3852,13 @@ compile_file (name)
     TIMEVAR (symout_time,
 	     {
 	       dwarf2out_finish ();
+	     });
+#endif
+
+#ifdef MACHO_PIC
+    TIMEVAR (symout_time,
+	     {
+	       machopic_finish (asm_out_file);
 	     });
 #endif
 
@@ -3615,12 +4122,18 @@ rest_of_compilation (decl)
       int inlinable = 0;
       const char *lose;
 
+#ifdef NEXT_SEMANTICS
+#define OPTIMIZE_FLAG	flag_keep_inline_functions
+#else
+#define OPTIMIZE_FLAG	! optimize
+#endif
+
       /* If requested, consider whether to make this function inline.  */
       if (DECL_INLINE (decl) || flag_inline_functions)
 	TIMEVAR (integration_time,
 		 {
 		   lose = function_cannot_inline_p (decl);
-		   if (lose || ! optimize)
+		   if (lose || OPTIMIZE_FLAG)
 		     {
 		       if (warn_inline && DECL_INLINE (decl))
 			 warning_with_decl (decl, lose);
@@ -4370,12 +4883,21 @@ rest_of_compilation (decl)
     }
 #endif
 
+#ifdef HAVE_COALESCED_SYMBOLS
+    /* gdb broken: don't output stabs for a coalesced symbol.  */
+    old_write_symbols = write_symbols;
+    if (DECL_COALESCED (decl))
+      write_symbols = NO_DEBUG;
+
+#endif
+
   /* Now turn the rtl into assembler code.  */
 
   TIMEVAR (final_time,
 	   {
 	     rtx x;
 	     char *fnname;
+	     int jumpto;
 
 	     /* Get the function's name, as described by its RTL.
 		This may be different from the DECL_NAME name used
@@ -4389,10 +4911,12 @@ rest_of_compilation (decl)
 	       abort ();
 	     fnname = XSTR (x, 0);
 
+	     jumpto = look_for_jumpto_pattern(insns, optimize);
+
 	     assemble_start_function (decl, fnname);
-	     final_start_function (insns, asm_out_file, optimize);
-	     final (insns, asm_out_file, optimize, 0);
-	     final_end_function (insns, asm_out_file, optimize);
+	     final_start_function (insns, asm_out_file, optimize, jumpto);
+	     final (insns, asm_out_file, optimize, 0, jumpto);
+	     final_end_function (insns, asm_out_file, optimize, jumpto);
 	     assemble_end_function (decl, fnname);
 	     if (! quiet_flag)
 	       fflush (asm_out_file);
@@ -4427,6 +4951,10 @@ rest_of_compilation (decl)
 #ifdef DWARF2_DEBUGGING_INFO
   if (write_symbols == DWARF2_DEBUG)
     TIMEVAR (symout_time, dwarf2out_decl (decl));
+#endif
+
+#ifdef HAVE_COALESCED_SYMBOLS
+  write_symbols = old_write_symbols;
 #endif
 
  exit_rest_of_compilation:
@@ -4840,6 +5368,14 @@ main (argc, argv)
 	}
     }
 
+#if defined (MACHO_PIC) && defined (I386)
+  /* 386 Optimization levels -- level 2 only for now.  */
+  if (optimize >= 2)
+    optimize = 2;
+  else
+    optimize = 0;
+#endif /* MACHO_PIC && I386 */
+ 
   obey_regdecls = (optimize == 0);
 
   if (optimize >= 1)
@@ -4930,6 +5466,11 @@ main (argc, argv)
 	  else if (str[0] == 'd')
 	    {
 	      register char *p = &str[1];
+#ifdef _WIN32
+	      /* We use -dll to indicate that we're building a dll,
+		 so don't process this.  */
+	      if (strcmp (str, "dll") && strcmp (str, "dynamic"))
+#endif /* _WIN32 */
 	      while (*p)
 		switch (*p++)
 		  {
@@ -4938,6 +5479,9 @@ main (argc, argv)
  		    combine_dump = 1;
 #ifdef DELAY_SLOTS
  		    dbr_sched_dump = 1;
+#endif
+#ifdef NEXT_SEMANTICS
+ 		    fppc_dump = 1;
 #endif
  		    flow_dump = 1;
  		    flow2_dump = 1;
@@ -5041,6 +5585,11 @@ main (argc, argv)
 		  case 'y':
 		    set_yydebug (1);
 		    break;
+#ifdef NEXT_SEMANTICS
+		  case 'P':
+		    fppc_dump = 1;
+		    break;
+#endif
 		  case 'x':
 		    rtl_dump_and_exit = 1;
 		    break;
@@ -5097,6 +5646,26 @@ main (argc, argv)
 		fix_register (&p[10], 0, 1);
 	      else if (!strncmp (p, "call-saved-", 11))
 		fix_register (&p[11], 0, 0);
+#ifdef NEXT_FAT_OUTPUT
+	      else if (!strncmp (p, "orce_cpusubtype_ALL", 19))
+		;
+#endif
+#if defined (NEXT_SEMANTICS) || defined (NEXT_PDO)
+	      else if (!strncmp (p, "ramework", 8))
+		{
+		  if (i + 1 < argc)
+		    i++;
+		  else
+		    error ("Missing argument to -framework");
+		}
+	      else if (!strncmp (p, "ilelist", 7))
+		{
+		  if (i + 1 < argc)
+		    i++;
+		  else
+		    error ("Missing argument to -filelist");
+		}
+#endif
 	      else
 		error ("Invalid option `%s'", argv[i]);
 	    }
@@ -5108,6 +5677,15 @@ main (argc, argv)
 	    pedantic = 1;
 	  else if (!strcmp (str, "pedantic-errors"))
 	    flag_pedantic_errors = pedantic = 1;
+#ifdef NEXT_FAT_OUTPUT
+	  else if (!strcmp (str, "arch"))
+	    {
+	      if (i + 1 < argc)
+		architecture = argv[++i];
+	      else
+		error ("Missing argument to -arch");
+	    }
+#endif /* NEXT_FAT_OUTPUT */
 	  else if (!strcmp (str, "quiet"))
 	    quiet_flag = 1;
 	  else if (!strcmp (str, "version"))
@@ -5138,6 +5716,9 @@ main (argc, argv)
 		{
 		  if (!strcmp (p, W_options[j].string))
 		    {
+#ifdef NEXT_SEMANTICS
+		      if (W_options[j].variable)
+#endif
 		      *W_options[j].variable = W_options[j].on_value;
 		      /* A goto here would be cleaner,
 			 but breaks the vax pcc.  */
@@ -5146,6 +5727,9 @@ main (argc, argv)
 		  if (p[0] == 'n' && p[1] == 'o' && p[2] == '-'
 		      && ! strcmp (p+3, W_options[j].string))
 		    {
+#ifdef NEXT_SEMANTICS
+		      if (W_options[j].variable)
+#endif
 		      *W_options[j].variable = ! W_options[j].on_value;
 		      found = 1;
 		    }
@@ -5351,6 +5935,27 @@ main (argc, argv)
 	filename = argv[i];
     }
 
+  /* Check the environment variable for indexing */
+  if (!flag_gen_index)
+  {     
+     index_port_string = getenv ("PB_INDEX_SOCKET_PORT");
+     if (index_port_string && *index_port_string)
+       {
+           index_port_number = atoi (index_port_string);
+           flag_gen_index  = 1;
+   
+           index_host_name = getenv ("PB_INDEX_SOCKET_HOSTNAME");
+           if (index_host_name && *index_host_name)
+             {  /* keep the host name */ } 
+           else
+             {
+                index_host_name = NULL;
+             }
+       } 
+       else
+         flag_gen_index = 0; 
+  }     
+
   /* Checker uses the frame pointer.  */
   if (flag_check_memory_usage)
     flag_omit_frame_pointer = 0;
@@ -5438,6 +6043,19 @@ main (argc, argv)
     }
 
   compile_file (filename);
+  if (flag_gen_index)
+  {   
+    char buf[16] = "pbxindex-end ?\n";
+    /* Put the index end marker */
+    write (index_socket_fd, &buf[0], strlen (&buf[0]));
+
+    /* close named pipe */
+    if (close (index_socket_fd) < 0)
+      {
+        warning ("Can not close the socket used to put indexing information");
+      }
+  }       
+
 
 #if !defined(OS2) && !defined(VMS) && (!defined(_WIN32) || defined (__CYGWIN__)) && !defined(__INTERIX)
   if (flag_print_mem)
@@ -5498,9 +6116,96 @@ set_target_switch (name)
       }
 #endif
 
+#ifdef NEXT_FAT_OUTPUT
+  if (!valid_target_option && architecture)
+    {
+      int len = strlen (architecture);
+      if (! strncmp (name, architecture, len) && name[len] == ':')
+	{
+	  if (getenv ("DEBUGING_GCC"))
+	    printf ("applying -m%s for arch %s\n", name + len, architecture);
+	  set_target_switch (name + len + 1);
+	  return;
+	}
+    }
+
+#ifdef DEFAULT_TARGET_ARCH
+  if (!valid_target_option && !architecture)
+    {
+      int len = strlen (DEFAULT_TARGET_ARCH);
+      if (! strncmp (name, DEFAULT_TARGET_ARCH, len) && name[len] == ':')
+	{
+	  if (getenv ("DEBUGGING_GCC"))
+	    printf ("applying -m%s for arch %s\n", name + len, 
+		    DEFAULT_TARGET_ARCH);
+	  set_target_switch (name + len + 1);
+	  return;
+	}
+    }
+#endif
+  
+  if (! valid_target_option)
+    {
+      NXArchInfo *info = (NXArchInfo*) NXGetAllArchInfos ();
+      register int j;
+      
+      for (j = 0; info[j].name; j++)
+	{
+	  int len = strlen (info[j].name);
+	  if (! strncmp (name, info[j].name, len)
+	      && name[len] == ':')
+	    {
+	      if (getenv ("DEBUGGING_GCC"))
+		printf ("ignoring -m%s for arch %s\n",
+			name + len + 1,
+			info[j].name);
+              return;
+	    }
+	}
+    }
+  
+  if (!valid_target_option && !architecture)
+#else /* ! NEXT_FAT_OUTPUT */
   if (!valid_target_option)
+#endif /* NEXT_FAT_OUTPUT */
     error ("Invalid option `%s'", name);
 }
+
+#ifdef NEXT_FAT_OUTPUT
+/* Decode -arch options.  */
+
+/* This table, filled in by the tm.h file, lists the known values of the
+   -arch option and their effect on `target_flags'.  */
+
+void
+set_target_architecture (name)
+     const char *name;
+{
+  static struct {
+    char *name; 
+    int value;
+  } target_arch [] = TARGET_ARCHITECTURE;
+  register int j;
+  int found = 0;
+
+  if (name == 0) return;
+
+  for (j = 0; j < sizeof target_arch / sizeof target_arch[0]; j++)
+    {
+      if (!strcmp (target_arch[j].name, name))
+	{
+	  if (target_arch[j].value < 0)
+	    target_flags &= ~-target_arch[j].value;
+	  else
+	    target_flags |= target_arch[j].value;
+	  found = 1;
+	}
+    }
+
+  if (!found)
+    warning ("-arch `%s' not understood", name);
+}
+#endif /* NEXT_FAT_OUTPUT */
 
 /* Print version information to FILE.
    Each line begins with INDENT (for the case where FILE is the
@@ -5639,6 +6344,14 @@ void
 debug_start_source_file (filename)
      register char *filename ATTRIBUTE_UNUSED;
 {
+  if (flag_dump_symbols)
+    /* Print out file resume record.
+       (cpp has already begun and suspended records for file.)  */
+    printf ("<Fm %s\n", filename);
+  if (flag_gen_index)
+    /* Print out file resume record.
+       (cpp has already begun and suspended records for file.)  */
+    dump_symbol_info ("<Fm ", filename, -1);
 #ifdef DBX_DEBUGGING_INFO
   if (write_symbols == DBX_DEBUG)
     dbxout_start_new_source_file (filename);
@@ -5666,6 +6379,10 @@ void
 debug_end_source_file (lineno)
      register unsigned lineno ATTRIBUTE_UNUSED;
 {
+  if (flag_dump_symbols)
+     printf ("-Fm %u\n", lineno);
+  if (flag_gen_index)
+     dump_symbol_info ("-Fm ", NULL, lineno);
 #ifdef DBX_DEBUGGING_INFO
   if (write_symbols == DBX_DEBUG)
     dbxout_resume_previous_source_file ();

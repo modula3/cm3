@@ -1,5 +1,12 @@
 #! /bin/sh
 
+##################### MacOSX SPECIFIC ############################
+# NB: Ordinarily, this file (gcc/configure) is generated from
+# gcc/configure.in.  But not on MacOS X; furthermore, gcc/configure
+# must have a MORE RECENT TIMESTAMP than gcc/configure.in or the
+# build will fail.
+##################### MacOSX SPECIFIC ############################
+
 # Guess values for system-dependent variables and create Makefiles.
 # Generated automatically using autoconf version 2.13 
 # Copyright (C) 1992, 93, 94, 95, 96 Free Software Foundation, Inc.
@@ -880,6 +887,10 @@ case x${enable_threads_flag} in
 		exit 1
 		;;
 esac
+
+# Declare known makefile conditions
+all_makefile_conds="next-headers next-pdo solaris-pdo win32-pdo"
+
 
 # Check whether --enable-objc-gc or --disable-objc-gc was given.
 if test "${enable_objc_gc+set}" = set; then
@@ -2869,6 +2880,8 @@ host_xm_file=
 host_xm_defines=
 host_xmake_file=
 host_truncate_target=
+# Set name of null device.
+null=`case $canon_build in *win*) echo NUL: ;; *) echo /dev/null ;; esac`
 host_exeext=
 
 # Decode the host machine, then the target machine.
@@ -3008,16 +3021,6 @@ for machine in $build $host $target; do
 	a29k-*-*)			# Default a29k environment.
 		use_collect2=yes
 		;;
-	alpha*-*-freebsd*)
-		tm_file="${tm_file} alpha/freebsd.h"
-		xm_file=alpha/xm-freebsd.h
-		# On FreeBSD, the headers are already ok.
-		fixincludes=Makefile.in
-		xmake_file=alpha/x-freebsd
-		gas=yes
-		gnu_ld=yes
-		stabs=yes
-		;;
 	alpha-*-interix)
 		tm_file="${tm_file} alpha/alpha32.h interix.h alpha/alpha-interix.h"
 
@@ -3123,6 +3126,15 @@ for machine in $build $host $target; do
 			extra_passes="mips-tfile mips-tdump"
 		fi
 		use_collect2=yes
+		;;
+	alpha-nextpdo-osf3*)
+		tm_file=alpha/next-pdo.h 
+		tmake_file=alpha/t-nextpdo
+		extra_programs=ld
+		extra_passes="cc1obj cc1plus mips-tfile mips-tdump"
+		broken_install=yes
+		use_collect2=yes
+		makefile_cond="$makefile_cond next-pdo"
 		thread_file='vxworks'
 		;;
 	alpha*-*-winnt*)
@@ -3363,6 +3375,29 @@ for machine in $build $host $target; do
 		install_headers_dir=install-headers-cpio
 		use_collect2=yes
 		;;
+	hppa1.1-*-openstep*)
+		cpu_type=pa
+		tm_file=pa/next.h
+		out_file=pa/next.c
+		xm_file=pa/xm-next.h
+		tmake_file=apple/t-apple
+		xmake_file=apple/x-openstep
+		extra_objs=machopic.o
+		extra_passes=cc1obj
+		fixincludes=Makefile.in # On NeXT, the headers are ok already.
+		makefile_cond="$makefile_cond next-headers"
+		;;
+	hppa1.1-nextpdo-hpux*)
+		cpu_type=pa
+		tm_file=pa/next-pdo.h
+		xm_file=pa/xm-pahpux.h
+		tmake_file=pa/t-nextpdo
+		extra_programs=ld
+		extra_passes="cc1obj cc1plus"
+		broken_install=yes
+		use_collect2=yes
+		makefile_cond="$makefile_cond next-pdo"
+		;;
 	hppa1.1-*-hpux10* | hppa2*-*-hpux10*)
 		target_cpu_default="MASK_PA_11"
 		tm_file="${tm_file} pa/pa-hpux.h pa/pa-hpux10.h"
@@ -3491,6 +3526,32 @@ for machine in $build $host $target; do
  		if test x$enable_threads = xyes; then
 			thread_file='mach'
 		fi
+		;;
+	i[34567]86-*-openstep*)
+		out_file=i386/openstep.c
+		xm_file=i386/xm-openstep.h
+		tm_file=i386/openstep.h
+		tmake_file=apple/t-apple
+		xmake_file=apple/x-openstep
+		extra_objs=machopic.o
+		extra_passes=cc1obj
+		fixincludes=Makefile.in # On NeXT, the headers are ok already.
+		makefile_cond="$makefile_cond next-headers"
+		;;
+	i[34567]86-*-macosx* | \
+	i[34567]86-*-darwin*)
+		out_file=i386/openstep.c
+		xm_file=i386/xm-openstep.h
+		tm_file=i386/openstep.h
+		tmake_file=apple/t-apple
+		xmake_file=apple/x-darwin
+		extra_objs=machopic.o
+		extra_passes=cc1obj
+		fixincludes=Makefile.in # On NeXT, the headers are ok already.
+ 		if [ x$enable_threads = xyes ]; then
+			thread_file='mach'
+		fi
+		makefile_cond="$makefile_cond next-headers"
 		;;
 	i[34567]86-sequent-bsd*) 		# 80386 from Sequent
 		use_collect2=yes
@@ -3849,6 +3910,21 @@ for machine in $build $host $target; do
 		tm_file=i386/vsta.h
 		tmake_file=i386/t-vsta
 		xmake_file=i386/x-vsta
+		;;
+	i[345]86-nextpdo-winnt3*)
+		cpu_type=i386
+		out_file=i386/i386.c
+		tm_file=i386/next-pdo.h
+		xm_file=i386/xm-winnt.h
+		xmake_file=winnt/x-winnt
+		tmake_file=i386/t-winnt
+		extra_objs="winnt.o"
+		extra_gcc_objs="spawnv.o oldnames.o"
+		extra_passes=cc1obj.exe
+		extra_programs=ld.exe
+		broken_install=yes
+		fixincludes=Makefile.in # At the moment there is nothing to fix
+		makefile_cond="$makefile_cond next-pdo win32-pdo"
 		;;
 	i[34567]86-*-win32)
 		xm_file="${xm_file} i386/xm-cygwin.h"
@@ -4305,9 +4381,24 @@ for machine in $build $host $target; do
 		extra_parts="crtbegin.o crtend.o"
 		extra_headers=math-68881.h
 		float_format=m68k
+ 		if [ x$enable_threads = xyes ]; then
+			thread_file='mach'
+		fi
+		;;
+	m68k-next-openstep*)
+		tm_file=m68k/next.h
+		xm_file="m68k/xm-next.h ${xm_file}"
+		tmake_file=m68k/t-next
+		xmake_file=m68k/x-next
+		extra_objs=machopic.o
+		extra_passes=cc1obj
+		extra_headers=math-68881.h
+		fixincludes=Makefile.in # On NeXT, the headers are ok already.
+		float_format=m68k
  		if test x$enable_threads = xyes; then
 			thread_file='mach'
 		fi
+		makefile_cond="$makefile_cond next-headers"
 		;;
 	m68k-sun-sunos3*)
 		if test x$with_fp = xno
@@ -5154,6 +5245,25 @@ for machine in $build $host $target; do
 			thread_file='posix'
 		fi
 		;;
+	powerpc-*-macosx* | \
+	powerpc-*-darwin*)
+		cpu_type=rs6000
+		tm_file=rs6000/macosx.h
+		out_file=rs6000/macosx.c
+		xm_file=rs6000/xm-macosx.h
+		tmake_file=rs6000/t-macosx
+		xmake_file=apple/x-darwin
+		extra_objs=machopic.o
+		extra_passes=cc1obj
+		fixincludes=Makefile.in # On NeXT, the headers are ok already.
+		makefile_cond="$makefile_cond next-headers"
+		;;
+	powerpc-*-macos*)
+		out_file=rs6000/macos.c
+		tm_file=rs6000/macos.h
+		tmake_file=rs6000/t-macos
+		fixincludes=Makefile.in
+		;;
         powerpc-wrs-vxworks*)
                 cpu_type=rs6000
 		xm_file="xm-siglist.h rs6000/xm-sysv4.h"
@@ -5321,6 +5431,17 @@ for machine in $build $host $target; do
 	sh-*-*)
 		float_format=sh
 		;;
+	sparc-*-openstep*)
+		tm_file=sparc/next.h
+		out_file=sparc/next.c
+		xm_file=sparc/xm-next.h
+		tmake_file=apple/t-apple
+		xmake_file=apple/x-openstep
+		extra_objs=machopic.o
+		extra_passes=cc1obj
+		fixincludes=Makefile.in # On NeXT, the headers are ok already.
+		makefile_cond="$makefile_cond next-headers"
+		;;
 	sparc-tti-*)
 		tm_file=sparc/pbd.h
 		xm_file="xm-alloca.h ${xm_file}"
@@ -5394,6 +5515,16 @@ for machine in $build $host $target; do
 	sparc-*-rtems*)
 		tmake_file="sparc/t-sparcbare t-rtems"
 		tm_file=sparc/rtems.h
+		;;
+	sparc-nextpdo-solaris2*)
+		tm_file=sparc/next-pdo-sol2.h
+		xm_file=sparc/xm-sol2.h
+		tmake_file=sparc/t-sol2-nextpdo
+		xmake_file=sparc/x-sysv4
+		extra_parts="crt1.o crti.o crtn.o gmon.o crtbegin.o crtend.o collect2"
+		fixincludes=fixinc.svr4
+		broken_install=yes
+		makefile_cond="$makefile_cond next-pdo solaris-pdo"
 		;;
 	sparcv9-*-solaris2*)
 		tm_file=sparc/sol2-sld-64.h
@@ -5472,6 +5603,16 @@ for machine in $build $host $target; do
 		tm_file=sparc/sunos4.h
 		tmake_file=sparc/t-sunos40
 		use_collect2=yes
+		;;
+	sparc-nextpdo-sunos4*)
+		xm_file=sparc/xm-nextpdo-sunos4.h
+		tm_file=sparc/next-pdo.h
+		tmake_file=sparc/t-sunos4-nextpdo
+		extra_programs=ld
+		extra_passes="cc1obj cc1plus"
+		extra_parts=libgcc.a
+		use_collect2=yes
+		makefile_cond="$makefile_cond next-pdo"
 		;;
 	sparc-*-sunos4*)
 		tm_file=sparc/sunos4.h
@@ -8888,6 +9029,9 @@ s%@language_hooks@%%g
 CEOF
 EOF
 
+#echo "makefile_cond="$makefile_cond" >> $CONFIG_STATUS
+#echo "all_makefile_conds="$all_makefile_conds" >> $CONFIG_STATUS
+export makefile_cond all_makefile_conds
 cat >> $CONFIG_STATUS <<\EOF
 
 # Split the substitutions into bite-sized pieces for seds with
@@ -8976,7 +9120,39 @@ s%@configure_input@%$configure_input%g
 s%@srcdir@%$srcdir%g
 s%@top_srcdir@%$top_srcdir%g
 " $ac_file_inputs | (eval "$ac_sed_cmds") > $ac_file
-fi; done
+fi;
+
+if [ $ac_file = *Makefile* ]; then	# did we just create a Makefile?
+
+  ScratchFileName="Makefile.xx"
+  RealMakeFileName=$ac_file
+
+  # Handle makefile conditions...
+  if [ "x$makefile_cond" != "x" ]; then
+    for cond in $makefile_cond; do
+      rm -f $ScratchFileName
+      sed -e "/^%if $cond\$/d" \
+          -e "/^%else $cond\$/,/^%endif $cond\$/d" \
+          -e "/^%endif $cond\$/d" \
+        $RealMakeFileName > $ScratchFileName
+      rm -f $RealMakeFileName
+      mv $ScratchFileName $RealMakeFileName
+    done
+  fi
+
+  # Remove other conditions
+  rm -f $ScratchFileName
+  for cond in $all_makefile_conds; do
+    sed -e "/^%if $cond/,/^%else $cond/d" \
+       -e "/^%if $cond\$/,/^%endif $cond\$/d" \
+       -e "/^%endif $cond\$/d" \
+       $RealMakeFileName > $ScratchFileName
+    rm -f $RealMakeFileName
+    mv $ScratchFileName $RealMakeFileName
+  done
+fi	# just created a Makefile
+
+done
 rm -f conftest.s*
 
 # These sed commands are passed to sed as "A NAME B NAME C VALUE D", where

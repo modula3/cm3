@@ -39,3 +39,12 @@ extern void dwarf2out_frame_finish	PROTO ((void));
 extern void debug_dwarf			PROTO ((void));
 struct die_struct;
 extern void debug_dwarf_die		PROTO ((struct die_struct *));
+
+extern void dwarf2out_def_cfa 		PROTO ((char * label, unsigned reg, long offset));
+extern void dwarf2out_undefined_regs	PROTO ((char * label, unsigned int beg_reg, unsigned int end_reg)) ;
+extern void dwarf2out_same_value_regs	PROTO ((char * label, unsigned int beg_reg, unsigned int end_reg)) ;
+extern void dwarf2out_restore_reg	PROTO ((char * label, unsigned int reg)) ;
+extern void dwarf2out_remember_state	PROTO ((char * label)) ;
+extern void dwarf2out_restore_state	PROTO ((char * label)) ;
+extern void dwarf2out_return_save 	PROTO((char * label, long offset)) ;
+extern void dwarf2out_return_reg 	PROTO((char * label, unsigned int sreg)) ;

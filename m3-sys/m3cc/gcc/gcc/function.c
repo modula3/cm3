@@ -58,9 +58,23 @@ Boston, MA 02111-1307, USA.  */
 #include "toplev.h"
 #include "hash.h"
 
+/* Allow alignment of stack slots to A mod B.  */
+#ifndef FRAME_ALIGN_MOD
+#define FRAME_ALIGN_MOD(A,O,S) 0
+#endif
+
+/* Allow alignment of function argument locations to A mod B.  */
+#ifndef FUNCTION_ARG_MOD_BOUNDARY
+#define FUNCTION_ARG_MOD_BOUNDARY(MODE,TYPE) 0
+#endif
+
 #ifndef TRAMPOLINE_ALIGNMENT
 #define TRAMPOLINE_ALIGNMENT FUNCTION_BOUNDARY
 #endif
+
+#if defined (_WIN32) && defined (NEXT_PDO)
+extern char *exportNamesForDLL;
+#endif /* _WIN32 */
 
 #ifndef LOCAL_ALIGNMENT
 #define LOCAL_ALIGNMENT(TYPE, ALIGNMENT) ALIGNMENT
@@ -496,7 +510,7 @@ static void instantiate_decls_1	PROTO((tree, int));
 static void instantiate_decl	PROTO((rtx, int, int));
 static int instantiate_virtual_regs_1 PROTO((rtx *, rtx, int));
 static void delete_handlers	PROTO((void));
-static void pad_to_arg_alignment PROTO((struct args_size *, int));
+static void pad_to_arg_alignment PROTO((struct args_size *, int, int));
 #ifndef ARGS_GROW_DOWNWARD
 static void pad_below		PROTO((struct args_size *, enum  machine_mode,
 				       tree));
@@ -760,7 +774,7 @@ assign_stack_local (mode, size, align)
 {
   register rtx x, addr;
   int bigend_correction = 0;
-  int alignment;
+  int alignment, alignment_mod;
 
   if (align == 0)
     {
@@ -795,10 +809,16 @@ assign_stack_local (mode, size, align)
      division with a negative dividend isn't as well defined as we might
      like.  So we instead assume that ALIGNMENT is a power of two and
      use logical operations which are unambiguous.  */
+
+  /* Allow the rounding to A mod B.  This defaults to 0 mod B.  */
+  alignment_mod = FRAME_ALIGN_MOD(alignment, frame_offset, size);
+
 #ifdef FRAME_GROWS_DOWNWARD
-  frame_offset = FLOOR_ROUND (frame_offset, alignment);
+  frame_offset = alignment_mod + FLOOR_ROUND (frame_offset - alignment_mod,
+					      alignment);
 #else
-  frame_offset = CEIL_ROUND (frame_offset, alignment);
+  frame_offset = alignment_mod + CEIL_ROUND (frame_offset - alignment_mod,
+					     alignment);
 #endif
 
   /* On a big-endian machine, if we are allocating more space than we will use,
@@ -841,6 +861,7 @@ assign_outer_stack_local (mode, size, align, function)
   register rtx x, addr;
   int bigend_correction = 0;
   int alignment;
+  int alignment_mod;
 
   /* Allocate in the memory associated with the function in whose frame
      we are assigning.  */
@@ -875,11 +896,16 @@ assign_outer_stack_local (mode, size, align, function)
   function->frame_offset -= size;
 #endif
 
-  /* Round frame offset to that alignment.  */
+  /* Round frame offset to that alignment.  Allow rounding to A mod B.  */
+  alignment_mod = FRAME_ALIGN_MOD(alignment, function->frame_offset, size);
 #ifdef FRAME_GROWS_DOWNWARD
-  function->frame_offset = FLOOR_ROUND (function->frame_offset, alignment);
+  function->frame_offset
+    = alignment_mod + FLOOR_ROUND (function->frame_offset - alignment_mod,
+				   alignment);
 #else
-  function->frame_offset = CEIL_ROUND (function->frame_offset, alignment);
+  function->frame_offset
+    = alignment_mod + CEIL_ROUND (function->frame_offset - alignment_mod,
+				  alignment);
 #endif
 
   /* On a big-endian machine, if we are allocating more space than we will use,
@@ -1370,6 +1396,7 @@ preserve_temp_slots (x)
       p->level--;
 }
 
+#ifndef NEXT_SEMANTICS
 /* X is the result of an RTL_EXPR.  If it is a temporary slot associated
    with that RTL_EXPR, promote it into a temporary slot at the present
    level so it will not be freed when we free slots made in the
@@ -1397,6 +1424,7 @@ preserve_rtl_expr_result (x)
 
   return;
 }
+#endif
 
 /* Free all temporaries used so far.  This is normally called at the end
    of generating code for a statement.  Don't free any temporaries
@@ -3647,6 +3675,13 @@ instantiate_decl (x, size, valid_only)
 	   mode = GET_MODE_WIDER_MODE (mode))
 	if (! memory_address_p (mode, addr))
 	  return;
+
+      /* If the address is a vector mode, check that.  These addressing modes
+	 may be more limited, so we don't want to always use them as the 
+	 limit.  */
+      if (GET_MODE_CLASS (GET_MODE (x)) == MODE_VECTOR
+	  && ! memory_address_p (GET_MODE (x), addr))
+	return;
     }
 
   /* Put back the address now that we have updated it and we either know
@@ -4311,6 +4346,18 @@ assign_parms (fndecl, second_time)
   stack_args_size.constant = 0;
   stack_args_size.var = 0;
 
+#ifdef INIT_CUMULATIVE_INCOMING_ARGS
+  INIT_CUMULATIVE_INCOMING_ARGS (args_so_far, fntype, NULL_RTX);
+#else
+  INIT_CUMULATIVE_ARGS (args_so_far, fntype, NULL_RTX, 0);
+#endif
+
+  /* Allow the machine to reorder the parameters to a function call.  */
+#ifdef REARRANGE_ARG_LIST
+  if (! second_time)
+    DECL_ARGUMENTS (fndecl) = fnargs = REARRANGE_ARG_LIST (args_so_far, fnargs);
+#endif
+
   /* If struct value address is treated as the first argument, make it so.  */
   if (aggregate_value_p (DECL_RESULT (fndecl))
       && ! current_function_returns_pcc_struct
@@ -4328,12 +4375,6 @@ assign_parms (fndecl, second_time)
   max_parm_reg = LAST_VIRTUAL_REGISTER + 1;
   parm_reg_stack_loc = (rtx *) savealloc (max_parm_reg * sizeof (rtx));
   bzero ((char *) parm_reg_stack_loc, max_parm_reg * sizeof (rtx));
-
-#ifdef INIT_CUMULATIVE_INCOMING_ARGS
-  INIT_CUMULATIVE_INCOMING_ARGS (args_so_far, fntype, NULL_RTX);
-#else
-  INIT_CUMULATIVE_ARGS (args_so_far, fntype, NULL_RTX, 0);
-#endif
 
   /* We haven't yet found an argument that we must push and pretend the
      caller did.  */
@@ -4471,6 +4512,11 @@ assign_parms (fndecl, second_time)
 	 0 as it was the previous time.  */
 
       pretend_named = named_arg || PRETEND_OUTGOING_VARARGS_NAMED;
+#if defined (NO_REG_PARM_STACK_SPACE)
+      if (NO_REG_PARM_STACK_SPACE(args_so_far, entry_parm))
+        stack_offset = stack_args_size;
+      else
+#endif
       locate_and_pad_parm (promoted_mode, passed_type,
 #ifdef STACK_PARMS_IN_REG_PARM_AREA
 			   1,
@@ -4565,7 +4611,7 @@ assign_parms (fndecl, second_time)
 	 count it in stack_args_size; otherwise set stack_parm to 0
 	 to indicate there is no preallocated stack slot for the parm.  */
 
-      if (entry_parm == stack_parm
+      if ((entry_parm == stack_parm
           || (GET_CODE (entry_parm) == PARALLEL
               && XEXP (XVECEXP (entry_parm, 0, 0), 0) == NULL_RTX)
 #if defined (REG_PARM_STACK_SPACE) && ! defined (MAYBE_REG_PARM_STACK_SPACE)
@@ -4579,6 +4625,10 @@ assign_parms (fndecl, second_time)
 	     yet.  So, for now, we just assume that stack slots never exist
 	     in this case.  */
 	  || REG_PARM_STACK_SPACE (fndecl) > 0
+#endif
+	  )
+#if defined (NO_REG_PARM_STACK_SPACE)    
+	  && !NO_REG_PARM_STACK_SPACE(args_so_far, entry_parm)
 #endif
 	  )
 	{
@@ -5210,6 +5260,7 @@ locate_and_pad_parm (passed_mode, type, in_regs, fndecl,
     = type ? size_in_bytes (type) : size_int (GET_MODE_SIZE (passed_mode));
   enum direction where_pad = FUNCTION_ARG_PADDING (passed_mode, type);
   int boundary = FUNCTION_ARG_BOUNDARY (passed_mode, type);
+  int mod_boundary = FUNCTION_ARG_MOD_BOUNDARY (passed_mode, type);
 
 #ifdef REG_PARM_STACK_SPACE
   /* If we have found a stack parm before we reach the end of the
@@ -5223,7 +5274,7 @@ locate_and_pad_parm (passed_mode, type, in_regs, fndecl,
 #else
       reg_parm_stack_space = REG_PARM_STACK_SPACE (fndecl);
 #endif
-      if (reg_parm_stack_space > 0)
+      if (reg_parm_stack_space > 0 && TREE_CODE (type) != VECTOR_TYPE)
 	{
 	  if (initial_offset_ptr->var)
 	    {
@@ -5259,7 +5310,7 @@ locate_and_pad_parm (passed_mode, type, in_regs, fndecl,
     sizetree = round_up (sizetree, PARM_BOUNDARY / BITS_PER_UNIT);
   SUB_PARM_SIZE (*offset_ptr, sizetree);
   if (where_pad != downward)
-    pad_to_arg_alignment (offset_ptr, boundary);
+    pad_to_arg_alignment (offset_ptr, mod_boundary, boundary);
   if (initial_offset_ptr->var)
     {
       arg_size_ptr->var = size_binop (MINUS_EXPR,
@@ -5274,7 +5325,7 @@ locate_and_pad_parm (passed_mode, type, in_regs, fndecl,
 				- offset_ptr->constant); 
     }
 #else /* !ARGS_GROW_DOWNWARD */
-  pad_to_arg_alignment (initial_offset_ptr, boundary);
+  pad_to_arg_alignment (initial_offset_ptr, mod_boundary, boundary);
   *offset_ptr = *initial_offset_ptr;
 
 #ifdef PUSH_ROUNDING
@@ -5299,20 +5350,24 @@ locate_and_pad_parm (passed_mode, type, in_regs, fndecl,
 #endif /* ARGS_GROW_DOWNWARD */
 }
 
-/* Round the stack offset in *OFFSET_PTR up to a multiple of BOUNDARY.
-   BOUNDARY is measured in bits, but must be a multiple of a storage unit.  */
+/* Round the stack offset in *OFFSET_PTR up to MOD_BOUNDARY mod BOUNDARY.
+   MOD_BOUNDARY and BOUNDARY are measured in bits, but must be a multiple
+   of a storage unit.  */
 
 static void
-pad_to_arg_alignment (offset_ptr, boundary)
+pad_to_arg_alignment (offset_ptr, mod_boundary, boundary)
      struct args_size *offset_ptr;
+     int mod_boundary;
      int boundary;
 {
   int boundary_in_bytes = boundary / BITS_PER_UNIT;
+  int mod_boundary_in_bytes = mod_boundary / BITS_PER_UNIT;
   
   if (boundary > BITS_PER_UNIT)
     {
       if (offset_ptr->var)
 	{
+	  offset_ptr->constant -= mod_boundary_in_bytes;
 	  offset_ptr->var  =
 #ifdef ARGS_GROW_DOWNWARD
 	    round_down 
@@ -5321,14 +5376,16 @@ pad_to_arg_alignment (offset_ptr, boundary)
 #endif
 	      (ARGS_SIZE_TREE (*offset_ptr),
 	       boundary / BITS_PER_UNIT);
-	  offset_ptr->constant = 0; /*?*/
+	  offset_ptr->constant = mod_boundary_in_bytes;
 	}
       else
-	offset_ptr->constant =
+	offset_ptr->constant = mod_boundary_in_bytes +
 #ifdef ARGS_GROW_DOWNWARD
-	  FLOOR_ROUND (offset_ptr->constant, boundary_in_bytes);
+	  FLOOR_ROUND (offset_ptr->constant - mod_boundary_in_bytes,
+		       boundary_in_bytes);
 #else
-	  CEIL_ROUND (offset_ptr->constant, boundary_in_bytes);
+	  CEIL_ROUND (offset_ptr->constant - mod_boundary_in_bytes,
+		      boundary_in_bytes);
 #endif
     }
 }
@@ -6042,6 +6099,13 @@ void
 expand_main_function ()
 {
 #if !defined (HAS_INIT_SECTION)
+#ifdef NEXT_EXTENSION
+      rtx _argv, _argc;
+      tree __main_type 
+	= build_function_type (void_type, 
+			       tree_cons (0, int_type,
+					  tree_cons (0, pointer_type, 0)));
+#endif
   emit_library_call (gen_rtx_SYMBOL_REF (Pmode, NAME__MAIN), 0,
 		     VOIDmode, 0);
 #endif /* not HAS_INIT_SECTION */
@@ -6197,6 +6261,58 @@ expand_function_start (subr, parms_have_cleanups)
      In some cases this requires emitting insns.  */
 
   assign_parms (subr, 0);
+
+#if defined (_WIN32) && defined (NEXT_PDO)
+	/* assign_parms should have set the current_function_args_size to the
+	   size of the arguments so now we can mangle the functions 
+	   assembler_name to have the @nn.  We only do this if the function
+	   is marked as __declspec(dllexport) and __stdcall.  Otherwise,
+	   just leave it alone */
+	{
+		int length = 0;
+		char* tail = "";
+		char parm_size[255];
+
+		if( DECL_STDCALL(subr) )
+		{
+			char* newName = 0;
+			
+			_ltoa( current_function_args_size, parm_size, 10 );
+			
+			// to allow for '_imp__' and \0
+			newName = (char*)malloc( strlen( IDENTIFIER_POINTER(DECL_NAME(subr)) ) 
+				+ strlen( parm_size ) + 7 ); 
+
+			sprintf( newName, "%s@%s", IDENTIFIER_POINTER(DECL_NAME(subr)), parm_size );
+			DECL_ASSEMBLER_NAME(subr) = get_identifier( newName );
+			XSTR( XEXP(DECL_RTL(subr), 0), 0 ) = IDENTIFIER_POINTER(DECL_ASSEMBLER_NAME(subr));
+			free( newName );
+//			printf( "Found: %s\n", XEXP( XEXP(DECL_RTL(subr), 0), 0 ) );
+//			DECL_RTL(subr) = NULL_PTR;
+//			make_decl_rtl( subr, NULL_PTR, 1 );
+		}
+		if( DECL_DLLIMPORT(subr) )
+		{
+			if( exportNamesForDLL )
+				length = strlen( exportNamesForDLL );
+			length += strlen( " -export:" );
+			length += strlen( IDENTIFIER_POINTER(DECL_ASSEMBLER_NAME(subr)) ) + 1;			// Include the '_' here
+			if( exportNamesForDLL )
+			{
+				exportNamesForDLL = (char*)realloc( (void*)exportNamesForDLL, length + 1 );
+			}
+			else
+			{
+				exportNamesForDLL = (char*)malloc( length + 1 );
+				*exportNamesForDLL = '\0';
+			}
+			sprintf( exportNamesForDLL, "%s%s%c%s%s", exportNamesForDLL, 
+				" -export:", '_', IDENTIFIER_POINTER(DECL_ASSEMBLER_NAME(subr)), tail );
+
+			DECL_DLLIMPORT(subr) = 0;
+		}
+	}
+#endif /* _WIN32 */
 
   /* Copy the static chain now if it wasn't a register.  The delay is to
      avoid conflicts with the parameter passing registers.  */
@@ -6413,6 +6529,9 @@ expand_function_end (filename, line, end_bindings)
 
   /* Warn about unused parms if extra warnings were specified.  */
   if (warn_unused && extra_warnings)
+#if defined (NEXT_SEMANTICS) || defined (NEXT_PDO)
+    if (warn_unused > 0 || strcmp (lang_identify (), "cplusplus"))
+#endif
     {
       tree decl;
 

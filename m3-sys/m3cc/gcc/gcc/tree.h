@@ -123,9 +123,33 @@ enum built_in_function
   BUILT_IN_DELETE,
   BUILT_IN_VEC_DELETE,
 
+  /* Machine intrinsics */
+  BUILT_IN_FIRST_TARGET_OVERLOADED_INTRINSIC,
+  BUILT_IN_LAST_TARGET_OVERLOADED_INTRINSIC
+  = (BUILT_IN_FIRST_TARGET_OVERLOADED_INTRINSIC + 300),
+  BUILT_IN_FIRST_TARGET_INTRINSIC,
+  BUILT_IN_LAST_TARGET_INTRINSIC
+  = (BUILT_IN_FIRST_TARGET_INTRINSIC + 2000),
+
   /* Upper bound on non-language-specific builtins. */
   END_BUILTINS
 };
+
+/* In a FUNCTION_DECL, nonzero means the function is a target defined
+   intrinsic function.  */
+
+#define DECL_TARGET_INTRINSIC_P(NODE) \
+  (DECL_BUILT_IN(NODE) \
+   && DECL_FUNCTION_CODE(NODE) >= BUILT_IN_FIRST_TARGET_INTRINSIC \
+   && DECL_FUNCTION_CODE(NODE) <= BUILT_IN_LAST_TARGET_INTRINSIC)
+
+/* In a FUNCTION_DECL, nonzero means the function is a target defined
+   intrinsic function that is overloaded.  */
+
+#define DECL_TARGET_OVERLOADED_INTRINSIC_P(NODE) \
+  (DECL_BUILT_IN(NODE) \
+   && DECL_FUNCTION_CODE(NODE) >= BUILT_IN_FIRST_TARGET_OVERLOADED_INTRINSIC \
+   && DECL_FUNCTION_CODE(NODE) <= BUILT_IN_LAST_TARGET_OVERLOADED_INTRINSIC)
 
 /* The definition of tree nodes fills the next several pages.  */
 
@@ -171,6 +195,9 @@ struct tree_common
   unsigned permanent_flag : 1;
   unsigned addressable_flag : 1;
   unsigned volatile_flag : 1;
+#ifdef _WIN32
+  unsigned stdcall_flag : 1;
+#endif
   unsigned readonly_flag : 1;
   unsigned unsigned_flag : 1;
   unsigned asm_written_flag: 1;
@@ -211,14 +238,14 @@ struct tree_common
        TREE_VIA_VIRTUAL in
            TREE_LIST or TREE_VEC
        TREE_CONSTANT_OVERFLOW in
-           INTEGER_CST, REAL_CST, COMPLEX_CST
+           INTEGER_CST, REAL_CST, COMPLEX_CST, VECTOR_CST
        TREE_SYMBOL_REFERENCED in
            IDENTIFIER_NODE
 
    public_flag:
 
        TREE_OVERFLOW in
-           INTEGER_CST, REAL_CST, COMPLEX_CST
+           INTEGER_CST, REAL_CST, COMPLEX_CST, VECTOR_CST
        TREE_PUBLIC in
            VAR_DECL or FUNCTION_DECL
        TREE_VIA_PUBLIC in
@@ -436,18 +463,20 @@ struct tree_common
    chain is via a `virtual' declaration.  */
 #define TREE_VIA_VIRTUAL(NODE) ((NODE)->common.static_flag)
 
-/* In an INTEGER_CST, REAL_CST, or COMPLEX_CST, this means there was an
-   overflow in folding.  This is distinct from TREE_OVERFLOW because ANSI C
-   requires a diagnostic when overflows occur in constant expressions.  */
+/* In an INTEGER_CST, REAL_CST, COMPLEX_CST, or VECTOR_CST this means
+   there was an overflow in folding.  This is distinct from TREE_OVERFLOW
+   because ANSI C requires a diagnostic when overflows occur in constant
+   expressions.  */
 #define TREE_CONSTANT_OVERFLOW(NODE) ((NODE)->common.static_flag)
 
 /* In an IDENTIFIER_NODE, this means that assemble_name was called with
    this string as an argument.  */
 #define TREE_SYMBOL_REFERENCED(NODE) ((NODE)->common.static_flag)
 
-/* In an INTEGER_CST, REAL_CST, of COMPLEX_CST, this means there was an
-   overflow in folding, and no warning has been issued for this subexpression.
-   TREE_OVERFLOW implies TREE_CONSTANT_OVERFLOW, but not vice versa.  */
+/* In an INTEGER_CST, REAL_CST, COMPLEX_CST, or VECTOR_CST, this means
+   there was an overflow in folding, and no warning has been issued for
+   this subexpression.  TREE_OVERFLOW implies TREE_CONSTANT_OVERFLOW, but
+   not vice versa.  */
 #define TREE_OVERFLOW(NODE) ((NODE)->common.public_flag)
 
 /* In a VAR_DECL or FUNCTION_DECL,
@@ -496,6 +525,11 @@ struct tree_common
    (but the macro TYPE_READONLY should be used instead of this macro
    when the node is a type).  */
 #define TREE_READONLY(NODE) ((NODE)->common.readonly_flag)
+
+#ifdef _WIN32
+/* Nonzero means this function uses the stdcall calling conventions */
+#define TYPE_STDCALL(NODE) ((NODE)->common.stdcall_flag)
+#endif /* _WIN32 */
 
 /* Value of expression is constant.
    Always appears in all ..._CST nodes.
@@ -579,9 +613,9 @@ struct tree_int_cst
   HOST_WIDE_INT int_cst_high;
 };
 
-/* In REAL_CST, STRING_CST, COMPLEX_CST nodes, and CONSTRUCTOR nodes,
-   and generally in all kinds of constants that could
-   be given labels (rather than being immediate).  */
+/* In REAL_CST, STRING_CST, COMPLEX_CST, VECTOR_CST nodes, and CONSTRUCTOR
+   nodes, and generally in all kinds of constants that could be given
+   labels (rather than being immediate).  */
 
 #define TREE_CST_RTL(NODE) (CST_OR_CONSTRUCTOR_CHECK (NODE)->real_cst.rtl)
 
@@ -626,6 +660,24 @@ struct tree_complex
 				   (rtl) info */
   union tree_node *real;
   union tree_node *imag;
+};
+
+/* In a VECTOR_CST node.  */
+#define TREE_VECTOR_CST_LOW(NODE) ((NODE)->vector.low)
+#define TREE_VECTOR_CST_HIGH(NODE) ((NODE)->vector.high)
+
+#define TREE_VECTOR_CST_0(NODE) ((NODE)->vector.low->complex.real)
+#define TREE_VECTOR_CST_1(NODE) ((NODE)->vector.low->complex.imag)
+#define TREE_VECTOR_CST_2(NODE) ((NODE)->vector.high->complex.real)
+#define TREE_VECTOR_CST_3(NODE) ((NODE)->vector.high->complex.imag)
+
+struct tree_vector
+{
+  char common[sizeof (struct tree_common)];
+  struct rtx_def *rtl;	/* acts as link to register transfer language
+				   (rtl) info */
+  union tree_node *low;
+  union tree_node *high;
 };
 
 /* Define fields and accessors for some special-purpose tree nodes.  */
@@ -912,7 +964,26 @@ struct tree_type
   unsigned lang_flag_6 : 1;
   /* room for 3 more bits */
 
+#ifdef APPLE_ALIGN_CHECK
+  /* Purely for debugging alignment changes -- we can remove if needed.
+     This is set if the type had a different alignment in the OS X 10.0
+     compiler (March 2001, __APPLE_CC__ == 926 .)  */
+
+  unsigned short align, osx1_align;
+  unsigned osx1_rec_size;
+
+#define TYPE_OSX1_ALIGN(TYPE)	(TYPE_CHECK (TYPE)->type.osx1_align)
+#define TYPE_OSX1_SIZE(TYPE)	(TYPE_CHECK (TYPE)->type.osx1_rec_size)
+
+#define TYPE_DIFF_ALIGN(TYPE)					\
+	(TYPE_OSX1_ALIGN (TYPE) != 0				\
+		&& TYPE_OSX1_ALIGN (TYPE) != TYPE_ALIGN (TYPE))
+
+#define TYPE_DIFF_SIZE(TYPE)	type_has_different_size_in_osx1 (TYPE)
+#else
   unsigned int align;
+#endif
+
   union tree_node *pointer_to;
   union tree_node *reference_to;
   union {int address; char *pointer; } symtab;
@@ -1156,6 +1227,20 @@ struct tree_type
    is not error_mark_node, then the decl cannot be put in .common.  */
 #define DECL_COMMON(NODE) (DECL_CHECK (NODE)->decl.common_flag)
 
+#ifdef HAVE_COALESCED_SYMBOLS
+/* Nonzero for a given ..._DECL node means that this node should be
+   marked as a "coalesced symbol".  Such symbols are treated like
+   COMMON except that it is OK for them to have DECL_INITIAL
+   initializations, and they are allowed in shared libraries.  */
+#define DECL_COALESCED(NODE) (DECL_CHECK (NODE)->decl.coalesced_flag)
+
+/* Nonzero if a given ..._DECL node could be written to (for example,
+   if the node needs constructing.)  */
+#define DECL_TREE_MAY_BE_WRITTEN(NODE)				\
+		(DECL_CHECK (NODE)->decl.tree_may_be_written_flag)
+
+#endif
+
 /* Language-specific decl information.  */
 #define DECL_LANG_SPECIFIC(NODE) (DECL_CHECK (NODE)->decl.lang_specific)
 
@@ -1164,10 +1249,29 @@ struct tree_type
    do not allocate storage, and refer to a definition elsewhere.  */
 #define DECL_EXTERNAL(NODE) (DECL_CHECK (NODE)->decl.external_flag)
 
+#if defined (NEXT_PDO)  && defined (_WIN32)
+/* In a FUNCTION_DECL, nonzero means that it uses the __stdcall 
+   calling convention as defined by Microsoft.  The callee (not 
+   the caller) pops the arguments off the stack. */
+#define DECL_STDCALL(NODE) ((NODE)->decl.stdcall_flag)
+
+/* When something is declared using __declspec(dllimport) this
+   flag will be set to 1. */
+#define DECL_DLLIMPORT(NODE) ((NODE)->decl.dllimport_flag)
+#endif /* defined (NEXT_PDO)  && defined (_WIN32) */
+
 /* In a VAR_DECL for a RECORD_TYPE, sets number for non-init_priority
    initializatons. */
+#ifdef NEXT_SEMANTICS
+/* These don't need to be nearly so big, and making them fit in a signed
+   16-bit int saves us four instructions in every static init routine.
+   Cheesy, I know.  Sorry.  */
+#define DEFAULT_INIT_PRIORITY 32767
+#define MAX_INIT_PRIORITY 32767
+#else
 #define DEFAULT_INIT_PRIORITY 65535
 #define MAX_INIT_PRIORITY 65535
+#endif
 #define MAX_RESERVED_INIT_PRIORITY 100
 
 /* In a TYPE_DECL
@@ -1243,6 +1347,12 @@ struct tree_type
 /* Used to indicate that this DECL has weak linkage.  */
 #define DECL_WEAK(NODE) (DECL_CHECK (NODE)->decl.weak_flag)
 
+#ifdef NEXT_SEMANTICS
+/* This specifies for a VAR_DECL or FIELD_DECL, if it is a offset type */
+#define DECL_RELATIVE(NODE) ((NODE)->decl.self_relative_flag)
+#define DECL_PRIVATE_EXTERN(NODE) ((NODE)->decl.private_extern_flag)
+#endif
+
 /* Used in TREE_PUBLIC decls to indicate that copies of this DECL in
    multiple translation units should be merged.  */
 #define DECL_ONE_ONLY(NODE) (DECL_CHECK (NODE)->decl.transparent_union)
@@ -1294,13 +1404,18 @@ struct tree_decl
 {
   char common[sizeof (struct tree_common)];
   char *filename;
+#ifndef NEXT_SEMANTICS
   int linenum;
+#endif
   unsigned int uid;
   union tree_node *size;
 #ifdef ONLY_INT_FIELDS
   int mode : 8;
 #else
   enum machine_mode mode : 8;
+#endif
+#ifdef NEXT_SEMANTICS
+  unsigned linenum : 24;	/* Reduces struct size from 100 to 96 bytes  */
 #endif
 
   unsigned external_flag : 1;
@@ -1320,6 +1435,25 @@ struct tree_decl
   unsigned static_dtor_flag : 1;
   unsigned artificial_flag : 1;
   unsigned weak_flag : 1;
+
+#ifdef NEXT_SEMANTICS
+  unsigned self_relative_flag : 1;
+  unsigned private_extern_flag : 1;
+  /* room for six more */
+#ifdef HAVE_COALESCED_SYMBOLS
+  unsigned coalesced_flag : 1;
+  unsigned tree_may_be_written_flag : 1;
+  /* room for four more  */
+#endif
+#endif
+#if defined (NEXT_PDO) && defined (_WIN32)
+  /* This is set when the function declaration is for a function 
+     that uses the __stdcall type as defined by Microsoft. */
+  unsigned stdcall_flag : 1;
+  /* This is set when something is declared __declspec(dllimport) */
+  unsigned dllimport_flag : 1;
+  /* room for four more */
+#endif /* defined (NEXT_PDO) && defined (_WIN32) */
 
   unsigned lang_flag_0 : 1;
   unsigned lang_flag_1 : 1;
@@ -1379,6 +1513,7 @@ union tree_node
   struct tree_real_cst real_cst;
   struct tree_string string;
   struct tree_complex complex;
+  struct tree_vector vector;
   struct tree_identifier identifier;
   struct tree_decl decl;
   struct tree_type type;
@@ -1450,6 +1585,7 @@ extern tree build_int_2_wide		PROTO((HOST_WIDE_INT, HOST_WIDE_INT));
 extern tree build_real			PROTO((tree, REAL_VALUE_TYPE));
 extern tree build_real_from_int_cst 	PROTO((tree, tree));
 extern tree build_complex		PROTO((tree, tree, tree));
+extern tree build_vector		PROTO((tree, tree, tree, tree, tree));
 extern tree build_string		PROTO((int, const char *));
 extern tree build1			PROTO((enum tree_code, tree, tree));
 extern tree build_tree_list		PROTO((tree, tree));
@@ -1825,6 +1961,9 @@ extern int real_zerop PROTO((tree));
 
 /* Declare commonly used variables for tree structure.  */
 
+/* Pointer to the root of the call graph for inlines and templates. */
+extern tree call_graph ;
+
 /* An integer constant with value 0 */
 extern tree integer_zero_node;
 
@@ -1917,6 +2056,8 @@ extern tree get_set_constructor_bytes		PROTO((tree,
 extern int get_alias_set                        PROTO((tree));
 extern int new_alias_set			PROTO((void));
 extern int (*lang_get_alias_set)                PROTO((tree));
+extern void add_call_graph_dependent		PROTO((tree, tree)) ;
+extern void call_graph_function_called		PROTO((tree, void (*)(tree))) ;
 
 /* In stmt.c */
 
@@ -2321,6 +2462,16 @@ extern void declare_nonlocal_label	PROTO ((tree));
 extern void lang_print_xnode 		PROTO ((FILE *, tree, int));
 #endif
 
+
+/* Declare a predefined function.  Return the declaration.  */
+extern tree lang_builtin_function PROTO((char *, tree, enum built_in_function function_, char *));
+
+/* Return 1 if TYPE1 and TYPE2 are compatible types for assignment
+   or various other operations.  */
+extern int lang_comptypes PROTO((tree, tree));
+
+/* Add qualifiers to a type, in the fashion for C.  */
+extern tree lang_build_type_variant PROTO((tree, int, int));
 
 /* If KIND=='I', return a suitable global initializer (constructor) name.
    If KIND=='D', return a suitable global clean-up (destructor) name.  */

@@ -218,6 +218,28 @@ declare_hidden_char_array (name, value)
   finish_decl (pushdecl (decl), init, NULL_TREE);
 }
 
+
+/* Given a wide flag and a pascal_string flag,
+   return the node indicating the type for combine_strings
+   to assign to the resulting string. */
+
+tree
+choose_string_type ( wide_flag, ps_flag )
+    int wide_flag, ps_flag;
+{
+  if (wide_flag)
+    return wchar_type_node;
+
+#ifndef PASCAL_STRINGS
+  return char_type_node;
+#else
+
+  return  ps_flag?  unsigned_char_type_node : char_type_node ;
+
+#endif
+}
+
+
 /* Given a chain of STRING_CST nodes,
    concatenate them into one STRING_CST
    and give it a suitable array-of-chars data type.  */
@@ -232,6 +254,20 @@ combine_strings (strings)
   int wide_flag = 0;
   int wchar_bytes = TYPE_PRECISION (wchar_type_node) / BITS_PER_UNIT;
   int nchars;
+
+  /* This flag is ignored by choose_string_type_node when
+     PASCAL_STRINGS is not defined. */
+  int is_pascal_string = 0;
+
+#ifdef PASCAL_STRINGS
+
+  /* If first string is a pascal-string, that "wins". */
+  if (TREE_TYPE (strings) == unsigned_char_array_type_node)
+    {
+      is_pascal_string = 1;
+      length = 2;   /* account for the \p length byte, and the NUL. */
+    }
+#endif
 
   if (TREE_CHAIN (strings))
     {
@@ -248,6 +284,21 @@ combine_strings (strings)
 	      wide_length += (TREE_STRING_LENGTH (t) - wchar_bytes);
 	      wide_flag = 1;
 	    }
+#ifdef PASCAL_STRINGS
+	  else if (TREE_TYPE (t) == unsigned_char_array_type_node)
+	    {
+	      /* This one is a pascal-string -- don't count its
+	         length byte.  */
+	      length += (TREE_STRING_LENGTH (t) - 2);
+
+	      /* If it's not the first one, complain. */
+	      if (t != strings)
+	        if (is_pascal_string)
+		  warning ("pascal-string length escape (\"\\p\") ignored");
+	        else
+		  error ("pascal-string length escape (\"\\p\") ignored");
+	    }
+#endif
 	  else
 	    length += (TREE_STRING_LENGTH (t) - 1);
 	}
@@ -264,14 +315,23 @@ combine_strings (strings)
 	 for any individual strings that are not wide.  */
 
       q = p;
+#ifdef PASCAL_STRINGS
+      if (is_pascal_string) ++q;
+#endif
       for (t = strings; t; t = TREE_CHAIN (t))
 	{
 	  int len = (TREE_STRING_LENGTH (t)
 		     - ((TREE_TYPE (t) == wchar_array_type_node)
 			? wchar_bytes : 1));
+	  char *string_ptr = TREE_STRING_POINTER (t);
+#ifdef PASCAL_STRINGS
+	  /* Skip the length byte of all of the strings, even the 1st. */
+	  if (TREE_TYPE (t) == unsigned_char_array_type_node)
+	    ++string_ptr, --len; 
+#endif
 	  if ((TREE_TYPE (t) == wchar_array_type_node) == wide_flag)
 	    {
-	      memcpy (q, TREE_STRING_POINTER (t), len);
+	      memcpy (q, string_ptr, len);
 	      q += len;
 	    }
 	  else
@@ -280,9 +340,9 @@ combine_strings (strings)
 	      for (i = 0; i < len; i++)
 		{
 		  if (WCHAR_TYPE_SIZE == HOST_BITS_PER_SHORT)
-		    ((short *) q)[i] = TREE_STRING_POINTER (t)[i];
+		    ((short *) q)[i] = string_ptr[i];
 		  else
-		    ((int *) q)[i] = TREE_STRING_POINTER (t)[i];
+		    ((int *) q)[i] = string_ptr[i];
 		}
 	      q += len * wchar_bytes;
 	    }
@@ -295,6 +355,17 @@ combine_strings (strings)
 	}
       else
 	*q = 0;
+
+#ifdef PASCAL_STRINGS
+      if (is_pascal_string)
+	{
+	  *p = length -2;
+	   if (length -2 > 255)
+	     {
+	       error ("pascal-string too long");
+	     }
+	}
+#endif
 
       value = make_node (STRING_CST);
       TREE_STRING_POINTER (value) = p;
@@ -319,7 +390,7 @@ combine_strings (strings)
       && (! flag_traditional  && ! flag_writable_strings))
     {
       tree elements
-	= build_type_variant (wide_flag ? wchar_type_node : char_type_node,
+	= build_type_variant (choose_string_type(wide_flag, is_pascal_string),
 			      1, 0);
       TREE_TYPE (value)
 	= build_array_type (elements,
@@ -327,11 +398,10 @@ combine_strings (strings)
     }
   else
     TREE_TYPE (value)
-      = build_array_type (wide_flag ? wchar_type_node : char_type_node,
+      = build_array_type (choose_string_type(wide_flag, is_pascal_string),
 			  build_index_type (build_int_2 (nchars - 1, 0)));
 
-  TREE_CONSTANT (value) = 1;
-  TREE_READONLY (value) = ! flag_writable_strings;
+  TREE_READONLY (value) = TREE_CONSTANT (value) = ! flag_writable_strings;
   TREE_STATIC (value) = 1;
   return value;
 }
@@ -1199,8 +1269,10 @@ init_function_format_info ()
 			  printf_format_type, 2, 0);
   record_function_format (get_identifier ("vsprintf"), NULL_TREE,
 			  printf_format_type, 2, 0);
+#ifndef NEXT_SEMANTICS /* Apple's strftime syntax not the same as glibc's!  */
   record_function_format (get_identifier ("strftime"), NULL_TREE,
 			  strftime_format_type, 3, 0);
+#endif
 
   record_international_format (get_identifier ("gettext"), NULL_TREE, 1);
   record_international_format (get_identifier ("dgettext"), NULL_TREE, 2);
@@ -1619,6 +1691,23 @@ check_format_info (info, params)
 		}
 	    }
 	}
+      if (*format_chars == 'h' || *format_chars == 'l')
+	length_char = *format_chars++;
+      else if (*format_chars == 'q' || *format_chars == 'L')
+	{
+	  length_char = *format_chars++;
+	  if (pedantic)
+	    pedwarn ("ANSI C does not support the `%c' length modifier",
+		     length_char);
+	}
+      else
+	length_char = 0;
+      if (length_char == 'l' && *format_chars == 'l')
+	{
+	  length_char = 'q', format_chars++;
+	  if (pedantic)
+	    pedwarn ("ANSI C does not support the `ll' length modifier");
+	}
 
       aflag = 0;
 
@@ -1639,8 +1728,10 @@ check_format_info (info, params)
 	      if (pedantic)
 		warning ("ANSI C does not support the `Z' length modifier");
 	    }
+#if !defined (NEXT_SEMANTICS) && !defined (NEXT_PDO) /* Otherwise, %ld does not match long int.  */
 	  else
 	    length_char = 0;
+#endif
 	  if (length_char == 'l' && *format_chars == 'l')
 	    {
 	      length_char = 'q', format_chars++;
@@ -1917,7 +2008,7 @@ constant_expression_warning (value)
      tree value;
 {
   if ((TREE_CODE (value) == INTEGER_CST || TREE_CODE (value) == REAL_CST
-       || TREE_CODE (value) == COMPLEX_CST)
+       || TREE_CODE (value) == COMPLEX_CST || TREE_CODE (value) == VECTOR_CST)
       && TREE_CONSTANT_OVERFLOW (value) && pedantic)
     pedwarn ("overflow in constant expression");
 }
@@ -1950,6 +2041,12 @@ overflow_warning (value)
       TREE_OVERFLOW (value) = 0;
       if (skip_evaluation == 0)
 	warning ("floating point overflow in expression");
+    }
+  else if (TREE_CODE (value) == VECTOR_CST && TREE_OVERFLOW (value))
+    {
+      TREE_OVERFLOW (value) = 0;
+      if (skip_evaluation == 0)
+	warning ("vector overflow in expression");
     }
 }
 
@@ -2996,6 +3093,19 @@ c_build_qualified_type (type, type_quals)
   return build_qualified_type (type, type_quals);
 }
 
+tree
+maybe_objc_method_name (decl)
+    tree decl;
+{
+#ifdef OBJC_TREE_CODES
+  if (TREE_CODE (decl) == INSTANCE_METHOD_DECL 
+      || TREE_CODE (decl) == CLASS_METHOD_DECL)
+    return 1;
+#endif
+  return 0;
+}
+
+
 /* Apply the TYPE_QUALS to the new DECL.  */
 
 void
@@ -3206,37 +3316,25 @@ c_get_alias_set (t)
        whose type is the same as one of the fields, recursively, but
        we don't yet make any use of that information.)  */
     TYPE_ALIAS_SET (type) = 0;
+
   else if (TREE_CODE (type) == POINTER_TYPE
-	   || TREE_CODE (type) == REFERENCE_TYPE)
+          || TREE_CODE (type) == REFERENCE_TYPE)
     {
       tree t;
-
+  
       /* Unfortunately, there is no canonical form of a pointer type.
-	 In particular, if we have `typedef int I', then `int *', and
-	 `I *' are different types.  So, we have to pick a canonical
-	 representative.  We do this below.
-	 
-	 Technically, this approach is actually more conservative that
-	 it needs to be.  In particular, `const int *' and `int *'
-	 chould be in different alias sets, according to the C and C++
-	 standard, since their types are not the same, and so,
-	 technically, an `int **' and `const int **' cannot point at
-	 the same thing.
+       In particular, if we have `typedef int I', then `int *', and
+       `I *' are different types.  So, we have to pick a canonical
+       representative.  We do this below.
+       
+       Note that this approach is actually more conservative that it
+       needs to be.  In particular, `const int *' and `int *' should
+       be in different alias sets, but this approach puts them in
+       the same alias set.  */
 
-         But, the standard is wrong.  In particular, this code is
-	 legal C++:
-
-            int *ip;
-            int **ipp = &ip;
-            const int* const* cipp = &ip;
-
-         And, it doesn't make sense for that to be legal unless you
-	 can dereference IPP and CIPP.  So, we ignore cv-qualifiers on
-	 the pointed-to types.  This issue has been reported to the
-	 C++ committee.  */
       t = TYPE_MAIN_VARIANT (TREE_TYPE (type));
       t = ((TREE_CODE (type) == POINTER_TYPE)
-	   ? build_pointer_type (t) : build_reference_type (t));
+		? build_pointer_type (t) : build_reference_type (t));
       if (t != type)
 	TYPE_ALIAS_SET (type) = c_get_alias_set (t);
     }
@@ -3244,16 +3342,16 @@ c_get_alias_set (t)
   if (!TYPE_ALIAS_SET_KNOWN_P (type)) 
     {
       /* Types that are not allocated on the permanent obstack are not
-	 placed in the type hash table.  Thus, there can be multiple
-	 copies of identical types in local scopes.  In the long run,
-	 all types should be permanent.  */
+       placed in the type hash table.  Thus, there can be multiple
+       copies of identical types in local scopes.  In the long run,
+       all types should be permanent.  */
       if (! TREE_PERMANENT (type))
 	TYPE_ALIAS_SET (type) = 0;
       else
-	/* TYPE is something we haven't seen before.  Put it in a new
-	   alias set.  */
+      /* TYPE is something we haven't seen before.  Put it in a new
+         alias set.  */
 	TYPE_ALIAS_SET (type) = new_alias_set ();
     }
-
+ 
   return TYPE_ALIAS_SET (type);
 }

@@ -86,6 +86,10 @@ tree lastiddecl;
 
 int doing_objc_thang;
 
+/* Nonzero forces lexer to return IDENTIFIER even if CLASSNAME is available.  */
+
+int objc_need_raw_identifier;
+
 extern int yydebug;
 
 /* File used for outputting assembler code.  */
@@ -146,7 +150,9 @@ make_pointer_declarator (type_quals, target)
 {
   return build1 (INDIRECT_REF, type_quals, target);
 }
-
+
+#ifndef OBJCPLUS
+/* FIXME:  Should these be in both c-lex.c and objc-act.c */
 void
 forget_protocol_qualifiers ()
 {
@@ -177,6 +183,7 @@ remember_protocol_qualifiers ()
     else if (wordlist[i].rid == RID_ONEWAY)
       wordlist[i].name = "oneway";
 }
+#endif
 
 char *
 init_parse (filename)
@@ -246,6 +253,7 @@ init_lex ()
   token_buffer = (char *) xmalloc (maxtoken + 2);
 
   ridpointers[(int) RID_INT] = get_identifier ("int");
+  ridpointers[(int) RID_BOOL] = get_identifier ("bool");
   ridpointers[(int) RID_CHAR] = get_identifier ("char");
   ridpointers[(int) RID_VOID] = get_identifier ("void");
   ridpointers[(int) RID_FLOAT] = get_identifier ("float");
@@ -265,6 +273,18 @@ init_lex ()
   ridpointers[(int) RID_REGISTER] = get_identifier ("register");
   ridpointers[(int) RID_ITERATOR] = get_identifier ("iterator");
   ridpointers[(int) RID_COMPLEX] = get_identifier ("complex");
+#if defined (_WIN32) && defined (NEXT_PDO)
+  ridpointers[(int) RID_STDCALL] = get_identifier ("stdcall");
+  ridpointers[(int) RID_DECLSPEC] = get_identifier ("declspec");
+  ridpointers[(int) RID_DLLIMPORT] = get_identifier ("dllimport");
+  ridpointers[(int) RID_DLLEXPORT] = get_identifier ("dllexport");
+#if 0 /* These are actually not needed.  */
+  ridpointers[(int) RID_THREAD] = get_identifier ("thread");
+  ridpointers[(int) RID_NAKED] = get_identifier ("naked");
+#endif
+#endif
+  ridpointers[(int) RID_PIXEL] = get_identifier ("__pixel");
+  ridpointers[(int) RID_VECTOR] = get_identifier ("__vector");
   ridpointers[(int) RID_ID] = get_identifier ("id");
   ridpointers[(int) RID_IN] = get_identifier ("in");
   ridpointers[(int) RID_OUT] = get_identifier ("out");
@@ -272,6 +292,11 @@ init_lex ()
   ridpointers[(int) RID_BYCOPY] = get_identifier ("bycopy");
   ridpointers[(int) RID_BYREF] = get_identifier ("byref");
   ridpointers[(int) RID_ONEWAY] = get_identifier ("oneway");
+#ifdef NEXT_SEMANTICS
+  ridpointers[(int) RID_PRIVATE_EXTERN] = get_identifier ("private_extern");
+  ridpointers[(int) RID_RELATIVE] = get_identifier ("relative");
+  ridpointers[(int) RID_DIRECT] = get_identifier ("direct");
+#endif
   forget_protocol_qualifiers();
 
   /* Some options inhibit certain reserved words.
@@ -304,6 +329,15 @@ init_lex ()
       UNSET_RESERVED_WORD ("inline");
       UNSET_RESERVED_WORD ("iterator");
       UNSET_RESERVED_WORD ("complex");
+    }
+  if (!flag_altivec)
+    {
+      UNSET_RESERVED_WORD ("__vector");
+      UNSET_RESERVED_WORD ("__pixel");
+      UNSET_RESERVED_WORD ("bool");
+      UNSET_RESERVED_WORD ("vec_step");
+      UNSET_RESERVED_WORD ("vector");  /* <tur25May99> these too, dammit!  */
+      UNSET_RESERVED_WORD ("pixel");
     }
 }
 
@@ -911,6 +945,9 @@ handle_generic_pragma (token)
 
 /* Read an escape sequence, returning its equivalent as a character,
    or store 1 in *ignore_ptr if it is backslash-newline.  */
+#ifdef PASCAL_STRINGS
+/* Returns -1 if the escape is a \p (Pascal-string-length).  */
+#endif
 
 static int
 readescape (ignore_ptr)
@@ -1039,6 +1076,11 @@ readescape (ignore_ptr)
       if (pedantic)
 	pedwarn ("non-ANSI escape sequence `\\%c'", c);
       return c;
+#ifdef PASCAL_STRINGS
+    case 'p':
+      if (flag_pascal_strings)
+        return -1;
+#endif
     }
   if (c >= 040 && c < 0177)
     pedwarn ("unknown escape sequence `\\%c'", c);
@@ -1089,6 +1131,16 @@ struct try_type type_sequence[] =
   { &long_long_unsigned_type_node, 1, 1, 1}
 };
 #endif /* 0 */
+
+/* <tur25May99> Horrible Hackery for contextualizing 'vector' and 'pixel'.  */
+
+static unsigned long this_token_number, last_vector_token_number = -2;
+
+/* PEEKAHEAD_ID_BUF must be big enough to hold one of the following IDs:
+   signed, unsigned, bool, float, pixel, char, int, short, long.  */
+
+static char peekahead_id_buf[9];	/* strlen("unsigned") + 1 */
+
 
 struct pf_args
 {
@@ -1213,6 +1265,10 @@ yylex ()
   int wide_flag = 0;
   int objc_flag = 0;
 
+  ++this_token_number;
+  if (peekahead_id_buf[0] != 0)		/* copy to token_buf[] */
+    goto letter;
+
 #if !USE_CPPLIB
   if (nextchar >= 0)
     c = nextchar, nextchar = -1;
@@ -1277,6 +1333,17 @@ yylex ()
       goto letter;
 
     case '@':
+#if defined (_WIN32) && defined (NEXT_PDO)
+    {
+		int theNextChar = getc(finput);
+		ungetc(theNextChar, finput);
+		
+		if( (theNextChar >= '0') && (theNextChar <= '9') )
+		{
+		  goto letter;
+		}
+	}
+#endif /* _WIN32 && NEXT_PDO */
       if (!doing_objc_thang)
 	{
 	  value = c;
@@ -1311,9 +1378,30 @@ yylex ()
     case '$':
     letter:
       p = token_buffer;
+
+      if (peekahead_id_buf[0] != 0)
+	{
+	  char *src = peekahead_id_buf;
+
+	  while (*p++ = *src++)
+	     ;
+	  peekahead_id_buf[0] = 0;
+	  c = *(p -= 2);	/* last character in peekahead_id_buf.  */
+	}
+
       while (ISALNUM (c) || c == '_' || c == '$' || c == '@')
 	{
 	  /* Make sure this char really belongs in an identifier.  */
+	  if (c == '@')
+	    {
+#if defined (_WIN32) && defined (NEXT_PDO)
+	      int nextchar = getc(finput);
+	      ungetc(nextchar, finput);
+	      if ((nextchar < '0') || (nextchar > '9'))
+#endif /* _WIN32 && NEXT_PDO */
+	      if (! doing_objc_thang)
+		break;
+	    }
 	  if (c == '$')
 	    {
 	      if (! dollars_in_ident)
@@ -1359,6 +1447,70 @@ yylex ()
 		    || TREE_CODE (lastiddecl) != TYPE_DECL)
 		  value = IDENTIFIER;
 	      }
+	    else
+            /* <tur25May99> Horrible Hack to contextualize the vector and
+               pixel keywords after I failed to modify the grammar.  */
+            if (flag_altivec && ptr->rid == RID_VECTOR)
+              {
+		int is_keyword = 0;
+
+                if (token_buffer[0] == '_')	/* it's '__vector'  */
+		  is_keyword = 1;
+		else
+		{
+		  /* one of signed, unsigned, bool, float, pixel, char
+		     int, short, long.  */
+		  nextchar = skip_white_space (nextchar);
+		  if (nextchar == 'u' || nextchar == 's' || nextchar == 'b'
+		     || nextchar == 'f' || nextchar == 'p' || nextchar == 'c'
+		     || nextchar == 'i' || nextchar == 'l')
+		    {
+		      char *pb = peekahead_id_buf;
+
+		      *pb++ = nextchar;
+		      c = GETC ();
+		      while (ISALPHA (c)
+			&& pb < &peekahead_id_buf[sizeof (peekahead_id_buf)-1])
+			{
+			  *pb++ = c;
+			  c = GETC ();
+			}
+		      *pb = 0;
+		      UNGETC (c);
+		      nextchar = -1;
+		      pb = peekahead_id_buf;
+
+		      /* Check if identifier is too big to be one of
+			 our "vector" follow-up words.  */
+
+		      /* Check if identifier is too big to be one of our words.  */
+		      if (ISALNUM (c) || c == '_' || c == '$')
+		        /* Yep -- too big!  */ ;
+		      else
+		      if (! strcmp (pb, "pixel") || ! strcmp (pb, "unsigned")
+		        || ! strcmp (pb, "signed") || ! strcmp (pb, "bool")
+		        || ! strcmp (pb, "float") || ! strcmp (pb, "char")
+		        || ! strcmp (pb, "int") || ! strcmp (pb, "short")
+		        || ! strcmp (pb, "long"))
+		        {
+		          is_keyword = 1;
+		        }
+		    }
+		}
+
+      	      if (is_keyword)
+		last_vector_token_number = this_token_number;
+	      else
+	      	value = IDENTIFIER;
+              }
+            else
+            if (flag_altivec
+		&& (ptr->rid == RID_BOOL
+			|| (ptr->rid == RID_PIXEL && token_buffer[0] != '_')))
+              {
+                if (last_vector_token_number != this_token_number - 1)
+                    value = IDENTIFIER;
+              }
 
 	    /* Even if we decided to recognize asm, still perhaps warn.  */
 	    if (pedantic
@@ -1403,13 +1555,18 @@ yylex ()
           else if (doing_objc_thang)
             {
 	      tree objc_interface_decl = is_class_name (yylval.ttype);
-
-	      if (objc_interface_decl)
+	      /* ObjC class names are in the same namespace as variables
+		 and typedefs, and hence are shadowed by local declarations.  */
+	      if (objc_interface_decl 
+	          && (global_bindings_p () 
+		      || (!objc_need_raw_identifier 
+		          && !lastiddecl)))
 		{
 		  value = CLASSNAME;
 		  yylval.ttype = objc_interface_decl;
 		}
 	    }
+	  objc_need_raw_identifier = 0;
 	}
 
       break;
@@ -1912,6 +2069,14 @@ yylex ()
 		c = readescape (&ignore);
 		if (ignore)
 		  goto tryagain;
+#ifdef PASCAL_STRINGS
+		if (flag_pascal_strings && c < 0)
+		  {
+		    pedwarn ("pascal string-length escape (\\p) not"
+		             " allowed in character constant");
+		    c = 'p';
+		  }
+#endif
 		if (width < HOST_BITS_PER_INT
 		    && (unsigned) c >= ((unsigned)1 << width))
 		  pedwarn ("escape sequence out of range for character");
@@ -2014,8 +2179,15 @@ yylex ()
 	    num_chars = max_chars;
 	    error ("character constant too long");
 	  }
-	else if (chars_seen != 1 && ! flag_traditional && warn_multichar)
-	  warning ("multi-character character constant");
+	else if (chars_seen != 1 && ! flag_traditional)
+#ifdef FOUR_CHAR_CONSTANTS
+	  /* warn_multichar won't warn about 4-char constants. $$$ */
+	  if ((chars_seen == 4 && warn_four_char_constants)
+	      || (chars_seen != 4 && warn_multichar))
+#else
+	  if (warn_multichar)
+#endif
+	    warning ("multi-character character constant");
 
 	/* If char type is signed, sign-extend the constant.  */
 	if (! wide_flag)
@@ -2052,6 +2224,9 @@ yylex ()
       {
 	unsigned width = wide_flag ? WCHAR_TYPE_SIZE
 	                           : TYPE_PRECISION (char_type_node);
+#ifdef PASCAL_STRINGS
+	int is_pascal_string = 0;
+#endif
 #ifdef MULTIBYTE_CHARS
 	int longest_char = local_mb_cur_max ();
 	(void) local_mbtowc (NULL_PTR, NULL_PTR, 0);
@@ -2067,6 +2242,34 @@ yylex ()
 		c = readescape (&ignore);
 		if (ignore)
 		  goto skipnewline;
+#ifdef PASCAL_STRINGS
+		if (flag_pascal_strings && c < 0)
+		  {
+		    if (wide_flag)
+		      {
+			pedwarn ("pascal string-length escape (\\p) not"
+		                 " allowed in wide string");
+			c = 'p';
+		      }
+		    else if (objc_flag)
+		      {
+			pedwarn ("pascal string-length escape (\\p) not"
+		                 " allowed in Objective-C string");
+			c = 'p';
+		      }
+		    else if (p == token_buffer + 1)
+		      {
+			is_pascal_string = 1;
+			c = 0;
+		      }
+		    else
+		      {
+			pedwarn ("pascal string-length escape (\\p) must"
+		                 " be at beginning of string");
+			c = 'p';
+		      }
+		  }
+#endif
 		if (width < HOST_BITS_PER_INT
 		    && (unsigned) c >= ((unsigned)1 << width))
 		  pedwarn ("escape sequence out of range for character");
@@ -2187,9 +2390,29 @@ yylex ()
 	  }
 	else
 	  {
+#ifdef PASCAL_STRINGS
+	    if (is_pascal_string)
+	      {
+		/* The "3" characters not counted in slen are the initial
+		   doublequote, the length byte, and the trailing null. */
+		int slen = p - token_buffer -3;
+		if (slen > 255)
+		  {
+		    error ("pascal string too long");
+		    slen = 255;
+		  }
+		token_buffer[1] = slen;
+	        yylval.ttype = build_string (slen + 2, token_buffer + 1);
+	        TREE_TYPE (yylval.ttype) = unsigned_char_array_type_node;
+	      }
+	    else {
+#endif
 	    yylval.ttype = build_string (p - (token_buffer + 1),
 					 token_buffer + 1);
 	    TREE_TYPE (yylval.ttype) = char_array_type_node;
+#ifdef PASCAL_STRINGS
+	    }
+#endif
 	    value = STRING;
 	  }
 
@@ -2324,6 +2547,10 @@ yylex ()
       value = c;
       break;
 
+    case ';': case ')': case ',':
+      objc_need_raw_identifier = 0;
+      /* Fall through.  */
+      
     default:
       value = c;
     }

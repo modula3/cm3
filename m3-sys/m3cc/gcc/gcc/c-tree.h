@@ -222,6 +222,9 @@ extern tree convert                             PROTO((tree, tree));
 /* in c-decl.c */
 /* Standard named or nameless data types of the C compiler.  */
 extern tree char_array_type_node;
+#ifdef PASCAL_STRINGS
+extern tree unsigned_char_array_type_node;
+#endif
 extern tree char_type_node;
 extern tree const_ptr_type_node;
 extern tree const_string_type_node;
@@ -253,6 +256,17 @@ extern tree complex_integer_type_node;
 extern tree complex_float_type_node;
 extern tree complex_double_type_node;
 extern tree complex_long_double_type_node;
+extern tree vector_unsigned_char_type_node;
+extern tree vector_signed_char_type_node;
+extern tree vector_boolean_char_type_node;
+extern tree vector_unsigned_short_type_node;
+extern tree vector_signed_short_type_node;
+extern tree vector_boolean_short_type_node;
+extern tree vector_unsigned_long_type_node;
+extern tree vector_signed_long_type_node;
+extern tree vector_boolean_long_type_node;
+extern tree vector_float_type_node;
+extern tree vector_pixel_type_node;
 extern tree ptr_type_node;
 extern tree ptrdiff_type_node;
 extern tree short_integer_type_node;
@@ -363,6 +377,8 @@ extern tree c_sizeof_nowarn                     PROTO((tree));
 extern tree c_size_in_bytes                     PROTO((tree));
 extern tree c_alignof				PROTO((tree));
 extern tree c_alignof_expr			PROTO((tree));
+extern tree c_vec_step				PROTO((tree));
+extern tree c_vec_step_expr			PROTO((tree));
 extern tree default_conversion                  PROTO((tree));
 extern tree build_component_ref                 PROTO((tree, tree));
 extern tree build_indirect_ref                  PROTO((tree, const char *));
@@ -399,6 +415,7 @@ extern void c_expand_asm_operands		PROTO((tree, tree, tree, tree,
 						       int, char *, int));
 extern void c_expand_return			PROTO((tree));
 extern tree c_expand_start_case                 PROTO((tree));
+extern tree build_vector_constant		PROTO((tree, tree));
 
 /* in c-iterate.c */
 extern void init_iterators			PROTO((void));
@@ -441,6 +458,23 @@ extern int flag_no_asm;
 
 extern int flag_hosted;
 
+#ifdef ENABLE_NEWLINE_MAPPING
+/* Nonzero means map \n to carriage return (0x0D) instead of
+   to line feed (0x0A).  */
+extern int flag_map_newline_to_cr;
+#endif
+
+#ifdef PASCAL_STRINGS
+/* Nonzero means initial "\p" in string becomes a length byte and
+   string type becomes _unsigned_ char* .  */
+
+extern int flag_pascal_strings;
+#endif
+
+/* Nonzero for -faltivec: Enable the SIMD programming model.  */
+
+extern int flag_altivec;
+
 /* Nonzero means warn about implicit declarations.  */
 
 extern int warn_implicit;
@@ -449,7 +483,16 @@ extern int warn_implicit;
    to get extra warnings from them.  These warnings will be too numerous
    to be useful, except in thoroughly ANSIfied programs.  */
 
+/*extern int warn_write_strings;*/
 extern int flag_const_strings;
+
+#ifdef FOUR_CHAR_CONSTANTS
+/* Nonzero (the default) means give warnings for any four-character
+   character constants.  Zero means be quiet about them.  These are
+   used often in Mac code, as "OSTypes".  */
+
+extern int warn_four_char_constants;
+#endif
 
 /* Nonzero means warn about sizeof (function) or addition/subtraction
    of function pointers.  */
@@ -540,6 +583,10 @@ extern int warn_multichar;
 
 extern int warn_long_long;
 
+/* Warn about long double.  */
+
+extern int warn_long_double;
+
 /* Nonzero means we are reading code that came from a system header file.  */
 
 extern int system_header_p;
@@ -547,6 +594,10 @@ extern int system_header_p;
 /* Nonzero enables objc features.  */
 
 extern int doing_objc_thang;
+
+/* Nonzero forces lexer to return IDENTIFIER even if CLASSNAME is available.  */
+
+extern int objc_need_raw_identifier;
 
 /* In c-decl.c */
 extern void finish_incomplete_decl PROTO((tree));
