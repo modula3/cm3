@@ -197,7 +197,7 @@ PROCEDURE CompileUnits (main     : TEXT;
     s.gui            := GetConfigBool (s, "M3_WINDOWS_GUI");
     s.do_coverage    := GetConfigBool (s, "M3_COVERAGE");
     s.broken_linker  := GetConfigBool (s, "M3_NEED_STANDALONE_LINKS");
-    s.lazy_init      := GetConfigBool (s, "M3_LAZY_MODULE_INIT");
+    s.lazy_init      := GetConfigBool (s, "M3_LAZY_MODULE_INIT", TRUE);
     s.Rpath_flag     := GetConfigText (s, "M3_SHARED_LIB_ARG");
     s.link_coverage  := GetConfigText (s, "M3_COVERAGE_LIB");
     s.m3_front_flags := GetConfigArray (s, "M3_FRONT_FLAGS");
@@ -263,10 +263,10 @@ PROCEDURE GetConfigInt (s: State;  symbol: TEXT): INTEGER =
     RETURN 0;
   END GetConfigInt;
 
-PROCEDURE GetConfigBool (s: State;  symbol: TEXT): BOOLEAN =
+PROCEDURE GetConfigBool (s: State;  symbol: TEXT; default := FALSE): BOOLEAN =
   VAR bind := GetDefn (s, symbol);
   BEGIN
-    IF (bind = NIL) THEN RETURN FALSE; END;
+    IF (bind = NIL) THEN RETURN default; END;
     TRY
       RETURN QVal.ToBool (s.machine, bind.value);
     EXCEPT Quake.Error (msg) =>
