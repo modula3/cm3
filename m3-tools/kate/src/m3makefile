@@ -1,0 +1,15 @@
+% $Id: m3makefile,v 1.1 2004-01-22 16:44:57 thielema Exp $
+
+% Here are syntax highlighting patterns for Kate and other KDE editors.
+% They allow for a nice look in konqueror, etc.
+
+% If a syntax highlighting description is found for the first time
+% some information is copied to
+% .kde/share/config/katesyntaxhighlightingrc
+% It is not updated later though.
+
+% You are adviced to copy or link the files to
+%    /opt/kde3/share/apps/katepart/syntax
+
+source("m3quake.xml")
+source("modula3.xml")
