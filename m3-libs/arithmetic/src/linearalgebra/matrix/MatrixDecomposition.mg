@@ -230,18 +230,48 @@ BEGIN
 END GaussElim;
 *)
 
-(* LU factoring *)
-PROCEDURE LUFactorD (A: M.T; VAR index: IndexArray; VAR d: INTEGER)
-  RAISES {Arith.Error} =
-  (**Factor A into Lower/Upper portions
-  Destroys A's values.
-  A is real nxn
-  index is integer nx1
-  return value "d" is used for BackSubst and det
-  *)
+(* Non-destructive LU factoring *)
+
+(* This routine recycles the results of LUFactorD in order to avoid writing
+   a separate routine with its own bugs :-) *)
+PROCEDURE LUFactor (A: M.T; ): LUFactors RAISES {Arith.Error} =
   <* UNUSED *>
   CONST
     ftn = "LUFactor";
+
+  VAR
+    Acopy            := M.Copy(A);
+    index            := NEW(REF IndexArray, NUMBER(A^));
+    d    : [-1 .. 1];
+    L, U             := M.NewZero(NUMBER(A^), NUMBER(A[0]));
+  BEGIN
+    LUFactorD(Acopy, index^, d);
+    FOR j := FIRST(Acopy^) TO LAST(Acopy^) DO
+      SUBARRAY(L[j], 0, j) := SUBARRAY(A[j], 0, j);
+      L[j, j] := R.One;
+      WITH l = NUMBER(U[j]) - j DO
+        SUBARRAY(U[j], j, l) := SUBARRAY(A[j], j, l);
+      END;
+    END;
+    RETURN LUFactors{L, U, index, d};
+  END LUFactor;
+
+PROCEDURE LUBackSubst (LU: LUFactors; b: V.T; ): V.T RAISES {Arith.Error} =
+  <* UNUSED *>
+  CONST
+    ftn = "LUBackSubst";
+  VAR B := V.Copy(b);
+  BEGIN
+    LUBackSubstSep(LU.L, LU.U, B, LU.index^);
+    RETURN B;
+  END LUBackSubst;
+
+(* Destructive LU factoring *)
+PROCEDURE LUFactorD (A: M.T; VAR index: IndexArray; VAR d: [-1 .. 1]; )
+  RAISES {Arith.Error} =
+  <* UNUSED *>
+  CONST
+    ftn = "LUFactorD";
   VAR
     imax                    := 0;
     sum, dum, max, tmp: R.T;
@@ -252,6 +282,7 @@ PROCEDURE LUFactorD (A: M.T; VAR index: IndexArray; VAR d: INTEGER)
     n2                      := LAST(index);
     scale                   := NEW(V.T, n1 + 1);
     tmprow                  := NEW(V.T, n1 + 1);
+
   BEGIN
     IF (m1 # n1) OR (m1 # n2) THEN
       RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
@@ -333,25 +364,25 @@ PROCEDURE LUFactorD (A: M.T; VAR index: IndexArray; VAR d: INTEGER)
 (*-----------------*)
 PROCEDURE LUBackSubstD (A: M.T; B: V.T; READONLY index: IndexArray)
   RAISES {Arith.Error} =
-  (**After LUFactor on A, solves A dot X = B.
-  X is returned in B.  B's values are destroyed
-  A is real nxn
-  B is real nx1
-  index is integer nx1
-  *)
+  BEGIN
+    LUBackSubstSep(A, A, B, index);
+  END LUBackSubstD;
+
+PROCEDURE LUBackSubstSep (A, U: M.T; B: V.T; READONLY index: IndexArray)
+  RAISES {Arith.Error} =
   <* UNUSED *>
   CONST
-    ftn = "LUBackSubst";
+    ftn = "LUBackSubstSep";
   VAR
-    Af              := FIRST(A^);
-    Al              := LAST(A^);
-    m1              := LAST(A^); (*num rows*)
-    n1              := LAST(A[0]); (*num cols*)
-    m2              := LAST(B^); (*num rows*)
-    ii, ip: INTEGER;
+    Af               := FIRST(A^);
+    Al               := LAST(A^);
+    m1               := LAST(A^); (*num rows*)
+    n1               := LAST(A[0]); (*num cols*)
+    m2               := LAST(B^); (*num rows*)
+    ii, ip: CARDINAL;
     sum   : R.T;
   BEGIN
-    IF (m1 # n1) OR (m2 # m1) THEN
+    IF m1 # n1 OR m2 # m1 THEN
       RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
     END;
 
@@ -373,11 +404,11 @@ PROCEDURE LUBackSubstD (A: M.T; B: V.T; READONLY index: IndexArray)
     FOR i := Al TO Af BY -1 DO
       sum := B[i];
       IF i < Al THEN
-        FOR j := i + 1 TO Al DO sum := sum - A[i, j] * B[j]; END (* for *);
+        FOR j := i + 1 TO Al DO sum := sum - U[i, j] * B[j]; END (* for *);
       END (* if *);
-      B[i] := sum / A[i, i];
+      B[i] := sum / U[i, i];
     END (* for *);
-  END LUBackSubstD;
+  END LUBackSubstSep;
 (*-----------------*)
 PROCEDURE LUInverseD (A: M.T; READONLY index: IndexArray): M.T
   RAISES {Arith.Error} =
@@ -418,7 +449,7 @@ PROCEDURE LUInverseD (A: M.T; READONLY index: IndexArray): M.T
     RETURN B;
   END LUInverseD;
 (*-----------------*)
-PROCEDURE LUDet (A: M.T; d: INTEGER): R.T =
+PROCEDURE LUDet (A: M.T; d: [-1 .. 1]): R.T =
   (*after LUFactor on A and no backsubs, returns determinant "d" is the
      parity marker from LUFactor *)
   <* UNUSED *>

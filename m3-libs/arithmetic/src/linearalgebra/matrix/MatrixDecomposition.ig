@@ -70,12 +70,26 @@ pivot:=FALSE
 
 (* LU Factoring *)
 
-PROCEDURE LUFactorD (A: M.T; VAR index: IndexArray; VAR d: INTEGER)
-  RAISES {Error};
-(* Factor A into Lower/Upper portions Destroys A's values.
+TYPE
+  LUFactors = RECORD
+                L, U : M.T;
+                index: REF IndexArray;
+                d    : [-1 .. 1];
+              END;
 
-   A is real nxn index is integer nx1 return value "d" is used for
-   BackSubst and det *)
+PROCEDURE LUFactor (A: M.T; ): LUFactors RAISES {Error};
+
+PROCEDURE LUBackSubst (LU: LUFactors; b: V.T; ): V.T RAISES {Error};
+
+
+PROCEDURE LUFactorD (A: M.T;     (* in: matrix to factorize, out: merged
+                                    lower and upper triangular factor
+                                    matrixes *)
+                     VAR index: IndexArray;  (* line permutations *)
+                     VAR d: [-1 .. 1];  (* parity of permutations, needed
+                                           for determinant computation *))
+  RAISES {Error};
+(* Factor A into Lower/Upper portions Destroys A's values. *)
 
 PROCEDURE LUBackSubstD (A: M.T; B: V.T; READONLY index: IndexArray)
   RAISES {Error};
@@ -93,7 +107,7 @@ B is real nxn
 index is integer nx1
 *)
 
-PROCEDURE LUDet (A: M.T; d: INTEGER): R.T RAISES {Error};
+PROCEDURE LUDet (A: M.T; d: [-1 .. 1]): R.T RAISES {Error};
 (*after LUFactor on A and no backsubs, returns determinant "d" is the
    parity marker from LUDecomp *)
 
