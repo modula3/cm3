@@ -8,6 +8,7 @@ Abstract: Roots.
 2/17/96   Harry George    Converted from OO to ADT format.
 *)
 FROM xUtils IMPORT Error;
+IMPORT NumberTheory AS NT;
 
 <*UNUSED*> CONST Module = "RootBasic.";
 
@@ -258,6 +259,7 @@ BEGIN
 END ElimMultRoots;
 
 
+(*--------------------*)
 (*given the sequence x of power sums,
   return the next one with respect to the polynomial y*)
 (*consider x as a cyclic buffer for successive sums of powers of the roots*)
@@ -277,9 +279,9 @@ BEGIN
   RETURN R.Neg(z);
 END GetNextPowerSum;
 
-(*could be sped up by factorizing the exponent into primes*)
-PROCEDURE PowN(x:T;
-               y:CARDINAL):T=
+(*--------------------*)
+PROCEDURE PowNSlow(x:T;
+                    y:CARDINAL):T=
 (*select each n-th element from the power sum sequence*)
 VAR
   ps,psz:REF PowerSumSeq;
@@ -328,6 +330,20 @@ BEGIN
     ScaleDownRoots(qz^,powcx,LAST(qz^)-1);
     RETURN qz;
   END;
+END PowNSlow;
+
+(*--------------------*)
+(*speed up by factorizing the exponent into primes*)
+PROCEDURE PowN(x:T;
+               y:CARDINAL):T=
+VAR
+  pr:NT.Array;
+BEGIN
+  pr:=NT.Factor(y);
+  FOR j:=0 TO LAST(pr^) DO
+    x:=PowNSlow(x,pr[j]);
+  END;
+  RETURN x;
 END PowN;
 
 (*

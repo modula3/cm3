@@ -572,6 +572,7 @@ BEGIN
         z:=IR.PowN(x,k);
         Msg(Fmt.FN("%s^%s = %s\n",
                    ARRAY OF TEXT{IPF.Fmt(x), Fmt.Int(k), IPF.Fmt(z)}));
+        <*ASSERT IP.Equal(z,IR.PowNSlow(x,k))*>
       END;
     END;
   END;
