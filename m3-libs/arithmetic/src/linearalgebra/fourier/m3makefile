@@ -1,9 +1,0 @@
-import("libm3")
-
-template("fourier")
-
-
-generic_module("FourierTransform")
-FourierTransform("Real",     "Real",     "Basic", "Fast")
-FourierTransform("LongReal", "LongReal", "Basic", "Fast")
-FourierTransform("Extended", "Extended", "Basic", "Fast")
