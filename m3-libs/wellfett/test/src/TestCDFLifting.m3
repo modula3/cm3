@@ -1,7 +1,7 @@
 MODULE TestCDFLifting;
 
 IMPORT LongRealBasic AS R;
-IMPORT LongRealTrans AS RT;
+(*IMPORT LongRealTrans AS RT;*)
 IMPORT LongRealSignal AS S;
 
 IMPORT LongRealBSplineWavelet AS BSpl;
@@ -43,6 +43,7 @@ PROCEDURE LiftCDFEven (order: R.T; num: CARDINAL) =
         g := h;
         h := swap;
       END;
+      <*FATAL Thread.Alerted, Wr.Failure*>
       VAR hscaled := h.scale(R.One / fac);
       BEGIN
         IO.Put(
@@ -67,6 +68,7 @@ PROCEDURE LiftCDFOdd (order: R.T; num: CARDINAL) =
     orderlower := order - R.One;
     g          := S.One;
     h          := S.One;
+  <*FATAL Thread.Alerted, Wr.Failure*>
   BEGIN
     PL.Init();
     (*the first lifting step differs from the following ones*)
