@@ -220,7 +220,7 @@ PROCEDURE DeriveDist (normalMat    : M.T;
 
 PROCEDURE DeriveSSE (hdual, gdual0, s: S.T; ): FnD.T RAISES {NA.Error} =
   VAR
-    gdual   := gdual0.superpose(s.upsample(2).convolve(hdual));
+    gdual   := gdual0.superpose(hdual.upConvolve(s, 2));
     hprimal := gdual.alternate();
     gprimal := hdual.alternate();
 
@@ -249,7 +249,7 @@ PROCEDURE DeriveWSSE (hdual, gdual0, s: S.T; c: R.T): FnD.T
      The whole computation is horribly inefficient but this is for research
      only! *)
   VAR
-    hsdual   := s.upsample(2).convolve(hdual);
+    hsdual   := hdual.upConvolve(s, 2);
     gdual    := gdual0.superpose(hsdual.scale(1.0D0 / c));
     hprimal  := gdual.alternate();
     gprimal  := hdual.alternate();
@@ -399,11 +399,12 @@ PROCEDURE GetLiftedPrimalGeneratorMask (         hdual, gdual0: S.T;
                                         READONLY mc           : MatchCoef):
   S.T =
   VAR
-    hsdual := mc.lift.upsample(2).convolve(hdual);
+    hsdual := hdual.upConvolve(mc.lift, 2);
     gdual  := gdual0.superpose(hsdual.scale(R.One / mc.wavelet0Amp));
   BEGIN
     RETURN gdual.alternate();
   END GetLiftedPrimalGeneratorMask;
+
 
 TYPE
   Matching =
@@ -683,8 +684,10 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
 
     BEGIN
       CASE 0 OF
-      | 0 => matching := NEW(VarWavAmpMatching, yfirst:=yfirst);
-      | 1 => matching := NEW(FixedWavAmpMatching, yfirst:=yfirst,wavAmp := x[LAST(x^)]);
+      | 0 => matching := NEW(VarWavAmpMatching, yfirst := yfirst);
+      | 1 =>
+          matching := NEW(FixedWavAmpMatching, yfirst := yfirst,
+                          wavAmp := x[LAST(x^)]);
       ELSE
       END;
       PL.Init();
@@ -710,8 +713,8 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         VAR
           mc := matching.splitParamVec(x);
           gdual := gdual0.superpose(
-                     hdualvan.convolve(
-                       mc.lift.scale(R.One / mc.wavelet0Amp).upsample(2)));
+                     hdualvan.upConvolve(
+                       mc.lift.scale(R.One / mc.wavelet0Amp), 2));
         BEGIN
           PL.StartPage();
           WP.PlotWaveletsYLim(hdual, gdual, levels, ymin, ymax);
@@ -756,9 +759,12 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
            mc.lift.translate((2 - smooth - vanishing) DIV 2), vanatom,
            vanishing);
     gdual0a := gdual0.scale(mc.wavelet0Amp);
-    gduala  := gdual0a.superpose(s.upsample(2).convolve(hdual));
+    gduala  := gdual0a.superpose(hdual.upConvolve(s, 2));
     gdual := gdual0.superpose(
-               s.upsample(2).convolve(hdual.scale(R.One / mc.wavelet0Amp)));
+               hdual.scale(R.One / mc.wavelet0Amp).upConvolve(s, 2));
+    (*
+gdual := GetLiftedPrimalGeneratorMask(hdual,gdual0,MatchCoef{lift:=s,wavelet0Amp:=mc.wavelet0Amp,targetAmp:=R.One});
+*)
     unit          := IIntPow.Power(2, levels);
     twopow        := FLOAT(unit, R.T);
     grid          := R.One / twopow;
@@ -782,9 +788,9 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
                 "gdual\n%s\n%s\n"*),
              ARRAY OF
                TEXT{SF.Fmt(s), SF.Fmt(gdual.alternate().wrapCyclic(3))
-               (*, SF.Fmt(s.upsample(2).convolve(hdual)),
-                  SF.Fmt(SIntPow.MulPower(mc.lift.upsample(2).convolve(
-                  hdualnovan), vanatom, vanishing)), SF.Fmt(gdual0),
+               (*, SF.Fmt(hdual.upConvolve(s,2)),
+                  SF.Fmt(SIntPow.MulPower(hdualnovan.upConvolve(mc.lift,2),
+                  vanatom, vanishing)), SF.Fmt(gdual0),
                   SF.Fmt(SIntPow.MulPower(gdual0novan, vanatom,
                   vanishing)), SF.Fmt(gdual), SF.Fmt(SIntPow.MulPower(
                   GetLiftedPrimalGeneratorMask( hdualnovan, gdual0novan,
