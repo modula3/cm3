@@ -1,12 +1,13 @@
 ;;- Machine description for the pdp11 for GNU C compiler
-;; Copyright (C) 1994, 1995, 1997, 1999 Free Software Foundation, Inc.
+;; Copyright (C) 1994, 1995, 1997, 1998, 1999, 2000
+;; Free Software Foundation, Inc.
 ;; Contributed by Michael K. Gschwind (mike@vlsivie.tuwien.ac.at).
 
 ;; This file is part of GNU CC.
 
 ;; GNU CC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 1, or (at your option)
+;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
 
 ;; GNU CC is distributed in the hope that it will be useful,
@@ -223,7 +224,7 @@
 (define_insn ""
   [(set (pc)
 	(if_then_else
-	 (ne (plus:HI (match_operand:HI 0 "register_operand" "r")
+	 (ne (plus:HI (match_operand:HI 0 "register_operand" "+r")
 		      (const_int -1))
 	     (const_int 0))
 	 (label_ref (match_operand 1 "" ""))
@@ -732,7 +733,7 @@
      {
        output_asm_insn(\"{stcdf|movfo} %1, -(sp)\", operands);
        output_asm_insn(\"mov (sp)+, %0\", operands);
-       operands[0] = gen_rtx(REG, HImode, REGNO (operands[0])+1);
+       operands[0] = gen_rtx_REG (HImode, REGNO (operands[0])+1);
        output_asm_insn(\"mov (sp)+, %0\", operands);
        return \"\";
      }
@@ -805,8 +806,8 @@
 
   /* make register pair available */
   latehalf[0] = operands[0];
-  operands[0] = gen_rtx(REG, HImode, REGNO (operands[0])+1);
-    
+  operands[0] = gen_rtx_REG (HImode, REGNO (operands[0])+ 1);
+
   output_asm_insn(\"movb %1, %0\", operands);
   output_asm_insn(\"sxt %0\", latehalf);
     
@@ -857,7 +858,7 @@
 
       /* make register pair available */
       latehalf[0] = operands[0];
-      operands[0] = gen_rtx(REG, HImode, REGNO (operands[0])+1);
+      operands[0] = gen_rtx_REG (HImode, REGNO (operands[0]) + 1);
 
       output_asm_insn(\"mov %1, %0\", operands);
       output_asm_insn(\"sxt %0\", latehalf);
@@ -883,7 +884,7 @@
   rtx lateoperands[2];
 
   lateoperands[0] = operands[0];
-  operands[0] = gen_rtx(REG, HImode, REGNO (operands[0])+1);
+  operands[0] = gen_rtx_REG (HImode, REGNO (operands[0]) + 1);
 
   output_asm_insn(\"tst %0\", operands);
   sprintf(buf, \"bge extendhisi%d\", count);
@@ -918,7 +919,7 @@
        rtx latehalf[2];
 
        latehalf[0] = NULL; 
-       latehalf[1] = gen_rtx(REG, HImode, REGNO (operands[0])+1);
+       latehalf[1] = gen_rtx_REG (HImode, REGNO (operands[0]) + 1);
        output_asm_insn(\"mov %1, -(sp)\", latehalf);
        output_asm_insn(\"mov %1, -(sp)\", operands);
        
@@ -952,7 +953,7 @@
        output_asm_insn(\"{stcdl|movfi} %1, -(sp)\", operands);
        output_asm_insn(\"seti\", operands);
        output_asm_insn(\"mov (sp)+, %0\", operands);
-       operands[0] = gen_rtx(REG, HImode, REGNO (operands[0])+1);
+       operands[0] = gen_rtx_REG (HImode, REGNO (operands[0]) + 1);
        output_asm_insn(\"mov (sp)+, %0\", operands);
        return \"\";
      }
@@ -992,13 +993,12 @@
 
      or is lateoperands the low word?? - looks like it! */
 
-  unsigned int i;
   rtx lateoperands[3];
   
   lateoperands[0] = operands[0];
 
   if (REG_P (operands[0]))
-    operands[0] = gen_rtx(REG, HImode, REGNO(operands[0]) + 1);
+    operands[0] = gen_rtx_REG (HImode, REGNO (operands[0]) + 1);
   else
     operands[0] = adj_offsettable_operand (operands[0], 2);
   
@@ -1007,7 +1007,7 @@
     lateoperands[2] = operands[2];
 
     if (REG_P (operands[2]))
-      operands[2] = gen_rtx(REG, HImode, REGNO(operands[2]) + 1);
+      operands[2] = gen_rtx_REG (HImode, REGNO (operands[2]) + 1);
     else
       operands[2] = adj_offsettable_operand(operands[2], 2);
 
@@ -1017,8 +1017,8 @@
     return \"\";
   }
 
-  lateoperands[2] = GEN_INT ((INTVAL(operands[2]) >> 16) & 0xffff);
-  operands[2] = GEN_INT (INTVAL(operands[2]) & 0xffff);
+  lateoperands[2] = GEN_INT ((INTVAL (operands[2]) >> 16) & 0xffff);
+  operands[2] = GEN_INT (INTVAL (operands[2]) & 0xffff);
   
   if (INTVAL(operands[2]))
   { 
@@ -1095,20 +1095,19 @@
 
      or is lateoperands the low word?? - looks like it! */
 
-  unsigned int i;
   rtx lateoperands[3];
   
   lateoperands[0] = operands[0];
 
   if (REG_P (operands[0]))
-    operands[0] = gen_rtx(REG, HImode, REGNO(operands[0]) + 1);
+    operands[0] = gen_rtx_REG (HImode, REGNO (operands[0]) + 1);
   else
     operands[0] = adj_offsettable_operand (operands[0], 2);
   
   lateoperands[2] = operands[2];
 
   if (REG_P (operands[2]))
-    operands[2] = gen_rtx(REG, HImode, REGNO(operands[2]) + 1);
+    operands[2] = gen_rtx_REG (HImode, REGNO (operands[2]) + 1);
   else
     operands[2] = adj_offsettable_operand(operands[2], 2);
 
@@ -1203,13 +1202,12 @@
 
      or is lateoperands the low word?? - looks like it! */
 
-  unsigned int i;
   rtx lateoperands[3];
   
   lateoperands[0] = operands[0];
 
   if (REG_P (operands[0]))
-    operands[0] = gen_rtx(REG, HImode, REGNO(operands[0]) + 1);
+    operands[0] = gen_rtx_REG (HImode, REGNO (operands[0]) + 1);
   else
     operands[0] = adj_offsettable_operand (operands[0], 2);
   
@@ -1218,7 +1216,7 @@
     lateoperands[2] = operands[2];
 
     if (REG_P (operands[2]))
-      operands[2] = gen_rtx(REG, HImode, REGNO(operands[2]) + 1);
+      operands[2] = gen_rtx_REG (HImode, REGNO (operands[2]) + 1);
     else
       operands[2] = adj_offsettable_operand(operands[2], 2);
 
@@ -1227,8 +1225,8 @@
     return \"\";
   }
 
-  lateoperands[2] = GEN_INT ((INTVAL(operands[2]) >> 16) & 0xffff);
-  operands[2] = GEN_INT (INTVAL(operands[2]) & 0xffff);
+  lateoperands[2] = GEN_INT ((INTVAL (operands[2]) >> 16) & 0xffff);
+  operands[2] = GEN_INT (INTVAL (operands[2]) & 0xffff);
   
   /* these have different lengths, so we should have 
      different constraints! */
@@ -1269,32 +1267,31 @@
 
      or is lateoperands the low word?? - looks like it! */
 
-  unsigned int i;
   rtx lateoperands[3];
   
   lateoperands[0] = operands[0];
 
   if (REG_P (operands[0]))
-    operands[0] = gen_rtx(REG, HImode, REGNO(operands[0]) + 1);
+    operands[0] = gen_rtx_REG (HImode, REGNO (operands[0]) + 1);
   else
     operands[0] = adj_offsettable_operand (operands[0], 2);
   
   if (! CONSTANT_P(operands[2]))
-  {
-    lateoperands[2] = operands[2];
+    {
+      lateoperands[2] = operands[2];
 
-    if (REG_P (operands[2]))
-      operands[2] = gen_rtx(REG, HImode, REGNO(operands[2]) + 1);
-    else
-      operands[2] = adj_offsettable_operand(operands[2], 2);
+      if (REG_P (operands[2]))
+	operands[2] = gen_rtx_REG (HImode, REGNO (operands[2]) + 1);
+      else
+	operands[2] = adj_offsettable_operand (operands[2], 2);
 
-    output_asm_insn (\"bis %2, %0\", operands);
-    output_asm_insn (\"bis %2, %0\", lateoperands);
-    return \"\";
-  }
+      output_asm_insn (\"bis %2, %0\", operands);
+      output_asm_insn (\"bis %2, %0\", lateoperands);
+      return \"\";
+    }
 
-  lateoperands[2] = GEN_INT ((INTVAL(operands[2]) >> 16) & 0xffff);
-  operands[2] = GEN_INT (INTVAL(operands[2]) & 0xffff);
+  lateoperands[2] = GEN_INT ((INTVAL (operands[2]) >> 16) & 0xffff);
+  operands[2] = GEN_INT (INTVAL (operands[2]) & 0xffff);
   
   /* these have different lengths, so we should have 
      different constraints! */
@@ -1332,30 +1329,29 @@
   "*
 { /* Here we trust that operands don't overlap */
 
-  unsigned int i;
   rtx lateoperands[3];
 
   lateoperands[0] = operands[0];
-  operands[0] = gen_rtx(REG, HImode, REGNO(operands[0]) + 1);
+  operands[0] = gen_rtx_REG (HImode, REGNO (operands[0]) + 1);
 
   if (REG_P(operands[2]))
-  {
-    lateoperands[2] = operands[2];
-    operands[2] = gen_rtx(REG, HImode, REGNO(operands[2]) + 1);
-    
-    output_asm_insn (\"xor %2, %0\", operands);
-    output_asm_insn (\"xor %2, %0\", lateoperands);
+    {
+      lateoperands[2] = operands[2];
+      operands[2] = gen_rtx_REG (HImode, REGNO (operands[2]) + 1);
 
-    return \"\";
-  }
+      output_asm_insn (\"xor %2, %0\", operands);
+      output_asm_insn (\"xor %2, %0\", lateoperands);
 
-  lateoperands[2] = GEN_INT ((INTVAL(operands[2]) >> 16) & 0xffff);
+      return \"\";
+    }
+
+  lateoperands[2] = GEN_INT ((INTVAL (operands[2]) >> 16) & 0xffff);
   operands[2] = GEN_INT (INTVAL(operands[2]) & 0xffff);
   
-  if (INTVAL(operands[2]))
+  if (INTVAL (operands[2]))
     output_asm_insn (\"xor %2, %0\", operands);
 
-  if (INTVAL(lateoperands[2]))
+  if (INTVAL (lateoperands[2]))
     output_asm_insn (\"xor %2, %0\", lateoperands);
 
   return \"\";
@@ -1614,7 +1610,7 @@
 ;
 ;  /* allow REG_NOTES to be set on last insn (labels don't have enough
 ;     fields, and can't be used for REG_NOTES anyway).  */
-;  emit_insn (gen_rtx (USE, VOIDmode, stack_pointer_rtx));
+;  emit_insn (gen_rtx_USE (VOIDmode, stack_pointer_rtx));
 ;  DONE;
 ;}")
 

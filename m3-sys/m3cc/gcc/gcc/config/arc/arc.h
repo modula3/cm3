@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler, Argonaut ARC cpu.
-   Copyright (C) 1994, 1995, 1997, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1997, 1998, 1999, 2000, 2001
+   Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -38,12 +39,13 @@ Boston, MA 02111-1307, USA.  */
 #undef PTRDIFF_TYPE
 #undef WCHAR_TYPE
 #undef WCHAR_TYPE_SIZE
+#undef ASM_OUTPUT_LABELREF
 
 /* Print subsidiary information on the compiler version in use.  */
 #define TARGET_VERSION fprintf (stderr, " (arc)")
 
 /* Names to predefine in the preprocessor for this target machine.  */
-#define CPP_PREDEFINES "-Acpu(arc) -Amachine(arc) -D__arc__"
+#define CPP_PREDEFINES "-Acpu=arc -Amachine=arc -D__arc__"
 
 /* Additional flags for the preprocessor.  */
 #define CPP_SPEC "\
@@ -147,8 +149,8 @@ extern int target_flags;
 	extern char *m88k_short_data;
 	#define TARGET_OPTIONS { { "short-data-", &m88k_short_data } }  */
 
-extern char *arc_cpu_string;
-extern char *arc_text_string,*arc_data_string,*arc_rodata_string;
+extern const char *arc_cpu_string;
+extern const char *arc_text_string,*arc_data_string,*arc_rodata_string;
 
 #define TARGET_OPTIONS \
 {						\
@@ -176,7 +178,6 @@ extern int arc_cpu_type;
    Don't use this macro to turn on various extra optimizations for
    `-O'.  That is what `OPTIMIZATION_OPTIONS' is for.  */
 
-extern void arc_init ();
 
 #define OVERRIDE_OPTIONS \
 do {				\
@@ -601,10 +602,12 @@ extern enum reg_class arc_regno_reg_class[];
    farther back is at [%fp,4].  */
 #if 0 /* The default value should work.  */
 #define RETURN_ADDR_RTX(COUNT, FRAME) \
-(((COUNT) == -1)				\
- ? gen_rtx (REG, Pmode, 31)			\
- : copy_to_reg (gen_rtx (MEM, Pmode,		\
-			 memory_address (Pmode, plus_constant ((FRAME), UNITS_PER_WORD)))))
+(((COUNT) == -1)							\
+ ? gen_rtx_REG (Pmode, 31)						\
+ : copy_to_reg (gen_rtx_MEM (Pmode,					\
+			     memory_address (Pmode,			\
+					     plus_constant ((FRAME),	\
+							    UNITS_PER_WORD)))))
 #endif
 
 /* Register to use for pushing function arguments.  */
@@ -634,14 +637,14 @@ extern enum reg_class arc_regno_reg_class[];
 /* Function argument passing.  */
 
 /* When a prototype says `char' or `short', really pass an `int'.  */
-#define PROMOTE_PROTOTYPES
+#define PROMOTE_PROTOTYPES 1
 
 /* If defined, the maximum amount of space required for outgoing
    arguments will be computed and placed into the variable
    `current_function_outgoing_args_size'.  No space will be pushed
    onto the stack for each call; instead, the function prologue should
    increase the stack frame size by this amount.  */
-#define ACCUMULATE_OUTGOING_ARGS
+#define ACCUMULATE_OUTGOING_ARGS 1
 
 /* Value is the number of bytes of arguments automatically
    popped when returning from a subroutine call.
@@ -686,7 +689,7 @@ extern enum reg_class arc_regno_reg_class[];
 #define ROUND_ADVANCE_CUM(CUM, MODE, TYPE) \
 ((((MODE) == BLKmode ? TYPE_ALIGN (TYPE) : GET_MODE_BITSIZE (MODE)) \
   > BITS_PER_WORD)	\
- ? ((CUM) + 1 & ~1)	\
+ ? (((CUM) + 1) & ~1)	\
  : (CUM))
 
 /* Return boolean indicating arg of type TYPE and mode MODE will be passed in
@@ -699,7 +702,6 @@ extern enum reg_class arc_regno_reg_class[];
    varargs function we want to treat the last named arg (which is
    `__builtin_va_alist') as unnamed.
    This macro is only used in this file.  */
-extern int current_function_varargs;
 #define PASS_IN_REG_P(CUM, MODE, TYPE, NAMED) \
 ((!current_function_varargs || (NAMED))					\
  && (CUM) < MAX_ARC_PARM_REGS						\
@@ -723,7 +725,7 @@ extern int current_function_varargs;
    and the rest are pushed.  */
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED) \
 (PASS_IN_REG_P ((CUM), (MODE), (TYPE), (NAMED))				\
- ? gen_rtx (REG, (MODE), ROUND_ADVANCE_CUM ((CUM), (MODE), (TYPE)))	\
+ ? gen_rtx_REG ((MODE), ROUND_ADVANCE_CUM ((CUM), (MODE), (TYPE)))	\
  : 0)
 
 /* A C expression for the number of words, at the beginning of an
@@ -813,11 +815,11 @@ arc_setup_incoming_varargs(&ARGS_SO_FAR, MODE, TYPE, &PRETEND_SIZE, NO_RTL)
    VALTYPE is the data type of the value (as a tree).
    If the precise function being called is known, FUNC is its FUNCTION_DECL;
    otherwise, FUNC is 0.  */
-#define FUNCTION_VALUE(VALTYPE, FUNC) gen_rtx (REG, TYPE_MODE (VALTYPE), 0)
+#define FUNCTION_VALUE(VALTYPE, FUNC) gen_rtx_REG (TYPE_MODE (VALTYPE), 0)
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
-#define LIBCALL_VALUE(MODE) gen_rtx (REG, MODE, 0)
+#define LIBCALL_VALUE(MODE) gen_rtx_REG (MODE, 0)
 
 /* 1 if N is a possible register number for a function value
    as seen by the caller.  */
@@ -910,9 +912,9 @@ do { \
    CXT is an RTX for the static chain value for the function.  */
 #define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT) \
 do { \
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 4)), CXT); \
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 12)), FNADDR); \
-  emit_insn (gen_flush_icache (validize_mem (gen_rtx (MEM, SImode, TRAMP)))); \
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 4)), CXT); \
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 12)), FNADDR); \
+  emit_insn (gen_flush_icache (validize_mem (gen_rtx_MEM (SImode, TRAMP)))); \
 } while (0)
 
 /* Library calls.  */
@@ -1048,13 +1050,12 @@ do { \
 /* Some insns set all condition code flags, some only set the ZNC flags, and
    some only set the ZN flags.  */
 
-#define EXTRA_CC_MODES CCZNCmode, CCZNmode
-
-#define EXTRA_CC_NAMES "CCZNC", "CCZN"
+#define EXTRA_CC_MODES \
+	CC(CCZNCmode, "CCZNC") \
+	CC(CCZNmode, "CCZN")
 
 /* Given a comparison code (EQ, NE, etc.) and the first operand of a COMPARE,
    return the mode to be used for the comparison.  */
-extern enum machine_mode arc_select_cc_mode ();
 #define SELECT_CC_MODE(OP, X, Y) \
 arc_select_cc_mode (OP, X, Y)
 
@@ -1097,7 +1098,7 @@ arc_select_cc_mode (OP, X, Y)
 
 /* Compute extra cost of moving data between one register class
    and another.  */
-#define REGISTER_MOVE_COST(CLASS1, CLASS2) 2
+#define REGISTER_MOVE_COST(MODE, CLASS1, CLASS2) 2
 
 /* Compute the cost of moving data between registers and memory.  */
 /* Memory is 3 times as expensive as registers.
@@ -1154,7 +1155,7 @@ arc_select_cc_mode (OP, X, Y)
 #define ARC_DEFAULT_DATA_SECTION	".data"
 #define ARC_DEFAULT_RODATA_SECTION	".rodata"
 
-extern char *arc_text_section,*arc_data_section,*arc_rodata_section;
+extern const char *arc_text_section, *arc_data_section, *arc_rodata_section;
 
 /* initfini.c uses this in an asm.  */
 #if defined (CRT_INIT) || defined (CRT_FINI)
@@ -1206,7 +1207,7 @@ do {							\
 
 /* For DWARF.  Marginally different than default so output is "prettier"
    (and consistent with above).  */
-#define PUSHSECTION_FORMAT "\t%s %s\n"
+#define PUSHSECTION_ASM_OP "\t.section "
 
 /* Tell crtstuff.c we're using ELF.  */
 #define OBJECT_FORMAT_ELF
@@ -1256,18 +1257,8 @@ do {							\
 /* Control the assembler format that we output.  */
 
 /* Output at beginning of assembler file.  */
-extern void arc_asm_file_start ();
 #undef ASM_FILE_START
 #define ASM_FILE_START(FILE) arc_asm_file_start (FILE)
-
-/* A C statement to output assembler commands which will identify the
-   object file as having been compiled with GNU CC (or another GNU
-   compiler).  */
-#undef ASM_IDENTIFY_GCC
-#define ASM_IDENTIFY_GCC(FILE) /* nothing */
-
-/* Needed because we define ASM_IDENTIFY_GCC.  */
-#define ASM_IDENTIFY_LANGUAGE(FILE) output_lang_identify (FILE)
 
 /* A C string constant describing how to begin a comment in the target
    assembler language.  The compiler assumes that the comment will
@@ -1335,9 +1326,9 @@ do {									\
 }
 
 /* This is how to output an assembler line for a numeric constant byte.  */
-#define ASM_BYTE_OP	".byte"
+#define ASM_BYTE_OP	"\t.byte\t"
 #define ASM_OUTPUT_BYTE(FILE, VALUE)  \
-  fprintf (FILE, "\t%s\t0x%x\n", ASM_BYTE_OP, (VALUE))
+  fprintf (FILE, "%s0x%x\n", ASM_BYTE_OP, (VALUE))
 
 /* The assembler's parentheses characters.  */
 #define ASM_OPEN_PAREN "("
@@ -1364,7 +1355,7 @@ do {				\
 /* On the ARC we want to have libgcc's for multiple cpus in one binary.
    We can't use `assemble_name' here as that will call ASM_OUTPUT_LABELREF
    and we'll get another suffix added on if -mmangle-cpu.  */
-extern char *arc_mangle_cpu;
+extern const char *arc_mangle_cpu;
 #define ASM_OUTPUT_EXTERNAL_LIBCALL(FILE, SYMREF) \
 do {							\
   if (TARGET_MANGLE_CPU_LIBGCC)				\
@@ -1383,7 +1374,7 @@ do {							\
 /* We work around a dwarfout.c deficiency by watching for labels from it and
    not adding the '_' prefix nor the cpu suffix.  There is a comment in
    dwarfout.c that says it should be using ASM_OUTPUT_INTERNAL_LABEL.  */
-extern char *arc_mangle_cpu;
+extern const char *arc_mangle_cpu;
 #define ASM_OUTPUT_LABELREF(FILE, NAME) \
 do {							\
   if ((NAME)[0] == '.' && (NAME)[1] == 'L')		\
@@ -1417,7 +1408,7 @@ do {						\
 /* ??? This is needed because dwarfout.c provides a default definition too
    late for defaults.h (which contains the default definition of ASM_OUTPUT_DEF
    that we use).  */
-#define SET_ASM_OP ".set"
+#define SET_ASM_OP "\t.set\t"
 
 /* A C statement (sans semicolon) to output an element in the table of
    global constructors.  */
@@ -1518,8 +1509,12 @@ do { if ((LOG) != 0) fprintf (FILE, "\t.align %d\n", 1 << (LOG)); } while (0)
 /* Debugging information.  */
 
 /* Generate DBX and DWARF debugging information.  */
+#ifndef DBX_DEBUGGING_INFO
 #define DBX_DEBUGGING_INFO
+#endif
+#ifndef DWARF_DEBUGGING_INFO
 #define DWARF_DEBUGGING_INFO
+#endif
 
 /* Prefer STABS (for now).  */
 #undef PREFERRED_DEBUGGING_TYPE
@@ -1592,27 +1587,18 @@ do { if ((LOG) != 0) fprintf (FILE, "\t.align %d\n", 1 << (LOG)); } while (0)
 /* A C expression whose value is nonzero if IDENTIFIER with arguments ARGS
    is a valid machine specific attribute for DECL.
    The attributes in ATTRIBUTES have previously been assigned to TYPE.  */
-extern int arc_valid_machine_attribute ();
 #define VALID_MACHINE_DECL_ATTRIBUTE(DECL, ATTRIBUTES, IDENTIFIER, ARGS) \
 arc_valid_machine_decl_attribute (DECL, ATTRIBUTES, IDENTIFIER, ARGS)
 
 /* A C expression that returns zero if the attributes on TYPE1 and TYPE2 are
    incompatible, one if they are compatible, and two if they are
    nearly compatible (which causes a warning to be generated).  */
-extern int arc_comp_type_attributes ();
 #define COMP_TYPE_ATTRIBUTES(TYPE1, TYPE2) \
 arc_comp_type_attributes (TYPE1, TYPE2)
 
 /* Give newly defined TYPE some default attributes.  */
-extern void arc_set_default_type_attributes ();
 #define SET_DEFAULT_TYPE_ATTRIBUTES(TYPE) \
 arc_set_default_type_attributes (TYPE)
-
-/* Define this if the target system supports the function
-   atexit from the ANSI C standard.  If this is not defined,
-   and INIT_SECTION_ASM_OP is not defined, a default
-   exit function will be provided to support C++.  */
-#define HAVE_ATEXIT
 
 /* alloca should avoid clobbering the old register save area.  */
 /* ??? Not defined in tm.texi.  */
@@ -1622,12 +1608,6 @@ arc_set_default_type_attributes (TYPE)
    stored from the compare operation.  Note that we can't use "rtx" here
    since it hasn't been defined!  */
 extern struct rtx_def *arc_compare_op0, *arc_compare_op1;
-
-/* Define the function that build the compare insn for scc and bcc.  */
-extern struct rtx_def *gen_compare_reg ();
-
-/* Declarations for various fns used in the .md file.  */
-extern char *output_shift ();
 
 /* ARC function types.   */
 enum arc_function_type {
@@ -1639,4 +1619,12 @@ enum arc_function_type {
 #define ARC_INTERRUPT_P(TYPE) \
 ((TYPE) == ARC_FUNCTION_ILINK1 || (TYPE) == ARC_FUNCTION_ILINK2)
 /* Compute the type of a function from its DECL.  */
-enum arc_function_type arc_compute_function_type ();
+
+
+/* Implement `va_start' for varargs and stdarg.  */
+#define EXPAND_BUILTIN_VA_START(stdarg, valist, nextarg) \
+  arc_va_start (stdarg, valist, nextarg)
+
+/* Implement `va_arg'.  */
+#define EXPAND_BUILTIN_VA_ARG(valist, type) \
+  arc_va_arg (valist, type)

@@ -1,5 +1,5 @@
 /* Definitions of target machine for gcc for Hitachi Super-H using ELF.
-   Copyright (C) 1996, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1996, 1997, 2000 Free Software Foundation, Inc.
    Contributed by Ian Lance Taylor <ian@cygnus.com>.
 
 This file is part of GNU CC.
@@ -19,11 +19,17 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-/* Mostly like the regular SH configuration.  */
-#include "sh/sh.h"
-
 /* No SDB debugging info.  */
 #undef SDB_DEBUGGING_INFO
+
+/* Generate DWARF2 debugging information and make it the default */
+#define DWARF2_DEBUGGING_INFO
+
+#undef PREFERRED_DEBUGGING_TYPE
+#define PREFERRED_DEBUGGING_TYPE DWARF2_DEBUG
+
+/* use a more compact format for line information */
+#define DWARF2_ASM_LINE_DEBUG_INFO 1
 
 /* Undefine some macros defined in both sh.h and svr4.h.  */
 #undef IDENT_ASM_OP
@@ -36,7 +42,6 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_OUTPUT_CONSTRUCTOR
 #undef ASM_OUTPUT_DESTRUCTOR
 #undef ASM_DECLARE_FUNCTION_NAME
-#undef PREFERRED_DEBUGGING_TYPE
 #undef MAX_OFILE_ALIGNMENT
 
 /* Be ELF-like.  */
@@ -62,7 +67,7 @@ Boston, MA 02111-1307, USA.  */
 
 
 /* Let code know that this is ELF.  */
-#define CPP_PREDEFINES "-D__sh__ -D__ELF__ -Acpu(sh) -Amachine(sh)"
+#define CPP_PREDEFINES "-D__sh__ -D__ELF__ -Acpu=sh -Amachine=sh"
 
 /* Pass -ml and -mrelax to the assembler and linker.  */
 #undef ASM_SPEC
@@ -76,15 +81,9 @@ Boston, MA 02111-1307, USA.  */
 #define DBX_REGISTER_NUMBER(REGNO)	\
   (((REGNO) >= 22 && (REGNO) <= 39) ? ((REGNO) + 1) : (REGNO))
 
-/* SH ELF, unlike most ELF implementations, uses underscores before
-   symbol names.  */
-#undef ASM_OUTPUT_LABELREF
-#define ASM_OUTPUT_LABELREF(STREAM,NAME) \
-  asm_fprintf (STREAM, "%U%s", NAME)
-
 #undef ASM_GENERATE_INTERNAL_LABEL
 #define ASM_GENERATE_INTERNAL_LABEL(STRING, PREFIX, NUM) \
-  sprintf ((STRING), "*%s%s%d", LOCAL_LABEL_PREFIX, (PREFIX), (NUM))
+  sprintf ((STRING), "*%s%s%ld", LOCAL_LABEL_PREFIX, (PREFIX), (long)(NUM))
 
 #undef ASM_OUTPUT_INTERNAL_LABEL
 #define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM) \
@@ -111,13 +110,11 @@ do {									\
   fprintf ((FILE), "\t.stabs \"\",%d,0,0,Letext\nLetext:\n", N_SO);	\
 } while (0)
 
-/* Arrange to call __main, rather than using crtbegin.o and crtend.o
-   and relying on .init and .fini being executed at appropriate times.  */
-#undef INIT_SECTION_ASM_OP
-#undef FINI_SECTION_ASM_OP
 #undef STARTFILE_SPEC
-#undef ENDFILE_SPEC
+#define STARTFILE_SPEC \
+  "%{!shared: crt1.o%s} crti.o%s \
+   %{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}"
 
-/* HANDLE_SYSV_PRAGMA (defined by svr4.h) takes precedence over HANDLE_PRAGMA.
-   We want to use the HANDLE_PRAGMA from sh.h.  */
-#undef HANDLE_SYSV_PRAGMA
+#undef ENDFILE_SPEC
+#define ENDFILE_SPEC \
+  "%{!shared:crtend.o%s} %{shared:crtendS.o%s} crtn.o%s"

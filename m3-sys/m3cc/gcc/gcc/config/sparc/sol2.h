@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler, for SPARC running Solaris 2
-   Copyright 1992, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
+   Copyright 1992, 1995, 1996, 1997, 1998, 1999, 2000,
+   2001 Free Software Foundation, Inc.
    Contributed by Ron Guilmette (rfg@netcom.com).
    Additional changes by David V. Henkel-Wallace (gumby@cygnus.com).
 
@@ -23,16 +24,32 @@ Boston, MA 02111-1307, USA.  */
 /* Supposedly the same as vanilla sparc svr4, except for the stuff below: */
 #include "sparc/sysv4.h"
 
+/* Solaris 2 uses a wint_t different from the default. This is required
+   by the SCD 2.4.1, p. 6-83, Figure 6-66.  */
+#undef	WINT_TYPE
+#define	WINT_TYPE "long int"
+
+#undef	WINT_TYPE_SIZE
+#define	WINT_TYPE_SIZE BITS_PER_WORD
+
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES \
 "-Dsparc -Dsun -Dunix -D__svr4__ -D__SVR4 \
--Asystem(unix) -Asystem(svr4)"
+-Asystem=unix -Asystem=svr4"
 
 #undef CPP_SUBTARGET_SPEC
 #define CPP_SUBTARGET_SPEC "\
 %{pthreads:-D_REENTRANT -D_PTHREADS} \
 %{!pthreads:%{threads:-D_REENTRANT -D_SOLARIS_THREADS}} \
 %{compat-bsd:-iwithprefixbefore ucbinclude -I/usr/ucbinclude} \
+"
+
+/* For C++ we need to add some additional macro definitions required
+   by the C++ standard library.  */
+#define CPLUSPLUS_CPP_SPEC "\
+-D_XOPEN_SOURCE=500 -D_LARGEFILE_SOURCE=1 -D_LARGEFILE64_SOURCE=1 \
+-D__EXTENSIONS__ \
+%(cpp) \
 "
 
 /* The sun bundled assembler doesn't accept -Yd, (and neither does gas).
@@ -138,7 +155,7 @@ Boston, MA 02111-1307, USA.  */
      %{!symbolic:\
        %{pthreads:-lpthread} \
        %{!pthreads:%{threads:-lthread}} \
-       -lc}}"
+       %{p|pg:-ldl} -lc}}"
 
 #undef  ENDFILE_SPEC
 #define ENDFILE_SPEC "crtend.o%s crtn.o%s"
@@ -155,14 +172,14 @@ Boston, MA 02111-1307, USA.  */
    %{YP,*} \
    %{R*} \
    %{compat-bsd: \
-     %{!YP,*:%{p:-Y P,/usr/ucblib:/usr/ccs/lib/libp:/usr/lib/libp:/usr/ccs/lib:/usr/lib} \
-       %{pg:-Y P,/usr/ucblib:/usr/ccs/lib/libp:/usr/lib/libp:/usr/ccs/lib:/usr/lib} \
-       %{!p:%{!pg:-Y P,/usr/ucblib:/usr/ccs/lib:/usr/lib}}} \
-     -R /usr/ucblib} \
+     %{!YP,*:%{pg:-Y P,/usr/ucblib:/usr/ccs/lib/libp:/usr/lib/libp:/usr/ccs/lib:/usr/lib} \
+             %{!pg:%{p:-Y P,/usr/ucblib:/usr/ccs/lib/libp:/usr/lib/libp:/usr/ccs/lib:/usr/lib} \
+                   %{!p:-Y P,/usr/ucblib:/usr/ccs/lib:/usr/lib}}} \
+             -R /usr/ucblib} \
    %{!compat-bsd: \
-     %{!YP,*:%{p:-Y P,/usr/ccs/lib/libp:/usr/lib/libp:/usr/ccs/lib:/usr/lib} \
-       %{pg:-Y P,/usr/ccs/lib/libp:/usr/lib/libp:/usr/ccs/lib:/usr/lib} \
-       %{!p:%{!pg:-Y P,/usr/ccs/lib:/usr/lib}}}} \
+     %{!YP,*:%{pg:-Y P,/usr/ccs/lib/libp:/usr/lib/libp:/usr/ccs/lib:/usr/lib} \
+             %{!pg:%{p:-Y P,/usr/ccs/lib/libp:/usr/lib/libp:/usr/ccs/lib:/usr/lib} \
+                   %{!p:-Y P,/usr/ccs/lib:/usr/lib}}}} \
    %{Qy:} %{!Qn:-Qy}"
 
 /* This defines which switch letters take arguments.
@@ -185,7 +202,7 @@ Boston, MA 02111-1307, USA.  */
 /* But indicate that it isn't supported by the hardware.  */
 #define WIDEST_HARDWARE_FP_SIZE 64
 
-#define STDC_0_IN_SYSTEM_HEADERS
+#define STDC_0_IN_SYSTEM_HEADERS 1
 
 #define MULDI3_LIBCALL "__mul64"
 #define DIVDI3_LIBCALL "__div64"
@@ -194,27 +211,22 @@ Boston, MA 02111-1307, USA.  */
 #define UMODDI3_LIBCALL "__urem64"
 
 #undef INIT_SUBTARGET_OPTABS
-#define INIT_SUBTARGET_OPTABS	\
-  fixsfdi_libfunc = gen_rtx_SYMBOL_REF (Pmode, \
-	TARGET_ARCH64 ? "__ftol" : "__ftoll");	\
-  fixunssfdi_libfunc = gen_rtx_SYMBOL_REF (Pmode, \
-	TARGET_ARCH64 ? "__ftoul" : "__ftoull");	\
-  fixdfdi_libfunc = gen_rtx_SYMBOL_REF (Pmode, \
-	TARGET_ARCH64 ? "__dtol" : "__dtoll");	\
-  fixunsdfdi_libfunc = gen_rtx_SYMBOL_REF (Pmode, \
-	TARGET_ARCH64 ? "__dtoul" : "__dtoull")
-
-/* No weird SPARC variants on Solaris */
-#undef TARGET_LIVE_G0
-#define TARGET_LIVE_G0	0
-#undef TARGET_BROKEN_SAVERESTORE
-#define TARGET_BROKEN_SAVERESTORE 0
+#define INIT_SUBTARGET_OPTABS						\
+  fixsfdi_libfunc							\
+    = init_one_libfunc (TARGET_ARCH64 ? "__ftol" : "__ftoll");		\
+  fixunssfdi_libfunc							\
+    = init_one_libfunc (TARGET_ARCH64 ? "__ftoul" : "__ftoull");	\
+  fixdfdi_libfunc							\
+    = init_one_libfunc (TARGET_ARCH64 ? "__dtol" : "__dtoll");		\
+  fixunsdfdi_libfunc							\
+    = init_one_libfunc (TARGET_ARCH64 ? "__dtoul" : "__dtoull")
 
 /* Solaris allows 64 bit out and global registers in 32 bit mode.
    sparc_override_options will disable V8+ if not generating V9 code.  */
 #undef TARGET_DEFAULT
-#define TARGET_DEFAULT (MASK_APP_REGS + MASK_EPILOGUE + MASK_FPU + MASK_V8PLUS)
+#define TARGET_DEFAULT (MASK_EPILOGUE + MASK_FPU + MASK_V8PLUS + MASK_LONG_DOUBLE_128)
 
+#if TARGET_ARCH32
 /* Override MACHINE_STATE_{SAVE,RESTORE} because we have special
    traps available which can get and set the condition codes
    reliably.  */
@@ -233,4 +245,48 @@ Boston, MA 02111-1307, USA.  */
 	       "ta	0x21\n\t"			\
 	       : /* no outputs */			\
 	       : "r" (ms_flags), "r" (ms_saveret));
+#endif /* sparc32 */
+
+/*
+ * Attempt to turn on access permissions for the stack.
+ *
+ * This code must be defined when compiling gcc but not when compiling
+ * libgcc2.a, unless we're generating code for 64 bits SPARC
+ *
+ * _SC_STACK_PROT is only defined for post 2.6, but we want this code
+ * to run always.  2.6 can change the stack protection but has no way to
+ * query it.
+ *
+ */
 
+#define TRANSFER_FROM_TRAMPOLINE					\
+static int need_enable_exec_stack;					\
+									\
+static void check_enabling(void) __attribute__ ((constructor));		\
+static void check_enabling(void)					\
+{									\
+  extern long sysconf(int);						\
+									\
+  int prot = (int) sysconf(515 /*_SC_STACK_PROT */);			\
+  if (prot != 7)							\
+    need_enable_exec_stack = 1;						\
+}									\
+									\
+extern void __enable_execute_stack (void *);				\
+void									\
+__enable_execute_stack (addr)						\
+     void *addr;							\
+{									\
+  if (!need_enable_exec_stack)						\
+    return;								\
+  else {								\
+    long size = getpagesize ();						\
+    long mask = ~(size-1);						\
+    char *page = (char *) (((long) addr) & mask); 			\
+    char *end  = (char *) ((((long) (addr + TRAMPOLINE_SIZE)) & mask) + size); \
+									\
+    /* 7 is PROT_READ | PROT_WRITE | PROT_EXEC */ 			\
+    if (mprotect (page, end - page, 7) < 0)				\
+      perror ("mprotect of trampoline code");				\
+  }									\
+}

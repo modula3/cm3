@@ -13,6 +13,7 @@
    incompatible with our later declaration, perhaps by using const
    attributes.  So we hide the declaration in errno.h (if any) using a
    macro. */
+#define sys_nerr sys_nerr__
 #define sys_errlist sys_errlist__
 #endif
 
@@ -20,19 +21,23 @@
 #include <errno.h>
 
 #ifdef HAVE_SYS_ERRLIST
+#undef sys_nerr
 #undef sys_errlist
 #endif
 
 /*  Routines imported from standard C runtime libraries. */
 
-#ifdef __STDC__
-#include <stddef.h>
-extern void *malloc (size_t size);				/* 4.10.3.3 */
-extern void *memset (void *s, int c, size_t n);			/* 4.11.6.1 */
-#else	/* !__STDC__ */
-extern char *malloc ();		/* Standard memory allocater */
-extern char *memset ();
-#endif	/* __STDC__ */
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#else
+extern PTR malloc ();
+#endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+extern PTR memset ();
+#endif
 
 #ifndef MAX
 #  define MAX(a,b) ((a) > (b) ? (a) : (b))

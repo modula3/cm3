@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.  ARM on semi-hosted platform
-   Copyright (C) 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
-   Contributed by Richard Earnshaw (richard.earnshaw@armltd.co.uk)
+   Copyright (C) 1994, 1995, 1996, 1997, 2001 Free Software Foundation, Inc.
+   Contributed by Richard Earnshaw (richard.earnshaw@arm.com)
 
 This file is part of GNU CC.
 
@@ -23,18 +23,47 @@ Boston, MA 02111-1307, USA.  */
 
 #define LIB_SPEC "-lc"
 
-#define CPP_PREDEFINES \
-    "-Darm -D__semi__ -Acpu(arm) -Amachine(arm)"
-
-#define ASM_SPEC "%{mbig-endian:-EB}"
+#define SUBTARGET_CPP_SPEC "-D__semi__"
 
 #define LINK_SPEC "%{mbig-endian:-EB} -X"
 
+#ifndef TARGET_VERSION
 #define TARGET_VERSION fputs (" (ARM/semi-hosted)", stderr);
+#endif
 
-#define TARGET_DEFAULT ARM_FLAG_APCS_32
+#ifndef TARGET_DEFAULT
+#define TARGET_DEFAULT (ARM_FLAG_APCS_32 | ARM_FLAG_APCS_FRAME)
+#endif
+
+#ifndef SUBTARGET_EXTRA_SPECS
+#define SUBTARGET_EXTRA_SPECS \
+  { "subtarget_extra_asm_spec",	SUBTARGET_EXTRA_ASM_SPEC },
+#endif
+
+#ifndef SUBTARGET_EXTRA_ASM_SPEC
+#define SUBTARGET_EXTRA_ASM_SPEC ""
+#endif
+
+/* The compiler supports PIC code generation, even though the binutils
+   may not.  If we are asked to compile position independent code, we
+   always pass -k to the assembler.  If it doesn't recognize it, then
+   it will barf, which probably means that it doesn't know how to
+   assemble PIC code.  This is what we want, since otherwise tools
+   may incorrectly assume we support PIC compilation even if the
+   binutils can't.  */
+#ifndef ASM_SPEC
+#define ASM_SPEC "\
+%{fpic: -k} %{fPIC: -k} \
+%{mbig-endian:-EB} \
+%{mcpu=*:-m%*} \
+%{march=*:-m%*} \
+%{mapcs-float:-mfloat} \
+%{msoft-float:-mno-fpu} \
+%{mthumb-interwork:-mthumb-interwork} \
+%(subtarget_extra_asm_spec)"
+#endif
 
 #include "arm/aout.h"
 
-#undef CPP_APCS_PC_DEFAULT_SPEC
+#undef  CPP_APCS_PC_DEFAULT_SPEC
 #define CPP_APCS_PC_DEFAULT_SPEC "-D__APCS_32__"

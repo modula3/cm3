@@ -1,5 +1,6 @@
 /* Define per-register tables for data flow info and register allocation.
-   Copyright (C) 1987, 1993, 1994, 1995, 1997, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1993, 1994, 1995, 1996, 1997, 1998,
+   1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -39,13 +40,13 @@ Boston, MA 02111-1307, USA.  */
 extern int max_regno;
 
 /* Register information indexed by register number */
-typedef struct reg_info_def {
-				/* fields set by reg_scan */
+typedef struct reg_info_def
+{				/* fields set by reg_scan */
   int first_uid;		/* UID of first insn to use (REG n) */
   int last_uid;			/* UID of last insn to use (REG n) */
   int last_note_uid;		/* UID of last note to use (REG n) */
 
-				/* fields set by both reg_scan and flow_analysis */
+				/* fields set by reg_scan & flow_analysis */
   int sets;			/* # of times (REG n) is set */
 
 				/* fields set by flow_analysis */
@@ -54,12 +55,11 @@ typedef struct reg_info_def {
   int live_length;		/* # of instructions (REG n) is live */
   int calls_crossed;		/* # of calls (REG n) is live across */
   int basic_block;		/* # of basic blocks (REG n) is used in */
-  char changes_size;		/* whether (SUBREG (REG n)) changes size */
+  char changes_mode;		/* whether (SUBREG (REG n)) exists and 
+				   is illegal.  */
 } reg_info;
 
 extern varray_type reg_n_info;
-
-extern unsigned int reg_n_max;
 
 /* Indexed by n, gives number of times (REG n) is used or set.
    References within loops may be counted more times.  */
@@ -81,10 +81,11 @@ extern unsigned int reg_n_max;
 #define REG_N_DEATHS(N) (VARRAY_REG (reg_n_info, N)->deaths)
 
 /* Indexed by N; says whether a pseudo register N was ever used
-   within a SUBREG that changes the size of the reg.  Some machines prohibit
-   such objects to be in certain (usually floating-point) registers.  */
+   within a SUBREG that changes the mode of the reg in some way
+   that is illegal for a given class (usually floating-point)
+   of registers.  */
 
-#define REG_CHANGES_SIZE(N) (VARRAY_REG (reg_n_info, N)->changes_size)
+#define REG_CHANGES_MODE(N) (VARRAY_REG (reg_n_info, N)->changes_mode)
 
 /* Get the number of consecutive words required to hold pseudo-reg N.  */
 
@@ -138,7 +139,7 @@ extern char regs_ever_live[FIRST_PSEUDO_REGISTER];
 
 /* Vector indexed by hardware reg giving its name.  */
 
-extern char *reg_names[FIRST_PSEUDO_REGISTER];
+extern const char * reg_names[FIRST_PSEUDO_REGISTER];
 
 /* For each hard register, the widest mode object that it can contain.
    This will be a MODE_INT mode if the register can hold integers.  Otherwise
@@ -166,27 +167,9 @@ extern enum machine_mode reg_raw_mode[FIRST_PSEUDO_REGISTER];
 
 #define REGNO_LAST_NOTE_UID(N) (VARRAY_REG (reg_n_info, N)->last_note_uid)
 
-/* This is reset to LAST_VIRTUAL_REGISTER + 1 at the start of each function.
-   After rtl generation, it is 1 plus the largest register number used.  */
-
-extern int reg_rtx_no;
-
-/* Vector indexed by regno; contains 1 for a register is considered a pointer.
-   Reloading, etc. will use a pointer register rather than a non-pointer
-   as the base register in an address, when there is a choice of two regs.  */
-
-extern char *regno_pointer_flag;
-#define REGNO_POINTER_FLAG(REGNO) regno_pointer_flag[REGNO]
-extern int regno_pointer_flag_length;
-
 /* List made of EXPR_LIST rtx's which gives pairs of pseudo registers
    that have to go in the same hard reg.  */
 extern rtx regs_may_share;
-
-/* Vector mapping pseudo regno into the REG rtx for that register.
-   This is computed by reg_scan.  */
-
-extern rtx *regno_reg_rtx;
 
 /* Flag set by local-alloc or global-alloc if they decide to allocate
    something in a call-clobbered register.  */
@@ -220,4 +203,4 @@ extern int caller_save_needed;
 #endif
 
 /* Allocate reg_n_info tables */
-extern void allocate_reg_info PROTO((size_t, int, int));
+extern void allocate_reg_info PARAMS ((size_t, int, int));

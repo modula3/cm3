@@ -1,5 +1,5 @@
 /* Functions to support general ended bitmaps.
-   Copyright (C) 1997, 1998, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1997, 1998, 1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -17,6 +17,9 @@ You should have received a copy of the GNU General Public License
 along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
+
+#ifndef _BITMAP_H
+#define _BITMAP_H 1
 
 /* Number of words to use for each element in the linked list.  */
 
@@ -55,7 +58,8 @@ typedef struct bitmap_head_def {
 enum bitmap_bits {
   BITMAP_AND,			/* TO = FROM1 & FROM2 */
   BITMAP_AND_COMPL,		/* TO = FROM1 & ~ FROM2 */
-  BITMAP_IOR			/* TO = FROM1 | FROM2 */
+  BITMAP_IOR,			/* TO = FROM1 | FROM2 */
+  BITMAP_XOR			/* TO = FROM1 ^ FROM2 */
 };
 
 /* Global data */
@@ -63,41 +67,44 @@ extern bitmap_element *bitmap_free;	/* Freelist of bitmap elements */
 extern bitmap_element bitmap_zero;	/* Zero bitmap element */
 
 /* Clear a bitmap by freeing up the linked list.  */
-extern void bitmap_clear PROTO((bitmap));
+extern void bitmap_clear PARAMS ((bitmap));
 
 /* Copy a bitmap to another bitmap. */
-extern void bitmap_copy PROTO((bitmap, bitmap));
+extern void bitmap_copy PARAMS ((bitmap, bitmap));
+
+/* True if two bitmaps are identical.  */
+extern int bitmap_equal_p PARAMS ((bitmap, bitmap));
 
 /* Perform an operation on two bitmaps, yielding a third.  */
-extern void bitmap_operation PROTO((bitmap, bitmap, bitmap, enum bitmap_bits));
+extern int bitmap_operation PARAMS ((bitmap, bitmap, bitmap, enum bitmap_bits));
 
 /* `or' into one bitmap the `and' of a second bitmap witih the complement
    of a third.  */
-extern void bitmap_ior_and_compl PROTO((bitmap, bitmap, bitmap));
+extern void bitmap_ior_and_compl PARAMS ((bitmap, bitmap, bitmap));
 
 /* Clear a single register in a register set.  */
-extern void bitmap_clear_bit PROTO((bitmap, int));
+extern void bitmap_clear_bit PARAMS ((bitmap, int));
 
 /* Set a single register in a register set.  */
-extern void bitmap_set_bit PROTO((bitmap, int));
+extern void bitmap_set_bit PARAMS ((bitmap, int));
 
 /* Return true if a register is set in a register set.  */
-extern int bitmap_bit_p PROTO((bitmap, int));
+extern int bitmap_bit_p PARAMS ((bitmap, int));
 
 /* Debug functions to print a bitmap linked list.  */
-extern void bitmap_debug PROTO((bitmap));
-extern void bitmap_debug_file PROTO((FILE *, bitmap));
+extern void debug_bitmap PARAMS ((bitmap));
+extern void debug_bitmap_file PARAMS ((FILE *, bitmap));
 
 /* Print a bitmap */
-extern void bitmap_print PROTO((FILE *, bitmap, const char *, const char *));
+extern void bitmap_print PARAMS ((FILE *, bitmap, const char *, const char *));
 
 /* Initialize a bitmap header.  */
-extern bitmap bitmap_initialize PROTO((bitmap));
+extern bitmap bitmap_initialize PARAMS ((bitmap));
 
 /* Release all memory held by bitmaps.  */
-extern void bitmap_release_memory PROTO((void));
+extern void bitmap_release_memory PARAMS ((void));
 
-extern void debug_bitmap PROTO((bitmap));
+extern void debug_bitmap PARAMS ((bitmap));
 
 /* Allocate a bitmap with oballoc.  */
 #define BITMAP_OBSTACK_ALLOC(OBSTACK)				\
@@ -107,14 +114,29 @@ extern void debug_bitmap PROTO((bitmap));
 #define BITMAP_ALLOCA()						\
   bitmap_initialize ((bitmap) alloca (sizeof (bitmap_head)))
 
+/* Allocate a bitmap with xmalloc.  */
+#define BITMAP_XMALLOC()                                        \
+  bitmap_initialize ((bitmap) xmalloc (sizeof (bitmap_head)))
+
 /* Do any cleanup needed on a bitmap when it is no longer used.  */
-#define BITMAP_FREE(BITMAP)					\
-do {				\
-  if (BITMAP)			\
-    {				\
-      bitmap_clear (BITMAP);	\
-      (BITMAP) = 0;		\
-    }									\
+#define BITMAP_FREE(BITMAP)			\
+do {						\
+  if (BITMAP)					\
+    {						\
+      bitmap_clear (BITMAP);			\
+      (BITMAP) = 0;				\
+    }						\
+} while (0)
+
+/* Do any cleanup needed on an xmalloced bitmap when it is no longer used.  */
+#define BITMAP_XFREE(BITMAP)			\
+do {						\
+  if (BITMAP)					\
+    {						\
+      bitmap_clear (BITMAP);			\
+      free (BITMAP);				\
+      (BITMAP) = 0;				\
+    }						\
 } while (0)
 
 /* Do any one-time initializations needed for bitmaps.  */
@@ -315,3 +337,5 @@ do {									\
       word_num_ = 0;							\
     }									\
 } while (0)
+
+#endif /* _BITMAP_H */

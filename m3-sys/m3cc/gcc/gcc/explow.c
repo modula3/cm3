@@ -1,5 +1,6 @@
 /* Subroutines for manipulating rtx's in semantically interesting ways.
-   Copyright (C) 1987, 91, 94-97, 1998, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1991, 1994, 1995, 1996, 1997, 1998,
+   1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -24,20 +25,61 @@ Boston, MA 02111-1307, USA.  */
 #include "toplev.h"
 #include "rtl.h"
 #include "tree.h"
+#include "tm_p.h"
 #include "flags.h"
+#include "function.h"
 #include "expr.h"
 #include "hard-reg-set.h"
 #include "insn-config.h"
 #include "recog.h"
-#include "insn-flags.h"
-#include "insn-codes.h"
 
 #if !defined PREFERRED_STACK_BOUNDARY && defined STACK_BOUNDARY
 #define PREFERRED_STACK_BOUNDARY STACK_BOUNDARY
 #endif
 
-static rtx break_out_memory_refs	PROTO((rtx));
-static void emit_stack_probe		PROTO((rtx));
+static rtx break_out_memory_refs	PARAMS ((rtx));
+static void emit_stack_probe		PARAMS ((rtx));
+
+
+/* Truncate and perhaps sign-extend C as appropriate for MODE.  */
+
+HOST_WIDE_INT
+trunc_int_for_mode (c, mode)
+     HOST_WIDE_INT c;
+     enum machine_mode mode;
+{
+  int width = GET_MODE_BITSIZE (mode);
+
+  /* Canonicalize BImode to 0 and STORE_FLAG_VALUE.  */
+  if (mode == BImode)
+    return c & 1 ? STORE_FLAG_VALUE : 0;
+
+  /* We clear out all bits that don't belong in MODE, unless they and our
+     sign bit are all one.  So we get either a reasonable negative
+     value or a reasonable unsigned value.  */
+
+  if (width < HOST_BITS_PER_WIDE_INT
+      && ((c & ((HOST_WIDE_INT) (-1) << (width - 1)))
+           != ((HOST_WIDE_INT) (-1) << (width - 1))))
+    c &= ((HOST_WIDE_INT) 1 << width) - 1;
+
+  /* If this would be an entire word for the target, but is not for
+     the host, then sign-extend on the host so that the number will look
+     the same way on the host that it would on the target.
+
+     For example, when building a 64 bit alpha hosted 32 bit sparc
+     targeted compiler, then we want the 32 bit unsigned value -1 to be
+     represented as a 64 bit value -1, and not as 0x00000000ffffffff.
+     The later confuses the sparc backend.  */
+
+  if (BITS_PER_WORD < HOST_BITS_PER_WIDE_INT
+      && BITS_PER_WORD == width
+      && (c & ((HOST_WIDE_INT) 1 << (width - 1))))
+    c |= ((HOST_WIDE_INT) (-1) << width);
+
+  return c;
+}
+
 /* Return an rtx for the sum of X and the integer C.
 
    This function should be used via the `plus_constant' macro.  */
@@ -66,11 +108,12 @@ plus_constant_wide (x, c)
 
     case CONST_DOUBLE:
       {
-	HOST_WIDE_INT l1 = CONST_DOUBLE_LOW (x);
+	unsigned HOST_WIDE_INT l1 = CONST_DOUBLE_LOW (x);
 	HOST_WIDE_INT h1 = CONST_DOUBLE_HIGH (x);
-	HOST_WIDE_INT l2 = c;
+	unsigned HOST_WIDE_INT l2 = c;
 	HOST_WIDE_INT h2 = c < 0 ? ~0 : 0;
-	HOST_WIDE_INT lv, hv;
+	unsigned HOST_WIDE_INT lv;
+	HOST_WIDE_INT hv;
 
 	add_double (l1, h1, l2, h2, &lv, &hv);
 
@@ -84,15 +127,10 @@ plus_constant_wide (x, c)
       if (GET_CODE (XEXP (x, 0)) == SYMBOL_REF
 	  && CONSTANT_POOL_ADDRESS_P (XEXP (x, 0)))
 	{
-	  /* Any rtl we create here must go in a saveable obstack, since
-	     we might have been called from within combine.  */
-	  push_obstacks_nochange ();
-	  rtl_in_saveable_obstack ();
 	  tem
 	    = force_const_mem (GET_MODE (x),
 			       plus_constant (get_pool_constant (XEXP (x, 0)),
 					      c));
-	  pop_obstacks ();
 	  if (memory_address_p (GET_MODE (tem), XEXP (tem, 0)))
 	    return tem;
 	}
@@ -126,6 +164,10 @@ plus_constant_wide (x, c)
       if (GET_CODE (XEXP (x, 1)) == CONST_INT)
 	{
 	  c += INTVAL (XEXP (x, 1));
+
+	  if (GET_MODE (x) != VOIDmode)
+	    c = trunc_int_for_mode (c, GET_MODE (x));
+
 	  x = XEXP (x, 0);
 	  goto restart;
 	}
@@ -173,7 +215,7 @@ plus_constant_for_output_wide (x, c)
 
   if (GET_CODE (x) == LO_SUM)
     return gen_rtx_LO_SUM (mode, XEXP (x, 0),
-		    plus_constant_for_output (XEXP (x, 1), c));
+			   plus_constant_for_output (XEXP (x, 1), c));
 
   else
     return plus_constant (x, c);
@@ -249,7 +291,7 @@ find_next_ref (reg, insn)
 	    return insn;
 	  if (GET_CODE (insn) == JUMP_INSN)
 	    {
-	      if (simplejump_p (insn))
+	      if (any_uncondjump_p (insn))
 		next = JUMP_LABEL (insn);
 	      else
 		return 0;
@@ -342,6 +384,11 @@ convert_memory_address (to_mode, x)
     case CONST_DOUBLE:
       return x;
 
+    case SUBREG:
+      if (GET_MODE (SUBREG_REG (x)) == to_mode)
+	return SUBREG_REG (x);
+      break;
+
     case LABEL_REF:
       temp = gen_rtx_LABEL_REF (to_mode, XEXP (x, 0));
       LABEL_REF_NONLOCAL_P (temp) = LABEL_REF_NONLOCAL_P (x);
@@ -351,6 +398,7 @@ convert_memory_address (to_mode, x)
       temp = gen_rtx_SYMBOL_REF (to_mode, XSTR (x, 0));
       SYMBOL_REF_FLAG (temp) = SYMBOL_REF_FLAG (x);
       CONSTANT_POOL_ADDRESS_P (temp) = CONSTANT_POOL_ADDRESS_P (x);
+      STRING_POOL_ADDRESS_P (temp) = STRING_POOL_ADDRESS_P (x);
       return temp;
 
     case CONST:
@@ -539,11 +587,11 @@ memory_address (mode, x)
   if (oldx == x)
     return x;
   else if (GET_CODE (x) == REG)
-    mark_reg_pointer (x, 1);
+    mark_reg_pointer (x, BITS_PER_UNIT);
   else if (GET_CODE (x) == PLUS
 	   && GET_CODE (XEXP (x, 0)) == REG
 	   && GET_CODE (XEXP (x, 1)) == CONST_INT)
-    mark_reg_pointer (XEXP (x, 0), 1);
+    mark_reg_pointer (XEXP (x, 0), BITS_PER_UNIT);
 
   /* OLDX may have been the address on a temporary.  Update the address
      to indicate that X is now used.  */
@@ -583,6 +631,93 @@ validize_mem (ref)
   return change_address (ref, GET_MODE (ref), XEXP (ref, 0));
 }
 
+/* Given REF, either a MEM or a REG, and T, either the type of X or
+   the expression corresponding to REF, set RTX_UNCHANGING_P if
+   appropriate.  */
+
+void
+maybe_set_unchanging (ref, t)
+     rtx ref;
+     tree t;
+{
+  /* We can set RTX_UNCHANGING_P from TREE_READONLY for decls whose
+     initialization is only executed once, or whose initializer always
+     has the same value.  Currently we simplify this to PARM_DECLs in the
+     first case, and decls with TREE_CONSTANT initializers in the second.  */
+  if ((TREE_READONLY (t) && DECL_P (t)
+       && (TREE_CODE (t) == PARM_DECL
+	   || DECL_INITIAL (t) == NULL_TREE
+	   || TREE_CONSTANT (DECL_INITIAL (t))))
+      || TREE_CODE_CLASS (TREE_CODE (t)) == 'c')
+    RTX_UNCHANGING_P (ref) = 1;
+}
+
+/* Given REF, a MEM, and T, either the type of X or the expression
+   corresponding to REF, set the memory attributes.  OBJECTP is nonzero
+   if we are making a new object of this type.  */
+
+void
+set_mem_attributes (ref, t, objectp)
+     rtx ref;
+     tree t;
+     int objectp;
+{
+  tree type;
+
+  /* It can happen that type_for_mode was given a mode for which there
+     is no language-level type.  In which case it returns NULL, which
+     we can see here.  */
+  if (t == NULL_TREE)
+    return;
+
+  type = TYPE_P (t) ? t : TREE_TYPE (t);
+
+  /* Get the alias set from the expression or type (perhaps using a
+     front-end routine) and then copy bits from the type.  */
+
+  /* It is incorrect to set RTX_UNCHANGING_P from TREE_READONLY (type)
+     here, because, in C and C++, the fact that a location is accessed
+     through a const expression does not mean that the value there can
+     never change.  */
+  MEM_ALIAS_SET (ref) = get_alias_set (t);
+  MEM_VOLATILE_P (ref) = TYPE_VOLATILE (type);
+  MEM_IN_STRUCT_P (ref) = AGGREGATE_TYPE_P (type);
+
+  /* If we are making an object of this type, we know that it is a scalar if
+     the type is not an aggregate. */
+  if (objectp && ! AGGREGATE_TYPE_P (type))
+    MEM_SCALAR_P (ref) = 1;
+
+  /* If T is a type, this is all we can do.  Otherwise, we may be able
+     to deduce some more information about the expression.  */
+  if (TYPE_P (t))
+    return;
+
+  maybe_set_unchanging (ref, t);
+  if (TREE_THIS_VOLATILE (t))
+    MEM_VOLATILE_P (ref) = 1;
+
+  /* Now see if we can say more about whether it's an aggregate or
+     scalar.  If we already know it's an aggregate, don't bother.  */
+  if (MEM_IN_STRUCT_P (ref))
+    return;
+
+  /* Now remove any NOPs: they don't change what the underlying object is.
+     Likewise for SAVE_EXPR.  */
+  while (TREE_CODE (t) == NOP_EXPR || TREE_CODE (t) == CONVERT_EXPR
+	 || TREE_CODE (t) == NON_LVALUE_EXPR || TREE_CODE (t) == SAVE_EXPR)
+    t = TREE_OPERAND (t, 0);
+
+  /* Since we already know the type isn't an aggregate, if this is a decl,
+     it must be a scalar.  Or if it is a reference into an aggregate,
+     this is part of an aggregate.   Otherwise we don't know.  */
+  if (DECL_P (t))
+    MEM_SCALAR_P (ref) = 1;
+  else if (TREE_CODE (t) == COMPONENT_REF || TREE_CODE (t) == ARRAY_REF
+	   || TREE_CODE (t) == BIT_FIELD_REF)
+    MEM_IN_STRUCT_P (ref) = 1;
+}
+
 /* Return a modified copy of X with its memory address copied
    into a temporary register to protect it from side effects.
    If X is not a MEM, it is returned unchanged (and not copied).
@@ -593,29 +728,17 @@ stabilize (x)
      rtx x;
 {
   register rtx addr;
+
   if (GET_CODE (x) != MEM)
     return x;
+
   addr = XEXP (x, 0);
   if (rtx_unstable_p (addr))
     {
-      rtx temp = copy_all_regs (addr);
-      rtx mem;
-      if (GET_CODE (temp) != REG)
-	temp = copy_to_reg (temp);
-      mem = gen_rtx_MEM (GET_MODE (x), temp);
+      rtx temp = force_reg (Pmode, copy_all_regs (addr));
+      rtx mem = gen_rtx_MEM (GET_MODE (x), temp);
 
-      /* Mark returned memref with in_struct if it's in an array or
-	 structure.  Copy const and volatile from original memref.  */
-
-      RTX_UNCHANGING_P (mem) = RTX_UNCHANGING_P (x);
       MEM_COPY_ATTRIBUTES (mem, x);
-      if (GET_CODE (addr) == PLUS)
-	MEM_SET_IN_STRUCT_P (mem, 1);
-
-      /* Since the new MEM is just like the old X, it can alias only
-	 the things that X could.  */
-      MEM_ALIAS_SET (mem) = MEM_ALIAS_SET (x);
-
       return mem;
     }
   return x;
@@ -689,7 +812,12 @@ force_reg (mode, x)
 
   if (GET_CODE (x) == REG)
     return x;
+  
   temp = gen_reg_rtx (mode);
+  
+  if (! general_operand (x, mode))
+    x = force_operand (x, NULL_RTX);
+  
   insn = emit_move_insn (temp, x);
 
   /* Let optimizers know that TEMP's value never changes
@@ -717,8 +845,10 @@ force_not_mem (x)
      rtx x;
 {
   register rtx temp;
+
   if (GET_CODE (x) != MEM || GET_MODE (x) == BLKmode)
     return x;
+
   temp = gen_reg_rtx (GET_MODE (x));
   emit_move_insn (temp, x);
   return temp;
@@ -803,6 +933,11 @@ adjust_stack (adjust)
   if (adjust == const0_rtx)
     return;
 
+  /* We expect all variable sized adjustments to be multiple of
+     PREFERRED_STACK_BOUNDARY.  */
+  if (GET_CODE (adjust) == CONST_INT)
+    stack_pointer_delta -= INTVAL (adjust);
+
   temp = expand_binop (Pmode,
 #ifdef STACK_GROWS_DOWNWARD
 		       add_optab,
@@ -828,6 +963,11 @@ anti_adjust_stack (adjust)
 
   if (adjust == const0_rtx)
     return;
+
+  /* We expect all variable sized adjustments to be multiple of
+     PREFERRED_STACK_BOUNDARY.  */
+  if (GET_CODE (adjust) == CONST_INT)
+    stack_pointer_delta += INTVAL (adjust);
 
   temp = expand_binop (Pmode,
 #ifdef STACK_GROWS_DOWNWARD
@@ -890,7 +1030,7 @@ emit_stack_save (save_level, psave, after)
 {
   rtx sa = *psave;
   /* The default is that we use a move insn and save in a Pmode object.  */
-  rtx (*fcn) PROTO ((rtx, rtx)) = gen_move_insn;
+  rtx (*fcn) PARAMS ((rtx, rtx)) = gen_move_insn;
   enum machine_mode mode = STACK_SAVEAREA_MODE (save_level);
 
   /* See if this machine has anything special to do for this kind of save.  */
@@ -972,7 +1112,7 @@ emit_stack_restore (save_level, sa, after)
      rtx sa;
 {
   /* The default is that we use a move insn.  */
-  rtx (*fcn) PROTO ((rtx, rtx)) = gen_move_insn;
+  rtx (*fcn) PARAMS ((rtx, rtx)) = gen_move_insn;
 
   /* See if this machine has anything special to do for this kind of save.  */
   switch (save_level)
@@ -1130,6 +1270,13 @@ allocate_dynamic_stack_space (size, target, known_align)
   if (GET_MODE (size) != VOIDmode && GET_MODE (size) != Pmode)
     size = convert_to_mode (Pmode, size, 1);
 
+  /* We can't attempt to minimize alignment necessary, because we don't
+     know the final value of preferred_stack_boundary yet while executing
+     this code.  */
+#ifdef PREFERRED_STACK_BOUNDARY
+  cfun->preferred_stack_boundary = PREFERRED_STACK_BOUNDARY;
+#endif
+
   /* We will need to ensure that the address we return is aligned to
      BIGGEST_ALIGNMENT.  If STACK_DYNAMIC_OFFSET is defined, we don't
      always know its final value at this point in the compilation (it 
@@ -1150,15 +1297,10 @@ allocate_dynamic_stack_space (size, target, known_align)
 #endif
 
   if (MUST_ALIGN)
-    {
-      if (GET_CODE (size) == CONST_INT)
-	size = GEN_INT (INTVAL (size)
-			+ (BIGGEST_ALIGNMENT / BITS_PER_UNIT - 1));
-      else
-	size = expand_binop (Pmode, add_optab, size,
-			     GEN_INT (BIGGEST_ALIGNMENT / BITS_PER_UNIT - 1),
-			     NULL_RTX, 1, OPTAB_LIB_WIDEN);
-    }
+    size
+      = force_operand (plus_constant (size, 
+				      BIGGEST_ALIGNMENT / BITS_PER_UNIT - 1),
+		       NULL_RTX);
 
 #ifdef SETJMP_VIA_SAVE_AREA
   /* If setjmp restores regs from a save area in the stack frame,
@@ -1181,12 +1323,12 @@ allocate_dynamic_stack_space (size, target, known_align)
 #if !defined(PREFERRED_STACK_BOUNDARY) || !defined(MUST_ALIGN) || (PREFERRED_STACK_BOUNDARY != BIGGEST_ALIGNMENT)
 	/* If anyone creates a target with these characteristics, let them
 	   know that our optimization cannot work correctly in such a case.  */
-	abort();
+	abort ();
 #endif
 
 	if (GET_CODE (size) == CONST_INT)
 	  {
-	    int new = INTVAL (size) / align * align;
+	    HOST_WIDE_INT new = INTVAL (size) / align * align;
 
 	    if (INTVAL (size) != new)
 	      setjmpless_size = GEN_INT (new);
@@ -1239,17 +1381,25 @@ allocate_dynamic_stack_space (size, target, known_align)
 
   do_pending_stack_adjust ();
 
+ /* We ought to be called always on the toplevel and stack ought to be aligned
+    propertly.  */
+#ifdef PREFERRED_STACK_BOUNDARY
+  if (stack_pointer_delta % (PREFERRED_STACK_BOUNDARY / BITS_PER_UNIT))
+    abort ();
+#endif
+
   /* If needed, check that we have the required amount of stack.  Take into
      account what has already been checked.  */
   if (flag_stack_check && ! STACK_CHECK_BUILTIN)
     probe_stack_range (STACK_CHECK_MAX_FRAME_SIZE + STACK_CHECK_PROTECT, size);
 
-  /* Don't use a TARGET that isn't a pseudo.  */
+  /* Don't use a TARGET that isn't a pseudo or is the wrong mode.  */
   if (target == 0 || GET_CODE (target) != REG
-      || REGNO (target) < FIRST_PSEUDO_REGISTER)
+      || REGNO (target) < FIRST_PSEUDO_REGISTER
+      || GET_MODE (target) != Pmode)
     target = gen_reg_rtx (Pmode);
 
-  mark_reg_pointer (target, known_align / BITS_PER_UNIT);
+  mark_reg_pointer (target, known_align);
 
   /* Perform the required allocation from the stack.  Some systems do
      this differently than simply incrementing/decrementing from the
@@ -1258,19 +1408,21 @@ allocate_dynamic_stack_space (size, target, known_align)
   if (HAVE_allocate_stack)
     {
       enum machine_mode mode = STACK_SIZE_MODE;
+      insn_operand_predicate_fn pred;
 
-      if (insn_operand_predicate[(int) CODE_FOR_allocate_stack][0]
-	  && ! ((*insn_operand_predicate[(int) CODE_FOR_allocate_stack][0])
-		(target, Pmode)))
+      pred = insn_data[(int) CODE_FOR_allocate_stack].operand[0].predicate;
+      if (pred && ! ((*pred) (target, Pmode)))
 #ifdef POINTERS_EXTEND_UNSIGNED
 	target = convert_memory_address (Pmode, target);
 #else
 	target = copy_to_mode_reg (Pmode, target);
 #endif
-      size = convert_modes (mode, ptr_mode, size, 1);
-      if (insn_operand_predicate[(int) CODE_FOR_allocate_stack][1]
-	  && ! ((*insn_operand_predicate[(int) CODE_FOR_allocate_stack][1])
-		(size, mode)))
+
+      if (mode == VOIDmode)
+	mode = Pmode;
+
+      pred = insn_data[(int) CODE_FOR_allocate_stack].operand[1].predicate;
+      if (pred && ! ((*pred) (size, mode)))
 	size = copy_to_mode_reg (mode, size);
 
       emit_insn (gen_allocate_stack (target, size));
@@ -1281,7 +1433,33 @@ allocate_dynamic_stack_space (size, target, known_align)
 #ifndef STACK_GROWS_DOWNWARD
       emit_move_insn (target, virtual_stack_dynamic_rtx);
 #endif
-      size = convert_modes (Pmode, ptr_mode, size, 1);
+
+      /* Check stack bounds if necessary.  */
+      if (current_function_limit_stack)
+	{
+	  rtx available;
+	  rtx space_available = gen_label_rtx ();
+#ifdef STACK_GROWS_DOWNWARD
+	  available = expand_binop (Pmode, sub_optab, 
+				    stack_pointer_rtx, stack_limit_rtx,
+				    NULL_RTX, 1, OPTAB_WIDEN);
+#else
+	  available = expand_binop (Pmode, sub_optab, 
+				    stack_limit_rtx, stack_pointer_rtx,
+				    NULL_RTX, 1, OPTAB_WIDEN);
+#endif
+	  emit_cmp_and_jump_insns (available, size, GEU, NULL_RTX, Pmode, 1,
+				   0, space_available);
+#ifdef HAVE_trap
+	  if (HAVE_trap)
+	    emit_insn (gen_trap ());
+	  else
+#endif
+	    error ("stack limits not supported on this target");
+	  emit_barrier ();
+	  emit_label (space_available);
+	}
+
       anti_adjust_stack (size);
 #ifdef SETJMP_VIA_SAVE_AREA
       if (setjmpless_size != NULL_RTX)
@@ -1293,6 +1471,7 @@ allocate_dynamic_stack_space (size, target, known_align)
 				 REG_NOTES (note_target));
 	}
 #endif /* SETJMP_VIA_SAVE_AREA */
+
 #ifdef STACK_GROWS_DOWNWARD
   emit_move_insn (target, virtual_stack_dynamic_rtx);
 #endif
@@ -1328,6 +1507,19 @@ allocate_dynamic_stack_space (size, target, known_align)
   return target;
 }
 
+/* A front end may want to override GCC's stack checking by providing a 
+   run-time routine to call to check the stack, so provide a mechanism for
+   calling that routine.  */
+
+static rtx stack_check_libfunc;
+
+void
+set_stack_check_libfunc (libfunc)
+     rtx libfunc;
+{
+  stack_check_libfunc = libfunc;
+}
+
 /* Emit one stack probe at ADDRESS, an address within the stack.  */
 
 static void
@@ -1361,30 +1553,47 @@ probe_stack_range (first, size)
      HOST_WIDE_INT first;
      rtx size;
 {
-  /* First see if we have an insn to check the stack.  Use it if so.  */
-#ifdef HAVE_check_stack
-  if (HAVE_check_stack)
+  /* First see if the front end has set up a function for us to call to
+     check the stack.  */
+  if (stack_check_libfunc != 0)
     {
+      rtx addr = memory_address (QImode,
+				 gen_rtx (STACK_GROW_OP, Pmode,
+					  stack_pointer_rtx,
+					  plus_constant (size, first)));
+
+#ifdef POINTERS_EXTEND_UNSIGNED
+      if (GET_MODE (addr) != ptr_mode)
+	addr = convert_memory_address (ptr_mode, addr);
+#endif
+
+      emit_library_call (stack_check_libfunc, 0, VOIDmode, 1, addr,
+			 ptr_mode);
+    }
+
+  /* Next see if we have an insn to check the stack.  Use it if so.  */
+#ifdef HAVE_check_stack
+  else if (HAVE_check_stack)
+    {
+      insn_operand_predicate_fn pred;
       rtx last_addr
 	= force_operand (gen_rtx_STACK_GROW_OP (Pmode,
 						stack_pointer_rtx,
 						plus_constant (size, first)),
 			 NULL_RTX);
 
-      if (insn_operand_predicate[(int) CODE_FOR_check_stack][0]
-	  && ! ((*insn_operand_predicate[(int) CODE_FOR_check_stack][0])
-		(last_address, Pmode)))
-	last_address = copy_to_mode_reg (Pmode, last_address);
+      pred = insn_data[(int) CODE_FOR_check_stack].operand[0].predicate;
+      if (pred && ! ((*pred) (last_addr, Pmode)))
+	last_addr = copy_to_mode_reg (Pmode, last_addr);
 
-      emit_insn (gen_check_stack (last_address));
-      return;
+      emit_insn (gen_check_stack (last_addr));
     }
 #endif
 
   /* If we have to generate explicit probes, see if we have a constant
      small number of them to generate.  If so, that's the easy case.  */
-  if (GET_CODE (size) == CONST_INT
-      && INTVAL (size) < 10 * STACK_CHECK_PROBE_INTERVAL)
+  else if (GET_CODE (size) == CONST_INT
+	   && INTVAL (size) < 10 * STACK_CHECK_PROBE_INTERVAL)
     {
       HOST_WIDE_INT offset;
 
@@ -1456,10 +1665,6 @@ probe_stack_range (first, size)
       emit_note (NULL_PTR, NOTE_INSN_LOOP_END);
       emit_label (end_lab);
 
-      /* If will be doing stupid optimization, show test_addr is still live. */
-      if (obey_regdecls)
-	emit_insn (gen_rtx_USE (VOIDmode, test_addr));
-
       emit_stack_probe (last_addr);
     }
 }
@@ -1468,21 +1673,34 @@ probe_stack_range (first, size)
    in which a scalar value of data type VALTYPE
    was returned by a function call to function FUNC.
    FUNC is a FUNCTION_DECL node if the precise function is known,
-   otherwise 0.  */
+   otherwise 0.
+   OUTGOING is 1 if on a machine with register windows this function
+   should return the register in which the function will put its result
+   and 0 otherwise. */
 
 rtx
-hard_function_value (valtype, func)
+hard_function_value (valtype, func, outgoing)
      tree valtype;
      tree func ATTRIBUTE_UNUSED;
+     int outgoing ATTRIBUTE_UNUSED;
 {
-  rtx val = FUNCTION_VALUE (valtype, func);
+  rtx val;
+
+#ifdef FUNCTION_OUTGOING_VALUE
+  if (outgoing)
+    val = FUNCTION_OUTGOING_VALUE (valtype, func);
+  else
+#endif
+    val = FUNCTION_VALUE (valtype, func);
+
   if (GET_CODE (val) == REG
       && GET_MODE (val) == BLKmode)
     {
-      int bytes = int_size_in_bytes (valtype);
+      unsigned HOST_WIDE_INT bytes = int_size_in_bytes (valtype);
       enum machine_mode tmpmode;
+
       for (tmpmode = GET_CLASS_NARROWEST_MODE (MODE_INT);
-           tmpmode != MAX_MACHINE_MODE;
+           tmpmode != VOIDmode;
            tmpmode = GET_MODE_WIDER_MODE (tmpmode))
         {
           /* Have we found a large enough mode?  */
@@ -1491,7 +1709,7 @@ hard_function_value (valtype, func)
         }
 
       /* No suitable mode found.  */
-      if (tmpmode == MAX_MACHINE_MODE)
+      if (tmpmode == VOIDmode)
         abort ();
 
       PUT_MODE (val, tmpmode);

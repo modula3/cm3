@@ -1,5 +1,5 @@
 /* Generate check macros for tree codes.
-   Copyright (C) 1998 Free Software Foundation, Inc.
+   Copyright (C) 1998, 1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -25,18 +25,25 @@ Boston, MA 02111-1307, USA.  */
 
 const char *tree_codes[] = {
 #include "tree.def"
+#include "c-common.def"
 #include "gencheck.h"
 (char*)0
 };
 
-void usage ()
+static void usage PARAMS ((void));
+
+static void
+usage ()
 {
   fprintf (stderr,"Usage: gencheck\n");
 }
 
-int main (argc, argv)
+extern int main PARAMS ((int, char **));
+
+int
+main (argc, argv)
      int argc;
-     char *argv[] ATTRIBUTE_UNUSED;
+     char **argv ATTRIBUTE_UNUSED;
 {
   int i;
 
@@ -47,15 +54,13 @@ int main (argc, argv)
 
     default:
       usage ();
-      exit (1);
+      return (1);
     }
 
   printf ("/* This file is generated using gencheck. Do not edit. */\n");
   for (i = 0; tree_codes[i]; i++)
     {
       printf ("#define %s_CHECK(t)\tTREE_CHECK (t, %s)\n",
-	      tree_codes[i], tree_codes[i]);
-      printf ("#define %s_CHECK1(t)\tTREE_CHECK1 (t, %s)\n",
 	      tree_codes[i], tree_codes[i]);
     }
 

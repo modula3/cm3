@@ -2,7 +2,8 @@
    for getting g++ file-scope static objects constructed.  This file
    will get included either by libgcc2.c (for systems that don't support
    a .init section) or by crtstuff.c (for those that do).
-   Copyright (C) 1991, 1995, 1996, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1995, 1996, 1998, 1999, 2000
+   Free Software Foundation, Inc.
    Contributed by Ron Guilmette (rfg@segfault.us.com)
 
 This file is part of GNU CC.
@@ -31,21 +32,7 @@ Boston, MA 02111-1307, USA.  */
 */
 
 #ifdef NEED_ATEXIT
-#ifndef HAVE_ATEXIT
-#define HAVE_ATEXIT	1	/* Take it from libgcc2.c */
-#endif
-#endif
-
-#ifdef HAVE_ATEXIT
-#if defined (WINNT) || defined (NEED_ATEXIT)
 extern int atexit (void (*) (void));
-#endif
-#define ON_EXIT(FUNC,ARG) atexit ((FUNC))
-#else
-#ifdef sun
-extern int on_exit (void *, void *);	/* The man page says it returns int. */
-#define ON_EXIT(FUNC,ARG) on_exit ((FUNC), (ARG))
-#endif
 #endif
 
 /*  Declare a pointer to void function type.  */
@@ -58,7 +45,11 @@ typedef void (*func_ptr) (void);
 extern func_ptr __CTOR_LIST__[];
 extern func_ptr __DTOR_LIST__[];
 
-/* Declare the routine which need to get invoked at program exit time.  */
+/* Declare the routine which needs to get invoked at program start time.  */
+
+extern void __do_global_ctors (void);
+
+/* Declare the routine which needs to get invoked at program exit time.  */
 
 extern void __do_global_dtors (void);
 

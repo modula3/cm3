@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.
    ARM Linux-based GNU systems version.
-   Copyright (C) 1997, 1998, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1997, 1998, 1999, 2000, 2001 Free Software Foundation, Inc.
    Contributed by Russell King  <rmk92@ecs.soton.ac.uk>.
 
 This file is part of GNU CC.
@@ -79,5 +79,7 @@ Boston, MA 02111-1307, USA.  */
   register unsigned long _beg __asm ("a1") = (unsigned long) (BEG);	\
   register unsigned long _end __asm ("a2") = (unsigned long) (END);	\
   register unsigned long _flg __asm ("a3") = 0;				\
-  __asm __volatile ("swi 0x9f0002");					\
+  __asm __volatile ("swi 0x9f0002		@ sys_cacheflush"	\
+		    : "=r" (_beg)					\
+		    : "0" (_beg), "r" (_end), "r" (_flg));		\
 }

@@ -1,5 +1,5 @@
 /* Virtual array support.
-   Copyright (C) 1998 Free Software Foundation, Inc.
+   Copyright (C) 1998, 1999, 2000 Free Software Foundation, Inc.
    Contributed by Cygnus Solutions.
 
    This file is part of GNU CC.
@@ -40,8 +40,9 @@ varray_init (num_elements, element_size, name)
   varray_type ptr = (varray_type) xcalloc (VARRAY_HDR_SIZE + data_size, 1);
 
   ptr->num_elements = num_elements;
+  ptr->elements_used = 0;
   ptr->element_size = element_size;
-  ptr->name	    = name;
+  ptr->name = name;
   return ptr;
 }
 
@@ -63,8 +64,29 @@ varray_grow (va, n)
       va = (varray_type) xrealloc ((char *)va, VARRAY_HDR_SIZE + data_size);
       va->num_elements = n;
       if (n > old_elements)
-	bzero (&va->data.c[old_data_size], data_size - old_data_size);
+	memset (&va->data.c[old_data_size], 0, data_size - old_data_size);
     }
 
   return va;
 }
+
+/* Check the bounds of a varray access.  */
+
+#if defined ENABLE_CHECKING && (GCC_VERSION >= 2007)
+
+extern void error PARAMS ((const char *, ...))	ATTRIBUTE_PRINTF_1;
+
+void
+varray_check_failed (va, n, file, line, function)
+     varray_type va;
+     size_t n;
+     const char *file;
+     int line;
+     const char *function;
+{
+  error("Virtual array %s[%lu]: element %lu out of bounds",
+	va->name, (unsigned long) va->num_elements, (unsigned long) n);
+  fancy_abort (file, line, function);
+}
+
+#endif

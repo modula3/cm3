@@ -1,5 +1,5 @@
 /* Sets (bit vectors) of hard registers, and operations on them.
-   Copyright (C) 1987, 1992, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1992, 1994, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC
 
@@ -18,6 +18,8 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
+#ifndef _HARD_REG_SET_H
+#define _HARD_REG_SET_H 1
 
 /* Define the type of a set of hard registers.  */
 
@@ -429,10 +431,14 @@ extern HARD_REG_SET call_fixed_reg_set;
 
 extern char global_regs[FIRST_PSEUDO_REGISTER];
 
+#ifdef REG_ALLOC_ORDER
 /* Table of register numbers in the order in which to try to use them.  */
 
-#ifdef REG_ALLOC_ORDER   /* Avoid undef symbol in certain broken linkers.  */
 extern int reg_alloc_order[FIRST_PSEUDO_REGISTER];
+
+/* The inverse of reg_alloc_order.  */
+
+extern int inv_reg_alloc_order[FIRST_PSEUDO_REGISTER];
 #endif
 
 /* For each reg class, a HARD_REG_SET saying which registers are in it.  */
@@ -441,7 +447,7 @@ extern HARD_REG_SET reg_class_contents[];
 
 /* For each reg class, number of regs it contains.  */
 
-extern int reg_class_size[N_REG_CLASSES];
+extern unsigned int reg_class_size[N_REG_CLASSES];
 
 /* For each reg class, table listing all the containing classes.  */
 
@@ -467,4 +473,6 @@ extern int n_non_fixed_regs;
 
 /* Vector indexed by hardware reg giving its name.  */
 
-extern char *reg_names[FIRST_PSEUDO_REGISTER];
+extern const char * reg_names[FIRST_PSEUDO_REGISTER];
+
+#endif /* _HARD_REG_SET_H */

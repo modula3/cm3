@@ -1,4 +1,4 @@
-# Common support for PowerPC eabi, System V targets.
+# Common support for PowerPC ELF targets (both EABI and SVR4).
 
 # Do not build libgcc1.
 LIBGCC1 =
@@ -6,7 +6,16 @@ CROSS_LIBGCC1 =
 
 # These are really part of libgcc1, but this will cause them to be
 # built correctly, so... [taken from t-sparclite]
-LIB2FUNCS_EXTRA = fp-bit.c dp-bit.c eabi.S eabi-ctors.c tramp.S
+LIB2FUNCS_EXTRA = tramp.S
+
+# This one can't end up in shared libgcc
+LIB2FUNCS_STATIC_EXTRA = eabi.S
+
+# We want fine grained libraries, so use the new code to build the
+# floating point emulation libraries.
+FPBIT = fp-bit.c
+DPBIT = dp-bit.c
+
 
 dp-bit.c: $(srcdir)/config/fp-bit.c
 	cat $(srcdir)/config/fp-bit.c > dp-bit.c
@@ -17,9 +26,6 @@ fp-bit.c: $(srcdir)/config/fp-bit.c
 
 eabi.S: $(srcdir)/config/rs6000/eabi.asm
 	cat $(srcdir)/config/rs6000/eabi.asm > eabi.S
-
-eabi-ctors.c: $(srcdir)/config/rs6000/eabi-ctors.c
-	cat $(srcdir)/config/rs6000/eabi-ctors.c > eabi-ctors.c
 
 tramp.S: $(srcdir)/config/rs6000/tramp.asm
 	cat $(srcdir)/config/rs6000/tramp.asm > tramp.S
@@ -33,14 +39,19 @@ MULTILIB_MATCHES_FLOAT	= msoft-float=mcpu?401 \
 			  msoft-float=mcpu?823 \
 			  msoft-float=mcpu?860
 MULTILIB_MATCHES_ENDIAN	= mlittle=mlittle-endian mbig=mbig-endian
-MULTILIB_MATCHES_SYSV	= mcall-sysv=mcall-sysv-eabi mcall-sysv=mcall-sysv-noeabi
+MULTILIB_MATCHES_SYSV	= mcall-sysv=mcall-sysv-eabi mcall-sysv=mcall-sysv-noeabi mcall-sysv=mcall-linux mcall-sysv=mcall-netbsd
 
 LIBGCC = stmp-multilib
 INSTALL_LIBGCC = install-multilib
-EXTRA_MULTILIB_PARTS = ecrti$(objext) ecrtn$(objext) scrt0$(objext) scrti$(objext) scrtn$(objext)
+EXTRA_MULTILIB_PARTS = crtbegin$(objext) crtend$(objext) \
+  crtbeginS$(objext) crtendS$(objext) \
+  ecrti$(objext) ecrtn$(objext) \
+  scrt0$(objext) scrti$(objext) scrtn$(objext) \
+  ncrti$(objext) ncrtn$(objext)
 
-# We build {e,s}crti.o, {e,s}crtn.o, and scrt0.o which serve to add begin and
-# end labels to all of the special sections used when we link using gcc.
+# We build {e,s}crti.o, {e,s}crtn.o, and {s,n}crt0.o which serve to
+# add begin and end labels to all of the special sections used when we
+# link using gcc.
 
 # Assemble startup files.
 ecrti.S: $(srcdir)/config/rs6000/eabi-ci.asm
@@ -48,6 +59,14 @@ ecrti.S: $(srcdir)/config/rs6000/eabi-ci.asm
 
 ecrtn.S: $(srcdir)/config/rs6000/eabi-cn.asm
 	cat $(srcdir)/config/rs6000/eabi-cn.asm >ecrtn.S
+
+ncrti.S: $(srcdir)/config/rs6000/sol-ci.asm
+	sed -e 's/__init/_init/' -e 's/__fini/_fini/' \
+		$(srcdir)/config/rs6000/sol-ci.asm >ncrti.S
+
+ncrtn.S: $(srcdir)/config/rs6000/sol-cn.asm
+	sed -e 's/__init/_init/' -e 's/__fini/_fini/' \
+		$(srcdir)/config/rs6000/sol-cn.asm >ncrtn.S
 
 scrti.S: $(srcdir)/config/rs6000/sol-ci.asm
 	cat $(srcdir)/config/rs6000/sol-ci.asm >scrti.S
@@ -65,6 +84,12 @@ $(T)ecrti$(objext): ecrti.S
 $(T)ecrtn$(objext): ecrtn.S
 	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(INCLUDES) $(MULTILIB_CFLAGS) -c ecrtn.S -o $(T)ecrtn$(objext)
 
+$(T)ncrti$(objext): ncrti.S
+	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(INCLUDES) $(MULTILIB_CFLAGS) -c ncrti.S -o $(T)ncrti$(objext)
+
+$(T)ncrtn$(objext): ncrtn.S
+	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(INCLUDES) $(MULTILIB_CFLAGS) -c ncrtn.S -o $(T)ncrtn$(objext)
+
 $(T)scrti$(objext): scrti.S
 	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(INCLUDES) $(MULTILIB_CFLAGS) -c scrti.S -o $(T)scrti$(objext)
 
@@ -76,4 +101,6 @@ $(T)scrt0$(objext): scrt0.c
 
 # It is important that crtbegin.o, etc., aren't surprised by stuff in .sdata.
 CRTSTUFF_T_CFLAGS = -msdata=none
-CRTSTUFF_T_CFLAGS_S = -fpic -msdata=none
+# Make sure crt*.o are built with -fPIC even if configured with
+# --enable-shared --disable-multilib
+CRTSTUFF_T_CFLAGS_S = -fPIC -msdata=none

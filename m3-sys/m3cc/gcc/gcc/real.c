@@ -1,6 +1,7 @@
 /* real.c - implementation of REAL_ARITHMETIC, REAL_VALUE_ATOF,
    and support for XFmode IEEE extended real floating point arithmetic.
-   Copyright (C) 1993, 94-98, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998,
+   1999, 2000 Free Software Foundation, Inc.
    Contributed by Stephen L. Moshier (moshier@world.std.com).
 
 This file is part of GNU CC.
@@ -24,6 +25,7 @@ Boston, MA 02111-1307, USA.  */
 #include "system.h"
 #include "tree.h"
 #include "toplev.h"
+#include "tm_p.h"
 
 /* To enable support of XFmode extended real floating point, define
 LONG_DOUBLE_TYPE_SIZE 96 in the tm.h file (m68k.h or i386.h).
@@ -93,7 +95,9 @@ netlib.att.com: netlib/cephes.   */
 
    The case LONG_DOUBLE_TYPE_SIZE = 128 activates TFmode support
    and may deactivate XFmode since `long double' is used to refer
-   to both modes.
+   to both modes.  Defining INTEL_EXTENDED_IEEE_FORMAT at the same 
+   time enables 80387-style 80-bit floats in a 128-bit padded
+   image, as seen on IA-64.
 
    The macros FLOAT_WORDS_BIG_ENDIAN, HOST_FLOAT_WORDS_BIG_ENDIAN,
    contributed by Richard Earnshaw <Richard.Earnshaw@cl.cam.ac.uk>,
@@ -242,25 +246,31 @@ unknown arithmetic type
    A REAL_VALUE_TYPE is guaranteed to occupy contiguous locations
    in memory, with no holes.  */
 
-#if LONG_DOUBLE_TYPE_SIZE == 96
+#if MAX_LONG_DOUBLE_TYPE_SIZE == 96 || \
+    (defined(INTEL_EXTENDED_IEEE_FORMAT) && MAX_LONG_DOUBLE_TYPE_SIZE == 128)
 /* Number of 16 bit words in external e type format */
-#define NE 6
-#define MAXDECEXP 4932
-#define MINDECEXP -4956
-#define GET_REAL(r,e) bcopy ((char *) r, (char *) e, 2*NE)
-#define PUT_REAL(e,r)				\
-do {						\
-  if (2*NE < sizeof(*r))			\
-    bzero((char *)r, sizeof(*r));		\
-  bcopy ((char *) e, (char *) r, 2*NE);		\
-} while (0)
-#else /* no XFmode */
-#if LONG_DOUBLE_TYPE_SIZE == 128
-#define NE 10
-#define MAXDECEXP 4932
-#define MINDECEXP -4977
-#define GET_REAL(r,e) bcopy ((char *) r, (char *) e, 2*NE)
-#define PUT_REAL(e,r) bcopy ((char *) e, (char *) r, 2*NE)
+# define NE 6
+# define MAXDECEXP 4932
+# define MINDECEXP -4956
+# define GET_REAL(r,e)  memcpy ((char *)(e), (char *)(r), 2*NE)
+# define PUT_REAL(e,r)						\
+	do {							\
+	  memcpy ((char *)(r), (char *)(e), 2*NE);		\
+	  if (2*NE < sizeof(*r))				\
+	    memset ((char *)(r) + 2*NE, 0, sizeof(*r) - 2*NE);	\
+	} while (0)
+# else /* no XFmode */
+#  if MAX_LONG_DOUBLE_TYPE_SIZE == 128
+#   define NE 10
+#   define MAXDECEXP 4932
+#   define MINDECEXP -4977
+#   define GET_REAL(r,e) memcpy ((char *)(e), (char *)(r), 2*NE)
+#   define PUT_REAL(e,r)					\
+	do {							\
+	  memcpy ((char *)(r), (char *)(e), 2*NE);		\
+	  if (2*NE < sizeof(*r))				\
+	    memset ((char *)(r) + 2*NE, 0, sizeof(*r) - 2*NE);	\
+	} while (0)
 #else
 #define NE 6
 #define MAXDECEXP 4932
@@ -276,10 +286,10 @@ do {									\
      else								\
        {								\
 	 unsigned EMUSHORT w[4];					\
-         bcopy (((EMUSHORT *) r), &w[3], sizeof (EMUSHORT));		\
-         bcopy (((EMUSHORT *) r) + 1, &w[2], sizeof (EMUSHORT));	\
-	 bcopy (((EMUSHORT *) r) + 2, &w[1], sizeof (EMUSHORT));	\
-	 bcopy (((EMUSHORT *) r) + 3, &w[0], sizeof (EMUSHORT));	\
+         memcpy (&w[3], ((EMUSHORT *) r), sizeof (EMUSHORT));		\
+         memcpy (&w[2], ((EMUSHORT *) r) + 1, sizeof (EMUSHORT));	\
+         memcpy (&w[1], ((EMUSHORT *) r) + 2, sizeof (EMUSHORT));	\
+         memcpy (&w[0], ((EMUSHORT *) r) + 3, sizeof (EMUSHORT));	\
 	 e53toe (w, (e));						\
        }								\
    } while (0)
@@ -292,10 +302,10 @@ do {									\
        {								\
 	 unsigned EMUSHORT w[4];					\
 	 etoe53 ((e), w);						\
-         bcopy (&w[3], ((EMUSHORT *) r), sizeof (EMUSHORT));		\
-         bcopy (&w[2], ((EMUSHORT *) r) + 1, sizeof (EMUSHORT));	\
-         bcopy (&w[1], ((EMUSHORT *) r) + 2, sizeof (EMUSHORT));	\
-         bcopy (&w[0], ((EMUSHORT *) r) + 3, sizeof (EMUSHORT));	\
+         memcpy (((EMUSHORT *) r), &w[3], sizeof (EMUSHORT));		\
+         memcpy (((EMUSHORT *) r) + 1, &w[2], sizeof (EMUSHORT));	\
+         memcpy (((EMUSHORT *) r) + 2, &w[1], sizeof (EMUSHORT));	\
+         memcpy (((EMUSHORT *) r) + 3, &w[0], sizeof (EMUSHORT));	\
        }								\
    } while (0)
 
@@ -330,136 +340,151 @@ do {									\
 /* The exponent of 1.0 */
 #define EXONE (0x3fff)
 
+#if defined(HOST_EBCDIC)
+/* bit 8 is significant in EBCDIC */
+#define CHARMASK 0xff
+#else
+#define CHARMASK 0x7f
+#endif
+
 extern int extra_warnings;
 extern unsigned EMUSHORT ezero[], ehalf[], eone[], etwo[];
 extern unsigned EMUSHORT elog2[], esqrt2[];
 
-static void endian	PROTO((unsigned EMUSHORT *, long *,
+static void endian	PARAMS ((unsigned EMUSHORT *, long *,
 			       enum machine_mode));
-static void eclear	PROTO((unsigned EMUSHORT *));
-static void emov	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void eclear	PARAMS ((unsigned EMUSHORT *));
+static void emov	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
 #if 0
-static void eabs	PROTO((unsigned EMUSHORT *));
+static void eabs	PARAMS ((unsigned EMUSHORT *));
 #endif
-static void eneg	PROTO((unsigned EMUSHORT *));
-static int eisneg	PROTO((unsigned EMUSHORT *));
-static int eisinf	PROTO((unsigned EMUSHORT *));
-static int eisnan	PROTO((unsigned EMUSHORT *));
-static void einfin	PROTO((unsigned EMUSHORT *));
-static void enan	PROTO((unsigned EMUSHORT *, int));
-static void emovi	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void emovo	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void ecleaz	PROTO((unsigned EMUSHORT *));
-static void ecleazs	PROTO((unsigned EMUSHORT *));
-static void emovz	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void einan	PROTO((unsigned EMUSHORT *));
-static int eiisnan	PROTO((unsigned EMUSHORT *));
-static int eiisneg	PROTO((unsigned EMUSHORT *));
+static void eneg	PARAMS ((unsigned EMUSHORT *));
+static int eisneg	PARAMS ((unsigned EMUSHORT *));
+static int eisinf	PARAMS ((unsigned EMUSHORT *));
+static int eisnan	PARAMS ((unsigned EMUSHORT *));
+static void einfin	PARAMS ((unsigned EMUSHORT *));
+#ifdef NANS
+static void enan	PARAMS ((unsigned EMUSHORT *, int));
+static void einan	PARAMS ((unsigned EMUSHORT *));
+static int eiisnan	PARAMS ((unsigned EMUSHORT *));
+static int eiisneg	PARAMS ((unsigned EMUSHORT *));
+static void make_nan	PARAMS ((unsigned EMUSHORT *, int, enum machine_mode));
+#endif
+static void emovi	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void emovo	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void ecleaz	PARAMS ((unsigned EMUSHORT *));
+static void ecleazs	PARAMS ((unsigned EMUSHORT *));
+static void emovz	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
 #if 0
-static void eiinfin	PROTO((unsigned EMUSHORT *));
+static void eiinfin	PARAMS ((unsigned EMUSHORT *));
 #endif
-static int eiisinf	PROTO((unsigned EMUSHORT *));
-static int ecmpm	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void eshdn1	PROTO((unsigned EMUSHORT *));
-static void eshup1	PROTO((unsigned EMUSHORT *));
-static void eshdn8	PROTO((unsigned EMUSHORT *));
-static void eshup8	PROTO((unsigned EMUSHORT *));
-static void eshup6	PROTO((unsigned EMUSHORT *));
-static void eshdn6	PROTO((unsigned EMUSHORT *));
-static void eaddm	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void esubm	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void m16m	PROTO((unsigned int, unsigned short *,
+#ifdef INFINITY
+static int eiisinf	PARAMS ((unsigned EMUSHORT *));
+#endif
+static int ecmpm	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void eshdn1	PARAMS ((unsigned EMUSHORT *));
+static void eshup1	PARAMS ((unsigned EMUSHORT *));
+static void eshdn8	PARAMS ((unsigned EMUSHORT *));
+static void eshup8	PARAMS ((unsigned EMUSHORT *));
+static void eshup6	PARAMS ((unsigned EMUSHORT *));
+static void eshdn6	PARAMS ((unsigned EMUSHORT *));
+static void eaddm	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void esubm	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void m16m	PARAMS ((unsigned int, unsigned short *,
 			       unsigned short *));
-static int edivm	PROTO((unsigned short *, unsigned short *));
-static int emulm	PROTO((unsigned short *, unsigned short *));
-static void emdnorm	PROTO((unsigned EMUSHORT *, int, int, EMULONG, int));
-static void esub	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *,
+static int edivm	PARAMS ((unsigned short *, unsigned short *));
+static int emulm	PARAMS ((unsigned short *, unsigned short *));
+static void emdnorm	PARAMS ((unsigned EMUSHORT *, int, int, EMULONG, int));
+static void esub	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *,
 			       unsigned EMUSHORT *));
-static void eadd	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *,
+static void eadd	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *,
 			       unsigned EMUSHORT *));
-static void eadd1	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *,
+static void eadd1	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *,
 			       unsigned EMUSHORT *));
-static void ediv	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *,
+static void ediv	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *,
 			       unsigned EMUSHORT *));
-static void emul	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *,
+static void emul	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *,
 			       unsigned EMUSHORT *));
-static void e53toe	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void e64toe	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void e113toe	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void e24toe	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void etoe113	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void toe113	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void etoe64	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void toe64	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void etoe53	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void toe53	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void etoe24	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void toe24	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static int ecmp		PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-#if 0
-static void eround	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void e53toe	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void e64toe	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+#ifndef INTEL_EXTENDED_IEEE_FORMAT
+static void e113toe	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
 #endif
-static void ltoe	PROTO((HOST_WIDE_INT *, unsigned EMUSHORT *));
-static void ultoe	PROTO((unsigned HOST_WIDE_INT *, unsigned EMUSHORT *));
-static void eifrac	PROTO((unsigned EMUSHORT *, HOST_WIDE_INT *,
-			       unsigned EMUSHORT *));
-static void euifrac	PROTO((unsigned EMUSHORT *, unsigned HOST_WIDE_INT *,
-			       unsigned EMUSHORT *));
-static int eshift	PROTO((unsigned EMUSHORT *, int));
-static int enormlz	PROTO((unsigned EMUSHORT *));
+static void e24toe	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void etoe113	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void toe113	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void etoe64	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void toe64	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void etoe53	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void toe53	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void etoe24	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void toe24	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static int ecmp		PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
 #if 0
-static void e24toasc	PROTO((unsigned EMUSHORT *, char *, int));
-static void e53toasc	PROTO((unsigned EMUSHORT *, char *, int));
-static void e64toasc	PROTO((unsigned EMUSHORT *, char *, int));
-static void e113toasc	PROTO((unsigned EMUSHORT *, char *, int));
+static void eround	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+#endif
+static void ltoe	PARAMS ((HOST_WIDE_INT *, unsigned EMUSHORT *));
+static void ultoe	PARAMS ((unsigned HOST_WIDE_INT *, unsigned EMUSHORT *));
+static void eifrac	PARAMS ((unsigned EMUSHORT *, HOST_WIDE_INT *,
+			       unsigned EMUSHORT *));
+static void euifrac	PARAMS ((unsigned EMUSHORT *, unsigned HOST_WIDE_INT *,
+			       unsigned EMUSHORT *));
+static int eshift	PARAMS ((unsigned EMUSHORT *, int));
+static int enormlz	PARAMS ((unsigned EMUSHORT *));
+#if 0
+static void e24toasc	PARAMS ((unsigned EMUSHORT *, char *, int));
+static void e53toasc	PARAMS ((unsigned EMUSHORT *, char *, int));
+static void e64toasc	PARAMS ((unsigned EMUSHORT *, char *, int));
+static void e113toasc	PARAMS ((unsigned EMUSHORT *, char *, int));
 #endif /* 0 */
-static void etoasc	PROTO((unsigned EMUSHORT *, char *, int));
-static void asctoe24	PROTO((const char *, unsigned EMUSHORT *));
-static void asctoe53	PROTO((const char *, unsigned EMUSHORT *));
-static void asctoe64	PROTO((const char *, unsigned EMUSHORT *));
-static void asctoe113	PROTO((const char *, unsigned EMUSHORT *));
-static void asctoe	PROTO((const char *, unsigned EMUSHORT *));
-static void asctoeg	PROTO((const char *, unsigned EMUSHORT *, int));
-static void efloor	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void etoasc	PARAMS ((unsigned EMUSHORT *, char *, int));
+static void asctoe24	PARAMS ((const char *, unsigned EMUSHORT *));
+static void asctoe53	PARAMS ((const char *, unsigned EMUSHORT *));
+static void asctoe64	PARAMS ((const char *, unsigned EMUSHORT *));
+#ifndef INTEL_EXTENDED_IEEE_FORMAT
+static void asctoe113	PARAMS ((const char *, unsigned EMUSHORT *));
+#endif
+static void asctoe	PARAMS ((const char *, unsigned EMUSHORT *));
+static void asctoeg	PARAMS ((const char *, unsigned EMUSHORT *, int));
+static void efloor	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
 #if 0
-static void efrexp	PROTO((unsigned EMUSHORT *, int *,
+static void efrexp	PARAMS ((unsigned EMUSHORT *, int *,
 			       unsigned EMUSHORT *));
 #endif
-static void eldexp	PROTO((unsigned EMUSHORT *, int, unsigned EMUSHORT *));
+static void eldexp	PARAMS ((unsigned EMUSHORT *, int, unsigned EMUSHORT *));
 #if 0
-static void eremain	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *,
+static void eremain	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *,
 			       unsigned EMUSHORT *));
 #endif
-static void eiremain	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void mtherr	PROTO((const char *, int));
+static void eiremain	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void mtherr	PARAMS ((const char *, int));
 #ifdef DEC
-static void dectoe	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void etodec	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void todec	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void dectoe	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void etodec	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void todec	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
 #endif
 #ifdef IBM
-static void ibmtoe	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *,
+static void ibmtoe	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *,
 			       enum machine_mode));
-static void etoibm	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *,
+static void etoibm	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *,
 			       enum machine_mode));
-static void toibm	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *,
+static void toibm	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *,
 			       enum machine_mode));
 #endif
 #ifdef C4X
-static void c4xtoe	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *,
+static void c4xtoe	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *,
  			       enum machine_mode));
-static void etoc4x	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *,
+static void etoc4x	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *,
  			       enum machine_mode));
-static void toc4x	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *,
+static void toc4x	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *,
  			       enum machine_mode));
 #endif
-static void make_nan	PROTO((unsigned EMUSHORT *, int, enum machine_mode));
 #if 0
-static void uditoe	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void ditoe	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void etoudi	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void etodi	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
-static void esqrt	PROTO((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void uditoe	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void ditoe	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void etoudi	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void etodi	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
+static void esqrt	PARAMS ((unsigned EMUSHORT *, unsigned EMUSHORT *));
 #endif
 
 /* Copy 32-bit numbers obtained from array containing 16-bit numbers,
@@ -479,11 +504,13 @@ endian (e, x, mode)
       switch (mode)
 	{
 	case TFmode:
+#ifndef INTEL_EXTENDED_IEEE_FORMAT
 	  /* Swap halfwords in the fourth long.  */
 	  th = (unsigned long) e[6] & 0xffff;
 	  t = (unsigned long) e[7] & 0xffff;
 	  t |= th << 16;
 	  x[3] = (long) t;
+#endif
 
 	case XFmode:
 	  /* Swap halfwords in the third long.  */
@@ -521,11 +548,13 @@ endian (e, x, mode)
       switch (mode)
 	{
 	case TFmode:
+#ifndef INTEL_EXTENDED_IEEE_FORMAT
 	  /* Pack the fourth long.  */
 	  th = (unsigned long) e[7] & 0xffff;
 	  t = (unsigned long) e[6] & 0xffff;
 	  t |= th << 16;
 	  x[3] = (long) t;
+#endif
 
 	case XFmode:
 	  /* Pack the third long.
@@ -719,14 +748,17 @@ ereal_atof (s, t)
       e53toe (tem, e);
       break;
 
+    case TFmode:
+#ifndef INTEL_EXTENDED_IEEE_FORMAT
+      asctoe113 (s, tem);
+      e113toe (tem, e);
+      break;
+#endif
+      /* FALLTHRU */
+
     case XFmode:
       asctoe64 (s, tem);
       e64toe (tem, e);
-      break;
-
-    case TFmode:
-      asctoe113 (s, tem);
-      e113toe (tem, e);
       break;
 
     default:
@@ -854,8 +886,13 @@ ereal_from_int (d, i, j, mode)
       break;
 
     case 128:
+#ifndef INTEL_EXTENDED_IEEE_FORMAT
       etoe113 (dg, df);
       e113toe (df, dg);
+#else
+      etoe64 (dg, df);
+      e64toe (df, dg);
+#endif
       break;
 
     default:
@@ -908,8 +945,13 @@ ereal_from_uint (d, i, j, mode)
       break;
 
     case 128:
+#ifndef INTEL_EXTENDED_IEEE_FORMAT
       etoe113 (dg, df);
       e113toe (df, dg);
+#else
+      etoe64 (dg, df);
+      e64toe (df, dg);
+#endif
       break;
 
     default:
@@ -993,11 +1035,11 @@ ereal_ldexp (x, n)
 
 int
 target_isinf (x)
-     REAL_VALUE_TYPE x;
+     REAL_VALUE_TYPE x ATTRIBUTE_UNUSED;
 {
+#ifdef INFINITY
   unsigned EMUSHORT e[NE];
 
-#ifdef INFINITY
   GET_REAL (&x, e);
   return (eisinf (e));
 #else
@@ -1009,11 +1051,11 @@ target_isinf (x)
 
 int
 target_isnan (x)
-     REAL_VALUE_TYPE x;
+     REAL_VALUE_TYPE x ATTRIBUTE_UNUSED;
 {
+#ifdef NANS
   unsigned EMUSHORT e[NE];
 
-#ifdef NANS
   GET_REAL (&x, e);
   return (eisnan (e));
 #else
@@ -1052,9 +1094,12 @@ real_value_truncate (mode, arg)
   switch (mode)
     {
     case TFmode:
+#ifndef INTEL_EXTENDED_IEEE_FORMAT
       etoe113 (e, t);
       e113toe (t, t);
       break;
+#endif
+      /* FALLTHRU */
 
     case XFmode:
       etoe64 (e, t);
@@ -1468,7 +1513,7 @@ ereal_isneg (x)
 
 /*  e type constants used by high precision check routines */
 
-#if LONG_DOUBLE_TYPE_SIZE == 128
+#if MAX_LONG_DOUBLE_TYPE_SIZE == 128 && !defined(INTEL_EXTENDED_IEEE_FORMAT)
 /* 0.0 */
 unsigned EMUSHORT ezero[NE] =
  {0x0000, 0x0000, 0x0000, 0x0000,
@@ -1625,7 +1670,7 @@ eisinf (x)
 
 static int
 eisnan (x)
-     unsigned EMUSHORT x[];
+     unsigned EMUSHORT x[] ATTRIBUTE_UNUSED;
 {
 #ifdef NANS
   int i;
@@ -1690,6 +1735,7 @@ einfin (x)
    This generates Intel's quiet NaN pattern for extended real.
    The exponent is 7fff, the leading mantissa word is c000.  */
 
+#ifdef NANS
 static void
 enan (x, sign)
      register unsigned EMUSHORT *x;
@@ -1702,6 +1748,7 @@ enan (x, sign)
   *x++ = 0xc000;
   *x = (sign << 15) | 0x7fff;
 }
+#endif /* NANS */
 
 /* Move in an e-type number A, converting it to exploded e-type B.  */
 
@@ -1832,6 +1879,7 @@ emovz (a, b)
    The explicit pattern for this is maximum exponent and
    top two significant bits set.  */
 
+#ifdef NANS
 static void
 einan (x)
      unsigned EMUSHORT x[];
@@ -1841,9 +1889,11 @@ einan (x)
   x[E] = 0x7fff;
   x[M + 1] = 0xc000;
 }
+#endif /* NANS */
 
 /* Return nonzero if exploded e-type X is a NaN.  */
 
+#ifdef NANS
 static int
 eiisnan (x)
      unsigned EMUSHORT x[];
@@ -1860,9 +1910,11 @@ eiisnan (x)
     }
   return (0);
 }
+#endif /* NANS */
 
 /* Return nonzero if sign of exploded e-type X is nonzero.  */
 
+#ifdef NANS
 static int
 eiisneg (x)
      unsigned EMUSHORT x[];
@@ -1870,6 +1922,7 @@ eiisneg (x)
 
   return x[0] != 0;
 }
+#endif /* NANS */
 
 #if 0
 /* Fill exploded e-type X with infinity pattern.
@@ -1887,6 +1940,7 @@ eiinfin (x)
 
 /* Return nonzero if exploded e-type X is infinite.  */
 
+#ifdef INFINITY
 static int
 eiisinf (x)
      unsigned EMUSHORT x[];
@@ -1900,7 +1954,7 @@ eiisinf (x)
     return (1);
   return (0);
 }
-
+#endif /* INFINITY */
 
 /* Compare significands of numbers in internal exploded e-type format.
    Guard words are included in the comparison.
@@ -3277,6 +3331,7 @@ bigend_nan:
     *q++ = *p++;
 }
 
+#ifndef INTEL_EXTENDED_IEEE_FORMAT
 /* Convert 128-bit long double precision float PE to e type Y.  */
 
 static void
@@ -3361,6 +3416,7 @@ e113toe (pe, y)
     }
   emovo (yy, y);
 }
+#endif
 
 /* Convert single precision float PE to e type Y.  */
 
@@ -3493,7 +3549,9 @@ etoe113 (x, e)
   rndprc = 113;
   emdnorm (xi, 0, 0, exp, 64);
   rndprc = rndsav;
+#ifdef INFINITY
  nonorm:
+#endif
   toe113 (xi, e);
 }
 
@@ -3585,7 +3643,9 @@ etoe64 (x, e)
   rndprc = 64;
   emdnorm (xi, 0, 0, exp, 64);
   rndprc = rndsav;
+#ifdef INFINITY
  nonorm:
+#endif
   toe64 (xi, e);
 }
 
@@ -3622,10 +3682,11 @@ toe64 (a, b)
   else
     {
       q = b + 4;			/* point to output exponent */
-#if LONG_DOUBLE_TYPE_SIZE == 96
-      /* Clear the last two bytes of 12-byte Intel format */
+      /* Clear the last two bytes of 12-byte Intel format.  q is pointing
+	 into an array of size 6 (e.g. x[NE]), so the last two bytes are
+	 always there, and there are never more bytes, even when we are using
+	 INTEL_EXTENDED_IEEE_FORMAT.  */
       *(q+1) = 0;
-#endif
     }
 #endif
 
@@ -3798,7 +3859,9 @@ etoe53 (x, e)
   rndprc = 53;
   emdnorm (xi, 0, 0, exp, 64);
   rndprc = rndsav;
+#ifdef INFINITY
  nonorm:
+#endif
   toe53 (xi, e);
 }
 
@@ -3972,7 +4035,9 @@ etoe24 (x, e)
   rndprc = 24;
   emdnorm (xi, 0, 0, exp, 64);
   rndprc = rndsav;
+#ifdef INFINITY
  nonorm:
+#endif
   toe24 (xi, e);
 }
 
@@ -4522,7 +4587,7 @@ enormlz (x)
 #define NTEN 12
 #define MAXP 4096
 
-#if LONG_DOUBLE_TYPE_SIZE == 128
+#if MAX_LONG_DOUBLE_TYPE_SIZE == 128 && !defined(INTEL_EXTENDED_IEEE_FORMAT)
 static unsigned EMUSHORT etens[NTEN + 1][NE] =
 {
   {0x6576, 0x4a92, 0x804a, 0x153f,
@@ -4950,7 +5015,7 @@ etoasc (x, string, ndigs)
       /* Round up and propagate carry-outs */
     roun:
       --s;
-      k = *s & 0x7f;
+      k = *s & CHARMASK;
       /* Carry out to most significant digit? */
       if (k == '.')
 	{
@@ -5042,6 +5107,7 @@ asctoe64 (s, y)
   asctoeg (s, y, 64);
 }
 
+#ifndef INTEL_EXTENDED_IEEE_FORMAT
 /* Convert ASCII string S to 128-bit long double Y.  */
 
 static void
@@ -5051,6 +5117,7 @@ asctoe113 (s, y)
 {
   asctoeg (s, y, 113);
 }
+#endif
 
 /* Convert ASCII string S to e type Y.  */
 
@@ -5063,7 +5130,7 @@ asctoe (s, y)
 }
 
 /* Convert ASCII string SS to e type Y, with a specified rounding precision
-   of OPREC bits.  BASE is 16 for C9X hexadecimal floating constants.  */
+   of OPREC bits.  BASE is 16 for C99 hexadecimal floating constants.  */
 
 static void
 asctoeg (ss, y, oprec)
@@ -5073,9 +5140,9 @@ asctoeg (ss, y, oprec)
 {
   unsigned EMUSHORT yy[NI], xt[NI], tt[NI];
   int esign, decflg, sgnflg, nexp, exp, prec, lost;
-  int k, trail, c, rndsav;
+  int i, k, trail, c, rndsav;
   EMULONG lexp;
-  unsigned EMUSHORT nsign, *p;
+  unsigned EMUSHORT nsign;
   char *sp, *s, *lstr;
   int base = 10;
 
@@ -5111,7 +5178,7 @@ asctoeg (ss, y, oprec)
  nxtcom:
   if (*s >= '0' && *s <= '9')
     k = *s - '0';
-  else if (*s >= 'a')
+  else if (*s >= 'a' && *s <= 'f')
     k = 10 + *s - 'a';
   else
     k = 10 + *s - 'A';
@@ -5129,13 +5196,13 @@ asctoeg (ss, y, oprec)
 				    || (*sp >= 'A' && *sp <= 'F'))))
 	    ++sp;
 	  /* Check for syntax error */
-	  c = *sp & 0x7f;
+	  c = *sp & CHARMASK;
 	  if ((base != 10 || ((c != 'e') && (c != 'E')))
 	      && (base != 16 || ((c != 'p') && (c != 'P')))
 	      && (c != '\0')
 	      && (c != '\n') && (c != '\r') && (c != ' ')
 	      && (c != ','))
-	    goto error;
+	    goto unexpected_char_error;
 	  --sp;
 	  while (*sp == '0')
 	    *sp-- = 'z';
@@ -5164,9 +5231,9 @@ asctoeg (ss, y, oprec)
 	  else
 	    {
 	      if (decflg)
-		nexp += 1;	/* count digits after decimal point */
+		nexp += 1;		/* count digits after decimal point */
 
-	      eshup1 (yy);	/* multiply current number by 10 */
+	      eshup1 (yy);		/* multiply current number by 10 */
 	      emovz (yy, xt);
 	      eshup1 (xt);
 	      eshup1 (xt);
@@ -5205,18 +5272,18 @@ asctoeg (ss, y, oprec)
       goto expnt;
     case '.':			/* decimal point */
       if (decflg)
-	goto error;
+	goto unexpected_char_error;
       ++decflg;
       break;
     case '-':
       nsign = 0xffff;
       if (sgnflg)
-	goto error;
+	goto unexpected_char_error;
       ++sgnflg;
       break;
     case '+':
       if (sgnflg)
-	goto error;
+	goto unexpected_char_error;
       ++sgnflg;
       break;
     case ',':
@@ -5229,7 +5296,7 @@ asctoeg (ss, y, oprec)
     case 'I':
       goto infinite;
     default:
-    error:
+    unexpected_char_error:
 #ifdef NANS
       einan (yy);
 #else
@@ -5269,7 +5336,7 @@ read_expnt:
       exp *= 10;
       exp += *s++ - '0';
       if (exp > 999999)
- 	break;
+	break;
     }
   if (esign < 0)
     exp = -exp;
@@ -5359,14 +5426,14 @@ read_expnt:
 	  nexp -= 4096;
 	}
     }
-  p = &etens[NTEN][0];
   emov (eone, xt);
   exp = 1;
+  i = NTEN;
   do
     {
       if (exp & nexp)
-	emul (p, xt, xt);
-      p -= NE;
+	emul (etens[i], xt, xt);
+      i--;
       exp = exp + exp;
     }
   while (exp <= MAXP);
@@ -5824,7 +5891,6 @@ ibmtoe (d, e, mode)
 {
   unsigned EMUSHORT y[NI];
   register unsigned EMUSHORT r, *p;
-  int rndsav;
 
   ecleaz (y);			/* start with a zero */
   p = y;			/* point to our number */
@@ -6223,6 +6289,7 @@ unsigned EMUSHORT SFlittlenan[2] = {0, 0xffc0};
 #endif
 
 
+#ifdef NANS
 static void
 make_nan (nan, sign, mode)
      unsigned EMUSHORT *nan;
@@ -6238,12 +6305,15 @@ make_nan (nan, sign, mode)
    used like NaN's, but probably not in the same way as IEEE.  */
 #if !defined(DEC) && !defined(IBM) && !defined(C4X)
     case TFmode:
+#ifndef INTEL_EXTENDED_IEEE_FORMAT
       n = 8;
       if (REAL_WORDS_BIG_ENDIAN)
 	p = TFbignan;
       else
 	p = TFlittlenan;
       break;
+#endif
+      /* FALLTHRU */
 
     case XFmode:
       n = 6;
@@ -6281,6 +6351,7 @@ make_nan (nan, sign, mode)
   if (! REAL_WORDS_BIG_ENDIAN)
     *nan = (sign << 15) | (*p & 0x7fff);
 }
+#endif /* NANS */
 
 /* This is the inverse of the function `etarsingle' invoked by
    REAL_VALUE_TO_TARGET_SINGLE.  */
@@ -6814,7 +6885,7 @@ esqrt (x, y)
    floating point mode.  The mode can hold an integer value
    that many bits wide, without losing any bits.  */
 
-int
+unsigned int
 significand_size (mode)
      enum machine_mode mode;
 {
@@ -6853,8 +6924,13 @@ switch (GET_MODE_BITSIZE (mode))
 
   case 96:
     return 64;
+
   case 128:
+#ifndef INTEL_EXTENDED_IEEE_FORMAT
     return 113;
+#else
+    return 64;
+#endif
 
   default:
     abort ();

@@ -1,12 +1,13 @@
 /* Subroutines for gcc2 for pdp11.
-   Copyright (C) 1994, 1995, 1996, 1997, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999
+   Free Software Foundation, Inc.
    Contributed by Michael K. Gschwind (mike@vlsivie.tuwien.ac.at).
 
 This file is part of GNU CC.
 
 GNU CC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU CC is distributed in the hope that it will be useful,
@@ -20,18 +21,20 @@ the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 #include "config.h"
-#include <stdio.h>
+#include "system.h"
 #include "rtl.h"
 #include "regs.h"
 #include "hard-reg-set.h"
 #include "real.h"
 #include "insn-config.h"
 #include "conditions.h"
-#include "insn-flags.h"
+#include "function.h"
 #include "output.h"
 #include "insn-attr.h"
 #include "flags.h"
 #include "recog.h"
+#include "tree.h"
+#include "tm_p.h"
 
 /*
 #define FPU_REG_P(X)	((X)>=8 && (X)<14)
@@ -45,7 +48,8 @@ int current_first_parm_offset;
 /* This is where the condition code register lives.  */
 /* rtx cc0_reg_rtx; - no longer needed? */
 
-static rtx find_addr_reg (); 
+static rtx find_addr_reg PARAMS ((rtx)); 
+static const char *singlemove_string PARAMS ((rtx *)); 
 
 /* Nonzero if OP is a valid second operand for an arithmetic insn.  */
 
@@ -60,7 +64,7 @@ arith_operand (op, mode)
 int
 const_immediate_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return (GET_CODE (op) == CONST_INT);
 }
@@ -68,7 +72,7 @@ const_immediate_operand (op, mode)
 int 
 immediate15_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
     return (GET_CODE (op) == CONST_INT && ((INTVAL (op) & 0x8000) == 0x0000));
 }
@@ -76,7 +80,7 @@ immediate15_operand (op, mode)
 int
 expand_shift_operand (op, mode)
   rtx op;
-  enum machine_mode mode;
+  enum machine_mode mode ATTRIBUTE_UNUSED;
 {
     return (GET_CODE (op) == CONST_INT 
 	    && abs (INTVAL(op)) > 1 
@@ -106,8 +110,7 @@ output_function_prologue(stream, size)
 
     /* if we are outputting code for main, 
        the switch FPU to right mode if TARGET_FPU */
-    if ( (strcmp ("main", current_function_name) == 0)
-	 && TARGET_FPU)
+    if (MAIN_NAME_P (DECL_NAME (current_function_decl)) && TARGET_FPU)
     {
 	fprintf(stream, "\t;/* switch cpu to double float, single integer */\n");
 	fprintf(stream, "\tsetd\n");
@@ -293,7 +296,7 @@ output_function_epilogue(stream, size)
 	
 /* Return the best assembler insn template
    for moving operands[1] into operands[0] as a fullword.  */
-static char *
+static const char *
 singlemove_string (operands)
      rtx *operands;
 {
@@ -307,7 +310,7 @@ singlemove_string (operands)
 /* Output assembler code to perform a doubleword move insn
    with operands OPERANDS.  */
 
-char *
+const char *
 output_move_double (operands)
      rtx *operands;
 {
@@ -363,14 +366,14 @@ output_move_double (operands)
     {
       operands[0] = XEXP (XEXP (operands[0], 0), 0);
       output_asm_insn ("sub $4,%0", operands);
-      operands[0] = gen_rtx (MEM, SImode, operands[0]);
+      operands[0] = gen_rtx_MEM (SImode, operands[0]);
       optype0 = OFFSOP;
     }
   if (optype0 == POPOP && optype1 == PUSHOP)
     {
       operands[1] = XEXP (XEXP (operands[1], 0), 0);
       output_asm_insn ("sub $4,%1", operands);
-      operands[1] = gen_rtx (MEM, SImode, operands[1]);
+      operands[1] = gen_rtx_MEM (SImode, operands[1]);
       optype1 = OFFSOP;
     }
 
@@ -393,14 +396,14 @@ output_move_double (operands)
      operands in OPERANDS to be suitable for the low-numbered word.  */
 
   if (optype0 == REGOP)
-    latehalf[0] = gen_rtx (REG, HImode, REGNO (operands[0]) + 1);
+    latehalf[0] = gen_rtx_REG (HImode, REGNO (operands[0]) + 1);
   else if (optype0 == OFFSOP)
     latehalf[0] = adj_offsettable_operand (operands[0], 2);
   else
     latehalf[0] = operands[0];
 
   if (optype1 == REGOP)
-    latehalf[1] = gen_rtx (REG, HImode, REGNO (operands[1]) + 1);
+    latehalf[1] = gen_rtx_REG (HImode, REGNO (operands[1]) + 1);
   else if (optype1 == OFFSOP)
     latehalf[1] = adj_offsettable_operand (operands[1], 2);
   else if (optype1 == CNSTOP)
@@ -410,8 +413,8 @@ output_move_double (operands)
 	    /* now the mess begins, high word is in lower word??? 
 
 	       that's what ashc makes me think, but I don't remember :-( */
-	    latehalf[1] = GEN_INT (INTVAL(operands[1])>>16);
-	    operands[1] = GEN_INT (INTVAL(operands[1])&0xff);
+	    latehalf[1] = GEN_INT (INTVAL(operands[1]) >> 16);
+	    operands[1] = GEN_INT (INTVAL(operands[1]) & 0xff);
 	}
       else if (GET_CODE (operands[1]) == CONST_DOUBLE)
 	{
@@ -485,7 +488,7 @@ output_move_double (operands)
 /* Output assembler code to perform a quadword move insn
    with operands OPERANDS.  */
 
-char *
+const char *
 output_move_quad (operands)
      rtx *operands;
 {
@@ -575,14 +578,14 @@ output_move_quad (operands)
     {
       operands[0] = XEXP (XEXP (operands[0], 0), 0);
       output_asm_insn ("sub $8,%0", operands);
-      operands[0] = gen_rtx (MEM, DImode, operands[0]);
+      operands[0] = gen_rtx_MEM (DImode, operands[0]);
       optype0 = OFFSOP;
     }
   if (optype0 == POPOP && optype1 == PUSHOP)
     {
       operands[1] = XEXP (XEXP (operands[1], 0), 0);
       output_asm_insn ("sub $8,%1", operands);
-      operands[1] = gen_rtx (MEM, SImode, operands[1]);
+      operands[1] = gen_rtx_MEM (SImode, operands[1]);
       optype1 = OFFSOP;
     }
 
@@ -605,14 +608,14 @@ output_move_quad (operands)
      operands in OPERANDS to be suitable for the low-numbered word.  */
 
   if (optype0 == REGOP)
-    latehalf[0] = gen_rtx (REG, SImode, REGNO (operands[0]) + 2);
+    latehalf[0] = gen_rtx_REG (SImode, REGNO (operands[0]) + 2);
   else if (optype0 == OFFSOP)
     latehalf[0] = adj_offsettable_operand (operands[0], 4);
   else
     latehalf[0] = operands[0];
 
   if (optype1 == REGOP)
-    latehalf[1] = gen_rtx (REG, SImode, REGNO (operands[1]) + 2);
+    latehalf[1] = gen_rtx_REG (SImode, REGNO (operands[1]) + 2);
   else if (optype1 == OFFSOP)
     latehalf[1] = adj_offsettable_operand (operands[1], 4);
   else if (optype1 == CNSTOP)
@@ -630,19 +633,18 @@ output_move_quad (operands)
 	    
 #ifndef HOST_WORDS_BIG_ENDIAN
 	  latehalf[1] = GEN_INT (CONST_DOUBLE_LOW (operands[1]));
-	  operands[1] = GEN_INT (CONST_DOUBLE_HIGH (operands[1]));
+	  operands[1] = GEN_INT	(CONST_DOUBLE_HIGH (operands[1]));
 #else /* HOST_WORDS_BIG_ENDIAN */
 	  latehalf[1] = GEN_INT (CONST_DOUBLE_HIGH (operands[1]));
 	  operands[1] = GEN_INT (CONST_DOUBLE_LOW (operands[1]));
 #endif /* HOST_WORDS_BIG_ENDIAN */
 	}
       else if (GET_CODE(operands[1]) == CONST_INT)
-      {
+	{
 	  latehalf[1] = GEN_INT (0);
-      }
+	}
       else
-	  abort();
-      
+	abort();
     }
   else
     latehalf[1] = operands[1];
@@ -736,7 +738,7 @@ find_addr_reg (addr)
 void
 output_ascii (file, p, size)
      FILE *file;
-     char *p;
+     const char *p;
      int size;
 {
   int i;
@@ -915,10 +917,10 @@ register_move_cost(c1, c2)
     return move_costs[(int)c1][(int)c2];
 }
 
-char *
+const char *
 output_jump(pos, neg, length)
+  const char *pos, *neg;
   int length;
-  char *pos, *neg;
 {
     static int x = 0;
     
@@ -961,7 +963,7 @@ output_jump(pos, neg, length)
 void
 notice_update_cc_on_set(exp, insn)
   rtx exp;
-  rtx insn;
+  rtx insn ATTRIBUTE_UNUSED;
 {
     if (GET_CODE (SET_DEST (exp)) == CC0)
     { 
@@ -1030,9 +1032,10 @@ notice_update_cc_on_set(exp, insn)
 }
 
 
-int simple_memory_operand(op, mode)
-  rtx op;
-  enum machine_mode mode;
+int
+simple_memory_operand(op, mode)
+     rtx op;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
     rtx addr;
 
@@ -1104,7 +1107,7 @@ int simple_memory_operand(op, mode)
  */
 
  
-char *
+const char *
 output_block_move(operands)
   rtx *operands;
 {
@@ -1389,7 +1392,7 @@ comparison_operator_index(op)
 int
 comp_operator (op, mode)
   rtx op;
-  enum machine_mode mode;
+  enum machine_mode mode ATTRIBUTE_UNUSED;
 {
     return comparison_operator_index(op) >= 0;
 }

@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler,
    for IBM RS/6000 POWER running AIX version 4.3.
-   Copyright (C) 1998, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1998, 1999, 2000, 2001 Free Software Foundation, Inc.
    Contributed by David Edelsohn (edelsohn@gnu.org).
 
 This file is part of GNU CC.
@@ -21,17 +21,15 @@ the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 
-/* Enable AIX XL compiler calling convention breakage compatibility.  */
-#define MASK_XL_CALL		0x40000000
-#define	TARGET_XL_CALL		(target_flags & MASK_XL_CALL)
-#undef  SUBTARGET_SWITCHES
-#define SUBTARGET_SWITCHES					\
-  {"aix64", 		MASK_64BIT | MASK_POWERPC64 | MASK_POWERPC}, \
-  {"aix32",		- (MASK_64BIT | MASK_POWERPC64)},	\
-  {"xl-call", 		MASK_XL_CALL},				\
-  {"no-xl-call",	- MASK_XL_CALL}, 			\
-  {"threads",		0},					\
-  {"pe",		0},
+/* AIX 4.3 and above support 64-bit executables.  */
+#undef  SUBSUBTARGET_SWITCHES
+#define SUBSUBTARGET_SWITCHES					\
+  {"aix64", 		MASK_64BIT | MASK_POWERPC64 | MASK_POWERPC,	\
+   N_("Compile for 64-bit pointers") },					\
+  {"aix32",		- (MASK_64BIT | MASK_POWERPC64),		\
+   N_("Compile for 32-bit pointers") },					\
+  {"pe",		0,						\
+   N_("Support message passing with the Parallel Environment") },
 
 /* Sometimes certain combinations of command options do not make sense
    on a particular target machine.  You can define a macro
@@ -50,14 +48,16 @@ do {									\
       target_flags &= ~NON_POWERPC_MASKS;				\
       warning ("-maix64 and POWER architecture are incompatible.");	\
     }									\
-  if (TARGET_64BIT && ! (target_flags & MASK_POWERPC64))		\
+  if (TARGET_64BIT && ! TARGET_POWERPC64)				\
     {									\
       target_flags |= MASK_POWERPC64;					\
       warning ("-maix64 requires PowerPC64 architecture remain enabled."); \
     }									\
+  if (TARGET_POWERPC64 && ! TARGET_64BIT)				\
+    {									\
+      error ("-maix64 required: 64-bit computation with 32-bit addressing not yet supported."); \
+    }									\
 } while (0);
-
-#include "rs6000/rs6000.h"
 
 #undef ASM_SPEC
 #define ASM_SPEC "-u %{maix64:-a64 -mppc64} %(asm_cpu)"
@@ -81,6 +81,7 @@ do {									\
 %{mcpu=rios2: -mpwr2} \
 %{mcpu=rsc: -mpwr} \
 %{mcpu=rsc1: -mpwr} \
+%{mcpu=rs64a: -mppc} \
 %{mcpu=403: -mppc} \
 %{mcpu=505: -mppc} \
 %{mcpu=601: -m601} \
@@ -90,6 +91,7 @@ do {									\
 %{mcpu=604: -m604} \
 %{mcpu=604e: -m604} \
 %{mcpu=620: -mppc} \
+%{mcpu=630: -mppc} \
 %{mcpu=821: -mppc} \
 %{mcpu=860: -mppc}"
 
@@ -98,13 +100,27 @@ do {									\
 
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES "-D_IBMR2 -D_POWER -D_AIX -D_AIX32 -D_AIX41 -D_AIX43 \
--D_LONG_LONG -Asystem(unix) -Asystem(aix)"
+-D_LONG_LONG -Asystem=unix -Asystem=aix"
 
 #undef CPP_SPEC
 #define CPP_SPEC "%{posix: -D_POSIX_SOURCE}\
-   %{maix64: -D__64BIT__ -D_ARCH_PPC}\
+   %{ansi: -D_ANSI_C_SOURCE}\
+   %{maix64: -D__64BIT__ -D_ARCH_PPC -D__LONG_MAX__=9223372036854775807L}\
    %{mpe: -I/usr/lpp/ppe.poe/include}\
-   %{mthreads: -D_THREAD_SAFE}\
+   %{pthread: -D_THREAD_SAFE}\
+   %(cpp_cpu)"
+
+/* The GNU C++ standard library requires that these macros be 
+   defined.  */
+#undef CPLUSPLUS_CPP_SPEC			
+#define CPLUSPLUS_CPP_SPEC			\
+  "-D_XOPEN_SOURCE=500				\
+   -D_XOPEN_SOURCE_EXTENDED=1			\
+   -D_LARGE_FILE_API				\
+   -D_ALL_SOURCE                                \
+   %{maix64: -D__64BIT__ -D_ARCH_PPC -D__LONG_MAX__=9223372036854775807L}\
+   %{mpe: -I/usr/lpp/ppe.poe/include}\
+   %{pthread: -D_THREAD_SAFE}\
    %(cpp_cpu)"
 
 /* Common CPP definitions used by CPP_SPEC among the various targets
@@ -125,6 +141,7 @@ do {									\
 %{mcpu=rios2: -D_ARCH_PWR2} \
 %{mcpu=rsc: -D_ARCH_PWR} \
 %{mcpu=rsc1: -D_ARCH_PWR} \
+%{mcpu=rs64a: -D_ARCH_PPC} \
 %{mcpu=403: -D_ARCH_PPC} \
 %{mcpu=505: -D_ARCH_PPC} \
 %{mcpu=601: -D_ARCH_PPC -D_ARCH_PWR} \
@@ -133,6 +150,7 @@ do {									\
 %{mcpu=603e: -D_ARCH_PPC} \
 %{mcpu=604: -D_ARCH_PPC} \
 %{mcpu=620: -D_ARCH_PPC} \
+%{mcpu=630: -D_ARCH_PPC} \
 %{mcpu=821: -D_ARCH_PPC} \
 %{mcpu=860: -D_ARCH_PPC}"
 
@@ -157,36 +175,18 @@ do {									\
 #undef	MULTILIB_DEFAULTS
 #define	MULTILIB_DEFAULTS { "mcpu=common" }
 
-/* These are not necessary when we pass -u to the assembler, and undefining
-   them saves a great deal of space in object files.  */
-
-#undef ASM_OUTPUT_EXTERNAL
-#undef ASM_OUTPUT_EXTERNAL_LIBCALL
-#define ASM_OUTPUT_EXTERNAL(FILE, DECL, NAME)	\
-{ rtx _symref = XEXP (DECL_RTL (DECL), 0);	\
-  if ((TREE_CODE (DECL) == VAR_DECL		\
-       || TREE_CODE (DECL) == FUNCTION_DECL)	\
-      && (NAME)[strlen (NAME) - 1] != ']')	\
-    {						\
-      char *_name = (char *) permalloc (strlen (XSTR (_symref, 0)) + 5); \
-      strcpy (_name, XSTR (_symref, 0));	\
-      strcat (_name, TREE_CODE (DECL) == FUNCTION_DECL ? "[DS]" : "[RW]"); \
-      XSTR (_symref, 0) = _name;		\
-    }						\
-}
-
 #undef LIB_SPEC
 #define LIB_SPEC "%{pg:-L/lib/profiled -L/usr/lib/profiled}\
    %{p:-L/lib/profiled -L/usr/lib/profiled}\
    %{!maix64:%{!shared:%{g*:-lg}}}\
    %{mpe:-L/usr/lpp/ppe.poe/lib -lmpi -lvtd}\
-   %{mthreads:-L/usr/lib/threads -lpthreads -lc_r /usr/lib/libc.a}\
-   %{!mthreads:-lc}"
+   %{pthread:-L/usr/lib/threads -lpthreads -lc_r /usr/lib/libc.a}\
+   %{!pthread:-lc}"
 
 #undef LINK_SPEC
 #define LINK_SPEC "-bpT:0x10000000 -bpD:0x20000000 %{!r:-btextro} -bnodelcsect\
-   %{static:-bnso %(link_syscalls) } %{!maix64:%{!shared:%{g*: %(link_libg) }}}\
-   %{shared:-bM:SRE %{!e:-bnoentry}} %{maix64:-b64}"
+   %{static:-bnso %(link_syscalls) } %{shared:-bM:SRE %{!e:-bnoentry}}\
+   %{!maix64:%{!shared:%{g*: %(link_libg) }}} %{maix64:-b64}"
 
 #undef STARTFILE_SPEC
 #define STARTFILE_SPEC "%{!shared:\
@@ -196,11 +196,28 @@ do {									\
    %{!mpe:\
      %{maix64:%{pg:gcrt0_64%O%s}%{!pg:%{p:mcrt0_64%O%s}%{!p:crt0_64%O%s}}}\
      %{!maix64:\
-       %{mthreads:%{pg:gcrt0_r%O%s}%{!pg:%{p:mcrt0_r%O%s}%{!p:crt0_r%O%s}}}\
-       %{!mthreads:%{pg:gcrt0%O%s}%{!pg:%{p:mcrt0%O%s}%{!p:crt0%O%s}}}}}}"
+       %{pthread:%{pg:gcrt0_r%O%s}%{!pg:%{p:mcrt0_r%O%s}%{!p:crt0_r%O%s}}}\
+       %{!pthread:%{pg:gcrt0%O%s}%{!pg:%{p:mcrt0%O%s}%{!p:crt0%O%s}}}}}}"
+
+/* Since there are separate multilibs for pthreads, determine the
+   thread model based on the command-line arguments.  */
+#define THREAD_MODEL_SPEC "%{pthread:posix}%{!pthread:single}"
 
 /* AIX 4.3 typedefs ptrdiff_t as "long" while earlier releases used "int".  */
 
 #undef PTRDIFF_TYPE
 #define PTRDIFF_TYPE "long int"
 
+/* AIX 4 uses PowerPC nop (ori 0,0,0) instruction as call glue for PowerPC
+   and "cror 31,31,31" for POWER architecture.  */
+
+#undef RS6000_CALL_GLUE
+#define RS6000_CALL_GLUE "{cror 31,31,31|nop}"
+
+/* AIX 4.2 and above provides initialization and finalization function
+   support from linker command line.  */
+#undef HAS_INIT_SECTION
+#define HAS_INIT_SECTION
+
+#undef LD_INIT_SWITCH
+#define LD_INIT_SWITCH "-binitfini"
