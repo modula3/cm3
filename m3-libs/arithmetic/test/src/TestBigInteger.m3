@@ -17,7 +17,7 @@ IMPORT
   Word AS W,
   Fmt AS F,
   Text,Wr,Thread,xUtils;
-FROM BigIntegerMatrixIntegerPower IMPORT IntegerPower;
+FROM BigIntegerMatrixIntegerPower IMPORT Power;
 (*=======================*)
 CONST
   Module = "TestBigInteger.";
@@ -198,7 +198,7 @@ BEGIN
     z := BR.AddU(x,y);
     x := y;
     y := z;
-    pow := IntegerPower(base,j+1);
+    pow := Power(base,j+1);
 (*
     Msg(F.FN("%2s: 16_%s = 16_%s\n",
       ARRAY OF TEXT {
@@ -212,7 +212,7 @@ BEGIN
   END;
   Msg(BF.Fmt(x,base16Style)); NewLine();
 
-  pow := IntegerPower(base,cycles);
+  pow := Power(base,cycles);
   Msg(BMF.Fmt(pow,BMF.FmtStyle{elemStyle:=base16Style})); NewLine();
   <*ASSERT B.Equal(x,pow[1,1])*>
 
