@@ -1,19 +1,19 @@
 /* $Id$ */
 
 /* .top is made by the Makefile before building anything */
-include(".top")
+TOP = ROOT & "/caltech-parser"
 
 /* when overriding, ld.so doesn't know where to find libraries */
 /* this is even more true if we want to move the binaries or */
 /* clean.. */
 
-if defined("pm3_version") 
-      	/* Polytechnique de Montreal Modula-3 */
-	option("shared_lib","")
-else 
-	/* SRC Modula-3 */
-	m3_option ("-X2@-static@")
-end
+%if defined("pm3_version") 
+%      	/* Polytechnique de Montreal Modula-3 */
+%	option("shared_lib","")
+%else 
+%	/* SRC Modula-3 */
+%	m3_option ("-X2@-static@")
+%end
 
 /* these are the packages that are part of this distribution */
 
@@ -39,3 +39,21 @@ override("dcpane",TOP & "/drawcontext")
 override("tasks",TOP)
 override("matrix",TOP)
 override("layout",TOP)
+
+% override other libraries if they exist locally
+
+m3core = ROOT & "/m3-libs/m3core"
+if not stale(m3core, m3core)
+  override("m3core", ROOT & "/m3-libs")
+end
+
+libm3 = ROOT & "/m3-libs/libm3"
+if not stale(libm3, libm3)
+  override("libm3", ROOT & "/m3-libs")
+end
+
+m3tk = ROOT & "/m3-tools/m3tk"
+if not stale(m3tk, m3tk)
+  override("m3tk", ROOT & "/m3-tools")
+end
+
