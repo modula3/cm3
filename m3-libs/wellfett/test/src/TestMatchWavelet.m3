@@ -640,7 +640,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
         "optimal lift %s,\ncyclic wrap of gdual %s\n",
         ARRAY OF TEXT{SF.Fmt(s), SF.Fmt(gdual.alternate().wrapCyclic(3))}));
     PL.Init();
-    CASE 0 OF
+    CASE 1 OF
     | 0 => WP.PlotWavelets(hdual, gdual, levels);
     | 1 =>
         PL.SetEnvironment(MIN(lefttarget, leftpsidual),
@@ -660,10 +660,29 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
     PL.Exit();
   END TestMatchPatternSmooth;
 
+(*create symmetric clip of the sin x / x curve*)
+PROCEDURE SincVector (size, width : CARDINAL): V.T =
+  VAR
+    z := V.New(2 * size + 1);
+    k := RT.Pi / FLOAT(2*width, R.T);
+  BEGIN
+    z[size] := R.One;
+    FOR i := 1 TO size - 1 DO
+      VAR
+        x := FLOAT(i, R.T) * k;
+        y := RT.Sin(x) / x;
+      BEGIN
+        z[size + i] := y;
+        z[size - i] := y;
+      END;
+    END;
+    RETURN z;
+  END SincVector;
+
 PROCEDURE Test () =
   <*FATAL BSpl.DifferentParity*>
   BEGIN
-    CASE 3 OF
+    CASE 4 OF
     | 0 =>
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50), 6,
@@ -682,24 +701,27 @@ PROCEDURE Test () =
            -0.11516417311729, ...} 0.330691666379811 *)
         MatchPattern(
           NEW(S.T).fromArray(
-            V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^, -256), 6, 4, 10, 5);
+            V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^, -256), 6, 4, 2, 5);
     | 3 =>
         TestMatchPatternSmooth(NEW(S.T).fromArray(
                                  V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^,
-                                 -256), 6, 4, 10, 5, 100.0D0);
+                                 -256), 6, 4, 2, 5, 0.0D0);
     | 4 =>
+        MatchPattern(NEW(S.T).fromArray(SincVector(1024, 64)^, 64-1024), 6, 4,
+                     2, 5);
+    | 5 =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(
             V.ArithSeq(2048, -1.0D0, 2.0D0 / 2048.0D0)^, -1024), 6, 3, 9,
           1, 100.0D0);
-    | 5 =>
+    | 6 =>
         TestSSE(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
         TestSSE(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0}));
-    | 6 =>
+    | 7 =>
         TestInverseDSSE(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0});
         TestInverseDSSE(ARRAY OF R.T{1.0D0, 1.0D0, 0.1D0});
         TestInverseDSSE(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0});
-    | 7 => TestDeriveWSSE();
+    | 8 => TestDeriveWSSE();
     ELSE
       <*ASSERT FALSE*>
     END;
