@@ -246,7 +246,7 @@ PROCEDURE Prepare (st: Stmt;  operation: TEXT) RAISES {Error} =
   BEGIN
     LOCK st DO
       CheckStmt (st, 12, "prepare", check_exec := FALSE);
-      err := SQL.SQLPrepare (st.hstmt, LOOPHOLE(operation, SQLCHAR_star), 
+      err := SQL.SQLPrepare (st.hstmt, LOOPHOLE(operation_c, SQLCHAR_star), 
                              Text.Length (operation));
       M3toC.FreeSharedS(operation, operation_c);
       IF (err # SQL.SQL_SUCCESS) THEN CheckErr (err, st); END;
@@ -274,7 +274,7 @@ PROCEDURE Execute (st: Stmt;  operation: TEXT) RAISES {Error} =
       ELSE
         st.prepared := FALSE;
         operation_c := M3toC.SharedTtoS(operation);
-        err := SQL.SQLExecDirect (st.hstmt, LOOPHOLE(operation, SQLCHAR_star),
+        err := SQL.SQLExecDirect (st.hstmt, LOOPHOLE(operation_c, SQLCHAR_star),
                                   Text.Length (operation));
         M3toC.FreeSharedS(operation, operation_c);
         IF (err # SQL.SQL_SUCCESS) THEN CheckErr (err, st); END;
@@ -829,7 +829,7 @@ PROCEDURE MapValues (st: Stmt): Results  RAISES {Error} =
   END MapValues;
 
 TYPE
-  RcvBuffer = ARRAY [0..1023] OF CHAR;
+  RcvBuffer = ARRAY [0..4095] OF CHAR;
 
 PROCEDURE MapString (st: Stmt;  VAR z: ValueInfo;  col: CARDINAL) RAISES {Error} =
   VAR
@@ -840,10 +840,12 @@ PROCEDURE MapString (st: Stmt;  VAR z: ValueInfo;  col: CARDINAL) RAISES {Error}
     err    : INTEGER;
     buf    : RcvBuffer;
   BEGIN
-    LOOP
+    LOOP 
       err := SQL.SQLGetData (st.hstmt, col, SQL.SQL_C_BINARY,
                              ADR(buf[0]), BYTESIZE (buf), ADR (len));
 
+
+		
       IF (err = SQL.SQL_SUCCESS) THEN
         (* ok, got all the remaining data *)
         CopyData (z, offset, buf, len);
@@ -865,9 +867,9 @@ PROCEDURE MapString (st: Stmt;  VAR z: ValueInfo;  col: CARDINAL) RAISES {Error}
       str.n_elts   := offset;
     END;
 
-    rr^ := LOOPHOLE (str, UNTRACED REF ARRAY OF CHAR); 
-
+    rr^ := LOOPHOLE (str.data_ptr, UNTRACED REF ARRAY OF CHAR); (* Hacked! *)
     (* rr^ := ADR(str^) also works, but is more puzzling. *)
+
 
   END MapString;
 
@@ -932,7 +934,7 @@ PROCEDURE SetCursorName (st: Stmt;  nm: TEXT) RAISES {Error} =
   BEGIN
     LOCK st DO
       CheckStmt (st, 30, "set the cursor name in", check_exec := FALSE);
-      err := SQL.SQLSetCursorName (st.hstmt, LOOPHOLE(nm, SQLCHAR_star),
+      err := SQL.SQLSetCursorName (st.hstmt, LOOPHOLE(nm_c, SQLCHAR_star),
                                    Text.Length (nm));
       M3toC.FreeSharedS(nm, nm_c);
       IF (err # SQL.SQL_SUCCESS) THEN CheckErr (err, st); END;
