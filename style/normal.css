@@ -93,7 +93,10 @@ DT.toppad {
 B.pink { background: transparent ;
 	 color : #FFAAAA ; }
 
+.tablebg { background: #DDEEFF }
+
+.datebg { background: #FFFFB0 }
+
 .sun {
   background: #F0F000;
 }
-
