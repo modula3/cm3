@@ -1,11 +1,10 @@
 GENERIC MODULE Signal(R, SignalRep, V, P);
 
-FROM NADefinitions IMPORT Error, Err;
-
 REVEAL
   T = SignalRep.TPrivate BRANDED OBJECT
       OVERRIDES
         init      := Init;
+        initFL    := InitFL;
         fromArray := FromArray;
         copy      := Copy;
 
@@ -14,7 +13,7 @@ REVEAL
         getNumber := GetNumber;
         getData   := GetData;
 
-        offset := Offset;
+        sum := Sum;
 
         upsample   := UpSample;
         downsample := DownSample;
@@ -30,7 +29,6 @@ REVEAL
 
         translateD := TranslateD;
         scaleD     := ScaleD;
-        raiseD     := RaiseD;
 
         convolve  := Convolve;
         superpose := Superpose;
@@ -44,6 +42,11 @@ PROCEDURE Init (SELF: T; first, number: IndexType): T =
     FOR j := 0 TO LAST(SELF.data^) DO SELF.data[j] := R.Zero; END;
     RETURN SELF;
   END Init;
+
+PROCEDURE InitFL (SELF: T; first, last: IndexType): T =
+  BEGIN
+    RETURN Init(SELF, first, last - first + 1);
+  END InitFL;
 
 PROCEDURE FromArray (SELF: T; READONLY arr: ARRAY OF R.T; first: IndexType):
   T =
@@ -59,9 +62,7 @@ PROCEDURE Copy (SELF: T): T =
   BEGIN
     z.data := NEW(V.T, NUMBER(SELF.data^));
     z.first := SELF.first;
-    FOR j := FIRST(SELF.data^) TO LAST(SELF.data^) DO
-      z.data[j] := SELF.data[j];
-    END;
+    z.data^ := SELF.data^;
     RETURN z;
   END Copy;
 
@@ -87,14 +88,10 @@ PROCEDURE GetData (SELF: T): P.T =
   END GetData;
 
 
-PROCEDURE Offset (SELF: T): R.T =
+PROCEDURE Sum (SELF: T): R.T =
   BEGIN
-    TRY
-      RETURN R.Div(V.Sum(SELF.data^), R.FromInteger(NUMBER(SELF.data^)));
-    EXCEPT
-    | Error (err) => <*ASSERT err=Err.divide_by_zero*> RETURN R.Zero;
-    END;
-  END Offset;
+    RETURN V.Sum(SELF.data^);
+  END Sum;
 
 
 PROCEDURE Translate (SELF: T; dist: IndexType): T =
@@ -222,31 +219,30 @@ PROCEDURE ScaleD (x: T; factor: R.T) =
     END;
   END ScaleD;
 
-PROCEDURE Raise (x: T; offset: R.T): T =
-  VAR z := NEW(T);
+PROCEDURE Raise (x: T; offset: R.T; first, number: IndexType): T =
+  VAR
+    zFirst := MIN(x.first, first);
+    zLast  := MAX(x.first + NUMBER(x.data^), first + number) - 1;
+    z      := NEW(T).initFL(zFirst, zLast);
   BEGIN
-    z.data := NEW(V.T, NUMBER(x.data^));
-    z.first := x.first;
-    FOR i := 0 TO LAST(x.data^) DO
-      z.data[i] := R.Add(x.data[i], offset);
+    WITH zdata = SUBARRAY(z.data^, x.first - z.first, NUMBER(x.data^)) DO
+      zdata := x.data^;
+    END;
+    WITH zdata = SUBARRAY(z.data^, first - z.first, number) DO
+      FOR i := 0 TO number - 1 DO zdata[i] := R.Add(zdata[i], offset); END;
     END;
     RETURN z;
   END Raise;
-
-PROCEDURE RaiseD (x: T; offset: R.T) =
-  BEGIN
-    FOR i := 0 TO LAST(x.data^) DO
-      x.data[i] := R.Add(x.data[i], offset);
-    END;
-  END RaiseD;
 
 
 PROCEDURE Convolve (x: T; y: T): T =
   VAR z := NEW(T).init(x.first + y.first, NUMBER(x.data^) + LAST(y.data^));
   BEGIN
     FOR i := 0 TO LAST(x.data^) DO
-      FOR j := 0 TO LAST(y.data^) DO
-        z.data[i + j] := R.Add(z.data[i + j], R.Mul(x.data[i], y.data[j]));
+      WITH zdata = SUBARRAY(z.data^, i, NUMBER(y.data^)) DO
+        FOR j := 0 TO LAST(y.data^) DO
+          zdata[j] := R.Add(zdata[j], R.Mul(x.data[i], y.data[j]));
+        END;
       END;
     END;
     RETURN z;
@@ -254,19 +250,20 @@ PROCEDURE Convolve (x: T; y: T): T =
 
 PROCEDURE Superpose (x: T; y: T): T =
   VAR
-    first            := MIN(x.getFirst(), y.getFirst());
-    last             := MAX(x.getLast(), y.getLast());
-    z                := NEW(T).init(first, last - first + 1);
-    j    : IndexType;
+    first := MIN(x.getFirst(), y.getFirst());
+    last  := MAX(x.getLast(), y.getLast());
+    z     := NEW(T).initFL(first, last);
 
   BEGIN
-    j := x.getFirst() - z.getFirst();
-    FOR i := 0 TO LAST(x.data^) DO
-      z.data[i + j] := R.Add(z.data[i + j], x.data[i]);
+    WITH zdata = SUBARRAY(z.data^, x.first - z.first, NUMBER(x.data^)) DO
+      FOR i := 0 TO LAST(x.data^) DO
+        zdata[i] := R.Add(zdata[i], x.data[i]);
+      END;
     END;
-    j := y.getFirst() - z.getFirst();
-    FOR i := 0 TO LAST(y.data^) DO
-      z.data[i + j] := R.Add(z.data[i + j], y.data[i]);
+    WITH zdata = SUBARRAY(z.data^, y.first - z.first, NUMBER(y.data^)) DO
+      FOR i := 0 TO LAST(y.data^) DO
+        zdata[i] := R.Add(zdata[i], y.data[i]);
+      END;
     END;
     RETURN z;
   END Superpose;
