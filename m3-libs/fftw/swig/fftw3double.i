@@ -69,6 +69,34 @@ TYPE
   Complex = RECORD r, i: LONGREAL; END;
   Dir = {forward, backward};
 
+  FlagSet=SET OF Flag;
+  Flag={
+(* documented flags *)
+DestroyInput,
+Unaligned,
+ConserveMemory,
+Exhaustive, (* NO_EXHAUSTIVE is default *)
+PreserveInput, (* cancels FFTW_DESTROY_INPUT *)
+Patient, (* IMPATIENT is default *)
+Estimate,
+
+(* undocumented beyond-guru flags *)
+EstimatePatient,
+BelievePCost,
+DFT_R2HC_Icky,
+NonThreaded_Icky,
+NoBuffering,
+NoIndirectOp,
+AllowLargeGeneric, (* NO_LARGE_GENERIC is default *)
+NoRankSplits,
+NoVRankSplits,
+NoVRecurse,
+
+NoSIMD};
+
+CONST
+  Measure=FlagSet{};
+
 EXCEPTION
   SizeMismatch;
 
@@ -105,6 +133,10 @@ PROCEDURE CleanupPlan(<*UNUSED*> READONLY w: WeakRef.T; r: REFANY) =
 
 %typemap(m3wrapintype)  int sign        %{Dir%};
 %typemap(m3wrapargraw)  int sign        %{dirToSign[$input]%};
+
+%typemap(m3wrapintype)  unsigned flags  %{FlagSet%};
+%typemap(m3wrapargraw)  unsigned flags  %{LOOPHOLE($input,C.unsigned_int)%};
+%typemap("m3wrapargraw:import") unsigned flags "Ctypes AS C"
 
 %typemap(m3wrapintype)  fftw_r2r_kind * %{ARRAY OF R2RKind%};
 %typemap(m3wrapintype)  fftw_r2r_kind   %{R2RKind%};
