@@ -109,7 +109,7 @@ PROCEDURE DiracTransform () =
                    200.0D0, xmin, xmax, ymin, ymax);
       PL.PlotLines(
         V.ArithSeq(width, xmin, R.One)^,
-        V.Scale(zf.clipToVector(-(width DIV 2), width), 1.0D1)^);
+        V.Scale(zf.clipToVector(-(width DIV 2), width), 4.0D1)^);
       (* PL.PlotLines(V.ArithSeq(width * 2 - 1, xmin, R.Half)^,
          V.Scale(z.getData(), 5.0D-6)^); *)
     END;
