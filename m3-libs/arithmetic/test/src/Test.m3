@@ -70,8 +70,9 @@ BEGIN
   NewLine(); EVAL TestEigenSystem();
   NewLine(); EVAL TestChebyshev();
   NewLine(); EVAL TestUnit();
-*)
   NewLine(); EVAL TestLapack();
+*)
+  NewLine(); EVAL TestTex();
 (*
 *)
 END Test.
