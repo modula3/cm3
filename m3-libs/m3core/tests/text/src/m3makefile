@@ -4,7 +4,7 @@
 %
 % Last modified on Tue Nov  1 08:53:16 PST 1994 by kalsow
 
-import(libm3)
-implementation(Test)
+import("libm3")
+implementation("Test")
 build_standalone()
-program(Test)
+program("Test")

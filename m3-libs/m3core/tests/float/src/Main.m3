@@ -15,8 +15,8 @@ IMPORT Wr, Stdio, Fmt;
 BEGIN
   Wr.PutText (Stdio.stderr, "---------------------------- REAL ---\n");
   RealTest.Test();
-  (*Wr.PutText (Stdio.stderr, "---------------------------- threads ---\n");
+  Wr.PutText (Stdio.stderr, "---------------------------- threads ---\n");
   RealTest.TestThreads();
   Wr.PutText (Stdio.stderr, "---------------------------- LONGREAL ---\n");
-  LongTest.Test ();*)
+  LongTest.Test ();
 END Main.
