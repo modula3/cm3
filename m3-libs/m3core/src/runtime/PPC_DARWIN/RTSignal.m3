@@ -81,7 +81,7 @@ PROCEDURE Interrupt (sig: int;  code: int;  scp: SigInfo) =
 PROCEDURE Quit (<*UNUSED*> sig, code: int; scp: SigInfo) =
   VAR pc := 0;
   BEGIN
-    IF (scp # NIL) THEN pc := scp.sc_eip END;
+    IF (scp # NIL) THEN pc := scp.sc_ir END;
     RTError.Msg (NIL, 0, "aborted");
     (* RTMisc.FatalErrorPC (pc, "aborted"); *)
   END Quit;
@@ -89,7 +89,7 @@ PROCEDURE Quit (<*UNUSED*> sig, code: int; scp: SigInfo) =
 PROCEDURE SegV (<*UNUSED*> sig, code: int; scp: SigInfo) =
   VAR pc := 0;
   BEGIN
-    IF (scp # NIL) THEN pc := scp.sc_eip END;
+    IF (scp # NIL) THEN pc := scp.sc_ir END;
     RTError.Msg (NIL, 0,
       "Segmentation violation - possible attempt to dereference NIL");
     (* RTMisc.FatalErrorPC (pc,
