@@ -9,6 +9,12 @@
 %      modified on Tue Apr 20 14:35:55 PDT 1993 by mcjones
 %      modified on Sun Feb 21 14:07:29 PST 1993 by jdd
 
+%if defined("M3NOVM")
+%  import("m3gc-simple")
+%else
+%  import("m3gc-enhanced")
+%end
+import_lib("m3gcdefs", LIB_INSTALL)
 pgm_source ("RTBuiltin.mx")
 
 Module    ("RTHooks")
@@ -57,4 +63,5 @@ Interface ("RTStack")
 Interface ("RTTypeSRC")
 interface ("RTOS")
 interface ("RTThreadInit")
+Interface ("RTVM")
 
