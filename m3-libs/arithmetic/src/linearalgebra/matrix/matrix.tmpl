@@ -48,11 +48,10 @@ readonly proc EigenSystem (nm, impl) is
   local rtrans  = nm & "Trans"
   local cfield  = nm & "Complex" & impl
   local vfield  = nm & "Vector" & impl
-  local cvfield = nm & "ComplexVectorBasic"
   local mfield  = nm & "Matrix" & impl
-  local mlap    = nm & "MatrixLapackRaw"
-  build_generic_intf (basic, "EigenSystem", [        rtrans,         vfield, cvfield, mfield], VISIBLE)
-  build_generic_impl (basic, "EigenSystem", [rfield, rtrans, cfield, vfield, cvfield, mfield, mlap])
+  local mlap    = nm & "MatrixLapack"
+  build_generic_intf (basic, "EigenSystem", [        rtrans, vfield, mfield, mlap], VISIBLE)
+  build_generic_impl (basic, "EigenSystem", [rfield, rtrans, vfield, mfield])
 end
 
 readonly proc CharPolynomial (nm, mimpl, rimpl) is
@@ -75,4 +74,18 @@ end
 readonly proc LAPACKToModula3 (nm, field, src, prefix, Prefix) is
   local raw = nm & src
   exec(path()&SL&"lapack2i3.sh",raw,prefix,Prefix,">"&path()&SL&raw&".i3")
+end
+
+readonly proc Lapack (nm, impl) is
+  local rfield  = nm & "Basic"
+  local rtrans  = nm & "Trans"
+  local cfield  = nm & "Complex" & impl
+  local vfield  = nm & "Vector" & impl
+  local cvfield = nm & "ComplexVectorBasic"
+  local mfield  = nm & "Matrix" & impl
+  local mlap    = nm & "MatrixLapack"
+  local mlapraw = mlap & "Raw"
+  module (mlapraw)
+  build_generic_intf (mlap, "FloatMatrixLapack", [rfield, cvfield, mfield], VISIBLE)
+  build_generic_impl (mlap, "FloatMatrixLapack", [rfield, cfield, vfield, cvfield, mfield, mlapraw])
 end

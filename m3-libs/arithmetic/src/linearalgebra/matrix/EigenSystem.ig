@@ -1,4 +1,4 @@
-GENERIC INTERFACE EigenSystem(RT, V, CV, M);
+GENERIC INTERFACE EigenSystem(RT, V, M, LA);
 (*Copyright (c) 1996, m3na project
 
    Abstract: Routines to solve eigenvalue problems. *)
@@ -17,17 +17,14 @@ PROCEDURE SquareMethod (    A  : M.T;
                         maxiter: CARDINAL := 100; ): RT.T RAISES {Error};
 
 TYPE
-  EVGenFlag = {schurVectors};
-  EVGenFlagSet = SET OF EVGenFlag;
+  EVGenFlag    = LA.EVGenFlag;
+  EVGenFlagSet = LA.EVGenFlagSet;
 
-  EV = RECORD
-         eigenvalues : CV.T;
-	 upperTri    : M.T;
-	 schur       : M.T;  (*initalized if schurVector flag is set*)
-       END;
+  EV           = LA.EV;
 
-(*wrapper for SGEES and DGEES *)
-PROCEDURE EigenValuesGen (A: M.T; flags:= EVGenFlagSet{}): EV RAISES {Error};
+CONST
+  EigenValuesGen = LA.EigenValuesGen;
+
 
 (* Unoptimised translations from
 
