@@ -49,19 +49,30 @@ PROCEDURE Build (src_dir: TEXT): TEXT =
       ConvertArgList (s);
 
       CASE M3Options.major_mode OF
+      | MM.Build  => Out (wr, "M3_MODE = ", "\"build\"");
+      | MM.Clean  => Out (wr, "M3_MODE = ", "\"clean\"");
+      | MM.Find   => Out (wr, "M3_MODE = ", "\"find\"");
+      | MM.Depend => Out (wr, "M3_MODE = ", "\"depend\"");
+      | MM.Ship   => Out (wr, "M3_MODE = ", "\"ship\"");
+      ELSE
+        Out (wr, "M3_MODE = ", "\"other\"");
+      END;
+
+      CASE M3Options.major_mode OF
       | MM.Build, MM.Clean, MM.Find, MM.Depend =>
           IncludeOverrides (s, src_overrides);
           IncludeMakefile (s, src_makefile, src_dir);
 
       | MM.Ship =>
-          IF M3File.IsReadable (".M3OVERRIDES") THEN
-            Msg.Out ("package was built with overrides, not shipping.", Wr.EOL);
-          ELSIF NOT M3File.IsReadable (".M3SHIP") THEN
-            Msg.Out ("missing \".M3SHIP\" file, build the package first.", Wr.EOL);
-          ELSE
-            Out (wr, "include (\".M3SHIP\")");
-            s.found_work := TRUE;
-          END;
+        IF M3File.IsReadable (".M3OVERRIDES") THEN
+          Msg.Out ("package was built with overrides, not shipping.", Wr.EOL);
+        ELSIF NOT M3File.IsReadable (".M3SHIP") THEN
+          Msg.Out ("missing \".M3SHIP\" file, build the package first.",
+                   Wr.EOL);
+        ELSE
+          Out (wr, "include (\".M3SHIP\")");
+          s.found_work := TRUE;
+        END;
       END;
     END Emit;
 
@@ -113,7 +124,8 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
              END;
 
     | 'a' => IF (arg_len = 2) THEN
-               Out (wr, "library (\"", GetArg (arg, s.args), "\")");  ok := TRUE;
+               Out (wr, "library (\"", GetArg (arg, s.args), "\")");
+               ok := TRUE;
                s.found_work := TRUE;
              END;
 
@@ -173,8 +185,13 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
                s.keep_files := TRUE;  ok := TRUE;
              END;
 
+    | 'l' => IF Text.Equal (arg, "-lazy") THEN
+               Out (wr, "M3_LAZY_MODULE_INIT = TRUE");  ok := TRUE;
+             END;
+
     | 'o' => IF (arg_len = 2) THEN
-               Out (wr, "program (\"", GetArg (arg, s.args), "\")");  ok := TRUE;
+               Out (wr, "program (\"", GetArg (arg, s.args), "\")");
+               ok := TRUE;
                s.found_work := TRUE;
              ELSIF Text.Equal (arg, "-override") THEN
                s.use_overrides := TRUE;  ok := TRUE;
@@ -473,6 +490,8 @@ CONST
     "  -w0 .. -w3     limit compiler warning messages",
     "  -Z             generate coverage analysis code",
     "  -profile       generate profiling code",
+    "  -lazy          generate lazy module initialization code",
+    "                 (main module and imports only)",
     "",
     "program and library options:  (default: -o prog)",
     "  -c             compile only, produce no program or library",
