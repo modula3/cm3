@@ -12,7 +12,7 @@ FROM xUtils IMPORT Error, Err;
 (*==========================*)
 (*----------------------*)
 
-PROCEDURE IntegerPower(x:T; y0:PositiveInteger):T =
+PROCEDURE Power(x:T; y0:PositiveInteger):T =
 (*we cannot always count on the existence of general Zero and One,
   e.g. for matrices. This makes things a bit ugly*)
 VAR
@@ -39,7 +39,7 @@ BEGIN
   END;
   <*ASSERT init*>
   RETURN z;
-END IntegerPower;
+END Power;
 
 (*==========================*)
 BEGIN
