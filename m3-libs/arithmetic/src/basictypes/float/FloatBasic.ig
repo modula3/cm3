@@ -15,6 +15,7 @@ TYPE T = R.T;
 
 <*INLINE*> PROCEDURE Mul(x,y:T):T;  (*return x*y*)
 <*INLINE*> PROCEDURE Div(x,y:T):T;  (*return x/y*)
+<*INLINE*> PROCEDURE Mod(x,y:T):T;  (*return x mod y*)
 <*INLINE*> PROCEDURE Rec(x:T):T;    (*return 1/x*)
 
 (*==========================*)

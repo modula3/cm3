@@ -16,6 +16,7 @@ PROCEDURE Neg(x:T):T   = BEGIN RETURN -x  END Neg;
 
 PROCEDURE Mul(x,y:T):T = BEGIN RETURN x*y END Mul;
 PROCEDURE Div(x,y:T):T = BEGIN RETURN x/y END Div;
+PROCEDURE Mod(x,y:T):T = BEGIN RETURN x MOD y END Mod;
 PROCEDURE Rec(x:T):T   = BEGIN RETURN FLOAT(1.0,T)/x END Rec;
 
 (*==========================*)
