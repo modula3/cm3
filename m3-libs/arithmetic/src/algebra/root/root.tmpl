@@ -8,8 +8,8 @@ readonly proc RootBasic (nm, pfield, field) is
   build_generic_impl (basic, "RootBasic", [pfield, field])
 end
 
-readonly proc RootApproximation (nm, root, field) is
+readonly proc RootApproximation (nm, croot, ctrans, cfield, rroot, rtrans, rfield) is
   local basic = nm & "RootApproximation"
-  build_generic_intf (basic, "RootApproximation", [root, field], VISIBLE)
-  build_generic_impl (basic, "RootApproximation", [root, field])
+  build_generic_intf (basic, "RootApproximation", [croot, cfield, rroot, rfield], VISIBLE)
+  build_generic_impl (basic, "RootApproximation", [croot, ctrans, cfield, rroot, rtrans, rfield])
 end
