@@ -5,7 +5,7 @@ IMPORT LongRealBasic        AS R,
        LongRealSignal       AS S,
        LongRealVector       AS V,
        LongRealVectorFast   AS VR,
-       NADefinitions        AS NA;
+       Arithmetic        AS Arith;
 
 IMPORT LongRealRefinableFunc AS Refn, LongRealDyadicFilterBank AS FB;
 
@@ -55,7 +55,7 @@ PROCEDURE PlotBiorthogonal (hDual, gDual: S.T; numlevels: CARDINAL) =
 PROCEDURE PlotBiorthogonalYLim (hDual, gDual: S.T;
                                 numlevels   : CARDINAL;
                                 ymin, ymax  : R.T       ) =
-  <* FATAL NA.Error *>           (*Power can't fail for reals*)
+  <* FATAL Arith.Error *>           (*Power can't fail for reals*)
   VAR
     dual  := ARRAY Filter OF S.T{hDual, gDual};
     bank  := FilterBank{FB.GetComplement(dual), dual};
@@ -79,7 +79,7 @@ PROCEDURE PlotAnyYLim (refnPrimal, refnDual          : S.T;
                        hPrimal, gPrimal, hDual, gDual: S.T;
                        numlevels                     : CARDINAL;
                        ymin, ymax                    : R.T       ) =
-  <* FATAL NA.Error *>           (*Power can't fail for reals*)
+  <* FATAL Arith.Error *>           (*Power can't fail for reals*)
   VAR
     grid := R.One / RIntPow.Power(R.Two, numlevels);
     basis := ComputeBasisFunctions(
@@ -93,7 +93,7 @@ PROCEDURE PlotAnyYLim (refnPrimal, refnDual          : S.T;
 PROCEDURE PlotBank (READONLY bank     : FilterBank;
                     READONLY refn     : ARRAY Basis OF S.T;
                              numlevels: CARDINAL            ) =
-  <* FATAL NA.Error *>           (*Power can't fail for reals*)
+  <* FATAL Arith.Error *>           (*Power can't fail for reals*)
   VAR
     grid  := R.One / RIntPow.Power(R.Two, numlevels);
     basis := ComputeBasisFunctions(bank, refn, numlevels);

@@ -1,6 +1,6 @@
 MODULE TestTransform;
 
-IMPORT NADefinitions         AS NA,
+IMPORT Arithmetic         AS Arith,
        LongRealBasic         AS R,
        Integer32IntegerPower AS IIntPow;
 
@@ -40,7 +40,7 @@ PROCEDURE DyadicFilterBankSynthesis (READONLY x: DWT.DyadicWaveletCoeffs;
   VAR
     z       := x.low;
     vanAtom := NEW(S.T).fromArray(ARRAY OF R.T{R.Half, -R.Half});
-  <* FATAL NA.Error *>           (*MulPower can't fail for signals*)
+  <* FATAL Arith.Error *>           (*MulPower can't fail for signals*)
   BEGIN
     FOR i := LAST(x.high^) TO FIRST(x.high^) BY -1 DO
       VAR xVan := SIntPow.MulPower(x.high[i], vanAtom, van1);
@@ -57,7 +57,7 @@ PROCEDURE DyadicFilterBankSynthesis (READONLY x: DWT.DyadicWaveletCoeffs;
 PROCEDURE PlotSWT (         x        : S.T;
                    READONLY bank     : ARRAY [0 .. 1] OF FB.T;
                             numLevels: CARDINAL;               ) =
-  <* FATAL NA.Error *>           (*MulPower can't fail for integers*)
+  <* FATAL Arith.Error *>           (*MulPower can't fail for integers*)
   VAR
     unit := IIntPow.MulPower(1, 2, numLevels);
     grid := R.One / FLOAT(unit, R.T);
@@ -95,7 +95,7 @@ PROCEDURE PlotDWT (         x        : S.T;
                    READONLY bank     : ARRAY [0 .. 1] OF FB.T;
                             van1     : CARDINAL;
                             numLevels: CARDINAL;               ) =
-  <* FATAL NA.Error *>           (*MulPower can't fail for integers*)
+  <* FATAL Arith.Error *>           (*MulPower can't fail for integers*)
   VAR
     unit     := IIntPow.MulPower(1, 2, numLevels);
     fineGrid := R.One / FLOAT(unit, R.T);

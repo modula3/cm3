@@ -11,7 +11,7 @@ IMPORT LongRealSignalFmtLex AS SF;
 IMPORT LongRealWaveletPlot AS WP;
 IMPORT PLPlot AS PL;
 IMPORT IO, Fmt, Wr, Thread;
-(*IMPORT NADefinitions AS NA;*)
+(*IMPORT Arithmetic AS Arith;*)
 
 <*UNUSED*>
 PROCEDURE ShowFilters () =

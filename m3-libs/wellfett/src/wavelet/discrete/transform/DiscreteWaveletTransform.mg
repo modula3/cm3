@@ -1,6 +1,6 @@
 GENERIC MODULE DiscreteWaveletTransform(R, S, SV, SVR, SM);
 
-IMPORT NADefinitions AS NA;
+IMPORT Arithmetic AS Arith;
 IMPORT Integer32IntegerPower AS IIntPow;
 
 PROCEDURE FilterBankToPolyphase (READONLY x      : SV.TBody;
@@ -34,10 +34,12 @@ PROCEDURE FilterBankAnalysisSingle (         x      : S.T;
 
 PROCEDURE FilterBankSynthesisSingle (READONLY x, y   : SV.TBody;
                                               scaling: ScalingType; ): S.T
-  RAISES {NA.Error} =
+  RAISES {Arith.Error} =
   VAR z := S.Zero;
   BEGIN
-    IF NUMBER(x) # NUMBER(y) THEN RAISE NA.Error(NA.Err.bad_size); END;
+    IF NUMBER(x) # NUMBER(y) THEN
+      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
+    END;
     FOR i := FIRST(x) TO LAST(x) DO
       z := z.superpose(y[i].upConvolve(x[i], scaling));
     END;
@@ -90,7 +92,7 @@ PROCEDURE DyadicFilterBankSynthesis (READONLY x: DyadicWaveletCoeffs;
                                      READONLY y: ARRAY [0 .. 1] OF S.T; ):
   S.T =
   VAR z := x.low;
-  <* FATAL NA.Error *>           (*Number of filters and channels will
+  <* FATAL Arith.Error *>        (*Number of filters and channels will
                                     always match*)
   BEGIN
     FOR i := LAST(x.high^) TO FIRST(x.high^) BY -1 DO
@@ -118,7 +120,7 @@ PROCEDURE DyadicFilterBankAnalysisTI (         x: S.T;
 PROCEDURE DyadicFilterBankSynthesisTI (READONLY x: DyadicWaveletCoeffs;
                                        READONLY y: ARRAY [0 .. 1] OF S.T; ):
   S.T =
-  <* FATAL NA.Error *>           (*Power can't fail for integers*)
+  <* FATAL Arith.Error *>        (*Power can't fail for integers*)
   VAR
     z                    := x.low;
     scaling: ScalingType := IIntPow.MulPower(1, 2, NUMBER(x.high^));

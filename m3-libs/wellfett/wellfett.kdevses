@@ -9,7 +9,7 @@
   </Doc0>
   <Doc1 NumberOfViews="1" URL="file:/home/thielema/programming/modula3/pkg/wavelib/test/src/TestBSpline.i3" >
    <View0 line="0" Type="???" >
-    <AdditionalSettings Top="2" Width="885" Attach="1" Height="514" Left="2" MinMaxMode="0" />
+    <AdditionalSettings Top="2" Width="883" Attach="1" Height="514" Left="2" MinMaxMode="0" />
    </View0>
   </Doc1>
   <Doc2 NumberOfViews="1" URL="file:/home/thielema/programming/modula3/pkg/wavelib/test/src/TestBSpline.m3" >
@@ -23,8 +23,8 @@
    </View0>
   </Doc3>
   <Doc4 NumberOfViews="1" URL="file:/home/thielema/programming/modula3/pkg/wavelib/test/src/TestSmoothness.m3" >
-   <View0 line="40" Type="???" >
-    <AdditionalSettings Top="2" Width="885" Attach="1" Height="514" Left="2" MinMaxMode="0" />
+   <View0 line="81" Type="???" >
+    <AdditionalSettings Top="2" Width="885" Attach="1" Height="513" Left="2" MinMaxMode="0" />
    </View0>
   </Doc4>
   <Doc5 NumberOfViews="1" URL="file:/home/thielema/programming/modula3/pkg/wavelib/test/src/m3makefile" >
@@ -38,16 +38,16 @@
    </View0>
   </Doc6>
   <Doc7 NumberOfViews="1" URL="file:/home/thielema/programming/modula3/pkg/wavelib/src/signal/Signal.ig" >
-   <View0 line="38" Type="???" >
+   <View0 line="74" Type="???" >
     <AdditionalSettings Top="2" Width="885" Attach="1" Height="513" Left="2" MinMaxMode="0" />
    </View0>
   </Doc7>
   <Doc8 NumberOfViews="1" URL="file:/home/thielema/programming/modula3/pkg/wavelib/test/src/TestTransform.m3" >
-   <View0 line="21" Type="???" >
-    <AdditionalSettings Top="2" Width="885" Attach="1" Height="514" Left="2" MinMaxMode="0" />
+   <View0 line="20" Type="???" >
+    <AdditionalSettings Top="2" Width="885" Attach="1" Height="513" Left="2" MinMaxMode="0" />
    </View0>
   </Doc8>
-  <Doc9 context="ctx_bookmarks" NumberOfViews="1" URL="file:/usr/local/share/ghc-6.0/html/base/Data.List.html" >
+  <Doc9 context="ctx_bookmarks" NumberOfViews="1" URL="file:/usr/local/cm3/doc/help/gen_html/arithmetic/src/linearalgebra/vector/Vector.ig.html" >
    <View0 Type="???" >
     <AdditionalSettings Top="2" Width="885" Attach="1" Height="514" Left="2" MinMaxMode="0" />
    </View0>

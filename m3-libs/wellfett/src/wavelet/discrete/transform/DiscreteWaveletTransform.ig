@@ -1,7 +1,7 @@
 
 GENERIC INTERFACE DiscreteWaveletTransform(S, SV, SVR, SM);
 
-IMPORT NADefinitions AS NA;
+IMPORT Arithmetic AS Arith;
 
 CONST Brand = "DiscreteWaveletTransform";
 
@@ -26,7 +26,7 @@ PROCEDURE FilterBankAnalysisSingle (         x      : S.T;
 
 PROCEDURE FilterBankSynthesisSingle (READONLY x, filter: SV.TBody;
                                               scaling  : ScalingType; ):
-  S.T RAISES {NA.Error};
+  S.T RAISES {Arith.Error};
 (*Transform NUMBER(y) downsampled channels into one signal*)
 
 <*INLINE*>
@@ -35,7 +35,7 @@ PROCEDURE FilterBankAnalysisTISingle (x: S.T; READONLY filter: SV.TBody; ):
 
 CONST
   FilterBankSynthesisTISingle: PROCEDURE (READONLY x, filter: SV.TBody; ):
-                                 S.T RAISES {NA.Error} = SVR.Dot;
+                                 S.T RAISES {Arith.Error} = SVR.Dot;
 
 TYPE
   WaveletCoeffs = RECORD

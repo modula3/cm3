@@ -1,6 +1,6 @@
 GENERIC MODULE DaubechiesWavelet(R, S, IntPow);
 
-IMPORT NADefinitions AS NA;
+IMPORT Arithmetic AS Arith;
 
 CONST
   Half    = FLOAT(0.50D0, R.T);
@@ -10,7 +10,7 @@ PROCEDURE FilterAbsSqr (n: CARDINAL): S.T =
   VAR
     sum := FilterPureAbsSqr(n);
     fac := NEW(S.T).fromArray(ARRAY OF R.T{Quarter, Half, Quarter}, -1);
-  <* FATAL NA.Error *>           (*Power can't fail for signals*)
+  <* FATAL Arith.Error *>           (*Power can't fail for signals*)
   BEGIN
     RETURN IntPow.MulPower(sum, fac, n);
   END FilterAbsSqr;
