@@ -20,10 +20,8 @@ TYPE
 PROCEDURE New(m,n:CARDINAL):T; (*make New mxn matrix*)
 PROCEDURE Copy(x:T):T;
 
-(*
-PROCEDURE Zero(x:T);                              (*set to zeros*)
-PROCEDURE One (x:T) RAISES {Error};               (*set to identity*)
-*)
+PROCEDURE NewZero(m,n:CARDINAL):T;               (*create zero matrix*)
+PROCEDURE NewOne (n  :CARDINAL):T;               (*create identity matrix*)
 
 PROCEDURE Add(x,y:T):T RAISES {Error};   (*x + y*)
 PROCEDURE Sub(x,y:T):T RAISES {Error};   (*x - y*)

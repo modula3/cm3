@@ -42,43 +42,35 @@ BEGIN
   RETURN z;
 END Copy;
 
-(*
 (*-----------------*)
-PROCEDURE Zero( 
-                x:T)=
-(*set all zeros*)
+PROCEDURE NewZero(m,n:CARDINAL):T =               (*create zero matrix*)
 VAR
-  m:=NUMBER(x^);    mf:=0; ml:=m-1;
-  n:=NUMBER(x[0]); nf:=0; nl:=n-1;
+  mf:=0; ml:=m-1;
+  nf:=0; nl:=n-1;
+  z:=NEW(T,m,n);
 BEGIN
   FOR i:=mf TO ml DO
     FOR j:=nf TO nl DO
-      x[i,j]:=R.Zero;
+      z[i,j]:=R.Zero;
     END;
   END;
-END Zero;
+  RETURN z;
+END NewZero;
 (*-----------------*)
-PROCEDURE One( 
-               x:T) RAISES {Error} =
-(*set all zeros except diagonal to 1's*)
-<*UNUSED*> <*UNUSED*> CONST ftn = "Midentity";
+PROCEDURE NewOne (n  :CARDINAL):T =               (*create identity matrix*)
 VAR
-  m:=NUMBER(x^);    mf:=0; ml:=m-1;
-  n:=NUMBER(x[0]); nf:=0; nl:=n-1;
+  nf:=0; nl:=n-1;
+  z:=NEW(T,n,n);
 BEGIN
-  IF m # n THEN
-    RAISE Error(Err.bad_size);
-  END;
-  FOR i:=mf TO ml DO
-    FOR j:=nf TO nl DO
-      x[i,j]:=R.Zero;
+  FOR i:=nf TO nl DO
+    z[i,i]:=R.One;
+    FOR j:=nf TO i-1 DO
+      z[i,j]:=R.Zero;
+      z[j,i]:=R.Zero;
     END;
   END;
-  FOR i:=mf TO ml DO
-    x[i,i]:=R.One;
-  END;
-END One;
-*)
+  RETURN z;
+END NewOne;
 
 
 (*-----------------*)
