@@ -1,54 +1,48 @@
 MODULE Statistic;
-(*Arithmetic for Modula-3, see doc for details
-
-   *)
+(* Arithmetic for Modula-3, see doc for details *)
 IMPORT Arithmetic AS Arith;
 IMPORT LongRealBasic AS R, LongRealTrans AS RT, SpecialFunction AS SF;
 
 CONST Module = "Statistic.";
 (*==========================*)
 (*----------------------*)
-PROCEDURE Describe (data: R.Array; VAR r: T) RAISES {Arith.Error} =
+PROCEDURE FromData (READONLY data: ARRAY OF R.T; ): T =
   (*using the 2 pass approach*)
   <* UNUSED *>
   CONST
     ftn = Module & "describe";
   VAR
-    N        := NUMBER(data^);
-    n1       := FIRST(data^);
-    nn       := LAST(data^);
-    n        := FLOAT(N, R.T);
-    sum      := R.Zero;
-    sumdelta := R.Zero;
-    delta    := R.Zero;
-    tmp      := R.Zero;
+    n           := FLOAT(NUMBER(data), R.T);
+    sum         := R.Zero;
+    sumdelta    := R.Zero;
+    delta       := R.Zero;
+    tmp         := R.Zero;
+    r       : T;
+
   BEGIN
-    IF N < 2 THEN
-      (*need >=2 data points for moment*)
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    <* ASSERT NUMBER(data) >= 2, "need >=2 data points for moment" *>
 
     (*---pass 1---*)
     r.min := +RT.Huge;
     r.max := -RT.Huge;
-    FOR i := n1 TO nn DO
+    FOR i := FIRST(data) TO LAST(data) DO
       IF data[i] < r.min THEN r.min := data[i]; END;
       IF data[i] > r.max THEN r.max := data[i]; END;
       sum := sum + data[i];
     END;
-    r.avg := sum / n;
+    r.avrgVar.avrg := sum / n;
 
     (*---pass 2---*)
     r.adev := R.Zero;
-    r.var := R.Zero;
+    r.avrgVar.var := R.Zero;
     r.skew := R.Zero;
     r.kurt := R.Zero;
-    FOR i := n1 TO nn DO
-      delta := data[i] - r.avg;
+    FOR i := FIRST(data) TO LAST(data) DO
+      delta := data[i] - r.avrgVar.avrg;
       sumdelta := sumdelta + delta;
       r.adev := r.adev + ABS(delta);
       tmp := delta * delta;
-      r.var := r.var + tmp;
+      r.avrgVar.var := r.avrgVar.var + tmp;
       tmp := tmp * delta;
       r.skew := r.skew + tmp;
       tmp := tmp * delta;
@@ -56,45 +50,46 @@ PROCEDURE Describe (data: R.Array; VAR r: T) RAISES {Arith.Error} =
     END;
     r.adev := r.adev / n;
 
-    (*---correct var---*)
-    r.var := (r.var - sumdelta * sumdelta / n) / (n - R.One);
+    (*---correct avrgVar.var---*)
+    r.avrgVar.var :=
+      (r.avrgVar.var - sumdelta * sumdelta / n) / (n - R.One);
 
     (*---calculate moments---*)
-    r.sdev := RT.SqRt(r.var);
-    IF r.var > RT.Tiny THEN
-      r.skew := r.skew / (n * r.var * r.sdev);
-      r.kurt := (r.kurt / (n * r.var * r.var)) - 3.0D0;
+    r.sdev := RT.SqRt(r.avrgVar.var);
+    IF r.avrgVar.var > RT.Tiny THEN
+      r.skew := r.skew / (n * r.avrgVar.var * r.sdev);
+      r.kurt := (r.kurt / (n * r.avrgVar.var * r.avrgVar.var)) - 3.0D0;
     ELSE
       r.skew := R.Zero;
       r.kurt := R.Zero;
     END;
-  END Describe;
+
+    RETURN r;
+  END FromData;
+
 (*---------------------*)
-PROCEDURE AveVar (data: R.Array; VAR ave, var: R.T) =
+PROCEDURE ComputeAvrgVar (READONLY data: ARRAY OF R.T; ): AvrgVar =
   VAR
-    N                         := NUMBER(data^);
-    n1                        := FIRST(data^);
-    nn                        := LAST(data^);
-    n                         := FLOAT(N, R.T);
+    n                             := FLOAT(NUMBER(data), R.T);
     sum, sumdelta, delta: R.T;
+    avrgVar             : AvrgVar;
   BEGIN
     sum := R.Zero;
-    FOR i := n1 TO nn DO sum := sum + data[i]; END;
-    ave := sum / n;
+    FOR i := FIRST(data) TO LAST(data) DO sum := sum + data[i]; END;
+    avrgVar.avrg := sum / n;
     sumdelta := R.Zero;
-    var := R.Zero;
-    FOR i := n1 TO nn DO
-      delta := data[i] - ave;
+    avrgVar.var := R.Zero;
+    FOR i := FIRST(data) TO LAST(data) DO
+      delta := data[i] - avrgVar.avrg;
       sumdelta := sumdelta + delta;
-      var := var + sumdelta * sumdelta;
+      avrgVar.var := avrgVar.var + sumdelta * sumdelta;
     END;
-    var := (var - sumdelta * sumdelta / n) / (n - R.One);
-  END AveVar;
+    avrgVar.var := (avrgVar.var - sumdelta * sumdelta / n) / (n - R.One);
+    RETURN avrgVar;
+  END ComputeAvrgVar;
 (*---------------------*)
-PROCEDURE TTest (data1, data2: R.Array;
-                 VAR t,          (*Student's t-test*)
-                       prob      (*probability of insignificance*)
-                       : R.T) RAISES {Arith.Error} =
+PROCEDURE TTest (READONLY data1, data2: ARRAY OF R.T; ): TTestResult
+  RAISES {Arith.Error} =
   (*Given data and data2 equal length R.Arrays, find t, which shows how
      close the means are, and find prob, which is small if this similarity
      is unlikely to be due to chance.  Note that their variances need to be
@@ -103,65 +98,65 @@ PROCEDURE TTest (data1, data2: R.Array;
   CONST
     ftn = Module & "TTest";
   VAR
-    N1                                  := NUMBER(data1^);
-    N2                                  := NUMBER(data2^);
-    n1                                  := FLOAT(N1, R.T);
-    n2                                  := FLOAT(N2, R.T);
-    avg1, var1, avg2, var2, sd, df: R.T;
-    vardiff                       : R.T;
+    n1            := FLOAT(NUMBER(data1), R.T);
+    n2            := FLOAT(NUMBER(data2), R.T);
+    sd, df  : R.T;
+    vardiff : R.T;
+    avrgVar1      := ComputeAvrgVar(data1);
+    avrgVar2      := ComputeAvrgVar(data2);
+
   BEGIN
-    AveVar(data1, avg1, var1);
-    AveVar(data2, avg2, var2);
-    vardiff := ABS((var1 - var2) / var2);
+    vardiff := ABS((avrgVar1.var - avrgVar2.var) / avrgVar2.var);
     IF vardiff > 5.0D0 THEN
       RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
     END;
     df := n1 + n2 - R.Two;
-    sd := RT.SqRt(((n1 - R.One) * var1 + (n2 - R.One) * var2) / df
-                    * (R.One / n1 + R.One / n2));
-    t := ABS((avg1 - avg2) / sd);
-    prob := SF.BetaI(0.5D0 * df, 0.5D0, df / (df + t * t));
+    sd :=
+      RT.SqRt(((n1 - R.One) * avrgVar1.var + (n2 - R.One) * avrgVar2.var)
+                / df * (R.One / n1 + R.One / n2));
+    WITH t = ABS((avrgVar1.avrg - avrgVar2.avrg) / sd) DO
+      RETURN TTestResult{t := t, prob :=
+                         SF.BetaI(0.5D0 * df, 0.5D0, df / (df + t * t))};
+    END;
   END TTest;
 
 (*--------------------*)
-PROCEDURE FTest (data1, data2: R.Array;
-                 VAR f,          (*F value*)
-                       prob      (*probability of significance*)
-                       : R.T) RAISES {Arith.Error} =
+PROCEDURE FTest (READONLY data1, data2: ARRAY OF R.T; ): FTestResult
+  RAISES {Arith.Error} =
   (*do F-test, returning F and the probability that a difference between
      vars is due to chance*)
   <* UNUSED *>
   CONST
     ftn = Module & "FTest";
-  VAR ave1, ave2, var1, var2, df1, df2: R.T;
+  VAR
+    df1, df2: R.T;
+    var1                  := ComputeAvrgVar(data1).var;
+    var2                  := ComputeAvrgVar(data2).var;
+    result  : FTestResult;
   BEGIN
-    AveVar(data1, ave1, var1);
-    AveVar(data2, ave2, var2);
     IF var1 < RT.Tiny OR var2 < RT.Tiny THEN
       (*vars cannot = 0*)
       RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
     END;
     IF var2 > var1 THEN
-      f := var2 / var1;
-      df1 := FLOAT(NUMBER(data2^) - 1, R.T);
-      df2 := FLOAT(NUMBER(data1^) - 1, R.T);
+      result.f := var2 / var1;
+      df1 := FLOAT(NUMBER(data2) - 1, R.T);
+      df2 := FLOAT(NUMBER(data1) - 1, R.T);
     ELSE
-      f := var1 / var2;
-      df1 := FLOAT(NUMBER(data1^) - 1, R.T);
-      df2 := FLOAT(NUMBER(data2^) - 1, R.T);
+      result.f := var1 / var2;
+      df1 := FLOAT(NUMBER(data1) - 1, R.T);
+      df2 := FLOAT(NUMBER(data2) - 1, R.T);
     END;
-    prob :=
-      R.Two * SF.BetaI(0.5D0 * df2, 0.5D0 * df1, df2 / (df2 + df1 * f));
-    IF prob > R.One THEN prob := R.Two - prob; END;
+    result.prob := R.Two * SF.BetaI(0.5D0 * df2, 0.5D0 * df1,
+                                    df2 / (df2 + df1 * result.f));
+    IF result.prob > R.One THEN result.prob := R.Two - result.prob; END;
+    RETURN result;
   END FTest;
 (*----------------------*)
-PROCEDURE ChiSqr1 (    bins       : R.Array;  (*actual bin counts*)
-                       ebins      : R.Array;  (*expected bin counts*)
-                       constraints: CARDINAL  := 1;
-                   VAR df         : R.T;      (*degrees of freedom*)
-                   VAR chsq       : R.T;      (*chi squared*)
-                   VAR prob: R.T (*probability of significance*)
-  ) RAISES {Arith.Error} =
+PROCEDURE ChiSqr1 (READONLY bins : ARRAY OF R.T;  (*actual bin counts*)
+                   READONLY ebins: ARRAY OF R.T;  (*expected bin counts*)
+                   constraints: CARDINAL := 1; ): ChiSqrResult
+  RAISES {Arith.Error} =
   (*bins has an integer number of events in each bin, ebins has the
      expected number in each bin (possibly non integer), contraints gives
      the constraint count which reduces the df from the number of bins.
@@ -172,36 +167,32 @@ PROCEDURE ChiSqr1 (    bins       : R.Array;  (*actual bin counts*)
   <* UNUSED *>
   CONST
     ftn = Module & "ChiSqr1";
-  VAR
-    n        := NUMBER(bins^);
-    n1       := 0;
-    nn       := n - 1;
-    m        := NUMBER(ebins^);
-    tmp: R.T;
-  BEGIN
-    IF m # n THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
 
-    chsq := R.Zero;
-    FOR i := n1 TO nn DO
+  VAR chsq := R.Zero;
+  BEGIN
+    <* ASSERT NUMBER(bins) = NUMBER(ebins),
+                "bins and ebins have different size" *>
+
+    FOR i := FIRST(bins) TO LAST(bins) DO
       IF bins[i] < 5.0D0 OR ebins[i] < 5.0D0 THEN
         RAISE Arith.Error(NEW(Arith.ErrorNeedMoreData).init());
       END;
-      tmp := bins[i] - ebins[i];
-      chsq := chsq + tmp * tmp / ebins[i];
+      WITH tmp = bins[i] - ebins[i] DO
+        chsq := chsq + tmp * tmp / ebins[i];
+      END;
     END;
-    df := FLOAT(n - constraints, R.T);
-    prob := SF.GammaQ(0.5D0 * df, 0.5D0 * chsq);
+
+    WITH df = FLOAT(NUMBER(bins) - constraints, R.T) DO
+      RETURN ChiSqrResult{chsq := chsq, df := df, prob :=
+                          SF.GammaQ(0.5D0 * df, 0.5D0 * chsq)};
+    END;
   END ChiSqr1;
+
 (*----------------------------*)
-PROCEDURE ChiSqr2 (    bins1      : R.Array;  (*actual bin1 counts*)
-                       bins2      : R.Array;  (*actual bin2 counts*)
-                       constraints: CARDINAL  := 1;
-                   VAR df         : R.T;      (*degrees of freedom*)
-                   VAR chsq       : R.T;      (*chi squared*)
-                   VAR prob: R.T (*probability of significance*)
-  ) RAISES {Arith.Error} =
+PROCEDURE ChiSqr2 (READONLY bins1: ARRAY OF R.T;  (*actual bin1 counts*)
+                   READONLY bins2: ARRAY OF R.T;  (*actual bin2 counts*)
+                   constraints: CARDINAL := 1; ): ChiSqrResult
+  RAISES {Arith.Error} =
   (*bins1 and bins2 have an integer number of events in each bin,
      contraints gives the constraint count which reduces the df from the
      number of bins.  chsq then is a measure of the difference in the
@@ -211,28 +202,25 @@ PROCEDURE ChiSqr2 (    bins1      : R.Array;  (*actual bin1 counts*)
   <* UNUSED *>
   CONST
     ftn = Module & "ChiSqr2";
-  VAR
-    n        := NUMBER(bins1^);
-    n1       := 0;
-    nn       := n - 1;
-    m        := NUMBER(bins2^);
-    tmp: R.T;
-  BEGIN
-    IF m # n THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
 
-    chsq := R.Zero;
-    FOR i := n1 TO nn DO
+  VAR chsq := R.Zero;
+  BEGIN
+    <* ASSERT NUMBER(bins1) = NUMBER(bins2),
+                "bins1 and bins1 have different size" *>
+
+    FOR i := FIRST(bins1) TO LAST(bins1) DO
       IF bins1[i] < 5.0D0 OR bins2[i] < 5.0D0 THEN
         RAISE Arith.Error(NEW(Arith.ErrorNeedMoreData).init());
       END;
-      tmp := bins1[i] - bins2[i];
-      chsq := chsq + tmp * tmp / (bins1[i] + bins2[i]);
+      WITH tmp = bins1[i] - bins2[i] DO
+        chsq := chsq + tmp * tmp / (bins1[i] + bins2[i]);
+      END;
     END;
 
-    df := FLOAT(n - constraints, R.T);
-    prob := SF.GammaQ(0.5D0 * df, 0.5D0 * chsq);
+    WITH df = FLOAT(NUMBER(bins1) - constraints, R.T) DO
+      RETURN ChiSqrResult{chsq := chsq, df := df, prob :=
+                          SF.GammaQ(R.Half * df, R.Half * chsq)};
+    END;
   END ChiSqr2;
 
 (*==========================*)

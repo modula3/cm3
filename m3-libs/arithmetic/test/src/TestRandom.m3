@@ -1,5 +1,6 @@
 MODULE TestRandom EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details Abstract: Tests for Rand module.
+(*Arithmetic for Modula-3, see doc for details Abstract: Tests for Rand
+   module.
 
    3/16/96 Harry George Initial version (basic structure) 3/17/96 Warren
    Smith Normal, Gamma, and Dirichlet *)
@@ -18,25 +19,24 @@ IMPORT LongRealBasic            AS R,
        RandomQuaternaryFibo     AS QuaFibo,
        RandomImprovedMcGill     AS McGill,
        RandomWolframCA          AS Wolf;
-IMPORT Statistic, Fmt, Arithmetic;
-
-<*FATAL Arithmetic.Error*>
+IMPORT Statistic, Fmt, Arithmetic AS Arith;
 
 (*=======================*)
 CONST Module = "TestRandom.";
 
 (*--------------------------*)
-PROCEDURE PrintStats (name: TEXT; data: R.Array) =
+PROCEDURE PrintStats (name: TEXT; READONLY data: ARRAY OF R.T) =
   CONST fmtStyle = RF.FmtStyle{prec := 6, style := Fmt.Style.Fix};
-  VAR r: Statistic.T;
+  VAR r := Statistic.FromData(data);
   BEGIN
-    Statistic.Describe(data, r);
     Msg("\n" & name);
     Msg("\n" & " min =" & RF.Fmt(r.min, fmtStyle) & " max ="
-          & RF.Fmt(r.max, fmtStyle) & " mean=" & RF.Fmt(r.avg, fmtStyle)
-          & "\n" & " sdev=" & RF.Fmt(r.sdev, fmtStyle) & " var ="
-          & RF.Fmt(r.var, fmtStyle) & " skew=" & RF.Fmt(r.skew, fmtStyle)
-          & " kurt=" & RF.Fmt(r.kurt, fmtStyle) & "\n");
+          & RF.Fmt(r.max, fmtStyle) & " mean="
+          & RF.Fmt(r.avrgVar.avrg, fmtStyle) & "\n" & " sdev="
+          & RF.Fmt(r.sdev, fmtStyle) & " var ="
+          & RF.Fmt(r.avrgVar.var, fmtStyle) & " skew="
+          & RF.Fmt(r.skew, fmtStyle) & " kurt=" & RF.Fmt(r.kurt, fmtStyle)
+          & "\n");
   END PrintStats;
 (*----------------------*)
 PROCEDURE TestEngines (): BOOLEAN =
@@ -56,9 +56,10 @@ PROCEDURE TestEngines (): BOOLEAN =
   (*------------------------*)
   PROCEDURE DoEngine (name: TEXT; rand: RandomBasic.T) =
     VAR data := NEW(R.Array, N);
+    <* FATAL Arith.Error *>
     BEGIN
       FOR i := n1 TO nn DO data[i] := rand.uniform(); END;
-      PrintStats(name, data);
+      PrintStats(name, data^);
     END DoEngine;
   (*----------------------*)
 
@@ -120,6 +121,7 @@ PROCEDURE TestUniform (): BOOLEAN =
     data1  := NEW(R.Array, N);
     data2  := NEW(R.Array, N);
     data3  := NEW(R.Array, N);
+  <* FATAL Arith.Error *>
   BEGIN
     Debug(1, ftn, "begin\n");
 
@@ -128,9 +130,9 @@ PROCEDURE TestUniform (): BOOLEAN =
       data2[i] := rand.uniform(min := -1.0D0, max := +1.0D0);
       data3[i] := rand.uniform(min := +200.0D0, max := +1000.0D0);
     END;
-    PrintStats("0..1", data1);
-    PrintStats("-1..+1", data2);
-    PrintStats("200..1000", data3);
+    PrintStats("0..1", data1^);
+    PrintStats("-1..+1", data2^);
+    PrintStats("200..1000", data3^);
 
     RETURN result;
   END TestUniform;
@@ -148,7 +150,7 @@ PROCEDURE TestExponential (): BOOLEAN =
   BEGIN
     Debug(1, ftn, "begin\n");
     FOR i := n1 TO nn DO data1[i] := rand.exponential(); END;
-    PrintStats("exponential, mean=1", data1);
+    PrintStats("exponential, mean=1", data1^);
 
     RETURN result;
   END TestExponential;
@@ -168,7 +170,7 @@ PROCEDURE TestNormal (): BOOLEAN =
     Debug(1, ftn, "begin\n");
 
     FOR i := n1 TO nn DO data1[i] := rand.gaussian(); END;
-    PrintStats("Normal (Gaussian): mean=0, var=1", data1);
+    PrintStats("Normal (Gaussian): mean=0, var=1", data1^);
     RETURN result;
   END TestNormal;
 (*----------------------*)
@@ -195,7 +197,7 @@ PROCEDURE TestBinomial (): BOOLEAN =
       data1[i] := FLOAT(curcnt, R.T);
       INC(count[curcnt]);
     END;
-    PrintStats("Binomial " & Fmt.Int(numBuckets), data1);
+    PrintStats("Binomial " & Fmt.Int(numBuckets), data1^);
 
     FOR j := 0 TO numBuckets DO
       Msg(Fmt.FN(
@@ -226,9 +228,9 @@ PROCEDURE TestGamma (): BOOLEAN =
       data2[i] := rand.gamma(2.5d0);
       data3[i] := rand.gamma(5.1d0);
     END;
-    PrintStats("gamma(1.0)", data1);
-    PrintStats("gamma(2.5)", data2);
-    PrintStats("gamma(5.1)", data3);
+    PrintStats("gamma(1.0)", data1^);
+    PrintStats("gamma(2.5)", data2^);
+    PrintStats("gamma(5.1)", data3^);
     RETURN result;
   END TestGamma;
 (*----------------------*)
@@ -254,8 +256,9 @@ PROCEDURE TestDirichlet (): BOOLEAN =
 
 (*-------------------------*)
 PROCEDURE TestRandom (): BOOLEAN =
-  <*UNUSED*>
-  CONST ftn = Module & "TestRandom";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "TestRandom";
   VAR result := TRUE;
   BEGIN
     NewLine();
