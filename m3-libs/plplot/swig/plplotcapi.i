@@ -442,7 +442,7 @@ plmeshc(PLFLTArrayX x, PLFLTArrayY y, PLFLTMatrixCk z,
 
 DOC(plmkstrm, "Create a new stream and makes it the default.")
 void
-plmkstrm(PLINTOutput);
+plmkstrm(PLINTOutput strm);
 
 DOC(plmtex, "Print \"text\" at specified position relative to viewport.")
 void
