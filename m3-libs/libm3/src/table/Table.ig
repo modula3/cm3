@@ -51,6 +51,7 @@ TYPE
     iterate(): Iterator
   END;
   Iterator = OBJECT METHODS
+    init(): Iterator;
     next(VAR k: Key.T; VAR v: Value.T): BOOLEAN
   END;
   Default <: T OBJECT METHODS
@@ -112,6 +113,9 @@ END Table.
    without setting "k" or "v".  It is a checked runtime error to call
    "next" after it has returned "FALSE".  The client must ensure that
    while an iterator is in use, the parent table is not modified.
+   "i" may be reset to iterate over all the values of a table by
+   reinitializing it with "init".   "tbl.iterate()" is equivalent to
+   "NEW(Iterator).init()".
 
    The type "Default" is an implementation of "T" using chained
    hashing.  The methods specific to an object "dflt" of type

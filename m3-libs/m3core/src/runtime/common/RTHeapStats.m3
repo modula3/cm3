@@ -11,7 +11,7 @@
 
 UNSAFE MODULE RTHeapStats;
 
-IMPORT RT0, RT0u, RTCollector, RTModule, RTIO, RTHeapMap, RTHeapRep, RTMisc;
+IMPORT RT0, RTCollector, RTModule, RTIO, RTHeapMap, RTHeapRep, RTMisc;
 IMPORT RTOS, RTType, RTTypeSRC, RTProcedure, RTProcedureSRC, RTMachine; 
 IMPORT RTStack, ThreadF, Word, Text;
 FROM RTIO IMPORT PutInt, PutAddr, PutText;
@@ -59,6 +59,7 @@ VAR
   map         : UNTRACED REF ARRAY OF Word.T;
   heap_min    : ADDRESS;
   heap_max    : ADDRESS;
+  n_types     : INTEGER;
   visit       : Info;
   visit_stack : UNTRACED REF VisitStack;
   top_of_stack: INTEGER;
@@ -99,6 +100,7 @@ PROCEDURE ReportReachable () =
     (* capture the heap limits *)
     heap_min  := LOOPHOLE (RTHeapRep.p0 * RTHeapRep.BytesPerPage, ADDRESS);
     heap_max  := LOOPHOLE (RTHeapRep.p1 * RTHeapRep.BytesPerPage, ADDRESS);
+    n_types   := RTType.MaxTypecode () + 1;
 
     PutText ("\nHEAP: ");
     PutAddr (heap_min);
@@ -198,7 +200,7 @@ PROCEDURE InnerVisit (<*UNUSED*> self: RTHeapMap.Visitor;  loc: ADDRESS) =
     IF (heap_min <= ref) AND (ref < heap_max)
       AND (Word.And (LOOPHOLE(ref, INTEGER), Mask) = 0) THEN
       typecode := header.typecode;
-      IF (0 < typecode) AND (typecode < RT0u.nTypes) THEN
+      IF (0 < typecode) AND (typecode < n_types) THEN
         cell := (ref - heap_min) DIV MapGrain;
         word := cell DIV BITSIZE (Word.T);
         bit  := cell - word * BITSIZE (Word.T);
@@ -220,41 +222,48 @@ PROCEDURE InnerVisit (<*UNUSED*> self: RTHeapMap.Visitor;  loc: ADDRESS) =
   END InnerVisit;
 
 PROCEDURE DataSize (h: RTHeapMap.ObjectPtr): CARDINAL =
+  TYPE TK = RT0.TypeKind;
   VAR
     res : INTEGER;
     tc  : RT0.Typecode := h.typecode;
     def : RT0.TypeDefn;
   BEGIN
     IF tc = RTHeapRep.Fill_1_type THEN RETURN 0; END;
+
     IF tc = RTHeapRep.Fill_N_type THEN
       res := LOOPHOLE(h + ADRSIZE(RT0.RefHeader), UNTRACED REF INTEGER)^;
       RETURN res - BYTESIZE(RT0.RefHeader);
     END;
+
     def := RTType.Get (tc);
-    IF def.nDimensions = 0 THEN
+
+    IF (def.kind # ORD (TK.Array)) THEN
       (* the typecell datasize tells the truth *)
       RETURN def.dataSize;
     END;
-    (* ELSE, the referent is an open array; it has the following layout:
-|         pointer to the elements (ADDRESS)
-|         size 1
-|         ....
-|         size n
-|         optional padding
-|         elements
-|         ....
-       where n is the number of open dimensions (given by the definition)
-       and each size is the number of elements along the dimension *)
+
+(* Otherwise, the referent is an open array; it has the following layout:
+|     pointer to the elements (ADDRESS)
+|     size 1
+|     ....
+|     size n
+|     optional padding
+|     elements
+|     ....
+   where n is the number of open dimensions (given by the definition)
+   and each size is the number of elements along the dimension. *)
+
     VAR
+      adef := LOOPHOLE (def, RT0.ArrayTypeDefn);
       sizes: UNTRACED REF INTEGER := h + ADRSIZE(RT0.RefHeader)
                                        + ADRSIZE(ADDRESS);  (* ^ elt pointer*)
     BEGIN
       res := 1;
-      FOR i := 0 TO def.nDimensions - 1 DO
+      FOR i := 0 TO adef.nDimensions - 1 DO
         res := res * sizes^;
         INC(sizes, ADRSIZE(sizes^));
       END;
-      res := res * def.elementSize;
+      res := res * adef.elementSize;
     END;
     res := RTMisc.Upper(res + def.dataSize, BYTESIZE(RT0.RefHeader));
     RETURN res;
@@ -269,7 +278,7 @@ PROCEDURE TypeName (ref: ADDRESS): TEXT =
     IF (Word.And (LOOPHOLE (header, INTEGER), Mask) = 0) (* => aligned *)
       AND (heap_min <= ref) AND (ref < heap_max) THEN
       typecode := header.typecode;
-      IF (0 < typecode) AND (typecode < RT0u.nTypes) THEN
+      IF (0 < typecode) AND (typecode <= n_types) THEN
         RETURN RTTypeSRC.TypecodeName (typecode);
       END;
     END;

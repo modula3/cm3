@@ -16,7 +16,7 @@
 
 MODULE Formatter;
 
-IMPORT Text, Wr, Thread, Scheduler;
+IMPORT AtomList, Text, Wr, Thread, Scheduler;
 
 <*FATAL Thread.Alerted *>
 
@@ -52,7 +52,7 @@ REVEAL
 
       waiters:     CARDINAL;     (* Number of threads waiting for Allocate *)
       failure:     BOOLEAN;
-      failureCode: REFANY;
+      failureCode: AtomList.T;
     END;
   (*
     Note on the storage scheme:
@@ -502,7 +502,7 @@ PROCEDURE WaitUntilEmpty(t: T;  index: CARDINAL) RAISES {Wr.Failure} =
   These procedures are used to pass Wr.Failure codes from 
   Consumer to Producer. *)
 
-PROCEDURE SetFailure(t: T;  failureCode: REFANY) RAISES {} =
+PROCEDURE SetFailure(t: T;  failureCode: AtomList.T) RAISES {} =
   BEGIN
     LOCK t.lock DO
       t.failure := TRUE;

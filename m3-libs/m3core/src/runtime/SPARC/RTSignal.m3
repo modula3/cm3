@@ -7,7 +7,7 @@
 
 UNSAFE MODULE RTSignal;
 
-IMPORT RTMisc, RTProcess, Usignal, Uprocess;
+IMPORT RTError, RTProcess, Usignal, Uprocess;
 FROM Ctypes IMPORT int;
 
 TYPE
@@ -94,7 +94,7 @@ PROCEDURE Quit (<*UNUSED*> sig, code: int;
   VAR pc := 0;
   BEGIN
     IF (scp # NIL) THEN pc := scp.sc_pc END;
-    RTMisc.FatalErrorPC (pc, "aborted");
+    RTError.MsgPC (pc, "aborted");
   END Quit;
 
 PROCEDURE SegV (<*UNUSED*> sig, code: int;
@@ -103,7 +103,7 @@ PROCEDURE SegV (<*UNUSED*> sig, code: int;
   VAR pc := 0;
   BEGIN
     IF (scp # NIL) THEN pc := scp.sc_pc END;
-    RTMisc.FatalErrorPC (pc,
+    RTError.MsgPC (pc,
       "Segmentation violation - possible attempt to dereference NIL");
   END SegV;
 

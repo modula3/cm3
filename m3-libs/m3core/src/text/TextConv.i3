@@ -14,7 +14,7 @@ TYPE CharSet = SET OF CHAR;
 
 CONST
   Escape = '\\';
-  NonPrinting = CharSet{'\000'..'\037', '\177'};
+  NonPrinting = CharSet{'\000'..'\037', '\177' .. LAST(CHAR)};
   Quotes = CharSet{'\'', '\"'};
 
 (* Given the constants above, we have the following mapping for
@@ -53,25 +53,25 @@ PROCEDURE Encode(textIn: TEXT; quoted: BOOLEAN:=TRUE): TEXT;
 (* Return a text that is the encoding of textIn. If quoted is TRUE,
    a double quote is added at the beginning an one at the end. *)
 
-PROCEDURE EncodedCharSize(charIn: CHAR): INTEGER;
+PROCEDURE EncodedCharSize(charIn: CHAR): CARDINAL;
 (* Return the size of the encoding of charIn; either 1, 2, or 4. *)
 
 PROCEDURE EncodeChar(
     charIn: CHAR; 
     VAR (*out*)charsOut: ARRAY[0..3] OF CHAR)
-    : INTEGER;
+    : CARDINAL;
 (* Write the encoding of charIn to charsOut; the result is the number of 
    significant elements of charsOut, either 1, 2, or 4.  *)
 
 PROCEDURE EncodedCharsSize(
-    READONLY charsIn: ARRAY OF CHAR): INTEGER;
+    READONLY charsIn: ARRAY OF CHAR): CARDINAL;
 (* Return the sum of the sizes of the encodings of all the characters
    in charIn. *)
 
 PROCEDURE EncodeChars(
     READONLY charsIn: ARRAY OF CHAR; 
     VAR (*out*)charsOut: ARRAY OF CHAR)
-    : INTEGER;
+    : CARDINAL;
 (* Write the encoding of charsIn to charsOut; charsOut must be at least of
    EncodedCharsSize(charsIn) size, which is also given as result. *)
 
@@ -87,7 +87,7 @@ PROCEDURE Decode(textIn: TEXT; quoted: BOOLEAN:=TRUE): TEXT RAISES {Fail};
 PROCEDURE DecodeChar(
     READONLY charsIn: ARRAY[0..3] OF CHAR; availIn: INTEGER;
     VAR (*out*)charOut: CHAR)
-    : INTEGER RAISES {Fail};
+    : CARDINAL RAISES {Fail};
 (* Decode the sequence charsIn (of which availIn are provided) as a character,
    and write it to charOut. Fail if not enough characters are available in 
    charsIn for the decoding of a single character, or if octal encodings are
@@ -95,14 +95,14 @@ PROCEDURE DecodeChar(
 
 PROCEDURE DecodedCharsSize(
     READONLY charsIn: ARRAY OF CHAR)
-    : INTEGER RAISES {Fail};
+    : CARDINAL RAISES {Fail};
 (* Apply DecodeChar repeatedly to charsIn until exhausted, and return the number
    of calls to DecodeChar. Fail if any of the DecodeChar calls fail. *)
 
 PROCEDURE DecodeChars(
     READONLY charsIn: ARRAY OF CHAR; 
     VAR (*out*)charsOut: ARRAY OF CHAR)
-    : INTEGER RAISES {Fail};
+    : CARDINAL RAISES {Fail};
 (* Apply DecodeChar repeatedly to charsIn until exhausted, and place the results
    in charsOut; charsOut must be at least of DecodedCharsSize(charsIn) size, 
    which is also given as result. Fail if any of the calls to DecodeChar fail. *)
@@ -119,9 +119,8 @@ PROCEDURE Explode(text: TEXT; VAR(*out*) array: ARRAY OF TEXT;
    Implode(Explode(text,{ch}),ch) is the identity.
 *)
 
-PROCEDURE ExplodedSize(text: TEXT; READONLY sep: SET OF CHAR): INTEGER;
-(* Return the length of the array needed by Explode on the same input;
-   always > 0. *)
+PROCEDURE ExplodedSize(text: TEXT; READONLY sep: SET OF CHAR): CARDINAL;
+(* Return the length of the array needed by Explode on the same input. *)
 
 (* ==== IMPLODING ==== *)
 

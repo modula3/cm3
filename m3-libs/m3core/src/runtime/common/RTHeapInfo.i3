@@ -8,6 +8,10 @@
 
 INTERFACE RTHeapInfo;
 
+CONST
+  SENDING_TYPES  = -23;
+  SENDING_COUNTS = -24;
+
 PROCEDURE Init ();
 
 END RTHeapInfo.

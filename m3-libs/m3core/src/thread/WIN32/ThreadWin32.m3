@@ -11,15 +11,16 @@
 (*      modified on Fri Mar 26 15:04:39 PST 1993 by birrell        *)
 
 UNSAFE MODULE ThreadWin32
-  EXPORTS Scheduler, Thread, ThreadF, RTThreadInit, RTHooks;
+  EXPORTS Scheduler, Thread, ThreadF, RTThreadInit;
 
-IMPORT RTLinker, RTMisc, WinBase, WinDef, WinGDI, WinNT;
-IMPORT ThreadContext, Word;
+IMPORT RTError, WinBase, WinDef, WinGDI, WinNT;
+IMPORT ThreadContext, Word, MutexRep;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
 
 VAR
   cm: WinBase.LPCRITICAL_SECTION;
+  cm_x: WinBase.CRITICAL_SECTION;
     (* Global lock for internals of Mutex and Condition *)
 
   default_stack: WinDef.DWORD := 8192;
@@ -30,23 +31,29 @@ VAR
     (* Global lock for internal fields of Thread.T *)
 
   activeMu: WinBase.LPCRITICAL_SECTION;
+  activeMu_x: WinBase.CRITICAL_SECTION;
     (* Global lock for list of active threads *)
     (* It is illegal to touch *any* traced references while
        holding activeMu because it is needed by SuspendOthers
        which is called by the collector's page fault handler. *)
 
   idleMu: WinBase.LPCRITICAL_SECTION;
+  idleMu_x: WinBase.CRITICAL_SECTION;
     (* Global lock for list of idle threads *)
 
   slotMu: WinBase.LPCRITICAL_SECTION;
+  slotMu_x: WinBase.CRITICAL_SECTION;
     (* Global lock for thread slot table *)
 
 REVEAL
-  Mutex = BRANDED "MUTEX Win32-1.0" OBJECT
+  Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
       waiters: T := NIL;
         (* LL = cm; List of threads waiting on this mutex. *)
       holder: T := NIL;
         (* LL = cm; The thread currently holding this mutex. *)
+    OVERRIDES
+      acquire := LockMutex;
+      release := UnlockMutex;
     END;
 
   Condition = BRANDED "Thread.Condition Win32-1.0" OBJECT
@@ -97,21 +104,21 @@ TYPE
     END;
 
 (*----------------------------------------------------------------- Mutex ---*)
-(* Note: RTHooks.{Unlock,Lock}Mutex are the routines called directly by
+(* Note: {Unlock,Lock}Mutex are the routines called directly by
    the compiler.  Acquire and Release are the routines exported through
    the Thread interface *)
          
 PROCEDURE Acquire (m: Mutex) =
   BEGIN
-    LockMutex (m);
+    m.acquire ();
   END Acquire;
 
 PROCEDURE Release (m: Mutex) =
   BEGIN
-    UnlockMutex (m);
+    m.release ();
   END Release;
 
-PROCEDURE (*RTHooks.*)LockMutex (m: Mutex) =
+PROCEDURE LockMutex (m: Mutex) =
   VAR self := Self();  wait := FALSE;  next, prev: T;
   BEGIN
     IF self = NIL THEN Die("Acquire called from non-Modula-3 thread") END;
@@ -147,7 +154,7 @@ PROCEDURE (*RTHooks.*)LockMutex (m: Mutex) =
     END;
   END LockMutex;
 
-PROCEDURE (*RTHooks.*)UnlockMutex(m: Mutex) =
+PROCEDURE UnlockMutex(m: Mutex) =
   VAR self := Self();  prevCount: WinDef.LONG;  next: T;
   BEGIN
     IF self = NIL THEN Die("Release called from non-Modula-3 thread") END;
@@ -177,6 +184,30 @@ PROCEDURE (*RTHooks.*)UnlockMutex(m: Mutex) =
 
     WinBase.LeaveCriticalSection(cm);
   END UnlockMutex;
+
+(**********
+PROCEDURE DumpSlots () =
+  VAR
+    me := LOOPHOLE (WinBase.TlsGetValue(threadIndex), Activation);
+  BEGIN
+    RTIO.PutText ("me = ");
+    RTIO.PutAddr (me);
+    RTIO.PutText ("  slot = ");
+    RTIO.PutInt  (me.slot);
+    RTIO.PutText ("  self = ");
+    RTIO.PutAddr (LOOPHOLE (slots[me.slot], ADDRESS));
+    RTIO.PutText ("\r\n");
+    FOR i := 1 TO n_slotted DO
+      RTIO.PutText (" slot = ");
+      RTIO.PutInt  (i);
+      RTIO.PutText ("  thr = ");
+      RTIO.PutAddr (LOOPHOLE (slots[i], ADDRESS));
+      RTIO.PutText ("  act = ");
+      RTIO.PutAddr (slots[i].act);
+      RTIO.PutText ("\r\n");
+    END;
+  END DumpSlots;
+**********)
 
 (*---------------------------------------- Condition variables and Alerts ---*)
 
@@ -315,7 +346,9 @@ VAR (* LL = slotMu *)
 PROCEDURE SetActivation (act: Activation) =
   (* LL = 0 *)
   BEGIN
-    IF WinBase.TlsSetValue(threadIndex, act) = 0 THEN Choke(); END;
+    IF WinBase.TlsSetValue(threadIndex, LOOPHOLE (act, WinDef.DWORD)) = 0 THEN
+      Choke();
+    END;
   END SetActivation;
 
 PROCEDURE GetActivation (): Activation =
@@ -328,7 +361,10 @@ PROCEDURE GetActivation (): Activation =
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
-  VAR me := GetActivation();  t: T;
+  VAR
+    me := LOOPHOLE (WinBase.TlsGetValue(threadIndex), Activation);
+    (** me := GetActivation(); **)
+    t: T;
   BEGIN
     IF (me = NIL) THEN RETURN NIL; END;
     WinBase.EnterCriticalSection (slotMu);
@@ -480,7 +516,7 @@ PROCEDURE RunThread (me: Activation): WinNT.HANDLE =
     WinBase.LeaveCriticalSection (slotMu);
 
     LockMutex(threadMu);
-      cl := self.closure;
+    cl := self.closure;
       self.id := nextId;  INC (nextId);
     UnlockMutex(threadMu);
 
@@ -515,8 +551,8 @@ PROCEDURE RunThread (me: Activation): WinNT.HANDLE =
       (* mark "self" done and clean it up a bit *)
       self.result := res;
       self.completed := TRUE;
+      Broadcast(self.cond); (* let everybody know that "self" is done *)
     UnlockMutex(threadMu);
-    Broadcast(self.cond); (* let everybody know that "self" is done *)
 
     IF next_self # NIL THEN
       (* we're going to be reborn! *)
@@ -714,33 +750,6 @@ PROCEDURE IncDefaultStackSize(inc: CARDINAL)=
     INC (default_stack, inc * BYTESIZE (INTEGER));
   END IncDefaultStackSize;
 
-(*-------------------------------------------- Exception handling support ---*)
-
-VAR handlersIndex: INTEGER;
-
-PROCEDURE GetCurrentHandlers(): ADDRESS=
-  BEGIN
-    RETURN WinBase.TlsGetValue(handlersIndex);
-  END GetCurrentHandlers;
-
-PROCEDURE SetCurrentHandlers(h: ADDRESS)=
-  BEGIN
-    EVAL WinBase.TlsSetValue(handlersIndex, h);
-  END SetCurrentHandlers;
-
-PROCEDURE PushEFrame (frame: ADDRESS) =
-  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
-  VAR f := LOOPHOLE (frame, Frame);
-  BEGIN
-    f.next := WinBase.TlsGetValue(handlersIndex);
-    EVAL WinBase.TlsSetValue(handlersIndex, f);
-  END PushEFrame;
-
-PROCEDURE PopEFrame (frame: ADDRESS) =
-  BEGIN
-    EVAL WinBase.TlsSetValue(handlersIndex, frame);
-  END PopEFrame;
-
 (*--------------------------------------------- Garbage collector support ---*)
 (* NOTE: These routines are called indirectly by the low-level page fault
    handler of the garbage collector.  So, if they touched traced references,
@@ -867,13 +876,13 @@ PROCEDURE MyId(): Id RAISES {}=
 
 PROCEDURE Die(msg: TEXT) =
   BEGIN
-    RTMisc.FatalError ("ThreadWin32.m3", 833, "Thread client error: ", msg);
+    RTError.Msg ("ThreadWin32.m3", 879, "Thread client error: ", msg);
   END Die;
 
 PROCEDURE Choke() =
   BEGIN
-    RTMisc.FatalErrorI (
-        "ThreadWin32.m3, line 839: Windows OS failure, GetLastError = ",
+    RTError.MsgI (
+        "ThreadWin32.m3, line 885: Windows OS failure, GetLastError = ",
         WinBase.GetLastError ());
   END Choke;
 
@@ -886,22 +895,19 @@ PROCEDURE Init() =
     act: Activation;
     threadhandle, processhandle: WinNT.HANDLE;
   BEGIN
-    handlersIndex := WinBase.TlsAlloc();
-    IF handlersIndex < 0 THEN Choke() END;
-
     threadIndex := WinBase.TlsAlloc();
     IF threadIndex < 0 THEN Choke() END;
 
-    cm := NEW(WinBase.LPCRITICAL_SECTION);
+    cm := ADR (cm_x);
     WinBase.InitializeCriticalSection(cm);
 
-    activeMu := NEW(WinBase.LPCRITICAL_SECTION);
+    activeMu := ADR (activeMu_x);
     WinBase.InitializeCriticalSection(activeMu);
 
-    idleMu := NEW(WinBase.LPCRITICAL_SECTION);
+    idleMu := ADR (idleMu_x);
     WinBase.InitializeCriticalSection(idleMu);
 
-    slotMu := NEW(WinBase.LPCRITICAL_SECTION);
+    slotMu := ADR (slotMu_x);
     WinBase.InitializeCriticalSection(slotMu);
 
     threadMu := NEW(Mutex);
@@ -920,11 +926,36 @@ PROCEDURE Init() =
       act.next   := act;
       act.prev   := act;
       allThreads := act;
-      act.stackbase := RTLinker.info.bottom_of_stack;
+      act.stackbase := InitialStackBase (ADR (self));
       IF act.stackbase = NIL THEN Choke(); END;
     WinBase.LeaveCriticalSection(activeMu);
     SetActivation (act);
   END Init;
+
+PROCEDURE InitialStackBase (start: ADDRESS): ADDRESS =
+  (* Find the bottom of the stack containing "start". *)
+  CONST N = BYTESIZE (info);
+  VAR info: WinNT.MEMORY_BASIC_INFORMATION;  last_good: ADDRESS;
+  BEGIN
+    last_good := start;
+    info.BaseAddress := start;
+    LOOP
+      IF WinBase.VirtualQuery (info.BaseAddress, ADR (info), N) # N THEN
+        Choke();
+      END;
+ 
+      (* is this chunk readable? *)
+      IF (info.Protect # WinNT.PAGE_READWRITE)
+        AND (info.Protect # WinNT.PAGE_READONLY) THEN
+        (* nope, return the base of the last good chunk *)
+        RETURN last_good;
+      END;
+
+      (* yep, try the previous chunk *)
+      last_good := info.BaseAddress + info.RegionSize;
+      info.BaseAddress := last_good;
+    END;
+  END InitialStackBase;
 
 BEGIN
 END ThreadWin32.

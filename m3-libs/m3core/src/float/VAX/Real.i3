@@ -2,8 +2,7 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 
-(* Last modified on Fri Aug 16 15:06:51 PDT 1996 by heydon     *)
-(*      modified on Fri Sep 24 08:24:15 PDT 1993 by kalsow     *)
+(* Last modified on Fri Sep 24 08:24:15 PDT 1993 by kalsow     *)
 (*      modified on Thu Apr 29 16:10:39 PDT 1993 by muller     *)
 (*      modified on Fri Feb 28 20:49:49 PST 1992 by stolfi     *)
 
@@ -13,9 +12,6 @@ INTERFACE Real;
 
    This package defines some basic properties of the 
    built-in float type REAL, for the VAX architecture.
-   If you want to instantiate a generic type with real
-   numbers, you should import the "RealType" interface
-   instead.
 
    Index: REAL; floating-point; generics
 *)

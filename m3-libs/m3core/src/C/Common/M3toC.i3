@@ -22,13 +22,24 @@ PROCEDURE FreeCopiedS(s: Ctypes.char_star);
    of "CopyTtoS".  It is an unchecked runtime error to free "s" more
    than once or to use "s" after calling "FreeCopiedS(s)". *)
 
-PROCEDURE TtoS(t: TEXT): Ctypes.char_star;
-(* Return a null-terminated C string with the same contents as "t",
-   and sharing storage with "t".  "FreeCopiedS" should {\em not} 
-   be called on the value returned by "TtoS". *)
+PROCEDURE SharedTtoS(t: TEXT): Ctypes.char_star;
+(* Return a null-terminated C string with the same contents as "t".
+   If possible, the result will share storage with "t".  "FreeSharedS"
+   should be called on the value returned by "SharedTtoS". *)
+
+PROCEDURE FreeSharedS(t: TEXT;  s: Ctypes.char_star);
+(* Free the storage for "s", which must have been returned from a call
+   of "SharedTtoS(t)".  It is an unchecked runtime error to free "s" more
+   than once or to use "s" after calling "FreeSharedS(s)". *)
+
+PROCEDURE FlatTtoS(t: TEXT): Ctypes.char_star;
+(* Return a null-terminated C string with the same contents as "t", where
+   the result shares storage with "t".  It is a checked runtime if "t" is
+   not a flat text of "CHAR".   The standard "flat" texts are Text8,
+   Text8Short, Text8Literal, Text8CString.  *)
 
 (* It is the client's responsibility to prevent the garbage collector
-   from collecting or moving "t" while the result of "TtoS(t)" is
+   from collecting or moving "t" while the result of "SharedTtoS(t)" is
    being used. One way to accomplish this is to maintain a reference
    to (or into) "t" on the stack or in the registers of any thread.
    Alternatively, the collector can be disabled.  See the

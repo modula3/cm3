@@ -6,7 +6,7 @@
 (*      modified on Wed Dec 23 17:25:11 PST 1992 by jdd       *)
 (*      modified on Thu Nov 12 15:56:31 PST 1992 by muller    *)
 
-UNSAFE MODULE RTThread;
+UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
 IMPORT Usignal, Word;
 
@@ -80,6 +80,33 @@ PROCEDURE disallow_sigvtalrm () =
     i := Word.Or (i, Usignal.sigmask (Usignal.SIGVTALRM));
     EVAL Usignal.sigsetmask (i); 
   END disallow_sigvtalrm;
+
+(*--------------------------------------------- exception handling support --*)
+
+PROCEDURE GetCurrentHandlers (): ADDRESS=
+  BEGIN
+    RETURN handlerStack;
+  END GetCurrentHandlers;
+
+PROCEDURE SetCurrentHandlers (h: ADDRESS)=
+  BEGIN
+    handlerStack := h;
+  END SetCurrentHandlers;
+
+(*RTHooks.PushEFrame*)
+PROCEDURE PushEFrame (frame: ADDRESS) =
+  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
+  VAR f := LOOPHOLE (frame, Frame);
+  BEGIN
+    f.next := handlerStack;
+    handlerStack := f;
+  END PushEFrame;
+
+(*RTHooks.PopEFrame*)
+PROCEDURE PopEFrame (frame: ADDRESS) =
+  BEGIN
+    handlerStack := frame;
+  END PopEFrame;
 
 BEGIN
 END RTThread.

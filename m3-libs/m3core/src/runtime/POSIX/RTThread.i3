@@ -104,4 +104,10 @@ PROCEDURE disallow_sigvtalrm ();
 VAR handlerStack: ADDRESS;
 (* linked list of exception frames. *)
 
+PROCEDURE GetCurrentHandlers(): ADDRESS;
+(* == RETURN RTThread.handlerStack *)
+
+PROCEDURE SetCurrentHandlers(h: ADDRESS);
+(* == RTThread.handlerStack := h *)
+
 END RTThread.

@@ -5,8 +5,8 @@
 % Last modified on Tue Nov 22 15:10:12 PST 1994 by kalsow 
 %      modified on Fri May  7 22:26:03 PDT 1993 by mjordan
 
-module         ("RT0u")
 implementation ("RTArgs")
 implementation ("RTOS")
+interface      ("RTThread")
 module         ("RTPerfTool")
 

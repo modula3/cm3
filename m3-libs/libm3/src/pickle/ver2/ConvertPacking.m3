@@ -1,11 +1,11 @@
-(* 
- * For more information on this program, contact Blair MacIntyre          
+(*
+ * For information about this program, contact Blair MacIntyre            
  * (bm@cs.columbia.edu) or Steven Feiner (feiner@cs.columbia.edu)         
  * at the Computer Science Dept., Columbia University,                    
- * 500 W 120th St, Room 450, New York, NY, 10027.                         
+ * 1214 Amsterdam Ave. Mailstop 0401, New York, NY, 10027.                
  *                                                                        
- * Copyright (C) Blair MacIntyre 1995, Columbia University 1995           
- * 
+ * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
+ * City of New York.  Blair MacIntyre, Computer Science Department.       
  *)
 
 UNSAFE MODULE ConvertPacking;
@@ -137,14 +137,28 @@ PROCEDURE ExtractSwap (self: T; x: Word.T; i, n: CARDINAL;
     RETURN to;
   END ExtractSwap;
 
+CONST MAXLEN = 65536;
+TYPE  BigBuf = ARRAY [0..MAXLEN-1] OF CHAR;
+TYPE  BufPtr = UNTRACED REF BigBuf;
+
+PROCEDURE ReadData(v: ReadVisitor;  dest: ADDRESS; len: INTEGER) 
+  RAISES {Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
+  BEGIN
+    WHILE len >= MAXLEN DO
+      v.readData(LOOPHOLE(dest, BufPtr)^);
+      INC(dest, MAXLEN);  DEC(len, MAXLEN);
+    END;
+    IF len > 0 THEN
+      v.readData (SUBARRAY(LOOPHOLE (dest, BufPtr)^, 0, len));
+    END;
+  END ReadData;
+
 PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor; 
                   number: INTEGER := 1): ADDRESS RAISES 
           {Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
-  VAR r := LOOPHOLE(dest, UNTRACED REF ARRAY  [0..65537] OF CHAR);
-      t: ARRAY [0..7] OF CHAR;
-      fromOffset := 0;
-      toOffset := 0;
+  VAR t: ARRAY [0..7] OF CHAR;
       repetition: INTEGER := 1;
+
   BEGIN
     IF self.prog.size() = 2 THEN
       (* We have a one step program (the step plus the DONE step), so
@@ -158,9 +172,7 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
              length = elem.length * repetition DO
           CASE elem.kind OF
           | PklAction.Kind.Copy => 
-            v.readData(SUBARRAY(r^, toOffset, length));
-            INC(fromOffset, length);
-            INC(toOffset, length);
+            ReadData(v, dest, length);
             INC(dest, length);
           | PklAction.Kind.SwapPacked => 
             WITH nelem = NARROW(elem, PklAction.SwapPacked) DO
@@ -169,7 +181,7 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
                     to: Word.T := 0;
                     bit: INTEGER := 0;
                     wb := LOOPHOLE(ADR(from), UNTRACED REF 
-                    ARRAY [0..BYTESIZE(Word.T)-1] OF CHAR);
+                                   ARRAY [0..BYTESIZE(Word.T)-1] OF CHAR);
                 BEGIN
                   v.readData(SUBARRAY(wb^, 0, nelem.size));
                   
@@ -215,57 +227,43 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
                     END;
                   END;
                   (* Copy the bytes *)
-                  SUBARRAY(r^, toOffset, nelem.size) :=
-                      SUBARRAY(LOOPHOLE(ADR(to), 
-                                        UNTRACED REF ARRAY [0..7] OF CHAR)^,
-                               0, nelem.size);
+                  SUBARRAY(LOOPHOLE(dest, BufPtr)^, 0, nelem.size) :=
+                    SUBARRAY(LOOPHOLE(ADR(to), BufPtr)^, 0, nelem.size);
                 END;
                 INC(dest, nelem.size);
-                INC(fromOffset, nelem.size);
-                INC(toOffset, nelem.size);
               END;
             END;
           | PklAction.Kind.SkipFrom =>
             v.skipData(length);
-            INC(fromOffset, length);
           | PklAction.Kind.SkipTo =>
-            INC(toOffset, length);
             INC(dest, length);
           | PklAction.Kind.Skip =>
             v.skipData(length);
-            INC(fromOffset, length);
-            INC(toOffset, length);
             INC(dest, length);
           | PklAction.Kind.Swap16 =>
-            v.readData(SUBARRAY(r^, toOffset, length*2));
+            ReadData(v, dest, length*2);
             FOR i := 1 TO length DO
               WITH int16 = LOOPHOLE(dest, UNTRACED REF Swap.Int16) DO
                 int16^ := Swap.Swap2(int16^);
               END;
               INC(dest, 2);
             END;
-            INC(fromOffset, length*2);
-            INC(toOffset, length*2);
           | PklAction.Kind.Swap32 =>
-            v.readData(SUBARRAY(r^, toOffset, length*4));
+            ReadData(v, dest, length*4);
             FOR i := 1 TO length DO
               WITH int32 = LOOPHOLE(dest, UNTRACED REF Swap.Int32) DO
                 int32^ := Swap.Swap4(int32^);
               END;
               INC(dest, 4);
             END;
-            INC(fromOffset, length*4);
-            INC(toOffset, length*4);
           | PklAction.Kind.Swap64 =>
-            v.readData(SUBARRAY(r^, toOffset, length*8));
+            ReadData(v, dest, length*8);
             FOR i := 1 TO length DO
               WITH int64 = LOOPHOLE(dest, UNTRACED REF Swap.Int64On32) DO
                 int64^ := Swap.Swap8(int64^);
               END;
               INC(dest, 8);
             END;
-            INC(fromOffset, length*8);
-            INC(toOffset, length*8);
           | PklAction.Kind.Copy32to64, PklAction.Kind.Swap32to64 =>
             WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
               FOR i := 1 TO length DO
@@ -297,8 +295,6 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
                 INC(dest, 8);
               END;
             END;
-            INC(fromOffset, length*4);
-            INC(toOffset, length*8);
           | PklAction.Kind.Copy64to32, PklAction.Kind.Swap64to32 =>
             FOR i := 1 TO length DO
               v.readData(t);
@@ -325,8 +321,6 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
               END;
               INC(dest, 4);
             END;
-            INC(fromOffset, length*8);
-            INC(toOffset, length*4);
           | PklAction.Kind.ReadRef =>
             WITH nelem = NARROW(elem, PklAction.Ref) DO
               FOR i := 1 TO length DO
@@ -336,8 +330,6 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
                 INC(dest, self.to.word_size DIV 8);
               END;
             END;
-            INC(fromOffset, length*(self.from.word_size DIV 8));
-            INC(toOffset, length*(self.to.word_size DIV 8));
           | PklAction.Kind.Done =>
           END;
         END;
@@ -345,13 +337,25 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
     END;
     RETURN dest;
   END Convert;
+
+PROCEDURE WriteData(v: WriteVisitor;  src: ADDRESS;  len: INTEGER)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  BEGIN
+    WHILE len >= MAXLEN DO
+      v.writeData(LOOPHOLE(src, BufPtr)^);
+      INC(src, MAXLEN);  DEC(len, MAXLEN);
+    END;
+    IF (len > 0) THEN
+      v.writeData(SUBARRAY(LOOPHOLE(src, BufPtr)^, 0, len));
+    END;
+  END WriteData;
  
 PROCEDURE Write(self: T; src: ADDRESS; v: WriteVisitor; 
                 number: INTEGER := 1): ADDRESS RAISES 
           {Error, Wr.Failure, Thread.Alerted} =
-  VAR r := LOOPHOLE(src, UNTRACED REF ARRAY [0..65537] OF CHAR);
-      offset := 0;
-      repetition: INTEGER := 1;
+  VAR repetition: INTEGER := 1;
+      len: INTEGER;
+
   BEGIN
     IF self.writer # NIL THEN
       RETURN self.writer.write(src, v, number);
@@ -368,14 +372,11 @@ PROCEDURE Write(self: T; src: ADDRESS; v: WriteVisitor;
         WITH elem = self.prog.get(i),
              length = elem.length * repetition DO
           CASE elem.kind OF
-          | PklAction.Kind.Copy => 
-            v.writeData(SUBARRAY(r^, offset, length));
-            INC(offset, length);
-            INC(src, length);
+          | PklAction.Kind.Copy =>
+            WriteData (v, src, len);
 
           | PklAction.Kind.Skip =>
             v.skipData(length);
-            INC(offset, length);
             INC(src, length);
 
           | PklAction.Kind.ReadRef =>
@@ -387,7 +388,6 @@ PROCEDURE Write(self: T; src: ADDRESS; v: WriteVisitor;
                 INC(src, self.to.word_size DIV 8);
               END;
             END;
-            INC(offset, length*(self.from.word_size DIV 8));
 
           | PklAction.Kind.Done =>
           | PklAction.Kind.SwapPacked => 

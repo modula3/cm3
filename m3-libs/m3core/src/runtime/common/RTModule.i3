@@ -13,9 +13,14 @@ INTERFACE RTModule;
 IMPORT RT0;
 
 PROCEDURE Count (): CARDINAL;
-(* returns the number of registered modules. They are indexed [0..Count-1]. *)
+(* Returns the current number of registered modules.
+   They are indexed "[0..Count-1]". *)
 
 PROCEDURE Get (m: CARDINAL): RT0.ModulePtr;
-(* returns a pointer to the module information for module 'm'. *)
+(* Returns a pointer to the module information for module number "m". *)
+
+PROCEDURE FromDataAddress (x: ADDRESS): RT0.ModulePtr;
+(* Returns module whose global data appears to contain the address "x".
+   Otherwise, returns "NIL". *)
 
 END RTModule.

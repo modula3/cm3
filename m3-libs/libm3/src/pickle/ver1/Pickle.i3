@@ -48,7 +48,7 @@
 | MODULE P1 EXPORTS Main;  IMPORT Pickle, IO;
 |   TYPE T = REF RECORD val: INTEGER END;
 | BEGIN
-|   Pickle.Write(NEW(T, val := 6), IO.OpenWrite("A.pickle"))
+|   Pickle.Write(IO.OpenWrite("A.pickle"), NEW(T, val := 6))
 | END P1.
 
    and then in the same directory, you compile and run the

@@ -98,7 +98,7 @@ PROCEDURE StartTool (name: TEXT; VAR r, w: Handle): BOOLEAN =
       END;
       
       (* execute the perf tool *)
-      args [0] := M3toC.TtoS (name);
+      args [0] := M3toC.SharedTtoS (name);
       args [1] := NIL;
       execResult := Uexec.execvp (args [0], ADR (args [0]));
       Unix.underscore_exit (99);

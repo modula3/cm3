@@ -2,7 +2,8 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 (*                                                             *)
-(* Last modified on Mon Oct 31 15:00:39 PST 1994 by kalsow     *)
+(* Last modified on Wed Jul 30 13:55:56 EST 1997 by hosking    *)
+(*      modified on Mon Oct 31 15:00:39 PST 1994 by kalsow     *)
 (*      modified on Sat Jun 27 15:27:28 PDT 1992 by muller     *)
 
 INTERFACE Udir;
@@ -19,8 +20,7 @@ TYPE
   struct_dirent_star = UNTRACED REF struct_dirent;
   struct_dirent = RECORD
     d_ino        : Utypes.ino_t;
-    d_offset_XXX : Utypes.off_t; (* not set until libucb is no *)
-                                 (* longer linked into M3 programs. *)
+    d_offset_XXX : Utypes.off_t;
     d_reclen     : unsigned_short;
     d_name       : D_name;
   END;
@@ -37,30 +37,10 @@ TYPE
   END;
 
 <* EXTERNAL *> PROCEDURE opendir(dir: char_star): DIR_star;
-(* Make readdir external again when libucb is no longer linked into M3
-   programs. *)
-               PROCEDURE readdir(dirPtr: DIR_star): struct_dirent_star;
+<* EXTERNAL *> PROCEDURE readdir(dirPtr: DIR_star): struct_dirent_star;
 <* EXTERNAL *> PROCEDURE telldir(dirPtr: DIR_star): long;
 <* EXTERNAL *> PROCEDURE seekdir(dirPtr: DIR_star; location: long);
 <* EXTERNAL *> PROCEDURE rewinddir(dirPtr: DIR_star);
 <* EXTERNAL *> PROCEDURE closedir(dirPtr: DIR_star): int;
-
-
-(*----------------------------------------------- UCB compatibility hack ---*)
-(* This is an interface to the Berkeley-style readdir routine.  The rest
-   of Udir is identical between Berkeley and System V.  This should go
-   away when libucb is no longer linked into M3 programs. *)
-
-TYPE
-  UCB_struct_direct_star = UNTRACED REF UCB_struct_direct;
-  UCB_struct_direct = RECORD
-    d_ino     : Utypes.ino_t;
-    d_reclen  : unsigned_short;
-    d_namlen  : unsigned_short;
-    d_name    : D_name;
-  END;
-
-<* EXTERNAL "readdir"*>
-PROCEDURE UCB_readdir(dirPtr: DIR_star): UCB_struct_direct_star;
 
 END Udir.

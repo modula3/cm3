@@ -143,7 +143,7 @@ END RegularFile.
 | IF locked(file(h) = Process.GetMyID() THEN
 |   locked(file(h)) := Process.NullID
 | END
-      
+   
    If the file h is not already locked by the calling process (i.e.,
    if locked(file(h)) # Process.GetMyID()), the call 
 

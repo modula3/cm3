@@ -11,11 +11,11 @@
 (*|      modified on Mon Feb 22 10:08:49 PST 1993 by jdd     *)
 
 UNSAFE MODULE ThreadPosix EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix,
-    RTThreadInit, RTHooks;
+    RTThreadInit;
 
-IMPORT Cerrno, Cstring, FloatMode,
-       RT0u, RTMisc, RTParams, RTPerfTool, RTProcedureSRC, RTProcess, 
-       RTThread, RTIO, ThreadEvent, Time, TimePosix,
+IMPORT Cerrno, Cstring, FloatMode, MutexRep,
+       RT0u, RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
+       RTProcess, RTThread, RTIO, ThreadEvent, Time, TimePosix,
        Unix, Usignal, Utime, Word;
 
 REVEAL
@@ -26,9 +26,12 @@ REVEAL
      waiting for the mutex to be released so that they can acquire it (the list
      is continued in the nextWaitingForMutex field of the threads) *)
 
-  MUTEX = BRANDED "Mutex Posix-1.0" OBJECT
+  MUTEX = MutexRep.Public BRANDED "Mutex Posix-1.0" OBJECT
     holder       : T := NIL;
     waitingForMe : T := NIL;
+  OVERRIDES
+    acquire := LockMutex;
+    release := UnlockMutex;
   END; 
 
 
@@ -388,21 +391,21 @@ PROCEDURE Self (): T =
   END Self;
 
 (*--------------------------------------------------------------- MUTEXes ---*)
-(* Note: RTHooks.{Unlock,Lock}Mutex are the routines called directly by
+(* Note: {Unlock,Lock}Mutex are the routines called directly by
    the compiler.  Acquire and Release are the routines exported through
    the Thread interface *)
          
 PROCEDURE Acquire (m: Mutex) =
   BEGIN
-    LockMutex (m);
+    m.acquire ();
   END Acquire;
 
 PROCEDURE Release (m: Mutex) =
   BEGIN
-    UnlockMutex (m);
+    m.release ();
   END Release;
 
-PROCEDURE (*RTHooks.*)LockMutex (m: Mutex) =
+PROCEDURE LockMutex (m: Mutex) =
   <*FATAL Alerted*>
   BEGIN
     LOOP
@@ -432,10 +435,10 @@ PROCEDURE ImpossibleAcquire (m: Mutex) =
     OutT (" is trying to reacquire mutex ");
     OutA (m, 0);
     OutT (" which it already holds.\n");
-    RTMisc.FatalError ("ThreadPosix.m3", 435, "impossible Thread.Acquire");
+    RTError.Msg ("ThreadPosix.m3", 438, "impossible Thread.Acquire");
   END ImpossibleAcquire;
 
-PROCEDURE (*RTHooks.*)UnlockMutex (m: Mutex) =
+PROCEDURE UnlockMutex (m: Mutex) =
   <*FATAL Alerted*>
   VAR waiters: BOOLEAN;
   BEGIN
@@ -483,33 +486,8 @@ PROCEDURE SleazyRelease (m: Mutex) =
       OutI (m.holder.id, 0);
       OutT (".\n");
     END;
-    RTMisc.FatalError ("Thread.m3", 381, "illegal Thread.Release");
+    RTError.Msg ("Thread.m3", 489, "illegal Thread.Release");
   END SleazyRelease;
-
-(*--------------------------------------------- exception handling support --*)
-
-PROCEDURE GetCurrentHandlers (): ADDRESS=
-  BEGIN
-    RETURN RTThread.handlerStack;
-  END GetCurrentHandlers;
-
-PROCEDURE SetCurrentHandlers (h: ADDRESS)=
-  BEGIN
-    RTThread.handlerStack := h;
-  END SetCurrentHandlers;
-
-PROCEDURE PushEFrame (frame: ADDRESS) =
-  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
-  VAR f := LOOPHOLE (frame, Frame);
-  BEGIN
-    f.next := RTThread.handlerStack;
-    RTThread.handlerStack := f;
-  END PushEFrame;
-
-PROCEDURE PopEFrame (frame: ADDRESS) =
-  BEGIN
-    RTThread.handlerStack := frame;
-  END PopEFrame;
 
 (*--------------------------------------------- garbage collector support ---*)
 
@@ -766,10 +744,8 @@ PROCEDURE StartSwitching () =
     END;
   END StartSwitching;
 
-TYPE SignalData = UNTRACED REF Usignal.struct_sigcontext;
-
 PROCEDURE switch_thread (<*UNUSED*> sig, code: INTEGER; 
-                         <*UNUSED*> scp: SignalData) RAISES {Alerted} =
+                         <*UNUSED*> scp: ADDRESS) RAISES {Alerted} =
   BEGIN
     RTThread.allow_sigvtalrm ();
     IF RT0u.inCritical = 0 THEN InternalYield () END;
@@ -1003,7 +979,7 @@ BEGIN
     ELSE
       IF perfOn THEN PerfRunning (-1); END;
       DumpEverybody ();
-      RTMisc.FatalError (NIL, 0, "Deadlock !");
+      RTError.Msg (NIL, 0, "Deadlock !");
     END;
   END;
 END InternalYield;
@@ -1063,17 +1039,23 @@ VAR
      closure).
 *)
 
-PROCEDURE InitTopContext (VAR c: Context) =
+PROCEDURE InitTopContext (VAR c: Context;  stackbase: ADDRESS) =
+  CONST STACK_SLOP = 8 * ADRSIZE (INTEGER);
   VAR env: RTThread.State;
   BEGIN
     (* The first thread runs on the original stack, we don't want any checks *)
     c.stack.words := NIL;
-    c.stack.first := top_of_stack;
-    c.stack.last  := bottom_of_stack;
-    c.stackTop    := top_of_stack;
-    c.stackBottom := bottom_of_stack;
+    c.stack.first := NIL;
+    c.stack.last  := NIL;
     c.handlers    := NIL;
     c.errno       := 0;
+    IF stack_grows_down THEN
+      c.stackTop    := NIL;
+      c.stackBottom := stackbase + STACK_SLOP;
+    ELSE
+      c.stackTop    := LOOPHOLE (LAST (INTEGER), ADDRESS);
+      c.stackBottom := stackbase - STACK_SLOP;
+    END;
     
     (* determine what should go in the stack of future threads *)
     WITH i = RTThread.Save (env) DO
@@ -1121,7 +1103,6 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
     ELSE 
       (* we are starting the execution of a forked thread *)
       RTThread.handlerStack := self.context.handlers;
-      top_of_stack := self.context.stackTop;
       Cerrno.errno := self.context.errno;
       RTThread.allow_sigvtalrm ();
       DEC (RT0u.inCritical);
@@ -1214,7 +1195,6 @@ PROCEDURE Transfer (VAR from, to: Context;  new_self: T) =
       self := new_self;
       myId := new_self.id;
       RTThread.Transfer (from.buf, to.buf);
-      top_of_stack := from.stackTop;
       RTThread.handlerStack := from.handlers;
       Cerrno.errno := from.errno;
       RTThread.allow_sigvtalrm ();
@@ -1228,7 +1208,7 @@ PROCEDURE SmashedStack (t: T) =
     OutI (t.id, 0);
     OutT ("'s stack overflowed its limits.\n");
     OutT ("*** Use Thread.IncDefaultStackSize to get bigger stacks.\n");
-    RTMisc.FatalError ("ThreadPosix.m3", 1230, "corrupt thread stack");
+    RTError.Msg ("ThreadPosix.m3", 1212, "corrupt thread stack");
   END SmashedStack;
 
 PROCEDURE Tos (READONLY c: Context; VAR start, stop: ADDRESS) =
@@ -1311,7 +1291,7 @@ PROCEDURE DumpThread (t: T) =
     OutT (" ");
     pc := NIL;
     co := LOOPHOLE (t.closure, ClosureObject);
-    IF (co # NIL) AND (co^ # NIL) THEN pc := co^^[1] END;
+    IF (co # NIL) AND (co^ # NIL) THEN pc := co^^[0] END;
     IF (co = NIL) THEN
       OutT ("*main program*      ");
     ELSE
@@ -1464,6 +1444,7 @@ PROCEDURE MyId(): Id RAISES {}=
   END MyId;
 
 (*-------------------------------------------------------- initialization ---*)
+
 PROCEDURE Init()=
   VAR xx: INTEGER;
   BEGIN
@@ -1474,7 +1455,7 @@ PROCEDURE Init()=
       INC (nextId);
     
       stack_grows_down := ADR (xx) > QQ();
-      InitTopContext (topThread.context);
+      InitTopContext (topThread.context, ADR(xx));
       self := topThread;
       myId := self.id;
 

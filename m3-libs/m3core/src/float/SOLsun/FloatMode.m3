@@ -1,7 +1,8 @@
 (* Copyright (C) 1992, Xerox                                                 *)
 (* All rights reserved.                                                      *)
 
-(* Last modified on Thu Jan 26 13:48:02 PST 1995 by kalsow                   *)
+(* Last modified on Wed Jul 30 13:55:56 EST 1997 by hosking                  *)
+(*      modified on Thu Jan 26 13:48:02 PST 1995 by kalsow                   *)
 (*      modified on Thu May 13 09:10:35 PDT 1993 by mcjones                  *)
 (*      modified on Wed Mar  4 23:35:36 PST 1992 by muller                   *)
 
@@ -12,11 +13,11 @@ UNSAFE MODULE FloatMode;
    thread *)
 
 (*
- * Unsafe because TtoS is potentially unsafe, however it is not in
+ * Unsafe because FlatTtoS is potentially unsafe, however it is not in
  * our use of it.
  *)
 FROM FPU IMPORT ieee_flags;
-IMPORT FPU, Ctypes, Word, Usignal, M3toC;
+IMPORT FPU, Ctypes, Word, Usignal, Uucontext, M3toC;
 
 (*
 <sys/ieeefp.h>
@@ -139,8 +140,7 @@ PROCEDURE SetBehavior (f: Flag; b: Behavior) RAISES {Failure} =
     ELSE
       CASE b OF
       | Behavior.Trap =>
-          x := FPU.ieee_handler(
-                 setStr, flagToSunOs[f], HandleFPE);
+          x := FPU.ieee_handler(setStr, flagToSunOs[f], HandleFPE);
           IF x = 1 THEN RAISE Failure; END;
       | Behavior.SetFlag =>
           (*
@@ -168,26 +168,22 @@ PROCEDURE SetBehavior (f: Flag; b: Behavior) RAISES {Failure} =
 #define	    FPE_FLTOVF_TRAP	0xd4	/* [floating overflow] */
 *)
 
-PROCEDURE HandleFPE (<* UNUSED *> sig      : INTEGER;
-                                  code     : INTEGER;
-                     <* UNUSED *> scp, addr: ADDRESS  ) RAISES {Trap} =
-  VAR old: INTEGER;
+PROCEDURE HandleFPE (<* UNUSED *> sig : Ctypes.int;
+                                  sip : Usignal.siginfo_t_fault_star;
+                     <* UNUSED *> uap : Uucontext.ucontext_t_star)
+  RAISES {Trap} =
   BEGIN
-    (*
-     * since the RAISE does a longjump, never leave unix signal
-     * handler, and sigmask is never restored.  So restore it here.
-     *)
-    old := Usignal.sigsetmask(0);
-    EVAL (Usignal.sigsetmask(Word.And(old, Word.Not(128))));
-    CASE code OF                <* NOWARN *>
-    | 16_c4 => RAISE Trap(Flag.Inexact);
-    | 16_c8 => RAISE Trap(Flag.DivByZero);
-    | 16_cc => RAISE Trap(Flag.Underflow);
-    | 16_d0 => RAISE Trap(Flag.Invalid);
-    | 16_d4 => RAISE Trap(Flag.Overflow);
+    CASE sip.si_code OF                <* NOWARN *>
+    | Usignal.FPE_FLTRES => RAISE Trap(Flag.Inexact);
+    | Usignal.FPE_FLTDIV => RAISE Trap(Flag.DivByZero);
+    | Usignal.FPE_FLTUND => RAISE Trap(Flag.Underflow);
+    | Usignal.FPE_FLTINV => RAISE Trap(Flag.Invalid);
+    | Usignal.FPE_FLTOVF => RAISE Trap(Flag.Overflow);
 
-    | 16_01 => RAISE Trap(Flag.IntOverflow); (* should never get here *)
-    | 16_14 => RAISE Trap(Flag.IntDivByZero);
+      (* should never get here *)
+    | Usignal.FPE_INTOVF => RAISE Trap(Flag.IntOverflow);
+    | Usignal.FPE_INTDIV => RAISE Trap(Flag.IntDivByZero);
+    | Usignal.FPE_FLTSUB => RAISE Trap(Flag.Subscript);
     END;
   END HandleFPE;
 
@@ -202,14 +198,14 @@ PROCEDURE BuildConversionArrays () =
                  "nearest", "negative", "positive", "tozero", "xxx", ..};
     flags = ARRAY Flag OF
               TEXT{"invalid", "inexact", "overflow", "underflow",
-                   "division", "", ""};
+                   "division", "", "", ""};
 
   BEGIN
     FOR i := FIRST(rndModes) TO LAST(rndModes) DO
-      rndModeToSunOs[i] := M3toC.TtoS(rndModes[i]);
+      rndModeToSunOs[i] := M3toC.FlatTtoS(rndModes[i]);
     END;
     FOR i := FIRST(flags) TO LAST(flags) DO
-      flagToSunOs[i] := M3toC.TtoS(flags[i]);
+      flagToSunOs[i] := M3toC.FlatTtoS(flags[i]);
     END;
   END BuildConversionArrays;
 
@@ -219,16 +215,15 @@ VAR
   rndModeToSunOs: ARRAY RoundingMode OF Ctypes.char_star;
   flagToSunOs: ARRAY Flag OF Ctypes.char_star;
 BEGIN
-  setStr := M3toC.TtoS("set");
-  directionStr := M3toC.TtoS("direction");
-  getStr := M3toC.TtoS("get");
-  exceptionStr := M3toC.TtoS("exception");
-  nullStr := M3toC.TtoS("");
-  clearStr := M3toC.TtoS("clear");
+  setStr := M3toC.FlatTtoS("set");
+  directionStr := M3toC.FlatTtoS("direction");
+  getStr := M3toC.FlatTtoS("get");
+  exceptionStr := M3toC.FlatTtoS("exception");
+  nullStr := M3toC.FlatTtoS("");
+  clearStr := M3toC.FlatTtoS("clear");
 
   BuildConversionArrays();
 
-  (* 16_14 = INTDIV_TRAP from above *)
-  EVAL (FPU.sigfpe(16_14, HandleFPE));
+  EVAL (FPU.sigfpe(Usignal.FPE_INTDIV, HandleFPE));
 
 END FloatMode.

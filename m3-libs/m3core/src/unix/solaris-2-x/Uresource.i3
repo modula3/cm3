@@ -2,12 +2,13 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-(* Last modified on Mon Oct 24 15:45:17 PDT 1994 by kalsow        *)
+(* Last modified on Wed Jul 30 13:55:56 EST 1997 by hosking       *)
+(*      modified on Mon Oct 24 15:45:17 PDT 1994 by kalsow        *)
 (*      modified on Wed Mar 25 16:45:58 PST 1992 by muller        *)
 
 INTERFACE Uresource;
 
-FROM Ctypes IMPORT int, long;
+FROM Ctypes IMPORT int, long, unsigned_long;
 IMPORT Utime;
 
 (*** <sys/resource.h> ***)
@@ -27,46 +28,50 @@ CONST
   RUSAGE_CHILDREN = -1;
 
 TYPE
-  struct_rusage = RECORD
-             ru_utime: Utime.struct_timeval;  (* user time used *)
-             ru_stime: Utime.struct_timeval;  (* system time used *)
-             ru_maxrss: long;
-             ru_ixrss: long;            (* integral shared text size *)
-             ru_ismrss: long;           (* integral shared memory size*)
-             ru_idrss: long;            (* integral unshared data " *)
-             ru_isrss: long;            (* integral unshared stack " *)
-             ru_minflt: long;           (* page reclaims *)
-             ru_majflt: long;           (* page faults *)
-             ru_nswap: long;            (* swaps *)
-             ru_inblock: long;          (* block input operations *)
-             ru_oublock: long;          (* block output operations *)
-             ru_msgsnd: long;           (* messages sent *)
-             ru_msgrcv: long;           (* messages received *)
-             ru_nsignals: long;         (* signals received *)
-             ru_nvcsw: long;            (* voluntary context switches *)
-             ru_nivcsw: long;           (* involuntary " *) END;
   struct_rusage_star = UNTRACED REF struct_rusage;
+  struct_rusage = RECORD
+    ru_utime    : Utime.struct_timeval;  (* user time used *)
+    ru_stime    : Utime.struct_timeval;  (* system time used *)
+    ru_maxrss   : long;            (* XXX: 0 *)
+    ru_ixrss    : long;            (* XXX: 0 *)
+    ru_idrss    : long;            (* XXX: sum of rm_asrss *)
+    ru_isrss    : long;            (* XXX: 0 *)
+    ru_minflt   : long;            (* any page faults not requiring I/O *)
+    ru_majflt   : long;            (* any page faults requiring I/O *)
+    ru_nswap    : long;            (* swaps *)
+    ru_inblock  : long;            (* block input operations *)
+    ru_oublock  : long;            (* block output operations *)
+    ru_msgsnd   : long;            (* messages sent *)
+    ru_msgrcv   : long;            (* messages received *)
+    ru_nsignals : long;            (* signals received *)
+    ru_nvcsw    : long;            (* voluntary context switches *)
+    ru_nivcsw   : long;            (* involuntary " *)
+  END;
 
 
 (* Resource limits *)
 
 CONST
-  RLIMIT_CPU   = 0;		(* cpu time in milliseconds *)
-  RLIMIT_FSIZE = 1;		(* maximum file size *)
-  RLIMIT_DATA  = 2;		(* data size *)
-  RLIMIT_STACK = 3;		(* stack size *)
-  RLIMIT_CORE  = 4;		(* core file size *)
-  RLIMIT_NOFILE= 5;		(* maximum descriptor index + 1 *)
+  RLIMIT_CPU   = 0;          (* cpu time in milliseconds *)
+  RLIMIT_FSIZE = 1;          (* maximum file size *)
+  RLIMIT_DATA  = 2;          (* data size *)
+  RLIMIT_STACK = 3;          (* stack size *)
+  RLIMIT_CORE  = 4;          (* core file size *)
+  RLIMIT_NOFILE= 5;          (* maximum descriptor index + 1 *)
+  RLIMIT_VMEM  = 6;          (* maximum mapped memory *)
+  RLIMIT_AS    = RLIMIT_VMEM;
 
-  RLIM_NLIMITS = 7;		(* number of resource limits *)
+  RLIMIT_NLIMITS = 7;          (* number of resource limits *)
 
-  RLIM_INFINITY	= 16_7fffffff;
+  RLIM_INFINITY = 16_7fffffff;
 
 TYPE
+  rlim_t = unsigned_long;
+
   struct_rlimit = RECORD
-	            rlim_cur: int;     (* current (soft) limit *)
- 	            rlim_max: int;     (* maximum value for rlim_cur *)
-                    END;
+    rlim_cur: rlim_t;     (* current (soft) limit *)
+    rlim_max: rlim_t;     (* maximum value for rlim_cur *)
+  END;
 
 
 (*** getpriority(2), setpriority(2) - get/set program scheduling priority ***)

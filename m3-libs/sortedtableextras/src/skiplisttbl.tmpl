@@ -1,0 +1,26 @@
+% Copyright (C) 1997 Digital Equipment Corporation.
+% Distributed only by permission.
+%
+% Created on Sat Nov 22 17:28:09 PST 1997 by heydon
+% Last modified on Sat Nov 22 17:32:38 PST 1997 by heydon
+
+% Quake functions to instantiate generic skip list tables
+% with domain interface "key" and range interface "value".
+% The instantiation files are named "SkipList<nm>Tbl.[im]3",
+% where <nm> denotes the value of the "nm" parameter.
+
+readonly proc _build_sltbl(nm, key, value, vis) is
+  local tbl = nm & "Tbl"
+  local stbl = "Sorted" & tbl
+  local sltbl = "SkipList" & tbl
+  build_generic_intf (sltbl, "SkipListTbl", [key, value, stbl], vis)
+  build_generic_impl (sltbl, "SkipListTbl", [key, value, tbl, stbl])
+end
+
+readonly proc skiplist_table (nm, key, value) is
+  _build_sltbl(nm, key, value, HIDDEN)
+end
+
+readonly proc SkipList_table (nm, key, value) is
+  _build_sltbl(nm, key, value, VISIBLE)
+end

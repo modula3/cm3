@@ -25,8 +25,8 @@ readonly EXCEPTION_IMPL = {
   "OKI"        : "ex_frame",
   "OS2"        : "ex_frame",
   "SEQUENT"    : "ex_frame",
-  "SOLgnu"     : "ex_frame",
-  "SOLsun"     : "ex_frame",
+  "SOLgnu"     : "ex_stack",  % has a working stack walker
+  "SOLsun"     : "ex_stack",  % has a working stack walker
   "SPARC"      : "ex_frame",
   "SUN3"       : "ex_frame",
   "SUN386"     : "ex_frame",

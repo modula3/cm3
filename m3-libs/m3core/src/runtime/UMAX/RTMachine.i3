@@ -50,6 +50,13 @@ CONST
 CONST
   VMHeap = FALSE;
 
+(* If "VMHeap" is true, "AtomicWrappers" indicates whether the wrappers
+   that validate parameters passed to system calls are atomic with
+   respect to the collector.  *)
+
+CONST
+  AtomicWrappers = TRUE;
+
 (*--------------------------------------------------------- thread stacks ---*)
 
 CONST

@@ -11,62 +11,88 @@
    characters.  "NIL" does not represent any sequence of characters,
    it will not be returned from any procedure in this interface, and
    it is a checked runtime error to pass "NIL" to any procedure in
-   this interface. *)
+   this interface.  *)
 
 INTERFACE Text;
 
-IMPORT Word;
+IMPORT TextClass, Word;
 
 TYPE T = TEXT;
 
-CONST Brand = "Text-1.0";
+CONST Brand = TextClass.Brand;
 
-PROCEDURE Cat(t, u: T): T;
-(* Return the concatenation of "t" and "u". *)
-
-PROCEDURE Equal(t, u: T): BOOLEAN;
-(* Return "TRUE" if "t" and "u" have the same length and
-   (case-sensitive) contents. *)
-
-PROCEDURE GetChar(t: T; i: CARDINAL): CHAR;
-(* Return character "i" of "t".  It is a checked runtime error if "i
-   >= Length(t)". *)
-
-PROCEDURE Length(t: T): CARDINAL;
+PROCEDURE Length (t: T): CARDINAL;
 (* Return the number of characters in "t". *)
 
-PROCEDURE Empty(t: T): BOOLEAN;
+PROCEDURE Empty (t: T): BOOLEAN;
 (* Equivalent to "Length(t) = 0". *)
 
-PROCEDURE Sub(t: T; start: CARDINAL;
-  length: CARDINAL := LAST(CARDINAL)): T;
+PROCEDURE Equal (t, u: T): BOOLEAN;
+(* Return "TRUE" if "t" and "u" have the same length and
+   (case-sensitive) contents. *)
+      
+PROCEDURE Compare (t1, t2: T): [-1..1];
+(* Return -1 if "t1" occurs before "t2", 0 if "Equal(t1, t2)", +1 if
+   "t1" occurs after "t2" in lexicographic order. *)
+
+PROCEDURE Cat (t, u: T): T;
+(* Return the concatenation of "t" and "u". *)
+
+PROCEDURE Sub (t: T; start: CARDINAL;
+               length: CARDINAL := LAST(CARDINAL)): T;
 (* Return a sub-sequence of "t": empty if "start >= Length(t)" or
    "length = 0"; otherwise the subsequence ranging from "start" to the
    minimum of "start+length-1" and "Length(t)-1". *)
 
-PROCEDURE SetChars(VAR a: ARRAY OF CHAR; t: T);
-(* For each "i" from 0 to "MIN(LAST(a), Length(t)-1)", set "a[i]" to
-   "GetChar(t, i)".  *)
+PROCEDURE Hash (t: T): Word.T;
+(* Return a hash function of the contents of "t". *)
 
-PROCEDURE FromChar(ch: CHAR): T;
+PROCEDURE HasWideChars (t: T): BOOLEAN;
+(* Returns "TRUE" if "t" contains any "WIDECHAR" characters. *)
+
+PROCEDURE GetChar     (t: T; i: CARDINAL): CHAR;
+PROCEDURE GetWideChar (t: T; i: CARDINAL): WIDECHAR;
+(* Return character "i" of "t".  It is a checked runtime error if "i
+   >= Length(t)". *)
+
+PROCEDURE SetChars     (VAR a: ARRAY OF CHAR;     t: T;  start: CARDINAL := 0);
+PROCEDURE SetWideChars (VAR a: ARRAY OF WIDECHAR; t: T;  start: CARDINAL := 0);
+(* For each "i" from 0 to "MIN(LAST(a), Length(t)-start-1)",
+   set "a[i]" to "GetChar(t, i + start)".  *)
+
+PROCEDURE FromChar     (ch: CHAR): T;
+PROCEDURE FromWideChar (ch: WIDECHAR): T;
 (* Return a text containing the single character "ch". *)
 
-PROCEDURE FromChars(READONLY a: ARRAY OF CHAR): T;
+PROCEDURE FromChars     (READONLY a: ARRAY OF CHAR): T;
+PROCEDURE FromWideChars (READONLY a: ARRAY OF WIDECHAR): T;
 (* Return a text containing the characters of "a". *)
 
-PROCEDURE Hash(t: T): Word.T;
-(* Return a hash function of the contents of "t". *)
-      
-PROCEDURE Compare(t1, t2: T): [-1..1];
-(* Return -1 if "t1" occurs before "t2", 0 if "Equal(t1, t2)", +1 if
-   "t1" occurs after "t2" in lexicographic order. *)
-
-PROCEDURE FindChar(t: T; c: CHAR; start := 0): INTEGER;
+PROCEDURE FindChar     (t: T; c: CHAR;     start := 0): INTEGER;
+PROCEDURE FindWideChar (t: T; c: WIDECHAR; start := 0): INTEGER;
 (* If "c = t[i]" for some "i" in "[start~..~Length(t)-1]", return the
    smallest such "i"; otherwise, return -1. *)
 
 PROCEDURE FindCharR(t: T; c: CHAR;  start := LAST(INTEGER)): INTEGER;
+PROCEDURE FindWideCharR(t: T; c: WIDECHAR;  start := LAST(INTEGER)): INTEGER;
 (* If "c = t[i]" for some "i" in "[0~..~MIN(start, Length(t)-1)]",
    return the largest such "i"; otherwise, return -1. *)
 
 END Text.
+
+(*
+   The characters of a text may be "CHAR"s or "WIDECHAR"s.  A single
+   text may contain both "CHAR"s and "WIDECHAR"s.  The characters of
+   a text are converted between the types "CHAR" and "WIDECHAR" as
+   needed.  Hence, client code may deal exclusively with either "CHAR"s
+   or "WIDECHAR"s, or it may handle both character types.
+
+   A "CHAR" is converted to a "WIDECHAR" by zero-extending its ordinal
+   value.  For example, if "c" is a "CHAR", "VAL (ORD (c), WIDECHAR)"
+   is the corresponding "WIDECHAR".
+
+   A "WIDECHAR" is converted to a "CHAR" by dropping the high-order
+   eight bits of the "WIDECHAR".  For example, if "c" is "WIDECHAR",
+   "VAL (Word.And (c, 16_ff), CHAR)" is the corresponding "CHAR"
+   value.
+*)

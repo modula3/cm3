@@ -8,7 +8,23 @@
 %      modified on Fri Jun 18 18:28:37 PDT 1993 by harrison
 %      modified on Tue Feb 11 17:11:14 PST 1992 by muller
 
-Module("Text")
-Interface("TextF")
-implementation("UnsafeHash")
-Module("TextConv")
+Module ("String8")
+Module ("String16")
+
+Module ("Text")
+Module ("TextClass")
+Module ("TextLiteral")
+
+Module ("Text8")
+Module ("Text8Short")
+Module ("Text8CString")
+
+Module ("Text16")
+Module ("Text16Short")
+
+Module ("TextSub")
+Module ("TextCat")
+
+Module ("TextConv")
+
+

@@ -9,19 +9,19 @@
 
 UNSAFE MODULE Fmt;
 
-IMPORT Text, TextF, Word, Convert, FmtBuf, FmtBufF;
+IMPORT Text, Text8, Text8Short, (**Text8Literal,**) Word, Convert, FmtBuf, FmtBufF;
 IMPORT Real AS R, LongReal AS LR, Extended AS ER;
 IMPORT RealFloat, LongFloat, ExtendedFloat;
 
 (* Boolean, character values ----------------------------------------------- *)
 
-PROCEDURE Bool (b: BOOLEAN): Text.T =
-  CONST Map = ARRAY BOOLEAN OF Text.T { "FALSE", "TRUE" };
+PROCEDURE Bool (b: BOOLEAN): TEXT =
+  CONST Map = ARRAY BOOLEAN OF TEXT { "FALSE", "TRUE" };
   BEGIN 
     RETURN Map[b];
   END Bool;
 
-PROCEDURE Char (c: CHAR): Text.T = 
+PROCEDURE Char (c: CHAR): TEXT = 
   BEGIN
     RETURN Text.FromChar(c);
   END Char;
@@ -48,7 +48,7 @@ CONST
      "100"
   };
 
-PROCEDURE Int (n: INTEGER; base: Base := 10): Text.T =
+PROCEDURE Int (n: INTEGER; base: Base := 10): TEXT =
   BEGIN
     IF FIRST(SmallInts) <= n AND n <= LAST(SmallInts) AND base = 10
       THEN RETURN SmallInts[n]
@@ -56,14 +56,14 @@ PROCEDURE Int (n: INTEGER; base: Base := 10): Text.T =
     END
   END Int;
 
-PROCEDURE AnyInt (n: INTEGER; base: Base := 10): Text.T =
+PROCEDURE AnyInt (n: INTEGER; base: Base := 10): TEXT =
   <* FATAL Convert.Failed *>
   VAR chars: ARRAY [0..BITSIZE(INTEGER)] OF CHAR; used: INTEGER; BEGIN
     used := Convert.FromInt(chars, n, base, prefix := FALSE);
     RETURN Text.FromChars(SUBARRAY(chars, 0, used))
   END AnyInt;
 
-PROCEDURE Unsigned (n: Word.T; base: Base := 10): Text.T =
+PROCEDURE Unsigned (n: Word.T; base: Base := 10): TEXT =
   BEGIN
     IF 0 <= n AND n <= LAST(SmallInts) AND base = 10
       THEN RETURN SmallInts[n]
@@ -71,7 +71,7 @@ PROCEDURE Unsigned (n: Word.T; base: Base := 10): Text.T =
     END
   END Unsigned;
 
-PROCEDURE AnyUnsigned (n: Word.T; base: Base := 10): Text.T =
+PROCEDURE AnyUnsigned (n: Word.T; base: Base := 10): TEXT =
   <* FATAL Convert.Failed *>
   VAR chars: ARRAY [0..BITSIZE(INTEGER)-1] OF CHAR; used: INTEGER; BEGIN
     used := Convert.FromUnsigned (chars, n, base, prefix := FALSE);
@@ -197,12 +197,12 @@ PROCEDURE Float(
 (* Padding routines -------------------------------------------------------- *)
 
 PROCEDURE Pad(
-    text: Text.T;
+    text: TEXT;
     length: CARDINAL;
     padChar: CHAR := ' ';
     align : Align := Align.Right)
-  : Text.T =
-  VAR buff: ARRAY [0..99] OF CHAR; len, padLen: INTEGER; pad: Text.T; BEGIN
+  : TEXT =
+  VAR buff: ARRAY [0..99] OF CHAR; len, padLen: INTEGER; pad: TEXT; BEGIN
     len := length - Text.Length(text);
     IF len <= 0 THEN RETURN text END;
     padLen := MIN(NUMBER(buff), len);
@@ -224,214 +224,201 @@ PROCEDURE Pad(
     RETURN text
   END Pad;
 
-PROCEDURE F(fmt: Text.T; t1, t2, t3, t4, t5: Text.T := NIL): Text.T =
+PROCEDURE F(fmt: TEXT; t1, t2, t3, t4, t5: TEXT := NIL): TEXT =
 (* Construct an array of texts not including NIL texts in the suffix, and call
    "FN" with the constructed array. *)
   VAR
-    a := ARRAY [0..4] OF Text.T {t1, t2, t3, t4, t5};
+    a := ARRAY [0..4] OF TEXT {t1, t2, t3, t4, t5};
     pos: INTEGER := LAST(a);
   BEGIN
     WHILE pos >= 0 AND a[pos] = NIL DO DEC(pos) END;
     RETURN FN(fmt, SUBARRAY(a, 0, pos + 1))
   END F;
 
-CONST
-  SpecBufferSize = 32;
+PROCEDURE FN(fmt: TEXT; READONLY texts: ARRAY OF TEXT): TEXT =
+  VAR len := Text.Length (fmt);
+  BEGIN
+    TYPECASE fmt OF
+    | Text8.T(t) =>
+        RETURN FNBuf (fmt, SUBARRAY (t.contents^, 0, len), texts);
+    | Text8Short.T(t) =>
+        RETURN FNBuf (fmt, SUBARRAY (t.contents,  0, len), texts);
+    (******
+    | Text8Literal.T(t) =>
+        RETURN FNBuf (fmt, SUBARRAY (t.contents,  0, len), texts);
+    ******)
+    ELSE
+        IF (len <= 128) THEN
+          VAR chars: ARRAY [0..127] OF CHAR; BEGIN
+            Text.SetChars (chars, fmt);
+            RETURN FNBuf (fmt, SUBARRAY (chars, 0, len), texts);
+          END;
+        ELSE
+          VAR chars := NEW (REF ARRAY OF CHAR, len); BEGIN
+            Text.SetChars (chars^, fmt);
+            RETURN FNBuf (fmt, chars^, texts);
+          END;
+        END;
+    END;
+  END FN;
 
 TYPE
-  (* Padding information *)
-  FormatSpecPad = RECORD
-    align: Align;
-    width: CARDINAL;
-    padChar: CHAR;
-  END;
-
   FormatSpec = RECORD
-    (* Textual position and size of specifier (including % and s) *)
-    start, length: CARDINAL;
-    (* Corresponding argument and its length *)
-    arg: Text.T;
-    argLength: CARDINAL;
-    (* Padding information extracted from the specification *)
-    pad: FormatSpecPad;
+    start    : CARDINAL;  (* offset of the specifier in the format string *)
+    length   : CARDINAL;  (* length of the specifier in the format string *)
+    padWidth : CARDINAL;
+    padAlign : Align;
+    padChar  : CHAR;
   END;
 
-  SpecBuffer = ARRAY [0..SpecBufferSize-1] OF FormatSpec;
-
-  SpecBufferList = REF RECORD
-    next: SpecBufferList := NIL;
-    buffer: SpecBuffer;
-  END;
-
-PROCEDURE ReadSpec(
-    fmt: Text.T;
-    start: CARDINAL;
-    VAR (*OUT*) pad: FormatSpecPad)
-    : CARDINAL =
-(* Reads a format specifier from the string "Text.Sub(fmt, start)". This
-   routine assumes that the leading '%' character has already been processed.
-   It writes the "align", "padChar", and "width" fields of "pad", and returns
-   the number of characters in the specifier (including the already processed
-   '%' character). *)
-  VAR
-    ch : CHAR    := fmt[start];
-    pos: INTEGER := start + 1;
+PROCEDURE FNBuf(fmtTxt : TEXT;
+       READONLY fmt    : ARRAY OF CHAR;  (* == contents of fmtTxt *)
+       READONLY texts  : ARRAY OF TEXT): TEXT =
+  VAR n := NUMBER(texts);  specs: ARRAY [0..19] OF FormatSpec;
   BEGIN
+    IF n <= NUMBER (specs)
+      THEN RETURN DoFN (fmtTxt, fmt, texts, SUBARRAY (specs, 0, n));
+      ELSE RETURN DoFN (fmtTxt, fmt, texts, NEW (REF ARRAY OF FormatSpec, n)^);
+    END;
+  END FNBuf;
+
+PROCEDURE DoFN (fmtTxt : TEXT;
+       READONLY fmt    : ARRAY OF CHAR;
+       READONLY texts  : ARRAY OF TEXT;
+       VAR      specs  : ARRAY OF FormatSpec): TEXT = 
+  <* FATAL Convert.Failed *>
+  VAR cnt := ReadSpecs(fmt, specs);
+  BEGIN
+    IF cnt # NUMBER(texts) THEN  RAISE Convert.Failed;  END;
+    IF cnt = 0 THEN RETURN fmtTxt; END;	 (* handle the null case *)
+    RETURN ConstructResult (fmt, texts, specs);
+  END DoFN;
+
+PROCEDURE ReadSpecs(READONLY fmt   : ARRAY OF CHAR;
+                  VAR(*OUT*) specs : ARRAY OF FormatSpec): CARDINAL =
+(* Scans "fmt" for format specifiers, sets "specs" to any that
+   are found, and returns the number found. *)
+  VAR cnt: CARDINAL := 0;   cursor := 0;  ignore: FormatSpec;
+  BEGIN
+    LOOP
+      WHILE (cursor < NUMBER(fmt)) AND (fmt[cursor] # '%') DO INC(cursor); END;
+      IF (cursor >= NUMBER(fmt)) THEN RETURN cnt; END;
+      IF (cnt < NUMBER(specs)) THEN
+        IF ReadSpec(fmt, cursor, specs[cnt]) THEN INC(cnt); END;
+      ELSIF ReadSpec(fmt, cursor, ignore) THEN
+        RETURN cnt+1;  (* too many *)
+      END;
+    END;
+  END ReadSpecs;
+
+PROCEDURE ReadSpec(READONLY fmt    : ARRAY OF CHAR;
+              VAR(*IN/OUT*) cursor : INTEGER;
+                 VAR(*OUT*) spec   : FormatSpec): BOOLEAN =
+(* Reads a format specifier from "fmt" beginning at "cursor".  Updates
+   "cursor" to reflect the characters consumed from "fmt" and
+   sets "spec" to the corresponding specifier.  Returns "TRUE"
+   if a complete specifier was parsed.  *)
+  VAR ch: CHAR;  len := NUMBER(fmt);
+  BEGIN
+    spec.start    := cursor;
+    spec.length   := 0;
+    spec.padAlign := Align.Right;
+    spec.padWidth := 0;
+    spec.padChar  := ' ';
+
+    ch := fmt[cursor];  INC(cursor);
+    <*ASSERT ch = '%'*>
+    IF (cursor >= len) THEN RETURN FALSE; END;
+    ch := fmt[cursor];  INC(cursor);
+
     (* Alignment *)
-    IF ch = '-'
-      THEN pad.align := Align.Left; ch := fmt[pos]; INC(pos)
-      ELSE pad.align := Align.Right;
+    IF ch = '-' THEN
+      spec.padAlign := Align.Left;
+      IF (cursor >= len) THEN RETURN FALSE; END;
+      ch := fmt[cursor]; INC(cursor);
     END;
 
     (* Pad character *)
-    IF ch = '0'
-      THEN pad.padChar := '0'; ch := fmt[pos]; INC(pos)
-      ELSE pad.padChar := ' ';
+    IF ch = '0' THEN
+      spec.padChar := '0';
+      IF (cursor >= len) THEN RETURN FALSE; END;
+      ch := fmt[cursor]; INC(cursor);
     END;
 
     (* Field width *)
-    pad.width := 0;
     WHILE '0' <= ch AND ch <= '9' DO
-      pad.width := pad.width * 10 + ORD(ch) - ORD('0');
-      ch := fmt[pos]; INC(pos)
+      spec.padWidth := spec.padWidth * 10 + ORD(ch) - ORD('0');
+      IF (cursor >= len) THEN RETURN FALSE; END;
+      ch := fmt[cursor]; INC(cursor);
     END;
 
     (* terminating 's' *)
-    IF ch = 's'
-      THEN RETURN pos - start + 1 (* add 1 for '%' *)
-      ELSE RETURN 0
-    END;
+    IF ch # 's' THEN RETURN FALSE; END;
+
+    spec.length := cursor - spec.start;
+    RETURN TRUE;
   END ReadSpec;
 
-PROCEDURE PutSpec(
-    READONLY spec: FormatSpec;
-    pos: CARDINAL;
-    VAR (*INOUT*) list: SpecBufferList) =
-(* Add the specifier "spec" with index "pos" to the list "list", where the
-   first specifier in "list" has index "SpecBufferSize" on the initial,
-   non-recursive call. Hence, this procedure requires that "pos >=
-   SpecBufferSize" on the initial call. *)
-  BEGIN
-    DEC(pos, SpecBufferSize);
-    IF pos >= SpecBufferSize THEN
-      PutSpec(spec, pos, list.next)
-    ELSE
-      IF pos = 0 THEN list := NEW(SpecBufferList) END;
-      list.buffer[pos] := spec;
-    END
-  END PutSpec;
+PROCEDURE ConstructResult(READONLY fmt    : ARRAY OF CHAR;
+                          READONLY texts  : ARRAY OF TEXT;
+                          VAR      specs  : ARRAY OF FormatSpec): TEXT = 
 
-PROCEDURE GetSpec(pos: CARDINAL; list: SpecBufferList): FormatSpec =
-(* Return the specifier with index "i" from "list", where the first specifier
-   in "list" has index "SpecBufferSize" on the initial, non-recursive call.
-   Hence, this procedure requires that "pos >= SpecBufferSize" on the initial
-   call. *) 
-  BEGIN
-    DEC(pos, SpecBufferSize);
-    IF pos >= SpecBufferSize
-      THEN RETURN GetSpec(pos, list.next)
-      ELSE RETURN list.buffer[pos]
-    END
-  END GetSpec;
-
-PROCEDURE FN(fmt: Text.T; READONLY texts: ARRAY OF Text.T): Text.T =
-  <* FATAL Convert.Failed *>
+(* Allocate and return a string formed from "fmt", "texts" and "specs". *)
   VAR
-    fmtLen := Text.Length(fmt);
-    resLen := fmtLen;			 (* length of final string *)
-    buffer: SpecBuffer;
-    overflow: SpecBufferList := NIL;
+    res: Text8.T;
+    buf: REF ARRAY OF CHAR;
+    fPos, rPos : INTEGER := 0;
+    len, argLen, pad: INTEGER;
+    arg: TEXT;
+  BEGIN
+    <*ASSERT NUMBER(texts) = NUMBER(specs)*>
 
-  PROCEDURE ReadSpecs(): CARDINAL =
-  (* Scan through "fmt" looking for format specifiers. Information on each
-     one found is stored in "buffer" or, if "buffer" overflows, "overflow".
-     This implementation requires quadriatic time for specifications inserted
-     in "overflow". Returns the number of specifiers found. *)
-    VAR spec: FormatSpec; cnt := 0; fPos := 0; BEGIN
-      WHILE fPos < fmtLen DO
-    	IF fmt[fPos] = '%' THEN
-    	  spec.start := fPos; INC(fPos);
-    	  spec.length := ReadSpec(fmt, fPos, spec.pad);
-    	  IF spec.length # 0 THEN
-    	    INC(fPos, spec.length - 1);
-    	    spec.arg := texts[cnt];
-    	    spec.argLength := Text.Length(spec.arg);
-    	    INC(resLen, MAX(spec.argLength, spec.pad.width) - spec.length);
-    	    IF cnt < SpecBufferSize
-    	      THEN buffer[cnt] := spec;
-    	      ELSE PutSpec(spec, cnt, overflow);
-    	    END;
-    	    INC(cnt)
-    	  END
-    	ELSE
-    	  INC(fPos)
-    	END
+    (* first, size and allocate the result *)
+    len := NUMBER(fmt);
+    FOR i := FIRST(specs) TO LAST(specs) DO
+      WITH s = specs[i] DO
+        argLen := Text.Length(texts[i]);
+        INC(len, MAX(argLen, s.padWidth) - s.length);
       END;
-      RETURN cnt
-    END ReadSpecs;
-
-  PROCEDURE ConstructResult(cnt: CARDINAL): TEXT =
-  (* Allocate and return a string formed from "fmt", "buffer", and "overflow"
-     by replacing format specifiers in "fmt" by the corresponding padded and
-     aligned "cnt" argument values. *)
-    VAR res: TEXT; fPos, rPos := 0; spec: FormatSpec; BEGIN
-      res := TextF.New(resLen);
-      FOR i := 0 TO cnt - 1 DO
-
-        (* get next spec *)
-        IF i < SpecBufferSize
-          THEN spec := buffer[i];
-          ELSE spec := GetSpec(i, overflow);
-        END;
-
-        (* copy section of 'fmt' between this and the last spec *)
-        VAR fl := spec.start - fPos; BEGIN
-          IF fl > 0 THEN
-            SUBARRAY(res^, rPos, fl) := SUBARRAY(fmt^, fPos, fl);
-            INC(rPos, fl)
-          END
-        END;
-        fPos := spec.start + spec.length;
-
-        (* copy padded argument *)          
-        WITH al = spec.argLength, padChar = spec.pad.padChar DO
-          VAR padding := spec.pad.width - al; BEGIN
-            IF spec.pad.align = Align.Right AND padding > 0 THEN
-              WITH limit = rPos + padding DO
-          	REPEAT res[rPos] := padChar; INC(rPos) UNTIL rPos = limit
-              END
-            END;
-            IF al > 0 THEN
-              SUBARRAY(res^, rPos, al) := SUBARRAY(spec.arg^, 0, al);
-              INC(rPos, al);
-            END;
-            IF spec.pad.align = Align.Left AND padding > 0 THEN
-              WITH limit = rPos + padding DO
-          	REPEAT res[rPos] := padChar; INC(rPos) UNTIL rPos = limit;
-              END
-            END
-          END
-        END
-
-      END; (* FOR *)
-
-      (* copy tail of format string *)
-      WITH fl = fmtLen - fPos DO
-        IF fl > 0 THEN
-          SUBARRAY(res^, rPos, fl) := SUBARRAY(fmt^, fPos, fl)
-        END
-      END;
-      RETURN res
-    END ConstructResult;
-
-  VAR specCnt: CARDINAL; BEGIN
-    specCnt := ReadSpecs();		 (* read format specifiers *)
-    IF specCnt # NUMBER(texts) THEN	 (* check for proper arg count *)
-      RAISE Convert.Failed
     END;
-    IF specCnt = 0 THEN RETURN fmt END;	 (* handle the null case *)
-    RETURN ConstructResult(specCnt)	 (* replace specs by args *)
-  END FN;
+    res := Text8.Create(len);
+    buf := res.contents;
+
+    FOR i := FIRST(specs) TO LAST(specs) DO
+      WITH s = specs[i] DO
+        (* copy section of 'fmt' between this and the last spec *)
+        len := s.start - fPos;
+        IF (len > 0) THEN
+          SUBARRAY(buf^, rPos, len) := SUBARRAY(fmt, fPos, len);
+          INC(rPos, len)
+        END;
+        fPos := s.start + s.length;  (* skip over the specifier *)
+
+        (* copy padded argument *)
+        arg := texts[i];
+        len := Text.Length (arg);
+        pad := s.padWidth - len;
+        IF s.padAlign = Align.Right THEN
+          WHILE pad > 0 DO buf[rPos] := s.padChar; INC(rPos); DEC(pad); END;
+        END;
+        IF len > 0 THEN
+          Text.SetChars (SUBARRAY(buf^, rPos, len), arg); INC(rPos, len);
+        END;
+        IF s.padAlign = Align.Left THEN
+          WHILE pad > 0 DO buf[rPos] := s.padChar; INC(rPos); DEC(pad); END;
+        END;
+      END; (*WITH*)
+    END; (* FOR *)
+
+    (* copy tail of format string *)
+    len := NUMBER(fmt) - fPos;
+    IF (len > 0) THEN
+      SUBARRAY(buf^, rPos, len) := SUBARRAY(fmt, fPos, len);
+      INC(rPos, len)
+    END;
+
+    RETURN res
+  END ConstructResult;
 
 BEGIN
 END Fmt.

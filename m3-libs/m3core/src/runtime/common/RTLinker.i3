@@ -10,30 +10,26 @@
 
 UNSAFE INTERFACE RTLinker;
 
-TYPE
-  LinkInfo = UNTRACED REF RECORD
-    (* global module table *)
-    n_modules  : INTEGER;
-    modules    : ADDRESS; (* REF ARRAY [0..n_modules-1] OF RT0.ModulePtr *)
+IMPORT RT0;
 
-    (* external environment *)
-    argc       : INTEGER;
-    argv       : ADDRESS;
-    envp       : ADDRESS;
-    instance   : ADDRESS;  (* Windows "instance" handle *)
+VAR (* external environment *)
+  argc       : INTEGER;
+  argv       : ADDRESS;
+  envp       : ADDRESS;
+  instance   : ADDRESS;  (* Windows "instance" handle *)
 
-    (* initial thread bounds *)
-    bottom_of_stack : ADDRESS;
-    top_of_stack    : ADDRESS;
-  END;
+PROCEDURE InitRuntime (argc: INTEGER;  argv, envp, instance: ADDRESS);
+(* Initializes the runtime and the environment globals.  It must be
+   called once before any other Modula-3 code is executed.  *)
 
-VAR info: LinkInfo := NIL;
+PROCEDURE AddUnit (b: RT0.Binder);
+(* Adds "b(0)" and any units it imports to the set of linked
+   and initialized compilation units. *)
 
-PROCEDURE RunProgram (x: LinkInfo);
-(* Called by the linker-generated main program to setup and
-   run the Modula-3 program.  Initially, "x.modules^" is
-   a list of RT0.Binder procedures which "RunProgram" calls
-   to reinitialized the table. *)
+PROCEDURE RunMainBody (m: RT0.ModulePtr);
+(* Invokes "m"s main body if it hasn't already been done.
+   Note: this procedure is only exported so that stack walkers
+   can know when to quit looking at frames. *)
 
 END RTLinker.
 
