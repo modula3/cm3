@@ -37,11 +37,16 @@ PROCEDURE Mul (x, y: T): T =
     RETURN x * y
   END Mul;
 
-PROCEDURE Div (x, y: T): T RAISES {Arith.Error} =
+PROCEDURE CheckDivisor (x: T) RAISES {Arith.Error} =
   BEGIN
-    IF y = 0 THEN
+    IF x = 0 THEN
       RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init())
     END;
+  END CheckDivisor;
+
+PROCEDURE Div (x, y: T): T RAISES {Arith.Error} =
+  BEGIN
+    CheckDivisor(y);
     IF x MOD y # 0 THEN
       RAISE Arith.Error(NEW(Arith.ErrorIndivisible).init())
     END;
@@ -60,21 +65,18 @@ PROCEDURE Rec (x: T): T RAISES {Arith.Error} =
 
 PROCEDURE Mod (x, y: T): T RAISES {Arith.Error} =
   BEGIN
-    IF y = 0 THEN
-      RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init())
-    END;
+    CheckDivisor(y);
     RETURN x MOD y;
   END Mod;
+
 PROCEDURE DivMod (x, y: T): QuotRem RAISES {Arith.Error} =
   BEGIN
-    IF y = 0 THEN
-      RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init())
-    END;
+    CheckDivisor(y);
     RETURN QuotRem{x MOD y, x DIV y};
   END DivMod;
 
-(*Kapil Hari Paranjape: Some lectures on number theory, elliptic curves and
-   cryptology, chapter 2: Greatest common divisor,
+(* Kapil Hari Paranjape: Some lectures on number theory, elliptic curves
+   and cryptology, chapter 2: Greatest common divisor,
    http://www.imsc.ernet.in/~kapil/crypto/notes/node8.html*)
 PROCEDURE GCD (x, y: T): T =
   VAR

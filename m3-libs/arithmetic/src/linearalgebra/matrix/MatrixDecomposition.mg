@@ -38,7 +38,7 @@ PROCEDURE BackSubst (A: M.T; x, b: V.T) RAISES {Arith.Error} =
 
     FOR row := mm TO m1 BY -1 DO
       IF ABS(b[row]) < Tiny THEN
-        RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init());
+        RAISE Arith.Error(NEW(Arith.ErrorMatrixSingular).init());
       END;
       WITH tmp = b[row] DO
         FOR col := row + 1 TO mm DO tmp := tmp - A[row, col] * x[col]; END;
@@ -171,7 +171,7 @@ PROCEDURE SolveTridiagonal (t: Tridiagonals; r: V.T; VAR u: V.T)
     FOR i := n1 + 1 TO nn - 1 DO
       den := b[i] - a[i] * d[i - 1];
       IF ABS(den) < Tiny THEN
-        RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init());
+        RAISE Arith.Error(NEW(Arith.ErrorMatrixSingular).init());
       END;
       u[i] := (r[i] - a[i] * u[i - 1]) / den;
       d[i] := c[i] / den;
@@ -358,7 +358,7 @@ PROCEDURE LUFactorD (VAR A    : M.TBody;
         IF tmp > max THEN max := tmp; END (* if *);
       END (* for *);
       IF max = R.Zero THEN
-        RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init());
+        RAISE Arith.Error(NEW(Arith.ErrorMatrixSingular).init());
       ELSE
         scale[i] := R.One / max;
       END (* if *);
