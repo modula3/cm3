@@ -1,31 +1,27 @@
 MODULE TestTransition;
 
-IMPORT LongRealBasic AS R;
-IMPORT LongRealTrans AS RT;
-IMPORT RandomDECSRC AS Rnd;
-IMPORT LongRealSignal AS S;
-IMPORT LongRealVector AS V;
-IMPORT LongRealVectorFast AS VFs;
-(*
-IMPORT LongRealVectorTrans AS VT;
-*)
-IMPORT LongRealComplexVectorTrans AS CVT;
+IMPORT LongRealBasic      AS R,
+       LongRealTrans      AS RT,
+       RandomDECSRC       AS Rnd,
+       LongRealSignal     AS S,
+       LongRealVector     AS V,
+       LongRealVectorFast AS VFs,
+       (*LongRealVectorTrans AS VT,*)
+       LongRealComplexVectorTrans AS CVT;
 
-(*IMPORT LongRealMatrix AS M;*)
-IMPORT LongRealMatrixTrans AS MT;
-IMPORT LongRealEigenSystem AS Eigen;
+IMPORT                           (*LongRealMatrix AS M,*)
+  LongRealMatrixTrans AS MT,
+  LongRealEigenSystem AS Eigen;
 
-IMPORT LongRealDaubechiesWavelet AS DB;
-IMPORT LongRealRefinableFunc AS Refn;
-IMPORT LongRealRefinableSmooth AS RefnSm;
+IMPORT LongRealDaubechiesWavelet AS DB,
+       LongRealRefinableFunc     AS Refn,
+       LongRealRefinableSmooth   AS RefnSm;
 
-IMPORT LongRealFmtLex AS RF;
-IMPORT LongRealSignalFmtLex AS SF;
-(*
-IMPORT LongRealVectorFmtLex AS VF;
-IMPORT LongRealComplexVectorFmtLex AS CVF;
-IMPORT LongRealMatrixFmtLex AS MF;
-*)
+IMPORT LongRealFmtLex AS RF,
+       LongRealSignalFmtLex AS SF (*, LongRealVectorFmtLex AS VF,
+                                     LongRealComplexVectorFmtLex AS CVF,
+                                     LongRealMatrixFmtLex AS MF*);
+
 IMPORT PLPlot AS PL;
 IMPORT IO, Fmt, Wr, Thread;
 IMPORT NADefinitions AS NA;
@@ -33,7 +29,7 @@ IMPORT NADefinitions AS NA;
 CONST AThird = 1.0D0 / 3.0D0;
 
 PROCEDURE PlotTransitionEV (mask: S.T) =
-  <*FATAL NA.Error, PL.SizeMismatch*>
+  <* FATAL NA.Error, PL.SizeMismatch *>
   VAR
     ev := RefnSm.Eigenvalues(mask);
     x  := NEW(V.T, NUMBER(ev.eigenvalues^));
@@ -76,8 +72,9 @@ PROCEDURE AnimateTransitionEV () =
 
 
 PROCEDURE CurveTransitionEV (READONLY maskcoef0, maskcoef1: ARRAY OF R.T) =
-  <*FATAL NA.Error, PL.SizeMismatch*>
-  CONST frames = 50;
+  <* FATAL NA.Error, PL.SizeMismatch *>
+  CONST
+    frames = 50;
   VAR
     mask0 := NEW(S.T).fromArray(maskcoef0);
     mask1 := NEW(S.T).fromArray(maskcoef1);
@@ -146,7 +143,7 @@ PROCEDURE CurveExamples () =
 
 PROCEDURE EstimateSpecRadSqr (mask: S.T): R.T =
   VAR
-    y      := mask.wrapCyclic(3).getData();
+    y      := mask.wrapCyclic(3);
     p1, p2 := R.Zero;
   BEGIN
     FOR j := 0 TO 2 DO p1 := p1 + y[j]; p2 := p2 + y[j] * y[j]; END;
@@ -160,7 +157,7 @@ PROCEDURE EstimateSpecRadSqr (mask: S.T): R.T =
 
 PROCEDURE EstimateSpecRad (mask: S.T): R.T =
   VAR
-    y   := mask.wrapCyclic(3).getData();
+    y   := mask.wrapCyclic(3);
     sum := R.Zero;
   BEGIN
     FOR j := 0 TO 2 DO sum := sum + y[j] * y[j]; END;
@@ -168,7 +165,7 @@ PROCEDURE EstimateSpecRad (mask: S.T): R.T =
   END EstimateSpecRad;
 
 PROCEDURE CompareEstimate (mask: S.T) =
-  <*FATAL NA.Error, Thread.Alerted, Wr.Failure *>
+  <* FATAL NA.Error, Thread.Alerted, Wr.Failure *>
   BEGIN
     IO.Put(
       Fmt.FN(
@@ -185,7 +182,7 @@ PROCEDURE CompareEstimate (mask: S.T) =
   END CompareEstimate;
 
 PROCEDURE RandomMaskWithLeastEstimate (): S.T =
-  <*FATAL NA.Error *>
+  <* FATAL NA.Error *>
   VAR
     rnd                           := NEW(Rnd.T).init();
     rndArr: ARRAY [0 .. 4] OF R.T;
@@ -206,7 +203,7 @@ PROCEDURE RandomMaskWithLeastEstimate (): S.T =
   END RandomMaskWithLeastEstimate;
 
 PROCEDURE RandomMask (size: CARDINAL): S.T =
-  <*FATAL NA.Error *>
+  <* FATAL NA.Error *>
   VAR
     rnd    := NEW(Rnd.T).init();
     rndArr := NEW(REF ARRAY OF R.T, size);
@@ -221,7 +218,7 @@ PROCEDURE RandomMask (size: CARDINAL): S.T =
   END RandomMask;
 
 PROCEDURE CompareTranslatedMasks (mask0, mask1: S.T) =
-  <*FATAL NA.Error *>
+  <* FATAL NA.Error *>
   BEGIN
     IO.Put(
       Fmt.FN(
@@ -283,7 +280,8 @@ PROCEDURE CheckEstimates () =
             CompareTranslatedMasks(mask0, mask1);
           END;
         END;
-    ELSE                         <*ASSERT FALSE*>
+    ELSE
+      <* ASSERT FALSE *>
     END;
   END CheckEstimates;
 
@@ -303,7 +301,7 @@ PROCEDURE PlotEstimates () =
     lowerSqrEst  := V.New(numOrder);
     upperSqrEst  := V.New(numOrder);
     upperFrobEst := V.New(numOrder);
-  <*FATAL NA.Error, PL.SizeMismatch*>
+  <* FATAL NA.Error, PL.SizeMismatch *>
   BEGIN
     PL.Init();
     FOR j := FIRST(order^) TO LAST(order^) DO
@@ -360,7 +358,8 @@ PROCEDURE Test () =
     | 1 => CurveExamples();
     | 2 => CheckEstimates();
     | 3 => PlotEstimates();
-    ELSE                         <*ASSERT FALSE*>
+    ELSE
+      <* ASSERT FALSE *>
     END;
   END Test;
 

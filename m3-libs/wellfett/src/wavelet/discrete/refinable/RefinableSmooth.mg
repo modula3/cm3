@@ -85,7 +85,7 @@ CONST
   Twelve = FLOAT(12.0, R.T);
 
 PROCEDURE ComputeSSE (READONLY y: ARRAY [0 .. 2] OF R.T): R.T =
-  <*FATAL NA.Error*>
+  <* FATAL NA.Error *>
   VAR
     p1  := VS.Sum(y);
     p2  := VS.Inner(y, y);
@@ -96,7 +96,7 @@ PROCEDURE ComputeSSE (READONLY y: ARRAY [0 .. 2] OF R.T): R.T =
   END ComputeSSE;
 
 PROCEDURE ComputeDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): V.T =
-  <*FATAL NA.Error*>
+  <* FATAL NA.Error *>
   VAR
     p1  := VS.Sum(y);
     p2  := VS.Inner(y, y);
@@ -111,8 +111,8 @@ PROCEDURE ComputeDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): V.T =
   END ComputeDSSE;
 
 PROCEDURE ComputeDDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
-  <*FATAL NA.Error*>
-  (*derived with mathematica*)
+  <* FATAL NA.Error *>
+    (*derived with mathematica*)
   VAR
     p1 := VS.Sum(y);
     p2 := VS.Inner(y, y);
@@ -130,7 +130,7 @@ PROCEDURE ComputeDDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
   END ComputeDDSSE;
 
 PROCEDURE SquareSmoothEstimate (x: S.T): R.T =
-  VAR hsums := x.wrapCyclic(3).getData();
+  VAR hsums := x.wrapCyclic(3);
 
   BEGIN
     (*
