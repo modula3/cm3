@@ -1,22 +1,20 @@
 MODULE TestTransform;
 
-IMPORT LongRealBasic AS R;
-IMPORT Integer32IntegerPower AS IIntPow;
+IMPORT NADefinitions         AS NA,
+       LongRealBasic         AS R,
+       Integer32IntegerPower AS IIntPow;
 
-IMPORT LongRealVector AS V;
-IMPORT LongRealVectorFast AS VFs;
+IMPORT LongRealVector AS V, LongRealVectorFast AS VFs;
 
-IMPORT LongRealSignal AS S;
-IMPORT LongRealSignalVector AS SV;
-IMPORT LongRealSignalIntegerPower AS SIntPow;
-IMPORT LongRealDiscreteWaveletTransform AS DWT;
-IMPORT LongRealDyadicFilterBank AS FB;
+IMPORT LongRealSignal                   AS S,
+       LongRealSignalVector             AS SV,
+       LongRealSignalIntegerPower       AS SIntPow,
+       LongRealDiscreteWaveletTransform AS DWT,
+       LongRealDyadicFilterBank         AS FB;
 
 IMPORT LongRealBSplineWavelet AS BSpl;
 
-(*IMPORT LongRealFmtLex AS RF;*)
-IMPORT LongRealSignalFmtLex AS SF;
-IMPORT PLPlot AS PL;
+IMPORT (*LongRealFmtLex AS RF,*) LongRealSignalFmtLex AS SF, PLPlot AS PL;
 IMPORT IO, Fmt, Wr, Thread;
 
 FROM TestMatchWavelet IMPORT TestMatchPatternSmooth;
@@ -42,6 +40,7 @@ PROCEDURE DyadicFilterBankSynthesis (READONLY x: DWT.DyadicWaveletCoeffs;
   VAR
     z       := x.low;
     vanAtom := NEW(S.T).fromArray(ARRAY OF R.T{R.Half, -R.Half});
+  <* FATAL NA.Error *>           (*MulPower can't fail for signals*)
   BEGIN
     FOR i := LAST(x.high^) TO FIRST(x.high^) BY -1 DO
       VAR xVan := SIntPow.MulPower(x.high[i], vanAtom, van1);
@@ -58,6 +57,7 @@ PROCEDURE DyadicFilterBankSynthesis (READONLY x: DWT.DyadicWaveletCoeffs;
 PROCEDURE PlotSWT (         x        : S.T;
                    READONLY bank     : ARRAY [0 .. 1] OF FB.T;
                             numLevels: CARDINAL;               ) =
+  <* FATAL NA.Error *>           (*MulPower can't fail for integers*)
   VAR
     unit := IIntPow.MulPower(1, 2, numLevels);
     grid := R.One / FLOAT(unit, R.T);
@@ -70,7 +70,8 @@ PROCEDURE PlotSWT (         x        : S.T;
     right := FLOAT(xrec.getLast(), R.T) * grid;
 
   PROCEDURE PlotBand (x: S.T; ) =
-    <*FATAL PL.SizeMismatch*>(*Number of filters and channels will always match*)
+    <* FATAL PL.SizeMismatch *>  (*Number of filters and channels will
+                                    always match*)
     BEGIN
       PL.SetFGColorDiscr(1);
       PL.SetEnvironment(
@@ -94,6 +95,7 @@ PROCEDURE PlotDWT (         x        : S.T;
                    READONLY bank     : ARRAY [0 .. 1] OF FB.T;
                             van1     : CARDINAL;
                             numLevels: CARDINAL;               ) =
+  <* FATAL NA.Error *>           (*MulPower can't fail for integers*)
   VAR
     unit     := IIntPow.MulPower(1, 2, numLevels);
     fineGrid := R.One / FLOAT(unit, R.T);
@@ -107,7 +109,8 @@ PROCEDURE PlotDWT (         x        : S.T;
     right := FLOAT(xrec.getLast(), R.T) * grid;
 
   PROCEDURE PlotBand (x: S.T; grid: R.T; ) =
-    <*FATAL PL.SizeMismatch*>(*Number of filters and channels will always match*)
+    <* FATAL PL.SizeMismatch *>  (*Number of filters and channels will
+                                    always match*)
     BEGIN
       PL.SetFGColorDiscr(1);
       PL.SetEnvironment(
@@ -132,7 +135,7 @@ PROCEDURE PlotDWT (         x        : S.T;
 
 
 PROCEDURE Test () =
-  <*FATAL BSpl.DifferentParity*>
+  <* FATAL BSpl.DifferentParity *>
   BEGIN
     CASE 1 OF
     | 0 =>
@@ -161,7 +164,7 @@ PROCEDURE Test () =
           reconBank := ARRAY [0 .. 1] OF
                          FB.T{bank[0], FB.T{bank[1, 0].scale(R.Two),
                                             bank[1, 1].scale(R.Two)}};
-        <*FATAL Thread.Alerted, Wr.Failure*>
+        <* FATAL Thread.Alerted, Wr.Failure *>
         BEGIN
           IO.Put(
             Fmt.FN(
@@ -172,7 +175,7 @@ PROCEDURE Test () =
           PlotDWT(S.One, reconBank, van1, 4);
         END;
     ELSE
-      <*ASSERT FALSE*>
+      <* ASSERT FALSE *>
     END;
   END Test;
 
