@@ -33,7 +33,7 @@ PROCEDURE Eval (x : T;           (*evaluate this polynomial*)
 PROCEDURE Derive (x: T;          (*differentiate polynomial*)
   ): T;
 
-PROCEDURE Integrate (x: T;       (*differentiate polynomial*)
+PROCEDURE Integrate (x: T;       (*integrate polynomial*)
   ): T;
 
 (*========================*)
