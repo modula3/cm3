@@ -3,6 +3,7 @@ import("libm3")
 include_dir("basictypes")
 include_dir("linearalgebra")
 include_dir("algebra")
+include_dir("inout")
 include_dir("misc")
 
 module("NADefinitions")
