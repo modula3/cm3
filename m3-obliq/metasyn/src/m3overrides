@@ -1,4 +1,3 @@
-WORKDIR = "/proj/cmass/src.1/m3-obliq"
-
-override ("synloc", WORKDIR)
-override ("synex", WORKDIR)
+override ("libm3", ROOT & "/m3-libs")
+override ("synloc", ROOT & "/m3-obliq")
+override ("synex", ROOT & "/m3-obliq")

@@ -1,3 +1,3 @@
-WORKDIR = "/proj/cmass/src.1/m3-obliq"
-
-override ("synloc", WORKDIR)
+override ("netobj", ROOT & "/m3-comm")
+% override ("sharedobj", ROOT & "/m3-xxx") % missing
+override ("synloc", ROOT & "/m3-obliq")

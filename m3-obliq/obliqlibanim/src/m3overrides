@@ -1,4 +1,4 @@
 override ("synloc", ROOT & "/m3-obliq")
-override ("synex", ROOT & "/m3-obliq")
-override ("metasyn", ROOT & "/m3-obliq")
 override ("obliqrt", ROOT & "/m3-obliq")
+override ("obliqlibui", ROOT & "/m3-obliq")
+override ("mgkit", ROOT & "/m3-ui")

@@ -1,4 +1,3 @@
 override ("synloc", ROOT & "/m3-obliq")
-override ("synex", ROOT & "/m3-obliq")
-override ("metasyn", ROOT & "/m3-obliq")
 override ("obliqrt", ROOT & "/m3-obliq")
+override ("formsvbt", ROOT & "/m3-ui")

@@ -11,7 +11,7 @@
 %%%% m3_option("-w2")			--- old m3build
 
 import("netobj")
-import("sharedobj")
+%import("sharedobj")
 import("synloc")
 
 interface ("OpSys")
