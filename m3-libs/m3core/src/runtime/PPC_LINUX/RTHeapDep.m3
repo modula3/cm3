@@ -149,7 +149,7 @@ PROCEDURE Core (             sig : Ctypes.int;
 PROCEDURE TimeUsed (): REAL =
   VAR usage: Uresource.struct_rusage;
   BEGIN
-    VAR ret := Uresource.getrusage(Uresource.RUSAGE_SELF, ADR(usage));
+    VAR ret := Uresource.getrusage(Uresource.RUSAGE_SELF, usage);
     BEGIN
       <* ASSERT ret # -1 *>
     END;
