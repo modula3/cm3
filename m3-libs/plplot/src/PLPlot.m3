@@ -288,8 +288,6 @@ PROCEDURE GetFGColorDiscrRGB (icol0: INTEGER; ): GetFGColorDiscrRGBResult =
   BEGIN
     PLPlotRaw.plgcol0(icol0, arg2, arg3, arg4);
     result.r := arg2;
-    result.g := arg3;
-    result.b := arg4;
     RETURN result;
   END GetFGColorDiscrRGB;
 
@@ -302,8 +300,6 @@ PROCEDURE GetBGColorDiscrRGB (): GetBGColorDiscrRGBResult =
   BEGIN
     PLPlotRaw.plgcolbg(arg1, arg2, arg3);
     result.r := arg1;
-    result.g := arg2;
-    result.b := arg3;
     RETURN result;
   END GetBGColorDiscrRGB;
 
@@ -347,8 +343,6 @@ PROCEDURE GetFamilyFile (): GetFamilyFileResult =
   BEGIN
     PLPlotRaw.plgfam(arg1, arg2, arg3);
     result.fam := arg1;
-    result.num := arg2;
-    result.bmax := arg3;
     RETURN result;
   END GetFamilyFile;
 
@@ -372,9 +366,6 @@ PROCEDURE GetOutputDeviceParam (): GetOutputDeviceParamResult =
   BEGIN
     PLPlotRaw.plgpage(result.xp, result.yp, arg3, arg4, arg5, arg6);
     result.xleng := arg3;
-    result.yleng := arg4;
-    result.xoff := arg5;
-    result.yoff := arg6;
     RETURN result;
   END GetOutputDeviceParam;
 
@@ -422,7 +413,6 @@ PROCEDURE GetXLabelParam (): GetXLabelParamResult =
   BEGIN
     PLPlotRaw.plgxax(arg1, arg2);
     result.digmax := arg1;
-    result.digits := arg2;
     RETURN result;
   END GetXLabelParam;
 
@@ -434,7 +424,6 @@ PROCEDURE GetYLabelParam (): GetYLabelParamResult =
   BEGIN
     PLPlotRaw.plgyax(arg1, arg2);
     result.digmax := arg1;
-    result.digits := arg2;
     RETURN result;
   END GetYLabelParam;
 
@@ -446,7 +435,6 @@ PROCEDURE GetZLabelParam (): GetZLabelParamResult =
   BEGIN
     PLPlotRaw.plgzax(arg1, arg2);
     result.digmax := arg1;
-    result.digits := arg2;
     RETURN result;
   END GetZLabelParam;
 
@@ -548,12 +536,12 @@ PROCEDURE PlotMeshColored (READONLY x, y  : V.TBody;
 
 PROCEDURE CreateStream (): INTEGER =
   VAR
-    arg0: INTEGER;
+    strm: INTEGER;
     arg1: C.int;
   BEGIN
     PLPlotRaw.plmkstrm(arg1);
-    arg0 := arg1;
-    RETURN arg0;
+    strm := arg1;
+    RETURN strm;
   END CreateStream;
 
 PROCEDURE PrintTextVP (side: TEXT; disp, pos, just: LONGREAL; text: TEXT; ) =
@@ -784,7 +772,7 @@ PROCEDURE SetEscapeChar (esc: CHAR; ) =
     PLPlotRaw.plsesc(ORD(esc));
   END SetEscapeChar;
 
-PROCEDURE SetOption (VAR opt, optarg: TEXT; ): INTEGER =
+PROCEDURE SetOption (opt, optarg: TEXT; ): INTEGER =
   VAR
     arg1  : C.char_star;
     arg2  : C.char_star;
@@ -915,12 +903,12 @@ PROCEDURE AddStripchartPoint (id, pen: INTEGER; x, y: LONGREAL; ) =
     PLPlotRaw.plstripa(id, pen, x, y);
   END AddStripchartPoint;
 
-PROCEDURE CreateStripchart (VAR xspec, yspec: TEXT;
+PROCEDURE CreateStripchart (xspec, yspec: TEXT;
                             xmin, xmax, xjump, ymin, ymax, xlpos, ylpos: LONGREAL;
                             y_ascl, acc, colbox, collab: INTEGER;
                             READONLY colline, styline: ARRAY OF INTEGER;
                             VAR legline: ARRAY [0 .. 3] OF TEXT;
-                            VAR labx, laby, labtop: TEXT; ): INTEGER
+                            labx, laby, labtop: TEXT; ): INTEGER
   RAISES {NA.Error} =
   VAR
     id   : INTEGER;
@@ -1064,7 +1052,7 @@ PROCEDURE ResetOpts () =
     PLPlotRaw.plResetOpts();
   END ResetOpts;
 
-PROCEDURE SetUsage (VAR program_string, usage_string: TEXT; ) =
+PROCEDURE SetUsage (program_string, usage_string: TEXT; ) =
   VAR
     arg1: C.char_star;
     arg2: C.char_star;

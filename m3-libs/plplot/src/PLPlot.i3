@@ -486,7 +486,7 @@ PROCEDURE SetEscapeChar (esc: CHAR; );
 (* plsetopt: "Process input strings, treating them as an option and
    argument pair.  The first is for the external API, the second the work
    routine declared here for backward compatibilty." *)
-PROCEDURE SetOption (VAR opt, optarg: TEXT; ): INTEGER;
+PROCEDURE SetOption (opt, optarg: TEXT; ): INTEGER;
 
 (* plsfam: "Set family file parameters." *)
 PROCEDURE SetFamilyFile (fam, num, bmax: INTEGER; );
@@ -549,12 +549,12 @@ PROCEDURE StartDev (devname: TEXT; nx, ny: INTEGER; );
 PROCEDURE AddStripchartPoint (id, pen: INTEGER; x, y: LONGREAL; );
 
 (* plstripc: "Create 1d stripchart." *)
-PROCEDURE CreateStripchart (VAR xspec, yspec: TEXT;
+PROCEDURE CreateStripchart (xspec, yspec: TEXT;
                             xmin, xmax, xjump, ymin, ymax, xlpos, ylpos: LONGREAL;
                             y_ascl, acc, colbox, collab: INTEGER;
                             READONLY colline, styline: ARRAY OF INTEGER;
                             VAR legline: ARRAY [0 .. 3] OF TEXT;
-                            VAR labx, laby, labtop: TEXT; ): INTEGER
+                            labx, laby, labtop: TEXT; ): INTEGER
   RAISES {NA.Error};
 
 (* plstripd: "Deletes and releases memory used by a stripchart.  " *)
@@ -620,7 +620,7 @@ PROCEDURE ClearOpts ();
 
 PROCEDURE ResetOpts ();
 
-PROCEDURE SetUsage (VAR program_string, usage_string: TEXT; );
+PROCEDURE SetUsage (program_string, usage_string: TEXT; );
 
 PROCEDURE OptUsage ();
 
