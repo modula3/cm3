@@ -31,7 +31,7 @@ IMPORT LongRealMatrixFmtLex AS MF;
 IMPORT LongRealSignalFmtLex AS SF;
 IMPORT LongRealWaveletPlot AS WP;
 IMPORT PLPlot AS PL;
-IMPORT IO, Fmt, Wr, Thread;
+IMPORT IO, Fmt, FileRd, Wr, Thread;
 
 IMPORT NADefinitions AS NA;
 
@@ -1152,12 +1152,13 @@ PROCEDURE Test () =
     numlevel = 6;
     unit     = 64;
   TYPE
-    Example = {matchBSpline, matchBSplineVan, matchBSplineWavelet,
-               matchRamp, matchRampSmooth, matchSincSmooth, matchGaussian,
-               matchLongRamp, testSSE, testInverseDSSE, testDeriveWSSE};
+    Example =
+      {matchBSpline, matchBSplineVan, matchBSplineWavelet, matchRamp,
+       matchRampSmooth, matchSincSmooth, matchGaussian, matchLongRamp,
+       matchMassPeak, testSSE, testInverseDSSE, testDeriveWSSE};
   <*FATAL BSpl.DifferentParity*>
   BEGIN
-    CASE Example.matchRampSmooth OF
+    CASE Example.matchMassPeak OF
     | Example.matchBSpline =>
         TestMatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50),
@@ -1313,6 +1314,29 @@ PROCEDURE Test () =
           V.ArithSeq(2048, -1.0D0, 2.0D0 / 2048.0D0)^,32 -1024), numlevel, 3, 1,
         5, 0.0D-4);
       *)
+    | Example.matchMassPeak =>
+        CONST
+          clipFirst  = 15500;
+          clipNumber = 2500;
+        VAR
+          rd := FileRd.Open(
+                  "/home/thielema/projects/industry/bruker/data/Datasets/T/Normal/spectrum_28_23.dat");
+          data  := MF.Lex(rd);
+          dataX := M.GetColumn(data, 0);
+          dataY := M.GetColumn(data, 1);
+          clipX := V.FromArray(SUBARRAY(dataX^, clipFirst, clipNumber));
+          clipY := V.FromArray(SUBARRAY(dataY^, clipFirst, clipNumber));
+        BEGIN
+          PL.Init();
+          PL.SetEnvironment(dataX[FIRST(dataX^)], dataX[LAST(dataX^)],
+                            VFs.Min(dataY^), VFs.Max(dataY^));
+          PL.PlotLines(dataX^, dataY^);
+
+          PL.SetEnvironment(clipX[FIRST(clipX^)], clipX[LAST(clipX^)],
+                            VFs.Min(clipY^), VFs.Max(clipY^));
+          PL.PlotLines(clipX^, clipY^);
+          PL.Exit();
+        END;
     | Example.testSSE =>
         TestSSE(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
         TestSSE(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0}));
