@@ -1,0 +1,10 @@
+  QuadMeshGO_BadSize: Exception                                         
+  QuadMeshGO_ColorsUndefined: Exception                                 
+  QuadMeshGO_New(pts: [[Point3]]): QuadMeshGO                          
+  QuadMeshGO_NewWithShapeHint(pts: [[Point3]], s: Shape): QuadMeshGO   
+WHERE                                                                   
+  QuadMeshGO <: SurfaceGO &                                              
+     { addFacetColors: ([[Col]]) => Ok ! QuadMeshGO_BadSize,
+       setColorOfFacet: (i j: Int, c: Col) => Ok ! QuadMeshGO_ColorsUndefined }
+  Shape = Text  (one of "Unknown", "Convex", "NonConvex", "Complex") 
+  Col = Color + Text

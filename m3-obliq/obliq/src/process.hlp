@@ -1,0 +1,19 @@
+  process_new(pr: Processor, nameAndArgs: [Text], mergeOut: Bool): Process
+    Create a process from a processor and the given process name and arguments.
+    The local processor is available as the lexically scoped identifier 
+    "processor". If mergeOut is true, use a single pipe for stdout and stderr.
+  process_in(p: Process): Wr
+    The stdin pipe of a process.
+  process_out(p: Process): Rd
+    The stdout pipe of a process.
+  process_err(p: Process): Rd
+    The stderr pipe of a process.
+  process_complete(p: Process): Int
+    Wait for the process to exit, close all its pipes, and return the exit code.
+  process_filter(pr: Processor, nameAndArgs: [Text], input: Text): Text 
+    ! net_failure
+    Create a process from a processor and the given process name and arguments.
+    The local processor is available as the lexically scoped identifier 
+    "processor". The stderr output is merged to stdout.
+    Usage: feed the input to its stdin pipe and close it; read all the output
+    from its stdout pipe and close it; return the output.

@@ -1,0 +1,4 @@
+  AmbientLightGO_New(c: ColorVal): AmbientLightGO    
+WHERE                                                 
+  AmbientLightGO <: LightGO                            
+  ColorVal = ColorPropVal + Color + Text              

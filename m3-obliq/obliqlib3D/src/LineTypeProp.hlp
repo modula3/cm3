@@ -1,0 +1,28 @@
+  LineTypeProp_NewConst(lt: LineType): LineTypePropVal                  
+  LineTypeProp_NewSync(ah: AnimHandle, lt: LineType): LineTypePropVal   
+  LineTypeProp_NewAsync(beh: LineTypePropAsyncBeh): LineTypePropVal     
+  LineTypeProp_NewDep(beh: LineTypePropDepBeh): LineTypePropVal         
+  LineTypeProp_NewConstBeh(lt: LineType): LineTypePropConstBeh          
+  LineTypeProp_NewSyncBeh(ah: AnimHandle, lt: LineType): LineTypePropSyncBeh
+  LineTypeProp_NewAsyncBeh(compute: M1):LineTypePropAsyncBeh            
+  LineTypeProp_NewDepBeh(compute: M2):LineTypePropDepBeh                
+  LineTypeProp_NewRequest(start dur: Num, value: M3): LineTypePropRequest
+WHERE                                                                   
+  LineTypePropName <: PropName & { bind: (v: LineTypePropVal) => Prop }    
+  LineTypePropVal <: PropVal & { getBeh: () => LineTypePropBeh,          
+                                 setBeh: (LineTypePropBeh) => Ok,        
+                                 get: () => LineType,                    
+                                 value: (Num) => LineType }             
+  LineTypePropBeh <: PropBeh                                             
+  LineTypePropConstBeh <: LineTypePropBeh & { set: (LineType) => Ok }    
+  LineTypePropSyncBeh <: LineTypePropBeh &                               
+          { addRequest: (LineTypePropRequest) => Ok ! Prop_BadInterval, 
+            change: (LineType,Num) => Ok ! Prop_BadInterval }          
+  LineTypePropAsyncBeh <: LineTypePropBeh & { compute: M1 }              
+  LineTypePropDepBeh <: LineTypePropBeh & { compute: M2 }                
+  LineTypePropRequest <: PropRequest & { value: M3 }                     
+  M1 = Self (X <: LineTypePropAsyncBeh) (Real) => LineType              
+  M2 = Self (X <: LineTypePropDepBeh) (Real) => LineType                
+  M3 = Self (X <: LineTypePropRequest) (LineType,Real) => LineType      
+  LineType = Text  (one of "Solid", "Dashed", "Dotted", "DashDot")
+  Num = Real + Int

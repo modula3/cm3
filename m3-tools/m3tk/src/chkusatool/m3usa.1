@@ -1,0 +1,11 @@
+.SH "CHECK FOR UNSET ATTRIBUTES TOOL OPTIONS"
+.TP
+.B \-CheckUnsetAtts
+This tool is a debugging aid. The Modula-3 AST is defined in
+such a way that, provided that a source unit is syntactically
+and semantically correct, there should be no unset semantic
+attributes in the generated AST. The tool verifies this constraint
+and generates warning messages for nodes which contain
+unset semantic attributes.
+
+

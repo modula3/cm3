@@ -1,0 +1,19 @@
+/* Copyright (C) 1994, Digital Equipment Corporation */
+/* All rights reserved. */
+/* See the file COPYRIGHT for a full description. */
+/* Makefile for pkgfprint */
+/* Last modified on Mon Apr  4 10:54:04 PDT 1994 by wobber     */
+/*      modified on Fri Feb 12 02:54:17 PST 1993 by prusker    */
+
+import("libm3")
+import("netobj")
+import("tcp")
+import("pkgobj")
+
+module("Export")
+module("ExportSort")
+implementation("PkgFP")
+
+build_standalone()
+
+program("pkgfp")

@@ -1,0 +1,13 @@
+m3tk-target.2 package -- created Thu Apr 2 17:22:13 PST 1992 by mjordan
+current owner mjordan
+
+This package implements the M3CBackEnd interface of the Modula-3 toolkit
+compiler front-end. It claims to match the SRC Modula-3 implementation,
+e.g. it computes the same value of BYTESIZE(T) as the SRC compiler.
+It is parameterised by machine type (actually C compiler) and it is
+possible to change this default at compile time. 
+
+Some interfaces may be useful to other AST tools, vis:
+
+M3CBackEnd_C    Reveals an M3AST_SM.Exp_value
+M3CBE_C_Tool    Handles the decoding of the machine type setting

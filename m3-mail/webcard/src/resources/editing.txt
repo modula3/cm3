@@ -1,0 +1,178 @@
+The built-in editor, which is used in the composition sub-window, the display-subwindow, and in every type-in field, allows you to select text, and to cut, copy, and paste text among the windows and the "clipboard" (the X-11 primary or "Source" selection). The display and composition sub-windows also have menus with common editing operations in them, including Undo and Redo.
+
+There are four text-editing "models" that you may use: emacs, ivy, mac, and xterm.  The configuration dialog allows you to pick the model you prefer. The first time you run Postcard, the model will depend on the environment variable named TextPortModel, which should be set to either emacs, ivy, mac, or xterm. If it is not set, the default model is emacs. Once you've chosen a model in the configuration dialog, Postcard will use that from then on, regardless of the value of the environment variable.
+
+Each of the four models has different keybindings for the editing commands, and different selection controls for the mouse, but the visual feedback is the same for all models:
+
+    A heavy underline indicates the Primary selection. On color screens, there is a further distinction: in read-only windows, such as the display sub-window, the underline is blue, and in read-only windows, such as the composition sub-window, the underline is red.
+
+    A replace-mode selection uses a pale red background on color screens, and "reverse video" on monochrome screens. In a replace-mode selection, anything you type will replace the highlighted text, and Backspace or Delete will erase it entirely.
+
+    A thin underline indicates the Secondary selection; on color screens, the underline is green. (Secondary selection is implemented only in the Ivy model.)
+
+The following sections describe the keybindings used in each of the four models. With one exception, these are all implemented by the underlying VBTkit library; for details, see the VBTkit reference manual.  The exception is a command to "justify" the current paragraph, i.e., to reformat the characters of the paragraph containing the typein-point to have no more than 80 characters per line.  "Paragraph" means characters bracketed by blank lines.  Postcard arranges that the third and subsequent line of the resulting paragraph all have the same indentation as the second line (or, if there was initially only one line, that all lines have the same indentation).
+
+NOTE ON "META" AND "OPTION" KEYS
+
+The editing commands listed below are described in terms of "control", "meta", and "option" keys. The "control" modifier should be familiar to users. "Meta" and "option" are two names that refer to the same modifier in VBTkit applications; emacs uses the name "meta", and Ivy uses the name "option".
+
+There are two ways to type meta/option characters. The first is to hold down the key that generates the modifier known as "mod1", and then type the character. (The notion of a "modifier" is defined by the X-server. The other modifiers are shift, lock, control, and mod2-mod5. The xmodmap(1) program can be used to display and alter the relationship between physical keys and the information that the X-server provides to an application. On some keyboards, this key is labeled "Alt" or "Compose"; consult your system manager for more information.)
+
+The second way to type a meta/option character is to type and release the Escape key, and then type the character. (Emacs model only.)
+
+In the emacs, ivy, and xterm models, the meta/option key can also be used as a "prefix" key for composing extended-ASCII (8-bit) characters, in the style of a VT220 terminal. (The mac model uses a different convention, described below.) If you type and release the meta/option key, then the next two characters you type will be "composed" into an extended character. While these two characters are being read, the cursor-shape will change to two counterclockwise arrows.  For example, if you type Meta, then "c", then "o", the result will be the ISO Latin-1 character for the copyright symbol, ©. If the font you are using does not have this character, you will see an ASCII representation for the character code, in octal, e.g., "\251". 
+
+Note that character-composition is not useful on a system where Postcard uses mail-transmission software that conforms to the rfc821 protocol, which requires that the high-order (8th) bit be stripped.
+
+EMACS MODEL
+
+To establish a Primary selection, left-click and drag the mouse. Right-click and drag will extend the selection. Middle-click is "Copy"; it copies the Primary selection to the Source selection ("clipboard"); meta-w does the same thing.
+
+For emacs users, the "region" is the same as the Primary selection; the "point" is always on one end, and the "mark" is always on the other. Left-click sets the point; double-left-click sets the "mark" (so does control-space). Right-click also sets the point, but it extends the region. The region is highlighted when you drag the mouse, when you extend the selection, and when the search-commands find a match.
+
+Here are the emacs keybindings:
+
+control-space	set the mark 
+control-a	move to the beginning of the line 
+control-b	move to the previous character 
+meta-b		move to the previous word 
+control-d	delete the next character 
+meta-d		delete the next word 
+control-e	move to the end of the line 
+control-f	move to the next character 
+meta-f		move to the next word 
+control-h	delete the previous character, and move left 
+meta-h		delete to the start of the current word 
+control-i	(in type-in boxes) move to the next type-in field
+control-j	insert a newline 
+control-k	delete to the end of the line, and make
+		the deleted text be the Source selection 
+control-n	move down one line 
+control-o	insert a newline without moving the cursor 
+control-p	move up one line 
+control-q	insert the next character ("quoted insert")
+meta-q		justify the current paragraph
+
+control-r	search backward for the current Source selection
+control-s	search forward for the current Source selection
+	Note that the Source selection, which is global, can be
+	defined in some other window. A highlighted Xterm
+	selection, for example, is Source. To make the Primary
+	emacs selection (the region) be Source, use the Copy command:
+	middle-click or meta-w.
+ 
+control-t	swap the current and previous characters 
+control-v	scroll up one screen 
+meta-v		scroll down one screen 
+control-w	Cut 
+meta-w		Copy (make the Primary selection be the Source selection)
+control-y	Paste 
+control-z	scroll up one line 
+meta-z		scroll down one line 
+control-_	Undo 
+meta-_		Redo 
+meta-<		move to the beginning of the buffer 
+meta->		move to the end of the buffer 
+meta-leftArrow	move to the previous word (like meta-b) 
+meta-rightArrow	move to the next word (like meta-f)
+
+IVY MODEL
+
+The Ivy model implements both Primary and Secondary selections. In this model, Primary is an "alias" for Target, and Secondary is an "alias" for Source. The Secondary selection is therefore used for Cut, Copy, Paste, Move, and Swap. The following table shows the mouse-gestures that establish the Primary selection; if the Control key is held down, these same gestures establish the Secondary selection.
+
+click		Left	to select a point between characters
+double-click	Left	to select a single line
+triple-click	Left	to select the entire buffer
+drag		Left	to change the selected point or line
+click		Middle	to select a single word
+double-click	Middle	to select a single paragraph
+triple-click	Middle	to select the entire buffer
+drag		Middle	to change the selected word or paragraph 
+click		Right	to extend the current selection 
+double-click	Right	to reduce the selection-unit 
+drag		Right	to extend the current selection
+
+There are two ways of acquiring the Source selection.  The usual way is to control-click to select a point, word, line, paragraph, or buffer. The second way is to use the Copy command or the Cut command; these commands make a copy of the Primary selection, which becomes the Source selection.
+
+option-Return	insert a newline after the cursor 
+Backspace	delete Primary selection or the previous character 
+option-Backspace	swap the two previous characters 
+control-A	delete previous character 
+control-B	delete whole line 
+control-C	delete to start of line 
+option-C	Copy 
+control-D	delete to the start of the current word 
+control-E	Move: replace Target with Source, and clear Source 
+control-F	delete to the end of the current word 
+control-G	delete whole word 
+control-H	exchange the identity of the two selections
+control-I	move to the next word 
+control-J	move to previous character 
+control-K	move to next character 
+control-L	move to first non-blank and select line 
+control-M	find previous occurrence of Source
+option-M	find previous occurrence of Target (Primary)
+control-N	find next occurrence of Target (Primary)
+option-N	find first occurrence of Target (Primary)
+control-O	move up 1 row in the current column 
+control-P	move down 1 row in the current column 
+control-Q	Clear 
+control-R	Swap: exchange the contents of the two selections
+control-S	delete the next character 
+control-T	justify the current paragraph
+control-U	move to the previous word 
+control-V	delete to end of line 
+option-V	Paste 
+control-W	Paste 
+option-X	Cut 
+control-Y	move to opposite end of selection 
+control-Z	Undo 
+control-shift-Z	Redo 
+control-,	find next occurrence of Source
+control-;	move to end of line and select line 
+control-Space	scroll so that the type-in point is visible	
+
+MAC MODEL
+
+The selection is established in the Mac model by left-clicking and dragging. Single-clicking selects a point; double-clicking selects a word; triple-clicking selects a line. Shift-click extends the current selection; so does dragging the mouse. Selections are extended in the unit in which they were established: point, word, or line.
+
+The Mac model supports only a few editing commands:
+
+command-c	Copy
+command-t	justify the current paragraph
+command-v	Paste
+command-x	Cut
+command-z	Undo
+command-shift-z	Redo
+
+The "command" modifier is defined by the environment variable MacCommandModifier, which should have one of the following values (case is not significant):
+
+	lock, control, mod1, mod2, mod3, mod4, or mod5 
+
+These correspond to the X-server names for key-modifiers; see the manpage for xmodmap(1) for more details. The default is "control", so by default, control-c, for example, invokes the Copy command.
+
+The Mac model also supports extended characters using the Apple (not VT220) conventions, insofar as the resulting character is defined for ISO Latin-1. For example, option-g produces the copyright symbol, ©, but option-shift-7, which produces a double dagger on the Macintosh, produces no key in the Mac model, since the double-dagger is not in the ISO Latin-1 set. The Mac model supports all the two-character sequences, such as option-e followed by "a" to produce "a" with an acute accent, á.
+
+The "option" modifier is defined by the environment variable MacOptionModifier, which should have one of the values in the list shown above. The default is "mod1", which is assigned to the "meta" key on many keyboards.
+
+
+XTERM MODEL
+
+The Xterm model supports a single selection (Primary, which in this model is an alias for Source) and mouse-events in the style of "xterm(1)". A single left-click establishes the keyboard focus and insertion point, but it does not change the Primary selection. A double left-click selects the current word; a triple left-click selects the current line. More clicks rotate among these three options.
+
+Single left-click and drag selects a range of characters. Double left-click and drag selects a range of words, and triple left-click and drag selects a range of lines.
+
+Middle-click pastes the current Source selection at the insertion point, which need not be at the end of the text (as it would be for a "typescript").  The xterm Primary selection is never in replace-mode.
+
+Right-click extends the current selection.
+
+The only keybindings that are supported are these:
+
+control-t	justify the current paragraph
+control-u	delete to the beginning of the line 
+control-z	Undo 
+control-shift-z	Redo 
+meta-x		Cut  
+meta-c		Copy 
+meta-v		Paste
+

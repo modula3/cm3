@@ -1,0 +1,257 @@
+.nh
+.TH pkgq 1
+.SH NAME
+pkgq \- siphon management (locks, sub-repositories, send queues, ...)
+.SH SYNTAX
+\fBpkgq\fR [\fB-v\fR] [\fB-f\fR] [\fB-s site\fR] [\fB-q queue\fR] \fBcommand\fR
+.PP
+\fBcommand\fR  :: =
+            # status commands
+       \fBstatus\fR <the default action>
+       | \fBshow\fR [\fBpackages\fR ...]
+       | \fBshowreps\fR
+       | \fBskulk\fR [\fBpackages\fR ...]
+       | \fBshowdirs\fR [\fBreplicas=a+b+c\fR] [\fBsubrepositories\fR ...]
+       | \fBcheck\fR [\fBreplicas=a+b+c\fR] [\fBpackages\fR ...]
+       | \fBfind\fR \fBpackageNameArc\fR
+       | \fBlocks\fR \fBpackages\fR ...
+       | \fBlocallocks\fR [\fBpackages\fR ...]
+            # action commands
+       | \fBsynch\fR [\fBpackages\fR ...]
+       | \fBcreaterep\fR \fBrepositoryName\fR
+       | \fBremoverep\fR \fBrepositoryName\fR
+       | \fBenqueue\fR \fBpackages\fR ...
+       | \fBdequeue\fR \fBpackages\fR ...
+       | \fBchange\fR \fBfield=value\fR \fBpackages\fR ...
+       | \fBcorrupt\fR [\fBreplicas=a+b+c\fR] \fBpackages\fR ...
+       | \fBchangeowner\fR site \fBpackages\fR ...
+
+.SH DESCRIPTION
+This is an administrative tool for monitoring the packageserver
+lock database and siphon. 
+ 
+For operations on packages, each package argument can be a full
+pathname beginning with "/".  Otherwise, the current package prefix is
+prepended (in the CRA siphon, this prefix is /proj/cra/pkg).  If no
+package is specified, package operations apply to all packages.
+
+For operations on replicas, replicas are named through their "site
+name", as defined in the configuration (see \fBpackageserver(8)\fR.
+If no replica is specified, replica operations apply to all replicas .
+
+The following switches apply:
+.TP 10
+\fB-s\fR
+direct enquiries to this site (local site by default)
+current valid sites are S-SRC, S-PRL, S-CRL
+.TP 10
+\fB-q\fR
+apply queue operation only for queue to this site
+(only for \fBshowqueue\fR, \fBenqueue\fR, \fBdequeue\fR)
+.TP 10
+\fB-v\fR
+verbose (only for \fBshow\fR, \fBshowqueue\fR, \fBlocks\fR,
+\fBlocallocks\fR, \fBfind\fR)
+.TP 10
+\fB-f\fR
+force operation (enqueues to top of queue, dequeues even if sending is in progress)
+.PP
+At SRC it is possible to peruse the PRL database by uttering "pkgq -s
+S-PRL ...". At PRL, do "pkgq -s S-SRC ..." to peruse SRC database.
+.SH "STATUS COMMANDS"
+.TP 10
+\fBstatus\fR
+print status of send queues <the default action>: packages waiting for
+sending, status of the communication lines to remote sites;  indicate
+also the last received package, or any reception in progress.
+Example:
+.EX          
+    Send queue status ... 
+      S-PRL: ok for 19 hours
+      S-CRL: ok for 3 days
+    Receive status ... 
+      Received "cra/AF-bins"(8) from S-CRL, finished May 11 05:39
+        fetched 20384232 bytes, 547 files in 8 mins, avgRate=728 kbit/s
+         pulled=546 unchanged=19 cached=0
+      Received "cra/ntk"(10) from S-PRL, finished May 12 06:49
+        fetched 1859920 bytes, 21 files in 5 mins, avgRate=64 kbit/s
+         pulled=21 unchanged=139 cached=0
+    Replica statistics ...
+      siphon(S-SRC), up 3 days, 0:44 ...
+         sent: 423; rcvd: 66; sending: 0/2; recving: 0/1; enqueued: 0/41;
+      packageserver(swindle.pa.dec.com), up 3 days, 0:44 ...
+         get: 398; currGet: 15/282; ship: 320; currShip: 6/21; backup: 0;
+         prepare: 309; currPrepare: 0/2; commit: 307;
+      packageserver(bamboozle.pa.dec.com), up 12 days, 18:53 ...
+         get: 1420; currGet: 70/526; ship: 800; currShip: 38/50; backup: 0;
+         prepare: 791; currPrepare: 0/2; commit: 788;
+.EE 
+.TP 10
+\fBshow\fR
+print out a description of the package database entry for the
+specified packages; each line will look something like this:
+.EX                   
+           graffiti: S-PRL  cv=12  Sep 29  2:07
+
+       "graffiti"       the package name
+       "S-PRL"          manager site name; if the package
+                          is managed by the local site and is
+                          locked, this is indicated by "(locked)".
+       "cv=12"          the current version; the lastVersion
+                          and pendingVersion field will be
+                          printed here as well (e.g. "lv=7",
+                          pv=2") if they are abnormal.
+       "Sep 29  2:07"   last time entry was modified.
+.EE
+It is expected that the output of this command will
+be piped through grep in order to filter the output.
+For example:
+.EX                  
+       pkgq show | grep S-PRL
+       pkgq show | grep "(locked)"
+       pkgq show | grep "lv="
+.EE                
+More details are printed in verbose mode. For example:
+.EX                
+       graffiti
+           Locked: perle:/smith/packages/graffiti (S-PRL)
+           Managed by: S-PRL
+           Instance=639963884; lv=12; cv=12; pv=0
+           Last modified: Sep 29  2:07
+.EE
+.TP 10
+\fBshowreps\fR
+list all repositories registered in the lock database.
+.TP 10
+\fBskulk\fR
+check if packages are synchronized at all sites;
+report anomalies and fingerprint mismatches. For example, 
+"pkgq skulk graffiti" answers either:
+
+       graffiti: package already synchronized
+
+or something like:
+
+       graffiti: should update to 93 entry S-PRL(92)
+
+which means that the current version at the local site (S-PRL)
+is out-of-date (version 92 instead of 93).
+.TP 10
+\fBshowdirs\fR
+show which replicas share the indicated repositories; if there are no
+repository arguments, all repositories registered at lock server are
+considered.
+.TP 10
+\fBcheck\fR
+check if replicas have the current version (as recorded in the lock
+database) of the indicated packages.
+.TP 10
+\fBfind\fR
+enumerates the set of known repositories searching for package
+pathnames whose tail arc matches the argument text.
+.TP 10
+\fBlocks\fR
+tells if packages are locked, and who holds the lock; queries the lock
+database at the managing site of each package; if the managing site is
+remote, it can take a while; more information are printed in verbose
+mode.
+.TP 10
+\fBlocallocks\fR
+like locks, but queries only the local lock database; thus, it cannot
+tell the lock status if managing site is remote; with no argument,
+prints out all locked packages managed by the local site; more
+information are printed in verbose mode.
+.SH "ACTION COMMANDS"
+.TP 10
+\fBsynch\fR
+synchronize sites (send current version as needed, create foreign
+entries, report anomalies and fingerprint mismatch).
+.TP 10
+\fBcreaterep\fR
+register a repository at lock server; this will allow later creation
+of packages in this repository.  A repository name is a sequence of
+strings separated by "/".  In order for a replica to share a
+repository, there must be an entry in the replica's configuration file
+mapping the repository name to a file system directory.  The replica
+owner must have write access to this directory.
+                 
+The \fBcreaterep\fR command does not check that the new created
+repository is shared by any replicas.  The \fBshowdirs\fR command can
+be used for this purpose.
+                 
+Repositories don't contain other repositories.  They contain only
+packages.  Thus, createrep fails if any parent repository is already
+registered (i.e. /a/b not created if /a exists).
+.TP 10
+\fBremoverep\fR
+remove a repository entry from lock server; the repository should not
+contain any locally managed package. ALL foreign packages in the
+repository will be deleted.
+.TP 10
+\fBenqueue\fR
+
+send the indicated packages to remote site; with the \fB-f\fR switch,
+the package will be put at the head of the send queues; with \fB-q\fR
+switch, applies only to indicated queue; example:
+
+         pkgq enqueue cra/graffiti
+.TP 10
+\fBdequeue\fR
+                 
+remove the packages from the send queues; with \fB-q\fR switch, applies only
+to indicated queue; if the package is currently sent, it will be
+removed only if the \fB-f\fR switch is present; in this case, the sending
+is canceled.
+.TP 10
+\fBchange\fR
+modifies package database entries.  USE WITH CARE.  possible fields to
+change and acceptable values are:
+.EX
+         managedBy -  text (delimited by " ")
+         ownerKey -   text (delimited by " ")
+         ownerSite -  text (delimited by " ")
+         instance -   integer
+         CV -         integer or "DeletedVN"
+         LV -         integer or "DeletedVN"
+         PV -         integer or "DeletedVN"
+.EE
+.TP 10
+\fBcorrupt\fR
+marks the specified package as corrupted at all specified replicas.
+USE WITH CARE.  If no replica is specified, all replicas at the local
+site will be marked as corrupted (the local lock entry current version
+will be set to InitialVN).
+
+Specify a subset of replicas iff one or more replicas have bad bits;
+the replica restart code (or daemon) will refetch all bits from a good
+replica.
+
+Specify all replicas (the default) in order to refetch the package
+through the siphon.  This action can be accelerated by the \fBsynch\fR
+command.
+    
+The \fBcorrupt\fR command is useful since normal operation of the
+package tools and siphon prevents re-shipment of files and package
+versions thought already to be present.  It does not actually delete
+bits, but simply causes the local replica or site state for the
+package to be invalidated.  However, if a package is invalidated on
+all replicas, it will not be possible to "get" that package until the
+old bits have been recovered or a new package version is received.
+.TP 10
+\fBchangeowner\fR
+sets the managedBy field for the package to \fBsite\fB and sets the
+lastVN field to curVN.
+
+.SH "SEE ALSO"
+.MS packagetool 1
+.MS packageserver 8
+.SH AUTHOR
+Francis Prusker and Ted Wobber
+.PP
+Copyright 1992 Digital Equipment Corporation.
+.br
+Distributed only by permission.
+
+Last modified on Thu Oct 13 14:01:31 PDT 1994 by wobber 
+     modified on Tue Nov 26 15:57:35 GMT+1:00 1991 by prusker
+     modified on Sun Feb 19 16:55:43 PST 1989 by glassman    

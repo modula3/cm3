@@ -1,0 +1,17 @@
+/* Copyright 1994 Digital Equipment Corporation.               */
+/* Distributed only by permission.                             */
+/* Last modified on Wed May 29 13:50:50 PDT 1996 by mcjones    */
+/*      modified on Tue Mar 14 16:41:47 PST 1995 by birrell    */
+
+import("formsvbt")
+import("lecternclient")
+import("lecterndoc")
+import("mtex") /* for manpage */
+
+resource("EditLectern.fv")
+resource("digitalLogo.pbm")
+resource("menuArrow.pbm")
+bundle("EditLecternBundle")
+implementation("EditLectern")
+Program("EditLectern")
+Mtex("EditLectern", 1) /* manpage */

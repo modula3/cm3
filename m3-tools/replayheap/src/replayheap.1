@@ -1,0 +1,48 @@
+.\" Copyright (C) 1989, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.nh
+.TH REPLAYHEAP 1
+.SH NAME
+replayheap \- replay a recorded Modula-3 heap activity
+
+.SH SYNTAX
+.B replayheap [-showheap pgm]
+file
+
+.SH DESCRIPTION
+The
+.B replayheap
+program replays the recorded trace of the heap activity of a Modula-3 
+program contained in file.
+
+Typically, the trace is recorded by running the Modula-3 program of
+interest with the option @M3showheap=recordheap.  This leaves the
+trace in the file m3heap.trace, which can then be replayed with the
+command replayheap m3heap.trace
+
+When
+.B replayheap
+starts, it creates a window with buttons.  Each
+button corresponds to some event in the heap activity trace.  Clicking
+a button will replay all the events until the next occurrence of the
+event.
+
+.SH OPTIONS
+.TP 6
+.BI -showheap " pgm"
+Use
+.I pgm
+instead as
+.I showheap
+to display the heap.
+
+.SH SEE ALSO
+showheap(1) recordheap(1)
+
+.SH AUTHOR OF OBJECT
+Eric Muller
+
+.SH AUTHOR OF DOCUMENTATION
+Eric Muller

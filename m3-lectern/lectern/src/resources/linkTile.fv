@@ -1,0 +1,78 @@
+(Border
+  (Pen 1)
+  (Insert "shared.fv")
+  (Macro list BOA (name)
+    `(Browser ,name Quick)
+    )
+  (Macro pixBtn BOA (name flavor pix (what (Button)))
+    `(,@what %,(Intern (Cat name flavor))
+      (Rim (Pen 2) (Pixmap ,pix))
+      )
+    )
+  (Macro title BOA (name prompt edit)
+    `(HBox
+        (PageButton %,(Intern (Cat name "Zoom"))
+          (For ,(Intern (Cat name "TSplit")))
+          (Rim (Pen 2)
+            (TSplit %,(Intern (Cat name "TSplit"))
+              Circular
+              (Pixmap "upDownArrow1.pbm")
+              (Pixmap "upDownArrow2.pbm")
+              )
+            )
+          )
+        ,(IF edit `(pixBtn ,name "New" "newTile.pbm")
+          `(Glue 0))
+        ,(IF edit `(pixBtn ,name "Edit" "editTile.pbm")
+          `(Glue 0))
+        (Fill)
+        (Shape (Width + 0) (Height + 0)
+          (Text LeftAlign (Margin 3) ,prompt)
+          )
+      )
+    )
+  (Macro tile BOA
+    (name prompt body (edit FALSE))
+    `(Shape %,(Intern (Cat name "Tile"))
+      (Height 80 + Infinity - Infinity)
+      (VBox
+        (Bar 1)
+        (title ,name ,prompt ,edit)
+        (Stable (Frame Lowered ,body))
+        (Bar 1)
+        )
+      )
+    )
+  (Filter
+    %LinkTileFilter
+    (Shape %LinkTileShape 
+      (Stable
+        (Shape
+          (Width 180 + Infinity - Infinity)
+          (Height + Infinity)
+          (VTile %LinkTileSplitter
+            (tile "Bookmark" "Bookmarks"
+              (list %BookmarkBrowser)
+              TRUE
+              )
+            (tile "Diary" "Diary"
+              (list %DiaryBrowser)
+              TRUE
+              )
+            (tile "Outline" "Outline"
+              (list %OutlineBrowser)
+              TRUE
+              )
+            (tile "Thumbnail" "Thumbnails"
+              (Shape
+                (Height + Infinity - Infinity)
+                (Width + Infinity - Infinity)
+                (Generic %ThumbnailBrowser)
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  )

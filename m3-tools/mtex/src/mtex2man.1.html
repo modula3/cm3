@@ -1,0 +1,112 @@
+<!-- This file generated automatically by mtextohtml(1) -->
+<HTML>
+<HEAD>
+<TITLE>mtex2man Man Page</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#ffffff" VLINK="#006633">
+<H2>mtex2man(1)</H2>
+
+<H3>NAME</H3>
+<BLOCKQUOTE>
+<P>
+
+mtex2man - translate mtex(7) files to man format
+</BLOCKQUOTE>
+
+<H3>SYNTAX</H3>
+<BLOCKQUOTE>
+<P>
+
+<B>mtex2man</B>
+</BLOCKQUOTE>
+
+<H3>DESCRIPTION</H3>
+<BLOCKQUOTE>
+<P>
+
+<I>mtex2man</I> is a filter that reads a file in <A HREF="mtex.7.html">mtex(7)</A> format from its standard input, and writes a <I>man</I>-format file to
+standard output suitable for viewing with nroff(1)/troff(1) and the man(7) or
+man.nopage(7) macro packages.<P>
+
+<I>mtex2man</I> is written entirely in LIM (see lim(1)).
+</BLOCKQUOTE>
+
+<H3>SPECIAL CHARACTERS</H3>
+<BLOCKQUOTE>
+<P>
+
+There are two special characters for the man output format. Here
+are the characters and the strings they are translated to by
+mtex2man(1):<P>
+
+"<TT>-</TT>" becomes "<TT>\-</TT>"<BR>
+"<TT>\</TT>" becomes "<TT>\\</TT>"
+<BR>
+<P>
+
+To prevent the first character from being translated within the
+scope of a <I>roff</I> environment, you must escape it with a
+<TT>\</TT> (backslash) character.<P>
+
+Since the backslash character is the escape character used by mtex,
+the way to signal one in the input is by escaping it. Hence, the
+second translation listed above says that "<TT>\\</TT>" in the input
+become "<TT>\\</TT>" in the output.
+</BLOCKQUOTE>
+
+<H3>DIAGNOSTICS</H3>
+<BLOCKQUOTE>
+<P>
+
+See the <A HREF="mtex.7.html#Diagnostics">Diagnostics</A> section of the
+mtex(7) manpage for a complete description.
+</BLOCKQUOTE>
+
+<H3>BUGS</H3>
+<BLOCKQUOTE>
+<P>
+
+The <TT>\tt</TT> command for typesetting in fixed-width font is currently
+ignored.<P>
+
+For now, there is no way to produce a single <TT>\</TT> (backslash)
+character in a <I>roff</I> environment.<P>
+
+An escaped backslash character (<TT>\\</TT>) should not be used in
+arguments to the <TT>\item</TT> command within the <TT>description</TT>
+environment. There seems to be a problem with using backslash in
+arguments to certain man(7) macros.<P>
+
+The <TT>"</TT> (double-quote) character should not be used in arguments to the
+<TT>\manpage</TT> and <TT>\section</TT> commands. This problem seems to be due to a
+mistake in the design of nroff(1)/troff(1), which uses this character
+literally in some contexts but as a method of quoting in others.<P>
+
+Links are not indicated in any way.
+</BLOCKQUOTE>
+
+<H3>SEE ALSO</H3>
+<BLOCKQUOTE>
+<P>
+
+<A HREF="mtex.7.html">mtex(7)</A>,
+<A HREF="mtex2html.1.html">mtex2html(1)</A>,
+<A HREF="mtex2tex.1.html">mtex2tex(1)</A>,
+nroff(1), troff(1), man(7), man.nopage(7)
+</BLOCKQUOTE>
+
+<H3>AUTHOR OF PROGRAM AND DOCUMENTATION</H3>
+<BLOCKQUOTE>
+<P>
+
+<A HREF="http://src-www.pa.dec.com/SRC/people/Allan_Heydon/bio.html">Allan Heydon</A>
+(<TT>heydon@src.dec.com</TT>)
+<PRE>
+Last modified on Mon Feb  6 16:46:23 PST 1995 by heydon
+</PRE>
+
+</BLOCKQUOTE>
+
+</BODY>
+</HTML>

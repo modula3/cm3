@@ -1,0 +1,12 @@
+  ConeGO_New(base tip: PointVal, rad: RealVal): ConeGO                
+  ConeGO_NewWithPrec(base tip: PointVal, rad: RealVal, prec: Int): ConeGO
+  ConeGO_Base: PointPropName                                           
+  ConeGO_Tip: PointPropName                                            
+  ConeGO_Radius: RealPropName                                          
+  ConeGO_SetBase(o: GO, p: PointVal): Ok                              
+  ConeGO_SetTip(o: GO, p: PointVal): Ok                               
+  ConeGO_SetRadius(o: GO, r: RealVal): Ok                             
+WHERE                                                                  
+  ConeGO <: SurfaceGO                                                   
+  PointVal = PointPropVal + Point3                                     
+  RealVal = RealPropVal + Real + Int

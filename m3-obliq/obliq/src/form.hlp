@@ -1,0 +1,76 @@
+  form_failure: Exception
+  form_new(t: Text): Form ! form_failure
+    Read a form description from a text.
+  form_fromFile(file: Text): Form ! form_failure thread_alerted
+    Read a form description from a file.
+  form_attach(fv: Form, name: Text, f: (Form)->Ok): Ok ! form_failure
+    Attach a procedure to an event, under a form. The procedure is passed 
+    back the form when the event happens.
+  form_getBool(fv: Form, name: Text, property: Text): Bool ! form_failure
+    Get the boolean value of the property of the named interactor.
+    (Do not confuse with form_getBoolean.)
+  form_putBool(fv: Form, name: Text, property: Text, b: Bool): Ok 
+    ! form_failure
+    Set the boolean value of the named property of the named interactor.
+    (Do not confuse with form_putBoolean.)
+  form_getInt(fv: Form, name: Text, property: Text): Int ! form_failure
+    Get the integer value of the named property of the named interactor. If 
+    property is the empty text, get the “value” property.
+  form_putInt(fv: Form, name: Text, property: Text, n: Int): Ok 
+    ! form_failure
+    Set the integer value of the named property of the named interactor. If 
+    property is the empty text, set the “value” property.
+  form_getText(fv: Form, name: Text, property: Text): Text ! form_failure
+    Get the text value of the named property of the named interactor. If 
+    property is the empty text, get the “value” property.
+  form_putText(fv: Form, name: Text, property: Text, t: Text, append: Bool)
+   : Ok ! form_failure
+    Set the text value of the named property of the named interactor. If 
+    property is the empty text, set the “value” property.
+  form_getBoolean(fv: Form, name: Text): Bool ! form_failure
+    Get the boolean value of the named boolean-choice interactor.
+  form_putBoolean(fv: Form, name: Text, b: Bool): Ok ! form_failure
+    Set the boolean value of the named boolean-choice interactor.
+  form_getChoice(fv: Form, radioName: Text): Text ! form_failure
+    Get the choice value of the named radio interactor.
+  form_putChoice(fv: Form, radioName: Text, choiceName: Text): Ok 
+    ! form_failure
+    Set the choice value of the named radio interactor.
+  form_getReactivity(fv: Form, name: Text): Text ! form_failure
+    Get the reactivity of the named interactor. It can be "active", 
+    "passive", "dormant", or "vanished".
+  form_putReactivity(fv: Form, name: Text, r: Text): Ok ! form_failure
+    Set the reactivity of the named interactor. It can be "active", 
+    "passive", "dormant", or "vanished".
+  form_popUp(fv: Form, name: Text): Ok ! form_failure
+    Pop up the named interactor.
+  form_popDown(fv: Form, name: Text): Ok ! form_failure
+    Pop down the named interactor.
+  form_numOfChildren(fv: Form, parent: Text): Int ! form_failure
+    Return the number of children of parent.
+  form_child(fv: Form, parent: Text, n: Int): Text ! form_failure
+    Return the n-th child of parent.
+  form_childIndex(fv: Form, parent: Text, child: Text): Int ! form_failure
+    Return the index of the given child of parent.
+  form_insert(fv: Form, parent: Text, t: Text, n: Int): Ok ! form_failure
+    Insert the form described by t as child n of parent.
+  form_move(fv: Form, parent: Text, child: Text, toChild: Text, before: Bool)
+    : Ok ! form_failure
+    Move child before or after toChild of parent; after "" means first,
+    before "" means last.
+  form_delete(fv: Form, parent: Text, child: Text): Ok ! form_failure
+    Delete the named child of parent.
+  form_deleteRange(fv: Form, parent: Text, n: Int, count: Int): Ok 
+    ! form_failure
+    Delete count children of parent, from child n.
+  form_takeFocus(fv: Form, name: Text, select: Bool): Ok ! form_failure
+    Make the named interactor acquire the keyboard focus, and optionally 
+    select its entire text contents.
+  form_show(fv: Form): Ok ! form_failure
+    Show a window containing the form on the default display.
+  form_showAt(fv: Form, at: Text, title: Text): Ok ! form_failure
+    Show a window containing the form on a display. For an X display,
+    at=<machine name>(':'|'::')<num>(''|'.'<num>); at="" is the default 
+    display. The title is shown in the window header.
+  form_hide(fv: Form): Ok ! form_failure
+    Hide the window containing the form.

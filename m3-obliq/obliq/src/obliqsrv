@@ -1,0 +1,11 @@
+#! /bin/sh
+PATH=/usr/ucb:/bin:/usr/bin:/proj/mips/bin
+
+case $1 in
+	-min)	exec obliqsrv-min ;;
+	-std)	exec obliqsrv-std ;;
+	-ui)	exec obliqsrv-ui ;;
+	"")     exec obliqsrv-std ;;
+	*)      /bin/echo "Bad flag for obliqsrv"
+	        /bin/echo "Usage: obliqsrv [ -min | -std | -ui ]" ;;
+esac

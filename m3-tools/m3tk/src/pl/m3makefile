@@ -1,0 +1,45 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Wed May  5 20:52:37 PDT 1993 by mjordan                  */
+
+Interface("M3LTypeHash")
+Interface("M3LInitOrder")
+Interface("M3LReveals")
+Interface("M3LTypeSpecToText")
+Interface("M3LProgContext")
+Interface("M3LMain")
+Interface("M3LTypeToText")
+Interface("M3LTypeCodes")
+Interface("M3LTextToType")
+Interface("M3LExports")
+Interface("M3LTool")
+Interface("M3LDepends")
+Interface("M3LTypeEquiv")
+Interface("M3LFingerPrint")
+Interface("M3LBackEnd")
+Interface("M3LSubtype")
+Interface("M3LMethodTable")
+Interface("M3LOpaque")
+
+implementation("M3LTypeHash")
+implementation("M3LInitOrder")
+implementation("M3LReveals")
+implementation("M3LProgContext")
+implementation("M3LMain")
+implementation("M3LTypeToText")
+implementation("M3LTypeCodes")
+implementation("M3LTextToType")
+implementation("M3LExports")
+implementation("M3LBackEnd_D")
+implementation("M3LTool")
+implementation("M3LDepends")
+implementation("M3LTypeEquiv")
+implementation("M3LFingerPrint")
+implementation("M3LBackEnd")
+implementation("M3LSubtype")
+implementation("M3LMethodTable")
+implementation("M3LOpaque")
+
+

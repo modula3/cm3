@@ -1,0 +1,23 @@
+(Filter %@filter $FilterState$
+ 
+  (Shape %@shape (Width $XSpan$ + Inf - Inf) (Height $YSpan$ + Inf - Inf)
+  
+    (BgColor "$BgColor$") (Color "$FgColor$")
+     (LabelFont "$Font$")  
+     
+     (Frame $FrameStyle$  
+      (Rim %@rim (Pen $RimPen$) (ShadowSize 1.5)
+       (Border %@border (Pen $BorderPen$)
+
+         (Boolean =$initValue$ %@ $fbstyle$ 
+                 ( $BooleanContents$ )
+         )
+         
+        )
+           
+        )
+      )
+    )
+ )
+  
+

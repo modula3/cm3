@@ -1,0 +1,15 @@
+#!  /bin/sh
+
+WIDS="boolean browser button choice filebrowser form"
+WIDS="$WIDS frame hscroll menu numeric text textedit"
+WIDS="$WIDS typein video vscroll"
+
+echo "module templates;" > ../OBLIQ/templates.obl
+echo "let Templates = {" >> ../OBLIQ/templates.obl
+for wid in $WIDS ;  do
+	echo $wid "=> \"" >> ../OBLIQ/templates.obl; 
+	sed -e 's/\"/\\\"/g' "${wid}TEMPLATE.fv" >> ../OBLIQ/templates.obl; 
+	 echo "\"," >> ../OBLIQ/templates.obl
+done
+echo "};" >> ../OBLIQ/templates.obl
+

@@ -1,0 +1,87 @@
+  graph_failure: Exception 
+  graph_new(): Graph 
+  graph_redisplay(g: Graph): Ok 
+  graph_animate(g: Graph, t0:Real, t1: Real): Ok 
+  graph_clear(g: Graph): Ok 
+  graph_setWorld(g: Graph, w: Real, e: Real, n: Real, s: Real): Ok 
+  graph_setMargin(g: Graph, margin: Real): Ok 
+  graph_setAspect(g: Graph, aspect: Real): Ok 
+  graph_setPreferredSize(g: Graph, h: Real, v: Real): Ok 
+  graph_setPixelSizeDivisor(g: Graph, h: Real, v: Int): Ok 
+  graph_verticesAt(g: Graph, w: Real, e: Real, n: Real, s: Real): [Vertex] 
+  graph_vertexHiLisAt(g: Graph, w: Real, e: Real, n: Real, s: Real): [VertexHiLi]
+  graph_edgesAt(g: Graph, w: Real, e: Real, n: Real, s: Real): [Edge] 
+  graph_polygonsAt(g: Graph, w: Real, e: Real, n: Real, s: Real): [Polygon] 
+  graph_setClickAction(g: Graph, p: (Graph,Real,Real)->Ok): Ok 
+    set the procedure to be invoked on single AND double down mouse transitions
+  graph_setClickReleaseAction(g: Graph, p: (Graph,Real,Real)->Ok): Ok 
+    set the procedure to be invoked on up mouse transitions
+  graph_setDoubleClickAction(g: Graph, p: (Graph,Real,Real)->Ok): Ok 
+    set the procedure to be invoked on double down mouse transitions
+  
+  graph_newVertex(g: Graph): Vertex 
+  graph_moveVertex(v: Vertex, x: Real, y: Real, animate: Bool): Ok 
+  graph_moveVertexOnPath(v: Vertex, path: (Real)->[2*Real]): Ok 
+  graph_removeVertex(v: Vertex): Ok 
+  graph_vertexToFront(v: Vertex): Ok 
+  graph_vertexToBack(v: Vertex): Ok 
+  graph_setVertexSize(v: Vertex, h: Real, v: Real): Ok 
+  graph_setVertexShape(v: Vertex, shape: Text): Ok 
+     (shape is "rectangle" or "ellipse") 
+  graph_setVertexColor(v: Vertex, c: Color): Ok 
+  graph_setVertexFont(v: Vertex, f: Font): Ok 
+  graph_setVertexLabel(v: Vertex, label: Text): Ok 
+  graph_setVertexLabelColor(v: Vertex, c: Color}): Ok 
+  graph_setVertexBorder(v: Vertex, border: Real): Ok 
+  graph_setVertexBorderColor(v: Vertex, c: Color): Ok 
+  graph_getVertexPosition(v: Vertex): [2*Real] 
+  
+  graph_newVertexHiLi(v: Vertex): VertexHiLi 
+  graph_moveVertexHiLi(vh: VertexHiLi, v: Vertex, animate: Bool): Ok 
+  graph_removeVertexHiLi(vh: VertexHiLi): Ok 
+  graph_vertexHiLiToFront(vh: VertexHiLi): Ok 
+  graph_vertexHiLiToBack(vh: VertexHiLi): Ok 
+  graph_setVertexHiLiColor(vh: VertexHiLi, c: Color): Ok 
+  graph_setVertexHiLiBorder(vh: VertexHiLi, h v: Real): Ok 
+  graph_getVertexHiLiVertex(vh: VertexHiLi): Vertex 
+  
+  graph_newEdge(v1:Vertex, v2: Vertex): Edge 
+  graph_moveEdge(e: Edge, v1: Vertex, v2: Vertex, animate: Bool): Ok 
+  graph_moveEdgeBezier(e: Edge, v1: Vertex, v2: Vertex, c1: Vertex, c2: Vertex,
+    animate: Bool): Ok 
+  graph_removeEdge(e: Edge): Ok 
+  graph_edgeToFront(e: Edge): Ok 
+  graph_edgeToBack(e: Edge): Ok 
+  graph_setEdgeWidth(e: Edge, width: Real): Ok 
+  graph_setEdgeColor(e: Edge, c: Color): Ok 
+  graph_setEdgeArrows(e: Edge, arrowAtV1: Bool, arrowAtV2: Bool): Ok 
+  graph_getEdgeVertices(e: Edge): [2*Vertex] 
+  graph_getEdgeControls(e: Edge): [Vertex]
+    (returns 0 or 2 vertices) 
+  
+  graph_newPolygon(vs: [Vertex]): Polygon 
+  graph_movePolygon(p: Polygon, vs: [Vertex], animate: Bool): Ok 
+  graph_removePolygon(p: Polygon): Ok 
+  graph_polygonToFront(p: Polygon): Ok 
+  graph_polygonToBack(p: Polygon): Ok 
+  graph_setPolygonColor(p: Polygon, c: Color): Ok 
+  
+  graph_newFont(g: Graph, family: Text, size: Real, 
+                slant: Text, weight: Text, foundry: Text): Font 
+    (family is "Helvetica"...; normal size is 0.0353; slant is "Roman",
+    "Italic", "Oblique", "ReverseItalic", "ReverseOblique", "Other", "Any"; 
+     weight is "bold"...; foundry is "*"... 
+  graph_defaultFont: Font 
+  
+  graph_newSpectrum(g: Graph): Spectrum 
+    a spectrum is an animatable color; it is a legal color 
+  graph_setSpectrumColor(s: Spectrum, c: Color): Ok 
+    set the visible-right-now color of the spectrum 
+  graph_setSpectrumRange(s: Spectrum, range: (Real)->Color): Ok 
+    set the color range for future animations; domain in 0.0..1.0 
+  
+  graph_show(g: Graph): Ok 
+  graph_hide(g: Graph): Ok 
+  
+  Some(T<:{}) graph_setObjectLayer(o: T, layer: Int): Ok 
+    Don't use this call! layer= 0(fore), 1(normal), 2(back) 

@@ -1,0 +1,56 @@
+  n.m: Int
+    Positive real constants; m is optional.
+  ~n.m: Int
+    Negative real constants; m is optional.
+  real_minus(n: Real): Real
+    (also '-n') Real negation.
+  real_minus(n: Int): Int
+    (also '-n') Overloaded integer negation.
+  real_+(n1: Real, n2: Real): Real
+    (also infix '+') Real addition.
+  real_+(n1: Int, n2: Int): Int
+    (also infix '+') Overloaded integer addition.
+  real_-(n1: Real, n2: Real): Real
+    (also infix '-') Real difference.
+  real_-(n1: Int, n2: Int): Int
+    (also infix '-') Overloaded integer difference.
+  real_*(n1: Real, n2: Real): Real
+    (also infix '*') Real multiplication.
+  real_*(n1: Int, n2: Int): Int
+    (also infix '*') Overloaded integer multiplication.
+  real_/(n1: Real, n2: Real): Real
+    (also infix '/') Real division.
+  real_/(n1: Int, n2: Int): Int
+    (also infix '/') Overloaded integer division.
+  real_<(n1: Real, n2: Real): Bool
+    (also infix '<') Real less-than predicate
+  real_<(n1: Int, n2: Int): Bool
+    (also infix '<') Overloaded integer less-than predicate
+  real_>(n1: Real, n2: Real): Bool
+    (also infix '>') Real greater-than predicate
+  real_>(n1: Int, n2: Int): Bool
+    (also infix '>') Overloaded integer greater-than predicate
+  real_<=(n1: Real, n2: Real): Bool
+    (also infix '<=') Real no-greater-than predicate
+  real_<=(n1: Int, n2: Int): Bool
+    (also infix '<=') Overloaded integer no-greater-than pred.
+  real_>=(n1: Real, n2: Real): Bool
+    (also infix '>=') Real no-less-than predicate.
+  real_>=(n1: Int, n2: Int): Bool
+    (also infix '>=') Overloaded integer no-less-than pred.
+  real_float(n: Int): Real
+    (also 'float(n)') Integer-to-real conversion.
+  real_float(n: Real): Real
+    (also 'float(n)') Overloaded; identity on reals.
+  real_round(n: Real): Int
+    (also 'round(n)') Real-to-integer rounding.
+  real_round(n: Int): Int
+    (also 'round(n)') Overloaded; identity on integers.
+  real_floor(n: Real): Int
+    Greatest integers no greater than n.
+  real_floor(n: Int): Int
+    Overloaded; identity on integers.
+  real_ceiling(n: Real): Int
+    Least integers no less than n.
+  real_ceiling(n: Int): Int
+    Overloaded; identity on integers.

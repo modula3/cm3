@@ -1,0 +1,30 @@
+.SH "SEARCH PATH TOOL"
+.PP
+A search path, defined as an ordered list of directories, is used
+to locate imported units and also to locate units specified
+by the \fBInterfaces\fP and \fBModules\fP keywords. 
+The search path can be specified directly with the \fBDefinepath\fP
+option (see below) or indirectly through an 
+\fIm3path\fP file in the current
+working directory. In the latter case, the \fIm3path\fP file
+should contain a list
+of directories, one per line. In \fIm3path\fP files,
+the directory names may contain
+environment variables in the style of \fImake\fP, e.g. \fB$(M3LIB)\fP. 
+However the search path is specified, the current
+working directory is always prepended to the search path, and the 
+(site-specific) directory
+containing the standard interfaces is always appended to the specified
+path. So, for simple use, no explicit search path is necessary.
+.TP
+.B \-DdefPath
+If this option is given, then any \fIm3path\fP files are ignored and
+the given search path is used to locate files. The syntax is the same
+as that used by the SRC Modula-3 compiler, a list of pathnames
+separated by `:' characters. The pathnames are prepended to the
+search path.
+.TP
+.B \-NOSTD
+Do not append the directory containing the standard interfaces to the
+search path. N.B. There is no way to suppress the prepending of the
+current working directory.

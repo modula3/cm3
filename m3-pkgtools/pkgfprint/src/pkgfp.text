@@ -1,0 +1,97 @@
+
+                                                    pkgfp(1)
+
+NAME
+    pkgfp - fingerprinting of package database; used by siphon
+
+SYNTAX
+    pkgfp [-vfcpx] [-r replicaName] [packages ...]
+
+DESCRIPTION
+    This program fingerprints packages.
+
+    Fingerprints are used by the siphon software to make sure that
+    packages are the same at distant sites (SRC and PRL). They can also
+    be used to make sure that two replicas at the same site are the same.
+
+    The default action is to fingerprint all packages for which no
+    valid fingerprint exists in the packageserver lock database.  Whenever
+    a package is shipped its fingerprint is set to invalid, so by default
+    pkgfp fingerprints all packages for which the most recent version hasn't
+    been fingerprinted.
+
+    If packages names are present on the command line, only those
+    packages are considered, otherwise all packages registered in the local
+    site lock server are considered.
+
+    Package names can be qualified or unqualified; unqualified names
+    are interpreted relative to the default ("cra" in the CRA siphon).
+
+    The following options are mutually exclusive:
+
+      -c  compare option: if the package is fingerprinted,
+          recompute its fingerprint and compares it with the value
+          in the lock database; doesn't modify the lock database;
+          this option allows to compare file servers.
+
+      -p  print option: prints the fingerprints as registered in
+	  the lock database; doesn't modify the lock database.
+
+      -f  force option: fingerprint packages even if they are already 
+          fingerprinted.
+          
+      -z  reset option: invalidates the fingerprint in the lock database
+
+    Other options:
+
+      -r  Perform any necessary fingerprinting on "replicaName".
+
+      -v  emit per-file information about fingerprinting in progress.
+
+EXAMPLES
+
+		pkgfp
+
+    will fingerprint all packages not already fingerprinted. This
+    command should be run every day on a machine which have access to
+    the packages directories.
+
+		pkgfp -c
+
+    will compute the fingerprint of already fingerprinted packages, and
+    report any mismatches between the computed value and the value
+    registered at lock server. This should be run on every replica of
+    /proj to detect any inconsistencies.
+
+WHAT AFFECTS THE FINGERPRINTS
+ 
+   Only the following characteristics affect the fingerprint of a
+   tree node:
+      +  the node type (regular file, directory, symbolic link)
+      +  the tail (last arc) in the node pathname
+      +  for a directory:        the fingerprint of child nodes
+      +  for a symbolic link:    value of the link referent
+      +  for a regular file: 
+          ++  content of the file
+          ++  "execute by owner" and "write by owner" access right bit
+          ++  the last modify time
+
+    In addition, the set of export links affects the fingerprint of a package.
+
+    Note that pkgfp use the package servers when fetching the contents
+    of a package.
+
+SEE ALSO
+    packagetool(1), packageserver(8), pkgq(1)
+
+AUTHOR OF OBJECT
+    Francis Prusker
+
+AUTHOR OF DOCUMENTATION
+    Francis Prusker
+
+# Copyright 1989 Digital Equipment Corporation.
+# Distributed only by permission.
+Last modified on Tue Aug  3 10:48:20 PDT 1993 by wobber 
+     modified on Fri Feb 12 02:42:05 PST 1993 by prusker
+     modified on Tue Feb 28 11:19:59 PST 1989 by glassman    

@@ -1,0 +1,16 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Makefile for pkgtool libraries
+%
+% Last modified on Thu Sep  1 08:37:48 PDT 1994 by kalsow
+%      modified on Mon Apr  4 10:55:59 PDT 1994 by wobber
+
+import("netobj")
+import("tcp")
+
+include_dir("Common")
+include_dir("POSIX")
+
+Library("pkgobj")

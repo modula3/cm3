@@ -1,0 +1,360 @@
+.nh
+.TH "Postcard" "1"
+.SH "NAME"
+.PP
+Postcard \- An X\-11 interface for mail and news groups
+.SH "SYNTAX"
+.PP
+\fBPostcard\fR
+[ \fB\-display\fR \fIname\fR ]
+[ \fB\-geometry WxH+X+Y]\fR ]
+[ \fB\-longFolders\fR ]
+.SH "DESCRIPTION"
+Postcard is a user interface for reading and composing personal
+electronic mail, and for reading newsgroups and bulletin boards.
+It combines in an X\-windows interface most of the functions of mail
+handling programs such as \fBmh\fR or \fBxmh\fR, and news\-reading programs
+such as \fBrn\fR or \fBxrn\fR.
+.PP
+In addition, Postcard provides an integrated user interface for
+browsing the accumulated spool of newsgroups and bulletin boards,
+with a query language that includes full text indexing.  This
+browsing is done through the
+ni(1)
+news indexing program.
+.PP
+Just like mh, Postcard keeps \fImessages\fR in \fIfolders\fR.  (There is
+no nesting of folders.)  One folder, \fIinbox\fR, is special: it is
+where your newly arrived personal electronic mail is placed.  You
+can create other private folders and copy or move messages into
+them.  You can also create folders that correspond to newsgroups
+    (or bulletin boards).  In many ways these behave like your other
+folders, except that they are read\-only.  When new articles appear
+in a newsgroup, they automatically appear in your corresponding
+folder. You can also create aliases for newsgroups and for folders
+shared with other users.
+.PP
+Postcard uses the same file and directory structures for storing
+messages as 
+mh(1).
+Indeed, it uses the various mh programs for
+most access to messages.  Postcard does not interfere with use of
+rn, although it does not use rn's list of active newsgroups, nor
+rn's kill file.  Postcard is compatible with some mail polling
+programs, such as \fBfaces \-a\fR; it is incompatible with \fBxbiff\fR.
+.PP
+Postcard uses an X\-Server for all its user interactions.  Postcard
+is programmed in Modula\-3, using the Trestle and VBTKit toolkit
+and the FormsVBT interface\-description system.
+.PP
+Postcard has a built\-in editor for message composition, but it
+also lets you use an external editor of your choice, such as
+    \fBemacs\fR, \fBepoch\fR, or \fBvi\fR.
+.PP
+Postcard has been debugged using version 6.7.1 of mh.  Your
+mileage might differ if you have a different version installed in
+your local environment.  Note that, unlike previous versions, mh
+version 6 allows more than 999 messages in a folder.
+.SH "DOCUMENTATION"
+All of Postcard's documentation is built\-in to the application.
+Click \*(lqhelp\*(rq on the general menu (at the top\-left of the main
+window, looking like a U.S. Mail box). That produces a \*(lqhelp\*(rq
+window, with buttons to provide detailed explanations of
+Postcard's operations.  Please use the help window's \fBNext\fR
+button to skim the documentation at least once.
+.SH "INSTALLATION"
+Postcard itself is a single unprivileged program, and needs no
+installation \- just run it, as described below in 
+Starting Postcard.  
+However, Postcard uses several other programs. 
+Postcard finds most of these subsidiary programs by their simple
+name, looked up according to your PATH environment variable.  You
+    (the user) or your system administrator should make sure these
+programs are accessible.
+.PP
+Postcard requires the mh(1) system, version 6.7 or later.  From
+mh(1), Postcard uses \fBinc\fR, \fBscan\fR, \fBrefile\fR, \fBrmm\fR, 
+    \fBfolder\fR, \fBsortm\fR and \fBsend\fR.
+.PP
+Postcard requires \fB/bin/rm\fR, \fBbin/ls\fR, and  \fB/usr/ucb/from\fR,
+each of which is referenced by absolute pathname.  Postcard
+invokes /bin/rm with the \fB\-r\fR option to delete recursively, and
+invokes /bin/ls with no options.  It uses \fB/usr/ucb/from\fR to
+count the number of messages in your inbox \- all that Postcard
+does is count the number of newline in the output.
+.PP
+Postcard requires the program \fBllscan\fR, which is available from SRC. 
+.PP
+Postcard uses the program \fBni\fR to implement the \*(lqBrowse Discussion\*(rq
+command and the commands in Postcard's \*(lqNI Query\*(rq dialog; if \fBni\fR
+is not available, Postcard will give you an error message when you
+use those commands.
+.PP
+Postcard can also use various other programs that you explicitly
+choose in the \*(lqSet Configuration\*(rq dialog, for printing, external
+editing, and PostScript previewing.  See the \*(lqhelp\*(rq popups in the
+configuration dialog for more information on these commands.
+.PP
+If you want to use Postcard to read newsgroups and bulletin boards,
+they must be available for direct file access, generally in the
+directory /usr/spool/news.  If you are using them, your system
+administrator should create a \*(lq.purge\*(rq file in a newsgroup
+directory whenever messages there are purged or renumbered, so that
+Postcard will rescan the directory.
+.SH "STARTING POSTCARD"
+Postcard takes about half a minute to start upon a modern
+workstation; you'll probably want start Postcard and leave it
+running until the machine crashes or a new version of Postcard
+comes along.
+.PP
+You start Postcard with the \fBPostcard\fR command; this creates a
+window on your display.  All your interaction with Postcard is
+centered around this window.
+.PP
+On the command line with the \fBPostcard\fR command you can give a
+    \fB\-geometry\fR parameter to specify the width, height and position of
+the main window.  The value of this parameter is in the standard
+WxH+X+Y format, e.g. \*(lq640x480+0+0\*(rq.  The numbers in this parameter
+are pixels.  Positions are measured from the top left of the display
+if positive, and the bottom right if negative.  You can also provide
+a 
+    \fB\-display\fR 
+parameter to name the X\-server and particular display
+for the main window.  Postcard creates its other windows when
+needed, near the main window.
+.PP
+The \fB\-longFolders\fR parameter requests a slightly different layout
+for Postcard's main window, with the folder list all the way down
+the right hand side.
+.PP
+It's generally safe to run multiple copies of Postcard (e.g. in
+order to display on your X\-server at work as well as your X\-server
+at home).  But this is safe only if the multiple copies are
+executing on the same computer (or you're not using NFS).  And the
+multiple copies will not track additions and removals of folders,
+nor changes made with the Postcard configuration dialog.  You might
+also get confused when there are file system errors, but the
+applications will try their best to avoid losing data in those
+cases.  Don't try to interact with multiple copies of Postcard
+simultaneously \- the algorithms assume there's a delay of at least
+one minute between your using one copy of Postcard and using the
+other one.
+.PP
+Postcard relies on a lot of files, programs, and settings from your
+environment.  The most important of these are as follows; section
+    5 describes many additional configuration options, and more
+environment variables are mentioned below under 
+ENVIRONMENT. 
+.PP
+Most systems provide suitable defaults for all of the settings
+automatically.
+.PD 0
+.RS 0
+.TP 6
+$PATH
+This environment variable must be set to a search
+path that provides access to the mh and ni commands.
+.IP
+.TP 6
+$DISPLAY
+This environment variable describes the display
+for your X\-Server, e.g. \*(lqtokay.pa.dec.com:0.0\*(rq.
+.IP
+.TP 6
+$HOME
+This environment variable should be the name of
+your user directory, e.g. \*(lq/udir/birrell\*(rq.
+.IP
+.TP 6
+$USER
+This environment variable should be your user name
+as used for mail, e.g. \*(lqbirrell\*(rq.  Case sensitive.
+.IP
+.TP 6
+$HOME/Mail
+The directory containing your mail folders, as
+for \fBmh\fR.  Must be writable, and should contain at
+least \*(lqinbox\*(rq (though you can create this in
+Postcard).
+.RE
+.PD
+.PP
+While Postcard is running it creates directories in $HOME/Mail
+when you create folders.  It stores your Postcard configuration
+in $HOME/.postcardFV_rc and draft messages in $HOME/.pc_draft;
+it can use an alias file from $HOME/.mail_aliases.sx
+.PP
+The mh commands used by Postcard require an mh profile in
+    $HOME/.mh_profile.  You probably already have one, but if not you
+should acquire one from a friend, or read the mh documentation.
+.SH "ERROR RECOVERY"
+Postcard does not have a generalized undo mechanism, but there are
+several ad hoc ways to recover from a mistake.  If you [move] a
+message to the wrong folder, just open that folder and [move] it
+to the correct one.
+.PP
+If you are worried about mistakes with [delete], you can use the
+Postcard option to have [delete] work by copying the message to
+a \*(lqdeleted\*(rq folder (see the help information in the configuration
+dialog).  If you decide to use this option, you should try to keep
+your \*(lqdeleted\*(rq folder down to a reasonable size by using the Purge
+command in the Folders menu when you have your \*(lqdeleted\*(rq folder
+open.
+.PP
+If you don't use the \*(lqdeleted\*(rq folder option, it is still possible
+to recover a message you accidentally deleted with the [delete]
+button.  The message is not destroyed immediately.  Instead, the
+message file is renamed to begin with a comma.  These \*(lqcomma files\*(rq
+may disappear, however: if you subsequently delete a second message
+with the same number (i.e., after an [inc] or a \*(lqSort & Pack\*(rq), its
+comma file will overwrite the earlier one.  Also many installations
+include daemons that delete such files overnight.  So you have a
+short period of grace in which to recover your accidentally deleted
+message.  Just use a shell window to look in the directory
+corresponding to the folder you had open, e.g.:
+.EX
+tokay 1> cd ~/Mail/inbox
+tokay 2> ls 
+.EE
+Look for the comma file corresponding to the message you deleted,
+and note the highest existing message number.  Rename the comma
+file to a message number not in use (such as the number of the
+message you deleted, if possible):
+.EX
+srcff 3> mv ,27 27
+.EE
+Then go back to Postcard and use the Rescan command in the Folder
+menu.  Your message will reappear in the browser.
+.PP
+If this fails, but the message you accidentally deleted had been
+in your folder for at least 24 hours, it may be possible to recover
+it from backup tapes.
+.PP
+Restoring files from backup tapes is not something that the system
+manager has time to do routinely, but he or she is willing to do
+it in an emergency.
+.PP
+The text of a draft message in a composition sub\-window is written
+to a file in the $HOME/.pc_draft directory within 30 seconds of
+each edit that you make to it.  These files are named \*(lq1\*(rq, \*(lq2\*(rq,
+etc.; the names are re\-used as composition sub\-windows are
+re\-used.  Postcard normally recovers these files automatically on
+a restart if you had an unsent draft.  When you click \*(lqdiscard\*(rq or
+after a successful \*(lqsend\*(rq, the message file is stored in a
+simlarly named file in $HOME/.pc_draft, but with its name prefixed
+by \*(lq,\*(rq.
+.PP
+Sometimes your $HOME/.mh_profile file can get into a state that
+will confuse the mh programs. A symptom of this is persistent
+strange messages including the name of an mh program (e.g. \fBscan\fR
+or \fBinc\fR). You can often recover from this by deleting
+    $HOME/.mh_profile or by copying that file a friend.
+.SH "BUGS"
+Postcard maintenance is handled at SRC by 
+Andrew Birrell. 
+Report  bugs in Postcard by sending a message to \fBBirrell@pa.dec.com\fR. If
+possible, include the version number, from the \*(lqAbout Postcard\*(rq
+dialog.
+.SH "WARNINGS"
+To improve interactiveness, Postcard executes time\-consuming
+operations in the background while giving the illusion that they
+are done immediately.  This can confuse you if you look at
+Postcard's part of the file system using other means.  To be sure
+no background operations are in progress, click on the \*(lqinc\*(rq button,
+open a different folder, or exit Postcard; each of these actions
+waits for the background queue to empty.
+.PP
+If you use mh and Postcard concurrently, it is possible that
+Postcard's internal cache of mail information can be incorrect.
+Postcard is only smart enough to detect whether a folder directory
+has been modified at the time it opens it.  If you modify the
+mail information through other means other than Postcard (i.e.,
+using mh from home), simply use the Rescan comand in
+the Folder menu.  This will bring Postcard up to date.
+.SH "MAINTENANCE NOTES"
+During bulletin board upheavals, it is sometimes useful for the
+bulletin board wizards to force an automatic rescan the next time a
+user opens a particular bulletin board.  This is done by creating a
+file .purge in the actual /usr/spool/news directory associated with
+the bulletin board.  If a user's own cache is out of date with
+respect to this file, a complete rescan will be performed.
+.SH "ENVIRONMENT"
+Postcard uses several environment variables, and the various mh
+programs use some more. The ones used explicitly by Postcard are
+as follows.
+.PD 0
+.RS 0
+.TP 6
+PATH
+Used to find sub\-programs.
+.TP 6
+DISPLAY
+The identity of your X\-Server, e.g. \*(lqtokay.pa.dec.com:0.0\*(rq.
+.TP 6
+HOME
+The directory containing your \*(lqMail\*(rq directory (which contains
+your folders), your \*(lq.pc_draft\*(rq directory (for message drafts),
+an optional alias file \*(lq.mail_aliases.sx\*(rq, and your Postcard
+configuration file \*(lq.postcardFV_rc\*(rq and \*(lq.mh_profile\*(rq.
+.TP 6
+USER
+The user name as used for mail, e.g. \*(lqbirrell\*(rq.  Case\-sensitive.
+.TP 6
+MAILDROP
+The mail spool, where new personal mail arrives.  The default is
+        /usr/spool/mail/$USER
+.TP 6
+NEWSDROP
+The news spool, where newsgroups and bulletin boards reside.
+The default is /usr/spool/news
+.TP 6
+TextPortModel
+	The initial editing model for the built\-in editing windows.
+	Should be ivy, emacs, mac, or xterm. The default is emacs.
+.TP 6
+PostcardPATH
+The resource\-path (directory name) where the startup code looks
+for the form\-descriptions, pixmaps, help files, etc. By default,
+these resources are bundled with the executable.
+.RE
+.PD
+.PP
+FILES
+.EX
+    $HOME/Mail/*/*                      # folders and messages
+    $HOME/.pc_draft                     # message drafts
+    $HOME/.mail_aliases.sx              # mail aliases
+    $HOME/.postcardFV_rc                # Postcard configuration options
+    $HOME/.mh_profile                   # .mh_profile file
+llscan                              # sub\-program to scan folders
+    /usr/ucb/from                       # to count new messages
+    {inc,scan,refile,rmm,folder,sortm,send}  # mh sub\-programs
+    /bin/rm                             # to delete folder (rm \-r)
+    /bin/ls                             # to enumerate (no options)
+the mail spool, defaulting to /usr/spool/mail/$USER
+the news spool, defaulting to /usr/spool/news
+.EE
+.SH "SEE ALSO"
+mh(1).
+.SH "AUTHOR"
+previously:  Anthony Discolo, Paul McJones, Dorothy Denning
+.br
+currently:   Andrew Birrell
+.br
+comments to: 
+Birrell@pa.dec.com
+.PP
+Copyright 1994 Digital Equipment Corporation.
+.br
+Distributed only by permission.
+.br
+.BR
+.EX
+Last modified on Mon Nov 28 14:17:25 PST 1994 by glassman 
+modified on Wed Apr 27 16:39:13 PDT 1994 by birrell 
+modified on Thu Feb 25 16:39:09 PST 1993 by meehan 
+modified on Fri Oct 13 16:03:09 PDT 1989 by mcjones
+modified on Tue Sep 19 10:52:36 PDT 1989 by denning
+modified on Tue Jan 12 18:21:39 PST 1988 by discolo
+modified on Fri Jan  8 14:08:27 PST 1988 by mbrown
+.EE

@@ -1,0 +1,16 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* Digital Internal Use Only                                                 *)
+(* All rights reserved.                                                      *)
+(*                                                                           *)
+(* Last modified on Tue Aug 22 12:04:52 PDT 1995 by najork                   *)
+(*       Created on Tue May 31 09:40:28 PDT 1994 by najork                   *)
+
+
+module RootGOWrap for RootGO;
+
+let TProto = clone (GroupGO_TProto, {
+  changeCamera => meth (self, cam) RootGO_ChangeCamera (self, cam) end,
+  screenToWorld => meth (self, pos, z) RootGO_ScreenToWorld (self, pos, z) end
+});
+
+end module;

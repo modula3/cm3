@@ -1,0 +1,425 @@
+\begin{html}
+\<IMG SRC="../vpLogo36.gif" ALIGN=middle ALT=""\>\<P\>
+\end{html}
+\manpage{Lectern}{Lectern}{1}
+\section{NAME}
+Lectern - viewing documents composed of rasterized images
+
+\section{SYNTAX}
+\bf{Lectern [file]}
+
+\section{DESCRIPTION }
+\bf{Lectern} is a document viewer.  It is intended to make it easy and
+comfortable for you to read text documents, such as technical papers,
+on-line.
+
+\bf{Lectern} lets you view documents that are in a proprietary format,
+created by the program 
+\link{BuildLectern.1.html}{BuildLectern(1)}.  These documents contain
+images of each page, at original resolution and at reduced resolutions,
+as well as data derived from the document by applying an OCR algorithm.
+The page images can be acquired by scanning, or by rasterizing some machine
+readable form (e.g., by using a program such as GhostScript - gs(1) - to
+render PostScript files into images).  See the 
+\link{BuildLectern.1.html}{BuildLectern(1)} man page 
+for details on how to construct and modify Lectern documents.
+
+When \bf{Lectern} starts up it creates a single \it{image window} displaying
+the first page of the Lectern document whose path is \bf{file} (or an
+error message, or the Digital logo if \bf{file} is omitted).
+
+SRC has a substantial shared repository of Lectern documents.  The repository
+can be browsed hierarchically, or through a full text index.  See the
+\link{../home.html}{Virtual Paper home page} to get started.
+
+You can use the programs 
+\link{LecternToHTML.1.html}{LecternToHTML(1)} and 
+\link{BuildLecternIndex.1.html}{BuildLecternIndex(1)} to build
+such repositories.  
+
+\section{USER INTERFACE GENERALITIES}
+You can choose whether to drive \bf{Lectern}'s user interface primarily with a
+mouse or from your keyboard.  You can discover all of Lectern's commands
+using your mouse and the pull-down menu: click the down-arrow at the top
+left corner of the image window to see the menu, or just type \tt{m}. The menu
+goes away whenever you execute a command, or when you click the up-arrow at
+its top left, or when you type \tt{m} once more.
+
+If you are using the mouse as your primary tool, you will want to make
+the toolbar visible.  Type \tt{t} or click \bf{Show or Hide Toolbar}
+on the menu.  The commands on the toolbar are shortcuts for things you
+could have done from the pull-down menu.  The \bf{+} and ``pencil''
+buttons in the link browsers (described below) are also designed to
+assist those whose are using a mouse.  In the toolbar sub-window, the
+\bf{+/- 1/5/20} buttons (for moving 1, 5, or 20 pages at a time),
+activate on a down-click, and auto-repeat if you keep the mouse button
+held down.
+
+If you are using your keyboard as your primary tool, you might still want to
+look at the menu as documentation: it describes all the keyboard shortcuts.
+Just type \bf{m} to see the menu, then type the keyboard shortcut for the
+command you want (or \bf{m} again) and the menu will go away.
+
+The command descriptions below are given in terms of the keyboard shortcuts,
+with the equivalent menu commands in parentheses.
+
+Some Lectern commands produce pop-up dialogs.  In general, you
+can cancel or close any dialog by typing \bf{[escape]} or by clicking
+the up-arrow in the corner of the dialog; some also have a \bf{Cancel}
+button.  In general, one button in the dialog has a black outline;
+typing \bf{[return]} is equivalent to clicking that button.
+
+Issuing any command implicitly closes the error dialog, the About Lectern
+dialog, and the menu.  Any command other than one of the \bf{Find} commands
+closes the Find dialog.
+
+Some of the pop-up dialogs have type-in boxes.  You can edit text in these
+using keyboard commands as specified for the FormsVBT library: see the
+FormsVBT Reference Manual.  By default these commands are similar to simple
+Emacs commands.  You can also copy text into (or out of) them using these
+commands.
+
+\bf{Lectern} refers to the images in the document by page number, as far as
+possible.  The document's creator should have specified which page should
+be treated as page 1, in a way that corresponds to the page numbers printed
+on the pages and used in tables of contents or indexes.  \bf{Lectern} refers to
+images prior to page 1 by image numbers, counting the first image in the
+document as image 1.  The menu anchor shows the current page number, 
+or the current image number when you are positioned before page 1.  
+The menu itself always shows the current image number, and the page number 
+when it is defined.
+
+\section{FILES AND PRINTING}
+
+This section describes explicit commands for controlling
+\bf{Lectern}'s access to files.  The \link{#links}{\it{link}}
+mechanism provides other ways to open files.  As mentioned earlier,
+you can also use \link{LecternClient.1.html}{LecternClient(1)}, and
+you can access Lectern documents through Mosaic and the WWW.
+
+You can type \bf{o (Open Document)} to open further \bf{Lectern}
+documents, either in separate windows (click \bf{New} in the \bf{Open}
+dialog) or replacing the document in the current window (click
+\bf{Here} in the \bf{Open} dialog, or type \bf{[return]}).
+
+You can close an image window at any time using the facilities of
+your window manager or by typing \bf{w (Close Viewer)}.  If you used the 
+\link{#links}{links mechanism} to modify the document and you haven't saved it,
+you will be asked to confirm that you really want to discard your
+modifications.
+
+When you close the last image window, \bf{Lectern} quits. Typing \bf{q (Quit)} is
+equivalent to closing each image window in turn.
+
+Type \bf{p} (Print) to send the images (or original PostScript) to
+the printer, or to save images as EPSF or PostScript job files.  Note that
+printing rasterized 300 DPI images is quite slow -
+multiple minutes per page on typical printers.  It would be even slower for
+grayscale or color images, except that printing them isn't implemented yet.
+Printing the original PostScript (if it's available) proceeds at the original
+rate.
+
+\section{SELECTIONS}
+You can select text in the image window by clicking (once) with the left mouse
+button.  You can extend the selection by dragging, or by right-clicking,
+or by shift-clicking.  A selection can extend over multiple pages.
+When you have selected text, it is available in
+character form as the X-11 ``source selection''.  For example, you can
+paste it into an xterm by middle-clicking there.  The characters you get,
+and the order of the words in an extended selection, are those provided
+by the OCR algorithm that was applied to the images by 
+\link{BuildLectern.1.html}{BuildLectern(1)}.
+
+If you double-click with the left mouse button on a word, \bf{Lectern} will
+select that word then try to find the next occurrence of the word in the
+document, as if you had typed \bf{f (Find)}, followed by the word, followed
+by \bf{[return] (Find Next)}.
+
+If you double-click with the middle mouse button on a word that is an integer,
+\bf{Lectern} will select that word and move to that page of the document, as if
+you had typed the number followed by \bf{[return] (To Page)}.
+
+\section{NAVIGATING}
+This section describes \bf{Lectern}'s basic navigation commands.  The 
+\link{#links}{\it{link}} and
+\link{#thumbnails}{\it{thumbnail}}
+mechanisms (described later) provide further navigation tools.
+
+Type \bf{[space] (Go Forward)} to move forward in the document and
+\bf{[backspace] (Go Backward)} to move backward.  See the section on
+\link{#viewControls}{View-Area and Viewing Controls} for a more precise
+description.  You can equivalently use the cursor or arrow keys on
+your keyboard: up or left means \bf{Go Backward}, down or right means \bf{Go
+Forward}.
+
+Use \bf{+ (Next Page)} to move to the next page.  Use \bf{- (Previous Page)} to
+move to the previous page.  \bf{b (Beginning Page)} moves to the beginning of the
+document.  \bf{c (Contents Page)} moves to the first contents page, if the
+document has a known contents page. \bf{i (Index Page)} moves to the first index
+page, similarly.  The function key \bf{next} or \bf{page down} is equivalent to \bf{+},
+as is \bf{=}; the function key \bf{prior} or \bf{page up} is equivalent to \bf{-}.  The
+function key \bf{end} moves to the end of the document.
+
+Type \bf{h (Home)}, or use the \bf{home} function key, to move to the page containing
+the selection (or the beginning of the document if there is no selection).
+
+Typing any digit \bf{0} through \bf{9} brings up the \bf{go} dialog, with its type-in
+initialized to the digit.  Finish typing a number, then type \bf{[return] (To Page)}
+to go to that page.  Or type \bf{+ (Fwd)} to go forward that number of pages,
+or \bf{- (Back)} to go back that number of pages.  For example, if you're on
+page 34, type \bf{7[return]} to go to page 7, or \bf{7+} to go to page 41, or \bf{7-}
+to go to page 27.  The meaning of page 1 was defined by the
+document's creator, so as to correspond to the page numbers in the
+document: it's likely not to be the first image in the document.
+Images before page 1 have no page numbers; you can get to them only by relative
+positioning, or commands such as \bf{b (Beginning Page)} and \bf{c (Contents Page)}.
+
+As described above, middle-double-click on a number is a shortcut for typing
+\bf{number [return]}, i.e., it goes to the numbered page, provided the document's
+creator correctly specified the location of page 1.
+
+Type \bf{f (Find)} to pop-up the Find dialog.  Also, if the selection is not on
+the current page, this command sets an empty selection at the start of the
+current page.  (If you don't want that, type \bf{h (Home)} first.)  In the
+Find dialog you can type a search target (currently only a single word), then
+click \bf{First}, \bf{Next} or \bf{Prev} to find the first, next, or previous
+occurrence of that word in this document, starting at the beginning of the
+selection.  You can type \bf{[return]} as a shortcut for \bf{Next}.  After the
+search, keystrokes are interpreted as commands (any of which will implicitly
+close the Find dialog).  But while the Find dialog remains visible, you can
+continue typing [return] to find the next occurrence of the search target. 
+Type \bf{[escape]} to close the Find dialog explicitly.
+
+As described above, left-double-click on a word is a shortcut for typing
+\bf{f word [return]}, i.e., it finds the next occurrence in this document.
+ 
+Type \bf{u (Undo Page Change)} to undo the most recent operation that moved to
+a different page or to a different resolution (\bf{<} or \bf{>}, described
+below).  You can repeatedly type \bf{u} to move backwards in history, until
+you reach the point where you opened this window.  This includes moving back across places where you opened a new document into an existing window.  Type \bf{r (Redo Page
+Change)} to redo, i.e., to undo an undo command (if you haven't moved to
+another page or resolution in between).
+
+If you hold down the middle mouse button (or control-left) in the
+image window, you can drag the image around.  The effect of this
+dragging is transient - it is ignored the next time you issue a
+command that moves around the page or moves to another page.  See also
+the description of the \link{#viewControls}{View-Area and Viewing
+Controls}, which provide a more persistent way of altering the part of
+the image that is visible.
+
+\section{\anchor{links}{LINKS AND THUMBNAILS}}
+
+Links and thumbnails provide a mechanism that lets you jump to a 
+particular page of a particular document with a single click.  If the link
+specifies a different document, jumping implicitly opens the document. 
+Jumping can also select some text starting on the specified page.
+
+\bf{Lectern} supports three types of links:
+
+\begin{enumerate}
+\item \it{Bookmark} links are personal and transient, intended for keeping 
+track of places in the short term.  Think of bookmarks as being 
+like keeping your place by sticking a finger between the pages 
+of a document.  You can have at most 10 bookmarks (no, you can't 
+use your toes).  When an eleventh bookmark is created, the first 
+bookmark is deleted.  This is the essence of bookmarks' transience:  
+you (and \bf{Lectern}) can create them casually, without cluttering 
+up your workspace, because excess bookmarks are deleted automatically.  
+If you want to keep a bookmark, use \bf{e (Edit Links)} to convert 
+it into a diary entry, as described below.  Your bookmarks are 
+preserved in a file in your home directory ($HOME), so they aren't 
+lost when you quit \bf{Lectern}.  Indeed, when you restart \bf{Lectern} 
+your last bookmark will describe the last place you were before 
+you quitted \bf{Lectern}. 
+
+\item \it{Diary} links are personal and persistent.  Think of them as 
+your personal notebook of favorite documents and places.  Diary 
+links belong to a single user; they are preserved in a file in 
+your home directory ($HOME).  It's entirely up to you to create, 
+sort and delete them. 
+  
+\item \it{Outline} links are attached to a particular document, and are 
+stored within the document.  They are a way for the document 
+designer to help you to navigate around the document, or to jump 
+to somewhere in a related document.  Unlike hypertext links (not 
+yet available in Lectern), all of a document's outline links are 
+available whenever you're viewing the document, independently 
+of your current position within the document.
+\end{enumerate}
+
+\anchor{thumbnails}{\it{Thumbnails}} are stored with a document, and are
+generated automatically by 
+\link{BuildLectern.1.html}{BuildLectern}(1)}.  They provide a
+visual way to find a page within that document.
+
+Bookmarks, diaries and outlines are all essentially the same mechanism.  
+They differ in how or when they are created, accessed and deleted, 
+and how and where they are stored.  But each of them is just a way 
+of remembering a particular place in a particular document (not necessarily 
+the current document). 
+
+Bookmarks, diary links and outline links are identified by text strings.  
+Thumbnails are identified by 1/16 scale images of their pages.
+
+To create a link of any type, first go to the place that you want the 
+link to jump to. Then either type \bf{n (New Bookmark)} to create a bookmark, or click the \bf{+} button in one of the link browsers to create a link of the corrseponding type.  Lectern chooses a name for the link and creates it. 
+
+Whenever you stop viewing a document (by closing a viewer, by terminating 
+\bf{Lectern}, or by opening a new document in an existing viewer), \bf{Lectern} creates a bookmark link describing the place that you just left. 
+
+Creating an eleventh bookmark link implicitly deletes the first bookmark link. 
+
+A newly created link is placed at the bottom of its class.  You can 
+use \bf{e (Edit Links)} to promote it or to rename it, or to convert it to another type of link, as described below. 
+
+The simplest way to jump to a link or thumbnail is to type \bf{L (Show 
+or Hide Link Browsers)}, so that the link browsers are visible in your 
+image window, then click once on one of the links or thumbnails. If you left-click, the link's destination is loaded into the current window; right-click or shift-left-click to load it into a new window.
+
+If you prefer to use the keyboard to jump to a link, type \bf{j (Jump 
+to Link)}.  In the popup-up dialog, select the type of link you're 
+interested in (by default you see the bookmarks).  You can do this 
+by clicking one of the radio buttons, or by using the right-arrow 
+and left-arrow cursor keys on your keyboard.  Then select the link: 
+type the initial part of the its name (until the appropriate link 
+is selected); or select it manually in the dialog using the mouse; 
+or select it using the down-arrow and up-arrow cursor keys on your 
+keyboard.  Or use a combination of all of these methods.  Then type 
+\bf{[return] (Jump)} to jump to it. 
+
+You can use \bf{e (Edit Links)} to modify the existing sets of links.  
+(You can't modify the thumbnails.)  In the Edit Links dialog you 
+can select a link in the usual ways.  You can use the \bf{(Up)} and \bf{(Down)} 
+buttons to change the order of the links.  You can convert a link 
+from one type to another.  Or you can rename a link.  You can do 
+these operations for several links in a single use of the dialog. 
+
+You can also edit links by clicking the ``pencil'' button at the top 
+of one of the links browsers, when they are visible.
+
+Changes you make to your diary or to the set of bookmarks are saved 
+when you close the New Link or Edit Links dialog. 
+
+You can save changes that you make to a document's outline with the 
+\bf{s (Save Document)} command.
+
+Your bookmarks and diary are shared across simultaneously executing
+Lecterns, provided they access the same "$HOME".  When one
+\bf{Lectern} saves changes to your diary or bookmarks, any other copy
+of \bf{Lectern} notices the changes in about 10 seconds, and updates
+its viewers appropriately.
+
+You can access someone else's bookmarks or diary from within \bf{Lectern} 
+by opening their $HOME/.bookmarks.lect or $HOME/.diary.lect as an 
+ordinary \bf{Lectern} document: their bookmarks or diary will appear as 
+the outline of that document. 
+
+\section{WINDOWS AND SETTINGS}
+Type \bf{m (Menu Buttons)} to pull down or release the menu.  Type \bf{k
+(Menu Anchor)} to show or hide the menu anchor button. Type \bf{v (Viewing
+Controls)} to show or hide the viewing controls window (described below). 
+Type \bf{t (Thumbnail Window)} to show or hide the thumbnail window (described
+earlier).  Type [return] to confirm an operation in a modal dialog, or
+to close the \bf{About Lectern} window.  Type \bf{[escape]} to cancel or close a
+dialog.
+
+You can zoom an image window by typing \bf{z (Zoom)} (and again to unzoom it). 
+When you do this, \bf{Lectern} tries to make the image window occupy the entire
+screen.  This is especially effective if you use \bf{Lectern} for presentations.
+And you can use the \bf{k (Menu Anchor)} command to hide the menu anchor button,
+leaving your entire screen filled with just the images.
+
+By default \bf{Lectern} shows the images scaled to 100 dots per inch (DPI) (if the
+originals were 300 DPI).  This makes the image look life size or somewhat
+larger on your screen, depending on the actual resolution of your monitor. 
+Type \bf{> (Larger Images)} to move to a finer resolution (magnifying the image), 
+or \bf{< (Smaller Images)} to move to a coarser resolution (shrinking the
+image). Typing \bf{,} or \bf{.} is equivalent to \bf{<} or \bf{>}.  The available
+resolutions are 75, 100, 150 DPI (or more accurately, scale factors
+of 4, 3, and 2 from the original images).  Most current monitors are
+75 to 100 DPI.
+
+\section{\anchor{viewControls}{VIEW-AREA AND VIEWING CONTROLS}}
+
+The \it{view-area} is a rectangle specifying what part of the current 
+page image you would like to be able to view.  By default, \bf{Lectern} 
+calculates this for you automatically whenever you move to a new 
+page, and by default the \bf{[space] (Go Forward)} command traverses through 
+the view-area of the current page in vertical strips, starting at 
+its top-left corner.  When you reach the bottom right, \bf{[space] (Go 
+Forward)} moves you to the next page.  The \bf{[backspace] (Go Backward)} 
+command works similarly in the opposite direction. 
+
+This process works well if the automatic calculation corresponds 
+to the part of the page you actually want to view, and if the page 
+is set in either one or two columns, and if each column is no wider 
+than the window.  In other situations, you might need to intervene.  
+On occasion, the best fix is to change the width of the \bf{Lectern} viewer 
+window.  The rest of the time you'll need to use the viewing controls 
+sub-window.  Type \bf{v (Viewing Controls)} to show or hide 
+the viewing controls sub-window. 
+
+If \bf{Lectern}'s automatic calculation of the view-area is wrong, use 
+your mouse to adjust the view area rectangle's corners in the viewing 
+controls sub-window.  Doing so flips the radio button below the thumbnail 
+from \bf{automatic} to \bf{manual}.  Your choice of rectangle persists from 
+page to page, until you choose a different rectangle, or click the 
+\bf{automatic} radio button or type \bf{a (Automatic View Area)}, which 
+switches back to having Lectern calculate the view-area for you on 
+each page.
+
+If traversing the view-area by vertical strips isn't appropriate, 
+click one of the other radio buttons in the viewing controls sub-window.  
+Using horizontal strips is good for some pages laid out as tables.  
+Using a single strip down the center of the page is good if you want 
+to ignore marginal labels or notes.  Using "to the next page" is 
+good for concentrating on the center of the view area, ignoring intrusive 
+marginal notes, headers and footers.  I've never used a single strip 
+across the page, but it completes the set.  Note that if the entire 
+view-area fits into the window, all the choices here are equivalent.  
+Your choice of traversal method persists from page to page, until 
+you change it. 
+
+\section{LecternClient}
+
+You can also create a viewer on a Lectern document with the
+\bf{LecternClient} program.  \bf{LecternClient} will communicate with
+an existing instance of the \bf{Lectern} program, or if necessary will
+start \bf{Lectern} for you.  See the
+\link{LecternClient.1.html}{LecternClient(1)} man page for details.
+
+Using \bf{LecternClient} causes \bf{Lectern} to load a document into the image window
+labelled as \it{server}.  The first image window is the initial \it{server}.  You
+can type \bf{d} to detach an image window, so that it is no longer the server. 
+In this situation, or if you close the server window, the next LecternClient
+request will create a new image window as the server window.
+
+\bf{LecternClient} can have one or two integer arguments following the document's
+file title.  If the first integer argument is present, it is interpreted by
+\bf{Lectern} as a word number; the second is a word count.  If they are present,
+these arguments cause \bf{Lectern} to select a range of words in the document
+(counting from 0), and to position the opened document to the page containing
+the start of that selection.
+
+\section{SEE ALSO}
+
+\link{LecternClient.1.html}{LecternClient(1)},
+\link{BuildLectern.1.html}{BuildLectern(1)},
+\link{LecternToHTML.1.html}{LecternToHTML(1)},
+\link{BuildLecternIndex.1.html}{BuildLecternIndex(1)},
+\link{EditLectern.1.html}{EditLectern(1)}.
+
+\section{AUTHOR}
+\link{http://www.research.digital.com/SRC/people/Andrew_Birrell/bio.html}{Andrew D. Birrell}
+
+\section{COPYRIGHT}
+\begin{flushleft}
+Copyright 1994 Digital Equipment Corporation.\newline
+Distributed only by permission.\newline
+\end{flushleft}
+\begin{verbatim}
+Last modified on Wed Jun  7 17:33:43 PDT 1995 by birrell  
+     modified on Sun Jan  1 08:55:47 PST 1995 by glassman 
+\end{verbatim}
+

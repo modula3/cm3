@@ -1,0 +1,60 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* Digital Internal Use Only                                                 *)
+(* All rights reserved.                                                      *)
+(*                                                                           *)
+(* Last modified on Thu Nov 10 13:23:15 PST 1994 by najork                   *)
+(*       Created on Fri May 27 20:32:05 PDT 1994 by najork                   *)
+
+
+module RasterModePropWrap for RasterModeProp;
+
+
+let NameProto = clone (Prop_NameProto, {
+  bind => meth (self, pv) RasterModeProp_NameBind (self, pv) end
+});
+
+
+let ValProto = clone (Prop_ValProto, {
+  getBeh => meth (self) RasterModeProp_ValGetBeh (self) end,
+  setBeh => meth (self, beh) RasterModeProp_ValSetBeh (self, beh) end,
+  get    => meth (self) RasterModeProp_ValGet (self) end,
+  value  => meth (self, time) RasterModeProp_ValValue (self, time) end
+});
+
+
+let BehProto = clone (Prop_BehProto, {});
+  
+
+let ConstBehProto = clone (BehProto, {
+  set => meth (self, k) RasterModeProp_ConstBehSet (self, k) end
+});
+
+
+let SyncBehProto = clone (BehProto, {
+  addRequest => 
+    meth (self, req) 
+      RasterModeProp_SyncBehAddRequest (self, req) 
+    end,
+  change =>
+    meth (self, k, start) 
+      RasterModeProp_SyncBehChange (self, k, start) 
+    end
+});
+
+
+let AsyncBehProto = clone (BehProto, {
+  compute => ok,
+});
+
+
+let DepBehProto = clone (BehProto, {
+  compute => ok,
+});
+
+
+let RequestProto = clone (Prop_RequestProto, {
+  value => ok,
+});
+
+
+end module;

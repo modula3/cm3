@@ -1,0 +1,12 @@
+  DiskGO_New(center normal: PointVal, rad: RealVal): DiskGO           
+  DiskGO_NewWithPrec(center normal: PointVal, rad: RealVal, prec: Int): DiskGO
+  DiskGO_Center: PointPropName                                         
+  DiskGO_Normal: PointPropName                                         
+  DiskGO_Radius: RealPropName                                          
+  DiskGO_SetCenter(o: GO, p: PointVal): Ok                            
+  DiskGO_SetNormal(o: GO, p: PointVal3): Ok                           
+  DiskGO_SetRadius(o: GO, r: RealVal): Ok                             
+WHERE                                                                  
+  DiskGO <: SurfaceGO                                                   
+  PointVal = PointPropVal + Point3                                     
+  RealVal = RealPropVal + Real + Int

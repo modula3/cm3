@@ -1,0 +1,282 @@
+.\" Copyright (C) 1992, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.\" File: m3.1
+.\" Last modified on Wed May 18 14:32:49 PDT 1994 by glassman
+.\"      modified on Thu Jan  7 10:48:32 PST 1993 by muller
+.\"      modified on Sun Jun 28 05:35:55 1992 by mhb     
+.\"      modified on Wed Jun 24 23:32:27 PDT 1992 by gnelson 
+.nh
+.TH M3TOTEX 1
+.SH Name
+m3totex \- convert M3 program to TeX source 
+
+.SH Syntax
+.B m3totex
+[-raw] infile outfile
+.br
+.B m3totex
+-example
+.br
+.B m3totex
+-defs
+
+.SH Description
+
+The command 
+.nf
+    m3totex infile outfile 
+.fi
+writes onto 
+.I outfile
+a TeX source program that will typeset the 
+Modula-3 program contained in 
+.IR infile ,
+according to the typesetting rules described below.
+
+If
+.I outfile
+is omitted, then it is defaulted as follows: if
+.I infile
+is of the form 
+.IR a.i3 , 
+.I outfile
+is 
+.IR a.i.tex ;
+if
+.I infile
+is of the form
+.IR a.m3 ,
+.I outfile
+is 
+.IR a.m.tex ;
+if
+.I infile
+is of the form
+.IR a.frag ,
+.I outfile
+is
+.IR a.f.tex .
+
+The command
+.nf
+    m3totex -example
+.fi
+writes three files onto the current directory:
+
+.EX
+   Example.i3  * an interface illustrating m3totex comment conventions
+   Example.tex * a latex file containing the boilerplate necessary to 
+               * make a document with one section for Example.i3
+   makefile    * a makefile with some useful targets
+.EE
+    
+A good way to start using m3totex is to type
+.nf
+    m3totex -example
+    make proof
+.fi
+in an empty directory; this will run m3totex, latex, dvips and psview
+to typeset the file
+.I Example.i3
+and proof-read it on-line.  Or type 
+.I make print
+to print the document on your default printer.
+
+
+By default, the various TeX macros that the formatted Modula-3
+programs use are defined at the start of 
+.IR outfile . 
+Use the 
+.I -raw
+option to prevent the definitions from appearing.
+
+The command
+.nf
+    m3totex -defs
+.fi
+writes a file called 
+.I m3totex.tex
+onto the current directory.
+This file contains exactly the text that is not output when the
+.I -raw
+option is specified.
+
+
+.SH Typesetting Rules
+
+All lines of
+.I infile
+up to and including the first blank line
+are skipped.  (This makes it easy to omit the copyright notice
+from the typeset version, for example.)
+
+The portions of 
+.I infile
+that are not in comments will be typeset
+verbatim, in typewriter font, obeying line breaks and indentation.
+Any characters that have special significance to TeX will be quoted.
+
+The portions of 
+.I infile 
+that are in comments will be treated
+differently depending on the position of the comment.  There are 
+three cases:
+
+1. Comments that do not begin in the first column are typeset in a
+fixed-width font, including the "(*" and "*)" markers, obeying line
+breaks and indentation, just like program text.  For example, if
+your program includes
+
+.nf
+    PROCEDURE P(VAR (*OUT*) x: INTEGER);
+.fi
+
+then the "(*OUT*)" will be typeset in typewriter font, just
+like rest of the line.
+
+2. Comments that begin in the first column and are not preceded
+by a blank line are indented and typeset in slanted roman text,
+except that double-quoted expressions are typeset in slanted
+typewriter font.  The purpose of this is to allow a brief comment
+after a procedure declaration, indicating what the procedure does.
+For example, here is the specification of "Path.LineTo":
+
+.nf
+    PROCEDURE LineTo(path: T; READONLY p: Point.T);
+    (* Extend "path" with a linear segment that starts
+       at its current point and ends at "p". *)
+.fi
+
+It is recommended that these slanted comments be kept brief;
+additional details can be provided in longer type 3 comments. 
+
+3. Comments that begin in the first column and are preceded by a
+blank line are typeset in a roman font and justified by TeX's usual
+rules to the document's margins.  Items enclosed in double-quotes
+are set in unslanted typewriter font; for example, program
+identifiers should be double-quoted this way.  Line breaks and
+indentation have no effect in these comments, since TeX is doing
+the line-breaking.  For example, here is the specification of
+"Path.Close": 
+
+.nf
+    PROCEDURE Close(path: T);
+    (* Add a linear segment to create a closed loop in "path". *)
+
+    (* More precisely, let "p" be the current point of "path", and let
+      "q" be last point of "path" that was added by a call to "MoveTo".
+      (Thus "q" is the startpoint of the first segment of the last subpath
+      of "path".)  "Close" adds a linear segment from "p" to "q" and marks
+      the sequence of segments from "q" to the end of the path as a closed
+      subpath.  *)
+.fi
+
+Sometimes you want a portion of a comment to be treated verbatim, like
+program text---for example, when including an example program or a
+table.  Therefore, m3totex treats any line that starts with "| "
+(vertical bar followed by space) like program text, typesetting it 
+verbatim in typewriter font.  For example, here is the specification 
+of "Path.CurveTo":
+
+.nf
+    PROCEDURE CurveTo(path: T; READONLY q, r, s: Point.T);
+    (* Extend "path" with a curved segment that starts
+       at its current point and ends at "s".  *)
+
+    (* "CurveTo" adds a curve that starts from the current point of "path"
+       in the direction of "q", and ends at "s" coming from the direction 
+       of "r".  More precisely, let "p" be the current point of "path"
+       and let "h(t)" and "v(t)" be the cubic polynomials such that
+    
+    | (h(0), v(0)) = p    
+    | (h(1), v(1)) = s
+    | (h'(0), v'(0)) = 3 * (q - p)
+    | (h'(1), v'(1)) = 3 * (s - r)
+
+       (Where the primes denote differentiation with respect to "t".) 
+       Then "CurveTo" adds the segment "(h(t), v(t))" for "t" between zero
+       and one.  (This is called the {\\it Bezier} arc determined by "p",
+       "q", "r", and "s".)  *)
+.fi
+
+Notice that the type-three comment included the TeX command "\\it" to
+print "Bezier" in italic type.  In general you can use TeX commands
+freely in type-three comments, but if you indulge yourself in this
+you may baffle programmers who read your interfaces on-line.
+
+Lines in type-three comments that begin with "| " are treated just
+like program text with one exception: you can slip in words in roman
+font by enclosing them in back-quotes.  For example:
+
+.nf
+    PROCEDURE Map(path: T; map: MapObject) 
+      RAISES {Malformed};
+    (* Apply the appropriate method of "map" to each segment of "path". *)
+       
+    (* That is, for each segment "s" of "path", in order, "Map" excecutes
+       the following:
+    
+    | IF s `is a linear segment` (p, q) THEN
+    |   IF s `was generated by` MoveTo THEN
+    |      (* p = q *)
+    |      map.move(p)
+    |   ELSIF s `was generated by` LineTo THEN
+    |     map.line(p, q)
+    |   ELSE (* s `was generated by` Close *)
+    |     map.close(p, q)
+    |   END
+    | ELSE (* s `is a curved segment` (p, q, r, s) *)
+    |   map.curve(p, q, r, s)
+    | END
+    
+    "Map" raises the exception if it is passed a malformed path. *)
+.fi
+
+.SH Assumptions
+
+We assume that the TeX or LaTex environment into which you include the
+TeX source contains the usual definitions of the following control 
+sequences:
+.nf
+    \\par \\medskip \\char \\smallskip \\noindent \\rm
+.fi
+Furthermore the TeX source generated by m3totex uses local definitions
+of the following control sequences:
+.nf
+    \\tab \\progmode \\procspec \\display \\indentation \\tt \\ignorerm
+.fi
+If you redefine any of these there could be unexpected results.
+
+
+.SH Error Messages
+
+.nf
+    ? can't read file
+.fi
+The given source file could not be opened for reading.
+
+.nf
+    ? can't write file 
+.fi
+The target file could not be opened for writing (or, in -example mode,
+one of the example files could not be opened for writing).
+
+.nf
+    ? usage: m3ToTex name.extension [name.extension]
+.fi
+The command line was malformed.
+
+.SH Bugs
+
+There is no way to include a literal double-quote within a
+double-quoted phrase in a comment. 
+
+.SH Author Of Object
+
+Greg Nelson. Marc H. Brown added -raw and -defs
+
+.SH Author Of Documentation
+
+Greg Nelson

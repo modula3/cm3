@@ -1,0 +1,60 @@
+(* Copyright (C) 1994, Digital Equipment Corporation                         *)
+(* Digital Internal Use Only                                                 *)
+(* All rights reserved.                                                      *)
+(*                                                                           *)
+(* Last modified on Thu Jul 21 13:47:01 PDT 1994 by najork                   *)
+(*       Created on Fri May 27 20:32:05 PDT 1994 by najork                   *)
+
+
+module ColorPropWrap for ColorProp;
+
+
+let NameProto = clone (Prop_NameProto, {
+  bind => meth (self, pv) ColorProp_NameBind (self, pv) end
+});
+
+
+let ValProto = clone (Prop_ValProto, {
+  getBeh => meth (self) ColorProp_ValGetBeh (self) end,
+  setBeh => meth (self, beh) ColorProp_ValSetBeh (self, beh) end,
+  get    => meth (self) ColorProp_ValGet (self) end,
+  value  => meth (self, time) ColorProp_ValValue (self, time) end
+});
+
+
+let BehProto = clone (Prop_BehProto, {});
+  
+
+let ConstBehProto = clone (BehProto, {
+  set => meth (self, c) ColorProp_ConstBehSet (self, c) end
+});
+
+
+let SyncBehProto = clone (BehProto, {
+  addRequest => 
+    meth (self, req) 
+      ColorProp_SyncBehAddRequest (self, req) 
+    end,
+  rgbLinChangeTo =>
+    meth (self, c, start, dur) 
+      ColorProp_SyncBehRgbLinChangeTo (self, c, start, dur) 
+    end
+});
+
+
+let AsyncBehProto = clone (BehProto, {
+  compute => ok,
+});
+
+
+let DepBehProto = clone (BehProto, {
+  compute => ok,
+});
+
+
+let RequestProto = clone (Prop_RequestProto, {
+  value => ok,
+});
+
+
+end module;

@@ -1,0 +1,84 @@
+(* Grammar file for extensible grammars, using MPTreeSubst as their
+   substitution	routine *)
+
+grammar ::=
+     clauseSeq
+clauseSeq ::=
+     [ 	gramExpIde _1
+        paramList_5
+	"::=" 
+	clauseExtends_2 
+	gramExp_3
+	clauseRest_4 
+	] :: ClauseList
+clauseRest ::=
+     { clauseSeq [] }
+clauseExtends ::=
+     { [ "." "." "." 
+        { [ "*" { [ "_" int_3 ] :: ClauseExtendsIterPos 
+	          []            :: ClauseExtendsIterNoPos 
+                }_2 ]  :: ClauseExtendsIter 
+          []           :: ClauseExtendsChoice
+        }_1 
+       ]   :: ClauseExtendsYes
+       []  :: ClauseExtendsNo
+     }
+
+
+
+paramList ::= { [ "<" paramList2_1 ">" ]::select1 [] }
+paramList2 ::= { [ "_" int_1 { [ "," paramList2_2 ]::select2 [] }_2 ]::cons [] }
+
+
+(*3456789012345678901234567890123456789012345678901234567890*)
+(*       1         2         3         4         5          *)
+
+gramExp ::=
+     [ gramExpBase_1 
+	{ [ "_" int_3 ]::Storage 
+          [ ExtendAction<_1>_2 ] :: select2
+          []::select1 }_2 
+     ]::select2
+
+
+gramExpBase ::=
+     { [ ide_1 paramList_2 ] :: GramIde
+       string_1              :: GramString
+       "ide"                 :: GramKeyIde
+       "int"                 :: GramKeyInt
+       "EOF"                 :: GramKeyEof
+       "real"                :: GramKeyReal
+       "char"                :: GramKeyChar
+       "string"              :: GramKeyString 
+       gramExpSequence 
+       gramExpChoice   
+       gramExpParens 
+     }
+
+gramExpIde ::=
+     ide_1 :: Ide
+
+
+gramExpSequence ::=
+     [ "[" gramExpList_1 "]" ]   :: GramExpSequence
+  
+gramExpChoice ::=
+     [ "{" gramExpList_1 "}" ] :: GramExpChoice
+  
+gramExpParens ::=
+     [ "(" gramExp_1
+     { [ "*" { [ "_" int_4 gramExp_3  ] :: GramExpIterPos
+               gramExp_3                :: GramExpIterNoPos  
+             }_5 ]  :: GramExpIter
+       []           :: GramExpBase   }_6
+     ")" ]  :: GramExpParens
+  
+gramExpList ::=
+     { [ gramExp_1 gramExpList_2 ]::GramList [] }
+
+
+
+
+
+
+

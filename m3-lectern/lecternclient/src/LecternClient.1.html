@@ -1,0 +1,74 @@
+<!-- This file generated automatically by mtextohtml(1) -->
+<HTML>
+<IMG SRC="../vpLogo36.gif" ALIGN=middle ALT=""><P>
+<HEAD>
+<TITLE>LecternClient</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#ffffff" VLINK="#006633">
+<H2>LecternClient(1)</H2>
+
+<H3>NAME</H3>
+<BLOCKQUOTE>
+LecternClient - send request to Lectern
+</BLOCKQUOTE>
+
+<H3>SYNTAX</H3>
+<BLOCKQUOTE>
+<B>LecternClient pathname</B><P>
+
+or:<P>
+
+<B>LecternClient -l arg...</B> <P>
+
+or:<P>
+
+<B>LecternClient -f path</B>
+</BLOCKQUOTE>
+
+<H3>DESCRIPTION</H3>
+<BLOCKQUOTE>
+This program sends a message to the latest instance of Lectern that was
+started by the current user on the current machine.  If it can't contact an
+instance of Lectern, it attempts to start another one.<P>
+
+See
+<A HREF="Lectern.1.html">Lectern(1)</A>
+for the interpretation of the arguments.  When LecternClient is called with a
+single pathname, it is made absolute if necessary (by prefixing it with the
+pathname of the current working directory) and passed to Lectern. When
+LecternClient is called with the <B>-f</B> option, its single argument is interpreted
+as the name of a file containing one or more lines, each of which is passed
+unchanged to Lectern. When LecternClient is called with the <B>-l</B> option, its
+remaining arguments are passed uninterpreted to Lectern.
+</BLOCKQUOTE>
+
+<H3>AUTHOR</H3>
+<BLOCKQUOTE>
+<A HREF="http://www.research.digital.com/SRC/people/Paul_McJones/bio.html">Paul McJones</A>
+</BLOCKQUOTE>
+
+<H3>SEE ALSO</H3>
+<BLOCKQUOTE>
+<A HREF="Lectern.1.html">Lectern(1)</A>
+</BLOCKQUOTE>
+
+<H3>COPYRIGHT</H3>
+<BLOCKQUOTE>
+<P>
+
+Copyright 1994 Digital Equipment Corporation.<BR>
+Distributed only by permission.<BR>
+<BR>
+<P>
+
+<PRE>
+Last modified on Fri Feb 17 17:43:10 PST 1995 by birrell  
+     modified on Sun Jan  1 09:33:26 PST 1995 by glassman 
+     modified on Mon Jul 25 16:56:11 PDT 1994 by mcjones 
+</PRE>
+
+</BLOCKQUOTE>
+
+</BODY>
+</HTML>

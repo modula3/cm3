@@ -1,0 +1,45 @@
+.\" Copyright (C) 1994, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.\" Last modified on Tue Aug 30 15:27:12 PDT 1994 by mcjones 
+.nh
+.TH LecternToHTML 1
+.SH NAME
+LecternToHTML \- generate HTML describing repository of Lectern documents
+.SH SYNTAX
+LecternToHTML [-quiet] path
+.SH DESCRIPTION
+This program walks a subtree of the filesystem rooted at the specified path,
+and annotates each directory, say p, by creating files named
+p/.ascending.html and p/.descending.html that each contain an HTML document
+describing the contents of that directory.  Each such document contains a
+hypertext link for each Lectern document and for each subdirectory containing
+(directly or indirectly) one or more Lectern documents.  If a directory
+contains no Lectern documents, no .ascending.html or .descending.html file is
+generated for it.  The hypertext link for a document is labeled with title,
+author and date attributes extracted from the Lectern document file -- see
+.MS BuildLectern 1 .
+The hypertext link for a directory, say q, is labeled with the contents of
+the file named q/.title, if such a file exists; otherwise the path q is used
+as the label. The referent for this link is q/index.html if the directory
+q/ contains a file or symbolic link named index.html, or q/.ascending.html
+otherwise.
+.PP
+If a directory contains a file named .prefix, its contents are
+inserted at the beginning of the generated HTML.  Similarly, if a file
+named .postfix exists, its contents are inserted at the end.
+.PP
+If -quiet is not specified, LecternToHTML prints to standard error the name of
+each directory or file it visits.
+.SH AUTHOR
+mcjones@src.dec.com (Paul McJones)
+.SH FILES
+/proj/m3/pkg/lecterntohtml  \-\- sources
+.br
+.SH "SEE ALSO"
+.MS Lectern 1
+.br
+.MS BuildLectern 1
+.br
+.MS BuildLecternIndex 1
