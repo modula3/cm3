@@ -1,4 +1,5 @@
 #!/bin/sh
+# $Id: pkgcmds.sh,v 1.2 2001-02-12 22:39:00 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -84,13 +85,17 @@ map_action() {
   elif [ "$1" = "realclean" ] ; then
     ACTION="${REALCLEAN}"
   else
-    echo "unknown action: $1" 1>&2
-    exit 1
+    if [ "${IGNORE_MISS}" = "yes" ] ; then
+      ACTION="${BUILDLOCAL}"
+    else
+      echo "unknown action: $1" 1>&2
+      exit 1
+    fi
   fi
   echo "${ACTION}"
 }
 
-add_action_args() {
+add_action_opts() {
   skip=true
   while [ -n "$1" -a "$skip" = "true" ] ; do
     case "$1" in
@@ -120,3 +125,101 @@ extract_options() {
   echo "$RES"
 }
 
+get_args() {
+  skip=true
+  while [ -n "$1" -a "$skip" = "true" ] ; do
+    case "$1" in
+      -*) shift;;
+      *) skip=false
+    esac
+  done
+  if [ "$1" = "build" -o "$1" = "buildlocal" ] ; then
+    shift
+  elif [ "$1" = "buildglobal" -o "$1" = "buildship" ] ; then
+    shift
+  elif [ "$1" = "ship" ] ; then
+    shift
+  elif [ "$1" = "clean" -o "$1" = "cleanlocal" ] ; then
+    shift
+  elif [ "$1" = "cleanglobal" ] ; then
+    shift
+  elif [ "$1" = "realclean" ] ; then
+    shift
+  fi
+  ARGS=""
+  while [ -n "$1" ] ; do
+    case "$1" in
+      -*) echo "encountered option after command: $1" 1>&2;;
+      *) ARGS="${ARGS} $1";;
+    esac
+    shift
+  done
+  echo "$ARGS"
+}
+
+GEN_CMDS='
+  build | buildlocal          build a package with local overrides (default)
+  buildglobal | buildship     build a package without overrides and ship it
+  ship                        ship a package
+  clean | cleanlocal          clean a package with local overrides
+  cleanglobal                 clean a package without overrides
+  realclean                   remove the TARGET directory of a package
+'
+GEN_OPTS='
+  -n                          no action (do not execute anything)
+  -k                          keep going (ignore errors if possible)
+'
+
+format_one() {
+  N=${N:-20}
+  if type printf > /dev/null 2>/dev/null ; then
+    printf "%-${N}s" $1
+  else
+    echo $1
+  fi
+}
+
+print_list() {
+  INDENT=${INDENT:-"  "}
+  while [ -n "$1" ] ; do
+    echo "${INDENT}$1"
+    shift
+  done
+}
+
+print_list2() {
+  INDENT=${INDENT:-"  "}
+  N=36; export N
+  while [ -n "$1" ] ; do
+    echo "${INDENT} `format_one $1` `format_one $2`"
+    shift; shift
+  done
+}
+
+print_list4() {
+  INDENT=${INDENT:-"  "}
+  N=18; export N
+  while [ -n "$1" ] ; do
+    echo "${INDENT} `format_one $1` `format_one $2` `format_one $3` `format_one $4`"
+    shift; shift
+  done
+}
+
+show_usage() {
+  if [ "x$1" = "x-h" -o "x$1" = "x-help" -o "x$1" = "x--help" ] ; then
+    echo ""
+    echo "usage `basename $0:`"
+    if [ -n "$USAGE" ] ; then
+      echo "$USAGE"
+    else
+      echo ""
+      echo "No specific usage notes available."
+      echo ""
+      echo "Generic commands:"
+      echo "${GEN_CMDS}"
+      echo "Generic options:"
+      echo "${GEN_OPTS}"
+    fi
+    exit 0
+  fi
+}

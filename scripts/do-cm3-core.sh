@@ -1,4 +1,5 @@
 #!/bin/sh
+# $Id: do-cm3-core.sh,v 1.2 2001-02-12 22:39:00 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -52,9 +53,24 @@ P="${P} table-list"
 P="${P} tempfiles"
 [ "${HAVE_TCL}" = "yes" ] && P="${P} tcl"
 
+USAGE="
+  `basename $0` [ generic_options ] [ generic_cmd ]
+
+  will apply the given symbolic command to the following packages:
+
+`print_list4 ${P}`
+
+  generic_options:
+${GEN_OPTS}
+  
+  generic_cmd:
+${GEN_CMDS}"
+
+show_usage $@
+
 OPTIONS=`extract_options $@`
 ACTION=`map_action $@`
-ADDARGS=`add_action_args $@`
+ADDARGS=`add_action_opts $@`
 
 echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
 "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}

@@ -1,4 +1,5 @@
 #!/bin/sh
+# $Id: sysinfo.sh,v 1.4 2001-02-12 22:39:00 wagner Exp $
 
 if [ "$SYSINFO_DONE" = "yes" ] ; then
   return 0

@@ -1,4 +1,4 @@
-CM3 Free Distribution -- scripts/README $Id: README,v 1.1 2001-02-12 21:09:32 wagner Exp $
+CM3 Free Distribution -- scripts/README $Id: README,v 1.2 2001-02-12 22:39:00 wagner Exp $
 
 This directory contains various scripts that can be used to compile /
 build / bootstrap part or all of the CM3 source distribution.
@@ -23,10 +23,14 @@ You are probably most interested in one of the following:
  o Use do-m3-std.sh to compile a standard system with GUI and full
    networking support.
 
+ o Use do-pkg.sh to compile or clean one or more arbitrary packages.
+
 Please read the file README.BOOT for booting and porting instructions.
 Read the file README.ELEGO for instructions how to use CM3 together
 with the Elego ComPact project manager, which also allows you to
-compile, clean, and version control CM3 packages.
+compile, clean, and version control CM3 packages. Actually, these
+scripts are only an imperfect attempt to re-implement some of the ComPact
+project manager's functions for M3 packages.
 
 Here are some short notes about the purpose of each script:
 
@@ -52,7 +56,9 @@ pkgcmds.sh [include]
 ----------
   defines basic commands applicable to Modula-3 packages depending on
   information from sysinfo.sh and some simple tests. Exports the
-  functions map_action(), add_action_args(), and extract_options().
+  functions map_action(), add_action_opts(), extract_options(),
+  get_args() and show_usage(), as well as generic usage texts GEN_CMDS
+  and GEN_OPTS.
   map_action() currently knows about the commands build or buildlocal,
   buildglobal or buildship, ship, clean or cleanlocal, cleanglobal,
   and realclean. `local' means that overrides are used to locate all
@@ -142,3 +148,7 @@ do-cm3-std.sh [callable]
   HAVE_TCL => tcl
   HAVE_SERIAL => serial
 
+do-pkg.sh [callable]
+---------
+  builds / ships / cleans one or more CM3 packages passed as arguments
+  on the command line. Recognizes generic options and commands.

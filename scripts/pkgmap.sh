@@ -1,4 +1,5 @@
 #!/bin/sh
+# $Id: pkgmap.sh,v 1.3 2001-02-12 22:39:00 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
