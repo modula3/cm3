@@ -1,5 +1,5 @@
 GENERIC INTERFACE ComplexTrans(C,R);
-(*Copyright (c) 1996, m3na project
+(*Copyright (x) 1996, m3na project
 
 Abstract: Transcendental functions of complex numbers.
 
@@ -10,36 +10,36 @@ Abstract: Transcendental functions of complex numbers.
 
 FROM xUtils IMPORT Error;
 
-PROCEDURE Arg   (READONLY c:C.T):R.T;       (*return polar angle*)    
-PROCEDURE Abs   (READONLY c:C.T):R.T;       (*return magnitude*)
-PROCEDURE AbsSqr(READONLY c:C.T):R.T;       (*return square of the magnitude*)
+PROCEDURE Arg   (READONLY x:C.T):R.T;       (*return polar angle*)    
+PROCEDURE Abs   (READONLY x:C.T):R.T;       (*return magnitude*)
+PROCEDURE AbsSqr(READONLY x:C.T):R.T;       (*return square of the magnitude*)
 
-PROCEDURE Norm1  (READONLY c:C.T):R.T;
-PROCEDURE NormInf(READONLY c:C.T):R.T;
+PROCEDURE Norm1  (READONLY x:C.T):R.T;
+PROCEDURE NormInf(READONLY x:C.T):R.T;
 CONST Norm2 = Abs;
 
-PROCEDURE SqRt(READONLY c:C.T):C.T;   (*return square root of c with c.re>=0*)
-PROCEDURE PowR(READONLY c:C.T;
-                        y:R.T):C.T;      (*return c^y*)
+PROCEDURE SqRt(READONLY x:C.T):C.T;   (*return square root of x with x.re>=0*)
+PROCEDURE PowR(READONLY x:C.T;
+                        y:R.T):C.T;      (*return x^y*)
          (*NOTE: Also for roots, e.g., cube root: y=1/3*)
 PROCEDURE Pow(x,y:C.T):C.T;  (*return x^y*)
 
 (*---transcendentals---*)
-PROCEDURE Exp(READONLY c:C.T):C.T;      (*return e^c *)
-PROCEDURE Ln (READONLY c:C.T):C.T;      (*return ln(c) *)
+PROCEDURE Exp(READONLY x:C.T):C.T;      (*return e^x *)
+PROCEDURE Ln (READONLY x:C.T):C.T;      (*return ln(x) *)
 
-(*---for trig and hyperbolics, must have |c|<=18---*)
-PROCEDURE Cos(READONLY c:C.T):C.T RAISES {Error}; (*return cos(c) *)
-PROCEDURE Sin(READONLY c:C.T):C.T RAISES {Error}; (*return sin(c) *)
-PROCEDURE Tan(READONLY c:C.T):C.T RAISES {Error}; (*return tan(c) *)
-PROCEDURE CosH(READONLY c:C.T):C.T RAISES {Error};(*return cosh(c) *)
-PROCEDURE SinH(READONLY c:C.T):C.T RAISES {Error};(*return sinh(c) *)
-PROCEDURE TanH(READONLY c:C.T):C.T RAISES {Error};(*return tanh(c) *)
+(*---for trig and hyperbolics, must have |x|<=18---*)
+PROCEDURE Cos(READONLY x:C.T):C.T RAISES {Error}; (*return cos(x) *)
+PROCEDURE Sin(READONLY x:C.T):C.T RAISES {Error}; (*return sin(x) *)
+PROCEDURE Tan(READONLY x:C.T):C.T RAISES {Error}; (*return tan(x) *)
+PROCEDURE CosH(READONLY x:C.T):C.T RAISES {Error};(*return cosh(x) *)
+PROCEDURE SinH(READONLY x:C.T):C.T RAISES {Error};(*return sinh(x) *)
+PROCEDURE TanH(READONLY x:C.T):C.T RAISES {Error};(*return tanh(x) *)
 
 (*---for inverse trigonometrics---*)
-PROCEDURE ArcCos(READONLY c:C.T):C.T RAISES {Error}; (*return arccos(c) *)
-PROCEDURE ArcSin(READONLY c:C.T):C.T RAISES {Error}; (*return arcsin(c) *)
-PROCEDURE ArcTan(READONLY c:C.T):C.T RAISES {Error}; (*return arctan(c) *)
+PROCEDURE ArcCos(READONLY x:C.T):C.T RAISES {Error}; (*return arccos(x) *)
+PROCEDURE ArcSin(READONLY x:C.T):C.T RAISES {Error}; (*return arcsin(x) *)
+PROCEDURE ArcTan(READONLY x:C.T):C.T RAISES {Error}; (*return arctan(x) *)
 
 (*==========================*)
 END ComplexTrans.
