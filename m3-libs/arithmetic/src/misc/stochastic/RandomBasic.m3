@@ -10,16 +10,56 @@ Abstract: Random number generators
 IMPORT LongFloat;
 IMPORT LongRealBasic AS R,
        LongRealTrans AS RT,
-       LongRealIntegerPower AS RP;
+       LongReal      AS RSpec,
+       LongRealIntegerPower AS RP,
+       Word AS W;
 FROM xUtils IMPORT Error,Err;
 
 CONST Module = "RandomBasic.";
 
 (*======================================*)
 REVEAL
+  TBoolean = TBooleanPublic BRANDED OBJECT
+  OVERRIDES
+    generateBoolean:=GenerateBooleanFromBoolean;
+    generateWord:=GenerateWordFromBoolean;
+    generateReal:=GenerateRealFromBoolean;
+  END;
+
+<*INLINE*>
+PROCEDURE GenerateBooleanFromBoolean(SELF:TBoolean) : BOOLEAN =
+  BEGIN
+    RETURN SELF.engine();
+  END GenerateBooleanFromBoolean;
+
+(* Generates a word, bit by bit *)
+PROCEDURE GenerateWordFromBoolean(SELF:TBoolean) : W.T =
+  VAR
+    x : W.T := 0;
+  BEGIN
+    FOR i:=0 TO W.Size DO
+      x := W.Plus( W.LeftShift(x,1), ORD(SELF.engine()));
+    END;
+    RETURN x;
+  END GenerateWordFromBoolean;
+
+(* Generates a longreal, bit by bit *)
+PROCEDURE GenerateRealFromBoolean(SELF:TBoolean) : R.T =
+  VAR
+    x : R.T := R.Zero;
+  BEGIN
+    FOR i:=0 TO RSpec.Precision-1 DO
+      x := RT.Half * (x + FLOAT(ORD(SELF.engine()), R.T));
+    END;
+    <* ASSERT R.Zero <= x *>
+    <* ASSERT x < R.One *>
+    RETURN x;
+  END GenerateRealFromBoolean;
+
+(*======================================*)
+REVEAL
   T = TPrivate BRANDED OBJECT
   OVERRIDES
-    engine:=NIL;
     uniform:=Uniform;
     exponential:=Exponential;
     gaussian:=NormalDev;
@@ -41,7 +81,7 @@ PROCEDURE Uniform(SELF:T;
 VAR
   t:R.T;
 BEGIN
-  t:=SELF.engine();
+  t:=SELF.generateReal();
   IF min=Min AND max=Max THEN RETURN t; END;
 
   IF min>=max THEN
@@ -54,7 +94,7 @@ END Uniform;
 PROCEDURE Exponential(SELF:T):R.T=
 (*exponential, mean=1 *)
 BEGIN
-  RETURN -RT.Ln(SELF.engine());
+  RETURN -RT.Ln(SELF.generateReal());
 END Exponential;
 (*-------------------*)
 (**********************
@@ -70,8 +110,8 @@ BEGIN
   END;
 
   REPEAT
-    v1:=R.Two*SELF.engine(SELF) - R.One;
-    v2:=R.Two*SELF.engine(SELF) - R.One;
+    v1:=R.Two*SELF.generateReal() - R.One;
+    v2:=R.Two*SELF.generateReal() - R.One;
     Rsq:=v1*v1 + v2*v2;
   UNTIL (Rsq > R.Zero) AND (Rsq < R.One);
   tmp:=R.sqrt(-R.Two*R.log(Rsq))/Rsq;
@@ -139,7 +179,7 @@ BEGIN
   IF event < cutoff THEN
     x:=R.One;
     FOR i:=1 TO event DO
-      x:=x*SELF.engine(SELF);
+      x:=x*SELF.generateReal();
     END;
     x:=-R.log(x);
   ELSE
@@ -148,14 +188,14 @@ BEGIN
     REPEAT
       REPEAT
         REPEAT
-          v1:=R.Two*SELF.engine(SELF)-R.One;
-          v2:=SELF.engine(SELF);
+          v1:=R.Two*SELF.generateReal()-R.One;
+          v2:=SELF.generateReal();
         UNTIL (v1*v1+v2*v2) <= R.One; (*within unit half-circle*)
         tanU:=v2/v1;
         x:=a0*tanU+x0;
       UNTIL x > R.Zero;  (*within positive probabilities*)
       ratio:=(R.One+tanU*tanU)*R.exp(x0*R.log(x/x0) - a0*tanU);
-    UNTIL SELF.engine(SELF) > ratio;
+    UNTIL SELF.generateReal() > ratio;
   END;
   RETURN x;
 END Gamma1;
@@ -279,7 +319,7 @@ PROCEDURE Binomial(SELF:T;
   VAR
     qp:=q/p;
     prob:=RP.Power(p,n);
-    rnd:=SELF.uniform();
+    rnd:=SELF.generateReal();
     den:=R.Zero;
     num:=FLOAT(n,R.T);
     k:CARDINAL:=0;

@@ -12,7 +12,7 @@ IMPORT RandomBasic;
 
 (*==========================*)
 TYPE
-  T <: RandomBasic.T;
+  T <: RandomBasic.TReal;
 
 PROCEDURE New():T;
 

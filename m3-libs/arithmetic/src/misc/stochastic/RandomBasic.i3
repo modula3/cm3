@@ -13,7 +13,8 @@ To do: (Lemming)
  - implement Geometric, Poisson distribution
 *)
 IMPORT LongRealBasic AS R,
-       LongRealTrans AS RT;
+       LongRealTrans AS RT,
+       Word AS W;
 FROM xUtils IMPORT Error;
 
 (*==========================*)
@@ -30,13 +31,17 @@ TYPE
     init(seed  :[FIRST(INTEGER)..-1]:=-1
               ):T RAISES {Error};
 *)
-    engine():R.T; (*raw engine; returns Min..Max*)
+    (*generate different types of random values,
+      the routines may convert types from the actual ones
+      of the engine behind*)
+    generateBoolean():BOOLEAN;
+    generateWord():W.T;
+    generateReal():R.T;
 
     uniform(min:R.T:=Min;  (*from min*)
             max:R.T:=Max   (*to max*)
               ):R.T
               (*RAISES{xUtils.Error}*);        (*return uniform deviate*)
-
 
     exponential():R.T;   (*exponential, mean=1 *)
 
@@ -60,9 +65,26 @@ TYPE
     (*slow implementation*)
     binomial(p:R.T;       (*probability of successful trial*)
              n:CARDINAL;  (*number of trials*)
-            ):CARDINAL;   (*number of successful trials*)
+             ):CARDINAL;  (*number of successful trials*)
   END;
 
+  TBoolean <: TBooleanPublic;
+  TBooleanPublic = T OBJECT
+  METHODS
+    engine():BOOLEAN;
+  END;
+
+  TWord <: TWordPublic;
+  TWordPublic = T OBJECT
+  METHODS
+    engine():W.T;
+  END;
+
+  TReal <: TRealPublic;
+  TRealPublic = T OBJECT
+  METHODS
+    engine():R.T; (*raw engine; returns Min..Max*)
+  END;
 
 (*==========================*)
 END RandomBasic.

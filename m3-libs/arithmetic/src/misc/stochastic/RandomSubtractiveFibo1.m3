@@ -17,7 +17,7 @@ CONST
   bsf1 = 34;
 
 (*------------------*)
-REVEAL T = RandomBasic.T BRANDED OBJECT
+REVEAL T = RandomBasic.TReal BRANDED OBJECT
     isf1 := asf1;
     jsf1 := bsf1;
     arrsf1 : ARRAY [0..asf1-1] OF R.T; (* initialize to rands in [0,1) not all with LS Bit=0*)

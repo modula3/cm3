@@ -8,16 +8,11 @@ which is 0..1, but not including the endpoints.
 
 3/16/96  Harry George  Initial version
 *)
-IMPORT RandomBasic,Word;
+IMPORT RandomBasic;
 
 (*==========================*)
 TYPE
-  T <: TPublic;
-  TPublic = RandomBasic.T OBJECT
-       METHODS
-         generateBoolean ():BOOLEAN;
-         generateWord    ():Word.T;
-       END;
+  T <: RandomBasic.TBoolean;
 
 PROCEDURE New():T;
 
