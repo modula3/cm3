@@ -1,0 +1,11 @@
+INTERFACE OSSupportWIN32IF;
+
+IMPORT WinNT;
+
+<*EXTERNAL SetEndOfFile:WINAPI*>
+PROCEDURE SetEndOfFile(handle: WinNT.HANDLE; pos: INTEGER): INTEGER;
+
+<*EXTERNAL FlushFileBuffers:WINAPI*>
+PROCEDURE FlushFileBuffers();
+
+END OSSupportWIN32IF.
