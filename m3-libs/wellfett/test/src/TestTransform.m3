@@ -40,6 +40,7 @@ IMPORT NADefinitions AS NA;
 FROM TestMatchWavelet IMPORT TestMatchPatternSmooth;
 
 
+(*Modifications of the DWT that downsample the lowpass channel only.*)
 PROCEDURE DyadicFilterBankAnalysis (         x        : S.T;
                                     READONLY y        : FB.T;
                                              numLevels: CARDINAL; ):
@@ -54,13 +55,9 @@ PROCEDURE DyadicFilterBankAnalysis (         x        : S.T;
   END DyadicFilterBankAnalysis;
 
 PROCEDURE DyadicFilterBankSynthesis (READONLY x: DWT.DyadicWaveletCoeffs;
-                                     READONLY y: FB.T;
-                                     numVan: CARDINAL; ): S.T =
-  VAR
-    z := x.low;
-    van := SIntPow.MulPower(
-             S.One, NEW(S.T).fromArray(ARRAY OF R.T{RT.Half, RT.Half}),
-             numVan);
+                                     READONLY y: FB.T;                    ):
+  S.T =
+  VAR z := x.low;
   <*FATAL NA.Error*>(*Number of filters and channels will always match*)
   BEGIN
     FOR i := LAST(x.high^) TO FIRST(x.high^) BY -1 DO
@@ -70,7 +67,7 @@ PROCEDURE DyadicFilterBankSynthesis (READONLY x: DWT.DyadicWaveletCoeffs;
   END DyadicFilterBankSynthesis;
 
 
-PROCEDURE PlotDWT (         x        : S.T;
+PROCEDURE PlotSWT (         x        : S.T;
                    READONLY bank     : ARRAY [0 .. 1] OF FB.T;
                             numLevels: CARDINAL;               ) =
   VAR
@@ -102,6 +99,44 @@ PROCEDURE PlotDWT (         x        : S.T;
     PlotBand(wt.low);
     PlotBand(xrec);
     PL.Exit();
+  END PlotSWT;
+
+PROCEDURE PlotDWT (         x        : S.T;
+                   READONLY bank     : ARRAY [0 .. 1] OF FB.T;
+                            numLevels: CARDINAL;               ) =
+  VAR
+    unit     := IIntPow.MulPower(1, 2, numLevels);
+    fineGrid := R.One / FLOAT(unit, R.T);
+    grid     := fineGrid;
+
+  (*role of primal and dual filters is swapped here*)
+  VAR
+    wt    := DyadicFilterBankAnalysis(x, bank[1], numLevels);
+    xrec  := DyadicFilterBankSynthesis(wt, bank[0]);
+    left  := FLOAT(xrec.getFirst(), R.T) * grid;
+    right := FLOAT(xrec.getLast(), R.T) * grid;
+
+  PROCEDURE PlotBand (x: S.T; grid: R.T; ) =
+    BEGIN
+      PL.SetFGColorDiscr(1);
+      PL.SetEnvironment(
+        left, right, VFs.Min(x.getData()^), VFs.Max(x.getData()^));
+      PL.SetFGColorDiscr(2);
+      PL.PlotLines(
+        V.ArithSeq(x.getNumber(), FLOAT(x.getFirst(), R.T) * grid, grid)^,
+        x.getData()^);
+    END PlotBand;
+
+  BEGIN
+    PL.Init();
+    PL.SetSubWindows(1, numLevels + 2);
+    FOR i := 0 TO numLevels - 1 DO
+      grid := grid * R.Two;
+      PlotBand(wt.high[i], grid);
+    END;
+    PlotBand(wt.low, grid);
+    PlotBand(xrec, fineGrid);
+    PL.Exit();
   END PlotDWT;
 
 
@@ -116,7 +151,7 @@ PROCEDURE Test () =
                       ARRAY OF
                         S.T{dual[0].scale(R.Two), dual[1].scale(R.Two)});
         BEGIN
-          PlotDWT(S.One, ARRAY OF FB.T{primal, dual}, 6);
+          PlotSWT(S.One, ARRAY OF FB.T{primal, dual}, 6);
         END;
     | 1 =>
         CONST
@@ -124,7 +159,7 @@ PROCEDURE Test () =
           unit      = 64;
           size      = 8 * unit;
           van0      = 1;
-          van1      = 2;
+          van1      = 6;
         VAR
           vanAtom := NEW(S.T).fromArray(ARRAY OF R.T{R.Half, -R.Half});
           bank := TestMatchPatternSmooth(
@@ -132,24 +167,11 @@ PROCEDURE Test () =
                       V.ArithSeq(size, -1.0D0, 2.0D0 / FLOAT(size, R.T))^,
                       -size DIV 2), numLevels, 3, van0 + van1, van0, 7,
                     1.0D-10);
-          vanBank := ARRAY [0 .. 1] OF
-                       FB.T{FB.T{bank[0, 0], bank[0, 1]},
-                            FB.T{bank[1, 0], SIntPow.MulPower(
-                                               bank[1, 1], vanAtom, van1)}};
+          (* Note that the Dual filters are used for Analysis! *)
           reconBank := ARRAY [0 .. 1] OF
-                         FB.T{
-                         FB.T{bank[0, 0],
-                              SIntPow.MulPower(bank[0, 1], vanAtom, van1)},
-                         FB.T{bank[1, 0], bank[1, 1]}};
+                         FB.T{bank[0], FB.T{bank[1, 0].scale(R.Two),
+                                            bank[1, 1].scale(R.Two)}};
         BEGIN
-          VAR primal := FB.DualToPrimal(vanBank[1]);
-          BEGIN
-            IO.Put(
-              Fmt.FN("Filter bank should be:\n%s\n%s\n%s\n%s\n",
-                     ARRAY OF
-                       TEXT{SF.Fmt(vanBank[0, 0]), SF.Fmt(primal[0]),
-                            SF.Fmt(vanBank[0, 1]), SF.Fmt(primal[1])}));
-          END;
           IO.Put(
             Fmt.FN(
               "Reconstruction:\n%s\n%s\n",
