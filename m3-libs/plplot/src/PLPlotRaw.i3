@@ -1,7 +1,7 @@
 INTERFACE PLPlotRaw;
 (*Copyright (c) 1996, m3na project
 
-Abstract: Raw interface to plplot library
+Abstract: Raw low level interface to plplot library
           'plplot' let you create function graphs
           directly from a program
           in X11 window or in a postscript file etc.
@@ -90,7 +90,7 @@ PROCEDURE c_pllab(xlabel:C.const_char_star; ylabel:C.const_char_star; tlabel:C.c
 END PLPlotRaw.
 
 (*
-/* $Id: PLPlotRaw.i3,v 1.1 2003-07-27 17:57:18 thielema Exp $
+/* $Id: PLPlotRaw.i3,v 1.2 2003-07-27 19:20:42 thielema Exp $
 
     Copyright (C) 1992 by 
     Maurice J. LeBrun, Geoff Furnish, Tony Richardson.

@@ -1,4 +1,4 @@
-UNSAFE MODULE TestPLPlot EXPORTS Test;
+MODULE TestPLPlot EXPORTS Test;
 (*Copyright (c) 1996, m3na project
 Abstract:  Tests for PLPlot module.
 
@@ -6,9 +6,7 @@ Abstract:  Tests for PLPlot module.
 
 *)
 
-IMPORT PLPlotRaw     AS PLP,
-       Ctypes        AS C,
-       M3toC,
+IMPORT PLPlot        AS PL,
        LongRealTrans AS RT;
 
 (*=======================*)
@@ -19,12 +17,10 @@ PROCEDURE TestHistogram():BOOLEAN=
 CONST
   ftn = Module & "TestABC";
 
-CONST
-  NPTS = 2047;
 VAR
   result:=TRUE;
-  data:=NEW(REF ARRAY OF PLP.PLFLT,NPTS);
-  delta:=RT.TwoPi / FLOAT (NPTS,PLP.PLFLT);
+  data:=NEW(REF ARRAY OF RT.T,2047);
+  delta:=RT.TwoPi / FLOAT (NUMBER(data^),RT.T);
 BEGIN
   Debug(1,ftn,"begin\n");
 
@@ -34,21 +30,21 @@ BEGIN
   *)
 
   (* Initialize plplot *)
-  PLP.plinit();
+  PL.Init();
 
   (* Fill up data points *)
   FOR i:=0 TO LAST(data^) DO
     data[i] := RT.Sin(FLOAT(i,RT.T) * delta);
   END;
 
-  PLP.plcol0(1);
-  PLP.plhist(NPTS, data[0], -1.1D0, 1.1D0, 44, 0);
-  PLP.plcol0(2);
-  PLP.pllab(M3toC.CopyTtoS("#frValue"),
-            M3toC.CopyTtoS("#frFrequency"),
-	          M3toC.CopyTtoS("#frPLplot Example 5 - Probability function of Oscillator"));
+  PL.SetColorMap0(1);
+  PL.Histogram(data^, -1.1D0, 1.1D0, 44);
+  PL.SetColorMap0(2);
+  PL.SetLabel("#frValue",
+              "#frFrequency",
+	            "#frPLplot Example 5 - Probability function of Oscillator");
 
-  PLP.plend();
+  PL.Exit();
 
   RETURN result;
 END TestHistogram;
