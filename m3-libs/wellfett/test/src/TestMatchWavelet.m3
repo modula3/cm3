@@ -30,6 +30,10 @@ IMPORT PLPlot AS PL;
 IMPORT IO, Fmt, Wr, Thread;
 IMPORT NADefinitions AS NA;
 
+(*{RT.Half, R.Zero, -RT.Half} instead of {R.One, R.Zero, -R.One}
+has the advantage
+that the sum of the coefficients of the primal filter doesn't change.*)
+
 PROCEDURE MatchPattern (target                               : S.T;
                         levels, smooth, vanishing, translates: CARDINAL)
   RAISES {BSpl.DifferentParity} =
@@ -40,11 +44,11 @@ PROCEDURE MatchPattern (target                               : S.T;
     hdual := BSpl.GeneratorMask(smooth);
     gdual := BSpl.WaveletMask(smooth, vanishing);
     vancore := SIntPow.MulPower(
-                 hdual,
-                 NEW(S.T).fromArray(ARRAY OF R.T{1.0D0, 0.0D0, -1.0D0}),
+                 hdual, NEW(S.T).fromArray(
+                          ARRAY OF R.T{RT.Half, R.Zero, -RT.Half}),
                  vanishing).translate(2 - smooth - vanishing);
-    phivan := Refn.Refine(vancore.scale(RT.SqRtTwo), hdual, levels);
-    psi    := Refn.Refine(gdual.scale(R.One / RT.SqRtTwo), hdual, levels);
+    phivan := Refn.Refine(vancore, hdual, levels);
+    psi    := Refn.Refine(gdual, hdual, levels);
 
     unit   := IIntPow.Power(2, levels);
     twonit := 2 * unit;
@@ -55,7 +59,7 @@ PROCEDURE MatchPattern (target                               : S.T;
 
     twopow    := FLOAT(unit, R.T);
     grid      := R.One / twopow;
-    wavescale := RT.SqRt(twopow);
+    wavescale := twopow;
     abscissa  := V.ArithSeq(size, FLOAT(first, R.T) * grid, grid);
 
     targetvec := V.New(size);
@@ -433,7 +437,7 @@ PROCEDURE GetLiftedPrimalGeneratorMask (         hdual, gdual0: S.T;
   S.T =
   VAR
     hsdual := mc.lift.upsample(2).convolve(hdual);
-    gdual  := gdual0.superpose(hsdual.scale(R.Two / mc.amp));
+    gdual  := gdual0.superpose(hsdual.scale(R.One / mc.amp));
   BEGIN
     RETURN gdual.alternate();
   END GetLiftedPrimalGeneratorMask;
@@ -493,8 +497,8 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
     END CheckDerivatives;
 
   VAR
-    generatorvan := Refn.Refine(hdualvan.scale(RT.SqRtTwo), hdual, levels);
-    wavelet := Refn.Refine(gdual0.scale(R.One / RT.SqRtTwo), hdual, levels);
+    generatorvan := Refn.Refine(hdualvan, hdual, levels);
+    wavelet      := Refn.Refine(gdual0, hdual, levels);
 
     unit   := IIntPow.Power(2, levels);
     twonit := 2 * unit;
@@ -681,32 +685,30 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
     hdual  := BSpl.GeneratorMask(smooth);
     gdual0 := BSpl.WaveletMask(smooth, vanishing);
     hdualvan := SIntPow.MulPower(
-                  hdual,
-                  NEW(S.T).fromArray(ARRAY OF R.T{1.0D0, 0.0D0, -1.0D0}),
+                  hdual, NEW(S.T).fromArray(
+                           ARRAY OF R.T{RT.Half, R.Zero, -RT.Half}),
                   vanishing).translate(2 - smooth - vanishing);
     hdualnovan := BSpl.GeneratorMask(smooth + vanishing).translate(
                     2 - smooth - vanishing).scale(
                     RIntPow.Power(R.Two, vanishing)); (*compensate factors
                                                          (0.5,0.5) from the
                                                          mask*)
-    gdual0novan := BSpl.WaveletMask(smooth + vanishing, 0).scale(
-                     R.One / RIntPow.Power(R.Two, vanishing));
+    gdual0novan := BSpl.WaveletMask(smooth + vanishing, 0);
 
+    (*
     mc := MatchCoef{NEW(S.T).fromArray(
                       ARRAY OF R.T{1.0D0, 0.0D0, 0.0D0, 1.0D0}), 1.5D0};
-    (*
-        mc := MatchPatternSmooth(target, hdual, gdual0, hdualvan, hdualnovan,
-                                 gdual0novan, levels, translates, smoothWeight);
     *)
-    vanatom := NEW(S.T).fromArray(ARRAY OF R.T{1.0D0, -1.0D0});
+    mc := MatchPatternSmooth(target, hdual, gdual0, hdualvan, hdualnovan,
+                             gdual0novan, levels, translates, smoothWeight);
+    vanatom := NEW(S.T).fromArray(ARRAY OF R.T{RT.Half, -RT.Half});
     s := SIntPow.MulPower(
            mc.lift.translate((2 - smooth - vanishing) DIV 2), vanatom,
            vanishing);
-    gdual0a := gdual0.scale(mc.amp / RT.SqRtTwo);
-    gduala := gdual0a.superpose(
-                s.upsample(2).convolve(hdual.scale(RT.SqRtTwo)));
+    gdual0a := gdual0.scale(mc.amp);
+    gduala  := gdual0a.superpose(s.upsample(2).convolve(hdual));
     gdual := gdual0.superpose(
-               s.upsample(2).convolve(hdual.scale(R.Two / mc.amp)));
+               s.upsample(2).convolve(hdual.scale(R.One / mc.amp)));
     unit          := IIntPow.Power(2, levels);
     twopow        := FLOAT(unit, R.T);
     grid          := R.One / twopow;
@@ -741,7 +743,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
                         GetLiftedPrimalGeneratorMask(
                           hdualnovan, gdual0novan, mc).alternate(),
                         vanatom, vanishing))}));
-    CASE 2 OF
+    CASE 1 OF
     | 0 => PL.Init(); WP.PlotWavelets(hdual, gdual, levels); PL.Exit();
     | 1 =>
         PL.Init();
@@ -824,14 +826,14 @@ PROCEDURE Test () =
                                  -256), 6, 4, 6, 5, 5.0D0);
     | Example.matchBSplineWavelet =>
         (*
-        MatchPattern(
-          Refn.Refine(
-            BSpl.WaveletMask(2, 8), BSpl.GeneratorMask(2), 6).scale(
-            64.0D0).translate(10), 6, 2, 6, 5);
+                MatchPattern(
+                  Refn.Refine(
+                    BSpl.WaveletMask(2, 8), BSpl.GeneratorMask(2), 6).scale(
+                    64.0D0).translate(10), 6, 2, 8, 5);
         *)
         TestMatchPatternSmooth(Refn.Refine(BSpl.WaveletMask(2, 8),
                                            BSpl.GeneratorMask(2), 6).scale(
-                                 64.0D0).translate(0), 6, 2, 8, 5, 1.0D0);
+                                 64.0D0).translate(10), 6, 2, 8, 5, 0.0D0);
     | Example.matchSincSmooth =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
