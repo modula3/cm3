@@ -1,10 +1,7 @@
 MODULE TestXYZ EXPORTS Test;
-(*Copyright (c) 1996, m3na project
-Abstract:  Tests for XYZ module.
+(*Copyright (c) 1996, m3na project*)
 
-1/1/96    <name>   Initial version
-
-*)
+(*Abstract:  Tests for XYZ module.*)
 
 
 (*=======================*)

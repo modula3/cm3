@@ -65,9 +65,7 @@ BEGIN
   NewLine(); EVAL TestSLE();
   NewLine(); EVAL TestRandom();
   NewLine(); EVAL TestFFT();
-*)
   NewLine(); EVAL TestBigInteger();
-(*
   NewLine(); EVAL TestGCD();
   NewLine(); EVAL TestEigenSystem();
   NewLine(); EVAL TestChebyshev();
@@ -76,4 +74,5 @@ BEGIN
   NewLine(); EVAL TestTex();
   NewLine(); EVAL TestFunctional();
 *)
+  NewLine(); EVAL TestFmtLex();
 END Test.
