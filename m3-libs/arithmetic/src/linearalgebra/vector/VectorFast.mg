@@ -85,6 +85,17 @@ BEGIN
   RETURN tmp;
 END Sub;
 
+(*---------------------*)
+PROCEDURE Equal(v1,v2:T):BOOLEAN =
+BEGIN
+  FOR i:=FIRST(v1^) TO LAST(v2^) DO
+    IF v1[i] # v2[i] THEN
+      RETURN FALSE;
+    END
+  END;
+  RETURN TRUE;
+END Equal;
+
 
 (*-----------------*)
 PROCEDURE Scale( 
