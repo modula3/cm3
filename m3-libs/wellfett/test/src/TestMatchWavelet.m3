@@ -30,9 +30,9 @@ IMPORT PLPlot AS PL;
 IMPORT IO, Fmt, Wr, Thread;
 IMPORT NADefinitions AS NA;
 
-(*{RT.Half, R.Zero, -RT.Half} instead of {R.One, R.Zero, -R.One}
-has the advantage
-that the sum of the coefficients of the primal filter doesn't change.*)
+(*{RT.Half, R.Zero, -RT.Half} instead of {R.One, R.Zero, -R.One} has the
+   advantage that the sum of the coefficients of the primal filter doesn't
+   change.*)
 
 PROCEDURE MatchPattern (target                               : S.T;
                         levels, smooth, vanishing, translates: CARDINAL)
@@ -566,7 +566,9 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
                      3).getData();
 
         BEGIN
-          (*IO.Put("ComputeOptCrit\n");*)
+(*
+IO.Put(Fmt.FN("Compute SSE of %s, sum %s\n",ARRAY OF TEXT{VF.Fmt(hsums),RF.Fmt(V.Sum(hsums^))}));
+*)
           RETURN ComputeSSE(hsums^);
         END SquareSmoothEstimate;
 
@@ -599,7 +601,7 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         IO.Put(
           Fmt.FN("ComputeOptCritDiff for x=%s", ARRAY OF TEXT{VF.Fmt(x)}));
         FOR i := FIRST(dx^) TO LAST(dx^) DO dx[i] := dxv END;
-        CASE 1 OF
+        CASE 0 OF
         | 0 =>
             dersmooth := Fn.EvalCentralDiff2(SquareSmoothEstimate, x, dx);
         | 1 => dersmooth := Fn.EvalCentralDiff2(TransitionSpecRad, x, dx);
@@ -621,7 +623,7 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
 
 
     CONST
-      maxIter   = 3;
+      maxIter   = 10;
       smoothFac = 1.5D0;
 
     VAR
@@ -728,22 +730,18 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
   BEGIN
     IO.Put(
       Fmt.FN("optimal lift %s,\ncyclic wrap of gdual %s\n\n"
-               & "hsdual\n%s\n%s\n\n" & "gdual0\n%s\n%s\n\n"
-               & "gdual\n%s\n%s\n",
+             (* & "hsdual\n%s\n%s\n\n" & "gdual0\n%s\n%s\n\n" &
+                "gdual\n%s\n%s\n"*),
              ARRAY OF
-               TEXT{
-               SF.Fmt(s), SF.Fmt(gdual.alternate().wrapCyclic(3)),
-               SF.Fmt(s.upsample(2).convolve(hdual)),
-               SF.Fmt(SIntPow.MulPower(mc.lift.upsample(2).convolve(
-                                         hdualnovan), vanatom, vanishing)),
-               SF.Fmt(gdual0),
-               SF.Fmt(SIntPow.MulPower(gdual0novan, vanatom, vanishing)),
-               SF.Fmt(gdual),
-               SF.Fmt(SIntPow.MulPower(
-                        GetLiftedPrimalGeneratorMask(
-                          hdualnovan, gdual0novan, mc).alternate(),
-                        vanatom, vanishing))}));
-    CASE 1 OF
+               TEXT{SF.Fmt(s), SF.Fmt(gdual.alternate().wrapCyclic(3))
+               (*, SF.Fmt(s.upsample(2).convolve(hdual)),
+                  SF.Fmt(SIntPow.MulPower(mc.lift.upsample(2).convolve(
+                  hdualnovan), vanatom, vanishing)), SF.Fmt(gdual0),
+                  SF.Fmt(SIntPow.MulPower(gdual0novan, vanatom,
+                  vanishing)), SF.Fmt(gdual), SF.Fmt(SIntPow.MulPower(
+                  GetLiftedPrimalGeneratorMask( hdualnovan, gdual0novan,
+                  mc).alternate(), vanatom, vanishing))*)}));
+    CASE 0 OF
     | 0 => PL.Init(); WP.PlotWavelets(hdual, gdual, levels); PL.Exit();
     | 1 =>
         PL.Init();
@@ -833,7 +831,7 @@ PROCEDURE Test () =
         *)
         TestMatchPatternSmooth(Refn.Refine(BSpl.WaveletMask(2, 8),
                                            BSpl.GeneratorMask(2), 6).scale(
-                                 64.0D0).translate(10), 6, 2, 8, 5, 0.0D0);
+                                 64.0D0).translate(30), 6, 2, 8, 5, 1.0D-10);
     | Example.matchSincSmooth =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
