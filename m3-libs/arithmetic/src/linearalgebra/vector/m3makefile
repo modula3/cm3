@@ -8,6 +8,7 @@ generic_module("VectorRep")
 
 generic_module("VectorFast")
 generic_module("VectorBasic")
+generic_module("VectorSupport")
 
 Vector("Real",     "Fast", "RealBasic")
 Vector("LongReal", "Fast", "LongRealBasic")

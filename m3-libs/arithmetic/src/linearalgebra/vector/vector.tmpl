@@ -5,11 +5,14 @@
 readonly proc Vector (nm, impl, rfield) is
   local base     = nm & "Vector"
   local rep      = base & "Rep"
+  local sup      = base & "Support"
   local instimpl = base & impl
   build_generic_intf (base,     "Vector",        [rfield], VISIBLE)
   build_generic_impl (base,     "Vector",        [rfield, rep])
   build_generic_intf (rep,      "VectorRep",     [rfield, base, instimpl], VISIBLE)
   build_generic_impl (rep,      "VectorRep",     [rfield, base])
+  build_generic_intf (sup,      "VectorSupport", [rfield], VISIBLE)
+  build_generic_impl (sup,      "VectorSupport", [rfield])
   build_generic_intf (instimpl, "Vector" & impl, [rfield, base], VISIBLE)
   build_generic_impl (instimpl, "Vector" & impl, [rfield, base])
 end
