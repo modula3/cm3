@@ -7,6 +7,7 @@
  *                                                                        
  * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
  * City of New York.  Blair MacIntyre, Computer Science Department.       
+ * See file COPYRIGHT-COLUMBIA for details.
  * 
  * Author          : Blair MacIntyre
  * Created On      : Wed Mar  1 20:13:22 1995
@@ -15,11 +16,14 @@
  * Update Count    : 24
  * 
  * $Source: /opt/cvs/cm3/m3-comm/rdwr/src/TeeWr.m3,v $
- * $Date: 2001-12-02 00:29:10 $
+ * $Date: 2001-12-02 00:35:21 $
  * $Author: wagner $
- * $Revision: 1.1.1.1 $
+ * $Revision: 1.2 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.1.1.1  2001/12/02 00:29:10  wagner
+ * Blair MacIntyre's rdwr library
+ *
  * Revision 1.3  1997/08/11 20:36:24  bm
  * Various fixes
  *
