@@ -37,6 +37,7 @@ readonly EXCEPTION_IMPL = {
   "LINUXLIBC6" : "ex_frame",
   "NEXT"       : "ex_frame",
   "NT386"      : "ex_frame",
+  "NT386GNU"   : "ex_frame",
   "OKI"        : "ex_frame",
   "OS2"        : "ex_frame",
   "SEQUENT"    : "ex_frame",
