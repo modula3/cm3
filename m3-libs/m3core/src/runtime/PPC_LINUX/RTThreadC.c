@@ -11,7 +11,7 @@
 RTThread__Transfer (from, to)
 jmp_buf *from, *to;
 {
-  if (_setjmp(*from) == 0) _longjmp (*to, 1);
+  if (setjmp(*from) == 0) longjmp (*to, 1);
 }
 
 
