@@ -1,9 +1,0 @@
-%
-%  Quake functions to instantiate generic zero finders.
-%
-
-readonly proc FindZero (nm, trans, field) is
-  local basic = nm & "FindZero"
-  build_generic_intf (basic, "FindZero", [field], VISIBLE)
-  build_generic_impl (basic, "FindZero", [trans, field])
-end
