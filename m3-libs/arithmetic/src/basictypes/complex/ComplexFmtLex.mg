@@ -33,7 +33,7 @@ BEGIN
   IF R.IsZero(x.im) THEN
     t:=RF.Fmt(x.re);
   ELSE
-    t:="COMPLEX{re:=" & RF.Fmt(x.re,style.elemStyle) & ","
+    t:="Complex{re:=" & RF.Fmt(x.re,style.elemStyle) & ","
              & "im:=" & RF.Fmt(x.im,style.elemStyle) & "}";
   END;
   RETURN t;
