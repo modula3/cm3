@@ -24,9 +24,27 @@ readonly proc UnitDatabase (nm, field) is
   build_generic_impl (udb, "UnitDatabase",  [       uu, uulist, cu, culist])
 end
 
+readonly proc SIUnit (nm, field) is
+  local siunit  = nm & "SIUnit"
+  local rfield  = nm & "Basic"
+  local rtrans  = nm & "Trans"
+  local ruu     = nm & "UsualUnit"
+  local rudb    = nm & "UnitDatabase"
+  build_generic_intf (siunit, "SIUnit", [rudb], VISIBLE)
+  build_generic_impl (siunit, "SIUnit", [rtrans, ruu, rudb])
+end
 
-readonly proc PhysicalValueFmtLex (nm, cfield, rfield, rfmt) is
-  local basic = nm & "PhysicalValueFmtLex"
-  build_generic_intf (basic, "PhysicalValueFmtLex", [cfield, rfmt], VISIBLE)
-  build_generic_impl (basic, "PhysicalValueFmtLex", [rfield, rfmt])
+
+readonly proc PhysicalValueFmtLex (nm, field) is
+  local fmt     = nm & "PhysicalValueFmtLex"
+  local rfield  = nm & "Basic"
+  local rtrans  = nm & "Trans"
+  local rfmt    = nm & "FmtLex"
+  local rpv     = nm & "PhysicalValue"
+  local rcu     = nm & "CompositeUnit"
+  local rculist = rcu & "List"
+  local rudb    = nm & "UnitDatabase"
+  local siunit  = nm & "SIUnit"
+  build_generic_intf (fmt, "PhysicalValueFmtLex", [rfmt, rpv, rudb], VISIBLE)
+  build_generic_impl (fmt, "PhysicalValueFmtLex", [rfield, rtrans, rfmt, rudb])
 end
