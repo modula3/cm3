@@ -1,14 +1,12 @@
-<html lang="en">
-<head>
+<html lang="en"><head>
 <title>Host/Target specific installation notes for GCC</title>
 <meta http-equiv="Content-Type" content="text/html">
 <meta name=description content="Host/Target specific installation notes for GCC">
-<meta name=generator content="makeinfo 4.2">
-<link href="http://www.gnu.org/software/texinfo/" rel=generator-home>
-</head>
-<body>
-<h1>Host/Target specific installation notes for GCC</h1>
-Please read this document carefully <em>before</em> installing the
+<meta name=generator content="makeinfo 4.0">
+<link href="http://texinfo.org/" rel=generator-home>
+</head><body>
+
+<p>P<p>lease read this document carefully <em>before</em> installing the
 GNU Compiler Collection on your machine.
 
 <ul>
@@ -121,7 +119,7 @@ GNU Compiler Collection on your machine.
 <!- ------- host/target specific issues start here --------------- ->
 <hr />
 
-<h3><a name="TOC0"></a><a name="1750a-*-*"></a>1750a-*-*</h3>
+<h2><a name="TOC0"><a name="1750a-*-*"></a>1750a-*-*</h2>
 
 <p>MIL-STD-1750A processors.  This target is obsoleted in GCC 3.1.
 
@@ -162,7 +160,7 @@ GCC.
 
 <hr />
 
-<h3><a name="TOC1"></a><a name="a29k"></a>a29k</h3>
+<h2><a name="TOC1"><a name="a29k"></a>a29k</h2>
 
 <p>AMD Am29k-family processors.  These are normally used in embedded
 applications.  This configuration corresponds to AMD's standard calling
@@ -176,13 +174,13 @@ particular configuration.
 
 <hr />
 
-<h3><a name="TOC2"></a><a name="a29k-*-bsd"></a>a29k-*-bsd</h3>
+<h2><a name="TOC2"><a name="a29k-*-bsd"></a>a29k-*-bsd</h2>
 
 <p>AMD Am29050 used in a system running a variant of BSD Unix.
 
 <hr />
 
-<h3><a name="TOC3"></a><a name="alpha*-*-*"></a>alpha*-*-*</h3>
+<h2><a name="TOC3"><a name="alpha*-*-*"></a>alpha*-*-*</h2>
 
 <p>This section contains general configuration information for all
 alpha-based platforms using ELF (in particular, ignore this section for
@@ -196,7 +194,7 @@ shared libraries.
 
 <hr />
 
-<h3><a name="TOC4"></a><a name="alpha*-dec-osf*"></a>alpha*-dec-osf*</h3>
+<h2><a name="TOC4"><a name="alpha*-dec-osf*"></a>alpha*-dec-osf*</h2>
 
 <p>Systems using processors that implement the DEC Alpha architecture and
 are running the DEC/Compaq Unix (DEC OSF/1, Digital UNIX, or Compaq
@@ -218,12 +216,12 @@ we need to use the old assembler, invoked via the barely documented
 <code>-oldas</code> option.  To bootstrap GCC, you either need to use the
 Compaq C Compiler:
 
-<br><pre>   % CC=cc <var>srcdir</var>/configure [<var>options</var>] [<var>target</var>]
+<pre>   % CC=cc <var>srcdir</var>/configure [<var>options</var>] [<var>target</var>]
 </pre>
 
 <p>or you can use a copy of GCC 2.95.3 or higher built on Tru64 UNIX V4.0:
 
-<br><pre>   % CC=gcc -Wa,-oldas <var>srcdir</var>/configure [<var>options</var>] [<var>target</var>]
+<pre>   % CC=gcc -Wa,-oldas <var>srcdir</var>/configure [<var>options</var>] [<var>target</var>]
 </pre>
 
 <p>As of GNU binutils 2.11.2, neither GNU <code>as</code> nor GNU <code>ld</code>
@@ -277,7 +275,7 @@ provide a fix shortly.
 
 <hr />
 
-<h3><a name="TOC5"></a><a name="alphaev5-cray-unicosmk*"></a>alphaev5-cray-unicosmk*</h3>
+<h2><a name="TOC5"><a name="alphaev5-cray-unicosmk*"></a>alphaev5-cray-unicosmk*</h2>
 
 <p>Cray T3E systems running Unicos/Mk.
 
@@ -292,7 +290,7 @@ need to tell GCC where to find the assembler and the linker.  The
 simplest way to do so is by providing <code>--with-as</code> and
 <code>--with-ld</code> to <code>configure</code>, e.g.
 
-<br><pre>    configure --with-as=/opt/ctl/bin/cam --with-ld=/opt/ctl/bin/cld \
+<pre>    configure --with-as=/opt/ctl/bin/cam --with-ld=/opt/ctl/bin/cld \
       --enable-languages=c
 </pre>
 
@@ -303,14 +301,14 @@ failure.
 
 <hr />
 
-<h3><a name="TOC6"></a><a name="arc-*-elf"></a>arc-*-elf</h3>
+<h2><a name="TOC6"><a name="arc-*-elf"></a>arc-*-elf</h2>
 
 <p>Argonaut ARC processor. 
 This configuration is intended for embedded systems.
 
 <hr />
 
-<h3><a name="TOC7"></a><a name="arm-*-aout"></a>arm-*-aout</h3>
+<h2><a name="TOC7"><a name="arm-*-aout"></a>arm-*-aout</h2>
 
 <p>Advanced RISC Machines ARM-family processors.  These are often used in
 embedded applications.  There are no standard Unix configurations. 
@@ -322,19 +320,19 @@ configuration.
 
 <hr />
 
-<h3><a name="TOC8"></a><a name="arm-*-elf"></a>arm-*-elf</h3>
+<h2><a name="TOC8"><a name="arm-*-elf"></a>arm-*-elf</h2>
 
 <p>This configuration is intended for embedded systems.
 
 <hr />
 
-<h3><a name="TOC9"></a><a name="arm*-*-linux-gnu"></a>arm*-*-linux-gnu</h3>
+<h2><a name="TOC9"><a name="arm*-*-linux-gnu"></a>arm*-*-linux-gnu</h2>
 
 <p>We require GNU binutils 2.10 or newer.
 
 <hr />
 
-<h3><a name="TOC10"></a><a name="arm-*-riscix"></a>arm-*-riscix</h3>
+<h2><a name="TOC10"><a name="arm-*-riscix"></a>arm-*-riscix</h2>
 
 <p>The ARM2 or ARM3 processor running RISC iX, Acorn's port of BSD Unix. 
 This configuration is obsoleted in GCC 3.1.
@@ -351,7 +349,7 @@ debugging, pass <code>--with-gnu-as</code> to configure.
 
 <hr />
 
-<h3><a name="TOC11"></a><a name="avr"></a>avr</h3>
+<h2><a name="TOC11"><a name="avr"></a>avr</h2>
 
 <p>ATMEL AVR-family micro controllers.  These are used in embedded
 applications.  There are no standard Unix configurations. 
@@ -371,14 +369,14 @@ can also be obtained from:
 <p>We <em>strongly</em> recommend using binutils 2.11 or newer.
 
 <p>The following error:
-<br><pre>  Error: register required
+<pre>  Error: register required
 </pre>
 
 <p>indicates that you should upgrade to a newer version of the binutils.
 
 <hr />
 
-<h3><a name="TOC12"></a><a name="c4x"></a>c4x</h3>
+<h2><a name="TOC12"><a name="c4x"></a>c4x</h2>
 
 <p>Texas Instruments TMS320C3x and TMS320C4x Floating Point Digital Signal
 Processors.  These are used in embedded applications.  There are no
@@ -399,7 +397,7 @@ can also be obtained from:
 
 <hr />
 
-<h3><a name="TOC13"></a><a name="cris"></a>CRIS</h3>
+<h2><a name="TOC13"><a name="cris"></a>CRIS</h2>
 
 <p>CRIS is the CPU architecture in Axis Communications ETRAX system-on-a-chip
 series.  These are used in embedded applications.
@@ -430,7 +428,7 @@ information about this platform is available at
 
 <hr />
 
-<h3><a name="TOC14"></a><a name="dos"></a>DOS</h3>
+<h2><a name="TOC14"><a name="dos"></a>DOS</h2>
 
 <p>Please have a look at our <a href="binaries.html">binaries page</a>.
 
@@ -441,13 +439,13 @@ and includes all the necessary compilation tools and libraries.
 
 <hr />
 
-<h3><a name="TOC15"></a><a name="dsp16xx"></a>dsp16xx</h3>
+<h2><a name="TOC15"><a name="dsp16xx"></a>dsp16xx</h2>
 
 <p>A port to the AT&amp;T DSP1610 family of processors.
 
 <hr />
 
-<h3><a name="TOC16"></a><a name="*-*-freebsd*"></a>*-*-freebsd*</h3>
+<h2><a name="TOC16"><a name="*-*-freebsd*"></a>*-*-freebsd*</h2>
 
 <p>The version of binutils installed in <code>/usr/bin</code> is known to work unless
 otherwise specified in any per-architecture notes.  However, binutils
@@ -494,7 +492,7 @@ the very least, both boehm-gc and libffi.
 
 <hr />
 
-<h3><a name="TOC17"></a><a name="elxsi-elxsi-bsd"></a>elxsi-elxsi-bsd</h3>
+<h2><a name="TOC17"><a name="elxsi-elxsi-bsd"></a>elxsi-elxsi-bsd</h2>
 
 <p>The Elxsi's C compiler has known limitations that prevent it from
 compiling GCC.  Please contact <a href="mailto:mrs@wrs.com">mrs@wrs.com</a> for more details.
@@ -503,7 +501,7 @@ compiling GCC.  Please contact <a href="mailto:mrs@wrs.com">mrs@wrs.com</a> for 
 
 <hr />
 
-<h3><a name="TOC18"></a><a name="h8300-hms"></a>h8300-hms</h3>
+<h2><a name="TOC18"><a name="h8300-hms"></a>h8300-hms</h2>
 
 <p>Hitachi H8/300 series of processors.
 
@@ -516,7 +514,7 @@ longer a multiple of 2 bytes.
 
 <hr />
 
-<h3><a name="TOC19"></a><a name="hppa*-hp-hpux*"></a>hppa*-hp-hpux*</h3>
+<h2><a name="TOC19"><a name="hppa*-hp-hpux*"></a>hppa*-hp-hpux*</h2>
 
 <p>We <em>highly</em> recommend using gas/binutils 2.8 or newer on all hppa
 platforms; you may encounter a variety of problems when using the HP
@@ -538,7 +536,7 @@ or a recent
 
 <hr />
 
-<h3><a name="TOC20"></a><a name="hppa*-hp-hpux9"></a>hppa*-hp-hpux9</h3>
+<h2><a name="TOC20"><a name="hppa*-hp-hpux9"></a>hppa*-hp-hpux9</h2>
 
 <p>The HP assembler has major problems on this platform.  We've tried to work
 around the worst of the problems.  However, those workarounds may be causing
@@ -551,7 +549,7 @@ and <code>SHELL</code> to <code>/bin/ksh</code> in your environment.
 
 <hr />
 
-<h3><a name="TOC21"></a><a name="hppa*-hp-hpux10"></a>hppa*-hp-hpux10</h3>
+<h2><a name="TOC21"><a name="hppa*-hp-hpux10"></a>hppa*-hp-hpux10</h2>
 
 <p>For hpux10.20, we <em>highly</em> recommend you pick up the latest sed patch
 <code>PHCO_19798</code> from HP.  HP has two sites which provide patches free of
@@ -572,7 +570,7 @@ bootstrap</code>.
 
 <hr />
 
-<h3><a name="TOC22"></a><a name="hppa*-hp-hpux11"></a>hppa*-hp-hpux11</h3>
+<h2><a name="TOC22"><a name="hppa*-hp-hpux11"></a>hppa*-hp-hpux11</h2>
 
 <p>GCC 3.0 and up support HP-UX 11.  On 64-bit capable systems, there
 are two distinct ports.  The <code>hppa2.0w-hp-hpux11*</code> port generates
@@ -610,14 +608,14 @@ port still is undergoing significant development.
 
 <hr />
 
-<h3><a name="TOC23"></a><a name="i370-*-*"></a>i370-*-*</h3>
+<h2><a name="TOC23"><a name="i370-*-*"></a>i370-*-*</h2>
 
 <p>This port is very preliminary and has many known bugs.  We hope to
 have a higher-quality port for this machine soon.
 
 <hr />
 
-<h3><a name="TOC24"></a><a name="*-*-linux-gnu"></a>*-*-linux-gnu</h3>
+<h2><a name="TOC24"><a name="*-*-linux-gnu"></a>*-*-linux-gnu</h2>
 
 <p>If you use glibc 2.2 (or 2.1.9x), GCC 2.95.2 won't install
 out-of-the-box.  You'll get compile errors while building <code>libstdc++</code>. 
@@ -637,7 +635,7 @@ glibc 2.2.4 whether patches for GCC 3.0 are needed.  You can use glibc
 
 <hr />
 
-<h3><a name="TOC25"></a><a name="ix86-*-linux*oldld"></a>i?86-*-linux*oldld</h3>
+<h2><a name="TOC25"><a name="ix86-*-linux*oldld"></a>i?86-*-linux*oldld</h2>
 
 <p>Use this configuration to generate <code>a.out</code> binaries on Linux-based
 GNU systems if you do not have gas/binutils version 2.5.2 or later
@@ -647,7 +645,7 @@ installed.
 
 <hr />
 
-<h3><a name="TOC26"></a><a name="ix86-*-linux*aout"></a>i?86-*-linux*aout</h3>
+<h2><a name="TOC26"><a name="ix86-*-linux*aout"></a>i?86-*-linux*aout</h2>
 
 <p>Use this configuration to generate <code>a.out</code> binaries on Linux-based
 GNU systems.  This configuration is being superseded.  You must use
@@ -655,7 +653,7 @@ gas/binutils version 2.5.2 or later.
 
 <hr />
 
-<h3><a name="TOC27"></a><a name="ix86-*-linux*"></a>i?86-*-linux*</h3>
+<h2><a name="TOC27"><a name="ix86-*-linux*"></a>i?86-*-linux*</h2>
 
 <p>You will need binutils 2.9.1.0.15 or newer for exception handling to work.
 
@@ -665,20 +663,20 @@ found on <a href="http://www.bitwizard.nl/sig11/">www.bitwizard.nl</a>.
 
 <hr />
 
-<h3><a name="TOC28"></a><a name="ix86-*-sco"></a>i?86-*-sco</h3>
+<h2><a name="TOC28"><a name="ix86-*-sco"></a>i?86-*-sco</h2>
 
 <p>Compilation with RCC is recommended.  Also, it may be a good idea to
 link with GNU malloc instead of the malloc that comes with the system.
 
 <hr />
 
-<h3><a name="TOC29"></a><a name="ix86-*-sco3.2v4"></a>i?86-*-sco3.2v4</h3>
+<h2><a name="TOC29"><a name="ix86-*-sco3.2v4"></a>i?86-*-sco3.2v4</h2>
 
 <p>Use this configuration for SCO release 3.2 version 4.
 
 <hr />
 
-<h3><a name="TOC30"></a><a name="ix86-*-sco3.2v5*"></a>i?86-*-sco3.2v5*</h3>
+<h2><a name="TOC30"><a name="ix86-*-sco3.2v5*"></a>i?86-*-sco3.2v5*</h2>
 
 <p>Use this for the SCO OpenServer Release 5 family of operating systems.
 
@@ -697,7 +695,7 @@ unrecognized opcodes when using the native assembler on OS versions before
 that version.)  While it's rather rare to see these emitted by GCC yet,
 errors of the basic form:
 
-<br><pre>  /usr/tmp/ccaNlqBc.s:22:unknown instruction: fcomip
+<pre>  /usr/tmp/ccaNlqBc.s:22:unknown instruction: fcomip
   /usr/tmp/ccaNlqBc.s:50:unknown instruction: fucomip
 </pre>
 
@@ -751,7 +749,7 @@ engineering and will hopefully be addressed in later releases.
 
 <hr />
 
-<h3><a name="TOC31"></a><a name="ix86-*-udk"></a>i?86-*-udk</h3>
+<h2><a name="TOC31"><a name="ix86-*-udk"></a>i?86-*-udk</h2>
 
 <p>This target emulates the SCO Universal Development Kit and requires that
 package be installed.  (If it is installed, you will have a
@@ -768,7 +766,7 @@ from the right place) while making the tools not think we're actually
 building a cross compiler.   The easiest way to do this is with a configure
 command like this:
 
-<br><pre>    CC=/udk/usr/ccs/bin/cc <var>/your/path/to</var>/gcc/configure \
+<pre>    CC=/udk/usr/ccs/bin/cc <var>/your/path/to</var>/gcc/configure \
       --host=i686-pc-udk --target=i686-pc-udk --program-prefix=udk-
 </pre>
 
@@ -784,7 +782,7 @@ have installed.
 
 <hr />
 
-<h3><a name="TOC32"></a><a name="ix86-*-isc"></a>i?86-*-isc</h3>
+<h2><a name="TOC32"><a name="ix86-*-isc"></a>i?86-*-isc</h2>
 
 <p>This configuration is obsoleted in GCC 3.1.
 
@@ -796,7 +794,7 @@ comes with the system.
 
 <hr />
 
-<h3><a name="TOC33"></a><a name="ix86-ibm-aix"></a>i?86-ibm-aix</h3>
+<h2><a name="TOC33"><a name="ix86-ibm-aix"></a>i?86-ibm-aix</h2>
 
 <p>This configuration is obsoleted in GCC 3.1.
 
@@ -805,7 +803,7 @@ GNU binutils version 2.2 or later.
 
 <hr />
 
-<h3><a name="TOC34"></a><a name="ix86-sequent-bsd"></a>i?86-sequent-bsd</h3>
+<h2><a name="TOC34"><a name="ix86-sequent-bsd"></a>i?86-sequent-bsd</h2>
 
 <p>This configuration is obsoleted in GCC 3.1.
 
@@ -813,7 +811,7 @@ GNU binutils version 2.2 or later.
 
 <hr />
 
-<h3><a name="TOC35"></a><a name="ix86-sequent-ptx1*"></a>i?86-sequent-ptx1*, i?86-sequent-ptx2*, i?86-sequent-sysv3*</h3>
+<h2><a name="TOC35"><a name="ix86-sequent-ptx1*"></a>i?86-sequent-ptx1*, i?86-sequent-ptx2*, i?86-sequent-sysv3*</h2>
 
 <p>This configuration is obsoleted in GCC 3.1.
 
@@ -825,7 +823,7 @@ use <code>bash</code> (the GNU shell) to run <code>fixproto</code>.
 
 <hr />
 
-<h3><a name="TOC36"></a><a name="i860-intel-osf*"></a>i860-intel-osf*</h3>
+<h2><a name="TOC36"><a name="i860-intel-osf*"></a>i860-intel-osf*</h2>
 
 <p>All support for the i860 processor is obsoleted in GCC 3.1.
 
@@ -837,32 +835,32 @@ of <code>va_arg</code> when you build GCC.
 <code>iclib.a</code>.  You must also modify <code>stdio.h</code> as follows: before
 the lines
 
-<br><pre>#if     defined(__i860__) &amp;&amp; !defined(_VA_LIST)
+<pre>#if     defined(__i860__) &amp;&amp; !defined(_VA_LIST)
 #include &lt;va_list.h&gt;
 </pre>
 
 <p>insert the line
 
-<br><pre>#if __PGC__
+<pre>#if __PGC__
 </pre>
 
 <p>and after the lines
 
-<br><pre>extern int  vprintf(const char *, va_list );
+<pre>extern int  vprintf(const char *, va_list );
 extern int  vsprintf(char *, const char *, va_list );
 #endif
 </pre>
 
 <p>insert the line
 
-<br><pre>#endif /* __PGC__ */
+<pre>#endif /* __PGC__ */
 </pre>
 
 <p>These problems don't exist in operating system version 1.1.
 
 <hr />
 
-<h3><a name="TOC37"></a><a name="ia64-*-linux"></a>ia64-*-linux</h3>
+<h2><a name="TOC37"><a name="ia64-*-linux"></a>ia64-*-linux</h2>
 
 <p>IA-64 processor (also known as IPF, or Itanium Processor Family)
 running GNU/Linux.
@@ -886,7 +884,7 @@ ABI changes are expected.
 
 <hr />
 
-<h3><a name="TOC38"></a><a name="*-lynx-lynxos"></a>*-lynx-lynxos</h3>
+<h2><a name="TOC38"><a name="*-lynx-lynxos"></a>*-lynx-lynxos</h2>
 
 <p>LynxOS 2.2 and earlier comes with GCC 1.x already installed as
 <code>/bin/gcc</code>.  You should compile with this instead of <code>/bin/cc</code>. 
@@ -898,7 +896,7 @@ installed tools, which produce <code>a.out</code> format executables.
 <hr />
 <!- rs6000-ibm-aix*, powerpc-ibm-aix* ->
 
-<h3><a name="TOC39"></a><a name="*-ibm-aix*"></a>*-ibm-aix*</h3>
+<h2><a name="TOC39"><a name="*-ibm-aix*"></a>*-ibm-aix*</h2>
 
 <p>AIX Make frequently has problems with GCC makefiles.  GNU Make 3.76 or
 newer is recommended to build on this platform.
@@ -936,17 +934,17 @@ multilib <code>libstdc++.a</code> installed:
 
 <p>Extract the shared object from each the GCC 3.1 <code>libstdc++.a</code>
 archive:
-<br><pre>   % ar -x libstdc++.a libstdc++.so.4
+<pre>   % ar -x libstdc++.a libstdc++.so.4
 </pre>
 
 <p>Enable the <code>F_LOADONLY</code> flag so that the shared object will be
 available for runtime dynamic loading, but not linking:
-<br><pre>   % strip -e libstdc++.so.4
+<pre>   % strip -e libstdc++.so.4
 </pre>
 
 <p>Archive the runtime-only shared object in the GCC 3.2
 <code>libstdc++.a</code> archive:
-<br><pre>   % ar -q libstdc++.a libstdc++.so.4
+<pre>   % ar -q libstdc++.a libstdc++.so.4
 </pre>
 
 <p>Linking executables and shared libraries may produce warnings of
@@ -1002,14 +1000,14 @@ switch and using the configure option <code>--with-cpu-<var>cpu_type</var></code
 
 <hr />
 
-<h3><a name="TOC40"></a><a name="m32r-*-elf"></a>m32r-*-elf</h3>
+<h2><a name="TOC40"><a name="m32r-*-elf"></a>m32r-*-elf</h2>
 
 <p>Mitsubishi M32R processor. 
 This configuration is intended for embedded systems.
 
 <hr />
 
-<h3><a name="TOC41"></a><a name="m68000-hp-bsd"></a>m68000-hp-bsd</h3>
+<h2><a name="TOC41"><a name="m68000-hp-bsd"></a>m68000-hp-bsd</h2>
 
 <p>HP 9000 series 200 running BSD.  Note that the C compiler that comes
 with this system cannot compile GCC; contact <a href="mailto:law@cygnus.com">law@cygnus.com</a>
@@ -1017,21 +1015,21 @@ to get binaries of GCC for bootstrapping.
 
 <hr />
 
-<h3><a name="TOC42"></a><a name="m6811-elf"></a>m6811-elf</h3>
+<h2><a name="TOC42"><a name="m6811-elf"></a>m6811-elf</h2>
 
 <p>Motorola 68HC11 family micro controllers.  These are used in embedded
 applications.  There are no standard Unix configurations.
 
 <hr />
 
-<h3><a name="TOC43"></a><a name="m6812-elf"></a>m6812-elf</h3>
+<h2><a name="TOC43"><a name="m6812-elf"></a>m6812-elf</h2>
 
 <p>Motorola 68HC12 family micro controllers.  These are used in embedded
 applications.  There are no standard Unix configurations.
 
 <hr />
 
-<h3><a name="TOC44"></a><a name="m68k-altos"></a>m68k-altos</h3>
+<h2><a name="TOC44"><a name="m68k-altos"></a>m68k-altos</h2>
 
 <p>Altos 3068.  This configuration is obsoleted in GCC 3.1.
 
@@ -1040,7 +1038,7 @@ Also, you must fix a kernel bug.
 
 <hr />
 
-<h3><a name="TOC45"></a><a name="m68k-apple-aux"></a>m68k-apple-aux</h3>
+<h2><a name="TOC45"><a name="m68k-apple-aux"></a>m68k-apple-aux</h2>
 
 <p>Apple Macintosh running A/UX. 
 This configuration is obsoleted in GCC 3.1.
@@ -1059,7 +1057,7 @@ raises some of the arbitrary limits found in the original.
 
 <hr />
 
-<h3><a name="TOC46"></a><a name="m68k-att-sysv"></a>m68k-att-sysv</h3>
+<h2><a name="TOC46"><a name="m68k-att-sysv"></a>m68k-att-sysv</h2>
 
 <p>AT&amp;T 3b1, a.k.a. 7300 PC.  This version of GCC cannot
 be compiled with the system C compiler, which is too buggy. 
@@ -1069,7 +1067,7 @@ bootstrap.  Binaries are available from the OSU-CIS archive, at
 
 <hr />
 
-<h3><a name="TOC47"></a><a name="m68k-bull-sysv"></a>m68k-bull-sysv</h3>
+<h2><a name="TOC47"><a name="m68k-bull-sysv"></a>m68k-bull-sysv</h2>
 
 <p>Bull DPX/2 series 200 and 300 with BOS-2.00.45 up to BOS-2.01. 
 This configuration is obsoleted in GCC 3.1.
@@ -1084,7 +1082,7 @@ assembler or for availability of the DPX/2 port of GAS, contact
 
 <hr />
 
-<h3><a name="TOC48"></a><a name="m68k-crds-unos"></a>m68k-crds-unos</h3>
+<h2><a name="TOC48"><a name="m68k-crds-unos"></a>m68k-crds-unos</h2>
 
 <p>Use <code>configure unos</code> for building on Unos.
 
@@ -1094,7 +1092,7 @@ behavior, and does not work.  So, when installing GCC, you should
 install the following script as <code>as</code> in the subdirectory where
 the passes of GCC are installed:
 
-<br><pre>#!/bin/sh
+<pre>#!/bin/sh
 casm $*
 </pre>
 
@@ -1121,14 +1119,14 @@ and linking from that library.
 
 <hr />
 
-<h3><a name="TOC49"></a><a name="m68k-hp-hpux"></a>m68k-hp-hpux</h3>
+<h2><a name="TOC49"><a name="m68k-hp-hpux"></a>m68k-hp-hpux</h2>
 
 <p>HP 9000 series 300 or 400 running HP-UX.  HP-UX version 8.0 has a bug in
 the assembler that prevents compilation of GCC.  This
 bug manifests itself during the first stage of compilation, while
 building <code>libgcc2.a</code>:
 
-<br><pre>_floatdisf
+<pre>_floatdisf
 cc1: warning: `-g' option not supported on this version of GCC
 cc1: warning: `-g1' option not supported on this version of GCC
 ./xgcc: Internal compiler error: program as got fatal signal 11
@@ -1164,18 +1162,18 @@ encounter this problem, upgrade your operating system or use BASH (the
 GNU shell) to run <code>fixproto</code>.  This bug will cause the fixproto
 program to report an error of the form:
 
-<br><pre>./fixproto: sh internal 1K buffer overflow
+<pre>./fixproto: sh internal 1K buffer overflow
 </pre>
 
 <p>To fix this, you can also change the first line of the fixproto script
 to look like:
 
-<br><pre>#!/bin/ksh
+<pre>#!/bin/ksh
 </pre>
 
 <hr />
 
-<h3><a name="TOC50"></a><a name="m68k-*-nextstep*"></a>m68k-*-nextstep*</h3>
+<h2><a name="TOC50"><a name="m68k-*-nextstep*"></a>m68k-*-nextstep*</h2>
 
 <p>These configurations are obsoleted in GCC 3.1.
 
@@ -1191,7 +1189,7 @@ does not happen on 3.1.
 <p>On NeXTSTEP 3.x where x &lt; 3 the build of GCC will abort during
 stage1 with an error message like this:
 
-<br><pre>  _eh
+<pre>  _eh
   /usr/tmp/ccbbsZ0U.s:987:Unknown pseudo-op: .section
   /usr/tmp/ccbbsZ0U.s:987:Rest of line ignored. 1st junk character
   valued 95 (_).
@@ -1211,7 +1209,7 @@ to use the following sequence.  Note you must have write permission to
 the directory <var>prefix</var> you specified in the configuration process of GCC
 for this sequence to work.
 
-<br><pre>  cd bld-gcc
+<pre>  cd bld-gcc
   make all-texinfo all-bison all-byacc all-binutils all-gas all-ld
   cd gcc
   make bootstrap
@@ -1222,7 +1220,7 @@ for this sequence to work.
 
 <hr />
 
-<h3><a name="TOC51"></a><a name="m68k-ncr-*"></a>m68k-ncr-*</h3>
+<h2><a name="TOC51"><a name="m68k-ncr-*"></a>m68k-ncr-*</h2>
 
 <p>On the Tower models 4<var>n</var>0 and 6<var>n</var>0, by default a process is not
 allowed to have more than one megabyte of memory.  GCC cannot compile
@@ -1231,12 +1229,12 @@ itself (or many other programs) with <code>-O</code> in that much memory.
 <p>To solve this problem, reconfigure the kernel adding the following line
 to the configuration file:
 
-<br><pre>MAXUMEM = 4096
+<pre>MAXUMEM = 4096
 </pre>
 
 <hr />
 
-<h3><a name="TOC52"></a><a name="m68k-sun"></a>m68k-sun</h3>
+<h2><a name="TOC52"><a name="m68k-sun"></a>m68k-sun</h2>
 
 <p>Sun 3.  We do not provide a configuration file to use the Sun FPA by
 default, because programs that establish signal handlers for floating
@@ -1244,13 +1242,13 @@ point traps inherently cannot work with the FPA.
 
 <hr />
 
-<h3><a name="TOC53"></a><a name="m68k-sun-sunos4.1.1"></a>m68k-sun-sunos4.1.1</h3>
+<h2><a name="TOC53"><a name="m68k-sun-sunos4.1.1"></a>m68k-sun-sunos4.1.1</h2>
 
 <p>It is reported that you may need the GNU assembler on this platform.
 
 <hr />
 
-<h3><a name="TOC54"></a><a name="m88k-*-svr3"></a>m88k-*-svr3</h3>
+<h2><a name="TOC54"><a name="m88k-*-svr3"></a>m88k-*-svr3</h2>
 
 <p>Motorola m88k running the AT&amp;T/Unisoft/Motorola V.3 reference port. 
 These configurations are obsoleted in GCC 3.1.
@@ -1268,7 +1266,7 @@ if you have one.
 
 <hr />
 
-<h3><a name="TOC55"></a><a name="m88k-*-dgux"></a>m88k-*-dgux</h3>
+<h2><a name="TOC55"><a name="m88k-*-dgux"></a>m88k-*-dgux</h2>
 
 <p>Motorola m88k running DG/UX. 
 These configurations are obsoleted in GCC 3.1.
@@ -1287,7 +1285,7 @@ configuration based on the current software development environment.
 
 <hr />
 
-<h3><a name="TOC56"></a><a name="m88k-tektronix-sysv3"></a>m88k-tektronix-sysv3</h3>
+<h2><a name="TOC56"><a name="m88k-tektronix-sysv3"></a>m88k-tektronix-sysv3</h2>
 
 <p>Tektronix XD88 running UTekV 3.2e. 
 These configurations are obsoleted in GCC 3.1.
@@ -1302,7 +1300,7 @@ between stages.
 
 <hr />
 
-<h3><a name="TOC57"></a><a name="mips-*-*"></a>mips-*-*</h3>
+<h2><a name="TOC57"><a name="mips-*-*"></a>mips-*-*</h2>
 
 <p>If you use the 1.31 version of the MIPS assembler (such as was shipped
 with Ultrix 3.1), you will need to use the <code>-fno-delayed-branch</code> switch
@@ -1335,7 +1333,7 @@ To protect against this, GCC passes <code>-non_shared</code> to the
 linker unless you pass an explicit <code>-shared</code> or
 <code>-call_shared</code> switch.
 
-<h3><a name="TOC58"></a><a name="mips-mips-bsd"></a>mips-mips-bsd</h3>
+<h2><a name="TOC58"><a name="mips-mips-bsd"></a>mips-mips-bsd</h2>
 
 <p>MIPS machines running the MIPS operating system in BSD mode. 
 These configurations are obsoleted in GCC 3.1.
@@ -1356,7 +1354,7 @@ compilers, you may need to add <code>-Wf,-XNg1500 -Olimit 3000</code>.
 
 <hr />
 
-<h3><a name="TOC59"></a><a name="mips-dec-*"></a>mips-dec-*</h3>
+<h2><a name="TOC59"><a name="mips-dec-*"></a>mips-dec-*</h2>
 
 <p>These configurations are obsoleted in GCC 3.1.
 
@@ -1389,7 +1387,7 @@ compilers, you may need to add <code>-Wf,-XNg1500 -Olimit 3000</code>.
 
 <hr />
 
-<h3><a name="TOC60"></a><a name="mips-mips-riscos*"></a>mips-mips-riscos*</h3>
+<h2><a name="TOC60"><a name="mips-mips-riscos*"></a>mips-mips-riscos*</h2>
 
 <p>These configurations are obsoleted in GCC 3.1.
 
@@ -1429,7 +1427,7 @@ avoiding a linker bug.
 
 <hr />
 
-<h3><a name="TOC61"></a><a name="mips-sgi-irix4"></a>mips-sgi-irix4</h3>
+<h2><a name="TOC61"><a name="mips-sgi-irix4"></a>mips-sgi-irix4</h2>
 
 <p>This configuration is obsoleted in GCC 3.1.
 
@@ -1455,12 +1453,12 @@ reordering--perhaps GCC itself was miscompiled as a result.
 
 <p>You may get the following warning on IRIX 4 platforms, it can be safely
 ignored.
-<br><pre>  warning: foo.o does not have gp tables for all its sections.
+<pre>  warning: foo.o does not have gp tables for all its sections.
 </pre>
 
 <hr />
 
-<h3><a name="TOC62"></a><a name="mips-sgi-irix5"></a>mips-sgi-irix5</h3>
+<h2><a name="TOC62"><a name="mips-sgi-irix5"></a>mips-sgi-irix5</h2>
 
 <p>This configuration has considerable problems, which will be fixed in a
 future release.
@@ -1504,24 +1502,24 @@ not have GNU <code>make</code> available.
 
 <hr />
 
-<h3><a name="TOC63"></a><a name="mips-sgi-irix6"></a>mips-sgi-irix6</h3>
+<h2><a name="TOC63"><a name="mips-sgi-irix6"></a>mips-sgi-irix6</h2>
 
 <p>If you are using IRIX <code>cc</code> as your bootstrap compiler, you must
 ensure that the N32 ABI is in use.  To test this, compile a simple C
 file with <code>cc</code> and then run <code>file</code> on the
 resulting object file.  The output should look like:
 
-<br><pre>test.o: ELF N32 MSB <small>...</small>
+<pre>test.o: ELF N32 MSB <small>...</small>
 </pre>
 
 <p>If you see:
 
-<br><pre>test.o: ELF 32-bit MSB <small>...</small>
+<pre>test.o: ELF 32-bit MSB <small>...</small>
 </pre>
 
 <p>or
 
-<br><pre>test.o: ELF 64-bit MSB <small>...</small>
+<pre>test.o: ELF 64-bit MSB <small>...</small>
 </pre>
 
 <p>then your version of <code>cc</code> uses the O32 or N64 ABI by default.  You
@@ -1536,12 +1534,12 @@ the ISA depending on the machine where GCC is built.  Using one of them
 as the bootstrap compiler may result in mips4 code, which won't run at
 all on mips3-only systems.  For the test program above, you should see:
 
-<br><pre>test.o: ELF N32 MSB mips-3 <small>...</small>
+<pre>test.o: ELF N32 MSB mips-3 <small>...</small>
 </pre>
 
 <p>If you get:
 
-<br><pre>test.o: ELF N32 MSB mips-4 <small>...</small>
+<pre>test.o: ELF N32 MSB mips-4 <small>...</small>
 </pre>
 
 <p>instead, you should set the environment variable <code>CC</code> to <code>cc
@@ -1597,7 +1595,7 @@ information about using GCC on IRIX platforms.
 
 <hr />
 
-<h3><a name="TOC64"></a><a name="mips-sony-sysv"></a>mips-sony-sysv</h3>
+<h2><a name="TOC64"><a name="mips-sony-sysv"></a>mips-sony-sysv</h2>
 
 <p>Sony MIPS NEWS.  This configuration is obsoleted in GCC 3.1.
 
@@ -1607,7 +1605,7 @@ GCC when shared libraries are linked in.
 
 <hr />
 
-<h3><a name="TOC65"></a><a name="ns32k-encore"></a>ns32k-encore</h3>
+<h2><a name="TOC65"><a name="ns32k-encore"></a>ns32k-encore</h2>
 
 <p>This configuration is obsoleted in GCC 3.1.
 
@@ -1615,7 +1613,7 @@ GCC when shared libraries are linked in.
 
 <hr />
 
-<h3><a name="TOC66"></a><a name="ns32k-*-genix"></a>ns32k-*-genix</h3>
+<h2><a name="TOC66"><a name="ns32k-*-genix"></a>ns32k-*-genix</h2>
 
 <p>National Semiconductor ns32000 system. This configuration is obsoleted
 in GCC 3.1.
@@ -1625,7 +1623,7 @@ compiled versions of these from GNU Emacs.
 
 <hr />
 
-<h3><a name="TOC67"></a><a name="ns32k-sequent"></a>ns32k-sequent</h3>
+<h2><a name="TOC67"><a name="ns32k-sequent"></a>ns32k-sequent</h2>
 
 <p>This configuration is obsoleted in GCC 3.1.
 
@@ -1633,7 +1631,7 @@ compiled versions of these from GNU Emacs.
 
 <hr />
 
-<h3><a name="TOC68"></a><a name="ns32k-utek"></a>ns32k-utek</h3>
+<h2><a name="TOC68"><a name="ns32k-utek"></a>ns32k-utek</h2>
 
 <p>UTEK ns32000 system ("merlin").  This configuration is obsoleted in
 GCC 3.1.
@@ -1643,14 +1641,14 @@ GCC 3.1.
 
 <hr />
 
-<h3><a name="TOC69"></a><a name="powerpc*-*-*"></a>powerpc-*-*</h3>
+<h2><a name="TOC69"><a name="powerpc*-*-*"></a>powerpc-*-*</h2>
 
 <p>You can specify a default version for the <code>-mcpu=<var>cpu_type</var></code>
 switch by using the configure option <code>--with-cpu-<var>cpu_type</var></code>.
 
 <hr />
 
-<h3><a name="TOC70"></a><a name="powerpc-*-darwin*"></a>powerpc-*-darwin*</h3>
+<h2><a name="TOC70"><a name="powerpc-*-darwin*"></a>powerpc-*-darwin*</h2>
 
 <p>PowerPC running Darwin (Mac OS X kernel).
 
@@ -1683,13 +1681,13 @@ extensions are generally specific to Mac programming.
 
 <hr />
 
-<h3><a name="TOC71"></a><a name="powerpc-*-elf"></a>powerpc-*-elf, powerpc-*-sysv4</h3>
+<h2><a name="TOC71"><a name="powerpc-*-elf"></a>powerpc-*-elf, powerpc-*-sysv4</h2>
 
 <p>PowerPC system in big endian mode, running System V.4.
 
 <hr />
 
-<h3><a name="TOC72"></a><a name="powerpc-*-linux-gnu*"></a>powerpc-*-linux-gnu*</h3>
+<h2><a name="TOC72"><a name="powerpc-*-linux-gnu*"></a>powerpc-*-linux-gnu*</h2>
 
 <p>You will need
 <a href="ftp://ftp.kernel.org/pub/linux/devel/binutils">binutils 2.13.90.0.10</a>
@@ -1697,7 +1695,7 @@ or newer for a working GCC.
 
 <hr />
 
-<h3><a name="TOC73"></a><a name="powerpc-*-netbsd*"></a>powerpc-*-netbsd*</h3>
+<h2><a name="TOC73"><a name="powerpc-*-netbsd*"></a>powerpc-*-netbsd*</h2>
 
 <p>PowerPC system in big endian mode running NetBSD.  To build the
 documentation you will need Texinfo version 4.1 (NetBSD 1.5.1 included
@@ -1705,52 +1703,52 @@ Texinfo version 3.12).
 
 <hr />
 
-<h3><a name="TOC74"></a><a name="powerpc-*-eabiaix"></a>powerpc-*-eabiaix</h3>
+<h2><a name="TOC74"><a name="powerpc-*-eabiaix"></a>powerpc-*-eabiaix</h2>
 
 <p>Embedded PowerPC system in big endian mode with <code>-mcall-aix</code> selected as
 the default.
 
 <hr />
 
-<h3><a name="TOC75"></a><a name="powerpc-*-eabisim"></a>powerpc-*-eabisim</h3>
+<h2><a name="TOC75"><a name="powerpc-*-eabisim"></a>powerpc-*-eabisim</h2>
 
 <p>Embedded PowerPC system in big endian mode for use in running under the
 PSIM simulator.
 
 <hr />
 
-<h3><a name="TOC76"></a><a name="powerpc-*-eabi"></a>powerpc-*-eabi</h3>
+<h2><a name="TOC76"><a name="powerpc-*-eabi"></a>powerpc-*-eabi</h2>
 
 <p>Embedded PowerPC system in big endian mode.
 
 <hr />
 
-<h3><a name="TOC77"></a><a name="powerpcle-*-elf"></a>powerpcle-*-elf, powerpcle-*-sysv4</h3>
+<h2><a name="TOC77"><a name="powerpcle-*-elf"></a>powerpcle-*-elf, powerpcle-*-sysv4</h2>
 
 <p>PowerPC system in little endian mode, running System V.4.
 
 <hr />
 
-<h3><a name="TOC78"></a><a name="powerpcle-*-eabisim"></a>powerpcle-*-eabisim</h3>
+<h2><a name="TOC78"><a name="powerpcle-*-eabisim"></a>powerpcle-*-eabisim</h2>
 
 <p>Embedded PowerPC system in little endian mode for use in running under
 the PSIM simulator.
 
 <hr />
 
-<h3><a name="TOC79"></a><a name="powerpcle-*-eabi"></a>powerpcle-*-eabi</h3>
+<h2><a name="TOC79"><a name="powerpcle-*-eabi"></a>powerpcle-*-eabi</h2>
 
 <p>Embedded PowerPC system in little endian mode.
 
 <hr />
 
-<h3><a name="TOC80"></a><a name="powerpcle-*-winnt"></a>powerpcle-*-winnt, powerpcle-*-pe</h3>
+<h2><a name="TOC80"><a name="powerpcle-*-winnt"></a>powerpcle-*-winnt, powerpcle-*-pe</h2>
 
 <p>PowerPC system in little endian mode running Windows NT.
 
 <hr />
 
-<h3><a name="TOC81"></a><a name="romp-*-aos"></a>romp-*-aos, romp-*-mach</h3>
+<h2><a name="TOC81"><a name="romp-*-aos"></a>romp-*-aos, romp-*-mach</h2>
 
 <p>These configurations are obsoleted in GCC 3.1.
 
@@ -1763,19 +1761,19 @@ is correct.
 
 <hr />
 
-<h3><a name="TOC82"></a><a name="s390-*-linux*"></a>s390-*-linux*</h3>
+<h2><a name="TOC82"><a name="s390-*-linux*"></a>s390-*-linux*</h2>
 
 <p>S/390 system running Linux for S/390.
 
 <hr />
 
-<h3><a name="TOC83"></a><a name="s390x-*-linux*"></a>s390x-*-linux*</h3>
+<h2><a name="TOC83"><a name="s390x-*-linux*"></a>s390x-*-linux*</h2>
 
 <p>zSeries system (64-bit) running Linux for zSeries.
 
 <hr />
 
-<h3><a name="TOC84"></a><a name="*-*-solaris2*"></a>*-*-solaris2*</h3>
+<h2><a name="TOC84"><a name="*-*-solaris2*"></a>*-*-solaris2*</h2>
 
 <p>Sun does not ship a C compiler with Solaris 2.  To bootstrap and install
 GCC you first have to install a pre-built compiler, see our
@@ -1823,7 +1821,7 @@ will assume that any missing type is <code>int</code> (as defined by C89).
 
 <hr />
 
-<h3><a name="TOC85"></a><a name="sparc-sun-solaris2*"></a>sparc-sun-solaris2*</h3>
+<h2><a name="TOC85"><a name="sparc-sun-solaris2*"></a>sparc-sun-solaris2*</h2>
 
 <p>When GCC is configured to use binutils 2.11.2 or later the binaries
 produced are smaller than the ones produced using Sun's native tools;
@@ -1833,7 +1831,7 @@ information.
 <p>Sun <code>as</code> 4.x is broken in that it cannot cope with long symbol names. 
 A typical error message might look similar to the following:
 
-<br><pre>/usr/ccs/bin/as: "/var/tmp/ccMsw135.s", line 11041: error:
+<pre>/usr/ccs/bin/as: "/var/tmp/ccMsw135.s", line 11041: error:
   can't compute value of an expression involving an external symbol.
 </pre>
 
@@ -1856,7 +1854,7 @@ that supports only 32-bit binaries, one must configure with
 
 <hr />
 
-<h3><a name="TOC86"></a><a name="sparc-sun-solaris2.7"></a>sparc-sun-solaris2.7</h3>
+<h2><a name="TOC86"><a name="sparc-sun-solaris2.7"></a>sparc-sun-solaris2.7</h2>
 
 <p>Sun patch 107058-01 (1999-01-13) for Solaris 7/SPARC triggers a bug in
 the dynamic linker.  This problem (Sun bug 4210064) affects GCC 2.8
@@ -1893,7 +1891,7 @@ the Solaris 7 Recommended Patch Cluster.
 <p>
 <hr />
 
-<h3><a name="TOC87"></a><a name="sparc-sun-sunos4*"></a>sparc-sun-sunos4*</h3>
+<h2><a name="TOC87"><a name="sparc-sun-sunos4*"></a>sparc-sun-sunos4*</h2>
 
 <p>A bug in the SunOS 4 linker will cause it to crash when linking
 <code>-fPIC</code> compiled objects (and will therefore not allow you to build
@@ -1911,7 +1909,7 @@ be due to a bug in <code>sh</code>.  You can probably get around it by running
 
 <hr />
 
-<h3><a name="TOC88"></a><a name="sparc-unknown-linux-gnulibc1"></a>sparc-unknown-linux-gnulibc1</h3>
+<h2><a name="TOC88"><a name="sparc-unknown-linux-gnulibc1"></a>sparc-unknown-linux-gnulibc1</h2>
 
 <p>It has been reported that you might need
 <a href="ftp://ftp.yggdrasil.com/private/hjl">binutils 2.8.1.0.23</a>
@@ -1919,7 +1917,7 @@ for this platform, too.
 
 <hr />
 
-<h3><a name="TOC89"></a><a name="sparc-*-linux*"></a>sparc-*-linux*</h3>
+<h2><a name="TOC89"><a name="sparc-*-linux*"></a>sparc-*-linux*</h2>
 
 <p>GCC versions 3.0 and higher require binutils 2.11.2 and glibc 2.2.4
 or newer on this platform.  All earlier binutils and glibc
@@ -1927,7 +1925,7 @@ releases mishandled unaligned relocations on <code>sparc-*-*</code> targets.
 
 <hr />
 
-<h3><a name="TOC90"></a><a name="sparc64-*-*"></a>sparc64-*-*</h3>
+<h2><a name="TOC90"><a name="sparc64-*-*"></a>sparc64-*-*</h2>
 
 <p>GCC version 2.95 is not able to compile code correctly for
 <code>sparc64</code> targets.  Users of the Linux kernel, at least,
@@ -1937,12 +1935,12 @@ recognize (via <code>uname -a</code>) the system as <code>sparc-*-*</code> inste
 
 <hr />
 
-<h3><a name="TOC91"></a><a name="sparcv9-*-solaris2*"></a>sparcv9-*-solaris2*</h3>
+<h2><a name="TOC91"><a name="sparcv9-*-solaris2*"></a>sparcv9-*-solaris2*</h2>
 
 <p>The following compiler flags must be specified in the configure
 step in order to bootstrap this target with the Sun compiler:
 
-<br><pre>   % CC="cc -xildoff -xarch=v9" <var>srcdir</var>/configure [<var>options</var>] [<var>target</var>]
+<pre>   % CC="cc -xildoff -xarch=v9" <var>srcdir</var>/configure [<var>options</var>] [<var>target</var>]
 </pre>
 
 <p><code>-xildoff</code> turns off the incremental linker, and <code>-xarch=v9</code>
@@ -1950,12 +1948,12 @@ specifies the v9 architecture to the Sun linker and assembler.
 
 <hr />
 
-<h3><a name="TOC92"></a><a name="%23*-*-sysv*"></a>*-*-sysv*</h3>
+<h2><a name="TOC92"><a name="%23*-*-sysv*"></a>*-*-sysv*</h2>
 
 <p>On System V release 3, you may get this error message
 while linking:
 
-<br><pre>ld fatal: failed to write symbol name <var>something</var>
+<pre>ld fatal: failed to write symbol name <var>something</var>
  in strings table for file <var>whatever</var>
 </pre>
 
@@ -1969,7 +1967,7 @@ is said to work.  Smaller values may also work.
 
 <p>On System V, if you get an error like this,
 
-<br><pre>/usr/local/lib/bison.simple: In function `yyparse':
+<pre>/usr/local/lib/bison.simple: In function `yyparse':
 /usr/local/lib/bison.simple:625: virtual memory exhausted
 </pre>
 
@@ -1981,14 +1979,14 @@ is said to work.  Smaller values may also work.
 
 <hr />
 
-<h3><a name="TOC93"></a><a name="vax-dec-ultrix"></a>vax-dec-ultrix</h3>
+<h2><a name="TOC93"><a name="vax-dec-ultrix"></a>vax-dec-ultrix</h2>
 
 <p>Don't try compiling with VAX C (<code>vcc</code>).  It produces incorrect code
 in some cases (for example, when <code>alloca</code> is used).
 
 <hr />
 
-<h3><a name="TOC94"></a><a name="we32k-*-*"></a>we32k-*-*</h3>
+<h2><a name="TOC94"><a name="we32k-*-*"></a>we32k-*-*</h2>
 
 <p>These computers are also known as the 3b2, 3b5, 3b20 and other similar
 names.  (However, the 3b1 is actually a 68000.) 
@@ -2003,7 +2001,7 @@ in GCC.  You can work around this by building <code>cpp</code> in GCC
 first, then use that instead of the system's preprocessor with the
 system's C compiler to compile <code>stmt.c</code>.  Here is how:
 
-<br><pre>mv /lib/cpp /lib/cpp.att
+<pre>mv /lib/cpp /lib/cpp.att
 cp cpp /lib/cpp.gnu
 echo '/lib/cpp.gnu -traditional ${1+"$@"}' &gt; /lib/cpp
 chmod +x /lib/cpp
@@ -2014,7 +2012,7 @@ optimization files.  So you must build the stage 2 compiler without
 optimization.  Then build a stage 3 compiler with optimization. 
 That executable should work.  Here are the necessary commands:
 
-<br><pre>make LANGUAGES=c CC=stage1/xgcc CFLAGS="-Bstage1/ -g"
+<pre>make LANGUAGES=c CC=stage1/xgcc CFLAGS="-Bstage1/ -g"
 make stage2
 make CC=stage2/xgcc CFLAGS="-Bstage2/ -g -O"
 </pre>
@@ -2024,7 +2022,7 @@ as the file <code>cc1plus</code> is larger than one megabyte.
 
 <hr />
 
-<h3><a name="TOC95"></a><a name="xtensa-*-elf"></a>xtensa-*-elf</h3>
+<h2><a name="TOC95"><a name="xtensa-*-elf"></a>xtensa-*-elf</h2>
 
 <p>This target is intended for embedded Xtensa systems using the
 <code>newlib</code> C library.  It uses ELF but does not support shared
@@ -2041,7 +2039,7 @@ which you can use to replace the default header file.
 
 <hr />
 
-<h3><a name="TOC96"></a><a name="xtensa-*-linux*"></a>xtensa-*-linux*</h3>
+<h2><a name="TOC96"><a name="xtensa-*-linux*"></a>xtensa-*-linux*</h2>
 
 <p>This target is for Xtensa systems running GNU/Linux.  It supports ELF
 shared objects and the GNU C library (glibc).  It also generates
@@ -2052,7 +2050,7 @@ respects, this target is the same as the
 
 <hr />
 
-<h3><a name="TOC97"></a><a name="windows"></a>Microsoft Windows (32-bit)</h3>
+<h2><a name="TOC97"><a name="windows"></a>Microsoft Windows (32-bit)</h2>
 
 <p>A port of GCC 2.95.x is included with the
 <a href="http://www.cygwin.com/">Cygwin environment</a>.
@@ -2062,7 +2060,7 @@ without modification.
 
 <hr />
 
-<h3><a name="TOC98"></a><a name="os2"></a>OS/2</h3>
+<h2><a name="TOC98"><a name="os2"></a>OS/2</h2>
 
 <p>GCC does not currently support OS/2.  However, Andrew Zabolotny has been
 working on a generic OS/2 port with pgcc.  The current code can be found
@@ -2073,7 +2071,7 @@ at <a href="http://www.goof.com/pcg/os2/">http://www.goof.com/pcg/os2/</a>.
 
 <hr />
 
-<h3><a name="TOC99"></a><a name="older"></a>Older systems</h3>
+<h2><a name="TOC99"><a name="older"></a>Older systems</h2>
 
 <p>GCC contains support files for many older (1980s and early
 1990s) Unix variants.  For the most part, support for these systems
@@ -2122,7 +2120,7 @@ current GCC) is to be found in the GCC texinfo manual.
 
 <hr />
 
-<h3><a name="TOC100"></a><a name="elf_targets"></a>all ELF targets (SVR4, Solaris 2, etc.)</h3>
+<h2><a name="TOC100"><a name="elf_targets"></a>all ELF targets (SVR4, Solaris 2, etc.)</h2>
 
 <p>C++ support is significantly better on ELF targets if you use the
 <a href="./configure.html#with-gnu-ld">GNU linker</a>; duplicate copies of

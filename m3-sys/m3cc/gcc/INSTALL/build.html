@@ -1,14 +1,12 @@
-<html lang="en">
-<head>
+<html lang="en"><head>
 <title>Installing GCC: Building</title>
 <meta http-equiv="Content-Type" content="text/html">
 <meta name=description content="Installing GCC: Building">
-<meta name=generator content="makeinfo 4.2">
-<link href="http://www.gnu.org/software/texinfo/" rel=generator-home>
-</head>
-<body>
-<h1>Installing GCC: Building</h1>
-Now that GCC is configured, you are ready to build the compiler and
+<meta name=generator content="makeinfo 4.0">
+<link href="http://texinfo.org/" rel=generator-home>
+</head><body>
+
+<p>N<p>ow that GCC is configured, you are ready to build the compiler and
 runtime libraries.
 
 <p>We <strong>highly</strong> recommend that GCC be built using GNU make;
@@ -58,7 +56,7 @@ documentation, you need version 4.1 or later of Texinfo installed if you
 want Info documentation to be regenerated.  Releases contain Info
 documentation pre-built for the unmodified documentation in the release.
 
-<h3><a name="TOC0"></a>Building a native compiler</h3>
+<h2><a name="TOC0">Building a native compiler</h2>
 
 <p>For a native build issue the command <code>make bootstrap</code>.  This
 will build the entire GCC system, which includes the following steps:
@@ -92,7 +90,7 @@ without debugging information as in the following example.  This will save
 roughly 40% of disk space both for the bootstrap and the final installation. 
 (Libraries will still contain debugging information.)
 
-<br><pre>     make CFLAGS='-O' LIBCFLAGS='-g -O2' \
+<pre>     make CFLAGS='-O' LIBCFLAGS='-g -O2' \
        LIBCXXFLAGS='-g -O2 -fno-implicit-templates' bootstrap
 </pre>
 
@@ -121,7 +119,7 @@ a few systems, meaningful comparison of object files is impossible; they
 always appear "different".  If you encounter this problem, you will
 need to disable comparison in the <code>Makefile</code>.)
 
-<h3><a name="TOC1"></a>Building a cross compiler</h3>
+<h2><a name="TOC1">Building a cross compiler</h2>
 
 <p>We recommend reading the
 <a href="http://www.objsw.com/CrossGCC/">crossgcc FAQ</a>
@@ -156,7 +154,7 @@ tree before configuring.
 
 <p>Note that if an error occurs in any step the make process will exit.
 
-<h3><a name="TOC2"></a>Building in parallel</h3>
+<h2><a name="TOC2">Building in parallel</h2>
 
 <p>If you have a multiprocessor system you can use <code>make bootstrap
 MAKE="make -j 2" -j 2</code> or just <code>make -j 2 bootstrap</code>
@@ -165,7 +163,7 @@ when building GCC.  You can use a bigger number instead of two if
 you like.  In most cases, it won't help to use a number bigger than
 the number of processors in your machine.
 
-<h3><a name="TOC3"></a>Building the Ada compiler</h3>
+<h2><a name="TOC3">Building the Ada compiler</h2>
 
 <p>In order to build GNAT, the Ada compiler, you need a working GNAT
 compiler (GNAT version 3.13 or later, or GCC version 3.1 or later),
@@ -192,7 +190,7 @@ you have to issue the following commands before invoking <code>make
 bootstrap</code> (this assumes that you start with an unmodified and consistent
 source distribution):
 
-<br><pre>    cd <var>srcdir</var>/gcc/ada
+<pre>    cd <var>srcdir</var>/gcc/ada
     touch treeprs.ads [es]info.h nmake.ad[bs]
 </pre>
 
@@ -204,7 +202,7 @@ subdirectory before proceeding with the next steps.
 <p>For example, you can build a native Ada compiler by issuing the
 following commands (assuming <code>make</code> is GNU make):
 
-<br><pre>    cd <var>objdir</var>
+<pre>    cd <var>objdir</var>
     <var>srcdir</var>/configure --enable-languages=c,ada
     cd <var>srcdir</var>/gcc/ada
     touch treeprs.ads [es]info.h nmake.ad[bs]
