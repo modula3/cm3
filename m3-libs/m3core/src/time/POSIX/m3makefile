@@ -25,6 +25,7 @@ readonly _DateImpls = {
   "IRIX5"      : "DatePosix",
   "LINUX"      : "DateLinux",
   "LINUXELF"   : "DateLinux",
+  "LINUXLIBC6" : "DateBsd",
   "NEXT"       : "DateBsd",
   "NT386"      : "DateBsd",
   "OKI"        : "DateBsd",
