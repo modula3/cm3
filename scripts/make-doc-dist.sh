@@ -29,7 +29,7 @@ header "building CM3 doc distribution in ${ARCHIVE}"
 #
 
 if [ "$1" = "-gen" ] ; then
-  cd "${ROOT}/doc/help" || exit 1
+  cd "${ROOT}/doc/help/gen_html" || exit 1
   rm -f html_gen/m3db 
   m3tohtml -v -root /usr/local/cm3/pkg `cd /usr/local/cm3/pkg && /bin/ls -d *`
 fi
