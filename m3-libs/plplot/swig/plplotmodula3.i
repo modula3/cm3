@@ -393,11 +393,6 @@ PROCEDURE CallbackM3()=BEGIN END CallbackM3;
 %typemap(m3rawarg)  fill_func %{NIL (*not yet supported*)%}
 
 
-%typemap(m3indecl)  char * %{$1 : C.char_star;%}
-%typemap(m3in)      char * %{$1 := M3toC.SharedTtoS($input);%}
-%typemap(m3freearg) char * %{M3toC.FreeSharedS($input,$1);%}
-%typemap(m3rawarg)  char * %{$1%}
-
 %typemap(rawintype) char *legline[4] %{READONLY%}
 %typemap(m3intype)  char *legline[4] %{READONLY%}
 %typemap(rawintype) char *legline[4] %{ARRAY [0..3] OF C.char_star%}
