@@ -79,5 +79,6 @@ tar -C "${TMPDIR}" -czf "${TMPDIR}/${ARCHIVE2}" cminstall${EXE} ${ARCHIVE1} \
   || exit 1
 ls -l "${ARCHIVE2}"
 echo "cleaning up"
+rm -f "${TMPDIR}/cminstall${EXE}"
 rm -rf "${INSTALLROOT}"
 rm -f "${TMPDIR}/${ARCHIVE1}"
