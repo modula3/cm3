@@ -19,6 +19,7 @@ IMPORT LongRealFunctionalDeriv2 AS FnD;
 IMPORT LongRealSignal AS S;
 IMPORT LongRealSignalIntegerPower AS SIntPow;
 IMPORT LongRealDiscreteWaveletTransform AS DWT;
+IMPORT LongRealDyadicFilterBank AS FB;
 
 IMPORT LongRealRefinableFunc AS Refn;
 IMPORT LongRealRefinableSmooth AS RefnSm;
@@ -44,9 +45,9 @@ PROCEDURE PlotDWT (x: S.T; READONLY filter: ARRAY [0 .. 1] OF S.T; ) =
   VAR
     wt := DWT.DyadicFilterBankAnalysisTI(x, filter, numlevels);
     xrec := DWT.DyadicFilterBankSynthesisTI(
-              wt, ARRAY OF
-                    S.T{filter[1].translate(-1).alternate().scale(R.Two),
-                        filter[0].alternate().translate(-1).scale(R.Two)});
+              wt, FB.DualToPrimal(
+                    ARRAY OF
+                      S.T{filter[0].scale(R.Two), filter[1].scale(R.Two)}));
     left  := FLOAT(xrec.getFirst(), R.T) * grid;
     right := FLOAT(xrec.getLast(), R.T) * grid;
 
