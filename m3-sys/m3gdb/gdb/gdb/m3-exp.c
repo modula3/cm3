@@ -66,7 +66,7 @@ m3_find_global (unit, entry)
       }
   
       /* Could it be a global name in one of the interfaces
-	 explicitly exported by the current unit ? */
+	 explicityly exported by the current unit ? */
       if (exports = find_m3_exported_interfaces (unit)) {
 	for (i = 0; i < TYPE_NFIELDS (exports); i++) {
 	  if (ir = find_m3_ir ('I', TYPE_FIELD_NAME (exports, i))) {
@@ -309,14 +309,6 @@ static int m3_parse_e8 ()
       get_token ();
       break;
 
-    case TK_WIDECHAR_LIT:
-      write_exp_elt_opcode (OP_M3_WIDECHAR);
-      write_exp_elt_type (builtin_type_m3_widechar);
-      write_exp_elt_longcst ((LONGEST) cur_tok.intval);
-      write_exp_elt_opcode (OP_M3_WIDECHAR); 
-      get_token ();
-      break;
-
     case TK_TEXT_LIT: {
       struct stoken str;
       str.ptr = cur_tok.string;
@@ -324,17 +316,6 @@ static int m3_parse_e8 ()
       write_exp_elt_opcode (OP_M3_TEXT);
       write_exp_string (str);
       write_exp_elt_opcode (OP_M3_TEXT); 
-      get_token ();
-      break;
-    }
-
-    case TK_WIDETEXT_LIT: {
-      struct stoken str;
-      str.ptr = cur_tok.string;
-      str.length = cur_tok.length;
-      write_exp_elt_opcode (OP_M3_WIDETEXT);
-      write_exp_string (str);
-      write_exp_elt_opcode (OP_M3_WIDETEXT); 
       get_token ();
       break;
     }
@@ -411,7 +392,6 @@ static int m3_parse_e8 ()
     case TK_REFANY:    write_m3_type (builtin_type_m3_refany);    break;
     case TK_ROOT:      write_m3_type (builtin_type_m3_root);      break;
     case TK_TEXT:      write_m3_type (builtin_type_m3_text);      break;
-    case TK_WIDECHAR:  write_m3_type (builtin_type_m3_widechar);  break;
 
     case TK_UNTRACED:
       get_token ();

@@ -244,14 +244,9 @@ PROCEDURE Accept (c: Connector): T
     RETURN NEW(T, sock := sock, ep := IP.NullEndPoint);
   END Accept;
 
-PROCEDURE CloseConnector(c: Connector) =
+PROCEDURE CloseConnector(<*UNUSED*> c: Connector) =
   BEGIN
-    LOCK c DO
-      IF NOT c.closed THEN
-        EVAL WinSock.closesocket(c.sock);
-        c.closed := TRUE;
-      END;
-    END;
+    IPError.Die();
   END CloseConnector;
   
 PROCEDURE EOF(t: T) : BOOLEAN =

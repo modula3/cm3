@@ -422,7 +422,6 @@ print_subexp (exp, pos, stream, prec)
 
     case OP_M3_LONG:
     case OP_M3_CHAR:
-    case OP_M3_WIDECHAR:
       (*pos) += 3;
       value_print (value_from_longest (exp->elts[pc + 1].type,
 				       exp->elts[pc + 2].longconst),
@@ -436,14 +435,6 @@ print_subexp (exp, pos, stream, prec)
       value_print (value_from_double (exp->elts[pc + 1].type,
 				      exp->elts[pc + 2].doubleconst),
 		   stream, 0, Val_no_prettyprint);
-      return;
-
-    case OP_M3_WIDETEXT: 
-      /* like OP_M3_TEXT, except with don't use the generic language stuff  */
-      nargs = longest_to_int (exp -> elts[pc + 1].longconst);
-      (*pos) += 3 + 2 * BYTES_TO_EXP_ELEM (nargs + 1);
-      /*** LA_PRINT_STRING (stream, &exp->elts[pc + 2].string, nargs, 0); ***/
-      m3_printwidestr (stream, &exp->elts[pc + 2].string, nargs, 0);
       return;
 
     case OP_M3_TEXT: 

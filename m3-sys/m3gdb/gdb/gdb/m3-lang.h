@@ -23,12 +23,6 @@ m3_parse PARAMS ((void));	/* Defined in c-exp.y */
 extern void			/* Defined in c-typeprint.c */
 m3_print_type PARAMS ((struct type *, char *, FILE *, int, int));
 
-extern void
-m3_emit_char PARAMS ((int c, FILE *stream, int quoter));
-
-extern void
-m3_emit_widechar PARAMS ((int c, FILE *stream, int quoter));
-
 extern int
 m3_val_print PARAMS ((struct type *, char *, CORE_ADDR, FILE *, int, int,
 		     int, enum val_prettyprint));
@@ -51,7 +45,6 @@ extern struct type *builtin_type_m3_root;
 extern struct type *builtin_type_m3_text;
 extern struct type *builtin_type_m3_untraced_root;
 extern struct type *builtin_type_m3_void;
-extern struct type *builtin_type_m3_widechar;
 
 extern LONGEST
 m3_unpack_ord PARAMS ((char *valaddr, int bitpos, int bitsize, int sign_extend));
@@ -93,10 +86,6 @@ find_m3_heap_tc_addr PARAMS ((CORE_ADDR addr));
 extern struct type *
 find_m3_type_from_tc PARAMS ((CORE_ADDR tc_addr));
 
-/* given a gdb type, find the address of the corresponding typecell */
-extern CORE_ADDR
-find_tc_from_m3_type PARAMS ((struct type *t));
-
 /* given a heap reference, find it's actual type */
 extern struct type *
 find_m3_heap_type PARAMS ((CORE_ADDR addr));
@@ -127,7 +116,3 @@ m3_ordinal_bounds PARAMS ((struct type *type, LONGEST *lower, LONGEST *upper));
 
 extern int
 m3_value_print PARAMS ((struct value *, GDB_FILE *, int, enum val_prettyprint));
-
-extern char*
-m3_read_object_fields_bits PARAMS ((CORE_ADDR ref));
-

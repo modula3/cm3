@@ -21,7 +21,6 @@ PROCEDURE ToText(t: Type.T; byName: BOOLEAN := TRUE): Text.T =
     IF t.name # NIL AND byName THEN RETURN QidToText(t.name); END;
     TYPECASE t OF 
       | Type.Char => RETURN "CHAR"
-      | Type.WideChar => RETURN "WIDECHAR"
       | Type.UserDefined (ud) => 
           IF NUMBER(ud.elts^) = 0 THEN text := "";
           ELSE 

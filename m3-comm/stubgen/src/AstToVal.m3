@@ -6,8 +6,7 @@ MODULE AstToVal;
 
 IMPORT AstToType, StubUtils, Value, M3AST_AS, M3CBackEnd_C;
 IMPORT M3AST_SM_F;
-IMPORT RTTypeSRC;
-
+ 
 PROCEDURE ProcessExp(
   <*UNUSED*>h: AstToType.Handle; exp: M3AST_AS.EXP): Value.T =
   BEGIN
@@ -27,8 +26,7 @@ PROCEDURE ProcessExp(
       |  M3CBackEnd_C.Array_or_record_constructor_value => 
       |  M3CBackEnd_C.Proc_value => 
       *)
-      ELSE StubUtils.Die("AstToVal.ProcessExp: unsupported value: "
-                         & RTTypeSRC.TypeName (exp.sm_exp_value));
+      ELSE StubUtils.Die("AstToVal.ProcessExp: unsupported value");
     END;
     RETURN NIL;
   END ProcessExp;

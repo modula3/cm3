@@ -29,10 +29,9 @@ TYPE
 
   Ordinal =  T BRANDED OBJECT END; (* Enumeration | Subrange *)
 
-  Enumeration = Ordinal BRANDED OBJECT END; (* Char | WideChar | UserDefined *)
+  Enumeration = Ordinal BRANDED OBJECT END; (* Char | UserDefined *)
 
   Char = Enumeration BRANDED OBJECT END;
-  WideChar = Enumeration BRANDED OBJECT END;
 
   UserDefined = Enumeration OBJECT
     elts : REF ARRAY OF Atom.T;
@@ -175,7 +174,6 @@ VAR (* READONLY *)
   cardinal      : Subrange;
   boolean       : UserDefined;
   char          : Char;
-  widechar      : WideChar;
   real          : Real;
   longreal      : LongReal;
   extended      : Extended;

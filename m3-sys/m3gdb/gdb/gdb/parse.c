@@ -602,7 +602,6 @@ length_of_subexp (expr, endpos)
       args = 1;
       /* fall through */
     case OP_M3_TEXT:
-    case OP_M3_WIDETEXT:
     case OP_M2_STRING:
     case OP_STRING:
     case OP_NAME:
@@ -652,7 +651,6 @@ length_of_subexp (expr, endpos)
     case OP_M3_LREEL:
     case OP_M3_XREEL:
     case OP_M3_CHAR:
-    case OP_M3_WIDECHAR:
       oplen = 4;
       break;
 

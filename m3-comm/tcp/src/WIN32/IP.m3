@@ -11,47 +11,15 @@
 
 UNSAFE MODULE IP;
 
-IMPORT IPError, M3toC, Process, WinSock;
+IMPORT IPError, M3toC, Process, TextF, WinSock;
 
 VAR mu := NEW(MUTEX);
 
-(************
 PROCEDURE GetHostByName(nm: TEXT; VAR (*out*) res: Address): BOOLEAN
     RAISES {Error} =
   BEGIN
     LOCK mu DO
-      VAR
-        s := M3toC.SharedTtoS(nm);
-        h := WinSock.gethostbyname(s);
-      BEGIN
-        M3toC.FreeSharedS(nm, s);
-        IF h = NIL THEN InterpretError(); RETURN FALSE; END;
-        res := GetAddress(h);
-      END;
-    END;
-    RETURN TRUE;
-  END GetHostByName;
-**************)
-
-PROCEDURE GetHostByName(nm: TEXT; VAR (*out*) res: Address): BOOLEAN
-    RAISES {Error} =
-  (* Apparently WinSock "gethostbyname" does not resolve names
-     that happen to be dotted IP addresses (e.g. "123.33.44.44").
-     This function does. *)
-  VAR
-    s := M3toC.SharedTtoS(nm);
-    a := WinSock.inet_addr(s);
-    h : WinSock.struct_hostent_star;
-  BEGIN
-    IF a # WinSock.INADDR_NONE THEN
-      (* the name is already a dotted IP address *)
-      M3toC.FreeSharedS(nm, s);
-      res := LOOPHOLE (a, Address);
-    ELSE
-      (* the name is not a dotted IP address *)
-      LOCK mu DO
-        h := WinSock.gethostbyname(s);
-        M3toC.FreeSharedS(nm, s);
+      VAR h := WinSock.gethostbyname(ADR(nm[0])); BEGIN
         IF h = NIL THEN InterpretError(); RETURN FALSE; END;
         res := GetAddress(h);
       END;
@@ -59,46 +27,17 @@ PROCEDURE GetHostByName(nm: TEXT; VAR (*out*) res: Address): BOOLEAN
     RETURN TRUE;
   END GetHostByName;
 
-(*************
 PROCEDURE GetCanonicalByName(nm: TEXT): TEXT RAISES {Error} =
   BEGIN
     LOCK mu DO
-      VAR
-        s := M3toC.SharedTtoS(nm);
-        h := WinSock.gethostbyname(s);
-      BEGIN
-        M3toC.FreeSharedS (nm, s);
+      VAR h := WinSock.gethostbyname(ADR(nm[0])); BEGIN
         IF h # NIL THEN
           RETURN M3toC.CopyStoT(h.h_name);
         END;
-        InterpretError();
       END;
     END;
+    InterpretError();
     RETURN NIL;
-  END GetCanonicalByName;
-************)
-
-PROCEDURE GetCanonicalByName(nm: TEXT): TEXT RAISES {Error} =
-  (* Apparently WinSock "gethostbyname" does not resolve names
-     that happen to be dotted IP addresses (e.g. "123.33.44.44").
-     This function does. *)
-  VAR
-    s := M3toC.SharedTtoS(nm);
-    a := WinSock.inet_addr(s);
-    h : WinSock.struct_hostent_star;
-  BEGIN
-    LOCK mu DO
-      IF a = WinSock.INADDR_NONE THEN
-        (* the name is not a dotted IP address *)
-        h := WinSock.gethostbyname(s);
-      ELSE
-        (* the name is a dotted IP address *)
-        h := WinSock.gethostbyaddr(ADR(a), BYTESIZE(a), WinSock.PF_INET);
-      END;
-      M3toC.FreeSharedS(nm, s);
-      IF h = NIL THEN  InterpretError();  RETURN NIL;  END;
-      RETURN M3toC.CopyStoT(h.h_name);
-    END;
   END GetCanonicalByName;
 
 PROCEDURE GetCanonicalByAddr(addr: Address): TEXT RAISES {Error} =
@@ -113,8 +52,8 @@ PROCEDURE GetCanonicalByAddr(addr: Address): TEXT RAISES {Error} =
           RETURN M3toC.CopyStoT(h.h_name);
         END;
       END;
-      InterpretError();
     END;
+    InterpretError();
     RETURN NIL;
   END GetCanonicalByAddr;
 

@@ -24,7 +24,6 @@ PROCEDURE ToText(t: T; byName: BOOLEAN := TRUE): Text.T =
     IF t.name # NIL AND byName THEN RETURN QidToText(t.name); END;
     TYPECASE t OF 
       | Char => RETURN "CHAR"
-      | WideChar => RETURN "WIDECHAR"
       | UserDefined (ud) => 
           IF NUMBER(ud.elts^) = 0 THEN text := "";
           ELSE 
@@ -50,10 +49,6 @@ PROCEDURE ToText(t: T; byName: BOOLEAN := TRUE): Text.T =
             IF sub.base = char THEN RETURN
                "[VAL(" & Fmt.Int(min) &  ", CHAR) .. VAL(" & 
                      Fmt.Int(max) & ", CHAR)]"
-            END;
-            IF sub.base = widechar THEN RETURN
-               "[VAL(" & Fmt.Int(min) &  ", WIDECHAR) .. VAL(" & 
-                     Fmt.Int(max) & ", WIDECHAR)]"
             END;
             ud := NARROW(sub.base, UserDefined);
             RETURN "[" & ToText(sub.base) & "." & Atom.ToText(ud.elts[min]) & 
@@ -265,8 +260,6 @@ BEGIN
 
   char :=    NEW(Char, 
                name := NEW(Qid, intf := nullAtm, item := Atom.FromText("CHAR")));
-  widechar := NEW(WideChar, 
-               name := NEW(Qid, intf := nullAtm, item := Atom.FromText("WIDECHAR")));
   real    := NEW(Real, 
                name := NEW(Qid, intf := nullAtm, item := Atom.FromText("REAL")));
   longreal := NEW(LongReal, name := 

@@ -1,17 +1,17 @@
 (* Copyright 1992 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
 (* StubLib.m3 *)
-(* Last modified on Tue Jan 31 08:47:30 PST 1995 by kalsow *)
-(*      modified on Wed Aug 31 16:52:41 PDT 1994 by wobber *)
+(* Last modified on Thu Sep  5 11:34:46 PDT 1996 by wobber *)
+(*      modified on Tue Jan 31 08:47:30 PST 1995 by kalsow *)
 (*      modified on Wed Feb 10 17:10:17 PST 1993 by owicki *)
 
-UNSAFE MODULE StubLib EXPORTS StubLib, NetObjF;
+UNSAFE MODULE StubLib;
    (* unsafe because of marshalling code *)
    
 IMPORT NetObj, NetObjRep, NetObjRT, Pickle, Pickle2, Protocol, Transport,
        TransportUtils, Voucher, WireRep;
-IMPORT Atom, AtomList, Rd, RTType, Wr, Text, TextClass, Text8, Text16,
-       Thread, RdClass, WrClass, UnsafeRd, UnsafeWr, FloatMode, Swap;
+IMPORT Atom, AtomList, Rd, RTType, Wr, Text, TextF, Thread,
+       RdClass, WrClass, UnsafeRd, UnsafeWr, FloatMode, Swap;
 
 FROM Protocol IMPORT MsgHeader, CallHeader, Op;
 
@@ -73,10 +73,6 @@ TYPE SpecRd2 = Pickle2.Reader OBJECT
   rep: DataRep;
   next: SpecRd2;
   END;
-
-TYPE
-  CharPtr  = UNTRACED REF ARRAY [0..65535] OF CHAR;
-  WCharPtr = UNTRACED REF ARRAY [0..65535] OF WIDECHAR;
 
 VAR mu: MUTEX;
     freeWr: SpecWr;
@@ -254,53 +250,16 @@ PROCEDURE InChars(c: Conn; rep: DataRep; VAR arr: ARRAY OF CHAR)
     END;
   END InChars;
 
-PROCEDURE InWideChars(c: Conn; rep: DataRep; VAR arr: ARRAY OF WIDECHAR)
-    RAISES {NetObj.Error, Rd.Failure, Thread.Alerted} =
-  VAR cnt: INTEGER := NUMBER(arr);  p: CharPtr;  n: INTEGER;
-  BEGIN
-    IF cnt <= 0 THEN RETURN; END;
-    INC(cnt, cnt);  (* == # of 8-bit characters *)
-    p := LOOPHOLE(ADR(arr[0]), CharPtr);
-    WHILE (cnt > 0) DO
-      n := MIN(cnt, NUMBER(p^));
-      IF c.rd.getSub(SUBARRAY(p^, 0, n)) # n THEN
-        RaiseUnmarshalFailure();
-      END;
-      INC(p, ADRSIZE(p^));  DEC(cnt, NUMBER(p^));
-    END;
-    IF NOT NativeEndian(rep) THEN
-      (* we need to byte swap *)
-      FOR i := 0 TO LAST(arr) DO
-        WITH z = arr[i] DO  z := VAL (Swap.Swap2U (ORD (z)), WIDECHAR);  END;
-      END;
-    END;
-  END InWideChars;
-
 PROCEDURE OutChars(c: Conn; READONLY arr: ARRAY OF CHAR)
     RAISES {Wr.Failure, Thread.Alerted} =
   BEGIN
     c.wr.putString(arr);
   END OutChars;
 
-PROCEDURE OutWideChars(c: Conn; READONLY arr: ARRAY OF WIDECHAR)
-    RAISES {Wr.Failure, Thread.Alerted} =
-  VAR cnt: INTEGER := NUMBER (arr);  p: CharPtr;
-  BEGIN
-    IF cnt <= 0 THEN RETURN; END;
-    INC(cnt, cnt);  (* == # of 8-bit characters *)
-    p := LOOPHOLE(ADR(arr[0]), CharPtr);
-    WHILE (cnt > 0) DO
-      c.wr.putString(SUBARRAY(p^, 0, MIN (cnt, NUMBER(p^))));
-      INC(p, ADRSIZE(p^)); DEC(cnt, NUMBER(p^));
-    END;
-  END OutWideChars;
-
 PROCEDURE InBytes(c: Conn; VAR arr: ARRAY OF Byte8)
     RAISES {NetObj.Error, Rd.Failure, Thread.Alerted} =
-  VAR p: CharPtr;
+  VAR p := LOOPHOLE(ADR(arr[0]), UNTRACED REF ARRAY [0..65335] OF CHAR);
   BEGIN
-    IF NUMBER(arr) <= 0 THEN RETURN; END;
-    p := LOOPHOLE(ADR(arr[0]), CharPtr);
     IF c.rd.getSub(SUBARRAY(p^, 0, NUMBER(arr))) # NUMBER(arr) THEN
       RaiseUnmarshalFailure();
     END;
@@ -308,10 +267,8 @@ PROCEDURE InBytes(c: Conn; VAR arr: ARRAY OF Byte8)
 
 PROCEDURE OutBytes(c: Conn; READONLY arr: ARRAY OF Byte8)
     RAISES {Wr.Failure, Thread.Alerted} =
-  VAR p: CharPtr;
+  VAR p := LOOPHOLE(ADR(arr[0]), UNTRACED REF ARRAY [0..65335] OF CHAR);
   BEGIN
-    IF NUMBER(arr) <= 0 THEN RETURN; END;
-    p := LOOPHOLE(ADR(arr[0]), CharPtr);
     c.wr.putString(SUBARRAY(p^, 0, NUMBER(arr)));
   END OutBytes;
 
@@ -365,7 +322,7 @@ PROCEDURE InInteger(c: Conn;
               i := Swap.Swap4(ip[0]);
             END;
             (* Don't need to swap ip[1] to do this check, since -1 and
-               0 are the same regardless *)
+	       0 are the same regardless *)
             IF (i < 0 AND ip[1] # -1) OR (i >= 0 AND ip[1] # 0) THEN
               RaiseError(NetObj.UnsupportedDataRep);
             END;
@@ -696,124 +653,37 @@ PROCEDURE OutBoolean(c: Conn; bool: BOOLEAN)
 
 PROCEDURE InText(c: Conn; rep: DataRep) : TEXT
    RAISES {NetObj.Error, Rd.Failure, Thread.Alerted} =
-  VAR len := InInt32(c, rep);
+  VAR len: INTEGER;
+  VAR text: TEXT;
   BEGIN
+    len := InInt32(c, rep);
     IF len = -1 THEN
       RETURN NIL;
-    ELSIF len = 0 THEN
-      RETURN "";
     ELSIF len < 0 THEN
       RaiseUnmarshalFailure();
-      RETURN NIL;
-    ELSIF InByte(c) # ORD(FALSE) THEN
-      RETURN InText16(c, rep, len);
     ELSE
-      RETURN InText8(c, rep, len);
+      text := NEW(TEXT, len+1);
+      InChars(c, rep, SUBARRAY(text^, 0, len));
+      text[len] := '\000';
     END;
+    RETURN text;
   END InText;
 
-PROCEDURE InText16(c: Conn; rep: DataRep;  len: INTEGER) : TEXT
-  RAISES {NetObj.Error, Rd.Failure, Thread.Alerted} =
-  VAR buf: ARRAY [0..255] OF WIDECHAR;  txt16: Text16.T;
+PROCEDURE OutText(c: Conn; text: TEXT)
+   RAISES {Wr.Failure, Thread.Alerted} =
+  VAR len: INTEGER;
   BEGIN
-    IF len <= NUMBER(buf) THEN
-      WITH z = SUBARRAY(buf, 0, len) DO
-        InWideChars(c, rep, z);
-        RETURN Text.FromWideChars(z);
-      END;
+    IF text # NIL THEN
+      len := Text.Length(text);
     ELSE
-      txt16 := Text16.Create(len);
-      InWideChars(c, rep, SUBARRAY(txt16.contents^, 0, len));
-      RETURN txt16;
+      len := -1;
     END;
-  END InText16;
-
-PROCEDURE InText8(c: Conn; rep: DataRep;  len: INTEGER) : TEXT
-  RAISES {NetObj.Error, Rd.Failure, Thread.Alerted} =
-  VAR buf: ARRAY [0..255] OF CHAR;  txt8: Text8.T;
-  BEGIN
-    IF len <= NUMBER(buf) THEN
-      WITH z = SUBARRAY(buf, 0, len) DO
-        InChars(c, rep, z);
-        RETURN Text.FromChars(z);
-      END;
-    ELSE
-      txt8 := Text8.Create(len);
-      InChars(c, rep, SUBARRAY(txt8.contents^, 0, len));
-      RETURN txt8;
-    END;
-  END InText8;
-
-PROCEDURE OutText(c: Conn; txt: TEXT)
-  RAISES {Wr.Failure, Thread.Alerted} =
-  VAR info: TextClass.Info;
-  BEGIN
-    IF txt = NIL THEN
-      OutInt32(c, -1);
-    ELSE
-      txt.get_info (info);
-      OutInt32(c, info.length);
-      IF info.length > 0 THEN
-        OutByte(c, ORD(info.wide));
-        IF info.wide THEN
-          IF info.start # NIL
-            THEN OutString16(c, info.start, info.length);
-            ELSE OutText16(c, txt, info.length);
-          END;
-        ELSE (* 8-bit characters only *)
-          IF info.start # NIL
-            THEN OutString8(c, info.start, info.length);
-            ELSE OutText8(c, txt, info.length);
-          END;
-        END;
-      END;
-    END;
+    OutInt32(c, len);
+    IF len > 0 THEN OutChars(c, SUBARRAY(text^, 0, len)); END;
   END OutText;
 
-PROCEDURE OutText16(c: Conn;  txt: TEXT;  len: INTEGER)
-  RAISES {Wr.Failure, Thread.Alerted} =
-  VAR cnt := 0;  buf: ARRAY [0..511] OF WIDECHAR;
-  BEGIN
-    WHILE cnt < len DO
-      Text.SetWideChars (buf, txt, start := cnt);
-      OutWideChars(c, SUBARRAY(buf, 0, MIN (len-cnt, NUMBER(buf))));
-      INC(cnt, NUMBER(buf));
-    END;
-  END OutText16;
-
-PROCEDURE OutString16(c: Conn;  start: ADDRESS;  len: INTEGER)
-  RAISES {Wr.Failure, Thread.Alerted} =
-  VAR p: WCharPtr := start;
-  BEGIN
-    WHILE (len > 0) DO
-      OutWideChars(c, SUBARRAY(p^, 0, MIN(len, NUMBER(p^))));
-      INC(p, ADRSIZE (p^));  DEC(len, NUMBER(p^));
-    END;
-  END OutString16;
-
-PROCEDURE OutText8(c: Conn;  txt: TEXT;  len: INTEGER)
-  RAISES {Wr.Failure, Thread.Alerted} =
-  VAR cnt := 0;  buf: ARRAY [0..511] OF CHAR;
-  BEGIN
-    WHILE cnt < len DO
-      Text.SetChars (buf, txt, start := cnt);
-      OutChars(c, SUBARRAY(buf, 0, MIN (len-cnt, NUMBER(buf))));
-      INC(cnt, NUMBER(buf));
-    END;
-  END OutText8;
-
-PROCEDURE OutString8(c: Conn;  start: ADDRESS;  len: INTEGER)
-  RAISES {Wr.Failure, Thread.Alerted} =
-  VAR p: CharPtr := start;
-  BEGIN
-    WHILE (len > 0) DO
-      OutChars(c, SUBARRAY(p^, 0, MIN(len, NUMBER(p^))));
-      INC(p, ADRSIZE(p^));  DEC(len, NUMBER(p^));
-    END;
-  END OutString8;
-
-PROCEDURE InTexts(c: Conn; rep: DataRep): REF ARRAY OF TEXT
-  RAISES {NetObj.Error, Rd.Failure, Thread.Alerted} =
+PROCEDURE InTexts(c: Conn; rep: DataRep) : REF ARRAY OF TEXT
+   RAISES {NetObj.Error, Rd.Failure, Thread.Alerted} =
   VAR n: CARDINAL;
   VAR rt: REF ARRAY OF TEXT;
   BEGIN
@@ -1199,17 +1069,6 @@ PROCEDURE InSpecial2(self: Pickle2.Special;
     END;
   END InSpecial2;
 
-(* NetObjF routines for checking if it's a netobj pickler *)
-PROCEDURE IsNetObjWriter(wr: Pickle2.Writer): BOOLEAN =
-  BEGIN
-    RETURN ISTYPE(wr, SpecWr2);
-  END IsNetObjWriter;
-
-PROCEDURE IsNetObjReader(rd: Pickle2.Reader): BOOLEAN =
-  BEGIN
-    RETURN ISTYPE(rd, SpecRd2);
-  END IsNetObjReader;
-
 PROCEDURE RaiseUnmarshalFailure() RAISES {NetObj.Error} =
   BEGIN
     RaiseError(UnmarshalFailure);
@@ -1227,17 +1086,17 @@ PROCEDURE RaiseError(a: Atom.T) RAISES {NetObj.Error} =
 
 (*
 PROCEDURE Swap32(i: Int32) : Int32 =
-  TYPE FourBytes = UNTRACED REF ARRAY [0..3] OF Byte8;
-  VAR
-    x : Int32;
-    p := LOOPHOLE(ADR(i), FourBytes);
-    r := LOOPHOLE(ADR(x), FourBytes);
+  VAR res: Int32;
   BEGIN
-    r[0] := p[3];
-    r[1] := p[2];
-    r[2] := p[1];
-    r[3] := p[0];
-    RETURN x;
+    WITH p = LOOPHOLE(ADR(i), UNTRACED REF ARRAY [0..3] OF Byte8) DO
+      WITH r = LOOPHOLE(ADR(res), UNTRACED REF ARRAY [0..3] OF Byte8) DO
+        r[0] := p[3];
+        r[1] := p[2];
+        r[2] := p[1];
+        r[3] := p[0];
+      END;
+    END;
+    RETURN res;
   END Swap32;
 *)
 
@@ -1246,16 +1105,18 @@ PROCEDURE SwapReal(i: REAL) : REAL =
     RETURN LOOPHOLE(Swap.Swap4(LOOPHOLE(i, Int32)), REAL);
   END SwapReal;
 
+TYPE LR = RECORD a, b: Int32; END;
+
 PROCEDURE SwapLongReal(i: LONGREAL) : LONGREAL =
-  TYPE Ptr = UNTRACED REF RECORD a, b: Int32; END;
-  VAR
-    x : LONGREAL;
-    p := LOOPHOLE(ADR(i), Ptr);
-    r := LOOPHOLE(ADR(x), Ptr);
+  VAR res: LONGREAL;
   BEGIN
-    r.a := Swap.Swap4(p.b);
-    r.b := Swap.Swap4(p.a);
-    RETURN x;
+    WITH p = LOOPHOLE(ADR(i), UNTRACED REF LR) DO
+      WITH r = LOOPHOLE(ADR(res), UNTRACED REF LR) DO
+        r.a := Swap.Swap4(p.b);
+        r.b := Swap.Swap4(p.a);
+      END;
+    END;
+    RETURN res;
   END SwapLongReal;
 
 PROCEDURE NativeEndian(rep: DataRep) : BOOLEAN =

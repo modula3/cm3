@@ -326,10 +326,6 @@ m3_type_print_base (type, stream, show, level)
       fprintf_filtered (stream, "CHAR");
       break; 
 
-    case TYPE_CODE_M3_WIDECHAR:
-      fprintf_filtered (stream, "WIDECHAR");
-      break; 
-
     case TYPE_CODE_M3_INTEGER:
       fprintf_filtered (stream, "INTEGER");
       break; 

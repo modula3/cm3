@@ -66,7 +66,7 @@ TYPE
   Address = RECORD a: ARRAY [0..3] OF BITS 8 FOR [0..255]; END;
   Endpoint = RECORD addr: Address; port: Port END;
 
-(* The type "Address" is an IP address in network byte order.
+(* The type "Address" is an IP address is network byte order.
    The type "Port" is an IP port number in host byte order.
 *)
 

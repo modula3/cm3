@@ -6,7 +6,7 @@
 (*      modified on Mon Feb  8 11:43:23 PST 1993 by owicki *)
 (*      modified on Tue Sep 15 10:36:23 PDT 1992 by evers  *)
 
-MODULE NetObjRT EXPORTS NetObjRT, NetObjNotifier, NetObjF,
+MODULE NetObjRT EXPORTS NetObjRT, NetObjNotifier,
                         NGCMonitor, SpecialObj, StubLib;
   
 <* PRAGMA LL *>
@@ -208,28 +208,6 @@ PROCEDURE FindDispatcher(exp: ExportInfo; stubProt: StubProtocol): Dispatcher =
     END;
     RETURN NIL;
   END FindDispatcher;
-
-(* These two routines are in the NetObjF interface. *)
-PROCEDURE ToWireRep(ref: NetObj.T; 
-                    VAR (*OUT*) rep: WRep; VAR addr: NetObj.Address) =
-  BEGIN
-    rep := InsertAndPin(ref);
-    TYPECASE ref.r OF
-    | NULL, ExportInfo =>
-      addr := TransportRegistry.LocalAdr();
-    | Transport.Location(loc) =>
-      addr := NEW(NetObj.Address, 1);
-      addr[0] := loc.getEp()
-    ELSE
-      <* NOWARN *> Die();
-    END;
-  END ToWireRep;
-
-PROCEDURE FromWireRep(wrep: WRep; addr: NetObj.Address): NetObj.T 
-  RAISES {NetObj.Error, Thread.Alerted} =
-  BEGIN
-    RETURN Find(wrep, TransportRegistry.LocationFromAdr(addr));
-  END FromWireRep;
 
 PROCEDURE Find (wrep: WireRep.T; loc: Transport.Location): NetObj.T
     RAISES {NetObj.Error, Thread.Alerted} =
@@ -453,7 +431,7 @@ PROCEDURE CleanerEnqueue(
 PROCEDURE CleanerApply(cl: Cleaner): REFANY =
   CONST tries = 3;
   (* The next call after a failed call is guaranteed to make a new connection.
-     If that connection cannot be made, the location will be declared dead. *)
+     If that connection cannot be made, the location will be declare dead. *)
   VAR
     st := New(cl.loc);
     nElem: CARDINAL;
@@ -587,18 +565,14 @@ PROCEDURE NewSrgt(
     tc: CARDINAL; 
     fpTower: FpTower;
     vers: ARRAY [0..MaxVersions-1] OF Int32;
-    res: NetObj.T;
   BEGIN
     fpTower := st.dirty(wrep, ts, vers);
     tc := TowerToSurrogateTC(fpTower, vers);
-    TRY
-      res := RTAllocator.NewTraced(tc);
-    EXCEPT RTAllocator.OutOfMemory =>
-      RaiseError (NetObj.NoResources);
-    END;
-    res.w := wrep;
-    res.r := st.r;
-    RETURN res;
+    VAR res: NetObj.T := RTAllocator.NewTraced(tc); BEGIN
+      res.w := wrep;
+      res.r := st.r;
+      RETURN res
+    END
   END NewSrgt;
 
 PROCEDURE SpaceToSpecial(space: SpaceID.T; loc: Transport.Location) : ST
@@ -692,7 +666,6 @@ PROCEDURE NewExportInfo(tc: Typecode) : ExportInfo =
 
 PROCEDURE New(loc: Transport.Location) : ST =
   <* LL.sup ???? *>
-  <* FATAL RTAllocator.OutOfMemory *>
   VAR st: ST;
   BEGIN
     st := RTAllocator.NewTraced(TYPECODE(Surrogate));

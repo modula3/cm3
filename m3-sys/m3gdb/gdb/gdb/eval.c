@@ -519,7 +519,6 @@ evaluate_subexp_standard (expect_type, exp, pos, noside)
       (*pos) += 2;
       return value_of_internalvar (exp->elts[pc + 1].internalvar);
 
-    case OP_M3_WIDETEXT:
     case OP_M3_TEXT:
     case OP_STRING:
       tem = longest_to_int (exp->elts[pc + 1].longconst);
@@ -1605,7 +1604,6 @@ evaluate_subexp_standard (expect_type, exp, pos, noside)
 
     case OP_M3_LONG:
     case OP_M3_CHAR:
-    case OP_M3_WIDECHAR:
       (*pos) += 3;
       return value_from_longest (exp->elts[pc+1].type,
                                  exp->elts[pc + 2].longconst);

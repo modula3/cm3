@@ -1,18 +1,14 @@
-(* Copyright (C) 1996, Positron Industries, Public Safety Division.         *)
-(* All rights reserved.                                                     *)
-(* See the file COPYRIGHT for a full description                            *)
+(* Copyright (C) 1996, Positron Industries, Public Safety Division.            *)
+(* All rights reserved.                                                        *)
+(* See the file COPYRIGHT for a full description                               *)
 
 (* Derived from the "CSSSerial" module defined by Claude Chausse and
-   Jacques Dagenais in March 1996. 
-   Fixed and enhanced by Blair MacIntyre, Feb. 1997.
-*)
+   Jacques Dagenais in March 1996. *)
 
 UNSAFE MODULE SerialPort;
 
 IMPORT File, FileWin32, M3toC, OSError, OSErrorWin32;
 IMPORT Pathname, WeakRef, WinBase, WinError, WinNT;
-
-(*IMPORT IO, Fmt;*)
 
 REVEAL
   T = Public BRANDED "SerialPort.T" OBJECT
@@ -51,26 +47,25 @@ TYPE
     last_val : ValIndex;
     values   : ValMap;
   END;
-  ValIndex = [0..13];
+  ValIndex = [0..12];
   ValMap   = ARRAY ValIndex OF INTEGER;
 
 CONST  (* mappings from Modula-3 <-> Win32 constant values *)
-  NO_VALUE = -1;
 
-  Win32BaudRates = ValueMap { ERR_UNKNOWN_BAUDRATE, 9,
-    ValMap { NO_VALUE, WinBase.CBR_110,   WinBase.CBR_300,   WinBase.CBR_600,
+  Win32BaudRates = ValueMap { ERR_UNKNOWN_BAUDRATE, 12,
+    ValMap { WinBase.CBR_110,   WinBase.CBR_300,   WinBase.CBR_600,
              WinBase.CBR_1200,  WinBase.CBR_2400,  WinBase.CBR_4800,
              WinBase.CBR_9600,  WinBase.CBR_14400, WinBase.CBR_19200,
-             WinBase.CBR_38400, .. }
+             WinBase.CBR_38400, WinBase.CBR_56000, WinBase.CBR_128000,
+             WinBase.CBR_256000 }
   };
 
   Win32DataBits = ValueMap { ERR_UNKNOWN_BYTESIZE, 3,
-    ValMap { 8, 7, 6, 5, .. }
+    ValMap { 5, 6, 7, 8, .. }
   };
 
   Win32StopBits = ValueMap { ERR_UNKNOWN_STOPBITS, 2,
-    ValMap { WinBase.ONESTOPBIT, WinBase.ONE5STOPBITS,
-             WinBase.TWOSTOPBITS, .. }
+    ValMap { 0(*1.0*), 1(*1.5*), 2(*2.0*), .. }
   };
 
   Win32Parity = ValueMap { ERR_UNKNOWN_PARITY, 4,
@@ -88,7 +83,11 @@ CONST  (* mappings from Modula-3 <-> Win32 constant values *)
              WinBase.RTS_CONTROL_HANDSHAKE, WinBase.RTS_CONTROL_TOGGLE, .. }
   };
 
-(*--------------------------------------------------- exported procedures ---*)
+  IntervalTimeout = ARRAY BaudRate OF INTEGER (*milliseconds*) {
+    120, 35, 18, 9, 5, 3, 2, 1, 0, 0, 0, 0, 0
+  };
+
+(*---------------------------------------------------- exported procedures ---*)
 
 PROCEDURE Open (p: Pathname.T): T
   RAISES {OSError.E} =
@@ -100,17 +99,14 @@ PROCEDURE Open (p: Pathname.T): T
     t.write_ov := NewOverlap ();
 
     (* Get the handle to the underlying Win32 device *)
-    WITH str = M3toC.SharedTtoS(p) DO
-      t.handle := WinBase.CreateFile(
-       lpFileName            := str,
+    t.handle := WinBase.CreateFile(
+       lpFileName            := M3toC.TtoS (p),
        dwDesiredAccess       := RWAccess,
        dwShareMode           := 0,  (* com devices must be exclusive access *)
        lpSecurityAttributes  := NIL,
        dwCreationDisposition := WinBase.OPEN_EXISTING,
        dwFlagsAndAttributes  := Attrs,
        hTemplateFile         := NIL);
-      M3toC.FreeSharedS(p,str);
-    END;
     IF LOOPHOLE (t.handle, INTEGER) = WinBase.INVALID_HANDLE_VALUE THEN 
       OSErrorWin32.Raise ();
     END;
@@ -129,7 +125,7 @@ PROCEDURE Open (p: Pathname.T): T
     RETURN t;
   END Open;
 
-(*--------------------------------------------------------------- methods ---*)
+(*---------------------------------------------------------------- methods ---*)
 
 PROCEDURE Close (t: T)
   RAISES {OSError.E} =
@@ -168,28 +164,24 @@ PROCEDURE SetConfig (t: T;  READONLY c: Config)
     END;
 
     (* set the values we care about *)
+    dcb.DCBlength         := BYTESIZE (dcb);
+    dcb.BaudRate          := Win32BaudRates.values [ORD (c.baud_rate)];
+    dcb.ByteSize          := Win32DataBits.values  [ORD (c.data_bits)];
+    dcb.StopBits          := Win32StopBits.values  [ORD (c.stop_bits)];
+    dcb.Parity            := Win32Parity.values    [ORD (c.parity)];
+    dcb.fDtrControl       := Win32DTRMode.values   [ORD (c.DTR_mode)];
+    dcb.fRtsControl       := Win32RTSMode.values   [ORD (c.RTS_mode)];
+    dcb.fBinary           := 1;  (* enable binary transfers, no EOF checking *)
     dcb.fParity           := 1;  (* enable parity checking *)
-    dcb.fDtrControl       := Value(Win32DTRMode, ORD (c.DTR_mode));
-    dcb.ByteSize          := Value(Win32DataBits, ORD (c.data_bits));
-    dcb.Parity            := Value(Win32Parity, ORD (c.parity));
-    dcb.StopBits          := Value(Win32StopBits, ORD (c.stop_bits));
     dcb.fOutxCtsFlow      := 0;  (* disable CTS output flow control *)
     dcb.fOutxDsrFlow      := 0;  (* disable DSR output flow control *)
     dcb.fDsrSensitivity   := 0;  (* sensitivity?? *)
-    dcb.fAbortOnError     := 0;  (* don't abort read/writes on error *)
-    dcb.fRtsControl       := Value(Win32RTSMode, ORD (c.RTS_mode));
-    dcb.BaudRate          := Value(Win32BaudRates, ORD (c.baud_rate));
-
-(*  I don't think we need to screw with these ... leave them for now.
-    dcb.fBinary           := 0;  (* enable binary transfers, no EOF checking *)
-    dcb.fTXContinueOnXoff := 0;  (* XOFF => continues transmission *)
+    dcb.fTXContinueOnXoff := 1;  (* XOFF => continues transmission *)
     dcb.fOutX             := 0;  (* disable XON/XOFF flow control on output *)
     dcb.fInX              := 0;  (* disable XON/XOFF flow control on input *)
     dcb.fErrorChar        := 0;  (* disable error replacement *)
     dcb.fNull             := 0;  (* disable NULL stripping *)
-*)
-
-    dcb.DCBlength         := BYTESIZE (dcb);
+    dcb.fAbortOnError     := 0;  (* don't abort read/writes on error *)
 
     (* update the device configuration *)
     IF WinBase.SetCommState (t.handle, ADR (dcb)) = 0 THEN
@@ -197,16 +189,48 @@ PROCEDURE SetConfig (t: T;  READONLY c: Config)
     END;
 
     (* finally, reset the timeout values to match the current baud rate *)
-    x.ReadIntervalTimeout         := c.timeouts.readInterval;
-    x.ReadTotalTimeoutMultiplier  := c.timeouts.readMultiplier;
-    x.ReadTotalTimeoutConstant    := c.timeouts.readConstant;
-    x.WriteTotalTimeoutMultiplier := 0;
-    x.WriteTotalTimeoutConstant   := 0;
+    x.ReadIntervalTimeout         := IntervalTimeout [c.baud_rate];
+    x.ReadTotalTimeoutMultiplier  := IntervalTimeout [c.baud_rate] * 2;
+    x.ReadTotalTimeoutConstant    := 0; (* milliseconds *)
+    x.WriteTotalTimeoutMultiplier := 0; (* milliseconds *)
+    x.WriteTotalTimeoutConstant   := 15000; (* milliseconds *)
     IF WinBase.SetCommTimeouts (t.handle, ADR (x)) = 0 THEN
       OSErrorWin32.Raise ();
     END;
   END SetConfig;
 
+PROCEDURE Read (t: T;  VAR(*OUT*) b: ARRAY OF File.Byte; 
+                mayBlock: BOOLEAN): INTEGER
+  RAISES {OSError.E} =
+  VAR numRead := 0;  len := NUMBER (b);  stats: WinBase.COMSTAT;
+  BEGIN
+    IF len <= 0 THEN RETURN 0; END;
+
+    (* see how much input data is already waiting *)
+    IF WinBase.ClearCommError (t.handle, ADR (numRead), ADR (stats)) = 0 THEN
+      OSErrorWin32.Raise ();
+    END;
+
+    IF stats.cbInQue > 0 THEN
+      (* we've got some data, return it *)
+      len := MIN (len, stats.cbInQue);
+    ELSIF NOT mayBlock THEN
+      (* no data & non-blocking read *)
+      RETURN -1;
+    ELSE
+      (* we can block, but there's nothing here yet => wait for 1 char *)
+      len := 1;
+    END;
+
+    IF WinBase.ReadFile (t.handle, ADR (b[0]), len,
+                         ADR (numRead), t.read_ov) = 0 THEN
+      numRead := IOWait (t, t.read_ov);
+    END;
+
+    RETURN numRead;
+  END Read;
+
+(*********
 PROCEDURE Read (t: T;  VAR(*OUT*) b: ARRAY OF File.Byte; 
                 mayBlock: BOOLEAN): INTEGER
   RAISES {OSError.E} =
@@ -230,6 +254,7 @@ PROCEDURE Read (t: T;  VAR(*OUT*) b: ARRAY OF File.Byte;
 
     RETURN numRead;
   END Read;
+**********)
 
 PROCEDURE Write (t: T;  READONLY b: ARRAY OF File.Byte)
   RAISES {OSError.E} =
@@ -263,29 +288,11 @@ PROCEDURE Scan (READONLY map: ValueMap;  val: INTEGER): ValIndex
     RETURN 0;
   END Scan;
 
-PROCEDURE Value (READONLY map: ValueMap;  val: ValIndex): INTEGER 
-  RAISES {OSError.E} =
-  VAR bits := map.values [val];
-  BEGIN
-    IF (bits = NO_VALUE) OR (val > map.last_val) THEN
-      (* unsupported option *)
-      OSErrorWin32.Raise0 (map.error);
-    END;
-    RETURN bits;
-  END Value; 
-
 PROCEDURE IOWait (t: T;  ov: WinBase.LPOVERLAPPED): INTEGER
   RAISES {OSError.E} =
   VAR err, result: INTEGER;
   BEGIN
     err := WinBase.GetLastError ();
-    (*
-    IF ov = t.write_ov THEN
-      IO.Put("waiting on write.\n");
-    ELSE
-      IO.Put("waiting on read.\n");
-    END;
-    *)
     IF err = WinError.ERROR_HANDLE_EOF THEN RETURN 0; END;
 
     IF err # WinError.ERROR_IO_PENDING THEN OSErrorWin32.Raise0 (err); END;
@@ -295,21 +302,13 @@ PROCEDURE IOWait (t: T;  ov: WinBase.LPOVERLAPPED): INTEGER
 
     WHILE WinBase.GetOverlappedResult (t.handle, ov, ADR (result), 1) = 0 DO
       err := WinBase.GetLastError ();
-      (*IO.Put("result=0.\n");*)
       IF err = WinError.ERROR_HANDLE_EOF THEN RETURN 0; END;
-      (*IO.Put("not eof.\n");*)
       IF err # WinError.ERROR_IO_PENDING THEN
         OSErrorWin32.Raise0 (err);
       END;
-      (*IO.Put("IO Pending!\n");*)
     END;
-    (*IO.Put("result=" & Fmt.Int(result) & "\n");*)
 
-    IF result = 0 THEN 
-      RETURN -1;
-    ELSE
-      RETURN result;
-    END;
+    RETURN result;
   END IOWait;
 
 PROCEDURE NewOverlap (): WinBase.LPOVERLAPPED
@@ -338,4 +337,3 @@ PROCEDURE DisposeOverlap (VAR ov: WinBase.LPOVERLAPPED) =
 
 BEGIN
 END SerialPort.
-

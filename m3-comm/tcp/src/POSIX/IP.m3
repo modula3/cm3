@@ -7,7 +7,7 @@
 
 UNSAFE MODULE IP;
 
-IMPORT Herrno, IPError, M3toC,
+IMPORT Herrno, IPError, M3toC, TextF,
        Unetdb, Usocket, Unix, Uin, Utypes;
 
 VAR mu := NEW(MUTEX);
@@ -16,11 +16,7 @@ PROCEDURE GetHostByName(nm: TEXT; VAR (*out*) res: Address): BOOLEAN
     RAISES {Error} =
   BEGIN
     LOCK mu DO
-      VAR
-        s := M3toC.SharedTtoS(nm);
-        h := Unetdb.gethostbyname(s);
-      BEGIN
-        M3toC.FreeSharedS(nm, s);
+      VAR h := Unetdb.gethostbyname(ADR(nm[0])); BEGIN
         IF h = NIL THEN InterpretError(); RETURN FALSE; END;
         res := GetAddress(h);
       END;
@@ -31,17 +27,13 @@ PROCEDURE GetHostByName(nm: TEXT; VAR (*out*) res: Address): BOOLEAN
 PROCEDURE GetCanonicalByName(nm: TEXT): TEXT RAISES {Error} =
   BEGIN
     LOCK mu DO
-      VAR
-        s := M3toC.SharedTtoS(nm);
-        h := Unetdb.gethostbyname(s);
-      BEGIN
-        M3toC.FreeSharedS(nm, s);
+      VAR h := Unetdb.gethostbyname(ADR(nm[0])); BEGIN
         IF h # NIL THEN
           RETURN M3toC.CopyStoT(h.h_name);
         END;
-        InterpretError();
       END;
     END;
+    InterpretError();
     RETURN NIL;
   END GetCanonicalByName;
 
@@ -56,9 +48,9 @@ PROCEDURE GetCanonicalByAddr(addr: Address): TEXT RAISES {Error} =
         IF h # NIL THEN
           RETURN M3toC.CopyStoT(h.h_name);
         END;
-        InterpretError();
       END;
     END;
+    InterpretError();
     RETURN NIL;
   END GetCanonicalByAddr;
 

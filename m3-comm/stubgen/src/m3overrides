@@ -1,5 +1,1 @@
-
-XXDIR = { "WIN32" : "N:\\m3-tools", "POSIX" : "/proj/cmass/src.2/m3-tools" }
-WORKDIR = XXDIR {OS_TYPE}
-
-override ("m3tk", WORKDIR)
+override ("m3tk", "/proj/cmass/src.1/m3-tools")

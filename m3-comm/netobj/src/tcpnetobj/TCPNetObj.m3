@@ -358,7 +358,7 @@ PROCEDURE Listener(l: ListenerClosure) : REFANY =
         (* pause and retry on IP.Error(NoResources) *)
         Thread.Pause(1.0D0);
       END;
-      <*ASSERT conn # NIL *>
+      <*ASSERT conn # NIL*>
       EVAL Thread.Fork(l);    (* fork another listener *)
       op := HeaderOps.Receive(conn, -1.0D0, me, him);
       IF Text.Equal(me, l.rep^[0]) OR KnownEndpoint(me) THEN

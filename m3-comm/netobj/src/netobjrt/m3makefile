@@ -9,7 +9,7 @@
 %      modified on Fri Sep 11 15:45:49 PDT 1992 by evers
 
 
-Interface ("NetObjF")
+include_dir (OS_TYPE)
 
 Interface ("NetObj")
 Interface ("NetObjNotifier")
@@ -17,7 +17,9 @@ interface ("NetObjRep")
 Interface ("StubConn")
 module ("NetObjRT")
 
-interface ("NetObjEpoch")
+module ("ListPkl")
+module("AtomPkl")
+
 Interface ("NetStream")
 Module ("StubLib")
 module ("WireRep")
