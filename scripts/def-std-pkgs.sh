@@ -43,7 +43,7 @@ P="${P} cmpdir"
 P="${P} cmpfp"
 P="${P} dirfp"
 P="${P} uniq"
-P="${P} pp"
+#P="${P} pp" # needs lex and yacc or flex and bison
 
 # network objects -- distributed programming
 P="${P} netobj"
@@ -71,6 +71,9 @@ P="${P} formsvbtpixmaps"
 P="${P} formsvbt"
 P="${P} formsview"
 P="${P} formsedit"
+P="${P} codeview"
+P="${P} mg"
+P="${P} mgkit"
 
 # more tools
 P="${P} recordheap"
@@ -78,4 +81,5 @@ P="${P} rehearsecode"
 P="${P} replayheap"
 P="${P} showheap"
 P="${P} shownew"
-P="${P} showthread"
+[ "${M3OSTYPE}" != "WIN32" -o -n "${CM3_ALL}" ] && P="${P} showthread"
+# showthread needs ThreadEvent, which does not exist on win32

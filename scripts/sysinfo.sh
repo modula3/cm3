@@ -200,7 +200,8 @@ header() {
 # elego customizations
 #
 # uncomment these if they interfere with your environment
-if [ "${M3OSTYPE}" = "POSIX" -a \
+if type domainname > /dev/null 2>/dev/null && \
+   [ "${M3OSTYPE}" = "POSIX" -a \
      "`domainname 2>/dev/null`" = "iceflower" ] ; then
   STAGE=${STAGE:-/t/wagner/cm3}
   export STAGE
