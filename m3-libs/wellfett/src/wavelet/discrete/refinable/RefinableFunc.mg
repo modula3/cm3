@@ -1,4 +1,4 @@
-GENERIC MODULE RefinableFunc(R,S,V,M);
+GENERIC MODULE RefinableFunc(R,V,M,S);
 
 PROCEDURE ClearArray(VAR x : V.TBody) =
   BEGIN
