@@ -3475,6 +3475,18 @@ output_addr_const (file, x)
       output_addr_const (file, XEXP (x, 0));
       break;
 
+    case NOTE:
+      if (NOTE_LINE_NUMBER (x) == NOTE_INSN_DELETED_LABEL) {
+	ASM_GENERATE_INTERNAL_LABEL (buf, "L", CODE_LABEL_NUMBER (x));
+#ifdef ASM_OUTPUT_LABEL_REF
+	ASM_OUTPUT_LABEL_REF (file, buf);
+#else
+	assemble_name (file, buf);
+#endif
+	break;
+      }
+      /* Fall through.  */
+
     default:
 #ifdef OUTPUT_ADDR_CONST_EXTRA
       OUTPUT_ADDR_CONST_EXTRA (file, x, fail);
