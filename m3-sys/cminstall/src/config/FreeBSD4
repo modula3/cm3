@@ -165,14 +165,14 @@ SYSTEM_LIBS = {
                    END_CONFIG, "-lGLU", "-lGL", "-lXext" ],
   "ODBC"       : [ BEGIN_CONFIG
                      "Where are the ODBC libraries?"
-                       11 "libiodbc.a"
+                       11 "libodbc.a"
                        12 "/usr/local/lib"
                        12 "/usr/lib"
                        12 "/usr/local/pgsql/lib"
                        12 "/usr/local/postgres95/lib"
                        13 "/usr/local/lib"
-                   END_CONFIG, "-lpq",
-                     PKG_USE & "/pgodbc/FreeBSD3/libpgodbc.a" ],
+                   END_CONFIG, "-lodbc" ],
+% FIXME: What is this?  PKG_USE & "/pgodbc/FreeBSD4/libpgodbc.a" ],
   "MOTIF"      : [ BEGIN_CONFIG
                      "Where are the Motif libraries?"
                        11 "libXm.a"

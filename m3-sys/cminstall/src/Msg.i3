@@ -13,6 +13,7 @@ PROCEDURE AskChoice (question: TEXT; choices : TextSeq.T): TEXT;
 
 PROCEDURE Debug (a, b, c, d: TEXT := NIL);
 PROCEDURE Out   (a, b, c, d, e, f: TEXT := NIL);
+PROCEDURE OutS  (a, b, c, d, e, f: TEXT := NIL); (* no newline *)
 PROCEDURE Warn  (a, b, c, d: TEXT := NIL);
 PROCEDURE Error (ec: AtomList.T;  a, b, c, d: TEXT := NIL);
 

@@ -195,6 +195,15 @@ SYSTEM_LIBS = {
                        12 "/usr/local/gnu/lib"
                        13 "/usr/lib"
                    END_CONFIG, "-lGLU", "-lGL", "-lXext" ],
+  "ODBC"       : [ BEGIN_CONFIG
+                     "Where are the ODBC libraries?"
+                       11 "libodbc.a"
+                       12 "/usr/local/lib"
+                       12 "/usr/lib"
+                       12 "/usr/local/pgsql/lib"
+                       12 "/usr/local/postgres95/lib"
+                       13 "/usr/local/lib"
+                   END_CONFIG, "-lodbc" ],
   "MOTIF"      : [ BEGIN_CONFIG
                      "Where are the Motif libraries?"
                        11 "libXm.a"

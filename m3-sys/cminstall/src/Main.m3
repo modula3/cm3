@@ -4,7 +4,7 @@ IMPORT Bundle, (* CMKey, CMCurrent, *) CoffTime, Env, File, Fmt, FS;
 IMPORT M3ID, Msg, OS, OSError, Params, Pathname, Pipe, Process;
 IMPORT Quake, QScanner, QToken, Registry, Setup, Text, Text2;
 IMPORT TextSeq, TextWr, Thread, Wr;
-FROM Msg IMPORT Out, Ask, AskBool, AskChoice;
+FROM Msg IMPORT Out, OutS, Ask, AskBool, AskChoice;
 
 CONST
   OnUnix = (CoffTime.EpochAdjust = 0.0d0);
@@ -262,6 +262,26 @@ TYPE
   TK = QToken.T;
   LibFile = REF RECORD file: TEXT;  next: LibFile; END;
 
+PROCEDURE LibFilesToText(l : LibFile) : TEXT =
+  VAR res := l.file;
+  BEGIN
+    l := l.next;
+    WHILE l # NIL DO
+      res := res & " " & l.file;
+      l := l.next;
+    END;
+    RETURN res;
+  END LibFilesToText;
+
+PROCEDURE OutResult (res : TEXT) =
+  BEGIN
+    IF res = NIL THEN
+      Out (" not found");
+    ELSE
+      Out (" found ");
+    END;
+  END OutResult;
+
 PROCEDURE GenConfig (): TEXT =
   <*FATAL Wr.Failure, Thread.Alerted*>
   TYPE
@@ -281,6 +301,7 @@ PROCEDURE GenConfig (): TEXT =
     rule       : INTEGER;
     kind       : Kind;
     lib_files  : LibFile;
+    lib_dirs   : TextSeq.T := NEW(TextSeq.T);
     choices    : TextSeq.T := NEW(TextSeq.T);
   BEGIN
     scan.next (); (* prime the token stream *)
@@ -301,6 +322,7 @@ PROCEDURE GenConfig (): TEXT =
 
       IF (done >= len) THEN EXIT; END;
       EVAL choices.init();
+      EVAL lib_dirs.init();
 
       (* get the config item's title *)
       IF (scan.token # TK.String) THEN
@@ -309,7 +331,7 @@ PROCEDURE GenConfig (): TEXT =
       title := ID2Txt (scan.string);
       scan.next ();
 
-      Msg.Debug ("configure: ", title);
+      Out (title);
 
       kind := Kind.Any;  lib_files := NIL;
       WHILE (scan.token = TK.Cardinal) DO
@@ -323,19 +345,25 @@ PROCEDURE GenConfig (): TEXT =
         CASE rule OF
         | 0 => (* exe-name *)
             v0 := GetTxt (scan);
+            OutS ("checking for executable " & v0 & "...");
             result := OS.FindExecutable (v0);
             kind := Kind.Exe;
+            OutResult (result);
 
         | 1 => (* file-extension *)
             v0 := GetTxt (scan);
+            OutS ("registry lookup by extension for " & v0 & "...");
             result := Registry.LookupByExtension (v0);
             IF result # NIL THEN choices.addhi(result) END;
             kind := Kind.Exe;
+            OutResult (result);
 
         | 2, 3 => (* file-extension, dir-name *)
             v0 := GetTxt (scan);
             v1 := GetTxt (scan);
             v2  := Registry.LookupByExtension (v0);
+            OutS ("registry lookup by extension: file " & v0 & " dir: " &
+              v1 & "...");
             IF v2 # NIL THEN
               v2 := OS.GetAbsolutePath (Pathname.Prefix (v2), v1);
               IF (v2 # NIL) AND OS.IsDirectory (v2) THEN
@@ -343,19 +371,25 @@ PROCEDURE GenConfig (): TEXT =
                 kind := Kind.Dir;
               END;
             END;
+            OutResult (result);
 
         | 4 =>  (* env-variable, exe-name *)
             v0 := GetTxt (scan);
             v1 := GetTxt (scan);
+            OutS ("checking for " & v1 & " at value of environment variable " &
+              v0 & "...");
             v2 := Env.Get (v0);
             IF v2 # NIL THEN
               result := OS.FindExecutable (OS.MakePath (v2, v1));
               kind := Kind.Exe;
             END;
+            OutResult (result);
 
         | 5 => (* exe-name, dir-name *)
             v0 := GetTxt (scan);
             v1 := GetTxt (scan);
+            OutS ("checking for directory " & v1 & " with executable " & 
+              v0 & "...");
             v2 := OS.FindExecutable (v0);
             IF (v2 # NIL) THEN
               v2 := OS.GetAbsolutePath (Pathname.Prefix (v2), v1);
@@ -364,29 +398,38 @@ PROCEDURE GenConfig (): TEXT =
                 kind := Kind.Dir;
               END;
             END;
+            OutResult (result);
 
         | 6 => (* dir-name, exe-name *)
             v0 := GetTxt (scan);
             v1 := GetTxt (scan);
+            OutS ("checking for executable " & v1 & " in directory " & 
+              v0 & "...");
             result := OS.FindExecutable (OS.MakePath (v0, v1));
             kind := Kind.Exe;
+            OutResult (result);
 
         | 7 => (* install root *)
             result := install_root;
             kind := Kind.Dir;
             confirm := FALSE;
+            Out ("setting INSTALL_ROOT to " & result);
 
         | 8 => (* dir-name *)
             v0 := GetTxt (scan);
+            OutS ("checking for directory " & v0 & "...");
             IF OS.IsDirectory (v0) THEN
               result := v0;
               kind := Kind.Dir;
             END;
+            OutResult (result);
 
         | 9 =>  (* env-variable, dir-name *)
             v0 := GetTxt (scan);
             v1 := GetTxt (scan);
             v2 := Env.Get (v0);
+            OutS ("checking for directory " & v1 & 
+              " with environment variable " & v0 & "...");
             IF v2 # NIL THEN
               v2 := OS.GetAbsolutePath (v2, v1);
               IF (v2 # NIL) AND OS.IsDirectory (v2) THEN
@@ -394,33 +437,46 @@ PROCEDURE GenConfig (): TEXT =
                 kind := Kind.Dir;
               END;
             END;
+            OutResult (result);
 
         | 10 => (* env-variable *)
             v0 := GetTxt (scan);
             v1 := Env.Get (v0);
+            OutS ("checking for executable " & v1 & 
+              " with environment variable " & v0 & "...");
             IF (v1 # NIL) THEN
               result := OS.FindExecutable (v1);
               kind := Kind.Exe;
             END;
+            OutResult (result);
 
         | 11 => (* file-name *)
             lib_files := NEW (LibFile, next := lib_files, 
                               file := GetTxt (scan));
+            Out ("looking for library file(s): " & LibFilesToText(lib_files));
 
         | 12 => (* dir-name *)
             v0 := GetTxt (scan);
+            IF v0 # NIL THEN
+              OutS ("checking for library files in directory " & v0 & "...");
+              lib_dirs.addhi(v0);
+            END;
             IF (v0 # NIL) AND OS.IsDirectory (v0)
               AND FilesPresent (v0, lib_files) THEN
               result := v0;
               kind := Kind.LibPath;
             END;
+            OutResult (result);
 
         | 13 => (* dir-name *)
             v0 := GetTxt (scan);
+            OutS ("checking for directory " & v0 & "...");
             IF OS.IsDirectory (v0) THEN
               result := v0;
               kind := Kind.LibPath;
+              lib_dirs.addhi(result);
             END;
+            OutResult (result);
 
         | 14 => (* install key *)
             result := install_passwd;
@@ -454,11 +510,74 @@ PROCEDURE GenConfig (): TEXT =
               Out ("Please enter the name of a directory.");
           | Kind.LibPath =>
               v0 := OS.CleanDirName (v0);
-              IF OS.IsDirectory (v0) THEN v0 := "-L" & v0;  EXIT; END;
-              Out ();
-              Out ("Please enter the name of a directory.");
+              IF v0 = NIL THEN v0 := "" END;
+              IF OS.IsDirectory (v0) THEN
+                IF FilesPresent (v0, lib_files) THEN
+                  v0 := "-L" & v0;
+                  EXIT;
+                ELSE
+                  Out ("The libraries " & LibFilesToText(lib_files) &
+                    " are not present in the chosen directory.");
+                  IF AskBool("Would you like to change the library names?",
+                             "yes") THEN
+                    Out ("Warning: Changing the required library names is ",
+                         "currently only partially");
+                    Out ("supported by the installer. You will have to edit ",
+                         Pathname.Join(
+                             Pathname.Join(install_root, "bin", NIL), 
+                             "cm3.cfg", NIL));
+                    Out ("manually after the installation and adapt the ",
+                         "-l suffixes in the SYSTEM_LIBS");
+                    Out ("array.");
+                    Out ("Sorry for the inconvenience.");
+                    lib_files := NIL;
+                    v0 := Ask("enter library file (or ENTER to " &
+                              "continue): ", NIL);
+                    WHILE v0 # NIL AND NOT Text.Empty(v0) DO
+                      lib_files := NEW (LibFile, next := lib_files, 
+                                        file := v0);
+                      v0 := Ask("enter library file (or ENTER to " &
+                                "continue): ", NIL);
+                    END;
+                    IF AskBool("Would you like to add library search paths?",
+                               "yes") THEN
+                      v0 := Ask("enter library directory (or ENTER to " &
+                                "continue): ", NIL);
+                      WHILE v0 # NIL AND NOT Text.Empty(v0) DO
+                        lib_dirs.addhi(v0);
+                        v0 := Ask("enter library directory (or ENTER to " &
+                                  "continue): ", NIL);
+                      END;
+                    END;
+                    Out ("looking for library file(s): " & 
+                      LibFilesToText(lib_files));
+                    EVAL choices.init();
+                    FOR i := 0 TO lib_dirs.size() - 1 DO
+                      WITH dir = lib_dirs.get(i) DO
+                        OutS ("checking in directory ", dir, "...");
+                        IF OS.IsDirectory (dir)
+                          AND FilesPresent (dir, lib_files) THEN
+                          OutResult (dir);
+                          IF NOT MemberOfTextSeq(choices, dir) THEN
+                            choices.addhi(dir);
+                          END;
+                        ELSE
+                          OutResult (NIL);
+                        END;
+                      END;
+                    END;
+                  ELSE
+                    Out ();
+                    Out ("Please enter the name of a directory.");
+                  END;
+                END;
+              ELSE
+                Out ();
+                Out ("Please enter the name of a directory.");
+              END;
           END; (* CASE *)
         END; (* LOOP *)
+        Out ();
         result := v0;
       END;
       Wr.PutText (wr, Text2.EscapeString (result));
