@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.10 2001-02-16 17:13:53 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.11 2001-03-01 16:10:29 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -135,6 +135,7 @@ cp "${ROOT}/m3-sys/COPYRIGHT-CMASS" "${STAGE}" || exit 1
 if [ "${M3OSTYPE}" = "WIN32" ] ; then
   ITAR="`find_file tar.exe ${CM3BINSEARCHPATH}`"
   IGZIP="`find_file gzip.exe ${CM3BINSEARCHPATH}`"
+  CYGWINDLL="`find_file cygwin.dll ${CM3BINSEARCHPATH}`"
   if [ -f "${ITAR}" ] ; then
     cp "${ITAR}" "${STAGE}"
     INSTDATA="${INSTDATA} tar.exe"
@@ -146,6 +147,12 @@ if [ "${M3OSTYPE}" = "WIN32" ] ; then
     INSTDATA="${INSTDATA} gzip.exe"
   else
     echo "no gzip.exe found on WIN32 for installation archive" 1>&2
+  fi
+  if [ -f "${CYGWINDLL}" ] ; then
+    cp "${CYGWINDLL}" "${STAGE}"
+    INSTDATA="${INSTDATA} cygwin.dll"
+  else
+    echo "no tar.exe found on WIN32 for installation archive" 1>&2
   fi
 fi
 echo "creating distribution archive ${ABSARCH2}"

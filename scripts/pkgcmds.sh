@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgcmds.sh,v 1.4 2001-02-13 17:40:48 wagner Exp $
+# $Id: pkgcmds.sh,v 1.5 2001-03-01 16:10:29 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -17,26 +17,33 @@ else
 fi
 . "$sysinfo"
 
+if [ "${M3OSTYPE}" = "WIN32" ] ; then
+  CM3ROOT="`cygpath -w ${ROOT} | sed -e 's;\\\;\\\\\\\\;g'`"
+  #echo ${CM3ROOT}
+else
+  CM3ROOT="${ROOT}"
+fi
+
 # define build and ship programs for Critical Mass Modula-3
-CM3_BUILDLOCAL="${BUILDLOCAL:-cm3 -build -override -DROOT=${ROOT} ${BUILDARGS}}"
-CM3_CLEANLOCAL="${CLEANLOCAL:-cm3 -clean -override -DROOT=${ROOT} ${CLEANARGS}}"
-CM3_BUILDGLOBAL="${BUILDGLOBAL:-cm3 -build  -DROOT=${ROOT} ${BUILDARGS}}"
-CM3_CLEANGLOBAL="${CLEANGLOBAL:-cm3 -clean -DROOT=${ROOT} ${CLEANARGS}}"
-CM3_SHIP="${SHIP:-cm3 -ship -DROOT=${ROOT} ${SHIPARGS}}"
+CM3_BUILDLOCAL="${BUILDLOCAL:-cm3 -build -override -DROOT='${CM3ROOT}' ${BUILDARGS}}"
+CM3_CLEANLOCAL="${CLEANLOCAL:-cm3 -clean -override -DROOT='${CM3ROOT}' ${CLEANARGS}}"
+CM3_BUILDGLOBAL="${BUILDGLOBAL:-cm3 -build  -DROOT='${CM3ROOT}' ${BUILDARGS}}"
+CM3_CLEANGLOBAL="${CLEANGLOBAL:-cm3 -clean -DROOT='${CM3ROOT}' ${CLEANARGS}}"
+CM3_SHIP="${SHIP:-cm3 -ship -DROOT='${CM3ROOT}' ${SHIPARGS}}"
 
 # define build and ship programs for Poly. Modula-3 from Montreal
-PM3_BUILDLOCAL="${BUILDLOCAL:-m3build -O -DROOT=${ROOT} ${BUILDARGS}}"
-PM3_CLEANLOCAL="${CLEANLOCAL:-m3build clean -O -DROOT=${ROOT} ${CLEANARGS}}"
-PM3_BUILDGLOBAL="${BUILDGLOBAL:-m3build -DROOT=${ROOT} ${BUILDARGS}}"
-PM3_CLEANGLOBAL="${CLEANGLOBAL:-m3build clean -DROOT=${ROOT} ${CLEANARGS}}"
-PM3_SHIP="${SHIP:-m3ship -DROOT=${ROOT} ${SHIPARGS}}"
+PM3_BUILDLOCAL="${BUILDLOCAL:-m3build -O -DROOT='${CM3ROOT}' ${BUILDARGS}}"
+PM3_CLEANLOCAL="${CLEANLOCAL:-m3build clean -O -DROOT='${CM3ROOT}' ${CLEANARGS}}"
+PM3_BUILDGLOBAL="${BUILDGLOBAL:-m3build -DROOT='${CM3ROOT}' ${BUILDARGS}}"
+PM3_CLEANGLOBAL="${CLEANGLOBAL:-m3build clean -DROOT='${CM3ROOT}' ${CLEANARGS}}"
+PM3_SHIP="${SHIP:-m3ship -DROOT='${CM3ROOT}' ${SHIPARGS}}"
 
 # define build and ship programs for DEC SRC Modula-3
-SRC_BUILDLOCAL="${BUILDLOCAL:-m3build -O -DROOT=${ROOT} ${BUILDARGS}}"
-SRC_CLEANLOCAL="${CLEANLOCAL:-m3build clean -O -DROOT=${ROOT} ${CLEANARGS}}"
-SRC_BUILDGLOBAL="${BUILDGLOBAL:-m3build -DROOT=${ROOT} ${BUILDARGS}}"
-SRC_CLEANGLOBAL="${CLEANGLOBAL:-m3build clean -DROOT=${ROOT} ${CLEANARGS}}"
-SRC_SHIP="${SHIP:-m3ship -DROOT=${ROOT} ${SHIPARGS}}"
+SRC_BUILDLOCAL="${BUILDLOCAL:-m3build -O -DROOT='${CM3ROOT}' ${BUILDARGS}}"
+SRC_CLEANLOCAL="${CLEANLOCAL:-m3build clean -O -DROOT='${CM3ROOT}' ${CLEANARGS}}"
+SRC_BUILDGLOBAL="${BUILDGLOBAL:-m3build -DROOT='${CM3ROOT}' ${BUILDARGS}}"
+SRC_CLEANGLOBAL="${CLEANGLOBAL:-m3build clean -DROOT='${CM3ROOT}' ${CLEANARGS}}"
+SRC_SHIP="${SHIP:-m3ship -DROOT='${CM3ROOT}' ${SHIPARGS}}"
 
 # other commands
 REALCLEAN="${REALCLEAN:-rm -rf ${TARGET}}"

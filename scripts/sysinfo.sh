@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.14 2001-02-19 16:03:32 wagner Exp $
+# $Id: sysinfo.sh,v 1.15 2001-03-01 16:10:29 wagner Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -200,7 +200,8 @@ header() {
 # elego customizations
 #
 # uncomment these if they interfere with your environment
-if [ "${M3OSTYPE}" = "POSIX" -a \
+if type domainname > /dev/null 2>/dev/null && \
+   [ "${M3OSTYPE}" = "POSIX" -a \
      "`domainname 2>/dev/null`" = "iceflower" ] ; then
   STAGE=${STAGE:-/t/wagner/cm3}
   export STAGE
