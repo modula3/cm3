@@ -16,7 +16,7 @@ CONST
   Eps = 1.0D-15;  (*ca. 2^-53*)
 
 (*==========================*)
-PROCEDURE factorial(n:CARDINAL):T=
+PROCEDURE Factorial(n:CARDINAL):T=
 CONST
   max = 34;
   cache=ARRAY [0..max] OF T{
@@ -35,13 +35,13 @@ BEGIN
   IF n<=max THEN
     RETURN cache[n];
   ELSE
-    RETURN Exp(ln_gamma(FLOAT(n,T)+One));
+    RETURN Exp(LnGamma(FLOAT(n,T)+One));
   END;
-END factorial;
+END Factorial;
 (*--------------------*)
 CONST max_factln = 70; 
 VAR   factln_cache:ARRAY [2..max_factln] OF T;
-PROCEDURE ln_factorial(n:CARDINAL):T=
+PROCEDURE LnFactorial(n:CARDINAL):T=
 (*returns ln(n!) as a real*)
 VAR
   tmp:T;
@@ -49,28 +49,28 @@ BEGIN
   IF n<2 THEN
     RETURN Zero;
   ELSIF n>max_factln THEN
-    RETURN ln_gamma(FLOAT(n,T)+One);
+    RETURN LnGamma(FLOAT(n,T)+One);
   END;
 
   (*---check the cache---*)
   tmp:=factln_cache[n];
   IF tmp=Zero THEN
-    tmp:=ln_gamma(FLOAT(n,T)+One);
+    tmp:=LnGamma(FLOAT(n,T)+One);
     factln_cache[n]:=tmp;
   END;
   RETURN tmp;  
-END ln_factorial;
+END LnFactorial;
 
 (*--------------------*)
-PROCEDURE gamma(z:T):T=
-(*returns gamma(z))*)
+PROCEDURE Gamma(z:T):T=
+(*returns Gamma(z))*)
 BEGIN
-  RETURN Exp(ln_gamma(z));
-END gamma;
+  RETURN Exp(LnGamma(z));
+END Gamma;
 
 (*--------------------*)
-PROCEDURE ln_gamma(z:T):T=
-(*returns ln(gamma(z))*)
+PROCEDURE LnGamma(z:T):T=
+(*returns ln(Gamma(z))*)
 TYPE coefs=ARRAY [0..N] OF T;
 CONST
   N=6;
@@ -96,26 +96,26 @@ BEGIN
               +c[6]/(z1+6.0d0);
   tmp:=Log(x)*(z1+0.5d0)+(-x)+lnsqrt2pi+Log(series);
   RETURN tmp;    
-END ln_gamma;
+END LnGamma;
 (*--------------------*)
-PROCEDURE binomial(n,k:CARDINAL):T RAISES {Error}=
-(*returns binomial coefficient for "n over k"*)
-CONST ftn = Module & "binomial";
+PROCEDURE Binomial(n,k:CARDINAL):T RAISES {Error}=
+(*returns Binomial coefficient for "n over k"*)
+CONST ftn = Module & "Binomial";
 VAR tmp:T;
 BEGIN
   IF k>n THEN
     (*n must be > k*)
     RAISE Error(Err.out_of_range);
   END;
-  tmp:=Exp(ln_factorial(n)-ln_factorial(k)-ln_factorial(n-k));
+  tmp:=Exp(LnFactorial(n)-LnFactorial(k)-LnFactorial(n-k));
   RETURN tmp;
-END binomial;
+END Binomial;
 (*-------------------*)
-PROCEDURE gamma_p(a,x:T):T RAISES {Error}=
-(*returns incomplete gamma P(a,x)=gamma(a,x)/Gamma(a)*)
-CONST ftn = Module & "gamma_p";
+PROCEDURE GammaP(a,x:T):T RAISES {Error}=
+(*returns incomplete Gamma P(a,x)=Gamma(a,x)/Gamma(a)*)
+CONST ftn = Module & "GammaP";
 VAR
-  factor:=Exp(-ln_gamma(a)-x+a*Log(x));
+  factor:=Exp(-LnGamma(a)-x+a*Log(x));
 BEGIN
   (*---check conditions---*)
   IF a<Zero OR x<Zero THEN
@@ -123,18 +123,18 @@ BEGIN
     RAISE Error(Err.out_of_range);
   END;
   IF x<(a+One) THEN
-    RETURN factor*gamser(a,x);
+    RETURN factor*GamSer(a,x);
   ELSE
-    RETURN One-factor*gamcf(a,x);
+    RETURN One-factor*GamCF(a,x);
   END;
-END gamma_p;
+END GammaP;
 (*-------------------*)
-PROCEDURE gamma_q(a,x:T):T RAISES {Error}=
-(*returns incomplete gamma Q(a,x)=Gamma(a,x)/Gamma(a)*)
+PROCEDURE GammaQ(a,x:T):T RAISES {Error}=
+(*returns incomplete Gamma Q(a,x)=Gamma(a,x)/Gamma(a)*)
 (*also, Q(a,x)=1-P(a,x) *)
-CONST ftn = Module & "gamma_q";
+CONST ftn = Module & "GammaQ";
 VAR
-  factor:=Exp(-ln_gamma(a)-x+a*Log(x));
+  factor:=Exp(-LnGamma(a)-x+a*Log(x));
 BEGIN
   (*---check conditions---*)
   IF a<Zero OR x<Zero THEN
@@ -142,17 +142,17 @@ BEGIN
     RAISE Error(Err.out_of_range);
   END;
   IF x<(a+One) THEN
-    RETURN One-factor*gamser(a,x);
+    RETURN One-factor*GamSer(a,x);
   ELSE
-    RETURN factor*gamcf(a,x);
+    RETURN factor*GamCF(a,x);
   END;
-END gamma_q;
+END GammaQ;
 (*-------------------*)
-PROCEDURE gamser(a,x:T):T RAISES {Error}=
-(*helper for gamma_p and gamma_q*)
-(*generates gamma(a,x)/Gamma(a) via series*)
+PROCEDURE GamSer(a,x:T):T RAISES {Error}=
+(*helper for GammaP and GammaQ*)
+(*generates Gamma(a,x)/Gamma(a) via series*)
 CONST
-  ftn = Module & "gamser";
+  ftn = Module & "GamSer";
   MaxIter=90;
   eps=5.0D0*Eps;
 VAR
@@ -173,13 +173,13 @@ BEGIN
   END;
   (*if we got here, we are in trouble*)
   RAISE Error(Err.not_converging);
-END gamser;
+END GamSer;
 (*-------------------*)
-PROCEDURE gamcf(a,x:T):T RAISES {Error}=
-(*helper for gamma_p and gamma_q*)
+PROCEDURE GamCF(a,x:T):T RAISES {Error}=
+(*helper for GammaP and GammaQ*)
 (*generates Gamma(a,x) via continued fractions*)
 CONST
-  ftn = Module & "gamcf";
+  ftn = Module & "GamCF";
   MaxIter=90;
   eps=5.0d0*Eps;
 VAR
@@ -215,38 +215,38 @@ BEGIN
   (*if we got here, we had a problem*)
   RAISE Error(Err.not_converging);
 
-END gamcf;
+END GamCF;
 (*--------------------*)
-PROCEDURE erf(x:T):T RAISES {Error}=
+PROCEDURE Erf(x:T):T RAISES {Error}=
 (*returns error function of x*)
 BEGIN
   IF x<Zero THEN
-    RETURN -gamma_p(Half,x*x);
+    RETURN -GammaP(Half,x*x);
   ELSE
-    RETURN  gamma_p(Half,x*x);
+    RETURN  GammaP(Half,x*x);
   END;
-END erf;
+END Erf;
 (*--------------------*)
-PROCEDURE erfc(x:T):T RAISES {Error}=
-(*returns 1-erf(x) *)
+PROCEDURE ErfC(x:T):T RAISES {Error}=
+(*returns 1-Erf(x) *)
 BEGIN
   IF x < Zero THEN
-    RETURN Two - gamma_q(Half,x*x);
+    RETURN Two - GammaQ(Half,x*x);
   ELSE
-    RETURN gamma_q(Half,x*x);
+    RETURN GammaQ(Half,x*x);
   END;
-END erfc;
+END ErfC;
 (*--------------------*)
-PROCEDURE beta(z,w:T):T=
-(*returns gamma(z)*gamma(w)/gamma(z+w)*)
+PROCEDURE Beta(z,w:T):T=
+(*returns Gamma(z)*Gamma(w)/Gamma(z+w)*)
 BEGIN
-  RETURN Exp(ln_gamma(z)+ln_gamma(w)-ln_gamma(z+w));
-END beta;
+  RETURN Exp(LnGamma(z)+LnGamma(w)-LnGamma(z+w));
+END Beta;
 (*--------------------*)
-PROCEDURE betacf(a,b,x:T):T RAISES {Error}=
-(*helper for betai, returns continued fraction*)
+PROCEDURE BetaCF(a,b,x:T):T RAISES {Error}=
+(*helper for BetaI, returns continued fraction*)
 CONST
-  ftn = Module & "betacf";
+  ftn = Module & "BetaCF";
   bj=One;
   eps=5.0D0*Eps;
   MaxIter=90;
@@ -290,11 +290,11 @@ BEGIN
   END;
   (*if we got here, we had a problem*)
   RAISE Error(Err.not_converging);
-END betacf;
+END BetaCF;
 (*--------------------*)
-PROCEDURE betai(a,b,x:T):T RAISES {Error}=
-(*returns incomplete beta Ix(a,b) *)
-CONST ftn = Module & "betai";
+PROCEDURE BetaI(a,b,x:T):T RAISES {Error}=
+(*returns incomplete Beta Ix(a,b) *)
+CONST ftn = Module & "BetaI";
 VAR
   factor:T;
 BEGIN
@@ -308,16 +308,16 @@ BEGIN
     factor:=Zero;
   ELSE
     factor:=Exp(a*Log(x)+b*Log(One-x)
-             -(ln_gamma(a)+ln_gamma(b)-ln_gamma(a+b)));
+             -(LnGamma(a)+LnGamma(b)-LnGamma(a+b)));
   END;
 
   (*---check for convergence condition---*)
   IF x < (a+One)/(a+b+Two) THEN
-    RETURN factor*betacf(a,b,x)/a;
+    RETURN factor*BetaCF(a,b,x)/a;
   ELSE
-    RETURN One-factor*betacf(a,b,One-x)/b;
+    RETURN One-factor*BetaCF(a,b,One-x)/b;
   END;
-END betai;
+END BetaI;
 (*==========================*)
 BEGIN
   FOR i:=FIRST(factln_cache) TO LAST(factln_cache) DO
