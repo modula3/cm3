@@ -1,7 +1,7 @@
 MODULE Main;
 
-IMPORT TestBSpline;
+IMPORT TestMatchWavelet;
 
 BEGIN
-  TestBSpline.Test();
+  TestMatchWavelet.Test();
 END Main.
