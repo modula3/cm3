@@ -10,9 +10,13 @@ Abstract: Test driver for Modula-3 rendition of
 FROM xUtils IMPORT Error,Err;
 IMPORT Fmt,
        LongRealBasic  AS R,
+       LongRealTrans  AS RT,
        LongRealFmtLex AS RF,
        LongRealComplexFast   AS C,
+       LongRealComplexTrans  AS CT,
        LongRealComplexFmtLex AS CF,
+       LongRealComplexPolynomialBasic AS CP,
+       LongRealRootApproximation      AS RtA,
        Integer32Basic        AS I,
        Integer32RootBasic    AS IR,
        Integer32PolynomialBasic  AS IP,
@@ -43,37 +47,48 @@ END myfun2;
 (* Quadratics              *)
 (*=========================*)
 (*-----------------------*)
-PROCEDURE TestQuadreal():BOOLEAN=
+PROCEDURE TestQuadraticReal():BOOLEAN=
+
+  PROCEDURE TestSingle (READONLY x:RtA.RealPolynomial2) =
+  VAR
+    rt : RtA.RootArray2;
+    xc : CP.T;
+  BEGIN
+    Msg(Fmt.FN("Solve %s+%s*t+%s*t^2=0  -->  ",
+               ARRAY OF TEXT{RF.Fmt(x[0]), RF.Fmt(x[1]), RF.Fmt(x[2])}));
+    rt := RtA.QuadraticReal(x);
+    Msg(Fmt.FN("{%s,%s}\n",
+               ARRAY OF TEXT{CF.Fmt(rt[0]), CF.Fmt(rt[1])}));
+    xc := CP.New(2);
+    xc[0] := C.T{x[0], R.Zero};
+    xc[1] := C.T{x[1], R.Zero};
+    xc[2] := C.T{x[2], R.Zero};
+    Msg(Fmt.FN("{%s,%s}\n", ARRAY OF TEXT
+        {CF.Fmt(CP.Eval(xc,rt[0])), CF.Fmt(CP.Eval(xc,rt[1]))}));
+    <*ASSERT CT.AbsSqr(CP.Eval(xc,rt[0]))<RT.Eps*>
+    <*ASSERT CT.AbsSqr(CP.Eval(xc,rt[1]))<RT.Eps*>
+  END TestSingle;
+
 CONST
-  ftn = Module & "TestQuadreal";
+  ftn = Module & "TestQuadraticReal";
 VAR
   result:=TRUE;
-  alpha,beta,x1,x2:C.T;
-  a,b,c:R.T;
 BEGIN
   Debug(1,ftn,"begin\n");
-  a:=1.0D0; b:=2.0D0; c:=-3.0D0;
-  Msg("Solve a*x^2+b*x+c=0 for"
-    & "\na=" & RF.Fmt(a)
-    & "\nb=" & RF.Fmt(b)
-    & "\nc=" & RF.Fmt(c)
-    & "\n");
-
-  xRoot.quadreal(a,b,c,alpha,beta,x1,x2);
-
-  Msg("alpha=" & CF.Fmt(alpha)
-   & " beta=" & CF.Fmt(beta)
-   & "\n");
-  Msg("x1=" & CF.Fmt(x1)
-   & " x2=" & CF.Fmt(x2)
-   & "\n");
+  TestSingle(ARRAY OF R.T{-3.0D0, 2.0D0, 1.0D0});
+  TestSingle(ARRAY OF R.T{-1.0D0, 0.0D0, 1.0D0});
+  TestSingle(ARRAY OF R.T{ 1.0D0, 2.0D0, 1.0D0});
+  TestSingle(ARRAY OF R.T{ 1.0D0,-2.0D0, 1.0D0});
+  TestSingle(ARRAY OF R.T{ 1.0D0, 1.0D0, 1.0D0});
+  TestSingle(ARRAY OF R.T{ 1.0D0,-1.0D0, 1.0D0});
+  TestSingle(ARRAY OF R.T{ 1.0D0, 0.0D0, 1.0D0});
 
   RETURN result;
-END TestQuadreal;
+END TestQuadraticReal;
 (*-----------------------*)
-PROCEDURE TestQuadcmplx():BOOLEAN=
+PROCEDURE TestQuadraticComplex():BOOLEAN=
 CONST
-  ftn = Module & "TestComplex";
+  ftn = Module & "TestQuadraticComplex";
 VAR
   result:=TRUE;
   alpha,beta,x1,x2:C.T;
@@ -89,7 +104,7 @@ BEGIN
     & "\nc=" & CF.Fmt(c)
     & "\n");
 
-  xRoot.quadcmpx(a,b,c,alpha,beta,x1,x2);
+  (*xRoot.QuadraticComplex(a,b,c,alpha,beta,x1,x2);*)
 
   Msg("alpha=" & CF.Fmt(alpha)
    & " beta=" & CF.Fmt(beta)
@@ -99,7 +114,7 @@ BEGIN
    & "\n");
 
   RETURN result;
-END TestQuadcmplx;
+END TestQuadraticComplex;
 
 CONST
   prec3Style = RF.FmtStyle{style:=Fmt.Style.Fix,prec:=3};
@@ -621,8 +636,8 @@ PROCEDURE TestRoot():BOOLEAN=
 CONST ftn = Module & "TestCh09_root";
 VAR result:=TRUE;
 BEGIN
-  NewLine(); EVAL TestQuadreal();
-  NewLine(); EVAL TestQuadcmplx();
+  NewLine(); EVAL TestQuadraticReal();
+  NewLine(); EVAL TestQuadraticComplex();
   (*NewLine(); EVAL TestBracket_out();*)
   (*NewLine(); EVAL TestBracket_in();*)
   (*NewLine(); EVAL TestBisect();*)
