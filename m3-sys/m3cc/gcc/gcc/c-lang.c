@@ -178,7 +178,7 @@ finish_file ()
 		      build_parse_node (CALL_EXPR, fnname, 
 					tree_cons (NULL_TREE, NULL_TREE, 
 						   void_list_node),
-					NULL_TREE, NULL_TREE),
+					NULL_TREE),
 		      NULL_TREE, NULL_TREE, 0);
       fnname = DECL_ASSEMBLER_NAME (current_function_decl);
       store_parm_decls ();
@@ -200,7 +200,7 @@ finish_file ()
 		      build_parse_node (CALL_EXPR, fnname, 
 					tree_cons (NULL_TREE, NULL_TREE,
 						   void_list_node),
-					NULL_TREE, NULL_TREE),
+					NULL_TREE),
 		      NULL_TREE, NULL_TREE, 0);
       fnname = DECL_ASSEMBLER_NAME (current_function_decl);
       store_parm_decls ();

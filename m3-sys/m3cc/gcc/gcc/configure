@@ -3008,16 +3008,6 @@ for machine in $build $host $target; do
 	a29k-*-*)			# Default a29k environment.
 		use_collect2=yes
 		;;
-	alpha*-*-freebsd*)
-		tm_file="${tm_file} alpha/freebsd.h"
-		xm_file=alpha/xm-freebsd.h
-		# On FreeBSD, the headers are already ok.
-		fixincludes=Makefile.in
-		xmake_file=alpha/x-freebsd
-		gas=yes
-		gnu_ld=yes
-		stabs=yes
-		;;
 	alpha-*-interix)
 		tm_file="${tm_file} alpha/alpha32.h interix.h alpha/alpha-interix.h"
 
