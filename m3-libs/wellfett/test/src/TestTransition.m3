@@ -1,13 +1,16 @@
 MODULE TestTransition;
 
 IMPORT LongRealBasic               AS R,
-(*
+       LongRealFmtLex              AS RF,
        LongRealTrans               AS RT,
-*)
+       RandomDECSRC                AS Rnd,
        LongRealSignal              AS S,
        LongRealVectorFast          AS V,
 (*
+       LongRealVectorTrans         AS VT,
+*)
        LongRealComplexVectorTrans  AS CVT,
+(*
        LongRealMatrixFast          AS M,
 *)
        LongRealEigenSystem         AS Eigen,
@@ -24,17 +27,25 @@ IMPORT LongRealBasic               AS R,
        LongRealMatrixFmtLex        AS MF,
 *)
        PLPlot AS PL,
-       (*IO, Fmt, Wr,*) Thread,
-       NADefinitions;
+       IO, Fmt, Wr, Thread,
+       NADefinitions AS NA;
+
+
+PROCEDURE TransitionEV (mask : S.T) : Eigen.EV
+    RAISES {NA.Error}=
+  BEGIN
+    RETURN Eigen.EigenValuesGen(
+             Refn.TransitionMatrix(
+               mask.adjoint().convolve(mask)
+             )
+           );
+  END TransitionEV;
+
 
 PROCEDURE PlotTransitionEV (mask : S.T) =
-  <*FATAL NADefinitions.Error*>
+  <*FATAL NA.Error*>
   VAR
-    ev := Eigen.EigenValuesGen(
-            Refn.TransitionMatrix(
-              mask.adjoint().convolve(mask)
-            )
-          );
+    ev := TransitionEV(mask);
     x  := NEW(V.T,NUMBER(ev.eigenvalues^));
     y  := NEW(V.T,NUMBER(ev.eigenvalues^));
   BEGIN
@@ -77,7 +88,7 @@ PROCEDURE AnimateTransitionEV()=
 
 
 PROCEDURE CurveTransitionEV(READONLY maskcoef0,maskcoef1:ARRAY OF R.T)=
-  <*FATAL NADefinitions.Error*>
+  <*FATAL NA.Error*>
   CONST
     frames = 50;
   VAR
@@ -175,13 +186,68 @@ PROCEDURE CurveExamples()=
     PL.Exit();
   END CurveExamples;
 
+PROCEDURE EstimateSpecRad(mask:S.T):R.T=
+  VAR
+    y:=mask.wrapCyclic(3).getData();
+    p1,p2:=R.Zero;
+  BEGIN
+    FOR j:=0 TO 2 DO
+      p1:=p1+y[j];
+      p2:=p2+y[j]*y[j];
+    END;
+    VAR
+      p12:=p1*p1;
+      dif:=p2-p12/3.0D0;
+    BEGIN
+      RETURN RT.SqRt(1.5D0*dif*dif+p12*p12/3.0D0);
+    END;
+  END EstimateSpecRad;
+
+PROCEDURE CompareEstimate(mask:S.T)=
+  <*FATAL NA.Error, Thread.Alerted, Wr.Failure *>
+  VAR
+    specRad:=CVT.NormInf(TransitionEV(mask).eigenvalues);
+    specRadUpper:=EstimateSpecRad(mask);
+  BEGIN
+    IO.Put(Fmt.FN("%s: %s < %s ?\n",ARRAY OF TEXT
+      {SF.Fmt(mask),RF.Fmt(specRad),RF.Fmt(specRadUpper)}));
+  END CompareEstimate;
+
+PROCEDURE RandomEstimateCheck()=
+  <*FATAL NA.Error *>
+  VAR
+    rnd    := NEW(Rnd.T).init();
+    rndArr : ARRAY [0..4] OF R.T;
+  BEGIN
+    FOR j:=FIRST(rndArr) TO LAST(rndArr) DO
+      rndArr[j]:=rnd.uniform(-1.0D0,1.0D0);
+    END;
+    VAR
+      slice:=NEW(S.T).fromArray(rndArr).slice(3);
+    BEGIN
+      FOR j:=FIRST(slice^) TO LAST(slice^) DO
+	slice[j].raiseD((1.0D0/3.0D0-slice[j].offset())/
+                           FLOAT(slice[j].getNumber(),R.T));
+      END;
+      CompareEstimate(NEW(S.T).interleave(slice^));
+    END;
+  END RandomEstimateCheck;
+
+PROCEDURE EstimateChecks()=
+  BEGIN
+    FOR n:=0 TO 10 DO
+      RandomEstimateCheck();
+    END;
+  END EstimateChecks;
 
 
 PROCEDURE Test()=
   BEGIN
-    CASE 1 OF
+    CASE 2 OF
     | 0 => AnimateTransitionEV();
     | 1 => CurveExamples();
+    | 2 => EstimateChecks();
+    ELSE
     END;
   END Test;
 
