@@ -348,7 +348,7 @@ END LUFactor;
 (*-----------------*)
 PROCEDURE LUBackSubst(A     :M.T;
                     B     :V.T;
-           READONLY index :IndexArray) RAISES ANY=
+           READONLY index :IndexArray) RAISES {Error}=
 (*After LUFactor on A, solves A dot X = B.
 X is returned in B.  B's values are destroyed
 A is real nxn
@@ -398,7 +398,7 @@ BEGIN
 END LUBackSubst;
 (*-----------------*)
 PROCEDURE LUInverse(A    :M.T;
-           READONLY index:IndexArray):M.T RAISES ANY=
+           READONLY index:IndexArray):M.T RAISES {Error}=
 (*
 Inverse of A goes to B
 Must have done LUFactor on A first
@@ -414,9 +414,7 @@ VAR
   B:M.T;
   C:V.T;
 BEGIN
-  IF (n # NUMBER(A[0])) OR
-     (n # NUMBER(B^))   OR
-     (n # NUMBER(B[0])) THEN
+  IF (n # NUMBER(A[0])) THEN
     RAISE Error(Err.bad_size);
   END;
 
