@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-update.sh,v 1.2 2001-05-12 15:21:40 wagner Exp $
+# $Id: make-src-update.sh,v 1.3 2001-09-19 16:07:39 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -27,6 +27,9 @@ for p in $@ ; do
     P="${P} ${NP}"
   elif [ -d "${ROOT}/${p}" ] ; then
     echo "adding directory ${p}"
+    P="${P} ${p}"
+  elif [ -f "${ROOT}/${p}" ] ; then
+    echo "adding file ${p}"
     P="${P} ${p}"
   else
     echo "${p} not found, skipping" 1>&2
