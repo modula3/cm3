@@ -27,21 +27,40 @@ IMPORT LongRealBasic                AS R,
 IMPORT Pathname, IO, Fmt, Wr, Thread, Rd, GZipRd;
 IMPORT Arithmetic AS Arith;
 
-PROCEDURE PlotReal (s: S.T; l: CARDINAL; ) =
-  <* FATAL Arith.Error *>        (*MulPower cannot fail for integers*)
+TYPE
+  ScaledRealSignal = RECORD
+                       sig: S.T;  (* real valued signal *)
+                       res: R.T;  (* resolution, that is the width of a
+                                     peak represented by a value *)
+                     END;
+
+PROCEDURE PlotReal (READONLY s: ARRAY OF ScaledRealSignal; ) =
+  CONST magnify = 1.0D0;
+
   VAR
-    unit  := IIntPow.MulPower(1, 2, l);
-    grid  := R.One / FLOAT(unit, R.T);
-    left  := FLOAT(s.getFirst(), R.T) * grid;
-    right := FLOAT(s.getLast(), R.T) * grid;
+    left, right := NEW(V.T, NUMBER(s));
+    min, max    := R.Zero;
+    color       := 2;
+
   BEGIN
+    FOR i := FIRST(s) TO LAST(s) DO
+      WITH si = s[i] DO
+        left[i] := FLOAT(si.sig.getFirst(), R.T) * si.res;
+        right[i] := FLOAT(si.sig.getLast(), R.T) * si.res;
+        min := MIN(min, VFs.Min(si.sig.getData()^));
+        max := MAX(max, VFs.Max(si.sig.getData()^));
+      END;
+    END;
     PL.SetFGColorDiscr(1);
     PL.SetEnvironment(
-      left, right, VFs.Min(s.getData()^), VFs.Max(s.getData()^));
-    PL.SetFGColorDiscr(2);
-    PL.PlotLines(
-      V.ArithSeq(s.getNumber(), FLOAT(s.getFirst(), R.T) * grid, grid)^,
-      s.getData()^);
+      VFs.Min(left^), VFs.Max(right^), min / magnify, max / magnify);
+    FOR i := FIRST(s) TO LAST(s) DO
+      WITH abscissa = V.ArithSeq(s[i].sig.getNumber(), left[i], s[i].res)^ DO
+        PL.SetFGColorDiscr(color);
+        PL.PlotLines(abscissa, s[i].sig.getData()^);
+        INC(color);
+      END;
+    END;
   END PlotReal;
 
 TYPE
@@ -111,7 +130,7 @@ PROCEDURE CircularAutoCorrelation (READONLY x: V.TBody; ): V.T =
    signals. *)
 PROCEDURE DetectPeriod (x: V.T; ): CARDINAL =
   VAR
-    ac             := CircularAutoCorrelation(SUBARRAY(x^, 0, 2048));
+    ac             := CircularAutoCorrelation(SUBARRAY(x^, 0, 4096));
     iMax: CARDINAL := 0;
     xMax           := R.Zero;
   BEGIN
@@ -148,18 +167,34 @@ PROCEDURE CombFilter (READONLY x: V.TBody; period: CARDINAL; k: R.T; ):
   END CombFilter;
 
 PROCEDURE SuppressPeriod (file: Pathname.T; ) =
+  CONST numPeriods = 10;
+
   VAR
-    rd     := GZipRd.Open(file);
-    x      := VF.Lex(rd, VF.LexStyle{sep := '\n'});
-    period := DetectPeriod(x);
+    rd         := GZipRd.Open(file);
+    x          := VF.Lex(rd, VF.LexStyle{sep := '\n'});
+    period     := DetectPeriod(x);
+    blockSize  := numPeriods * period;
+    resolution := R.Rec(R.FromInteger(period));
+    comb       := CombFilter(x^, period, 0.8D0);
+    residue    := V.Sub(x, comb);
 
   BEGIN
     Rd.Close(rd);
     IO.Put(Fmt.F("period: %s\n", Fmt.Int(period)));
     (* PlotReal(NEW(S.T).fromVector(x), 0); *)
-    PlotReal(NEW(S.T).fromArray(SUBARRAY(x^, 0, 5000)), 0);
-    PlotReal(NEW(S.T).fromVector(
-               CombFilter(SUBARRAY(x^, 0, 5000), period, 0.9D0)), 0);
+    FOR j := 0 TO LAST(x^) BY blockSize DO
+      WITH size = MIN(blockSize, NUMBER(x^) - j) DO
+        PlotReal(
+          ARRAY OF
+            ScaledRealSignal{
+            ScaledRealSignal{
+              NEW(S.T).fromArray(SUBARRAY(x^, j, size), j), resolution},
+            ScaledRealSignal{
+              NEW(S.T).fromVector(comb).clip(j, size), resolution},
+            ScaledRealSignal{
+              NEW(S.T).fromVector(residue).clip(j, size), resolution}});
+      END;
+    END;
   END SuppressPeriod;
 
 
