@@ -60,16 +60,16 @@ PROCEDURE Init () =
       host_arch  := M3toC.CopyStoT (ADR (uts.machine[0]));
       os_name    := M3toC.CopyStoT (ADR (uts.sysname[0]));
       os_version := M3toC.CopyStoT (ADR (uts.release[0]));
-    ELSE
+    ELSE 
       host_name  := "<unknown>";
-      host_arch  := DefaultArch [Compiler.ThisPlatform];
-      os_name    := DefaultOSName [Compiler.ThisPlatform];
+      host_arch  := DefaultArch [ORD(Compiler.ThisPlatform)];
+      os_name    := DefaultOSName [ORD(Compiler.ThisPlatform)];
       os_version := "";
     END;
   END Init;
 
 CONST
-  DefaultOSName = ARRAY Compiler.Platform OF TEXT {
+  DefaultOSName = ARRAY [0..49] (* Compiler.Platform *) OF TEXT {
    (* AIX386     *)  "AIX",
    (* ALPHA_OSF  *)  "Digital Unix",
    (* AP3000     *)  "Unix",
@@ -101,11 +101,12 @@ CONST
    (* FBSD_ALPHA *)  "FreeBSD",
    (* LINUXLIBC6 *)  "Linux",
    (* I386_DARWIN*)  "Darwin",
-   (* PPP_DARWIN *)  "Darwin"
+   (* PPC_DARWIN *)  "Darwin",
+   ..
   };
 
 CONST
-  DefaultArch = ARRAY Compiler.Platform OF TEXT {
+  DefaultArch = ARRAY [0..49] (* Compiler.Platform *) OF TEXT {
    (* AIX386     *)  "i386",
    (* ALPHA_OSF  *)  "alpha",
    (* AP3000     *)  "apollo",
@@ -137,7 +138,8 @@ CONST
    (* FBSD_ALPHA *)  "i486",
    (* LINUXLIBC6 *)  "i486",
    (* I386_DARWIN*)  "i486",
-   (* PPP_DARWIN *)  "ppc"
+   (* PPC_DARWIN *)  "ppc",
+   ..
   };
 
 PROCEDURE InitUserName () =
