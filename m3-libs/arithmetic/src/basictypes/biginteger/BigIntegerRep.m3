@@ -8,10 +8,24 @@ Daniel Beer
 
 IMPORT Word AS W, xWordEx AS Wx;
 FROM xUtils IMPORT Error, Err;
-FROM BigIntegerBasic IMPORT Value, Zero;
+FROM BigIntegerBasic  IMPORT Zero;
+IMPORT IO,Fmt,BigIntegerFmtLex AS BF;
+(*
+IO.Put(Fmt.FN("m %s, y.data[k] %s\n", ARRAY OF  TEXT{Fmt.Unsigned(m),Fmt.Unsigned(y.data[k])}));
+IO.Put("hi " & Fmt.Unsigned(hi) & " lo " & Fmt.Unsigned(lo) & "\n");
+IO.Put("z.data[k] " & Fmt.Unsigned(z.data[k]) & "\n");
+*)
 
 <*UNUSED*> CONST Module = "BigIntegerRep.";
 (*==========================*)
+
+
+PROCEDURE Clear ((*OUT*)v : Value) =
+BEGIN
+  FOR j:=FIRST(v^) TO LAST(v^) DO
+    v[j] := 0;
+  END;
+END Clear;
 
 
 PROCEDURE IsZero (READONLY x : T) : BOOLEAN =
@@ -158,6 +172,9 @@ BEGIN
     z.data[k] := lo;
   END;
   z.data[y.size] := hi;
+  FOR k:=y.size+1 TO z.size-1 DO
+    z.data[k] := 0;
+  END;
 
   FOR j:=1 TO x.size-1 DO
     m := x.data[j];
@@ -261,6 +278,15 @@ BEGIN
   END;
 END SubBitPos;
 
+PROCEDURE AddBitPos (READONLY x,y : BitPos) : BitPos =
+BEGIN
+  IF x.bit + y.bit < W.Size THEN
+    RETURN BitPos{x.word+y.word,x.bit+y.bit};
+  ELSE
+    RETURN BitPos{x.word+y.word+1,x.bit+y.bit-W.Size};
+  END;
+END AddBitPos;
+
 <*INLINE*>
 PROCEDURE CompareBitPos (READONLY x,y : BitPos) : [-1..1] =
 BEGIN
@@ -288,6 +314,13 @@ END BitPosEndToBegin;
 
 PROCEDURE GetMSBPos (READONLY x : T) : BitPos =
 BEGIN
+(*
+IO.Put(Fmt.FN("GetMSBPos (size %s) 16_%s\n",
+       ARRAY OF TEXT {Fmt.Int(x.size),BF.Fmt(x,16)}));
+IO.Put(Fmt.FN("MSB of %s: %s\n",
+       ARRAY OF TEXT {Fmt.Unsigned(x.data[x.size-1]),
+                      Fmt.Int(Wx.FindMostSignifBit(x.data[x.size-1]))}));
+*)
   RETURN BitPos{x.size-1, Wx.FindMostSignifBit(x.data[x.size-1])};
 END GetMSBPos;
 
@@ -316,6 +349,9 @@ VAR
   borrow := FALSE;
   j      :  INTEGER;
 BEGIN
+IO.Put(Fmt.FN("x 16_%s - SHL (y 16_%s * z 16_%s, {%s,%s})\n",
+            ARRAY OF TEXT {BF.Fmt(x,16),BF.Fmt(y,16),Fmt.Unsigned(z),
+            Fmt.Int(sh.word),Fmt.Int(sh.bit)}));
   hi := 0;
   probs := 0;
   FOR k:=0 TO y.size-1 DO
@@ -324,11 +360,12 @@ BEGIN
     carry := FALSE;
     lo := Wx.PlusWithCarry(lo,oldhi,carry);
     hi := Wx.PlusWithCarry(hi,0,carry);
+    <*ASSERT NOT carry*>
     loshft := Wx.LeftShiftWithProbscosis(lo,sh.bit,probs);
     x.data[sh.word+k] := Wx.MinusWithBorrow(x.data[sh.word+k],loshft,borrow);
   END;
   j := sh.word+y.size;
-  loshft := Wx.LeftShiftWithProbscosis(oldhi,sh.bit,probs);
+  loshft := Wx.LeftShiftWithProbscosis(hi,sh.bit,probs);
   x.data[j] := Wx.MinusWithBorrow(x.data[j],loshft,borrow);
   INC(j);
   x.data[j] := Wx.MinusWithBorrow(x.data[j],probs,borrow);
@@ -338,6 +375,7 @@ BEGIN
     x.data[j] := Wx.MinusWithBorrow(x.data[j], 0, borrow);
   END;
   CorrectSize(x,x.size);
+IO.Put(Fmt.FN("x 16_%s\n", ARRAY OF TEXT {BF.Fmt(x,16)}));
 END SubShiftedProd;
 
 (*x := x+SHL(y,sh)   (inplace, make sure that x.data has enough space)*)
@@ -346,8 +384,10 @@ VAR
   carry := FALSE;
 BEGIN
   x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], W.LeftShift(y,sh.bit), carry);
-  INC(sh.word);
-  x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], W.RightShift(y,W.Size-sh.bit), carry);
+  IF sh.bit>0 THEN (*for sh.bit=0 RightShift will fail*)
+    INC(sh.word);
+    x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], W.RightShift(y,W.Size-sh.bit), carry);
+  END;
   WHILE carry DO
     INC(sh.word);
     x.data[sh.word] := Wx.PlusWithCarry(x.data[sh.word], 0, carry);
@@ -365,9 +405,13 @@ BEGIN
     RAISE Error(Err.divide_by_zero);
   END;
 
-  r.data := NEW(Value,x.size+1);
+  r.data := NEW(Value,x.size+2);
   q.data := NEW(Value,x.size-y.size+1);
-  SUBARRAY(r.data^,0,x.size-1) := SUBARRAY(x.data^,0,x.size-1);
+  r.size := x.size;
+  SUBARRAY(r.data^,0,r.size) := SUBARRAY(x.data^,0,r.size);
+  r.data[x.size  ] := 0;
+  r.data[x.size+1] := 0;
+  Clear(q.data);
 
   (*normalize remainder and divisor temporarily
     divide most significant 32 bit of r by the most significant 16 bit of y*)
@@ -380,9 +424,18 @@ BEGIN
   WHILE CompareBitPos (rmsbpos, ymsbpos) > 0 DO
     rmsw := GetSubword(r,BitPosEndToBegin(rmsbpos));
     (*round down by neglecting the following bits to get a lower estimate for quotient*)
-    qmsw    := rmsw DIV ymsw;
+    qmsw    := W.Divide(rmsw,ymsw);
+IO.Put(Fmt.FN("rmsw %s, ymsw %s, qmsw %s, ymsw*qmsw %s\n",
+  ARRAY OF TEXT{Fmt.Unsigned(rmsw),Fmt.Unsigned(ymsw),Fmt.Unsigned(qmsw),
+                Fmt.Unsigned(W.Times(ymsw,qmsw))}));
     qmsbpos := SubBitPos(rmsbpos,ymsbpos);
-    qmswstartpos := SubBitPos(qmsbpos,BitPos{0,W.Size DIV 2-1});
+    qmswstartpos := SubBitPos(qmsbpos,BitPos{0,W.Size DIV 2});
+    <*ASSERT qmswstartpos.word>=-1 *>
+    IF qmswstartpos.word=-1 THEN
+      qmsw := W.RightShift(qmsw,W.Size-qmswstartpos.bit);
+      qmswstartpos.word:=0;
+      qmswstartpos.bit:=0;
+    END;
     AddShifted     (q,    qmsw, qmswstartpos);
     SubShiftedProd (r, y, qmsw, qmswstartpos);
     rmsbpos := GetMSBPos(r);
@@ -390,7 +443,7 @@ BEGIN
   (*CorrectSize (q, LAST(q.data));*)
 
   (*this loop will run at most three times*)
-  WHILE CompareU (r, y) > 0 DO
+  WHILE CompareU (r, y) >= 0 DO
     (*
     r := SubU (r, y);
     q := AddU (q, One);

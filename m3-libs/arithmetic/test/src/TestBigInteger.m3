@@ -25,6 +25,7 @@ CONST
 VAR
   result:=TRUE;
   carry:=TRUE;
+  hi,lo:W.T;
 BEGIN
   debug(1,ftn,"begin\n");
   msg("W.Size " & F.Int(W.Size) & "\n");
@@ -33,6 +34,8 @@ BEGIN
   msg("MinusWithBorrow " & F.Int(Wx.MinusWithBorrow(2,3,carry)) & "\n");
   msg("MinusWithBorrow " & F.Int(Wx.MinusWithBorrow(5,3,carry)) & "\n");
   msg("MinusWithBorrow " & F.Int(Wx.MinusWithBorrow(5,3,carry)) & "\n");
+  Wx.DoubleLengthMultiply(7,16_249,lo,hi);
+  msg("DoubleLengthMultiply " & F.Int(hi,16) & " " & F.Int(lo,16) & "\n");
   msg("Plus " & F.Int(W.Plus(3,2)) & "\n");
   RETURN result;
 END test_basic;
@@ -51,21 +54,97 @@ BEGIN
   y := B.One;
   z := B.Zero;
 
-  FOR j:=0 TO cycles DO
-    msg(F.Pad(F.Int(j),2) & ": 16_" & FL.Fmt(z,16) & ": 2_" & FL.Fmt(z,2) & "\n");
+  FOR j:=0 TO cycles-1 DO
+    (*msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(j), FL.Fmt(z,16), FL.Fmt(z,2)}));*)
     z := Br.AddU(z,y);
     y := Br.MulU(y,x);
   END;
+  (*msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(cycles), FL.Fmt(z,16), FL.Fmt(z,2)}));*)
   z := Br.MulU(z,B.FromInteger(7));
-  fff := FL.Fmt(z,16)
+  fff := FL.Fmt(z,16);
   msg("multiply with 7: 16_" & fff & ": 2_" & FL.Fmt(z,2) & "\n");
   <*ASSERT Text.Length(fff) = (cycles DIV 4)*3 *>
-  FOR j:=0 TO Text.Length(fff) DO
+  FOR j:=0 TO Text.Length(fff)-1 DO
     <*ASSERT Text.GetChar(fff,j)='f'*>
   END;
 
   RETURN result;
 END test_power;
+(*----------------------*)
+PROCEDURE test_addshift():BOOLEAN=
+CONST
+  ftn = Module & "test_addshift";
+  cycles  = 4*13;
+VAR
+  x, y    : B.T;
+  q, r    : B.T;
+  divisor : W.T;
+  result  := TRUE;
+  sh      := Br.BitPos{0,0};
+BEGIN
+  debug(1,ftn,"begin\n");
+  x.data := NEW(Br.Value,cycles*3 DIV W.Size +2);
+  x.size := NUMBER(x.data^);
+  Br.Clear(x.data);
+
+  FOR j:=0 TO cycles DO
+(*
+    msg(F.FN("%2s: bit %02s,%02s; 16_%s\n",
+             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,16)}));
+*)
+(*
+    msg(F.FN("%2s: bit %s,%s; 16_%s, 2_%s\n",
+             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,16), FL.Fmt(x,2)}));
+*)
+    Br.AddShifted(x,j,sh);
+    sh := Br.AddBitPos(sh,Br.BitPos{0,3});
+  END;
+
+  sh := Br.BitPos{0,0};
+  FOR j:=0 TO cycles DO
+(*
+    msg(F.FN("%2s: bit %02s,%02s; 16_%s\n",
+             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,16)}));
+*)
+    Br.AddShifted(x,cycles-j,sh);
+    sh := Br.AddBitPos(sh,Br.BitPos{0,3});
+  END;
+
+(*
+  sh := Br.BitPos{0,0};
+  quotient := cycles * 2_1001001001;
+  FOR j:=0 TO cycles DO
+    msg(F.FN("%2s: bit %02s,%02s; 16_%s\n",
+             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,16)}));
+    Br.SubShiftedProd(x,cycles-j,sh);
+    sh := Br.AddBitPos(sh,Br.BitPos{0,3});
+  END;
+*)
+  x := B.One;
+  FOR j:=0 TO 13 DO
+    x := Br.AddU(B.One,Br.MulU(x,B.FromInteger(16_1000)));
+  END;
+  y := Br.MulU(B.FromInteger(16_1000001),B.FromInteger(16_1001));
+(*
+  x := B.FromInteger(16_1001001);
+  FOR j:=0 TO 1 DO
+    x := Br.MulU(x,x);
+  END;
+  x := Br.AddU(x,B.One);
+  y := B.FromInteger(16_1001001);
+  y := Br.MulU(y,y);
+*)
+  msg(F.FN("x = 16_%s   y = 16_%s\n",
+           ARRAY OF TEXT{FL.Fmt(x,16), FL.Fmt(y,16)}));
+  q := Br.DivModU(x,y,r);
+  msg(F.FN("q = 16_%s   r = 16_%s\n",
+           ARRAY OF TEXT{FL.Fmt(q,16), FL.Fmt(r,16)}));
+  q.sign := FALSE;
+  r.sign := FALSE;
+  <*ASSERT B.Equal(x,Br.AddU(r,Br.MulU(q,y)))*>
+
+  RETURN result;
+END test_addshift;
 (*----------------------*)
 PROCEDURE test_fibonacci():BOOLEAN=
 CONST
@@ -123,6 +202,7 @@ VAR result:=TRUE;
 BEGIN
   newline(); EVAL test_basic();
   newline(); EVAL test_power();
+  newline(); EVAL test_addshift();
   (*newline(); EVAL test_fibonacci();*)
   newline(); EVAL test_pseudoprime();
 
