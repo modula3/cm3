@@ -1,4 +1,4 @@
-GENERIC MODULE PhysicalValueFmtLex(R,RT,RF,UDB);
+GENERIC MODULE PhysicalValueFmtLex(R,RT,C,CT,CF,UDB);
 
 IMPORT Fmt AS F,
        NADefinitions;
@@ -32,11 +32,11 @@ PROCEDURE Fmt (READONLY x : T; READONLY style : FmtStyle) : TEXT =
     realExp, abs : R.T;
 
   BEGIN
-    IF (cu=NIL) OR (R.IsZero(x.val)) THEN
-      RETURN RF.Fmt(x.val,style.elemStyle);
+    IF (cu=NIL) OR (C.IsZero(x.val)) THEN
+      RETURN CF.Fmt(x.val,style.elemStyle);
     ELSE
       realExp := FLOAT(cu.head.exp,R.T);
-      abs := RT.Abs(x.val);
+      abs := CT.Abs(x.val);
       VAR
         factor:=R.One;
         cup:=cu.tail;
@@ -75,8 +75,8 @@ PROCEDURE Fmt (READONLY x : T; READONLY style : FmtStyle) : TEXT =
         END;
 
         VAR
-          z   := R.Scale(x.val, RT.Pow(scales[minSU].mag,-realExp));
-          res := RF.Fmt(z,style.elemStyle) &
+          z   := C.Scale(x.val, RT.Pow(scales[minSU].mag,-realExp));
+          res := CF.Fmt(z,style.elemStyle) &
                  FmtUnitPart(scales[minSU].symbol,cu.head.exp);
         BEGIN
           cu := cu.tail;
