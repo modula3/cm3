@@ -1,16 +1,5 @@
 \section{Library Architecture}
 
-
-conventions:
-quake templates, proc parameters
-order of generic formals
-common abbreviations of module names
-module names (fraction of polynomials or polynomials of fractions?)
-don't rely on order of field names, e.g. in TexStyle, FmtStyle
-
-directory structure
-structure of each module, common functions
-
 \subsection{Directory structure}
 
 \subsubsection{\filename{doc} - Documentation}
@@ -136,6 +125,79 @@ and thus allows for generic templates.
  look for similar ones in other modules
  for adapting argument order and naming.
 \end{enumerate}
+
+\subsection{Quake}
+
+The \filename{quake} utility which is the counterpart
+to \filename{make} for Modula 3
+is a central part of current Modula 3 compiler packages.
+Without \filename{quake} it would be a nightmare
+to work with generic modules,
+since quake generates and incorporates
+modules that instantiate generic ones for you.
+Every data type in the \modna{} library
+is equipped with \filename{quake} procedures
+stored in \varid{type}\filename{.tmpl} files.
+that instantiate the data type for new element types.
+It is important to respect some conventions
+when writing generic modules and
+corresponding \filename{quake} procedures.
+\begin{itemize}
+\item Module names contain almost no abbreviations for clarity.
+Names of instantiated modules can become rather long, so abbreviate them when importing.
+\item Names of instantiated modules follow a fixed scheme
+to provide for automatic file name generation.
+It also allows you to easily remember the name of such a module.
+The main name is the last part, each element name is prepended.
+E.g. \filename{BigIntegerFractionPolynomial}
+operates on polynomials which have coefficients
+that are fractions of integers of arbitrary size.
+\item The instantiating helpers from \filename{libm3}
+expect the specification of all element modules,
+e.g. \sourcecode{Table(key,elt)}.
+This was the approach for \modna{}, too, for some time,
+but it turned out to be to expensive.
+Instead only the element names are given
+and additionally arguments specifying the flavor
+of some modules (like \filename{"Fast"} or \filename{"Basic"}).
+The \filename{quake} template procedures
+internally constructs the filenames of all required modules.
+Be prepared to build additional modules
+to match all requirements.
+
+It is possible to give a name that differs from
+the long naming scheme,
+e.g. calling a module \filename{BigIntFracPolynomial}
+instead of the long form.
+However it is not recommend to break the scheme
+since it makes further instantiating even worse.
+\item Abbreviate generic formals and imported modules following the same scheme.
+Each name component is abbreviated with a beginning capital and
+maybe following lowercase letters.
+Neglict implementation extensions like \filename{Fast} and \filename{Basic}.
+Examples:
+\begin{itemize}
+\item \sourcecode{LongRealBasic AS R}
+\item \sourcecode{LongRealTrans AS RT}
+\item \sourcecode{LongRealFmtLex AS RF}
+\item \sourcecode{RootBasic AS Rt}
+\item \sourcecode{VectorFast AS V}
+\item \sourcecode{ComplexVectorBasic AS CV}
+\item \sourcecode{ComplexVectorFmtLex AS CVF}
+\end{itemize}
+\item Generic formals should be ordered in increasing complexity.
+That is simple types first,
+other types that have the first type as element follows and so on.
+Modules that add other functionality to the same type
+are placed immediately after the basic module.
+Example:
+\sourcecode{GENERIC INTERFACE Mighty(R,RT,RF,C,CT,CF,V,VF,CV,M,MF);}
+\end{itemize}
+
+Remark: (where is a good place for it?)\\
+Don't rely on order of RECORD entries,
+e.g. in TexStyle, FmtStyle,
+but access them by name.
 
 \subsection{Arrays}
 An array is a collection of items, all of the same type,
