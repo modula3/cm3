@@ -1,4 +1,4 @@
-GENERIC MODULE EigenSystem(R,RT,V,M);
+GENERIC MODULE EigenSystem(R, RT, V, M);
 (*
 IMPORT Wr, Stdio, IO, Fmt,
        LongRealVectorFmtLex AS VF,
@@ -8,13 +8,13 @@ FROM NADefinitions IMPORT Error, Err;
 
 EXCEPTION NormalTermination;
 
-PROCEDURE PowerMethod (A: M.T; VAR v: V.T; tol: R.T; maxiter: CARDINAL; ):
-  R.T RAISES {Error} =
+PROCEDURE PowerMethod (A: M.T; tol: R.T; maxiter: CARDINAL; ):
+  EigenPair RAISES {Error} =
   VAR
-    x, dx : V.T;
-    err   : R.T;
-    tol2        := tol * tol;
-    x2, vx: R.T;
+    x, dx, v: V.T;
+    err     : R.T;
+    tol2          := tol * tol;
+    x2, vx  : R.T;
   BEGIN
     x := V.New(NUMBER(A^));
     x^ := A[0];                  (*is this initialization random enough?*)
@@ -27,12 +27,9 @@ PROCEDURE PowerMethod (A: M.T; VAR v: V.T; tol: R.T; maxiter: CARDINAL; ):
       v := x;
 
       x := M.MulV(A, v);
-      (* this error estimation sucks because of cancellations
-      v2 := V.Inner(v, v);
-      x2 := V.Inner(x, x);
-      vx := V.Inner(v, x);
-      err := (x2*v2-vx*vx)/(v2*v2);
-      *)
+      (* this error estimation sucks because of cancellations v2 :=
+         V.Inner(v, v); x2 := V.Inner(x, x); vx := V.Inner(v, x); err :=
+         (x2*v2-vx*vx)/(v2*v2); *)
       (*
       x2 := V.Inner(x, x);
       vx := V.Inner(v, x);
@@ -47,56 +44,52 @@ PROCEDURE PowerMethod (A: M.T; VAR v: V.T; tol: R.T; maxiter: CARDINAL; ):
       (*compute the minimum possible Euclidean distance from lambda*v to
          x*)
       x2 := V.Inner(x, x);
-      vx := V.Inner(v, x);  (*approximation for largest eigenvalue lambda*)
-      dx := V.Sub(v,V.Scale(x,R.Rec(vx)));
-      err := V.Inner(dx,dx);
-(*
-IO.Put(Fmt.FN("err %s, tol %s, dx %s, v %s, x %s\n",ARRAY OF TEXT{
-  RF.Fmt(err), RF.Fmt(tol), VF.Fmt(dx), VF.Fmt(v), VF.Fmt(x)}));
-*)
+      vx := V.Inner(v, x);       (*approximation for largest eigenvalue
+                                    lambda*)
+      dx := V.Sub(v, V.Scale(x, R.Rec(vx)));
+      err := V.Inner(dx, dx);
+      (*
+      IO.Put(Fmt.FN("err %s, tol %s, dx %s, v %s, x %s\n",ARRAY OF TEXT{
+        RF.Fmt(err), RF.Fmt(tol), VF.Fmt(dx), VF.Fmt(v), VF.Fmt(x)}));
+      *)
       x := V.Scale(x, R.Rec(RT.SqRt(x2)));
     UNTIL err <= tol2;
     (*calculate the lambda for which x is optimally approximated by
        lambda*v with respect to the Euclidean norm*)
     (*RETURN R.Div(vx,v2);*)
-    RETURN vx;
+    RETURN EigenPair{vx, v};
   END PowerMethod;
 
 
-PROCEDURE MaxColumn(x:M.T;VAR max:R.T):CARDINAL=
+PROCEDURE MaxColumn (x: M.T; VAR max: R.T): CARDINAL =
   VAR
-    sum:R.T;
-    maxcol:CARDINAL:=0;
+    sum   : R.T;
+    maxcol: CARDINAL := 0;
   BEGIN
-    max:=R.Zero;
-    FOR j:=FIRST(x[0]) TO LAST(x[0]) DO
-      sum:=R.Zero;
-      FOR i:=FIRST(x^) TO LAST(x^) DO
-        sum:=R.Add(sum,RT.Abs(x[i,j]));
+    max := R.Zero;
+    FOR j := FIRST(x[0]) TO LAST(x[0]) DO
+      sum := R.Zero;
+      FOR i := FIRST(x^) TO LAST(x^) DO
+        sum := R.Add(sum, RT.Abs(x[i, j]));
       END;
-      IF max<sum THEN
-        maxcol:=j;
-        max:=sum;
-      END;
+      IF max < sum THEN maxcol := j; max := sum; END;
     END;
     RETURN maxcol;
   END MaxColumn;
 
-(*The same idea as for PowerMethod,
-  iterated squaring of A instead of taking successive powers;
-  needs less but more expensive iterations.
-  One have to compare whether computing the whole eigenvalue spectrum
-  using other methods is faster. *)
-PROCEDURE SquareMethod (A: M.T; VAR v: V.T; tol: R.T; maxiter: CARDINAL; ):
-  R.T RAISES {Error} =
+(*The same idea as for PowerMethod, iterated squaring of A instead of
+   taking successive powers; needs less but more expensive iterations.  One
+   have to compare whether computing the whole eigenvalue spectrum using
+   other methods is faster. *)
+PROCEDURE SquareMethod (A: M.T; tol: R.T; maxiter: CARDINAL; ): EigenPair
+  RAISES {Error} =
   VAR
-    B,C: M.T;
-    x, dx : V.T;
-    norm1,
-    err   : R.T;
-    tol2        := tol * tol;
+    B, C      : M.T;
+    v, x, dx  : V.T;
+    norm1, err: R.T;
+    tol2                 := tol * tol;
     v2, x2, vx: R.T;
-    j : CARDINAL;
+    j         : CARDINAL;
   BEGIN
     C := A;
     REPEAT
@@ -106,30 +99,30 @@ PROCEDURE SquareMethod (A: M.T; VAR v: V.T; tol: R.T; maxiter: CARDINAL; ):
       (*turn new into old*)
       B := C;
 
-      B := M.Mul(B,B);
-      C := M.Mul(A,B);
+      B := M.Mul(B, B);
+      C := M.Mul(A, B);
 
-      j  := MaxColumn(B,norm1);
-      v  := M.GetColumn(B,j);
-      x  := M.GetColumn(C,j);
+      j := MaxColumn(B, norm1);
+      v := M.GetColumn(B, j);
+      x := M.GetColumn(C, j);
       (*compute the minimum possible Euclidean distance from lambda*v to
          x*)
       v2 := V.Inner(v, v);
       x2 := V.Inner(x, x);
-      vx := V.Inner(v, x);  (*approximation for largest eigenvalue*)
-      dx := V.Sub(V.Scale(v,vx),V.Scale(x,v2));
-      err := V.Inner(dx,dx);
-(*
-IO.Put(Fmt.FN("err %s, tol %s, maxcol %s, v2 %s, x2 %s, vx %s,\ndx %s, v %s, x %s\n",ARRAY OF TEXT{
-  RF.Fmt(err), RF.Fmt(tol), Fmt.Int(j),
-  RF.Fmt(v2), RF.Fmt(x2), RF.Fmt(vx),
-  VF.Fmt(dx), VF.Fmt(v), VF.Fmt(x)}));
-*)
+      vx := V.Inner(v, x);       (*approximation for largest eigenvalue*)
+      dx := V.Sub(V.Scale(v, vx), V.Scale(x, v2));
+      err := V.Inner(dx, dx);
+      (*
+      IO.Put(Fmt.FN("err %s, tol %s, maxcol %s, v2 %s, x2 %s, vx %s,\ndx %s, v %s, x %s\n",ARRAY OF TEXT{
+        RF.Fmt(err), RF.Fmt(tol), Fmt.Int(j),
+        RF.Fmt(v2), RF.Fmt(x2), RF.Fmt(vx),
+        VF.Fmt(dx), VF.Fmt(v), VF.Fmt(x)}));
+      *)
       C := M.Scale(C, R.Rec(norm1));
-    UNTIL err <= tol2*v2*v2*x2;
+    UNTIL err <= tol2 * v2 * v2 * x2;
     (*calculate the lambda for which x is optimally approximated by
        lambda*v with respect to the Euclidean norm*)
-    RETURN R.Div(vx,v2);
+    RETURN EigenPair{R.Div(vx, v2), v};
   END SquareMethod;
 
 

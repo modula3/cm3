@@ -27,7 +27,7 @@ PROCEDURE Test()=
 
   VAR
     x, y  : S.T;
-    v, yv : V.T;
+    yv    : V.T;
     trans : M.T;
     sqr0, sqr1,
     specrad : R.T;
@@ -48,10 +48,14 @@ PROCEDURE Test()=
              CharPoly.CharPolynomial(trans)
            );
     IO.Put(Fmt.FN("eigenvalues: %s\n", ARRAY OF TEXT{CVF.Fmt(eig)}));
-    IO.Put(Fmt.FN("largest eigenvalue: %s\neigenvector: %s\n",
-      ARRAY OF TEXT{
-        RF.Fmt(Eigen.PowerMethod(trans,v)),
-        VF.Fmt(v)}));
+    VAR
+      ep:=Eigen.PowerMethod(trans);
+    BEGIN
+      IO.Put(Fmt.FN("largest eigenvalue: %s\neigenvector: %s\n",
+        ARRAY OF TEXT{
+          RF.Fmt(ep.value),
+          VF.Fmt(ep.vector)}));
+    END;
 
     FOR n:=1 TO 45 DO
       x := Daub.FilterPureAbsSqr(n);
@@ -70,7 +74,7 @@ PROCEDURE Test()=
         ARRAY OF TEXT{Fmt.Int(n),RF.Fmt(sqr0),RF.Fmt(sqr1)}));
       <*ASSERT ABS(sqr0-sqr1)<1.0D-10*sqr0*>
 *)
-      specrad := Eigen.SquareMethod(trans,v,tol:=1.0D-5);
+      specrad := Eigen.SquareMethod(trans,tol:=1.0D-5).value;
       IO.Put(Fmt.FN("%s: spectral radius %s < %s <(?) %s\n",
         ARRAY OF TEXT{
 	  Fmt.Int(n),
