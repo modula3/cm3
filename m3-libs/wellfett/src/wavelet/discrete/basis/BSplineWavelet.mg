@@ -1,9 +1,9 @@
-GENERIC MODULE BSplineWavelet(R, S, IntPow, DB);
+GENERIC MODULE BSplineWavelet(R, V, S, IntPow, DB);
 
 PROCEDURE GeneratorMask (n: CARDINAL; base: [1 .. LAST(CARDINAL)]): S.T =
   VAR
     coef := R.One / R.FromInteger(base);
-    atom := NEW(S.T).fromVector(V.NewUniform(coef));
+    atom := NEW(S.T).fromVector(V.NewUniform(base, coef));
   BEGIN
     RETURN IntPow.MulPower(S.One, atom, n);
   END GeneratorMask;
