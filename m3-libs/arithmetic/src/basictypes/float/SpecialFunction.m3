@@ -151,9 +151,9 @@ PROCEDURE GamSer(a,x:T):T RAISES {Error}=
 <*UNUSED*> CONST ftn = Module & "GamSer";
 CONST
   MaxIter=90;
+  eps=5.0D0*Eps;
 VAR
   a1n,term,sum:T;
-  eps:=5.0D0*Eps;
 BEGIN
   (*---initialize---*)
   term:=One/a;
@@ -178,9 +178,9 @@ PROCEDURE GamCF(a,x:T):T RAISES {Error}=
 <*UNUSED*> CONST ftn = Module & "GamCF";
 CONST
   MaxIter=90;
+  eps=5.0d0*Eps;
 VAR
   f,D,C,m,xa,aj,bj,delta:T;
-  eps:=5.0d0*Eps;
 BEGIN
   (*---initialize for j=1---*)
   C:=x+One+a+One/Tiny;
@@ -246,9 +246,9 @@ PROCEDURE BetaCF(a,b,x:T):T RAISES {Error}=
 CONST
   bj=One;
   MaxIter=90;
+  eps=5.0D0*Eps;
 VAR
   f,D,C,m,am,a2m,aj,delta:T;
-  eps:=5.0D0*Eps;
 BEGIN
   (*---initialize at j=2---*)
   aj:=-(a+b)*x/(a+One);

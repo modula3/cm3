@@ -1,4 +1,4 @@
-GENERIC MODULE FloatTrans(R,RB);
+GENERIC MODULE FloatTrans();
 (*Copyright (c) 1996, m3na project
 
 Abstract: Generic wrapper routines for (mainly) transcendent functions
@@ -192,7 +192,5 @@ BEGIN
 END Sgn;
 
 
-<*FATAL ANY*>
 BEGIN
-  Eps := RB.Scalb(One,-R.Precision);
 END FloatTrans.
