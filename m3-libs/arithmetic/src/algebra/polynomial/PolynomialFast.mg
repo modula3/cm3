@@ -29,60 +29,35 @@ BEGIN
 END Copy;
 
 (*--------------------*)
-(*
-PROCEDURE Zero( 
-               x:T)=
-VAR
-  n:=NUMBER(x^); n1:=0; nn:=n-1;
-BEGIN
-  FOR i:=n1 TO nn DO
-    x[i]:=R.Zero;
-  END;
-END Zero;
-(*--------------------*)
-PROCEDURE One( 
-               x:T)=
-VAR
-  n:=NUMBER(x^); n0:=0; nn:=n-1;
-BEGIN
-  x[0]:=R.One;
-  FOR i:=n0+1 TO nn DO
-    x[i]:=R.Zero;
-  END;
-END One;
-*)
-(*--------------------*)
-<*OBSOLETE*>
 PROCEDURE Eval( 
                 x:T;
                 xi:R.T
                 ):R.T=
 VAR
-  n:=NUMBER(x^); nn:=n-1;
-  z:=x[nn];
+  l:=LAST(x^);
+  y:=x[l];
 BEGIN
-  FOR i:=nn-1 TO 1 BY -1 DO
-    z:=x[i]+xi*z;
+  FOR i:=l-1 TO 0 BY -1 DO
+    y:=x[i]+xi*y;
   END;
-  z:=x[0]+z;  (*is this correct?*)
-  RETURN z;
+  RETURN y;
 END Eval;
 
 (*-----------------*)
 PROCEDURE Add( 
                x,y:T):T=
 VAR
-  p1n:=NUMBER(x^); p1nn:=p1n-1;
-  p2n:=NUMBER(y^); p2nn:=p2n-1;
-  maxn:=MAX(p1n,p2n);
-  z:=NEW(T,maxn);
+  xn:=NUMBER(x^); xl:=xn-1;
+  yn:=NUMBER(y^); yl:=yn-1;
+  zn:=MAX(xn,yn);
+  z:=NEW(T,zn);
 BEGIN
-  IF p1nn>=p2nn THEN
-    FOR i:=0 TO p2nn      DO z[i]:=x[i]+y[i]; END;
-    FOR i:=p2nn+1 TO p1nn DO z[i]:=x[i];       END;
+  IF xl>=yl THEN
+    FOR i:=0    TO yl DO z[i]:=x[i]+y[i]; END;
+    FOR i:=yl+1 TO xl DO z[i]:=x[i];      END;
   ELSE
-    FOR i:=0 TO p1nn      DO z[i]:=x[i]+y[i]; END;
-    FOR i:=p1nn+1 TO p2nn DO z[i]:=      y[i]; END;
+    FOR i:=0    TO xl DO z[i]:=x[i]+y[i]; END;
+    FOR i:=xl+1 TO yl DO z[i]:=     y[i]; END;
   END;
   RETURN z;
 END Add;
@@ -90,17 +65,17 @@ END Add;
 PROCEDURE Sub( 
                x,y:T):T=
 VAR
-  p1n:=NUMBER(x^); p1nn:=p1n-1;
-  p2n:=NUMBER(y^); p2nn:=p2n-1;
-  maxn:=MAX(p1n,p2n);
-  z:=NEW(T,maxn);
+  xn:=NUMBER(x^); xl:=xn-1;
+  yn:=NUMBER(y^); yl:=yn-1;
+  zn:=MAX(xn,yn);
+  z:=NEW(T,zn);
 BEGIN
-  IF p1nn>=p2nn THEN
-    FOR i:=0 TO p2nn      DO z[i]:=x[i]-y[i]; END;
-    FOR i:=p2nn+1 TO p1nn DO z[i]:=x[i];       END;
+  IF xl>=yl THEN
+    FOR i:=0    TO yl DO z[i]:=x[i]-y[i]; END;
+    FOR i:=yl+1 TO xl DO z[i]:=x[i];      END;
   ELSE
-    FOR i:=0 TO p1nn      DO z[i]:=x[i]-y[i]; END;
-    FOR i:=p1nn+1 TO p2nn DO z[i]:=     -y[i]; END;
+    FOR i:=0    TO xl DO z[i]:=x[i]-y[i]; END;
+    FOR i:=xl+1 TO yl DO z[i]:=    -y[i]; END;
   END;
   RETURN z;
 END Sub;
@@ -108,15 +83,15 @@ END Sub;
 (*---------------------*)
 PROCEDURE Equal(x,y:T):BOOLEAN =
 VAR
-  p1nn:=LAST(x^);
-  p2nn:=LAST(y^);
+  xl:=LAST(x^);
+  yl:=LAST(y^);
 BEGIN
-  IF p1nn>=p2nn THEN
-    FOR i:=0 TO p2nn      DO IF NOT x[i]#y[i]  THEN RETURN FALSE END END;
-    FOR i:=p2nn+1 TO p1nn DO IF NOT x[i]#R.Zero THEN RETURN FALSE END END;
+  IF xl>=yl THEN
+    FOR i:=0    TO yl DO IF x[i]#y[i]   THEN RETURN FALSE END END;
+    FOR i:=yl+1 TO xl DO IF x[i]#R.Zero THEN RETURN FALSE END END;
   ELSE
-    FOR i:=0 TO p1nn      DO IF NOT x[i]#y[i]  THEN RETURN FALSE END END;
-    FOR i:=p1nn+1 TO p2nn DO IF NOT R.Zero#y[i] THEN RETURN FALSE END END;
+    FOR i:=0    TO xl DO IF x[i]#y[i]   THEN RETURN FALSE END END;
+    FOR i:=xl+1 TO yl DO IF R.Zero#y[i] THEN RETURN FALSE END END;
   END;
   RETURN TRUE;
 END Equal;
@@ -125,14 +100,15 @@ END Equal;
 PROCEDURE Mul( 
                x,y:T):T=
 VAR
-  p1n:=NUMBER(x^); p2n:=NUMBER(y^);
-  pn:=p1n+p2n-1; p0:=0; pnn:=pn-1;
-  z:=NEW(T,pn);
+  xn:=NUMBER(x^);
+  yn:=NUMBER(y^);
+  zn:=xn+yn-1; zf:=0; zl:=zn-1;
+  z:=NEW(T,zn);
 BEGIN
-  FOR i:=p0 TO pnn DO z[i]:=R.Zero; END;
+  FOR i:=zf TO zl DO z[i]:=R.Zero; END;
 
-  FOR i:=0 TO p1n-1 DO
-    FOR j:=0 TO p2n-1 DO
+  FOR i:=0 TO xn-1 DO
+    FOR j:=0 TO yn-1 DO
       z[i+j]:=z[i+j]+x[i]*y[j];
     END;
   END;
@@ -159,40 +135,40 @@ PROCEDURE DivMod(
 <*UNUSED*>
 CONST ftn = Module & "DivMod";
 VAR
-  p1n:=NUMBER(x^);                  p1nn:=LAST(x^); 
-  p2n:=NUMBER(y^); p20:=FIRST(y^); p2nn:=LAST(y^);
+  xn:=NUMBER(x^);                xl:=LAST(x^); 
+  yn:=NUMBER(y^); y0:=FIRST(y^); yl:=LAST(y^);
   q:T;
-  qtmp,p2max:R.T;
-  qn,q0,qnn,qi,ri2:CARDINAL;
+  qtmp,ymax:R.T;
+  qn,q0,ql,qi,ri2:CARDINAL;
 BEGIN
   (*---Copy numerator into r---*)
-  r:=NEW(T,p1n); r^:=x^;
+  r:=NEW(T,xn); r^:=x^;
 
   (*---check for quick exit---*)
-  IF p1nn<p2nn THEN
+  IF xl<yl THEN
     (*can't do any DivModides at all*)
     q:=NEW(T,1); q[0]:=R.Zero;
     RETURN q;
   END;
 
   (*---setup quotient---*)
-  qn:=p1n-p2n+1;
-  q:=NEW(T,qn); q0:=FIRST(q^); qnn:=LAST(q^);
+  qn:=xn-yn+1;
+  q:=NEW(T,qn); q0:=FIRST(q^); ql:=LAST(q^);
 
   (*---find the dominant denominator term---*)
-  p2max:=y[p2nn];
+  ymax:=y[yl];
 
 
   (*---compute---*)
-  qi:=qnn+1;
-  FOR ri:=p1nn TO (p1nn-qnn) BY-1 DO
+  qi:=ql+1;
+  FOR ri:=xl TO (xl-ql) BY-1 DO
     DEC(qi);
-    qtmp:=r[ri]/p2max;
+    qtmp:=r[ri]/ymax;
     q[qi]:=qtmp;
     ri2:=ri+1;
-    FOR p2i:=p2nn TO p20 BY -1 DO
+    FOR yi:=yl TO y0 BY -1 DO
       DEC(ri2);
-      r[ri2]:=r[ri2]-qtmp*y[p2i];
+      r[ri2]:=r[ri2]-qtmp*y[yi];
     END;
   END;
   RETURN q;
@@ -205,11 +181,11 @@ PROCEDURE deflate(
                    c:R.T;
                    VAR rem:R.T)=
 VAR
-  pnn:=LAST(x^);
+  xl:=LAST(x^);
   b,psave:R.T;
 BEGIN
-  b:=x[pnn]; psave:=x[pnn-1]; x[pnn-1]:=b;
-  FOR i:=pnn-2 TO 1 BY -1 DO
+  b:=x[xl]; psave:=x[xl-1]; x[xl-1]:=b;
+  FOR i:=xl-2 TO 1 BY -1 DO
     b:=psave+c*b;
     psave:=x[i]; x[i]:=b;
   END;
@@ -243,21 +219,21 @@ raises:
    Err.bad_size if nd>NUMBER(pd)+1 
 *)
 VAR
-  p0:=FIRST(x^); pnn:=LAST(x^);
-  pdnn:=nd; (*may be using part of pd vector*)
+  xf:=FIRST(x^); xl:=LAST(x^);
+  pdl:=nd; (*may be using part of pd vector*)
   fact,fac:R.T;
 BEGIN
-  IF nd>NUMBER(pd)+1 OR nd>pnn THEN
+  IF nd>NUMBER(pd)+1 OR nd>xl THEN
     RAISE Error(Err.bad_size);
   END;
 
   (*---initialize f(xi) and clear f'(xi), f"(xi)...---*)
-  pd[0]:=x[pnn];
-  FOR i:=1 TO pdnn DO pd[i]:=R.Zero; END;
+  pd[0]:=x[xl];
+  FOR i:=1 TO pdl DO pd[i]:=R.Zero; END;
   
   (*---collect the raw values---*)
-  FOR i:=pnn-1 TO p0 BY -1 DO
-    FOR j:=pdnn TO 1 BY -1 DO
+  FOR i:=xl-1 TO xf BY -1 DO
+    FOR j:=pdl TO 1 BY -1 DO
       pd[j]:=pd[j-1]+xi*pd[j];
     END;
     pd[0]:=x[i]+xi*pd[0];
@@ -266,7 +242,7 @@ BEGIN
   (*---fix the factorials---*) 
   fact:=R.One;
   fac:=R.Zero;
-  FOR i:=0 TO pdnn DO
+  FOR i:=0 TO pdl DO
     pd[i]:=fact*pd[i];
     fac:=fac+R.One;
     fact:=fact*fac;
