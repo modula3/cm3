@@ -120,7 +120,7 @@ PROCEDURE Rec(READONLY x0 : T) : T RAISES{Error} =
     END;
     z.re :=  x.re / denom;
     z.im := -x.im / denom;
-    RETURN Scalb(z,exp);
+    RETURN Scalb(z,-exp);
   END Rec;
 
 (*-------------------*)
