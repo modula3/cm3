@@ -25,43 +25,43 @@ REVEAL
   END;
 
 
-PROCEDURE Init (s : T; first, last : IndexType) =
+PROCEDURE Init (SELF : T; first, last : IndexType) =
   BEGIN
-	s.data := NEW(REF ARRAY OF ElemType, last-first);
+	SELF.data := NEW(REF ARRAY OF ElemType, last-first);
   END Init;
 
-PROCEDURE Copy (s : T) : REF T =
+PROCEDURE Copy (SELF : T) : REF T =
   VAR
 	c : REF T;
   BEGIN
 	c := NEW(REF T);
-	c.init(s.first,s.first+NUMBER(s.data^));
-	FOR j:=FIRST(s.data^) TO LAST(s.data^) DO
-	  c.data[j] := s.data[j];
+	c.init(SELF.first,SELF.first+NUMBER(SELF.data^));
+	FOR j:=FIRST(SELF.data^) TO LAST(SELF.data^) DO
+	  c.data[j] := SELF.data[j];
 	END;
 	RETURN c;
   END Copy;
 
 
-PROCEDURE GetFirst (s : T) : IndexType =
+PROCEDURE GetFirst (SELF : T) : IndexType =
   BEGIN
-	RETURN s.first;
+	RETURN SELF.first;
   END GetFirst;
 
-PROCEDURE GetLast (s : T) : IndexType =
+PROCEDURE GetLast (SELF : T) : IndexType =
   BEGIN
-	RETURN s.first + NUMBER(s.data^);
+	RETURN SELF.first + NUMBER(SELF.data^);
   END GetLast;
 
-PROCEDURE GetNumber (s : T) : IndexType =
+PROCEDURE GetNumber (SELF : T) : IndexType =
   BEGIN
-	RETURN NUMBER(s.data^);
+	RETURN NUMBER(SELF.data^);
   END GetNumber;
 
 
-PROCEDURE Translate (s : T; dist : IndexType) =
+PROCEDURE Translate (SELF : T; dist : IndexType) =
   BEGIN
-	INC (s.first, dist);
+	INC (SELF.first, dist);
   END Translate;
 
 PROCEDURE UpSample (x : T; factor : IndexType) : REF T =
