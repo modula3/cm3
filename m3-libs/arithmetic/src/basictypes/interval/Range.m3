@@ -7,22 +7,36 @@ PROCEDURE New (first: INTEGER; number: CARDINAL; ): T =
   END New;
 
 <* INLINE *>
-PROCEDURE First (x: T; ): INTEGER =
+PROCEDURE First (READONLY x: T; ): INTEGER =
   BEGIN
     RETURN x.first;
   END First;
 
 <* INLINE *>
-PROCEDURE Last (x: T; ): INTEGER =
+PROCEDURE Last (READONLY x: T; ): INTEGER =
   BEGIN
     RETURN x.first + x.number - 1;
   END Last;
 
 <* INLINE *>
-PROCEDURE Number (x: T; ): CARDINAL =
+PROCEDURE Number (READONLY x: T; ): CARDINAL =
   BEGIN
     RETURN x.number;
   END Number;
+
+
+
+<* INLINE *>
+PROCEDURE Add (READONLY x, y: T; ): T =
+  BEGIN
+    RETURN T{x.first + y.first, x.number + y.number - 1};
+  END Add;
+
+<* INLINE *>
+PROCEDURE Scale (READONLY x: T; y: CARDINAL; ): T =
+  BEGIN
+    RETURN T{x.first * y, x.number * y + 1 - y};
+  END Scale;
 
 BEGIN
 END Range.
