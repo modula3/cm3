@@ -1,0 +1,279 @@
+Mon Feb  5 18:11:04 1996  Stan Shebs  <shebs@andros.cygnus.com>
+
+	* mpw-config.in: Update to use new float-*.h files.
+	* mpw-make.sed: Edit out check and CHECK_TARGETS.
+
+Mon Jan 15 13:57:41 1996  Stan Shebs  <shebs@andros.cygnus.com>
+
+	* cccp.c (main): Remove MPW-specific include processing.
+	(path_include): Ditto.
+
+Fri Dec 15 16:07:46 1995  Stan Shebs  <shebs@andros.cygnus.com>
+
+	* mpw-config.in: Make source file edits conditional on choice
+	of host compiler, add edit of stmt.c to work around Metrowerks bug.
+	* mpw-make.sed: Remove edits of source filenames that had been
+	required because of source file edits.
+
+Mon Dec 11 15:09:04 1995  Stan Shebs  <shebs@andros.cygnus.com>
+
+	* mac-gcc.r: Fix copyright and version strings.
+	* mpw-config.in: Match on i386-*-go32, mips-*-*, and sh-*-hms
+	instead of more specific configs, compute version here and
+	paste result into mk.tmp and thus the generated makefile.
+	* mpw-make.sed (version): Edit out existing definition, don't
+	set during installation.
+	* config/xm-mpw.h: Remove commented-out code.
+
+Mon Dec  4 13:52:50 1995  Stan Shebs  <shebs@andros.cygnus.com>
+
+	* mpw-make.sed: Edit in a Mac-specific install procedure,
+	edit in the use of Move instead of Rename on tmplibgcc.a,
+	edit in fix to references to libsubdir, use {target_canonical}
+	instead of {target} everywhere.
+
+Thu Sep 28 20:11:59 1995  Stan Shebs  <shebs@andros.cygnus.com>
+
+	* mpw-config.in: Rewrite to support PowerMac as host and target,
+	and to use an edited Unix makefile rather than a handwritten MPW
+	makefile.
+	* mpw-make.sed: New file, edits Unix makefile into MPW syntax.
+	* mpw-make.in: Remove.
+	* mac-gcc.r: New file, Mac resources.
+	* xm-mpw.h: New file, processor-independent MPW definitions.
+	* m68k/xm-mpw.h: Move most definitions into config/xm-mpw.h.
+	* rs6000/macos.h: New file, definitions for PowerMac target.
+	* rs6000/xm-mpw.h: New file, definitions for PowerMac MPW host.
+
+Thu Jun 29 13:49:07 1995  Stan Shebs  <shebs@andros.cygnus.com>
+
+	* mpw-config.in: Set LIBGCC1, EXTRA_HEADERS, and FLOAT_H.
+	(sh-hitachi-hms): Add fp-bit.c and lib1funcs.asm configury.
+	* mpw-make.in (USER_H): Define.
+	(LIBGCC1): Remove.
+	(gfloat.h, xlimits.h): Add rules to make.
+	(libgcc1-asm.a): Ditto.
+	(libgcc2.a): Use LIB2FUNCS_EXTRA if defined.
+	(stmp-int-hdrs, stmp-headers, install-headers): Add rules.
+
+Mon Jun 19 12:35:43 1995  Stan Shebs  <shebs@andros.cygnus.com>
+
+	* mpw-config.in: Add sed'ing of reload1.c to work around an
+	MPW C bug.
+	(i386-unknown-coff): Rename to i386-unknown-go32.
+	(ppc-apple-macos): Rename to powerpc-apple-macos.
+	(powerpc-apple-macos, i386-unknown-go32, sh-hitachi-hms):
+	Add multilib.h generation.
+	(sh-hitachi-hms): Sed sh/sh.h instead of forward including it,
+	to work around an MPW C bug.
+	(specs.h, options.h): Create.
+	* mpw-make.in (reload1.c): Compile hacked_reload1.c instead.
+	(LIBGCC2_CFLAGS): Add -O2.
+	* mpw-gC: Add comment.
+	* mips/mips.c (P_tmpdir): Define for MPW.
+	* dbxout.c (DEBUGGER_AUTO_OFFSET) [MPW_C]: Define the default
+	expansion as a function debugger_auto_offset, to work around
+	another MPW C bug.
+	* sdbout.c (DEBUGGER_AUTO_OFFSET) [MPW_C]: Similarly.
+
+Fri Mar 17 16:33:36 1995  Stan Shebs  <shebs@andros.cygnus.com>
+
+	* cccp.c (main): Move START_PROGRESS to be able to use
+	program name and use it, add program name to END_PROGRESS.
+	* toplev.c (main): Ditto.
+
+Mon Mar 13 12:22:34 1995  Stan Shebs  <shebs@andros.cygnus.com>
+
+	* c-lex.c (yylex), cccp.c (main), toplev.c (compile_file,
+	rest_of_decl_compilation, main), stor-layout.c (layout_decl,
+	layout_type): Add PROGRESS macros.
+	* gcc.c (main): Fix generation of Exit in MPW script.
+	* optabs.c (extended): Redefine.
+
+Tue Mar  7 18:22:49 1995  Stan Shebs  <shebs@andros.cygnus.com>
+
+	* mpw-config.in: No longer make tmp subdirs.
+	(ppc-apple-macos, i386-unknown-coff): Add configuration bits.
+	(sh-hitachi-hms): New target.
+	(version): Get from version.c.
+	* mpw-make.in: Strip out various junk.
+	(Version.r): Generate from makefile.
+	* Versions.r: Remove.
+
+Fri Dec 16 13:42:19 1994  Stan Shebs  <shebs@andros.cygnus.com>
+
+	* m68k/xm-mpw.h: Include spin.h instead of CursorCtl.h,
+	(bzero, bcopy, bcmp): Remove definitions.
+	(PRINT_FILE_AND_LINE): New macro.
+	* mips/mips.h (ASM_OUTPUT_ASCII) [MPW_C]: Remove ifndef,
+	apparently unnecessary.
+	* mips/ecoff.h (ASM_OUTPUT_ASCII) [MPW_C]: Add comment.
+
+Mon Dec 12 19:58:51 1994  Stan Shebs  <shebs@andros.cygnus.com>
+
+	* mpw-config.in: Add mdname and MAYBE_TARGET_DEFAULT to mk.tmp.
+	(m68k-apple-macos, ppc-apple-macos, i386-unknown-coff): New targets.
+	* mpw-make.in: Remove .gc.o rule and usages, use sed instead of
+	StreamEdit for editing, use "{o}"Version.r as version resource.
+
+Sat Sep 24 14:15:55 1994  Stan Shebs  (shebs@andros.cygnus.com)
+
+	* mpw-make.in: Use {md} instead of "{md}".
+	(insn-*.c.o): Explicitly invoke {CC}, works around MPW Make bug.
+
+Fri Jul  1 11:31:41 1994  Stan Shebs  (shebs@andros.cygnus.com)
+
+	* mpw-make.in (gcc.gc.o): Calculate the version, and remove extra
+	colon in STANDARD_EXEC_PREFIX.
+
+Thu Jun 30 16:07:39 1994  Stan Shebs  (shebs@andros.cygnus.com)
+
+	* mpw-config.in (ld): Fix path.
+
+Mon Jun 27 19:26:52 1994  Stan Shebs  (shebs@andros.cygnus.com)
+
+	* mpw-make.in (install-only): New target.
+	(install): Also depend on install-only.
+	* gcc.c (delete_if_ordinary) [MPW]: Match new arg type to function.
+
+Sun Jun 12 16:50:00 1994  Stan Shebs  (shebs@andros.cygnus.com)
+
+	* mpw-make.in (SymOptions): Remove everywhere.
+	(LinkOptions): Use LDFLAGS instead.
+	(COMLIBS): Use non-FPU libraries.
+
+Tue Apr 26 16:16:51 1994  Stan Shebs  (shebs@andros.cygnus.com)
+
+	* mpw-config.in (as, ld): Create one-line scripts to get these
+	from sibling directories.
+	* mpw-make.in (gcc.gc.o): No longer need to define __va_list__.
+	* reload1.c (reload): Manually expand macro-intensive code that
+	confuses MPW C.
+
+Thu Apr 14 12:14:45 1994  Stan Shebs  (shebs@andros.cygnus.com)
+
+	* cccp.c (main): Fix typo in ifdef, use the value of CIncludes for
+	the search path.
+	(open_include_file): Don't do filename mapping in MPW.
+	(print_containing_files): Add MPW syntax to file-and-line message.
+	(hack_mpw_include_specification): Use mem functions, remove
+	debugging code.
+	* cexp.y (parse_number): Work around MPW C code generation bug.
+	* mpw-make.in (gcc.gc.o): Define DEFAULT_TARGET_VERSION, don't
+	define TOOLDIR.
+	Remove references to gvarargs.h.
+	Use {CC} instead of C for explicit compile commands.
+	* config/m68k/xm-mpw.h (S_ISREG, S_ISDIR): Remove stubouts.
+	(stat): Declare.
+
+Wed Mar 23 12:52:12 1994  Stan Shebs  (shebs@andros.cygnus.com)
+
+	* gcc.c (default_compilers): Back out string splittings.
+	(pexecute): Do better quoting of arguments to script commands.
+	* mpw-config.in (mdname, maybe_target_default): Set.
+	* mpw-make.in: Use GCC 1.x to compile some files.
+	(gcc.gc.o): Add extra quoting to args.
+	(cccp.c.o): Define CROSS_INCLUDE_DIR.
+	(libgcc2.a): Build correctly.
+
+Sat Feb 26 13:54:27 1994  Stan Shebs  (shebs@andros.cygnus.com)
+
+	* mpwlib.c: Remove, makefile uses libiberty version.
+
+	* mpw-make.in: Added installation and pathname variables
+	(exec_prefix, etc), used in compilation of gcc.c.
+	Changed gcc to xgcc everywhere.
+	(install): Moved here from mpw-build.in
+	(COptions): Add -d IN_GCC.
+	(GCC_CROSS, GCC_CFLAGS, GCC_FOR_TARGET): Add, use GCC option
+	syntax instead of MPW C syntax.
+	(bi-parser.c): Generate directly from byacc.
+	* mpw-build.in: Removed.
+	* mpw-gC: Invoke xgcc instead of gcc.
+	* gcc.c (ASM_SPEC): Remove redefinition.
+	(delete_temp_files, delete_failure_queue): Add -i to delete
+	commands, so errors ignored.
+	(pexecute): Translate program pathname to MPW syntax, collect
+	and interpret return status from commands correctly, quote args to
+	echoed command.
+	(escape_single_quotes): Remove, never called.
+	(execute): If MPW, don't echo commands when being verbose.
+	(main): If MPW, issue commands to exit with the correct status.
+
+Tue Jan 25 18:38:41 1994  Stan Shebs  (shebs@andros.cygnus.com)
+
+	* mpw-config.in (varargs.h, sys/*.h): Don't create.
+	(config.h, etc) Use Catenate and forward-include to create.
+	* mpw-build.in: New file, build script fragment.
+	* mpw-make.in: Various cleanups.
+	(COptions): Add include/mpw, extra-include to include path.
+	* mpwlib.c (fcntl.h, errno.h, sys/stat.h): Include.
+	(mpwify_filename, mpw_open, mpw_access): New functions.
+	* gcc.c (comp): Redefine as comp_ in MPW.
+	(ASM_SPEC): Undefine if compiling with MPW C.
+	(default_compilers): Don't include ObjC and Chill specs if
+	compiling with MPW C.
+	(delete_temp_files, delete_failure_queue):  Issue script commands
+	to delete files.
+	(choose_temp_base): If MPW, use : as pathname separators, don't
+	look at env vars.
+	(pexecute): If MPW, define to issue script language commands to
+	execute programs, rather than executing them directly.
+	(escape_single_quotes): New function to add escape chars
+	(option-d) to single quote chars in a command line.
+
+	* m68k/xm-mpw.h (ONLY_INT_FIELDS): Remove redundant definition.
+	(fancy_abort): Remove define, will use mpw_abort instead.
+	(stat): Remove hack declaration.
+	(open, access): Define as macros that become mpw_open, mpw_access.
+
+Fri Jan  7 11:33:36 1994  Stan Shebs  (shebs@andros.cygnus.com)
+
+	* mpw-make.in: Replace 8-bit chars with their names.
+	Remove wired-in target machine bits.
+	(gcc): Add more command-line defines.
+	(libgcc.a): Add partial build rule.
+	* Versions.r: Remove 8-bit char.
+	* mpw-config.in (sys/resource.h, sys/time.h): Add script to fill
+	these with Unix-like structs.
+	* mpwlib.c (getrusage, sbrk, environ): Define.
+
+Thu Jan  6 16:51:31 1994  Stan Shebs  (shebs@andros.cygnus.com)
+
+	* cccp.c: Don't undef bxxx functions.
+	(main): Dissect comma-separated lists of directories.
+	(path_include): Use a colon for current directory.
+	(do_include): Make Mac-compatible file names.
+	(hack_mpw_include_specification): New function.
+	(error, error_from_errno, warning): Add MPW-style error reporting.
+
+Wed Jan  5 16:26:24 1994  Stan Shebs  (shebs@andros.cygnus.com)
+
+	* toplev.c (error_with_file_and_line, error_with_decl,
+	warning_with_file_and_line): Add MPW-style error reporting.
+
+	* machmode.h (machine_mode): Add machine_mode_intifier to
+	work around MPW C lossage.
+	* rtl.h (rtx_code): Same.
+	* tree.h (tree_code): Same.
+	* alloca.c (ADDRESS_FUNCTION): For MPW C, define to look at frame
+	pointer rather than stack pointer.
+	* cse.c (make_regs_eqv): #Ifdef out code that freaks out MPW C.
+	* emit-rtl.c (comp): Redefine as comp_ in MPW.
+	* expr.c (comp, extended): Redefine.
+	(emit_push_insn): For MPW C, change label's name.
+	* fold-const.c (FLOAT_TYPE_P): Define to 0 if in MPW.
+	* genrecog.c (main): Break up a long string.
+	* jump.c (comp): Redefine as comp_ in MPW.
+
+Mon Jan  3 12:07:54 1994  Stan Shebs  (shebs@andros.cygnus.com)
+
+	* mpw-config.in: New file, MPW version of configure.in.
+	* mpw-make.in: New file, MPW version of Makefile.in.
+	* mpwlib.c: New file, MPW compatibility routines.
+	* mpw-gC: New file, MPW script for compiler.
+	* Versions.r: New file, version resources.
+	* config/m68k/xm-mpw.h: New file, MPW host definitions.
+	* config/mips/mips.h (ASM_OUTPUT_ASCII): Undefine if MPW_C.
+	* config/mips/ecoff.h (ASM_OUTPUT_ASCII): Define using a simpler
+	macro, if compiling with MPW_C.

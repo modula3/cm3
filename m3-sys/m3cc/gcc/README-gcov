@@ -1,0 +1,85 @@
+/* CYGNUS LOCAL: gcov */
+
+Gcov is a test coverage program.  Gcov will create a file appended
+with ".gcov" which indicates how many times each line of a source file
+has been executed.  Gcov can optionally also output taken branch
+probabilities.
+
+To use gcov, compile your program with -fprofile-arcs -ftest-coverage,
+run the program, and then run gcov on each source file, for example,
+  gcc -fprofile-arcs -ftest-coverage tmp.c
+  a.out
+  gcov tmp.c
+
+If you use the -b option of gcov, it will write branch probabilities to
+the output file in addition to line execution counts.
+
+Because gcov is line oriented, it works best if you adopt a programming style
+that places only one statement on each line.  It also helps to avoid
+complicated macros that expand to loops or other control structures.  You
+can use inline functions instead of macros to solve this problem.
+
+Although you can use these options with any other GCC options, if you
+want to use this to prove that every single line in your program was executed,
+then you should not compile with optimization at the same time.  This is
+because on some machines the optimizer will be able to eliminate some
+simple code lines by combining them with other lines.  For example, code
+like this:
+  if (a != b)
+    c = 1;
+  else
+    c = 0;
+can be compiled into one instruction on some machines.  In this case,
+there is no way for gcov to calculate separate execution counts for each
+line because there isn't separate code for each line.  Hence the output
+will look like this when compiled with optimization:
+      100  if (a != b)
+      100    c = 1;
+      100  else
+      100    c = 0;
+This is in a sense correct, because there was only one instruction representing
+all 4 of these lines, but it is a little confusing, and does not indicate
+how many times the result was 0 and how many times the result was 1.
+
+Technical details follow.
+
+The -fprofile-arcs option instructs gcc to instrument arcs.  For each
+function of your program, gcc will create a program flow graph, and
+then it finds a spanning tree for the graph.  Only arcs not on the
+spanning tree have to be instrumented, and code is added to count the
+number of times that these arcs are executed.  When an arc is the only
+exit or only entrance to a block, the instrumentation code can be
+added to the block, otherwise, a new basic block must be created to
+hold the instrumentation code.  Since not every arc in the program
+must be instrumented, programs compiled with this option will run
+faster than programs compiled with -a, which adds instrumentation code
+to every basic block in the program.  Another advantage of profiling arcs
+is that it is possible to calculate both branch probabilities and basic
+block execution counts from this info.  In general, basic block execution
+counts does not give you enough info to calculate all branch probabilities.
+When the compiled program exits, it saves the arc execution counts to
+a .da file.
+
+The -ftest-coverage option instructs gcc to also create some data
+files needed by gcov.  The .bb file contains a mapping from basic
+blocks to line numbers, which is used to associate basic block
+execution counts with line numbers.  The .bbg file contains a list of
+all arcs in the program flow graph.  This allows gcov to reconstruct
+the program flow graph, so that it can compute all basic block and arc
+execution counts from the info in the .da file.  Since gcov does not
+have execution counts for all branches, it must start with the
+execution counts for the instrumented branches, and then iterate over
+the program flow graph until the entire graph has been solved.  Hence,
+gcov runs a little slower than a program which uses info from -a.
+
+After running a program compiled with -fprofile-arcs, you can compile
+it a second time using -fbranch-probabilities, which will read in the
+.da file, and put a REG_EXEC_COUNT note on the first insn of each basic
+block, and a REG_BR_PROB note on each JUMP_INSN and CALL_INSN.  These can
+be used to improve optimization.  Currently, these are only used in one
+place, in reorg.c, instead of guessing which path a branch is mostly to
+take, the REG_BR_PROB values are used to exactly determine which path is taken
+more often.
+
+Jim Wilson	Cygnus Support
+wilson@cygnus.com
