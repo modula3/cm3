@@ -1,10 +1,10 @@
 MODULE TestMatrix EXPORTS Test;
-(*Copyright (c) 1996, m3na project
+(**Copyright (c) 1996, m3na project
 Abstract:  Tests for LongRealMatrixBasic module.
 
 1/1/96    <name>   Initial version
 
-*)
+**)
 (*FROM NADefinitions IMPORT Error,Err;*)
 IMPORT (*IO,Wr,Fmt,*)
        LongRealBasic AS R,
@@ -49,12 +49,52 @@ BEGIN
 
   RETURN result;
 END TestMatrixBasic;
+
+(*----------------------*)
+<*FATAL ANY*>
+PROCEDURE TestConstruct():BOOLEAN=
+CONST
+  ftn = Module & "TestConstruct";
+VAR
+  result:=TRUE;
+  b:=V.FromArray(ARRAY OF R.T {1.0D0,2.0D0,3.0D0});
+  bmr:=M.RowFromVector(b);
+  bmc:=M.ColumnFromVector(b);
+  bmd:=M.DiagonalFromVector(b);
+  big:=M.FromMatrixArray(
+    ARRAY OF ARRAY OF M.T{
+      ARRAY [0..1] OF M.T{bmd,bmc},
+      ARRAY [0..1] OF M.T{bmr,M.FromScalar(-1.0D0)}
+    });
+BEGIN
+  Debug(1,ftn,"begin\n");
+
+  Msg("Row(b)=\n" & MF.Fmt(bmr) & "\n");
+  Msg("Column(b)=\n" & MF.Fmt(bmc) & "\n");
+  <*ASSERT M.Equal(bmc,M.Transpose(bmr))*>
+  <*ASSERT M.Equal(M.Transpose(bmc),bmr)*>
+
+  Msg("Diagonal(b)=\n" & MF.Fmt(bmd) & "\n");
+  Msg("Composed \n" & MF.Fmt(big) & "\n");
+  <*ASSERT M.Equal(M.Transpose(big),big)*>
+(*
+  Msg("Composed \n" & MF.Fmt(M.FromMatrixArray(
+    ARRAY OF ARRAY OF M.T{
+      ARRAY OF M.T{bmd,bmc},
+      ARRAY OF M.T{bmr,M.FromScalar(-1.0D0)}
+    })) & "\n");
+*)
+
+  RETURN result;
+END TestConstruct;
+
 (*-------------------------*)
 PROCEDURE TestMatrix():BOOLEAN=
 <*UNUSED*> CONST ftn = Module & "TestMatrix";
 VAR result:=TRUE;
 BEGIN
   NewLine(); EVAL TestMatrixBasic();
+  NewLine(); EVAL TestConstruct();
   RETURN result;
 END TestMatrix;
 (*=======================*)

@@ -85,6 +85,11 @@ may be that xUtils are not imported in one of these modules
 
 ---------------
 
+The "incompatible types" compiler message may be more expressive:
+  incompatible types (arg(2): expected type T0, got type T1)
+
+---------------
+
 It would be of great help, if the compiler tells me with which (implicitly given) declaration the new one conflicts and where it is was done, e.g.
 
 "Rand.m3", line 123: procedure redefined (Uniform), in
@@ -118,7 +123,8 @@ BEGIN
   mat^ := MatrixBody{RowBody{B.Zero,B.One},RowBody{B.One,B.One}};
 
 
-let the compiler abort without a meaningful error report
+This let the compiler abort without a meaningful error report.
+It seems to be a problem with the unknown inner dimension.
 
 ---------------
 
