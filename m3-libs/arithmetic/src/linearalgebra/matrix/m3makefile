@@ -12,7 +12,7 @@ Matrix("LongReal",        "Fast",  "LongRealBasic")
 Matrix("Extended",        "Fast",  "ExtendedBasic")
 Matrix("LongRealComplex", "Basic", "LongRealComplexBasic")
 Matrix("Integer32",       "Basic", "Integer32Basic")
-Matrix("BigInteger",      "Basic", "BigIntegerBasic")
+Matrix("BigInteger",      "Basic", "BigInteger")
 
 generic_module("MatrixTrans")
 MatrixTrans("Real",            "Real",     "Basic", "",        "Basic", "Fast")
@@ -46,7 +46,7 @@ CharPolynomial("LongReal",        "Basic")
 CharPolynomial("Extended",        "Basic")
 CharPolynomial("LongRealComplex", "Fast")
 CharPolynomial("Integer32",       "Basic")
-CharPolynomial("BigInteger",      "Basic")
+CharPolynomial("BigInteger",      "")
 
 generic_module("MatrixFmtLex")
 MatrixFmtLex("Real",            "Fast")
@@ -54,7 +54,7 @@ MatrixFmtLex("LongReal",        "Fast")
 MatrixFmtLex("Extended",        "Fast")
 MatrixFmtLex("LongRealComplex", "Basic")
 MatrixFmtLex("Integer32",       "Basic")
-MatrixFmtLex("BigInteger",      "Basic")
+MatrixFmtLex("BigInteger",      "")
 
 % if you import 'blas' functions like 'e_wsfe' cannot be found
 % if you then switch to 'gslcblas', compile, switch back to 'blas'
