@@ -14,7 +14,9 @@ TYPE
 
   TVBody = ARRAY OF T;
 
-PROCEDURE New (n: CARDINAL): T;  (*make new vector with n components T*)
+PROCEDURE New (n: CARDINAL): T;  (*make new vector with n components*)
+PROCEDURE NewZero (n: CARDINAL): T;  (*make new zero vector with n components*)
+PROCEDURE NewUniform (n: CARDINAL; x:R.T): T;  (*vector with all components set to x*)
 <*INLINE*>
 PROCEDURE FromArray (READONLY x: TBody): T;
 PROCEDURE FromVectorArray (READONLY x: TVBody): T;
