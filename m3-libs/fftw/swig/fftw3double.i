@@ -68,6 +68,10 @@ TYPE
   Plan    <: REFANY;
   Complex = RECORD r, i: LONGREAL; END;
   Sign = [-1..1];
+
+EXCEPTION
+  SizeMismatch;
+
 %}
 
 %insert(m3wrapimpl) %{
@@ -108,14 +112,38 @@ REVEAL
 %typemap(m3wrapargraw)  fftw_complex_array_3d *, fftw_real_array_3d *  %{$input[0,0,0]%};
 %typemap(m3wrapargraw)  fftw_complex_tensor   *, fftw_real_tensor   *  %{$input%};
 
-%typemap(m3wrapinmode)  fftw_complex_array_1d *,
-                        fftw_complex_array_2d *,
-                        fftw_complex_array_3d *,
-			fftw_real_array_1d *,
-                        fftw_real_array_2d *,
-                        fftw_real_array_3d *
-			  "";
+%typemap(m3wrapinmode)
+	fftw_complex_array_1d *, fftw_real_array_1d *,
+	fftw_complex_array_2d *, fftw_real_array_2d *,
+	fftw_complex_array_3d *, fftw_real_array_3d *
+	  "";
 
+%typemap(m3wrapintype,numinputs=0) int n, int nx, int ny, int nz %{%}
+%typemap(m3wrapargvar) int n, int nx, int ny, int nz %{$input: CARDINAL;%}
+
+%typemap(m3wrapincheck) fftw_complex_array_1d *in, fftw_real_array_1d *in
+  %{n := NUMBER($input^);%};
+%typemap(m3wrapincheck) fftw_complex_array_2d *in, fftw_real_array_2d *in
+  %{nx := NUMBER($input^); ny := NUMBER($input[0]);%};
+%typemap(m3wrapincheck) fftw_complex_array_3d *in, fftw_real_array_3d *in
+  %{nx := NUMBER($input^); ny := NUMBER($input[0]); nz := NUMBER($input[0,0]);%};
+%typemap(m3wrapincheck) fftw_complex_tensor   *in, fftw_real_tensor   *in
+  %{$input%};
+
+%typemap(m3wrapincheck) fftw_complex_array_1d *out, fftw_real_array_1d *out
+  %{IF n # NUMBER($input^) THEN RAISE SizeMismatch; END;%};
+%typemap(m3wrapincheck) fftw_complex_array_2d *out, fftw_real_array_2d *out
+  %{IF nx # NUMBER($input^) OR ny # NUMBER($input[0]) THEN RAISE SizeMismatch; END;%};
+%typemap(m3wrapincheck) fftw_complex_array_3d *out, fftw_real_array_3d *out
+  %{IF nx # NUMBER($input^) OR ny # NUMBER($input[0]) OR nz # NUMBER($input[0,0]) THEN RAISE SizeMismatch; END;%};
+%typemap(m3wrapincheck) fftw_complex_tensor   *out, fftw_real_tensor   *out
+  %{$input%};
+
+%typemap("m3wrapincheck:throws")
+	fftw_complex_array_1d *out, fftw_real_array_1d *out,
+	fftw_complex_array_2d *out, fftw_real_array_2d *out,
+	fftw_complex_array_3d *out, fftw_real_array_3d *out
+	  "SizeMismatch";
 
 %typemap(m3wrapintype)  void  * %{REFANY%};
 %typemap(m3wraprettype) void  * %{REFANY%};
