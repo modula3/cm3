@@ -19,22 +19,22 @@ VAR
   w:T;
 BEGIN
   TRY
-    WHILE NOT R.IsZero(u) DO
-      w:=R.Mod(v,u);
-      v:=u;
-      u:=w;
+    WHILE NOT R.IsZero(v) DO
+      w:=R.Mod(u,v);
+      u:=v;
+      v:=w;
     END;
   (*
-    WHILE u#0 DO
-      w:=v MOD u;
-      v:=u;
-      u:=w;
+    WHILE v#0 DO
+      w:=u MOD v;
+      u:=v;
+      v:=w;
     END;
   *)
   EXCEPT
     Error(err) => <*ASSERT err#Err.divide_by_zero*>
   END;
-  RETURN v;
+  RETURN u;
 END GCD;
 
 PROCEDURE LCM(u,v:T):T =
