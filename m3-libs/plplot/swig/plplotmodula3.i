@@ -1,6 +1,5 @@
 /* 
-Copyright 2002 Gary Bishop
-Copyright 2002 Alan W. Irwin
+Copyright 2003 Henning Thielemann
 This file is part of PLplot.
 
 This file is free software; you can redistribute it and/or modify
@@ -29,11 +28,11 @@ A SWIG interface to PLplot for Modula3. This wrapper does the following:
    3) it works both with the single and double-precision versions of the
       PLplot library.
 
-This is known to work with swig-1.3.17 on Linux.
+This is known to work with swig-1.3.20 on Linux.
 
 */
 %module PLPlot
-%include typemaps.i
+//%include typemaps.i
 
 %{
 #include "plplotP.h"      
@@ -54,6 +53,8 @@ typedef int PLINT;
 %define DOC(func, string) 
 %wrapper %{#define _doc_ ## func string %}
 %enddef
+
+%pragma(modula3) enumitem="Escape,PLESC_";
 
 %rename("arrows") plarrows;
 %rename("sxwin") plsxwin;
