@@ -126,8 +126,7 @@ IO.Put("   exp " & Fmt.Int(exp));
 IO.Put("   diff " & Fmt.Int(diff));
 IO.Put("   indep " & Fmt.Bool(UU.Flags.independent IN uu.head.flags));
 IO.Put("   isFirst " & Fmt.Bool(isFirst) & "\n");
-      IF (diff<minDiff OR
-          (diff<=minDiff AND ABS(exp)<ABS(minExp))) AND
+      IF (diff<minDiff) AND
          (NOT UU.Flags.independent IN uu.head.flags OR
           (isFirst AND diff=0)) THEN
         minDiff := diff;
