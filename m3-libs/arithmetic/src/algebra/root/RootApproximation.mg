@@ -6,7 +6,7 @@ Abstract: Implementation of Root.
 1/28/96    Harry George    Initial version, from earlier work
 2/17/96    Harry George    Converted from OO to ADT format
 *)
-FROM xUtils IMPORT Error,Err;
+FROM xUtils IMPORT Error;
 (*
 IMPORT LongRealComplexVectorFmtLex AS VF,
        LongRealComplexFmtLex AS CF,
@@ -14,6 +14,7 @@ IMPORT LongRealComplexVectorFmtLex AS VF,
        IO;
 *)
 
+<*UNUSED*>
 CONST Module = "RootApproximation.";
 (*==========================*)
 (*=====================*)
@@ -58,7 +59,7 @@ BEGIN
 END RealQuadratic;
 (*---------------------*)
 PROCEDURE ComplexQuadratic(READONLY x:ComplexPolynomial2;     (*coefs*)
-                           ):RootArray2=
+                           ):RootArray2 RAISES {Error}=
 (*Given a*t^2+b*t+c=0, solve for t.*)
 CONST
   c4=FLOAT(4.0,R.T);
@@ -81,7 +82,7 @@ BEGIN
   RETURN RootArray2{C.Div(q,a),C.Div(c,q)};
 END ComplexQuadratic;
 (*---------------------*)
-PROCEDURE RealNewtonMaehli   (x:RRt.T):REF CRt.RootArray=
+PROCEDURE RealNewtonMaehli   (x:RRt.T):REF CRt.RootArray RAISES {Error}=
 VAR
   xc:=NEW(CRt.T,NUMBER(x^));
 BEGIN
@@ -91,10 +92,10 @@ BEGIN
   RETURN ComplexNewtonMaehli(xc);
 END RealNewtonMaehli;
 (*---------------------*)
-PROCEDURE ComplexNewtonMaehli(x:CRt.T):REF CRt.RootArray=
-VAR
-  (*CONST*) maxArgError := RT.Eps*FLOAT(10.0,R.T);  (* error in the argument r *)
-  (*CONST*) maxValError := RT.Eps*FLOAT(100.0,R.T);  (* error in the value p(r) *)
+PROCEDURE ComplexNewtonMaehli(x:CRt.T):REF CRt.RootArray RAISES {Error}=
+CONST maxArgError = RT.Eps*FLOAT(10.0,R.T);  (* error in the argument r *)
+<*UNUSED*>
+CONST maxValError = RT.Eps*FLOAT(100.0,R.T);  (* error in the value p(r) *)
 VAR
   z:=NEW(REF CRt.RootArray,LAST(x^));
   maxIter:=100;

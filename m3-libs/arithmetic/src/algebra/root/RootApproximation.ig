@@ -24,13 +24,13 @@ PROCEDURE RealQuadratic   (READONLY x:RealPolynomial2;        (*coefs*)
 (*Given a*x^2+b*x+c=0, solve for x.*)
 (*------------------*)
 PROCEDURE ComplexQuadratic(READONLY x:ComplexPolynomial2;     (*coefs*)
-                           ):RootArray2;
+                           ):RootArray2 RAISES {Error};
 (*Given a*x^2+b*x+c=0, solve for x.*)
 
 
 (*------------------*)
-PROCEDURE RealNewtonMaehli   (x:RRt.T):REF CRt.RootArray;
-PROCEDURE ComplexNewtonMaehli(x:CRt.T):REF CRt.RootArray;
+PROCEDURE RealNewtonMaehli   (x:RRt.T):REF CRt.RootArray RAISES {Error};
+PROCEDURE ComplexNewtonMaehli(x:CRt.T):REF CRt.RootArray RAISES {Error};
 (*determine all roots of a polynomial with a variant
   of the Newton-Maehli method,
   that is the roots are not removed successively
