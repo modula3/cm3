@@ -1,0 +1,6 @@
+import("libm3")
+
+module("PhysicalUnit")
+%module("PhysicalUnitValue")
+%module("PhysicalUnitFmtLex")
+%module("SIUnitValue")
