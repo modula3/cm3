@@ -63,8 +63,7 @@ typedef int PLINT;
 
 %insert(m3makefile) %{% compiled / works with with CM3 5.2.6 2002-05-18
 %import_lib("plplotd","/usr/lib")
-import_lib("plplotd","/home/thielema/applications/plplot/lib")
-import("m3na")%}
+import_lib("plplotd","/home/thielema/applications/plplot/lib")%}
 
 %insert(m3rawintf) %{
 TYPE
@@ -84,6 +83,14 @@ improper types.
 whereever possible to increase safety for parameter passing.
 We should use exceptions to indicate errors.
 * * * *)
+
+TYPE
+Float = LONGREAL;
+FloatVector = ARRAY OF Float;
+FloatMatrix = ARRAY OF ARRAY OF Float;
+
+EXCEPTION
+SizeMismatch;
 %}
 
 
@@ -286,18 +293,16 @@ We should use exceptions to indicate errors.
 %typemap("m3rawinmode")   PLFLTArray %{READONLY%}
 %typemap("m3wrapinmode")  PLFLTArray %{READONLY%}
 %typemap("m3rawintype")   PLFLTArray %{(*ARRAY OF*) C.double%}
-%typemap("m3wrapintype")  PLFLTArray %{V.TBody%}
+%typemap("m3wrapintype")  PLFLTArray %{FloatVector%}
 %typemap("m3wrapargraw")  PLFLTArray %{$1_name[0]%}
-%typemap("m3wrapintype:import") PLFLTArray %{LongRealVector AS V%}
 
 %typemap("m3wrapargvar")  PLFLTArrayFst %{n:=NUMBER($1_name);%}
 %typemap("m3wrapargvar")  PLFLTArrayX   %{nx:=NUMBER($1_name);%}
 %typemap("m3wrapargvar")  PLFLTArrayY   %{ny:=NUMBER($1_name);%}
-//%typemap("m3wrapincheck") PLFLTArrayX   %{IF NUMBER($1_name) # nx THEN RAISE NA.Error(NA.Err.bad_size) END;%}
-//%typemap("m3wrapincheck") PLFLTArrayY   %{IF NUMBER($1_name) # ny THEN RAISE NA.Error(NA.Err.bad_size) END;%}
-%typemap("m3wrapincheck") PLFLTArrayCk  %{IF NUMBER($1_name) # n THEN RAISE NA.Error(NA.Err.bad_size) END;%}
-%typemap("m3wrapincheck:throws") PLFLTArrayCk %{NA.Error%}
-%typemap("m3wrapincheck:throws:import") PLFLTArrayCk %{NADefinitions AS NA%}
+//%typemap("m3wrapincheck") PLFLTArrayX   %{IF NUMBER($1_name) # nx THEN RAISE SizeMismatch END;%}
+//%typemap("m3wrapincheck") PLFLTArrayY   %{IF NUMBER($1_name) # ny THEN RAISE SizeMismatch END;%}
+%typemap("m3wrapincheck") PLFLTArrayCk  %{IF NUMBER($1_name) # n THEN RAISE SizeMismatch END;%}
+%typemap("m3wrapincheck:throws") PLFLTArrayCk %{SizeMismatch%}
 
 
 %typemap("m3rawinmode")   PLINTArray %{READONLY%}
@@ -307,18 +312,17 @@ We should use exceptions to indicate errors.
 %typemap("m3wrapargraw")  PLINTArray %{$1_name[0]%}
 
 %typemap("m3wrapargvar")  PLINTArrayFst %{n:=NUMBER($1_name);%}
-%typemap("m3wrapincheck") PLINTArrayCk  %{IF NUMBER($1_name) # n THEN RAISE NA.Error(NA.Err.bad_size) END;%}
-%typemap("m3wrapincheck") PLINTArrayCkInterim %{IF NUMBER($1_name) # n-1 THEN RAISE NA.Error(NA.Err.bad_size) END;%}
-%typemap("m3wrapincheck:throws") PLINTArrayCk        %{NA.Error%}
-%typemap("m3wrapincheck:throws") PLINTArrayCkInterim %{NA.Error%}
+%typemap("m3wrapincheck") PLINTArrayCk  %{IF NUMBER($1_name) # n THEN RAISE SizeMismatch END;%}
+%typemap("m3wrapincheck") PLINTArrayCkInterim %{IF NUMBER($1_name) # n-1 THEN RAISE SizeMismatch END;%}
+%typemap("m3wrapincheck:throws") PLINTArrayCk        %{SizeMismatch%}
+%typemap("m3wrapincheck:throws") PLINTArrayCkInterim %{SizeMismatch%}
 
 
 %typemap("m3rawinmode")   PLFLTMatrix %{READONLY%}
 %typemap("m3wrapinmode")  PLFLTMatrix %{READONLY%}
 %typemap("m3rawintype")   PLFLTMatrix %{(*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*)%}
-%typemap("m3wrapintype")  PLFLTMatrix %{M.TBody%}
+%typemap("m3wrapintype")  PLFLTMatrix %{FloatMatrix%}
 %typemap("m3wrapargraw")  PLFLTMatrix %{$1[0]%}
-%typemap("m3wrapintype:import") PLFLTMatrix %{LongRealMatrix AS M%}
 
 %typemap("m3wrapintype",numinputs=0) PLArraySize nx %{%}
 %typemap("m3wrapintype",numinputs=0) PLArraySize ny %{%}
@@ -335,9 +339,9 @@ FOR i:=0 TO LAST($1_name) DO $1[i] := ADR($1_name[i,0]) END;%}
 %{$1:=NEW(REF ARRAY OF ADDRESS,NUMBER($1_name));
 FOR i:=0 TO LAST($1_name) DO $1[i] := ADR($1_name[i,0]) END;%}
 %typemap("m3wrapincheck") PLFLTMatrixCk
-%{IF NUMBER($1_name) # nx THEN RAISE NA.Error(NA.Err.bad_size) END;
-IF NUMBER($1_name[0]) # ny THEN RAISE NA.Error(NA.Err.bad_size) END;%}
-%typemap("m3wrapincheck:throws") PLFLTMatrixCk %{NA.Error%}
+%{IF NUMBER($1_name) # nx THEN RAISE SizeMismatch END;
+IF NUMBER($1_name[0]) # ny THEN RAISE SizeMismatch END;%}
+%typemap("m3wrapincheck:throws") PLFLTMatrixCk %{SizeMismatch%}
 
 
 
@@ -385,7 +389,7 @@ PROCEDURE CallbackM3()=BEGIN END CallbackM3;
 %typemap(m3rawintype)   char *legline[4] %{ARRAY [0..3] OF C.char_star%}
 %typemap(m3wrapintype)  char *legline[4] %{ARRAY [0..3] OF TEXT%}
 %typemap(m3wrapargvar)  char *legline[4] %{$1: ARRAY [0..3] OF C.char_star;%}
-%typemap("m3wrapargdecl:import") char *legline[4] "Ctypes AS C"
+%typemap("m3wrapargvar:import") char *legline[4] "Ctypes AS C"
 %typemap(m3wrapinconv)  char *legline[4]
 %{FOR i:=FIRST($1_name) TO LAST($1_name) DO
 $1[i]:=M3toC.SharedTtoS($1_name[i]);
@@ -486,12 +490,10 @@ TYPE
 %typemap(m3rawintype)   char **argv   %{(*ARRAY OF*) C.char_star%}
 %typemap(m3wrapintype)  char **argv   %{ARRAY OF TEXT%}
 
-%typemap("m3wrapintype")         PLFLT "R.T"
-%typemap("m3wrapintype:import")  PLFLT "LongRealBasic AS R"
+%typemap("m3wrapintype")         PLFLT "Float"
 
 %typemap("m3wrapargdir")         PLFLTOutput "out"
-%typemap("m3wrapouttype")        PLFLTOutput "R.T"
-%typemap("m3wrapouttype:import") PLFLTOutput "LongRealBasic AS R"
+%typemap("m3wrapouttype")        PLFLTOutput "Float"
 
 %typemap("m3wrapargdir")  PLINTOutput "out"
 %typemap("m3wrapargvar")  PLINTOutput %{$1: C.int;%}
@@ -499,9 +501,9 @@ TYPE
 %typemap("m3wrapoutconv") PLINTOutput %{$1%}
 %typemap("m3wrapouttype") PLINTOutput %{INTEGER%}
 /*this is a workaround and can be removed sometimes, I hope*/
-%typemap("m3outvar")  PLINTOutput %{$1_name:C.int%}
+%typemap("m3outvar")      PLINTOutput %{$1_name:C.int%}
 %typemap("m3wrapoutname") PLINTOutput %{$1_name%}
-%typemap("m3outdecl:import") PLINTOutput %{Ctypes AS C%}
+%typemap("m3outvar:import") PLINTOutput %{Ctypes AS C%}
 
 %typemap(m3wrapargraw) char %{ORD($1_name)%}
 

@@ -7,10 +7,6 @@
  *******************************************************************************)
 
 INTERFACE PLPlot;
-IMPORT LongRealBasic AS R;
-IMPORT LongRealVector AS V;
-IMPORT NADefinitions AS NA;
-IMPORT LongRealMatrix AS M;
 
 TYPE
 
@@ -36,6 +32,13 @@ TYPE
    enumerations, sets, subranges whereever possible to increase safety for
    parameter passing.  We should use exceptions to indicate errors.  * *
    * *)
+
+TYPE
+  Float = LONGREAL;
+  FloatVector = ARRAY OF Float;
+  FloatMatrix = ARRAY OF ARRAY OF Float;
+
+EXCEPTION SizeMismatch;
 
 
 TYPE
@@ -98,7 +101,7 @@ CONST
 PROCEDURE SetContLabelFormat (lexp, sigdig: INTEGER; );
 
 (* pl_setcontlabelparam: "Set offset and spacing of contour labels." *)
-PROCEDURE SetContLabelParam (offset, size, spacing: R.T; active: INTEGER; );
+PROCEDURE SetContLabelParam (offset, size, spacing: Float; active: INTEGER; );
 
 (* pladv: "Advance to subpage \"page\", or to the next one if \"page\" =
    0." *)
@@ -106,42 +109,42 @@ PROCEDURE Advance (page: INTEGER; );
 
 (* plaxes: "This functions similarly to plbox() except that the origin of
    the axes is placed at the user-specified point (x0, y0)." *)
-PROCEDURE DrawAxes (x0, y0: R.T;
+PROCEDURE DrawAxes (x0, y0: Float;
                     xopt  : DirTileSet;
-                    xtick : R.T;
+                    xtick : Float;
                     nxsub : INTEGER;
                     yopt  : DirTileSet;
-                    ytick : R.T;
+                    ytick : Float;
                     nysub : INTEGER;    );
 
 (* plbin: "Plot a histogram using x to store data values and y to store
    frequencies." *)
-PROCEDURE PlotBins (READONLY x, y: V.TBody; center: INTEGER; )
-  RAISES {NA.Error};
+PROCEDURE PlotBins (READONLY x, y: FloatVector; center: INTEGER; )
+  RAISES {SizeMismatch};
 
 (* plbop: "Start new page.  Should only be used with pleop()." *)
 PROCEDURE StartPage ();
 
 (* plbox: "Draw a box around the current viewport." *)
 PROCEDURE DrawBox (xopt : DirTileSet;
-                   xtick: R.T;
+                   xtick: Float;
                    nxsub: INTEGER;
                    yopt : DirTileSet;
-                   ytick: R.T;
+                   ytick: Float;
                    nysub: INTEGER;    );
 
 (* plbox3: "This is the 3-d analogue of plbox()." *)
 PROCEDURE DrawBox3D (xopt  : DirTileSet;
                      xlabel: TEXT;
-                     xtick : R.T;
+                     xtick : Float;
                      nsubx : INTEGER;
                      yopt  : DirTileSet;
                      ylabel: TEXT;
-                     ytick : R.T;
+                     ytick : Float;
                      nsuby : INTEGER;
                      zopt  : DirTileSet;
                      zlabel: TEXT;
-                     ztick : R.T;
+                     ztick : Float;
                      nsubz : INTEGER;    );
 
 (* plPLFLTMatrix: "Calculate world coordinates and subpage from relative
@@ -149,10 +152,10 @@ PROCEDURE DrawBox3D (xopt  : DirTileSet;
 
 TYPE
   CalcWorldResult = RECORD
-                      wx, wy: R.T;
+                      wx, wy: Float;
                       window: INTEGER;
                     END;
-PROCEDURE CalcWorld (rx, ry: R.T; ): CalcWorldResult;
+PROCEDURE CalcWorld (rx, ry: Float; ): CalcWorldResult;
 
 (* plclear: "Clear current subpage." *)
 PROCEDURE Clear ();
@@ -161,12 +164,12 @@ PROCEDURE Clear ();
 PROCEDURE SetFGColorDiscr (icol0: INTEGER; );
 
 (* plcol1: "Set color, map 1.  Argument is a float between 0.  and 1." *)
-PROCEDURE SetFGColorCont (col1: R.T; );
+PROCEDURE SetFGColorCont (col1: Float; );
 
 (* plcont: "Draw a contour plot." *)
-PROCEDURE PlotContour (READONLY z             : M.TBody;
+PROCEDURE PlotContour (READONLY z             : FloatMatrix;
                                 kx, lx, ky, ly: INTEGER;
-                       READONLY x             : V.TBody;
+                       READONLY x             : FloatVector;
                                 pltr          : CallbackM3Proc;
                                 OBJECT_DATA   : REFANY;         );
 
@@ -181,7 +184,7 @@ PROCEDURE ExitAll ();
 PROCEDURE Exit ();
 
 (* plenv: "Simple interface for defining viewport and window." *)
-PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: R.T;
+PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: Float;
                           just: AxesScaling := AxesScaling.independent;
                           axis: TileSet := TileSet{Tile.box, Tile.ticks}; );
 
@@ -190,19 +193,22 @@ PROCEDURE StopPage ();
 
 (* plerrx: "Plot horizontal error bars (xmin(i),y(i)) to
    (xmax(i),y(i))." *)
-PROCEDURE PlotErrorX (READONLY xmin, xmax, y: V.TBody; ) RAISES {NA.Error};
+PROCEDURE PlotErrorX (READONLY xmin, xmax, y: FloatVector; )
+  RAISES {SizeMismatch};
 
 (* plerry: "Plot vertical error bars (x,ymin(i)) to (x(i),ymax(i))." *)
-PROCEDURE PlotErrorY (READONLY x, ymin, ymax: V.TBody; ) RAISES {NA.Error};
+PROCEDURE PlotErrorY (READONLY x, ymin, ymax: FloatVector; )
+  RAISES {SizeMismatch};
 
 (* plfamadv: "Advance to the next family file on the next new page." *)
 PROCEDURE AdvanceFamily ();
 
 (* plfill: "Pattern fills the polygon bounded by the input points." *)
-PROCEDURE FillPolygon (READONLY x, y: V.TBody; ) RAISES {NA.Error};
+PROCEDURE FillPolygon (READONLY x, y: FloatVector; ) RAISES {SizeMismatch};
 
 (* plfill3: "Pattern fills the 3d polygon bounded by the input points." *)
-PROCEDURE FillPolygon3D (READONLY x, y, z: V.TBody; ) RAISES {NA.Error};
+PROCEDURE FillPolygon3D (READONLY x, y, z: FloatVector; )
+  RAISES {SizeMismatch};
 
 (* plflush: "Flush the output stream.  Use sparingly, if at all." *)
 PROCEDURE Flush ();
@@ -215,7 +221,7 @@ PROCEDURE LoadFont (fnt: INTEGER; );
 
 (* plgchr: "Get character default height and current (scaled) height." *)
 
-TYPE GetCharacterHeightResult = RECORD def, ht: R.T;  END;
+TYPE GetCharacterHeightResult = RECORD def, ht: Float;  END;
 PROCEDURE GetCharacterHeight (): GetCharacterHeightResult;
 
 (* plgcol0: "Get 8 bit RGB values for given color from color map 0." *)
@@ -233,15 +239,15 @@ PROCEDURE GetCompression (): INTEGER;
 
 (* plgdidev: "Retrieve current window into device space." *)
 
-TYPE GetWindowDeviceResult = RECORD mar, aspect, jx, jy: R.T;  END;
+TYPE GetWindowDeviceResult = RECORD mar, aspect, jx, jy: Float;  END;
 PROCEDURE GetWindowDevice (): GetWindowDeviceResult;
 
 (* plgdiori: "Get plot orientation." *)
-PROCEDURE GetOrientation (): R.T;
+PROCEDURE GetOrientation (): Float;
 
 (* plgdiplt: "Retrieve current window into plot space." *)
 
-TYPE GetWindowPlotResult = RECORD xmin, ymin, xmax, ymax: R.T;  END;
+TYPE GetWindowPlotResult = RECORD xmin, ymin, xmax, ymax: Float;  END;
 PROCEDURE GetWindowPlot (): GetWindowPlotResult;
 
 (* plgfam: "Get family file parameters." *)
@@ -256,7 +262,7 @@ PROCEDURE GetRunLevel (): INTEGER;
 
 TYPE
   GetOutputDeviceParamResult = RECORD
-                                 xp, yp                  : R.T;
+                                 xp, yp                  : Float;
                                  xleng, yleng, xoff, yoff: INTEGER;
                                END;
 PROCEDURE GetOutputDeviceParam (): GetOutputDeviceParamResult;
@@ -266,7 +272,7 @@ PROCEDURE ShowGraphicScreen ();
 
 (* plgspa: "Get subpage boundaries in absolute coordinates." *)
 
-TYPE GetBoundariesResult = RECORD xmin, xmax, ymin, ymax: R.T;  END;
+TYPE GetBoundariesResult = RECORD xmin, xmax, ymin, ymax: Float;  END;
 PROCEDURE GetBoundaries (): GetBoundariesResult;
 
 (* plgstrm: "Get current stream number." *)
@@ -274,12 +280,12 @@ PROCEDURE GetStream (): INTEGER;
 
 (* plgvpd: "Get viewport boundaries in normalized device coordinates." *)
 
-TYPE GetVPBoundDevResult = RECORD xmin, xmax, ymin, ymax: R.T;  END;
+TYPE GetVPBoundDevResult = RECORD xmin, xmax, ymin, ymax: Float;  END;
 PROCEDURE GetVPBoundDev (): GetVPBoundDevResult;
 
 (* plgvpw: "Get viewport boundaries in world coordinates." *)
 
-TYPE GetVPBoundWorldResult = RECORD xmin, xmax, ymin, ymax: R.T;  END;
+TYPE GetVPBoundWorldResult = RECORD xmin, xmax, ymin, ymax: Float;  END;
 PROCEDURE GetVPBoundWorld (): GetVPBoundWorldResult;
 
 (* plgxax: "Get x axis labeling parameters." *)
@@ -298,90 +304,92 @@ TYPE GetZLabelParamResult = RECORD digmax, digits: INTEGER;  END;
 PROCEDURE GetZLabelParam (): GetZLabelParamResult;
 
 (* plhist: "Draw histogram." *)
-PROCEDURE PlotHistogram (READONLY x             : V.TBody;
-                                  datmin, datmax: R.T;
+PROCEDURE PlotHistogram (READONLY x             : FloatVector;
+                                  datmin, datmax: Float;
                                   nbin          : INTEGER;
-                                  oldwin        : INTEGER   := 0; );
+                                  oldwin        : INTEGER       := 0; );
 
 (* plhls: "Set current color (map 0) by hue, lightness, and saturation." *)
-PROCEDURE SetColorHLS (h, l, s: R.T; );
+PROCEDURE SetColorHLS (h, l, s: Float; );
 
 (* plinit: "Initialize PLplot, using preset or default options." *)
 PROCEDURE Init ();
 
 (* pljoin: "Draw a line segment from (x1, y1) to (x2, y2)." *)
-PROCEDURE PlotLineSegment (x1, y1, x2, y2: R.T; );
+PROCEDURE PlotLineSegment (x1, y1, x2, y2: Float; );
 
 (* pllab: "Label graphs." *)
 PROCEDURE SetLabels (xlabel, ylabel, tlabel: TEXT; );
 
 (* pllightsource: "Set position of the light source." *)
-PROCEDURE SetLightPos (x, y, z: R.T; );
+PROCEDURE SetLightPos (x, y, z: Float; );
 
 (* plline: "Draw line segments connecting a series of points." *)
-PROCEDURE PlotLines (READONLY x, y: V.TBody; ) RAISES {NA.Error};
+PROCEDURE PlotLines (READONLY x, y: FloatVector; ) RAISES {SizeMismatch};
 
 (* plline3: "Draw a line in 3 space." *)
-PROCEDURE PlotLines3D (READONLY x, y, z: V.TBody; ) RAISES {NA.Error};
+PROCEDURE PlotLines3D (READONLY x, y, z: FloatVector; )
+  RAISES {SizeMismatch};
 
 (* pllsty: "Set line style." *)
 PROCEDURE SetLineStyle (lin: [LineStyle.continuous .. LAST(LineStyle)]; );
 
 (* plmesh: "Plot a 3-d mesh representation of z[x][y]." *)
-PROCEDURE PlotMesh (READONLY x, y: V.TBody;
-                    READONLY z   : M.TBody;
-                             opt : INTEGER; ) RAISES {NA.Error};
+PROCEDURE PlotMesh (READONLY x, y: FloatVector;
+                    READONLY z   : FloatMatrix;
+                             opt : INTEGER;     ) RAISES {SizeMismatch};
 
 (* plmeshc: "Plot a 3-d contoured mesh representation of the function
    z[x][y]." *)
-PROCEDURE PlotMeshColored (READONLY x, y  : V.TBody;
-                           READONLY z     : M.TBody;
+PROCEDURE PlotMeshColored (READONLY x, y  : FloatVector;
+                           READONLY z     : FloatMatrix;
                                     opt   : INTEGER;
-                           READONLY clevel: V.TBody; ) RAISES {NA.Error};
+                           READONLY clevel: FloatVector; )
+  RAISES {SizeMismatch};
 
 (* plmkstrm: "Create a new stream and makes it the default." *)
 PROCEDURE CreateStream (): INTEGER;
 
 (* plmtex: "Print \"text\" at specified position relative to viewport." *)
-PROCEDURE PrintTextVP (side: TEXT; disp, pos, just: R.T; text: TEXT; );
+PROCEDURE PrintTextVP (side: TEXT; disp, pos, just: Float; text: TEXT; );
 
 (* plot3d: "Plot a 3-d representation of the function z[x][y]." *)
-PROCEDURE Plot3D (READONLY x, y     : V.TBody;
-                  READONLY z        : M.TBody;
-                           opt, side: INTEGER; ) RAISES {NA.Error};
+PROCEDURE Plot3D (READONLY x, y     : FloatVector;
+                  READONLY z        : FloatMatrix;
+                           opt, side: INTEGER;     ) RAISES {SizeMismatch};
 
 (* plot3dc: "Plot a 3-d contoured representation of the function
    z[x][y]." *)
-PROCEDURE Plot3DC (READONLY x, y  : V.TBody;
-                   READONLY z     : M.TBody;
+PROCEDURE Plot3DC (READONLY x, y  : FloatVector;
+                   READONLY z     : FloatMatrix;
                             opt   : INTEGER;
-                   READONLY clevel: V.TBody; ) RAISES {NA.Error};
+                   READONLY clevel: FloatVector; ) RAISES {SizeMismatch};
 
 (* plsurf3d: "Plot a 3-d contoured surface representation of the function
    z[x][y]." *)
-PROCEDURE Surface3D (READONLY x, y  : V.TBody;
-                     READONLY z     : M.TBody;
+PROCEDURE Surface3D (READONLY x, y  : FloatVector;
+                     READONLY z     : FloatMatrix;
                               opt   : INTEGER;
-                     READONLY clevel: V.TBody; ) RAISES {NA.Error};
+                     READONLY clevel: FloatVector; ) RAISES {SizeMismatch};
 
 (* plpat: "Set fill pattern directly." *)
 PROCEDURE SetFillPattern (READONLY inc, del: ARRAY OF INTEGER; )
-  RAISES {NA.Error};
+  RAISES {SizeMismatch};
 
 (* plpoin: "Plot array y against x for n points using ASCII code
    \"code\"." *)
-PROCEDURE PlotPoints (READONLY x, y: V.TBody; code: INTEGER; )
-  RAISES {NA.Error};
+PROCEDURE PlotPoints (READONLY x, y: FloatVector; code: INTEGER; )
+  RAISES {SizeMismatch};
 
 (* plpoin3: "Draw a series of points in 3 space." *)
-PROCEDURE PlotPoints3D (READONLY x, y, z: V.TBody; code: INTEGER; )
-  RAISES {NA.Error};
+PROCEDURE PlotPoints3D (READONLY x, y, z: FloatVector; code: INTEGER; )
+  RAISES {SizeMismatch};
 
 (* plpoly3: "Draw a polygon in 3 space.  " *)
-PROCEDURE PlotPolygon3D (READONLY x, y, z: V.TBody;
+PROCEDURE PlotPolygon3D (READONLY x, y, z: FloatVector;
                          READONLY draw   : ARRAY OF INTEGER;
                                   flag   : INTEGER;          )
-  RAISES {NA.Error};
+  RAISES {SizeMismatch};
 
 (* plprec: "Set the floating point precision (in number of places) in
    numeric labels." *)
@@ -391,32 +399,32 @@ PROCEDURE SetLabelPrecision (setp, prec: INTEGER; );
 PROCEDURE SetFillStyle (patt: INTEGER; );
 
 (* plptex: "Print \"text\" at world coordinate (x,y)." *)
-PROCEDURE PrintTextWorld (x, y, dx, dy, just: R.T; text: TEXT; );
+PROCEDURE PrintTextWorld (x, y, dx, dy, just: Float; text: TEXT; );
 
 (* plreplot: "Replay contents of plot buffer to current device/file." *)
 PROCEDURE Replot ();
 
 (* plschr: "Set character height." *)
-PROCEDURE SetCharacterHeight (def, scale: R.T; );
+PROCEDURE SetCharacterHeight (def, scale: Float; );
 
 (* plscmap0: "Set color map 0 colors by 8 bit RGB values." *)
 PROCEDURE SetColorMapDiscr (READONLY r, g, b: ARRAY OF INTEGER; )
-  RAISES {NA.Error};
+  RAISES {SizeMismatch};
 
 (* plscmap0n: "Set number of colors in cmap 0." *)
 PROCEDURE SetColorMapDiscrSize (ncol0: INTEGER; );
 
 (* plscmap1: "Set color map 1 colors by 8 bit RGB values." *)
 PROCEDURE SetColorMapCont (READONLY r, g, b: ARRAY OF INTEGER; )
-  RAISES {NA.Error};
+  RAISES {SizeMismatch};
 
 (* plscmap1l: "Set color map 1 colors using a piece-wise linear
    relationship between intensity [0,1] (cmap 1 index) and position in HLS
    or RGB color space." *)
 PROCEDURE SetColorCont (         itype                      : INTEGER;
-                        READONLY pos, coord1, coord2, coord3: V.TBody;
+                        READONLY pos, coord1, coord2, coord3: FloatVector;
                         READONLY rev: ARRAY OF INTEGER; )
-  RAISES {NA.Error};
+  RAISES {SizeMismatch};
 
 (* plscmap1n: "Set number of colors in cmap 1." *)
 PROCEDURE SetColorMapContSize (ncol1: INTEGER; );
@@ -438,21 +446,21 @@ PROCEDURE SetDevice (devname: TEXT; );
 
 (* plsdidev: "Set window into device space using margin, aspect ratio, and
    justification." *)
-PROCEDURE SetWindowDevice (mar, aspect, jx, jy: R.T; );
+PROCEDURE SetWindowDevice (mar, aspect, jx, jy: Float; );
 
 (* plsdimap: "Set up transformation from metafile coordinates." *)
 PROCEDURE LoadTransformation (dimxmin, dimxmax, dimymin, dimymax: INTEGER;
-                              dimxpmm, dimypmm                  : R.T;     );
+                              dimxpmm, dimypmm                  : Float;   );
 
 (* plsdiori: "Set plot orientation, specifying rotation in units of
    pi/2." *)
-PROCEDURE SetOrientation (rot: R.T; );
+PROCEDURE SetOrientation (rot: Float; );
 
 (* plsdiplt: "Set window into plot space." *)
-PROCEDURE SetWindowPlot (xmin, ymin, xmax, ymax: R.T; );
+PROCEDURE SetWindowPlot (xmin, ymin, xmax, ymax: Float; );
 
 (* plsdiplz: "Set window into plot space incrementally (zoom)." *)
-PROCEDURE ZoomWindow (xmin, ymin, xmax, ymax: R.T; );
+PROCEDURE ZoomWindow (xmin, ymin, xmax, ymax: Float; );
 
 (* plsesc: "Set the escape character for text strings." *)
 PROCEDURE SetEscapeChar (esc: CHAR; );
@@ -469,35 +477,35 @@ PROCEDURE SetFamilyFile (fam, num, bmax: INTEGER; );
 PROCEDURE SetFileName (fnam: TEXT; );
 
 (* plshades: "Shade regions with continuous range of colours." *)
-PROCEDURE ShadeRegions (READONLY a                     : M.TBody;
-                                 xmin, xmax, ymin, ymax: R.T;
-                        READONLY x                     : V.TBody;
+PROCEDURE ShadeRegions (READONLY a                     : FloatMatrix;
+                                 xmin, xmax, ymin, ymax: Float;
+                        READONLY x                     : FloatVector;
                         fill_width, cont_color, cont_width, rectangular: INTEGER;
                         pltr       : CallbackM3Proc;
                         OBJECT_DATA: REFANY;         );
 
 (* plshade: "Shade region with discrete colour, pattern fill." *)
-PROCEDURE ShadeRegion (READONLY a: M.TBody;
-                       left, right, bottom, top, shade_min, shade_max: R.T;
+PROCEDURE ShadeRegion (READONLY a: FloatMatrix;
+                       left, right, bottom, top, shade_min, shade_max: Float;
                        sh_cmap : INTEGER;
-                       sh_color: R.T;
+                       sh_color: Float;
                        sh_width, min_color, min_width, max_color,
                          max_width, rectangular: INTEGER;
                        pltr       : CallbackM3Proc;
                        OBJECT_DATA: REFANY;         );
 
 (* plsmaj: "Set up lengths of major tick marks." *)
-PROCEDURE SetMajorTickSize (def, scale: R.T; );
+PROCEDURE SetMajorTickSize (def, scale: Float; );
 
 (* plsmin: "Set up lengths of minor tick marks." *)
-PROCEDURE SetMinorTickSize (def, scale: R.T; );
+PROCEDURE SetMinorTickSize (def, scale: Float; );
 
 (* plsori: "Set orientation.  Must be done before calling plinit." *)
 PROCEDURE SetGlobalOrientation (ori: INTEGER; );
 
 (* plspage: "Set output device parameters.  Usually ignored by the
    driver." *)
-PROCEDURE SetOutputDeviceParam (xp, yp                  : R.T;
+PROCEDURE SetOutputDeviceParam (xp, yp                  : Float;
                                 xleng, yleng, xoff, yoff: INTEGER; );
 
 (* plspause: "Set the pause (on end-of-page) status." *)
@@ -510,7 +518,7 @@ PROCEDURE SetStream (strm: INTEGER; );
 PROCEDURE SetSubWindows (nx, ny: INTEGER; );
 
 (* plssym: "Set symbol height." *)
-PROCEDURE SetSymbolHeight (def, scale: R.T; );
+PROCEDURE SetSymbolHeight (def, scale: Float; );
 
 (* plstar: "Initialize PLplot, passing in the windows/page settings." *)
 PROCEDURE Start (nx, ny: INTEGER; );
@@ -520,27 +528,27 @@ PROCEDURE Start (nx, ny: INTEGER; );
 PROCEDURE StartDev (devname: TEXT; nx, ny: INTEGER; );
 
 (* plstripa: "Add a point to a stripchart.  " *)
-PROCEDURE AddStripchartPoint (id, pen: INTEGER; x, y: R.T; );
+PROCEDURE AddStripchartPoint (id, pen: INTEGER; x, y: Float; );
 
 (* plstripc: "Create 1d stripchart." *)
 PROCEDURE CreateStripchart (xspec, yspec: TEXT;
-                            xmin, xmax, xjump, ymin, ymax, xlpos, ylpos: R.T;
+                            xmin, xmax, xjump, ymin, ymax, xlpos, ylpos: Float;
                             y_ascl, acc, colbox, collab: INTEGER;
                             READONLY colline, styline: ARRAY OF INTEGER;
                             VAR legline: ARRAY [0 .. 3] OF TEXT;
                             labx, laby, labtop: TEXT; ): INTEGER
-  RAISES {NA.Error};
+  RAISES {SizeMismatch};
 
 (* plstripd: "Deletes and releases memory used by a stripchart.  " *)
 PROCEDURE DeleteStripchart (id: INTEGER; );
 
 (* plstyl: "Set up a new line style." *)
 PROCEDURE SetNewLineStyle (READONLY mark, space: ARRAY OF INTEGER; )
-  RAISES {NA.Error};
+  RAISES {SizeMismatch};
 
 (* plsvpa: "Set the edges of the viewport to the specified absolute
    coordinates." *)
-PROCEDURE SetVPAbsolute (xmin, xmax, ymin, ymax: R.T; );
+PROCEDURE SetVPAbsolute (xmin, xmax, ymin, ymax: Float; );
 
 (* plsxax: "Set x axis labeling parameters." *)
 PROCEDURE SetXLabelParam (digmax, digits: INTEGER; );
@@ -550,8 +558,8 @@ PROCEDURE SetYLabelParam (digmax, digits: INTEGER; );
 
 (* plsym: "Plot array y against x for n points using Hershey symbol
    \"code\"" *)
-PROCEDURE PlotSymbols (READONLY x, y: V.TBody; code: INTEGER; )
-  RAISES {NA.Error};
+PROCEDURE PlotSymbols (READONLY x, y: FloatVector; code: INTEGER; )
+  RAISES {SizeMismatch};
 
 (* plszax: "Set z axis labeling parameters" *)
 PROCEDURE SetZLabelParam (digmax, digits: INTEGER; );
@@ -561,15 +569,15 @@ PROCEDURE ShowTextScreen ();
 
 (* plvasp: "Sets the edges of the viewport with the given aspect ratio,
    leaving room for labels." *)
-PROCEDURE SetVPAspect (aspect: R.T; );
+PROCEDURE SetVPAspect (aspect: Float; );
 
 (* plvpas: "Create the largest viewport of the specified aspect ratio that
    fits within the specified normalized subpage coordinates." *)
-PROCEDURE CreateVPAspect (xmin, xmax, ymin, ymax, aspect: R.T; );
+PROCEDURE CreateVPAspect (xmin, xmax, ymin, ymax, aspect: Float; );
 
 (* plvpor: "Create a viewport with the specified normalized subpage
    coordinates." *)
-PROCEDURE CreateVP (xmin, xmax, ymin, ymax: R.T; );
+PROCEDURE CreateVP (xmin, xmax, ymin, ymax: Float; );
 
 (* plvsta: "Define a \"standard\" viewport with seven character heights for
    the left margin and four character heights everywhere else." *)
@@ -577,14 +585,14 @@ PROCEDURE SetStandardVP ();
 
 (* plw3d: "Set up a window for three-dimensional plotting." *)
 PROCEDURE Init3DWindow (basex, basey, height, xmin0, xmax0, ymin0, ymax0,
-                          zmin0, zmax0, alt, az: R.T; );
+                          zmin0, zmax0, alt, az: Float; );
 
 (* plwid: "Set pen width." *)
 PROCEDURE SetPenWidth (width: INTEGER; );
 
 (* plwind: "Set up world coordinates of the viewport boundaries (2d
    plots)." *)
-PROCEDURE SetWindow (xmin, xmax, ymin, ymax: R.T; );
+PROCEDURE SetWindow (xmin, xmax, ymin, ymax: Float; );
 
 (* plxormod: "Set xor mode; mode = 1-enter, 0-leave, status = 0 if not
    interactive device." *)
