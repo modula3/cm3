@@ -1,0 +1,7 @@
+INTERFACE ODBCDB;
+
+IMPORT DB;
+
+PROCEDURE GetInterface(): DB.Interface;
+
+END ODBCDB.

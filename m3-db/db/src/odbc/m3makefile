@@ -1,7 +1,4 @@
-% Copyright 1996-2000, Critical Mass, Inc.  All rights reserved.
-% See file COPYRIGHT-CMASS for details.
-
-import ("odbc")
-
-Interface ("DBRep")
-implementation ("DB")
+import_sys_lib ("ODBC")
+import("odbc")
+Interface("ODBCDBRep")
+implementation("ODBCDB")
