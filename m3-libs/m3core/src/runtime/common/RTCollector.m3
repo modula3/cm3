@@ -14,7 +14,7 @@
 UNSAFE MODULE RTCollector EXPORTS RTCollector, RTCollectorSRC,
                                   RTHeapRep, RTWeakRef;
 
-IMPORT RT0, RTHeapEvent, RTHeapDep, RTHeapMap, RTIO, RTMachine;
+IMPORT RT0, RTHeapEvent, RTHeapDep, RTHeapMap, RTIO, RTMachine, RTVM;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
 IMPORT Word, Cstdlib, Thread, ThreadF, RuntimeError;
 IMPORT TextLiteral;
@@ -869,7 +869,7 @@ PROCEDURE CollectSomeInStateZero () =
        before the system call completed.  On those systems, we must ensure
        that the heap pages referenced by threads remain unprotected after
        the collection begins. *)
-    IF RTHeapDep.VM AND NOT RTMachine.AtomicWrappers THEN
+    IF RTVM.VMHeap() AND NOT RTVM.AtomicWrappers() THEN
       FinishThreadPages ();
     END;
 
