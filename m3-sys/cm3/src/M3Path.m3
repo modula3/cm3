@@ -348,7 +348,17 @@ PROCEDURE MakeRelative (VAR path: TEXT;  full, rel: TEXT): BOOLEAN =
   BEGIN
     IF PrefixMatch (path, full, os_map[TRUE])
       AND EndOfArc (path, Text.Length (full), os_map[TRUE]) THEN
-      path := New (rel, Text.Sub (path, Text.Length (full)));
+      (* IO.Put("\npath = " & path & " full = " & full &
+         " rel = " & rel & "\n"); *)
+      WITH fl = Text.Length (full), rl = Text.Length(rel) DO
+        IF rl > fl AND 
+          (Text.GetChar(rel, fl + 1) = DirSep [ OSKind.Unix ] OR
+           Text.GetChar(rel, fl + 1) = DirSep [ OSKind.Win32 ]) THEN
+          path := New (rel, Text.Sub (path, fl + 1));
+        ELSE
+          path := New (rel, Text.Sub (path, fl));
+        END;
+      END;
       RETURN TRUE;
     ELSE
       RETURN FALSE;
