@@ -361,9 +361,9 @@ PROCEDURE DeriveSSE (hdual, gdual0, s: S.T; ): FnD.T RAISES {NA.Error} =
     hprimal := gdual.alternate();
     gprimal := hdual.alternate();
 
-    hsums := hprimal.wrapCyclic(3).getData();
-    dsums := M.Cyclic(gprimal.translate(2 * s.getFirst()).wrapCyclic(
-                        3).getData(), s.getNumber(), -1);
+    hsums := hprimal.wrapCyclic(3);
+    dsums := M.Cyclic(gprimal.translate(2 * s.getFirst()).wrapCyclic(3),
+                      s.getNumber(), -1);
   BEGIN
     (*
     IO.Put(MF.Fmt(dsums) & "\n");
@@ -392,11 +392,10 @@ PROCEDURE DeriveWSSE (hdual, gdual0, s: S.T; c: R.T): FnD.T
     gprimal  := hdual.alternate();
     gsprimal := hsdual.alternate();
 
-    hsums := hprimal.wrapCyclic(3).getData();
+    hsums := hprimal.wrapCyclic(3);
     dsums := M.Cyclic(gprimal.scale(1.0D0 / c).translate(
-                        2 * s.getFirst()).wrapCyclic(3).getData(),
-                      s.getNumber(), -1);
-    csums := gsprimal.wrapCyclic(3).scale(-1.0D0 / (c * c)).getData();
+                        2 * s.getFirst()).wrapCyclic(3), s.getNumber(), -1);
+    csums := V.Scale(gsprimal.wrapCyclic(3), -1.0D0 / (c * c));
     dcsums := M.FromMatrixArray(
                 ARRAY OF
                   ARRAY OF M.T{
@@ -415,9 +414,9 @@ PROCEDURE DeriveWSSE (hdual, gdual0, s: S.T; c: R.T): FnD.T
     RETURN polypart;
     *)
     FOR i := 0 TO s.getNumber() - 1 DO
-      dgsums[i] :=
-        V.Inner(dsse, gprimal.translate(2 * (s.getFirst() + i)).wrapCyclic(
-                        3).getData()) * (R.MinusOne / (c * c));
+      dgsums[i] := V.Inner(dsse, gprimal.translate(
+                                   2 * (s.getFirst() + i)).wrapCyclic(3))
+                     * (R.MinusOne / (c * c));
     END;
 
     RETURN FnD.T{zeroth := sse, first := M.MulV(dcsums, dsse), second :=
@@ -1127,7 +1126,7 @@ gdual := GetLiftedPrimalGeneratorMask(hdual,gdual0,MatchCoef{lift:=s,wavelet0Amp
              (* & "hsdual\n%s\n%s\n\n" & "gdual0\n%s\n%s\n\n" &
                 "gdual\n%s\n%s\n"*),
              ARRAY OF
-               TEXT{SF.Fmt(s), SF.Fmt(gdual.alternate().wrapCyclic(3))
+               TEXT{SF.Fmt(s), VF.Fmt(gdual.alternate().wrapCyclic(3))
                (*, SF.Fmt(hdual.upConvolve(s,2)),
                   SF.Fmt(SIntPow.MulPower(hdualnovan.upConvolve(mc.lift,2),
                   vanatom, vanishing)), SF.Fmt(gdual0),

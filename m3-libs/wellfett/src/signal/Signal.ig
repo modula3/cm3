@@ -48,7 +48,7 @@ TYPE
 
       upsample   (factor: ScalingType): T;
       downsample (factor: ScalingType): T;
-      wrapCyclic (box: ScalingType): T;
+      wrapCyclic (box: ScalingType): V.T;
       slice      (num: ScalingType): REF SignalPP;
       sliceRev   (num: ScalingType): REF SignalPP;
       interleave (READONLY slice: SignalPP): T;

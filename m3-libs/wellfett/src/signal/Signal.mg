@@ -99,7 +99,7 @@ PROCEDURE Copy (SELF: T): T =
 
 
 PROCEDURE Clip (x: T; first: IndexType; size: SizeType): T =
-  VAR z := NEW(T, data := V.New(size), first := first);
+  VAR z := NEW(T, data := NEW(V.T, size), first := first);
   BEGIN
     ClipToArray(x, first, z.data^);
     RETURN z;
@@ -140,7 +140,7 @@ PROCEDURE ClipToArray (x: T; first: IndexType; VAR y: V.TBody) =
   END ClipToArray;
 
 PROCEDURE ClipToVector (x: T; first: IndexType; size: SizeType): V.T =
-  VAR z := V.New(size);
+  VAR z := NEW(V.T, size);
   BEGIN
     ClipToArray(x, first, z^);
     RETURN z;
@@ -182,7 +182,7 @@ PROCEDURE IsZero (x: T): BOOLEAN =
   END IsZero;
 
 PROCEDURE Equal (x, y: T): BOOLEAN =
-  <*FATAL Error*>
+  <* FATAL Error *>
   BEGIN
     RETURN V.Equal(x.data, y.data); (* this is nonsense but I haven't yet
                                        access to Vector Rep *)
@@ -245,7 +245,7 @@ PROCEDURE Inner (x, y: T): R.T =
         RETURN VS.Inner(SUBARRAY(x.data^, first - x.first, number),
                         SUBARRAY(y.data^, first - y.first, number));
       EXCEPT
-      | Error (err) => EVAL err; <*ASSERT FALSE*>
+      | Error (err) => EVAL err; <* ASSERT FALSE *>
       END;
     ELSE
       RETURN R.Zero;
@@ -286,15 +286,15 @@ PROCEDURE DownSample (x: T; factor: ScalingType): T =
     RETURN z;
   END DownSample;
 
-PROCEDURE WrapCyclic (x: T; length: ScalingType): T =
+PROCEDURE WrapCyclic (x: T; length: ScalingType): V.T =
   VAR
-    z            := NEW(T).init(0, length);
-    j: IndexType;
+    (*vector must be initialized with zeros*)
+    z            := V.New(length);
+    j: IndexType := x.first MOD length;
 
   BEGIN
-    j := x.first MOD length;
-    FOR i := 0 TO LAST(x.data^) DO
-      z.data[j] := R.Add(z.data[j], x.data[i]);
+    FOR i := FIRST(x.data^) TO LAST(x.data^) DO
+      z[j] := R.Add(z[j], x.data[i]);
       INC(j);
       IF j >= length THEN j := 0; END;
       (*
@@ -436,7 +436,7 @@ PROCEDURE Alternate (x: T): T =
     RETURN z;
   END Alternate;
 
-<*UNUSED*>
+<* UNUSED *>
 PROCEDURE AlternateBool (x: T): T =
   VAR
     z    := NEW(T).init(x.first, NUMBER(x.data^));
@@ -474,7 +474,7 @@ PROCEDURE Add (x, y: T): T =
         VS.Add(zdata, zdata, y.data^);
       END;
     EXCEPT
-    | Error (err) => EVAL err;   <*ASSERT FALSE*>
+    | Error (err) => EVAL err; <* ASSERT FALSE *>
     END;
     RETURN z;
   END Add;
@@ -520,7 +520,7 @@ PROCEDURE UpConvolve (x, y: T; factor: ScalingType): T =
     xlast := x.first + LAST(x.data^);
     ylast := y.first + LAST(y.data^);
     z := NEW(T).initFL(x.first + y.first * factor, xlast + ylast * factor);
-  <*FATAL Error*>(*size mismatches can't occur*)
+  <* FATAL Error *>              (*size mismatches can't occur*)
   BEGIN
     FOR i := FIRST(y.data^) TO LAST(y.data^) DO
       WITH zdata = SUBARRAY(z.data^, i * factor, NUMBER(x.data^)) DO
@@ -572,7 +572,7 @@ PROCEDURE ExtractPeaks (x: T; factor: ScalingType; ): T =
           INC(i, factor);
         END;
       END;
-      <*ASSERT z.equal(x.downsample(factor).upsample(factor))*>
+      <* ASSERT z.equal(x.downsample(factor).upsample(factor)) *>
       RETURN z;
     ELSE
       RETURN z.init(zFirst, 1);
