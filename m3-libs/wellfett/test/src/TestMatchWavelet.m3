@@ -802,10 +802,8 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
 
     BEGIN
       FOR j := 0 TO LAST(derArr^) DO
-        VAR
-          yp := y.superpose(NEW(S.T).fromArray(
-                              ARRAY OF R.T{delta}, j + y.getFirst()));
-        BEGIN
+        WITH yp = y.superpose(NEW(S.T).fromArray(
+                                ARRAY OF R.T{delta}, j + y.getFirst())) DO
           derArr[j] :=
             FnD.Add(DeriveDist(normalMat, waveletCor, waveletNormSqr, yp),
                     FnD.Scale(DeriveSSE(dualBasis.lpVan, dualBasis.hp, yp),
@@ -1001,8 +999,7 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
               RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
             END;
             INC(subIter);
-            VAR der := ComputeOptCritDiff(x);
-            BEGIN
+            WITH der = ComputeOptCritDiff(x) DO
               x := V.Sub(x, LA.LeastSquares(
                               der.second, ARRAY OF V.T{der.first})[0].x);
               precOk := VT.Norm1(der.first) <= tol * RT.Abs(der.zeroth);
@@ -1163,10 +1160,8 @@ PROCEDURE SincVector (size, width: CARDINAL): V.T =
   BEGIN
     z[size] := R.One;
     FOR i := 1 TO size - 1 DO
-      VAR
-        x := FLOAT(i, R.T) * k;
-        y := RT.Sin(x) / x;
-      BEGIN
+      WITH x = FLOAT(i, R.T) * k,
+           y = RT.Sin(x) / x      DO
         z[size + i] := y;
         z[size - i] := y;
       END;
@@ -1181,10 +1176,8 @@ PROCEDURE GaussianVector (size, width: CARDINAL): V.T =
   BEGIN
     z[size] := R.One;
     FOR i := 1 TO size - 1 DO
-      VAR
-        x := FLOAT(i, R.T) * k;
-        y := RT.Exp(-x * x);
-      BEGIN
+      WITH x = FLOAT(i, R.T) * k,
+           y = RT.Exp(-x * x)     DO
         z[size + i] := y;
         z[size - i] := y;
       END;
@@ -1192,7 +1185,7 @@ PROCEDURE GaussianVector (size, width: CARDINAL): V.T =
     RETURN z;
   END GaussianVector;
 
-(* a sinc function that is modulated such that it covers band ready for
+(* a sinc function that is modulated such that it covers a band ready for
    dyadic partitioning *)
 PROCEDURE ModulateReal (x: V.T; period: R.T): V.T =
   VAR
@@ -1202,8 +1195,7 @@ PROCEDURE ModulateReal (x: V.T; period: R.T): V.T =
   BEGIN
     z[size] := x[size];
     FOR i := 1 TO size - 1 DO
-      VAR c := RT.Cos(FLOAT(i, R.T) * k);
-      BEGIN
+      WITH c = RT.Cos(FLOAT(i, R.T) * k) DO
         z[size + i] := x[size + i] * c;
         z[size - i] := x[size - i] * c;
       END;
@@ -1219,8 +1211,7 @@ PROCEDURE ModulateImag (x: V.T; period: R.T): V.T =
   BEGIN
     z[size] := R.Zero;
     FOR i := 1 TO size - 1 DO
-      VAR c := RT.Sin(FLOAT(i, R.T) * k);
-      BEGIN
+      WITH c = RT.Sin(FLOAT(i, R.T) * k) DO
         z[size + i] := x[size + i] * c;
         z[size - i] := -x[size - i] * c;
       END;
