@@ -6,7 +6,7 @@
 
 MODULE CIText;
 
-IMPORT ASCII, Text, TextF, Word;
+IMPORT ASCII, Text, Text8, Word;
 
 PROCEDURE Equal(t, u: T): BOOLEAN =
   VAR
@@ -16,7 +16,8 @@ PROCEDURE Equal(t, u: T): BOOLEAN =
   BEGIN
     IF lt = lu THEN 
       WHILE i<lt DO
-        IF ASCII.Upper[t[i]] # ASCII.Upper[u[i]] THEN 
+        IF ASCII.Upper[Text.GetChar(t, i)] # 
+           ASCII.Upper[Text.GetChar(u, i)] THEN 
           RETURN FALSE 
         ELSE INC(i) 
         END;
@@ -29,11 +30,11 @@ PROCEDURE Equal(t, u: T): BOOLEAN =
 PROCEDURE Hash (t: T): Word.T =
   VAR
     len := Text.Length(t);
-    u   := NEW(T, len + 1);
+    u   := Text8.Create(len);
   BEGIN
-    u[len] := '\000';
-    FOR i := 0 TO NUMBER(t^) - 1 DO  
-      u[i] := ASCII.Upper[t[i]]
+    u.contents[len] := '\000';
+    FOR i := 0 TO Text.Length(t) - 1 DO  
+      u.contents[i] := ASCII.Upper[Text.GetChar(t, i)]
     END;
     RETURN Text.Hash(u);
   END Hash;

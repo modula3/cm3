@@ -6,9 +6,10 @@
 %      modified on Wed Jan 17 14:42:47 PST 1996 by najork   
 
 import ("formsvbt")
+import("http")
 import ("web")
 
-UseOblets = "defined"
+%UseOblets = "defined"
 
 if defined("UseOblets")
   include_dir("oblet")
@@ -22,7 +23,7 @@ module		("CIText")
 interface	("Element")
 table		("CITextElement", "CIText", "Element")
 module		("Lexer")
-Module		("TextExtras")
+%Module		("TextExtras")
 Module  	("HTML")
 implementation	("HTMLParser")
 
