@@ -691,7 +691,7 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
           hprimal := GetLiftedPrimalGeneratorMask(
                        hdualnovan, gdual0novan,
                        SplitParamVec(x, initWavelet0Amp));
-          hh := hprimal.autocorrelate();
+          hh := hprimal;
           (*frob0 := M.Trace(M.MulMMA(Refn.RadicBandMatrix(hh)));*)
           frob1           := R.Zero;
           alter: [0 .. 1] := 1;
@@ -1008,7 +1008,7 @@ PROCEDURE Test () =
         *)
         TestMatchPatternSmooth(Refn.Refine(BSpl.WaveletMask(2, 8),
                                            BSpl.GeneratorMask(2), 6).scale(
-                                 64.0D0).translate(50), 6, 2, 8, 5, 1.0D-4);
+                                 64.0D0).translate(50), 6, 2, 8, 5, 1.0D0);
     | Example.matchSincSmooth =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
