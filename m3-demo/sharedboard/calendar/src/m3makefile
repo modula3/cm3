@@ -4,7 +4,7 @@
 %
 import (ui)
 import (netobj)
-override (board, "/udir/umesh/m3/board/3")
+%override (board, "/udir/umesh/m3/board/3")
 import (board)
 
 sequence (Item, Item)
