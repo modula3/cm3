@@ -289,9 +289,11 @@ PROCEDURE Derive(p:T;           (*differentiate polynomial*)
                  ):T =
 VAR
   q:=NEW(T,LAST(p^));
+  fac:=R.Zero;
 BEGIN
   FOR n:=0 TO LAST(q^) DO
-    q[n]:=R.ScaleInt(p[n+1],n+1);
+    fac:=R.Add(fac,R.One);
+    q[n]:=R.Mul(p[n+1],fac);
   END;
   RETURN q;
 END Derive;
@@ -312,7 +314,7 @@ raises:
 VAR
   p0:=FIRST(p^); pnn:=LAST(p^);
   pdnn:=nd; (*may be using part of pd vector*)
-  fact:R.T;
+  fact,fac:R.T;
 BEGIN
   IF nd>NUMBER(pd)+1 OR nd>pnn THEN
     RAISE Error(Err.bad_size);
@@ -332,12 +334,14 @@ BEGIN
 
   (*---fix the factorials---*) 
   fact:=R.One;
+  fac:=R.Zero;
   FOR i:=0 TO pdnn DO
     pd[i]:=R.Mul(pd[i],fact);
-	fact:=R.ScaleInt(fact,i+1);
+    fac:=R.Add(fac,R.One);
+    fact:=R.Mul(fact,fac);
   END;
 
-END EvalDerivate; 
+END EvalDerivate;
 
 (*==========================*)
 BEGIN

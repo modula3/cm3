@@ -245,7 +245,7 @@ raises:
 VAR
   p0:=FIRST(p^); pnn:=LAST(p^);
   pdnn:=nd; (*may be using part of pd vector*)
-  fact:R.T;
+  fact,fac:R.T;
 BEGIN
   IF nd>NUMBER(pd)+1 OR nd>pnn THEN
     RAISE Error(Err.bad_size);
@@ -265,11 +265,13 @@ BEGIN
 
   (*---fix the factorials---*) 
   fact:=R.One;
+  fac:=R.Zero;
   FOR i:=0 TO pdnn DO
     pd[i]:=fact*pd[i];
-	fact:=fact*FLOAT(i+1,R.T);
+    fac:=fac+R.One;
+    fact:=fact*fac;
   END;
- 
+
 END EvalDerivate; 
 
 (*==========================*)
