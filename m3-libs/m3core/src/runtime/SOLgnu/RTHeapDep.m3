@@ -7,7 +7,7 @@
 
 UNSAFE MODULE RTHeapDep;
 
-IMPORT RT0u, RTHeapRep, RTCollectorSRC, RTMachine, RTVM;
+IMPORT RT0u, RTHeapRep, RTCollectorSRC, RTProcedureSRC, RTMachine, RTVM;
 IMPORT Cstdlib, Ctypes, Umman, Unix, Uresource, Usignal;
 IMPORT Utime, Utypes, Uucontext, Word;
 
@@ -178,6 +178,8 @@ PROCEDURE VMFaultTime (): REAL =
   END VMFaultTime;
 
 BEGIN
+  RTMachine.RTHeapDep_Fault := LOOPHOLE(Fault, ADDRESS);
+  RTMachine.RTProcedureSRC_FromPC := LOOPHOLE (RTProcedureSRC.FromPC, ADDRESS);
   VM := RTVM.VMHeap();
   IF VM THEN
     RTMachine.RTHeapRep_Fault  := LOOPHOLE (RTHeapRep.Fault, ADDRESS);
