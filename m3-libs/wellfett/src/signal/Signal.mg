@@ -105,7 +105,7 @@ PROCEDURE Inner (x, y: T): R.T =
     last   := MIN(x.getLast(), y.getLast());
     number := last - first + 1;
   BEGIN
-    IF first < last THEN
+    IF number>0 THEN
       TRY
         RETURN VS.Inner(SUBARRAY(x.data^, first - x.first, number),
                         SUBARRAY(y.data^, first - y.first, number));
