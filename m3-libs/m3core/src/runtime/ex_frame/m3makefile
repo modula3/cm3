@@ -5,5 +5,6 @@
 % Last modified on Tue May  2 11:37:20 PDT 1995 by kalsow
 
 module ("RTExFrame")
-c_source ("RTStackC")
-
+if not HAS_STACK_WALKER{TARGET}
+  c_source ("RTStackC")
+end
