@@ -52,6 +52,10 @@ PROCEDURE DoIt () =
     Out ("Thank you for using Critical Mass CM3.  This program");
     Out ("will configure and install the system.");
     Out ();
+    Out ("cminstall_root is set to ", cminstall_root);
+    Out ("If this is not correct, please restart the installer with");
+    Out ("-root <directory-of-installer-and-system-archive>");
+    Out ();
     Out ("The installer will ask you some questions about the locations",
          " of programs");
     Out ("and libraries. Usually it will display a default inside [],",
