@@ -18,6 +18,8 @@ TYPE
 	upsample   (factor : IndexType) : T;
 	downsample (factor : IndexType) : T;
 	wrapcyclic (length : IndexType) : T;
+	reverse    () : T;
+	adjungate  () : T;
 
     scale      (factor : R.T);
     raise      (offset : R.T);
