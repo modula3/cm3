@@ -23,7 +23,7 @@ The M3 support to make gcc 3.2.1 into a code generator for Modula-3
 has been completely redone from scratch by John Polstra for PM3 and
 the EZM3 distributions. Olaf Wagner is responsible for the CM3
 integration. Tests on the platforms FreeBSD4, LINUXLIBC6, and SOLgnu
-have shown that new code generator seems to work well, however there
+have shown that the new code generator seems to work well, however there
 is one major drawback: Due to structural improvements in gcc code it
 is no longer possible to use the stack walkers implemented on several
 M3 platforms for fast exception support, as the new gcc disallows the
@@ -57,7 +57,7 @@ itself as
   Power Macintosh powerpc 
 
 All the runtime and Unix implementation modules were initially copied
-from the FreeBSD3 platform; in hindsight, this as only a mediocre
+from the FreeBSD3 platform; in hindsight, this was only a mediocre
 choice, as FreeBSD3 and PPC_DARWIN differ in endianness.
 
 The following list gives detailed information about the status of
