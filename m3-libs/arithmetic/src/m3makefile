@@ -6,6 +6,7 @@ import("libm3")
 
 include_dir("float")
 include_dir("complex")
+include_dir("polar")
 
 
 
