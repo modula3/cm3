@@ -13,7 +13,7 @@ IMPORT
   BigIntegerMatrixBasic  AS BM,
   BigIntegerMatrixFmtLex AS BMF,
   NumberTheory AS NT,
-  xWordEx AS Wx,
+  WordEx AS Wx,
   Word AS W,
   Fmt AS F,
   Text,Wr,Thread,xUtils;

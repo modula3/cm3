@@ -6,7 +6,7 @@ Abstract: Integers of arbitrary size
 Daniel Beer
 *)
 
-IMPORT Word AS W, xWordEx AS Wx;
+IMPORT Word AS W, WordEx AS Wx;
 FROM xUtils IMPORT Error, Err;
 FROM BigIntegerBasic  IMPORT Zero;
 (*
