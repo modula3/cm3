@@ -116,11 +116,13 @@ PROCEDURE MatchPattern (target                               : S.T;
     coef :=
       LA.LeastSquares(basis, ARRAY OF V.T{targetvec},
                       flags := LA.LSFlagSet{LA.LSFlag.transposed})[0];
-
-    IO.Put(Fmt.FN("translates %s, size %s, residuum %s, %s\n",
-                  ARRAY OF
-                    TEXT{Fmt.Int(translates), Fmt.Int(size),
-                         RF.Fmt(coef.res), VF.Fmt(coef.x)}));
+    (*
+        IO.Put(Fmt.FN("translates %s, size %s, residuum %s, %s\n",
+                      ARRAY OF
+                        TEXT{Fmt.Int(translates), Fmt.Int(size),
+                             RF.Fmt(coef.res), VF.Fmt(coef.x)}));
+    *)
+    IO.Put(Fmt.FN("residuum - %s\n", ARRAY OF TEXT{RF.Fmt(coef.res)}));
 
     PL.SetFGColorDiscr(4);
     PL.PlotLines(abscissa^, M.MulTV(basis, coef.x)^);
@@ -809,9 +811,7 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         | 5 =>
             dersmooth :=
               Fn.EvalCentralDiff2(TransitionSimpFrobenius, x, dx);
-        | 6 =>
-            dersmooth :=
-              Fn.EvalCentralDiff2(TransitionSumNorm, x, dx);
+        | 6 => dersmooth := Fn.EvalCentralDiff2(TransitionSumNorm, x, dx);
         ELSE
           <*ASSERT FALSE*>
         END;
@@ -1010,6 +1010,42 @@ PROCEDURE SincVector (size, width: CARDINAL): V.T =
     RETURN z;
   END SincVector;
 
+(*a sinc function that is modulated such that it covers band ready for
+   dyadic partitioning*)
+PROCEDURE ModSincRealVector (size, width: CARDINAL): V.T =
+  VAR
+    y := SincVector(size, width);
+    z := V.New(2 * size + 1);
+    k := 3.0D0 * RT.Pi / FLOAT(2 * width, R.T);
+  BEGIN
+    z[size] := R.One;
+    FOR i := 1 TO size - 1 DO
+      VAR c := RT.Cos(FLOAT(i, R.T) * k);
+      BEGIN
+        z[size + i] := y[size + i] * c;
+        z[size - i] := y[size - i] * c;
+      END;
+    END;
+    RETURN z;
+  END ModSincRealVector;
+
+PROCEDURE ModSincImagVector (size, width: CARDINAL): V.T =
+  VAR
+    y := SincVector(size, width);
+    z := V.New(2 * size + 1);
+    k := 3.0D0 * RT.Pi / FLOAT(2 * width, R.T);
+  BEGIN
+    z[size] := R.Zero;
+    FOR i := 1 TO size - 1 DO
+      VAR c := RT.Sin(FLOAT(i, R.T) * k);
+      BEGIN
+        z[size + i] := y[size + i] * c;
+        z[size - i] := y[size - i] * -c;
+      END;
+    END;
+    RETURN z;
+  END ModSincImagVector;
+
 PROCEDURE Test () =
   <*FATAL BSpl.DifferentParity*>
   TYPE
@@ -1017,7 +1053,7 @@ PROCEDURE Test () =
                matchRamp, matchRampSmooth, matchSincSmooth, matchLongRamp,
                testSSE, testInverseDSSE, testDeriveWSSE};
   BEGIN
-    CASE Example.matchBSplineWavelet OF
+    CASE Example.matchSincSmooth OF
     | Example.matchBSpline =>
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50), 6,
@@ -1056,13 +1092,56 @@ PROCEDURE Test () =
               BSpl.WaveletMask(2, 8), BSpl.GeneratorMask(2), 6).scale(
               64.0D0).translate(10), 6, 2, 8, 5);
         *)
-        TestMatchPatternSmooth(Refn.Refine(BSpl.WaveletMask(2, 8),
-                                           BSpl.GeneratorMask(2), 6).scale(
-                                 64.0D0).translate(50), 6, 2, 8, 5, 1.0D-10);
-    | Example.matchSincSmooth =>
         TestMatchPatternSmooth(
-          NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
-          4, 6, 10, 1.0D-3);
+          Refn.Refine(
+            BSpl.WaveletMask(2, 8), BSpl.GeneratorMask(2), 6).scale(
+            64.0D0).translate(50), 6, 2, 8, 5, 1.0D-10);
+    | Example.matchSincSmooth =>
+        (*
+          MatchPattern(
+            NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
+            4, 6, 10);
+        *)
+        FOR scale := 3 TO 10 DO
+          (** which scale achieves best match?
+          VAR size := 5 * scale * 64;
+          BEGIN
+            MatchPattern(NEW(S.T).fromArray(
+                           V.Neg(ModSincRealVector(size, scale * 64))^,
+                           64 - size), 6, 4, 0, 20);
+          END;
+             3 - 22.1834569283071
+             4 -  5.45720352492108
+             5 -  1.12455306018079
+             6 -  0.32131075741861
+             7 -  0.0526881888961695
+             8 -  0.106707504091051
+             9 -  3.60586130516876
+            10 -  0.202799707663614
+          *)
+          VAR size := 5 * scale * 64;
+          BEGIN
+            MatchPattern(NEW(S.T).fromArray(
+                           V.Neg(ModSincImagVector(size, scale * 64))^,
+                           64 - size), 6, 3, 1, 20);
+          END;
+          (** which scale achieves best match?
+             3 - 40.9491273229196
+             4 -  9.13161843532297
+             5 -  3.38459627541558
+             6 -  1.7937034581564
+             7 -  0.653510798955025
+             8 -  0.91561743745227
+             9 -  0.255038945635696
+            10 -  0.476846592814738
+            11 - 
+          *)
+        END;
+      (*
+      TestMatchPatternSmooth(
+        NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
+        4, 6, 10, 1.0D-3);
+      *)
     | Example.matchLongRamp =>
         (*matching a pattern with 1 vanishing moment with a wavelet of 9
            vanishing moments can't work obviously*)
