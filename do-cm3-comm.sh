@@ -1,6 +1,17 @@
 #!/bin/sh
 
 WIN32=${WIN32:-yes}
+UNAME=`uname`
+
+if [ "${UNAME}" = FreeBSD ] ; then
+  WIN32=no
+  ROOT=${ROOT:-`pwd`}
+elif [ "${UNAME}" = SunOS ] ; then
+  WIN32=no
+  ROOT=${ROOT:-`pwd`}
+fi
+
+export GCC_BACKEND WIN32 ROOT
 
 # base libraries and compiler
 PKGS=""
