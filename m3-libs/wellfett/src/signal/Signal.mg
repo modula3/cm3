@@ -1,4 +1,6 @@
-GENERIC MODULE Signal(R, SignalRep, V, P);
+GENERIC MODULE Signal(R, SignalRep, V, VS, P);
+
+FROM NADefinitions IMPORT Error;
 
 REVEAL
   T = SignalRep.TPrivate BRANDED OBJECT
@@ -13,7 +15,8 @@ REVEAL
         getNumber := GetNumber;
         getData   := GetData;
 
-        sum := Sum;
+        sum   := Sum;
+        inner := Inner;
 
         upsample   := UpSample;
         downsample := DownSample;
@@ -93,8 +96,26 @@ PROCEDURE GetData (SELF: T): P.T =
 
 PROCEDURE Sum (SELF: T): R.T =
   BEGIN
-    RETURN V.Sum(SELF.data^);
+    RETURN VS.Sum(SELF.data^);
   END Sum;
+
+PROCEDURE Inner (x, y: T): R.T =
+  VAR
+    first  := MAX(x.first, y.first);
+    last   := MIN(x.getLast(), y.getLast());
+    number := last - first + 1;
+  BEGIN
+    IF first < last THEN
+      TRY
+        RETURN VS.Inner(SUBARRAY(x.data^, first - x.first, number),
+                        SUBARRAY(y.data^, first - y.first, number));
+      EXCEPT
+      | Error (err) => EVAL err; <*ASSERT FALSE*>
+      END;
+    ELSE
+      RETURN R.Zero;
+    END;
+  END Inner;
 
 
 PROCEDURE Translate (SELF: T; dist: IndexType): T =
@@ -278,16 +299,9 @@ PROCEDURE AlternateBool (x: T): T =
   END AlternateBool;
 
 PROCEDURE Mul (x: T; y: T): T =
-  VAR z := NEW(T).init(x.first + y.first, NUMBER(x.data^) + LAST(y.data^));
   BEGIN
-    FOR i := 0 TO LAST(x.data^) DO
-      WITH zdata = SUBARRAY(z.data^, i, NUMBER(y.data^)) DO
-        FOR j := 0 TO LAST(y.data^) DO
-          zdata[j] := R.Add(zdata[j], R.Mul(x.data[i], y.data[j]));
-        END;
-      END;
-    END;
-    RETURN z;
+    RETURN
+      NEW(T, first := x.first + y.first, data := P.Mul(x.data, y.data));
   END Mul;
 
 PROCEDURE Add (x: T; y: T): T =
@@ -297,15 +311,15 @@ PROCEDURE Add (x: T; y: T): T =
     z     := NEW(T).initFL(first, last);
 
   BEGIN
-    WITH zdata = SUBARRAY(z.data^, x.first - z.first, NUMBER(x.data^)) DO
-      FOR i := 0 TO LAST(x.data^) DO
-        zdata[i] := R.Add(zdata[i], x.data[i]);
+    TRY
+      WITH zdata = SUBARRAY(z.data^, x.first - z.first, NUMBER(x.data^)) DO
+        VS.Add(zdata, zdata, x.data^);
       END;
-    END;
-    WITH zdata = SUBARRAY(z.data^, y.first - z.first, NUMBER(y.data^)) DO
-      FOR i := 0 TO LAST(y.data^) DO
-        zdata[i] := R.Add(zdata[i], y.data[i]);
+      WITH zdata = SUBARRAY(z.data^, y.first - z.first, NUMBER(y.data^)) DO
+        VS.Add(zdata, zdata, y.data^);
       END;
+    EXCEPT
+    | Error (err) => EVAL err;   <*ASSERT FALSE*>
     END;
     RETURN z;
   END Add;
