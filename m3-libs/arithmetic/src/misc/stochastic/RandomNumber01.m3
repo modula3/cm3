@@ -5,8 +5,7 @@ Abstract: <describe>
 
 1/1/96  <name>    Initial version
 *)
-IMPORT xReal64 AS R;
-FROM xReal64 IMPORT REAL64;
+IMPORT LongRealBasic AS R;
 IMPORT Random;
 
 FROM RandomBasic IMPORT RandomGen,Min,Max;
@@ -33,11 +32,11 @@ BEGIN
   RETURN t;
 END DECSRC_init;
 
-PROCEDURE DECSRC_engine(self:RandomGen):REAL64=
-CONST ftn = Module & "DECSRC";
+PROCEDURE DECSRC_engine(self:RandomGen):R.T=
+<*UNUSED*> CONST ftn = Module & "DECSRC";
 VAR
   t:=NARROW(self,DECSRC);
-  result:REAL64;
+  result:R.T;
 BEGIN
   result:=t.rand.longreal();
   IF result < Min THEN
@@ -67,9 +66,9 @@ BEGIN
   RETURN t;
 END ran0_init;
 
-PROCEDURE ran0_engine(self:ran0):REAL64=
+PROCEDURE ran0_engine(self:ran0):R.T=
+<*UNUSED*> CONST ftn= Module & "ran0_engine";
 CONST
-  ftn= Module & "ran0_engine";
   (*use Park/Miller alternatives (NR92, pg279)*)
   m = 2147483647;
   m_recip = R.One / FLOAT(m,R.T);
@@ -79,7 +78,7 @@ CONST
 
 VAR
   z1,tmp:INTEGER;
-  result:REAL64;
+  result:R.T;
 BEGIN
   z1:=self.z1;
   tmp:=z1 DIV q;
@@ -87,7 +86,7 @@ BEGIN
   IF z1 < 0 THEN INC(z1,m) END;
 
   (*---convert and check for out of bounds---*)
-  result:= FLOAT(z1,REAL64) * m_recip;
+  result:= FLOAT(z1,R.T) * m_recip;
   IF result < Min THEN
     result:=Min;
   ELSIF result > Max THEN
@@ -120,9 +119,9 @@ BEGIN
   RETURN t;
 END ran1_init;
 
-PROCEDURE ran1_engine(self:ran1):REAL64=
+PROCEDURE ran1_engine(self:ran1):R.T=
+<*UNUSED*> CONST ftn= Module & "ran1_engine";
 CONST
-  ftn= Module & "ran1_engine";
   m = 2147483647;
   m_recip = R.One / FLOAT(m,R.T);
   a = 48271;
@@ -131,7 +130,7 @@ CONST
 
 VAR
   z1,table_z,tmp,ndx:INTEGER;
-  result:REAL64;
+  result:R.T;
 BEGIN
   IF self.start THEN
       z1:=self.z1;
@@ -160,7 +159,7 @@ BEGIN
   self.table[ndx]:=z1;
 
   (*---convert and check for out of bounds---*)
-  result:= FLOAT(table_z,REAL64) * m_recip;
+  result:= FLOAT(table_z,R.T) * m_recip;
   IF result < Min THEN
     result:=Min;
   ELSIF result > Max THEN

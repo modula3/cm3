@@ -8,8 +8,8 @@ Abstract: Random number generators
 *)
 
 IMPORT Math, LongFloat;
-IMPORT xReal64 AS R;
-FROM xReal64 IMPORT REAL64;
+IMPORT LongRealBasic AS R,
+       LongRealTrans AS RT;
 FROM xUtils IMPORT Error,Err;
 
 CONST Module = "RandomBasic.";
@@ -40,13 +40,13 @@ REVEAL
 (*========================================*)
 (*-------------------*)
 PROCEDURE Uniform(self:RandomGen;
-                  min:REAL64:=0.0D0;  (*from min*)
-                  max:REAL64:=1.0D0   (*up to but not including max*)
-                  ):REAL64            (*return uniform deviate*)
+                  min:R.T:=0.0D0;  (*from min*)
+                  max:R.T:=1.0D0   (*up to but not including max*)
+                  ):R.T            (*return uniform deviate*)
                   (* RAISES{xUtils.Error}  using this here and in the methods declarations let the compiler believe that procedure and method definitions do not match and thus it leads to the error: "procedure redefined (Uniform)" *)
                   =
 VAR
-  t:REAL64;
+  t:R.T;
 BEGIN
   t:=self.engine();
   IF min=Min AND max=Max THEN RETURN t; END;
@@ -58,18 +58,18 @@ BEGIN
   RETURN min + t*(max-min);
 END Uniform;
 (*-------------------*)
-PROCEDURE Exponential(self:RandomGen):REAL64=
+PROCEDURE Exponential(self:RandomGen):R.T=
 (*exponential, mean=1 *)
 BEGIN
-  RETURN -R.log(self.engine());
+  RETURN -RT.Ln(self.engine());
 END Exponential;
 (*-------------------*)
 (**********************
-PROCEDURE Gaussian1(self:RandomGen):REAL64=
+PROCEDURE Gaussian1(self:RandomGen):R.T=
 (*gaussian, mean=0, var=1 *)
 (*based on NR92*)
 VAR
-  v1,v2,Rsq,tmp,result:REAL64;
+  v1,v2,Rsq,tmp,result:R.T;
 BEGIN
   IF NOT self.start THEN
     self.start:=TRUE;
@@ -95,9 +95,9 @@ END Gaussian1;
  * using Marsaglia-Bray method on page 390 Devroye, see
  * G.Marsaglia & T.A. Bray: A convenient method for
  * generating normal random variables, SIAM Review 6 (1964) 260-264.**)
-PROCEDURE NormalDev(self:RandomGen) : REAL64 =
+PROCEDURE NormalDev(self:RandomGen) : R.T =
   VAR
-    v,u,w,x,sum : REAL64;
+    v,u,w,x,sum : R.T;
   BEGIN
     u := self.uniform();
     IF u <= 0.8638D0 THEN
@@ -135,13 +135,13 @@ PROCEDURE NormalDev(self:RandomGen) : REAL64 =
 (*-------------------*)
 (***************************************
 PROCEDURE Gamma1(self:RandomGen;
-                event:[1..LAST(INTEGER)]):REAL64=
+                event:[1..LAST(INTEGER)]):R.T=
 (*gamma, waiting time for event in Poisson process, mean=1*)
 (*based on NR92*)
 CONST
   cutoff=7;
 VAR
-  x,v1,v2,tanU,a0,x0,ratio:REAL64;
+  x,v1,v2,tanU,a0,x0,ratio:R.T;
 BEGIN
   IF event < cutoff THEN
     x:=R.One;
@@ -150,7 +150,7 @@ BEGIN
     END;
     x:=-R.log(x);
   ELSE
-    x0:=FLOAT(event-1,REAL64);
+    x0:=FLOAT(event-1,R.T);
     a0:=R.sqrt(R.Two*x0+R.One);
     REPEAT
       REPEAT
@@ -185,12 +185,12 @@ END Gamma1;
  * according to mean and variance tests at a=.3,.5,.6,.9,1,2,3.
 ***************************************)
 PROCEDURE GammaDev(self:RandomGen;
-                   a : REAL64) : REAL64 =
+                   a : R.T) : R.T =
   BEGIN
     <* ASSERT a>0.0D0 *>
     IF a<1.0D0 THEN
       VAR
-        u0,u1,x : REAL64;
+        u0,u1,x : R.T;
       BEGIN
         LOOP
           u0 :=  self.uniform();
@@ -218,7 +218,7 @@ PROCEDURE GammaDev(self:RandomGen;
         c3 := 2.0D0/c1;
         c4 := c3+2.0D0;
         c5 := 1.0D0/Math.sqrt(a);
-        u1, u2, w: REAL64;
+        u1, u2, w: R.T;
       BEGIN
         LOOP
           REPEAT
@@ -251,7 +251,7 @@ PROCEDURE GammaDev(self:RandomGen;
 PROCEDURE Dirichlet(self:RandomGen;
                     p:R.Array) =
   VAR
-    t, sum : REAL64;
+    t, sum : R.T;
     n1:=FIRST(p^); nn:=LAST(p^);
   BEGIN
     sum := 0.0D0;
@@ -269,24 +269,22 @@ PROCEDURE Dirichlet(self:RandomGen;
 
 (*-------------------*)
 PROCEDURE Poisson(self:RandomGen;
-                     m:REAL64    (*mean*)
-                     ):REAL64=
+                     m:R.T    (*mean*)
+                     ):R.T=
 (*Poisson, integer returned as real*)
-CONST ftn = Module & "Poisson";
+<*UNUSED*> CONST ftn = Module & "Poisson";
 BEGIN
   RAISE Error(Err.not_implemented);
-  RETURN R.Zero;
 END Poisson;
 (*-------------------*)
 PROCEDURE Binomial(self:RandomGen;
-                     p:REAL64;  (*probability*)
+                     p:R.T;  (*probability*)
                      n:INTEGER  (*trials*)
-                     ):REAL64=
+                     ):R.T=
 (*Binomial, returned as real*)
-CONST ftn = Module & "Binomial";
+<*UNUSED*> CONST ftn = Module & "Binomial";
 BEGIN
   RAISE Error(Err.not_implemented);
-  RETURN R.Zero;
 END Binomial;
 
 (*==========================*)

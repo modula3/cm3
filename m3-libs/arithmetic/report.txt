@@ -1,6 +1,7 @@
 for myself:
 
 todo:
+  - remove dependency from xWordEx
   - physical units
   - Interpolation, Random/RNG01/RNG02, Stat
   - ODE
@@ -32,7 +33,8 @@ for Harry:
 
  What's advantage of using REAL64 instead of LONGREAL and REAL32 instead of REAL?
  Why are there constants like 'Module' and 'ftn' ? Are they for documentation or  debugging purposes?
- truncation errors for div and abs in xCmplx, they cannot be resolved by extracting a factor; the only thing one can prevent are roundings to zero
+ truncation errors for div and abs in xCmplx, they cannot be resolved by extracting a factor;
+ the only thing one can prevent are roundings to zero and overflows
 
 
 for comp.lang.modula3 :
@@ -161,3 +163,9 @@ List of conventions for names for modules, types, variables, constants, record e
 How can I access the name of a module that another module imports?
 This is especially useful if you want to find out, with which module
 a generic module was instantiated.
+
+---------------
+
+Eps should be defined in Real.i3, LongReal.i3, Extended.i3,
+or Scaleb gets the privilege to generate constants
+ExtendedType.[im]3 -> main repository
