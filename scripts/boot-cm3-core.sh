@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: boot-cm3-core.sh,v 1.1 2002-01-13 22:31:31 wagner Exp $
+# $Id: boot-cm3-core.sh,v 1.2 2003-01-10 01:18:50 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -22,7 +22,7 @@ if [ -z "$1" ] ; then
   exit 1
 fi
 CROSS_TARGET=$1
-BUILDARGS='-DM3_BOOTSTRAP=TRUE -DBIN_USE=${ROOT}/m3-sys/m3cc/${TARGET}-${CROSS_TARGET}'
+BUILDARGS='-DM3_BOOTSTRAP=TRUE -DBIN_USE=${ROOT}/m3-sys/m3cc/${TARGET}-${CROSS_TARGET} -keep'
 M3CONFIG=${ROOT}/m3-sys/cm3/src/config/${CROSS_TARGET}
 export M3CONFIG
 . "$ROOT/scripts/pkginfo.sh"
