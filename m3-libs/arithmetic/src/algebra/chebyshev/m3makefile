@@ -1,0 +1,9 @@
+import("libm3")
+
+template("chebypolynomial")
+
+
+generic_module("ChebyPolynomialFast")
+ChebyPolynomialFast("Real",     "RealPolynomialFast",     "RealTrans",     "RealBasic")
+ChebyPolynomialFast("LongReal", "LongRealPolynomialFast", "LongRealTrans", "LongRealBasic")
+ChebyPolynomialFast("Extended", "ExtendedPolynomialFast", "ExtendedTrans", "ExtendedBasic")
