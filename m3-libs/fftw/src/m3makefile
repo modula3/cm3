@@ -1,7 +1,7 @@
-% automatically generated quake file for FFTW
+% automatically generated quake file for FFTWLongReal
 
 import("libm3")
-module("FFTWRaw")
-module("FFTW")
+module("FFTWLongRealRaw")
+module("FFTWLongReal")
 
-library("m3FFTW")
+library("m3FFTWLongReal")

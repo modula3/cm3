@@ -1,0 +1,10 @@
+# KDevelop Custom Project File List
+FFTW.kdevelop
+Makefile
+swig/fftw3.h
+swig/fftw3.i
+src/FFTW.i3
+src/FFTW.m3
+src/FFTWRaw.i3
+src/FFTWRaw.m3
+src/m3makefile
