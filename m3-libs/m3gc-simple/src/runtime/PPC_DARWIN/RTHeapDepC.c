@@ -5,6 +5,8 @@
 #include <sys/uio.h>
 #include <signal.h>
 
+int RT0u__inCritical = 0;
+
 void set_RTHeapRep_Fault(void *p)
 {
 /* Do nothing.

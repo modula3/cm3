@@ -109,7 +109,7 @@
 #undef   NULL
 #endif
 #define  NULL (void *)(0)
-extern long RT0u__inCritical;
+int RT0u__inCritical = 0;
 #define ENTER_CRITICAL RT0u__inCritical++
 #define EXIT_CRITICAL  RT0u__inCritical--
 
