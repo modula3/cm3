@@ -1,16 +1,17 @@
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
 % 
-% Standard configuration file for SOLgnu (Solaris 2.x w/gcc)
+% Standard configuration file for FreeBSD 3.x with ELF object files
 %
 
 %-------------------------------------------------- compilation environment ---
 
-readonly TARGET       = "SOLgnu"              % code generation target
-readonly BUILD_DIR    = TARGET                % directory for results
-readonly OS_TYPE      = "POSIX"               % { "WIN32" or "POSIX" }
-readonly WORD_SIZE    = "32BITS"              % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "sparc-sun-solaris2"  % "cpu-vendor-os" string for GNU
+readonly TARGET       = "FreeBSD3"        % code generation target
+readonly BUILD_DIR    = TARGET            % directory for results
+readonly OS_TYPE      = "POSIX"           % { "WIN32" or "POSIX" }
+readonly WORD_SIZE    = "32BITS"          % { "32BITS" or "64BITS" }
+readonly GNU_PLATFORM = "i486-unknown-freebsdelf" 
+                                          % "cpu-vendor-os" string for GNU
 %readonly INSTALL_KEY  = BEGIN_CONFIG
 %  "What is your installation key?"
 %    14 %-- user specified key
@@ -52,13 +53,15 @@ end
 % its first command-line argument.
 
 INITIAL_REACTOR_EDITOR = BEGIN_CONFIG
-  "What should be the default text editor for new Reactor users?"
+  "What should be the default text editor for new CM3 users?"
     10 "EDITOR"
      0 "emacsclient"
      0 "emacs"
      0 "gnuclient"
      0 "xemacs"
+     0 "ee"
      0 "vi"
+     0 "vim"
      0 "textedit"
      0 "xedit"
      6 "/usr/local/emacs/bin"  "emacsclient"
@@ -67,8 +70,6 @@ INITIAL_REACTOR_EDITOR = BEGIN_CONFIG
      6 "/usr/local/bin"        "gnuclient"
      6 "/usr/local/emacs/bin"  "emacs"
      6 "/usr/local/bin"        "emacs"
-     6 "/usr/local/xemacs/bin" "xemacs"
-     6 "/usr/local/bin"        "xemacs"
      6 "/usr/bin"              "vi"
      6 "/usr/local/X11R5/bin"  "xedit"
      6 "/usr/openwin/bin"      "textedit"
@@ -87,7 +88,7 @@ END_CONFIG
 % fixed the permissions.
 
 INSTALL_ROOT = BEGIN_CONFIG
-  "Where should Reactor be installed?"
+  "Where should CM3 be installed?"
     7 %-- user specified install root
 END_CONFIG
 
@@ -125,19 +126,16 @@ readonly INSTALL_IMPLS = TRUE
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ "-Xlinker", "-Bdynamic", "-lsocket", "-lnsl",
-                        "-lw",    % wide-char (Unicode) support
-                        "-ldl",   % dynamic loader support
-                        "-lm" ],
-  "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
-                     "Where are the lex/yacc libraries?"
-                       11 "libl.a"
-                       12 "/usr/lib"
-                       12 "/usr/local/lib"
-                       12 "/usr/local/gnu/lib"
-                       13 "/usr/lib"
-                   END_CONFIG, "-ll" ],
-  "FLEX-BISON" : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
+  "LIBC"       : [ "-lm" ],
+% "LEX-YACC"   : [ BEGIN_CONFIG
+%                    "Where are the lex/yacc libraries?"
+%                      11 "libl.a"
+%                      12 "/usr/lib"
+%                      12 "/usr/local/lib"
+%                      12 "/usr/local/gnu/lib"
+%                      13 "/usr/lib"
+%                  END_CONFIG, "-ll" ],
+  "FLEX-BISON" : [ BEGIN_CONFIG
                      "Where are the flex/bison libraries?"
                        11 "libfl.a"
                        12 "/usr/lib"
@@ -145,52 +143,63 @@ SYSTEM_LIBS = {
                        12 "/usr/local/gnu/lib"
                        13 "/usr/lib"
                    END_CONFIG, "-lfl" ],
-  "POSTGRES95" : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
+  "POSTGRES95" : [ BEGIN_CONFIG
                      "Where are the Postgres95 libraries?"
                        11 "libpq.a"
                        12 "/usr/local/pgsql/lib"
                        12 "/usr/local/postgres95/lib"
                        12 "/usr/local/lib"
                        12 "/usr/lib"
-                       13 "/usr/lib"
+                       13 "/usr/local/pgsql/lib"
                    END_CONFIG, "-lpq" ],
-  "OPENGL"     : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
+  "OPENGL"     : [ BEGIN_CONFIG
                      "Where are the OpenGL libraries?"
                        11 "libGLU.a"
                        11 "libGL.a"
-                       12 "/usr/openwin/lib"
+                       12 "/usr/X11R6/lib"
+                       12 "/usr/X11/lib"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
                        12 "/usr/local/gnu/lib"
-                       13 "/usr/openwin/lib"
-                       13 "/usr/lib"
-                   END_CONFIG,
-                      "-lGLU", "-lGL", "-lXext" ],
-  "MOTIF"      : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
+                       13 "/usr/X11R6/lib"
+                   END_CONFIG, "-lGLU", "-lGL", "-lXext" ],
+  "ODBC"       : [ BEGIN_CONFIG
+                     "Where are the Postgres95 libraries?"
+                       11 "libiodbc.a"
+                       12 "/usr/local/lib"
+                       12 "/usr/lib"
+                       12 "/usr/local/pgsql/lib"
+                       12 "/usr/local/postgres95/lib"
+                       13 "/usr/local/lib"
+                   END_CONFIG, "-lpq",
+                     PKG_USE & "/pgodbc/FreeBSD3/libpgodbc.a" ],
+  "MOTIF"      : [ BEGIN_CONFIG
                      "Where are the Motif libraries?"
                        11 "libXm.a"
-                       12 "/usr/dt/lib"
+                       12 "/usr/X11R6/lib"
+                       12 "/usr/X11/lib"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
                        12 "/usr/local/gnu/lib"
-                       13 "/usr/dt/lib"
-                       13 "/usr/lib"
+                       13 "/usr/X11R6/lib"
                    END_CONFIG, "-lXm" ],
-  "X11"        : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
+  "X11"        : [ BEGIN_CONFIG
                      "Where are the X11 libraries?"
                        11 "libXaw.a"
                        11 "libXmu.a"
                        11 "libXext.a"
                        11 "libXt.a"
+                       11 "libSM.a"
+                       11 "libICE.a"
                        11 "libX11.a"
-                       12 "/usr/openwin/lib"
+                       12 "/usr/X11R6/lib"
+                       12 "/usr/X11/lib"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
                        12 "/usr/local/gnu/lib"
-                       13 "/usr/openwin/lib"
-                       13 "/usr/lib"
-                   END_CONFIG,
-                      "-lXaw", "-lXmu", "-lXext", "-lXt", "-lX11" ],
+                       13 "/usr/X11R6/lib"
+                   END_CONFIG, "-lXaw", "-lXmu", "-lXext",
+                        "-lXt", "-lSM", "-lICE", "-lX11" ],
   "TCP"        : [ ]
 }
 
@@ -205,44 +214,41 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
 readonly SYSTEM_CC  = BEGIN_CONFIG
   "Where is your C compiler?"
     0 "gcc"
-    6 "/bin"           "gcc"
     6 "/usr/bin"       "gcc"
+    6 "/bin"           "gcc"
     6 "/usr/local"     "gcc"
     6 "/usr/local/bin" "gcc"
     6 "/usr/local/gnu" "gcc"
     0 "cc"
-    6 "/bin"           "cc"
     6 "/usr/bin"       "cc"
+    6 "/bin"           "cc"
     6 "/usr/local"     "cc"
     6 "/usr/local/bin" "cc"
     6 "/usr/local/gnu" "cc"
 END_CONFIG % C compiler
-readonly SYSTEM_LD  = BEGIN_CONFIG
-  "Where is your linker?"
-    6 "/usr/ccs/bin"   "ld"
-    0 "ld"
-    6 "/usr/bin"       "ld"
-    6 "/bin"           "ld"
-    6 "/usr/local"     "ld"
-    6 "/usr/local/bin" "ld"
-    6 "/usr/local/gnu" "ld"
-END_CONFIG % Linker
 readonly SYSTEM_AR  = BEGIN_CONFIG
   "Where is your library archiver?"
-    6 "/usr/ccs/bin"   "ar"
     0 "ar"
-    6 "/bin"           "ar"
     6 "/usr/bin"       "ar"
+    6 "/bin"           "ar"
     6 "/usr/local"     "ar"
     6 "/usr/local/bin" "ar"
     6 "/usr/local/gnu" "ar"
 END_CONFIG % Archiver
+readonly SYSTEM_RANLIB  = BEGIN_CONFIG
+  "Where is your library indexer?"
+    0 "ranlib"
+    6 "/usr/bin"       "ranlib"
+    6 "/bin"           "ranlib"
+    6 "/usr/local"     "ranlib"
+    6 "/usr/local/bin" "ranlib"
+    6 "/usr/local/gnu" "ranlib"
+END_CONFIG % Archiver
 readonly SYSTEM_ASM = BEGIN_CONFIG
   "Where is your assembler?"
-    6 "/usr/ccs/bin"   "as"
     0 "as"
-    6 "/bin"           "as"
     6 "/usr/bin"       "as"
+    6 "/bin"           "as"
     6 "/usr/local"     "as"
     6 "/usr/local/bin" "as"
     6 "/usr/local/gnu" "as"
@@ -255,7 +261,7 @@ END_CONFIG % Assembler
 readonly m3back = "@" & BIN_USE & "/cm3cg"
 
 proc m3_backend (source, object, optimize, debug) is
-  local args = [ "-quiet", "-fPIC", source, "-o", object ]
+  local args = [ "-quiet", source, "-o", object ]
   if optimize  args += "-O"  end
   if debug     args += "-g"  end
   return try_exec (m3back, args)
@@ -274,7 +280,7 @@ M3_BACKEND_MODE = "3"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "-fPIC", options ]
+  local args = [ "-fpic", options ]
   if optimize  args += "-O"  end
   if debug     args += "-g"  end
   return try_exec ("@" & SYSTEM_CC, args, "-c", source)
@@ -286,7 +292,7 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc assemble (source, object) is
-  return try_exec ("@" & SYSTEM_ASM, "-s", "-K", "PIC", source, "-o", object)
+  return try_exec ("@" & SYSTEM_ASM, source, "-o", object)
 end
 
 %--------------------------------------------------------- library creation ---
@@ -297,21 +303,33 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local ret_code = 0
   local lib_a    = format ("lib%s.a", lib)
   local lib_so   = format ("lib%s.so", lib)
+  local lib_sox  = format ("lib%s.so.5", lib)
+  local lib_soxx = format ("lib%s.so.5.1", lib)
 
   % first, build the non-shared library
   ret_code = try_exec ("@" & SYSTEM_AR, "cru", lib_a, objects)
   if not equal (ret_code, 0) return ret_code end
+  ret_code = try_exec ("@" & SYSTEM_RANLIB, lib_a)
+  if not equal (ret_code, 0) return ret_code end
 
   if shared
-    % then, build the shared library
-    ret_code = try_exec ("@" & SYSTEM_LD, "-dy -G -z text -o", lib_so, objects)
+    % build the shared library
+    ret_code = try_exec ("@" & SYSTEM_CC, "-shared -Wl,-soname,"  & lib_sox,
+                          "-o", lib_sox, objects)
     if not equal (ret_code, 0) return ret_code end
 
+    % create the version aliases
+    %link_file(lib_soxx, lib_sox)
+    link_file(lib_sox, lib_so)
+
     % finally, make sure the shared library stuff gets installed properly
-    install_derived (lib_so)
+    install_derived (lib_sox)
+    install_derived_link (lib_sox, lib_so)
+    install_link_to_derived (lib_sox, LIB_INSTALL)
     install_link_to_derived (lib_so, LIB_INSTALL)
   else
     delete_file (lib_so)
+    delete_file (lib_sox)
   end
 
   return 0
@@ -323,14 +341,18 @@ end
 % files that should be deleted or shipped.
 
 proc skip_lib (lib, shared) is
-  local lib_so = format ("lib%s.so", lib)
+  local lib_so   = format ("lib%s.so", lib)
+  local lib_sox  = format ("lib%s.so.5", lib)
 
   if shared
     % make sure the shared library stuff gets installed properly
+    install_derived (lib_sox)
     install_derived (lib_so)
+    install_link_to_derived (lib_sox, LIB_INSTALL)
     install_link_to_derived (lib_so, LIB_INSTALL)
   else
     delete_file (lib_so)
+    delete_file (lib_sox)
   end
 
   return 0
@@ -338,14 +360,16 @@ end
 
 %------------------------------------------------------------------- linker ---
 % "m3_link" is called to produce a final executable.
+%---  "-pdb:none" enables the use of windbg with the resulting executable.
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
-  local linker = [ "@" & SYSTEM_CC, "-fPIC" ]
   local args = [ "-o", prog, options, objects, imported_libs ]
   if shared
-    return try_exec (linker, args)
+    return try_exec ("@" & SYSTEM_CC, args)
   else
-    return try_exec (linker, "-Xlinker", "-dy", "-Xlinker", "-Bstatic", args)
+    return try_exec ("@" & SYSTEM_CC, "-static", args)
+    %%% -- see M3_NEED_STANDALONE_LINKS  below
+    %%%return try_exec ("@" & SYSTEM_CC, args)
   end
 end
 
@@ -384,7 +408,7 @@ M3_COVERAGE_LIB = LIB_USE & "/report_coverage.o"
 M3_SPLIT_LIBNAMES = TRUE
 % --- split library names and pass -L/-l arguments to the linker
 
-% M3_SHARED_LIB_ARG = "-R"
+M3_SHARED_LIB_ARG = "-Wl,-R"
 % --- pass "-R" flags to the linker too...
 
 % M3_BOOTSTRAP = TRUE
@@ -405,7 +429,7 @@ M3_SPLIT_LIBNAMES = TRUE
 X11_WITH_SHARED_MEM = TRUE
 % --- X11 libraries include the shared memory extensions (XShm...)
 
-% M3_NEED_STANDALONE_LINKS = TRUE
+%M3_NEED_STANDALONE_LINKS = TRUE
 % --- linker is broken and we need to build a directory of symbolic
 %     links pointing to the non-shared libraries.
 
@@ -429,6 +453,5 @@ end
 %
 
 GNU_CC     = "gcc"
-GNU_CFLAGS = "-g"
+GNU_CFLAGS = "-O"
 GNU_MAKE   = "make"
-

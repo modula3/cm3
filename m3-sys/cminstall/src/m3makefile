@@ -3,7 +3,7 @@
 
 import ("libm3")
 import ("m3quake")
-import ("cmkey")
+%import ("cmkey")
 
 resource_named ("config", "config" & SL & TARGET)
 bundle ("Setup")
