@@ -102,9 +102,9 @@ SYSTEM_LIBS = {
   "FLEX-BISON" : [ "-L/usr/lib", "-lfl" ],
   "POSTGRES95" : [ "-L/usr/local/postgres95/lib", "-lpq" ],
   "OPENGL"     : [ "-L/usr/lib", "-lGLU", "-lGL", "-lXext" ],
-  "MOTIF"      : [ "-L/usr/X11R6/lib", "-lXm", "-lpthread" ],
+  "MOTIF"      : [ "-L/usr/X11R6/lib", "-lXm" ],
   "X11"        : [ "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext",
-                        "-lXt", "-lSM", "-lICE", "-lX11", "-lpthread" ],
+                        "-lXt", "-lSM", "-lICE", "-lX11" ],
   "TCP"        : [ ]
 }
 
