@@ -12,7 +12,7 @@ TYPE
 
 <*UNUSED*>
 PROCEDURE Lex(str:TEXT):T;
-PROCEDURE Fmt(v:T;
+PROCEDURE Fmt(x:T;
             style:=F.Style.Fix;
             prec:=2):TEXT RAISES {Thread.Alerted, Wr.Failure};
 

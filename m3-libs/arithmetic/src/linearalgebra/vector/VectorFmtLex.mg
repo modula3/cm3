@@ -33,17 +33,17 @@ BEGIN
 END Lex;
 (*-----------------*)
 PROCEDURE Fmt( 
-            v:T; 
+            x:T; 
             style:=F.Style.Fix;
             prec:=2):TEXT RAISES {Thread.Alerted, Wr.Failure} = 
 CONST width = 12;
 VAR
   wr:=TextWr.New();
 BEGIN
-  Wr.PutText(wr,"V" & F.Int(NUMBER(v^)) & "{");
-  FOR i:=FIRST(v^) TO LAST(v^) DO
-    Wr.PutText(wr,F.Pad(Rf.Fmt(v[i],style,prec),width)); 
-    IF i#LAST(v^) THEN Wr.PutText(wr,", "); END;
+  Wr.PutText(wr,"V" & F.Int(NUMBER(x^)) & "{");
+  FOR i:=FIRST(x^) TO LAST(x^) DO
+    Wr.PutText(wr,F.Pad(Rf.Fmt(x[i],style,prec),width)); 
+    IF i#LAST(x^) THEN Wr.PutText(wr,", "); END;
   END;
   Wr.PutText(wr,"}\n");
   RETURN TextWr.ToText(wr);
