@@ -1,6 +1,6 @@
 import("libm3")
 import("tempfiles")
-import("m3na")
+import("m3na-new")
 
 implementation("TestWordEx")
 implementation("TestBits")

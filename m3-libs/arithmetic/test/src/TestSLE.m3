@@ -11,7 +11,7 @@ FROM NADefinitions IMPORT Error;
 IMPORT LongRealBasic  AS R,
        LongRealTrans  AS RT,
        LongRealFmtLex AS RF,
-       LongRealVectorFast AS V,
+       LongRealVector     AS V,
        LongRealMatrixFast AS M,
        LongRealVectorFmtLex AS VF,
        LongRealMatrixFmtLex AS MF,

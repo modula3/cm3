@@ -23,9 +23,6 @@ CONST
   ArithSeq = VI.ArithSeq;
   GeomSeq  = VI.GeomSeq;
 
-PROCEDURE RecursiveSeq (num: CARDINAL; from: R.T; by: V.MapFtn): V.T
-  RAISES {Error};
-
 PROCEDURE Apply (READONLY x: T; f: V.ApplyFtn) RAISES {Error};
 PROCEDURE Map (READONLY x: T; f: V.MapFtn): V.T RAISES {Error};
 PROCEDURE Reduce (READONLY x: T; f: V.ReduceFtn; accu: R.T): R.T

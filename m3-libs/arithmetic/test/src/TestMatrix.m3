@@ -8,7 +8,7 @@ Abstract:  Tests for LongRealMatrixBasic module.
 (*FROM NADefinitions IMPORT Error,Err;*)
 IMPORT (*IO,Wr,Fmt,*)
        LongRealBasic AS R,
-       LongRealVectorBasic  AS V,
+       LongRealVector       AS V,
        LongRealVectorFmtLex AS VF,
        LongRealMatrixBasic  AS M,
        LongRealMatrixFmtLex AS MF;
