@@ -98,6 +98,7 @@ readonly DEV_BIN = "G:\\MSDEV\\BIN\\"  % executables
 SYSTEM_LIBS = {
   "LIBC"       : [ DEV_LIB & "msvcrt.lib",
                    DEV_LIB & "winspool.lib",
+                   DEV_LIB & "\\comctl32.lib",
                    LIB_USE & "\\wsock32.lib",
                    LIB_USE & "\\comdlg32.lib",
                    LIB_USE & "\\netapi32.lib",
