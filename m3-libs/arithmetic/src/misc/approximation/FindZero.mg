@@ -1,5 +1,5 @@
 GENERIC MODULE FindZero(R, RT);
-(*Copyright (c) 1996, Harry George *)
+(*Arithmetic for Modula-3, see doc for details *)
 FROM NADefinitions IMPORT Error, Err;
 
 CONST Module = "FindZero.";

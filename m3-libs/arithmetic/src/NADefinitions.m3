@@ -1,10 +1,10 @@
 MODULE NADefinitions;
-(*Copyright (c) 1996, m3na project
+(** Arithmetic for Modula-3, see doc for details
 
-Abstract: m3na Utilities.
+Abstract: Utilities.
 
 12/13/95  Harry George    Initial version
-1/27/96   Harry George    Comverted to m3na
+1/27/96   Harry George    Converted to m3na
 *)
 IMPORT IO,Stdio,Wr,Thread;
 
@@ -15,7 +15,7 @@ PROCEDURE debug(level:[0..3]; ftn,str:TEXT) (*RAISES {Thread.Alerted, Wr.Failure
 <*FATAL Thread.Alerted, Wr.Failure*>
 BEGIN
   IF verbosity >= level THEN
-    Wr.PutText(Stdio.stdout,"m3na." & ftn & ":" & str & "\n");
+    Wr.PutText(Stdio.stdout,"arithmetic." & ftn & ":" & str & "\n");
     Wr.Flush(Stdio.stdout);
   END;
 END debug;
@@ -23,7 +23,7 @@ END debug;
 (*---errors-----------*)
 PROCEDURE err(ftn:TEXT; code:Err; errmsg :TEXT:=NIL) RAISES {Error}=
 BEGIN
-  IO.Put("m3na error:" & ftn & ":" & errmsg & "\n");
+  IO.Put("arithmetic error:" & ftn & ":" & errmsg & "\n");
   RAISE Error(code);
 END err;
 

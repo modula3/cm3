@@ -1,7 +1,10 @@
 MODULE Test EXPORTS Test, Main;
-(*Copyright (c) 1996, Abstract: Test driver for m3na library.
+(** Arithmetic for Modula-3, see doc for details
 
-   12/13/95 Harry George Initial version 1/27/96 Harry George converted to
+   Abstract: Test drivers
+
+   12/13/95 Harry George Initial version
+    1/27/96 Harry George converted to
    m3na format *)
 
 IMPORT Stdio, Thread, Wr, LongRealBasic AS R;

@@ -1,5 +1,5 @@
 GENERIC INTERFACE ChebyPolynomial(P, CP);
-(*Copyright (c) 1995, Harry George
+(*Arithmetic for Modula-3, see doc for details
 
    Abstract: Chebyshev polynomials and approximation of functions by sums
    of chebyshev polynomials *)

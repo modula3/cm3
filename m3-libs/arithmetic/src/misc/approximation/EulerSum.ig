@@ -1,5 +1,5 @@
 GENERIC INTERFACE EulerSum(R);
-(*Copyright (c) 1995, Harry George
+(*Arithmetic for Modula-3, see doc for details
 
    Abstract: Approximately sum up the function values
    f(0)+f(1)+f(2)+...+f(x) for given f and x, x might be a fraction

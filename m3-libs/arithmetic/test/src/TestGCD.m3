@@ -1,5 +1,5 @@
 MODULE TestGCD EXPORTS Test;
-(*Copyright (c) 1996, m3na project Abstract: Tests for GCD module.
+(*Arithmetic for Modula-3, see doc for details Abstract: Tests for GCD module.
 
    *)
 

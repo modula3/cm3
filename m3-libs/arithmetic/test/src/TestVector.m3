@@ -1,5 +1,5 @@
 MODULE TestVector EXPORTS Test;
-(*Copyright (c) 1996, m3na project Abstract: Tests for Vector module.
+(*Arithmetic for Modula-3, see doc for details Abstract: Tests for Vector module.
 
    1/1/96 <name> Initial version
 

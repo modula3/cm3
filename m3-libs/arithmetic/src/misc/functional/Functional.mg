@@ -1,5 +1,5 @@
 GENERIC MODULE Functional(R, RT, V, VT, M, FD, LA);
-(* Copyright (c) 1996, m3na project *)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT NADefinitions AS NA;
 

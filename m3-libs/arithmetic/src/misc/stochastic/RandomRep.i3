@@ -1,5 +1,5 @@
 INTERFACE RandomRep;
-(*Copyright (c) 1996, m3na project
+(*Arithmetic for Modula-3, see doc for details
 
 Abstract: Private interface to RandomBasic
 Used to put object wrapper on RNG's.

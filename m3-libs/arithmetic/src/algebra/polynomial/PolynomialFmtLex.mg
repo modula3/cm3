@@ -1,5 +1,5 @@
 GENERIC MODULE PolynomialFmtLex(R, RF, VF);
-(*Copyright (c) 1995, Harry George*)
+(*Arithmetic for Modula-3, see doc for details*)
 
 IMPORT Rd, Wr, TextWr, Thread;
 IMPORT Fmt AS F;

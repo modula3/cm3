@@ -1,5 +1,5 @@
 GENERIC INTERFACE PhysicalValue(R);
-(*Copyright (c) 1996, m3na project
+(*Arithmetic for Modula-3, see doc for details
 
 Abstract: Combines a numerical type with physical units.
           This allows for dynamically safe operations.

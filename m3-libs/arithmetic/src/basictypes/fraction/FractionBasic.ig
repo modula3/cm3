@@ -1,5 +1,5 @@
 GENERIC INTERFACE FractionBasic(R);
-(*Copyright (c) 1996, m3na project
+(*Arithmetic for Modula-3, see doc for details
 
    Abstract: Generic fraction type Instantiate with integers,
    polynomials *)

@@ -1,5 +1,5 @@
 MODULE TestWordEx EXPORTS Test;
-(*Copyright (c) 1996, m3na project Abstract: Tests for WordEx module.
+(*Arithmetic for Modula-3, see doc for details Abstract: Tests for WordEx module.
 
    3/23/96 Harry George Initial version
 

@@ -1,5 +1,7 @@
 MODULE TestReal64 EXPORTS Test;
-(*Copyright (c) 1995,1996 Harry George Abstract: Test driver for numerical
+(*Arithmetic for Modula-3, see doc for details 
+
+   Abstract: Test driver for numerical
    analysis
 
    12/24/95 Harry George Initial version 2/17/96 Harry George Rebuilt into

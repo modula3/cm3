@@ -1,5 +1,5 @@
 MODULE TestBigInteger EXPORTS Test;
-(*Copyright (c) 1996, m3na project Abstract: Tests for BigInteger module.
+(*Arithmetic for Modula-3, see doc for details Abstract: Tests for BigInteger module.
 
    3/6/96 Harry George Initial version
 

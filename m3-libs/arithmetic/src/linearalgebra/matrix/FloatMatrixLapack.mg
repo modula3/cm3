@@ -1,5 +1,5 @@
 GENERIC MODULE FloatMatrixLapack(R, C, V, VR, CV, M, LA);
-(*Copyright (c) 1996, m3na project
+(*Arithmetic for Modula-3, see doc for details
 
    Abstract: <describe> *)
 

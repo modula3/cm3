@@ -1,5 +1,5 @@
 GENERIC INTERFACE PolynomialFmtLex(RF, P);
-(*Copyright (c) 1996, m3na project*)
+(*Arithmetic for Modula-3, see doc for details*)
 
 IMPORT Rd, Wr, Thread;
 IMPORT Lex AS L;

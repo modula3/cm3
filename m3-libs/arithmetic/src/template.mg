@@ -1,10 +1,8 @@
 GENERIC MODULE XYZ(R);
-(* Copyright (c) 1996, m3na project *)
+(* Arithmetic for Modula-3, see doc for details *)
 
 <*UNUSED*>
 CONST Module = "XYZ.";
-(*==========================*)
 
-(*==========================*)
 BEGIN
 END XYZ.

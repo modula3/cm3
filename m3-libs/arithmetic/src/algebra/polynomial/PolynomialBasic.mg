@@ -1,5 +1,5 @@
 GENERIC MODULE PolynomialBasic(R, VR);
-(*Copyright (c) 1995, Harry George*)
+(*Arithmetic for Modula-3, see doc for details*)
 FROM NADefinitions IMPORT Error, Err;
 
 CONST Module = "PolynomialBasic.";

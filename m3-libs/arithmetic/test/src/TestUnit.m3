@@ -1,5 +1,5 @@
 MODULE TestUnit EXPORTS Test;
-(*Copyright (c) 1996, m3na project Abstract: Tests for PhysicalUnit and
+(*Arithmetic for Modula-3, see doc for details Abstract: Tests for PhysicalUnit and
    related modules.
 
    *)

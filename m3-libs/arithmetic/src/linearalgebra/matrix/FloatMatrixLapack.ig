@@ -1,5 +1,5 @@
 GENERIC INTERFACE FloatMatrixLapack(R, V, CV, M);
-(*Copyright (c) 1996, m3na project
+(*Arithmetic for Modula-3, see doc for details
 
    Abstract: High level interfaces to LAPACK
 

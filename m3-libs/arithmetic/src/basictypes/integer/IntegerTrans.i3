@@ -1,5 +1,5 @@
 INTERFACE IntegerTrans;
-(*Copyright (c) 1996, m3na project
+(*Arithmetic for Modula-3, see doc for details
 
 Abstract: Generic computations on integer types
 
