@@ -865,8 +865,8 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
 
 
     CONST
-      maxIter           = 1;
-      smoothWeightProgr = 10.0D0;
+      maxIter           = 10;
+      smoothWeightProgr = 100.0D0;
       maxSubIter        = 30;
 
       tol     = 1.0D-4;
