@@ -1,0 +1,33 @@
+% Copyright (C) 1993, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Fri Aug 19 16:30:40 PDT 1994 by steveg
+%      modified on Tue Dec 21 10:46:24 PST 1993 by kalsow
+%      modified on Thu Jul 30 16:51:53 PDT 1992 by johnh
+%      modified on Wed Jul 22 12:03:01 PDT 1992 by harrison
+%      modified on Wed Jul  8 09:44:42 1992 by mhb
+
+import("formsvbt")
+
+Interface ("MGPublic")
+
+Module ("Animate")
+Module ("Appearances")
+Module ("CirclePixmap")
+Module ("CirclePixmapCache")
+Module ("Fuzzy")
+Module ("MG")
+Module ("MGPaintOp")
+Module ("MGV")
+Module ("Matrix2D")
+Module ("R2")
+Module ("R2Box")
+Module ("R2Path")
+Module ("ShapePixmap")
+Module ("ShapeUtils")
+module ("R2PathExtra")
+
+Generic_module ("TypeSelector")
+
+Library("m3mg")

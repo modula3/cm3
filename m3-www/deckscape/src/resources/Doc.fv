@@ -1,0 +1,9 @@
+(VBox
+  (Insert "macros.fv")
+  (HBox
+    (Shape (Width + Inf - Inf)
+      (Source %source (Text %docName LeftAlign "Doc Name")))
+    (Button %hotlistButton "H")
+    (Button %killButton "D"))
+  (Bar 2)
+  (Shape (Width - Inf) (Height - Inf)  (Generic %gen)))

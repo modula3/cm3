@@ -1,0 +1,31 @@
+% Copyright (C) 1993, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Tue Dec 21 10:53:03 PST 1993 by kalsow
+%      modified on Thu Sep 23 11:16:29 PDT 1993 by mhb
+
+import("mg")
+
+Module("ChipsVBT")
+Module("RectsVBT")
+
+Module("LinearArray")
+Module("LinearArraySelector")
+Module("IntArrayView")
+Module("BinaryTree")
+Interface("GenericSubTree")
+Module("GenericSubTreeSelector")
+Module("GenericTree")
+Module("RadialTree")
+
+Interface("GraphVBTExtras")
+Module("GraphVBT")
+Module("AnimationPath")
+Module("GraphAnim")
+Module("PaintOpAnim")
+Module("Grid")
+
+Module ("MGRd")
+
+Library("m3mgkit")

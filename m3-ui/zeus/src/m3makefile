@@ -1,0 +1,49 @@
+% Copyright (C) 1993, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Wed Feb 15 08:18:47 PST 1995 by kalsow 
+%      modified on Sun Jun  5 17:01:59 PDT 1994 by najork 
+%      modified on Fri Jun  3 11:15:06 PDT 1994 by heydon 
+%      modified on Wed Jun  1 23:42:20 PDT 1994 by mhb   
+%      modified on Thu Jul  8 17:06:37 PDT 1993 by steveg
+%      modified on Fri Jan 29 13:48:01 PST 1993 by johnh
+%      modified on Tue Jul 21 18:06:00 PDT 1992 by sclafani
+
+import     ("netobj")
+import     ("codeview")
+import     ("mg")
+import     ("mgkit")
+
+template   ("m3zume")
+
+module     ("AlbumVBT")
+Module     ("Algorithm")
+Interface  ("AlgorithmClass")
+module     ("Classes")
+module     ("OSUtils")
+Module     ("View")
+Interface  ("ViewClass")
+Interface  ("RemoteView")
+Module     ("Zeus")
+interface  ("ZeusPrivate")
+Module     ("ZeusClass")
+Module     ("ZeusCodeView")
+Module     ("ZeusDataView")
+Module     ("ZeusPanel")
+interface  ("ZeusPanelFriends")
+interface  ("ZeusPanelPrivate")
+Module     ("ZeusUtil")
+module     ("ZeusSnapshot")
+Module     ("ZFmt")
+
+resource   ("digital.pbm")
+resource   ("zeusPanel.fv")
+resource   ("zeusSession.fv")
+resource   ("zeusIcon.pbm")
+bundle     ("ZeusBundle")
+
+netobj     ("RemoteView", "T")
+
+Library    ("m3zeus")
+

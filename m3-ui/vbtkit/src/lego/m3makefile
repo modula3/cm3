@@ -1,0 +1,52 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Fri May 17 09:10:52 PDT 1996 by mhb   
+%      modified on Tue Jan 24 10:54:15 PST 1995 by kalsow
+%      modified on Fri May 14 17:02:06 PDT 1993 by meehan
+%      modified on Fri Sep 25 14:16:22 PDT 1992 by steveg
+
+Module ("AnchorSplit")
+Module ("AnchorHelpSplit")
+Module ("AnchorHelpVBT")
+Module ("BiFeedbackVBT")
+Module ("BooleanVBT")
+Module ("ChoiceVBT")
+Module ("FeedbackVBT")
+Module ("FileBrowserVBT")
+Module ("FlexVBT")
+Module ("GuardedBtnVBT")
+Module ("Image")
+Module ("ListVBT")
+Module ("MarginFeedbackVBT")
+Module ("MenuSwitchVBT")
+Module ("MultiFilter")
+Module ("MultiSplit")
+Module ("MultiClass")
+Module ("NumericVBT")
+Module ("OffsetVBT")
+Module ("PixmapVBT")
+Module ("QuickSwitchVBT")
+Module ("ReactivityVBT")
+Module ("ScaleFilter")
+Module ("ScrollerVBT")
+Module ("ScrollerVBTClass")
+Module ("Shadow")
+module ("ShadowPaint")
+Module ("ShadowedBarVBT")
+Module ("ShadowedFeedbackVBT")
+Module ("ShadowedVBT")
+Module ("SourceVBT")
+Module ("SplitterVBT")
+Module ("SwitchVBT")
+Module ("TrillSwitchVBT")
+module ("VBTKitResources")
+Module ("ViewportVBT")
+Module ("ZBackgroundVBT")
+Module ("ZChassisVBT")
+Module ("ZChildVBT")
+Module ("ZGrowVBT")
+Module ("ZMoveVBT")
+Module ("ZSplitUtils")
+Module ("ZTilps")
