@@ -1139,7 +1139,7 @@ c-common.o : c-common.c $(CONFIG_H) $(TREE_H) c-tree.h c-lex.h flags.h
 
 # Modula-3 language specific files.
 
-m3.o : m3.c $(CONFIG_H) $(RTL_H) $(TREE_H) input.h flags.h insn-codes.h expr.h
+m3.o : m3.c m3cg.h $(CONFIG_H) $(RTL_H) $(TREE_H) input.h flags.h insn-codes.h expr.h
 
 # Language-independent files.
 
