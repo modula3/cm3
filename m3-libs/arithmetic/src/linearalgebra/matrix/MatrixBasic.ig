@@ -30,6 +30,7 @@ PROCEDURE Sub(x,y:T):T RAISES {Error};   (*x - y*)
 PROCEDURE IsZero(x:T):BOOLEAN;
 PROCEDURE Equal(x,y:T):BOOLEAN RAISES {Error};  (*return v1=v2*)
 
+PROCEDURE Scale(x:T; y:R.T):T;            (*x:=x*factor*)
 PROCEDURE Mul(x,y:T):T RAISES {Error};   (*x * y*)
 PROCEDURE MulV(A:T;b:V.T):V.T RAISES {Error};  (*A * b*)
 PROCEDURE Transpose(x:T):T;                  (*x^T*)
