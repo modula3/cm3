@@ -18,6 +18,8 @@ readonly _FloatPieces = {
   "DS3100_OSF" : [ "IEEE", "IEEE-le", "DS3100" ],
   "FreeBSD"    : _float_le,
   "FreeBSD2"   : _float_le,
+  "FreeBSD3"    : _float_le,
+  "FreeBSD4"   : _float_le,
   "HP300"      : _float_be,
   "HPPA"       : _float_be,
   "IBMR2"      : _float_be,
@@ -25,6 +27,7 @@ readonly _FloatPieces = {
   "IRIX5"      : [ "IEEE", "IEEE-be", "IRIX5" ],
   "LINUX"      : _float_le,
   "LINUXELF"   : _float_le,
+  "LINUXLIBC6" : _float_le,
   "NEXT"       : _float_be,
   "NT386"      : _float_le,
   "OKI"        : _float_le,
@@ -35,7 +38,9 @@ readonly _FloatPieces = {
   "SUN3"       : _float_be,
   "SUN386"     : [ "IEEE", "IEEE-le", "SUN386" ],
   "UMAX"       : _float_le,
-  "VAX"        : [ "VAX" ]
+  "VAX"        : [ "VAX" ],
+  "I386_DARWIN": _float_le, % FIXME: is this correct?
+  "PPC_DARWIN" : _float_be  % FIXME: is this correct?
 }
 
 if _FloatPieces contains TARGET
