@@ -4,6 +4,9 @@
 %pragma(modula3) unsafe="true";
 %pragma(modula3) library="m3fftw";
 
+%insert(m3makefile) %{% compiled / works with with CM3 5.2.6 2003-06-27
+import_lib("fftw3","/usr/lib")%}
+
 /*
   RTType.GetNDimensions and RTHeap.GetArrayShape
   for retrieving data from open arrays
@@ -67,7 +70,7 @@ FROM FFTWLongRealRaw IMPORT R2RKind;
 TYPE
   Plan    <: REFANY;
   Complex = RECORD r, i: LONGREAL; END;
-  Dir = {forward, backward};
+  Dir = {Forward, Backward};
 
   FlagSet=SET OF Flag;
   Flag={
@@ -131,11 +134,13 @@ PROCEDURE CleanupPlan(<*UNUSED*> READONLY w: WeakRef.T; r: REFANY) =
 %typemap(m3wrapintype)  double *        %{LONGREAL%};
 %typemap(m3wrapintype)  fftw_iodim *    %{IODim%};
 
-%typemap(m3wrapintype)  int sign        %{Dir%};
-%typemap(m3wrapargraw)  int sign        %{dirToSign[$input]%};
+%typemap(m3wrapintype)    int sign        %{Dir%};
+%typemap(m3wrapindefault) int sign        %{Dir.Backward%};
+%typemap(m3wrapargraw)    int sign        %{dirToSign[$input]%};
 
-%typemap(m3wrapintype)  unsigned flags  %{FlagSet%};
-%typemap(m3wrapargraw)  unsigned flags  %{LOOPHOLE($input,C.unsigned_int)%};
+%typemap(m3wrapintype)    unsigned flags  %{FlagSet%};
+%typemap(m3wrapindefault) unsigned flags  %{FlagSet{Flag.Estimate}%};
+%typemap(m3wrapargraw)    unsigned flags  %{LOOPHOLE($input,C.unsigned_int)%};
 %typemap("m3wrapargraw:import") unsigned flags "Ctypes AS C"
 
 %typemap(m3wrapintype)  fftw_r2r_kind * %{ARRAY OF R2RKind%};
@@ -308,6 +313,11 @@ PROCEDURE CleanupPlan(<*UNUSED*> READONLY w: WeakRef.T; r: REFANY) =
 %ignore fftw_execute_r2r;
 %ignore fftw_malloc;
 %ignore fftw_free;
+
+/* thread functions are not present in the libraries I have installed */
+%ignore fftw_plan_with_nthreads;
+%ignore fftw_init_threads;
+%ignore fftw_cleanup_threads;
 
 
 /* This is the original fftw3.h file
