@@ -1,5 +1,5 @@
 GENERIC MODULE FloatTrans();
-(**Copyright (c) 1996, m3na project
+(**Arithmetic for Modula-3, see doc for details
 
 Abstract: Generic wrapper routines for (mainly) transcendent functions
 

@@ -1,5 +1,5 @@
 GENERIC INTERFACE GCD(R(*,RList*));
-(*Copyright (c) 1996, m3na project
+(*Arithmetic for Modula-3, see doc for details
 
 Abstract: Generic computation of the greatest common divisor
 

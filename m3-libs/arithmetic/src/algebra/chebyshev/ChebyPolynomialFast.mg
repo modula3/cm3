@@ -1,5 +1,5 @@
 GENERIC MODULE ChebyPolynomialFast(R, RT);
-(*Copyright (c) 1995, Harry George
+(*Arithmetic for Modula-3, see doc for details
 
    Abstract: Implementation of Modula-3 version of NR92, ch 5. *)
 FROM NADefinitions IMPORT Error, Err;

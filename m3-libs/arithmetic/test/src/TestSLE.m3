@@ -1,8 +1,11 @@
 MODULE TestSLE EXPORTS Test;
-(*Copyright (c) 1995,1996 Harry George Abstract: Test driver for
+(*Arithmetic for Modula-3, see doc for details 
+
+   Abstract: Test driver for
    LongRealMatrixDecomposition (simultaneous linear equations)
 
-   12/13/95 Harry George Initial version: nr utilities 2/17/96 Harry George
+   12/13/95 Harry George Initial version: nr utilities
+    2/17/96 Harry George
    Converted to m3na format
 
    *)

@@ -1,5 +1,5 @@
 GENERIC INTERFACE PhysicalValueFmtLex(CF, PV, DB);
-(*Copyright (c) 1996, m3na project*)
+(*Arithmetic for Modula-3, see doc for details*)
 
 
 TYPE T = PV.T;

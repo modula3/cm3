@@ -1,5 +1,5 @@
 MODULE PhysicalUnitFmtLex;
-(*Copyright (c) 1996, m3na project*)
+(*Arithmetic for Modula-3, see doc for details*)
 
 IMPORT PhysicalUnit AS U;
 (*IMPORT Rd, Wr, TextWr, Thread;*)

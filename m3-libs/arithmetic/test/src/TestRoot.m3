@@ -1,5 +1,5 @@
 MODULE TestRoot EXPORTS Test;
-(*Copyright (c) 1996, Harry George*)
+(*Arithmetic for Modula-3, see doc for details*)
 FROM NADefinitions IMPORT Error, Err;
 IMPORT Fmt,
        LongRealBasic                   AS R,

@@ -214,3 +214,9 @@ ExtendedType.[im]3 -> main repository
 build_generic_intf
 build_generic_impl
  aren't described in cm3/doc/help/cm3/
+
+---------------
+
+If an exception occurs twice in a RAISES list the compiler says
+"warning: exception is never raised: PLPlot.SizeMismatch"
+

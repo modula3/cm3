@@ -1,5 +1,5 @@
 MODULE TestMatrix EXPORTS Test;
-(**Copyright (c) 1996, m3na project
+(**Arithmetic for Modula-3, see doc for details
 Abstract:  Tests for LongRealMatrix      module.
 
 1/1/96    <name>   Initial version

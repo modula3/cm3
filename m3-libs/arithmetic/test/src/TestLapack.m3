@@ -1,5 +1,5 @@
 UNSAFE MODULE TestLapack EXPORTS Test;
-(*Copyright (c) 1996, m3na project Abstract: Tests for XYZ module.
+(*Arithmetic for Modula-3, see doc for details Abstract: Tests for XYZ module.
 
    1/1/96 <name> Initial version
 

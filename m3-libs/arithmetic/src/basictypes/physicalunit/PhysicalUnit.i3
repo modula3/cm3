@@ -1,5 +1,5 @@
 INTERFACE PhysicalUnit;
-(*Copyright (c) 1996, m3na project
+(*Arithmetic for Modula-3, see doc for details
 
 Abstract: Computations with vectors of exponents of physical units.
           It will most commonly be used in connection with

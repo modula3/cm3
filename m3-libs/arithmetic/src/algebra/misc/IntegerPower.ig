@@ -1,5 +1,5 @@
 GENERIC INTERFACE IntegerPower(R);
-(*Copyright (c) 1996, m3na project
+(*Arithmetic for Modula-3, see doc for details
 
    Abstract: Fast generic computation of a power with integer exponent *)
 

@@ -1,5 +1,5 @@
 INTERFACE RandomSubtractiveFibo1;
-(*Copyright (c) 1996, m3na project
+(*Arithmetic for Modula-3, see doc for details
 
 Abstract: Collection of random number generators
 Each returns numbers in range:

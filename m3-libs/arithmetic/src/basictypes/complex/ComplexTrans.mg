@@ -1,5 +1,5 @@
 GENERIC MODULE ComplexTrans(R,RT,C);
-(*Copyright (c) 1996, m3na project
+(*Arithmetic for Modula-3, see doc for details
 
 Abstract: Transcendental functions of complex numbers.
 *)

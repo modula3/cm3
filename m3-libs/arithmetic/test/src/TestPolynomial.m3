@@ -1,5 +1,5 @@
 MODULE TestPolynomial EXPORTS Test;
-(*Copyright (c) 1996, m3na project Abstract: Tests for Poly module.
+(*Arithmetic for Modula-3, see doc for details Abstract: Tests for Poly module.
 
    2/4/96 Harry George Initial version
 

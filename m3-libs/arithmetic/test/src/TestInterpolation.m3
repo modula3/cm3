@@ -1,7 +1,10 @@
 MODULE TestInterpolation EXPORTS Test;
-(*Copyright (c) 1996, m3na project Abstract: Test driver for interpolation.
+(*Arithmetic for Modula-3, see doc for details
 
-   12/28/95 Harry George Initial version 1/29/96 Harry George converted to
+   Abstract: Test driver for interpolation.
+
+   12/28/95 Harry George Initial version
+    1/29/96 Harry George converted to
    m3na format *)
 
 IMPORT LongRealBasic         AS R,

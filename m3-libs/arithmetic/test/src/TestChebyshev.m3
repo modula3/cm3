@@ -1,5 +1,7 @@
 MODULE TestChebyshev EXPORTS Test;
-(*Copyright (c) 1995, Harry George Abstract: Test driver for Modula-3
+(*Arithmetic for Modula-3, see doc for details 
+
+   Abstract: Test driver for Modula-3
    rendition of Numerical Recipes in C, 1992.
 
    12/27/95 Harry George Initial version: Ch 5

@@ -1,5 +1,5 @@
 MODULE TestRandom EXPORTS Test;
-(*Copyright (c) 1996, m3na project Abstract: Tests for Rand module.
+(*Arithmetic for Modula-3, see doc for details Abstract: Tests for Rand module.
 
    3/16/96 Harry George Initial version (basic structure) 3/17/96 Warren
    Smith Normal, Gamma, and Dirichlet *)

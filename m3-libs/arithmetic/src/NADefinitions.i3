@@ -1,7 +1,7 @@
 INTERFACE NADefinitions;
-(*Copyright (c) 1996, Harry George
+(* Arithmetic for Modula-3, see doc for details
 
-   Abstract: Global definitions used by all m3na modules. *)
+   Abstract: Global definitions used by all arithmetic modules. *)
 
 EXCEPTION
   Error(Err);

@@ -1,5 +1,5 @@
 GENERIC MODULE ChebyPolynomial();
-(*Copyright (c) 1995, Harry George *)
+(*Arithmetic for Modula-3, see doc for details *)
 
 <*UNUSED*>
 CONST Module = "ChebyPolynomial.";

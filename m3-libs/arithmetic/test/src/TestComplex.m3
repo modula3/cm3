@@ -1,5 +1,7 @@
 MODULE TestComplex EXPORTS Test;
-(*Copyright (c) 1996, Harry George Abstract: Test driver for Complex
+(*Arithmetic for Modula-3, see doc for details 
+
+   Abstract: Test driver for Complex
 
    1/27/96 Harry George Initial version *)
 
