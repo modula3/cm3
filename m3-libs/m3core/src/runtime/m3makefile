@@ -49,7 +49,8 @@ readonly EXCEPTION_IMPL = {
   "UMAX"       : "ex_frame",
   "VAX"        : "ex_frame",
   "I386_DARWIN": "ex_frame",
-  "PPC_DARWIN" : "ex_frame"
+  "PPC_DARWIN" : "ex_frame",
+  "PPC_LINUX"  : "ex_frame"
 }
 
 

@@ -39,7 +39,8 @@ readonly _DateImpls = {
   "UMAX"       : "DateBsd",
   "VAX"        : "DateBsd",
   "I386_DARWIN": "DateBsd",
-  "PPC_DARWIN" : "DateBsd"
+  "PPC_DARWIN" : "DateBsd",
+  "PPC_LINUX"  : "DateBsd"
 }
 
 if _DateImpls contains TARGET
