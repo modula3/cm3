@@ -6,6 +6,7 @@ IMPORT Integer32IntegerPower AS IIntPow;
 
 IMPORT LongRealVectorFast AS V;
 IMPORT LongRealVectorSupport AS VS;
+IMPORT LongRealVectorTrans AS VT;
 
 IMPORT LongRealMatrixFast AS M;
 IMPORT LongRealMatrixLapack AS LA;
@@ -191,23 +192,41 @@ PROCEDURE TestRho (x: V.T) =
     END;
   END TestRho;
 
-PROCEDURE InverseDRho (x: V.T) =
+PROCEDURE InverseDRho (x: V.T): V.T RAISES {NA.Error} =
   (*Find the parameter vector y for which DRho(y)=x*)
+  CONST tol = 1.0D-14;
   (*VAR y := V.New(3);*)
-  VAR y := x;
+  VAR y := x;                    (*zero is a bad initial value*)
   BEGIN
-    FOR j := 0 TO 15 DO
-      y := V.Add(y, LA.LeastSquaresGen(
-                      ComputeDDRho(y^),
-                      ARRAY OF V.T{V.Sub(x, ComputeDRho(y^))})[0].x);
-      IO.Put(Fmt.FN("y %s, DRho(y) %s\n",
-                    ARRAY OF TEXT{VF.Fmt(y), VF.Fmt(ComputeDRho(y^))}));
+    FOR j := 0 TO 100 DO
+      VAR ax := ComputeDRho(y^);
+      BEGIN
+        IF VT.Norm1(V.Sub(ax, x)) <= tol * VT.Norm1(x) THEN RETURN y; END;
+        y :=
+          V.Add(y, LA.LeastSquaresGen(
+                     ComputeDDRho(y^), ARRAY OF V.T{V.Sub(x, ax)})[0].x);
+        (*
+          IO.Put(Fmt.FN("y %s, DRho(y) %s\n",
+                       ARRAY OF TEXT{VF.Fmt(y), VF.Fmt(ComputeDRho(y^))}));
+        *)
+      END;
     END;
+    RAISE NA.Error(NA.Err.not_converging);
   END InverseDRho;
+
+PROCEDURE TestInverseDRho (READONLY x0: ARRAY [0 .. 2] OF R.T) =
+  <*FATAL NA.Error*>
+  VAR
+    x := V.FromArray(x0);
+    y := InverseDRho(x);
+  BEGIN
+    IO.Put(
+      Fmt.FN("x %s, ComputeDRho(y) %s, y %s\n",
+             ARRAY OF TEXT{VF.Fmt(x), VF.Fmt(ComputeDRho(y^)), VF.Fmt(y)}));
+  END TestInverseDRho;
 
 PROCEDURE MaximizeSmoothness (x: V.T) =
   VAR
-
     id := M.NewOne(3);
   BEGIN
 
@@ -233,9 +252,9 @@ PROCEDURE Test () =
         TestRho(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
         TestRho(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0}));
     | 4 =>
-        InverseDRho(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
-        InverseDRho(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 0.1D0}));
-        InverseDRho(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0}));
+        TestInverseDRho(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0});
+        TestInverseDRho(ARRAY OF R.T{1.0D0, 1.0D0, 0.1D0});
+        TestInverseDRho(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0});
     | 5 =>
         MaximizeSmoothness(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
     ELSE
