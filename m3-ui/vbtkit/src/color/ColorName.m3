@@ -13,7 +13,7 @@
 
 MODULE ColorName EXPORTS ColorName, ColorNameF;
 
-IMPORT Color, ISOChar, Text, TextF, TextList, TextListSort, TextIntTbl,
+IMPORT Color, ISOChar, Text, TextList, TextSub, TextListSort, TextIntTbl,
        TextRefTbl;
 
 FROM ColorNameTable IMPORT Basic;
@@ -47,19 +47,19 @@ PROCEDURE IsPrefix (a, b: TEXT; VAR (*OUT*) rest: TEXT): BOOLEAN =
   BEGIN
     <* ASSERT a # NIL *>
     <* ASSERT b # NIL *>
-    WITH aa = a^,
-         bb = b^  DO
-      IF NUMBER (aa) <= 1 THEN
+    WITH al = Text.Length(a),
+         bl = Text.Length(b)  DO
+      IF al <= 0 THEN
         rest := b;
         RETURN TRUE
-      ELSIF NUMBER (bb) < NUMBER (aa) THEN
+      ELSIF bl < al THEN
         RETURN FALSE
       ELSE
-        FOR i := 0 TO LAST (aa) - 1 DO
-          IF ISOChar.Lower [aa [i]] # ISOChar.Lower [bb [i]] THEN RETURN FALSE END
+        FOR i := 0 TO al - 1 DO
+          IF ISOChar.Lower [Text.GetChar(a,i)] # 
+            ISOChar.Lower [Text.GetChar(b,i)] THEN RETURN FALSE END
         END;
-        rest := Text.FromChars (
-                  SUBARRAY (bb, NUMBER (aa) - 1, NUMBER (bb) - NUMBER (aa)));
+        rest := TextSub.New (b, al, bl - al);
         RETURN TRUE
       END
     END
@@ -68,13 +68,14 @@ PROCEDURE IsPrefix (a, b: TEXT; VAR (*OUT*) rest: TEXT): BOOLEAN =
 PROCEDURE NormalizeName (a: TEXT): TEXT =
   (* Deletes all whitespace in /a/ and converts to lower case *)
   VAR
-    b := NEW (REF ARRAY OF CHAR, Text.Length (a));
+    al := Text.Length(a);
+    b := NEW (REF ARRAY OF CHAR, al);
     j := 0;
   BEGIN
     IF NUMBER (b^) > 0 THEN
-      FOR i := 0 TO LAST (a^) - 1 DO
-        IF NOT a [i] IN ISOChar.Spaces THEN
-          b [j] := ISOChar.Lower [a [i]];
+      FOR i := 0 TO al - 1 DO
+        IF NOT Text.GetChar(a,i) IN ISOChar.Spaces THEN
+          b [j] := ISOChar.Lower [Text.GetChar(a,i)];
           INC (j)
         END
       END

@@ -739,22 +739,35 @@ PROCEDURE SetDecoration (trsl: T; w: X.Window; old, new: Decoration)
     TRY
       IF new = NIL OR w = X.None THEN RETURN END;
       IF (old = NIL) OR NOT Text.Equal(old.windowTitle, new.windowTitle) THEN
-        WITH s = M3toC.TtoS(new.windowTitle) DO
-          X.XStoreName(trsl.dpy, w, s)
+        WITH s = M3toC.SharedTtoS(new.windowTitle) DO
+          TRY
+            X.XStoreName(trsl.dpy, w, s);
+          FINALLY
+            M3toC.FreeSharedS(new.windowTitle, s);
+          END;
         END
       END;
       IF (old = NIL) OR NOT Text.Equal(old.iconTitle, new.iconTitle) THEN
-        WITH s = M3toC.TtoS(new.iconTitle) DO
-          X.XSetIconName(trsl.dpy, w, s)
+        WITH s = M3toC.SharedTtoS(new.iconTitle) DO
+          TRY
+            X.XSetIconName(trsl.dpy, w, s);
+          FINALLY
+            M3toC.FreeSharedS(new.iconTitle, s);
+          END;
         END
       END;
       IF (old = NIL) OR NOT Text.Equal(old.inst, new.inst)
            OR NOT Text.Equal(old.applName, new.applName) THEN
-        xClassHint.res_name := M3toC.TtoS(new.inst);
-        xClassHint.res_class := M3toC.TtoS(new.applName);
-        X.XSetClassHint(trsl.dpy, w, ADR(xClassHint));
-        X.XSetCommand(trsl.dpy, w,
-                      LOOPHOLE(ADR(xClassHint.res_class), X.Argv), 1)
+        TRY
+          xClassHint.res_name := M3toC.SharedTtoS(new.inst);
+          xClassHint.res_class := M3toC.SharedTtoS(new.applName);
+          X.XSetClassHint(trsl.dpy, w, ADR(xClassHint));
+          X.XSetCommand(trsl.dpy, w,
+                        LOOPHOLE(ADR(xClassHint.res_class), X.Argv), 1);
+        FINALLY
+          M3toC.FreeSharedS(new.inst, xClassHint.res_name);
+          M3toC.FreeSharedS(new.applName, xClassHint.res_class);
+        END;
       END;
     EXCEPT
       X.Error => RAISE TrestleComm.Failure
@@ -1231,12 +1244,16 @@ PROCEDURE ToAtom (trsl: T; name: TEXT): X.Atom
       RETURN a
     ELSE
       VAR
-        s         := M3toC.TtoS(name);
+        s         := M3toC.SharedTtoS(name);
         a: X.Atom;
       BEGIN
-        a := X.XInternAtom(trsl.dpy, s, X.False);
-        EVAL trsl.atoms.put(a, name);
-        EVAL trsl.names.put(name, a);
+        TRY
+          a := X.XInternAtom(trsl.dpy, s, X.False);
+          EVAL trsl.atoms.put(a, name);
+          EVAL trsl.names.put(name, a);
+        FINALLY
+          M3toC.FreeSharedS(name, s);
+        END;
         RETURN a
       END
     END;

@@ -88,73 +88,70 @@ PROCEDURE ComputeLine (             view  : View;
     (* solve the problem the hard way *)
     VTRd.InitReaderIx(view.vt, from);
     VAR
-      i    : I     := from;     (* the reader index *)
+      i    : I      := from;     (* the reader index *)
       w    : Pixels := 0;        (* the width so far *)
       ow   : Pixels := 0;        (* the previous value of w *)
-      white        := FALSE;    (* true after a whitespace *)
-      okI  : I     := 0;        (* index of a possible break *)
+      white         := FALSE;    (* true after a whitespace *)
+      okI  : I      := 0;        (* index of a possible break *)
       okw  : Pixels := 0;        (* the width up to okI *)
       c    : CHAR;
-      widthMap: ARRAY CHAR OF Pixels := view.vScreenFont.vScreenFont.width;
-      printable: SET OF CHAR := view.vScreenFont.vScreenFont.vFont.vFont.printable;
     BEGIN
-      TRY
-        LOOP
-          (* can we read a character? *)
-          IF i >= length THEN   (* no; we're at eof *)
-            <* ASSERT i <= length + 1 *>
-            IF white THEN okI := i; okw := w END;
-            turned := i # from;
-            w := w + 1;         (* width of the caret *)
-            i := length + 1;
-            IF w > avail THEN RAISE Overflow END;
-            max := i;
-            width := w;
-            RETURN i
-          END;
+      WITH widthMap = view.vScreenFont.width,
+           printable = view.vScreenFont.vFont.printable DO
+        TRY
+          LOOP
+            (* can we read a character? *)
+            IF i >= length THEN   (* no; we're at eof *)
+              <* ASSERT i <= length + 1 *>
+              IF white THEN okI := i; okw := w END;
+              turned := i # from;
+              w := w + 1;         (* width of the caret *)
+              i := length + 1;
+              IF w > avail THEN RAISE Overflow END;
+              max := i;
+              width := w;
+              RETURN i
+            END;
 
-          (* read a character *)
-          c := Rd.GetChar(view.vt.rd);
-          i := i + 1;
-          (* handle the cases *)
-          IF c = ' ' THEN
-            w := w + widthMap[' '];
-            IF w > avail THEN RAISE Overflow END;
-            white := TRUE
-          ELSIF c = '\n' THEN
-            w := w + widthMap['\n'];
-            IF white THEN okI := i - 1; okw := ow END;
-            IF w > avail THEN RAISE Overflow END;
-            max := i;
-            turned := FALSE;
-            width := w;
-            RETURN i
-          ELSIF c = '\t' AND '\t' IN printable THEN
-            IF w + widthMap[' '] > avail THEN RAISE Overflow END;
-            w := w + widthMap[' '] + widthMap['\t'] - 1;
-            w := MIN(w - w MOD widthMap['\t'], avail);
-            white := TRUE
-          ELSE
-            w := w + widthMap[c];
-            IF white THEN okI := i - 1; okw := ow END;
-            IF w > avail THEN RAISE Overflow END;
-            white := FALSE
-          END;
-          ow := w
-        END
-      EXCEPT
-      | Overflow =>             (* line got too long; break *)
+            (* read a character *)
+            c := Rd.GetChar(view.vt.rd);
+            i := i + 1;
+            (* handle the cases *)
+            IF c = ' ' THEN
+              w := w + widthMap[' '];
+              IF w > avail THEN RAISE Overflow END;
+              white := TRUE
+            ELSIF c = '\n' THEN
+              w := w + widthMap['\n'];
+              IF white THEN okI := i - 1; okw := ow END;
+              IF w > avail THEN RAISE Overflow END;
+              max := i;
+              turned := FALSE;
+              width := w;
+              RETURN i
+            ELSIF c = '\t' AND '\t' IN printable THEN
+              IF w + widthMap[' '] > avail THEN RAISE Overflow END;
+              w := w + widthMap[' '] + widthMap['\t'] - 1;
+              w := MIN(w - w MOD widthMap['\t'], avail);
+              white := TRUE
+            ELSE
+              w := w + widthMap[c];
+              IF white THEN okI := i - 1; okw := ow END;
+              IF w > avail THEN RAISE Overflow END;
+              white := FALSE
+            END;
+            ow := w
+          END
+        EXCEPT Overflow =>  (* line got too long; break *)
           max := i;
           turned := TRUE;
-          IF okI > 0 THEN
-            width := okw;
-            RETURN okI
-          ELSE
-            width := ow;
-            RETURN MAX(i - 1, from + 1)
-          END
-      END
-    END
+          IF okI > 0
+            THEN  width := okw;  RETURN okI;
+            ELSE  width := ow;   RETURN MAX(i - 1, from + 1);
+          END;
+        END;
+      END;
+    END;
   END ComputeLine;
 
 (* Up computes the beginning of the screen line "n" lines above the screen
@@ -366,38 +363,34 @@ PROCEDURE UnsafeLocatePoint (             view : View;
   VAR
     i    : INTEGER;
     w    : Pixels;
-    index: I;
     c    : CHAR;
   BEGIN
     i := UnsafeLocateLine (view, place);
     IF i < 0 THEN
       p.v := i
     ELSE
-      WITH z_7 = view^ DO
-        WITH z_8 = z_7.virtual.line [i] DO
-          p.v := z_7.rect.text.north + i * z_7.lineSpacing;
-          VTRd.InitReaderIx (z_7.vt, z_8.virtualLine.from);
-          WITH z_9 = z_7.vScreenFont^ DO
-            WITH z_10 = z_9.vScreenFont.vFont^ DO
+        WITH vl = view.virtual.line [i] DO
+          p.v := view.rect.text.north + i * view.lineSpacing;
+          VTRd.InitReaderIx (view.vt, vl.virtualLine.from);
+          WITH sf = view.vScreenFont DO
+            WITH vFont = sf.vFont DO
               w := 0;
-              FOR z_11 := z_8.virtualLine.from TO place - off DO
-                index := z_11;
-                c := Rd.GetChar (z_7.vt.rd);
+              FOR index := vl.virtualLine.from TO place - off DO
+                c := Rd.GetChar (view.vt.rd);
                 IF c = '\n' THEN
-                  w := z_7.lineWidth
+                  w := view.lineWidth
                 ELSE
-                  w := w + z_9.vScreenFont.width [c];
-                  IF (c = '\t') AND ('\t' IN z_10.vFont.printable) THEN
-                    w := w - 1 + z_9.vScreenFont.width [' '];
-                    w := w - w MOD z_9.vScreenFont.width ['\t']
+                  w := w + sf.width [c];
+                  IF (c = '\t') AND ('\t' IN vFont.printable) THEN
+                    w := w - 1 + sf.width [' '];
+                    w := w - w MOD sf.width ['\t']
                   END
                 END
               END
             END
           END
         END;
-        p.h := MIN (z_7.rect.text.west + w, z_7.rect.text.east)
-      END
+        p.h := MIN (view.rect.text.west + w, view.rect.text.east)
     END
   END UnsafeLocatePoint;
 

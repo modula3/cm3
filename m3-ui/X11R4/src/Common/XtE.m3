@@ -18,7 +18,7 @@ UNSAFE MODULE XtE;
 (*==============================================================*)
 
 
-FROM M3toC IMPORT TtoS;
+FROM M3toC IMPORT FlatTtoS;
 
 PROCEDURE ForceToLoadAnImplementation () =
 BEGIN
@@ -26,28 +26,28 @@ END ForceToLoadAnImplementation;
 
 BEGIN
 
-  Ellipse                        := TtoS("Ellipse");
-  Oval                           := TtoS("Oval");
-  Rectangle                      := TtoS("Rectangle");
-  RoundedRectangle               := TtoS("RoundedRectangle");
-  always                         := TtoS("always");
-  center                         := TtoS("center");
-  default                        := TtoS("default");
-  file                           := TtoS("file");
-  left                           := TtoS("left");
-  notUseful                      := TtoS("notUseful");
-  right                          := TtoS("right");
-  string                         := TtoS("string");
-  textScrollNever                := TtoS("never");
-  textScrollWhenNeeded           := TtoS("whenneeded");
-  textScrollAlways               := TtoS("always");
-  textWrapNever                  := TtoS("never");
-  textWrapLine                   := TtoS("line");
-  textWrapWord                   := TtoS("word");
-  textResizeNever                := TtoS("never");
-  textResizeWidth                := TtoS("width");
-  textResizeHeight               := TtoS("height");
-  textResizeBoth                 := TtoS("both");
-  whenMapped                     := TtoS("whenMapped");
+  Ellipse                        := FlatTtoS("Ellipse");
+  Oval                           := FlatTtoS("Oval");
+  Rectangle                      := FlatTtoS("Rectangle");
+  RoundedRectangle               := FlatTtoS("RoundedRectangle");
+  always                         := FlatTtoS("always");
+  center                         := FlatTtoS("center");
+  default                        := FlatTtoS("default");
+  file                           := FlatTtoS("file");
+  left                           := FlatTtoS("left");
+  notUseful                      := FlatTtoS("notUseful");
+  right                          := FlatTtoS("right");
+  string                         := FlatTtoS("string");
+  textScrollNever                := FlatTtoS("never");
+  textScrollWhenNeeded           := FlatTtoS("whenneeded");
+  textScrollAlways               := FlatTtoS("always");
+  textWrapNever                  := FlatTtoS("never");
+  textWrapLine                   := FlatTtoS("line");
+  textWrapWord                   := FlatTtoS("word");
+  textResizeNever                := FlatTtoS("never");
+  textResizeWidth                := FlatTtoS("width");
+  textResizeHeight               := FlatTtoS("height");
+  textResizeBoth                 := FlatTtoS("both");
+  whenMapped                     := FlatTtoS("whenMapped");
 
 END XtE.

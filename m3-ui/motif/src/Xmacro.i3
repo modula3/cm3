@@ -40,8 +40,10 @@ PROCEDURE AddrVal(value:ADDRESS):Xt.ArgVal;
 PROCEDURE CharVal(value:CHAR):Xt.ArgVal;
 PROCEDURE IntVal(value:INTEGER):Xt.ArgVal;
 PROCEDURE ShortVal(value:short):Xt.ArgVal;
-PROCEDURE TextVal(value:TEXT):Xt.ArgVal;
 PROCEDURE UShortVal(value:unsigned_short):Xt.ArgVal;
+
+PROCEDURE TextVal(value:TEXT;  VAR(*OUT*) str: char_star):Xt.ArgVal;
+(* The caller is responsible for freeing the C-string "str" *)
 
 PROCEDURE XtNewString(str:char_star):char_star;
 

@@ -241,8 +241,9 @@ PROCEDURE Colormap (t: T; VAR info: ColormapInfo): BOOLEAN
               RAISE OSError.E(AtomList.List1(XNameTooLong));
             END;
 
-            WITH string = M3toC.TtoS(info.displayName) DO
+            WITH string = M3toC.SharedTtoS(info.displayName) DO
               RTMisc.Copy(string, ADR(req.serverName[0]), length + 1);
+              M3toC.FreeSharedS(info.displayName,string);
             END;
           ELSE
             RTMisc.Zero(ADR(req.serverName[0]), BYTESIZE(req.serverName));

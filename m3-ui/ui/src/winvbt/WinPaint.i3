@@ -8,8 +8,9 @@
 
 INTERFACE WinPaint;
 
-IMPORT Batch, Trestle, VBT, WinDef;
+IMPORT Batch, Region, Trestle, VBT, WinDef;
 
-PROCEDURE PaintBatch (self: Trestle.T; v: VBT.T; ba: Batch.T; hdc: WinDef.HDC);
+PROCEDURE PaintBatch (self: Trestle.T; v: VBT.T; ba: Batch.T;
+                      hdc: WinDef.HDC;  badR: Region.T): Region.T;
 
 END WinPaint.
