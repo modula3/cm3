@@ -21,6 +21,7 @@
  <li><a href="#where">Where to post it</a></li>
  <li><a href="#detailed">Detailed bug reporting instructions</a></li>
  <li><a href="#gnat">Detailed bug reporting instructions for GNAT</a></li>
+ <li><a href="#pch">Detailed bug reporting instructions when using a precompiled header</a></li>
  </ul>
 </li>
 <li><a href="#manage">Managing Bugs (GNATS and the test-suite)</a></li>
@@ -116,7 +117,8 @@ three of which can be obtained from the output of <code>gcc -v</code>:
   possible as a follow-up to the original bug report</li>
 
   <li>Assembly files (<code>*.s</code>) produced by the compiler, or any
-  binary files, such as object files, executables or core files</li>
+  binary files, such as object files, executables, core files, or
+  precompiled header files</li>
 
   <li>Duplicate bug reports, or reports of bugs already fixed in the
   development tree, especially those that have already been reported
@@ -150,7 +152,8 @@ database</a>.</p>
 <h2><a name="detailed">Detailed bug reporting instructions</a></h2>
 
 <p>Please refer to the <a href="#gnat">next section</a> when reporting
-bugs in GNAT, the Ada compiler.</p>
+bugs in GNAT, the Ada compiler, or to the <a href="#pch">one after
+that</a> when reporting bugs that appear when using a precompiled header.</p>
 
 <p>In general, all the information we need can be obtained by
 collecting the command line below, as well as its output and the
@@ -170,11 +173,11 @@ freely available elsewhere; it makes the job of our volunteer testers
 much easier.</p>
 
 <p>The <b>only</b> excuses to not send us the preprocessed sources are
-(i) if you've found a bug in the preprocessor, or (ii) if you've
-reduced the testcase to a small file that doesn't include any
-other file.  If you can't post the preprocessed sources because
-they're proprietary code, then try to create a small file that
-triggers the same problem.</p>
+(i) if you've found a bug in the preprocessor, (ii) if you've reduced
+the testcase to a small file that doesn't include any other file or
+(iii) if the bug appears only when using precompiled headers.  If you
+can't post the preprocessed sources because they're proprietary code,
+then try to create a small file that triggers the same problem.</p>
 
 <p>Since we're supposed to be able to re-create the assembly output
 (extension <code>.s</code>), you usually should not include
@@ -245,9 +248,33 @@ source files listed after the bug box along with your report.</p>
 sources (unless you have to report a bug in <code>gnatprep</code>).</p>
 
 <p>When you have checked that your report meets these criteria, please
-submit it accoding to our <a href="#where">generic instructions</a>.
+submit it according to our <a href="#where">generic instructions</a>.
 (If you use a mailing list for reporting, please include an
 "<code>[Ada]</code>" tag in the subject.)</p>
+
+<h2><a name="pch">Detailed bug reporting instructions when using a
+precompiled header</a></h2>
+
+<p>If you're encountering a bug when using a precompiled header, the
+first thing to do is to delete the precompiled header, and try running
+the same GCC command again.  If the bug happens again, the bug doesn't
+really involve precompiled headers, please report it without using
+them by following the instructions <a href="#detailed">above</a>.</p>
+
+<p>If you've found a bug while <i>building</i> a precompiled header
+(for instance, the compiler crashes), follow the usual instructions
+<a href="#detailed">above</a>.</p>
+
+<p>If you've found a real precompiled header bug, what we'll need to
+reproduce it is the sources to build the precompiled header (as a
+single <code>.i</code> file), the source file that uses the
+precompiled header, any other headers that source file includes, and
+the command lines that you used to build the precompiled header and to
+use it.</p>
+
+<p>Please <strong>don't</strong> send us the actual precompiled
+header.  It is likely to be very large and we can't use it to
+reproduce the problem.</p>
 
 <h1><a name="manage">Managing Bugs (GNATS and the test-suite)</a></h1>
 
@@ -450,7 +477,7 @@ doesn't exist, you need to recompile libstdc++ with
 </ul>
 
 This means you may get lots of errors about things like
-<code>strcmp</code> not being found. You've most likely forgotton to
+<code>strcmp</code> not being found. You've most likely forgotten to
 tell the compiler to look in the <code>std::</code> namespace. There are
 several ways to do this,
 
@@ -557,7 +584,7 @@ int main() {<br />
 <br />
 }<br />
 </code></blockquote>
-<p>might print 50 on some systems and optimization levels, and 51 on
+<p>might print 49 on some systems and optimization levels, and 48 on
 others.</p>
 
 <p>The is the result of <em>rounding</em>: The computer cannot

@@ -1,14 +1,12 @@
-<html lang="en">
-<head>
+<html lang="en"><head>
 <title>Installing GCC: Configuration</title>
 <meta http-equiv="Content-Type" content="text/html">
 <meta name=description content="Installing GCC: Configuration">
-<meta name=generator content="makeinfo 4.2">
-<link href="http://www.gnu.org/software/texinfo/" rel=generator-home>
-</head>
-<body>
-<h1>Installing GCC: Configuration</h1>
-Like most GNU software, GCC must be configured before it can be built. 
+<meta name=generator content="makeinfo 4.0">
+<link href="http://texinfo.org/" rel=generator-home>
+</head><body>
+
+<p>L<p>ike most GNU software, GCC must be configured before it can be built. 
 This document describes the recommended configuration procedure
 for both native and cross targets.
 
@@ -48,12 +46,12 @@ affected by this requirement, see
 
 <p>To configure GCC:
 
-<br><pre>   % mkdir <var>objdir</var>
+<pre>   % mkdir <var>objdir</var>
    % cd <var>objdir</var>
    % <var>srcdir</var>/configure [<var>options</var>] [<var>target</var>]
 </pre>
 
-<h3><a name="TOC0"></a>Target specification</h3>
+<h2><a name="TOC0">Target specification</h2>
 
 <ul>
 <li>GCC has code to correctly determine the correct value for <var>target</var>
@@ -68,7 +66,7 @@ i960-rtems, m68k-coff, sh-elf, etc.
 implies that the host defaults to <var>target</var>. 
 </ul>
 
-<h3><a name="TOC1"></a>Options specification</h3>
+<h2><a name="TOC1">Options specification</h2>
 
 <p>Use <var>options</var> to override several configure time options for
 GCC.  A list of supported <var>options</var> follows; <code>configure
@@ -485,7 +483,7 @@ changed in this case.
 their runtime libraries should be built.  For a list of valid values for
 <var>langN</var> you can issue the following command in the
 <code>gcc</code> directory of your GCC source tree:<br>
-<br><pre>grep language= */config-lang.in
+<pre>grep language= */config-lang.in
 </pre>
 Currently, you can use any of the following:
 <code>ada</code>, <code>c</code>, <code>c++</code>, <code>f77</code>, <code>java</code>, <code>objc</code>. 
@@ -517,7 +515,7 @@ use DWARF 2 debugging information as the default.
 <dd>The <code>--enable-win32-registry</code> option enables Windows-hosted GCC
 to look up installations paths in the registry using the following key:
 
-<br><pre><code>HKEY_LOCAL_MACHINE\SOFTWARE\Free Software Foundation\<var>key</var></code>
+<pre><code>HKEY_LOCAL_MACHINE\SOFTWARE\Free Software Foundation\<var>key</var></code>
 </pre>
 
 <p><var>key</var> defaults to GCC version number, and can be overridden by the
