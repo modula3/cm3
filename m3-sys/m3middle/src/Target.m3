@@ -149,6 +149,8 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
 
     CCs := NIL;
 
+		Allow_packed_byte_aligned := FALSE;
+		
     (* add the system-specific customization *)
     CASE sys OF
     |  0 => (* AIX386 *)
@@ -672,8 +674,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Global_handler_stack      := TRUE;
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
-
-
+                 Allow_packed_byte_aligned := TRUE;
 
     ELSE RETURN FALSE;
     END;
