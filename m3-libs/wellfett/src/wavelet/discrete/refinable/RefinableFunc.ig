@@ -1,5 +1,13 @@
-GENERIC INTERFACE RefinableFunc(M,S);
+GENERIC INTERFACE RefinableFunc(R, M, Eigen, S);
 
-PROCEDURE TransitionMatrix(mask : S.T; shift : CARDINAL := 2) : M.T;
+IMPORT NADefinitions AS NA;
+
+PROCEDURE TransitionMatrix (mask: S.T; shift: CARDINAL := 2): M.T;
+
+PROCEDURE TransitionEV (mask: S.T): Eigen.EV RAISES {NA.Error};
+PROCEDURE TransitionSpecRad (mask: S.T): R.T RAISES {NA.Error};
+
+PROCEDURE Refine (start, mask: S.T; levels: CARDINAL; shift: CARDINAL := 2):
+  S.T;
 
 END RefinableFunc.
