@@ -9,12 +9,17 @@ INTERFACE Csetjmp;		(* for LINUX *)
 FROM Ctypes IMPORT long, int, void_star;
 IMPORT Usignal;
 
+(* In recent releases the jmp_buf seems to have grown rather large
+   on PPC_LINUX systems. We now just use the largest value known,
+   as it won't hurt on systems with smaller jmp_buf size. *)
+
+CONST JMPBUF_SIZE = (64 + (12 * 4) * 4);
 
 TYPE 
   ptr_t = void_star;
 
   jmp_buf = RECORD
-    regs: ARRAY [0..57] OF long;
+    regs: ARRAY [0..JMPBUF_SIZE] OF long;
     mask_was_saved: long;
     saved_mask: Usignal.sigset_t; 
   END;
