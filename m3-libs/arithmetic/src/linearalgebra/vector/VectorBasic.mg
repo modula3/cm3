@@ -193,6 +193,17 @@ PROCEDURE Reduce(x:T;f:ReduceFtn;accu:R.T):R.T=
     RETURN accu;
   END Reduce;
 
+
+PROCEDURE Sum(READONLY x:TBody):R.T=
+  VAR
+    sum:=R.Zero;
+  BEGIN
+    FOR i:=FIRST(x) TO LAST(x) DO
+      sum:=R.Add(sum,x[i]);
+    END;
+    RETURN sum;
+  END Sum;
+
 (*-----------------*)
 BEGIN
 END VectorBasic.

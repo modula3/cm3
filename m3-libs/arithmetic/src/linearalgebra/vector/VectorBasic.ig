@@ -48,5 +48,7 @@ PROCEDURE Apply(x:T;f:ApplyFtn);
 PROCEDURE Map(x:T;f:MapFtn):T;
 PROCEDURE Reduce(x:T;f:ReduceFtn;init:R.T):R.T;
 
+PROCEDURE Sum(READONLY x:TBody):R.T;
+
 (*==========================*)
 END VectorBasic.
