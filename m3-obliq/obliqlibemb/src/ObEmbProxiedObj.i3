@@ -11,7 +11,7 @@
 
 INTERFACE ObEmbProxiedObj;
 
-IMPORT ObLoader, ObValue, EmbProxiedObj, ObLib, SynLocation;
+IMPORT ObLoader, ObValue, EmbProxiedObj, ObLib, SynLocation, Obliq;
 
 PROCEDURE SetupPackage ();
 PROCEDURE SetupModule (loader : ObLoader.T);
@@ -22,6 +22,11 @@ PROCEDURE GetArg (args    : ObValue.ArgArray;
                   opCode  : ObLib.OpCode; 
                   loc     : SynLocation.T) : EmbProxiedObj.T 
     RAISES {ObValue.Error, ObValue.Exception};
+
+PROCEDURE Extend(READONLY objects: Obliq.Vals): Obliq.Val 
+    RAISES {ObValue.Error, ObValue.Exception};
+(* Similar to Obliq.Clone but works by calling "extend" on the Obliq
+   side of the proxy. *)
 
 TYPE
   T <: Public;

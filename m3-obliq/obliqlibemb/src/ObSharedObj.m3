@@ -1,29 +1,28 @@
-(* 
- * This library is free software; you can redistribute it and/or          
- * modify it under the terms of the GNU Library General Public            
- * License as published by the Free Software Foundation.                  
- * This library is distributed in the hope that it will be useful,        
- * but WITHOUT ANY WARRANTY; without even the implied warranty of         
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU      
- * Library General Public License for more details.                       
- * If you do not have a copy of the GNU Library General Public            
- * License, write to The Free Software Foundation, Inc.,                  
- * 675 Mass Ave, Cambridge, MA 02139, USA.                                
- *                                                                        
- * For more information on this program, contact Blair MacIntyre          
+(*                            -*- Mode: Modula-3 -*- 
+ * 
+ * For information about this program, contact Blair MacIntyre            
  * (bm@cs.columbia.edu) or Steven Feiner (feiner@cs.columbia.edu)         
  * at the Computer Science Dept., Columbia University,                    
- * 500 W 120th St, Room 450, New York, NY, 10027.                         
+ * 1214 Amsterdam Ave. Mailstop 0401, New York, NY, 10027.                
  *                                                                        
- * Copyright (C) Blair MacIntyre 1995, Columbia University 1995           
+ * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
+ * City of New York.  Blair MacIntyre, Computer Science Department.       
  * 
  * Author          : Blair MacIntyre
  * Created On      : Tue Aug  8 16:29:55 1995
  * Last Modified By: Blair MacIntyre
- * Last Modified On: Sun Feb 18 15:02:20 1996
- * Update Count    : 24
+ * Last Modified On: Sat Aug  9 13:46:04 1997
+ * Update Count    : 31
+ * 
+ * $Source$
+ * $Date$
+ * $Author$
+ * $Revision$
+ * 
+ * $Log$
+ * Revision 1.3  1997/08/11 20:35:11  bm
+ * Various fixes
  *
- * SCCS Status     : %W%	%G%
  * 
  * HISTORY
  *)
@@ -35,7 +34,7 @@
 
 MODULE ObSharedObj;
 
-IMPORT ObCommand, ObLib, ObLoader, ObValue, Obliq, Env,
+IMPORT ObCommand, ObLib, ObLoader, ObValue, Obliq, Env, SynWr,
        ObEmbProxiedObj, SynLocation, SharedObj, SharedObjRT, Text,
        ObText, ObInt, Thread, IP, ObjectSpace, ObError;
 
@@ -55,7 +54,7 @@ PROCEDURE GetArg (args    : ObValue.ArgArray;
                   loc     : SynLocation.T) : SharedObj.T
     RAISES {ObValue.Error, ObValue.Exception} =
   BEGIN
-    WITH raw = Obliq.ObjectSelect (args[idx], "raw") DO
+    WITH raw = Obliq.ObjectSelect (args[idx], "raw", Obliq.Console()) DO
       TYPECASE raw OF
       | T (node) =>
         RETURN node.po;
@@ -145,124 +144,126 @@ VAR
    one eventually.
  *)
 
-PROCEDURE Eval(self: Package; opCode: ObLib.OpCode;
-               <* UNUSED *> arity        : ObLib.OpArity; 
-               READONLY args: ObValue.ArgArray; 
-               <* UNUSED *> temp: BOOLEAN; loc: SynLocation.T)
-    : ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
+PROCEDURE Eval (                      self  : Package;
+                                      opCode: ObLib.OpCode;
+                <* UNUSED *>          arity : ObLib.OpArity;
+                             READONLY args  : ObValue.ArgArray;
+                <* UNUSED *>          temp  : BOOLEAN;
+                <* UNUSED *>          swr   : SynWr.T;
+                                      loc   : SynLocation.T     ):
+  ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
   BEGIN
     TRY
       CASE NARROW(opCode, OpCode).code OF
-      | Code.Error =>
-        RETURN errorException;
-      | Code.Fatal =>
-        RETURN fatalException;
+      | Code.Error => RETURN errorException;
+      | Code.Fatal => RETURN fatalException;
       | Code.AcquireGlobalLock =>
-        WITH obj = GetArg(args, 1, self, opCode, loc) DO
-          SharedObj.AcquireGlobalLock(obj);
-        END;
-        RETURN ObValue.valOk;
+          WITH obj = GetArg(args, 1, self, opCode, loc) DO
+            SharedObj.AcquireGlobalLock(obj);
+          END;
+          RETURN ObValue.valOk;
       | Code.ReleaseGlobalLock =>
-        WITH obj = GetArg(args, 1, self, opCode, loc) DO
-          SharedObj.ReleaseGlobalLock(obj);
-        END;
-        RETURN ObValue.valOk;
+          WITH obj = GetArg(args, 1, self, opCode, loc) DO
+            SharedObj.ReleaseGlobalLock(obj);
+          END;
+          RETURN ObValue.valOk;
       | Code.Own =>
-        WITH obj = GetArg(args, 1, self, opCode, loc),
-             arg1 = ObInt.GetArg(args, 2, self, opCode, loc) DO
-          IF arg1 < FIRST(SharedObj.Timeliness) OR 
-            arg1 > LAST(SharedObj.Timeliness) THEN
-            ObValue.BadArgVal(2, "invalid timeliness", self.name,
-                              opCode.name, loc); 
+          WITH obj  = GetArg(args, 1, self, opCode, loc),
+               arg1 = ObInt.GetArg(args, 2, self, opCode, loc) DO
+            IF arg1 < FIRST(SharedObj.Timeliness)
+                 OR arg1 > LAST(SharedObj.Timeliness) THEN
+              ObValue.BadArgVal(
+                2, "invalid timeliness", self.name, opCode.name, loc);
+            END;
+            SharedObj.Own(obj, arg1);
           END;
-          SharedObj.Own(obj, arg1);
-        END;
-        RETURN ObValue.valOk;
+          RETURN ObValue.valOk;
       | Code.Disown =>
-        WITH obj = GetArg(args, 1, self, opCode, loc) DO
-          SharedObj.Disown(obj);
-        END;
-        RETURN ObValue.valOk;
-      | Code.SetTimeliness =>
-        WITH obj = GetArg(args, 1, self, opCode, loc),
-             arg1 = ObInt.GetArg(args, 2, self, opCode, loc) DO
-          IF arg1 < FIRST(SharedObj.Timeliness) OR 
-            arg1 > LAST(SharedObj.Timeliness) THEN
-            ObValue.BadArgVal(2, "invalid timeliness", self.name,
-                              opCode.name, loc); 
+          WITH obj = GetArg(args, 1, self, opCode, loc) DO
+            SharedObj.Disown(obj);
           END;
-          SharedObj.SetTimeliness(obj, arg1);
-        END;
-        RETURN ObValue.valOk;
+          RETURN ObValue.valOk;
+      | Code.SetTimeliness =>
+          WITH obj  = GetArg(args, 1, self, opCode, loc),
+               arg1 = ObInt.GetArg(args, 2, self, opCode, loc) DO
+            IF arg1 < FIRST(SharedObj.Timeliness)
+                 OR arg1 > LAST(SharedObj.Timeliness) THEN
+              ObValue.BadArgVal(
+                2, "invalid timeliness", self.name, opCode.name, loc);
+            END;
+            SharedObj.SetTimeliness(obj, arg1);
+          END;
+          RETURN ObValue.valOk;
       | Code.SetNodeName =>
-        nodename := ObText.GetArg(args, 1, self, opCode, loc);
-        IF Text.Equal(nodename, "") THEN
-          nodename := IP.GetCanonicalByAddr(IP.GetHostAddr());
-        END;
-        SharedObjRT.ExportSpace(nodename);
-        RETURN ObText.M3ToObliq(nodename);
+          nodename := ObText.GetArg(args, 1, self, opCode, loc);
+          IF Text.Equal(nodename, "") THEN
+            nodename := IP.GetCanonicalByAddr(IP.GetHostAddr());
+          END;
+          SharedObjRT.ExportSpace(nodename);
+          RETURN ObText.M3ToObliq(nodename);
       | Code.SetDefaultSequencer =>
-        VAR space: ObjectSpace.T;
+          VAR
+            space: ObjectSpace.T;
             host := ObText.GetArg(args, 1, self, opCode, loc);
             name := ObText.GetArg(args, 2, self, opCode, loc);
-        BEGIN
-          IF Text.Equal("", host) THEN
-            WITH defhost = Env.Get("SEQUENCERHOST") DO
-              IF defhost # NIL THEN
-                host := defhost;
+          BEGIN
+            IF Text.Equal("", host) THEN
+              WITH defhost = Env.Get("SEQUENCERHOST") DO
+                IF defhost # NIL THEN host := defhost; END;
               END;
             END;
-          END;
-          IF Text.Equal("", name) THEN
-            WITH defname = Env.Get("SEQUENCERNAME") DO
-              IF defname # NIL THEN
-                name := defname;
+            IF Text.Equal("", name) THEN
+              WITH defname = Env.Get("SEQUENCERNAME") DO
+                IF defname # NIL THEN name := defname; END;
               END;
             END;
-          END;
 
-          IF NOT Text.Equal("", host) OR NOT Text.Equal("", name) THEN
-            space := SharedObjRT.ImportSpace(host, name);
-            IF space = NIL THEN
-              ObValue.RaiseException(errorException, 
-                                     self.name & "_" & opCode.name & 
-                                     ": node " & name & "@" & host &
-                                     " is unavailable", loc);
+            IF NOT Text.Equal("", host) OR NOT Text.Equal("", name) THEN
+              space := SharedObjRT.ImportSpace(host, name);
+              IF space = NIL THEN
+                ObValue.RaiseException(
+                  errorException,
+                  self.name & "_" & opCode.name & ": node " & name & "@"
+                    & host & " is unavailable", loc);
+              END;
+            ELSE
+              space := SharedObjRT.LocalSpace();
             END;
-          ELSE
-            space := SharedObjRT.LocalSpace();
+            SharedObjRT.SetDfltSequencer(space);
           END;
-          SharedObjRT.SetDfltSequencer(space);
-        END;
-        RETURN ObValue.valOk;
+          RETURN ObValue.valOk;
       | Code.DebugLevel =>
-        WITH arg1 = ObInt.GetArg(args, 1, self, opCode, loc) DO
-          SharedObjRT.DebugLevel(arg1);
-        END;
-        RETURN ObValue.valOk;
+          WITH arg1 = ObInt.GetArg(args, 1, self, opCode, loc) DO
+            SharedObjRT.DebugLevel(arg1);
+          END;
+          RETURN ObValue.valOk;
       | Code.PullObject =>
-        WITH po = GetArg (args, 1, self, opCode, loc) DO
-          RETURN po.proxy.obj;
-        END;
+          WITH po = GetArg(args, 1, self, opCode, loc) DO
+            RETURN po.proxy.obj;
+          END;
       ELSE
         ObValue.BadOp(self.name, opCode.name, loc);
-        RETURN NIL; (* to shut up warning in compiler about no return value *)
+        RETURN NIL;              (* to shut up warning in compiler about no
+                                    return value *)
       END;
     EXCEPT
-    | IP.Error(ec) => 
-      ObValue.RaiseException(ObValue.netException, 
-                             self.name & "_" & opCode.name & 
-                             ": " & ObError.AtomListToText(ec), loc);
-      RETURN NIL; (* to shut up warning in compiler about no return value *)
+    | IP.Error (ec) =>
+        ObValue.RaiseException(
+          ObValue.netException, self.name & "_" & opCode.name & ": "
+                                  & ObError.AtomListToText(ec), loc);
+        RETURN NIL;              (* to shut up warning in compiler about no
+                                    return value *)
     | Thread.Alerted =>
-      ObValue.RaiseException(ObValue.threadAlerted, 
-                             self.name & "_" & opCode.name & ": ", loc);
-      RETURN NIL; (* to shut up warning in compiler about no return value *)
-    | SharedObj.Error(ec) =>
-      ObValue.RaiseException(errorException, 
-                             self.name & "_" & opCode.name & 
-                             ": " & ObError.AtomListToText(ec), loc);
-      RETURN NIL; (* to shut up warning in compiler about no return value *)
+        ObValue.RaiseException(
+          ObValue.threadAlerted, self.name & "_" & opCode.name & ": ", loc);
+        RETURN NIL;              (* to shut up warning in compiler about no
+                                    return value *)
+    | SharedObj.Error (ec) =>
+        ObValue.RaiseException(
+          errorException, self.name & "_" & opCode.name & ": "
+                            & ObError.AtomListToText(ec), loc);
+        RETURN NIL;              (* to shut up warning in compiler about no
+                                    return value *)
     END;
   END Eval;
   
@@ -270,10 +271,10 @@ PROCEDURE Eval(self: Package; opCode: ObLib.OpCode;
 (* Help                                                                      *)
 (*****************************************************************************)
 
-PROCEDURE Help (self : ObCommand.T; arg : TEXT; <* UNUSED *> data : REFANY) =
+PROCEDURE Help (wr: SynWr.T; self : ObCommand.T; arg : TEXT; <* UNUSED *> data : REFANY) =
   BEGIN
     IF pkgloader # NIL THEN
-      pkgloader.help (self, arg, pkgname);
+      pkgloader.help (wr, self, arg, pkgname);
     END;
   END Help;
 

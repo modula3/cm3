@@ -1,0 +1,83 @@
+.\" Copyright (C) 1992, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.\" File: m3.1
+.nh
+.TH reposrv 1
+.SH Name
+Repo Server \- start an Repo server
+
+.SH Syntax
+.B reposrv
+[options] &
+
+.SH Description
+
+An Repo server. The command reposrv -X, where "X" is "std", "http",
+"trk" or "vr", 
+starts netobjd on the local machine M, if needed,
+and exports an execution engine to it. From any machine M1 one can then issue
+the Repo command net_importEngine("XRepoEngine","M")(p) to execute the 
+procedure p on machine M, where "X" is either "std", "http", "trk" or "vr". 
+Here M must be an IP address, and p must be
+a procedure of one arguments. The argument given to p is the IP address of 
+the server, as a string. The result of p is returned to machine M1.
+
+A server has the privileges of the account that starts it. 
+Every client acquires the privileges of the server while running in the server.
+A server is not an inherent security risk: a server's operating system and file system are not avaliable to clients, unless the server allows it.
+
+To start an Repo server on another machine M2, issue the following command:
+
+rsh M2 exec reposrv [options] &
+
+.SH Options
+
+.TP
+.BI \-std
+repo server with standard libraries
+.TP
+.BI \-http
+repo server with http libraries
+.TP
+.BI \-trk
+repo server with tracker libraries
+.TP
+.BI \-vr
+repo server with virtual environment libraries
+
+.SH Columbia Documentation
+
+    /u/stieglitz/bm/projects/papers/ObliqStar/Repo.ps
+
+.SH External Site Documentation 
+    (in ftp.cs.columbia.edu:/pub/bm)
+
+    ...repodoc/Repo.ps         (paper/manual, for printing)
+
+.SH Files
+
+    /tmp/reposrvstd.log
+    /tmp/reposrvhttp.log
+    /tmp/reposrvtrk.log
+    /tmp/reposrvvr.log
+
+.SH See Also
+
+    repo
+    netobjd
+    The Modula-3 Network Objects documentation
+    The Modula-3 Replicated Objects documentation
+    "Obliq: A language with distributed scope" Obliq.ps, above)
+    "Repo: Replicated Obliq" (Repo.ps, above)
+
+.SH Author Of Object
+
+  Luca Cardelli
+  Blair MacIntyre
+
+.SH Author Of Documentation
+
+  Luca Cardelli
+  Blair MacIntyre

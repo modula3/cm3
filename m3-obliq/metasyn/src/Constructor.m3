@@ -52,7 +52,7 @@ PROCEDURE Fetch5(<*UNUSED*>self: SynParse.Action; p: SynParse.T; base: INTEGER;
     RETURN p.stack[base+5];
   END Fetch5;
 
-PROCEDURE Setup() RAISES {SynParse.Fail} =
+PROCEDURE Setup(wr: SynWr.T) RAISES {SynParse.Fail} =
 VAR
   keyDefSyn, keyIde, keyName, keyEof, keyInt, keyReal, 
   keyChar, keyString, keyTermSem, keyStar, keyEq,
@@ -64,8 +64,7 @@ VAR
   keySet : SynScan.KeywordSet ;
   
 BEGIN
-
-  metaParser := SynParse.New(SynWr.out, SynParse.NewEnv());
+  metaParser := SynParse.New(wr, SynParse.NewEnv());
   keySet := SynScan.NewKeywordSet();
   
   keyDefSyn := SynScan.BeKeyword("::=", keySet);    

@@ -3,8 +3,9 @@
 
 MODULE ObLibAnim;
 IMPORT Text, ObLib, ObValue, ObEval, SynWr, SynLocation, Point,
-Thread, NetObj, RefList, R2, PaintOp, VBT, GraphVBT, GraphVBTExtras,
-Animate, Trestle, TrestleComm, ObLibUI, Color, PaintOpAnim, Rect, RectsVBT;
+       Thread, NetObj, RefList, R2, PaintOp, VBT, GraphVBT,
+       GraphVBTExtras, Animate, Trestle, TrestleComm, ObLibUI, Color,
+       PaintOpAnim, Rect, RectsVBT, SharedObj; 
 
   VAR setupDone := FALSE;
 
@@ -83,7 +84,7 @@ TYPE
 
   PROCEDURE EvalRects(self: PackageRects; opCode: ObLib.OpCode; 
                       <*UNUSED*>arity: ObLib.OpArity; READONLY args: ObValue.ArgArray; 
-                      <*UNUSED*>temp: BOOLEAN; loc: SynLocation.T)
+                      <*UNUSED*>temp: BOOLEAN; <*UNUSED*> swr: SynWr.T; loc: SynLocation.T)
       : ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
     VAR rs1: ValRects; int1: INTEGER; bool1: BOOLEAN; clr1: Color.T;
       r1: Rect.T; p1,p2: RectsVBT.RealPoint;
@@ -485,6 +486,7 @@ PROCEDURE EvalGraph (                    self  : PackageGraph;
                      <*UNUSED*>          arity : ObLib.OpArity;
                                 READONLY args  : ObValue.ArgArray;
                      <*UNUSED*>          temp  : BOOLEAN;
+                     swr: SynWr.T;
                                          loc   : SynLocation.T     ):
   ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
   VAR
@@ -512,7 +514,7 @@ PROCEDURE EvalGraph (                    self  : PackageGraph;
       CASE NARROW(opCode, GraphOpCode).code OF
       | GraphCode.Error => RETURN graphException;
       | GraphCode.New =>
-          gr1 := NEW(Graph, clickAction := NIL, clickReleaseAction := NIL,
+          gr1 := NEW(Graph, swr := swr, clickAction := NIL, clickReleaseAction := NIL,
                      doubleClickAction := NIL).init();
           gr0 :=
             NEW(ValGraph, what := "<a GraphVBT.T>", picklable := FALSE,
@@ -906,7 +908,8 @@ PROCEDURE EvalGraph (                    self  : PackageGraph;
           ELSE
             ObValue.BadArgType(2, "procedure", self.name, opCode.name, loc); <*ASSERT FALSE*>
           END;
-          moveClosure := NEW(MoveClosure, fun := fun1, location := loc);
+          moveClosure := NEW(MoveClosure, swr := swr, 
+                             fun := fun1, location := loc);
           (* -- Sets the final vertex position by calling the obliq
              procedure at time 1.0. *)
           v1.move(moveClosure.pos(1.0), TRUE, 0.0, 1.0, moveClosure);
@@ -1323,7 +1326,7 @@ PROCEDURE EvalGraph (                    self  : PackageGraph;
 
       | GraphCode.NewPolygon =>
           TYPECASE args[1] OF
-          | ObValue.ValArray (node) => array1 := node.remote.Obtain();
+          | ObValue.ValArray (node) => array1 := node.Obtain();
           ELSE
             ObValue.BadArgType(1, "array", self.name, opCode.name, loc); <*ASSERT FALSE*>
           END;
@@ -1348,7 +1351,7 @@ PROCEDURE EvalGraph (                    self  : PackageGraph;
             ObValue.BadArgType(1, "polygon", self.name, opCode.name, loc); <*ASSERT FALSE*>
           END;
           TYPECASE args[2] OF
-          | ObValue.ValArray (node) => array1 := node.remote.Obtain();
+          | ObValue.ValArray (node) => array1 := node.Obtain();
           ELSE
             ObValue.BadArgType(2, "array", self.name, opCode.name, loc); <*ASSERT FALSE*>
           END;
@@ -1479,7 +1482,7 @@ PROCEDURE EvalGraph (                    self  : PackageGraph;
             ObValue.BadArgType(2, "procedure", self.name, opCode.name, loc); <*ASSERT FALSE*>
           END;
           sp1.spectrum.animate(
-            sp1.graph, NEW(SpectrumClosure, fun := fun1, location := loc));
+            sp1.graph, NEW(SpectrumClosure, swr := swr, fun := fun1, location := loc));
           RETURN ObValue.valOk;
 
       | GraphCode.Show =>
@@ -1516,6 +1519,9 @@ PROCEDURE EvalGraph (                    self  : PackageGraph;
     | NetObj.Error (atoms) =>
         ObValue.RaiseNetException(
           self.name & "_" & opCode.name, atoms, loc); <*ASSERT FALSE*>
+    | SharedObj.Error (atoms) =>
+        ObValue.RaiseSharedException(
+          self.name & "_" & opCode.name, atoms, loc); <*ASSERT FALSE*>
     | Thread.Alerted =>
         ObValue.RaiseException(
           ObValue.threadAlerted, self.name & "_" & opCode.name, loc); <*ASSERT FALSE*>
@@ -1526,6 +1532,7 @@ TYPE
   SpectrumClosure = PaintOpAnim.Animation OBJECT
                       fun     : ObValue.ValFun;
                       location: SynLocation.T;
+                      swr     : SynWr.T;
                     OVERRIDES
                       rgb := SpectrumRangeClosure;
                     END;
@@ -1540,7 +1547,7 @@ PROCEDURE SpectrumRangeClosure (self: SpectrumClosure; t: REAL): Color.T
     TRY
       args[0] :=
         NEW(ObValue.ValReal, real := FLOAT(t, LONGREAL), temp := FALSE);
-      v := ObEval.Call(self.fun, args, self.location);
+      v := ObEval.Call(self.fun, args, self.swr, self.location);
       TYPECASE v OF
       | ObLibUI.ValColor (node) => RETURN node.color;
       | ValSpectrum (node) => RETURN node.spectrum.get();
@@ -1552,17 +1559,17 @@ PROCEDURE SpectrumRangeClosure (self: SpectrumClosure; t: REAL): Color.T
     EXCEPT
     | ObValue.Error (packet) =>
         SynWr.Text(
-          SynWr.out,
+          self.swr,
           "*** A Modula3 callback to Obliq caused an Obliq error: ***\n");
-        ObValue.ErrorMsg(SynWr.out, packet);
-        SynWr.Flush(SynWr.out);
+        ObValue.ErrorMsg(self.swr, packet);
+        SynWr.Flush(self.swr);
         RETURN Color.Black;
     | ObValue.Exception (packet) =>
         SynWr.Text(
-          SynWr.out,
+          self.swr,
           "*** A Modula3 callback to Obliq caused an Obliq exception: ***\n");
-        ObValue.ExceptionMsg(SynWr.out, packet);
-        SynWr.Flush(SynWr.out);
+        ObValue.ExceptionMsg(self.swr, packet);
+        SynWr.Flush(self.swr);
         RETURN Color.Black;
     END;
   END SpectrumRangeClosure;
@@ -1571,6 +1578,7 @@ TYPE
   MoveClosure = GraphVBT.AnimationPath OBJECT
                   fun     : ObValue.ValFun;
                   location: SynLocation.T;
+                  swr     : SynWr.T;
                 OVERRIDES
                   pos := MoveOnPathClosure;
                 END;
@@ -1585,18 +1593,21 @@ PROCEDURE MoveOnPathClosure (self: MoveClosure; t: REAL): R2.T RAISES {} =
     TRY
       args[0] :=
         NEW(ObValue.ValReal, real := FLOAT(t, LONGREAL), temp := FALSE);
-      v := ObEval.Call(self.fun, args, self.location);
+      v := ObEval.Call(self.fun, args, self.swr, self.location);
       TYPECASE v OF
       | ObValue.ValArray (node) =>
           TRY
-            vx := node.remote.Get(0);
-            vy := node.remote.Get(1);
+            vx := node.Get(0);
+            vy := node.Get(1);
           EXCEPT
           | ObValue.ServerError (msg) =>
               ObValue.RaiseError(msg, self.location);
           | NetObj.Error (atoms) =>
               ObValue.RaiseNetException(
                 "on remote array access", atoms, self.location);
+          | SharedObj.Error (atoms) =>
+              ObValue.RaiseSharedException(
+                "on replicated array access", atoms, self.location);
           | Thread.Alerted =>
               ObValue.RaiseException(
                 ObValue.threadAlerted, "on remote array access",
@@ -1624,18 +1635,16 @@ PROCEDURE MoveOnPathClosure (self: MoveClosure; t: REAL): R2.T RAISES {} =
       RETURN R2.T{rx, ry};
     EXCEPT
     | ObValue.Error (packet) =>
-        SynWr.Text(
-          SynWr.out,
+        SynWr.Text(self.swr, 
           "*** A Modula3 callback to Obliq caused an Obliq error: ***\n");
-        ObValue.ErrorMsg(SynWr.out, packet);
-        SynWr.Flush(SynWr.out);
+        ObValue.ErrorMsg(self.swr, packet);
+        SynWr.Flush(self.swr);
         RETURN R2.T{0.0, 0.0};
     | ObValue.Exception (packet) =>
-        SynWr.Text(
-          SynWr.out,
+        SynWr.Text(self.swr,
           "*** A Modula3 callback to Obliq caused an Obliq exception: ***\n");
-        ObValue.ExceptionMsg(SynWr.out, packet);
-        SynWr.Flush(SynWr.out);
+        ObValue.ExceptionMsg(self.swr, packet);
+        SynWr.Flush(self.swr);
         RETURN R2.T{0.0, 0.0};
     END;
   END MoveOnPathClosure;
@@ -1692,7 +1701,7 @@ PROCEDURE Mouse (self: Graph; READONLY cd: VBT.MouseRec) =
         args[2] := NEW(ObValue.ValReal, real := FLOAT(r2[1], LONGREAL),
                        temp := FALSE);
         EVAL ObEval.Call(
-               self.clickAction, args, self.clickAction.fun.location);
+               self.clickAction, args, self.swr, self.clickAction.fun.location);
       ELSIF (cd.clickType = VBT.ClickType.LastUp) AND (cd.clickCount <= 1) THEN
         IF self.clickReleaseAction = NIL THEN RETURN END;
         r2 := GraphVBTExtras.ScreenPtToWorldPos(self, cd.cp.pt);
@@ -1701,7 +1710,7 @@ PROCEDURE Mouse (self: Graph; READONLY cd: VBT.MouseRec) =
                        temp := FALSE);
         args[2] := NEW(ObValue.ValReal, real := FLOAT(r2[1], LONGREAL),
                        temp := FALSE);
-        EVAL ObEval.Call(self.clickReleaseAction, args,
+        EVAL ObEval.Call(self.clickReleaseAction, args, self.swr,
                          self.clickReleaseAction.fun.location);
       ELSIF (cd.clickType = VBT.ClickType.FirstDown)
               AND (cd.clickCount = 2) THEN
@@ -1712,22 +1721,22 @@ PROCEDURE Mouse (self: Graph; READONLY cd: VBT.MouseRec) =
                        temp := FALSE);
         args[2] := NEW(ObValue.ValReal, real := FLOAT(r2[1], LONGREAL),
                        temp := FALSE);
-        EVAL ObEval.Call(self.doubleClickAction, args,
+        EVAL ObEval.Call(self.doubleClickAction, args, self.swr,
                          self.doubleClickAction.fun.location);
       END;
     EXCEPT
     | ObValue.Error (packet) =>
         SynWr.Text(
-          SynWr.out,
+          self.swr,
           "*** a graph_ click action caused an Obliq error: ***\n");
-        ObValue.ErrorMsg(SynWr.out, packet);
-        SynWr.Flush(SynWr.out);
+        ObValue.ErrorMsg(self.swr, packet);
+        SynWr.Flush(self.swr);
     | ObValue.Exception (packet) =>
         SynWr.Text(
-          SynWr.out,
+          self.swr,
           "*** a graph_ click action caused an Obliq exception: ***\n");
-        ObValue.ExceptionMsg(SynWr.out, packet);
-        SynWr.Flush(SynWr.out);
+        ObValue.ExceptionMsg(self.swr, packet);
+        SynWr.Flush(self.swr);
     END;
   END Mouse;
 
@@ -1798,7 +1807,8 @@ TYPE
 
   PROCEDURE EvalZeus(self: PackageZeus; opCode: ObLib.OpCode; 
                      <*UNUSED*>arity: ObLib.OpArity; READONLY args: ObValue.ArgArray; 
-                     <*UNUSED*>temp: BOOLEAN; loc: SynLocation.T)
+                     <*UNUSED*>temp: BOOLEAN; <*UNUSED*> swr: SynWr.T;
+                     loc: SynLocation.T)
       : ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
     VAR gr1: Graph; real1, real2: LONGREAL; 
     BEGIN

@@ -1,5 +1,12 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 15:04:15 1997
+ *)
 
 MODULE ObCheck;
 IMPORT ObErr, ObTree;
@@ -7,10 +14,10 @@ IMPORT ObErr, ObTree;
   REVEAL
 
     Env =
-      ObTree.Env BRANDED OBJECT END;
+      ObTree.Env BRANDED "ObCheck.Env" OBJECT END;
 
     TermEnv =
-      TermEnvBase BRANDED OBJECT END;
+      TermEnvBase BRANDED "ObCheck.TermEnv" OBJECT END;
 
 PROCEDURE NewTermEnv(name: ObTree.IdeName; rest: Env): Env =
   VAR env: Env;

@@ -11,8 +11,9 @@
 %%%% m3_option("-w2")			--- old m3build
 
 import("netobj")
-%import("sharedobj")
+import("sharedobj")
 import("synloc")
+import ("regex")
 
 interface ("OpSys")
 Interface ("ObPathSep")
@@ -37,19 +38,25 @@ Module ("ObEval")
 Module ("ObBuiltIn")
 Module ("Obliq")
 
+Module ("ObValueField")
+array_sort("ObField", "ObValueField")
 Module ("ObValueNotify")
 
 table ("ObLib", "Fingerprint", "WeakerRef")
 
-netobj("ObValue","RemVar")
-netobj("ObValue","RemArray")
-netobj("ObValue","RemObj")
-netobj("ObValue","RemEngine")
-netobj("ObValue","RemFileSystem")
+netobjv2("ObValue","RemVar")
+netobjv2("ObValue","RemArray")
+netobjv2("ObValue","RemObj")
+netobjv2("ObValue","RemEngine")
+netobjv2("ObValue","RemFileSystem")
+netobjv2("ObValue","RemIterator")
+netobjv2("ObValue","RemProcessor")
+netobjv2("ObValue","RemProcess")
 
-netobj("ObValue","NonRemObjHook")
+netobjv2("ObValue","NonRemValHook")
 
-sharedobj("ObValue", ["ReplObjStd"], ["ObValueRep"])
+sharedobj("ObValue", ["ReplObjStd", "ReplVarStd", "ReplArrayStd"], ["ObValueRep"])
+
 %implementation("ObValueSO")
 %Interface("ObValueProxy")
 %Interface("ObValuePickle")

@@ -39,7 +39,7 @@ phraseFlag ::=
   ]                                             :: BuildPhraseFlag
 
 phraseType ::=
-  [ typDecl ";" ] :: BuildPhraseEmpty
+  [ typDecl ";" ] 				:: BuildPhraseEmpty
 
 phraseFrame ::=
   { phraseLoad
@@ -109,7 +109,7 @@ phraseAddHelp ::=
     { [ "short" string_4 ]                      :: Select4
       []
     }_5
-    string_6 ";" ]      			:: BuildPhraseAddHelp
+    "full" string_6 ";" ]      			:: BuildPhraseAddHelp
 
 phraseEndModule ::=
   [ "end" "module" 
@@ -123,7 +123,6 @@ importList ::=
 	  []					:: BuildImportListSingle
 	}_3
     ]    					:: Select3                 
-    []						:: BuildImportListNil
   }
 
 phraseTerm ::=
@@ -333,32 +332,39 @@ termArray ::=
   [ "[" termList_1 "]" ]			:: BuildTermArray
 
 termObj ::=
-  [ "{" termObjProtected_1 termObjSerialized_2 
-	termObjReplicated_3 termObjSimple_4
-    termObjFields_5 "}" ]                 	:: BuildTermObj
+  [ "{" termObjOptions_1 termObjFields_2 "}" ]	:: BuildTermObj
+
+termObjOptions ::=
+  { [ termObjOption_1 
+      { [ "," termObjOptions_2 ]		:: BuildObjOptionCons
+	[]					:: Select1
+      }_3
+    ]						:: Select3
+    []						:: BuildObjOptionNil
+  }
+
+termObjOption ::=
+  { termObjProtected
+    termObjSerialized
+    termObjReplicated
+    termObjSimple
+  }
 
 termObjProtected ::=
- {  [ "protected" { "," [] } ] 		        :: BuildOptionYes
-    []						:: BuildOptionNo
-  }
+  [ "protected" ]				:: BuildObjOptionProtected
   
 termObjSerialized ::=
- {  [ "serialized" { "," [] } ] 	        :: BuildOptionYes
-    []						:: BuildOptionNo
-  }
+  [ "serialized" ]				:: BuildObjOptionSerialized
 
 termObjReplicated ::=
- {  [ "replicated" { "," [] } ] 	        :: BuildOptionYes
-    []						:: BuildOptionNo
-  }
+  [ "replicated" ]				:: BuildObjOptionReplicated
 
 termObjSimple ::=
- {  [ "simple" { "," [] } ] 	         	:: BuildOptionYes
-    []						:: BuildOptionNo
-  }
+  [ "simple" ]					:: BuildObjOptionSimple
 
 termOption ::=
-  [ "option" name_1 typSpec "=>" termSeqOpt_2 "end" ]	:: BuildTermOption
+  [ "option" term_1 typSpec "=>" termSeqOpt_2 "end" ]
+						:: BuildTermOption
 
 termOrAlias ::=
   { term
@@ -375,22 +381,34 @@ termObjFields ::=
   }
 
 termClone ::=
-  [ "clone" "(" termList_1 ")" ]		:: BuildTermClone
+  [ "clone" "(" termNonEmptyList_1 ")" ]	:: BuildTermClone
 
 termNotify ::=
-  [ "notify" term_1 "with" term_2 ]		:: BuildTermNotify
+  [ "unreachable" term_1 "do" term_2 ]		:: BuildTermNotify
 
 termPickler ::=
-  [ "setpickler" "(" term_1 "," term_2 "," term_3 ")" ]	:: BuildTermPickler
+  [ "objectpickler" term_1 "reader" term_2 "writer" term_3 ] :: BuildTermPickler
 
 termReplicate ::=
-  [ "replicate" "(" termList_1 ")" ]		:: BuildTermReplicate
+  [ "replicated" {
+	[ "(" termNonEmptyList_1 ")" ]		:: BuildTermReplicate
+  	[ "[" termList_1 "]" ]			:: BuildTermReplicatedArray
+    }_2
+  ]						:: Select2
 
 termSimple ::=
-  [ "simple" "(" term_1 ")" ]			:: BuildTermSimple
+  [ "simple" {
+	[ "(" term_1 ")" ]			:: BuildTermSimple
+  	[ "[" termList_1 "]" ]			:: BuildTermSimpleArray
+    }_2
+  ]						:: Select2
 
 termRemote ::=
-  [ "remote" "(" term_1 ")" ]			:: BuildTermRemote
+  [ "remote" {
+	[ "(" term_1 ")" ]			:: BuildTermRemote
+  	[ "[" termList_1 "]" ]			:: BuildTermRemoteArray
+    }_2
+  ]						:: Select2
 
 termDelegate ::= (* OBSOLETE *)
   [ "delegate" termSeq_1 "to" termSeq_2 "end" ]	:: BuildTermRedirect
@@ -405,9 +423,11 @@ termProc ::=
 termMeth ::=
   [ "meth" "(" ideList_1 ")" { [ typResSpec "," ] [] } termSeqOpt_2 "end" ]
 						:: BuildTermMeth
+
 termUpdateMeth ::=
   [ "umeth" "(" ideList_1 ")" { [ typResSpec "," ] [] } termSeqOpt_2 "end" ]
 						:: BuildTermUpdateMeth
+
 termPar ::=
   [ "(" termSeqOpt_1 ")" ]			:: Select1
 
@@ -420,17 +440,24 @@ termLet ::=
 
 termVar ::=
   [ "var"
-    { [ "rec" termBinding_1 ]                   :: BuildTermVarRec
-      termBinding_1                             :: BuildTermVar
-    }_2
-  ]                                             :: Select2                    
+    { [ "rec" termVarOption_1 termBinding_2 ]	:: BuildTermVarRec
+      [ termVarOption_1 termBinding_2 ]		:: BuildTermVar
+    }_3
+  ]                                             :: Select3
+
+termVarOption ::=
+ {  [ "replicated" ]		 	        :: BuildOptionReplicated
+    [ "simple" ]				:: BuildOptionSimple
+    []						:: BuildOptionRemote
+ }
 
 termIf ::=
   [ "if" termSeq_1 "then" termSeqOpt_2 termElsif_3 ]
 						:: BuildTermIf
+
 termElsif ::=
   { [ "end" ]					:: BuildTermIfEnd
-    [ "else" termSeqOpt_1 "end" ]			:: Select1
+    [ "else" termSeqOpt_1 "end" ]		:: Select1
     [ "elsif" termSeq_1 "then" termSeqOpt_2 termElsif_3 ]
 						:: BuildTermIf
   }
@@ -471,9 +498,17 @@ termTry ::=
     }_3
   ]						:: Select3
 
+termNonEmptyList ::=
+  { [ term_1 
+      { [ "," termNonEmptyList_2 ]		:: BuildTermListCons
+	[]					:: BuildTermListSingle
+      }_3
+    ]						:: Select3
+  }
+
 termList ::=
   { [ term_1 
-      { [ "," termList_2 ]			:: BuildTermListCons
+      { [ "," termNonEmptyList_2 ]		:: BuildTermListCons
 	[]					:: BuildTermListSingle
       }_3
     ]						:: Select3
@@ -500,21 +535,31 @@ termCaseListEnd ::=
     [ "else" termSeqOpt_1 "end" ]	        :: BuildCaseListElse
   }
 
+termCaseBranch ::=
+  { string_1                                    :: BuildTermString
+    termIde
+    [ "(" term_1 ")" ]				:: Select1
+  }
+
 termCaseList ::=
   { termCaseListEnd
-    [ name_1 
-      { [ "(" ide_2 typSpec ")" "=>" termSeqOpt_3
-          { [ "," termCaseList_4 ]		:: BuildCaseListCons
-	    termCaseListEnd_4         		:: BuildCaseListCons
-          }_5
-        ]					:: Select5
-        [ "=>" termSeqOpt_3
-          { [ "," termCaseList_4 ]		:: BuildCaseListCons
-	    termCaseListEnd_4         		:: BuildCaseListCons
-          }_5
-        ]					:: Select5
-      }_6
-    ]						:: Select6
+    [ termCaseBranch_1
+      { [ "(" ide_2 typSpec
+	  { [ "," ide_3 ")" ] 			:: Select3
+	    ")" 
+	  }_3					:: Select3
+	  "=>" termSeqOpt_4
+          { [ "," termCaseList_5 ]		:: BuildCaseListCons
+	    termCaseListEnd_5         		:: BuildCaseListCons
+          }_6
+        ]					:: Select6
+        [ "=>" termSeqOpt_4
+          { [ "," termCaseList_5 ]		:: BuildCaseListCons
+	    termCaseListEnd_5         		:: BuildCaseListCons
+          }_6
+        ]					:: Select6
+      }_7
+    ]						:: Select7
   }
 
 termTryList ::=
@@ -529,12 +574,13 @@ termTryList ::=
   }
 
 termAll ::=
-    [ "All" "(" ide { typBound [] } ")" term_1 ]    :: Select1
+    [ "All" "(" ide { typBound [] } ")" term_1 ]:: Select1
 
 termSome ::=
-    [ "Some" "(" ide { typBound [] } ")" term_1 ]    :: Select1
+    [ "Some" "(" ide { typBound [] } ")" term_1 ]
+						:: Select1
 
 termSelf ::=
-    [ "Self" "(" ide ")" term_1 ]    :: Select1
+    [ "Self" "(" ide ")" term_1 ]    		:: Select1
 
 (* </pre> *)

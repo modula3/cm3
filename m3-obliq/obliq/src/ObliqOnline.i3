@@ -15,11 +15,13 @@ TYPE
    it can be used to investigate the state of the interpreter. The swr field is 
    the writer the interpreter is using. *)
 
-PROCEDURE Setup();
-(* To be called once before any other use of is interface. *)
+PROCEDURE Setup(console: SynWr.T);
+(* To be called once before any other use of is interface. Any 
+   error messages will go to "console" if they cannot go to a more
+   Parser specific writer. *)
 
-PROCEDURE New(greetings: TEXT:=""; swr: SynWr.T:=NIL; loadDotObliq: 
-    BOOLEAN:=TRUE; env: Obliq.Env := NIL): T; 
+PROCEDURE New(swr: SynWr.T; greetings: TEXT:=""; 
+              loadDotObliq: BOOLEAN:=TRUE; env: Obliq.Env := NIL): T; 
 (* An interactive interpreter (a read-eval-print loop), producing 
    output to swr (NIL = standard output). If loadDotObliq is true, 
    the file ~/.obliq is loaded. Returns an interpreter that can 
@@ -31,7 +33,7 @@ PROCEDURE New(greetings: TEXT:=""; swr: SynWr.T:=NIL; loadDotObliq:
    *) 
 
 PROCEDURE Interact(interpreter: T; rdName: TEXT:=""; rd: Rd.T:=NIL; 
-  closeRd: BOOLEAN:=FALSE; generateEOF: BOOLEAN := TRUE);
+                   closeRd: BOOLEAN:=FALSE; generateEOF: BOOLEAN := TRUE);
 (* Push a new reader rd (NIL = standard input) as a source of characters 
    for the interpreter. Returns when rd is exhausted. 
    This procedure can be called repeatedly on the same

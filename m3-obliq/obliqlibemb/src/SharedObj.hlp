@@ -7,7 +7,7 @@
   SharedObj_SetNodeName(name: Text): Text ! SharedObj_Error Thread_alerted  
   SharedObj_SetDefaultSequencer(host: Text, name: Text): Ok 
 				! SharedObj_Error Thread_alerted  
-  SharedObj_SetDebugLevel(level: Int): Ok
+  SharedObj_DebugLevel(level: Int): Ok
   SharedObj_PullObject(obj: T): T;
   SharedObj_Error: Exception       
   SharedObj_Fatal: Exception        

@@ -3,10 +3,11 @@
 
 MODULE ObEval;
 IMPORT Text, SynLocation, ObTree, ObValue, ObLib, ObBuiltIn, NetObj,
-       Thread, SharedObj;
+       Thread, SharedObj, RegEx, SynWr;
 
 PROCEDURE Setup () =
   BEGIN
+    traceExecution := FALSE;
   END Setup;
 
 PROCEDURE LookupIde (name  : ObTree.IdeName;
@@ -56,11 +57,16 @@ PROCEDURE LookupIde (name  : ObTree.IdeName;
       TYPECASE val OF
       | ObValue.ValVar (node) =>
           TRY
-            RETURN node.remote.Get();
+            RETURN node.Get();
           EXCEPT
           | NetObj.Error (atoms) =>
               ObValue.RaiseNetException("on remote access to variable '"
                                           & name.text & "'", atoms, loc);
+            <*ASSERT FALSE*>
+          | SharedObj.Error (atoms) =>
+              ObValue.RaiseSharedException(
+                  "on access to replicated variable '" &
+                  name.text & "'", atoms, loc);
             <*ASSERT FALSE*>
           | Thread.Alerted =>
               ObValue.RaiseException(
@@ -74,11 +80,14 @@ PROCEDURE LookupIde (name  : ObTree.IdeName;
     END;
   END LookupIde;
 
-PROCEDURE TermBindingSeq (binding     : ObTree.TermBinding;
+PROCEDURE TermBindingSeq (swr         : SynWr.T; 
+                          binding     : ObTree.TermBinding;
                           var         : BOOLEAN;
+                          semantics   : ObTree.SharingSemantics;
                           initEnv, env: ObValue.Env;
                           glob        : ObValue.GlobalEnv;
-                          mySelf      : ObValue.ValObj      ): ObValue.Env
+                          mySelf      : ObValue.ValObj;
+                          loc         : SynLocation.T): ObValue.Env
   RAISES {ObValue.Error, ObValue.Exception} =
   VAR
     val : ObValue.Val;
@@ -88,19 +97,36 @@ PROCEDURE TermBindingSeq (binding     : ObTree.TermBinding;
     | NULL => RETURN env;
     | ObTree.TermBinding (node) =>
         env1 := initEnv;
-        val := Term(node.term, (*in-out*) env1, glob, mySelf);
-        IF var THEN val := ObValue.NewVar(val) END;
-        RETURN TermBindingSeq(node.rest, var, initEnv,
+        val := Term(swr, node.term, (*in-out*) env1, glob, mySelf);
+        IF var THEN
+          CASE semantics OF
+          | ObTree.SharingSemantics.Remote =>
+            val := ObValue.NewVar(val);
+          | ObTree.SharingSemantics.Replicated =>
+            TRY
+              val := ObValue.NewReplVar(val);
+            EXCEPT SharedObj.Error (atoms) =>
+              ObValue.RaiseSharedException(
+                  "on replicated var creation", atoms, loc);
+            END;
+          | ObTree.SharingSemantics.Simple =>
+            val := ObValue.NewSimpleVar(val);
+          END;
+        END;
+        RETURN TermBindingSeq(swr, node.rest, var, semantics, initEnv,
                               NEW(ObValue.LocalEnv, name := node.binder,
-                                  val := val, rest := env), glob, mySelf);
+                                  val := val, rest := env), glob, mySelf,loc);
     END;
   END TermBindingSeq;
 
-PROCEDURE TermBindingRec (binding: ObTree.TermBinding;
+PROCEDURE TermBindingRec (swr    : SynWr.T; 
+                          binding: ObTree.TermBinding;
                           var    : BOOLEAN;
+                          semantics   : ObTree.SharingSemantics;
                           env    : ObValue.LocalEnv;
                           glob   : ObValue.GlobalEnv;
-                          mySelf : ObValue.ValObj      ): ObValue.Env
+                          mySelf : ObValue.ValObj;
+                          loc    : SynLocation.T): ObValue.Env
   RAISES {ObValue.Error, ObValue.Exception} =
   (* Executes definitions backwards, but it's ok since they are all
      functions. *)
@@ -113,13 +139,27 @@ PROCEDURE TermBindingRec (binding: ObTree.TermBinding;
     | NULL => RETURN env;
     | ObTree.TermBinding (node) =>
         dumFun := NEW(ObValue.ValFun, fun := NIL, global := NIL);
-        IF var THEN val := ObValue.NewVar(dumFun); ELSE val := dumFun; END;
+        IF var THEN
+          CASE semantics OF
+          | ObTree.SharingSemantics.Remote =>
+            val := ObValue.NewVar(dumFun);
+          | ObTree.SharingSemantics.Replicated =>
+            TRY
+              val := ObValue.NewReplVar(dumFun);
+            EXCEPT SharedObj.Error (atoms) =>
+              ObValue.RaiseSharedException(
+                  "on replicated var creation", atoms, loc);
+            END;
+          | ObTree.SharingSemantics.Simple =>
+            val := ObValue.NewSimpleVar(dumFun);
+          END;
+        ELSE val := dumFun END;
         recEnv :=
-          TermBindingRec(
-            node.rest, var, NEW(ObValue.LocalEnv, name := node.binder,
-                                val := val, rest := env), glob, mySelf);
+          TermBindingRec(swr, node.rest, var, semantics, 
+                         NEW(ObValue.LocalEnv, name := node.binder,
+                             val := val, rest := env), glob, mySelf, loc);
         recEnv1 := recEnv;
-        TYPECASE Term(node.term, (*in-out*) recEnv1, glob, mySelf) OF
+        TYPECASE Term(swr, node.term, (*in-out*) recEnv1, glob, mySelf) OF
         | ObValue.ValFun (valFun) =>
             dumFun.fun := valFun.fun;
             dumFun.global := valFun.global;
@@ -131,7 +171,8 @@ PROCEDURE TermBindingRec (binding: ObTree.TermBinding;
     END;
   END TermBindingRec;
 
-PROCEDURE Term (               term  : ObTree.Term;
+PROCEDURE Term (               swr   : SynWr.T;
+                               term  : ObTree.Term;
                 VAR (*in-out*) env   : ObValue.Env;
                                glob  : ObValue.GlobalEnv;
                                mySelf: ObValue.ValObj     ): ObValue.Val
@@ -142,6 +183,14 @@ PROCEDURE Term (               term  : ObTree.Term;
     IF interrupt THEN
       interrupt := FALSE;
       ObValue.RaiseError("Interrupt", term.location);
+    END;
+    IF traceExecution THEN
+      SynLocation.PrintLocation(swr, term.location);
+      SynWr.NewLine(swr, loud:=TRUE);
+(*
+      SynWr.Text(swr, ": ", loud:=TRUE);
+      ObPrintTree.PrintTerm(swr, term, NIL, NIL, 1);
+*)
     END;
     TYPECASE term OF
       (* | NULL => ObErr.Fault("Eval.Term NIL"); *)
@@ -177,12 +226,20 @@ PROCEDURE Term (               term  : ObTree.Term;
         END;
         result := node.cache;
     | ObTree.TermOption (node) =>
-        VAR env1: ObValue.Env;
+        VAR
+          env1: ObValue.Env;
+          text: TEXT;
         BEGIN
           env1 := env;
-          result :=
-            NEW(ObValue.ValOption, tag := node.tag.text,
-                val := Term(node.term, (*in-out*) env1, glob, mySelf));
+          TYPECASE Term(swr, node.tag, (*in-out*) env1, glob, mySelf) OF
+          | ObValue.ValText (txt) => text := txt.text;
+          ELSE
+            ObValue.RaiseError("Option tag must be a text", term.location);
+          END;
+          env1 := env;
+          result := NEW(ObValue.ValOption, tag := text,
+                        val := Term(swr, node.term, (*in-out*) env1, glob,
+                                    mySelf));
         END;
     | ObTree.TermAlias (node) =>
         VAR
@@ -190,7 +247,7 @@ PROCEDURE Term (               term  : ObTree.Term;
           val : ObValue.Val;
         BEGIN
           env1 := env;
-          val := Term(node.term, (*in-out*) env1, glob, mySelf);
+          val := Term(swr, node.term, (*in-out*) env1, glob, mySelf);
           TYPECASE val OF
           | ObValue.ValObj (obj) =>
               result :=
@@ -208,10 +265,24 @@ PROCEDURE Term (               term  : ObTree.Term;
         BEGIN
           FOR i := 0 TO node.elemsNo - 1 DO
             env1 := env;
-            vals[i] := Term(argList.first, (*in-out*) env1, glob, mySelf);
+            vals[i] :=
+              Term(swr, argList.first, (*in-out*) env1, glob, mySelf);
             argList := argList.rest;
           END;
-          result := ObValue.NewArrayFromVals(vals);
+          CASE node.semantics OF
+          | ObTree.SharingSemantics.Remote =>
+              result := ObValue.NewArrayFromVals(vals);
+          | ObTree.SharingSemantics.Replicated =>
+              TRY
+                result := ObValue.NewReplArrayFromVals(vals);
+              EXCEPT
+                SharedObj.Error (atoms) =>
+                  ObValue.RaiseSharedException(
+                    "on replicated array creation", atoms, term.location);
+              END;
+          | ObTree.SharingSemantics.Simple =>
+              result := ObValue.NewSimpleArrayFromVals(vals);
+          END;
         END;
     | ObTree.TermOp (node) =>
         VAR
@@ -241,12 +312,12 @@ PROCEDURE Term (               term  : ObTree.Term;
           FOR i := 1 TO node.argsNo DO
             env1 := env;
             argArray[i] :=
-              Term(argList.first, (*in-out*) env1, glob, mySelf);
+              Term(swr, argList.first, (*in-out*) env1, glob, mySelf);
             argList := argList.rest;
           END;
-          result :=
-            NARROW(node.package, ObLib.T).Eval(
-              opCode, node.argsNo, argArray, node.temp, term.location);
+          result := NARROW(node.package, ObLib.T).Eval(
+                      opCode, node.argsNo, argArray, node.temp, swr,
+                      term.location);
         END;
     | ObTree.TermFun (node) =>
         VAR
@@ -281,7 +352,7 @@ PROCEDURE Term (               term  : ObTree.Term;
           val         : ObValue.Val;
         BEGIN
           env1 := env;
-          TYPECASE Term(node.fun, (*in-out*) env1, glob, mySelf) OF
+          TYPECASE Term(swr, node.fun, (*in-out*) env1, glob, mySelf) OF
           | ObValue.ValFun (clos) =>
               IF node.argsNo # clos.fun.bindersNo THEN
                 ObValue.RaiseError(ObValue.BadArgsNoMsg(
@@ -294,14 +365,15 @@ PROCEDURE Term (               term  : ObTree.Term;
               argList := node.args;
               FOR i := 1 TO node.argsNo DO
                 env1 := env;
-                newEnv := NEW(ObValue.LocalEnv, name := binderList.first,
-                              val := Term(argList.first, (*in-out*) env1,
-                                          glob, mySelf), rest := newEnv);
+                newEnv :=
+                  NEW(ObValue.LocalEnv, name := binderList.first,
+                      val := Term(swr, argList.first, (*in-out*) env1,
+                                  glob, mySelf), rest := newEnv);
                 binderList := binderList.rest;
                 argList := argList.rest;
               END;
-              result :=
-                Term(clos.fun.body, (*in-out*) newEnv, newGlob, mySelf);
+              result := Term(swr, clos.fun.body, (*in-out*) newEnv,
+                             newGlob, mySelf);
           | ObValue.ValEngine (engine) =>
               IF node.argsNo # 1 THEN
                 ObValue.RaiseError(
@@ -309,7 +381,8 @@ PROCEDURE Term (               term  : ObTree.Term;
                   term.location);
               END;
               env1 := env;
-              val := Term(node.args.first, (*in-out*) env1, glob, mySelf);
+              val :=
+                Term(swr, node.args.first, (*in-out*) env1, glob, mySelf);
               TRY
                 result := engine.remote.Eval(val, mySelf);
               EXCEPT
@@ -345,36 +418,32 @@ PROCEDURE Term (               term  : ObTree.Term;
             env1 := env;
             fields^[i].label := fieldList.label.text;
             fields^[i].field :=
-              Term(fieldList.term, (*in-out*) env1, glob, mySelf);
-            TYPECASE fieldList.term OF
-            | ObTree.TermMeth (meth) =>
-              IF meth.update THEN fields^[i].update := TRUE END;
-            ELSE END;
+              Term(swr, fieldList.term, (*in-out*) env1, glob, mySelf);
             fieldList := fieldList.rest;
           END;
 
           CASE node.semantics OF
           | ObTree.SharingSemantics.Remote =>
-            result :=
-                ObValue.NewObjectFromFields(fields, "", node.protected,
-                                            sync);
+              result := ObValue.NewObjectFromFields(
+                          fields, "", node.protected, sync);
           | ObTree.SharingSemantics.Replicated =>
-            IF sync # NIL THEN
-              ObValue.RaiseError(
+              IF sync # NIL THEN
+                ObValue.RaiseError(
                   "serialized implied by replicated", term.location);
-            END;
-            TRY
-              result :=
-                  ObValue.NewReplObjectFromFields(fields, "", node.protected);
-            EXCEPT
-            | SharedObj.Error (atoms) =>
-              ObValue.RaiseSharedException(
-                  "on replicated object creation", atoms, term.location);
-            END;
+              END;
+              TRY
+                result := ObValue.NewReplObjectFromFields(
+                            fields, "", node.protected);
+              EXCEPT
+              | ObValue.ServerError (msg) =>
+                  ObValue.RaiseError(msg, term.location);
+              | SharedObj.Error (atoms) =>
+                  ObValue.RaiseSharedException(
+                    "on replicated object creation", atoms, term.location);
+              END;
           | ObTree.SharingSemantics.Simple =>
-            result :=
-                ObValue.NewSimpleObjectFromFields(fields, "", node.protected,
-                                                  sync);
+              result := ObValue.NewSimpleObjectFromFields(
+                          fields, "", node.protected, sync);
           END;
         END;
     | ObTree.TermClone (node) =>
@@ -386,10 +455,10 @@ PROCEDURE Term (               term  : ObTree.Term;
           TRY
             IF node.objsNo = 1 THEN
               env1 := env;
-              TYPECASE Term(node.objs.first, 
+              TYPECASE Term(swr, node.objs.first,
                             (*in-out*) env1, glob, mySelf) OF
               | ObValue.ValObj (obj) =>
-                result := ObValue.ObjClone1(obj, mySelf);
+                  result := ObValue.ObjClone1(obj, mySelf);
               ELSE
                 ObValue.RaiseError(
                   "Arguments of clone must be objects", term.location);
@@ -399,7 +468,8 @@ PROCEDURE Term (               term  : ObTree.Term;
               valObjs := NEW(REF ARRAY OF ObValue.ValObj, node.objsNo);
               FOR i := 0 TO node.objsNo - 1 DO
                 env1 := env;
-                TYPECASE Term(objs.first, (*in-out*) env1, glob, mySelf) OF
+                TYPECASE
+                    Term(swr, objs.first, (*in-out*) env1, glob, mySelf) OF
                 | ObValue.ValObj (obj) => valObjs^[i] := obj;
                 ELSE
                   ObValue.RaiseError(
@@ -407,212 +477,263 @@ PROCEDURE Term (               term  : ObTree.Term;
                 END;
                 objs := objs.rest;
               END;
-              result :=
-                ObValue.ObjClone( (*readonly*)valObjs^, mySelf);
+              result := ObValue.ObjClone( (*readonly*)valObjs^, mySelf);
             END;
           EXCEPT
           | ObValue.ServerError (msg) =>
-            ObValue.RaiseError(msg, term.location);
+              ObValue.RaiseError(msg, term.location);
           | SharedObj.Error (atoms) =>
-            ObValue.RaiseSharedException(
+              ObValue.RaiseSharedException(
                 "on replicated object cloning", atoms, term.location);
           | NetObj.Error (atoms) =>
-            ObValue.RaiseNetException(
+              ObValue.RaiseNetException(
                 "on remote object cloning", atoms, term.location);
           | Thread.Alerted =>
-            ObValue.RaiseException(
+              ObValue.RaiseException(
                 ObValue.threadAlerted, "on remote object cloning",
                 term.location);
           END;
         END;
     | ObTree.TermNotify (node) =>
         VAR
-          env1   : ObValue.Env;
-          val1   : ObValue.Val;
+          env1: ObValue.Env;
+          val1: ObValue.Val;
         BEGIN
           env1 := env;
-          TYPECASE Term(node.withObj, (*in-out*) env1, glob, mySelf) OF
+          TYPECASE Term(swr, node.withObj, (*in-out*) env1, glob, mySelf)
+              OF
           | ObValue.ValFun (fun) =>
-            env1 := env;
-            val1 := Term(node.obj, (*in-out*) env1, glob, mySelf);
-            TYPECASE val1 OF
-            | ObValue.ValObj, ObValue.ValVar, ObValue.ValArray,
-              ObValue.ValEngine, ObValue.ValFileSystem =>
-              ObValue.ObjNotify(val1, fun);
-            ELSE
-              ObValue.RaiseError(
-                  "First argument of notify must be a remote data object", 
+              env1 := env;
+              val1 := Term(swr, node.obj, (*in-out*) env1, glob, mySelf);
+              TYPECASE val1 OF
+              | ObValue.ValObj, ObValue.ValVar, ObValue.ValArray,
+                  ObValue.ValEngine, ObValue.ValFileSystem =>
+                  ObValue.ObjNotify(val1, fun, swr);
+              ELSE
+                ObValue.RaiseError(
+                  "First argument of notify must be a remote data object",
                   term.location);
-            END;
+              END;
           ELSE
             ObValue.RaiseError(
-                "Second argument of notify must be a procedure", 
-                term.location);
+              "Second argument of notify must be a procedure",
+              term.location);
           END;
           result := ObValue.valOk;
         END;
     | ObTree.TermPickler (node) =>
-        VAR
-          env1   : ObValue.Env;
+        VAR env1: ObValue.Env;
         BEGIN
           env1 := env;
-          TYPECASE Term(node.pklIn, (*in-out*) env1, glob, mySelf) OF
+          TYPECASE Term(swr, node.pklIn, (*in-out*) env1, glob, mySelf) OF
           | ObValue.ValSimpleObj (in) =>
-            env1 := env;
-            TYPECASE Term(node.pklOut, (*in-out*) env1, glob, mySelf) OF
-            | ObValue.ValSimpleObj (out) =>
               env1 := env;
-              TYPECASE Term(node.obj, (*in-out*) env1, glob, mySelf) OF
-              | ObValue.ValObj(valobj) =>
-                TRY
-                  ObValue.SetObjPickler(valobj, in, out, mySelf);
-                EXCEPT
-                | ObValue.ServerError (msg) =>
-                  ObValue.RaiseError(msg, term.location);
-                | SharedObj.Error (atoms) =>
-                  ObValue.RaiseSharedException("while setting pickler", atoms, 
-                                               term.location);
-                | NetObj.Error (atoms) =>
-                  ObValue.RaiseNetException("while setting pickler", atoms, 
-                                            term.location);
-                | Thread.Alerted =>
-                  ObValue.RaiseException(ObValue.threadAlerted, 
-                                         "while setting pickler",
-                                         term.location);
-                END;
+              TYPECASE
+                  Term(swr, node.pklOut, (*in-out*) env1, glob, mySelf) OF
+              | ObValue.ValSimpleObj (out) =>
+                  env1 := env;
+                  TYPECASE
+                      Term(swr, node.obj, (*in-out*) env1, glob, mySelf) OF
+                  | ObValue.ValObj (valobj) =>
+                      TRY
+                        ObValue.SetObjPickler(valobj, in, out, mySelf);
+                      EXCEPT
+                      | ObValue.ServerError (msg) =>
+                          ObValue.RaiseError(msg, term.location);
+                      | SharedObj.Error (atoms) =>
+                          ObValue.RaiseSharedException(
+                            "while setting pickler", atoms, term.location);
+                      | NetObj.Error (atoms) =>
+                          ObValue.RaiseNetException(
+                            "while setting pickler", atoms, term.location);
+                      | Thread.Alerted =>
+                          ObValue.RaiseException(
+                            ObValue.threadAlerted, "while setting pickler",
+                            term.location);
+                      END;
+                  ELSE
+                    ObValue.RaiseError(
+                      "First argument of registerPickler must be an object",
+                      term.location);
+                  END;
               ELSE
                 ObValue.RaiseError(
-                    "First argument of registerPickler must be an object", 
-                    term.location);
-              END;
-            ELSE
-              ObValue.RaiseError(
                   "Second argument of registerPickler must be a simple object",
                   term.location);
-          END;
+              END;
           ELSE
             ObValue.RaiseError(
-                "Third argument of registerPickler must be a simple object", 
-                term.location);
+              "Third argument of registerPickler must be a simple object",
+              term.location);
           END;
           result := ObValue.valOk;
         END;
     | ObTree.TermReplicate (node) =>
         VAR
-          env1 : ObValue.Env;
+          env1  : ObValue.Env;
           array1: Vals;
-          arr: REF ARRAY OF TEXT;
+          arr   : REF ARRAY OF TEXT;
         BEGIN
-          IF node.argsNo # 2 THEN
-            ObValue.RaiseError(ObValue.BadArgsNoMsg(2, node.argsNo, "", ""), 
-                               term.location);
-          END;
           env1 := env;
-          TYPECASE Term(node.args.first, (*in-out*) env1, glob, mySelf) OF
+          TYPECASE
+              Term(swr, node.args.first, (*in-out*) env1, glob, mySelf) OF
           | ObValue.ValObj (obj) =>
-            env1 := env;
-            TYPECASE Term(node.args.rest.first, 
-                          (*in-out*) env1, glob, mySelf) OF
-            | ObValue.ValArray (arrayObj) =>
-              TRY
-                array1 := arrayObj.remote.Obtain();
-                arr := NEW(REF ARRAY OF TEXT, NUMBER(array1^));
-                FOR i := 0 TO NUMBER(array1^)-1 DO
-                  TYPECASE array1^[i] OF
-                  | ObValue.ValText (txt) => arr[i] := txt.text;
-                  ELSE
-                    ObValue.RaiseError(
-                        "second argument must be array of text", 
+              IF node.argsNo # 2 THEN
+                ObValue.RaiseError(
+                    ObValue.BadArgsNoMsg(2, node.argsNo, "", ""), 
+                    term.location);
+              END;
+              env1 := env;
+              TYPECASE Term(swr, node.args.rest.first,
+                            (*in-out*) env1, glob, mySelf) OF
+              | ObValue.ValArray (arrayObj) =>
+                  TRY
+                    array1 := arrayObj.Obtain();
+                    arr := NEW(REF ARRAY OF TEXT, NUMBER(array1^));
+                    FOR i := 0 TO NUMBER(array1^) - 1 DO
+                      TYPECASE array1^[i] OF
+                      | ObValue.ValText (txt) => arr[i] := txt.text;
+                      ELSE
+                        ObValue.RaiseError(
+                          "second argument must be array of text",
+                          term.location);
+                      END;
+                    END;
+                    result := ObValue.ToReplObj(obj, mySelf, arr^);
+                  EXCEPT
+                  | ObValue.ServerError (msg) =>
+                      ObValue.RaiseError(msg, term.location);
+                  | SharedObj.Error (atoms) =>
+                      ObValue.RaiseSharedException(
+                        "on conversion to replicated object", atoms,
                         term.location);
+                  | NetObj.Error (atoms) =>
+                      ObValue.RaiseNetException(
+                        "on conversion to replicated object", atoms,
+                        term.location);
+                  | Thread.Alerted =>
+                      ObValue.RaiseException(
+                        ObValue.threadAlerted,
+                        "on conversion to replicated object", term.location);
                   END;
-                END;
-                result := ObValue.ToReplObj(obj, mySelf, arr^);
+              ELSE
+                ObValue.RaiseError(
+                  "second argument must be array of text", term.location);
+              END;
+          | ObValue.ValArray (arr) =>
+              IF node.argsNo # 1 THEN
+                ObValue.RaiseError(
+                    ObValue.BadArgsNoMsg(1, node.argsNo, "", ""), 
+                    term.location);
+              END;
+              TRY
+                array1 := arr.Obtain();
+                result := ObValue.NewReplArray(array1^);
+              EXCEPT
+              | SharedObj.Error (atoms) =>
+                  ObValue.RaiseSharedException(
+                    "on conversion to replicated array", atoms,
+                    term.location);
+              | NetObj.Error (atoms) =>
+                  ObValue.RaiseNetException(
+                    "on conversion to replicated array", atoms,
+                    term.location);
+              | Thread.Alerted =>
+                  ObValue.RaiseException(
+                    ObValue.threadAlerted,
+                    "on conversion to replicated array", term.location);
+              END;
+          ELSE
+            ObValue.RaiseError(
+              "Redirection must operate on an object or array", term.location);
+          END;
+        END;
+    | ObTree.TermRemote (node) =>
+        VAR env1: ObValue.Env;
+            array1: Vals;
+        BEGIN
+          env1 := env;
+          TYPECASE Term(swr, node.obj, (*in-out*) env1, glob, mySelf) OF
+          | ObValue.ValObj (obj) =>
+              TRY
+                result := ObValue.ToRemObj(obj, mySelf);
               EXCEPT
               | ObValue.ServerError (msg) =>
                   ObValue.RaiseError(msg, term.location);
               | SharedObj.Error (atoms) =>
                   ObValue.RaiseSharedException(
-                    "on conversion to replicated object", atoms, 
-                    term.location);
+                    "on conversion to remote object", atoms, term.location);
               | NetObj.Error (atoms) =>
                   ObValue.RaiseNetException(
-                    "on conversion to replicated object", atoms, 
-                    term.location);
+                    "on conversion to remote object", atoms, term.location);
               | Thread.Alerted =>
                   ObValue.RaiseException(
-                    ObValue.threadAlerted, 
-                    "on conversion to replicated object",
+                    ObValue.threadAlerted,
+                    "on conversion to remote object", term.location);
+              END;
+          | ObValue.ValArray (arr) =>
+              TRY
+                array1 := arr.Obtain();
+                result := ObValue.NewArray(array1^);
+              EXCEPT
+              | SharedObj.Error (atoms) =>
+                  ObValue.RaiseSharedException(
+                    "on conversion to remote array", atoms, term.location);
+              | NetObj.Error (atoms) =>
+                  ObValue.RaiseNetException(
+                    "on conversion to remote array", atoms, term.location);
+              | Thread.Alerted =>
+                  ObValue.RaiseException(
+                    ObValue.threadAlerted, "on conversion to remote array",
                     term.location);
               END;
-            ELSE
-              ObValue.RaiseError(
-                  "second argument must be array of text", term.location);
-            END;
           ELSE
             ObValue.RaiseError(
-              "Redirection must operate on an object", term.location);
-          END;
-        END;
-    | ObTree.TermRemote (node) =>
-        VAR
-          env1 : ObValue.Env;
-        BEGIN
-          env1 := env;
-          TYPECASE Term(node.obj, (*in-out*) env1, glob, mySelf) OF
-          | ObValue.ValObj (obj) =>
-            TRY
-              result := ObValue.ToRemObj(obj, mySelf);
-            EXCEPT
-            | ObValue.ServerError (msg) =>
-              ObValue.RaiseError(msg, term.location);
-            | SharedObj.Error (atoms) =>
-              ObValue.RaiseSharedException(
-                  "on conversion to remote object", atoms, 
-                  term.location);
-            | NetObj.Error (atoms) =>
-              ObValue.RaiseNetException(
-                  "on conversion to remote object", atoms, 
-                  term.location);
-            | Thread.Alerted =>
-              ObValue.RaiseException(
-                  ObValue.threadAlerted, 
-                  "on conversion to remote object",
-                  term.location);
-            END;
-          ELSE
-            ObValue.RaiseError(
-              "remote must operate on an object", term.location);
+              "remote must operate on an object or array", term.location);
           END;
         END;
     | ObTree.TermSimple (node) =>
-        VAR
-          env1 : ObValue.Env;
+        VAR env1: ObValue.Env;
+            array1: Vals;
         BEGIN
           env1 := env;
-          TYPECASE Term(node.obj, (*in-out*) env1, glob, mySelf) OF
+          TYPECASE Term(swr, node.obj, (*in-out*) env1, glob, mySelf) OF
           | ObValue.ValObj (obj) =>
-            TRY
-              result := ObValue.ToSimpleObj(obj, mySelf);
-            EXCEPT
-            | ObValue.ServerError (msg) =>
-              ObValue.RaiseError(msg, term.location);
-            | SharedObj.Error (atoms) =>
-              ObValue.RaiseSharedException(
-                  "on conversion to simple object", atoms, 
-                  term.location);
-            | NetObj.Error (atoms) =>
-              ObValue.RaiseNetException(
-                  "on conversion to simple object", atoms, 
-                  term.location);
-            | Thread.Alerted =>
-              ObValue.RaiseException(
-                  ObValue.threadAlerted, 
-                  "on conversion to simple object",
-                  term.location);
-            END;
+              TRY
+                result := ObValue.ToSimpleObj(obj, mySelf);
+              EXCEPT
+              | ObValue.ServerError (msg) =>
+                  ObValue.RaiseError(msg, term.location);
+              | SharedObj.Error (atoms) =>
+                  ObValue.RaiseSharedException(
+                    "on conversion to simple object", atoms, term.location);
+              | NetObj.Error (atoms) =>
+                  ObValue.RaiseNetException(
+                    "on conversion to simple object", atoms, term.location);
+              | Thread.Alerted =>
+                  ObValue.RaiseException(
+                    ObValue.threadAlerted,
+                    "on conversion to simple object", term.location);
+              END;
+          | ObValue.ValArray (arr) =>
+              TRY
+                array1 := arr.Obtain();
+                result := ObValue.NewSimpleArray(array1^);
+              EXCEPT
+              | SharedObj.Error (atoms) =>
+                  ObValue.RaiseSharedException(
+                    "on conversion to simple array", atoms, term.location);
+              | NetObj.Error (atoms) =>
+                  ObValue.RaiseNetException(
+                    "on conversion to simple array", atoms, term.location);
+              | Thread.Alerted =>
+                  ObValue.RaiseException(
+                    ObValue.threadAlerted, "on conversion to simple array",
+                    term.location);
+              END;
           ELSE
             ObValue.RaiseError(
-              "simple must operate on an object", term.location);
+              "simple must operate on an object or array", term.location);
           END;
         END;
     | ObTree.TermRedirect (node) =>
@@ -621,10 +742,11 @@ PROCEDURE Term (               term  : ObTree.Term;
           toObj: ObValue.Val;
         BEGIN
           env1 := env;
-          TYPECASE Term(node.obj, (*in-out*) env1, glob, mySelf) OF
+          TYPECASE Term(swr, node.obj, (*in-out*) env1, glob, mySelf) OF
           | ObValue.ValObj (obj) =>
               env1 := env;
-              toObj := Term(node.toObj, (*in-out*) env1, glob, mySelf);
+              toObj :=
+                Term(swr, node.toObj, (*in-out*) env1, glob, mySelf);
               TRY
                 obj.Redirect(toObj, ObValue.Is(obj, mySelf, term.location));
               EXCEPT
@@ -657,13 +779,13 @@ PROCEDURE Term (               term  : ObTree.Term;
             ObValue.RaiseError("Too many arguments.", term.location);
           END;
           env1 := env;
-          TYPECASE Term(node.obj, (*in-out*) env1, glob, mySelf) OF
+          TYPECASE Term(swr, node.obj, (*in-out*) env1, glob, mySelf) OF
           | ObValue.ValObj (obj) =>
               argList := node.args;
               FOR i := 1 TO node.argsNo DO
                 env1 := env;
                 argArray[i] :=
-                  Term(argList.first, (*in-out*) env1, glob, mySelf);
+                  Term(swr, argList.first, (*in-out*) env1, glob, mySelf);
                 argList := argList.rest;
               END;
               TRY
@@ -672,15 +794,14 @@ PROCEDURE Term (               term  : ObTree.Term;
                     argArray[i] := NIL; (* Clear for transmission *)
                   END;
                   result :=
-                    obj.Invoke(node.label.text, node.argsNo,
-                               argArray, ObValue.Is(obj, mySelf, 
-                                                    term.location),
-                                      (*var*) node.labelIndexHint);
+                    obj.Invoke(swr, node.label.text, node.argsNo, argArray,
+                               ObValue.Is(obj, mySelf, term.location),
+                               (*var*) node.labelIndexHint);
                 ELSE
-                  result := obj.Select(
-                              node.label.text, ObValue.Is(obj, mySelf,
-                                                          term.location),
-                              (*var*) node.labelIndexHint);
+                  result :=
+                    obj.Select(swr, node.label.text,
+                               ObValue.Is(obj, mySelf, term.location),
+                               (*var*) node.labelIndexHint);
                 END;
               EXCEPT
               | ObValue.ServerError (msg) =>
@@ -707,14 +828,14 @@ PROCEDURE Term (               term  : ObTree.Term;
           val : ObValue.Val;
         BEGIN
           env1 := env;
-          TYPECASE Term(node.obj, (*in-out*) env1, glob, mySelf) OF
+          TYPECASE Term(swr, node.obj, (*in-out*) env1, glob, mySelf) OF
           | ObValue.ValObj (obj) =>
               env1 := env;
-              val := Term(node.term, (*in-out*) env1, glob, mySelf);
+              val := Term(swr, node.term, (*in-out*) env1, glob, mySelf);
               TRY
-                obj.Update(
-                  node.label.text, val, ObValue.Is(obj, mySelf, term.location),
-                  (*var*) node.labelIndexHint);
+                obj.Update(node.label.text, val,
+                           ObValue.Is(obj, mySelf, term.location),
+                           (*var*) node.labelIndexHint);
               EXCEPT
               | ObValue.ServerError (msg) =>
                   ObValue.RaiseError(msg, term.location);
@@ -743,20 +864,23 @@ PROCEDURE Term (               term  : ObTree.Term;
           LOOP
             TYPECASE term1 OF
             | ObTree.TermSeq (seq) =>
-                EVAL Term(seq.before, (*in-out*) env1, glob, mySelf);
+                EVAL Term(swr, seq.before, (*in-out*) env1, glob, mySelf);
                 term1 := seq.after;
             ELSE
-              result := Term(term1, (*in-out*) env1, glob, mySelf);
+              result := Term(swr, term1, (*in-out*) env1, glob, mySelf);
               EXIT;
             END;
           END;
         END;
     | ObTree.TermLet (node) =>
         IF node.rec THEN
-          env := TermBindingRec(node.binding, node.var, env, glob, mySelf);
+          env :=
+            TermBindingRec(swr, node.binding, node.var, node.semantics,
+                           env, glob, mySelf, term.location);
         ELSE
           env :=
-            TermBindingSeq(node.binding, node.var, env, env, glob, mySelf);
+            TermBindingSeq(swr, node.binding, node.var, node.semantics,
+                           env, env, glob, mySelf, term.location);
         END;
         result := ObValue.valOk;
     | ObTree.TermAssign (node) =>
@@ -769,14 +893,18 @@ PROCEDURE Term (               term  : ObTree.Term;
               OF
           | ObValue.ValVar (var) =>
               env1 := env;
-              val := Term(node.val, (*in-out*) env1, glob, mySelf);
+              val := Term(swr, node.val, (*in-out*) env1, glob, mySelf);
               TRY
-                var.remote.Set(val);
+                var.Set(val);
               EXCEPT
               | NetObj.Error (atoms) =>
                   ObValue.RaiseNetException(
                     "on remote assigment to variable '" & node.name.text
                       & "'", atoms, term.location);
+              | SharedObj.Error (atoms) =>
+                  ObValue.RaiseSharedException(
+                    "on assignment to replicated variable '"
+                      & node.name.text & "'", atoms, term.location);
               | Thread.Alerted =>
                   ObValue.RaiseException(
                     ObValue.threadAlerted,
@@ -793,17 +921,18 @@ PROCEDURE Term (               term  : ObTree.Term;
         VAR env1: ObValue.Env;
         BEGIN
           env1 := env;
-          TYPECASE Term(node.test, (*in-out*) env1, glob, mySelf) OF
+          TYPECASE Term(swr, node.test, (*in-out*) env1, glob, mySelf) OF
           | ObValue.ValBool (bool) =>
               IF bool.bool THEN
                 env1 := env;
-                result := Term(node.ifTrue, (*in-out*) env1, glob, mySelf);
+                result :=
+                  Term(swr, node.ifTrue, (*in-out*) env1, glob, mySelf);
               ELSIF node.ifFalse = NIL THEN
                 result := ObValue.valOk;
               ELSE
                 env1 := env;
                 result :=
-                  Term(node.ifFalse, (*in-out*) env1, glob, mySelf);
+                  Term(swr, node.ifFalse, (*in-out*) env1, glob, mySelf);
               END;
           ELSE
             ObValue.RaiseError(
@@ -814,9 +943,13 @@ PROCEDURE Term (               term  : ObTree.Term;
         VAR
           env1    : ObValue.Env;
           caseList: ObTree.TermCaseList;
+          mem     : REF RegEx.Memory    := NIL;
+          matchNo : INTEGER;
+          compiled: RegEx.Pattern; 
+          vals: ARRAY [0 .. NUMBER(RegEx.Memory) - 1] OF ObValue.Val;
         BEGIN
           env1 := env;
-          TYPECASE Term(node.option, (*in-out*) env1, glob, mySelf) OF
+          TYPECASE Term(swr, node.option, (*in-out*) env1, glob, mySelf) OF
           | ObValue.ValOption (option) =>
               caseList := node.caseList;
               LOOP
@@ -824,21 +957,65 @@ PROCEDURE Term (               term  : ObTree.Term;
                   ObValue.RaiseError("No case branch applies to tag: "
                                        & option.tag, term.location);
                 END;
-                IF caseList.tag = NIL THEN (* "else" case *)
+                IF caseList.pattern = NIL THEN (* "else" case *)
                   env1 := env;
-                  result :=
-                    Term(caseList.body, (*in-out*) env1, glob, mySelf);
+                  result := Term(swr, caseList.body, (*in-out*) env1, glob,
+                                 mySelf);
                   EXIT;
                 END;
-                IF Text.Equal(option.tag, caseList.tag.text) THEN
+                IF caseList.compiled = NIL THEN
+                  TYPECASE Term(swr, caseList.pattern, (*in-out*) env1, glob, 
+                                mySelf) OF
+                  | ObValue.ValText (txt) =>
+                    TRY
+                      compiled := RegEx.Compile(txt.text);
+                    EXCEPT
+                      RegEx.Error (txt2) =>
+                      ObValue.RaiseError("Case branch regular expression '"&
+                        txt.text & "' error:" & txt2, term.location)
+                    END;
+                  ELSE
+                    ObValue.RaiseError("Non-text case branch", term.location);
+                  END;
+
+                  (* if the case branch is actually a constant, we can
+                     store the compiled pattern for the future *)
+                  TYPECASE caseList.pattern OF
+                  | ObTree.TermText => caseList.compiled := compiled;
+                  ELSE END;
+                ELSE
+                  compiled := caseList.compiled;
+                END;
+                IF caseList.binderMatch # NIL THEN
+                  mem := NEW(REF RegEx.Memory);
+                END;
+                IF RegEx.Execute(compiled, option.tag, mem := mem)
+                     > -1 THEN
                   IF caseList.binder = NIL THEN
                     env1 := env;
                   ELSE
                     env1 := NEW(ObValue.LocalEnv, name := caseList.binder,
                                 val := option.val, rest := env);
+                    IF caseList.binderMatch # NIL THEN
+                      matchNo := 0;
+                      FOR i := FIRST(mem^) TO LAST(mem^) DO
+                        IF mem[i].start > -1 THEN
+                          vals[matchNo] :=
+                            ObValue.NewText(
+                              Text.Sub(option.tag, mem[i].start,
+                                       mem[i].stop - mem[i].start));
+                          INC(matchNo);
+                        END;
+                      END;
+                      env1 :=
+                        NEW(ObValue.LocalEnv, name := caseList.binderMatch,
+                            val := ObValue.NewSimpleArray(
+                                     SUBARRAY(vals, 0, matchNo)),
+                            rest := env1);
+                    END;
                   END;
-                  result :=
-                    Term(caseList.body, (*in-out*) env1, glob, mySelf);
+                  result := Term(swr, caseList.body, (*in-out*) env1, glob,
+                                 mySelf);
                   EXIT;
                 END;
                 caseList := caseList.rest;
@@ -854,7 +1031,7 @@ PROCEDURE Term (               term  : ObTree.Term;
           TRY
             LOOP
               env1 := env;
-              EVAL Term(node.loop, (*in-out*) env1, glob, mySelf);
+              EVAL Term(swr, node.loop, (*in-out*) env1, glob, mySelf);
             END;
           EXCEPT
           | ObValue.Error (pkt) =>
@@ -875,7 +1052,7 @@ PROCEDURE Term (               term  : ObTree.Term;
           i, ub       : INTEGER;
         BEGIN
           env1 := env;
-          lbVal := Term(node.lb, (*in-out*) env1, glob, mySelf);
+          lbVal := Term(swr, node.lb, (*in-out*) env1, glob, mySelf);
           TYPECASE lbVal OF
           | ObValue.ValInt (node) => i := node.int;
           ELSE
@@ -883,7 +1060,7 @@ PROCEDURE Term (               term  : ObTree.Term;
               "Lower bound of 'for' must be an integer", term.location);
           END;
           env1 := env;
-          ubVal := Term(node.ub, (*in-out*) env1, glob, mySelf);
+          ubVal := Term(swr, node.ub, (*in-out*) env1, glob, mySelf);
           TYPECASE ubVal OF
           | ObValue.ValInt (node) => ub := node.int;
           ELSE
@@ -897,7 +1074,7 @@ PROCEDURE Term (               term  : ObTree.Term;
               IF i > ub THEN EXIT END;
               forEnv.val := NEW(ObValue.ValInt, int := i, temp := FALSE);
               env1 := forEnv;
-              EVAL Term(node.body, (*in-out*) env1, glob, mySelf);
+              EVAL Term(swr, node.body, (*in-out*) env1, glob, mySelf);
               INC(i);
             END;
           EXCEPT
@@ -917,15 +1094,18 @@ PROCEDURE Term (               term  : ObTree.Term;
           i, ub                : INTEGER;
         BEGIN
           env1 := env;
-          rangeVal := Term(node.range, (*in-out*) env1, glob, mySelf);
+          rangeVal := Term(swr, node.range, (*in-out*) env1, glob, mySelf);
           TYPECASE rangeVal OF
           | ObValue.ValArray (node) =>
               TRY
-                array1 := node.remote.Obtain();
+                array1 := node.Obtain();
               EXCEPT
               | NetObj.Error (atoms) =>
                   ObValue.RaiseNetException(
                     "on remote array access", atoms, term.location);
+              | SharedObj.Error (atoms) =>
+                  ObValue.RaiseSharedException(
+                    "on replicated array access", atoms, term.location);
               | Thread.Alerted =>
                   ObValue.RaiseException(
                     ObValue.threadAlerted, "on remote array access",
@@ -945,7 +1125,7 @@ PROCEDURE Term (               term  : ObTree.Term;
               IF i >= ub THEN EXIT END;
               forEnv.val := array1^[i];
               env1 := forEnv;
-              val := Term(node.body, (*in-out*) env1, glob, mySelf);
+              val := Term(swr, node.body, (*in-out*) env1, glob, mySelf);
               IF node.map THEN vals^[i] := val END;
               INC(i);
             END;
@@ -969,7 +1149,7 @@ PROCEDURE Term (               term  : ObTree.Term;
         VAR env1: ObValue.Env;
         BEGIN
           env1 := env;
-          TYPECASE Term(node.name, (*in-out*) env1, glob, mySelf) OF
+          TYPECASE Term(swr, node.name, (*in-out*) env1, glob, mySelf) OF
           | ObValue.ValText (str) =>
               result := NEW(ObValue.ValException, name := str.text);
           ELSE
@@ -981,7 +1161,8 @@ PROCEDURE Term (               term  : ObTree.Term;
         VAR env1: ObValue.Env;
         BEGIN
           env1 := env;
-          TYPECASE Term(node.exception, (*in-out*) env1, glob, mySelf) OF
+          TYPECASE Term(swr, node.exception, (*in-out*) env1, glob, mySelf)
+              OF
           | ObValue.ValException (exc) =>
               ObValue.RaiseException(exc, "", node.location);
           ELSE
@@ -996,7 +1177,7 @@ PROCEDURE Term (               term  : ObTree.Term;
         BEGIN
           TRY
             env1 := env;
-            result := Term(node.body, (*in-out*) env1, glob, mySelf);
+            result := Term(swr, node.body, (*in-out*) env1, glob, mySelf);
           EXCEPT
           | ObValue.Exception (packet) =>
               tryList := node.tryList;
@@ -1004,18 +1185,17 @@ PROCEDURE Term (               term  : ObTree.Term;
                 IF tryList = NIL THEN RAISE ObValue.Exception(packet) END;
                 IF tryList.exception = NIL THEN (* "else" case *)
                   env1 := env;
-                  result :=
-                    Term(tryList.recover, (*in-out*) env1, glob, mySelf);
+                  result := Term(swr, tryList.recover, (*in-out*) env1,
+                                 glob, mySelf);
                   EXIT;
                 END;
                 env1 := env;
-                TYPECASE
-                    Term(tryList.exception, (*in-out*) env1, glob, mySelf)
-                    OF
+                TYPECASE Term(swr, tryList.exception, (*in-out*) env1,
+                              glob, mySelf) OF
                 | ObValue.ValException (exc) =>
                     IF ObValue.SameException(exc, packet.exception) THEN
                       env1 := env;
-                      result := Term(tryList.recover, (*in-out*) env1,
+                      result := Term(swr, tryList.recover, (*in-out*) env1,
                                      glob, mySelf);
                       EXIT;
                     END;
@@ -1031,8 +1211,8 @@ PROCEDURE Term (               term  : ObTree.Term;
                 IF tryList = NIL THEN RAISE ObValue.Error(packet); END;
                 IF tryList.exception = NIL THEN (* "else" case *)
                   env1 := env;
-                  result :=
-                    Term(tryList.recover, (*in-out*) env1, glob, mySelf);
+                  result := Term(swr, tryList.recover, (*in-out*) env1,
+                                 glob, mySelf);
                   EXIT;
                 END;
                 tryList := tryList.rest;
@@ -1044,68 +1224,91 @@ PROCEDURE Term (               term  : ObTree.Term;
         BEGIN
           TRY
             env1 := env;
-            result := Term(node.body, (*in-out*) env1, glob, mySelf);
+            result := Term(swr, node.body, (*in-out*) env1, glob, mySelf);
           FINALLY
             env1 := env;
-            result := Term(node.finally, (*in-out*) env1, glob, mySelf);
+            result :=
+              Term(swr, node.finally, (*in-out*) env1, glob, mySelf);
           END;
         END;
     | ObTree.TermWatch (node) =>
         VAR
-          env1       : ObValue.Env;
-          mySync     : ObValue.Sync;
+          env1  : ObValue.Env;
+          mySync: ObValue.Sync := NIL;
         BEGIN
           TYPECASE mySelf OF
           | ObValue.ValRemObj (remObj) =>
-            TYPECASE remObj.remote OF
-            | ObValue.RemObjServer(remObjServer) =>
-              IF remObjServer = NIL THEN
+              IF remObj = NIL THEN
+                ObValue.RaiseError(
+                    "watch-until must be used inside a method",
+                    term.location);
+              END;
+              TYPECASE remObj.remote OF
+              | ObValue.RemObjServer (remObjServer) =>
+                  mySync := remObjServer.sync;
+              ELSE
+                ObValue.RaiseError(
+                  "watch-until does not work on remote objects",
+                  term.location);
+              END;
+
+              IF mySync = NIL THEN
+                ObValue.RaiseError(
+                  "watch-until must be used inside a serialized object",
+                  term.location);
+              END;
+          | ObValue.ValSimpleObj (simpleObj) =>
+              (* Simple objs are always local! *)
+              IF simpleObj = NIL THEN
                 ObValue.RaiseError(
                   "watch-until must be used inside a method", term.location);
               END;
-              mySync := remObjServer.sync;
-            ELSE
-              ObValue.RaiseError(
-                  "watch-until does not work on remote objects",
+              mySync := simpleObj.simple.sync;
+
+              IF mySync = NIL THEN
+                ObValue.RaiseError(
+                  "watch-until must be used inside a serialized object",
                   term.location);
-            END;
-          | ObValue.ValSimpleObj(simpleObj) =>
-            (* Simple objs are always local! *)
-            IF simpleObj = NIL THEN
-              ObValue.RaiseError(
+              END;
+          | ObValue.ValReplObj (replObj) =>
+              IF replObj = NIL THEN
+                ObValue.RaiseError(
                   "watch-until must be used inside a method", term.location);
-            END;
-            mySync := simpleObj.simple.sync;
+              END;
           ELSE
             ObValue.RaiseError(
-              "watch-until does not work on remote or replicated objects", 
+              "watch-until does not work on non-local remote objects",
               term.location);
           END;
           env1 := env;
-          TYPECASE Term(node.condition, (*in-out*) env1, glob, mySelf) OF
+          TYPECASE Term(swr, node.condition, (*in-out*) env1, glob, mySelf)
+              OF
           | ObBuiltIn.ValCondition (cond) =>
-            IF mySync = NIL THEN
-              ObValue.RaiseError(
-                  "watch-until must be used inside a protected object",
-                  term.location);
-            ELSE
-              LOOP
-                env1 := env;
-                TYPECASE Term(node.guard, (*in-out*) env1, glob, mySelf) OF
-                | ObValue.ValBool (guard) =>
-                  IF guard.bool THEN
-                    EXIT
+                LOOP
+                  env1 := env;
+                  TYPECASE
+                      Term(swr, node.guard, (*in-out*) env1, glob, mySelf)
+                      OF
+                  | ObValue.ValBool (guard) =>
+                      IF guard.bool THEN
+                        EXIT
+                      ELSE
+                        TYPECASE mySelf OF
+                        | ObValue.ValRemObj, ObValue.ValSimpleObj =>
+                          Thread.Wait(mySync.mutex, cond.condition);
+                        | ObValue.ValReplObj (replObj) =>
+                          SharedObj.Wait(replObj.replica, cond.condition);
+                        ELSE
+                          <*ASSERT FALSE*>  (*can't get here*)
+                        END;
+                      END;
                   ELSE
-                    Thread.Wait(mySync.mutex, cond.condition);
-                  END;
-                ELSE
-                  ObValue.RaiseError(
+                    ObValue.RaiseError(
                       "Argument 2 of watch-until must be a boolean",
                       term.location);
+                  END;
                 END;
-              END;
-              result := ObValue.valOk;
-            END;
+                result := ObValue.valOk;
           ELSE
             ObValue.RaiseError(
               "Argument 1 of watch-until must be a condition",
@@ -1119,6 +1322,7 @@ PROCEDURE Term (               term  : ObTree.Term;
 
 PROCEDURE Call (         clos: ObValue.ValFun;
                 READONLY args: ObValue.Vals;
+                         swr : SynWr.T;
                          loc : SynLocation.T    := NIL): ObValue.Val
   RAISES {ObValue.Error, ObValue.Exception} =
   VAR
@@ -1136,7 +1340,7 @@ PROCEDURE Call (         clos: ObValue.ValFun;
                  rest := env);
       binders := binders.rest;
     END;
-    RETURN Term(clos.fun.body, (*in-out*) env, clos.global, NIL);
+    RETURN Term(swr, clos.fun.body, (*in-out*) env, clos.global, NIL);
   END Call;
 
 PROCEDURE CallEngine (engine: ObValue.ValEngine;

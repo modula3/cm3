@@ -11,8 +11,8 @@
  * Author          : Blair MacIntyre
  * Created On      : Thu Aug 10 09:30:55 1995
  * Last Modified By: Blair MacIntyre
- * Last Modified On: Wed Mar 12 12:16:19 1997
- * Update Count    : 5
+ * Last Modified On: Mon Jun 30 18:15:53 1997
+ * Update Count    : 6
  * 
  * $Source$
  * $Date$
@@ -20,6 +20,9 @@
  * $Revision$
  * 
  * $Log$
+ * Revision 1.3  1997/07/11 17:37:22  bm
+ * Potential release version
+ *
  * Revision 1.2  1997/03/12 21:34:57  bm
  * Moved sharedobj from coterie
  *
@@ -29,9 +32,9 @@
 
 INTERFACE ObLibEmb;
 
-IMPORT ObLoader;
+IMPORT ObLoader, SynWr;
 
-PROCEDURE PackageSetup() : ObLoader.T; 
+PROCEDURE PackageSetup(wr: SynWr.T) : ObLoader.T; 
 
 (* To be called at least once before any other use of the obliq
   embedding package.  Any package that builds on this library should use

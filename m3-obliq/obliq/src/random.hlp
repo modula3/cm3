@@ -1,3 +1,3 @@
-  random_int(min, max: int): int
-  random_real(min, max: real): real
+  random_int(min, max: Int): Int
+  random_real(min, max: Real): Real
     return a random number in the range [min, max]

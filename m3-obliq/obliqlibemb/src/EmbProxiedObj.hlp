@@ -1,5 +1,8 @@
   EmbProxiedObj_Error: Exception       
 WHERE
-  EmbProxiedObj <: { extend: Self(X) All(Y<:{}) (Y) => X & Y }
+  EmbProxiedObj <: { extend: Self(X) All(Y<:{}) (Y) => Y & X ! 
+				                       EmbProxiedObj_Error }
        Objects of this type also contain a field "raw", 
-       which is for internal use.  
+       which is for internal use.  Various proxied objects can enforce 
+       semantics on their proxies, and raise an exception if they are not
+       met.

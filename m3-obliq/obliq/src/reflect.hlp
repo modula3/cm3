@@ -1,0 +1,97 @@
+  reflect_error: Exception
+  All(T) reflect_isArray(v: T): Bool
+    is v an array?
+  All(T) reflect_isObject(v: T): Bool
+    is v an object?
+  All(T) reflect_isClosure(v: T): Bool
+    is v a closure?
+  All(T) reflect_isException(v: T): Bool
+    is v an exception?
+  All(T) reflect_isMethod(v: T): Bool
+    is v a method?
+  All(T) reflect_isUpdateMethod(v: T): Bool
+    is v an update method?
+  All(T) reflect_isOption(v: T): Bool
+    is v an option?
+  All(T) reflect_isBasic(v: T): Bool
+    is v a basic value? (ok, Bool, Char, Text, Int, Real)
+  All(T) reflect_isNative(v: T): Bool
+    is v a native value? (an opaque value)
+  All(T) reflect_isAlias(v: T): Bool
+    is v an alias?
+  All(T) reflect_isLocal(v: T): Bool
+    is the location of v local to this site?
+  All(T) reflect_isProtected(v: T): Bool
+    is v a protected object?
+  All(T) reflect_isSerialized(v: T): Bool
+    is v a serialized object?
+  All(T) reflect_isSimple(v: T): Bool
+    is v a simple object?
+  All(T) reflect_isReplicated(v: T): Bool
+    is v a replicated object?
+  All(T) reflect_isRemote(v: T): Bool
+    is v a remote object?
+  All(T<:option(tag,val)) reflect_getOptionTag(o: T): tag
+    return the tag of the option
+  All(T<:option(tag,val)) reflect_getOptionVal(o: T): val
+    return the value of the option
+  All(T) reflect_getType(v: T): option(type,ok)
+    return an option whose label describes the type of v, and whose value is ok
+  All(T) reflect_getTypedVal(v: T): option(type,v)
+    return an option whose label describes the type of v, and whose value is v
+  All(T<:{}) reflect_getFieldTypes(v: T): [[Text,option(type,ok)]]
+    return an array describing the fields of v.  Each array element is a 2
+    element array containing the field label and an option describing its type.
+    The value of the option is always ok.
+  All(T<:{}) reflect_getObjectType(v: T): option(objectType,v)
+    return an option created by appending all the option tags of the fields of
+    v using the text template "label=>tag" for each field
+    Obtaining the type of a remote object does not require the field values
+    to be copied to the local machine.
+  All(T<:{}) reflect_getObjectInterface(v: T): option(objectType,v)
+    similar to getObjectType, but only methods of v are included.
+  All(T<:{}) reflect_objectWho(v: T): Text 
+    return the text that is used to identify the object v when it is printed
+  All(T<:{}) reflect_getField(v: T, label: Text) ! reflect_error
+    get the named field from the object.
+  All(T<:{}) All(S) reflect_getFields(v: T): [[Text,S]] ! reflect_error
+    return an array of pairs of field labels and their values.
+  All(T<:{}) reflect_select(v: T, label: Text): S ! reflect_error
+    the same as calling 'v.label'.
+  All(T<:{}) All(S,U) reflect_update(v: T, label: Text, nv:S):U ! reflect_error
+    the same as calling 'v.label := nv'.
+  All(T<:{}) All(S,U) reflect_invoke(v: T, label: Text, 
+				     args: [S]): U !reflect_error
+    the same as calling 'v.label(args)', where args is expanded to an arg list
+  All(T<:{}) All(S) reflect_newObject(v: ObjectType, protected serialized: Bool,
+			       who: Text, fields: [[Text,val]]): S
+    create a new object.
+  All(T,U) reflect_match(match: T, val: S): bool !reflect_error
+    Test to see if "val" matches "match", using the rules below.
+WHERE
+  ObjectType = one of {"Remote","Replicated","Simple"}
+
+  A value "val" matches a "match" value if:
+  - "match is ok"
+  - "match is val"
+  - "val" is a text string and "match" is a regular expression that matches
+    all of it (ie. "val" matches "^" & match & "$")
+  - "match" is a regular expression that matches all of the option key of
+    "reflect_getType(val)"
+  - "match" is an option whose key is a regular expression matches all of 
+    the option key of "reflect_getType(val)", and the value of the option 
+    is either "ok" or also matches "val".
+  - "val" and "match" are objects, and for each field of "match",
+    "val" has a corresponding field whose contents are matched by the
+    contents of the field of "match".
+  - "val" and "match" are arrays of the same size, and each element of the 
+    array matches
+
+  Here are the possible types strings of the basic Repo types:
+  "Var", "Var`Replicated", "Var`Simple", "Ok", "Bool", "Char", "Text",
+  "Int", "Real", "Option", "Alias", "Array`Remote", "Array`Replicated",
+  "Array`Simple", "Closure`#", "Method`#`Update", "Method`#",
+  "Object`Remote", "Object`Replicated", "Object`Simple", "Engine", "Exception"
+
+  Opaque data types introduced by libraries have a type string of either 
+  "ValAnything" or a value provided by the library.

@@ -39,12 +39,30 @@ VAR
   BEGIN
     IF val=NIL THEN SynWr.Char(swr, '_'); RETURN END;
     TYPECASE val OF
-    | ObValue.ValVar(node) => 
+    | ObValue.ValRemVar(node) => 
       TRY val1 := node.remote.Get();
       EXCEPT
       | NetObj.Error, Thread.Alerted => 
         SynWr.Text(swr, "<remote variable disconnected>");
       END;
+      PrintVal(swr, val1, libEnv, printEnv, depth);
+    | ObValue.ValReplVar(node) => 
+      TRY val1 := node.replica.Get();
+      EXCEPT
+      | SharedObj.Error => 
+        SynWr.Text(swr, "<stale shared variable>");
+      END;
+      SynWr.Text(swr, "replicated ");
+      PrintVal(swr, val1, libEnv, printEnv, depth);
+    | ObValue.ValSimpleVar(node) => 
+      TRY val1 := node.Get();
+      EXCEPT
+      | NetObj.Error, Thread.Alerted => 
+        SynWr.Text(swr, "<remote variable disconnected>");
+      | SharedObj.Error => 
+        SynWr.Text(swr, "<stale shared variable>");
+      END;
+      SynWr.Text(swr, "simple ");
       PrintVal(swr, val1, libEnv, printEnv, depth);
     | ObValue.ValOk => ObPrintTree.PrintOk(swr);
     | ObValue.ValBool(node) => ObPrintTree.PrintBool(swr, node.bool);
@@ -63,7 +81,7 @@ VAR
 	    SynWr.Text(swr, "option ");
 	  SynWr.Break(swr);
             SynWr.Beg(swr, 4);
-	      SynWr.Text(swr, node.tag);
+              ObPrintTree.PrintText(swr, node.tag);
 	      SynWr.Text(swr, " => ");
             SynWr.End(swr);
 	  SynWr.Break(swr);
@@ -90,7 +108,7 @@ VAR
 	SynWr.Break(swr);
 	  SynWr.Text(swr, "end");
 	SynWr.End(swr);
-    | ObValue.ValArray(node) => 
+    | ObValue.ValRemArray(node) => 
         IF depth <= 0 THEN SynWr.Text(swr, "..."); RETURN END;
         SynWr.Beg(swr, 1);
           SynWr.Char(swr, '[');
@@ -99,6 +117,32 @@ VAR
           EXCEPT
           | NetObj.Error, Thread.Alerted => 
             SynWr.Text(swr, "<remote array disconnected>");
+          END;
+          SynWr.Char(swr, ']');
+	SynWr.End(swr);
+    | ObValue.ValReplArray(node) => 
+        IF depth <= 0 THEN SynWr.Text(swr, "..."); RETURN END;
+        SynWr.Beg(swr, 1);
+          SynWr.Text(swr, "replicated [");
+          TRY
+            PrintValArray(swr, node.replica.Obtain(), libEnv, printEnv, depth);
+          EXCEPT
+          | SharedObj.Error => 
+            SynWr.Text(swr, "<stale shared array>");
+          END;
+          SynWr.Char(swr, ']');
+	SynWr.End(swr);
+    | ObValue.ValSimpleArray(node) => 
+        IF depth <= 0 THEN SynWr.Text(swr, "..."); RETURN END;
+        SynWr.Beg(swr, 1);
+          SynWr.Text(swr, "simple [");
+          TRY
+            PrintValArray(swr, node.simple.Obtain(), libEnv, printEnv, depth);
+          EXCEPT
+          | NetObj.Error, Thread.Alerted => 
+            SynWr.Text(swr, "<remote array disconnected>");
+          | SharedObj.Error => 
+            SynWr.Text(swr, "<stale shared array>");
           END;
           SynWr.Char(swr, ']');
 	SynWr.End(swr);
@@ -214,11 +258,29 @@ VAR
   BEGIN
     IF val=NIL THEN SynWr.Char(swr, '_'); RETURN END;
     TYPECASE val OF
-    | ObValue.ValVar(node) => 
+    | ObValue.ValRemVar(node) => 
       TRY val1 := node.remote.Get();
       EXCEPT NetObj.Error, Thread.Alerted => 
         SynWr.Text(swr, "<remote variable disconnected>");
       END;
+      PrintValSummary(swr, val1, libEnv, printEnv);
+    | ObValue.ValReplVar(node) => 
+      TRY val1 := node.replica.Get();
+      EXCEPT
+      | SharedObj.Error => 
+        SynWr.Text(swr, "<stale shared variable>");
+      END;
+      SynWr.Text(swr, "replicated ");
+      PrintValSummary(swr, val1, libEnv, printEnv);
+    | ObValue.ValSimpleVar(node) => 
+      TRY val1 := node.simple.Get();
+      EXCEPT
+      | NetObj.Error, Thread.Alerted => 
+        SynWr.Text(swr, "<remote variable disconnected>");
+      | SharedObj.Error => 
+        SynWr.Text(swr, "<stale shared variable>");
+      END;
+      SynWr.Text(swr, "simple ");
       PrintValSummary(swr, val1, libEnv, printEnv);
     | ObValue.ValOk, ObValue.ValBool, ObValue.ValChar,
       ObValue.ValInt, ObValue.ValReal => 
@@ -230,7 +292,7 @@ VAR
 	    SynWr.Text(swr, "option ");
 	  SynWr.Break(swr);
             SynWr.Beg(swr, 4);
-	      SynWr.Text(swr, node.tag);
+	      ObPrintTree.PrintText(swr, node.tag);
 	      SynWr.Text(swr, " => ... end");
             SynWr.End(swr);
 	  SynWr.End(swr);
@@ -246,8 +308,12 @@ VAR
             SynWr.End(swr);
 	  SynWr.End(swr);
 	SynWr.End(swr);
-    | ObValue.ValArray => 
+    | ObValue.ValRemArray => 
 	SynWr.Text(swr, "[ ... ]");
+    | ObValue.ValReplArray => 
+	SynWr.Text(swr, "replicated [ ... ]");
+    | ObValue.ValSimpleArray => 
+	SynWr.Text(swr, "simple [ ... ]");
     | ObValue.ValAnything(node) => 
         SynWr.Text(swr, node.Print());
     | ObValue.ValFun(node) => 
@@ -417,7 +483,7 @@ VAR
 
   PROCEDURE PrintValObjFields(swr: SynWr.T; fields: REF ObValue.ObjFields; 
     libEnv: ObLib.Env; printEnv: ObTree.Env; depth: INTEGER; 
-    isReplicated: BOOLEAN) =
+    <*UNUSED*>isReplicated: BOOLEAN) =
   VAR sep: TEXT;
   BEGIN
     sep := "";
@@ -428,9 +494,11 @@ VAR
 	  SynWr.Beg(swr, 4);
 	    SynWr.Text(swr, fields^[i].label);
 	    SynWr.Text(swr, " => ");
-            IF isReplicated AND fields^[i].update THEN
+            (*
+            IF isReplicated AND fields^[i].meth.update THEN
               SynWr.Text(swr, "update ");
             END;
+            *)
 	  SynWr.End(swr);
 	SynWr.Break(swr);
 	  PrintVal(swr, fields^[i].field, libEnv, printEnv, depth-1);
@@ -441,7 +509,7 @@ VAR
   PROCEDURE PrintValObjFieldsSummary(swr: SynWr.T; 
     fields: REF ObValue.ObjFields; 
     <*UNUSED*>libEnv: ObLib.Env; <*UNUSED*>printEnv: ObTree.Env; 
-    isReplicated: BOOLEAN) =
+    <*UNUSED*>isReplicated: BOOLEAN) =
   VAR sep: TEXT;
   BEGIN
     sep := "";
@@ -452,21 +520,28 @@ VAR
 	  SynWr.Beg(swr, 4);
 	    SynWr.Text(swr, fields^[i].label);
 	    SynWr.Text(swr, "=> ");
-            IF isReplicated AND fields^[i].update THEN
+            (*
+            IF isReplicated AND fields^[i].meth.update THEN
               SynWr.Text(swr, "update ");
             END;
+            *)
 	    SynWr.Text(swr, "... ");
 	  SynWr.End(swr);
 	SynWr.End(swr);
     END;
   END PrintValObjFieldsSummary;
 
-PROCEDURE PrintPhraseLet(swr: SynWr.T; checkEnv, checkEnvStop: ObCheck.Env; 
-    env, envStop: ObValue.Env; var: BOOLEAN; libEnv: ObLib.Env; depth: INTEGER) =
+PROCEDURE PrintPhraseLet (swr                   : SynWr.T;
+                          checkEnv, checkEnvStop: ObCheck.Env;
+                          env, envStop          : ObValue.Env;
+                          var                   : BOOLEAN;
+                          libEnv                : ObLib.Env;
+                          depth                 : INTEGER      ) =
   BEGIN
     SynWr.Beg(swr, 2);
-      IF var THEN SynWr.Text(swr, "var ") ELSE SynWr.Text(swr, "let ") END;
-      PrintTermBinding(swr, checkEnv, checkEnvStop, env, envStop, libEnv, depth);
+    IF var THEN SynWr.Text(swr, "var ") ELSE SynWr.Text(swr, "let ") END;
+    PrintTermBinding(
+      swr, checkEnv, checkEnvStop, env, envStop, libEnv, depth);
     SynWr.End(swr);
     SynWr.NewLine(swr);
   END PrintPhraseLet;
@@ -506,20 +581,20 @@ PROCEDURE PrintTermBinding(swr: SynWr.T; checkEnv, checkEnvStop: ObCheck.Env;
     END;
   END PrintTermBinding;
 
-  PROCEDURE PrintClosureGlobals(self: ObCommand.T; arg: TEXT; 
+  PROCEDURE PrintClosureGlobals(wr: SynWr.T; self: ObCommand.T; arg: TEXT; 
                                 <*UNUSED*>data: REFANY:=NIL) =
     BEGIN
       IF Text.Equal(arg, "!") OR Text.Equal(arg, "?") THEN
-	SynWr.Text(SynWr.out , self.name & " {On Off} is ");
-	IF printClosureGlobals THEN SynWr.Text(SynWr.out , "On");
-	ELSE SynWr.Text(SynWr.out , "Off"); END;
-	SynWr.NewLine(SynWr.out );
+	SynWr.Text(wr , self.name & " {On Off} is ");
+	IF printClosureGlobals THEN SynWr.Text(wr , "On");
+	ELSE SynWr.Text(wr , "Off"); END;
+	SynWr.NewLine(wr );
       ELSIF Text.Equal(arg, "On") THEN printClosureGlobals:=TRUE;
       ELSIF Text.Equal(arg, "Off") THEN printClosureGlobals:=FALSE;
       ELSE
-	SynWr.Text(SynWr.out , "Command " & self.name 
+	SynWr.Text(wr , "Command " & self.name 
 	  & ": bad argument: " & arg);
-	SynWr.NewLine(SynWr.out );
+	SynWr.NewLine(wr );
       END;
     END PrintClosureGlobals;
 

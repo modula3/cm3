@@ -1,8 +1,9 @@
-%WORKDIR = "/proj/cmass/src.1/m3-obliq"
-
-override ("synloc", ROOT & "/m3-obliq")
-override ("synex", ROOT & "/m3-obliq")
-override ("metasyn", ROOT & "/m3-obliq")
-override ("obliqrt", ROOT & "/m3-obliq")
-override ("obliqprint", ROOT & "/m3-obliq")
-override ("obliqparse", ROOT & "/m3-obliq")
+if equal (OS_TYPE, "WIN32")
+  override("obliqrt", "\\\\stieglitz\\graphics\\arm3\\bm-work\\cm3\\m3-obliq")
+  override("obliqprint", "\\\\stieglitz\\graphics\\arm3\\bm-work\\cm3\\m3-obliq")
+  override("obliqparse", "\\\\stieglitz\\graphics\\arm3\\bm-work\\cm3\\m3-obliq")
+else
+  override("obliqrt", "/proj/graphics/arm3/bm-work/cm3/m3-obliq")
+  override("obliqprint", "/proj/graphics/arm3/bm-work/cm3/m3-obliq")
+  override("obliqparse", "/proj/graphics/arm3/bm-work/cm3/m3-obliq")
+end

@@ -5,6 +5,8 @@ DEFINITIONS (identifiers are denoted by "x", terms are denoted by "a")
   let x1=a1,...,xn=an                	definition of constant identifiers
   let rec x1=a1,...,xn=an            	definition of recursive procedures
   var x1=a1,...,xn=an                	definition of updatable identifiers
+  var replicated x1=a1,...,xn=an       	definition of replicated updatable ids
+  var simple x1=a1,...,xn=an          	definition of simple updatable ids
 
 SEQUENCES (denoted by "s")           	each "ai" (a term or a definition) is
   a1;...;an                          	executed; yields "an" (or "ok" if n=0)
@@ -17,10 +19,12 @@ TERMS (denoted by "a","b","c"; identifiers are denoted by "x","l";
   ok  true  false  'a'  "abc"  3  1.5	constants
 
   [a1,...,an]                     	arrays
+  replicated [a1,...,an]                replicated arrays
+  simple [a1,...,an]                    simple arrays
   a[b]	a[b]:=c               	        array selection, array update
   a[b for b']	a[b for b']:=c        	subarray selection, subarray update
 
-  option l => s end              	term "s" tagged by "l"
+  option "l" => s end              	term "s" tagged by "l"
 
   proc(x1,...,xn) s end              	procedures
   a(b1,...,bn)                       	procedure invocation
@@ -37,23 +41,26 @@ TERMS (denoted by "a","b","c"; identifiers are denoted by "x","l";
   a.l    a.l(a1, ..., an)            	field selection / method invocation
   a.l:=b                             	field update / method override
   clone(a1,...,an)                      object cloning
-  replicate(a,umethlist)                turning into a replicated object
-  simple(a)		                turning into a simple object
-  remote(a)	                        turning into a remote object
+  replicated(a,umethlist)		replicated clone of object "a"
+  replicated(a)				replicated copy of array "a"
+  simple(a)				simple clone/copy (object/array) of "a"
+  remote(a)				remote clone/copy (object/array) of "a"
   a1.l1:=alias l2 of a2 end             field delegation
   delegate a1 to a2 end 	        object delegation
-  notify a1 with a2                     unreachable data value notification  
-  setpickler (a1,a2,a3)			pickle a1 using a2 for reading and
+  unreachable a1 do a2                  unreachable data value notification  
+  objectpickler a1 reader a2 writer a3	pickle a1 using a2 for reading and
 					a3 for writing
-  modulehelp m sort "s" short "sh" "long"
-					setup help for a module
+  addhelp m sort "s1" short "s2" full "s3" 
+					setup help entry for m
 					
   d                                  	definition
   if s1 then s2                      	conditional
     elsif s3 then s4... else sn end  	("elsif", "else" optional)
   a andif b	a orif b             	conditional conjunction/disjunction
-  case s of l1(x1)=>s1,...,             case over the tag "li" of an option
-    ln(xn)=>sn else s0 end     	        binding "xi" in "si" ("else" optional)
+  case s of "l1"(x1,m1)=>s1,...,        case over the tag "li" of an option
+    "ln"(xn,m1)=>sn			binding "xi" in "si" ("mi" optional)
+    else s0 end         		("else" optional)
+					of match subexpressions of "li"
   loop s end                         	loop
   for i=a to b do s end              	iteration through successive integers
   foreach i in a do s end            	iteration through an array

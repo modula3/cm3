@@ -2,6 +2,14 @@
 (* Distributed only by permission.                             *)
 (* Last modified on Fri Jun  3 12:45:29 1994 by luca                       *)
 (*      modified on Thu Jun 25 02:37:59 1992 by knaff          *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 15:05:10 1997
+ *)
+
 MODULE MetaParser ;
 
 IMPORT Constructor, Rd, SynParse, TextRefTbl, 
@@ -11,7 +19,7 @@ IMPORT Constructor, Rd, SynParse, TextRefTbl,
 <* FATAL Crash *>
 
 REVEAL
-  Grammar = Grammar_public BRANDED OBJECT
+  Grammar = Grammar_public BRANDED "MetaParser.Grammar" OBJECT
     gram: SynParse.Grammar := NIL;
   END; (* object *)
 
@@ -54,9 +62,9 @@ PROCEDURE Setup() =
   BEGIN
   END Setup;
 
-PROCEDURE PackageSetup() RAISES {SynParse.Fail} =
+PROCEDURE PackageSetup(wr: SynWr.T) RAISES {SynParse.Fail} =
   BEGIN
-    Constructor.Setup();
+    Constructor.Setup(wr);
     Setup();
   END PackageSetup;
 
@@ -74,7 +82,7 @@ PROCEDURE NewActionTable(): ActionTable =
 
 EXCEPTION Crash;
 
-PROCEDURE TableFromArray(READONLY sourceTable : ActionProcTable;
+PROCEDURE TableFromArray(<*NOWARN*>sourceTable : ActionProcTable;
                           table: ActionTable ) =
 (* transforms an array of (Text, Procedure) pairs into an actionTable *)
 VAR
@@ -180,51 +188,51 @@ PROCEDURE TextToTree(<*UNUSED*>self: SynParse.QuotedString;
 PROCEDURE GInt(p: SynParse.T; loc :INTEGER): INTEGER RAISES {SynParse.Fail}=
   BEGIN
     RETURN
-      XInt(p.stack[loc]);
+      XInt(p.Writer(), p.stack[loc]);
   END GInt;
 
 PROCEDURE GReal(p: SynParse.T; loc :INTEGER): LONGREAL RAISES {SynParse.Fail}=
   BEGIN
     RETURN
-      XReal(p.stack[loc]);
+      XReal(p.Writer(), p.stack[loc]);
   END GReal;
 
 PROCEDURE GText(p: SynParse.T; loc :INTEGER): TEXT RAISES {SynParse.Fail}=
   BEGIN
     RETURN
-      XText(p.stack[loc]);
+      XText(p.Writer(), p.stack[loc]);
   END GText;
 
 
 PROCEDURE GBool(p: SynParse.T; loc: INTEGER): BOOLEAN RAISES {SynParse.Fail}=
   BEGIN
     RETURN
-      XBool(p.stack[loc]);
+      XBool(p.Writer(), p.stack[loc]);
   END GBool;
 
-PROCEDURE XInt(tree: SynParse.Tree): INTEGER RAISES {SynParse.Fail}=
+PROCEDURE XInt(wr: SynWr.T; tree: SynParse.Tree): INTEGER RAISES {SynParse.Fail}=
   BEGIN
     TYPECASE tree OF
     | NULL =>
     | IntegerTemp(node) => RETURN node.int ;
     ELSE
     END;
-    TypeError("Text",tree);
+    TypeError(wr, "Text",tree);
     <*ASSERT FALSE*>
   END XInt;
 
-PROCEDURE XReal(tree: SynParse.Tree): LONGREAL RAISES {SynParse.Fail}=
+PROCEDURE XReal(wr: SynWr.T; tree: SynParse.Tree): LONGREAL RAISES {SynParse.Fail}=
   BEGIN
     TYPECASE tree OF
     | NULL =>
     | RealTemp(node) => RETURN node.real ;
     ELSE
     END;
-    TypeError("Text",tree);
+    TypeError(wr, "Text",tree);
     <*ASSERT FALSE*>
   END XReal;
 
-PROCEDURE XText(tree: SynParse.Tree): TEXT RAISES {SynParse.Fail}=
+PROCEDURE XText(wr: SynWr.T; tree: SynParse.Tree): TEXT RAISES {SynParse.Fail}=
   BEGIN
     TYPECASE tree OF
     | NULL =>
@@ -233,11 +241,11 @@ PROCEDURE XText(tree: SynParse.Tree): TEXT RAISES {SynParse.Fail}=
     | TextTemp(node)    => RETURN node.text ;
     ELSE
     END;
-    TypeError("Text",tree);
+    TypeError(wr,"Text",tree);
     <*ASSERT FALSE*>
   END XText;
 
-PROCEDURE XBool(tree: SynParse.Tree): BOOLEAN RAISES {SynParse.Fail}=
+PROCEDURE XBool(wr: SynWr.T; tree: SynParse.Tree): BOOLEAN RAISES {SynParse.Fail}=
   VAR
     text : TEXT;
     array : REF ARRAY OF CHAR;
@@ -262,20 +270,21 @@ PROCEDURE XBool(tree: SynParse.Tree): BOOLEAN RAISES {SynParse.Fail}=
       END;
     ELSE
     END;
-    TypeError("Boolean",tree);
+    TypeError(wr,"Boolean",tree);
     <*ASSERT FALSE*>
   END XBool; 
 
-PROCEDURE TypeError(type: TEXT; tree: SynParse.Tree) RAISES {SynParse.Fail}=
+PROCEDURE TypeError(wr: SynWr.T; type: TEXT; tree: SynParse.Tree) 
+  RAISES {SynParse.Fail}=
   BEGIN
     IF tree = NIL THEN
-      SynWr.Text(SynWr.out, "Got NIL pointer instead of "&type, loud:=TRUE);      
+      SynWr.Text(wr, "Got NIL pointer instead of "&type, loud:=TRUE);      
     ELSE      
-      SynWr.Text(SynWr.out, type & " expected at ", loud:=TRUE);
-      SynLocation.PrintLocation(SynWr.out, tree.location);      
+      SynWr.Text(wr, type & " expected at ", loud:=TRUE);
+      SynLocation.PrintLocation(wr, tree.location);      
     END;
-    SynWr.Text(SynWr.out, "\n", loud:=TRUE);
-    SynWr.Flush(SynWr.out, loud:=TRUE);
+    SynWr.Text(wr, "\n", loud:=TRUE);
+    SynWr.Flush(wr, loud:=TRUE);
     RAISE SynParse.Fail;
   END TypeError;
 
@@ -351,78 +360,78 @@ PROCEDURE TypeError(type: TEXT; tree: SynParse.Tree) RAISES {SynParse.Fail}=
       END;
     END BeKeywordsOfGram;
 
-    PROCEDURE PrintGram(gram : SynParse.Grammar )=
+    PROCEDURE PrintGram(wr: SynWr.T; gram : SynParse.Grammar)=
       BEGIN
       TYPECASE gram OF
       | NULL =>
       | SynParse.NonTerminal(node) =>
-        SynWr.Text(SynWr.out, node.name);
+        SynWr.Text(wr, node.name);
       | SynParse.Storage(node) => 
-        PrintGram(node.item);
-        SynWr.Text(SynWr.out, Fmt.Int(node.position));
+        PrintGram(wr, node.item);
+        SynWr.Text(wr, Fmt.Int(node.position));
       | SynParse.Action(node) => 
-        PrintGram(node.grammar);
-        SynWr.Text(SynWr.out, " :: Action ");
+        PrintGram(wr, node.grammar);
+        SynWr.Text(wr, " :: Action ");
       | SynParse.GivenKeyword(node) =>
-        SynWr.Text(SynWr.out, "\"" & node.key & "\"" );
+        SynWr.Text(wr, "\"" & node.key & "\"" );
       | SynParse.GivenName(node) =>
-        SynWr.Text(SynWr.out, "\"~" & node.text & "\"" );
+        SynWr.Text(wr, "\"~" & node.text & "\"" );
       | SynParse.Identifier =>
-        SynWr.Text(SynWr.out, " identifier ");
+        SynWr.Text(wr, " identifier ");
       | SynParse.QuotedChar =>
-        SynWr.Text(SynWr.out, " quoted char ");
+        SynWr.Text(wr, " quoted char ");
       | SynParse.Integer =>
-        SynWr.Text(SynWr.out, " integer ");
+        SynWr.Text(wr, " integer ");
       | SynParse.Real =>
-        SynWr.Text(SynWr.out, " real ");
+        SynWr.Text(wr, " real ");
       | SynParse.QuotedString =>
-        SynWr.Text(SynWr.out, " quoted string ");        
+        SynWr.Text(wr, " quoted string ");        
       | SynParse.GivenDelimiter(node) =>
-        SynWr.Text(SynWr.out, "\' ");
-        SynWr.Char(SynWr.out, node.delim);
-        SynWr.Text(SynWr.out, "\' ");
+        SynWr.Text(wr, "\' ");
+        SynWr.Char(wr, node.delim);
+        SynWr.Text(wr, "\' ");
       | SynParse.Sequence(node) =>
-        SynWr.Text(SynWr.out, " [ "); 
-        PrintGramList(node.items);
-        SynWr.Text(SynWr.out, " ] "); 
+        SynWr.Text(wr, " [ "); 
+        PrintGramList(wr, node.items);
+        SynWr.Text(wr, " ] "); 
       | SynParse.Choice(node) => 
-        SynWr.Text(SynWr.out, " { "); 
-        PrintGramList(node.choice);
-        SynWr.Text(SynWr.out, " } "); 
+        SynWr.Text(wr, " { "); 
+        PrintGramList(wr, node.choice);
+        SynWr.Text(wr, " } "); 
       | SynParse.Iter(node) =>
-        SynWr.Text(SynWr.out, " ( "); 
-        PrintGram(node.base);
-        SynWr.Text(SynWr.out, " * "); 
-        PrintGram(node.base);
-        SynWr.Text(SynWr.out, " ) "); 
+        SynWr.Text(wr, " ( "); 
+        PrintGram(wr, node.base);
+        SynWr.Text(wr, " * "); 
+        PrintGram(wr, node.base);
+        SynWr.Text(wr, " ) "); 
       | SynParse.Eof =>
-        SynWr.Text(SynWr.out, "EOF"); 
+        SynWr.Text(wr, "EOF"); 
       ELSE <*ASSERT FALSE*>
       END;
     END PrintGram;
 
-  PROCEDURE PrintGramList(list: SynParse.GrammarList) = 
+  PROCEDURE PrintGramList(wr: SynWr.T; list: SynParse.GrammarList) = 
   BEGIN
     WHILE list#NIL DO
-      PrintGram(list.first);
+      PrintGram(wr, list.first);
       list:=list.rest;
-      SynWr.Char(SynWr.out, ' ');
+      SynWr.Char(wr, ' ');
     END;
   END PrintGramList;
 
 
 
-  PROCEDURE PrintClauseList(list: ClauseList) =
+  PROCEDURE PrintClauseList(wr: SynWr.T; list: ClauseList) =
   BEGIN
     WHILE list#NIL DO
-      SynWr.Text(SynWr.out, " " & list.ide.text);
-      SynWr.Text(SynWr.out, "::= " );
-      PrintGram(list.gram);
+      SynWr.Text(wr, " " & list.ide.text);
+      SynWr.Text(wr, "::= " );
+      PrintGram(wr, list.gram);
       (* IF list.extend OR list.extendIter THEN
-         SynWr.Text(SynWr.out, "(extended)");
+         SynWr.Text(wr, "(extended)");
       END; *)
       list:=list.rest;
-      SynWr.Char(SynWr.out, '\n');
+      SynWr.Char(wr, '\n');
     END;
   END PrintClauseList;
 

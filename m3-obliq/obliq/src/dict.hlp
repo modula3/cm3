@@ -1,0 +1,32 @@
+  dict_invalidKey: Exception
+  dict_new (): Dict
+    Create a new dictionary that maps Texts to any Obliq value.
+  dict_get (t: Dict, key: Text): Val ! dict_invalidKey
+    Look up "key" in dictionary "t".  If it exists, return the value "Val" that
+    it maps to.  Otherwise, raise "dict_invalidKey".
+  dict_put (t: Dict, key: Text, val: Val): Bool
+    Set the value mapped from "key" in the dictionary "t" to "val".  If "key"
+    already mapped to something in "t", return "true", otherwise return
+    "false."
+  dict_delete (t: Dict, key: Text): Val ! dict_invalidKey
+    Delete the mapping for "key" from dictionary "t".  If it exists, return the
+    value "Val" that it mapped to.  Otherwise, raise "dict_invalidKey".
+  dict_size (t: Dict): Int
+    Return the number of elements (mappings) in dictionary "t"
+  dict_iterate (t: Dict): Iterator
+    Return an Iterator, which is an object that can be used to iterate
+    over the key-value pairs in "t".
+  dict_iteratorNext (i: Iterator): [Text, Val] | Ok
+    If "i" is the result of the call "dict_iterate(t)", then the call
+    "dict_iteratorNext(i)" selects an entry from "t" that has not already
+    been returned by "i", and returns the pair ["k","v"] corresponding to its
+    key and value.  If no entries remain, the call returns "Ok". It is a
+    checked runtime error to call "iteratorNext" after it has returned "Ok".
+    The client must ensure that while an iterator is in use, the parent 
+    dictionary is not modified.
+  dict_iteratorInit (i: Iterator, t: Dict): Iterator
+    Reinitialize "i" to iterate over all the values of a dictionary "t".  
+    Return "i"
+WHERE
+  Dict is a dictionary
+  Iterator is a dictionary iterator

@@ -1,5 +1,12 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:55:25 1997
+ *)
 
 UNSAFE MODULE ObLib;
 IMPORT SynLocation, ObCommand, Text, Pickle2 AS Pickle, Wr, Thread,
@@ -73,7 +80,7 @@ IMPORT SynLocation, ObCommand, Text, Pickle2 AS Pickle, Wr, Thread,
     END EncodeTermOp;
 
 REVEAL
-  ObLibSpecial = Pickle.Special BRANDED OBJECT
+  ObLibSpecial = Pickle.Special BRANDED "ObLib.ObLibSpecial" OBJECT
                        OVERRIDES
                          write := WriteLib;
                          read := ReadLib;

@@ -1,9 +1,16 @@
-
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Sat Apr  4 13:29:41 1998
+ *)
 
 INTERFACE Obliq;
-IMPORT SynWr, SynLocation, ObTree, ObValue, ObScope, ObCheck, ObLib, Thread;
+IMPORT SynWr, SynLocation, ObTree, ObValue, ObScope, ObCheck, ObLib,
+       Thread, SharedObj;
 FROM ObValue IMPORT Error, Exception;
 
 (* Program interface to Obliq run-time values and evaluation.
@@ -13,8 +20,13 @@ FROM ObValue IMPORT Error, Exception;
 
 (* ====== Setup ====== *)
 
-  PROCEDURE PackageSetup();
-  (* To be called at least once before any other use of the obliqrt package. *)
+  PROCEDURE PackageSetup(console: SynWr.T);
+  (* To be called at least once before any other use of the obliqrt package.
+     "console" is the writer to write all output that has nowhere else
+     to go. *)
+
+  PROCEDURE Console(): SynWr.T;
+    (* Get the console writer *)
 
 (* ====== Types ====== *)
 
@@ -30,7 +42,7 @@ FROM ObValue IMPORT Error, Exception;
          use the NIL defaults for location (for pretty good error reporting)
          or synthesize you own locations (for optimal error reporting). *)
     Env = 
-      BRANDED OBJECT
+      BRANDED "Obliq.Env" OBJECT
         frameName: TEXT; (* the module name, to handle reloading *)
         forName: TEXT;   (* the qualified name for the operations. *)
         libEnv: ObLib.Env;
@@ -43,11 +55,12 @@ FROM ObValue IMPORT Error, Exception;
 
 (* ====== Environments ====== *)
 
-  PROCEDURE EmptyEnv(): Env;
+  PROCEDURE EmptyEnv(wr: SynWr.T): Env;
   (* The empty evaluation environment, containing the currently registered
      built-in modules. This is a legal environment. *)
   
-  PROCEDURE NewEnv(name: TEXT; val: Val; rest: Env; loc: Location:=NIL)
+  PROCEDURE NewEnv(wr: SynWr.T; name: TEXT; val: Val; rest: Env; 
+                   loc: Location:=NIL)
     : Env RAISES {Error};
   (* Extend an evaluation environment with a new association name-val. 
      This is a legal environment if "rest" is, and if "val" is
@@ -58,13 +71,13 @@ FROM ObValue IMPORT Error, Exception;
 
 (* ====== Eval ====== *)
 
-  PROCEDURE EvalTerm(term: Term; env: Env; loc: Location:=NIL)
+  PROCEDURE EvalTerm(wr: SynWr.T; term: Term; env: Env; loc: Location:=NIL)
     : Val RAISES {Error, Exception};
   (* Check and evaluate a term in an environment. "env" must be a legal
      environment. Produces a legal value, or an exception.
      A Term can be obtained via ObliqParser.i3. *)
 
-  PROCEDURE EvalPhrase(phrase: Phrase; VAR (*in-out*) env: Env; 
+  PROCEDURE EvalPhrase(wr: SynWr.T; phrase: Phrase; VAR (*in-out*) env: Env; 
     loc: Location:=NIL): Val RAISES {Error, Exception};
   (* Check and evaluate a term, definition, or command phrase in an 
      environment. "env" must be a legal environment. Produces an enriched 
@@ -112,33 +125,43 @@ FROM ObValue IMPORT Error, Exception;
      It is much better to call Eval with appropriate arguments, so that 
      objects-with-methods are produced. *)
 
-  PROCEDURE ObjectSelect(object: Val; label: TEXT; loc: Location:=NIL): Val 
+  PROCEDURE ObjectSelect(object: Val; label: TEXT; swr: SynWr.T; 
+                         loc: Location:=NIL; internal:=FALSE): Val 
     RAISES {Error, Exception};
   (* Selects the contents of a field of an object. The value produced
      (if any) is a legal value provided that "object" is both a legal value 
-     and an object. *)
+     and an object. If this is executed as if
+     from "within" the object, internal should be set to TRUE. *)
     
   PROCEDURE ObjectInvoke(object: Val; label: TEXT; READONLY args: Vals; 
-    loc: Location:=NIL): Val RAISES {Error, Exception};
+                         swr: SynWr.T; loc: Location:=NIL; 
+                         internal:=FALSE): Val RAISES {Error, Exception};
   (* Invokes a method of an object. The value produced (if any) is a 
      legal value provided that "object" is both a legal value and 
-     an object, and args is an array of legal values. *)
+     an object, and args is an array of legal values. If this is executed as if
+     from "within" the object, internal should be set to TRUE. *)
     
   PROCEDURE ObjectUpdate(object: Val; label: TEXT; val: Val; 
-    loc: Location:=NIL) RAISES {Error, Exception};
+                         loc: Location:=NIL; 
+                         internal:=FALSE) RAISES {Error, Exception};
   (* Updates a field or method of an object. The value produced (if any) is a 
      legal value provided that "object" is both a legal value and 
-     an object, and val is a legal value. *)
+     an object, and val is a legal value. If this is executed as if
+     from "within" the object, internal should be set to TRUE. *)
 
-  PROCEDURE ObjectClone1(object: Val; loc: Location:=NIL): Val
+  PROCEDURE ObjectClone1(object: Val; loc: Location:=NIL; self: Val:=NIL): Val
     RAISES {Error, Exception};
   (* Clone a single object. The value produced (if any) is a legal value 
-     provided that "object" is both a legal value and an object. *)
+     provided that "object" is both a legal value and an object.  If
+     this is executed as if from "within" another object, self should be set
+     to that object. *)
 
-  PROCEDURE ObjectClone(READONLY objects: Vals; loc: Location:=NIL): Val 
-    RAISES {Error, Exception};
+  PROCEDURE ObjectClone(READONLY objects: Vals; loc: Location:=NIL; 
+                        self: Val:=NIL): Val RAISES {Error, Exception};
   (* Clone many objects into one. The value produced (if any) is a legal value 
-     provided that "objects" are both legal values and objects. *)
+     provided that "objects" are both legal values and objects. If
+     this is executed as if from "within" another object, self should be set
+     to that object. *)
 
   PROCEDURE ObjectHas(object: Val; label: TEXT; loc: Location:=NIL): 
     BOOLEAN RAISES{Error, Exception};
@@ -189,10 +212,10 @@ FROM ObValue IMPORT Error, Exception;
     (* Release a global lock from the replicated object.  It is an
        exception if it is not a replicated object. *)
 
-  PROCEDURE ReplicaSetNodeName(name: TEXT := NIL; 
+  PROCEDURE ReplicaSetSiteName(name: TEXT := NIL; 
                                loc: SynLocation.T:=NIL) : TEXT
     RAISES {Exception, Error};
-    (* Set the "node name" of the process for replicated object
+    (* Set the "site name" of the process (site) for replicated object
        system.  Each process has a name, which defaults to the machine
        name if the name passed in is NIL or the empty string.  The
        name used is returned. *)
@@ -203,7 +226,7 @@ FROM ObValue IMPORT Error, Exception;
     (* Select the process to be used as the default sequencer for the
        replicated object system.  The host is the machine the process
        is running on, and the name is the the name of that process, as
-       set locally with "ReplicaSetNodeName."  The name of the
+       set locally with "ReplicaSetSiteName."  The name of the
        sequencer is returned. *)
 
   PROCEDURE ReplicaNotify(object: Val; notifyObj: Val;
@@ -225,6 +248,8 @@ FROM ObValue IMPORT Error, Exception;
 (* ====== Arrays ====== *)
 
   PROCEDURE NewArray(READONLY vals: Vals): Val;
+  PROCEDURE NewReplArray(READONLY vals: Vals): Val  RAISES {SharedObj.Error};
+  PROCEDURE NewSimpleArray(READONLY vals: Vals): Val;
   (* Allocates an array value from an array of values. *)
   
   PROCEDURE ArraySize(array: Val; loc: Location:=NIL): INTEGER RAISES {Error};
@@ -271,6 +296,8 @@ FROM ObValue IMPORT Error, Exception;
 (* ====== Variables ====== *)
 
   PROCEDURE NewVar(val: Val): Val;
+  PROCEDURE NewReplVar(val: Val): Val RAISES {SharedObj.Error};
+  PROCEDURE NewSimpleVar(val: Val): Val;
     (* Create a new variable with given contents. *)
 
   PROCEDURE VarGet(var: Val; loc: Location:=NIL): Val RAISES {Error};
@@ -281,7 +308,8 @@ FROM ObValue IMPORT Error, Exception;
 
 (* ====== Procedures ====== *)
 
-  PROCEDURE Call(proc: Val; READONLY args: Vals; loc: Location:=NIL): Val 
+  PROCEDURE Call(proc: Val; READONLY args: Vals; swr: SynWr.T; 
+                 loc: Location:=NIL): Val 
     RAISES {Error, Exception};
   (* Take a procedure value with N parameters (i.e. the result of evaluating
      an Obliq program of the form "proc(x1..xn)...end"), and call it 
@@ -312,7 +340,8 @@ FROM ObValue IMPORT Error, Exception;
     RAISES {Error};
     (* The Thread.Condition of a condition. *)
   
-  PROCEDURE Fork(proc: Val; stackSize: INTEGER; loc: Location:=NIL): Val 
+  PROCEDURE Fork(proc: Val; stackSize: INTEGER; swr: SynWr.T; 
+                 loc: Location:=NIL): Val 
     RAISES {Error};
     (* Fork a procedure of no arguments and return a thread value. *)
 
@@ -329,7 +358,7 @@ FROM ObValue IMPORT Error, Exception;
   TYPE
     SysCallClosure = OBJECT
     METHODS
-      SysCall(READONLY args: Vals; loc: Location:=NIL): Val 
+      SysCall(READONLY args: Vals; swr: SynWr.T; loc: Location:=NIL): Val 
         RAISES{Error, Exception}; 
       (* To be overridden. It should return an obliq Val, or raise an error
          by calling RaiseError, or raise an exception by calling 

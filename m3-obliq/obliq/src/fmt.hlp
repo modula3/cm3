@@ -10,3 +10,5 @@
     Convert an integer to its printable form.
   fmt_real(r: Real): Text
     Convert a real to its printable form.
+  fmt_realPrec(r: Real, prec: Int): Text
+    Convert a real to its printable form.  Use a maximum precision of "prec"

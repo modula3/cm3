@@ -2,6 +2,13 @@
 (* Distributed only by permission.                             *)
 (* Last modified on Fri Jun  3 12:47:10 1994 by luca                   *)
 (*      modified on Mon Jun 29 19:17:19 1992 by knaff          *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:54:30 1997
+ *)
 
 MODULE SynParse;
 IMPORT Text, SynWr, SynLocation, Fmt, SynScan, TextRefTbl;
@@ -13,20 +20,20 @@ REVEAL
       env: GrammarEnv;
       failedName: TEXT;
     OVERRIDES
-      Grammar:=GetGrammarEnv; Scanner:=GetScanner;
+      Grammar:=GetGrammarEnv; Scanner:=GetScanner; Writer:=GetWriter;
       ReadNonTerminal:=ReadNonTerminal; Read:=Read; Lookup:=Lookup; 
       Add:=Add; Extend:=Extend; ExtendIter:=ExtendIter;      
     END;
 
-  Grammar = Tree BRANDED "Grammar" OBJECT END ;
+  Grammar = Tree BRANDED "SynParse.Grammar" OBJECT END ;
   GrammarEnvRoot = 
-    BRANDED "GrammarEnvRoot" OBJECT
+    BRANDED "SynParse.GrammarEnvRoot" OBJECT
       table: TextRefTbl.T;
     END;
 
 TYPE
   ParGram =
-    BRANDED OBJECT
+    BRANDED "SynParse.ParGram" OBJECT
     grammar : Grammar;
     args: Args ;
   END;
@@ -173,6 +180,11 @@ PROCEDURE BuildNoEof(<*UNUSED*>self: Eof;
   BEGIN
     RETURN g.sc
   END GetScanner;
+
+  PROCEDURE GetWriter(g: T): SynWr.T =
+  BEGIN
+    RETURN SynScan.GetWriter(g.sc);
+  END GetWriter;
 
   PROCEDURE GetGrammarEnv(g: T): GrammarEnv =
   BEGIN

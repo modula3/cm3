@@ -1,8 +1,16 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:55:28 1997
+ *)
 
 INTERFACE ObLib;
-IMPORT SynLocation, ObCommand, ObValue, Fingerprint, Pickle2 AS Pickle;
+IMPORT SynLocation, ObCommand, ObValue, Fingerprint, Pickle2 AS Pickle,
+       SynWr;
 
 (* To set up a library one must provide (1) a name, (2) an array of opcodes,
    (3) an evaluator for the opcodes, (4) optionally, a help routine.
@@ -12,7 +20,7 @@ IMPORT SynLocation, ObCommand, ObValue, Fingerprint, Pickle2 AS Pickle;
 TYPE
 
   T = (* To be subtyped. *)
-    BRANDED OBJECT
+    BRANDED "ObLib.T" OBJECT
       name: TEXT;
         (* The name the obliq parser recognizes as the name of the library. *)
 
@@ -24,7 +32,7 @@ TYPE
            between processes *)
     METHODS
       Eval(code: OpCode; arity: OpArity; READONLY args: ObValue.ArgArray; 
-        temp: BOOLEAN; location: SynLocation.T): ObValue.Val 
+           temp: BOOLEAN; swr: SynWr.T; location: SynLocation.T): ObValue.Val 
           RAISES {ObValue.Error, ObValue.Exception};
       (* To be overridden; the routine that evaluates opcodes.
          "args" is a 1-based array of ObValue.Val, filled with as
@@ -86,9 +94,9 @@ TYPE
     };
  
   HelpProc = 
-    PROCEDURE(self: ObCommand.T; arg: TEXT; data: REFANY:=NIL);
+    PROCEDURE(wr: SynWr.T; self: ObCommand.T; arg: TEXT; data: REFANY:=NIL);
 
-  Env = BRANDED OBJECT
+  Env = BRANDED "ObLib.Env" OBJECT
       library: T;
       rest: Env;
     END;

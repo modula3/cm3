@@ -19,7 +19,7 @@ IMPORT TextConv, ObCommand, SynWr, Text, Fmt, ObTree, ObLib;
 
     printAlphaDecor := FALSE;
     ObCommand.Register(ObTree.doCommandSet,
-      NEW(ObCommand.T, name:="ShowVarAlphaDecor", sortingName:="ShowAlphaDecor",
+      NEW(ObCommand.T, name:="ShowVarAlphaDecor",sortingName:="ShowAlphaDecor",
 	Exec:=PrintAlphaDecor));
 
     printVariant := FALSE;
@@ -268,13 +268,18 @@ IMPORT TextConv, ObCommand, SynWr, Text, Fmt, ObTree, ObLib;
           SynWr.Break(swr);
 	  SynWr.Beg(swr, 2);
 	    SynWr.Beg(swr, 4);
-              IF node.tag=NIL THEN
+              IF node.pattern=NIL THEN
                 SynWr.Text(swr, "else ");
               ELSE
-	        PrintIdeName(swr, node.tag, env);
+	        PrintTerm(swr, node.pattern, libEnv, env, depth-1);
                 IF node.binder # NIL THEN
 	          SynWr.Char(swr, '(');
 	          PrintIdeName(swr, node.binder, env);
+                  IF node.binderMatch # NIL THEN
+                    SynWr.Text(swr, ", ");
+                    SynWr.Break(swr);
+                    PrintIdeName(swr, node.binderMatch, env);
+                  END;
 	          SynWr.Char(swr, ')');
                 END;
 	        SynWr.Text(swr, " => ");
@@ -409,7 +414,14 @@ IMPORT TextConv, ObCommand, SynWr, Text, Fmt, ObTree, ObLib;
     | ObTree.TermArray(node) =>
         IF depth<=0 THEN SynWr.Text(swr, "..."); RETURN END;
         SynWr.Beg(swr, 1);
-          SynWr.Char(swr, '[');
+          CASE node.semantics OF
+          | ObTree.SharingSemantics.Remote =>
+            SynWr.Char(swr, '[');
+          | ObTree.SharingSemantics.Replicated =>
+            SynWr.Text(swr, "replicated [");
+          | ObTree.SharingSemantics.Simple =>
+            SynWr.Text(swr, "simple [");
+          END;
           PrintTermList(swr, node.elems, libEnv, env, depth);
           SynWr.Char(swr, ']');
 	SynWr.End(swr);
@@ -420,7 +432,7 @@ IMPORT TextConv, ObCommand, SynWr, Text, Fmt, ObTree, ObLib;
 	    SynWr.Text(swr, "option ");
 	  SynWr.Break(swr);
             SynWr.Beg(swr, 4);
-	      PrintIdeName(swr, node.tag, env);
+              PrintTerm(swr, node.tag, libEnv, env, depth-1);
 	      SynWr.Text(swr, " => ");
             SynWr.End(swr);
 	  SynWr.Break(swr);
@@ -653,7 +665,18 @@ IMPORT TextConv, ObCommand, SynWr, Text, Fmt, ObTree, ObLib;
     | ObTree.TermLet(node) =>
         IF depth<=0 THEN SynWr.Text(swr, "..."); RETURN END;
 	SynWr.Beg(swr, 2);
-          IF node.var THEN SynWr.Text(swr, "var ") ELSE SynWr.Text(swr, "let ") END;
+          IF node.var THEN 
+            SynWr.Text(swr, "var ");
+            CASE node.semantics OF
+            | ObTree.SharingSemantics.Remote =>
+            | ObTree.SharingSemantics.Replicated =>
+              SynWr.Text(swr, "replicated ");
+            | ObTree.SharingSemantics.Simple =>
+              SynWr.Text(swr, "simple ");
+            END;
+          ELSE 
+            SynWr.Text(swr, "let ")
+          END;
           PrintTermBinding(swr, node.rec, node.binding, libEnv, env, depth);
 	SynWr.End(swr);  
     | ObTree.TermAssign(node) =>  
@@ -855,51 +878,54 @@ IMPORT TextConv, ObCommand, SynWr, Text, Fmt, ObTree, ObLib;
     END;
   END PrintTerm; 
 
-  PROCEDURE PrintVarIndex(self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL)  =
+  PROCEDURE PrintVarIndex(wr: SynWr.T; self: ObCommand.T; 
+                          arg: TEXT; <*UNUSED*>data: REFANY:=NIL)  =
     BEGIN
       IF Text.Equal(arg, "!") OR Text.Equal(arg, "?") THEN
-	SynWr.Text(SynWr.out, self.name & " {On Off} is ");
-	IF printVarIndex THEN SynWr.Text(SynWr.out, "On");
-	ELSE SynWr.Text(SynWr.out, "Off"); END;
-	SynWr.NewLine(SynWr.out);
+	SynWr.Text(wr, self.name & " {On Off} is ");
+	IF printVarIndex THEN SynWr.Text(wr, "On");
+	ELSE SynWr.Text(wr, "Off"); END;
+	SynWr.NewLine(wr);
       ELSIF Text.Equal(arg, "On") THEN printVarIndex:=TRUE;
       ELSIF Text.Equal(arg, "Off") THEN printVarIndex:=FALSE;
       ELSE
-	SynWr.Text(SynWr.out, "Command " & self.name 
+	SynWr.Text(wr, "Command " & self.name 
 	  & ": bad argument: " & arg);
-	SynWr.NewLine(SynWr.out);
+	SynWr.NewLine(wr);
       END;
     END PrintVarIndex;
 
-  PROCEDURE PrintVariant(self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL)  =
+  PROCEDURE PrintVariant(wr: SynWr.T; self: ObCommand.T; arg: TEXT;
+                         <*UNUSED*>data: REFANY:=NIL)  =
     BEGIN
       IF Text.Equal(arg, "!") OR Text.Equal(arg, "?") THEN
-	SynWr.Text(SynWr.out , self.name & " {On Off} is ");
-	IF printVariant THEN SynWr.Text(SynWr.out , "On");
-	ELSE SynWr.Text(SynWr.out , "Off"); END;
-	SynWr.NewLine(SynWr.out );	
+	SynWr.Text(wr, self.name & " {On Off} is ");
+	IF printVariant THEN SynWr.Text(wr, "On");
+	ELSE SynWr.Text(wr , "Off"); END;
+	SynWr.NewLine(wr );	
       ELSIF Text.Equal(arg, "On") THEN printVariant:=TRUE;
       ELSIF Text.Equal(arg, "Off") THEN printVariant:=FALSE;
       ELSE
-	SynWr.Text(SynWr.out , "Command " & self.name 
+	SynWr.Text(wr , "Command " & self.name 
 	  & ": bad argument: " & arg);
-	SynWr.NewLine(SynWr.out );
+	SynWr.NewLine(wr );
       END;
     END PrintVariant;
 
-  PROCEDURE PrintAlphaDecor(self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL)  =
+  PROCEDURE PrintAlphaDecor(wr: SynWr.T; self: ObCommand.T; arg: TEXT;
+                            <*UNUSED*>data: REFANY:=NIL)  =
     BEGIN
       IF Text.Equal(arg, "!") OR Text.Equal(arg, "?") THEN
-	SynWr.Text(SynWr.out , self.name & " {On Off} is ");
-	IF printAlphaDecor THEN SynWr.Text(SynWr.out , "On");
-	ELSE SynWr.Text(SynWr.out , "Off"); END;
-	SynWr.NewLine(SynWr.out );	
+	SynWr.Text(wr, self.name & " {On Off} is ");
+	IF printAlphaDecor THEN SynWr.Text(wr, "On");
+	ELSE SynWr.Text(wr, "Off"); END;
+	SynWr.NewLine(wr);	
       ELSIF Text.Equal(arg, "On") THEN printAlphaDecor:=TRUE;
       ELSIF Text.Equal(arg, "Off") THEN printAlphaDecor:=FALSE;
       ELSE
-	SynWr.Text(SynWr.out , "Command " & self.name 
+	SynWr.Text(wr, "Command " & self.name 
 	  & ": bad argument: " & arg);
-	SynWr.NewLine(SynWr.out );
+	SynWr.NewLine(wr);
       END;
     END PrintAlphaDecor;
 

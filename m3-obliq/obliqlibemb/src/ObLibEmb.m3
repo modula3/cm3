@@ -11,8 +11,8 @@
  * Author          : Blair MacIntyre
  * Created On      : Thu Aug 10 09:32:23 1995
  * Last Modified By: Blair MacIntyre
- * Last Modified On: Wed Mar 12 16:36:14 1997
- * Update Count    : 27
+ * Last Modified On: Wed Sep 24 15:00:44 1997
+ * Update Count    : 33
  * 
  * $Source$
  * $Date$
@@ -20,6 +20,13 @@
  * $Revision$
  * 
  * $Log$
+ * Revision 1.8  1997/10/22 14:21:49  bm
+ * fixed typos in the help files.  Changed EmbProxiedObj obliq object to
+ * not be protected.
+ *
+ * Revision 1.7  1997/07/11 17:37:22  bm
+ * Potential release version
+ *
  * Revision 1.6  1997/03/12 21:39:44  bm
  * Small bug
  *
@@ -38,14 +45,14 @@
 
 MODULE ObLibEmb;
 
-IMPORT ObEmbProxiedObj, ObLoader, ObEmbBundle, ObSharedObj, LibEmbDirs, SynWr;
+IMPORT ObEmbProxiedObj, ObLoader, ObEmbBundle, ObSharedObj, SynWr;
 
 VAR setupDone := FALSE;
 
-PROCEDURE PackageSetup (): ObLoader.T =
+PROCEDURE PackageSetup (wr: SynWr.T): ObLoader.T =
   BEGIN
     SetupPackages();
-    RETURN SetupModules();
+    RETURN SetupModules(wr);
   END PackageSetup;
 
 PROCEDURE SetupPackages () =
@@ -57,19 +64,17 @@ PROCEDURE SetupPackages () =
     END;
   END SetupPackages;
 
-PROCEDURE SetupModules (): ObLoader.T =
+PROCEDURE SetupModules (wr: SynWr.T): ObLoader.T =
   VAR 
     (* Use the Bundle as a fallback. *)
-    loader: ObLoader.T := NEW(ObLoader.BundleT).init(ObEmbBundle.Get());
+    loader: ObLoader.T := NEW(ObLoader.BundleT).init(wr, ObEmbBundle.Get());
   BEGIN
     (* Search the dirs first, in case we change the files during
        testing. *)
-    loader:= ObLoader.NewDirs(LibEmbDirs.dirs, NIL, loader);
+    loader := ObLoader.NewDefaultDir(wr, "obliqlibemb", NIL, loader);
 
-    SynWr.PushSilence(SynWr.out);
     ObEmbProxiedObj.SetupModule(loader);
     ObSharedObj.SetupModule(loader);
-    SynWr.PopSilence(SynWr.out);
     RETURN loader;
   END SetupModules;
 

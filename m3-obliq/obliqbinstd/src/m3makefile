@@ -8,8 +8,22 @@
 
 import("obliq")
 import("obliqlibm3")
+
+> "compiletime.txt" in
+	if equal(TARGET, "NT386")
+		%%% a unix-like date command from a free set of unix
+		%%% utilities
+		exec("@unixdate")
+	else
+		exec("@date")
+	end
+end
+derived_resource("compiletime.txt")
+
+bundle("CompileTime")
+
 implementation("Main")
 
-build_standalone()
-Program("obliq-std")
-ManPage("obliq-std","1")
+%build_standalone()
+Program("repo-std")
+ManPage("repo-std","1")

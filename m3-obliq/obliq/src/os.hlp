@@ -1,0 +1,11 @@
+  os_error: Exception
+    A generic operating system exception, raise by various libraries.
+  os_type: Text
+    A string describing the general type of this OS. Currently, one of
+    "POSIX" or "WIN32".
+  os_target: Text
+    The Modula-3 build target for this process.  Examples include "HPPA", 
+    "NT386", "SOLgnu", "SOLsun", "IRIX5, and "LINUXELF".
+  os_newPipe(): [Wr,Rd] ! os_error
+    Create a new channel allowing bytes written to the "Wr" to be read from
+    "Rd".

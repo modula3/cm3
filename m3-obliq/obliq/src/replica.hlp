@@ -4,10 +4,8 @@
 	! replica_failure thread_alerted
   All(T<:[replica]{}) replica_release(o: T): Ok
 	! replica_failure thread_alerted
-  replica_setNodeName(name: Text): Text ! replica_failure thread_alerted  
-  replica_setDefaultSequencer(host name: Text): Ok 
-	! replica_failure thread_alerted  
   All(T<:[replica]{}, S:[simple]{}) replica_notify(o: T, n: S): callback
 	! replica_failure
-  All(T<:[replica]{}) replica_cancelNotifier(o: T)
-  replica_dumpState(): Ok;
+  All(T<:[replica]{}) replica_cancelNotifier(cb: callback)
+  replica_flushIncomingUpdates(): Ok ! thread_alerted
+  replica_flushQueuedUpdates(): Ok ! thread_alerted

@@ -1,9 +1,16 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
-(* Last modified on Fri Jun  3 11:38:39 1994 by luca                   *)
+(* Created by luca                   *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:53:30 1997
+ *)
 
 MODULE SynWr; 
-IMPORT Stdio, Wr, Formatter, Thread; 
+IMPORT Stdio, Wr, Formatter, Thread(*, NetObj, NullWr*); 
 
 VAR setupDone := FALSE;
 
@@ -16,29 +23,42 @@ PROCEDURE Setup() =
     END;
   END Setup;
 
-REVEAL T =
-  BRANDED OBJECT
+TYPE
+  Private = T BRANDED "SynWr.Private" OBJECT
     mu: Thread.Mutex;
     nesting: INTEGER;
     fmt: Formatter.T;
     silent: INTEGER;
     open: BOOLEAN;
+  OVERRIDES
+    underlyingWr := UnderlyingWrP;
+    beg := BegP;
+    break := BreakP;
+    flatBreak := FlatBreakP;
+    end := EndP;
+    char := CharP;
+    text := TextP;
+    newLine := NewLineP;
+    flush := FlushP;
+    close := CloseP;
+    pushSilence := PushSilenceP;
+    popSilence := PopSilenceP;
   END;
 
 PROCEDURE New(wr: Wr.T; width: CARDINAL:=75): T =
   BEGIN
-    RETURN NEW(T, mu:=NEW(Thread.Mutex), nesting := 0, 
+    RETURN NEW(Private, mu:=NEW(Thread.Mutex), nesting := 0, 
                fmt:=Formatter.New(wr, width), silent:=0, open:=TRUE);
   END New;
 
-PROCEDURE UnderlyingWr (swr: T): Wr.T =
+PROCEDURE UnderlyingWrP (swr: Private): Wr.T =
   BEGIN
     LOCK swr.mu DO
       RETURN Formatter.UnderlyingWr(swr.fmt);
     END;
-  END UnderlyingWr;
+  END UnderlyingWrP;
 
-PROCEDURE Beg(swr: T; indent: INTEGER:=0; loud:=FALSE) =
+PROCEDURE BegP(swr: Private; indent: INTEGER:=0; loud:=FALSE) =
 BEGIN 
   LOCK swr.mu DO
     IF swr.open AND ((swr.silent = 0) OR loud) THEN
@@ -48,9 +68,9 @@ BEGIN
       EXCEPT Wr.Failure => END;
     END;
   END;
-END Beg;
+END BegP;
 
-PROCEDURE Break(swr: T; loud:=FALSE) =
+PROCEDURE BreakP(swr: Private; loud:=FALSE) =
 BEGIN 
   LOCK swr.mu DO
     IF swr.open AND ((swr.silent = 0) OR loud) THEN
@@ -59,9 +79,9 @@ BEGIN
       EXCEPT Wr.Failure => END;
     END;
   END;
-END Break;
+END BreakP;
 
-PROCEDURE FlatBreak(swr: T; loud:=FALSE) =
+PROCEDURE FlatBreakP(swr: Private; loud:=FALSE) =
 BEGIN 
   LOCK swr.mu DO
     IF swr.open AND ((swr.silent = 0) OR loud) THEN
@@ -70,9 +90,9 @@ BEGIN
       EXCEPT Wr.Failure => END;
     END;
   END;
-END FlatBreak;
+END FlatBreakP;
 
-PROCEDURE End(swr: T; loud:=FALSE) =
+PROCEDURE EndP(swr: Private; loud:=FALSE) =
 BEGIN 
   LOCK swr.mu DO
     IF swr.open AND ((swr.silent = 0) OR loud) THEN
@@ -84,9 +104,9 @@ BEGIN
       END;
     END;
   END;
-END End;
+END EndP;
 
-PROCEDURE Char(swr: T; c: CHAR; loud:=FALSE) =
+PROCEDURE CharP(swr: Private; c: CHAR; loud:=FALSE) =
 BEGIN
   LOCK swr.mu DO
     IF swr.open AND ((swr.silent = 0) OR loud) THEN
@@ -95,9 +115,9 @@ BEGIN
       EXCEPT Wr.Failure => END;
    END;
   END;
-END Char;
+END CharP;
 
-PROCEDURE Text(swr: T; t: TEXT; loud:=FALSE) =
+PROCEDURE TextP(swr: Private; t: TEXT; loud:=FALSE) =
 BEGIN 
   LOCK swr.mu DO
     IF swr.open AND ((swr.silent = 0) OR loud) THEN
@@ -106,9 +126,9 @@ BEGIN
       EXCEPT Wr.Failure => END;
     END;
   END;
-END Text;
+END TextP;
 
-PROCEDURE NewLine(swr: T; loud:=FALSE) =
+PROCEDURE NewLineP(swr: Private; loud:=FALSE) =
 BEGIN 
   LOCK swr.mu DO
     IF swr.open AND ((swr.silent = 0) OR loud) THEN
@@ -117,9 +137,9 @@ BEGIN
       EXCEPT Wr.Failure => END;
     END;
   END;
-END NewLine;
+END NewLineP;
 
-PROCEDURE Flush(swr: T; loud:=FALSE) =
+PROCEDURE FlushP(swr: Private; loud:=FALSE) =
 BEGIN 
   LOCK swr.mu DO
     IF swr.open AND ((swr.silent = 0) OR loud) THEN
@@ -129,9 +149,9 @@ BEGIN
       EXCEPT Wr.Failure => END;
     END;
   END;
-END Flush;
+END FlushP;
 
-PROCEDURE Close(swr: T) =
+PROCEDURE CloseP(swr: Private) =
 BEGIN
   LOCK swr.mu DO
     swr.open := FALSE;
@@ -140,20 +160,122 @@ BEGIN
       Formatter.Close(swr.fmt);
     EXCEPT Wr.Failure => END;
   END;
-END Close;
+END CloseP;
 
-PROCEDURE PushSilence(swr: T) =
+PROCEDURE PushSilenceP(swr: Private) =
   BEGIN
     LOCK swr.mu DO
       INC(swr.silent);
     END;
-  END PushSilence;
+  END PushSilenceP;
 
-PROCEDURE PopSilence(swr: T) =
+PROCEDURE PopSilenceP(swr: Private) =
   BEGIN
     LOCK swr.mu DO
       swr.silent := MAX(swr.silent-1, 0);
     END;
+  END PopSilenceP;
+
+(*******************************************************************)
+(* convenience routines                                            *)
+(*******************************************************************)
+PROCEDURE UnderlyingWr (swr: T): Wr.T =
+  BEGIN
+    (*TRY*)
+      RETURN swr.underlyingWr();
+    (*EXCEPT NetObj.Error, Thread.Alerted => 
+      (* silently suck them up *)
+      RETURN NEW(NullWr.T).init();
+    END;
+    *)
+  END UnderlyingWr;
+
+PROCEDURE Beg(swr: T; indent: INTEGER:=0; loud:=FALSE) =
+  BEGIN 
+    (*TRY*)
+      swr.beg(indent,loud);
+    (*EXCEPT NetObj.Error, Thread.Alerted => (* silently suck them up *)
+    END;*)
+  END Beg;
+
+PROCEDURE Break(swr: T; loud:=FALSE) =
+  BEGIN 
+    (*TRY*)
+      swr.break(loud);
+    (*EXCEPT NetObj.Error, Thread.Alerted => (* silently suck them up *)
+    END;*)
+  END Break;
+
+PROCEDURE FlatBreak(swr: T; loud:=FALSE) =
+  BEGIN 
+    (*TRY*)
+      swr.flatBreak(loud);
+    (*EXCEPT NetObj.Error, Thread.Alerted => (* silently suck them up *)
+    END;*)
+  END FlatBreak;
+
+PROCEDURE End(swr: T; loud:=FALSE) =
+  BEGIN 
+    (*TRY*)
+      swr.end(loud);
+    (*EXCEPT NetObj.Error, Thread.Alerted => (* silently suck them up *)
+    END;*)
+  END End;
+
+PROCEDURE Char(swr: T; c: CHAR; loud:=FALSE) =
+  BEGIN
+    (*TRY*)
+      swr.char(c,loud);
+    (*EXCEPT NetObj.Error, Thread.Alerted => (* silently suck them up *)
+    END;*)
+  END Char;
+
+PROCEDURE Text(swr: T; t: TEXT; loud:=FALSE) =
+  BEGIN 
+    (*TRY*)
+      swr.text(t,loud);
+    (*EXCEPT NetObj.Error, Thread.Alerted => (* silently suck them up *)
+    END;*)
+  END Text;
+
+PROCEDURE NewLine(swr: T; loud:=FALSE) =
+  BEGIN 
+    (*TRY*)
+      swr.newLine(loud);
+    (*EXCEPT NetObj.Error, Thread.Alerted => (* silently suck them up *)
+    END;*)
+  END NewLine;
+
+PROCEDURE Flush(swr: T; loud:=FALSE) =
+  BEGIN 
+    (*TRY*)
+      swr.flush(loud);
+    (*EXCEPT NetObj.Error, Thread.Alerted => (* silently suck them up *)
+    END;*)
+  END Flush;
+
+PROCEDURE Close(swr: T) =
+  BEGIN
+    (*TRY*)
+      swr.close();
+    (*EXCEPT NetObj.Error, Thread.Alerted => (* silently suck them up *)
+    END;*)
+  END Close;
+
+PROCEDURE PushSilence(swr: T) =
+  BEGIN
+    (*TRY*)
+      swr.pushSilence();
+    (*EXCEPT NetObj.Error, Thread.Alerted => (* silently suck them up *)
+    END;*)
+  END PushSilence;
+
+PROCEDURE PopSilence(swr: T) =
+  BEGIN
+    (*TRY*)
+      swr.popSilence();
+    (*EXCEPT NetObj.Error, Thread.Alerted => (* silently suck them up *)
+    END;*)
   END PopSilence;
 
 BEGIN

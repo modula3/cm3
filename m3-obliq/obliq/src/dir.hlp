@@ -1,0 +1,53 @@
+  dir_failure: Exception
+  dir_getAbsolutePathname(fs: FileSystem, p: Text): Text ! dir_failure
+    Return an absolute pathname referring to the same file or
+    directory as "p".  The new pathname will not involve any symbolic links
+    or relative arcs (that is, occurrences of "path_parent" or
+    "path_current".
+  dir_createDirectory(fs: FileSystem, p: Text): Ok ! dir_failure
+    Create a directory named by "p".
+  dir_deleteDirectory(fs: FileSystem, p: Text): Ok ! dir_failure
+    Delete the directory named by "p".  "dir_failure" is raised if the
+    directory contains entries (other than perhaps "path_current"
+    and "path_parent").
+  dir_deleteFile(fs: FileSystem, p: Text): Ok ! dir_failure
+    Delete the file or device named by "p".  "dir_failure" is raised if "p"
+    names a directory.
+    Note: Under Win32, "DeleteFile" raises "dir_failure" if "p" is open.
+    Under POSIX, an open file may be deleted; the file doesn't actually
+    disappear until every link (path) for it is deleted.
+  dir_rename(fs: FileSystem, p0 p1: Text): Ok ! dir_failure
+    Rename the file or directory named "p0" as "p1".
+    Some implementations automatically delete an existing file named
+    "p1", others raise "dir_failure".  Some implementations disallow a
+    rename where "p0" and "p1" name different physical storage devices
+    (different root directories or file systems).
+  dir_iterate(fs: FileSystem, p: Text): Iterator ! dir_failure
+    Return an iterator for the entries of the directory named by "p".
+    An "Iterator" supplies information about the entries in a
+    directory: names and, optionally, status.  The iteration does not
+    include entries corresponding to "path_current" or "path_parent".
+  dir_iteratorNext(i: Iterator): [Text, Bool] 
+    If more entries remain, returns ["n",True], with "n" set to the name
+    of the next one.  It returns ["n",False], with "n"  undefined, if no
+    more entries remain. 
+  dir_iteratorNextWithStatus(i: Iterator): [Text, Bool, Status] ! dir_failure
+    If more entries remain, returns ["n",True,Status], with "n" set to the
+    name of the next one and "Status" set to its status (see dir_status).
+    It returns ["n",False,ok], with "n" undefined, if no more entries remain. 
+  dir_iteratorClose(i: Iterator): Ok 
+    The call "i.close()" releases the resources used by "i", after
+    which time it is a checked runtime error to use "i".  Every
+    iterator should be closed.
+  dir_status(fs: FileSystem, p: Text): Status ! dir_failure
+    Return information about the file or directory named by "p".
+    The type field includes the values "Directory" for directories,
+    "RegularFile" for disk files,"Terminal" for terminals and "Pipe" for pipes.
+  dir_setModificationTime(fs: FileSystem, p: Text, t: Real): Ok ! dir_failure
+    Change the modification time of the file or directory named by "p"
+    to "t".
+WHERE
+  Iterator is a directory iterator
+  FileSystem is a file system.  The local file system is available through 
+    the predefined lexically scoped identifier "fileSys".    
+  Status = {type => Text, modificationTime => Real, size => Int};

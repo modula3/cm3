@@ -1,0 +1,16 @@
+  All(T) debug_assertFree (v: T)
+    Assert that this value is free.
+  debug_checkHeap()
+    Check the heap for all locations of any value that was asserted free.
+  debug_collectNow()
+    A hint that this might be a good time to do a garbage collection
+  debug_reportReachable()
+    Generate a report to stderr of all reachable data
+  debug_disableCollector()
+    Prevent garbage collection
+  debug_enableCollector()
+    All garbage collection to resume
+  debug_dumpReplicaState()
+    Dump a report about the state of the replicated object runtime
+  debug_replicaDebugLevel(level: Int): Ok
+    level>0 causes debugging info to go to stderr

@@ -1,0 +1,10 @@
+#!/bin/sh
+case $1 in
+	-std)	shift; exec repo-std -RepoSrv $*;;
+	-http)	shift; exec repo-http -RepoSrv $*;;
+	-trk)	shift; exec repo-trk -RepoSrv $*;;
+	-vr)	shift; exec coterie -RepoSrv $*;;
+	"")     exec repo-std -RepoSrv $*;;
+	*)      /bin/echo "Bad flag for reposrv:" $1
+	        /bin/echo "Usage: reposrv [ -std | -http | -trk | -vr ] ..." ;;
+esac

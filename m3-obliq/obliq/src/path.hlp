@@ -1,0 +1,70 @@
+  path_invalid: Exception
+    When a path with invalid syntax is passed to a procedure in
+    this interface not declared as raising the exception "invalid",
+    the result is undefined, but safe.
+  path_valid(fs: FileSystem, pn: Text): Bool
+    Return "True" iff "pn" conforms to the path syntax of this
+    operating system.
+  path_decompose(fs: FileSystem, pn: Text): [Text] ! path_invalid
+    Parse "pn", returning a sequence whose first element is a root
+    directory name (possibly "") and whose remaining elements
+    consist of zero or more arc names.  Raise "path_invalid" if "path_valid(pn)"
+    is "False". "path_decompose" returns exactly the sequence of arc names
+    present in "pn"; it doesn't attempt to produce a canonical form. Some
+    operating systems allow zero-length arc names.
+  path_compose(fs: FileSystem, arcs: [Text]): Text ! path_invalid
+    Combine the elements of "arcs" to form a path corresponding to the
+    syntax of this operating system.  Raise "path_invalid" if "arcs" is [],
+    if "arcs[0]" is neither "" nor a valid root directory name, or
+    if one of the elments of "arcs" is not a valid arc name.
+  path_absolute(fs: FileSystem, pn: Text): Bool
+    Return "True" iff "pn" is an absolute path.  Equivalent to
+    "not(text_equal(path_decompose(pn)[0],""))", but faster.
+  path_prefix(fs: FileSystem, pn: Text): Text    
+    Return a path equal to "pn" up to, but not including, the final
+    arc name.  If "pn" consists only of a root directory name,
+    "path_prefix(pn)" returns "pn".
+  path_last(fs: FileSystem, pn: Text): Text
+    Return the final arc name in "pn".  If "pn" consists only of a root
+    directory name, "path_last(pn)" returns the empty string.
+  path_base(fs: FileSystem, pn: Text): Text
+    Return a path equal to "pn" except with "path_last(pn)" replaced by
+    its base.
+  path_join(fs: FileSystem, pn base ext: Text): Text
+    Return a path formed by prepending "pn" to "base" (if "pn" is
+    not "") and appending "ext" to "base" (if "ext" is not "").
+    More precisely, this is equivalent to the following, in which "a"
+    is an array of Text:
+	if text_equal(pn, "") then a := [];
+        else
+          if path_absolute(base) then `Cause checked runtime error` end;
+          a := path_decompose(pn);
+	end;
+	if text_length(ext) > 0 then base := base & "." & ext end;
+	let ba = path_decompose(base);
+	path_compose(a @ ba[1 for (#(ba)-1)]);
+    The value returned by "path_join" will be a valid path only if the
+    "base" and "ext" conform to the syntax of the particular operating
+    system.
+  path_lastBase(fs: FileSystem, pn: Text): Text
+    Return the base of the final arc name of "pn".  It is a checked
+    runtime error if "pn" is empty or consists only of a root directory
+    name. 
+  path_lastExt(fs: FileSystem, pn: Text): Text
+    Return the extension of the last arc name of "pn".  It is a checked
+    runtime error if "pn" is empty or consists only of a root directory
+    name. 
+  path_replaceExt(fs: FileSystem, pn ext: Text): Text
+    Return a path equal to "pn" except with the extension of the
+    final arc name replaced with "ext", which must not be "".
+  path_parent(fs: FileSystem): Text
+    A special arc name that, when encountered during a path lookup,
+    stands for the parent of the directory currently being examined.
+  path_current(fs: FileSystem): Text
+    A special arc name that, when encountered during a path lookup,
+    stands for the directory currently being examined. 
+  path_searchSeparator(fs: FileSystem): Text
+    The search path separator charactor, used for appending multiple paths 
+    together.
+  path_separator(fs: FileSystem): Text
+    The path separator charactor.  Used to separate the arcs in a path.

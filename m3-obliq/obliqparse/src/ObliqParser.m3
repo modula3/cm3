@@ -11,16 +11,16 @@ FROM ObValue IMPORT Error, Exception;
 
   VAR setupDone := FALSE;
 
-  PROCEDURE PackageSetup() =
+  PROCEDURE PackageSetup(wr: SynWr.T) =
   BEGIN
     SynParse.PackageSetup();
     TRY
-      MetaParser.PackageSetup(); (* NOWARN *)
+      MetaParser.PackageSetup(wr); (* NOWARN *)
     EXCEPT
     | SynParse.Fail =>
       Process.Crash("Fatal error trying to parse MetaSyn grammar");
     END;
-    Obliq.PackageSetup();
+    Obliq.PackageSetup(wr);
     
     IF NOT setupDone THEN
       setupDone := TRUE;
@@ -119,16 +119,17 @@ FROM ObValue IMPORT Error, Exception;
       | ObFrame.EndModule(node) =>
 	    ObFrame.ModuleEnd(p.Scanner(), node.ideList);
       | ObFrame.Establish(node) =>
-	    env := ObFrame.EstablishFrame(node.name, node.for, env);
+	    env := ObFrame.EstablishFrame(p.Writer(), node.name, 
+                                          node.for, env);
       | ObFrame.Save(node) =>
-	    env := ObFrame.SaveFrame(node.name, node.name, env);
+	    env := ObFrame.SaveFrame(p.Writer(), node.name, node.name, env);
       | ObFrame.Delete(node) =>
-	    env := ObFrame.DeleteFrame(node.name, env);
+	    env := ObFrame.DeleteFrame(p.Writer(), node.name, env);
       | ObFrame.Qualify(node) =>
-	    env := ObFrame.QualifyFrame(env, node.ideList);
+	    env := ObFrame.QualifyFrame(p.Writer(), env, node.ideList);
       | ObTree.PhraseCommand, 
         ObTree.PhraseTerm =>
-          val := Obliq.EvalPhrase(phrase, (*in-out*) env, loc);
+          val := Obliq.EvalPhrase(p.Writer(), phrase, (*in-out*) env, loc);
       ELSE
         Obliq.RaiseError("Static Error, unknown phrase", loc);
       END;

@@ -11,42 +11,42 @@ IMPORT SynWr, Text, ObLib, ObCommand, Bundle, ObliqBdl2;
     ObLib.RegisterHelp("zeus", HelpZeus);
   END Setup;
 
-  PROCEDURE HelpRects(self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
+  PROCEDURE HelpRects(wr: SynWr.T; self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
     BEGIN
       IF Text.Equal(arg, "!") THEN
-        SynWr.Text(SynWr.out, "  rects             (the built-in rects library)\n");
+        SynWr.Text(wr, "  rects             (the built-in rects library)\n");
       ELSIF Text.Equal(arg, "?") THEN
-        SynWr.Text(SynWr.out, Bundle.Get(ObliqBdl2.Get(),"ObliqHelpRects"));
-        SynWr.NewLine(SynWr.out);
+        SynWr.Text(wr, Bundle.Get(ObliqBdl2.Get(),"ObliqHelpRects"));
+        SynWr.NewLine(wr);
       ELSE
-	SynWr.Text(SynWr.out, "Command " & self.name  & ": bad argument: " & arg);
-	SynWr.NewLine(SynWr.out);
+	SynWr.Text(wr, "Command " & self.name  & ": bad argument: " & arg);
+	SynWr.NewLine(wr);
       END;
     END HelpRects;
 
-  PROCEDURE HelpGraph(self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
+  PROCEDURE HelpGraph(wr: SynWr.T; self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
     BEGIN
       IF Text.Equal(arg, "!") THEN
-        SynWr.Text(SynWr.out, "  graph             (the built-in graph library)\n");
+        SynWr.Text(wr, "  graph             (the built-in graph library)\n");
       ELSIF Text.Equal(arg, "?") THEN
-        SynWr.Text(SynWr.out, Bundle.Get(ObliqBdl2.Get(),"ObliqHelpGraph"));
-        SynWr.NewLine(SynWr.out);
+        SynWr.Text(wr, Bundle.Get(ObliqBdl2.Get(),"ObliqHelpGraph"));
+        SynWr.NewLine(wr);
       ELSE
-	SynWr.Text(SynWr.out, "Command " & self.name  & ": bad argument: " & arg);
-	SynWr.NewLine(SynWr.out);
+	SynWr.Text(wr, "Command " & self.name  & ": bad argument: " & arg);
+	SynWr.NewLine(wr);
       END;
     END HelpGraph;
 
-  PROCEDURE HelpZeus(self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
+  PROCEDURE HelpZeus(wr: SynWr.T; self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
     BEGIN
       IF Text.Equal(arg, "!") THEN
-        SynWr.Text(SynWr.out, "  zeus              (the built-in zeus library)\n");
+        SynWr.Text(wr, "  zeus              (the built-in zeus library)\n");
       ELSIF Text.Equal(arg, "?") THEN
-        SynWr.Text(SynWr.out, Bundle.Get(ObliqBdl2.Get(),"ObliqHelpZeus"));
-        SynWr.NewLine(SynWr.out);
+        SynWr.Text(wr, Bundle.Get(ObliqBdl2.Get(),"ObliqHelpZeus"));
+        SynWr.NewLine(wr);
       ELSE
-	SynWr.Text(SynWr.out, "Command " & self.name  & ": bad argument: " & arg);
-	SynWr.NewLine(SynWr.out);
+	SynWr.Text(wr, "Command " & self.name  & ": bad argument: " & arg);
+	SynWr.NewLine(wr);
       END;
     END HelpZeus;
 

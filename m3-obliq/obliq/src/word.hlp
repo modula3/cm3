@@ -1,0 +1,12 @@
+  word_bitnot(w: Int): Int
+    the bitwise not of w.
+  word_bitand(w1 w2: Int): Int
+    the bitwise and of w1 and w2.
+  word_bitor(w1 w2: Int): Int
+    the bitwise or of w1 and w2.
+  word_bitxor(w1 w2: Int): Int
+    the bitwise xor of w1 and w2.
+  word_bitshift(w n: Int): Int
+    the bitwise shift of w by n bits.
+  word_bitrotate(w n: Int): Int
+    the bitwise rotate of w by n bits.

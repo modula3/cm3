@@ -34,7 +34,7 @@ TYPE
   Env = Obliq.Env;
   Location = SynLocation.T;
 
-  PROCEDURE PackageSetup();
+  PROCEDURE PackageSetup(console: SynWr.T);
   (* To be called at least once before any other use of the obliqparse package.
      It calls all the required PackageSetup routines of other packages,
      including Obliq.PackageSetup for obliqrt-ip. *)

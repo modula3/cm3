@@ -1,5 +1,12 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 15:04:17 1997
+ *)
 
 INTERFACE ObCheck;
 IMPORT ObErr, ObTree;
@@ -11,7 +18,7 @@ IMPORT ObErr, ObTree;
 
     TermEnv <: TermEnvBase;
     TermEnvBase =
-      Env BRANDED OBJECT
+      Env BRANDED "ObCheck.TermEnvBase" OBJECT
 	(* type: Type; *)
       END;
 

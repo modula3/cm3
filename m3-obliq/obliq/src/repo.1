@@ -1,0 +1,72 @@
+.\" Copyright (C) 1992, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.\" File: m3.1
+.nh
+.TH repo 1
+.SH Name
+Repo \- a lightweight language for network and replicated objects
+
+.SH Syntax
+.B repo
+[options]
+
+.SH Description
+
+An interactive interpreter for the Repo language.
+Repo is a small, statically scoped, untyped language. It is 
+object-oriented, higher-order, and distributed. State is 
+local to an address space, or replicated across multiple address
+spaces, while computation can migrate 
+over the network. The distributed computation mechanism is 
+based on Modula-3 Network and Replicated Objects.
+
+Repo requires copies of netobjd to be running on all appropriate 
+machines, if network or replicated objects are to be used.
+
+.SH Options
+
+.TP
+.BI \-min
+repo interpreter with minimum libraries
+.TP
+.BI \-std
+repo interpreter with standard libraries
+.TP
+.BI \-http
+repo interpreter with http libraries
+.TP
+.BI \-trk
+repo interpreter with tracker libraries
+.TP
+.BI \-vr
+repo interpreter with virtual reality libraries
+
+.SH Columbia Documentation
+
+    /u/stieglitz/bm/projects/papers/ObliqStar/Repo.ps
+
+.SH External Site Documentation 
+    (in ftp.cs.columbia.edu:/pub/bm)
+
+    ...repodoc/Repo.ps         (paper/manual, for printing)
+
+.SH See Also
+
+    reposrv
+    netobjd
+    The Modula-3 Network Objects documentation
+    The Modula-3 Network Objects documentation
+    "Obliq: A language with distributed scope" Obliq.ps, above)
+    "Repo: Replicated Obliq" (Repo.ps, above)
+
+.SH Author Of Object
+
+  Luca Cardelli
+  Blair MacIntyre
+
+.SH Author Of Documentation
+
+  Luca Cardelli
+  Blair MacIntyre

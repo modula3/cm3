@@ -19,7 +19,7 @@ Module ("ObParseFrame")
 Module ("ObParseTree")
 Module ("ObliqParser")
 
-netobj("ObFrame", "OpCodeHandle")
+netobjv2("ObFrame", "OpCodeHandle")
 
 resource_named ("ObliqGram", "obliq.gr")
 bundle ("ObliqBdl")

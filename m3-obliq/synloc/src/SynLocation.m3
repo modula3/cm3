@@ -1,6 +1,13 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
-(* Last modified on Fri Jun  3 12:36:34 1994 by luca                   *)
+(* Created by luca                   *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:53:48 1997
+ *)
 
 MODULE SynLocation;
 IMPORT Text, SynWr, Fmt;
@@ -22,25 +29,25 @@ PROCEDURE Setup() =
   END Setup;
 
 REVEAL
-  T = BRANDED "Location" OBJECT END;
+  T = BRANDED "SynLocation.Location" OBJECT END;
 
 TYPE
   NoLocation =
-    T BRANDED OBJECT END;
+    T BRANDED "SynLocation.NoLocation" OBJECT END;
 
   SomeLocation =
-    T BRANDED OBJECT
+    T BRANDED "SynLocation.SomeLocation" OBJECT
       where: TEXT;
     END;
 
   LineLocation =
-    T BRANDED OBJECT
+    T BRANDED "SynLocation.LineLocation" OBJECT
       fileName: TEXT;
       line, char: INTEGER;
     END;
 
   CharLocation =
-    T BRANDED OBJECT
+    T BRANDED "SynLocation.CharLocation" OBJECT
       fileName: TEXT;
       begChar, endChar: INTEGER;
     END;

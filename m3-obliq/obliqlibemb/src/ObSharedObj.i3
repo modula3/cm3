@@ -1,29 +1,28 @@
-(* 
- * This library is free software; you can redistribute it and/or          
- * modify it under the terms of the GNU Library General Public            
- * License as published by the Free Software Foundation.                  
- * This library is distributed in the hope that it will be useful,        
- * but WITHOUT ANY WARRANTY; without even the implied warranty of         
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU      
- * Library General Public License for more details.                       
- * If you do not have a copy of the GNU Library General Public            
- * License, write to The Free Software Foundation, Inc.,                  
- * 675 Mass Ave, Cambridge, MA 02139, USA.                                
- *                                                                        
- * For more information on this program, contact Blair MacIntyre          
+(*                            -*- Mode: Modula-3 -*- 
+ * 
+ * For information about this program, contact Blair MacIntyre            
  * (bm@cs.columbia.edu) or Steven Feiner (feiner@cs.columbia.edu)         
  * at the Computer Science Dept., Columbia University,                    
- * 500 W 120th St, Room 450, New York, NY, 10027.                         
+ * 1214 Amsterdam Ave. Mailstop 0401, New York, NY, 10027.                
  *                                                                        
- * Copyright (C) Blair MacIntyre 1995, Columbia University 1995           
+ * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
+ * City of New York.  Blair MacIntyre, Computer Science Department.       
  * 
  * Author          : Blair MacIntyre
  * Created On      : Tue Aug  8 16:28:33 1995
  * Last Modified By: Blair MacIntyre
- * Last Modified On: Tue Dec  5 13:14:24 1995
- * Update Count    : 8
+ * Last Modified On: Sat Aug  9 13:45:38 1997
+ * Update Count    : 9
  * 
- * SCCS Status     : @(#)ObSharedObj.i3	1.2	30 Jan 1996
+ * $Source$
+ * $Date$
+ * $Author$
+ * $Revision$
+ * 
+ * $Log$
+ * Revision 1.2  1997/08/11 20:35:10  bm
+ * Various fixes
+ *
  * 
  * HISTORY
  *)

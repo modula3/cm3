@@ -2,6 +2,13 @@
 (* Distributed only by permission.                             *)
 (* Last modified on Fri Jun  3 12:49:11 1994 by luca               *)
 (*      modified on Tue Jun 23 20:16:54 1992 by knaff          *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 15:05:17 1997
+ *)
 
 MODULE Builder;
 IMPORT SynParse, SynLocation, SynScan, SynWr, MetaParser, Text;
@@ -9,26 +16,26 @@ IMPORT SynParse, SynLocation, SynScan, SynWr, MetaParser, Text;
 
 TYPE
   ClauseExtends = 
-    SynParse.Tree BRANDED OBJECT
+    SynParse.Tree BRANDED "Builder.ClauseExtends" OBJECT
     extend, iter, iterPosPresent: BOOLEAN;
     iterPos: INTEGER;
   END;
   StringAction =
-    SynParse.Action BRANDED OBJECT
+    SynParse.Action BRANDED "Builder.StringAction" OBJECT
     text: TEXT;
   END;
   IntegerAction =
-    SynParse.Action BRANDED OBJECT
+    SynParse.Action BRANDED "Builder.IntegerAction" OBJECT
     int: INTEGER;
   END;
   ProcAction =
-    SynParse.Action BRANDED OBJECT
+    SynParse.Action BRANDED "Builder.ProcAction" OBJECT
     proc: SynParse.Action;
   END;
     
 REVEAL
   GramInfo =
-    GramInfoBase BRANDED OBJECT
+    GramInfoBase BRANDED "Builder.GramInfo" OBJECT
     clauseList: MetaParser.ClauseList;
     oldKeySet, newKeySet: SynScan.KeywordSet;
   END;
@@ -91,7 +98,7 @@ PROCEDURE GClauseList(p: SynParse.T; loc: INTEGER): MetaParser.ClauseList
     | MetaParser.ClauseList(node) => RETURN node ;
     ELSE
     END;    
-    MetaParser.TypeError("clause-list", p.stack[loc]);
+    MetaParser.TypeError(p.Writer(),"clause-list", p.stack[loc]);
     <*ASSERT FALSE*>
   END GClauseList;
 
@@ -103,7 +110,7 @@ PROCEDURE GClauseExtends(p: SynParse.T; loc: INTEGER): ClauseExtends
     | ClauseExtends(node) => RETURN node ;
     ELSE
     END;    
-    MetaParser.TypeError("clause-extends", p.stack[loc]);
+    MetaParser.TypeError(p.Writer(), "clause-extends", p.stack[loc]);
     <*ASSERT FALSE*>
   END GClauseExtends;
 
@@ -115,7 +122,7 @@ PROCEDURE GIdeNode(p: SynParse.T; loc: INTEGER): MetaParser.TextNode
     | MetaParser.TextNode(node) => RETURN node ;
     ELSE
     END;    
-    MetaParser.TypeError("n ide-node", p.stack[loc]);
+    MetaParser.TypeError(p.Writer(), "n ide-node", p.stack[loc]);
     <*ASSERT FALSE*>
   END GIdeNode;
 
@@ -127,7 +134,7 @@ PROCEDURE GGrammar(p: SynParse.T; loc: INTEGER): SynParse.Grammar
     | SynParse.Grammar(node) => RETURN node ;
     ELSE
     END;        
-    MetaParser.TypeError("grammar",p.stack[loc]);
+    MetaParser.TypeError(p.Writer(), "grammar",p.stack[loc]);
     <*ASSERT FALSE*>
   END GGrammar;
 
@@ -138,7 +145,7 @@ PROCEDURE GGramList(p: SynParse.T; loc: INTEGER): SynParse.GrammarList
     | SynParse.GrammarList(node) => RETURN node ;
     ELSE
     END;    
-    MetaParser.TypeError("grammar list",p.stack[loc]);
+    MetaParser.TypeError(p.Writer(), "grammar list",p.stack[loc]);
     <*ASSERT FALSE*>
   END GGramList;
 
@@ -164,7 +171,7 @@ PROCEDURE GArgs(p: SynParse.T; loc: INTEGER):SynParse.Args
       TYPECASE args OF
       | NULL =>
       | Params(node) => 
-          ret^[i] := MetaParser.XInt(node.first); 
+          ret^[i] := MetaParser.XInt(p.Writer(), node.first); 
           args:=node.rest;
       ELSE <*ASSERT FALSE*>
       END;
@@ -686,18 +693,22 @@ PROCEDURE LookupAction(p: SynParse.T; base: INTEGER;
       TYPECASE ref OF
       | REF ActionProc(node) => RETURN node^;
       ELSE
-        SynWr.Text(SynWr.out, "Not an action: "&name&" ", loud:=TRUE);
-        SynLocation.PrintLocation(SynWr.out, SynLocation.NewLineLocation(info));
-        SynWr.Text(SynWr.out, "\n", loud:=TRUE);
-        SynWr.Flush(SynWr.out, loud:=TRUE);
+        WITH out = p.Writer() DO
+          SynWr.Text(out, "Not an action: "&name&" ", loud:=TRUE);
+          SynLocation.PrintLocation(out, SynLocation.NewLineLocation(info));
+          SynWr.Text(out, "\n", loud:=TRUE);
+          SynWr.Flush(out, loud:=TRUE);
+        END;
         RAISE SynParse.Fail;
       END;
         
     ELSE
-      SynWr.Text(SynWr.out, "Unknown action: "&name&" ", loud:=TRUE);
-      SynLocation.PrintLocation(SynWr.out, SynLocation.NewLineLocation(info));
-      SynWr.Text(SynWr.out, "\n", loud:=TRUE);
-      SynWr.Flush(SynWr.out, loud:=TRUE);
+      WITH out = p.Writer() DO
+        SynWr.Text(out, "Unknown action: "&name&" ", loud:=TRUE);
+        SynLocation.PrintLocation(out, SynLocation.NewLineLocation(info));
+        SynWr.Text(out, "\n", loud:=TRUE);
+        SynWr.Flush(out, loud:=TRUE);
+      END;
       RAISE SynParse.Fail;
     END;
   END LookupAction;

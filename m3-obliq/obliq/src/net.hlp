@@ -20,3 +20,5 @@
     ! net_failure thread_alerted
     Import the object of name 'name', from the name server at IP 
     address 'server'. The empty text denotes the local IP address.
+  net_setSiteName(name: Text): Text ! net_failure thread_alerted  
+  net_setDefaultSequencer(host name: Text): Ok ! net_failure thread_alerted  

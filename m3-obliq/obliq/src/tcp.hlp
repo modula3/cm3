@@ -1,0 +1,56 @@
+  tcp_error: Exception
+  tcp_getHostByName(name: Text): Ok or Address ! tcp_error
+    look up the IP address of a host.  Return Ok if the host cannot be found
+  tcp_getCanonicalByName(name: Text): Text ! tcp_error
+  tcp_getCanonicalByAddr(addr: Address): Text ! tcp_error
+    return the canonical host name
+  tcp_getHostAddr(): Address 
+    return one of this hosts address
+  tcp_newConnector(ep: Endpoint): Connector ! tcp_error
+    the address portion should be zeros or a valid IP address of this host.
+    if the port is zero, a free one will be chosen.  Use getEndpoint to find out
+    which one
+  tcp_getEndPoint(conn: Connector): Endpoint
+    get the endpoint of the Connector
+  tcp_closeConnector(conn: Connector)
+    close the Connector
+  tcp_connect(ep: Endpoint): T ! tcp_error thread_alerted
+    connect to some TCP address
+  tcp_accept(conn: Connector): T ! tcp_error thread_alerted
+    accept an incoming connection on a Connector
+  tcp_close(tcp: T)
+    close a TCP connection
+  tcp_eof(tcp: T)
+    returns "True" if and only if there are no more bytes to be read from
+    this connection, and the connection indicates end-of-file (e.g.
+    the other side closed it.
+  tcp_startConnect(ep: Endpoint): T ! tcp_error
+    initiate a request to connect to the destination specified by "ep".  
+  tcp_finishConnect(tcp: T, waitFor: Real): Bool ! tcp_error thread_alerted
+    returns a "Bool" to indicate if a connection request initiated via
+    "startConnect" has successfully completed. A result of "True" indicates 
+    that it has.  "False" means that the connection request is still outstanding.
+    If "waitFor" is negative, then "finishConnect" waits indefinitely until
+    the operation completes, otherwise it waits for a maximum of "waitFor" 
+    seconds.  The caller should continue to call this procedure until it
+    either returns "True" or raises an error.
+  tcp_getPeer(tcp: T): Endpoint ! tcp_error
+    return the peer endpoint for TCP connection.
+  tcp_getPeerName(tcp: T): Text ! tcp_error
+    return the peer name for TCP connection.
+  tcp_matchPeer(tcp: T, addr: Address, maskBits: MaskBits): Bool ! tcp_error
+    returns "True" if the first maskBits bits of peer's endpoint address
+    match the given address.
+  tcp_localEndpoint(tcp: T): Endpoint ! tcp_error
+    return the local Endpoint of a TCP connection.
+  tcp_getRd(tcp: T): Rd
+    get a reader on the TCP connection
+  tcp_getWr(tcp: T): Wr
+    get a writer on the TCP connection
+WHERE
+  MastBits = [0 .. 32]
+  Address = [Int,Int,Int,Int]
+    A valid IP address
+  Endpoint = [Int,Int,Int,Int,Int]
+    A valid IP address and port number
+  Connector = an opaque TCP connector

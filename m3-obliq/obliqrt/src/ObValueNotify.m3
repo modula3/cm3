@@ -11,8 +11,8 @@
  * Author          : Blair MacIntyre
  * Created On      : Tue Oct 22 15:05:13 1996
  * Last Modified By: Blair MacIntyre
- * Last Modified On: Sun Jun 29 12:29:49 1997
- * Update Count    : 28
+ * Last Modified On: Mon Aug  4 11:04:03 1997
+ * Update Count    : 35
  * 
  * $Source$
  * $Date$
@@ -20,6 +20,12 @@
  * $Revision$
  * 
  * $Log$
+ * Revision 1.4  1997/08/04 20:16:07  bm
+ * Fixed BRANDs
+ *
+ * Revision 1.3  1997/07/11 17:37:52  bm
+ * Potential release version
+ *
  * Revision 1.2  1997/06/29 18:19:37  bm
  * pickling modules
  *
@@ -32,7 +38,7 @@
 
 MODULE ObValueNotify;
 IMPORT SynLocation, ObValue, ObValueRep, ObValueCB, SynWr, SharedObj,
-       Thread, NetObj;
+       Thread, NetObj, Obliq;
 
 TYPE
   ReplObjCB = ObValueCB.ReplObjStd OBJECT 
@@ -49,7 +55,7 @@ TYPE
   END;
 
 REVEAL
-  ValObjCB = ObjCBPublic BRANDED "ObjCBPublic" OBJECT 
+  ValObjCB = ObjCBPublic BRANDED "ObValueNotify.ObjCBPublic" OBJECT 
     cb: ObValueCB.ReplObjStd;
   OVERRIDES
     cancel := ObjCBCancel;
@@ -120,7 +126,8 @@ PROCEDURE ObjCBCancel(self: ValObjCB) =
 
  PROCEDURE Invoke (self: ReplObjCB; 
 		   READONLY meth: TEXT;
-		   READONLY args: ObValue.Vals): BOOLEAN =
+		   READONLY args: ObValue.Vals;
+                   swr: SynWr.T): BOOLEAN =
    VAR hint: INTEGER;
   BEGIN
     TRY
@@ -128,8 +135,9 @@ PROCEDURE ObjCBCancel(self: ValObjCB) =
         IF NOT self.val.notifier.Has(meth, hint) THEN
           RETURN FALSE;
         END;
-        TYPECASE self.val.notifier.Invoke (meth, NUMBER(args), args,
-                                       FALSE, hint) OF
+        TYPECASE self.val.notifier.Invoke (swr, meth, 
+                                           NUMBER(args), args,
+                                           FALSE, hint) OF
         | ObValue.ValBool(b) => RETURN b.bool;
         ELSE
           RETURN FALSE;
@@ -145,8 +153,8 @@ PROCEDURE ObjCBCancel(self: ValObjCB) =
         ObValue.RaiseException(ObValue.threadAlerted, meth & ": ", NIL);
       END;
     EXCEPT
-    | ObValue.Error(er) => ObValue.ErrorMsg(SynWr.err, er);
-    | ObValue.Exception(ex) => ObValue.ExceptionMsg(SynWr.err, ex);
+    | ObValue.Error(er) => ObValue.ErrorMsg(swr, er);
+    | ObValue.Exception(ex) => ObValue.ExceptionMsg(swr, ex);
     END;
     RETURN FALSE;
   END Invoke;
@@ -155,7 +163,7 @@ PROCEDURE ReplObjCB_pre_anyChange (self: ReplObjCB;
                                    READONLY obj: ObValue.ReplObjStd) =
   BEGIN
     WITH args = ObValue.Vals {obj.self} DO
-      EVAL Invoke(self, "pre`anyChange", args);
+      EVAL Invoke(self, "pre`anyChange", args, Obliq.Console());
     END;
   END ReplObjCB_pre_anyChange;
 
@@ -163,37 +171,41 @@ PROCEDURE ReplObjCB_post_anyChange (self: ReplObjCB;
                                     READONLY obj: ObValue.ReplObjStd) =
   BEGIN
     WITH args = ObValue.Vals {obj.self} DO
-      EVAL Invoke(self, "post`anyChange", args);
+      EVAL Invoke(self, "post`anyChange", args, Obliq.Console());
     END;
   END ReplObjCB_post_anyChange;
 
-PROCEDURE ReplObjCB_pre_InvokeUpdate (self: ReplObjCB; 
-                                      READONLY obj: ObValue.ReplObjStd;
-                                      label: TEXT;
-                                      argNo: INTEGER;
+PROCEDURE ReplObjCB_pre_InvokeUpdate (         self: ReplObjCB;
+                                      READONLY obj : ObValue.ReplObjStd;
+                                       swr  : SynWr.T;
+                                                 label: TEXT;
+                                                 argNo: INTEGER;
                                       READONLY args: ObValue.Vals;
-                                      <*UNUSED*> VAR hint: INTEGER): BOOLEAN =
+                                      <*UNUSED*> VAR hint: INTEGER):
+  BOOLEAN =
   BEGIN
-    WITH args1 = NEW(REF ObValue.Vals, argNo+1) DO
+    WITH args1 = NEW(REF ObValue.Vals, argNo + 1) DO
       args1[0] := obj.self;
       SUBARRAY(args1^, 1, argNo) := SUBARRAY(args, 0, argNo);
 
-      RETURN Invoke(self, "pre`" & label, args1^);
+      RETURN Invoke(self, "pre`" & label, args1^, swr);
     END;
   END ReplObjCB_pre_InvokeUpdate;
 
-PROCEDURE ReplObjCB_post_InvokeUpdate (self: ReplObjCB; 
-                                       READONLY obj: ObValue.ReplObjStd;
-                                       label: TEXT;
-                                       argNo: INTEGER;
+PROCEDURE ReplObjCB_post_InvokeUpdate (         self: ReplObjCB;
+                                       READONLY obj : ObValue.ReplObjStd;
+                                        swr  : SynWr.T;
+                                                  label: TEXT;
+                                                  argNo: INTEGER;
                                        READONLY args: ObValue.Vals;
-                                       <*UNUSED*>VAR hint: INTEGER): BOOLEAN =
+                                       <*UNUSED*> VAR hint: INTEGER):
+  BOOLEAN =
   BEGIN
-    WITH args1 = NEW(REF ObValue.Vals, argNo+1) DO
+    WITH args1 = NEW(REF ObValue.Vals, argNo + 1) DO
       args1[0] := obj.self;
       SUBARRAY(args1^, 1, argNo) := SUBARRAY(args, 0, argNo);
 
-      RETURN Invoke(self, "post`" & label, args1^);
+      RETURN Invoke(self, "post`" & label, args1^, swr);
     END;
   END ReplObjCB_post_InvokeUpdate;
 
@@ -205,7 +217,7 @@ PROCEDURE ReplObjCB_pre_Update (self: ReplObjCB;
                                 <*UNUSED*>VAR hint: INTEGER): BOOLEAN =
   BEGIN
     WITH args = ObValue.Vals {obj.self, val} DO
-      RETURN Invoke(self, "pre`" & label, args);
+      RETURN Invoke(self, "pre`" & label, args, Obliq.Console());
     END;
   END ReplObjCB_pre_Update;
 
@@ -217,7 +229,7 @@ PROCEDURE ReplObjCB_post_Update (self: ReplObjCB;
                                   <*UNUSED*>VAR hint: INTEGER): BOOLEAN =
   BEGIN
     WITH args = ObValue.Vals {obj.self, val} DO
-      RETURN Invoke(self, "post`" & label, args);
+      RETURN Invoke(self, "post`" & label, args, Obliq.Console());
     END;
   END ReplObjCB_post_Update;
 

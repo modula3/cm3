@@ -11,8 +11,8 @@
  * Author          : Blair MacIntyre
  * Created On      : Wed Mar 12 12:17:06 1997
  * Last Modified By: Blair MacIntyre
- * Last Modified On: Sat May 17 14:45:02 1997
- * Update Count    : 4
+ * Last Modified On: Tue Apr  7 13:30:52 1998
+ * Update Count    : 19
  * 
  * $Source$
  * $Date$
@@ -20,6 +20,19 @@
  * $Revision$
  * 
  * $Log$
+ * Revision 1.7  1998/05/11 02:28:29  bm
+ * Integrating Repo properly including help and scripts
+ *
+ * Revision 1.6  1997/10/22 14:21:50  bm
+ * fixed typos in the help files.  Changed EmbProxiedObj obliq object to
+ * not be protected.
+ *
+ * Revision 1.5  1997/08/04 20:15:39  bm
+ * Fixed BRANDs
+ *
+ * Revision 1.4  1997/07/11 17:37:23  bm
+ * Potential release version
+ *
  * Revision 1.3  1997/05/25 20:40:53  bm
  * small fix.
  *
@@ -33,11 +46,11 @@
 MODULE ObLoader;
 
 IMPORT Bundle, ObLibOnline, ObValue, Obliq, ObliqParser, SynScan, SynWr, 
-       SynParse, TextRd, ObCommand, Text, TextWr, RdCopy, Pathname,
+       SynParse, TextRd, ObCommand, Text, TextWr, RdCopy, Pathname, Env,
        OSError, FileRd, Rd, Fmt, Wr, Thread, Process, TextSeq;
 
 REVEAL 
-  T = Public BRANDED OBJECT
+  T = Public BRANDED "ObLoader.T" OBJECT
     parser : SynParse.T;
     env    : Obliq.Env := NIL;
     alt    : T := NIL;
@@ -48,10 +61,11 @@ REVEAL
     get := Get;
     load := Load;
     help := Help;
+    writer := Writer;
   END;
 
 REVEAL 
-  BundleT = BundlePublic BRANDED OBJECT
+  BundleT = BundlePublic BRANDED "ObLoader.BundleT" OBJECT
     bundle : Bundle.T;
   OVERRIDES
     init := BundleInit;
@@ -60,7 +74,7 @@ REVEAL
   END;
 
 REVEAL 
-  DirT = DirPublic BRANDED OBJECT
+  DirT = DirPublic BRANDED "ObLoader.DirT" OBJECT
     root : Pathname.Arcs;
   OVERRIDES
     init := DirInit;
@@ -68,21 +82,27 @@ REVEAL
     getText := DirGetText;
   END;
 
+PROCEDURE Writer (self : T) : SynWr.T =
+  BEGIN
+    RETURN self.parser.Writer();
+  END Writer;
+
 PROCEDURE Get (self : T; qualName : TEXT) : Obliq.Val =
   BEGIN
     ObliqParser.ReadFrom (self.parser, "", TextRd.New (qualName & ";"), TRUE);
 
     TRY
-      RETURN Obliq.EvalPhrase (ObliqParser.ParsePhrase (self.parser), 
+      RETURN Obliq.EvalPhrase (self.parser.Writer(), 
+                               ObliqParser.ParsePhrase (self.parser), 
                                self.env);
     EXCEPT
     | ObValue.Error (packet) => 
-      ObValue.ErrorMsg(SynWr.err, packet);
+      ObValue.ErrorMsg(self.parser.Writer(), packet);
       Process.Crash("Fatal error attempting to get '" & qualName & 
         "' in ObLoader.Get");
       <*ASSERT FALSE*>
     | ObValue.Exception (packet) => 
-      ObValue.ExceptionMsg(SynWr.err, packet);
+      ObValue.ExceptionMsg(self.parser.Writer(), packet);
       Process.Crash("Fatal error attempting to get '" & qualName & 
         "' in ObLoader.Get");
       <*ASSERT FALSE*>
@@ -111,51 +131,51 @@ PROCEDURE Load (self : T; name : TEXT) =
       END;
     EXCEPT
     | ObValue.Error (packet) => 
-      ObValue.ErrorMsg(SynWr.err, packet);
+      ObValue.ErrorMsg(self.parser.Writer(), packet);
       Process.Crash("Fatal error attempting to get '" & name & 
         "' in ObLoader.Load");
     | ObValue.Exception (packet) => 
-      ObValue.ExceptionMsg(SynWr.err, packet);
+      ObValue.ExceptionMsg(self.parser.Writer(), packet);
       Process.Crash("Fatal error attempting to get '" & name & 
         "' in ObLoader.Load");
     END;
   END Load;
 
-PROCEDURE Help (self: T; cmd: ObCommand.T; arg, pkgname, m3name : TEXT) =
+PROCEDURE Help (self: T; wr: SynWr.T; cmd: ObCommand.T; 
+                arg, pkgname, m3name : TEXT) =
   BEGIN
     IF m3name = NIL THEN
-      m3name := pkgname;
+      m3name := "the " & pkgname;
     END;
     IF Text.Equal (arg, "!") THEN
-      SynWr.Text (SynWr.out, 
+      SynWr.Text (wr, 
                   "  " & Fmt.Pad (pkgname, 18, ' ', Fmt.Align.Left) & 
-                  "(interface to the " & m3name & " module)\n");
+                  "(built-in interface to " & m3name & " module)\n");
     ELSIF Text.Equal (arg, "?") THEN
-      WITH text = self.getText(m3name & ".hlp") DO
+      WITH text = self.getText(pkgname & ".hlp") DO
         IF text # NIL THEN
-          SynWr.Text (SynWr.out, text);
+          SynWr.Text (wr, text);
         END;
-        SynWr.NewLine (SynWr.out);
+        SynWr.NewLine (wr);
       END;
     ELSE
-      SynWr.Text(SynWr.out, "Command " & cmd.name & ": bad argument: " & arg);
-      SynWr.NewLine (SynWr.out);
+      SynWr.Text(wr, "Command " & cmd.name & ": bad argument: " & arg);
+      SynWr.NewLine (wr);
     END;
   END Help;
 
-PROCEDURE BundleInit (self : BundleT; bundle: Bundle.T; parent: T; alt: T) : T=
+PROCEDURE BundleInit (self : BundleT; wr: SynWr.T; bundle: Bundle.T; parent: T; alt: T) : T=
   BEGIN
     self.alt := alt;
     IF parent # NIL THEN
       self.env := parent.env; 
     ELSE
-      self.env := Obliq.EmptyEnv ();
+      self.env := Obliq.EmptyEnv (wr);
     END;
-    self.parser := ObliqParser.New (SynWr.out);
+    self.parser := ObliqParser.New (wr);
     self.bundle := bundle;
 
     ObLibOnline.RegisterScanner (self.parser.Scanner ());
-
     RETURN self;
   END BundleInit;
 
@@ -177,15 +197,16 @@ PROCEDURE BundleGetText (self: BundleT; name : TEXT) : TEXT =
     RETURN text;
   END BundleGetText; 
 
-PROCEDURE DirInit (self : DirT; root: TEXT; parent: T; alt: T) : T =
+PROCEDURE DirInit (self : DirT; wr: SynWr.T; root: TEXT; parent: T;
+                   alt: T) : T = 
   BEGIN
     self.alt := alt;
     IF parent # NIL THEN
       self.env := parent.env; 
     ELSE
-      self.env := Obliq.EmptyEnv ();
+      self.env := Obliq.EmptyEnv (wr);
     END;
-    self.parser := ObliqParser.New (SynWr.out);
+    self.parser := ObliqParser.New (wr);
     TRY
       self.root   := Pathname.Decompose(root);
     EXCEPT 
@@ -235,15 +256,48 @@ PROCEDURE DirGetText (self: DirT; name : TEXT) : TEXT =
     END;
   END DirGetText; 
 
-PROCEDURE NewDirs(roots: TextSeq.T; parent: T := NIL; alt: T := NIL): T =
+PROCEDURE NewDirs(wr: SynWr.T; roots: TextSeq.T; 
+                  parent: T := NIL; alt: T := NIL): T =
   VAR root: T := NIL;
   BEGIN
     FOR i := roots.size()-1 TO 0 BY -1 DO
-      root := NEW(DirT).init(roots.get(i), parent, alt);
+      root := NEW(DirT).init(wr, roots.get(i), parent, alt);
       alt := root;
     END;
     RETURN root;
   END NewDirs;
 
+VAR
+  defaultDirPath: TEXT := NIL;
+  defaultDir: Pathname.Arcs := NIL;
+
+PROCEDURE NewDefaultDir(wr: SynWr.T; package: TEXT;
+                        parent: T := NIL; alt: T := NIL): T =
+  BEGIN
+    IF defaultDir = NIL THEN RETURN alt END;
+
+    WITH dir = TextSeq.Cat(defaultDir,
+                           NEW(TextSeq.T).fromArray(
+                                           ARRAY OF TEXT{package,"src"})) DO
+      TRY
+        RETURN NEW(DirT).init(wr, Pathname.Compose(dir), parent, alt);
+      EXCEPT
+      | Pathname.Invalid => 
+        Process.Crash("Invalid package '" & package & "'");
+        <*ASSERT FALSE*>
+      END;
+    END;
+  END NewDefaultDir;
+
 BEGIN
+  defaultDirPath := Env.Get("M3PACKAGEDIR");
+  IF defaultDirPath # NIL THEN
+    TRY
+      defaultDir := Pathname.Decompose(defaultDirPath);
+    EXCEPT
+    | Pathname.Invalid => 
+      Process.Crash("Invalid M3PACKAGEDIR='" & defaultDirPath & "'");
+      <*ASSERT FALSE*>
+    END;
+  END;
 END ObLoader. 

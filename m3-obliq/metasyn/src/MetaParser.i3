@@ -2,6 +2,14 @@
 (* Distributed only by permission.                             *)
 (* Last modified on Fri Nov  5 11:13:41 1993 by luca                       *)
 (*      modified on Thu Jun 25 01:51:09 1992 by knaff          *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 15:05:14 1997
+ *)
+
 INTERFACE MetaParser ;
 IMPORT SynWr, SynLocation, SynParse, Rd, SynScan, TextRefTbl;
 
@@ -81,7 +89,7 @@ TYPE
   END;
   (*
     | entry in the "source" action table
-    | the "source" action table is just an array of these.
+    | the "source" action table is juste an array of these.
     | To use it, it must first be transformed into a hash-table, using the 
     | procedure TableFromArray
   *)
@@ -94,7 +102,7 @@ TYPE
   ActionProcTable = ARRAY OF ActionProcEntry ;
 
   Grammar <: Grammar_public;
-  Grammar_public = BRANDED OBJECT
+  Grammar_public = BRANDED "MetaParser.Grammar_public" OBJECT
     env: SynParse.GrammarEnv := NIL;
     (* environment of non-terminals *)
     keySet: SynScan.KeywordSet := NIL;
@@ -103,7 +111,7 @@ TYPE
   (* grammar object *)
 
   ClauseList = 
-    SynParse.Tree BRANDED OBJECT
+    SynParse.Tree BRANDED "MetaParser.ClauseList" OBJECT
     ide: TextNode;
     args: SynParse.Args;
     extend, extendIter, iterPosPresent: BOOLEAN; iterPos: INTEGER;
@@ -112,7 +120,7 @@ TYPE
   END;
 
   TextNode =
-    SynParse.Tree BRANDED OBJECT
+    SynParse.Tree BRANDED "MetaParser.TextNode" OBJECT
       text: TEXT;
     END;
 
@@ -138,7 +146,7 @@ PROCEDURE AddClauseList(tree: SynParse.Tree; p: SynParse.T)
 PROCEDURE Setup() RAISES {SynParse.Fail};
 (* To be called before any other use of this module. *)
 
-PROCEDURE PackageSetup() RAISES {SynParse.Fail};
+PROCEDURE PackageSetup(wr: SynWr.T) RAISES {SynParse.Fail};
 (* Call all the Setup functions in this package. *)
 
 PROCEDURE NewActionTable(): ActionTable;
@@ -147,13 +155,12 @@ PROCEDURE NewActionTable(): ActionTable;
 PROCEDURE Register(name: TEXT; proc: ActionProc;
                           table: ActionTable );
 
-PROCEDURE TableFromArray(READONLY sourceTable : ActionProcTable;
+PROCEDURE TableFromArray( sourceTable : ActionProcTable;
                           table: ActionTable ) ;
 (* merges an array of ActionProcEntry's (sourceTable) into a ActionTable,
   which can be passed to ReadGFile *)
 
-  PROCEDURE PrintClauseList(list: ClauseList);
-
+PROCEDURE PrintClauseList(wr: SynWr.T; list: ClauseList);
 (* Basic routines to deal with the metaParser
    datatypes IntegerTemp, RealTemp, and TextTemp. *)
 
@@ -167,15 +174,15 @@ TYPE
   (* types to represent integers, reals, and strings as parse-trees  *)
   
   IntegerTemp =
-    SynParse.Tree BRANDED OBJECT
+    SynParse.Tree BRANDED "MetaParser.IntegerTemp" OBJECT
     int: INTEGER;
   END;
   RealTemp =
-    SynParse.Tree BRANDED OBJECT
+    SynParse.Tree BRANDED "MetaParser.RealTemp" OBJECT
     real: LONGREAL;
   END;
   TextTemp =
-    SynParse.Tree BRANDED OBJECT
+    SynParse.Tree BRANDED "MetaParser.TextTemp" OBJECT
     text: TEXT ;
   END;
   (* TextTemp, represents Strings, Texts and Chars *)
@@ -234,10 +241,10 @@ PROCEDURE GBool(p: SynParse.T; loc :INTEGER): BOOLEAN RAISES {SynParse.Fail};
 (* the X-routines transform a SynParse.Tree to the requested type *) 
 (* ============================================================== *)
 
-PROCEDURE XInt(tree: SynParse.Tree): INTEGER RAISES {SynParse.Fail};
-PROCEDURE XReal(tree: SynParse.Tree): LONGREAL RAISES {SynParse.Fail};
-PROCEDURE XText(tree: SynParse.Tree): TEXT RAISES {SynParse.Fail};
-PROCEDURE XBool(tree: SynParse.Tree): BOOLEAN RAISES {SynParse.Fail};
+PROCEDURE XInt(wr: SynWr.T; tree: SynParse.Tree): INTEGER RAISES {SynParse.Fail};
+PROCEDURE XReal(wr: SynWr.T; tree: SynParse.Tree): LONGREAL RAISES {SynParse.Fail};
+PROCEDURE XText(wr: SynWr.T; tree: SynParse.Tree): TEXT RAISES {SynParse.Fail};
+PROCEDURE XBool(wr: SynWr.T; tree: SynParse.Tree): BOOLEAN RAISES {SynParse.Fail};
 
 
 (* ================================================================ *)
@@ -246,7 +253,7 @@ PROCEDURE XBool(tree: SynParse.Tree): BOOLEAN RAISES {SynParse.Fail};
 (* Text should contain the expected type                            *)
 (* ================================================================ *)
 
-PROCEDURE TypeError(type: TEXT ; tree : SynParse.Tree) RAISES {SynParse.Fail};
+PROCEDURE TypeError(wr: SynWr.T; type: TEXT ; tree : SynParse.Tree) RAISES {SynParse.Fail};
 
 END MetaParser.
 

@@ -4,7 +4,7 @@ MODULE ObFrame;
 IMPORT ObErr, SynWr, SynScan, Rd, TextRd, Lex, FileRd, Text, OSError,
        Pathname, ObLib, ObValue, SynLocation, ObEval, Thread,
        ObCommand, Fmt, Fingerprint, Pickle2 AS Pickle, Wr,
-       PickleStubs, NetObj, TextList;
+       PickleStubs, NetObj, TextList, SharedObj;
 IMPORT Env AS ProcessEnv;
 IMPORT ObPathSep;
 
@@ -48,7 +48,7 @@ PROCEDURE PostFile(sc: SynScan.T; filename: Pathname.T): BOOLEAN =
   BEGIN
     TRY
       rd:= FileRd.Open(filename);
-      SynWr.Text(SynWr.out, "Loading '" & filename & "'\n");
+      SynWr.Text(SynScan.GetWriter(sc), "Loading '" & filename & "'\n");
       SynScan.PushInput(sc, Pathname.Last(filename), rd, TRUE, TRUE);
       RETURN TRUE;
     EXCEPT OSError.E => RETURN FALSE
@@ -126,7 +126,7 @@ PROCEDURE ImportFrame(sc: SynScan.T; name: TEXT; env: Env) =
     scan:=FindFrame(name, env);
     IF scan=NIL THEN LoadFile(sc, name & ".obl");
     ELSIF SynScan.TopLevel(sc) THEN
-      SynWr.Text(SynWr.out, "(Frame '" & name & 
+      SynWr.Text(SynScan.GetWriter(sc), "(Frame '" & name & 
         "' already exists and has not been reloaded)\n");
     END;
   END ImportFrame;
@@ -137,35 +137,35 @@ PROCEDURE ModAndLib(name, for: TEXT): TEXT =
     ELSE RETURN "'" & name & "' for '" & for & "'" END;
   END ModAndLib;
 
-PROCEDURE EstablishFrame(name, for: TEXT; env: Env): Env 
+PROCEDURE EstablishFrame(wr: SynWr.T; name, for: TEXT; env: Env): Env 
     RAISES {ObErr.Fail} =
   VAR moduleExists, frameExists: BOOLEAN; 
   BEGIN
-    SynWr.Text(SynWr.out, "Establishing " & ModAndLib(name,for) & "\n");
+    SynWr.Text(wr, "Establishing " & ModAndLib(name,for) & "\n");
     moduleExists := ObLib.Lookup(name, env.libEnv)#NIL;
     frameExists := FindFrame(name, env)#NIL;
     IF frameExists THEN
-      RETURN SaveFrame(name, for, DeleteFrame(name, env));
+      RETURN SaveFrame(wr, name, for, DeleteFrame(wr, name, env));
     ELSIF moduleExists THEN
-      ObErr.Fault(SynWr.out, 
+      ObErr.Fault(wr, 
         "Module name conflicts with existing library: '" & name & "_'");
       <*ASSERT FALSE*>
     ELSE
-      RETURN SaveFrame(name, for, env);
+      RETURN SaveFrame(wr, name, for, env);
     END;
   END EstablishFrame;
 
-PROCEDURE SaveFrame(name, for: TEXT; env: Env): Env 
+PROCEDURE SaveFrame(wr: SynWr.T; name, for: TEXT; env: Env): Env 
     RAISES {ObErr.Fail} =
   VAR scan: Env;
   BEGIN
     scan:=FindFrame(name, env);
     IF scan#NIL THEN 
-      ObErr.Fault(SynWr.out, "Frame already exists: '" & name & "'");
+      ObErr.Fault(wr, "Frame already exists: '" & name & "'");
       RETURN env;
     END;
     IF NOT Text.Empty(name) THEN
-      SynWr.Text(SynWr.out, "(Created frame " & ModAndLib(name,for) & ")\n");
+      SynWr.Text(wr, "(Created frame " & ModAndLib(name,for) & ")\n");
     END;
     RETURN
       NEW(Env,
@@ -178,7 +178,7 @@ PROCEDURE SaveFrame(name, for: TEXT; env: Env): Env
         nextFrame := env);
   END SaveFrame;
 
-PROCEDURE DeleteFrame(name: TEXT; env: Env): Env =
+PROCEDURE DeleteFrame(wr: SynWr.T; name: TEXT; env: Env): Env =
   VAR scan: Env;
   BEGIN
     scan:=FindFrame(name, env);
@@ -186,7 +186,7 @@ PROCEDURE DeleteFrame(name: TEXT; env: Env): Env =
       RETURN env;
     ELSE
       LOOP
-        SynWr.Text(SynWr.out, 
+        SynWr.Text(wr, 
           "(Deleted frame " & ModAndLib(env.frameName,env.forName) & ")\n");
 	IF env=scan THEN EXIT END;
 	env:=env.nextFrame;
@@ -223,7 +223,7 @@ PROCEDURE InNameList(name: TEXT; list: NameList): BOOLEAN =
     RETURN FALSE;
   END InNameList;
 
-PROCEDURE QualifyFrame(env: Env; ideList: NameList): Env =
+PROCEDURE QualifyFrame(wr: SynWr.T; env: Env; ideList: NameList): Env =
   VAR scanValueEnv: ObValue.Env;
       frameCount, frameSize: INTEGER; opCodes: REF ObLib.OpCodes;
       library: ObLib.T; newLibEnv: ObLib.Env; newEnv: Env;
@@ -276,14 +276,16 @@ PROCEDURE QualifyFrame(env: Env; ideList: NameList): Env =
           checkEnv := env.nextFrame.checkEnv,
           valueEnv := env.nextFrame.valueEnv,
           nextFrame := env.nextFrame);
-    SynWr.Text(SynWr.out,
+    SynWr.Text(wr,
       "(Closed frame " & ModAndLib(env.frameName,env.forName) & ")\n");
     RETURN newEnv;
   END QualifyFrame;
 
 PROCEDURE FrameLibEval(self: FrameLib; opCode: ObLib.OpCode;
                        arity: ObLib.OpArity; READONLY args: ObValue.ArgArray; 
-                       <*UNUSED*>temp: BOOLEAN; loc: SynLocation.T)
+                       <*UNUSED*>temp: BOOLEAN; 
+                       swr: SynWr.T; 
+                       loc: SynLocation.T)
   : ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
   VAR frameOpCode: FrameOpCode;
   BEGIN
@@ -296,11 +298,37 @@ PROCEDURE FrameLibEval(self: FrameLib; opCode: ObLib.OpCode;
     ELSE
       TYPECASE frameOpCode.val OF
       | ObValue.ValFun(fun) =>
-        RETURN ObEval.Call(fun, SUBARRAY(args, 0, arity), loc);
+        RETURN ObEval.Call(fun, SUBARRAY(args, 0, arity), swr, loc);
+      | ObValue.ValVar (node) =>
+        TRY
+          TYPECASE node.Get() OF
+          | ObValue.ValFun(fun) =>
+            RETURN ObEval.Call(fun, SUBARRAY(args, 0, arity), swr, loc);
+          ELSE
+            ObValue.RaiseError("Not expecting argument list for: " &
+              self.name & "_" & opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+        EXCEPT
+        | NetObj.Error (atoms) =>
+          ObValue.RaiseNetException("on remote access to variable: " &
+            self.name & "_" & opCode.name, atoms, loc);
+          <*ASSERT FALSE*>
+        | SharedObj.Error (atoms) =>
+          ObValue.RaiseSharedException("on access to replicated variable: " &
+            self.name & "_" & opCode.name, atoms, loc);
+          <*ASSERT FALSE*>
+        | Thread.Alerted =>
+          ObValue.RaiseException(
+              ObValue.threadAlerted,
+              "on remote access to variable: " & 
+              self.name & "_" & opCode.name, loc);
+          <*ASSERT FALSE*>
+        END;
       ELSE
-         ObValue.RaiseError("Not expecting argument list for: " &
+        ObValue.RaiseError("Not expecting argument list for: " &
           self.name & "_" & opCode.name, loc);
-         <*ASSERT FALSE*>
+        <*ASSERT FALSE*>
       END;
     END;
   END FrameLibEval;
@@ -321,19 +349,20 @@ PROCEDURE AddHelpFrame(name, sort, short, long: TEXT;
                            Exec:= Help));
   END AddHelpFrame;
 
-PROCEDURE Help (comm: ObCommand.T; arg : TEXT; <* UNUSED *> data : REFANY) =
+PROCEDURE Help (wr: SynWr.T; comm: ObCommand.T; arg : TEXT; 
+                <*UNUSED*> data : REFANY) =
   VAR self := NARROW(comm, HelpCommand);
   BEGIN
     IF Text.Equal (arg, "!") THEN
-      SynWr.Text (SynWr.out, 
+      SynWr.Text (wr, 
                   "  " & Fmt.Pad (self.name, 18, ' ', Fmt.Align.Left) & 
                   "(" & self.short & ")\n");
     ELSIF Text.Equal (arg, "?") THEN
-      SynWr.Text (SynWr.out, self.long);
-      SynWr.NewLine (SynWr.out);
+      SynWr.Text (wr, self.long);
+      SynWr.NewLine (wr);
     ELSE
-      SynWr.Text(SynWr.out, "Command " & self.name & ": bad argument: " & arg);
-      SynWr.NewLine (SynWr.out);
+      SynWr.Text(wr, "Command " & self.name & ": bad argument: " & arg);
+      SynWr.NewLine (wr);
     END;
   END Help;
 
@@ -352,7 +381,7 @@ PROCEDURE Setup()  =
   END Setup;
 
 TYPE
-  ObFrameSpecial = Pickle.Special BRANDED OBJECT
+  ObFrameSpecial = Pickle.Special BRANDED "ObFrame.ObFrameSpecial" OBJECT
                        OVERRIDES
                          write := WriteLib;
                          read := ReadLib;

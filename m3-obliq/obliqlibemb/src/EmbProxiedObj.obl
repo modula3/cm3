@@ -11,7 +11,7 @@ module EmbProxiedObjWrap for EmbProxiedObj;
 (* extend is used to create subtypes, and should only be used by 
    machine generated protos.  As long as raw is "ok", it can be used.  When 
    raw is actually assigned to, it just returns self. *)
-
+(*
 let TProto = {
   protected, 
   raw    => ok,
@@ -30,6 +30,39 @@ let TProto = {
 	end;
 	new
 	end,
+};
+*)
+
+let TProto = {protected,
+  raw    => ok,
+  extend => meth (self, o) 
+	if self.raw is ok then
+		if o is ok then clone (self) else clone (o, self) end;
+	else
+		EmbProxiedObj_Extend (self, o);
+	end;
+    end,
+  make`simple => meth (self) 
+	if self.raw is ok then 
+		simple (self);
+	else
+		EmbProxiedObj_Extend (simple(self), {simple});
+	end;
+    end,
+  make`remote => meth (self) 
+	if self.raw is ok then 
+		remote (self);
+	else
+		EmbProxiedObj_Extend (remote(self), {});
+	end;
+    end,
+  make`replicated => meth (self, umeths) 
+	if self.raw is ok then 
+		replicated (self,umeths);
+	else
+		EmbProxiedObj_Extend (replicated(self,umeths), {replicated});
+	end;
+    end
 };
 
 end module;

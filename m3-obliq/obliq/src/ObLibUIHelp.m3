@@ -11,44 +11,44 @@ IMPORT SynWr, Text, ObLib, ObCommand, Bundle, ObliqBdl2;
     ObLib.RegisterHelp("form", HelpForm);
   END Setup;
 
-  PROCEDURE HelpColor(self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL)  =
+  PROCEDURE HelpColor(wr: SynWr.T; self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL)  =
     BEGIN
       IF Text.Equal(arg, "!") THEN
-        SynWr.Text(SynWr.out, "  color             (the built-in color library)\n");
+        SynWr.Text(wr, "  color             (the built-in color library)\n");
       ELSIF Text.Equal(arg, "?") THEN
-        SynWr.Text(SynWr.out, Bundle.Get(ObliqBdl2.Get(),"ObliqHelpColor"));
-        SynWr.NewLine(SynWr.out);
+        SynWr.Text(wr, Bundle.Get(ObliqBdl2.Get(),"ObliqHelpColor"));
+        SynWr.NewLine(wr);
       ELSE
-	SynWr.Text(SynWr.out, "Command " & self.name & ": bad argument: " & arg);
-	SynWr.NewLine(SynWr.out);
+	SynWr.Text(wr, "Command " & self.name & ": bad argument: " & arg);
+	SynWr.NewLine(wr);
       END;
     END HelpColor;
 
-  PROCEDURE HelpVBT(self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
+  PROCEDURE HelpVBT(wr: SynWr.T; self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
     BEGIN
       IF Text.Equal(arg, "!") THEN
-        SynWr.Text(SynWr.out, "  vbt               (the built-in vbt library)\n");
+        SynWr.Text(wr, "  vbt               (the built-in vbt library)\n");
       ELSIF Text.Equal(arg, "?") THEN
-        SynWr.Text(SynWr.out, Bundle.Get(ObliqBdl2.Get(),"ObliqHelpVBT"));
-        SynWr.NewLine(SynWr.out);
+        SynWr.Text(wr, Bundle.Get(ObliqBdl2.Get(),"ObliqHelpVBT"));
+        SynWr.NewLine(wr);
       ELSE
-	SynWr.Text(SynWr.out, "Command " & self.name 
+	SynWr.Text(wr, "Command " & self.name 
 	  & ": bad argument: " & arg);
-	SynWr.NewLine(SynWr.out);
+	SynWr.NewLine(wr);
       END;
     END HelpVBT;
 
-  PROCEDURE HelpForm(self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
+  PROCEDURE HelpForm(wr: SynWr.T; self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
     BEGIN
       IF Text.Equal(arg, "!") THEN
-        SynWr.Text(SynWr.out, "  form              (the built-in forms library)\n");
+        SynWr.Text(wr, "  form              (the built-in forms library)\n");
       ELSIF Text.Equal(arg, "?") THEN
-        SynWr.Text(SynWr.out, Bundle.Get(ObliqBdl2.Get(),"ObliqHelpForm"));
-        SynWr.NewLine(SynWr.out);
+        SynWr.Text(wr, Bundle.Get(ObliqBdl2.Get(),"ObliqHelpForm"));
+        SynWr.NewLine(wr);
       ELSE
-	SynWr.Text(SynWr.out, "Command " & self.name 
+	SynWr.Text(wr, "Command " & self.name 
 	  & ": bad argument: " & arg);
-	SynWr.NewLine(SynWr.out);
+	SynWr.NewLine(wr);
       END;
     END HelpForm;
 

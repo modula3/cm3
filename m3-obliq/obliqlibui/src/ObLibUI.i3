@@ -1,5 +1,12 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 15:04:28 1997
+ *)
 
 INTERFACE ObLibUI;
 IMPORT SynLocation, ObValue, Color, VBT;
@@ -9,7 +16,7 @@ IMPORT SynLocation, ObValue, Color, VBT;
 
   TYPE 
     ValColor =
-      ObValue.ValAnything BRANDED OBJECT
+      ObValue.ValAnything BRANDED "ObLibUI.ValColor" OBJECT
         color: Color.T;
       OVERRIDES Is := IsColor; Copy := CopyColor;
       END;
@@ -19,7 +26,7 @@ IMPORT SynLocation, ObValue, Color, VBT;
     loc: SynLocation.T): ObValue.ValAnything RAISES {ObValue.Error};
 
   TYPE
-    ValVBT = ObValue.ValAnything BRANDED OBJECT
+    ValVBT = ObValue.ValAnything BRANDED "ObLibUI.ValVBT" OBJECT
       vbt: VBT.T;
     OVERRIDES Is := IsVBT; Copy := CopyVBT;
     END;
@@ -29,7 +36,7 @@ IMPORT SynLocation, ObValue, Color, VBT;
     (* Raises Error *)
 
   TYPE 
-    ValForm = ValVBT BRANDED OBJECT END;
+    ValForm = ValVBT BRANDED "ObLibUI.ValForm" OBJECT END;
 
 
 END ObLibUI.

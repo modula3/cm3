@@ -1,5 +1,12 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Tue Jul  7 21:52:08 1998
+ *)
 
 MODULE ObliqOnline;
 IMPORT Rd, SynWr, Stdio, SynLocation, Text, SynScan, MetaParser, Fmt,
@@ -11,69 +18,85 @@ IMPORT Rd, SynWr, Stdio, SynLocation, Text, SynScan, MetaParser, Fmt,
 (* ============ Online flags ============ *)
 
 CONST
-  Version = 2; Enhancement = 2; BugFix = 0;
+  Version = 2; Enhancement = 2; BugFix = 1;
   DefaultPrintDepth = 4;
 
-PROCEDURE ShowVersion(self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
+PROCEDURE ShowVersion(wr: SynWr.T; self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
     BEGIN
       IF Text.Equal(arg, "!") OR Text.Equal(arg, "?") THEN
-	SynWr.Text(SynWr.out, self.name & " "
+	SynWr.Text(wr, self.name & " "
 	  & Fmt.Int(Version) & "." 
 	  & Fmt.Int(Enhancement) & "."
 	  & Fmt.Int(BugFix));
-	SynWr.NewLine(SynWr.out);
+	SynWr.NewLine(wr);
       ELSE
-	SynWr.Text(SynWr.out, "Command " & self.name 
+	SynWr.Text(wr, "Command " & self.name 
 	  & ": bad argument: " & arg);
-	SynWr.NewLine(SynWr.out);
+	SynWr.NewLine(wr);
       END;
     END ShowVersion;
 
 VAR showAfterParsing: BOOLEAN := FALSE;
 
-PROCEDURE ShowAfterParsing(self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
+PROCEDURE ShowAfterParsing(wr: SynWr.T; self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
     BEGIN
       IF Text.Equal(arg, "!") OR Text.Equal(arg, "?") THEN
-	SynWr.Text(SynWr.out, self.name & " {On Off} is ");
-	IF showAfterParsing THEN SynWr.Text(SynWr.out, "On");
-	ELSE SynWr.Text(SynWr.out, "Off"); END;
-	SynWr.NewLine(SynWr.out);
+	SynWr.Text(wr, self.name & " {On Off} is ");
+	IF showAfterParsing THEN SynWr.Text(wr, "On");
+	ELSE SynWr.Text(wr, "Off"); END;
+	SynWr.NewLine(wr);
       ELSIF Text.Equal(arg, "On") THEN showAfterParsing:=TRUE;
       ELSIF Text.Equal(arg, "Off") THEN showAfterParsing:=FALSE;
       ELSE
-	SynWr.Text(SynWr.out, "Command " & self.name 
+	SynWr.Text(wr, "Command " & self.name 
 	  & ": bad argument: " & arg);
-	SynWr.NewLine(SynWr.out);
+	SynWr.NewLine(wr);
       END;
     END ShowAfterParsing;
 
-PROCEDURE ShowNetObjMsgs(self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
+PROCEDURE ShowNetObjMsgs(wr: SynWr.T; self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
     BEGIN
       IF Text.Equal(arg, "!") OR Text.Equal(arg, "?") THEN
-	SynWr.Text(SynWr.out, self.name & " {On Off} is ");
-	IF ObValue.showNetObjMsgs THEN SynWr.Text(SynWr.out, "On");
-	ELSE SynWr.Text(SynWr.out, "Off"); END;
-	SynWr.NewLine(SynWr.out);
+	SynWr.Text(wr, self.name & " {On Off} is ");
+	IF ObValue.showNetObjMsgs THEN SynWr.Text(wr, "On");
+	ELSE SynWr.Text(wr, "Off"); END;
+	SynWr.NewLine(wr);
       ELSIF Text.Equal(arg, "On") THEN ObValue.showNetObjMsgs:=TRUE;
       ELSIF Text.Equal(arg, "Off") THEN ObValue.showNetObjMsgs:=FALSE;
       ELSE
-	SynWr.Text(SynWr.out, "Command " & self.name 
+	SynWr.Text(wr, "Command " & self.name 
 	  & ": bad argument: " & arg);
-	SynWr.NewLine(SynWr.out);
+	SynWr.NewLine(wr);
       END;
     END ShowNetObjMsgs;
 
+PROCEDURE TraceExecution(wr: SynWr.T; self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
+    BEGIN
+      IF Text.Equal(arg, "!") OR Text.Equal(arg, "?") THEN
+	SynWr.Text(wr, self.name & " {On Off} is ");
+	IF ObEval.traceExecution THEN SynWr.Text(wr, "On");
+	ELSE SynWr.Text(wr, "Off"); END;
+	SynWr.NewLine(wr);
+      ELSIF Text.Equal(arg, "On") THEN ObEval.traceExecution:=TRUE;
+      ELSIF Text.Equal(arg, "Off") THEN ObEval.traceExecution:=FALSE;
+      ELSE
+	SynWr.Text(wr, "Command " & self.name 
+	  & ": bad argument: " & arg);
+	SynWr.NewLine(wr);
+      END;
+    END TraceExecution; 
+
 (* 
-PROCEDURE PrintAfterParsing(term: ObTree.Term; env: Obliq.Env) =
+PROCEDURE PrintAfterParsing(wr: SynWr.T; term: ObTree.Term; env: Obliq.Env) =
   BEGIN
     IF showAfterParsing THEN
-      SynWr.Beg(SynWr.out, 2);
-      SynWr.Text(SynWr.out, "Parsed term: ");
-      SynWr.Break(SynWr.out);
-      ObPrintTree.PrintTerm(SynWr.out, term, env.checkEnv, 100);
-      SynWr.End(SynWr.out);
-      SynWr.NewLine(SynWr.out); 
-      SynWr.Flush(SynWr.out);
+      SynWr.Beg(wr, 2);
+      SynWr.Text(wr, "Parsed term: ");
+      SynWr.Break(wr);
+      ObPrintTree.PrintTerm(wr, term, env.checkEnv, 100);
+      SynWr.End(wr);
+      SynWr.NewLine(wr); 
+      SynWr.Flush(wr);
     END;
   END PrintAfterParsing;
 *)
@@ -81,19 +104,19 @@ PROCEDURE PrintAfterParsing(term: ObTree.Term; env: Obliq.Env) =
 (* ============ Do it  ============ *)
 
 REVEAL T = 
-  TPublic BRANDED OBJECT
+  TPublic BRANDED "ObliqOnline.T" OBJECT
     parser: SynParse.T;
   END;
 
-PROCEDURE New(greetings: TEXT:=""; swr: SynWr.T:=NIL; 
+PROCEDURE New(swr: SynWr.T; greetings: TEXT:=""; 
     loadDotObliq: BOOLEAN:=TRUE; env: Obliq.Env := NIL):T =
     VAR interpreter: T; filename: Pathname.T; rd: Rd.T;
   BEGIN
     IF swr=NIL THEN swr:=SynWr.out END;
-    IF env=NIL THEN env:=Obliq.EmptyEnv() END;
+    IF env=NIL THEN env:=Obliq.EmptyEnv(swr) END;
     
     interpreter := NEW(T, env:=env, 
-      swr:=swr, parser:=ObliqParser.New(swr));
+                       swr:=swr, parser:=ObliqParser.New(swr));
     ObLibOnline.RegisterScanner(interpreter.parser.Scanner());
 
     IF NOT Text.Empty(greetings) THEN
@@ -215,7 +238,7 @@ PROCEDURE SignalSetup() =
     old := RTProcess.OnInterrupt(OnInterrupt);
   END SignalSetup;
 
-PROCEDURE Setup() =
+PROCEDURE Setup(swr: SynWr.T) =
 BEGIN
   (* Thread.IncDefaultStackSize(64*1024); *)
   (* mainThread := Thread.Self(); *)
@@ -223,14 +246,14 @@ BEGIN
   SynLocation.PackageSetup();
   SynParse.PackageSetup();
   TRY
-    MetaParser.PackageSetup(); (* NOWARN *)
+    MetaParser.PackageSetup(swr); (* NOWARN *)
   EXCEPT
   | SynParse.Fail =>
     Process.Crash("Fatal error trying to parse MetaSyn grammar");
   END;
-  Obliq.PackageSetup();
-  ObliqParser.PackageSetup();
-  ObliqPrinter.PackageSetup();
+  Obliq.PackageSetup(swr);
+  ObliqParser.PackageSetup(swr);
+  ObliqPrinter.PackageSetup(swr);
   SignalSetup();
 
   ObCommand.Register(ObTree.doCommandSet,
@@ -245,6 +268,10 @@ BEGIN
   ObCommand.Register(ObTree.doCommandSet,
     NEW(ObCommand.T, name:="ShowNetObjMsgs", sortingName:="ShowNetObjMsgs", 
         Exec:=ShowNetObjMsgs));
+
+  ObCommand.Register(ObTree.doCommandSet,
+    NEW(ObCommand.T, name:="TraceExecution", sortingName:="TraceExecution", 
+        Exec:=TraceExecution));
 
     ObLibOnline.Setup();
   ObLibOnlineHelp.Setup();

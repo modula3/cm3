@@ -2,6 +2,13 @@
 (* Distributed only by permission.                             *)
 (* Last modified on Fri Nov  5 10:20:35 1993 by luca                   *)
 (*      modified on Mon Jun 29 19:04:13 1992 by knaff          *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:54:35 1997
+ *)
 
 INTERFACE SynParse;
 IMPORT SynWr, SynLocation, SynScan;
@@ -31,6 +38,9 @@ TYPE
 
       Scanner(): SynScan.T;
       (* The scanner associated with this parser. *)
+
+      Writer(): SynWr.T;
+      (* The writer associated with this parser. *)
 
       ReadNonTerminal(named: TEXT): Tree
            RAISES {Fail, SynScan.Fail, SynScan.NoReader};
@@ -98,7 +108,7 @@ TYPE
   
   GrammarEnvRoot <: ROOT;
   GrammarEnv =
-    GrammarEnvRoot BRANDED OBJECT
+    GrammarEnvRoot BRANDED "SynParse.GrammarEnv" OBJECT
     END;
   (* A full grammar definition is given by a pair of a Grammar and a GrammarEnv;
      the latter is an environment associating non-terminals (including the ones 
@@ -106,14 +116,14 @@ TYPE
      (see NewEnv()) and use the Add method to add definitions. *)
 
   GrammarList =
-    Tree BRANDED OBJECT
+    Tree BRANDED "SynParse.GrammarList" OBJECT
       first: Grammar;
       rest: GrammarList;
     END;
   (* Just a list of grammars. *)
 
   NonTerminal =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.NonTerminal" OBJECT
       name: TEXT;
       args: REF ARRAY OF INTEGER;
     END;
@@ -125,7 +135,7 @@ TYPE
      associated description fails.  *)
 
   Storage =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.Storage" OBJECT
       item: Grammar;
       position: INTEGER; (* >= 0 *)
     END;
@@ -139,7 +149,7 @@ TYPE
      The used positions do not have to be contiguous. *)
 
   Action =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.Action" OBJECT
       grammar: Grammar;
       Build: PROCEDURE(self: Action; g: T; base: INTEGER; 
         READONLY info: SynLocation.Info): Tree RAISES {Fail}
@@ -154,7 +164,7 @@ TYPE
      tree. Parsing fails if the parsing of "grammar" fails. *)
 
   GivenKeyword =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.GivenKeyword" OBJECT
       key: TEXT;
       Build: PROCEDURE(self: GivenKeyword; g: T;
 	READONLY info: SynLocation.Info): Tree RAISES {Fail}
@@ -166,7 +176,7 @@ TYPE
      cannot be scanned. *)
 
   GivenIdentifier =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.GivenIdentifier" OBJECT
       ide: TEXT;
       Build: PROCEDURE(self: GivenIdentifier; g: T;
 	READONLY info: SynLocation.Info): Tree RAISES {Fail}
@@ -178,7 +188,7 @@ TYPE
      given identifier cannot be scanned. *)
 
   GivenName =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.GivenName" OBJECT
       text: TEXT;
       Build: PROCEDURE(self: GivenName; g: T;
 	READONLY info: SynLocation.Info): Tree RAISES {Fail}
@@ -190,7 +200,7 @@ TYPE
      the given identifier or keyword cannot be scanned. *)
 
   GivenDelimiter =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.GivenDelimiter" OBJECT
       delim: CHAR;
       Build: PROCEDURE(self: GivenDelimiter; g: T;
 	READONLY info: SynLocation.Info): Tree RAISES {Fail}
@@ -202,7 +212,7 @@ TYPE
      the given delimiter cannot be scanned. *)
 
   Eof =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.Eof" OBJECT
       Build: PROCEDURE(self: Eof; g: T;
 	READONLY info: SynLocation.Info): Tree RAISES {Fail}
 	:= BuildNoEof;
@@ -213,7 +223,7 @@ TYPE
      Parsing fails if an end-of-file marker cannot be scanned. *)
 
   Identifier =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.Identifier" OBJECT
       Build: PROCEDURE(self: Identifier; g: T; name: TEXT; 
 	READONLY info: SynLocation.Info): Tree RAISES {Fail}
 	:= BuildNoIdentifier;
@@ -224,7 +234,7 @@ TYPE
      returns a NIL tree. Parsing fails if no identifier can be scanned. *)
 
   Name =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.Name" OBJECT
       Build: PROCEDURE(self: Name; g: T; name: TEXT; 
 	READONLY info: SynLocation.Info): Tree RAISES {Fail}
 	:= BuildNoName;
@@ -236,7 +246,7 @@ TYPE
      scanned. *)
 
   QuotedChar =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.QuotedChar" OBJECT
       Build: PROCEDURE(self: QuotedChar; g: T; char: CHAR; 
 	READONLY info: SynLocation.Info): Tree RAISES {Fail}
 	:= BuildNoQuotedChar;
@@ -247,7 +257,7 @@ TYPE
      returns a NIL tree. Parsing fails if no quoted char can be scanned. *)
 
   Integer =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.Integer" OBJECT
       Build: PROCEDURE(self: Integer; g: T; int: INTEGER; 
 	READONLY info: SynLocation.Info): Tree RAISES {Fail}
 	:= BuildNoInteger;
@@ -258,7 +268,7 @@ TYPE
      returns a NIL tree. Parsing fails if no integer can be scanned. *)
 
   Real =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.Real" OBJECT
       Build:PROCEDURE(self: Real; g: T; real: LONGREAL; 
 	READONLY info: SynLocation.Info): Tree RAISES {Fail}
 	:= BuildNoReal;
@@ -269,7 +279,7 @@ TYPE
      returns a NIL tree. Parsing fails if no real can be scanned. *)
 
   QuotedString =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.QuotedString" OBJECT
       Build: PROCEDURE(self: QuotedString; g: T; string: TEXT; 
 	READONLY info: SynLocation.Info): Tree RAISES {Fail}
 	:= BuildNoQuotedString;
@@ -280,7 +290,7 @@ TYPE
      returns a NIL tree. Parsing fails if no quoted string can be scanned. *)
 
   Sequence =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.Sequence" OBJECT
       items: GrammarList
     END;
   (* A grammar to parse a (possibly empty) sequence of grammars, in the given 
@@ -292,7 +302,7 @@ TYPE
      definition of LL(1) *)
 
   Choice =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.Choice" OBJECT
       choice: GrammarList;
 	(* returns what the succesful choice returns *)
     END;
@@ -309,7 +319,7 @@ TYPE
      branch are undone. *)
 
   Iter =
-    Grammar BRANDED OBJECT
+    Grammar BRANDED "SynParse.Iter" OBJECT
       accum: BOOLEAN;
       accumPosition: INTEGER;
       base, iter: Grammar;

@@ -1,0 +1,11 @@
+#!/bin/sh
+case $1 in
+	-min)	shift; exec repo-min $*;;
+	-std)	shift; exec repo-std $*;;
+	-http)	shift; exec repo-http $*;;
+	-trk)	shift; exec repo-trk $*;;
+	-vr)	shift; exec repo-vr $*;;
+	"")     exec repo-std $*;;
+	*)      /bin/echo "Bad flag for repo:" $1
+	        /bin/echo "Usage: repo [ -min | -std | -http | -trk | -vr ] ..." ;;
+esac

@@ -2,6 +2,13 @@
 (* Distributed only by permission.                             *)
 (* Last modified on Tue Jan 25 15:03:42 1994 by luca               *)
 (*      modified on Tue Jun 23 20:16:54 1992 by knaff          *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 15:05:20 1997
+ *)
 
 INTERFACE Builder;
 
@@ -16,14 +23,14 @@ TYPE
   GramInfo <: GramInfoBase;
   (* revealed in Builder.m3 *)
   GramInfoBase = 
-    SynParse.Tree BRANDED OBJECT
+    SynParse.Tree BRANDED "Builder.GramInfoBase" OBJECT
     topGram: SynParse.Grammar;
     env: SynParse.GrammarEnv;
     adoptAsTopLevelGrammar: BOOLEAN;
   END;
 
   Params =
-    SynParse.Tree BRANDED OBJECT
+    SynParse.Tree BRANDED "Builder.Params" OBJECT
       first: SynParse.Tree;
       rest: Params;
     END;

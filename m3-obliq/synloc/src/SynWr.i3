@@ -3,9 +3,24 @@
 (* Last modified on Fri Jun  3 11:39:06 1994 by luca                   *)
 
 INTERFACE SynWr;
-IMPORT Wr;
+IMPORT Wr (*, NetObj, Thread *);
 
-TYPE T <: ROOT;
+TYPE 
+  T = (* NetObj.T *) OBJECT METHODS
+    underlyingWr(): Wr.T (* RAISES {NetObj.Error, Thread.Alerted} *);
+    beg(indent: INTEGER:=0; loud:=FALSE) 
+       (* RAISES {NetObj.Error, Thread.Alerted} *);
+    break(loud:=FALSE) (* RAISES {NetObj.Error, Thread.Alerted} *);
+    flatBreak(loud:=FALSE) (* RAISES {NetObj.Error, Thread.Alerted} *);
+    end(loud:=FALSE) (* RAISES {NetObj.Error, Thread.Alerted} *);
+    char(c: CHAR; loud:=FALSE) (* RAISES {NetObj.Error, Thread.Alerted} *);
+    text(t: TEXT; loud:=FALSE) (* RAISES {NetObj.Error, Thread.Alerted} *);
+    newLine(loud:=FALSE) (* RAISES {NetObj.Error, Thread.Alerted} *);
+    flush(loud:=FALSE) (* RAISES {NetObj.Error, Thread.Alerted} *);
+    close() (* RAISES {NetObj.Error, Thread.Alerted} *);
+    pushSilence() (* RAISES {NetObj.Error, Thread.Alerted} *);
+    popSilence() (* RAISES {NetObj.Error, Thread.Alerted} *);
+  END;
 
 PROCEDURE Setup();
 (* To be called before any other use of this module. *)

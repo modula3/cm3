@@ -5,6 +5,6 @@ module SharedObjWrap for SharedObj;
    for testing and debugging. *)
 let TProto = EmbProxiedObj_TProto.extend({
   location => meth(self) sys_getEnvVar("HOSTNAME") end
-}, ok);
+});
 
 end module;

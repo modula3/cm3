@@ -8,11 +8,18 @@
 (*                                                                           *)
 (* Used to be ObProxiedObj in Anim3D, but I don't want everything            *)
 (* depending on Anim3D so I made a separate "embedded language" package      *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Apr  6 22:35:52 1998
+ *)
 
 MODULE ObEmbProxiedObj;
 
 IMPORT EmbProxiedObj, ObLoader, ObCommand, ObLib, ObValue, Obliq,
-       SynLocation; 
+       SynLocation, SynWr; 
 
 CONST
   pkgname = "EmbProxiedObj";
@@ -43,7 +50,7 @@ PROCEDURE GetArg (args    : ObValue.ArgArray;
                   loc     : SynLocation.T) : EmbProxiedObj.T 
     RAISES {ObValue.Error, ObValue.Exception} =
   BEGIN
-    WITH raw = Obliq.ObjectSelect (args[idx], "raw") DO
+    WITH raw = Obliq.ObjectSelect (args[idx], "raw", Obliq.Console()) DO
       TYPECASE raw OF
       | T (node) =>
         RETURN node.po;
@@ -53,6 +60,12 @@ PROCEDURE GetArg (args    : ObValue.ArgArray;
       END;
     END;
   END GetArg;
+
+PROCEDURE Extend(READONLY objs: Obliq.Vals): Obliq.Val 
+    RAISES {ObValue.Error, ObValue.Exception} =
+  BEGIN
+    RETURN Obliq.ObjectInvoke(objs[0], "extend", objs, Obliq.Console());
+  END Extend;
 
 (*****************************************************************************)
 (* Setup procedures                                                          *)
@@ -72,7 +85,8 @@ PROCEDURE SetupPackage () =
     opCodes := NEW (REF OpCodes, NUMBER (Code));
     opCodes^ := 
         OpCodes {
-            NewOpCode ("Error",   -1, Code.Error)
+            NewOpCode ("Error",   -1, Code.Error),
+            NewOpCode ("Extend",   2, Code.Extend)
         };
 
     errorException := Obliq.NewException("EmbProxiedObj_Error");
@@ -93,27 +107,44 @@ PROCEDURE SetupModule (loader: ObLoader.T) =
 VAR errorException: ObValue.Val;
 
 TYPE
-  Code = {Error};
+  Code = {Extend, Error};
 
-  OpCode = ObLib.OpCode OBJECT
+  OpCode = ObLib.OpCode BRANDED "ObEmbProxiedObj.OpCode" OBJECT
     code: Code;
   END;
     
-  Package = ObLib.T OBJECT
+  Package = ObLib.T BRANDED "ObEmbProxiedObj.Package" OBJECT
   OVERRIDES
     Eval := DoEval;
   END;
 
-PROCEDURE DoEval (<* UNUSED *> self         : Package; 
+PROCEDURE DoEval (self         : Package; 
                   opCode       : ObLib.OpCode; 
      <* UNUSED *> arity        : ObLib.OpArity; 
-     <* UNUSED *> READONLY args: ObValue.ArgArray; 
+                  READONLY args: ObValue.ArgArray; 
      <* UNUSED *> temp         : BOOLEAN;
-     <* UNUSED *> loc          : SynLocation.T) : ObValue.Val =
+     <* UNUSED *> swr          : SynWr.T;
+                  loc          : SynLocation.T) : ObValue.Val 
+    RAISES {ObValue.Error, ObValue.Exception} =
   BEGIN
     CASE NARROW (opCode, OpCode).code OF
     | Code.Error =>
       RETURN errorException;
+    | Code.Extend =>
+      WITH po    = GetArg (args, 1, self, opCode, loc),
+           proxy = po.proxy DO
+        TRY
+          proxy.changeProxy(Obliq.ObjectClone (Obliq.Vals {args[1], args[2]},
+                                               self := args[1]));
+          RETURN proxy.obj;
+        EXCEPT
+        | EmbProxiedObj.Error (msg) =>
+          ObValue.RaiseException(errorException, 
+                                 self.name & "_" & opCode.name & ": " & msg,
+                                 loc);
+          <*ASSERT FALSE*>(* to shut up warning in compiler *)
+        END;
+      END;
     END;
   END DoEval;
 
@@ -121,10 +152,11 @@ PROCEDURE DoEval (<* UNUSED *> self         : Package;
 (* Help                                                                      *)
 (*****************************************************************************)
 
-PROCEDURE Help (self : ObCommand.T; arg : TEXT; <* UNUSED *> data : REFANY) =
+PROCEDURE Help (wr: SynWr.T; self : ObCommand.T; arg : TEXT; 
+                <* UNUSED *> data : REFANY) =
   BEGIN
     IF pkgloader # NIL THEN
-      pkgloader.help (self, arg, pkgname);
+      pkgloader.help (wr, self, arg, pkgname);
     END;
   END Help;
 

@@ -54,3 +54,7 @@
   text_replaceAll(old: Text, new: Text, t: Text): Text
     Replace all occurrences of 'old' by 'new' in 't', as found by iterating 
     'findFirst'.
+  text_toUpper(t: Text): Int
+    Return a text with all the lower case letters converted to upper case ones.
+  text_toLower(t: Text): Int
+    Return a text with all the upper case letters converted to lower case ones.

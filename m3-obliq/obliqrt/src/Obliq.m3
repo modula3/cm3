@@ -5,15 +5,47 @@
 MODULE Obliq;
 IMPORT Thread, SynWr, SynLocation, ObErr, ObCommand, ObLib, ObTree, ObScope, 
        ObCheck, ObValue, ObEval, ObBuiltIn, NetObj, Text, SharedObj,
-       M3Config, ObPathSep;
+       Pickle2 AS Pickle;
+
 FROM ObValue IMPORT Error, Exception;
 
   VAR 
     setupDone := FALSE;
+    (* initialize the console to the standard output, so it's always
+       valid *)
+    console: SynWr.T := SynWr.out;
 
-  PROCEDURE PackageSetup() =
+  PROCEDURE Console(): SynWr.T =
+    BEGIN
+      RETURN console;
+    END Console;
+
+  (* When SynWr's are passed between machines, we quietly substitute
+     the local console! *)
+  TYPE
+    SynWrSpecial = Pickle.Special OBJECT
+                   OVERRIDES
+                     write := WriteSynWr;
+                     read  := ReadSynWr;
+                   END;
+
+  PROCEDURE WriteSynWr (<*UNUSED*> self: SynWrSpecial;
+                        <*UNUSED*> ref : REFANY;
+                        <*UNUSED*> wr  : Pickle.Writer   ) =
+  BEGIN
+  END WriteSynWr; 
+
+  PROCEDURE ReadSynWr (<*UNUSED*> self: SynWrSpecial;
+                       <*UNUSED*> rd  : Pickle.Reader;
+                       <*UNUSED*> id  : Pickle.RefID    ): REFANY =
+  BEGIN
+    RETURN console;
+  END ReadSynWr;
+
+  PROCEDURE PackageSetup(wr: SynWr.T) =
   BEGIN
     IF NOT setupDone THEN
+      console := wr;
       setupDone := TRUE;
       ObCommand.Setup();
       ObLib.Setup();
@@ -44,7 +76,7 @@ FROM ObValue IMPORT Error, Exception;
     sysCallFailure := ObValue.sysCallFailure;
   END Setup;
 
-  PROCEDURE EmptyEnv(): Env =
+  PROCEDURE EmptyEnv(wr: SynWr.T): Env =
   VAR env: Env;
   BEGIN
     env :=
@@ -53,22 +85,16 @@ FROM ObValue IMPORT Error, Exception;
           scopeEnv := NIL, checkEnv := NIL, valueEnv := NIL, 
           nextFrame := NIL);
     TRY
-      env := NewEnv("hostName", NewText(ObValue.machineAddress), env);
-      env := NewEnv("target", NewText(M3Config.TARGET), env);
-      env := NewEnv("osType", NewText(M3Config.OS_TYPE), env);
-      env := NewEnv("pathSep", NewText(M3Config.PATH_SEP), env);
-      env := NewEnv("searchPathSep", 
-                    NewText(Text.FromChar(ObPathSep.SearchPathSeparator)),
-                    env);
-      env := NewEnv("fileSysReader", 
+      env := NewEnv(wr,"fileSysReader", 
                     ObValue.NewFileSystem(readOnly:=TRUE), env);
-      env := NewEnv("fileSys", ObValue.NewFileSystem(readOnly:=FALSE), env);
-      env := NewEnv("processor", ObValue.localProcessor, env);
+      env := NewEnv(wr,"fileSys", ObValue.NewFileSystem(readOnly:=FALSE), env);
+      env := NewEnv(wr,"processor", ObValue.localProcessor, env);
     EXCEPT ELSE <* ASSERT FALSE *> (* should never fail *) END;
     RETURN env;
   END EmptyEnv;
 
-  PROCEDURE NewEnv(name: TEXT; val: Val; rest: Env; loc: Location:=NIL)
+  PROCEDURE NewEnv(wr: SynWr.T; name: TEXT; val: Val; 
+                   rest: Env; loc: Location:=NIL)
     : Env RAISES {Error} =
   VAR ideName: ObTree.IdeName;
   BEGIN
@@ -81,13 +107,13 @@ FROM ObValue IMPORT Error, Exception;
         forName := rest.forName,
         libEnv := rest.libEnv,
         scopeEnv := 
-            ObScope.NewTermEnv(loc, ideName, rest.libEnv, rest.scopeEnv),
+            ObScope.NewTermEnv(wr, loc, ideName, rest.libEnv, rest.scopeEnv),
         checkEnv := ObCheck.NewTermEnv(ideName, rest.checkEnv),
         valueEnv := NEW(ObValue.LocalEnv, name:=ideName, val:=val, 
                         rest:=rest.valueEnv), nextFrame := rest.nextFrame);
     EXCEPT
     | ObErr.Fail => 
-        SynWr.Flush(SynWr.out); 
+        SynWr.Flush(wr); 
         RaiseError("Static Error", loc); 
         <*ASSERT FALSE*>
     END;
@@ -118,7 +144,7 @@ FROM ObValue IMPORT Error, Exception;
     <*ASSERT FALSE*>
   END Lookup;
 
-  PROCEDURE EvalTerm(term: Term; env: Env; loc :Location:=NIL)
+  PROCEDURE EvalTerm(wr: SynWr.T; term: Term; env: Env; loc :Location:=NIL)
     : Val RAISES {Error, Exception} =
   VAR scopeEnv, freeEnv: ObScope.Env; checkEnv: ObCheck.Env;
     valueEnv: ObValue.Env; 
@@ -129,21 +155,21 @@ FROM ObValue IMPORT Error, Exception;
       checkEnv := env.checkEnv;
       valueEnv := env.valueEnv;
       freeEnv := NIL;
-      ObScope.ScopeTerm(term, env.libEnv, 
+      ObScope.ScopeTerm(wr, term, env.libEnv, 
                         (*in-out*)scopeEnv, (*in-out*)freeEnv);
-      ObScope.UnboundIdes(freeEnv);
+      ObScope.UnboundIdes(wr, freeEnv);
       ObCheck.CheckTerm(term, (*in-out*)checkEnv);
-      RETURN ObEval.Term(term, (*in-out*)valueEnv, NIL, NIL);
+      RETURN ObEval.Term(wr, term, (*in-out*)valueEnv, NIL, NIL);
     EXCEPT
     | ObErr.Fail => 
-        SynWr.Flush(SynWr.out); 
+        SynWr.Flush(wr); 
         RaiseError("Static Error", loc);
         <*ASSERT FALSE*>
     END;
   END EvalTerm;
 
-  PROCEDURE EvalPhrase(phrase: Phrase; VAR (*in-out*) env: Env; 
-    loc: Location:=NIL): Val RAISES {Error, Exception} =
+  PROCEDURE EvalPhrase(wr: SynWr.T; phrase: Phrase; VAR (*in-out*) env: Env; 
+                       loc: Location:=NIL): Val RAISES {Error, Exception} =
   VAR newEnv: Env; freeEnv: ObScope.Env; val: Val;
   BEGIN
     IF loc=NIL THEN loc:=phrase.location END;
@@ -156,14 +182,15 @@ FROM ObValue IMPORT Error, Exception;
               valueEnv:=env.valueEnv, nextFrame:= env.nextFrame);
       TYPECASE phrase OF
       | ObTree.PhraseCommand(node) =>
-          ObCommand.Exec(node.name, node.arg, node.set, env);
+          ObCommand.Exec(wr,node.name, node.arg, node.set, env);
       | ObTree.PhraseTerm(node) =>
           freeEnv := NIL;
-          ObScope.ScopeTerm(node.term, newEnv.libEnv,
+          ObScope.ScopeTerm(wr, node.term, newEnv.libEnv,
             (*in-out*)newEnv.scopeEnv, (*in-out*)freeEnv);
-          ObScope.UnboundIdes(freeEnv);
+          ObScope.UnboundIdes(wr, freeEnv);
           ObCheck.CheckTerm(node.term, (*in-out*)newEnv.checkEnv);
-          val := ObEval.Term(node.term, (*in-out*)newEnv.valueEnv, NIL, NIL);
+          val := ObEval.Term(wr, node.term, (*in-out*)newEnv.valueEnv,
+                             NIL, NIL);
       ELSE
         <*ASSERT FALSE*> (*should never happen*)
       END;
@@ -171,7 +198,7 @@ FROM ObValue IMPORT Error, Exception;
       RETURN val;
     EXCEPT
     | ObErr.Fail => 
-        SynWr.Flush(SynWr.out); 
+        SynWr.Flush(wr); 
         RaiseError("Static Error", loc);
         <*ASSERT FALSE*>
     END;
@@ -263,14 +290,24 @@ FROM ObValue IMPORT Error, Exception;
     RETURN ObValue.NewArray(vals)
   END NewArray;
 
+  PROCEDURE NewReplArray(READONLY vals: Vals): Val RAISES {SharedObj.Error} =
+  BEGIN
+    RETURN ObValue.NewReplArray(vals)
+  END NewReplArray; 
+
+  PROCEDURE NewSimpleArray(READONLY vals: Vals): Val =
+  BEGIN
+    RETURN ObValue.NewSimpleArray(vals)
+  END NewSimpleArray; 
+
   PROCEDURE ArraySize(array: Val; loc: Location:=NIL): INTEGER RAISES {Error} =
   BEGIN
     TYPECASE array OF
     | ObValue.ValArray(arr) =>
-        TRY RETURN arr.remote.Size();
+        TRY RETURN arr.Size();
         EXCEPT 
-        | NetObj.Error, Thread.Alerted => 
-          RaiseError("on remote array access", loc);
+        | NetObj.Error, Thread.Alerted, SharedObj.Error => 
+          RaiseError("on array access", loc);
           <*ASSERT FALSE*>
         END;
     ELSE
@@ -284,11 +321,11 @@ FROM ObValue IMPORT Error, Exception;
   BEGIN
     TYPECASE array OF
     | ObValue.ValArray(arr) =>
-        TRY RETURN arr.remote.Get(i);
+        TRY RETURN arr.Get(i);
         EXCEPT 
         | ObValue.ServerError(msg) => RaiseError(msg, loc); <*ASSERT FALSE*>
-        | NetObj.Error, Thread.Alerted => 
-          RaiseError("on remote array access", loc);
+        | NetObj.Error, Thread.Alerted, SharedObj.Error => 
+          RaiseError("on array access", loc);
           <*ASSERT FALSE*>
         END;
     ELSE RaiseError("Obliq.ArrayGet: array expected", loc); <*ASSERT FALSE*>
@@ -300,11 +337,11 @@ FROM ObValue IMPORT Error, Exception;
   BEGIN
     TYPECASE array OF
     | ObValue.ValArray(arr) =>
-        TRY arr.remote.Set(i, val);
+        TRY arr.Set(i, val);
         EXCEPT
         | ObValue.ServerError(msg) => RaiseError(msg, loc);
-        | NetObj.Error, Thread.Alerted => 
-          RaiseError("on remote array access", loc);
+        | NetObj.Error, Thread.Alerted, SharedObj.Error => 
+          RaiseError("on array access", loc);
         END;
     ELSE RaiseError("Obliq.ArraySet: array expected", loc); 
     END;
@@ -315,11 +352,11 @@ FROM ObValue IMPORT Error, Exception;
   BEGIN
     TYPECASE array OF
     | ObValue.ValArray(arr) =>
-        TRY RETURN arr.remote.Sub(start, size);
+        TRY RETURN arr.Sub(start, size);
         EXCEPT 
         | ObValue.ServerError(msg) => RaiseError(msg, loc); <*ASSERT FALSE*>
-        | NetObj.Error, Thread.Alerted => 
-          RaiseError("on remote array access", loc); <*ASSERT FALSE*>
+        | NetObj.Error, Thread.Alerted, SharedObj.Error => 
+          RaiseError("on array access", loc); <*ASSERT FALSE*>
         END;
     ELSE RaiseError("Obliq.ArraySub: array expected", loc); <*ASSERT FALSE*>
     END;
@@ -333,18 +370,18 @@ FROM ObValue IMPORT Error, Exception;
     | ObValue.ValArray(arr) =>
         TYPECASE sub OF
         | ObValue.ValArray(subArr) =>
-            TRY subArr1 := subArr.remote.Obtain()
+            TRY subArr1 := subArr.Obtain()
             EXCEPT 
-            | NetObj.Error, Thread.Alerted => 
-              RaiseError("on remote array access", loc);
+            | NetObj.Error, Thread.Alerted, SharedObj.Error => 
+              RaiseError("on array access", loc);
             END;
         ELSE RaiseError("Obliq.ArrayUpd: array expected (arg 3)", loc); 
         END;
-        TRY arr.remote.Upd(start, size, subArr1);
+        TRY arr.Upd(start, size, subArr1);
         EXCEPT 
         | ObValue.ServerError(msg) => RaiseError(msg, loc);
-        | NetObj.Error, Thread.Alerted => 
-          RaiseError("on remote array access", loc);
+        | NetObj.Error, Thread.Alerted, SharedObj.Error => 
+          RaiseError("on array access", loc);
         END;
     ELSE RaiseError("Obliq.ArrayUpd: array expected (arg 1)", loc); 
     END;
@@ -356,21 +393,21 @@ FROM ObValue IMPORT Error, Exception;
   BEGIN
     TRY
       TYPECASE array1 OF
-      | ObValue.ValArray(arr1) => vals1 := arr1.remote.Obtain();
+      | ObValue.ValArray(arr1) => vals1 := arr1.Obtain();
       ELSE
         RaiseError("Obliq.ArrayCat: array expected (arg 1)", loc); 
         <*ASSERT FALSE*>
       END;
       TYPECASE array2 OF
-      | ObValue.ValArray(arr2) => vals2 := arr2.remote.Obtain();
+      | ObValue.ValArray(arr2) => vals2 := arr2.Obtain();
       ELSE 
         RaiseError("Obliq.ArrayCat: array expected (arg 2)", loc); 
         <*ASSERT FALSE*>
       END;
       RETURN ObValue.ArrayCat(vals1, vals2);
     EXCEPT 
-    | NetObj.Error, Thread.Alerted => 
-      RaiseError("on remote array access", loc); <*ASSERT FALSE*>
+    | NetObj.Error, Thread.Alerted, SharedObj.Error => 
+      RaiseError("on array access", loc); <*ASSERT FALSE*>
     END;      
   END ArrayCat;
 
@@ -380,10 +417,10 @@ FROM ObValue IMPORT Error, Exception;
   BEGIN
     TYPECASE val OF
     | ObValue.ValArray(arr) =>
-        TRY vals := arr.remote.Obtain();
+        TRY vals := arr.Obtain();
         EXCEPT 
-        | NetObj.Error, Thread.Alerted => 
-          RaiseError("on remote array access", loc);
+        | NetObj.Error, Thread.Alerted, SharedObj.Error => 
+          RaiseError("on array access", loc);
         END;      
     ELSE RaiseError("Obliq.ToArray: array expected", loc); 
     END;    
@@ -459,14 +496,15 @@ FROM ObValue IMPORT Error, Exception;
     RETURN ObValue.NewObject((*readonly*) fields, "", FALSE, NIL);
   END NewObject;
 
-  PROCEDURE ObjectSelect(object: Val; label: TEXT; loc: Location:=NIL): Val 
+  PROCEDURE ObjectSelect(object: Val; label: TEXT; swr: SynWr.T; 
+                         loc: Location:=NIL; internal := FALSE): Val 
     RAISES {Error, Exception} =
     VAR hint:=-1;
   BEGIN
     TRY 
       TYPECASE object OF
       | ObValue.ValObj(obj) =>
-          RETURN obj.Select(label, FALSE, (*var*)hint);
+          RETURN obj.Select(swr, label, internal, (*var*)hint);
       ELSE
         RaiseError("Obliq.ObjectSelect: object expected", loc);
         <*ASSERT FALSE*>
@@ -475,28 +513,29 @@ FROM ObValue IMPORT Error, Exception;
     | ObValue.ServerError(msg) => RaiseError(msg, loc); <*ASSERT FALSE*>
     | SharedObj.Error =>
         RaiseException(ObValue.sharedException,
-          "on remote object selection", loc);
+          "on object selection", loc);
         <*ASSERT FALSE*>
     | NetObj.Error =>
         RaiseException(ObValue.netException,
-          "on remote object selection", loc);
+          "on object selection", loc);
         <*ASSERT FALSE*>
     | Thread.Alerted =>
         RaiseException(ObValue.threadAlerted,
-          "on remote object selection", loc);
+          "on object selection", loc);
         <*ASSERT FALSE*>
     END;
   END ObjectSelect;
 
   PROCEDURE ObjectInvoke(object: Val; label: TEXT; READONLY args: Vals;
-                         loc: Location:=NIL): Val RAISES {Error, Exception} =
+                         swr: SynWr.T; loc: Location:=NIL;
+                         internal:=FALSE): Val RAISES {Error, Exception} =
     VAR hint := -1;
   BEGIN
     TRY 
       TYPECASE object OF
       | ObValue.ValObj(obj) =>
-        RETURN obj.Invoke(label, NUMBER(args), args, 
-                                 FALSE, (*var*) hint);
+        RETURN obj.Invoke(swr, label, NUMBER(args), args, 
+                          internal, (*var*) hint);
       ELSE
         RaiseError("Obliq.ObjectInvoke: object expected", loc);
         <*ASSERT FALSE*>
@@ -505,39 +544,40 @@ FROM ObValue IMPORT Error, Exception;
     | ObValue.ServerError(msg) => RaiseError(msg, loc); <*ASSERT FALSE*>
     | SharedObj.Error =>
         RaiseException(ObValue.sharedException,
-          "on remote object invocation", loc);
+          "on object invocation", loc);
         <*ASSERT FALSE*>
     | NetObj.Error =>
         RaiseException(ObValue.netException,
-          "on remote object invocation", loc);
+          "on object invocation", loc);
         <*ASSERT FALSE*>
     | Thread.Alerted =>
         RaiseException(ObValue.threadAlerted,
-          "on remote object invocation", loc);
+          "on object invocation", loc);
         <*ASSERT FALSE*>
     END;
   END ObjectInvoke;
 
   PROCEDURE ObjectUpdate(object: Val; label: TEXT; val: Val;
-    loc: Location:=NIL) RAISES {Error, Exception} =
+                         loc: Location:=NIL; internal:=FALSE) 
+    RAISES {Error, Exception} =
     VAR hint := -1;
   BEGIN
       TYPECASE object OF
       | ObValue.ValObj(obj) =>
           TRY 
-            obj.Update(label, val, FALSE, (*var*) hint);
+            obj.Update(label, val, internal, (*var*) hint);
           EXCEPT 
           | ObValue.ServerError(msg) =>
               RaiseError(msg, loc);
           | SharedObj.Error =>
             RaiseException(ObValue.sharedException,
-                           "on remote object update", loc);
+                           "on object update", loc);
           | NetObj.Error =>
               RaiseException(ObValue.netException,
-                "on remote object update", loc);
+                "on object update", loc);
           | Thread.Alerted =>
               RaiseException(ObValue.threadAlerted,
-                "on remote object update", loc);
+                "on object update", loc);
           END;
       ELSE RaiseError("Obliq.ObjectUpdate: object expected", loc);
       END;
@@ -554,15 +594,15 @@ FROM ObValue IMPORT Error, Exception;
           EXCEPT 
           | SharedObj.Error =>
             RaiseException(ObValue.sharedException,
-                           "on remote object 'has'", loc);
+                           "on object 'has'", loc);
             <*ASSERT FALSE*>
           | NetObj.Error =>
               RaiseException(ObValue.netException,
-                "on remote object 'has'", loc);
+                "on object 'has'", loc);
               <*ASSERT FALSE*>
           | Thread.Alerted =>
               RaiseException(ObValue.threadAlerted,
-                "on remote object 'has'", loc);
+                "on object 'has'", loc);
               <*ASSERT FALSE*>
           END;
       ELSE
@@ -571,13 +611,13 @@ FROM ObValue IMPORT Error, Exception;
       END;
   END ObjectHas;
 
-  PROCEDURE ObjectClone1(object: Val; loc: Location:=NIL): Val 
+  PROCEDURE ObjectClone1(object: Val; loc: Location:=NIL; self: Val:=NIL): Val 
     RAISES {Error, Exception} =
   BEGIN
     TRY 
       TYPECASE object OF
       | ObValue.ValObj(obj) =>
-          RETURN ObValue.ObjClone1(obj, NIL);
+          RETURN ObValue.ObjClone1(obj, self);
       ELSE 
         RaiseError("Obliq.ObjectClone1: object expected", loc);
         <*ASSERT FALSE*>
@@ -586,20 +626,21 @@ FROM ObValue IMPORT Error, Exception;
     | ObValue.ServerError(msg) => RaiseError(msg, loc); <*ASSERT FALSE*>
     | SharedObj.Error =>
         RaiseException(ObValue.sharedException,
-          "on remote object cloning", loc);
+          "on object cloning", loc);
         <*ASSERT FALSE*>
     | NetObj.Error =>
         RaiseException(ObValue.netException,
-          "on remote object cloning", loc);
+          "on object cloning", loc);
         <*ASSERT FALSE*>
     | Thread.Alerted =>
         RaiseException(ObValue.threadAlerted,
-          "on remote object cloning", loc);
+          "on object cloning", loc);
         <*ASSERT FALSE*>
     END;
   END ObjectClone1;
 
-  PROCEDURE ObjectClone(READONLY objects: Vals; loc: Location:=NIL): Val 
+  PROCEDURE ObjectClone(READONLY objects: Vals; loc: Location:=NIL;
+                        self: Val:=NIL): Val 
     RAISES {Error, Exception} =
   VAR remObjs: REF ARRAY OF ObValue.ValObj;
   BEGIN
@@ -613,20 +654,20 @@ FROM ObValue IMPORT Error, Exception;
       END;
     END;
     TRY 
-      RETURN ObValue.ObjClone(remObjs^, NIL); 
+      RETURN ObValue.ObjClone(remObjs^, self); 
     EXCEPT 
     | ObValue.ServerError(msg) => RaiseError(msg, loc); <*ASSERT FALSE*>
     | SharedObj.Error =>
         RaiseException(ObValue.sharedException,
-          "on remote object cloning", loc);
+          "on object cloning", loc);
         <*ASSERT FALSE*>
     | NetObj.Error =>
         RaiseException(ObValue.netException,
-          "on remote object cloning", loc);
+          "on object cloning", loc);
         <*ASSERT FALSE*>
     | Thread.Alerted =>
         RaiseException(ObValue.threadAlerted,
-          "on remote object cloning", loc);
+          "on object cloning", loc);
         <*ASSERT FALSE*>
     END;
   END ObjectClone;
@@ -685,13 +726,13 @@ FROM ObValue IMPORT Error, Exception;
       EVAL ObBuiltIn.ReplicaReleaseLock(object, loc);
     END ReplicaReleaseLock;
 
-  PROCEDURE ReplicaSetNodeName(name: TEXT := NIL; 
+  PROCEDURE ReplicaSetSiteName(name: TEXT := NIL; 
                                loc: SynLocation.T:=NIL) : TEXT
     RAISES {Exception, Error} =
     BEGIN
       IF name = NIL THEN name := "" END;
-      RETURN ToText(ObBuiltIn.ReplicaSetNodeName(name,loc));
-    END ReplicaSetNodeName;
+      RETURN ToText(ObBuiltIn.ReplicaSetSiteName(name,loc));
+    END ReplicaSetSiteName;
 
   PROCEDURE ReplicaSetDefaultSequencer(host, name: TEXT; 
                                        loc: SynLocation.T:=NIL): TEXT
@@ -720,17 +761,30 @@ FROM ObValue IMPORT Error, Exception;
     RETURN ObValue.NewVar(val);
   END NewVar;
 
+  PROCEDURE NewSimpleVar(val: Val): Val =
+  BEGIN
+    RETURN ObValue.NewSimpleVar(val);
+  END NewSimpleVar; 
+
+  PROCEDURE NewReplVar(val: Val): Val RAISES {SharedObj.Error} =
+  BEGIN
+    RETURN ObValue.NewReplVar(val);
+  END NewReplVar; 
+
   PROCEDURE VarGet(var: Val; loc: Location:=NIL): Val RAISES {Error} =
   BEGIN
     TYPECASE var OF
     | ObValue.ValVar(valVar) =>
-        TRY RETURN valVar.remote.Get();
+        TRY RETURN valVar.Get();
         EXCEPT 
         | NetObj.Error => 
-          RaiseError("on remote variable access", loc);
+          RaiseError("on variable access", loc);
+          <*ASSERT FALSE*>
+        | SharedObj.Error =>
+          RaiseError("on variable access", loc);
           <*ASSERT FALSE*>
         | Thread.Alerted => 
-          RaiseError("on remote variable access", loc);
+          RaiseError("on variable access", loc);
           <*ASSERT FALSE*>
         END;
     ELSE
@@ -743,21 +797,23 @@ FROM ObValue IMPORT Error, Exception;
   BEGIN
     TYPECASE var OF
     | ObValue.ValVar(valVar) =>
-        TRY valVar.remote.Set(val);
+        TRY valVar.Set(val);
         EXCEPT 
-        | NetObj.Error => RaiseError("on remote variable access", loc);
-        | Thread.Alerted => RaiseError("on remote variable access", loc);
+        | NetObj.Error => RaiseError("on variable access", loc);
+        | SharedObj.Error => RaiseError("on variable access", loc);
+        | Thread.Alerted => RaiseError("on variable access", loc);
         END;
     ELSE RaiseError("Obliq.VarSet: variable expected", loc); 
     END;
   END VarSet;
 
-  PROCEDURE Call(proc: Val; READONLY args: Vals; loc: Location:=NIL): Val 
+  PROCEDURE Call(proc: Val; READONLY args: Vals; swr: SynWr.T; 
+                 loc: Location:=NIL): Val 
     RAISES {Error, Exception} =
   BEGIN
       TYPECASE proc OF
       | ObValue.ValFun(clos) =>
-        RETURN ObEval.Call(clos, args, loc);
+        RETURN ObEval.Call(clos, args, swr, loc);
       | ObValue.ValEngine(eng) =>
         IF NUMBER(args)=1 THEN
           RETURN ObEval.CallEngine(eng, args[0], loc);
@@ -771,12 +827,13 @@ FROM ObValue IMPORT Error, Exception;
       END;
   END Call;
 
-  PROCEDURE Fork(proc: Val; stackSize: INTEGER; loc: Location:=NIL): Val 
+  PROCEDURE Fork(proc: Val; stackSize: INTEGER; swr: SynWr.T; 
+                 loc: Location:=NIL): Val 
     RAISES {Error} =
   BEGIN
       TYPECASE proc OF
       | ObValue.ValFun(clos) =>
-	RETURN ObBuiltIn.ForkThread(clos, stackSize, loc);
+	RETURN ObBuiltIn.ForkThread(clos, stackSize, swr, loc);
       ELSE
         RaiseError("Obliq.Fork: procedure expected", loc);
         <*ASSERT FALSE*>
@@ -879,4 +936,5 @@ FROM ObValue IMPORT Error, Exception;
   END SourceLocation;
 
 BEGIN
+  Pickle.RegisterSpecial(NEW(SynWrSpecial, sc := TYPECODE(SynWr.T)));
 END Obliq.

@@ -4,12 +4,15 @@
 MODULE ObBuiltIn;
 IMPORT Text, TextRd, Rd, Lex, Fmt, ObLib, ObValue, SynLocation, TextConv,
        Thread, NetObj, Env, Params, Math, ObEval, ObjectSpace, FloatMode,
-       SharedObj, SharedObjRT, ObValueNotify, Obliq, Time, SynWr,
-       WorkerPool, Work;
+       SharedObj, SharedObjRT, ObValueNotify, Obliq, Time, SynWr, FmtTime,
+       WorkerPool, Work, RegEx, LongFloat, Scheduler, RTHeapDebug,
+       RTCollector, RTHeapStats, RTProcess, TextF, ASCII, ThreadF;
 
 PROCEDURE Setup () =
   BEGIN
     SetupSys();
+    SetupDebug();
+
     SetupBool();
     SetupInt();
     SetupReal();                 (* after Int, so real_+ etc.  have
@@ -22,7 +25,8 @@ PROCEDURE Setup () =
     SetupReplica();
     SetupThread();
 
-(*    SetupReflect();*)
+    SetupRegEx();
+    SetupReflect();
   END Setup;
 
 (* ============ "sys" package ============ *)
@@ -30,7 +34,8 @@ PROCEDURE Setup () =
 TYPE
 
   SysCode = {Address, GetEnvVar, GetParamCount, GetParam, CallFailure,
-             Call, Copy, TimeNow, TimeGrain};
+             Call, Copy, TimeNow, TimeGrain, TimeLong, TimeShort,
+             RegisterExitor};
 
   SysOpCode = ObLib.OpCode OBJECT code: SysCode;  END;
 
@@ -60,7 +65,10 @@ PROCEDURE SetupSys () =
               NewSysOC("call", 2, SysCode.Call),
               NewSysOC("timeNow", -1, SysCode.TimeNow),
               NewSysOC("timeGrain", -1, SysCode.TimeGrain),
-              NewSysOC("copy", 1, SysCode.Copy, ObLib.OpFixity.Prefix)};
+              NewSysOC("timeLong", 1, SysCode.TimeLong),
+              NewSysOC("timeShort", 1, SysCode.TimeShort),
+              NewSysOC("copy", 1, SysCode.Copy, ObLib.OpFixity.Prefix),
+              NewSysOC("registerExitor", 1, SysCode.RegisterExitor)};
     ObLib.Register(NEW(PackageSys, name := "sys", opCodes := opCodes));
   END SetupSys;
 
@@ -69,10 +77,12 @@ PROCEDURE EvalSys (                    self  : PackageSys;
                    <*UNUSED*>          arity : ObLib.OpArity;
                               READONLY args  : ObValue.ArgArray;
                                        temp  : BOOLEAN;
+                                       swr   : SynWr.T;
                                        loc   : SynLocation.T     ):
   ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
   VAR
     int1        : INTEGER;
+    longReal1   : LONGREAL;
     text1, text2: TEXT;
     array1      : REF ObValue.Vals;
     sysProc     : ObValue.SysCallClosure;
@@ -108,7 +118,7 @@ PROCEDURE EvalSys (                    self  : PackageSys;
             ObValue.BadArgType(1, "text", self.name, opCode.name, loc);
           END;
           TYPECASE args[2] OF
-          | ObValue.ValArray (node) => array1 := node.remote.Obtain();
+          | ObValue.ValArray (node) => array1 := node.Obtain();
           ELSE
             ObValue.BadArgType(2, "array", self.name, opCode.name, loc)
           END;
@@ -117,12 +127,44 @@ PROCEDURE EvalSys (                    self  : PackageSys;
                                    self.name & "_" & opCode.name & ": \""
                                      & text1 & "\" not found", loc);
           END;
-          RETURN sysProc.SysCall(array1^, loc);
+          RETURN sysProc.SysCall(array1^, swr, loc);
       | SysCode.Copy =>
           RETURN ObValue.CopyVal(args[1], ObValue.NewTbl(), loc);
       | SysCode.TimeNow => RETURN Obliq.NewReal(Time.Now());
       | SysCode.TimeGrain =>
           WITH grain = Time.Grain DO RETURN Obliq.NewReal(grain); END;
+      | SysCode.TimeShort => 
+        TYPECASE args[1] OF
+        | ObValue.ValReal (node) => longReal1 := node.real;
+        ELSE
+          ObValue.BadArgType(1, "time", self.name, opCode.name, loc);
+          <*ASSERT FALSE*>
+        END;
+        RETURN Obliq.NewText(FmtTime.Short(longReal1));
+      | SysCode.TimeLong => 
+        TYPECASE args[1] OF
+        | ObValue.ValReal (node) => longReal1 := node.real;
+        ELSE
+          ObValue.BadArgType(1, "time", self.name, opCode.name, loc);
+          <*ASSERT FALSE*>
+        END;
+        RETURN Obliq.NewText(FmtTime.Long(longReal1));
+      | SysCode.RegisterExitor =>
+        TYPECASE args[1] OF
+        | ObValue.ValFun =>
+        ELSE
+          ObValue.BadArgType(1, "procedure", self.name, opCode.name, loc);
+          <*ASSERT FALSE*>
+        END;
+        LOCK exMu DO
+          IF exitors = NIL THEN exitors := NEW (REF ObValue.Vals, 1) END;
+          WITH newEx = NEW(REF ObValue.Vals, NUMBER(exitors^)+1) DO
+            SUBARRAY(newEx^,0,NUMBER(exitors^)) := exitors^;
+            newEx[NUMBER(exitors^)] := args[1];
+            exitors := newEx;
+          END;
+        END;
+        RETURN ObValue.valOk;
       ELSE
         ObValue.BadOp(self.name, opCode.name, loc);
         <*ASSERT FALSE*>
@@ -142,6 +184,121 @@ PROCEDURE EvalSys (                    self  : PackageSys;
       <*ASSERT FALSE*>
     END;
   END EvalSys;
+
+VAR exitors: REF ObValue.Vals := NIL;
+    exMu: MUTEX := NEW(MUTEX);
+
+PROCEDURE ObliqExitor () =
+  BEGIN
+    IF exitors = NIL THEN RETURN END;
+    FOR i := 0 TO NUMBER(exitors^)-1 DO
+      TRY
+        EVAL ObEval.Call(exitors[i], ObValue.Vals{}, Obliq.Console());
+      EXCEPT 
+      | ObValue.Error (er) => ObValue.ErrorMsg(Obliq.Console(), er);
+      | ObValue.Exception (ex) => ObValue.ExceptionMsg(Obliq.Console(), ex);
+      END;
+    END;
+  END ObliqExitor;
+
+(* ============ "debug" package ============ *)
+
+TYPE
+
+  DebugCode = {AssertFree, CheckHeap, CollectNow, ReportReachable, 
+               EnableCollector, DisableCollector, DumpReplicaState,
+               ReplicaDebugLevel}; 
+
+  DebugOpCode = ObLib.OpCode OBJECT code: DebugCode;  END;
+
+  PackageDebug = ObLib.T OBJECT OVERRIDES Eval := EvalDebug; END;
+
+PROCEDURE NewDebugOC (name  : TEXT;
+                    arity : INTEGER;
+                    code  : DebugCode;
+                    fixity: ObLib.OpFixity := ObLib.OpFixity.Qualified):
+  DebugOpCode =
+  BEGIN
+    RETURN NEW(DebugOpCode, name := name, arity := arity, code := code,
+               fixity := fixity);
+  END NewDebugOC;
+
+PROCEDURE SetupDebug () =
+  TYPE OpCodes = ARRAY OF ObLib.OpCode;
+  VAR opCodes: REF OpCodes;
+  BEGIN
+    opCodes := NEW(REF OpCodes, NUMBER(DebugCode));
+    opCodes^ :=
+      OpCodes{NewDebugOC("assertFree", 1, DebugCode.AssertFree),
+              NewDebugOC("checkHeap", 0, DebugCode.CheckHeap),
+              NewDebugOC("collectNow", 0, DebugCode.CollectNow),
+              NewDebugOC("reportReachable", 0, DebugCode.ReportReachable),
+              NewDebugOC("enableCollector", 0, DebugCode.EnableCollector),
+              NewDebugOC("disableCollector", 0, DebugCode.DisableCollector),
+              NewDebugOC("dumpReplicaState", 0, DebugCode.DumpReplicaState),
+              NewDebugOC("replicaDebugLevel", 1, DebugCode.ReplicaDebugLevel)
+              };
+    ObLib.Register(NEW(PackageDebug, name := "debug", opCodes := opCodes));
+  END SetupDebug;
+
+PROCEDURE EvalDebug (                    self  : PackageDebug;
+                                       opCode: ObLib.OpCode;
+                   <*UNUSED*>          arity : ObLib.OpArity;
+                              READONLY args  : ObValue.ArgArray;
+                              <*UNUSED*>temp  : BOOLEAN;
+                              <*UNUSED*>swr   : SynWr.T;
+                                       loc   : SynLocation.T     ):
+  ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
+  VAR int1: INTEGER;
+  BEGIN
+      CASE NARROW(opCode, DebugOpCode).code OF
+      | DebugCode.AssertFree => 
+        RTHeapDebug.Free(args[1]); 
+        RETURN ObValue.valOk;
+      | DebugCode.CheckHeap => 
+        RTHeapDebug.CheckHeap(); 
+        RETURN ObValue.valOk;
+      | DebugCode.CollectNow => 
+        RTCollector.Collect(); 
+        RETURN ObValue.valOk;
+      | DebugCode.DisableCollector => 
+        RTCollector.Disable(); 
+        RETURN ObValue.valOk;
+      | DebugCode.EnableCollector => 
+        RTCollector.Enable(); 
+        RETURN ObValue.valOk;
+      | DebugCode.ReportReachable => 
+        RTHeapStats.ReportReachable(); 
+        RETURN ObValue.valOk;
+      | DebugCode.DumpReplicaState => 
+        ReplicaDumpState(loc); 
+        RETURN ObValue.valOk;
+      | DebugCode.ReplicaDebugLevel =>
+          TYPECASE args[1] OF
+          | ObValue.ValInt (node) => int1 := node.int;
+          ELSE
+            ObValue.BadArgType(1, "int", self.name, opCode.name, loc);
+          END;
+          SharedObjRT.DebugLevel(int1);
+          RETURN ObValue.valOk;
+      END;
+  END EvalDebug;
+
+PROCEDURE ReplicaDumpState (loc: SynLocation.T)
+  RAISES {ObValue.Exception} =
+  BEGIN
+    TRY
+      SharedObjRT.LocalSpace().printState();
+    EXCEPT
+    | NetObj.Error (atoms) =>
+        ObValue.RaiseNetException("replica_dumpState: ", atoms, loc);
+      <*ASSERT FALSE*>
+    | Thread.Alerted =>
+        ObValue.RaiseException(
+          ObValue.threadAlerted, "replica_dumpState: ", loc);
+      <*ASSERT FALSE*>
+    END;
+  END ReplicaDumpState;
 
 (* ============ "bool" package ============ *)
 
@@ -186,6 +343,7 @@ PROCEDURE EvalBool (                    self  : PackageBool;
                     <*UNUSED*>          arity : ObLib.OpArity;
                                READONLY args  : ObValue.ArgArray;
                     <*UNUSED*>          temp  : BOOLEAN;
+                    <*UNUSED*>          swr   : SynWr.T;
                                         loc   : SynLocation.T     ):
   ObValue.Val RAISES {ObValue.Error} =
   VAR bool1, bool2: BOOLEAN;
@@ -282,6 +440,7 @@ PROCEDURE EvalInt (                    self  : PackageInt;
                    <*UNUSED*>          arity : ObLib.OpArity;
                               READONLY args  : ObValue.ArgArray;
                                        temp  : BOOLEAN;
+                   <*UNUSED*>          swr   : SynWr.T;
                                        loc   : SynLocation.T     ):
   ObValue.Val RAISES {ObValue.Error} =
   VAR
@@ -357,7 +516,7 @@ PROCEDURE EvalInt (                    self  : PackageInt;
 TYPE
 
   RealCode = {Minus, Add, Sub, Mult, Div, Less, More, LessEq, MoreEq,
-              Round, Float, Floor, Ceiling};
+              Round, Float, Floor, Ceiling, IsNaN};
 
   RealOpCode = ObLib.OpCode OBJECT code: RealCode;  END;
 
@@ -390,6 +549,7 @@ PROCEDURE SetupReal () =
               NewRealOC(">=", 2, RealCode.MoreEq, ObLib.OpFixity.Infix),
               NewRealOC("round", 1, RealCode.Round, ObLib.OpFixity.Prefix),
               NewRealOC("float", 1, RealCode.Float, ObLib.OpFixity.Prefix),
+              NewRealOC("isNaN", 1, RealCode.IsNaN),
               NewRealOC("floor", 1, RealCode.Floor),
               NewRealOC("ceiling", 1, RealCode.Ceiling)};
     ObLib.Register(NEW(PackageReal, name := "real", opCodes := opCodes));
@@ -400,6 +560,7 @@ PROCEDURE EvalReal (                    self  : PackageReal;
                     <*UNUSED*>          arity : ObLib.OpArity;
                                READONLY args  : ObValue.ArgArray;
                                         temp  : BOOLEAN;
+                    <*UNUSED*>          swr   : SynWr.T;
                                         loc   : SynLocation.T     ):
   ObValue.Val RAISES {ObValue.Error} =
   VAR
@@ -466,6 +627,12 @@ PROCEDURE EvalReal (                    self  : PackageReal;
         ELSE
           IF intVal1.temp THEN intVal1.temp := temp END;
           RETURN intVal1;
+        END;
+    | RealCode.IsNaN =>
+        IF isReal1 THEN
+          RETURN NEW(ObValue.ValBool, bool := LongFloat.IsNaN(real1));
+        ELSE
+          RETURN NEW(ObValue.ValBool, bool := FALSE);
         END;
     | RealCode.Ceiling =>
         IF isReal1 THEN
@@ -670,6 +837,7 @@ PROCEDURE EvalMath (                    self  : PackageMath;
                     <*UNUSED*>          arity : ObLib.OpArity;
                                READONLY args  : ObValue.ArgArray;
                                         temp  : BOOLEAN;
+                    <*UNUSED*>          swr   : SynWr.T;
                                         loc   : SynLocation.T     ):
   ObValue.Val RAISES {ObValue.Error} =
   VAR
@@ -916,6 +1084,7 @@ PROCEDURE EvalAscii (                    self  : PackageAscii;
                      <*UNUSED*>          arity : ObLib.OpArity;
                                 READONLY args  : ObValue.ArgArray;
                                          temp  : BOOLEAN;
+                     <*UNUSED*>          swr   : SynWr.T;
                                          loc   : SynLocation.T     ):
   ObValue.Val RAISES {ObValue.Error} =
   VAR
@@ -953,7 +1122,7 @@ TYPE
   TextCode =
     {New, Empty, Length, Equal, Char, Sub, Cat, Precedes, Encode, Decode,
      Implode, Explode, Hash, ToInt, FromInt, FindFirstChar, FindLastChar,
-     FindFirst, FindLast, ReplaceAll};
+     FindFirst, FindLast, ReplaceAll, ToUpper, ToLower};
 
   TextOpCode = ObLib.OpCode OBJECT code: TextCode;  END;
 
@@ -994,6 +1163,8 @@ PROCEDURE SetupText () =
               NewTextOC("findLastChar", 3, TextCode.FindLastChar),
               NewTextOC("findFirst", 3, TextCode.FindFirst),
               NewTextOC("findLast", 3, TextCode.FindLast),
+              NewTextOC("toUpper", 1, TextCode.ToUpper),
+              NewTextOC("toLower", 1, TextCode.ToLower),
               NewTextOC("replaceAll", 3, TextCode.ReplaceAll)};
     ObLib.Register(NEW(PackageText, name := "text", opCodes := opCodes));
   END SetupText;
@@ -1003,6 +1174,7 @@ PROCEDURE EvalText (                    self  : PackageText;
                     <*UNUSED*>          arity : ObLib.OpArity;
                                READONLY args  : ObValue.ArgArray;
                                         temp  : BOOLEAN;
+                    <*UNUSED*>          swr   : SynWr.T;
                                         loc   : SynLocation.T     ):
   ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
   TYPE Chars = REF ARRAY OF CHAR;
@@ -1187,7 +1359,7 @@ PROCEDURE EvalText (                    self  : PackageText;
             <*ASSERT FALSE*>
           END;
           TYPECASE args[2] OF
-          | ObValue.ValArray (node) => array1 := node.remote.Obtain();
+          | ObValue.ValArray (node) => array1 := node.Obtain();
           ELSE
             ObValue.BadArgType(2, "array", self.name, opCode.name, loc);
             <*ASSERT FALSE*>
@@ -1249,6 +1421,34 @@ PROCEDURE EvalText (                    self  : PackageText;
                 1, "a well-formed int", self.name, opCode.name, loc);
             <*ASSERT FALSE*>
           END;
+      | TextCode.ToUpper =>
+          TYPECASE args[1] OF
+          | ObValue.ValText (node) => text1 := node.text;
+          ELSE
+            ObValue.BadArgType(1, "text", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          WITH l = Text.Length(text1) DO
+            text2 := TextF.New(l);
+            FOR i:=0 TO l-1 DO
+              text2[i] := ASCII.Upper[text1[i]];
+            END;
+          END;
+          RETURN ObValue.NewText(text2);
+      | TextCode.ToLower =>
+          TYPECASE args[1] OF
+          | ObValue.ValText (node) => text1 := node.text;
+          ELSE
+            ObValue.BadArgType(1, "text", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          WITH l = Text.Length(text1) DO
+            text2 := TextF.New(l);
+            FOR i:=0 TO l-1 DO
+              text2[i] := ASCII.Lower[text1[i]];
+            END;
+          END;
+          RETURN ObValue.NewText(text2);
       | TextCode.FromInt =>
           TYPECASE args[1] OF
           | ObValue.ValInt (node) => int1 := node.int;
@@ -1370,6 +1570,10 @@ PROCEDURE EvalText (                    self  : PackageText;
     EXCEPT
     | NetObj.Error (atoms) =>
         ObValue.RaiseNetException(
+          self.name & "_" & opCode.name, atoms, loc);
+      <*ASSERT FALSE*>
+    | SharedObj.Error (atoms) =>
+        ObValue.RaiseSharedException(
           self.name & "_" & opCode.name, atoms, loc);
       <*ASSERT FALSE*>
     | Thread.Alerted =>
@@ -1519,7 +1723,8 @@ PROCEDURE ReplaceAll (source: TEXT; pattern: TEXT; repl: TEXT): TEXT =
 
 TYPE
 
-  ArrayCode = {New, Gen, Size, Get, Set, Sub, Upd, Cat};
+  ArrayCode = {New, NewRepl, NewSimple, Gen, GenRepl, GenSimple, 
+               Size, Get, Set, Sub, Upd, Cat};
 
   ArrayOpCode = ObLib.OpCode OBJECT code: ArrayCode;  END;
 
@@ -1539,10 +1744,16 @@ PROCEDURE SetupArray () =
   TYPE OpCodes = ARRAY OF ObLib.OpCode;
   VAR opCodes: REF OpCodes;
   BEGIN
-    opCodes := NEW(REF OpCodes, NUMBER(ArrayCode));
+    opCodes := NEW(REF OpCodes, NUMBER(ArrayCode)+2);
     opCodes^ :=
       OpCodes{NewArrayOC("new", 2, ArrayCode.New),
+              NewArrayOC("newRemote", 2, ArrayCode.New),
+              NewArrayOC("newReplicated", 2, ArrayCode.NewRepl),
+              NewArrayOC("newSimple", 2, ArrayCode.NewSimple),
               NewArrayOC("gen", 2, ArrayCode.Gen),
+              NewArrayOC("genRemote", 2, ArrayCode.Gen),
+              NewArrayOC("genReplicated", 2, ArrayCode.GenRepl),
+              NewArrayOC("genSimple", 2, ArrayCode.GenSimple),
               NewArrayOC("#", 1, ArrayCode.Size, ObLib.OpFixity.Prefix),
               NewArrayOC("get", 2, ArrayCode.Get),
               NewArrayOC("set", 3, ArrayCode.Set),
@@ -1557,19 +1768,20 @@ PROCEDURE EvalArray (                    self  : PackageArray;
                      <*UNUSED*>          arity : ObLib.OpArity;
                                 READONLY args  : ObValue.ArgArray;
                                          temp  : BOOLEAN;
+                                         swr   : SynWr.T;
                                          loc   : SynLocation.T     ):
   ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
   TYPE Vals = REF ARRAY OF ObValue.Val;
   VAR
     int1, int2          : INTEGER;
     vals, array1, array2: Vals;
-    rem1                : ObValue.RemArray;
+    arr1                : ObValue.ValArray;
     badOp               : INTEGER          := 0;
     clos1               : ObValue.ValFun;
   BEGIN
     TRY
       CASE NARROW(opCode, ArrayOpCode).code OF
-      | ArrayCode.New =>
+      | ArrayCode.New, ArrayCode.NewRepl, ArrayCode.NewSimple =>
           TYPECASE args[1] OF
           | ObValue.ValInt (node) => int1 := node.int;
           ELSE
@@ -1583,8 +1795,13 @@ PROCEDURE EvalArray (                    self  : PackageArray;
           END;
           vals := NEW(Vals, int1);
           FOR i := 0 TO int1 - 1 DO vals^[i] := args[2]; END;
-          RETURN ObValue.NewArrayFromVals(vals);
-      | ArrayCode.Gen =>
+          CASE NARROW(opCode, ArrayOpCode).code OF
+          | ArrayCode.New => RETURN ObValue.NewArrayFromVals(vals);
+          | ArrayCode.NewRepl => RETURN ObValue.NewReplArrayFromVals(vals);
+          | ArrayCode.NewSimple => RETURN ObValue.NewSimpleArrayFromVals(vals);
+          ELSE <*ASSERT FALSE*>
+          END;
+      | ArrayCode.Gen, ArrayCode.GenRepl, ArrayCode.GenSimple =>
           TYPECASE args[1] OF
           | ObValue.ValInt (node) => int1 := node.int;
           ELSE
@@ -1606,13 +1823,18 @@ PROCEDURE EvalArray (                    self  : PackageArray;
           FOR i := 0 TO int1 - 1 DO
             vals^[i] :=
               ObEval.Call(clos1, ObValue.Vals{NEW(ObValue.ValInt, int := i,
-                                                  temp := FALSE)}, loc);
+                                                  temp := FALSE)}, swr, loc);
           END;
-          RETURN ObValue.NewArrayFromVals(vals);
+          CASE NARROW(opCode, ArrayOpCode).code OF
+          | ArrayCode.Gen => RETURN ObValue.NewArrayFromVals(vals);
+          | ArrayCode.GenRepl => RETURN ObValue.NewReplArrayFromVals(vals);
+          | ArrayCode.GenSimple => RETURN ObValue.NewSimpleArrayFromVals(vals);
+          ELSE <*ASSERT FALSE*>
+          END;
       | ArrayCode.Size =>
           TYPECASE args[1] OF
           | ObValue.ValArray (node) =>
-              RETURN NEW(ObValue.ValInt, int := node.remote.Size(),
+              RETURN NEW(ObValue.ValInt, int := node.Size(),
                          temp := temp);
           ELSE
             ObValue.BadArgType(1, "array", self.name, opCode.name, loc);
@@ -1628,14 +1850,14 @@ PROCEDURE EvalArray (                    self  : PackageArray;
           TYPECASE args[1] OF
           | ObValue.ValArray (node) =>
               badOp := 2;
-              RETURN node.remote.Get(int1);
+              RETURN node.Get(int1);
           ELSE
             ObValue.BadArgType(1, "array", self.name, opCode.name, loc);
             <*ASSERT FALSE*>
           END;
       | ArrayCode.Set =>
           TYPECASE args[1] OF
-          | ObValue.ValArray (node) => rem1 := node.remote;
+          | ObValue.ValArray (node) => arr1 := node;
           ELSE
             ObValue.BadArgType(1, "array", self.name, opCode.name, loc);
             <*ASSERT FALSE*>
@@ -1646,7 +1868,7 @@ PROCEDURE EvalArray (                    self  : PackageArray;
             ObValue.BadArgType(2, "int", self.name, opCode.name, loc);
             <*ASSERT FALSE*>
           END;
-          rem1.Set(int1, args[3]);
+          arr1.Set(int1, args[3]);
           badOp := 2;
           RETURN ObValue.valOk;
       | ArrayCode.Sub =>
@@ -1665,14 +1887,14 @@ PROCEDURE EvalArray (                    self  : PackageArray;
           TYPECASE args[1] OF
           | ObValue.ValArray (node) =>
               badOp := 3;
-              RETURN node.remote.Sub(int1, int2);
+              RETURN node.Sub(int1, int2);
           ELSE
             ObValue.BadArgType(1, "array", self.name, opCode.name, loc);
             <*ASSERT FALSE*>
           END;
       | ArrayCode.Upd =>
           TYPECASE args[1] OF
-          | ObValue.ValArray (node) => rem1 := node.remote;
+          | ObValue.ValArray (node) => arr1 := node;
           ELSE
             ObValue.BadArgType(1, "array", self.name, opCode.name, loc);
             <*ASSERT FALSE*>
@@ -1690,29 +1912,37 @@ PROCEDURE EvalArray (                    self  : PackageArray;
             <*ASSERT FALSE*>
           END;
           TYPECASE args[4] OF
-          | ObValue.ValArray (node) => array1 := node.remote.Obtain();
+          | ObValue.ValArray (node) => array1 := node.Obtain();
           ELSE
             ObValue.BadArgType(4, "array", self.name, opCode.name, loc);
             <*ASSERT FALSE*>
           END;
           badOp := 3;
-          rem1.Upd(int1, int2, array1);
+          arr1.Upd(int1, int2, array1);
           RETURN ObValue.valOk;
       | ArrayCode.Cat =>
           TYPECASE args[1] OF
-          | ObValue.ValArray (node) => array1 := node.remote.Obtain();
+          | ObValue.ValArray (node) => array1 := node.Obtain();
           ELSE
             ObValue.BadArgType(1, "array", self.name, opCode.name, loc);
             <*ASSERT FALSE*>
           END;
           TYPECASE args[2] OF
-          | ObValue.ValArray (node) => array2 := node.remote.Obtain();
+          | ObValue.ValArray (node) => array2 := node.Obtain();
           ELSE
             ObValue.BadArgType(2, "array", self.name, opCode.name, loc);
             <*ASSERT FALSE*>
           END;
           badOp := 1;
-          RETURN ObValue.ArrayCat(array1, array2);
+          TYPECASE args[1] OF
+          | ObValue.ValRemArray => 
+            RETURN ObValue.ArrayCat(array1, array2);
+          | ObValue.ValReplArray => 
+            RETURN ObValue.ReplArrayCat(array1, array2);
+          | ObValue.ValSimpleArray => 
+            RETURN ObValue.SimpleArrayCat(array1,array2);
+          ELSE <*ASSERT FALSE*>
+          END;
       ELSE
         ObValue.BadOp(self.name, opCode.name, loc);
         <*ASSERT FALSE*>
@@ -1723,6 +1953,10 @@ PROCEDURE EvalArray (                    self  : PackageArray;
       <*ASSERT FALSE*>
     | NetObj.Error (atoms) =>
         ObValue.RaiseNetException(
+          self.name & "_" & opCode.name, atoms, loc);
+      <*ASSERT FALSE*>
+    | SharedObj.Error (atoms) =>
+        ObValue.RaiseSharedException(
           self.name & "_" & opCode.name, atoms, loc);
       <*ASSERT FALSE*>
     | Thread.Alerted =>
@@ -1736,7 +1970,8 @@ PROCEDURE EvalArray (                    self  : PackageArray;
 
 TYPE
 
-  NetCode = {Error, Who, Export, Import, ExportEngine, ImportEngine};
+  NetCode = {Error, Who, Export, Import, ExportEngine, ImportEngine,
+             SetSiteName, SetDefaultSequencer};
 
   NetOpCode = ObLib.OpCode OBJECT code: NetCode;  END;
 
@@ -1757,7 +1992,10 @@ PROCEDURE SetupNet () =
                         NewNetOC("export", 3, NetCode.Export),
                         NewNetOC("import", 2, NetCode.Import),
                         NewNetOC("exportEngine", 3, NetCode.ExportEngine),
-                        NewNetOC("importEngine", 2, NetCode.ImportEngine)};
+                        NewNetOC("importEngine", 2, NetCode.ImportEngine),
+                        NewNetOC("setSiteName", 1, NetCode.SetSiteName),
+                        NewNetOC("setDefaultSequencer", 2, 
+                                 NetCode.SetDefaultSequencer)};
     ObLib.Register(NEW(PackageNet, name := "net", opCodes := opCodes));
   END SetupNet;
 
@@ -1766,6 +2004,7 @@ PROCEDURE EvalNet (                    self  : PackageNet;
                    <*UNUSED*>          arity : ObLib.OpArity;
                               READONLY args  : ObValue.ArgArray;
                    <*UNUSED*>          temp  : BOOLEAN;
+                   <*UNUSED*>          swr   : SynWr.T;
                                        loc   : SynLocation.T     ):
   ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
   VAR text1, text2: TEXT;
@@ -1846,6 +2085,28 @@ PROCEDURE EvalNet (                    self  : PackageNet;
           <*ASSERT FALSE*>
         END;
         RETURN NetImportEngine(text1, text2, loc);
+    | NetCode.SetSiteName =>
+        TYPECASE args[1] OF
+        | ObValue.ValText (node) => text1 := node.text;
+        ELSE
+          ObValue.BadArgType(1, "text", self.name, opCode.name, loc);
+          <*ASSERT FALSE*>
+        END;
+        RETURN ReplicaSetSiteName(text1, loc);
+    | NetCode.SetDefaultSequencer =>
+        TYPECASE args[1] OF
+        | ObValue.ValText (node) => text1 := node.text;
+        ELSE
+          ObValue.BadArgType(1, "text", self.name, opCode.name, loc);
+          <*ASSERT FALSE*>
+        END;
+        TYPECASE args[2] OF
+        | ObValue.ValText (node) => text2 := node.text;
+        ELSE
+          ObValue.BadArgType(2, "text", self.name, opCode.name, loc);
+          <*ASSERT FALSE*>
+        END;
+        RETURN ReplicaSetDefaultSequencer(text1, text2, loc);
     ELSE
       ObValue.BadOp(self.name, opCode.name, loc);
       <*ASSERT FALSE*>
@@ -1925,10 +2186,10 @@ PROCEDURE NetExport (name, server: TEXT;
       | ObValue.ValRemObj (o) => NetObj.Export(name, o.remote, netAddress);
       | ObValue.ValReplObj (o) =>
           NetObj.Export(
-            name, NEW(ObValue.NonRemObjHookServer).init(o), netAddress);
+            name, NEW(ObValue.NonRemValHookServer).init(o), netAddress);
       | ObValue.ValSimpleObj (o) =>
           NetObj.Export(
-            name, NEW(ObValue.NonRemObjHookServer).init(o), netAddress);
+            name, NEW(ObValue.NonRemValHookServer).init(o), netAddress);
       ELSE                       <*ASSERT FALSE*>
       END;
     EXCEPT
@@ -1984,7 +2245,7 @@ PROCEDURE NetImport (name, server: TEXT; loc: SynLocation.T): ObValue.Val
     TYPECASE netObj OF
     | ObValue.RemObj (remObj) =>
         RETURN NEW(ObValue.ValRemObj, remote := remObj);
-    | ObValue.NonRemObjHook (hook) =>
+    | ObValue.NonRemValHook (hook) =>
         TRY
           RETURN hook.Get();
         EXCEPT
@@ -2072,12 +2333,73 @@ PROCEDURE NetImportEngine (name, server: TEXT; loc: SynLocation.T):
     END;
   END NetImportEngine;
 
+PROCEDURE ReplicaSetSiteName (name: TEXT; loc: SynLocation.T): ObValue.Val
+  RAISES {ObValue.Exception} =
+  BEGIN
+    TRY
+      IF Text.Equal(name, "") THEN name := ObValue.machineAddress; END;
+      SharedObjRT.ExportSpace(name);
+      RETURN ObValue.NewText(name);
+    EXCEPT
+    | SharedObj.Error (atoms) =>
+        ObValue.RaiseNetException("net_setSiteName: ", atoms, loc);
+      <*ASSERT FALSE*>
+    | Thread.Alerted =>
+        ObValue.RaiseException(
+          ObValue.threadAlerted, "net_setSiteName: ", loc);
+      <*ASSERT FALSE*>
+    END;
+  END ReplicaSetSiteName;
+
+PROCEDURE ReplicaSetDefaultSequencer (host, name: TEXT; loc: SynLocation.T):
+  ObValue.Val RAISES {ObValue.Exception} =
+  VAR space: ObjectSpace.T;
+  BEGIN
+    TRY
+      IF Text.Equal("", host) THEN
+        WITH defhost = Env.Get("SEQUENCERHOST") DO
+          IF defhost # NIL THEN host := defhost; END;
+        END;
+      END;
+      IF Text.Equal("", name) THEN
+        WITH defname = Env.Get("SEQUENCERNAME") DO
+          IF defname # NIL THEN name := defname; END;
+        END;
+      END;
+
+      IF NOT Text.Equal("", host) OR NOT Text.Equal("", name) THEN
+        space := SharedObjRT.ImportSpace(host, name);
+        IF space = NIL THEN
+          ObValue.RaiseException(
+            ObValue.netException,
+            "net_setDefaultSequencer: node " & name & "@" & host
+              & " is unavailable", loc);
+          <*ASSERT FALSE*>
+        END;
+      ELSE
+        space := SharedObjRT.LocalSpace();
+      END;
+      SharedObjRT.SetDfltSequencer(space);
+      RETURN ObValue.valOk;
+    EXCEPT
+    | SharedObj.Error (atoms) =>
+        ObValue.RaiseNetException(
+          "net_setDefaultSequencer: ", atoms, loc);
+      <*ASSERT FALSE*>
+    | Thread.Alerted =>
+        ObValue.RaiseException(
+          ObValue.threadAlerted, "net_setDefaultSequencer: ", loc);
+      <*ASSERT FALSE*>
+    END;
+  END ReplicaSetDefaultSequencer;
+
 (* ============ "replica" package ============ *)
 
 TYPE
   ReplicaCode =
-    {Error, Fatal, AcquireGlobalLock, ReleaseGlobalLock, SetNodeName,
-     SetDefaultSequencer, Notify, CancelNotifier, DumpState};
+    {Error, Fatal, AcquireGlobalLock, ReleaseGlobalLock, 
+     Notify, CancelNotifier, FlushIncomingUpdates,
+     FlushQueuedUpdates};
 
   ReplicaOpCode = ObLib.OpCode OBJECT code: ReplicaCode;  END;
 
@@ -2104,12 +2426,12 @@ PROCEDURE SetupReplica () =
         NewReplicaOC("fatal", -1, ReplicaCode.Fatal),
         NewReplicaOC("acquire", 1, ReplicaCode.AcquireGlobalLock),
         NewReplicaOC("release", 1, ReplicaCode.ReleaseGlobalLock),
-        NewReplicaOC("setNodeName", 1, ReplicaCode.SetNodeName),
         NewReplicaOC("notify", 2, ReplicaCode.Notify),
         NewReplicaOC("cancelNotifier", 1, ReplicaCode.CancelNotifier),
-        NewReplicaOC(
-          "setDefaultSequencer", 2, ReplicaCode.SetDefaultSequencer),
-        NewReplicaOC("dumpState", 0, ReplicaCode.DumpState)};
+        NewReplicaOC("flushIncomingUpdates", 0, 
+                     ReplicaCode.FlushIncomingUpdates),
+        NewReplicaOC("flushQueuedUpdates", 0, 
+                     ReplicaCode.FlushQueuedUpdates)};
     ObLib.Register(
       NEW(PackageReplica, name := "replica", opCodes := opCodes));
   END SetupReplica;
@@ -2119,18 +2441,35 @@ PROCEDURE EvalReplica (                    self  : PackageReplica;
                        <*UNUSED*>          arity : ObLib.OpArity;
                                   READONLY args  : ObValue.ArgArray;
                        <*UNUSED*>          temp  : BOOLEAN;
+                       <*UNUSED*>          swr   : SynWr.T;
                                            loc   : SynLocation.T     ):
   ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
-  VAR text1, text2: TEXT;
   BEGIN
     CASE NARROW(opCode, ReplicaOpCode).code OF
     | ReplicaCode.Error => RETURN ObValue.sharedException;
     | ReplicaCode.Fatal => RETURN ObValue.sharedFatal;
     | ReplicaCode.Notify => RETURN ReplicaNotify(args[1], args[2], loc);
+    | ReplicaCode.FlushIncomingUpdates => 
+      TRY
+        SharedObjRT.FlushIncomingUpdates();
+        RETURN ObValue.valOk;
+      EXCEPT Thread.Alerted =>
+        ObValue.RaiseException(
+            ObValue.threadAlerted, "replica_flushIncomingUpdates: ", loc);
+        <*ASSERT FALSE*>
+      END;
+    | ReplicaCode.FlushQueuedUpdates => 
+      TRY
+        SharedObjRT.FlushQueuedUpdates();
+        RETURN ObValue.valOk;
+      EXCEPT Thread.Alerted =>
+        ObValue.RaiseException(
+            ObValue.threadAlerted, "replica_flushQueuedUpdates: ", loc);
+        <*ASSERT FALSE*>
+      END;
     | ReplicaCode.CancelNotifier =>
         ReplicaCancelNotifier(args[1], loc);
         RETURN ObValue.valOk;
-    | ReplicaCode.DumpState => ReplicaDumpState(loc); RETURN ObValue.valOk;
     | ReplicaCode.AcquireGlobalLock =>
         TYPECASE args[1] OF
         | ObValue.ValReplObj =>
@@ -2149,28 +2488,6 @@ PROCEDURE EvalReplica (                    self  : PackageReplica;
           <*ASSERT FALSE*>
         END;
         RETURN ReplicaReleaseLock(args[1], loc);
-    | ReplicaCode.SetNodeName =>
-        TYPECASE args[1] OF
-        | ObValue.ValText (node) => text1 := node.text;
-        ELSE
-          ObValue.BadArgType(1, "text", self.name, opCode.name, loc);
-          <*ASSERT FALSE*>
-        END;
-        RETURN ReplicaSetNodeName(text1, loc);
-    | ReplicaCode.SetDefaultSequencer =>
-        TYPECASE args[1] OF
-        | ObValue.ValText (node) => text1 := node.text;
-        ELSE
-          ObValue.BadArgType(1, "text", self.name, opCode.name, loc);
-          <*ASSERT FALSE*>
-        END;
-        TYPECASE args[2] OF
-        | ObValue.ValText (node) => text2 := node.text;
-        ELSE
-          ObValue.BadArgType(2, "text", self.name, opCode.name, loc);
-          <*ASSERT FALSE*>
-        END;
-        RETURN ReplicaSetDefaultSequencer(text1, text2, loc);
     ELSE
       ObValue.BadOp(self.name, opCode.name, loc);
       <*ASSERT FALSE*>
@@ -2267,90 +2584,14 @@ PROCEDURE ReplicaReleaseLock (valObj: ObValue.ValObj; loc: SynLocation.T):
     RETURN ObValue.valOk;
   END ReplicaReleaseLock;
 
-PROCEDURE ReplicaSetNodeName (name: TEXT; loc: SynLocation.T): ObValue.Val
-  RAISES {ObValue.Exception} =
-  BEGIN
-    TRY
-      IF Text.Equal(name, "") THEN name := ObValue.machineAddress; END;
-      SharedObjRT.ExportSpace(name);
-      RETURN ObValue.NewText(name);
-    EXCEPT
-    | SharedObj.Error (atoms) =>
-        ObValue.RaiseSharedException("replica_setNodeName: ", atoms, loc);
-      <*ASSERT FALSE*>
-    | Thread.Alerted =>
-        ObValue.RaiseException(
-          ObValue.threadAlerted, "replica_setNodeName: ", loc);
-      <*ASSERT FALSE*>
-    END;
-  END ReplicaSetNodeName;
-
-PROCEDURE ReplicaDumpState (loc: SynLocation.T)
-  RAISES {ObValue.Exception} =
-  BEGIN
-    TRY
-      SharedObjRT.LocalSpace().printState();
-    EXCEPT
-    | NetObj.Error (atoms) =>
-        ObValue.RaiseNetException("replica_dumpState: ", atoms, loc);
-      <*ASSERT FALSE*>
-    | Thread.Alerted =>
-        ObValue.RaiseException(
-          ObValue.threadAlerted, "replica_setNodeName: ", loc);
-      <*ASSERT FALSE*>
-    END;
-  END ReplicaDumpState;
-
-PROCEDURE ReplicaSetDefaultSequencer (host, name: TEXT; loc: SynLocation.T):
-  ObValue.Val RAISES {ObValue.Exception} =
-  VAR space: ObjectSpace.T;
-  BEGIN
-    TRY
-      IF Text.Equal("", host) THEN
-        WITH defhost = Env.Get("SEQUENCERHOST") DO
-          IF defhost # NIL THEN host := defhost; END;
-        END;
-      END;
-      IF Text.Equal("", name) THEN
-        WITH defname = Env.Get("SEQUENCERNAME") DO
-          IF defname # NIL THEN name := defname; END;
-        END;
-      END;
-
-      IF NOT Text.Equal("", host) OR NOT Text.Equal("", name) THEN
-        space := SharedObjRT.ImportSpace(host, name);
-        IF space = NIL THEN
-          ObValue.RaiseException(
-            ObValue.sharedException,
-            "replica_setDefaultSequencer: node " & name & "@" & host
-              & " is unavailable", loc);
-          <*ASSERT FALSE*>
-        END;
-      ELSE
-        space := SharedObjRT.LocalSpace();
-      END;
-      SharedObjRT.SetDfltSequencer(space);
-      RETURN ObValue.valOk;
-    EXCEPT
-    | SharedObj.Error (atoms) =>
-        ObValue.RaiseSharedException(
-          "replica_setDefaultSequencer: ", atoms, loc);
-      <*ASSERT FALSE*>
-    | Thread.Alerted =>
-        ObValue.RaiseException(
-          ObValue.threadAlerted, "replica_setDefaultSequencer: ", loc);
-      <*ASSERT FALSE*>
-    END;
-  END ReplicaSetDefaultSequencer;
-
 (* ============ "thread" package ============ *)
 
 TYPE
 
   ThreadCode = {Alerted, NewMutex, NewCondition, Self, Fork, Join, Wait,
                 Acquire, Release, Broadcast, Signal, Pause, Alert,
-                TestAlert, AlertWait, AlertJoin, AlertPause, Lock, 
-                NewPool, AddWork, StealWorker, FinishWork};
+                TestAlert, AlertWait, AlertJoin, AlertPause, Lock, Id, 
+                NewPool, AddWork, StealWorker, FinishWork, Yield};
 
   ThreadOpCode = ObLib.OpCode OBJECT code: ThreadCode;  END;
 
@@ -2416,6 +2657,7 @@ PROCEDURE CopyCondition (<*UNUSED*> self: ObValue.ValAnything;
 TYPE
   ObliqThreadClosure = Thread.SizedClosure OBJECT
                          fun      : ObValue.ValFun;
+                         swr      : SynWr.T;
                          location : SynLocation.T;
                          result   : ObValue.Val;
                          error    : ObValue.ErrorPacket;
@@ -2427,6 +2669,7 @@ TYPE
 TYPE
   ObliqWork = Work.T OBJECT
                          fun      : ObValue.ValFun;
+                         swr      : SynWr.T;
                          location : SynLocation.T;
                        OVERRIDES
                          handle := HandleWork;
@@ -2448,17 +2691,18 @@ PROCEDURE ApplyThreadClosure (self: ObliqThreadClosure): REFANY =
   VAR noArgs: ARRAY [0 .. -1] OF ObValue.Val;
   BEGIN
     TRY
-      self.result := ObEval.Call(self.fun, noArgs, self.location);
+      self.result := ObEval.Call(self.fun, noArgs,
+                                 self.swr, self.location); 
     EXCEPT
     | ObValue.Error (packet) =>
         self.error := packet;
-        ObValue.ErrorMsg(SynWr.err, packet);
-        Msg(SynWr.err, "<Thread.T> terminated by execution error",
+        ObValue.ErrorMsg(self.swr, packet);
+        Msg(self.swr, "<Thread.T> terminated by execution error",
             self.location); 
     | ObValue.Exception (packet) =>
         self.exception := packet;
-        ObValue.ExceptionMsg(SynWr.err, packet);
-        Msg(SynWr.err, "<Thread.T> terminated by unhandled exception",
+        ObValue.ExceptionMsg(self.swr, packet);
+        Msg(self.swr, "<Thread.T> terminated by unhandled exception",
             self.location); 
     END;
     RETURN self;
@@ -2468,15 +2712,15 @@ PROCEDURE HandleWork (self: ObliqWork) =
   VAR noArgs: ARRAY [0 .. -1] OF ObValue.Val;
   BEGIN
     TRY
-      EVAL ObEval.Call(self.fun, noArgs, self.location);
+      EVAL ObEval.Call(self.fun, noArgs, self.swr, self.location);
     EXCEPT
     | ObValue.Error (packet) =>
-        ObValue.ErrorMsg(SynWr.err, packet);
-        Msg(SynWr.err, "<work> terminated by execution error",
+        ObValue.ErrorMsg(self.swr, packet);
+        Msg(self.swr, "<work> terminated by execution error",
             self.location); 
     | ObValue.Exception (packet) =>
-        ObValue.ExceptionMsg(SynWr.err, packet);
-        Msg(SynWr.err, "<work> terminated by unhandled exception",
+        ObValue.ExceptionMsg(self.swr, packet);
+        Msg(self.swr, "<work> terminated by unhandled exception",
             self.location); 
     END;
   END HandleWork;
@@ -2494,6 +2738,7 @@ PROCEDURE NewPool (maxThreads, idleThreads, stackSize: INTEGER): ValPool =
 
 PROCEDURE ForkThread (fun      : ObValue.ValFun;
                       stackSize: INTEGER;
+                      swr      : SynWr.T;
                       loc      : SynLocation.T   ): ValThread =
   VAR
     thread       : Thread.T;
@@ -2502,7 +2747,8 @@ PROCEDURE ForkThread (fun      : ObValue.ValFun;
     stackSize := MIN(MAX(stackSize, 4096), LAST(CARDINAL));
     threadClosure :=
       NEW(ObliqThreadClosure, stackSize := stackSize, fun := fun,
-          location := loc, result := NIL, error := NIL, exception := NIL);
+          swr:=swr, location := loc, result := NIL, error := NIL, 
+          exception := NIL);
     thread := Thread.Fork(threadClosure);
     RETURN NEW(ValThread, what := "<a Thread.T>", picklable := FALSE,
                tag:="Thread`T",
@@ -2572,10 +2818,12 @@ PROCEDURE SetupThread () =
               NewThreadOC("alertWait", 2, ThreadCode.AlertWait),
               NewThreadOC("alertJoin", 1, ThreadCode.AlertJoin),
               NewThreadOC("alertPause", 1, ThreadCode.AlertPause),
+              NewThreadOC("id", 1, ThreadCode.Id),
               NewThreadOC("pool", 3, ThreadCode.NewPool),
               NewThreadOC("addWork", 2, ThreadCode.AddWork),
               NewThreadOC("stealWorker", 1, ThreadCode.StealWorker),
               NewThreadOC("finish", 1, ThreadCode.FinishWork),
+              NewThreadOC("yield", 0, ThreadCode.Yield),
               NewThreadOC("lock", 2, ThreadCode.Lock)};
     ObLib.Register(
       NEW(PackageThread, name := "thread", opCodes := opCodes));
@@ -2592,6 +2840,7 @@ PROCEDURE EvalThread (                    self  : PackageThread;
                       <*UNUSED*>          arity : ObLib.OpArity;
                                  READONLY args  : ObValue.ArgArray;
                       <*UNUSED*>          temp  : BOOLEAN;
+                                          swr   : SynWr.T;
                                           loc   : SynLocation.T     ):
   ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
   VAR
@@ -2623,6 +2872,9 @@ PROCEDURE EvalThread (                    self  : PackageThread;
                    tag:="Thread`T",
                    thread := thread1, joinedMu := NEW(Thread.Mutex),
                    joined := FALSE);
+    | ThreadCode.Yield =>
+        Scheduler.Yield();
+        RETURN ObValue.valOk;
     | ThreadCode.Fork =>
         TYPECASE args[1] OF
         | ObValue.ValFun (node) => fun1 := node;
@@ -2636,7 +2888,7 @@ PROCEDURE EvalThread (                    self  : PackageThread;
           ObValue.BadArgType(2, "int", self.name, opCode.name, loc);
           <*ASSERT FALSE*>
         END;
-        RETURN ForkThread(fun1, int1, loc);
+        RETURN ForkThread(fun1, int1, swr, loc);
     | ThreadCode.Join =>
         TYPECASE args[1] OF
         | ValThread (node) => threadVal1 := node;
@@ -2709,6 +2961,14 @@ PROCEDURE EvalThread (                    self  : PackageThread;
         END;
         Thread.Pause(longReal1);
         RETURN ObValue.valOk;
+    | ThreadCode.Id =>
+        TYPECASE args[1] OF
+        | ValThread (node) => thread1 := node.thread;
+        ELSE
+          ObValue.BadArgType(1, "thread", self.name, opCode.name, loc);
+          <*ASSERT FALSE*>
+        END;
+        RETURN Obliq.NewInt(ThreadF.MyId());
     | ThreadCode.Alert =>
         TYPECASE args[1] OF
         | ValThread (node) => thread1 := node.thread;
@@ -2787,7 +3047,7 @@ PROCEDURE EvalThread (                    self  : PackageThread;
           ObValue.BadArgType(2, "procedure", self.name, opCode.name, loc);
           <*ASSERT FALSE*>
         END;
-        LOCK mutex1 DO RETURN ObEval.Call(fun1, noArgs, loc) END;
+        LOCK mutex1 DO RETURN ObEval.Call(fun1, noArgs, swr, loc) END;
     | ThreadCode.NewPool =>
         TYPECASE args[1] OF
         | ObValue.ValInt (node) => int1 := node.int;
@@ -2821,7 +3081,7 @@ PROCEDURE EvalThread (                    self  : PackageThread;
           ObValue.BadArgType(2, "procedure", self.name, opCode.name, loc);
           <*ASSERT FALSE*>
         END;
-        pool1.add(NEW(ObliqWork, fun := fun1, location := loc));
+        pool1.add(NEW(ObliqWork, swr := swr, fun := fun1, location := loc));
         RETURN ObValue.valOk;
     | ThreadCode.StealWorker =>
         TYPECASE args[1] OF
@@ -2846,8 +3106,171 @@ PROCEDURE EvalThread (                    self  : PackageThread;
     END;
   END EvalThread;
 
-(*
+(* ============ "regex" package ============ *)
 
+TYPE
+
+  RegExCode = {Error, Compile, Decompile, Dump, Execute, ExecuteRes,
+               ExecuteSub, ExecuteSubRes};
+
+  RegExOpCode = ObLib.OpCode OBJECT code: RegExCode;  END;
+
+  PackageRegEx = ObLib.T OBJECT OVERRIDES Eval := EvalRegEx; END;
+
+PROCEDURE NewRegExOC (name  : TEXT;
+                    arity : INTEGER;
+                    code  : RegExCode;
+                    fixity: ObLib.OpFixity := ObLib.OpFixity.Qualified):
+  RegExOpCode =
+  BEGIN
+    RETURN NEW(RegExOpCode, name := name, arity := arity, code := code,
+               fixity := fixity);
+  END NewRegExOC;
+
+PROCEDURE SetupRegEx () =
+  TYPE OpCodes = ARRAY OF ObLib.OpCode;
+  VAR opCodes: REF OpCodes;
+  BEGIN
+    opCodes := NEW(REF OpCodes, NUMBER(RegExCode));
+    opCodes^ :=
+      OpCodes{NewRegExOC("error", -1, RegExCode.Error),
+              NewRegExOC("compile", 1, RegExCode.Compile),
+              NewRegExOC("decompile", 1, RegExCode.Decompile),
+              NewRegExOC("dump", 1, RegExCode.Dump),
+              NewRegExOC("execute", 2, RegExCode.Execute),
+              NewRegExOC("executeRes", 2, RegExCode.ExecuteRes),
+              NewRegExOC("executeSub", 4, RegExCode.ExecuteSub),
+              NewRegExOC("executeSubRes", 4, RegExCode.ExecuteSubRes)};
+    ObLib.Register(NEW(PackageRegEx, name := "regex", opCodes := opCodes));
+    regexError := NEW(ObValue.ValException, name := "regex_error");
+  END SetupRegEx;
+
+PROCEDURE EvalRegEx (                    self  : PackageRegEx;
+                                         opCode: ObLib.OpCode;
+                     <*UNUSED*>          arity : ObLib.OpArity;
+                                READONLY args  : ObValue.ArgArray;
+                                         temp  : BOOLEAN;
+                     <*UNUSED*>          swr   : SynWr.T;
+                                         loc   : SynLocation.T     ):
+  ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
+  VAR
+    text1     : TEXT;
+    pattern1  : RegEx.Pattern;
+    mem       : REF RegEx.Memory := NIL;
+    start, len: CARDINAL;
+    matchNo   : INTEGER;
+    vals: ARRAY [0 .. NUMBER(RegEx.Memory) - 1] OF ObValue.Val;
+    arr : ARRAY [0 .. 1] OF ObValue.Val;
+  BEGIN
+    CASE NARROW(opCode, RegExOpCode).code OF
+    | RegExCode.Error => RETURN regexError;
+    | RegExCode.Compile =>
+        TYPECASE args[1] OF
+        | ObValue.ValText (node) => text1 := node.text;
+        ELSE
+          ObValue.BadArgType(1, "text", self.name, opCode.name, loc);
+        END;
+        TRY
+          RETURN NEW(ValPattern, what := "<a RegEx.Pattern>",
+                     tag := "RegEx`Pattern", picklable := TRUE,
+                     pattern := RegEx.Compile(text1));
+        EXCEPT
+          RegEx.Error (txt) =>
+            ObValue.RaiseException(
+              regexError, "regex_compile failed: '" & txt & "'", loc);
+          <*ASSERT FALSE*>
+        END;
+    | RegExCode.Decompile =>
+        TYPECASE args[1] OF
+        | ValPattern (node) => pattern1 := node.pattern;
+        ELSE
+          ObValue.BadArgType(1, "pattern", self.name, opCode.name, loc);
+          <*ASSERT FALSE*>
+        END;
+        RETURN NEW(ObValue.ValText, text := RegEx.Decompile(pattern1));
+    | RegExCode.Dump =>
+        TYPECASE args[1] OF
+        | ValPattern (node) => pattern1 := node.pattern;
+        ELSE
+          ObValue.BadArgType(1, "pattern", self.name, opCode.name, loc);
+          <*ASSERT FALSE*>
+        END;
+        RETURN NEW(ObValue.ValText, text := RegEx.Dump(pattern1));
+    | RegExCode.Execute, RegExCode.ExecuteRes, RegExCode.ExecuteSub,
+        RegExCode.ExecuteSubRes =>
+        TYPECASE args[1] OF
+        | ValPattern (node) => pattern1 := node.pattern;
+        ELSE
+          ObValue.BadArgType(1, "pattern", self.name, opCode.name, loc);
+          <*ASSERT FALSE*>
+        END;
+        TYPECASE args[2] OF
+        | ObValue.ValText (node) => text1 := node.text;
+        ELSE
+          ObValue.BadArgType(2, "text", self.name, opCode.name, loc);
+        END;
+        CASE NARROW(opCode, RegExOpCode).code OF
+        | RegExCode.ExecuteRes, RegExCode.ExecuteSubRes =>
+            mem := NEW(REF RegEx.Memory);
+        ELSE
+        END;
+        CASE NARROW(opCode, RegExOpCode).code OF
+        | RegExCode.ExecuteSub, RegExCode.ExecuteSubRes =>
+            TYPECASE args[3] OF
+            | ObValue.ValInt (node) =>
+                IF node.int < 0 THEN
+                  ObValue.BadArgVal(
+                    3, "cardinal", self.name, opCode.name, loc);
+                END;
+                start := node.int;
+            ELSE
+              ObValue.BadArgType(3, "int", self.name, opCode.name, loc);
+            END;
+            TYPECASE args[4] OF
+            | ObValue.ValInt (node) =>
+                IF node.int < 0 THEN
+                  ObValue.BadArgVal(
+                    4, "cardinal", self.name, opCode.name, loc);
+                END;
+                len := node.int;
+            ELSE
+              ObValue.BadArgType(4, "int", self.name, opCode.name, loc);
+            END;
+        ELSE
+          start := 0;
+          len := LAST(CARDINAL);
+        END;
+        WITH res = RegEx.Execute(pattern1, text1, start, len, mem) DO
+          IF mem = NIL THEN
+            RETURN NEW(ObValue.ValInt, int := res, temp := temp);
+          ELSE
+            IF res = -1 THEN RETURN ObValue.valOk END;
+            matchNo := 0;
+            FOR i := FIRST(mem^) TO LAST(mem^) DO
+              IF mem[i].start > -1 THEN
+                arr[0] := Obliq.NewInt(mem[i].start);
+                arr[1] := Obliq.NewInt(mem[i].stop);
+                vals[matchNo] := ObValue.NewSimpleArray(arr);
+                INC(matchNo);
+              END;
+            END;
+            RETURN ObValue.NewSimpleArray(SUBARRAY(vals, 0, matchNo));
+          END;
+        END;
+    ELSE
+      ObValue.BadOp(self.name, opCode.name, loc);
+      <*ASSERT FALSE*>
+    END;
+  END EvalRegEx;
+
+PROCEDURE IsPattern (self: ValPattern; other: ObValue.ValAnything): BOOLEAN =
+  BEGIN
+    TYPECASE other OF
+      ValPattern (oth) => RETURN self.pattern = oth.pattern;
+    ELSE
+      RETURN FALSE
+    END;
+  END IsPattern;
 
 (* ============ "reflect" package ============ *)
 
@@ -2855,50 +3278,68 @@ PROCEDURE EvalThread (                    self  : PackageThread;
    valOk, valBool, valChar, valText, valInt, valReal, valException,
    valOption, valVar, valArray, valMethod, valClosure, valAlias,
    valObject, 
-   valAnything objects will have the ta
+   valAnything objects will have the tags defined by the programmer.
 *)
+
+(* Alias handling:
+   we want to be secure, so we do not provide a way to retrieve the
+   object and field of the alias -> you get an alias back from
+   "getFields" and can use it in a new object, but you can't extract
+   info from it or change it.  Similarly, getType returns the
+   value of the desination of the alias, not "alias" *)
 
 TYPE
   ReflectCode =
     {Error, 
-     isVar,             (* does the ide refer to an updatable value? *)
 
-     isArray,           (* is the Val an Array? *)
-     isObject,          (*            an Object? *)
-     isPrimitive,       (*            a Primitive? *)
-     isOpaque,          (* is this a opaque wrapper of an M3 value? *)
+     IsArray,           (* is the Val an Array? *)
+     IsObject,          (*            an Object? *)
+     IsClosure,         (* is this value a closure? *)
+     IsException,
+     IsMethod,
+     IsUpdateMethod,
+     IsOption,         
+     IsBasic,       (* any of the data types not covered above *)
+     IsNative,          (* is this a opaque wrapper of an M3 value? *)
+     IsAlias,
 
-     isSimple,
-     isReplicated,
-     isRemote,
-     objectType,        (* get an option describing which of the 3 it is *)
+     IsLocal,           (* is the object in question local. Simple and
+                           replicated always return True.*)
+     IsProtected,       (* is the object protected? *)
+     IsSerialized,      (* is the object serialized? *)
+     IsReplicated,      (* is the object replicated? *)
+     IsSimple,          (* is the object simple? *)
+     IsRemote,          (* is the object remote? *)
 
-     isProtected,
-     isSynchronized,
-     isClosure,         (* is this value a closure? *)
-
-     isCompatible,      (* does o1 have AT LEAST the same fields as o2? *)
-                        (* the fields must be compatible (meth=meth,
-                           non-meth=non-meth) and have the same number
-                           of params, etc *)
-     
-     tagCompatible,     (* pass an object and an array of option
-                           tagged objects, return the object option
-                           tagged with the tag of the first array
-                           element it is compatible with *)
-
-     (* we do not allow method fields to be retrieved *)
-     getType,           (* return an option describing the type *)
-     getFields,         (* return an array of non-method fields of o *)
-     getField,          (* return the named non-method field of o *)
-     isAlias,           (* is the named slot an alias? *)
-     
-     getName,
-     getValue,
-     setValue,
-     invoke,
-     equals,
-     toString};
+     GetOptionTag,      (* return the tag of the option *)
+     GetOptionVal,      (* return the value of the option *)
+     GetType,           (* return an option describing the type *)
+                        (* the value is ok *)
+                        (* includes some interesting details:
+                           - methods/procs include num parameters
+                        *)
+     GetTypedVal,       (* return an option describing the type *)
+                        (* the value is the original object *)
+     GetFieldTypes,     (* return an option describing an obj fields types *)
+     GetObjectType,     (* return a single string describing the obj fields *)
+     GetObjectInterface,(* return a single string describing the obj methods *)
+     ObjectWho,         (* return the "who" string used for printing *)
+     GetField,          (* return a single field of o *)
+     GetFields,         (* return an array of fields of o *)
+     NewObject,         (* create an object from the needed parameters:
+                           - type (repl, remote, simple)
+                           - protected?
+                           - serialized?
+                           - who
+                           - fields
+                        *)
+     NewAlias,          (* delegate a named field to another object field *)
+     (* equivalent to the normal obliq ops, including security concerns *)
+     Select,            (* return the named field of o *)
+     Update,            (* set the value of the named field *)
+     Invoke,            (* invoke the named field *)
+     Match              (* match the two objects *)
+     };
 
   ReflectOpCode = ObLib.OpCode OBJECT code: ReflectCode;  END;
 
@@ -2920,249 +3361,653 @@ PROCEDURE SetupReflect () =
   BEGIN
     opCodes := NEW(REF OpCodes, NUMBER(ReflectCode));
     opCodes^ :=
-      OpCodes{
-        NewReflectOC("failure", -1, ReflectCode.Error),
-        NewReflectOC("fatal", -1, ReflectCode.Fatal),
-        NewReflectOC("acquire", 1, ReflectCode.AcquireGlobalLock),
-        NewReflectOC("release", 1, ReflectCode.ReleaseGlobalLock),
-        NewReflectOC("setNodeName", 1, ReflectCode.SetNodeName),
-        NewReflectOC("notify", 2, ReflectCode.Notify),
-        NewReflectOC("cancelNotifier", 1, ReflectCode.CancelNotifier),
-        NewReflectOC(
-          "setDefaultSequencer", 2, ReflectCode.SetDefaultSequencer),
-        NewReflectOC("dumpState", 0, ReflectCode.DumpState)};
+      OpCodes{NewReflectOC("error", -1, ReflectCode.Error),
+              NewReflectOC("isArray", 1, ReflectCode.IsArray),
+              NewReflectOC("isObject", 1, ReflectCode.IsObject),
+              NewReflectOC("isClosure", 1, ReflectCode.IsClosure),
+              NewReflectOC("isException", 1, ReflectCode.IsException),
+              NewReflectOC("isMethod", 1, ReflectCode.IsMethod),
+              NewReflectOC("isUpdateMethod", 1, ReflectCode.IsUpdateMethod),
+              NewReflectOC("isOption", 1, ReflectCode.IsOption),
+              NewReflectOC("isBasic", 1, ReflectCode.IsBasic),
+              NewReflectOC("isNative", 1, ReflectCode.IsNative),
+              NewReflectOC("isAlias", 1, ReflectCode.IsAlias),
+              NewReflectOC("isLocal", 1, ReflectCode.IsLocal),
+              NewReflectOC("isProtected", 1, ReflectCode.IsProtected),
+              NewReflectOC("isSerialized", 1, ReflectCode.IsSerialized),
+              NewReflectOC("isSimple", 1, ReflectCode.IsSimple),
+              NewReflectOC("isRemote", 1, ReflectCode.IsRemote),
+              NewReflectOC("isReplicated", 1, ReflectCode.IsReplicated),
+              NewReflectOC("getOptionTag", 1, ReflectCode.GetOptionTag),
+              NewReflectOC("getOptionVal", 1, ReflectCode.GetOptionVal),
+              NewReflectOC("getType", 1, ReflectCode.GetType),
+              NewReflectOC("getTypedVal", 1, ReflectCode.GetTypedVal),
+              NewReflectOC("getFieldTypes", 1, ReflectCode.GetFieldTypes),
+              NewReflectOC("getObjectType", 1, ReflectCode.GetObjectType),
+              NewReflectOC("getObjectInterface", 1,
+                           ReflectCode.GetObjectInterface),
+              NewReflectOC("objectWho", 1, ReflectCode.ObjectWho),
+              NewReflectOC("getField", 2, ReflectCode.GetField),
+              NewReflectOC("getFields", 1, ReflectCode.GetFields),
+              NewReflectOC("select", 2, ReflectCode.Select),
+              NewReflectOC("update", 3, ReflectCode.Update),
+              NewReflectOC("invoke", 3, ReflectCode.Invoke),
+              NewReflectOC("match", 2, ReflectCode.Match),
+              NewReflectOC("newAlias", 2, ReflectCode.NewAlias),
+              NewReflectOC("newObject", 5, ReflectCode.NewObject)};
     ObLib.Register(
       NEW(PackageReflect, name := "reflect", opCodes := opCodes));
+    reflectError := NEW(ObValue.ValException, name := "reflect_error");
   END SetupReflect;
+
+PROCEDURE NewOption(tag: TEXT; val: ObValue.Val): ObValue.Val =
+  BEGIN
+    RETURN NEW(ObValue.ValOption, tag := tag, val := val);
+  END NewOption;
 
 PROCEDURE EvalReflect (                    self  : PackageReflect;
                                            opCode: ObLib.OpCode;
                        <*UNUSED*>          arity : ObLib.OpArity;
                                   READONLY args  : ObValue.ArgArray;
                        <*UNUSED*>          temp  : BOOLEAN;
+                                           swr   : SynWr.T;
                                            loc   : SynLocation.T     ):
   ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
-  VAR text1, text2: TEXT;
+  TYPE Vals = REF ARRAY OF ObValue.Val;
+  VAR text1,text2: TEXT;
+      protected, serialized: BOOLEAN;
+      obj1 : ObValue.ValObj;
+      hint : INTEGER;
+      array1             : Vals;
   BEGIN
-    CASE NARROW(opCode, ReflectOpCode).code OF
-    | ReflectCode.Error => RETURN ObValue.sharedException;
-    | ReflectCode.Fatal => RETURN ObValue.sharedFatal;
-    | ReflectCode.Notify => RETURN ReflectNotify(args[1], args[2], loc);
-    | ReflectCode.CancelNotifier =>
-        ReflectCancelNotifier(args[1], loc);
-        RETURN ObValue.valOk;
-    | ReflectCode.DumpState => ReflectDumpState(loc); RETURN ObValue.valOk;
-    | ReflectCode.AcquireGlobalLock =>
-        TYPECASE args[1] OF
-        | ObValue.ValReplObj =>
-        ELSE
-          ObValue.BadArgType(
-            1, "reflectted object", self.name, opCode.name, loc);
-          <*ASSERT FALSE*>
-        END;
-        RETURN ReflectAcquireLock(args[1], loc);
-    | ReflectCode.ReleaseGlobalLock =>
-        TYPECASE args[1] OF
-        | ObValue.ValReplObj =>
-        ELSE
-          ObValue.BadArgType(
-            1, "reflectted object", self.name, opCode.name, loc);
-          <*ASSERT FALSE*>
-        END;
-        RETURN ReflectReleaseLock(args[1], loc);
-    | ReflectCode.SetNodeName =>
-        TYPECASE args[1] OF
-        | ObValue.ValText (node) => text1 := node.text;
-        ELSE
-          ObValue.BadArgType(1, "text", self.name, opCode.name, loc);
-          <*ASSERT FALSE*>
-        END;
-        RETURN ReflectSetNodeName(text1, loc);
-    | ReflectCode.SetDefaultSequencer =>
-        TYPECASE args[1] OF
-        | ObValue.ValText (node) => text1 := node.text;
-        ELSE
-          ObValue.BadArgType(1, "text", self.name, opCode.name, loc);
-          <*ASSERT FALSE*>
-        END;
-        TYPECASE args[2] OF
-        | ObValue.ValText (node) => text2 := node.text;
-        ELSE
-          ObValue.BadArgType(2, "text", self.name, opCode.name, loc);
-          <*ASSERT FALSE*>
-        END;
-        RETURN ReflectSetDefaultSequencer(text1, text2, loc);
-    ELSE
-      ObValue.BadOp(self.name, opCode.name, loc);
+    TRY
+      CASE NARROW(opCode, ReflectOpCode).code OF
+      | ReflectCode.Error => RETURN reflectError;
+      | ReflectCode.IsArray =>
+          TYPECASE args[1] OF
+          | ObValue.ValArray => RETURN Obliq.true
+          ELSE
+            RETURN Obliq.false
+          END;
+      | ReflectCode.IsObject =>
+          TYPECASE args[1] OF
+          | ObValue.ValObj => RETURN Obliq.true
+          ELSE
+            RETURN Obliq.false
+          END;
+      | ReflectCode.IsClosure =>
+          TYPECASE args[1] OF
+          | ObValue.ValFun => RETURN Obliq.true
+          ELSE
+            RETURN Obliq.false
+          END;
+      | ReflectCode.IsException =>
+          TYPECASE args[1] OF
+          | ObValue.ValException => RETURN Obliq.true
+          ELSE
+            RETURN Obliq.false
+          END;
+      | ReflectCode.IsMethod =>
+          TYPECASE args[1] OF
+          | ObValue.ValMeth => RETURN Obliq.true
+          ELSE
+            RETURN Obliq.false
+          END;
+      | ReflectCode.IsUpdateMethod =>
+          TYPECASE args[1] OF
+          | ObValue.ValMeth(meth) => RETURN Obliq.NewBool(meth.meth.update);
+          ELSE
+            RETURN Obliq.false
+          END;
+      | ReflectCode.IsOption =>
+          TYPECASE args[1] OF
+          | ObValue.ValOption => RETURN Obliq.true
+          ELSE
+            RETURN Obliq.false
+          END;
+      | ReflectCode.IsBasic =>
+          TYPECASE args[1] OF
+          | ObValue.ValOk, ObValue.ValBool, ObValue.ValChar, 
+            ObValue.ValText, ObValue.ValInt, ObValue.ValReal =>
+              RETURN Obliq.true
+          ELSE
+            RETURN Obliq.false
+          END;
+      | ReflectCode.IsNative =>
+          TYPECASE args[1] OF
+          | ObValue.ValAnything => RETURN Obliq.true
+          ELSE
+            RETURN Obliq.false
+          END;
+      | ReflectCode.IsAlias =>
+          TYPECASE args[1] OF
+          | ObValue.ValAlias => RETURN Obliq.true
+          ELSE
+            RETURN Obliq.false
+          END;
+      | ReflectCode.IsProtected =>
+          TYPECASE args[1] OF
+          | ObValue.ValObj (node) => EVAL node.Who(protected, serialized);
+          ELSE
+            ObValue.BadArgType(1, "object", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          RETURN NEW(ObValue.ValBool, bool := protected);
+      | ReflectCode.IsSerialized =>
+          TYPECASE args[1] OF
+          | ObValue.ValObj (node) => EVAL node.Who(protected, serialized);
+          ELSE
+            ObValue.BadArgType(1, "object", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          RETURN NEW(ObValue.ValBool, bool := serialized);
+      | ReflectCode.IsRemote =>
+          TYPECASE args[1] OF
+          | ObValue.ValRemObj, ObValue.ValRemArray, ObValue.ValRemVar =>
+            RETURN Obliq.true;
+          ELSE
+            RETURN Obliq.false;
+          END;
+      | ReflectCode.IsReplicated =>
+          TYPECASE args[1] OF
+          | ObValue.ValReplObj, ObValue.ValReplArray, ObValue.ValReplVar =>
+            RETURN Obliq.true;
+          ELSE
+            RETURN Obliq.false;
+          END;
+      | ReflectCode.IsSimple =>
+          TYPECASE args[1] OF
+          | ObValue.ValSimpleObj, ObValue.ValSimpleArray, 
+            ObValue.ValSimpleVar =>
+            RETURN Obliq.true;
+          ELSE
+            RETURN Obliq.false;
+          END;
+      | ReflectCode.IsLocal =>
+          TYPECASE args[1] OF
+          | ObValue.ValRemObj (node) =>
+              RETURN NEW(ObValue.ValBool, bool := 
+                TYPECODE(node.remote) = TYPECODE(ObValue.RemObjServer));
+          | ObValue.ValRemArray (node) =>
+              RETURN NEW(ObValue.ValBool, bool := 
+                TYPECODE(node.remote) = TYPECODE(ObValue.RemVarServer));
+          | ObValue.ValRemVar (node) =>
+              RETURN NEW(ObValue.ValBool, bool := 
+                TYPECODE(node.remote) = TYPECODE(ObValue.RemArrayServer));
+          ELSE
+            RETURN Obliq.true
+          END;
+      | ReflectCode.GetOptionTag =>
+          TYPECASE args[1] OF
+          | ObValue.ValOption (o) => RETURN Obliq.NewText(o.tag);
+          ELSE
+            ObValue.BadArgType(1, "option", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+      | ReflectCode.GetOptionVal =>
+          TYPECASE args[1] OF
+          | ObValue.ValOption (o) => RETURN o.val;
+          ELSE
+            ObValue.BadArgType(1, "option", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+      | ReflectCode.GetType =>
+          RETURN NewOption(ObValue.GetTypeString(args[1]), ObValue.valOk);
+      | ReflectCode.GetTypedVal =>
+          RETURN NewOption(ObValue.GetTypeString(args[1]), args[1]);
+      | ReflectCode.ObjectWho =>
+          TYPECASE args[1] OF
+          | ObValue.ValObj (node) =>
+              text1 := node.Who(protected, serialized);
+          ELSE
+            ObValue.BadArgType(1, "object", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          RETURN NEW(ObValue.ValText, text := text1);
+      | ReflectCode.Select =>
+          TYPECASE args[1] OF
+          | ObValue.ValObj (obj) => obj1 := obj;
+          ELSE
+            ObValue.BadArgType(1, "object", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          TYPECASE args[2] OF
+          | ObValue.ValText (text) => text1 := text.text;
+          ELSE
+            ObValue.BadArgType(1, "text", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          hint := -1;
+          TRY
+            RETURN obj1.Select(swr, text1, FALSE, hint);
+          EXCEPT
+          | ObValue.ServerError(msg) => 
+            ObValue.RaiseException(
+                reflectError, self.name & "_" & opCode.name & ": " & msg, loc);
+            <*ASSERT FALSE*>
+          END;
+      | ReflectCode.Update =>
+          TYPECASE args[1] OF
+          | ObValue.ValObj (obj) => obj1 := obj;
+          ELSE
+            ObValue.BadArgType(1, "object", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          TYPECASE args[2] OF
+          | ObValue.ValText (text) => text1 := text.text;
+          ELSE
+            ObValue.BadArgType(2, "text", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          hint := -1;
+          TRY
+            obj1.Update(text1, args[3], FALSE, hint);
+            RETURN ObValue.valOk;
+          EXCEPT
+          | ObValue.ServerError(msg) => 
+            ObValue.RaiseException(
+                reflectError, self.name & "_" & opCode.name & ": " & msg, loc);
+              <*ASSERT FALSE*>
+          END;
+      | ReflectCode.Invoke =>
+          TYPECASE args[1] OF
+          | ObValue.ValObj (obj) => obj1 := obj;
+          ELSE
+            ObValue.BadArgType(1, "object", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          TYPECASE args[2] OF
+          | ObValue.ValText (text) => text1 := text.text;
+          ELSE
+            ObValue.BadArgType(2, "text", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          TYPECASE args[3] OF
+          | ObValue.ValArray (arr) => array1 := arr.Obtain();
+          ELSE
+            ObValue.BadArgType(3, "array", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          hint := -1;
+          TRY
+            RETURN obj1.Invoke(swr, text1, NUMBER(array1^), array1^, 
+                               FALSE, hint);
+          EXCEPT
+          | ObValue.ServerError(msg) => 
+            ObValue.RaiseException(
+                reflectError, self.name & "_" & opCode.name & ": " & msg, loc);
+              <*ASSERT FALSE*>
+          END;
+      | ReflectCode.NewAlias =>
+          TYPECASE args[1] OF
+          | ObValue.ValObj (obj) => obj1 := obj;
+          ELSE
+            ObValue.BadArgType(1, "object", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          TYPECASE args[2] OF
+          | ObValue.ValText (text) => text1 := text.text;
+          ELSE
+            ObValue.BadArgType(2, "text", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          hint := -1;
+          RETURN ObValue.NewAlias(obj1, text1, loc);
+      | ReflectCode.GetFieldTypes =>
+          TYPECASE args[1] OF
+          | ObValue.ValObj (obj) => obj1 := obj;
+          ELSE
+            ObValue.BadArgType(1, "object", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          TRY
+            VAR desc := obj1.ObtainDescriptions();
+                vals := NEW(REF ARRAY OF ObValue.Val, NUMBER(desc^));
+                arr : ARRAY [0 .. 1] OF ObValue.Val;
+            BEGIN
+              FOR i := FIRST(desc^) TO LAST(desc^) DO
+                arr[0] := Obliq.NewText(desc[i].label);
+                arr[1] := NewOption(desc[i].type, ObValue.valOk);
+                vals[i] := ObValue.NewSimpleArray(arr);
+              END;
+              RETURN ObValue.NewSimpleArrayFromVals(vals);
+            END;
+          EXCEPT
+          | ObValue.ServerError(msg) => 
+            ObValue.RaiseException(
+                reflectError, self.name & "_" & opCode.name & ": " & msg, loc);
+              <*ASSERT FALSE*>
+          END;
+      | ReflectCode.GetObjectType =>
+          TYPECASE args[1] OF
+          | ObValue.ValObj (obj) => obj1 := obj;
+          ELSE
+            ObValue.BadArgType(1, "object", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          TRY
+            VAR desc := obj1.ObtainDescriptions();
+                ret  := ".*";
+            BEGIN
+              FOR i := 0 TO LAST(desc^) DO
+                ret := ret & "|" & desc[i].label & "=>" & desc[i].type & "|.*";
+              END;
+              RETURN NewOption(ret, ObValue.valOk);
+            END;
+          EXCEPT
+          | ObValue.ServerError(msg) => 
+            ObValue.RaiseException(
+                reflectError, self.name & "_" & opCode.name & ": " & msg, loc);
+              <*ASSERT FALSE*>
+          END;
+      | ReflectCode.GetObjectInterface =>
+          TYPECASE args[1] OF
+          | ObValue.ValObj (obj) => obj1 := obj;
+          ELSE
+            ObValue.BadArgType(1, "object", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          TRY
+            VAR desc := obj1.ObtainDescriptions();
+                ret  := ".*";
+            BEGIN
+              FOR i := 0 TO LAST(desc^) DO
+                IF Text.Equal("Method", Text.Sub(desc[i].type, 0, 6)) THEN
+                  ret := ret & "|" & desc[i].label & "=>" & 
+                             desc[i].type & "|.*";
+                END;
+              END;
+              RETURN NewOption(ret, ObValue.valOk);
+            END;
+          EXCEPT
+          | ObValue.ServerError(msg) => 
+            ObValue.RaiseException(
+                reflectError, self.name & "_" & opCode.name & ": " & msg, loc);
+              <*ASSERT FALSE*>
+          END;
+      | ReflectCode.GetField =>
+          TYPECASE args[1] OF
+          | ObValue.ValObj (obj) => obj1 := obj;
+          ELSE
+            ObValue.BadArgType(1, "object", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          TYPECASE args[2] OF
+          | ObValue.ValText (text) => text1 := text.text;
+          ELSE
+            ObValue.BadArgType(2, "text", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          TRY
+            RETURN obj1.ObtainField(text1,FALSE);
+          EXCEPT
+          | ObValue.ServerError(msg) => 
+            ObValue.RaiseException(
+                reflectError, self.name & "_" & opCode.name & ": " & msg, loc);
+              <*ASSERT FALSE*>
+          END;
+      | ReflectCode.GetFields =>
+          TYPECASE args[1] OF
+          | ObValue.ValObj (obj) => obj1 := obj;
+          ELSE
+            ObValue.BadArgType(1, "object", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          TRY
+            VAR fields := obj1.Obtain(FALSE);
+                vals := NEW(REF ARRAY OF ObValue.Val, NUMBER(fields^));
+                arr : ARRAY [0 .. 1] OF ObValue.Val;
+            BEGIN
+              FOR i := FIRST(fields^) TO LAST(fields^) DO
+                arr[0] := ObValue.NewText(fields[i].label);
+                arr[1] := fields[i].field;
+                vals[i] := ObValue.NewSimpleArray(arr);
+              END;
+              RETURN ObValue.NewSimpleArrayFromVals(vals);
+            END;
+          EXCEPT
+          | ObValue.ServerError(msg) => 
+            ObValue.RaiseException(
+                reflectError, self.name & "_" & opCode.name & ": " & msg, loc);
+              <*ASSERT FALSE*>
+          END;
+      | ReflectCode.Match =>
+          RETURN Obliq.NewBool(Match(args[1],args[2],loc));
+      | ReflectCode.NewObject =>
+          TYPECASE args[1] OF
+          | ObValue.ValText (text) => text1 := text.text;
+          | ObValue.ValOption (o) => text1 := o.tag;
+          ELSE
+            ObValue.BadArgType(1, "text or option", self.name,
+                               opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          TYPECASE args[2] OF
+          | ObValue.ValBool (bool) => protected := bool.bool;
+          ELSE
+            ObValue.BadArgType(2, "bool", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          TYPECASE args[3] OF
+          | ObValue.ValBool (bool) => serialized := bool.bool;
+          ELSE
+            ObValue.BadArgType(3, "bool", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          TYPECASE args[4] OF
+          | ObValue.ValText (text) => text2 := text.text;
+          ELSE
+            ObValue.BadArgType(4, "text", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          TYPECASE args[5] OF
+          | ObValue.ValArray (arr) => array1 := arr.Obtain();
+          ELSE
+            ObValue.BadArgType(5, "array", self.name, opCode.name, loc);
+            <*ASSERT FALSE*>
+          END;
+          VAR fields := NEW(REF ObValue.ObjFields, NUMBER(array1^));
+              sync   : ObValue.Sync := NIL;
+          BEGIN
+            FOR i := FIRST(fields^) TO LAST(fields^) DO
+              TYPECASE array1[i] OF
+              | ObValue.ValArray(arr) =>
+                WITH vals = arr.Obtain() DO
+                  IF NUMBER(vals^) # 2 THEN
+                    ObValue.BadArgVal(5, "a [text,val] pair in element " &
+                                         Fmt.Int(i),
+                                      self.name, opCode.name, loc);
+                    <*ASSERT FALSE*>
+                  END;
+                  TYPECASE vals[0] OF
+                  | ObValue.ValText(text) => fields[i].label := text.text;
+                  ELSE
+                    ObValue.BadArgVal(5, "a text in element [" &
+                                         Fmt.Int(i) & ", 0]",
+                                      self.name, opCode.name, loc);
+                    <*ASSERT FALSE*>
+                  END;
+                  fields[i].field := vals[1];
+                END;
+              ELSE
+                ObValue.BadArgVal(5, "an array of [text,val] pairs",
+                                  self.name, opCode.name, loc);
+                <*ASSERT FALSE*>
+              END;
+            END;
+            IF Text.Equal(text1, "Simple") OR 
+               Text.Equal(text1, "Object`Simple") THEN
+              IF serialized THEN
+                sync := NEW(ObValue.Sync, mutex := NEW(Thread.Mutex))
+              END;
+              RETURN ObValue.NewSimpleObjectFromFields(fields, text2,
+                                                       protected, sync);
+            ELSIF Text.Equal(text1, "Remote") OR
+                  Text.Equal(text1, "Object`Remote") THEN
+              IF serialized THEN
+                sync := NEW(ObValue.Sync, mutex := NEW(Thread.Mutex))
+              END;
+              RETURN ObValue.NewObjectFromFields(fields, text2,
+                                                 protected, sync);
+            ELSIF Text.Equal(text1, "Replicated") OR
+                  Text.Equal(text1, "Object`Replicated") THEN
+              TRY
+                RETURN ObValue.NewReplObjectFromFields(fields, text2,
+                                                       protected);
+              EXCEPT
+              | ObValue.ServerError(msg) => 
+                ObValue.RaiseException(
+                    reflectError, self.name & "_" & opCode.name & ": " & msg, 
+                    loc);
+                <*ASSERT FALSE*>
+              END;
+            ELSE
+              ObValue.BadArgVal(1, "one of {Object`Simple, Simple, Object`Remote, Remote, Object`Replicated, Replicated}",
+                                self.name, opCode.name, loc);
+              <*ASSERT FALSE*>
+            END;
+          END;
+      ELSE
+        ObValue.BadOp(self.name, opCode.name, loc);
+        <*ASSERT FALSE*>
+      END;
+    EXCEPT
+    | NetObj.Error (atoms) =>
+        ObValue.RaiseNetException(
+          self.name & "_" & opCode.name & ": ", atoms, loc);
+      <*ASSERT FALSE*>
+    | Thread.Alerted =>
+        ObValue.RaiseException(
+          ObValue.threadAlerted, self.name & "_" & opCode.name & ": ", loc);
+      <*ASSERT FALSE*>
+    | SharedObj.Error (atoms) =>
+        ObValue.RaiseSharedException(
+          self.name & "_" & opCode.name & ": ", atoms, loc);
       <*ASSERT FALSE*>
     END;
   END EvalReflect;
 
-PROCEDURE ReflectNotify (valObj   : ObValue.Val;
-                         notifyObj: ObValue.ValObj;
-                         loc      : SynLocation.T   ): ObValue.Val
-  RAISES {ObValue.Exception} =
+  (* Match a value "val" against a match object.  The "match" object
+     is a positive match if:
+       - "match" is ok
+       - "match" and "val" are equal, or
+       - "val" is a text string and "match" is a regular expression
+         that matches all of val (ie. "val" matches "^" & match & "$")
+       - "match" is a regular expression that matches all of the TypeString
+         of "val"
+       - "match" is an option whose regular expression matches all of the
+         TypeString of "val", and the value of the option is either
+         "ok" or also matches "val".
+       - "val" and "match" are objects, and for each field of "match",
+         "val" has a corresponding field whose contents are matched by the
+         contents of the field of "match".
+       - "val" and "match" are arrays of the same size, and each
+         element of the array matches
+  *)
+PROCEDURE Match (match, val: Obliq.Val; loc: SynLocation.T): BOOLEAN  
+  RAISES {ObValue.Error, ObValue.Exception, NetObj.Error,
+          SharedObj.Error, Thread.Alerted} =
   BEGIN
-    TYPECASE valObj OF
-    | ObValue.ValReplObj (obj) =>
-        TYPECASE notifyObj OF
-        | ObValue.ValSimpleObj (notifier) =>
-            RETURN ObValueNotify.New(obj, notifier, loc);
+    IF ObValue.Is(match, val, loc) THEN RETURN TRUE END;
+
+    TYPECASE match OF
+    | ObValue.ValOk => RETURN TRUE;
+    | ObValue.ValOption (m1) =>
+      TRY
+        WITH typeVal = ObValue.GetTypeString (val),
+             compiled = RegEx.Compile("^" & m1.tag & "$") DO
+          IF RegEx.Execute(compiled, typeVal) = -1 THEN
+            RETURN FALSE;
+          END;
+        END;
+      EXCEPT RegEx.Error (txt2) =>
+        ObValue.RaiseError("Option regular expression '"&
+          m1.tag & "' error:" & txt2, loc)
+      END;
+      TYPECASE m1.val OF 
+        ObValue.ValOk => RETURN TRUE;
+      ELSE
+        RETURN Match(m1.val, val, loc);
+      END;
+    | ObValue.ValText (t1) =>
+      TRY
+        WITH typeVal = ObValue.GetTypeString (val),
+             compiled = RegEx.Compile("^" & t1.text & "$") DO
+          IF RegEx.Execute(compiled, typeVal) = -1 THEN
+            RETURN FALSE;
+          END;
+        END;
+      EXCEPT RegEx.Error (txt2) =>
+        ObValue.RaiseError("Option regular expression '"&
+          t1.text & "' error:" & txt2, loc)
+      END;
+      RETURN TRUE;
+
+    | ObValue.ValArray (ma) =>
+      TRY
+        TYPECASE val OF
+        | ObValue.ValArray (va) =>
+          WITH ms = ma.Size() DO
+            IF ms # va.Size() THEN RETURN FALSE END;
+            FOR i := 0 TO ms-1 DO
+              IF NOT Match(ma.Get(i), va.Get(i), loc) THEN
+                RETURN FALSE;
+              END;
+            END;
+            RETURN TRUE;
+          END;
         ELSE
-          ObValue.RaiseException(
-            ObValue.sharedException,
-            "reflect_notify failed: '"
-              & "second argument must be a simple object", loc);
-          <*ASSERT FALSE*>
+          RETURN FALSE;
         END;
-    ELSE
-      ObValue.RaiseException(
-        ObValue.sharedException,
-        "reflect_notify failed: '"
-          & "first argument must be a reflectted object", loc);
-      <*ASSERT FALSE*>
-    END;
-  END ReflectNotify;
-
-PROCEDURE ReflectCancelNotifier (notifier: ObValue.Val; loc: SynLocation.T)
-  RAISES {ObValue.Exception} =
-  BEGIN
-    TYPECASE notifier OF
-    | ObValueNotify.ValObjCB (obj) => obj.cancel();
-    ELSE
-      ObValue.RaiseException(
-        ObValue.sharedException,
-        "reflect_cancelNotifier failed: '"
-          & "first argument must be a notifier callback", loc);
-      <*ASSERT FALSE*>
-    END;
-  END ReflectCancelNotifier;
-
-PROCEDURE ReflectAcquireLock (valObj: ObValue.ValObj; loc: SynLocation.T):
-  ObValue.Val RAISES {ObValue.Exception} =
-  BEGIN
-    TRY
-      TYPECASE valObj OF
-      | ObValue.ValReplObj (obj) =>
-          SharedObj.AcquireGlobalLock(obj.reflect);
-      ELSE
-        ObValue.RaiseException(
-          ObValue.sharedException,
-          "reflect_acquire failed: '"
-            & "argument must be a reflectted object", loc);
+      EXCEPT
+      | ObValue.ServerError(msg) => 
+        ObValue.RaiseException(reflectError, "reflect_match: " & msg, 
+                               loc);
         <*ASSERT FALSE*>
       END;
-    EXCEPT
-    | SharedObj.Error (atoms) =>
-        ObValue.RaiseSharedException("reflect_acquire: ", atoms, loc);
-    | Thread.Alerted =>
-        ObValue.RaiseException(
-          ObValue.threadAlerted, "reflect_acquire: ", loc);
-    END;
-    RETURN ObValue.valOk;
-  END ReflectAcquireLock;
 
-PROCEDURE ReflectReleaseLock (valObj: ObValue.ValObj; loc: SynLocation.T):
-  ObValue.Val RAISES {ObValue.Exception} =
-  BEGIN
-    TRY
-      TYPECASE valObj OF
-      | ObValue.ValReplObj (obj) =>
-          SharedObj.ReleaseGlobalLock(obj.reflect);
-      ELSE
-        ObValue.RaiseException(
-          ObValue.sharedException,
-          "reflect_release failed: '"
-            & "argument must be a reflectted object", loc);
+    | ObValue.ValObj (mo) =>
+      TRY
+        TYPECASE val OF
+        | ObValue.ValObj (vo) =>
+          VAR mfields := mo.Obtain(FALSE);
+              vfields := vo.Obtain(FALSE);
+              vi: INTEGER := 0;
+          BEGIN
+            FOR i := FIRST(mfields^) TO LAST(mfields^) DO
+              IF vi > LAST(vfields^) THEN RETURN FALSE END;
+              WHILE vi <= LAST(vfields^) DO
+                WITH cmp = Text.Compare(vfields[vi].label,
+                                        mfields[i].label) DO
+                  IF cmp = 1 THEN RETURN FALSE END;
+                  IF cmp = 0 THEN 
+                    IF NOT Match(mfields[i].field, vfields[vi].field,
+                                 loc) THEN
+                      RETURN FALSE;
+                    END;
+                    INC(vi);
+                    EXIT;
+                  END;
+                  INC(vi);
+                END;
+              END;
+            END;
+            RETURN TRUE;
+          END;
+        ELSE
+          RETURN FALSE;
+        END;
+      EXCEPT
+      | ObValue.ServerError(msg) => 
+        ObValue.RaiseException(reflectError, "reflect_match: " & msg, 
+                               loc);
         <*ASSERT FALSE*>
       END;
-    EXCEPT
-    | SharedObj.Error (atoms) =>
-        ObValue.RaiseSharedException("reflect_release: ", atoms, loc);
-      <*ASSERT FALSE*>
-    | Thread.Alerted =>
-        ObValue.RaiseException(
-          ObValue.threadAlerted, "reflect_release: ", loc);
-      <*ASSERT FALSE*>
+    ELSE
+      RETURN FALSE;
     END;
-    RETURN ObValue.valOk;
-  END ReflectReleaseLock;
-
-PROCEDURE ReflectSetNodeName (name: TEXT; loc: SynLocation.T): ObValue.Val
-  RAISES {ObValue.Exception} =
-  BEGIN
-    TRY
-      IF Text.Equal(name, "") THEN name := ObValue.machineAddress; END;
-      SharedObjRT.ExportSpace(name);
-      RETURN ObValue.NewText(name);
-    EXCEPT
-    | SharedObj.Error (atoms) =>
-        ObValue.RaiseSharedException("reflect_setNodeName: ", atoms, loc);
-      <*ASSERT FALSE*>
-    | Thread.Alerted =>
-        ObValue.RaiseException(
-          ObValue.threadAlerted, "reflect_setNodeName: ", loc);
-      <*ASSERT FALSE*>
-    END;
-  END ReflectSetNodeName;
-
-PROCEDURE ReflectDumpState (loc: SynLocation.T)
-  RAISES {ObValue.Exception} =
-  BEGIN
-    TRY
-      SharedObjRT.LocalSpace().printState();
-    EXCEPT
-    | NetObj.Error (atoms) =>
-        ObValue.RaiseNetException("reflect_dumpState: ", atoms, loc);
-      <*ASSERT FALSE*>
-    | Thread.Alerted =>
-        ObValue.RaiseException(
-          ObValue.threadAlerted, "reflect_setNodeName: ", loc);
-      <*ASSERT FALSE*>
-    END;
-  END ReflectDumpState;
-
-PROCEDURE ReflectSetDefaultSequencer (host, name: TEXT; loc: SynLocation.T):
-  ObValue.Val RAISES {ObValue.Exception} =
-  VAR space: ObjectSpace.T;
-  BEGIN
-    TRY
-      IF Text.Equal("", host) THEN
-        WITH defhost = Env.Get("SEQUENCERHOST") DO
-          IF defhost # NIL THEN host := defhost; END;
-        END;
-      END;
-      IF Text.Equal("", name) THEN
-        WITH defname = Env.Get("SEQUENCERNAME") DO
-          IF defname # NIL THEN name := defname; END;
-        END;
-      END;
-
-      IF NOT Text.Equal("", host) OR NOT Text.Equal("", name) THEN
-        space := SharedObjRT.ImportSpace(host, name);
-        IF space = NIL THEN
-          ObValue.RaiseException(
-            ObValue.sharedException,
-            "reflect_setDefaultSequencer: node " & name & "@" & host
-              & " is unavailable", loc);
-          <*ASSERT FALSE*>
-        END;
-      ELSE
-        space := SharedObjRT.LocalSpace();
-      END;
-      SharedObjRT.SetDfltSequencer(space);
-      RETURN ObValue.valOk;
-    EXCEPT
-    | SharedObj.Error (atoms) =>
-        ObValue.RaiseSharedException(
-          "reflect_setDefaultSequencer: ", atoms, loc);
-      <*ASSERT FALSE*>
-    | Thread.Alerted =>
-        ObValue.RaiseException(
-          ObValue.threadAlerted, "reflect_setDefaultSequencer: ", loc);
-      <*ASSERT FALSE*>
-    END;
-  END ReflectSetDefaultSequencer;
-*)
+  END Match;
+       
 BEGIN
+  RTProcess.RegisterExitor(ObliqExitor);
 END ObBuiltIn.

@@ -1,19 +1,27 @@
 (* Copyright 1991 Digital Equipment Corporation. *)
 (* Distributed only by permission. *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: 
+ * Last Modified On: Sun Aug 30 20:40:47 1998
+ *)
 
 MODULE ObValue EXPORTS ObValue, ObValueRep;
 
 IMPORT Text, Fmt, SynWr, SynLocation, ObTree, AtomList, Atom, ObEval,
        NetObj, Pickle2 AS Pickle, PickleStubs, Rd, Wr, Thread,
        OSError, TextRefTbl, Refany, FileRd, FileWr, OpSys, SharedObj,
-       NetObjNotifier;
+       NetObjNotifier, Obliq, ObFieldArraySort, File, Time, FS, Pipe,
+       Process, Pathname, M3Config, ObPathSep(*, NetObjF, EventStubLib*);
 
 IMPORT ObValuePickle; 
 
 (* IMPORT Env AS ProcEnv; *)
 
 REVEAL
-    ValRemObj = ValRemObjPublic BRANDED "ValRemObj" OBJECT OVERRIDES
+    ValRemObj = ValRemObjPublic BRANDED "ObValue.ValRemObj" OBJECT OVERRIDES
       Who      := ValRemObjWho;
       Select   := ValRemObjSelect;
       Invoke   := ValRemObjInvoke;
@@ -21,9 +29,12 @@ REVEAL
       Redirect := ValRemObjRedirect;
       Has      := ValRemObjHas;
       Obtain   := ValRemObjObtain;
+      ObtainField := ValRemObjObtainField;
+      ObtainDescriptions := ValRemObjObtainDescriptions;
+      Describe := ValRemObjDescribe;
     END;
 
-    ValReplObj = ValReplObjPublic BRANDED "ValReplObj" OBJECT OVERRIDES
+    ValReplObj = ValReplObjPublic BRANDED "ObValue.ValReplObj" OBJECT OVERRIDES
       Who      := ValReplObjWho;
       Select   := ValReplObjSelect;
       Invoke   := ValReplObjInvoke;
@@ -31,9 +42,12 @@ REVEAL
       Redirect := ValReplObjRedirect;
       Has      := ValReplObjHas;
       Obtain   := ValReplObjObtain;
+      ObtainField := ValReplObjObtainField;
+      ObtainDescriptions := ValReplObjObtainDescriptions;
+      Describe := ValReplObjDescribe;
     END;
 
-    ValSimpleObj = ValSimpleObjPublic BRANDED "ValSimpleObj" OBJECT
+    ValSimpleObj = ValSimpleObjPublic BRANDED "ObValue.ValSimpleObj" OBJECT
       OVERRIDES
         Who      := ValSimpleObjWho;
         Select   := ValSimpleObjSelect;
@@ -42,27 +56,62 @@ REVEAL
         Redirect := ValSimpleObjRedirect;
         Has      := ValSimpleObjHas;
         Obtain   := ValSimpleObjObtain;
+        ObtainField := ValSimpleObjObtainField;
+        ObtainDescriptions := ValSimpleObjObtainDescriptions;
+        Describe := ValSimpleObjDescribe;
       END;
 
-  RemVarServer = RemVar BRANDED "RemVarServer" OBJECT
+    ValRemVar = ValRemVarPublic BRANDED "ObValue.ValRemVar" OBJECT OVERRIDES
+      Get        := ValRemVarGet;
+      Set        := ValRemVarSet;
+    END;
+
+    ValReplVar = ValReplVarPublic BRANDED "ObValue.ValReplVar" OBJECT OVERRIDES
+      Get        := ValReplVarGet;
+      Set        := ValReplVarSet;
+    END;
+
+    ValSimpleVar = ValSimpleVarPublic BRANDED "ObValue.ValSimpleVar" OBJECT OVERRIDES
+      Get        := ValSimpleVarGet;
+      Set        := ValSimpleVarSet;
+    END;
+
+    ValRemArray = ValRemArrayPublic BRANDED "ObValue.ValRemArray" OBJECT OVERRIDES
+                     Size   := ValRemArraySize;
+                     Get    := ValRemArrayGet;
+                     Set    := ValRemArraySet;
+                     Sub    := ValRemArraySub;
+                     Upd    := ValRemArrayUpd;
+                     Obtain := ValRemArrayObtain;
+                   END;
+
+    ValReplArray = ValReplArrayPublic BRANDED "ObValue.ValReplArray" OBJECT OVERRIDES
+                     Size   := ValReplArraySize;
+                     Get    := ValReplArrayGet;
+                     Set    := ValReplArraySet;
+                     Sub    := ValReplArraySub;
+                     Upd    := ValReplArrayUpd;
+                     Obtain := ValReplArrayObtain;
+                   END;
+
+    ValSimpleArray = ValSimpleArrayPublic BRANDED "ObValue.ValSimpleArray" OBJECT 
+                   OVERRIDES
+                     Size   := ValSimpleArraySize;
+                     Get    := ValSimpleArrayGet;
+                     Set    := ValSimpleArraySet;
+                     Sub    := ValSimpleArraySub;
+                     Upd    := ValSimpleArrayUpd;
+                     Obtain := ValSimpleArrayObtain;
+                   END;
+
+     RemVarServer = RemVar BRANDED "ObValue.RemVarServer" OBJECT
                    val: Val;
                  OVERRIDES
                    Get := VarGet;
                    Set := VarSet;
                  END;
 
-  RemArrayServer = RemArray BRANDED "RemArrayServer" OBJECT
-                     array: REF Vals;
-                   OVERRIDES
-                     Size   := ArraySize;
-                     Get    := ArrayGet;
-                     Set    := ArraySet;
-                     Sub    := ArraySub;
-                     Upd    := ArrayUpd;
-                     Obtain := ArrayObtain;
-                   END;
-
-  RemObjServer = RemObjServerPublic BRANDED "RemObjServer" OBJECT
+     RemObjServer = RemObjServerPublic BRANDED "ObValue.RemObjServer" OBJECT
                    self     : ValRemObj;
                    fields   : REF ObjFields;
                    protected: BOOLEAN;
@@ -74,9 +123,23 @@ REVEAL
                    Redirect := ObjRedirect;
                    Has      := ObjHas;
                    Obtain   := ObjObtain;
+                   ObtainField := ObjObtainField;
+                   ObtainDescriptions := ObjObtainDescriptions;
+                   Describe := ObjDescribe;
                  END;
 
-  SimpleObj = SimpleObjPublic BRANDED "SimpleObj" OBJECT
+    RemArrayServer = RemArray BRANDED "ObValue.RemArrayServer" OBJECT
+                     array: REF Vals;
+                   OVERRIDES
+                     Size   := ArraySize;
+                     Get    := ArrayGet;
+                     Set    := ArraySet;
+                     Sub    := ArraySub;
+                     Upd    := ArrayUpd;
+                     Obtain := ArrayObtain;
+                   END;
+
+    SimpleObj = SimpleObjPublic BRANDED "ObValue.SimpleObj" OBJECT
                 self     : ValSimpleObj;
                 fields   : REF ObjFields;
                 protected: BOOLEAN;
@@ -91,22 +154,89 @@ REVEAL
                 Redirect := SimpleObjRedirect;
                 Has      := SimpleObjHas;
                 Obtain   := SimpleObjObtain;
+                ObtainField := SimpleObjObtainField;
+                ObtainDescriptions := SimpleObjObtainDescriptions;
+                Describe := SimpleObjDescribe;
               END;
 
-  RemFileSystemServer = RemFileSystem BRANDED "RemFileSystemServer" OBJECT
+    SimpleVar = SimpleVarPublic BRANDED "ObValue.SimpleVar" OBJECT
+                   val: Val;
+                 OVERRIDES
+                   Get := SimpleVarGet;
+                   Set := SimpleVarSet;
+                 END;
+
+    SimpleArray = SimpleArrayPublic BRANDED "ObValue.SimpleArray" OBJECT
+                     array: REF Vals;
+                   OVERRIDES
+                     Size   := SimpleArraySize;
+                     Get    := SimpleArrayGet;
+                     Set    := SimpleArraySet;
+                     Sub    := SimpleArraySub;
+                     Upd    := SimpleArrayUpd;
+                     Obtain := SimpleArrayObtain;
+                   END;
+
+    RemFileSystemServer = RemFileSystem BRANDED "ObValue.RemFileSystemServer" OBJECT
                           readOnly: BOOLEAN;
                         OVERRIDES
                           OpenRead   := FileSystemOpenRead;
                           OpenWrite  := FileSystemOpenWrite;
                           OpenAppend := FileSystemOpenAppend;
+                          GetAbsolutePathname := FileSystemGetAbsolutePathname;
+                          CreateDirectory := FileSystemCreateDirectory;
+                          DeleteDirectory := FileSystemDeleteDirectory;
+                          DeleteFile := FileSystemDeleteFile;
+                          Rename := FileSystemRename;
+                          Iterate := FileSystemIterate;
+                          Status := FileSystemStatus;
+                          SetModificationTime := FileSystemSetModificationTime;
+                          (* path support *)
+                          PathSep := FileSystemPathSep;
+                          PathSearchSep := FileSystemPathSearchSep;
+                          PathCurrent := FileSystemPathCurrent;
+                          PathParent := FileSystemPathParent;
+                          PathValid := FileSystemPathValid;
+                          PathDecompose := FileSystemPathDecompose;
+                          PathCompose := FileSystemPathCompose;
+                          PathAbsolute := FileSystemPathAbsolute;
+                          PathPrefix := FileSystemPathPrefix;
+                          PathLast := FileSystemPathLast;
+                          PathBase := FileSystemPathBase;
+                          PathJoin := FileSystemPathJoin;
+                          PathLastBase := FileSystemPathLastBase;
+                          PathLastExt := FileSystemPathLastExt;
+                          PathReplaceExt := FileSystemPathReplaceExt;
                         END;
 
-  NonRemObjHookServer = NonRemObjHook BRANDED "NonRemObjHookServer" OBJECT
-    replObj: ValObj;
-  OVERRIDES
-    init := NonRemObjHookInit;
-    Get := NonRemObjHookGet;
-  END;
+    RemIteratorServer = RemIterator BRANDED "ObValue.RemIteratorServer" OBJECT
+                          iterator: FS.Iterator;
+                        OVERRIDES
+                          Next := IteratorNext;
+                          NextWithStatus := IteratorNextWithStatus;
+                          Close := IteratorClose;
+                        END;
+
+    RemProcessorServer = RemProcessor BRANDED "ObValue.RemProcessorServer" OBJECT
+                        OVERRIDES
+                          CreateProcess := ProcessorCreateProcess;
+                          GetWorkingDirectory := ProcessorGetWorkingDirectory;
+                          SetWorkingDirectory := ProcessorSetWorkingDirectory;
+                        END;
+
+    RemProcessServer = RemProcess BRANDED "ObValue.RemProcessServer" OBJECT
+                          proc: Process.T;
+                        OVERRIDES
+                          Wait := ProcessWait;
+                          GetID := ProcessGetID;
+                        END;
+
+    NonRemValHookServer = NonRemValHook BRANDED "ObValue.NonRemValHookServer" OBJECT
+      val: Val;
+    OVERRIDES
+      init := NonRemValHookInit;
+      Get := NonRemValHookGet;
+    END;
 
 VAR sysCallTable: TextRefTbl.Default;
 
@@ -122,10 +252,12 @@ PROCEDURE ThisMachine (): TEXT =
 PROCEDURE Setup () =
   BEGIN
     valOk := NEW(ValOk);
+    
     netException := NEW(ValException, name := "net_failure");
-    sharedException := NEW(ValException, name := "shared_failure");
-    sharedFatal := NEW(ValException, name := "shared_fatal");
+    sharedException := NEW(ValException, name := "replica_failure");
+    sharedFatal := NEW(ValException, name := "replica_fatal");
     threadAlerted := NEW(ValException, name := "thread_alerted");
+    osError := NEW(ValException, name := "os_error");
     machineAddress := ThisMachine();
 
     sysCallTable := NEW(TextRefTbl.Default).init();
@@ -133,8 +265,6 @@ PROCEDURE Setup () =
     showNetObjMsgs := FALSE;
 
     localProcessor := NewProcessor();
-    InhibitTransmission(TYPECODE(ValProcessor),
-                        "processors cannot be transmitted/duplicated");
   END Setup;
 
 PROCEDURE RaiseError (msg: TEXT; location: SynLocation.T) RAISES {Error} =
@@ -160,17 +290,26 @@ PROCEDURE RaiseException (exception: ValException;
                         exception := exception, data := NIL));
   END RaiseException;
 
+PROCEDURE AtomsToText(atoms: AtomList.T): TEXT =
+  VAR msg := "";
+  BEGIN
+    IF atoms # NIL THEN
+      msg := Atom.ToText(atoms.head);
+      atoms := atoms.tail;
+    END;
+    WHILE atoms # NIL DO
+      msg := msg & " " & Atom.ToText(atoms.head);
+      atoms := atoms.tail;
+    END;
+    RETURN msg;
+  END AtomsToText; 
+
 PROCEDURE RaiseNetException (msg  : TEXT;
                              atoms: AtomList.T;
                              loc  : SynLocation.T) RAISES {Exception} =
   BEGIN
     IF showNetObjMsgs THEN
-      msg := msg & " (NetObj says:";
-      WHILE atoms # NIL DO
-        msg := msg & " " & Atom.ToText(atoms.head);
-        atoms := atoms.tail;
-      END;
-      msg := msg & ")";
+      msg := msg & " (NetObj says: " & AtomsToText(atoms) & ")";
     END;
     RaiseException(netException, msg, loc);
   END RaiseNetException;
@@ -180,12 +319,7 @@ PROCEDURE RaiseSharedException (msg  : TEXT;
                                 loc  : SynLocation.T) RAISES {Exception} =
   BEGIN
     IF showNetObjMsgs THEN
-      msg := msg & " (SharedObj says:";
-      WHILE atoms # NIL DO
-        msg := msg & " " & Atom.ToText(atoms.head);
-        atoms := atoms.tail;
-      END;
-      msg := msg & ")";
+      msg := msg & " (SharedObj says: " & AtomsToText(atoms) & ")";
     END;
     RaiseException(sharedException, msg, loc);
   END RaiseSharedException;
@@ -265,7 +399,7 @@ PROCEDURE IsSelfOther (self, other: ValAnything): BOOLEAN =
     RETURN self = other;
   END IsSelfOther;
 
-PROCEDURE Is (v1, v2: Val; <*UNUSED*> location: SynLocation.T): BOOLEAN =
+PROCEDURE Is (v1, v2: Val; location: SynLocation.T): BOOLEAN =
   BEGIN
     (* handle NILs explicitely *)
     IF v1 = NIL OR v2 = NIL THEN RETURN v1 = v2 END;
@@ -310,9 +444,21 @@ PROCEDURE Is (v1, v2: Val; <*UNUSED*> location: SynLocation.T): BOOLEAN =
         ELSE
           RETURN FALSE;
         END;
-    | ValArray (node1) =>
+    | ValRemArray (node1) =>
         TYPECASE v2 OF
-        | ValArray (node2) => RETURN node1.remote = node2.remote;
+        | ValRemArray (node2) => RETURN node1.remote = node2.remote;
+        ELSE
+          RETURN FALSE;
+        END;
+    | ValReplArray (node1) =>
+        TYPECASE v2 OF
+        | ValReplArray (node2) => RETURN node1.replica = node2.replica;
+        ELSE
+          RETURN FALSE;
+        END;
+    | ValSimpleArray (node1) =>
+        TYPECASE v2 OF
+        | ValSimpleArray (node2) => RETURN node1.simple = node2.simple;
         ELSE
           RETURN FALSE;
         END;
@@ -324,7 +470,9 @@ PROCEDURE Is (v1, v2: Val; <*UNUSED*> location: SynLocation.T): BOOLEAN =
         END;
     | ValOption (node1) =>
         TYPECASE v2 OF
-        | ValOption (node2) => RETURN node1 = node2;
+        | ValOption (node2) => 
+          RETURN Text.Equal(node1.tag, node2.tag) AND
+                 Is(node1.val, node2.val, location);
         ELSE
           RETURN FALSE;
         END;
@@ -340,8 +488,6 @@ PROCEDURE Is (v1, v2: Val; <*UNUSED*> location: SynLocation.T): BOOLEAN =
         ELSE
           RETURN FALSE;
         END;
-      (* Obliq++: added handling for the 3 subtypes, and removed the
-         generic ValObj supertype *)
     | ValRemObj (node1) =>
         TYPECASE v2 OF
         | ValRemObj (node2) => RETURN node1.remote = node2.remote;
@@ -376,26 +522,72 @@ PROCEDURE Is (v1, v2: Val; <*UNUSED*> location: SynLocation.T): BOOLEAN =
     END;
   END Is;
 
+PROCEDURE BadArgsNoMsg (desired, found          : INTEGER;
+                        routineKind, routineName: TEXT     ): TEXT =
+  VAR msg: TEXT;
+  BEGIN
+    msg := "Expecting " & Fmt.Int(desired);
+    IF desired = 1 THEN
+      msg := msg & " argument";
+    ELSE
+      msg := msg & " arguments";
+    END;
+    msg := msg & ", not " & Fmt.Int(found);
+    IF NOT Text.Empty(routineKind) THEN
+      msg := msg & ", for " & routineKind & ": " & routineName;
+    END;
+    RETURN msg;
+  END BadArgsNoMsg;
+
+PROCEDURE NonRemValHookGet (self: NonRemValHookServer): Val =
+  BEGIN
+    RETURN self.val;
+  END NonRemValHookGet; 
+
+PROCEDURE NonRemValHookInit (self: NonRemValHookServer; val: Val):
+  NonRemValHook =
+  BEGIN
+    self.val := val;
+    RETURN self;
+  END NonRemValHookInit; 
+
+(****************************************************************
+ * The New Routines
+ ****************************************************************)
 PROCEDURE NewText (text: TEXT): Val =
   BEGIN
     IF text = NIL THEN text := "" END;
     RETURN NEW(ValText, text := text);
   END NewText;
 
-PROCEDURE NewVar (val: Val): ValVar =
+PROCEDURE NewAlias (obj: ValObj; label: TEXT; location: SynLocation.T):
+  ValAlias RAISES {Error, Exception} =
+  VAR
+    hint    : INTEGER;
+    hasLabel          := FALSE;
   BEGIN
-    RETURN NEW(ValVar, remote := NEW(RemVarServer, val := val));
-  END NewVar;
-
-PROCEDURE VarGet (self: RemVarServer): Val RAISES {} =
-  BEGIN
-    RETURN self.val;
-  END VarGet;
-
-PROCEDURE VarSet (self: RemVarServer; val: Val) RAISES {} =
-  BEGIN
-    self.val := val;
-  END VarSet;
+    TRY
+      hasLabel := obj.Has(label, (*var*) hint);
+      IF hasLabel THEN
+        RETURN NEW(ValAlias, label := label, labelIndexHint := hint,
+                   obj := obj);
+      ELSE
+        RaiseError("Field not found in object: " & label, location);
+        <*ASSERT FALSE*>
+      END;
+    EXCEPT
+    | NetObj.Error (atoms) =>
+        RaiseNetException("on remote object access", atoms, location);
+      <*ASSERT FALSE*>
+    | SharedObj.Error (atoms) =>
+        RaiseSharedException(
+          "on replicated object access", atoms, location);
+      <*ASSERT FALSE*>
+    | Thread.Alerted =>
+        RaiseException(threadAlerted, "on remote object access", location);
+      <*ASSERT FALSE*>
+    END;
+  END NewAlias;
 
 PROCEDURE NewArray (READONLY vals: Vals): ValArray =
   VAR newVals: REF Vals;
@@ -407,92 +599,13 @@ PROCEDURE NewArray (READONLY vals: Vals): ValArray =
 
 PROCEDURE NewArrayFromVals (vals: REF Vals): ValArray =
   BEGIN
-    RETURN NEW(ValArray, remote := NEW(RemArrayServer, array := vals));
+    RETURN NEW(ValRemArray, remote := NEW(RemArrayServer, array := vals));
   END NewArrayFromVals;
 
-PROCEDURE ArraySize (arr: RemArrayServer): INTEGER RAISES {} =
+PROCEDURE NewVar (val: Val): ValVar =
   BEGIN
-    RETURN NUMBER(arr.array^);
-  END ArraySize;
-
-PROCEDURE ArrayGet (self: RemArrayServer; i: INTEGER): Val
-  RAISES {ServerError} =
-  BEGIN
-    IF (i < 0) OR (i >= NUMBER(self.array^)) THEN
-      RaiseServerError("arg not in range")
-    END;
-    RETURN self.array^[i];
-  END ArrayGet;
-
-PROCEDURE ArraySet (self: RemArrayServer; i: INTEGER; val: Val)
-  RAISES {ServerError} =
-  BEGIN
-    IF (i < 0) OR (i >= NUMBER(self.array^)) THEN
-      RaiseServerError("arg 1 not in range");
-    END;
-    self.array^[i] := val;
-  END ArraySet;
-
-PROCEDURE ArraySub (self: RemArrayServer; start, size: INTEGER): ValArray
-  RAISES {ServerError} =
-  VAR
-    len : INTEGER;
-    vals: REF Vals;
-  BEGIN
-    len := NUMBER(self.array^);
-    IF (start < 0) OR (start > len) THEN
-      RaiseServerError("arg 2 not in range");
-    END;
-    IF (size < 0) OR (start + size > len) THEN
-      RaiseServerError("arg 3 not in range");
-    END;
-    vals := NEW(REF Vals, size);
-    FOR i := 0 TO size - 1 DO vals^[i] := self.array^[start + i]; END;
-    RETURN NEW(ValArray, remote := NEW(RemArrayServer, array := vals));
-  END ArraySub;
-
-PROCEDURE ArrayUpd (         self       : RemArrayServer;
-                             start, size: INTEGER;
-                    READONLY otherArr   : REF Vals        )
-  RAISES {ServerError} =
-  VAR
-    selfLen, otherLen: INTEGER;
-    selfArr          : REF Vals;
-  BEGIN
-    selfArr := self.array;
-    selfLen := NUMBER(selfArr^);
-    IF (start < 0) OR (start > selfLen) THEN
-      RaiseServerError("arg 2 not in range");
-    END;
-    IF (size < 0) OR (start + size > selfLen) THEN
-      RaiseServerError("arg 3 not in range of arg 1");
-    END;
-    otherLen := NUMBER(otherArr^);
-    IF size > otherLen THEN
-      RaiseServerError("arg 3 not in range of arg 4");
-    END;
-    FOR i := size - 1 TO 0 BY -1 DO
-      selfArr^[start + i] := otherArr^[i];
-    END;
-  END ArrayUpd;
-
-PROCEDURE ArrayObtain (self: RemArrayServer): REF Vals RAISES {} =
-  BEGIN
-    RETURN self.array;
-  END ArrayObtain;
-
-PROCEDURE ArrayCat (vals1, vals2: REF Vals): Val RAISES {} =
-  VAR
-    len1, len2: INTEGER;
-    vals      : REF Vals;
-  BEGIN
-    len1 := NUMBER(vals1^);
-    len2 := NUMBER(vals2^);
-    vals := NEW(REF Vals, len1 + len2);
-    FOR i := 0 TO len1 - 1 DO vals^[i] := vals1^[i]; END;
-    FOR i := 0 TO len2 - 1 DO vals^[len1 + i] := vals2^[i]; END;
-    RETURN NEW(ValArray, remote := NEW(RemArrayServer, array := vals));
-  END ArrayCat;
+    RETURN NEW(ValRemVar, remote := NEW(RemVarServer, val := val));
+  END NewVar;
 
 PROCEDURE NewObject (READONLY fields   : ObjFields;
                               who      : TEXT        := "";
@@ -511,13 +624,39 @@ PROCEDURE NewObjectFromFields (fields   : REF ObjFields;
                                sync     : Sync           ): ValObj =
   VAR remObjServ: RemObjServer;
   BEGIN
-    (* Obliq++: made the new object a ValRemObj *)
+    IF NUMBER(fields^) > 1 THEN ObFieldArraySort.Sort(fields^) END;
     remObjServ :=
       NEW(RemObjServer, who := who, self := NEW(ValRemObj, remote := NIL),
           fields := fields, protected := protected, sync := sync);
     remObjServ.self.remote := remObjServ;
     RETURN remObjServ.self;
   END NewObjectFromFields;
+
+PROCEDURE NewReplArray (READONLY vals: Vals): ValArray 
+  RAISES {SharedObj.Error} =
+  VAR newVals: REF Vals;
+  BEGIN
+    newVals := NEW(REF Vals, NUMBER(vals));
+    newVals^ := vals;
+    RETURN NewReplArrayFromVals(newVals);
+  END NewReplArray; 
+
+PROCEDURE NewReplArrayFromVals (vals: REF Vals): ValArray 
+  RAISES {SharedObj.Error} =
+  BEGIN
+    WITH rep = NEW(ValReplArray, replica := NEW(ReplArrayStd, 
+                                                array:=vals).init()) DO
+      RETURN rep;
+    END;
+  END NewReplArrayFromVals;
+
+PROCEDURE NewReplVar (val: Val): ValVar RAISES {SharedObj.Error} =
+  BEGIN
+    WITH rep = NEW(ValReplVar, replica := NEW(ReplVarStd, 
+                                              val := val).init()) DO
+      RETURN rep;
+    END;
+  END NewReplVar; 
 
 PROCEDURE NewReplObject (READONLY fields   : ObjFields;
                          who      : TEXT        := "";
@@ -536,13 +675,43 @@ PROCEDURE NewReplObjectFromFields (fields   : REF ObjFields;
     RAISES {SharedObj.Error} =
   VAR replObjServ: ReplObjStd;
   BEGIN
+    (*
+    FOR i := FIRST(fields^) TO LAST(fields^) DO
+      TYPECASE fields[i].field OF
+      | ValAlias => 
+        RaiseServerError("Cannot have alias fields in a replicated object");
+      ELSE
+      END;
+    END;
+    *)
+
+    IF NUMBER(fields^) > 1 THEN ObFieldArraySort.Sort(fields^) END;
     replObjServ := NEW(ReplObjStd, who := who, 
                       self := NEW(ValReplObj, replica := NIL),
                       protected := protected,
                       fields := fields).init();
     replObjServ.self.replica := replObjServ;
+
     RETURN replObjServ.self;
   END NewReplObjectFromFields;
+
+PROCEDURE NewSimpleArray (READONLY vals: Vals): ValArray =
+  VAR newVals: REF Vals;
+  BEGIN
+    newVals := NEW(REF Vals, NUMBER(vals));
+    newVals^ := vals;
+    RETURN NewSimpleArrayFromVals(newVals);
+  END NewSimpleArray; 
+
+PROCEDURE NewSimpleArrayFromVals (vals: REF Vals): ValArray =
+  BEGIN
+    RETURN NEW(ValSimpleArray, simple := NEW(SimpleArray, array := vals));
+  END NewSimpleArrayFromVals; 
+
+PROCEDURE NewSimpleVar (val: Val): ValVar =
+  BEGIN
+    RETURN NEW(ValSimpleVar, simple := NEW(SimpleVar, val := val));
+  END NewSimpleVar; 
 
 PROCEDURE NewSimpleObject (READONLY fields   : ObjFields;
                            who      : TEXT        := "";
@@ -561,6 +730,7 @@ PROCEDURE NewSimpleObjectFromFields (fields   : REF ObjFields;
                                      sync     : Sync           ): ValObj =
   VAR simpleObj: SimpleObj;
   BEGIN
+    IF NUMBER(fields^) > 1 THEN ObFieldArraySort.Sort(fields^) END;
     simpleObj := NEW(SimpleObj, who := who,
                      self := NEW(ValSimpleObj, simple := NIL), 
                      fields := fields,
@@ -591,6 +761,16 @@ PROCEDURE CloneObjData(valObj: ValObj; mySelf: ValObj;
     resSize := NUMBER(fieldsOf1^);
     resFields := NEW(REF ObjFields, resSize);
     resFields^ := fieldsOf1^;
+
+    FOR i := FIRST(resFields^) TO LAST(resFields^) DO
+      TYPECASE resFields^[i].field OF
+      | ValMeth (node) => 
+        node.meth := CopyMeth(node.meth);
+        node.meth.update := FALSE;
+      ELSE
+      END;
+    END;
+
     IF serialized THEN
       sync := NEW(Sync, mutex := NEW(Thread.Mutex))
     ELSE
@@ -607,7 +787,8 @@ PROCEDURE ToSimpleObj (READONLY obj: ValObj; mySelf: ValObj): ValObj
     sync                 : Sync;
   BEGIN
     CloneObjData(obj, mySelf, resWho, resFields, protected, sync);
-    WITH res = NEW(SimpleObj, who := resWho,
+    
+    WITH res = NEW(SimpleObj, who := "",
                    self := NEW(ValSimpleObj, simple := NIL), 
                    fields := resFields,
                    protected := protected, sync := sync) DO
@@ -615,6 +796,18 @@ PROCEDURE ToSimpleObj (READONLY obj: ValObj; mySelf: ValObj): ValObj
       RETURN res.self;
     END;
   END ToSimpleObj;
+
+PROCEDURE CopyMeth (meth: ObTree.TermMeth): ObTree.TermMeth =
+  BEGIN
+    RETURN NEW(ObTree.TermMeth,
+               location := meth.location,
+               binders := meth.binders,
+               bindersNo := meth.bindersNo,
+               body := meth.body,
+               globals := meth.globals,
+               globalsNo := meth.globalsNo,
+               update := meth.update);
+  END CopyMeth; 
 
 PROCEDURE ToReplObj (READONLY obj: ValObj; mySelf: ValObj;
                      READONLY updateMethods: ARRAY OF TEXT): ValObj
@@ -634,15 +827,12 @@ PROCEDURE ToReplObj (READONLY obj: ValObj; mySelf: ValObj;
     END;
     *)
 
-    FOR i := FIRST(resFields^) TO LAST(resFields^) DO
-      resFields^[i].update := FALSE;
-    END;
     FOR i := FIRST(updateMethods) TO LAST(updateMethods) DO
       j := FIRST(resFields^);
       WHILE j <= LAST(resFields^) DO
         IF Text.Equal(updateMethods[i], resFields^[j].label) THEN
           TYPECASE resFields^[j].field OF
-          | ValMeth => resFields^[j].update := TRUE; EXIT;
+          | ValMeth(node) => node.meth.update := TRUE; EXIT;
           ELSE
             RaiseServerError("field '" & updateMethods[i] & 
               "' is not a method");
@@ -655,7 +845,7 @@ PROCEDURE ToReplObj (READONLY obj: ValObj; mySelf: ValObj;
           "' does not exist");
       END;
     END;
-    WITH res = NEW(ReplObjStd, who := resWho, protected := protected,
+    WITH res = NEW(ReplObjStd, who := "", protected := protected,
                    self := NEW(ValReplObj, replica := NIL), 
                    fields := resFields).init() DO
       res.self.replica := res;
@@ -672,6 +862,7 @@ PROCEDURE ToRemObj (READONLY obj: ValObj; mySelf: ValObj): ValObj
     sync                 : Sync;
   BEGIN
     CloneObjData(obj, mySelf, resWho, resFields, protected, sync);
+
     WITH res = NEW(RemObjServer, who := resWho,
                    self := NEW(ValRemObj, remote := NIL), 
                    fields := resFields,
@@ -680,6 +871,164 @@ PROCEDURE ToRemObj (READONLY obj: ValObj; mySelf: ValObj): ValObj
       RETURN res.self;
     END;
   END ToRemObj;
+
+
+(***************************
+ ValVar object wrapper functions
+ ***************************)
+PROCEDURE ValRemVarGet (self: ValRemVar): Val 
+  RAISES {NetObj.Error, Thread.Alerted} =
+  BEGIN
+    RETURN self.remote.Get();
+  END ValRemVarGet;
+
+PROCEDURE ValRemVarSet (self: ValRemVar; val: Val)
+  RAISES {NetObj.Error, Thread.Alerted} =
+  BEGIN
+    self.remote.Set(val);
+  END ValRemVarSet; 
+
+PROCEDURE ValReplVarGet (self: ValReplVar): Val 
+  RAISES {SharedObj.Error} =
+  BEGIN
+    RETURN self.replica.Get();
+  END ValReplVarGet;
+
+PROCEDURE ValReplVarSet (self: ValReplVar; val: Val)
+  RAISES {SharedObj.Error} =
+  BEGIN
+    self.replica.Set(val);
+  END ValReplVarSet; 
+
+PROCEDURE ValSimpleVarGet (self: ValSimpleVar): Val 
+  RAISES {NetObj.Error, Thread.Alerted, SharedObj.Error} =
+  BEGIN
+    RETURN self.simple.Get();
+  END ValSimpleVarGet;
+
+PROCEDURE ValSimpleVarSet (self: ValSimpleVar; val: Val)
+  RAISES {NetObj.Error, Thread.Alerted, SharedObj.Error} =
+  BEGIN
+    self.simple.Set(val);
+  END ValSimpleVarSet; 
+
+(***************************
+ ValArray object wrapper functions
+ ***************************)
+PROCEDURE ValRemArraySize (arr: ValRemArray): INTEGER 
+  RAISES {NetObj.Error, Thread.Alerted} =
+  BEGIN
+    RETURN arr.remote.Size();
+  END ValRemArraySize; 
+
+PROCEDURE ValRemArrayGet (self: ValRemArray; i: INTEGER): Val
+  RAISES {ServerError, NetObj.Error, Thread.Alerted} =
+  BEGIN
+    RETURN self.remote.Get(i);
+  END ValRemArrayGet;
+
+PROCEDURE ValRemArraySet (self: ValRemArray; i: INTEGER; val: Val)
+  RAISES {ServerError, NetObj.Error, Thread.Alerted} =
+  BEGIN
+    self.remote.Set(i,val);
+  END ValRemArraySet;
+
+PROCEDURE ValRemArraySub (self: ValRemArray; start, size: INTEGER): ValArray
+  RAISES {ServerError, NetObj.Error, Thread.Alerted} =
+  BEGIN
+    RETURN self.remote.Sub(start,size);
+  END ValRemArraySub;
+
+PROCEDURE ValRemArrayUpd (   self       : ValRemArray;
+                             start, size: INTEGER;
+                    READONLY otherArr   : REF Vals        )
+  RAISES {ServerError, NetObj.Error, Thread.Alerted} =
+  BEGIN
+    self.remote.Upd(start,size,otherArr);
+  END ValRemArrayUpd;
+
+PROCEDURE ValRemArrayObtain (self: ValRemArray): REF Vals 
+  RAISES {NetObj.Error, Thread.Alerted} =
+  BEGIN
+    RETURN self.remote.Obtain();
+  END ValRemArrayObtain; 
+
+PROCEDURE ValReplArraySize (arr: ValReplArray): INTEGER 
+  RAISES {SharedObj.Error} =
+  BEGIN
+    RETURN arr.replica.Size();
+  END ValReplArraySize; 
+
+PROCEDURE ValReplArrayGet (self: ValReplArray; i: INTEGER): Val
+  RAISES {SharedObj.Error, ServerError} =
+  BEGIN
+    RETURN self.replica.Get(i);
+  END ValReplArrayGet;
+
+PROCEDURE ValReplArraySet (self: ValReplArray; i: INTEGER; val: Val)
+  RAISES {SharedObj.Error, ServerError} =
+  BEGIN
+    self.replica.Set(i,val);
+  END ValReplArraySet;
+
+PROCEDURE ValReplArraySub (self: ValReplArray; start, size: INTEGER): ValArray
+  RAISES {SharedObj.Error, ServerError} =
+  BEGIN
+    RETURN self.replica.Sub(start,size);
+  END ValReplArraySub;
+
+PROCEDURE ValReplArrayUpd (   self       : ValReplArray;
+                             start, size: INTEGER;
+                    READONLY otherArr   : REF Vals        )
+  RAISES {SharedObj.Error, ServerError} =
+  BEGIN
+    self.replica.Upd(start,size,otherArr);
+  END ValReplArrayUpd;
+
+PROCEDURE ValReplArrayObtain (self: ValReplArray): REF Vals 
+  RAISES {SharedObj.Error} =
+  BEGIN
+    RETURN self.replica.Obtain();
+  END ValReplArrayObtain; 
+
+PROCEDURE ValSimpleArraySize (arr: ValSimpleArray): INTEGER 
+  RAISES {SharedObj.Error, NetObj.Error, Thread.Alerted} =
+  BEGIN
+    RETURN arr.simple.Size();
+  END ValSimpleArraySize; 
+
+PROCEDURE ValSimpleArrayGet (self: ValSimpleArray; i: INTEGER): Val
+  RAISES {SharedObj.Error, ServerError, NetObj.Error, Thread.Alerted} =
+  BEGIN
+    RETURN self.simple.Get(i);
+  END ValSimpleArrayGet;
+
+PROCEDURE ValSimpleArraySet (self: ValSimpleArray; i: INTEGER; val: Val)
+  RAISES {SharedObj.Error, ServerError, NetObj.Error, Thread.Alerted} =
+  BEGIN
+    self.simple.Set(i,val);
+  END ValSimpleArraySet;
+
+PROCEDURE ValSimpleArraySub (self: ValSimpleArray; 
+                             start, size: INTEGER): ValArray
+  RAISES {SharedObj.Error, ServerError, NetObj.Error, Thread.Alerted} =
+  BEGIN
+    RETURN self.simple.Sub(start,size);
+  END ValSimpleArraySub;
+
+PROCEDURE ValSimpleArrayUpd (   self       : ValSimpleArray;
+                             start, size: INTEGER;
+                    READONLY otherArr   : REF Vals        )
+  RAISES {SharedObj.Error, ServerError, NetObj.Error, Thread.Alerted} =
+  BEGIN
+    self.simple.Upd(start,size,otherArr);
+  END ValSimpleArrayUpd;
+
+PROCEDURE ValSimpleArrayObtain (self: ValSimpleArray): REF Vals 
+  RAISES {SharedObj.Error, NetObj.Error, Thread.Alerted} =
+  BEGIN
+    RETURN self.simple.Obtain();
+  END ValSimpleArrayObtain; 
 
 (***************************
  ValObj object wrapper functions
@@ -691,180 +1040,567 @@ PROCEDURE ValRemObjWho(self: ValRemObj;
     RETURN self.remote.Who(protected, serialized);
   END ValRemObjWho;
 
-PROCEDURE ValRemObjSelect(self: ValRemObj; 
-                    label: TEXT; internal: BOOLEAN; VAR hint: INTEGER): Val 
-          RAISES {Error, Exception, ServerError, SharedObj.Error, 
-                  NetObj.Error, Thread.Alerted} =
+PROCEDURE ValRemObjSelect (    self    : ValRemObj;
+                               swr     : SynWr.T;
+                               label   : TEXT;
+                               internal: BOOLEAN;
+                           VAR hint    : INTEGER    ): Val
+  RAISES {Error, Exception, ServerError, SharedObj.Error, NetObj.Error,
+          Thread.Alerted} =
   BEGIN
-    RETURN self.remote.Select(label, internal, hint);
+    RETURN self.remote.Select(swr, label, internal, hint);
   END ValRemObjSelect;
 
-PROCEDURE ValRemObjInvoke(self: ValRemObj; 
-                    label: TEXT; argNo: INTEGER; READONLY args: Vals;
-               internal: BOOLEAN; VAR hint: INTEGER): Val
-          RAISES {Error, Exception, ServerError, SharedObj.Error,
-                  NetObj.Error, Thread.Alerted} =
+PROCEDURE ValRemObjInvoke (         self    : ValRemObj;
+                                    swr     : SynWr.T;
+                                    label   : TEXT;
+                                    argNo   : INTEGER;
+                           READONLY args    : Vals;
+                                    internal: BOOLEAN;
+                           VAR      hint    : INTEGER    ): Val
+  RAISES {Error, Exception, ServerError, SharedObj.Error, NetObj.Error,
+          Thread.Alerted} =
   BEGIN
-    RETURN self.remote.Invoke(label, argNo, args, internal, hint);
+    RETURN self.remote.Invoke(swr, label, argNo, args, internal, hint);
   END ValRemObjInvoke;
 
-PROCEDURE ValRemObjUpdate(self: ValRemObj; 
-                    label: TEXT; val: Val; internal: BOOLEAN; 
-                       VAR hint: INTEGER) 
-          RAISES {ServerError, SharedObj.Error,
-                  NetObj.Error, Thread.Alerted} =
+PROCEDURE ValRemObjUpdate (    self    : ValRemObj;
+                               label   : TEXT;
+                               val     : Val;
+                               internal: BOOLEAN;
+                           VAR hint    : INTEGER    )
+  RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted} =
   BEGIN
     self.remote.Update(label, val, internal, hint);
   END ValRemObjUpdate;
 
-PROCEDURE ValRemObjRedirect(self: ValRemObj; 
-                    val: Val; internal: BOOLEAN) 
-          RAISES {ServerError, SharedObj.Error,
-                  NetObj.Error, Thread.Alerted} =
+PROCEDURE ValRemObjRedirect (self: ValRemObj; val: Val; internal: BOOLEAN)
+  RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted} =
   BEGIN
     self.remote.Redirect(val, internal);
   END ValRemObjRedirect;
 
-PROCEDURE ValRemObjHas(self: ValRemObj; 
-                    label: TEXT; VAR hint: INTEGER): BOOLEAN 
-          RAISES {NetObj.Error, Thread.Alerted} =
+PROCEDURE ValRemObjHas (self: ValRemObj; label: TEXT; VAR hint: INTEGER):
+  BOOLEAN RAISES {NetObj.Error, Thread.Alerted} =
   BEGIN
     RETURN self.remote.Has(label, hint);
   END ValRemObjHas;
 
-PROCEDURE ValRemObjObtain(self: ValRemObj; 
-                    internal: BOOLEAN): REF ObjFields
-  RAISES {ServerError, NetObj.Error, Thread.Alerted} =
+PROCEDURE ValRemObjObtain (self: ValRemObj; internal: BOOLEAN):
+  REF ObjFields RAISES {ServerError, NetObj.Error, Thread.Alerted} =
   BEGIN
     RETURN self.remote.Obtain(internal);
   END ValRemObjObtain;
 
-PROCEDURE ValReplObjWho(self: ValReplObj; 
-                    VAR(*out*) protected, serialized: BOOLEAN): TEXT 
-          RAISES {SharedObj.Error} =
+PROCEDURE ValRemObjObtainField(self: ValRemObj; label: TEXT; 
+                               internal: BOOLEAN): Val
+  RAISES {ServerError, NetObj.Error, Thread.Alerted} =
+  BEGIN
+    RETURN self.remote.ObtainField(label,internal);
+  END ValRemObjObtainField;
+
+PROCEDURE ValRemObjObtainDescriptions(self: ValRemObj): REF ObjFieldTypes 
+  RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted} =
+  BEGIN
+    RETURN self.remote.ObtainDescriptions();
+  END ValRemObjObtainDescriptions;
+
+PROCEDURE ValRemObjDescribe(self: ValRemObj; label: TEXT): TEXT
+  RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted} =
+  BEGIN
+    RETURN self.remote.Describe(label);
+  END ValRemObjDescribe;
+
+PROCEDURE ValReplObjWho (            self                 : ValReplObj;
+                         VAR (*out*) protected, serialized: BOOLEAN     ):
+  TEXT RAISES {SharedObj.Error} =
   BEGIN
     serialized := TRUE;
     RETURN self.replica.Who(protected);
   END ValReplObjWho;
 
-PROCEDURE ValReplObjSelect(self: ValReplObj; 
-                    label: TEXT; <*UNUSED*>internal: BOOLEAN; 
-                    VAR hint: INTEGER): Val 
-          RAISES {Error, Exception, ServerError, SharedObj.Error} =
+PROCEDURE ValReplObjSelect (               self    : ValReplObj;
+                                           swr     : SynWr.T;
+                                           label   : TEXT;
+                            <*UNUSED*>     internal: BOOLEAN;
+                                       VAR hint    : INTEGER     ): Val
+  RAISES {Error, Exception, ServerError, SharedObj.Error} =
   BEGIN
-    RETURN self.replica.Select(label, hint);
+    RETURN self.replica.Select(swr, label, hint);
   END ValReplObjSelect;
 
-PROCEDURE ValReplObjInvoke(self: ValReplObj; 
-                    label: TEXT; argNo: INTEGER; READONLY args: Vals;
-                    <*UNUSED*>internal: BOOLEAN; VAR hint: INTEGER): Val
-          RAISES {Error, Exception, ServerError, SharedObj.Error} =
+PROCEDURE ValReplObjInvoke (                    self    : ValReplObj;
+                                                swr     : SynWr.T;
+                                                label   : TEXT;
+                                                argNo   : INTEGER;
+                                       READONLY args    : Vals;
+                            <*UNUSED*>          internal: BOOLEAN;
+                                       VAR      hint    : INTEGER     ):
+  Val RAISES {Error, Exception, ServerError, SharedObj.Error} =
   BEGIN
-    RETURN self.replica.Invoke(label, argNo, args, hint);
+    RETURN self.replica.Invoke(swr, label, argNo, args, hint);
   END ValReplObjInvoke;
 
-PROCEDURE ValReplObjUpdate(self: ValReplObj; 
-                    label: TEXT; val: Val; internal: BOOLEAN; 
-                       VAR hint: INTEGER) 
-          RAISES {ServerError, SharedObj.Error} =
+PROCEDURE ValReplObjUpdate (    self    : ValReplObj;
+                                label   : TEXT;
+                                val     : Val;
+                                internal: BOOLEAN;
+                            VAR hint    : INTEGER     )
+  RAISES {ServerError, SharedObj.Error} =
   BEGIN
     self.replica.Update(label, val, internal, hint);
   END ValReplObjUpdate;
 
-PROCEDURE ValReplObjRedirect(<*UNUSED*>self: ValReplObj; 
-                          <*UNUSED*>val: Val; <*UNUSED*>internal: BOOLEAN) 
-          RAISES {ServerError} =
+PROCEDURE ValReplObjRedirect (self    : ValReplObj;
+                              val     : Val;
+                              internal: BOOLEAN     )
+  RAISES {ServerError, SharedObj.Error} =
   BEGIN
+    self.replica.Redirect(val, internal);
+    (*
     RaiseServerError("Cannot Redirect Replicated Object Fields");
+    *)
   END ValReplObjRedirect;
 
-PROCEDURE ValReplObjHas(self: ValReplObj; 
-                    label: TEXT; VAR hint: INTEGER): BOOLEAN 
-          RAISES {SharedObj.Error} =
+PROCEDURE ValReplObjHas (self: ValReplObj; label: TEXT; VAR hint: INTEGER):
+  BOOLEAN RAISES {SharedObj.Error} =
   BEGIN
     RETURN self.replica.Has(label, hint);
   END ValReplObjHas;
 
-PROCEDURE ValReplObjObtain(self: ValReplObj; 
-                    internal: BOOLEAN): REF ObjFields
-  RAISES {ServerError, SharedObj.Error} =
+PROCEDURE ValReplObjObtain (self: ValReplObj; internal: BOOLEAN):
+  REF ObjFields RAISES {ServerError, SharedObj.Error} =
   BEGIN
     RETURN self.replica.Obtain(internal);
   END ValReplObjObtain;
 
-PROCEDURE ValSimpleObjWho(self: ValSimpleObj; 
-                    VAR(*out*) protected, serialized: BOOLEAN): TEXT =
+PROCEDURE ValReplObjObtainField(self: ValReplObj; label: TEXT; 
+                               internal: BOOLEAN): Val
+  RAISES {ServerError, SharedObj.Error} =
+  BEGIN
+    RETURN self.replica.ObtainField(label,internal);
+  END ValReplObjObtainField;
+
+PROCEDURE ValReplObjObtainDescriptions(self: ValReplObj): REF ObjFieldTypes 
+  RAISES {ServerError, SharedObj.Error} =
+  BEGIN
+    RETURN self.replica.ObtainDescriptions();
+  END ValReplObjObtainDescriptions;
+
+PROCEDURE ValReplObjDescribe(self: ValReplObj; label: TEXT): TEXT
+  RAISES {ServerError, SharedObj.Error} =
+  BEGIN
+    RETURN self.replica.Describe(label);
+  END ValReplObjDescribe;
+
+PROCEDURE ValSimpleObjWho (self: ValSimpleObj;
+                           VAR (*out*) protected, serialized: BOOLEAN):
+  TEXT =
   BEGIN
     RETURN self.simple.Who(protected, serialized);
   END ValSimpleObjWho;
 
-PROCEDURE ValSimpleObjSelect(self: ValSimpleObj; 
-                    label: TEXT; internal: BOOLEAN; VAR hint: INTEGER): Val 
-          RAISES {Error, Exception, ServerError, SharedObj.Error, 
-                  NetObj.Error, Thread.Alerted} =
+PROCEDURE ValSimpleObjSelect (    self    : ValSimpleObj;
+                                  swr     : SynWr.T;
+                                  label   : TEXT;
+                                  internal: BOOLEAN;
+                              VAR hint    : INTEGER       ): Val
+  RAISES {Error, Exception, ServerError, SharedObj.Error, NetObj.Error,
+          Thread.Alerted} =
   BEGIN
-    RETURN self.simple.Select(label, internal, hint);
+    RETURN self.simple.Select(swr, label, internal, hint);
   END ValSimpleObjSelect;
 
-PROCEDURE ValSimpleObjInvoke(self: ValSimpleObj; 
-                    label: TEXT; argNo: INTEGER; READONLY args: Vals;
-               internal: BOOLEAN; VAR hint: INTEGER): Val
-          RAISES {Error, Exception, ServerError, SharedObj.Error,
-                  NetObj.Error, Thread.Alerted} =
+PROCEDURE ValSimpleObjInvoke (         self    : ValSimpleObj;
+                                       swr     : SynWr.T;
+                                       label   : TEXT;
+                                       argNo   : INTEGER;
+                              READONLY args    : Vals;
+                                       internal: BOOLEAN;
+                              VAR      hint    : INTEGER       ): Val
+  RAISES {Error, Exception, ServerError, SharedObj.Error, NetObj.Error,
+          Thread.Alerted} =
   BEGIN
-    RETURN self.simple.Invoke(label, argNo, args, internal, hint);
+    RETURN self.simple.Invoke(swr, label, argNo, args, internal, hint);
   END ValSimpleObjInvoke;
 
-PROCEDURE ValSimpleObjUpdate(self: ValSimpleObj; 
-                    label: TEXT; val: Val; internal: BOOLEAN; 
-                       VAR hint: INTEGER) 
-          RAISES {ServerError, SharedObj.Error,
-                  NetObj.Error, Thread.Alerted} =
+PROCEDURE ValSimpleObjUpdate (    self    : ValSimpleObj;
+                                  label   : TEXT;
+                                  val     : Val;
+                                  internal: BOOLEAN;
+                              VAR hint    : INTEGER       )
+  RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted} =
   BEGIN
     self.simple.Update(label, val, internal, hint);
   END ValSimpleObjUpdate;
 
-PROCEDURE ValSimpleObjRedirect(self: ValSimpleObj; 
-                    val: Val; internal: BOOLEAN) 
-          RAISES {ServerError, SharedObj.Error,
-                  NetObj.Error, Thread.Alerted} =
+PROCEDURE ValSimpleObjRedirect (self    : ValSimpleObj;
+                                val     : Val;
+                                internal: BOOLEAN       )
+  RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted} =
   BEGIN
     self.simple.Redirect(val, internal);
   END ValSimpleObjRedirect;
 
-PROCEDURE ValSimpleObjHas(self: ValSimpleObj; 
-                    label: TEXT; VAR hint: INTEGER): BOOLEAN =
+PROCEDURE ValSimpleObjHas (    self : ValSimpleObj;
+                               label: TEXT;
+                           VAR hint : INTEGER       ): BOOLEAN =
   BEGIN
     RETURN self.simple.Has(label, hint);
   END ValSimpleObjHas;
 
-PROCEDURE ValSimpleObjObtain(self: ValSimpleObj; 
-                    internal: BOOLEAN): REF ObjFields
-  RAISES {ServerError} =
+PROCEDURE ValSimpleObjObtain (self: ValSimpleObj; internal: BOOLEAN):
+  REF ObjFields RAISES {ServerError} =
   BEGIN
     RETURN self.simple.Obtain(internal);
   END ValSimpleObjObtain;
+
+PROCEDURE ValSimpleObjObtainField(self: ValSimpleObj; label: TEXT; 
+                                  internal: BOOLEAN): Val
+  RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted} =
+  BEGIN
+    RETURN self.simple.ObtainField(label,internal);
+  END ValSimpleObjObtainField;
+
+PROCEDURE ValSimpleObjObtainDescriptions(self: ValSimpleObj): REF ObjFieldTypes
+  RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted} =
+  BEGIN
+    RETURN self.simple.ObtainDescriptions();
+  END ValSimpleObjObtainDescriptions;
+
+PROCEDURE ValSimpleObjDescribe(self: ValSimpleObj; label: TEXT): TEXT
+  RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted} =
+  BEGIN
+    RETURN self.simple.Describe(label);
+  END ValSimpleObjDescribe;
+
+(***************************
+ variable fields
+ ***************************)
+
+PROCEDURE VarGet (self: RemVarServer): Val =
+  BEGIN
+    RETURN self.val;
+  END VarGet;
+
+PROCEDURE ReplVarGet (self: ReplVar): Val =
+  BEGIN
+    RETURN self.val;
+  END ReplVarGet; 
+
+PROCEDURE SimpleVarGet (self: SimpleVar): Val =
+  BEGIN
+    RETURN self.val;
+  END SimpleVarGet; 
+
+PROCEDURE VarSet (self: RemVarServer; val: Val) =
+  BEGIN
+    self.val := val;
+  END VarSet;
+
+PROCEDURE ReplVarSet (self: ReplVar; val: Val) =
+  BEGIN
+    self.val := val;
+  END ReplVarSet; 
+
+PROCEDURE SimpleVarSet (self: SimpleVar; val: Val) =
+  BEGIN
+    self.val := val;
+  END SimpleVarSet; 
+
+PROCEDURE ReplVarInit (self: ReplVar): ReplVar =
+  BEGIN
+    RETURN self;
+  END ReplVarInit; 
+
+(***************************
+ array fields
+ ***************************)
+PROCEDURE ArraySize (arr: RemArrayServer): INTEGER =
+  BEGIN
+    RETURN NUMBER(arr.array^);
+  END ArraySize;
+
+PROCEDURE ReplArraySize (arr: ReplArray): INTEGER =
+  BEGIN
+    RETURN NUMBER(arr.array^);
+  END ReplArraySize; 
+
+PROCEDURE SimpleArraySize (arr: SimpleArray): INTEGER =
+  BEGIN
+    RETURN NUMBER(arr.array^);
+  END SimpleArraySize; 
+
+PROCEDURE ArrayGet (self: RemArrayServer; i: INTEGER): Val
+  RAISES {ServerError} =
+  BEGIN
+    IF (i < 0) OR (i >= NUMBER(self.array^)) THEN
+      RaiseServerError("arg not in range")
+    END;
+    RETURN self.array^[i];
+  END ArrayGet;
+
+PROCEDURE ReplArrayGet (self: ReplArray; i: INTEGER): Val
+  RAISES {ServerError} =
+  BEGIN
+    IF (i < 0) OR (i >= NUMBER(self.array^)) THEN
+      RaiseServerError("arg not in range")
+    END;
+    RETURN self.array^[i];
+  END ReplArrayGet; 
+
+PROCEDURE SimpleArrayGet (self: SimpleArray; i: INTEGER): Val
+  RAISES {ServerError} =
+  BEGIN
+    IF (i < 0) OR (i >= NUMBER(self.array^)) THEN
+      RaiseServerError("arg not in range")
+    END;
+    RETURN self.array^[i];
+  END SimpleArrayGet;
+
+PROCEDURE ArraySet (self: RemArrayServer; i: INTEGER; val: Val)
+  RAISES {ServerError} =
+  BEGIN
+    IF (i < 0) OR (i >= NUMBER(self.array^)) THEN
+      RaiseServerError("arg 1 not in range");
+    END;
+    self.array^[i] := val;
+  END ArraySet;
+
+PROCEDURE ReplArraySet (self: ReplArray; i: INTEGER; val: Val)
+  RAISES {ServerError} =
+  BEGIN
+    IF (i < 0) OR (i >= NUMBER(self.array^)) THEN
+      RaiseServerError("arg 1 not in range");
+    END;
+    self.array^[i] := val;
+  END ReplArraySet; 
+
+PROCEDURE SimpleArraySet (self: SimpleArray; i: INTEGER; val: Val)
+  RAISES {ServerError} =
+  BEGIN
+    IF (i < 0) OR (i >= NUMBER(self.array^)) THEN
+      RaiseServerError("arg 1 not in range");
+    END;
+    self.array^[i] := val;
+  END SimpleArraySet;
+
+PROCEDURE ArraySub (self: RemArrayServer; start, size: INTEGER): ValArray
+  RAISES {ServerError} =
+  VAR
+    len : INTEGER;
+    vals: REF Vals;
+  BEGIN
+    len := NUMBER(self.array^);
+    IF (start < 0) OR (start > len) THEN
+      RaiseServerError("arg 2 not in range");
+    END;
+    IF (size < 0) OR (start + size > len) THEN
+      RaiseServerError("arg 3 not in range");
+    END;
+    vals := NEW(REF Vals, size);
+    FOR i := 0 TO size - 1 DO vals^[i] := self.array^[start + i]; END;
+    RETURN NEW(ValRemArray, remote := NEW(RemArrayServer, array := vals));
+  END ArraySub;
+
+PROCEDURE ReplArraySub (self: ReplArray; start, size: INTEGER): ValArray
+  RAISES {SharedObj.Error, ServerError} =
+  VAR
+    len : INTEGER;
+    vals: REF Vals;
+  BEGIN
+    len := NUMBER(self.array^);
+    IF (start < 0) OR (start > len) THEN
+      RaiseServerError("arg 2 not in range");
+    END;
+    IF (size < 0) OR (start + size > len) THEN
+      RaiseServerError("arg 3 not in range");
+    END;
+    vals := NEW(REF Vals, size);
+    FOR i := 0 TO size - 1 DO vals^[i] := self.array^[start + i]; END;
+    WITH rep = NEW(ValReplArray, replica := NEW(ReplArrayStd, 
+                                                array:=vals).init()) DO
+      RETURN rep;
+    END;
+  END ReplArraySub; 
+
+PROCEDURE SimpleArraySub (self: SimpleArray; start, size: INTEGER): ValArray
+  RAISES {ServerError} =
+  VAR
+    len : INTEGER;
+    vals: REF Vals;
+  BEGIN
+    len := NUMBER(self.array^);
+    IF (start < 0) OR (start > len) THEN
+      RaiseServerError("arg 2 not in range");
+    END;
+    IF (size < 0) OR (start + size > len) THEN
+      RaiseServerError("arg 3 not in range");
+    END;
+    vals := NEW(REF Vals, size);
+    FOR i := 0 TO size - 1 DO vals^[i] := self.array^[start + i]; END;
+    RETURN NEW(ValSimpleArray, simple := NEW(SimpleArray, array := vals));
+  END SimpleArraySub;
+ 
+PROCEDURE ArrayUpd (         self       : RemArrayServer;
+                             start, size: INTEGER;
+                    READONLY otherArr   : REF Vals        )
+  RAISES {ServerError} =
+  VAR
+    selfLen, otherLen: INTEGER;
+    selfArr          : REF Vals;
+  BEGIN
+    selfArr := self.array;
+    selfLen := NUMBER(selfArr^);
+    IF (start < 0) OR (start > selfLen) THEN
+      RaiseServerError("arg 2 not in range");
+    END;
+    IF (size < 0) OR (start + size > selfLen) THEN
+      RaiseServerError("arg 3 not in range of arg 1");
+    END;
+    otherLen := NUMBER(otherArr^);
+    IF size > otherLen THEN
+      RaiseServerError("arg 3 not in range of arg 4");
+    END;
+    FOR i := size - 1 TO 0 BY -1 DO
+      selfArr^[start + i] := otherArr^[i];
+    END;
+  END ArrayUpd;
+
+PROCEDURE ReplArrayUpd (     self       : ReplArray;
+                             start, size: INTEGER;
+                    READONLY otherArr   : REF Vals        )
+  RAISES {ServerError} =
+  VAR
+    selfLen, otherLen: INTEGER;
+    selfArr          : REF Vals;
+  BEGIN
+    selfArr := self.array;
+    selfLen := NUMBER(selfArr^);
+    IF (start < 0) OR (start > selfLen) THEN
+      RaiseServerError("arg 2 not in range");
+    END;
+    IF (size < 0) OR (start + size > selfLen) THEN
+      RaiseServerError("arg 3 not in range of arg 1");
+    END;
+    otherLen := NUMBER(otherArr^);
+    IF size > otherLen THEN
+      RaiseServerError("arg 3 not in range of arg 4");
+    END;
+    FOR i := size - 1 TO 0 BY -1 DO
+      selfArr^[start + i] := otherArr^[i];
+    END;
+  END ReplArrayUpd;
+
+PROCEDURE SimpleArrayUpd (   self       : SimpleArray;
+                             start, size: INTEGER;
+                    READONLY otherArr   : REF Vals        )
+  RAISES {ServerError} =
+  VAR
+    selfLen, otherLen: INTEGER;
+    selfArr          : REF Vals;
+  BEGIN
+    selfArr := self.array;
+    selfLen := NUMBER(selfArr^);
+    IF (start < 0) OR (start > selfLen) THEN
+      RaiseServerError("arg 2 not in range");
+    END;
+    IF (size < 0) OR (start + size > selfLen) THEN
+      RaiseServerError("arg 3 not in range of arg 1");
+    END;
+    otherLen := NUMBER(otherArr^);
+    IF size > otherLen THEN
+      RaiseServerError("arg 3 not in range of arg 4");
+    END;
+    FOR i := size - 1 TO 0 BY -1 DO
+      selfArr^[start + i] := otherArr^[i];
+    END;
+  END SimpleArrayUpd; 
+
+PROCEDURE ArrayObtain (self: RemArrayServer): REF Vals RAISES {} =
+  BEGIN
+    RETURN self.array;
+  END ArrayObtain;
+
+PROCEDURE ReplArrayObtain (self: ReplArray): REF Vals =
+  BEGIN
+    RETURN self.array;
+  END ReplArrayObtain; 
+
+PROCEDURE SimpleArrayObtain (self: SimpleArray): REF Vals =
+  BEGIN
+    RETURN self.array;
+  END SimpleArrayObtain;
+
+PROCEDURE ArrayCat (vals1, vals2: REF Vals): Val =
+  VAR
+    len1, len2: INTEGER;
+    vals      : REF Vals;
+  BEGIN
+    len1 := NUMBER(vals1^);
+    len2 := NUMBER(vals2^);
+    vals := NEW(REF Vals, len1 + len2);
+    FOR i := 0 TO len1 - 1 DO vals^[i] := vals1^[i]; END;
+    FOR i := 0 TO len2 - 1 DO vals^[len1 + i] := vals2^[i]; END;
+    RETURN NEW(ValRemArray, remote := NEW(RemArrayServer, array := vals));
+  END ArrayCat;
+
+PROCEDURE ReplArrayCat (vals1, vals2: REF Vals): Val RAISES {SharedObj.Error} =
+  VAR
+    len1, len2: INTEGER;
+    vals      : REF Vals;
+  BEGIN
+    len1 := NUMBER(vals1^);
+    len2 := NUMBER(vals2^);
+    vals := NEW(REF Vals, len1 + len2);
+    FOR i := 0 TO len1 - 1 DO vals^[i] := vals1^[i]; END;
+    FOR i := 0 TO len2 - 1 DO vals^[len1 + i] := vals2^[i]; END;
+    WITH rep = NEW(ValReplArray, replica := NEW(ReplArrayStd, 
+                                                array:=vals).init()) DO
+      RETURN rep;
+    END;
+  END ReplArrayCat; 
+
+PROCEDURE SimpleArrayCat (vals1, vals2: REF Vals): Val =
+  VAR
+    len1, len2: INTEGER;
+    vals      : REF Vals;
+  BEGIN
+    len1 := NUMBER(vals1^);
+    len2 := NUMBER(vals2^);
+    vals := NEW(REF Vals, len1 + len2);
+    FOR i := 0 TO len1 - 1 DO vals^[i] := vals1^[i]; END;
+    FOR i := 0 TO len2 - 1 DO vals^[len1 + i] := vals2^[i]; END;
+    RETURN NEW(ValSimpleArray, simple := NEW(SimpleArray, array:=vals));
+  END SimpleArrayCat; 
+
+PROCEDURE ReplArrayInit (self: ReplArray): ReplArray =
+  BEGIN
+    RETURN self;
+  END ReplArrayInit; 
 
 (***************************
  object fields
  ***************************)
 PROCEDURE ObjWho (            self                 : RemObjServer;
-                  VAR (*out*) protected, serialized: BOOLEAN       ): TEXT =
+                  VAR (*out*) protected, serialized: BOOLEAN       ):
+  TEXT =
   BEGIN
     protected := self.protected;
     serialized := self.sync # NIL;
     RETURN self.who;
   END ObjWho;
 
-PROCEDURE ReplObjWho (self: ReplObj;
-                      VAR (*out*) protected: BOOLEAN ): TEXT =
+PROCEDURE ReplObjWho (self: ReplObj; VAR (*out*) protected: BOOLEAN):
+  TEXT =
   BEGIN
     protected := self.protected;
     RETURN self.who;
   END ReplObjWho;
 
 PROCEDURE SimpleObjWho (            self                 : SimpleObj;
-                        VAR (*out*) protected, serialized: BOOLEAN    ): TEXT =
+                        VAR (*out*) protected, serialized: BOOLEAN    ):
+  TEXT =
   BEGIN
     protected := self.protected;
     serialized := self.sync # NIL;
@@ -901,8 +1637,7 @@ PROCEDURE ObjEqual (v1, v2: ValObj): BOOLEAN =
 
 PROCEDURE ObjClone1 (valObj: ValObj; mySelf: ValObj): ValObj
   RAISES {ServerError, NetObj.Error, SharedObj.Error, Thread.Alerted} =
-  VAR
-    resWho, who: TEXT;
+  VAR who: TEXT;
   VAR fieldsOf1: REF ObjFields;
   VAR
     resSize  : INTEGER;
@@ -913,7 +1648,6 @@ PROCEDURE ObjClone1 (valObj: ValObj; mySelf: ValObj): ValObj
   BEGIN
     who := valObj.Who( (*out*)protected, (*out*) serialized);
     IF Text.Empty(who) THEN who := "someone" END;
-    resWho := "clone of " & who;
     fieldsOf1 := valObj.Obtain(ObjEqual(valObj, mySelf));
     resSize := NUMBER(fieldsOf1^);
     resFields := NEW(REF ObjFields, resSize);
@@ -923,40 +1657,42 @@ PROCEDURE ObjClone1 (valObj: ValObj; mySelf: ValObj): ValObj
     ELSE
       sync := NIL
     END;
-    (* Obliq++: made the new object a ValRemObj *)
     TYPECASE valObj OF
     | ValRemObj =>
-      WITH res = NEW(RemObjServer, who := resWho,
-                     self := NEW(ValRemObj, remote := NIL), 
-                     fields := resFields,
-                     protected := protected, sync := sync) DO
-        res.self.remote := res;
-        RETURN res.self;
-      END;
+        WITH res = NEW(RemObjServer, who := "clone of " & who,
+                       self := NEW(ValRemObj, remote := NIL),
+                       fields := resFields, protected := protected,
+                       sync := sync) DO
+          res.self.remote := res;
+          RETURN res.self;
+        END;
     | ValReplObj =>
-      WITH res = NEW(ReplObjStd, who := resWho, protected := protected,
-                     self := NEW(ValReplObj, replica := NIL), 
-                     fields := resFields).init() DO
-        res.self.replica := res;
-        RETURN res.self;
-      END;
+        WITH res = NEW(ReplObjStd, who := "", protected := protected,
+                       self := NEW(ValReplObj, replica := NIL),
+                       fields := resFields).init() DO
+          res.self.replica := res;
+          RETURN res.self;
+        END;
     | ValSimpleObj =>
-      WITH res = NEW(SimpleObj, who := resWho,
-                     self := NEW(ValSimpleObj, simple := NIL), 
-                     fields := resFields,
-                     protected := protected, sync := sync) DO
-        res.self.simple := res;
-        RETURN res.self;
-      END;
-    ELSE <*ASSERT FALSE*>
+        WITH res = NEW(SimpleObj, who := "", 
+                       self := NEW(ValSimpleObj, simple := NIL),
+                       fields := resFields, protected := protected,
+                       sync := sync) DO
+          res.self.simple := res;
+          RETURN res.self;
+        END;
+    ELSE                         <*ASSERT FALSE*>
     END;
   END ObjClone1;
 
 PROCEDURE ObjClone (READONLY valObjs: ARRAY OF ValObj; mySelf: ValObj):
-  ValObj RAISES {ServerError, NetObj.Error, Thread.Alerted, SharedObj.Error} =
-  VAR
-    resWho, remWho: TEXT;
+  ValObj
+  RAISES {ServerError, NetObj.Error, Thread.Alerted, SharedObj.Error} =
+  VAR resWho := "";
+  VAR remWho: TEXT;
+  VAR someunnamed := FALSE;
   VAR fieldsOfN: REF ARRAY OF REF ObjFields;
+  VAR setWho := FALSE;
   VAR
     resSize, k          : INTEGER;
     ithFields, resFields: REF ObjFields;
@@ -967,31 +1703,38 @@ PROCEDURE ObjClone (READONLY valObjs: ARRAY OF ValObj; mySelf: ValObj):
     (* First, check to make sure they are all the same type *)
     TYPECASE valObjs[0] OF
     | ValRemObj =>
-      FOR i := 1 TO NUMBER(valObjs) - 1 DO
-        TYPECASE valObjs[i] OF ValRemObj => (* ok *)
-        ELSE 
-          RaiseServerError("Objects to be cloned must be of the same type");
+        FOR i := 1 TO NUMBER(valObjs) - 1 DO
+          TYPECASE valObjs[i] OF
+            ValRemObj =>         (* ok *)
+          ELSE
+            RaiseServerError(
+              "Objects to be cloned must be of the same type");
+          END;
         END;
-      END;
+        setWho := TRUE;
     | ValReplObj =>
-      FOR i := 1 TO NUMBER(valObjs) - 1 DO
-        TYPECASE valObjs[i] OF ValReplObj => (* ok *)
-        ELSE 
-          RaiseServerError("Objects to be cloned must be of the same type");
+        FOR i := 1 TO NUMBER(valObjs) - 1 DO
+          TYPECASE valObjs[i] OF
+            ValReplObj =>        (* ok *)
+          ELSE
+            RaiseServerError(
+              "Objects to be cloned must be of the same type");
+          END;
         END;
-      END;
     | ValSimpleObj =>
-      FOR i := 1 TO NUMBER(valObjs) - 1 DO
-        TYPECASE valObjs[i] OF ValSimpleObj => (* ok *)
-        ELSE 
-          RaiseServerError("Objects to be cloned must be of the same type");
+        FOR i := 1 TO NUMBER(valObjs) - 1 DO
+          TYPECASE valObjs[i] OF
+            ValSimpleObj =>      (* ok *)
+          ELSE
+            RaiseServerError(
+              "Objects to be cloned must be of the same type");
+          END;
         END;
-      END;
     ELSE
       RaiseServerError("Arguments of clone must be objects");
-    END;      
+    END;
 
-    resWho := "clone of";
+    IF setWho THEN resWho := "clone of" END;
     protected := FALSE;
     serialized := FALSE;
     fieldsOfN := NEW(REF ARRAY OF REF ObjFields, NUMBER(valObjs));
@@ -1001,10 +1744,16 @@ PROCEDURE ObjClone (READONLY valObjs: ARRAY OF ValObj; mySelf: ValObj):
         protected := protected1;
         serialized := serialized1;
       END;
-      IF Text.Empty(remWho) THEN remWho := "someone" END;
-      resWho := resWho & " " & remWho;
+      IF setWho THEN
+        IF Text.Empty(remWho) THEN 
+          someunnamed := TRUE;
+        ELSE
+          resWho := resWho & " " & remWho;
+        END;
+      END;
       fieldsOfN^[i] := valObjs[i].Obtain(ObjEqual(valObjs[i], mySelf));
     END;
+    IF setWho AND someunnamed THEN resWho := resWho & " someone" END;
     resSize := 0;
     FOR i := 0 TO NUMBER(fieldsOfN^) - 1 DO
       ithFields := fieldsOfN^[i];
@@ -1020,6 +1769,8 @@ PROCEDURE ObjClone (READONLY valObjs: ARRAY OF ValObj; mySelf: ValObj):
       END;
     END;
     IF NUMBER(fieldsOfN^) > 1 THEN
+      ObFieldArraySort.Sort(resFields^);
+      (* Since they are sorted, we can just see if any pair are the same!
       FOR i := 0 TO resSize - 1 DO
         FOR j := i + 1 TO resSize - 1 DO
           IF Text.Equal(resFields^[i].label, resFields^[j].label) THEN
@@ -1028,7 +1779,15 @@ PROCEDURE ObjClone (READONLY valObjs: ARRAY OF ValObj; mySelf: ValObj):
           END;
         END;
       END;
+      *)
+      FOR i := 0 TO resSize - 2 DO
+        IF Text.Equal(resFields^[i].label, resFields^[i+1].label) THEN
+          RaiseServerError(
+              "duplicated field on cloning: " & resFields^[i].label);
+        END;
+      END;
     END;
+
     IF serialized THEN
       sync := NEW(Sync, mutex := NEW(Thread.Mutex))
     ELSE
@@ -1036,166 +1795,35 @@ PROCEDURE ObjClone (READONLY valObjs: ARRAY OF ValObj; mySelf: ValObj):
     END;
     TYPECASE valObjs[0] OF
     | ValRemObj =>
-      WITH res = NEW(RemObjServer, who := resWho,
-                     self := NEW(ValRemObj, remote := NIL), 
-                     fields := resFields,
-                     protected := protected, sync := sync) DO
-        res.self.remote := res;
-        RETURN res.self;
-      END;
+        WITH res = NEW(RemObjServer, who := resWho,
+                       self := NEW(ValRemObj, remote := NIL),
+                       fields := resFields, protected := protected,
+                       sync := sync) DO
+          res.self.remote := res;
+          RETURN res.self;
+        END;
     | ValReplObj =>
-      WITH res = NEW(ReplObjStd, who := resWho, protected := protected,
-                     self := NEW(ValReplObj, replica := NIL), 
-                     fields := resFields).init() DO
-        res.self.replica := res;
-        RETURN res.self;
-      END;
+        WITH res = NEW(ReplObjStd, who := resWho, protected := protected,
+                       self := NEW(ValReplObj, replica := NIL),
+                       fields := resFields).init() DO
+          res.self.replica := res;
+          RETURN res.self;
+        END;
     | ValSimpleObj =>
-      WITH res = NEW(SimpleObj, who := resWho,
-                     self := NEW(ValSimpleObj, simple := NIL), 
-                     fields := resFields,
-                     protected := protected, sync := sync) DO
-        res.self.simple := res;
-        RETURN res.self;
-      END;
-    ELSE <*ASSERT FALSE*>
+        WITH res = NEW(SimpleObj, who := resWho,
+                       self := NEW(ValSimpleObj, simple := NIL),
+                       fields := resFields, protected := protected,
+                       sync := sync) DO
+          res.self.simple := res;
+          RETURN res.self;
+        END;
+    ELSE                         <*ASSERT FALSE*>
     END;
   END ObjClone;
 
-PROCEDURE SetObjPickler(obj: ValObj; picklerIn: ValSimpleObj;
-                        picklerOut: ValSimpleObj; mySelf: ValObj)
-  RAISES {ServerError, NetObj.Error, SharedObj.Error,
-          Thread.Alerted} =
-  VAR
-    objFields := obj.Obtain(ObjEqual(obj, mySelf));
-    pklInFields := picklerIn.Obtain(ObjEqual(obj, mySelf));
-    pklOutFields := picklerOut.Obtain(ObjEqual(obj, mySelf));
-
-    inFields := NEW(REF ObjFields, NUMBER(objFields^));
-    outFields := NEW(REF ObjFields, NUMBER(objFields^));
-    hint: INTEGER;
-    numFields := 0;
-  BEGIN
-    TYPECASE obj OF
-    | ValSimpleObj, ValReplObj => (*ok*)
-    ELSE
-      RaiseServerError("Can only set picklers for simple or " & 
-        "replicated objects");
-    END;
-
-    IF NUMBER(pklInFields^) # NUMBER(pklOutFields^) THEN
-      RaiseServerError("in and out pickler objects must have the same " &
-        "set of fields");
-    END;
-    IF NUMBER(objFields^) < NUMBER(pklInFields^) THEN
-      RaiseServerError("pickler objects have extra fields");
-    END;
-
-    (* want to have the inFields and outFields be in the same order as
-       the objects fields, for later efficient use *)
-    FOR i := 0 TO NUMBER(objFields^) - 1 DO
-      TYPECASE objFields[i].field OF
-      | ValMeth => (* ignore *)
-        IF FieldsHave (pklInFields, objFields[i].label, hint) OR
-          FieldsHave (pklOutFields, objFields[i].label, hint) THEN
-          RaiseServerError("field in pickle object corresponds to " &
-            "method field in object: " & objFields[i].label);
-        END;
-        (* put some dummy values for simplicity *)
-        inFields[i].label := objFields[i].label;
-        inFields[i].field := valOk;
-        outFields[i].label := objFields[i].label;
-        outFields[i].field := valOk;
-      | ValAlias => RaiseServerError("Unexpected Alias field in " &
-        "replicated object: " & objFields[i].label);
-      ELSE
-        IF NOT FieldsHave(pklInFields, objFields[i].label, hint) THEN
-          RaiseServerError("pickler 'in' object missing field: " & 
-            objFields[i].label);
-        END;
-        inFields[i].label := objFields[i].label;
-        TYPECASE pklInFields[hint].field OF
-        | ValMeth(meth) =>
-          IF meth.meth.bindersNo # 3 THEN
-            RaiseServerError(BadArgsNoMsg(3, meth.meth.bindersNo, 
-                                          "pickle 'in' method",
-                                          objFields[i].label));
-          END;
-          inFields[i].field := meth;
-        ELSE
-          RaiseServerError("pickler 'in' field must be a method: " & 
-            objFields[i].label);
-        END;
-        IF NOT FieldsHave(pklOutFields, objFields[i].label, hint) THEN
-          RaiseServerError("pickler 'out' object missing field: " & 
-            objFields[i].label);
-        END;
-        outFields[i].label := objFields[i].label;
-        TYPECASE pklOutFields[hint].field OF
-        | ValMeth(meth) =>
-          IF meth.meth.bindersNo # 3 THEN
-            RaiseServerError(BadArgsNoMsg(3, meth.meth.bindersNo,
-                                          "pickler 'out' method",
-                                          objFields[i].label));
-          END;
-          outFields[i].field := meth;
-        ELSE
-          RaiseServerError("pickler 'out' field must be a method: " & 
-            objFields[i].label);
-        END;
-        INC(numFields);
-      END;
-    END;
-
-    IF numFields # NUMBER(pklOutFields^) THEN
-      RaiseServerError("extra fields in pickler objects"); 
-    END;
-
-    TYPECASE obj OF
-    | ValSimpleObj(simple) => 
-      simple.simple.pickleIn := inFields;
-      simple.simple.pickleOut := outFields;
-    | ValReplObj(repl) =>
-      repl.replica.pickleIn := inFields;
-      repl.replica.pickleOut := outFields;
-    ELSE
-      <*ASSERT FALSE*>
-    END;
-  END SetObjPickler;
-
-PROCEDURE BadArgsNoMsg (desired, found          : INTEGER;
-                        routineKind, routineName: TEXT     ): TEXT =
-  VAR msg: TEXT;
-  BEGIN
-    msg := "Expecting " & Fmt.Int(desired);
-    IF desired = 1 THEN
-      msg := msg & " argument";
-    ELSE
-      msg := msg & " arguments";
-    END;
-    msg := msg & ", not " & Fmt.Int(found);
-    IF NOT Text.Empty(routineKind) THEN
-      msg := msg & ", for " & routineKind & ": " & routineName;
-    END;
-    RETURN msg;
-  END BadArgsNoMsg;
-
-PROCEDURE NonRemObjHookGet (self: NonRemObjHookServer): ValObj =
-  BEGIN
-    RETURN self.replObj;
-  END NonRemObjHookGet;
-
-PROCEDURE NonRemObjHookInit (self: NonRemObjHookServer; 
-                             replObj: ValObj): NonRemObjHook =
-  BEGIN
-    self.replObj := replObj;
-    RETURN self;
-  END NonRemObjHookInit; 
-
-<*INLINE*> PROCEDURE FindField (    label : TEXT;
-                                    fields: REF ObjFields;
-                                VAR hint  : INTEGER        ): Val
-  RAISES {ServerError} =
+<*INLINE*> 
+PROCEDURE FindField (label: TEXT; fields: REF ObjFields; VAR hint: INTEGER):
+  Val RAISES {ServerError} =
   VAR fieldIndex := -1;
   BEGIN
     WITH fieldsNo = NUMBER(fields^) DO
@@ -1219,6 +1847,7 @@ PROCEDURE NonRemObjHookInit (self: NonRemObjHookServer;
   END FindField;
 
 PROCEDURE ObjSelect (               self    : RemObjServer;
+                                    swr     : SynWr.T;
                                     label   : TEXT;
                                     internal: BOOLEAN;
                      VAR (*in-out*) hint    : INTEGER       ): Val
@@ -1246,11 +1875,12 @@ PROCEDURE ObjSelect (               self    : RemObjServer;
           END;
           newEnv := NEW(LocalEnv, name := meth.meth.binders.first,
                         val := self.self, rest := NIL);
-          RETURN ObEval.Term(meth.meth.body, (*in-out*) newEnv, 
+          RETURN ObEval.Term(swr, meth.meth.body, (*in-out*) newEnv,
                              meth.global, self.self);
       | ValAlias (alias) =>
-        RETURN alias.obj.Select(alias.label, ObjEqual(alias.obj, self.self),
-                                (*var*) alias.labelIndexHint);
+          RETURN
+            alias.obj.Select(swr, alias.label, ObjEqual(alias.obj, self.self),
+                             (*var*) alias.labelIndexHint);
       ELSE
         RETURN fieldVal;
       END;
@@ -1261,6 +1891,7 @@ PROCEDURE ObjSelect (               self    : RemObjServer;
   END ObjSelect;
 
 PROCEDURE SimpleObjSelect (    self    : SimpleObj;
+                               swr     : SynWr.T;
                                label   : TEXT;
                                internal: BOOLEAN;
                            VAR hint    : INTEGER    ): Val
@@ -1288,11 +1919,12 @@ PROCEDURE SimpleObjSelect (    self    : SimpleObj;
           END;
           newEnv := NEW(LocalEnv, name := meth.meth.binders.first,
                         val := self.self, rest := NIL);
-          RETURN ObEval.Term(meth.meth.body, (*in-out*) newEnv, 
+          RETURN ObEval.Term(swr, meth.meth.body, (*in-out*) newEnv,
                              meth.global, self.self);
       | ValAlias (alias) =>
-        RETURN alias.obj.Select(alias.label, ObjEqual(alias.obj, self.self),
-                                (*var*) alias.labelIndexHint);
+          RETURN alias.obj.Select(
+                   swr, alias.label, ObjEqual(alias.obj, self.self),
+                   (*var*) alias.labelIndexHint);
       ELSE
         RETURN fieldVal;
       END;
@@ -1302,12 +1934,13 @@ PROCEDURE SimpleObjSelect (    self    : SimpleObj;
     END;
   END SimpleObjSelect;
 
-PROCEDURE ReplObjSelect (    self    : ReplObj;
-                             label   : TEXT;
-                         VAR hint    : INTEGER        ): Val
+PROCEDURE ReplObjSelect (    self : ReplObj;
+                             swr  : SynWr.T;
+                             label: TEXT;
+                         VAR hint : INTEGER  ): Val
   RAISES {Error, Exception, ServerError, SharedObj.Error} =
   VAR
-    fields                 := self.fields;
+    fields        := self.fields;
     newEnv  : Env;
     fieldVal: Val;
   BEGIN
@@ -1321,35 +1954,89 @@ PROCEDURE ReplObjSelect (    self    : ReplObj;
         END;
         (* If it is not an update method, we can execute it here.  If it is
            an update method, we must call InvokeUpdate *)
-        IF fields^[hint].update THEN
-          VAR args := ARRAY [0..0] OF Val{NIL};
+        IF meth.meth.update THEN
+          VAR args := ARRAY [0 .. 0] OF Val{NIL};
           BEGIN
-            RETURN self.InvokeUpdate(label, 0, args, hint);
+            RETURN self.InvokeUpdate(swr, label, 0, args, hint);
           END;
         ELSE
           newEnv := NEW(LocalEnv, name := meth.meth.binders.first,
                         val := self.self, rest := NIL);
-          RETURN ObEval.Term(meth.meth.body, (*in-out*) newEnv, 
+          RETURN ObEval.Term(swr, meth.meth.body, (*in-out*) newEnv,
                              meth.global, self.self);
         END;
-    | ValAlias =>
-      <*ASSERT FALSE*>(* should not be any aliases on replicated object
-                         fields *)
+    | ValAlias (alias) =>
+      TRY
+        RETURN alias.obj.Select(
+                         swr, alias.label, ObjEqual(alias.obj, self.self),
+                         (*var*) alias.labelIndexHint);
+      EXCEPT
+      | NetObj.Error, SharedObj.Error, Thread.Alerted =>
+        RaiseServerError("on remote object access through alias");
+        <*ASSERT FALSE*>
+      END;
+      (*
+        RaiseServerError(
+          "Unexpected Alias field in replicated object: " & label);
+          <*ASSERT FALSE*>
+      *)
     ELSE
       RETURN fieldVal;
     END;
   END ReplObjSelect;
 
-PROCEDURE FieldsHave (fields: REF ObjFields; label: TEXT; VAR hint: INTEGER):
+(*
+PROCEDURE LinearFieldsHave (fields: REF ObjFields; label: TEXT; 
+                            i, len: INTEGER; VAR hint: INTEGER):
   BOOLEAN =
   BEGIN
-    FOR i := 0 TO NUMBER(fields^) - 1 DO
+    WHILE len > 0 DO
       IF Text.Equal(label, fields^[i].label) THEN
         hint := i;
         RETURN TRUE;
       END;
+      INC(i);
+      DEC(len);
     END;
     RETURN FALSE;
+  END LinearFieldsHave; 
+*)
+
+(* use binary search *)
+PROCEDURE FieldsHave (fields: REF ObjFields; label: TEXT; VAR hint: INTEGER):
+  BOOLEAN =
+  VAR left := 0;
+      size := NUMBER(fields^);
+      rightSize, middle: INTEGER;
+  BEGIN
+    LOOP
+      IF size <= 1 THEN
+        IF size = 0 THEN RETURN FALSE END;
+        IF Text.Equal(label, fields^[left].label) THEN
+          hint := left;
+          RETURN TRUE;
+        END;
+        RETURN FALSE;
+      END;
+
+      IF size MOD 2 = 0 THEN
+        (* if size is even, then rightsize is (size DIV 2)-1, which
+           represents the number of elements to the right of middle. *)
+        size := size DIV 2;
+        rightSize := size - 1;
+      ELSE
+        (* if size is odd, then rightsize is (size DIV 2), since there
+           is the same number of elements on both sides of middle. *)
+        size := size DIV 2;
+        rightSize := size;
+      END;
+      middle :=  size + left;
+      CASE Text.Compare(label, fields^[middle].label) OF
+      | -1 => (* do nothing *)
+      | 0 => hint := middle; RETURN TRUE;
+      | 1 => left := middle + 1; size := rightSize 
+      ELSE <*ASSERT FALSE*> END;
+    END;
   END FieldsHave;
 
 PROCEDURE ObjHas (self: RemObjServer; label: TEXT; VAR hint: INTEGER):
@@ -1371,6 +2058,7 @@ PROCEDURE SimpleObjHas (self: SimpleObj; label: TEXT; VAR hint: INTEGER):
   END SimpleObjHas;
 
 PROCEDURE ObjInvoke (               self    : RemObjServer;
+                                    swr     : SynWr.T;
                                     label   : TEXT;
                                     argsNo  : INTEGER;
                      READONLY       args    : Vals;
@@ -1407,12 +2095,12 @@ PROCEDURE ObjInvoke (               self    : RemObjServer;
                           val := args[i], rest := newEnv);
             binderList := binderList.rest;
           END;
-          RETURN ObEval.Term(meth.meth.body, (*in-out*) newEnv, 
+          RETURN ObEval.Term(swr, meth.meth.body, (*in-out*) newEnv,
                              meth.global, self.self);
       | ValAlias (alias) =>
-        RETURN alias.obj.Invoke(alias.label, argsNo, args,
-                                ObjEqual(alias.obj, self.self),
-                                (*var*) alias.labelIndexHint);
+          RETURN alias.obj.Invoke(swr, alias.label, argsNo, args,
+                                  ObjEqual(alias.obj, self.self),
+                                  (*var*) alias.labelIndexHint);
       ELSE
         RaiseServerError("Field used as a method: " & label);
         <*ASSERT FALSE*>
@@ -1423,11 +2111,12 @@ PROCEDURE ObjInvoke (               self    : RemObjServer;
   END ObjInvoke;
 
 PROCEDURE SimpleObjInvoke (         self    : SimpleObj;
+                                    swr     : SynWr.T;
                                     label   : TEXT;
                                     argsNo  : INTEGER;
                            READONLY args    : Vals;
                                     internal: BOOLEAN;
-                           VAR      hint    : INTEGER    ): Val 
+                           VAR      hint    : INTEGER    ): Val
   RAISES {ServerError, Error, Exception, SharedObj.Error, NetObj.Error,
           Thread.Alerted} =
   VAR
@@ -1459,12 +2148,12 @@ PROCEDURE SimpleObjInvoke (         self    : SimpleObj;
                           val := args[i], rest := newEnv);
             binderList := binderList.rest;
           END;
-          RETURN ObEval.Term(meth.meth.body, (*in-out*) newEnv, 
+          RETURN ObEval.Term(swr, meth.meth.body, (*in-out*) newEnv,
                              meth.global, self.self);
       | ValAlias (alias) =>
-        RETURN alias.obj.Invoke(alias.label, argsNo, args,
-                                ObjEqual(alias.obj, self.self),
-                                (*var*) alias.labelIndexHint);
+          RETURN alias.obj.Invoke(swr, alias.label, argsNo, args,
+                                  ObjEqual(alias.obj, self.self),
+                                  (*var*) alias.labelIndexHint);
       ELSE
         RaiseServerError("Field used as a method: " & label);
         <*ASSERT FALSE*>
@@ -1474,11 +2163,12 @@ PROCEDURE SimpleObjInvoke (         self    : SimpleObj;
     END;
   END SimpleObjInvoke;
 
-PROCEDURE ReplObjInvoke (         self    : ReplObj;
-                                  label   : TEXT;
-                                  argsNo  : INTEGER;
-                         READONLY args    : Vals;
-                         VAR      hint    : INTEGER        ): Val
+PROCEDURE ReplObjInvoke (         self  : ReplObj;
+                                  swr   : SynWr.T;
+                                  label : TEXT;
+                                  argsNo: INTEGER;
+                         READONLY args  : Vals;
+                         VAR      hint  : INTEGER  ): Val
   RAISES {Error, Exception, ServerError, SharedObj.Error} =
   VAR
     fields    : REF ObjFields;
@@ -1489,13 +2179,13 @@ PROCEDURE ReplObjInvoke (         self    : ReplObj;
     fields := self.fields;
     fieldVal := FindField(label, fields, hint);
 
-    (* If it's an update method, do perform the update instead *)
-    IF fields^[hint].update THEN
-      RETURN self.InvokeUpdate(label, argsNo, args, hint);
-    END;
-
     TYPECASE fieldVal OF
     | ValMeth (meth) =>
+        (* If it's an update method, do perform the update instead *)
+        IF meth.meth.update THEN
+          RETURN self.InvokeUpdate(swr, label, argsNo, args, hint);
+        END;
+
         IF meth.meth.bindersNo - 1 # argsNo THEN
           RaiseServerError(
             BadArgsNoMsg(meth.meth.bindersNo - 1, argsNo, "method", label));
@@ -1509,20 +2199,35 @@ PROCEDURE ReplObjInvoke (         self    : ReplObj;
                         rest := newEnv);
           binderList := binderList.rest;
         END;
-        RETURN ObEval.Term(meth.meth.body, (*in-out*) newEnv, 
+        RETURN ObEval.Term(swr, meth.meth.body, (*in-out*) newEnv,
                            meth.global, self.self);
-    | ValAlias =>        <*ASSERT FALSE*>(* should never happen *)
+    | ValAlias (alias) =>
+      TRY
+        RETURN alias.obj.Invoke(swr, alias.label, argsNo, args,
+                                ObjEqual(alias.obj, self.self),
+                                (*var*) alias.labelIndexHint);
+      EXCEPT
+      | NetObj.Error, SharedObj.Error, Thread.Alerted =>
+        RaiseServerError("on object invocation through alias");
+        <*ASSERT FALSE*>
+      END;
+      (*
+        RaiseServerError(
+          "Unexpected Alias field in replicated object: " & label);
+        <*ASSERT FALSE*>
+      *)
     ELSE
       RaiseServerError("Field used as a method: " & label);
       <*ASSERT FALSE*>
     END;
   END ReplObjInvoke;
 
-PROCEDURE ReplObjInvokeUpdate (         self    : ReplObj;
-                                        label   : TEXT;
-                                        argsNo  : INTEGER;
-                               READONLY args    : Vals;
-                                    VAR hint    : INTEGER        ): Val
+PROCEDURE ReplObjInvokeUpdate (         self  : ReplObj;
+                                        swr   : SynWr.T;
+                                        label : TEXT;
+                                        argsNo: INTEGER;
+                               READONLY args  : Vals;
+                               VAR      hint  : INTEGER  ): Val
   RAISES {Error, Exception, ServerError} =
   VAR
     fields    : REF ObjFields;
@@ -1548,9 +2253,12 @@ PROCEDURE ReplObjInvokeUpdate (         self    : ReplObj;
                         rest := newEnv);
           binderList := binderList.rest;
         END;
-        RETURN ObEval.Term(meth.meth.body, (*in-out*) newEnv, 
+        RETURN ObEval.Term(swr, meth.meth.body, (*in-out*) newEnv,
                            meth.global, self.self);
-    | ValAlias =>        <*ASSERT FALSE*>(* should never happen *)
+    | ValAlias =>
+        RaiseServerError(
+          "Unexpected Alias field in replicated object: " & label);
+      <*ASSERT FALSE*>(* should never happen *)
     ELSE
       RaiseServerError("Field used as a method: " & label);
       <*ASSERT FALSE*>
@@ -1564,9 +2272,9 @@ PROCEDURE ObjUpdate (               self    : RemObjServer;
                      VAR (*in-out*) hint    : INTEGER       )
   RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted} =
   VAR
-    lock                : BOOLEAN;
-    fields              : REF ObjFields;
-    objMu               : Thread.Mutex;
+    lock  : BOOLEAN;
+    fields: REF ObjFields;
+    objMu : Thread.Mutex;
   BEGIN
     lock := (NOT internal) AND (self.sync # NIL);
     IF lock THEN objMu := self.sync.mutex; Thread.Acquire(objMu) END;
@@ -1583,9 +2291,9 @@ PROCEDURE ObjUpdate (               self    : RemObjServer;
           TYPECASE val OF
           | ValAlias => fields^[hint].field := val
           ELSE
-            alias.obj.Update(alias.label, val,
-                             ObjEqual(alias.obj, self.self),
-                             (*var*) alias.labelIndexHint);
+            alias.obj.Update(
+              alias.label, val, ObjEqual(alias.obj, self.self),
+              (*var*) alias.labelIndexHint);
           END;
       ELSE
         fields^[hint].field := val;
@@ -1603,9 +2311,9 @@ PROCEDURE SimpleObjUpdate (    self    : SimpleObj;
                            VAR hint    : INTEGER    )
   RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted} =
   VAR
-    lock                : BOOLEAN;
-    fields              : REF ObjFields;
-    objMu               : Thread.Mutex;
+    lock  : BOOLEAN;
+    fields: REF ObjFields;
+    objMu : Thread.Mutex;
   BEGIN
     lock := (NOT internal) AND (self.sync # NIL);
     IF lock THEN objMu := self.sync.mutex; Thread.Acquire(objMu) END;
@@ -1622,9 +2330,9 @@ PROCEDURE SimpleObjUpdate (    self    : SimpleObj;
           TYPECASE val OF
           | ValAlias => fields^[hint].field := val
           ELSE
-            alias.obj.Update(alias.label, val,
-                             ObjEqual(alias.obj, self.self),
-                             (*var*) alias.labelIndexHint);
+            alias.obj.Update(
+              alias.label, val, ObjEqual(alias.obj, self.self),
+              (*var*) alias.labelIndexHint);
           END;
       ELSE
         fields^[hint].field := val;
@@ -1639,26 +2347,44 @@ PROCEDURE ReplObjUpdate (    self    : ReplObj;
                              label   : TEXT;
                              val     : Val;
                              internal: BOOLEAN;
-                         VAR hint    : INTEGER        )
+                         VAR hint    : INTEGER  ) 
   RAISES {ServerError} =
-  VAR
-    fields              : REF ObjFields;
+  VAR fields: REF ObjFields;
   BEGIN
     IF self.protected AND (NOT internal) THEN
       RaiseServerError("Cannot update protected object");
     END;
 
+    (*
     TYPECASE val OF
-    | ValAlias => 
-      RaiseServerError("Cannot alias fields in a replicated object");
+    | ValAlias =>
+        RaiseServerError("Cannot alias fields in a replicated object");
     ELSE
     END;
-
+    *)
     fields := self.fields;
     EVAL FindField(label, fields, hint);
 
     TYPECASE fields^[hint].field OF
-    | ValAlias => <* ASSERT FALSE *> (* should be impossible *)
+    | ValAlias(alias) =>
+        TYPECASE val OF
+        | ValAlias => fields^[hint].field := val
+        ELSE
+          TRY
+            alias.obj.Update(
+                      alias.label, val, ObjEqual(alias.obj, self.self),
+                      (*var*) alias.labelIndexHint);
+          EXCEPT
+          | NetObj.Error, SharedObj.Error, Thread.Alerted =>
+            RaiseServerError("on object update through alias");
+            <*ASSERT FALSE*>
+          END;
+        END;
+        (*
+        RaiseServerError(
+          "Unexpected Alias field in replicated object: " & label);
+          <* ASSERT FALSE *>(* should be impossible *)
+        *)
     ELSE
       fields^[hint].field := val;
     END;
@@ -1675,7 +2401,9 @@ PROCEDURE ObjRedirect (self: RemObjServer; val: Val; internal: BOOLEAN)
     objMu            : Thread.Mutex;
     valObj           : ValObj;
   BEGIN
-    TYPECASE val OF ValObj(vo) => valObj := vo ELSE
+    TYPECASE val OF
+      ValObj (vo) => valObj := vo
+    ELSE
       RaiseServerError("Redirection target must be an object");
     END;
 
@@ -1693,11 +2421,11 @@ PROCEDURE ObjRedirect (self: RemObjServer; val: Val; internal: BOOLEAN)
         newFields^[i].label := label;
         IF valObj.Has(label, (*in-out*) hint) THEN
           newFields^[i].field :=
-              NEW(ValAlias, label := label, labelIndexHint := hint,
-                  obj := valObj);
+            NEW(ValAlias, label := label, labelIndexHint := hint,
+                obj := valObj);
         ELSE
-          RaiseServerError("Field not found in object on redirection: " & 
-            label);
+          RaiseServerError(
+            "Field not found in object on redirection: " & label);
         END;
         self.fields := newFields; (* atomic swap *)
       END;
@@ -1707,6 +2435,53 @@ PROCEDURE ObjRedirect (self: RemObjServer; val: Val; internal: BOOLEAN)
     END;
   END ObjRedirect;
 
+PROCEDURE ReplObjRedirect (self: ReplObj; val: Val; internal: BOOLEAN)
+  RAISES {ServerError} =
+  VAR
+    fields, newFields: REF ObjFields;
+    fieldsNo         : INTEGER;
+    label            : TEXT;
+    hint             : INTEGER;
+    valObj           : ValObj;
+  BEGIN
+    TYPECASE val OF
+      ValObj (vo) => valObj := vo
+    ELSE
+      RaiseServerError("Redirection target must be an object");
+    END;
+
+    IF self.protected AND (NOT internal) THEN
+      RaiseServerError("Cannot redirect protected object");
+    END;
+    fields := self.fields;
+    fieldsNo := NUMBER(fields^);
+    newFields := NEW(REF ObjFields, fieldsNo);
+    FOR i := 0 TO fieldsNo - 1 DO
+      label := fields^[i].label;
+      newFields^[i].label := label;
+      TRY
+        IF valObj.Has(label, (*in-out*) hint) THEN
+          newFields^[i].field :=
+              NEW(ValAlias, label := label, labelIndexHint := hint,
+                  obj := valObj);
+        ELSE
+          RaiseServerError(
+              "Field not found in object on redirection: " & label);
+        END;
+        self.RedirectFields(newFields);
+      EXCEPT
+      | NetObj.Error, SharedObj.Error, Thread.Alerted =>
+        RaiseServerError("on object access through alias");
+        <*ASSERT FALSE*>
+      END;
+    END;
+  END ReplObjRedirect;
+
+PROCEDURE ReplObjRedirectFields (self: ReplObj; newFields: REF ObjFields) =
+  BEGIN
+    self.fields := newFields; (* atomic swap *)
+  END ReplObjRedirectFields;
+    
 PROCEDURE SimpleObjRedirect (self: SimpleObj; val: Val; internal: BOOLEAN)
   RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted} =
   VAR
@@ -1718,7 +2493,9 @@ PROCEDURE SimpleObjRedirect (self: SimpleObj; val: Val; internal: BOOLEAN)
     objMu            : Thread.Mutex;
     valObj           : ValObj;
   BEGIN
-    TYPECASE val OF ValObj(vo) => valObj := vo ELSE
+    TYPECASE val OF
+      ValObj (vo) => valObj := vo
+    ELSE
       RaiseServerError("Redirection target must be an object");
     END;
 
@@ -1736,11 +2513,11 @@ PROCEDURE SimpleObjRedirect (self: SimpleObj; val: Val; internal: BOOLEAN)
         newFields^[i].label := label;
         IF valObj.Has(label, (*in-out*) hint) THEN
           newFields^[i].field :=
-              NEW(ValAlias, label := label, labelIndexHint := hint,
-                  obj := valObj);
+            NEW(ValAlias, label := label, labelIndexHint := hint,
+                obj := valObj);
         ELSE
           RaiseServerError(
-              "Field not found in object on redirection: " & label);
+            "Field not found in object on redirection: " & label);
         END;
         self.fields := newFields; (* atomic swap *)
       END;
@@ -1769,8 +2546,8 @@ PROCEDURE ObjObtain (self: RemObjServer; internal: BOOLEAN): REF ObjFields
     END;
   END ObjObtain;
 
-PROCEDURE ReplObjObtain (self: ReplObj; internal: BOOLEAN):
-  REF ObjFields RAISES {ServerError} =
+PROCEDURE ReplObjObtain (self: ReplObj; internal: BOOLEAN): REF ObjFields
+  RAISES {ServerError} =
   BEGIN
     IF self.protected AND (NOT internal) THEN
       RaiseServerError("Cannot obtain protected object");
@@ -1778,8 +2555,8 @@ PROCEDURE ReplObjObtain (self: ReplObj; internal: BOOLEAN):
     RETURN self.fields;
   END ReplObjObtain;
 
-PROCEDURE SimpleObjObtain (self: SimpleObj; internal: BOOLEAN): REF ObjFields
-  RAISES {ServerError} =
+PROCEDURE SimpleObjObtain (self: SimpleObj; internal: BOOLEAN):
+  REF ObjFields RAISES {ServerError} =
   VAR
     lock : BOOLEAN;
     objMu: Thread.Mutex;
@@ -1797,39 +2574,327 @@ PROCEDURE SimpleObjObtain (self: SimpleObj; internal: BOOLEAN): REF ObjFields
     END;
   END SimpleObjObtain;
 
+PROCEDURE ObjObtainField(self: RemObjServer; label: TEXT; 
+                            internal: BOOLEAN): Val
+  RAISES {ServerError} =
+  VAR
+    lock    : BOOLEAN;
+    objMu   : Thread.Mutex;
+    hint := -1;
+  BEGIN
+    lock := (NOT internal) AND (self.sync # NIL);
+    IF lock THEN objMu := self.sync.mutex; Thread.Acquire(objMu) END;
+    TRY
+      IF self.protected AND (NOT internal) THEN
+        RaiseServerError("Cannot obtain fields of protected object");
+      END;
+      RETURN FindField(label, self.fields, hint);
+    FINALLY
+      IF lock THEN Thread.Release(objMu) END;
+    END;
+  END ObjObtainField;
+
+PROCEDURE ReplObjObtainField(self: ReplObj; label: TEXT; 
+                             internal: BOOLEAN): Val
+  RAISES {ServerError} =
+  VAR hint := -1;
+  BEGIN
+    IF self.protected AND (NOT internal) THEN
+      RaiseServerError("Cannot obtain fields of protected object");
+    END;
+    RETURN FindField(label, self.fields, hint);
+  END ReplObjObtainField;
+  
+PROCEDURE SimpleObjObtainField(self: SimpleObj; label: TEXT; 
+                               internal: BOOLEAN): Val
+  RAISES {ServerError} =
+  VAR
+    lock    : BOOLEAN;
+    objMu   : Thread.Mutex;
+    hint := -1;
+  BEGIN
+    lock := (NOT internal) AND (self.sync # NIL);
+    IF lock THEN objMu := self.sync.mutex; Thread.Acquire(objMu) END;
+    TRY
+      IF self.protected AND (NOT internal) THEN
+        RaiseServerError("Cannot obtain fields of protected object");
+      END;
+      RETURN FindField(label, self.fields, hint);
+    FINALLY
+      IF lock THEN Thread.Release(objMu) END;
+    END;
+  END SimpleObjObtainField;
+  
+PROCEDURE ObjDescribe(self: RemObjServer; label: TEXT): TEXT
+  RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted} =
+  VAR
+    lock    : BOOLEAN;
+    fieldVal: Val;
+    objMu   : Thread.Mutex;
+    hint    := -1;
+  BEGIN
+    lock := self.sync # NIL;
+    IF lock THEN objMu := self.sync.mutex; Thread.Acquire(objMu) END;
+    TRY
+      fieldVal := FindField(label, self.fields, hint);
+      TYPECASE fieldVal OF
+      | ValAlias (alias) => RETURN alias.obj.Describe(alias.label);
+      ELSE
+        RETURN GetTypeString(fieldVal);
+      END;
+    FINALLY
+      IF lock THEN Thread.Release(objMu) END;
+    END;
+  END ObjDescribe; 
+
+PROCEDURE ReplObjDescribe(self: ReplObj;
+                          label: TEXT): TEXT
+  RAISES {ServerError} =
+  VAR
+    fieldVal: Val;
+    hint    := -1;
+  BEGIN
+    fieldVal := FindField(label, self.fields, hint);
+    TYPECASE fieldVal OF
+    | ValAlias (alias) => 
+      TRY
+        RETURN alias.obj.Describe(alias.label);
+      EXCEPT
+      | NetObj.Error, SharedObj.Error, Thread.Alerted =>
+        RaiseServerError("on object access through alias");
+        <*ASSERT FALSE*>
+      END;
+      (*RaiseServerError(
+          "Unexpected Alias field in replicated object: " & label);
+      <*ASSERT FALSE*>(* should never happen *)*)
+    ELSE
+      RETURN GetTypeString(fieldVal);
+    END;
+  END ReplObjDescribe;
+
+PROCEDURE SimpleObjDescribe(self: SimpleObj;
+                          label: TEXT): TEXT
+  RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted} =
+  VAR
+    lock    : BOOLEAN;
+    fieldVal: Val;
+    objMu   : Thread.Mutex;
+    hint    := -1;
+  BEGIN
+    lock := self.sync # NIL;
+    IF lock THEN objMu := self.sync.mutex; Thread.Acquire(objMu) END;
+    TRY
+      fieldVal := FindField(label, self.fields, hint);
+      TYPECASE fieldVal OF
+      | ValAlias (alias) => RETURN alias.obj.Describe(alias.label);
+      ELSE
+        RETURN GetTypeString(fieldVal);
+      END;
+    FINALLY
+      IF lock THEN Thread.Release(objMu) END;
+    END;
+  END SimpleObjDescribe;
+
+PROCEDURE ObjObtainDescriptions(self: RemObjServer): REF ObjFieldTypes 
+  RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted} =
+  VAR
+    lock             : BOOLEAN;
+    fields           : REF ObjFields;
+    fieldsNo         : INTEGER;
+    objMu            : Thread.Mutex;
+    desc             : REF ObjFieldTypes := NIL;
+  BEGIN
+    lock := self.sync # NIL;
+    IF lock THEN objMu := self.sync.mutex; Thread.Acquire(objMu) END;
+    TRY
+      fields := self.fields;
+      fieldsNo := NUMBER(fields^);
+      desc := NEW(REF ObjFieldTypes, fieldsNo);
+      FOR i := 0 TO fieldsNo - 1 DO
+        desc[i].label := fields^[i].label;
+        TYPECASE fields[i].field OF
+        | ValAlias (alias) => desc[i].type := alias.obj.Describe(alias.label);
+        ELSE
+          desc[i].type := GetTypeString(fields[i].field);
+        END;
+      END;
+      RETURN desc;
+    FINALLY
+      IF lock THEN Thread.Release(objMu) END;
+    END;
+  END ObjObtainDescriptions;
+
+PROCEDURE ReplObjObtainDescriptions(self: ReplObj): REF ObjFieldTypes
+  RAISES {ServerError} =
+  VAR
+    fields           : REF ObjFields;
+    fieldsNo         : INTEGER;
+    desc             : REF ObjFieldTypes := NIL;
+  BEGIN
+    fields := self.fields;
+    fieldsNo := NUMBER(fields^);
+    desc := NEW(REF ObjFieldTypes, fieldsNo);
+    FOR i := 0 TO fieldsNo - 1 DO
+      desc[i].label := fields^[i].label;
+      TYPECASE fields[i].field OF
+      | ValAlias (alias) => 
+        TRY
+          desc[i].type := alias.obj.Describe(alias.label);
+        EXCEPT
+        | NetObj.Error, SharedObj.Error, Thread.Alerted =>
+          RaiseServerError("on object access through alias");
+          <*ASSERT FALSE*>
+        END;
+        (*
+        RaiseServerError(
+            "Unexpected Alias field in replicated object: " & fields[i].label);
+        <*ASSERT FALSE*>(* should never happen *)
+        *)
+      ELSE
+        desc[i].type := GetTypeString(fields[i].field);
+      END;
+    END;
+    RETURN desc;
+  END ReplObjObtainDescriptions;
+
+PROCEDURE SimpleObjObtainDescriptions(self: SimpleObj): REF ObjFieldTypes
+  RAISES {ServerError, SharedObj.Error, NetObj.Error, Thread.Alerted} =
+  VAR
+    lock             : BOOLEAN;
+    fields           : REF ObjFields;
+    fieldsNo         : INTEGER;
+    objMu            : Thread.Mutex;
+    desc             : REF ObjFieldTypes := NIL;
+  BEGIN
+    lock := self.sync # NIL;
+    IF lock THEN objMu := self.sync.mutex; Thread.Acquire(objMu) END;
+    TRY
+      fields := self.fields;
+      fieldsNo := NUMBER(fields^);
+      desc := NEW(REF ObjFieldTypes, fieldsNo);
+      FOR i := 0 TO fieldsNo - 1 DO
+        desc[i].label := fields^[i].label;
+        TYPECASE fields[i].field OF
+        | ValAlias (alias) => desc[i].type := alias.obj.Describe(alias.label);
+        ELSE
+          desc[i].type := GetTypeString(fields[i].field);
+        END;
+      END;
+      RETURN desc;
+    FINALLY
+      IF lock THEN Thread.Release(objMu) END;
+    END;
+  END SimpleObjObtainDescriptions;
+
 PROCEDURE ReplObjInit (self: ReplObj): ReplObj =
   BEGIN
     RETURN self;
   END ReplObjInit;
 
-PROCEDURE NewAlias (obj: ValObj; label: TEXT; location: SynLocation.T):
-  ValAlias RAISES {Error, Exception} =
+(*****************************************************
+ * miscellaneous routines
+ *****************************************************)
+PROCEDURE SetObjPickler (obj       : ValObj;
+                         picklerIn : ValSimpleObj;
+                         picklerOut: ValSimpleObj;
+                         mySelf    : ValObj        )
+  RAISES {ServerError, NetObj.Error, SharedObj.Error, Thread.Alerted} =
   VAR
-    hint    : INTEGER;
-    hasLabel          := FALSE;
+    objFields    := obj.Obtain(ObjEqual(obj, mySelf));
+    pklInFields  := picklerIn.Obtain(ObjEqual(obj, mySelf));
+    pklOutFields := picklerOut.Obtain(ObjEqual(obj, mySelf));
+
+    inFields           := NEW(REF ObjFields, NUMBER(objFields^));
+    outFields          := NEW(REF ObjFields, NUMBER(objFields^));
+    numFields          := 0;
   BEGIN
-    TRY
-      hasLabel := obj.Has(label, (*var*) hint);
-      IF hasLabel THEN
-        RETURN NEW(ValAlias, label := label, labelIndexHint := hint,
-                   obj := obj);
+    TYPECASE obj OF
+    | ValSimpleObj, ValReplObj => (*ok*)
+    ELSE
+      RaiseServerError(
+        "Can only set picklers for simple or " & "replicated objects");
+    END;
+
+    IF NUMBER(pklInFields^) # NUMBER(pklOutFields^) THEN
+      RaiseServerError(
+        "in and out pickler objects must have the same " & "set of fields");
+    END;
+    IF NUMBER(objFields^) < NUMBER(pklInFields^) THEN
+      RaiseServerError("pickler objects have extra fields");
+    END;
+
+    (* the fields should all be sorted, which makes life easier *)
+    FOR i := 0 TO NUMBER(objFields^) - 1 DO
+      TYPECASE objFields[i].field OF
+      | ValMeth, ValAlias =>               (* ignore *)
+          IF numFields < NUMBER(pklInFields^) AND 
+            (Text.Equal(pklInFields[numFields].label, objFields[i].label) OR
+             Text.Equal(pklOutFields[numFields].label, objFields[i].label))THEN
+            RaiseServerError(
+              "field in pickle object corresponds to "
+                & "method or alias field in object: " & objFields[i].label);
+          END;
+          (* put some dummy values for simplicity *)
+          inFields[i].label := objFields[i].label;
+          inFields[i].field := NIL;
+          outFields[i].label := objFields[i].label;
+          outFields[i].field := NIL;
       ELSE
-        RaiseError("Field not found in object: " & label, location);
-        <*ASSERT FALSE*>
+        IF numFields >= NUMBER(pklInFields^) OR
+          NOT Text.Equal(pklInFields[numFields].label,objFields[i].label) THEN
+          RaiseServerError(
+              "pickler 'in' object missing field: " & objFields[i].label);
+        END;
+        inFields[i].label := objFields[i].label;
+        TYPECASE pklInFields[numFields].field OF
+        | ValMeth (meth) =>
+            IF meth.meth.bindersNo # 2 THEN
+              RaiseServerError(
+                BadArgsNoMsg(2, meth.meth.bindersNo, "pickle 'in' method",
+                             objFields[i].label));
+            END;
+            inFields[i].field := meth;
+        ELSE
+          RaiseServerError(
+            "pickler 'in' field must be a method: " & objFields[i].label);
+        END;
+        IF numFields >= NUMBER(pklOutFields^) OR
+          NOT Text.Equal(pklOutFields[numFields].label,objFields[i].label) THEN
+          RaiseServerError(
+            "pickler 'out' object missing field: " & objFields[i].label);
+        END;
+        outFields[i].label := objFields[i].label;
+        TYPECASE pklOutFields[numFields].field OF
+        | ValMeth (meth) =>
+            IF meth.meth.bindersNo # 2 THEN
+              RaiseServerError(
+                BadArgsNoMsg(2, meth.meth.bindersNo,
+                             "pickler 'out' method", objFields[i].label));
+            END;
+            outFields[i].field := meth;
+        ELSE
+          RaiseServerError(
+            "pickler 'out' field must be a method: " & objFields[i].label);
+        END;
+        INC(numFields);
       END;
-    EXCEPT
-    | NetObj.Error (atoms) =>
-        RaiseNetException("on remote object access", atoms, location);
-      <*ASSERT FALSE*>
-    | SharedObj.Error (atoms) =>
-        RaiseSharedException(
-          "on replicated object access", atoms, location);
-      <*ASSERT FALSE*>
-    | Thread.Alerted =>
-        RaiseException(threadAlerted, "on remote object access", location);
+    END;
+
+    IF numFields # NUMBER(pklOutFields^) THEN
+      RaiseServerError("extra fields in pickler objects");
+    END;
+
+    TYPECASE obj OF
+    | ValSimpleObj (simple) =>
+        simple.simple.pickleIn := inFields;
+        simple.simple.pickleOut := outFields;
+    | ValReplObj (repl) =>
+        repl.replica.pickleIn := inFields;
+        repl.replica.pickleOut := outFields;
+    ELSE
       <*ASSERT FALSE*>
     END;
-  END NewAlias;
+  END SetObjPickler;
 
 PROCEDURE EngineWho (self: RemEngineServer): TEXT RAISES {} =
   BEGIN
@@ -1851,8 +2916,8 @@ PROCEDURE EngineEval (self: RemEngineServer; proc: Val; mySelf: ValObj):
         newGlob := clos.global;
         newEnv := NEW(LocalEnv, name := clos.fun.binders.first,
                       val := self.arg, rest := NIL);
-        RETURN ObEval.Term(clos.fun.body, (*in-out*) newEnv, 
-                           newGlob, mySelf);
+        RETURN ObEval.Term(Obliq.Console(), clos.fun.body, (*in-out*)
+                           newEnv, newGlob, mySelf);
     ELSE
       RaiseServerError("Engine needs a procedure as argument");
       <*ASSERT FALSE*>
@@ -1875,6 +2940,15 @@ PROCEDURE FileSystemIs (self: ValFileSystem; other: ValAnything): BOOLEAN =
       RETURN FALSE;
     END;
   END FileSystemIs;
+
+PROCEDURE IteratorIs(self: ValIterator; other: ValAnything): BOOLEAN =
+  BEGIN
+    TYPECASE other OF
+    | ValIterator (oth) => RETURN self.remote = oth.remote;
+    ELSE
+      RETURN FALSE;
+    END;
+  END IteratorIs; 
 
 PROCEDURE FileSystemOpenRead (<*UNUSED*> self    : RemFileSystemServer;
                                          fileName: TEXT                 ):
@@ -1912,12 +2986,356 @@ PROCEDURE FileSystemOpenAppend (self: RemFileSystemServer; fileName: TEXT):
     END;
   END FileSystemOpenAppend;
 
+PROCEDURE FileSystemGetAbsolutePathname (<*UNUSED*>self: RemFileSystemServer; 
+                                         fileName: TEXT):
+  TEXT RAISES {ServerError} =
+  BEGIN
+    TRY
+      RETURN FS.GetAbsolutePathname(fileName);
+    EXCEPT
+    | OSError.E => RaiseServerError("GetAbsolutePathname");
+      <*ASSERT FALSE*>
+    END;
+  END FileSystemGetAbsolutePathname;
+
+PROCEDURE FileSystemCreateDirectory (self: RemFileSystemServer; fileName: TEXT)
+  RAISES {ServerError} =
+  BEGIN
+    IF self.readOnly THEN RaiseServerError("CreateDirectory") END;
+    TRY
+      FS.CreateDirectory(fileName);
+    EXCEPT
+    | OSError.E => RaiseServerError("CreateDirectory");
+      <*ASSERT FALSE*>
+    END;
+  END FileSystemCreateDirectory;
+
+PROCEDURE FileSystemDeleteDirectory (self: RemFileSystemServer; fileName: TEXT)
+  RAISES {ServerError} =
+  BEGIN
+    IF self.readOnly THEN RaiseServerError("DeleteDirectory") END;
+    TRY
+      FS.DeleteDirectory(fileName);
+    EXCEPT
+    | OSError.E => RaiseServerError("DeleteDirectory");
+      <*ASSERT FALSE*>
+    END;
+  END FileSystemDeleteDirectory;
+
+PROCEDURE FileSystemDeleteFile (self: RemFileSystemServer; fileName: TEXT)
+  RAISES {ServerError} =
+  BEGIN
+    IF self.readOnly THEN RaiseServerError("DeleteFile") END;
+    TRY
+      FS.DeleteFile(fileName);
+    EXCEPT
+    | OSError.E => RaiseServerError("DeleteFile");
+      <*ASSERT FALSE*>
+    END;
+  END FileSystemDeleteFile;
+
+PROCEDURE FileSystemRename (self: RemFileSystemServer; fileName1,fileName2: TEXT)
+  RAISES {ServerError} =
+  BEGIN
+    IF self.readOnly THEN RaiseServerError("Rename") END;
+    TRY
+      FS.Rename(fileName1, fileName2);
+    EXCEPT
+    | OSError.E => RaiseServerError("Rename");
+      <*ASSERT FALSE*>
+    END;
+  END FileSystemRename;
+
+PROCEDURE FileSystemIterate (<*UNUSED*>self: RemFileSystemServer; 
+                             fileName: TEXT): RemIterator RAISES {ServerError} =
+  BEGIN
+    TRY
+      WITH it = FS.Iterate(fileName) DO
+        RETURN NEW(RemIteratorServer, iterator := it);
+      END;
+    EXCEPT
+    | OSError.E => RaiseServerError("Iterate");
+      <*ASSERT FALSE*>
+    END;
+  END FileSystemIterate;
+
+PROCEDURE FileSystemStatus (<*UNUSED*>self: RemFileSystemServer; 
+                            fileName: TEXT) : File.Status RAISES {ServerError} =
+  BEGIN
+    TRY
+      RETURN FS.Status(fileName);
+    EXCEPT
+    | OSError.E => RaiseServerError("Status");
+      <*ASSERT FALSE*>
+    END;
+  END FileSystemStatus; 
+
+PROCEDURE FileSystemSetModificationTime (self: RemFileSystemServer; 
+                                         fileName: TEXT; time: Time.T)
+  RAISES {ServerError} =
+  BEGIN
+    IF self.readOnly THEN RaiseServerError("SetModificationTime") END;
+    TRY
+      FS.SetModificationTime(fileName,time);
+    EXCEPT
+    | OSError.E => RaiseServerError("SetModificationTime");
+      <*ASSERT FALSE*>
+    END;
+  END FileSystemSetModificationTime; 
+
+PROCEDURE FileSystemPathSep(<*UNUSED*> self: RemFileSystemServer): TEXT =
+  BEGIN
+    RETURN M3Config.PATH_SEP;
+  END FileSystemPathSep;
+
+PROCEDURE FileSystemPathSearchSep(<*UNUSED*> self: RemFileSystemServer): TEXT =
+  BEGIN
+    RETURN Text.FromChar(ObPathSep.SearchPathSeparator);
+  END FileSystemPathSearchSep;
+
+PROCEDURE FileSystemPathCurrent(<*UNUSED*> self: RemFileSystemServer): TEXT =
+  BEGIN
+    RETURN Pathname.Current;
+  END FileSystemPathCurrent;
+
+PROCEDURE FileSystemPathParent(<*UNUSED*> self: RemFileSystemServer): TEXT =
+  BEGIN
+    RETURN Pathname.Parent;
+  END FileSystemPathParent;
+
+PROCEDURE FileSystemPathValid(<*UNUSED*> self: RemFileSystemServer; pn: Pathname.T): BOOLEAN =
+  BEGIN
+    RETURN Pathname.Valid(pn);
+  END FileSystemPathValid;
+
+PROCEDURE FileSystemPathDecompose(<*UNUSED*> self: RemFileSystemServer;
+                                  pn: Pathname.T): Pathname.Arcs 
+  RAISES{Pathname.Invalid} =
+  BEGIN
+    RETURN Pathname.Decompose(pn);
+  END FileSystemPathDecompose;
+
+PROCEDURE FileSystemPathCompose(<*UNUSED*> self: RemFileSystemServer;
+                                a: Pathname.Arcs): Pathname.T
+  RAISES{Pathname.Invalid} = 
+  BEGIN
+    RETURN Pathname.Compose(a);
+  END FileSystemPathCompose;
+
+PROCEDURE FileSystemPathAbsolute(<*UNUSED*> self: RemFileSystemServer; 
+                                 pn: Pathname.T): BOOLEAN =
+  BEGIN
+    RETURN Pathname.Absolute(pn);
+  END FileSystemPathAbsolute;
+
+PROCEDURE FileSystemPathPrefix(<*UNUSED*> self: RemFileSystemServer; 
+                               pn: Pathname.T): Pathname.T =
+  BEGIN
+    RETURN Pathname.Prefix(pn);
+  END FileSystemPathPrefix;
+
+PROCEDURE FileSystemPathLast(<*UNUSED*> self: RemFileSystemServer; 
+                             pn: Pathname.T): Pathname.T =
+  BEGIN
+    RETURN Pathname.Last(pn);
+  END FileSystemPathLast;
+
+PROCEDURE FileSystemPathBase(<*UNUSED*> self: RemFileSystemServer; 
+                             pn: Pathname.T): Pathname.T =
+  BEGIN
+    RETURN Pathname.Base(pn);
+  END FileSystemPathBase;
+
+PROCEDURE FileSystemPathJoin(<*UNUSED*> self: RemFileSystemServer; 
+                             pn, base: Pathname.T; ext: TEXT): Pathname.T=
+  BEGIN
+    RETURN Pathname.Join(pn,base,ext);
+  END FileSystemPathJoin;
+
+PROCEDURE FileSystemPathLastBase(<*UNUSED*> self: RemFileSystemServer; 
+                                 pn: Pathname.T): Pathname.T =
+  BEGIN
+    RETURN Pathname.LastBase(pn);
+  END FileSystemPathLastBase;
+
+PROCEDURE FileSystemPathLastExt(<*UNUSED*> self: RemFileSystemServer; 
+                                pn: Pathname.T): TEXT=
+  BEGIN
+    RETURN Pathname.LastExt(pn);
+  END FileSystemPathLastExt;
+
+PROCEDURE FileSystemPathReplaceExt(<*UNUSED*> self: RemFileSystemServer; 
+                                   pn: Pathname.T; ext: TEXT): Pathname.T =
+  BEGIN
+    RETURN Pathname.ReplaceExt(pn,ext);
+  END FileSystemPathReplaceExt;
+
+PROCEDURE IteratorNext (self: RemIteratorServer; 
+                        VAR name: TEXT) : BOOLEAN =
+  BEGIN
+    RETURN self.iterator.next(name);
+  END IteratorNext; 
+
+PROCEDURE IteratorClose (self: RemIteratorServer) =
+  BEGIN
+    self.iterator.close();
+  END IteratorClose; 
+
+PROCEDURE IteratorNextWithStatus (self: RemIteratorServer; 
+                                  VAR name: TEXT; 
+                                  VAR stat: File.Status) : BOOLEAN 
+  RAISES {ServerError} =
+  BEGIN
+    TRY
+      RETURN self.iterator.nextWithStatus(name,stat);
+    EXCEPT
+    | OSError.E => RaiseServerError("NextWithStatus");
+      <*ASSERT FALSE*>
+    END;
+  END IteratorNextWithStatus; 
+
 PROCEDURE NewProcessor (): ValProcessor =
   BEGIN
-    RETURN NEW(ValProcessor, picklable := FALSE,
-               tag:="Processor",
-               what := "<Processor at " & machineAddress & ">");
+    RETURN NEW(ValProcessor, picklable := TRUE,
+               tag:="Processor", what := "<Processor at " & machineAddress & ">",
+               remote := NEW(RemProcessorServer));
   END NewProcessor;
+
+PROCEDURE ProcessorIs (self: ValProcessor; other: ValAnything): BOOLEAN =
+  BEGIN
+    TYPECASE other OF
+      ValProcessor (oth) => RETURN self.remote = oth.remote;
+    ELSE
+      RETURN FALSE
+    END;
+  END ProcessorIs;
+
+PROCEDURE NewProcess (proc: Process.T): RemProcess =
+  BEGIN
+    RETURN NEW(RemProcessServer, proc := proc);
+  END NewProcess;
+
+PROCEDURE ProcessIs (self: ValProcess; other: ValAnything): BOOLEAN =
+  BEGIN
+    TYPECASE other OF
+      ValProcess (oth) => RETURN self.remote = oth.remote;
+    ELSE
+      RETURN FALSE
+    END;
+  END ProcessIs; 
+
+PROCEDURE NewRd(rd: Rd.T; what: TEXT := "<a reader>"): ValRd =
+  BEGIN
+    RETURN NEW(ValRd, what := what, tag := "Reader",
+               picklable := FALSE, rd := rd);
+  END NewRd;
+
+PROCEDURE RdIs(self: ValRd; other: ValAnything): BOOLEAN =
+  BEGIN
+    TYPECASE other OF
+      ValRd (oth) => RETURN self.rd = oth.rd;
+    ELSE
+      RETURN FALSE
+    END;
+  END RdIs;
+
+PROCEDURE NewWr(wr: Wr.T; what: TEXT := "<a writer>"): ValWr =
+  BEGIN
+    RETURN NEW(ValWr, what := what, tag := "Writer",
+               picklable := FALSE, wr := wr);
+  END NewWr;
+
+PROCEDURE WrIs(self: ValWr; other: ValAnything): BOOLEAN =
+  BEGIN
+    TYPECASE other OF
+      ValWr (oth) => RETURN self.wr = oth.wr;
+    ELSE
+      RETURN FALSE
+    END;
+  END WrIs;
+
+PROCEDURE ProcessorCreateProcess(<*UNUSED*> self: RemProcessorServer;
+                                 cmd: TEXT; 
+                                 READONLY params: ARRAY OF TEXT;
+                                 env: REF ARRAY OF TEXT := NIL;
+                                 wd: TEXT := NIL; 
+                                 mergeOut: BOOLEAN;
+                                 VAR (*out*) stdin: Wr.T;
+                                 VAR (*out*) stdout: Rd.T;
+                                 VAR (*out*) stderr: Rd.T): RemProcess
+  RAISES {ServerError} =
+  VAR
+    stdinR, stdinW, stdoutR, stdoutW, stderrR, stderrW: Pipe.T := NIL;
+  BEGIN
+    TRY
+      Pipe.Open( (*out*)stdinR, (*out*) stdinW);
+      Pipe.Open( (*out*)stdoutR, (*out*) stdoutW);
+      IF mergeOut THEN
+        stderrW := stdoutW;
+        stderr := NIL;
+      ELSE
+        Pipe.Open( (*out*)stderrR, (*out*) stderrW);
+      END;
+      WITH proc = NEW(RemProcessServer, 
+                      proc := Process.Create(cmd, params, env, wd, 
+                                             stdinR, stdoutW, stderrW)) DO
+        stdinR.close();
+        stdoutW.close();
+        stdin := NEW(FileWr.T).init(stdinW);
+        stdout := NEW(FileRd.T).init(stdoutR);
+        IF mergeOut THEN 
+          stderr := NIL
+        ELSE
+          stderrW.close(); 
+          stderr := NEW(FileRd.T).init(stderrR);
+        END;
+        RETURN proc;
+      END;
+    EXCEPT
+    | OSError.E => 
+      TRY IF stdinR # NIL THEN stdinR.close() END EXCEPT OSError.E =>END;
+      TRY IF stdoutR # NIL THEN stdoutR.close() END EXCEPT OSError.E =>END;
+      TRY IF stderrR # NIL THEN stderrR.close() END EXCEPT OSError.E =>END;
+      TRY IF stdinW # NIL THEN stdinW.close() END EXCEPT OSError.E =>END;
+      TRY IF stdoutW # NIL THEN stdoutW.close() END EXCEPT OSError.E =>END;
+      TRY IF stderrW # NIL THEN stderrW.close() END EXCEPT OSError.E =>END;
+      RaiseServerError("CreateProcess");
+      <*ASSERT FALSE*>
+    END;
+  END ProcessorCreateProcess;
+
+PROCEDURE ProcessWait(self: RemProcessServer): Process.ExitCode =
+  BEGIN
+    RETURN Process.Wait(self.proc);
+  END ProcessWait;
+
+PROCEDURE ProcessorGetWorkingDirectory(<*UNUSED*> self: RemProcessorServer): TEXT
+  RAISES {ServerError} =
+  BEGIN
+    TRY
+      RETURN Process.GetWorkingDirectory();
+    EXCEPT
+    | OSError.E => RaiseServerError("GetWorkingDirectory");
+      <*ASSERT FALSE*>
+    END;
+  END ProcessorGetWorkingDirectory;
+
+PROCEDURE ProcessorSetWorkingDirectory(<*UNUSED*> self: RemProcessorServer; 
+                                       path: TEXT)
+  RAISES {ServerError} =
+  BEGIN
+    TRY
+      Process.SetWorkingDirectory(path);
+    EXCEPT
+    | OSError.E => RaiseServerError("GetWorkingDirectory");
+      <*ASSERT FALSE*>
+    END;
+  END ProcessorSetWorkingDirectory;
+
+PROCEDURE ProcessGetID(self: RemProcessServer): Process.ID =
+  BEGIN
+    RETURN Process.GetID(self.proc);
+  END ProcessGetID;
 
 PROCEDURE RegisterSysCall (name: TEXT; clos: SysCallClosure) =
   VAR v: Refany.T;
@@ -1944,6 +3362,7 @@ PROCEDURE FetchSysCall (name: TEXT; VAR (*out*) clos: SysCallClosure):
 
 TYPE
   ObNotifierClosure = NetObjNotifier.NotifierClosure OBJECT 
+    swr  : SynWr.T;
     proc : ValFun;
   OVERRIDES
     notify := ObNotifyMethod;
@@ -1954,11 +3373,12 @@ PROCEDURE ObNotifyMethod(self: ObNotifierClosure;
   VAR args   : ARRAY [0..1] OF Val;
   BEGIN
     TYPECASE obj OF
-    | RemVar(var) => args[0] := NEW(ValVar, remote := var);
-    | RemArray(var) => args[0] := NEW(ValArray, remote := var);
+    | RemVar(var) => args[0] := NEW(ValRemVar, remote := var);
+    | RemArray(var) => args[0] := NEW(ValRemArray, remote := var);
     | RemObj(var) => args[0] := NEW(ValRemObj, remote := var);
     | RemEngine(var) => args[0] := NEW(ValEngine, remote := var);
     | RemFileSystem(var) => args[0] := NEW(ValFileSystem, remote := var);
+    | RemIterator(var) => args[0] := NEW(ValIterator, remote := var);
     ELSE <* ASSERT FALSE *> (* Shouldn't get here! *)
     END;
     CASE st OF
@@ -1968,22 +3388,23 @@ PROCEDURE ObNotifyMethod(self: ObNotifierClosure;
       args[1] := NewText("Failed");
     END;
     TRY
-      EVAL ObEval.Call(self.proc, args);
+      EVAL ObEval.Call(self.proc, args, self.swr);
     EXCEPT
-    | Error (packet) => ErrorMsg(SynWr.err, packet);
-    | Exception (packet) => ExceptionMsg(SynWr.err, packet);
+    | Error (packet) => ErrorMsg(self.swr, packet);
+    | Exception (packet) => ExceptionMsg(self.swr, packet);
     END;
   END ObNotifyMethod;
 
-PROCEDURE ObjNotify(val: Val; notifyProc: ValFun) =
+PROCEDURE ObjNotify(val: Val; notifyProc: ValFun; swr: SynWr.T) =
   BEGIN
-    WITH notifier = NEW(ObNotifierClosure, proc := notifyProc) DO
+    WITH notifier = NEW(ObNotifierClosure, swr := swr, proc := notifyProc) DO
       TYPECASE val OF
-      | ValVar(var) =>        NetObjNotifier.AddNotifier(var.remote, notifier);
-      | ValArray(var) =>      NetObjNotifier.AddNotifier(var.remote, notifier);
+      | ValRemVar(var) =>     NetObjNotifier.AddNotifier(var.remote, notifier);
+      | ValRemArray(var) =>   NetObjNotifier.AddNotifier(var.remote, notifier);
       | ValRemObj(var) =>     NetObjNotifier.AddNotifier(var.remote, notifier);
       | ValEngine(var) =>     NetObjNotifier.AddNotifier(var.remote, notifier);
       | ValFileSystem(var) => NetObjNotifier.AddNotifier(var.remote, notifier);
+      | ValIterator(var) =>   NetObjNotifier.AddNotifier(var.remote, notifier);
       ELSE (* do nothing for other objects *)
       END;
     END;
@@ -1992,8 +3413,9 @@ PROCEDURE ObjNotify(val: Val; notifyProc: ValFun) =
 (* === GC-safe hash table of refanys :-) === *)
 
 TYPE TblArr = ARRAY OF RECORD old, new: REFANY END;
+
 REVEAL
-  Tbl = BRANDED OBJECT
+  Tbl = BRANDED "ObValue.Tbl" OBJECT
           a  : REF TblArr;
           top: INTEGER      := 0;
         METHODS
@@ -2032,14 +3454,20 @@ PROCEDURE TblPut (self: Tbl; old, new: REFANY) =
 
 TYPE CopyStyle = {ValToVal, ValToLocal, LocalToVal};
 
-TYPE ValVarLocal = Val BRANDED "ValVarLocal" OBJECT val: Val;  END;
-
-TYPE
-  ValArrayLocal = Val BRANDED "ValArrayLocal" OBJECT array: REF Vals;  END;
-
 TYPE OrigObjType = {Remote, Replicated, Simple};
+TYPE ValVarLocal = Val BRANDED "ObValue.ValVarLocal" OBJECT 
+                  type                 : OrigObjType;
+                  val: Val;  
+END;
+
 TYPE
-  ValObjLocal = Val BRANDED "ValObjLocal" OBJECT
+  ValArrayLocal = Val BRANDED "ObValue.ValArrayLocal" OBJECT 
+                  type                 : OrigObjType;
+                  array: REF Vals;  
+  END;
+
+TYPE
+  ValObjLocal = Val BRANDED "ObValue.ValObjLocal" OBJECT
                   who                  : TEXT;
                   fields               : REF ObjFields;
                   protected, serialized: BOOLEAN;
@@ -2068,51 +3496,115 @@ PROCEDURE Copy (val: Val; tbl: Tbl; loc: SynLocation.T; style: CopyStyle):
   Val RAISES {Error, SharedObj.Error, NetObj.Error, Thread.Alerted} =
   VAR cache: REFANY;
 
-  PROCEDURE CopyFields (fields, newFields: REF ObjFields) 
+  PROCEDURE CopyFields (fields, newFields: REF ObjFields)
     RAISES {Error, SharedObj.Error, NetObj.Error, Thread.Alerted} =
     BEGIN
       FOR i := 0 TO NUMBER(fields^) - 1 DO
         newFields^[i].label := fields^[i].label;
         newFields^[i].field := Copy(fields^[i].field, tbl, loc, style);
-        newFields^[i].update := FALSE;
       END;
     END CopyFields;
 
   BEGIN
     TYPECASE val OF
-    | ValVar (node) =>
+    | ValRemVar (node) =>
         VAR
-          newVar     : ValVar;
+          newVar     : ValRemVar;
           newVarLocal: ValVarLocal;
         BEGIN
           IF tbl.Get(node.remote, (*out*) cache) THEN RETURN cache END;
           CASE style OF
           | CopyStyle.ValToVal =>
-              newVar := NEW(ValVar, remote := NIL);
+              newVar := NEW(ValRemVar, remote := NIL);
               tbl.Put(node.remote, newVar);
               newVar.remote :=
                 NEW(RemVarServer,
                     val := Copy(node.remote.Get(), tbl, loc, style));
               RETURN newVar;
           | CopyStyle.ValToLocal =>
-              newVarLocal := NEW(ValVarLocal, val := NIL);
+              newVarLocal := NEW(ValVarLocal, val := NIL, 
+                                 type := OrigObjType.Remote);
               tbl.Put(node.remote, newVarLocal);
               newVarLocal.val := Copy(node.remote.Get(), tbl, loc, style);
               RETURN newVarLocal;
           ELSE                   <*ASSERT FALSE*>
           END;
         END;
+    | ValReplVar (node) =>
+        VAR
+          newVar     : ValReplVar;
+          newVarLocal: ValVarLocal;
+        BEGIN
+          IF tbl.Get(node.replica, (*out*) cache) THEN RETURN cache END;
+          CASE style OF
+          | CopyStyle.ValToVal =>
+              newVar := NEW(ValReplVar, replica := NIL);
+              tbl.Put(node.replica, newVar);
+              newVar.replica :=
+                NEW(ReplVarStd,
+                    val := Copy(node.replica.Get(), tbl, loc, style));
+              RETURN newVar;
+          | CopyStyle.ValToLocal =>
+              newVarLocal := NEW(ValVarLocal, val := NIL, 
+                                 type := OrigObjType.Replicated);
+              tbl.Put(node.replica, newVarLocal);
+              newVarLocal.val := Copy(node.replica.Get(), tbl, loc, style);
+              RETURN newVarLocal;
+          ELSE                   <*ASSERT FALSE*>
+          END;
+        END;
+    | ValSimpleVar (node) =>
+        VAR
+          newVar     : ValSimpleVar;
+          newVarLocal: ValVarLocal;
+        BEGIN
+          IF tbl.Get(node.simple, (*out*) cache) THEN RETURN cache END;
+          CASE style OF
+          | CopyStyle.ValToVal =>
+              newVar := NEW(ValSimpleVar, simple := NIL);
+              tbl.Put(node.simple, newVar);
+              newVar.simple :=
+                NEW(SimpleVar,
+                    val := Copy(node.simple.Get(), tbl, loc, style));
+              RETURN newVar;
+          | CopyStyle.ValToLocal =>
+              newVarLocal := NEW(ValVarLocal, val := NIL, 
+                                 type := OrigObjType.Simple);
+              tbl.Put(node.simple, newVarLocal);
+              newVarLocal.val := Copy(node.simple.Get(), tbl, loc, style);
+              RETURN newVarLocal;
+          ELSE                   <*ASSERT FALSE*>
+          END;
+        END;
     | ValVarLocal (node) =>
-        VAR newVar: ValVar;
         BEGIN
           IF tbl.Get(node, (*out*) cache) THEN RETURN cache END;
           CASE style OF
           | CopyStyle.LocalToVal =>
-              newVar := NEW(ValVar, remote := NIL);
-              tbl.Put(node, newVar);
-              newVar.remote :=
-                NEW(RemVarServer, val := Copy(node.val, tbl, loc, style));
-              RETURN newVar;
+              CASE node.type OF
+              | OrigObjType.Remote =>
+                WITH newVar = NEW(ValRemVar, remote := NIL) DO
+                  tbl.Put(node, newVar);
+                  newVar.remote :=
+                      NEW(RemVarServer, 
+                          val := Copy(node.val, tbl, loc, style));
+                  RETURN newVar;
+                END;
+              | OrigObjType.Replicated =>
+                WITH newVar = NEW(ValReplVar, replica := NIL) DO
+                  tbl.Put(node, newVar);
+                  newVar.replica :=
+                      NEW(ReplVarStd, val := Copy(node.val, tbl, loc, style));
+                  RETURN newVar;
+                END;
+              | OrigObjType.Simple =>
+                WITH newVar = NEW(ValSimpleVar, simple := NIL) DO
+                  tbl.Put(node, newVar);
+                  newVar.simple :=
+                      NEW(SimpleVar, val := Copy(node.val, tbl, loc, style));
+                  RETURN newVar;
+                END;
+              END;
           ELSE                   <*ASSERT FALSE*>
           END;
         END;
@@ -2139,10 +3631,10 @@ PROCEDURE Copy (val: Val; tbl: Tbl; loc: SynLocation.T; style: CopyStyle):
           newAlias.obj := Copy(node.obj, tbl, loc, style);
           RETURN newAlias;
         END;
-    | ValArray (node) =>
+    | ValRemArray (node) =>
         VAR
           vals, newVals: REF Vals;
-          newArr       : ValArray;
+          newArr       : ValRemArray;
           newArrLocal  : ValArrayLocal;
         BEGIN
           IF tbl.Get(node.remote, (*out*) cache) THEN RETURN cache END;
@@ -2150,7 +3642,7 @@ PROCEDURE Copy (val: Val; tbl: Tbl; loc: SynLocation.T; style: CopyStyle):
           newVals := NEW(REF Vals, NUMBER(vals^));
           CASE style OF
           | CopyStyle.ValToVal =>
-              newArr := NEW(ValArray, remote := NIL);
+              newArr := NEW(ValRemArray, remote := NIL);
               tbl.Put(node.remote, newArr);
               FOR i := 0 TO NUMBER(vals^) - 1 DO
                 newVals^[i] := Copy(vals^[i], tbl, loc, style);
@@ -2158,8 +3650,69 @@ PROCEDURE Copy (val: Val; tbl: Tbl; loc: SynLocation.T; style: CopyStyle):
               newArr.remote := NEW(RemArrayServer, array := newVals);
               RETURN newArr;
           | CopyStyle.ValToLocal =>
-              newArrLocal := NEW(ValArrayLocal, array := NIL);
+              newArrLocal := NEW(ValArrayLocal, array := NIL,
+                                 type := OrigObjType.Remote);
               tbl.Put(node.remote, newArrLocal);
+              FOR i := 0 TO NUMBER(vals^) - 1 DO
+                newVals^[i] := Copy(vals^[i], tbl, loc, style);
+              END;
+              newArrLocal.array := newVals;
+              RETURN newArrLocal;
+          ELSE                   <*ASSERT FALSE*>
+          END;
+        END;
+    | ValReplArray (node) =>
+        VAR
+          vals, newVals: REF Vals;
+          newArr       : ValReplArray;
+          newArrLocal  : ValArrayLocal;
+        BEGIN
+          IF tbl.Get(node.replica, (*out*) cache) THEN RETURN cache END;
+          vals := node.replica.Obtain();
+          newVals := NEW(REF Vals, NUMBER(vals^));
+          CASE style OF
+          | CopyStyle.ValToVal =>
+              newArr := NEW(ValReplArray, replica := NIL);
+              tbl.Put(node.replica, newArr);
+              FOR i := 0 TO NUMBER(vals^) - 1 DO
+                newVals^[i] := Copy(vals^[i], tbl, loc, style);
+              END;
+              newArr.replica := NEW(ReplArrayStd, array := newVals).init();
+              RETURN newArr;
+          | CopyStyle.ValToLocal =>
+              newArrLocal := NEW(ValArrayLocal, array := NIL,
+                                 type := OrigObjType.Replicated);
+              tbl.Put(node.replica, newArrLocal);
+              FOR i := 0 TO NUMBER(vals^) - 1 DO
+                newVals^[i] := Copy(vals^[i], tbl, loc, style);
+              END;
+              newArrLocal.array := newVals;
+              RETURN newArrLocal;
+          ELSE                   <*ASSERT FALSE*>
+          END;
+        END;
+    | ValSimpleArray (node) =>
+        VAR
+          vals, newVals: REF Vals;
+          newArr       : ValSimpleArray;
+          newArrLocal  : ValArrayLocal;
+        BEGIN
+          IF tbl.Get(node.simple, (*out*) cache) THEN RETURN cache END;
+          vals := node.simple.Obtain();
+          newVals := NEW(REF Vals, NUMBER(vals^));
+          CASE style OF
+          | CopyStyle.ValToVal =>
+              newArr := NEW(ValSimpleArray, simple := NIL);
+              tbl.Put(node.simple, newArr);
+              FOR i := 0 TO NUMBER(vals^) - 1 DO
+                newVals^[i] := Copy(vals^[i], tbl, loc, style);
+              END;
+              newArr.simple := NEW(SimpleArray, array := newVals);
+              RETURN newArr;
+          | CopyStyle.ValToLocal =>
+              newArrLocal := NEW(ValArrayLocal, array := NIL,
+                                 type := OrigObjType.Simple);
+              tbl.Put(node.simple, newArrLocal);
               FOR i := 0 TO NUMBER(vals^) - 1 DO
                 newVals^[i] := Copy(vals^[i], tbl, loc, style);
               END;
@@ -2171,20 +3724,41 @@ PROCEDURE Copy (val: Val; tbl: Tbl; loc: SynLocation.T; style: CopyStyle):
     | ValArrayLocal (node) =>
         VAR
           vals, newVals: REF Vals;
-          newArr       : ValArray;
         BEGIN
           IF tbl.Get(node, (*out*) cache) THEN RETURN cache END;
           vals := node.array;
           newVals := NEW(REF Vals, NUMBER(vals^));
           CASE style OF
           | CopyStyle.LocalToVal =>
-              newArr := NEW(ValArray, remote := NIL);
-              tbl.Put(node, newArr);
-              FOR i := 0 TO NUMBER(vals^) - 1 DO
-                newVals^[i] := Copy(vals^[i], tbl, loc, style);
+            CASE node.type OF
+            | OrigObjType.Remote =>
+              WITH newArr = NEW(ValRemArray, remote := NIL) DO
+                tbl.Put(node, newArr);
+                FOR i := 0 TO NUMBER(vals^) - 1 DO
+                  newVals^[i] := Copy(vals^[i], tbl, loc, style);
+                END;
+                newArr.remote := NEW(RemArrayServer, array := newVals);
+                RETURN newArr;
               END;
-              newArr.remote := NEW(RemArrayServer, array := newVals);
-              RETURN newArr;
+            | OrigObjType.Replicated =>
+              WITH newArr = NEW(ValReplArray, replica := NIL) DO
+                tbl.Put(node, newArr);
+                FOR i := 0 TO NUMBER(vals^) - 1 DO
+                  newVals^[i] := Copy(vals^[i], tbl, loc, style);
+                END;
+                newArr.replica := NEW(ReplArrayStd, array := newVals).init();
+                RETURN newArr;
+              END;
+            | OrigObjType.Simple =>
+              WITH newArr = NEW(ValSimpleArray, simple := NIL) DO
+                tbl.Put(node, newArr);
+                FOR i := 0 TO NUMBER(vals^) - 1 DO
+                  newVals^[i] := Copy(vals^[i], tbl, loc, style);
+                END;
+                newArr.simple := NEW(SimpleArray, array := newVals);
+                RETURN newArr;
+              END;
+            END;
           ELSE                   <*ASSERT FALSE*>
           END;
         END;
@@ -2278,7 +3852,7 @@ PROCEDURE Copy (val: Val; tbl: Tbl; loc: SynLocation.T; style: CopyStyle):
         BEGIN
           IF tbl.Get(node.replica, (*out*) cache) THEN RETURN cache END;
           TRY
-            who := node.replica.Who((*out*)protected);
+            who := node.replica.Who( (*out*)protected);
             fields := node.replica.Obtain(FALSE);
             newFields := NEW(REF ObjFields, NUMBER(fields^));
           EXCEPT
@@ -2289,20 +3863,19 @@ PROCEDURE Copy (val: Val; tbl: Tbl; loc: SynLocation.T; style: CopyStyle):
               WITH newObj = NEW(ValReplObj, replica := NIL) DO
                 tbl.Put(node.replica, newObj);
                 CopyFields(fields, newFields);
-                WITH newObjServ = NEW(ReplObjStd, who := who, 
-                                      self := newObj,
-                                      protected := protected,
-                                      fields := newFields).init() DO
+                WITH newObjServ = NEW(
+                                    ReplObjStd, who := who, self := newObj,
+                                    protected := protected,
+                                    fields := newFields).init() DO
                   newObj.replica := newObjServ;
                 END;
                 RETURN newObj;
               END;
           | CopyStyle.ValToLocal =>
-              WITH newObjLocal = NEW(
-                                   ValObjLocal, who := who, fields := NIL,
-                                   protected := protected,
-                                   serialized := FALSE,
-                                   type := OrigObjType.Replicated) DO
+              WITH newObjLocal = NEW(ValObjLocal, who := who,
+                                     fields := NIL, protected := protected,
+                                     serialized := FALSE,
+                                     type := OrigObjType.Replicated) DO
                 tbl.Put(node.replica, newObjLocal);
                 CopyFields(fields, newFields);
                 newObjLocal.fields := newFields;
@@ -2337,8 +3910,8 @@ PROCEDURE Copy (val: Val; tbl: Tbl; loc: SynLocation.T; style: CopyStyle):
               WITH newObj = NEW(ValSimpleObj, simple := NIL) DO
                 tbl.Put(node.simple, newObj);
                 CopyFields(fields, newFields);
-                WITH newObjServ = NEW(SimpleObj, who := who, self := newObj,
-                                      fields := newFields,
+                WITH newObjServ = NEW(SimpleObj, who := who,
+                                      self := newObj, fields := newFields,
                                       protected := protected, sync := sync) DO
                   newObj.simple := newObjServ;
                 END;
@@ -2391,11 +3964,10 @@ PROCEDURE Copy (val: Val; tbl: Tbl; loc: SynLocation.T; style: CopyStyle):
                   WITH newObj = NEW(ValReplObj, replica := NIL) DO
                     tbl.Put(node, newObj);
                     CopyFields(fields, newFields);
-                    WITH newObjServ = NEW(
-                                        ReplObjStd, who := node.who,
-                                        self := NIL, 
-                                        protected := node.protected,
-                                        fields := newFields).init() DO
+                    WITH newObjServ = NEW(ReplObjStd, who := node.who,
+                                          self := NIL,
+                                          protected := node.protected,
+                                          fields := newFields).init() DO
                       newObj.replica := newObjServ;
                       newObjServ.self := newObj;
                       RETURN newObj;
@@ -2437,27 +4009,150 @@ PROCEDURE CopyError (           self: ValAnything;
     RaiseError("Cannot copy: " & self.what, loc); <*ASSERT FALSE*>
   END CopyError;
 
+(*--------------------Description routines-----------------------*)
+
+PROCEDURE GetTypeString (val: Val): TEXT =
+  BEGIN
+    IF val=NIL THEN RETURN "NIL" END;
+    TYPECASE val OF
+    | ValRemVar => RETURN "Var";
+    | ValReplVar => RETURN "Var`Replicated";
+    | ValSimpleVar => RETURN "Var`Simple";
+    | ValOk => RETURN "Ok";
+    | ValBool => RETURN "Bool";
+    | ValChar => RETURN "Char";
+    | ValText => RETURN "Text";
+    | ValInt => RETURN "Int";
+    | ValReal => RETURN "Real";
+    | ValOption => RETURN "Option";
+    | ValAlias => RETURN "Alias";
+    | ValRemArray => RETURN "Array`Remote"
+    | ValReplArray => RETURN "Array`Replicated"
+    | ValSimpleArray => RETURN "Array`Simple"
+    | ValAnything(node) => 
+      IF node.tag = NIL THEN RETURN "ValAnything" ELSE RETURN node.tag END;
+    | ValFun(node) => RETURN "Closure`" & Fmt.Int(node.fun.bindersNo);
+    | ValMeth(node) => 
+      IF node.meth.update THEN
+        RETURN "Method`" & Fmt.Int(node.meth.bindersNo) & "`Update";
+      ELSE
+        RETURN "Method`" & Fmt.Int(node.meth.bindersNo);
+      END;
+    | ValRemObj => RETURN "Object`Remote";
+    | ValReplObj => RETURN "Object`Replicated";
+    | ValSimpleObj => RETURN "Object`Simple";
+    | ValEngine => RETURN "Engine";
+    | ValException => RETURN "Exception";
+    ELSE RETURN "?";
+    END;
+  END GetTypeString;
+
 (*--------------------Pickling routines-----------------------*)
 (* Need a pickle special for the simple objects, and a shared
    object special for the replicated objects *)
 
-PROCEDURE WriteFields (out: Pickle.Writer; fields: REF ObjFields; 
-                       pkl: REF ObjFields) 
+PROCEDURE WriteFields (out   : Pickle.Writer;
+                       self  : ValObj;
+                       fields: REF ObjFields;
+                       pkl   : REF ObjFields  )
   RAISES {Pickle.Error, Wr.Failure, Thread.Alerted} =
+  VAR
+    binderList: ObTree.IdeList;
+    newEnv    : Env;
+    meth      : ValMeth;
   BEGIN
-    PickleStubs.OutInteger(out, NUMBER(fields^));
-    PickleStubs.OutRef(out, fields);
+    IF pkl # NIL THEN
+      FOR i := 0 TO NUMBER(fields^) - 1 DO
+        PickleStubs.OutText(out, fields[i].label);
+        TYPECASE fields[i].field OF
+        | ValMeth, ValAlias => 
+          PickleStubs.OutRef(out, fields[i].field);
+        ELSE
+        END;
+      END;
+      FOR i := 0 TO NUMBER(fields^) - 1 DO
+        TYPECASE fields[i].field OF
+        | ValMeth, ValAlias => 
+        ELSE
+          TRY
+            meth := pkl[i].field;
+            binderList := meth.meth.binders;
+            newEnv := NEW(LocalEnv, name := binderList.first, 
+                          val := self, rest := NIL);
+            binderList := binderList.rest;
+            newEnv := NEW(LocalEnv, name := binderList.first, 
+                          val := fields[i].field, rest := newEnv);
+            PickleStubs.OutRef(
+              out, ObEval.Term(Obliq.Console(), meth.meth.body,
+                               (*in-out*) newEnv, meth.global, self));
+          EXCEPT
+          | Thread.Alerted =>
+              RAISE Pickle.Error("Obliq NetObj.Error executing pickle "
+                                   & "method" & fields[i].label);
+          | Error (packet) =>
+              RAISE Pickle.Error("Obliq Error executing pickle " & "method"
+                                   & fields[i].label & ": " & packet.msg);
+          | Exception (packet) =>
+              RAISE
+                Pickle.Error("Obliq Exception executing pickle " & "method"
+                               & fields[i].label & ": " & packet.msg);
+          END;
+        END;
+      END;
+    ELSE
+      PickleStubs.OutRef(out, fields);
+    END;
   END WriteFields;
 
-PROCEDURE ReadFields (in: Pickle.Reader; pkl: REF ObjFields): REF ObjFields
+PROCEDURE ReadFields (in: Pickle.Reader;
+                      self  : ValObj;
+                      ret: REF ObjFields;
+                      pkl: REF ObjFields)
   RAISES {Pickle.Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
-  VAR ret : REF ObjFields;
+  VAR binderList: ObTree.IdeList;
+      newEnv    : Env;
+      meth      : ValMeth;
   BEGIN
-    WITH num = PickleStubs.InInteger(in) DO
-      ret := PickleStubs.InRef(in);
-      <* ASSERT num = NUMBER(ret^) *>
-    END;
-    RETURN ret;
+      IF pkl # NIL THEN
+        FOR i := 0 TO NUMBER(ret^) - 1 DO
+          ret[i].label := PickleStubs.InText(in);
+          IF pkl[i].field = NIL THEN
+            ret[i].field := PickleStubs.InRef(in);
+          ELSE
+            ret[i].field := valOk;
+          END;
+        END;
+        FOR i := 0 TO NUMBER(ret^) - 1 DO
+          IF pkl[i].field # NIL THEN
+            TRY
+              meth := pkl[i].field;
+              binderList := meth.meth.binders;
+              newEnv := NEW(LocalEnv, name := binderList.first, 
+                            val := self, rest := NIL);
+              binderList := binderList.rest;
+              newEnv := NEW(LocalEnv, name := binderList.first, 
+                            val := PickleStubs.InRef(in), rest := newEnv);
+              ret[i].field :=
+                ObEval.Term(Obliq.Console(), meth.meth.body,
+                            (*in-out*) newEnv, meth.global, NIL);
+            EXCEPT
+            | Thread.Alerted =>
+                RAISE Pickle.Error("Obliq NetObj.Error executing pickle "
+                                     & "method" & ret[i].label);
+            | Error (packet) =>
+                RAISE
+                  Pickle.Error("Obliq Error executing pickle " & "method"
+                                 & ret[i].label & ": " & packet.msg);
+            | Exception (packet) =>
+                RAISE Pickle.Error(
+                        "Obliq Exception executing pickle " & "method"
+                          & ret[i].label & ": " & packet.msg);
+            END;
+          END;
+        END;
+      ELSE
+        ret^ := NARROW(PickleStubs.InRef(in), REF ObjFields)^;
+      END;
   END ReadFields;
 
 TYPE
@@ -2474,7 +4169,11 @@ PROCEDURE Write_SimpleObj (<*UNUSED*>ts: SimpleObjSpecial;
       tc := TYPECODE(ref);
   BEGIN
     IF tc = TYPECODE(SimpleObj) THEN
-      PickleStubs.OutText(out, o.who);
+      (*
+      IF NetObjF.IsNetObjWriter(out) OR EventStubLib.IsEventWriter(out) THEN
+        PickleStubs.OutText(out, o.who);
+      END;
+      *)
       IF o.sync # NIL THEN
         PickleStubs.OutBoolean(out, TRUE);
       ELSE
@@ -2486,7 +4185,8 @@ PROCEDURE Write_SimpleObj (<*UNUSED*>ts: SimpleObjSpecial;
       PickleStubs.OutRef(out, o.pickleIn);
       PickleStubs.OutRef(out, o.pickleOut);
       
-      WriteFields(out, o.fields, o.pickleOut);
+      PickleStubs.OutInteger(out, NUMBER(o.fields^));
+      WriteFields(out, o.self, o.fields, o.pickleOut);
     ELSE
       RAISE Pickle.Error("Pickle.Error: cannot handle subtypes " & 
             "of ObValue.SimpleObj");
@@ -2500,7 +4200,14 @@ PROCEDURE Read_SimpleObj (<*UNUSED*>ts: SimpleObjSpecial;
   VAR o := NEW(SimpleObj);
   BEGIN
     in.noteRef(o, id);
-    o.who := PickleStubs.InText(in);
+    (*
+    IF NetObjF.IsNetObjReader(in) OR EventStubLib.IsEventReader(in) THEN
+      o.who := PickleStubs.InText(in);
+    ELSE
+      o.who := "";
+    END;
+    *)
+    o.who := "";
     IF PickleStubs.InBoolean(in) THEN
       o.sync := NEW(Sync, mutex := NEW(Thread.Mutex))
     END;
@@ -2510,7 +4217,13 @@ PROCEDURE Read_SimpleObj (<*UNUSED*>ts: SimpleObjSpecial;
     o.pickleIn := PickleStubs.InRef(in);
     o.pickleOut := PickleStubs.InRef(in);
 
-    o.fields := ReadFields(in, o.pickleIn);
+    (* we don't need to do this for the pickling, but we require that
+       o.self is a valid object *)
+    o.self.simple := o;
+    WITH num = PickleStubs.InInteger(in) DO
+      o.fields := NEW(REF ObjFields, num);
+      ReadFields(in, o.self, o.fields, o.pickleIn);
+    END;
     RETURN o;
   END Read_SimpleObj;
 
@@ -2526,13 +4239,18 @@ PROCEDURE Write_ReplObjStd (<*UNUSED*>ts: ReplObjStdSpecial;
   RAISES {Pickle.Error, Wr.Failure, Thread.Alerted} =
   VAR obj := NARROW(ref, ReplObjStd);
   BEGIN
-    PickleStubs.OutRef(out, obj.who);
+    (*
+    IF NetObjF.IsNetObjWriter(out) OR EventStubLib.IsEventWriter(out) THEN
+      PickleStubs.OutRef(out, obj.who);
+    END;
+    *)
     PickleStubs.OutRef(out, obj.self);
     PickleStubs.OutInteger(out, ORD(obj.protected));
     PickleStubs.OutRef(out, obj.pickleIn);
     PickleStubs.OutRef(out, obj.pickleOut);
 
-    WriteFields(out, obj.fields, obj.pickleOut);
+    PickleStubs.OutInteger(out, NUMBER(obj.fields^));
+    WriteFields(out, obj.self, obj.fields, obj.pickleOut);
   END Write_ReplObjStd;
 
 PROCEDURE Read_ReplObjStd (<*UNUSED*>ts: ReplObjStdSpecial;
@@ -2541,13 +4259,26 @@ PROCEDURE Read_ReplObjStd (<*UNUSED*>ts: ReplObjStdSpecial;
   RAISES {Pickle.Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
   VAR obj := NARROW(ref, ReplObjStd);
   BEGIN
-    obj.who := PickleStubs.InRef(in, -1);
+    (*
+    IF NetObjF.IsNetObjReader(in) OR EventStubLib.IsEventReader(in) THEN
+      obj.who := PickleStubs.InRef(in, -1);
+    ELSE
+      obj.who := "";
+    END;
+    *)
+    obj.who := "";
     obj.self := PickleStubs.InRef(in, TYPECODE(ValReplObj));
     obj.protected := VAL(PickleStubs.InInteger(in, 0,1), BOOLEAN);
     obj.pickleIn := PickleStubs.InRef(in, -1);
     obj.pickleOut := PickleStubs.InRef(in, -1);
 
-    obj.fields := ReadFields(in, obj.pickleIn);
+    (* we don't need to do this for the pickling, but we require that
+       o.self is a valid object *)
+    obj.self.replica := obj;
+    WITH num = PickleStubs.InInteger(in) DO
+      obj.fields := NEW(REF ObjFields, num);
+      ReadFields(in, obj.self, obj.fields, obj.pickleIn);
+    END;
   END Read_ReplObjStd;
 
 TYPE

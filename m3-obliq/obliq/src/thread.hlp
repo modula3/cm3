@@ -4,6 +4,14 @@
     (also 'condition()') A new condition.
   Some(T) thread_self(): Thread(T)
     The current thread.
+  thread_id(th: Thread(T)): Int
+    The id of the thread.
+  thread_yield(): Ok
+    If there are other threads ready to run, transfer control to one
+    of them; otherwise continue with the current thread. 
+    Implementation note: the exact semantics of "yield" varies widely 
+    from system to system.  You shouldn't use it without consulting the
+    detailed documentation for your implementation.
   All(T) thread_fork(f: ()->T, stackSize: Int): Thread(T)
     (also 'fork(f,n)') Fork a new thread executing f. If stackSize is zero, a 
     small default size is used.

@@ -20,12 +20,14 @@ Module ("ObEmbProxiedObj")
 resource ("EmbProxiedObj.hlp")
 resource ("EmbProxiedObj.obl")
 
+/*
 interface ("LibEmbDirs")
 if equal (OS_TYPE, "WIN32")
 	implementation ("LibEmbDirsWin32")
 else
 	implementation ("LibEmbDirsPosix")
 end
+*/
 
 bundle ("ObEmbBundle")
 

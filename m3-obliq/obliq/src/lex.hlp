@@ -2,9 +2,15 @@
   lex_scan(r: Rd, t: Text): Text ! rd_failure thread_alerted
     Read from r the longest prefix formed of characters listed in t, and return 
     it.
+  lex_scanNonBlanks(r: Rd): Text ! rd_failure thread_alerted
+    Read from r the longest prefix formed of characters nonblank characters, 
+    which means any in the range {'!' .. '~'), and return it.
   lex_skip(r: Rd, t: Text): Ok ! rd_failure thread_alerted
     Read from r the longest prefix formed of characters listed in t, and discard 
     it.
+  lex_skipBlanks(r: Rd): Ok ! rd_failure thread_alerted
+    Read from r the longest prefix formed of blanks, which means any of
+    {' ', '\t', '\n', '\r', '\013' (* vertical tab *), '\f'}, and discard it.
   lex_match(r: Rd, t: Text): Ok ! lex_failure rd_failure thread_alerted
     Read from r the string t and discard it; raise failure if not found.
   lex_bool(r: Rd): Bool ! lex_failure rd_failure thread_alerted

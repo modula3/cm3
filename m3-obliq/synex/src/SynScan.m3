@@ -1,14 +1,21 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
-(* Last modified on Fri Jun  3 13:22:49 1994 by luca                               *)
+(* Created by luca                               *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Tue May 26 15:46:59 1998
+ *)
 
 MODULE SynScan;
 IMPORT Wr, TextRefTbl, Text, TextConv, Rd, SynWr, SynLocation, 
        Fmt, Lex, FloatMode, TextRd, Thread, SynScan;
 
 REVEAL
-  Keyword =  BRANDED OBJECT name: TEXT; keyword: BOOLEAN END;
-  KeywordSet = BRANDED OBJECT table: TextRefTbl.T END;
+  Keyword =  BRANDED "SynScan.Keyword" OBJECT name: TEXT; keyword: BOOLEAN END;
+  KeywordSet = BRANDED "SynScan.KeywordSet" OBJECT table: TextRefTbl.T END;
 
 TYPE
   Symbol = Keyword;
@@ -31,7 +38,7 @@ TYPE
 CONST EofChar = VAL(255, CHAR);
 
 REVEAL T = 
-  BRANDED REF RECORD
+  BRANDED "SynScan.T" REF RECORD
     swr: SynWr.T;
     scanBuffer: REF ARRAY OF CHAR;
     scanBufferSize: INTEGER;
@@ -331,11 +338,14 @@ PROCEDURE ScanNumber(sc: T): TokenClass RAISES {NoReader, Fail} =
       LOOP
         char := LookChar(sc);
         IF (z.charTable[char] # CharacterClass.DigitCharCase) AND
-            (char # '.') AND (char # 'e') AND (char # '~') THEN
+            (char # '.') AND (char # 'e') AND (char # 'd') AND 
+            (char # '~') THEN
           EXIT
         END;
         char := GetChar(sc);
-        IF (char = '.') OR (char = 'e') THEN integer := FALSE END;
+        IF (char = '.') OR (char = 'e') OR (char = 'd') THEN 
+          integer := FALSE;
+        END;
         IF (NOT integer) AND (char = '~') THEN char := '-' END;
         z.scanBuffer[z.scanBufferSize]:= char;
         INC(z.scanBufferSize);

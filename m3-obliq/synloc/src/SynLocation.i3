@@ -1,6 +1,13 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
-(* Last modified on Mon Jul 26 04:07:03 PDT 1993 by luca               *)
+(* Created by luca               *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:53:58 1997
+ *)
 
 INTERFACE SynLocation;
 IMPORT SynWr;
@@ -20,7 +27,7 @@ TYPE
   *)
 
   Located =
-    BRANDED "Located" OBJECT
+    BRANDED "SynLocation.Located" OBJECT
       location: T := NIL;
     END;
   (* A located object, to be subtyped. *)

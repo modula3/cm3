@@ -54,3 +54,5 @@
     Least integers no less than n.
   real_ceiling(n: Int): Int
     Overloaded; identity on integers.
+  real_isNaN(n: Real): Bool
+    Overloaded; false on integers.

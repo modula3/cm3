@@ -1,0 +1,16 @@
+  regex_error: Exception       
+  regex_compile(pat: Text): Pattern ! regex_error
+    compile a regular expression string into an regular expression Pattern
+  regex_decompile(pat: Pattern): Text
+    decompile an executable Pattern into the original regular expression
+  regex_dump(pat: Pattern): Text
+    dump an executable Pattern into a readable text string for debugging 
+  regex_execute(pat: Pattern, text: Text): Int
+    compare the regular expression 'pat' against the text data returning the
+    starting position in 'data' if there was a match, -1 otherwise.
+  regex_executeRes(pat: Pattern, text: Text): [[Int,Int]] or ok
+    if there is a match, return indices for the \(..\) sequences.  Otherwise,
+    return ok.
+  regex_executeSub(pat: Pattern, text: Text, start len: Int): Int
+  regex_executeSubRes(pat:Pattern, text:Text, start len:Int): [[Int,Int]] or ok
+    consider only text_sub(text,start,len) portion of 'text' 

@@ -1,5 +1,12 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 15:04:09 1997
+ *)
 
 MODULE ObCommand;
 IMPORT Text, ObErr, SynWr;
@@ -12,7 +19,7 @@ TYPE
 
 REVEAL
   Set = 
-    BRANDED OBJECT 
+    BRANDED "ObCommand.Set" OBJECT 
       list: List;
     END;
 
@@ -54,7 +61,8 @@ REVEAL
       END;
     END ReRegister;
 
-  PROCEDURE Exec(name: TEXT; arg: TEXT:=NIL; set: Set; data: REFANY:=NIL) 
+  PROCEDURE Exec(wr: SynWr.T; name: TEXT; arg: TEXT:=NIL; 
+                 set: Set; data: REFANY:=NIL) 
       RAISES {ObErr.Fail} =
     VAR scan: List;
     BEGIN
@@ -62,28 +70,27 @@ REVEAL
 	scan := set.list;
 	WHILE scan#NIL DO
 	  IF scan.first.Exec # NIL THEN 
-            scan.first.Exec(scan.first, "!", data);
+            scan.first.Exec(wr, scan.first, "!", data);
           END;
 	  scan:=scan.rest;
 	END;
-	SynWr.Flush(SynWr.out);
+	SynWr.Flush(wr);
       ELSE
         scan:=set.list;
 	WHILE scan#NIL DO
 	  IF Text.Equal(name, scan.first.name) THEN
 	    IF scan.first.Exec # NIL THEN 
-              scan.first.Exec(scan.first, arg, data);
+              scan.first.Exec(wr, scan.first, arg, data);
             END;
-	    SynWr.Flush(SynWr.out);
+	    SynWr.Flush(wr);
 	    RETURN;
 	  END;
 	  scan:=scan.rest;
 	END;
-        SynWr.Text(SynWr.out, "Command not found: " & name & "\n");
-	SynWr.Flush(SynWr.out);
+        SynWr.Text(wr, "Command not found: " & name & "\n");
+	SynWr.Flush(wr);
       END;
     END Exec;
 
 BEGIN
-
 END ObCommand.

@@ -1,55 +1,78 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Wed Jun 10 21:18:37 1998
+ *)
 
 INTERFACE ObLibM3;
-IMPORT SynLocation, ObValue, Rd, Wr, Process;
+IMPORT SynLocation, ObValue, TCP, TextRefTbl, IP;
 
   PROCEDURE PackageSetup();
   (* To be called at least once before any other use of the obliqlibm3 package. *)
 
-(* ============ "rd" package ============ *)
+(* ============ "tcp" package ============ *)
 
   TYPE
-    ValRd =
-      ObValue.ValAnything BRANDED OBJECT
-        rd: Rd.T;
-      OVERRIDES Is := IsRd; Copy := CopyRd;
+    ValConnector =
+      ObValue.ValAnything BRANDED "ObLibM3.ValConnector" OBJECT
+        conn: TCP.Connector;
+      OVERRIDES Is := IsConn; Copy := CopyConn;
       END;
 
-  PROCEDURE IsRd(self: ValRd; other: ObValue.ValAnything): BOOLEAN;
-  PROCEDURE CopyRd(self: ObValue.ValAnything; tbl: ObValue.Tbl;
-    loc: SynLocation.T): ObValue.ValAnything RAISES {ObValue.Error};
-    (* Shares the reader *)
-
-(* ============ "wr" package ============ *)
+  PROCEDURE IsConn(self: ValConnector; other: ObValue.ValAnything): BOOLEAN;
+  PROCEDURE CopyConn(self: ValConnector; tbl: ObValue.Tbl;
+                     loc: SynLocation.T): ObValue.ValAnything
+    RAISES {ObValue.Error};
 
   TYPE
-    ValWr =
-      ObValue.ValAnything BRANDED OBJECT
-        wr: Wr.T;
-      OVERRIDES Is := IsWr; Copy := CopyWr;
+    ValTCP =
+      ObValue.ValAnything BRANDED "ObLibM3.ValTCP" OBJECT
+        tcp: TCP.T;
+      OVERRIDES Is := IsTCP; Copy := CopyTCP;
       END;
 
-  PROCEDURE IsWr(self: ValWr; other: ObValue.ValAnything): BOOLEAN;
-  PROCEDURE CopyWr(self: ObValue.ValAnything; tbl: ObValue.Tbl;
-    loc: SynLocation.T): ObValue.ValAnything RAISES {ObValue.Error};
-    (* Shares the writer *)
+  PROCEDURE IsTCP(self: ValTCP; other: ObValue.ValAnything): BOOLEAN;
+  PROCEDURE CopyTCP(self: ValTCP; tbl: ObValue.Tbl; 
+                    loc: SynLocation.T): ObValue.ValAnything 
+    RAISES {ObValue.Error};
 
-(* ============ "process" package ============ *)
+PROCEDURE NewConnector(conn: TCP.Connector): ObValue.Val;
+PROCEDURE NewTCP(tcp: TCP.T): ObValue.Val;
+PROCEDURE FromEndPoint (ep: IP.Endpoint): ObValue.Val;
+PROCEDURE FromAddress (addr: IP.Address): ObValue.Val;
+
+(* ============ "dict" package ============ *)
 
   TYPE
-    ValProc =
-      ObValue.ValAnything BRANDED OBJECT
-        proc: Process.T;
-        in: ValWr;
-        out: ValRd;
-        err: ValRd;
-      OVERRIDES Is := IsProc; Copy := CopyProc;
+    ValDict =
+      ObValue.ValAnything BRANDED "ObLibM3.ValDict" OBJECT
+        dict: TextRefTbl.T;
+      OVERRIDES Is := IsDict; Copy := CopyDict;
       END;
 
-  PROCEDURE IsProc(self: ValProc; other: ObValue.ValAnything): BOOLEAN;
-  PROCEDURE CopyProc(self: ObValue.ValAnything; tbl: ObValue.Tbl;
-    loc: SynLocation.T): ObValue.ValAnything RAISES {ObValue.Error};
-    (* Raises Error *)
+  PROCEDURE IsDict(self: ValDict; other: ObValue.ValAnything): BOOLEAN;
+  PROCEDURE CopyDict(self: ValDict; tbl: ObValue.Tbl;
+                     loc: SynLocation.T): ObValue.ValAnything
+    RAISES {ObValue.Error};
+
+  TYPE
+    ValIterator =
+      ObValue.ValAnything BRANDED "ObLibM3.ValDictIterator" OBJECT
+        iterator: TextRefTbl.Iterator;
+      OVERRIDES Is := IsIterator; Copy := CopyIterator;
+      END;
+
+  PROCEDURE IsIterator(self: ValIterator; 
+                       other: ObValue.ValAnything): BOOLEAN;
+  PROCEDURE CopyIterator(self: ValIterator; tbl: ObValue.Tbl;
+                         loc: SynLocation.T): ObValue.ValAnything
+    RAISES {ObValue.Error};
+
+PROCEDURE NewDict(tbl: TextRefTbl.T): ObValue.Val;
+PROCEDURE NewIterator(tbl: TextRefTbl.Iterator): ObValue.Val;
 
 END ObLibM3.

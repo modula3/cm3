@@ -1,50 +1,58 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
+(*                                                                           *)
+(* Parts Copyright (C) 1997, Columbia University                             *)
+(* All rights reserved.                                                      *)
+(*
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:55:22 1997
+ *)
 
 MODULE ObScope;
 IMPORT Text, SynLocation, SynWr, ObErr, ObTree, ObLib;
 
 REVEAL
 
-  Env = BRANDED OBJECT END;
+  Env = BRANDED "ObScope.Env" OBJECT END;
 
   TermEnv =
-    Env BRANDED OBJECT
+    Env BRANDED "ObScope.TermEnv" OBJECT
       location: SynLocation.T;
       name: ObTree.IdeName;
       rest: Env;
     END;
 
-PROCEDURE ScopeErrorMsg(msg: TEXT; location: SynLocation.T) =
+PROCEDURE ScopeErrorMsg(wr: SynWr.T; msg: TEXT; location: SynLocation.T) =
     BEGIN
-      SynWr.Text(SynWr.out, msg, loud:=TRUE); 
-      SynWr.NewLine(SynWr.out, loud:=TRUE);
-      SynWr.Text(SynWr.out, "  ", loud:=TRUE);
-      SynLocation.PrintLocation(SynWr.out, location);
-      SynWr.NewLine(SynWr.out, loud:=TRUE);
-      SynWr.Flush(SynWr.out, loud:=TRUE);
+      SynWr.Text(wr, msg, loud:=TRUE); 
+      SynWr.NewLine(wr, loud:=TRUE);
+      SynWr.Text(wr, "  ", loud:=TRUE);
+      SynLocation.PrintLocation(wr, location);
+      SynWr.NewLine(wr, loud:=TRUE);
+      SynWr.Flush(wr, loud:=TRUE);
    END ScopeErrorMsg;
 
-PROCEDURE ScopeError(msg: TEXT; location: SynLocation.T) 
+PROCEDURE ScopeError(wr: SynWr.T; msg: TEXT; location: SynLocation.T) 
     RAISES {ObErr.Fail} =
   BEGIN
-    ScopeErrorMsg(msg, location);
+    ScopeErrorMsg(wr, msg, location);
     RAISE ObErr.Fail;
   END ScopeError;
 
-PROCEDURE UnboundIdeMsg(name: ObTree.IdeName; location: SynLocation.T) =
+PROCEDURE UnboundIdeMsg(wr: SynWr.T; name: ObTree.IdeName; 
+                        location: SynLocation.T) =
   BEGIN
-    ScopeErrorMsg("Unbound term identifier: " & name.text, location);
+    ScopeErrorMsg(wr, "Unbound term identifier: " & name.text, location);
   END UnboundIdeMsg;
 
-PROCEDURE UnboundIdes(freeEnv: Env) RAISES {ObErr.Fail} =
+PROCEDURE UnboundIdes(wr: SynWr.T; freeEnv: Env) RAISES {ObErr.Fail} =
   BEGIN
     IF freeEnv=NIL THEN RETURN END;
     LOOP
       TYPECASE freeEnv OF
       | NULL => EXIT;
       | TermEnv(node) =>
-          UnboundIdeMsg(node.name, node.location);
+          UnboundIdeMsg(wr, node.name, node.location);
           freeEnv := node.rest;
       ELSE <*ASSERT FALSE*>
       END
@@ -52,59 +60,62 @@ PROCEDURE UnboundIdes(freeEnv: Env) RAISES {ObErr.Fail} =
     RAISE ObErr.Fail;
   END UnboundIdes;
 
-PROCEDURE NewTermEnv(location: SynLocation.T; name: ObTree.IdeName;
-     libEnv: ObLib.Env; rest: TermEnv): TermEnv RAISES {ObErr.Fail} =
+PROCEDURE NewTermEnv(wr: SynWr.T; location: SynLocation.T; 
+                     name: ObTree.IdeName; libEnv: ObLib.Env; 
+                     rest: TermEnv): TermEnv RAISES {ObErr.Fail} =
   BEGIN
-    CheckBuiltInIde(name, libEnv, location);
+    CheckBuiltInIde(wr, name, libEnv, location);
     RETURN NEW(TermEnv, location:=location, name:=name, rest:=rest);
   END NewTermEnv;
 
-PROCEDURE ExtendEnv(binders: ObTree.IdeList; libEnv: ObLib.Env; env: Env; 
+PROCEDURE ExtendEnv(wr: SynWr.T; binders: ObTree.IdeList; 
+                    libEnv: ObLib.Env; env: Env; 
     VAR(*in-out*)no: INTEGER): Env RAISES {ObErr.Fail} =
   BEGIN
     IF binders = NIL THEN RETURN env;
     ELSE
       INC(no);
       RETURN 
-        ExtendEnv(binders.rest, libEnv,
-          NewTermEnv(binders.location, binders.first, libEnv, env),
+        ExtendEnv(wr, binders.rest, libEnv,
+          NewTermEnv(wr, binders.location, binders.first, libEnv, env),
           (*in-out*)no);
     END;
   END ExtendEnv;
 
 PROCEDURE EnvLength(env: TermEnv): INTEGER =
-VAR i: INTEGER;
-BEGIN
-  i:=0; WHILE env#NIL DO env:=env.rest; INC(i); END; RETURN i;
-END EnvLength;
+  VAR i: INTEGER;
+  BEGIN
+    i:=0; WHILE env#NIL DO env:=env.rest; INC(i); END; RETURN i;
+  END EnvLength;
 
-PROCEDURE CheckBuiltInIde(name: ObTree.IdeName; libEnv: ObLib.Env;
-    location: SynLocation.T) RAISES {ObErr.Fail} =
+PROCEDURE CheckBuiltInIde(wr: SynWr.T; name: ObTree.IdeName; libEnv: ObLib.Env;
+                          location: SynLocation.T) RAISES {ObErr.Fail} =
   VAR pkgName: TEXT;
   BEGIN
       IF ObLib.Lookup(name.text, libEnv)#NIL THEN
-          ScopeError("Identifier '" & name.text & 
-            "' is reserved as the name of a module",
-            location);
+        ScopeError(wr, "Identifier '" & name.text & 
+          "' is reserved as the name of a module",
+          location);
       END;
       CASE ObLib.LookupFixity(name.text, libEnv, (*out*)pkgName) OF
       | ObLib.OpFixity.Undefined, ObLib.OpFixity.Qualified =>
       | ObLib.OpFixity.Infix, ObLib.OpFixity.Prefix =>
-          ScopeError("Identifier '" & name.text &
+          ScopeError(wr, "Identifier '" & name.text &
             "' is reserved by module '" & pkgName & "'",
             location);
       END;
   END CheckBuiltInIde;
 
-PROCEDURE LookupTermIdeGlobal(name: ObTree.IdeName; libEnv: ObLib.Env;
-    location: SynLocation.T; VAR (*in-out*)global: Env): ObTree.IdePlace 
+PROCEDURE LookupTermIdeGlobal(wr: SynWr.T; name: ObTree.IdeName; 
+                              libEnv: ObLib.Env; location: SynLocation.T; 
+                              VAR (*in-out*)global: Env): ObTree.IdePlace 
     RAISES {ObErr.Fail}=
   VAR env: TermEnv;
   BEGIN
     env := global;
     LOOP
       IF env=NIL THEN
-        global := NewTermEnv(location, name, libEnv, global);
+        global := NewTermEnv(wr, location, name, libEnv, global);
         RETURN NEW(ObTree.IdePlaceGlobal, index:=EnvLength(global));
       ELSE
 	IF ObTree.SameIdeName(name, env.name) THEN
@@ -115,7 +126,7 @@ PROCEDURE LookupTermIdeGlobal(name: ObTree.IdeName; libEnv: ObLib.Env;
     END;
   END LookupTermIdeGlobal;
 
-PROCEDURE LookupTermIde(name: ObTree.IdeName; libEnv: ObLib.Env;
+PROCEDURE LookupTermIde(wr: SynWr.T; name: ObTree.IdeName; libEnv: ObLib.Env;
         location: SynLocation.T;
 	local: Env; VAR (*in-out*)global: Env): 
 	ObTree.IdePlace RAISES {ObErr.Fail} =
@@ -125,7 +136,8 @@ PROCEDURE LookupTermIde(name: ObTree.IdeName; libEnv: ObLib.Env;
     LOOP
       TYPECASE local OF
       | NULL => 
-        RETURN LookupTermIdeGlobal(name, libEnv, location, (*in-out*)global);
+        RETURN LookupTermIdeGlobal(wr, name, libEnv, location,
+                                   (*in-out*)global); 
       | TermEnv(node) =>
 	    IF ObTree.SameIdeName(name, node.name) THEN
 	      RETURN NEW(ObTree.IdePlaceLocal, index:=index);
@@ -138,7 +150,8 @@ PROCEDURE LookupTermIde(name: ObTree.IdeName; libEnv: ObLib.Env;
     END;
   END LookupTermIde;
 
-PROCEDURE LookupTermGlobals(free: Env; local: Env; libEnv: ObLib.Env;
+PROCEDURE LookupTermGlobals(wr: SynWr.T; free: Env; local: Env; 
+                            libEnv: ObLib.Env;
     VAR (*in-out*)global: Env; VAR (*in-out*)globalsNo: INTEGER)
     : ObTree.Globals RAISES {ObErr.Fail}=
   VAR closure: ObTree.Globals;
@@ -153,7 +166,7 @@ PROCEDURE LookupTermGlobals(free: Env; local: Env; libEnv: ObLib.Env;
             location := node.location,
             name := node.name,
             place := 
-              LookupTermIde(node.name, libEnv, 
+              LookupTermIde(wr, node.name, libEnv, 
                             node.location, local, (*in-out*)global),
             rest := closure);
         INC(globalsNo);
@@ -163,51 +176,56 @@ PROCEDURE LookupTermGlobals(free: Env; local: Env; libEnv: ObLib.Env;
     END;
   END LookupTermGlobals;
 
-PROCEDURE ScopeTermBinding(binding: ObTree.TermBinding; libEnv: ObLib.Env;
-    initEnv,env: Env;  VAR (*in-out*)global: Env): Env RAISES {ObErr.Fail} =
+PROCEDURE ScopeTermBinding(wr: SynWr.T; binding: ObTree.TermBinding; 
+                           libEnv: ObLib.Env; initEnv,env: Env;  
+                           VAR (*in-out*)global: Env): Env RAISES {ObErr.Fail}=
   VAR local1: Env;
   BEGIN
     TYPECASE binding OF
     | NULL => RETURN env;
     | ObTree.TermBinding(node) =>
         local1 := initEnv;
-	ScopeTerm(node.term, libEnv, (*in-out*)local1, (*in-out*)global);
-	RETURN ScopeTermBinding(node.rest, libEnv, initEnv,
-	  NewTermEnv(binding.location,
-	      node.binder, libEnv, env), (*in-out*)global);
+	ScopeTerm(wr, node.term, libEnv, (*in-out*)local1, (*in-out*)global);
+	RETURN ScopeTermBinding(wr, node.rest, libEnv, initEnv,
+	  NewTermEnv(wr, binding.location,
+                     node.binder, libEnv, env), (*in-out*)global);
     END;
   END ScopeTermBinding;
 
-PROCEDURE ScopeTermBindingRec1(binding: ObTree.TermBinding; libEnv: ObLib.Env;
-    env: Env): Env RAISES {ObErr.Fail} =
+PROCEDURE ScopeTermBindingRec1(wr: SynWr.T; binding: ObTree.TermBinding; 
+                               libEnv: ObLib.Env;
+                               env: Env): Env RAISES {ObErr.Fail} =
   BEGIN
     TYPECASE binding OF
     | NULL => RETURN env;
     | ObTree.TermBinding(node) =>
         IF NOT ISTYPE(node.term, ObTree.TermFun) THEN
-          ScopeError("Non-function found in recursive definition: " & 
+          ScopeError(wr, "Non-function found in recursive definition: " & 
             node.binder.text, node.location);
         END;
-	RETURN ScopeTermBindingRec1(node.rest, libEnv, 
-	  NewTermEnv(binding.location, node.binder, libEnv, env));
+	RETURN ScopeTermBindingRec1(wr, node.rest, libEnv, 
+	  NewTermEnv(wr, binding.location, node.binder, libEnv, env));
     END;
   END ScopeTermBindingRec1;
 
-PROCEDURE ScopeTermBindingRec2(binding: ObTree.TermBinding; libEnv: ObLib.Env;
-    recEnv: Env; VAR (*in-out*)global: Env) RAISES {ObErr.Fail} =
+PROCEDURE ScopeTermBindingRec2(wr: SynWr.T; binding: ObTree.TermBinding; 
+                               libEnv: ObLib.Env; recEnv: Env; 
+                               VAR (*in-out*)global: Env) RAISES {ObErr.Fail} =
   VAR local1: Env;
   BEGIN
     TYPECASE binding OF
     | NULL => 
     | ObTree.TermBinding(node) =>
         local1 := recEnv;
-	ScopeTerm(node.term, libEnv, (*in-out*)local1, (*in-out*)global);
-	ScopeTermBindingRec2(node.rest, libEnv, recEnv, (*in-out*)global);
+	ScopeTerm(wr, node.term, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTermBindingRec2(wr, node.rest, libEnv, recEnv, (*in-out*)global);
     END;
   END ScopeTermBindingRec2;
 
-PROCEDURE ScopeTermList(list: ObTree.TermList; libEnv: ObLib.Env; local: Env; 
-    VAR (*in-out*)global: Env; temp: BOOLEAN:=FALSE): INTEGER 
+PROCEDURE ScopeTermList(wr: SynWr.T; list: ObTree.TermList; 
+                        libEnv: ObLib.Env; local: Env; 
+                        VAR (*in-out*)global: Env; 
+                        temp: BOOLEAN:=FALSE): INTEGER 
     RAISES {ObErr.Fail} =
   VAR local1: Env;
   BEGIN
@@ -215,8 +233,9 @@ PROCEDURE ScopeTermList(list: ObTree.TermList; libEnv: ObLib.Env; local: Env;
     | NULL => RETURN 0;
     | ObTree.TermList(node) =>
         local1 := local;
-        ScopeTerm(node.first, libEnv, (*in-out*)local1, (*in-out*)global, temp);
-        RETURN 1 + ScopeTermList(node.rest, libEnv, local, 
+        ScopeTerm(wr, node.first, libEnv, (*in-out*)local1, 
+                  (*in-out*)global, temp);
+        RETURN 1 + ScopeTermList(wr, node.rest, libEnv, local, 
 			(*in-out*)global, temp);
     END;
   END ScopeTermList;
@@ -224,33 +243,36 @@ PROCEDURE ScopeTermList(list: ObTree.TermList; libEnv: ObLib.Env; local: Env;
 (* Temporary value analysis done for constants, and conditionals. 
    Could be extended to case and let *)
 
-PROCEDURE ScopeTerm(term: ObTree.Term; libEnv: ObLib.Env; 
-    VAR (*in-out*)local,global: Env; temp: BOOLEAN:=FALSE) RAISES {ObErr.Fail} =
+PROCEDURE ScopeTerm(wr: SynWr.T; term: ObTree.Term; libEnv: ObLib.Env; 
+                    VAR (*in-out*)local, global: Env; 
+                    temp: BOOLEAN:=FALSE) RAISES {ObErr.Fail} =
   VAR local1, newLocal, newGlobal: Env; libName: TEXT;
       lib: ObLib.Env; opCode: ObLib.OpCode;
       optimizeTemps: BOOLEAN;
   BEGIN
     TYPECASE term OF
-    | NULL => ObErr.Fault(SynWr.out, "ScopeTerm NIL");
+    | NULL => ObErr.Fault(wr, "ScopeTerm NIL");
     | ObTree.TermIde(node) =>
 	node.place := 
-	  LookupTermIde(node.name, libEnv, 
+	  LookupTermIde(wr, node.name, libEnv, 
                         node.location, local, (*in-out*)global);
     | ObTree.TermConstant =>
     | ObTree.TermArray(node) =>
         node.elemsNo := 
-	  ScopeTermList(node.elems, libEnv, local, (*in-out*)global);
+	  ScopeTermList(wr, node.elems, libEnv, local, (*in-out*)global);
     | ObTree.TermOption(node) =>
         local1 := local;
-        ScopeTerm(node.term, libEnv, local1, (*in-out*)global);
+        ScopeTerm(wr, node.tag, libEnv, local1, (*in-out*)global);
+        local1 := local;
+        ScopeTerm(wr, node.term, libEnv, local1, (*in-out*)global);
     | ObTree.TermAlias(node) =>
         local1 := local;
-        ScopeTerm(node.term, libEnv, local1, (*in-out*)global);
+        ScopeTerm(wr, node.term, libEnv, local1, (*in-out*)global);
     | ObTree.TermOp(node) =>
 	libName := node.pkg.text;
         lib := ObLib.Lookup(libName, libEnv);
 	IF lib = NIL THEN
-          ScopeError("Unknown module: " & node.pkg.text, term.location);
+          ScopeError(wr, "Unknown module: " & node.pkg.text, term.location);
         END;
 	optimizeTemps :=
 	  Text.Equal(libName, "int") OR Text.Equal(libName, "real")
@@ -260,7 +282,7 @@ PROCEDURE ScopeTerm(term: ObTree.Term; libEnv: ObLib.Env;
           THEN
             IF node.argsNo#-1 (* not a TermOpConst *) THEN
               node.argsNo := 
-                ScopeTermList(node.args, libEnv, local, (*in-out*)global, 
+                ScopeTermList(wr, node.args, libEnv, local, (*in-out*)global, 
 		  optimizeTemps);
             END;
 	    node.temp := temp;
@@ -270,152 +292,157 @@ PROCEDURE ScopeTerm(term: ObTree.Term; libEnv: ObLib.Env;
           END;
           lib := ObLib.Lookup(node.pkg.text, lib.rest);          
           IF lib=NIL THEN
-            ScopeError("Unknown operation: " & 
+            ScopeError(wr, "Unknown operation: " & 
               node.pkg.text & "_" & node.op.text, term.location);
           END;
         END;
     | ObTree.TermFun(node) =>
         node.bindersNo:=0;
         newLocal := 
-            ExtendEnv(node.binders, libEnv, NIL, (*in-out*)node.bindersNo);
+            ExtendEnv(wr, node.binders, libEnv, NIL, (*in-out*)node.bindersNo);
         newGlobal := NIL;
-	ScopeTerm(node.body, libEnv, (*in-out*)newLocal, (*in-out*)newGlobal);
+	ScopeTerm(wr, node.body, libEnv, (*in-out*)newLocal,
+                  (*in-out*)newGlobal); 
 	node.globalsNo := 0;
 	node.globals := 
-	  LookupTermGlobals(newGlobal, local, libEnv,
-	    (*in-out*)global, (*in-out*)node.globalsNo)
+	  LookupTermGlobals(wr, newGlobal, local, libEnv,
+                            (*in-out*)global, (*in-out*)node.globalsNo)
     | ObTree.TermAppl(node) =>
         local1 := local;
-	ScopeTerm(node.fun, libEnv, (*in-out*)local1, (*in-out*)global);
-	node.argsNo := ScopeTermList(node.args, libEnv, local, (*in-out*)global);
+	ScopeTerm(wr, node.fun, libEnv, (*in-out*)local1, (*in-out*)global);
+	node.argsNo := ScopeTermList(wr, node.args, libEnv, local,
+                                     (*in-out*)global); 
     | ObTree.TermObj(node) =>
         node.fieldsNo := 
-          ScopeObjFields(node.fields, libEnv, local, (*in-out*)global);
+          ScopeObjFields(wr, node.fields, libEnv, local, (*in-out*)global);
     | ObTree.TermMeth(node) =>
         node.bindersNo:=0;
         newLocal := 
-            ExtendEnv(node.binders, libEnv, NIL, (*in-out*)node.bindersNo);
+            ExtendEnv(wr, node.binders, libEnv, NIL, (*in-out*)node.bindersNo);
         newGlobal := NIL;
-	ScopeTerm(node.body, libEnv, (*in-out*)newLocal, (*in-out*)newGlobal);
+	ScopeTerm(wr, node.body, libEnv, (*in-out*)newLocal,
+                  (*in-out*)newGlobal); 
 	node.globalsNo := 0;
 	node.globals := 
-	  LookupTermGlobals(newGlobal, local, libEnv,
+	  LookupTermGlobals(wr, newGlobal, local, libEnv,
 	    (*in-out*)global, (*in-out*)node.globalsNo)
     | ObTree.TermClone(node) =>
-        node.objsNo := ScopeTermList(node.objs, libEnv, local, 
+        node.objsNo := ScopeTermList(wr, node.objs, libEnv, local, 
                                      (*in-out*)global);
     | ObTree.TermNotify(node) =>
         local1 := local;
-	ScopeTerm(node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
         local1 := local;
-	ScopeTerm(node.withObj, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.withObj, libEnv, (*in-out*)local1, (*in-out*)global);
     | ObTree.TermPickler(node) =>
         local1 := local;
-	ScopeTerm(node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
         local1 := local;
-	ScopeTerm(node.pklIn, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.pklIn, libEnv, (*in-out*)local1, (*in-out*)global);
         local1 := local;
-	ScopeTerm(node.pklOut, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.pklOut, libEnv, (*in-out*)local1, (*in-out*)global);
     | ObTree.TermReplicate(node) =>
-        node.argsNo := ScopeTermList(node.args, libEnv, local, 
+        node.argsNo := ScopeTermList(wr, node.args, libEnv, local, 
                                      (*in-out*)global);
     | ObTree.TermRemote(node) =>
         local1 := local;
-	ScopeTerm(node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
     | ObTree.TermSimple(node) =>
         local1 := local;
-	ScopeTerm(node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
     | ObTree.TermSelect(node) =>
         local1 := local;
-        ScopeTerm(node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
+        ScopeTerm(wr, node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
         IF node.invoke THEN
-	  node.argsNo := ScopeTermList(node.args, libEnv, local, 
+	  node.argsNo := ScopeTermList(wr, node.args, libEnv, local, 
                                        (*in-out*)global);
 	END;
     | ObTree.TermRedirect(node) =>
         local1 := local;
-	ScopeTerm(node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
         local1 := local;
-	ScopeTerm(node.toObj, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.toObj, libEnv, (*in-out*)local1, (*in-out*)global);
     | ObTree.TermUpdate(node) =>
         local1 := local;
-	ScopeTerm(node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
         local1 := local;
-	ScopeTerm(node.term, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.term, libEnv, (*in-out*)local1, (*in-out*)global);
     | ObTree.TermLet(node) =>
         IF node.rec THEN
-          local := ScopeTermBindingRec1(node.binding, libEnv, local);
-          ScopeTermBindingRec2(node.binding, libEnv, local, (*in-out*)global);
+          local := ScopeTermBindingRec1(wr, node.binding, libEnv, local);
+          ScopeTermBindingRec2(wr, node.binding, libEnv, local,
+                               (*in-out*)global); 
         ELSE
           local := 
-            ScopeTermBinding(node.binding, libEnv, local, local, (*in-out*)global);
+            ScopeTermBinding(wr, node.binding, libEnv, local, local,
+                             (*in-out*)global); 
         END;
     | ObTree.TermSeq(node) =>
         local1 := local;
-	ScopeTerm(node.before, libEnv, (*in-out*)local1, (*in-out*)global);
-	ScopeTerm(node.after, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.before, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.after, libEnv, (*in-out*)local1, (*in-out*)global);
     | ObTree.TermAssign(node) =>
 	node.place := 
-	  LookupTermIde((*mod*)node.name, libEnv, node.location, 
+	  LookupTermIde(wr, (*mod*)node.name, libEnv, node.location, 
 	    local, (*in-out*)global);
         local1 := local;
-        ScopeTerm(node.val, libEnv, (*in-out*)local1, (*in-out*)global);
+        ScopeTerm(wr, node.val, libEnv, (*in-out*)local1, (*in-out*)global);
     | ObTree.TermIf(node) =>
         local1 := local;
-	ScopeTerm(node.test, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.test, libEnv, (*in-out*)local1, (*in-out*)global);
         local1 := local;
-	ScopeTerm(node.ifTrue, libEnv, 
+	ScopeTerm(wr, node.ifTrue, libEnv, 
 		(*in-out*)local1, (*in-out*)global, temp);
         IF node.ifFalse # NIL THEN
           local1 := local;
-	  ScopeTerm(node.ifFalse, libEnv, 
+	  ScopeTerm(wr, node.ifFalse, libEnv, 
 		(*in-out*)local1, (*in-out*)global, temp);
         END;
     | ObTree.TermCase(node) =>
         local1 := local;
-	ScopeTerm(node.option, libEnv, (*in-out*)local1, (*in-out*)global);
-	ScopeTermCaseList(node.caseList, libEnv, local, (*in-out*)global);
+	ScopeTerm(wr, node.option, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTermCaseList(wr, node.caseList, libEnv, local, (*in-out*)global);
     | ObTree.TermLoop(node) =>
         local1 := local;
-	ScopeTerm(node.loop, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.loop, libEnv, (*in-out*)local1, (*in-out*)global);
     | ObTree.TermExit =>
     | ObTree.TermFor(node) =>
         local1 := local;
-	ScopeTerm(node.lb, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.lb, libEnv, (*in-out*)local1, (*in-out*)global);
         local1 := local;
-	ScopeTerm(node.ub, libEnv, (*in-out*)local1, (*in-out*)global);
-        local1 := NewTermEnv(node.location, node.binder, libEnv, local);
-	ScopeTerm(node.body, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.ub, libEnv, (*in-out*)local1, (*in-out*)global);
+        local1 := NewTermEnv(wr, node.location, node.binder, libEnv, local);
+	ScopeTerm(wr, node.body, libEnv, (*in-out*)local1, (*in-out*)global);
     | ObTree.TermForeach(node) =>
         local1 := local;
-	ScopeTerm(node.range, libEnv, (*in-out*)local1, (*in-out*)global);
-        local1 := NewTermEnv(node.location, node.binder, libEnv, local);
-	ScopeTerm(node.body, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.range, libEnv, (*in-out*)local1, (*in-out*)global);
+        local1 := NewTermEnv(wr, node.location, node.binder, libEnv, local);
+	ScopeTerm(wr, node.body, libEnv, (*in-out*)local1, (*in-out*)global);
     | ObTree.TermException(node) =>
         local1 := local;
-	ScopeTerm(node.name, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.name, libEnv, (*in-out*)local1, (*in-out*)global);
     | ObTree.TermRaise(node) =>
         local1 := local;
-	ScopeTerm(node.exception, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.exception, libEnv, (*in-out*)local1, (*in-out*)global);
     | ObTree.TermTry(node) =>
         local1 := local;
-	ScopeTerm(node.body, libEnv, (*in-out*)local1, (*in-out*)global);
-	ScopeTermTryList(node.tryList, libEnv, local, (*in-out*)global);
+	ScopeTerm(wr, node.body, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTermTryList(wr, node.tryList, libEnv, local, (*in-out*)global);
     | ObTree.TermTryFinally(node) =>
         local1 := local;
-	ScopeTerm(node.body, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.body, libEnv, (*in-out*)local1, (*in-out*)global);
         local1 := local;
-	ScopeTerm(node.finally, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.finally, libEnv, (*in-out*)local1, (*in-out*)global);
     | ObTree.TermWatch(node) =>
         local1 := local;
-	ScopeTerm(node.condition, libEnv, (*in-out*)local1, (*in-out*)global);
+	ScopeTerm(wr, node.condition, libEnv, (*in-out*)local1, (*in-out*)global);
         local1 := local;
-	ScopeTerm(node.guard, libEnv, (*in-out*)local1, (*in-out*)global);
-    ELSE ObErr.Fault(SynWr.out, "ScopeTerm");
+	ScopeTerm(wr, node.guard, libEnv, (*in-out*)local1, (*in-out*)global);
+    ELSE ObErr.Fault(wr, "ScopeTerm");
     END;
   END ScopeTerm;
 
-PROCEDURE ScopeObjFields(fields: ObTree.TermObjFields; libEnv: ObLib.Env;
+PROCEDURE ScopeObjFields(wr: SynWr.T; fields: ObTree.TermObjFields; libEnv: ObLib.Env;
     local: Env; VAR (*in-out*)global: Env): INTEGER RAISES {ObErr.Fail} =
   VAR local1: Env;
   BEGIN
@@ -423,30 +450,42 @@ PROCEDURE ScopeObjFields(fields: ObTree.TermObjFields; libEnv: ObLib.Env;
     | NULL => RETURN 0;
     | ObTree.TermObjFields(node) =>
         local1 := local;
-        ScopeTerm(node.term, libEnv, (*in-out*)local1, (*in-out*)global);
-        RETURN 1 + ScopeObjFields(node.rest, libEnv, local, (*in-out*)global);
+        ScopeTerm(wr, node.term, libEnv, (*in-out*)local1, (*in-out*)global);
+        RETURN 1 + ScopeObjFields(wr, node.rest, libEnv, local, 
+                                  (*in-out*)global);
     END
   END ScopeObjFields;
 
-PROCEDURE ScopeTermCaseList(list: ObTree.TermCaseList; libEnv: ObLib.Env;
-    local: Env; VAR (*in-out*)global: Env) RAISES {ObErr.Fail} =
+PROCEDURE ScopeTermCaseList(wr: SynWr.T; list: ObTree.TermCaseList; 
+                            libEnv: ObLib.Env; local: Env; 
+                            VAR (*in-out*)global: Env) RAISES {ObErr.Fail} =
   VAR local1: Env;
   BEGIN
     TYPECASE list OF
     | NULL =>
     | ObTree.TermCaseList(node) =>
+        IF node.pattern#NIL THEN
+          local1 := local;
+          ScopeTerm(wr, node.pattern, libEnv,(*in-out*)local1, 
+                    (*in-out*)global);
+        END;
         IF node.binder=NIL THEN
           local1 := local;
         ELSE
-          local1 := NewTermEnv(node.location, node.binder, libEnv, local);
+          local1 := NewTermEnv(wr, node.location, node.binder, libEnv, local);
+          IF node.binderMatch # NIL THEN
+            local1 := NewTermEnv(wr, node.location, node.binderMatch, 
+                                 libEnv, local1);
+          END;
         END;
-        ScopeTerm(node.body, libEnv, (*in-out*)local1, (*in-out*)global);
-        ScopeTermCaseList(node.rest, libEnv, local, (*in-out*)global);
+        ScopeTerm(wr, node.body, libEnv, (*in-out*)local1, (*in-out*)global);
+        ScopeTermCaseList(wr, node.rest, libEnv, local, (*in-out*)global);
     END;
   END ScopeTermCaseList;
 
-PROCEDURE ScopeTermTryList(list: ObTree.TermTryList; libEnv: ObLib.Env;
-    local: Env; VAR (*in-out*)global: Env) RAISES {ObErr.Fail} =
+PROCEDURE ScopeTermTryList(wr: SynWr.T; list: ObTree.TermTryList; 
+                           libEnv: ObLib.Env; local: Env; 
+                           VAR (*in-out*)global: Env) RAISES {ObErr.Fail} =
   VAR local1: Env;
   BEGIN
     TYPECASE list OF
@@ -454,12 +493,13 @@ PROCEDURE ScopeTermTryList(list: ObTree.TermTryList; libEnv: ObLib.Env;
     | ObTree.TermTryList(node) =>
         IF node.exception#NIL THEN 
           local1 := local;
-          ScopeTerm(node.exception, libEnv, (*in-out*)local1, 
+          ScopeTerm(wr, node.exception, libEnv, (*in-out*)local1, 
                     (*in-out*)global) 
         END;
         local1 := local;
-        ScopeTerm(node.recover, libEnv, (*in-out*)local1, (*in-out*)global);
-        ScopeTermTryList(node.rest, libEnv, local, (*in-out*)global);
+        ScopeTerm(wr, node.recover, libEnv, (*in-out*)local1, 
+                  (*in-out*)global);
+        ScopeTermTryList(wr, node.rest, libEnv, local, (*in-out*)global);
     END;
   END ScopeTermTryList;
 

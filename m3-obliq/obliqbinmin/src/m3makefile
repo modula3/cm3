@@ -2,11 +2,27 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 %
-% Last modified on Wed Mar 23 14:09:46 1994 by luca      
-%      modified on Wed Dec 22 15:19:46 PST 1993 by kalsow
+% Last modified on Sat Sep  2 22:43:44 PDT 1995 by najork    
+%      modified on Wed Mar 23 14:10:13 1994 by luca      
+%      modified on Wed Dec 22 15:33:15 PST 1993 by kalsow
 
 import("obliq")
+
+> "compiletime.txt" in
+	if equal(TARGET, "NT386")
+		%%% a unix-like date command from a free set of unix
+		%%% utilities
+		exec("@unixdate")
+	else
+		exec("@date")
+	end
+end
+derived_resource("compiletime.txt")
+
+bundle("CompileTime")
+
 implementation("Main")
 
-Program("obliq-min")
-ManPage("obliq-min",1)
+%build_standalone()
+Program("repo-min")
+ManPage("repo-min","1")
