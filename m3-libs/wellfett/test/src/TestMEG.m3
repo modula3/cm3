@@ -27,7 +27,6 @@ IMPORT LongRealBasic                AS R,
 IMPORT Pathname, IO, Fmt, Wr, Thread, Rd, GZipRd;
 IMPORT Arithmetic AS Arith;
 
-<* UNUSED *>
 PROCEDURE PlotReal (s: S.T; l: CARDINAL; ) =
   <* FATAL Arith.Error *>        (*MulPower cannot fail for integers*)
   VAR
@@ -98,14 +97,69 @@ PROCEDURE PlotComplex (READONLY s: ARRAY OF ScaledComplexSignal; ) =
   END PlotComplex;
 
 
-PROCEDURE SuppressPeriod (file: Pathname.T; ) =
-  VAR rd := GZipRd.Open(file);
+PROCEDURE CircularAutoCorrelation (READONLY x: V.TBody; ): V.T =
+  VAR xc := FFT.DFTR2C1D(x);
   BEGIN
-    FOR i := 0 TO 9 DO IO.Put(Rd.GetLine(rd) & "\n"); END;
-    WITH x = VF.Lex(rd, VF.LexStyle{sep := '\n'}) DO
-      IO.Put(VF.Fmt(x));
+    FOR i := FIRST(xc^) TO LAST(xc^) DO
+      xc[i] := C.T{CT.AbsSqr(xc[i]), R.Zero};
     END;
+    RETURN FFT.DFTC2R1D(xc^, NUMBER(x) MOD 2);
+  END CircularAutoCorrelation;
+
+
+(* In fact what we do here is the same as pitch detection in audio
+   signals. *)
+PROCEDURE DetectPeriod (x: V.T; ): CARDINAL =
+  VAR
+    ac             := CircularAutoCorrelation(SUBARRAY(x^, 0, 2048));
+    iMax: CARDINAL := 0;
+    xMax           := R.Zero;
+  BEGIN
+    (* PlotReal(NEW(S.T).fromArray(SUBARRAY(x^, 0, 2048)), 0);
+       PlotReal(NEW(S.T).fromVector(ac), 0); *)
+    FOR i := 10 TO LAST(ac^) DIV 2 DO
+      (* No ABS needed since only positive correlations indicate
+         similarity. *)
+      IF xMax < ac[i] THEN xMax := ac[i]; iMax := i; END;
+    END;
+    RETURN iMax;
+  END DetectPeriod;
+
+
+(* k must be between 0 and 1, the higher k the slower the filter reacts on
+   differences in the shape of the periodic signal but the more of the
+   non-periodic signal is preserved; 0 means no effect, 1 means constant
+   output *)
+PROCEDURE CombFilter (READONLY x: V.TBody; period: CARDINAL; k: R.T; ):
+  V.T =
+  VAR
+    delayLine           := V.NewZero(period);
+    y                   := NEW(V.T, NUMBER(x));
+    j        : CARDINAL := 0;
+  BEGIN
+    FOR i := FIRST(x) TO LAST(x) DO
+      WITH yi = x[i] + (delayLine[j] - x[i]) * k DO
+        delayLine[j] := yi;
+        y[i] := yi;
+      END;
+      j := (j + 1) MOD period;
+    END;
+    RETURN y;
+  END CombFilter;
+
+PROCEDURE SuppressPeriod (file: Pathname.T; ) =
+  VAR
+    rd     := GZipRd.Open(file);
+    x      := VF.Lex(rd, VF.LexStyle{sep := '\n'});
+    period := DetectPeriod(x);
+
+  BEGIN
     Rd.Close(rd);
+    IO.Put(Fmt.F("period: %s\n", Fmt.Int(period)));
+    (* PlotReal(NEW(S.T).fromVector(x), 0); *)
+    PlotReal(NEW(S.T).fromArray(SUBARRAY(x^, 0, 5000)), 0);
+    PlotReal(NEW(S.T).fromVector(
+               CombFilter(SUBARRAY(x^, 0, 5000), period, 0.9D0)), 0);
   END SuppressPeriod;
 
 
