@@ -3978,7 +3978,7 @@
   emit_insn (gen_umulsidi3 (cross_product2, op2l, op1r));
 
   /* Emit a multiply for the low sub-word.  */
-  emit_insn (gen_umulsidi3 (low_product, op2r, op1r));
+  emit_insn (gen_umulsidi3 (low_product, copy_rtx (op2r), copy_rtx (op1r)));
 
   /* Sum the cross products and shift them into proper position.  */
   emit_insn (gen_adddi3 (cross_scratch, cross_product1, cross_product2));
@@ -5909,12 +5909,21 @@
 
   /* If we're generating PIC code.  */
   xoperands[0] = operands[0];
-  xoperands[1] = gen_label_rtx ();
   output_asm_insn (\"{bl|b,l} .+8,%%r1\", xoperands);
-  output_asm_insn (\"addil L%%$$dyncall-%1,%%r1\", xoperands);
-  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, \"L\",
-			     CODE_LABEL_NUMBER (xoperands[1]));
-  output_asm_insn (\"ldo R%%$$dyncall-%1(%%r1),%%r1\", xoperands);
+  if (TARGET_SOM || !TARGET_GAS)
+    {
+      xoperands[1] = gen_label_rtx ();
+      output_asm_insn (\"addil L%%$$dyncall-%1,%%r1\", xoperands);
+      ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, \"L\",
+				 CODE_LABEL_NUMBER (xoperands[1]));
+      output_asm_insn (\"ldo R%%$$dyncall-%1(%%r1),%%r1\", xoperands);
+    }
+  else
+    {
+      output_asm_insn (\"addil L%%$$dyncall-$PIC_pcrel$0+4,%%r1\", xoperands);
+      output_asm_insn (\"ldo R%%$$dyncall-$PIC_pcrel$0+8(%%r1),%%r1\",
+		       xoperands);
+    }
   output_asm_insn (\"blr %%r0,%%r2\", xoperands);
   output_asm_insn (\"bv,n %%r0(%%r1)\\n\\tnop\", xoperands);
   return \"\";
@@ -6084,12 +6093,21 @@
 
   /* If we're generating PIC code.  */
   xoperands[0] = operands[1];
-  xoperands[1] = gen_label_rtx ();
   output_asm_insn (\"{bl|b,l} .+8,%%r1\", xoperands);
-  output_asm_insn (\"addil L%%$$dyncall-%1,%%r1\", xoperands);
-  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, \"L\",
-			     CODE_LABEL_NUMBER (xoperands[1]));
-  output_asm_insn (\"ldo R%%$$dyncall-%1(%%r1),%%r1\", xoperands);
+  if (TARGET_SOM || !TARGET_GAS)
+    {
+      xoperands[1] = gen_label_rtx ();
+      output_asm_insn (\"addil L%%$$dyncall-%1,%%r1\", xoperands);
+      ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, \"L\",
+				 CODE_LABEL_NUMBER (xoperands[1]));
+      output_asm_insn (\"ldo R%%$$dyncall-%1(%%r1),%%r1\", xoperands);
+    }
+  else
+    {
+      output_asm_insn (\"addil L%%$$dyncall-$PIC_pcrel$0+4,%%r1\", xoperands);
+      output_asm_insn (\"ldo R%%$$dyncall-$PIC_pcrel$0+8(%%r1),%%r1\",
+		       xoperands);
+    }
   output_asm_insn (\"blr %%r0,%%r2\", xoperands);
   output_asm_insn (\"bv,n %%r0(%%r1)\\n\\tnop\", xoperands);
   return \"\";

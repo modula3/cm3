@@ -1,14 +1,12 @@
-<html lang="en">
-<head>
+<html lang="en"><head>
 <title>Installing GCC: Testing</title>
 <meta http-equiv="Content-Type" content="text/html">
 <meta name=description content="Installing GCC: Testing">
-<meta name=generator content="makeinfo 4.2">
-<link href="http://www.gnu.org/software/texinfo/" rel=generator-home>
-</head>
-<body>
-<h1>Installing GCC: Testing</h1>
-Before you install GCC, we encourage you to run the testsuites and to
+<meta name=generator content="makeinfo 4.0">
+<link href="http://texinfo.org/" rel=generator-home>
+</head><body>
+
+<p>B<p>efore you install GCC, we encourage you to run the testsuites and to
 compare your results with results from a similar configuration that have
 been submitted to the
 <a href="http://gcc.gnu.org/ml/gcc-testresults/">gcc-testresults mailing list</a>. 
@@ -34,7 +32,7 @@ It also includes Tcl and Expect; the DejaGnu site has links to these.
 the following example (which assumes that DejaGnu has been installed
 under <code>/usr/local</code>):
 
-<br><pre>     TCL_LIBRARY = /usr/local/share/tcl8.0
+<pre>     TCL_LIBRARY = /usr/local/share/tcl8.0
      DEJAGNULIBS = /usr/local/share/dejagnu
 </pre>
 
@@ -49,7 +47,7 @@ environment variables.
 </ul>
 
 <p>Finally, you can run the testsuite (which may take a long time):
-<br><pre>     cd <var>objdir</var>; make -k check
+<pre>     cd <var>objdir</var>; make -k check
 </pre>
 
 <p>The testing process will try to test as many components in the GCC
@@ -61,19 +59,19 @@ compilers as well as the C++ and Java runtime libraries.
 <code>WARNING: Couldn't find tool init file</code>. 
 These messages are harmless and do not affect the validity of the tests.
 
-<h3><a name="TOC0"></a>How can I run the test suite on selected tests?</h3>
+<h2><a name="TOC0">How can I run the test suite on selected tests?</h2>
 
 <p>As a first possibility to cut down the number of tests that are run it is
 possible to use <code>make check-gcc</code> or <code>make check-g++</code>
 in the <code>gcc</code> subdirectory of the object directory.  To further cut down the
 tests the following is possible:
 
-<br><pre>    make check-gcc RUNTESTFLAGS="execute.exp <var>other-options</var>"
+<pre>    make check-gcc RUNTESTFLAGS="execute.exp <var>other-options</var>"
 </pre>
 
 <p>This will run all <code>gcc</code> execute tests in the testsuite.
 
-<br><pre>    make check-g++ RUNTESTFLAGS="old-deja.exp=9805* <var>other-options</var>"
+<pre>    make check-g++ RUNTESTFLAGS="old-deja.exp=9805* <var>other-options</var>"
 </pre>
 
 <p>This will run the <code>g++</code> "old-deja" tests in the testsuite where the filename
@@ -90,14 +88,14 @@ output of <code>make check</code> into a file and look at the
 the library's testsuite in a subdirectory of the object directory:
 <code>libstdc++-v3/testsuite</code> or <code>libcgj/testsuite</code>.
 
-<h3><a name="TOC1"></a>Additional testing for Java Class Libraries</h3>
+<h2><a name="TOC1">Additional testing for Java Class Libraries</h2>
 
 <p>The <a href="http://sources.redhat.com/mauve/">Mauve Project</a> provides
 a suite of tests for the Java Class Libraries.  This suite can be run
 as part of libgcj testing by specifying the location of the Mauve tree
 when invoking <code>make</code>, as in <code>make MAUVEDIR=~/mauve check</code>.
 
-<h3><a name="TOC2"></a>How to interpret test results</h3>
+<h2><a name="TOC2">How to interpret test results</h2>
 
 <p>After the testsuite has run you'll find various <code>*.sum</code> and <code>*.log</code>
 files in the testsuite subdirectories.  The <code>*.log</code> files contain a
@@ -120,12 +118,12 @@ current time our testing harness does not allow fine grained control
 over whether or not a test is expected to fail.  We expect to fix this
 problem in future releases.
 
-<h3><a name="TOC3"></a>Submitting test results</h3>
+<h2><a name="TOC3">Submitting test results</h2>
 
 <p>If you want to report the results to the GCC project, use the
 <code>contrib/test_summary</code> shell script.  Start it in the <var>objdir</var> with
 
-<br><pre>    <var>srcdir</var>/contrib/test_summary -p your_commentary.txt \
+<pre>    <var>srcdir</var>/contrib/test_summary -p your_commentary.txt \
         -m gcc-testresults@gcc.gnu.org |sh
 </pre>
 
