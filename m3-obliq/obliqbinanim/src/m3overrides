@@ -1,0 +1,4 @@
+override ("obliqlibm3", ROOT & "/m3-obliq")
+override ("obliqlibanim", ROOT & "/m3-obliq")
+override ("obliqlibui", ROOT & "/m3-obliq")
+override ("obliq", ROOT & "/m3-obliq")
