@@ -1,5 +1,5 @@
 /* Compute register class preferences for pseudo-registers.
-   Copyright (C) 1987, 88, 91, 92, 93, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1987, 88, 91, 92, 93, 94, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -81,6 +81,9 @@ char call_used_regs[FIRST_PSEUDO_REGISTER];
 
 HARD_REG_SET call_used_reg_set;
 
+/* HARD_REG_SET of registers we want to avoid caller saving.  */
+HARD_REG_SET losing_caller_save_reg_set;
+
 /* Data for initializing the above.  */
 
 static char initial_call_used_regs[] = CALL_USED_REGISTERS;
@@ -112,6 +115,15 @@ char global_regs[FIRST_PSEUDO_REGISTER];
 #ifdef REG_ALLOC_ORDER
 int reg_alloc_order[FIRST_PSEUDO_REGISTER] = REG_ALLOC_ORDER;
 #endif
+
+/* CYGNUS LOCAL z8k */
+/* Table of register numbers in the order in which to try to use them
+   for reloads.  */
+/* ??? Hack, see reload1.c.  */
+#ifdef RELOAD_ALLOC_ORDER
+int reload_alloc_order[FIRST_PSEUDO_REGISTER] = RELOAD_ALLOC_ORDER;
+#endif
+/* END CYGNUS LOCAL */
 
 /* For each reg class, a HARD_REG_SET saying which registers are in it.  */
 
@@ -390,6 +402,8 @@ init_reg_sets_1 ()
 	SET_HARD_REG_BIT (call_used_reg_set, i);
       if (call_fixed_regs[i])
 	SET_HARD_REG_BIT (call_fixed_reg_set, i);
+      if (CLASS_LIKELY_SPILLED_P (REGNO_REG_CLASS (i)))
+	SET_HARD_REG_BIT (losing_caller_save_reg_set, i);
     }
 }
 
@@ -674,6 +688,10 @@ regclass (f, nregs)
 		     being used in such addresses.  */
 
 		  if ((0
+#ifdef SECONDARY_RELOAD_CLASS
+		       || (SECONDARY_RELOAD_CLASS (BASE_REG_CLASS, m, r)
+			   != NO_REGS)
+#else
 #ifdef SECONDARY_INPUT_RELOAD_CLASS
 		       || (SECONDARY_INPUT_RELOAD_CLASS (BASE_REG_CLASS, m, r)
 			   != NO_REGS)
@@ -681,6 +699,7 @@ regclass (f, nregs)
 #ifdef SECONDARY_OUTPUT_RELOAD_CLASS
 		       || (SECONDARY_OUTPUT_RELOAD_CLASS (BASE_REG_CLASS, m, r)
 			   != NO_REGS)
+#endif
 #endif
 		       )
 		      && ! auto_inc_dec_reg_p (r, m))
@@ -824,7 +843,7 @@ regclass (f, nregs)
 			      basic_block_head[b] = newinsn;
 			}
 
-		      /* This makes one more setting of new insns's dest. */
+		      /* This makes one more setting of new insns's dest.  */
 		      reg_n_sets[REGNO (recog_operand[0])]++;
 
 		      *recog_operand_loc[1] = recog_operand[0];
@@ -968,7 +987,7 @@ regclass (f, nregs)
 	  
 	  /* If we don't add any classes, nothing to try.  */
 	  if (alt == best)
-	    alt = (int) NO_REGS;
+	    alt = NO_REGS;
 
 	  /* We cast to (int) because (char) hits bugs in some compilers.  */
 	  prefclass[i] = (int) best;
@@ -1831,7 +1850,7 @@ reg_scan_mark_refs (x, insn, note_flag)
 		      || GET_CODE (XEXP (note, 0)) == LABEL_REF))))
 	REGNO_POINTER_FLAG (REGNO (SET_DEST (x))) = 1;
 
-      /* ... fall through ... */
+      /* ... fall through ...  */
 
     default:
       {

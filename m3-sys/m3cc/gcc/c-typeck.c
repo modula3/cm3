@@ -1,5 +1,5 @@
 /* Build expressions with type checking for C compiler.
-   Copyright (C) 1987, 88, 91, 92, 93, 94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 88, 91, 92-5, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -42,7 +42,7 @@ static int missing_braces_mentioned;
 extern char *index ();
 extern char *rindex ();
 
-static tree quality_type		PROTO((tree, tree));
+static tree qualify_type		PROTO((tree, tree));
 static int comp_target_types		PROTO((tree, tree));
 static int function_types_compatible_p	PROTO((tree, tree));
 static int type_lists_compatible_p	PROTO((tree, tree));
@@ -192,40 +192,10 @@ common_type (t1, t2)
   if (t2 == error_mark_node)
     return t1;
 
-  /* Merge the attributes */
-
-  { register tree a1, a2;
-    a1 = TYPE_ATTRIBUTES (t1);
-    a2 = TYPE_ATTRIBUTES (t2);
-
-    /* Either one unset?  Take the set one.  */
-
-    if (!(attributes = a1))
-       attributes = a2;
-
-    /* One that completely contains the other?  Take it.  */
-
-    else if (a2 && !attribute_list_contained (a1, a2))
-       if (attribute_list_contained (a2, a1))
-	  attributes = a2;
-       else
-	{
-	  /* Pick the longest list, and hang on the other list.  */
-	  /* ??? For the moment we punt on the issue of attrs with args.  */
-	
-	  if (list_length (a1) < list_length (a2))
-	     attributes = a2, a2 = a1;
-
-	  for (; a2; a2 = TREE_CHAIN (a2))
-	    if (lookup_attribute (IDENTIFIER_POINTER (TREE_PURPOSE (a2)),
-				  attributes) == NULL_TREE)
-	      {
-		a1 = copy_node (a2);
-		TREE_CHAIN (a1) = attributes;
-		attributes = a1;
-	      }
-	}
-  }
+  /* CYGNUS LOCAL dje/pe */
+  /* Merge the attributes.  */
+  attributes = merge_machine_type_attributes (t1, t2);
+  /* END CYGNUS LOCAL */
 
   /* Treat an enum type as the unsigned integer type of the same width.  */
 
@@ -427,7 +397,7 @@ common_type (t1, t2)
 	  }
 
 	t1 = build_function_type (valtype, newargs);
-	/* ... falls through ... */
+	/* ... falls through ...  */
       }
 
     default:
@@ -940,7 +910,7 @@ c_alignof_expr (expr)
     return size_int (DECL_ALIGN (expr) / BITS_PER_UNIT);
  
   if (TREE_CODE (expr) == COMPONENT_REF
-      && DECL_BIT_FIELD (TREE_OPERAND (expr, 1)))
+      && DECL_C_BIT_FIELD (TREE_OPERAND (expr, 1)))
     {
       error ("`__alignof' applied to a bit-field");
       return size_int (1);
@@ -1040,6 +1010,24 @@ default_conversion (exp)
 			      || TYPE_PRECISION (type) >= TYPE_PRECISION (integer_type_node))
 			     && TREE_UNSIGNED (type)));
       return convert (type, exp);
+    }
+
+  if (TREE_CODE (exp) == COMPONENT_REF
+      && DECL_BIT_FIELD (TREE_OPERAND (exp, 1)))
+    {
+    tree width = DECL_SIZE (TREE_OPERAND (exp, 1));
+    HOST_WIDE_INT low = TREE_INT_CST_LOW (width);
+
+    /* If it's thinner than an int, promote it like a
+       C_PROMOTING_INTEGER_TYPE_P, otherwise leave it alone.  */
+
+    if (low < TYPE_PRECISION (integer_type_node))
+      {
+	if ( flag_traditional && TREE_UNSIGNED (type))
+	  return convert (unsigned_type_node, exp);
+	else
+	  return convert (integer_type_node, exp);
+      }
     }
 
   if (C_PROMOTING_INTEGER_TYPE_P (type))
@@ -1476,7 +1464,8 @@ build_array_ref (array, index)
     if (ar == error_mark_node)
       return ar;
 
-    if (TREE_CODE (TREE_TYPE (ar)) != POINTER_TYPE)
+    if (TREE_CODE (TREE_TYPE (ar)) != POINTER_TYPE
+	|| TREE_CODE (TREE_TYPE (TREE_TYPE (ar))) == FUNCTION_TYPE)
       {
 	error ("subscripted value is neither array nor pointer");
 	return error_mark_node;
@@ -1734,7 +1723,7 @@ convert_arguments (typelist, values, name, fundecl)
 		}
 
 	      parmval = convert_for_assignment (type, val, 
-					        (char *)0, /* arg passing  */
+					        (char *) 0, /* arg passing  */
 						fundecl, name, parmnum + 1);
 	      
 #ifdef PROMOTE_PROTOTYPES
@@ -2471,7 +2460,7 @@ build_binary_op (code, orig_op0, orig_op1, convert_p)
 	  converted = 1;
 	  resultcode = xresultcode;
 
-	  if (extra_warnings)
+	  if (warn_sign_compare)
 	    {
 	      int op0_signed = ! TREE_UNSIGNED (TREE_TYPE (orig_op0));
 	      int op1_signed = ! TREE_UNSIGNED (TREE_TYPE (orig_op1));
@@ -2513,9 +2502,9 @@ build_binary_op (code, orig_op0, orig_op1, convert_p)
                  not use the most significant bit of result_type.  */
 	      else if ((resultcode == EQ_EXPR || resultcode == NE_EXPR)
 		       && ((op0_signed && TREE_CODE (xop1) == INTEGER_CST
-			    && int_fits_type_p (xop1, signed_type (result_type))
+			    && int_fits_type_p (xop1, signed_type (result_type)))
 			   || (op1_signed && TREE_CODE (xop0) == INTEGER_CST
-			       && int_fits_type_p (xop0, signed_type (result_type))))))
+			       && int_fits_type_p (xop0, signed_type (result_type)))))
 		/* OK */;
 	      else
 		warning ("comparison between signed and unsigned");
@@ -2677,11 +2666,13 @@ pointer_int_sum (resultcode, ptrop, intop)
       intop = convert (int_type, TREE_OPERAND (intop, 0));
     }
 
-  /* Convert the integer argument to a type the same size as a pointer
+  /* Convert the integer argument to a type the same size as sizetype
      so the multiply won't overflow spuriously.  */
 
-  if (TYPE_PRECISION (TREE_TYPE (intop)) != POINTER_SIZE)
-    intop = convert (type_for_size (POINTER_SIZE, 0), intop);
+  if (TYPE_PRECISION (TREE_TYPE (intop)) != TYPE_PRECISION (sizetype)
+      || TREE_UNSIGNED (TREE_TYPE (intop)) != TREE_UNSIGNED (sizetype))
+    intop = convert (type_for_size (TYPE_PRECISION (sizetype), 
+				    TREE_UNSIGNED (sizetype)), intop);
 
   /* Replace the integer argument with a suitable product by the object size.
      Do this multiplication as signed, then convert to the appropriate
@@ -3070,7 +3061,7 @@ build_unary_op (code, xarg, noconvert)
 
 	    addr = build_unary_op (ADDR_EXPR, TREE_OPERAND (arg, 0), 0);
 
-	    if (DECL_BIT_FIELD (field))
+	    if (DECL_C_BIT_FIELD (field))
 	      {
 		error ("attempt to take address of bit-field structure member `%s'",
 		       IDENTIFIER_POINTER (DECL_NAME (field)));
@@ -3287,8 +3278,17 @@ mark_addressable (exp)
   while (1)
     switch (TREE_CODE (x))
       {
-      case ADDR_EXPR:
       case COMPONENT_REF:
+	if (DECL_C_BIT_FIELD (TREE_OPERAND (x, 1)))
+	  {
+	    error ("cannot take address of bitfield `%s'",
+		   IDENTIFIER_POINTER (DECL_NAME (TREE_OPERAND (x, 1))));
+	    return 0;
+	  }
+
+	/* ... fall through ...  */
+
+      case ADDR_EXPR:
       case ARRAY_REF:
       case REALPART_EXPR:
       case IMAGPART_EXPR:
@@ -3372,7 +3372,7 @@ build_conditional_expr (ifexp, op1, op2)
     {
       if (pedantic)
 	pedwarn ("ANSI C forbids omitting the middle term of a ?: expression");
-      ifexp = op1 = save_expr (ifexp);
+      ifexp = orig_op1 = op1 = save_expr (ifexp);
     }
 
   ifexp = truthvalue_conversion (default_conversion (ifexp));
@@ -3735,6 +3735,11 @@ build_c_cast (type, expr)
 	  && TREE_CODE (otype) == POINTER_TYPE
 	  && TREE_CODE (TREE_TYPE (otype)) != VOID_TYPE
 	  && TREE_CODE (TREE_TYPE (otype)) != FUNCTION_TYPE
+	  /* Don't warn about opaque types, where the actual alignment
+	     restriction is unknown.  */
+	  && !((TREE_CODE (TREE_TYPE (otype)) == UNION_TYPE
+		|| TREE_CODE (TREE_TYPE (otype)) == RECORD_TYPE)
+	       && TYPE_MODE (TREE_TYPE (otype)) == VOIDmode)
 	  && TYPE_ALIGN (TREE_TYPE (type)) > TYPE_ALIGN (TREE_TYPE (otype)))
 	warning ("cast increases required alignment of target type");
 
@@ -3993,7 +3998,9 @@ convert_for_assignment (type, rhs, errtype, fundecl, funname, parmnum)
   if (coder == ERROR_MARK)
     return error_mark_node;
 
-  if (TYPE_MAIN_VARIANT (type) == TYPE_MAIN_VARIANT (rhstype))
+  if (TYPE_MAIN_VARIANT (type) == TYPE_MAIN_VARIANT (rhstype)
+/* CYGNUS LOCAL sac, cvs revision 1.85 */
+      && TYPE_MODE (type) == TYPE_MODE (rhstype))
     {
       overflow_warning (rhs);
       /* Check for Objective-C protocols.  This will issue a warning if
@@ -4014,26 +4021,27 @@ convert_for_assignment (type, rhs, errtype, fundecl, funname, parmnum)
 	  || coder == COMPLEX_TYPE))
     return convert_and_check (type, rhs);
 
-  /* Conversion to a union from its member types.  */
-  else if (codel == UNION_TYPE)
+  /* Conversion to a transparent union from its member types.
+     This applies only to function arguments.  */
+  else if (codel == UNION_TYPE && TYPE_TRANSPARENT_UNION (type) && ! errtype)
     {
       tree memb_types;
+      tree marginal_memb_type = 0;
 
       for (memb_types = TYPE_FIELDS (type); memb_types;
 	   memb_types = TREE_CHAIN (memb_types))
 	{
-	  if (comptypes (TREE_TYPE (memb_types), TREE_TYPE (rhs)))
-	    {
-	      if (pedantic
-		  && !(fundecl != 0 && DECL_IN_SYSTEM_HEADER (fundecl)))
-		pedwarn ("ANSI C prohibits argument conversion to union type");
-	      return build1 (NOP_EXPR, type, rhs);
-	    }
+	  tree memb_type = TREE_TYPE (memb_types);
 
-	  else if (coder == POINTER_TYPE
-		   && TREE_CODE (TREE_TYPE (memb_types)) == POINTER_TYPE)
+	  if (comptypes (TYPE_MAIN_VARIANT (memb_type),
+			 TYPE_MAIN_VARIANT (rhstype)))
+	    break;
+
+	  if (TREE_CODE (memb_type) != POINTER_TYPE)
+	    continue;
+
+	  if (coder == POINTER_TYPE)
 	    {
-	      tree memb_type = TREE_TYPE (memb_types);
 	      register tree ttl = TREE_TYPE (memb_type);
 	      register tree ttr = TREE_TYPE (rhstype);
 
@@ -4045,50 +4053,76 @@ convert_for_assignment (type, rhs, errtype, fundecl, funname, parmnum)
 		  || TYPE_MAIN_VARIANT (ttr) == void_type_node
 		  || comp_target_types (memb_type, rhstype))
 		{
-		  /* Const and volatile mean something different for function
-		     types, so the usual warnings are not appropriate.  */
-		  if (TREE_CODE (ttr) != FUNCTION_TYPE
-		      || TREE_CODE (ttl) != FUNCTION_TYPE)
-		    {
-		      if (! TYPE_READONLY (ttl) && TYPE_READONLY (ttr))
-			warn_for_assignment ("%s discards `const' from pointer target type",
-					     get_spelling (errtype), funname,
-					     parmnum);
-		      if (! TYPE_VOLATILE (ttl) && TYPE_VOLATILE (ttr))
-			warn_for_assignment ("%s discards `volatile' from pointer target type",
-					     get_spelling (errtype), funname,
-					     parmnum);
-		    }
-		  else
-		    {
-		      /* Because const and volatile on functions are
-			 restrictions that say the function will not do
-			 certain things, it is okay to use a const or volatile
-			 function where an ordinary one is wanted, but not
-			 vice-versa.  */
-		      if (TYPE_READONLY (ttl) && ! TYPE_READONLY (ttr))
-			warn_for_assignment ("%s makes `const *' function pointer from non-const",
-					     get_spelling (errtype), funname,
-					     parmnum);
-		      if (TYPE_VOLATILE (ttl) && ! TYPE_VOLATILE (ttr))
-			warn_for_assignment ("%s makes `volatile *' function pointer from non-volatile",
-					     get_spelling (errtype), funname,
-					     parmnum);
-		    }
+		  /* If this type won't generate any warnings, use it.  */
+		  if ((TREE_CODE (ttr) == FUNCTION_TYPE
+		       && TREE_CODE (ttl) == FUNCTION_TYPE)
+		      ? ((! TYPE_READONLY (ttl) | TYPE_READONLY (ttr))
+			 & (! TYPE_VOLATILE (ttl) | TYPE_VOLATILE (ttr)))
+		      : ((TYPE_READONLY (ttl) | ! TYPE_READONLY (ttr))
+			 & (TYPE_VOLATILE (ttl) | ! TYPE_VOLATILE (ttr))))
+		    break;
 
-		  if (pedantic
-		      && !(fundecl != 0 && DECL_IN_SYSTEM_HEADER (fundecl)))
-		    pedwarn ("ANSI C prohibits argument conversion to union type");
-		  return build1 (NOP_EXPR, type, rhs);
+		  /* Keep looking for a better type, but remember this one.  */
+		  if (! marginal_memb_type)
+		    marginal_memb_type = memb_type;
 		}
 	    }
 
 	  /* Can convert integer zero to any pointer type.  */
-	  else if (TREE_CODE (TREE_TYPE (memb_types)) == POINTER_TYPE
-		   && (integer_zerop (rhs)
-		       || (TREE_CODE (rhs) == NOP_EXPR
-			   && integer_zerop (TREE_OPERAND (rhs, 0)))))
-	    return build1 (NOP_EXPR, type, null_pointer_node);
+	  if (integer_zerop (rhs)
+	      || (TREE_CODE (rhs) == NOP_EXPR
+		  && integer_zerop (TREE_OPERAND (rhs, 0))))
+	    {
+	      rhs = null_pointer_node;
+	      break;
+	    }
+	}
+
+      if (memb_types || marginal_memb_type)
+	{
+	  if (! memb_types)
+	    {
+	      /* We have only a marginally acceptable member type;
+		 it needs a warning.  */
+	      register tree ttl = TREE_TYPE (marginal_memb_type);
+	      register tree ttr = TREE_TYPE (rhstype);
+
+	      /* Const and volatile mean something different for function
+		 types, so the usual warnings are not appropriate.  */
+	      if (TREE_CODE (ttr) == FUNCTION_TYPE
+		  && TREE_CODE (ttl) == FUNCTION_TYPE)
+		{
+		  /* Because const and volatile on functions are
+		     restrictions that say the function will not do
+		     certain things, it is okay to use a const or volatile
+		     function where an ordinary one is wanted, but not
+		     vice-versa.  */
+		  if (TYPE_READONLY (ttl) && ! TYPE_READONLY (ttr))
+		    warn_for_assignment ("%s makes `const *' function pointer from non-const",
+					 get_spelling (errtype), funname,
+					 parmnum);
+		  if (TYPE_VOLATILE (ttl) && ! TYPE_VOLATILE (ttr))
+		    warn_for_assignment ("%s makes `volatile *' function pointer from non-volatile",
+					 get_spelling (errtype), funname,
+					 parmnum);
+		}
+	      else
+		{
+		  if (! TYPE_READONLY (ttl) && TYPE_READONLY (ttr))
+		    warn_for_assignment ("%s discards `const' from pointer target type",
+					 get_spelling (errtype), funname,
+					 parmnum);
+		  if (! TYPE_VOLATILE (ttl) && TYPE_VOLATILE (ttr))
+		    warn_for_assignment ("%s discards `volatile' from pointer target type",
+					 get_spelling (errtype), funname,
+					 parmnum);
+		}
+	    }
+	  
+	  if (pedantic && ! DECL_IN_SYSTEM_HEADER (fundecl))
+	    pedwarn ("ANSI C prohibits argument conversion to union type");
+
+	  return build1 (NOP_EXPR, type, rhs);
 	}
     }
 
@@ -4270,7 +4304,8 @@ initializer_constant_valid_p (value, endtype)
     case CONSTRUCTOR:
       if ((TREE_CODE (TREE_TYPE (value)) == UNION_TYPE
 	   || TREE_CODE (TREE_TYPE (value)) == RECORD_TYPE)
-	  && TREE_CONSTANT (value))
+	  && TREE_CONSTANT (value)
+	  && CONSTRUCTOR_ELTS (value))
 	return
 	  initializer_constant_valid_p (TREE_VALUE (CONSTRUCTOR_ELTS (value)),
 					endtype);
@@ -5004,7 +5039,7 @@ static tree constructor_pending_elts;
 static int constructor_depth;
 
 /* 0 if implicitly pushing constructor levels is allowed.  */
-int constructor_no_implicit = 0; /* 0 for C; 1 for some other languages. */
+int constructor_no_implicit = 0; /* 0 for C; 1 for some other languages.  */
 
 /* 1 if this constructor level was entered implicitly.  */
 static int constructor_implicit;
@@ -5247,7 +5282,7 @@ really_start_incremental_init (type)
     {
       constructor_fields = TYPE_FIELDS (constructor_type);
       /* Skip any nameless bit fields at the beginning.  */
-      while (constructor_fields != 0 && DECL_BIT_FIELD (constructor_fields)
+      while (constructor_fields != 0 && DECL_C_BIT_FIELD (constructor_fields)
 	     && DECL_NAME (constructor_fields) == 0)
 	constructor_fields = TREE_CHAIN (constructor_fields);
       constructor_unfilled_fields = constructor_fields;
@@ -5320,10 +5355,12 @@ push_init_level (implicit)
 	break;
     }
 
-  /* Structure elements may require alignment.  Do this now
-     if necessary for the subaggregate.  */
+  /* Structure elements may require alignment.  Do this now if necessary
+     for the subaggregate, and if it comes next in sequence.  Don't do
+     this for subaggregates that will go on the pending list.  */
   if (constructor_incremental && constructor_type != 0
-      && TREE_CODE (constructor_type) == RECORD_TYPE && constructor_fields)
+      && TREE_CODE (constructor_type) == RECORD_TYPE && constructor_fields
+      && constructor_fields == constructor_unfilled_fields)
     {
       /* Advance to offset of this element.  */
       if (! tree_int_cst_equal (constructor_bit_index,
@@ -5337,6 +5374,9 @@ push_init_level (implicit)
 
 	  assemble_zeros (next - here);
 	}
+      /* Indicate that we have now filled the structure up to the current
+	 field.  */
+      constructor_unfilled_fields = constructor_fields;
     }
 
   p = (struct constructor_stack *) xmalloc (sizeof (struct constructor_stack));
@@ -5419,7 +5459,7 @@ push_init_level (implicit)
     {
       constructor_fields = TYPE_FIELDS (constructor_type);
       /* Skip any nameless bit fields at the beginning.  */
-      while (constructor_fields != 0 && DECL_BIT_FIELD (constructor_fields)
+      while (constructor_fields != 0 && DECL_C_BIT_FIELD (constructor_fields)
 	     && DECL_NAME (constructor_fields) == 0)
 	constructor_fields = TREE_CHAIN (constructor_fields);
       constructor_unfilled_fields = constructor_fields;
@@ -5461,7 +5501,7 @@ check_init_type_bitfields (type)
       for (tail = TYPE_FIELDS (type); tail;
 	   tail = TREE_CHAIN (tail))
 	{
-	  if (DECL_BIT_FIELD (tail)
+	  if (DECL_C_BIT_FIELD (tail)
 	      /* This catches cases like `int foo : 8;'.  */
 	      || DECL_MODE (tail) != TYPE_MODE (TREE_TYPE (tail)))
 	    {
@@ -5815,7 +5855,8 @@ output_init_element (value, type, field, pending)
   else if (initializer_constant_valid_p (value, TREE_TYPE (value)) == 0
 	   || ((TREE_CODE (constructor_type) == RECORD_TYPE
 		|| TREE_CODE (constructor_type) == UNION_TYPE)
-	       && DECL_BIT_FIELD (field) && TREE_CODE (value) != INTEGER_CST))
+	       && DECL_C_BIT_FIELD (field)
+	       && TREE_CODE (value) != INTEGER_CST))
     constructor_simple = 0;
 
   if (require_constant_value && ! TREE_CONSTANT (value))
@@ -6239,7 +6280,8 @@ process_init_element (value)
 
 	  constructor_fields = TREE_CHAIN (constructor_fields);
 	  /* Skip any nameless bit fields at the beginning.  */
-	  while (constructor_fields != 0 && DECL_BIT_FIELD (constructor_fields)
+	  while (constructor_fields != 0
+		 && DECL_C_BIT_FIELD (constructor_fields)
 		 && DECL_NAME (constructor_fields) == 0)
 	    constructor_fields = TREE_CHAIN (constructor_fields);
 	  break;
@@ -6331,7 +6373,7 @@ process_init_element (value)
 	      break;
 	    }
 
-	  /* In the case of [LO .. HI] = VALUE, only evaluate VALUE once. */
+	  /* In the case of [LO .. HI] = VALUE, only evaluate VALUE once.  */
 	  if (constructor_range_end)
 	    value = save_expr (value);
 

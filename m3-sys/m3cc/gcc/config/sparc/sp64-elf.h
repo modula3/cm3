@@ -1,6 +1,5 @@
-/* Definitions of target machine for GNU compiler,
-   for Sun SPARC-V9 on a hypothetical elf format machine.
-   Copyright (C) 1994, 1995 Free Software Foundation, Inc.
+/* Definitions of target machine for GNU compiler, for SPARC64, ELF.
+   Copyright (C) 1994, 1995, 1996 Free Software Foundation, Inc.
    Contributed by Doug Evans, dje@cygnus.com.
 
 This file is part of GNU CC.
@@ -22,19 +21,14 @@ Boston, MA 02111-1307, USA.  */
 
 /* This is a v9 only compiler.  -mv8 is not expected to work.  If you want
    a v8/v9 compiler, this isn't the place to do it.  */
-/* ??? Until real v9 machines exist, all of this is subject to change.  */
-/* ??? This file should really be called sp64-sol2.h or some such but that
-   would be a bit misleading since no such machines exist yet.  The current
-   name is also misleading since the term "elf" is more properly applied to
-   embedded configurations.  */
 
-#define SPARCV9 /* See sparc.h.  */
+#define SPARC_V9 1	/* See sparc.h.  */
+#define SPARC_ARCH64 1
 
 /* ??? We're taking the scheme of including another file and then overriding
    the values we don't like a bit too far here.  The alternative is to more or
    less duplicate all of svr4.h, sparc/sysv4.h, and sparc/sol2.h here
-   (suitably cleaned up).  Until real sparc64 machines exist, it's not clear
-   which is better.  */
+   (suitably cleaned up).  */
 
 #include "sparc/sol2.h"
 
@@ -46,12 +40,14 @@ Boston, MA 02111-1307, USA.  */
 
 #undef TARGET_DEFAULT
 #define TARGET_DEFAULT \
-  (MASK_V9 + MASK_STACK_BIAS + MASK_MEDANY + MASK_PTR64 + MASK_HARD_QUAD + MASK_EPILOGUE + MASK_FPU)
+  (MASK_V9 + MASK_ARCH64 + MASK_PTR64 + MASK_HARD_QUAD \
+   + MASK_STACK_BIAS + MASK_MEDANY + MASK_APP_REGS + MASK_EPILOGUE + MASK_FPU)
 
 /* __svr4__ is used by the C library */
+/* ??? __arch64__ is subject to change.  */
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES "\
--D__sparc__ -D__sparc_v9__ -D__svr4__ \
+-D__sparc__ -D__sparc_v9__ -D__arch64__ -D__svr4__ \
 -Acpu(sparc64) -Amachine(sparc64) \
 "
 
@@ -66,13 +62,13 @@ Boston, MA 02111-1307, USA.  */
 
 #undef ASM_SPEC
 #define ASM_SPEC "\
-%{V} %{v:%{!V:-V}} -s %{fpic:-K PIC} %{fPIC:-K PIC} \
+%{v:-V} -s %{fpic:-K PIC} %{fPIC:-K PIC} \
 "
 
 /* This is taken from sol2.h.  */
 #undef LINK_SPEC
 #define LINK_SPEC "\
-%{V} %{v:%{!V:-V}} \
+%{v:-V} \
 "
 
 /* We need something a little simpler for the embedded environment.
@@ -84,7 +80,7 @@ crtbegin.o%s \
 "
 
 #undef ENDFILE_SPEC
-#define ENDFILE_SPEC "%{!nostartfiles:crtend.o%s}"
+#define ENDFILE_SPEC "crtend.o%s"
 
 /* Use the default (for now).  */
 #undef LIB_SPEC
@@ -106,10 +102,11 @@ crtbegin.o%s \
 #undef WCHAR_TYPE_SIZE
 #define WCHAR_TYPE_SIZE 16
 
-/* ??? Disabled for v9 as the current implementation of the Medium/Anywhere
-   code model needs this in the data segment (still true?).  Let's hope the
-   assembler is fixed.  */
+/* The medium/anywhere code model practically requires us to put jump tables
+   in the text section as gcc is unable to distinguish LABEL_REF's of jump
+   tables from other label refs (when we need to).  */
 #undef JUMP_TABLES_IN_TEXT_SECTION
+#define JUMP_TABLES_IN_TEXT_SECTION
 
 /* System V Release 4 uses DWARF debugging info.
    GDB doesn't support 64 bit stabs yet and the desired debug format is DWARF
@@ -120,6 +117,11 @@ crtbegin.o%s \
 
 #undef PREFERRED_DEBUGGING_TYPE
 #define PREFERRED_DEBUGGING_TYPE DWARF_DEBUG
+
+/* Stabs doesn't use this, and it confuses a simulator.  */
+/* ??? Need to see what DWARF needs, if anything.  */
+#undef ASM_IDENTIFY_GCC
+#define ASM_IDENTIFY_GCC(FILE)
 
 /* Define the names of various pseudo-ops used by the Sparc/svr4 assembler.
    ??? If ints are 64 bits then UNALIGNED_INT_ASM_OP (defined elsewhere) is

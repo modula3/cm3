@@ -1,5 +1,5 @@
 /* Definitions for Motorola 68k running Linux with ELF format.
-   Copyright (C) 1995 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -29,7 +29,12 @@ Boston, MA 02111-1307, USA.  */
 #define TARGET_VERSION fprintf (stderr, " (68k Linux/ELF)");
 
 /* 68020 with 68881 */
-#define TARGET_DEFAULT 7
+#define TARGET_DEFAULT (MASK_BITFIELD|MASK_68881|MASK_68020)
+
+/* for 68k machines this only needs to be TRUE for the 68000 */
+
+#undef STRICT_ALIGNMENT     
+#define STRICT_ALIGNMENT 0
 
 #undef SUBTARGET_SWITCHES
 #define SUBTARGET_SWITCHES	{"ieee-fp", 0},
@@ -95,34 +100,16 @@ Boston, MA 02111-1307, USA.  */
 #undef WCHAR_TYPE_SIZE
 #define WCHAR_TYPE_SIZE BITS_PER_WORD
 
-#undef ASM_SPEC
-#define ASM_SPEC "%{m68030} %{m68040} %{fpic:-k} %{fPIC:-k}"
-
 #define CPP_PREDEFINES \
   "-D__ELF__ -Dunix -Dmc68000 -Dmc68020 -Dlinux -Asystem(unix) -Asystem(posix) -Acpu(m68k) -Amachine(m68k)"
 
 #undef CPP_SPEC
-#if TARGET_DEFAULT & 2
+#if TARGET_DEFAULT & MASK_68881
 #define CPP_SPEC \
   "%{fPIC:-D__PIC__ -D__pic__} %{fpic:-D__PIC__ -D__pic__} %{!msoft-float:-D__HAVE_68881__} %{posix:-D_POSIX_SOURCE}"
 #else
 #define CPP_SPEC \
   "%{fPIC:-D__PIC__ -D__pic__} %{fpic:-D__PIC__ -D__pic__} %{m68881:-D__HAVE_68881__} %{posix:-D_POSIX_SOURCE}"
-#endif
-
-#undef	LIB_SPEC
-#if 1
-/* We no longer link with libc_p.a or libg.a by default.  If you want
-   to profile or debug the Linux C library, please add -lc_p or -ggdb
-   to LDFLAGS at the link time, respectively.  */
-#define LIB_SPEC \
-  "%{!shared:%{!symbolic: %{mieee-fp:-lieee} %{p:-lgmon} %{pg:-lgmon} \
-     %{!ggdb:-lc} %{ggdb:-lg}}}"
-#else
-#define LIB_SPEC \
-  "%{!shared:%{!symbolic: \
-     %{mieee-fp:-lieee} %{p:-lgmon -lc_p} %{pg:-lgmon -lc_p} \
-     %{!p:%{!pg:%{!g*:-lc} %{g*:-lg}}}}}"
 #endif
 
 /* Provide a LINK_SPEC appropriate for Linux.  Here we provide support
@@ -181,6 +168,20 @@ Boston, MA 02111-1307, USA.  */
   if ((LOG) > 0)						\
     fprintf ((FILE), "\t%s \t%u\n", ALIGN_ASM_OP, 1 << (LOG));
 
+/* If defined, a C expression whose value is a string containing the
+   assembler operation to identify the following data as uninitialized global
+   data.  */
+
+#define BSS_SECTION_ASM_OP ".section\t.bss"
+
+/* A C statement (sans semicolon) to output to the stdio stream
+   FILE the assembler definition of uninitialized global DECL named
+   NAME whose size is SIZE bytes and alignment is ALIGN bytes.
+   Try to use asm_output_aligned_bss to implement this macro.  */
+
+#define ASM_OUTPUT_ALIGNED_BSS(FILE, DECL, NAME, SIZE, ALIGN) \
+  asm_output_aligned_bss (FILE, DECL, NAME, SIZE, ALIGN)
+
 /* Output assembler code to FILE to increment profiler label # LABELNO
    for profiling a function entry.  */
 
@@ -193,6 +194,19 @@ Boston, MA 02111-1307, USA.  */
   else									\
     fprintf (FILE, "\tjbsr _mcount\n");					\
 }
+
+/* Register in which address to store a structure value is passed to a
+   function.  The default in m68k.h is a1.  For m68k/SVR4 it is a0. */
+
+#undef STRUCT_VALUE_REGNUM
+#define STRUCT_VALUE_REGNUM 8
+
+/* Register in which static-chain is passed to a function.  The
+   default in m68k.h is a0, but that is already the struct value
+   regnum.  Make it a1 instead.  */
+
+#undef STATIC_CHAIN_REGNUM
+#define STATIC_CHAIN_REGNUM 9
 
 /* How to renumber registers for dbx and gdb.
    On the Sun-3, the floating point registers have numbers
@@ -259,7 +273,8 @@ do {									\
 
 #undef LIBCALL_VALUE
 #define LIBCALL_VALUE(MODE)						\
-  (((MODE) == SFmode || (MODE) == DFmode) && TARGET_68881		\
+  ((((MODE) == SFmode || (MODE) == DFmode || (MODE) == XFmode)		\
+    && TARGET_68881)							\
    ? gen_rtx (REG, (MODE), 16)						\
    : gen_rtx (REG, (MODE), 0))
 
@@ -267,7 +282,10 @@ do {									\
    an operand of a function call. */
 #undef LEGITIMATE_PIC_OPERAND_P
 #define LEGITIMATE_PIC_OPERAND_P(X) \
-  (! symbolic_operand (X, VOIDmode) \
+  ((! symbolic_operand (X, VOIDmode) \
+    && ! (GET_CODE (X) == CONST_DOUBLE && CONST_DOUBLE_MEM (X)	\
+	  && GET_CODE (CONST_DOUBLE_MEM (X)) == MEM		\
+	  && symbolic_operand (XEXP (CONST_DOUBLE_MEM (X), 0), VOIDmode))) \
    || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X)))
 
 /* Turn off function cse if we are doing PIC. We always want function
@@ -283,3 +301,56 @@ do {									\
    technique. */
 #undef PCC_STATIC_STRUCT_RETURN
 #define DEFAULT_PCC_STRUCT_RETURN 0
+
+/* Emit RTL insns to initialize the variable parts of a trampoline.
+   FNADDR is an RTX for the address of the function's pure code.
+   CXT is an RTX for the static chain value for the function.  */
+
+/* This is different from the generic version in that we use a1 as the
+   static call chain.  */
+
+#undef INITIALIZE_TRAMPOLINE
+#define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT)			\
+{									\
+  emit_move_insn (gen_rtx (MEM, HImode, TRAMP), GEN_INT (0x227C));	\
+  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 2)), CXT); \
+  emit_move_insn (gen_rtx (MEM, HImode, plus_constant (TRAMP, 6)),	\
+		  GEN_INT (0x4EF9));					\
+  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 8)), FNADDR); \
+  FINALIZE_TRAMPOLINE (TRAMP);						\
+}
+
+/* Finalize the trampoline by flushing the insn cache.  */
+
+#undef FINALIZE_TRAMPOLINE
+#define FINALIZE_TRAMPOLINE(TRAMP)					\
+  emit_library_call (gen_rtx (SYMBOL_REF, Pmode, "__clear_cache"),	\
+		     0, VOIDmode, 2, TRAMP, Pmode,			\
+		     plus_constant (TRAMP, TRAMPOLINE_SIZE), Pmode);
+
+/* Clear the instruction cache from `beg' to `end'.  This makes an
+   inline system call to SYS_cacheflush.  The arguments are as
+   follows:
+
+	cacheflush (addr, scope, cache, len)
+
+   addr	  - the start address for the flush
+   scope  - the scope of the flush (see the cpush insn)
+   cache  - which cache to flush (see the cpush insn)
+   len    - a factor relating to the number of flushes to perform:
+   	    len/16 lines, or len/4096 pages.  */
+
+#define CLEAR_INSN_CACHE(BEG, END)					\
+{									\
+  register unsigned long _beg __asm ("%d1") = (unsigned long) (BEG);	\
+  unsigned long _end = (unsigned long) (END);				\
+  register unsigned long _len __asm ("%d4") = (_end - _beg + 32);	\
+  __asm __volatile							\
+    ("move%.l %#123, %/d0\n\t"	/* system call nr */			\
+     "move%.l %#1, %/d2\n\t"	/* clear lines */			\
+     "move%.l %#3, %/d3\n\t"	/* insn+data caches */			\
+     "trap %#0"								\
+     : /* no outputs */							\
+     : "d" (_beg), "d" (_len)						\
+     : "%d0", "%d2", "%d3");						\
+}

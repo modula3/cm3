@@ -2,7 +2,8 @@
 @setfilename cpp.info
 @settitle The C Preprocessor
 
-@ignore
+@c CYGNUS LOCAL doc
+@c @ignore
 @ifinfo
 @format
 START-INFO-DIR-ENTRY
@@ -10,11 +11,13 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 @end format
 @end ifinfo
-@end ignore
+@c CYGNUS LOCAL doc
+@c @end ignore
 
 @c @smallbook
 @c @cropmarks
-@c @finalout
+@c CYGNUS LOCAL doc
+@finalout
 @setchapternewpage odd
 @ifinfo
 This file documents the GNU C Preprocessor.
@@ -859,8 +862,9 @@ if a @samp{#line} directive is used.  @xref{Combining Sources}.
 @findex __DATE__
 This macro expands to a string constant that describes the date on
 which the preprocessor is being run.  The string constant contains
-eleven characters and looks like @samp{"Jan 29 1987"} or @w{@samp{"Apr
-1 1905"}}.
+eleven characters and looks like @w{@samp{"Feb  1 1996"}}.
+@c After reformatting the above, check that the date remains `Feb  1 1996',
+@c all on one line, with two spaces between the `Feb' and the `1'.
 
 @item __TIME__
 @findex __TIME__
@@ -2462,7 +2466,8 @@ where it is meaningful.
 The output from the C preprocessor looks much like the input, except
 that all preprocessing directive lines have been replaced with blank lines
 and all comments with spaces.  Whitespace within a line is not altered;
-however, a space is inserted after the expansions of most macro calls.
+however, unless @samp{-traditional} is used, spaces may be inserted into
+the expansions of macro calls to prevent tokens from being concatenated.
 
 Source file name and line number information is conveyed by lines of
 the form
@@ -2614,7 +2619,8 @@ Warn if any trigraphs are encountered (assuming they are enabled).
 @itemx -Wcomments
 (Both forms have the same effect).
 @end ignore
-Warn whenever a comment-start sequence @samp{/*} appears in a comment.
+Warn whenever a comment-start sequence @samp{/*} appears in a @samp{/*}
+comment, or whenever a Backslash-Newline appears in a @samp{//} comment.
 
 @item -Wall
 @findex -Wall

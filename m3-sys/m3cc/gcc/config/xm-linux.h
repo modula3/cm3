@@ -1,5 +1,5 @@
 /* Configuration for GCC for Intel i386 running Linux.
-   Copyright (C) 1995 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996 Free Software Foundation, Inc.
    Contributed by H.J. Lu (hjl@nynexst.com)
 
 This file is part of GNU CC.
@@ -22,6 +22,9 @@ Boston, MA 02111-1307, USA.  */
 #define HAVE_VPRINTF
 
 #define HAVE_STRERROR
+
+#undef HAVE_POPEN
+#define HAVE_POPEN
 
 #define POSIX
 

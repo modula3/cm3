@@ -28,10 +28,11 @@ extern char *getcwd ();
 /* We actually use this as a starting point, not a limit.  */
 #define GUESSPATHLEN 100
 #endif /* (defined (USG) || defined (VMS)) */
-#ifdef _WIN32
+/* CYGNUS LOCAL sac/win32 */
+#if defined(_WIN32) && defined(HAVE_DIRECT_H)
 #include <direct.h>
 #endif
-
+/* END CYGNUS LOCAL sac/win32 */
 char *getenv ();
 char *xmalloc ();
 

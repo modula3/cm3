@@ -1,5 +1,5 @@
 /* Generate code to initialize optabs from machine description.
-   Copyright (C) 1993, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1994, 1995 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -105,6 +105,9 @@ char *optabs[] =
   "smax_optab->handlers[(int) %A].insn_code = CODE_FOR_%(max%F\%a3%)",
   "umin_optab->handlers[(int) %A].insn_code = CODE_FOR_%(umin%I\%a3%)",
   "umax_optab->handlers[(int) %A].insn_code = CODE_FOR_%(umax%I\%a3%)",
+/* CYGNUS LOCAL -- branch prediction */
+  "expect_optab->handlers[(int) %A].insn_code = CODE_FOR_%(expect%I\%a3%)",
+/* END CYGNUS LOCAL -- branch prediction */
   "neg_optab->handlers[(int) %A].insn_code = CODE_FOR_%(neg%a2%)",
   "abs_optab->handlers[(int) %A].insn_code = CODE_FOR_%(abs%a2%)",
   "sqrt_optab->handlers[(int) %A].insn_code = CODE_FOR_%(sqrt%a2%)",
@@ -122,7 +125,8 @@ char *optabs[] =
   "movcc_gen_code[(int) %A] = CODE_FOR_%(mov%acc%)",
   "reload_in_optab[(int) %A] = CODE_FOR_%(reload_in%a%)",
   "reload_out_optab[(int) %A] = CODE_FOR_%(reload_out%a%)",
-  "movstr_optab[(int) %A] = CODE_FOR_%(movstr%a%)" };
+  "movstr_optab[(int) %A] = CODE_FOR_%(movstr%a%)",
+  "clrstr_optab[(int) %A] = CODE_FOR_%(clrstr%a%)" };
 
 /* Allow linking with print-rtl.c.  */
 char **insn_name_ptr;

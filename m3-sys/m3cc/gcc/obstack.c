@@ -52,7 +52,7 @@ Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 /* Determine default alignment.  */
 struct fooalign {char x; double d;};
 #define DEFAULT_ALIGNMENT  \
-  ((PTR_INT_TYPE) ((char *)&((struct fooalign *) 0)->d - (char *)0))
+  ((PTR_INT_TYPE) ((char *) &((struct fooalign *) 0)->d - (char *) 0))
 /* If malloc were really smart, it would round addresses to DEFAULT_ALIGNMENT.
    But in fact it might be less smart and round addresses to as much as
    DEFAULT_ROUNDING.  So we prepare for it to do that.  */
@@ -81,14 +81,14 @@ struct obstack *_obstack;
 #define CALL_CHUNKFUN(h, size) \
   (((h) -> use_extra_arg) \
    ? (*(h)->chunkfun) ((h)->extra_arg, (size)) \
-   : (*(h)->chunkfun) ((size)))
+   : (*(struct _obstack_chunk *(*) ()) (h)->chunkfun) ((size)))
 
 #define CALL_FREEFUN(h, old_chunk) \
   do { \
     if ((h) -> use_extra_arg) \
       (*(h)->freefun) ((h)->extra_arg, (old_chunk)); \
     else \
-      (*(h)->freefun) ((old_chunk)); \
+      (*(void (*) ()) (h)->freefun) ((old_chunk)); \
   } while (0)
 
 
@@ -109,7 +109,7 @@ _obstack_begin (h, size, alignment, chunkfun, freefun)
      POINTER (*chunkfun) ();
      void (*freefun) ();
 {
-  register struct _obstack_chunk* chunk; /* points to new chunk */
+  register struct _obstack_chunk *chunk; /* points to new chunk */
 
   if (alignment == 0)
     alignment = DEFAULT_ALIGNMENT;
@@ -161,7 +161,7 @@ _obstack_begin_1 (h, size, alignment, chunkfun, freefun, arg)
      void (*freefun) ();
      POINTER arg;
 {
-  register struct _obstack_chunk* chunk; /* points to new chunk */
+  register struct _obstack_chunk *chunk; /* points to new chunk */
 
   if (alignment == 0)
     alignment = DEFAULT_ALIGNMENT;
@@ -216,8 +216,8 @@ _obstack_newchunk (h, length)
      struct obstack *h;
      int length;
 {
-  register struct _obstack_chunk*	old_chunk = h->chunk;
-  register struct _obstack_chunk*	new_chunk;
+  register struct _obstack_chunk *old_chunk = h->chunk;
+  register struct _obstack_chunk *new_chunk;
   register long	new_size;
   register int obj_size = h->next_free - h->object_base;
   register int i;
@@ -290,14 +290,14 @@ _obstack_allocated_p (h, obj)
      struct obstack *h;
      POINTER obj;
 {
-  register struct _obstack_chunk*  lp;	/* below addr of any objects in this chunk */
-  register struct _obstack_chunk*  plp;	/* point to previous chunk if any */
+  register struct _obstack_chunk *lp;	/* below addr of any objects in this chunk */
+  register struct _obstack_chunk *plp;	/* point to previous chunk if any */
 
   lp = (h)->chunk;
   /* We use >= rather than > since the object cannot be exactly at
      the beginning of the chunk but might be an empty object exactly
-     at the end of an adjacent chunk. */
-  while (lp != 0 && ((POINTER)lp >= obj || (POINTER)(lp)->limit < obj))
+     at the end of an adjacent chunk.  */
+  while (lp != 0 && ((POINTER) lp >= obj || (POINTER) (lp)->limit < obj))
     {
       plp = lp->prev;
       lp = plp;
@@ -318,14 +318,14 @@ _obstack_free (h, obj)
      struct obstack *h;
      POINTER obj;
 {
-  register struct _obstack_chunk*  lp;	/* below addr of any objects in this chunk */
-  register struct _obstack_chunk*  plp;	/* point to previous chunk if any */
+  register struct _obstack_chunk *lp;	/* below addr of any objects in this chunk */
+  register struct _obstack_chunk *plp;	/* point to previous chunk if any */
 
   lp = h->chunk;
   /* We use >= because there cannot be an object at the beginning of a chunk.
      But there can be an empty object at that address
      at the end of another chunk.  */
-  while (lp != 0 && ((POINTER)lp >= obj || (POINTER)(lp)->limit < obj))
+  while (lp != 0 && ((POINTER) lp >= obj || (POINTER) (lp)->limit < obj))
     {
       plp = lp->prev;
       CALL_FREEFUN (h, lp);
@@ -336,7 +336,7 @@ _obstack_free (h, obj)
     }
   if (lp)
     {
-      h->object_base = h->next_free = (char *)(obj);
+      h->object_base = h->next_free = (char *) (obj);
       h->chunk_limit = lp->limit;
       h->chunk = lp;
     }
@@ -352,14 +352,14 @@ obstack_free (h, obj)
      struct obstack *h;
      POINTER obj;
 {
-  register struct _obstack_chunk*  lp;	/* below addr of any objects in this chunk */
-  register struct _obstack_chunk*  plp;	/* point to previous chunk if any */
+  register struct _obstack_chunk *lp;	/* below addr of any objects in this chunk */
+  register struct _obstack_chunk *plp;	/* point to previous chunk if any */
 
   lp = h->chunk;
   /* We use >= because there cannot be an object at the beginning of a chunk.
      But there can be an empty object at that address
      at the end of another chunk.  */
-  while (lp != 0 && ((POINTER)lp >= obj || (POINTER)(lp)->limit < obj))
+  while (lp != 0 && ((POINTER) lp >= obj || (POINTER) (lp)->limit < obj))
     {
       plp = lp->prev;
       CALL_FREEFUN (h, lp);
@@ -370,7 +370,7 @@ obstack_free (h, obj)
     }
   if (lp)
     {
-      h->object_base = h->next_free = (char *)(obj);
+      h->object_base = h->next_free = (char *) (obj);
       h->chunk_limit = lp->limit;
       h->chunk = lp;
     }

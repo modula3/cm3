@@ -1,5 +1,5 @@
 /* Structure for saving state for a nested function.
-   Copyright (C) 1989, 1992, 1993, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1989, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -70,6 +70,7 @@ struct function
   int pops_args;
   int returns_struct;
   int returns_pcc_struct;
+  int returns_pointer;
   int needs_context;
   int calls_setjmp;
   int calls_longjmp;
@@ -126,6 +127,14 @@ struct function
   int emit_lineno;
   struct goto_fixup *goto_fixup_chain;
 
+  /* For exception handling information.  */
+  struct eh_stack ehstack;
+  struct eh_queue ehqueue;
+  rtx catch_clauses;
+  struct label_node *false_label_stack;
+  struct label_node *caught_return_label_stack;
+  tree protect_list;
+
   /* For expr.c.  */
   int pending_stack_adjust;
   int inhibit_defer_pop;
@@ -145,6 +154,7 @@ struct function
   int last_linenum;
   char *last_filename;
   char *regno_pointer_flag;
+  char *regno_pointer_align;
   int regno_pointer_flag_length;
   rtx *regno_reg_rtx;
 
@@ -187,6 +197,11 @@ struct function
   struct pool_sym **const_rtx_sym_hash_table;
   struct pool_constant *first_pool, *last_pool;
   int pool_offset;
+
+  /* CYGNUS LOCAL -- Branch Prediction */
+  /* For jump.  */
+  int uses_expect;
+  /* END CYGNUS LOCAL -- Branch Prediction */
 };
 
 /* The FUNCTION_DECL for an inline function currently being expanded.  */

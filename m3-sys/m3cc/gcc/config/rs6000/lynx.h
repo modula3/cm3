@@ -1,5 +1,5 @@
 /* Definitions for Rs6000 running LynxOS.
-   Copyright (C) 1995 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996 Free Software Foundation, Inc.
    Contributed by David Henkel-Wallace, Cygnus Support (gumby@cygnus.com)
 
 This file is part of GNU CC.
@@ -72,7 +72,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* This can become more refined as we have more powerpc options. */
 #undef ASM_SPEC
-#define ASM_SPEC "-u %{m601:-m601} %{power*:-m601}"
+#define ASM_SPEC "-u %(asm_cpu)"
 
 #undef SUBTARGET_SWITCHES
 #define SUBTARGET_SWITCHES \
