@@ -1009,8 +1009,6 @@ static void one_gap (offset)
 
   TREE_TYPE (f) = make_node (LANG_TYPE);
   TYPE_SIZE (TREE_TYPE (f)) = DECL_SIZE (f);
-  TYPE_SIZE_UNIT (f) = size_binop (FLOOR_DIV_EXPR, TYPE_SIZE(TREE_TYPE(f)),
-                                   size_int(BITS_PER_UNIT));
   TYPE_ALIGN (TREE_TYPE (f)) = DECL_ALIGN (f); 
 	    
   TREE_VALUE (v) = make_node (CONSTRUCTOR);
@@ -1261,13 +1259,13 @@ static void m3_store (v, o, src_t, dest_t)
 {
   tree lhs, rhs;
 
-  if (TREE_TYPE (stack [tos-1]) == TREE_TYPE(src_t)) {
+  if (TREE_TYPE (stack [tos-1]) == src_t) {
     rhs = stack [tos-1];
   } else {
     rhs = m3_cast (src_t, stack [tos-1]);
   }
 
-  if (o == 0 && TREE_TYPE (v) == TREE_TYPE(dest_t)) {
+  if (o == 0 && TREE_TYPE (v) == dest_t) {
     lhs = v;
   } else {
     tree f = make_node (FIELD_DECL);
@@ -1279,7 +1277,7 @@ static void m3_store (v, o, src_t, dest_t)
     DECL_FIELD_BITPOS (f) = m3_build_int (o);
   }
 
-  expand_assignment (lhs, rhs, 0, 0);
+  expand_assignment (lhs, m3_build1 (CONVERT_EXPR, dest_t, rhs), 0, 0);
   tos--;
 }
 
