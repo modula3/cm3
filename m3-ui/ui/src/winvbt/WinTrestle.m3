@@ -9,8 +9,8 @@
 
 UNSAFE MODULE WinTrestle;
 
-IMPORT Axis, Batch, Cstring, Ctypes, Fmt, M3toC, Point, ProperSplit, Rect, 
-       Region, RTCollectorSRC, RTHeapDep, RTHeapRep, RTParams, RTLinker, 
+IMPORT Axis, Batch, Cstring, Ctypes, Env, Fmt, M3toC, Point, ProperSplit,
+       Rect, Region, RTCollectorSRC, RTHeapDep, RTHeapRep, RTParams, RTLinker, 
        ScrnColorMap, ScrnCursor, ScrnPixmap, Split, Text, Thread,
        Trestle, TrestleClass, TrestleImpl, VBT, VBTClass, VBTRep, WinBase, 
        WinDef, WinGDI, WinKey, WinMsg, WinPaint, WinScreenType,
@@ -1759,13 +1759,15 @@ PROCEDURE VBTCharPress (hwnd: WinDef.HWND;  wParam: WinDef.WPARAM) =
 
     modifiers := modifiers - VBT.Modifiers{VBT.Modifier.Control};
     (* simulate the key up and down events for Trestle *)
-    LOCK VBT.mu DO
-      VBTClass.Key (v, VBT.KeyRec {keysym, time, TRUE, modifiers});
-      VBTClass.Key (v, VBT.KeyRec {keysym, time, FALSE, modifiers});
+    IF useEvent_WM_CHAR THEN
+      LOCK VBT.mu DO
+        VBTClass.Key (v, VBT.KeyRec {keysym, time, TRUE, modifiers});
+        VBTClass.Key (v, VBT.KeyRec {keysym, time, FALSE, modifiers});
+      END;
     END;
   END VBTCharPress;
 
-PROCEDURE ModifiersToText(m : VBT.Modifiers) : TEXT =
+PROCEDURE ModifiersToText(m : VBT.Modifiers) : TEXT = <*NOWARN*>
   VAR res := "";
   BEGIN
     IF VBT.Modifier.Shift IN m THEN
@@ -2557,6 +2559,16 @@ PROCEDURE DumpSystemPalette (hdc : WinDef.HDC) =
 
 (*-------------------------------------------------------- initialization ---*)
 
+VAR 
+  useEvent_WM_CHAR := FALSE;
 BEGIN
+  WITH v = Env.Get("USE_EVENT_WM_CHAR") DO
+    IF v # NIL THEN
+      useEvent_WM_CHAR := Text.Length(v) = 0 OR
+                          Text.GetChar(v, 0) = '1' OR
+                          Text.GetChar(v, 0) = 'y' OR
+                          Text.GetChar(v, 0) = 'Y';
+    END;
+  END;
   CreateTrestle ();
 END WinTrestle.
