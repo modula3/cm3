@@ -8,6 +8,7 @@ If R.T is
   LONGREAL, then the instantiated module is a wrapper for Math with procedure names conforming to the conventions
   EXTENDED, then the instantiated module may be used for transcendental computations but the precision is only that of LONGREAL because this is the precision of the standard C math library
 
+SqRt should through an exception if applied to negative numbers
 *)
 
 (*==========================*)

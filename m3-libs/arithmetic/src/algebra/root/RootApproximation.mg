@@ -33,11 +33,11 @@ BEGIN
              C.T{re:=q1,im:=-q2}
            };
   ELSE
-    (*avoid cancelations*)
+    (*avoid cancelation*)
     IF b<R.Zero THEN
       q:=RT.Half*(-b+RT.SqRt(disc));
     ELSE
-      q:=RT.Half*-(b+RT.SqRt(disc));
+      q:=RT.Half*(-b-RT.SqRt(disc));
     END;
     (*fails because Sgn(0)=0 :
     q:=-RT.Half*(b+RT.Sgn(b)*RT.SqRt(disc));
@@ -66,13 +66,13 @@ BEGIN
   disc_sqrt:=CT.SqRt(disc);
 
   (*---set sign of sqrt via NR92 eqn 5.6.6---*)
-  IF C.Mul(C.Conj(b),disc_sqrt).re<R.Zero THEN
+  IF C.Mul(C.Conj(b),disc_sqrt).re>R.Zero THEN
     disc_sqrt:=C.Neg(disc_sqrt);
   END;
 
   (*---calculate per NR92 eqn 5.6.4, 5.6.5.---*)
-  q:=C.Scale(C.Add(b,disc_sqrt),RT.Half);
-  RETURN RootArray2{C.Div(q,a),C.Div(c,q)}
+  q:=C.Scale(C.Sub(disc_sqrt,b),RT.Half);
+  RETURN RootArray2{C.Div(q,a),C.Div(c,q)};
 END QuadraticComplex;
 
 (*==========================*)

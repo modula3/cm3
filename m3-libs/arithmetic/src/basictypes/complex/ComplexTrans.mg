@@ -229,14 +229,14 @@ BEGIN
     IF R.Compare(z.re, R.Zero) < 0 THEN (* mathematically impossible, can be caused by rounding *)
       z.re := R.Zero;
     ELSE
-      z.re := RT.SqRt (R.Div(z.re,R.Two));
+      z.re := RT.SqRt (R.Mul(z.re,RT.Half));
     END;
 
     z.im := R.Sub (r, x.re);
     IF R.Compare(z.im, R.Zero) < 0 THEN (* mathematically impossible, can be caused by rounding *)
       z.im := R.Zero;
     ELSE
-      z.im := RT.SqRt (R.Div(z.im,R.Two));
+      z.im := RT.SqRt (R.Mul(z.im,RT.Half));
       IF R.Compare(x.im, R.Zero) < 0 THEN  (* instead of using the Sgn function *)
         z.im := R.Neg (z.im);
       END;

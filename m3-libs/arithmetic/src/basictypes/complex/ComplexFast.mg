@@ -95,8 +95,8 @@ PROCEDURE Div(READONLY x0,y0 : T) : T RAISES {Error} =
     exp     : INTEGER;
   BEGIN
     (*avoid overflow and underflow by conditioning*)
-    y := Normalize(y0,exp);
-    x := Scalb(x0,-exp);
+    x := Normalize(x0,exp);
+    y := Scalb(y0,-exp);
     denom := y.re*y.re + y.im*y.im;
     IF denom=R.Zero THEN
       RAISE Error(Err.divide_by_zero);
@@ -158,13 +158,31 @@ END ScaleInt;
 
 PROCEDURE Normalize (READONLY x: T; VAR exp: INTEGER): T =
   BEGIN
-    exp := ILogb (x);
+    IF NOT IsZero(x) THEN
+      exp:=ILogb(x);
+      RETURN Scalb(x,-exp);
+    ELSE
+      (* ILogb(0)=-Infinity *)
+      exp:=0;
+      RETURN x;
+    END;
+  END Normalize;
+
+(*
+PROCEDURE Normalize (READONLY x: T; VAR exp: INTEGER): T =
+  BEGIN
+    exp:=0;
+    IF x.re#R.Zero THEN exp:=exp+R.ILogb(x.re) END;
+    IF x.im#R.Zero THEN exp:=exp+R.ILogb(x.im) END;
+    exp := exp DIV 2;
+    (*exp := ILogb (x);   ILogb(0)=-Infinity *)
     RETURN Scalb(x,-exp);
   END Normalize;
+*)
 
 PROCEDURE ILogb (READONLY x: T): INTEGER =
   BEGIN
-    RETURN (R.ILogb(x.re)+R.ILogb(x.im)) DIV 2;
+    RETURN R.ILogb(ABS(x.re)+ABS(x.im)) DIV 2;
   END ILogb;
 
 PROCEDURE Scalb (READONLY x: T; exp: INTEGER): T RAISES {FloatMode.Trap} =
