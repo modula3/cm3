@@ -32,6 +32,7 @@ readonly _UnixPieces = {
   "LINUXLIBC6" : [ "linux-libc6" ],
   "NEXT"       : [ "ultrix-3-1.generic", "ultrix-3-1.NEXT" ],
   "NT386"      : [ ], % doesn't define a "Unix" interface
+  "NT386GNU"   : [ "cygwin" ],
   "OKI"        : [ "sysv-4.0" ],
   "OS2"        : [ "os2" ],
   "SEQUENT"    : [ "ultrix-3-1.generic", "ultrix-3-1.SEQUENT" ],
