@@ -39,6 +39,8 @@ TYPE
                                                  the considered field,
                                                  DivMod should always
                                                  work*)
+  ErrorMatrixSingular =
+    ErrorOperationAborted BRANDED OBJECT END; (*matrix can't be inverted*)
   ErrorAlmostZero =
     ErrorOperationAborted BRANDED OBJECT END; (*in tridiagonal, rewrite for
                                                  n-1 eqns*)

@@ -14,21 +14,19 @@ CONST
 PROCEDURE GCD (u, v: T): T =
   (*returns the greatest common denominator for u and v.*)
   (*use Euclid's algorithm*)
-  VAR w: T;
+  (* Arith.ErrorDivisionByZero cannot occur *)
+  <* FATAL Arith.Error *>
+  VAR
+    w: T;
   BEGIN
-    TRY
-      WHILE NOT R.IsZero(v) DO w := R.Mod(u, v); u := v; v := w; END;
-      (*
-        WHILE v#0 DO
-          w:=u MOD v;
-          u:=v;
-          v:=w;
-        END;
-      *)
-    EXCEPT
-      Arith.Error (err) =>
-        <* ASSERT NOT ISTYPE(err, Arith.ErrorDivisionByZero) *>
-    END;
+    WHILE NOT R.IsZero(v) DO w := R.Mod(u, v); u := v; v := w; END;
+    (*
+      WHILE v#0 DO
+        w:=u MOD v;
+        u:=v;
+        v:=w;
+      END;
+    *)
     RETURN u;
   END GCD;
 
@@ -55,27 +53,25 @@ PROCEDURE BezoutGCD (u, v: T; VAR (*OUT*) c: ARRAY [0 .. 1], [0 .. 1] OF T):
   / a 1 \ / 0  1 \ - / 1 0 \
   \ 1 0 / \ 1 -a / - \ 0 1 /
   *)
-  VAR next: ARRAY [0 .. 1] OF T;
+
+  (* Arith.ErrorDivisionByZero cannot occur *)
+  <* FATAL Arith.Error *>
+  VAR
+    next: ARRAY [0 .. 1] OF T;
   BEGIN
     c[0, 0] := R.One;
     c[0, 1] := R.Zero;
     c[1, 0] := R.Zero;
     c[1, 1] := R.One;
-    TRY
-      WHILE NOT R.IsZero(v) DO
-        VAR qr := R.DivMod(u, v);
-        BEGIN
-          u := v;
-          v := qr.rem;
-          next[0] := R.Sub(c[0, 0], R.Mul(c[0, 0], qr.quot));
-          next[1] := R.Sub(c[0, 1], R.Mul(c[0, 1], qr.quot));
-          c[0] := c[1];
-          c[1] := next;
-        END;
+    WHILE NOT R.IsZero(v) DO
+      WITH qr = R.DivMod(u, v) DO
+        u := v;
+        v := qr.rem;
+        next[0] := R.Sub(c[0, 0], R.Mul(c[0, 0], qr.quot));
+        next[1] := R.Sub(c[0, 1], R.Mul(c[0, 1], qr.quot));
+        c[0] := c[1];
+        c[1] := next;
       END;
-    EXCEPT
-      Arith.Error (err) =>
-        <* ASSERT NOT ISTYPE(err, Arith.ErrorDivisionByZero) *>
     END;
     RETURN u;
   END BezoutGCD;
@@ -108,22 +104,17 @@ PROCEDURE Bezout (u, v, w: T; VAR (*OUT*) c: ARRAY [0 .. 1], [0 .. 1] OF T)
   END Bezout;
 
 PROCEDURE MACDecompose (u, v: T; VAR (*OUT*) mac: MAC): T =
+  (* Arith.ErrorDivisionByZero cannot occur *)
+  <* FATAL Arith.Error *>
   BEGIN
-    TRY
-      mac := NIL;
-      WHILE NOT R.IsZero(v) DO
-        VAR
-          qr     := R.DivMod(u, v);
-          newmac := NEW(MAC, factor := qr.quot, next := mac);
-        BEGIN
-          mac := newmac;
-          u := v;
-          v := qr.rem;
-        END;
+    mac := NIL;
+    WHILE NOT R.IsZero(v) DO
+      WITH qr     = R.DivMod(u, v),
+           newmac = NEW(MAC, factor := qr.quot, next := mac) DO
+        mac := newmac;
+        u := v;
+        v := qr.rem;
       END;
-    EXCEPT
-      Arith.Error (err) =>
-        <* ASSERT NOT ISTYPE(err, Arith.ErrorDivisionByZero) *>
     END;
     RETURN u;
   END MACDecompose;

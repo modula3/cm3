@@ -76,17 +76,13 @@ PROCEDURE DivMod (x, y: T): QuotRem RAISES {Arith.Error} =
 
 PROCEDURE IntMod (x, y: T): T RAISES {Arith.Error} =
   BEGIN
-    IF y = Zero THEN
-      RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init())
-    END;
+    CheckDivisor(y);
     RETURN x MOD y
   END IntMod;
 
 PROCEDURE Rec (x: T): T RAISES {Arith.Error} =
   BEGIN
-    IF x = Zero THEN
-      RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init())
-    END;
+    CheckDivisor(x);
     RETURN One / x
   END Rec;
 
