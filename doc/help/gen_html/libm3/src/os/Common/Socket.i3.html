@@ -18,7 +18,7 @@
 IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="File.i3.html">File</A>, <A HREF="OSError.i3.html">OSError</A>, <A HREF="../../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>;
 
 TYPE
-  <A HREF="#x2">T</A> &lt;: Public;
+  <A HREF="../POSIX/SocketPosix.m3.html#T">T</A> &lt;: Public;
   Public = File.T OBJECT METHODS
     bind (READONLY ep: EndPoint)     RAISES {OSError.E};
     connect (READONLY ep: EndPoint)  RAISES {OSError.E, Thread.Alerted};
@@ -55,7 +55,7 @@ CONST
 VAR (*CONST*) FileType: File.Type;
 </PRE><BLOCKQUOTE><EM> Equal to {\tt Atom.FromText("Socket").} </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE  <A HREF="#x3">Create</A> (reliable: BOOLEAN): T  RAISES {OSError.E};
+PROCEDURE  <A HREF="../POSIX/SocketPosix.m3.html#Create">Create</A> (reliable: BOOLEAN): T  RAISES {OSError.E};
 </PRE><BLOCKQUOTE><EM> Create a new bidirectional channel.  If <CODE>reliable</CODE> is <CODE>TRUE</CODE>, a
    TCP stream socket is created, otherwise an unreliable datagram
    socket is created. </EM></BLOCKQUOTE><PRE>
@@ -95,21 +95,6 @@ PROCEDURE  <A HREF="#x3">Create</A> (reliable: BOOLEAN): T  RAISES {OSError.E};
 </A><UL>
 <LI><A HREF="Socket.m3.html#0TOP0">libm3/src/os/Common/Socket.m3</A>
 <LI><A HREF="../POSIX/SocketPosix.m3.html#0TOP0">libm3/src/os/POSIX/SocketPosix.m3</A>
-<LI><A HREF="../WIN32/SocketWin32.m3.html#0TOP0">libm3/src/os/WIN32/SocketWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">opaque type Socket.T is in:
-</A><UL>
-<LI><A HREF="../POSIX/SocketPosix.m3.html#T">libm3/src/os/POSIX/SocketPosix.m3</A>
-<LI><A HREF="../WIN32/SocketWin32.m3.html#T">libm3/src/os/WIN32/SocketWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">procedure Socket.Create is in:
-</A><UL>
-<LI><A HREF="../POSIX/SocketPosix.m3.html#Create">libm3/src/os/POSIX/SocketPosix.m3</A>
-<LI><A HREF="../WIN32/SocketWin32.m3.html#Create">libm3/src/os/WIN32/SocketWin32.m3</A>
 </UL>
 <P>
 <PRE>

@@ -12,7 +12,7 @@
 
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="../common/TCPExtras.i3.html">TCPExtras</A></implements></module>;
 
-IMPORT <A HREF="../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../common/IP.i3.html">IP</A>, <A HREF="../common/IPError.i3.html">IPError</A>, <A HREF="../common/TCP.i3.html">TCP</A>, <A HREF="TCPPosix.i3.html">TCPPosix</A>, <A HREF="../../../m3core/src/unix/freebsd-3/Uin.i3.html">Uin</A>, <A HREF="../../../m3core/src/unix/freebsd-3/Usocket.i3.html">Usocket</A>;
+IMPORT <A HREF="../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../common/IP.i3.html">IP</A>, <A HREF="../common/IPError.i3.html">IPError</A>, <A HREF="../common/TCP.i3.html">TCP</A>, <A HREF="TCPPosix.i3.html">TCPPosix</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Uin.i3.html">Uin</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Usocket.i3.html">Usocket</A>;
 
 PROCEDURE <A NAME="LocalEndpoint"><procedure>LocalEndpoint</procedure></A> (conn: TCP.T): IP.Endpoint RAISES {IP.Error} =
   VAR

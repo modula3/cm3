@@ -10,48 +10,20 @@
  All rights reserved. 
  Last modified on Tue Jun 27 13:59:11 PDT 1995 by steveg 
 
-<P><PRE>INTERFACE <interface><A HREF="#x1">TCPExtras</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="../POSIX/TCPExtras.m3.html">TCPExtras</A></interface>;
 
 IMPORT <A HREF="../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="IP.i3.html">IP</A>, <A HREF="TCP.i3.html">TCP</A>;
 
-PROCEDURE <A HREF="#x2">LocalEndpoint</A>(conn: TCP.T): IP.Endpoint RAISES {IP.Error};
+PROCEDURE <A HREF="../POSIX/TCPExtras.m3.html#LocalEndpoint">LocalEndpoint</A>(conn: TCP.T): IP.Endpoint RAISES {IP.Error};
 </PRE><BLOCKQUOTE><EM> return the local endpoint of a TCP connection </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x3">htons</A>(s: Ctypes.unsigned_short_int): Ctypes.unsigned_short_int;
-PROCEDURE <A HREF="#x4">ntohs</A>(s: Ctypes.unsigned_short_int): Ctypes.unsigned_short_int;
+PROCEDURE <A HREF="../POSIX/TCPExtras.m3.html#htons">htons</A>(s: Ctypes.unsigned_short_int): Ctypes.unsigned_short_int;
+PROCEDURE <A HREF="../POSIX/TCPExtras.m3.html#ntohs">ntohs</A>(s: Ctypes.unsigned_short_int): Ctypes.unsigned_short_int;
 </PRE><BLOCKQUOTE><EM> convert between host (h) and network (n) byte orders. </EM></BLOCKQUOTE><PRE>
 
 END TCPExtras.
 </PRE>
 </inInterface>
-<HR>
-<A NAME="x1">TCPExtras's implementation  is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCPExtras.m3.html#0TOP0">tcp/src/POSIX/TCPExtras.m3</A>
-<LI><A HREF="../WIN32/TCPExtras.m3.html#0TOP0">tcp/src/WIN32/TCPExtras.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">procedure TCPExtras.LocalEndpoint is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCPExtras.m3.html#LocalEndpoint">tcp/src/POSIX/TCPExtras.m3</A>
-<LI><A HREF="../WIN32/TCPExtras.m3.html#LocalEndpoint">tcp/src/WIN32/TCPExtras.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">procedure TCPExtras.htons is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCPExtras.m3.html#htons">tcp/src/POSIX/TCPExtras.m3</A>
-<LI><A HREF="../WIN32/TCPExtras.m3.html#htons">tcp/src/WIN32/TCPExtras.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x4">procedure TCPExtras.ntohs is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCPExtras.m3.html#ntohs">tcp/src/POSIX/TCPExtras.m3</A>
-<LI><A HREF="../WIN32/TCPExtras.m3.html#ntohs">tcp/src/WIN32/TCPExtras.m3</A>
-</UL>
-<P>
 <PRE>
 
 

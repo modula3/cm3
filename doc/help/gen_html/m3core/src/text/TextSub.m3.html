@@ -11,7 +11,7 @@
 
 <P><PRE>UNSAFE MODULE <module>TextSub</module> EXPORTS <A HREF="Text.i3.html"><implements>Text</A></implements>, <A HREF="TextSub.i3.html"><implements>TextSub</A></implements>;
 
-IMPORT <A HREF="TextClass.i3.html">TextClass</A>, <A HREF="Text8.i3.html">Text8</A>, <A HREF="Text16.i3.html">Text16</A>, <A HREF="TextLiteral.i3.html">TextLiteral</A>;
+IMPORT <A HREF="TextCat.i3.html">TextCat</A>, <A HREF="TextClass.i3.html">TextClass</A>, <A HREF="Text8.i3.html">Text8</A>, <A HREF="Text16.i3.html">Text16</A>, <A HREF="TextLiteral.i3.html">TextLiteral</A>;
 
 REVEAL
   <A NAME="TT">TT</A> = Public BRANDED &quot;TextSub.T&quot; OBJECT OVERRIDES
@@ -28,7 +28,7 @@ PROCEDURE <A NAME="New"><procedure>New</procedure></A> (t: TEXT; start, length: 
   END New;
 </PRE> Text.Sub 
 <PRE>PROCEDURE <A NAME="Sub"><procedure>Sub</procedure></A> (t: TEXT; start, length: CARDINAL): TEXT =
-  VAR info: TextClass.Info;  new_len: INTEGER;
+  VAR info: TextClass.Info;  new_len: INTEGER;  root: TEXT;
   BEGIN
     t.get_info (info);
     new_len := MIN (info.length - start, length);
@@ -36,10 +36,29 @@ PROCEDURE <A NAME="New"><procedure>New</procedure></A> (t: TEXT; start, length: 
     IF (new_len = info.length)  THEN RETURN t;  END;
     IF (new_len = 1) THEN RETURN FromWideChar (t.get_wide_char (start)); END;
 
-    (* Avoid building subtexts of subtexts... *)
-    TYPECASE t OF
-    | TT(tt) =&gt;  t := tt.base;  INC (start, tt.start);
-    ELSE         (* skip *)
+    (* Descend as far as possible through subtexts and concatenations. *)
+    root := t;
+    LOOP
+      TYPECASE t OF
+      | TT(tt) =&gt;  t := tt.base;  INC (start, tt.start);
+      | TextCat.T(tc) =&gt;
+          IF start + new_len &lt;= tc.a_len THEN
+            t := tc.a;
+          ELSIF start &gt;= tc.a_len THEN
+            t := tc.b;
+            DEC (start, tc.a_len);
+          ELSE
+            EXIT;
+          END;
+      ELSE
+        EXIT;
+      END;
+    END;
+    IF t # root THEN
+      t.get_info (info);
+      IF start = 0 AND new_len = info.length THEN
+        RETURN t;
+      END;
     END;
 
     IF  (info.length &gt;= 256)          (* It's big *)

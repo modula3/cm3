@@ -13,7 +13,7 @@
       modified on Sun Jan 12 16:16:54 PST 1992 by meehan 
       modified on Sat Jan 11 16:55:00 PST 1992 by gnelson 
 
-<P><PRE>INTERFACE <interface><A HREF="#x1">TCP</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="../POSIX/TCP.m3.html">TCP</A></interface>;
 </PRE> A TCP connection is a bidirectional byte stream between two
    programs, implemented using internet protocols.
 <P>
@@ -35,8 +35,8 @@
 <P><PRE>IMPORT <A HREF="../../../libm3/src/atom/Atom.i3.html">Atom</A>, <A HREF="ConnFD.i3.html">ConnFD</A>, <A HREF="IP.i3.html">IP</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>;
 
 TYPE
-  <A HREF="#x2">Connector</A> &lt;: ROOT;
-  <A HREF="#x3">T</A> &lt;: ConnFD.T;
+  <A HREF="../POSIX/TCP.m3.html#Connector">Connector</A> &lt;: ROOT;
+  <A HREF="../POSIX/TCP.m3.html#T">T</A> &lt;: ConnFD.T;
 </PRE> The TCP implementation produces a <CODE>ConnFD.T</CODE> which raises
    <CODE>Rd.Failure</CODE> and <CODE>Wr.Failure</CODE> errors with the same atom lists
    used for <CODE>IP.Error</CODE>.  TCP procedures can raise <CODE>IP.Error</CODE> with
@@ -60,7 +60,7 @@ TYPE
 <P>
 <P> procedures 
 
-<P><PRE>PROCEDURE <A HREF="#x4">NewConnector</A>(ep: IP.Endpoint): Connector RAISES {IP.Error};
+<P><PRE>PROCEDURE <A HREF="../POSIX/TCP.m3.html#NewConnector">NewConnector</A>(ep: IP.Endpoint): Connector RAISES {IP.Error};
 </PRE><BLOCKQUOTE><EM> Allocate and return a connector with the endpoint <CODE>ep</CODE>. </EM></BLOCKQUOTE><PRE>
 </PRE> The value of <CODE>ep.addr</CODE> must be null or one of the caller's IP
    addresses.  If <CODE>ep.addr</CODE> is null then the connector will accept
@@ -79,13 +79,13 @@ TYPE
    Initially the connector returned has no server or client threads
    waiting on it. 
 
-<P><PRE>PROCEDURE <A HREF="#x5">GetEndPoint</A>(c: Connector): IP.Endpoint;
+<P><PRE>PROCEDURE <A HREF="../POSIX/TCP.m3.html#GetEndPoint">GetEndPoint</A>(c: Connector): IP.Endpoint;
 </PRE><BLOCKQUOTE><EM> Return the endpoint of <CODE>c</CODE>. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x6">CloseConnector</A>(c: Connector);
+PROCEDURE <A HREF="../POSIX/TCP.m3.html#CloseConnector">CloseConnector</A>(c: Connector);
 </PRE><BLOCKQUOTE><EM> Close the connector <CODE>c</CODE>.  Not yet implemented. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x7">Connect</A> (ep: IP.Endpoint): T
+PROCEDURE <A HREF="../POSIX/TCP.m3.html#Connect">Connect</A> (ep: IP.Endpoint): T
     RAISES {IP.Error, Thread.Alerted};
 </PRE><BLOCKQUOTE><EM> Create and return a connection to the endpoint <CODE>ep</CODE>. </EM></BLOCKQUOTE><PRE>
 </PRE> The procedure <CODE>Connect</CODE> raises <CODE>IP.Error</CODE> with <CODE>Refused</CODE> if no connector
@@ -103,7 +103,7 @@ PROCEDURE <A HREF="#x7">Connect</A> (ep: IP.Endpoint): T
    If <CODE>ep.addr</CODE> is null, <CODE>Connect</CODE> connects to the calling machine
    itself. 
 
-<P><PRE>PROCEDURE <A HREF="#x8">Accept</A>(c: Connector): T
+<P><PRE>PROCEDURE <A HREF="../POSIX/TCP.m3.html#Accept">Accept</A>(c: Connector): T
     RAISES {IP.Error, Thread.Alerted};
 </PRE><BLOCKQUOTE><EM> Block and wait until some process connects to <CODE>c</CODE>, and
    return a connection to that process.  </EM></BLOCKQUOTE><PRE>
@@ -118,75 +118,12 @@ PROCEDURE <A HREF="#x7">Connect</A> (ep: IP.Endpoint): T
    if the connector is closed or becomes closed while the thread is
    blocked.  
 
-<P><PRE>PROCEDURE <A HREF="#x9">Close</A>(t: T);
+<P><PRE>PROCEDURE <A HREF="../POSIX/TCP.m3.html#Close">Close</A>(t: T);
 </PRE><BLOCKQUOTE><EM> Close the connection <CODE>t</CODE> and free all related resources. </EM></BLOCKQUOTE><PRE>
 
 END TCP.
 </PRE>
 </inInterface>
-<HR>
-<A NAME="x1">TCP's implementation  is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCP.m3.html#0TOP0">tcp/src/POSIX/TCP.m3</A>
-<LI><A HREF="../WIN32/TCP.m3.html#0TOP0">tcp/src/WIN32/TCP.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">opaque type TCP.Connector is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCP.m3.html#Connector">tcp/src/POSIX/TCP.m3</A>
-<LI><A HREF="../WIN32/TCP.m3.html#Connector">tcp/src/WIN32/TCP.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">opaque type TCP.T is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCP.m3.html#T">tcp/src/POSIX/TCP.m3</A>
-<LI><A HREF="../WIN32/TCP.m3.html#T">tcp/src/WIN32/TCP.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x4">procedure TCP.NewConnector is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCP.m3.html#NewConnector">tcp/src/POSIX/TCP.m3</A>
-<LI><A HREF="../WIN32/TCP.m3.html#NewConnector">tcp/src/WIN32/TCP.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x5">procedure TCP.GetEndPoint is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCP.m3.html#GetEndPoint">tcp/src/POSIX/TCP.m3</A>
-<LI><A HREF="../WIN32/TCP.m3.html#GetEndPoint">tcp/src/WIN32/TCP.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x6">procedure TCP.CloseConnector is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCP.m3.html#CloseConnector">tcp/src/POSIX/TCP.m3</A>
-<LI><A HREF="../WIN32/TCP.m3.html#CloseConnector">tcp/src/WIN32/TCP.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x7">procedure TCP.Connect is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCP.m3.html#Connect">tcp/src/POSIX/TCP.m3</A>
-<LI><A HREF="../WIN32/TCP.m3.html#Connect">tcp/src/WIN32/TCP.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x8">procedure TCP.Accept is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCP.m3.html#Accept">tcp/src/POSIX/TCP.m3</A>
-<LI><A HREF="../WIN32/TCP.m3.html#Accept">tcp/src/WIN32/TCP.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x9">procedure TCP.Close is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCP.m3.html#Close">tcp/src/POSIX/TCP.m3</A>
-<LI><A HREF="../WIN32/TCP.m3.html#Close">tcp/src/WIN32/TCP.m3</A>
-</UL>
-<P>
 <PRE>
 
 

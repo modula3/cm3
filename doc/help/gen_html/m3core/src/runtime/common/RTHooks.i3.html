@@ -50,10 +50,10 @@ TYPE
 PROCEDURE <A HREF="RTHooks.m3.html#ResumeRaise">ResumeRaise</A> (a: ADDRESS (*VAR RT0.RaiseActivation*)) RAISES ANY;
 </PRE><BLOCKQUOTE><EM> called by the compiler to resume the raising of 'a.exception(a.arg)'. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="../FreeBSD3/RTThread.m3.html#PushEFrame">PushEFrame</A> (frame: ADDRESS);
+PROCEDURE <A HREF="../LINUXLIBC6/RTThread.m3.html#PushEFrame">PushEFrame</A> (frame: ADDRESS);
 </PRE><BLOCKQUOTE><EM> called by the compiler to push an exception frame. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="../FreeBSD3/RTThread.m3.html#PopEFrame">PopEFrame</A> (frame: ADDRESS);
+PROCEDURE <A HREF="../LINUXLIBC6/RTThread.m3.html#PopEFrame">PopEFrame</A> (frame: ADDRESS);
 </PRE><BLOCKQUOTE><EM> called by the compiler to pop an exception frame. </EM></BLOCKQUOTE><PRE>
 </PRE>----------------------------------------------- builtin TEXT operations ---
 
@@ -140,7 +140,7 @@ END RTHooks.
 <HR>
 <A NAME="x1">RTHooks's implementation  is in:
 </A><UL>
-<LI><A HREF="../FreeBSD3/RTThread.m3.html#0TOP0">m3core/src/runtime/FreeBSD3/RTThread.m3</A>
+<LI><A HREF="../LINUXLIBC6/RTThread.m3.html#0TOP0">m3core/src/runtime/LINUXLIBC6/RTThread.m3</A>
 <LI><A HREF="RTAllocator.m3.html#0TOP0">m3core/src/runtime/common/RTAllocator.m3</A>
 <LI><A HREF="RTDebug.m3.html#0TOP0">m3core/src/runtime/common/RTDebug.m3</A>
 <LI><A HREF="RTHooks.m3.html#0TOP0">m3core/src/runtime/common/RTHooks.m3</A>

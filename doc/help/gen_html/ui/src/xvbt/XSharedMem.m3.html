@@ -99,10 +99,10 @@ PROCEDURE <A NAME="MakeCompletion"><procedure>MakeCompletion</procedure></A> (&l
 
     TRY
       IF NOT IP.GetHostByName(display, displayAddr) THEN RETURN FALSE; END;
+      RETURN displayAddr = IP.GetHostAddr();
     EXCEPT
     | IP.Error =&gt; RETURN FALSE;
     END;
-    RETURN displayAddr = IP.GetHostAddr();
   END SameHost;
 
 PROCEDURE <A NAME="DisplayHost"><procedure>DisplayHost</procedure></A> (trsl: XClient.T): TEXT =

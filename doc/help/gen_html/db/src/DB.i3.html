@@ -15,7 +15,7 @@
    statements.
 
 
-<P><PRE>INTERFACE <interface><A HREF="#x1">DB</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="odbc/DB.m3.html">DB</A></interface>;
 </PRE>------------------------------------------------------- connections ---
 
    A <CODE>DB.T</CODE>, or connection, represents a single connection to a database.
@@ -23,13 +23,13 @@
    used concurrently by multiple threads.
 
 
-<P><PRE>PROCEDURE <A HREF="#x2">Connect</A> (database, user_id, password: TEXT): T  RAISES {Error};
+<P><PRE>PROCEDURE <A HREF="odbc/DB.m3.html#Connect">Connect</A> (database, user_id, password: TEXT): T  RAISES {Error};
 </PRE><BLOCKQUOTE><EM> Establish a connection to the named <CODE>database</CODE> using <CODE>user_id</CODE> and
   <CODE>password</CODE> as authentication credentials. </EM></BLOCKQUOTE><PRE>
 
 TYPE
   (* a database connection *)
-  <A HREF="#x3">T</A> &lt;: Public;  Public = OBJECT METHODS
+  <A HREF="odbc/DB.m3.html#T">T</A> &lt;: Public;  Public = OBJECT METHODS
     disconnect ()              RAISES {Error};
     new_stmt (): Stmt          RAISES {Error};
     auto_commit (on: BOOLEAN)  RAISES {Error};
@@ -72,7 +72,7 @@ TYPE
 
 <P><PRE>TYPE
   (* a SQL database statement (query or update) *)
-  <A HREF="#x4">Stmt</A> &lt;: StmtPublic;  StmtPublic = MUTEX OBJECT METHODS
+  <A HREF="odbc/DB.m3.html#Stmt">Stmt</A> &lt;: StmtPublic;  StmtPublic = MUTEX OBJECT METHODS
     prepare (operation: TEXT)       RAISES {Error};
     execute (operation: TEXT)       RAISES {Error};
     fetch ():  Results              RAISES {Error};
@@ -180,11 +180,11 @@ TYPE
 
 <P>--------------------------------------- misc. DB server information ---
 
-<P><PRE>PROCEDURE <A HREF="#x5">GetDataSources</A> (): DescList  RAISES {Error};
+<P><PRE>PROCEDURE <A HREF="odbc/DB.m3.html#GetDataSources">GetDataSources</A> (): DescList  RAISES {Error};
 </PRE><BLOCKQUOTE><EM> Returns the names and descriptions of the data sources that are
    available from the local server. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x6">GetDrivers</A> (): DescList  RAISES {Error};
+PROCEDURE <A HREF="odbc/DB.m3.html#GetDrivers">GetDrivers</A> (): DescList  RAISES {Error};
 </PRE><BLOCKQUOTE><EM> Returns the names and descriptions of the drivers that are
    available from the local server. </EM></BLOCKQUOTE><PRE>
 
@@ -211,48 +211,6 @@ TYPE
 END DB.
 </PRE>
 </inInterface>
-<HR>
-<A NAME="x1">DB's implementation  is in:
-</A><UL>
-<LI><A HREF="odbc/DB.m3.html#0TOP0">db/src/odbc/DB.m3</A>
-<LI><A HREF="postgres95/DB.m3.html#0TOP0">db/src/postgres95/DB.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">procedure DB.Connect is in:
-</A><UL>
-<LI><A HREF="odbc/DB.m3.html#Connect">db/src/odbc/DB.m3</A>
-<LI><A HREF="postgres95/DB.m3.html#Connect">db/src/postgres95/DB.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">opaque type DB.T is in:
-</A><UL>
-<LI><A HREF="odbc/DB.m3.html#T">db/src/odbc/DB.m3</A>
-<LI><A HREF="postgres95/DB.m3.html#T">db/src/postgres95/DB.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x4">opaque type DB.Stmt is in:
-</A><UL>
-<LI><A HREF="odbc/DB.m3.html#Stmt">db/src/odbc/DB.m3</A>
-<LI><A HREF="postgres95/DB.m3.html#Stmt">db/src/postgres95/DB.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x5">procedure DB.GetDataSources is in:
-</A><UL>
-<LI><A HREF="odbc/DB.m3.html#GetDataSources">db/src/odbc/DB.m3</A>
-<LI><A HREF="postgres95/DB.m3.html#GetDataSources">db/src/postgres95/DB.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x6">procedure DB.GetDrivers is in:
-</A><UL>
-<LI><A HREF="odbc/DB.m3.html#GetDrivers">db/src/odbc/DB.m3</A>
-<LI><A HREF="postgres95/DB.m3.html#GetDrivers">db/src/postgres95/DB.m3</A>
-</UL>
-<P>
 <PRE>
 
 

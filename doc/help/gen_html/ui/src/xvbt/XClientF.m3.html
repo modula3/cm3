@@ -442,13 +442,15 @@ PROCEDURE <A NAME="Connect"><procedure>Connect</procedure></A> (inst: TEXT; trsl
            AND Text.GetChar(inst, cpos + 1) IN ASCII.Digits THEN
         TRY
           IF cpos = 0 THEN
-            machine := &quot;localhost&quot;;
             machine := IP.GetCanonicalByAddr(IP.GetHostAddr());
           ELSE
             machine := Text.Sub(inst, 0, cpos);
             rest := IP.GetCanonicalByName(machine);
             IF rest # NIL THEN machine := rest END
-          END
+          END;
+          IF machine = NIL THEN
+            machine := &quot;localhost&quot;;
+          END;
         EXCEPT
           IP.Error =&gt;
         END;
@@ -456,6 +458,9 @@ PROCEDURE <A NAME="Connect"><procedure>Connect</procedure></A> (inst: TEXT; trsl
           rest := Text.Sub(inst, cpos)
         ELSE
           rest := Text.Sub(inst, cpos, dpos - cpos)
+        END;
+        IF machine = NIL THEN
+          machine := &quot;localhost&quot;;
         END;
         fullinst := machine &amp; rest;
       ELSE

@@ -9,7 +9,7 @@
 <PRE></PRE> Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. 
  See file COPYRIGHT-CMASS for details. 
 
-<P><PRE>INTERFACE <interface><A HREF="#x1">OSConfig</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="OSConfigPosix.m3.html">OSConfig</A></interface>;
 
 CONST
   ArcSep  : CHAR = '/';   (* separates arcs of a pathname *)
@@ -20,76 +20,27 @@ CONST
   UnixEpoch : LONGREAL = 0.0d0;
   (* &quot;Time.T&quot; value that corresponds to the Unix epoch, 00:00 Jan 1, 1970 GMT *)
 
-PROCEDURE <A HREF="#x2">HostName</A> (): TEXT;
+PROCEDURE <A HREF="OSConfigPosix.m3.html#HostName">HostName</A> (): TEXT;
 </PRE><BLOCKQUOTE><EM> Returns the name of the host system. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x3">HostArchitecture</A> (): TEXT;
+PROCEDURE <A HREF="OSConfigPosix.m3.html#HostArchitecture">HostArchitecture</A> (): TEXT;
 </PRE><BLOCKQUOTE><EM> Returns the name of the host machine architecture. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x4">OSName</A> (): TEXT;
+PROCEDURE <A HREF="OSConfigPosix.m3.html#OSName">OSName</A> (): TEXT;
 </PRE><BLOCKQUOTE><EM> Returns the name of the host operating system. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x5">OSVersion</A> (): TEXT;
+PROCEDURE <A HREF="OSConfigPosix.m3.html#OSVersion">OSVersion</A> (): TEXT;
 </PRE><BLOCKQUOTE><EM> Returns the version of the host operating system. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x6">UserName</A> (): TEXT;
+PROCEDURE <A HREF="OSConfigPosix.m3.html#UserName">UserName</A> (): TEXT;
 </PRE><BLOCKQUOTE><EM> Returns the logon name of the current user </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x7">UserHome</A> (): TEXT;
+PROCEDURE <A HREF="OSConfigPosix.m3.html#UserHome">UserHome</A> (): TEXT;
 </PRE><BLOCKQUOTE><EM> Returns the home directory of the current user </EM></BLOCKQUOTE><PRE>
 
 END OSConfig.
 </PRE>
 </inInterface>
-<HR>
-<A NAME="x1">OSConfig's implementation  is in:
-</A><UL>
-<LI><A HREF="OSConfigPosix.m3.html#0TOP0">libm3/src/os/POSIX/OSConfigPosix.m3</A>
-<LI><A HREF="../WIN32/OSConfigWin32.m3.html#0TOP0">libm3/src/os/WIN32/OSConfigWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">procedure OSConfig.HostName is in:
-</A><UL>
-<LI><A HREF="OSConfigPosix.m3.html#HostName">libm3/src/os/POSIX/OSConfigPosix.m3</A>
-<LI><A HREF="../WIN32/OSConfigWin32.m3.html#HostName">libm3/src/os/WIN32/OSConfigWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">procedure OSConfig.HostArchitecture is in:
-</A><UL>
-<LI><A HREF="OSConfigPosix.m3.html#HostArchitecture">libm3/src/os/POSIX/OSConfigPosix.m3</A>
-<LI><A HREF="../WIN32/OSConfigWin32.m3.html#HostArchitecture">libm3/src/os/WIN32/OSConfigWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x4">procedure OSConfig.OSName is in:
-</A><UL>
-<LI><A HREF="OSConfigPosix.m3.html#OSName">libm3/src/os/POSIX/OSConfigPosix.m3</A>
-<LI><A HREF="../WIN32/OSConfigWin32.m3.html#OSName">libm3/src/os/WIN32/OSConfigWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x5">procedure OSConfig.OSVersion is in:
-</A><UL>
-<LI><A HREF="OSConfigPosix.m3.html#OSVersion">libm3/src/os/POSIX/OSConfigPosix.m3</A>
-<LI><A HREF="../WIN32/OSConfigWin32.m3.html#OSVersion">libm3/src/os/WIN32/OSConfigWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x6">procedure OSConfig.UserName is in:
-</A><UL>
-<LI><A HREF="OSConfigPosix.m3.html#UserName">libm3/src/os/POSIX/OSConfigPosix.m3</A>
-<LI><A HREF="../WIN32/OSConfigWin32.m3.html#UserName">libm3/src/os/WIN32/OSConfigWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x7">procedure OSConfig.UserHome is in:
-</A><UL>
-<LI><A HREF="OSConfigPosix.m3.html#UserHome">libm3/src/os/POSIX/OSConfigPosix.m3</A>
-<LI><A HREF="../WIN32/OSConfigWin32.m3.html#UserHome">libm3/src/os/WIN32/OSConfigWin32.m3</A>
-</UL>
-<P>
 <PRE>
 
 

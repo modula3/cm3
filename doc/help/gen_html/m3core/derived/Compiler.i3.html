@@ -20,11 +20,13 @@ TYPE
                FreeBSD, FreeBSD2, HP300, HPPA, IBMR2,
                IBMRT, IRIX5, LINUX, LINUXELF, NEXT,
                NT386, OKI, OS2, SEQUENT, SOLgnu, SOLsun,
-               SPARC, SUN3, SUN386, UMAX, VAX, FreeBSD3, FreeBSD4 };
+               SPARC, SUN3, SUN386, UMAX, VAX, FreeBSD3,
+               FreeBSD4, FBSD_ALPHA, LINUXLIBC6, I386_DARWIN,
+               PPC_DARWIN };
 
 CONST
   ThisOS       = OS.POSIX;
-  ThisPlatform = Platform.FreeBSD3;
+  ThisPlatform = Platform.LINUXLIBC6;
 
 PROCEDURE <A HREF="../src/runtime/common/Compiler.m3.html#ThisFile">ThisFile</A> (): TEXT;
 </PRE><BLOCKQUOTE><EM> Returns the name of the source file that called <CODE>ThisFile</CODE>.

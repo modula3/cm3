@@ -47,7 +47,11 @@ CONST
     (* 24 *) &quot;UMAX&quot;,
     (* 25 *) &quot;VAX&quot;,
     (* 26 *) &quot;FreeBSD3&quot;,
-    (* 27 *) &quot;FreeBSD4&quot;
+    (* 27 *) &quot;FreeBSD4&quot;,
+    (* 28 *) &quot;FBSD_ALPHA&quot;,
+    (* 29 *) &quot;LINUXLIBC6&quot;,
+    (* 30 *) &quot;I386_DARWIN&quot;,
+    (* 31 *) &quot;PPC_DARWIN&quot;
   };
 
 VAR (*CONST*)
@@ -610,6 +614,65 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Fixed_frame_size          := 12 * Address.size;
                  Guard_page_size           := 1024 * Char.size;
                  All_floats_legal          := FALSE;
+                 Has_stack_walker          := FALSE;
+                 Setjmp                    := &quot;_setjmp&quot;;
+                 Checks_integer_ops        := FALSE;
+                 Global_handler_stack      := TRUE;
+                 Aligned_procedures        := TRUE;
+                 EOL                       := &quot;\n&quot;;
+
+    |  29 =&gt; (* LINUXLIBC6 *)
+                 max_align                 := 32;
+                 Little_endian             := TRUE;
+                 PCC_bitfield_type_matters := TRUE;
+                 Structure_size_boundary   := 8;
+                 Bitfield_can_overlap      := FALSE;
+                 First_readable_addr       := 0;
+                 Jumpbuf_size              := 40 * Address.size;
+                 Jumpbuf_align             := Address.align;
+                 Fixed_frame_size          := 4 * Address.size;
+                 Guard_page_size           := 0 * Char.size;
+                 All_floats_legal          := TRUE;
+                 Has_stack_walker          := FALSE;
+                 Setjmp                    := &quot;_setjmp&quot;;
+                 Checks_integer_ops        := FALSE;
+                 Global_handler_stack      := TRUE;
+                 Aligned_procedures        := TRUE;
+                 EOL                       := &quot;\n&quot;;
+
+    |  30 =&gt; (* I386_DARWIN *)
+      (* FIXME: please carefully check all the values *)
+                 max_align                 := 32;
+                 Little_endian             := TRUE;
+                 PCC_bitfield_type_matters := TRUE;
+                 Structure_size_boundary   := 8;
+                 Bitfield_can_overlap      := FALSE;
+                 First_readable_addr       := 4096 * Char.size;
+                 Jumpbuf_size              := 11 * Address.size;
+                 Jumpbuf_align             := Address.align;
+                 Fixed_frame_size          := 4 * Address.size;
+                 Guard_page_size           := 0 * Char.size;
+                 All_floats_legal          := TRUE;
+                 Has_stack_walker          := FALSE;
+                 Setjmp                    := &quot;_setjmp&quot;;
+                 Checks_integer_ops        := FALSE;
+                 Global_handler_stack      := TRUE;
+                 Aligned_procedures        := TRUE;
+                 EOL                       := &quot;\n&quot;;
+
+    |  31 =&gt; (* PPC_DARWIN *)
+      (* FIXME: please carefully check all the values *)
+                 max_align                 := 64;
+                 Little_endian             := FALSE;
+                 PCC_bitfield_type_matters := TRUE;
+                 Structure_size_boundary   := 8;
+                 Bitfield_can_overlap      := FALSE;
+                 First_readable_addr       := 4096 * Char.size;
+                 Jumpbuf_size              := 11 * Address.size;
+                 Jumpbuf_align             := Address.align;
+                 Fixed_frame_size          := 4 * Address.size;
+                 Guard_page_size           := 0 * Char.size;
+                 All_floats_legal          := TRUE;
                  Has_stack_walker          := FALSE;
                  Setjmp                    := &quot;_setjmp&quot;;
                  Checks_integer_ops        := FALSE;

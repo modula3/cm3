@@ -17,7 +17,7 @@
 
 <P><PRE>UNSAFE MODULE <module>DateBsd</module> EXPORTS <A HREF="../Common/Date.i3.html"><implements>Date</A></implements>;
 
-IMPORT <A HREF="../../thread/Common/Thread.i3.html">Thread</A>, <A HREF="../Common/Time.i3.html">Time</A>, <A HREF="../../C/Common/M3toC.i3.html">M3toC</A>, <A HREF="../../unix/freebsd-3/Utime.i3.html">Utime</A>, <A HREF="TimePosix.i3.html">TimePosix</A>;
+IMPORT <A HREF="../../thread/Common/Thread.i3.html">Thread</A>, <A HREF="../Common/Time.i3.html">Time</A>, <A HREF="../../C/Common/M3toC.i3.html">M3toC</A>, <A HREF="../../unix/linux-libc6/Utime.i3.html">Utime</A>, <A HREF="TimePosix.i3.html">TimePosix</A>;
 
 VAR mu := NEW(Thread.Mutex);
 </PRE><BLOCKQUOTE><EM> Protect the static storage used by <CODE>Utime.localtime</CODE> and <CODE>Utime.gmtime</CODE>

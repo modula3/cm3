@@ -15,14 +15,14 @@
    an address space.  A process may hold a variety of resources such as
    file handles. 
 
-<P><PRE>INTERFACE <interface><A HREF="#x1">Process</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="../POSIX/ProcessPosix.m3.html">Process</A></interface>;
 
 IMPORT <A HREF="File.i3.html">File</A>, <A HREF="OSError.i3.html">OSError</A>, <A HREF="Pathname.i3.html">Pathname</A>;
 
-TYPE <A HREF="#x2">T</A> &lt;: REFANY;
+TYPE <A HREF="../POSIX/ProcessPosix.m3.html#T">T</A> &lt;: REFANY;
 </PRE><BLOCKQUOTE><EM> A <CODE>Process.T</CODE>, or process handle, provides access to a child process. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x3">Create</A>(
+PROCEDURE <A HREF="../POSIX/ProcessPosix.m3.html#Create">Create</A>(
     cmd: Pathname.T;
     READONLY params: ARRAY OF TEXT;
     env: REF ARRAY OF TEXT := NIL;
@@ -98,7 +98,7 @@ PROCEDURE <A HREF="#x3">Create</A>(
    termination, and a non-zero value normally indicates an error, but
    the exact conventions vary between systems and programs. 
 
-<P><PRE>PROCEDURE <A HREF="#x4">Wait</A>(p: T): ExitCode;
+<P><PRE>PROCEDURE <A HREF="../POSIX/ProcessPosix.m3.html#Wait">Wait</A>(p: T): ExitCode;
 </PRE><BLOCKQUOTE><EM> Wait until the process with handle <CODE>p</CODE> terminates, then free the
    operating system resources associated with the process and return
    an exit code indicating the reason for its termination.  It is a
@@ -111,13 +111,13 @@ PROCEDURE <A HREF="#x3">Create</A>(
    (LAST(ExitCode) + 1)</CODE> where <CODE>c</CODE> is the value returned by
    <CODE>Win32.GetExitCodeProcess</CODE>. 
 
-<P><PRE>PROCEDURE <A HREF="#x5">Exit</A>(n: ExitCode := 0);
+<P><PRE>PROCEDURE <A HREF="../POSIX/ProcessPosix.m3.html#Exit">Exit</A>(n: ExitCode := 0);
 </PRE><BLOCKQUOTE><EM> Call the registered exitors and terminate the program with exit
    code <CODE>n</CODE>.  Terminating a Modula-3 program by ``falling off the
    end'' is equivalent to calling <CODE>Exit(0)</CODE>. </EM></BLOCKQUOTE><PRE>
 </PRE> \index{terminating execution} 
 
-<P><PRE>PROCEDURE <A HREF="#x6">Crash</A>(msg: TEXT);
+<P><PRE>PROCEDURE <A HREF="../POSIX/ProcessPosix.m3.html#Crash">Crash</A>(msg: TEXT);
 </PRE><BLOCKQUOTE><EM> Call the registered exitors and terminate the program with the
    error message <CODE>msg</CODE>.  If possible, invoke a debugger or generate a
    core dump. </EM></BLOCKQUOTE><PRE>
@@ -129,7 +129,7 @@ PROCEDURE <A HREF="#x3">Create</A>(
    call <CODE>Crash</CODE>.  Consult your local installation guide for more
    information. 
 
-<P><PRE>PROCEDURE <A HREF="#x7">RegisterExitor</A>(p: PROCEDURE());
+<P><PRE>PROCEDURE <A HREF="../POSIX/ProcessPosix.m3.html#RegisterExitor">RegisterExitor</A>(p: PROCEDURE());
 </PRE><BLOCKQUOTE><EM> Register the procedure <CODE>p</CODE> to be called when <CODE>Exit</CODE> or <CODE>Crash</CODE> is
    called. </EM></BLOCKQUOTE><PRE>
 </PRE> Each registered exitor is called at most once.  Exitors are called
@@ -147,14 +147,14 @@ CONST NullID: ID = 0;
    have the same identifier, but identifiers can be reused over time.
    No process is ever assigned the identifier <CODE>NullID</CODE>. 
 
-<P><PRE>PROCEDURE <A HREF="#x8">GetID</A>(p: T): ID;
+<P><PRE>PROCEDURE <A HREF="../POSIX/ProcessPosix.m3.html#GetID">GetID</A>(p: T): ID;
 </PRE><BLOCKQUOTE><EM> Return the process identifier of the process with handle <CODE>p</CODE>. </EM></BLOCKQUOTE><PRE>
 </PRE> \index{process!identifier} 
 
-<P><PRE>PROCEDURE <A HREF="#x9">GetMyID</A>(): ID;
+<P><PRE>PROCEDURE <A HREF="../POSIX/ProcessPosix.m3.html#GetMyID">GetMyID</A>(): ID;
 </PRE><BLOCKQUOTE><EM> Return the process identifier of the caller's process. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x10">GetStandardFileHandles</A>(
+PROCEDURE <A HREF="../POSIX/ProcessPosix.m3.html#GetStandardFileHandles">GetStandardFileHandles</A>(
     VAR (*OUT*) stdin, stdout, stderr: File.T);
 </PRE><BLOCKQUOTE><EM> Return the standard input/output handles that were supplied when
    this process was created. </EM></BLOCKQUOTE><PRE>
@@ -164,7 +164,7 @@ PROCEDURE <A HREF="#x10">GetStandardFileHandles</A>(
 
 
 <P>
-<P><PRE>PROCEDURE <A HREF="#x11">GetWorkingDirectory</A>(): Pathname.T
+<P><PRE>PROCEDURE <A HREF="../POSIX/ProcessPosix.m3.html#GetWorkingDirectory">GetWorkingDirectory</A>(): Pathname.T
   RAISES {OSError.E};
 </PRE><BLOCKQUOTE><EM> Return an absolute pathname for the working directory of the
    caller's process. </EM></BLOCKQUOTE><PRE>
@@ -172,7 +172,7 @@ PROCEDURE <A HREF="#x10">GetStandardFileHandles</A>(
    \index{process!working directory}
 
 
-<P><PRE>PROCEDURE <A HREF="#x12">SetWorkingDirectory</A>(path: Pathname.T)
+<P><PRE>PROCEDURE <A HREF="../POSIX/ProcessPosix.m3.html#SetWorkingDirectory">SetWorkingDirectory</A>(path: Pathname.T)
   RAISES {OSError.E};
 </PRE><BLOCKQUOTE><EM> Change the working directory of this process to <CODE>path</CODE>. </EM></BLOCKQUOTE><PRE>
 
@@ -234,90 +234,6 @@ END Process.
 *)
 </PRE>
 </inInterface>
-<HR>
-<A NAME="x1">Process's implementation  is in:
-</A><UL>
-<LI><A HREF="../POSIX/ProcessPosix.m3.html#0TOP0">libm3/src/os/POSIX/ProcessPosix.m3</A>
-<LI><A HREF="../WIN32/ProcessWin32.m3.html#0TOP0">libm3/src/os/WIN32/ProcessWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">opaque type Process.T is in:
-</A><UL>
-<LI><A HREF="../POSIX/ProcessPosix.m3.html#T">libm3/src/os/POSIX/ProcessPosix.m3</A>
-<LI><A HREF="../WIN32/ProcessWin32.m3.html#T">libm3/src/os/WIN32/ProcessWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">procedure Process.Create is in:
-</A><UL>
-<LI><A HREF="../POSIX/ProcessPosix.m3.html#Create">libm3/src/os/POSIX/ProcessPosix.m3</A>
-<LI><A HREF="../WIN32/ProcessWin32.m3.html#Create">libm3/src/os/WIN32/ProcessWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x4">procedure Process.Wait is in:
-</A><UL>
-<LI><A HREF="../POSIX/ProcessPosix.m3.html#Wait">libm3/src/os/POSIX/ProcessPosix.m3</A>
-<LI><A HREF="../WIN32/ProcessWin32.m3.html#Wait">libm3/src/os/WIN32/ProcessWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x5">procedure Process.Exit is in:
-</A><UL>
-<LI><A HREF="../POSIX/ProcessPosix.m3.html#Exit">libm3/src/os/POSIX/ProcessPosix.m3</A>
-<LI><A HREF="../WIN32/ProcessWin32.m3.html#Exit">libm3/src/os/WIN32/ProcessWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x6">procedure Process.Crash is in:
-</A><UL>
-<LI><A HREF="../POSIX/ProcessPosix.m3.html#Crash">libm3/src/os/POSIX/ProcessPosix.m3</A>
-<LI><A HREF="../WIN32/ProcessWin32.m3.html#Crash">libm3/src/os/WIN32/ProcessWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x7">procedure Process.RegisterExitor is in:
-</A><UL>
-<LI><A HREF="../POSIX/ProcessPosix.m3.html#RegisterExitor">libm3/src/os/POSIX/ProcessPosix.m3</A>
-<LI><A HREF="../WIN32/ProcessWin32.m3.html#RegisterExitor">libm3/src/os/WIN32/ProcessWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x8">procedure Process.GetID is in:
-</A><UL>
-<LI><A HREF="../POSIX/ProcessPosix.m3.html#GetID">libm3/src/os/POSIX/ProcessPosix.m3</A>
-<LI><A HREF="../WIN32/ProcessWin32.m3.html#GetID">libm3/src/os/WIN32/ProcessWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x9">procedure Process.GetMyID is in:
-</A><UL>
-<LI><A HREF="../POSIX/ProcessPosix.m3.html#GetMyID">libm3/src/os/POSIX/ProcessPosix.m3</A>
-<LI><A HREF="../WIN32/ProcessWin32.m3.html#GetMyID">libm3/src/os/WIN32/ProcessWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x10">procedure Process.GetStandardFileHandles is in:
-</A><UL>
-<LI><A HREF="../POSIX/ProcessPosix.m3.html#GetStandardFileHandles">libm3/src/os/POSIX/ProcessPosix.m3</A>
-<LI><A HREF="../WIN32/ProcessWin32.m3.html#GetStandardFileHandles">libm3/src/os/WIN32/ProcessWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x11">procedure Process.GetWorkingDirectory is in:
-</A><UL>
-<LI><A HREF="../POSIX/ProcessPosix.m3.html#GetWorkingDirectory">libm3/src/os/POSIX/ProcessPosix.m3</A>
-<LI><A HREF="../WIN32/ProcessWin32.m3.html#GetWorkingDirectory">libm3/src/os/WIN32/ProcessWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x12">procedure Process.SetWorkingDirectory is in:
-</A><UL>
-<LI><A HREF="../POSIX/ProcessPosix.m3.html#SetWorkingDirectory">libm3/src/os/POSIX/ProcessPosix.m3</A>
-<LI><A HREF="../WIN32/ProcessWin32.m3.html#SetWorkingDirectory">libm3/src/os/WIN32/ProcessWin32.m3</A>
-</UL>
-<P>
 <PRE>
 
 

@@ -9,13 +9,13 @@
 <PRE></PRE> Copyright (C) 1996-2000, Critical Mass, Inc.  All Rights Reserved. 
  See file COPYRIGHT-CMASS for details. 
 
-<P><PRE>UNSAFE MODULE <module>DB</module> EXPORTS <A HREF="../DB.i3.html"><implements>DB</A></implements>, <A HREF="#x1"><implements>DBRep</A></implements>;
+<P><PRE>UNSAFE MODULE <module>DB</module> EXPORTS <A HREF="../DB.i3.html"><implements>DB</A></implements>, <A HREF="DBRep.i3.html"><implements>DBRep</A></implements>;
 
-IMPORT <A HREF="../../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../../libm3/src/os/Common/Process.i3.html">Process</A>, <A HREF="#x2">SQL</A>, <A HREF="#x3">SQLext</A>, <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>, TextF, <A HREF="../../../m3core/src/weakref/WeakRef.i3.html">WeakRef</A>, <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>;
-FROM <A HREF="#x4">SQLtypes</A> IMPORT
+IMPORT <A HREF="../../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../../libm3/src/os/Common/Process.i3.html">Process</A>, <A HREF="../../../odbc/src/POSIX/SQL.i3.html">SQL</A>, <A HREF="../../../odbc/src/POSIX/SQLext.i3.html">SQLext</A>, <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../m3core/src/weakref/WeakRef.i3.html">WeakRef</A>, <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>;
+FROM <A HREF="../../../odbc/src/POSIX/SQLtypes.i3.html">SQLtypes</A> IMPORT
   SQLHENV, SQLRETURN, SQLSMALLINT, SQLHDBC, SQLHSTMT, SQLINTEGER,
   SQLUINTEGER, LDOUBLE, DATE_STRUCT, TIME_STRUCT, TIMESTAMP_STRUCT,
-  SFLOAT, SWORD;
+  SFLOAT, SWORD, SQLCHAR_star;
 </PRE> This module (ab)uses two compiler-dependent features of the code:
 <P>
 <PRE>
@@ -54,6 +54,9 @@ PROCEDURE <A NAME="Connect"><procedure>Connect</procedure></A> (database, user_i
   VAR
     t    := NEW (T);
     err  : SQLRETURN;
+    database_c := M3toC.SharedTtoS(database);
+    user_id_c  := M3toC.SharedTtoS(user_id);
+    password_c := M3toC.SharedTtoS(password);
   BEGIN
     Init ();
 
@@ -61,9 +64,12 @@ PROCEDURE <A NAME="Connect"><procedure>Connect</procedure></A> (database, user_i
     IF (err # SQL.SQL_SUCCESS) THEN CheckErr (err, NIL, t) END;
 
     err := SQL.SQLConnect (t.hdbc,
-             ADR (database[0]),  Text.Length (database),
-             ADR (user_id[0]),   Text.Length (user_id),
-             ADR (password[0]),  Text.Length (password));
+             LOOPHOLE(database_c, SQLCHAR_star),  Text.Length(database),
+             LOOPHOLE(user_id_c, SQLCHAR_star),   Text.Length(user_id),
+             LOOPHOLE(password_c, SQLCHAR_star),  Text.Length(password));
+    M3toC.FreeSharedS(database, database_c);
+    M3toC.FreeSharedS(user_id, user_id_c);
+    M3toC.FreeSharedS(password, password_c);
     IF (err # SQL.SQL_SUCCESS) THEN CheckErr (err, NIL, t); END;
 
     EVAL WeakRef.FromRef (t, CleanupConnection);
@@ -216,11 +222,15 @@ PROCEDURE <A NAME="StmtConnection"><procedure>StmtConnection</procedure></A> (st
   END StmtConnection;
 
 PROCEDURE <A NAME="Prepare"><procedure>Prepare</procedure></A> (st: Stmt;  operation: TEXT) RAISES {Error} =
-  VAR err: SQLRETURN;
+  VAR
+    err: SQLRETURN;
+    operation_c := M3toC.SharedTtoS(operation);
   BEGIN
     LOCK st DO
       CheckStmt (st, 12, &quot;prepare&quot;, check_exec := FALSE);
-      err := SQL.SQLPrepare (st.hstmt, ADR (operation[0]), Text.Length (operation));
+      err := SQL.SQLPrepare (st.hstmt, LOOPHOLE(operation, SQLCHAR_star),
+                             Text.Length (operation));
+      M3toC.FreeSharedS(operation, operation_c);
       IF (err # SQL.SQL_SUCCESS) THEN CheckErr (err, st); END;
       st.prepared := TRUE;
       st.executed := FALSE;
@@ -230,7 +240,9 @@ PROCEDURE <A NAME="Prepare"><procedure>Prepare</procedure></A> (st: Stmt;  opera
   END Prepare;
 
 PROCEDURE <A NAME="Execute"><procedure>Execute</procedure></A> (st: Stmt;  operation: TEXT) RAISES {Error} =
-  VAR err: SQLRETURN;
+  VAR
+    err: SQLRETURN;
+    operation_c: Ctypes.char_star;
   BEGIN
     LOCK st DO
       CheckStmt (st, 15, &quot;execute&quot;, check_exec := FALSE);
@@ -243,8 +255,10 @@ PROCEDURE <A NAME="Execute"><procedure>Execute</procedure></A> (st: Stmt;  opera
         IF (err # SQL.SQL_SUCCESS) THEN CheckErr (err, st); END;
       ELSE
         st.prepared := FALSE;
-        err := SQL.SQLExecDirect (st.hstmt, ADR (operation[0]),
+        operation_c := M3toC.SharedTtoS(operation);
+        err := SQL.SQLExecDirect (st.hstmt, LOOPHOLE(operation, SQLCHAR_star),
                                   Text.Length (operation));
+        M3toC.FreeSharedS(operation, operation_c);
         IF (err # SQL.SQL_SUCCESS) THEN CheckErr (err, st); END;
       END;
       st.executed := TRUE;
@@ -890,11 +904,15 @@ PROCEDURE <A NAME="GetCursorName"><procedure>GetCursorName</procedure></A> (st: 
   END GetCursorName;
 
 PROCEDURE <A NAME="SetCursorName"><procedure>SetCursorName</procedure></A> (st: Stmt;  nm: TEXT) RAISES {Error} =
-  VAR err: SQLRETURN;
+  VAR
+    err: SQLRETURN;
+    nm_c := M3toC.SharedTtoS(nm);
   BEGIN
     LOCK st DO
       CheckStmt (st, 30, &quot;set the cursor name in&quot;, check_exec := FALSE);
-      err := SQL.SQLSetCursorName (st.hstmt, ADR (nm[0]), Text.Length (nm));
+      err := SQL.SQLSetCursorName (st.hstmt, LOOPHOLE(nm, SQLCHAR_star),
+                                   Text.Length (nm));
+      M3toC.FreeSharedS(nm, nm_c);
       IF (err # SQL.SQL_SUCCESS) THEN CheckErr (err, st); END;
     END;
   END SetCursorName;
@@ -1174,34 +1192,6 @@ BEGIN
 END DB.
 </PRE>
 </inModule>
-<HR>
-<A NAME="x1">interface DBRep is in:
-</A><UL>
-<LI><A HREF="DBRep.i3.html#0TOP0">db/src/odbc/DBRep.i3</A>
-<LI><A HREF="../postgres95/DBRep.i3.html#0TOP0">db/src/postgres95/DBRep.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">interface SQL is in:
-</A><UL>
-<LI><A HREF="../../../odbc/src/POSIX/SQL.i3.html#0TOP0">odbc/src/POSIX/SQL.i3</A>
-<LI><A HREF="../../../odbc/src/WIN32/SQL.i3.html#0TOP0">odbc/src/WIN32/SQL.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">interface SQLext is in:
-</A><UL>
-<LI><A HREF="../../../odbc/src/POSIX/SQLext.i3.html#0TOP0">odbc/src/POSIX/SQLext.i3</A>
-<LI><A HREF="../../../odbc/src/WIN32/SQLext.i3.html#0TOP0">odbc/src/WIN32/SQLext.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x4">interface SQLtypes is in:
-</A><UL>
-<LI><A HREF="../../../odbc/src/POSIX/SQLtypes.i3.html#0TOP0">odbc/src/POSIX/SQLtypes.i3</A>
-<LI><A HREF="../../../odbc/src/WIN32/SQLtypes.i3.html#0TOP0">odbc/src/WIN32/SQLtypes.i3</A>
-</UL>
-<P>
 <PRE>
 
 

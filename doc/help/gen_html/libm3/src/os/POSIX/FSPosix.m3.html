@@ -19,10 +19,10 @@
 <P><PRE>UNSAFE MODULE <module>FSPosix</module> EXPORTS <A HREF="../Common/FS.i3.html"><implements>FS</A></implements>;
 
 IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="../../../derived/AtomList.i3.html">AtomList</A>, <A HREF="../../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../Common/File.i3.html">File</A>, <A HREF="FilePosix.i3.html">FilePosix</A>, <A HREF="../../../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="../Common/OSError.i3.html">OSError</A>,
-       <A HREF="OSErrorPosix.i3.html">OSErrorPosix</A>, <A HREF="../Common/Pathname.i3.html">Pathname</A>, <A HREF="../Common/Process.i3.html">Process</A>, <A HREF="../../../../m3core/src/runtime/common/RTOS.i3.html">RTOS</A>, <A HREF="../../../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="../../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../derived/TextSeq.i3.html">TextSeq</A>, <A HREF="../../../../m3core/src/unix/freebsd-3/Unix.i3.html">Unix</A>,
-       <A HREF="../../../../m3core/src/unix/freebsd-3/Udir.i3.html">Udir</A>, <A HREF="../../../../m3core/src/unix/freebsd-3/Uerror.i3.html">Uerror</A>, <A HREF="../../../../m3core/src/unix/freebsd-3/Ustat.i3.html">Ustat</A>, <A HREF="../../../../m3core/src/unix/freebsd-3/Utime.i3.html">Utime</A>, <A HREF="../../../../m3core/src/word/Word.i3.html">Word</A>;
+       <A HREF="OSErrorPosix.i3.html">OSErrorPosix</A>, <A HREF="../Common/Pathname.i3.html">Pathname</A>, <A HREF="../Common/Process.i3.html">Process</A>, <A HREF="../../../../m3core/src/runtime/common/RTOS.i3.html">RTOS</A>, <A HREF="../../../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="../../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../derived/TextSeq.i3.html">TextSeq</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Unix.i3.html">Unix</A>,
+       <A HREF="../../../../m3core/src/unix/linux-libc6/Udir.i3.html">Udir</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Uerror.i3.html">Uerror</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Ustat.i3.html">Ustat</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Utime.i3.html">Utime</A>, <A HREF="../../../../m3core/src/word/Word.i3.html">Word</A>;
 
-FROM <A HREF="../../../../m3core/src/unix/freebsd-3/Unix.i3.html">Unix</A> IMPORT O_RDWR, O_CREAT, O_TRUNC, O_EXCL;
+FROM <A HREF="../../../../m3core/src/unix/linux-libc6/Unix.i3.html">Unix</A> IMPORT O_RDWR, O_CREAT, O_TRUNC, O_EXCL;
 
 PROCEDURE <A NAME="GetAbsolutePathname"><procedure>GetAbsolutePathname</procedure></A>(pn: Pathname.T): Pathname.T RAISES {OSError.E} =
   VAR arcs, prefix: Pathname.Arcs;

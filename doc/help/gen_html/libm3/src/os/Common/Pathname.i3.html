@@ -16,7 +16,7 @@
 <P> <CODE>Pathname</CODE> defines procedures for manipulating pathnames in a
    portable fashion.  
 
-<P><PRE>INTERFACE <interface><A HREF="#x1">Pathname</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="../POSIX/PathnamePosix.m3.html">Pathname</A></interface>;
 
 IMPORT <A HREF="../../../derived/TextSeq.i3.html">TextSeq</A>;
 
@@ -63,14 +63,14 @@ TYPE
 
 <P><PRE>EXCEPTION Invalid;
 
-PROCEDURE <A HREF="#x2">Valid</A>(pn: T): BOOLEAN;
+PROCEDURE <A HREF="../POSIX/PathnamePosix.m3.html#Valid">Valid</A>(pn: T): BOOLEAN;
 </PRE><BLOCKQUOTE><EM> Return <CODE>TRUE</CODE> iff <CODE>pn</CODE> conforms to the pathname syntax of this
    operating system. </EM></BLOCKQUOTE><PRE>
 </PRE> When a pathname with invalid syntax is passed to a procedure in
    this interface not declared as raising the exception <CODE>Invalid</CODE>,
    the result is undefined, but safe. 
 
-<P><PRE>PROCEDURE <A HREF="#x3">Decompose</A>(pn: T): Arcs RAISES {Invalid};
+<P><PRE>PROCEDURE <A HREF="../POSIX/PathnamePosix.m3.html#Decompose">Decompose</A>(pn: T): Arcs RAISES {Invalid};
 </PRE><BLOCKQUOTE><EM> Parse <CODE>pn</CODE>, returning a sequence whose first element is a root
    directory name (possibly <CODE>NIL</CODE>) and whose remaining elements
    consist of zero or more arc names.  Raise <CODE>Invalid</CODE> if <CODE>Valid(pn)</CODE>
@@ -80,31 +80,31 @@ PROCEDURE <A HREF="#x2">Valid</A>(pn: T): BOOLEAN;
    operating systems allow zero-length arc names (see the discussion
    of specific systems at the end of this section.) 
 
-<P><PRE>PROCEDURE <A HREF="#x4">Compose</A>(a: Arcs): T RAISES {Invalid};
+<P><PRE>PROCEDURE <A HREF="../POSIX/PathnamePosix.m3.html#Compose">Compose</A>(a: Arcs): T RAISES {Invalid};
 </PRE><BLOCKQUOTE><EM> Combine the elements of <CODE>a</CODE> to form a pathname corresponding to the
    syntax of this operating system.  Raise <CODE>Invalid</CODE> if <CODE>a</CODE> is <CODE>NIL</CODE>,
    if <CODE>a.getlo()</CODE> is neither <CODE>NIL</CODE> nor a valid root directory name, or
    if one of the elements of <CODE>TextSeq.Sub(a, 1)</CODE> is not a valid arc
    name. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x5">Absolute</A>(pn: T): BOOLEAN;
+PROCEDURE <A HREF="../POSIX/PathnamePosix.m3.html#Absolute">Absolute</A>(pn: T): BOOLEAN;
 </PRE><BLOCKQUOTE><EM> Return <CODE>TRUE</CODE> iff <CODE>pn</CODE> is an absolute pathname.  Equivalent to
    <CODE>Decompose(pn).getlo() # NIL</CODE>, but faster. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x6">Prefix</A>(pn: T): T;
+PROCEDURE <A HREF="../POSIX/PathnamePosix.m3.html#Prefix">Prefix</A>(pn: T): T;
 </PRE><BLOCKQUOTE><EM> Return a pathname equal to <CODE>pn</CODE> up to, but not including, the final
    arc name.  If <CODE>pn</CODE> consists only of a root directory name,
    <CODE>Prefix(pn)</CODE> returns <CODE>pn</CODE>. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x7">Last</A>(pn: T): T;
+PROCEDURE <A HREF="../POSIX/PathnamePosix.m3.html#Last">Last</A>(pn: T): T;
 </PRE><BLOCKQUOTE><EM> Return the final arc name in <CODE>pn</CODE>.  If <CODE>pn</CODE> consists only of a root
    directory name, <CODE>Last(pn)</CODE> returns the empty string.  </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x8">Base</A>(pn: T): T;
+PROCEDURE <A HREF="../POSIX/PathnamePosix.m3.html#Base">Base</A>(pn: T): T;
 </PRE><BLOCKQUOTE><EM> Return a pathname equal to <CODE>pn</CODE> except with <CODE>Last(pn)</CODE> replaced by
    its base. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x9">Join</A>(pn, base: T; ext: TEXT := NIL): T;
+PROCEDURE <A HREF="../POSIX/PathnamePosix.m3.html#Join">Join</A>(pn, base: T; ext: TEXT := NIL): T;
 </PRE><BLOCKQUOTE><EM> Return a pathname formed by prepending <CODE>pn</CODE> to <CODE>base</CODE> (if <CODE>pn</CODE> is
    not <CODE>NIL</CODE>) and appending <CODE>ext</CODE> to <CODE>base</CODE> (if <CODE>ext</CODE> is not <CODE>NIL</CODE>).
    More precisely, this is equivalent to the following, in which <CODE>a</CODE>
@@ -149,12 +149,12 @@ The value returned by <CODE>Join</CODE> will be a valid pathname only if
      operating system, as specified at the end of this section.  
 
 <P>
-<P><PRE>PROCEDURE <A HREF="#x10">LastBase</A>(pn: T): T;
+<P><PRE>PROCEDURE <A HREF="../POSIX/PathnamePosix.m3.html#LastBase">LastBase</A>(pn: T): T;
 </PRE><BLOCKQUOTE><EM> Return the base of the final arc name of <CODE>pn</CODE>.  It is a checked
    runtime error if <CODE>pn</CODE> is empty or consists only of a root directory
    name. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x11">LastExt</A>(pn: T): TEXT;
+PROCEDURE <A HREF="../POSIX/PathnamePosix.m3.html#LastExt">LastExt</A>(pn: T): TEXT;
 </PRE><BLOCKQUOTE><EM> Return a pathname equal to <CODE>pn</CODE> except with the extension of the
    final arc name set to <CODE>ext</CODE>, replacing the previous extension. If
    the final arc name is empty, <CODE>pn</CODE> is returned unchanged; if the
@@ -165,7 +165,7 @@ PROCEDURE <A HREF="#x11">LastExt</A>(pn: T): TEXT;
 </PRE>
    is returned. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x12">ReplaceExt</A>(pn: T; ext: TEXT): T;
+PROCEDURE <A HREF="../POSIX/PathnamePosix.m3.html#ReplaceExt">ReplaceExt</A>(pn: T; ext: TEXT): T;
 </PRE><BLOCKQUOTE><EM> Return a pathname equal to <CODE>pn</CODE> except with the extension of the
    final arc name replaced with <CODE>ext</CODE>, which must be non-<CODE>NIL</CODE>. </EM></BLOCKQUOTE><PRE>
 
@@ -278,90 +278,6 @@ END Pathname.
 
 
 </inInterface>
-<HR>
-<A NAME="x1">Pathname's implementation  is in:
-</A><UL>
-<LI><A HREF="../POSIX/PathnamePosix.m3.html#0TOP0">libm3/src/os/POSIX/PathnamePosix.m3</A>
-<LI><A HREF="../WIN32/PathnameWin32.m3.html#0TOP0">libm3/src/os/WIN32/PathnameWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">procedure Pathname.Valid is in:
-</A><UL>
-<LI><A HREF="../POSIX/PathnamePosix.m3.html#Valid">libm3/src/os/POSIX/PathnamePosix.m3</A>
-<LI><A HREF="../WIN32/PathnameWin32.m3.html#Valid">libm3/src/os/WIN32/PathnameWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">procedure Pathname.Decompose is in:
-</A><UL>
-<LI><A HREF="../POSIX/PathnamePosix.m3.html#Decompose">libm3/src/os/POSIX/PathnamePosix.m3</A>
-<LI><A HREF="../WIN32/PathnameWin32.m3.html#Decompose">libm3/src/os/WIN32/PathnameWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x4">procedure Pathname.Compose is in:
-</A><UL>
-<LI><A HREF="../POSIX/PathnamePosix.m3.html#Compose">libm3/src/os/POSIX/PathnamePosix.m3</A>
-<LI><A HREF="../WIN32/PathnameWin32.m3.html#Compose">libm3/src/os/WIN32/PathnameWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x5">procedure Pathname.Absolute is in:
-</A><UL>
-<LI><A HREF="../POSIX/PathnamePosix.m3.html#Absolute">libm3/src/os/POSIX/PathnamePosix.m3</A>
-<LI><A HREF="../WIN32/PathnameWin32.m3.html#Absolute">libm3/src/os/WIN32/PathnameWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x6">procedure Pathname.Prefix is in:
-</A><UL>
-<LI><A HREF="../POSIX/PathnamePosix.m3.html#Prefix">libm3/src/os/POSIX/PathnamePosix.m3</A>
-<LI><A HREF="../WIN32/PathnameWin32.m3.html#Prefix">libm3/src/os/WIN32/PathnameWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x7">procedure Pathname.Last is in:
-</A><UL>
-<LI><A HREF="../POSIX/PathnamePosix.m3.html#Last">libm3/src/os/POSIX/PathnamePosix.m3</A>
-<LI><A HREF="../WIN32/PathnameWin32.m3.html#Last">libm3/src/os/WIN32/PathnameWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x8">procedure Pathname.Base is in:
-</A><UL>
-<LI><A HREF="../POSIX/PathnamePosix.m3.html#Base">libm3/src/os/POSIX/PathnamePosix.m3</A>
-<LI><A HREF="../WIN32/PathnameWin32.m3.html#Base">libm3/src/os/WIN32/PathnameWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x9">procedure Pathname.Join is in:
-</A><UL>
-<LI><A HREF="../POSIX/PathnamePosix.m3.html#Join">libm3/src/os/POSIX/PathnamePosix.m3</A>
-<LI><A HREF="../WIN32/PathnameWin32.m3.html#Join">libm3/src/os/WIN32/PathnameWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x10">procedure Pathname.LastBase is in:
-</A><UL>
-<LI><A HREF="../POSIX/PathnamePosix.m3.html#LastBase">libm3/src/os/POSIX/PathnamePosix.m3</A>
-<LI><A HREF="../WIN32/PathnameWin32.m3.html#LastBase">libm3/src/os/WIN32/PathnameWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x11">procedure Pathname.LastExt is in:
-</A><UL>
-<LI><A HREF="../POSIX/PathnamePosix.m3.html#LastExt">libm3/src/os/POSIX/PathnamePosix.m3</A>
-<LI><A HREF="../WIN32/PathnameWin32.m3.html#LastExt">libm3/src/os/WIN32/PathnameWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x12">procedure Pathname.ReplaceExt is in:
-</A><UL>
-<LI><A HREF="../POSIX/PathnamePosix.m3.html#ReplaceExt">libm3/src/os/POSIX/PathnamePosix.m3</A>
-<LI><A HREF="../WIN32/PathnameWin32.m3.html#ReplaceExt">libm3/src/os/WIN32/PathnameWin32.m3</A>
-</UL>
-<P>
 <PRE>
 
 

@@ -24,10 +24,10 @@ All rights reserved.
 <P><PRE>UNSAFE MODULE <module>ThreadPosix</module> EXPORTS <A HREF="../Common/Thread.i3.html"><implements>Thread</A></implements>, <A HREF="ThreadF.i3.html"><implements>ThreadF</A></implements>, <A HREF="../Common/Scheduler.i3.html"><implements>Scheduler</A></implements>, <A HREF="SchedulerPosix.i3.html"><implements>SchedulerPosix</A></implements>,
     <A HREF="../../runtime/common/RTThreadInit.i3.html"><implements>RTThreadInit</A></implements>;
 
-IMPORT <A HREF="../../C/Common/Cerrno.i3.html">Cerrno</A>, <A HREF="../../C/FreeBSD3/Cstring.i3.html">Cstring</A>, <A HREF="../../float/IEEE-default/FloatMode.i3.html">FloatMode</A>, <A HREF="../Common/MutexRep.i3.html">MutexRep</A>,
+IMPORT <A HREF="../../C/Common/Cerrno.i3.html">Cerrno</A>, <A HREF="../../C/LINUXLIBC6/Cstring.i3.html">Cstring</A>, <A HREF="../../float/IEEE-default/FloatMode.i3.html">FloatMode</A>, <A HREF="../Common/MutexRep.i3.html">MutexRep</A>,
        <A HREF="../../runtime/POSIX/RT0u.i3.html">RT0u</A>, <A HREF="../../runtime/common/RTError.i3.html">RTError</A>, <A HREF="../../runtime/common/RTMisc.i3.html">RTMisc</A>, <A HREF="../../runtime/common/RTParams.i3.html">RTParams</A>, <A HREF="../../runtime/POSIX/RTPerfTool.i3.html">RTPerfTool</A>, <A HREF="../../runtime/common/RTProcedureSRC.i3.html">RTProcedureSRC</A>,
        <A HREF="../../runtime/common/RTProcess.i3.html">RTProcess</A>, <A HREF="../../runtime/POSIX/RTThread.i3.html">RTThread</A>, <A HREF="../../runtime/common/RTIO.i3.html">RTIO</A>, <A HREF="ThreadEvent.i3.html">ThreadEvent</A>, <A HREF="../../time/Common/Time.i3.html">Time</A>, <A HREF="../../time/POSIX/TimePosix.i3.html">TimePosix</A>,
-       <A HREF="../../unix/freebsd-3/Unix.i3.html">Unix</A>, <A HREF="../../unix/freebsd-3/Usignal.i3.html">Usignal</A>, <A HREF="../../unix/freebsd-3/Utime.i3.html">Utime</A>, <A HREF="../../word/Word.i3.html">Word</A>;
+       <A HREF="../../unix/linux-libc6/Unix.i3.html">Unix</A>, <A HREF="../../unix/linux-libc6/Usignal.i3.html">Usignal</A>, <A HREF="../../unix/linux-libc6/Utime.i3.html">Utime</A>, <A HREF="../../word/Word.i3.html">Word</A>;
 
 REVEAL
   (* Remember, the report (p 43-44) says that MUTEX is predeclared and &lt;: ROOT;

@@ -10,7 +10,8 @@
  All rights reserved.                                        
  See the file COPYRIGHT for a full description.              
                                                              
- portions Copyright 1997, Critical Mass, Inc.                
+ Portions Copyright 1996-2000, Critical Mass, Inc.           
+ See file COPYRIGHT-CMASS for details.                       
 
 <P>  Modula-3 code generator interface
 <P>
@@ -40,7 +41,7 @@ available on an M3CG.T are defined in M3CG_Ops.
 
 <P><PRE>INTERFACE <interface><A HREF="M3CG.m3.html">M3CG</A></interface>;
 
-IMPORT <A HREF="Target.i3.html">Target</A>, <A HREF="M3ID.i3.html">M3ID</A>;
+IMPORT <A HREF="Target.i3.html">Target</A>, <A HREF="#x1">M3ID</A>;
 
 TYPE <A HREF="M3CG.m3.html#T">T</A> &lt;: ROOT; (* a code generator *)
 
@@ -154,6 +155,13 @@ TYPE
 END M3CG.
 </PRE>
 </inInterface>
+<HR>
+<A NAME="x1">interface M3ID is in:
+</A><UL>
+<LI><A HREF="M3ID.i3.html#0TOP0">m3middle/src/M3ID.i3</A>
+<LI><A HREF="../../m3scan/src/M3ID.i3.html#0TOP0">m3scan/src/M3ID.i3</A>
+</UL>
+<P>
 <PRE>
 
 
