@@ -1,9 +1,7 @@
 (*| Copyright (C) 1990, Digital Equipment Corporation       *)
 (*| All rights reserved.                                    *)
 (*| See the file COPYRIGHT for a full description.          *)
-(*|                                                         *)
-(*| portions Copyright 1997, Critical Mass, Inc.            *)
-(*|                                                         *)
+
 (*| Last modified on Wed Oct 12 14:30:51 PDT 1994 by kalsow *)
 (*|      modified on Tue Jun  1 13:03:23 PDT 1993 by muller *)
 (*|      modified on Tue Mar  9 08:44:09 PST 1993 by jdd    *)
@@ -57,12 +55,6 @@ VAR p0, p1: Page := Nil;
 
 VAR desc: UNTRACED REF ARRAY OF Desc;
 
-VAR max_heap_size: INTEGER := -1;
-(** If "max_heap_size" is non-negative, the traced heap will not be
-    extended beyond "max_heap_size" bytes.  If "max_heap_size" is
-    negative, the traced heap will be allowed to grow until the
-    underlying OS refuses to provide more memory.  *)
-
 TYPE
   Desc = RECORD
            space     : BITS 2 FOR Space;
@@ -81,7 +73,6 @@ TYPE Space = {Unallocated, Free, Previous, Current};
    state.  This is usually used for performance monitoring. *)
 
 TYPE
-  Notes = SET OF Note;
   Note = {OlderGeneration,       (* page promoted to current space because
                                     it it contained the older generation
                                     from the previous space *)
@@ -159,55 +150,12 @@ PROCEDURE UnsafeGetShape (    r          : REFANY;
 
 (****** LOW-LEVEL ALLOCATOR/COLLECTOR *****)
 
-PROCEDURE AllocUntraced (size: INTEGER): ADDRESS;
-(* Return the address of "size" bytes of untraced, un-zeroed storage,
-   if possible.  Otherwise, return "NIL".  *)
-
-PROCEDURE AllocTraced (size, alignment: CARDINAL;  VAR pool: AllocPool): ADDRESS;
+PROCEDURE AllocForNew (size, alignment: CARDINAL): ADDRESS;
 (* Return the address of "size" bytes of traced storage on an
-   "alignment" byte boundary from the allocation pool "pool".
-   The storage is not zeroed.  If the request cannot be satisfied,
-   "NIL" is returned.  LL >= RTOS.LockHeap. *)
+   "alignment" byte boundary.  The storage is not zeroed. *)
 
-(* Objects in the traced heap are allocated from one of three "pools".
-   A pool is collection of pages with similar properties.  The "newPool"
-   contains NEWed objects.  The "pureCopy" pool contains objects that
-   were copied by the collector into new space, but that contain no
-   internal REFs.  Similarly, the "impureCopy" pool is for copied
-   objects that contain REFs.  *)
-
-TYPE
-  AllocPool = RECORD
-    desc       : Desc;           (* descriptor for new pages in this pool *)
-    notAfter   : Notes;          (* if possible avoid following these pages *)
-    page       : Page    := Nil; (* current allocation page of the pool *)
-    stack      : Page    := Nil; (* linked list of new pages from this pool *)
-    next       : ADDRESS := NIL; (* address of next available byte *)
-    limit      : ADDRESS := NIL; (* address of first unavailable byte *)
-    n_small    : INTEGER := 0;   (* # of "small" pages allocated via this pool *)
-    n_big      : INTEGER := 0;   (* # of "big" and "continued" pages allocated *)
-  END;
-
-VAR (* LL >= RTOS.HeapLock *)
-  newPool := AllocPool {
-    desc := Desc {space := Space.Current, generation := Generation.Younger,
-                  pure := FALSE, note := Note.Allocated, gray := FALSE,
-                  protected := FALSE, continued := FALSE },
-    notAfter := Notes {Note.Copied} };
-
-VAR (* LL >= RTOS.HeapLock *)
-  pureCopy := AllocPool {
-    desc := Desc {space := Space.Current, generation := Generation.Younger,
-                  pure := TRUE, note := Note.Copied, gray := FALSE,
-                  protected := FALSE, continued := FALSE },
-    notAfter := Notes {Note.Allocated} };
-
-VAR (* LL >= RTOS.HeapLock *)
-  impureCopy := AllocPool {
-    desc := Desc {space := Space.Current, generation := Generation.Younger,
-                  pure := FALSE, note := Note.Copied, gray := TRUE,
-                  protected := FALSE, continued := FALSE },
-    notAfter := Notes {Note.Allocated} };
+PROCEDURE Malloc (size: INTEGER): ADDRESS;
+(* Return the address of "size" bytes of untraced, zeroed storage *)
 
 (****** MODULE OBJECTS ******)
 
@@ -247,6 +195,15 @@ PROCEDURE Crash (): BOOLEAN;
    will move or be protected.  Crash attempts to finish the current
    collection.  If Crash returns TRUE, the current collection, if any,
    successfully completed. *)
+
+(* We maintain counts of pages in the current pace allocated by "NEW", by
+   copying, and by promotion, for pages for small objects and for large
+   objects. *)
+
+VAR
+  smallNewPages, largeNewPages            : CARDINAL := 0;
+  smallCopyPages, largeCopyPages          : CARDINAL := 0;
+  smallPromotionPages, largePromotionPages: CARDINAL := 0;
 
 TYPE
   MonitorClosure <: OBJECT
@@ -295,6 +252,10 @@ PROCEDURE VisitAllRefs (proc: RefVisitor);
    you should refrain from allocating memory in proc. *)
 
 (****** INITIALIZATION ******)
+
+PROCEDURE CheckTypes ();
+(* called after type registration to let the allocator sanity check the
+   typecells. *)
 
 PROCEDURE Init();
 (* MUST be called to initialize allocator/collector state *)

@@ -2,8 +2,8 @@
 
 UNSAFE MODULE RTMachInfo;
 
-IMPORT RTHooks, RTIO, RTError, RTLinker, RTProcedure, RTProcedureSRC;
-IMPORT RTException, WinBase, WinDef;
+IMPORT RTHooks, RTIO, RTLinker, RTMisc, RTProcedure, RTProcedureSRC;
+IMPORT WinBase, WinDef;
 
 TYPE
   Frame = UNTRACED REF RECORD saved_fp, saved_pc: ADDRESS; END;
@@ -25,7 +25,7 @@ PROCEDURE DumpStack (pc, xfp: ADDRESS) =
     n_skipped : CARDINAL := 0;
     n_found   : CARDINAL := 0;
     hit_bottom: BOOLEAN  := FALSE;
-    lines     : ARRAY [0..31] OF PrintLine;
+    lines     : ARRAY [0..20] OF PrintLine;
   BEGIN
     IF dumping THEN RETURN; END;
     dumping := TRUE;
@@ -40,41 +40,27 @@ PROCEDURE DumpStack (pc, xfp: ADDRESS) =
           INC (n_found); EXIT;
         END;
         RTProcedureSRC.FromPC (pc-1, z.proc, z.file, z.name);
-
-        IF (z.proc = LOOPHOLE (RTLinker.RunMainBody, ADDRESS)) THEN
-          (* bail out, and don't bother reporting this frame. *)
-          hit_bottom := TRUE;  EXIT;
-        ELSIF (z.proc = LOOPHOLE (RTLinker.InitRuntime, ADDRESS)) THEN
+        IF (z.proc = LOOPHOLE (RTLinker.RunProgram, ADDRESS)) THEN
           (* bail out, and don't bother reporting this frame. *)
           hit_bottom := TRUE;  EXIT;
         ELSIF (z.proc = LOOPHOLE (RTHooks.ReportFault, ADDRESS)) THEN
           (* skip this frame and its caller, a compiler-generated stub *)
           n_skipped := n_found+2;
-        ELSIF (z.proc = LOOPHOLE (RTHooks.AssertFailed, ADDRESS)) THEN
+        ELSIF (z.proc = LOOPHOLE (RTMisc.FatalError, ADDRESS)) THEN
           n_skipped := n_found+1;    (* skip this frame *)
-        ELSIF (z.proc = LOOPHOLE (RTHooks.Raise, ADDRESS)) THEN
+        ELSIF (z.proc = LOOPHOLE (RTMisc.FatalErrorS, ADDRESS)) THEN
           n_skipped := n_found+1;    (* skip this frame *)
-        ELSIF (z.proc = LOOPHOLE (RTHooks.ResumeRaise, ADDRESS)) THEN
+        ELSIF (z.proc = LOOPHOLE (RTMisc.FatalErrorI, ADDRESS)) THEN
           n_skipped := n_found+1;    (* skip this frame *)
-        ELSIF (z.proc = LOOPHOLE (RTException.Raise, ADDRESS)) THEN
+        ELSIF (z.proc = LOOPHOLE (RTMisc.FatalErrorPC, ADDRESS)) THEN
           n_skipped := n_found+1;    (* skip this frame *)
-        ELSIF (z.proc = LOOPHOLE (RTException.ResumeRaise, ADDRESS)) THEN
-          n_skipped := n_found+1;    (* skip this frame *)
-        ELSIF (z.proc = LOOPHOLE (RTError.Msg, ADDRESS)) THEN
-          n_skipped := n_found+1;    (* skip this frame *)
-        ELSIF (z.proc = LOOPHOLE (RTError.MsgS, ADDRESS)) THEN
-          n_skipped := n_found+1;    (* skip this frame *)
-        ELSIF (z.proc = LOOPHOLE (RTError.MsgI, ADDRESS)) THEN
-          n_skipped := n_found+1;    (* skip this frame *)
-        ELSIF (z.proc = LOOPHOLE (RTError.MsgPC, ADDRESS)) THEN
-          n_skipped := n_found+1;    (* skip this frame *)
-        ELSIF (z.proc = LOOPHOLE (RTError.ReportPC, ADDRESS)) THEN
+        ELSIF (z.proc = LOOPHOLE (RTMisc.ReportErrorPC, ADDRESS)) THEN
           n_skipped := n_found+1;    (* skip this frame *)
         END;
       END;
       pc := fp.saved_pc;
       IF WinBase.IsBadReadPtr (fp.saved_fp, BYTESIZE (fp^)) # 0 THEN EXIT; END;
-      IF (fp.saved_fp <= fp) OR (fp + 8000 < fp.saved_fp) THEN EXIT; END;
+      IF (fp.saved_fp <= fp) OR (fp + 2000 < fp.saved_fp) THEN EXIT; END;
       fp := fp.saved_fp;
       INC (n_found);
     END;
@@ -105,13 +91,12 @@ PROCEDURE DumpFrame (READONLY z: PrintLine) =
   BEGIN
     RTIO.PutAddr (z.fp, 9);  RTIO.PutText ("  ");
     RTIO.PutAddr (z.pc, 9);  RTIO.PutText ("  ");
-    IF (0 <= offset) AND (offset < 8192) THEN
+    IF (0 <= offset) AND (offset < 2048) THEN
       IF (z.name # NIL) THEN
         RTIO.PutString (z.name);
         IF (offset # 0) THEN
           RTIO.PutText (" + ");
           RTIO.PutHex  (offset);
-          IF (offset > 4096) THEN RTIO.PutText ("(!)"); END;
         END;
       END;
       IF (z.file # NIL) THEN

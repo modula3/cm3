@@ -13,6 +13,8 @@ readonly EXCEPTION_IMPL = {
   "DS3100"     : "ex_stack",  % has a working stack walker
   "FreeBSD"    : "ex_frame",
   "FreeBSD2"   : "ex_frame",
+  "FreeBSD3"   : "ex_frame",
+  "FreeBSD4"   : "ex_frame",
   "HP300"      : "ex_frame",
   "HPPA"       : "ex_frame",
   "IBMR2"      : "ex_frame",

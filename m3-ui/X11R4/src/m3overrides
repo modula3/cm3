@@ -1,0 +1,2 @@
+override ("m3core", ROOT & "/m3-libs")
+override ("libm3", ROOT & "/m3-libs")

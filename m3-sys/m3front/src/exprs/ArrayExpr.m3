@@ -634,7 +634,7 @@ PROCEDURE GenFPLiteral (p: P;  buf: M3Buf.T) =
     M3Buf.PutChar (buf, '>');
   END GenFPLiteral;
 
-PROCEDURE PrepLiteral (p: P;  type: Type.T;  is_const: BOOLEAN) =
+PROCEDURE PrepLiteral (p: P;  <*UNUSED*>type: Type.T;  is_const: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
     PrepElements (p, p.tipe, is_const);
@@ -699,7 +699,8 @@ PROCEDURE GenOpenLiteral (e: Expr.T;  offset: INTEGER;  depth: INTEGER;
     END;
   END GenOpenLiteral;
 
-PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN) =
+PROCEDURE GenLiteral (p: P;  offset: INTEGER;  <*UNUSED*>type: Type.T;
+                      is_const: BOOLEAN) =
   VAR index, element: Type.T;  last, n_elts, elt_size: INTEGER;  b: BOOLEAN;
   BEGIN
     b := ArrayType.Split (p.tipe, index, element); <* ASSERT b *>

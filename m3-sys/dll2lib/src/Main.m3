@@ -51,7 +51,6 @@ PROCEDURE DoIt () =
   END DoIt;
 
 PROCEDURE ParseCmdLine () =
-  VAR arg: TEXT;
   BEGIN
     FOR i := 1 TO Params.Count - 1 DO
       ParseArg (Params.Get (i));

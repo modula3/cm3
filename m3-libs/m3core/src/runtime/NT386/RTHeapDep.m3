@@ -27,7 +27,6 @@ PROCEDURE Protect (p: Page;  n: CARDINAL;  readable, writable: BOOLEAN) =
     END;
   END Protect;
 
-<*WINAPI*>
 PROCEDURE FaultHandler (info: WinNT.PEXCEPTION_POINTERS): WinDef.LONG =
   VAR
     desc := info.ExceptionRecord;

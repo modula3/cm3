@@ -25,14 +25,17 @@ TYPE
   END;
 
 PROCEDURE GetExports (file: TEXT): ExportList  RAISES {Error} =
-  VAR s: State;
+  VAR
+    s  :  State;
+    fn := M3toC.SharedTtoS(file);
   BEGIN
     s.file := file;
     s.exports := NEW (ExportList, 32);
     TRY
-      s.hFile := WinBase.CreateFile (M3toC.TtoS (file), WinNT.GENERIC_READ,
+      s.hFile := WinBase.CreateFile (fn, WinNT.GENERIC_READ,
                    WinNT.FILE_SHARE_READ, NIL, WinBase.OPEN_EXISTING,
                    WinNT.FILE_ATTRIBUTE_NORMAL, NIL);
+      M3toC.FreeSharedS(file, fn);
       IF (LOOPHOLE (s.hFile, INTEGER) = WinBase.INVALID_HANDLE_VALUE) THEN
         Err ("cannot open file file");
       END;
@@ -167,14 +170,18 @@ PROCEDURE ExpandExports (VAR s: State) =
   END ExpandExports;
 
 PROCEDURE GetSectionHeader (VAR s: State;  nm: TEXT): WinNT.PIMAGE_SECTION_HEADER =
-  VAR section: WinNT.PIMAGE_SECTION_HEADER;
+  VAR
+    section: WinNT.PIMAGE_SECTION_HEADER;
+    nms := M3toC.SharedTtoS(nm);
   BEGIN
     section := s.pNTHeader + ADRSIZE (s.pNTHeader^);
     FOR i := 0 TO s.pNTHeader.FileHeader.NumberOfSections - 1 DO
-      IF strnicmp (ADR (section.Name[0]), M3toC.TtoS (nm),
+      IF strnicmp (ADR (section.Name[0]), nms,
                    WinNT.IMAGE_SIZEOF_SHORT_NAME) = 0 THEN
+	M3toC.FreeSharedS(nm, nms);
         RETURN section;
       END;
+      M3toC.FreeSharedS(nm, nms);
       section := section + BYTESIZE (section^);
     END;
     RETURN NIL;

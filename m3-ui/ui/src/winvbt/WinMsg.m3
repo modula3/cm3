@@ -196,8 +196,7 @@ CONST
     X{ FORGE_VBT,                         "FORGE_VBT" },
     X{ ICONIZE_VBT,                       "ICONIZE_VBT" },
     X{ OVERLAP_VBT,                       "OVERLAP_VBT" },
-    X{ RETITLE_VBT,                       "RETITLE_VBT" },
-    X{ PAINTBATCH_VBT,                    "PAINTBATCH_VBT" }
+    X{ RETITLE_VBT,                       "RETITLE_VBT" }
   };
 
 BEGIN

@@ -18,6 +18,8 @@ readonly _FloatPieces = {
   "DS3100_OSF" : [ "IEEE", "IEEE-le", "DS3100" ],
   "FreeBSD"    : _float_le,
   "FreeBSD2"   : _float_le,
+  "FreeBSD3"    : _float_le,
+  "FreeBSD4"   : _float_le,
   "HP300"      : _float_be,
   "HPPA"       : _float_be,
   "IBMR2"      : _float_be,
