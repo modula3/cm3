@@ -12,7 +12,7 @@ readonly proc Vector (nm, impl, field, rimpl) is
   build_generic_intf (rep,      "VectorRep",     [rfield, base, instimpl], VISIBLE)
   build_generic_impl (rep,      "VectorRep",     [rfield, base])
   build_generic_intf (instimpl, "Vector" & impl, [rfield, base], VISIBLE)
-  build_generic_impl (instimpl, "Vector" & impl, [rfield, base, rep])
+  build_generic_impl (instimpl, "Vector" & impl, [rfield, base])
 end
 
 readonly proc VectorTrans (nm, real, complex, cimpl) is
@@ -24,7 +24,7 @@ readonly proc VectorTrans (nm, real, complex, cimpl) is
   local vtrans = nm & "VectorTrans"
   local vrep   = nm & "VectorRep"
   build_generic_intf (vtrans, "VectorTrans", [rfield, vfield], VISIBLE)
-  build_generic_impl (vtrans, "VectorTrans", [rfield, rtrans, ctrans, vrep])
+  build_generic_impl (vtrans, "VectorTrans", [rfield, rtrans, ctrans])
 end
 
 readonly proc VectorFmtLex (nm) is
@@ -33,5 +33,5 @@ readonly proc VectorFmtLex (nm) is
   local vfmt   = nm & "VectorFmtLex"
   local vrep   = nm & "VectorRep"
   build_generic_intf (vfmt, "VectorFmtLex", [rfmt, vfield], VISIBLE)
-  build_generic_impl (vfmt, "VectorFmtLex", [rfmt, vrep])
+  build_generic_impl (vfmt, "VectorFmtLex", [rfmt])
 end

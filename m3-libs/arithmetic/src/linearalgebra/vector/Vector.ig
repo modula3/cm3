@@ -10,7 +10,7 @@ CONST Brand = R.Brand & "Vector";
 TYPE
   (*text form: "V6{a0,a1,a2,a3,a4,a5}"*)
   TBody = ARRAY OF R.T;
-  T <: REFANY;
+  T = REF TBody;
 
   TVBody = ARRAY OF T;
 
@@ -55,7 +55,8 @@ PROCEDURE Reduce (x: T; f: ReduceFtn; init: R.T): R.T RAISES {Error};
 
 PROCEDURE ArithSeq (num: CARDINAL; from: R.T; by: R.T): T;
 PROCEDURE GeomSeq (num: CARDINAL; from: R.T; by: R.T): T;
-PROCEDURE RecursiveSeq (num: CARDINAL; from: R.T; by: MapFtn): T RAISES {Error};
+PROCEDURE RecursiveSeq (num: CARDINAL; from: R.T; by: MapFtn): T
+  RAISES {Error};
 
 (*==========================*)
 END Vector.

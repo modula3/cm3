@@ -1,4 +1,4 @@
-GENERIC MODULE VectorTrans(R, RT, CT, VR);
+GENERIC MODULE VectorTrans(R, RT, CT);
 (*Copyright (c) 1996, m3na project *)
 
 <*UNUSED*>

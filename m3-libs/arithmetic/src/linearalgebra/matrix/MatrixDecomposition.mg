@@ -1,4 +1,4 @@
-GENERIC MODULE MatrixDecomposition(R,RT,V,VR,M);
+GENERIC MODULE MatrixDecomposition(R,RT,V,M);
 (*Copyright (c) 1996, m3na project
 *)
 FROM NADefinitions IMPORT Error,Err;

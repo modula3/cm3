@@ -3,9 +3,7 @@ GENERIC INTERFACE VectorRep(R, V, VI);
 FROM NADefinitions IMPORT Error;
 (*==========================*)
 
-REVEAL V.T = BRANDED V.Brand REF V.TBody;
-
-TYPE T = VI.T;
+TYPE T = V.TBody;
 
 PROCEDURE Clear (VAR (*OUT*) z: T);
 

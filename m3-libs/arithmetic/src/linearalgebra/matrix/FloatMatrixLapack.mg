@@ -1,4 +1,4 @@
-GENERIC MODULE FloatMatrixLapack(R, C, V, VR, CV, CVR, M, LA);
+GENERIC MODULE FloatMatrixLapack(R, C, V, VR, CV, M, LA);
 (*Copyright (c) 1996, m3na project
 
    Abstract: <describe> *)

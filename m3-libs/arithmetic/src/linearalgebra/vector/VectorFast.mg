@@ -1,4 +1,4 @@
-GENERIC MODULE VectorFast(R, V, VR);
+GENERIC MODULE VectorFast(R, V);
 (*Copyright (c) 1996, m3na project *)
 FROM NADefinitions IMPORT Error, Err;
 

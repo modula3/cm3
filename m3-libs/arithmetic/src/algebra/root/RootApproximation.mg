@@ -1,4 +1,4 @@
-GENERIC MODULE RootApproximation(R,RT,RRt,C,CT,CP,CRt,VR,CVR);
+GENERIC MODULE RootApproximation(R,RT,RRt,C,CT,CP,CRt);
 (*Copyright (c) 1996, Harry George
 
 Abstract: Implementation of Root.

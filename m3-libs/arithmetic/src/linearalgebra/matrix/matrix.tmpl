@@ -20,7 +20,7 @@ readonly proc MatrixFast (nm, field, rimpl) is
   build_generic_intf (basic, "MatrixBasic", [rfield, vfield], VISIBLE)
   build_generic_impl (basic, "MatrixBasic", [rfield, vfield, vrep])
   build_generic_intf (fast,  "MatrixFast",  [rfield, vfield, basic], VISIBLE)
-  build_generic_impl (fast,  "MatrixFast",  [rfield, vfield, vrep])
+  build_generic_impl (fast,  "MatrixFast",  [rfield, vfield])
 end
 
 readonly proc MatrixTrans (nm, real, rimpl, complex, cimpl, mimpl) is
@@ -42,7 +42,7 @@ readonly proc MatrixDecomposition (nm, impl) is
   local vrep    = nm & "VectorRep"
   local mfield  = nm & "Matrix" & impl
   build_generic_intf (basic, "MatrixDecomposition", [rfield,         vfield, mfield], VISIBLE)
-  build_generic_impl (basic, "MatrixDecomposition", [rfield, rtrans, vfield, vrep, mfield])
+  build_generic_impl (basic, "MatrixDecomposition", [rfield, rtrans, vfield, mfield])
 end
 
 readonly proc EigenSystem (nm, impl) is
@@ -54,18 +54,17 @@ readonly proc EigenSystem (nm, impl) is
   local vrep    = nm & "VectorRep"
   local mfield  = nm & "Matrix" & impl
   local mlap    = nm & "MatrixLapack"
-  build_generic_intf (basic, "EigenSystem", [        rtrans, vfield,       mfield, mlap], VISIBLE)
-  build_generic_impl (basic, "EigenSystem", [rfield, rtrans, vfield, vrep, mfield])
+  build_generic_intf (basic, "EigenSystem", [        rtrans, vfield, mfield, mlap], VISIBLE)
+  build_generic_impl (basic, "EigenSystem", [rfield, rtrans, vfield, mfield])
 end
 
 readonly proc CharPolynomial (nm, mimpl, rimpl) is
   local basic   = nm & "CharPolynomial"
   local rfield  = nm & rimpl
   local rtfield = nm & "RootBasic"
-  local vrep    = nm & "VectorRep"
   local mfield  = nm & "Matrix" & mimpl
-  build_generic_intf (basic, "CharPolynomial", [        rtfield,       mfield], VISIBLE)
-  build_generic_impl (basic, "CharPolynomial", [rfield, rtfield, vrep, mfield])
+  build_generic_intf (basic, "CharPolynomial", [        rtfield, mfield], VISIBLE)
+  build_generic_impl (basic, "CharPolynomial", [rfield, rtfield, mfield])
 end
 
 readonly proc MatrixFmtLex (nm, mimpl) is
@@ -93,6 +92,6 @@ readonly proc Lapack (nm, impl) is
   local mlap    = nm & "MatrixLapack"
   local mlapraw = mlap & "Raw"
   module (mlapraw)
-  build_generic_intf (mlap, "FloatMatrixLapack", [rfield,         vfield,       cvfield,        mfield], VISIBLE)
-  build_generic_impl (mlap, "FloatMatrixLapack", [rfield, cfield, vfield, vrep, cvfield, cvrep, mfield, mlapraw])
+  build_generic_intf (mlap, "FloatMatrixLapack", [rfield,         vfield,       cvfield, mfield], VISIBLE)
+  build_generic_impl (mlap, "FloatMatrixLapack", [rfield, cfield, vfield, vrep, cvfield, mfield, mlapraw])
 end
