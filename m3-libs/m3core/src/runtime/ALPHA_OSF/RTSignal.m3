@@ -11,12 +11,13 @@ IMPORT RTError, RTProcess, Usignal, Uprocess;
 FROM Ctypes IMPORT int;
 
 TYPE
-  SigInfo = UNTRACED REF Usignal.struct_sigcontext;
+  SigInfo = UNTRACED REF Usignal.siginfo_t;
+  SigContext = UNTRACED REF Usignal.struct_sigcontext;
 
 VAR
   DefaultHandler   : Usignal.SignalHandler;
   IgnoreSignal     : Usignal.SignalHandler;
-  initial_handlers : ARRAY [0..5] OF Usignal.struct_sigvec;
+  initial_handlers : ARRAY [0..5] OF Usignal.struct_sigaction;
 
 PROCEDURE InstallHandlers () =
   BEGIN
@@ -35,15 +36,21 @@ PROCEDURE SetHandler (id: INTEGER; sig: int;  handler: Usignal.SignalHandler) =
   (* Note: we use the LOOPHOLE to prevent the runtime check for
      nested procedure.  The runtime check crashes when
      handler = IgnoreSignal = 1. *)
-  VAR new: Usignal.struct_sigvec;
+  VAR new: Usignal.struct_sigaction;
   BEGIN
-    new.sv_handler := LOOPHOLE (handler, Usignal.SignalHandler);
-    new.sv_mask    := Usignal.empty_sv_mask;
-    new.sv_flags   := 0;
-    EVAL Usignal.sigvec (sig, new, initial_handlers[id]);
-    IF (initial_handlers[id].sv_handler # DefaultHandler) THEN
+    new.sa_handler := LOOPHOLE (handler, Usignal.SignalHandler);
+    new.sa_flags   := Usignal.SA_SIGINFO;
+    WITH i = Usignal.sigemptyset(new.sa_mask) DO
+      <*ASSERT i = 0*>
+    END;
+    WITH i = Usignal.sigaction (sig, new, initial_handlers[id]) DO
+      <*ASSERT i = 0*>
+    END;
+    IF (initial_handlers[id].sa_handler # DefaultHandler) THEN
       (* don't override inherited, non-default handlers *)
-      EVAL Usignal.sigvec (sig, initial_handlers[id], new);
+      WITH i = Usignal.sigaction (sig, initial_handlers[id], new) DO
+        <*ASSERT i = 0*>
+      END;
     END;
   END SetHandler;
 
@@ -58,41 +65,47 @@ PROCEDURE RestoreHandlers () =
   END RestoreHandlers;
 
 PROCEDURE RestoreHandler (id: INTEGER;  sig: int) =
-  VAR old: Usignal.struct_sigvec;
+  VAR old: Usignal.struct_sigaction;
   BEGIN
-    EVAL Usignal.sigvec (sig, initial_handlers[id], old);
+    EVAL Usignal.sigaction (sig, initial_handlers[id], old);
   END RestoreHandler;
 
-PROCEDURE Shutdown (sig: int; <*UNUSED*> code: int; <*UNUSED*> scp: SigInfo) =
-  VAR new, old: Usignal.struct_sigvec;
+PROCEDURE Shutdown (sig: int;
+                    <*UNUSED*> sip: SigInfo;
+                    <*UNUSED*> scp: SigContext) =
+  VAR new, old: Usignal.struct_sigaction;
   BEGIN
-    new.sv_handler := DefaultHandler;
-    new.sv_mask    := Usignal.empty_sv_mask;
-    new.sv_flags   := 0;
+    new.sa_handler := DefaultHandler;
+    new.sa_flags   := 0;
+    EVAL Usignal.sigemptyset(new.sa_mask);
     RTProcess.InvokeExitors ();                   (* flush stdio... *)
-    EVAL Usignal.sigvec (sig, new, old);          (* restore default handler *)
+    EVAL Usignal.sigaction (sig, new, old);       (* restore default handler *)
     EVAL Usignal.kill (Uprocess.getpid (), sig);  (* and resend the signal *)
   END Shutdown;
 
-PROCEDURE Interrupt (sig: int;  code: int;  scp: SigInfo) =
+PROCEDURE Interrupt (sig: int; sip: SigInfo; scp: SigContext) =
   VAR h := RTProcess.OnInterrupt (NIL);
   BEGIN
     IF (h = NIL) THEN
-      Shutdown (sig, code, scp);
+      Shutdown (sig, sip, scp);
     ELSE
       EVAL RTProcess.OnInterrupt (h); (* reinstall the handler *)
       h ();
     END;
   END Interrupt;
 
-PROCEDURE Quit (<*UNUSED*> sig, code: int; scp: SigInfo) =
+PROCEDURE Quit (<*UNUSED*> sig: int;
+                <*UNUSED*> sip: SigInfo;
+                scp: SigContext) =
   VAR pc := 0;
   BEGIN
     IF (scp # NIL) THEN pc := scp.sc_pc END;
     RTError.MsgPC (pc, "aborted");
   END Quit;
 
-PROCEDURE SegV (<*UNUSED*> sig, code: int; scp: SigInfo) =
+PROCEDURE SegV (<*UNUSED*> sig: int;
+                <*UNUSED*> sip: SigInfo;
+                scp: SigContext) =
   VAR pc := 0;
   BEGIN
     IF (scp # NIL) THEN pc := scp.sc_pc END;

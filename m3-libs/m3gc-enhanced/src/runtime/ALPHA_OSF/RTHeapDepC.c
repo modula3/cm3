@@ -3,7 +3,7 @@
 /* See the file COPYRIGHT for a full description.           */
 /*                                                          */
 /* Created by Allan Heydon.                                 */
-/* Last modified on Wed Nov 13 15:25:32 PST 1996 by heydon  */
+/* Last modified on Fri Nov 15 13:54:00 PST 1996 by heydon  */
 
 /* This is RTHeapDepC.c for Digital Unix running on Alpha processors. 
    It was adapted from the version of RTHeapDepC.c written for the
@@ -105,6 +105,7 @@
    pointer must reference only one object.  Therefore, it is not
    possible to write the heap contents with a single write. */
 
+#define COMPAT_43
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -115,8 +116,13 @@
 #include <utime.h>
 #include <wait.h>
 #include <machine/hal_sysinfo.h>
+#include <stdarg.h>
+
+/* The following two header files must be included before
+   <nfs/nfs.h> on older versions of Digital Unix. */
 #include <sys/time.h>
 #include <rpc/types.h>
+
 #include <nfs/nfs.h>
 #include <sys/addrconf.h>	/* for getaddressconf(2) */
 #include <sys/audit.h>
@@ -131,21 +137,22 @@
 #include <sys/ptrace.h>		/* for ptrace(2) */
 #include <sys/resource.h>
 #include <sys/sem.h>
+#include <sys/shm.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/swap.h>		/* for swapctl(2) */
 #include <sys/sysinfo.h>
 #include <sys/systeminfo.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/uio.h>
+#include <sys/utsname.h>
 #include <ufs/quota.h>		/* for quotactl(2) */
 
-extern int RT0u__inCritical;
+extern long RT0u__inCritical;
 #define ENTER_CRITICAL RT0u__inCritical++
 #define EXIT_CRITICAL  RT0u__inCritical--
 
-void (*RTHeapRep_Fault)(char*);
+void (*RTHeapRep_Fault)(void *);
 void (*RTCSRC_FinishVM)();
 
 static char RTHeapDepC__c;
@@ -228,7 +235,7 @@ int audcntl(request, argp, len, flag, audit_id, pid)
       case GET_PROC_AMASK:
       case GET_SITEMASK:
       case GET_HABITAT_EVENT:
-#ifdef GET_SUBJ_AMASK
+#ifdef GET_SUBJ_AMASK /* not defined on old versions of Digital Unix */
       case GET_SUBJ_AMASK:
 #endif
 	MAKE_WRITABLE(argp);
@@ -274,7 +281,7 @@ int audgen(event, tokenp, argv, userbuff, size)
 
 int bind(s, address, address_len)
   int s;
-  struct sockaddr *address;
+  const struct sockaddr *address;
   int address_len;
 {   int result;
 
@@ -334,7 +341,7 @@ int chroot(path)
 
 int connect(socket, address, address_len)
   int socket;
-  struct sockaddr *address;
+  const struct sockaddr *address;
   int address_len;
 {   int result;
 
@@ -344,26 +351,6 @@ int connect(socket, address, address_len)
     EXIT_CRITICAL;
     return result;
 }
-
-#ifdef UNNECESSARY
-int creat(path, mode)
-  const char *path;
-  mode_t mode;
-{   
-    /* There is no system call entry for "creat(2)". Instead,
-       it is defined in terms of "open(2)". */
-    return open(path, O_WRONLY | O_CREAT | O_TRUNC, mode);
-}
-#endif
-
-#ifdef UNNECESSARY
-int execv(path, argv)
-  const char *path;
-  char * const argv[];
-{
-    return execve(path, argv, NULL);
-}
-#endif
 
 int execve(path, argv, envp)
 /* execve is implemented differently since it does not return, which
@@ -425,24 +412,27 @@ int exportfs(access, cookie, exdata)
     return result;
 }
 
-int fcntl(filedes, request, argument)
-  int filedes, request;
-  long argument;
+int fcntl(int filedes, int request, ...)
 {   int result;
+    va_list args;
+    struct flock *arg;
 
     ENTER_CRITICAL;
+    va_start(args, request);
+    arg = va_arg(args, struct flock *);
+    va_end(args);
     switch (request) {
       case F_GETLK:
-	MAKE_WRITABLE((struct flock *)argument);
+	MAKE_WRITABLE(arg);
 	break;
       case F_SETLK:
       case F_SETLKW:
-	MAKE_READABLE((struct flock *)argument);
+	MAKE_READABLE(arg);
 	break;
       default:
 	break;
     }
-    result = syscall(SYS_fcntl, filedes, request, argument);
+    result = syscall(SYS_fcntl, filedes, request, arg);
     EXIT_CRITICAL;
     return result;
 }
@@ -475,6 +465,30 @@ pid_t fork()
     return fork2(SYS_fork);
 }
 
+#ifdef SYS_pre_F64_fstat
+int __fstat(filedes, buffer)
+  int filedes;
+  void *buffer;
+{   int result;
+
+    ENTER_CRITICAL;
+    MAKE_WRITABLE(buffer);
+    result = syscall(SYS_pre_F64_fstat, filedes, buffer);
+    EXIT_CRITICAL;
+    return result;
+}
+int _F64_fstat(filedes, buffer)
+  int filedes;
+  struct stat *buffer;
+{   int result;
+
+    ENTER_CRITICAL;
+    MAKE_WRITABLE(buffer);
+    result = syscall(SYS_fstat, filedes, buffer);
+    EXIT_CRITICAL;
+    return result;
+}
+#else
 int fstat(filedes, buffer)
   int filedes;
   struct stat *buffer;
@@ -486,7 +500,31 @@ int fstat(filedes, buffer)
     EXIT_CRITICAL;
     return result;
 }
+#endif
 
+#ifdef SYS_pre_F64_fstatfs
+int __fstatfs(filedes, buffer, length)
+  int filedes;
+  void *buffer;
+  int length;
+{   int result;
+
+    ENTER_CRITICAL;
+    MAKE_WRITABLE(buffer);
+    result = syscall(SYS_pre_F64_fstatfs, filedes, buffer, length);
+    EXIT_CRITICAL;
+    return result;
+}
+int _F64_fstatfs(int filedes, struct statfs *buffer, ...)
+{   int result;
+
+    ENTER_CRITICAL;
+    MAKE_WRITABLE(buffer);
+    result = syscall(SYS_fstatfs, filedes, buffer);
+    EXIT_CRITICAL;
+    return result;
+}
+#else
 int fstatfs(filedes, buffer, length)
   int filedes;
   struct statfs *buffer;
@@ -499,9 +537,10 @@ int fstatfs(filedes, buffer, length)
     EXIT_CRITICAL;
     return result;
 }
+#endif
 
 int fuser(file, flag, fuser_array, sizeof_fuser_array)
-  char *file;
+  const char *file;
   long flag;
   struct f_user fuser_array[];
   long sizeof_fuser_array;
@@ -566,6 +605,32 @@ int getfh(fd, fhp, exp_fd)
     return result;
 }
 
+#ifdef SYS_pre_F64_getfsstat
+int __getfsstat(buf, bufsize, flags)
+  void *buf;
+  long bufsize;
+  int flags;
+{   int result;
+
+    ENTER_CRITICAL;
+    MAKE_WRITABLE(buf);
+    result = syscall(SYS_pre_F64_getfsstat, buf, bufsize, flags);
+    EXIT_CRITICAL;
+    return result;
+}
+int _F64_getfsstat(buf, bufsize, flags)
+  struct statfs *buf;
+  long bufsize;
+  int flags;
+{   int result;
+
+    ENTER_CRITICAL;
+    MAKE_WRITABLE(buf);
+    result = syscall(SYS_getfsstat, buf, bufsize, flags);
+    EXIT_CRITICAL;
+    return result;
+}
+#else
 int getfsstat(buf, bufsize, flags)
   struct statfs *buf;
   long bufsize;
@@ -578,6 +643,7 @@ int getfsstat(buf, bufsize, flags)
     EXIT_CRITICAL;
     return result;
 }
+#endif
 
 int gethostname(address, address_len)
   char *address;
@@ -669,7 +735,7 @@ int getsockname(s, address, address_len)
 
 int getsockopt(socket, level, option_nam, option_value, option_len)
   int socket, level, option_nam;
-  char *option_value;
+  void *option_value;
   int *option_len;
 {   int result;
 
@@ -682,19 +748,26 @@ int getsockopt(socket, level, option_nam, option_value, option_len)
     return result;
 }
 
-int getsysinfo(op, buffer, nbytes, start, arg)
-  unsigned long op;
-  void *buffer;
-  unsigned long nbytes;
-  int *start;
-  void *arg;
+int getsysinfo(unsigned long op, caddr_t buffer, unsigned long nbytes, ...)
 {   int result;
+    va_list args;
+    int *start;
+    void *arg;
+    unsigned long *flag;
 
     ENTER_CRITICAL;
+    va_start(args, nbytes);
+    start = va_arg(args, int *);
+    arg = va_arg(args, void *);
+    flag = va_arg(args, unsigned long *);
+    va_end(args);
     MAKE_WRITABLE(buffer);
     MAKE_WRITABLE(start);
     MAKE_WRITABLE(arg);
-    result = syscall(SYS_getsysinfo, op, buffer, nbytes, start, arg);
+    /* flag may or may not be a pointer */
+    if (RTHeapRep_Fault) RTHeapRep_Fault(flag); /* make it readable */
+    if (RTHeapRep_Fault) RTHeapRep_Fault(flag); /* make it writable */
+    result = syscall(SYS_getsysinfo, op, buffer, nbytes, start, arg, flag);
     EXIT_CRITICAL;
     return result;
 }
@@ -756,6 +829,32 @@ int link(path1, path2)
     return result;
 }
 
+#ifdef SYS_pre_F64_lstat
+int __lstat(path, buffer)
+  const char *path;
+  void *buffer;
+{   int result;
+
+    ENTER_CRITICAL;
+    MAKE_READABLE(path);
+    MAKE_WRITABLE(buffer);
+    result = syscall(SYS_pre_F64_lstat, path, buffer);
+    EXIT_CRITICAL;
+    return result;
+}
+int _F64_lstat(path, buffer)
+  const char *path;
+  struct stat *buffer;
+{   int result;
+
+    ENTER_CRITICAL;
+    MAKE_READABLE(path);
+    MAKE_WRITABLE(buffer);
+    result = syscall(SYS_lstat, path, buffer);
+    EXIT_CRITICAL;
+    return result;
+}
+#else
 int lstat(path, buffer)
   const char *path;
   struct stat *buffer;
@@ -768,6 +867,7 @@ int lstat(path, buffer)
     EXIT_CRITICAL;
     return result;
 }
+#endif
 
 int mkdir(path, mode)
   const char *path;
@@ -781,13 +881,15 @@ int mkdir(path, mode)
     return result;
 }
 
-int mknod(path, mode, device)
-  const char *path;
-  int mode;
-  dev_t device;
+int mknod(const char *path, mode_t mode, ...)
 {   int result;
+    va_list args;
+    dev_t device;
 
     ENTER_CRITICAL;
+    va_start(args, mode);
+    device = va_arg(args, dev_t);
+    va_end(args);
     MAKE_READABLE(path);
     result = syscall(SYS_mknod, path, mode, device);
     EXIT_CRITICAL;
@@ -797,7 +899,7 @@ int mknod(path, mode, device)
 int mount(type, mnt_path, mnt_flag, data)
   int type;
   char *mnt_path;
-  int mnt_flag;
+  u_long mnt_flag;
   caddr_t data;
 {   int result;
 
@@ -832,7 +934,7 @@ int msgctl(msqid, cmd, buf)
 
 int msgrcv(msqid, msgp, msgsz, msgtyp, msgflg)
   int msqid;
-  struct msgbuf *msgp;
+  void *msgp;
   size_t msgsz;
   long msgtyp;
   int msgflg;
@@ -859,20 +961,22 @@ int msgsnd(msqid, msgp, msgsz, msgflg)
     return result;
 }
 
-int open(path, oflag, mode)
-  const char *path;
-  int oflag;
-  mode_t mode;
+int open(const char *path, int oflag, ...)
 {   int result;
+    va_list args;
+    mode_t mode;
 
     ENTER_CRITICAL;
+    va_start(args, oflag);
+    mode = va_arg(args, mode_t);
+    va_end(args);
     MAKE_READABLE(path);
     result = syscall(SYS_open, path, oflag, mode);
     EXIT_CRITICAL;
     return result;
 }
 
-#ifdef SYS_pid_block
+#ifdef SYS_pid_block /* not defined on old versions of Digital Unix */
 int pid_block(tp, flags)
   struct timeval *tp;
   long flags;
@@ -974,7 +1078,8 @@ int readlink(path, buffer, buf_size)
     return result;
 }
 
-int readv(filedes, iov, iov_count)
+#ifdef SYS__F64_readv
+ssize_t __readv(filedes, iov, iov_count)
   int filedes;
   struct iovec *iov;
   int iov_count;
@@ -993,19 +1098,48 @@ int readv(filedes, iov, iov_count)
     return result;
 }
 
-#ifdef UNNECESSARY
-int recv(socket, buffer, length, flags)
-  int socket;
-  char *buffer;
-  int length, flags;
-{
-    return recvfrom(socket, buffer, length, flags, NULL, NULL);
+ssize_t _Ereadv(filedes, iov, iov_count)
+  int filedes;
+  const struct iovec *iov;
+  int iov_count;
+{   int result;
+
+    ENTER_CRITICAL;
+    {   int i;
+	for (i = 0; i < iov_count; i++) {
+	    if (iov[i].iov_len > 0) {
+		MAKE_WRITABLE(iov[i].iov_base);
+	    }
+	}
+    }
+    result = __Ereadv(filedes, iov, iov_count);
+    EXIT_CRITICAL;
+    return result;
+}
+#else
+ssize_t readv(filedes, iov, iov_count)
+  int filedes;
+  struct iovec *iov;
+  int iov_count;
+{   int result;
+
+    ENTER_CRITICAL;
+    {   int i;
+	for (i = 0; i < iov_count; i++) {
+	    if (iov[i].iov_len > 0) {
+		MAKE_WRITABLE(iov[i].iov_base);
+	    }
+	}
+    }
+    result = syscall(SYS_readv, filedes, iov, iov_count);
+    EXIT_CRITICAL;
+    return result;
 }
 #endif
 
 int recvfrom(socket, buffer, length, flags, address, address_len)
   int socket;
-  char *buffer;
+  void *buffer;
   int length, flags;
   struct sockaddr *address;
   int *address_len;
@@ -1043,8 +1177,8 @@ int recvmsg(socket, message, flags)
 }
 
 int rename(from, to)
-  char *from;
-  char *to;
+  const char *from;
+  const char *to;
 {   int result;
 
     ENTER_CRITICAL;
@@ -1095,28 +1229,27 @@ int select(nfds, readfds, writefds, exceptfds, timeout)
     return result;
 }
 
-int semctl(semid, semnum, cmd, arg)
-  int semid, semnum, cmd;
-  union semun {
-    int val;
-    struct semid_ds *buf;
-    ushort *array;
-  } arg;
+int semctl(int semid, int semnum, int cmd, ...)
 {   int result;
+    va_list args;
+    void *arg;
 
     ENTER_CRITICAL;
+    va_start(args, cmd);
+    arg = va_arg(args, void *);
+    va_end(args);
     switch (cmd) {
       case GETALL:
-	MAKE_WRITABLE(arg.array);
+	MAKE_WRITABLE(arg);
 	break;
       case SETALL:
-	MAKE_READABLE(arg.array);
+	MAKE_READABLE(arg);
 	break;
       case IPC_STAT:
-	MAKE_WRITABLE(arg.buf);
+	MAKE_WRITABLE(arg);
 	break;
       case IPC_SET:
-	MAKE_READABLE(arg.buf);
+	MAKE_READABLE(arg);
 	break;
       default:
 	break;
@@ -1129,7 +1262,7 @@ int semctl(semid, semnum, cmd, arg)
 int semop(semid, sops, nsops)
   int semid;
   struct sembuf *sops;
-  u_int nsops;
+  size_t nsops;
 {   int result;
 
     ENTER_CRITICAL;
@@ -1138,16 +1271,6 @@ int semop(semid, sops, nsops)
     EXIT_CRITICAL;
     return result;
 }
-
-#ifdef UNNECESSARY
-int send(socket, message, length, flags)
-  int socket;
-  char *message;
-  int length, flags;
-{
-    return sendto(socket, message, length, flags, NULL, 0);
-}
-#endif
 
 int sendmsg(socket, message, flags)
   int socket;
@@ -1172,9 +1295,9 @@ int sendmsg(socket, message, flags)
 
 int sendto(socket, message_addr, length, flags, dest_addr, dest_len)
   int socket;
-  char *message_addr;
+  const void *message_addr;
   int length, flags;
-  struct sockaddr *dest_addr;
+  const struct sockaddr *dest_addr;
   int dest_len;
 {   int result;
 
@@ -1262,7 +1385,7 @@ int setrlimit(resource1, rlp)
 
 int setsockopt(socket, level, option_name, option_value, option_len)
   int socket, level, option_name;
-  char *option_value;
+  const void *option_value;
   int option_len;
 {   int result;
 
@@ -1274,20 +1397,24 @@ int setsockopt(socket, level, option_name, option_value, option_len)
     return result;
 }
 
-int setsysinfo(op, buffer, nbytes, start, arg, flag)
-  unsigned long op;
-  void *buffer;
-  unsigned long nbytes;
-  int *start;
-  void *arg;
-  unsigned long flag;
+int setsysinfo(unsigned long op, ...)
 {   int result;
+    va_list args;
+    void *buffer;
+    unsigned long nbytes;
+    void *arg;
+    unsigned long flag;
 
     ENTER_CRITICAL;
+    va_start(args, op);
+    buffer = va_arg(args, void *);
+    nbytes = va_arg(args, unsigned long);
+    arg = va_arg(args, void *);
+    flag = va_arg(args, unsigned long);
+    va_end(args);
     MAKE_READABLE(buffer);
-    MAKE_WRITABLE(start);
     MAKE_READABLE(arg);
-    result = syscall(SYS_setsysinfo, op, buffer, nbytes, start, arg, flag);
+    result = syscall(SYS_setsysinfo, op, buffer, nbytes, arg, flag);
     EXIT_CRITICAL;
     return result;
 }
@@ -1329,7 +1456,7 @@ int sigaction(signal, action, o_action)
     ENTER_CRITICAL;
     MAKE_READABLE(action);
     MAKE_WRITABLE(o_action);
-    result = syscall(SYS_sigaction, signal, action, o_action);
+    result = __sigaction(signal, action, o_action);
     EXIT_CRITICAL;
     return result;
 }
@@ -1340,21 +1467,21 @@ int sigpending(set)
 
     ENTER_CRITICAL;
     MAKE_WRITABLE(set);
-    result = syscall(SYS_sigpending, set);
+    result = __sigpending(set);
     EXIT_CRITICAL;
     return result;
 }
 
 int sigprocmask(how, set, o_set)
   int how;
-  sigset_t *set;
+  const sigset_t *set;
   sigset_t *o_set;
 {   int result;
 
     ENTER_CRITICAL;
     MAKE_READABLE(set);
     MAKE_WRITABLE(o_set);
-    result = syscall(SYS_sigprocmask, how, set, o_set);
+    result = __sigprocmask(how, set, o_set);
     EXIT_CRITICAL;
     return result;
 }
@@ -1396,12 +1523,12 @@ int sigreturn(scp)
 }
 
 int sigsuspend(signal_mask)
-  sigset_t *signal_mask;
+  const sigset_t *signal_mask;
 {   int result;
 
     ENTER_CRITICAL;
     MAKE_READABLE(signal_mask);
-    result = syscall(SYS_sigsuspend, signal_mask);
+    result = __sigsuspend(signal_mask);
     EXIT_CRITICAL;
     return result;
 }
@@ -1418,6 +1545,32 @@ int socketpair(domain, type, protocol, socket_vector)
     return result;
 }
 
+#ifdef SYS_pre_F64_stat
+int __stat(path, buffer)
+  const char *path;
+  void *buffer;
+{   int result;
+
+    ENTER_CRITICAL;
+    MAKE_READABLE(path);
+    MAKE_WRITABLE(buffer);
+    result = syscall(SYS_pre_F64_stat, path, buffer);
+    EXIT_CRITICAL;
+    return result;
+}
+int _F64_stat(path, buffer)
+  const char *path;
+  struct stat *buffer;
+{   int result;
+
+    ENTER_CRITICAL;
+    MAKE_READABLE(path);
+    MAKE_WRITABLE(buffer);
+    result = syscall(SYS_stat, path, buffer);
+    EXIT_CRITICAL;
+    return result;
+}
+#else
 int stat(path, buffer)
   const char *path;
   struct stat *buffer;
@@ -1430,7 +1583,33 @@ int stat(path, buffer)
     EXIT_CRITICAL;
     return result;
 }
+#endif
 
+#ifdef SYS_pre_F64_statfs
+int __statfs(path, buffer, length)
+  char *path;
+  void *buffer;
+  int length;
+{   int result;
+
+    ENTER_CRITICAL;
+    MAKE_READABLE(path);
+    MAKE_WRITABLE(buffer);
+    result = syscall(SYS_pre_F64_statfs, path, buffer, length);
+    EXIT_CRITICAL;
+    return result;
+}
+int _F64_statfs(char *path, struct statfs *buffer, ...)
+{   int result;
+
+    ENTER_CRITICAL;
+    MAKE_READABLE(path);
+    MAKE_WRITABLE(buffer);
+    result = syscall(SYS_statfs, path, buffer);
+    EXIT_CRITICAL;
+    return result;
+}
+#else
 int statfs(path, buffer, length)
   char *path;
   struct statfs *buffer;
@@ -1444,6 +1623,7 @@ int statfs(path, buffer, length)
     EXIT_CRITICAL;
     return result;
 }
+#endif
 
 int swapon(path, flags, lowat, hiwat)
   char *path;
@@ -1501,30 +1681,32 @@ int sysinfo(command, buf, count)
     return result;
 }
 
-int sysfs(opcode, fsname, buf)
-  int opcode;			/* all cases */
-  const char *fsname;		/* only when opcode == GETFSIND */
-  char *buf;			/* only when opcode == GETFSTYP */
-/* According to the man page, there are three signatures for this function!
-   All three take the initial 'opcode' parameter. The other parameters passed
-   to the function depend on the 'opcode'. */
-{   int result, fs_index;
+int sysfs(int opcode, ...)
+{   int result;
+    va_list args;
+    char *fsname;		/* only when opcode == GETFSIND */
+    int fs_index;		/* only when opcode == GETFSTYP */
+    char *buf;			/* only when opcode == GETFSTYP */
 
     ENTER_CRITICAL;
+    va_start(args, opcode);
     switch (opcode) {
       case GETFSIND:
+        fsname = va_arg(args, char *);
 	MAKE_READABLE(fsname);
 	result = syscall(SYS_sysfs, opcode, fsname);
 	break;
       case GETFSTYP:
+	fs_index = va_arg(args, int);
+	buf = va_arg(args, char *);
 	MAKE_WRITABLE(buf);
-	fs_index = (int)fsname;
 	result = syscall(SYS_sysfs, opcode, fs_index, buf);
 	break;
       case GETNFSTYP:
 	result = syscall(SYS_sysfs, opcode);
 	break;
     }
+    va_end(args);
     EXIT_CRITICAL;
     return result;
 }
@@ -1625,31 +1807,6 @@ int utimes(path, times)
     return result;
 }
 
-#ifdef UNNECESSARY
-pid_t vfork()
-{
-    return fork2(SYS_vfork);
-}
-#endif
-
-#ifdef UNNECESSARY
-pid_t wait(status_location)
-  int *status_location;
-{
-    return wait4(-1, status_location, 0, NULL);
-}
-#endif
-
-#ifdef UNNECESSARY
-pid_t wait3(status_location, options, resource_usage)
-  union wait *status_location;
-  int options;
-  struct rusage *resource_usage;
-{ 
-    return wait4(-1, status_location, options, resource_usage);
-}
-#endif
-
 pid_t wait4(process_id, status_location, options, resource_usage)
   pid_t process_id;
   union wait *status_location;
@@ -1665,16 +1822,6 @@ pid_t wait4(process_id, status_location, options, resource_usage)
     EXIT_CRITICAL;
     return result;
 }
-
-#ifdef UNNECESSARY
-pid_t waitpid(process_id, status_location, options)
-  pid_t process_id;
-  int *status_location;
-  int options;
-{
-    return wait4(process_id, (union wait *)status_location, options, NULL);
-}
-#endif
 
 int waitid(idtype, id, infop, options)
   idtype_t idtype;
@@ -1703,7 +1850,8 @@ ssize_t write(filedes, buffer, nbytes)
     return result;
 }
 
-int writev(filedes, iov, iov_count)
+#ifdef SYS__F64_writev
+ssize_t __writev(filedes, iov, iov_count)
   int filedes;
   struct iovec *iov;
   int iov_count;
@@ -1721,3 +1869,41 @@ int writev(filedes, iov, iov_count)
     EXIT_CRITICAL;
     return result;
 }
+ssize_t _Ewritev(filedes, iov, iov_count)
+  int filedes;
+  const struct iovec *iov;
+  int iov_count;
+{   int result;
+
+    ENTER_CRITICAL;
+    {   int i;
+	for (i = 0; i < iov_count; i++) {
+	    if (iov[i].iov_len > 0) {
+		MAKE_READABLE(iov[i].iov_base);
+	    }
+	}
+    }
+    result = __Ewritev(filedes, iov, iov_count);
+    EXIT_CRITICAL;
+    return result;
+}
+#else
+ssize_t writev(filedes, iov, iov_count)
+  int filedes;
+  struct iovec *iov;
+  int iov_count;
+{   int result;
+
+    ENTER_CRITICAL;
+    {   int i;
+	for (i = 0; i < iov_count; i++) {
+	    if (iov[i].iov_len > 0) {
+		MAKE_READABLE(iov[i].iov_base);
+	    }
+	}
+    }
+    result = syscall(SYS_writev, filedes, iov, iov_count);
+    EXIT_CRITICAL;
+    return result;
+}
+#endif

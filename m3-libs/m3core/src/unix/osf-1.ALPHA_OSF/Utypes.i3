@@ -191,6 +191,5 @@ PROCEDURE FD_ISSET (n: INTEGER; p: UNTRACED REF fd_set): INTEGER;
 PROCEDURE FD_ZERO  (p: UNTRACED REF fd_set);
 
 PROCEDURE asLong(val: off_t): long;
-PROCEDURE assignOffT (VAR dest: off_t; src: long);
 
 END Utypes.
