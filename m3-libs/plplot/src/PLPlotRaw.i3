@@ -61,6 +61,11 @@ PROCEDURE plenv (xmin: PLFLT;
                  axis: PLINT  );
 (* Simple interface for defining viewport and window. *)
 
+<*EXTERNAL c_plclear*>
+PROCEDURE plclear ();
+(* Clear current subpage. *)
+
+
 <*EXTERNAL c_plxormod*>
 PROCEDURE plxormod (mode: PLINT; VAR status: PLINT);
 (* set xor mode; mode = 1-enter, 0-leave, status = 0 if not interactive

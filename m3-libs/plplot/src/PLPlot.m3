@@ -35,6 +35,11 @@ PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: R.T;
     PL.plenv(xmin, xmax, ymin, ymax, just, axis);
   END SetEnvironment;
 
+PROCEDURE Clear () =
+  BEGIN
+    PL.plclear();
+  END Clear;
+
 PROCEDURE SetXORMode (mode: BOOLEAN): BOOLEAN =
   VAR success: PL.PLINT;
   BEGIN
