@@ -2,15 +2,16 @@
 /* All rights reserved.                                                      */
 /* See the file COPYRIGHT for a full description.                            */
 
-#include <varargs.h>
 #include <stdio.h>
 #include <errno.h>
 #include <setjmp.h>
 #include "config.h"
-#include "rtl.h"
-#include "tree.h"
-#include "input.h"
+#include "system.h"
 #include "flags.h"
+#include "tree.h"
+#include "obstack.h"
+#include "rtl.h"
+#include "input.h"
 #include "expr.h"
 
 #include "m3cg.h"
@@ -720,22 +721,30 @@ static int current_dbg_type_count1;
 static int current_dbg_type_count2;
 static int current_dbg_type_count3;
 
-static void debug_tag (kind, id, va_alist)
-     char kind;
-     long id;
-     va_dcl
+static void debug_tag VPROTO((char kind, long id, ...))
 {
+#ifndef ANSI_PROTOTYPES
+  char kind;
+  long id;
+#endif
   va_list args;
   char *fmt;
 
-  va_start (args);
+  VA_START (args, id);
+
+#ifndef ANSI_PROTOTYPES
+  kind = va_arg (args, char);
+  id = va_arg (args, long);
+#endif
+
   current_dbg_type_tag [0] = 'M';
   current_dbg_type_tag [1] = kind;
   current_dbg_type_tag [2] = '_';
   fmt_uid (id, current_dbg_type_tag + 3);
 
   fmt = va_arg (args, char *);
-  vsprintf (current_dbg_type_tag + UID_SIZE + 3, fmt, args);
+  vsnprintf (current_dbg_type_tag + UID_SIZE + 3,
+	     100 - (UID_SIZE + 3), fmt, args);
   va_end (args);
 }
 
@@ -766,18 +775,24 @@ static void debug_field_id (id)
   debug_field (buf);
 }
 
-static void debug_field_fmt (id, va_alist)
-     long id;
-     va_dcl
+static void debug_field_fmt VPROTO((long id, ...))
 {
+#ifndef ANSI_PROTOTYPES
+  long id;
+#endif
   va_list args;
   char name [100];
   char *fmt;
 
+  VA_START (args, id);
+
+#ifndef ANSI_PROTOTYPES
+  id = va_arg (args, long);
+#endif
+
   fmt_uid (id, name);
-  va_start (args);
   fmt = va_arg (args, char *);
-  vsprintf (name + UID_SIZE, fmt, args);
+  vsnprintf (name + UID_SIZE, 100 - UID_SIZE, fmt, args);
   va_end (args);
 
   debug_field (name);
