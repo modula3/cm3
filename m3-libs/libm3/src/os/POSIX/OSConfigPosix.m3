@@ -104,7 +104,7 @@ CONST
    (* PPC_DARWIN *)  "Darwin",
    (* BSDI4	 *)  "BSD/OS",
    (* NT386GNU	 *)  "Cygwin",
-   (* Tru64v5	 *)  "Tru64",
+   (* PPC_LINUX	 *)  "Linux",
    ..
   };
 
@@ -144,7 +144,7 @@ CONST
    (* PPC_DARWIN *)  "ppc",
    (* BSDI4	 *)  "i486",
    (* NT386GNU	 *)  "i486",
-   (* Tru64v5	 *)  "alpha",
+   (* PPC_LINUX	 *)  "ppc",
    ..
   };
 
