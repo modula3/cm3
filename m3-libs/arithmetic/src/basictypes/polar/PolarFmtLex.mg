@@ -18,7 +18,7 @@ PROCEDURE Fmt (READONLY x : T; READONLY style := FmtStyle{}) : TEXT =
 VAR
   t:TEXT;
 BEGIN
-  t:="POLAR{radius:=" & RF.Fmt(x.radius,style.elemStyle) & ","
+  t:="Polar{radius:=" & RF.Fmt(x.radius,style.elemStyle) & ","
          & "angle:="  & RF.Fmt(x.angle, style.elemStyle) & "}";
   RETURN t;
 END Fmt;
