@@ -18,7 +18,7 @@ PROCEDURE WaveletMask (n, m: CARDINAL): S.T RAISES {DifferentParity} =
     BEGIN
       mask := IntPow.MulPower(
                 mask, NEW(S.T).fromArray(ARRAY OF R.T{Half, Half}), m);
-      RETURN mask.translate(1).alternate();
+      RETURN mask.translate(1-(m + n) DIV 2).alternate();
     END;
   END WaveletMask;
 
