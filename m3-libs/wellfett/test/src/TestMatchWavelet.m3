@@ -515,7 +515,6 @@ TYPE
     OBJECT
       lp,                        (*--h--*)
         lpVan,                   (*lp*(1,0,-1)^m*)
-        lpSmooth,                (*lp*(1,1)^m1*)
         lpSmallVan,              (*lp*(1,0,-1)^m0*(1,1)^m1 with m=m0+m1*)
         lpNoVan,                 (*lp*(1,1)^m, lpVan with (1,-1)^m
                                     removed*)
@@ -607,7 +606,7 @@ PROCEDURE NoVanGetFilterBank (         SELF: NoVanFilterBasis;
   VAR
     bank := ARRAY [0 .. 1] OF
               FB.T{FB.DualToPrimal(
-                     FB.T{SELF.lpSmooth,
+                     FB.T{SELF.lp,
                           SELF.hp.superpose(
                             SELF.lpVan.upConvolve(
                               mc.lift.scale(R.One / mc.wavelet0Amp), 2))}),
@@ -934,7 +933,6 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
     gdual0 := BSpl.WaveletMask(smooth, vanishing);
     hdualvan := SIntPow.MulPower(hdual, bigVanAtom, vanishing).translate(
                   shiftVan);
-    hdualsmooth := BSpl.GeneratorMask(smooth + vanishing - smallVanishing);
 
     (*GeneratorMask uses factors (0.5,0.5), Vanishing moments (0.5,-0.5),
        this results in (0.25,-0.25) but the lifting mask is convolved with
@@ -961,9 +959,8 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
     dualBasis := NEW(            (*StdFilterBasis*)
                    NoVanFilterBasis, lp := hdual, hp := gdual0,
                    lpVan := hdualvan, lpSmallVan := hdualsmallvan,
-                   lpSmooth := hdualsmooth, hpSmallVan := gdual0smallvan,
-                   lpNoVan := hdualnovan, hpNoVan := gdual0novan,
-                   shiftSmallVan := shiftSmallVan,
+                   hpSmallVan := gdual0smallvan, lpNoVan := hdualnovan,
+                   hpNoVan := gdual0novan, shiftSmallVan := shiftSmallVan,
                    negateWavelet := (vanishing DIV 2) MOD 2 # 0);
 
     (*
