@@ -1,2963 +1,1857 @@
-# Makefile for GNU C compiler.
-#   Copyright (C) 1987, 88, 90-95, 1996 Free Software Foundation, Inc.
+#
+# Makefile for directory with subdirs to build.
+#   Copyright (C) 1990, 91, 92, 93, 94, 95, 96, 97, 1998
+#   Free Software Foundation
+#
+# This file is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
 
-#This file is part of GNU CC.
+srcdir = .
 
-#GNU CC is free software; you can redistribute it and/or modify
-#it under the terms of the GNU General Public License as published by
-#the Free Software Foundation; either version 2, or (at your option)
-#any later version.
+prefix = /usr/local
+exec_prefix = $(prefix)
 
-#GNU CC is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#GNU General Public License for more details.
+bindir=${exec_prefix}/bin
+sbindir=${exec_prefix}/sbin
+libexecdir=${exec_prefix}/libexec
+datadir=${prefix}/share
+sysconfdir=${prefix}/etc
+sharedstatedir=${prefix}/com
+localstatedir=${prefix}/var
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+oldincludedir=/usr/include
+infodir=${prefix}/info
+mandir=${prefix}/man
+gxx_include_dir=${includedir}/g++
 
-#You should have received a copy of the GNU General Public License
-#along with GNU CC; see the file COPYING.  If not, write to
-#the Free Software Foundation, 59 Temple Place - Suite 330,
-#Boston MA 02111-1307, USA.
+tooldir = $(exec_prefix)/$(target_alias)
+build_tooldir = $(exec_prefix)/$(target_alias)
 
-# The targets for external use include:
-# all, doc, proto, install, install-cross, install-cross-rest,
-# uninstall, TAGS, mostlyclean, clean, distclean, maintainer-clean,
-# stage1, stage2, stage3, stage4.
 
-# Suppress smart makes who think they know how to automake Yacc files
-.y.c:
+program_transform_name =
 
-# Variables that exist for you to override.
-# See below for how to change them for certain systems.
+man1dir = $(mandir)/man1
+man2dir = $(mandir)/man2
+man3dir = $(mandir)/man3
+man4dir = $(mandir)/man4
+man5dir = $(mandir)/man5
+man6dir = $(mandir)/man6
+man7dir = $(mandir)/man7
+man8dir = $(mandir)/man8
+man9dir = $(mandir)/man9
+infodir = $(prefix)/info
+includedir = $(prefix)/include
+# Directory in which the compiler finds executables, libraries, etc.
+libsubdir = $(libdir)/gcc-lib/$(target_alias)/$(gcc_version)
+GDB_NLM_DEPS = 
 
-# List of language subdirectories.
-# This is overridden by configure.
-SUBDIRS =
-
-# Selection of languages to be made.
-# This is overridden by configure.
-# CYGNUS LOCAL gcov
-LANGUAGES = c objective-c proto gcov
-
-# Selection of languages to be made during stage1 build.
-# This is overridden by configure.
-BOOT_LANGUAGES = c
-
-ALLOCA =
-ALLOCA_FLAGS =
-ALLOCA_FINISH = true
-
-# Various ways of specifying flags for compilations:  
-# CFLAGS is for the user to override to, e.g., do a bootstrap with -O2.
-# BOOT_CFLAGS is the value of CFLAGS to pass
-# to the stage2 and stage3 compilations
-# XCFLAGS is used for most compilations but not when using the GCC just built.
-# TCFLAGS is used for compilations with the GCC just built.
-XCFLAGS =
-TCFLAGS =
-CFLAGS = -g
-BOOT_CFLAGS = -O $(CFLAGS)
-# These exists to be overridden by the x-* and t-* files, respectively.
-X_CFLAGS =
-T_CFLAGS =
-
-X_CPPFLAGS =
-T_CPPFLAGS =
-
-CC = cc
-# CYGNUS LOCAL: we use byacc instead of bison, DO NOT SEND TO RMS
-BISON = `if [ -f $(objdir)/../byacc/byacc ] ; then echo $(objdir)/../byacc/byacc ; else echo byacc ; fi`
-BISONFLAGS =
-# CYGNUS LOCAL: use flex in build tree if it exists
-LEX = `if [ -f $(objdir)/../flex/flex ] ; then echo $(objdir)/../flex/flex ; else echo flex ; fi`
-LEXFLAGS =
-AR = ar
-OLDAR_FLAGS = qc
-AR_FLAGS = rc
 SHELL = /bin/sh
-# on sysV, define this as cp.
-INSTALL = install -c
-# These permit overriding just for certain files.
-INSTALL_PROGRAM = $(INSTALL)
-INSTALL_DATA = $(INSTALL)
-MAKEINFO = makeinfo
-MAKEINFOFLAGS =
-TEXI2DVI = texi2dvi
-# For GNUmake: let us decide what gets passed to recursive makes.
-MAKEOVERRIDES =
 
-# Define this as & to perform parallel make on a Sequent.
-# Note that this has some bugs, and it seems currently necessary 
-# to compile all the gen* files first by hand to avoid erroneous results.
-P =
+# INSTALL_PROGRAM_ARGS is changed by configure.in to use -x for a
+# cygwin32 host.
+INSTALL_PROGRAM_ARGS =
 
-# How to invoke ranlib.
+INSTALL = $(SHELL) $$s/install-sh -c
+INSTALL_PROGRAM = $(INSTALL) $(INSTALL_PROGRAM_ARGS)
+INSTALL_SCRIPT = $(INSTALL)
+INSTALL_DATA = $(INSTALL) -m 644
+
+INSTALL_DOSREL = install-dosrel-fake
+
+AS = as
+AR = ar
+AR_FLAGS = rc
+CC = cc
+
+# Special variables passed down in EXTRA_GCC_FLAGS.  They are defined
+# here so that they can be overridden by Makefile fragments.
+HOST_CC = $(CC_FOR_BUILD)
+HOST_PREFIX = 
+HOST_PREFIX_1 = loser-
+
+# These flag values are normally overridden by the configure script.
+CFLAGS = -g
+CXXFLAGS = -g -O2
+
+LIBCFLAGS = $(CFLAGS)
+CFLAGS_FOR_TARGET = $(CFLAGS)
+LDFLAGS_FOR_TARGET = 
+LIBCFLAGS_FOR_TARGET = $(CFLAGS_FOR_TARGET)
+PICFLAG = 
+PICFLAG_FOR_TARGET = 
+
+CHILLFLAGS = $(CFLAGS)
+CHILL_LIB = -lchill
+CXX = c++
+
+# Use -O2 to stress test the compiler.
+LIBCXXFLAGS = $(CXXFLAGS) -fno-implicit-templates
+CXXFLAGS_FOR_TARGET = $(CXXFLAGS)
+LIBCXXFLAGS_FOR_TARGET = $(CXXFLAGS_FOR_TARGET) -fno-implicit-templates
+
 RANLIB = ranlib
-# Test to use to see whether ranlib exists on the system.
-RANLIB_TEST = [ -f /usr/bin/ranlib -o -f /bin/ranlib ]
 
-# Compiler to use for compiling libgcc1.a.
-# OLDCC should not be the GNU C compiler,
-# since that would compile typical libgcc1.a functions such as mulsi3
-# into infinite recursions.
-OLDCC = cc
+DLLTOOL = dlltool
+WINDRES = windres
 
-# CFLAGS for use with OLDCC, for compiling libgcc1.a.
-# NOTE: -O does not work on some Unix systems!
-CCLIBFLAGS = -O
+NM = nm
 
-# Version of ar to use when compiling libgcc1.a.
-OLDAR = ar
+LD = ld
 
-# Target to use when installing include directory.  Either
-# install-headers-tar or install-headers-cpio.
-INSTALL_HEADERS_DIR = install-headers-tar
+# Not plain GZIP, since gzip looks there for extra command-line options.
+GZIPPROG = gzip
 
-# Header files that are made available under the same name
-# to programs compiled with GCC.
-USER_H = $(srcdir)/ginclude/stdarg.h $(srcdir)/ginclude/stddef.h \
-    $(srcdir)/ginclude/varargs.h $(srcdir)/ginclude/va-alpha.h \
-    $(srcdir)/ginclude/va-h8300.h $(srcdir)/ginclude/va-i860.h \
-    $(srcdir)/ginclude/va-i960.h $(srcdir)/ginclude/va-mips.h \
-    $(srcdir)/ginclude/va-m88k.h $(srcdir)/ginclude/va-pa.h \
-    $(srcdir)/ginclude/va-pyr.h $(srcdir)/ginclude/va-sparc.h \
-    $(srcdir)/ginclude/va-clipper.h $(srcdir)/ginclude/va-spur.h \
-    $(srcdir)/ginclude/iso646.h $(srcdir)/ginclude/va-ppc.h \
-    $(srcdir)/ginclude/proto.h $(srcdir)/ginclude/va-sh.h $(EXTRA_HEADERS)
+# These values are substituted by configure.
+DEFAULT_YACC = yacc
+DEFAULT_LEX = lex
+DEFAULT_M4 = m4
 
-# Target to use whe installing assert.h.  Some systems may
-# want to set this empty.
-INSTALL_ASSERT_H = install-assert-h
+BISON = `if [ -f $$r/bison/bison ] ; then \
+	    echo $$r/bison/bison -L $$s/bison/ ; \
+	 else \
+	    echo bison ; \
+	 fi`
 
-# The GCC to use for compiling libgcc2.a, enquire, and libgcc1-test.
-# Usually the one we just built.
-# Don't use this as a dependency--use $(GCC_PASSES) or $(GCC_PARTS).
-GCC_FOR_TARGET = ./xgcc -B./
+YACC = `if [ -f $$r/bison/bison ] ; then \
+	    echo $$r/bison/bison -y -L $$s/bison/ ; \
+	elif [ -f $$r/byacc/byacc ] ; then \
+	    echo $$r/byacc/byacc ; \
+	else \
+	    echo ${DEFAULT_YACC} ; \
+	fi`
 
-# This is used instead of ALL_CFLAGS when compiling with GCC_FOR_TARGET.
-# It omits XCFLAGS, and specifies -B./.
-# It also specifies -I./include to find, e.g., stddef.h.
-GCC_CFLAGS=$(INTERNAL_CFLAGS) $(X_CFLAGS) $(T_CFLAGS) $(CFLAGS) -I./include $(TCFLAGS)
+LEX = `if [ -f $$r/flex/flex ] ; \
+	then echo $$r/flex/flex ; \
+	else echo ${DEFAULT_LEX} ; fi`
 
-# Special flags for compiling enquire.
-# We disable optimization to make floating point more reliable.
-ENQUIRE_CFLAGS = -DNO_MEM -DNO_LONG_DOUBLE_IO -O0
-ENQUIRE_LDFLAGS = $(LDFLAGS)
+M4 = `if [ -f $$r/m4/m4 ] ; \
+	then echo $$r/m4/m4 ; \
+	else echo ${DEFAULT_M4} ; fi`
 
-# Sed command to transform gcc to installed name.  Overwritten by configure.
-program_transform_name = -e s,x,x,
-program_transform_cross_name = -e s,^,$(target_alias)-,
+MAKEINFO = `if [ -f $$r/texinfo/makeinfo/Makefile ] ; \
+	then echo $$r/texinfo/makeinfo/makeinfo ; \
+	else echo makeinfo ; fi`
 
-# Tools to use when building a cross-compiler.
-# These are used because `configure' appends `cross-make'
-# to the makefile when making a cross-compiler.
+# This just becomes part of the MAKEINFO definition passed down to
+# sub-makes.  It lets flags be given on the command line while still
+# using the makeinfo from the object tree.
+MAKEINFOFLAGS =
 
-# CYGNUS LOCAL: Use the tools from the build tree, if they are available.
+EXPECT = `if [ -f $$r/expect/expect ] ; \
+	then echo $$r/expect/expect ; \
+	else echo expect ; fi`
 
-# objdir is set by configure.
-objdir = .
+RUNTEST = `if [ -f $$s/dejagnu/runtest ] ; \
+	then echo $$s/dejagnu/runtest ; \
+	else echo runtest ; fi`
+
+
+# compilers to use to create programs which must be run in the build
+# environment.
+CC_FOR_BUILD = $(CC)
+CXX_FOR_BUILD = $(CXX)
+
+SUBDIRS = "this is set via configure, don't edit this"
+OTHERS = 
+
+# This is set by the configure script to the list of directories which
+# should be built using the target tools.
+TARGET_CONFIGDIRS = libiberty libgloss newlib libio librx libstdc++ libg++ winsup opcodes libstub cygmon libf2c libchill libobjc
+
+# Target libraries are put under this directory:
+# Changed by configure to $(target_alias) if cross.
+TARGET_SUBDIR = .
+
+# This is set by the configure script to the arguments passed to configure.
+CONFIG_ARGUMENTS = 
+
+# This is set by configure to REALLY_SET_LIB_PATH if --enable-shared
+# was used.
+SET_LIB_PATH =
+
+# This is the name of the environment variable used for the path to
+# the libraries.  This may be changed by configure.in.
+RPATH_ENVVAR = LD_LIBRARY_PATH
+
+# configure.in sets SET_LIB_PATH to this if --enable-shared was used.
+REALLY_SET_LIB_PATH = \
+  if [ x"$$$(RPATH_ENVVAR)" != x ]; then \
+    $(RPATH_ENVVAR)=$$r/bfd:$$r/opcodes:$$$(RPATH_ENVVAR); \
+  else \
+    $(RPATH_ENVVAR)=$$r/bfd:$$r/opcodes; \
+  fi; \
+  export $(RPATH_ENVVAR);
+
+ALL = all.normal
+INSTALL_TARGET = installdirs \
+	install-gcc \
+	$(INSTALL_MODULES) \
+	$(INSTALL_TARGET_MODULES) \
+	$(INSTALL_X11_MODULES) \
+	$(INSTALL_DOSREL)
+
+INSTALL_TARGET_CROSS = installdirs \
+	install-gcc-cross \
+	$(INSTALL_MODULES) \
+	$(INSTALL_TARGET_MODULES) \
+	$(INSTALL_X11_MODULES) \
+	$(INSTALL_DOSREL)
+
+CC_FOR_TARGET = ` \
+  if [ -f $$r/gcc/xgcc ] ; then \
+    if [ -f $$r/$(TARGET_SUBDIR)/newlib/Makefile ] ; then \
+      if [ -f $$r/$(TARGET_SUBDIR)/winsup/Makefile ] ; then \
+        echo $$r/gcc/xgcc -B$$r/gcc/ -B$$r/$(TARGET_SUBDIR)/newlib/ -B$(build_tooldir)/bin/ -L$$r/$(TARGET_SUBDIR)/winsup -idirafter $$r/$(TARGET_SUBDIR)/newlib/targ-include -idirafter $$s/newlib/libc/include -nostdinc; \
+      else \
+        echo $$r/gcc/xgcc -B$$r/gcc/ -B$(build_tooldir)/bin/ -idirafter $$r/$(TARGET_SUBDIR)/newlib/targ-include -idirafter $$s/newlib/libc/include -nostdinc; \
+      fi; \
+    else \
+      echo $$r/gcc/xgcc -B$$r/gcc/ -B$(build_tooldir)/bin/; \
+    fi; \
+  else \
+    if [ "$(host_canonical)" = "$(target_canonical)" ] ; then \
+      echo $(CC); \
+    else \
+      t='$(program_transform_name)'; echo gcc | sed -e 's/x/x/' $$t; \
+    fi; \
+  fi`
+
+# If CC_FOR_TARGET is not overriden on the command line, then this
+# variable is passed down to the gcc Makefile, where it is used to
+# build libgcc2.a.  We define it here so that it can itself be
+# overridden on the command line.
+GCC_FOR_TARGET = $$r/gcc/xgcc -B$$r/gcc/ -B$(build_tooldir)/bin/ -I$(build_tooldir)/include
+
+CHILL_FOR_TARGET = ` \
+  if [ -f $$r/gcc/xgcc ] ; then \
+    echo $$r/gcc/xgcc -B$$r/gcc/ -B$(build_tooldir)/bin/ -L$$r/gcc/ch/runtime/; \
+  else \
+    if [ "$(host_canonical)" = "$(target_canonical)" ] ; then \
+      echo $(CC); \
+    else \
+      t='$(program_transform_name)'; echo gcc | sed -e 's/x/x/' $$t; \
+    fi; \
+  fi`
+
+CXX_FOR_TARGET = ` \
+  if [ -f $$r/gcc/xgcc ] ; then \
+    if [ -f $$r/$(TARGET_SUBDIR)/newlib/Makefile ] ; then \
+      if [ -f $$r/$(TARGET_SUBDIR)/winsup/Makefile ] ; then \
+        echo $$r/gcc/xgcc -B$$r/gcc/ -B$$r/$(TARGET_SUBDIR)/newlib/ -B$(build_tooldir)/bin/ -L$$r/winsup -idirafter $$r/$(TARGET_SUBDIR)/newlib/targ-include -idirafter $$s/newlib/libc/include -nostdinc; \
+      else \
+        echo $$r/gcc/xgcc -B$$r/gcc/ -B$(build_tooldir)/bin/ -idirafter $$r/$(TARGET_SUBDIR)/newlib/targ-include -idirafter $$s/newlib/libc/include -nostdinc; \
+      fi; \
+    else \
+      echo $$r/gcc/xgcc -B$$r/gcc/ -B$(build_tooldir)/bin/; \
+    fi; \
+  else \
+    if [ "$(host_canonical)" = "$(target_canonical)" ] ; then \
+      echo $(CXX); \
+    else \
+      t='$(program_transform_name)'; echo c++ | sed -e 's/x/x/' $$t; \
+    fi; \
+  fi`
+
+AS_FOR_TARGET = ` \
+  if [ -f $$r/gas/as-new ] ; then \
+    echo $$r/gas/as-new ; \
+  else \
+    if [ "$(host_canonical)" = "$(target_canonical)" ] ; then \
+      echo $(AS); \
+    else \
+       t='$(program_transform_name)'; echo as | sed -e 's/x/x/' $$t ; \
+    fi; \
+  fi`
+
+LD_FOR_TARGET = ` \
+  if [ -f $$r/ld/ld-new ] ; then \
+    echo $$r/ld/ld-new ; \
+  else \
+    if [ "$(host_canonical)" = "$(target_canonical)" ] ; then \
+      echo $(LD); \
+    else \
+       t='$(program_transform_name)'; echo ld | sed -e 's/x/x/' $$t ; \
+    fi; \
+  fi`
+
+DLLTOOL_FOR_TARGET = ` \
+  if [ -f $$r/binutils/dlltool ] ; then \
+    echo $$r/binutils/dlltool ; \
+  else \
+    if [ "$(host_canonical)" = "$(target_canonical)" ] ; then \
+      echo $(DLLTOOL); \
+    else \
+       t='$(program_transform_name)'; echo dlltool | sed -e 's/x/x/' $$t ; \
+    fi; \
+  fi`
+
+WINDRES_FOR_TARGET = ` \
+  if [ -f $$r/binutils/windres ] ; then \
+    echo $$r/binutils/windres ; \
+  else \
+    if [ "$(host_canonical)" = "$(target_canonical)" ] ; then \
+      echo $(WINDRES); \
+    else \
+       t='$(program_transform_name)'; echo windres | sed -e 's/x/x/' $$t ; \
+    fi; \
+  fi`
 
 AR_FOR_TARGET = ` \
-  if [ -f $(objdir)/../binutils/ar ] ; then \
-    echo $(objdir)/../binutils/ar ; \
+  if [ -f $$r/binutils/ar ] ; then \
+    echo $$r/binutils/ar ; \
   else \
-    if [ "$(host_canonical)" = "$(target)" ] ; then \
-      echo ar; \
+    if [ "$(host_canonical)" = "$(target_canonical)" ] ; then \
+      echo $(AR); \
     else \
-       t='$(program_transform_name)'; echo ar | sed -e '' $$t ; \
+       t='$(program_transform_name)'; echo ar | sed -e 's/x/x/' $$t ; \
     fi; \
   fi`
-AR_FOR_TARGET_FLAGS = rc
+
 RANLIB_FOR_TARGET = ` \
-  if [ -f $(objdir)/../binutils/ranlib ] ; then \
-    echo $(objdir)/../binutils/ranlib ; \
+  if [ -f $$r/binutils/ranlib ] ; then \
+    echo $$r/binutils/ranlib ; \
   else \
-    if [ "$(host_canonical)" = "$(target)" ] ; then \
-      echo ranlib; \
+    if [ "$(host_canonical)" = "$(target_canonical)" ] ; then \
+      echo $(RANLIB); \
     else \
-       t='$(program_transform_name)'; echo ranlib | sed -e '' $$t ; \
+       t='$(program_transform_name)'; echo ranlib | sed -e 's/x/x/' $$t ; \
     fi; \
   fi`
-RANLIB_TEST_FOR_TARGET = \
-  [ -f $(RANLIB_FOR_TARGET) ] \
-  || ( [ "$(host_canonical)" = "$(target)" ] \
-       && [ -f /usr/bin/ranlib -o -f /bin/ranlib ] )
 
-# CYGNUS LOCAL: we always act like a cross-compiler, even when we're
-# compiling native.  This is because we want to use our own tools if
-# we can.  We don't just set RANLIB to a complicated expression,
-# because the top level Makefile.in might override RANLIB_FOR_TARGET.
-# These are from the FSF file "cross-make".
-AR = $(AR_FOR_TARGET)
-AR_FLAGS = $(AR_FOR_TARGET_FLAGS)
-OLDAR = $(AR_FOR_TARGET)
-OLDAR_FLAGS = $(AR_FOR_TARGET_FLAGS)
-RANLIB = $(RANLIB_FOR_TARGET)
-RANLIB_TEST = $(RANLIB_TEST_FOR_TARGET)
-
-# Dir to search for system headers.  Overridden by cross-make.
-SYSTEM_HEADER_DIR = /usr/include
-
-# Control whether to run fixproto.
-STMP_FIXPROTO = stmp-fixproto
-
-# Test to see whether <limits.h> exists in the system header files.
-LIMITS_H_TEST = [ -f $(SYSTEM_HEADER_DIR)/limits.h ]
-
-# There may be a premade insn-attrtab.c for this machine.
-# (You could rebuild it with genattrtab as usual, but it takes a long time.)
-# PREMADE_ATTRTAB is the file name of the file to use.
-# PREMADE_ATTRTAB_MD is the md file it corresponds to.
-PREMADE_ATTRTAB_MD = Makefile  # Guaranteed not to cmp equal to md.
-PREMADE_ATTRTAB = 
-
-target= ... `configure' substitutes actual target name here.
-target_alias= ... `configure' substitutes specified target name here.
-xmake_file= ... `configure' substitutes actual x- file name here.
-tmake_file= ... `configure' substitutes actual t- file name here.
-out_file= ... `configure' substitutes actual out file name here.
-out_object_file= ... `configure' substitutes actual out object file name here.
-md_file= ... `configure' substitutes actual md file name here.
-tm_file= ... `configure' substitutes actual tm file name here.
-build_xm_file= ... `configure' substitutes actual build xm- file name here.
-host_xm_file= ... `configure' substitutes actual host xm- file name here.
-lang_specs_files= ... `configure' substitutes actual lang spec file names here.
-lang_options_files= ... `configure' puts actual lang options file names here.
-OBJC_THREAD_FILE= ... `configure' puts actual objc thread file name here.
-version=`sed -e 's/.*\"\([^ \"]*\)[ \"].*/\1/' < $(srcdir)/version.c`
-mainversion=`sed -e 's/.*\"\([0-9]*\.[0-9]*\).*/\1/' < $(srcdir)/version.c`
-
-# Directory where sources are, from where we are.
-srcdir = .
-# Common prefix for installation directories.
-# NOTE: This directory must exist when you start installation.
-prefix = /usr/local
-# Directory in which to put localized header files. On the systems with
-# gcc as the native cc, `local_prefix' may not be `prefix' which is
-# `/usr'.
-# NOTE: local_prefix *should not* default from prefix.
-local_prefix = /usr/local
-# Directory in which to put host dependent programs and libraries
-exec_prefix = $(prefix)
-# Directory in which to put the executable for the command `gcc'
-bindir = $(exec_prefix)/bin
-# Directory in which to put the directories used by the compiler.
-libdir = $(exec_prefix)/lib
-# Directory in which the compiler finds executables, libraries, etc.
-libsubdir = $(libdir)/gcc-lib/$(target_alias)/$(version)
-# CYGNUS LOCAL: used to produce a relative $(tooldir) in gcc.o.
-unlibsubdir = ../../..
-# END CYGNUS LOCAL
-# Directory in which the compiler finds g++ includes.
-gxx_include_dir= $(prefix)/include/g++
-# Directory in which the old g++ header files may be found.
-old_gxx_include_dir= $(libdir)/g++-include
-# Directory to search for site-specific includes.
-includedir = $(local_prefix)/include
-# CYGNUS LOCAL: value for assertdir is different from FSF.
-# assertdir is overridden in cross-make.
-assertdir = $(includedir)
-# where the info files go
-infodir = $(prefix)/info
-# Extension (if any) to put in installed man-page filename.
-manext = .1
-objext = .o
-exeext =
-
-# Directory in which to put man pages.
-# CYGNUS LOCAL: define mandir and man1dir
-mandir = $(prefix)/man
-man1dir = $(mandir)/man1
-# Directory in which to find other cross-compilation tools and headers.
-# Used in install-cross.
-tooldir = $(exec_prefix)/$(target_alias)
-# Dir for temp files.
-tmpdir = /tmp
-
-# CYGNUS LOCAL texinfo
-# Directory where texinfo.tex lives
-texidir = $(srcdir)/../texinfo
-# END CYGNUS LOCAL
-
-# Additional system libraries to link with.
-CLIB=
-
-# Change this to a null string if obstacks are installed in the
-# system library.
-OBSTACK=obstack.o
-
-# Specify the rule for actually making libgcc.a,
-LIBGCC = libgcc.a
-# and the rule for installing it.
-INSTALL_LIBGCC = install-libgcc
-
-# Specify the rule for actually making libgcc1.a.
-# The value may be empty; that means to do absolutely nothing
-# with or for libgcc1.a.
-LIBGCC1 = libgcc1.a
-
-# Specify the rule for making libgcc1.a for a cross-compiler.
-# The default rule assumes that libgcc1.a is supplied by the user.
-CROSS_LIBGCC1 = libgcc1.cross
-
-# Specify the rule for actually making libgcc2.a.
-LIBGCC2 = libgcc2.a
-
-# Options to use when compiling libgcc2.a.
-# -g1 causes output of debug info only for file-scope entities.
-# we use this here because that should be enough, and also
-# so that -g1 will be tested.
-LIBGCC2_CFLAGS = -O2 $(LIBGCC2_INCLUDES) $(GCC_CFLAGS) $(TARGET_LIBGCC2_CFLAGS) -g1 -DIN_LIBGCC2 -D__GCC_FLOAT_NOT_NEEDED
-
-# Additional options to use when compiling libgcc2.a.
-# Some targets override this to -Iinclude
-LIBGCC2_INCLUDES =
-
-# Additional target-dependent options for compiling libgcc2.a.
-TARGET_LIBGCC2_CFLAGS = 
-
-# Things which must be built before building libgcc2.a.
-# Some targets override this to stmp-int-hdrs
-LIBGCC2_DEPS =
-
-# Enquire target (This is a variable so that a target can choose not to
-# build it.)
-ENQUIRE = enquire
-
-# libgcc1-test target (must also be overridable for a target)
-LIBGCC1_TEST = libgcc1-test
-
-# List of extra executables that should be compiled for this target machine
-# that are used for compiling from source code to object code.
-# The rules for compiling them should be in the t-* file for the machine.
-EXTRA_PASSES =
-
-# Like EXTRA_PASSES, but these are used when linking.
-EXTRA_PROGRAMS = 
-
-# List of extra object files that should be compiled for this target machine.
-# The rules for compiling them should be in the t-* file for the machine.
-EXTRA_PARTS =
-
-# List of extra object files that should be compiled and linked with
-# compiler proper (cc1, cc1obj, cc1plus).
-EXTRA_OBJS =
-
-# List of extra object files that should be compiled and linked with
-# the gcc driver.
-EXTRA_GCC_OBJS =
-
-# List of additional header files to install.
-# Often this is edited directly by `configure'.
-EXTRA_HEADERS =
-
-# CYGNUS LOCAL: Always use collect2.  jason
-# Set this to `ld' to enable use of collect2.
-USE_COLLECT2 = ld
-
-# List of extra C and assembler files to add to libgcc1.a.
-# Assembler files should have names ending in `.asm'.
-LIB1FUNCS_EXTRA = 
-
-# List of extra C and assembler files to add to libgcc2.a.
-# Assembler files should have names ending in `.asm'.
-LIB2FUNCS_EXTRA = 
-
-# Default float.h source to use for cross-compiler.
-# This is overidden by configure.
-CROSS_FLOAT_H=float.h-cross
-
-# Program to convert libraries.
-LIBCONVERT = 
-
-# Control whether header files are installed.
-INSTALL_HEADERS=install-headers
-
-# Options for tar when copying trees.  So HPUX can override it.
-TAROUTOPTS = xpBf
-
-# Select which version of fixincludes to use (I.E. regular versus SVR4)
-# This value is overridden directly by configure.
-FIXINCLUDES=fixincludes
-
-# Additional directories of header files to run fixincludes on.
-# These should be directories searched automatically by default
-# just as /usr/include is.
-# *Do not* use this for directories that happen to contain 
-# header files, but are not searched automatically by default.
-# On most systems, this is empty.
-OTHER_FIXINCLUDES_DIRS=
-
-# List of things which should already be built whenever we try to use xgcc
-# to compile anything (without linking).
-GCC_PASSES=xgcc cc1 cpp $(EXTRA_PASSES)
-
-# List of things which should already be built whenever we try to use xgcc
-# to link anything.
-GCC_PARTS=$(GCC_PASSES) $(LIBGCC) $(EXTRA_PROGRAMS) $(USE_COLLECT2) $(EXTRA_PARTS)
-
-# Directory to link to, when using the target `maketest'.
-DIR = ../gcc
-
-# Guaranteed to not exist when not passing md through cpp.
-# This value is overridden directly by configure.
-MD_FILE = md-cpp-not-used
-
-# Flags to use when cross-building GCC.
-# Prefix to apply to names of object files when using them
-# to run on the machine we are compiling on.
-HOST_PREFIX=
-# Prefix to apply to names of object files when compiling them
-# to run on the machine we are compiling on.
-# The default for this variable is chosen to keep these rules 
-# out of the way of the other rules for compiling the same source files.
-HOST_PREFIX_1=loser-
-HOST_CC=$(CC)
-HOST_CFLAGS=$(ALL_CFLAGS)
-HOST_CLIB=$(CLIB)
-HOST_LDFLAGS=$(LDFLAGS)
-HOST_CPPFLAGS=$(ALL_CPPFLAGS)
-HOST_ALLOCA=$(ALLOCA)
-HOST_MALLOC=$(MALLOC)
-HOST_OBSTACK=$(OBSTACK)
-
-# Actual name to use when installing a native compiler.
-GCC_INSTALL_NAME = `t='$(program_transform_name)'; echo gcc | sed $$t`
-
-# Actual name to use when installing a cross-compiler.
-GCC_CROSS_NAME = `t='$(program_transform_cross_name)'; echo gcc | sed $$t`
-
-# Choose the real default target.
-ALL=all.internal
-
-# Choose the real install target.
-INSTALL_TARGET=install-normal
-
-# Source for float.h.  Overridden by cross-make.
-FLOAT_H=float.h-nat
-
-# CYGNUS LOCAL dejagnu
-# Setup the testing framework, if you have one
-EXPECT = `if [ -f $${rootme}/../expect/expect ] ; then \
-            echo $${rootme}/../expect/expect ; \
-          else echo expect ; fi`
-
-RUNTEST = `if [ -f $${srcdir}/../dejagnu/runtest ] ; then \
-	       echo $${srcdir}/../dejagnu/runtest ; \
-	    else echo runtest; fi`
-RUNTESTFLAGS =
-# END CYGNUS LOCAL
-
-# Extra symbols for fixproto to define when parsing headers.
-FIXPROTO_DEFINES = 
-
-# Extra flags to use when compiling crt{begin,end}.o.
-CRTSTUFF_T_CFLAGS = 
-
-# Extra flags to use when compiling [m]crt0.o.
-CRT0STUFF_T_CFLAGS = 
-
-# End of variables for you to override.
-
-# Definition of `all' is here so that new rules inserted by sed
-# do not specify the default target.
-# The real definition is under `all.internal' (for native compilers)
-# or `all.cross' (for cross compilers).
-all: all.indirect
-
-# This tells GNU Make version 3 not to put all variables in the environment.
-.NOEXPORT:
-
-# sed inserts variable overrides after the following line.
-####target overrides
-####host overrides
-####cross overrides
-####build overrides
-# CYGNUS LOCAL --site
-####site overrides
-# END CYGNUS LOCAL
-
-# Now figure out from those variables how to compile and link.
-
-all.indirect: $(ALL)
-
-# IN_GCC tells obstack.h that we are using gcc's <stddef.h> file.
-# ??? IN_GCC should be obsolete now.
-INTERNAL_CFLAGS = $(CROSS) -DIN_GCC
-
-# This is the variable actually used when we compile.
-# CYGNUS LOCAL -- SCHED_CFLAGS
-ALL_CFLAGS = $(INTERNAL_CFLAGS) $(X_CFLAGS) $(T_CFLAGS) $(CFLAGS) $(XCFLAGS) $(SCHED_CFLAGS)
-# END CYGNUS LOCAL
-
-# Likewise.
-ALL_CPPFLAGS = $(CPPFLAGS) $(X_CPPFLAGS) $(T_CPPFLAGS)
-
-# CYGNUS LOCAL: USE_ALLOCA and USE_HOST_ALLOCA different from FSF.
-# Even if ALLOCA is set, don't use it if compiling with GCC.
-#USE_ALLOCA= ` case "${CC}" in "${OLDCC}") echo "" ${ALLOCA} ;; esac `
-USE_ALLOCA= ${ALLOCA}
-#USE_HOST_ALLOCA= ` case "${HOST_CC}"@"${HOST_ALLOCA}" in "${OLDCC}"@?*) echo ${HOST_PREFIX}${HOST_ALLOCA} ;; esac `
-#USE_HOST_ALLOCA= ${HOST_PREFIX}${HOST_ALLOCA}
-USE_HOST_ALLOCA= ` case "${HOST_ALLOCA}" in ?*) echo ${HOST_PREFIX}${HOST_ALLOCA} ;; esac `
-USE_HOST_MALLOC= ` case "${HOST_MALLOC}" in ?*) echo ${HOST_PREFIX}${HOST_MALLOC} ;; esac `
-USE_HOST_OBSTACK= ` case "${HOST_OBSTACK}" in ?*) echo ${HOST_PREFIX}${HOST_OBSTACK} ;; esac `
-
-# Dependency on obstack, alloca, malloc or whatever library facilities
-# are not installed in the system libraries.
-# We don't use USE_ALLOCA because backquote expansion doesn't work in deps.
-LIBDEPS= $(OBSTACK) $(ALLOCA) $(MALLOC)
-
-# Likewise, for use in the tools that must run on this machine
-# even if we are cross-building GCC.
-# We don't use USE_ALLOCA because backquote expansion doesn't work in deps.
-HOST_LIBDEPS= $(HOST_PREFIX)$(HOST_OBSTACK) $(HOST_PREFIX)$(HOST_ALLOCA) $(HOST_PREFIX)$(HOST_MALLOC)
-
-# How to link with both our special library facilities
-# and the system's installed libraries.
-LIBS = $(OBSTACK) $(USE_ALLOCA) $(MALLOC) $(CLIB)
-
-# Likewise, for use in the tools that must run on this machine
-# even if we are cross-building GCC.
-HOST_LIBS = $(USE_HOST_OBSTACK) $(USE_HOST_ALLOCA) $(USE_HOST_MALLOC)  \
-	    $(HOST_CLIB)
-
-HOST_RTL = $(HOST_PREFIX)rtl.o
-HOST_RTLANAL = $(HOST_PREFIX)rtlanal.o
-HOST_PRINT = $(HOST_PREFIX)print-rtl.o
-
-# Specify the directories to be searched for header files.
-# Both . and srcdir are used, in that order,
-# so that tm.h and config.h will be found in the compilation
-# subdirectory rather than in the source directory.
-INCLUDES = -I. -I$(srcdir) -I$(srcdir)/config
-
-# Always use -I$(srcdir)/config when compiling.
-.c.o:
-	$(CC) -c $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
-
-# This tells GNU make version 3 not to export all the variables
-# defined in this file into the environment.
-.NOEXPORT:
-
-# Support for additional languages (other than c and objc).
-# ??? objc can be supported this way too (leave for later).
-
-# These next lines are overridden by configure.
-LANG_MAKEFILES =
-LANG_STAGESTUFF =
-LANG_DIFF_EXCLUDES =
-
-# Flags to pass to recursive makes.
-# CC is set by configure.  Hosts without symlinks need special handling
-# because we need CC="stage1/xgcc -Bstage1/" to work in the language
-# subdirectories.
-# ??? The choices here will need some experimenting with.
-FLAGS_TO_PASS = \
+NM_FOR_TARGET = ` \
+  if [ -f $$r/binutils/nm-new ] ; then \
+    echo $$r/binutils/nm-new ; \
+  else \
+    if [ "$(host_canonical)" = "$(target_canonical)" ] ; then \
+      echo $(NM); \
+    else \
+       t='$(program_transform_name)'; echo nm | sed -e 's/x/x/' $$t ; \
+    fi; \
+  fi`
+
+# The first rule in the file had better be this one.  Don't put any above it.
+# This lives here to allow makefile fragments to contain dependencies.
+all: all.normal
+.PHONY: all
+
+# These can be overridden by config/mt-*.
+# The _TARGET_ is because they're specified in mt-foo.
+# The _HOST_ is because they're programs that run on the host.
+EXTRA_TARGET_HOST_ALL_MODULES =
+EXTRA_TARGET_HOST_INSTALL_MODULES =
+EXTRA_TARGET_HOST_CHECK_MODULES =
+
+#### host and target specific makefile fragments come in here.
+###
+
+# Flags to pass down to all sub-makes.
+# Please keep these in alphabetical order.
+BASE_FLAGS_TO_PASS = \
 	"AR_FLAGS=$(AR_FLAGS)" \
 	"AR_FOR_TARGET=$(AR_FOR_TARGET)" \
+	"AS_FOR_TARGET=$(AS_FOR_TARGET)" \
 	"BISON=$(BISON)" \
-	"BISONFLAGS=$(BISONFLAGS)" \
-	"CC=set-by-configure" \
+	"CC_FOR_BUILD=$(CC_FOR_BUILD)" \
+	"CC_FOR_TARGET=$(CC_FOR_TARGET)" \
 	"CFLAGS=$(CFLAGS)" \
-	"GCC_FOR_TARGET=$(GCC_FOR_TARGET)" \
+	"CFLAGS_FOR_TARGET=$(CFLAGS_FOR_TARGET)" \
+	"CHILLFLAGS=$(CHILLFLAGS)" \
+	"CHILL_FOR_TARGET=$(CHILL_FOR_TARGET)" \
+	"CHILL_LIB=$(CHILL_LIB)" \
+	"CXX_FOR_BUILD=$(CXX_FOR_BUILD)" \
+	"CXXFLAGS=$(CXXFLAGS)" \
+	"CXXFLAGS_FOR_TARGET=$(CXXFLAGS_FOR_TARGET)" \
+	"CXX_FOR_TARGET=$(CXX_FOR_TARGET)" \
+	"DLLTOOL_FOR_TARGET=$(DLLTOOL_FOR_TARGET)" \
+	"INSTALL=$(INSTALL)" \
+	"INSTALL_DATA=$(INSTALL_DATA)" \
+	"INSTALL_PROGRAM=$(INSTALL_PROGRAM)" \
+	"INSTALL_SCRIPT=$(INSTALL_SCRIPT)" \
 	"LDFLAGS=$(LDFLAGS)" \
 	"LEX=$(LEX)" \
-	"LEXFLAGS=$(LEXFLAGS)" \
-	"MAKEINFO=$(MAKEINFO)" \
-	"MAKEINFOFLAGS=$(MAKEINFOFLAGS)" \
+	"LD_FOR_TARGET=$(LD_FOR_TARGET)" \
+	"LIBCFLAGS=$(LIBCFLAGS)" \
+	"LIBCFLAGS_FOR_TARGET=$(LIBCFLAGS_FOR_TARGET)" \
+	"LIBCXXFLAGS=$(LIBCXXFLAGS)" \
+	"LIBCXXFLAGS_FOR_TARGET=$(LIBCXXFLAGS_FOR_TARGET)" \
+	"M4=$(M4)" \
+	"MAKE=$(MAKE)" \
+	"MAKEINFO=$(MAKEINFO) $(MAKEINFOFLAGS)" \
+	"NM_FOR_TARGET=$(NM_FOR_TARGET)" \
 	"RANLIB_FOR_TARGET=$(RANLIB_FOR_TARGET)" \
-	"RANLIB_TEST_FOR_TARGET=$(RANLIB_TEST_FOR_TARGET)" \
+	"RPATH_ENVVAR=$(RPATH_ENVVAR)" \
 	"SHELL=$(SHELL)" \
-	"exeext=$(exeext)" \
-	"objext=$(objext)" \
-	"exec_prefix=$(exec_prefix)" \
-	"prefix=$(prefix)" \
-	"tooldir=$(tooldir)" \
+	"EXPECT=$(EXPECT)" \
+	"RUNTEST=$(RUNTEST)" \
+	"RUNTESTFLAGS=$(RUNTESTFLAGS)" \
+	"TARGET_SUBDIR=$(TARGET_SUBDIR)" \
+	"WINDRES_FOR_TARGET=$(WINDRES_FOR_TARGET)" \
+	"YACC=$(YACC)" \
 	"bindir=$(bindir)" \
+	"datadir=$(datadir)" \
+	"exec_prefix=$(exec_prefix)" \
+	"includedir=$(includedir)" \
+	"infodir=$(infodir)" \
+	"libdir=$(libdir)" \
+	"libexecdir=$(libexecdir)" \
+	"lispdir=$(lispdir)" \
+	"localstatedir=$(localstatedir)" \
+	"mandir=$(mandir)" \
+	"oldincludedir=$(oldincludedir)" \
+	"prefix=$(prefix)" \
+	"sbindir=$(sbindir)" \
+	"sharedstatedir=$(sharedstatedir)" \
+	"sysconfdir=$(sysconfdir)" \
+	"tooldir=$(tooldir)" \
+	"build_tooldir=$(build_tooldir)" \
+	"gxx_include_dir=$(gxx_include_dir)" \
+	"gcc_version=$(gcc_version)" \
+	"gcc_version_trigger=$(gcc_version_trigger)" \
+	"target_alias=$(target_alias)" \
 	"libsubdir=$(libsubdir)"
-
-# Lists of files for various purposes.
 
-# A list of all the language-specific executables.
-# This is overridden by configure.
-COMPILERS = cc1$(exeext) cc1obj$(exeext)
+# Flags to pass down to most sub-makes, in which we're building with
+# the host environment.
+# If any variables are added here, they must be added to do-*, below.
+EXTRA_HOST_FLAGS = \
+	'AR=$(AR)' \
+	'AS=$(AS)' \
+	'CC=$(CC)' \
+	'CXX=$(CXX)' \
+	'DLLTOOL=$(DLLTOOL)' \
+	'LD=$(LD)' \
+	'NM=$(NM)' \
+	'RANLIB=$(RANLIB)' \
+	'WINDRES=$(WINDRES)'
 
-# Language-specific object files for C.
-C_OBJS = c-parse.o c-lang.o c-lex.o c-pragma.o \
-   c-decl.o c-typeck.o c-convert.o c-aux-info.o c-common.o c-iterate.o
+FLAGS_TO_PASS = $(BASE_FLAGS_TO_PASS) $(EXTRA_HOST_FLAGS)
 
-# Language-specific object files for Objective C.
-OBJC_OBJS = objc-parse.o objc-act.o c-lex.o c-pragma.o \
-   c-decl.o c-typeck.o c-convert.o c-aux-info.o c-common.o c-iterate.o
-
-# Files specific to the C interpreter bytecode compiler(s).
-BC_OBJS = bc-emit.o bc-optab.o
-
-# Bytecode header files constructed at build time; vmsconfig.com wants this.
-BC_ALL = bc-arity.h bc-opcode.h bc-opname.h
-
-# CYGNUS LOCAL haifa
-SCHED_PREFIX =
-SCHED_CFLAGS =
-# END CYGNUS LOCAL
-
-# Language-independent object files.
-OBJS = toplev.o version.o tree.o print-tree.o stor-layout.o fold-const.o \
- function.o stmt.o except.o expr.o calls.o expmed.o explow.o optabs.o \
- varasm.o rtl.o print-rtl.o rtlanal.o emit-rtl.o real.o \
- dbxout.o sdbout.o dwarfout.o dwarf2out.o xcoffout.o \
- integrate.o jump.o cse.o loop.o unroll.o flow.o stupid.o combine.o \
- regclass.o local-alloc.o global.o reload.o reload1.o caller-save.o \
- $(CYGNUS-LOCAL-haifa) \
- insn-peep.o reorg.o $(SCHED_PREFIX)sched.o final.o recog.o reg-stack.o \
- insn-opinit.o insn-recog.o insn-extract.o insn-output.o insn-emit.o \
- $(CYGNUS-LOCAL-gcov) \
- profile.o \
- $(CYGNUS-LOCAL-mentoropt) \
- shorten-life.o \
- $(CYGNUS-LOCAL-regmove) \
- regmove.o \
- insn-attrtab.o $(out_object_file) getpwd.o convert.o $(EXTRA_OBJS)
-
-# GEN files are listed separately, so they can be built before doing parallel
-#  makes for cc1 or cc1plus.  Otherwise sequent parallel make attempts to load
-#  them before rtl.o is compiled.
-GEN= genemit genoutput genrecog genextract genflags gencodes genconfig genpeep
-
-CCCP=cccp
-# Uncomment this line if you want to use cppmain (w/cpplib) as cpp.
-#CCCP=cppmain
-
-# Files to be copied away after each stage in building.
-STAGESTUFF = *$(objext) insn-flags.h insn-config.h insn-codes.h \
- insn-output.c insn-recog.c insn-emit.c insn-extract.c insn-peep.c \
- insn-attr.h insn-attrtab.c insn-opinit.c \
- stamp-flags stamp-config stamp-codes \
- $(CYGNUS-LOCAL-multilib) stamp-mlib \
- stamp-output stamp-recog stamp-emit stamp-extract stamp-peep \
- stamp-attr stamp-attrtab stamp-opinit stamp-proto stamp-crt stamp-crtS stamp-crt0 \
- genemit$(exeext) genoutput$(exeext) genrecog$(exeext) genextract$(exeext) \
- genflags$(exeext) gencodes$(exeext) genconfig$(exeext) genpeep$(exeext) \
- genattrtab$(exeext) genattr$(exeext) genopinit$(exeext) \
- $(BC_ALL) \
- stamp-bcarity stamp-bcopcode stamp-bcopname \
- bi-arity$(exeext) bi-opcode$(exeext) bi-opname$(exeext) \
- $(GCC_PASSES) $(EXTRA_PARTS) $(EXTRA_PROGRAMS) gcc-cross$(exeext) \
- $(CCCP)$(exeext) cc1obj$(exeext) enquire$(exeext) \
- protoize$(exeext) unprotoize$(exeext) \
- specs collect2$(exeext) $(USE_COLLECT2) underscore.c \
- $(CYGNUS-LOCAL-gcov) gcov$(exeext) *.bp \
- $(CYGNUS-LOCAL-regmove) *.regmove \
- $(CYGNUS-LOCAL-mentoropt) *.shorten \
- *.greg *.lreg *.combine *.flow *.cse *.jump *.rtl *.tree *.loop \
- *.dbr *.jump2 *.sched *.cse2 *.sched2 *.stack \
- *.[si] \
- $(LANG_STAGESTUFF)
-
-# Members of libgcc1.a.
-LIB1FUNCS = _mulsi3 _udivsi3 _divsi3 _umodsi3 _modsi3 \
-   _lshrsi3 _ashrsi3 _ashlsi3 \
-   _divdf3 _muldf3 _negdf2 _adddf3 _subdf3 \
-   _fixdfsi _fixsfsi _floatsidf _floatsisf _truncdfsf2 _extendsfdf2 \
-   _addsf3 _negsf2 _subsf3 _mulsf3 _divsf3 \
-   _eqdf2 _nedf2 _gtdf2 _gedf2 _ltdf2 _ledf2 \
-   _eqsf2 _nesf2 _gtsf2 _gesf2 _ltsf2 _lesf2
-
-# Library members defined in libgcc2.c.
-LIB2FUNCS = _muldi3 _divdi3 _moddi3 _udivdi3 _umoddi3 _negdi2 \
-     _lshrdi3 _ashldi3 _ashrdi3 _ffsdi2 \
-    _udiv_w_sdiv _udivmoddi4 _cmpdi2 _ucmpdi2 _floatdidf _floatdisf \
-    _fixunsdfsi _fixunssfsi _fixunsdfdi _fixdfdi _fixunssfdi _fixsfdi \
-    _fixxfdi _fixunsxfdi _floatdixf _fixunsxfsi \
-    _fixtfdi _fixunstfdi _floatditf \
-    __gcc_bcmp _varargs __dummy _eprintf _op_new _op_vnew _new_handler \
-    _op_delete _op_vdel _bb _shtab _clear_cache _trampoline __main _exit \
-    _ctors _eh  _pure
-
-# The files that "belong" in CONFIG_H are deliberately omitted
-# because having them there would not be useful in actual practice.
-# All they would do is cause complete recompilation every time
-# one of the machine description files is edited.
-# That may or may not be what one wants to do.
-# If it is, rm *.o is an easy way to do it.
-# CONFIG_H = $(host_xm_file) $(tm_file)
-CONFIG_H =
-RTL_H = rtl.h rtl.def machmode.h machmode.def
-TREE_H = tree.h real.h tree.def machmode.h machmode.def
-BYTECODE_H = bytecode.h bc-emit.h bc-optab.h
-
-# Language makefile fragments.
-
-# The following targets define the interface between us and the languages.
+# Flags that are concerned with the location of the X11 include files
+# and library files
 #
-# all.build, all.cross, start.encap, rest.encap,
-# info, dvi,
-# install-normal, install-common, install-info, install-man,
-# uninstall, distdir,
-# mostlyclean, clean, distclean, extraclean, maintainer-clean,
-# stage1, stage2, stage3, stage4
+# NOTE: until the top-level is getting the values via autoconf, it only
+# causes problems to have this top-level Makefile overriding the autoconf-set
+# values in child directories.  Only variables that don't conflict with
+# autoconf'ed ones should be passed by X11_FLAGS_TO_PASS for now.
 #
-# Each language is linked in with a series of hooks (since we can't use `::'
-# targets).  The name of each hooked is "lang.${target_name}" (eg: lang.info).
-# Configure computes and adds these here.
+X11_FLAGS_TO_PASS = \
+	'X11_EXTRA_CFLAGS=$(X11_EXTRA_CFLAGS)' \
+	'X11_EXTRA_LIBS=$(X11_EXTRA_LIBS)'
 
-####language hooks
+# Flags to pass down to makes which are built with the target environment.
+# The double $ decreases the length of the command line; the variables
+# are set in BASE_FLAGS_TO_PASS, and the sub-make will expand them.
+# If any variables are added here, they must be added to do-*, below.
+EXTRA_TARGET_FLAGS = \
+	'AR=$$(AR_FOR_TARGET)' \
+	'AS=$$(AS_FOR_TARGET)' \
+	'CC=$$(CC_FOR_TARGET)' \
+	'CFLAGS=$$(CFLAGS_FOR_TARGET)' \
+	'CXX=$$(CXX_FOR_TARGET)' \
+	'CXXFLAGS=$$(CXXFLAGS_FOR_TARGET)' \
+	'DLLTOOL=$$(DLLTOOL_FOR_TARGET)' \
+	'LD=$$(LD_FOR_TARGET)' \
+	'LIBCFLAGS=$$(LIBCFLAGS_FOR_TARGET)' \
+	'LIBCXXFLAGS=$$(LIBCXXFLAGS_FOR_TARGET)' \
+	'NM=$$(NM_FOR_TARGET)' \
+	'RANLIB=$$(RANLIB_FOR_TARGET)' \
+	'WINDRES=$$(WINDRES_FOR_TARGET)'
 
-# sed inserts language fragments after the following line.
-####language fragments
+TARGET_FLAGS_TO_PASS = $(BASE_FLAGS_TO_PASS) $(EXTRA_TARGET_FLAGS)
 
-# End of language makefile fragments.
-
-# Avoid a lot of time thinking about remaking Makefile.in and *.def.
-.SUFFIXES: .in .def
+# Flags to pass down to gcc.  gcc builds a library, libgcc.a, so it
+# unfortunately needs the native compiler and the target ar and
+# ranlib.
+# If any variables are added here, they must be added to do-*, below.
+# The HOST_* variables are a special case, which are used for the gcc
+# cross-building scheme.
+EXTRA_GCC_FLAGS = \
+	'AR=$(AR)' \
+	'AS=$(AS)' \
+	'CC=$(CC)' \
+	'CXX=$(CXX)' \
+	'DLLTOOL=$$(DLLTOOL_FOR_TARGET)' \
+	'HOST_CC=$(CC_FOR_BUILD)' \
+	'HOST_PREFIX=$(HOST_PREFIX)' \
+	'HOST_PREFIX_1=$(HOST_PREFIX_1)' \
+	'NM=$(NM)' \
+	'RANLIB=$(RANLIB)' \
+	'WINDRES=$$(WINDRES_FOR_TARGET)' \
+	"GCC_FOR_TARGET=$(GCC_FOR_TARGET)" \
+	"`echo 'LANGUAGES=$(LANGUAGES)' | sed -e s/.*=$$/XFOO=/`" \
+	"`echo 'STMP_FIXPROTO=$(STMP_FIXPROTO)' | sed -e s/.*=$$/XFOO=/`" \
+	"`echo 'LIMITS_H_TEST=$(LIMITS_H_TEST)' | sed -e s/.*=$$/XFOO=/`" \
+	"`echo 'LIBGCC1_TEST=$(LIBGCC1_TEST)' | sed -e s/.*=$$/XFOO=/`" \
+	"`echo 'LIBGCC2_CFLAGS=$(LIBGCC2_CFLAGS)' | sed -e s/.*=$$/XFOO=/`" \
+	"`echo 'LIBGCC2_DEBUG_CFLAGS=$(LIBGCC2_DEBUG_CFLAGS)' | sed -e s/.*=$$/XFOO=/`" \
+	"`echo 'LIBGCC2_INCLUDES=$(LIBGCC2_INCLUDES)' | sed -e s/.*=$$/XFOO=/`" \
+	"`echo 'ENQUIRE=$(ENQUIRE)' | sed -e s/.*=$$/XFOO=/`" \
+	"`echo 'BOOT_CFLAGS=$(BOOT_CFLAGS)' | sed -e s/.*=$$/XFOO=/`"
 
-Makefile: $(srcdir)/Makefile.in $(srcdir)/configure $(srcdir)/version.c \
-   $(xmake_file) $(tmake_file) \
-   $(LANG_MAKEFILES)
-	cp config.status config.run
-	$(SHELL) config.run
-	rm -f config.run
+GCC_FLAGS_TO_PASS = $(BASE_FLAGS_TO_PASS) $(EXTRA_GCC_FLAGS)
 
-all.internal: start.encap rest.encap
-# This is what to compile if making a cross-compiler.
-# Note that we can compile enquire using the cross-compiler just built,
-# although we can't run it on this machine.
-all.cross: native gcc-cross specs stmp-headers $(LIBGCC) $(STMP_FIXPROTO) \
-	$(LIBGCC1_TEST) $(EXTRA_PARTS) lang.all.cross
-# This is what to compile if making gcc with a cross-compiler.
-all.build: native xgcc $(EXTRA_PARTS) lang.all.build
-# This is what must be made before installing GCC and converting libraries.
-start.encap: native xgcc specs $(LIBGCC1) xlimits.h lang.start.encap
-# These can't be made until after GCC can run.
-rest.encap: stmp-headers $(LIBGCC) $(STMP_FIXPROTO) $(EXTRA_PARTS) lang.rest.encap
-# This is what is made with the host's compiler
-# whether making a cross compiler or not.
-native: config.status cpp $(LANGUAGES) $(EXTRA_PASSES) $(EXTRA_PROGRAMS) $(USE_COLLECT2)
+# This is a list of the targets for all of the modules which are compiled
+# using $(FLAGS_TO_PASS).
+ALL_MODULES = \
+	all-apache \
+	all-ash \
+	all-autoconf \
+	all-automake \
+	all-bash \
+	all-bfd \
+	all-binutils \
+	all-bison \
+	all-byacc \
+	all-bzip2 \
+	all-cvssrc \
+	all-db \
+	all-dejagnu \
+	all-diff \
+	all-dosutils \
+	all-etc \
+	all-fileutils \
+	all-findutils \
+	all-find \
+	all-flex \
+	all-gas \
+	all-gawk \
+	all-gettext \
+	all-gnuserv \
+	all-gprof \
+	all-grep \
+	all-grez \
+	all-gzip \
+	all-hello \
+	all-indent \
+	all-inet \
+	all-intl \
+	all-ispell \
+	all-itcl \
+	all-ld \
+	all-libgui \
+	all-libiberty \
+	all-m4 \
+	all-make \
+	all-mmalloc \
+	all-opcodes \
+	all-patch \
+	all-perl \
+	all-prms \
+	all-rcs \
+	all-readline \
+	all-release \
+	all-recode \
+	all-sed \
+	all-send-pr \
+	all-shellutils \
+	all-sim \
+	all-snavigator \
+	all-tar \
+	all-tcl \
+	all-texinfo \
+	all-textutils \
+	all-tgas \
+	all-time \
+	all-uudecode \
+	all-wdiff \
+	all-zip \
+	$(EXTRA_TARGET_HOST_ALL_MODULES)
 
-# Define the names for selecting languages in LANGUAGES.
-C c: cc1
-# CYGNUS LOCAL: Don't build objc-runtime.
-OBJC objc: cc1obj
-OBJECTIVE-C objective-c: cc1obj
-PROTO: proto
-
-# Tell GNU make these are phony targets.
-.PHONY: C c OBJC objc OBJECTIVE-C objective-c PROTO proto
-
-# Really, really stupid make features, such as SUN's KEEP_STATE, may force
-# a target to build even if it is up-to-date.  So we must verify that
-# config.status does not exist before failing.
-config.status:
-	@if [ ! -f config.status ] ; then \
-	  echo You must configure gcc.  Look at the INSTALL file for details.; \
-	  false; \
-	else \
-	  true; \
-	fi
-
-# On the target machine, finish building a cross compiler.
-# This does the things that can't be done on the host machine.
-rest.cross: $(LIBGCC) gfloat.h specs
-
-# Verify that it works to compile and link libgcc1-test.
-# If it does, then there are sufficient replacements for libgcc1.a.
-libgcc1-test: libgcc1-test.o native $(GCC_PARTS)
-	@echo "Testing libgcc1.  Ignore linker warning messages."
-	$(GCC_FOR_TARGET) $(GCC_CFLAGS) libgcc1-test.o -o libgcc1-test \
-	  -nostartfiles -nostdlib `$(GCC_FOR_TARGET) --print-libgcc-file-name`
-libgcc1-test.o: libgcc1-test.c native xgcc
-	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(ALL_CPPFLAGS) -c $(srcdir)/libgcc1-test.c
-
-# Recompile all the language-independent object files.
-# This is used only if the user explicitly asks for it.
-compilations: ${OBJS}
-
-# Create a list of the language-independent object files so the language
-# subdirectories needn't mention their names explicitly.
-stamp-objlist: Makefile $(OBJS) $(BC_OBJS)
-	echo " $(OBJS) $(BC_OBJS)" | sed -e 's, \([a-z]\), ../\1,g' -e 's/\.o/$(objext)/g' >stamp-objlist
-
-# We call this executable `xgcc' rather than `gcc'
-# to avoid confusion if the current directory is in the path
-# and CC is `gcc'.  It is renamed to `gcc' when it is installed.
-xgcc: gcc.o version.o choose-temp.o pexecute.o $(LIBDEPS) $(EXTRA_GCC_OBJS)
-	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ gcc.o version.o \
-	  choose-temp.o pexecute.o $(EXTRA_GCC_OBJS) $(LIBS)
-
-# Dump a specs file to make -B./ read these specs over installed ones.
-specs: xgcc
-	$(GCC_FOR_TARGET) -dumpspecs > tmp-specs
-	mv tmp-specs specs
-
-# We do want to create an executable named `xgcc', so we can use it to
-# compile libgcc2.a.
-# Also create gcc-cross, so that install-common will install properly.
-gcc-cross: xgcc
-	cp xgcc$(exeext) gcc-cross$(exeext)
-
-cc1: $(P) $(C_OBJS) $(OBJS) $(BC_OBJS) $(LIBDEPS)
-	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ $(C_OBJS) $(OBJS) $(BC_OBJS) $(LIBS)
-
-cc1obj: $(P) $(OBJC_OBJS) $(OBJS) $(BC_OBJS) $(LIBDEPS)
-	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ $(OBJC_OBJS) $(OBJS) $(BC_OBJS) $(LIBS)
-
-# Copy float.h from its source.
-gfloat.h: $(FLOAT_H)
-	-rm -f gfloat.h
-	cp $(FLOAT_H) gfloat.h
-
-# Create float.h source for the native machine.
-float.h-nat: enquire
-	-./enquire -f > tmp-float.h
-	mv tmp-float.h float.h-nat
-
-# Create a dummy float.h source for a cross-compiler.
-# ??? This isn't used anymore.  Should we create config/float-unkn.h
-# and make that the default float_format in configure?
-float.h-cross:
-	echo "#ifndef	__GCC_FLOAT_NOT_NEEDED" > t-float.h-cross
-	echo "#error float.h values not known for cross-compiler" >> t-float.h-cross
-	echo "#endif" >> t-float.h-cross
-	mv t-float.h-cross float.h-cross
-
-# Used to compile enquire with standard cc, but have forgotten why.
-# Let's try with GCC.
-enquire: enquire.o $(GCC_PARTS)
-	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(ENQUIRE_LDFLAGS) enquire.o -o $@
-enquire.o: $(srcdir)/enquire.c $(GCC_PASSES) stmp-int-hdrs
-# Breaking this line caused a problem with one version of GNU make.
-	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(ALL_CPPFLAGS) $(ENQUIRE_CFLAGS) -I. -c $(srcdir)/enquire.c
-
-# Build the version of limits.h that we will install.
-xlimits.h: glimits.h limitx.h limity.h
-	if $(LIMITS_H_TEST) ; then \
-	  cat $(srcdir)/limitx.h $(srcdir)/glimits.h $(srcdir)/limity.h > tmp-xlimits.h; \
-	else \
-	  cat $(srcdir)/glimits.h > tmp-xlimits.h; \
-	fi
-	mv tmp-xlimits.h xlimits.h
-
-# Build libgcc.a.
-# This is done in two parts because some functions, in libgcc1.c,
-# must be compiled with something other than GCC,
-# while the rest, in libgcc2.c, must be compiled with xgcc.
-# That means we can't do libgcc2.c until after xgcc, cc1, etc.
-
-# Use this as value of LIBGCC1 to cause conversion to GNU library format.
-# LIBCONVERT should put its output in libgcc1.conv.
-libgcc1.conv: libgcc1.a
-	$(LIBCONVERT) libgcc1.a libgcc1.conv
-
-# Use this as value of LIBGCC1 to inhibit use of libgcc1.c entirely.
-# Make an empty file instead.
-libgcc1.null: $(GCC_PASSES)
-	echo "__foo () {}" > dummy.c
-	$(GCC_FOR_TARGET) $(GCC_CFLAGS) -c dummy.c
-	$(OLDAR) $(OLDAR_FLAGS) libgcc1.null dummy$(objext)
-	rm -f dummy$(objext) dummy.c
-
-# This is $(LIBGCC1) for a cross-compiler.
-# We have no automatic way of building libgcc1.a, 
-# so it's up to the installer to find a way to do that.
-# This rule deliberately does not depend on libgcc1.a
-# so that it will fail if the installer hasn't provided it.
-libgcc1.cross:
-	mv libgcc1.a libgcc1.cross || (echo You must find a way to make libgcc1.a; false)
-
-# Compile the library of arithmetic subroutines with the native compiler.
-# Don't compile it with GCC!
-# (That would cause most arithmetic functions to call themselves.)
+# This is a list of the check targets for all of the modules which are
+# compiled using $(FLAGS_TO_PASS).
 #
-# NOTE: If you modify these rules substantially, please be sure to
-# check at least config/i386/t-sco5 and possibly other makefile
-# fragments.
-libgcc1.a: libgcc1.c $(CONFIG_H) $(LIB1FUNCS_EXTRA) config.status
-	-rm -f tmplibgcc1.a
-# Actually build it in tmplibgcc1.a, then rename at end,
-# so that libgcc1.a itself remains nonexistent if compilation is aborted.
-# -e causes any failing command to make this rule fail.
-# -e doesn't work in certain shells, so we test $$? as well.
-# lynx has a broken ar, it always complains when the initial library is
-# empty, thus this command works only if we don't do -e
-# There is a trailing backslash (\) deleted from the following line.
-#	set -e;
-	for name in $(LIB1FUNCS); \
-	do \
-	  echo $${name}; \
-	  rm -f $${name}$(objext); \
-	  $(OLDCC) -DIN_LIBGCC1 $(CCLIBFLAGS) $(INCLUDES) -c -DL$${name} $(srcdir)/libgcc1.c; \
-	  if [ $$? -eq 0 ] ; then true; else exit 1; fi; \
-	  mv libgcc1$(objext) $${name}$(objext); \
-	  $(OLDAR) $(OLDAR_FLAGS) tmplibgcc1.a $${name}$(objext); \
-	  rm -f $${name}$(objext); \
-	done
-# Some shells crash when a loop has no items.
-# So make sure there is always at least one--`..'.
-# Then ignore it.
-# We don't use -e here because there are if statements
-# that should not make the command give up when the if condition is false.
-# Instead, we test for failure after each command where it matters.
-	for file in .. $(LIB1FUNCS_EXTRA); \
-	do \
-	  if [ x$${file} != x.. ]; then \
-	    name=`echo $${file} | sed -e 's/[.][cS]$$//' -e 's/[.]asm$$//'`; \
-	    echo $${name}; \
-	    if [ $${name}.asm = $${file} ]; then \
-	      cp $${file} $${name}.s || exit 1; file=$${name}.s; \
-	    else true; fi; \
-	    $(OLDCC) -DIN_LIBGCC1 $(CCLIBFLAGS) $(INCLUDES) -c $${file}; \
-	    if [ $$? -eq 0 ] ; then true; else exit 1; fi; \
-	    $(OLDAR) $(OLDAR_FLAGS) tmplibgcc1.a $${name}$(objext); \
-	    if [ $$? -eq 0 ] ; then true; else exit 1; fi; \
-	    rm -f $${name}.s $${name}$(objext); \
-	  else true; \
-	  fi; \
-	done
-	-if $(RANLIB_TEST) ; then $(RANLIB) tmplibgcc1.a; else true; fi
-	mv tmplibgcc1.a libgcc1.a
-
-# Build libgcc1.a from assembler source.  LIB1ASMFUNCS is the list of
-# functions.  LIB1ASMSRC is the name of the source file in the config
-# subdirectory.
-libgcc1-asm.a: libgcc2.ready config.status $(srcdir)/config/$(LIB1ASMSRC)
-	-rm -f tmplibgcc1.a libgcc1.S
-	cp $(srcdir)/config/$(LIB1ASMSRC) libgcc1.S
-# Actually build it in tmplibgcc1.a, then rename at end,
-# so that libgcc1-asm.a itself remains nonexistent if compilation is aborted.
-# -e causes any failing command to make this rule fail.
-# -e doesn't work in certain shells, so we test $$? as well.
-# lynx has a broken ar, it always complains when the initial library is
-# empty, thus this command works only if we don't do -e
-# There is a trailing backslash (\) deleted from the following line.
-#	set -e;
-	for name in $(LIB1ASMFUNCS); \
-	do \
-	  echo $${name}; \
-	  $(GCC_FOR_TARGET) $(LIBGCC2_CFLAGS) $(INCLUDES) -c -DL$${name} libgcc1.S; \
-	  if [ $$? -eq 0 ] ; then true; else exit 1; fi; \
-	  mv libgcc1$(objext) $${name}$(objext); \
-	  $(AR) $(AR_FLAGS) tmplibgcc1.a $${name}$(objext); \
-	  rm -f $${name}$(objext); \
-	done
-	-rm -f libgcc1.S
-	mv tmplibgcc1.a libgcc1-asm.a
-
-# Generate assembly versions of the functions required for libgcc1.
-# You'll still need to massage the code by hand (possibly hacking
-# underscores and local labels) but this will get you started.
-libgcc1.S: libgcc1.c $(CONFIG_H) config.status
-	-rm -f libgcc1.S
-	touch libgcc1.S
-	for name in $(LIB1FUNCS); \
-	do \
-	  echo $${name}; \
-	  $(OLDCC) -DIN_LIBGCC1 $(CCLIBFLAGS) $(INCLUDES) -S -DL$${name} $(srcdir)/libgcc1.c; \
-	  if [ $$? -eq 0 ] ; then true; else exit 1; fi; \
-	  echo '#ifdef ' L$${name} >> libgcc1.S; \
-	  cat  libgcc1.s >> libgcc1.S; \
-	  echo '#endif /*' L$${name} '*/' >> libgcc1.S; \
-	  echo "" >> libgcc1.S; \
-	done
-
-# Compiling libgcc2.a requires making sure that cc1, etc. have been compiled.
-# But recompiling cc1 should not force recompilation of libgcc2.a.
-# If you want to force recompilation, delete libgcc2.a.
-libgcc2.ready: $(GCC_PASSES) $(LIBGCC2_DEPS) stmp-int-hdrs
-	-if [ -f libgcc2.ready ] ; then \
-		true; \
-	else \
-		touch libgcc2.ready; \
-	fi
-
-libgcc2.a: libgcc2.c libgcc2.ready $(CONFIG_H) $(LIB2FUNCS_EXTRA) \
-   machmode.h longlong.h gbl-ctors.h config.status
-# Actually build it in tmplibgcc2.a, then rename at end,
-# so that libgcc2.a itself remains nonexistent if compilation is aborted.
-	-rm -f tmplibgcc2.a
-# -e causes any failing command to make this rule fail.
-# -e doesn't work in certain shells, so we test $$? as well.
-# lynx has a broken ar, it always complains when the initial library is
-# empty, thus this command works only if we don't do -e
-# There is a trailing backslash (\) deleted from the following line.
-#	set -e;
-	for name in $(LIB2FUNCS); \
-	do \
-	  echo $${name}; \
-	  $(GCC_FOR_TARGET) $(LIBGCC2_CFLAGS) $(INCLUDES) -c -DL$${name} \
-	      $(srcdir)/libgcc2.c -o $${name}$(objext); \
-	  if [ $$? -eq 0 ] ; then true; else exit 1; fi; \
-	  $(AR) $(AR_FLAGS) tmplibgcc2.a $${name}$(objext); \
-	  rm -f $${name}$(objext); \
-	done
-# Some shells crash when a loop has no items.
-# So make sure there is always at least one--`..'.
-# Then ignore it.
-# We don't use -e here because there are if statements
-# that should not make the command give up when the if condition is false.
-# Instead, we test for failure after each command where it matters.
-	for file in .. $(LIB2FUNCS_EXTRA); \
-	do \
-	  if [ x$${file} != x.. ]; then \
-	    name=`echo $${file} | sed -e 's/[.][cS]$$//' -e 's/[.]asm$$//'`; \
-	    oname=` echo $${name} | sed -e 's,.*/,,'`; \
-	    echo $${name}; \
-	    if [ $${name}.asm = $${file} ]; then \
-	      cp $${file} $${name}.s || exit 1; file=$${name}.s; \
-	    else true; fi; \
-	    $(GCC_FOR_TARGET) $(LIBGCC2_CFLAGS) $(INCLUDES) -c $${file}; \
-	    if [ $$? -eq 0 ] ; then true; else exit 1; fi; \
-	    $(AR) $(AR_FLAGS) tmplibgcc2.a $${oname}$(objext); \
-	    rm -f $${name}.s $${oname}$(objext); \
-	  else true; \
-	  fi; \
-	done
-	mv tmplibgcc2.a libgcc2.a
-# These lines were deleted from above the mv command
-# because ranlibing libgcc.a itself should suffice.
-#	-if [ x${HPUX_GAS} = x ] ; then \
-#	  if $(RANLIB_TEST) ; then $(RANLIB) tmplibgcc2.a; else true; fi; \
-#	else true; fi
-
-# Combine the various libraries into a single library, libgcc.a.
-libgcc.a: $(LIBGCC1) $(LIBGCC2)
-	-rm -rf tmplibgcc.a libgcc.a tmpcopy
-	mkdir tmpcopy
-	-if [ x$(LIBGCC1) != x ];			\
-	then (cd tmpcopy; $(AR) x ../$(LIBGCC1));	\
-	else true;					\
-	fi
-# Some versions of ar (specifically the one in RISC/os 5.x), create an
-# unwritable table of contents file, and then print an error message when
-# the second ar command tries to overwrite this file.  To avoid the error
-# message from ar, we make sure all files are writable.
-	-(cd tmpcopy; chmod +w * > /dev/null 2>&1)
-	(cd tmpcopy; $(AR) x ../$(LIBGCC2))
-	(cd tmpcopy; $(AR) $(AR_FLAGS) ../tmplibgcc.a *$(objext))
-	rm -rf tmpcopy
-	-if $(RANLIB_TEST) ; then $(RANLIB) tmplibgcc.a; else true; fi
-# Actually build it in tmplibgcc.a, then rename at end,
-# so that libgcc.a itself remains nonexistent if compilation is aborted.
-	mv tmplibgcc.a libgcc.a
-
-# Use the genmultilib shell script to generate the information the gcc
-# driver program needs to select the library directory based on the
-# switches.
-multilib.h: stamp-mlib; @true
-stamp-mlib: $(srcdir)/genmultilib Makefile
-	$(SHELL) $(srcdir)/genmultilib \
-	  "$(MULTILIB_OPTIONS)" \
-	  "$(MULTILIB_DIRNAMES)" \
-	  "$(MULTILIB_MATCHES)" \
-	  "$(MULTILIB_EXCEPTIONS)" \
-	  "$(MULTILIB_EXTRA_OPTS)" > tmp-mlib.h
-	$(srcdir)/move-if-change tmp-mlib.h multilib.h
-	touch stamp-mlib
-
-# Build multiple copies of libgcc.a, one for each target switch.
-stmp-multilib: $(LIBGCC1) libgcc2.c libgcc2.ready $(CONFIG_H) \
-   $(LIB2FUNCS_EXTRA) machmode.h longlong.h gbl-ctors.h config.status
-	for i in `$(GCC_FOR_TARGET) --print-multi-lib`; do \
-	  dir=`echo $$i | sed -e 's/;.*$$//'`; \
-	  flags=`echo $$i | sed -e 's/^[^;]*;//' -e 's/@/ -/g'`; \
-	  $(MAKE) GCC_FOR_TARGET="$(GCC_FOR_TARGET)" \
-	    AR="$(AR)" AR_FLAGS="$(AR_FLAGS)" CC="$(CC)" CFLAGS="$(CFLAGS)" \
-	    RANLIB="$(RANLIB)" RANLIB_TEST="$(RANLIB_TEST)" \
-	    HOST_PREFIX="$(HOST_PREFIX)" HOST_PREFIX_1="$(HOST_PREFIX_1)" \
-	    LIBGCC2_CFLAGS="$(LIBGCC2_CFLAGS) $${flags}" \
-	    LIBGCC1="$(LIBGCC1)" LIBGCC2="$(LIBGCC2)" \
-	    dir="$${dir}" stmp-multilib-sub; \
-	  if [ $$? -eq 0 ] ; then true; else exit 1; fi; \
-	done
-	touch stmp-multilib
-
-# Subroutine of stmp-multilib so make -n works.
-stmp-multilib-sub:
-	rm -f $(dir)/libgcc.a $(LIBGCC2)
-	$(MAKE) GCC_FOR_TARGET="$(GCC_FOR_TARGET)" \
-	  AR="$(AR)" AR_FLAGS="$(AR_FLAGS)" CC="$(CC)" CFLAGS="$(CFLAGS)" \
-	  HOST_PREFIX="$(HOST_PREFIX)" HOST_PREFIX_1="$(HOST_PREFIX_1)" \
-	  LIBGCC2_CFLAGS="$(LIBGCC2_CFLAGS)" $(LIBGCC2)
-	if [ x$(LIBGCC1) != xlibgcc1-asm.a ]; \
-	then true; \
-	else rm -f $(LIBGCC1); \
-	fi
-	if [ x$(LIBGCC1) != xlibgcc1-asm.a ]; \
-	then true; \
-	else \
-	  $(MAKE) GCC_FOR_TARGET="$(GCC_FOR_TARGET)" \
-	    AR="$(AR)" AR_FLAGS="$(AR_FLAGS)" CC="$(CC)" CFLAGS="$(CFLAGS)" \
-	    HOST_PREFIX="$(HOST_PREFIX)" HOST_PREFIX_1="$(HOST_PREFIX_1)" \
-	    LIBGCC2_CFLAGS="$(LIBGCC2_CFLAGS)" $(LIBGCC1); \
-	fi
-	rm -rf tmplibgcc.a tmpcopy
-	mkdir tmpcopy
-	if [ x$(LIBGCC1) != x ]; \
-	then (cd tmpcopy; $(AR) x ../$(LIBGCC1)); \
-	else true; \
-	fi
-	(cd tmpcopy; $(AR) x ../$(LIBGCC2))
-	(cd tmpcopy; $(AR) $(AR_FLAGS) ../tmplibgcc.a *$(objext))
-	rm -rf libgcc2.a tmpcopy
-	if $(RANLIB_TEST) ; then $(RANLIB) tmplibgcc.a; else true; fi
-	if [ -d $(dir) ]; then true; else mkdir $(dir); fi
-	mv tmplibgcc.a $(dir)/libgcc.a
-
-objc-runtime: libobjc.a
-
-# Build the Objective C runtime library.
-libobjc.a: cc1obj specs stmp-int-hdrs libgcc2.ready $(USE_COLLECT2) $(EXTRA_PARTS)
-	if [ -d objc ]; then true; else mkdir objc; fi
-	thisdir1=`pwd`; \
-	srcdir1=`cd $(srcdir); pwd`; \
-	cd objc; \
-	$(MAKE) -f $${srcdir1}/objc/Makefile libobjc.a \
-	  srcdir=$${srcdir1} tooldir=$(tooldir) AR="$(AR)" AR_FLAGS="$(AR_FLAGS)" \
-	  GCC_FOR_TARGET="$${thisdir1}/xgcc -B$${thisdir1}/" \
-	  GCC_CFLAGS="$(GCC_CFLAGS)" OBJC_THREAD_FILE="$(OBJC_THREAD_FILE)"
-	-rm -f libobjc.a
-	ln objc/libobjc.a . >/dev/null 2>&1 || cp objc/libobjc.a .
-	-if $(RANLIB_TEST) ; then $(RANLIB) libobjc.a; else true; fi
-
-# This is used by objc/Makefile if the user runs that directly.
-sublibobjc.a: cc1obj specs stmp-int-hdrs libgcc2.ready
-	thisdir1=`pwd`; \
-	srcdir1=`cd $(srcdir); pwd`; \
-	cd objc; \
-	$(MAKE) -f $$srcdir1/objc/Makefile libobjc.a \
-	  srcdir=$$srcdir1 tooldir=$(tooldir) AR="$(AR)" AR_FLAGS="$(AR_FLAGS)" \
-	  GCC_FOR_TARGET="$$thisdir1/xgcc -B$$thisdir1/" \
-	  GCC_CFLAGS="$(GCC_CFLAGS)" OBJC_THREAD_FILE="$(OBJC_THREAD_FILE)"
-
-# Compile two additional files that are linked with every program
-# linked using GCC on systems using COFF or ELF, for the sake of C++
-# constructors.
-crtbegin.o: stamp-crt ; @true
-crtend.o: stamp-crt; @true
-
-stamp-crt:	crtstuff.c $(GCC_PASSES) $(CONFIG_H) gbl-ctors.h
-	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(INCLUDES) $(CRTSTUFF_T_CFLAGS) \
-	  -DCRT_BEGIN -finhibit-size-directive -fno-inline-functions \
-	  -g0 -c $(srcdir)/crtstuff.c
-	mv crtstuff$(objext) crtbegin$(objext)
-	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(INCLUDES) $(CRTSTUFF_T_CFLAGS) \
-	  -DCRT_END -finhibit-size-directive -fno-inline-functions \
-	  -g0 -c $(srcdir)/crtstuff.c -o crtend$(objext)
-	touch stamp-crt
-
-# On some systems we also want to install versions of these files
-# compiled using PIC for use in shared libraries.
-crtbeginS.o crtendS.o: stamp-crtS ; @true
-
-stamp-crtS:	crtstuff.c $(GCC_PASSES) $(CONFIG_H) gbl-ctors.h
-	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(INCLUDES) $(CRTSTUFF_T_CFLAGS_S) \
-	  -DCRT_BEGIN -finhibit-size-directive -fno-inline-functions \
-	  -g0 -c $(srcdir)/crtstuff.c 
-	mv crtstuff$(objext) crtbeginS$(objext)
-	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(INCLUDES) $(CRTSTUFF_T_CFLAGS_S) \
-	  -DCRT_END -finhibit-size-directive -fno-inline-functions \
-	  -g0 -c $(srcdir)/crtstuff.c -o crtendS$(objext)
-	touch stamp-crtS
-
-# Compile the start modules crt0.o and mcrt0.o that are linked with every program
-crt0.o: stamp-crt0 ; @true
-mcrt0.o: stamp-crt0; @true
-
-stamp-crt0:	$(CRT0_S) $(MCRT0_S) $(GCC_PASSES) $(CONFIG_H)
-	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(CRT0STUFF_T_CFLAGS) \
-	  -o crt0.o -c $(CRT0_S)
-	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(CRT0STUFF_T_CFLAGS) \
-	  -o mcrt0.o -c $(MCRT0_S)
-	touch stamp-crt0
-
-# Compiling object files from source files.
-
-# Note that dependencies on obstack.h are not written
-# because that file is not part of GCC.
-
-# C language specific files.
-
-# CYGNUS LOCAL: built in build directory
-c-parse.o : c-parse.c $(CONFIG_H) $(TREE_H) c-lex.h c-parse.h \
-    c-tree.h input.h flags.h
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) -c c-parse.c
-c-parse.h : c-parse.c
-# CYGNUS LOCAL dje prefix attributes
-c-parse.c : c-parse.y
-	@echo expect 45 shift/reduce conflicts.
-	$(BISON) $(BISONFLAGS) -d c-parse.y
-	mv -f y.tab.c c-parse.c
-	mv -f y.tab.h c-parse.h
-#	for GDB debugging
-	cp c-parse.c y.tab.c
-c-parse.y : $(srcdir)/c-parse.in
-	echo '/*WARNING: This file is automatically generated!*/' >tmp-c-parse.y
-	sed -e "/^ifobjc$$/,/^end ifobjc$$/d" \
-	  -e "/^ifc$$/d" -e "/^end ifc$$/d" \
-	  $(srcdir)/c-parse.in >>tmp-c-parse.y
-	$(srcdir)/move-if-change tmp-c-parse.y c-parse.y
-
-# CYGNUS LOCAL: c-gperf.h really depends on c-parse.gperf.
-$(srcdir)/c-gperf.h:
-	gperf -p -j1 -i 1 -g -o -t -G -N is_reserved_word -k1,3,$$ \
-	   $(srcdir)/c-parse.gperf >tmp-gperf.h
-	 $(srcdir)/move-if-change tmp-gperf.h $(srcdir)/c-gperf.h
-
-c-decl.o : c-decl.c $(CONFIG_H) $(TREE_H) c-tree.h c-lex.h flags.h output.h
-c-typeck.o : c-typeck.c $(CONFIG_H) $(TREE_H) c-tree.h flags.h output.h
-c-lang.o : c-lang.c $(CONFIG_H) $(TREE_H)
-# CYGNUS LOCAL: built in build directory
-c-lex.o : c-lex.c $(CONFIG_H) $(TREE_H) c-lex.h c-tree.h c-parse.h \
-    input.h flags.h c-gperf.h c-pragma.h
-c-aux-info.o : c-aux-info.c  $(CONFIG_H) $(TREE_H) c-tree.h flags.h
-c-convert.o : c-convert.c $(CONFIG_H) $(TREE_H) flags.h
-c-pragma.o: c-pragma.c $(CONFIG_H) $(TREE_H) c-pragma.h
-c-iterate.o: c-iterate.c $(CONFIG_H) $(TREE_H) $(RTL_H) c-tree.h flags.h
-
-# To make a configuration always use collect2, set USE_COLLECT2 to ld.
-ld: collect2
-	rm -f ld$(exeext)
-	ln collect2$(exeext) ld$(exeext) > /dev/null 2>&1 \
-	   || cp collect2$(exeext) ld$(exeext)
-
-# CYGNUS LOCAL: tlink etc.  jason
-collect2: collect2.o tlink.o hash.o cplus-dem.o underscore.o version.o \
-	choose-temp.o $(LIBDEPS)
-# Don't try modifying collect2 (aka ld) in place--it might be linking this.
-	-rm -f collect2$(exeext)
-	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ collect2.o tlink.o hash.o \
-	  cplus-dem.o underscore.o version.o choose-temp.o $(LIBS)
-
-collect2.o : collect2.c $(CONFIG_H) gstab.h obstack.h demangle.h
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES)  \
-	-DTARGET_MACHINE=\"$(target_alias)\" $(MAYBE_USE_COLLECT2) \
-	-c `echo $(srcdir)/collect2.c | sed 's,^\./,,'`
-
-# CYGNUS LOCAL: tlink etc.  jason
-tlink.o: tlink.c demangle.h hash.h $(CONFIG_H)
-hash.o: hash.c hash.h
-# END CYGNUS LOCAL
-cplus-dem.o: cplus-dem.c demangle.h
-
-underscore.c: stamp-under ; @true
-
-stamp-under: $(GCC_PASSES)
-	echo "int xxy_us_dummy;" >tmp-dum.c
-	$(GCC_FOR_TARGET) -S tmp-dum.c
-	echo '/*WARNING: This file is automatically generated!*/' >tmp-under.c
-	if grep _xxy_us_dummy tmp-dum.s > /dev/null ; then \
-	  echo "int prepends_underscore = 1;" >>tmp-under.c; \
-	else \
-	  echo "int prepends_underscore = 0;" >>tmp-under.c; \
-	fi
-	$(srcdir)/move-if-change tmp-under.c underscore.c
-	-rm -f tmp-dum.c tmp-dum.s
-	touch stamp-under
-
-# Objective C language specific files.
-
-# CYGNUS LOCAL: built in build directory
-objc-parse.o : objc-parse.c $(CONFIG_H) $(TREE_H) c-lex.h \
-   c-tree.h input.h flags.h objc-act.h
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) -c objc-parse.c
-# CYGNUS LOCAL dje prefix attributes
-objc-parse.c : objc-parse.y
-	@echo expect 62 shift/reduce conflicts.
-	$(BISON) $(BISONFLAGS) objc-parse.y
-	mv -f y.tab.c objc-parse.c
-objc-parse.y : $(srcdir)/c-parse.in
-	echo '/*WARNING: This file is automatically generated!*/' >tmp-c-parse.y
-	sed -e "/^ifc$$/,/^end ifc$$/d" \
-	  -e "/^ifobjc$$/d" -e "/^end ifobjc$$/d" \
-	  $(srcdir)/c-parse.in >>tmp-objc-prs.y
-	$(srcdir)/move-if-change tmp-objc-prs.y objc-parse.y
-
-objc-act.o : objc-act.c $(CONFIG_H) $(TREE_H) $(RTL_H) c-tree.h c-lex.h \
-   flags.h objc-act.h input.h function.h c-parse.h
-
-# A file used by all variants of C.
-
-c-common.o : c-common.c $(CONFIG_H) $(TREE_H) c-tree.h c-lex.h flags.h
-
-# Language-independent files.
-
-# CYGNUS LOCAL: We use relative paths for TOOLDIR_BASE_PREFIX and
-# STANDARD_STARTFILE_PREFIX so that we can move the installed tree.
-gcc.o: gcc.c $(CONFIG_H) multilib.h config.status $(lang_specs_files)
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) \
-  -DSTANDARD_STARTFILE_PREFIX=\"$(unlibsubdir)/\" \
-  -DSTANDARD_EXEC_PREFIX=\"$(libdir)/gcc-lib/\" \
-  -DDEFAULT_TARGET_VERSION=\"$(version)\" \
-  -DDEFAULT_TARGET_MACHINE=\"$(target_alias)\" \
-  -DTOOLDIR_BASE_PREFIX=\"$(unlibsubdir)/../\" \
-  -c `echo $(srcdir)/gcc.c | sed 's,^\./,,'`
-
-dumpvers: dumpvers.c
-
-version.o: version.c
-obstack.o: obstack.c
-choose-temp.o: choose-temp.c
-pexecute.o: pexecute.c
-
-convert.o: convert.c $(CONFIG_H) $(TREE_H) flags.h convert.h
-
-tree.o : tree.c $(CONFIG_H) $(TREE_H) flags.h function.h
-# CYGNUS LOCAL mentoropt/law
-shorten-life.o: shorten-life.c $(CONFIG_H) $(RTL_H) basic-block.h regs.h
-# END CYGNUS LOCAL
-print-tree.o : print-tree.c $(CONFIG_H) $(TREE_H)
-stor-layout.o : stor-layout.c $(CONFIG_H) $(TREE_H) flags.h function.h
-fold-const.o : fold-const.c $(CONFIG_H) $(TREE_H) flags.h 
-toplev.o : toplev.c $(CONFIG_H) $(TREE_H) $(RTL_H) bytecode.h bc-emit.h \
-   flags.h input.h insn-attr.h xcoffout.h defaults.h output.h \
-   $(lang_options_files)
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $(MAYBE_USE_COLLECT2) \
-	  -DTARGET_NAME=\"$(target_alias)\" \
-	  -c `echo $(srcdir)/toplev.c | sed 's,^\./,,'`
-
-rtl.o : rtl.c $(CONFIG_H) $(RTL_H)
-
-print-rtl.o : print-rtl.c $(CONFIG_H) $(RTL_H)
-rtlanal.o : rtlanal.c $(CONFIG_H) $(RTL_H)
-
-varasm.o : varasm.c $(CONFIG_H) $(TREE_H) $(RTL_H) flags.h function.h \
-   defaults.h insn-codes.h expr.h hard-reg-set.h regs.h xcoffout.h \
-   output.h bytecode.h c-pragma.h
-function.o : function.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h function.h  \
-   insn-flags.h insn-codes.h expr.h regs.h hard-reg-set.h insn-config.h \
-   recog.h output.h bytecode.h bc-emit.h
-stmt.o : stmt.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h function.h  \
-   insn-flags.h insn-config.h insn-codes.h hard-reg-set.h expr.h except.h \
-   loop.h recog.h bytecode.h bc-typecd.h bc-typecd.def bc-opcode.h \
-   bc-optab.h bc-emit.h
-except.o : except.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h function.h  \
-   insn-flags.h insn-codes.h expr.h regs.h hard-reg-set.h insn-config.h \
-   recog.h output.h except.h
-expr.o : expr.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h function.h regs.h \
-   insn-flags.h insn-codes.h expr.h insn-config.h recog.h output.h \
-   typeclass.h bytecode.h bc-opcode.h bc-typecd.h bc-typecd.def bc-optab.h \
-   bc-emit.h modemap.def hard-reg-set.h
-calls.o : calls.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h expr.h insn-codes.h \
-   insn-flags.h
-expmed.o : expmed.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h  \
-   insn-flags.h insn-config.h insn-codes.h expr.h recog.h real.h
-explow.o : explow.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h hard-reg-set.h \
-   insn-config.h expr.h recog.h insn-flags.h insn-codes.h
-optabs.o : optabs.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h  \
-   insn-flags.h insn-config.h insn-codes.h expr.h recog.h reload.h
-dbxout.o : dbxout.c $(CONFIG_H) $(TREE_H) $(RTL_H) flags.h regs.h \
-   insn-config.h reload.h gstab.h xcoffout.h defaults.h output.h
-sdbout.o : sdbout.c $(CONFIG_H) $(TREE_H) $(RTL_H) gsyms.h flags.h \
-   insn-config.h reload.h
-dwarfout.o : dwarfout.c $(CONFIG_H) $(TREE_H) $(RTL_H) dwarf.h flags.h \
-   insn-config.h reload.h output.h defaults.h
-dwarf2out.o : dwarf2out.c $(CONFIG_H) $(TREE_H) $(RTL_H) dwarf2.h flags.h \
-   insn-config.h reload.h output.h defaults.h hard-reg-set.h regs.h
-xcoffout.o : xcoffout.c $(CONFIG_H) $(TREE_H) $(RTL_H) xcoffout.h flags.h
-emit-rtl.o : emit-rtl.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h \
-   function.h regs.h insn-config.h insn-codes.h real.h expr.h bytecode.h \
-   bc-opcode.h bc-typecd.h bc-typecd.def bc-optab.h bc-emit.h bc-opname.h
-real.o : real.c $(CONFIG_H) $(TREE_H)
-getpwd.o : getpwd.c $(CONFIG_H)
-
-integrate.o : integrate.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h integrate.h \
-   insn-flags.h insn-config.h insn-codes.h expr.h real.h regs.h function.h \
-   bytecode.h
-
-jump.o : jump.c $(CONFIG_H) $(RTL_H) flags.h hard-reg-set.h regs.h \
-   insn-config.h insn-flags.h insn-codes.h expr.h real.h
-stupid.o : stupid.c $(CONFIG_H) $(RTL_H) regs.h hard-reg-set.h flags.h
-
-cse.o : cse.c $(CONFIG_H) $(RTL_H) regs.h hard-reg-set.h flags.h real.h \
-   insn-config.h recog.h
-# CYGNUS LOCAL: gcov
-profile.o : profile.c $(CONFIG_H) $(RTL_H) flags.h insn-flags.h
-# END CYGNUS LOCAL
-loop.o : loop.c $(CONFIG_H) $(RTL_H) flags.h loop.h insn-config.h \
-   insn-flags.h insn-codes.h regs.h hard-reg-set.h recog.h expr.h real.h
-unroll.o : unroll.c $(CONFIG_H) $(RTL_H) insn-config.h insn-codes.h \
-   integrate.h regs.h flags.h expr.h loop.h
-flow.o : flow.c $(CONFIG_H) $(RTL_H) flags.h insn-config.h \
-   basic-block.h regs.h hard-reg-set.h output.h
-combine.o : combine.c $(CONFIG_H) $(RTL_H) flags.h  \
-   insn-config.h insn-flags.h insn-codes.h insn-attr.h regs.h expr.h \
-   basic-block.h recog.h real.h hard-reg-set.h
-# CYGNUS LOCAL: regmove
-regmove.o : regmove.c $(CONFIG_H) $(RTL_H) insn-config.h recog.h \
-   output.h reload.h regs.h
-# END CYGNUS LOCAL
-regclass.o : regclass.c $(CONFIG_H) $(RTL_H) hard-reg-set.h flags.h \
-   basic-block.h regs.h insn-config.h recog.h reload.h real.h bytecode.h
-local-alloc.o : local-alloc.c $(CONFIG_H) $(RTL_H) flags.h basic-block.h \
-   regs.h hard-reg-set.h insn-config.h recog.h output.h
-global.o : global.c $(CONFIG_H) $(RTL_H) flags.h  \
-   basic-block.h regs.h hard-reg-set.h insn-config.h output.h
-
-reload.o : reload.c $(CONFIG_H) $(RTL_H) flags.h output.h \
-   reload.h recog.h hard-reg-set.h insn-config.h insn-codes.h regs.h real.h
-reload1.o : reload1.c $(CONFIG_H) $(RTL_H) real.h flags.h expr.h \
-   reload.h regs.h hard-reg-set.h insn-config.h insn-flags.h insn-codes.h \
-   basic-block.h recog.h output.h
-caller-save.o : caller-save.c $(CONFIG_H) $(RTL_H) flags.h \
-   regs.h hard-reg-set.h insn-codes.h insn-config.h basic-block.h recog.h \
-   reload.h expr.h
-reorg.o : reorg.c $(CONFIG_H) $(RTL_H) conditions.h hard-reg-set.h \
-   basic-block.h regs.h insn-config.h insn-attr.h insn-flags.h recog.h \
-   flags.h output.h
-$(SCHED_PREFIX)sched.o : $(SCHED_PREFIX)sched.c $(CONFIG_H) $(RTL_H) basic-block.h regs.h hard-reg-set.h \
-   flags.h insn-config.h insn-attr.h
-final.o : final.c $(CONFIG_H) $(RTL_H) $(TREE_H) flags.h regs.h \
-   recog.h conditions.h insn-config.h insn-attr.h except.h real.h output.h \
-   hard-reg-set.h insn-flags.h insn-codes.h gstab.h xcoffout.h defaults.h
-recog.o : recog.c $(CONFIG_H) $(RTL_H)  \
-   regs.h recog.h hard-reg-set.h flags.h insn-config.h insn-attr.h \
-   insn-flags.h insn-codes.h real.h
-reg-stack.o : reg-stack.c $(CONFIG_H) $(RTL_H) $(TREE_H) \
-   regs.h hard-reg-set.h flags.h insn-config.h insn-flags.h
-
-$(out_object_file): $(out_file) $(CONFIG_H) $(TREE_H) \
-   $(RTL_H) regs.h hard-reg-set.h real.h insn-config.h conditions.h \
-   insn-flags.h output.h insn-attr.h insn-codes.h
-	$(CC) -c $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $(out_file)
-
-# Build auxiliary files that support ecoff format.
-mips-tfile: mips-tfile.o version.o $(LIBDEPS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ mips-tfile.o version.o $(LIBS)
-
-mips-tfile.o : mips-tfile.c $(CONFIG_H) $(RTL_H)
-
-mips-tdump: mips-tdump.o version.o $(LIBDEPS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ mips-tdump.o version.o $(LIBS)
-
-mips-tdump.o : mips-tdump.c $(CONFIG_H) $(RTL_H)
-
-# Build file to support OSF/rose half-pic format.
-halfpic.o: halfpic.c $(CONFIG_H) $(RTL_H) $(TREE_H)
-
-# Normally this target is not used; but it is used if you
-# define ALLOCA=alloca.o.  In that case, you must get a suitable alloca.c
-# from the GNU Emacs distribution.
-alloca.o:	alloca.c
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $(ALLOCA_FLAGS) \
-	  -c `echo $(srcdir)/alloca.c | sed 's,^\./,,'`
-	$(ALLOCA_FINISH)
-
-# Generate header and source files from the machine description, 
-# and compile them.
-
-.PRECIOUS: insn-config.h insn-flags.h insn-codes.h \
-  insn-emit.c insn-recog.c insn-extract.c insn-output.c insn-peep.c \
-  insn-attr.h insn-attrtab.c
-
-# The following pair of rules has this effect:
-# genconfig is run only if the md has changed since genconfig was last run;
-# but the file insn-config.h is touched only when its contents actually change.
-
-# Each of the other insn-* files is handled by a similar pair of rules.
-
-# This causes an anomaly in the results of make -n
-# because insn-* is older than stamp-*
-# and thus make -n thinks that insn-* will be updated
-# and force recompilation of things that depend on it.
-# We use move-if-change precisely to avoid such recompilation.
-# But there is no way to teach make -n that it will be avoided.
-
-# Each of the insn-*.[ch] rules has a semicolon at the end,
-# for otherwise the system Make on SunOS 4.1 never tries
-# to recompile insn-*.o.  To avoid problems and extra noise from
-# versions of make which don't like empty commands (nothing after the
-# trailing `;'), we call true for each.
-
-insn-config.h: stamp-config ; @true
-stamp-config : $(md_file) genconfig $(srcdir)/move-if-change
-	./genconfig $(md_file) > tmp-config.h
-	$(srcdir)/move-if-change tmp-config.h insn-config.h
-	touch stamp-config
-
-insn-flags.h: stamp-flags ; @true
-stamp-flags : $(md_file) genflags $(srcdir)/move-if-change
-	./genflags $(md_file) > tmp-flags.h
-	$(srcdir)/move-if-change tmp-flags.h insn-flags.h
-	touch stamp-flags
-
-insn-codes.h: stamp-codes ; @true
-stamp-codes : $(md_file) gencodes $(srcdir)/move-if-change
-	./gencodes $(md_file) > tmp-codes.h
-	$(srcdir)/move-if-change tmp-codes.h insn-codes.h
-	touch stamp-codes
-
-insn-emit.o : insn-emit.c $(CONFIG_H) $(RTL_H) expr.h real.h output.h \
-  insn-config.h insn-flags.h insn-codes.h
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) -c insn-emit.c
-
-insn-emit.c: stamp-emit ; @true
-stamp-emit : $(md_file) genemit $(srcdir)/move-if-change
-	./genemit $(md_file) > tmp-emit.c
-	$(srcdir)/move-if-change tmp-emit.c insn-emit.c
-	touch stamp-emit
-
-insn-recog.o : insn-recog.c $(CONFIG_H) $(RTL_H) insn-config.h recog.h \
-  real.h output.h flags.h
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) -c insn-recog.c
-
-insn-recog.c: stamp-recog ; @true
-stamp-recog : $(md_file) genrecog $(srcdir)/move-if-change
-	./genrecog $(md_file) > tmp-recog.c
-	$(srcdir)/move-if-change tmp-recog.c insn-recog.c
-	touch stamp-recog
-
-insn-opinit.o : insn-opinit.c $(CONFIG_H) $(RTL_H) insn-codes.h insn-flags.h \
-  insn-config.h flags.h rtl.h recog.h expr.h reload.h
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) -c insn-opinit.c
-
-insn-opinit.c: stamp-opinit ; @true
-stamp-opinit : $(md_file) genopinit $(srcdir)/move-if-change
-	./genopinit $(md_file) > tmp-opinit.c
-	$(srcdir)/move-if-change tmp-opinit.c insn-opinit.c
-	touch stamp-opinit
-
-insn-extract.o : insn-extract.c $(CONFIG_H) $(RTL_H)
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) -c insn-extract.c
-
-insn-extract.c: stamp-extract ; @true
-stamp-extract : $(md_file) genextract $(srcdir)/move-if-change
-	./genextract $(md_file) > tmp-extract.c
-	$(srcdir)/move-if-change tmp-extract.c insn-extract.c
-	touch stamp-extract
-
-insn-peep.o : insn-peep.c $(CONFIG_H) $(RTL_H) regs.h output.h real.h
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) -c insn-peep.c
-
-insn-peep.c: stamp-peep ; @true
-stamp-peep : $(md_file) genpeep $(srcdir)/move-if-change
-	./genpeep $(md_file) > tmp-peep.c
-	$(srcdir)/move-if-change tmp-peep.c insn-peep.c
-	touch stamp-peep
-
-insn-attrtab.o : insn-attrtab.c $(CONFIG_H) $(RTL_H) regs.h real.h output.h \
-     insn-attr.h insn-config.h
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) -c insn-attrtab.c
-
-insn-attr.h: stamp-attr ; @true
-stamp-attr : $(md_file) genattr $(srcdir)/move-if-change
-	./genattr $(md_file) > tmp-attr.h
-	$(srcdir)/move-if-change tmp-attr.h insn-attr.h
-	touch stamp-attr
-
-insn-attrtab.c: stamp-attrtab ; @true
-stamp-attrtab : $(md_file) genattrtab $(srcdir)/move-if-change
-	if cmp -s $(PREMADE_ATTRTAB_MD) $(md_file);	\
-	then					\
-	  echo Using $(PREMADE_ATTRTAB);	\
-	  cp $(PREMADE_ATTRTAB) tmp-attrtab.c;	\
-	else					\
-	  ./genattrtab $(md_file) > tmp-attrtab.c;	\
-	fi
-	$(srcdir)/move-if-change tmp-attrtab.c insn-attrtab.c
-	touch stamp-attrtab
-
-insn-output.o : insn-output.c $(CONFIG_H) $(RTL_H) regs.h real.h conditions.h \
-    hard-reg-set.h insn-config.h insn-flags.h insn-attr.h output.h recog.h \
-    insn-codes.h
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) -c insn-output.c
-
-insn-output.c: stamp-output ; @true
-stamp-output : $(md_file) genoutput $(srcdir)/move-if-change
-	./genoutput $(md_file) > tmp-output.c
-	$(srcdir)/move-if-change tmp-output.c insn-output.c
-	touch stamp-output
-
-# Compile the programs that generate insn-* from the machine description.
-# They are compiled with $(HOST_CC), and associated libraries,
-# since they need to run on this machine
-# even if GCC is being compiled to run on some other machine.
-
-# $(CONFIG_H) is omitted from the deps of the gen*.o
-# because these programs don't really depend on anything 
-# about the target machine.  They do depend on config.h itself,
-# since that describes the host machine.
-
-# Pass the md file through cpp if the target requests it.
-$(MD_FILE): $(MD_DEPS)
-	rm -f $@
-	$(MD_CPP) $(MD_CPPFLAGS) $(md_file) | sed 's/^# /; /g' > tmp-$@
-	mv tmp-$@ $@
-
-genconfig : genconfig.o $(HOST_RTL) $(HOST_LIBDEPS)
-	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
-	  genconfig.o $(HOST_RTL) $(HOST_LIBS)
-
-genconfig.o : genconfig.c $(RTL_H) $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(srcdir)/genconfig.c
-
-genflags : genflags.o $(HOST_RTL) $(HOST_LIBDEPS)
-	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
-	 genflags.o $(HOST_RTL) $(HOST_LIBS)
-
-genflags.o : genflags.c $(RTL_H) $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(srcdir)/genflags.c
-
-gencodes : gencodes.o $(HOST_RTL) $(HOST_LIBDEPS)
-	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
-	 gencodes.o $(HOST_RTL) $(HOST_LIBS)
-
-gencodes.o : gencodes.c $(RTL_H) $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(srcdir)/gencodes.c
-
-genemit : genemit.o $(HOST_RTL) $(HOST_LIBDEPS)
-	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
-	 genemit.o $(HOST_RTL) $(HOST_LIBS)
-
-genemit.o : genemit.c $(RTL_H) $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(srcdir)/genemit.c
-
-genopinit : genopinit.o $(HOST_RTL) $(HOST_LIBDEPS)
-	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
-	 genopinit.o $(HOST_RTL) $(HOST_LIBS)
-
-genopinit.o : genopinit.c $(RTL_H) $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(srcdir)/genopinit.c
-
-genrecog : genrecog.o $(HOST_RTL) $(HOST_LIBDEPS)
-	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
-	 genrecog.o $(HOST_RTL) $(HOST_LIBS)
-
-genrecog.o : genrecog.c $(RTL_H) $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(srcdir)/genrecog.c
-
-genextract : genextract.o $(HOST_RTL) $(HOST_LIBDEPS)
-	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
-	 genextract.o $(HOST_RTL) $(HOST_LIBS)
-
-genextract.o : genextract.c $(RTL_H) $(build_xm_file) insn-config.h
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(srcdir)/genextract.c
-
-genpeep : genpeep.o $(HOST_RTL) $(HOST_LIBDEPS)
-	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
-	 genpeep.o $(HOST_RTL) $(HOST_LIBS)
-
-genpeep.o : genpeep.c $(RTL_H) $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(srcdir)/genpeep.c
-
-genattr : genattr.o $(HOST_RTL) $(HOST_LIBDEPS)
-	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
-	 genattr.o $(HOST_RTL) $(HOST_LIBS)
-
-genattr.o : genattr.c $(RTL_H) $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(srcdir)/genattr.c
-
-genattrtab : genattrtab.o $(HOST_RTL) $(HOST_PRINT) $(HOST_RTLANAL) $(HOST_LIBDEPS)
-	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
-	 genattrtab.o $(HOST_RTL) $(HOST_PRINT) $(HOST_RTLANAL) $(HOST_LIBS)
-
-genattrtab.o : genattrtab.c $(RTL_H)  $(build_xm_file) insn-config.h
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(srcdir)/genattrtab.c
-
-genoutput : genoutput.o $(HOST_RTL) $(HOST_LIBDEPS)
-	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
-	 genoutput.o $(HOST_RTL) $(HOST_LIBS)
-
-genoutput.o : genoutput.c $(RTL_H) $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(srcdir)/genoutput.c
-
-# Compile the libraries to be used by gen*.
-# If we are not cross-building, gen* use the same .o's that cc1 will use,
-# and HOST_PREFIX_1 is `foobar', just to ensure these rules don't conflict
-# with the rules for rtl.o, alloca.o, etc.
-$(HOST_PREFIX_1)rtl.o: $(srcdir)/rtl.c $(CONFIG_H) $(RTL_H)
-	rm -f $(HOST_PREFIX)rtl.c
-	sed -e 's/config[.]h/hconfig.h/' $(srcdir)/rtl.c > $(HOST_PREFIX)rtl.c
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(HOST_PREFIX)rtl.c
-
-$(HOST_PREFIX_1)print-rtl.o: $(srcdir)/print-rtl.c $(CONFIG_H) $(RTL_H)
-	rm -f $(HOST_PREFIX)print-rtl.c
-	sed -e 's/config[.]h/hconfig.h/' $(srcdir)/print-rtl.c > $(HOST_PREFIX)print-rtl.c
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(HOST_PREFIX)print-rtl.c
-
-$(HOST_PREFIX_1)rtlanal.o: $(srcdir)/rtlanal.c $(CONFIG_H) $(RTL_H)
-	rm -f $(HOST_PREFIX)rtlanal.c
-	sed -e 's/config[.]h/hconfig.h/' $(srcdir)/rtlanal.c > $(HOST_PREFIX)rtlanal.c
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(HOST_PREFIX)rtlanal.c
-
-$(HOST_PREFIX_1)alloca.o: alloca.c
-	rm -f $(HOST_PREFIX)alloca.c
-	cp $(srcdir)/alloca.c $(HOST_PREFIX)alloca.c
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(HOST_PREFIX)alloca.c
-
-$(HOST_PREFIX_1)obstack.o: obstack.c
-	rm -f $(HOST_PREFIX)obstack.c
-	sed -e 's/config[.]h/hconfig.h/' $(srcdir)/obstack.c > $(HOST_PREFIX)obstack.c
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(HOST_PREFIX)obstack.c
-
-$(HOST_PREFIX_1)malloc.o: malloc.c
-	rm -f $(HOST_PREFIX)malloc.c
-	sed -e 's/config[.]h/hconfig.h/' $(srcdir)/malloc.c > $(HOST_PREFIX)malloc.c
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(HOST_PREFIX)malloc.c
-
-# This satisfies the dependency that we get if you cross-compile a compiler
-# that does not need to compile alloca, malloc or whatever.
-$(HOST_PREFIX_1): 
-	touch $(HOST_PREFIX_1)
-
-# Remake bytecode files.
-BI_OBJ=bi-parser.o bi-lexer.o bi-reverse.o
-
-bc-emit.o : bc-emit.c $(CONFIG_H) $(RTL_H) real.h $(BYTECODE_H) \
-   bc-arity.h bc-opcode.h bc-typecd.h bc-typecd.def bi-run.h bytetypes.h
-bc-optab.o : bc-optab.c $(CONFIG_H) $(REAL_H) $(BYTECODE_H) \
-   bc-opcode.h bc-typecd.h bc-typecd.def
-
-bi-arity: bi-arity.o $(BI_OBJ) $(HOST_LIBDEPS)
-	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
-	 bi-arity.o $(BI_OBJ) $(HOST_LIBS)
-bi-opcode: bi-opcode.o $(BI_OBJ) $(HOST_LIBDEPS)
-	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
-	 bi-opcode.o $(BI_OBJ) $(HOST_LIBS)
-bi-opname: bi-opname.o $(BI_OBJ) $(HOST_LIBDEPS)
-	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
-	 bi-opname.o $(BI_OBJ) $(HOST_LIBS)
-
-# CYGNUS LOCAL: built in build directory
-bi-parser.h: bi-parser.c
-bi-parser.c: $(srcdir)/bi-parser.y
-	$(BISON) $(BISONFLAGS) -d $(srcdir)/bi-parser.y
-	mv -f y.tab.c bi-parser.c
-	mv -f y.tab.h bi-parser.h
-bi-parser.o: bi-parser.c bi-defs.h $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) \
-	   bi-parser.c
-bi-lexer.o: $(srcdir)/bi-lexer.c bi-parser.h $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) \
-	   $(srcdir)/bi-lexer.c
-bi-arity.o: bi-arity.c bi-defs.h $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) \
-	   $(srcdir)/bi-arity.c
-bi-opcode.o: bi-opcode.c bi-defs.h $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) \
-	   $(srcdir)/bi-opcode.c
-bi-opname.o: bi-opname.c bi-defs.h $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) \
-	   $(srcdir)/bi-opname.c
-bi-reverse.o: bi-reverse.c bi-defs.h
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) \
-	   $(srcdir)/bi-reverse.c
-
-bc-arity.h: stamp-bcarity ; @true
-stamp-bcarity : $(srcdir)/bytecode.def bi-arity $(srcdir)/move-if-change
-	./bi-arity < $(srcdir)/bytecode.def >tmp-bc-arity.h
-	$(srcdir)/move-if-change tmp-bc-arity.h bc-arity.h
-	touch stamp-bcarity
-
-bc-opcode.h: stamp-bcopcode ; @true
-stamp-bcopcode : $(srcdir)/bytecode.def bi-opcode $(srcdir)/move-if-change
-	./bi-opcode < $(srcdir)/bytecode.def >tmp-bcopcd.h
-	$(srcdir)/move-if-change tmp-bcopcd.h bc-opcode.h
-	touch stamp-bcopcode
-
-bc-opname.h: stamp-bcopname ; @true
-stamp-bcopname : $(srcdir)/bytecode.def bi-opname $(srcdir)/move-if-change
-	./bi-opname < $(srcdir)/bytecode.def >tmp-bcopnm.h
-	$(srcdir)/move-if-change tmp-bcopnm.h bc-opname.h
-	touch stamp-bcopname
-
-bytecode.mostlyclean:
-	-rm -f bc-arity.h bc-opcode.h bc-opname.h
-# CYGNUS LOCAL: built in build directory
-# Delete these files here instead of in realclean because they are now created
-# in the build subdirectories.
-	-rm -f bi-parser.c bi-parser.h
-# END CYGNUS LOCAL
-
-bytecode.distclean bytecode.clean:	bytecode.mostlyclean
-	-rm -f bi-arity bi-opcode bi-opname bi-lexer
-
-bytecode.maintainer-clean: bytecode.clean
-	-rm -f bi-parser.c bi-parser.h
-
-
-# Remake cpp and protoize.
-
-# Making the preprocessor
-cpp: $(CCCP)
-	-rm -f cpp$(exeext)
-	ln $(CCCP)$(exeext) cpp$(exeext) > /dev/null 2>&1 \
-	 || cp $(CCCP)$(exeext) cpp$(exeext)
-cccp: cccp.o cexp.o version.o $(LIBDEPS)
-	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ cccp.o cexp.o \
-	  version.o $(LIBS)
-# CYGNUS LOCAL: built in build directory
-cexp.o: cexp.c $(CONFIG_H)
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) -c cexp.c
-cexp.c: $(srcdir)/cexp.y
-	$(BISON) $(BISONFLAGS) $(srcdir)/cexp.y
-	mv -f y.tab.c cexp.c
-cccp.o: cccp.c $(CONFIG_H) pcp.h version.c config.status
-# The reason we use $(libdir)/g++-include rather than using libsubdir
-# is for compatibility with the current version of libg++.
-# CYGNUS LOCAL: We use $(libsubdir)/$(unlibsubdir) to match the
-# -iprefix argument which gcc will pass if GCC_EXEC_PREFIX is used.
-# CYGNUS LOCAL: CROSS_INCLUDE_DIR is in tooldir not libsubdir.
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) \
-	  -DGCC_INCLUDE_DIR=\"$(libsubdir)/include\" \
-	  -DGPLUSPLUS_INCLUDE_DIR=\"$(gxx_include_dir)\" \
-	  -DOLD_GPLUSPLUS_INCLUDE_DIR=\"$(old_gxx_include_dir)\" \
-	  -DLOCAL_INCLUDE_DIR=\"$(libsubdir)/$(unlibsubdir)/..`echo $(exec_prefix) | sed -e 's|^$(prefix)||' -e 's|/[^/]*|/..|g'`/include\" \
-	  -DCROSS_INCLUDE_DIR=\"$(libsubdir)/$(unlibsubdir)/../$(target_alias)/sys-include\" \
-	  -DTOOL_INCLUDE_DIR=\"$(libsubdir)/$(unlibsubdir)/../$(target_alias)/include\" \
-	  -c `echo $(srcdir)/cccp.c | sed 's,^\./,,'`
-
-cppmain: cppmain.o cpplib.o cpphash.o cppalloc.o cpperror.o cppexp.o \
-  version.o $(LIBDEPS)
-	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ cppmain.o cpplib.o cpphash.o \
-	  cppalloc.o cpperror.o cppexp.o version.o $(LIBS)
-
-cpplib.o: cpplib.c $(CONFIG_H) cpplib.h cpphash.h config.status
-# CYGNUS LOCAL: We use $(libsubdir)/$(unlibsubdir) to match the
-# -iprefix argument which gcc will pass if GCC_EXEC_PREFIX is used.
-# CYGNUS LOCAL: CROSS_INCLUDE_DIR is in tooldir not libsubdir.
-	$(CC) $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) \
-	  -DGCC_INCLUDE_DIR=\"$(libsubdir)/include\" \
-	  -DGPLUSPLUS_INCLUDE_DIR=\"$(gxx_include_dir)\" \
-	  -DOLD_GPLUSPLUS_INCLUDE_DIR=\"$(old_gxx_include_dir)\" \
-	  -DLOCAL_INCLUDE_DIR=\"$(libsubdir)/$(unlibsubdir)/..`echo $(exec_prefix) | sed -e 's|^$(prefix)||' -e 's|/[^/]*|/..|g'`/include\" \
-	  -DCROSS_INCLUDE_DIR=\"$(libsubdir)/$(unlibsubdir)/../$(target_alias)/sys-include\" \
-	  -DTOOL_INCLUDE_DIR=\"$(libsubdir)/$(unlibsubdir)/../$(target_alias)/include\" \
-	  -c `echo $(srcdir)/cpplib.c | sed 's,^\./,,'`
-
-cpperror.o: cpperror.c $(CONFIG_H) cpplib.h
-
-cppexp.o: cppexp.c $(CONFIG_H) cpplib.h
-
-cpphash.o: cpphash.c cpplib.h cpphash.h
-
-cppalloc.o: cppalloc.c $(CONFIG_H)
-
-# Note for the stamp targets, we run the program `true' instead of
-# having an empty command (nothing following the semicolon).
-
-proto: config.status protoize unprotoize SYSCALLS.c.X
-
-protoize: protoize.o getopt.o getopt1.o getpwd.o version.o \
-    pexecute.o choose-temp.o $(LIBDEPS)
-	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ \
-	  protoize.o getopt.o getopt1.o getpwd.o version.o \
-	  pexecute.o choose-temp.o $(LIBS)
-protoize.o: stamp-proto ; @true
-
-unprotoize: unprotoize.o getopt.o getopt1.o getpwd.o version.o \
-    pexecute.o choose-temp.o $(LIBDEPS)
-	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ \
-	  unprotoize.o getopt.o getopt1.o getpwd.o version.o \
-	  pexecute.o choose-temp.o $(LIBS)
-unprotoize.o:	stamp-proto ; @true
-
-# CYGNUS LOCAL: CROSS_INCLUDE_DIR is in tooldir not libsubdir.
-stamp-proto: protoize.c getopt.h $(CONFIG_H)
-	$(CC) -c $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) \
-          -DGCC_INCLUDE_DIR=\"$(libsubdir)/include\" \
-	  -DGPLUSPLUS_INCLUDE_DIR=\"$(gxx_include_dir)\" \
-          -DCROSS_INCLUDE_DIR=\"$(libsubdir)/$(unlibsubdir)/../$(target_alias)/sys-include\" \
-	  -DTOOL_INCLUDE_DIR=\"$(tooldir)/include\" \
-	  -DLOCAL_INCLUDE_DIR=\"$(includedir)\" \
-	  -DSTD_PROTO_DIR=\"$(libsubdir)\" \
-	  -DUNPROTOIZE $(srcdir)/protoize.c
-	mv protoize$(objext) unprotoize$(objext)
-	$(CC) -c $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) \
-          -DGCC_INCLUDE_DIR=\"$(libsubdir)/include\" \
-	  -DGPLUSPLUS_INCLUDE_DIR=\"$(gxx_include_dir)\" \
-          -DCROSS_INCLUDE_DIR=\"$(libsubdir)/$(unlibsubdir)/../$(target_alias)/sys-include\" \
-	  -DTOOL_INCLUDE_DIR=\"$(tooldir)/include\" \
-	  -DLOCAL_INCLUDE_DIR=\"$(includedir)\" \
-	  -DSTD_PROTO_DIR=\"$(libsubdir)\" \
-	  $(srcdir)/protoize.c
-	touch stamp-proto
-
-getopt.o: getopt.c getopt.h
-	$(CC) -c $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $(srcdir)/getopt.c
-getopt1.o: getopt1.c getopt.h
-	$(CC) -c $(ALL_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $(srcdir)/getopt1.c
-
-# This info describes the target machine, so compile with GCC just built.
-SYSCALLS.c.X: $(srcdir)/sys-types.h $(srcdir)/sys-protos.h $(GCC_PASSES) \
-   stmp-int-hdrs
-	-rm -f SYSCALLS.c tmp-SYSCALLS.s
-	cat $(srcdir)/sys-types.h $(srcdir)/sys-protos.h > SYSCALLS.c
-	$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) \
-	  -aux-info $@ -S -o tmp-SYSCALLS.s SYSCALLS.c
-	-rm -f SYSCALLS.c tmp-SYSCALLS.s
-
-
-test-protoize-simple: ./protoize ./unprotoize $(GCC_PASSES)
-	-rm -f tmp-proto.[cso]
-	cp $(srcdir)/protoize.c tmp-proto.c
-	chmod u+w tmp-proto.c
-	./protoize -N -B ./ -x getopt.h -c "-B./ -Wall -Wwrite-strings \
-	  $(CFLAGS) $(INCLUDES) \
-	  -DGCC_INCLUDE_DIR=0 \
-	  -DGPLUSPLUS_INCLUDE_DIR=0 \
-	  -DCROSS_INCLUDE_DIR=0 \
-	  -DTOOL_INCLUDE_DIR=0 \
-	  -DSTD_PROTO_DIR=0" tmp-proto.c
-	@echo '**********' Expect 400 lines of differences.
-	-diff $(srcdir)/protoize.c tmp-proto.c > tmp-proto.diff
-	-wc -l tmp-proto.diff
-	./unprotoize -N -x getopt.h -c "-B./ -Wall -Wwrite-strings \
-	  $(CFLAGS) $(INCLUDES) \
-	  -DGCC_INCLUDE_DIR=0 \
-	  -DGPLUSPLUS_INCLUDE_DIR=0 \
-	  -DCROSS_INCLUDE_DIR=0 \
-	  -DTOOL_INCLUDE_DIR=0 \
-	  -DSTD_PROTO_DIR=0" tmp-proto.c
-	@echo Expect zero differences.
-	diff $(srcdir)/protoize.c tmp-proto.c | cat
-	-rm -f tmp-proto.[cs] tmp-proto$(objext)
-
-# CYGNUS LOCAL: gcov
-gcov.o: gcov.c
-
-gcov: gcov.o $(LIBDEPS)
-	$(CC) $(ALL_CFLAGS) $(LDFLAGS) gcov.o $(LIBS) -o $@
-# END CYGNUS LOCAL
-
-# Build the include directory.  The stamp files are stmp-* rather than
-# stamp-* so that mostlyclean does not force the include directory to
-# be rebuilt.
-
-# Build the include directory except for float.h (which depends upon
-# enquire).
-stmp-int-hdrs: stmp-fixinc $(USER_H) xlimits.h objc-headers
-# Copy in the headers provided with gcc.
-# The sed command gets just the last file name component;
-# this is necessary because VPATH could add a dirname.
-# Using basename would be simpler, but some systems don't have it.
-	objdir=`pwd`; \
-	cd $(srcdir); \
-	for file in .. $(USER_H); do \
-	  if [ X$$file != X.. ]; then \
-	    realfile=`echo $$file | sed -e 's|.*/\([^/]*\)$$|\1|'`; \
-	    rm -f $$objdir/include/$$realfile; \
-	    cp ginclude/$$realfile $$objdir/include; \
-	    chmod a+r $$objdir/include/$$realfile; \
-	  fi; \
-	done
-	rm -f include/limits.h
-	cp xlimits.h include/limits.h
-	chmod a+r include/limits.h
-# Install the README
-	rm -f include/README
-	cp $(srcdir)/README-fixinc include/README
-	chmod a+r include/README
-	touch stmp-int-hdrs
-
-# Build the complete include directory.
-stmp-headers: stmp-int-hdrs gfloat.h
-	rm -f include/float.h
-	cp gfloat.h include/float.h
-	chmod a+r include/float.h
-	touch stmp-headers
-
-# Build fixed copies of system files.
-stmp-fixinc: $(FIXINCLUDES) gsyslimits.h
-	rm -rf include
-	mkdir include
-	if [ x$(FIXINCLUDES) != xMakefile.in ]; \
-	then \
-	  for dir in $(SYSTEM_HEADER_DIR) $(OTHER_FIXINCLUDES_DIRS); do \
-	    if [ -d $$dir ]; \
-	    then \
-	      $(SHELL) $(srcdir)/$(FIXINCLUDES) include $$dir; \
-	    else true; fi; \
-	  done; \
-	else true; \
-	fi
-	rm -f include/syslimits.h
-	if [ -f include/limits.h ]; then \
-	  mv include/limits.h include/syslimits.h; \
-	else \
-	  cp $(srcdir)/gsyslimits.h include/syslimits.h; \
-	fi
-	chmod a+r include/syslimits.h
-# CYGNUS LOCAL: If $(SYSTEM_HEADER_DIR) is $(tooldir)/sys-include, and
-# that directory exists, then make sure that $(libsubdir) exists.
-# This is because cpp is compiled to find $(tooldir)/include via
-# $(libsubdir)/$(unlibsubdir), which will only work if $(libsubdir)
-# exists.
-	if [ "$(SYSTEM_HEADER_DIR)" = "$(tooldir)/sys-include" ] \
-	   && [ -d $(tooldir)/sys-include ]; then \
-	  if [ -d $(libdir) ] ; then true ; else mkdir $(libdir) ; fi; \
-	  if [ -d $(libdir)/gcc-lib ] ; then true ; else mkdir $(libdir)/gcc-lib ; fi; \
-	  if [ -d $(libdir)/gcc-lib/$(target_alias) ] ; then true ; else mkdir $(libdir)/gcc-lib/$(target_alias) ; fi; \
-	  if [ -d $(libdir)/gcc-lib/$(target_alias)/$(version) ] ; then true ; else mkdir $(libdir)/gcc-lib/$(target_alias)/$(version) ; fi; \
-	else true; fi
-# END CYGNUS LOCAL
-	touch stmp-fixinc
-
-# copy objc header files into build directory
-objc-headers: stmp-fixinc
-	if [ -d include ]; then true; else mkdir include; fi
-	if [ -d objc ]; then true; else mkdir objc; fi
-	thisdir1=`pwd`; \
-	srcdir1=`cd $(srcdir); pwd`; \
-	cd objc; \
-	$(MAKE) -f $${srcdir1}/objc/Makefile copy-headers \
-	srcdir=$${srcdir1} tooldir=$(tooldir) AR="$(AR)" AR_FLAGS="$(AR_FLAGS)" \
-	GCC_FOR_TARGET="$${thisdir1}/xgcc -B$${thisdir1}/" \
-	GCC_CFLAGS="$(GCC_CFLAGS)" incinstalldir=$${thisdir1}/include
-	touch objc-headers
-
-# Files related to the fixproto script.
-
-deduced.h: $(GCC_PASSES) $(srcdir)/scan-types.sh stmp-int-hdrs
-# CYGNUS LOCAL: build-make/STMP_FIXPROTO
-	if [ -d $(SYSTEM_HEADER_DIR) ]; \
-	then \
-	  CC="$(GCC_FOR_TARGET) $(GCC_CFLAGS) $(ALL_CPPFLAGS) -I. -I$(srcdir) -Iinclude -I${SYSTEM_HEADER_DIR}"; \
-	  export CC; \
-	  $(SHELL) $(srcdir)/scan-types.sh "$(srcdir)" >tmp-deduced.h; \
-	  mv tmp-deduced.h deduced.h; \
-	else \
-	  touch deduced.h; \
-	fi
-# END CYGNUS LOCAL
-
-gen-protos: gen-protos.o scan.o cppalloc.o $(HOST_LIBDEPS)
-	${HOST_CC} $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ \
-	  gen-protos.o scan.o cppalloc.o $(HOST_LIBS)
-
-gen-protos.o: gen-protos.c scan.h $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(srcdir)/gen-protos.c
-
-scan.o: scan.c scan.h $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(srcdir)/scan.c
-
-xsys-protos.h: $(GCC_PASSES) $(srcdir)/sys-protos.h deduced.h gen-protos Makefile
-	cat deduced.h $(srcdir)/sys-protos.h > tmp-fixtmp.c
-	mv tmp-fixtmp.c fixtmp.c
-	$(GCC_FOR_TARGET) fixtmp.c -w -U__SIZE_TYPE__ -U__PTRDIFF_TYPE__ -U__WCHAR_TYPE__ -E \
-	  | sed -e 's/	/ /g' -e 's/ *(/ (/g' -e 's/ [ ]*/ /g' -e 's/( )/()/' \
-	  | ./gen-protos >xsys-protos.hT
-	mv xsys-protos.hT xsys-protos.h
-	rm -rf fixtmp.c
-
-fix-header: fix-header.o scan-decls.o scan.o xsys-protos.h $(HOST_LIBDEPS) \
-   cpplib.o cpphash.o cppalloc.o cppexp.o cpperror.o version.o
-	$(HOST_CC) $(HOST_CFLAGS) $(HOST_LDFLAGS) -o $@ fix-header.o \
-	   scan-decls.o scan.o cpplib.o cpphash.o cppalloc.o version.o \
-	   cppexp.o $(HOST_LIBS)
-
-fix-header.o: fix-header.c obstack.h scan.h xsys-protos.h $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(srcdir)/fix-header.c
-
-scan-decls.o: scan-decls.c scan.h cpplib.h $(build_xm_file)
-	$(HOST_CC) -c $(HOST_CFLAGS) $(HOST_CPPFLAGS) $(INCLUDES) $(srcdir)/scan-decls.c
-
-# stmp-fixproto depends on this, not on fix-header directly.
-# The idea is to make sure fix-header gets built,
-# but not rerun fixproto after each stage
-# just because fix-header's mtime has changed.
-fixhdr.ready: fix-header
-	-if [ -f fixhdr.ready ] ; then \
-		true; \
-	else \
-		touch fixhdr.ready; \
-	fi
-
-# stmp-headers is to make sure fixincludes has already finished.
-# The if statement is so that we don't run fixproto a second time
-# if it has already been run on the files in `include'.
-stmp-fixproto: fixhdr.ready fixproto stmp-headers
-	@echo "Various warnings and error messages from fixproto are normal"
-	-if [ -d include ] ; then true; else mkdir include; fi
-	-if [ -f include/fixed ] ; then true; \
-	else \
-	  : This line works around a 'make' bug in BSDI 1.1.; \
-	  FIXPROTO_DEFINES="$(FIXPROTO_DEFINES)"; export FIXPROTO_DEFINES; \
-	  : CYGNUS LOCAL: build-make/STMP_FIXPROTO; \
-	  if [ -d $(SYSTEM_HEADER_DIR) ] ; then \
-	    $(SHELL) ${srcdir}/fixproto include include $(SYSTEM_HEADER_DIR); \
+# The list is in two parts.  The first lists those tools which
+# are tested as part of the host's native tool-chain, and not
+# tested in a cross configuration.
+NATIVE_CHECK_MODULES = \
+	check-bison \
+	check-byacc \
+	check-flex \
+	check-zip
+
+CROSS_CHECK_MODULES = \
+	check-apache \
+	check-ash \
+	check-autoconf \
+	check-automake \
+	check-bash \
+	check-bfd \
+	check-binutils \
+	check-bzip2 \
+	check-cvssrc \
+	check-db \
+	check-dejagnu \
+	check-diff \
+	check-etc \
+	check-fileutils \
+	check-findutils \
+	check-find \
+	check-gas \
+	check-gawk \
+	check-gettext \
+	check-gnuserv \
+	check-gprof \
+	check-grep \
+	check-gzip \
+	check-hello \
+	check-indent \
+	check-inet \
+	check-intl \
+	check-ispell \
+	check-itcl \
+	check-ld \
+	check-libgui \
+	check-libiberty \
+	check-libtool \
+	check-m4 \
+	check-make \
+	check-mmcheckoc \
+	check-opcodes \
+	check-patch \
+	check-perl \
+	check-prms \
+	check-rcs \
+	check-readline \
+	check-recode \
+	check-sed \
+	check-send-pr \
+	check-shellutils \
+	check-snaviagor \
+	check-sim \
+	check-tar \
+	check-tcl \
+	check-texinfo \
+	check-textutils \
+	check-tgas \
+	check-time \
+	check-uudecode \
+	check-wdiff \
+	$(EXTRA_TARGET_HOST_CHECK_MODULES)
+
+CHECK_MODULES=$(NATIVE_CHECK_MODULES) $(CROSS_CHECK_MODULES)
+
+# This is a list of the install targets for all of the modules which are
+# compiled using $(FLAGS_TO_PASS).
+# We put install-opcodes before install-binutils because the installed
+# binutils might be on PATH, and they might need the shared opcodes
+# library.
+# We put install-tcl before install-itcl because itcl wants to run a
+# program on installation which uses the Tcl libraries.
+INSTALL_MODULES = \
+	install-apache \
+	install-ash \
+	install-autoconf \
+	install-automake \
+	install-bash \
+	install-bfd \
+	install-bzip2 \
+	install-opcodes \
+	install-binutils \
+	install-bison \
+	install-byacc \
+	install-cvssrc \
+	install-db \
+	install-dejagnu \
+	install-diff \
+	install-dosutils \
+	install-etc \
+	install-fileutils \
+	install-findutils \
+	install-find \
+	install-flex \
+	install-gas \
+	install-gawk \
+	install-gettext \
+	install-gnuserv \
+	install-gprof \
+	install-grep \
+	install-grez \
+	install-gzip \
+	install-hello \
+	install-indent \
+	install-inet \
+	install-intl \
+	install-ispell \
+	install-tcl \
+	install-itcl \
+	install-ld \
+	install-libgui \
+	install-libiberty \
+	install-libtool \
+	install-m4 \
+	install-make \
+	install-mmalloc \
+	install-patch \
+	install-perl \
+	install-prms \
+	install-rcs \
+	install-readline \
+	install-recode \
+	install-sed \
+	install-send-pr \
+	install-shellutils \
+	install-sim \
+	install-snavigator \
+	install-tar \
+	install-texinfo \
+	install-textutils \
+	install-tgas \
+	install-time \
+	install-uudecode \
+	install-wdiff \
+	install-zip \
+	$(EXTRA_TARGET_HOST_INSTALL_MODULES)
+
+# This is a list of the targets for all of the modules which are compiled
+# using $(X11_FLAGS_TO_PASS).
+ALL_X11_MODULES = \
+	all-emacs \
+	all-emacs19 \
+	all-gdb \
+	all-expect \
+	all-gash \
+	all-guile \
+	all-tclX \
+	all-tk \
+	all-tix
+
+# This is a list of the check targets for all of the modules which are
+# compiled using $(X11_FLAGS_TO_PASS).
+CHECK_X11_MODULES = \
+	check-emacs \
+	check-gdb \
+	check-guile \
+	check-expect \
+	check-gash \
+	check-tclX \
+	check-tk \
+	check-tix
+
+# This is a list of the install targets for all the modules which are
+# compiled using $(X11_FLAGS_TO_PASS).
+INSTALL_X11_MODULES = \
+	install-emacs \
+	install-emacs19 \
+	install-gdb \
+	install-guile \
+	install-expect \
+	install-gash \
+	install-tclX \
+	install-tk \
+	install-tix
+
+# This is a list of the targets for all of the modules which are compiled
+# using $(TARGET_FLAGS_TO_PASS).
+ALL_TARGET_MODULES = \
+	all-target-libio \
+	all-target-libstdc++ \
+	all-target-librx \
+	all-target-libg++ \
+	all-target-newlib \
+	all-target-libf2c \
+	all-target-libchill \
+	all-target-libobjc \
+	all-target-winsup \
+	all-target-libgloss \
+	all-target-libiberty \
+	all-target-gperf \
+	all-target-examples \
+	all-target-libstub \
+	all-target-libjava \
+	all-target-zlib \
+	all-target-boehm-gc \
+	all-target-qthreads \
+	all-target-cygmon
+
+# This is a list of the configure targets for all of the modules which
+# are compiled using the target tools.
+CONFIGURE_TARGET_MODULES = \
+	configure-target-libio \
+	configure-target-libstdc++ \
+	configure-target-librx \
+	configure-target-libg++ \
+	configure-target-newlib \
+	configure-target-libf2c \
+	configure-target-libchill \
+	configure-target-libobjc \
+	configure-target-winsup \
+	configure-target-libgloss \
+	configure-target-libiberty \
+	configure-target-gperf \
+	configure-target-examples \
+	configure-target-libstub \
+	configure-target-libjava \
+	configure-target-zlib \
+	configure-target-boehm-gc \
+	configure-target-qthreads \
+	configure-target-cygmon
+
+# This is a list of the check targets for all of the modules which are
+# compiled using $(TARGET_FLAGS_TO_PASS).
+CHECK_TARGET_MODULES = \
+	check-target-libio \
+	check-target-libstdc++ \
+	check-target-libg++ \
+	check-target-newlib \
+	check-target-libf2c \
+	check-target-libchill \
+	check-target-libobjc \
+	check-target-winsup \
+	check-target-libiberty \
+	check-target-libjava \
+	check-target-zlib \
+	check-target-boehm-gc \
+	check-target-qthreads \
+	check-target-gperf
+
+# This is a list of the install targets for all of the modules which are
+# compiled using $(TARGET_FLAGS_TO_PASS).
+INSTALL_TARGET_MODULES = \
+	install-target-libio \
+	install-target-libstdc++ \
+	install-target-libg++ \
+	install-target-newlib \
+	install-target-libf2c \
+	install-target-libchill \
+	install-target-libobjc \
+	install-target-winsup \
+	install-target-libgloss \
+	install-target-libiberty \
+	install-target-bsp \
+	install-target-libjava \
+	install-target-zlib \
+	install-target-boehm-gc \
+	install-target-qthreads \
+	install-target-gperf
+
+# This is a list of the targets for which we can do a clean-{target}.
+CLEAN_MODULES = \
+	clean-apache \
+	clean-ash \
+	clean-autoconf \
+	clean-automake \
+	clean-bash \
+	clean-bfd \
+	clean-binutils \
+	clean-bison \
+	clean-byacc \
+	clean-bzip2 \
+	clean-cvssrc \
+	clean-db \
+	clean-dejagnu \
+	clean-diff \
+	clean-dosutils \
+	clean-etc \
+	clean-fileutils \
+	clean-findutils \
+	clean-find \
+	clean-flex \
+	clean-gas \
+	clean-gawk \
+	clean-gettext \
+	clean-gnuserv \
+	clean-gprof \
+	clean-grep \
+	clean-grez \
+	clean-gzip \
+	clean-hello \
+	clean-indent \
+	clean-inet \
+	clean-intl \
+	clean-ispell \
+	clean-itcl \
+	clean-ld \
+	clean-libgui \
+	clean-libiberty \
+	clean-libtool \
+	clean-m4 \
+	clean-make \
+	clean-mmalloc \
+	clean-opcodes \
+	clean-patch \
+	clean-perl \
+	clean-prms \
+	clean-rcs \
+	clean-readline \
+	clean-release \
+	clean-recode \
+	clean-sed \
+	clean-send-pr \
+	clean-shellutils \
+	clean-sim \
+	clean-snavigator \
+	clean-tar \
+	clean-tcl \
+	clean-texinfo \
+	clean-textutils \
+	clean-tgas \
+	clean-time \
+	clean-uudecode \
+	clean-wdiff \
+	clean-zip
+
+
+# All of the target modules that can be cleaned
+CLEAN_TARGET_MODULES = \
+	clean-target-libio \
+	clean-target-libstdc++ \
+	clean-target-librx \
+	clean-target-libg++ \
+	clean-target-newlib \
+	clean-target-libf2c \
+	clean-target-libchill \
+	clean-target-libobjc \
+	clean-target-winsup \
+	clean-target-libgloss \
+	clean-target-libiberty \
+	clean-target-gperf \
+	clean-target-examples \
+	clean-target-libstub \
+	clean-target-libjava \
+	clean-target-zlib \
+	clean-target-boehm-gc \
+	clean-target-qthreads \
+	clean-target-cygmon
+
+# All of the x11 modules that can be cleaned
+CLEAN_X11_MODULES = \
+	clean-emacs \
+	clean-emacs19 \
+	clean-gdb \
+	clean-expect \
+	clean-gash \
+	clean-guile \
+	clean-tclX \
+	clean-tk \
+	clean-tix
+
+# The first rule in the file had better be this one.  Don't put any above it.
+all: all.normal
+.PHONY: all
+
+# The target built for a native build.
+.PHONY: all.normal
+all.normal: \
+	$(ALL_MODULES) \
+	$(ALL_X11_MODULES) \
+	$(ALL_TARGET_MODULES) \
+	all-gcc
+
+# Do a target for all the subdirectories.  A ``make do-X'' will do a
+# ``make X'' in all subdirectories (because, in general, there is a
+# dependency (below) of X upon do-X, a ``make X'' will also do this,
+# but it may do additional work as well).
+# This target ensures that $(BASE_FLAGS_TO_PASS) appears only once,
+# because it is so large that it can easily overflow the command line
+# length limit on some systems.
+DO_X = \
+	do-clean \
+	do-distclean \
+	do-dvi \
+	do-info \
+	do-install-info \
+	do-installcheck \
+	do-mostlyclean \
+	do-maintainer-clean \
+	do-TAGS
+.PHONY: $(DO_X)
+$(DO_X):
+	@target=`echo $@ | sed -e 's/^do-//'`; \
+	r=`pwd`; export r; \
+	s=`cd $(srcdir); pwd`; export s; \
+	$(SET_LIB_PATH) \
+	for i in $(SUBDIRS) -dummy-; do \
+	  if [ -f ./$$i/Makefile ]; then \
+	    case $$i in \
+	    gcc) \
+	      for flag in $(EXTRA_GCC_FLAGS); do \
+		eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'|"`; \
+	      done; \
+	      ;; \
+	    *) \
+	      for flag in $(EXTRA_HOST_FLAGS); do \
+		eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'|"`; \
+	      done; \
+	      ;; \
+	    esac ; \
+	    export AR AS CC CXX LD NM RANLIB DLLTOOL WINDRES; \
+	    if (cd ./$$i; \
+	        $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
+			"CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
+			"RANLIB=$${RANLIB}" \
+			"DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" \
+			$${target}); \
+	    then true; else exit 1; fi; \
 	  else true; fi; \
-	  : END CYGNUS LOCAL; \
-	  touch include/fixed; \
-	fi
-	touch stmp-fixproto
-
-# Remake the info files.
-# CYGNUS LOCAL: built in build directory
+	done
+	@target=`echo $@ | sed -e 's/^do-//'`; \
+	r=`pwd`; export r; \
+	s=`cd $(srcdir); pwd`; export s; \
+	$(SET_LIB_PATH) \
+	for i in $(TARGET_CONFIGDIRS) -dummy-; do \
+	  if [ -f $(TARGET_SUBDIR)/$$i/Makefile ]; then \
+	    for flag in $(EXTRA_TARGET_FLAGS); do \
+		eval `echo "$$flag" | sed -e "s|^\([^=]*\)=\(.*\)|\1='\2'|"`; \
+	    done; \
+	    export AR AS CC CXX LD NM RANLIB DLLTOOL WINDRES; \
+	    if (cd $(TARGET_SUBDIR)/$$i; \
+	        $(MAKE) $(BASE_FLAGS_TO_PASS) "AR=$${AR}" "AS=$${AS}" \
+			"CC=$${CC}" "CXX=$${CXX}" "LD=$${LD}" "NM=$${NM}" \
+			"RANLIB=$${RANLIB}" \
+			"DLLTOOL=$${DLLTOOL}" "WINDRES=$${WINDRES}" \
+			$${target}); \
+	    then true; else exit 1; fi; \
+	  else true; fi; \
+	done
 
-doc: info INSTALL
-info: cpp.info gcc.info lang.info
+# Here are the targets which correspond to the do-X targets.
 
-cpp.info: $(srcdir)/cpp.texi
-	$(MAKEINFO) -I$(srcdir) $(srcdir)/cpp.texi -o ./cpp.info
+.PHONY: info installcheck dvi install-info
+.PHONY: clean distclean mostlyclean maintainer-clean realclean
+.PHONY: local-clean local-distclean local-maintainer-clean
+info: do-info
+installcheck: do-installcheck
+dvi: do-dvi
 
-gcc.info: $(srcdir)/gcc.texi extend.texi install.texi invoke.texi \
-		md.texi rtl.texi tm.texi \
-		$(CYGNUS-LOCAL-gcov) gcov.texi
-	$(MAKEINFO) -I$(srcdir) $(srcdir)/gcc.texi -o ./gcc.info
+# Make sure makeinfo is built before we do a `make info'.
+do-info: all-texinfo
 
-dvi: gcc.dvi cpp.dvi lang.dvi
+install-info: do-install-info dir.info
+	s=`cd $(srcdir); pwd`; export s; \
+	if [ -f dir.info ] ; then \
+	  $(INSTALL_DATA) dir.info $(infodir)/dir.info ; \
+	else true ; fi
 
-gcc.dvi: $(srcdir)/gcc.texi $(srcdir)/extend.texi $(srcdir)/invoke.texi $(srcdir)/md.texi $(srcdir)/rtl.texi $(srcdir)/tm.texi \
-		$(CYGNUS-LOCAL-gcov) gcov.texi
-	TEXINPUTS=${texidir}:$(srcdir):$$TEXINPUTS tex gcc.texi
-	texindex gcc.??
-	TEXINPUTS=${texidir}:$(srcdir):$$TEXINPUTS tex gcc.texi
+local-clean:
+	-rm -f *.a TEMP errs core *.o *~ \#* TAGS *.E *.log
 
-cpp.dvi: $(srcdir)/cpp.texi
-	TEXINPUTS=${texidir}:$(srcdir):$$TEXINPUTS tex cpp.texi
-	texindex cpp.??
-	TEXINPUTS=${texidir}:$(srcdir):$$TEXINPUTS tex cpp.texi
-
-usegcc.dvi: usegcc.texi $(srcdir)/extend.texi $(srcdir)/invoke.texi $(srcdir)/md.texi \
-		$(CYGNUS-LOCAL-gcov) gcov.texi
-	TEXINPUTS=${texidir}:$(srcdir):$$TEXINPUTS tex usegcc.texi
-	texindex usegcc.??
-	TEXINPUTS=${texidir}:$(srcdir):$$TEXINPUTS tex usegcc.texi
-
-# CYGNUS LOCAL: don't rebuild gcc/INSTALL, ever.
-#$(srcdir)/INSTALL: install1.texi install.texi
-#	$(MAKEINFO) -I$(srcdir) -D INSTALLONLY --no-header --no-split \
-#	  $(srcdir)/install1.texi
-
-# CYGNUS LOCAL doc
-usegcc.texi: $(srcdir)/gcc.texi
-	sed 	-e '/@setfilename gcc.info/d' \
-		-e '/@c @setfilename usegcc.info/s/@c //' \
-		-e '/@set INTERNALS/s/@/@c @/' \
-		-e '/@c @clear INTERNALS/s/@c //' \
-		$(srcdir)/gcc.texi > usegcc.texi
-
-usegcc.info: usegcc.texi  $(srcdir)/extend.texi $(srcdir)/invoke.texi \
-		$(CYGNUS-LOCAL-gcov) gcov.texi
-	$(MAKEINFO) -I$(srcdir) -o usegcc.info usegcc.texi
-
-# Deletion of files made during compilation.
-# There are four levels of this:
-#   `mostlyclean', `clean', `distclean' and `maintainer-clean'.
-# `mostlyclean' is useful while working on a particular type of machine.
-# It deletes most, but not all, of the files made by compilation.
-# It does not delete libgcc.a or its parts, so it won't have to be recompiled.
-# `clean' deletes everything made by running `make all'.
-# `distclean' also deletes the files made by config.
-# `maintainer-clean' also deletes everything that could be regenerated
-# automatically.  We remove as much from the language subdirectories as we can
-# (less duplicated code).
-
-
-mostlyclean: bytecode.mostlyclean lang.mostlyclean
-	-rm -f $(STAGESTUFF)
-# Clean the objc subdir if we created one.
-	if [ -d objc ]; then \
-	  srcdir1=`cd $(srcdir); pwd`; \
-	  cd objc; $(MAKE) -f $$srcdir1/objc/Makefile mostlyclean; \
+local-distclean:
+	-rm -f Makefile config.status config.cache mh-frag mt-frag
+	-if [ "$(TARGET_SUBDIR)" != "." ]; then \
+	  rm -rf $(TARGET_SUBDIR); \
 	else true; fi
-	-rm -f libobjc.a
-# Delete the temporary source copies for cross compilation.
-	-rm -f $(HOST_PREFIX_1)rtl.c $(HOST_PREFIX_1)rtlanal.c
-	-rm -f $(HOST_PREFIX_1)alloca.c $(HOST_PREFIX_1)malloc.c
-	-rm -f $(HOST_PREFIX_1)obstack.c 
-# Delete the temp files made in the course of building libgcc.a.
-	-rm -f tmplibgcc* tmpcopy xlimits.h
-	for name in $(LIB1FUNCS); do rm -f $${name}.c; done
-# Delete other temporary files.
-	-rm -f tmp-float.h tmp-gcc.xtar.gz
-	-rm -f tmp-foo1 tmp-foo2 tmp-proto.* tmp-unproto.1 tmp-SYSCALLS.s
-	-rm -f tmp-c-parse.y tmp-objc-prs.y tmp-gperf.h
-	-rm -f tmp-specs t-float.h-cross tmp-xlimits.h
-	-rm -f tmp-fixtmp.c xsys-protos.hT
-# Delete the stamp files.
-	-rm -f stamp-* tmp-*
-	-rm -f */stamp-* */tmp-*
-# Delete debugging dump files.
-	-rm -f *.greg *.lreg *.combine *.flow *.cse *.jump *.rtl *.tree *.loop
-	-rm -f *.dbr *.jump2 *.sched *.cse2 *.sched2 *.stack
-	-rm -f */*.greg */*.lreg */*.combine */*.flow */*.cse */*.jump */*.rtl
-	-rm -f */*.tree */*.loop */*.dbr */*.jump2 */*.sched */*.cse2
-	-rm -f */*.sched2 */*.stack
-# Delete some files made during installation.
-	-rm -f specs gfloat.h float.h-* enquire SYSCALLS.c.X SYSCALLS.c
-	-rm -f collect collect2 mips-tfile mips-tdump alloca.s
-# Delete files generated for fixproto
-	-rm -rf fix-header xsys-protos.h deduced.h tmp-deduced.h \
-	  gen-protos fixproto.list fixtmp.* fixhdr.ready
-# Delete unwanted output files from TeX.
-	-rm -f *.toc *.log *.vr *.fn *.cp *.tp *.ky *.pg
-	-rm -f */*.toc */*.log */*.vr */*.fn */*.cp */*.tp */*.ky */*.pg
-# Delete sorted indices we don't actually use.
-	-rm -f gcc.vrs gcc.kys gcc.tps gcc.pgs gcc.fns
-# Delete core dumps.
-	-rm -f core */core
-# CYGNUS LOCAL: built in build directory
-	-rm -f y.tab.c y.tab.h y.output
-# Delete these files here instead of in realclean because they are now created
-# in the build subdirectories.
-	-rm -f objc-parse.c objc-parse.output
-	-rm -f c-parse.c c-parse.output c-parse.h
-	-rm -f cexp.c cexp.output $(BUILD_SO1) $(BUILD_SO2) $(BUILD_SO3)
-# END CYGNUS LOCAL
-# CYGNUS LOCAL: regmove
-	-rm -f *.regmove */*.regmove
-# END CYGNUS LOCAL
-# CYGNUS LOCAL: mentoropt/meissner
-	-rm -f *.shorten */*.shorten
-# END CYGNUS LOCAL: mentoropt/meissner
-# CYGNUS LOCAL: gcov/meissner
-	-rm -f *.bp */*.bp
-# END CYGNUS LOCAL: gcov/meissner
 
-# Delete all files made by compilation
-# that don't exist in the distribution.
-clean: mostlyclean bytecode.clean lang.clean
-# It may not be quite desirable to delete unprotoize.c here,
-# but the spec for `make clean' requires it.
-# Using unprotoize.c is not quite right in the first place, 
-# but what better way is there?
-	-rm -f libgcc.a libgcc1.a libgcc1-asm.a libgcc2.a libgcc2.ready
-	-rm -f libgcc1.null
-	-rm -f *.dvi
-	-rm -f */*.dvi
-	-if [ -f md.pre-cpp ]; then \
-	  rm -f md ; \
-	fi
-# Delete the include directory.
-	-rm -rf stmp-* include objc-headers
-	-rm -f */stmp-*
-# Delete files used by the "multilib" facility (including libgcc subdirs).
-	-rm -f multilib.h tmpmultilib*
-	-if [ "x$(MULTILIB_DIRNAMES)" != x ] ; then \
-	  rm -rf $(MULTILIB_DIRNAMES); \
-	else if [ "x$(MULTILIB_OPTIONS)" != x ] ; then \
-	  rm -rf `echo $(MULTILIB_OPTIONS) | sed -e 's/\// /g'`; \
-	fi ; fi
-# CYGNUS LOCAL: built in build directory
-	-rm -f c-parse.y objc-parse.y
-# END CYGNUS LOCAL
+local-maintainer-clean:
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
 
-# Delete all files that users would normally create
-# while building and installing GCC.
-distclean: clean bytecode.distclean lang.distclean
-	-rm -f tm.h config.h tconfig.h hconfig.h md
-	-rm -f config.status config.run
-	-rm -f Makefile specs.h options.h *.oaux
-	-rm -fr stage1 stage2 stage3 stage4
-	-rm -f */stage1 */stage2 */stage3 */stage4 */include
-	-rm -f objc-parse.output
-	-rm -f c-parse.output
-	-rm -f *.asm
-	-rm -f float.h
-
-# Delete anything likely to be found in the source directory
-# that shouldn't be in the distribution.
-extraclean: distclean lang.extraclean
-	-rm -rf =* ./"#"* *~* config/=* config/"#"* config/*~*
-	-rm -f patch* *.orig *.rej config/patch* config/*.orig config/*.rej
-	-rm -f config/*/=* config/*/"#"* config/*/*~*
-	-rm -f config/*/*.orig config/*/*.rej
-	-rm -f *.dvi *.ps *.oaux *.d *.[zZ] *.gz
-	-rm -f *.tar *.xtar *diff *.diff.* *.tar.* *.xtar.* *diffs
-	-rm -f *lose config/*lose config/*/*lose
-	-rm -f *.s *.s[0-9] *.i install1.texi config/ChangeLog
-	-rm -f */=* */"#"* */*~*
-	-rm -f */patch* */*.orig */*.rej
-	-rm -f */*.dvi */*.oaux */*.d */*.[zZ] */*.gz
-	-rm -f */*.tar */*.xtar */*diff */*.diff.* */*.tar.* */*.xtar.* */*diffs
-	-rm -f */*lose */*.s */*.s[0-9] */*.i
-
-# Get rid of every file that's generated from some other file.
-# Most of these files ARE PRESENT in the GCC distribution.
-maintainer-clean: distclean bytecode.maintainer-clean lang.maintainer-clean
-	-rm -f c-parse.y c-gperf.h objc-parse.y
-	-rm -f objc-parse.c objc-parse.output
-	-rm -f c-parse.c c-parse.h c-parse.output
-	-rm -f cexp.c cexp.output TAGS 
-	-rm -f cpp.info* cpp.??s cpp.*aux
-	-rm -f gcc.info* gcc.??s gcc.*aux
-# CYGNUS LOCAL: Delete locally created files.
-	-rm -f *.as cp-hash.h
-# END CYGNUS LOCAL
-
-# CYGNUS LOCAL: realclean
+clean: do-clean local-clean
+mostlyclean: do-mostlyclean local-clean
+distclean: do-distclean local-clean local-distclean
+maintainer-clean: local-maintainer-clean do-maintainer-clean local-clean 
+maintainer-clean: local-distclean
 realclean: maintainer-clean
-# END CYGNUS LOCAL
-
-# Entry points `install' and `uninstall'.
-# Also use `install-collect2' to install collect2 when the config files don't.
 
-# The semicolon is to prevent the install.sh -> install default rule
-# from doing anything.  Having it run true helps avoid problems and
-# noise from versions of make which don't like to have null commands.
-install: $(INSTALL_TARGET) ; @true
-
-# Copy the compiler files into directories where they will be run.
-# Install the driver last so that the window when things are
-# broken is small.
-# CYGNUS LOCAL: install-info done separately.
-install-normal: install-common $(INSTALL_HEADERS) $(INSTALL_LIBGCC) \
-    install-libobjc install-man lang.install-normal install-driver
-
-# Do nothing while making gcc with a cross-compiler. The person who
-# makes gcc for the target machine has to know how to put a complete
-# gcc together by hand.
-install-build: force
-	@echo You have to install gcc on your target machine by hand.
-
-# Run this on the target machine
-# to finish installation of cross compiler.
-install-cross-rest: install-float-h-cross
-
-# Install float.h for cross compiler.
-# Run this on the target machine!
-install-float-h-cross: install-dir
-#	if [ -f enquire ] ; then true; else false; fi
-# Note: don't use -.  We should fail right away if enquire was not made.
-	./enquire -f > $(tmpdir)/float.h
-	-rm -f $(libsubdir)/include/float.h
-	$(INSTALL_DATA) $(tmpdir)/float.h $(libsubdir)/include/float.h
-	-rm -f $(tmpdir)/float.h
-	chmod a-x $(libsubdir)/include/float.h
-
-# Create the installation directory.
-install-dir:
-	-if [ -d $(libdir) ] ; then true ; else mkdir $(libdir) ; chmod a+rx $(libdir) ; fi
-	-if [ -d $(libdir)/gcc-lib ] ; then true ; else mkdir $(libdir)/gcc-lib ; chmod a+rx $(libdir)/gcc-lib ; fi
-# This dir isn't currently searched by cpp.
-#	-if [ -d $(libdir)/gcc-lib/include ] ; then true ; else mkdir $(libdir)/gcc-lib/include ; chmod a+rx $(libdir)/gcc-lib/include ; fi
-	-if [ -d $(libdir)/gcc-lib/$(target_alias) ] ; then true ; else mkdir $(libdir)/gcc-lib/$(target_alias) ; chmod a+rx $(libdir)/gcc-lib/$(target_alias) ; fi
-	-if [ -d $(libdir)/gcc-lib/$(target_alias)/$(version) ] ; then true ; else mkdir $(libdir)/gcc-lib/$(target_alias)/$(version) ; chmod a+rx $(libdir)/gcc-lib/$(target_alias)/$(version) ; fi
-	-if [ -d $(libdir)/gcc-lib/$(target_alias)/$(version)/include ] ; then true ; else mkdir $(libdir)/gcc-lib/$(target_alias)/$(version)/include ; chmod a+rx $(libdir)/gcc-lib/$(target_alias)/$(version)/include ; fi
-	-if [ -d $(bindir) ] ; then true ; else mkdir $(bindir) ; chmod a+rx $(bindir) ; fi
-	-if [ -d $(includedir) ] ; then true ; else mkdir $(includedir) ; chmod a+rx $(includedir) ; fi
-	-if [ -d $(tooldir) ] ; then true ; else mkdir $(tooldir) ; chmod a+rx $(tooldir) ; fi
-	-if [ -d $(assertdir) ] ; then true ; else mkdir $(assertdir) ; chmod a+rx $(assertdir) ; fi
-	-if [ -d $(infodir) ] ; then true ; else mkdir $(infodir) ; chmod a+rx $(infodir) ; fi
-# We don't use mkdir -p to create the parents of mandir,
-# because some systems don't support it.
-# Instead, we use this technique to create the immediate parent of mandir.
-	-parent=`echo $(mandir)|sed -e 's@/[^/]*$$@@'`; \
-	if [ -d $$parent ] ; then true ; else mkdir $$parent ; chmod a+rx $$parent ; fi
-	-if [ -d $(mandir) ] ; then true ; else mkdir $(mandir) ; chmod a+rx $(mandir) ; fi
-# CYGNUS LOCAL: We use man1dir instead of mandir.
-	-if [ -d $(man1dir) ] ; then true ; else mkdir $(man1dir) ; chmod a+rx $(mandir) ; fi
-# END CYGNUS LOCAL
-
-# Install the compiler executables built during cross compilation.
-install-common: native install-dir $(EXTRA_PARTS) lang.install-common
-	for file in $(COMPILERS); do \
-	  if [ -f $$file ] ; then \
-	    rm -f $(libsubdir)/$$file; \
-	    $(INSTALL_PROGRAM) $$file $(libsubdir)/$$file; \
-	  else true; \
-	  fi; \
-	done
-	for file in $(EXTRA_PASSES) $(EXTRA_PROGRAMS) $(USE_COLLECT2) ..; do \
-	  if [ x"$$file" != x.. ]; then \
-	    rm -f $(libsubdir)/$$file; \
-	    $(INSTALL_PROGRAM) $$file $(libsubdir)/$$file; \
-	  else true; fi; \
-	done
-	for file in $(EXTRA_PARTS) ..; do \
-	  if [ x"$$file" != x.. ]; then \
-	    rm -f $(libsubdir)/$$file; \
-	    $(INSTALL_DATA) $$file $(libsubdir)/$$file; \
-	  else true; fi; \
-	done
-# Don't mess with specs if it doesn't exist yet.
-	-if [ -f specs ] ; then \
-	  rm -f $(libsubdir)/specs; \
-	  $(INSTALL_DATA) specs $(libsubdir)/specs; \
+# This rule is used to clean specific modules.
+.PHONY: $(CLEAN_MODULES) $(CLEAN_X11_MODULES) clean-gcc
+$(CLEAN_MODULES) $(CLEAN_X11_MODULES) clean-gcc:
+	@dir=`echo $@ | sed -e 's/clean-//'`; \
+	if [ -f ./$${dir}/Makefile ] ; then \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd`; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd $${dir}; $(MAKE) $(FLAGS_TO_PASS) clean); \
+	else \
+	  true; \
 	fi
-# Install protoize if it was compiled.
-	-if [ -f protoize$(exeext) ]; \
-	then \
-	    rm -f $(bindir)/protoize$(exeext); \
-	    $(INSTALL_PROGRAM) protoize$(exeext) $(bindir)/protoize$(exeext); \
-	    rm -f $(bindir)/unprotoize$(exeext); \
-	    $(INSTALL_PROGRAM) unprotoize$(exeext) $(bindir)/unprotoize$(exeext); \
-	    rm -f $(libsubdir)/SYSCALLS.c.X; \
-	    $(INSTALL_DATA) SYSCALLS.c.X $(libsubdir)/SYSCALLS.c.X; \
-	    chmod a-x $(libsubdir)/SYSCALLS.c.X; \
+
+.PHONY: $(CLEAN_TARGET_MODULES)
+$(CLEAN_TARGET_MODULES):
+	@dir=`echo $@ | sed -e 's/clean-target-//'`; \
+	rm -f $(TARGET_SUBDIR)/$${dir}/multilib.out $(TARGET_SUBDIR)/$${dir}/tmpmulti.out; \
+	if [ -f $(TARGET_SUBDIR)/$${dir}/Makefile ] ; then \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd`; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd $(TARGET_SUBDIR)/$${dir}; $(MAKE) $(TARGET_FLAGS_TO_PASS) clean); \
+	else \
+	  true; \
 	fi
-	-rm -f $(libsubdir)/cpp$(exeext)
-	$(INSTALL_PROGRAM) cpp$(exeext) $(libsubdir)/cpp$(exeext)
-# CYGNUS LOCAL: gcov
-# Install gcov if it was compiled.
-	-if [ -f gcov$(exeext) ]; \
-	then \
-	    rm -f $(bindir)/gcov$(exeext); \
-	    $(INSTALL_PROGRAM) gcov$(exeext) $(bindir)/gcov$(exeext); \
-	    chmod a+x $(bindir)/gcov$(exeext); \
-	fi
-# END CYGNUS LOCAL
-# CYGNUS LOCAL: binary installation
-# This is for the sake of binary installation.
-# If newlib exists, then we don't want to run fixincludes or fix-header.
-# Otherwise, install them if they exist and should be run.
-	if [ -d $(objdir)/../$(target_alias)/newlib ] ; then \
+
+clean-target: $(CLEAN_TARGET_MODULES)
+
+# Check target.
+
+.PHONY: check
+check: $(CHECK_MODULES) \
+	$(CHECK_TARGET_MODULES) \
+	$(CHECK_X11_MODULES) \
+	check-gcc
+
+# Automated reporting of test results.
+
+warning.log: build.log
+	$(srcdir)/contrib/warn_summary build.log > $@
+
+mail-report.log:
+	if test x'$(BOOT_CFLAGS)' != x''; then \
+	    BOOT_CFLAGS='$(BOOT_CFLAGS)'; export BOOT_CFLAGS; \
+	fi; \
+	$(srcdir)/contrib/test_summary -t >$@
+	chmod +x $@
+	echo If you really want to send e-mail, run ./$@ now
+
+mail-report-with-warnings.log: warning.log
+	if test x'$(BOOT_CFLAGS)' != x''; then \
+	    BOOT_CFLAGS='$(BOOT_CFLAGS)'; export BOOT_CFLAGS; \
+	fi; \
+	$(srcdir)/contrib/test_summary -t -i warning.log >$@
+	chmod +x $@
+	echo If you really want to send e-mail, run ./$@ now
+
+# Installation targets.
+
+.PHONY: install install-cross uninstall source-vault binary-vault vault-install
+install: $(INSTALL_TARGET) 
+install-cross: $(INSTALL_TARGET_CROSS) 
+
+uninstall:
+	@echo "the uninstall target is not supported in this tree"
+
+source-vault:
+	$(MAKE) -f ./release/Build-A-Release \
+		host=$(host_alias) source-vault
+
+binary-vault:
+	$(MAKE) -f ./release/Build-A-Release \
+		host=$(host_alias) target=$(target_alias)
+
+vault-install:
+	@if [ -f ./release/vault-install ] ; then \
+	  ./release/vault-install $(host_alias) $(target_alias) ; \
+	else \
 	  true ; \
-	else \
-	  if [ -d $(tooldir)/install-tools ] ; then true ; else mkdir $(tooldir)/install-tools ; fi ; \
-	  if [ x$(FIXINCLUDES) != xMakefile.in ] ; then \
-	    $(INSTALL_PROGRAM) $(srcdir)/$(FIXINCLUDES) $(tooldir)/install-tools/fixincludes ; \
-	  else true; fi; \
-	  if [ -f fix-header ] ; then \
-	    $(INSTALL_PROGRAM) fix-header $(tooldir)/install-tools/fix-header ; \
-	    $(INSTALL_PROGRAM) $(srcdir)/fixproto $(tooldir)/install-tools/fixproto ; \
-	    rm -f tmp-def ; \
-	    echo "#!/bin/sh" > tmp-def ; \
-	    echo "# Print FIXPROTO_DEFINES needed by fixproto." >> tmp-def ; \
-	    echo "echo '$(FIXPROTO_DEFINES)'" >> tmp-def ; \
-	    chmod +x tmp-def ; \
-	    $(INSTALL_PROGRAM) tmp-def $(tooldir)/install-tools/fixproto-defines ; \
-	    rm -f tmp-def ; \
-	  else true; fi; \
-	fi
-# END CYGNUS LOCAL
-
-# Install the driver program as $(target_alias)-gcc
-# and also as either gcc (if native) or $(tooldir)/bin/gcc.
-install-driver: xgcc
-	-if [ -f gcc-cross$(exeext) ] ; then \
-	  rm -f $(bindir)/$(GCC_CROSS_NAME)$(exeext); \
-	  $(INSTALL_PROGRAM) gcc-cross$(exeext) $(bindir)/$(GCC_CROSS_NAME)$(exeext); \
-	  if [ -d $(tooldir)/bin/. ] ; then \
-	    rm -f $(tooldir)/bin/gcc$(exeext); \
-	    $(INSTALL_PROGRAM) gcc-cross$(exeext) $(tooldir)/bin/gcc$(exeext); \
-	  else true; fi; \
-	else \
-	  rm -f $(bindir)/$(GCC_INSTALL_NAME)$(exeext); \
-	  $(INSTALL_PROGRAM) xgcc$(exeext) $(bindir)/$(GCC_INSTALL_NAME)$(exeext); \
-	  rm -f $(bindir)/$(target_alias)-gcc-1$(exeext); \
-	  ln $(bindir)/$(GCC_INSTALL_NAME)$(exeext) $(bindir)/$(target_alias)-gcc-1$(exeext) \
-	    > /dev/null 2>&1 \
-	    || cp $(bindir)/$(GCC_INSTALL_NAME)$(exeext) $(bindir)/$(target_alias)-gcc-1$(exeext); \
-	  mv $(bindir)/$(target_alias)-gcc-1$(exeext) $(bindir)/$(target_alias)-gcc$(exeext); \
 	fi
 
-# CYGNUS LOCAL: compile-man-sysv
-# Some system V machines don't come with nroff so we'll work out the
-# pages here for them.
-compile-man-sysv:
-	for i in gcc cccp protoize unprotoize ; do \
-		nroff -man $$i.1 | col -b > $$i.t ; \
-		pack $$i.t ; rm -f $$i.t; \
-		mv $$i.t.z $$i.z ;\
-	done
-# END CYGNUS LOCAL
-
-# Install the info files.
-# CYGNUS LOCAL: Handle an arbitrary set of .info files.
-install-info: doc install-dir lang.install-info
-	-for i in *.info*; do \
-	  rm -f $(infodir)/$$i; \
-	  $(INSTALL_DATA) $$i $(infodir)/$$i; \
-	done
-
-# CYGNUS LOCAL: clean-info
-clean-info:
-	-rm -f *.info*
-
-# Install the man pages.
-# CYGNUS LOCAL: We use man1dir instead of mandir.
-install-man: install-dir $(srcdir)/gcc.1 $(srcdir)/cccp.1 \
-	$(srcdir)/cpp.1 lang.install-man
-	-if [ -f gcc-cross ] ; then \
-	  rm -f $(man1dir)/$(GCC_CROSS_NAME)$(manext); \
-	  $(INSTALL_DATA) $(srcdir)/gcc.1 $(man1dir)/$(GCC_CROSS_NAME)$(manext); \
-	  chmod a-x $(man1dir)/$(GCC_CROSS_NAME)$(manext); \
+.PHONY: install.all
+install.all: install-no-fixedincludes
+	@if [ -f ./gcc/Makefile ] ; then \
+		r=`pwd` ; export r ; \
+		$(SET_LIB_PATH) \
+		(cd ./gcc; \
+		$(MAKE) $(FLAGS_TO_PASS) install-headers) ; \
 	else \
-	  rm -f $(man1dir)/$(GCC_INSTALL_NAME)$(manext); \
-	  $(INSTALL_DATA) $(srcdir)/gcc.1 $(man1dir)/$(GCC_INSTALL_NAME)$(manext); \
-	  chmod a-x $(man1dir)/$(GCC_INSTALL_NAME)$(manext); \
+		true ; \
 	fi
-	-rm -f $(man1dir)/cccp$(manext)
-	-$(INSTALL_DATA) $(srcdir)/cccp.1 $(man1dir)/cccp$(manext)
-	-chmod a-x $(man1dir)/cccp$(manext)
-	-rm -f $(man1dir)/cpp$(manext)
-	-$(INSTALL_DATA) $(srcdir)/cpp.1 $(man1dir)/cpp$(manext)
-	-chmod a-x $(man1dir)/cpp$(manext)
 
-# Install the library.
-install-libgcc: libgcc.a install-dir
-	-if [ -f libgcc.a ] ; then \
-	  rm -f $(libsubdir)/libgcc.a; \
-	  $(INSTALL_DATA) libgcc.a $(libsubdir)/libgcc.a; \
-	  if $(RANLIB_TEST) ; then \
-	    (cd $(libsubdir); $(RANLIB) libgcc.a); else true; fi; \
-	  chmod a-x $(libsubdir)/libgcc.a; \
+# inet-install is used because the I*Net wants DejaGNU installed but
+# not built.  Similarly, gzip is built but not installed.
+inet-install:
+	$(MAKE) INSTALL_MODULES="`echo $(INSTALL_MODULES) | sed -e 's/install-dejagnu//' -e 's/install-gzip//'`" install
+
+# install-no-fixedincludes is used because Cygnus can not distribute
+# the fixed header files.
+.PHONY: install-no-fixedincludes
+install-no-fixedincludes: \
+	installdirs \
+	$(INSTALL_MODULES) \
+	$(INSTALL_TARGET_MODULES) \
+	$(INSTALL_X11_MODULES) \
+	gcc-no-fixedincludes 
+
+# Install the gcc headers files, but not the fixed include files,
+# which Cygnus is not allowed to distribute.  This rule is very
+# dependent on the workings of the gcc Makefile.in.
+.PHONY: gcc-no-fixedincludes
+gcc-no-fixedincludes:
+	@if [ -f ./gcc/Makefile ]; then \
+	  rm -rf gcc/tmp-include; \
+	  mv gcc/include gcc/tmp-include 2>/dev/null; \
+	  mkdir gcc/include; \
+	  cp $(srcdir)/gcc/gsyslimits.h gcc/include/syslimits.h; \
+	  touch gcc/stmp-fixinc gcc/include/fixed; \
+	  rm -f gcc/stmp-headers gcc/stmp-int-hdrs; \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd` ; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd ./gcc; \
+	   $(MAKE) $(GCC_FLAGS_TO_PASS) install); \
+	  rm -rf gcc/include; \
+	  mv gcc/tmp-include gcc/include 2>/dev/null; \
 	else true; fi
 
-# Install multiple versions of libgcc.a.
-install-multilib: stmp-multilib install-dir
-	for i in `$(GCC_FOR_TARGET) --print-multi-lib`; do \
-	  dir=`echo $$i | sed -e 's/;.*$$//'`; \
-	  if [ -d $(libsubdir)/$${dir} ]; then true; else mkdir $(libsubdir)/$${dir}; fi; \
-	  rm -f $(libsubdir)/$${dir}/libgcc.a; \
-	  $(INSTALL_DATA) $${dir}/libgcc.a $(libsubdir)/$${dir}/libgcc.a; \
-	  if $(RANLIB_TEST); then \
-	    (cd $(libsubdir)/$${dir}; $(RANLIB) libgcc.a); else true; fi; \
-	  chmod a-x $(libsubdir)/$${dir}/libgcc.a; \
-	done
-
-# Install the objc run time library.
-install-libobjc: install-dir
-	-if [ -f libobjc.a ] ; then \
-	  rm -f $(libsubdir)/libobjc.a; \
-	  $(INSTALL_DATA) libobjc.a $(libsubdir)/libobjc.a; \
-	  if $(RANLIB_TEST) ; then \
-	    (cd $(libsubdir); $(RANLIB) libobjc.a); else true; fi; \
-	  chmod a-x $(libsubdir)/libobjc.a; \
-	else true; fi
-
-# Install all the header files built in the include subdirectory.
-install-headers: install-include-dir $(INSTALL_HEADERS_DIR) $(INSTALL_ASSERT_H)
-# Fix symlinks to absolute paths in the installed include directory to
-# point to the installed directory, not the build directory.
-	-files=`cd $(libsubdir)/include; find . -type l -print 2>/dev/null`; \
-	if [ $$? -eq 0 ]; then \
-	  dir=`cd include; pwd`; \
-	  for i in $$files; do \
-	    dest=`ls -ld $(libsubdir)/include/$$i | sed -n 's/.*-> //p'`; \
-	    if expr "$$dest" : "$$dir.*" > /dev/null; then \
-	      rm -f $(libsubdir)/include/$$i; \
-	      ln -s `echo $$i | sed "s|/[^/]*|/..|g" | sed 's|/..$$||'``echo "$$dest" | sed "s|$$dir||"` $(libsubdir)/include/$$i; \
-	    fi; \
-	  done; \
-	fi
-
-# Create or recreate the gcc private include file directory.
-install-include-dir: install-dir
-	-rm -rf $(libsubdir)/include
-	mkdir $(libsubdir)/include
-	-chmod a+rx $(libsubdir)/include
-
-# Install the include directory using tar.
-install-headers-tar: stmp-headers $(STMP_FIXPROTO) install-include-dir
-	(cd include; \
-	 tar -cf - .; exit 0) | (cd $(libsubdir)/include; tar $(TAROUTOPTS) - )
-# /bin/sh on some systems returns the status of the first tar,
-# and that can lose with GNU tar which always writes a full block.
-# So use `exit 0' to ignore its exit status.
-
-# Install the include directory using cpio.
-install-headers-cpio: stmp-headers $(STMP_FIXPROTO) install-include-dir
-	(cd include; find . -print) | (cd include; cpio -pdum $(libsubdir)/include)
-
-# Put assert.h where it won't override GNU libc's assert.h.
-# It goes in a dir that is searched after GNU libc's headers;
-# thus, the following conditionals are no longer needed.
-# But it's not worth deleting them now.
-## Don't replace the assert.h already there if it is not from GCC.
-## This code would be simpler if it tested for -f ... && ! grep ...
-## but supposedly the ! operator is missing in sh on some systems.
-install-assert-h: assert.h install-dir
-	if [ -f $(assertdir)/assert.h ]; \
-	then \
-	  if grep "__eprintf" $(assertdir)/assert.h >/dev/null; \
-	    then \
-	    rm -f $(assertdir)/assert.h; \
-	    $(INSTALL_DATA) $(srcdir)/assert.h $(assertdir)/assert.h; \
-	    chmod a-x $(assertdir)/assert.h; \
-	  else true; \
-	  fi; \
+# This rule is used to build the modules which use FLAGS_TO_PASS.  To
+# build a target all-X means to cd to X and make all.
+#
+# all-gui, and all-libproc are handled specially because
+# they are still experimental, and if they fail to build, that
+# shouldn't stop "make all".
+.PHONY: $(ALL_MODULES) all-gui all-libproc
+$(ALL_MODULES) all-gui all-libproc:
+	@dir=`echo $@ | sed -e 's/all-//'`; \
+	if [ -f ./$${dir}/Makefile ] ; then \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd`; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd $${dir}; $(MAKE) $(FLAGS_TO_PASS) all); \
 	else \
-	  rm -f $(assertdir)/assert.h; \
-	  $(INSTALL_DATA) $(srcdir)/assert.h $(assertdir)/assert.h; \
-	  chmod a-x $(assertdir)/assert.h; \
-	fi
-
-# Use this target to install the program `collect2' under the name `ld'.
-install-collect2: collect2 install-dir
-	$(INSTALL_PROGRAM) collect2$(exeext) $(libsubdir)/ld$(exeext)
-# Install the driver program as $(libsubdir)/gcc for collect2.
-	$(INSTALL_PROGRAM) xgcc$(exeext) $(libsubdir)/gcc$(exeext)
-
-# Cancel installation by deleting the installed files.
-uninstall: lang.uninstall
-	-rm -rf $(libsubdir)
-	-rm -rf $(bindir)/$(GCC_INSTALL_NAME)$(exeext)
-	-rm -rf $(bindir)/$(GCC_CROSS_NAME)$(exeext)
-	-rm -rf $(bindir)/protoize$(exeext)
-	-rm -rf $(bindir)/unprotoize$(exeext)
-# CYGNUS LOCAL: We use man1dir instead of mandir.
-	-rm -rf $(man1dir)/$(GCC_INSTALL_NAME)$(manext)
-	-rm -rf $(man1dir)/$(GCC_CROSS_NAME)$(manext)
-	-rm -rf $(man1dir)/cccp$(manext)
-	-rm -rf $(man1dir)/protoize$(manext)
-	-rm -rf $(man1dir)/unprotoize$(manext)
-	-rm -rf $(man1dir)/cpp$(manext)
-
-# CYGNUS LOCAL: dejagnu
-# These targets are for the dejagnu testsuites. The file site.exp 
-# contains global variables that all the testsuites will use.
-
-# Gets overridden to $(target_alias)/ for cross.
-target_subdir =
-
-site.exp: ./config.status Makefile
-	@echo "Making a new config file..."
-	-@rm -f ./tmp?
-	@touch site.exp
-	-@mv site.exp site.bak
-	@echo "## these variables are automatically generated by make ##" > ./tmp0
-	@echo "# Do not edit here. If you wish to override these values" >> ./tmp0
-	@echo "# add them to the last section" >> ./tmp0
-	@echo "set rootme \"`pwd`\"" >> ./tmp0
-	@echo "set srcdir \"`cd ${srcdir}; pwd`\"" >> ./tmp0
-	@echo "set host_triplet $(host_canonical)" >> ./tmp0
-	@echo "set build_triplet $(build_canonical)" >> ./tmp0
-	@echo "set target_triplet $(target)" >> ./tmp0
-	@echo "set target_alias $(target_alias)" >> ./tmp0
-# CFLAGS is set even though it's empty to show we reserve the right to set it.
-	@echo "set CFLAGS \"\"" >> ./tmp0
-	@echo "set CXXFLAGS \"-I$(objdir)/../$(target_subdir)libio -I\$$srcdir/../libg++/src -I\$$srcdir/../libio -I\$$srcdir/../libstdc++ -I\$$srcdir/../libstdc++/stl -L$(objdir)/../$(target_subdir)libg++ -L$(objdir)/../$(target_subdir)libstdc++\"" >> ./tmp0
-# If newlib has been configured, we need to pass -B to gcc so it can find
-# newlib's crt0.o if it exists.  This will cause a "path prefix not used"
-# message if it doesn't, but the testsuite is supposed to ignore the message -
-# it's too difficult to tell when to and when not to pass -B (not all targets
-# have crt0's).  We could only add the -B if ../newlib/crt0.o exists, but that
-# seems like too selective a test.
-# ??? Another way to solve this might be to rely on linker scripts.  Then
-# theoretically the -B won't be needed.
-# We also need to pass -L ../ld so that the linker can find ldscripts.
-	@if [ -d $(objdir)/../$(target_subdir)newlib ] ; then \
-	  echo "set newlib_cflags \"-I$(objdir)/../$(target_subdir)newlib/targ-include -I\$$srcdir/../newlib/libc/include\"" >> ./tmp0; \
-	  echo "set newlib_ldflags \"-B$(objdir)/../$(target_subdir)newlib/\"" >> ./tmp0; \
-	  echo "append CFLAGS \" \$$newlib_cflags\"" >> ./tmp0; \
-	  echo "append CXXFLAGS \" \$$newlib_cflags\"" >> ./tmp0; \
-	  echo "append LDFLAGS \" \$$newlib_ldflags\"" >> ./tmp0; \
-	else true; \
-	fi
-	@if [ -d $(objdir)/../ld ] ; then \
-	  echo "append LDFLAGS \" -L$(objdir)/../ld\"" >> ./tmp0; \
-	else true; \
-	fi
-	@if  [ $(build_canonical) != $(host_canonical) ] ; then \
-	  echo "set tmpdir /tmp" >> ./tmp0 ; \
-	else echo "set tmpdir $(objdir)/testsuite" >> ./tmp0 ; \
-	fi
-	@echo "set srcdir \"\$${srcdir}/testsuite\"" >> ./tmp0
-	@echo "## All variables above are generated by configure. Do Not Edit ##" >> ./tmp0
-	@cat ./tmp0 > site.exp
-	@cat site.bak | sed \
-		-e '1,/^## All variables above are.*##/ d' >> site.exp
-	-@rm -f ./tmp?
-
-CHECK_TARGETS = check-gcc check-g++
-
-check: $(CHECK_TARGETS)
-
-check-g++: site.exp
-	if [ -d testsuite ]; then \
 	  true; \
-	else \
-	  mkdir testsuite; \
 	fi
-	rm -rf testsuite/site.exp
-	cp site.exp testsuite/site.exp
-	rootme=`pwd`; export rootme; \
-	srcdir=`cd ${srcdir}; pwd` ; export srcdir ; \
-	cd testsuite; \
-	EXPECT=${EXPECT} ; export EXPECT ; \
-	if [ -f $${rootme}/../expect/expect ] ; then  \
-	   TCL_LIBRARY=$${srcdir}/../tcl/library ; \
-	    export TCL_LIBRARY ; fi ; \
-	$(RUNTEST) --tool g++ $(RUNTESTFLAGS)
 
-check-gcc: site.exp
-	if [ -d testsuite ]; then \
-	  true; \
-	else \
-	  mkdir testsuite; \
-	fi
-	rm -rf testsuite/site.exp
-	cp site.exp testsuite/site.exp
-	rootme=`pwd`; export rootme; \
-	srcdir=`cd ${srcdir}; pwd` ; export srcdir ; \
-	cd testsuite; \
-	EXPECT=${EXPECT} ; export EXPECT ; \
-	if [ -f $${rootme}/../expect/expect ] ; then  \
-	   TCL_LIBRARY=$${srcdir}/../tcl/library ; \
-	   export TCL_LIBRARY ; fi ; \
-	$(RUNTEST) --tool gcc $(RUNTESTFLAGS)
+# These rules are used to check the modules which use FLAGS_TO_PASS.
+# To build a target check-X means to cd to X and make check.  Some
+# modules are only tested in a native toolchain.
 
-# END CYGNUS LOCAL
-
-
-# These exist for maintenance purposes.
-
-# Update the tags table.
-TAGS: force
-	cd $(srcdir);							\
-	mkdir temp;							\
-	mv -f c-parse.[ch] objc-parse.c cexp.c =*.[chy] temp;		\
-	etags *.y *.h *.c;						\
-	mv temp/* .;							\
-	rmdir temp
-
-# Create the distribution tar file.
-#dist: gcc-$(version).tar.gz
-dist: gcc.xtar.gz
-
-gcc.xtar.gz: gcc.xtar
-	gzip --best < gcc.xtar > tmp-gcc.xtar.gz
-	mv tmp-gcc.xtar.gz gcc.xtar.gz
-
-#gcc-$(version).tar.gz: gcc-$(version).tar
-#	gzip < gcc-$(version).tar > gcc-$(version).tar.gz
-
-#gcc-$(version).tar:
-gcc.xtar: distdir
-# Make the distribution.
-	tar -chf gcc.xtar gcc-$(version)
-
-# This target exists to do the initial work before the language specific
-# stuff gets done.
-distdir-start: doc $(srcdir)/INSTALL c-parse.y $(srcdir)/c-gperf.h objc-parse.y \
-  c-parse.c objc-parse.c cexp.c
-	@if grep -s "for version ${mainversion}" gcc.texi > /dev/null; \
-	then true; \
-	else echo "You must update the version number in \`gcc.texi'"; sleep 10;\
-	fi
-# Update the version number in README
-	awk '$$1 " " $$2 " " $$3 == "This directory contains" \
-		{ $$6 = version; print $$0 } \
-	     $$1 " " $$2 " " $$3 != "This directory contains"' \
-	  version=$(version) README > tmp.README
-	mv tmp.README README
-	-rm -rf gcc-$(version) tmp	
-# Put all the files in a temporary subdirectory
-# which has the name that we want to have in the tar file.
-	mkdir tmp
-	mkdir tmp/config
-	mkdir tmp/ginclude
-	mkdir tmp/objc
-	for file in *[0-9a-zA-Z+]; do \
-	  ln $$file tmp > /dev/null 2>&1 || cp $$file tmp; \
-	done
-	cd config; \
-	for file in *[0-9a-zA-Z+]; do \
-	  if test -d $$file && test "$$file" != RCS; then \
-	    mkdir ../tmp/config/$$file; \
-	    cd $$file; \
-	    for subfile in *[0-9a-zA-Z+]; do \
-	      ln $$subfile ../../tmp/config/$$file >/dev/null 2>&1 \
-	      || cp $$subfile ../../tmp/config/$$file; \
-	    done; \
-	    cd ..; \
+.PHONY: $(CHECK_MODULES) $(NATIVE_CHECK_MODULES) $(CROSS_CHECK_MODULES)
+$(NATIVE_CHECK_MODULES):
+	@if [ "$(host_canonical)" = "$(target_canonical)" ] ; then \
+	  dir=`echo $@ | sed -e 's/check-//'`; \
+	  if [ -f ./$${dir}/Makefile ] ; then \
+	    r=`pwd`; export r; \
+	    s=`cd $(srcdir); pwd`; export s; \
+	    $(SET_LIB_PATH) \
+	    (cd $${dir}; $(MAKE) $(FLAGS_TO_PASS) check); \
 	  else \
-	    ln $$file ../tmp/config >/dev/null 2>&1 \
-	    || cp $$file ../tmp/config; \
+	    true; \
 	  fi; \
-	done
-	cd ginclude; \
-	for file in *[0-9a-zA-Z+]; do \
-	  ln $$file ../tmp/ginclude >/dev/null 2>&1 \
-	   || cp $$file ../tmp/ginclude; \
-	done
-	cd objc; \
-	for file in *[0-9a-zA-Z+]; do \
-	  ln $$file ../tmp/objc >/dev/null 2>&1 || cp $$file ../tmp/objc; \
-	done
-	ln .gdbinit tmp
+	fi
 
-# Finish making `distdir', after the languages have done their thing.
-distdir-finish:
-	mv tmp gcc-$(version)
-# Get rid of everything we don't want in the distribution.  We'd want
-# this to use Makefile.in, but it doesn't have the `lang.foo' targets
-# expanded.
-	cd gcc-$(version); make extraclean
+$(CROSS_CHECK_MODULES):
+	@dir=`echo $@ | sed -e 's/check-//'`; \
+	if [ -f ./$${dir}/Makefile ] ; then \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd`; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd $${dir}; $(MAKE) $(FLAGS_TO_PASS) check); \
+	else \
+	  true; \
+	fi
 
-distdir: distdir-start lang.distdir distdir-finish
+# This rule is used to install the modules which use FLAGS_TO_PASS.
+# To build a target install-X means to cd to X and make install.
+.PHONY: $(INSTALL_MODULES)
+$(INSTALL_MODULES): installdirs
+	@dir=`echo $@ | sed -e 's/install-//'`; \
+	if [ -f ./$${dir}/Makefile ] ; then \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd`; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd $${dir}; $(MAKE) $(FLAGS_TO_PASS) install); \
+	else \
+	  true; \
+	fi
 
-# make diff oldversion=M.N 
-# creates a diff file between an older distribution and this one.
-# The -P option assumes this is GNU diff.
-diff:
-	diff -rc2P -x c-parse.y -x c-parse.c -x c-parse.h -x c-gperf.h \
-	  -x cexp.c -x bi-parser.c -x objc-parse.y -x objc-parse.c \
-	  -x TAGS \
-	  -x "gcc.??" -x "gcc.??s" -x gcc.aux -x "gcc.info*" \
-	  -x "cpp.??" -x "cpp.??s" -x cpp.aux -x "cpp.info*" \
-	  $(LANG_DIFF_EXCLUDES) \
-	  gcc-$(oldversion) gcc-$(version) > diffs
-
-bootstrap: force
-# Only build the C compiler for stage1, because that is the only one that
-# we can guarantee will build with the native compiler, and also it is the
-# only thing useful for building stage2.
-	$(MAKE) CC="$(CC)" libdir=$(libdir) LANGUAGES="$(BOOT_LANGUAGES)"
-	$(MAKE) stage1
-# This used to define ALLOCA as empty, but that would lead to bad results
-# for a subsequent `make install' since that would not have ALLOCA empty.
-# To prevent `make install' from compiling alloca.o and then relinking cc1
-# because alloca.o is newer, we permit these recursive makes to compile
-# alloca.o.  Then cc1 is newer, so it won't have to be relinked.
-	$(MAKE) CC="stage1/xgcc -Bstage1/" CFLAGS="$(BOOT_CFLAGS)" LDFLAGS="$(BOOT_LDFLAGS)" libdir=$(libdir) STAGE_PREFIX=stage1/ LANGUAGES="$(LANGUAGES)"
-	$(MAKE) stage2
-	$(MAKE) CC="stage2/xgcc -Bstage2/" CFLAGS="$(BOOT_CFLAGS)" LDFLAGS="$(BOOT_LDFLAGS)" libdir=$(libdir) STAGE_PREFIX=stage2/ LANGUAGES="$(LANGUAGES)"
-
-bootstrap2: force
-	$(MAKE) CC="stage1/xgcc -Bstage1/" CFLAGS="$(BOOT_CFLAGS)" LDFLAGS="$(BOOT_LDFLAGS)" libdir=$(libdir) STAGE_PREFIX=stage1/ LANGUAGES="$(LANGUAGES)"
-	$(MAKE) stage2
-	$(MAKE) CC="stage2/xgcc -Bstage2/" CFLAGS="$(BOOT_CFLAGS)" LDFLAGS="$(BOOT_LDFLAGS)" libdir=$(libdir) STAGE_PREFIX=stage2/ LANGUAGES="$(LANGUAGES)"
-
-bootstrap3: force
-	$(MAKE) CC="stage2/xgcc -Bstage2/" CFLAGS="$(BOOT_CFLAGS)" LDFLAGS="$(BOOT_LDFLAGS)" libdir=$(libdir) STAGE_PREFIX=stage2/ LANGUAGES="$(LANGUAGES)"
-
-# Compare the object files in the current directory with those in the
-# stage2 directory.
-
-# ./ avoids bug in some versions of tail.
-compare: force
-	for file in *$(objext); do \
-	  tail +16c ./$$file > tmp-foo1; \
-	  tail +16c stage2/$$file > tmp-foo2 2>/dev/null \
-	    && (cmp tmp-foo1 tmp-foo2 || echo $$file differs) || true; \
-	done
-	for dir in tmp-foo $(SUBDIRS); do \
-	  if [ "`echo $$dir/*$(objext)`" != "$$dir/*$(objext)" ] ; then \
-	    for file in $$dir/*$(objext); do \
-	      tail +16c ./$$file > tmp-foo1; \
-	      tail +16c stage2/$$file > tmp-foo2 2>/dev/null \
-	        && (cmp tmp-foo1 tmp-foo2 || echo $$file differs) || true; \
-	    done; \
+# This rule is used to configure the modules which are built with the
+# target tools.
+.PHONY: $(CONFIGURE_TARGET_MODULES)
+$(CONFIGURE_TARGET_MODULES):
+	@dir=`echo $@ | sed -e 's/configure-target-//'`; \
+	if [ -d $(TARGET_SUBDIR)/$${dir} ]; then \
+	  r=`pwd`; export r; \
+	  $(CC_FOR_TARGET) --print-multi-lib > $(TARGET_SUBDIR)/$${dir}/tmpmulti.out 2> /dev/null; \
+	  if [ -s $(TARGET_SUBDIR)/$${dir}/tmpmulti.out ]; then \
+	    if [ -f $(TARGET_SUBDIR)/$${dir}/multilib.out ]; then \
+	      if cmp $(TARGET_SUBDIR)/$${dir}/multilib.out $(TARGET_SUBDIR)/$${dir}/tmpmulti.out > /dev/null; then \
+		rm -f $(TARGET_SUBDIR)/$${dir}/tmpmulti.out; \
+	      else \
+		echo "Multilibs changed for $${dir}, reconfiguring"; \
+		rm -f $(TARGET_SUBDIR)/$${dir}/multilib.out $(TARGET_SUBDIR)/$${dir}/Makefile; \
+		mv $(TARGET_SUBDIR)/$${dir}/tmpmulti.out $(TARGET_SUBDIR)/$${dir}/multilib.out; \
+	      fi; \
+	    else \
+	      mv $(TARGET_SUBDIR)/$${dir}/tmpmulti.out $(TARGET_SUBDIR)/$${dir}/multilib.out; \
+	    fi; \
 	  fi; \
-	done
-	-rm -f tmp-foo*
-
-# Similar, but compare with stage3 directory
-compare3: force
-	for file in *$(objext); do \
-	  tail +16c ./$$file > tmp-foo1; \
-	  tail +16c stage3/$$file > tmp-foo2 2>/dev/null \
-	    && (cmp tmp-foo1 tmp-foo2 || echo $$file differs) || true; \
-	done
-	for dir in tmp-foo $(SUBDIRS); do \
-	  if [ "`echo $$dir/*$(objext)`" != "$$dir/*$(objext)" ] ; then \
-	    for file in $$dir/*$(objext); do \
-	      tail +16c ./$$file > tmp-foo1; \
-	      tail +16c stage3/$$file > tmp-foo2 2>/dev/null \
-	        && (cmp tmp-foo1 tmp-foo2 || echo $$file differs) || true; \
-	    done; \
+	fi; exit 0	# break command into two pieces
+	@dir=`echo $@ | sed -e 's/configure-target-//'`; \
+	if [ ! -d $(TARGET_SUBDIR) ]; then \
+	  true; \
+	elif [ -f $(TARGET_SUBDIR)/$${dir}/Makefile ] ; then \
+	  true; \
+	elif echo " $(TARGET_CONFIGDIRS) " | grep " $${dir} " >/dev/null 2>&1; then \
+	  if [ -d $(srcdir)/$${dir} ]; then \
+	    [ -d $(TARGET_SUBDIR)/$${dir} ] || mkdir $(TARGET_SUBDIR)/$${dir};\
+	    r=`pwd`; export r; \
+	    s=`cd $(srcdir); pwd`; export s; \
+	    $(SET_LIB_PATH) \
+	    AR="$(AR_FOR_TARGET)"; export AR; \
+	    AS="$(AS_FOR_TARGET)"; export AS; \
+	    CC="$(CC_FOR_TARGET)"; export CC; \
+	    CFLAGS="$(CFLAGS_FOR_TARGET)"; export CFLAGS; \
+	    CXX="$(CXX_FOR_TARGET)"; export CXX; \
+	    CXXFLAGS="$(CXXFLAGS_FOR_TARGET)"; export CXXFLAGS; \
+	    DLLTOOL="$(DLLTOOL_FOR_TARGET)"; export DLLTOOL; \
+	    LD="$(LD_FOR_TARGET)"; export LD; \
+            LDFLAGS="$(LDFLAGS_FOR_TARGET)"; export LDFLAGS; \
+	    NM="$(NM_FOR_TARGET)"; export NM; \
+	    RANLIB="$(RANLIB_FOR_TARGET)"; export RANLIB; \
+	    WINDRES="$(WINDRES_FOR_TARGET)"; export WINDRES; \
+	    echo Configuring in $(TARGET_SUBDIR)/$${dir}; \
+	    cd $(TARGET_SUBDIR)/$${dir}; \
+	    case $(srcdir) in \
+	    /*) \
+	      topdir=$(srcdir) ;; \
+	    *) \
+	      case "$(TARGET_SUBDIR)" in \
+	      .) topdir="../$(srcdir)" ;; \
+	      *) topdir="../../$(srcdir)" ;; \
+	      esac ;; \
+	    esac; \
+	    if [ "$(srcdir)" = "." ] ; then \
+	      if [ "$(TARGET_SUBDIR)" != "." ] ; then \
+		if $(SHELL) $$s/symlink-tree $${topdir}/$${dir} "no-such-file" ; then \
+		  if [ -f Makefile ]; then \
+		    if $(MAKE) distclean; then \
+		      true; \
+		    else \
+		      exit 1; \
+		    fi; \
+		  else \
+		    true; \
+		  fi; \
+		else \
+		  exit 1; \
+		fi; \
+	      else \
+		true; \
+	      fi; \
+	      srcdiroption="--srcdir=."; \
+	      libsrcdir="."; \
+	    else \
+	      srcdiroption="--srcdir=$${topdir}/$${dir}"; \
+	      libsrcdir="$$s/$${dir}"; \
+	    fi; \
+	    if [ -f $${libsrcdir}/configure ] ; then \
+	      rm -f no-such-file skip-this-dir; \
+	      CONFIG_SITE=no-such-file $(SHELL) $${libsrcdir}/configure \
+		$(CONFIG_ARGUMENTS) $${srcdiroption} \
+		--with-target-subdir="$(TARGET_SUBDIR)"; \
+	    else \
+	      rm -f no-such-file skip-this-dir; \
+	      CONFIG_SITE=no-such-file $(SHELL) $$s/configure \
+		$(CONFIG_ARGUMENTS) $${srcdiroption} \
+		--with-target-subdir="$(TARGET_SUBDIR)"; \
+	    fi; \
+	    if [ -f skip-this-dir ] ; then \
+	      sh skip-this-dir; \
+	      rm -f skip-this-dir; \
+	      cd ..; rmdir $${dir} || true; \
+	    else \
+	      true; \
+	    fi; \
+	  else \
+	    true; \
 	  fi; \
+	else \
+	  true; \
+	fi
+
+# This rule is used to build the modules which use TARGET_FLAGS_TO_PASS.
+# To build a target all-X means to cd to X and make all.
+.PHONY: $(ALL_TARGET_MODULES)
+$(ALL_TARGET_MODULES):
+	@dir=`echo $@ | sed -e 's/all-target-//'`; \
+	if [ -f $(TARGET_SUBDIR)/$${dir}/Makefile ] ; then \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd`; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd $(TARGET_SUBDIR)/$${dir}; $(MAKE) $(TARGET_FLAGS_TO_PASS) all); \
+	else \
+	  true; \
+	fi
+
+# This rule is used to check the modules which use TARGET_FLAGS_TO_PASS.
+# To build a target install-X means to cd to X and make install.
+.PHONY: $(CHECK_TARGET_MODULES)
+$(CHECK_TARGET_MODULES):
+	@dir=`echo $@ | sed -e 's/check-target-//'`; \
+	if [ -f $(TARGET_SUBDIR)/$${dir}/Makefile ] ; then \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd`; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd $(TARGET_SUBDIR)/$${dir};$(MAKE) $(TARGET_FLAGS_TO_PASS) check);\
+	else \
+	  true; \
+	fi
+
+# This rule is used to install the modules which use
+# TARGET_FLAGS_TO_PASS.  To build a target install-X means to cd to X
+# and make install.
+.PHONY: $(INSTALL_TARGET_MODULES)
+$(INSTALL_TARGET_MODULES): installdirs
+	@dir=`echo $@ | sed -e 's/install-target-//'`; \
+	if [ -f $(TARGET_SUBDIR)/$${dir}/Makefile ] ; then \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd`; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd $(TARGET_SUBDIR)/$${dir}; \
+	    $(MAKE) $(TARGET_FLAGS_TO_PASS) install); \
+	else \
+	  true; \
+	fi
+
+# This rule is used to build the modules which use X11_FLAGS_TO_PASS.
+# To build a target all-X means to cd to X and make all.
+.PHONY: $(ALL_X11_MODULES)
+$(ALL_X11_MODULES):
+	@dir=`echo $@ | sed -e 's/all-//'`; \
+	if [ -f ./$${dir}/Makefile ] ; then \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd`; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd $${dir}; \
+	   $(MAKE) $(FLAGS_TO_PASS) $(X11_FLAGS_TO_PASS) all); \
+	else \
+	  true; \
+	fi
+
+# This rule is used to check the modules which use X11_FLAGS_TO_PASS.
+# To build a target check-X means to cd to X and make all.
+.PHONY: $(CHECK_X11_MODULES)
+$(CHECK_X11_MODULES):
+	@dir=`echo $@ | sed -e 's/check-//'`; \
+	if [ -f ./$${dir}/Makefile ] ; then \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd`; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd $${dir}; \
+	   $(MAKE) $(FLAGS_TO_PASS) $(X11_FLAGS_TO_PASS) check); \
+	else \
+	  true; \
+	fi
+
+# This rule is used to install the modules which use X11_FLAGS_TO_PASS.
+# To build a target install-X means to cd to X and make install.
+.PHONY: $(INSTALL_X11_MODULES)
+$(INSTALL_X11_MODULES): installdirs
+	@dir=`echo $@ | sed -e 's/install-//'`; \
+	if [ -f ./$${dir}/Makefile ] ; then \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd`; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd $${dir}; \
+	   $(MAKE) $(FLAGS_TO_PASS) $(X11_FLAGS_TO_PASS) install); \
+	else \
+	  true; \
+	fi
+
+# gcc is the only module which uses GCC_FLAGS_TO_PASS.
+.PHONY: all-gcc
+all-gcc:
+	@if [ -f ./gcc/Makefile ] ; then \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd`; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd gcc; $(MAKE) $(GCC_FLAGS_TO_PASS) all); \
+	else \
+	  true; \
+	fi
+
+# Building GCC uses some tools for rebuilding "source" files
+# like texinfo, bison/byacc, etc.  So we must depend on those.
+#
+# While building GCC, it may be necessary to run various target
+# programs like the assembler, linker, etc.  So we depend on
+# those too.
+#
+# In theory, on an SMP all those dependencies can be resolved
+# in parallel.
+#
+.PHONY: bootstrap bootstrap-lean bootstrap2 bootstrap2-lean bootstrap3 bootstrap3-lean bootstrap4 bootstrap4-lean
+bootstrap bootstrap-lean bootstrap2 bootstrap2-lean bootstrap3 bootstrap3-lean bootstrap4 bootstrap4-lean: all-texinfo all-bison all-byacc all-binutils all-gas all-ld
+	@r=`pwd`; export r; \
+	s=`cd $(srcdir); pwd`; export s; \
+	$(SET_LIB_PATH) \
+	echo "Bootstrapping the compiler"; \
+	cd gcc; $(MAKE) $(GCC_FLAGS_TO_PASS) $@
+	@r=`pwd`; export r; \
+	s=`cd $(srcdir); pwd`; export s; \
+	case "$@" in \
+	  *bootstrap4-lean ) \
+			msg="Comparing stage3 and stage4 of the compiler"; \
+	  		compare=compare3-lean ;; \
+	  *bootstrap4 ) msg="Comparing stage3 and stage4 of the compiler"; \
+	  		compare=compare3 ;; \
+	  *-lean )	msg="Comparing stage2 and stage3 of the compiler"; \
+	  		compare=compare-lean ;; \
+	  * )		msg="Comparing stage2 and stage3 of the compiler"; \
+	  		compare=compare ;; \
+	esac; \
+	$(SET_LIB_PATH) \
+	echo "$$msg"; \
+	cd gcc; $(MAKE) $(GCC_FLAGS_TO_PASS) $$compare
+	@r=`pwd`; export r; \
+	s=`cd $(srcdir); pwd` ; export s; \
+	$(SET_LIB_PATH) \
+	echo "Building runtime libraries"; \
+	$(MAKE) $(BASE_FLAGS_TO_PASS) all
+
+.PHONY: cross
+cross: all-texinfo all-bison all-byacc all-binutils all-gas all-ld
+	@r=`pwd`; export r; \
+	s=`cd $(srcdir); pwd`; export s; \
+	$(SET_LIB_PATH) \
+	echo "Building the C and C++ compiler"; \
+	cd gcc; $(MAKE) $(GCC_FLAGS_TO_PASS) LANGUAGES="c c++"
+	@r=`pwd`; export r; \
+	s=`cd $(srcdir); pwd` ; export s; \
+	$(SET_LIB_PATH) \
+	echo "Building runtime libraries"; \
+	$(MAKE) $(BASE_FLAGS_TO_PASS) all LANGUAGES="c c++"
+
+.PHONY: check-gcc
+check-gcc:
+	@if [ -f ./gcc/Makefile ] ; then \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd`; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd gcc; $(MAKE) $(GCC_FLAGS_TO_PASS) check); \
+	else \
+	  true; \
+	fi
+
+.PHONY: install-gcc
+install-gcc:
+	@if [ -f ./gcc/Makefile ] ; then \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd`; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd gcc; $(MAKE) $(GCC_FLAGS_TO_PASS) install); \
+	else \
+	  true; \
+	fi
+
+.PHONY: install-gcc-cross
+install-gcc-cross:
+	@if [ -f ./gcc/Makefile ] ; then \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd`; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd gcc; $(MAKE) $(GCC_FLAGS_TO_PASS) LANGUAGES="c c++" install); \
+	else \
+	  true; \
+	fi
+# EXPERIMENTAL STUFF
+# This rule is used to install the modules which use FLAGS_TO_PASS.
+# To build a target install-X means to cd to X and make install.
+.PHONY: install-dosrel
+install-dosrel: installdirs info
+	@dir=`echo $@ | sed -e 's/install-//'`; \
+	if [ -f ./$${dir}/Makefile ] ; then \
+	  r=`pwd`; export r; \
+	  s=`cd $(srcdir); pwd`; export s; \
+	  $(SET_LIB_PATH) \
+	  (cd $${dir}; $(MAKE) $(FLAGS_TO_PASS) install); \
+	else \
+	  true; \
+	fi
+
+install-dosrel-fake:
+
+
+# This is a list of inter-dependencies among modules.
+all-apache:
+all-ash:
+all-autoconf: all-m4 all-texinfo
+all-automake: all-m4 all-texinfo
+all-bash:
+all-bfd: all-libiberty all-intl
+all-binutils: all-libiberty all-opcodes all-bfd all-flex all-bison all-byacc all-intl
+all-bison: all-texinfo
+configure-target-boehm-gc: configure-target-newlib configure-target-qthreads
+all-target-boehm-gc: configure-target-boehm-gc
+all-byacc:
+all-bzip2:
+all-cvssrc:
+configure-target-cygmon: $(ALL_GCC)
+all-target-cygmon: configure-target-cygmon all-gas all-ld all-gcc all-target-libiberty all-target-newlib all-target-libio all-target-libstub
+all-db:
+all-dejagnu: all-tcl all-expect all-tk
+all-diff: all-libiberty
+all-emacs:
+all-emacs19: all-bison all-byacc
+all-etc:
+configure-target-examples: $(ALL_GCC)
+all-target-examples: configure-target-examples
+all-expect: all-tcl all-tk
+all-fileutils: all-libiberty
+all-findutils:
+all-find:
+all-flex: all-libiberty all-bison all-byacc
+all-gas: all-libiberty all-opcodes all-bfd all-intl
+all-gash: all-tcl
+all-gawk:
+ALL_GCC = all-gcc
+all-gcc: all-bison all-byacc all-binutils all-gas all-ld
+all-bootstrap: all-libiberty all-bison all-byacc all-binutils all-gas all-ld
+GDB_TK = all-tk all-tcl all-itcl all-tix all-libgui
+all-gdb: all-libiberty all-opcodes all-bfd all-mmalloc all-readline all-bison all-byacc all-sim $(gdbnlmrequirements) $(GDB_TK)
+all-gettext:
+all-gnuserv:
+configure-target-gperf: $(ALL_GCC)
+all-target-gperf: configure-target-gperf all-target-libiberty all-target-libstdc++
+all-gprof: all-libiberty all-bfd all-opcodes all-intl
+all-grep: all-libiberty
+all-grez: all-libiberty all-bfd all-opcodes
+all-gui: all-gdb all-libproc all-target-librx
+all-guile:
+all-gzip: all-libiberty
+all-hello: all-libiberty
+all-indent:
+all-inet: all-tcl all-send-pr all-perl
+all-intl:
+all-ispell: all-emacs19
+all-itcl: all-tcl all-tk
+all-ld: all-libiberty all-bfd all-opcodes all-bison all-byacc all-flex all-intl
+configure-target-libg++: $(ALL_GCC) configure-target-librx
+all-target-libg++: configure-target-libg++ all-gas all-ld all-gcc all-target-libiberty all-target-newlib all-target-libio all-target-librx all-target-libstdc++
+configure-target-libgloss: $(ALL_GCC)
+all-target-libgloss: configure-target-libgloss configure-target-newlib
+configure-target-libio: $(ALL_GCC)
+all-target-libio: configure-target-libio all-gas all-ld all-gcc all-target-libiberty all-target-newlib
+check-target-libio: all-target-libstdc++
+all-libgui: all-tcl all-tk all-itcl
+all-libiberty:
+configure-target-libjava: $(ALL_GCC) configure-target-zlib configure-target-boehm-gc configure-target-qthreads configure-target-newlib
+all-target-libjava: configure-target-libjava all-gcc all-zip all-target-newlib all-target-zlib all-target-boehm-gc all-target-qthreads
+configure-target-librx: $(ALL_GCC) configure-target-newlib
+all-target-librx: configure-target-librx
+configure-target-libstdc++: $(ALL_GCC)
+all-target-libstdc++: configure-target-libstdc++ all-gas all-ld all-gcc all-target-libiberty all-target-newlib all-target-libio
+configure-target-libstub: $(ALL_GCC)
+all-target-libstub: configure-target-libstub
+all-libtool:
+all-target-libf2c: configure-target-libf2c all-gas all-ld all-gcc all-target-libiberty all-target-newlib
+all-target-libchill: configure-target-libchill all-gas all-ld all-gcc all-target-libiberty all-target-newlib
+all-target-libobjc: configure-target-libobjc all-gas all-ld all-gcc all-target-libiberty all-target-newlib
+all-m4: all-libiberty
+all-make: all-libiberty
+all-mmalloc:
+configure-target-newlib: $(ALL_GCC)
+all-target-newlib: configure-target-newlib all-binutils all-gas all-gcc
+all-opcodes: all-bfd all-libiberty
+all-patch: all-libiberty
+all-perl:
+all-prms: all-libiberty
+configure-target-qthreads: configure-target-newlib
+all-target-qthreads: configure-target-qthreads
+all-rcs:
+all-readline:
+all-recode: all-libiberty
+all-sed: all-libiberty
+all-send-pr: all-prms
+all-shellutils:
+all-sim: all-libiberty all-bfd all-opcodes all-readline
+all-snavigator: all-tcl all-tk all-itcl all-db all-grep all-libgui
+all-tar: all-libiberty
+all-tcl:
+all-tclX: all-tcl all-tk
+all-tk: all-tcl
+all-texinfo: all-libiberty
+all-textutils:
+all-tgas: all-libiberty all-bfd all-opcodes
+all-time:
+all-tix: all-tcl all-tk
+all-wdiff:
+all-target-winsup: all-target-newlib all-target-libiberty all-target-libio configure-target-winsup 
+configure-target-winsup: configure-target-newlib
+all-uudecode: all-libiberty
+all-zip:
+configure-target-zlib: $(ALL_GCC)
+all-target-zlib: configure-target-zlib
+configure-target-libiberty: $(ALL_GCC)
+all-target-libiberty: configure-target-libiberty all-gcc all-ld all-target-newlib
+all-target: $(ALL_TARGET_MODULES)
+install-target: $(INSTALL_TARGET_MODULES)
+
+### other supporting targets
+
+MAKEDIRS= \
+	$(prefix) \
+	$(exec_prefix)
+.PHONY: installdirs
+installdirs: mkinstalldirs
+	$(SHELL) $(srcdir)/mkinstalldirs $(MAKEDIRS)
+
+dir.info: do-install-info
+	if [ -f $(srcdir)/texinfo/gen-info-dir ] ; then \
+	  $(srcdir)/texinfo/gen-info-dir $(infodir) $(srcdir)/texinfo/dir.info-template > dir.info.new ; \
+	  mv -f dir.info.new dir.info ; \
+	else true ; \
+	fi
+
+dist:
+	@echo "Building a full distribution of this tree isn't done"
+	@echo "via 'make dist'.  Check out the etc/ subdirectory" 
+
+etags tags: TAGS
+
+# Right now this just builds TAGS in each subdirectory.  emacs19 has the
+# ability to use several tags files at once, so there is probably no need
+# to combine them into one big TAGS file (like CVS 1.3 does).  We could
+# (if we felt like it) have this Makefile write a piece of elisp which
+# the user could load to tell emacs19 where all the TAGS files we just
+# built are.
+TAGS: do-TAGS
+
+# with the gnu make, this is done automatically.
+
+Makefile: Makefile.in configure.in $(host_makefile_frag) $(target_makefile_frag) $(gcc_version_trigger)
+	$(SHELL) ./config.status
+
+#
+# Support for building net releases
+
+# Files in devo used in any net release.
+# ChangeLog omitted because it may refer to files which are not in this
+# distribution (perhaps it would be better to include it anyway).
+DEVO_SUPPORT= README Makefile.in configure configure.in \
+	config.guess config.if config.sub config move-if-change \
+	mpw-README mpw-build.in mpw-config.in mpw-configure mpw-install \
+	COPYING COPYING.LIB install-sh config-ml.in symlink-tree \
+	mkinstalldirs ltconfig ltmain.sh missing ylwrap
+
+# Files in devo/etc used in any net release.
+# ChangeLog omitted because it may refer to files which are not in this
+# distribution (perhaps it would be better to include it anyway).
+ETC_SUPPORT= Makefile.in configure configure.in standards.texi \
+	make-stds.texi standards.info*
+
+# When you use `make setup-dirs' or `make taz' you should always redefine
+# this macro.
+SUPPORT_FILES = list-of-support-files-for-tool-in-question
+
+.PHONY: taz
+
+taz: $(DEVO_SUPPORT) $(SUPPORT_FILES) \
+  texinfo/texinfo.tex texinfo/gpl.texinfo texinfo/lgpl.texinfo
+	# Take out texinfo from a few places
+	sed -e '/^all\.normal: /s/\all-texinfo //' \
+	    -e '/^	install-texinfo /d' \
+	<Makefile.in >tmp
+	mv -f tmp Makefile.in
+	#
+	./configure sun4
+	[ -z "$(CONFIGURE_TARGET_MODULES)" ] \
+	  || $(MAKE) $(CONFIGURE_TARGET_MODULES) ALL_GCC="" \
+	    CC_FOR_TARGET="$(CC)" CXX_FOR_TARGET="$(CXX)"
+	# Make links, and run "make diststuff" or "make info" when needed.
+	rm -rf proto-toplev ; mkdir proto-toplev
+	set -e ; dirs="$(TOOL) $(DEVO_SUPPORT) $(SUPPORT_FILES)" ; \
+	for d in $$dirs ; do \
+	  if [ -d $$d ]; then \
+	    if [ ! -f $$d/Makefile ] ; then true ; \
+	    elif grep '^diststuff:' $$d/Makefile >/dev/null ; then \
+		(cd $$d ; $(MAKE) diststuff ) || exit 1 ; \
+	    elif grep '^info:' $$d/Makefile >/dev/null ; then \
+	        (cd $$d ; $(MAKE) info ) || exit 1 ; \
+	    fi ; \
+	    if [ -d $$d/proto-$$d.dir ]; then \
+	      ln -s ../$$d/proto-$$d.dir proto-toplev/$$d ; \
+	    else \
+	      ln -s ../$$d proto-toplev/$$d ; \
+	    fi ; \
+	  else ln -s ../$$d proto-toplev/$$d ; fi ; \
 	done
-	-rm -f tmp-foo*
+	cd etc ; $(MAKE) info
+	$(MAKE) distclean
+	#
+	mkdir proto-toplev/etc
+	(cd proto-toplev/etc; \
+	 for i in $(ETC_SUPPORT); do \
+		ln -s ../../etc/$$i . ; \
+	 done)
+	#
+	# Take out texinfo from configurable dirs
+	rm proto-toplev/configure.in
+	sed -e '/^host_tools=/s/texinfo //' \
+	    <configure.in >proto-toplev/configure.in
+	#
+	mkdir proto-toplev/texinfo
+	ln -s ../../texinfo/texinfo.tex		proto-toplev/texinfo/
+	ln -s ../../texinfo/gpl.texinfo		proto-toplev/texinfo/
+	ln -s ../../texinfo/lgpl.texinfo	proto-toplev/texinfo/
+	if test -r texinfo/util/tex3patch ; then \
+	  mkdir proto-toplev/texinfo/util && \
+	  ln -s ../../../texinfo/util/tex3patch	proto-toplev/texinfo/util ; \
+	else true; fi
+	chmod -R og=u . || chmod og=u `find . -print`
+	if grep AM_INIT_AUTOMAKE $(TOOL)/configure.in >/dev/null 2>&1; then \
+	  ver=`sed < $(TOOL)/configure.in -n 's/AM_INIT_AUTOMAKE[^,]*, *\([^)]*\))/\1/p'`; \
+	else \
+	  ver=`sed <$(TOOL)/Makefile.in -n 's/^VERSION *= *//p'`; \
+	fi; \
+	$(MAKE) -f Makefile.in do-tar-gz TOOL=$(TOOL) VER=$$ver
 
-# Compare the object files in the current directory with those in the
-# stage2 directory.  Use gnu cmp (diffutils v2.4 or later) to avoid
-# running tail and the overhead of twice copying each object file.
+do-tar-gz:
+	echo "==> Making $(TOOL)-$(VER).tar.gz"
+	-rm -f $(TOOL)-$(VER)
+	ln -s proto-toplev $(TOOL)-$(VER)
+	tar cfh $(TOOL)-$(VER).tar $(TOOL)-$(VER)
+	$(GZIPPROG) -v -9 $(TOOL)-$(VER).tar
 
-gnucompare: force
-	for file in *$(objext); do \
-	  cmp --ignore-initial=16 $$file stage2/$$file || true ; \
-	done
-	for dir in tmp-foo $(SUBDIRS); do \
-	  if [ "`echo $$dir/*$(objext)`" != "$$dir/*$(objext)" ] ; then \
-	    for file in $$dir/*$(objext); do \
-	      cmp --ignore-initial=16 $$file stage2/$$file || true ; \
-	    done; \
-	  fi; \
-	done
+TEXINFO_SUPPORT= texinfo/texinfo.tex texinfo/gpl.texinfo texinfo/lgpl.texinfo
+DIST_SUPPORT= $(DEVO_SUPPORT) $(TEXINFO_SUPPORT)
 
-# Similar, but compare with stage3 directory
-gnucompare3: force
-	for file in *$(objext); do \
-	  cmp --ignore-initial=16 $$file stage3/$$file || true ; \
-	done
-	for dir in tmp-foo $(SUBDIRS); do \
-	  if [ "`echo $$dir/*$(objext)`" != "$$dir/*$(objext)" ] ; then \
-	    for file in $$dir/*$(objext); do \
-	      cmp --ignore-initial=16 $$file stage3/$$file || true ; \
-	    done; \
-	  fi; \
-	done
+.PHONY: gas.tar.gz
+GAS_SUPPORT_DIRS= bfd include libiberty opcodes intl setup.com makefile.vms
+gas.tar.gz: $(DIST_SUPPORT) $(GAS_SUPPORT_DIRS) gas
+	$(MAKE) -f Makefile.in taz TOOL=gas \
+		SUPPORT_FILES="$(GAS_SUPPORT_DIRS)"
 
-# Copy the object files from a particular stage into a subdirectory.
-stage1-start:
-	-if [ -d stage1 ] ; then true ; else mkdir stage1 ; fi
-	-for dir in . $(SUBDIRS) ; \
-	 do \
-	   if [ -d stage1/$$dir ] ; then true ; else mkdir stage1/$$dir ; fi ; \
-	 done
-	-mv $(STAGESTUFF) stage1
-# Copy as/ld if they exist to stage dir, so that running xgcc from the stage
-# dir will work properly.
-	-if [ -f as$(exeext) ] ; then ln -s ../as$(exeext) stage1 || cp as$(exeext) stage1 ; else true ; fi
-	-if [ -f ld$(exeext) ] ; then ln -s ../ld$(exeext) stage1 || cp ld$(exeext) stage1 ; else true ; fi
-	-if [ -f collect-ld$(exeext) ] ; then ln -s ../collect-ld$(exeext) stage1 || cp collect-ld$(exeext) stage1 ; else true ; fi
-	-rm -f stage1/libgcc.a
-	-cp libgcc.a stage1
-	-if $(RANLIB_TEST) ; then $(RANLIB) stage1/libgcc.a; else true; fi
-stage1: force stage1-start lang.stage1
+# The FSF "binutils" release includes gprof and ld.
+.PHONY: binutils.tar.gz
+BINUTILS_SUPPORT_DIRS= bfd gas include libiberty opcodes ld gprof intl setup.com makefile.vms
+binutils.tar.gz: $(DIST_SUPPORT) $(BINUTILS_SUPPORT_DIRS) binutils
+	$(MAKE) -f Makefile.in taz TOOL=binutils \
+		SUPPORT_FILES="$(BINUTILS_SUPPORT_DIRS) makeall.bat configure.bat"
 
-stage2-start:
-	-if [ -d stage2 ] ; then true ; else mkdir stage2 ; fi
-	-for dir in . $(SUBDIRS) ; \
-	 do \
-	   if [ -d stage2/$$dir ] ; then true ; else mkdir stage2/$$dir ; fi ; \
-	 done
-	-mv $(STAGESTUFF) stage2
-# Copy as/ld if they exist to stage dir, so that running xgcc from the stage
-# dir will work properly.
-	-if [ -f as$(exeext) ] ; then ln -s ../as$(exeext) stage2 || cp as$(exeext) stage2 ; else true ; fi
-	-if [ -f ld$(exeext) ] ; then ln -s ../ld$(exeext) stage2 || cp ld$(exeext) stage2 ; else true ; fi
-	-if [ -f collect-ld ] ; then ln -s ../collect-ld$(exeext) stage2 || cp collect-ld$(exeext) stage2 ; else true ; fi
-	-rm -f stage2/libgcc.a
-	-cp libgcc.a stage2
-	-if $(RANLIB_TEST) ; then $(RANLIB) stage2/libgcc.a; else true; fi
-stage2: force stage2-start lang.stage2
+.PHONY: gas+binutils.tar.gz
+GASB_SUPPORT_DIRS= $(GAS_SUPPORT_DIRS) binutils ld gprof
+gas+binutils.tar.gz: $(DIST_SUPPORT) $(GASB_SUPPORT_DIRS) gas
+	$(MAKE) -f Makefile.in taz TOOL=gas \
+		SUPPORT_FILES="$(GASB_SUPPORT_DIRS) makeall.bat configure.bat"
 
-stage3-start:
-	-if [ -d stage3 ] ; then true ; else mkdir stage3 ; fi
-	-for dir in . $(SUBDIRS) ; \
-	 do \
-	   if [ -d stage3/$$dir ] ; then true ; else mkdir stage3/$$dir ; fi ; \
-	 done
-	-mv $(STAGESTUFF) stage3
-# Copy as/ld if they exist to stage dir, so that running xgcc from the stage
-# dir will work properly.
-	-if [ -f as$(exeext) ] ; then ln -s ../as$(exeext) stage3 || cp as$(exeext) stage3 ; else true ; fi
-	-if [ -f ld$(exeext) ] ; then ln -s ../ld$(exeext) stage3 || cp ld$(exeext) stage3 ; else true ; fi
-	-if [ -f collect-ld$(exeext) ] ; then ln -s ../collect-ld$(exeext) stage3 || cp collect-ld$(exeext) stage3 ; else true ; fi
-	-rm -f stage3/libgcc.a
-	-cp libgcc.a stage3
-	-if $(RANLIB_TEST) ; then $(RANLIB) stage3/libgcc.a; else true; fi
-stage3: force stage3-start lang.stage3
+.PHONY: libg++.tar.gz
+LIBGXX_SUPPORT_DIRS=include libstdc++ libio librx libiberty
+libg++.tar.gz: $(DIST_SUPPORT) libg++
+	$(MAKE) -f Makefile.in taz TOOL=libg++ \
+		SUPPORT_FILES="$(LIBGXX_SUPPORT_DIRS)"
 
-stage4-start:
-	-if [ -d stage4 ] ; then true ; else mkdir stage4 ; fi
-	-for dir in . $(SUBDIRS) ; \
-	 do \
-	   if [ -d stage4/$$dir ] ; then true ; else mkdir stage4/$$dir ; fi ; \
-	 done
-	-mv $(STAGESTUFF) stage4
-# Copy as/ld if they exist to stage dir, so that running xgcc from the stage
-# dir will work properly.
-	-if [ -f as$(exeext) ] ; then ln -s ../as$(exeext) stage4 || cp as$(exeext) stage4 ; else true ; fi
-	-if [ -f ld$(exeext) ] ; then ln -s ../ld$(exeext) stage4 || cp ld$(exeext) stage4 ; else true ; fi
-	-if [ -f collect-ld$(exeext) ] ; then ln -s ../collect-ld$(exeext) stage4 || cp collect-ld$(exeext) stage4 ; else true ; fi
-	-rm -f stage4/libgcc.a
-	-cp libgcc.a stage4
-	-if $(RANLIB_TEST) ; then $(RANLIB) stage4/libgcc.a; else true; fi
-stage4: force stage4-start lang.stage4
+GNATS_SUPPORT_DIRS=include libiberty send-pr
+gnats.tar.gz: $(DIST_SUPPORT) $(GNATS_SUPPORT_DIRS) gnats
+	$(MAKE) -f  Makefile.in taz TOOL=gnats \
+		SUPPORT_FILES="$(GNATS_SUPPORT_DIRS)"
 
-# Copy just the executable files from a particular stage into a subdirectory,
-# and delete the object files.  Use this if you're just verifying a version
-# that is pretty sure to work, and you are short of disk space.
-risky-stage1: stage1
-	- make clean
+.PHONY: gdb.tar.gz
+GDB_SUPPORT_DIRS= bfd include libiberty mmalloc opcodes readline sim utils intl
+GDBTK_SUPPORT_DIRS= `if [ -d tcl -a -d tk ] ; then echo tcl tk ; fi`
+gdb.tar.gz: $(DIST_SUPPORT) $(GDB_SUPPORT_DIRS) gdb
+	$(MAKE) -f Makefile.in taz TOOL=gdb \
+		SUPPORT_FILES="$(GDB_SUPPORT_DIRS) $(GDBTK_SUPPORT_DIRS)"
 
-risky-stage2: stage2
-	-make clean
+.PHONY: newlib.tar.gz
+NEWLIB_SUPPORT_DIRS=libgloss
+# taz configures for the sun4 target which won't configure newlib.
+# We need newlib configured so that the .info files are made.
+# Unfortunately, it is not enough to just configure newlib separately:
+# taz will build the .info files but since SUBDIRS won't contain newlib,
+# distclean won't be run (leaving Makefile, config.status, and the tmp files
+# used in building the .info files, eg: *.def, *.ref).
+# The problem isn't solvable however without a lot of extra work because
+# target libraries are built in subdir $(target_alias) which gets nuked during
+# the make distclean.  For now punt on the issue of shipping newlib info files
+# with newlib net releases and wait for a day when some native target (sun4?)
+# supports newlib (if only minimally).
+newlib.tar.gz: $(DIST_SUPPORT) $(NEWLIB_SUPPORT_DIRS) newlib
+	$(MAKE) -f Makefile.in taz TOOL=newlib \
+		SUPPORT_FILES="$(NEWLIB_SUPPORT_DIRS)" \
+		DEVO_SUPPORT="$(DEVO_SUPPORT) COPYING.NEWLIB" newlib
 
-risky-stage3: stage3
-	-make clean
+.NOEXPORT:
+MAKEOVERRIDES=
 
-risky-stage4: stage4
-	-make clean
-
-#In GNU Make, ignore whether `stage*' exists.
-.PHONY: stage1 stage2 stage3 stage4 clean maintainer-clean TAGS bootstrap
-.PHONY: risky-stage1 risky-stage2 risky-stage3 risky-stage4
-
-force:
+# end of Makefile.in
