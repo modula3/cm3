@@ -132,6 +132,41 @@ BEGIN
 END Cross;
 *)
 
+PROCEDURE Sum(READONLY x:TBody):R.T=
+  VAR
+    sum:=R.Zero;
+  BEGIN
+    FOR i:=FIRST(x) TO LAST(x) DO
+      sum:=sum+x[i];
+    END;
+    RETURN sum;
+  END Sum;
+
+PROCEDURE Max(READONLY x:TBody):R.T=
+  VAR
+    max:=R.NegInf;
+  BEGIN
+    FOR i:=FIRST(x) TO LAST(x) DO
+      IF max<x[i] THEN
+        max:=x[i];
+      END;
+    END;
+    RETURN max;
+  END Max;
+
+PROCEDURE Min(READONLY x:TBody):R.T=
+  VAR
+    min:=R.PosInf;
+  BEGIN
+    FOR i:=FIRST(x) TO LAST(x) DO
+      IF min>x[i] THEN
+        min:=x[i];
+      END;
+    END;
+    RETURN min;
+  END Min;
+
+
 (*-----------------*)
 BEGIN
 END VectorFast.

@@ -157,6 +157,10 @@ END Inner;
      the j-th component is computed by the determinant of the limitted matrix
      with the j-th row removed
      now iterate to the matrix of size (m+2,m+1) and so on
+
+   for floating point numbers this can be done more efficiently
+   by a QR factorization
+
 PROCEDURE Cross(
                 x,y:T):T RAISES {Error}=
 BEGIN
