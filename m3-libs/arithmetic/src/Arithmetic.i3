@@ -25,9 +25,6 @@ TYPE
     ErrorBadParameters BRANDED OBJECT END; (*parameter is out of range*)
   ErrorDivisionByZero =
     ErrorBadParameters BRANDED OBJECT END; (*x/0 condition detected*)
-  ErrorSizeMismatch =
-    ErrorBadParameters BRANDED OBJECT END; (*e.g., vector sizes
-                                              mismatched*)
   ErrorUnitMismatch =
     ErrorBadParameters BRANDED OBJECT END; (*physical units of values
                                               didn't meet the requirements

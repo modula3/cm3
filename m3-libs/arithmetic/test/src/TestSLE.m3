@@ -15,11 +15,11 @@ IMPORT LongRealBasic               AS R,
        LongRealMatrixDecomposition AS MD,
        LongRealVectorTrans         AS VT,
        LongRealMatrixTrans         AS MT,
-       RandomBayesDurham           AS Rand,
-       Fmt;
+       RandomBayesDurham           AS Rand;
+IMPORT Thread, Wr, Fmt;
 
 CONST Module = "TestSLE.";
-<* FATAL ANY *>
+<* FATAL Thread.Alerted, Wr.Failure, Arith.Error *>
 
   (*=====================================*)
 TYPE
@@ -213,7 +213,7 @@ PROCEDURE TestLU (): BOOLEAN RAISES {} =
           Msg("U = " & MF.Fmt(lu.U) & "\n");
           Msg("det = " & RF.Fmt(det) & "\n");
           Msg("Inverse(A) =" & MF.Fmt(AI));
-          Msg("Inverse(A)*A =" & MF.Fmt(M.Mul(AI,A)));
+          Msg("Inverse(A)*A =" & MF.Fmt(M.Mul(AI, A)));
 
           Msg("knownX = " & VF.Fmt(knownX));
           Msg("foundX = " & VF.Fmt(foundX));
