@@ -1,4 +1,4 @@
-GENERIC MODULE VectorTrans(CT,R,RT);
+GENERIC MODULE VectorTrans(R,RT,CT);
 (*
 Abstract:
 

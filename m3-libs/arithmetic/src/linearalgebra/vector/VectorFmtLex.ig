@@ -1,4 +1,4 @@
-GENERIC INTERFACE VectorFmtLex(V,RF);
+GENERIC INTERFACE VectorFmtLex(RF,V);
 (*Copyright (c) 1996, m3na project
 
 Abstract: vector formatting
