@@ -90,41 +90,28 @@ PROCEDURE RunTred1(a: M.T;
           READONLY dWR, eWR, e2WR: V.TBody) 
     RAISES {}=
   VAR
-    z: M.T;
-    d, e, e2: V.T;
-  BEGIN
-    z := NEW( M.T, NUMBER(a^), NUMBER(a[0]));
+    z := M.Copy(a);
     d := NEW( V.T, NUMBER(a^));
     e := NEW( V.T, NUMBER(a^));
     e2:= NEW( V.T, NUMBER(a^));
-    FOR i:=FIRST(z^) TO LAST(z^) DO
-      FOR j:=FIRST(z[0]) TO LAST(z[0]) DO
-        z[i,j] := a[i,j];
-      END; (* for *)
-    END; (* for *)
+  BEGIN
     EigenSys.Tred1( NUMBER(d^), z, d, e, e2);
     Print3( d, e, e2, dWR, eWR, e2WR);
     RunTql1( d,e);
   END RunTred1;
 
 PROCEDURE RunTred2(a: M.T; 
-               VAR dWR, eWR: V.TBody;) RAISES {}=
+                   READONLY dWR,eWR: V.TBody;) RAISES {}=
   VAR
-    aLocal: M.T;
-    d, e: V.T;
-  BEGIN
-    aLocal := NEW( M.T, NUMBER(a^), NUMBER(a[0]));
+    aLocal := M.Copy(a);
+    dWR2   := V.FromArray(dWR);
     d := NEW( V.T, NUMBER(a^));
     e := NEW( V.T, NUMBER(a^));
-    FOR i:=FIRST(a^) TO LAST(a^) DO
-      FOR j:=FIRST(a[0]) TO LAST(a[0]) DO
-        aLocal[i,j] := a[i,j];
-      END; (* for *)
-    END; (* for *)
+  BEGIN
     EigenSys.Tred2( NUMBER(d^), aLocal, d, e);
-    dWR[1] := -dWR[1];
-    Print2( d, e, dWR, eWR);
-    dWR[1] := -dWR[1];
+    dWR2[1] := -dWR2[1];
+    Print2( d, e, dWR2^, eWR);
+    dWR2[1] := -dWR2[1];
     Wr.PutText(Stdio.stdout, "Transformationsmatrix\n");
     FOR i:=FIRST(a^) TO LAST(a^) DO
       FOR j:=FIRST(a[0]) TO LAST(a[0]) DO
@@ -138,35 +125,31 @@ PROCEDURE RunTred2(a: M.T;
 
 
 PROCEDURE RunTestA() RAISES {}=
-  VAR
-    a : M.T;
-    d,e,e2 : V.T;
-    aWR := ARRAY[0..24] OF R.T
-             { 10.0D0,  1.0D0,  2.0D0,  3.0D0,  4.0D0,
-                1.0D0,  9.0D0, -1.0D0,  2.0D0, -3.0D0,
-                2.0D0, -1.0D0,  7.0D0,  3.0D0, -5.0D0,
-                3.0D0,  2.0D0,  3.0D0, 12.0D0, -1.0D0,
-                4.0D0, -3.0D0, -5.0D0, -1.0D0, 15.0D0}; 
-    eWR := ARRAY [0..4] OF R.T
+  CONST
+    aWR = M.TBody{
+             M.TRow{10.0D0,  1.0D0,  2.0D0,  3.0D0,  4.0D0},
+             M.TRow{ 1.0D0,  9.0D0, -1.0D0,  2.0D0, -3.0D0},
+             M.TRow{ 2.0D0, -1.0D0,  7.0D0,  3.0D0, -5.0D0},
+             M.TRow{ 3.0D0,  2.0D0,  3.0D0, 12.0D0, -1.0D0},
+             M.TRow{ 4.0D0, -3.0D0, -5.0D0, -1.0D0, 15.0D0}
+           };
+    eWR = V.TBody
         {0.0d0, 7.49484677741D-1, -4.49626820120D0, 
             -2.15704099085D0, 7.14142842854D0};
-    dWR := ARRAY [0..4] OF R.T
+    dWR = V.TBody
         {9.29520217754D0, 1.16267115569D1, 1.09604392078D1,
             6.11764705885D0, 1.5D1};
-    e2WR := ARRAY [0..4] OF R.T
+    e2WR = V.TBody
         {0.0D0, 5.61727282169D-1, 2.02164277371D1,
              4.65282583621D0, 5.1D1};
-  BEGIN
+
+  VAR
     a := NEW( M.T, 5, 5);
     d := NEW( V.T, 5);
     e := NEW( V.T, 5);
     e2 := NEW( V.T, 5);
-
-    FOR i:=FIRST(a^) TO LAST(a^) DO
-      FOR j:=FIRST(a[0]) TO LAST(a[0]) DO
-        a[i,j] := aWR[i*NUMBER(a[0])+j];
-      END; (* for *)
-    END; (* for *)
+  BEGIN
+    a^ := aWR;
 
     Wr.PutText( Stdio.stdout, "Test: Tred1\n");
     FOR i:=FIRST(a^) TO LAST(a^) DO
