@@ -582,7 +582,7 @@ int ioctl(int fildes, int request, ...)
 
   ENTER_CRITICAL;
   va_start(args, request);
-  argp = va_arg(args, int);
+  argp = va_arg(args, void *);
   va_end(args);
   if (RTHeapRep_Fault) RTHeapRep_Fault(argp); /* make it readable */
   if (RTHeapRep_Fault) RTHeapRep_Fault(argp); /* make it writable */
