@@ -19,9 +19,9 @@ You are probably most interested in one of the following:
 
  o Use do-cm3-min.sh to compile the minimal set of CM3 libraries.
 
- o Use do-m3-base.sh to compile a basic system without GUI.
+ o Use do-cm3-base.sh to compile a basic system without GUI.
 
- o Use do-m3-std.sh to compile a standard system with GUI and full
+ o Use do-cm3-std.sh to compile a standard system with GUI and full
    networking support.
 
  o Use do-pkg.sh to compile or clean one or more arbitrary packages.
