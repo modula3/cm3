@@ -10,6 +10,8 @@ REVEAL
         fromArray := FromArray;
         copy      := Copy;
 
+        clipToArray := ClipToArray;
+
         getFirst  := GetFirst;
         getLast   := GetLast;
         getNumber := GetNumber;
@@ -73,6 +75,40 @@ PROCEDURE Copy (SELF: T): T =
   END Copy;
 
 
+PROCEDURE ClipToArray (x: T; first: IndexType; VAR y: V.TBody) =
+  VAR
+    yStart                   := x.first - first;
+    yStop                    := yStart + NUMBER(x.data^);
+    xl, xr, yl, yr: CARDINAL;
+  BEGIN
+    IF yStart < 0 THEN
+      xl := -yStart;
+      yl := 0;
+    ELSIF yStart < NUMBER(y) THEN
+      xl := 0;
+      yl := yStart;
+    ELSE
+      VS.Clear(y);
+      RETURN;
+    END;
+
+    yStop := yStart + NUMBER(x.data^);
+    IF yStop < 0 THEN
+      VS.Clear(y);
+      RETURN;
+    ELSIF yStop < NUMBER(y) THEN
+      xr := NUMBER(x.data^);
+      yr := yStop;
+    ELSE
+      xr := NUMBER(y) - yStart;
+      yr := NUMBER(y);
+    END;
+
+    VS.Clear(SUBARRAY(y, 0, yl));
+    SUBARRAY(y, yl, yr - yl) := SUBARRAY(x.data^, xl, xr - xl);
+    VS.Clear(SUBARRAY(y, yr, NUMBER(y) - yr));
+  END ClipToArray;
+
 PROCEDURE GetFirst (SELF: T): IndexType =
   BEGIN
     RETURN SELF.first;
@@ -105,7 +141,7 @@ PROCEDURE Inner (x, y: T): R.T =
     last   := MIN(x.getLast(), y.getLast());
     number := last - first + 1;
   BEGIN
-    IF number>0 THEN
+    IF number > 0 THEN
       TRY
         RETURN VS.Inner(SUBARRAY(x.data^, first - x.first, number),
                         SUBARRAY(y.data^, first - y.first, number));
