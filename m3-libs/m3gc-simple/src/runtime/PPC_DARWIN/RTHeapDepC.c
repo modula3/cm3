@@ -4,7 +4,6 @@
 
 /*      modified on Tue Feb  2 11:15:57 PST 1993 by jdd */
 
-/* This is RTHeapDepC.c for FreeBSD running on 386/486 processors. */
 /*
  * ow Sat Oct 29 14:10:19 MET 1994
  * ow Sun Nov  6 16:39:26 MET 1994

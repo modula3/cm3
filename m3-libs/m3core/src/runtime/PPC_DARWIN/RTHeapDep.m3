@@ -162,7 +162,8 @@ PROCEDURE VMFaultTime (): REAL =
 BEGIN
   VM := RTVM.VMHeap();
   IF VM THEN
-    RTMachine.RTHeapRep_Fault  := LOOPHOLE (RTHeapRep.Fault, ADDRESS);
-    RTMachine.RTCSRC_FinishVM  := LOOPHOLE (RTCollectorSRC.FinishVM, ADDRESS);
+    RTMachine.set_RTHeapRep_Fault_Proc(LOOPHOLE (RTHeapRep.Fault, ADDRESS));
+    RTMachine.set_RTCSRC_FinishVM_Proc(LOOPHOLE (RTCollectorSRC.FinishVM, 
+                                       ADDRESS));
   END;
 END RTHeapDep.
