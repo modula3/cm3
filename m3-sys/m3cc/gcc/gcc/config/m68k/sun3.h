@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler.  Sun 68000/68020 version.
-   Copyright (C) 1987, 1988, 1993, 1995, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1988, 1993, 1995, 1996, 1998, 1999
+   Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -88,7 +89,7 @@ Boston, MA 02111-1307, USA.  */
    should not be defined.  For cross compilers, let's do things as we
    normally do in GCC.  -- rms.  */
 
-#define CPP_PREDEFINES "-Dmc68000 -Dsun -Dunix -Asystem(unix)  -Asystem(bsd) -Acpu(m68k) -Amachine(m68k)"
+#define CPP_PREDEFINES "-Dmc68000 -Dsun -Dunix -Asystem=unix  -Asystem=bsd -Acpu=m68k -Amachine=m68k"
 
 /* STARTFILE_SPEC to include sun floating point initialization
    This is necessary (tr: Sun does it) for both the m68881 and the fpa
@@ -171,11 +172,12 @@ Boston, MA 02111-1307, USA.  */
 /* This is not a good idea.  It prevents interoperation between
    files compiled with -m68881 and those compiled with -msoft-float.  */
 #if 0
-#define FUNCTION_VALUEX(MODE)						    \
-  gen_rtx (REG, (MODE),							    \
-	   ((TARGET_68881						    \
-	     && ((MODE) == SFmode || (MODE) == DFmode || (MODE) == XFmode)) \
-	    ? 16 : 0))
+#define FUNCTION_VALUEX(MODE)					\
+  gen_rtx_REG ((MODE),						\
+	       ((TARGET_68881					\
+		 && ((MODE) == SFmode || (MODE) == DFmode	\
+		     || (MODE) == XFmode))			\
+		? 16 : 0))
 
 #undef FUNCTION_VALUE
 #define FUNCTION_VALUE(VALTYPE,FUNC) FUNCTION_VALUEX (TYPE_MODE (VALTYPE))

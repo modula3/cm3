@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.  
    Bull DPX/2 200 and 300 systems (m68k, SysVr3).
-   Copyright (C) 1987, 1993, 1994, 1995, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1993, 1994, 1995, 1996, 1999, 2000 Free Software Foundation, Inc.
    Contributed by Frederic Pierresteguy (F.Pierresteguy@frcl.bull.fr).
 
 This file is part of GNU CC.
@@ -40,7 +40,6 @@ Boston, MA 02111-1307, USA.  */
 #endif
 
 #define OBJECT_FORMAT_COFF
-#define NO_SYS_SIGLIST
 
 #ifdef CPP_PREDEFINES
 #undef CPP_PREDEFINES
@@ -49,12 +48,12 @@ Boston, MA 02111-1307, USA.  */
  * define all the things the compiler should
  */
 #ifdef ncl_mr
-# define CPP_PREDEFINES "-Dunix -Dbull -DDPX2 -DSVR3 -Dmc68000 -Dmc68020 -Dncl_mr=1 -D_BULL_SOURCE -D_POSIX_SOURCE -D_XOPEN_SOURCE -Asystem(unix) -Asystem(svr3)  -Acpu(m68k) -Amachine(m68k)"
+# define CPP_PREDEFINES "-Dunix -Dbull -DDPX2 -DSVR3 -Dmc68000 -Dmc68020 -Dncl_mr=1 -D_BULL_SOURCE -D_POSIX_SOURCE -D_XOPEN_SOURCE -Asystem=unix -Asystem=svr3  -Acpu=m68k -Amachine=m68k"
 #else
 # ifdef ncl_el
-# define CPP_PREDEFINES "-Dunix -Dbull -DDPX2 -DSVR3 -Dmc68000 -Dmc68020 -Dncl_el -D_BULL_SOURCE -D_POSIX_SOURCE -D_XOPEN_SOURCE -Asystem(unix) -Asystem(svr3)  -Acpu(m68k) -Amachine(m68k)"
+# define CPP_PREDEFINES "-Dunix -Dbull -DDPX2 -DSVR3 -Dmc68000 -Dmc68020 -Dncl_el -D_BULL_SOURCE -D_POSIX_SOURCE -D_XOPEN_SOURCE -Asystem=unix -Asystem=svr3  -Acpu=m68k -Amachine=m68k"
 # else
-#   define CPP_PREDEFINES "-Dunix -Dbull -DDPX2 -DSVR3 -Dmc68000 -Dmc68020 -D_BULL_SOURCE -D_POSIX_SOURCE -D_XOPEN_SOURCE -Asystem(unix) -Asystem(svr3)  -Acpu(m68k) -Amachine(m68k)"
+#   define CPP_PREDEFINES "-Dunix -Dbull -DDPX2 -DSVR3 -Dmc68000 -Dmc68020 -D_BULL_SOURCE -D_POSIX_SOURCE -D_XOPEN_SOURCE -Asystem=unix -Asystem=svr3  -Acpu=m68k -Amachine=m68k"
 # endif
 #endif
 
@@ -66,7 +65,6 @@ Boston, MA 02111-1307, USA.  */
 # define __HAVE_68881__ 1
 # define CPP_SPEC "%{!msoft-float:-D__HAVE_68881__ }"
 
-#define HAVE_ATEXIT
 #undef DO_GLOBAL_CTORS_BODY		/* don't use svr3.h version */
 #undef DO_GLOBAL_DTORS_BODY
 
@@ -120,7 +118,7 @@ Boston, MA 02111-1307, USA.  */
 /* Assembler pseudos to introduce constants of various size.  */
 
 #undef ASM_BYTE_OP
-#define ASM_BYTE_OP "\tdc.b"
+#define ASM_BYTE_OP "\tdc.b\t"
 #undef ASM_LONG
 #define ASM_LONG "\tdc.l"
 
@@ -136,7 +134,7 @@ Boston, MA 02111-1307, USA.  */
   fprintf (FILE, "\tdcb.b %u,0\n", (SIZE))
 
 #undef GLOBAL_ASM_OP 
-#define GLOBAL_ASM_OP "\txdef"
+#define GLOBAL_ASM_OP "\txdef\t"
 
 #undef ASM_OUTPUT_ALIGN
 #define ASM_OUTPUT_ALIGN(FILE,LOG)	\

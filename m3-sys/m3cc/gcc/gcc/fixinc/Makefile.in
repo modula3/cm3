@@ -1,5 +1,6 @@
 # Makefile for GNU compilers.
-#   Copyright (C) 1998, 1999 Free Software Foundation, Inc.
+#
+#   Copyright (C) 1998, 1999, 2000, 2001 Free Software Foundation, Inc.
 
 #This file is part of GNU CC.
 
@@ -21,30 +22,36 @@
 # The makefile built from this file lives in the fixinc subdirectory.
 # Its purpose is to build the any-platforms fixinc.sh script.
 
-CFLAGS = -g
-FIXINC_DEFS = @fixinc_defs@
+SHELL=/bin/sh
 
-CC = @CC@
-SHELL = /bin/sh
+# Some versions of `touch' (such as the version on Solaris 2.8) 
+# do not correctly set the timestamp due to buggy versions of `utime'
+# in the kernel.  So, we use `echo' instead. 
+STAMP = echo timestamp >
 
-target=@target@
+FL_LIST = $(CFLAGS) $(CPPFLAGS) $(WARN_CFLAGS)
+FIXINC_DEFS = -DIN_GCC -DHAVE_CONFIG_H $(FL_LIST) $(INCLUDES)
+
 # Directory where sources are, from where we are.
 srcdir = @srcdir@
-VPATH = @srcdir@
+VPATH = $(srcdir)
+subdir = fixinc
 
 # End of variables for you to override.
 
-default : gen
+default : all
 
 # Now figure out from those variables how to compile and link.
 
 # Specify the directories to be searched for header files.
 # Both . and srcdir are used, in that order.
-INCLUDES = -I. -I.. -I$(srcdir) -I$(srcdir)/.. -I$(srcdir)/../config -I$(srcdir)/../../include
+#
+INCLUDES = -I. -I.. -I$(srcdir) -I$(srcdir)/.. \
+-I$(srcdir)/../config -I$(srcdir)/../../include
 
 # Always use -I$(srcdir)/config when compiling.
 .c.o:
-	$(CC) -c $(CFLAGS) $(FIXINC_DEFS) $(CPPFLAGS) $(INCLUDES) $<
+	$(CC) -c $(FIXINC_DEFS) $<
 
 # The only suffixes we want for implicit rules are .c and .o.
 .SUFFIXES:
@@ -58,90 +65,75 @@ INCLUDES = -I. -I.. -I$(srcdir) -I$(srcdir)/.. -I$(srcdir)/../config -I$(srcdir)
 ##
 ## # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-OBJ = fixincl.o server.o gnu-regex.o procopen.o
-HDR = server.h gnu-regex.h
 LIBERTY = ../../libiberty/libiberty.a
 
-SH_TARGET  = inclhack.sh fixincl.sh
-BIN_TARGET = fixincl
-AG_TEXT    = $(SH_TARGET) fixincl.x \
-	inclhack.def inclhack.tpl hackshell.tpl fixincl.tpl
-TARGETS    = $(SH_TARGET) $(BIN_TARGET)
+ALLOBJ = fixincl.o fixtests.o fixfixes.o server.o procopen.o \
+      gnu-regex.o fixlib.o
+
+TESTOBJ = fixincl.o fixlib.o fixtests.o gnu-regex.o
+FIXOBJ  = fixfixes.o fixlib.o gnu-regex.o
+
+HDR = server.h gnu-regex.h fixlib.h machname.h
+FI  = fixincl@build_exeext@
+AF  = applyfix@build_exeext@
 
 all : $(TARGETS)
-sh  : $(SH_TARGET)
-gen : $(SH_TARGET) fixincl.x
+gen : $(srcdir)/fixincl.x
 
-$(OBJ): $(HDR)
+oneprocess : full-stamp
+twoprocess : test-stamp $(AF)
 
-fixincl: $(OBJ)
-	@echo $(CC) -o $@ $(OBJ) $(LIBERTY) $(LIB) ; \
-	if $(CC) -o $@ $(OBJ) $(LIBERTY) $(LIB) ; then : ; else \
-	rm -f $@ ; (echo "#! /bin/sh" ; echo exit 1 ) > $@ ; \
-	chmod 777 $@ ; fi
+full-stamp : $(ALLOBJ) $(LIBERTY)
+	$(CC) $(FIXINC_DEFS) $(LDFLAGS) -o $(FI) $(ALLOBJ) $(LIBERTY)
+	$(STAMP) $@
 
-gnu-regex.o: gnu-regex.c
-	-$(CC) $(CFLAGS) $(FIXINC_DEFS) $(INCLUDES) -DREGEX_MALLOC \
-		-c $(srcdir)/gnu-regex.c
+test-stamp : $(TESTOBJ) $(LIBERTY)
+	$(CC) $(FIXINC_DEFS) $(LDFLAGS) -o $(FI) $(TESTOBJ) $(LIBERTY)
+	$(STAMP) $@
 
-fixincl.o : fixincl.x fixincl.c
-server.o : server.c server.h
-procopen.o : procopen.c server.h
+$(AF): $(FIXOBJ) $(LIBERTY)
+	$(CC) $(FIXINC_DEFS) $(LDFLAGS) -o $@ $(FIXOBJ) $(LIBERTY)
 
-fixincl.x: fixincl.tpl inclhack.def
-	@if ( autogen --help > /dev/null 2>&1 ) ; then \
-		echo autogen -T fixincl.tpl -b fixincl inclhack.def ; \
-		autogen -T $(srcdir)/fixincl.tpl -b fixincl \
-			$(srcdir)/inclhack.def ; \
-	else echo You need to install autogen ; \
-		if [ `pwd` != `cd $(srcdir) ; pwd` ] ; then \
-			$(CP) $(srcdir)/$@ . ; \
-		else touch $@ ; fi ; fi
+$(ALLOBJ)   : $(HDR)
+fixincl.o   : fixincl.c  $(srcdir)/fixincl.x
+fixtests.o  : fixtests.c
+fixfixes.o  : fixfixes.c $(srcdir)/fixincl.x
+server.o    : server.c
+procopen.o  : procopen.c
+gnu-regex.o : gnu-regex.c
+fixlib.o    : fixlib.c
 
-inclhack.sh: inclhack.def inclhack.tpl hackshell.tpl
-	@if ( autogen --help > /dev/null 2>&1 ) ; then \
-		echo autogen inclhack.def ; \
-		autogen -L$(srcdir) $(srcdir)/inclhack.def ; \
-	else echo You need to install autogen ; \
-		if [ `pwd` != `cd $(srcdir) ; pwd` ] ; then \
-			$(CP) $(srcdir)/$@ . ; \
-		else touch $@ ; fi ; fi
+#  'machname.h' is built in the build directory.
+#  'fixincl.x' in the source dir.
+#
+machname.h: ../specs
+	$(SHELL) $(srcdir)/genfixes $@
 
-fixincl.sh: inclhack.def inclhack.tpl
-	@if ( autogen --help > /dev/null 2>&1 ) ; then \
-		echo autogen -DPROGRAM=1 -b fixincl inclhack.def ; \
-		autogen -DPROGRAM=1 -b fixincl -L$(srcdir) \
-			$(srcdir)/inclhack.def ; touch $@ ; \
-	else echo You need to install autogen ; \
-		if [ `pwd` != `cd $(srcdir) ; pwd` ] ; then \
-			$(CP) $(srcdir)/$@ . ; \
-		else touch $@ ; fi ; fi
+$(srcdir)/fixincl.x: fixincl.tpl inclhack.def
+	cd $(srcdir) ; $(SHELL) ./genfixes $@
 
 clean:
-	rm -f *.o $(TARGETS) fixincl.x
+	rm -f *.o *-stamp $(AF) $(FI) machname.h *~
 
-#  Ensure all the targets are built.  If the program "fixincl"
-#  failed to compile, link or load, then we install the
-#  "inclhack.sh" script.  Otherwise, we install that program
-#  plus the wrapper script, "fixincl.sh".
+maintainer-clean : clean
+	rm -f $(srcdir)/fixincl.x
+
+#  Build the executable and copy up into gcc dir.
+#  We still copy the script because we still have alternative scripts.
 #
-install: $(TARGETS)
-	@rm -f ../fixinc.sh ; \
-	if ( ./fixincl -v > /dev/null 2>&1 ) ; then \
-		echo cp fixincl.sh ../fixinc.sh ; \
-		if [ -f ./fixincl.sh ] ; \
-		then cp fixincl.sh ../fixinc.sh ; \
-		else cp $(srcdir)/fixincl.sh ../fixinc.sh ; fi ; \
-		chmod 555 ../fixinc.sh ; \
-		rm -f ../fixincl ; \
-		echo cp fixincl .. ; \
-		cp fixincl .. ; \
-		chmod 555 ../fixincl ; \
-	else \
-		echo Could not install binary fixincludes.  ; \
-		echo Installing shell script instead. ; \
-		echo cp inclhack.sh ../fixinc.sh ; \
-		if [ -f ./inclhack.sh ] ; \
-		then cp inclhack.sh ../fixinc.sh ; \
-		else cp $(srcdir)/inclhack.sh ../fixinc.sh ; fi ; \
-	fi
+install-bin : $(TARGETS)
+	./fixincl -v < /dev/null
+	@if [ -f ../fixinc.sh ] ; then rm -f ../fixinc.sh || \
+	    mv -f ../fixinc.sh ../fixinc.sh.$$ || exit 1 ; else : ; fi
+	@cp $(srcdir)/fixincl.sh ../fixinc.sh
+	chmod 755 ../fixinc.sh
+
+Makefile: Makefile.in ../config.status
+	cd .. \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= \
+	  $(SHELL) ./config.status
+
+check : $(TARGETS)
+	autogen -T $(srcdir)/check.tpl $(srcdir)/inclhack.def
+	$(SHELL) ./check.sh $(srcdir)/tests/base
+	@rm -f ./check.sh

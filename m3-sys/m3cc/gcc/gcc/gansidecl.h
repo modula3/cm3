@@ -27,13 +27,6 @@ Boston, MA 02111-1307, USA.  */
 
 #include "ansidecl.h"
 
-/* Undef ansidecl.h's "obsolete" version. */
-#undef PROTO
-/* These macros are deprecated, use ansidecl.h's PARAMS style instead. */
-#define PROTO(ARGS) PARAMS(ARGS)
-#define VPROTO(ARGS) VPARAMS(ARGS)
-#define PVPROTO(ARGS) PARAMS(ARGS)
-
 /* Autoconf will possibly define the `inline' or `const' keywords as
    macros, however this is only valid for the stage1 compiler.  If we
    detect a modern version of gcc, unconditionally reset the values.
@@ -41,42 +34,21 @@ Boston, MA 02111-1307, USA.  */
    need to do this very early; i.e. before any systems header files or
    gcc header files in case they use these keywords.  Otherwise
    conflicts might occur. */
-#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 7)
-# undef const
+#if (GCC_VERSION >= 2007)
+# ifdef __STDC__
+#  undef const
+# endif
 # undef inline
 # define inline __inline__  /* Modern gcc can use `__inline__' freely. */
+# ifndef HAVE_LONG_DOUBLE
+#  define HAVE_LONG_DOUBLE 1
+# endif
+/* Assume that (non-traditional) gcc used in stage2 or later has the
+   stringize feature.  */
+# if !defined (HAVE_STRINGIZE) && __STDC__
+#  define HAVE_STRINGIZE 1
+# endif /* ! HAVE_STRINGIZE && __STDC__ */
 #endif /* GCC >= 2.7 */
-
-#if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 7)
-# define __attribute__(x)
-#endif
-
-#ifndef ATTRIBUTE_UNUSED_LABEL
-# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 93)
-#  define ATTRIBUTE_UNUSED_LABEL
-# else
-#  define ATTRIBUTE_UNUSED_LABEL ATTRIBUTE_UNUSED
-# endif /* GNUC < 2.93 */
-#endif /* ATTRIBUTE_UNUSED_LABEL */
-
-#ifndef ATTRIBUTE_UNUSED
-#define ATTRIBUTE_UNUSED __attribute__ ((__unused__))
-#endif /* ATTRIBUTE_UNUSED */
-
-#ifndef ATTRIBUTE_NORETURN
-#define ATTRIBUTE_NORETURN __attribute__ ((__noreturn__))
-#endif /* ATTRIBUTE_NORETURN */
-
-#ifndef ATTRIBUTE_PRINTF
-#define ATTRIBUTE_PRINTF(m, n) __attribute__ ((format (__printf__, m, n)))
-#define ATTRIBUTE_PRINTF_1 ATTRIBUTE_PRINTF(1, 2)
-#define ATTRIBUTE_PRINTF_2 ATTRIBUTE_PRINTF(2, 3)
-#define ATTRIBUTE_PRINTF_3 ATTRIBUTE_PRINTF(3, 4)
-#define ATTRIBUTE_PRINTF_4 ATTRIBUTE_PRINTF(4, 5)
-#define ATTRIBUTE_PRINTF_5 ATTRIBUTE_PRINTF(5, 6)
-#endif /* ATTRIBUTE_PRINTF */
-
-#define GENERIC_PTR PTR
 
 #ifndef NULL_PTR
 #define NULL_PTR ((PTR) 0)

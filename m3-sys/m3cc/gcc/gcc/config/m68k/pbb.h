@@ -43,7 +43,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
-#define CPP_PREDEFINES "-Dm68k -Dunix -DUnicomPBB -Dmc68k -Dmc68020 -Dmc68k32 -Asystem(unix)  -Acpu(m68k) -Amachine(m68k)"
+#define CPP_PREDEFINES "-Dm68k -Dunix -DUnicomPBB -Dmc68k -Dmc68020 -Dmc68k32 -Asystem=unix  -Acpu=m68k -Amachine=m68k"
 
 /* We want DBX format for use with gdb under COFF.  */
 
@@ -109,9 +109,8 @@ Boston, MA 02111-1307, USA.  */
 
 #undef FUNCTION_EXTRA_EPILOGUE
 #define FUNCTION_EXTRA_EPILOGUE(FILE, SIZE)				\
-  { extern int current_function_returns_pointer;			\
-    if ((current_function_returns_pointer) &&				\
-      ! find_equiv_reg (0, get_last_insn (), 0, 0, 0, 8, Pmode))        \
+{ if (current_function_returns_pointer					\
+      && ! find_equiv_reg (0, get_last_insn (), 0, 0, 0, 8, Pmode))	\
       asm_fprintf (FILE, "\tmovl %Rd0,%Ra0\n"); } 
 
 #define ASM_RETURN_CASE_JUMP \

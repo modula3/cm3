@@ -1,5 +1,5 @@
 /* Definitions for Sun assembler syntax for the Intel 80386.
-   Copyright (C) 1988, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1996, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -33,10 +33,9 @@ Boston, MA 02111-1307, USA.  */
 
 /* Assembler pseudos to introduce constants of various size.  */
 
-#define ASM_BYTE_OP "\t.byte"
-#define ASM_SHORT "\t.value"
-#define ASM_LONG "\t.long"
-#define ASM_DOUBLE "\t.double"
+#define ASM_BYTE_OP "\t.byte\t"
+#define ASM_SHORT "\t.value\t"
+#define ASM_LONG "\t.long\t"
 
 /* How to output an ASCII string constant.  */
 
@@ -45,7 +44,7 @@ do								\
 { int i = 0; 							\
   while (i < (size))						\
     { if (i%10 == 0) { if (i!=0) fprintf ((FILE), "\n");	\
-		       fprintf ((FILE), "%s ", ASM_BYTE_OP); }	\
+		       fprintf ((FILE), "%s", ASM_BYTE_OP); }	\
       else fprintf ((FILE), ",");				\
       fprintf ((FILE), "0x%x", ((p)[i++] & 0377)) ;}		\
       fprintf ((FILE), "\n");					\
@@ -57,7 +56,6 @@ do								\
 #undef ASM_FILE_START
 #define ASM_FILE_START(FILE) \
   do {							\
-    extern char *version_string, *language_string;	\
     {							\
       int len = strlen (main_input_filename);		\
       char *na = main_input_filename + len;		\
@@ -98,12 +96,12 @@ do								\
 /* Output before read-only data.  */
 
 #undef TEXT_SECTION_ASM_OP
-#define TEXT_SECTION_ASM_OP ".text"
+#define TEXT_SECTION_ASM_OP "\t.text"
 
 /* Output before writable data.  */
 
 #undef DATA_SECTION_ASM_OP
-#define DATA_SECTION_ASM_OP ".data"
+#define DATA_SECTION_ASM_OP "\t.data"
 
 /* Define the syntax of labels and symbol definitions/declarations.  */
 

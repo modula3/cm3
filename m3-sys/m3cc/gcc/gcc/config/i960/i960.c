@@ -1,5 +1,6 @@
 /* Subroutines used for code generation on intel 80960.
-   Copyright (C) 1992, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1995, 1996, 1997, 1998, 1999, 2000
+   Free Software Foundation, Inc.
    Contributed by Steven McGeady, Intel Corp.
    Additional Work by Glenn Colon-Bonet, Jonathan Shapiro, Andy Wilson
    Converted to GCC 2.0 by Jim Wilson and Michael Tiemann, Cygnus Support.
@@ -22,24 +23,27 @@ the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 #include "config.h"
-#include <stdio.h>
+#include "system.h"
+#include <math.h>
 #include "rtl.h"
 #include "regs.h"
 #include "hard-reg-set.h"
 #include "real.h"
 #include "insn-config.h"
 #include "conditions.h"
-#include "insn-flags.h"
 #include "output.h"
 #include "insn-attr.h"
 #include "flags.h"
 #include "tree.h"
-#include "insn-codes.h"
 #include "expr.h"
 #include "except.h"
 #include "function.h"
 #include "recog.h"
-#include <math.h>
+#include "toplev.h"
+#include "cpplib.h"
+#include "c-pragma.h"
+#include "c-lex.h"
+#include "tm_p.h"
 
 /* Save the operands last given to a compare for use when we
    generate a scc or bcc insn.  */
@@ -85,16 +89,93 @@ static int ret_label = 0;
 
 /* Handle pragmas for compatibility with Intel's compilers.  */
 
-/* ??? This is incomplete, since it does not handle all pragmas that the
-   intel compilers understand.  */
+/* NOTE: ic960 R3.0 pragma align definition:
+
+   #pragma align [(size)] | (identifier=size[,...])
+   #pragma noalign [(identifier)[,...]]
+     
+   (all parens are optional)
+     
+   - size is [1,2,4,8,16]
+   - noalign means size==1
+   - applies only to component elements of a struct (and union?)
+   - identifier applies to structure tag (only)
+   - missing identifier means next struct
+     
+   - alignment rules for bitfields need more investigation.
+
+   This implementation only handles the case of no identifiers.  */
+
+void
+i960_pr_align (pfile)
+     cpp_reader *pfile ATTRIBUTE_UNUSED;
+{
+  tree number;
+  enum cpp_ttype type;
+  int align;
+
+  type = c_lex (&number);
+  if (type == CPP_OPEN_PAREN)
+    type = c_lex (&number);
+  if (type == CPP_NAME)
+    {
+      warning ("sorry, not implemented: #pragma align NAME=SIZE");
+      return;
+    }
+  if (type != CPP_NUMBER)
+    {
+      warning ("malformed #pragma align - ignored");
+      return;
+    }
+
+  align = TREE_INT_CST_LOW (number);
+  switch (align)
+    {
+    case 0:
+      /* Return to last alignment.  */
+      align = i960_last_maxbitalignment / 8;
+      /* Fall through.  */
+    case 16:
+    case 8:
+    case 4:
+    case 2:
+    case 1:
+      i960_last_maxbitalignment = i960_maxbitalignment;
+      i960_maxbitalignment = align * 8;
+      break;
+      
+    default:
+      /* Silently ignore bad values.  */
+      break;
+    }
+}
+
+void
+i960_pr_noalign (pfile)
+     cpp_reader *pfile ATTRIBUTE_UNUSED;
+{
+  enum cpp_ttype type;
+  tree number;
+
+  type = c_lex (&number);
+  if (type == CPP_OPEN_PAREN)
+    type = c_lex (&number);
+  if (type == CPP_NAME)
+    {
+      warning ("sorry, not implemented: #pragma noalign NAME");
+      return;
+    }
+
+  i960_last_maxbitalignment = i960_maxbitalignment;
+  i960_maxbitalignment = 8;
+}
 
 int
 process_pragma (p_getc, p_ungetc, pname)
-     int (*  p_getc) PROTO ((void));
-     void (* p_ungetc) PROTO ((int));
-     char * pname;
+     int (*  p_getc) PARAMS ((void));
+     void (* p_ungetc) PARAMS ((int));
+     const char *pname;
 {
-  int i;
   register int c;
   char buf[20];
   char *s = buf;
@@ -130,40 +211,7 @@ process_pragma (p_getc, p_ungetc, pname)
 
   align = atoi (buf);
 
-  switch (align)
-    {
-    case 0:
-      /* Return to last alignment.  */
-      align = i960_last_maxbitalignment / 8;
-      /* Fall through.  */
-    case 16:
-    case 8:
-    case 4:
-    case 2:
-    case 1:
-      i960_last_maxbitalignment = i960_maxbitalignment;
-      i960_maxbitalignment = align * 8;
-      break;
-      
-    default:
-      /* Silently ignore bad values.  */
-      break;
-    }
   
-  /* NOTE: ic960 R3.0 pragma align definition:
-     
-     #pragma align [(size)] | (identifier=size[,...])
-     #pragma noalign [(identifier)[,...]]
-     
-     (all parens are optional)
-     
-     - size is [1,2,4,8,16]
-     - noalign means size==1
-     - applies only to component elements of a struct (and union?)
-     - identifier applies to structure tag (only)
-     - missing identifier means next struct
-     
-     - alignment rules for bitfields need more investigation  */
   
   return 1;
 }
@@ -241,7 +289,7 @@ fp_arith_operand (op, mode)
   return (register_operand (op, mode) || fp_literal (op, mode));
 }
 
-/* Return true is OP is a register or a valid signed integer literal.  */
+/* Return true if OP is a register or a valid signed integer literal.  */
 
 int
 signed_arith_operand (op, mode)
@@ -257,7 +305,7 @@ signed_arith_operand (op, mode)
 int
 literal (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return ((GET_CODE (op) == CONST_INT) && INTVAL(op) >= 0 && INTVAL(op) < 32);
 }
@@ -297,7 +345,7 @@ fp_literal(op, mode)
 int
 signed_literal(op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return ((GET_CODE (op) == CONST_INT) && INTVAL(op) > -32 && INTVAL(op) < 32);
 }
@@ -308,7 +356,7 @@ signed_literal(op, mode)
 int
 symbolic_memory_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   if (GET_CODE (op) == SUBREG)
     op = SUBREG_REG (op);
@@ -324,7 +372,7 @@ symbolic_memory_operand (op, mode)
 int
 eq_or_neq (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return (GET_CODE (op) == EQ || GET_CODE (op) == NE);
 }
@@ -346,7 +394,7 @@ arith32_operand (op, mode)
 int
 power2_operand (op,mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   if (GET_CODE (op) != CONST_INT)
     return 0;
@@ -360,7 +408,7 @@ power2_operand (op,mode)
 int
 cmplpower2_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   if (GET_CODE (op) != CONST_INT)
     return 0;
@@ -478,7 +526,7 @@ bitstr (val, s, e)
 enum machine_mode
 select_cc_mode (op, x)
      RTX_CODE op;
-     rtx x;
+     rtx x ATTRIBUTE_UNUSED;
 {
   if (op == GTU || op == LTU || op == GEU || op == LEU)
     return CC_UNSmode;
@@ -506,9 +554,9 @@ gen_compare_reg (code, x, y)
 	y = force_reg (SImode, y);
     }
 
-  cc_reg = gen_rtx (REG, ccmode, 36);
-  emit_insn (gen_rtx (SET, VOIDmode, cc_reg,
-		      gen_rtx (COMPARE, ccmode, x, y)));
+  cc_reg = gen_rtx_REG (ccmode, 36);
+  emit_insn (gen_rtx_SET (VOIDmode, cc_reg,
+			  gen_rtx_COMPARE (ccmode, x, y)));
 
   return cc_reg;
 }
@@ -607,12 +655,12 @@ emit_move_sequence (operands, mode)
       && REGNO (operands[1]) < FIRST_PSEUDO_REGISTER
       && ! HARD_REGNO_MODE_OK (REGNO (operands[1]), mode))
     {
-      emit_insn (gen_rtx (PARALLEL, VOIDmode,
-			  gen_rtvec (2,
-				     gen_rtx (SET, VOIDmode,
-					      operands[0], operands[1]),
-				     gen_rtx (CLOBBER, VOIDmode,
-					      gen_rtx (SCRATCH, Pmode)))));
+      emit_insn (gen_rtx_PARALLEL
+		 (VOIDmode,
+		  gen_rtvec (2,
+			     gen_rtx_SET (VOIDmode, operands[0], operands[1]),
+			     gen_rtx_CLOBBER (VOIDmode,
+					      gen_rtx_SCRATCH (Pmode)))));
       return 1;
     }
 
@@ -621,7 +669,7 @@ emit_move_sequence (operands, mode)
 
 /* Output assembler to move a double word value.  */
 
-char *
+const char *
 i960_output_move_double (dst, src)
      rtx dst, src;
 {
@@ -663,8 +711,8 @@ i960_output_move_double (dst, src)
 	     edge conditions.  */
 	  operands[0] = dst;
 	  operands[1] = src;
-	  operands[2] = gen_rtx (REG, Pmode, REGNO (dst) + 1);
-	  operands[3] = gen_rtx (MEM, word_mode, operands[2]);
+	  operands[2] = gen_rtx_REG (Pmode, REGNO (dst) + 1);
+	  operands[3] = gen_rtx_MEM (word_mode, operands[2]);
 	  operands[4] = adj_offsettable_operand (operands[3], UNITS_PER_WORD);
 	  output_asm_insn ("lda	%1,%2\n\tld	%3,%0\n\tld	%4,%D0", operands);
 	  return "";
@@ -693,7 +741,7 @@ i960_output_move_double (dst, src)
 
 /* Output assembler to move a double word zero.  */
 
-char *
+const char *
 i960_output_move_double_zero (dst)
      rtx dst;
 {
@@ -709,7 +757,7 @@ i960_output_move_double_zero (dst)
 
 /* Output assembler to move a quad word value.  */
 
-char *
+const char *
 i960_output_move_quad (dst, src)
      rtx dst, src;
 {
@@ -753,8 +801,8 @@ i960_output_move_quad (dst, src)
 	     edge conditions.  */
 	  operands[0] = dst;
 	  operands[1] = src;
-	  operands[2] = gen_rtx (REG, Pmode, REGNO (dst) + 3);
-	  operands[3] = gen_rtx (MEM, word_mode, operands[2]);
+	  operands[2] = gen_rtx_REG (Pmode, REGNO (dst) + 3);
+	  operands[3] = gen_rtx_MEM (word_mode, operands[2]);
 	  operands[4] = adj_offsettable_operand (operands[3], UNITS_PER_WORD);
 	  operands[5] = adj_offsettable_operand (operands[4], UNITS_PER_WORD);
 	  operands[6] = adj_offsettable_operand (operands[5], UNITS_PER_WORD);
@@ -787,7 +835,7 @@ i960_output_move_quad (dst, src)
 
 /* Output assembler to move a quad word zero.  */
 
-char *
+const char *
 i960_output_move_quad_zero (dst)
      rtx dst;
 {
@@ -807,7 +855,7 @@ i960_output_move_quad_zero (dst)
 /* Emit insns to load a constant to non-floating point registers.
    Uses several strategies to try to use as few insns as possible.  */
 
-char *
+const char *
 i960_output_ldconst (dst, src)
      register rtx dst, src;
 {
@@ -843,7 +891,7 @@ i960_output_ldconst (dst, src)
 
       for (i = 0; i < 3; i++)
 	{
-	  operands[0] = gen_rtx (REG, SImode, REGNO (dst) + i);
+	  operands[0] = gen_rtx_REG (SImode, REGNO (dst) + i);
 	  operands[1] = GEN_INT (value_long[i]);
 	  output_asm_insn (i960_output_ldconst (operands[0], operands[1]),
 			   operands);
@@ -862,11 +910,11 @@ i960_output_ldconst (dst, src)
 
       output_asm_insn ("# ldconst	%1,%0",operands);
 
-      operands[0] = gen_rtx (REG, SImode, REGNO (dst));
+      operands[0] = gen_rtx_REG (SImode, REGNO (dst));
       operands[1] = first;
       output_asm_insn (i960_output_ldconst (operands[0], operands[1]),
 		      operands);
-      operands[0] = gen_rtx (REG, SImode, REGNO (dst) + 1);
+      operands[0] = gen_rtx_REG (SImode, REGNO (dst) + 1);
       operands[1] = second;
       output_asm_insn (i960_output_ldconst (operands[0], operands[1]),
 		      operands);
@@ -881,7 +929,7 @@ i960_output_ldconst (dst, src)
       REAL_VALUE_TO_TARGET_SINGLE (d, value);
 
       output_asm_insn ("# ldconst	%1,%0",operands);
-      operands[0] = gen_rtx (REG, SImode, REGNO (dst));
+      operands[0] = gen_rtx_REG (SImode, REGNO (dst));
       operands[1] = GEN_INT (value);
       output_asm_insn (i960_output_ldconst (operands[0], operands[1]),
 		      operands);
@@ -917,7 +965,7 @@ i960_output_ldconst (dst, src)
 	return "movl	%1,%0";
 
       /* Output the upper half with a recursive call.  */
-      xoperands[0] = gen_rtx (REG, SImode, REGNO (dst) + 1);
+      xoperands[0] = gen_rtx_REG (SImode, REGNO (dst) + 1);
       xoperands[1] = upperhalf;
       output_asm_insn (i960_output_ldconst (xoperands[0], xoperands[1]),
 		       xoperands);
@@ -1061,7 +1109,7 @@ i960_bypass (insn, op1, op2, cmpbr_flag)
 void
 i960_function_name_declare (file, name, fndecl)
      FILE *file;
-     char *name;
+     const char *name;
      tree fndecl;
 {
   register int i, j;
@@ -1196,7 +1244,7 @@ i960_function_name_declare (file, name, fndecl)
       assemble_name (file, name);
       fprintf (file, ",%s.lf\n", (name[0] == '*' ? &name[1] : name));
       ASM_OUTPUT_LABEL (file, name);
-      fprintf (file, "\tlda    LR%d,g14\n", ret_label);
+      fprintf (file, "\tlda    Li960R%d,g14\n", ret_label);
       fprintf (file, "%s.lf:\n", (name[0] == '*' ? &name[1] : name));
       fprintf (file, "\tmov    g14,g%d\n", i960_leaf_ret_reg);
 
@@ -1244,6 +1292,11 @@ struct reg_group
   char length;
 };
 
+static int i960_form_reg_groups PARAMS ((int, int, int *, int, struct reg_group *));
+static int i960_reg_group_compare PARAMS ((const void *, const void *));
+static int i960_split_reg_group PARAMS ((struct reg_group *, int, int));
+static void i960_arg_size_and_align PARAMS ((enum machine_mode, tree, int *, int *));
+
 /* The following functions forms the biggest as possible register
    groups with registers in STATE.  REGS contain states of the
    registers in range [start, finish_reg).  The function returns the
@@ -1284,11 +1337,11 @@ i960_form_reg_groups (start_reg, finish_reg, regs, state, reg_groups)
 /* We sort register winodws in descending order by length. */
 static int
 i960_reg_group_compare (group1, group2)
-     void *group1;
-     void *group2;
+     const void *group1;
+     const void *group2;
 {
-  struct reg_group *w1 = group1;
-  struct reg_group *w2 = group2;
+  const struct reg_group *w1 = group1;
+  const struct reg_group *w2 = group2;
 
   if (w1->length > w2->length)
     return -1;
@@ -1332,8 +1385,9 @@ i960_function_prologue (file, size)
      unsigned int size;
 {
   register int i, j, nr;
-  int n_iregs = 0;
-  int rsize = 0;
+  int n_saved_regs = 0;
+  int n_remaining_saved_regs;
+  int lvar_size;
   int actual_fsize, offset;
   int gnw, lnw;
   struct reg_group *g, *l;
@@ -1356,10 +1410,12 @@ i960_function_prologue (file, size)
 	regs[i] = -1;
         /* Count global registers that need saving.  */
 	if (i < 16)
-	  n_iregs++;
+	  n_saved_regs++;
       }
     else
       regs[i] = 0;
+
+  n_remaining_saved_regs = n_saved_regs;
 
   epilogue_string[0] = '\0';
 
@@ -1389,14 +1445,16 @@ i960_function_prologue (file, size)
 		   ((g->length == 4) ? "q" :
 		    (g->length == 3) ? "t" :
 		    (g->length == 2) ? "l" : ""),
-		   reg_names[g->start_reg], reg_names[l->start_reg]);
+		   reg_names[(unsigned char) g->start_reg],
+		   reg_names[(unsigned char) l->start_reg]);
 	  sprintf (tmpstr, "\tmov%s	%s,%s\n",
 		   ((g->length == 4) ? "q" :
 		    (g->length == 3) ? "t" :
 		    (g->length == 2) ? "l" : ""),
-		   reg_names[l->start_reg], reg_names[g->start_reg]);
+		   reg_names[(unsigned char) l->start_reg],
+		   reg_names[(unsigned char) g->start_reg]);
 	  strcat (epilogue_string, tmpstr);
-	  n_iregs -= g->length;
+	  n_remaining_saved_regs -= g->length;
 	  for (i = 0; i < g->length; i++)
 	    {
 	      regs [i + g->start_reg] = 1;
@@ -1414,11 +1472,7 @@ i960_function_prologue (file, size)
 	lnw = i960_split_reg_group (l, lnw, g->length);
     }
 
-  /* N_iregs is now the number of global registers that haven't been saved
-     yet.  */
-
-  rsize = (n_iregs * 4);
-  actual_fsize = compute_frame_size (size) + rsize;
+  actual_fsize = compute_frame_size (size);
 #if 0
   /* ??? The 1.2.1 compiler does this also.  This is meant to round the frame
      size up to the nearest multiple of 16.  I don't know whether this is
@@ -1431,6 +1485,34 @@ i960_function_prologue (file, size)
   actual_fsize = (actual_fsize + 15) & ~0xF;
 #endif
 
+  /* Check stack limit if necessary.  */
+  if (current_function_limit_stack)
+    {
+      rtx min_stack = stack_limit_rtx;
+      if (actual_fsize != 0)
+	min_stack = plus_constant (stack_limit_rtx, -actual_fsize);
+
+      /* Now, emulate a little bit of reload.  We want to turn 'min_stack'
+	 into an arith_operand.  Use register 20 as the temporary.  */
+      if (legitimate_address_p (Pmode, min_stack, 1) 
+	  && !arith_operand (min_stack, Pmode))
+	{
+	  rtx tmp = gen_rtx_MEM (Pmode, min_stack);
+	  fputs ("\tlda\t", file);
+	  i960_print_operand (file, tmp, 0);
+	  fputs (",r4\n", file);
+	  min_stack = gen_rtx_REG (Pmode, 20);
+	}
+      if (arith_operand (min_stack, Pmode))
+	{
+	  fputs ("\tcmpo\tsp,", file);
+	  i960_print_operand (file, min_stack, 0);
+	  fputs ("\n\tfaultge.f\n", file);
+	}
+      else
+	warning ("stack limit expression is not supported");
+    }
+
   /* Allocate space for register save and locals.  */
   if (actual_fsize > 0)
     {
@@ -1442,11 +1524,12 @@ i960_function_prologue (file, size)
 
   /* Take hardware register save area created by the call instruction
      into account, but store them before the argument block area.  */
-  offset = 64 + actual_fsize - compute_frame_size (0) - rsize;
+  lvar_size = actual_fsize - compute_frame_size (0) - n_saved_regs * 4;
+  offset = STARTING_FRAME_OFFSET + lvar_size;
   /* Save registers on stack if needed.  */
   /* ??? Is it worth to use the same algorithm as one for saving
      global registers in local registers? */
-  for (i = 0, j = n_iregs; j > 0 && i < 16; i++)
+  for (i = 0, j = n_remaining_saved_regs; j > 0 && i < 16; i++)
     {
       if (regs[i] != -1)
 	continue;
@@ -1479,17 +1562,17 @@ i960_function_prologue (file, size)
       offset += nr * 4;
     }
 
-  if (actual_fsize == 0 && size == 0 && rsize == 0)
+  if (actual_fsize == 0)
     return;
 
   fprintf (file, "\t#Prologue stats:\n");
   fprintf (file, "\t#  Total Frame Size: %d bytes\n", actual_fsize);
 
-  if (size)
-    fprintf (file, "\t#  Local Variable Size: %d bytes\n", size);
-  if (rsize)
+  if (lvar_size)
+    fprintf (file, "\t#  Local Variable Size: %d bytes\n", lvar_size);
+  if (n_saved_regs)
     fprintf (file, "\t#  Register Save Size: %d regs, %d bytes\n",
-	     n_iregs, rsize);
+	     n_saved_regs, n_saved_regs * 4);
   fprintf (file, "\t#End Prologue#\n");
 }
 
@@ -1577,11 +1660,11 @@ output_function_profiler (file, labelno)
 void
 i960_function_epilogue (file, size)
      FILE *file;
-     unsigned int size;
+     unsigned int size ATTRIBUTE_UNUSED;
 {
   if (i960_leaf_ret_reg >= 0)
     {
-      fprintf (file, "LR%d:	ret\n", ret_label);
+      fprintf (file, "Li960R%d:	ret\n", ret_label);
       return;
     }
 
@@ -1611,11 +1694,11 @@ i960_function_epilogue (file, size)
 	    }
 	  break;
 	}
-      fprintf (file, "LR%d:	ret\n", ret_label);
+      fprintf (file, "Li960R%d:	ret\n", ret_label);
       return;
     }
 
-  fprintf (file, "LR%d:\n", ret_label);
+  fprintf (file, "Li960R%d:\n", ret_label);
 
   fprintf (file, "\t#EPILOGUE#\n");
 
@@ -1637,7 +1720,7 @@ i960_function_epilogue (file, size)
 
 /* Output code for a call insn.  */
 
-char *
+const char *
 i960_output_call_insn (target, argsize_rtx, arg_pointer, insn)
      register rtx target, argsize_rtx, arg_pointer, insn;
 {
@@ -1689,7 +1772,7 @@ i960_output_call_insn (target, argsize_rtx, arg_pointer, insn)
 
 /* Output code for a return insn.  */
 
-char *
+const char *
 i960_output_ret_insn (insn)
      register rtx insn;
 {
@@ -1700,7 +1783,7 @@ i960_output_ret_insn (insn)
       if (! TARGET_CODE_ALIGN && next_real_insn (insn) == 0)
 	return "";
 
-      sprintf (lbuf, "b	LR%d", ret_label);
+      sprintf (lbuf, "b	Li960R%d", ret_label);
       return lbuf;
     }
 
@@ -1718,49 +1801,15 @@ i960_output_ret_insn (insn)
   return "ret";
 }
 
-#if 0
-/* Return a character string representing the branch prediction
-   opcode to be tacked on an instruction.  This must at least
-   return a null string.  */
-
-char *
-i960_br_predict_opcode (lab_ref, insn)
-     rtx lab_ref, insn;
-{
-  if (TARGET_BRANCH_PREDICT)
-    {
-      unsigned long label_uid;
-      
-      if (GET_CODE (lab_ref) == CODE_LABEL)
-	label_uid = INSN_UID (lab_ref);
-      else if (GET_CODE (lab_ref) == LABEL_REF)
-	label_uid = INSN_UID (XEXP (lab_ref, 0));
-      else
-	return ".f";
-
-      /* If not optimizing, then the insn_addresses array will not be
-	 valid.  In this case, always return ".t" since most branches
-	 are taken.  If optimizing, return .t for backward branches
-	 and .f for forward branches.  */
-      if (! optimize
-	  || insn_addresses[label_uid] < insn_addresses[INSN_UID (insn)])
-	return ".t";
-      return ".f";
-    }
-    
-  return "";
-}
-#endif
-
 /* Print the operand represented by rtx X formatted by code CODE.  */
 
 void
 i960_print_operand (file, x, code)
      FILE *file;
      rtx x;
-     char code;
+     int code;
 {
-  enum rtx_code rtxcode = GET_CODE (x);
+  enum rtx_code rtxcode = x ? GET_CODE (x) : NIL;
 
   if (rtxcode == REG)
     {
@@ -1879,6 +1928,19 @@ i960_print_operand (file, x, code)
       else if (rtxcode == LE)  { fputs ("le", file); return; }
       else if (rtxcode == LEU) { fputs ("le", file); return; }
       else abort ();
+      break;
+
+    case '+':
+      /* For conditional branches, substitute ".t" or ".f".  */
+      if (TARGET_BRANCH_PREDICT)
+	{
+	  x = find_reg_note (current_output_insn, REG_BR_PROB, 0);
+	  if (x)
+	    {
+	      int pred_val = INTVAL (XEXP (x, 0));
+	      fputs ((pred_val < REG_BR_PROB_BASE / 2 ? ".f" : ".t"), file);
+	    }
+	}
       break;
 
     case 0:
@@ -2035,7 +2097,7 @@ i960_print_operand_addr (file, addr)
 
 int
 legitimate_address_p (mode, addr, strict)
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
      register rtx addr;
      int strict;
 {
@@ -2125,8 +2187,8 @@ legitimate_address_p (mode, addr, strict)
 rtx
 legitimize_address (x, oldx, mode)
      register rtx x;
-     register rtx oldx;
-     enum machine_mode mode;
+     register rtx oldx ATTRIBUTE_UNUSED;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 { 
   if (GET_CODE (x) == SYMBOL_REF)
     {
@@ -2143,9 +2205,9 @@ legitimize_address (x, oldx, mode)
      similar optimizations.  */
   if (GET_CODE (x) == PLUS && GET_CODE (XEXP (x, 0)) == MULT
       && GET_CODE (XEXP (x, 1)) == PLUS)
-    x = gen_rtx (PLUS, Pmode,
-		 gen_rtx (PLUS, Pmode, XEXP (x, 0), XEXP (XEXP (x, 1), 0)),
-		 XEXP (XEXP (x, 1), 1));
+    x = gen_rtx_PLUS (Pmode,
+		      gen_rtx_PLUS (Pmode, XEXP (x, 0), XEXP (XEXP (x, 1), 0)),
+		      XEXP (XEXP (x, 1), 1));
 
   /* Canonicalize (plus (plus (mult (reg) (const)) (plus (reg) (const))) const)
      into (plus (plus (mult (reg) (const)) (reg)) (const)).  */
@@ -2170,10 +2232,10 @@ legitimize_address (x, oldx, mode)
 	constant = 0;
 
       if (constant)
-	x = gen_rtx (PLUS, Pmode,
-		     gen_rtx (PLUS, Pmode, XEXP (XEXP (x, 0), 0),
-			      XEXP (XEXP (XEXP (x, 0), 1), 0)),
-		     plus_constant (other, INTVAL (constant)));
+	x = gen_rtx_PLUS (Pmode,
+			  gen_rtx_PLUS (Pmode, XEXP (XEXP (x, 0), 0),
+					XEXP (XEXP (XEXP (x, 0), 1), 0)),
+			  plus_constant (other, INTVAL (constant)));
     }
 
   return x;
@@ -2303,7 +2365,7 @@ i960_expr_alignment (x, size)
       break;
 
     case ASHIFT:
-      align = i960_expr_alignment (XEXP (x, 0));
+      align = i960_expr_alignment (XEXP (x, 0), size);
 
       if (GET_CODE (XEXP (x, 1)) == CONST_INT)
 	{
@@ -2317,6 +2379,8 @@ i960_expr_alignment (x, size)
 	       i960_expr_alignment (XEXP (x, 1), size));
 
       align = MIN (align, 16);
+      break;
+    default:
       break;
     }
 
@@ -2438,7 +2502,7 @@ i960_function_arg_advance (cum, mode, type, named)
      CUMULATIVE_ARGS *cum;
      enum machine_mode mode;
      tree type;
-     int named;
+     int named ATTRIBUTE_UNUSED;
 {
   int size, align;
 
@@ -2465,10 +2529,13 @@ i960_function_arg (cum, mode, type, named)
      CUMULATIVE_ARGS *cum;
      enum machine_mode mode;
      tree type;
-     int named;
+     int named ATTRIBUTE_UNUSED;
 {
   rtx ret;
   int size, align;
+
+  if (mode == VOIDmode)
+    return 0;
 
   i960_arg_size_and_align (mode, type, &size, &align);
 
@@ -2482,7 +2549,7 @@ i960_function_arg (cum, mode, type, named)
   else
     {
       cum->ca_nregparms = ROUND_PARM (cum->ca_nregparms, align);
-      ret = gen_rtx (REG, mode, cum->ca_nregparms);
+      ret = gen_rtx_REG (mode, cum->ca_nregparms);
     }
 
   return ret;
@@ -2562,7 +2629,7 @@ i960_round_align (align, tsize)
 {
   int new_align;
 
-  if (TREE_CODE (tsize) != INTEGER_CST)
+  if (! tsize || TREE_CODE (tsize) != INTEGER_CST)
     return align;
 
   new_align = i960_object_bytes_bitalign (TREE_INT_CST_LOW (tsize)
@@ -2584,9 +2651,9 @@ i960_round_align (align, tsize)
 void
 i960_setup_incoming_varargs (cum, mode, type, pretend_size, no_rtl)
      CUMULATIVE_ARGS *cum;
-     enum machine_mode mode;
-     tree type;
-     int *pretend_size;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
+     tree type ATTRIBUTE_UNUSED;
+     int *pretend_size ATTRIBUTE_UNUSED;
      int no_rtl;
 {
   /* Note: for a varargs fn with only a va_alist argument, this is 0.  */
@@ -2614,23 +2681,124 @@ i960_setup_incoming_varargs (cum, mode, type, pretend_size, no_rtl)
 	 va_start assumes it.  */
       emit_insn (gen_cmpsi (arg_pointer_rtx, const0_rtx));
       emit_jump_insn (gen_bne (label));
-      emit_insn (gen_rtx (SET, VOIDmode, arg_pointer_rtx,
-			  stack_pointer_rtx));
-      emit_insn (gen_rtx (SET, VOIDmode, stack_pointer_rtx,
-			  memory_address (SImode,
-					  plus_constant (stack_pointer_rtx,
-							 48))));
+      emit_insn (gen_rtx_SET (VOIDmode, arg_pointer_rtx,
+			      stack_pointer_rtx));
+      emit_insn (gen_rtx_SET (VOIDmode, stack_pointer_rtx,
+			      memory_address (SImode,
+					      plus_constant (stack_pointer_rtx,
+							     48))));
       emit_label (label);
 
       /* ??? Note that we unnecessarily store one extra register for stdarg
 	 fns.  We could optimize this, but it's kept as for now.  */
-      regblock = gen_rtx (MEM, BLKmode,
+      regblock = gen_rtx_MEM (BLKmode,
 			  plus_constant (arg_pointer_rtx,
 					 first_reg * 4));
+      MEM_ALIAS_SET (regblock) = get_varargs_alias_set ();
       move_block_from_reg (first_reg, regblock,
 			   NPARM_REGS - first_reg,
 			   (NPARM_REGS - first_reg) * UNITS_PER_WORD);
     }
+}
+
+/* Define the `__builtin_va_list' type for the ABI.  */
+
+tree
+i960_build_va_list ()
+{
+  return build_array_type (unsigned_type_node,
+			   build_index_type (size_one_node));
+}
+
+/* Implement `va_start' for varargs and stdarg.  */
+
+void
+i960_va_start (stdarg_p, valist, nextarg)
+     int stdarg_p ATTRIBUTE_UNUSED;
+     tree valist;
+     rtx nextarg ATTRIBUTE_UNUSED;
+{
+  tree s, t, base, num;
+
+  /* The array type always decays to a pointer before we get here, so we
+     can't use ARRAY_REF.  */
+  base = build1 (INDIRECT_REF, unsigned_type_node, valist);
+  num = build1 (INDIRECT_REF, unsigned_type_node,
+		build (PLUS_EXPR, unsigned_type_node, valist,
+		       TYPE_SIZE_UNIT (TREE_TYPE (valist))));
+
+  s = make_tree (unsigned_type_node, arg_pointer_rtx);
+  t = build (MODIFY_EXPR, unsigned_type_node, base, s);
+  TREE_SIDE_EFFECTS (t) = 1;
+  expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
+
+  s = build_int_2 ((current_function_args_info.ca_nregparms
+		    + current_function_args_info.ca_nstackparms) * 4, 0);
+  t = build (MODIFY_EXPR, unsigned_type_node, num, s);
+  TREE_SIDE_EFFECTS (t) = 1;
+  expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
+}
+
+/* Implement `va_arg'.  */
+
+rtx
+i960_va_arg (valist, type)
+     tree valist, type;
+{
+  HOST_WIDE_INT siz, ali;
+  tree base, num, pad, next, this, t1, t2, int48;
+  rtx addr_rtx;
+
+  /* The array type always decays to a pointer before we get here, so we
+     can't use ARRAY_REF.  */
+  base = build1 (INDIRECT_REF, unsigned_type_node, valist);
+  num = build1 (INDIRECT_REF, unsigned_type_node,
+		build (PLUS_EXPR, unsigned_type_node, valist,
+		       TYPE_SIZE_UNIT (TREE_TYPE (valist))));
+
+  /* Round up sizeof(type) to a word.  */
+  siz = (int_size_in_bytes (type) + UNITS_PER_WORD - 1) & -UNITS_PER_WORD;
+
+  /* Round up alignment to a word.  */
+  ali = TYPE_ALIGN (type);
+  if (ali < BITS_PER_WORD)
+    ali = BITS_PER_WORD;
+  ali /= BITS_PER_UNIT;
+
+  /* Align NUM appropriate for the argument.  */
+  pad = fold (build (PLUS_EXPR, unsigned_type_node, num, 
+		      build_int_2 (ali - 1, 0)));
+  pad = fold (build (BIT_AND_EXPR, unsigned_type_node, pad,
+		      build_int_2 (-ali, -1)));
+  pad = save_expr (pad);
+
+  /* Increment VPAD past this argument.  */
+  next = fold (build (PLUS_EXPR, unsigned_type_node, pad,
+		      build_int_2 (siz, 0)));
+  next = save_expr (next);
+
+  /* Find the offset for the current argument.  Mind peculiar overflow
+     from registers to stack.  */
+  int48 = build_int_2 (48, 0);
+  if (siz > 16)
+    t2 = integer_one_node;
+  else
+    t2 = fold (build (GT_EXPR, integer_type_node, next, int48));
+  t1 = fold (build (LE_EXPR, integer_type_node, num, int48));
+  t1 = fold (build (TRUTH_AND_EXPR, integer_type_node, t1, t2));
+  this = fold (build (COND_EXPR, unsigned_type_node, t1, int48, pad));
+
+  /* Find the address for the current argument.  */
+  t1 = fold (build (PLUS_EXPR, unsigned_type_node, base, this));
+  t1 = build1 (NOP_EXPR, ptr_type_node, t1);
+  addr_rtx = expand_expr (t1, NULL_RTX, Pmode, EXPAND_NORMAL);
+
+  /* Increment NUM.  */
+  t1 = build (MODIFY_EXPR, unsigned_type_node, num, next);
+  TREE_SIDE_EFFECTS (t1) = 1;
+  expand_expr (t1, const0_rtx, VOIDmode, EXPAND_NORMAL);
+  
+  return addr_rtx;
 }
 
 /* Calculate the final size of the reg parm stack space for the current
@@ -2709,7 +2877,7 @@ secondary_reload_class (class, mode, in)
 
 void
 i960_scan_opcode (p)
-     char *p;
+     const char *p;
 {
   switch (*p)
     {

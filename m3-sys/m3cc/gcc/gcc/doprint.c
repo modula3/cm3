@@ -1,5 +1,5 @@
 /* Provide a version _doprnt in terms of fprintf.
-   Copyright (C) 1998 Free Software Foundation, Inc.
+   Copyright (C) 1998, 1999, 2000 Free Software Foundation, Inc.
    Contributed by Kaveh Ghazi  (ghazi@caip.rutgers.edu)  3/29/98
 
 This program is free software; you can redistribute it and/or modify it
@@ -15,8 +15,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
-
- */
 
 #include "config.h"
 #include "system.h"
@@ -88,7 +86,7 @@ _doprnt (format, ap, stream)
 	  if (*ptr == '*')
 	    COPY_VA_INT;
 	  else
-	    while (isdigit(*ptr)) /* Handle explicit numeric value. */
+	    while (ISDIGIT(*ptr)) /* Handle explicit numeric value. */
 	      *sptr++ = *ptr++;
 	  
 	  if (*ptr == '.')
@@ -97,7 +95,7 @@ _doprnt (format, ap, stream)
 	      if (*ptr == '*')
 		COPY_VA_INT;
 	      else
-		while (isdigit(*ptr)) /* Handle explicit numeric value. */
+		while (ISDIGIT(*ptr)) /* Handle explicit numeric value. */
 		  *sptr++ = *ptr++;
 	    }
 	  while (strchr ("hlL", *ptr))
@@ -206,10 +204,10 @@ _doprnt (format, ap, stream)
     fflush(stdin); \
 } while (0)
 
-static int checkit PVPROTO ((const char * format, ...)) ATTRIBUTE_PRINTF_1;
+static int checkit PARAMS ((const char * format, ...)) ATTRIBUTE_PRINTF_1;
 
 static int
-checkit VPROTO ((const char* format, ...))
+checkit VPARAMS ((const char* format, ...))
 {
   va_list args;
   int result;

@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler, for Intel 860.
-   Copyright (C) 1989, 91, 93, 95, 96, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1989, 1991, 1993, 1995, 1996, 1997, 1998, 1999, 2000
+   Free Software Foundation, Inc.
    Hacked substantially by Ron Guilmette (rfg@monkeys.com) to cater to
    the whims of the System V Release 4 assembler.
 
@@ -27,7 +28,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
-#define CPP_PREDEFINES "-Di860 -Dunix -Asystem(unix) -Asystem(svr4) -Acpu(i860) -Amachine(i860)"
+#define CPP_PREDEFINES "-Di860 -Dunix -Asystem=unix -Asystem=svr4 -Acpu=i860 -Amachine=i860"
 
 /* Print subsidiary information on the compiler version in use.  */
 #define TARGET_VERSION fprintf (stderr, " (i860)");
@@ -52,9 +53,9 @@ extern int target_flags;
    An empty string NAME is used to identify the default VALUE.  */
 
 #define TARGET_SWITCHES  \
-  { {"xp", 1, "Generate code which uses the FPU"},			\
-    {"noxp", -1, "Do not generate code which uses the FPU"},		\
-    {"xr", -1, "Do not generate code which uses the FPU"},		\
+  { {"xp", 1, N_("Generate code which uses the FPU")},			\
+    {"noxp", -1, N_("Do not generate code which uses the FPU")},	\
+    {"xr", -1, N_("Do not generate code which uses the FPU")},		\
     { "", TARGET_DEFAULT, NULL}}
 
 #define TARGET_DEFAULT 0
@@ -428,17 +429,17 @@ enum reg_class { NO_REGS, GENERAL_REGS, FP_REGS, ALL_REGS, LIM_REG_CLASSES };
 /* On the i860, the value register depends on the mode.  */
 
 #define FUNCTION_VALUE(VALTYPE, FUNC)  \
-  gen_rtx (REG, TYPE_MODE (VALTYPE),				\
-	   (GET_MODE_CLASS (TYPE_MODE (VALTYPE)) == MODE_FLOAT	\
-	    ? 40 : 16))
+  gen_rtx_REG (TYPE_MODE (VALTYPE),				\
+	       (GET_MODE_CLASS (TYPE_MODE (VALTYPE)) == MODE_FLOAT	\
+		? 40 : 16))
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
 
 #define LIBCALL_VALUE(MODE)				\
-  gen_rtx (REG, MODE,					\
-	   (GET_MODE_CLASS ((MODE)) == MODE_FLOAT	\
-	    ? 40 : 16))
+  gen_rtx_REG (MODE,					\
+	       (GET_MODE_CLASS ((MODE)) == MODE_FLOAT	\
+		? 40 : 16))
 
 /* 1 if N is a possible register number for a function value
    as seen by the caller.  */
@@ -523,17 +524,17 @@ struct cumulative_args { int ints, floats; };
   ? 0							\
   : GET_MODE_CLASS ((MODE)) == MODE_FLOAT || (MODE) == DImode	\
   ? (ROUNDUP ((CUM).floats, GET_MODE_SIZE ((MODE))) < 32	\
-     ? gen_rtx (REG, (MODE),				\
-		40+(ROUNDUP ((CUM).floats,		\
-			     GET_MODE_SIZE ((MODE)))	\
-		    / 4))				\
+     ? gen_rtx_REG ((MODE),				\
+		    40 + (ROUNDUP ((CUM).floats,	\
+				   GET_MODE_SIZE ((MODE)))	\
+			  / 4))				\
      : 0)						\
   : GET_MODE_CLASS ((MODE)) == MODE_INT			\
   ? (ROUNDUP ((CUM).ints, GET_MODE_SIZE ((MODE))) < 48	\
-     ? gen_rtx (REG, (MODE),				\
-		16+(ROUNDUP ((CUM).ints,		\
-			     GET_MODE_SIZE ((MODE)))	\
-		    / 4))				\
+     ? gen_rtx_REG ((MODE),				\
+		    16 + (ROUNDUP ((CUM).ints,		\
+				   GET_MODE_SIZE ((MODE)))	\
+			  / 4))				\
      : 0)						\
   : 0)
 
@@ -596,6 +597,22 @@ struct cumulative_args { int ints, floats; };
 
 #define FUNCTION_EPILOGUE(FILE, SIZE) function_epilogue ((FILE), (SIZE))
 
+/* Generate necessary RTL for __builtin_saveregs().  */
+#define EXPAND_BUILTIN_SAVEREGS() \
+  i860_saveregs()
+
+/* Define the `__builtin_va_list' type for the ABI.  */
+#define BUILD_VA_LIST_TYPE(VALIST) \
+  (VALIST) = i860_build_va_list ()
+
+/* Implement `va_start' for varargs and stdarg.  */
+#define EXPAND_BUILTIN_VA_START(stdarg, valist, nextarg) \
+  i860_va_start (stdarg, valist, nextarg)
+
+/* Implement `va_arg'.  */
+#define EXPAND_BUILTIN_VA_ARG(valist, type) \
+  i860_va_arg (valist, type)
+
 /* Store in the variable DEPTH the initial difference between the
    frame pointer reg contents and the stack pointer reg contents,
    as of the start of the function body.  This depends on the layout
@@ -644,13 +661,13 @@ struct cumulative_args { int ints, floats; };
 			     size_int (16), 0, 0);			\
   rtx hi_fn = expand_shift (RSHIFT_EXPR, SImode, fn,			\
 			    size_int (16), 0, 0);			\
-  emit_move_insn (gen_rtx (MEM, HImode, plus_constant (TRAMP, 16)),	\
+  emit_move_insn (gen_rtx_MEM (HImode, plus_constant (TRAMP, 16)),	\
 		  gen_lowpart (HImode, cxt));				\
-  emit_move_insn (gen_rtx (MEM, HImode, plus_constant (TRAMP, 4)),	\
+  emit_move_insn (gen_rtx_MEM (HImode, plus_constant (TRAMP, 4)),	\
 		  gen_lowpart (HImode, fn));				\
-  emit_move_insn (gen_rtx (MEM, HImode, plus_constant (TRAMP, 8)),	\
+  emit_move_insn (gen_rtx_MEM (HImode, plus_constant (TRAMP, 8)),	\
 		  gen_lowpart (HImode, hi_cxt));			\
-  emit_move_insn (gen_rtx (MEM, HImode, plus_constant (TRAMP, 0)),	\
+  emit_move_insn (gen_rtx_MEM (HImode, plus_constant (TRAMP, 0)),	\
 		  gen_lowpart (HImode, hi_fn));				\
 }
 
@@ -803,25 +820,25 @@ struct cumulative_args { int ints, floats; };
 
 #define LEGITIMIZE_ADDRESS(X,OLDX,MODE,WIN)	\
 { if (GET_CODE (X) == PLUS && GET_CODE (XEXP (X, 0)) == MULT)	\
-    (X) = gen_rtx (PLUS, SImode, XEXP (X, 1),			\
-		   force_operand (XEXP (X, 0), 0));		\
+    (X) = gen_rtx_PLUS (SImode, XEXP (X, 1),			\
+			force_operand (XEXP (X, 0), 0));	\
   if (GET_CODE (X) == PLUS && GET_CODE (XEXP (X, 1)) == MULT)	\
-    (X) = gen_rtx (PLUS, SImode, XEXP (X, 0),			\
-		   force_operand (XEXP (X, 1), 0));		\
+    (X) = gen_rtx_PLUS (SImode, XEXP (X, 0),			\
+			force_operand (XEXP (X, 1), 0));	\
   if (GET_CODE (X) == PLUS && GET_CODE (XEXP (X, 0)) == PLUS)	\
-    (X) = gen_rtx (PLUS, SImode, XEXP (X, 1),			\
-		   force_operand (XEXP (X, 0), 0));		\
+    (X) = gen_rtx_PLUS (SImode, XEXP (X, 1),			\
+			force_operand (XEXP (X, 0), 0));	\
   if (GET_CODE (X) == PLUS && GET_CODE (XEXP (X, 1)) == PLUS)	\
-    (X) = gen_rtx (PLUS, SImode, XEXP (X, 0),			\
-		   force_operand (XEXP (X, 1), 0));		\
+    (X) = gen_rtx_PLUS (SImode, XEXP (X, 0),			\
+			force_operand (XEXP (X, 1), 0));	\
   if (GET_CODE (X) == PLUS && GET_CODE (XEXP (X, 0)) != REG	\
       && GET_CODE (XEXP (X, 0)) != CONST_INT)			\
-    (X) = gen_rtx (PLUS, SImode, XEXP (X, 1),			\
-		   copy_to_mode_reg (SImode, XEXP (X, 0)));	\
+    (X) = gen_rtx_PLUS (SImode, XEXP (X, 1),			\
+			copy_to_mode_reg (SImode, XEXP (X, 0))); \
   if (GET_CODE (X) == PLUS && GET_CODE (XEXP (X, 1)) != REG	\
       && GET_CODE (XEXP (X, 1)) != CONST_INT)			\
-    (X) = gen_rtx (PLUS, SImode, XEXP (X, 0),			\
-		   copy_to_mode_reg (SImode, XEXP (X, 1)));	\
+    (X) = gen_rtx_PLUS (SImode, XEXP (X, 0),			\
+			copy_to_mode_reg (SImode, XEXP (X, 1))); \
   if (GET_CODE (x) == SYMBOL_REF)				\
     (X) = copy_to_reg (X);					\
   if (GET_CODE (x) == CONST)					\
@@ -979,7 +996,7 @@ struct cumulative_args { int ints, floats; };
 
 /* Assembler pseudos to introduce constants of various size.  */
 
-#define ASM_BYTE_OP "\t.byte"
+#define ASM_BYTE_OP "\t.byte\t"
 #define ASM_SHORT "\t.short"
 #define ASM_LONG "\t.long"
 #define ASM_DOUBLE "\t.double"
@@ -1009,11 +1026,11 @@ struct cumulative_args { int ints, floats; };
 
 /* Output before read-only data.  */
 
-#define TEXT_SECTION_ASM_OP ".text"
+#define TEXT_SECTION_ASM_OP "\t.text"
 
 /* Output before writable data.  */
 
-#define DATA_SECTION_ASM_OP ".data"
+#define DATA_SECTION_ASM_OP "\t.data"
 
 /* How to refer to registers in assembler output.
    This sequence is indexed by compiler's hard-register-number (see above).  */
@@ -1258,8 +1275,7 @@ do { ASM_OUTPUT_ALIGN ((FILE), 2);					\
 		"%" in i860.c.
 */
 
-extern char *i860_reg_prefix;
-extern unsigned long sfmode_constant_to_ulong ();
+extern const char *i860_reg_prefix;
 
 #define PRINT_OPERAND_PUNCT_VALID_P(CODE) ((CODE) == '?')
 
@@ -1316,16 +1332,14 @@ extern unsigned long sfmode_constant_to_ulong ();
   else if ((CODE) == 'r' && (X) == CONST0_RTX (GET_MODE (X)))		\
     fprintf (FILE, "%sf0", i860_reg_prefix);				\
   else if (GET_CODE (X) == CONST_DOUBLE)				\
-    fprintf (FILE, "0x%x", sfmode_constant_to_ulong (X));		\
+    fprintf (FILE, "0x%lx", sfmode_constant_to_ulong (X));		\
   else									\
     output_addr_const (FILE, X); }
 
 /* Print a memory address as an operand to reference that memory location.  */
 
 #define PRINT_OPERAND_ADDRESS(FILE, ADDR)  \
-{ register rtx base, index = 0;					\
-  int offset = 0;						\
-  register rtx addr = ADDR;					\
+{ register rtx addr = ADDR;					\
   if (GET_CODE (addr) == REG)					\
     {								\
       fprintf (FILE, "0(%s%s)",					\
@@ -1333,7 +1347,7 @@ extern unsigned long sfmode_constant_to_ulong ();
     }								\
   else if (GET_CODE (addr) == CONST_DOUBLE			\
             && GET_MODE (addr) == SFmode)			\
-    fprintf (FILE, "0x%x", sfmode_constant_to_ulong (addr));	\
+    fprintf (FILE, "0x%lx", sfmode_constant_to_ulong (addr));	\
   else if (GET_CODE (addr) == PLUS)				\
     {								\
       if ((GET_CODE (XEXP (addr, 0)) == CONST_INT)		\
@@ -1417,16 +1431,3 @@ extern unsigned long sfmode_constant_to_ulong ();
    hasn't been defined!  */
 
 extern struct rtx_def *i860_compare_op0, *i860_compare_op1;
-
-/* Declare things which are defined in i860.c but called from
-   insn-output.c.  */
-
-extern unsigned long sfmode_constant_to_ulong ();
-extern char *output_load ();
-extern char *output_store ();
-extern char *output_move_double ();
-extern char *output_fp_move_double ();
-extern char *output_block_move ();
-extern char *output_delay_insn ();
-extern char *output_delayed_branch ();
-extern void output_load_address ();

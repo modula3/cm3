@@ -1,5 +1,5 @@
 /* Subroutines for GNU compiler for Intel 80x86 running DG/ux
-   Copyright (C) 1993, 1995, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1995, 1997, 1999, 2000 Free Software Foundation, Inc.
    Currently maintained by (gcc@dg-rtp.dg.com)
 
 This file is part of GNU CC.
@@ -22,10 +22,7 @@ Boston, MA 02111-1307, USA.  */
 #include <time.h>
 #include "i386/i386.c"
 
-
-extern char *version_string;
-
-struct option
+struct lang_independent_option
 {
   char *string;
   int *variable;
@@ -51,17 +48,22 @@ output_option (file, sep, type, name, indent, pos, max)
   return pos + fprintf (file, "%s%s%s", sep, type, name);
 }
 
-static struct { char *name; int value; } m_options[] = TARGET_SWITCHES;
+static struct { 
+  char *name; 
+  int value; 
+  const char * description;
+} m_options[] = TARGET_SWITCHES;
 
 static void
 output_options (file, f_options, f_len, W_options, W_len,
 		pos, max, sep, indent, term)
      FILE *file;
-     struct option *f_options;
-     struct option *W_options;
+     struct lang_independent_option *f_options;
+     struct lang_independent_option *W_options;
      int f_len, W_len;
      int pos;
      int max;
+     int sep;
      char *indent;
      char *term;
 {
@@ -88,7 +90,7 @@ output_options (file, f_options, f_len, W_options, W_len,
       pos = output_option (file, sep, "-W", W_options[j].string,
 			   indent, pos, max);
 
-  for (j = 0; j < sizeof m_options / sizeof m_options[0]; j++)
+  for (j = 0; j < ARRAY_SIZE (m_options); j++)
     if (m_options[j].name[0] != '\0'
 	&& m_options[j].value > 0
 	&& ((m_options[j].value & target_flags)
@@ -96,8 +98,12 @@ output_options (file, f_options, f_len, W_options, W_len,
       pos = output_option (file, sep, "-m", m_options[j].name,
 			   indent, pos, max);
 
-  pos = output_option (file, sep, "-mcpu=", ix86_cpu_string, indent, pos, max);
-  pos = output_option (file, sep, "-march=", ix86_arch_string, indent, pos, max);
+  if (ix86_cpu_string)
+    pos = output_option (file, sep, "-mcpu=", ix86_cpu_string, 
+			 indent, pos, max);
+  if (ix86_arch_string)
+    pos = output_option (file, sep, "-march=", ix86_arch_string, 
+			 indent, pos, max);
   fprintf (file, term);
 }
 
@@ -106,16 +112,16 @@ output_options (file, f_options, f_len, W_options, W_len,
 void
 output_file_start (file, f_options, f_len, W_options, W_len)
      FILE *file;
-     struct option *f_options;
-     struct option *W_options;
+     struct lang_independent_option *f_options;
+     struct lang_independent_option *W_options;
      int f_len, W_len;
 {
   register int pos;
 
   output_file_directive (file, main_input_filename);
   fprintf (file, "\t.version\t\"01.01\"\n");			\
-  /* Switch to the data section so that the coffsem symbol and the
-     gcc2_compiled. symbol aren't in the text section.  */
+  /* Switch to the data section so that the coffsem symbol
+     isn't in the text section.  */
   data_section ();
 
   pos = fprintf (file, "\n// cc1 (%s) arguments:", VERSION_STRING);
@@ -128,7 +134,7 @@ output_file_start (file, f_options, f_len, W_options, W_len)
       char indent[256];
 
       time_t now = time ((time_t *)0);
-      sprintf (indent, "]\"\n\t%s\t \"@(#)%s [", IDENT_ASM_OP, main_input_filename);
+      sprintf (indent, "]\"\n%s\"@(#)%s [", IDENT_ASM_OP, main_input_filename);
       fprintf (file, indent+3);
       pos = fprintf (file, "gcc %s, %.24s,", VERSION_STRING, ctime (&now));
       output_options (file, f_options, f_len, W_options, W_len,

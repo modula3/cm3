@@ -1,12 +1,13 @@
 /* Definitions of target machine for GNU compiler.
-   Copyright (C) 1994, 95-98, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999,
+   2000, 2001 Free Software Foundation, Inc.
    Contributed by O.M.Kellogg, DASA (oliver.kellogg@space.otn.dasa.de)
 
 This file is part of GNU CC.
 
 GNU CC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU CC is distributed in the hope that it will be useful,
@@ -34,8 +35,8 @@ Boston, MA 02111-1307, USA.  */
 
 /* Run-time compilation parameters selecting different hardware subsets.  */
 
-#define TARGET_SWITCHES  \
-  { {"vaxc-alignment", 2, "Use VAX-C alignment"}, \
+#define TARGET_SWITCHES					\
+  { {"vaxc-alignment", 2, N_("Use VAX-C alignment")},	\
     { "", TARGET_DEFAULT, NULL}}
 
 /* Default target_flags if no switches specified.  */
@@ -65,12 +66,7 @@ extern struct datalabel_array datalbl[];
 extern struct jumplabel_array jmplbl[];
 extern int datalbl_ndx, jmplbl_ndx, label_pending, program_counter;
 extern enum section current_section;
-extern char *sectname[4];
-extern char *float_label();
-extern struct rtx_def *function_arg ();
-extern char *movcnt_regno_adjust ();
-extern char *mod_regno_adjust ();
-extern char *branch_or_jump ();
+extern const char *const sectname[4];
 #endif
 /*--------------------------------------------------------------------*/
 
@@ -329,7 +325,7 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
    1750 "index" (remember, in the *GCC* sense!) regs are R12 through R15. 
    The only 1750 register not usable as BASE_REG is R0. */
 
-#define REG_CLASS_CONTENTS  {0, 0x0004, 0x0003, 0xf000, 0xfffe, 0xffff}
+#define REG_CLASS_CONTENTS  { {0}, {0x0004}, {0x0003}, {0xf000}, {0xfffe}, {0xffff} }
 
 /* The same information, inverted:
    Return the class number of the smallest class containing
@@ -474,14 +470,14 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
    otherwise, FUNC is 0. */
 
 #define FUNCTION_VALUE(VALTYPE, FUNC)  \
-  gen_rtx(REG,TYPE_MODE(VALTYPE),0)
+  gen_rtx_REG (TYPE_MODE (VALTYPE), 0)
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE. */
 /* 1750 note: no libcalls yet */
 
 #define LIBCALL_VALUE(MODE)  printf("LIBCALL_VALUE called!\n"), \
-  gen_rtx(REG,MODE,0)
+  gen_rtx_REG (MODE, 0)
 
 /* 1 if N is a possible register number for a function value. */
 
@@ -696,8 +692,8 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
 
 #define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT)  printf("INITIALIZE_TRAMPO called\n")
 /* {									\
-  emit_move_insn (gen_rtx (MEM, QImode, plus_constant (TRAMP, 1)), CXT); \
-  emit_move_insn (gen_rtx (MEM, QImode, plus_constant (TRAMP, 6)), FNADDR); \
+  emit_move_insn (gen_rtx_MEM (QImode, plus_constant (TRAMP, 1)), CXT); \
+  emit_move_insn (gen_rtx_MEM (QImode, plus_constant (TRAMP, 6)), FNADDR); \
 } */
 
 
@@ -725,11 +721,11 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
    */
 
 #define REGNO_OK_FOR_BASE_P(REGNO)  \
- ((REGNO) > 0 && (REGNO) <= 15 ||   \
-  reg_renumber[REGNO] > 0 && reg_renumber[REGNO] <= 15)
+ (((REGNO) > 0 && (REGNO) <= 15) ||   \
+  (reg_renumber[REGNO] > 0 && reg_renumber[REGNO] <= 15))
 #define REGNO_OK_FOR_INDEX_P(REGNO) \
- ((REGNO) >= 12 && (REGNO) <= 15 || \
-  reg_renumber[REGNO] >= 12 && reg_renumber[REGNO] <= 15)
+ (((REGNO) >= 12 && (REGNO) <= 15) || \
+  (reg_renumber[REGNO] >= 12 && reg_renumber[REGNO] <= 15))
 
 /* Now macros that check whether X is a register and also,
    strictly, whether it is in a specified class.  */
@@ -879,8 +875,8 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
 #define STORE_FLAG_VALUE 1
 
 /* When a prototype says `char' or `short', really pass an `int'. 
-   1750: for now, `char' is 16 bits wide anyway.
-   #define PROMOTE_PROTOTYPES */
+   1750: for now, `char' is 16 bits wide anyway.  */
+#define PROMOTE_PROTOTYPES 0
 
 /* Specify the machine mode that pointers have.
    After generation of rtl, the compiler makes no further distinction
@@ -908,7 +904,7 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
 
 #define ADDRESS_COST(ADDRESS)  (memop_valid (ADDRESS) ?  3 : 10)
 
-#define REGISTER_MOVE_COST(FROM,TO)	2
+#define REGISTER_MOVE_COST(MODE,FROM,TO)	2
 
 #define MEMORY_MOVE_COST(M,C,I)		4
 
@@ -945,7 +941,7 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
    else									\
 	p = main_input_filename;					\
    strcpy(name,p);							\
-   if (p = (char *)strchr(name,'.'))					\
+   if ((p = (char *)strchr(name,'.')))					\
 	*p = '\0';							\
    fprintf(FILE,"\tname %s\n",name); 					\
    fprintf(FILE,"\tnolist\n\tinclude \"ms1750.inc\"\n\tlist\n\n");	\
@@ -1002,7 +998,7 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
 	fprintf(asm_out_file,"\tkonst\n");			\
 	current_section = Konst;				\
     }								\
-    check_section(sect)						\
+    void check_section(sect)					\
 	 enum section sect;					\
     {								\
         if (current_section != sect) {				\
@@ -1051,8 +1047,6 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
 #define DBX_REGISTER_NUMBER(REGNO) (REGNO)
 
 /******************  Assembler output formatting  **********************/
-
-#define ASM_IDENTIFY_GCC(FILE)  fputs ("; gcc2_compiled:\n", FILE)
 
 #define ASM_COMMENT_START  ";"
 
@@ -1116,7 +1110,7 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
 	do {							\
 	  if (strcmp(PREFIX,"LC") == 0) {			\
 	     label_pending = 1;					\
-	     datalbl[++datalbl_ndx].name = (char *) malloc (9); \
+	     datalbl[++datalbl_ndx].name = (char *) xmalloc (9);\
 	     sprintf(datalbl[datalbl_ndx].name,"LC%d",NUM);	\
 	     datalbl[datalbl_ndx].size = 0;			\
 	     check_section(Konst);				\
@@ -1164,10 +1158,10 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
   do {								\
       if (label_pending) {					\
 	 label_pending = 0;					\
-         sprintf (datalbl[datalbl_ndx].value, "%lf", (double) VALUE); \
+         sprintf (datalbl[datalbl_ndx].value, "%f", (double) VALUE); \
       }								\
       datalbl[datalbl_ndx].size += 2;				\
-      fprintf (FILE, "\tdataf\t%lf\n",VALUE);			\
+      fprintf (FILE, "\tdataf\t%f\n",VALUE);			\
   } while(0)
 
 /* This is how to output an assembler line defining a 1750A `double'
@@ -1177,10 +1171,10 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
   do {								\
       if (label_pending) {					\
 	 label_pending = 0;					\
-         sprintf (datalbl[datalbl_ndx].value, "%lf", VALUE);	\
+         sprintf (datalbl[datalbl_ndx].value, "%f", VALUE);	\
       }								\
       datalbl[datalbl_ndx].size += 3;				\
-      fprintf(FILE,"\tdataef\t%lf\n",VALUE);			\
+      fprintf(FILE,"\tdataef\t%f\n",VALUE);			\
   } while (0)
 
 /* This is how to output an assembler line defining a string constant.  */
@@ -1250,13 +1244,13 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
    It need not be very fast code.  */
 
 #define ASM_OUTPUT_REG_PUSH(FILE,REGNO)  \
-  fprintf (FILE, "\tPSHM R%s,R%s\n", reg_names[REGNO])
+  fprintf (FILE, "\tPSHM R%s,R%s\n", reg_names[REGNO], "FIXME: missing arg")
 
 /* This is how to output an insn to pop a register from the stack.
    It need not be very fast code.  */
 
 #define ASM_OUTPUT_REG_POP(FILE,REGNO)  \
-	fprintf (FILE, "\tPOPM R%s,R%s\n", reg_names[REGNO])
+	fprintf (FILE, "\tPOPM R%s,R%s\n", reg_names[REGNO], "FIXME: missing arg")
 
 /* This is how to output an element of a case-vector that is absolute. */
 

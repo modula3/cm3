@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler.  Iris version 4.
-   Copyright (C) 1991, 1993 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1993, 1999, 2001 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -18,10 +18,6 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-/* Use atexit for static constructors/destructors, instead of defining
-   our own exit function.  */
-#define HAVE_ATEXIT
-
 /* Profiling is supported via libprof1.a not -lc_p as in Irix 3.  */
 #undef STARTFILE_SPEC
 #define STARTFILE_SPEC \
@@ -34,15 +30,16 @@ Boston, MA 02111-1307, USA.  */
 /* Some assemblers have a bug that causes backslash escaped chars in .ascii
    to be misassembled, so we just completely avoid it.  */
 #undef ASM_OUTPUT_ASCII
-#define ASM_OUTPUT_ASCII(FILE,PTR,LEN)			\
-do {							\
-  unsigned char *s;					\
-  int i;						\
-  for (i = 0, s = (unsigned char *)(PTR); i < (LEN); s++, i++)	\
-    {							\
-      if ((i % 8) == 0)					\
-	fputs ("\n\t.byte\t", (FILE));			\
-      fprintf ((FILE), "%s0x%x", (i%8?",":""), (unsigned)*s); \
-    }							\
-  fputs ("\n", (FILE));					\
+#define ASM_OUTPUT_ASCII(FILE,PTR,LEN)				\
+do {								\
+  const unsigned char *s_ = (const unsigned char *)(PTR);	\
+  unsigned len_ = (LEN);					\
+  unsigned i_;							\
+  for (i_ = 0; i_ < len_; s_++, i_++)				\
+    {								\
+      if ((i_ % 8) == 0)					\
+	fputs ("\n\t.byte\t", (FILE));				\
+      fprintf ((FILE), "%s0x%x", (i_%8?",":""), *s_);		\
+    }								\
+  fputs ("\n", (FILE));						\
 } while (0)

@@ -1,5 +1,6 @@
 /* Definitions for Intel 386 running SCO Unix System V.
-   Copyright (C) 1988, 92, 94, 95, 96, 1999  Free Software Foundation, Inc.
+   Copyright (C) 1988, 1992, 1994, 1995, 1996, 1999 
+   Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -55,7 +56,7 @@ Boston, MA 02111-1307, USA.  */
 /* Specify predefined symbols in preprocessor.  */
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Dunix -DM_UNIX -DM_I386 -DM_COFF -DM_WORDSWAP -Asystem(svr3)"
+#define CPP_PREDEFINES "-DM_UNIX -DM_I386 -DM_COFF -DM_WORDSWAP -Asystem=svr3"
 
 #undef CPP_SPEC
 #define CPP_SPEC "%(cpp_cpu) %{scointl:-DM_INTERNAT}"
@@ -70,10 +71,6 @@ Boston, MA 02111-1307, USA.  */
 #define SIGNED_CHAR_SPEC \
  "%{!fsigned-char:-D__CHAR_UNSIGNED__ -D_CHAR_UNSIGNED}"
 #endif
-
-/* Use atexit for static destructors, instead of defining
-   our own exit function.  */
-#define HAVE_ATEXIT
 
 /* Specify the size_t type.  */
 #define SIZE_TYPE "unsigned int"

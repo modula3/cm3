@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler.  SONY NEWS-OS 4 version.
-   Copyright (C) 1987, 89, 93, 94, 96, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1989, 1993, 1994, 1996, 1997, 1998, 1999
+   Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -43,9 +44,9 @@ Boston, MA 02111-1307, USA.  */
    GCC on other 68000 systems.  */
 
 #ifdef MOTOROLA
-#define CPP_PREDEFINES "-Dunix -Dbsd43 -Dsony -Dsony_news -Dmc68000 -Dmc68020 -Dnews700 -D__motorola__ -Asystem(unix) -Asystem(bsd) -Acpu(m68k) -Amachine(m68k)"
+#define CPP_PREDEFINES "-Dunix -Dbsd43 -Dsony -Dsony_news -Dmc68000 -Dmc68020 -Dnews700 -D__motorola__ -Asystem=unix -Asystem=bsd -Acpu=m68k -Amachine=m68k"
 #else
-#define CPP_PREDEFINES "-Dunix -Dbsd43 -Dsony -Dsony_news -Dmc68000 -Dmc68020 -Dnews700 -Asystem(unix) -Asystem(bsd) -Acpu(m68k) -Amachine(m68k)"
+#define CPP_PREDEFINES "-Dunix -Dbsd43 -Dsony -Dsony_news -Dmc68000 -Dmc68020 -Dnews700 -Asystem=unix -Asystem=bsd -Acpu=m68k -Amachine=m68k"
 #endif
 
 /* These conditionals tested for different submodels,
@@ -54,22 +55,22 @@ Boston, MA 02111-1307, USA.  */
 
 #if 0
 #ifdef news800
-#define CPP_PREDEFINES "-Dunix -Dbsd43 -Dsony -Dsony_news -Dmc68000 -Dmc68020 -Dnews800 -Asystem(unix) -Asystem(bsd) -Acpu(m68k) -Amachine(m68k)"
+#define CPP_PREDEFINES "-Dunix -Dbsd43 -Dsony -Dsony_news -Dmc68000 -Dmc68020 -Dnews800 -Asystem=unix -Asystem=bsd -Acpu=m68k -Amachine=m68k"
 #endif
 #ifdef news900
-#define CPP_PREDEFINES "-Dunix -Dbsd43 -Dsony -Dsony_news -Dmc68000 -Dmc68020 -Dnews900 -Asystem(unix) -Asystem(bsd) -Acpu(m68k) -Amachine(m68k)"
+#define CPP_PREDEFINES "-Dunix -Dbsd43 -Dsony -Dsony_news -Dmc68000 -Dmc68020 -Dnews900 -Asystem=unix -Asystem=bsd -Acpu=m68k -Amachine=m68k"
 #endif
 #ifdef news1500
-#define CPP_PREDEFINES "-Dunix -Dbsd43 -Dsony -Dsony_news -Dmc68000 -Dmc68020 -Dmc68030 -Dnews1500 -Asystem(unix) -Asystem(bsd) -Acpu(m68k) -Amachine(m68k)"
+#define CPP_PREDEFINES "-Dunix -Dbsd43 -Dsony -Dsony_news -Dmc68000 -Dmc68020 -Dmc68030 -Dnews1500 -Asystem=unix -Asystem=bsd -Acpu=m68k -Amachine=m68k"
 #endif
 #ifdef news1700
-#define CPP_PREDEFINES "-Dunix -Dbsd43 -Dsony -Dsony_news -Dmc68000 -Dmc68020 -Dmc68030 -Dnews1700 -Asystem(unix) -Asystem(bsd) -Acpu(m68k) -Amachine(m68k)"
+#define CPP_PREDEFINES "-Dunix -Dbsd43 -Dsony -Dsony_news -Dmc68000 -Dmc68020 -Dmc68030 -Dnews1700 -Asystem=unix -Asystem=bsd -Acpu=m68k -Amachine=m68k"
 #endif
 #ifdef news1800
-#define CPP_PREDEFINES "-Dunix -Dbsd43 -Dsony -Dsony_news -Dmc68000 -Dmc68020 -Dmc68030 -Dnews1800 -Asystem(unix) -Asystem(bsd) -Acpu(m68k) -Amachine(m68k)"
+#define CPP_PREDEFINES "-Dunix -Dbsd43 -Dsony -Dsony_news -Dmc68000 -Dmc68020 -Dmc68030 -Dnews1800 -Asystem=unix -Asystem=bsd -Acpu=m68k -Amachine=m68k"
 #endif
 #ifdef news1900
-#define CPP_PREDEFINES "-Dunix -Dbsd43 -Dsony -Dsony_news -Dmc68000 -Dmc68020 -Dmc68030 -Dnews1900 -Asystem(unix) -Asystem(bsd) -Acpu(m68k) -Amachine(m68k)"
+#define CPP_PREDEFINES "-Dunix -Dbsd43 -Dsony -Dsony_news -Dmc68000 -Dmc68020 -Dmc68030 -Dnews1900 -Asystem=unix -Asystem=bsd -Acpu=m68k -Amachine=m68k"
 #endif
 #endif
 
@@ -126,21 +127,17 @@ Boston, MA 02111-1307, USA.  */
 
 #define FUNCTION_VALUE(VALTYPE,FUNC) LIBCALL_VALUE (TYPE_MODE (VALTYPE))
 
-#define LIBCALL_VALUE(MODE)						   \
- gen_rtx (REG, (MODE),							   \
-	  ((TARGET_68881						   \
-	    && ((MODE) == SFmode || (MODE) == DFmode || (MODE) == XFmode)) \
-	   ? 16 : 0))
+#define LIBCALL_VALUE(MODE)					\
+ gen_rtx_REG ((MODE),						\
+	      ((TARGET_68881					\
+		&& ((MODE) == SFmode || (MODE) == DFmode	\
+		    || (MODE) == XFmode))			\
+	       ? 16 : 0))
 
 #define ASM_OUTPUT_ALIGN(FILE,LOG)	\
   fprintf (FILE, "\t.align %d\n", (LOG))
 
 #ifdef MOTOROLA
-
-/* Don't try to define `gcc_compiled.' since the assembler does not
-   accept symbols with periods.  This is no real loss since GDB only
-   really needs it for parms passed in registers.  */
-#define ASM_IDENTIFY_GCC(FILE)
 
 #define FUNCTION_PROLOGUE(FILE, SIZE)     \
 { register int regno;						\

@@ -1,5 +1,6 @@
 /* Subroutines for assembler code output on the NS32000.
-   Copyright (C) 1988, 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1994, 1995, 1996, 1997, 1998, 1999, 2000
+   Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -18,7 +19,6 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-/* Some output-actions in ns32k.md need these.  */
 #include "config.h"
 #include "system.h"
 #include "rtl.h"
@@ -27,22 +27,24 @@ Boston, MA 02111-1307, USA.  */
 #include "real.h"
 #include "insn-config.h"
 #include "conditions.h"
-#include "insn-flags.h"
 #include "output.h"
 #include "insn-attr.h"
 #include "tree.h"
+#include "function.h"
 #include "expr.h"
 #include "flags.h"
+#include "recog.h"
+#include "tm_p.h"
 
 #ifdef OSF_OS
 int ns32k_num_files = 0;
 #endif
 
-/* This duplicates reg_class_contens in reg_class.c, but maybe that isn't
+/* This duplicates reg_class_contents in reg_class.c, but maybe that isn't
    initialized in time. Also this is more convenient as an array of ints.
    We know that HARD_REG_SET fits in an unsigned int */
 
-unsigned int ns32k_reg_class_contents[N_REG_CLASSES] = REG_CLASS_CONTENTS;
+unsigned int ns32k_reg_class_contents[N_REG_CLASSES][1] = REG_CLASS_CONTENTS;
 
 enum reg_class regclass_map[FIRST_PSEUDO_REGISTER] =
 {
@@ -55,15 +57,11 @@ enum reg_class regclass_map[FIRST_PSEUDO_REGISTER] =
   FRAME_POINTER_REG, STACK_POINTER_REG
 };
 
-char *ns32k_out_reg_names[] = OUTPUT_REGISTER_NAMES;
+const char *const ns32k_out_reg_names[] = OUTPUT_REGISTER_NAMES;
 
-void
-trace (s, s1, s2)
-     char *s, *s1, *s2;
-{
-  fprintf (stderr, s, s1, s2);
-}
-
+static rtx gen_indexed_expr PARAMS ((rtx, rtx, rtx));
+static const char *singlemove_string PARAMS ((rtx *));
+static void move_tail PARAMS ((rtx[], int, int));
 
 /* Value is 1 if hard register REGNO can hold a value of machine-mode MODE. */ 
 int
@@ -71,9 +69,9 @@ hard_regno_mode_ok (regno, mode)
      int regno;
      enum machine_mode mode;
 {
-  int size = GET_MODE_UNIT_SIZE(mode);
+  int size = GET_MODE_UNIT_SIZE (mode);
 
-  if (FLOAT_MODE_P(mode))
+  if (FLOAT_MODE_P (mode))
     {
       if (size == UNITS_PER_WORD && regno < L1_REGNUM)
 	return 1;
@@ -92,20 +90,20 @@ hard_regno_mode_ok (regno, mode)
   return 0;
 }
 
-int register_move_cost(CLASS1, CLASS2)
+int register_move_cost (CLASS1, CLASS2)
      enum reg_class CLASS1;
      enum reg_class CLASS2;
 {
   if (CLASS1 == NO_REGS || CLASS2 == NO_REGS)
     return 2;
-  if((SUBSET_P(CLASS1, FP_REGS) && !SUBSET_P(CLASS2, FP_REGS))
-   || (!SUBSET_P(CLASS1, FP_REGS) && SUBSET_P(CLASS2, FP_REGS)))
+  if ((SUBSET_P (CLASS1, FP_REGS) && !SUBSET_P (CLASS2, FP_REGS))
+   || (!SUBSET_P (CLASS1, FP_REGS) && SUBSET_P (CLASS2, FP_REGS)))
     return 8;
-  if (((CLASS1) == STACK_POINTER_REG && !SUBSET_P(CLASS2,GENERAL_REGS))
-      || ((CLASS2) == STACK_POINTER_REG && !SUBSET_P(CLASS1,GENERAL_REGS)))
+  if (((CLASS1) == STACK_POINTER_REG && !SUBSET_P (CLASS2,GENERAL_REGS))
+      || ((CLASS2) == STACK_POINTER_REG && !SUBSET_P (CLASS1,GENERAL_REGS)))
     return 6;
-  if (((CLASS1) == FRAME_POINTER_REG && !SUBSET_P(CLASS2,GENERAL_REGS))
-      || ((CLASS2) == FRAME_POINTER_REG && !SUBSET_P(CLASS1,GENERAL_REGS)))
+  if (((CLASS1) == FRAME_POINTER_REG && !SUBSET_P (CLASS2,GENERAL_REGS))
+      || ((CLASS2) == FRAME_POINTER_REG && !SUBSET_P (CLASS1,GENERAL_REGS)))
     return 6;
   return 2;
 }
@@ -113,13 +111,13 @@ int register_move_cost(CLASS1, CLASS2)
 #if 0
 /* We made the insn definitions copy from floating point to general
   registers via the stack. */
-int secondary_memory_needed(CLASS1, CLASS2, M)
+int secondary_memory_needed (CLASS1, CLASS2, M)
      enum reg_class CLASS1;
      enum reg_class CLASS2;
      enum machine_mode M;
 {
-  int ret = ((SUBSET_P(CLASS1, FP_REGS) && !SUBSET_P(CLASS2, FP_REGS))
-   || (!SUBSET_P(CLASS1, FP_REGS) && SUBSET_P(CLASS2, FP_REGS)));
+  int ret = ((SUBSET_P (CLASS1, FP_REGS) && !SUBSET_P (CLASS2, FP_REGS))
+   || (!SUBSET_P (CLASS1, FP_REGS) && SUBSET_P (CLASS2, FP_REGS)));
   return ret;
 }
 #endif
@@ -135,27 +133,33 @@ calc_address_cost (operand)
 {
   int i;
   int cost = 0;
-  
   if (GET_CODE (operand) == MEM)
     cost += 3;
   if (GET_CODE (operand) == MULT)
     cost += 2;
-#if 0
-  if (GET_CODE (operand) == REG)
-    cost += 1;			/* not really, but the documentation
-				   says different amount of registers
-				   shouldn't return the same costs */
-#endif
   switch (GET_CODE (operand))
     {
     case REG:
-    case CONST:
-    case CONST_INT:
-    case CONST_DOUBLE:
-    case SYMBOL_REF:
-    case LABEL_REF:
+      cost += 1;
+      break;
     case POST_DEC:
     case PRE_DEC:
+      break;
+    case CONST_INT:
+      if (INTVAL (operand) <= 7 && INTVAL (operand) >= -8)
+	break;
+      if (INTVAL (operand) < 0x2000 && INTVAL (operand) >= -0x2000)
+	{
+	  cost +=1;
+	  break;
+	}
+    case CONST:
+    case LABEL_REF:
+    case SYMBOL_REF:
+      cost +=3;
+      break;
+    case CONST_DOUBLE:
+      cost += 5;
       break;
     case MEM:
       cost += calc_address_cost (XEXP (operand, 0));
@@ -179,7 +183,7 @@ calc_address_cost (operand)
 enum reg_class
 secondary_reload_class (class, mode, in)
      enum reg_class class;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
      rtx in;
 {
   int regno = true_regnum (in);
@@ -198,6 +202,7 @@ secondary_reload_class (class, mode, in)
 /* The expression to be build is BASE[INDEX:SCALE].  To recognize this,
    scale must be converted from an exponent (from ASHIFT) to a
    multiplier (for MULT). */
+
 static rtx
 gen_indexed_expr (base, index, scale)
      rtx base, index, scale;
@@ -207,25 +212,11 @@ gen_indexed_expr (base, index, scale)
   /* This generates an invalid addressing mode, if BASE is
      fp or sp.  This is handled by PRINT_OPERAND_ADDRESS.  */
   if (GET_CODE (base) != REG && GET_CODE (base) != CONST_INT)
-    base = gen_rtx (MEM, SImode, base);
-  addr = gen_rtx (MULT, SImode, index,
-		  GEN_INT (1 << INTVAL (scale)));
-  addr = gen_rtx (PLUS, SImode, base, addr);
+    base = gen_rtx_MEM (SImode, base);
+  addr = gen_rtx_MULT (SImode, index,
+		       GEN_INT (1 << INTVAL (scale)));
+  addr = gen_rtx_PLUS (SImode, base, addr);
   return addr;
-}
-
-/* Return 1 if OP is a valid operand of mode MODE.  This
-   predicate rejects operands which do not have a mode
-   (such as CONST_INT which are VOIDmode).  */
-int
-reg_or_mem_operand (op, mode)
-     register rtx op;
-     enum machine_mode mode;
-{
-  return (GET_MODE (op) == mode
-	  && (GET_CODE (op) == REG
-	      || GET_CODE (op) == SUBREG
-	      || GET_CODE (op) == MEM));
 }
 
 
@@ -245,8 +236,8 @@ split_di (operands, num, lo_half, hi_half)
     {
       if (GET_CODE (operands[num]) == REG)
 	{
-	  lo_half[num] = gen_rtx (REG, SImode, REGNO (operands[num]));
-	  hi_half[num] = gen_rtx (REG, SImode, REGNO (operands[num]) + 1);
+	  lo_half[num] = gen_rtx_REG (SImode, REGNO (operands[num]));
+	  hi_half[num] = gen_rtx_REG (SImode, REGNO (operands[num]) + 1);
 	}
       else if (CONSTANT_P (operands[num]))
 	{
@@ -258,14 +249,14 @@ split_di (operands, num, lo_half, hi_half)
 	  hi_half[num] = adj_offsettable_operand (operands[num], 4);
 	}
       else
-	abort();
+	abort ();
     }
 }
 
 /* Return the best assembler insn template
    for moving operands[1] into operands[0] as a fullword.  */
 
-static char *
+static const char *
 singlemove_string (operands)
      rtx *operands;
 {
@@ -276,7 +267,7 @@ singlemove_string (operands)
   return "movd %1,%0";
 }
 
-char *
+const char *
 output_move_double (operands)
      rtx *operands;
 {
@@ -323,14 +314,14 @@ output_move_double (operands)
      operands in OPERANDS to be suitable for the low-numbered word.  */
 
   if (optype0 == REGOP)
-    latehalf[0] = gen_rtx (REG, SImode, REGNO (operands[0]) + 1);
+    latehalf[0] = gen_rtx_REG (SImode, REGNO (operands[0]) + 1);
   else if (optype0 == OFFSOP)
     latehalf[0] = adj_offsettable_operand (operands[0], 4);
   else
     latehalf[0] = operands[0];
 
   if (optype1 == REGOP)
-    latehalf[1] = gen_rtx (REG, SImode, REGNO (operands[1]) + 1);
+    latehalf[1] = gen_rtx_REG (SImode, REGNO (operands[1]) + 1);
   else if (optype1 == OFFSOP)
     latehalf[1] = adj_offsettable_operand (operands[1], 4);
   else if (optype1 == CNSTOP)
@@ -381,7 +372,7 @@ output_move_double (operands)
 	  xops[0] = XEXP (operands[1], 0);
 	  xops[1] = operands[0];
 	  output_asm_insn ("addr %a0,%1", xops);
-	  operands[1] = gen_rtx (MEM, DImode, operands[0]);
+	  operands[1] = gen_rtx_MEM (DImode, operands[0]);
 	  latehalf[1] = adj_offsettable_operand (operands[1], 4);
 	  /* The first half has the overlap, Do the late half first.  */
 	  output_asm_insn (singlemove_string (latehalf), latehalf);
@@ -416,7 +407,7 @@ output_move_double (operands)
    operands[3] is the alignment.  */
 
 static void
-move_tail(operands, bytes, offset)
+move_tail (operands, bytes, offset)
      rtx operands[];
      int bytes;
      int offset;
@@ -424,21 +415,21 @@ move_tail(operands, bytes, offset)
   if (bytes & 2)
     {
       rtx src, dest;
-      dest = change_address(operands[0], HImode,
-			    plus_constant(XEXP(operands[0], 0), offset));
-      src = change_address(operands[1], HImode,
-			   plus_constant(XEXP(operands[1], 0), offset));
-      emit_move_insn(dest, src);
+      dest = change_address (operands[0], HImode,
+			    plus_constant (XEXP (operands[0], 0), offset));
+      src = change_address (operands[1], HImode,
+			   plus_constant (XEXP (operands[1], 0), offset));
+      emit_move_insn (dest, src);
       offset += 2;
     }
   if (bytes & 1)
     {
       rtx src, dest;
-      dest = change_address(operands[0], QImode,
-			    plus_constant(XEXP(operands[0], 0), offset));
-      src = change_address(operands[1], QImode,
-			   plus_constant(XEXP(operands[1], 0), offset));
-      emit_move_insn(dest, src);
+      dest = change_address (operands[0], QImode,
+			    plus_constant (XEXP (operands[0], 0), offset));
+      src = change_address (operands[1], QImode,
+			   plus_constant (XEXP (operands[1], 0), offset));
+      emit_move_insn (dest, src);
     }
 }
 
@@ -451,10 +442,9 @@ expand_block_move (operands)
   int constp	= (GET_CODE (bytes_rtx) == CONST_INT);
   int bytes	= (constp ? INTVAL (bytes_rtx) : 0);
   int align	= INTVAL (align_rtx);
-  rtx src_reg = gen_rtx(REG, Pmode, 1);
-  rtx dest_reg = gen_rtx(REG, Pmode, 2);
-  rtx count_reg = gen_rtx(REG, SImode, 0);
-  rtx insn;
+  rtx src_reg = gen_rtx_REG (Pmode, 1);
+  rtx dest_reg = gen_rtx_REG (Pmode, 2);
+  rtx count_reg = gen_rtx_REG (SImode, 0);
 
   if (constp && bytes <= 0)
     return;
@@ -463,32 +453,34 @@ expand_block_move (operands)
     {
       int words = bytes >> 2;
       if (words)
-	if (words < 3 || flag_unroll_loops)
-	  {
-	    int offset = 0;
-	    for (; words; words--, offset += 4)
-	      {
-		rtx src, dest;
-		dest = change_address(operands[0], SImode,
-				      plus_constant(XEXP(operands[0], 0), offset));
-		src = change_address(operands[1], SImode,
-				     plus_constant(XEXP(operands[1], 0), offset));
-		emit_move_insn(dest, src);
-	      }
-	  }
-	else
-	  {
-	    /* Use movmd. It is slower than multiple movd's but more
-	       compact. It is also slower than movsd for large copies
-	       but causes less registers reloading so is better than movsd
-	       for small copies. */
-	    rtx src, dest;
-	    dest = copy_addr_to_reg (XEXP(operands[0], 0));
-	    src = copy_addr_to_reg (XEXP(operands[1], 0));
+	{
+	  if (words < 3 || flag_unroll_loops)
+	    {
+	      int offset = 0;
+	      for (; words; words--, offset += 4)
+		{
+		  rtx src, dest;
+		  dest = change_address (operands[0], SImode,
+					plus_constant (XEXP (operands[0], 0), offset));
+		  src = change_address (operands[1], SImode,
+				       plus_constant (XEXP (operands[1], 0), offset));
+		  emit_move_insn (dest, src);
+		}
+	    }
+	  else
+	    {
+	      /* Use movmd. It is slower than multiple movd's but more
+		 compact. It is also slower than movsd for large copies
+		 but causes less registers reloading so is better than movsd
+		 for small copies. */
+	      rtx src, dest;
+	      dest = copy_addr_to_reg (XEXP (operands[0], 0));
+	      src = copy_addr_to_reg (XEXP (operands[1], 0));
 	    
-	    emit_insn(gen_movstrsi2(dest, src, GEN_INT(words)));
-	  }
-      move_tail(operands, bytes & 3, bytes & ~3);
+	      emit_insn (gen_movstrsi2(dest, src, GEN_INT (words)));
+	    }
+	}
+      move_tail (operands, bytes & 3, bytes & ~3);
       return;
     }
 
@@ -496,35 +488,42 @@ expand_block_move (operands)
     align = UNITS_PER_WORD;
 
   /* Move the address into scratch registers.  */
-  emit_insn(gen_rtx(CLOBBER, VOIDmode, dest_reg));
-  emit_move_insn(dest_reg, XEXP (operands[0], 0));
-  emit_insn(gen_rtx(CLOBBER, VOIDmode, src_reg));
-  emit_move_insn(src_reg, XEXP (operands[1], 0));
-  emit_insn(gen_rtx(CLOBBER, VOIDmode, count_reg));
+  emit_insn (gen_rtx_CLOBBER (VOIDmode, dest_reg));
+  emit_move_insn (dest_reg, XEXP (operands[0], 0));
+  operands[0] = gen_rtx_MEM (SImode, dest_reg);
+  emit_insn (gen_rtx_CLOBBER (VOIDmode, src_reg));
+  emit_move_insn (src_reg, XEXP (operands[1], 0));
+  operands[1] = gen_rtx_MEM (SImode, src_reg);
+  emit_insn (gen_rtx_CLOBBER (VOIDmode, count_reg));
 
   if (constp && (align == UNITS_PER_WORD || bytes < MAX_UNALIGNED_COPY))
     {
-      rtx  bytes_reg;
-
       /* constant no of bytes and aligned or small enough copy to not bother
        * aligning. Emit insns to copy by words.
        */
       if (bytes >> 2)
 	{
-	  emit_move_insn(count_reg, GEN_INT(bytes >> 2));
-	  emit_insn(gen_movstrsi1 (GEN_INT(4)));
+	  emit_move_insn (count_reg, GEN_INT (bytes >> 2));
+	  emit_insn (gen_movstrsi1 (GEN_INT (4)));
 	}
       /* insns to copy rest */
-      move_tail(operands, bytes & 3, bytes & ~3);
+      move_tail (operands, bytes & 3, 0);
     }
   else if (align == UNITS_PER_WORD)
     {
       /* insns to copy by words */
-      emit_insn(gen_lshrsi3 (count_reg, bytes_rtx, GEN_INT(2)));
-      emit_insn(gen_movstrsi1 (GEN_INT(4)));
-      /* insns to copy rest */
-      emit_insn(gen_andsi3 (count_reg, bytes_rtx, GEN_INT(3)));
-      emit_insn(gen_movstrsi1 (const1_rtx));
+      emit_insn (gen_lshrsi3 (count_reg, bytes_rtx, GEN_INT (2)));
+      emit_insn (gen_movstrsi1 (GEN_INT (4)));
+      if (constp)
+	{
+	  move_tail (operands, bytes & 3, 0);
+	}
+      else
+	{
+	  /* insns to copy rest */
+	  emit_insn (gen_andsi3 (count_reg, bytes_rtx, GEN_INT (3)));
+	  emit_insn (gen_movstrsi1 (const1_rtx));
+	}
     }
   else
     {
@@ -534,32 +533,32 @@ expand_block_move (operands)
       rtx aligned_label = gen_label_rtx ();
       rtx bytes_reg;
 
-      bytes_reg = copy_to_mode_reg(SImode, bytes_rtx);
+      bytes_reg = copy_to_mode_reg (SImode, bytes_rtx);
       if (!constp)
 	{
 	  /* Emit insns to test and skip over the alignment if it is
 	   * not worth it. This doubles as a test to ensure that the alignment
 	   * operation can't copy too many bytes
 	   */
-	  emit_insn(gen_cmpsi (bytes_reg, GEN_INT(MAX_UNALIGNED_COPY)));
+	  emit_insn (gen_cmpsi (bytes_reg, GEN_INT (MAX_UNALIGNED_COPY)));
 	  emit_jump_insn (gen_blt (aligned_label));
 	}
 
       /* Emit insns to do alignment at run time */
-      emit_insn(gen_negsi2 (count_reg, src_reg));
-      emit_insn(gen_andsi3 (count_reg, count_reg, GEN_INT(3)));
-      emit_insn(gen_subsi3 (bytes_reg, bytes_reg, count_reg));
-      emit_insn(gen_movstrsi1 (const1_rtx));
+      emit_insn (gen_negsi2 (count_reg, src_reg));
+      emit_insn (gen_andsi3 (count_reg, count_reg, GEN_INT (3)));
+      emit_insn (gen_subsi3 (bytes_reg, bytes_reg, count_reg));
+      emit_insn (gen_movstrsi1 (const1_rtx));
       if (!constp)
 	emit_label (aligned_label);
 
       /* insns to copy by words */
-      emit_insn (gen_lshrsi3 (count_reg, bytes_reg, GEN_INT(2)));
-      emit_insn(gen_movstrsi1 (GEN_INT(4)));
+      emit_insn (gen_lshrsi3 (count_reg, bytes_reg, GEN_INT (2)));
+      emit_insn (gen_movstrsi1 (GEN_INT (4)));
 
       /* insns to copy rest */
-      emit_insn (gen_andsi3 (count_reg, bytes_reg, GEN_INT(3)));
-      emit_insn(gen_movstrsi1 (const1_rtx));    
+      emit_insn (gen_andsi3 (count_reg, bytes_reg, GEN_INT (3)));
+      emit_insn (gen_movstrsi1 (const1_rtx));
     }
 }
 
@@ -571,7 +570,7 @@ global_symbolic_reference_mentioned_p (op, f)
      rtx op;
      int f;
 {
-  register char *fmt;
+  register const char *fmt;
   register int i;
 
   if (GET_CODE (op) == SYMBOL_REF)
@@ -610,7 +609,7 @@ int
 symbolic_reference_mentioned_p (op)
      rtx op;
 {
-  register char *fmt;
+  register const char *fmt;
   register int i;
 
   if (GET_CODE (op) == SYMBOL_REF || GET_CODE (op) == LABEL_REF)
@@ -640,10 +639,10 @@ symbolic_reference_mentioned_p (op)
 
 int
 ns32k_valid_decl_attribute_p (decl, attributes, identifier, args)
-     tree decl;
-     tree attributes;
-     tree identifier;
-     tree args;
+     tree decl ATTRIBUTE_UNUSED;
+     tree attributes ATTRIBUTE_UNUSED;
+     tree identifier ATTRIBUTE_UNUSED;
+     tree args ATTRIBUTE_UNUSED;
 {
   return 0;
 }
@@ -655,7 +654,7 @@ ns32k_valid_decl_attribute_p (decl, attributes, identifier, args)
 int
 ns32k_valid_type_attribute_p (type, attributes, identifier, args)
      tree type;
-     tree attributes;
+     tree attributes ATTRIBUTE_UNUSED;
      tree identifier;
      tree args;
 {
@@ -682,8 +681,8 @@ ns32k_valid_type_attribute_p (type, attributes, identifier, args)
 
 int
 ns32k_comp_type_attributes (type1, type2)
-     tree type1;
-     tree type2;
+     tree type1 ATTRIBUTE_UNUSED;
+     tree type2 ATTRIBUTE_UNUSED;
 {
   return 1;
 }
@@ -708,7 +707,7 @@ ns32k_comp_type_attributes (type1, type2)
 
 int
 ns32k_return_pops_args (fundecl, funtype, size)
-     tree fundecl;
+     tree fundecl ATTRIBUTE_UNUSED;
      tree funtype;
      int size;
 {
@@ -744,7 +743,7 @@ void
 print_operand (file, x, code)
      FILE *file;
      rtx x;
-     char code;
+     int code;
 {
   if (code == '$')
     PUT_IMMEDIATE_PREFIX (file);
@@ -754,7 +753,6 @@ print_operand (file, x, code)
     fprintf (file, "%s", ns32k_out_reg_names[REGNO (x)]);
   else if (GET_CODE (x) == MEM)
     {
-      rtx tmp = XEXP (x, 0);
       output_address (XEXP (x, 0));
     }
   else if (GET_CODE (x) == CONST_DOUBLE && GET_MODE (x) != VOIDmode)
@@ -763,7 +761,7 @@ print_operand (file, x, code)
 	{ 
 	  union { double d; int i[2]; } u;
 	  u.i[0] = CONST_DOUBLE_LOW (x); u.i[1] = CONST_DOUBLE_HIGH (x);
-	  PUT_IMMEDIATE_PREFIX(file);
+	  PUT_IMMEDIATE_PREFIX (file);
 #ifdef SEQUENT_ASM
 	  /* Sequent likes its floating point constants as integers */
 	  fprintf (file, "0Dx%08x%08x", u.i[1], u.i[0]);
@@ -802,10 +800,10 @@ print_operand (file, x, code)
           && GET_CODE (x) == CONST
           && symbolic_reference_mentioned_p (x))
         {
-	  fprintf(stderr, "illegal constant for pic-mode: \n");
-	  print_rtl(stderr, x);
-          fprintf(stderr, "\nGET_CODE (x) == %d, CONST == %d, symbolic_reference_mentioned_p (x) == %d\n",
-		  GET_CODE (x), CONST, symbolic_reference_mentioned_p(x));
+	  fprintf (stderr, "illegal constant for pic-mode: \n");
+	  print_rtl (stderr, x);
+          fprintf (stderr, "\nGET_CODE (x) == %d, CONST == %d, symbolic_reference_mentioned_p (x) == %d\n",
+		  GET_CODE (x), CONST, symbolic_reference_mentioned_p (x));
 	  abort ();
 	}
       else if (flag_pic
@@ -967,7 +965,7 @@ print_operand_address (file, addr)
 	case CONST_INT:
 	case LABEL_REF:
 	  if (offset)
-	    offset = gen_rtx (PLUS, SImode, tmp, offset);
+	    offset = gen_rtx_PLUS (SImode, tmp, offset);
 	  else
 	    offset = tmp;
 	  break;
@@ -1029,7 +1027,7 @@ print_operand_address (file, addr)
 	fprintf (file, "(sb))");
         break;
       case MEM:
-	addr = XEXP(base,0);
+	addr = XEXP (base,0);
 	base = NULL;
 	offset = NULL;
 	while (addr != NULL)
@@ -1062,7 +1060,7 @@ print_operand_address (file, addr)
 	      case SYMBOL_REF:
 	      case LABEL_REF:
 		if (offset)
-		  offset = gen_rtx (PLUS, SImode, tmp, offset);
+		  offset = gen_rtx_PLUS (SImode, tmp, offset);
 		else
 		  offset = tmp;
 		break;
@@ -1124,58 +1122,60 @@ print_operand_address (file, addr)
 /* National 32032 shifting is so bad that we can get
    better performance in many common cases by using other
    techniques.  */
-char *
+const char *
 output_shift_insn (operands)
      rtx *operands;
 {
   if (GET_CODE (operands[2]) == CONST_INT
       && INTVAL (operands[2]) > 0
       && INTVAL (operands[2]) <= 3)
-    if (GET_CODE (operands[0]) == REG)
-      {
-	if (GET_CODE (operands[1]) == REG)
-	  {
-	    if (REGNO (operands[0]) == REGNO (operands[1]))
-	      {
-		if (operands[2] == const1_rtx)
-		  return "addd %0,%0";
-		else if (INTVAL (operands[2]) == 2)
-		  return "addd %0,%0\n\taddd %0,%0";
-	      }
-	    if (operands[2] == const1_rtx)
-	      return "movd %1,%0\n\taddd %0,%0";
+    {
+      if (GET_CODE (operands[0]) == REG)
+	{
+	  if (GET_CODE (operands[1]) == REG)
+	    {
+	      if (REGNO (operands[0]) == REGNO (operands[1]))
+		{
+		  if (operands[2] == const1_rtx)
+		    return "addd %0,%0";
+		  else if (INTVAL (operands[2]) == 2)
+		    return "addd %0,%0\n\taddd %0,%0";
+		}
+	      if (operands[2] == const1_rtx)
+		return "movd %1,%0\n\taddd %0,%0";
 	    
-	    operands[1] = gen_indexed_expr (const0_rtx, operands[1], operands[2]);
-	    return "addr %a1,%0";
-	  }
-	if (operands[2] == const1_rtx)
-	  return "movd %1,%0\n\taddd %0,%0";
-      }
-    else if (GET_CODE (operands[1]) == REG)
-      {
-	operands[1] = gen_indexed_expr (const0_rtx, operands[1], operands[2]);
-	return "addr %a1,%0";
-      }
-    else if (INTVAL (operands[2]) == 1
-	     && GET_CODE (operands[1]) == MEM
-	     && rtx_equal_p (operands [0], operands[1]))
-      {
-	rtx temp = XEXP (operands[1], 0);
+	      operands[1] = gen_indexed_expr (const0_rtx, operands[1], operands[2]);
+	      return "addr %a1,%0";
+	    }
+	  if (operands[2] == const1_rtx)
+	    return "movd %1,%0\n\taddd %0,%0";
+	}
+      else if (GET_CODE (operands[1]) == REG)
+	{
+	  operands[1] = gen_indexed_expr (const0_rtx, operands[1], operands[2]);
+	  return "addr %a1,%0";
+	}
+      else if (INTVAL (operands[2]) == 1
+	       && GET_CODE (operands[1]) == MEM
+	       && rtx_equal_p (operands [0], operands[1]))
+	{
+	  rtx temp = XEXP (operands[1], 0);
 	
-	if (GET_CODE (temp) == REG
-	    || (GET_CODE (temp) == PLUS
-		&& GET_CODE (XEXP (temp, 0)) == REG
-		&& GET_CODE (XEXP (temp, 1)) == CONST_INT))
-	  return "addd %0,%0";
-      }
-    else return "ashd %2,%0";
+	  if (GET_CODE (temp) == REG
+	      || (GET_CODE (temp) == PLUS
+		  && GET_CODE (XEXP (temp, 0)) == REG
+		  && GET_CODE (XEXP (temp, 1)) == CONST_INT))
+	    return "addd %0,%0";
+	}
+      else return "ashd %2,%0";
+    }
   return "ashd %2,%0";
 }
 
-char *
+const char *
 output_move_dconst (n, s)
 	int n;
-	char *s;
+	const char *s;
 {
   static char r[32];
 

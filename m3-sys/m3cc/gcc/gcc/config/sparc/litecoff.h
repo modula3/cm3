@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler, for SPARClite w/o FPU, COFF.
-   Copyright (C) 1994, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1996, 2000 Free Software Foundation, Inc.
    Written by Ken Raeburn (raeburn@cygnus.com).
 
 This file is part of GNU CC.
@@ -25,12 +25,12 @@ Boston, MA 02111-1307, USA.  */
 
 #undef SELECT_SECTION
 #undef SELECT_RTX_SECTION
-#define BSS_SECTION_ASM_OP	".section\t\".bss\""
+#define BSS_SECTION_ASM_OP	"\t.section\t\".bss\""
 
 #include "svr3.h"
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Dsparc -Dsparclite -Acpu(sparc) -Amachine(sparc)"
+#define CPP_PREDEFINES "-Dsparc -Dsparclite -Acpu=sparc -Amachine=sparc"
 
 /* Default to stabs in COFF.  */
 
@@ -45,9 +45,9 @@ Boston, MA 02111-1307, USA.  */
 /* Support the ctors and dtors sections for g++.  */
 
 #undef CTORS_SECTION_ASM_OP
-#define CTORS_SECTION_ASM_OP	".section\t.ctors,\"x\""
+#define CTORS_SECTION_ASM_OP	"\t.section\t.ctors,\"x\""
 #undef DTORS_SECTION_ASM_OP
-#define DTORS_SECTION_ASM_OP	".section\t.dtors,\"x\""
+#define DTORS_SECTION_ASM_OP	"\t.section\t.dtors,\"x\""
 
 /* A list of other sections which the compiler might be "in" at any
    given time.  */
@@ -85,7 +85,7 @@ dtors_section ()							\
     }									\
 }
 
-#define INT_ASM_OP ".long"
+#define INT_ASM_OP "\t.long\t"
 
 /* A C statement (sans semicolon) to output an element in the table of
    global constructors.  */
@@ -93,7 +93,7 @@ dtors_section ()							\
 #define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)				\
   do {									\
     ctors_section ();							\
-    fprintf (FILE, "\t%s\t ", INT_ASM_OP);				\
+    fprintf (FILE, "%s", INT_ASM_OP);					\
     assemble_name (FILE, NAME);						\
     fprintf (FILE, "\n");						\
   } while (0)
@@ -104,7 +104,7 @@ dtors_section ()							\
 #define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)       				\
   do {									\
     dtors_section ();                   				\
-    fprintf (FILE, "\t%s\t ", INT_ASM_OP);				\
+    fprintf (FILE, "%s", INT_ASM_OP);					\
     assemble_name (FILE, NAME);              				\
     fprintf (FILE, "\n");						\
   } while (0)

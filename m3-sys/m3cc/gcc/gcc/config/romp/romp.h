@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler, for ROMP chip.
-   Copyright (C) 1989, 1991, 1993, 1995, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1989, 1991, 1993, 1995, 1996, 1998, 1999, 2000, 2001
+   Free Software Foundation, Inc.
    Contributed by Richard Kenner (kenner@nyu.edu)
 
 This file is part of GNU CC.
@@ -22,7 +23,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
-#define CPP_PREDEFINES "-Dibm032 -Dunix -Asystem(unix) -Asystem(bsd)  -Acpu(ibm032) -Amachine(ibm032)"
+#define CPP_PREDEFINES "-Dibm032 -Dunix -Asystem=unix -Asystem=bsd  -Acpu=ibm032 -Amachine=ibm032"
 
 /* Print subsidiary information on the compiler version in use.  */
 #define TARGET_VERSION ;
@@ -245,7 +246,7 @@ extern int target_flags;
 
    On the ROMP, access to floating-point registers is expensive (even between
    two FP regs.)  */
-#define REGISTER_MOVE_COST(CLASS1, CLASS2)	\
+#define REGISTER_MOVE_COST(MODE, CLASS1, CLASS2)	\
   (2 + 10 * ((CLASS1) == FP_REGS) + 10 * (CLASS2 == FP_REGS))
 
 /* Specify the registers used for certain standard purposes.
@@ -271,13 +272,11 @@ extern int target_flags;
 
 /* Place to put static chain when calling a function that requires it.  */
 #define STATIC_CHAIN							\
-  gen_rtx (MEM, Pmode, gen_rtx (PLUS, Pmode, stack_pointer_rtx,		\
-				GEN_INT (-36)))
+  gen_rtx_MEM (Pmode, plus_constant (stack_pointer_rtx, -36))
 
 /* Place where static chain is found upon entry to routine.  */
 #define STATIC_CHAIN_INCOMING						\
-  gen_rtx (MEM, Pmode, gen_rtx (PLUS, Pmode, arg_pointer_rtx,		\
-				GEN_INT (-20)))
+  gen_rtx_MEM (Pmode, plus_constant (arg_pointer_rtx, -20))
 
 /* Place that structure value return address is placed.
 
@@ -327,8 +326,8 @@ enum reg_class { NO_REGS, R0_REGS, R15_REGS, BASE_REGS, GENERAL_REGS,
    This is an initializer for a vector of HARD_REG_SET
    of length N_REG_CLASSES.  */
 
-#define REG_CLASS_CONTENTS {0, 0x00001, 0x08000, 0x1fffe, 0x1ffff,  \
-			    0x1fe0000, 0x1ffffff }
+#define REG_CLASS_CONTENTS {{0}, {0x00001}, {0x08000}, {0x1fffe}, {0x1ffff},  \
+			    {0x1fe0000}, {0x1ffffff} }
 
 /* The same information, inverted:
    Return the class number of the smallest class containing
@@ -501,7 +500,7 @@ enum reg_class { NO_REGS, R0_REGS, R15_REGS, BASE_REGS, GENERAL_REGS,
 /* Define this if the maximum size of all the outgoing args is to be
    accumulated and pushed during the prologue.  The amount can be
    found in the variable current_function_outgoing_args_size.  */
-#define ACCUMULATE_OUTGOING_ARGS
+#define ACCUMULATE_OUTGOING_ARGS 1
 
 /* Value is the number of bytes of arguments automatically
    popped when returning from a subroutine call.
@@ -520,15 +519,16 @@ enum reg_class { NO_REGS, R0_REGS, R15_REGS, BASE_REGS, GENERAL_REGS,
    On ROMP the value is found in r2, unless the machine specific option
    fp-arg-in-fpregs is selected, in which case FP return values are in fr1 */
 
-#define FUNCTION_VALUE(VALTYPE, FUNC)	\
-  gen_rtx (REG, TYPE_MODE (VALTYPE),	\
-	   (TARGET_FP_REGS &&		\
-	    GET_MODE_CLASS (TYPE_MODE (VALTYPE)) == MODE_FLOAT) ? 18 : 2)
+#define FUNCTION_VALUE(VALTYPE, FUNC)					\
+  gen_rtx_REG (TYPE_MODE (VALTYPE),					\
+	       (TARGET_FP_REGS						\
+		&& GET_MODE_CLASS (TYPE_MODE (VALTYPE)) == MODE_FLOAT)	\
+	       ? 18 : 2)
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
 
-#define LIBCALL_VALUE(MODE)  gen_rtx (REG, MODE, 2)
+#define LIBCALL_VALUE(MODE)  gen_rtx_REG (MODE, 2)
 
 /* The definition of this macro implies that there are cases where
    a scalar value cannot be returned in registers.
@@ -628,8 +628,8 @@ struct rt_cargs {int gregs, fregs; };
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED)				\
   (! (NAMED) ? 0							\
    : ((TYPE) != 0 && TREE_CODE (TYPE_SIZE (TYPE)) != INTEGER_CST) ? 0	\
-   : USE_FP_REG(MODE,CUM) ? gen_rtx(REG, (MODE),(CUM.fregs) + 17)	\
-   : (CUM).gregs < 4 ? gen_rtx(REG, (MODE), 2 + (CUM).gregs) : 0)
+   : USE_FP_REG(MODE,CUM) ? gen_rtx_REG ((MODE), (CUM).fregs + 17)	\
+   : (CUM).gregs < 4 ? gen_rtx_REG ((MODE), 2 + (CUM).gregs) : 0)
 
 /* For an arg passed partly in registers and partly in memory,
    this is the number of registers used.
@@ -672,9 +672,9 @@ struct rt_cargs {int gregs, fregs; };
       if (! NO_RTL && first_reg_offset != 4)				\
 	move_block_from_reg						\
 	  (2 + first_reg_offset,					\
-	   gen_rtx (MEM, BLKmode,					\
-		    plus_constant (virtual_incoming_args_rtx,		\
-				   first_reg_offset * 4)), 		\
+	   gen_rtx_MEM (BLKmode,					\
+			plus_constant (virtual_incoming_args_rtx,	\
+				       first_reg_offset * 4)), 		\
 	   4 - first_reg_offset, (4 - first_reg_offset) * UNITS_PER_WORD); \
       PRETEND_SIZE = (4 - first_reg_offset) * UNITS_PER_WORD;		\
     }									\
@@ -814,27 +814,27 @@ struct rt_cargs {int gregs, fregs; };
   _temp = expand_binop (SImode, add_optab, ADDR,		\
 			GEN_INT (4),				\
 			0, 1, OPTAB_LIB_WIDEN);			\
-  emit_move_insn (gen_rtx (MEM, SImode,				\
-			   memory_address (SImode, ADDR)), _temp); \
+  emit_move_insn (gen_rtx_MEM (SImode,				\
+			       memory_address (SImode, ADDR)), _temp); \
 								\
   _val = force_reg (SImode, CXT);				\
   _addr = memory_address (HImode, plus_constant (ADDR, 10));	\
-  emit_move_insn (gen_rtx (MEM, HImode, _addr),			\
+  emit_move_insn (gen_rtx_MEM (HImode, _addr),			\
 		  gen_lowpart (HImode, _val));			\
   _temp = expand_shift (RSHIFT_EXPR, SImode, _val,		\
 			build_int_2 (16, 0), 0, 1);		\
   _addr = memory_address (HImode, plus_constant (ADDR, 6));	\
-  emit_move_insn (gen_rtx (MEM, HImode, _addr),			\
+  emit_move_insn (gen_rtx_MEM (HImode, _addr),			\
 		  gen_lowpart (HImode, _temp));			\
 								\
   _val = force_reg (SImode, FNADDR);				\
   _addr = memory_address (HImode, plus_constant (ADDR, 24));	\
-  emit_move_insn (gen_rtx (MEM, HImode, _addr),			\
+  emit_move_insn (gen_rtx_MEM (HImode, _addr),			\
 		  gen_lowpart (HImode, _val));			\
   _temp = expand_shift (RSHIFT_EXPR, SImode, _val,		\
 			build_int_2 (16, 0), 0, 1);		\
   _addr = memory_address (HImode, plus_constant (ADDR, 20));	\
-  emit_move_insn (gen_rtx (MEM, HImode, _addr),			\
+  emit_move_insn (gen_rtx_MEM (HImode, _addr),			\
 		  gen_lowpart (HImode, _temp));			\
 								\
 }
@@ -1074,11 +1074,10 @@ struct rt_cargs {int gregs, fregs; };
       low_int = INTVAL (XEXP (X, 1)) & 0xffff;			\
       if (low_int & 0x8000)					\
 	high_int += 1, low_int |= 0xffff0000;			\
-      (X) = gen_rtx (PLUS, SImode,				\
-		     force_operand				\
-		     	(gen_rtx (PLUS, SImode, XEXP (X, 0), \
-				  GEN_INT (high_int << 16)), 0),\
-		     GEN_INT (low_int));			\
+      (X) = gen_rtx_PLUS (SImode,				\
+			  force_operand (plus_constant (XEXP (X, 0),  \
+							high_int << 16), 0), \
+			  GEN_INT (low_int));			\
     }								\
 }
 
@@ -1129,7 +1128,7 @@ struct rt_cargs {int gregs, fregs; };
 		&& GET_CODE (op2) == REG && FP_REGNO_P (REGNO (op2))	\
 		&& REGNO (op0) == REGNO (op2))				\
 	      {								\
-		tem = gen_rtx (REG, GET_MODE (op0), 17);		\
+		tem = gen_rtx_REG (GET_MODE (op0), 17);		\
 		emit_insn_after (gen_move_insn (op0, tem), INSN);	\
 		SET_DEST (XVECEXP (PATTERN (INSN), 0, 0)) = tem; 	\
 		OPERANDS[0] = tem;					\
@@ -1202,7 +1201,6 @@ struct rt_cargs {int gregs, fregs; };
 /* A C expression for the integer offset value of an automatic variable
    (N_LSYM) having address X (an RTX). This gets used in .stabs entries
    for the local variables. Compare with the default definition.  */
-extern int romp_debugger_auto_correction();
 #define DEBUGGER_AUTO_OFFSET(X)                        \
   (GET_CODE (X) == PLUS                                \
    ? romp_debugger_auto_correction (INTVAL (XEXP (X, 1)) ) \
@@ -1210,7 +1208,6 @@ extern int romp_debugger_auto_correction();
 
 /* A C expression for the integer offset value of an argument (N_PSYM)
    having address X (an RTX).  The nominal offset is OFFSET.  */
-extern int romp_debugger_arg_correction();
 #define DEBUGGER_ARG_OFFSET(OFFSET, X)             \
   romp_debugger_arg_correction (OFFSET);
 
@@ -1263,8 +1260,8 @@ extern int romp_debugger_arg_correction();
 
 #define CONST_COSTS(RTX,CODE,OUTER_CODE) \
   case CONST_INT:						\
-    if ((OUTER_CODE) == IOR && exact_log2 (INTVAL (RTX)) >= 0	\
-	|| (OUTER_CODE) == AND && exact_log2 (~INTVAL (RTX)) >= 0 \
+    if (((OUTER_CODE) == IOR && exact_log2 (INTVAL (RTX)) >= 0)	\
+	|| ((OUTER_CODE) == AND && exact_log2 (~INTVAL (RTX)) >= 0) \
 	|| (((OUTER_CODE) == PLUS || (OUTER_CODE) == MINUS)	\
 	    && (unsigned int) (INTVAL (RTX) + 15) < 31)		\
 	|| ((OUTER_CODE) == SET && (unsigned int) INTVAL (RTX) < 16))\
@@ -1364,8 +1361,7 @@ extern int romp_debugger_arg_correction();
 /* Output at beginning of assembler file.  */
 
 #define ASM_FILE_START(FILE)				\
-{ extern char *version_string;				\
-  char *p;						\
+{ const char *p;					\
 							\
   fprintf (FILE, "\t.globl .oVncs\n\t.set .oVncs,0\n") ; \
   fprintf (FILE, "\t.globl .oVgcc");			\
@@ -1389,11 +1385,11 @@ extern int romp_debugger_arg_correction();
 
 /* Output before instructions and read-only data.  */
 
-#define TEXT_SECTION_ASM_OP ".text"
+#define TEXT_SECTION_ASM_OP "\t.text"
 
 /* Output before writable data.  */
 
-#define DATA_SECTION_ASM_OP ".data"
+#define DATA_SECTION_ASM_OP "\t.data"
 
 /* How to refer to registers in assembler output.
    This sequence is indexed by compiler's hard-register-number (see above).  */
@@ -1584,8 +1580,8 @@ extern int romp_debugger_arg_correction();
   else if (GET_CODE (addr) == SYMBOL_REF			\
 	   && CONSTANT_POOL_ADDRESS_P (addr))			\
     {								\
-      offset = GEN_INT (get_pool_offset (addr) + 12);  \
-      base = gen_rtx (REG, SImode, 14);				\
+      offset = GEN_INT (get_pool_offset (addr) + 12);  		\
+      base = gen_rtx_REG (SImode, 14);				\
     }								\
   else if (GET_CODE (addr) == CONST				\
 	   && GET_CODE (XEXP (addr, 0)) == PLUS			\
@@ -1596,7 +1592,7 @@ extern int romp_debugger_arg_correction();
       offset = plus_constant (XEXP (XEXP (addr, 0), 1),		\
 			      (get_pool_offset (XEXP (XEXP (addr, 0), 0)) \
 			       + 12));				\
-      base = gen_rtx (REG, SImode, 14);				\
+      base = gen_rtx_REG (SImode, 14);				\
     }								\
   output_addr_const (FILE, offset);				\
   if (base)							\
@@ -1630,7 +1626,3 @@ extern int romp_debugger_arg_correction();
   {"float_unary", {NEG, ABS}},					\
   {"float_conversion", {FLOAT_TRUNCATE, FLOAT_EXTEND, FLOAT, FIX}},
 
-/* Define functions defined in aux-output.c and used in templates.  */
-
-extern char *output_in_line_mul ();
-extern char *output_fpop ();

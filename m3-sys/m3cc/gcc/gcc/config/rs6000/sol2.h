@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler,
    for IBM RS/6000 running AIX version 3.1.
-   Copyright (C) 1996, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1996, 1997, 2000 Free Software Foundation, Inc.
    Contributed by David Reese (Dave.Reese@East.Sun.COM)
 
 This file is part of GNU CC.
@@ -19,8 +19,6 @@ You should have received a copy of the GNU General Public License
 along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
-
-#include "rs6000/sysv4le.h"
 
 /* Default ABI to use */
 #undef	RS6000_ABI_NAME
@@ -65,9 +63,6 @@ Boston, MA 02111-1307, USA.  */
 #undef	CPP_ENDIAN_LITTLE_SPEC
 #define	CPP_ENDIAN_LITTLE_SPEC CPP_ENDIAN_SOLARIS_SPEC
 
-/* Don't turn -B into -L if the argument specifies a relative file name.  */
-#undef	RELATIVE_PREFIX_NOT_LINKDIR
-
 #define	DEFAULT_PCC_STRUCT_RETURN 0
 
 #undef TARGET_VERSION
@@ -95,14 +90,14 @@ do {									\
 
 /* use .stabd instead of .stabn */
 
-#define	ASM_STABN_OP	".stabd"
+#define	ASM_STABN_OP	"\t.stabd\t"
 
 #undef  ASM_OUTPUT_SOURCE_LINE
 #define ASM_OUTPUT_SOURCE_LINE(file, line)				\
 do									\
   {									\
     static int sym_lineno = 1;						\
-    char *_p;								\
+    const char *_p;							\
     fprintf (file, "\t.stabd 68,0,%d,.LM%d-",				\
 	     line, sym_lineno);						\
     STRIP_NAME_ENCODING (_p, XSTR (XEXP (DECL_RTL (current_function_decl), 0), 0)); \
@@ -176,4 +171,4 @@ while (0)
 #undef	MULTILIB_DEFAULTS
 #define	MULTILIB_DEFAULTS { "mlittle", "mcall-solaris" }
 
-#define STDC_0_IN_SYSTEM_HEADERS
+#define STDC_0_IN_SYSTEM_HEADERS 1

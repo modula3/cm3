@@ -24,7 +24,7 @@ Boston, MA 02111-1307, USA.  */
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES \
  "-DCPU=SIMSPARCSOLARIS -D__vxworks -D__vxworks__ -Dsparc -D__svr4__ -D__SVR4 \
-  -Asystem(embedded) -Asystem(svr4) -Acpu(sparc) -Amachine(sparc)\
+  -Asystem=embedded -Asystem=svr4 -Acpu=sparc -Amachine=sparc\
   -D__GCC_NEW_VARARGS__"
 
 #undef CPP_SPEC
@@ -67,7 +67,7 @@ do {									\
 } while (0)
 
 #undef COMMON_ASM_OP
-#define COMMON_ASM_OP "\t.common"
+#define COMMON_ASM_OP "\t.common\t"
 
 /* This is how to output a definition of an internal numbered label where
    PREFIX is the class of label and NUM is the number within the class.  */

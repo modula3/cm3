@@ -2,7 +2,8 @@
    version 0.12.
    (Implements POSIX draft P1003.2/D11.2, except for some of the
    internationalization features.)
-   Copyright (C) 1993, 94, 95, 96, 97, 98 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998
+   Free Software Foundation, Inc.
 
    NOTE: The canonical source of this file is maintained with the 
    GNU C Library.  Bugs can be reported to bug-glibc@prep.ai.mit.edu.
@@ -21,16 +22,26 @@
    along with this program; if not, write to the Free Software Foundation, 
    Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-/* AIX requires this to be the first thing in the file. */
-#if defined _AIX && !defined REGEX_MALLOC
-  #pragma alloca
-#endif
-
 #undef	_GNU_SOURCE
 #define _GNU_SOURCE
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
+#endif
+
+/* GCC LOCAL: we don't need NLS here.  */
+#undef ENABLE_NLS
+/* GCC LOCAL: to handle defining alloca.  */
+#include "libiberty.h"
+
+/* Do not use a C alloca, we will leak memory and crash.  */
+#ifdef C_ALLOCA
+# define REGEX_MALLOC
+#endif
+
+/* AIX requires this to be the first thing in the file. */
+#if defined _AIX && !defined REGEX_MALLOC
+  #pragma alloca
 #endif
 
 #ifndef PARAMS
@@ -57,7 +68,7 @@
 #endif
 
 /* This is for other GNU distributions with internationalized messages.  */
-/* CYGNUS LOCAL: ../intl will handle this for us */
+/* GCC LOCAL: ../intl will handle this for us */
 #ifdef ENABLE_NLS
 # include <libintl.h>
 #else
@@ -69,22 +80,6 @@
    strings.  */
 # define gettext_noop(String) String
 #endif
-
-/* The `emacs' switch turns on certain matching commands
-   that make sense only in Emacs. */
-#ifdef emacs
-
-# include "lisp.h"
-# include "buffer.h"
-# include "syntax.h"
-
-#else  /* not emacs */
-
-# include "auto-host.h"
-
-# if !defined(const) && !defined(HAVE_CONST)
-#  define const
-# endif
 
 # if !defined(volatile) && !defined(HAVE_VOLATILE)
 #  define volatile
@@ -153,11 +148,6 @@ char *realloc ();
 /* How many characters in the character set.  */
 # define CHAR_SET_SIZE 256
 
-/* GDB LOCAL: define _REGEX_RE_COMP to get BSD style re_comp and re_exec */
-#ifndef _REGEX_RE_COMP
-#define _REGEX_RE_COMP
-#endif
-
 # ifdef SYNTAX_TABLE
 
 extern char *re_syntax_table;
@@ -194,57 +184,15 @@ init_syntax_once ()
 # endif /* not SYNTAX_TABLE */
 
 # define SYNTAX(c) re_syntax_table[c]
-
-#endif /* not emacs */
 
 /* Get the interface, including the syntax bits.  */
-/* CYGNUS LOCAL: call it gnu-regex.h, not regex.h, to avoid name conflicts */
+/* GCC LOCAL: call it gnu-regex.h, not regex.h, to avoid name conflicts */
 #include "gnu-regex.h"
 
-/* isalpha etc. are used for the character classes.  */
-#include <ctype.h>
-
-/* Jim Meyering writes:
-
-   "... Some ctype macros are valid only for character codes that
-   isascii says are ASCII (SGI's IRIX-4.0.5 is one such system --when
-   using /bin/cc or gcc but without giving an ansi option).  So, all
-   ctype uses should be through macros like ISPRINT...  If
-   STDC_HEADERS is defined, then autoconf has verified that the ctype
-   macros don't need to be guarded with references to isascii. ...
-   Defining isascii to 1 should let any compiler worth its salt
-   eliminate the && through constant folding."
-   Solaris defines some of these symbols so we must undefine them first.  */
-
-#undef ISASCII
-#if defined STDC_HEADERS || (!defined isascii && !defined HAVE_ISASCII)
-# define ISASCII(c) 1
-#else
-# define ISASCII(c) isascii(c)
-#endif
-
-#ifdef isblank
-# define ISBLANK(c) (ISASCII (c) && isblank (c))
-#else
-# define ISBLANK(c) ((c) == ' ' || (c) == '\t')
-#endif
-#ifdef isgraph
-# define ISGRAPH(c) (ISASCII (c) && isgraph (c))
-#else
-# define ISGRAPH(c) (ISASCII (c) && isprint (c) && !isspace (c))
-#endif
-
-#undef ISPRINT
-#define ISPRINT(c) (ISASCII (c) && isprint (c))
-#define ISDIGIT(c) (ISASCII (c) && isdigit (c))
-#define ISALNUM(c) (ISASCII (c) && isalnum (c))
-#define ISALPHA(c) (ISASCII (c) && isalpha (c))
-#define ISCNTRL(c) (ISASCII (c) && iscntrl (c))
-#define ISLOWER(c) (ISASCII (c) && islower (c))
-#define ISPUNCT(c) (ISASCII (c) && ispunct (c))
-#define ISSPACE(c) (ISASCII (c) && isspace (c))
-#define ISUPPER(c) (ISASCII (c) && isupper (c))
-#define ISXDIGIT(c) (ISASCII (c) && isxdigit (c))
+/* ISALPHA etc. are used for the character classes.  */
+/* GCC LOCAL: use libiberty's safe-ctype.h, don't bother defining
+   wrapper macros ourselves.  */
+#include <safe-ctype.h>
 
 #ifndef NULL
 # define NULL (void *)0
@@ -2214,7 +2162,7 @@ regex_compile (pattern, size, syntax, bufp)
                        the leading `:' and `[' (but set bits for them).  */
                     if (c == ':' && *p == ']')
                       {
-/* CYGNUS LOCAL: Skip this code if we don't have btowc().  btowc() is */
+/* GCC LOCAL: Skip this code if we don't have btowc().  btowc() is */
 /* defined in the 1994 Amendment 1 to ISO C and may not be present on */
 /* systems where we have wchar.h and wctype.h.   */
 #if defined _LIBC || (defined HAVE_WCTYPE_H && defined HAVE_WCHAR_H && defined HAVE_BTOWC)
@@ -5561,7 +5509,8 @@ re_exec (s)
        REG_EXTENDED bit in CFLAGS is set; otherwise, to
        RE_SYNTAX_POSIX_BASIC;
      `newline_anchor' to REG_NEWLINE being set in CFLAGS;
-     `fastmap' and `fastmap_accurate' to zero;
+     `fastmap' to an allocated space for the fastmap;
+     `fastmap_accurate' to 1;
      `re_nsub' to the number of subexpressions in PATTERN.
 
    PATTERN is the address of the pattern string.
@@ -5600,11 +5549,8 @@ regcomp (preg, pattern, cflags)
   preg->allocated = 0;
   preg->used = 0;
 
-  /* Don't bother to use a fastmap when searching.  This simplifies the
-     REG_NEWLINE case: if we used a fastmap, we'd have to put all the
-     characters after newlines into the fastmap.  This way, we just try
-     every character.  */
-  preg->fastmap = 0;
+  /* Try to allocate space for the fastmap.  */
+  preg->fastmap = (char *) malloc (1 << BYTEWIDTH);
 
   if (cflags & REG_ICASE)
     {
@@ -5618,7 +5564,7 @@ regcomp (preg, pattern, cflags)
 
       /* Map uppercase characters to corresponding lowercase ones.  */
       for (i = 0; i < CHAR_SET_SIZE; i++)
-        preg->translate[i] = ISUPPER (i) ? tolower (i) : i;
+        preg->translate[i] = TOLOWER (i);
     }
   else
     preg->translate = NULL;
@@ -5643,6 +5589,19 @@ regcomp (preg, pattern, cflags)
   /* POSIX doesn't distinguish between an unmatched open-group and an
      unmatched close-group: both are REG_EPAREN.  */
   if (ret == REG_ERPAREN) ret = REG_EPAREN;
+
+  if (ret == REG_NOERROR && preg->fastmap)
+    {
+      /* Compute the fastmap now, since regexec cannot modify the pattern
+        buffer.  */
+      if (re_compile_fastmap (preg) == -2)
+       {
+         /* Some error occured while computing the fastmap, just forget
+            about it.  */
+         free (preg->fastmap);
+         preg->fastmap = NULL;
+       }
+    }
 
   return (int) ret;
 }
@@ -5734,7 +5693,7 @@ weak_alias (__regexec, regexec)
    from either regcomp or regexec.   We don't use PREG here.  */
 
 size_t
-__regerror (errcode, preg, errbuf, errbuf_size)
+regerror (errcode, preg, errbuf, errbuf_size)
     int errcode;
     const regex_t *preg;
     char *errbuf;
@@ -5742,6 +5701,7 @@ __regerror (errcode, preg, errbuf, errbuf_size)
 {
   const char *msg;
   size_t msg_size;
+  (void)preg;
 
   if (errcode < 0
       || errcode >= (int) (sizeof (re_error_msgid)

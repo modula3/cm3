@@ -21,10 +21,6 @@ Boston, MA 02111-1307, USA.  */
 
 extern int errno;
 
-/* #defines that need visibility everywhere.  */
-#define FALSE 0
-#define TRUE 1
-
 /* This describes the machine the compiler is hosted on.  */
 #define HOST_BITS_PER_CHAR 8
 #define HOST_BITS_PER_SHORT 16
@@ -46,9 +42,6 @@ extern int errno;
 /* Arguments to use with `exit'.  */
 #define SUCCESS_EXIT_CODE 0
 #define FATAL_EXIT_CODE 33
-
-/* Don't try to use sys_siglist.  */
-#define NO_SYS_SIGLIST
 
 /* HP's compiler has problems with enum bitfields.  */
 #define ONLY_INT_FIELDS
