@@ -8,9 +8,7 @@ IMPORT LongRealBasic               AS R,
        LongRealVectorFast          AS V,
 (*
        LongRealVectorTrans         AS VT,
-*)
        LongRealComplexVectorTrans  AS CVT,
-(*
        LongRealMatrixFast          AS M,
 *)
        LongRealEigenSystem         AS Eigen,
@@ -199,17 +197,12 @@ PROCEDURE EstimateSpecRad(mask:S.T):R.T=
     END;
   END EstimateSpecRad;
 
-PROCEDURE ComputeSpecRad(mask:S.T):R.T RAISES {NA.Error}=
-  BEGIN
-    RETURN CVT.NormInf(Refn.TransitionEV(mask).eigenvalues);
-  END ComputeSpecRad;
-
 PROCEDURE CompareEstimate(mask:S.T)=
   <*FATAL NA.Error, Thread.Alerted, Wr.Failure *>
   BEGIN
     IO.Put(Fmt.FN("%s: %s < %s ?\n",ARRAY OF TEXT
       {SF.Fmt(mask),
-       RF.Fmt(ComputeSpecRad(mask)),
+       RF.Fmt(Refn.TransitionSpecRad(mask)),
        RF.Fmt(EstimateSpecRad(mask))
       }));
   END CompareEstimate;
@@ -257,7 +250,7 @@ PROCEDURE CompareTranslatedMasks(mask0,mask1:S.T) =
 
     FOR n:=-10 TO 10 DO
       IO.Put(Fmt.FN("%s, ",ARRAY OF TEXT
-        {RF.Fmt(ComputeSpecRad(mask1.translate(3*n).superpose(mask0)))
+        {RF.Fmt(Refn.TransitionSpecRad(mask1.translate(3*n).superpose(mask0)))
         }));
     END;
     IO.Put("\n");
