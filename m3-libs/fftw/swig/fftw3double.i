@@ -1,5 +1,5 @@
 
-%module FFTWLongReal
+%module LongRealFFTW
 
 %insert(m3rawintf) %{
 IMPORT LongReal AS R;
@@ -10,7 +10,7 @@ IMPORT LongReal AS R;
 %}
 
 %insert(m3wrapimpl) %{
-IMPORT LongReal AS R, FFTWLongRealRaw AS Raw;
+IMPORT LongReal AS R, LongRealFFTWRaw AS Raw;
 %}
 
 #define FPREF(name) fftw_ ## name

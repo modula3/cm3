@@ -1,8 +1,8 @@
 
-M3FILEEXTS = .i3 .m3 Raw.i3 Raw.m3
-M3FILES    = $(patsubst %, FFTWLongReal%, $(M3FILEEXTS)) \
-             $(patsubst %, FFTWReal%,     $(M3FILEEXTS)) \
-             $(patsubst %, FFTWExtended%, $(M3FILEEXTS))
+M3FILEEXTS = FFTW.i3 FFTW.m3 FFTWRaw.i3 FFTWRaw.m3
+M3FILES    = $(patsubst %, LongReal%, $(M3FILEEXTS)) \
+             $(patsubst %, Real%,     $(M3FILEEXTS)) \
+             $(patsubst %, Extended%, $(M3FILEEXTS))
 
 all:	fftw
 
@@ -12,7 +12,7 @@ install:
 fftw:	src/m3makefile $(patsubst %, src/%, $(M3FILES))
 	cm3
 
-src/FFTWLongReal.i3:	swig/fftw3double.i swig/fftw3float.i swig/fftw3longdouble.i \
+src/LongRealFFTW.i3:	swig/fftw3double.i swig/fftw3float.i swig/fftw3longdouble.i \
                         swig/fftw3base.i swig/fftw3base.h
 	(cd swig; \
 	  swig -modula3 fftw3double.i; \
