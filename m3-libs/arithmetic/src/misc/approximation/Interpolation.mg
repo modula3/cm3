@@ -81,47 +81,46 @@ Partial access: Give the starting index and the length to be used.
 <*UNUSED*>
 CONST ftn = Module & "Newton";
 VAR
-  xn,xn1,xnn,n,col_n:CARDINAL;
-  c:=NEW(REF ARRAY OF V.T,NUMBER(xa)+1);
-  d:=NEW(REF ARRAY OF V.T,NUMBER(xa)+1);
-  ndx:CARDINAL:=1;
-  diff,difftmp:R.T;
+  col_n:CARDINAL;
+  c:=NEW(REF ARRAY OF V.T,NUMBER(xa));
+  d:=NEW(REF ARRAY OF V.T,NUMBER(xa));
+  ndx:=LAST(xa);              (*get a starter x*)
   y:V.T;
 BEGIN
   IF NUMBER(xa) # NUMBER(ya) THEN
     RAISE Error(Err.bad_size);
   END;
 
-  (*use the full tables*)
-  xn:=NUMBER(xa); xn1:=0; xnn:=xn-1;
-  (*either way, c and d are 0..n but we use 1..n*)
-  n:=xn;
-
-  (*---find starting y---*)
-  ndx:=xnn;              (*get a starter x*)
-  diff:=ABS(x-xa[ndx]);  (*and its difference from true x*)
-  FOR i:=xn1 TO xnn DO
-    difftmp:=ABS(x-xa[i]);
-    IF difftmp < RT.Tiny THEN
-      y:=ya[i]; dy:=V.Sub(y,y);(*dy:=V.NewCompliantZero(y);*)
-      RETURN y;
-    ELSIF difftmp < diff THEN (*found a better one*)
-      ndx:=i;  diff:=difftmp;
+  VAR
+    difftmp:R.T;
+    (*---find starting y---*)
+    diff:=ABS(x-xa[ndx]);  (*and its difference from true x*)
+  BEGIN
+    FOR i:=0 TO LAST(xa) DO
+      difftmp:=ABS(x-xa[i]);
+      IF difftmp < RT.Tiny THEN
+        y:=ya[i];
+        dy:=V.Sub(y,y);
+        (*dy:=V.NewCompliantZero(y);*)
+        RETURN y;
+      ELSIF difftmp < diff THEN (*found a better one*)
+        ndx:=i;  diff:=difftmp;
+      END;
+      c[i]:=ya[i];  (*c and d are 1..NUMBER(xa)*)
     END;
-    c[i-xn1+1]:=ya[i];  (*c and d are 1..xn*)
   END;
   d^:=c^;     (*load d from c, thus from ya*)
 
   y:=ya[ndx]; (*use the best ndx to get starting y*)
 
   (*---compute and use c and d---*)
-  DEC(ndx,xn1);  (*adjust for partial access*)
-  col_n:=n;  (*originally there are n in the col*)
-  FOR m:=1 TO n-1 DO
+  col_n:=NUMBER(xa);  (*originally there are n in the col*)
+  FOR m:=1 TO LAST(xa) DO
     DEC(col_n); (*each col recalc loses 1 cell*)
-    FOR i:=1 TO col_n DO
+    FOR i:=0 TO col_n-1 DO
       VAR
-        xi:=xa[xn1+i-1];  xim:=xa[xn1+(i-1)+m];
+        xi :=xa[i];
+        xim:=xa[i+m];
         den:=xi-xim;
         delta:=V.Sub(c[i+1],d[i]);
       BEGIN
@@ -135,10 +134,11 @@ BEGIN
     (*---which correction to use?---*)
     IF ndx*2 >= col_n THEN
       (*we are at or below the center, need to move up*)
-      dy:=d[ndx]; DEC(ndx);
+      DEC(ndx);
+      dy:=d[ndx];
     ELSE
       (*we are above the center, need to move down*)
-      dy:=c[ndx+1];
+      dy:=c[ndx];
       (*don't need to adjust ndx, because it is effectively
       moved down when we slide the next col up*)
     END;
