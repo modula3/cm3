@@ -67,6 +67,20 @@ PROCEDURE CleanUp () =
     END;
   END CleanUp;
 
+PROCEDURE EmitPkgImports (READONLY units: M3Unit.Set) =
+  VAR src := units.head;
+  BEGIN
+    WHILE (src # NIL) DO
+      IF (src.imported) AND (src.kind = UK.M3LIB) THEN
+        WITH name = M3ID.ToText(src.loc.pkg) DO
+          Msg.Out (" ", name);
+        END;
+      END;
+      src := src.next;
+    END;
+    Msg.Out (Wr.EOL);
+  END EmitPkgImports; 
+
 (*-------------------------------------------------- general compilation ---*)
 (* The "global" variables of a compilation are passed around in a "State". *)
 
@@ -433,6 +447,7 @@ PROCEDURE BuildLibraryPool (s: State) =
   BEGIN
     WHILE (src # NIL) DO
       IF (src.imported) AND (src.kind = UK.M3LIB) THEN
+        (* Msg.Explain ("imported package ", M3ID.ToText(src.name)); *)
         ETimer.Push (M3Timers.inhale);
         Msg.Commands ("inhale ", UnitPath (src));
         ux := GetUnitLinkInfo (src, imported := TRUE);

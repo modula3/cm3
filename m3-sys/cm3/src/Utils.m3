@@ -212,6 +212,28 @@ PROCEDURE IsEqual (a, b: TEXT): BOOLEAN =
     RETURN FALSE;
   END IsEqual;
 
+PROCEDURE IsDir(fn : TEXT) : BOOLEAN =
+  VAR s : File.Status;
+  BEGIN
+    TRY
+      s := FS.Status(fn);
+    EXCEPT ELSE
+      RETURN FALSE;
+    END;
+    RETURN s.type = FS.DirectoryFileType;
+  END IsDir;
+
+PROCEDURE IsFile(fn : TEXT) : BOOLEAN =
+  VAR s : File.Status;
+  BEGIN
+    TRY
+      s := FS.Status(fn);
+    EXCEPT ELSE
+      RETURN FALSE;
+    END;
+    RETURN s.type = RegularFile.FileType;
+  END IsFile;
+
 (*------------------------------------------------------------ file times ---*)
 
 VAR

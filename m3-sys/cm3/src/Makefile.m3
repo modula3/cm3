@@ -12,8 +12,10 @@ TYPE
   MM = M3Options.Mode;
 
 CONST
-  ModeName = ARRAY MM OF TEXT { "-build", "-clean", "-ship", "-find" };
-  ModeFlag = ARRAY MM OF TEXT { "_all",   "_clean", "_ship", "_find" };
+  ModeName = ARRAY MM OF TEXT { "-build", "-clean", "-ship", "-find", 
+                                "-depend" };
+  ModeFlag = ARRAY MM OF TEXT { "_all",   "_clean", "_ship", "_find", 
+                                "_depend" };
 
 TYPE
   State = RECORD
@@ -41,13 +43,13 @@ PROCEDURE Build (src_dir: TEXT): TEXT =
 
       CASE M3Options.major_mode OF
       | MM.Find => Out (wr, "M3_FIND_UNITS = []")
-      | MM.Build, MM.Clean, MM.Ship =>  (* skip *)
+      | MM.Build, MM.Clean, MM.Ship, MM.Depend =>  (* skip *)
       END;
 
       ConvertArgList (s);
 
       CASE M3Options.major_mode OF
-      | MM.Build, MM.Clean, MM.Find =>
+      | MM.Build, MM.Clean, MM.Find, MM.Depend =>
           IncludeOverrides (s, src_overrides);
           IncludeMakefile (s, src_makefile, src_dir);
 
@@ -143,6 +145,8 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
     | 'd' => IF Text.Equal(arg, "-debug") THEN
                Msg.SetLevel (Msg.Level.Debug);  ok := TRUE;
                Out (wr, "m3_option (\"-debug\")");
+             ELSIF Text.Equal (arg, "-depend") THEN
+               ok := TRUE;
              END;
 
     | 'D' => ProcessDefine (arg, wr);  ok := TRUE;
@@ -353,12 +357,21 @@ PROCEDURE IncludeOverrides (VAR s: State;  overrides: TEXT)
         Out (s.wr, "include (\"", M3Path.Escape (overrides), "\")");
         s.found_work := TRUE;
       ELSE
-        Msg.Out ("ignoring ", overrides, Wr.EOL);
+        IF (M3Options.major_mode = MM.Depend) THEN
+          Msg.Verbose ("ignoring ", overrides, Wr.EOL);
+        ELSE
+          Msg.Out ("ignoring ", overrides, Wr.EOL);
+        END;
       END;
     ELSE
       IF (s.use_overrides) THEN
-        Msg.Out ("unable to read ", overrides,
-          ", options \"-override\" and \"-x\" ignored.", Wr.EOL);
+        IF (M3Options.major_mode = MM.Depend) THEN
+          Msg.Verbose ("unable to read ", overrides,
+                       ", options \"-override\" and \"-x\" ignored.", Wr.EOL);
+        ELSE
+          Msg.Out ("unable to read ", overrides,
+                   ", options \"-override\" and \"-x\" ignored.", Wr.EOL);
+        END;
       END;
     END;
   END IncludeOverrides;
@@ -387,6 +400,7 @@ PROCEDURE ScanCommandLine () =
       ELSIF Text.Equal (arg, "-clean")   THEN  SetMode (cnt, MM.Clean);
       ELSIF Text.Equal (arg, "-find")    THEN  SetMode (cnt, MM.Find);
       ELSIF Text.Equal (arg, "-ship")    THEN  SetMode (cnt, MM.Ship);
+      ELSIF Text.Equal (arg, "-depend")  THEN  SetMode (cnt, MM.Depend);
       ELSIF Text.Equal (arg, "-?")       THEN  PrintHelp ();
       ELSIF Text.Equal (arg, "-help")    THEN  PrintHelp ();
       ELSIF Text.Equal (arg, "-config")  THEN  PrintVersion (TRUE);
@@ -409,8 +423,8 @@ PROCEDURE SetMode (VAR cnt: INTEGER;  mode: MM) =
 
 PROCEDURE PrintVersion (exit: BOOLEAN) =
   BEGIN
-    Msg.Out ("Critical Mass Modula-3 version 5.1", Wr.EOL);
-    Msg.Out ("  last updated:  Nov 1, 1997", Wr.EOL);
+    Msg.Out ("Critical Mass Modula-3 version 5.1.0", Wr.EOL);
+    Msg.Out ("  last updated:  Feb 25, 2001", Wr.EOL);
     Msg.Out ("  configuration: ", M3Config.FindFile(), Wr.EOL);
     Msg.Out (Wr.EOL);
     IF exit THEN Process.Exit (0); END;
@@ -434,6 +448,7 @@ CONST
     "  -ship          install package",
     "  -clean         delete derived files",
     "  -find          locate source files",
+    "  -depend        output package dependencies",
     "",
     "compile options:  (default: -g -w1)",
     "  -g             produce symbol table information for debugger",
