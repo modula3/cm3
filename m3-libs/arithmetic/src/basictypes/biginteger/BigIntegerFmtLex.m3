@@ -1,5 +1,5 @@
 MODULE BigIntegerFmtLex;
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT Rd, Thread, Fmt AS F, Lex AS L;
 IMPORT Word, Text;
@@ -7,10 +7,24 @@ IMPORT BigIntegerRep AS BR, BigInteger AS BB;
 FROM FmtLexSupport IMPORT Precedence;
 IMPORT Arithmetic AS Arith;
 
+(*
+IMPORT IO;
+*)
+
+
 <* UNUSED *>
 CONST
   Module = "BigIntegerFmtLex.";
 
+
+(** Format the contents of the number data structure for debug purposes.
+PROCEDURE Dump (READONLY x: T; ): TEXT =
+  BEGIN
+    RETURN
+      "(" & F.Int(x.size) & ", " & ARRAY BOOLEAN OF TEXT{"+", "-"}[x.sign]
+        & ", " & FastFmtU(x, 16, Word.Size DIV 4) & ")";
+  END Dump;
+*)
 
 PROCEDURE FastFmtU (READONLY x: T; base: F.Base; pad: [1 .. Word.Size]):
   TEXT =
@@ -23,12 +37,12 @@ PROCEDURE FastFmtU (READONLY x: T; base: F.Base; pad: [1 .. Word.Size]):
       FOR k := x.size - 2 TO 0 BY -1 DO
         txt := txt & F.Pad(F.Unsigned(x.data[k], base), pad, '0');
       END;
+      RETURN txt;
     END;
-    RETURN txt;
   END FastFmtU;
 
-(*can be optimized with a division routine that is specialised to small
-   divisors*)
+(* can be optimized with a division routine that is specialised to small
+   divisors *)
 PROCEDURE SlowFmtU (x: T; base: F.Base): TEXT =
   VAR
     qr                             := BB.QuotRem{x, BB.Zero};
@@ -38,7 +52,8 @@ PROCEDURE SlowFmtU (x: T; base: F.Base): TEXT =
   BEGIN
     TRY
       b := BB.FromInteger(base);
-      WHILE NOT BB.IsZero(x) DO
+      WHILE NOT BB.IsZero(qr.quot) DO
+        (* IO.Put(Dump(qr.quot) & "\n"); *)
         qr := BR.DivModU(qr.quot, b);
         <* ASSERT qr.rem.size <= 1 *>
         digit := qr.rem.data[0];
@@ -68,9 +83,8 @@ PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT =
     IF x.sign THEN RETURN "-" & txt; ELSE RETURN txt; END;
   END Fmt;
 
-PROCEDURE Tex (                      x     : T;
-                            READONLY style              := TexStyle{};
-               <* UNUSED *>          within: Precedence                ):
+PROCEDURE Tex
+  (x: T; READONLY style := TexStyle{}; <* UNUSED *> within: Precedence):
   TEXT =
   BEGIN
     IF style.base = 10 THEN
@@ -98,7 +112,7 @@ PROCEDURE Lex (rd: Rd.T; <* UNUSED *> READONLY style: LexStyle; ): T
       LOOP
         VAR c := Rd.GetChar(rd);
         BEGIN
-          IF NOT c IN SET OF CHAR{'0'.. '9'} THEN EXIT END;
+          IF NOT c IN SET OF CHAR{'0' .. '9'} THEN EXIT END;
           z := BB.Add(BB.Mul(z, b), BB.FromInteger(ORD(c) - ORD('0')));
         END;
       END;

@@ -1,9 +1,5 @@
 MODULE BigInteger;
-(* Arithmetic for Modula-3, see doc for details
-
-   Abstract: Integers of arbitrary size
-
-   Daniel Beer *)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT Arithmetic AS Arith;
 IMPORT BigIntegerRep AS Rep;
@@ -14,7 +10,7 @@ CONST
 (*==========================*)
 
 <* UNUSED *>
-PROCEDURE FastCopy (READONLY x: T): T =
+PROCEDURE FastCopy (READONLY x: T; ): T =
   VAR y := T{NEW(Value, NUMBER(x.data^)), x.size, x.sign};
 
   BEGIN
@@ -22,7 +18,7 @@ PROCEDURE FastCopy (READONLY x: T): T =
     RETURN y;
   END FastCopy;
 
-PROCEDURE Copy (READONLY x: T): T =
+PROCEDURE Copy (READONLY x: T; ): T =
   VAR y := T{NEW(Value, x.size), x.size, x.sign};
 
   BEGIN
@@ -31,7 +27,7 @@ PROCEDURE Copy (READONLY x: T): T =
   END Copy;
 
 
-PROCEDURE FromInteger (x: INTEGER): T =
+PROCEDURE FromInteger (x: INTEGER; ): T =
   VAR data: Value;
   BEGIN
     IF x = 0 THEN
@@ -45,11 +41,25 @@ PROCEDURE FromInteger (x: INTEGER): T =
     END;
   END FromInteger;
 
+PROCEDURE ToInteger (READONLY x: T; ): INTEGER =
+  BEGIN
+    CASE x.size OF
+    | 0 => RETURN 0;
+    | 1 =>
+        (* The run-time system should generate an overflow exception if you
+           try to convert from a word where the most significant bit is
+           set. *)
+        IF x.sign THEN RETURN -x.data[0]; ELSE RETURN x.data[0]; END;
+    ELSE
+      <* ASSERT FALSE, "BigInteger.ToInteger: Overflow" *>
+    END;
+  END ToInteger;
 
 
-(*signed arithmetic*)
 
-PROCEDURE Add (READONLY x, y: T): T =
+(* signed arithmetic *)
+
+PROCEDURE Add (READONLY x, y: T; ): T =
   VAR z: T;
 
   BEGIN
@@ -66,7 +76,7 @@ PROCEDURE Add (READONLY x, y: T): T =
     RETURN z;
   END Add;
 
-PROCEDURE Sub (READONLY x, y: T): T =
+PROCEDURE Sub (READONLY x, y: T; ): T =
   VAR z: T;
 
   BEGIN
@@ -83,26 +93,26 @@ PROCEDURE Sub (READONLY x, y: T): T =
     RETURN z;
   END Sub;
 
-PROCEDURE Neg (READONLY x: T): T =
+PROCEDURE Neg (READONLY x: T; ): T =
   VAR y := x;
   BEGIN
     y.sign := NOT x.sign;
     RETURN y;
   END Neg;
 
-PROCEDURE Conj (READONLY x: T): T =
+PROCEDURE Conj (READONLY x: T; ): T =
   BEGIN
     RETURN x;
   END Conj;
 
 
-PROCEDURE IsZero (READONLY x: T): BOOLEAN =
+PROCEDURE IsZero (READONLY x: T; ): BOOLEAN =
   BEGIN
     RETURN x.size = 0;
-    (*RETURN x.size=0 OR x.size=1 AND x.data[0]=0;*)
+    (* RETURN x.size=0 OR x.size=1 AND x.data[0]=0; *)
   END IsZero;
 
-PROCEDURE Compare (READONLY x, y: T): [-1 .. 1] =
+PROCEDURE Compare (READONLY x, y: T; ): [-1 .. 1] =
   BEGIN
     IF x.sign # y.sign THEN
       IF x.sign THEN RETURN -1 ELSE RETURN 1 END
@@ -115,7 +125,7 @@ PROCEDURE Compare (READONLY x, y: T): [-1 .. 1] =
     END;
   END Compare;
 
-PROCEDURE Equal (READONLY x, y: T): BOOLEAN =
+PROCEDURE Equal (READONLY x, y: T; ): BOOLEAN =
   BEGIN
     IF x.sign # y.sign OR x.size # y.size THEN
       RETURN FALSE
@@ -130,30 +140,29 @@ PROCEDURE Equal (READONLY x, y: T): BOOLEAN =
 
 
 
-PROCEDURE Mul (READONLY x, y: T): T =
-  VAR z: T;
+PROCEDURE Mul (READONLY x, y: T; ): T =
+  VAR z := Rep.MulU(x, y);
 
   BEGIN
-    z := Rep.MulU(x, y);
     z.sign := x.sign # y.sign;
     RETURN z;
   END Mul;
 
 
 
-PROCEDURE Div (READONLY x, y: T): T RAISES {Arith.Error} =
+PROCEDURE Div (READONLY x, y: T; ): T RAISES {Arith.Error} =
   VAR qr := Rep.DivModU(x, y);
 
   BEGIN
     qr.quot.sign := x.sign # y.sign;
-    (*IF NOT Equal(r,Zero) THEN*)
+    (* IF NOT Equal(r,Zero) THEN *)
     IF qr.rem.size # 0 THEN
       RAISE Arith.Error(NEW(Arith.ErrorIndivisible).init());
     END;
     RETURN qr.quot;
   END Div;
 
-PROCEDURE Rec (READONLY x: T): T RAISES {Arith.Error} =
+PROCEDURE Rec (READONLY x: T; ): T RAISES {Arith.Error} =
   BEGIN
     IF IsZero(x) THEN
       RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init());
@@ -164,14 +173,14 @@ PROCEDURE Rec (READONLY x: T): T RAISES {Arith.Error} =
     END;
   END Rec;
 
-(*Is this correct?*)
-PROCEDURE DivMod (READONLY x, y: T): QuotRem RAISES {Arith.Error} =
+(* Is this correct? *)
+PROCEDURE DivMod (READONLY x, y: T; ): QuotRem RAISES {Arith.Error} =
   VAR qr := Rep.DivModU(x, y);
 
   BEGIN
     qr.rem.sign := y.sign;
     qr.quot.sign := x.sign # y.sign;
-    IF qr.quot.sign AND NOT IsZero(qr.rem) THEN (*means x.sign#y.sign*)
+    IF qr.quot.sign AND NOT IsZero(qr.rem) THEN (* means x.sign # y.sign *)
       qr.rem := Rep.SubU(y, qr.rem);
       IF IsZero(qr.quot) THEN
         IF qr.quot.sign THEN qr.quot := One; ELSE qr.quot := MinusOne; END;
@@ -182,7 +191,7 @@ PROCEDURE DivMod (READONLY x, y: T): QuotRem RAISES {Arith.Error} =
     RETURN qr;
   END DivMod;
 
-PROCEDURE Mod (READONLY x, y: T): T RAISES {Arith.Error} =
+PROCEDURE Mod (READONLY x, y: T; ): T RAISES {Arith.Error} =
   BEGIN
     RETURN DivMod(x, y).rem;
   END Mod;

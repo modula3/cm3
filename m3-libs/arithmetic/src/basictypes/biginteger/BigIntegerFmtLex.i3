@@ -1,5 +1,5 @@
 INTERFACE BigIntegerFmtLex;
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT BigInteger AS B;
 IMPORT Rd, Thread;
@@ -14,12 +14,12 @@ TYPE T = B.T;
 
 TYPE FmtStyle = RECORD base: F.Base := 10;  END;
 
-PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT;
+PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}; ): TEXT;
 
 TYPE TexStyle = FmtStyle;
 
-PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within := Precedence.sum):
-  TEXT;
+PROCEDURE Tex
+  (x: T; READONLY style := TexStyle{}; within := Precedence.sum; ): TEXT;
 
 TYPE LexStyle = RECORD END;
 
