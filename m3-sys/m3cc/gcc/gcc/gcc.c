@@ -35,12 +35,35 @@ compilation is specified by a string called a "spec".  */
 #include "system.h"
 #include <signal.h>
 
+#if defined(NeXT) || defined(__APPLE__)
+#include <sys/param.h>
+#endif
+
 #include "obstack.h"
 #include "intl.h"
 #include "prefix.h"
 
+#ifdef REPORT_EVENT
+#include "apple/make-support.h"
+#endif
+
+#if defined (_WIN32) && defined (NEXT_PDO)
+/* Define X_OK to be something other than zero.  */
+#undef X_OK
+#define X_OK 1
+#endif
+
 #ifdef VMS
 #define exit __posix_exit
+#endif
+
+#define HAVE_GETRUSAGE
+
+#ifdef HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif
+#if defined (HAVE_DECL_GETRUSAGE) && !HAVE_DECL_GETRUSAGE
+extern int getrusage PARAMS ((int, struct rusage *));
 #endif
 
 /* By default there is no special suffix for executables.  */
@@ -125,6 +148,8 @@ static int print_help_list;
 
 static int verbose_flag;
 
+static int report_times;
+
 /* Nonzero means write "temp" files in source directory
    and use the source file's name in them, and don't delete them.  */
 
@@ -151,6 +176,53 @@ static char *cross_compile = "1";
 static char *cross_compile = "0";
 #endif
 
+#ifdef NEXT_FAT_OUTPUT
+#include <mach-o/arch.h>
+
+/* An array of architectures sepcified with -arch. */
+unsigned int current_arch;
+unsigned int arch_count = 0;
+NXArchInfo const **arch_array = NULL;
+char **arch_family = NULL;
+unsigned int multi_arch = 0;
+/* Default name to use in the -final_output linker flag
+   in case the -o flag is absent.  */
+char *final_output = "a.out";
+#endif /* NEXT_FAT_OUTPUT */
+
+#if defined (NEXT_SEMANTICS) || defined (NEXT_PDO)
+static unsigned int n_filelists = 0;
+static char **filelists = NULL;
+static unsigned int n_dynamiclib_options = 0;
+static char **dynamiclib_options = NULL;
+#endif /* NEXT_SEMANTICS || NEXT_PDO */
+   
+#ifdef REPORT_EVENT
+int re_type, re_line, re_arg1, re_arg2, re_arg3, re_ok;
+const char *re_name, *re_file, *re_msg;
+#define SAVE_REPORT_EVENT(TYPE, NAME, FILE, LINE, MSG, ARG1, ARG2, ARG3)  \
+  re_type = (TYPE), re_name = (NAME), re_file = (FILE), re_line = (LINE), \
+  re_msg = (MSG), re_arg1 = (int)(ARG1), re_arg2 = (int)(ARG2),           \
+  re_arg3 = (int)(ARG3), re_ok = 1
+#define DO_REPORT_EVENT()				\
+ do {							\
+   if (re_ok)						\
+     REPORT_EVENT (re_type, re_name, re_file, re_line,	\
+		   re_msg, re_arg1, re_arg2, re_arg3);	\
+   re_ok = 0;						\
+ } while (0)
+#define DO_REPORT_STAGE(STAGE)				\
+ do {							\
+   if (multi_arch)						\
+     REPORT_EVENT (re_type, re_name, re_file, re_line,	\
+		   STAGE " for %s", 			\
+		arch_array[current_arch]->name, re_arg2, re_arg3);	\
+   else							\
+     REPORT_EVENT (re_type, re_name, re_file, re_line,	\
+		   STAGE, re_arg1, re_arg2, re_arg3);	\
+ } while (0)
+#endif
+
 /* The number of errors that have occurred; the link phase will not be
    run if this is non-zero.  */
 static int error_count = 0;
@@ -165,6 +237,10 @@ static struct obstack obstack;
    and destructors.  */
 
 static struct obstack collect_obstack;
+
+#ifdef HAVE_GETRUSAGE
+static struct rusage rus, prus;
+#endif
 
 extern char *version_string;
 
@@ -281,6 +357,16 @@ or with constant text in a single argument.
  %W{...}
 	like %{...} but mark last argument supplied within
 	as a file to be deleted on failure.
+%ifdef NEXT_FAT_OUTPUT
+ %f	marks the argument following the %f as the "output file" of this
+	compilation for multi-architecture builds.  This puts the argument
+	into the sequence of arguments that %F will substitute later.
+ %F	substitutes the names of all the intermediate architecture files,
+	with spaces automatically placed around them.  You should write spaces
+	around the %F as well or the results are undefined.
+	%F is for use in the specs for running the architecture merger.
+ %T	substitutes the name of the current architecture.
+%endif
  %o	substitutes the names of all the output files, with spaces
 	automatically placed around them.  You should write spaces
 	around the %o as well or the results are undefined.
@@ -321,6 +407,9 @@ or with constant text in a single argument.
 	assembler has done its job.
  %D	Dump out a -L option for each directory in startfile_prefixes.
 	If multilib_dir is set, extra entries are generated with it affixed.
+%ifdef NEXT_FAT_OUTPUT
+ %M	substitutes the dependency file name (e.g. foo.d).
+%endif
  %l     process LINK_SPEC as a spec.
  %L     process LIB_SPEC as a spec.
  %G     process LIBGCC_SPEC as a spec.
@@ -355,6 +444,13 @@ or with constant text in a single argument.
  %{!.S:X} substitutes X, but only if NOT processing a file with suffix S.
  %{S|P:X} substitutes X if either -S or -P was given to CC.  This may be
 	  combined with ! and . as above binding stronger than the OR.
+%ifdef NEXT_FAT_OUTPUT
+ %{@:X} substitutes X, but only if processing multiple architectures.
+ %{!@:X} substitutes X, but only if NOT processing multiple architectures.
+%endif
+%ifdef NEXT_SEMANTICS
+ %J substitutes the accumulated dynamic library options   
+%endif
  %(Spec) processes a specification defined in a specs file as *Spec:
  %[Spec] as above, but put __ around -D arguments
 
@@ -584,12 +680,15 @@ static struct compiler default_compilers[] =
      linking is not done".  */
   {".m", {"#Objective-C"}},
   {".cc", {"#C++"}}, {".cxx", {"#C++"}}, {".cpp", {"#C++"}},
-  {".c++", {"#C++"}}, {".C", {"#C++"}},
+  {".c++", {"#C++"}}, {".cp", {"#C++"}}, {".C", {"#C++"}},
   {".ads", {"#Ada"}}, {".adb", {"#Ada"}}, {".ada", {"#Ada"}},
   {".f", {"#Fortran"}}, {".for", {"#Fortran"}}, {".F", {"#Fortran"}},
   {".fpp", {"#Fortran"}},
   {".p", {"#Pascal"}}, {".pas", {"#Pascal"}},
   /* Next come the entries for C.  */
+#if defined (NEXT_SEMANTICS) || defined (NEXT_PDO)
+#include "apple/apple-specs.h"
+#else
   {".c", {"@c"}},
   {"@c",
    {
@@ -634,6 +733,7 @@ static struct compiler default_compilers[] =
 	%{C} %{v} %{A*} %{I*} %{P} %{$} %I\
 	%{C:%{!E:%eGNU C does not support -C without using -E}}\
 	%{M} %{MM} %{MD:-MD %b.d} %{MMD:-MMD %b.d} %{MG}\
+	%{faltivec:-D__VEC__=10205 -D__ALTIVEC__}\
         %{!no-gcc:-D__GNUC__=%v1 -D__GNUC_MINOR__=%v2}\
 	%{ansi|std=*:%{!std=gnu*:-trigraphs -D__STRICT_ANSI__}}\
 	%{!undef:%{!ansi:%{!std=*:%p}%{std=gnu*:%p}} %P} %{trigraphs}\
@@ -662,6 +762,7 @@ static struct compiler default_compilers[] =
 	%{C} %{v} %{A*} %{I*} %{P} %{$} %I\
 	%{C:%{!E:%eGNU C does not support -C without using -E}}\
 	%{M} %{MM} %{MD:-MD %b.d} %{MMD:-MMD %b.d} %{MG}\
+	%{faltivec:-D__VEC__=10205 -D__ALTIVEC__}\
         %{!no-gcc:-D__GNUC__=%v1 -D__GNUC_MINOR__=%v2}\
 	%{ansi|std=*:%{!std=gnu*:-trigraphs -D__STRICT_ANSI__}}\
 	%{!undef:%{!ansi:%{!std=*:%p}%{std=gnu*:%p}} %P} %{trigraphs}\
@@ -678,6 +779,7 @@ static struct compiler default_compilers[] =
    {"%{!E:%eCompilation of header file requested} \
     cpp %{nostdinc*} %{C} %{v} %{A*} %{I*} %{P} %{$} %I\
 	%{C:%{!E:%eGNU C does not support -C without using -E}}\
+	%{faltivec:-D__VEC__=10205 -D__ALTIVEC__}\
 	%{M} %{MM} %{MD:-MD %b.d} %{MMD:-MMD %b.d} %{MG}\
         %{!no-gcc:-D__GNUC__=%v1 -D__GNUC_MINOR__=%v2}\
 	%{std=*:%{!std=gnu*:-trigraphs -D__STRICT_ANSI__}}\
@@ -714,6 +816,7 @@ static struct compiler default_compilers[] =
         %c %{Os:-D__OPTIMIZE_SIZE__} %{O*:%{!O0:-D__OPTIMIZE__}}\
 	%{ffast-math:-D__FAST_MATH__}\
         %{traditional} %{ftraditional:-traditional}\
+	%{faltivec:-Dvector=__vector -Dpixel=__pixel -D__VEC__=10205 -D__ALTIVEC__}\
         %{traditional-cpp:-traditional}\
 	%{fleading-underscore} %{fno-leading-underscore}\
 	%{g*} %{W*} %{w} %{pedantic*} %{H} %{d*} %C %{D*} %{U*} %{i*} %Z\
@@ -722,6 +825,7 @@ static struct compiler default_compilers[] =
                     %{c:%W{o*}%{!o*:-o %w%b%O}}%{!c:-o %d%w%u%O}\
 		    %{!pipe:%g.s} %A\n }}}}"}},
 #include "specs.h"
+#endif /* NEXT_SEMANTICS || NEXT_PDO */
   /* Mark end of table */
   {0, {0}}
 };
@@ -771,6 +875,22 @@ static const char *link_command_spec = "\
 			\n }}}}}}";
 #endif
 #endif
+
+#ifdef NEXT_FAT_OUTPUT
+/* The spec for running the architecture merger.  This is run whenever
+   compiling multiple architectures and the output is a .o or an
+   executable. */
+static char *ofile_merge_spec = "\
+%{!M:%{!MM:%{!E:%{!precomp:%{!S:lipo -create %F \
+			%{c:%W{o}%{!o:-o %w%b%O}}%{!c:-o %w%u%O}\n}}}}}";
+static char *exec_merge_spec = "\
+%{!M:%{!MM:%{!E:%{!precomp:%{!S:%{!c:lipo -create %F \
+			%{o}%{!o:-o a.out}\n}}}}}}";
+static char *precomp_merge_spec = "\
+%{!M:%{!MM:%{!E:%{precomp:%{!S:%{!c:lipo -create %F \
+			%{o}%{!o:-o %b.p}\n}}}}}}";
+
+#endif /* NEXT_FAT_OUTPUT */
 
 /* A vector of options to give to the linker.
    These options are accumulated by %x,
@@ -874,6 +994,7 @@ struct option_map option_map[] =
    {"--std", "-std=", "aj"},
    {"--symbolic", "-symbolic", 0},
    {"--target", "-b", "a"},
+   {"--time", "-time", 0},
    {"--trace-includes", "-H", 0},
    {"--traditional", "-traditional", 0},
    {"--traditional-cpp", "-traditional-cpp", 0},
@@ -1346,6 +1467,34 @@ static struct path_prefix startfile_prefixes = { 0, 0, "startfile" };
 
 static struct path_prefix include_prefixes = { 0, 0, "include" };
 
+#ifdef NEXT_FRAMEWORK
+
+/* A vector of the frameworks specified with 
+   -framework XXX */
+static struct path_prefix framework_paths = {0, 0, "frameworks"};
+static struct path_prefix default_framework_paths = {0, 0, "default_frameworks"};
+
+static struct { char *path; int u1; } 
+	framework_paths_defaults_array [] = {
+#ifdef NEXT_FRAMEWORKS_DEFAULT
+    NEXT_FRAMEWORKS_DEFAULT
+#elif defined (OPENSTEP)
+    {"/LocalLibrary/Frameworks", 0},
+    {"/NextLibrary/Frameworks", 0},
+#else
+    {"/Local/Library/Frameworks", 0},
+#ifdef NEXT_PDO
+    {"/Library/Frameworks", 0},
+#else
+    {"/Network/Library/Frameworks", 0},
+    {"/System/Library/Frameworks", 0},
+#endif
+#endif
+    {NULL, 0}
+ };
+
+#endif /*  NEXT_FRAMEWORK */
+
 /* Suffix to attach to directories searched for commands.
    This looks like `MACHINE/VERSION/'.  */
 
@@ -1371,9 +1520,12 @@ static const char *gcc_exec_prefix;
 #ifndef STANDARD_EXEC_PREFIX
 #define STANDARD_EXEC_PREFIX "/usr/local/lib/gcc-lib/"
 #endif /* !defined STANDARD_EXEC_PREFIX */
+#ifndef STANDARD_EXEC_PREFIX_1
+#define STANDARD_EXEC_PREFIX_1 "/usr/lib/gcc/"
+#endif /* !defined STANDARD_EXEC_PREFIX_1 */
 
 static const char *standard_exec_prefix = STANDARD_EXEC_PREFIX;
-static const char *standard_exec_prefix_1 = "/usr/lib/gcc/";
+static const char *standard_exec_prefix_1 = STANDARD_EXEC_PREFIX_1;
 #ifdef MD_EXEC_PREFIX
 static const char *md_exec_prefix = MD_EXEC_PREFIX;
 #endif
@@ -1954,6 +2106,39 @@ putenv_from_prefixes (paths, env_var)
   putenv (build_search_list (paths, env_var, 1));
 }
 
+#ifdef NEXT_CPP_PRECOMP
+/* This code is dublicated from below because it is needed in between */
+
+/* Find all the switches given to us
+   and make a vector describing them.
+   The elements of the vector are strings, one per switch given.
+   If a switch uses following arguments, then the `part1' field
+   is the switch itself and the `args' field
+   is a null-terminated vector containing the following arguments.
+   The `live_cond' field is 1 if the switch is true in a conditional spec,
+   -1 if false (overridden by a later switch), and is initialized to zero.
+   The `valid' field is nonzero if any spec has looked at this switch;
+   if it remains zero at the end of the run, it must be meaningless.  */
+
+struct switchstr
+{
+  char *part1;
+  char **args;
+  int live_cond;
+  int validated;
+};
+
+static struct switchstr *switches;
+
+static int n_switches;
+
+struct infile
+{
+  char *name;
+  char *language;
+};
+#endif /* NEXT_CPP_PRECOMP */
+
 /* Search for NAME using the prefix list PREFIXES.  MODE is passed to
    access to check permissions.
    Return 0 if not found, otherwise return its name, allocated with malloc.  */
@@ -1968,6 +2153,12 @@ find_a_file (pprefix, name, mode)
   const char *file_suffix = ((mode & X_OK) != 0 ? EXECUTABLE_SUFFIX : "");
   struct prefix_list *pl;
   int len = pprefix->max_len + strlen (name) + strlen (file_suffix) + 1;
+
+#if defined (_WIN32) && defined (NEXT_PDO)
+  if (mode & X_OK)
+    /* Turn off the X_OK bit because X_OK is really supposed to be zero!  */
+    mode = mode & ~X_OK;
+#endif
 
 #ifdef DEFAULT_ASSEMBLER
   if (! strcmp(name, "as") && access (DEFAULT_ASSEMBLER, mode) == 0) {
@@ -2103,9 +2294,50 @@ find_a_file (pprefix, name, mode)
 	  }
       }
 
+#ifdef NEXT_CPP_PRECOMP
+  /* If there is no cpp-precomp and -precomp is not given, use gcc's cpp.  */
+  /* Actually, it doesn't matter if the -precomp switch was specified,
+     since cpp has been modified to exit with a warning in this case.  */
+  if (strcmp(name, "cpp-precomp") == 0)
+    {
+#if 0
+      int i = 0;
+      while (i < n_switches 
+	     && (switches[i].part1[0] != 'p'
+		 || strcmp (switches[i].part1, "precomp")))
+	i++;
+      if (i == n_switches)
+#endif /* 0 */
+	return find_a_file (pprefix, "cpp", X_OK);
+    }
+#endif /* NEXT_CPP_PRECOMP */
+
   free (temp);
   return 0;
 }
+
+#ifdef NEXT_SEMANTICS
+/* Collect arguments to be passed to dynamic library tool */
+
+static void add_dynamiclib_option(first, second)
+     char * first;
+     char * second;
+{
+   n_dynamiclib_options+=2;
+   if (dynamiclib_options == NULL)
+     dynamiclib_options = (char **)
+         xmalloc (n_dynamiclib_options * sizeof (char*));
+   else
+     dynamiclib_options = (char **)
+         xrealloc (dynamiclib_options,
+                   n_dynamiclib_options * sizeof (char*));
+   dynamiclib_options[n_dynamiclib_options-2] = first;
+   if (second)
+      dynamiclib_options[n_dynamiclib_options-1] = second;
+   else 
+      n_dynamiclib_options--;
+}
+#endif
 
 /* Add an entry for PREFIX in PLIST.  If FIRST is set, it goes
    at the start of the list, otherwise it goes at the end.
@@ -2161,6 +2393,28 @@ add_prefix (pprefix, prefix, component, first, require_machine_suffix, warn)
     pl->next = (struct prefix_list *) 0;
   *prev = pl;
 }
+
+#ifdef NEXT_FRAMEWORK
+static void
+safe_add_prefix (pprefix, prefix, first, require_machine_suffix, warn)
+     struct path_prefix *pprefix;
+     char *prefix;
+     int first;
+     int require_machine_suffix;
+     int *warn;
+{
+  int len = strlen (prefix);
+  char *temp = prefix;
+  if (prefix[len - 1] != '/')
+    {
+      temp = xmalloc (len+2);
+      strcpy (temp, prefix);
+      temp[len] = '/';
+      temp[len+1] = 0;
+    }
+  add_prefix (pprefix, temp, "GCC", first, require_machine_suffix, warn);
+}
+#endif
 
 /* Print warnings for any prefixes in the list PPREFIX that were not used.  */
 
@@ -2282,6 +2536,10 @@ execute ()
 #endif /* DEBUG */
     }
 
+#ifdef DO_REPORT_EVENT
+  DO_REPORT_EVENT ();
+#endif
+
   /* Run each piped subprocess.  */
 
   for (i = 0; i < n_commands; i++)
@@ -2315,6 +2573,10 @@ execute ()
 
   {
     int ret_code = 0;
+#ifdef HAVE_GETRUSAGE
+    struct timeval d;
+    double ut = 0.0, st = 0.0;
+#endif
 
     for (i = 0; i < n_commands; )
       {
@@ -2325,6 +2587,25 @@ execute ()
 	pid = pwait (commands[i].pid, &status, 0);
 	if (pid < 0)
 	  abort ();
+
+#ifdef HAVE_GETRUSAGE
+	if (report_times)
+	  {
+	    /* getrusage returns the total resource usage of all children
+	       up to now.  Copy the previous values into prus, get the
+	       current statistics, then take the difference.  */
+
+	    prus = rus;
+	    getrusage (RUSAGE_CHILDREN, &rus);
+	    d.tv_sec = rus.ru_utime.tv_sec - prus.ru_utime.tv_sec;
+	    d.tv_usec = rus.ru_utime.tv_usec - prus.ru_utime.tv_usec;
+	    ut = (double)d.tv_sec + (double)d.tv_usec / 1.0e6;
+	    
+	    d.tv_sec = rus.ru_stime.tv_sec - prus.ru_stime.tv_sec;
+	    d.tv_usec = rus.ru_stime.tv_usec - prus.ru_stime.tv_usec;
+	    st = (double)d.tv_sec + (double)d.tv_usec / 1.0e6;
+	  }
+#endif
 
 	for (j = 0; j < n_commands; j++)
 	  if (commands[j].pid == pid)
@@ -2343,6 +2624,10 @@ execute ()
 			   && WEXITSTATUS (status) >= MIN_FATAL_STATUS)
 		    ret_code = -1;
 		}
+#ifdef HAVE_GETRUSAGE
+	      if (report_times /*&& ut + st != 0*/)
+		fprintf (stderr, "# %s %.2f %.2f\n", commands[j].prog, ut, st);
+#endif
 	      break;
 	    }
       }
@@ -2350,6 +2635,7 @@ execute ()
   }
 }
 
+#ifndef NEXT_CPP_PRECOMP
 /* Find all the switches given to us
    and make a vector describing them.
    The elements of the vector are strings, one per switch given.
@@ -2378,6 +2664,7 @@ struct infile
   const char *name;
   const char *language;
 };
+#endif /* not NEXT_CPP_PRECOMP */
 
 /* Also a vector of input files specified.  */
 
@@ -2553,15 +2840,60 @@ add_linker_option (option, len)
 
   if (! linker_options)
     linker_options
-      = (char **) xmalloc (n_linker_options * sizeof (char *));
+      = (char **) xmalloc (n_linker_options * sizeof (char **));
   else
     linker_options
       = (char **) xrealloc (linker_options,
-			    n_linker_options * sizeof (char *));
+			    n_linker_options * sizeof (char **));
 
   linker_options [n_linker_options - 1] = save_string (option, len);
 }
+     
+#ifdef NEXT_FAT_OUTPUT
+/* A vector of per-architecture files to be merged together. */
+
+const char **arch_merge_files;
+
+/* The dependency output file (specified with -dependency-file) */
+
+static const char *dependency_output_file = NULL;
+#endif /* NEXT_FAT_OUTPUT */
+
+#ifdef NEXT_FRAMEWORK
+static char *
+find_a_framework (pprefix, name, postfix)
+     struct path_prefix *pprefix;
+     char *name;
+     char *postfix;
+{
+  int len = pprefix->max_len + strlen (name) * 2
+	    + strlen (".framework/") + 4 + (postfix ? strlen (postfix) : 0);
+  char *temp = xmalloc (len);
+  struct prefix_list *pl;
+
+  /* Determine the filename to execute (special case for absolute paths).  */
+  for (pl = pprefix->plist; pl; pl = pl->next)
+    {
+      strcpy (temp, pl->prefix);
+      strcat (temp, name);
+      strcat (temp, ".framework/");
+      strcat (temp, name);
+      if (postfix)
+	strcat (temp, postfix);
+
+      if (access (temp, R_OK) == 0)
+	return temp;
+    }
+
+  free (temp);
+  return 0;
+}
+#endif
 
+#if defined (NEXT_SEMANTICS) || defined (NEXT_PDO)
+static char *default_language = NULL;
+#endif
+
 /* Create the vector `switches' and its contents.
    Store its length in `n_switches'.  */
 
@@ -2570,6 +2902,11 @@ process_command (argc, argv)
      int argc;
      char **argv;
 {
+#ifdef NEXT_SEMANTICS
+  int code_gen_style_dynamic = -1;
+  /* Default name in case the -install_name and -o flags are absent.  */
+  char *install_name = "a.out";
+#endif
   register int i;
   const char *temp;
   char *temp1;
@@ -2618,6 +2955,28 @@ process_command (argc, argv)
       add_prefix (&exec_prefixes, gcc_exec_prefix, "GCC", 0, 0, NULL_PTR);
       add_prefix (&startfile_prefixes, gcc_exec_prefix, "GCC", 0, 0, NULL_PTR);
     }
+
+#ifdef NEXT_FRAMEWORK
+  {
+    /* Setup default search path for frameworks.  */
+    int i = 0;
+    const char *path;
+    char *next_root = getenv ("NEXT_ROOT");
+    if (next_root && *next_root && next_root[strlen (next_root) - 1] == '/')
+      next_root[strlen (next_root) - 1] = '\0';
+    while (path = framework_paths_defaults_array[i++].path)
+      {
+	char *new_fname = NULL;
+	if (next_root && *next_root)
+          new_fname = (char *) xmalloc (strlen (next_root) + strlen (path) + 1);
+	if (new_fname)
+	  sprintf (new_fname, "%s%s", next_root, path);
+	else
+	  new_fname = path;
+	safe_add_prefix (&default_framework_paths, new_fname, 0, 0, 0);
+      }
+  }
+#endif
 
   /* COMPILER_PATH and LIBRARY_PATH have values
      that are lists of directory names with colons.  */
@@ -2739,6 +3098,32 @@ process_command (argc, argv)
 	  init_spec ();
 	  for (sl = specs; sl; sl = sl->next)
 	    printf ("*%s:\n%s\n\n", sl->name, *(sl->ptr_spec));
+
+#ifdef NEXT_CPP_PRECOMP
+/* Default string value for __PTRDIFF_TYPE__ - taken from cccp.c.  */
+
+#ifndef PTRDIFF_TYPE
+#define PTRDIFF_TYPE "long int"
+#endif
+
+/* Default string value for __SIZE_TYPE__ - taken from cccp.c.  */
+
+#ifndef SIZE_TYPE
+#define SIZE_TYPE "long unsigned int"
+#endif
+
+/* Default string value for __WCHAR_TYPE__ - taken from cccp.c.  */
+
+#ifndef WCHAR_TYPE
+#define WCHAR_TYPE "int"
+#endif
+
+	  printf ("*builtin_predefines:\n%s\n\n",
+		  "\"-D__PTRDIFF_TYPE__=" PTRDIFF_TYPE
+		  "\" \"-D__SIZE_TYPE__=" SIZE_TYPE
+		  "\" \"-D__WCHAR_TYPE__=" WCHAR_TYPE "\"");
+#endif
+
           if (link_command_spec)
             printf ("*link_command:\n%s\n\n", link_command_spec);
 	  exit (0);
@@ -2830,8 +3215,22 @@ process_command (argc, argv)
 	  n_infiles++;
 	  i++;
 	}
+#ifdef NEXT_PDO
+      else if (! strncmp (argv[i], "-F", 2))
+	{
+	  if (argv[i][2] == 0)
+	    fatal ("argument to `-F' is missing");
+
+#ifdef NEXT_FRAMEWORK
+	  safe_add_prefix (&framework_paths, argv[i]+2, 0, 0, 0);
+#endif
+	  n_switches++;
+	}
+#endif /* NEXT_PDO */
       else if (strncmp (argv[i], "-l", 2) == 0)
 	n_infiles++;
+      else if (strcmp (argv[i], "-time") == 0)
+	report_times = 1;
       else if (strcmp (argv[i], "-save-temps") == 0)
 	{
 	  save_temps_flag = 1;
@@ -2880,6 +3279,11 @@ process_command (argc, argv)
 		fatal ("argument to `-b' is missing");
 	      if (p[1] == 0)
 		spec_machine = argv[++i];
+#if defined (NEXT_SEMANTICS) || defined (NEXT_PDO)
+	      /* Allow NeXT's -bsd and -bundle switch.  */
+	      else if (WORD_SWITCH (p))
+		i += WORD_SWITCH_TAKES_ARG (p);
+#endif /* NEXT_SEMANTICS */
 	      else
 		spec_machine = p + 1;
 
@@ -2981,8 +3385,187 @@ process_command (argc, argv)
 	      }
 	      break;
 
-	    case 'S':
+#if defined (NEXT_SEMANTICS) || defined (NEXT_PDO)
+            case 'f':
+              /* The -framework switch needs to be treated in a manner similar
+                 to the -l switch.  */
+	      if (!strcmp (p, "framework"))
+                {
+#ifndef NEXT_FRAMEWORK
+                  n_infiles++;
+#endif
+                  if (WORD_SWITCH_TAKES_ARG (p))
+                    {
+		      n_infiles += WORD_SWITCH_TAKES_ARG (p);
+		      i += WORD_SWITCH_TAKES_ARG (p);
+		      if (i >= argc)
+			fatal ("argument to `-framework' is missing");
+		    }
+                  break;
+                }
+	      else if (!strcmp (p, "filelist"))
+                {
+#if defined (NEXT_SEMANTICS) || defined (hpux) || defined (_WIN32)
+                  n_infiles++;
+                  if (WORD_SWITCH_TAKES_ARG (p))
+                    {
+		      n_infiles += WORD_SWITCH_TAKES_ARG (p);
+		      i += WORD_SWITCH_TAKES_ARG (p);
+		      if (i >= argc)
+			fatal ("argument to `-filelist' is missing");
+		    }
+#else
+                  if (i + 1 == argc)
+                    fatal ("argument to `-filelist' is missing");
+                  n_filelists++;
+                  if (filelists == NULL)
+                    filelists = (char **)
+                        xmalloc (n_filelists * sizeof (char*));
+                  else
+                    filelists = (char **)
+                        xrealloc (filelists,
+                                  n_filelists * sizeof (char*));
+                  filelists[n_filelists-1] = argv[++i];
+                  n_switches++;
+#endif
+                  break;
+                }
+              else if (!strncmp (p, "fgen-index=", 11))
+                { 
+                  if (!p[11])
+                    fatal ("Missing argument to -fgen-index=");
+                  n_switches++;
+                  break;
+                }
+
+
+#ifdef NEXT_SEMANTICS
+            case 'i':
+              if (!strcmp (p, "install_name"))
+                {
+                  if (i + 1 == argc)
+                    fatal ("argument to `-install_name' is missing");
+                  add_dynamiclib_option(argv[i], argv[i+1]);
+                  i++;
+		  n_switches++;
+		  /* This indicates the -install_name flag was present.  */
+                  install_name = NULL;
+                  break;
+                }
+              else if (!strcmp (p, "image_base"))
+                {
+                  if (i + 1 == argc)
+                    fatal ("argument to `-image_base' is missing");
+                  add_dynamiclib_option(argv[i], argv[i+1]);
+                  i++;
+		  n_switches++;
+                  break;
+                }
+#endif
+#endif
+
+#if defined (NEXT_FAT_OUTPUT) || defined (NEXT_PDO)
+	    case 'a':
+              if (!strcmp (p, "arch") || !strcmp (p, "arch_only"))
+	        {
+#ifdef NEXT_FAT_OUTPUT
+		  NXArchInfo const* temp;
+		  int j, duplicate = 0;
+#endif
+		  
+		  if (i + 1 == argc)
+		    fatal ("argument to `-arch' is missing");
+		  
+#ifdef NEXT_PDO
+		  i++;
+#ifdef _WIN32
+		  if (strcmp (argv[i], "i386")
+#ifdef ARCH
+		      && strcmp (argv[i], ARCH)
+#endif
+		      )
+		    fatal ("unknown architecture `%s'", argv[i]);
+#else /* !_WIN32 */
+		  error ("Warning: This version of gcc ignores the -arch flag");
+#endif /* !_WIN32 */
+#else /* !NEXT_PDO */
+		  temp = NXGetArchInfoFromName (argv[++i]);
+		  if (temp == 0 && !strcmp (argv[i], "ppc"))
+		    temp = NXGetArchInfoFromName ("m98k");
+		  if (temp == 0)
+		    fatal ("unknown architecture `%s'", argv[i]);
+		  
+		  for (j = 0; j < arch_count; j++)
+		    if (!strcmp (temp->name, arch_array[j]->name))
+		      duplicate = 1;
+		  
+		  if (!duplicate)
+		    {
+		      arch_count++;
+		      if (arch_array == NULL)
+			arch_array = (NXArchInfo const **)
+			    xmalloc (arch_count * sizeof (NXArchInfo*));
+		      else
+			arch_array = (NXArchInfo const **)
+			    xrealloc (arch_array,
+				      arch_count * sizeof (NXArchInfo*));
+		      
+		      arch_array[arch_count - 1] = temp;
+		    }
+#endif /* !NEXT_PDO */
+		  
+		  n_switches++;
+		  break;
+		}
+#endif /* NEXT_FAT_OUTPUT || NEXT_PDO */
+#if defined (NEXT_FAT_OUTPUT) || defined (NEXT_SEMANTICS)
+	    case 'd':
+	      if (p[1] == '\0')	/* -d is a linker switch!  */
+		break;
+#ifdef NEXT_FAT_OUTPUT
+	      else if (!strcmp (p, "dependency-file"))
+		{
+		  if (i + 1 == argc)
+		    fatal ("argument to `-dependency-file' is missing");
+		  dependency_output_file = argv[++i];
+		  break;
+		}
+#endif /* NEXT_FAT_OUTPUT */
+#ifdef NEXT_SEMANTICS
+	      else if (!strcmp (p, "dynamic"))
+		{
+		  n_switches++;
+                  if (code_gen_style_dynamic == 0)
+		    fatal ("conflicting code gen style switches");
+                  code_gen_style_dynamic = 1;
+		  break;
+		}
+#endif /* NEXT_SEMANTICS */
+#endif /* NEXT_FAT_OUTPUT || NEXT_SEMANTICS */
+
 	    case 'c':
+#ifdef NEXT_SEMANTICS
+              if (!strcmp (p, "current_version"))
+                {
+                  if (i + 1 == argc)
+                    fatal ("argument to `-current_version' is missing");
+                  add_dynamiclib_option(argv[i], argv[i+1]);
+                  i++;
+                  n_switches++;
+                  break;
+                }
+              else if (!strcmp (p, "compatibility_version"))
+                {
+                  if (i + 1 == argc)
+                    fatal ("argument to `-compatibility_version' is missing");
+                  add_dynamiclib_option(argv[i], argv[i+1]);
+                  i++;
+                  n_switches++;
+                  break;
+                }
+		/* else FALL THRU */
+#endif
+	    case 'S':
 	      if (p[1] == 0)
 		{
 		  have_c = 1;
@@ -3030,10 +3613,37 @@ process_command (argc, argv)
 #endif
 	      goto normal_switch;
 
+#if defined (NEXT_SEMANTICS) || (defined (NEXT_PDO) && defined (_WIN32))
+	    case 's':
+	      if (!strcmp (p, "static"))
+#ifdef NEXT_SEMANTICS
+		{
+                  if (code_gen_style_dynamic == 1)
+		    fatal ("conflicting code gen style switches");
+                  code_gen_style_dynamic = 0;
+		}
+#elif defined (NEXT_PDO) && defined (_WIN32)
+		error ("Warning: This version of gcc does not support the -static flag");
+#endif
+#endif
+
 	    default:
 	    normal_switch:
 	      n_switches++;
 
+#ifdef NEXT_SEMANTICS
+	      if (p[0] == 'o' && p[1] == '\0' && i + 1 < argc)
+		{
+		  if (install_name)
+		    /* Name to use in case the -install_name flag
+		       is absent.  */
+		    install_name = argv[i+1];
+#ifdef NEXT_FAT_OUTPUT
+		  /* Name to use in the -final_output linker flag.  */
+		  final_output = argv[i+1];
+#endif
+		}
+#endif /* NEXT_SEMANTICS */
 	      if (SWITCH_TAKES_ARG (c) > (p[1] != 0))
 		i += SWITCH_TAKES_ARG (c) - (p[1] != 0);
 	      else if (WORD_SWITCH_TAKES_ARG (p))
@@ -3047,10 +3657,43 @@ process_command (argc, argv)
 	}
     }
 
+#ifdef NEXT_SEMANTICS
+  if (install_name)
+    add_dynamiclib_option ("-install_name", install_name);
+#endif
+
   if (have_c && have_o && lang_n_infiles > 1)
     fatal ("cannot specify -o with -c or -S and multiple compilations");
 
   /* Set up the search paths before we go looking for config files.  */
+
+#ifdef NEXT_PDO
+  {
+    char *next_root = getenv ("NEXT_ROOT");
+    if (next_root && next_root[strlen (next_root)-1] == '/')
+      next_root[strlen (next_root)-1] = '\0';
+    if (next_root && *next_root)
+      {
+	char *new_standard_exec_prefix = (char*)malloc(strlen(next_root) + strlen(standard_exec_prefix) + 1);
+	char* new_standard_startfile_prefix = (char*)malloc(strlen(next_root) + strlen(standard_startfile_prefix) + 1);
+	char* new_tooldir_base_prefix = (char*)malloc(strlen(next_root) + strlen(tooldir_base_prefix) + 1);
+
+	sprintf (new_standard_exec_prefix, "%s%s",
+		 next_root, standard_exec_prefix);
+	sprintf (new_standard_startfile_prefix, "%s%s",
+		 next_root, standard_startfile_prefix);
+	sprintf (new_tooldir_base_prefix, "%s%s",
+		 next_root, tooldir_base_prefix);
+
+	if (new_standard_exec_prefix && *new_standard_exec_prefix) 
+	  standard_exec_prefix = new_standard_exec_prefix;
+	if (new_standard_startfile_prefix && *new_standard_startfile_prefix) 
+	  standard_startfile_prefix = new_standard_startfile_prefix;
+	if (new_tooldir_base_prefix && *new_tooldir_base_prefix) 
+	  tooldir_base_prefix = new_tooldir_base_prefix;
+      }
+  }
+#endif /* NEXT_PDO */
 
   /* These come before the md prefixes so that we will find gcc's subcommands
      (such as cpp) rather than those of the host system.  */
@@ -3136,6 +3779,8 @@ process_command (argc, argv)
 	;
       else if (! strcmp (argv[i], "-print-libgcc-file-name"))
 	;
+      else if (strcmp (argv[i], "-time") == 0)
+	;
       else if (! strncmp (argv[i], "-print-file-name=", 17))
 	;
       else if (! strncmp (argv[i], "-print-prog-name=", 17))
@@ -3210,10 +3855,122 @@ process_command (argc, argv)
       /* -save-temps overrides -pipe, so that temp files are produced */
       else if (save_temps_flag && strcmp (argv[i], "-pipe") == 0)
 	error ("Warning: -pipe ignored since -save-temps specified");
+#if defined (NEXT_SEMANTICS) || defined (NEXT_PDO)
+      else if (strcmp (argv[i], "-flat_namespace") == 0
+      		|| strcmp (argv[i], "-force_flat_namespace") == 0)
+        {
+	  infiles[n_infiles].language = "*";
+	  infiles[n_infiles++].name = argv[i];
+        }
+      /* The -framework switch needs to be treated in a manner similar
+	 to the -l switch.  */
+      else if (strcmp (argv[i], "-framework") == 0)
+	{
+	  int j, n;
+#ifndef NEXT_FRAMEWORK
+	  infiles[n_infiles].language = 0;
+	  infiles[n_infiles++].name = argv[i];
+#endif
+	  for (j = 0, n = WORD_SWITCH_TAKES_ARG (argv[i]+1);
+	       j < n && i + 1 < argc; j++)
+	    {
+	      infiles[n_infiles].language = 0;
+#ifndef NEXT_FRAMEWORK
+	      infiles[n_infiles++].name = argv[++i];
+#else
+	      {
+		const char *fw = argv[++i];
+		char *fw_path = 0, *suffix;
+
+		/* find the suffix, if any */
+		if (suffix = (char *) index (fw, ','))
+		  *suffix++ = 0;
+		/* find the framework in the file system */
+		if (suffix)
+		  fw_path = find_a_framework (&framework_paths, fw, suffix);
+		if (!fw_path)
+		  fw_path = find_a_framework (&framework_paths, fw, 0);
+		if (suffix && !fw_path)
+		  fw_path = find_a_framework (&default_framework_paths, fw,
+					      suffix);
+		if (!fw_path)
+		  fw_path = find_a_framework (&default_framework_paths, fw, 0);
+		if (!fw_path)
+		  error ("framework %s not found", fw);
+		else
+		  infiles[n_infiles++].name = (char *) fw_path;
+	      }
+#endif /* NEXT_FRAMEWORK */
+	    }
+	}
+#if defined (NEXT_SEMANTICS) || defined (hpux) || defined (_WIN32)
+      /* The -filelist switch needs to be treated in a manner similar
+	 to the -l switch.  */
+      else if (strcmp (argv[i], "-filelist") == 0)
+	{
+	  int j, n;
+	  infiles[n_infiles].language = 0;
+#ifdef hpux
+	  /* Translate -filelist into -c if no comma follows file name.  */
+	  infiles[n_infiles++].name = index (argv[i+1], ',') ? argv[i] : "-c";
+#else
+	  infiles[n_infiles++].name = argv[i];
+#endif
+	  for (j = 0, n = WORD_SWITCH_TAKES_ARG (argv[i]+1);
+	       j < n && i + 1 < argc; j++)
+	    {
+	      infiles[n_infiles].language = 0;
+	      infiles[n_infiles++].name = argv[++i];
+	    }
+	}
+#endif /* NEXT_PDO */
+      /* 12 = strlen ("-fgen-index") */
+      else if (strncmp (argv[i], "-fgen-index=", 12) == 0)
+	{
+          int arg_len = 0;
+          char *part1 = (char *) xmalloc (13);
+          strcpy (part1, "-fgen-index=");
+          arg_len = strlen (&argv[i][12]);
+          switches[n_switches].part1 = &argv[i][1];
+          switches[n_switches].args = 0;
+          /* switches[n_switches].part1 = &argv[i][1]; */
+          /*
+          switches[n_switches].part1 = part1;
+          switches[n_switches].args = (char **) xmalloc (1 * sizeof (char *));
+          switches[n_switches].args[0] = xmalloc (arg_len+1);
+          strcpy (switches[n_switches].args[0], &argv[i][12]);
+          switches[n_switches].args[1] = 0;
+          */
+          switches[n_switches].live_cond = 1;
+          switches[n_switches].validated     = 1;
+	  add_preprocessor_option (argv[i], strlen (argv[i]));
+          n_switches++;
+	}
+
+#endif /* NEXT_SEMANTICS || NEXT_PDO */
       else if (argv[i][0] == '-' && argv[i][1] != 0)
 	{
 	  register char *p = &argv[i][1];
 	  register int c = *p;
+
+#if defined (NEXT_SEMANTICS) || defined (NEXT_PDO)
+#if 0  /* This may be a remnant from gcc 2.7.2.1!  */
+	  /* Allow NeXT's -bsd and -bundle switch */
+	  if ((c == 'B' || c == 'b' || c == 'V')
+		&& ! WORD_SWITCH (p))
+	    {
+	      /* Skip a separate arg, if any.  */
+	      if (p[1] == 0)
+		i++;
+	      continue;
+	    }
+#endif
+	  if (c == 'd' && !strcmp (p, "dependency-file"))
+	    {
+	      i++;
+	      continue;
+	    }
+#endif
 
 	  if (c == 'x')
 	    {
@@ -3269,7 +4026,15 @@ process_command (argc, argv)
 	      switches[n_switches].args[1] = 0;
 	    }
 	  else
-	    switches[n_switches].args = 0;
+	    {
+	      switches[n_switches].args = 0;
+#if defined (NEXT_SEMANTICS) || defined (NEXT_PDO)
+	      if (!strcmp (p, "ObjC"))
+		default_language = "objective-c";
+	      else if (!strcmp (p, "ObjC++"))
+		default_language = "objective-c++";
+#endif
+	    }
 
 	  switches[n_switches].live_cond = 0;
 	  switches[n_switches].validated = 0;
@@ -3340,6 +4105,12 @@ static int delete_this_arg;
    is the output file name of this compilation.  */
 static int this_is_output_file;
 
+#ifdef NEXT_FAT_OUTPUT
+/* Nonzero means %m has been seen; the next arg to be terminated
+   is the output file name of the compilation of this architecture.  */
+static int this_is_arch_merge_file;
+#endif
+
 /* Nonzero means %s has been seen; the next arg to be terminated
    is the name of a library file and we should try the standard
    search dirs for it.  */
@@ -3361,6 +4132,9 @@ do_spec (spec)
   arg_going = 0;
   delete_this_arg = 0;
   this_is_output_file = 0;
+#ifdef NEXT_FAT_OUTPUT
+  this_is_arch_merge_file = 0;
+#endif
   this_is_library_file = 0;
   input_from_pipe = 0;
 
@@ -3418,9 +4192,17 @@ do_spec_1 (spec, inswitch, soft_matched_part)
 	    string = obstack_finish (&obstack);
 	    if (this_is_library_file)
 	      string = find_file (string);
-	    store_arg (string, delete_this_arg, this_is_output_file);
+	    store_arg (string, delete_this_arg, this_is_output_file
+#ifdef NEXT_FAT_OUTPUT
+		       || this_is_arch_merge_file
+#endif
+		       );
 	    if (this_is_output_file)
 	      outfiles[input_file_number] = string;
+#ifdef NEXT_FAT_OUTPUT
+	    else if (this_is_arch_merge_file)
+	      arch_merge_files[current_arch] = string;
+#endif
 	  }
 	arg_going = 0;
 
@@ -3455,6 +4237,9 @@ do_spec_1 (spec, inswitch, soft_matched_part)
 	delete_this_arg = 0;
 	this_is_output_file = 0;
 	this_is_library_file = 0;
+#ifdef NEXT_FAT_OUTPUT
+	this_is_arch_merge_file = 0;
+#endif
 	input_from_pipe = 0;
 	break;
 
@@ -3466,9 +4251,17 @@ do_spec_1 (spec, inswitch, soft_matched_part)
 	    string = obstack_finish (&obstack);
 	    if (this_is_library_file)
 	      string = find_file (string);
-	    store_arg (string, delete_this_arg, this_is_output_file);
+	    store_arg (string, delete_this_arg, this_is_output_file
+#ifdef NEXT_FAT_OUTPUT
+		       || this_is_arch_merge_file
+#endif
+		       );
 	    if (this_is_output_file)
 	      outfiles[input_file_number] = string;
+#ifdef NEXT_FAT_OUTPUT
+	    else if (this_is_arch_merge_file)
+	      arch_merge_files[current_arch] = string;
+#endif
 	  }
 
 	/* Use pipe */
@@ -3485,14 +4278,25 @@ do_spec_1 (spec, inswitch, soft_matched_part)
 	    string = obstack_finish (&obstack);
 	    if (this_is_library_file)
 	      string = find_file (string);
-	    store_arg (string, delete_this_arg, this_is_output_file);
+	    store_arg (string, delete_this_arg, this_is_output_file
+#ifdef NEXT_FAT_OUTPUT
+		       || this_is_arch_merge_file
+#endif
+		       );
 	    if (this_is_output_file)
 	      outfiles[input_file_number] = string;
+#ifdef NEXT_FAT_OUTPUT
+	    else if (this_is_arch_merge_file)
+	      arch_merge_files[current_arch] = string;
+#endif
 	  }
 	/* Reinitialize for a new argument.  */
 	arg_going = 0;
 	delete_this_arg = 0;
 	this_is_output_file = 0;
+#ifdef NEXT_FAT_OUTPUT
+	this_is_arch_merge_file = 0;
+#endif
 	this_is_library_file = 0;
 	break;
 
@@ -3634,6 +4438,43 @@ do_spec_1 (spec, inswitch, soft_matched_part)
 	    }
 	    break;
 
+#if defined (NEXT_SEMANTICS) || defined (NEXT_PDO)
+	  case 'B':
+	    /* {...:%Bfoo} means report the stage foo to ProjectBuilder */
+	    {
+	      const char *q = p;
+	      char *buf;
+	      while (*p != 0 && *p != '\n') p++;
+	      buf = (char *) xmalloc (p - q + 1 + 30);
+	      strncpy (buf, q, p - q);
+	      buf[p - q] = 0;
+#ifdef NEXT_SEMANTICS
+	      if (multi_arch)
+		{
+		  const char *curr = arch_array[current_arch]->name;
+
+		  strcat (buf, " %%s for ");
+
+		  if (! strcmp (curr, "i386"))
+		    strcat (buf, "Intel");
+                  else if (! strcmp (curr, "hppa"))
+                    strcat (buf, "HPPA");
+                  else if (! strcmp (curr, "sparc"))
+                    strcat (buf, "SPARC");
+		  else if (! strcmp (curr, "m68k"))
+		    strcat (buf, "NeXT");
+		  else
+		    strcat (buf, curr);
+		}
+#endif /* NEXT_SEMANTICS */
+#ifdef SAVE_REPORT_EVENT
+              SAVE_REPORT_EVENT (-1, NULL, input_basename, \
+				 0, buf, 0, 0, 0);
+#endif              
+	    }
+	    break;
+#endif
+
 	  case 'g':
 	  case 'u':
 	  case 'U':
@@ -3732,6 +4573,7 @@ do_spec_1 (spec, inswitch, soft_matched_part)
 		  do_spec_1 (" ", 0, NULL_PTR);
 		}
 
+#ifndef NEXT_OBJC_RUNTIME
 	      for (; pl; pl = pl->next)
 		{
 		  do_spec_1 ("-isystem", 1, NULL_PTR);
@@ -3740,6 +4582,7 @@ do_spec_1 (spec, inswitch, soft_matched_part)
 		  do_spec_1 (pl->prefix, 1, NULL_PTR);
 		  do_spec_1 (" ", 0, NULL_PTR);
 		}
+#endif
 	    }
 	    break;
 
@@ -3751,6 +4594,13 @@ do_spec_1 (spec, inswitch, soft_matched_part)
 	      for (i = 0; i < max; i++)
 		if (outfiles[i])
 		  store_arg (outfiles[i], 0, 0);
+#ifdef NEXT_FAT_OUTPUT
+	      if (multi_arch)
+		{
+		  store_arg ("-final_output", 0, 0);
+		  store_arg (final_output, 0, 0);
+		}
+#endif
 	      break;
 	    }
 
@@ -3766,6 +4616,12 @@ do_spec_1 (spec, inswitch, soft_matched_part)
 	  case 'w':
 	    this_is_output_file = 1;
 	    break;
+
+#ifdef NEXT_FAT_OUTPUT
+	  case 'f':
+	    this_is_arch_merge_file = 1;
+	    break;
+#endif
 
 	  case 'W':
 	    {
@@ -3819,6 +4675,17 @@ do_spec_1 (spec, inswitch, soft_matched_part)
 	      }
 	    break;
 
+#ifdef NEXT_SEMANTICS
+           case 'J':
+              for (i = 0; i < n_dynamiclib_options; i++)
+                {
+                  do_spec_1 (dynamiclib_options[i], 1, NULL_PTR);
+                  /* Make each accumulated option a separate argument.  */
+                  do_spec_1 (" ", 0, NULL_PTR);
+                }
+              break;
+#endif
+            
 	  /* Dump out the options accumulated previously using -Wa,.  */
 	  case 'Y':
 	    for (i = 0; i < n_assembler_options; i++)
@@ -3828,6 +4695,46 @@ do_spec_1 (spec, inswitch, soft_matched_part)
 		do_spec_1 (" ", 0, NULL_PTR);
 	      }
 	    break;
+
+#ifdef NEXT_FAT_OUTPUT
+	  case 'T':
+	    if (1) {
+	    int current_arch_name_len =
+	      strlen (strcmp (arch_array[current_arch]->name, "m98k") ?
+		      arch_array[current_arch]->name : "ppc");
+	    obstack_grow (&obstack,
+			  strcmp (arch_array[current_arch]->name, "m98k") ?
+			    arch_array[current_arch]->name : "ppc",
+			  current_arch_name_len);
+	    }
+	    arg_going = 1;
+	    break;
+
+	  case 'F':
+	    {
+	      register int i;
+	      for (i = 0; i < arch_count; i++) {
+		store_arg ("-arch", 0, 0);
+		store_arg (arch_array[i]->name, 0, 0);
+		store_arg (arch_merge_files[i], 0, 0);
+	      }
+	    }
+	    break;
+
+	  case 'M':
+	    {
+	      if (dependency_output_file == NULL)
+		{
+		  obstack_grow (&obstack, input_basename, basename_length);
+		  obstack_grow (&obstack, ".d", 2);
+		}
+	      else
+		obstack_grow (&obstack, dependency_output_file,
+			      strlen (dependency_output_file));
+	      arg_going = 1;
+	    }
+	    break;
+#endif /* NEXT_FAT_OUTPUT */
 
 	  /* Dump out the options accumulated previously using -Wp,.  */
 	  case 'Z':
@@ -4294,6 +5201,20 @@ next_member:
 	body = p, endbody = p+1;
     }
 
+#ifdef NEXT_FAT_OUTPUT
+  if (*filter == '@')
+    {
+      if (*p == '}')
+	fatal ("Internal compiler error: empty body in `@' conditioned spec");
+      if (p - filter > 1)
+	fatal ("Internal compiler error: `@' condition illegal in spec");
+      if (negate != multi_arch
+	  && do_spec_1 (save_string (p + 1, endbody - p - 2), 0, NULL) < 0)
+	return 0;
+      return endbody;
+    }
+#endif /* NEXT_FAT_OUTPUT */
+
   if (suffix)
     {
       int found = (input_suffix != 0
@@ -4457,8 +5378,15 @@ check_live_switch (switchnum, prefix_length)
   switch (*name)
     {
     case 'O':
+#if defined (NEXT_SEMANTICS) || defined (NEXT_PDO)
+      if (strncmp (name, "ObjC", 4))
+#endif
 	for (i = switchnum + 1; i < n_switches; i++)
-	  if (switches[i].part1[0] == 'O')
+	  if (switches[i].part1[0] == 'O'
+#if defined (NEXT_SEMANTICS) || defined (NEXT_PDO)
+	      && strncmp (switches[i].part1, "ObjC", 4)
+#endif
+	     )
 	    {
 	      switches[switchnum].validated = 1;
 	      switches[switchnum].live_cond = -1;
@@ -4644,8 +5572,102 @@ main (argc, argv)
   int linker_was_run = 0;
   char *explicit_link_files;
   char *specs_file;
+#ifdef REPORT_EVENT
+  char *link_output = "a.out";
+#endif
   const char *p;
   struct user_specs *uptr;
+
+#if defined (NEXT_PDO) && !defined (hpux) && !defined (_WIN32)
+	for( j = 0 ; j < argc ; j++ )
+	{
+		if (!strcmp (argv[j], "-filelist"))
+		{
+			char* filename;
+			char* prefixString;
+			FILE* atFile;
+			int argsToSkip = 0;
+
+			if (j + 1 == argc)
+			  error ("Missing argument to -filelist");
+
+			filename = argv[j+1];
+			argsToSkip = 1;
+
+			if (prefixString = strchr (filename, ','))
+			{
+				*prefixString = '\0';
+				prefixString++;
+			}
+			else
+			{
+				prefixString = "";
+			}
+
+			if( atFile = fopen( filename, "rt" ) )
+			{
+				int numOfItems = 0;
+				int letterCount = 0;
+				char c;
+				char** newArgv;
+				char* tempString;
+				char tempBuffer[1024];
+
+				while( ((c = fgetc( atFile )) != EOF))
+					 if( c == '\n') 
+					 	numOfItems++;
+				
+				newArgv = (char**)malloc( (numOfItems + argc) * sizeof(char*) );
+				memset( newArgv, 0, (numOfItems + argc) * sizeof( char*) );
+				memmove( &newArgv[0], &argv[0], j * sizeof( char* ) );
+				if( j+1 < argc )
+					memmove( &newArgv[j + numOfItems], &argv[j+1+argsToSkip], (argc - j) * sizeof( char* ) );
+				fseek( atFile, 0, SEEK_SET );
+				
+				numOfItems = 0;
+				while( (c = fgetc( atFile )) != EOF )
+				{
+					if( c != '\n' )
+					{
+						tempBuffer[letterCount] = c;
+						letterCount++;				
+					}
+					else
+					{
+						tempBuffer[letterCount] = '\0';
+						letterCount++;
+						tempString = (char*)malloc( (strlen(prefixString) + 1 + letterCount) * sizeof( char ) );
+						if (strlen(prefixString) > 0)
+							sprintf( tempString, "%s/", prefixString );
+						else
+							strcpy( tempString, "" );
+						strncat( tempString, tempBuffer, letterCount );
+						if( tempString[0] == '@' )
+							if( strcmp( tempString, argv[j] ) == 0 )
+							{
+								// I don't think you want to recursively include yourself!
+								tempString[0] = '\0';
+							}
+						newArgv[j + numOfItems] = tempString;
+						numOfItems++;
+						letterCount = 0;
+					}
+				}
+
+				if( newArgv )
+				{
+				  /* argv should NOT be freed because we didn't
+				     allocate it - it might not even point to
+				     a chunk of memory on the heap!  */
+				  argv = newArgv;
+				  argc = argc + numOfItems - 1 - argsToSkip;
+				}
+
+				fclose( atFile );
+			}
+		}
+	}
+#endif /* NEXT_PDO && !hpux && !_WIN32 */
 
   p = argv[0] + strlen (argv[0]);
   while (p != argv[0] && !IS_DIR_SEPARATOR (p[-1]))
@@ -4794,10 +5816,62 @@ main (argc, argv)
   n_compilers = n_default_compilers;
 
   /* Read specs from a file if there is one.  */
-
+#ifdef NEXT_FAT_OUTPUT
+  /* Determine the default architecture, if none was specified.
+     Compute the architecture family name.  */
+  if (arch_array == NULL)
+    {
+#ifndef DEFAULT_TARGET_ARCH
+      const NXArchInfo *family_arch;
+#endif
+      arch_family = (char **) xmalloc (sizeof (char *));
+      arch_array = (NXArchInfo const **) xmalloc (sizeof (NXArchInfo*));
+      arch_count = 1;
+#ifdef DEFAULT_TARGET_ARCH
+      arch_family[0] = DEFAULT_TARGET_ARCH;
+      arch_array[0] = NXGetArchInfoFromName (arch_family[0]);
+      if (arch_array[0] == 0 && !strcmp (arch_family[0], "ppc"))
+	arch_array[0] = NXGetArchInfoFromName ("m98k");
+      if (arch_array[0] == 0)
+	fatal ("unknown default architecture");
+#else /* not DEFAULT_TARGET_ARCH */
+      arch_family = (char **) xmalloc (sizeof (char *));
+      arch_count = 1;
+      arch_array = (NXArchInfo const **) xmalloc (sizeof (NXArchInfo*));
+      if ((arch_array[0] = NXGetLocalArchInfo ()) == 0)
+	fatal ("unknown default architecture");
+      family_arch = NXGetArchInfoFromCpuType (arch_array[0]->cputype,
+					      CPU_SUBTYPE_MULTIPLE);
+      arch_family[0] = (char*) (family_arch == NULL
+				? arch_array[0]->name
+				: family_arch->name);
+#endif /* not DEFAULT_TARGET_ARCH */
+    }
+  else
+    {
+      arch_family = (char **) xmalloc (sizeof (char *) * arch_count);
+      for (i = 0; i < arch_count; i++)
+	{
+	  const NXArchInfo *family_arch;
+	  family_arch = NXGetArchInfoFromCpuType (arch_array[i]->cputype,
+						  CPU_SUBTYPE_MULTIPLE);
+	  arch_family[i] = (char *) (family_arch == NULL 
+				     ? arch_array[i]->name 
+				     : family_arch->name);
+	  if (!strcmp (arch_family[i], "m98k"))
+	    arch_family[i] = "ppc";
+	}
+    }
+  multi_arch = (arch_count > 1);
+  arch_merge_files = (char **) xmalloc (arch_count * sizeof (char *));
+  machine_suffix = concat (arch_family[0], dir_separator_str,
+			   spec_version, dir_separator_str, NULL);
+  just_machine_suffix = concat (arch_family[0], dir_separator_str, NULL_PTR);
+#else /* not NEXT_FAT_OUTPUT */
   machine_suffix = concat (spec_machine, dir_separator_str,
 			   spec_version, dir_separator_str, NULL_PTR);
   just_machine_suffix = concat (spec_machine, dir_separator_str, NULL_PTR);
+#endif /* not NEXT_FAT_OUTPUT */
 
   specs_file = find_a_file (&startfile_prefixes, "specs", R_OK);
   /* Read the specs file unless it is a default one.  */
@@ -4962,8 +6036,13 @@ main (argc, argv)
 
       if (! verbose_flag)
 	{
+#if defined (NEXT_SEMANTICS) || defined (NEXT_PDO)
+	  printf ("Report bugs via the "
+		  "<URL:http://developer.apple.com/bugreporter> web page.\n");
+#else
 	  printf ("\nFor bug reporting instructions, please see:\n");
 	  printf ("<URL:http://www.gnu.org/software/gcc/faq.html#bugreport>.\n");
+#endif
 	  
 	  exit (0);
 	}
@@ -4977,6 +6056,11 @@ main (argc, argv)
     {
       int n;
 
+#ifdef NEXT_SEMANTICS
+      extern char *apple_version;
+      notice ("Apple Computer, Inc. version %s, based on ", apple_version);
+#endif
+
       /* compiler_version is truncated at the first space when initialized
 	 from version string, so truncate version_string at the first space
 	 before comparing.  */
@@ -4986,10 +6070,17 @@ main (argc, argv)
 
       if (! strncmp (version_string, compiler_version, n)
 	  && compiler_version[n] == 0)
+#ifdef NEXT_PDO
+	notice ("gcc version %s for Apple PDO\n", version_string);
+      else
+	notice ("gcc driver version %s executing gcc version %s for Apple PDO\n",
+		 version_string, compiler_version);
+#else
 	notice ("gcc version %s\n", version_string);
       else
 	notice ("gcc driver version %s executing gcc version %s\n",
 		version_string, compiler_version);
+#endif
 
       if (n_infiles == 0)
 	exit (0);
@@ -5030,6 +6121,37 @@ main (argc, argv)
 
       cp = lookup_compiler (infiles[i].name, input_filename_length,
 			    infiles[i].language);
+#ifdef NEXT_SEMANTICS
+      if (! cp)
+	{
+	  int i;
+	  for (i = 0; i < n_switches; i++)
+	    {
+	      if (!strcmp (switches[i].part1, "E"))
+		{
+		  cp = lookup_compiler (0, 0, "c");
+		  /* now turn on the -traditional-cpp, somehow */
+		  for ( i = 0; i < n_switches; i++ ) {
+		    if (!strcmp (switches[i].part1, "traditional-cpp")
+			|| !strcmp (switches[i].part1, "traditional")
+			|| !strcmp (switches[i].part1, "cpp"))
+		      break;
+		  }
+		  if (i == n_switches)
+		    {
+		      /* we didn't find the -traditional-cpp switch */
+		      switches
+			= ((struct switchstr*)
+			   xrealloc (switches,
+				     sizeof (struct switchstr) * ++n_switches));
+		      switches[n_switches-1].part1 = "traditional-cpp";
+		      switches[n_switches-1].args  = 0;
+		      switches[n_switches-1].validated = 1;
+		    }
+		}
+	    }
+	}
+#endif /* NEXT_SEMANTICS */
 
       if (cp)
 	{
@@ -5076,11 +6198,64 @@ main (argc, argv)
 		  len += strlen (cp->spec[j]);
 		}
 	    
+#ifdef NEXT_FAT_OUTPUT
+	    bzero (arch_merge_files, arch_count * sizeof (char *));
+	    for (current_arch = 0; current_arch < arch_count; current_arch++)
+	      {
+#if defined(SAVE_REPORT_EVENT) && 0
+	        SAVE_REPORT_EVENT (-1, NULL, input_basename, 0,
+				   (multi_arch ? "Compiling for %s:"
+					       : "Compiling"),
+				   arch_array[current_arch]->name, 0, 0);
+#endif
+		if (multi_arch)
+		  {
+		    /* Read CPP predefines from architecture spec. */
+		    machine_suffix = concat (arch_family[current_arch],
+					     dir_separator_str, spec_version,
+					     dir_separator_str, NULL_PTR);
+		    just_machine_suffix = concat (arch_family[current_arch],
+						  dir_separator_str, NULL_PTR);
+		    specs_file = find_a_file (&startfile_prefixes,
+					      "specs", R_OK);
+		    /* Read the specs file unless it is a default one.  */
+		    if (specs_file != 0 && strcmp (specs_file, "specs"))
+	              read_specs (specs_file, FALSE);
+		    else
+		      fatal ("cannot read specs file.");
+		  }
+#endif /* NEXT_FAT_OUTPUT */
 	    value = do_spec (p1);
+#ifdef NEXT_FAT_OUTPUT
+	        if (value < 0)
+		  {
+		    this_file_error = 1;
+		    break;
+		  }
+	      }
+#endif /* NEXT_FAT_OUTPUT */
 	    free (p1);
 	  }
+#ifdef NEXT_FAT_OUTPUT
+	  /* Run the merger after compiling all architectures. */
+	  if (multi_arch && !this_file_error)
+	    {
+#ifdef SAVE_REPORT_EVENT
+	      SAVE_REPORT_EVENT (-1, NULL, input_basename, 0,
+				 "Combining", 0, 0, 0);
+#endif
+	      value = do_spec (ofile_merge_spec);
+	      if (value < 0)
+		this_file_error = 1;
+	      value = do_spec (precomp_merge_spec);
+#elif defined(SAVE_REPORT_EVENT) && 0
+	  SAVE_REPORT_EVENT (-1, NULL, input_basename, 0, "Compiling", 0, 0, 0);
+#endif /* NEXT_FAT_OUTPUT */
 	  if (value < 0)
 	    this_file_error = 1;
+#ifdef NEXT_FAT_OUTPUT
+	    }
+#endif
 	}
 
       /* If this file's name does not contain a recognized suffix,
@@ -5128,11 +6303,49 @@ main (argc, argv)
       putenv_from_prefixes (&exec_prefixes, "COMPILER_PATH=");
       putenv_from_prefixes (&startfile_prefixes, "LIBRARY_PATH=");
 
+#ifndef NEXT_FAT_OUTPUT
+#ifdef SAVE_REPORT_EVENT
+      SAVE_REPORT_EVENT (-1, NULL, NULL, 0, "Linking %s", link_output, 0, 0);
+#endif
       value = do_spec (link_command_spec);
       if (value < 0)
 	error_count = 1;
+#else /* NEXT_FAT_OUTPUT */
+      bzero (arch_merge_files, arch_count * sizeof (char *));
+
+      for (current_arch = 0; current_arch < arch_count; current_arch++)
+	{
+#ifdef SAVE_REPORT_EVENT
+	  SAVE_REPORT_EVENT (-1, NULL, NULL, 0,
+			     (multi_arch ? "Linking %s for %s" : "Linking %s"),
+			     link_output, arch_array[current_arch]->name, 0);
+#endif
+	  machine_suffix = concat (arch_family[current_arch],
+				   dir_separator_str, NULL);
+	  value = do_spec (link_command_spec);
+	  if (value < 0)
+	    {
+	      error_count = 1;
+	      break;
+	    }
+	}
+#endif /* NEXT_FAT_OUTPUT */
       linker_was_run = (tmp != execution_count);
     }
+
+#ifdef NEXT_FAT_OUTPUT
+    /* Run the merger after linking all architectures. */
+    if (multi_arch && error_count == 0)
+      {
+#ifdef SAVE_REPORT_EVENT
+	SAVE_REPORT_EVENT (-1, NULL, NULL, 0,
+			   "Combining into %s", link_output, 0, 0);
+#endif
+	value = do_spec (exec_merge_spec);
+	if (value < 0)
+	  error_count = 1;
+      }
+#endif /* NEXT_FAT_OUTPUT */
 
   /* Warn if a -B option was specified but the prefix was never used.  */
   unused_prefix_warnings (&exec_prefixes);
@@ -5210,6 +6423,10 @@ lookup_compiler (name, length, language)
 #endif
 	 ))
 	{
+#if defined (NEXT_SEMANTICS) || defined (NEXT_PDO)
+	  if (default_language)
+	    return lookup_compiler (0, 0, default_language);
+#endif
 	  if (cp->spec[0][0] == '@')
 	    {
 	      struct compiler *new;

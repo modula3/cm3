@@ -52,6 +52,9 @@ struct object {
   struct dwarf_fde **fde_array;
   size_t count;
   struct object *next;
+#ifdef FRAME_SECTION_DESCRIPTOR
+  FRAME_SECTION_DESCRIPTOR
+#endif
 };
 
 /* Note the following routines are exported interfaces from libgcc; do not

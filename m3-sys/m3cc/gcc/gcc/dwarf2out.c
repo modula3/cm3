@@ -57,17 +57,33 @@ Boston, MA 02111-1307, USA.  */
 /* Decide whether we want to emit frame unwind information for the current
    translation unit.  */
 
+static int frame_was_required = 0;
+static int this_function_needs_dwarf2_info ()
+{
+  if (get_insns() != NULL && ! leaf_function_p ())
+    return frame_was_required = 1;
+  return 0;
+}
 int
 dwarf2out_do_frame ()
 {
-  return (write_symbols == DWARF2_DEBUG
+  int f = (write_symbols == DWARF2_DEBUG
 #ifdef DWARF2_FRAME_INFO
           || DWARF2_FRAME_INFO
 #endif
 #ifdef DWARF2_UNWIND_INFO
+#ifdef NEXT_SEMANTICS
+	  /* Don't bother if this is a leaf function.
+	     If GET_INSNS is NULL, though, return 1.  */
+	  || (flag_exceptions && ! exceptions_via_longjmp
+	      && (get_insns () == NULL
+		  || this_function_needs_dwarf2_info ()))
+#else
 	  || (flag_exceptions && ! exceptions_via_longjmp)
 #endif
+#endif
 	  );
+  return f;
 }
 
 #if defined (DWARF2_DEBUGGING_INFO) || defined (DWARF2_UNWIND_INFO)
@@ -186,7 +202,7 @@ static unsigned current_funcdef_fde;
 
 /* Forward declarations for functions defined in this file.  */
 
-static char *stripattributes		PROTO((char *));
+static char *stripattributes		PROTO((const char *));
 static char *dwarf_cfi_name		PROTO((unsigned));
 static dw_cfi_ref new_cfi		PROTO((void));
 static void add_cfi			PROTO((dw_cfi_ref *, dw_cfi_ref));
@@ -527,7 +543,7 @@ expand_builtin_dwarf_fp_regnum ()
 
 static inline char *
 stripattributes (s)
-     char *s;
+     const char *s;
 {
   char *stripped = xmalloc (strlen (s) + 2);
   char *p = stripped;
@@ -572,6 +588,10 @@ struct reg_size_range
    ranges.  We need to do it this way because REG_TREE is not a constant,
    and the target macros were not designed to make this task easy.  */
 
+#ifndef MAX_NUMBER_OF_REG_SIZES
+#define MAX_NUMBER_OF_REG_SIZES		10
+#endif
+
 rtx
 expand_builtin_dwarf_reg_size (reg_tree, target)
      tree reg_tree;
@@ -579,7 +599,7 @@ expand_builtin_dwarf_reg_size (reg_tree, target)
 {
   enum machine_mode mode;
   int size;
-  struct reg_size_range ranges[5];
+  struct reg_size_range ranges[MAX_NUMBER_OF_REG_SIZES];
   tree t, t2;
 
   int i = 0;
@@ -615,7 +635,7 @@ expand_builtin_dwarf_reg_size (reg_tree, target)
 	  ranges[n_ranges].beg = i;
 	  ranges[n_ranges].size = last_size = size;
 	  ++n_ranges;
-	  if (n_ranges >= 5)
+	  if (n_ranges >= MAX_NUMBER_OF_REG_SIZES)
 	    abort ();
 	}
       ranges[n_ranges-1].end = i;
@@ -719,6 +739,8 @@ dwarf_cfi_name (cfi_opc)
       return "DW_CFA_GNU_window_save";
     case DW_CFA_GNU_args_size:
       return "DW_CFA_GNU_args_size";
+    case DW_CFA_GNU_negative_offset_extended:
+      return "DW_CFA_GNU_negative_offset_extended";
 
     default:
       return "DW_CFA_<unknown>";
@@ -919,6 +941,90 @@ dwarf2out_def_cfa (label, reg, offset)
   add_fde_cfi (label, cfi);
 }
 
+/* Add the CFI for tagging a range of registers as initially 
+   undefined. Typically the label argument would be NULL since
+   these instructions are usually attached to the CIE initial
+   instructions.  */
+   
+void
+dwarf2out_undefined_regs (label, beg_reg, end_reg)
+	char *label;
+	unsigned int beg_reg;
+	unsigned int end_reg;
+{
+  register dw_cfi_ref cfi;
+   
+  do {
+	cfi = new_cfi ();
+	cfi->dw_cfi_oprnd1.dw_cfi_reg_num = DWARF_FRAME_REGNUM (beg_reg);
+	cfi->dw_cfi_opc = DW_CFA_undefined;
+	add_fde_cfi (label, cfi);
+  } while (beg_reg++ < end_reg);
+}
+
+/* Add the CFI for tagging a range of registers as requiring  
+   preservation (callee save). Typically the label argument would be NULL since
+   these instructions are usually attached to the CIE initial
+   instructions.  */
+   
+void
+dwarf2out_same_value_regs (label, beg_reg, end_reg)
+	char *label;
+	unsigned int beg_reg;
+	unsigned int end_reg;
+{
+  register dw_cfi_ref cfi;
+   
+  do {
+	cfi = new_cfi ();
+	cfi->dw_cfi_oprnd1.dw_cfi_reg_num = DWARF_FRAME_REGNUM (beg_reg);
+	cfi->dw_cfi_opc = DW_CFA_same_value;
+	add_fde_cfi (label, cfi);
+  } while (beg_reg++ < end_reg);
+}
+
+/* Add the CFI for tagging a register as having been restored 
+   to its function entry state.  */
+   
+void
+dwarf2out_restore_reg (label, reg)
+        char *label;
+        unsigned int reg;
+{
+  register dw_cfi_ref cfi;
+   
+  cfi = new_cfi ();
+  cfi->dw_cfi_oprnd1.dw_cfi_reg_num = DWARF_FRAME_REGNUM (reg);
+  cfi->dw_cfi_opc = (cfi->dw_cfi_oprnd1.dw_cfi_reg_num > 0x3f) ? DW_CFA_restore_extended : DW_CFA_restore;
+  add_fde_cfi (label, cfi);
+}
+
+/* Add the CFI for saving the state of all registers.  */
+
+void 
+dwarf2out_remember_state (label)
+    char *label;
+{
+  register dw_cfi_ref cfi;
+   
+  cfi = new_cfi ();
+  cfi->dw_cfi_opc = DW_CFA_remember_state;
+  add_fde_cfi (label, cfi);
+}
+
+/* Add the CFI for restoring the state of all registers.*/
+
+void 
+dwarf2out_restore_state (label)
+    char *label;
+{
+  register dw_cfi_ref cfi;
+   
+  cfi = new_cfi ();
+  cfi->dw_cfi_opc = DW_CFA_restore_state;
+  add_fde_cfi (label, cfi);
+}
+
 /* Add the CFI for saving a register.  REG is the CFA column number.
    LABEL is passed to add_fde_cfi.
    If SREG is -1, the register is saved at OFFSET from the CFA;
@@ -948,7 +1054,10 @@ reg_save (label, reg, sreg, offset)
 
       offset /= DWARF_CIE_DATA_ALIGNMENT;
       if (offset < 0)
-	abort ();
+	{
+	  cfi->dw_cfi_opc = DW_CFA_GNU_negative_offset_extended;
+	  offset = -offset;
+	}
       cfi->dw_cfi_oprnd2.dw_cfi_offset = offset;
     }
   else
@@ -1635,6 +1744,7 @@ output_cfi (cfi, fde)
 	  break;
 #endif
 	case DW_CFA_offset_extended:
+	case DW_CFA_GNU_negative_offset_extended:
 	case DW_CFA_def_cfa:
 	  output_uleb128 (cfi->dw_cfi_oprnd1.dw_cfi_reg_num);
           fputc ('\n', asm_out_file);
@@ -1709,6 +1819,11 @@ output_call_frame_info (for_eh)
 
   /* Do we want to include a pointer to the exception table?  */
   int eh_ptr = for_eh && exception_table_p ();
+
+#ifdef TRACE_DWARF2_UNWIND
+  int flag_debug_asm_saved = flag_debug_asm ;
+  flag_debug_asm = 1 ;
+#endif
 
   fputc ('\n', asm_out_file);
 
@@ -1905,6 +2020,13 @@ output_call_frame_info (for_eh)
       fputc ('\n', asm_out_file);
 #endif
     }
+
+#ifdef DWARF2_END_OF_SECTION
+  /* Mac OS X uses this macro to workaround asm/linker bugs having to do
+     with end of section.  */
+  DWARF2_END_OF_SECTION(asm_out_file, flag_debug_asm) ;
+#endif
+
 #ifndef EH_FRAME_SECTION
   if (for_eh)
     {
@@ -1922,6 +2044,10 @@ output_call_frame_info (for_eh)
   /* Turn off app to make assembly quicker.  */
   if (flag_debug_asm)
     app_disable ();
+    
+#ifdef TRACE_DWARF2_UNWIND
+  flag_debug_asm = flag_debug_asm_saved ;
+#endif
 }
 
 /* Output a marker (i.e. a label) for the beginning of a function, before
@@ -1994,9 +2120,16 @@ dwarf2out_frame_init ()
      sake of lookup_cfa.  */
 
 #ifdef DWARF2_UNWIND_INFO
+#ifdef DWARF2_TARGET_CALLING_CONVENTION
+  /* Some targets have a fairly complicated initial frame setup.
+     Those targets will define this macro to contain the calls 
+     to dwarf2out emitting the initial dwarf2 instructions for the frame.  */
+  DWARF2_TARGET_CALLING_CONVENTION()
+#else
   /* On entry, the Canonical Frame Address is at SP.  */
   dwarf2out_def_cfa (NULL, STACK_POINTER_REGNUM, INCOMING_FRAME_SP_OFFSET);
   initial_return_save (INCOMING_RETURN_ADDR_RTX);
+#endif /* DWARF2_TARGET_CALLING_CONVENTION */
 #endif
 }
 
@@ -2011,7 +2144,7 @@ dwarf2out_frame_finish ()
     output_call_frame_info (1);
 #else
   if (write_symbols == DWARF2_DEBUG
-      || (flag_exceptions && ! exceptions_via_longjmp))
+      || (flag_exceptions && ! exceptions_via_longjmp && frame_was_required))
     output_call_frame_info (1);  
 #endif
 }  
@@ -6363,6 +6496,7 @@ is_base_type (type)
     case CHAR_TYPE:
       return 1;
 
+    case VECTOR_TYPE: /* Treat like an array. */
     case SET_TYPE:
     case ARRAY_TYPE:
     case RECORD_TYPE:
@@ -8902,7 +9036,8 @@ gen_compile_unit_die (main_input_filename)
 
   add_AT_string (comp_unit_die, DW_AT_producer, producer);
 
-  if (strcmp (language_string, "GNU C++") == 0)
+  if (strcmp (language_string, "GNU C++") == 0 
+      || strcmp (language_string, "GNU Obj-C++") == 0)
     add_AT_unsigned (comp_unit_die, DW_AT_language, DW_LANG_C_plus_plus);
 
   else if (strcmp (language_string, "GNU Ada") == 0)

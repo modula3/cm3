@@ -60,7 +60,8 @@ extern char *mode_name[];
 #define GET_MODE_NAME(MODE)		(mode_name[(int) (MODE)])
 
 enum mode_class { MODE_RANDOM, MODE_INT, MODE_FLOAT, MODE_PARTIAL_INT, MODE_CC,
-		  MODE_COMPLEX_INT, MODE_COMPLEX_FLOAT, MAX_MODE_CLASS};
+		  MODE_COMPLEX_INT, MODE_COMPLEX_FLOAT,
+		  MODE_VECTOR, MAX_MODE_CLASS};
 
 /* Get the general kind of object that mode MODE represents
    (integer, floating, complex, etc.)  */

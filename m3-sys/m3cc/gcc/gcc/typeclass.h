@@ -2,6 +2,7 @@
 
 enum type_class
 {
+  vector_type_class = -2,
   no_type_class = -1,
   void_type_class, integer_type_class, char_type_class,
   enumeral_type_class, boolean_type_class,

@@ -148,6 +148,10 @@ DEFTREECODE (REAL_TYPE, "real_type", 't', 0)
    of the real and imaginary parts.  */
 DEFTREECODE (COMPLEX_TYPE, "complex_type", 't', 0)
 
+/* Vector types.  The TREE_TYPE field is the data type of the vector
+   element.  (What gives the number of elements?)  */
+DEFTREECODE (VECTOR_TYPE, "vector_type", 't', 0)
+
 /* C enums.  The type node looks just like an INTEGER_TYPE node.
    The symbols for the values of the enum type are defined by
    CONST_DECL nodes, but the type does not point to them;
@@ -266,6 +270,11 @@ DEFTREECODE (REAL_CST, "real_cst", 'c', 3)
    whose contents are other constant nodes.
    Also there is TREE_CST_RTL.  */
 DEFTREECODE (COMPLEX_CST, "complex_cst", 'c', 3)
+
+/* Contents are in TREE_... fields.
+   whose contents are other constant nodes.
+   Also there is TREE_CST_RTL.  */
+DEFTREECODE (VECTOR_CST, "vector_cst", 'c', 3)
 
 /* Contents are TREE_STRING_LENGTH and TREE_STRING_POINTER fields.
    Also there is TREE_CST_RTL.  */

@@ -78,6 +78,9 @@ extern FILE *asm_out_file;
 
 /* The (assembler) name of the first globally-visible object output.  */
 char *first_global_object_name;
+#if defined (NEXT_PDO)
+char *second_global_object_name;
+#endif /* defined (NEXT_PDO) */
 char *weak_global_object_name;
 
 extern struct obstack *current_obstack;
@@ -185,6 +188,9 @@ text_section ()
     {
       fprintf (asm_out_file, "%s\n", TEXT_SECTION_ASM_OP);
       in_section = in_text;
+#ifdef NEXT_SEMANTICS
+      try_section_alias ();
+#endif
     }
 }
 
@@ -207,6 +213,9 @@ data_section ()
 	fprintf (asm_out_file, "%s\n", DATA_SECTION_ASM_OP);
 
       in_section = in_data;
+#ifdef NEXT_SEMANTICS
+      try_section_alias ();
+#endif
     }
 }
 /* Tell assembler to ALWAYS switch to data section, in case
@@ -264,6 +273,10 @@ named_section (decl, name, reloc)
     abort ();
   if (name == NULL)
     name = TREE_STRING_POINTER (DECL_SECTION_NAME (decl));
+
+#ifdef FIXUP_SECTION_NAME_FOR_DECL
+  FIXUP_SECTION_NAME_FOR_DECL (decl, name);
+#endif
 
   if (in_section != in_named || strcmp (name, in_named_name))
     {
@@ -410,6 +423,11 @@ function_section (decl)
       && DECL_SECTION_NAME (decl) != NULL_TREE)
     named_section (decl, (char *) 0, 0);
   else
+#ifdef HAVE_COALESCED_SYMBOLS
+  if (DECL_COALESCED (decl))
+    coalesced_text_section ();
+  else
+#endif
     text_section ();
 }
 
@@ -707,7 +725,12 @@ make_decl_rtl (decl, asmspec, top_level)
 		 else.  */
 	      nregs = HARD_REGNO_NREGS (reg_number, DECL_MODE (decl));
 	      while (nregs > 0)
+#ifdef MACHO_PIC
+		global_regs[reg_number + --nregs] = 1;
+	      init_reg_sets_1 ();
+#else
 		globalize_reg (reg_number + --nregs);
+#endif
 	    }
 	}
       /* Specifying a section attribute on a variable forces it into a
@@ -952,6 +975,13 @@ assemble_start_function (decl, fnname)
      char *fnname;
 {
   int align;
+#ifdef HAVE_COALESCED_SYMBOLS
+/* We need to turn off writing debug info for COALESCED functions until
+   after the function's label appears.  */
+  int original_write_symbols = write_symbols;
+  if (write_symbols == DBX_DEBUG && DECL_COALESCED (decl))
+    write_symbols = NO_DEBUG;
+#endif
 
   /* The following code does not need preprocessing in the assembler.  */
 
@@ -970,6 +1000,20 @@ assemble_start_function (decl, fnname)
 #endif
 
   function_section (decl);
+
+#ifdef MACHOPIC_DEFINE_DECL
+#ifdef HAVE_COALESCED_SYMBOLS
+  if (DECL_COALESCED (decl))
+    {
+      if (DECL_SECTION_NAME (decl) == NULL_TREE)
+        coalesced_text_section ();
+      /* otherwise FUNCTION_SECTION () will have called ASM_OUTPUT_SECTION_NAME
+	 which would have output the appropriate "coalesced" tag.  */
+    }
+  else
+#endif
+    MACHOPIC_DEFINE_DECL (decl, fnname);
+#endif
 
   /* Tell assembler to move to target machine's alignment for functions.  */
   align = floor_log2 (FUNCTION_BOUNDARY / BITS_PER_UNIT);
@@ -994,7 +1038,11 @@ assemble_start_function (decl, fnname)
 
   /* Make function name accessible from other files, if appropriate.  */
 
-  if (TREE_PUBLIC (decl))
+  if (TREE_PUBLIC (decl)
+#ifdef HAVE_COALESCED_SYMBOLS
+      || DECL_COALESCED (decl)
+#endif
+     )
     {
       if (! first_global_object_name)
 	{
@@ -1022,6 +1070,11 @@ assemble_start_function (decl, fnname)
 	}
       else
 #endif
+#ifdef ASM_PRIVATE_EXTERNIZE_LABEL
+      if (DECL_PRIVATE_EXTERN (decl))
+	ASM_PRIVATE_EXTERNIZE_LABEL (asm_out_file, fnname);
+      else
+#endif
       ASM_GLOBALIZE_LABEL (asm_out_file, fnname);
     }
 
@@ -1032,6 +1085,14 @@ assemble_start_function (decl, fnname)
   /* Standard thing is just output label for the function.  */
   ASM_OUTPUT_LABEL (asm_out_file, fnname);
 #endif /* ASM_DECLARE_FUNCTION_NAME */
+
+#ifdef HAVE_COALESCED_SYMBOLS
+  if (original_write_symbols != NO_DEBUG)
+    {
+      write_symbols = original_write_symbols;
+      dbxout_begin_function (decl);
+    }
+#endif
 }
 
 /* Output assembler code associated with defining the size of the
@@ -1159,6 +1220,9 @@ assemble_variable (decl, top_level, at_end, dont_output_data)
   tree size_tree;
   int reloc = 0;
   enum in_section saved_in_section;
+#ifdef HAVE_COALESCED_SYMBOLS
+  int postpone_dbx = 0;
+#endif
 
   last_assemble_variable_decl = 0;
 
@@ -1204,8 +1268,12 @@ assemble_variable (decl, top_level, at_end, dont_output_data)
      since assemble_external is called by the language-specific code
      when a declaration is first seen.  */
 
-  if (DECL_EXTERNAL (decl))
-    return;
+#ifdef HAVE_COALESCED_SYMBOLS
+  /* If it's a coalesced symbol, we MUST write it out.  */
+  if (! DECL_COALESCED (decl))
+#endif
+     if (DECL_EXTERNAL (decl))
+       return;
 
   /* Output no assembler code for a function declaration.
      Only definitions of functions output anything.  */
@@ -1246,6 +1314,16 @@ assemble_variable (decl, top_level, at_end, dont_output_data)
   if (flag_syntax_only)
     return;
 
+#ifdef HAVE_COALESCED_SYMBOLS
+  /* Until we figure out how to do the N_BNSYM / N_ENSYM stuff for
+     coalesced symbols, punt on outputting dbx info for now.  */
+  if (write_symbols == DBX_DEBUG && DECL_COALESCED (decl))
+    {
+      postpone_dbx = 1;
+      write_symbols = NO_DEBUG;
+    }
+#endif
+
   app_disable ();
 
   if (! dont_output_data)
@@ -1269,6 +1347,40 @@ assemble_variable (decl, top_level, at_end, dont_output_data)
     }
 
   name = XSTR (XEXP (DECL_RTL (decl), 0), 0);
+
+#ifdef MACHO_PIC
+  /* Ensure that any RTTI data symbol (e.g., __ti4name) references
+     are done indirectly.  I.e., do *not* call machopic_define_name
+     for them.  For other kinds of symbols, the machopic_define_name
+     calls are telling the machopic subsystem that the name *is*
+     defined in this module, so it doesn't need to make them
+     indirect.  The original code called machopic_define_name
+     whenever TREE_STATIC or DECL_INITIAL.  */
+
+  if (GET_CODE (XEXP (DECL_RTL (decl), 0)) != SYMBOL_REF)
+    name = IDENTIFIER_POINTER (DECL_NAME (decl));
+
+#ifdef HAVE_COALESCED_SYMBOLS
+  /* With coalesced symbols, the __ti RTTI data symbols are marked
+     as coalesced, not common.  Coalesced symbols should ALWAYS be
+     referenced indirectly.  */
+
+  if (! DECL_COALESCED (decl))
+#endif
+  /* Without coalesced symbols, we attempted to get the __ti
+     variable generated in only one compilation unit, not
+     entirely successfully.
+
+     The RTTI data (e.g., __ti4name) is common and public (and
+     static), but it does need to be referenced via indirect PIC
+     data pointers.  The machopic_define_name calls are telling
+     the machopic subsystem that the name *is* defined in this
+     module, so it doesn't need to make them indirect.  */
+  if (TREE_STATIC (decl)
+      && (!DECL_COMMON (decl) || !TREE_PUBLIC (decl))
+      || DECL_INITIAL (decl))
+    machopic_define_name (name);
+#endif
 
   if (TREE_PUBLIC (decl) && DECL_NAME (decl)
       && ! first_global_object_name
@@ -1449,10 +1561,14 @@ assemble_variable (decl, top_level, at_end, dont_output_data)
      target doesn't support ASM_OUTPUT_BSS.  */
 
   /* First make the assembler name(s) global if appropriate.  */
-  if (TREE_PUBLIC (decl) && DECL_NAME (decl))
+  if ((TREE_PUBLIC (decl)
+#ifdef HAVE_COALESCED_SYMBOLS
+       || DECL_COALESCED (decl)
+#endif
+      ) && DECL_NAME (decl))
     {
 #ifdef ASM_WEAKEN_LABEL
-      if (DECL_WEAK (decl)) 
+      if (DECL_WEAK (decl))
 	{
 	  ASM_WEAKEN_LABEL (asm_out_file, name);
 	   /* Remove this variable from the pending weak list so that
@@ -1462,13 +1578,37 @@ assemble_variable (decl, top_level, at_end, dont_output_data)
 	}
       else
 #endif
+#ifdef ASM_PRIVATE_EXTERNIZE_LABEL
+      if (DECL_PRIVATE_EXTERN (decl))
+	ASM_PRIVATE_EXTERNIZE_LABEL (asm_out_file, name);
+      else
+#endif
       ASM_GLOBALIZE_LABEL (asm_out_file, name);
     }
+#if defined (NEXT_PDO)
+  /* An Objective-C source file may define some string constants, but 
+     no functions.  We still need to have a value for first_global_object_name,
+     so we can also settle for the first class variable too.
+   */
+  else if (!second_global_object_name 
+           && strncmp(name, "_OBJC_", 6) && TREE_PUBLIC (decl))
+    {
+	second_global_object_name = permalloc (strlen (name) + 1);
+	strcpy (second_global_object_name, name);
+    }
+#endif /* defined (NEXT_PDO) */
+
 #if 0
   for (d = equivalents; d; d = TREE_CHAIN (d))
     {
       tree e = TREE_VALUE (d);
       if (TREE_PUBLIC (e) && DECL_NAME (e))
+#ifdef ASM_PRIVATE_EXTERNIZE_LABEL
+	if (DECL_PRIVATE_EXTERN (decl))
+	  ASM_PRIVATE_EXTERNIZE_LABEL (asm_out_file, 
+				       XSTR (XEXP (DECL_RTL (e), 0), 0));
+	else
+#endif
 	ASM_GLOBALIZE_LABEL (asm_out_file,
 			     XSTR (XEXP (DECL_RTL (e), 0), 0));
     }
@@ -1525,6 +1665,22 @@ assemble_variable (decl, top_level, at_end, dont_output_data)
   if (in_section != saved_in_section)
     variable_section (decl, reloc);
 
+#ifdef ASM_OUTPUT_ZEROFILL
+#ifdef HAVE_COALESCED_SYMBOLS
+  /* We need a ZEROFILL COALESCED option!  */
+  if (! DECL_COALESCED (decl))
+#endif
+  if (flag_no_common
+      && ! dont_output_data 
+      && (DECL_INITIAL (decl) == 0 || DECL_INITIAL (decl) == error_mark_node))
+    {
+      ASM_OUTPUT_ZEROFILL (asm_out_file, name,
+                           int_size_in_bytes (TREE_TYPE (decl)),
+                           floor_log2 (align / BITS_PER_UNIT));
+      goto finish;
+    }
+#endif
+
   /* Output the alignment of this data.  */
   if (align > BITS_PER_UNIT)
     ASM_OUTPUT_ALIGN (asm_out_file,
@@ -1550,6 +1706,16 @@ assemble_variable (decl, top_level, at_end, dont_output_data)
     }
 
  finish:
+#ifdef HAVE_COALESCED_SYMBOLS
+  if (postpone_dbx)
+    {
+      write_symbols = DBX_DEBUG;
+      /* File-scope global variables are output here.
+         With coalesced symbols, we never output stabs for RTTI vars/funcs.  */
+      if (top_level && ! rtti_var_p (decl))
+          dbxout_symbol (decl, 0);
+    }
+#endif
 #ifdef XCOFF_DEBUGGING_INFO
   /* Unfortunately, the IBM assembler cannot handle stabx before the actual
      declaration.  When something like ".stabx  "aa:S-2",aa,133,0" is emitted 
@@ -1666,6 +1832,10 @@ void
 assemble_label (name)
      char *name;
 {
+#ifdef MACHO_PIC
+  if (!(name[0] == '*' && name[1] == 'L'))
+    machopic_define_name (name);
+#endif
   ASM_OUTPUT_LABEL (asm_out_file, name);
 }
 
@@ -1693,7 +1863,20 @@ assemble_name (file, name)
     TREE_SYMBOL_REFERENCED (id) = 1;
 
   if (name[0] == '*')
+#ifdef MACHO_PIC
+    {
+      int len = strlen (name);
+      if (len > 6 && !strcmp("$stub", name+len-5))
+	machopic_validate_stub_or_non_lazy_ptr (name, 1);
+      else if (len > 7 && !strcmp("$stub\"", name+len-6))
+          machopic_validate_stub_or_non_lazy_ptr (name, 1);
+      else if (len > 14 && !strcmp ("$non_lazy_ptr", name+len-13))
+          machopic_validate_stub_or_non_lazy_ptr (name, 0);
+#endif
     fputs (&name[1], file);
+#ifdef MACHO_PIC
+    }
+#endif
   else
     ASM_OUTPUT_LABELREF (file, name);
 }
@@ -1953,7 +2136,15 @@ assemble_real (d, mode)
    (CONST_DOUBLE_MEM is used only for top-level functions.
    See force_const_mem for explanation.)  */
 
-static rtx const_double_chain;
+static rtx const_double_chain = 0;
+
+#ifdef MACHO_PIC
+int
+const_double_mem_used ()
+{
+  return (const_double_chain != 0);
+}
+#endif
 
 /* Return a CONST_DOUBLE or CONST_INT for a value specified as a pair of ints.
    For an integer, I0 is the low-order word and I1 is the high-order word.
@@ -2150,6 +2341,91 @@ immed_real_const (exp)
   return immed_real_const_1 (TREE_REAL_CST (exp), TYPE_MODE (TREE_TYPE (exp)));
 }
 
+/* Here we combine duplicate vector constants to make
+   CONST_VECTOR rtx's, and force those out to memory when necessary.  */
+
+/* Chain of all CONST_VECTOR rtx's constructed for the current function.
+   They are chained through the CONST_VECTOR_CHAIN.
+   A CONST_VECTOR rtx has CONST_VECTOR_MEM != cc0_rtx iff it is on this chain.
+   In that case, CONST_VECTOR_MEM is either a MEM,
+   or const0_rtx if no MEM has been made for this CONST_VECTOR yet.
+
+   (CONST_VECTOR_MEM is used only for top-level functions.
+   See force_const_mem for explanation.)  */
+
+static rtx const_vector_chain;
+
+/* Return a CONST_VECTOR rtx for a value specified by EXP,
+   which must be a VECTOR_CST tree node.  */
+
+rtx
+immed_vector_const (exp)
+     tree exp;
+{
+  enum machine_mode mode = TYPE_MODE (TREE_TYPE (exp));
+  HOST_WIDE_INT u[4];
+  register rtx r;
+  int in_current_obstack;
+
+  /* Compute the representation fo the vector value EXP into an array of four
+     integers.  */
+  if (TREE_CODE (TREE_VECTOR_CST_0 (exp)) == INTEGER_CST)
+    {
+      u[0] = TREE_INT_CST_LOW (TREE_VECTOR_CST_0 (exp));
+      u[1] = TREE_INT_CST_LOW (TREE_VECTOR_CST_1 (exp));
+      u[2] = TREE_INT_CST_LOW (TREE_VECTOR_CST_2 (exp));
+      u[3] = TREE_INT_CST_LOW (TREE_VECTOR_CST_3 (exp));
+    }
+  else if (TREE_CODE (TREE_VECTOR_CST_0 (exp)) == REAL_CST)
+    {
+      REAL_VALUE_TO_TARGET_SINGLE (TREE_REAL_CST (TREE_VECTOR_CST_0 (exp)), u[0]);
+      REAL_VALUE_TO_TARGET_SINGLE (TREE_REAL_CST (TREE_VECTOR_CST_1 (exp)), u[1]);
+      REAL_VALUE_TO_TARGET_SINGLE (TREE_REAL_CST (TREE_VECTOR_CST_2 (exp)), u[2]);
+      REAL_VALUE_TO_TARGET_SINGLE (TREE_REAL_CST (TREE_VECTOR_CST_3 (exp)), u[3]);
+    }
+  else
+    abort ();
+
+  /* Search the chain for an existing CONST_VECTOR with the right value.
+     If one is found, return it.  */
+
+  for (r = const_vector_chain; r; r = CONST_VECTOR_CHAIN (r))
+    if (! bcmp ((char *) &CONST_VECTOR_0 (r), (char *) &u, sizeof u)
+	&& GET_MODE (r) == mode)
+      return r;
+
+  /* No; make a new one and add it to the chain.
+
+     We may be called by an optimizer which may be discarding any memory
+     allocated during its processing (such as combine and loop).  However,
+     we will be leaving this constant on the chain, so we cannot tolerate
+     freed memory.  So switch to saveable_obstack for this allocation
+     and then switch back if we were in current_obstack.  */
+
+  push_obstacks_nochange ();
+  rtl_in_saveable_obstack ();
+  r = rtx_alloc (CONST_VECTOR);
+  PUT_MODE (r, mode);
+  bcopy ((char *) &u, (char *) &CONST_VECTOR_0 (r), sizeof u);
+  pop_obstacks ();
+
+  /* Don't touch const_vector_chain in nested function; see force_const_mem.
+     Also, don't touch it if not inside any function.  */
+  if (outer_function_chain == 0 && current_function_decl != 0)
+    {
+      CONST_VECTOR_CHAIN (r) = const_vector_chain;
+      const_vector_chain = r;
+    }
+
+  /* Store const0_rtx in CONST_VECTOR_MEM since this CONST_VECTOR is on the
+     chain, but has not been allocated memory.  Actual use of CONST_VECTOR_MEM
+     is only through force_const_mem.  */
+
+  CONST_VECTOR_MEM (r) = const0_rtx;
+
+  return r;
+}
+
 /* At the end of a function, forget the memory-constants
    previously made for CONST_DOUBLEs.  Mark them as not on real_constant_chain.
    Also clear out real_constant_chain and clear out all the chain-pointers.  */
@@ -2171,6 +2447,15 @@ clear_const_double_mem ()
       CONST_DOUBLE_MEM (r) = cc0_rtx;
     }
   const_double_chain = 0;
+
+  /* Clear the CONST_VECTORs at the same time.  */
+  for (r = const_vector_chain; r; r = next)
+    {
+      next = CONST_VECTOR_CHAIN (r);
+      CONST_VECTOR_CHAIN (r) = 0;
+      CONST_VECTOR_MEM (r) = cc0_rtx;
+    }
+  const_vector_chain = 0;
 }
 
 /* Given an expression EXP with a constant value,
@@ -2232,6 +2517,7 @@ decode_addr_const (exp, value)
     case REAL_CST:
     case STRING_CST:
     case COMPLEX_CST:
+    case VECTOR_CST:
     case CONSTRUCTOR:
     case INTEGER_CST:
       x = TREE_CST_RTL (target);
@@ -2302,6 +2588,10 @@ const_hash (exp)
     case COMPLEX_CST:
       return (const_hash (TREE_REALPART (exp)) * 5
 	      + const_hash (TREE_IMAGPART (exp)));
+
+    case VECTOR_CST:
+      return (const_hash (TREE_VECTOR_CST_LOW (exp)) * 11
+	      + const_hash (TREE_VECTOR_CST_HIGH (exp)));
 
     case CONSTRUCTOR:
       if (TREE_CODE (TREE_TYPE (exp)) == SET_TYPE)
@@ -2459,6 +2749,13 @@ compare_constant_1 (exp, p)
 	return 0;
 
       return compare_constant_1 (TREE_IMAGPART (exp), p);
+
+    case VECTOR_CST:
+      p = compare_constant_1 (TREE_VECTOR_CST_LOW (exp), p);
+      if (p == 0)
+	return 0;
+
+      return compare_constant_1 (TREE_VECTOR_CST_HIGH (exp), p);
 
     case CONSTRUCTOR:
       if (TREE_CODE (TREE_TYPE (exp)) == SET_TYPE)
@@ -2672,6 +2969,11 @@ record_constant_1 (exp)
       record_constant_1 (TREE_IMAGPART (exp));
       return;
 
+    case VECTOR_CST:
+      record_constant_1 (TREE_VECTOR_CST_LOW (exp));
+      record_constant_1 (TREE_VECTOR_CST_HIGH (exp));
+      return;
+
     case CONSTRUCTOR:
       if (TREE_CODE (TREE_TYPE (exp)) == SET_TYPE)
 	{
@@ -2877,6 +3179,13 @@ copy_constant (exp)
       return build_complex (TREE_TYPE (exp),
 			    copy_constant (TREE_REALPART (exp)),
 			    copy_constant (TREE_IMAGPART (exp)));
+
+    case VECTOR_CST:
+      return build_vector (TREE_TYPE (exp),
+			   copy_constant (TREE_VECTOR_CST_0 (exp)),
+			   copy_constant (TREE_VECTOR_CST_1 (exp)),
+			   copy_constant (TREE_VECTOR_CST_2 (exp)),
+			   copy_constant (TREE_VECTOR_CST_3 (exp)));
 
     case PLUS_EXPR:
     case MINUS_EXPR:
@@ -3201,7 +3510,7 @@ restore_varasm_status (p)
   const_double_chain = p->const_double_chain;
 }
 
-enum kind { RTX_DOUBLE, RTX_INT };
+enum kind { RTX_DOUBLE, RTX_VECTOR, RTX_INT };
 
 struct rtx_const
 {
@@ -3216,6 +3525,7 @@ struct rtx_const
     union real_extract du;
     struct addr_const addr;
     struct {HOST_WIDE_INT high, low;} di;
+    struct {HOST_WIDE_INT v0, v1, v2, v3; } dv;
   } un;
 };
 
@@ -3258,6 +3568,18 @@ decode_rtx_const (mode, x, value)
 	}
       break;
 
+    case CONST_VECTOR:
+      value->kind = RTX_VECTOR;
+      if (GET_MODE (x) != VOIDmode)
+	{
+	  value->mode = GET_MODE (x);
+	  bcopy ((char *) &CONST_VECTOR_0 (x),
+		 (char *) &value->un.dv, sizeof value->un.dv);
+	}
+      else
+	abort ();
+      break;
+
     case CONST_INT:
       value->un.addr.offset = INTVAL (x);
       break;
@@ -3267,6 +3589,12 @@ decode_rtx_const (mode, x, value)
     case PC:
       value->un.addr.base = x;
       break;
+
+#ifdef NEXT_SEMANTICS
+    case SIGN_EXTEND:
+      decode_rtx_const (mode, XEXP (x, 0), value);
+      return;
+#endif
 
     case CONST:
       x = XEXP (x, 0);
@@ -3681,6 +4009,17 @@ output_constant_pool (fnname, fndecl)
 	  assemble_integer (x, GET_MODE_SIZE (pool->mode), 1);
 	  break;
 
+	case MODE_VECTOR:
+	  {
+	    HOST_WIDE_INT v[4];
+	    int i;
+	    bcopy ((char *) &CONST_VECTOR_0 (x), (char *) v, sizeof v);
+	    for (i = 0; i < 4; i++)
+	      assemble_integer (gen_rtx (CONST_INT, SImode, v[i]),
+				GET_MODE_SIZE (SImode), 1);
+	  }
+	  break;
+
 	default:
 	  abort ();
 	}
@@ -3962,6 +4301,19 @@ output_constant (exp, size)
       output_constant (TREE_REALPART (exp), size / 2);
       output_constant (TREE_IMAGPART (exp), size / 2);
       size -= (size / 2) * 2;
+      break;
+
+    case VECTOR_TYPE:
+      if (TREE_CODE (exp) == VECTOR_CST)
+	{
+	  output_constant (TREE_VECTOR_CST_0 (exp), size / 4);
+	  output_constant (TREE_VECTOR_CST_1 (exp), size / 4);
+	  output_constant (TREE_VECTOR_CST_2 (exp), size / 4);
+	  output_constant (TREE_VECTOR_CST_3 (exp), size / 4);
+	  size = 0;
+	}
+      else
+	abort ();
       break;
 
     case ARRAY_TYPE:

@@ -537,6 +537,22 @@ comp_target_types (ttl, ttr)
   if ((val = maybe_objc_comptypes (ttl, ttr, 1)) >= 0)
     return val;
 
+#ifdef NEXT_SEMANTICS
+  if (! pedantic)
+    {
+      /* Ignore pointer qualifiers recursively.
+	 This way char ** and const char ** are compatible.  */
+      ttl = TYPE_MAIN_VARIANT (TREE_TYPE (ttl));
+      ttr = TYPE_MAIN_VARIANT (TREE_TYPE (ttr));
+      
+      if (TREE_CODE (ttl) == POINTER_TYPE 
+	  && TREE_CODE (ttr) == POINTER_TYPE)
+	return comp_target_types (ttl, ttr);
+      else
+	return comptypes (ttl, ttr);
+    }
+#endif
+
   val = comptypes (TYPE_MAIN_VARIANT (TREE_TYPE (ttl)),
 		   TYPE_MAIN_VARIANT (TREE_TYPE (ttr)));
 
@@ -806,6 +822,70 @@ signed_or_unsigned_type (unsignedp, type)
   return type;
 }
 
+/* Digest a vector constant.  */
+
+tree
+build_vector_constant (type, values)
+     tree type;
+     tree values;
+{
+  tree vtype;
+  tree valarray[16], valtail;
+  int valnum, elements;
+
+  /* Get the vector element type and number of elements.  */
+  vtype = TREE_TYPE (type);
+  elements = (TREE_INT_CST_LOW (TYPE_SIZE (type))
+	      / TREE_INT_CST_LOW (TYPE_SIZE (vtype)));
+
+  /* Walk the values list placing the converted constants into
+     valarray and counting the number of constants.  */
+  for (valtail = values, valnum = 0;
+       valtail;
+       valtail = TREE_CHAIN (valtail), valnum++)
+    {
+      register tree val = TREE_VALUE (valtail);
+      STRIP_NOPS (val);
+      if (TREE_CODE (val) != INTEGER_CST && TREE_CODE (val) != REAL_CST)
+	{
+	  error("expected a constant expression");
+	  return error_mark_node;
+	}
+      valarray[valnum] = convert_for_assignment (vtype, val, "assignment",
+						 NULL_TREE, NULL_TREE, 0);
+    }
+
+  /* Check for the correct number of elements.  */
+  if (valnum != 1 && valnum != elements)
+    {
+      error (valnum < elements
+	     ? "too few initializers" : "too many initializers");
+      return error_mark_node;
+    }
+
+  /* A single constant value is shorthand for a duplicated value.
+     Duplicate it now.  */
+  while (valnum < elements)
+    valarray[valnum++] = valarray[0];
+
+  /* Combine the constant [integer] values until there are exactly four.  */
+  while (elements > 4)
+    {
+      int i, j;
+      for (i = 2, j = 0; i <= elements; i += 2, j++)
+	{
+	  unsigned HOST_WIDE_INT a = TREE_INT_CST_LOW (valarray[i-2]);
+	  unsigned HOST_WIDE_INT b = TREE_INT_CST_LOW (valarray[i-1]);
+	  int bits = 128 / elements;
+	  valarray[j] = build_int_2 ((a << bits) | (b & ((1 << bits) - 1)),
+				     0);
+	}
+      elements /= 2;
+    }
+  return build_vector (type, valarray[0], valarray[1],
+		       valarray[2], valarray[3]);
+}
+
 /* Compute the value of the `sizeof' operator.  */
 
 tree
@@ -911,6 +991,12 @@ c_alignof (type)
   if (code == VOID_TYPE || code == ERROR_MARK)
     return size_int (1);
 
+  if (TYPE_SIZE (type) == 0)
+    {
+      warning ("__alignof applied to an incomplete type");
+      return size_int (1);
+    }
+
   return size_int (TYPE_ALIGN (type) / BITS_PER_UNIT);
 }
 
@@ -958,6 +1044,35 @@ c_alignof_expr (expr)
     return c_alignof (TREE_TYPE (expr));
 }
 
+/* Implement the vec_step keyword: Return the number of components in the
+   given vector type.  */
+
+tree
+c_vec_step (type)
+     tree type;
+{
+  enum tree_code code = TREE_CODE (type);
+
+  if (code != VECTOR_TYPE)
+    {
+      error ("operand of `vec_step' must be a vector type");
+      return size_int (0);
+    }
+
+  return size_binop (CEIL_DIV_EXPR, size_int (16),
+		     c_sizeof (TREE_TYPE (type)));
+}
+
+/* Implement the vec_step keyword: Return the number of components in
+   the given vector type.  */
+
+tree
+c_vec_step_expr (expr)
+     tree expr;
+{
+  return c_vec_step (TREE_TYPE (expr));
+}
+
 /* Return either DECL or its known constant value (if it has one).  */
 
 static tree
@@ -1346,6 +1461,9 @@ build_indirect_ref (ptr, errorstring)
 
 	  if (TYPE_SIZE (t) == 0 && TREE_CODE (t) != ARRAY_TYPE)
 	    {
+#ifdef NEXT_SEMANTICS
+	      require_complete_type (type);
+#endif
 	      error ("dereferencing pointer to incomplete type");
 	      return error_mark_node;
 	    }
@@ -1535,6 +1653,18 @@ build_function_call (function, params)
   /* Strip NON_LVALUE_EXPRs, etc., since we aren't using as an lvalue.  */
   STRIP_TYPE_NOPS (function);
 
+  if (TREE_CODE (function) == FUNCTION_DECL
+      && DECL_TARGET_OVERLOADED_INTRINSIC_P (function))
+    {
+#ifdef SELECT_TARGET_OVERLOADED_INTRINSIC
+      /* If this is an overloaded builtin function, we have to select
+	 which overload to use now.  */
+      function = SELECT_TARGET_OVERLOADED_INTRINSIC (function, params);
+      if (function == NULL_TREE)
+#endif
+	return error_mark_node;
+    }
+
   /* Convert anything with function type to a pointer-to-function.  */
   if (TREE_CODE (function) == FUNCTION_DECL)
     {
@@ -1601,7 +1731,7 @@ build_function_call (function, params)
   {
     register tree result
       = build (CALL_EXPR, TREE_TYPE (fntype),
-	       function, coerced_params, NULL_TREE, NULL_TREE);
+	       function, coerced_params, NULL_TREE);
 
     TREE_SIDE_EFFECTS (result) = 1;
     if (TREE_TYPE (result) == void_type_node)
@@ -1667,6 +1797,15 @@ convert_arguments (typelist, values, name, fundecl)
 	val = default_conversion (val);
 
       val = require_complete_type (val);
+
+      /* Ensure that a prototype is present if a vector type is involved.  */
+      if (typelist == 0 
+	  && TREE_CODE (TREE_TYPE (val)) == VECTOR_TYPE
+	  && !(DECL_BUILT_IN (fundecl)
+	       && (DECL_FUNCTION_CODE (fundecl) == BUILT_IN_NEXT_ARG
+		   || DECL_FUNCTION_CODE (fundecl) == BUILT_IN_CLASSIFY_TYPE)))
+	error ("vector argument %d requires a prototype for `%s'",
+	       parmnum + 1, IDENTIFIER_POINTER (name));
 
       if (type != 0)
 	{
@@ -1852,9 +1991,9 @@ parser_build_binary_op (code, arg1, arg2)
 	      || code2 == BIT_AND_EXPR || code2 == BIT_XOR_EXPR
 	      || code2 == PLUS_EXPR || code2 == MINUS_EXPR)
 	    warning ("suggest parentheses around arithmetic in operand of |");
-	  /* Check cases like x|y==z */
-	  if (TREE_CODE_CLASS (code1) == '<' || TREE_CODE_CLASS (code2) == '<')
-	    warning ("suggest parentheses around comparison in operand of |");
+          /* Check cases like x|y==z */
+          if (TREE_CODE_CLASS (code1) == '<' || TREE_CODE_CLASS (code2) == '<')
+            warning ("suggest parentheses around comparison in operand of |");
 	}
 
       if (code == BIT_XOR_EXPR)
@@ -1864,9 +2003,9 @@ parser_build_binary_op (code, arg1, arg2)
 	      || code2 == BIT_AND_EXPR
 	      || code2 == PLUS_EXPR || code2 == MINUS_EXPR)
 	    warning ("suggest parentheses around arithmetic in operand of ^");
-	  /* Check cases like x^y==z */
-	  if (TREE_CODE_CLASS (code1) == '<' || TREE_CODE_CLASS (code2) == '<')
-	    warning ("suggest parentheses around comparison in operand of ^");
+          /* Check cases like x^y==z */
+          if (TREE_CODE_CLASS (code1) == '<' || TREE_CODE_CLASS (code2) == '<')
+            warning ("suggest parentheses around comparison in operand of ^");
 	}
 
       if (code == BIT_AND_EXPR)
@@ -1874,9 +2013,9 @@ parser_build_binary_op (code, arg1, arg2)
 	  if (code1 == PLUS_EXPR || code1 == MINUS_EXPR
 	      || code2 == PLUS_EXPR || code2 == MINUS_EXPR)
 	    warning ("suggest parentheses around + or - in operand of &");
-	  /* Check cases like x&y==z */
-	  if (TREE_CODE_CLASS (code1) == '<' || TREE_CODE_CLASS (code2) == '<')
-	    warning ("suggest parentheses around comparison in operand of &");
+          /* Check cases like x&y==z */
+          if (TREE_CODE_CLASS (code1) == '<' || TREE_CODE_CLASS (code2) == '<')
+            warning ("suggest parentheses around comparison in operand of &");
 	}
     }
 
@@ -3656,6 +3795,14 @@ internal_build_compound_expr (list, first_p)
       if ((extra_warnings || warn_unused)
            && ! (TREE_CODE (TREE_VALUE (list)) == CONVERT_EXPR
                 && TREE_TYPE (TREE_VALUE (list)) == void_type_node))
+#ifdef NEXT_SEMANTICS
+      /* Inhibit bogus warnings for "vector int x = (vector int)(1,2,3,4);" 
+	 Unfortunately, we have no way of knowing whether the expression
+	 we're currently parsing is part of a vector constant, so we just
+	 inhibit this warning when "-faltivec" was specified.  I know, I know,
+	 it's a crummy solution, but it'll do for now.  */
+	if (!(flag_altivec && !extra_warnings))
+#endif
         warning ("left-hand operand of comma expression has no effect");
 
       /* When pedantic, a compound expression can be neither an lvalue
@@ -3685,7 +3832,9 @@ build_c_cast (type, expr)
   
   if (type == error_mark_node || expr == error_mark_node)
     return error_mark_node;
-  type = TYPE_MAIN_VARIANT (type);
+  if (TREE_CODE (type) != POINTER_TYPE
+      || !is_protocol_qualified_id (type))
+    type = TYPE_MAIN_VARIANT (type);
 
 #if 0
   /* Strip NON_LVALUE_EXPRs since we aren't using as an lvalue.  */
@@ -3751,6 +3900,14 @@ build_c_cast (type, expr)
       error ("cast to union type from type not present in union");
       return error_mark_node;
     }
+  /* Handle "(vector float)(vector unsigned long) (0x1,0x2,0x3,0x4)" which 
+     means a vector float using the given values (with no conversion.)  */
+  else if (TREE_CODE (type) == VECTOR_TYPE && TREE_CODE (expr) == VECTOR_CST
+	   && TREE_TYPE (expr) != type)
+    { 
+      TREE_TYPE (expr) = type;
+      return expr;
+    } 
   else
     {
       tree otype, ovalue;
@@ -4207,8 +4364,15 @@ convert_for_assignment (type, rhs, errtype, fundecl, funname, parmnum)
 		   && TREE_CODE (ttl) != FUNCTION_TYPE)
 	    {
 	      if (TYPE_QUALS (ttr) & ~TYPE_QUALS (ttl))
+		{
+		  /* Some builtin functions allow const and volatile and do not
+		     discard their meaning.  */
+		  if (!(fundecl
+			&& TREE_CODE (fundecl) == FUNCTION_DECL
+			&& DECL_TARGET_INTRINSIC_P (fundecl)))
 		warn_for_assignment ("%s discards qualifiers from pointer target type",
 				     errtype, funname, parmnum);
+		}
 	      /* If this is not a case of ignoring a mismatch in signedness,
 		 no warning.  */
 	      else if (TYPE_MAIN_VARIANT (ttl) == void_type_node
@@ -4291,6 +4455,8 @@ convert_for_assignment (type, rhs, errtype, fundecl, funname, parmnum)
    FUNCTION and ARGNUM are handled specially if we are building an
    Objective-C selector.  */
 
+int flag_next_runtime;
+
 static void
 warn_for_assignment (msgid, opname, function, argnum)
      const char *msgid;
@@ -4303,10 +4469,10 @@ warn_for_assignment (msgid, opname, function, argnum)
       tree selector = maybe_building_objc_message_expr ();
       char * new_opname;
       
-      if (selector && argnum > 2)
+      if (selector && argnum > (flag_next_runtime ? 2 : 3))
 	{
 	  function = selector;
-	  argnum -= 2;
+	  argnum -= (flag_next_runtime ? 2 : 3);
 	}
       if (function)
 	{
@@ -4362,6 +4528,7 @@ initializer_constant_valid_p (value, endtype)
     case REAL_CST:
     case STRING_CST:
     case COMPLEX_CST:
+    case VECTOR_CST:
       return null_pointer_node;
 
     case ADDR_EXPR:
@@ -4372,6 +4539,12 @@ initializer_constant_valid_p (value, endtype)
 
     case CONVERT_EXPR:
     case NOP_EXPR:
+#ifdef NEXT_SEMANTICS
+      /* Allow conversions between pointer types.  */
+      if (TREE_CODE (TREE_TYPE (value)) == POINTER_TYPE
+	  && TREE_CODE (TREE_TYPE (TREE_OPERAND (value, 0))) == INTEGER_TYPE)
+	return initializer_constant_valid_p (TREE_OPERAND (value, 0), endtype);
+#endif
       /* Allow conversions between pointer types.  */
       if (TREE_CODE (TREE_TYPE (value)) == POINTER_TYPE
 	  && TREE_CODE (TREE_TYPE (TREE_OPERAND (value, 0))) == POINTER_TYPE)
@@ -4785,6 +4958,10 @@ digest_init (type, init, require_constant, constructor_constant)
 
 	  if ((TYPE_MAIN_VARIANT (TREE_TYPE (TREE_TYPE (inside_init)))
 	       != char_type_node)
+#ifdef PASCAL_STRINGS
+              && (TYPE_MAIN_VARIANT (TREE_TYPE (TREE_TYPE (inside_init)))
+               != unsigned_char_type_node)
+#endif
 	      && TYPE_PRECISION (typ1) == TYPE_PRECISION (char_type_node))
 	    {
 	      error_init ("char-array initialized from wide string");
@@ -4879,7 +5056,7 @@ digest_init (type, init, require_constant, constructor_constant)
   /* Handle scalar types, including conversions.  */
 
   if (code == INTEGER_TYPE || code == REAL_TYPE || code == POINTER_TYPE
-      || code == ENUMERAL_TYPE || code == COMPLEX_TYPE)
+      || code == ENUMERAL_TYPE || code == COMPLEX_TYPE || code == VECTOR_TYPE)
     {
       /* Note that convert_for_assignment calls default_conversion
 	 for arrays and functions.  We must not call it in the
@@ -5312,6 +5489,7 @@ really_start_incremental_init (type)
       constructor_subconstants_deferred = 1;
     }
 }
+
 
 /* Push down into a subobject, for initialization.
    If this is for an explicit set of braces, IMPLICIT is 0.
@@ -6468,6 +6646,7 @@ void
 process_init_element (value)
      tree value;
 {
+  extern int errorcount;
   tree orig_value = value;
   int string_flag = value != 0 && TREE_CODE (value) == STRING_CST;
 
@@ -6487,6 +6666,12 @@ process_init_element (value)
     {
       error_init ("excess elements in struct initializer");
       return;
+    }
+
+  /* Sometimes an error-mark will cause an infinite loop */
+  if (value && TREE_CODE (value) == ERROR_MARK && errorcount)
+    {
+      fatal ("too many errors, bailing out");
     }
 
   /* Ignore elements of a brace group if it is entirely superfluous

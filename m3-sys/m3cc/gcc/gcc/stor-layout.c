@@ -49,6 +49,11 @@ tree size_one_node;
    The value is measured in bits.  */
 int maximum_field_alignment;
 
+#ifndef __PIN_ALIGN_TO_MAX
+#define __PIN_ALIGN_TO_MAX(DESIRED_ALIGN)		\
+		MIN (DESIRED_ALIGN, (unsigned) maximum_field_alignment)
+#endif
+
 /* If non-zero, the alignment of a bitstring or (power-)set value, in bits.
    May be overridden by front-ends.  */
 int set_alignment = 0;
@@ -192,6 +197,10 @@ int_mode_for_mode (mode)
       mode = mode_for_size (GET_MODE_BITSIZE (mode), MODE_INT, 0);
       break;
 
+    case MODE_VECTOR:
+      mode = BLKmode;
+      break; 
+
     case MODE_RANDOM:
       if (mode == BLKmode)
         break;
@@ -281,8 +290,7 @@ layout_decl (decl, known_align)
     {
       DECL_BIT_FIELD_TYPE (decl) = DECL_BIT_FIELD (decl) ? type : 0;
       if (maximum_field_alignment != 0)
-	DECL_ALIGN (decl) = MIN (DECL_ALIGN (decl),
-				 (unsigned)maximum_field_alignment);
+	DECL_ALIGN (decl) = __PIN_ALIGN_TO_MAX (DECL_ALIGN (decl));
       else if (DECL_PACKED (decl))
 	DECL_ALIGN (decl) = MIN (DECL_ALIGN (decl), BITS_PER_UNIT);
     }
@@ -351,7 +359,11 @@ layout_record (rec)
   /* Once we start using VAR_SIZE, this is the maximum alignment
      that we know VAR_SIZE has.  */
   register int var_align = BITS_PER_UNIT;
-
+#ifdef APPLE_ALIGN_CHECK
+  /* This is a running total of "how much we KNOW we're off by..." simply
+     from watching the fields being laid out.  */
+  int const_size_osx1_delta = 0;
+#endif
 #ifdef STRUCTURE_SIZE_BOUNDARY
   /* Packed structures don't need to have minimum size.  */
   if (! TYPE_PACKED (rec))
@@ -385,6 +397,7 @@ layout_record (rec)
       if (DECL_PACKED (field))
 	desired_align = DECL_ALIGN (field);
       layout_decl (field, known_align);
+
       if (! DECL_PACKED (field))
 	desired_align = DECL_ALIGN (field);
       /* Some targets (i.e. VMS) limit struct field alignment
@@ -421,7 +434,7 @@ layout_record (rec)
 	    {
 	      int type_align = TYPE_ALIGN (TREE_TYPE (field));
 	      if (maximum_field_alignment != 0)
-		type_align = MIN (type_align, maximum_field_alignment);
+		type_align = __PIN_ALIGN_TO_MAX (type_align);
 	      else if (DECL_PACKED (field))
 		type_align = MIN (type_align, BITS_PER_UNIT);
 
@@ -495,7 +508,7 @@ layout_record (rec)
 	  int field_size = TREE_INT_CST_LOW (dsize);
 
 	  if (maximum_field_alignment != 0)
-	    type_align = MIN (type_align, maximum_field_alignment);
+	    type_align = __PIN_ALIGN_TO_MAX (type_align);
 	  /* ??? This test is opposite the test in the containing if
 	     statement, so this code is unreachable currently.  */
 	  else if (DECL_PACKED (field))
@@ -512,6 +525,50 @@ layout_record (rec)
 #endif
 
       /* Size so far becomes the position of this field.  */
+
+#ifdef WARN_POOR_FIELD_ALIGN
+      /* Check FIELD for "optimal" alignment.  */
+      if (warn_poor_field_align)
+	WARN_POOR_FIELD_ALIGN (field, const_size);
+#endif
+#ifdef APPLE_ALIGN_CHECK
+      if (! DECL_PACKED (field) && warn_osx1_size_align)
+	{
+	  extern int errorcount;
+	  const int old_errorcount = errorcount;
+	  tree t = (TREE_CODE (TREE_TYPE (field)) == ARRAY_TYPE)
+		? get_inner_array_type (field) : TREE_TYPE (field);
+
+	  /* We only care about records and unions.  */
+	  if (TREE_CODE (t) != RECORD_TYPE && TREE_CODE (t) != UNION_TYPE
+		&& TREE_CODE (t) != QUAL_UNION_TYPE)
+	    ;
+	  else
+	    {
+	      if (TYPE_DIFF_SIZE (t))
+		{
+		  const_size_osx1_delta += get_type_size_as_int (t)
+						- TYPE_OSX1_SIZE (t);
+
+		  warning_with_decl (field, "OSX1ALIGN new size of `%s' field "
+		    "(%d) compared to OS X 10.0's gcc (%d) [in `%s']",
+			get_type_size_as_int (t) / 8,
+			t->type.osx1_rec_size / 8,
+			get_type_name_string (rec));
+		}
+	      else
+	      if (TYPE_DIFF_ALIGN (t) && (const_size % TYPE_ALIGN (t)))
+		warning_with_decl (field, "OSX1ALIGN new alignment of `%s' "
+		  "(%d) changes field offset compared to "
+		  "OS X 10.0's gcc (%d) [in `%s']",
+			t->type.align / 8, TYPE_OSX1_ALIGN (t) / 8,
+			get_type_name_string (rec));
+	    }
+
+          /* These aren't really errors; don't count them as such.  */
+	  errorcount = old_errorcount;
+	}
+#endif	/* APPLE_ALIGN_CHECK  */
 
       if (var_size && const_size)
 	DECL_FIELD_BITPOS (field)
@@ -590,6 +647,10 @@ layout_record (rec)
   /* Round the size up to be a multiple of the required alignment */
   TYPE_SIZE (rec) = round_up (TYPE_SIZE (rec), TYPE_ALIGN (rec));
 #endif
+
+#ifdef APPLE_ALIGN_CHECK
+  apple_align_check (rec, const_size, const_size_osx1_delta, var_size);
+#endif  /* APPLE_ALIGN_CHECK  */
 
   return pending_statics;
 }
@@ -692,6 +753,9 @@ layout_union (rec)
   /* Round the size up to be a multiple of the required alignment */
   TYPE_SIZE (rec) = round_up (TYPE_SIZE (rec), TYPE_ALIGN (rec));
 #endif
+#ifdef APPLE_ALIGN_CHECK
+  apple_align_check (rec, const_size, 0, var_size);
+#endif  /* APPLE_ALIGN_CHECK  */
 }
 
 /* Calculate the mode, size, and alignment for TYPE.
@@ -770,6 +834,12 @@ layout_type (type)
       TYPE_SIZE_UNIT (type) = size_int (GET_MODE_SIZE (TYPE_MODE (type)));
       break;
 
+    case VECTOR_TYPE:
+      TREE_UNSIGNED (type) = TREE_UNSIGNED (TREE_TYPE (type));
+      TYPE_MODE (type) = SVmode;
+      TYPE_SIZE (type) = size_int (GET_MODE_BITSIZE (TYPE_MODE (type)));
+      break;
+	
     case VOID_TYPE:
       TYPE_SIZE (type) = size_zero_node;
       TYPE_SIZE_UNIT (type) = size_zero_node;
@@ -969,6 +1039,19 @@ layout_type (type)
 	    /* We only have one real field; use its mode.  */
 	    TYPE_MODE (type) = mode;
 	  else
+#if defined (NEXT_SEMANTICS) && defined (TARGET_TOC)  /* i.e., PowerPC  */
+	    /* We have nasty problems caused by 8-byte structs being treated
+	       as DImode, which can then be loaded into FP-regs regardless of
+	       alignment restrictions.  This is DEFINITELY not the best way
+	       to fix it, but what we now do is to override a BLKmode
+	       (the current value of TYPE_MODE (type)) to DImode type mod,
+	       but only when generating PIC, to avoid using FP instructions
+	       in libgcc when NOT generating PIC (as contradictory as that
+	       may sound)!  */
+	    if (mode_for_size (TREE_INT_CST_LOW (TYPE_SIZE (type)),
+			       MODE_INT, 1) != DImode
+		|| !flag_pic)
+#endif
 	    TYPE_MODE (type)
 	      = mode_for_size (TREE_INT_CST_LOW (TYPE_SIZE (type)),
 			       MODE_INT, 1);
@@ -1026,6 +1109,19 @@ layout_type (type)
 		goto union_lose;
 	    }
 
+#if defined (NEXT_SEMANTICS) && defined (TARGET_TOC)  /* i.e., PowerPC  */
+	  /* We have nasty problems caused by 8-byte structs being treated
+	     as DImode, which can then be loaded into FP-regs regardless of
+	     alignment restrictions.  This is DEFINITELY not the best way
+	     to fix it, but what we now do is to override a BLKmode
+	     (the current value of TYPE_MODE (type)) to DImode type mod,
+	     but only when generating PIC, to avoid using FP instructions
+	     in libgcc when NOT generating PIC (as contradictory as that
+	     may sound)!  */
+	  if (mode_for_size (TREE_INT_CST_LOW (TYPE_SIZE (type)),
+			     MODE_INT, 1) != DImode
+	      || !flag_pic)
+#endif
 	  TYPE_MODE (type)
 	    = mode_for_size (TREE_INT_CST_LOW (TYPE_SIZE (type)),
 			     MODE_INT, 1);

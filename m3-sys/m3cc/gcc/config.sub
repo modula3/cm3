@@ -147,6 +147,27 @@ case $os in
 	-lynx*)
 		os=-lynxos
 		;;
+	-next)
+		if [ $basic_machine = m68k ]
+		then basic_machine=$1
+		fi
+		os=-nextstep3
+		;;
+	-nextstep*)
+		if [ $basic_machine = m68k ]
+		then basic_machine=$basic_machine-next
+		fi
+		case $basic_machine in
+			hppa1*)
+				;;
+			hppa*)
+				basic_machine=`echo $basic_machine \
+					| sed -e 's/hppa/hppa1.1/'`
+		esac
+		if [ $os = -nextstep ]
+		then os=-nextstep3
+		fi
+		;;
 	-ptx*)
 		basic_machine=`echo $1 | sed -e 's/86-.*/86-sequent/'`
 		;;
@@ -937,7 +958,7 @@ case $os in
 	      | -udi* | -eabi* | -lites* | -ieee* | -go32* | -aux* \
 	      | -cygwin* | -pe* | -psos* | -moss* | -proelf* | -rtems* \
 	      | -mingw32* | -linux-gnu* | -uxpv* | -beos* | -mpeix* | -udk* \
-	      | -interix* | -uwin* )
+	      | -interix* | -uwin* | -openstep* | -macos* | -darwin* )
 	# Remember, each alternative MUST END IN *, to match a version number.
 		;;
 	# EGCS LOCAL

@@ -477,6 +477,24 @@ extern struct rtx_def *immed_real_const_1	PROTO((REAL_VALUE_TYPE,
 						       enum machine_mode));
 
 
+/* For a CONST_VECTOR:
+   The usual four ints that hold the value.
+   For a SVmode, that is all there are;
+    and CONST_VECTOR_0 is the low-order word and ..._3 the high-order.
+    So use &CONST_VECTOR_0(r) as the address of an array of ints.  */
+#define CONST_VECTOR_0(r) XWINT (r, 2)
+#define CONST_VECTOR_1(r) XWINT (r, 3)
+#define CONST_VECTOR_2(r) XWINT (r, 4)
+#define CONST_VECTOR_3(r) XWINT (r, 5)
+
+/* Link for chain of all CONST_VECTORs in use in current function.  */
+#define CONST_VECTOR_CHAIN(r) XEXP (r, 1)
+/* The MEM which represents this CONST_VECTOR's value in memory,
+   or const0_rtx if no MEM has been made for it yet,
+   or cc0_rtx if it is not on the chain.  */
+#define CONST_VECTOR_MEM(r) XEXP (r, 0)
+
+
 /* Convert a floating point value `r', that can be interpreted
    as a host machine float or double, to a decimal ASCII string `s'
    using printf format string `fmt'.  */

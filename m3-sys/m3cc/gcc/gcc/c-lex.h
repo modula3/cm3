@@ -24,11 +24,14 @@ enum rid
 {
   RID_UNUSED,
   RID_INT,
+  RID_BOOL,
   RID_CHAR,
   RID_FLOAT,
   RID_DOUBLE,
   RID_VOID,
+#if !defined (_WIN32) || !defined (NEXT_PDO) /* avoid having too many enums  */
   RID_UNUSED1,
+#endif
 
   RID_UNSIGNED,
   RID_SHORT,
@@ -46,6 +49,25 @@ enum rid
   RID_NOALIAS,
   RID_ITERATOR,
   RID_COMPLEX,
+  RID_PIXEL,
+  RID_VECTOR,
+
+  RID_ID,
+#ifdef NEXT_SEMANTICS
+  RID_RELATIVE,
+  RID_PRIVATE_EXTERN,
+  RID_DIRECT,
+#endif
+#if defined (_WIN32) && defined (NEXT_PDO)
+  RID_STDCALL,
+  RID_DECLSPEC,
+  RID_DLLIMPORT,
+  RID_DLLEXPORT,
+#if 0 /* These are not actually needed.  */
+  RID_THREAD,
+  RID_NAKED,
+#endif
+#endif
 
   RID_IN,
   RID_OUT,
@@ -53,7 +75,6 @@ enum rid
   RID_BYCOPY,
   RID_BYREF,
   RID_ONEWAY,
-  RID_ID,
 
   RID_MAX
 };
@@ -75,6 +96,11 @@ extern tree lastiddecl;
 
 extern char *token_buffer;	/* Pointer to token buffer.  */
 
+extern tree make_pointer_declarator ();
+extern void reinit_parse_for_function ();
+extern int yylex ();
+
+extern char *get_directive_line ();
 extern tree make_pointer_declarator PROTO((tree, tree));
 extern void reinit_parse_for_function PROTO((void));
 extern void position_after_white_space PROTO((void));
