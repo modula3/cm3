@@ -27,7 +27,7 @@ readonly Platform_info = {
   "LINUXLIBC6": "i486--linuxelf",
   "NEXT"      : "next-bsd",
   "NT386"     : "i486--nt",
-  "NT386GNU"  : "i486--cygwin32",
+  "NT386GNU"  : "i486-pc-cygwin",
   "OKI"       : "i860--sysv4.0",
   "SEQUENT"   : "i386-sequent-bsd",
   "SOLgnu"    : "sparc-sun-solaris2",
@@ -39,7 +39,8 @@ readonly Platform_info = {
   "UMAX"      : "encore-bsd",
   "VAX"       : "vax-dec-ultrix",
   "I386_DARWIN" : "i486-unknown-bsd",
-  "PPC_DARWIN"  : "powerpc-apple-darwin6.3"
+  "PPC_DARWIN"  : "powerpc-apple-darwin6.3",
+  "PPC_LINUX"   : "powerpc-apple-linuxelf"
 }
 
 if not defined("SL")
