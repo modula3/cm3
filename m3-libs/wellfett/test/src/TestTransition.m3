@@ -63,7 +63,7 @@ PROCEDURE AnimateTransitionEV()=
     delta := R.One/FLOAT(frames,R.T);
   BEGIN
     PL.Init();
-    (*PL.SetColor0(1);*)
+    (*PL.SetFGColorDiscr(1);*)
     FOR fr:=0 TO frames DO
       VAR
         t:=FLOAT(fr,R.T)*delta;
@@ -85,7 +85,7 @@ PROCEDURE CurveTransitionEV(READONLY maskcoef0,maskcoef1:ARRAY OF R.T)=
     mask1 := NEW(S.T).fromArray(maskcoef1);
     delta := R.One/FLOAT(frames,R.T);
   BEGIN
-    PL.SetColor0(1);
+    PL.SetFGColorDiscr(1);
     PL.SetEnvironment(-0.2D0,1.2D0,-10.0D0,10.0D0);
     FOR fr:=0 TO frames DO
       VAR
@@ -105,9 +105,9 @@ PROCEDURE CurveTransitionEV(READONLY maskcoef0,maskcoef1:ARRAY OF R.T)=
           yre[i]:=ev.eigenvalues[i].re;
           yim[i]:=ev.eigenvalues[i].im;
         END;
-        PL.SetColor0(2);
+        PL.SetFGColorDiscr(2);
         PL.PlotPoints(x^,yre^,17);
-        PL.SetColor0(3);
+        PL.SetFGColorDiscr(3);
         PL.PlotPoints(x^,yim^,20);
       END;
     END;
