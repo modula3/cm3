@@ -288,6 +288,53 @@ END Trace;
 (*-----------------*)
 (*PROCEDURE Determinant(x:T):R.T;*)
 
+PROCEDURE Apply(x:T;f:ApplyFtn)=
+  BEGIN
+    FOR i:=0 TO LAST(x^) DO
+      FOR j:=0 TO LAST(x[0]) DO
+        f(x[i,j]);
+      END;
+    END;
+  END Apply;
+
+PROCEDURE Map(x:T;f:MapFtn):T=
+  VAR
+    y:=NEW(T,NUMBER(x^),NUMBER(x[0]));
+  BEGIN
+    FOR i:=0 TO LAST(x^) DO
+      FOR j:=0 TO LAST(x[0]) DO
+        y[i,j]:=f(x[i,j]);
+      END;
+    END;
+    RETURN y;
+  END Map;
+
+PROCEDURE ReduceRows(x:T;f:ReduceFtn;READONLY init:V.TBody):V.T=
+  VAR
+    y:=NEW(V.T,NUMBER(init));
+  BEGIN
+    y^:=init;
+    FOR i:=0 TO LAST(x^) DO
+      FOR j:=0 TO LAST(x[0]) DO
+        x[i,j]:=f(y[i],x[i,j]);
+      END;
+    END;
+    RETURN y;
+  END ReduceRows;
+
+PROCEDURE ReduceColumns(x:T;f:ReduceFtn;READONLY init:V.TBody):V.T=
+  VAR
+    y:=NEW(V.T,NUMBER(init));
+  BEGIN
+    y^:=init;
+    FOR i:=0 TO LAST(x^) DO
+      FOR j:=0 TO LAST(x[0]) DO
+        x[i,j]:=f(y[j],x[i,j]);
+      END;
+    END;
+    RETURN y;
+  END ReduceColumns;
+
 (*-----------------*)
 BEGIN
 END MatrixBasic.

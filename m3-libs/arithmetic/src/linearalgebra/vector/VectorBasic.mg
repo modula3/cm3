@@ -140,14 +140,45 @@ BEGIN
 END Inner;
 
 (*-----------------*)
-(*
+(* should be generalized to finding an orthonormal basis
+   of the space orthogonal to a given set of vectors
+   one way to do this:
+     let the matrix have size (n,m) with less columns than rows (m<n)
+     clip the matrix to size (m+1,m) and create a column vector orthogonal to it
+     the j-th component is computed by the determinant of the limitted matrix
+     with the j-th row removed
+     now iterate to the matrix of size (m+2,m+1) and so on
 PROCEDURE Cross(
                 x,y:T):T RAISES {Error}=
-(*return cross product of x and y*)
 BEGIN
   RAISE Error(Err.not_implemented);
 END Cross;
 *)
+
+PROCEDURE Apply(x:T;f:ApplyFtn)=
+  BEGIN
+    FOR j:=0 TO LAST(x^) DO
+      f(x[j]);
+    END;
+  END Apply;
+
+PROCEDURE Map(x:T;f:MapFtn):T=
+  VAR
+    y:=NEW(T,NUMBER(x^));
+  BEGIN
+    FOR j:=0 TO LAST(x^) DO
+      y[j]:=f(x[j]);
+    END;
+    RETURN y;
+  END Map;
+
+PROCEDURE Reduce(x:T;f:ReduceFtn;accu:R.T):R.T=
+  BEGIN
+    FOR j:=0 TO LAST(x^) DO
+      accu:=f(accu,x[j]);
+    END;
+    RETURN accu;
+  END Reduce;
 
 (*-----------------*)
 BEGIN
