@@ -148,15 +148,15 @@ PROCEDURE Wait(p: T): ExitCode =
     p.waitOk := FALSE;
     TRY
       IF WinBase.WaitForSingleObject(p.info.hProcess, WinBase.INFINITE) #
-         WinBase.WAIT_OBJECT_0 THEN RAISE InternalError 
+	 WinBase.WAIT_OBJECT_0 THEN RAISE InternalError 
       END;
       IF WinBase.GetExitCodeProcess(p.info.hProcess, ADR(status)) = 0 THEN
-        error := WinBase.GetLastError();
-        RAISE InternalError
+	error := WinBase.GetLastError();
+	RAISE InternalError
       END;
     FINALLY
-      CloseHandle (p.info.hProcess);
-      CloseHandle (p.info.hThread);
+      TRY CloseHandle(p.info.hProcess) EXCEPT ELSE END;
+      TRY CloseHandle(p.info.hThread) EXCEPT ELSE END;
     END;
     RETURN Word.And(status, LAST(ExitCode))
   END Wait;
@@ -180,7 +180,7 @@ PROCEDURE GetID(p: T): ID =
   BEGIN RETURN LOOPHOLE(p.info.hProcess, ID) END GetID;
 
 PROCEDURE GetMyID(): ID =
-  BEGIN RETURN LOOPHOLE(WinBase.GetCurrentProcess(), ID) END GetMyID;
+  BEGIN RETURN LOOPHOLE(WinBase.GetCurrentProcessId(), ID) END GetMyID;
 
 VAR
   stdin_g  := GetFileHandle(WinBase.STD_INPUT_HANDLE,  FileWin32.Read);
