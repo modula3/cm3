@@ -34,23 +34,23 @@ PROCEDURE Strip(
 VAR
   n:=LAST(p^);
 BEGIN
-  WHILE n>FIRST(p^) AND R.Equal(p[n],R.Zero) DO
-    DEC(n);
-  END;
-  IF n=LAST(p^) THEN
+  IF R.Equal(p[n],R.Zero) THEN
     RETURN p;
   ELSE
-    VAR
-      q:=NEW(T,n+1);
-    BEGIN
-      q^:=SUBARRAY(p^,0,n);
+    REPEAT
+      DEC(n);
+    UNTIL n=FIRST(p^) OR NOT R.Equal(p[n],R.Zero);
+  END;
+  VAR
+    q:=NEW(T,n+1);
+  BEGIN
+    q^:=SUBARRAY(p^,0,n);
 (*
   WHILE n>=FIRST(p^) DO
     q[n]:=p[n];
   END;
 *)
-      RETURN q;
-    END;
+    RETURN q;
   END;
 END Strip;
 
