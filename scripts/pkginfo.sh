@@ -12,6 +12,7 @@ else
     echo "scripts/sysinfo.sh not found" 1>&2
     exit 1
   fi
+  export root
 fi
 . "$sysinfo"
 
@@ -34,8 +35,8 @@ pkg_defined() {
 pkgpath() {
   ok=true
   for p in $* ; do
-    if res=`"$GREP" /"$p\$" "$PKGSDB" | head -1` ; then
-      echo $res
+    if res=`"$GREP" /"$p\$" "$PKGSDB"` ; then
+      echo $res | head -1
     else
       echo "package $p not found" 1>&2
       ok=false

@@ -14,11 +14,19 @@ else
   fi
   export root
 fi
-. "$sysinfo"
 
-(
-  cd "$ROOT" &&  find . -type f -name m3makefile -print | 
-  grep src/m3makefile | sed -e 's;/src/m3makefile$;;' | 
-  sort | uniq | sed -e "s;^./;;"
-) > "$PKGSDB"
+. "$sysinfo"
+. "$ROOT/scripts/pkginfo.sh"
+. "$ROOT/scripts/pkgcmds.sh"
+
+P=""
+P="${P} m3core"
+P="${P} libm3"
+
+OPTIONS=`extract_options $@`
+ACTION=`map_action $@`
+ADDARGS=`add_action_args $@`
+
+echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
+"$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}
 

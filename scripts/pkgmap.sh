@@ -13,14 +13,10 @@ else
     echo "scripts/sysinfo.sh not found" 1>&2
     exit 1
   fi
+  export root
 fi
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
-
-if [ -z "$PKG_ACTION" ] ; then
-  echo "no PKG_ACTION defined, aborting" 1>&2
-  exit 1
-fi
 
 exec_cmd() {
   echo " +++ $PKG_ACTION +++"
@@ -33,6 +29,13 @@ while [ -n "$1" ] ; do
     KEEP_GOING="yes"
   elif [ x-n = x"$1" ] ; then
     NO_ACTION="yes"
+  elif [ x-c = x"$1" ] ; then
+    if [ -z "${PKG_ACTION}" ] ; then
+      PKG_ACTION="$2"
+    else
+      PKG_ACTION="${PKG_ACTION} ; $2"
+    fi
+    shift
   elif [ -d "$1" ] ; then
     PKGS="${PKGS} $1"
   elif [ -d "$ROOT/$1" ] ; then
@@ -41,7 +44,7 @@ while [ -n "$1" ] ; do
     p=`pkgpath $1`
     if [ -d "$p" ] ; then
       PKGS="${PKGS} $p"
-    elif [ -d "$ROOT/$p" ] ; then
+    elif [ -n "$p" -a -d "$ROOT/$p" ] ; then
       PKGS="${PKGS} $ROOT/$p"
     else
       echo " *** cannot find package $1 / $p" 1>&2
@@ -50,6 +53,11 @@ while [ -n "$1" ] ; do
   fi
   shift
 done
+
+if [ -z "$PKG_ACTION" ] ; then
+  echo "no PKG_ACTION defined, aborting" 1>&2
+  exit 1
+fi
 
 if [ -z "${PKGS}" ] ; then
   echo "no packages" 1>&2
