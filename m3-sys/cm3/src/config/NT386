@@ -52,7 +52,7 @@ INITIAL_REACTOR_EDITOR = "C:\\GNU\\emacs.bat"
 % the installation will fail, but can be restarted after you have 
 % fixed the permissions.
 
-INSTALL_ROOT = "N:\\M3\\"
+INSTALL_ROOT = "c:\\cm3\\"
 %-- handy for installations that keep all M3 stuff together
 
 BIN_INSTALL   = INSTALL_ROOT & "bin"          % executables
