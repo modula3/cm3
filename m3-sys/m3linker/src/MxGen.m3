@@ -17,7 +17,7 @@ TYPE
     verbose       : BOOLEAN      := FALSE;
     gui           : BOOLEAN      := FALSE;
     genC          : BOOLEAN      := FALSE;
-    lazyInit      : BOOLEAN      := FALSE;
+    lazyInit      : BOOLEAN      := TRUE;
     main_units    : UnitInfo     := NIL;
     all_units     : UnitInfo     := NIL;
     top_units     : UnitInfo     := NIL;
@@ -95,7 +95,7 @@ PROCEDURE GenCGTypeDecls (VAR s: State) =
   VAR
     interface    : M3CG.Var;
     struct_align := MAX (Target.Structure_size_boundary, Target.Address.align)
-                       DIV Target.Byte;   (* == min structure alignment (bytes)*)
+                      DIV Target.Byte; (* == min structure alignment (bytes)*)
   BEGIN
     s.cg.begin_unit ();
     s.cg.set_source_file ("_m3main.mc");
@@ -220,6 +220,7 @@ PROCEDURE ImportTopUnits (VAR s: State) =
     DumpUnits("Top Units:", s.top_units);
 
     (* concatenate main and other top units *)
+    (*
     ui := s.top_units;
     IF ui # NIL THEN
       WHILE ui.next # NIL DO
@@ -228,7 +229,16 @@ PROCEDURE ImportTopUnits (VAR s: State) =
       ui.next := s.main_units;
       s.main_units := s.top_units;
     END;
+    *)
 
+    (* import all top units different from Main *)
+    ui := s.top_units;
+    WHILE ui # NIL DO
+      ImportUnit (s, ui);
+      ui := ui.next;
+    END;
+
+    (* import all main units *)
     ui := s.main_units;
     WHILE ui # NIL DO
       ImportUnit (s, ui);
@@ -279,10 +289,28 @@ PROCEDURE DumpUnits (h: TEXT; units: UnitInfo) =
 (*------------------------------------------------------------------------*)
 
 PROCEDURE GenerateCEntry (VAR s: State) =
-  VAR ui: UnitInfo;
+
+  PROCEDURE GenAddUnits(ui: UnitInfo) =
+    BEGIN
+      WHILE (ui # NIL) DO
+        Out (s, "  RTLinker__AddUnit (", ui.binder, ");", s.eol);
+        ui := ui.next;
+      END;
+    END GenAddUnits;
+
+  PROCEDURE GenAddUnitImports(ui: UnitInfo) =
+    BEGIN
+      IF s.lazyInit THEN RETURN END;
+      WHILE (ui # NIL) DO
+        Out (s, "  RTLinker__AddUnitImports (", ui.binder, ");", s.eol);
+        ui := ui.next;
+      END;
+    END GenAddUnitImports;
+
   BEGIN
     Out (s, "extern void RTLinker__InitRuntime ();", s.eol);
     Out (s, "extern void RTLinker__AddUnit ();", s.eol);
+    Out (s, "extern void RTLinker__AddUnitImports ();", s.eol);
     Out (s, "extern void RTProcess__Exit ();", s.eol, s.eol);
 
     IF (s.gui) THEN
@@ -302,11 +330,9 @@ PROCEDURE GenerateCEntry (VAR s: State) =
       Out (s, "  RTLinker__InitRuntime (argc, argv, envp, 0);", s.eol);
     END;
 
-    ui := s.main_units;
-    WHILE (ui # NIL) DO
-      Out (s, "  RTLinker__AddUnit (", ui.binder, ");", s.eol);
-      ui := ui.next;
-    END;
+    GenAddUnitImports(s.main_units);
+    GenAddUnits(s.top_units);
+    GenAddUnits(s.main_units);
 
     Out (s, "  RTProcess__Exit (0);", s.eol);
     Out (s, "  return 0;", s.eol);
@@ -320,6 +346,7 @@ PROCEDURE GenerateCGEntry (VAR s: State) =
     main      : M3CG.Proc;
     run_proc  : M3CG.Proc;
     link_proc : M3CG.Proc;
+    link_proc2: M3CG.Proc;
     exit_proc : M3CG.Proc;
     getenv    : M3CG.Proc;
     winapi    : Target.CallingConvention;
@@ -330,9 +357,34 @@ PROCEDURE GenerateCGEntry (VAR s: State) =
     prev      : M3CG.Var;
     mode      : M3CG.Var;
     src_line  : INTEGER := 2;
-    ui        : UnitInfo;
     int_t     := Target.Integer.cg_type;
     addr_t    := Target.CGType.Addr;
+
+  PROCEDURE GenAddUnits(ui: UnitInfo) =
+    BEGIN
+      WHILE (ui # NIL) DO
+        s.cg.set_source_line (src_line);  INC (src_line);
+        s.cg.start_call_direct (link_proc, 0, Target.CGType.Void);
+        s.cg.load_procedure (ui.cg_proc);
+        s.cg.pop_param (addr_t);
+        s.cg.call_direct (link_proc, Target.CGType.Void);
+        ui := ui.next;
+      END;
+    END GenAddUnits;
+
+  PROCEDURE GenAddUnitImports(ui: UnitInfo) =
+    BEGIN
+      IF s.lazyInit THEN RETURN END;
+      WHILE (ui # NIL) DO
+        s.cg.set_source_line (src_line);  INC (src_line);
+        s.cg.start_call_direct (link_proc2, 0, Target.CGType.Void);
+        s.cg.load_procedure (ui.cg_proc);
+        s.cg.pop_param (addr_t);
+        s.cg.call_direct (link_proc2, Target.CGType.Void);
+        ui := ui.next;
+      END;
+    END GenAddUnitImports;
+
   BEGIN
     run_proc := s.cg.import_procedure (M3ID.Add ("RTLinker__InitRuntime"), 4,
                                        Target.CGType.Void, Target.DefaultCall);
@@ -343,6 +395,11 @@ PROCEDURE GenerateCGEntry (VAR s: State) =
 
     link_proc := s.cg.import_procedure (M3ID.Add ("RTLinker__AddUnit"), 1,
                                        Target.CGType.Void, Target.DefaultCall);
+    EVAL DeclareParam (s, "m", addr_t);
+
+    link_proc2 := s.cg.import_procedure (M3ID.Add ("RTLinker__AddUnitImports"),
+                                         1, Target.CGType.Void,
+                                         Target.DefaultCall);
     EVAL DeclareParam (s, "m", addr_t);
 
     exit_proc := s.cg.import_procedure (M3ID.Add ("RTProcess__Exit"), 1,
@@ -427,15 +484,9 @@ PROCEDURE GenerateCGEntry (VAR s: State) =
     END;
     s.cg.call_direct (run_proc, Target.CGType.Void);
 
-    ui := s.main_units;
-    WHILE (ui # NIL) DO
-      s.cg.set_source_line (src_line);  INC (src_line);
-      s.cg.start_call_direct (link_proc, 0, Target.CGType.Void);
-      s.cg.load_procedure (ui.cg_proc);
-      s.cg.pop_param (addr_t);
-      s.cg.call_direct (link_proc, Target.CGType.Void);
-      ui := ui.next;
-    END;
+    GenAddUnitImports(s.main_units);
+    GenAddUnits(s.top_units);
+    GenAddUnits(s.main_units);
 
     (*  RTProcess.Exit (0); *)
     s.cg.set_source_line (src_line);  INC (src_line);
