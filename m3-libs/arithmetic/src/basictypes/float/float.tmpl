@@ -23,6 +23,8 @@ end
 
 readonly proc FloatFmtLex (nm, field) is
   local basic = nm & "FmtLex"
+  local intf  = nm & "FmtLexIntf"
   build_generic_intf (basic, "FloatFmtLex", [field], VISIBLE)
-  implementation (basic)
+  build_generic_impl (basic, "FloatFmtLex", [intf])
+  interface (intf)
 end
