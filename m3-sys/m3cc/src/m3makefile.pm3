@@ -24,17 +24,25 @@ if not defined ("no_config")
   if not empty(M3CC_CONFIG)
     cmd += M3CC_CONFIG
   end
-  if equal(OS_TYPE,"WIN32")
-    > "tmpsh" in
-      write("#! /bin/sh",CR)
-      write(cmd,CR)
+  done  = ".configure-done"
+  donep = build_dir & SL & done
+  if stale(donep, donep)
+    if equal(OS_TYPE,"WIN32")
+      > "tmpsh" in
+	write("#! /bin/sh",CR)
+	write(cmd,CR)
+      end
+      ret = exec(["sh","tmpsh"],[],build_dir)
+    else
+      write(cmd," ",build_dir,CR)
+      ret = exec(cmd,[],build_dir)
     end
-    ret = exec(["sh","tmpsh"],[],build_dir)
-  else
-    write(cmd," ",build_dir,CR)
-    ret = exec(cmd,[],build_dir)
+    if equal(ret,0)
+      ret = exec(["echo", "done"], ["",donep,""])
+    else
+      error("Failed to configure m3cc")
+    end
   end
-  if not equal(ret,0) error("Failed to configure m3cc") end
 end
 
 % misc fixups & ship commands
@@ -67,5 +75,6 @@ ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
 % finally, compile it
 ret = exec ([M3CC_MAKE, ARG0, ARG1, "LANGUAGES=" & pgms],[], build_dir)
 if not equal(ret,0) error("Failed to build m3cc") end
+ret = exec(["cp", "-p", "gcc/cm3cg", "cm3cg"],[],build_dir)
 
 
