@@ -185,8 +185,8 @@ PROCEDURE TestLU (): BOOLEAN RAISES {} =
     foundX: V.T;
 
     det  : R.T;
-    d    : INTEGER;
-    index          := NEW(REF MD.IndexArray, n);
+    d    : [-1 .. 1];
+    index            := NEW(REF MD.IndexArray, n);
 
   BEGIN
     Debug(1, ftn, "begin\n");
@@ -201,7 +201,7 @@ PROCEDURE TestLU (): BOOLEAN RAISES {} =
       (*---make a copy so we can reuse the decomp---*)
       Acopy := M.Copy(A);
       det := MD.LUDet(Acopy, d);
-      Msg("det=" & RF.Fmt(det) & "\n");
+      Msg("det =" & RF.Fmt(det) & "\n");
 
       Acopy := M.Copy(A);
       D := MD.LUInverseD(A, index^);
