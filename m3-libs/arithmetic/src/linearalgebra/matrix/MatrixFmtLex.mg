@@ -57,7 +57,8 @@ BEGIN
   RETURN TextWr.ToText(wr);
 END Fmt;
 
-PROCEDURE Dup (str:TEXT; n:CARDINAL):TEXT =
+PROCEDURE Dup (str:TEXT; n:CARDINAL):TEXT
+               RAISES {Thread.Alerted, Wr.Failure} =
   VAR
     wr:=TextWr.New();
   BEGIN
