@@ -126,6 +126,22 @@ PROCEDURE Rec(READONLY x0 : T) : T RAISES{Error} =
   END Rec;
 
 (*-------------------*)
+PROCEDURE Mod(<*UNUSED*> READONLY x:T; READONLY y:T):T RAISES {Error} =
+  BEGIN
+    IF y.re=R.Zero AND y.im=R.Zero THEN
+      RAISE Error(Err.divide_by_zero);
+    END;
+    RETURN Zero;
+  END Mod;
+
+(*-------------------*)
+PROCEDURE DivMod(READONLY x,y:T;VAR r:T):T RAISES {Error} =
+  BEGIN
+    r:=Zero;
+    RETURN Div(x,y);
+  END DivMod;
+
+(*-------------------*)
 PROCEDURE Square(READONLY x : T) : T =
   VAR
     z : T;
