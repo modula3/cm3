@@ -97,6 +97,8 @@ case "${UNAME}" in
     L="${L} e:/reactor5/lib c:/reactor/lib d:/reactor/lib"
     L="${L} e:/reactor/lib /usr/local/cm3/lib /usr/local/reactor/lib"
     L="${L} /usr/cm3/lib /usr/reactor/lib"
+    CM3LIBSEARCHPATH="${L}"
+    CM3BINSEARCHPATH="`echo ${L} | sed -e 's/lib/bin/g'`"
     if f="`find_file KERNEL32.LIB ${L}`" ; then
       SYSLIBDIR="`dirname $f`"
     else
@@ -199,5 +201,6 @@ debug "TAR         = $TAR"
 
 export ROOT SCRIPTS M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB QGREP
 export GREP TMPDIR EXE SL CM3VERSION SYSLIBDIR SYSLIB DEV_BIN DEV_LIB TAR
+export CM3LIBSEARCHPATH CM3BINSEARCHPATH
 export SYSINFO_DONE
 

@@ -90,17 +90,32 @@ ARCHIVE1="system.tgz"
 ARCHIVE2="cm3-min-${M3OSTYPE}-${TARGET}-${CM3VERSION}.tgz"
 ABSARCH1="`cygpath -u ${STAGE}/${ARCHIVE1}`"
 ABSARCH2="`cygpath -u ${STAGE}/${ARCHIVE2}`"
+INSTDATA="cminstall${EXE} COPYRIGHT-CMASS ${ARCHIVE1}"
 head "stage 6: building archive in ${ARCHIVE2}"
 echo "creating system archive in ${ABSARCH1}"
 ${TAR} -C "${INSTALLROOT}" -czf "${ABSARCH1}" . || exit 1
 echo ".../cminstall/${TARGET}/cminstall${EXE} -->" "${STAGE}"
 cp "${ROOT}/m3-sys/cminstall/${TARGET}/cminstall${EXE}" "${STAGE}" ||  exit 1
 cp "${ROOT}/m3-sys/COPYRIGHT-CMASS" "${STAGE}" || exit 1
+if [ "${M3OSTYPE}" = "WIN32" ] ; then
+  ITAR="`find_file tar.exe ${CM3BINSEARCHPATH}`"
+  IGZIP="`find_file gzip.exe ${CM3BINSEARCHPATH}`"
+  if [ -f "${ITAR}" ] ; then
+    cp "${ITAR}" "${STAGE}"
+    INSTDATA="${INSTDATA} tar.exe"
+  else
+    echo "no tar.exe found on WIN32 for installation archive" 1>&2
+  fi
+  if [ -f "${IGZIP}" ] ; then
+    cp "${IGZIP}" "${STAGE}"
+    INSTDATA="${INSTDATA} gzip.exe"
+  else
+    echo "no gzip.exe found on WIN32 for installation archive" 1>&2
+  fi
+fi
 echo "creating distribution archive ${ABSARCH2}"
-${TAR} -C "${STAGE}" -czf "${ABSARCH2}" cminstall${EXE} \
-  COPYRIGHT-CMASS ${ARCHIVE1} || exit 1
+${TAR} -C "${STAGE}" -czf ${ABSARCH2} ${INSTDATA} || exit 1
 ls -l "${ABSARCH2}"
 echo "cleaning up"
-rm -f "${STAGE}/cminstall${EXE}"
+cd "${STAGE}" && rm -f ${INSTDATA}
 rm -rf "${INSTALLROOT}"
-rm -f "${ABSARCH1}"
