@@ -246,6 +246,59 @@ PROCEDURE CIHash (t: T): INTEGER =
     RETURN result;
   END CIHash;
 
-BEGIN
+(* In pattern, '*' matches any sequence of 0 or characters
+               '?' matches any single character
+               '\x' matches the character 'x'
+   Might get false match if pattern ends with a '\' 
+ *)
+PROCEDURE OnlyStarsLeft(pattern: TEXT; ip, len: INTEGER): BOOLEAN =
+  BEGIN
+    FOR i := ip TO len - 1 DO
+      IF Text.GetChar(pattern, i) # '*' THEN RETURN FALSE END;
+    END;
+    RETURN TRUE;
+  END OnlyStarsLeft;
 
+PROCEDURE PatternMatch1 (t, pattern: TEXT;
+                         it, ip    : INTEGER;
+                         lenT, lenP: INTEGER  ): BOOLEAN =
+  VAR chT, chP: CHAR;
+  BEGIN
+    IF it = lenT THEN
+      RETURN ip = lenP OR OnlyStarsLeft(pattern, ip, lenP);
+    ELSIF ip = lenP THEN
+      RETURN FALSE;
+    END;
+    chP := Text.GetChar(pattern, ip);
+    chT := Text.GetChar(t, it);
+    CASE chP OF
+    | '*' =>
+        INC(ip);
+        WHILE NOT PatternMatch1(t, pattern, it, ip, lenT, lenP) DO
+          INC(it);
+          IF it = lenT THEN RETURN ip = lenP END;
+        END;
+        RETURN TRUE;
+    | '?' =>
+        INC(ip);
+        INC(it);
+        RETURN PatternMatch1(t, pattern, it, ip, lenT, lenP);
+    | '\\' =>
+        INC(ip);
+        RETURN PatternMatch1(t, pattern, it, ip, lenT, lenP);
+    ELSE
+      IF chP # chT THEN RETURN FALSE; END;
+      INC(ip);
+      INC(it);
+      RETURN PatternMatch1(t, pattern, it, ip, lenT, lenP);
+    END;
+  END PatternMatch1;
+
+PROCEDURE PatternMatch (t, pattern: TEXT): BOOLEAN =
+  BEGIN
+    RETURN
+      PatternMatch1(t, pattern, 0, 0, Text.Length(t), Text.Length(pattern));
+  END PatternMatch;
+
+BEGIN
 END TextExtras.
