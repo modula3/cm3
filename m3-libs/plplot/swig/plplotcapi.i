@@ -311,13 +311,9 @@ DOC(plgcompression, "Get the current compression setting.")
 void
 plgcompression(PLINTOutput compression);
 
-//temporary
-#if 0
 DOC(plgdev, "Get the current device (keyword) name.")
 void
 plgdev(PLCharOutput dev);
-//temporary
-#endif
 
 DOC(plgdidev, "Retrieve current window into device space.")
 void
@@ -335,13 +331,9 @@ DOC(plgfam, "Get family file parameters.")
 void
 plgfam(PLINTOutput fam, PLINTOutput num, PLINTOutput bmax);
 
-//temporary
-#if 0
 DOC(plgfnam, "Get the (current) output file name.")
 void
 plgfnam(PLCharOutput fnam);
-//temporary
-#endif
 
 DOC(plglevel, "Get the (current) run level.")
 void
@@ -366,12 +358,9 @@ DOC(plgstrm, "Get current stream number.")
 void
 plgstrm(PLINTOutput strm);
 
-//temporary
-#if 0
 DOC(plgver, "Get current library version number.")
 void
 plgver(PLCharOutput ver);
-#endif
 
 DOC(plgvpd, "Get viewport boundaries in normalized device coordinates.")
 void
@@ -758,7 +747,7 @@ plshade1(PLFLT *Matrix, PLArraySize nx, PLArraySize ny, defined_func df,
  *  DocBook xml documentation in the api.xml chapter, etc. 
 \*--------------------------------------------------------------------------*/
 
-#if 0
+
 
 /* Draws a contour plot using the function evaluator f2eval and data stored
  * by way of the f2eval_data pointer.  This allows arbitrary organizations
@@ -814,9 +803,9 @@ pldip2dc(PLFLTInOut, PLFLTInOut, PLFLTInOut, PLFLTInOut);
 /* plots a 2d image (or a matrix too large for plshade() ). */
 
 void
-plimage( PLFLTMatrix, PLArraySize nx, PLArraySize ny, 
+plimage( PLFLTMatrixFst z, PLArraySize nx, PLArraySize ny, 
 	 PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax, PLFLT zmin, PLFLT zmax,
-	 PLFLT Dxmin, PLFLT Dxmax, PLFLT Dymin, PLFLT Dymax);
+	 PLFLT dxmin, PLFLT dxmax, PLFLT dymin, PLFLT dymax);
 
 /* Returns a list of file-oriented device names and their menu strings */
 void
@@ -837,20 +826,16 @@ plsKeyEH(void (*KeyEH) (PLGraphicsIn *, void *, PLINT *), void *KeyEH_data);
 void
 plsButtonEH(void (*ButtonEH) (PLGraphicsIn *, void *, PLINT *),
 	    void *ButtonEH_data);
-#endif
+
 /* Set the variables to be used for storing error info */
 
-#if 0
 void
 plsError(PLINT *errcode, char *errmsg);
-#endif
 
 /* Sets an optional user exit handler. */
-#if 0
 void
 plsexit(PLINT (*handler) (char *));
-	/* Transformation routines */
-#endif
+
 
 	/* Transformation routines */
 
@@ -888,11 +873,10 @@ void
 pltr2f(PLFLT x, PLFLT y, PLFLTOutput tx, PLFLTOutput ty, void *pltr_data);
 
 
-#if 0
 /* Example linear transformation function for contour plotter. */
 
 void 
-xform(PLFLT x, PLFLT y, PLFLTOutput OUTPUT, PLFLTOutput OUTPUT);
+xform(PLFLT x, PLFLT y, PLFLTOutput tx, PLFLTOutput ty);
 	/* Function evaluators */
 /* Does a lookup from a 2d function array.  Array is of type (PLFLT **), */
 /* and is column dominant (normal C ordering). */
@@ -911,7 +895,8 @@ plf2eval(PLINT ix, PLINT iy, PLPointer plf2eval_data);
 
 PLFLT
 plf2evalr(PLINT ix, PLINT iy, PLPointer plf2eval_data);
-#endif
+
+
 	/* Command line parsing utilities */
 
 /* Clear internal option table info structure. */
@@ -925,16 +910,13 @@ void
 plResetOpts(void);
 
 /* Merge user option table into internal info structure. */
-#if 0
 PLINT
 plMergeOpts(PLOptionTable *options, char *name, char **notes);
-#endif
 /* Set the strings used in usage and syntax messages. */
 
 void
 plSetUsage(const char *program_string, const char *usage_string);
 
-#if 0
 /* This is wrapped by common API plsetopt so ignore. */
 PLINT
 plSetOpt(char *opt, char *optarg);
@@ -942,7 +924,6 @@ plSetOpt(char *opt, char *optarg);
 /* Process options list using current options info. */
 PLINT
 plParseOpts(PLINT *p_argc, char **argv, PLINT mode);
-#endif
 
 /* Print usage & syntax message. */
 
@@ -950,7 +931,7 @@ void
 plOptUsage(void);
 
 	/* Miscellaneous */
-#if 0
+
 /* Set the output file pointer */
 
 void
@@ -1014,28 +995,24 @@ plFree2dGrid(PLFLT **f, PLArraySize nx, PLArraySize ny);
 void
 plMinMax2dGrid(PLFLT **f, PLArraySize nx, PLArraySize ny, PLFLT *fmax, PLFLT *fmin);
 
-#endif
+
 
 /* Functions for converting between HLS and RGB color space */
 
-#if 0
 void
-plHLS_RGB(PLFLT h, PLFLT l, PLFLT s, PLFLTOutput, PLFLTOutput, PLFLTOutput);
+plHLS_RGB(PLFLT h, PLFLT l, PLFLT s, PLFLTOutput r, PLFLTOutput g, PLFLTOutput b);
 
 void
-plRGB_HLS(PLFLT r, PLFLT g, PLFLT b, PLFLTOutput, PLFLTOutput, PLFLTOutput);
+plRGB_HLS(PLFLT r, PLFLT g, PLFLT b, PLFLTOutput h, PLFLTOutput l, PLFLTOutput s);
 
 /* Wait for graphics input event and translate to world coordinates */
-#endif
 
-#if 0
 PLINT
 plGetCursor(PLGraphicsIn *gin);
 
 /* Translates relative device coordinates to world coordinates.  */
-#endif
+
 /* Use plcalc_world instead of plTranslateCursor. */
-#if 0
+
 int
 plTranslateCursor(PLGraphicsIn *gin);
-#endif

@@ -38,8 +38,11 @@ you must further process PLPlotRaw.i3 with
 #define PL_DOUBLE
 
 %{
-#include "plplotP.h"      
+#include "plplotP.h"
 %}
+
+
+
 
 #ifdef PL_DOUBLE
 typedef double PLFLT;
@@ -100,6 +103,166 @@ FillFunc = PROCEDURE (READONLY x, y: ARRAY OF Float; );
 Point = RECORD x,y: Float; END;
 PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 %}
+
+
+// plplot.h overlaps with definitions in plplotcapi.h
+//%import "plplot.h"
+// thus copy the necessary part from plplot.h
+
+#ifndef __PLSTUBS_H__	/* i.e. do not expand this in the stubs */
+
+#define    pl_setcontlabelformat c_pl_setcontlabelformat
+#define    pl_setcontlabelparam c_pl_setcontlabelparam
+#define    pladv	c_pladv
+#define    plaxes	c_plaxes
+#define    plbin	c_plbin
+#define    plbop	c_plbop
+#define    plbox	c_plbox
+#define    plbox3	c_plbox3
+#define    plcalc_world	c_plcalc_world
+#define    plclear	c_plclear
+#define    plcol0	c_plcol0
+#define    plcol1	c_plcol1
+#define    plcont	c_plcont
+#define    plcpstrm	c_plcpstrm
+#define    plend	c_plend
+#define    plend1	c_plend1
+#define    plenv	c_plenv
+#define    plenv0	c_plenv0
+#define    pleop	c_pleop
+#define    plerrx	c_plerrx
+#define    plerry	c_plerry
+#define    plfamadv	c_plfamadv
+#define    plfill	c_plfill
+#define    plfill3	c_plfill3
+#define    plflush	c_plflush
+#define    plfont	c_plfont
+#define    plfontld	c_plfontld
+#define    plgchr	c_plgchr
+#define    plgcol0	c_plgcol0
+#define    plgcolbg	c_plgcolbg
+#define    plgcompression	c_plgcompression
+#define    plgdev	c_plgdev
+#define    plgdidev	c_plgdidev
+#define    plgdiori	c_plgdiori
+#define    plgdiplt	c_plgdiplt
+#define    plgfam	c_plgfam
+#define    plgfnam	c_plgfnam
+#define    plglevel	c_plglevel
+#define    plgpage	c_plgpage
+#define    plgra	c_plgra
+#define    plgriddata   c_plgriddata
+#define    plgspa	c_plgspa
+#define    plgstrm	c_plgstrm
+#define    plgver	c_plgver
+#define    plgvpd	c_plgvpd
+#define    plgvpw	c_plgvpw
+#define    plgxax	c_plgxax
+#define    plgyax	c_plgyax
+#define    plgzax	c_plgzax
+#define    plhist	c_plhist
+#define    plhls        c_plhls
+#define    plinit	c_plinit
+#define    pljoin	c_pljoin
+#define    pllab	c_pllab
+#define    pllightsource	c_pllightsource
+#define    plline	c_plline
+#define    plline3	c_plline3
+#define    pllsty	c_pllsty
+#define    plmesh	c_plmesh
+#define    plmeshc	c_plmeshc
+#define    plmkstrm	c_plmkstrm
+#define    plmtex	c_plmtex
+#define    plot3d	c_plot3d
+#define    plot3dc	c_plot3dc
+#define    plot3dcl	c_plot3dcl
+#define    plpat	c_plpat
+#define    plpoin	c_plpoin
+#define    plpoin3	c_plpoin3
+#define    plpoly3	c_plpoly3
+#define    plprec	c_plprec
+#define    plpsty	c_plpsty
+#define    plptex	c_plptex
+#define    plreplot	c_plreplot
+#define    plrgb	c_plrgb
+#define    plrgb1	c_plrgb1
+#define    plschr	c_plschr
+#define    plscmap0	c_plscmap0
+#define    plscmap0n	c_plscmap0n
+#define    plscmap1	c_plscmap1
+#define    plscmap1l	c_plscmap1l
+#define    plscmap1n	c_plscmap1n
+#define    plscol0	c_plscol0
+#define    plscolbg	c_plscolbg
+#define    plscolor	c_plscolor
+#define    plscompression	c_plscompression
+#define    plsdev	c_plsdev
+#define    plsdidev	c_plsdidev
+#define    plsdimap	c_plsdimap
+#define    plsdiori	c_plsdiori
+#define    plsdiplt	c_plsdiplt
+#define    plsdiplz	c_plsdiplz
+#define    plsesc	c_plsesc
+#define    plsetopt	c_plsetopt
+#define    plsfam	c_plsfam
+#define    plsfnam	c_plsfnam
+#define    plshade	c_plshade
+#define    plshade1	c_plshade1
+#define    plshades	c_plshades
+#define    plsmaj	c_plsmaj
+#define    plsmem	c_plsmem
+#define    plsmin	c_plsmin
+#define    plsori	c_plsori
+#define    plspage	c_plspage
+#define    plspause	c_plspause
+#define    plsstrm	c_plsstrm
+#define    plssub	c_plssub
+#define    plssym	c_plssym
+#define    plstar	c_plstar
+#define    plstart	c_plstart
+#define    plstripa	c_plstripa
+#define    plstripc	c_plstripc
+#define    plstripd	c_plstripd
+#define    plstyl	c_plstyl
+#define    plsurf3d	c_plsurf3d
+#define    plsurf3dl	c_plsurf3dl
+#define    plsvect      c_plsvect
+#define    plsvpa	c_plsvpa
+#define    plsxax	c_plsxax
+#define    plsyax	c_plsyax
+#define    plsym	c_plsym
+#define    plszax	c_plszax
+#define    pltext	c_pltext
+#define    plvasp	c_plvasp
+#define    plvect	c_plvect
+#define    plvpas	c_plvpas
+#define    plvpor	c_plvpor
+#define    plvsta	c_plvsta
+#define    plw3d	c_plw3d
+#define    plwid	c_plwid
+#define    plwind	c_plwind
+#define    plxormod	c_plxormod
+
+#endif /* __PLSTUBS_H__ */
+
+/* Redefine some old function names for backward compatibility */
+
+#ifndef __PLSTUBS_H__	/* i.e. do not expand this in the stubs */
+
+#define    plclr	pleop
+#define    plpage	plbop
+#define    plcol	plcol0
+#define    plcontf	plfcont
+#define	   Alloc2dGrid	plAlloc2dGrid
+#define	   Free2dGrid	plFree2dGrid
+#define    MinMax2dGrid plMinMax2dGrid
+#define    plP_gvpd	plgvpd
+#define    plP_gvpw	plgvpw
+#define    plotsh3d(x,y,z,nx,ny,opt)     plsurf3d(x,y,z,nx,ny,opt, NULL, 0)
+
+#endif /* __PLSTUBS_H__ */
+
+
 
 
 %rename("SetContLabelFormat") pl_setcontlabelformat;
@@ -236,7 +399,7 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 %rename("PlotFShade") plfshade;
 %rename("did2pc") pldid2pc;
 %rename("dip2dc") pldip2dc;
-%rename("image") plimage;
+%rename("PlotImage") plimage;
 %rename("GetFileDevs") plgFileDevs;
 %rename("GetDevs") plgDevs;
 %rename("SetKeyEH") plsKeyEH;
@@ -277,6 +440,42 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 /* Ignore FORTRAN routines */
 %ignore pltr0f;
 %ignore pltr2f;
+
+%ignore plfcont;
+%ignore plfshade;
+%ignore plmap;
+%ignore plmeridians;
+%ignore plgFileDevs;
+%ignore plgDevs;
+%ignore plsButtonEH;
+%ignore plMergeOpts;
+%ignore plgfile;
+%ignore plGetName;
+%ignore plGetCursor;
+%ignore plTranslateCursor;
+%ignore plsKeyEH;
+
+%ignore plgdev;
+%ignore plgfnam;
+%ignore plgver;
+%ignore pldid2pc;
+%ignore pldip2dc;
+%ignore plsError;
+%ignore plsexit;
+%ignore plParseOpts;
+%ignore plSetOpt;
+%ignore plAlloc2dGrid;
+%ignore plFree2dGrid;
+%ignore plMinMax2dGrid;
+%ignore plgesc;
+%ignore pl_cmd;
+%ignore plFindName;
+%ignore plFindCommand;
+%ignore plGetInt;
+%ignore plGetFlt;
+
+%ignore xform;
+
 
 %pragma(modula3) enumitem="prefix=PLESPLFLTBUFFERING_;int;srcstyle=underscore;Buffering";
 %pragma(modula3) enumitem="prefix=PLESC_;set;srcstyle=underscore;Escape";
@@ -567,6 +766,7 @@ TYPE
 %m3multiretval pltr1;
 %m3multiretval pltr2;
 %m3multiretval pltr2p;
+%m3multiretval xform;
 
 
 /* swig compatible PLplot API definitions from here on. */
