@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.3 2001-02-13 23:41:53 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.4 2001-02-14 00:44:52 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -69,15 +69,14 @@ cp "${ROOT}/m3-sys/cm3/src/config/${TARGET}" \
 ARCHIVE1="system.tgz"
 ARCHIVE2="cm3-min-${M3OSTYPE}-${TARGET}-${CM3VERSION}.tgz"
 head "stage 6: building archive in ${ARCHIVE2}"
-echo tar -C "${TMPDIR}" -czf "${TMPDIR}/${ARCHIVE1}" cm3
-tar -C "${TMPDIR}" -czf "${TMPDIR}/${ARCHIVE1}" cm3 || exit 1
-echo cp "${ROOT}/m3-sys/cminstall/${TARGET}/cminstall${EXE}" "${TMPDIR}"
+echo "creating system archive in ${TMPDIR}/${ARCHIVE1}"
+tar -C "${INSTALLROOT}" -czf "${TMPDIR}/${ARCHIVE1}" . || exit 1
+echo ".../cminstall/${TARGET}/cminstall${EXE} -->" "${TMPDIR}"
 cp "${ROOT}/m3-sys/cminstall/${TARGET}/cminstall${EXE}" "${TMPDIR}" ||  exit 1
-echo tar -C "${TMPDIR}" -czf "${TMPDIR}/${ARCHIVE2}" cminstall${EXE} \
-  ${ARCHIVE1}
+echo "creating distribution archive ${TMPDIR}/${ARCHIVE2}"
 tar -C "${TMPDIR}" -czf "${TMPDIR}/${ARCHIVE2}" cminstall${EXE} ${ARCHIVE1} \
   || exit 1
-ls -l "${ARCHIVE2}"
+ls -l "${TMPDIR}/${ARCHIVE2}"
 echo "cleaning up"
 rm -f "${TMPDIR}/cminstall${EXE}"
 rm -rf "${INSTALLROOT}"
