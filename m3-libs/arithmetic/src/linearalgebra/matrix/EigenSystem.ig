@@ -23,7 +23,7 @@ PROCEDURE Jacobi( VAR a         :REF ARRAY OF ARRAY OF LONGREAL;
                   VAR vects     :REF ARRAY OF ARRAY OF LONGREAL;
                   VAR nrot      :INTEGER;
                   eigenvals     := FALSE)
-    RAISES {ArrayTooSmall, NoConvergence};
+    RAISES {ArrayTooSmall};
 PROCEDURE EigenSort(VAR vects: REF ARRAY OF ARRAY OF LONGREAL;
                     VAR vals: REF ARRAY OF LONGREAL)
     RAISES {ArraySizesDontMatch};
