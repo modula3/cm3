@@ -14,9 +14,10 @@ IMPORT LongRealMatrix       AS M,
        LongRealMatrixTrans  AS MT,
        LongRealMatrixLapack AS LA;
 
-IMPORT LongRealFunctional       AS Fn,
-       LongRealFunctionalDeriv2 AS FnD,
-       LongRealMatchWavelet     AS WM;
+IMPORT LongRealFunctional           AS Fn,
+       LongRealFunctionalDeriv2     AS FnD,
+       LongRealMatchWavelet         AS WM,
+       LongRealMatchWaveletGradient AS WMGrad;
 
 IMPORT LongRealSignal AS S, LongRealSignalIntegerPower AS SIntPow;
 
@@ -285,14 +286,15 @@ PROCEDURE TestDeriveWSSE () =
     s      := NEW(S.T).fromArray(ARRAY OF R.T{0.2D0, -0.3D0, 0.1D0});
     sDelta := NEW(S.T).fromArray(ARRAY OF R.T{delta}, s.getFirst());
     c      := 0.73D0;
-    der    := WM.DeriveWSSE(hDual, gDual0, s, c);
+    der    := WMGrad.DeriveWSSE(hDual, gDual0, s, c);
     derArr := NEW(REF ARRAY OF FnD.T, s.getNumber() + 1);
   BEGIN
     FOR i := 0 TO s.getNumber() - 1 DO
-      derArr[i] :=
-        WM.DeriveWSSE(hDual, gDual0, s.superpose(sDelta.translate(i)), c);
+      derArr[i] := WMGrad.DeriveWSSE(
+                     hDual, gDual0, s.superpose(sDelta.translate(i)), c);
     END;
-    derArr[LAST(derArr^)] := WM.DeriveWSSE(hDual, gDual0, s, c + delta);
+    derArr[LAST(derArr^)] :=
+      WMGrad.DeriveWSSE(hDual, gDual0, s, c + delta);
     PutDervDif(der, derArr^, delta);
   END TestDeriveWSSE;
 
@@ -640,9 +642,10 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
       y := NEW(S.T).fromArray(
              ARRAY OF R.T{0.2D0, -0.3D0, 0.0D0, -0.1D0, 0.0D0, 0.4D0}, -3);
       der := FnD.Add(
-               WM.DeriveDist(normalMat, waveletCor, waveletNormSqr, y),
-               FnD.Scale(WM.DeriveSSE(dualBasis.lpVan, dualBasis.hp, y),
-                         smoothWeight));
+               WMGrad.DeriveDist(normalMat, waveletCor, waveletNormSqr, y),
+               FnD.Scale(
+                 WMGrad.DeriveSSE(dualBasis.lpVan, dualBasis.hp, y),
+                 smoothWeight));
       derArr := NEW(REF ARRAY OF FnD.T, NUMBER(der.first^));
       extDer := ExtendDervTarget(
                   der, y.getData(), cf, targetVec, targetCor, waveletVec);
@@ -654,9 +657,10 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
                                 ARRAY OF R.T{delta}, j + y.getFirst())) DO
           derArr[j] :=
             FnD.Add(
-              WM.DeriveDist(normalMat, waveletCor, waveletNormSqr, yp),
-              FnD.Scale(WM.DeriveSSE(dualBasis.lpVan, dualBasis.hp, yp),
-                        smoothWeight));
+              WMGrad.DeriveDist(normalMat, waveletCor, waveletNormSqr, yp),
+              FnD.Scale(
+                WMGrad.DeriveSSE(dualBasis.lpVan, dualBasis.hp, yp),
+                smoothWeight));
           extDerArr[j] :=
             ExtendDervTarget(derArr[j], yp.getData(), cf, targetVec,
                              targetCor, waveletVec);
@@ -724,7 +728,7 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
            won't work if we compute the real derivative instead of a finite
            difference. *)
         mc := matching.splitParamVec(x);
-        derDist := WM.DeriveDist(
+        derDist := WMGrad.DeriveDist(
                      normalMat, targetCor, targetNormSqr, mc.lift);
         derWavDist := ExtendDervTarget(
                         derDist, mc.lift.getData(), mc.wavelet0Amp,
@@ -735,7 +739,7 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
           Fmt.FN("y %s, cf %s\n", ARRAY OF TEXT{SF.Fmt(y), RF.Fmt(cf)}));
         *)
         RETURN FnD.Add(derWavDist,
-                       FnD.Scale(WM.DeriveWSSE(
+                       FnD.Scale(WMGrad.DeriveWSSE(
                                    dualBasis.getLSGeneratorMask(),
                                    dualBasis.getLSWavelet0Mask(), mc.lift,
                                    mc.wavelet0Amp), smoothWeightFade));
@@ -764,7 +768,7 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
 
       VAR
         mc := matching.splitParamVec(x);
-        derDist := WM.DeriveDist(
+        derDist := WMGrad.DeriveDist(
                      normalMat, targetCor, targetNormSqr, mc.lift);
 
         dx  := V.New(NUMBER(x^));
@@ -818,7 +822,7 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
 
          x := V.New(2 * numTranslates + 1); *)
       initLift := NEW(S.T).init(yFirst, 2 * numTranslates);
-      initDerDist := WM.DeriveDist(
+      initDerDist := WMGrad.DeriveDist(
                        normalMat, targetCor, targetNormSqr, initLift);
       initDerWavDist := ExtendDervTarget(
                           initDerDist, initLift.getData(), R.Zero,
@@ -1338,7 +1342,7 @@ PROCEDURE Test () =
           clipFirst  = 15500;
           clipNumber = 2500;
         <* FATAL OSError.E, FloatMode.Trap, Lex.Error, Rd.Failure,
-          Thread.Alerted *>
+                 Thread.Alerted *>
         VAR
           rd := FileRd.Open(
                   "/home/thielema/projects/industry/bruker/data/Datasets"

@@ -2,6 +2,7 @@
 template("matchwavelet")
 
 Generic_module("MatchWavelet")
+Generic_module("MatchWaveletGradient")
 
 %MatchWavelet("Real",            "RealBasic")
 MatchWavelet("LongReal",        "LongRealBasic")
