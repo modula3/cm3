@@ -15,7 +15,7 @@ done
 
 DEST=""
 DEST="$DEST root@www-he:/var/www/html/cm3/"
-DEST="$DEST web27@www-mw:web/cm3/"
+#DEST="$DEST web27@www-mw:web/cm3/"
 DEST="$DEST m3@www.m3.org:html/cm3/"
 
 for d in $DEST; do
