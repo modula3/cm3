@@ -19,11 +19,11 @@
    \index{time!Time interface@{\tt Time} interface}
 
 
-<P><PRE>INTERFACE <interface><A HREF="#x1">Time</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="../POSIX/TimePosix.m3.html">Time</A></interface>;
 
 TYPE T = LONGREAL;
 
-PROCEDURE <A HREF="#x2">Now</A>(): T;
+PROCEDURE <A HREF="../POSIX/TimePosix.m3.html#Now">Now</A>(): T;
 </PRE><BLOCKQUOTE><EM> Return the current moment in time. </EM></BLOCKQUOTE><PRE>
 
 VAR (*CONST*) Grain: LONGREAL;
@@ -57,20 +57,6 @@ END Time.
 
 
 </inInterface>
-<HR>
-<A NAME="x1">Time's implementation  is in:
-</A><UL>
-<LI><A HREF="../POSIX/TimePosix.m3.html#0TOP0">m3core/src/time/POSIX/TimePosix.m3</A>
-<LI><A HREF="../WIN32/TimeWin32.m3.html#0TOP0">m3core/src/time/WIN32/TimeWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">procedure Time.Now is in:
-</A><UL>
-<LI><A HREF="../POSIX/TimePosix.m3.html#Now">m3core/src/time/POSIX/TimePosix.m3</A>
-<LI><A HREF="../WIN32/TimeWin32.m3.html#Now">m3core/src/time/WIN32/TimeWin32.m3</A>
-</UL>
-<P>
 <PRE>
 
 

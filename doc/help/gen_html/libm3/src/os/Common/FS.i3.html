@@ -20,7 +20,7 @@
 
 IMPORT <A HREF="OSError.i3.html">OSError</A>, <A HREF="File.i3.html">File</A>, <A HREF="Pathname.i3.html">Pathname</A>, <A HREF="../../../../m3core/src/time/Common/Time.i3.html">Time</A>;
 
-PROCEDURE <A HREF="#x2">GetAbsolutePathname</A>(p: Pathname.T): Pathname.T
+PROCEDURE <A HREF="../POSIX/FSPosix.m3.html#GetAbsolutePathname">GetAbsolutePathname</A>(p: Pathname.T): Pathname.T
    RAISES {OSError.E};
 </PRE><BLOCKQUOTE><EM> Return an absolute pathname referring to the same file or
    directory as <CODE>p</CODE>. </EM></BLOCKQUOTE><PRE>
@@ -45,7 +45,7 @@ PROCEDURE <A HREF="#x2">GetAbsolutePathname</A>(p: Pathname.T): Pathname.T
   CreateOption = {Never, Ok, Always};
   AccessOption = {OnlyOwnerCanRead, ReadOnly, Default};
 
-PROCEDURE <A HREF="#x3">OpenFile</A>(
+PROCEDURE <A HREF="../POSIX/FSPosix.m3.html#OpenFile">OpenFile</A>(
     p: Pathname.T;
     truncate: BOOLEAN := TRUE;
     create: CreateOption := CreateOption.Ok;
@@ -105,7 +105,7 @@ PROCEDURE <A HREF="#x3">OpenFile</A>(
 </PRE>
    after opening <CODE>h</CODE>. 
 
-<P><PRE>PROCEDURE <A HREF="#x4">OpenFileReadonly</A>(p: Pathname.T): File.T
+<P><PRE>PROCEDURE <A HREF="../POSIX/FSPosix.m3.html#OpenFileReadonly">OpenFileReadonly</A>(p: Pathname.T): File.T
   RAISES {OSError.E};
 </PRE><BLOCKQUOTE><EM> Return an object permitting reading the file named by <CODE>p</CODE>. </EM></BLOCKQUOTE><PRE>
 </PRE> If <CODE>p</CODE> names a regular file, the call <CODE>OpenFileReadonly(p)</CODE> returns
@@ -120,15 +120,15 @@ PROCEDURE <A HREF="#x3">OpenFile</A>(
 </PRE>
 
 
-<P><PRE>PROCEDURE <A HREF="#x5">CreateDirectory</A>(p: Pathname.T) RAISES {OSError.E};
+<P><PRE>PROCEDURE <A HREF="../POSIX/FSPosix.m3.html#CreateDirectory">CreateDirectory</A>(p: Pathname.T) RAISES {OSError.E};
 </PRE><BLOCKQUOTE><EM> Create a directory named by <CODE>p</CODE>. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x6">DeleteDirectory</A>(p: Pathname.T) RAISES {OSError.E};
+PROCEDURE <A HREF="../POSIX/FSPosix.m3.html#DeleteDirectory">DeleteDirectory</A>(p: Pathname.T) RAISES {OSError.E};
 </PRE><BLOCKQUOTE><EM> Delete the directory named by <CODE>p</CODE>.  <CODE>OSError.E</CODE> is raised if the
    directory contains entries (other than perhaps <CODE>Pathname.Current</CODE>
    and <CODE>Pathname.Parent</CODE>). </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x7">DeleteFile</A>(p: Pathname.T)
+PROCEDURE <A HREF="../POSIX/FSPosix.m3.html#DeleteFile">DeleteFile</A>(p: Pathname.T)
   RAISES {OSError.E};
 </PRE><BLOCKQUOTE><EM> Delete the file or device named by <CODE>p</CODE>.  <CODE>OSError.E</CODE> is raised if <CODE>p</CODE>
    names a directory. </EM></BLOCKQUOTE><PRE>
@@ -136,7 +136,7 @@ PROCEDURE <A HREF="#x7">DeleteFile</A>(p: Pathname.T)
    Under POSIX, an open file may be deleted; the file doesn't actually
    disappear until every link (pathname) for it is deleted. 
 
-<P><PRE>PROCEDURE <A HREF="#x8">Rename</A>(p0, p1: Pathname.T)
+<P><PRE>PROCEDURE <A HREF="../POSIX/FSPosix.m3.html#Rename">Rename</A>(p0, p1: Pathname.T)
   RAISES {OSError.E};
 </PRE><BLOCKQUOTE><EM> Rename the file or directory named <CODE>p0</CODE> as <CODE>p1</CODE>. </EM></BLOCKQUOTE><PRE>
 </PRE> Some implementations automatically delete an existing file named
@@ -145,7 +145,7 @@ PROCEDURE <A HREF="#x7">DeleteFile</A>(p: Pathname.T)
    (different root directories or file systems).  
 
 <P><PRE>TYPE
-  <A HREF="#x9">Iterator</A> &lt;: PublicIterator;
+  <A HREF="../POSIX/FSPosix.m3.html#Iterator">Iterator</A> &lt;: PublicIterator;
   PublicIterator = OBJECT METHODS
     next(VAR (*OUT*) name: TEXT): BOOLEAN;
     nextWithStatus(VAR (*OUT*) name: TEXT;
@@ -156,7 +156,7 @@ PROCEDURE <A HREF="#x7">DeleteFile</A>(p: Pathname.T)
 VAR (*CONST*) DirectoryFileType: File.Type;
 </PRE><BLOCKQUOTE><EM> Equal to {\tt Atom.FromText("Directory").} </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x10">Iterate</A>(p: Pathname.T): Iterator
+PROCEDURE <A HREF="../POSIX/FSPosix.m3.html#Iterate">Iterate</A>(p: Pathname.T): Iterator
   RAISES {OSError.E};
 </PRE><BLOCKQUOTE><EM> Return an iterator for the entries of the directory named by <CODE>p</CODE>. </EM></BLOCKQUOTE><PRE>
 </PRE> An <CODE>Iterator</CODE> supplies information about the entries in a
@@ -206,7 +206,7 @@ PROCEDURE <A HREF="#x10">Iterate</A>(p: Pathname.T): Iterator
    occur in the iteration at least once, and an entry that occurs in
    the iteration must have been in the directory at some moment.  
 
-<P><PRE>PROCEDURE <A HREF="#x11">Status</A>(p: Pathname.T): File.Status
+<P><PRE>PROCEDURE <A HREF="../POSIX/FSPosix.m3.html#Status">Status</A>(p: Pathname.T): File.Status
   RAISES {OSError.E};
 </PRE><BLOCKQUOTE><EM> Return information about the file or directory named by <CODE>p</CODE>. </EM></BLOCKQUOTE><PRE>
 </PRE> Possible values of <CODE>stat.type</CODE> include
@@ -222,7 +222,7 @@ PROCEDURE <A HREF="#x10">Iterate</A>(p: Pathname.T): Iterator
    See also the <CODE>status</CODE> method of <CODE>File.T</CODE> and the <CODE>nextWithStatus</CODE>
    method of <CODE>Iterator</CODE>.  
 
-<P><PRE>PROCEDURE <A HREF="#x12">SetModificationTime</A>(
+<P><PRE>PROCEDURE <A HREF="../POSIX/FSPosix.m3.html#SetModificationTime">SetModificationTime</A>(
     p: Pathname.T;
     READONLY t: Time.T)
   RAISES {OSError.E};
@@ -237,84 +237,6 @@ END FS.
 </A><UL>
 <LI><A HREF="FS.m3.html#0TOP0">libm3/src/os/Common/FS.m3</A>
 <LI><A HREF="../POSIX/FSPosix.m3.html#0TOP0">libm3/src/os/POSIX/FSPosix.m3</A>
-<LI><A HREF="../WIN32/FSWin32.m3.html#0TOP0">libm3/src/os/WIN32/FSWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">procedure FS.GetAbsolutePathname is in:
-</A><UL>
-<LI><A HREF="../POSIX/FSPosix.m3.html#GetAbsolutePathname">libm3/src/os/POSIX/FSPosix.m3</A>
-<LI><A HREF="../WIN32/FSWin32.m3.html#GetAbsolutePathname">libm3/src/os/WIN32/FSWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">procedure FS.OpenFile is in:
-</A><UL>
-<LI><A HREF="../POSIX/FSPosix.m3.html#OpenFile">libm3/src/os/POSIX/FSPosix.m3</A>
-<LI><A HREF="../WIN32/FSWin32.m3.html#OpenFile">libm3/src/os/WIN32/FSWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x4">procedure FS.OpenFileReadonly is in:
-</A><UL>
-<LI><A HREF="../POSIX/FSPosix.m3.html#OpenFileReadonly">libm3/src/os/POSIX/FSPosix.m3</A>
-<LI><A HREF="../WIN32/FSWin32.m3.html#OpenFileReadonly">libm3/src/os/WIN32/FSWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x5">procedure FS.CreateDirectory is in:
-</A><UL>
-<LI><A HREF="../POSIX/FSPosix.m3.html#CreateDirectory">libm3/src/os/POSIX/FSPosix.m3</A>
-<LI><A HREF="../WIN32/FSWin32.m3.html#CreateDirectory">libm3/src/os/WIN32/FSWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x6">procedure FS.DeleteDirectory is in:
-</A><UL>
-<LI><A HREF="../POSIX/FSPosix.m3.html#DeleteDirectory">libm3/src/os/POSIX/FSPosix.m3</A>
-<LI><A HREF="../WIN32/FSWin32.m3.html#DeleteDirectory">libm3/src/os/WIN32/FSWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x7">procedure FS.DeleteFile is in:
-</A><UL>
-<LI><A HREF="../POSIX/FSPosix.m3.html#DeleteFile">libm3/src/os/POSIX/FSPosix.m3</A>
-<LI><A HREF="../WIN32/FSWin32.m3.html#DeleteFile">libm3/src/os/WIN32/FSWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x8">procedure FS.Rename is in:
-</A><UL>
-<LI><A HREF="../POSIX/FSPosix.m3.html#Rename">libm3/src/os/POSIX/FSPosix.m3</A>
-<LI><A HREF="../WIN32/FSWin32.m3.html#Rename">libm3/src/os/WIN32/FSWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x9">opaque type FS.Iterator is in:
-</A><UL>
-<LI><A HREF="../POSIX/FSPosix.m3.html#Iterator">libm3/src/os/POSIX/FSPosix.m3</A>
-<LI><A HREF="../WIN32/FSWin32.m3.html#Iterator">libm3/src/os/WIN32/FSWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x10">procedure FS.Iterate is in:
-</A><UL>
-<LI><A HREF="../POSIX/FSPosix.m3.html#Iterate">libm3/src/os/POSIX/FSPosix.m3</A>
-<LI><A HREF="../WIN32/FSWin32.m3.html#Iterate">libm3/src/os/WIN32/FSWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x11">procedure FS.Status is in:
-</A><UL>
-<LI><A HREF="../POSIX/FSPosix.m3.html#Status">libm3/src/os/POSIX/FSPosix.m3</A>
-<LI><A HREF="../WIN32/FSWin32.m3.html#Status">libm3/src/os/WIN32/FSWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x12">procedure FS.SetModificationTime is in:
-</A><UL>
-<LI><A HREF="../POSIX/FSPosix.m3.html#SetModificationTime">libm3/src/os/POSIX/FSPosix.m3</A>
-<LI><A HREF="../WIN32/FSWin32.m3.html#SetModificationTime">libm3/src/os/WIN32/FSWin32.m3</A>
 </UL>
 <P>
 <PRE>

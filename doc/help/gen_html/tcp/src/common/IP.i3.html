@@ -12,7 +12,7 @@
  Last modified on Wed Aug 31 15:59:31 PDT 1994 by wobber 
       modified on Sun Jan 12 16:17:07 PST 1992 by meehan 
 
-<P><PRE>INTERFACE <interface><A HREF="#x1">IP</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="../POSIX/IP.m3.html">IP</A></interface>;
 
 IMPORT <A HREF="../../../libm3/src/atom/Atom.i3.html">Atom</A>, <A HREF="../../../libm3/derived/AtomList.i3.html">AtomList</A>;
 </PRE> This interface defines the addresses used for communicating
@@ -79,7 +79,7 @@ EXCEPTION Error(EC);
   NullAddress = Address{a := ARRAY OF BITS 8 FOR [0..255] {0,0,0,0}};
   NullEndPoint = Endpoint{NullAddress, NullPort};
 
-PROCEDURE <A HREF="#x2">GetHostByName</A>(nm: TEXT; VAR (*out*) res: Address): BOOLEAN
+PROCEDURE <A HREF="../POSIX/IP.m3.html#GetHostByName">GetHostByName</A>(nm: TEXT; VAR (*out*) res: Address): BOOLEAN
      RAISES {Error};
 </PRE><BLOCKQUOTE><EM> If a host named <CODE>nm</CODE> is found, <CODE>GetHostByName</CODE> sets <CODE>res</CODE> to its
    address and returns <CODE>TRUE</CODE>.  If <CODE>nm</CODE> is not found, <CODE>GetHostByName</CODE>
@@ -95,7 +95,7 @@ PROCEDURE <A HREF="#x2">GetHostByName</A>(nm: TEXT; VAR (*out*) res: Address): B
   Different systems use different algorithms for
   implementing <CODE>GetHostByName</CODE>. 
 
-<P><PRE>PROCEDURE <A HREF="#x3">GetCanonicalByName</A>(nm: TEXT): TEXT RAISES {Error};
+<P><PRE>PROCEDURE <A HREF="../POSIX/IP.m3.html#GetCanonicalByName">GetCanonicalByName</A>(nm: TEXT): TEXT RAISES {Error};
 </PRE><BLOCKQUOTE><EM> If a host named <CODE>nm</CODE> is found, <CODE>GetCanonicalByName</CODE> returns the
    canonical, full-qualified name for the host <CODE>nm</CODE>.  If <CODE>nm</CODE> is not found,
    <CODE>GetCanonicalByName</CODE> returns <CODE>NIL</CODE>.  If the lookup cannot complete
@@ -107,51 +107,16 @@ PROCEDURE <A HREF="#x2">GetHostByName</A>(nm: TEXT; VAR (*out*) res: Address): B
 </PRE>
   returns <CODE>gatekeeper.dec.com. 
 
-<P><PRE>PROCEDURE <A HREF="#x4">GetCanonicalByAddr</A>(addr: Address): TEXT RAISES {Error};
+<P><PRE>PROCEDURE <A HREF="../POSIX/IP.m3.html#GetCanonicalByAddr">GetCanonicalByAddr</A>(addr: Address): TEXT RAISES {Error};
 </PRE><BLOCKQUOTE><EM> <CODE>GetCanonicalByAddr</CODE> is has the same semantics as <CODE>GetCanonicalByName</CODE>
    except that it takes an address rather than a name. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x5">GetHostAddr</A>(): Address;
+PROCEDURE <A HREF="../POSIX/IP.m3.html#GetHostAddr">GetHostAddr</A>(): Address;
 </PRE><BLOCKQUOTE><EM> Return an address of the machine executing the call to <CODE>GetHostAddr</CODE>. </EM></BLOCKQUOTE><PRE>
 
 END IP.
 </PRE>
 </inInterface>
-<HR>
-<A NAME="x1">IP's implementation  is in:
-</A><UL>
-<LI><A HREF="../POSIX/IP.m3.html#0TOP0">tcp/src/POSIX/IP.m3</A>
-<LI><A HREF="../WIN32/IP.m3.html#0TOP0">tcp/src/WIN32/IP.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">procedure IP.GetHostByName is in:
-</A><UL>
-<LI><A HREF="../POSIX/IP.m3.html#GetHostByName">tcp/src/POSIX/IP.m3</A>
-<LI><A HREF="../WIN32/IP.m3.html#GetHostByName">tcp/src/WIN32/IP.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">procedure IP.GetCanonicalByName is in:
-</A><UL>
-<LI><A HREF="../POSIX/IP.m3.html#GetCanonicalByName">tcp/src/POSIX/IP.m3</A>
-<LI><A HREF="../WIN32/IP.m3.html#GetCanonicalByName">tcp/src/WIN32/IP.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x4">procedure IP.GetCanonicalByAddr is in:
-</A><UL>
-<LI><A HREF="../POSIX/IP.m3.html#GetCanonicalByAddr">tcp/src/POSIX/IP.m3</A>
-<LI><A HREF="../WIN32/IP.m3.html#GetCanonicalByAddr">tcp/src/WIN32/IP.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x5">procedure IP.GetHostAddr is in:
-</A><UL>
-<LI><A HREF="../POSIX/IP.m3.html#GetHostAddr">tcp/src/POSIX/IP.m3</A>
-<LI><A HREF="../WIN32/IP.m3.html#GetHostAddr">tcp/src/WIN32/IP.m3</A>
-</UL>
-<P>
 <PRE>
 
 

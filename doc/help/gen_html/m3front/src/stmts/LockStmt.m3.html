@@ -16,7 +16,7 @@
 
 <P><PRE>MODULE <module><implements><A HREF="LockStmt.i3.html">LockStmt</A></implements></module>;
 
-IMPORT <A HREF="../../../m3middle/src/M3ID.i3.html">M3ID</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="../builtinTypes/Mutex.i3.html">Mutex</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="#x1">Type</A>, <A HREF="Stmt.i3.html">Stmt</A>, <A HREF="StmtRep.i3.html">StmtRep</A>, <A HREF="../misc/Token.i3.html">Token</A>, <A HREF="../misc/Marker.i3.html">Marker</A>;
+IMPORT <A HREF="#x1">M3ID</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="../builtinTypes/Mutex.i3.html">Mutex</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="#x2">Type</A>, <A HREF="Stmt.i3.html">Stmt</A>, <A HREF="StmtRep.i3.html">StmtRep</A>, <A HREF="../misc/Token.i3.html">Token</A>, <A HREF="../misc/Marker.i3.html">Marker</A>;
 IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/M3RT.i3.html">M3RT</A>, <A HREF="../misc/Scanner.i3.html">Scanner</A>;
 FROM <A HREF="../misc/Scanner.i3.html">Scanner</A> IMPORT Match;
 
@@ -150,9 +150,18 @@ END LockStmt.
 </PRE>
 </inModule>
 <HR>
-<A NAME="x1">interface Type is in:
+<A NAME="x1">interface M3ID is in:
+</A><UL>
+<LI><A HREF="../../../m3middle/src/M3ID.i3.html#0TOP0">m3middle/src/M3ID.i3</A>
+<LI><A HREF="../../../m3scan/src/M3ID.i3.html#0TOP0">m3scan/src/M3ID.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Type is in:
 </A><UL>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
+<LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
+<LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>
 <LI><A HREF="../../../stubgen/src/Type.i3.html#0TOP0">stubgen/src/Type.i3</A>
 </UL>
 <P>

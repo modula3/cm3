@@ -39,7 +39,7 @@ the compiler front-end from a back-end .
 <P> Version targeted to C back-end for a variety of machines 
 
 <P><PRE>IMPORT <A HREF="../sem/M3CBackEnd.i3.html">M3CBackEnd</A>;
-IMPORT <A HREF="../../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../libm3/src/rw/TextRd.i3.html">TextRd</A>, <A HREF="../../../libm3/src/rw/TextWr.i3.html">TextWr</A>, <A HREF="../../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../../m3core/src/convert/Convert.i3.html">Convert</A>, <A HREF="../misc/RdExtras.i3.html">RdExtras</A>;
+IMPORT <A HREF="../../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../libm3/src/rw/TextRd.i3.html">TextRd</A>, <A HREF="../../../libm3/src/rw/TextWr.i3.html">TextWr</A>, <A HREF="../../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../../m3core/src/convert/Convert.i3.html">Convert</A>, <A HREF="../../../libm3/src/rw/RdExtras.i3.html">RdExtras</A>;
 IMPORT <A HREF="../ast/M3AST_AS.i3.html">M3AST_AS</A>, <A HREF="../ast/M3AST_SM.i3.html">M3AST_SM</A>;
 
 IMPORT <A HREF="../ast/M3AST_AS_F.i3.html">M3AST_AS_F</A>, <A HREF="../ast/M3AST_SM_F.i3.html">M3AST_SM_F</A>;
@@ -47,7 +47,7 @@ IMPORT <A HREF="../ast/M3AST_AS_F.i3.html">M3AST_AS_F</A>, <A HREF="../ast/M3AST
 IMPORT <A HREF="../../derived/SeqM3AST_AS_RANGE_EXP.i3.html">SeqM3AST_AS_RANGE_EXP</A>, <A HREF="../../derived/SeqM3AST_AS_Fields.i3.html">SeqM3AST_AS_Fields</A>;
 
 IMPORT <A HREF="../syn/M3CId.i3.html">M3CId</A>, <A HREF="../syn/M3CLiteral.i3.html">M3CLiteral</A>;
-IMPORT <A HREF="../toolmisc/M3Error.i3.html">M3Error</A>, <A HREF="../misc/M3Assert.i3.html">M3Assert</A>, <A HREF="../syn/M3CSrcPos.i3.html">M3CSrcPos</A>;
+IMPORT <A HREF="../toolmisc/M3Error.i3.html">M3Error</A>, <A HREF="../../../m3tk-misc/src/M3Assert.i3.html">M3Assert</A>, <A HREF="../syn/M3CSrcPos.i3.html">M3CSrcPos</A>;
 IMPORT <A HREF="../sem/M3CStdProcs.i3.html">M3CStdProcs</A>, <A HREF="../sem/M3CWordProcs.i3.html">M3CWordProcs</A>;
 IMPORT <A HREF="../sem/M3CExpValue.i3.html">M3CExpValue</A>, <A HREF="../sem/M3CTypesMisc.i3.html">M3CTypesMisc</A>, <A HREF="../sem/M3ASTNext.i3.html">M3ASTNext</A>;
 FROM <A HREF="M3CBackEnd_C_cc.i3.html">M3CBackEnd_C_cc</A> IMPORT a32, a64, a16, a8, minAlignment, recAlignment,

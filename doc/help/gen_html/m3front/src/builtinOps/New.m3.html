@@ -21,7 +21,7 @@ IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../exprs/CallExpr.i3.html">
 IMPORT <A HREF="../types/RefType.i3.html">RefType</A>, <A HREF="../types/ObjectType.i3.html">ObjectType</A>, <A HREF="../types/OpaqueType.i3.html">OpaqueType</A>, <A HREF="../exprs/KeywordExpr.i3.html">KeywordExpr</A>, <A HREF="#x2">Value</A>;
 IMPORT <A HREF="../values/Field.i3.html">Field</A>, <A HREF="../values/Method.i3.html">Method</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>, <A HREF="../types/ProcType.i3.html">ProcType</A>, <A HREF="../stmts/AssignStmt.i3.html">AssignStmt</A>, <A HREF="../types/OpenArrayType.i3.html">OpenArrayType</A>;
 IMPORT <A HREF="../misc/Scope.i3.html">Scope</A>, <A HREF="../types/RecordType.i3.html">RecordType</A>, <A HREF="../exprs/TypeExpr.i3.html">TypeExpr</A>, <A HREF="../builtinTypes/Null.i3.html">Null</A>, <A HREF="../values/Revelation.i3.html">Revelation</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>;
-IMPORT <A HREF="../../../m3middle/src/M3ID.i3.html">M3ID</A>, <A HREF="../../../m3middle/src/M3RT.i3.html">M3RT</A>, <A HREF="../misc/RunTyme.i3.html">RunTyme</A>, <A HREF="../builtinTypes/ErrType.i3.html">ErrType</A>;
+IMPORT <A HREF="#x3">M3ID</A>, <A HREF="../../../m3middle/src/M3RT.i3.html">M3RT</A>, <A HREF="../misc/RunTyme.i3.html">RunTyme</A>, <A HREF="../builtinTypes/ErrType.i3.html">ErrType</A>;
 
 VAR Z: CallExpr.MethodList;
 
@@ -450,6 +450,8 @@ END New.
 <A NAME="x1">interface Type is in:
 </A><UL>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
+<LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
+<LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>
 <LI><A HREF="../../../stubgen/src/Type.i3.html#0TOP0">stubgen/src/Type.i3</A>
 </UL>
 <P>
@@ -457,7 +459,16 @@ END New.
 <A NAME="x2">interface Value is in:
 </A><UL>
 <LI><A HREF="../values/Value.i3.html#0TOP0">m3front/src/values/Value.i3</A>
+<LI><A HREF="../../../sharedobjgen/src/Value.i3.html#0TOP0">sharedobjgen/src/Value.i3</A>
+<LI><A HREF="../../../stablegen/src/Value.i3.html#0TOP0">stablegen/src/Value.i3</A>
 <LI><A HREF="../../../stubgen/src/Value.i3.html#0TOP0">stubgen/src/Value.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface M3ID is in:
+</A><UL>
+<LI><A HREF="../../../m3middle/src/M3ID.i3.html#0TOP0">m3middle/src/M3ID.i3</A>
+<LI><A HREF="../../../m3scan/src/M3ID.i3.html#0TOP0">m3scan/src/M3ID.i3</A>
 </UL>
 <P>
 <PRE>

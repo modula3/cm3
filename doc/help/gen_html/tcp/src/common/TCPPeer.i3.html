@@ -15,17 +15,17 @@
  Contributed by Peter Klein (pk@i3.informatik.rwth-aachen.de)  
     - Mar 7, 1995                                              
 
-<P><PRE>INTERFACE <interface><A HREF="#x1">TCPPeer</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="../POSIX/TCPPeer.m3.html">TCPPeer</A></interface>;
 
 IMPORT <A HREF="TCP.i3.html">TCP</A>, <A HREF="IP.i3.html">IP</A>;
 
-PROCEDURE <A HREF="#x2">Get</A> (channel: TCP.T): IP.Endpoint RAISES {IP.Error};
+PROCEDURE <A HREF="../POSIX/TCPPeer.m3.html#Get">Get</A> (channel: TCP.T): IP.Endpoint RAISES {IP.Error};
 </PRE><BLOCKQUOTE><EM> Return peer endpoint for TCP connection. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x3">GetName</A> (channel: TCP.T): TEXT RAISES {IP.Error};
+PROCEDURE <A HREF="../POSIX/TCPPeer.m3.html#GetName">GetName</A> (channel: TCP.T): TEXT RAISES {IP.Error};
 </PRE><BLOCKQUOTE><EM> Return peer name for TCP connection. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x4">Match</A> (channel: TCP.T;  address: IP.Address;  maskBits: [0 .. 32]):
+PROCEDURE <A HREF="../POSIX/TCPPeer.m3.html#Match">Match</A> (channel: TCP.T;  address: IP.Address;  maskBits: [0 .. 32]):
   BOOLEAN RAISES {IP.Error};
 </PRE><BLOCKQUOTE><EM> Returns TRUE if the first maskBits bits of peer's endpoint adress
    match the given address. </EM></BLOCKQUOTE><PRE>
@@ -33,34 +33,6 @@ PROCEDURE <A HREF="#x4">Match</A> (channel: TCP.T;  address: IP.Address;  maskBi
 END TCPPeer.
 </PRE>
 </inInterface>
-<HR>
-<A NAME="x1">TCPPeer's implementation  is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCPPeer.m3.html#0TOP0">tcp/src/POSIX/TCPPeer.m3</A>
-<LI><A HREF="../WIN32/TCPPeer.m3.html#0TOP0">tcp/src/WIN32/TCPPeer.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">procedure TCPPeer.Get is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCPPeer.m3.html#Get">tcp/src/POSIX/TCPPeer.m3</A>
-<LI><A HREF="../WIN32/TCPPeer.m3.html#Get">tcp/src/WIN32/TCPPeer.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">procedure TCPPeer.GetName is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCPPeer.m3.html#GetName">tcp/src/POSIX/TCPPeer.m3</A>
-<LI><A HREF="../WIN32/TCPPeer.m3.html#GetName">tcp/src/WIN32/TCPPeer.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x4">procedure TCPPeer.Match is in:
-</A><UL>
-<LI><A HREF="../POSIX/TCPPeer.m3.html#Match">tcp/src/POSIX/TCPPeer.m3</A>
-<LI><A HREF="../WIN32/TCPPeer.m3.html#Match">tcp/src/WIN32/TCPPeer.m3</A>
-</UL>
-<P>
 <PRE>
 
 

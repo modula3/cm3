@@ -50,25 +50,25 @@ PROCEDURE <A NAME="LookUp"><procedure>LookUp</procedure></A> (&lt;*UNUSED*&gt; s
   END LookUp;
 
 CONST Names = ARRAY [0..8] OF TEXT {
-  &quot;formseditvbt.fv&quot;,
-  &quot;digitalLogo.pbm&quot;,
   &quot;finder.fv&quot;,
   &quot;pen.pbm&quot;,
   &quot;formsedit.txt&quot;,
   &quot;confirm.fv&quot;,
   &quot;bnote.pbm&quot;,
   &quot;yesno.fv&quot;,
+  &quot;formseditvbt.fv&quot;,
+  &quot;digitalLogo.pbm&quot;,
   NIL
 };
 
 VAR Elements := ARRAY [0..8] OF TEXT {
-  NIL (* E0 .. E0_5 *),
+  E0,
   E1,
-  E2,
+  NIL (* E2 .. E2_3 *),
   E3,
-  NIL (* E4 .. E4_3 *),
+  E4,
   E5,
-  E6,
+  NIL (* E6 .. E6_5 *),
   E7,
   NIL
 };
@@ -78,26 +78,213 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
   VAR wr := TextWr.New ();
   BEGIN
     CASE n OF
-    | 0 =&gt;
-        Wr.PutText (wr, E0);
-        Wr.PutText (wr, E0_0);
-        Wr.PutText (wr, E0_1);
-        Wr.PutText (wr, E0_2);
-        Wr.PutText (wr, E0_3);
-        Wr.PutText (wr, E0_4);
-        Wr.PutText (wr, E0_5);
-    | 4 =&gt;
-        Wr.PutText (wr, E4);
-        Wr.PutText (wr, E4_0);
-        Wr.PutText (wr, E4_1);
-        Wr.PutText (wr, E4_2);
-        Wr.PutText (wr, E4_3);
+    | 2 =&gt;
+        Wr.PutText (wr, E2);
+        Wr.PutText (wr, E2_0);
+        Wr.PutText (wr, E2_1);
+        Wr.PutText (wr, E2_2);
+        Wr.PutText (wr, E2_3);
+    | 6 =&gt;
+        Wr.PutText (wr, E6);
+        Wr.PutText (wr, E6_0);
+        Wr.PutText (wr, E6_1);
+        Wr.PutText (wr, E6_2);
+        Wr.PutText (wr, E6_3);
+        Wr.PutText (wr, E6_4);
+        Wr.PutText (wr, E6_5);
     ELSE (*skip*)
     END;
     RETURN TextWr.ToText (wr);
   END GetElt;
 
 CONST E0 =
+   &quot;(Macro finder (first next prev typein show hide close)\n `(TSplit Flex\n&quot;
+ &amp; &quot;\t  (LightShadow \&quot;White\&quot;)\n\t  (DarkShadow \&quot;Blue\&quot;)\n\t  (BgColor \&quot;&quot;
+ &amp; &quot;VeryPaleBlue\&quot;)\n    (Shape (Height 0) Fill)\n    (VBox %,show\n      R&quot;
+ &amp; &quot;idge\n      (Glue 2)\n      (HBox\n       (Shape (Width + 0) \&quot;Find:\&quot;)&quot;
+ &amp; &quot;\n       (Shape (Width 0 + 3000)\n\t(Frame Lowered (TypeIn %,typein (Bg&quot;
+ &amp; &quot;Color \&quot;VeryVeryPaleBlue\&quot;))))\n       (Glue 5)\n       (Shape (Width 0&quot;
+ &amp; &quot; + 1000) (Rim (Pen 1) (Button %,first \&quot;First\&quot;)))\n       (Shape (Widt&quot;
+ &amp; &quot;h 0 + 1000) (ShadowSize 2.5) (Button %,next \&quot;Next\&quot;))\n       (Shape (&quot;
+ &amp; &quot;Width 0 + 1000) (Rim (Pen 1) (Button %,prev \&quot;Prev.\&quot;)))\n       (Glue &quot;
+ &amp; &quot;20)\n       (Rim (Pen 1) (PageButton %,close \&quot;C\&quot;)))\n      (Glue 2)))&quot;
+ &amp; &quot;)\n&quot;;
+
+CONST E1 =
+   &quot;P4\r\n16 16\r\n\000\000\000\002\000\f\000&gt;\000`\000\374\001\200\003\370&quot;
+ &amp; &quot;\007\000\007\340\f\000\017\200\030\000\020\000 \000@\000&quot;;
+
+CONST E2 =
+   &quot;\t\t       FormsEdit -- version 2.7\n\nFormsEdit uses TextPort to suppo&quot;
+ &amp; &quot;rt four editing \&quot;models\&quot;: Emacs, Ivy,\nMac, and Xterm.  When you chan&quot;
+ &amp; &quot;ge models, the keybinding-labels in the\nmenus change accordingly.  The&quot;
+ &amp; &quot; Ivy model uses the notation \&quot;oA\&quot; to\nmean \&quot;option-a\&quot;; the other mo&quot;
+ &amp; &quot;dels describe the same key as \&quot;M-a\&quot;,\nmeaning \&quot;meta-a\&quot;.  This key i&quot;
+ &amp; &quot;s whatever the X-server maps to \&quot;mod1\&quot;;\non some keyboards it is labe&quot;
+ &amp; &quot;led \&quot;Alt\&quot;, \&quot;Compose\&quot;, or \&quot;Compose\nCharacter\&quot;.\n\n\nFormsEdit men&quot;
+ &amp; &quot;u-layout:\n\n    (Quill pen icon)\n        About ...        shows info &quot;
+ &amp; &quot;about this version\n        Help             shows this file. (The key &quot;
+ &amp; &quot;labeled\n                            \&quot;Help\&quot; also brings up this file.&quot;
+ &amp; &quot;)\n        Editing Model    changes the keybindings and selection contr&quot;
+ &amp; &quot;ols\n\t    Ivy\n\t    Emacs\n            Mac\n            Xterm\n      &quot;
+ &amp; &quot;  Quit             stops the application, after notifying you\n        &quot;
+ &amp; &quot;                 about an unsaved edits\n\n    File\n        New       &quot;
+ &amp; &quot;       creates new editor and result views\n        Open...          op&quot;
+ &amp; &quot;ens an existing .fv file\n        Close            closes the editor an&quot;
+ &amp; &quot;d result views\n        Save             saves the current .fv file\n  &quot;
+ &amp; &quot;      Save As ...      allows you to choose a name for the file\n      &quot;
+ &amp; &quot;  Revert To Saved  discards edits since the last Save\n        PP setup&quot;
+ &amp; &quot;...      allows you to change the width used by\n                      &quot;
+ &amp; &quot;   the prettyprinter\n        PPrint           prettyprints the form (i&quot;
+ &amp; &quot;t does NOT send\n                         the file to a hardcopy printe&quot;
+ &amp; &quot;r)\n        Quit             stops the application, after notifying you&quot;
+ &amp; &quot;\n                         about an unsaved edits\n\n    Edit\n        &quot;
+ &amp; &quot;Undo             reverses the effect of the last text-edit.\n\t\t\t    &quot;
+ &amp; &quot; This does NOT re-parse the form.\n\tRedo             reinstates the la&quot;
+ &amp; &quot;st text-edit.\n\t\t\t     This does NOT re-parse the form.\n        Cut&quot;
+ &amp; &quot;              deletes the [primary] selection and saves it\n        Cop&quot;
+ &amp; &quot;y             copies the [primary] selection\n        Paste            &quot;
+ &amp; &quot;inserts the conten&quot;;
+
+CONST E2_0 =
+   &quot;ts of the source selection\n        Clear            deletes the curren&quot;
+ &amp; &quot;t selection\n        Select All       selects the entire text\n\tFind..&quot;
+ &amp; &quot;.\t\t opens a \&quot;search\&quot; dialog\n\tFind Next\n\tFind Prev\n\n    Misc\n&quot;
+ &amp; &quot;\tShow the named VBTs...\n \t\tdisplays a list of all the named sub-for&quot;
+ &amp; &quot;ms (e.g.,\n \t\t\&quot;%StartButton\&quot;) along with their Modula-3 types (e.g.&quot;
+ &amp; &quot;,\n \t\t\&quot;FVTypes.ButtonVBT\&quot;) and shapes (horizontal [lo, pref,\n \t\t&quot;
+ &amp; &quot;hi], vertical [lo, pref, hi]).  An asterisk indicates\n \t\tthat there &quot;
+ &amp; &quot;is a procedure attached to this interactor.\n\tShow current snapshot ..&quot;
+ &amp; &quot;.\n\t\tinvokes the \&quot;snapshot\&quot; method of the form (see the\n\t\tFormsV&quot;
+ &amp; &quot;BT interface) and displays the results in a\n\t\tpop-up window.\n      &quot;
+ &amp; &quot;  Show last error message\n\t\tpops up the error-message window, which &quot;
+ &amp; &quot;normally disappears\n                5 seconds after an error.\n\tMove &quot;
+ &amp; &quot;Result to... \n\t\tmoves the result-view to a different screen\n\tMove &quot;
+ &amp; &quot;Editor to...\n\t\tmoves the editor to a different screen\n\t\t\n    &lt;fi&quot;
+ &amp; &quot;lename&gt;\t\tthe name of the file being edited\n\n    Do It\n\tThis is a &quot;
+ &amp; &quot;button, not a menu.  (The keyboard equivalent on an\n\tLK201 is the lar&quot;
+ &amp; &quot;ge key labeled \&quot;Do\&quot;.)  It invokes the FormsVBT\n\tparser and changes &quot;
+ &amp; &quot;the display in the result view, unless\n\tthere are errors.\n\n\nNOTES\n&quot;
+ &amp; &quot;\nThe language interpreted by formsedit (i.e., by the Modula-3 FormsVBT&quot;
+ &amp; &quot;\nruntime interface) is defined in the FormsVBT Reference Manual.  Some&quot;
+ &amp; &quot;\nof the properties can be changed at runtime.\n    \nThe following uni&quot;
+ &amp; &quot;versal properties are supported:\n\n        BgColor\n        Color\n   &quot;
+ &amp; &quot;     DarkShadow\n        Font\n        Labelfont\n        LightShadow\n&quot;
+ &amp; &quot;        Name\n        ShadowSize\n\nA Macro definition can appear anywh&quot;
+ &amp; &quot;ere, as if it were a universal\nproperty. The syntax for defining a mac&quot;
+ &amp; &quot;ro is:\n    \n        (Macro &lt;name&gt; [BOA] &lt;formals&gt; &lt;expression&gt;)\n\n  &quot;
+ &amp; &quot;          Example:\n\n                (Macro Boxed (x)\n               &quot;
+ &amp; &quot;   `(Border (Pen 2) (Rim (Pen 16) ,x)))\n\n            The syntax for c&quot;
+ &amp; &quot;alling a macro is\n\n                (&lt;name&gt; (&lt;formal&gt; &lt;actual&gt;) (&lt;form&quot;
+ &amp; &quot;al&gt; &lt;actual&gt;) ...)\n\n            Example:\n\n           &quot;;
+
+CONST E2_1 =
+   &quot;     (Boxed (x (Text (BgColor \&quot;Red\&quot;) \&quot;Warning\&quot;)))\n\n            Th&quot;
+ &amp; &quot;at expands into\n\n                (Border (Pen 2)\n                   &quot;
+ &amp; &quot; (Rim (Pen 16)\n                        (Text (BgColor \&quot;Red\&quot;) \&quot;Warni&quot;
+ &amp; &quot;ng\&quot;))))\n\n            If the keyword BOA (\&quot;by order of arguments\&quot;) &quot;
+ &amp; &quot;appears\n            in the macro definition, then the arguments are\n &quot;
+ &amp; &quot;           positional and not named. Example:\n\n                (Macro&quot;
+ &amp; &quot; Ht BOA (n v) `(Shape (Height ,n) ,v))\n\n            Given that defini&quot;
+ &amp; &quot;tion,\n\t\t(Ht 20 (Button \&quot;Go!\&quot;))\n\t    expands into\n\t        (Sha&quot;
+ &amp; &quot;pe (Height 20) (Button \&quot;Go!\&quot;))\n            \n            Macros must&quot;
+ &amp; &quot; be defined before they are called. The effect\n            of using a &quot;
+ &amp; &quot;macro to redefine an existing name (e.g., VBox)\n            is undefin&quot;
+ &amp; &quot;ed. The expressions should expand into legal\n            forms, includ&quot;
+ &amp; &quot;ing Macros.  Nested backquotes are permitted.\n            Within a bac&quot;
+ &amp; &quot;kquote, you may use \&quot;,\&quot; to insert a value,\n            or \&quot;,@\&quot; to &quot;
+ &amp; &quot;append a list of values.  Example:\n\n                (Macro V (items) &quot;
+ &amp; &quot;`(VBox (Color \&quot;Red\&quot;) ,@items))\n                (V (items (\&quot;abc\&quot; \&quot;&quot;
+ &amp; &quot;def\&quot;)))\n\n            The second form expands into\n\n               &quot;
+ &amp; &quot; (VBox (Color \&quot;Red\&quot;) \&quot;abc\&quot; \&quot;def\&quot;)\n\nFont and LabelFont take stri&quot;
+ &amp; &quot;ng-arguments, e.g., \n\n    \&quot;fixed\&quot;\n    \&quot;-*-new century schoolbook-&quot;
+ &amp; &quot;*-r-*-*-*-120-*-*-*-*-*-*\&quot;\n    \nThey also take their own property li&quot;
+ &amp; &quot;sts for the individual\nmetrics:\n\n\tFoundry\n\tFamily\n\tWeightName\n&quot;
+ &amp; &quot;\tSlant\n\tWidth\n\tPointSize\n\tHRes\n\tVRes\n\tSpacing\n\tAvgWidth\n\t&quot;
+ &amp; &quot;Encoding\n\tRegistry\n\nPointSize is a cardinal, and it actually repres&quot;
+ &amp; &quot;ents TENTHS of a point,\nso a 12-point would be specified as (PointSize&quot;
+ &amp; &quot; 120).  All the other\nmetrics are text.  The defaults are:\n\n(Font\t(&quot;
+ &amp; &quot;Foundry\t\&quot;*\&quot;)\n\t(Family\t\t\&quot;fixed\&quot;)\n\t(WeightName\t\&quot;medium\&quot;)\n\t&quot;
+ &amp; &quot;(Slant\t\t\&quot;r\&quot;)\n\t(Width\t\t\&quot;semicondensed\&quot;)\n\t(PointSize \t100)\n&quot;
+ &amp; &quot;\t(HRes \t\t\&quot;*\&quot;)\n\t(VRes \t\t\&quot;*\&quot;)\n\t(Spacing\t\&quot;*\&quot;)\n\t(AvgWidth&quot;
+ &amp; &quot; \t\&quot;*\&quot;)\n\t(Encoding \t\&quot;iso8859\&quot;)\n\t(Registry \t\&quot;1\&quot;))\n(LabelFon&quot;
+ &amp; &quot;t\n\t(Foundry\t\&quot;*\&quot;)\n\t(Family\t\t\&quot;helvetica\&quot;)\n\t(WeightName\t\&quot;bo&quot;
+ &amp; &quot;ld\&quot;)\n\t(Slant\t\t\&quot;r\&quot;)\n\t(Width\t\t\&quot;*\&quot;)\n\t(PointSize \t100)\n\t(&quot;
+ &amp; &quot;H&quot;;
+
+CONST E2_2 =
+   &quot;Res \t\t\&quot;*\&quot;)\n\t(VRes \t\t\&quot;*\&quot;)\n\t(Spacing\t\&quot;*\&quot;)\n\t(AvgWidth \t\&quot;&quot;
+ &amp; &quot;*\&quot;)\n\t(Encoding \t\&quot;iso8859\&quot;)\n\t(Registry \t\&quot;1\&quot;))\n\t\nMost users&quot;
+ &amp; &quot; will specify only Family, WeightName,\nand PointSize.  Examples:\n\n  &quot;
+ &amp; &quot;  (Font (Family \&quot;courier\&quot;) (WeightName \&quot;Bold\&quot;))\n    (LabelFont (Fa&quot;
+ &amp; &quot;mily \&quot;Times\&quot;) (PointSize 240))\n\nThe chart below lists the component&quot;
+ &amp; &quot;s and the properties they support.\nSee the FormsVBT Reference Manual f&quot;
+ &amp; &quot;or details.\n\n        Audio =&gt; Value, Volume, Mute, IgnoreMapping\n   &quot;
+ &amp; &quot;     Bar =&gt; SizeRange\n        Boolean =&gt; Inverting, CheckMark, CheckBo&quot;
+ &amp; &quot;x, MenuStyle, Value\n        Border =&gt; Pen, Pattern\n        Browser =&gt;&quot;
+ &amp; &quot; Value, Select, Items, From, Quick\n        Button    \n        Choice &quot;
+ &amp; &quot;=&gt; Inverting, CheckMark, CheckBox, MenuStyle, Value\n        CloseButto&quot;
+ &amp; &quot;n =&gt; For\n        DirMenu =&gt; For [filebrowser]\n        FileBrowser =&gt; &quot;
+ &amp; &quot;ReadOnly, Suffixes\n        Fill =&gt; SizeRange\n        Filter =&gt; Passiv&quot;
+ &amp; &quot;e, Dormant, Vanish, Active\n        Frame =&gt; ShadowStyle\n        Gener&quot;
+ &amp; &quot;ic\n        Glue =&gt; SizeRange\n        Guard\n        HBox\n        HPa&quot;
+ &amp; &quot;ckSplit =&gt; HGap, VGap, Background\n        HTile =&gt; Targets\n        He&quot;
+ &amp; &quot;lper =&gt; For [filebrowser]\n        Insert =&gt; Main\n        IntApply =&gt; &quot;
+ &amp; &quot;For, Property\n        LinkButton =&gt; For\n        LinkMButton =&gt; For\n &quot;
+ &amp; &quot;       Macro\n        MButton\n        Menu\n        MultiBrowser =&gt; Va&quot;
+ &amp; &quot;lue, Select, Items, From, Quick\n        Numeric =&gt; AllowEmpty, HideBut&quot;
+ &amp; &quot;tons, Value, Min, Max\n        PageButton =&gt; For [TSplit], Back\n      &quot;
+ &amp; &quot;  PageMButton =&gt; For [TSplit], Back\n        Pixmap =&gt; Main\n        Po&quot;
+ &amp; &quot;pButton =&gt; For [ZChild or ZChassis]\n        PopMButton =&gt; For [ZChild &quot;
+ &amp; &quot;or ZChassis]\n        Radio =&gt; Value\n        Ridge =&gt; Main, ShadowStyl&quot;
+ &amp; &quot;e\n        Rim =&gt; Pen, Pattern\n        Scale =&gt; HScale, VScale\n      &quot;
+ &amp; &quot;  Scroller =&gt; Unrelated, Vertical, Min, Max, Value, Thumb, Step\n      &quot;
+ &amp; &quot;  Shape =&gt; Height, Width, Main\n        Source\n        Stable\n       &quot;
+ &amp; &quot; TSplit =&gt; Value, Which, Circular, Flex\n        Target\n        Text =&quot;
+ &amp; &quot;&gt; Main, Margin, LeftAlign, RightAlign, From\n        TextEdit =&gt; From, &quot;
+ &amp; &quot;Value, ReadOnly\n        Texture =&quot;;
+
+CONST E2_3 =
+   &quot;&gt; Main, LocalAlign\n        TrillButton\n        TypeIn =&gt; Value, Expan&quot;
+ &amp; &quot;dOnDemand, ReadOnly, Scrollable\n        VBox\n        VPackSplit =&gt; HG&quot;
+ &amp; &quot;ap, VGap, Background\n        VTile =&gt; Targets\n        Video =&gt; Qualit&quot;
+ &amp; &quot;y, Colors, Width, Height, Synchronous,\n          MSecs, Paused, FixedS&quot;
+ &amp; &quot;ize\n        Viewport =&gt; Step; HorAndVer, HorOnly, or VerOnly.\n       &quot;
+ &amp; &quot; ZBackground\n        ZChassis =&gt; At, Open, Title, NoClose\n        ZCh&quot;
+ &amp; &quot;ild   =&gt; At, Open\n        ZGrow\n        ZMove\n        ZSplit\n\nCopy&quot;
+ &amp; &quot;right \251 1992-1993, Digital Equipment Corporation.\nDistributed only &quot;
+ &amp; &quot;by permission.\nLast modified on Thu Feb 29 12:40:04 PST 1996 by mhb   &quot;
+ &amp; &quot;\n     modified on Sun Mar 14 18:19:28 PST 1993 by meehan\n&quot;;
+
+CONST E3 =
+   &quot;(Macro Confirm (Name question yes no cancel cancelMsg)\n  `(ZChild %,Na&quot;
+ &amp; &quot;me\n     (BgColor \&quot;VeryPaleBlue\&quot;)\n     (LightShadow \&quot;White\&quot;)\n    &quot;
+ &amp; &quot; (DarkShadow \&quot;VeryDarkBlue\&quot;)\n     (Shape (Width 300)\n       (BOX (p&quot;
+ &amp; &quot;ens (2 2 1 26))\n\t (child\n\t  (VBox\n\t   ,question\n\t   (Glue 20)\n&quot;
+ &amp; &quot;\t   (HBox\n\t    Fill\n\t    (VBox\n             (Button %,yes (BgColo&quot;
+ &amp; &quot;r \&quot;Green\&quot;) (Shape (Width 80) \&quot;Yes\&quot;))\n             (Glue 10)\n     &quot;
+ &amp; &quot;        (Button %,no (BgColor \&quot;Red\&quot;) (Shape (Width 80) \&quot;No\&quot;)))\n   &quot;
+ &amp; &quot;         (Glue 20)\n            (VBox\n             Fill\n             &quot;
+ &amp; &quot;(Filter %,cancel\n                     (CloseButton (Shape (Width 80) ,&quot;
+ &amp; &quot;cancelMsg))))\n            Fill)))))))\n&quot;;
+
+CONST E4 =
+   &quot;P4\r\n# created by \'xv bnote.xbm\'\r\n18 18\r\n\377\377\377\203\377\377&quot;
+ &amp; &quot;\203\377\377\203\303\377\223\201\377\203\030\377\203\030\377\203\030\377&quot;
+ &amp; &quot;\203\030\377\203\030\377\203\030\377\237\000\377\217\030\377\216\031\377&quot;
+ &amp; &quot;\270\003\377\217\377\377\217\377\377\377\377\377&quot;;
+
+CONST E5 =
+   &quot;(Macro YesNo (Name msg yes no)\n  `(ZChild %,Name\n     (BgColor \&quot;Very&quot;
+ &amp; &quot;PaleGray\&quot;)\n     (LightShadow \&quot;White\&quot;)\n     (DarkShadow \&quot;VeryDarkG&quot;
+ &amp; &quot;ray\&quot;)\n     (Shape (Width 300)\n       (BOX (pens (2 2 1 26))\n       &quot;
+ &amp; &quot; (child \n         (VBox\n          ,msg\n          (Glue 20)\n        &quot;
+ &amp; &quot;  (HBox\n           Fill\n           (Button %,yes (BgColor \&quot;Red\&quot;) (S&quot;
+ &amp; &quot;hape (Width 75) \&quot;Yes\&quot;))\n           Fill\n           (CloseButton %,n&quot;
+ &amp; &quot;o (BgColor \&quot;Green\&quot;) (Shape (Width 75) \&quot;No\&quot;))\n           Fill))))))&quot;
+ &amp; &quot;)\n&quot;;
+
+CONST E6 =
    &quot;(Shape %top (Height 300 - 200 + Inf) (Width 425 - 200 + Inf)\n  (LabelF&quot;
  &amp; &quot;ont (Family \&quot;new century schoolbook\&quot;))\n  (Font \&quot;fixed\&quot;)\n  (BgColo&quot;
  &amp; &quot;r \&quot;PaleYellow\&quot;)\n  (LightShadow \&quot;VeryVeryLightBlue\&quot;)\n  (DarkShadow&quot;
@@ -130,7 +317,7 @@ CONST E0 =
  &amp; &quot;on (For PPwidthNumeric)\n               (TLA \&quot;PP setup...\&quot;))\n       &quot;
  &amp; &quot;      (&quot;;
 
-CONST E0_0 =
+CONST E6_0 =
    &quot;COMMAND %PPrint \&quot;PPrint\&quot; \&quot;oP\&quot; \&quot;M-p\&quot; \&quot;c-p\&quot; \&quot;M-p\&quot;)\n           &quot;
  &amp; &quot;  (SEP)\n             (COMMAND %quit \&quot;Quit\&quot; \&quot;oQ\&quot; \&quot;M-q\&quot; \&quot;c-q\&quot; \&quot;&quot;
  &amp; &quot;M-q\&quot;))))))\n  (Macro EDITMENU ()\n    \'(Menu\n       (Shape (Width 40&quot;
@@ -163,7 +350,7 @@ CONST E0_0 =
  &amp; &quot;       (Glue 5)\n           (Shape (Width 0 + 1000)\n             (Rim &quot;
  &amp; &quot;(Pen 1) (Button %,first \&quot;First\&quot;)))\n           (Shape (Width 0&quot;;
 
-CONST E0_1 =
+CONST E6_1 =
    &quot; + 1000) (ShadowSize 2.5)\n             (Button %,next \&quot;Next\&quot;))\n    &quot;
  &amp; &quot;       (Shape (Width 0 + 1000)\n             (Rim (Pen 1) (Button %,pre&quot;
  &amp; &quot;v \&quot;Prev.\&quot;)))\n           (Glue 20)\n           (Rim (Pen 1) (PageButt&quot;
@@ -195,7 +382,7 @@ CONST E0_1 =
  &amp; &quot;lor) (LightShadow \&quot;White\&quot;) (DarkShadow ,DarkShadow)\n       (Title ,T&quot;
  &amp; &quot;itle)\n       (Shape (Width 300 - &quot;;
 
-CONST E0_2 =
+CONST E6_2 =
    &quot;200 + Inf) (ShadowSize 2)\n         (Rim\n           (Pen 10)\n        &quot;
  &amp; &quot;   (VBox\n             (HBox\n               (Shape (Width 150 + Inf) (&quot;
  &amp; &quot;Height 150 + Inf)\n                 (VBox (LabelFont \&quot;fixed\&quot;)\n      &quot;
@@ -227,7 +414,7 @@ CONST E0_2 =
  &amp; &quot;opy \&quot;Copy\&quot; \&quot;oC\&quot; \&quot;M-w\&quot; \&quot;c-c\&quot; \&quot;M-c\&quot;)\n              (COMMAND %m&quot;
  &amp; &quot;pselectAll \&quot;SelectAll\&quot;\n                \&quot;oA\&quot;&quot;;
 
-CONST E0_3 =
+CONST E6_3 =
    &quot; \&quot;M-a\&quot; \&quot;c-a\&quot; \&quot;M-a\&quot;)\n              (SEP)\n              (COMMAND &quot;
  &amp; &quot;%mpfindMButton \&quot;Find...\&quot;\n                \&quot;oF\&quot; \&quot;\&quot; \&quot;c-f\&quot; \&quot;M-f\&quot;&quot;
  &amp; &quot;\n                (LinkMButton (For FindDialog)))\n              (COMMA&quot;
@@ -260,7 +447,7 @@ CONST E0_3 =
  &amp; &quot;          (VBox\n            (HBox\n              Fill\n              (&quot;
  &amp; &quot;Sha&quot;;
 
-CONST E0_4 =
+CONST E6_4 =
    &quot;pe (Width 80) \&quot;Line width:\&quot;)\n              (Glue 10)\n              &quot;
  &amp; &quot;(Shape (Width 70)\n                (Numeric %ppwidth FirstFocus\n      &quot;
  &amp; &quot;            (BgColor \&quot;VeryPaleGold\&quot;)\n                  =78 (Min 30) &quot;
@@ -292,7 +479,7 @@ CONST E0_4 =
  &amp; &quot;(DarkShadow \&quot;Blue\&quot;)\n      (Title \&quot;Save As...\&quot;)\n      (fbName save&quot;
  &amp; &quot;asfile)\n      (OKName saveas)\n      (OKLabel &quot;;
 
-CONST E0_5 =
+CONST E6_5 =
    &quot;\&quot;Save\&quot;)\n      (cancelName cancelsaveas)\n      (helperName sfbh))\n &quot;
  &amp; &quot;   (CONFIRM %quitConfirmation\n      (question \&quot;Save changes before qu&quot;
  &amp; &quot;itting?\&quot;)\n      (yesName saveandquit)\n      (noName quitAnyway)\n   &quot;
@@ -308,7 +495,7 @@ CONST E0_5 =
  &amp; &quot;rite))\n    (YESNO %RevertDialog\n      (yesName revert)\n      (noName&quot;
  &amp; &quot; dontRevert)\n      (msg \&quot;Revert to the last version saved?\&quot;))))\n&quot;;
 
-CONST E1 =
+CONST E7 =
    &quot;P4\r\n190 65\r\n\000\000\377\377\361\377\377\343\377\377\307\377\377\217&quot;
  &amp; &quot;\377\377\037\377\376?\377\374}\004\000\000\377\377\361\377\377\343\377\377&quot;
  &amp; &quot;\307\377\377\217\377\377\037\377\376?\377\374\021\214\000\000\377\377\361&quot;
@@ -389,193 +576,6 @@ CONST E1 =
  &amp; &quot;\000\000\000\000\000\000\000\000\210\000\000\000\000\000\000\000\000\000&quot;
  &amp; &quot;\000\000\000\000\000\000\000\000\000\000\000\000\000\000p\000\000\000\000&quot;
  &amp; &quot;\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000&quot;;
-
-CONST E2 =
-   &quot;(Macro finder (first next prev typein show hide close)\n `(TSplit Flex\n&quot;
- &amp; &quot;\t  (LightShadow \&quot;White\&quot;)\n\t  (DarkShadow \&quot;Blue\&quot;)\n\t  (BgColor \&quot;&quot;
- &amp; &quot;VeryPaleBlue\&quot;)\n    (Shape (Height 0) Fill)\n    (VBox %,show\n      R&quot;
- &amp; &quot;idge\n      (Glue 2)\n      (HBox\n       (Shape (Width + 0) \&quot;Find:\&quot;)&quot;
- &amp; &quot;\n       (Shape (Width 0 + 3000)\n\t(Frame Lowered (TypeIn %,typein (Bg&quot;
- &amp; &quot;Color \&quot;VeryVeryPaleBlue\&quot;))))\n       (Glue 5)\n       (Shape (Width 0&quot;
- &amp; &quot; + 1000) (Rim (Pen 1) (Button %,first \&quot;First\&quot;)))\n       (Shape (Widt&quot;
- &amp; &quot;h 0 + 1000) (ShadowSize 2.5) (Button %,next \&quot;Next\&quot;))\n       (Shape (&quot;
- &amp; &quot;Width 0 + 1000) (Rim (Pen 1) (Button %,prev \&quot;Prev.\&quot;)))\n       (Glue &quot;
- &amp; &quot;20)\n       (Rim (Pen 1) (PageButton %,close \&quot;C\&quot;)))\n      (Glue 2)))&quot;
- &amp; &quot;)\n&quot;;
-
-CONST E3 =
-   &quot;P4\r\n16 16\r\n\000\000\000\002\000\f\000&gt;\000`\000\374\001\200\003\370&quot;
- &amp; &quot;\007\000\007\340\f\000\017\200\030\000\020\000 \000@\000&quot;;
-
-CONST E4 =
-   &quot;\t\t       FormsEdit -- version 2.7\n\nFormsEdit uses TextPort to suppo&quot;
- &amp; &quot;rt four editing \&quot;models\&quot;: Emacs, Ivy,\nMac, and Xterm.  When you chan&quot;
- &amp; &quot;ge models, the keybinding-labels in the\nmenus change accordingly.  The&quot;
- &amp; &quot; Ivy model uses the notation \&quot;oA\&quot; to\nmean \&quot;option-a\&quot;; the other mo&quot;
- &amp; &quot;dels describe the same key as \&quot;M-a\&quot;,\nmeaning \&quot;meta-a\&quot;.  This key i&quot;
- &amp; &quot;s whatever the X-server maps to \&quot;mod1\&quot;;\non some keyboards it is labe&quot;
- &amp; &quot;led \&quot;Alt\&quot;, \&quot;Compose\&quot;, or \&quot;Compose\nCharacter\&quot;.\n\n\nFormsEdit men&quot;
- &amp; &quot;u-layout:\n\n    (Quill pen icon)\n        About ...        shows info &quot;
- &amp; &quot;about this version\n        Help             shows this file. (The key &quot;
- &amp; &quot;labeled\n                            \&quot;Help\&quot; also brings up this file.&quot;
- &amp; &quot;)\n        Editing Model    changes the keybindings and selection contr&quot;
- &amp; &quot;ols\n\t    Ivy\n\t    Emacs\n            Mac\n            Xterm\n      &quot;
- &amp; &quot;  Quit             stops the application, after notifying you\n        &quot;
- &amp; &quot;                 about an unsaved edits\n\n    File\n        New       &quot;
- &amp; &quot;       creates new editor and result views\n        Open...          op&quot;
- &amp; &quot;ens an existing .fv file\n        Close            closes the editor an&quot;
- &amp; &quot;d result views\n        Save             saves the current .fv file\n  &quot;
- &amp; &quot;      Save As ...      allows you to choose a name for the file\n      &quot;
- &amp; &quot;  Revert To Saved  discards edits since the last Save\n        PP setup&quot;
- &amp; &quot;...      allows you to change the width used by\n                      &quot;
- &amp; &quot;   the prettyprinter\n        PPrint           prettyprints the form (i&quot;
- &amp; &quot;t does NOT send\n                         the file to a hardcopy printe&quot;
- &amp; &quot;r)\n        Quit             stops the application, after notifying you&quot;
- &amp; &quot;\n                         about an unsaved edits\n\n    Edit\n        &quot;
- &amp; &quot;Undo             reverses the effect of the last text-edit.\n\t\t\t    &quot;
- &amp; &quot; This does NOT re-parse the form.\n\tRedo             reinstates the la&quot;
- &amp; &quot;st text-edit.\n\t\t\t     This does NOT re-parse the form.\n        Cut&quot;
- &amp; &quot;              deletes the [primary] selection and saves it\n        Cop&quot;
- &amp; &quot;y             copies the [primary] selection\n        Paste            &quot;
- &amp; &quot;inserts the conten&quot;;
-
-CONST E4_0 =
-   &quot;ts of the source selection\n        Clear            deletes the curren&quot;
- &amp; &quot;t selection\n        Select All       selects the entire text\n\tFind..&quot;
- &amp; &quot;.\t\t opens a \&quot;search\&quot; dialog\n\tFind Next\n\tFind Prev\n\n    Misc\n&quot;
- &amp; &quot;\tShow the named VBTs...\n \t\tdisplays a list of all the named sub-for&quot;
- &amp; &quot;ms (e.g.,\n \t\t\&quot;%StartButton\&quot;) along with their Modula-3 types (e.g.&quot;
- &amp; &quot;,\n \t\t\&quot;FVTypes.ButtonVBT\&quot;) and shapes (horizontal [lo, pref,\n \t\t&quot;
- &amp; &quot;hi], vertical [lo, pref, hi]).  An asterisk indicates\n \t\tthat there &quot;
- &amp; &quot;is a procedure attached to this interactor.\n\tShow current snapshot ..&quot;
- &amp; &quot;.\n\t\tinvokes the \&quot;snapshot\&quot; method of the form (see the\n\t\tFormsV&quot;
- &amp; &quot;BT interface) and displays the results in a\n\t\tpop-up window.\n      &quot;
- &amp; &quot;  Show last error message\n\t\tpops up the error-message window, which &quot;
- &amp; &quot;normally disappears\n                5 seconds after an error.\n\tMove &quot;
- &amp; &quot;Result to... \n\t\tmoves the result-view to a different screen\n\tMove &quot;
- &amp; &quot;Editor to...\n\t\tmoves the editor to a different screen\n\t\t\n    &lt;fi&quot;
- &amp; &quot;lename&gt;\t\tthe name of the file being edited\n\n    Do It\n\tThis is a &quot;
- &amp; &quot;button, not a menu.  (The keyboard equivalent on an\n\tLK201 is the lar&quot;
- &amp; &quot;ge key labeled \&quot;Do\&quot;.)  It invokes the FormsVBT\n\tparser and changes &quot;
- &amp; &quot;the display in the result view, unless\n\tthere are errors.\n\n\nNOTES\n&quot;
- &amp; &quot;\nThe language interpreted by formsedit (i.e., by the Modula-3 FormsVBT&quot;
- &amp; &quot;\nruntime interface) is defined in the FormsVBT Reference Manual.  Some&quot;
- &amp; &quot;\nof the properties can be changed at runtime.\n    \nThe following uni&quot;
- &amp; &quot;versal properties are supported:\n\n        BgColor\n        Color\n   &quot;
- &amp; &quot;     DarkShadow\n        Font\n        Labelfont\n        LightShadow\n&quot;
- &amp; &quot;        Name\n        ShadowSize\n\nA Macro definition can appear anywh&quot;
- &amp; &quot;ere, as if it were a universal\nproperty. The syntax for defining a mac&quot;
- &amp; &quot;ro is:\n    \n        (Macro &lt;name&gt; [BOA] &lt;formals&gt; &lt;expression&gt;)\n\n  &quot;
- &amp; &quot;          Example:\n\n                (Macro Boxed (x)\n               &quot;
- &amp; &quot;   `(Border (Pen 2) (Rim (Pen 16) ,x)))\n\n            The syntax for c&quot;
- &amp; &quot;alling a macro is\n\n                (&lt;name&gt; (&lt;formal&gt; &lt;actual&gt;) (&lt;form&quot;
- &amp; &quot;al&gt; &lt;actual&gt;) ...)\n\n            Example:\n\n           &quot;;
-
-CONST E4_1 =
-   &quot;     (Boxed (x (Text (BgColor \&quot;Red\&quot;) \&quot;Warning\&quot;)))\n\n            Th&quot;
- &amp; &quot;at expands into\n\n                (Border (Pen 2)\n                   &quot;
- &amp; &quot; (Rim (Pen 16)\n                        (Text (BgColor \&quot;Red\&quot;) \&quot;Warni&quot;
- &amp; &quot;ng\&quot;))))\n\n            If the keyword BOA (\&quot;by order of arguments\&quot;) &quot;
- &amp; &quot;appears\n            in the macro definition, then the arguments are\n &quot;
- &amp; &quot;           positional and not named. Example:\n\n                (Macro&quot;
- &amp; &quot; Ht BOA (n v) `(Shape (Height ,n) ,v))\n\n            Given that defini&quot;
- &amp; &quot;tion,\n\t\t(Ht 20 (Button \&quot;Go!\&quot;))\n\t    expands into\n\t        (Sha&quot;
- &amp; &quot;pe (Height 20) (Button \&quot;Go!\&quot;))\n            \n            Macros must&quot;
- &amp; &quot; be defined before they are called. The effect\n            of using a &quot;
- &amp; &quot;macro to redefine an existing name (e.g., VBox)\n            is undefin&quot;
- &amp; &quot;ed. The expressions should expand into legal\n            forms, includ&quot;
- &amp; &quot;ing Macros.  Nested backquotes are permitted.\n            Within a bac&quot;
- &amp; &quot;kquote, you may use \&quot;,\&quot; to insert a value,\n            or \&quot;,@\&quot; to &quot;
- &amp; &quot;append a list of values.  Example:\n\n                (Macro V (items) &quot;
- &amp; &quot;`(VBox (Color \&quot;Red\&quot;) ,@items))\n                (V (items (\&quot;abc\&quot; \&quot;&quot;
- &amp; &quot;def\&quot;)))\n\n            The second form expands into\n\n               &quot;
- &amp; &quot; (VBox (Color \&quot;Red\&quot;) \&quot;abc\&quot; \&quot;def\&quot;)\n\nFont and LabelFont take stri&quot;
- &amp; &quot;ng-arguments, e.g., \n\n    \&quot;fixed\&quot;\n    \&quot;-*-new century schoolbook-&quot;
- &amp; &quot;*-r-*-*-*-120-*-*-*-*-*-*\&quot;\n    \nThey also take their own property li&quot;
- &amp; &quot;sts for the individual\nmetrics:\n\n\tFoundry\n\tFamily\n\tWeightName\n&quot;
- &amp; &quot;\tSlant\n\tWidth\n\tPointSize\n\tHRes\n\tVRes\n\tSpacing\n\tAvgWidth\n\t&quot;
- &amp; &quot;Encoding\n\tRegistry\n\nPointSize is a cardinal, and it actually repres&quot;
- &amp; &quot;ents TENTHS of a point,\nso a 12-point would be specified as (PointSize&quot;
- &amp; &quot; 120).  All the other\nmetrics are text.  The defaults are:\n\n(Font\t(&quot;
- &amp; &quot;Foundry\t\&quot;*\&quot;)\n\t(Family\t\t\&quot;fixed\&quot;)\n\t(WeightName\t\&quot;medium\&quot;)\n\t&quot;
- &amp; &quot;(Slant\t\t\&quot;r\&quot;)\n\t(Width\t\t\&quot;semicondensed\&quot;)\n\t(PointSize \t100)\n&quot;
- &amp; &quot;\t(HRes \t\t\&quot;*\&quot;)\n\t(VRes \t\t\&quot;*\&quot;)\n\t(Spacing\t\&quot;*\&quot;)\n\t(AvgWidth&quot;
- &amp; &quot; \t\&quot;*\&quot;)\n\t(Encoding \t\&quot;iso8859\&quot;)\n\t(Registry \t\&quot;1\&quot;))\n(LabelFon&quot;
- &amp; &quot;t\n\t(Foundry\t\&quot;*\&quot;)\n\t(Family\t\t\&quot;helvetica\&quot;)\n\t(WeightName\t\&quot;bo&quot;
- &amp; &quot;ld\&quot;)\n\t(Slant\t\t\&quot;r\&quot;)\n\t(Width\t\t\&quot;*\&quot;)\n\t(PointSize \t100)\n\t(&quot;
- &amp; &quot;H&quot;;
-
-CONST E4_2 =
-   &quot;Res \t\t\&quot;*\&quot;)\n\t(VRes \t\t\&quot;*\&quot;)\n\t(Spacing\t\&quot;*\&quot;)\n\t(AvgWidth \t\&quot;&quot;
- &amp; &quot;*\&quot;)\n\t(Encoding \t\&quot;iso8859\&quot;)\n\t(Registry \t\&quot;1\&quot;))\n\t\nMost users&quot;
- &amp; &quot; will specify only Family, WeightName,\nand PointSize.  Examples:\n\n  &quot;
- &amp; &quot;  (Font (Family \&quot;courier\&quot;) (WeightName \&quot;Bold\&quot;))\n    (LabelFont (Fa&quot;
- &amp; &quot;mily \&quot;Times\&quot;) (PointSize 240))\n\nThe chart below lists the component&quot;
- &amp; &quot;s and the properties they support.\nSee the FormsVBT Reference Manual f&quot;
- &amp; &quot;or details.\n\n        Audio =&gt; Value, Volume, Mute, IgnoreMapping\n   &quot;
- &amp; &quot;     Bar =&gt; SizeRange\n        Boolean =&gt; Inverting, CheckMark, CheckBo&quot;
- &amp; &quot;x, MenuStyle, Value\n        Border =&gt; Pen, Pattern\n        Browser =&gt;&quot;
- &amp; &quot; Value, Select, Items, From, Quick\n        Button    \n        Choice &quot;
- &amp; &quot;=&gt; Inverting, CheckMark, CheckBox, MenuStyle, Value\n        CloseButto&quot;
- &amp; &quot;n =&gt; For\n        DirMenu =&gt; For [filebrowser]\n        FileBrowser =&gt; &quot;
- &amp; &quot;ReadOnly, Suffixes\n        Fill =&gt; SizeRange\n        Filter =&gt; Passiv&quot;
- &amp; &quot;e, Dormant, Vanish, Active\n        Frame =&gt; ShadowStyle\n        Gener&quot;
- &amp; &quot;ic\n        Glue =&gt; SizeRange\n        Guard\n        HBox\n        HPa&quot;
- &amp; &quot;ckSplit =&gt; HGap, VGap, Background\n        HTile =&gt; Targets\n        He&quot;
- &amp; &quot;lper =&gt; For [filebrowser]\n        Insert =&gt; Main\n        IntApply =&gt; &quot;
- &amp; &quot;For, Property\n        LinkButton =&gt; For\n        LinkMButton =&gt; For\n &quot;
- &amp; &quot;       Macro\n        MButton\n        Menu\n        MultiBrowser =&gt; Va&quot;
- &amp; &quot;lue, Select, Items, From, Quick\n        Numeric =&gt; AllowEmpty, HideBut&quot;
- &amp; &quot;tons, Value, Min, Max\n        PageButton =&gt; For [TSplit], Back\n      &quot;
- &amp; &quot;  PageMButton =&gt; For [TSplit], Back\n        Pixmap =&gt; Main\n        Po&quot;
- &amp; &quot;pButton =&gt; For [ZChild or ZChassis]\n        PopMButton =&gt; For [ZChild &quot;
- &amp; &quot;or ZChassis]\n        Radio =&gt; Value\n        Ridge =&gt; Main, ShadowStyl&quot;
- &amp; &quot;e\n        Rim =&gt; Pen, Pattern\n        Scale =&gt; HScale, VScale\n      &quot;
- &amp; &quot;  Scroller =&gt; Unrelated, Vertical, Min, Max, Value, Thumb, Step\n      &quot;
- &amp; &quot;  Shape =&gt; Height, Width, Main\n        Source\n        Stable\n       &quot;
- &amp; &quot; TSplit =&gt; Value, Which, Circular, Flex\n        Target\n        Text =&quot;
- &amp; &quot;&gt; Main, Margin, LeftAlign, RightAlign, From\n        TextEdit =&gt; From, &quot;
- &amp; &quot;Value, ReadOnly\n        Texture =&quot;;
-
-CONST E4_3 =
-   &quot;&gt; Main, LocalAlign\n        TrillButton\n        TypeIn =&gt; Value, Expan&quot;
- &amp; &quot;dOnDemand, ReadOnly, Scrollable\n        VBox\n        VPackSplit =&gt; HG&quot;
- &amp; &quot;ap, VGap, Background\n        VTile =&gt; Targets\n        Video =&gt; Qualit&quot;
- &amp; &quot;y, Colors, Width, Height, Synchronous,\n          MSecs, Paused, FixedS&quot;
- &amp; &quot;ize\n        Viewport =&gt; Step; HorAndVer, HorOnly, or VerOnly.\n       &quot;
- &amp; &quot; ZBackground\n        ZChassis =&gt; At, Open, Title, NoClose\n        ZCh&quot;
- &amp; &quot;ild   =&gt; At, Open\n        ZGrow\n        ZMove\n        ZSplit\n\nCopy&quot;
- &amp; &quot;right \251 1992-1993, Digital Equipment Corporation.\nDistributed only &quot;
- &amp; &quot;by permission.\nLast modified on Thu Feb 29 12:40:04 PST 1996 by mhb   &quot;
- &amp; &quot;\n     modified on Sun Mar 14 18:19:28 PST 1993 by meehan\n&quot;;
-
-CONST E5 =
-   &quot;(Macro Confirm (Name question yes no cancel cancelMsg)\n  `(ZChild %,Na&quot;
- &amp; &quot;me\n     (BgColor \&quot;VeryPaleBlue\&quot;)\n     (LightShadow \&quot;White\&quot;)\n    &quot;
- &amp; &quot; (DarkShadow \&quot;VeryDarkBlue\&quot;)\n     (Shape (Width 300)\n       (BOX (p&quot;
- &amp; &quot;ens (2 2 1 26))\n\t (child\n\t  (VBox\n\t   ,question\n\t   (Glue 20)\n&quot;
- &amp; &quot;\t   (HBox\n\t    Fill\n\t    (VBox\n             (Button %,yes (BgColo&quot;
- &amp; &quot;r \&quot;Green\&quot;) (Shape (Width 80) \&quot;Yes\&quot;))\n             (Glue 10)\n     &quot;
- &amp; &quot;        (Button %,no (BgColor \&quot;Red\&quot;) (Shape (Width 80) \&quot;No\&quot;)))\n   &quot;
- &amp; &quot;         (Glue 20)\n            (VBox\n             Fill\n             &quot;
- &amp; &quot;(Filter %,cancel\n                     (CloseButton (Shape (Width 80) ,&quot;
- &amp; &quot;cancelMsg))))\n            Fill)))))))\n&quot;;
-
-CONST E6 =
-   &quot;P4\r\n# created by \'xv bnote.xbm\'\r\n18 18\r\n\377\377\377\203\377\377&quot;
- &amp; &quot;\203\377\377\203\303\377\223\201\377\203\030\377\203\030\377\203\030\377&quot;
- &amp; &quot;\203\030\377\203\030\377\203\030\377\237\000\377\217\030\377\216\031\377&quot;
- &amp; &quot;\270\003\377\217\377\377\217\377\377\377\377\377&quot;;
-
-CONST E7 =
-   &quot;(Macro YesNo (Name msg yes no)\n  `(ZChild %,Name\n     (BgColor \&quot;Very&quot;
- &amp; &quot;PaleGray\&quot;)\n     (LightShadow \&quot;White\&quot;)\n     (DarkShadow \&quot;VeryDarkG&quot;
- &amp; &quot;ray\&quot;)\n     (Shape (Width 300)\n       (BOX (pens (2 2 1 26))\n       &quot;
- &amp; &quot; (child \n         (VBox\n          ,msg\n          (Glue 20)\n        &quot;
- &amp; &quot;  (HBox\n           Fill\n           (Button %,yes (BgColor \&quot;Red\&quot;) (S&quot;
- &amp; &quot;hape (Width 75) \&quot;Yes\&quot;))\n           Fill\n           (CloseButton %,n&quot;
- &amp; &quot;o (BgColor \&quot;Green\&quot;) (Shape (Width 75) \&quot;No\&quot;))\n           Fill))))))&quot;
- &amp; &quot;)\n&quot;;
 
 BEGIN
 END formseditBundle.

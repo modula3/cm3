@@ -16,7 +16,7 @@
 
 <P><PRE>MODULE <module><implements><A HREF="TypeExpr.i3.html">TypeExpr</A></implements></module>;
 
-IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="../../../m3middle/src/M3ID.i3.html">M3ID</A>, <A HREF="Expr.i3.html">Expr</A>, <A HREF="ExprRep.i3.html">ExprRep</A>, <A HREF="#x1">Type</A>, <A HREF="#x2">Value</A>, <A HREF="NamedExpr.i3.html">NamedExpr</A>, <A HREF="QualifyExpr.i3.html">QualifyExpr</A>;
+IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="#x1">M3ID</A>, <A HREF="Expr.i3.html">Expr</A>, <A HREF="ExprRep.i3.html">ExprRep</A>, <A HREF="#x2">Type</A>, <A HREF="#x3">Value</A>, <A HREF="NamedExpr.i3.html">NamedExpr</A>, <A HREF="QualifyExpr.i3.html">QualifyExpr</A>;
 
 TYPE
   P = Expr.T BRANDED &quot;TypeExpr.P&quot;OBJECT
@@ -96,16 +96,27 @@ END TypeExpr.
 </PRE>
 </inModule>
 <HR>
-<A NAME="x1">interface Type is in:
+<A NAME="x1">interface M3ID is in:
+</A><UL>
+<LI><A HREF="../../../m3middle/src/M3ID.i3.html#0TOP0">m3middle/src/M3ID.i3</A>
+<LI><A HREF="../../../m3scan/src/M3ID.i3.html#0TOP0">m3scan/src/M3ID.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Type is in:
 </A><UL>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
+<LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
+<LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>
 <LI><A HREF="../../../stubgen/src/Type.i3.html#0TOP0">stubgen/src/Type.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x2">interface Value is in:
+<A NAME="x3">interface Value is in:
 </A><UL>
 <LI><A HREF="../values/Value.i3.html#0TOP0">m3front/src/values/Value.i3</A>
+<LI><A HREF="../../../sharedobjgen/src/Value.i3.html#0TOP0">sharedobjgen/src/Value.i3</A>
+<LI><A HREF="../../../stablegen/src/Value.i3.html#0TOP0">stablegen/src/Value.i3</A>
 <LI><A HREF="../../../stubgen/src/Value.i3.html#0TOP0">stubgen/src/Value.i3</A>
 </UL>
 <P>

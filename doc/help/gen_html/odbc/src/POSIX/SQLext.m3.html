@@ -9,9 +9,9 @@
 <PRE></PRE> Copyright (C) 1996-2000, Critical Mass, Inc.  All Rights Reserved. 
  See file COPYRIGHT-CMASS for details. 
 
-<P><PRE>UNSAFE MODULE <module><implements><A HREF="#x1">SQLext</A></implements></module>;
+<P><PRE>UNSAFE MODULE <module><implements><A HREF="SQLext.i3.html">SQLext</A></implements></module>;
 
-FROM <A HREF="#x2">SQLtypes</A> IMPORT SQLRETURN, SQLHSTMT, SQLUSMALLINT;
+FROM <A HREF="SQLtypes.i3.html">SQLtypes</A> IMPORT SQLRETURN, SQLHSTMT, SQLUSMALLINT;
 
 PROCEDURE <A NAME="SQL_LEN_DATA_AT_EXEC"><procedure>SQL_LEN_DATA_AT_EXEC</procedure></A> (length: INTEGER): INTEGER =
   BEGIN
@@ -52,20 +52,6 @@ BEGIN
 END SQLext.
 </PRE>
 </inModule>
-<HR>
-<A NAME="x1">interface SQLext is in:
-</A><UL>
-<LI><A HREF="SQLext.i3.html#0TOP0">odbc/src/POSIX/SQLext.i3</A>
-<LI><A HREF="../WIN32/SQLext.i3.html#0TOP0">odbc/src/WIN32/SQLext.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">interface SQLtypes is in:
-</A><UL>
-<LI><A HREF="SQLtypes.i3.html#0TOP0">odbc/src/POSIX/SQLtypes.i3</A>
-<LI><A HREF="../WIN32/SQLtypes.i3.html#0TOP0">odbc/src/WIN32/SQLtypes.i3</A>
-</UL>
-<P>
 <PRE>
 
 

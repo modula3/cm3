@@ -20,6 +20,7 @@ IMPORT <A HREF="../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>, <A HRE
 IMPORT <A HREF="../../m3middle/src/M3Buf.i3.html">M3Buf</A>, <A HREF="../../m3middle/src/M3File.i3.html">M3File</A>, <A HREF="../../m3middle/src/M3Process.i3.html">M3Process</A>, <A HREF="../../m3middle/src/POSIX/CoffTime.i3.html">CoffTime</A>;
 IMPORT <A HREF="QIdent.i3.html">QIdent</A>, <A HREF="QValue.i3.html">QValue</A>, <A HREF="QVal.i3.html">QVal</A>, <A HREF="QCode.i3.html">QCode</A>, <A HREF="QCompiler.i3.html">QCompiler</A>, <A HREF="../derived/QVTbl.i3.html">QVTbl</A>, <A HREF="../derived/QVSeq.i3.html">QVSeq</A>, <A HREF="QScanner.i3.html">QScanner</A>;
 FROM <A HREF="Quake.i3.html">Quake</A> IMPORT Error, ID, IDMap, NoID;
+</PRE><BLOCKQUOTE><EM> IMPORT IO; </EM></BLOCKQUOTE><PRE>
 
 CONST
   OnUnix = (CoffTime.EpochAdjust = 0.0d0);
@@ -222,7 +223,10 @@ PROCEDURE <A NAME="Eval"><procedure>Eval</procedure></A> (t: T)
           val.kind := QK.Proc;
           val.int  := 0;
           val.ref  := NEW (QValue.Proc, info := t.reg.cp.procs [arg],
-                                        env  := t.scopes [t.reg.xp-1]);
+                           env  := t.scopes [0]);
+                         (*env  := t.scopes [t.reg.xp-1]);*)
+          (* In quake all procedures are global, and we don't want
+             dynamic scoping... *)
           Push (t, val);
           val.ref := NIL;
 
@@ -548,6 +552,19 @@ PROCEDURE <A NAME="DoCall"><procedure>DoCall</procedure></A> (t: T;  n_args: INT
         t.reg.fn := isFunc;
         s := PushScope (t);
         s.parent := p.env;  (* use procedure's static link *)
+        (* scope debugging
+        VAR m := &quot;\n&quot;; BEGIN
+          FOR i := 0 TO t.reg.xp -1 DO
+            m := m &amp; &quot; s: &quot; &amp; Fmt.Int(t.scopes[i].id);
+            IF t.scopes[i].parent = NIL THEN
+              m := m &amp; &quot; p: NIL\n&quot;;
+            ELSE
+              m := m &amp; &quot; p: &quot; &amp; Fmt.Int(t.scopes[i].parent.id) &amp; &quot;\n&quot;;
+            END;
+          END;
+          IO.Put(&quot;scopes (DoCall):&quot; &amp; m);
+        END;
+        *)
         &lt;*ASSERT s.parent # s*&gt;
       END;
     END;
@@ -610,19 +627,50 @@ PROCEDURE <A NAME="Put"><procedure>Put</procedure></A> (t: T;  name: ID;  READON
 </PRE>----------------------------------------------- scopes &amp; local bindings ---
 
 <P><PRE>PROCEDURE <A NAME="PushScope"><procedure>PushScope</procedure></A> (t: T): QValue.Scope =
+  VAR m := &quot;\n&quot;;
   BEGIN
     IF (t.reg.xp &gt;= NUMBER (t.scopes^)) THEN ExpandScopes (t); END;
     WITH s = t.scopes [t.reg.xp] DO
-      IF (s = NIL) THEN s := NEW (QValue.Scope); END;
+      IF (s = NIL) THEN
+        s := NEW (QValue.Scope);
+        s.id := nextScopeId;
+        INC (nextScopeId);
+      END;
       IF (t.reg.xp &gt; 0)
         THEN s.parent := t.scopes[t.reg.xp-1];
         ELSE s.parent := NIL;
       END;
       &lt;*ASSERT s.parent # s*&gt;
+      (* scope debugging
+      FOR i := 0 TO t.reg.xp DO
+        m := m &amp; &quot; s: &quot; &amp; Fmt.Int(t.scopes[i].id);
+        IF t.scopes[i].parent = NIL THEN
+          m := m &amp; &quot; p: NIL\n&quot;;
+        ELSE
+          m := m &amp; &quot; p: &quot; &amp; Fmt.Int(t.scopes[i].parent.id) &amp; &quot;\n&quot;;
+        END;
+      END;
+      IO.Put(&quot;scopes:&quot; &amp; m);
+      *)
+      IF s.parent # NIL THEN
+        IF s.parent.parent = s THEN
+          TRY
+            Err (t, &quot;loop in scopes, t.reg.xp = &quot; &amp; Fmt.Int(t.reg.xp) &amp; m);
+          EXCEPT
+            Error(e) =&gt;
+            TRY
+              Wr.PutText(Stdio.stderr, e);
+            EXCEPT ELSE END;
+          END;
+          s.parent.parent := NIL;
+        END;
+      END;
       INC (t.reg.xp);
       RETURN s;
     END;
   END PushScope;
+
+VAR nextScopeId := 0;
 
 PROCEDURE <A NAME="ExpandScopes"><procedure>ExpandScopes</procedure></A> (t: T) =
   VAR n := NUMBER (t.scopes^);  new := NEW (ScopeStack, n+n);
@@ -658,6 +706,7 @@ PROCEDURE <A NAME="Define"><procedure>Define</procedure></A> (t: T;  id: ID;  re
   RAISES {Error} =
   VAR old, new: QValue.Binding;
   BEGIN
+    (* IO.Put(&quot;Define(&quot; &amp; Fmt.Int(id) &amp; &quot;)\n&quot;); *)
     WITH s = t.scopes [t.reg.xp-1] DO
       old := s.bindings;
       new := NewBinding (t);
@@ -697,6 +746,7 @@ PROCEDURE <A NAME="DefineGlobal"><procedure>DefineGlobal</procedure></A> (t: T; 
 PROCEDURE <A NAME="LookUp"><procedure>LookUp</procedure></A> (t: T;  id: ID): QValue.Binding =
   VAR s: QValue.Scope;  b: QValue.Binding;  ref: REFANY;
   BEGIN
+    (* IO.Put(&quot;LookUp(&quot; &amp; Fmt.Int(id) &amp; &quot;)\n&quot;); *)
     (* try the local scopes first *)
     IF (t.reg.xp &gt; 0) THEN
       s := t.scopes [t.reg.xp-1];

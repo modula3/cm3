@@ -59,12 +59,12 @@ PROCEDURE <A NAME="QuickSort"><procedure>QuickSort</procedure></A> (VAR a: ARRAY
       LOOP
         IF (i &gt; j) THEN EXIT END;
 
-        WHILE cmp (a[i], key) &lt; 0 DO INC (i) END;
+        WHILE i &lt; hi AND cmp (a[i], key) &lt; 0 DO INC (i) END;
         IF (i &gt; j) THEN EXIT END;
         a[j+1] := a[i];
         INC (i);
 
-        WHILE cmp (a[j], key) &gt; 0 DO DEC (j) END;
+        WHILE j &gt; lo AND cmp (a[j], key) &gt; 0 DO DEC (j) END;
         IF (i &gt; j) THEN  IF (j = i-1) THEN  DEC (j)  END;  EXIT  END;
         a[i-1] := a[j];
         DEC (j);

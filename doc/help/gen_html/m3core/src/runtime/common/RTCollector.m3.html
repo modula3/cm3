@@ -22,7 +22,7 @@
 <P><PRE>UNSAFE MODULE <module>RTCollector</module> EXPORTS <A HREF="RTCollector.i3.html"><implements>RTCollector</A></implements>, <A HREF="RTCollectorSRC.i3.html"><implements>RTCollectorSRC</A></implements>,
                                   <A HREF="RTHeapRep.i3.html"><implements>RTHeapRep</A></implements>, <A HREF="RTWeakRef.i3.html"><implements>RTWeakRef</A></implements>;
 
-IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTHeapEvent.i3.html">RTHeapEvent</A>, <A HREF="RTHeapDep.i3.html">RTHeapDep</A>, <A HREF="RTHeapMap.i3.html">RTHeapMap</A>, <A HREF="RTIO.i3.html">RTIO</A>, <A HREF="../FreeBSD3/RTMachine.i3.html">RTMachine</A>;
+IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTHeapEvent.i3.html">RTHeapEvent</A>, <A HREF="RTHeapDep.i3.html">RTHeapDep</A>, <A HREF="RTHeapMap.i3.html">RTHeapMap</A>, <A HREF="RTIO.i3.html">RTIO</A>, <A HREF="../LINUXLIBC6/RTMachine.i3.html">RTMachine</A>, <A HREF="RTVM.i3.html">RTVM</A>;
 IMPORT <A HREF="RTMisc.i3.html">RTMisc</A>, <A HREF="RTOS.i3.html">RTOS</A>, <A HREF="RTParams.i3.html">RTParams</A>, <A HREF="../POSIX/RTPerfTool.i3.html">RTPerfTool</A>, <A HREF="RTProcess.i3.html">RTProcess</A>, <A HREF="RTType.i3.html">RTType</A>;
 IMPORT <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="../../C/Common/Cstdlib.i3.html">Cstdlib</A>, <A HREF="../../thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../thread/POSIX/ThreadF.i3.html">ThreadF</A>, <A HREF="RuntimeError.i3.html">RuntimeError</A>;
 IMPORT <A HREF="../../text/TextLiteral.i3.html">TextLiteral</A>;
@@ -867,7 +867,7 @@ PROCEDURE <A NAME="CollectSomeInStateZero"><procedure>CollectSomeInStateZero</pr
        before the system call completed.  On those systems, we must ensure
        that the heap pages referenced by threads remain unprotected after
        the collection begins. *)
-    IF RTHeapDep.VM AND NOT RTMachine.AtomicWrappers THEN
+    IF RTVM.VMHeap() AND NOT RTVM.AtomicWrappers() THEN
       FinishThreadPages ();
     END;
 

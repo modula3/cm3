@@ -25,7 +25,7 @@ TYPE T &lt;: File.T;
 VAR (*CONST*) FileType: File.Type;
 </PRE><BLOCKQUOTE><EM> Equal to {\tt Atom.FromText("Pipe").} </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x2">Open</A>(VAR (*OUT*) hr, hw: T) RAISES {OSError.E};
+PROCEDURE <A HREF="../POSIX/PipePosix.m3.html#Open">Open</A>(VAR (*OUT*) hr, hw: T) RAISES {OSError.E};
 </PRE><BLOCKQUOTE><EM> Create a new channel allowing bytes written to <CODE>hw</CODE> to be read from
    <CODE>hr</CODE>.  </EM></BLOCKQUOTE><PRE>
 
@@ -147,14 +147,6 @@ END Pipe.
 </A><UL>
 <LI><A HREF="Pipe.m3.html#0TOP0">libm3/src/os/Common/Pipe.m3</A>
 <LI><A HREF="../POSIX/PipePosix.m3.html#0TOP0">libm3/src/os/POSIX/PipePosix.m3</A>
-<LI><A HREF="../WIN32/PipeWin32.m3.html#0TOP0">libm3/src/os/WIN32/PipeWin32.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">procedure Pipe.Open is in:
-</A><UL>
-<LI><A HREF="../POSIX/PipePosix.m3.html#Open">libm3/src/os/POSIX/PipePosix.m3</A>
-<LI><A HREF="../WIN32/PipeWin32.m3.html#Open">libm3/src/os/WIN32/PipeWin32.m3</A>
 </UL>
 <P>
 <PRE>

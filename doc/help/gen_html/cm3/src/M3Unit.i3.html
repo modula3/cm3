@@ -6,11 +6,12 @@
 <A NAME="0TOP0">
 <H2>cm3/src/M3Unit.i3</H2></A><HR>
 <inInterface>
-<PRE></PRE> Copyright 1996 Critical Mass, Inc. All rights reserved.    
+<PRE></PRE> Copyright 1996-2000 Critical Mass, Inc. All rights reserved.    
+ See file COPYRIGHT-CMASS for details. 
 
 <P><PRE>INTERFACE <interface><A HREF="M3Unit.m3.html">M3Unit</A></interface>;
 
-IMPORT <A HREF="../../libm3/derived/IntRefTbl.i3.html">IntRefTbl</A>, <A HREF="../../m3middle/src/M3ID.i3.html">M3ID</A>, <A HREF="M3Loc.i3.html">M3Loc</A>, <A HREF="M3Path.i3.html">M3Path</A>, <A HREF="../../m3linker/src/Mx.i3.html">Mx</A>;
+IMPORT <A HREF="../../libm3/derived/IntRefTbl.i3.html">IntRefTbl</A>, <A HREF="#x1">M3ID</A>, <A HREF="M3Loc.i3.html">M3Loc</A>, <A HREF="M3Path.i3.html">M3Path</A>, <A HREF="../../m3linker/src/Mx.i3.html">Mx</A>;
 
 TYPE
   Kind = M3Path.Kind;
@@ -83,6 +84,13 @@ PROCEDURE <A HREF="M3Unit.m3.html#FullPath">FullPath</A> (t: T): TEXT;
 END M3Unit.
 </PRE>
 </inInterface>
+<HR>
+<A NAME="x1">interface M3ID is in:
+</A><UL>
+<LI><A HREF="../../m3middle/src/M3ID.i3.html#0TOP0">m3middle/src/M3ID.i3</A>
+<LI><A HREF="../../m3scan/src/M3ID.i3.html#0TOP0">m3scan/src/M3ID.i3</A>
+</UL>
+<P>
 <PRE>
 
 

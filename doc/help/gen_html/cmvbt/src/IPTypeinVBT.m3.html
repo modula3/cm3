@@ -124,9 +124,9 @@ PROCEDURE <A NAME="Put"><procedure>Put</procedure></A> (v: T; addr: IP.Address) 
     txt := Conv(addr.a[0]);
   BEGIN
     FOR i := 1 TO 3 DO
-      txt := &quot;.&quot; &amp; Conv(addr.a[i]);
+      txt := txt &amp; &quot;.&quot; &amp; Conv(addr.a[i]);
     END;
-    TextPort.PutText (v, txt);
+    TextPort.SetText(v, txt);
   END Put;
 
 BEGIN

@@ -14,7 +14,7 @@
 
 <P><PRE>MODULE <module>PipePosix</module> EXPORTS <A HREF="../Common/Pipe.i3.html"><implements>Pipe</A></implements>;
 
-IMPORT <A HREF="../../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="FilePosix.i3.html">FilePosix</A>, <A HREF="../Common/OSError.i3.html">OSError</A>, <A HREF="OSErrorPosix.i3.html">OSErrorPosix</A>, <A HREF="../../../../m3core/src/unix/freebsd-3/Unix.i3.html">Unix</A>;
+IMPORT <A HREF="../../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="FilePosix.i3.html">FilePosix</A>, <A HREF="../Common/OSError.i3.html">OSError</A>, <A HREF="OSErrorPosix.i3.html">OSErrorPosix</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Unix.i3.html">Unix</A>;
 
 PROCEDURE <A NAME="Open"><procedure>Open</procedure></A>(VAR hr, hw: T) RAISES {OSError.E} =
   VAR fd: ARRAY [0..1] OF Ctypes.int;

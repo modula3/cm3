@@ -20,9 +20,9 @@
 
 <P><PRE>IMPORT <A HREF="../../libm3/src/os/Common/Process.i3.html">Process</A>, <A HREF="../../m3core/src/runtime/common/RTCollector.i3.html">RTCollector</A>;
 IMPORT <A HREF="../../libm3/src/rw/Stdio.i3.html">Stdio</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>;
-IMPORT <A HREF="AstToType.i3.html">AstToType</A>;
-IMPORT <A HREF="TypeNames.i3.html">TypeNames</A>, <A HREF="StubGenTool.i3.html">StubGenTool</A>;
-IMPORT <A HREF="../../m3tk/src/misc/M3Args.i3.html">M3Args</A>, <A HREF="../../m3tk/src/toolmisc/M3Context.i3.html">M3Context</A>, <A HREF="../../m3tk/src/toolmisc/M3Conventions.i3.html">M3Conventions</A>, <A HREF="../../m3tk/src/ast/M3AST_AS.i3.html">M3AST_AS</A>, <A HREF="../../m3tk/src/toolmisc/M3CUnit.i3.html">M3CUnit</A>, <A HREF="../../m3tk/src/fe/M3CFETool.i3.html">M3CFETool</A>,
+IMPORT <A HREF="#x1">AstToType</A>;
+IMPORT <A HREF="#x2">TypeNames</A>, <A HREF="#x3">StubGenTool</A>;
+IMPORT <A HREF="../../m3tk-misc/src/M3Args.i3.html">M3Args</A>, <A HREF="../../m3tk/src/toolmisc/M3Context.i3.html">M3Context</A>, <A HREF="../../m3tk/src/toolmisc/M3Conventions.i3.html">M3Conventions</A>, <A HREF="../../m3tk/src/ast/M3AST_AS.i3.html">M3AST_AS</A>, <A HREF="../../m3tk/src/toolmisc/M3CUnit.i3.html">M3CUnit</A>, <A HREF="../../m3tk/src/fe/M3CFETool.i3.html">M3CFETool</A>,
        <A HREF="../../m3tk/src/toolframe/M3ToolFrame.i3.html">M3ToolFrame</A>;
 IMPORT <A HREF="../../m3tk/src/astall/M3AST_all.i3.html">M3AST_all</A>; (* this cannot be omitted; it defines the particular
                      revelations for all the AST nodes *)
@@ -86,6 +86,29 @@ BEGIN
 END Main.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface AstToType is in:
+</A><UL>
+<LI><A HREF="../../sharedobjgen/src/AstToType.i3.html#0TOP0">sharedobjgen/src/AstToType.i3</A>
+<LI><A HREF="../../stablegen/src/AstToType.i3.html#0TOP0">stablegen/src/AstToType.i3</A>
+<LI><A HREF="AstToType.i3.html#0TOP0">stubgen/src/AstToType.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface TypeNames is in:
+</A><UL>
+<LI><A HREF="../../sharedobjgen/src/TypeNames.i3.html#0TOP0">sharedobjgen/src/TypeNames.i3</A>
+<LI><A HREF="../../stablegen/src/TypeNames.i3.html#0TOP0">stablegen/src/TypeNames.i3</A>
+<LI><A HREF="TypeNames.i3.html#0TOP0">stubgen/src/TypeNames.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface StubGenTool is in:
+</A><UL>
+<LI><A HREF="../../sharedobjgen/src/StubGenTool.i3.html#0TOP0">sharedobjgen/src/StubGenTool.i3</A>
+<LI><A HREF="StubGenTool.i3.html#0TOP0">stubgen/src/StubGenTool.i3</A>
+</UL>
+<P>
 <PRE>
 
 

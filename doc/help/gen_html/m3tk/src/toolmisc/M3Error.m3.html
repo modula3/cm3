@@ -32,14 +32,14 @@
 <P>
 <P><PRE>MODULE <module>M3Error</module> EXPORTS <A HREF="M3Error.i3.html"><implements>M3Error</A></implements>, <A HREF="M3ErrorStream.i3.html"><implements>M3ErrorStream</A></implements>;
 
-IMPORT <A HREF="../misc/TextExtras.i3.html">TextExtras</A>, <A HREF="../../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../../libm3/src/rw/Stdio.i3.html">Stdio</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../../libm3/derived/RefList.i3.html">RefList</A>, <A HREF="../../../libm3/derived/TextRefTbl.i3.html">TextRefTbl</A>, <A HREF="../../../libm3/src/atom/Atom.i3.html">Atom</A>;
+IMPORT <A HREF="../../../libm3/src/text/TextExtras.i3.html">TextExtras</A>, <A HREF="../../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../../libm3/src/rw/Stdio.i3.html">Stdio</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../../libm3/derived/RefList.i3.html">RefList</A>, <A HREF="../../../libm3/derived/TextRefTbl.i3.html">TextRefTbl</A>, <A HREF="../../../libm3/src/atom/Atom.i3.html">Atom</A>;
 IMPORT <A HREF="../gast/AST.i3.html">AST</A>, <A HREF="../ast/M3AST_LX.i3.html">M3AST_LX</A>, <A HREF="../ast/M3AST_AS.i3.html">M3AST_AS</A>;
 IMPORT <A HREF="../ast/M3AST_FE_priv.i3.html">M3AST_FE_priv</A>;
 
 IMPORT <A HREF="../ast/M3AST_LX_F.i3.html">M3AST_LX_F</A>, (*M3AST_AS_F,*) <A HREF="../ast/M3AST_SM_F.i3.html">M3AST_SM_F</A>, <A HREF="../ast/M3AST_TM_F.i3.html">M3AST_TM_F</A>, <A HREF="../ast/M3AST_FE_priv_F.i3.html">M3AST_FE_priv_F</A>;
 
 IMPORT <A HREF="../syn/M3CSrcPos.i3.html">M3CSrcPos</A>, <A HREF="../syn/M3CId.i3.html">M3CId</A>, <A HREF="M3CUnit.i3.html">M3CUnit</A>, <A HREF="../ast/M3ASTWalk.i3.html">M3ASTWalk</A>;
-IMPORT <A HREF="../misc/M3Assert.i3.html">M3Assert</A>;
+IMPORT <A HREF="../../../m3tk-misc/src/M3Assert.i3.html">M3Assert</A>;
 </PRE> This version records error message strings in a hash table, and records
    nodes with errors on a list, plus the args if any. 
    The errors can then be displayed in various ways, including a 

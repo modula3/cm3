@@ -16,7 +16,7 @@
 
 <P><PRE>INTERFACE <interface><A HREF="ProcType.m3.html">ProcType</A></interface>;
 
-IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="../../../m3middle/src/M3ID.i3.html">M3ID</A>, <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="#x1">Type</A>, <A HREF="#x2">Value</A>, <A HREF="../exprs/CallExpr.i3.html">CallExpr</A>;
+IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="#x1">M3ID</A>, <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="#x2">Type</A>, <A HREF="#x3">Value</A>, <A HREF="../exprs/CallExpr.i3.html">CallExpr</A>;
 
 PROCEDURE <A HREF="ProcType.m3.html#Parse">Parse</A>          (): Type.T;
 PROCEDURE <A HREF="ProcType.m3.html#ParseSignature">ParseSignature</A> (name: M3ID.T;  cc: CG.CallingConvention): Type.T;
@@ -42,16 +42,27 @@ END ProcType.
 </PRE>
 </inInterface>
 <HR>
-<A NAME="x1">interface Type is in:
+<A NAME="x1">interface M3ID is in:
+</A><UL>
+<LI><A HREF="../../../m3middle/src/M3ID.i3.html#0TOP0">m3middle/src/M3ID.i3</A>
+<LI><A HREF="../../../m3scan/src/M3ID.i3.html#0TOP0">m3scan/src/M3ID.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Type is in:
 </A><UL>
 <LI><A HREF="Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
+<LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
+<LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>
 <LI><A HREF="../../../stubgen/src/Type.i3.html#0TOP0">stubgen/src/Type.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x2">interface Value is in:
+<A NAME="x3">interface Value is in:
 </A><UL>
 <LI><A HREF="../values/Value.i3.html#0TOP0">m3front/src/values/Value.i3</A>
+<LI><A HREF="../../../sharedobjgen/src/Value.i3.html#0TOP0">sharedobjgen/src/Value.i3</A>
+<LI><A HREF="../../../stablegen/src/Value.i3.html#0TOP0">stablegen/src/Value.i3</A>
 <LI><A HREF="../../../stubgen/src/Value.i3.html#0TOP0">stubgen/src/Value.i3</A>
 </UL>
 <P>

@@ -17,9 +17,9 @@
 
 <P> Implementation of the m3tohtml command; see its manpage for details. 
 
-<P><PRE>MODULE <module><implements><A HREF="MarkUp.i3.html">MarkUp</A></implements></module>;
+<P><PRE>MODULE <module><implements><A HREF="#x1">MarkUp</A></implements></module>;
 
-IMPORT <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="M3MarkUp.i3.html">M3MarkUp</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>;
+IMPORT <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="#x2">M3MarkUp</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>;
 
 CONST
   EscapeSpecials = TRUE;
@@ -466,6 +466,20 @@ BEGIN
 END MarkUp.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface MarkUp is in:
+</A><UL>
+<LI><A HREF="../../m3markup/src/MarkUp.i3.html#0TOP0">m3markup/src/MarkUp.i3</A>
+<LI><A HREF="MarkUp.i3.html#0TOP0">m3tohtml/src/MarkUp.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface M3MarkUp is in:
+</A><UL>
+<LI><A HREF="../../m3markup/src/M3MarkUp.i3.html#0TOP0">m3markup/src/M3MarkUp.i3</A>
+<LI><A HREF="M3MarkUp.i3.html#0TOP0">m3tohtml/src/M3MarkUp.i3</A>
+</UL>
+<P>
 <PRE>
 
 
