@@ -1,16 +1,15 @@
 MODULE LongRealWaveletPlot;
 
-IMPORT LongRealBasic AS R;
-IMPORT LongRealIntegerPower AS RIntPow;
-IMPORT LongRealSignal AS S;
-IMPORT LongRealVector AS V;
-IMPORT LongRealVectorFast AS VR;
+IMPORT LongRealBasic        AS R,
+       LongRealIntegerPower AS RIntPow,
+       LongRealSignal       AS S,
+       LongRealVector       AS V,
+       LongRealVectorFast   AS VR,
+       NADefinitions        AS NA;
 
-IMPORT LongRealRefinableFunc AS Refn;
-IMPORT LongRealDyadicFilterBank AS FB;
+IMPORT LongRealRefinableFunc AS Refn, LongRealDyadicFilterBank AS FB;
 
-IMPORT LongRealSignalFmtLex AS SF;
-IMPORT PLPlot AS PL;
+IMPORT LongRealSignalFmtLex AS SF, PLPlot AS PL;
 
 TYPE
   Basis = {primal, dual};
@@ -56,6 +55,7 @@ PROCEDURE PlotBiorthogonal (hDual, gDual: S.T; numlevels: CARDINAL) =
 PROCEDURE PlotBiorthogonalYLim (hDual, gDual: S.T;
                                 numlevels   : CARDINAL;
                                 ymin, ymax  : R.T       ) =
+  <* FATAL NA.Error *>           (*Power can't fail for reals*)
   VAR
     dual  := ARRAY Filter OF S.T{hDual, gDual};
     bank  := FilterBank{FB.GetComplement(dual), dual};
@@ -79,6 +79,7 @@ PROCEDURE PlotAnyYLim (refnPrimal, refnDual          : S.T;
                        hPrimal, gPrimal, hDual, gDual: S.T;
                        numlevels                     : CARDINAL;
                        ymin, ymax                    : R.T       ) =
+  <* FATAL NA.Error *>           (*Power can't fail for reals*)
   VAR
     grid := R.One / RIntPow.Power(R.Two, numlevels);
     basis := ComputeBasisFunctions(
@@ -92,6 +93,7 @@ PROCEDURE PlotAnyYLim (refnPrimal, refnDual          : S.T;
 PROCEDURE PlotBank (READONLY bank     : FilterBank;
                     READONLY refn     : ARRAY Basis OF S.T;
                              numlevels: CARDINAL            ) =
+  <* FATAL NA.Error *>           (*Power can't fail for reals*)
   VAR
     grid  := R.One / RIntPow.Power(R.Two, numlevels);
     basis := ComputeBasisFunctions(bank, refn, numlevels);
@@ -121,7 +123,7 @@ PROCEDURE DoPlot (basis: BasisFunctions; ymin, ymax: R.T; grid: R.T) =
     boundsa: ARRAY Basis OF Interval;
   (*PlotLines may complain about inconsistent vector sizes but we won't
      give it a reason for complaints.*)
-  <*FATAL PL.SizeMismatch*>
+  <* FATAL PL.SizeMismatch *>
   BEGIN
     FOR b := FIRST(basis) TO LAST(basis) DO
       FOR f := FIRST(basis[b]) TO LAST(basis[b]) DO

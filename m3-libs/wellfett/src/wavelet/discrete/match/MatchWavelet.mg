@@ -35,7 +35,7 @@ PROCEDURE MatchPatternGenWav (target                                : S.T;
     targetVec := target.clipToVector(first, size);
     basis     := M.New(numTranslates + 1, size);
 
-  <*FATAL NA.Error*>
+  <* FATAL NA.Error *>
   BEGIN
     wavelet.clipToArray(first, basis[LAST(basis^)]);
     FOR j := firstTranslate TO lastTranslate DO
@@ -94,7 +94,7 @@ PROCEDURE MatchPatternGen (target                   : S.T;
     targetVec := target.clipToVector(first, size);
     basis     := M.New(numTranslates, size);
 
-  <*FATAL NA.Error*>
+  <* FATAL NA.Error *>
   BEGIN
     FOR j := firstTranslate TO lastTranslate DO
       generator.clipToArray(first - twonit * j, basis[j - firstTranslate]);
@@ -131,8 +131,10 @@ PROCEDURE MatchPatternWav (target                 : S.T;
     BEGIN
       FOR i := 0 TO numLevels - 1 DO x := x.convolveDown(y, 2); END;
       targetCor2 := x.convolveDown(waveletMask.adjoint(), 2).getValue(0);
-      <*ASSERT ABS(targetCor2-targetCor) <= ABS(targetCor)*1.0D-15*>
+      <* ASSERT ABS(targetCor2 - targetCor) <= ABS(targetCor) * 1.0D-15 *>
     END;
+    <* FATAL NA.Error *>         (*Power can't fail since we use square
+                                    matrices*)
     VAR
       refineSize  := refineMask.getNumber() - 1;
       refineTrans := Refn.TransitionMatrix(refineMask);
@@ -143,7 +145,8 @@ PROCEDURE MatchPatternWav (target                 : S.T;
       waveletMaskAutoCor := waveletMask.autocorrelate();
       waveletNorm2       := refineAutoCor.inner(waveletMaskAutoCor);
     BEGIN
-      <*ASSERT ABS(waveletNorm2-waveletNorm) <= ABS(waveletNorm)*1.0D-15*>
+      <* ASSERT ABS(waveletNorm2 - waveletNorm)
+                  <= ABS(waveletNorm) * 1.0D-15 *>
     END;
     RETURN targetCor / waveletNorm;
   END MatchPatternWav;

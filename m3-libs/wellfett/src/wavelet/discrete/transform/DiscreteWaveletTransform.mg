@@ -44,7 +44,7 @@ PROCEDURE FilterBankSynthesisSingle (READONLY x, y   : SV.TBody;
     RETURN z;
   END FilterBankSynthesisSingle;
 
-<*INLINE*>
+<* INLINE *>
 PROCEDURE FilterBankAnalysisTISingle (x: S.T; READONLY filter: SV.TBody; ):
   SV.T =
   BEGIN
@@ -90,7 +90,8 @@ PROCEDURE DyadicFilterBankSynthesis (READONLY x: DyadicWaveletCoeffs;
                                      READONLY y: ARRAY [0 .. 1] OF S.T; ):
   S.T =
   VAR z := x.low;
-  <*FATAL NA.Error*>(*Number of filters and channels will always match*)
+  <* FATAL NA.Error *>           (*Number of filters and channels will
+                                    always match*)
   BEGIN
     FOR i := LAST(x.high^) TO FIRST(x.high^) BY -1 DO
       z := FilterBankSynthesisSingle(ARRAY OF S.T{z, x.high[i]}, y, 2);
@@ -117,6 +118,7 @@ PROCEDURE DyadicFilterBankAnalysisTI (         x: S.T;
 PROCEDURE DyadicFilterBankSynthesisTI (READONLY x: DyadicWaveletCoeffs;
                                        READONLY y: ARRAY [0 .. 1] OF S.T; ):
   S.T =
+  <* FATAL NA.Error *>           (*Power can't fail for integers*)
   VAR
     z                    := x.low;
     scaling: ScalingType := IIntPow.MulPower(1, 2, NUMBER(x.high^));
