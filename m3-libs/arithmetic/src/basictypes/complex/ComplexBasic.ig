@@ -19,11 +19,19 @@ FROM xUtils IMPORT Error;
 TYPE
   T = RECORD re,im: R.T; END;
 
+(*Zero and One non-constant in some modules
 CONST
-  Zero    =  T{re:=R.Zero,     im:=R.Zero};
-  One     =  T{re:=R.One,      im:=R.Zero};
-  I       =  T{re:=R.Zero,     im:=R.One};
-  MinusOne=  T{re:=R.MinusOne, im:=R.Zero};
+  Zero     = T{re:=R.Zero,     im:=R.Zero};
+  One      = T{re:=R.One,      im:=R.Zero};
+  I        = T{re:=R.Zero,     im:=R.One};
+  MinusOne = T{re:=R.MinusOne, im:=R.Zero};
+*)
+
+VAR
+  Zero     : T;
+  One      : T;
+  I        : T;
+  MinusOne : T;
 
 <*INLINE*> PROCEDURE Add(READONLY x,y:T):T;  (*return x+y*)
 <*INLINE*> PROCEDURE Sub(READONLY x,y:T):T;  (*return x-y*)

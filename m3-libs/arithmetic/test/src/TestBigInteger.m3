@@ -18,6 +18,10 @@ IMPORT
 (*=======================*)
 CONST
   Module = "TestBigInteger.";
+
+CONST
+  base2Style  = FL.FmtStyle{base:=2};
+  base16Style = FL.FmtStyle{base:=16};
 (*----------------------*)
 PROCEDURE TestBasic():BOOLEAN=
 CONST
@@ -55,14 +59,14 @@ BEGIN
   z := B.Zero;
 
   FOR j:=0 TO cycles-1 DO
-    (*Msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(j), FL.Fmt(z,16), FL.Fmt(z,2)}));*)
+    (*Msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(j), FL.Fmt(z,base16Style), FL.Fmt(z,base2Style)}));*)
     z := Br.AddU(z,y);
     y := Br.MulU(y,x);
   END;
-  (*Msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(cycles), FL.Fmt(z,16), FL.Fmt(z,2)}));*)
+  (*Msg(F.FN("%2s: 16_%s, 2_%s\n", ARRAY OF TEXT{F.Int(cycles), FL.Fmt(z,base16Style), FL.Fmt(z,base2Style)}));*)
   z := Br.MulU(z,B.FromInteger(7));
-  fff := FL.Fmt(z,16);
-  Msg("multiply with 7: 16_" & fff & ": 2_" & FL.Fmt(z,2) & "\n");
+  fff := FL.Fmt(z,base16Style);
+  Msg("multiply with 7: 16_" & fff & ": 2_" & FL.Fmt(z,base2Style) & "\n");
   <*ASSERT Text.Length(fff) = (cycles DIV 4)*3 *>
   FOR j:=0 TO Text.Length(fff)-1 DO
     <*ASSERT Text.GetChar(fff,j)='f'*>
@@ -89,11 +93,11 @@ BEGIN
   FOR j:=0 TO cycles DO
 (*
     Msg(F.FN("%2s: bit %02s,%02s; 16_%s\n",
-             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,16)}));
+             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,base16Style)}));
 *)
 (*
     Msg(F.FN("%2s: bit %s,%s; 16_%s, 2_%s\n",
-             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,16), FL.Fmt(x,2)}));
+             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,base16Style), FL.Fmt(x,base2Style)}));
 *)
     Br.AddShifted(x,j,sh);
     sh := Br.AddBitPos(sh,Br.BitPos{0,3});
@@ -103,7 +107,7 @@ BEGIN
   FOR j:=0 TO cycles DO
 (*
     Msg(F.FN("%2s: bit %02s,%02s; 16_%s\n",
-             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,16)}));
+             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,base16Style)}));
 *)
     Br.AddShifted(x,cycles-j,sh);
     sh := Br.AddBitPos(sh,Br.BitPos{0,3});
@@ -114,7 +118,7 @@ BEGIN
   quotient := cycles * 2_1001001001;
   FOR j:=0 TO cycles DO
     Msg(F.FN("%2s: bit %02s,%02s; 16_%s\n",
-             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,16)}));
+             ARRAY OF TEXT{F.Int(j), F.Int(sh.word), F.Int(sh.bit), FL.Fmt(x,base16Style)}));
     Br.SubShiftedProd(x,cycles-j,sh);
     sh := Br.AddBitPos(sh,Br.BitPos{0,3});
   END;
@@ -134,10 +138,10 @@ BEGIN
   y := Br.MulU(y,y);
 *)
   Msg(F.FN("x = 16_%s   y = 16_%s\n",
-           ARRAY OF TEXT{FL.Fmt(x,16), FL.Fmt(y,16)}));
+           ARRAY OF TEXT{FL.Fmt(x,base16Style), FL.Fmt(y,base16Style)}));
   q := Br.DivModU(x,y,r);
   Msg(F.FN("q = 16_%s   r = 16_%s\n",
-           ARRAY OF TEXT{FL.Fmt(q,16), FL.Fmt(r,16)}));
+           ARRAY OF TEXT{FL.Fmt(q,base16Style), FL.Fmt(r,base16Style)}));
   q.sign := FALSE;
   r.sign := FALSE;
   <*ASSERT B.Equal(x,Br.AddU(r,Br.MulU(q,y)))*>
@@ -161,13 +165,15 @@ BEGIN
 
   FOR j:=0 TO 100 DO
     (*Msg("size: " & F.Int(x.size) & "\n");*)
-    Msg(F.Pad(F.Int(j),2) & ": 16_" & FL.Fmt(x,16) & ": 2_" & FL.Fmt(x,2) & "\n");
+    Msg(F.FN("%2s: 16_%s, 2_%s\n",
+      ARRAY OF TEXT {F.Int(j), FL.Fmt(x,base16Style), FL.Fmt(x)}));
     z := Br.AddU(x,y);
     x := y;
     y := z;
   END;
 
   (*!!! compare with explicit formula !!!*)
+  (*!!! better: compare with fast integer power of matrix {{0,1},{1,1}}!!!*)
   RETURN result;
 END TestFibonacci;
 (*-------------------------*)
@@ -190,7 +196,7 @@ BEGIN
 
   FOR j:=3 TO 10000 DO
     x[3] := B.Add (x[0], x[1]);
-    (*Msg(F.FN("%s / %s\n", ARRAY OF TEXT {FL.Fmt(x[3],16), F.Int(j,16)}));*)
+    (*Msg(F.FN("%s / %s\n", ARRAY OF TEXT {FL.Fmt(x[3],base16Style), F.Int(j,16)}));*)
     mod := B.Mod(x[3],B.FromInteger(j));
     prime0 := B.IsZero(mod);
     prime1 := I.isprime(j);
@@ -213,7 +219,7 @@ BEGIN
   NewLine(); EVAL TestBasic();
   NewLine(); EVAL TestPower();
   NewLine(); EVAL TestAddshift();
-  (*NewLine(); EVAL TestFibonacci();*)
+  NewLine(); EVAL TestFibonacci();
   NewLine(); EVAL TestPseudoprime();
 
   RETURN result;
