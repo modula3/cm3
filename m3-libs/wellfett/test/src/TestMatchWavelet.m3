@@ -406,6 +406,80 @@ PROCEDURE GetLiftedPrimalGeneratorMask (         hdual, gdual0: S.T;
   END GetLiftedPrimalGeneratorMask;
 
 TYPE
+  Matching =
+    OBJECT
+      hdual, gdual0: S.T;
+      yfirst       : INTEGER;
+    METHODS
+      splitParamVec (x: V.T): MatchCoef;
+      deriveRegularized (         derdist: FnD.T;
+                         READONLY mc     : MatchCoef;
+                         waveletVec, waveletCor, targetVec: V.T; ): FnD.T;
+    END;
+
+  VarWavAmpMatching = Matching OBJECT
+                      OVERRIDES
+                        splitParamVec     := VarSplitParamVec;
+                        deriveRegularized := VarDeriveRegularized;
+                      END;
+
+  FixedWavAmpMatching = Matching OBJECT
+                          wavAmp: R.T
+                        OVERRIDES
+                          splitParamVec     := FixSplitParamVec;
+                          deriveRegularized := FixDeriveRegularized;
+                        END;
+
+PROCEDURE VarSplitParamVec (SELF: VarWavAmpMatching; x: V.T; ): MatchCoef =
+  BEGIN
+    RETURN MatchCoef{NEW(S.T).fromArray(SUBARRAY(
+                                          x^, FIRST(x^), NUMBER(x^) - 1),
+                                        SELF.yfirst), x[LAST(x^)], R.One};
+  END VarSplitParamVec;
+
+
+PROCEDURE VarDeriveRegularized ( <*UNUSED*>SELF   : VarWavAmpMatching;
+                                           derdist: FnD.T;
+                                           READONLY mc: MatchCoef;
+                                           waveletVec, waveletCor,
+                                             targetVec: V.T; ): FnD.T =
+  <*FATAL NA.Error*>(*size mismatches can't occur*)
+  BEGIN
+    RETURN ExtendDervTarget(derdist, mc.lift.getData(), mc.wavelet0Amp,
+                            waveletVec, waveletCor, targetVec);
+  END VarDeriveRegularized;
+
+PROCEDURE FixSplitParamVec (SELF: FixedWavAmpMatching; x: V.T; ):
+  MatchCoef =
+  BEGIN
+    RETURN MatchCoef{NEW(S.T).fromArray(SUBARRAY(
+                                          x^, FIRST(x^), NUMBER(x^) - 1),
+                                        SELF.yfirst), SELF.wavAmp, R.One};
+  END FixSplitParamVec;
+
+PROCEDURE FixDeriveRegularized ( <*UNUSED*>SELF   : FixedWavAmpMatching;
+                                           derdist: FnD.T;
+                                           READONLY mc: MatchCoef;
+                                           <*UNUSED*>
+                                           waveletVec, waveletCor,
+                                             targetVec: V.T; ): FnD.T =
+  <*FATAL NA.Error*>(*size mismatches can't occur*)
+  VAR zerovec := V.NewZero(mc.lift.getNumber());
+  BEGIN
+    RETURN
+      FnD.T{
+        zeroth := derdist.zeroth, first :=
+        V.FromVectorArray(
+          ARRAY OF V.T{derdist.first, V.FromScalar(R.Zero)}), second :=
+        M.FromMatrixArray(
+          ARRAY [0 .. 1], [0 .. 1] OF
+            M.T{
+            ARRAY OF M.T{derdist.second, M.ColumnFromArray(zerovec^)},
+            ARRAY OF M.T{M.RowFromArray(zerovec^), M.FromScalar(R.One)}})};
+  END FixDeriveRegularized;
+
+
+TYPE
   MatchCoef =
     RECORD
       lift                  : S.T;
@@ -494,17 +568,7 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
     *)
 
     VAR yfirst := -translates;
-
-    CONST constWavAmp = TRUE;
-
-    PROCEDURE SplitParamVec (x: V.T; wavAmp: R.T): MatchCoef =
-      BEGIN
-        IF NOT constWavAmp THEN wavAmp := x[LAST(x^)]; END;
-        RETURN
-          MatchCoef{NEW(S.T).fromArray(
-                      SUBARRAY(x^, FIRST(x^), NUMBER(x^) - 1), yfirst),
-                    wavAmp, R.One};
-      END SplitParamVec;
+    VAR matching: Matching;
 
     <*UNUSED*>
     PROCEDURE ComputeOptCritDeriv (x: V.T): FnD.T RAISES {NA.Error} =
@@ -512,7 +576,7 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         (*SplitParamVec may return initWavelet0Amp as waveletAmp and this
            won't work if we compute the real derivative instead of a finite
            difference.*)
-        mc := SplitParamVec(x, initWavelet0Amp);
+        mc := matching.splitParamVec(x);
         derdist := DeriveDist(normalMat, targetCor, targetNormSqr, mc.lift);
         derwavdist := ExtendDervTarget(
                         derdist, mc.lift.getData(), mc.wavelet0Amp,
@@ -533,8 +597,7 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
       PROCEDURE EstimateSmoothness (x: V.T): R.T =
         VAR
           hprimal := GetLiftedPrimalGeneratorMask(
-                       hdualnovan, gdual0novan,
-                       SplitParamVec(x, initWavelet0Amp));
+                       hdualnovan, gdual0novan, matching.splitParamVec(x));
         <*FATAL NA.Error*>
         BEGIN
           CASE 4 OF
@@ -551,40 +614,18 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         END EstimateSmoothness;
 
       VAR
-        mc := SplitParamVec(x, initWavelet0Amp);
+        mc := matching.splitParamVec(x);
         derdist := DeriveDist(normalMat, targetCor, targetNormSqr, mc.lift);
 
         dx  := V.New(NUMBER(x^));
         dxv := VT.Norm1(x) * difdist;
         (*dx := V.Scale(x, 1.0D-2);*)
-        derwavdist, dersmooth: FnD.T;
+        derwavdist := matching.deriveRegularized(
+                        derdist, mc, waveletVec, waveletCor, targetVec);
+        dersmooth: FnD.T;
 
       <*FATAL Thread.Alerted, Wr.Failure*>
       BEGIN
-        IF constWavAmp THEN
-          VAR zerovec := V.New(mc.lift.getNumber());
-          BEGIN
-            FOR i := FIRST(zerovec^) TO LAST(zerovec^) DO
-              zerovec[i] := R.Zero;
-            END;
-            derwavdist :=
-              FnD.T{zeroth := derdist.zeroth, first :=
-                    V.FromVectorArray(
-                      ARRAY OF V.T{derdist.first, V.FromScalar(R.Zero)}),
-                    second := M.FromMatrixArray(
-                                ARRAY [0 .. 1], [0 .. 1] OF
-                                  M.T{ARRAY OF
-                                        M.T{derdist.second,
-                                            M.ColumnFromArray(zerovec^)},
-                                      ARRAY OF
-                                        M.T{M.RowFromArray(zerovec^),
-                                            M.FromScalar(R.One)}})};
-          END;
-        ELSE
-          derwavdist :=
-            ExtendDervTarget(derdist, mc.lift.getData(), mc.wavelet0Amp,
-                             waveletVec, waveletCor, targetVec);
-        END;
         IO.Put(
           Fmt.FN("ComputeOptCritDiff for x=%s", ARRAY OF TEXT{VF.Fmt(x)}));
         FOR i := FIRST(dx^) TO LAST(dx^) DO dx[i] := dxv END;
@@ -637,11 +678,15 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
                           waveletVec, waveletCor, targetVec);
       x := V.Neg(LA.LeastSquares(initderwavdist.second,
                                  ARRAY OF V.T{initderwavdist.first})[0].x);
-      initWavelet0Amp := x[LAST(x^)];
 
       smoothWeightFade := smoothWeight / RIntPow.Power(smoothFac, maxIter);
 
     BEGIN
+      CASE 0 OF
+      | 0 => matching := NEW(VarWavAmpMatching, yfirst:=yfirst);
+      | 1 => matching := NEW(FixedWavAmpMatching, yfirst:=yfirst,wavAmp := x[LAST(x^)]);
+      ELSE
+      END;
       PL.Init();
       (*IO.Put(Fmt.FN("targetCor %s", ARRAY OF TEXT{VF.Fmt(targetCor)}));*)
       FOR iter := 0 TO maxIter DO
@@ -663,7 +708,7 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
           END;
         END;
         VAR
-          mc := SplitParamVec(x, initWavelet0Amp);
+          mc := matching.splitParamVec(x);
           gdual := gdual0.superpose(
                      hdualvan.convolve(
                        mc.lift.scale(R.One / mc.wavelet0Amp).upsample(2)));
@@ -675,7 +720,7 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         smoothWeightFade := smoothWeightFade * smoothFac;
       END;
       PL.Exit();
-      RETURN SplitParamVec(x, initWavelet0Amp);
+      RETURN matching.splitParamVec(x);
     END;
   END MatchPatternSmooth;
 
