@@ -58,7 +58,7 @@ PROCEDURE Test()=
                CharPoly.CharPolynomial(trans)
              );
       specrad0 := CVT.NormInf(eig);
-      specrad1 := Eigen.PowerMethod(trans,v,maxiter:=1000000,tol:=RT.Eps);
+      specrad1 := Eigen.SquareMethod(trans,v);
       IO.Put(Fmt.FN("%s: spectral radius %s ~ %s\n",
         ARRAY OF TEXT{Fmt.Int(n),RF.Fmt(specrad0),RF.Fmt(specrad1)}));
     END;
