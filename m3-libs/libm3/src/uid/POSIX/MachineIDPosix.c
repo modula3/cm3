@@ -15,7 +15,7 @@
 
 int MachineIDPosix__CanGet(char *id) {
   int i;
-  char hostname[32];
+  char hostname[128];
   struct hostent *hostent;
 
 #ifdef __linux__
@@ -43,8 +43,6 @@ int MachineIDPosix__CanGet(char *id) {
     }
   }
 #elif defined(__osf__)
-  char hostname[128];
-  struct hostent *hostent;
   struct ifdevea req;
   struct ifconf list;
   int s;
