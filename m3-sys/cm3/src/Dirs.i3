@@ -25,5 +25,8 @@ PROCEDURE CleanUp ();
 PROCEDURE MkDir (dir: TEXT);
 (* Create directory "dir". *)
 
+PROCEDURE RemoveRecursively (dir: TEXT);
+(* Remove dir and everything in it including all sub-directories *)
+
 END Dirs.
 

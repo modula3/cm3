@@ -14,9 +14,9 @@ TYPE
 
 CONST
   ModeName = ARRAY MM OF TEXT { "-build", "-clean", "-ship", "-find", 
-                                "-depend" };
+                                "-depend", "-realclean" };
   ModeFlag = ARRAY MM OF TEXT { "_all",   "_clean", "_ship", "_find", 
-                                "_depend" };
+                                "_depend", "_realclean" };
 
 TYPE
   State = RECORD
@@ -46,7 +46,7 @@ PROCEDURE Build (src_dir: TEXT): TEXT =
 
       CASE M3Options.major_mode OF
       | MM.Find => Out (wr, "M3_FIND_UNITS = []")
-      | MM.Build, MM.Clean, MM.Ship, MM.Depend =>  (* skip *)
+      | MM.Build, MM.Clean, MM.RealClean, MM.Ship, MM.Depend =>  (* skip *)
       END;
 
       ConvertArgList (s);
@@ -57,6 +57,7 @@ PROCEDURE Build (src_dir: TEXT): TEXT =
       | MM.Find   => Out (wr, "M3_MODE = ", "\"find\"");
       | MM.Depend => Out (wr, "M3_MODE = ", "\"depend\"");
       | MM.Ship   => Out (wr, "M3_MODE = ", "\"ship\"");
+      | MM.RealClean  => Out (wr, "M3_MODE = ", "\"realclean\"");
       ELSE
         Out (wr, "M3_MODE = ", "\"other\"");
       END;
@@ -82,6 +83,9 @@ PROCEDURE Build (src_dir: TEXT): TEXT =
           Out (wr, "include (\".M3SHIP\")");
           s.found_work := TRUE;
         END;
+
+      | MM.RealClean =>
+        (* we don't bother to include anything since it will be erased soon *)
       END;
     END Emit;
 
@@ -96,7 +100,8 @@ PROCEDURE Build (src_dir: TEXT): TEXT =
     Utils.WriteFile (Makefile, Emit, append := FALSE);
 
     IF s.found_work THEN
-      IF NOT s.keep_files THEN Utils.NoteTempFile (Makefile); END;
+      IF NOT s.keep_files AND M3Options.major_mode # MM.RealClean THEN
+        Utils.NoteTempFile (Makefile); END;
       RETURN Makefile;
     ELSE
       Msg.Out ("cm3: found nothing to build.", Wr.EOL);
@@ -242,6 +247,11 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
 
     | 'O' => IF (arg_len = 2) THEN
                Out (wr, "m3_optimize (TRUE)");  ok := TRUE;
+             END;
+
+    | 'r' => IF Text.Equal(arg, "-realclean") THEN
+               ok := TRUE;  (* mode set during the pre-scan *)
+               s.found_work := TRUE;
              END;
 
     | 's' => IF Text.Equal (arg, "-silent") THEN
@@ -495,15 +505,26 @@ PROCEDURE ScanCommandLine () : TextTextTbl.T =
   BEGIN
     FOR i := 1 TO Params.Count-1 DO
       arg := Params.Get (i);
-      IF    Text.Equal (arg, "-build")   THEN  SetMode (cnt, MM.Build);
-      ELSIF Text.Equal (arg, "-clean")   THEN  SetMode (cnt, MM.Clean);
-      ELSIF Text.Equal (arg, "-find")    THEN  SetMode (cnt, MM.Find);
-      ELSIF Text.Equal (arg, "-ship")    THEN  SetMode (cnt, MM.Ship);
-      ELSIF Text.Equal (arg, "-depend")  THEN  SetMode (cnt, MM.Depend);
-      ELSIF Text.Equal (arg, "-?")       THEN  PrintHelp ();
-      ELSIF Text.Equal (arg, "-help")    THEN  PrintHelp ();
-      ELSIF Text.Equal (arg, "-config")  THEN  PrintVersion (TRUE);
-      ELSIF Text.Equal (arg, "-version") THEN  PrintVersion (TRUE);
+      IF    Text.Equal (arg, "-build")     THEN  SetMode (cnt, MM.Build);
+      ELSIF Text.Equal (arg, "-clean")     THEN  SetMode (cnt, MM.Clean);
+      ELSIF Text.Equal (arg, "-realclean") THEN  SetMode (cnt, MM.RealClean);
+      ELSIF Text.Equal (arg, "-find")      THEN  SetMode (cnt, MM.Find);
+      ELSIF Text.Equal (arg, "-ship")      THEN  SetMode (cnt, MM.Ship);
+      ELSIF Text.Equal (arg, "-depend")    THEN  SetMode (cnt, MM.Depend);
+      ELSIF Text.Equal (arg, "-?")         THEN  PrintHelp ();
+      ELSIF Text.Equal (arg, "-help")      THEN  PrintHelp ();
+      ELSIF Text.Equal (arg, "-config")    THEN  PrintVersion (TRUE);
+      ELSIF Text.Equal (arg, "-version")   THEN  PrintVersion (TRUE);
+      ELSIF Text.Equal (arg, "-silent") THEN  
+        Msg.SetLevel (Msg.Level.Silent);
+      ELSIF Text.Equal (arg, "-why") THEN  
+        Msg.SetLevel (Msg.Level.Explain);
+      ELSIF Text.Equal (arg, "-commands") THEN  
+        Msg.SetLevel (Msg.Level.Commands);
+      ELSIF Text.Equal (arg, "-verbose") THEN  
+        Msg.SetLevel (Msg.Level.Verbose);
+      ELSIF Text.Equal (arg, "-debug") THEN  
+        Msg.SetLevel (Msg.Level.Debug);
       ELSIF Text.Equal (arg, "-profile") THEN
         EVAL defs.put("M3_PROFILING", "TRUE");
       ELSIF Text.Equal (arg, "-pretend") THEN
@@ -555,6 +576,7 @@ CONST
     "  -build         compile and link",
     "  -ship          install package",
     "  -clean         delete derived files",
+    "  -realclean     delete derived target directory",
     "  -find          locate source files",
     "  -depend        output package dependencies",
     "",
@@ -642,9 +664,9 @@ PROCEDURE Val(name: TEXT) : TEXT =
 VAR
   defs := NEW(TextTextTbl.Default).init();
 BEGIN
-  EVAL defs.put("CM3_RELEASE", "5.2.6");       (* readable release version *)
-  EVAL defs.put("CM3_VERSION", "050206");      (* version as number *)
-  EVAL defs.put("CM3_CREATED", "2003-06-27");  (* date of last change *)
+  EVAL defs.put("CM3_RELEASE", "5.2.7");       (* readable release version *)
+  EVAL defs.put("CM3_VERSION", "050207");      (* version as number *)
+  EVAL defs.put("CM3_CREATED", "2003-08-02");  (* date of last change *)
   EVAL defs.put("M3_PROFILING", "");           (* no profiling by default *)
   EVAL defs.put("EOL", Wr.EOL);
 END Makefile.

@@ -8,6 +8,7 @@ IMPORT Quake, QValue, QCode, QMachine, QVal, QVSeq, QVTbl, M3Timers;
 IMPORT Arg, Builder, M3Loc, M3Options, M3Path, M3Unit, Msg, Utils;
 FROM QMachine IMPORT PushText, PopText, PopID, PopBool;
 IMPORT MxConfig AS M3Config;
+IMPORT OSError, Process, Dirs;
 
 TYPE
   UK = M3Unit.Kind;
@@ -182,6 +183,26 @@ PROCEDURE Run (t: T;  makefile: TEXT)
     Quake.Run (t, makefile);
     MakeRoom (t, 999999);  (* finish any partial listings *)
   END Run;
+
+PROCEDURE RealClean () =
+  VAR
+    targetdir, base, parent: Pathname.T;
+  BEGIN
+    (* We are already in the TARGET build directory *)
+    TRY
+      targetdir := Process.GetWorkingDirectory ();
+    EXCEPT OSError.E(ec) =>
+      Msg.FatalError (ec, "unable to get full directory path: ", targetdir);
+    END;
+    base   := Pathname.Last (targetdir);
+    parent := Pathname.Prefix (targetdir);
+    TRY
+      Process.SetWorkingDirectory (parent);
+    EXCEPT OSError.E(ec) =>
+      Msg.FatalError (ec, "unable to move to directory: ", parent);
+    END;
+    Dirs.RemoveRecursively(base);
+  END RealClean;
 
 PROCEDURE NewMap (): IntRefTbl.T =
   BEGIN
@@ -962,7 +983,9 @@ PROCEDURE DoImport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error, Thread.Alerted} =
   VAR t := Self (m);
   BEGIN
-    ImportVersion (t, PopID (t), t.build_dir);
+    IF M3Options.major_mode # MM.Clean THEN
+      ImportVersion (t, PopID (t), t.build_dir);
+    END;
   END DoImport;
 
 PROCEDURE DoImportVersion (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
@@ -971,7 +994,9 @@ PROCEDURE DoImportVersion (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   BEGIN
     vers := PopID (t);
     pkg  := PopID (t);
-    ImportVersion (t, pkg, vers);
+    IF M3Options.major_mode # MM.Clean THEN
+      ImportVersion (t, pkg, vers);
+    END;
   END DoImportVersion;
 
 PROCEDURE ImportVersion (t: T;  pkg, vers: M3ID.T)

@@ -3,13 +3,13 @@
 
 MODULE Dirs;
 
-IMPORT FS, M3File, OSError, Pathname, Process;
+IMPORT Atom, FS, File, M3File, OSError, Pathname, Process, RegularFile, Text;
 IMPORT Msg, M3Options, M3Path, Wr;
 
 CONST
   ModeVerb = ARRAY M3Options.Mode OF TEXT {
-    "building in ", "cleaning ", "shipping from ", "searching from ",
-    "computing dependencies in " };
+    "building in ", "cleaning ", "purging derived files from ",
+    "shipping from ", "searching from ", "computing dependencies in " };
 
 VAR
   built_derived := FALSE;
@@ -93,6 +93,79 @@ PROCEDURE CleanUp () =
       RmDir (to_derived);
     END;
   END CleanUp;
+
+PROCEDURE RemoveRecursively (dir: TEXT) =
+
+  PROCEDURE RmDir (dir: TEXT) =
+    BEGIN
+      Msg.Commands ("rmdir ", dir);
+      TRY
+        FS.DeleteDirectory (dir);
+      EXCEPT OSError.E(ec) =>
+        Msg.Error (ec, "unable to remove directory ", dir);
+      END;
+    END RmDir;
+
+  PROCEDURE RmFile (fn: TEXT) =
+    BEGIN
+      Msg.Commands ("rm ", fn);
+      TRY
+        FS.DeleteFile (fn);
+      EXCEPT OSError.E(ec) => Msg.Error (ec, "unable to remove file ", fn);
+      END;
+    END RmFile;
+
+  PROCEDURE IterNext (VAR name: TEXT; VAR type: File.Type): BOOLEAN =
+    VAR 
+      ret: BOOLEAN;
+      stat: File.Status;
+    BEGIN
+      ret := iter.next (name);
+      TRY
+        stat := FS.Status (Pathname.Join(dir, name, NIL));
+        type := stat.type;
+      EXCEPT ELSE
+        type := RegularFile.FileType; (* just an assumption ;-) *)
+        (* This usually occures due to symbolic links for libraries in
+           the target directory. The iterator lists a file that has
+           already been removed, so we cannot stat it. We just ignore
+           the error here as our intention is to remove as much as
+           possible. Sadly, it cannot be done in a correct and system
+           independent fashion.
+        *)
+      END;
+      RETURN ret;
+    END IterNext;
+
+  VAR
+    iter: FS.Iterator;
+    name: TEXT;
+    type: File.Type;
+  BEGIN (* RemoveRecursively *)
+    TRY
+      iter := FS.Iterate (dir);
+    EXCEPT
+      OSError.E(ec) => Msg.Error (ec, "unable to read directory ", dir);
+      RETURN;
+    END;
+    WHILE IterNext (name, type) DO
+      Msg.Debug ("file ", name, " ", Atom.ToText(type));
+      IF NOT Text.Equal (name, Pathname.Parent) AND
+        NOT Text.Equal (name, Pathname.Current) THEN
+        IF type = FS.DirectoryFileType THEN
+          WITH subdir = Pathname.Join(dir, name, NIL) DO
+            RemoveRecursively (subdir);
+          END;
+        ELSE
+          WITH fn = Pathname.Join(dir, name, NIL) DO
+            RmFile (fn);
+          END;
+        END;
+      END;
+    END;
+    iter.close();
+    RmDir (dir);
+  END RemoveRecursively;
 
 (*------------------------------------------------------ internal --*)
 

@@ -72,7 +72,10 @@ PROCEDURE DoIt () =
         makefile := Makefile.Build (Dirs.to_source);
 
         (* and finally, do it *)
-        IF (makefile # NIL) THEN
+        IF M3Options.major_mode = M3Options.Mode.RealClean THEN
+          (* shortcut; don't call quake to remove everything, do it directly *)
+          M3Build.RealClean();
+        ELSIF (makefile # NIL) THEN
           Msg.Verbose ("EVAL (\"", makefile, "\")");
           M3Build.Run (mach, Pathname.Join (Dirs.derived, makefile, NIL));
         END;
@@ -174,7 +177,9 @@ PROCEDURE CleanUp () =
     Builder.CleanUp ();
     M3Timers.Stop ();
     Utils.RemoveTempFiles ();
-    Dirs.CleanUp ();
+    IF M3Options.major_mode # M3Options.Mode.RealClean THEN
+      Dirs.CleanUp ();
+    END;
 
     IF (M3Options.heap_stats) THEN
       RTutils.Heap (suppressZeros := TRUE,

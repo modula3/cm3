@@ -12,7 +12,7 @@ TYPE
   Level = {Silent, Explain, Commands, Verbose, Debug};
 
 VAR (*READONLY*)
-  level : Level := Level.Silent;
+  level : Level := Level.Explain;
 
 PROCEDURE SetLevel (new: Level);
 (* level := MAX (level, new) *)
