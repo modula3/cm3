@@ -71,6 +71,7 @@ typedef int PLINT;
 %rename("box") plbox;
 %rename("box3") plbox3;
 %rename("CalcWorld") plcalc_world;
+%rename("Clear") plclear;
 %rename("SetColorDiscr") plcol0;
 %rename("SetColorCont") plcol1;
 %rename("PlotContour") plcont;
