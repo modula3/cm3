@@ -1,11 +1,9 @@
 MODULE GZipRd;
 
 
-IMPORT Pipe, Process, FS, Pathname, IO;
-IMPORT FileRd, Rd, RdClass, (* close method of Rd.T *) Text;
-IMPORT FileWr, Wr, Fmt;
-IMPORT OSError, AtomList, Thread;
-IMPORT LongRealTrans AS RT;
+IMPORT Pipe, Process, Pathname;
+IMPORT FileRd, Rd, RdClass;      (* close method of Rd.T *)
+IMPORT OSError, Thread;
 
 
 REVEAL
@@ -34,20 +32,8 @@ PROCEDURE Open (p: Pathname.T; ): T RAISES {OSError.E} =
   END Open;
 
 PROCEDURE Close (rd: T; ) RAISES {Rd.Failure, Thread.Alerted} =
-  VAR
-    failure, alerted             := FALSE;
-    error           : AtomList.T;
   BEGIN
-    TRY
-      FileRd.T.close(rd);
-    EXCEPT
-    | Rd.Failure (code) => failure := TRUE; error := code;
-    | Thread.Alerted => alerted := TRUE;
-    END;
-
-    EVAL Process.Wait(rd.gzipProc);
-    IF failure THEN RAISE Rd.Failure(error); END;
-    IF alerted THEN RAISE Thread.Alerted; END;
+    TRY FileRd.T.close(rd); FINALLY EVAL Process.Wait(rd.gzipProc); END;
   END Close;
 
 BEGIN
