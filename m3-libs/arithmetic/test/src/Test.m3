@@ -67,9 +67,10 @@ BEGIN
   NewLine(); EVAL TestFFT();
   NewLine(); EVAL TestBigInteger();
   NewLine(); EVAL TestGCD();
-*)
   NewLine(); EVAL TestEigenSystem();
-(*
   NewLine(); EVAL TestChebyshev();
+*)
+  NewLine(); EVAL TestUnit();
+(*
 *)
 END Test.
