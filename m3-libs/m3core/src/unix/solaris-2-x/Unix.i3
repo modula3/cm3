@@ -10,7 +10,7 @@ INTERFACE Unix;
 FROM Word IMPORT Or, And, Shift;
 
 FROM Ctypes IMPORT short, int, long, char_star, char_star_star, int_star;
-FROM Utypes IMPORT u_short, dev_t, off_t;
+FROM Utypes IMPORT u_short, dev_t, off_t, size_t;
 FROM Utime IMPORT struct_timeval;
 
 
@@ -202,6 +202,7 @@ CONST (* l_type values -- more conventional names... *)
 
 (*** getwd - get current working directory pathname ***)
 <*EXTERNAL*> PROCEDURE getwd (pathname: char_star): char_star;
+<*EXTERNAL*> PROCEDURE getcwd (pathname: char_star; size: size_t): char_star;
 
 (*** ioctl - control device ***)
 (* this is a temptative declaration of the types of the arguments. 
@@ -776,7 +777,7 @@ CONST (* mode *)
 
   (* lower bits used for the access permissions *)
 
-<*EXTERNAL*> PROCEDURE mknod (path: char_star; mode, dev: int): int;
+<*EXTERNAL*> PROCEDURE mknod (path: char_star; mode: int; dev: dev_t): int;
 
 
 (*** mount, umount - mount or unmount a file system ***)
@@ -930,8 +931,9 @@ TYPE
 
 
 (*** vfork - spawn new process in a virtual memory efficient way ***)
-
-<*EXTERNAL*> PROCEDURE vfork (): int;
+(* Avoid vfork. The way it is used in ProcessPosix breaks incremental GC:
+   RestoreHandlers in child is reflected in parent to break VM faulting *)
+<*EXTERNAL "fork1"*> PROCEDURE vfork (): int;
 
 (*** vhangup - virtually hang up the current control terminal ***)
 
