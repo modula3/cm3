@@ -3,20 +3,20 @@
 
 import("libm3")
 
-readonly proc FloatBasic (nm, elt) is
+readonly proc FloatBasic (nm, mod, modt) is
   local basic = nm & "Basic"
-  build_generic_intf (basic, "FloatBasic", [elt], VISIBLE)
+  build_generic_intf (basic, "FloatBasic", [mod, modt], VISIBLE)
   build_generic_impl (basic, "FloatBasic", [])
 end
 
 generic_module("FloatBasic")
-FloatBasic("Real",     "Real")
-FloatBasic("LongReal", "LongReal")
-FloatBasic("Extended", "Extended")
+FloatBasic("Real",     "Real",     "RealType")
+FloatBasic("LongReal", "LongReal", "LongrealType")
+FloatBasic("Extended", "Extended", "ExtendedType")
 
-readonly proc FloatTrans (nm, elt) is
+readonly proc FloatTrans (nm, mod) is
   local trans = nm & "Trans"
-  build_generic_intf (trans, "FloatTrans", [elt], VISIBLE)
+  build_generic_intf (trans, "FloatTrans", [mod], VISIBLE)
   build_generic_impl (trans, "FloatTrans", [])
 end
 
@@ -26,10 +26,10 @@ FloatTrans("LongReal", "LongReal")
 FloatTrans("Extended", "Extended")
 
 
-readonly proc ComplexBasic (nm, elt) is
+readonly proc ComplexBasic (nm, mod) is
   local basic = nm & "ComplexBasic"
-  build_generic_intf (basic, "ComplexBasic", [elt], VISIBLE)
-  build_generic_impl (basic, "ComplexBasic", [elt])
+  build_generic_intf (basic, "ComplexBasic", [mod], VISIBLE)
+  build_generic_impl (basic, "ComplexBasic", [mod])
 end
 
 generic_module("ComplexBasic")
@@ -45,9 +45,9 @@ readonly proc ComplexFast (nm, elt) is
 end
 
 generic_module("ComplexFast")
-ComplexFast("Real",     "RealBasic")
-ComplexFast("LongReal", "LongRealBasic")
-ComplexFast("Extended", "ExtendedBasic")
+ComplexFast("Real",     "Real")
+ComplexFast("LongReal", "LongReal")
+ComplexFast("Extended", "Extended")
 
 
 

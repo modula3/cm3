@@ -2,7 +2,9 @@ GENERIC INTERFACE ComplexFast(R);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Generic complex number type
-          Instantiate with RealBasic, LongRealBasic, ExtendedBasic, IntegerBasic
+          Fast implementation using infix operators.
+		  Will become unnecessary if the compiler allows for INLINE procedures some day.
+          Instantiate with Real, LongReal, Extended
 
 Originally was xComplex
 
@@ -18,10 +20,10 @@ TYPE
   T = RECORD re,im: R.T; END;
 
 CONST
-  Zero    =  T{re:=R.Zero,     im:=R.Zero};
-  One     =  T{re:=R.One,      im:=R.Zero};
-  I       =  T{re:=R.Zero,     im:=R.One};
-  MinusOne=  T{re:=R.MinusOne, im:=R.Zero};
+  Zero     = T{re:=FLOAT( 0.0,R.T), im:=FLOAT(0.0,R.T)};
+  One      = T{re:=FLOAT( 1.0,R.T), im:=FLOAT(0.0,R.T)};
+  I        = T{re:=FLOAT( 0.0,R.T), im:=FLOAT(1.0,R.T)};
+  MinusOne = T{re:=FLOAT(-1.0,R.T), im:=FLOAT(0.0,R.T)};
 
 <*INLINE*> PROCEDURE Add(READONLY x,y:T):T;  (*return x+y*)
 <*INLINE*> PROCEDURE Sub(READONLY x,y:T):T;  (*return x-y*)
