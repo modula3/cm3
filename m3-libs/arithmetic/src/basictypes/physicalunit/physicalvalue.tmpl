@@ -36,16 +36,18 @@ readonly proc SIUnit (nm, field) is
 end
 
 
-readonly proc PhysicalValueFmtLex (nm, field) is
+readonly proc PhysicalValueFmtLex (nm, field, complex) is
   local fmt     = nm & "PhysicalValueFmtLex"
-  local rfield  = nm & "Basic"
-  local rtrans  = nm & "Trans"
-  local rfmt    = nm & "FmtLex"
-  local rpv     = nm & "PhysicalValue"
-  local rcu     = nm & "CompositeUnit"
+  local rfield  = field & "Basic"
+  local rtrans  = field & "Trans"
+  local cfield  = nm & "Basic"
+  local ctrans  = nm & "Trans"
+  local cfmt    = nm & "FmtLex"
+  local cpv     = nm & "PhysicalValue"
+  local rcu     = field & "CompositeUnit"
   local rculist = rcu & "List"
-  local rudb    = nm & "UnitDatabase"
-  local siunit  = nm & "SIUnit"
-  build_generic_intf (fmt, "PhysicalValueFmtLex", [rfmt, rpv, rudb], VISIBLE)
-  build_generic_impl (fmt, "PhysicalValueFmtLex", [rfield, rtrans, rfmt, rudb])
+  local rudb    = field & "UnitDatabase"
+  local siunit  = field & "SIUnit"
+  build_generic_intf (fmt, "PhysicalValueFmtLex", [cfmt, cpv, rudb], VISIBLE)
+  build_generic_impl (fmt, "PhysicalValueFmtLex", [rfield, rtrans, cfield, ctrans, cfmt, rudb])
 end

@@ -1,9 +1,9 @@
-GENERIC INTERFACE PhysicalValueFmtLex(RF,PV,DB);
+GENERIC INTERFACE PhysicalValueFmtLex(CF,PV,DB);
 
 (*==========================*)
 TYPE
   T = PV.T;
-  FmtStyle = RECORD unitDataBase : DB.T; elemStyle := RF.FmtStyle{}; END;
+  FmtStyle = RECORD unitDataBase : DB.T; elemStyle := CF.FmtStyle{}; END;
 
 (*
 PROCEDURE Lex(str:TEXT):T RAISES {Error};
