@@ -6,10 +6,104 @@
 
 MODULE Main;
 
-IMPORT Text, Rd, Wr, Stdio, Thread, Fmt, Time;
-IMPORT OSError, FileRd, FileWr, Pathname, FS, M3Config;
-IMPORT MarkUp, M3DB, HTMLDir, FilePath, Process;
+IMPORT Text, Rd, Wr, Stdio, Thread, Fmt, Time, TextSeq;
+IMPORT OSError, FileRd, FileWr, Pathname, FS, M3Config, ParseParams;
+IMPORT MarkUp, M3DB, HTMLDir, FilePath, Process, FSUtils, Msg;
+FROM Msg IMPORT M, V, F;
 <*FATAL Thread.Alerted*>
+
+CONST u = ARRAY OF TEXT {
+  "",
+  "SYNTAX",
+  "",
+  "  m3tohtml [<options>] <pkg>+",
+  "or",
+  "  m3tohtml [<options>]  <  <file-list>",
+  "",
+  "  options:",
+  "",
+  "    -force|-F                        overwrite existing HTML.index",
+  "    -root|-pkgroot <package root>    defined package root directory",
+  "                                     (default: PKG_USE from cm3.cfg)",
+  "    -dir|-dest <outdir>              create output in directory outdir",
+  "    -d|-debug                        display debug output",
+  "    -v|-verbose                      be verbose",
+  "",
+  "SEMANTICS",
+  "",
+  "  m3tohtml reads one or more CM3 packages and creates an HTML tree of all",
+  "  interfaces and modules together with a complete index structure.",
+  "  All interface, module, procedure, and type names are converted into",
+  "  hyperrefs pointing to the appropriate definition.",
+  "",
+  "  All output will be placed in the current directory (unless -d is used),",
+  "  where also a file named m3db will be found. This file contains all", 
+  "  symbol information from the parsed M3 sources needed for the hypertext.",
+  "",
+  "HISTORY",
+  "",
+  "  The m3tohtml man page says that Bill Kalsow wrote it as part of his",
+  "  HTML browser for /proj/m3. He didn't write a man page.",
+  "  Later part of the functionality of the program has been incorporated",
+  "  into Reactor, the graphical CM3 frontend from Critical Mass.",
+  "  The changes from CM3 4.1 to 5.1 broke this code in several ways.",
+  "  It was made usable again at at Elego GmbH, where an easier-to-use",
+  "  interface was implemented, too. The second (original) form which",
+  "  reads all the file and package names from standard input in a non-",
+  "  documented format should still work, too.",
+  "",
+  "BUGS",
+  "",
+  "  The program is still somewhat peculiar about its environment. It tends",
+  "  to crash in unexpected situations with obscure error messages (if all).",
+  "  There are also still some issues with the generated HTML; parameters",
+  "  of generic module instantiations contain wrong references, and pathname",
+  "  normalization does not cover all possibilities (for example `./.').",
+  ""
+  };
+    
+
+PROCEDURE Usage() =
+  BEGIN
+    FOR i := FIRST(u) TO LAST(u) DO
+      M(u[i]);
+    END;
+  END Usage;
+
+PROCEDURE ProcessParameters() =
+  BEGIN
+    WITH pp = NEW(ParseParams.T).init(Stdio.stderr) DO
+      TRY
+        IF pp.keywordPresent("-h") OR pp.keywordPresent("-help") OR
+           pp.keywordPresent("-?") THEN
+          Usage();
+          Process.Exit(0);
+        END;
+        force := pp.keywordPresent("-force") OR pp.keywordPresent("-F");
+        Msg.debug := pp.keywordPresent("-d") OR pp.keywordPresent("-debug");
+        Msg.verbose := pp.keywordPresent("-v") OR 
+                           pp.keywordPresent("-verbose");
+        IF pp.keywordPresent("-root") OR pp.keywordPresent("-pkgroot") THEN
+          pkgRoot := pp.getNext();
+        END;
+        IF pp.keywordPresent("-dir") OR pp.keywordPresent("-dest") THEN
+          outdir := pp.getNext();
+        END;
+	nTargets := NUMBER(pp.arg^) - pp.next;
+        (* build parameters *)
+	targets := NEW(TextSeq.T).init(nTargets);
+	FOR i := 1 TO nTargets DO
+	  VAR t := pp.getNext(); BEGIN
+            targets.addhi(t);
+	  END;
+	END;
+        pp.finish();
+      EXCEPT
+        ParseParams.Error => F("parameter error");
+      END;
+    END;
+    (* all command line parameters handled *)
+  END ProcessParameters;
 
 TYPE
   Source = REF RECORD
@@ -22,23 +116,113 @@ TYPE
 VAR
   sources: Source := NIL;
   n_sources: INTEGER := 0;
+  pkgRoot := M3Config.PKG_USE;
+  targets : TextSeq.T;
+  nTargets : INTEGER;
+  force := FALSE;
+  outdir : TEXT := NIL;
 
 PROCEDURE ReadFileList () =
   <*FATAL Rd.EndOfFile, Rd.Failure, Thread.Alerted*>
-  VAR pkg, proj_pkg, file: TEXT;  a,b,c: Source;  rd := Stdio.stdin;
-  BEGIN
-    (* read the input file *)
-    WHILE NOT Rd.EOF (rd) DO
-      file := Rd.GetLine (rd);
-      IF Text.GetChar (file, 0) = '$' THEN
-        pkg := Text.Sub (file, 1) & M3Config.PATH_SEP;
-        proj_pkg := M3Config.PKG_USE & M3Config.PATH_SEP & pkg;
+
+  PROCEDURE AddFile(file, pkg, pkgpath: TEXT) =
+    BEGIN
+      INC (n_sources);
+      kind := FilePath.Classify (file);
+      sources := NEW (Source, next := sources,
+                      from := Pathname.Join(pkgpath, file, NIL),
+                      to   := Pathname.Join(pkg, FixDerived (file), NIL),
+                      kind := kind);
+      CASE kind OF
+        FilePath.Kind.I3 => fk := "I3";
+      | FilePath.Kind.M3 => fk := "M3";
+      | FilePath.Kind.IG => fk := "IG";
+      | FilePath.Kind.MG => fk := "Mg";
       ELSE
-        INC (n_sources);
-        sources := NEW (Source, next := sources,
-                        from := proj_pkg & file,
-                        to   := pkg & FixDerived (file),
-                        kind := FilePath.Classify (file));
+        fk := "??";
+      END;
+      V("  ", fk, ": ", sources.from, " -> ", sources.to);
+    END AddFile;
+
+  PROCEDURE AddPkg(pkg: TEXT) =
+    VAR
+      root := Pathname.Join(pkgRoot, pkg, NIL);
+
+    PROCEDURE AddRec(pref: TEXT) =
+      VAR
+        dir := root;
+      BEGIN
+        IF pref # NIL THEN
+          dir := Pathname.Join(root, pref, NIL);
+        END;
+        VAR
+          iter  :  FS.Iterator;
+          name  :  TEXT;
+          path  :  TEXT;
+          rpath :  TEXT;
+        BEGIN
+          TRY
+            iter  := FS.Iterate(dir);
+          EXCEPT
+            OSError.E => V("cannot read directory ", dir); RETURN;
+          END;
+          WHILE iter.next(name) DO
+            path := Pathname.Join(dir, name, NIL);
+            IF pref = NIL THEN
+              rpath := name;
+            ELSE
+              rpath := Pathname.Join(pref, name, NIL);
+            END;
+            IF FSUtils.IsDir(path) THEN
+              AddRec(rpath);
+            ELSIF FSUtils.IsFile(path) THEN
+              AddFile(rpath, pkg, root);
+            ELSE
+            END;
+          END;
+        END;
+      END AddRec;
+
+    BEGIN
+      IF NOT FSUtils.IsDir(root) THEN
+        M("package ", pkg, " not found");
+        RETURN;
+      END;
+      V(pkg, " ==> ", root);
+      AddRec(NIL);
+    END AddPkg;
+
+  VAR 
+    pkg, proj_pkg, file, fk: TEXT;  
+    a,b,c: Source;  rd := Stdio.stdin;
+    kind: FilePath.Kind;
+  BEGIN
+    proj_pkg := "";
+    pkg := "";
+    IF nTargets = 0 THEN
+      (* read the input file *)
+      WHILE NOT Rd.EOF (rd) DO
+        file := Rd.GetLine (rd);
+        IF Text.GetChar (file, 0) = '$' THEN
+          pkg := Text.Sub (file, 1);
+          WITH i =Text.FindChar(pkg, '$') DO
+            IF i > 0 THEN
+              proj_pkg := Text.Sub(pkg, i + 1);
+              pkg := Text.Sub(pkg, 0, i);
+            ELSE
+              proj_pkg := pkgRoot & M3Config.PATH_SEP & pkg;
+            END;
+          END;
+          V(pkg, " ==> ", proj_pkg);
+        ELSE
+          AddFile(file, pkg, proj_pkg);
+        END;
+      END;
+    ELSE
+      FOR i := 0 TO nTargets - 1 DO
+        WITH pkg = targets.get(i) DO
+          AddPkg(pkg);
+        END;
       END;
     END;
 
@@ -150,10 +334,9 @@ PROCEDURE GenerateIndex () =
   <*FATAL Wr.Failure, OSError.E, Thread.Alerted *>
   VAR names := NEW (REF ARRAY OF TEXT, n_sources);  wr: Wr.T;
   BEGIN
-
     wr := FileWr.Open ("INDEX.html");
-    Wr.PutText (wr, "<HTML>\n<HEAD>\n<TITLE>SRC Modula-3 sources</TITLE>\n");
-    Wr.PutText (wr, "</HEAD>\n<BODY>\n<H1>SRC Modula-3 sources</H1>\n<P>\n");
+    Wr.PutText (wr, "<HTML>\n<HEAD>\n<TITLE>Modula-3 sources</TITLE>\n");
+    Wr.PutText (wr, "</HEAD>\n<BODY bgcolor=\"#eeeeee\">\n<H1>Modula-3 sources</H1>\n<P>\n");
     GenIndex (wr, "href/I3", FilePath.Kind.I3, "Interfaces", names^);
     GenIndex (wr, "href/IG", FilePath.Kind.IG, "Generic interfaces", names^);
     GenIndex (wr, "href/M3", FilePath.Kind.M3, "Modules", names^);
@@ -176,8 +359,10 @@ PROCEDURE GenIndex (wr: Wr.T;  file: TEXT;  kind: FilePath.Kind;  title: TEXT;
       END;
       s := s.next;
     END;
-    HTMLDir.GenDir (SUBARRAY (names, 0, cnt), wr, file,
-                     "SRC Modula-3: " & title, 70);
+    IF cnt > 0 THEN
+      HTMLDir.GenDir (SUBARRAY (names, 0, cnt), wr, file,
+                      "Critical Mass Modula-3: " & title, 70);
+    END;
     Wr.PutText (wr, "<P>\n");
   END GenIndex;
 
@@ -212,8 +397,66 @@ PROCEDURE RunPhase (p: PROCEDURE ();  name: TEXT) =
     Out ("  ", Fmt.LongReal (stop - start, Fmt.Style.Fix, 2), " seconds.");
   END RunPhase;
 
+PROCEDURE Confirm(msg : TEXT) : BOOLEAN =
+  VAR 
+    answer : TEXT;
+  BEGIN
+    LOOP
+      TRY
+        Wr.PutText(Stdio.stdout, msg & "? [y(es)<cr>/n(o)<cr>] ");
+        Wr.Flush(Stdio.stdout);
+        answer := Rd.GetLine(Stdio.stdin);
+      EXCEPT 
+        Rd.Failure => M("reader failure on stdin"); RETURN FALSE;
+      | Rd.EndOfFile => M("eof on stdin"); RETURN FALSE;
+      | Wr.Failure => M("writer failure on stdout"); RETURN FALSE;
+      ELSE
+        M("exception while reading confirmation");
+        RETURN FALSE; (* if anything is wrong we don't want to continue *)
+      END;
+      IF Text.Equal(answer, "y") OR Text.Equal(answer, "yes") OR
+         Text.Equal(answer, "Y") OR Text.Equal(answer, "YES") THEN
+        RETURN TRUE;
+      ELSIF Text.Equal(answer, "n") OR Text.Equal(answer, "no") OR
+            Text.Equal(answer, "N") OR Text.Equal(answer, "NO") THEN
+        RETURN FALSE;
+      END;
+      TRY
+        Wr.PutText(Stdio.stdout, "\nPlease answer `yes' or `no'\n");
+        Wr.Flush(Stdio.stdout);
+      EXCEPT
+        Rd.Failure => M("reader failure on stdin"); RETURN FALSE;
+      | Rd.EndOfFile => M("eof on stdin"); RETURN FALSE;
+      | Wr.Failure => M("writer failure on stdout"); RETURN FALSE;
+      ELSE
+        M("exception while reading confirmation");
+        RETURN FALSE; (* if anything is wrong we don't want to continue *)
+      END;
+    END;
+  END Confirm; 
+
 BEGIN
-  RunPhase (ReadFileList, "reading file list");
+  ProcessParameters();
+  IF outdir # NIL THEN
+    IF NOT FSUtils.IsDir(outdir) THEN
+      FSUtils.MakeDir(outdir);
+    END;
+    TRY
+      Process.SetWorkingDirectory(outdir);
+    EXCEPT
+      OSError.E => F("cannot change directory to " & outdir);
+    END;
+  END;
+  IF FSUtils.IsFile("INDEX.html") AND NOT force THEN
+    IF NOT Confirm("Overwrite existing INDEX.html") THEN
+      Process.Exit(1);
+    END;
+  END;
+  IF nTargets > 0 THEN
+    RunPhase (ReadFileList, "scanning packages");
+  ELSE
+    RunPhase (ReadFileList, "reading file list");
+  END;
   RunPhase (UpdateDB, "building database");
   RunPhase (GenerateHTML, "generating html");
   RunPhase (GenerateIndex, "generating index");
