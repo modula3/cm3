@@ -30,7 +30,7 @@ VAR
 BEGIN
   sum:=R.Zero;
   FOR i:=FIRST(v^) TO LAST(v^) DO
-    sum:=sum+Ct.Abs(v[i]);
+    sum:=R.Add(sum,Ct.Abs(v[i]));
   END;
   RETURN sum;
 END Norm1;
@@ -43,7 +43,7 @@ VAR
 BEGIN
   sum:=R.Zero;
   FOR i:=FIRST(v^) TO LAST(v^) DO
-    sum:=sum+Ct.AbsSqr(v[i]);
+    sum:=R.Add(sum,Ct.AbsSqr(v[i]));
   END;
   RETURN Rt.SqRt(sum);
 END Norm2;
@@ -57,7 +57,7 @@ BEGIN
   max:=R.Zero;
   FOR i:=FIRST(v^) TO LAST(v^) DO
     abs:=Ct.Abs(v[i]);
-    IF max<abs THEN
+    IF R.Compare(max,abs)<0 THEN
       max:=abs;
     END;
   END;
