@@ -90,6 +90,7 @@ PROCEDURE MatchPattern (target                               : S.T;
   END MatchPattern;
 
 PROCEDURE ComputeRho (READONLY y: ARRAY [0 .. 2] OF R.T): R.T =
+  <*FATAL NA.Error*>
   VAR
     p1  := VS.Sum(y);
     p2  := VS.Inner(y, y);
@@ -100,6 +101,7 @@ PROCEDURE ComputeRho (READONLY y: ARRAY [0 .. 2] OF R.T): R.T =
   END ComputeRho;
 
 PROCEDURE ComputeDRho (READONLY y: ARRAY [0 .. 2] OF R.T): V.T =
+  <*FATAL NA.Error*>
   VAR
     p1  := VS.Sum(y);
     p2  := VS.Inner(y, y);
@@ -136,6 +138,7 @@ PROCEDURE ComputeDDRho (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
 *)
 
 PROCEDURE ComputeDDRho (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
+  <*FATAL NA.Error*>
   (*derived with mathematica*)
   VAR
     p1 := VS.Sum(y);
@@ -188,6 +191,20 @@ PROCEDURE TestRho (x: V.T) =
     END;
   END TestRho;
 
+PROCEDURE InverseDRho (x: V.T) =
+  (*Find the parameter vector y for which DRho(y)=x*)
+  (*VAR y := V.New(3);*)
+  VAR y := x;
+  BEGIN
+    FOR j := 0 TO 15 DO
+      y := V.Add(y, LA.LeastSquaresGen(
+                      ComputeDDRho(y^),
+                      ARRAY OF V.T{V.Sub(x, ComputeDRho(y^))})[0].x);
+      IO.Put(Fmt.FN("y %s, DRho(y) %s\n",
+                    ARRAY OF TEXT{VF.Fmt(y), VF.Fmt(ComputeDRho(y^))}));
+    END;
+  END InverseDRho;
+
 PROCEDURE MaximizeSmoothness (x: V.T) =
   VAR
 
@@ -199,7 +216,7 @@ PROCEDURE MaximizeSmoothness (x: V.T) =
 PROCEDURE Test () =
   <*FATAL BSpl.DifferentParity*>
   BEGIN
-    CASE 3 OF
+    CASE 4 OF
     | 0 =>
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50), 6,
@@ -216,6 +233,10 @@ PROCEDURE Test () =
         TestRho(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
         TestRho(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0}));
     | 4 =>
+        InverseDRho(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
+        InverseDRho(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 0.1D0}));
+        InverseDRho(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0}));
+    | 5 =>
         MaximizeSmoothness(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
     ELSE
       <*ASSERT FALSE*>
