@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-dist-gnu.sh,v 1.1 2001-03-01 21:29:35 wagner Exp $
+# $Id: make-src-dist-gnu.sh,v 1.2 2001-04-03 19:17:10 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -33,6 +33,7 @@ cd "${ROOT}" || exit 1
 /bin/ls -1d COPYRIGHT-CMASS COPYRIGHT-DEC scripts > .tar-include
 /bin/ls -1d m3-sys/m3cc m3-sys/m3gdb >> .tar-include
 /bin/ls -1d m3-*/*/${TARGET} > .tar-exclude
+/bin/ls -1d m3-*/*/${TARGET}p >> .tar-exclude
 echo "building exclude list..."
 find . \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
           -name '*.rej' -or -name 'cvs-nq-up' -or -name '*-diffs' -or \
