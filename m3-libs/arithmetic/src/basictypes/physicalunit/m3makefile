@@ -15,6 +15,14 @@ PhysicalValue("RealComplex",     "RealComplexFast")
 PhysicalValue("LongRealComplex", "LongRealComplexFast")
 PhysicalValue("ExtendedComplex", "ExtendedComplexFast")
 
+generic_module("UnitDatabase")
+UnitDatabase("Real",            "RealBasic")
+UnitDatabase("LongReal",        "LongRealBasic")
+UnitDatabase("Extended",        "ExtendedBasic")
+UnitDatabase("RealComplex",     "RealComplexFast")
+UnitDatabase("LongRealComplex", "LongRealComplexFast")
+UnitDatabase("ExtendedComplex", "ExtendedComplexFast")
+
 %generic_module("PhysicalValueFmtLex")
 
-%module("SIUnitValue")
+module("SIUnit")

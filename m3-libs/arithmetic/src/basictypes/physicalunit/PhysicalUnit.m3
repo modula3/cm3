@@ -19,6 +19,25 @@ PROCEDURE New () : T =
     RETURN NEW(T).init(sizeHint:=5);
   END New;
 
+PROCEDURE FromArray (READONLY x : ARRAY OF ExpType) : T =
+  VAR
+    y := New();
+    success:BOOLEAN;
+  BEGIN
+    FOR j:=0 TO LAST(x) DO
+      IF x[j]#0 THEN
+        success:=y.put(j,x[j]);
+        <*ASSERT success*>
+        (* resist writing
+          <*ASSERT y.put(j,x[j])*>
+          because ASSERT statements may be removed
+          for final executables
+        *)
+      END;
+    END;
+    RETURN y;
+  END FromArray;
+
 PROCEDURE Copy (x : T) : T =
   VAR
     y := New();
@@ -29,11 +48,6 @@ PROCEDURE Copy (x : T) : T =
     WHILE it.next(unit,exp) DO
       success:=y.put(unit,exp);
       <*ASSERT success*>
-      (* resist writing
-        <*ASSERT y.put(unit,exp)*>
-        because ASSERT statements may be removed
-        for final executables
-      *)
     END;
     RETURN y;
   END Copy;
