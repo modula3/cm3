@@ -1,5 +1,0 @@
-import_lib("plplotd","/home/thielema/applications/plplot/lib")
-%import_lib("plplotd","/usr/lib")
-
-module("PLPlotRaw")
-module("PLPlot")
