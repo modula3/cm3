@@ -7,6 +7,7 @@ Abstract: Generic interface for formatting and parsing of float numbers
 
 IMPORT Fmt AS F;
 (*IMPORT Lex AS L;*)
+FROM FmtLexSupport IMPORT Precedence;
 
 TYPE
   T = R.T;
@@ -15,7 +16,10 @@ TYPE
                prec    :  CARDINAL := R.MaxSignifDigits - 3;
                literal := FALSE;
              END;
-  TexStyle = FmtStyle;
+  TexStyle = RECORD
+               style   := F.Style.Auto;
+               prec    :  CARDINAL := R.MaxSignifDigits - 3;
+             END;
 
 (*
 CONST
@@ -25,7 +29,6 @@ CONST
 <*INLINE*>
 PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}) : TEXT;
 
-CONST
-  Tex = Fmt;
+PROCEDURE Tex (x : T; READONLY style := TexStyle{}; within := Precedence.sum) : TEXT;
 
 END FloatFmtLex.

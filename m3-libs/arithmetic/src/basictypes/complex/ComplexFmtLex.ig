@@ -11,11 +11,13 @@ Abstract: Formatting and parsing complex numbers
 (*
 FROM NADefinitions IMPORT Error;
 *)
+FROM FmtLexSupport IMPORT Precedence;
 
 (*==========================*)
 TYPE
   T = C.T;
   FmtStyle = RECORD elemStyle := RF.FmtStyle{}; END;
+  TexStyle = RECORD elemStyle := RF.TexStyle{}; END;
 
 (*
 PROCEDURE Lex(str:TEXT):C.T RAISES {Error};
@@ -26,6 +28,8 @@ PROCEDURE Lex(str:TEXT):C.T RAISES {Error};
 PROCEDURE Fmt (READONLY x : T; READONLY style := FmtStyle{}) : TEXT;
         (*outputs as "COMPLEX{re:=<r>; im:=<r>}"
         Uses simple F.Real if x.im=0.0.*)
+
+PROCEDURE Tex (READONLY x : T; READONLY style := TexStyle{}; within := Precedence.sum) : TEXT;
 
 (*==========================*)
 END ComplexFmtLex.
