@@ -7,8 +7,8 @@ TYPE
   T <: TPublic;
   TPublic = OBJECT
 	METHODS
-	init(first, last : IndexType);
-	fromArray(READONLY arr : ARRAY OF R.T; first : IndexType := 0);
+	init(first, last : IndexType) : T;
+	fromArray(READONLY arr : ARRAY OF R.T; first : IndexType := 0) : T;
 	copy() : T;
 
     (*simply 'first' would collide with a instance variable*)
@@ -16,15 +16,19 @@ TYPE
 	getLast()   : IndexType;
 	getNumber() : IndexType;
 
-	translate  (dist   : IndexType);
 	upsample   (factor : IndexType) : T;
 	downsample (factor : IndexType) : T;
 	wrapCyclic (length : IndexType) : T;
 	reverse    () : T;
 	adjungate  () : T;
 
-    scale      (factor : R.T);
-    raise      (offset : R.T);
+    scale      (factor : R.T) : T;
+    raise      (offset : R.T) : T;
+
+    (*inplace operations*)
+	translateD (dist   : IndexType);
+    scaleD     (factor : R.T);
+    raiseD     (offset : R.T);
 
     convolve   (with : T) : T;
     superpose  (with : T) : T;
