@@ -1,0 +1,153 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <META HTTP-EQUIV="Content-Type" CONTENT="text/html">
+    <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+    <META HTTP-EQUIV="Resource-type" CONTENT="document"> 
+    <META HTTP-EQUIV="Description" CONTENT="Modula-3 Resource Page"> 
+    <META HTTP-EQUIV="Distribution" CONTENT="global"> 
+    <META HTTP-EQUIV="Keywords" CONTENT="m3, modula-3, modula3, M3, Modula-3, modula-3, cm3, CM3, FreeCM3">
+    <META HTTP-EQUIV="Reply-to" CONTENT="webmaster@m3.org"> 
+    <LINK HREF="http://www.m3.org/style/normal.css" REL="stylesheet" TYPE="text/css">
+    <title>Known Problems with CM3 5.1</title>
+  </head>
+
+  <body bgcolor="#ffffff">
+    <h2>Known Problems with CM3 5.1</h2>
+
+    <p>
+      Contents:<br><br>
+
+      <a href="#p_1">1 General Problems</a><br>
+      &nbsp;&nbsp;    
+      <a href="#p_1_1">1.1 Linkage failure: cannot find -lXaw</a><br>
+      <br>
+      <a href="#p_2">2 Release 5.1.0</a><br>
+      &nbsp;&nbsp;    
+      <a href="#p_2_1">2.1 Installation on NT386 fails because of
+        missing cygwin.dll</a><br>
+      <br>
+      <a href="#p_3">3 Release 5.1.1</a><br>
+    </p>
+
+    <a name="p_1">
+    <h3>1 General Problems</h3>
+    </a>
+
+    <p>
+      General problems and notes applying to all releases:
+    </p>
+
+    <a name="p_1_1">
+    <h4>1.1 Linkage failure: cannot find -lXaw</h4>
+    </a>
+
+    <p>
+      <b>Platforms:</b> mostly LINUXLIBC6, LINUXELF
+    </p>
+
+    <p>
+      <b>Description:</b>
+      Problems of this kind will arise if the linker cannot find the
+      static standard libraries of the X systems. This will mostly be
+      a problem on Linux systems, as almost all newer distributions
+      tend to not install static libraries by default. A typical
+      failure situation looks like this:
+    </p>
+
+    <pre>
+&gt; === package /home/i8fs1/VERIF/usr/old/stow/cm3/current/m3-ui/formsedit ===
+&gt;  +++ cm3 -build -override -DROOT=/home/i8fs1/VERIF/usr/old/stow/cm3/current  +++
+&gt; --- building in LINUXLIBC6 ---
+&gt; /home/i8fs1/VERIF/usr/old/stow/cm3/tmp/bin/m3bundle -name formseditBundle -F/tmp/qk
+&gt; new source -&gt; compiling FormsEditVBT.i3
+&gt; new source -&gt; compiling formseditBundle.i3
+&gt; new source -&gt; compiling FormsEditVBT.m3
+&gt; new source -&gt; compiling FormsEdit.m3
+&gt; new source -&gt; compiling formseditBundle.m3
+&gt;  -&gt; linking formsedit
+&gt; /home/i8fs1/VERIF/usr/old/bin/ld: cannot find -lXaw
+&gt; collect2: ld returned 1 exit status
+    </pre>
+
+    <p>
+      <b>Solution:</b>
+      Usually it is possible to install the missing libraries without
+      much effort.
+    </p>
+
+    <a name="p_2">
+    <h3>2 Release 5.1.0</h3>
+    </a>
+
+    <p>
+      Problems and notes specific to release 5.1.0:
+    </p>
+
+    <a name="p_2_1">
+    <h4>2.1 Installation on NT386 fails because of missing cygwin.dll</h4>
+    </a>
+
+    <p>
+      <b>Platforms:</b> NT386
+    </p>
+
+    <p>
+      <b>Description:</b>
+      The installation program cannot unpack the system and other
+      archives because <tt>cygwin.dll</tt>, which is needed by the
+      bundled <tt>tar.exe</tt>, is missing in the installation
+      archive. 
+    </p>
+
+    <p>
+      <b>Solution:</b>
+      Either
+    </p>
+    <ul>
+      <li>
+        place a working <tt>cygwin.dll</tt> in next to the
+        <tt>cminstall</tt> program,
+      </li>
+      <li>
+        place a working <tt>tar.exe</tt> next to the 
+        <tt>cminstall</tt> program,
+      </li>
+      <li>
+        get a newer installation archive (5.1.1 or better).
+      </li>
+    </ul>
+
+
+    <a name="p_3">
+    <h3>3 Release 5.1.1</h3>
+    </a>
+
+    <p>
+      Problems and notes specific to release 5.1.1:
+    </p>
+
+    <!--
+    <h4></h4>
+
+    <p>
+      <b>Platforms:</b> all
+    </p>
+
+    <p>
+      <b>Description:</b>
+    </p>
+
+    <p>
+      <b>Solution:</b>
+    </p>
+    -->
+
+    <hr>
+    <address><a href="mailto:m3-support@elego.de">Olaf Wagner</a></address>
+<!-- Created: Fri Mar  2 10:51:41 MET 2001 -->
+<!-- hhmts start -->
+Last modified: Fri Mar  2 14:39:09 MET 2001
+<!-- hhmts end -->
+  </body>
+</html>
