@@ -7,7 +7,7 @@
 
 UNSAFE MODULE ProcessPosix EXPORTS Process;
 
-IMPORT Atom, AtomList, Ctypes, Env, File, FilePosix, M3toC, OSError,
+IMPORT Atom, AtomList, Cerrno, Ctypes, Env, File, FilePosix, M3toC, OSError,
   OSErrorPosix, Pathname, RTLinker, RTProcess, RTSignal,
   SchedulerPosix, Text, Thread, Unix, Uerror, Uexec, Uprocess, Ustat,
   Utime, Uugid, Word;
@@ -18,7 +18,8 @@ REVEAL T = BRANDED REF RECORD
   END;
 
 CONST
-  NoFile = -1;  (* ==> Create should "dup" the existing file *)
+  NoFileDescriptor: INTEGER = -1;
+  (* A non-existent file descriptor *)
 
 PROCEDURE Create(
     cmd: Pathname.T;
@@ -36,7 +37,7 @@ PROCEDURE Create(
     forkResult, execResult: INTEGER;
     forkErrno, execErrno: Ctypes.int;
     waitStatus: Uexec.w_A;
-    stdin_fd, stdout_fd, stderr_fd: INTEGER;
+    stdin_fd, stdout_fd, stderr_fd: INTEGER := NoFileDescriptor;
   BEGIN
     VAR path := GetPathToExec(cmd); BEGIN
       (* make sure the result is an absolute pathname if "wd # NIL" *)
@@ -61,9 +62,12 @@ PROCEDURE Create(
 
     (* grab the file descriptors from inside the traced File.Ts so
        we don't trigger a GC after the vfork() call. *)
-    stdin_fd  := NoFile;  IF (stdin  # NIL) THEN stdin_fd  := stdin.fd;  END;
-    stdout_fd := NoFile;  IF (stdout # NIL) THEN stdout_fd := stdout.fd; END;
-    stderr_fd := NoFile;  IF (stderr # NIL) THEN stderr_fd := stderr.fd; END;
+    stdin_fd  := NoFileDescriptor;  
+    IF (stdin  # NIL) THEN stdin_fd  := stdin.fd;  END;
+    stdout_fd := NoFileDescriptor;
+    IF (stdout # NIL) THEN stdout_fd := stdout.fd; END;
+    stderr_fd := NoFileDescriptor;
+    IF (stderr # NIL) THEN stderr_fd := stderr.fd; END;
 
     (* Turn off the interval timer (so it won't be running in child). *)
     nit := Utime.struct_itimerval {
@@ -79,18 +83,18 @@ PROCEDURE Create(
     execResult := 0;
     forkResult := Unix.vfork();
     IF forkResult = 0 THEN (* in the child *)
-      ExecChild(argx, envp, wdstr, stdin_fd, stdout_fd, stderr_fd);
-     (* If ExecChild returns, the execve.  Let's try to leave a note
-        for our parent, in case we're still sharing their address
-        space. *)
-      execResult := -1;
-      execErrno := Uerror.errno;
+      execResult := ExecChild(argx, envp, wdstr, stdin_fd, stdout_fd,
+          stderr_fd);
+      (* If ExecChild returns, the execve failed. Let's try to leave
+        a note for our parent, in case we're still sharing their
+        address space. *)
+      execErrno := Cerrno.GetErrno();
       Unix.underscore_exit(99)
     END;
 
     (* Back in parent. *)
 
-    forkErrno := Uerror.errno;
+    forkErrno := Cerrno.GetErrno();
 
     (* Enable scheduler. *)
     SchedulerPosix.EnableSwitching ();
@@ -140,7 +144,8 @@ PROCEDURE GetPathToExec(pn: Pathname.T): Pathname.T RAISES {OSError.E} =
         pname := M3toC.SharedTtoS(prog);
         result := Ustat.stat(pname, ADR(statBuf));
         M3toC.FreeSharedS(prog, pname);
-        IF result = 0 AND Word.And(statBuf.st_mode, Ustat.S_IFMT) = Ustat.S_IFREG THEN
+        IF result = 0 AND 
+          Word.And(statBuf.st_mode, Ustat.S_IFMT) = Ustat.S_IFREG THEN
           statBuf.st_mode := Word.And(statBuf.st_mode, MaskXXX);
           IF statBuf.st_mode # 0 THEN
             IF statBuf.st_mode = MaskXXX THEN RETURN prog END;
@@ -165,7 +170,7 @@ PROCEDURE GetPathToExec(pn: Pathname.T): Pathname.T RAISES {OSError.E} =
     ELSE (* pn contains '/' *)
       pname := M3toC.SharedTtoS(pn);
       IF Ustat.stat(pname, ADR(statBuf)) < 0 THEN
-        result := Uerror.errno;
+        result := Cerrno.GetErrno();
         M3toC.FreeSharedS(pn, pname);
         OSErrorPosix.Raise0(result)
       END;
@@ -228,19 +233,19 @@ PROCEDURE ExecChild(
     argx: ArrCStr; (* see "AllocArgs" for layout *)
     envp: Ctypes.char_star_star;
     wdstr: Ctypes.char_star;
-    stdin, stdout, stderr: INTEGER)
+    stdin, stdout, stderr: INTEGER) : INTEGER
   RAISES {} =
 (* Modify Unix state using "stdin", ..., and invoke execve using
    "argx" and "envp".  Do not invoke scheduler, allocator, or
    exceptions.  Return only if a fatal Unix error is encountered, in
-   which case Uerror.errno is set. *)
+   which case Cerrno.GetErrno() is set. *)
   VAR res := 0; t: Ctypes.char_star;
   BEGIN
     IF wdstr # NIL THEN
-      IF Unix.chdir(wdstr) < 0 THEN RETURN END
+      IF Unix.chdir(wdstr) < 0 THEN RETURN -1; END
     END;
     IF NOT (SetFd(0, stdin) AND SetFd(1, stdout) AND SetFd(2, stderr)) THEN
-      RETURN
+      RETURN -1;
     END;
     FOR fd := 3 TO Unix.getdtablesize() - 1 DO
       EVAL Unix.close(fd) (* ignore errors *)
@@ -249,47 +254,51 @@ PROCEDURE ExecChild(
     RTSignal.RestoreHandlers();
     res := Unix.execve((*path*)argx[0], ADR(argx[2]), envp);
     <* ASSERT res < 0 *>
-    IF Uerror.errno = Uerror.ENOEXEC THEN
+    IF Cerrno.GetErrno() = Uerror.ENOEXEC THEN
       t := argx[0]; argx[0] := argx[2]; argx[2] := t;
       res := Unix.execve(BinSh, ADR(argx[1]), envp);
       <* ASSERT res < 0 *>
-    END
+    END;
+    RETURN res;
   END ExecChild;
 
 PROCEDURE SetFd(fd: INTEGER; h: INTEGER(*File.T*)): BOOLEAN =
   (* Make file descriptor "fd" refer to file "h", or set "fd"'s
      close-on-exec flag if "h=NoFile".  Return "TRUE" if succesful. *)
   BEGIN
-    IF h # NoFile THEN
+    IF h # NoFileDescriptor THEN
       RETURN NOT Unix.dup2(h, fd) < 0
     ELSIF Unix.fcntl(fd, Unix.F_SETFD, 1) >= 0 THEN
       RETURN TRUE;
     ELSE (* EBADF => "fd" was already closed, don't panic *)
-      RETURN (Uerror.errno = Uerror.EBADF);
+      RETURN (Cerrno.GetErrno() = Uerror.EBADF);
     END;
   END SetFd;
 
 EXCEPTION WaitAlreadyCalled;
 
 PROCEDURE Wait(p: T): ExitCode = <* FATAL WaitAlreadyCalled *> 
-  VAR result: Ctypes.int;  status: Uexec.w_A;
-  CONST Delay = 0.2D0;
+  VAR
+    result: Ctypes.int;
+    statusT: Uexec.w_T;
+    statusM3: Uexec.w_M3;
+  CONST Delay = 0.1D0;
   BEGIN
     IF NOT p.waitOk THEN RAISE WaitAlreadyCalled END;
     p.waitOk := FALSE;
     (* By rights, the SchedulerPosix interface should have a WaitPID
        procedure that is integrated with the thread scheduler. *)
     LOOP
-      result := Uexec.waitpid(p.pid, ADR(status), Uexec.WNOHANG);
+      result := Uexec.waitpid(p.pid, ADR(statusT), Uexec.WNOHANG);
       IF result # 0 THEN EXIT END;
       Thread.Pause(Delay)
     END;
     <* ASSERT result > 0 *>
-    IF Word.And(status, LAST(ExitCode)) = status THEN
-      RETURN status
-    ELSE
-      RETURN LAST(ExitCode)
-    END
+    statusM3.w_Filler := 0;
+    statusM3.w_Coredump := statusT.w_Coredump;
+    statusM3.w_Termsig := statusT.w_Termsig;
+    statusM3.w_Retcode := statusT.w_Retcode;
+    RETURN MIN(LAST(ExitCode),LOOPHOLE(statusM3,Uexec.w_A));
   END Wait;
 
 PROCEDURE Exit(n: ExitCode) =
@@ -335,7 +344,7 @@ PROCEDURE GetWorkingDirectory(): Pathname.T RAISES {OSError.E} =
   BEGIN
     LOCK wdCacheMutex DO
       IF wdCache = NIL THEN
-        rc := Unix.getwd(ADR(buffer[0]));
+        rc := Unix.getcwd(ADR(buffer[0]), Unix.MaxPathLen+1);
         IF rc = NIL THEN
           RAISE OSError.E(
             NEW(AtomList.T,
@@ -353,7 +362,7 @@ PROCEDURE SetWorkingDirectory(pn: Pathname.T) RAISES {OSError.E} =
   BEGIN
     LOCK wdCacheMutex DO
       IF Unix.chdir(fname) < 0 THEN
-        err := Uerror.errno;
+        err := Cerrno.GetErrno();
         M3toC.FreeSharedS(pn, fname);
         OSErrorPosix.Raise0(err);
       END;

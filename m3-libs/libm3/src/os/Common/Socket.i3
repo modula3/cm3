@@ -1,4 +1,5 @@
-(* Copyright 1997, Critical Mass, Inc.  All rights reserved. *)
+(* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 (* A "Socket.T", or socket, is a file handle that provides access to
    a bidirectional channel that is typically used to communicate between
