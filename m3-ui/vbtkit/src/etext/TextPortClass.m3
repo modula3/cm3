@@ -141,15 +141,26 @@ PROCEDURE LocateNextWordBoundary (v: T; reverse := FALSE): CARDINAL =
     IF reverse THEN RETURN index - count ELSE RETURN index + count END
   END LocateNextWordBoundary;
 
+PROCEDURE AtCRLF (v: T;  index: INTEGER): BOOLEAN =
+  VAR m := v.vtext.mtext;
+  BEGIN
+    RETURN (index+1 < MText.Length (m))
+       AND MText.GetChar (m, index) = '\r'
+       AND MText.GetChar (m, index+1) = '\n';
+  END AtCRLF;
+
 PROCEDURE ToPrevChar (v: T) =
   VAR index := v.index ();
   BEGIN
-    IF index > 0 THEN v.m.seek (index - 1) END
+    IF index > 1 AND AtCRLF (v, index-2) THEN DEC (index); END;
+    IF index > 0 THEN v.m.seek (index - 1); END
   END ToPrevChar;
 
 PROCEDURE ToNextChar (v: T) =
+  VAR index := v.index ();
   BEGIN
-    v.m.seek (v.index () + 1)
+    IF AtCRLF (v, index) THEN INC (index); END;
+    v.m.seek (index + 1)
   END ToNextChar;
 
 PROCEDURE ToStartOfLine (v: T) =
@@ -210,7 +221,9 @@ PROCEDURE GoUpDown (v: T; goUp: BOOLEAN) =
 PROCEDURE DeletePrevChar (v: T): Extent =
   VAR here := v.index ();
   BEGIN
-    IF here > 0 THEN
+    IF here > 1 AND AtCRLF (v, here - 2) THEN
+      RETURN v.replace (here - 2, here, "")
+    ELSIF here > 0 THEN
       RETURN v.replace (here - 1, here, "")
     ELSE
       RETURN NotFound
@@ -220,7 +233,11 @@ PROCEDURE DeletePrevChar (v: T): Extent =
 PROCEDURE DeleteNextChar (v: T): Extent =
   VAR here := v.index ();
   BEGIN
-    RETURN v.replace (here, here + 1, "")
+    IF AtCRLF (v, here) THEN
+      RETURN v.replace (here, here + 2, "")
+    ELSE
+      RETURN v.replace (here, here + 1, "")
+    END;
   END DeleteNextChar;
 
 PROCEDURE DeleteToEndOfWord (v: T): Extent =
@@ -272,8 +289,8 @@ PROCEDURE DeleteToStartOfLine (v: T): Extent =
     left := MTextUnit.StartOfLine (v.vtext.mtext, here);
   BEGIN
     IF here = left THEN
-      (* We're already at the start of line; delete one char. *)
-      RETURN v.replace (here - 1, here, "")
+      (* Already at the start of line; delete preceding newline if any. *)
+      RETURN DeletePrevChar (v);
     ELSE
       RETURN v.replace (left, here, "")
     END

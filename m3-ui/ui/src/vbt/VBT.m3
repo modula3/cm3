@@ -18,7 +18,7 @@ UNSAFE MODULE VBT;
 IMPORT Word, Thread, Rect, Point, Axis, Path, Trapezoid, Region, Pixmap,
        Cursor, Font, PaintOp, ScrnPixmap, BatchRep, ScrnFont, ScrnPaintOp,
        Text, VBTClass, VBTRep, TextWr, Cstring, PaintExt, PaintPrivate,
-       Pickle, TextRd, TextF, PropertyV, PathPrivate, TextIntTbl, Wr, Rd,
+       Pickle, TextRd, PropertyV, PathPrivate, TextIntTbl, Wr, Rd,
        Palette, PlttFrnds, RTParams;
 
 PROCEDURE CopyBytes (src, dst: ADDRESS; n: INTEGER) =
@@ -656,8 +656,19 @@ PROCEDURE PaintText (         v      : Leaf;
                               t      : Text.T;
                               paintOp: PaintOp.T;
                      READONLY dl := ARRAY OF Displacement{}) RAISES {} =
+  VAR
+    len := Text.Length(t);
+    buf : ARRAY [0..127] OF CHAR;
+    rbuf: REF ARRAY OF CHAR;
   BEGIN
-    PaintSub(v, clp, rfpt, fntP, SUBARRAY(t^, 0, LAST(t^)), paintOp, dl)
+    IF (len <= NUMBER(buf)) THEN
+      Text.SetChars (buf, t);
+      PaintSub(v, clp, rfpt, fntP, SUBARRAY(buf, 0, len), paintOp, dl)
+    ELSE
+      rbuf := NEW (REF ARRAY OF CHAR, len);
+      Text.SetChars (rbuf^, t);
+      PaintSub(v, clp, rfpt, fntP, rbuf^, paintOp, dl)
+    END;
   END PaintText;
 
 PROCEDURE PaintSub (         v      : Leaf;

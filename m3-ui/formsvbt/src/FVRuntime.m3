@@ -103,9 +103,10 @@ PROCEDURE InitFromRd (fv: T; rd: Rd.T; raw := FALSE; path: Rsrc.Path := NIL):
 
 PROCEDURE FromRd (fv: T; rd: Rd.T; raw := FALSE; path: Rsrc.Path := NIL; baseURL: TEXT :=NIL): T
   RAISES {Error, Rd.Failure, Thread.Alerted} =
+  VAR desc := Thread.Join(Thread.Fork(NEW(ReaderClosure, rd := rd,
+                                          stackSize := 10000)));
   BEGIN
-    TYPECASE Thread.Join(Thread.Fork(NEW(ReaderClosure, rd := rd,
-                                         stackSize := 10000))) OF
+    TYPECASE desc OF
     | ReaderClosure (rc) =>
         CASE rc.errType OF
         | ErrType.ReadError => RAISE Error("Sx.ReadError: " & rc.errArg)
@@ -113,7 +114,7 @@ PROCEDURE FromRd (fv: T; rd: Rd.T; raw := FALSE; path: Rsrc.Path := NIL; baseURL
         | ErrType.Failure => RAISE Rd.Failure(rc.errArg)
         | ErrType.Alerted => RAISE Thread.Alerted
         END
-    | REFANY (desc) => RETURN FromSx(fv, desc, raw, path, baseURL)
+    ELSE RETURN FromSx(fv, desc, raw, path, baseURL);
     END
   END FromRd;
 

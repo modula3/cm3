@@ -157,23 +157,19 @@ TYPE
 
   VFont = REF RECORD
                 handedOut: CARDINAL;
-                vFont: RECORD
-                         font     : Font.T;
-                         printable: SET OF CHAR;
-                         whiteTabs: BOOLEAN;
-                       END;
+                font     : Font.T;
+                printable: SET OF CHAR;
+                whiteTabs: BOOLEAN;
               END;
 
   VScreenFont = REF RECORD
-                      vScreenFont: RECORD
-                                     vFont      : VFont;
-                                     metrics    : ScrnFont.Metrics;
-                                     box        : Rect.T;
-                                     width      : ARRAY CHAR OF Pixels;
-                                     defined    : SET OF CHAR;
-                                     paintOpaque: BOOLEAN;
-                                   END;
-                    END;
+                  vFont      : VFont;
+                  metrics    : ScrnFont.Metrics;
+                  box        : Rect.T;
+                  width      : ARRAY CHAR OF Pixels;
+                  defined    : SET OF CHAR;
+                  paintOpaque: BOOLEAN;
+                END;
 
   Tint = PaintOp.T;
   ColorScheme = PaintOp.ColorScheme;

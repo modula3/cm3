@@ -180,8 +180,8 @@ PROCEDURE FindInView (view: View)
       IF nw.v >= 0 THEN
         view.caret.rect :=
           Rect.Meet (Rect.FromCorner (
-                       nw, 1, view.vScreenFont.vScreenFont.box.south
-                                - view.vScreenFont.vScreenFont.box.north),
+                       nw, 1, view.vScreenFont.box.south
+                                - view.vScreenFont.box.north),
                      view.rect.clip);
         view.caret.lineNo :=
           (nw.v - view.rect.text.north) DIV view.lineSpacing;

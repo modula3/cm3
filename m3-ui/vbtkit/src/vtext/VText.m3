@@ -39,7 +39,7 @@ PROCEDURE New (         mtext   : MText.T;
     vtext := NEW (T);
     vtext.mtext := mtext;       (* old-style *)
     vtext.vbt := vbt;           (* old-style *)
-    vtext.font := vOptions.vFontxxx.vFont.font; (* old-style *)
+    vtext.font := vOptions.vFontxxx.font; (* old-style *)
     vtext.vOptions := vOptions; (* semi old-style *)
     vtext.vt := VT.New (mtext);
     vtext.west := rect.west;    (* old-style *)
@@ -51,12 +51,12 @@ PROCEDURE New (         mtext   : MText.T;
     VTextRegion.SetupRegion (
       vtext, 0, rect.north, rect.south - rect.north, 0);
     vtext.lineSpacing :=
-      vtext.region [0].view.vScreenFont.vScreenFont.box.south
-        - vtext.region [0].view.vScreenFont.vScreenFont.box.north
+      vtext.region [0].view.vScreenFont.box.south
+        - vtext.region [0].view.vScreenFont.box.north
         + vtext.leading;
     (* old-style *)
     vtext.lineOffset :=
-      -vtext.region [0].view.vScreenFont.vScreenFont.box.north;
+      -vtext.region [0].view.vScreenFont.box.north;
     (* old-style *)
     vtext.caretState := vtext.vt.caret.state; (* old-style *)
     vtext.dividersDirty := FALSE;
@@ -93,9 +93,9 @@ PROCEDURE ExplodeVFont (READONLY     vFont    : VFont;
                         VAR (* OUT*) printable: SET OF CHAR;
                         VAR (* OUT*) whiteTabs: BOOLEAN      ) RAISES {} =
   BEGIN
-    font := vFont.vFont.font;
-    printable := vFont.vFont.printable;
-    whiteTabs := vFont.vFont.whiteTabs;
+    font      := vFont.font;
+    printable := vFont.printable;
+    whiteTabs := vFont.whiteTabs;
   END ExplodeVFont;
 
 
@@ -153,7 +153,7 @@ PROCEDURE ChangeVOptions (vtext: T; READONLY vOptions: VOptions)
     IF vtext = NIL THEN RAISE VTDef.Error (ErrorCode.IsNil); END;
     LOCK vtext.vt.mutex DO
       vtext.vOptions := vOptions;
-      vtext.font := vtext.vOptions.vFontxxx.vFont.font; (* old-style *)
+      vtext.font := vtext.vOptions.vFontxxx.font; (* old-style *)
       WITH vo = vtext.vOptions DO
         VTView.SetPixelOptions (vo, vtext.vbt);
         vtext.leftMargin := vo.leftMargin;
@@ -164,12 +164,12 @@ PROCEDURE ChangeVOptions (vtext: T; READONLY vOptions: VOptions)
       END;
       vtext.left := vtext.west + vtext.leftMargin + vtext.turnMargin;
       vtext.lineSpacing :=
-        vtext.region [0].view.vScreenFont.vScreenFont.box.south
-          - vtext.region [0].view.vScreenFont.vScreenFont.box.north
+        vtext.region [0].view.vScreenFont.box.south
+          - vtext.region [0].view.vScreenFont.box.north
           + vtext.leading;
       (* old-style *)
       vtext.lineOffset :=
-        -vtext.region [0].view.vScreenFont.vScreenFont.box.north;
+        -vtext.region [0].view.vScreenFont.box.north;
       (* old-style *)
 
       FOR r := 0 TO vtext.regionMax DO
@@ -254,11 +254,11 @@ PROCEDURE Rescreen (vtext: T; READONLY cd: VBT.RescreenRec) RAISES {} =
 
       vtext.left := vtext.west + vtext.leftMargin + vtext.turnMargin;
       vtext.lineSpacing :=
-        vtext.region [0].view.vScreenFont.vScreenFont.box.south
-          - vtext.region [0].view.vScreenFont.vScreenFont.box.north
+        vtext.region [0].view.vScreenFont.box.south
+          - vtext.region [0].view.vScreenFont.box.north
           + vtext.leading;      (* old-style *)
       vtext.lineOffset :=
-        -vtext.region [0].view.vScreenFont.vScreenFont.box.north;
+        -vtext.region [0].view.vScreenFont.box.north;
       (* old-style *)
     END
   END Rescreen;
@@ -809,7 +809,7 @@ PROCEDURE Locate (              vtext: T;
         VTBase.UnsafeLocatePoint (z_153.view, place, p);
         IF p.v >= 0 THEN
           h := p.h;
-          v := p.v + -z_153.view.vScreenFont.vScreenFont.box.north;
+          v := p.v + -z_153.view.vScreenFont.box.north;
         ELSE
           v := p.v;
         END;
