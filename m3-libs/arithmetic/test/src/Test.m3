@@ -63,4 +63,5 @@ BEGIN
   (*NewLine(); EVAL TestFFT();*)
   NewLine(); EVAL TestBigInteger();
   NewLine(); EVAL TestGCD();
+  NewLine(); EVAL TestEigenSystem();
 END Test.

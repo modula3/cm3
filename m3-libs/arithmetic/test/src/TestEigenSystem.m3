@@ -2,9 +2,9 @@
  *
  * Test Tred[1234].
  *)
-MODULE Main;
+MODULE TestEigenSystem EXPORTS Test;
 
-IMPORT EigenSystem;
+IMPORT LongRealEigenSystem AS EigenSys;
 IMPORT Wr, Stdio, Math, Thread, Fmt;
 
 <* FATAL Wr.Failure *>
@@ -12,6 +12,10 @@ IMPORT Wr, Stdio, Math, Thread, Fmt;
 <* FATAL EigenSys.NoConvergence *>
 <* FATAL EigenSys.ArrayTooSmall *>
 <* FATAL EigenSys.ArraySizesDontMatch *>
+
+(*=======================*)
+CONST
+  Module = "TestEigenSystem.";
 
 PROCEDURE Print2(d,e: REF ARRAY OF LONGREAL;
                  dWR, eWR: ARRAY OF LONGREAL) RAISES {}=
@@ -21,8 +25,8 @@ PROCEDURE Print2(d,e: REF ARRAY OF LONGREAL;
       Fmt.Pad("Sub-Diagonale",18) &"\n" );
     FOR i:=FIRST(d^) TO LAST(d^) DO
       Wr.PutText(Stdio.stdout, Fmt.Pad(Fmt.Int(i),2) &
-        Fmt.Pad(Fmt.LongReal(d[i],12,Fmt.Style.Sci),19) &
-        Fmt.Pad(Fmt.LongReal(e[i],12,Fmt.Style.Sci),19) &"\n");
+        Fmt.Pad(Fmt.LongReal(d[i],Fmt.Style.Sci,12),19) &
+        Fmt.Pad(Fmt.LongReal(e[i],Fmt.Style.Sci,12),19) &"\n");
     END; (* for *)
     Wr.PutText( Stdio.stdout, "\nVergleich mit Wilkinson-Reinsch:\n");
     FOR i:=FIRST(d^) TO LAST(d^) DO
@@ -42,9 +46,9 @@ PROCEDURE Print3(d,e,e2 : REF ARRAY OF LONGREAL;
       Fmt.Pad("Sub-Diagonale**2",18) &"\n" );
     FOR i:=FIRST(d^) TO LAST(d^) DO
       Wr.PutText(Stdio.stdout, Fmt.Pad(Fmt.Int(i),2) &
-        Fmt.Pad(Fmt.LongReal(d[i],12,Fmt.Style.Sci),19) &
-        Fmt.Pad(Fmt.LongReal(e[i],12,Fmt.Style.Sci),19) &
-        Fmt.Pad(Fmt.LongReal(e2[i],12,Fmt.Style.Sci),19) &"\n");
+        Fmt.Pad(Fmt.LongReal(d[i],Fmt.Style.Sci,12),19) &
+        Fmt.Pad(Fmt.LongReal(e[i],Fmt.Style.Sci,12),19) &
+        Fmt.Pad(Fmt.LongReal(e2[i],Fmt.Style.Sci,12),19) &"\n");
     END; (* for *)
     Wr.PutText( Stdio.stdout, "\nVergleich mit Wilkinson-Reinsch:\n");
     FOR i:=FIRST(d^) TO LAST(d^) DO
@@ -62,7 +66,7 @@ PROCEDURE RunTql1(VAR d,e: REF ARRAY OF LONGREAL) RAISES {}=
     EigenSys.Tql1( d, e);
     Wr.PutText(Stdio.stdout, "Eigenwerte\n");
     FOR i:=FIRST(d^) TO LAST(d^) DO
-      Wr.PutText( Stdio.stdout, Fmt.Pad(Fmt.LongReal( d[i],12),20) & "\n");
+      Wr.PutText( Stdio.stdout, Fmt.Pad(Fmt.LongReal( d[i],prec:=12),20) & "\n");
     END; (* for *)
   END RunTql1;
 
@@ -72,7 +76,7 @@ PROCEDURE RunTql2(VAR d,e: REF ARRAY OF LONGREAL;
     EigenSys.Tql2( d, e, z);
     Wr.PutText(Stdio.stdout, "Eigenwerte\n");
     FOR i:=FIRST(d^) TO LAST(d^) DO
-      Wr.PutText( Stdio.stdout, Fmt.Pad(Fmt.LongReal( d[i],12),20) & "\n");
+      Wr.PutText( Stdio.stdout, Fmt.Pad(Fmt.LongReal( d[i],prec:=12),20) & "\n");
     END; (* for *)
   END RunTql2;
 
@@ -118,7 +122,7 @@ PROCEDURE RunTred2(a: REF ARRAY OF ARRAY OF LONGREAL;
     Wr.PutText(Stdio.stdout, "Transformationsmatrix\n");
     FOR i:=FIRST(a^) TO LAST(a^) DO
       FOR j:=FIRST(a[0]) TO LAST(a[0]) DO
-        Wr.PutText( Stdio.stdout, Fmt.Pad(Fmt.LongReal(aLocal[i,j],10),15));
+        Wr.PutText( Stdio.stdout, Fmt.Pad(Fmt.LongReal(aLocal[i,j],prec:=10),15));
       END; (* for *)
       Wr.PutText( Stdio.stdout, "\n");
     END; (* for *)
@@ -179,6 +183,15 @@ PROCEDURE RunTestA() RAISES {}=
   END RunTestA;
 
 
+(*-------------------------*)
+PROCEDURE TestEigenSystem():BOOLEAN=
+CONST ftn = Module & "TestEigenSystem";
+VAR result:=TRUE;
 BEGIN
-  RunTestA();
-END Main.
+  NewLine(); RunTestA();
+  RETURN result;
+END TestEigenSystem;
+(*=======================*)
+
+BEGIN
+END TestEigenSystem.
