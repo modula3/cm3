@@ -9,31 +9,30 @@ Abstract: Interpolation routines.
 2/17/96   Harry George    converted to ADT format
 *)
 FROM xUtils IMPORT Error,Err;
-FROM xReal64 IMPORT REAL64,Array,Zero,TINY;
 
 CONST Module = "Interpolation.";
 (*==========================*)
 
 (*------------------*)
-PROCEDURE linear(
-                 READONLY xa,ya:ARRAY OF REAL64;(*interp table*)
-                 x:REAL64;                      (*the input*)
-                 ):REAL64=
+PROCEDURE Linear(
+                 READONLY xa,ya:ARRAY OF R.T;(*interp table*)
+                 x:R.T;                      (*the input*)
+                 ):R.T=
 (*Given an interpolation table with xa input and ya output,
 do linear interpolation for x.
 *)
 VAR
   n:=NUMBER(xa); n1:=0; nn:=n-1;
-  diffbest,diff:REAL64;
+  diffbest,diff:R.T;
   ndx,ndx1,ndx2:CARDINAL;
-  x1,x2,y1,y2:REAL64;
+  x1,x2,y1,y2:R.T;
 BEGIN
   (*---find the best start point---*)
   ndx:=n1; (*this is arbitrary, but fix the FOR loop if you change*)
   diffbest:=ABS(x-xa[ndx]);
   FOR i:=n1+1 TO nn DO
     diff:=ABS(x-xa[i]);
-    IF diff < TINY THEN
+    IF diff < RT.Tiny THEN
       (*quick victory*)
       RETURN ya[i];
     ELSIF diff<diffbest THEN
@@ -56,25 +55,26 @@ BEGIN
   x1:=xa[ndx1]; y1:=ya[ndx1];
   x2:=xa[ndx2]; y2:=ya[ndx2];
   RETURN y1+((y2-y1)/(x2-x1))*(x-x1);
-END linear;
+END Linear;
 
 (*------------------*)
-PROCEDURE newt(
-                 READONLY xa,ya:ARRAY OF REAL64;(*interp table*)
-                 x:REAL64;             (*the input*)
-                 VAR dy:REAL64;        (*the error estimate*)
+PROCEDURE Newton(
+                 READONLY xa,ya:ARRAY OF R.T;(*interp table*)
+                 x:R.T;             (*the input*)
+                 VAR dy:R.T;        (*the error estimate*)
                  start,len:CARDINAL:=0 (*for partial access*)
-                 ):REAL64  RAISES {Error}=
+                 ):R.T  RAISES {Error}=
 (*Given an interpolation table with xa input and ya output,
 do Newton polynomial interpolation for x.  Report error estimate as dy.
 Partial access: Give the starting index and the length to be used.
 *)
-CONST ftn = Module & "newt";
+<*UNUSED*>
+CONST ftn = Module & "Newton";
 VAR
   xn,xn1,xnn,n,col_n:CARDINAL;
-  c,d:Array;
+  c,d:REF ARRAY OF R.T;
   ndx:CARDINAL:=1;
-  y,xi,xim,den,factor,diff,difftmp:REAL64;
+  y,xi,xim,den,factor,diff,difftmp:R.T;
 BEGIN
   IF NUMBER(xa) # NUMBER(ya) THEN
     RAISE Error(Err.bad_size);
@@ -93,23 +93,23 @@ BEGIN
   END;
   (*either way, c and d are 0..n but we use 1..n*)
   n:=xn;
-  c:=NEW(Array,n+1);
-  d:=NEW(Array,n+1);
+  c:=NEW(REF ARRAY OF R.T,n+1);
+  d:=NEW(REF ARRAY OF R.T,n+1);
 
   (*---find starting y---*)
   ndx:=xnn;              (*get a starter x*)
   diff:=ABS(x-xa[ndx]);  (*and its difference from true x*)
   FOR i:=xn1 TO xnn DO
     difftmp:=ABS(x-xa[i]);
-    IF difftmp < TINY THEN
-      y:=ya[i]; dy:=Zero;
+    IF difftmp < RT.Tiny THEN
+      y:=ya[i]; dy:=R.Zero;
       RETURN y;
     ELSIF difftmp < diff THEN (*found a better one*)
       ndx:=i;  diff:=difftmp;
     END;
     c[i-xn1+1]:=ya[i];  (*c and d are 1..xn*)
   END;
-  c[0]:=Zero;  (*even though we don't use it*)
+  c[0]:=R.Zero;  (*even though we don't use it*)
   d^:=c^;     (*load d from c, thus from ya*)
 
   y:=ya[ndx]; (*use the best ndx to get starting y*)
@@ -122,7 +122,7 @@ BEGIN
     FOR i:=1 TO col_n DO
       xi:=xa[xn1+i-1];  xim:=xa[xn1+(i-1)+m];
       den:=xi-xim;
-      IF ABS(den) < TINY THEN
+      IF ABS(den) < RT.Tiny THEN
         RAISE Error(Err.divide_by_zero);
       END;
       factor:=(c[i+1]-d[i])/den;
@@ -143,7 +143,7 @@ BEGIN
     y:=y+dy;
   END;
   RETURN y;
-END newt;
+END Newton;
 
 
 (*==========================*)
