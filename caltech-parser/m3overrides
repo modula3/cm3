@@ -57,3 +57,12 @@ if not stale(m3tk, m3tk)
   override("m3tk", ROOT & "/m3-tools")
 end
 
+ui = ROOT & "/m3-ui/ui"
+if not stale(ui, ui)
+  override("ui", ROOT & "/m3-ui")
+end
+
+vbtkit = ROOT & "/m3-ui/vbtkit"
+if not stale(vbtkit, vbtkit)
+  override("vbtkit", ROOT & "/m3-ui")
+end
