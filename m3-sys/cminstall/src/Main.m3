@@ -29,6 +29,23 @@ CONST
   FIXUP_EXE = ARRAY BOOLEAN OF TEXT
     { "fixup.bat", "fixup" } [OnUnix];
 
+  ARCHIVES = ARRAY [0..12] OF TEXT
+    {
+      "cm3-doc",
+      "cm3-doc-5.1.0",
+      "cm3-doc-5.1.1",
+      "cm3-doc-5.1.2",
+      "cm3-doc-5.1.3",
+      "cm3-doc-5.1.4",
+      "cm3-doc-5.2.0",
+      "cm3-doc-5.2.1",
+      "cm3-doc-5.2.2",
+      "cm3-doc-5.2.3",
+      "cm3-misc",
+      "cm3-specials",
+      "cm3-fixes"
+    };
+
 VAR
   install_passwd    : TEXT;
   install_root      : TEXT;
@@ -135,6 +152,11 @@ PROCEDURE DoIt () =
     Out ("Installing CM3 in: ", install_root);
     Out ("This may take a few minutes...");
     Unpack ("system");
+    FOR i := FIRST(ARCHIVES) TO LAST(ARCHIVES) DO
+      IF OS.IsExecutable(ARCHIVES[i]) THEN
+        Unpack(ARCHIVES[i]);
+      END;
+    END;
     (* Unpack (OS.MakePath ("..", "DOCS")); *)
 
     (* reinstall the new cm3.cfg file to make sure we've got the right one *)
