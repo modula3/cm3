@@ -132,12 +132,12 @@ PROCEDURE BSplineSmoothness () =
 PROCEDURE FourierDecay () =
   VAR
     (* A mask close to the one of the hat function. *)
-    mask0 := NEW(S.T).fromArray(
-               ARRAY OF R.T{0.25D0, 0.5D0, 0.25D0}, -1).autocorrelate();
     mask := NEW(S.T).fromArray(
-              ARRAY OF R.T{0.26D0, 0.5D0, 0.24D0}, -1).autocorrelate();
+               ARRAY OF R.T{0.25D0, 0.5D0, 0.25D0}, -1).autocorrelate();
+    mask1 := NEW(S.T).fromArray(
+               ARRAY OF R.T{0.26D0, 0.5D0, 0.24D0}, -1).autocorrelate();
     mask2 := NEW(S.T).fromArray(
-               ARRAY OF R.T{0.3D0, 0.5D0, 0.2D0}, -1).autocorrelate();
+              ARRAY OF R.T{0.3D0, 0.5D0, 0.2D0}, -1).autocorrelate();
     mask3 := NEW(S.T).fromArray(
                ARRAY OF R.T{0.23D0, 0.54D0, 0.23D0}, -1).autocorrelate();
     mask4 := NEW(S.T).fromArray(ARRAY OF R.T{0.23D0, 0.54D0, 0.23D0}, -1);
@@ -157,9 +157,10 @@ PROCEDURE FourierDecay () =
         vec        := V.NewZero(mask.getNumber());
         vecmid     := LAST(vec^) DIV 2;
       BEGIN
-        vec[vecmid - 1] := -RT.Half;
-        vec[vecmid] := R.One;
-        vec[vecmid + 1] := -RT.Half;
+        (*quite a random start filter*)
+        vec[vecmid - 1] := -0.3D0;
+        vec[vecmid] := 1.85D0;
+        vec[vecmid + 1] := -0.55D0;
         PlotComplex(NEW(CS.T).fromVector(spec), l);
         (* Too high frequencies are equivalent to negative frequencies and
            must not be considered here.  They also don't appear in the
