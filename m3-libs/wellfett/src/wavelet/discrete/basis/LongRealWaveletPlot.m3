@@ -7,6 +7,7 @@ IMPORT LongRealVector AS V;
 IMPORT LongRealVectorFast AS VR;
 
 IMPORT LongRealRefinableFunc AS Refn;
+IMPORT LongRealDyadicFilterBank AS FB;
 
 IMPORT LongRealSignalFmtLex AS SF;
 IMPORT PLPlot AS PL;
@@ -15,26 +16,16 @@ FROM NADefinitions IMPORT Error;
 
 TYPE
   Basis = {primal, dual};
-  Filter = {lowpass, highpass};
+  Filter = [0 .. 1];
   FilterBank = ARRAY Basis, Filter OF S.T;
   BasisFunctions = ARRAY Basis, Filter OF S.T;
-
-(*this function should be moved into a general biorthogonal wavelet
-   module*)
-PROCEDURE ComputeDualFilterBank (primal: ARRAY Filter OF S.T; ):
-  ARRAY Filter OF S.T =
-  BEGIN
-    RETURN ARRAY Filter OF
-             S.T{primal[Filter.highpass].alternate(),
-                 primal[Filter.lowpass].alternate()};
-  END ComputeDualFilterBank;
 
 PROCEDURE ExtractRefinementMasks (READONLY bank: ARRAY Basis, Filter OF S.T; ):
   ARRAY Basis OF S.T =
   BEGIN
     RETURN ARRAY Basis OF
-             S.T{bank[Basis.primal, Filter.lowpass].scale(R.Two),
-                 bank[Basis.dual, Filter.lowpass].scale(R.Two)};
+             S.T{bank[Basis.primal, 0].scale(R.Two),
+                 bank[Basis.dual, 0].scale(R.Two)};
   END ExtractRefinementMasks;
 
 PROCEDURE ComputeBasisFunctions (READONLY bank: ARRAY Basis, Filter OF S.T;
@@ -59,7 +50,7 @@ PROCEDURE PlotOrthogonal (h: S.T; numlevels: CARDINAL) =
 PROCEDURE PlotBiorthogonal (hDual, gDual: S.T; numlevels: CARDINAL) =
   VAR
     dual := ARRAY Filter OF S.T{hDual, gDual};
-    bank := FilterBank{ComputeDualFilterBank(dual), dual};
+    bank := FilterBank{FB.DualToPrimal(dual), dual};
   BEGIN
     PlotBank(bank, ExtractRefinementMasks(bank), numlevels);
   END PlotBiorthogonal;
@@ -69,7 +60,7 @@ PROCEDURE PlotBiorthogonalYLim (hDual, gDual: S.T;
                                 ymin, ymax  : R.T       ) =
   VAR
     dual  := ARRAY Filter OF S.T{hDual, gDual};
-    bank  := FilterBank{ComputeDualFilterBank(dual), dual};
+    bank  := FilterBank{FB.DualToPrimal(dual), dual};
     refn  := ExtractRefinementMasks(bank);
     grid  := R.One / RIntPow.Power(R.Two, numlevels);
     basis := ComputeBasisFunctions(bank, refn, numlevels);
@@ -106,16 +97,14 @@ PROCEDURE PlotBank (READONLY bank     : FilterBank;
   VAR
     grid  := R.One / RIntPow.Power(R.Two, numlevels);
     basis := ComputeBasisFunctions(bank, refn, numlevels);
-    ymin := MIN(
-              MIN(VR.Min(basis[Basis.primal, Filter.lowpass].getData()^),
-                  VR.Min(basis[Basis.primal, Filter.highpass].getData()^)),
-              MIN(VR.Min(basis[Basis.dual, Filter.lowpass].getData()^),
-                  VR.Min(basis[Basis.dual, Filter.highpass].getData()^)));
-    ymax := MAX(
-              MAX(VR.Max(basis[Basis.primal, Filter.lowpass].getData()^),
-                  VR.Max(basis[Basis.primal, Filter.highpass].getData()^)),
-              MAX(VR.Max(basis[Basis.dual, Filter.lowpass].getData()^),
-                  VR.Max(basis[Basis.dual, Filter.highpass].getData()^)));
+    ymin := MIN(MIN(VR.Min(basis[Basis.primal, 0].getData()^),
+                    VR.Min(basis[Basis.primal, 1].getData()^)),
+                MIN(VR.Min(basis[Basis.dual, 0].getData()^),
+                    VR.Min(basis[Basis.dual, 1].getData()^)));
+    ymax := MAX(MAX(VR.Max(basis[Basis.primal, 0].getData()^),
+                    VR.Max(basis[Basis.primal, 1].getData()^)),
+                MAX(VR.Max(basis[Basis.dual, 0].getData()^),
+                    VR.Max(basis[Basis.dual, 1].getData()^)));
   BEGIN
     DoPlot(basis, ymin, ymax, grid);
   END PlotBank;
@@ -140,10 +129,8 @@ PROCEDURE DoPlot (basis: BasisFunctions; ymin, ymax: R.T; grid: R.T) =
       FOR f := FIRST(basis[b]) TO LAST(basis[b]) DO
         bounds[b, f] := GetSignalInterval(basis[b, f], grid);
       END;
-      boundsa[b].left := MIN(bounds[b, Filter.lowpass].left,
-                             bounds[b, Filter.highpass].left);
-      boundsa[b].right := MAX(bounds[b, Filter.lowpass].right,
-                              bounds[b, Filter.highpass].right);
+      boundsa[b].left := MIN(bounds[b, 0].left, bounds[b, 1].left);
+      boundsa[b].right := MAX(bounds[b, 0].right, bounds[b, 1].right);
     END;
 
     PL.SetSubWindows(2, 2);
