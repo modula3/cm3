@@ -5,10 +5,11 @@ FROM NADefinitions IMPORT Error;
 REVEAL
   T = SignalRep.TPrivate BRANDED OBJECT
       OVERRIDES
-        init      := Init;
-        initFL    := InitFL;
-        fromArray := FromArray;
-        copy      := Copy;
+        init       := Init;
+        initFL     := InitFL;
+        fromArray  := FromArray;
+        fromVector := FromVector;
+        copy       := Copy;
 
         clipToArray  := ClipToArray;
         clipToVector := ClipToVector;
@@ -65,6 +66,13 @@ PROCEDURE FromArray (SELF: T; READONLY arr: ARRAY OF R.T; first: IndexType):
     SELF.first := first;
     RETURN SELF;
   END FromArray;
+
+PROCEDURE FromVector (SELF: T; x: V.T; first: IndexType): T =
+  BEGIN
+    SELF.data := x;
+    SELF.first := first;
+    RETURN SELF;
+  END FromVector;
 
 PROCEDURE Copy (SELF: T): T =
   VAR z := NEW(T);

@@ -10,7 +10,9 @@ TYPE
               init      (first, number: IndexType): T;
               initFL    (first, last: IndexType): T;
               fromArray (READONLY arr: V.TBody; first: IndexType := 0): T;
-              copy      (): T;
+              fromVector (x: V.T; first: IndexType := 0):
+                          T;     (*don't modify x afterwards!*)
+              copy (): T;
 
               clipToArray (first: IndexType := 0; VAR arr: V.TBody);
               (*Take a clip starting at 'first' with length 'NUMBER(arr)'
