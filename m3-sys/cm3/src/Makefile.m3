@@ -187,6 +187,8 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
 
     | 'l' => IF Text.Equal (arg, "-lazy") THEN
                Out (wr, "M3_LAZY_MODULE_INIT = TRUE");  ok := TRUE;
+             ELSIF Text.Equal (arg, "-linkall") THEN
+               Out (wr, "M3_LAZY_MODULE_INIT = FALSE");  ok := TRUE;
              END;
 
     | 'o' => IF (arg_len = 2) THEN
@@ -491,7 +493,11 @@ CONST
     "  -Z             generate coverage analysis code",
     "  -profile       generate profiling code",
     "  -lazy          generate lazy module initialization code",
-    "                 (main module and imports only)",
+    "                 (main module and imports only) This is the default.",
+    "  -linkall       generate module initialization code for all modules,",
+    "                 even those that are not imported directly or indirectly",
+    "                 by Main. This is currently experimental and does not",
+    "                 always work as expected.",
     "",
     "program and library options:  (default: -o prog)",
     "  -c             compile only, produce no program or library",
@@ -549,9 +555,9 @@ PROCEDURE Val(name: TEXT) : TEXT =
 VAR
   defs := NEW(TextTextTbl.Default).init();
 BEGIN
-  EVAL defs.put("CM3_RELEASE", "5.1.8");       (* readable release version *)
-  EVAL defs.put("CM3_VERSION", "050108");      (* version as number *)
-  EVAL defs.put("CM3_CREATED", "2001-12-19");  (* date of last change *)
+  EVAL defs.put("CM3_RELEASE", "5.1.9");       (* readable release version *)
+  EVAL defs.put("CM3_VERSION", "050109");      (* version as number *)
+  EVAL defs.put("CM3_CREATED", "2003-01-05");  (* date of last change *)
   EVAL defs.put("M3_PROFILING", "");           (* no profiling by default *)
   EVAL defs.put("EOL", Wr.EOL);
 END Makefile.
