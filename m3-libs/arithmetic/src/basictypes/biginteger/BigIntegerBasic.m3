@@ -60,11 +60,16 @@ END SetOne;
 
 PROCEDURE FromInteger (x : INTEGER) : T =
 VAR
-  y := T{NEW(Value,1),1,x<0};
+  data : Value;
 BEGIN
-  IF y.sign THEN x := -x END;
-  y.data[0] := x;
-  RETURN y;
+  IF x=0 THEN
+    (*we cannot return Zero because we use FromInteger to initialize Zero*)
+    RETURN T{NIL,0,FALSE};
+  ELSE
+    data := NEW(Value,1);
+    data[0] := ABS(x);
+    RETURN T{data,1,x<0};
+  END;
 END FromInteger;
 
 
@@ -124,6 +129,13 @@ BEGIN
   y.sign := NOT x.sign;
   RETURN y;
 END Neg;
+
+
+PROCEDURE IsZero (READONLY x : T) : BOOLEAN =
+BEGIN
+  RETURN x.size=0;
+  (*RETURN x.size=0 OR x.size=1 AND x.data[0]=0;*)
+END IsZero;
 
 PROCEDURE Compare (READONLY x, y : T) : [-1..1] =
 BEGIN

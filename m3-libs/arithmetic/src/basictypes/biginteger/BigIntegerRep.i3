@@ -20,8 +20,6 @@ TYPE
 
 PROCEDURE Clear ((*OUT*)v : Value);
 
-<*INLINE*>
-PROCEDURE IsZero (READONLY x : T) : BOOLEAN;
 PROCEDURE MinMax (VAR min, max : INTEGER; a, b : INTEGER);
 PROCEDURE CorrectSize (VAR x : T; start : INTEGER);
 PROCEDURE AddU (READONLY x, y : T) : T;

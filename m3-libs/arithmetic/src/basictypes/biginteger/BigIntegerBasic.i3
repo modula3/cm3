@@ -36,6 +36,9 @@ VAR
 PROCEDURE Add (READONLY x, y : T) : T;
 PROCEDURE Sub (READONLY x, y : T) : T;
 <*INLINE*>PROCEDURE Neg (READONLY x : T) : T;
+
+<*INLINE*>
+PROCEDURE IsZero  (READONLY x : T) : BOOLEAN;
 PROCEDURE Equal   (READONLY x, y : T) : BOOLEAN;
 PROCEDURE Compare (READONLY x, y : T) : [-1..1];
 
