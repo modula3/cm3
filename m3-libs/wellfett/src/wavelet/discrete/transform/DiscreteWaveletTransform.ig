@@ -5,29 +5,37 @@ IMPORT NADefinitions AS NA;
 
 CONST Brand = "DiscreteWaveletTransform";
 
-PROCEDURE FilterBankToPolyphase (READONLY x: VS.TBody; step: CARDINAL; ):
-  MS.T;
-(*'step' is the factor of sub-sampling which may differ from the number of
-   channels, in that case the polyphase matrix is not square.*)
+TYPE
+  IndexType = INTEGER;
+  SizeType = CARDINAL;
+  ScalingType = CARDINAL;
+  SignalPP = ARRAY OF S.T;
+
+PROCEDURE FilterBankToPolyphase (READONLY x      : VS.TBody;
+                                          scaling: ScalingType; ): MS.T;
+(*'scaling' is the factor of sub-sampling which may differ from the number
+   of channels, in that case the polyphase matrix is not square.*)
 
 PROCEDURE PolyphaseToFilterBank (READONLY x: MS.TBody; ): VS.T;
-(*step=NUMBER(x[0])*)
+(*scaling=NUMBER(x[0])*)
 
-PROCEDURE FilterBankAnalysisSingle (         x   : S.T;
-                                    READONLY y   : VS.TBody;
-                                             step: CARDINAL; ): VS.T;
-(*Transform signal x into NUMBER(y) channels downsampled by 'step'*)
+PROCEDURE FilterBankAnalysisSingle (         x      : S.T;
+                                    READONLY filter : VS.TBody;
+                                             scaling: ScalingType; ): VS.T;
+(*Transform signal x into NUMBER(y) channels downsampled by 'scaling'*)
 
-PROCEDURE FilterBankSynthesisSingle (READONLY x, y: VS.TBody;
-                                              step: CARDINAL; ): S.T
-  RAISES {NA.Error};
+PROCEDURE FilterBankSynthesisSingle (READONLY x, filter: VS.TBody;
+                                              scaling  : ScalingType; ):
+  S.T RAISES {NA.Error};
 (*Transform NUMBER(y) downsampled channels into one signal*)
 
+<*INLINE*>
+PROCEDURE FilterBankAnalysisTISingle (x: S.T; READONLY filter: VS.TBody; ):
+  VS.T;
+
 CONST
-  FilterBankAnalysisTISingle = VSR.Scale; (*the order of operands is not
-                                             natural*)
-  FilterBankSynthesisTISingle = VSR.Inner; (*there is an adjoint too much
-                                              in it*)
+  FilterBankSynthesisTISingle: PROCEDURE (READONLY x, filter: VS.TBody; ):
+                                 S.T RAISES {NA.Error} = VSR.Dot;
 
 TYPE
   WaveletCoeffs = RECORD
@@ -60,5 +68,16 @@ PROCEDURE DyadicFilterBankSynthesis (READONLY x: DyadicWaveletCoeffs;
 (*Transform sub bands into the original signal.  The reconstructed signal
    will be longer than the original one but the extra values should be zero
    if the filter bank allows for perfect reconstruction.*)
+
+PROCEDURE DyadicFilterBankAnalysisTI (         x: S.T;
+                                    READONLY y: ARRAY [0 .. 1] OF S.T;
+                                    numLevels: CARDINAL; ):
+  DyadicWaveletCoeffs;
+(*Translation invariant transform, 
+this is achieved by omitting the subsampling.*)
+
+PROCEDURE DyadicFilterBankSynthesisTI (READONLY x: DyadicWaveletCoeffs;
+                                     READONLY y: ARRAY [0 .. 1] OF S.T; ):
+  S.T;
 
 END DiscreteWaveletTransform.
