@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.39 2004-10-31 11:15:10 wagner Exp $
+# $Id: sysinfo.sh,v 1.40 2005-03-31 08:35:46 micha Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -12,7 +12,7 @@ PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
 
 #-----------------------------------------------------------------------------
 # set some defaults
-CM3VERSION=${CM3VERSION:-"d5.2.7-2004-10-31"}
+CM3VERSION=${CM3VERSION:-"d5.2.7-2005-03-31"}
 CM3_GCC_BACKEND=yes
 CM3_GDB=no
 CM3_INSTALL=/usr/local/cm3
@@ -265,7 +265,7 @@ if type domainname > /dev/null 2>/dev/null && \
   export STAGE
 fi
 if [ "${M3OSTYPE}" = "WIN32" -a "${HOSTNAME}" = "FIR" ] ; then
-  STAGE=${STAGE:-e:/home/wagner/tmp/cm3stage}
+  STAGE=${STAGE:-c:/tmp/cm3stage}
   export STAGE
 fi
 

@@ -110,14 +110,30 @@
 #include <sys/times.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
+#include <string.h>
 
 #if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 1
 #include <asm/ipc.h>
 #endif
 
+/* dd- IMO, it is much better to make better rules for using Unix calls which
+   can produce syscall than to enumerate each and every syscall here. For example,
+   see nanosleep usage in ThreadPosix.m3.
+   In other words - why immobilize GC subsystem if we really do not need to?
+*/
+
+/* dd- Sun, 7 Dec 3 15:16:38 MET: These implement recursive mutex for heap manager.
+*/
+void (*RTOS_LockHeap)();    /* Not so logical, but it's a way to have linker fix it for us */
+void (*RTOS_UnlockHeap)();
+#define ENTER_CRITICAL if (RTOS_LockHeap) RTOS_LockHeap()
+#define EXIT_CRITICAL  if (RTOS_UnlockHeap) RTOS_UnlockHeap()
+
+/* dd- Sun, 7 Dec 3 15:17:07 MET: No more :)
 extern int RT0u__inCritical;
 #define ENTER_CRITICAL RT0u__inCritical++
 #define EXIT_CRITICAL  RT0u__inCritical--
+*/
 
 void (*RTHeapRep_Fault)(char*);
 void (*RTCSRC_FinishVM)();
@@ -600,6 +616,7 @@ char *path;
 }
 */
 
+/*
 int getpeername(int sockfd, struct sockaddr *addr, socklen_t *paddrlen)
 { int result;
 
@@ -618,15 +635,16 @@ int getpeername(int sockfd, struct sockaddr *addr, socklen_t *paddrlen)
   return result;
 }
 
-int getrlimit(int resource, struct rlimit *rlim)
+int getrlimit(__rlimit_resource_t resource, struct rlimit *rlp)
 { int result;
 
   ENTER_CRITICAL;
-  MAKE_WRITABLE(rlim);
-  result = syscall(SYS_getrlimit, resource, rlim);
+  MAKE_WRITABLE(rlp);
+  result = syscall(SYS_getrlimit, resource, rlp);
   EXIT_CRITICAL;
   return result;
 }
+
 
 int getrusage(who, rusage)
 int who;
@@ -640,6 +658,7 @@ struct rusage *rusage;
   return result;
 }
 
+/*
 int getsockname(int sockfd, struct sockaddr *addr, socklen_t *paddrlen)
 { int result;
 
@@ -657,6 +676,7 @@ int getsockname(int sockfd, struct sockaddr *addr, socklen_t *paddrlen)
   EXIT_CRITICAL;
   return result;
 }
+*/
 
 int getsockopt(int fd, int level, int optname, void *optval, socklen_t *optlen)
 { int result;
@@ -697,6 +717,7 @@ char *arg;
 }
 */
 
+/*
 int gettimeofday(tp, tzp)
 struct timeval *tp;
 struct timezone *tzp;
@@ -709,24 +730,27 @@ struct timezone *tzp;
   EXIT_CRITICAL;
   return result;
 }
+*/
 
 /* ioctl must test the argp argument carefully.  It may be a pointer,
    or maybe not.  At a slight expense, we call RTHeapRep.Fault to
    unprotect the page if it's in the traced heap, but do nothing
    otherwise. */
 
+/*
 int ioctl(d, request, argp)
 int d, request;
 char *argp;
 { int result;
 
   ENTER_CRITICAL;
-  if (RTHeapRep_Fault) RTHeapRep_Fault(argp); /* make it readable */
-  if (RTHeapRep_Fault) RTHeapRep_Fault(argp); /* make it writable */
+  if (RTHeapRep_Fault) RTHeapRep_Fault(argp); / * make it readable * /
+  if (RTHeapRep_Fault) RTHeapRep_Fault(argp); / * make it writable * /
   result = syscall(SYS_ioctl, d, request, argp);
   EXIT_CRITICAL;
   return result;
 }
+*/
 
 int link(name1, name2)
 char *name1;
@@ -1280,7 +1304,7 @@ int namelen;
   return result;
 }
 
-int setitimer(int which,
+int setitimer(__itimer_which_t which,
 	      const struct itimerval *value,
 	      struct itimerval *ovalue)
 { int result;
@@ -1308,12 +1332,12 @@ char *file;
 }
 */
 
-int setrlimit(int resource, const struct rlimit *rlim)
+int setrlimit(__rlimit_resource_t resource, const struct rlimit *rlp)
 { int result;
 
   ENTER_CRITICAL;
-  MAKE_READABLE(rlim);
-  result = syscall(SYS_setrlimit, resource, rlim);
+  MAKE_READABLE(rlp);
+  result = syscall(SYS_setrlimit, resource, rlp);
   EXIT_CRITICAL;
   return result;
 }
@@ -1370,6 +1394,7 @@ const struct timezone *tzp;
   return result;
 }
 
+/*
 int sigaction(int signum, const struct sigaction *act, 
 	      struct sigaction *oldact)
 { int result;
@@ -1381,6 +1406,7 @@ int sigaction(int signum, const struct sigaction *act,
   EXIT_CRITICAL;
   return result;
 }
+*/
 
 int sigpending(set)
 sigset_t *set;
@@ -1720,6 +1746,18 @@ pid_t clone(sp, flags)
   }
   return result;
 }
+int get_errno() {
+  return errno;
+}
+
+void set_errno(int n) {
+  errno = n;
+}
+
+char *get_strerror(int n) {
+  return strerror(n);
+}
+
 
 int pthread_equal (pthread_t thread1, pthread_t thread2) {
   return thread1 == thread2;
