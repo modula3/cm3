@@ -32,6 +32,8 @@ CONST
   Equal   = RTy.Equal;
   Compare = RTy.Compare;
 
+<*INLINE*> PROCEDURE FromInteger(x:INTEGER):T;
+
 <*INLINE*> PROCEDURE Add(x,y:T):T;  (*return x+y*)
 <*INLINE*> PROCEDURE Sub(x,y:T):T;  (*return x-y*)
 <*INLINE*> PROCEDURE Neg(x:T):T;    (*return -x *)
