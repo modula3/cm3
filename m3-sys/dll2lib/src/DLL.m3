@@ -1,4 +1,5 @@
-(* Copyright 1995-96 Critical Mass, Inc. All rights reserved.    *)
+(* Copyright 1996-2000 Critical Mass, Inc. All rights reserved.    *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 (* This code is derived from a version of Matt Pietrek's PEDUMP program.
    It's ugly Modula-3 because it's a straight translation from the C code. *)
