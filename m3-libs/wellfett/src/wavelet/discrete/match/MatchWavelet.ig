@@ -4,15 +4,15 @@ CONST MatchPattern = MatchPatternGenWav;
 
 TYPE
   MatchGenWav = RECORD
-                  lift       : S.T;  (*lifting filter*)
-                  wavelet0Amp: R.T;  (*coefficient for unlifted wavelet*)
-                  approx     : S.T;  (*approximative function*)
+                  lift       : S.T;  (* lifting filter *)
+                  wavelet0Amp: R.T;  (* coefficient for unlifted wavelet *)
+                  approx     : S.T;  (* approximative function *)
 
-                  (*for debugging and visualization purposes*)
-                  basis: M.T;    (*basis of generators and the unlifted
-                                    wavelet*)
-                  targetPad: V.T;  (*the target padded for fitting to the
-                                      basis vectors*)
+                  (* for debugging and visualization purposes *)
+                  basis: M.T;    (* basis of generators and the unlifted
+                                    wavelet *)
+                  targetPad: V.T;  (* the target padded for fitting to the
+                                      basis vectors *)
                 END;
 
 PROCEDURE MatchPatternGenWav (target                                : S.T;
@@ -43,15 +43,15 @@ PROCEDURE MatchPatternGen (target                   : S.T;
                            firstTranslate           : INTEGER;
                            numTranslates            : CARDINAL; ):
   MatchGen;
-(*Like MatchPattern with the difference that an unlifted wavelet can not be
-   specified.  This is required in case you want to fix the amplitude of
+(* Like MatchPattern with the difference that an unlifted wavelet can not
+   be specified.  This is required in case you want to fix the amplitude of
    the unlifted wavelet.  Then you have to subtract the wavelet from target
    before approximation. *)
 
 PROCEDURE MatchPatternWav (target                 : S.T;
                            refineMask, waveletMask: S.T;
                            numLevels              : CARDINAL; ): R.T;
-(*Find the amplitude where the wavelet best matches the target.*)
+(* Find the amplitude where the wavelet best matches the target. *)
 
 
 END MatchWavelet.
