@@ -48,7 +48,7 @@ END newline;
 
 (*=======================*)
 BEGIN
-  (*newline(); EVAL test_WordEx();*)
+  newline(); EVAL test_WordEx();
   (*newline(); EVAL test_Bits();*)
   (*newline(); EVAL test_Integer();*)
   (*newline(); EVAL test_Real64();*)
