@@ -852,27 +852,47 @@ plsexit(PLINT (*handler) (char *));
 	/* Transformation routines */
 #endif
 
-#if 0
+	/* Transformation routines */
+
+/* Identity transformation. */
+
+void
+pltr0(PLFLT x, PLFLT y, PLFLTOutput tx, PLFLTOutput ty, PLPointer pltr_data);
+
+/* Does linear interpolation from singly dimensioned coord arrays. */
+
+void
+pltr1(PLFLT x, PLFLT y, PLFLTOutput tx, PLFLTOutput ty, PLPointer pltr_data);
+
+/* Does linear interpolation from doubly dimensioned coord arrays */
+/* (column dominant, as per normal C 2d arrays). */
+
+void
+pltr2(PLFLT x, PLFLT y, PLFLTOutput tx, PLFLTOutput ty, PLPointer pltr_data);
+
 /* Just like pltr2() but uses pointer arithmetic to get coordinates from */
 /* 2d grid tables.  */
 
 void
-pltr2p(PLFLT x, PLFLT y, PLFLT *tx, PLFLT *ty, PLPointer pltr_data);
+pltr2p(PLFLT x, PLFLT y, PLFLTOutput tx, PLFLTOutput ty, PLPointer pltr_data);
+
 /* Identity transformation for plots from Fortran. */
 
 void
-pltr0f(PLFLT x, PLFLT y, PLFLT *tx, PLFLT *ty, void *pltr_data);
+pltr0f(PLFLT x, PLFLT y, PLFLTOutput tx, PLFLTOutput ty, void *pltr_data);
 
 /* Does linear interpolation from doubly dimensioned coord arrays */
 /* (row dominant, i.e. Fortran ordering). */
 
 void
-pltr2f(PLFLT x, PLFLT y, PLFLT *tx, PLFLT *ty, void *pltr_data);
+pltr2f(PLFLT x, PLFLT y, PLFLTOutput tx, PLFLTOutput ty, void *pltr_data);
 
+
+#if 0
 /* Example linear transformation function for contour plotter. */
 
 void 
-xform(PLFLT x, PLFLT y, PLFLT * OUTPUT, PLFLT * OUTPUT);
+xform(PLFLT x, PLFLT y, PLFLTOutput OUTPUT, PLFLTOutput OUTPUT);
 	/* Function evaluators */
 /* Does a lookup from a 2d function array.  Array is of type (PLFLT **), */
 /* and is column dominant (normal C ordering). */

@@ -7,6 +7,7 @@
  *******************************************************************************)
 
 INTERFACE PLPlot;
+IMPORT PLPlotRaw;
 
 TYPE
 
@@ -39,14 +40,16 @@ TYPE
   FloatVector = ARRAY OF Float;
   FloatMatrix = ARRAY OF ARRAY OF Float;
 
+  DefinedFunc = PROCEDURE (x, y: Float; ): BOOLEAN;
+  FillFunc = PROCEDURE (READONLY x, y: ARRAY OF Float; );
+  Point = RECORD x, y: Float;  END;
+  PlotterFunc = PROCEDURE (x, y: Float; data: REFANY; ): Point;
+
 
 TYPE
   DrawModeSet = SET OF DrawMode;
   OptionSet = SET OF Option;
   ParseSet = SET OF Parse;
-
-TYPE CallbackM3Proc = PROCEDURE (data: REFANY);
-
 TYPE
   AxesScaling = {none, independent, equal, square};
   Tile = {box, ticks, axes, gridMajor, gridMinor, xTicksLog, yTicksLog};
@@ -168,8 +171,8 @@ PROCEDURE SetFGColorCont (col1: Float; );
 PROCEDURE PlotContour (READONLY z             : FloatMatrix;
                                 kx, lx, ky, ly: INTEGER;
                        READONLY x             : FloatVector;
-                                pltr          : CallbackM3Proc;
-                                OBJECT_DATA   : REFANY;         );
+                                plotter       : PlotterFunc;
+                                plotterData   : REFANY;      );
 
 (* plcpstrm: "Copy state parameters from the reference stream to the
    current stream." *)
@@ -463,23 +466,27 @@ PROCEDURE SetFamilyFile (fam, num, bmax: INTEGER; );
 PROCEDURE SetFileName (fnam: TEXT; );
 
 (* plshades: "Shade regions with continuous range of colours." *)
-PROCEDURE ShadeRegions (READONLY a                     : FloatMatrix;
-                                 xmin, xmax, ymin, ymax: Float;
-                        READONLY x                     : FloatVector;
-                        fill_width, cont_color, cont_width: INTEGER;
-                        rectangular                       : BOOLEAN;
-                        pltr       : CallbackM3Proc;
-                        OBJECT_DATA: REFANY;         );
+PROCEDURE PlotShades (READONLY a : FloatMatrix;
+                               df: PLPlotRaw.DefinedFunc;
+                               xmin, xmax, ymin, ymax: Float;
+                      READONLY x                     : FloatVector;
+                      fill_width, cont_color, cont_width: INTEGER;
+                      ff         : PLPlotRaw.FillFunc;
+                      rectangular: BOOLEAN;
+                      plotter    : PlotterFunc;
+                      plotterData: REFANY;             );
 
 (* plshade: "Shade region with discrete colour, pattern fill." *)
-PROCEDURE ShadeRegion (READONLY a: FloatMatrix;
-                       left, right, bottom, top, shade_min, shade_max: Float;
-                       sh_cmap : INTEGER;
-                       sh_color: Float;
-                       sh_width, min_color, min_width, max_color, max_width: INTEGER;
-                       rectangular: BOOLEAN;
-                       pltr       : CallbackM3Proc;
-                       OBJECT_DATA: REFANY;         );
+PROCEDURE PlotShade (READONLY a : FloatMatrix;
+                              df: PLPlotRaw.DefinedFunc;
+                     left, right, bottom, top, shade_min, shade_max: Float;
+                     sh_cmap : INTEGER;
+                     sh_color: Float;
+                     sh_width, min_color, min_width, max_color, max_width: INTEGER;
+                     ff         : PLPlotRaw.FillFunc;
+                     rectangular: BOOLEAN;
+                     plotter    : PlotterFunc;
+                     plotterData: REFANY;             );
 
 (* plsmaj: "Set up lengths of major tick marks." *)
 PROCEDURE SetMajorTickSize (def, scale: Float; );
@@ -581,6 +588,22 @@ PROCEDURE SetWindow (xmin, xmax, ymin, ymax: Float; );
 (* plxormod: "Set xor mode; mode = 1-enter, 0-leave, status = 0 if not
    interactive device." *)
 PROCEDURE SetXORMode (mode: BOOLEAN; ): BOOLEAN;
+
+
+TYPE Plotter0Result = RECORD x, y: Float;  END;
+PROCEDURE Plotter0 (x, y: Float; pltr_data: REFANY; ): Plotter0Result;
+
+
+TYPE Plotter1Result = RECORD x, y: Float;  END;
+PROCEDURE Plotter1 (x, y: Float; pltr_data: REFANY; ): Plotter1Result;
+
+
+TYPE Plotter2Result = RECORD x, y: Float;  END;
+PROCEDURE Plotter2 (x, y: Float; pltr_data: REFANY; ): Plotter2Result;
+
+
+TYPE Plotter2PResult = RECORD x, y: Float;  END;
+PROCEDURE Plotter2P (x, y: Float; pltr_data: REFANY; ): Plotter2PResult;
 
 PROCEDURE ClearOpts ();
 

@@ -12,9 +12,14 @@ IMPORT Ctypes AS C;
 
 
 TYPE
-  PlotterFunc = PROCEDURE ();
   PLINT = C.int;
   PLFLT = C.double;
+  PLPointer = C.void_star;
+
+  DefinedFunc = PROCEDURE (x, y: PLFLT; ): PLINT;
+  FillFunc = PROCEDURE (n: PLINT; READONLY x, y: (*ARRAY OF*) PLFLT; );
+  PlotterFunc =
+    PROCEDURE (x, y: PLFLT; VAR (*OUT*) tx, ty: PLFLT; data: PLPointer; );
 
 
 <* EXTERNAL c_pl_setcontlabelformat *>
@@ -82,7 +87,7 @@ PROCEDURE SetFGColorCont (col1: C.double; );
 
 <* EXTERNAL c_plcont *>
 PROCEDURE PlotContour (READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF
-                                                           R.T*);
+                                                           Float*);
                        nx, ny, kx, lx, ky, ly: C.int;
                        READONLY x          : (*ARRAY OF*) C.double;
                                 n          : C.int;
@@ -218,13 +223,13 @@ PROCEDURE SetLineStyle (lin: C.int; );
 
 <* EXTERNAL c_plmesh *>
 PROCEDURE PlotMesh (READONLY x, y: (*ARRAY OF*) C.double;
-                    READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*);
+                    READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF Float*);
                     nx, ny, opt: C.int; );
 
 <* EXTERNAL c_plmeshc *>
 PROCEDURE PlotMeshColored (READONLY x, y: (*ARRAY OF*) C.double;
                            READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF
-                                                               R.T*);
+                                                               Float*);
                                     nx, ny, opt: C.int;
                            READONLY clevel     : (*ARRAY OF*) C.double;
                                     n          : C.int;                 );
@@ -239,19 +244,20 @@ PROCEDURE PrintTextVP (side           : C.char_star;
 
 <* EXTERNAL c_plot3d *>
 PROCEDURE Plot3D (READONLY x, y: (*ARRAY OF*) C.double;
-                  READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*);
+                  READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF Float*);
                   nx, ny, opt, side: C.int; );
 
 <* EXTERNAL c_plot3dc *>
 PROCEDURE Plot3DC (READONLY x, y: (*ARRAY OF*) C.double;
-                   READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*);
+                   READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF Float*);
                             nx, ny, opt: C.int;
                    READONLY clevel     : (*ARRAY OF*) C.double;
                             n          : C.int;                 );
 
 <* EXTERNAL c_plsurf3d *>
 PROCEDURE Surface3D (READONLY x, y: (*ARRAY OF*) C.double;
-                     READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*);
+                     READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF
+                                                         Float*);
                               nx, ny, opt: C.int;
                      READONLY clevel     : (*ARRAY OF*) C.double;
                               n          : C.int;                 );
@@ -351,31 +357,31 @@ PROCEDURE SetFamilyFile (fam, num, bmax: C.int; );
 PROCEDURE SetFileName (fnam: C.char_star; );
 
 <* EXTERNAL c_plshades *>
-PROCEDURE ShadeRegions (READONLY a: (*ARRAY OF*) ADDRESS (*REF ARRAY OF
-                                                            R.T*);
-                        nx, ny                : C.int;
-                        df                    : PlotterFunc;
-                        xmin, xmax, ymin, ymax: C.double;
-                        READONLY x: (*ARRAY OF*) C.double;
-                        n, fill_width, cont_color, cont_width: C.int;
-                        ff         : PlotterFunc;
-                        rectangular: C.int;
-                        pltr       : PlotterFunc;
-                        OBJECT_DATA: REFANY;      );
+PROCEDURE PlotShades (READONLY a: (*ARRAY OF*) ADDRESS (*REF ARRAY OF
+                                                          Float*);
+                      nx, ny                : C.int;
+                      df                    : DefinedFunc;
+                      xmin, xmax, ymin, ymax: C.double;
+                      READONLY x: (*ARRAY OF*) C.double;
+                      n, fill_width, cont_color, cont_width: C.int;
+                      ff                                   : FillFunc;
+                      rectangular                          : C.int;
+                      pltr                                 : PlotterFunc;
+                      OBJECT_DATA                          : REFANY;      );
 
 <* EXTERNAL c_plshade *>
-PROCEDURE ShadeRegion (READONLY a: (*ARRAY OF*) ADDRESS (*REF ARRAY OF
-                                                           R.T*);
-                       nx, ny: C.int;
-                       df    : PlotterFunc;
-                       left, right, bottom, top, shade_min, shade_max: C.double;
-                       sh_cmap : C.int;
-                       sh_color: C.double;
-                       sh_width, min_color, min_width, max_color, max_width: C.int;
-                       ff         : PlotterFunc;
-                       rectangular: C.int;
-                       pltr       : PlotterFunc;
-                       OBJECT_DATA: REFANY;      );
+PROCEDURE PlotShade (READONLY a: (*ARRAY OF*) ADDRESS (*REF ARRAY OF
+                                                         Float*);
+                     nx, ny: C.int;
+                     df    : DefinedFunc;
+                     left, right, bottom, top, shade_min, shade_max: C.double;
+                     sh_cmap : C.int;
+                     sh_color: C.double;
+                     sh_width, min_color, min_width, max_color, max_width: C.int;
+                     ff         : FillFunc;
+                     rectangular: C.int;
+                     pltr       : PlotterFunc;
+                     OBJECT_DATA: REFANY;      );
 
 <* EXTERNAL c_plsmaj *>
 PROCEDURE SetMajorTickSize (def, scale: C.double; );
@@ -470,6 +476,26 @@ PROCEDURE SetWindow (xmin, xmax, ymin, ymax: C.double; );
 
 <* EXTERNAL c_plxormod *>
 PROCEDURE SetXORMode (mode: C.int; VAR status: C.int; );
+
+<* EXTERNAL pltr0 *>
+PROCEDURE Plotter0 (    x, y     : C.double;
+                    VAR tx, ty   : C.double;
+                        pltr_data: REFANY;   );
+
+<* EXTERNAL pltr1 *>
+PROCEDURE Plotter1 (    x, y     : C.double;
+                    VAR tx, ty   : C.double;
+                        pltr_data: REFANY;   );
+
+<* EXTERNAL pltr2 *>
+PROCEDURE Plotter2 (    x, y     : C.double;
+                    VAR tx, ty   : C.double;
+                        pltr_data: REFANY;   );
+
+<* EXTERNAL pltr2p *>
+PROCEDURE Plotter2P (    x, y     : C.double;
+                     VAR tx, ty   : C.double;
+                         pltr_data: REFANY;   );
 
 <* EXTERNAL plClearOpts *>
 PROCEDURE ClearOpts ();
