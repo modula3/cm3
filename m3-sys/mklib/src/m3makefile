@@ -4,5 +4,6 @@ import ("m3middle")
 
 implementation ("Main")
 
+include("../../../compat.quake")
 build_standalone ()
 Program ("mklib")
