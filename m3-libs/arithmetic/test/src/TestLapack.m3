@@ -10,6 +10,7 @@ IMPORT Fmt;
 IMPORT LongRealBasic          AS R,
        LongRealVectorBasic    AS V,
        LongRealVectorFmtLex   AS VF,
+       LongRealMatrixFast     AS M,
        LongRealMatrixLapack   AS ML,
        LongRealMatrixFmtLex   AS MF,
        LongRealCharPolynomial AS MCP;
@@ -52,37 +53,25 @@ VAR
   (*
   A:=NEW(REF ARRAY OF ARRAY OF LONGREAL,3,3);
   *)
-  Am:=NEW(REF ARRAY OF LONGREAL,9);
+  Atmp:=M.Transpose(A);
   eigRe:=V.New(3);
   eigIm:=V.New(3);
   sdim:INTEGER;
   worksize:=MAX(1,3*size);
   work:=V.New(worksize);
-  vs:=ARRAY [0..-1] OF ARRAY [0..-1] OF LONGREAL{};
-  bwork:=ARRAY [0..-1] OF BOOLEAN{};
+  vs:LONGREAL;
+  bwork:=NEW(REF ARRAY OF BOOLEAN,size);
   success:INTEGER;
 BEGIN
   Debug(1,ftn,"begin\n");
 
-  SUBARRAY(Am^,0,3) := A[0];
-  SUBARRAY(Am^,3,3) := A[1];
-  SUBARRAY(Am^,6,3) := A[2];
+  Msg(MF.Fmt(Atmp) & "\n");
 
-  Msg(VF.Fmt(Am) & "\n");
-  Msg(MF.Fmt(A) & "\n");
+  ML.GEES ('N', 'N', NIL, 3, Atmp[0,0], 3, sdim, eigRe[0], eigIm[0],
+           vs, 1, work[0], worksize, bwork[0], success);
 
-  Msg(Fmt.Int(ADR(A^)-LOOPHOLE(A,ADDRESS)) & "\n");
-  Msg(Fmt.Int(ADR(A[0])-ADR(A)) & "\n");
-  Msg(Fmt.Int(ADR(A[0])-ADR(A^)) & "\n");
-  Msg(Fmt.Int(ADR(A[1])-ADR(A[0])) & "\n");
-  Msg(Fmt.Int(ADR(A[2])-ADR(A[1])) & "\n");
-  Msg(Fmt.Int(ADR(A[0,1])-ADR(A[0,0])) & "\n");
-  Msg(Fmt.Int(ADR(A[0,2])-ADR(A[0,1])) & "\n");
-
-  ML.GEES ('N', 'N', NIL, 3, ADR(Am[0]), 3, sdim, eigRe^, eigIm^,
-           vs, 1, work^, worksize, bwork, success);
-
-  Msg(VF.Fmt(Am) & "\n");
+  Msg(MF.Fmt(Atmp) & "\n");
+  A:=M.Transpose(Atmp);
   Msg(MF.Fmt(A) & "\n");
 
   FOR j:=0 TO LAST(eigRe^) DO
