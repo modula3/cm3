@@ -9,7 +9,8 @@ FROM xUtils IMPORT Error;
 (*==========================*)
 TYPE
   (*text form: "V6{a0,a1,a2,a3,a4,a5}"*)
-  T = REF ARRAY OF R.T;
+  TBody = ARRAY OF R.T;
+  T     = REF TBody;
 
 PROCEDURE New(n:CARDINAL):T; (*make new vector with n components T*)
 PROCEDURE Copy(x:T):T;

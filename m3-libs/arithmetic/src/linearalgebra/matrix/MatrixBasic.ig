@@ -15,7 +15,9 @@ TYPE
 |               V6{a10,a11,a12,a13,a14,a15}
 |               }"
 *)
-  T  = REF ARRAY OF ARRAY OF R.T;
+  TRow  = ARRAY OF R.T;
+  TBody = ARRAY OF TRow;
+  T     = REF TBody;
 
 PROCEDURE New(m,n:CARDINAL):T; (*make New mxn matrix*)
 PROCEDURE Copy(x:T):T;
