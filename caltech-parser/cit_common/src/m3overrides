@@ -1,2 +1,10 @@
 /* $Id$ */
-include("../../m3overrides")
+libm3 = ROOT & "/m3-libs/libm3"
+m3core = ROOT & "/m3-libs/m3core"
+if not stale(m3core, m3core)
+  override("m3core", ROOT & "/m3-libs")
+end
+if not stale(libm3, libm3)
+  override("libm3", ROOT & "/m3-libs")
+end
+
