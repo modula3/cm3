@@ -6,8 +6,8 @@ CONST Brand = "Signal";
 TYPE
   IndexType = INTEGER;
   SizeType = CARDINAL;
-  ScalingType = CARDINAL;        (*might be a scaling matrix for high
-                                    dimensional signals*)
+  ScalingType = [1 .. LAST(CARDINAL)]; (*might be a scaling matrix for high
+                                          dimensional signals*)
   SignalPP = ARRAY OF T;         (*VS.TBody*)(*discrete parallelepiped
                                                 containing signals, it is a
                                                 plain ARRAY in one

@@ -285,7 +285,7 @@ PROCEDURE DownSample (x: T; factor: ScalingType): T =
     RETURN z;
   END DownSample;
 
-PROCEDURE WrapCyclic (x: T; length: CARDINAL): T =
+PROCEDURE WrapCyclic (x: T; length: ScalingType): T =
   VAR
     z            := NEW(T).init(0, length);
     j: IndexType;
@@ -303,7 +303,7 @@ PROCEDURE WrapCyclic (x: T; length: CARDINAL): T =
     RETURN z;
   END WrapCyclic;
 
-PROCEDURE Slice (x: T; num: CARDINAL): REF SignalPP =
+PROCEDURE Slice (x: T; num: ScalingType): REF SignalPP =
   VAR slice := NEW(REF SignalPP, num);
   BEGIN
     FOR j := 0 TO LAST(slice^) DO
@@ -312,7 +312,7 @@ PROCEDURE Slice (x: T; num: CARDINAL): REF SignalPP =
     RETURN slice;
   END Slice;
 
-PROCEDURE SliceRev (x: T; num: CARDINAL): REF SignalPP =
+PROCEDURE SliceRev (x: T; num: ScalingType): REF SignalPP =
   VAR slice := NEW(REF SignalPP, num);
   BEGIN
     FOR j := 0 TO LAST(slice^) DO
@@ -502,9 +502,11 @@ PROCEDURE ConvolveDown (x, y: T; factor: ScalingType): T =
     *)
     sliceX := Slice(x, factor);
     sliceY := SliceRev(y, factor);
-    z      := Zero;
+    (*This is different from starting with Zero since superposing with Zero
+       may extend the support of the signal.*)
+    z := sliceX[0].convolve(sliceY[0]);
   BEGIN
-    FOR i := 0 TO factor - 1 DO
+    FOR i := 1 TO factor - 1 DO
       z := z.superpose(sliceX[i].convolve(sliceY[i]));
     END;
     <*ASSERT z.equal(x.convolve(y).downsample(factor))*>
@@ -523,6 +525,8 @@ PROCEDURE UpConvolve (x, y: T; factor: ScalingType): T =
         VS.Add(zdata, zdata, V.Scale(x.data, y.data[i])^);
       END;
     END;
+    (* this will be approximately equal <*ASSERT
+       z.equal(x.convolve(y.upsample(factor)))*> *)
     RETURN z;
   END UpConvolve;
 
