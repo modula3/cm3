@@ -10,7 +10,7 @@ IMPORT
   BigIntegerBasic        AS B,
   BigIntegerRep          AS BR,
   BigIntegerFmtLex       AS BF,
-  BigIntegerMatrixBasic  AS BM,
+  BigIntegerMatrix       AS BM,
   BigIntegerMatrixFmtLex AS BMF,
   NumberTheory AS NT,
   WordEx AS Wx,

@@ -1,6 +1,6 @@
 MODULE TestMatrix EXPORTS Test;
 (**Copyright (c) 1996, m3na project
-Abstract:  Tests for LongRealMatrixBasic module.
+Abstract:  Tests for LongRealMatrix      module.
 
 1/1/96    <name>   Initial version
 
@@ -10,7 +10,7 @@ IMPORT (*IO,Wr,Fmt,*)
        LongRealBasic AS R,
        LongRealVector       AS V,
        LongRealVectorFmtLex AS VF,
-       LongRealMatrixBasic  AS M,
+       LongRealMatrix       AS M,
        LongRealMatrixFmtLex AS MF;
 
 (*=======================*)
@@ -19,7 +19,7 @@ CONST
 
 (*----------------------*)
 <*FATAL ANY*>
-PROCEDURE TestMatrixBasic():BOOLEAN=
+PROCEDURE TestMatrixBasic ():BOOLEAN=
 CONST
   ftn = Module & "TestMatrixBasic";
   m=3; n=3;

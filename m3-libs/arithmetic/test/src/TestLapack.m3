@@ -10,7 +10,7 @@ IMPORT Fmt,Wr,Thread;
 IMPORT LongRealBasic              AS R,
        LongRealVector             AS V,
        (*LongRealComplexVector      AS CV,*)
-       (*LongRealMatrixFast         AS M,*)
+       (*LongRealMatrix             AS M,*)
        LongRealEigenSystem        AS ES,
        LongRealMatrixLapack       AS LA,
        LongRealCharPolynomial     AS MCP,

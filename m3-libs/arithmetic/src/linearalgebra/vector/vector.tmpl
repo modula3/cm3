@@ -3,10 +3,10 @@
 %
 
 readonly proc Vector (nm, impl, field, rimpl) is
+  local rfield   = field & rimpl
   local base     = nm & "Vector"
   local rep      = base & "Rep"
   local instimpl = base & impl
-  local rfield   = field & rimpl
   build_generic_intf (base,     "Vector",        [rfield], VISIBLE)
   build_generic_impl (base,     "Vector",        [rfield, rep])
   build_generic_intf (rep,      "VectorRep",     [rfield, base, instimpl], VISIBLE)
