@@ -19,11 +19,11 @@ FROM xUtils IMPORT Error;
 PROCEDURE FromComplex( 
                    READONLY c:C.T):T=
 VAR
-  p:T;
+  x:T;
 BEGIN
-  p.radius:=Ct.Abs(c);
-  p.angle:=Rt.ArcTan2(c.im,c.re);
-  RETURN p;
+  x.radius:=Ct.Abs(c);
+  x.angle:=Rt.ArcTan2(c.im,c.re);
+  RETURN x;
 END FromComplex;
 
 (*----------------*)
@@ -34,44 +34,44 @@ END Equal;
 
 (*----------------*)
 PROCEDURE ToComplex( 
-                     READONLY p:T):C.T=
+                     READONLY x:T):C.T=
 BEGIN
-  RETURN C.Scale(C.T{re:=Rt.Cos(p.angle),im:=Rt.Sin(p.angle)},p.radius);
+  RETURN C.Scale(C.T{re:=Rt.Cos(x.angle),im:=Rt.Sin(x.angle)},x.radius);
 END ToComplex;
 (*----------------*)
-PROCEDURE NormalizeAngle(VAR p:T) =
+PROCEDURE NormalizeAngle(VAR x:T) =
   BEGIN
 	(*---normalize to -pi..+pi---*)
 	(*if it was normalized before,
       the loops should run at most one cycle*)
-	WHILE R.Compare(p.angle,Rt.Pi)>0 DO
-      p.angle:=R.Sub(p.angle,Rt.TwoPi);
+	WHILE R.Compare(x.angle,Rt.Pi)>0 DO
+      x.angle:=R.Sub(x.angle,Rt.TwoPi);
 	END;
-	WHILE R.Compare(p.angle,R.Neg(Rt.Pi))<0 DO
-      p.angle:=R.Add(p.angle,Rt.TwoPi);
+	WHILE R.Compare(x.angle,R.Neg(Rt.Pi))<0 DO
+      x.angle:=R.Add(x.angle,Rt.TwoPi);
 	END;
   END NormalizeAngle;
 (*----------------*)
 PROCEDURE Mul( 
-               READONLY p1,p2:T):T=
+               READONLY x,y:T):T=
 VAR
-  tmp:T;
+  z:T;
 BEGIN
-  tmp.radius:=R.Mul(p1.radius,p2.radius);
-  tmp.angle :=R.Add(p1.angle, p2.angle);
-  NormalizeAngle(tmp);
-  RETURN tmp;  
+  z.radius:=R.Mul(x.radius,y.radius);
+  z.angle :=R.Add(x.angle, y.angle);
+  NormalizeAngle(z);
+  RETURN z;  
 END Mul;
 (*----------------*)
 PROCEDURE Div( 
-               READONLY p1,p2:T):T RAISES {Error}=
+               READONLY x,y:T):T RAISES {Error}=
 VAR
-  tmp:T;
+  z:T;
 BEGIN
-  tmp.radius:=R.Div(p1.radius,p2.radius);
-  tmp.angle :=R.Sub(p1.angle, p2.angle);
-  NormalizeAngle(tmp);
-  RETURN tmp;  
+  z.radius:=R.Div(x.radius,y.radius);
+  z.angle :=R.Sub(x.angle, y.angle);
+  NormalizeAngle(z);
+  RETURN z;  
 END Div;
 
 
