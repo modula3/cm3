@@ -1,7 +1,7 @@
 MODULE Main;
 
-IMPORT TestDaubechies;
+IMPORT TestTransition;
 
 BEGIN
-  TestDaubechies.Test();
+  TestTransition.Test();
 END Main.
