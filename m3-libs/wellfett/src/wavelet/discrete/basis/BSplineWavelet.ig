@@ -11,4 +11,6 @@ PROCEDURE GeneratorMask (n: CARDINAL; base: [1 .. LAST(CARDINAL)] := 2):
 
 PROCEDURE WaveletMask (n, m: CARDINAL): S.T RAISES {DifferentParity};
 
+PROCEDURE WaveletMaskNoVan (n, m: CARDINAL): S.T RAISES {DifferentParity};
+
 END BSplineWavelet.

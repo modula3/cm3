@@ -2,15 +2,14 @@
 %  Quake functions to instantiate operations on generic signals.
 %
 
-readonly proc Signal (nm, field, rimpl, vimpl, pimpl) is
+readonly proc Signal (nm, rfield) is
   local signal  = nm & "Signal"
   local rep     = signal & "Rep"
   local fmtlex  = signal & "FmtLex"
-  local rfmtlex = field & "FmtLex"
-  local rfield  = field & rimpl
-  local vfield  = field & "Vector" & vimpl
-  local vecsup  = field & "VectorSupport"
-  local pfield  = field & "Polynomial" & pimpl
+  local rfmtlex = nm & "FmtLex"
+  local vfield  = nm & "Vector"
+  local vecsup  = nm & "VectorSupport"
+  local pfield  = nm & "Polynomial"
 
   build_generic_intf (signal, "Signal",       [rfield,      vfield], VISIBLE)
   build_generic_impl (signal, "Signal",       [rfield, rep, vfield, vecsup, pfield])

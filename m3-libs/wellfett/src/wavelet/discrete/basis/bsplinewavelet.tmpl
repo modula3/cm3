@@ -2,12 +2,11 @@
 %  Quake functions to instantiate operations on BSpline wavelets for generic float types.
 %
 
-readonly proc BSplineWavelet (nm, field, rimpl) is
+readonly proc BSplineWavelet (nm, rfield) is
   local basic  = nm & "BSplineWavelet"
-  local rfield = field  & rimpl
-  local signal = field  & "Signal"
+  local signal = nm  & "Signal"
   local intpow = signal & "IntegerPower"
-  local db     = field  & "DaubechiesWavelet"
+  local db     = nm  & "DaubechiesWavelet"
   build_generic_intf (basic, "BSplineWavelet", [signal], VISIBLE)
   build_generic_impl (basic, "BSplineWavelet", [rfield, signal, intpow, db])
 end

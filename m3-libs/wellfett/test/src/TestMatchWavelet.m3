@@ -2,14 +2,11 @@ MODULE TestMatchWavelet;
 
 IMPORT LongRealBasic AS R;
 IMPORT LongRealTrans AS RT;
-IMPORT LongRealComplex AS C;
-IMPORT LongRealComplexTrans AS CT;
 IMPORT Integer32IntegerPower AS IIntPow;
 IMPORT LongRealIntegerPower AS RIntPow;
 
 IMPORT LongRealVector AS V;
 IMPORT LongRealVectorFast AS VFs;
-IMPORT LongRealVectorSupport AS VS;
 IMPORT LongRealVectorTrans AS VT;
 
 IMPORT LongRealMatrix AS M;
@@ -22,6 +19,7 @@ IMPORT LongRealSignal AS S;
 IMPORT LongRealSignalIntegerPower AS SIntPow;
 
 IMPORT LongRealRefinableFunc AS Refn;
+IMPORT LongRealRefinableSmooth AS RefnSm;
 IMPORT LongRealBSplineWavelet AS BSpl;
 
 IMPORT LongRealFmtLex AS RF;
@@ -32,7 +30,6 @@ IMPORT LongRealSignalFmtLex AS SF;
 IMPORT LongRealWaveletPlot AS WP;
 IMPORT PLPlot AS PL;
 IMPORT IO, Fmt, Wr, Thread;
-IMPORT IntBiList;
 
 IMPORT NADefinitions AS NA;
 
@@ -116,13 +113,13 @@ PROCEDURE MatchPattern (target                               : S.T;
     coef :=
       LA.LeastSquares(basis, ARRAY OF V.T{targetvec},
                       flags := LA.LSFlagSet{LA.LSFlag.transposed})[0];
+    IO.Put(Fmt.FN("translates %s, size %s, residuum %s, %s\n",
+                  ARRAY OF
+                    TEXT{Fmt.Int(translates), Fmt.Int(size),
+                         RF.Fmt(coef.res), VF.Fmt(coef.x)}));
     (*
-        IO.Put(Fmt.FN("translates %s, size %s, residuum %s, %s\n",
-                      ARRAY OF
-                        TEXT{Fmt.Int(translates), Fmt.Int(size),
-                             RF.Fmt(coef.res), VF.Fmt(coef.x)}));
-    *)
     IO.Put(Fmt.FN("residuum - %s\n", ARRAY OF TEXT{RF.Fmt(coef.res)}));
+    *)
 
     PL.SetFGColorDiscr(4);
     PL.PlotLines(abscissa^, M.MulTV(basis, coef.x)^);
@@ -137,51 +134,6 @@ PROCEDURE MatchPattern (target                               : S.T;
            was amplified within the linear least squares term
 *)
 
-PROCEDURE ComputeSSE (READONLY y: ARRAY [0 .. 2] OF R.T): R.T =
-  <*FATAL NA.Error*>
-  VAR
-    p1  := VS.Sum(y);
-    p2  := VS.Inner(y, y);
-    p12 := p1 * p1;
-    dif := 3.0D0 * p2 - p12;
-  BEGIN
-    RETURN dif * dif + 2.0D0 * p12 * p12;
-  END ComputeSSE;
-
-PROCEDURE ComputeDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): V.T =
-  <*FATAL NA.Error*>
-  VAR
-    p1  := VS.Sum(y);
-    p2  := VS.Inner(y, y);
-    p12 := p1 * p1;
-    p1d := 12.0D0 * (p1 * (p12 - p2));
-    p2d := 6.0D0 * (3.0D0 * p2 - p12)
-             * 2.0D0 (*because p2' contains 2a'a and so on*);
-    z := V.New(NUMBER(y));
-  BEGIN
-    FOR i := 0 TO LAST(y) DO z[i] := p1d + y[i] * p2d; END;
-    RETURN z;
-  END ComputeDSSE;
-
-PROCEDURE ComputeDDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
-  <*FATAL NA.Error*>
-  (*derived with mathematica*)
-  VAR
-    p1 := VS.Sum(y);
-    p2 := VS.Inner(y, y);
-
-    z := M.New(NUMBER(y), NUMBER(y));
-  BEGIN
-    FOR i := 0 TO LAST(y) DO
-      FOR j := i TO LAST(y) DO
-        z[i, j] := (p1 + y[i] - y[j]) * (p1 - y[i] + y[j]);
-        z[j, i] := z[i, j];
-      END;
-      z[i, i] := z[i, i] + (3.0D0 * y[i] - 2.0D0 * p1) * y[i] + p2;
-    END;
-    RETURN M.Scale(z, 24.0D0);
-  END ComputeDDSSE;
-
 PROCEDURE TestSSE (x: V.T) =
   VAR
     dx0 := V.FromArray(ARRAY OF R.T{1.0D-8, 0.0D0, 0.0D0});
@@ -190,11 +142,11 @@ PROCEDURE TestSSE (x: V.T) =
   <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
   BEGIN
     VAR
-      rho     := ComputeSSE(x^);
-      rho0    := ComputeSSE(V.Add(x, dx0)^);
-      rho1    := ComputeSSE(V.Add(x, dx1)^);
-      rho2    := ComputeSSE(V.Add(x, dx2)^);
-      gradrho := V.Scale(ComputeDSSE(x^), 1.0D-8);
+      rho     := RefnSm.ComputeSSE(x^);
+      rho0    := RefnSm.ComputeSSE(V.Add(x, dx0)^);
+      rho1    := RefnSm.ComputeSSE(V.Add(x, dx1)^);
+      rho2    := RefnSm.ComputeSSE(V.Add(x, dx2)^);
+      gradrho := V.Scale(RefnSm.ComputeDSSE(x^), 1.0D-8);
     BEGIN
       IO.Put(
         Fmt.FN("rho %s, difrho={%s,%s,%s}, approxdiff=%s\n",
@@ -203,11 +155,11 @@ PROCEDURE TestSSE (x: V.T) =
                       RF.Fmt(rho2 - rho), VF.Fmt(gradrho)}));
     END;
     VAR
-      gradrho   := ComputeDSSE(x^);
-      gradrho0  := ComputeDSSE(V.Add(x, dx0)^);
-      gradrho1  := ComputeDSSE(V.Add(x, dx1)^);
-      gradrho2  := ComputeDSSE(V.Add(x, dx2)^);
-      jacobirho := M.Scale(ComputeDDSSE(x^), 1.0D-8);
+      gradrho   := RefnSm.ComputeDSSE(x^);
+      gradrho0  := RefnSm.ComputeDSSE(V.Add(x, dx0)^);
+      gradrho1  := RefnSm.ComputeDSSE(V.Add(x, dx1)^);
+      gradrho2  := RefnSm.ComputeDSSE(V.Add(x, dx2)^);
+      jacobirho := M.Scale(RefnSm.ComputeDDSSE(x^), 1.0D-8);
     BEGIN
       IO.Put(
         Fmt.FN("gradrho %s, difgradrho={%s,%s,%s}, approxdiff=%s\n",
@@ -225,15 +177,14 @@ PROCEDURE InverseDSSE (x: V.T): V.T RAISES {NA.Error} =
   VAR y := x;                    (*zero is a bad initial value*)
   BEGIN
     FOR j := 0 TO 100 DO
-      VAR ax := ComputeDSSE(y^);
+      VAR ax := RefnSm.ComputeDSSE(y^);
       BEGIN
         IF VT.Norm1(V.Sub(ax, x)) <= tol * VT.Norm1(x) THEN RETURN y; END;
-        y :=
-          V.Add(y, LA.LeastSquares(
-                     ComputeDDSSE(y^), ARRAY OF V.T{V.Sub(x, ax)})[0].x);
+        y := V.Add(y, LA.LeastSquares(RefnSm.ComputeDDSSE(y^),
+                                      ARRAY OF V.T{V.Sub(x, ax)})[0].x);
         (*
           IO.Put(Fmt.FN("y %s, DSSE(y) %s\n",
-                       ARRAY OF TEXT{VF.Fmt(y), VF.Fmt(ComputeDSSE(y^))}));
+                       ARRAY OF TEXT{VF.Fmt(y), VF.Fmt(RefnSm.ComputeDSSE(y^))}));
         *)
       END;
     END;
@@ -247,8 +198,9 @@ PROCEDURE TestInverseDSSE (READONLY x0: ARRAY [0 .. 2] OF R.T) =
     y := InverseDSSE(x);
   BEGIN
     IO.Put(
-      Fmt.FN("x %s, ComputeDSSE(y) %s, y %s\n",
-             ARRAY OF TEXT{VF.Fmt(x), VF.Fmt(ComputeDSSE(y^)), VF.Fmt(y)}));
+      Fmt.FN("x %s, RefnSm.ComputeDSSE(y) %s, y %s\n",
+             ARRAY OF
+               TEXT{VF.Fmt(x), VF.Fmt(RefnSm.ComputeDSSE(y^)), VF.Fmt(y)}));
   END TestInverseDSSE;
 
 PROCEDURE DeriveDist (normalMat    : M.T;
@@ -280,10 +232,10 @@ PROCEDURE DeriveSSE (hdual, gdual0, s: S.T; ): FnD.T RAISES {NA.Error} =
     IO.Put(MF.Fmt(dsums) & "\n");
     RETURN polypart;
     *)
-    RETURN
-      FnD.T{zeroth := ComputeSSE(hsums^), first :=
-            M.MulV(dsums, ComputeDSSE(hsums^)), second :=
-            M.Mul(M.Mul(dsums, ComputeDDSSE(hsums^)), M.Transpose(dsums))};
+    RETURN FnD.T{zeroth := RefnSm.ComputeSSE(hsums^), first :=
+                 M.MulV(dsums, RefnSm.ComputeDSSE(hsums^)), second :=
+                 M.Mul(M.Mul(dsums, RefnSm.ComputeDDSSE(hsums^)),
+                       M.Transpose(dsums))};
   END DeriveSSE;
 
 PROCEDURE DeriveWSSE (hdual, gdual0, s: S.T; c: R.T): FnD.T
@@ -314,9 +266,9 @@ PROCEDURE DeriveWSSE (hdual, gdual0, s: S.T; c: R.T): FnD.T
                   ARRAY [0 .. 0] OF M.T{dsums},
                   ARRAY [0 .. 0] OF M.T{M.RowFromVector(csums)}});
 
-    sse   := ComputeSSE(hsums^);
-    dsse  := ComputeDSSE(hsums^);
-    ddsse := ComputeDDSSE(hsums^);
+    sse   := RefnSm.ComputeSSE(hsums^);
+    dsse  := RefnSm.ComputeDSSE(hsums^);
+    ddsse := RefnSm.ComputeDDSSE(hsums^);
 
     dgsums := V.New(s.getNumber());
 
@@ -441,81 +393,6 @@ PROCEDURE TranslatesBasis (generatorvan: S.T;
     END;
     RETURN basis;
   END TranslatesBasis;
-
-
-TYPE
-  MatrixElem = RECORD
-                 enX, enY: IntBiList.Node;
-                 value   : R.T;
-               END;
-
-PROCEDURE FindMinMatrix (READONLY mat               : M.TBody;
-                                  enabledX, enabledY: IntBiList.T; ):
-  MatrixElem =
-  VAR
-    result  : MatrixElem;
-    enX, enY: IntBiList.Node;
-  BEGIN
-    result.value := R.PosInf;
-    enX := enabledX.getlo();
-    WHILE enX # NIL DO
-      enY := enabledY.getlo();
-      WHILE enY # NIL DO
-        IF result.value
-             > mat[enabledX.getvalue(enX), enabledY.getvalue(enY)] THEN
-          result.value :=
-            mat[enabledX.getvalue(enX), enabledY.getvalue(enY)];
-          result.enX := enX;
-          result.enY := enY;
-        END;
-        enY := enabledY.getnext(enY);
-      END;
-      enX := enabledX.getnext(enX);
-    END;
-    RETURN result;
-  END FindMinMatrix;
-
-(*Compute a kind of distance of a given eigenspectrum to the one of the
-   transfer matrix of the B-Spline of corresponding order*)
-PROCEDURE EigenDistBSpline (specX: REF ARRAY OF C.T): R.T =
-  VAR
-    enabledX, enabledY := NEW(IntBiList.T).init();
-    specY              := NEW(V.T, NUMBER(specX^));
-    distMatrix         := NEW(M.T, NUMBER(specX^), NUMBER(specX^));
-  BEGIN
-    VAR eigY := R.One;
-    BEGIN
-      FOR i := FIRST(specX^) TO LAST(specX^) DO
-        EVAL enabledX.addhi(i);
-        EVAL enabledY.addhi(i);
-        eigY := eigY / R.Two;
-        specY[i] := eigY;
-      END;
-      specY[LAST(specX^)] := R.Two * eigY;
-    END;
-    (*
-    IO.Put(Fmt.FN("compute distance between spectra\n%s%s\n",
-                  ARRAY OF TEXT{CVF.Fmt(specX), VF.Fmt(specY)}));
-    *)
-    FOR i := FIRST(specX^) TO LAST(specX^) DO
-      FOR j := FIRST(specX^) TO LAST(specX^) DO
-        distMatrix[i, j] :=
-          CT.AbsSqr(C.T{specX[i].re - specY[j], specX[i].im});
-      END;
-    END;
-    VAR sum := R.Zero;
-    BEGIN
-      FOR i := FIRST(specX^) TO LAST(specX^) DO
-        VAR min := FindMinMatrix(distMatrix^, enabledX, enabledY);
-        BEGIN
-          sum := sum + min.value;
-          enabledX.rem(min.enX);
-          enabledY.rem(min.enY);
-        END;
-      END;
-      RETURN sum;
-    END;
-  END EigenDistBSpline;
 
 
 PROCEDURE GetLiftedPrimalGeneratorMask (         hdual, gdual0: S.T;
@@ -653,114 +530,25 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
 
     PROCEDURE ComputeOptCritDiff (x: V.T): FnD.T RAISES {NA.Error} =
 
-      PROCEDURE SquareSmoothEstimate (x: V.T): R.T =
-        VAR
-          hsums := GetLiftedPrimalGeneratorMask(
-                     hdualnovan, gdual0novan,
-                     SplitParamVec(x, initWavelet0Amp)).wrapCyclic(
-                     3).getData();
-
-        BEGIN
-          (*
-          IO.Put(Fmt.FN("Compute SSE of %s, sum %s\n",ARRAY OF TEXT{VF.Fmt(hsums),RF.Fmt(V.Sum(hsums^))}));
-          *)
-          RETURN ComputeSSE(hsums^);
-        END SquareSmoothEstimate;
-
-      PROCEDURE TransitionSpecRad (x: V.T): R.T RAISES {NA.Error} =
+      PROCEDURE EstimateSmoothness (x: V.T): R.T =
         VAR
           hprimal := GetLiftedPrimalGeneratorMask(
                        hdualnovan, gdual0novan,
                        SplitParamVec(x, initWavelet0Amp));
+        <*FATAL NA.Error*>
         BEGIN
-          (*
-          IO.Put("TransitionSpecRad "&Fmt.Int(ncall)&"\n");
-          INC(ncall);
-          *)
-          RETURN Refn.TransitionSpecRad(hprimal);
-        END TransitionSpecRad;
-
-      PROCEDURE TransitionBSpline (x: V.T): R.T RAISES {NA.Error} =
-        VAR
-          hprimal := GetLiftedPrimalGeneratorMask(
-                       hdualnovan, gdual0novan,
-                       SplitParamVec(x, initWavelet0Amp));
-        BEGIN
-          RETURN EigenDistBSpline(Refn.TransitionEV(hprimal).eigenvalues);
-        END TransitionBSpline;
-
-      PROCEDURE TransitionBinomial (x: V.T): R.T =
-        VAR
-          hprimal := GetLiftedPrimalGeneratorMask(
-                       hdualnovan, gdual0novan,
-                       SplitParamVec(x, initWavelet0Amp));
-          bsplinemask := BSpl.GeneratorMask(
-                           hprimal.getNumber() - 1).translate(
-                           hprimal.getFirst());
-        BEGIN
-          (*
-          IO.Put(Fmt.FN("%s-%s, %s-%s\n",
-                        ARRAY OF
-                          TEXT{Fmt.Int(hprimal.getFirst()),
-                               Fmt.Int(hprimal.getLast()),
-                               Fmt.Int(bsplinemask.getFirst()),
-                               Fmt.Int(bsplinemask.getLast())}));
-          *)
-          RETURN -ABS(bsplinemask.inner(hprimal));
-        END TransitionBinomial;
-
-      PROCEDURE TransitionFrobenius (x: V.T): R.T =
-        VAR
-          hprimal := GetLiftedPrimalGeneratorMask(
-                       hdualnovan, gdual0novan,
-                       SplitParamVec(x, initWavelet0Amp));
-          hh := hprimal.autocorrelate();
-          (*frob0 := M.Trace(M.MulMMA(Refn.RadicBandMatrix(hh)));*)
-          frob1           := R.Zero;
-          alter: [0 .. 1] := 1;
-          n               := hh.getLast();
-        BEGIN
-          (*because of the symmetry we can content ourselves with the half
-             autocorrelated mask*)
-          FOR i := hh.getFirst() TO -1 DO
-            VAR val := hh.getValue(i);
-            BEGIN
-              frob1 := frob1 + FLOAT(n + alter, R.T) * val * val;
-              alter := 1 - alter;
-            END;
+          CASE 4 OF
+          | 0 => RETURN RefnSm.SquareSmoothEstimate(hprimal);
+          | 1 => RETURN RefnSm.SpecRad(hprimal);
+          | 2 => RETURN RefnSm.BSpline(hprimal);
+          | 3 => RETURN RefnSm.Binomial(hprimal);
+          | 4 => RETURN RefnSm.Frobenius(hprimal);
+          | 5 => RETURN RefnSm.SimpFrobenius(hprimal);
+          | 6 => RETURN RefnSm.SumNorm(hprimal);
+          ELSE
+            <*ASSERT FALSE*>
           END;
-          VAR val := hh.getValue(0);
-          BEGIN
-            frob1 := R.Two * frob1 + FLOAT(n + alter, R.T) * val * val;
-          END;
-          (*
-          IO.Put(Fmt.FN("Frobenius norm %s =?= %s\n",
-                        ARRAY OF TEXT{RF.Fmt(frob0), RF.Fmt(frob1)}));
-          *)
-          RETURN frob1;
-        END TransitionFrobenius;
-
-      PROCEDURE TransitionSimpFrobenius (x: V.T): R.T =
-        VAR
-          hprimal := GetLiftedPrimalGeneratorMask(
-                       hdualnovan, gdual0novan,
-                       SplitParamVec(x, initWavelet0Amp));
-          hh := hprimal.autocorrelate();
-        BEGIN
-          (*the computation could be sped-up because 'hh' is symmetric*)
-          RETURN hh.inner(hh);
-        END TransitionSimpFrobenius;
-
-      PROCEDURE TransitionSumNorm (x: V.T): R.T =
-        VAR
-          hprimal := GetLiftedPrimalGeneratorMask(
-                       hdualnovan, gdual0novan,
-                       SplitParamVec(x, initWavelet0Amp));
-          hh := hprimal.autocorrelate();
-        BEGIN
-          (*the computation could be sped-up because 'hh' is symmetric*)
-          RETURN VT.Norm1(hh.getData());
-        END TransitionSumNorm;
+        END EstimateSmoothness;
 
       VAR
         mc := SplitParamVec(x, initWavelet0Amp);
@@ -800,21 +588,7 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         IO.Put(
           Fmt.FN("ComputeOptCritDiff for x=%s", ARRAY OF TEXT{VF.Fmt(x)}));
         FOR i := FIRST(dx^) TO LAST(dx^) DO dx[i] := dxv END;
-        CASE 6 OF
-        | 0 =>
-            dersmooth := Fn.EvalCentralDiff2(SquareSmoothEstimate, x, dx);
-        | 1 => dersmooth := Fn.EvalCentralDiff2(TransitionSpecRad, x, dx);
-        | 2 => dersmooth := Fn.EvalCentralDiff2(TransitionBSpline, x, dx);
-        | 3 => dersmooth := Fn.EvalCentralDiff2(TransitionBinomial, x, dx);
-        | 4 =>
-            dersmooth := Fn.EvalCentralDiff2(TransitionFrobenius, x, dx);
-        | 5 =>
-            dersmooth :=
-              Fn.EvalCentralDiff2(TransitionSimpFrobenius, x, dx);
-        | 6 => dersmooth := Fn.EvalCentralDiff2(TransitionSumNorm, x, dx);
-        ELSE
-          <*ASSERT FALSE*>
-        END;
+        dersmooth := Fn.EvalCentralDiff2(EstimateSmoothness, x, dx);
         IO.Put(
           Fmt.FN(
             "dist %s, smooth %s, weight %s\n",
@@ -919,9 +693,11 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
                   vanishing).translate(2 - smooth - vanishing);
     hdualnovan := BSpl.GeneratorMask(smooth + vanishing).translate(
                     2 - smooth - vanishing).scale(
-                    RIntPow.Power(R.Two, vanishing)); (*compensate factors
-                                                         (0.5,0.5) from the
-                                                         mask*)
+                    RIntPow.MulPower(R.One, R.Two, vanishing)); (*compensate
+                                                                   factors
+                                                                   (0.5,0.5)
+                                                                   from the
+                                                                   mask*)
     gdual0novan := BSpl.WaveletMask(smooth + vanishing, 0);
 
     (*
@@ -1171,22 +947,35 @@ PROCEDURE Test () =
         4, 6, 10, 1.0D-3);
       *)
     | Example.matchGaussian =>
-        FOR scale := 3 TO 10 DO
-          VAR size := 5 * scale * unit;
-          BEGIN
-            MatchPattern(
-              NEW(S.T).fromArray(
-                ModulateReal(V.Neg(GaussianVector(size, scale * unit)),
-                             FLOAT(scale * unit, R.T))^, unit - size),
-              numlevel, 4, 0, 20);
+        (*
+          FOR scale := 3 TO 10 DO
+            IO.Put("scale: "&Fmt.Int(scale)&"\n");
+            VAR size := 5 * scale * unit;
+            BEGIN
+              MatchPattern(
+                NEW(S.T).fromArray(
+                  ModulateReal(V.Neg(GaussianVector(size, scale * unit)),
+                               FLOAT(scale * unit, R.T))^, unit - size),
+                numlevel, 4, 0, 20);
+            END;
+            VAR size := 5 * scale * unit;
+            BEGIN
+              MatchPattern(NEW(S.T).fromArray(
+                             ModulateImag(GaussianVector(size, scale * unit),
+                                          FLOAT(scale * unit, R.T))^,
+                             unit - size), numlevel, 3, 1, 20);
+            END;
           END;
-          VAR size := 5 * scale * unit;
-          BEGIN
-            MatchPattern(NEW(S.T).fromArray(
-                           ModulateImag(GaussianVector(size, scale * unit),
-                                        FLOAT(scale * unit, R.T))^,
-                           unit - size), numlevel, 3, 1, 20);
-          END;
+        *)
+        CONST
+          scale = 6;
+          size  = 5 * scale * unit;
+        BEGIN
+          TestMatchPatternSmooth(
+            NEW(S.T).fromArray(
+              ModulateReal(V.Neg(GaussianVector(size, scale * unit)),
+                           FLOAT(scale * unit, R.T))^, unit - size),
+            numlevel, 4, 0, 6, 10.0D0);
         END;
     | Example.matchLongRamp =>
         (*matching a pattern with 1 vanishing moment with a wavelet of 9

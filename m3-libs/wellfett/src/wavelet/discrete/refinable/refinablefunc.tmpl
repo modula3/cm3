@@ -2,14 +2,28 @@
 %  Quake functions to instantiate operations on Daubechies wavelets for generic float types.
 %
 
-readonly proc RefinableFunc (nm, field, rimpl, cfield, cimpl, vimpl, cvimpl, mimpl) is
+readonly proc RefinableFunc (nm, rfield, cfield) is
   local basic   = nm & "RefinableFunc"
-  local rfield  = field & rimpl
-  local vfield  = field & "Vector" & vimpl
-  local cvfield = cfield & "VectorTrans"
-  local mfield  = field & "Matrix" & mimpl
-  local eigen   = field & "EigenSystem"
-  local signal  = field & "Signal"
+  local vfield  = nm & "Vector"
+  local cvtrans = cfield & "VectorTrans"
+  local mfield  = nm & "Matrix"
+  local eigen   = nm & "EigenSystem"
+  local signal  = nm & "Signal"
   build_generic_intf (basic, "RefinableFunc", [rfield,          mfield, eigen, signal], VISIBLE)
-  build_generic_impl (basic, "RefinableFunc", [rfield, cvfield, mfield, eigen, signal])
+  build_generic_impl (basic, "RefinableFunc", [rfield, cvtrans, mfield, eigen, signal])
+end
+
+readonly proc RefinableSmooth (nm, rfield, cfield) is
+  local basic   = nm & "RefinableSmooth"
+  local vfield  = nm & "Vector"
+  local vrep    = nm & "VectorRep"
+  local vtrans  = nm & "VectorTrans"
+  local ctrans  = cfield & "Trans"
+  local mfield  = nm & "Matrix"
+  local eigen   = nm & "EigenSystem"
+  local signal  = nm & "Signal"
+  local refn    = nm & "RefinableFunc"
+  local bspl    = nm & "BSplineWavelet"
+  build_generic_intf (basic, "RefinableSmooth", [rfield, vfield, mfield, signal], VISIBLE)
+  build_generic_impl (basic, "RefinableSmooth", [rfield, cfield, ctrans, vfield, vrep, vtrans, mfield, signal, refn, bspl])
 end
