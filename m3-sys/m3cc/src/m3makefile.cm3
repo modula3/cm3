@@ -1,0 +1,45 @@
+if not equal (M3CC_HOST, M3CC_TARGET)
+  build_dir = ".." & SL & BUILD_DIR & "-" & M3CC_TARGET
+end
+
+% make sure the derived directory exists
+if stale (build_dir, build_dir)
+  exec ("mkdir", build_dir)
+end
+
+if not defined ("no_config")
+  % configure the sources
+  done  = ".configure-done"
+  donep = build_dir & SL & done
+  if stale(donep, donep)
+    exec ("cd", build_dir, "; ../gcc/configure", M3CC_CONFIG,
+             "--srcdir=../gcc",
+             "--host=" & GNU_platform (M3CC_HOST),
+             "--build=" & GNU_platform (M3CC_HOST),
+             "--target=" & GNU_platform (M3CC_TARGET),
+             "&& echo \"done\" > " & done)
+  end
+end
+
+% misc fixups & ship commands
+pgms = "LANGUAGES=m3cg"
+postcp = "cp -p gcc/cm3cg ."
+if equal (M3CC_HOST, M3CC_TARGET)
+  BindExport ("cm3cg")
+  if equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF")
+    pgms = "LANGUAGES='m3cg mips-tfile'"
+    BindExport ("mips-tfile")
+    postcp = "cp -p gcc/cm3cg . && cp -p gcc/mips-tfile ."
+  end
+end
+
+% check for non-default flags
+ARG0 = get_overrides ("CC", M3CC_CC)
+ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
+
+% finally, compile it
+exec ("cd", build_dir, ";", M3CC_MAKE, ARG0, ARG1, pgms)
+if defined("postcp")
+  exec(postcp)
+end
+
