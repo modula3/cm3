@@ -117,10 +117,20 @@ PROCEDURE GetAbsolutePath (a, b: TEXT := NIL): TEXT =
 
 PROCEDURE MakePath (a, b, c, d: TEXT := NIL): TEXT =
   VAR path := a;
-  BEGIN
-    IF (b # NIL) THEN path := Pathname.Join (path, b, NIL); END;
-    IF (c # NIL) THEN path := Pathname.Join (path, c, NIL); END;
-    IF (d # NIL) THEN path := Pathname.Join (path, d, NIL); END;
+
+  PROCEDURE Join (a, b: TEXT): TEXT =
+    BEGIN
+      IF Pathname.Absolute(b) THEN
+        RETURN b;
+      ELSE
+        RETURN Pathname.Join(a, b, NIL);
+      END;
+    END Join;
+
+  BEGIN (* MakePath *)
+    IF (b # NIL) THEN path := Join (path, b); END;
+    IF (c # NIL) THEN path := Join (path, c); END;
+    IF (d # NIL) THEN path := Join (path, d); END;
     RETURN path;
   END MakePath;
 

@@ -3,6 +3,7 @@
 
 import ("libm3")
 import ("m3quake")
+import ("patternmatching")
 %import ("cmkey")
 
 resource_named ("config", "config" & SL & TARGET)

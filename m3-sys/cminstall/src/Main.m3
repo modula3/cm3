@@ -1,9 +1,9 @@
 MODULE Main;
 
-IMPORT Bundle, (* CMKey, CMCurrent, *) CoffTime, Env, File, Fmt, FS;
+IMPORT Bundle, (* CMKey, CMCurrent, *) CoffTime, Env, File, Fmt, FS, Glob;
 IMPORT M3ID, Msg, OS, OSError, Params, Pathname, Pipe, Process;
-IMPORT Quake, QScanner, QToken, Registry, Setup, Text, Text2;
-IMPORT TextSeq, TextWr, Thread, Wr;
+IMPORT Quake, QScanner, QToken, RegEx, Registry, RegularFile, Setup;
+IMPORT Text, Text2, TextSeq, TextWr, Thread, Wr;
 FROM Msg IMPORT Out, OutS, Ask, AskBool, AskChoice;
 
 CONST
@@ -14,7 +14,7 @@ CONST
 
   MinDiskSpace = 75; (* megabytes *)
 
-  REACTOR_EXE = ARRAY BOOLEAN OF TEXT
+  REACTOR_EXE = ARRAY BOOLEAN OF TEXT <*NOWARN*>
     { "reactor.exe", "reactor" } [OnUnix];
 
   CM3_EXE = ARRAY BOOLEAN OF TEXT
@@ -29,21 +29,12 @@ CONST
   FIXUP_EXE = ARRAY BOOLEAN OF TEXT
     { "fixup.bat", "fixup" } [OnUnix];
 
-  ARCHIVES = ARRAY [0..12] OF TEXT
+  ARCHIVES = ARRAY [0..3] OF TEXT
     {
-      "cm3-doc",
-      "cm3-doc-5.1.0",
-      "cm3-doc-5.1.1",
-      "cm3-doc-5.1.2",
-      "cm3-doc-5.1.3",
-      "cm3-doc-5.1.4",
-      "cm3-doc-5.2.0",
-      "cm3-doc-5.2.1",
-      "cm3-doc-5.2.2",
-      "cm3-doc-5.2.3",
-      "cm3-misc",
-      "cm3-specials",
-      "cm3-fixes"
+      "cm3-doc*",
+      "cm3-misc*",
+      "cm3-specials*",
+      "cm3-fixes*"
     };
 
 VAR
@@ -152,17 +143,34 @@ PROCEDURE DoIt () =
     Out ("Installing CM3 in: ", install_root);
     Out ("This may take a few minutes...");
     Unpack ("system");
-    FOR i := FIRST(ARCHIVES) TO LAST(ARCHIVES) DO
-      WITH archive_name = ARCHIVES[i],
-           archive_path1 = OS.MakePath(cminstall_root, ARCHIVES[i] & ".tgz"),
-           archive_path2 = OS.MakePath(cminstall_root, ARCHIVES[i] & ".tar") DO
-        IF OS.IsExecutable(archive_path1) THEN
-          Unpack(archive_name);
-        ELSIF OS.IsExecutable(archive_path2) THEN
-          Unpack(archive_name);
-        ELSE
-          Msg.Debug ("not found: ", archive_name);
+    VAR 
+      iter: FS.Iterator;
+      fn: TEXT;
+      stat: File.Status;
+      archive_name, archive_path1: TEXT;
+    BEGIN
+      TRY
+        iter := FS.Iterate(".");
+        FOR i := FIRST(ARCHIVES) TO LAST(ARCHIVES) DO
+          archive_name := ARCHIVES[i];
+          Msg.Debug ("looking for archive: ", archive_name);
+          WHILE iter.nextWithStatus(fn, stat) DO
+            Msg.Debug ("  file ", fn);
+            IF stat.type = RegularFile.FileType AND
+              Glob.Match(archive_name, fn) THEN
+              Msg.Debug ("    matching regular file");
+              archive_path1 := OS.MakePath(cminstall_root, fn);
+              IF OS.IsExecutable(archive_path1) THEN
+                Unpack(fn);
+              ELSE
+                Msg.Debug ("not found: ", archive_name);
+              END;
+            END;
+          END;
         END;
+      EXCEPT
+        OSError.E(e) => Msg.Error(e, "cannot list current directory");
+      | RegEx.Error => Msg.Error(NIL, "invalid regular expression");
       END;
     END;
     (* Unpack (OS.MakePath ("..", "DOCS")); *)
@@ -529,9 +537,7 @@ PROCEDURE GenConfig (): TEXT =
                     Out ("Warning: Changing the required library names is ",
                          "currently only partially");
                     Out ("supported by the installer. You will have to edit ",
-                         Pathname.Join(
-                             Pathname.Join(install_root, "bin", NIL), 
-                             "cm3.cfg", NIL));
+                         OS.MakePath(install_root, "bin", "cm3.cfg"));
                     Out ("manually after the installation and adapt the ",
                          "-l suffixes in the SYSTEM_LIBS");
                     Out ("array.");
@@ -705,16 +711,23 @@ CONST
 PROCEDURE Unpack (archive: TEXT) =
   VAR data: TEXT := OS.MakePath (cminstall_root, archive);
   BEGIN
-    IF OS.IsExecutable (data & ".tar") THEN 
-      UnpackTAR (data & ".tar");
+    IF OS.IsExecutable (data) THEN
+      TRY
+        IF Glob.Match("*.tar", data) THEN
+          UnpackTAR (data);
+        ELSIF Glob.Match("*.tar.gz", data) THEN
+          UnpackTGZ (data);
+        ELSIF Glob.Match("*.tgz", data) THEN
+          UnpackTGZ (data);
+        ELSE
+          Msg.Error(NIL, "unknown archive type: ", data);
+        END;
+      EXCEPT ELSE END; (* cannot happen :-) *)
     ELSE
-      IF OnUnix THEN
-        UnpackTGZ (data & ".tgz");
+      IF OS.IsExecutable (data & ".tar") THEN 
+        UnpackTAR (data & ".tar");
       ELSE
         UnpackTGZ (data & ".tgz");
-        (* does not work, too... 
-        UnpackTGZWin32 (data & ".tgz");
-        *)
       END;
     END;
   END Unpack;
@@ -759,7 +772,7 @@ PROCEDURE UnpackTAR (data: TEXT) =
     Msg.Debug ("unpacking done.");
   END UnpackTAR;
 
-PROCEDURE UnpackTGZWin32 (data: TEXT) =
+PROCEDURE UnpackTGZWin32 (data: TEXT) <*NOWARN*> =
   CONST
     TarArgs  = ARRAY [0..1] OF TEXT { "-zxmf", "-" };
   VAR
