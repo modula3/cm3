@@ -119,15 +119,14 @@ REVEAL
 	  "";
 
 %typemap(m3wrapintype,numinputs=0) int n, int nx, int ny, int nz %{%}
-%typemap(m3wrapargvar) int n, int nx, int ny, int nz %{$input: CARDINAL;%}
 
-%typemap(m3wrapincheck) fftw_complex_array_1d *in, fftw_real_array_1d *in
+%typemap(m3wrapargvar) fftw_complex_array_1d *in, fftw_real_array_1d *in
   %{n := NUMBER($input^);%};
-%typemap(m3wrapincheck) fftw_complex_array_2d *in, fftw_real_array_2d *in
+%typemap(m3wrapargvar) fftw_complex_array_2d *in, fftw_real_array_2d *in
   %{nx := NUMBER($input^); ny := NUMBER($input[0]);%};
-%typemap(m3wrapincheck) fftw_complex_array_3d *in, fftw_real_array_3d *in
+%typemap(m3wrapargvar) fftw_complex_array_3d *in, fftw_real_array_3d *in
   %{nx := NUMBER($input^); ny := NUMBER($input[0]); nz := NUMBER($input[0,0]);%};
-%typemap(m3wrapincheck) fftw_complex_tensor   *in, fftw_real_tensor   *in
+%typemap(m3wrapargvar) fftw_complex_tensor   *in, fftw_real_tensor   *in
   %{$input%};
 
 %typemap(m3wrapincheck) fftw_complex_array_1d *out, fftw_real_array_1d *out
