@@ -7,6 +7,8 @@ IMPORT Usignal, Unix, Umman, RTMisc;
 
 CONST 
   SP_pos = 0;
+  (* FP_pos = 18; *)
+  SP_copy_pos = 19;
   (* FP_pos = 3; *)
 
 PROCEDURE SP (READONLY s: State): ADDRESS =
@@ -67,6 +69,7 @@ PROCEDURE UpdateStateForNewSP (VAR s: State; offset: INTEGER) =
   BEGIN
     INC (s [SP_pos], offset);
     (* INC (s [FP_pos], offset); *)
+    INC (s [SP_copy_pos], offset);
   END UpdateStateForNewSP;
 
 PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;

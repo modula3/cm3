@@ -27,6 +27,7 @@ CONST
   DT_REG     =      8;
   DT_LNK     =     10;
   DT_SOCK    =     12;
+  DT_WHT     =     14;
 
 (*
  * The dirent structure defines the format of directory entries returned by
@@ -50,13 +51,14 @@ TYPE
   direct = dirent;                    (* backwards compatibility *)
 
   DIR = RECORD
-    dd_fd:    Ctypes.int; (* file descriptor associated with directory *)
-    dd_loc:   Ctypes.long; (* offset in current buffer *)
-    dd_size:  Ctypes.long; (* amount of data returned by getdirentries *)
-    dd_buf:   Ctypes.char_star; (* data buffer *)
-    dd_len:   Ctypes.int; (* size of data buffer *)
-    dd_seek:  Ctypes.long (* magic cookie returned by getdirentries *);
+    dd_fd:     Ctypes.int; (* file descriptor associated with directory *)
+    dd_loc:    Ctypes.long; (* offset in current buffer *)
+    dd_size:   Ctypes.long; (* amount of data returned by getdirentries *)
+    dd_buf:    Ctypes.char_star; (* data buffer *)
+    dd_len:    Ctypes.int; (* size of data buffer *)
+    dd_seek:   Ctypes.long (* magic cookie returned by getdirentries *);
     dd_rewind: Ctypes.long; (* magic cookie for rewinding *)
+    dd_flags:  Ctypes.int; (* file descriptor associated with directory *)
   END;
 
   DIR_star = UNTRACED REF DIR;
