@@ -1,5 +1,5 @@
 GENERIC MODULE ComplexTrans(C,R,Rt);
-(*Copyright (c) 1996, m3na project
+(*Copyright (x) 1996, m3na project
 
 Abstract: Transcendental functions of complex numbers.
 
@@ -16,21 +16,21 @@ FROM xUtils IMPORT Error,Err;
 
 (*----------------*)
 PROCEDURE Arg( 
-               READONLY c:C.T):R.T=
+               READONLY x:C.T):R.T=
 BEGIN
-  RETURN Rt.ArcTan2(c.im,c.re);
+  RETURN Rt.ArcTan2(x.im,x.re);
 END Arg;
 
 (*----------------*)
 PROCEDURE PowR( 
-                READONLY c:C.T;
+                READONLY x:C.T;
                 y:R.T):C.T=
 VAR
   arg:R.T;
   abs:R.T;
 BEGIN
-  arg:=Arg(c);
-  abs:=Abs(c);
+  arg:=Arg(x);
+  abs:=Abs(x);
   RETURN C.Scale(Exp(C.T{R.Zero,R.Mul(arg,y)}),abs);
 END PowR;
 
@@ -39,187 +39,116 @@ PROCEDURE Pow(
                 x,y:C.T
                   ):C.T=
 VAR
-  tmp:C.T;
+  z:C.T;
 BEGIN
-  tmp:=Ln(x);
-  tmp:=C.Mul(y,tmp);
-  tmp:=Exp(tmp);
-  RETURN tmp;
+  z:=Ln(x);
+  z:=C.Mul(y,z);
+  z:=Exp(z);
+  RETURN z;
 END Pow;
 
 
 (*----------------*)
 PROCEDURE Exp( 
-                READONLY c:C.T):C.T=
+                READONLY x:C.T):C.T=
 BEGIN
-  RETURN C.Scale(C.T{Rt.Cos(c.im),Rt.Sin(c.im)},Rt.Exp(c.re));
+  RETURN C.Scale(C.T{Rt.Cos(x.im),Rt.Sin(x.im)},Rt.Exp(x.re));
 END Exp;
 
 (*----------------*)
 PROCEDURE Ln( 
-                READONLY c:C.T):C.T=
+                READONLY x:C.T):C.T=
 VAR
-  tmp:C.T;
+  z:C.T;
 BEGIN
-  (*tmp.re:= R.Div(Rt.Ln(AbsSqr(c)),R.Two);*)
-  tmp.re:= Rt.Ln(AbsSqr(c)) / R.Two;
-  tmp.im:= Arg(c);
-  RETURN tmp;
+  (*z.re:= R.Div(Rt.Ln(AbsSqr(x)),R.Two);*)
+  z.re:= Rt.Ln(AbsSqr(x)) / R.Two;
+  z.im:= Arg(x);
+  RETURN z;
 END Ln;
 
 (*----------------*)
 PROCEDURE Cos( 
-                READONLY c:C.T):C.T RAISES {Error}=
+                READONLY x:C.T):C.T RAISES {Error}=
 VAR
-  tmp:C.T;
+  z:C.T;
 BEGIN
-  IF ABS(c.re) > FLOAT(18.0D0,R.T) OR ABS(c.im) > FLOAT(18.0D0,R.T) THEN
+  IF ABS(x.re) > FLOAT(18.0D0,R.T) OR ABS(x.im) > FLOAT(18.0D0,R.T) THEN
     RAISE Error(Err.out_of_range);
   END;
-  tmp.re:=+Rt.Cos(c.re)*Rt.CosH(c.im);
-  tmp.im:=-Rt.Sin(c.re)*Rt.SinH(c.im);
-  RETURN tmp;
+  z.re:=+Rt.Cos(x.re)*Rt.CosH(x.im);
+  z.im:=-Rt.Sin(x.re)*Rt.SinH(x.im);
+  RETURN z;
 END Cos;
 (*----------------*)
 PROCEDURE Sin( 
-                READONLY c:C.T):C.T RAISES {Error}=
+                READONLY x:C.T):C.T RAISES {Error}=
 VAR
-  tmp:C.T;
+  z:C.T;
 BEGIN
-  IF ABS(c.re) > FLOAT(18.0D0,R.T) OR ABS(c.im) > FLOAT(18.0D0,R.T) THEN
+  IF ABS(x.re) > FLOAT(18.0D0,R.T) OR ABS(x.im) > FLOAT(18.0D0,R.T) THEN
     RAISE Error(Err.out_of_range);
   END;
-  tmp.re:=+Rt.Sin(c.re)*Rt.CosH(c.im);
-  tmp.im:=+Rt.Cos(c.re)*Rt.SinH(c.im);
-  RETURN tmp;
+  z.re:=+Rt.Sin(x.re)*Rt.CosH(x.im);
+  z.im:=+Rt.Cos(x.re)*Rt.SinH(x.im);
+  RETURN z;
 END Sin;
 (*----------------*)
 PROCEDURE Tan( 
-                READONLY c:C.T):C.T RAISES {Error}=
+                READONLY x:C.T):C.T RAISES {Error}=
 VAR
-  tmp:C.T;
+  z:C.T;
 BEGIN
-  tmp:=C.Div(Sin(c),Cos(c));
-  RETURN tmp;
+  z:=C.Div(Sin(x),Cos(x));
+  RETURN z;
 END Tan;
 
 (*----------------*)
 PROCEDURE CosH( 
-                READONLY c:C.T):C.T RAISES {Error}=
+                READONLY x:C.T):C.T RAISES {Error}=
 VAR
-  tmp:C.T;
+  z:C.T;
 BEGIN
-  tmp.re:=-c.im;
-  tmp.im:=+c.re;
-  tmp:=Cos(tmp);
-  RETURN tmp;
+  z.re:=-x.im;
+  z.im:=+x.re;
+  z:=Cos(z);
+  RETURN z;
 END CosH;
 (*----------------*)
 PROCEDURE SinH( 
-                READONLY c:C.T):C.T RAISES {Error}=
+                READONLY x:C.T):C.T RAISES {Error}=
 VAR
-  tmp:C.T;
+  z:C.T;
   t:R.T;
 BEGIN
-  tmp.re:=-c.im;
-  tmp.im:=+c.re;
-  tmp:=Sin(tmp);
-  (*tmp.re = -i*i*tmp.im = tmp.im*)
-  (*tmp.im = -i*tmp.re* = -tmp.re*)
-  t:=tmp.im;
-  tmp.im:=-tmp.re;
-  tmp.re:=t;
-  RETURN tmp;
+  z.re:=-x.im;
+  z.im:=+x.re;
+  z:=Sin(z);
+  (*z.re = -i*i*z.im = z.im*)
+  (*z.im = -i*z.re* = -z.re*)
+  t:=z.im;
+  z.im:=-z.re;
+  z.re:=t;
+  RETURN z;
 END SinH;
 (*----------------*)
 PROCEDURE TanH( 
-                READONLY c:C.T):C.T RAISES {Error}=
+                READONLY x:C.T):C.T RAISES {Error}=
 BEGIN
-  RETURN C.Div(SinH(c),CosH(c));
+  RETURN C.Div(SinH(x),CosH(x));
 END TanH;
 
-(*===============*)
-(* WDS Functions *)
-(*===============*)
-
 (*-------------------*)
-<*UNUSED*>
-PROCEDURE Magnitude(READONLY c : C.T) : R.T =
-  VAR
-    x,y : R.T;
+PROCEDURE Norm1(READONLY x : C.T) : R.T =
   BEGIN
-    x := ABS(c.re);
-    y := ABS(c.im);
-    IF x<=R.Zero THEN
-      RETURN y;
-    ELSIF y<=R.Zero THEN
-      RETURN x;
-    ELSIF x<=y THEN
-      WITH q = x/y DO
-        RETURN Rt.SqRt(q*q + R.One) * y;
-      END;
-    ELSE (* x>y *)
-      WITH q = y/x DO
-        RETURN Rt.SqRt(q*q + R.One) * x;
-      END;
-    END;
-  END Magnitude;
-
-(*-------------------*)
-PROCEDURE Norm1(READONLY c : C.T) : R.T =
-  BEGIN
-    RETURN ABS(c.re) + ABS(c.im);
+    RETURN ABS(x.re) + ABS(x.im);
   END Norm1;
 
-PROCEDURE NormInf(READONLY c : C.T) : R.T =
-  BEGIN
-    RETURN MAX(ABS(c.re), ABS(c.im));
-  END NormInf;
-
 (*-------------------*)
-(* Branch chosen so real part is always >= 0: *)
-<*UNUSED*>
-PROCEDURE SqrtWDS(READONLY a : C.T) : C.T =
-  CONST
-    RootHalf = FLOAT(0.707106781186547524400844362104849039284835937689D0,R.T);
-  VAR
-    x, y, q, mag : R.T;
-    c : C.T;
+PROCEDURE NormInf(READONLY x : C.T) : R.T =
   BEGIN
-    x := ABS(a.re);
-    y := ABS(a.im);
-    IF x < y THEN
-      q := x/y;
-      mag := y * Rt.SqRt(R.One + q*q);
-    ELSE
-      IF y = R.Zero THEN
-        q := Rt.SqRt(x);
-        IF a.re >= R.Zero THEN
-          c.re := q;  c.im := R.Zero;
-        ELSE
-          c.re := R.Zero;  c.im := q;
-        END;
-        RETURN c;
-      END;
-      <* ASSERT x > R.Zero *>
-      q := y/x;
-      mag := x * Rt.SqRt(R.One + q*q);
-    END;
-    q := Rt.SqRt(x + mag);
-    <* ASSERT q > R.Zero *>
-    IF a.re>=R.Zero THEN
-      c.re := q * RootHalf;
-      c.im := a.im * RootHalf / q;
-    ELSE
-      c.re := y * RootHalf / q;
-      IF a.im < R.Zero THEN (* copysign?? *)
-        c.im := -RootHalf * q;
-      ELSE
-        c.im :=  RootHalf * q;
-      END; 
-    END;
-    RETURN c;
-  END SqrtWDS;
+    RETURN MAX(ABS(x.re), ABS(x.im));
+  END NormInf;
 
 (* Lemming's stuff *)
 
@@ -228,7 +157,8 @@ VAR
   ix, y : C.T;
 BEGIN
   (* arcsin x = -i ln (ix ± sqrt (1-x²)) *)
-  ix := C.Mul(x,C.I);
+  (*ix := C.Mul(x,C.I);*)
+  ix := C.T{R.Neg(x.im),x.re};
   y  := SqRt(C.Add(C.Square(ix),C.One));
   RETURN C.Neg(C.Mul(C.I,Ln(C.Add(ix,y))));
 END ArcSin;
@@ -270,28 +200,30 @@ VAR
   z : C.T;
 BEGIN
   TRY
-	r := Abs(x);
-	z.re := R.Add (r, x.re);
-	IF R.Compare(z.re, R.Zero) < 0 THEN (* mathematically impossible, can be caused by rounding *)
-      z.re := R.Zero;
-	ELSE
-      z.re := Rt.SqRt (R.Div(z.re,R.Two));
-	END;
+	  r := Abs(x);
+	  z.re := R.Add (r, x.re);
+	  IF R.Compare(z.re, R.Zero) < 0 THEN (* mathematically impossible, can be caused by rounding *)
+        z.re := R.Zero;
+	  ELSE
+        z.re := Rt.SqRt (R.Div(z.re,R.Two));
+	  END;
 
-	z.im := R.Sub (r, x.re);
-	IF R.Compare(z.im, R.Zero) < 0 THEN (* mathematically impossible, can be caused by rounding *)
-      z.im := R.Zero;
-	ELSE
-      z.im := Rt.SqRt (R.Div(z.im,R.Two));
-      IF R.Compare(x.im, R.Zero) < 0 THEN  (* instead of using the Sgn function *)
-    	z.im := R.Neg (z.im);
-      END;
-	END;
+	  z.im := R.Sub (r, x.re);
+	  IF R.Compare(z.im, R.Zero) < 0 THEN (* mathematically impossible, can be caused by rounding *)
+        z.im := R.Zero;
+	  ELSE
+        z.im := Rt.SqRt (R.Div(z.im,R.Two));
+        IF R.Compare(x.im, R.Zero) < 0 THEN  (* instead of using the Sgn function *)
+    	  z.im := R.Neg (z.im);
+        END;
+	  END;
+    (* Root is on the same side as the radicand with respect to the real axis. *)
 
   EXCEPT
-    Error(err) => EVAL err; (*IF err#Err.divide_by_zero THEN RAISE Error(err) END;*) (*division by zero never occurs, although Div() can throw it potentially*)
+    Error(err) =>
+      <*ASSERT err#Err.divide_by_zero*>
+      (*division by zero never occurs, although Div() can throw it potentially*)
   END;
-  (* Root is on the same side as the radicand with respect to the real axis. *)
   RETURN z;
 END SqRt;
 
