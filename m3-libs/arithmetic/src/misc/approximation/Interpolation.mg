@@ -5,11 +5,17 @@ IMPORT Arithmetic AS Arith;
 CONST Module = "Interpolation.";
 (*==========================*)
 
+PROCEDURE CheckSizes (READONLY xa: ARRAY OF R.T; READONLY ya: ARRAY OF V.T; ) =
+  BEGIN
+    <* ASSERT NUMBER(xa) = NUMBER(ya),
+                "The number of interpolation nodes and the number of node values must match." *>
+  END CheckSizes;
+
 (*------------------*)
 PROCEDURE Linear (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
                   READONLY ya: ARRAY OF V.T;  (*interpolation values*)
                            x : R.T;                                   ):
-  V.T RAISES {Arith.Error} =
+  V.T =
   (*Given an interpolation table with xa input and ya output, do linear
      interpolation for x. *)
   VAR
@@ -20,10 +26,9 @@ PROCEDURE Linear (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
     ndx, ndx1, ndx2: CARDINAL;
     x1, x2, x12    : R.T;
     y1, y2         : V.T;
+
   BEGIN
-    IF NUMBER(xa) # NUMBER(ya) THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    CheckSizes(xa, ya);
 
     (*---find the best start point---*)
     ndx := n1;                   (*this is arbitrary, but fix the FOR loop
@@ -82,10 +87,9 @@ PROCEDURE Newton (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
     d               := NEW(REF ARRAY OF V.T, NUMBER(xa));
     ndx             := LAST(xa); (*get a starter x*)
     y    : V.T;
+
   BEGIN
-    IF NUMBER(xa) # NUMBER(ya) THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    CheckSizes(xa, ya);
 
     VAR
       difftmp: R.T;
@@ -150,11 +154,11 @@ PROCEDURE CubicHermite (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
                         READONLY ya: ARRAY OF V.T;  (*interpolation
                                                        values*)
                         x: R.T;  (*the function argument*)
-  ): V.T RAISES {Arith.Error} =
+  ): V.T =
 
   PROCEDURE InterpolateQuadratic (READONLY xb: ARRAY [0 .. 2] OF R.T;
                                   READONLY yb: ARRAY [0 .. 2] OF V.T  ):
-    V.T RAISES {Arith.Error} <* NOWARN *> =
+    V.T =
     (* for some datatypes no Error can occur *)
     VAR
       x01 := xb[0] - xb[1];
@@ -172,8 +176,7 @@ PROCEDURE CubicHermite (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
 
   (*probably not very efficient*)
   PROCEDURE InterpolateHalf (READONLY xb: ARRAY [0 .. 2] OF R.T;
-                             READONLY yb: ARRAY [0 .. 2] OF V.T  ): V.T
-    RAISES {Arith.Error} <* NOWARN *> =
+                             READONLY yb: ARRAY [0 .. 2] OF V.T  ): V.T =
     (* for some datatypes no Error can occur *)
     CONST Three = FLOAT(3, R.T);
     VAR
@@ -193,8 +196,7 @@ PROCEDURE CubicHermite (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
     END InterpolateHalf;
 
   PROCEDURE InterpolatePiece (READONLY xb: ARRAY [0 .. 3] OF R.T;
-                              READONLY yb: ARRAY [0 .. 3] OF V.T  ): V.T
-    RAISES {Arith.Error} =
+                              READONLY yb: ARRAY [0 .. 3] OF V.T  ): V.T =
     BEGIN
       RETURN V.Add(InterpolateHalf(SUBARRAY(xb, 0, 3), SUBARRAY(yb, 0, 3)),
                    InterpolateHalf(ARRAY OF R.T{xb[3], xb[2], xb[1]},
@@ -202,9 +204,7 @@ PROCEDURE CubicHermite (READONLY xa: ARRAY OF R.T;  (*interpolation nodes*)
     END InterpolatePiece;
 
   BEGIN
-    IF NUMBER(xa) # NUMBER(ya) THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    CheckSizes(xa, ya);
 
     IF x <= xa[1] THEN
       RETURN InterpolateQuadratic(SUBARRAY(xa, 0, 3), SUBARRAY(ya, 0, 3));
