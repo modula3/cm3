@@ -22,7 +22,7 @@ fi
 STAGE="${STAGE:-${TMPDIR}}"
 [ -d "${STAGE}" ] || mkdir "${STAGE}" || mkdir -p "${STAGE}" || exit 1
 INSTALLROOT="${STAGE}/cm3"
-head "building CM3 installation in ${INSTALLROOT}"
+header "building CM3 installation in ${INSTALLROOT}"
 
 #-----------------------------------------------------------------------------
 # create the basic directories
@@ -30,7 +30,7 @@ head "building CM3 installation in ${INSTALLROOT}"
 
 #-----------------------------------------------------------------------------
 # compile the core system
-head "stage 1: building cm3 compiler"
+header "stage 1: building cm3 compiler"
 P=""
 P="${P} m3core"
 P="${P} libm3"
@@ -55,7 +55,7 @@ echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
 
 #-----------------------------------------------------------------------------
 # install the compiler
-head "stage 2: installing cm3 compiler"
+header "stage 2: installing cm3 compiler"
 echo "installing ${INSTALLROOT}/bin/cm3${EXE}"
 cp "${ROOT}/m3-sys/cm3/${TARGET}/cm3${EXE}" "${INSTALLROOT}/bin" || exit 1
 strip_exe "${INSTALLROOT}/bin/cm3${EXE}"
@@ -94,7 +94,7 @@ sed -e '
 
 #-----------------------------------------------------------------------------
 # compile and install all needed packages
-head "stage 3: compiling libraries using new cm3 compiler"
+header "stage 3: compiling libraries using new cm3 compiler"
 CM3="${INSTALLROOT}/bin/cm3${EXE}"
 BUILDLOCAL="${CM3} -build -override -DROOT=${ROOT}"
 CLEANLOCAL="${CM3} -clean -override -DROOT=${ROOT}"
@@ -105,10 +105,10 @@ export BUILDLOCAL CLEANLOCAL BUILDGLOBAL CLEANGLOBAL SHIP
 
 "${ROOT}/scripts/do-cm3-min.sh" buildlocal || exit 1
 
-head "stage 4: installing libraries using new cm3 compiler"
+header "stage 4: installing libraries using new cm3 compiler"
 "${ROOT}/scripts/do-cm3-min.sh" buildglobal || exit 1
 
-head "stage 5: re-adjusting cm3.cfg"
+header "stage 5: re-adjusting cm3.cfg"
 echo ".../cminstall/src/config/${TARGET} -->" \
   "${INSTALLROOT}/bin/cm3.cfg"
 cp "${ROOT}/m3-sys/cminstall/src/config/${TARGET}" \
@@ -125,7 +125,7 @@ ARCHIVE2="cm3-min-${M3OSTYPE}-${TARGET}-${CM3VERSION}.tgz"
 ABSARCH1="`cygpath -u ${STAGE}/${ARCHIVE1}`"
 ABSARCH2="`cygpath -u ${STAGE}/${ARCHIVE2}`"
 INSTDATA="cminstall${EXE} COPYRIGHT-CMASS ${ARCHIVE1}"
-head "stage 6: building archive in ${ARCHIVE2}"
+header "stage 6: building archive in ${ARCHIVE2}"
 echo "creating system archive in ${ABSARCH1}"
 ${TAR} -C "${INSTALLROOT}" -czf "${ABSARCH1}" . || exit 1
 echo ".../cminstall/${TARGET}/cminstall${EXE} -->" "${STAGE}"
