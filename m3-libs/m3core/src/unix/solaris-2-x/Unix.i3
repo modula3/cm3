@@ -121,14 +121,14 @@ CONST   (* request *)
   F_SETFD =  2;   (* Set close-on-exec flag *)
   F_GETFL =  3;   (* Get fd status flags *)
   F_SETFL =  4;   (* Set fd status flags *)
-  F_GETOWN = 5;   (* Get owner *)
-  F_SETOWN = 6;   (* Set owner *)
+  F_GETOWN = 23;   (* Get owner *)
+  F_SETOWN = 24;   (* Set owner *)
 
   (* in these three cases, you need to pass LOOPHOLE (ADR (v), int) 
      for arg, where v is a variable of type struct_flock *)
-  F_GETLK  = 7;   (* Get file lock *)
-  F_SETLK  = 8;   (* Set file lock *)
-  F_SETLKW = 9;   (* Set file lock and wait *)
+  F_GETLK  = 14;   (* Get file lock *)
+  F_SETLK  = 6;   (* Set file lock *)
+  F_SETLKW = 7;   (* Set file lock and wait *)
 
 CONST (* fd flags *)
   FD_CLOEXEC = 1;    (* Close file descriptor on exec() *)
@@ -139,7 +139,12 @@ TYPE
     l_whence: short;
     l_start:  off_t := 0;
     l_len:    off_t := 0;
+    l_sysid:  int   := 0;
     l_pid:    int   := 0;
+    l_pad0:   long  := 0;
+    l_pad1:   long  := 0;
+    l_pad2:   long  := 0;
+    l_pad3:   long  := 0;
   END;
 
 (*
@@ -157,15 +162,18 @@ PROCEDURE fcntl (fd, request, arg: int): int;
 
 (*** flock - apply or remove an advisory lock on an open file ***)
 CONST
+  (* FIXME: These four are missing in my Solairs 8 header files. And I
+            thought this was some standard... ow 2003-07-24 *)
+            
   LOCK_SH = 1;   (* shared lock *)
   LOCK_EX = 2;   (* exclusive lock *)
   LOCK_NB = 4;   (* don't block when locking *)
   LOCK_UN = 8;   (* unlock *)
 
 CONST (* l_type values -- more conventional names... *)
-  F_RDLCK = LOCK_SH; (* Read lock *) 
-  F_WRLCK = LOCK_EX; (* Write lock *)
-  F_UNLCK = LOCK_UN; (* Remove lock(s) *)
+  F_RDLCK = 01; (* Read lock *) 
+  F_WRLCK = 02; (* Write lock *)
+  F_UNLCK = 03; (* Remove lock(s) *)
 
 <*EXTERNAL*> PROCEDURE flock (fd, operation: int): int;
 
