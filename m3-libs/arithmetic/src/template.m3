@@ -6,7 +6,7 @@ Abstract: <describe>
 1/1/96  <name>    Initial version
 *)
 
-<*UNUSED*> CONST Module = "xXYZ.";
+<*UNUSED*> CONST Module = "XYZ.";
 (*==========================*)
 
 (*==========================*)

@@ -71,8 +71,9 @@ BEGIN
   NewLine(); EVAL TestChebyshev();
   NewLine(); EVAL TestUnit();
   NewLine(); EVAL TestLapack();
-*)
   NewLine(); EVAL TestTex();
+*)
+  NewLine(); EVAL TestPLPlot();
 (*
 *)
 END Test.
