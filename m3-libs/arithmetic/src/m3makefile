@@ -1,5 +1,5 @@
-remove_m3_option("-map")
-remove_m3_option("-g")
+%remove_m3_option("-map")
+%remove_m3_option("-g")
 
 import("libm3")
 
