@@ -1,6 +1,0 @@
-import("dcpane")
-
-module("TestVBT")
-vbtStarter("TestVBT", "TestVBT")
-implementation("Main")
-program("test")
