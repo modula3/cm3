@@ -9,7 +9,7 @@ import ("formsvbt")
 import("http")
 import ("web")
 
-%UseOblets = "defined"
+UseOblets = "defined"
 
 if defined("UseOblets")
   include_dir("oblet")
