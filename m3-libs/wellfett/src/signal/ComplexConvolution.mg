@@ -14,6 +14,7 @@ REVEAL
                     width : Width;
                   OVERRIDES
                     init     := HandleFourierInit;
+                    exit     := HandleFourierExit;
                     convolve := HandleFourierConvolve;
                   END;
 
@@ -31,6 +32,11 @@ PROCEDURE HandleFourierInit (h: HandleFourier; x: CP.T; width: Width; ):
     h.width := width;
     RETURN h;
   END HandleFourierInit;
+
+PROCEDURE HandleFourierExit (h: HandleFourier; ) =
+  BEGIN
+    h.xFT := NIL;
+  END HandleFourierExit;
 
 PROCEDURE HandleFourierConvolve (h: HandleFourier; y: CP.T; ): CP.T =
   VAR z := NEW(CP.T, h.number);
@@ -54,6 +60,7 @@ REVEAL
                   x: CP.T;
                 OVERRIDES
                   init     := HandleNaiveInit;
+                  exit     := HandleNaiveExit;
                   convolve := HandleNaiveConvolve;
                 END;
 
@@ -64,6 +71,11 @@ PROCEDURE HandleNaiveInit (             h    : HandleNaive;
     h.x := x;
     RETURN h;
   END HandleNaiveInit;
+
+PROCEDURE HandleNaiveExit (h: HandleNaive; ) =
+  BEGIN
+    h.x := NIL;
+  END HandleNaiveExit;
 
 PROCEDURE HandleNaiveConvolve (h: HandleNaive; y: CP.T; ): CP.T =
   BEGIN

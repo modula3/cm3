@@ -18,6 +18,9 @@ TYPE
                 initialization and execution increases speed when several
                 filters are applied to the same signal. *)
 
+             exit ();
+             (* Flush internal data. *)
+
              convolve (y: V.T; ): V.T;
              (* Convolve the signal 'x' given at initialisation time with
                 'y', where 'y' contains at most 'width' values.  If 'y' is

@@ -1,18 +1,18 @@
 MODULE TestCWT;
 
-IMPORT LongRealBasic              AS R,
-       LongRealTrans              AS RT,
-       LongRealSignal             AS S,
-       LongRealVector             AS V,
-       LongRealVectorFast         AS VFs,
-       LongRealComplexVectorTrans AS CVT;
+IMPORT LongRealBasic  AS R,
+       LongRealTrans  AS RT,
+       LongRealSignal AS S,
+       LongRealVector AS V;
 
 IMPORT LongRealMatrix AS M;
 
-IMPORT LongRealFmtLex AS RF, LongRealSignalFmtLex AS SF;
+(* Why isn't it reported as unused? *)
+IMPORT LongRealSignalFmtLex AS SF;
 
 IMPORT LongRealConvolution AS Conv;
-IMPORT LongRealContinuousWaveletTransform AS CWT;
+IMPORT LongRealContinuousWaveletAnalysis  AS CWA,
+       LongRealContinuousWaveletSynthesis AS CWS;
 
 IMPORT PLPlot AS PL, PLPlotRaw AS PLRaw;
 IMPORT IO, Fmt, Wr, Thread;
@@ -61,24 +61,30 @@ PROCEDURE GaussianDiff (t: R.T; ): R.T =
 PROCEDURE DiracTransform () =
   CONST
     width     = 201;
-    numScales = 100;
+    numScales = 101;
 
-    xmin = 0.0D0;
-    xmax = FLOAT(width, R.T);
-    ymin = 0.0D0;
-    ymax = FLOAT(numScales, R.T);
+    xmin = -FLOAT(width DIV 2, R.T);
+    xmax = FLOAT(width DIV 2, R.T);
+    ymin = -FLOAT(numScales DIV 2, R.T);
+    ymax = FLOAT(numScales DIV 2, R.T);
   VAR
-    y := CWT.Analyse(
-           S.One, GaussianDiff, width,
-           V.GeomSeq(numScales, 30.0D0, RT.Pow(R.Half, R.One / 20.0D0))^,
-           NEW(Conv.HandleFourier));
+    scales := V.GeomSeq(numScales, 30.0D0, RT.Pow(R.Half, R.One / 20.0D0));
+    y := CWA.Do(
+           S.One, GaussianDiff, width, scales^, NEW(Conv.HandleFourier));
+    z := CWS.Do(y, GaussianDiff, width, scales^, NEW(Conv.HandleFourier));
     m := NEW(M.T, numScales, width);
   BEGIN
+    IO.Put(Fmt.F("y.first %s, z.first %s\n", Fmt.Int(y[0].getFirst()),
+                 Fmt.Int(z.getFirst())));
     PL.Init();
     PL.SetEnvironment(xmin, xmax, ymin, ymax);
     FOR i := FIRST(m^) TO LAST(m^) DO m[i] := y[i].getData()^; END;
     PL.PlotImage(M.Transpose(m)^, xmin, xmax, ymin, ymax, -200.0D0,
                  200.0D0, xmin, xmax, ymin, ymax);
+    PL.PlotLines(V.ArithSeq(width, xmin, R.One)^,
+                 V.Scale(z.clipToVector(-(width DIV 2), width), -5.0D-6)^);
+    (* PL.PlotLines(V.ArithSeq(width * 2 - 1, xmin, R.Half)^,
+       V.Scale(z.getData(), 5.0D-6)^); *)
     PL.Exit();
   END DiracTransform;
 
