@@ -99,22 +99,27 @@ END TestDiv;
 PROCEDURE TestDeriv():BOOLEAN=
 CONST
   ftn = Module & "TestDeriv";
+  nd  = 4;
 VAR
-  p:=NEW(P.T,5);
-  nd:=3;
+  p:ARRAY [0..nd] OF P.T;
   pd:=NEW(REF ARRAY OF R.T,nd+1);
   x:=1.0D0;
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
-  p^:=Poly5{1.0D0,1.0D0,1.0D0,1.0D0,1.0D0};
-  Msg("p="   & PF.Fmt(p) & "\n");
-  FOR j:=1 TO 5 DO
+  p[0]:=NEW(P.T,5);
+  p[0]^:=Poly5{1.0D0,-1.0D0,-2.0D0,3.0D0,1.0D0};
+  FOR i:=0 TO nd-1 DO
+    p[i+1]:=P.Derive(p[i]);
+  END;
+  Msg("p="   & PF.Fmt(p[0]) & "\n");
+  FOR j:=0 TO 9 DO
     x:=FLOAT(j,R.T);
     Msg("x=" & RF.Fmt(x));
-    P.EvalDerivative(p,x,pd^);
+    P.EvalDerivative(p[0],x,pd^);
     FOR i:=0 TO nd DO
       Msg(" d"& Fmt.Int(i) & "=" & RF.Fmt(pd[i]));
+      <*ASSERT pd[i]=P.Eval(p[i],x)*>
     END;
     Msg("\n");
   END;
