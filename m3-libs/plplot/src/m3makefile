@@ -1,1 +1,1 @@
-import_lib("/usr/lib/libplplotd.a","/usr/lib")
+import_lib("plplotd","/usr/lib")
