@@ -668,8 +668,8 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
     mc := MatchPatternSmooth(target, hdual, gdual0, hdualvan, levels,
                              translates, smoothWeight);
     s := SIntPow.MulPower(
-           mc.lift, NEW(S.T).fromArray(ARRAY OF R.T{1.0D0, -1.0D0}, -1),
-           vanishing);
+           mc.lift.translate((2 - smooth - vanishing) DIV 2),
+           NEW(S.T).fromArray(ARRAY OF R.T{1.0D0, -1.0D0}), vanishing);
     gdual0a := gdual0.scale(mc.amp / RT.SqRtTwo);
     gduala := gdual0a.superpose(
                 s.upsample(2).convolve(hdual.scale(RT.SqRtTwo)));
@@ -777,14 +777,14 @@ PROCEDURE Test () =
                                  V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^,
                                  -256), 6, 4, 6, 5, 5.0D0);
     | Example.matchBSplineWavelet =>
-        MatchPattern(Refn.Refine(BSpl.WaveletMask(2, 2),
-                                 BSpl.GeneratorMask(2), 6).scale(64.0D0),
-                     6, 8, 2, 5);
-      (*
-      TestMatchPatternSmooth(Refn.Refine(BSpl.WaveletMask(2,8),
-                               BSpl.GeneratorMask(2), 6).scale(64.0D0),
-                   6, 2,8, 5, 1.0D0);
-      *)
+        (*
+          MatchPattern(Refn.Refine(BSpl.WaveletMask(2, 2),
+                                   BSpl.GeneratorMask(2), 6).scale(64.0D0),
+                       6, 2, 2, 5);
+        *)
+        TestMatchPatternSmooth(Refn.Refine(BSpl.WaveletMask(2, 8),
+                                           BSpl.GeneratorMask(2), 6).scale(
+                                 64.0D0).translate(-100), 6, 2, 8, 5, 1.0D0);
     | Example.matchSincSmooth =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
