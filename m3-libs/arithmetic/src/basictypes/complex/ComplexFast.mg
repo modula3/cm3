@@ -79,7 +79,7 @@ PROCEDURE Div(READONLY x,y : T) : T =
     denom : R.T;
   BEGIN
     denom := y.re*y.re + y.im*y.im;
-    <* ASSERT denom > R.Zero *>
+    <* ASSERT denom > FLOAT(0.0,R.T) *>
     z.re := (  x.re * y.re + x.im * y.im) / denom;
     z.im := (- x.re * y.im + x.im * y.re) / denom;
     RETURN z;
@@ -92,7 +92,7 @@ PROCEDURE Rec(READONLY x : T) : T =
     denom : R.T;
   BEGIN
     denom := x.re*x.re + x.im*x.im;
-    <* ASSERT denom > R.Zero *>
+    <* ASSERT denom > FLOAT(0.0,R.T) *>
     z.re :=  x.re / denom;
     z.im := -x.im / denom;
     RETURN z;
@@ -104,7 +104,7 @@ PROCEDURE Square(READONLY x : T) : T =
     z : T;
   BEGIN
     z.re := x.re * x.re - x.im * x.im;
-    z.im := x.im * x.re * R.Two;
+    z.im := x.im * x.re * FLOAT(2.0,R.T);
     RETURN z;
   END Square;
 

@@ -1,4 +1,4 @@
-GENERIC INTERFACE FloatBasic(R);
+GENERIC INTERFACE FloatBasic(R,Rt);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Generic wrapper routines for basic operations of float types
@@ -14,6 +14,10 @@ CONST
   One         = FLOAT(1.0D0,T);
   Two         = FLOAT(2.0D0,T);
   MinusOne    = FLOAT(-1.0D0,T);
+
+CONST
+  Equal   = Rt.Equal;
+  Compare = Rt.Compare;
 
 <*INLINE*> PROCEDURE Add(x,y:T):T;  (*return x+y*)
 <*INLINE*> PROCEDURE Sub(x,y:T):T;  (*return x-y*)
