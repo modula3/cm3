@@ -86,6 +86,10 @@ in the format string of Fmt.FN
 
 ---------------
 
+There should be a warning if a variable is passed to a READONLY and a VAR parameter at the same call.
+
+---------------
+
 Design question:
 
 Is it better to create a pair interface,module for every set of functions for the same datatype
