@@ -3,6 +3,7 @@ MODULE TestBSpline;
 IMPORT LongRealBasic AS R;
 IMPORT LongRealFmtLex AS RF;
 IMPORT LongRealTrans AS RT;
+IMPORT LongRealIntegerPower AS RIntPow;
 IMPORT RandomDECSRC AS Rnd;
 IMPORT LongRealSignal AS S;
 IMPORT LongRealVectorFast AS V;
@@ -36,7 +37,6 @@ PROCEDURE Reconstruction (hdual, gdual: S.T): S.T =
 
 PROCEDURE CheckPerfectReconstruction () =
   <*FATAL BSpl.DifferentParity, Thread.Alerted, Wr.Failure*>
-  VAR hdual, gdual: S.T;
   BEGIN
     FOR i := 0 TO 6 DO
       FOR j := i MOD 2 TO 8 BY 2 DO
@@ -50,14 +50,35 @@ PROCEDURE CheckPerfectReconstruction () =
     END;
   END CheckPerfectReconstruction;
 
+PROCEDURE ShowWavelets (h, g: S.T; levels: CARDINAL) =
+  VAR
+    twopow := RIntPow.Power(R.Two, levels);
+    grid:=1.0D0/twopow;
+    phi    := Refn.Refine(S.One, h, levels).scale(twopow);
+    psi    := Refn.Refine(g, h, levels).scale(twopow);
+    left   := FLOAT(psi.getFirst(), R.T) * grid;
+    length := FLOAT(psi.getNumber(), R.T) * grid;
+  BEGIN
+    PL.SetEnvironment(left, left + length, -1.1D0, 1.1D0);
+    PL.PlotLines(V.ArithSeq(psi.getNumber(), left, grid)^, psi.getData()^);
+  END ShowWavelets;
+
+PROCEDURE ShowBSplWavelets () =
+  BEGIN
+    ShowWavelets(BSpl.GeneratorMask(3), BSpl.WaveletMask(3, 9), 6);
+  END ShowBSplWavelets;
+
 PROCEDURE Test () =
   BEGIN
-    CASE 1 OF
+    PL.Init();
+    CASE 2 OF
     | 0 => ShowFilters();
     | 1 => CheckPerfectReconstruction();
+    | 2 => ShowBSplWavelets();
     ELSE
       <*ASSERT FALSE*>
     END;
+    PL.Exit();
   END Test;
 
 BEGIN
