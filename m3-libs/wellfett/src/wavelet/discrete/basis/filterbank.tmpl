@@ -13,5 +13,5 @@ readonly proc DyadicFilterBank (nm, rfield) is
   local basic  = nm & "DyadicFilterBank"
   local signal = nm & "Signal"
   build_generic_intf (basic, "DyadicFilterBank", [signal], VISIBLE)
-  build_generic_impl (basic, "DyadicFilterBank", [])
+  build_generic_impl (basic, "DyadicFilterBank", [signal])
 end

@@ -47,7 +47,7 @@ PROCEDURE PlotOrthogonal (h: S.T; numlevels: CARDINAL) =
 PROCEDURE PlotBiorthogonal (hDual, gDual: S.T; numlevels: CARDINAL) =
   VAR
     dual := ARRAY Filter OF S.T{hDual, gDual};
-    bank := FilterBank{FB.GetComplement(dual), dual};
+    bank := FilterBank{FB.Complement(dual), dual};
   BEGIN
     PlotBank(bank, ExtractRefinementMasks(bank), numlevels);
   END PlotBiorthogonal;
@@ -58,7 +58,7 @@ PROCEDURE PlotBiorthogonalYLim (hDual, gDual: S.T;
   <* FATAL Arith.Error *>        (*Power can't fail for reals*)
   VAR
     dual  := ARRAY Filter OF S.T{hDual, gDual};
-    bank  := FilterBank{FB.GetComplement(dual), dual};
+    bank  := FilterBank{FB.Complement(dual), dual};
     refn  := ExtractRefinementMasks(bank);
     grid  := R.One / RIntPow.Power(R.Two, numlevels);
     basis := ComputeBasisFunctions(bank, refn, numlevels);
