@@ -10,7 +10,7 @@ INTERFACE Uresource;
 
 FROM Ctypes IMPORT int, long;
 FROM Utypes IMPORT rlim_t, fixpt_t;
-IMPORT Utime;
+FROM Utime IMPORT struct_timeval;
 
 (*** <sys/resource.h> ***)
 
@@ -30,8 +30,8 @@ CONST
 
 TYPE
   struct_rusage = RECORD
-    ru_utime: Utime.struct_timeval;  (* user time used *)
-    ru_stime: Utime.struct_timeval;  (* system time used *)
+    ru_utime: struct_timeval;  (* user time used *)
+    ru_stime: struct_timeval;  (* system time used *)
     ru_maxrss: long;
     ru_ixrss: long;            (* integral shared text size *)
     ru_idrss: long;            (* integral unshared data " *)

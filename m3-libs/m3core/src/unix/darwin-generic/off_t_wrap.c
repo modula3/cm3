@@ -31,6 +31,24 @@ int m3_lseek(int fildes, int offset, int whence)
   return m3_asLong(lseek(fildes, off, whence));
 }
 
+int m3_pread(int d, void *buf, size_t nbytes, int offset)
+{
+  off_t off = (off_t)offset;
+  return pread(d, buf, nbytes, offset);
+}
+
+int m3_profil(char *samples, size_t size, u_long offset, u_int scale)
+{
+  off_t off = (off_t)offset;
+  return profil(samples, size, offset, scale);
+}
+
+int m3_pwrite(int d, const void *buf, size_t nbytes, int offset)
+{
+  off_t off = (off_t)offset;
+  return pwrite(d, buf, nbytes, offset);
+}
+
 int m3_truncate(const char *path, int length)
 {
   off_t len = (off_t) length;
