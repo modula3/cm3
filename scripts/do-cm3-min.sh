@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-min.sh,v 1.2 2001-02-12 22:39:00 wagner Exp $
+# $Id: do-cm3-min.sh,v 1.3 2001-12-19 14:37:16 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -21,6 +21,10 @@ fi
 . "$ROOT/scripts/pkgcmds.sh"
 
 P=""
+P="${P} m3gc-simple"
+if syscall_wrappers_exist ; then
+  P="${P} m3gc-enhanced"
+fi
 P="${P} m3core"
 P="${P} libm3"
 
