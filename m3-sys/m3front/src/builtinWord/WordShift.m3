@@ -67,7 +67,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     IF (e0 # NIL) AND IntegerExpr.Split (e0, w0)
       AND (e1 # NIL) AND IntegerExpr.Split (e1, i1)
     THEN
-      TWord.Shift (w0, i1, result);
+      TWord.Shift (TWord.Trim(w0), TInt.Trim(i1), result);
       RETURN IntegerExpr.New (TWord.Trim (result));
     ELSE
       RETURN NIL;
@@ -81,11 +81,11 @@ PROCEDURE FoldL (ce: CallExpr.T): Expr.T =
     e1 := Expr.ConstValue (ce.args[1]);
     IF (e0 # NIL) AND IntegerExpr.Split (e0, w0)
       AND (e1 # NIL) AND IntegerExpr.Split (e1, i1)
-      AND TInt.LE (TInt.Zero, i1)
+      AND TInt.LE (TInt.Zero, TInt.Trim(i1))
       AND TInt.FromInt (Target.Integer.size, max)
-      AND TInt.LT (i1, max)
+      AND TInt.LT (TInt.Trim(i1), max)
     THEN
-      TWord.Shift (w0, i1, result);
+      TWord.Shift (TWord.Trim(w0), TInt.Trim(i1), result);
       RETURN IntegerExpr.New (TWord.Trim (result));
     ELSE
       RETURN NIL;
@@ -99,12 +99,12 @@ PROCEDURE FoldR (ce: CallExpr.T): Expr.T =
     e1 := Expr.ConstValue (ce.args[1]);
     IF (e0 # NIL) AND IntegerExpr.Split (e0, w0)
       AND (e1 # NIL) AND IntegerExpr.Split (e1, i1)
-      AND TInt.LE (TInt.Zero, i1)
+      AND TInt.LE (TInt.Zero, TInt.Trim(i1))
       AND TInt.FromInt (Target.Integer.size, max)
-      AND TInt.LT (i1, max)
-      AND TInt.Subtract (TInt.Zero, i1, neg_i1)
+      AND TInt.LT (TInt.Trim(i1), max)
+      AND TInt.Subtract (TInt.Zero, TInt.Trim(i1), neg_i1)
     THEN
-      TWord.Shift (w0, neg_i1, result);
+      TWord.Shift (TWord.Trim(w0), TInt.Trim(neg_i1), result);
       RETURN IntegerExpr.New (TWord.Trim (result));
     ELSE
       RETURN NIL;

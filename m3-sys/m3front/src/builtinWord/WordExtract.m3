@@ -106,10 +106,11 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     IF (e0 = NIL) OR (NOT IntegerExpr.Split (e0, w0)) OR 
        (e1 = NIL) OR (NOT IntegerExpr.Split (e1, i1)) OR 
        (e2 = NIL) OR (NOT IntegerExpr.Split (e2, i2)) OR
-       NOT TWord.Extract (w0, i1, i2, result) THEN
+       NOT TWord.Extract (TWord.Trim(w0), TInt.Trim(i1), TInt.Trim(i2),
+                          result) THEN
       RETURN NIL;
     END;
-    RETURN IntegerExpr.New (result);
+    RETURN IntegerExpr.New (TWord.Trim(result));
   END Fold;
 
 PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =

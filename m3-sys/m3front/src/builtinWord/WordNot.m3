@@ -31,8 +31,8 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   BEGIN
     e := Expr.ConstValue (ce.args[0]);
     IF (e # NIL) AND IntegerExpr.Split (e, w)
-      THEN w := TWord.Trim (w); TWord.Not (w, result);
-           RETURN IntegerExpr.New (result);
+      THEN TWord.Not (TWord.Trim(w), result);
+           RETURN IntegerExpr.New (TWord.Trim(result));
       ELSE RETURN NIL;
     END;
   END Fold;

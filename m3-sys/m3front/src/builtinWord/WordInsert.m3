@@ -60,10 +60,11 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
        (e1 = NIL) OR (NOT IntegerExpr.Split (e1, w1)) OR 
        (e2 = NIL) OR (NOT IntegerExpr.Split (e2, i2)) OR 
        (e3 = NIL) OR (NOT IntegerExpr.Split (e3, i3)) OR
-       NOT TWord.Insert (w0, w1, i2, i3, result) THEN
+       NOT TWord.Insert (TWord.Trim(w0), TWord.Trim(w1), TInt.Trim(i2),
+                         TInt.Trim(i3), result) THEN
       RETURN NIL;
     END;
-    RETURN IntegerExpr.New (result);
+    RETURN IntegerExpr.New (TWord.Trim(result));
   END Fold;
 
 PROCEDURE Initialize () =
