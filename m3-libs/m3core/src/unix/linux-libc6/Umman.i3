@@ -14,50 +14,40 @@ FROM Utypes IMPORT caddr_t, size_t, off_t;
 (*** sys/mman.h ***)
 
 CONST
-  PROT_NONE  = 0;
-  PROT_READ  = 16_1;
-  PROT_WRITE = 16_2;
-  PROT_EXEC  = 16_4;
+  PROT_READ  = 16_1; (* page can be read *)
+  PROT_WRITE = 16_2; (* page can be written *)
+  PROT_EXEC  = 16_4; (* page can be executed *)
+  PROT_NONE  = 16_0; (* page can not be accessed *)
 
-  MAP_SHARED  = 1;
-  MAP_PRIVATE = 2;
-  MAP_TYPE    = 16_f;
+  MAP_SHARED    = 16_01; (* Share changes *)
+  MAP_PRIVATE   = 16_02; (* Changes are private *)
+  MAP_TYPE      = 16_0f; (* Mask for type of mapping *)
+  MAP_FIXED     = 16_10; (* Interpret addr exactly *)
+  MAP_ANONYMOUS = 16_20; (* don't use a file *)
 
-  MAP_FIXED   = 16_10;
-  MAP_RENAME  = 16_20; (* Doesn't appear to be supported any more - rrw *)
-  MAP_ANONYMOUS = 16_20;
-  MAP_NORESERVE = 16_4000; 
 
-  MAP_GROWSDOWN = 16_100; (* Stack-like segment *)
-  MAP_DENYWRITE = 16_800; (* ETXTBSY *)
-  MAP_EXECUTABLE = 16_1000; (* Mark it as an executable *)
-  MAP_LOCKED = 16_2000;
+  MAP_GROWSDOWN  = 16_0100; (* stack-like segment *)
+  MAP_DENYWRITE  = 16_0800; (* ETXTBSY *)
+  MAP_EXECUTABLE = 16_1000; (* mark it as an executable *)
+  MAP_LOCKED     = 16_2000; (* pages are locked *)
+  MAP_NORESERVE  = 16_4000; (* don't check for reservations *)
 
-  (* Up to & including MDV_DONTNEED appears not to be used any more *)
-  MAP_NEW  = 16_80000000;
+  MS_ASYNC        = 1; (* sync memory asynchronosly *)
+  MS_INVALIDATE   = 2; (* invalidate the caches *)
+  MS_SYNC         = 4; (* synchronous memory sync *)
 
-  MADV_NORMAL     = 0;
-  MADV_RANDOM     = 1;
-  MADV_SEQUENTIAL = 2;
-  MADV_WILLNEED   = 3;
-  MADV_DONTNEED   = 4;
-
-  MS_ASYNC        = 16_1;
-  MS_INVALIDATE   = 16_2;
-  MS_SYNC         = 16_4; (* Synchronous memory sync., apparently *)
-
-  (* The following appear not to exist any more either - rrw *)
-  MC_SYNC         = 1;
-  MC_LOCK         = 2;
-  MC_UNLOCK       = 3;
-  MC_ADVISE       = 4;
-  MC_LOCKAS       = 5;
-  MC_UNLOCKAS     = 6;
-
-  MCL_CURRENT     = 16_1;
-  MCL_FUTURE      = 16_2;
+  MCL_CURRENT     = 1; (* lock all current mappings *)
+  MCL_FUTURE      = 2; (* lock all future mappings *)
    
-  MREMAP_MAYMOVE  = 1;
+  MADV_NORMAL     = 16_0; (* default page-in behavior *)
+  MADV_RANDOM     = 16_1; (* page-in minimum required *)
+  MADV_SEQUENTIAL = 16_2; (* read-ahead aggressively *)
+  MADV_WILLNEED   = 16_3; (* pre-fault pages *)
+  MADV_DONTNEED   = 16_4; (* discard these pages *)
+
+  (* compatibility flags *)
+  MAP_ANON = MAP_ANONYMOUS;
+  MAP_FILE = 0;
 
 <*EXTERNAL*>
 PROCEDURE mmap (addr: caddr_t; len: size_t; prot,flags,fd: int; off: off_t)
