@@ -40,7 +40,7 @@ Changes since 5.2.4
    enable the old behaviour.
 
  o Fix for Trestle keyboard input on WIN32 platforms:
-   Make the interpretation of CM_CHAR events in Trestle depend on the
+   Make the interpretation of WM_CHAR events in Trestle depend on the
    value of the environment variable USE_EVENT_WM_CHAR. Heeding
    WM_CHAR events seems superflous to me and leeds to double input
    characters on my Windows 2000 installation, but has been included
@@ -114,7 +114,7 @@ Changes since 5.2.4
 Bug Reports
 -----------
 
-As always, bug reports should be send to the GNATS data base at elego
+As always, bug reports should be send to the GNATS database at elego
 Software Solutions GmbH (bugs@elego.de). The web pages at
 www.elegosoft.com offer a nice interface for this.
 
@@ -124,7 +124,7 @@ Other Resources
 
 Since January two mailing lists for the development of Modula-3 exist:
 m3devel@elegosoft.com and m3commit@elegosoft.com. The first is for
-discussions about planned CM3 and PM3 developement and general
+discussions about planned CM3 and PM3 development and general
 Modula-3 topics, the second distributes the commit log messages of the
 CM3 and PM3 repositories via e-mail. You can read archives of these
 lists at
