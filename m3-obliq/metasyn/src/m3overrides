@@ -1,2 +1,0 @@
-override ("libm3", ROOT & "/m3libs")
-override ("synloc", ROOT & "/m3-obliq")
