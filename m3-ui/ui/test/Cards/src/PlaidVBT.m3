@@ -11,7 +11,7 @@
 
 MODULE PlaidVBT;
 
-IMPORT Axis, PaintOp, Pixmap, Point, Rect, Region, Thread, VBT, Scheduler;
+IMPORT PaintOp, Pixmap, Point, Rect, Region, Thread, VBT, Scheduler;
 
 REVEAL T = VBT.Leaf BRANDED OBJECT
     startOver := TRUE;
