@@ -5,8 +5,15 @@
 
 %-------------------------------------------------- compilation environment ---
 
+%M3_PROFILING = TRUE  % set by cm3 since 5.1.2
+%M3_PROFILING = FALSE
+
 readonly TARGET       = "LINUXLIBC6"      % code generation target
-readonly BUILD_DIR    = TARGET            % directory for results
+if M3_PROFILING 
+  readonly BUILD_DIR  = TARGET & "p"     % code generation target
+else
+  readonly BUILD_DIR  = TARGET           % directory for results
+end
 readonly OS_TYPE      = "POSIX"           % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"          % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "i486--linuxelf"  % "cpu-vendor-os" string for GNU
@@ -53,7 +60,11 @@ INSTALL_ROOT = "/usr/local/cm3/"
 %-- handy for installations that keep all M3 stuff together
 
 BIN_INSTALL   = INSTALL_ROOT & "bin"        % executables
-LIB_INSTALL   = INSTALL_ROOT & "lib"        % libraries
+if M3_PROFILING 
+  LIB_INSTALL   = INSTALL_ROOT & "libp"       % libraries
+else
+  LIB_INSTALL   = INSTALL_ROOT & "lib"        % libraries
+end
 PKG_INSTALL   = INSTALL_ROOT & "pkg"        % packages
 DOC_INSTALL   = INSTALL_ROOT & "doc"        % documents
 EMACS_INSTALL = INSTALL_ROOT & "elisp"      % emacs lisp code
@@ -114,6 +125,7 @@ proc m3_backend (source, object, optimize, debug) is
   local args = [ "-quiet", source, "-o", object ]
   if optimize  args += "-O"  end
   if debug     args += "-g"  end
+  if M3_PROFILING args += "-p" end
   return try_exec (m3back, args)
 end
 
@@ -133,6 +145,7 @@ proc compile_c (source, object, options, optimize, debug) is
   local args = [ "-fPIC", options ]
   if optimize  args += "-O"  end
   if debug     args += "-g"  end
+  if M3_PROFILING args += "-pg" end
   return try_exec ("@gcc", args, "-c", source)
 end
 
@@ -162,9 +175,15 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
 
   if shared
     % build the shared library
-    ret_code = try_exec ("@gcc -shared " & GCWRAPFLAGS & 
-                         "-Wl,-soname," & lib_sox,
-                         "-o", lib_sox, objects)
+    if M3_PROFILING 
+      ret_code = try_exec ("@gcc -pg -shared " & GCWRAPFLAGS & 
+                           "-Wl,-soname," & lib_sox,
+                           "-o", lib_sox, objects)
+    else
+      ret_code = try_exec ("@gcc -shared " & GCWRAPFLAGS & 
+                           "-Wl,-soname," & lib_sox,
+                           "-o", lib_sox, objects)
+    end
     if not equal (ret_code, 0) return ret_code end
 
     % create the version aliases
@@ -211,7 +230,9 @@ end
 %---  "-pdb:none" enables the use of windbg with the resulting executable.
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
-  local args = [ "-o", prog, options, objects, imported_libs ]
+  local args = []
+  if M3_PROFILING args += "-pg" end
+  args += [ "-o", prog, options, objects, imported_libs ]
   if shared
     return try_exec ("@gcc", args, GCWRAPFLAGS)
   else

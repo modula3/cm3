@@ -4,7 +4,7 @@
 MODULE Makefile;
 
 IMPORT FS, M3File, M3Timers, OSError, Params, Process, Text, Thread, Wr;
-IMPORT Arg, M3Options, M3Path, Msg, Utils;
+IMPORT Arg, M3Options, M3Path, Msg, Utils, TextTextTbl;
 IMPORT MxConfig AS M3Config;
 
 TYPE
@@ -180,6 +180,11 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
                s.use_overrides := TRUE;  ok := TRUE;
              ELSIF Text.Equal (arg, "-once") THEN
                Out (wr, "M3_COMPILE_ONCE = TRUE");  ok := TRUE;
+             END;
+
+    | 'p' => IF Text.Equal(arg, "-pretend") OR 
+                Text.Equal(arg, "-profile") THEN
+               ok := TRUE;
              END;
 
     | 'O' => IF (arg_len = 2) THEN
@@ -391,8 +396,9 @@ PROCEDURE IncludeMakefile (VAR s: State;  makefile, dir: TEXT)
 
 (*----------------------------------------- pre-scan command line ---*)
 
-PROCEDURE ScanCommandLine () =
-  VAR cnt := 0;  arg: TEXT;
+PROCEDURE ScanCommandLine () : TextTextTbl.T =
+  VAR 
+    cnt := 0;  arg: TEXT;
   BEGIN
     FOR i := 1 TO Params.Count-1 DO
       arg := Params.Get (i);
@@ -405,9 +411,18 @@ PROCEDURE ScanCommandLine () =
       ELSIF Text.Equal (arg, "-help")    THEN  PrintHelp ();
       ELSIF Text.Equal (arg, "-config")  THEN  PrintVersion (TRUE);
       ELSIF Text.Equal (arg, "-version") THEN  PrintVersion (TRUE);
+      ELSIF Text.Equal (arg, "-profile") THEN
+        EVAL defs.put("M3_PROFILING", "TRUE");
+      ELSIF Text.Equal (arg, "-pretend") THEN
+        IF i < Params.Count - 1 THEN
+          EVAL defs.put("CM3_VERSION", Params.Get(i+1));
+        ELSE
+          Msg.Error(NIL, "missing argument for -pretend");
+        END;
       END;
     END;
     IF (cnt <= 0) THEN SetMode (cnt, MM.Build); END;
+    RETURN defs;
   END ScanCommandLine;
 
 PROCEDURE SetMode (VAR cnt: INTEGER;  mode: MM) =
@@ -423,9 +438,8 @@ PROCEDURE SetMode (VAR cnt: INTEGER;  mode: MM) =
 
 PROCEDURE PrintVersion (exit: BOOLEAN) =
   BEGIN
-    (* If you change the version, don't forget to change it in Main.m3, too *)
-    Msg.Out ("Critical Mass Modula-3 version 5.1.1", Wr.EOL);
-    Msg.Out ("  last updated:  Mar 01, 2001", Wr.EOL);
+    Msg.Out ("Critical Mass Modula-3 version ", Val("CM3_RELEASE"), Wr.EOL);
+    Msg.Out ("  last updated: ", Val("CM3_CREATED"), Wr.EOL);
     Msg.Out ("  configuration: ", M3Config.FindFile(), Wr.EOL);
     Msg.Out (Wr.EOL);
     IF exit THEN Process.Exit (0); END;
@@ -458,6 +472,7 @@ CONST
     "  -once          don't recompile to improve opaque object code",
     "  -w0 .. -w3     limit compiler warning messages",
     "  -Z             generate coverage analysis code",
+    "  -profile       generate profiling code",
     "",
     "program and library options:  (default: -o prog)",
     "  -c             compile only, produce no program or library",
@@ -488,6 +503,7 @@ CONST
     "  -console       produce a Windows CONSOLE subsystem program",
     "  -gui           produce a Windows GUI subsystem program",
     "  -windows       produce a Windows GUI subsystem program",
+    "  -pretend <val> pretend to run as CM3_Version <val>",
     ""
   };
 
@@ -504,5 +520,19 @@ PROCEDURE Out (wr: Wr.T;  a, b, c, d, e: TEXT := NIL)
     Wr.PutText (wr, Wr.EOL);
   END Out;
 
+PROCEDURE Val(name: TEXT) : TEXT =
+  VAR res: TEXT := "undefined";
+  BEGIN
+    EVAL defs.get(name, res);
+    RETURN res;
+  END Val;
+
+VAR
+  defs := NEW(TextTextTbl.Default).init();
 BEGIN
+  EVAL defs.put("CM3_RELEASE", "5.1.2");       (* readable release version *)
+  EVAL defs.put("CM3_VERSION", "050102");      (* version as number *)
+  EVAL defs.put("CM3_CREATED", "2001-03-07");  (* date of last change *)
+  EVAL defs.put("M3_PROFILING", "");           (* no profiling by default *)
+  EVAL defs.put("EOL", Wr.EOL);
 END Makefile.
