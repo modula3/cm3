@@ -11,10 +11,6 @@ implementation ("RTHeapDep")
 implementation ("RTSignal")
 implementation ("RTThread")
 c_source       ("RTThreadC")
-if defined("M3_USE_STACK_WALKER") 
-  if M3_USE_STACK_WALKER
-    c_source   ("RTStackC")
-  end
-end
+c_source       ("RTStackC")
 s_source       ("RTStackASM")
 
