@@ -1,11 +1,10 @@
-GENERIC MODULE Signal(R);
+GENERIC MODULE Signal(R,(*Signal,*)SignalRep);
 
 REVEAL
-  T = Public BRANDED OBJECT
-	data : REF ARRAY OF R.T;
-	first : IndexType;
+  T = SignalRep.TPrivate BRANDED OBJECT
 	OVERRIDES
 	init      := Init;
+	fromArray := FromArray;
 	copy      := Copy;
 
 	getfirst  := GetFirst;
@@ -31,6 +30,13 @@ PROCEDURE Init (SELF : T; first, last : IndexType) =
   BEGIN
 	SELF.data := NEW(REF ARRAY OF R.T, last-first);
   END Init;
+
+PROCEDURE FromArray (SELF : T; READONLY arr : ARRAY OF R.T; first : IndexType) =
+  BEGIN
+	SELF.data  := NEW(REF ARRAY OF R.T, NUMBER(arr));
+	SELF.data^ := arr;
+	SELF.first := first;
+  END FromArray;
 
 PROCEDURE Copy (SELF : T) : T =
   VAR
