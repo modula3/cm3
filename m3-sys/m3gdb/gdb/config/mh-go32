@@ -1,0 +1,3 @@
+MAKEINFOFLAGS=--no-split
+
+INSTALL_DOSREL=install-dosrel
