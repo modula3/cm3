@@ -129,7 +129,7 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP",
 % translate Modula-3 intermediate code to object code.
 
 readonly m3back = "@" & BIN_USE & "/cm3cg"
-M3_USE_STACK_WALKER = FALSE
+M3_USE_STACK_WALKER = TRUE
 
 proc m3_backend (source, object, optimize, debug) is
   local args = [ "-quiet", "-fPIC", source, "-o", object ]
