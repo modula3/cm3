@@ -5,6 +5,7 @@ import("wavelib")
 module("TestDaubechies")
 module("TestTransition")
 module("TestBSpline")
+module("TestMatchWavelet")
 implementation("Main")
 
 program("test")
