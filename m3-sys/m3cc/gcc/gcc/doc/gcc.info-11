@@ -33,6 +33,56 @@ software.  Copies published by the Free Software Foundation raise
 funds for GNU development.
 
 
+File: gcc.info,  Node: Local Labels,  Next: Labels as Values,  Prev: Statement Exprs,  Up: C Extensions
+
+Locally Declared Labels
+=======================
+
+   Each statement expression is a scope in which "local labels" can be
+declared.  A local label is simply an identifier; you can jump to it
+with an ordinary `goto' statement, but only from within the statement
+expression it belongs to.
+
+   A local label declaration looks like this:
+
+     __label__ LABEL;
+
+or
+
+     __label__ LABEL1, LABEL2, ...;
+
+   Local label declarations must come at the beginning of the statement
+expression, right after the `({', before any ordinary declarations.
+
+   The label declaration defines the label _name_, but does not define
+the label itself.  You must do this in the usual way, with `LABEL:',
+within the statements of the statement expression.
+
+   The local label feature is useful because statement expressions are
+often used in macros.  If the macro contains nested loops, a `goto' can
+be useful for breaking out of them.  However, an ordinary label whose
+scope is the whole function cannot be used: if the macro can be
+expanded several times in one function, the label will be multiply
+defined in that function.  A local label avoids this problem.  For
+example:
+
+     #define SEARCH(array, target)                     \
+     ({                                                \
+       __label__ found;                                \
+       typeof (target) _SEARCH_target = (target);      \
+       typeof (*(array)) *_SEARCH_array = (array);     \
+       int i, j;                                       \
+       int value;                                      \
+       for (i = 0; i < max; i++)                       \
+         for (j = 0; j < max; j++)                     \
+           if (_SEARCH_array[i][j] == _SEARCH_target)  \
+             { value = i; goto found; }                \
+       value = -1;                                     \
+      found:                                           \
+       value;                                          \
+     })
+
+
 File: gcc.info,  Node: Labels as Values,  Next: Nested Functions,  Prev: Local Labels,  Up: C Extensions
 
 Labels as Values
@@ -162,7 +212,7 @@ safe.
    GCC implements taking the address of a nested function using a
 technique called "trampolines".  A paper describing them is available as
 
-`http://people.debian.org/~karlheg/Usenix88-lexic.pdf'.
+`http://people.debian.org/~aaronl/Usenix88-lexic.pdf'.
 
    A nested function can jump to a label inherited from a containing
 function, provided the label was explicitly declared in the containing
@@ -212,7 +262,7 @@ function declarations).
      }
 
 
-File: gcc.info,  Node: Constructing Calls,  Next: Naming Types,  Prev: Nested Functions,  Up: C Extensions
+File: gcc.info,  Node: Constructing Calls,  Next: Typeof,  Prev: Nested Functions,  Up: C Extensions
 
 Constructing Function Calls
 ===========================
@@ -258,27 +308,6 @@ tried to return (as long as your caller expects that data type).
      the containing function.  You should specify, for RESULT, a value
      returned by `__builtin_apply'.
 
-
-File: gcc.info,  Node: Naming Types,  Next: Typeof,  Prev: Constructing Calls,  Up: C Extensions
-
-Naming an Expression's Type
-===========================
-
-   You can give a name to the type of an expression using a `typedef'
-declaration with an initializer.  Here is how to define NAME as a type
-name for the type of EXP:
-
-     typedef NAME = EXP;
-
-   This is useful in conjunction with the statements-within-expressions
-feature.  Here is how the two together can be used to define a safe
-"maximum" macro that operates on any arithmetic type:
-
-     #define max(a,b) \
-       ({typedef _ta = (a), _tb = (b);  \
-         _ta _a = (a); _tb _b = (b);     \
-         _a > _b ? _a : _b; })
-
    The reason for using names that start with underscores for the local
 variables is to avoid conflicts with variable names that occur within
 the expressions that are substituted for `a' and `b'.  Eventually we
@@ -287,7 +316,7 @@ declare variables whose scopes start only after their initializers;
 this will be a more reliable way to prevent such conflicts.
 
 
-File: gcc.info,  Node: Typeof,  Next: Lvalues,  Prev: Naming Types,  Up: C Extensions
+File: gcc.info,  Node: Typeof,  Next: Lvalues,  Prev: Constructing Calls,  Up: C Extensions
 
 Referring to a Type with `typeof'
 =================================
@@ -318,6 +347,18 @@ Keywords::.
 used.  For example, you can use it in a declaration, in a cast, or
 inside of `sizeof' or `typeof'.
 
+   `typeof' is often useful in conjunction with the
+statements-within-expressions feature.  Here is how the two together can
+be used to define a safe "maximum" macro that operates on any
+arithmetic type and evaluates each of its arguments exactly once:
+
+     #define max(a,b) \
+       ({ typeof (a) _a = (a); \
+           typeof (b) _b = (b); \
+         _a > _b ? _a : _b; })
+
+Some more examples of the use of `typeof':
+
    * This declares `y' with the type of what `x' points to.
 
           typeof (*x) y;
@@ -346,6 +387,20 @@ inside of `sizeof' or `typeof'.
 
      Thus, `array (pointer (char), 4)' is the type of arrays of 4
      pointers to `char'.
+
+   _Compatibility Note:_ In addition to `typeof', GCC 2 supported a
+more limited extension which permitted one to write
+
+     typedef T = EXPR;
+
+with the effect of declaring T to have the type of the expression EXPR.
+This extension does not work with GCC 3 (versions between 3.0 and 3.2
+will crash; 3.2.1 and later give an error).  Code which relies on it
+should be rewritten to use `typeof':
+
+     typedef typeof(EXPR) T;
+
+This will work with all versions of GCC.
 
 
 File: gcc.info,  Node: Lvalues,  Next: Conditionals,  Prev: Typeof,  Up: C Extensions

@@ -33,6 +33,302 @@ software.  Copies published by the Free Software Foundation raise
 funds for GNU development.
 
 
+File: gcc.info,  Node: Incompatibilities,  Next: Fixed Headers,  Prev: External Bugs,  Up: Trouble
+
+Incompatibilities of GCC
+========================
+
+   There are several noteworthy incompatibilities between GNU C and K&R
+(non-ISO) versions of C.  The `-traditional' option eliminates many of
+these incompatibilities, _but not all_, by telling GCC to behave like a
+K&R C compiler.
+
+   * GCC normally makes string constants read-only.  If several
+     identical-looking string constants are used, GCC stores only one
+     copy of the string.
+
+     One consequence is that you cannot call `mktemp' with a string
+     constant argument.  The function `mktemp' always alters the string
+     its argument points to.
+
+     Another consequence is that `sscanf' does not work on some systems
+     when passed a string constant as its format control string or
+     input.  This is because `sscanf' incorrectly tries to write into
+     the string constant.  Likewise `fscanf' and `scanf'.
+
+     The best solution to these problems is to change the program to use
+     `char'-array variables with initialization strings for these
+     purposes instead of string constants.  But if this is not possible,
+     you can use the `-fwritable-strings' flag, which directs GCC to
+     handle string constants the same way most C compilers do.
+     `-traditional' also has this effect, among others.
+
+   * `-2147483648' is positive.
+
+     This is because 2147483648 cannot fit in the type `int', so
+     (following the ISO C rules) its data type is `unsigned long int'.
+     Negating this value yields 2147483648 again.
+
+   * GCC does not substitute macro arguments when they appear inside of
+     string constants.  For example, the following macro in GCC
+
+          #define foo(a) "a"
+
+     will produce output `"a"' regardless of what the argument A is.
+
+     The `-traditional' option directs GCC to handle such cases (among
+     others) in the old-fashioned (non-ISO) fashion.
+
+   * When you use `setjmp' and `longjmp', the only automatic variables
+     guaranteed to remain valid are those declared `volatile'.  This is
+     a consequence of automatic register allocation.  Consider this
+     function:
+
+          jmp_buf j;
+          
+          foo ()
+          {
+            int a, b;
+          
+            a = fun1 ();
+            if (setjmp (j))
+              return a;
+          
+            a = fun2 ();
+            /* `longjmp (j)' may occur in `fun3'. */
+            return a + fun3 ();
+          }
+
+     Here `a' may or may not be restored to its first value when the
+     `longjmp' occurs.  If `a' is allocated in a register, then its
+     first value is restored; otherwise, it keeps the last value stored
+     in it.
+
+     If you use the `-W' option with the `-O' option, you will get a
+     warning when GCC thinks such a problem might be possible.
+
+     The `-traditional' option directs GCC to put variables in the
+     stack by default, rather than in registers, in functions that call
+     `setjmp'.  This results in the behavior found in traditional C
+     compilers.
+
+   * Programs that use preprocessing directives in the middle of macro
+     arguments do not work with GCC.  For example, a program like this
+     will not work:
+
+          foobar (
+          #define luser
+                  hack)
+
+     ISO C does not permit such a construct.  It would make sense to
+     support it when `-traditional' is used, but it is too much work to
+     implement.
+
+   * K&R compilers allow comments to cross over an inclusion boundary
+     (i.e. started in an include file and ended in the including file).
+     I think this would be quite ugly and can't imagine it could be
+     needed.
+
+   * Declarations of external variables and functions within a block
+     apply only to the block containing the declaration.  In other
+     words, they have the same scope as any other declaration in the
+     same place.
+
+     In some other C compilers, a `extern' declaration affects all the
+     rest of the file even if it happens within a block.
+
+     The `-traditional' option directs GCC to treat all `extern'
+     declarations as global, like traditional compilers.
+
+   * In traditional C, you can combine `long', etc., with a typedef
+     name, as shown here:
+
+          typedef int foo;
+          typedef long foo bar;
+
+     In ISO C, this is not allowed: `long' and other type modifiers
+     require an explicit `int'.  Because this criterion is expressed by
+     Bison grammar rules rather than C code, the `-traditional' flag
+     cannot alter it.
+
+   * PCC allows typedef names to be used as function parameters.  The
+     difficulty described immediately above applies here too.
+
+   * When in `-traditional' mode, GCC allows the following erroneous
+     pair of declarations to appear together in a given scope:
+
+          typedef int foo;
+          typedef foo foo;
+
+   * GCC treats all characters of identifiers as significant, even when
+     in `-traditional' mode.  According to K&R-1 (2.2), "No more than
+     the first eight characters are significant, although more may be
+     used.".  Also according to K&R-1 (2.2), "An identifier is a
+     sequence of letters and digits; the first character must be a
+     letter.  The underscore _ counts as a letter.", but GCC also
+     allows dollar signs in identifiers.
+
+   * PCC allows whitespace in the middle of compound assignment
+     operators such as `+='.  GCC, following the ISO standard, does not
+     allow this.  The difficulty described immediately above applies
+     here too.
+
+   * GCC complains about unterminated character constants inside of
+     preprocessing conditionals that fail.  Some programs have English
+     comments enclosed in conditionals that are guaranteed to fail; if
+     these comments contain apostrophes, GCC will probably report an
+     error.  For example, this code would produce an error:
+
+          #if 0
+          You can't expect this to work.
+          #endif
+
+     The best solution to such a problem is to put the text into an
+     actual C comment delimited by `/*...*/'.  However, `-traditional'
+     suppresses these error messages.
+
+   * Many user programs contain the declaration `long time ();'.  In the
+     past, the system header files on many systems did not actually
+     declare `time', so it did not matter what type your program
+     declared it to return.  But in systems with ISO C headers, `time'
+     is declared to return `time_t', and if that is not the same as
+     `long', then `long time ();' is erroneous.
+
+     The solution is to change your program to use appropriate system
+     headers (`<time.h>' on systems with ISO C headers) and not to
+     declare `time' if the system header files declare it, or failing
+     that to use `time_t' as the return type of `time'.
+
+   * When compiling functions that return `float', PCC converts it to a
+     double.  GCC actually returns a `float'.  If you are concerned
+     with PCC compatibility, you should declare your functions to return
+     `double'; you might as well say what you mean.
+
+   * When compiling functions that return structures or unions, GCC
+     output code normally uses a method different from that used on most
+     versions of Unix.  As a result, code compiled with GCC cannot call
+     a structure-returning function compiled with PCC, and vice versa.
+
+     The method used by GCC is as follows: a structure or union which is
+     1, 2, 4 or 8 bytes long is returned like a scalar.  A structure or
+     union with any other size is stored into an address supplied by
+     the caller (usually in a special, fixed register, but on some
+     machines it is passed on the stack).  The machine-description
+     macros `STRUCT_VALUE' and `STRUCT_INCOMING_VALUE' tell GCC where
+     to pass this address.
+
+     By contrast, PCC on most target machines returns structures and
+     unions of any size by copying the data into an area of static
+     storage, and then returning the address of that storage as if it
+     were a pointer value.  The caller must copy the data from that
+     memory area to the place where the value is wanted.  GCC does not
+     use this method because it is slower and nonreentrant.
+
+     On some newer machines, PCC uses a reentrant convention for all
+     structure and union returning.  GCC on most of these machines uses
+     a compatible convention when returning structures and unions in
+     memory, but still returns small structures and unions in registers.
+
+     You can tell GCC to use a compatible convention for all structure
+     and union returning with the option `-fpcc-struct-return'.
+
+   * GCC complains about program fragments such as `0x74ae-0x4000'
+     which appear to be two hexadecimal constants separated by the minus
+     operator.  Actually, this string is a single "preprocessing token".
+     Each such token must correspond to one token in C.  Since this
+     does not, GCC prints an error message.  Although it may appear
+     obvious that what is meant is an operator and two values, the ISO
+     C standard specifically requires that this be treated as erroneous.
+
+     A "preprocessing token" is a "preprocessing number" if it begins
+     with a digit and is followed by letters, underscores, digits,
+     periods and `e+', `e-', `E+', `E-', `p+', `p-', `P+', or `P-'
+     character sequences.  (In strict C89 mode, the sequences `p+',
+     `p-', `P+' and `P-' cannot appear in preprocessing numbers.)
+
+     To make the above program fragment valid, place whitespace in
+     front of the minus sign.  This whitespace will end the
+     preprocessing number.
+
+
+File: gcc.info,  Node: Fixed Headers,  Next: Standard Libraries,  Prev: Incompatibilities,  Up: Trouble
+
+Fixed Header Files
+==================
+
+   GCC needs to install corrected versions of some system header files.
+This is because most target systems have some header files that won't
+work with GCC unless they are changed.  Some have bugs, some are
+incompatible with ISO C, and some depend on special features of other
+compilers.
+
+   Installing GCC automatically creates and installs the fixed header
+files, by running a program called `fixincludes' (or for certain
+targets an alternative such as `fixinc.svr4').  Normally, you don't
+need to pay attention to this.  But there are cases where it doesn't do
+the right thing automatically.
+
+   * If you update the system's header files, such as by installing a
+     new system version, the fixed header files of GCC are not
+     automatically updated.  The easiest way to update them is to
+     reinstall GCC.  (If you want to be clever, look in the makefile
+     and you can find a shortcut.)
+
+   * On some systems, in particular SunOS 4, header file directories
+     contain machine-specific symbolic links in certain places.  This
+     makes it possible to share most of the header files among hosts
+     running the same version of SunOS 4 on different machine models.
+
+     The programs that fix the header files do not understand this
+     special way of using symbolic links; therefore, the directory of
+     fixed header files is good only for the machine model used to
+     build it.
+
+     In SunOS 4, only programs that look inside the kernel will notice
+     the difference between machine models.  Therefore, for most
+     purposes, you need not be concerned about this.
+
+     It is possible to make separate sets of fixed header files for the
+     different machine models, and arrange a structure of symbolic
+     links so as to use the proper set, but you'll have to do this by
+     hand.
+
+   * On Lynxos, GCC by default does not fix the header files.  This is
+     because bugs in the shell cause the `fixincludes' script to fail.
+
+     This means you will encounter problems due to bugs in the system
+     header files.  It may be no comfort that they aren't GCC's fault,
+     but it does mean that there's nothing for us to do about them.
+
+
+File: gcc.info,  Node: Standard Libraries,  Next: Disappointments,  Prev: Fixed Headers,  Up: Trouble
+
+Standard Libraries
+==================
+
+   GCC by itself attempts to be a conforming freestanding
+implementation.  *Note Language Standards Supported by GCC: Standards,
+for details of what this means.  Beyond the library facilities required
+of such an implementation, the rest of the C library is supplied by the
+vendor of the operating system.  If that C library doesn't conform to
+the C standards, then your programs might get warnings (especially when
+using `-Wall') that you don't expect.
+
+   For example, the `sprintf' function on SunOS 4.1.3 returns `char *'
+while the C standard says that `sprintf' returns an `int'.  The
+`fixincludes' program could make the prototype for this function match
+the Standard, but that would be wrong, since the function will still
+return `char *'.
+
+   If you need a Standard compliant library, then you need to find one,
+as GCC does not provide one.  The GNU C library (called `glibc')
+provides ISO C, POSIX, BSD, SystemV and X/Open compatibility for
+GNU/Linux and HURD-based GNU systems; no recent version of it supports
+other systems, though some very old versions did.  Version 2.2 of the
+GNU C library includes nearly complete C99 support.  You could also ask
+your operating system vendor if newer libraries are available.
+
+
 File: gcc.info,  Node: Disappointments,  Next: C++ Misunderstandings,  Prev: Standard Libraries,  Up: Trouble
 
 Disappointments and Misunderstandings
@@ -720,417 +1016,4 @@ address given above.
 
    Please read `http://gcc.gnu.org/bugs.html' for additional and/or
 more up-to-date bug reporting instructions before you post a bug report.
-
-
-File: gcc.info,  Node: Bug Reporting,  Next: gccbug,  Prev: Bug Lists,  Up: Bugs
-
-How to Report Bugs
-==================
-
-   The fundamental principle of reporting bugs usefully is this:
-*report all the facts*.  If you are not sure whether to state a fact or
-leave it out, state it!
-
-   Often people omit facts because they think they know what causes the
-problem and they conclude that some details don't matter.  Thus, you
-might assume that the name of the variable you use in an example does
-not matter.  Well, probably it doesn't, but one cannot be sure.
-Perhaps the bug is a stray memory reference which happens to fetch from
-the location where that name is stored in memory; perhaps, if the name
-were different, the contents of that location would fool the compiler
-into doing the right thing despite the bug.  Play it safe and give a
-specific, complete example.  That is the easiest thing for you to do,
-and the most helpful.
-
-   Keep in mind that the purpose of a bug report is to enable someone to
-fix the bug if it is not known.  It isn't very important what happens if
-the bug is already known.  Therefore, always write your bug reports on
-the assumption that the bug is not known.
-
-   Sometimes people give a few sketchy facts and ask, "Does this ring a
-bell?"  This cannot help us fix a bug, so it is basically useless.  We
-respond by asking for enough details to enable us to investigate.  You
-might as well expedite matters by sending them to begin with.
-
-   Try to make your bug report self-contained.  If we have to ask you
-for more information, it is best if you include all the previous
-information in your response, as well as the information that was
-missing.
-
-   Please report each bug in a separate message.  This makes it easier
-for us to track which bugs have been fixed and to forward your bugs
-reports to the appropriate maintainer.
-
-   To enable someone to investigate the bug, you should include all
-these things:
-
-   * The version of GCC.  You can get this by running it with the `-v'
-     option.
-
-     Without this, we won't know whether there is any point in looking
-     for the bug in the current version of GCC.
-
-   * A complete input file that will reproduce the bug.  If the bug is
-     in the C preprocessor, send a source file and any header files
-     that it requires.  If the bug is in the compiler proper (`cc1'),
-     send the preprocessor output generated by adding `-save-temps' to
-     the compilation command (*note Debugging Options::).  When you do
-     this, use the same `-I', `-D' or `-U' options that you used in
-     actual compilation.  Then send the INPUT.i or INPUT.ii files
-     generated.
-
-     A single statement is not enough of an example.  In order to
-     compile it, it must be embedded in a complete file of compiler
-     input; and the bug might depend on the details of how this is done.
-
-     Without a real example one can compile, all anyone can do about
-     your bug report is wish you luck.  It would be futile to try to
-     guess how to provoke the bug.  For example, bugs in register
-     allocation and reloading frequently depend on every little detail
-     of the function they happen in.
-
-     Even if the input file that fails comes from a GNU program, you
-     should still send the complete test case.  Don't ask the GCC
-     maintainers to do the extra work of obtaining the program in
-     question--they are all overworked as it is.  Also, the problem may
-     depend on what is in the header files on your system; it is
-     unreliable for the GCC maintainers to try the problem with the
-     header files available to them.  By sending CPP output, you can
-     eliminate this source of uncertainty and save us a certain
-     percentage of wild goose chases.
-
-   * The command arguments you gave GCC to compile that example and
-     observe the bug.  For example, did you use `-O'?  To guarantee you
-     won't omit something important, list all the options.
-
-     If we were to try to guess the arguments, we would probably guess
-     wrong and then we would not encounter the bug.
-
-   * The type of machine you are using, and the operating system name
-     and version number.
-
-   * The operands you gave to the `configure' command when you installed
-     the compiler.
-
-   * A complete list of any modifications you have made to the compiler
-     source.  (We don't promise to investigate the bug unless it
-     happens in an unmodified compiler.  But if you've made
-     modifications and don't tell us, then you are sending us on a wild
-     goose chase.)
-
-     Be precise about these changes.  A description in English is not
-     enough--send a context diff for them.
-
-     Adding files of your own (such as a machine description for a
-     machine we don't support) is a modification of the compiler source.
-
-   * Details of any other deviations from the standard procedure for
-     installing GCC.
-
-   * A description of what behavior you observe that you believe is
-     incorrect.  For example, "The compiler gets a fatal signal," or,
-     "The assembler instruction at line 208 in the output is incorrect."
-
-     Of course, if the bug is that the compiler gets a fatal signal,
-     then one can't miss it.  But if the bug is incorrect output, the
-     maintainer might not notice unless it is glaringly wrong.  None of
-     us has time to study all the assembler code from a 50-line C
-     program just on the chance that one instruction might be wrong.
-     We need _you_ to do this part!
-
-     Even if the problem you experience is a fatal signal, you should
-     still say so explicitly.  Suppose something strange is going on,
-     such as, your copy of the compiler is out of synch, or you have
-     encountered a bug in the C library on your system.  (This has
-     happened!)  Your copy might crash and the copy here would not.  If
-     you said to expect a crash, then when the compiler here fails to
-     crash, we would know that the bug was not happening.  If you don't
-     say to expect a crash, then we would not know whether the bug was
-     happening.  We would not be able to draw any conclusion from our
-     observations.
-
-     If the problem is a diagnostic when compiling GCC with some other
-     compiler, say whether it is a warning or an error.
-
-     Often the observed symptom is incorrect output when your program
-     is run.  Sad to say, this is not enough information unless the
-     program is short and simple.  None of us has time to study a large
-     program to figure out how it would work if compiled correctly,
-     much less which line of it was compiled wrong.  So you will have
-     to do that.  Tell us which source line it is, and what incorrect
-     result happens when that line is executed.  A person who
-     understands the program can find this as easily as finding a bug
-     in the program itself.
-
-   * If you send examples of assembler code output from GCC, please use
-     `-g' when you make them.  The debugging information includes
-     source line numbers which are essential for correlating the output
-     with the input.
-
-   * If you wish to mention something in the GCC source, refer to it by
-     context, not by line number.
-
-     The line numbers in the development sources don't match those in
-     your sources.  Your line numbers would convey no useful
-     information to the maintainers.
-
-   * Additional information from a debugger might enable someone to
-     find a problem on a machine which he does not have available.
-     However, you need to think when you collect this information if
-     you want it to have any chance of being useful.
-
-     For example, many people send just a backtrace, but that is never
-     useful by itself.  A simple backtrace with arguments conveys little
-     about GCC because the compiler is largely data-driven; the same
-     functions are called over and over for different RTL insns, doing
-     different things depending on the details of the insn.
-
-     Most of the arguments listed in the backtrace are useless because
-     they are pointers to RTL list structure.  The numeric values of the
-     pointers, which the debugger prints in the backtrace, have no
-     significance whatever; all that matters is the contents of the
-     objects they point to (and most of the contents are other such
-     pointers).
-
-     In addition, most compiler passes consist of one or more loops that
-     scan the RTL insn sequence.  The most vital piece of information
-     about such a loop--which insn it has reached--is usually in a
-     local variable, not in an argument.
-
-     What you need to provide in addition to a backtrace are the values
-     of the local variables for several stack frames up.  When a local
-     variable or an argument is an RTX, first print its value and then
-     use the GDB command `pr' to print the RTL expression that it points
-     to.  (If GDB doesn't run on your machine, use your debugger to call
-     the function `debug_rtx' with the RTX as an argument.)  In
-     general, whenever a variable is a pointer, its value is no use
-     without the data it points to.
-
-   Here are some things that are not necessary:
-
-   * A description of the envelope of the bug.
-
-     Often people who encounter a bug spend a lot of time investigating
-     which changes to the input file will make the bug go away and which
-     changes will not affect it.
-
-     This is often time consuming and not very useful, because the way
-     we will find the bug is by running a single example under the
-     debugger with breakpoints, not by pure deduction from a series of
-     examples.  You might as well save your time for something else.
-
-     Of course, if you can find a simpler example to report _instead_ of
-     the original one, that is a convenience.  Errors in the output
-     will be easier to spot, running under the debugger will take less
-     time, etc.  Most GCC bugs involve just one function, so the most
-     straightforward way to simplify an example is to delete all the
-     function definitions except the one where the bug occurs.  Those
-     earlier in the file may be replaced by external declarations if
-     the crucial function depends on them.  (Exception: inline
-     functions may affect compilation of functions defined later in the
-     file.)
-
-     However, simplification is not vital; if you don't want to do this,
-     report the bug anyway and send the entire test case you used.
-
-   * In particular, some people insert conditionals `#ifdef BUG' around
-     a statement which, if removed, makes the bug not happen.  These
-     are just clutter; we won't pay any attention to them anyway.
-     Besides, you should send us cpp output, and that can't have
-     conditionals.
-
-   * A patch for the bug.
-
-     A patch for the bug is useful if it is a good one.  But don't omit
-     the necessary information, such as the test case, on the
-     assumption that a patch is all we need.  We might see problems
-     with your patch and decide to fix the problem another way, or we
-     might not understand it at all.
-
-     Sometimes with a program as complicated as GCC it is very hard to
-     construct an example that will make the program follow a certain
-     path through the code.  If you don't send the example, we won't be
-     able to construct one, so we won't be able to verify that the bug
-     is fixed.
-
-     And if we can't understand what bug you are trying to fix, or why
-     your patch should be an improvement, we won't install it.  A test
-     case will help us to understand.
-
-     See `http://gcc.gnu.org/contribute.html' for guidelines on how to
-     make it easy for us to understand and install your patches.
-
-   * A guess about what the bug is or what it depends on.
-
-     Such guesses are usually wrong.  Even I can't guess right about
-     such things without first using the debugger to find the facts.
-
-   * A core dump file.
-
-     We have no way of examining a core dump for your type of machine
-     unless we have an identical system--and if we do have one, we
-     should be able to reproduce the crash ourselves.
-
-
-File: gcc.info,  Node: gccbug,  Prev: Bug Reporting,  Up: Bugs
-
-The gccbug script
-=================
-
-   To simplify creation of bug reports, and to allow better tracking of
-reports, we use the GNATS bug tracking system.  Part of that system is
-the `gccbug' script.  This is a Unix shell script, so you need a shell
-to run it.  It is normally installed in the same directory where `gcc'
-is installed.
-
-   The gccbug script is derived from send-pr, *note Creating new
-Problem Reports: (send-pr)using send-pr..  When invoked, it starts a
-text editor so you can fill out the various fields of the report.  When
-the you quit the editor, the report is automatically send to the bug
-reporting address.
-
-   A number of fields in this bug report form are specific to GCC, and
-are explained at `http://gcc.gnu.org/gnats.html'.
-
-
-File: gcc.info,  Node: Service,  Next: Contributing,  Prev: Bugs,  Up: Top
-
-How To Get Help with GCC
-************************
-
-   If you need help installing, using or changing GCC, there are two
-ways to find it:
-
-   * Send a message to a suitable network mailing list.  First try
-     <gcc-help@gcc.gnu.org> (for help installing or using GCC), and if
-     that brings no response, try <gcc@gcc.gnu.org>.  For help changing
-     GCC, ask <gcc@gcc.gnu.org>.  If you think you have found a bug in
-     GCC, please report it following the instructions at *note Bug
-     Reporting::.
-
-   * Look in the service directory for someone who might help you for a
-     fee.  The service directory is found at
-     `http://www.gnu.org/prep/service.html'.
-
-
-File: gcc.info,  Node: Contributing,  Next: VMS,  Prev: Service,  Up: Top
-
-Contributing to GCC Development
-*******************************
-
-   If you would like to help pretest GCC releases to assure they work
-well, our current development sources are available by CVS (see
-`http://gcc.gnu.org/cvs.html').  Source and binary snapshots are also
-available for FTP; see `http://gcc.gnu.org/snapshots.html'.
-
-   If you would like to work on improvements to GCC, please read the
-advice at these URLs:
-
-     `http://gcc.gnu.org/contribute.html'
-     `http://gcc.gnu.org/contributewhy.html'
-
-for information on how to make useful contributions and avoid
-duplication of effort.  Suggested projects are listed at
-`http://gcc.gnu.org/projects/'.
-
-
-File: gcc.info,  Node: VMS,  Next: Funding,  Prev: Contributing,  Up: Top
-
-Using GCC on VMS
-****************
-
-   Here is how to use GCC on VMS.
-
-* Menu:
-
-* Include Files and VMS::  Where the preprocessor looks for the include files.
-* Global Declarations::    How to do globaldef, globalref and globalvalue with
-                           GCC.
-* VMS Misc::		   Misc information.
-
-
-File: gcc.info,  Node: Include Files and VMS,  Next: Global Declarations,  Up: VMS
-
-Include Files and VMS
-=====================
-
-   Due to the differences between the filesystems of Unix and VMS, GCC
-attempts to translate file names in `#include' into names that VMS will
-understand.  The basic strategy is to prepend a prefix to the
-specification of the include file, convert the whole filename to a VMS
-filename, and then try to open the file.  GCC tries various prefixes
-one by one until one of them succeeds:
-
-  1. The first prefix is the `GNU_CC_INCLUDE:' logical name: this is
-     where GNU C header files are traditionally stored.  If you wish to
-     store header files in non-standard locations, then you can assign
-     the logical `GNU_CC_INCLUDE' to be a search list, where each
-     element of the list is suitable for use with a rooted logical.
-
-  2. The next prefix tried is `SYS$SYSROOT:[SYSLIB.]'.  This is where
-     VAX-C header files are traditionally stored.
-
-  3. If the include file specification by itself is a valid VMS
-     filename, the preprocessor then uses this name with no prefix in
-     an attempt to open the include file.
-
-  4. If the file specification is not a valid VMS filename (i.e. does
-     not contain a device or a directory specifier, and contains a `/'
-     character), the preprocessor tries to convert it from Unix syntax
-     to VMS syntax.
-
-     Conversion works like this: the first directory name becomes a
-     device, and the rest of the directories are converted into
-     VMS-format directory names.  For example, the name `X11/foobar.h'
-     is translated to `X11:[000000]foobar.h' or `X11:foobar.h',
-     whichever one can be opened.  This strategy allows you to assign a
-     logical name to point to the actual location of the header files.
-
-  5. If none of these strategies succeeds, the `#include' fails.
-
-   Include directives of the form:
-
-     #include foobar
-
-are a common source of incompatibility between VAX-C and GCC.  VAX-C
-treats this much like a standard `#include <foobar.h>' directive.  That
-is incompatible with the ISO C behavior implemented by GCC: to expand
-the name `foobar' as a macro.  Macro expansion should eventually yield
-one of the two standard formats for `#include':
-
-     #include "FILE"
-     #include <FILE>
-
-   If you have this problem, the best solution is to modify the source
-to convert the `#include' directives to one of the two standard forms.
-That will work with either compiler.  If you want a quick and dirty fix,
-define the file names as macros with the proper expansion, like this:
-
-     #define stdio <stdio.h>
-
-This will work, as long as the name doesn't conflict with anything else
-in the program.
-
-   Another source of incompatibility is that VAX-C assumes that:
-
-     #include "foobar"
-
-is actually asking for the file `foobar.h'.  GCC does not make this
-assumption, and instead takes what you ask for literally; it tries to
-read the file `foobar'.  The best way to avoid this problem is to
-always specify the desired file extension in your include directives.
-
-   GCC for VMS is distributed with a set of include files that is
-sufficient to compile most general purpose programs.  Even though the
-GCC distribution does not contain header files to define constants and
-structures for some VMS system-specific functions, there is no reason
-why you cannot use GCC with any of these functions.  You first may have
-to generate or create header files, either by using the public domain
-utility `UNSDL' (which can be found on a DECUS tape), or by extracting
-the relevant modules from one of the system macro libraries, and using
-an editor to construct a C header file.
-
-   A `#include' file name cannot contain a DECNET node name.  The
-preprocessor reports an I/O error if you attempt to use a node name,
-whether explicitly, or implicitly via a logical name.
 
