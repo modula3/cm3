@@ -39,6 +39,9 @@ PROCEDURE PlotWavelet (fileName          : TEXT;
       "/home/thielema/projects/paper/matchedwavelet/figures/" & fileName);
     PL.Init();
 
+    PL.SetPenWidth(20);
+    PL.SetCharacterHeight(R.Zero, 1.5D0);
+
     PL.SetFGColorDiscr(1);
     PL.SetEnvironment(
       left, right, VFs.Min(func.getData()^), VFs.Max(func.getData()^));
