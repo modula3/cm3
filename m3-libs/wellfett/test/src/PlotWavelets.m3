@@ -9,18 +9,22 @@ IMPORT LongRealVectorFast AS VFs;
 
 IMPORT LongRealSignal AS S;
 IMPORT LongRealRefinableFunc AS Refn;
+IMPORT LongRealDyadicFilterBank AS FB;
 
 IMPORT LongRealBSplineWavelet AS BSpl;
 
 (*IMPORT LongRealFmtLex AS RF;*)
 IMPORT LongRealSignalFmtLex AS SF;
 IMPORT PLPlot AS PL;
+IMPORT Fmt;
 (*IMPORT IO, Fmt, Wr, Thread;*)
 
 IMPORT NADefinitions AS NA;
 
 
-PROCEDURE PlotWavelet (generator, wavelet: S.T; numLevels: CARDINAL; ) =
+PROCEDURE PlotWavelet (fileName          : TEXT;
+                       generator, wavelet: S.T;
+                       numLevels         : CARDINAL; ) =
   VAR
     unit  := IIntPow.MulPower(1, 2, numLevels);
     grid  := R.Half / FLOAT(unit, R.T);
@@ -30,6 +34,9 @@ PROCEDURE PlotWavelet (generator, wavelet: S.T; numLevels: CARDINAL; ) =
 
   <*FATAL NA.Error*>(*Number of filters and channels will always match*)
   BEGIN
+    PL.SetDevice("ps");
+    PL.SetFileName(
+      "/home/thielema/projects/paper/matchedwavelet/figures/" & fileName);
     PL.Init();
 
     PL.SetFGColorDiscr(1);
@@ -47,8 +54,20 @@ PROCEDURE PlotWavelet (generator, wavelet: S.T; numLevels: CARDINAL; ) =
 
 PROCEDURE Test () =
   <*FATAL BSpl.DifferentParity*>
-  CONST numLevels = 8;
+  CONST
+    numLevels    = 7;
+    dualSmooth   = 2;
+    primalSmooth = 4;
   VAR
+    cdfName := Fmt.FN(
+                 "cdf-%s-%s",
+                 ARRAY OF TEXT{Fmt.Int(dualSmooth), Fmt.Int(primalSmooth)});
+    (*Translate by one step to match Daubechies' figures.*)
+    cdfDual := FB.T{
+                 BSpl.GeneratorMask(dualSmooth).scale(R.Two).translate(-1),
+                 BSpl.WaveletMask(dualSmooth, primalSmooth).scale(
+                   R.Two).translate(1)};
+    cdfPrimal := FB.DualToPrimal(cdfDual);
     daub2 := NEW(S.T).fromArray(
                ARRAY OF
                  R.T{-0.129409522550921D0, 0.224143868041857D0,
@@ -60,12 +79,20 @@ PROCEDURE Test () =
                      -0.0279837694169838D0, 0.63088076792959D0,
                      0.714846570552542D0, 0.230377813308855D0});
   BEGIN
-    PlotWavelet(BSpl.GeneratorMask(2).scale(R.Two),
-                BSpl.WaveletMask(2, 2).scale(-R.Two), numLevels);
-    PlotWavelet(daub2.adjoint().scale(RT.SqRtTwo),
-                daub2.alternate().translate(1), numLevels);
-    PlotWavelet(daub4.adjoint().scale(RT.SqRtTwo),
-                daub4.alternate().translate(1), numLevels);
+    PlotWavelet(
+      cdfName & "-dual-gen.eps", cdfDual[0], cdfDual[0], numLevels);
+    PlotWavelet(
+      cdfName & "-dual-wav.eps", cdfDual[0], cdfDual[1], numLevels);
+    PlotWavelet(
+      cdfName & "-primal-gen.eps", cdfPrimal[0], cdfPrimal[0], numLevels);
+    PlotWavelet(
+      cdfName & "-primal-wav.eps", cdfPrimal[0], cdfPrimal[1], numLevels);
+    PlotWavelet(
+      "daub2.eps", daub2.adjoint().scale(RT.SqRtTwo).translate(1),
+      daub2.alternate(), numLevels);
+    PlotWavelet(
+      "daub4.eps", daub4.adjoint().scale(RT.SqRtTwo).translate(1),
+      daub4.alternate(), numLevels);
   END Test;
 
 BEGIN

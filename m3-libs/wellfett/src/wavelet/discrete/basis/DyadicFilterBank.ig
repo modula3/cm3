@@ -2,7 +2,7 @@ GENERIC INTERFACE DyadicFilterBank(S);
 
 TYPE T = ARRAY [0 .. 1] OF S.T;
 
-PROCEDURE PrimalToDual (READONLY x: T): T;
+CONST PrimalToDual = DualToPrimal;
 
 PROCEDURE DualToPrimal (READONLY x: T): T;
 
