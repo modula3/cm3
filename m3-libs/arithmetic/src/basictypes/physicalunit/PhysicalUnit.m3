@@ -16,20 +16,20 @@ FROM NADefinitions IMPORT Error,Err;
 
 PROCEDURE New () : T =
   BEGIN
-    RETURN NEW(T).init(sizeHint:=5);
+    RETURN NEW(T).init(sizeHint:=10);
   END New;
 
 PROCEDURE FromArray (READONLY x : ARRAY OF ExpType) : T =
   VAR
     y := New();
-    success:BOOLEAN;
+    replaced:BOOLEAN;
   BEGIN
     FOR j:=0 TO LAST(x) DO
       IF x[j]#0 THEN
-        success:=y.put(j,x[j]);
-        <*ASSERT success*>
+        replaced:=y.put(j,x[j]);
+        <*ASSERT NOT replaced*>
         (* resist writing
-          <*ASSERT y.put(j,x[j])*>
+          <*ASSERT NOT y.put(j,x[j])*>
           because ASSERT statements may be removed
           for final executables
         *)
@@ -43,11 +43,11 @@ PROCEDURE Copy (x : T) : T =
     y := New();
     it := x.iterate();
     unit,exp : INTEGER;
-    success:BOOLEAN;
+    replaced : BOOLEAN;
   BEGIN
     WHILE it.next(unit,exp) DO
-      success:=y.put(unit,exp);
-      <*ASSERT success*>
+      replaced:=y.put(unit,exp);
+      <*ASSERT NOT replaced*>
     END;
     RETURN y;
   END Copy;
@@ -81,9 +81,9 @@ PROCEDURE Put (x : T; unit : INTEGER; exp : ExpType) =
   BEGIN
     IF exp#0 THEN
       VAR
-        success:=x.put(unit,exp);
+        replaced:=x.put(unit,exp);
       BEGIN
-        <*ASSERT success*>
+        <*ASSERT NOT replaced*>
       END;
     END;
   END Put;
@@ -135,11 +135,11 @@ PROCEDURE Neg  (x : T) : T =
     y := New();
     it := x.iterate();
     unit,exp : ExpType;
-    success:BOOLEAN;
+    replaced:BOOLEAN;
   BEGIN
     WHILE it.next(unit,exp) DO
-      success:=y.put(unit,-exp);
-      <*ASSERT success*>
+      replaced:=y.put(unit,-exp);
+      <*ASSERT NOT replaced*>
     END;
     RETURN y;
   END Neg;
@@ -149,12 +149,12 @@ PROCEDURE Scale     (x : T; y : ExpType) : T =
     z := New();
     it := x.iterate();
     unit,exp : ExpType;
-    success:BOOLEAN;
+    replaced:BOOLEAN;
   BEGIN
     IF y#0 THEN
       WHILE it.next(unit,exp) DO
-        success:=z.put(unit,exp*y);
-        <*ASSERT success*>
+        replaced:=z.put(unit,exp*y);
+        <*ASSERT NOT replaced*>
       END;
     END;
     RETURN z;
@@ -165,11 +165,11 @@ PROCEDURE ScaleDiv  (x : T; y : ExpType) : T RAISES {Error} =
     z := New();
     it := x.iterate();
     unit,exp : ExpType;
-    success:BOOLEAN;
+    replaced:BOOLEAN;
   BEGIN
     WHILE it.next(unit,exp) DO
-      success:=z.put(unit,I.Div(exp,y));
-      <*ASSERT success*>
+      replaced:=z.put(unit,I.Div(exp,y));
+      <*ASSERT NOT replaced*>
     END;
     RETURN z;
   END ScaleDiv;

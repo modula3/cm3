@@ -51,7 +51,7 @@ CONST
   independent = UU.FlagSet{UU.Flags.independent};
 
 BEGIN
-  DB.AddUnit(db,voltage,scales:=SUA{
+  DB.AddUnit(db,noUnit,scales:=SUA{
     SU{"pi",    RT.Pi},
     SU{"e",     RT.E},
 (*    SU{"i",     0.,1.}, *)
