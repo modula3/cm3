@@ -64,7 +64,7 @@ PROCEDURE FindStationaryPoint (f      : FuncDeriv2;
         IF VT.Norm1(der.first) <= tol * RT.Abs(der.zeroth) THEN
           RETURN x;
         END;
-        x := V.Sub(x, LA.LeastSquaresGen(
+        x := V.Sub(x, LA.LeastSquares(
                         der.second, ARRAY OF V.T{der.first})[0].x);
       END;
     END;

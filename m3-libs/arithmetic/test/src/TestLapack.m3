@@ -59,7 +59,7 @@ BEGIN
 
   Msg(MF.Fmt(A) & "\n");
 
-  ev := ES.EigenValuesGen (A, flags:= ES.EVGenFlagSet{ES.EVGenFlag.schurVectors});
+  ev := ES.EigenValues (A, flags:= ES.EVFlagSet{ES.EVFlag.schurVectors});
 
   Msg(MF.Fmt(ev.upperTri) & "\n");
   Msg(MF.Fmt(ev.schur) & "\n");

@@ -9,8 +9,7 @@ FROM NADefinitions IMPORT Error, Err;
 CONST Module = "FloatMatrixLapack.";
 (*==========================*)
 
-PROCEDURE EigenValuesGen (A: M.T; flags := EVGenFlagSet{}): EV
-  RAISES {Error} =
+PROCEDURE EigenValues (A: M.T; flags := EVFlagSet{}): EV RAISES {Error} =
   VAR
     eigRe            := V.New(NUMBER(A^));
     eigIm            := V.New(NUMBER(A^));
@@ -25,7 +24,7 @@ PROCEDURE EigenValuesGen (A: M.T; flags := EVGenFlagSet{}): EV
 
     result.eigenvalues := CV.New(NUMBER(A^));
 
-    IF EVGenFlag.schurVectors IN flags THEN
+    IF EVFlag.schurVectors IN flags THEN
       job := 'V';
       result.schur := M.New(NUMBER(A^), NUMBER(A[0]));
     ELSE
@@ -53,12 +52,10 @@ PROCEDURE EigenValuesGen (A: M.T; flags := EVGenFlagSet{}): EV
     END;
 
     RETURN result;
-  END EigenValuesGen;
+  END EigenValues;
 
-PROCEDURE LeastSquaresGen (         A    : M.T;
-                           READONLY B    : ARRAY OF V.T;
-                                    flags: LSGenFlagSet  ): REF ARRAY OF LS
-  RAISES {Error} =
+PROCEDURE LeastSquares (A: M.T; READONLY B: ARRAY OF V.T; flags: LSFlagSet):
+  REF ARRAY OF LS RAISES {Error} =
   VAR
     ls    := NEW(REF ARRAY OF LS, NUMBER(B));
     minmn := MIN(NUMBER(A^), NUMBER(A[0]));
@@ -74,7 +71,7 @@ PROCEDURE LeastSquaresGen (         A    : M.T;
     trans  : CHAR;
     work := NEW(REF ARRAY OF R.T, MAX(1, minmn + MAX(minmn, NUMBER(B))));
   BEGIN
-    IF LSGenFlag.transposed IN flags THEN
+    IF LSFlag.transposed IN flags THEN
       bsize := NUMBER(A[0]);
       xsize := NUMBER(A^);
       trans := 'N';              (*we have to think inverse because FORTRAN
@@ -106,7 +103,7 @@ PROCEDURE LeastSquaresGen (         A    : M.T;
     END;
 
     RETURN ls;
-  END LeastSquaresGen;
+  END LeastSquares;
 
 PROCEDURE GetMachineParameter (param: MachParam): R.T =
   CONST
