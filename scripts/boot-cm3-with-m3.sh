@@ -34,6 +34,7 @@ P="${P} m3quake"
 [ "${GCC_BACKEND}" = yes ] && P="${P} m3cc"
 P="${P} cm3"
 P="${P} cminstall"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]
