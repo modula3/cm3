@@ -76,7 +76,7 @@ M. Dagenais's ftp site.
 \subsection{Packaging}
 The library is a collection of interface and implementation
 modules (x{\it name}.i3/m3).  [Originally, names were in the DOS 8.3
-formatrix, but as Spencer Allain noted, we can use long names
+format, but as Spencer Allain noted, we can use long names
 if we can tar it all up -- which is now the approach.]
 
 The library is documented with an analysis paper for each
@@ -196,7 +196,7 @@ naming convention:
 
 The result is that a client can do:
 \begin{tt} \begin{verbatim}
-IMPORT xCmplx AS C;
+IMPORT Complex AS C;
 
 VAR c1,c2,c3:C.Complex;           (*make some variables*)
 BEGIN
@@ -235,7 +235,7 @@ happens to be used as the actual parm, it can be
 dereferenced prior to the call:
 
 \begin{tt} \begin{verbatim}
-     y:=xInterp.linear(xarr^,yarr^,x);
+     y:=Interpolation.linear(xarr^,yarr^,x);
 \end{verbatim} \end{tt}
 
 Modula-3's dynamic arrays only range 0..n-1.  But many matrixh

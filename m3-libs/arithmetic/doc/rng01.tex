@@ -1,4 +1,4 @@
-\section{xRGN01: Random Number Generators -- 01}
+\section{RNG01: Random Number Generators -- 01}
 
 \subsection*{DECSRC}
 This is just a wrapper for the DEC SRC-supplied {\tt Random.T.longreal}.
@@ -42,7 +42,7 @@ We'll use the first alternative.
 NR92 makes a point of telling us to not include the
 endpoints (0.0 and 1.0).  Thus there is a Min value and a
 Max value.  Min should be such that we don't get a 0.0 when
-captured in REAL64 formatrix.  Min can be a few times bigger than EPS.
+captured in REAL64 format.  Min can be a few times bigger than EPS.
 Max is then that close to 1.0, or (1.0-Min), which can be precalculated.
 
 \subsection*{ran1}

@@ -1,4 +1,4 @@
-\section{xReal64: 64-bit IEEE Reals}
+\section{LongReal: 64-bit IEEE Reals}
 \subsection{Types}
 Why rename LONGREAL?  Because numerical analysis is tuned to specific
 resolutions for specific classes of problems.  If you need a 64-bit real
@@ -29,7 +29,7 @@ The signum function is occasionally handy.  However, for
 performance purpose, you usually have to do it inline.
 
 \subsection{Special Functions}
-These are implemented in xSpecFtn,m3 but exported via xReal64.i3.
+These are implemented in SpecialFunction.m3 but exported via LongReal.i3.
 
 \subsection*{factorial}
 Following NR92, this is implemented with a cached table for

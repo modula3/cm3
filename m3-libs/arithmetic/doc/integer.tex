@@ -1,4 +1,4 @@
-\section{xInteger: Integers}
+\section{Integer: Integers}
 
 \subsection*{Types}
 The various short cardinals and integers are for convenience.  The
@@ -8,8 +8,8 @@ Array is used as an index array several places in the library.
 Convenience functions.
 
 \subsection*{Factoring: isprime}
-This is defined in the xPrime module, but accessed from xInteger.  [HGG: At one
-time it was implemented in the xInteger module, but compiling the
+This is defined in the xPrime module, but accessed from Integer.  [HGG: At one
+time it was implemented in the Integer module, but compiling the
 bitmap took too long.]
 
 xPrime is mainly a bitmap of the cardinals from
@@ -19,7 +19,7 @@ the largest CARDINAL ($46933 > \sqrt{2^{31}}$).  In factoring problems,
 we will not get anything larger than this.
 
 The primes themselves were obtained from Project Gutenberg's prime11.txt
-list.  They were converted to the bitmap formatrix via a perl script:
+list.  They were converted to the bitmap format via a perl script:
 
 \begin{tt} \begin{verbatim}
 #file:     mkprime.pl
@@ -201,7 +201,7 @@ j & = & 0 \ldots \mbox{bits}\\
 It all starts with the number of bits.  We chose 16 as a convenient
 number.  That gives 64K increments per quadrant or 256K around the 
 circle.  The numbers were computed in MathCad and copy-and-pasted
-into xInteger.m3. We used Turkowski's idea of hardcoding the
+into Integer.m3. We used Turkowski's idea of hardcoding the
 arctan table.  We used Bertrandom's idea of presetting x to a correction
 factor prior to starting work.
 
@@ -217,5 +217,5 @@ The basic algorithm works in the first quadrant.  Jarvis warns that
 the system doesn't always converge in other quadrants.  Bertrandom 
 works only in the first quadrant, and adjusts other values into
 this quadrant.  We followed Bertrandom, but had trouble with his actual
-quadrant decomposition.  As coded in xInteger.m3, it works.  [HGG:
+quadrant decomposition.  As coded in Integer.m3, it works.  [HGG:
 I wonder if there was a typo in the published article.]

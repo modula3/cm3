@@ -14,10 +14,10 @@ sections:	$(SECTIONPDF)
 
 pdf:	m3na.pdf
 
-m3na.pdf:	$(patsubst %, %.tex, $(SECTIONS))
-
 %.pdf:	%.tex
 	pdflatex $<
+
+m3na.pdf:	m3na.tex $(patsubst %, %.tex, $(SECTIONS))
 
 # was the function of 'mkview' before
 section_%.tex:	%.tex
