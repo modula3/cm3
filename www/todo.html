@@ -6,7 +6,7 @@
     <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
     <META HTTP-EQUIV="Resource-type" CONTENT="document"> 
     <META HTTP-EQUIV="Reply-to" CONTENT="webmaster@m3.org"> 
-    <LINK HREF="../style/normal.css" REL="stylesheet" TYPE="text/css">
+    <LINK HREF="normal.css" REL="stylesheet" TYPE="text/css">
     <META NAME="robots" content="noindex">
   </head>
 
@@ -15,15 +15,35 @@
 
     <p>
       Here is a list of things that need to be done to improve the
-      CM3 5.1 distribution. If you want to work on any of them, we
+      CM3 5.1/5.2 distribution. If you want to work on any of them, we
       would like to be informed to be able to avoid duplicate work.
     </p>
 
     <ul>
       <li>
-        Test and stabilize the compiler and runtime on all existing
-        platforms. Make sure all the system interfaces are correct and
-        up-to-date.
+        Write IPv6 and TCPv6 interfaces for M3. Create a
+        backwards-compatible interface which facilitates adapting
+        existing applications to the new protocols (i.e. using
+        reasonable defaults etc.)
+      </li>
+
+      <li>
+        Make m3gdb work again on current operating systems. Adapt the
+        TEXT handling to the changes in CM3.
+      </li>
+
+      <li>
+        Add real Unicode support. Probably it will be best to use
+        UTF-8 as an encoding and revert to the old TEXT representation.
+      </li>
+
+      <li>
+        Extend the M3 back-end interface to provide efficient support
+        for exceptions through the new gcc exception handling
+        interface. As the old table based approach does not work any
+        more with current gccs, the M3 front-end needs to be taught
+        about using this new interface then instead of the old
+        EX_STACK method with generated explicit jump tables.
       </li>
 
       <li>
@@ -33,27 +53,53 @@
       </li>
 
       <li>
+        Make the NT386GNU platform work with current Cygwin on Windows
+        systems.
+      </li>
+
+      <li>
+        Test and stabilize the compiler and runtime on all existing
+        platforms. Make sure all the system interfaces are correct and
+        up-to-date.
+      </li>
+
+      <li>
         Build the compiler on some of the other included target
         platforms, test it, and provide a minimal binary installation
         archive. You may find the scripts provided by Elego helpful.
+        <em>I would still appreciate to find some maintainers for some
+          of the currently inactive platforms of CM3, who could do the
+          initial bootstrap and provide installation archives for new
+          releases. [ow 2003-07-19]</em>
       </li>
 
       <li>
         Port the system to a new target platform. We'll write up some
         porting instructions during the next weeks.
+        <em>Since the first release, two platforms have been added:
+          PPC_DARWIN and PPC_LINUX. Ports to other operating systems
+          and hardware should be considerably easier now, as many
+          tasks have been automated, and tools and quite
+          up-to-date. [ow 2003-07-19]</em>
       </li>
 
       <li>
         Integrate and improve system documentation. The first release
         (5.1.0) will either have none or very minimal documentation.
         This needs to be done soon to make the system usable for new
-        users. 
+        users. <em>Much has also been done in this area. The current
+        documentation set should be quite usable, though it would be
+        nice to have the interactive Reactor capabilities and the SGML
+        documentation packages from PM3. [ow 2003-07-19]</em>
       </li>
 
       <li>
         Update all the database stuff (ODBC, Postgres, etc.) and make
         it compile and work with current systems. I haven't tried this
         yet, though it was one of the reasons I got involved.
+        <em>Darko Volaric has done updated the database binding,
+        though he says that several thing are still missing and could
+        be improved.[ow 2003-07-19]</em>
       </li>
 
       <li>
@@ -156,7 +202,7 @@
     <address><a href="mailto:m3-support@elego.de">m3-support@elego.de</a></address>
 <!-- Created: Fri Feb 16 15:27:10 MET 2001 -->
 <!-- hhmts start -->
-Last modified: Sun Apr  8 16:32:22 MET DST 2001
+Last modified: Sat Jul 19 23:19:25 CEST 2003
 <!-- hhmts end -->
   </body>
 </html>

@@ -6,7 +6,7 @@
     <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
     <META HTTP-EQUIV="Resource-type" CONTENT="document"> 
     <META HTTP-EQUIV="Reply-to" CONTENT="webmaster@m3.org"> 
-    <LINK HREF="../style/normal.css" REL="stylesheet"
+    <LINK HREF="normal.css" REL="stylesheet"
           TYPE="text/css">
     <META NAME="robots" content="noindex">
   </head>
@@ -28,17 +28,17 @@
     </p>
     <form method="post" 
           action="send-pr.php3">
-      <table>
+      <table cellpadding="10" cellspacing="3">
           <tr>
             <td><b>Reporter's email:</b></td>
-            <td>
+            <td class="tablebg">
               <input type="text" name="email"  size=60>
               Your email address
             </td>
           </tr>
           <tr>
             <td><b>Send a CC of this report only to:</b></td>
-            <td>
+            <td class="tablebg">
               <input type="text" name="cc"  size=60>
               Comma separated list of email addresses
             </td>
@@ -56,7 +56,7 @@
           </tr>
           <tr>
             <td><b>Category:</b></td>
-            <td>
+            <td class="tablebg">
               <select name="Category">
                 <option  value="cm3-comm">cm3-comm
                 <option  value="cm3-db">cm3-db
@@ -82,14 +82,14 @@
           </tr>
           <tr>
             <td><b>Synopsis:</b></td>
-            <td>
+            <td class="tablebg">
               <input type="text" name="Synopsis"  SIZE=60><br>
               Short but meaningful problem description
             </td>
           </tr>
           <tr>
             <td><b>Confidential:</b></td>
-            <td>
+            <td class="tablebg">
               <select name="Confidential">
                 <option  value="no">no
                 <option  value="yes">yes
@@ -98,7 +98,7 @@
           </tr>
           <tr>
             <td><b>Severity:</b></td>
-            <td>
+            <td class="tablebg">
               <select name="Severity">
                 <option  value="critical">critical
                 <option selected value="serious">serious
@@ -108,7 +108,7 @@
           </tr>
           <tr>
             <td><b>Priority:</b></td>
-            <td>
+            <td class="tablebg">
               <select name="Priority">
                 <option  value="high">high
                 <option selected value="medium">medium
@@ -118,7 +118,7 @@
           </tr>
           <tr>
             <td><b>Class:</b></td>
-            <td>
+            <td class="tablebg">
               <select name="Class">
                 <option  value="sw-bug">sw-bug
                 <option  value="sw-change">sw-change
@@ -133,7 +133,7 @@
           </tr>
           <tr>
             <td><b>Submitter-Id:</b></td>
-            <td>
+            <td class="tablebg">
               <select name="SubmitterId">
                 <option  value="customer" selected>customer
                 <option  value="elego">elego
@@ -146,20 +146,21 @@
             <td>
               <b>Originator:</b>
             </td>
-            <td><input type="text" name="Originator" size=60><br>
+            <td class="tablebg">
+              <input type="text" name="Originator" size=60><br>
               Full name or company title
             </td>
           </tr>
           <tr>
             <td><b>Release:</b></td>
-            <td>
+            <td class="tablebg">
               <input type="text" name="Release" size=60><br>
               CM3 Release Version
             </td>
           </tr>
           <tr>
             <td valign=top><b>Environment:</b></td>
-            <td>
+            <td class="tablebg">
               <textarea name="Environment" rows=2 cols=60></textarea><br>
               Machine, operating system, environment settings,
               compilation target, etc. This should include <tt>cm3
@@ -168,14 +169,14 @@
           </tr>
           <tr>
             <td valign=top><b>Description:</b></td>
-            <td>
+            <td class="tablebg">
               <textarea name="Description" rows=8 cols=60></textarea><br>
               Precise description of the problem. Copy error messages etc.
             </td>
           </tr>
           <tr>
             <td valign=top><b>How-To-Repeat:</b></td>
-            <td>
+            <td class="tablebg">
               <textarea name="HowToRepeat" rows=4 cols=60></textarea><br>
               Instructions how to reproduce the problem. Copy command
               sequences if possible.
@@ -183,7 +184,7 @@
           </tr>
           <tr>
             <td valign=top><b>Fix:</b></td>
-            <td>
+            <td class="tablebg">
               <textarea name="Fix" rows=4 cols=60></textarea><br>
               If you know a fix or work-around, please include it.
             </td>
