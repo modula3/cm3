@@ -12,24 +12,24 @@ all: ${CKSUMS} ${MD5S} archive.list archive.md5 archive.cksum
 #       echo ${CKSUMS}
 
 %.cksum: %.tgz
-        cksum $< >$@
+	cksum $< >$@
 
 %.md5: %.tgz
-        md5sum $< >$@
+	md5sum $< >$@
 
 archive.cksum: ${CKSUMS}
-        cat ${CKSUMS} >$@
+	cat ${CKSUMS} >$@
 
 archive.md5: ${MD5S}
-        cat ${MD5S} >$@
+	cat ${MD5S} >$@
 
 archive.list: ${ARCHIVES}
-        ls -l ${ARCHIVES} > $@
+	ls -l ${ARCHIVES} > $@
 
 clean:
-        rm -f ${MD5S}
-        rm -f ${CKSUMS}
-        rm -f archive.list archive.md5 archive.cksum
+	rm -f ${MD5S}
+	rm -f ${CKSUMS}
+	rm -f archive.list archive.md5 archive.cksum
 
 # memo
 #       cksum $< |awk '{print $$1 $$2}' >$@
