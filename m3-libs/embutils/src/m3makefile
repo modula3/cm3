@@ -1,5 +1,0 @@
-import("m3core")
-
-Module ("EmbProxiedObj")
-
-Library("embutils")
