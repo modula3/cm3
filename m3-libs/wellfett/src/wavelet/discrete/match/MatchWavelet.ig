@@ -1,9 +1,4 @@
-INTERFACE LongRealMatchWavelet;
-
-IMPORT LongRealBasic AS R;
-IMPORT LongRealVector AS V;
-IMPORT LongRealMatrix AS M;
-IMPORT LongRealSignal AS S;
+GENERIC INTERFACE MatchWavelet(R, V, M, S);
 
 TYPE
   SimpleApprox = RECORD
@@ -22,4 +17,4 @@ PROCEDURE MatchPattern (target                                : S.T;
                         numTranslates                         : CARDINAL; ):
   SimpleApprox;
 
-END LongRealMatchWavelet.
+END MatchWavelet.

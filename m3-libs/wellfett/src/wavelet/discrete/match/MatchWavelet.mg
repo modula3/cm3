@@ -1,15 +1,6 @@
-MODULE LongRealMatchWavelet;
+GENERIC MODULE MatchWavelet(V, M, LA, S, Refn);
 
 IMPORT Integer32IntegerPower AS IIntPow;
-
-IMPORT LongRealVector AS V;
-
-IMPORT LongRealMatrix AS M;
-IMPORT LongRealMatrixLapack AS LA;
-
-IMPORT LongRealSignal AS S;
-
-IMPORT LongRealRefinableFunc AS Refn;
 
 (*
 IMPORT LongRealFmtLex AS RF;
@@ -86,4 +77,4 @@ PROCEDURE MatchPattern (target                                : S.T;
 
 
 BEGIN
-END LongRealMatchWavelet.
+END MatchWavelet.
