@@ -1389,4 +1389,7 @@ PROCEDURE TZRQF (READONLY M: INTEGER;
                  VAR      TAU : (* ARRAY OF *) LONGREAL;
                  VAR      INFO: INTEGER;                 );
 
+<*EXTERNAL dlamch_ *>
+PROCEDURE LAMCH (READONLY CMACH: CHAR; ): LONGREAL;
+
 END LongRealMatrixLapackRaw.

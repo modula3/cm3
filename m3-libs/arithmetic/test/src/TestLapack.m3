@@ -12,7 +12,7 @@ IMPORT LongRealBasic              AS R,
        (*LongRealComplexVectorBasic AS CV,*)
        (*LongRealMatrixFast         AS M,*)
        LongRealEigenSystem        AS ES,
-       LongRealMatrixLapack       AS ML,
+       LongRealMatrixLapack       AS LA,
        LongRealCharPolynomial     AS MCP,
        LongRealComplexFmtLex      AS CF,
        (*LongRealVectorFmtLex       AS VF,*)
@@ -28,17 +28,15 @@ CONST
 PROCEDURE TestBasic():BOOLEAN=
 CONST
   ftn = Module & "TestBasic";
-CONST
-  id = ARRAY OF CHAR {'e', 's' , 'b', 'p', 'n', 'r', 'm', 'u', 'l', 'o'};
 
 VAR
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
 
-  FOR j:=FIRST(id) TO LAST(id) DO
+  FOR j:=FIRST(LA.MachParam) TO LAST(LA.MachParam) DO
     Msg(Fmt.FN("%s: %s\n", ARRAY OF TEXT
-         {Fmt.Char(id[j]), Fmt.LongReal(ML.GetMachineParameter(id[j]))}));
+         {Fmt.Int(ORD(j)), Fmt.LongReal(LA.GetMachineParameter(j))}));
   END;
 
   RETURN result;
