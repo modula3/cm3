@@ -27,32 +27,34 @@ PROCEDURE PowerMethod(     A   : M.T;
     x      :  V.T;
     err    :  R.T;
     tol2   := tol*tol;
-    lambdaold,
-    lambda :  R.T;
-    x2, v2, vx : R.T;
+    x2, vx : R.T;
   BEGIN
-    lambda := R.Zero;
     x  := V.New(NUMBER(A^));
     x^ := A[0];  (*is this initialization random enough?*)
+    x2 := V.Inner(x,x);
     REPEAT
       IF maxiter=0 THEN
         RAISE Error(Err.not_converging);
       END;
       DEC(maxiter);
-      lambdaold := lambda;
-      v := x;
-      x := M.MulV(A,v);
+
+      (*turn new into old*)
+      v  := x;
+
+      x  := M.MulV(A,v);
       (*compute the minimum possible Euclidean distance
         from lambda*v to x*)
       x2 := V.Inner(x,x);
-      v2 := V.Inner(v,v);
       vx := V.Inner(v,x);
-      err := (x2*v2-vx*vx)/(v2*v2);
+      (*err := (x2*v2-vx*vx)/(v2*v2);  v was normalized to 1 *)
+      err := x2-vx*vx;
+      (*err := RT.SqRt(x2)-vx;*)
       x := V.Scale(x,R.Rec(RT.SqRt(x2)));
-    UNTIL err <= tol;
+    UNTIL err <= tol2;
     (*calculate the lambda for which x is optimally approximated by lambda*v
       with respect to the Euclidean norm*)
-    RETURN R.Div(vx,v2);
+    (*RETURN R.Div(vx,v2);*)
+    RETURN vx;
   END PowerMethod;
 
 
