@@ -1,4 +1,0 @@
-import		("libm3")
-import		("bitvector")
-implementation	("TestBitVector")
-program		("TestBitVector")
