@@ -9,6 +9,7 @@
 INTERFACE PLPlotRaw;
 
 IMPORT Ctypes AS C;
+IMPORT Cstdio;
 
 
 TYPE
@@ -477,6 +478,13 @@ PROCEDURE SetWindow (xmin, xmax, ymin, ymax: C.double; );
 <* EXTERNAL c_plxormod *>
 PROCEDURE SetXORMode (mode: C.int; VAR status: C.int; );
 
+<* EXTERNAL plimage *>
+PROCEDURE PlotImage (READONLY z: (*ARRAY OF*) ADDRESS (*REF ARRAY OF
+                                                         Float*);
+                     nx, ny: C.int;
+                     xmin, xmax, ymin, ymax, zmin, zmax, dxmin, dxmax,
+                       dymin, dymax: C.double; );
+
 <* EXTERNAL pltr0 *>
 PROCEDURE Plotter0 (    x, y     : C.double;
                     VAR tx, ty   : C.double;
@@ -497,6 +505,15 @@ PROCEDURE Plotter2P (    x, y     : C.double;
                      VAR tx, ty   : C.double;
                          pltr_data: REFANY;   );
 
+<* EXTERNAL plf2eval2 *>
+PROCEDURE F2Eval2 (ix, iy: C.int; plf2eval_data: REFANY; ): C.double;
+
+<* EXTERNAL plf2eval *>
+PROCEDURE F2Eval (ix, iy: C.int; plf2eval_data: REFANY; ): C.double;
+
+<* EXTERNAL plf2evalr *>
+PROCEDURE F2EvalR (ix, iy: C.int; plf2eval_data: REFANY; ): C.double;
+
 <* EXTERNAL plClearOpts *>
 PROCEDURE ClearOpts ();
 
@@ -508,5 +525,14 @@ PROCEDURE SetUsage (program_string, usage_string: C.char_star; );
 
 <* EXTERNAL plOptUsage *>
 PROCEDURE OptUsage ();
+
+<* EXTERNAL plsfile *>
+PROCEDURE SetFile (file: Cstdio.FILE_star; );
+
+<* EXTERNAL plHLS_RGB *>
+PROCEDURE HLS_RGB (h, l, s: C.double; VAR r, g, b: C.double; );
+
+<* EXTERNAL plRGB_HLS *>
+PROCEDURE RGB_HLS (r, g, b: C.double; VAR h, l, s: C.double; );
 
 END PLPlotRaw.

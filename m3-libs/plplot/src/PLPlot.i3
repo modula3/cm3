@@ -8,6 +8,7 @@
 
 INTERFACE PLPlot;
 IMPORT PLPlotRaw;
+IMPORT Cstdio;
 
 TYPE
 
@@ -99,17 +100,17 @@ CONST
   parseSkip                = ParseSet{Parse.skip};
   maxKey        : CARDINAL = 16;
   maxWindows    : CARDINAL = 64;
-(* pl_setcontlabelformat: "Set the format of the contour labels." *)
+(* c_pl_setcontlabelformat: "Set the format of the contour labels." *)
 PROCEDURE SetContLabelFormat (lexp, sigdig: INTEGER; );
 
-(* pl_setcontlabelparam: "Set offset and spacing of contour labels." *)
+(* c_pl_setcontlabelparam: "Set offset and spacing of contour labels." *)
 PROCEDURE SetContLabelParam (offset, size, spacing: Float; active: INTEGER; );
 
-(* pladv: "Advance to subpage \"page\", or to the next one if \"page\" =
+(* c_pladv: "Advance to subpage \"page\", or to the next one if \"page\" =
    0." *)
 PROCEDURE Advance (page: INTEGER; );
 
-(* plaxes: "This functions similarly to plbox() except that the origin of
+(* c_plaxes: "This functions similarly to plbox() except that the origin of
    the axes is placed at the user-specified point (x0, y0)." *)
 PROCEDURE DrawAxes (x0, y0: Float;
                     xopt  : DirTileSet;
@@ -119,14 +120,14 @@ PROCEDURE DrawAxes (x0, y0: Float;
                     ytick : Float;
                     nysub : INTEGER;    );
 
-(* plbin: "Plot a histogram using x to store data values and y to store
+(* c_plbin: "Plot a histogram using x to store data values and y to store
    frequencies." *)
 PROCEDURE PlotBins (READONLY x, y: FloatVector; center: INTEGER; );
 
-(* plbop: "Start new page.  Should only be used with pleop()." *)
+(* c_plbop: "Start new page.  Should only be used with pleop()." *)
 PROCEDURE StartPage ();
 
-(* plbox: "Draw a box around the current viewport." *)
+(* c_plbox: "Draw a box around the current viewport." *)
 PROCEDURE DrawBox (xopt : DirTileSet;
                    xtick: Float;
                    nxsub: INTEGER;
@@ -134,7 +135,7 @@ PROCEDURE DrawBox (xopt : DirTileSet;
                    ytick: Float;
                    nysub: INTEGER;    );
 
-(* plbox3: "This is the 3-d analogue of plbox()." *)
+(* c_plbox3: "This is the 3-d analogue of plbox()." *)
 PROCEDURE DrawBox3D (xopt  : DirTileSet;
                      xlabel: TEXT;
                      xtick : Float;
@@ -158,105 +159,108 @@ TYPE
                     END;
 PROCEDURE CalcWorld (rx, ry: Float; ): CalcWorldResult;
 
-(* plclear: "Clear current subpage." *)
+(* c_plclear: "Clear current subpage." *)
 PROCEDURE Clear ();
 
-(* plcol0: "Set color, map 0.  Argument is integer between 0 and 15." *)
+(* c_plcol0: "Set color, map 0.  Argument is integer between 0 and 15." *)
 PROCEDURE SetFGColorDiscr (icol0: INTEGER; );
 
-(* plcol1: "Set color, map 1.  Argument is a float between 0.  and 1." *)
+(* c_plcol1: "Set color, map 1.  Argument is a float between 0.  and 1." *)
 PROCEDURE SetFGColorCont (col1: Float; );
 
-(* plcont: "Draw a contour plot." *)
+(* c_plcont: "Draw a contour plot." *)
 PROCEDURE PlotContour (READONLY z             : FloatMatrix;
                                 kx, lx, ky, ly: INTEGER;
                        READONLY x             : FloatVector;
                                 plotter       : PlotterFunc;
                                 plotterData   : REFANY;      );
 
-(* plcpstrm: "Copy state parameters from the reference stream to the
+(* c_plcpstrm: "Copy state parameters from the reference stream to the
    current stream." *)
 PROCEDURE CopyStateFrom (iplsr, flags: INTEGER; );
 
-(* plend: "End a plotting session for all open streams." *)
+(* c_plend: "End a plotting session for all open streams." *)
 PROCEDURE ExitAll ();
 
-(* plend1: "End a plotting session for the current stream only." *)
+(* c_plend1: "End a plotting session for the current stream only." *)
 PROCEDURE Exit ();
 
-(* plenv: "Simple interface for defining viewport and window." *)
+(* c_plenv: "Simple interface for defining viewport and window." *)
 PROCEDURE SetEnvironment (xmin, xmax, ymin, ymax: Float;
                           just: AxesScaling := AxesScaling.independent;
                           axis: TileSet := TileSet{Tile.box, Tile.ticks}; );
 
-(* pleop: "End current page.  Should only be used with plbop()." *)
+(* c_pleop: "End current page.  Should only be used with plbop()." *)
 PROCEDURE StopPage ();
 
-(* plerrx: "Plot horizontal error bars (xmin(i),y(i)) to
+(* c_plerrx: "Plot horizontal error bars (xmin(i),y(i)) to
    (xmax(i),y(i))." *)
 PROCEDURE PlotErrorX (READONLY xmin, xmax, y: FloatVector; );
 
-(* plerry: "Plot vertical error bars (x,ymin(i)) to (x(i),ymax(i))." *)
+(* c_plerry: "Plot vertical error bars (x,ymin(i)) to (x(i),ymax(i))." *)
 PROCEDURE PlotErrorY (READONLY x, ymin, ymax: FloatVector; );
 
-(* plfamadv: "Advance to the next family file on the next new page." *)
+(* c_plfamadv: "Advance to the next family file on the next new page." *)
 PROCEDURE AdvanceFamily ();
 
-(* plfill: "Pattern fills the polygon bounded by the input points." *)
+(* c_plfill: "Pattern fills the polygon bounded by the input points." *)
 PROCEDURE FillPolygon (READONLY x, y: FloatVector; );
 
-(* plfill3: "Pattern fills the 3d polygon bounded by the input points." *)
+(* c_plfill3: "Pattern fills the 3d polygon bounded by the input
+   points." *)
 PROCEDURE FillPolygon3D (READONLY x, y, z: FloatVector; );
 
-(* plflush: "Flush the output stream.  Use sparingly, if at all." *)
+(* c_plflush: "Flush the output stream.  Use sparingly, if at all." *)
 PROCEDURE Flush ();
 
-(* plfont: "Set the global font flag to 'ifont'." *)
+(* c_plfont: "Set the global font flag to 'ifont'." *)
 PROCEDURE SetFont (ifont: INTEGER; );
 
-(* plfontld: "Load specified font set." *)
+(* c_plfontld: "Load specified font set." *)
 PROCEDURE LoadFont (fnt: INTEGER; );
 
-(* plgchr: "Get character default height and current (scaled) height." *)
+(* c_plgchr: "Get character default height and current (scaled) height." *)
 
 TYPE GetCharacterHeightResult = RECORD def, ht: Float;  END;
 PROCEDURE GetCharacterHeight (): GetCharacterHeightResult;
 
-(* plgcol0: "Get 8 bit RGB values for given color from color map 0." *)
+(* c_plgcol0: "Get 8 bit RGB values for given color from color map 0." *)
 
 TYPE GetFGColorDiscrRGBResult = RECORD r, g, b: INTEGER;  END;
 PROCEDURE GetFGColorDiscrRGB (icol0: INTEGER; ): GetFGColorDiscrRGBResult;
 
-(* plgcolbg: "Get 8-bit RGB background color." *)
+(* c_plgcolbg: "Get 8-bit RGB background color." *)
 
 TYPE GetBGColorDiscrRGBResult = RECORD r, g, b: INTEGER;  END;
 PROCEDURE GetBGColorDiscrRGB (): GetBGColorDiscrRGBResult;
 
-(* plgcompression: "Get the current compression setting." *)
+(* c_plgcompression: "Get the current compression setting." *)
 PROCEDURE GetCompression (): INTEGER;
 
-(* plgdidev: "Retrieve current window into device space." *)
+(* c_plgdev: "Get the current device (keyword) name." *)
+(* c_plgdidev: "Retrieve current window into device space." *)
 
 TYPE GetWindowDeviceResult = RECORD mar, aspect, jx, jy: Float;  END;
 PROCEDURE GetWindowDevice (): GetWindowDeviceResult;
 
-(* plgdiori: "Get plot orientation." *)
+(* c_plgdiori: "Get plot orientation." *)
 PROCEDURE GetOrientation (): Float;
 
-(* plgdiplt: "Retrieve current window into plot space." *)
+(* c_plgdiplt: "Retrieve current window into plot space." *)
 
 TYPE GetWindowPlotResult = RECORD xmin, ymin, xmax, ymax: Float;  END;
 PROCEDURE GetWindowPlot (): GetWindowPlotResult;
 
-(* plgfam: "Get family file parameters." *)
+(* c_plgfam: "Get family file parameters." *)
 
 TYPE GetFamilyFileResult = RECORD fam, num, bmax: INTEGER;  END;
 PROCEDURE GetFamilyFile (): GetFamilyFileResult;
 
-(* plglevel: "Get the (current) run level." *)
+(* c_plgfnam: "Get the (current) output file name." *)
+(* c_plglevel: "Get the (current) run level." *)
 PROCEDURE GetRunLevel (): INTEGER;
 
-(* plgpage: "Get output device parameters." *)
+(* c_plgpage: "Get output device parameters." *)
 
 TYPE
   GetOutputDeviceParamResult = RECORD
@@ -265,207 +269,210 @@ TYPE
                                END;
 PROCEDURE GetOutputDeviceParam (): GetOutputDeviceParamResult;
 
-(* plgra: "Switch to graphics screen." *)
+(* c_plgra: "Switch to graphics screen." *)
 PROCEDURE ShowGraphicScreen ();
 
-(* plgspa: "Get subpage boundaries in absolute coordinates." *)
+(* c_plgspa: "Get subpage boundaries in absolute coordinates." *)
 
 TYPE GetBoundariesResult = RECORD xmin, xmax, ymin, ymax: Float;  END;
 PROCEDURE GetBoundaries (): GetBoundariesResult;
 
-(* plgstrm: "Get current stream number." *)
+(* c_plgstrm: "Get current stream number." *)
 PROCEDURE GetStream (): INTEGER;
 
-(* plgvpd: "Get viewport boundaries in normalized device coordinates." *)
+(* c_plgver: "Get current library version number." *)
+(* c_plgvpd: "Get viewport boundaries in normalized device coordinates." *)
 
 TYPE GetVPBoundDevResult = RECORD xmin, xmax, ymin, ymax: Float;  END;
 PROCEDURE GetVPBoundDev (): GetVPBoundDevResult;
 
-(* plgvpw: "Get viewport boundaries in world coordinates." *)
+(* c_plgvpw: "Get viewport boundaries in world coordinates." *)
 
 TYPE GetVPBoundWorldResult = RECORD xmin, xmax, ymin, ymax: Float;  END;
 PROCEDURE GetVPBoundWorld (): GetVPBoundWorldResult;
 
-(* plgxax: "Get x axis labeling parameters." *)
+(* c_plgxax: "Get x axis labeling parameters." *)
 
 TYPE GetXLabelParamResult = RECORD digmax, digits: INTEGER;  END;
 PROCEDURE GetXLabelParam (): GetXLabelParamResult;
 
-(* plgyax: "Get y axis labeling parameters." *)
+(* c_plgyax: "Get y axis labeling parameters." *)
 
 TYPE GetYLabelParamResult = RECORD digmax, digits: INTEGER;  END;
 PROCEDURE GetYLabelParam (): GetYLabelParamResult;
 
-(* plgzax: "Get z axis labeling parameters." *)
+(* c_plgzax: "Get z axis labeling parameters." *)
 
 TYPE GetZLabelParamResult = RECORD digmax, digits: INTEGER;  END;
 PROCEDURE GetZLabelParam (): GetZLabelParamResult;
 
-(* plhist: "Draw histogram." *)
+(* c_plhist: "Draw histogram." *)
 PROCEDURE PlotHistogram (READONLY x             : FloatVector;
                                   datmin, datmax: Float;
                                   nbin          : INTEGER;
                                   oldwin        : INTEGER       := 0; );
 
-(* plhls: "Set current color (map 0) by hue, lightness, and saturation." *)
+(* c_plhls: "Set current color (map 0) by hue, lightness, and
+   saturation." *)
 PROCEDURE SetColorHLS (h, l, s: Float; );
 
-(* plinit: "Initialize PLplot, using preset or default options." *)
+(* c_plinit: "Initialize PLplot, using preset or default options." *)
 PROCEDURE Init ();
 
-(* pljoin: "Draw a line segment from (x1, y1) to (x2, y2)." *)
+(* c_pljoin: "Draw a line segment from (x1, y1) to (x2, y2)." *)
 PROCEDURE PlotLineSegment (x1, y1, x2, y2: Float; );
 
-(* pllab: "Label graphs." *)
+(* c_pllab: "Label graphs." *)
 PROCEDURE SetLabels (xlabel, ylabel, tlabel: TEXT; );
 
-(* pllightsource: "Set position of the light source." *)
+(* c_pllightsource: "Set position of the light source." *)
 PROCEDURE SetLightPos (x, y, z: Float; );
 
-(* plline: "Draw line segments connecting a series of points." *)
+(* c_plline: "Draw line segments connecting a series of points." *)
 PROCEDURE PlotLines (READONLY x, y: FloatVector; );
 
-(* plline3: "Draw a line in 3 space." *)
+(* c_plline3: "Draw a line in 3 space." *)
 PROCEDURE PlotLines3D (READONLY x, y, z: FloatVector; );
 
-(* pllsty: "Set line style." *)
+(* c_pllsty: "Set line style." *)
 PROCEDURE SetLineStyle (lin: [LineStyle.continuous .. LAST(LineStyle)]; );
 
-(* plmesh: "Plot a 3-d mesh representation of z[x][y]." *)
+(* c_plmesh: "Plot a 3-d mesh representation of z[x][y]." *)
 PROCEDURE PlotMesh (READONLY x, y: FloatVector;
                     READONLY z   : FloatMatrix;
                              opt : INTEGER;     );
 
-(* plmeshc: "Plot a 3-d contoured mesh representation of the function
+(* c_plmeshc: "Plot a 3-d contoured mesh representation of the function
    z[x][y]." *)
 PROCEDURE PlotMeshColored (READONLY x, y  : FloatVector;
                            READONLY z     : FloatMatrix;
                                     opt   : INTEGER;
                            READONLY clevel: FloatVector; );
 
-(* plmkstrm: "Create a new stream and makes it the default." *)
+(* c_plmkstrm: "Create a new stream and makes it the default." *)
 PROCEDURE CreateStream (): INTEGER;
 
-(* plmtex: "Print \"text\" at specified position relative to viewport." *)
+(* c_plmtex: "Print \"text\" at specified position relative to
+   viewport." *)
 PROCEDURE PrintTextVP (side: TEXT; disp, pos, just: Float; text: TEXT; );
 
-(* plot3d: "Plot a 3-d representation of the function z[x][y]." *)
+(* c_plot3d: "Plot a 3-d representation of the function z[x][y]." *)
 PROCEDURE Plot3D (READONLY x, y     : FloatVector;
                   READONLY z        : FloatMatrix;
                            opt, side: INTEGER;     );
 
-(* plot3dc: "Plot a 3-d contoured representation of the function
+(* c_plot3dc: "Plot a 3-d contoured representation of the function
    z[x][y]." *)
 PROCEDURE Plot3DC (READONLY x, y  : FloatVector;
                    READONLY z     : FloatMatrix;
                             opt   : INTEGER;
                    READONLY clevel: FloatVector; );
 
-(* plsurf3d: "Plot a 3-d contoured surface representation of the function
+(* c_plsurf3d: "Plot a 3-d contoured surface representation of the function
    z[x][y]." *)
 PROCEDURE Surface3D (READONLY x, y  : FloatVector;
                      READONLY z     : FloatMatrix;
                               opt   : INTEGER;
                      READONLY clevel: FloatVector; );
 
-(* plpat: "Set fill pattern directly." *)
+(* c_plpat: "Set fill pattern directly." *)
 PROCEDURE SetFillPattern (READONLY inc, del: ARRAY OF INTEGER; );
 
-(* plpoin: "Plot array y against x for n points using ASCII code
+(* c_plpoin: "Plot array y against x for n points using ASCII code
    \"code\"." *)
 PROCEDURE PlotPoints (READONLY x, y: FloatVector; code: INTEGER; );
 
-(* plpoin3: "Draw a series of points in 3 space." *)
+(* c_plpoin3: "Draw a series of points in 3 space." *)
 PROCEDURE PlotPoints3D (READONLY x, y, z: FloatVector; code: INTEGER; );
 
-(* plpoly3: "Draw a polygon in 3 space.  " *)
+(* c_plpoly3: "Draw a polygon in 3 space.  " *)
 PROCEDURE PlotPolygon3D (READONLY x, y, z: FloatVector;
                          READONLY draw   : ARRAY OF INTEGER;
                                   flag   : INTEGER;          );
 
-(* plprec: "Set the floating point precision (in number of places) in
+(* c_plprec: "Set the floating point precision (in number of places) in
    numeric labels." *)
 PROCEDURE SetLabelPrecision (setp, prec: INTEGER; );
 
-(* plpsty: "Set fill pattern, using one of the predefined patterns." *)
+(* c_plpsty: "Set fill pattern, using one of the predefined patterns." *)
 PROCEDURE SetFillStyle (patt: INTEGER; );
 
-(* plptex: "Print \"text\" at world coordinate (x,y)." *)
+(* c_plptex: "Print \"text\" at world coordinate (x,y)." *)
 PROCEDURE PrintTextWorld (x, y, dx, dy, just: Float; text: TEXT; );
 
-(* plreplot: "Replay contents of plot buffer to current device/file." *)
+(* c_plreplot: "Replay contents of plot buffer to current device/file." *)
 PROCEDURE Replot ();
 
-(* plschr: "Set character height." *)
+(* c_plschr: "Set character height." *)
 PROCEDURE SetCharacterHeight (def, scale: Float; );
 
-(* plscmap0: "Set color map 0 colors by 8 bit RGB values." *)
+(* c_plscmap0: "Set color map 0 colors by 8 bit RGB values." *)
 PROCEDURE SetColorMapDiscr (READONLY r, g, b: ARRAY OF INTEGER; );
 
-(* plscmap0n: "Set number of colors in cmap 0." *)
+(* c_plscmap0n: "Set number of colors in cmap 0." *)
 PROCEDURE SetColorMapDiscrSize (ncol0: INTEGER; );
 
-(* plscmap1: "Set color map 1 colors by 8 bit RGB values." *)
+(* c_plscmap1: "Set color map 1 colors by 8 bit RGB values." *)
 PROCEDURE SetColorMapCont (READONLY r, g, b: ARRAY OF INTEGER; );
 
-(* plscmap1l: "Set color map 1 colors using a piece-wise linear
+(* c_plscmap1l: "Set color map 1 colors using a piece-wise linear
    relationship between intensity [0,1] (cmap 1 index) and position in HLS
    or RGB color space." *)
 PROCEDURE SetColorCont (         itype                      : INTEGER;
                         READONLY pos, coord1, coord2, coord3: FloatVector;
                         READONLY rev: ARRAY OF INTEGER; );
 
-(* plscmap1n: "Set number of colors in cmap 1." *)
+(* c_plscmap1n: "Set number of colors in cmap 1." *)
 PROCEDURE SetColorMapContSize (ncol1: INTEGER; );
 
-(* plscol0: "Set 8-bit RGB value in cmap 0." *)
+(* c_plscol0: "Set 8-bit RGB value in cmap 0." *)
 PROCEDURE SetColorRGB (icol0, r, g, b: INTEGER; );
 
-(* plscolbg: "Set the background color using 8-bit RGB value." *)
+(* c_plscolbg: "Set the background color using 8-bit RGB value." *)
 PROCEDURE SetBGColor (r, g, b: INTEGER; );
 
-(* plscolor: "Globally turn color output on/off." *)
+(* c_plscolor: "Globally turn color output on/off." *)
 PROCEDURE ToggleColor (color: INTEGER; );
 
-(* plscompression: "Set the compression level." *)
+(* c_plscompression: "Set the compression level." *)
 PROCEDURE SetCompression (compression: INTEGER; );
 
-(* plsdev: "Set the device (keyword) name." *)
+(* c_plsdev: "Set the device (keyword) name." *)
 PROCEDURE SetDevice (devname: TEXT; );
 
-(* plsdidev: "Set window into device space using margin, aspect ratio, and
-   justification." *)
+(* c_plsdidev: "Set window into device space using margin, aspect ratio,
+   and justification." *)
 PROCEDURE SetWindowDevice (mar, aspect, jx, jy: Float; );
 
-(* plsdimap: "Set up transformation from metafile coordinates." *)
+(* c_plsdimap: "Set up transformation from metafile coordinates." *)
 PROCEDURE LoadTransformation (dimxmin, dimxmax, dimymin, dimymax: INTEGER;
                               dimxpmm, dimypmm                  : Float;   );
 
-(* plsdiori: "Set plot orientation, specifying rotation in units of
+(* c_plsdiori: "Set plot orientation, specifying rotation in units of
    pi/2." *)
 PROCEDURE SetOrientation (rot: Float; );
 
-(* plsdiplt: "Set window into plot space." *)
+(* c_plsdiplt: "Set window into plot space." *)
 PROCEDURE SetWindowPlot (xmin, ymin, xmax, ymax: Float; );
 
-(* plsdiplz: "Set window into plot space incrementally (zoom)." *)
+(* c_plsdiplz: "Set window into plot space incrementally (zoom)." *)
 PROCEDURE ZoomWindow (xmin, ymin, xmax, ymax: Float; );
 
-(* plsesc: "Set the escape character for text strings." *)
+(* c_plsesc: "Set the escape character for text strings." *)
 PROCEDURE SetEscapeChar (esc: CHAR; );
 
-(* plsetopt: "Process input strings, treating them as an option and
+(* c_plsetopt: "Process input strings, treating them as an option and
    argument pair.  The first is for the external API, the second the work
    routine declared here for backward compatibilty." *)
 PROCEDURE SetOption (opt, optarg: TEXT; ): INTEGER;
 
-(* plsfam: "Set family file parameters." *)
+(* c_plsfam: "Set family file parameters." *)
 PROCEDURE SetFamilyFile (fam, num, bmax: INTEGER; );
 
-(* plsfnam: "Set the output file name." *)
+(* c_plsfnam: "Set the output file name." *)
 PROCEDURE SetFileName (fnam: TEXT; );
 
-(* plshades: "Shade regions with continuous range of colours." *)
+(* c_plshades: "Shade regions with continuous range of colours." *)
 PROCEDURE PlotShades (READONLY a : FloatMatrix;
                                df: PLPlotRaw.DefinedFunc;
                                xmin, xmax, ymin, ymax: Float;
@@ -476,7 +483,7 @@ PROCEDURE PlotShades (READONLY a : FloatMatrix;
                       plotter    : PlotterFunc;
                       plotterData: REFANY;             );
 
-(* plshade: "Shade region with discrete colour, pattern fill." *)
+(* c_plshade: "Shade region with discrete colour, pattern fill." *)
 PROCEDURE PlotShade (READONLY a : FloatMatrix;
                               df: PLPlotRaw.DefinedFunc;
                      left, right, bottom, top, shade_min, shade_max: Float;
@@ -488,43 +495,43 @@ PROCEDURE PlotShade (READONLY a : FloatMatrix;
                      plotter    : PlotterFunc;
                      plotterData: REFANY;             );
 
-(* plsmaj: "Set up lengths of major tick marks." *)
+(* c_plsmaj: "Set up lengths of major tick marks." *)
 PROCEDURE SetMajorTickSize (def, scale: Float; );
 
-(* plsmin: "Set up lengths of minor tick marks." *)
+(* c_plsmin: "Set up lengths of minor tick marks." *)
 PROCEDURE SetMinorTickSize (def, scale: Float; );
 
-(* plsori: "Set orientation.  Must be done before calling plinit." *)
+(* c_plsori: "Set orientation.  Must be done before calling plinit." *)
 PROCEDURE SetGlobalOrientation (ori: INTEGER; );
 
-(* plspage: "Set output device parameters.  Usually ignored by the
+(* c_plspage: "Set output device parameters.  Usually ignored by the
    driver." *)
 PROCEDURE SetOutputDeviceParam (xp, yp                  : Float;
                                 xleng, yleng, xoff, yoff: INTEGER; );
 
-(* plspause: "Set the pause (on end-of-page) status." *)
+(* c_plspause: "Set the pause (on end-of-page) status." *)
 PROCEDURE SetPause (pause: INTEGER; );
 
-(* plsstrm: "Set stream number." *)
+(* c_plsstrm: "Set stream number." *)
 PROCEDURE SetStream (strm: INTEGER; );
 
-(* plssub: "Set the number of subwindows in x and y." *)
+(* c_plssub: "Set the number of subwindows in x and y." *)
 PROCEDURE SetSubWindows (nx, ny: INTEGER; );
 
-(* plssym: "Set symbol height." *)
+(* c_plssym: "Set symbol height." *)
 PROCEDURE SetSymbolHeight (def, scale: Float; );
 
-(* plstar: "Initialize PLplot, passing in the windows/page settings." *)
+(* c_plstar: "Initialize PLplot, passing in the windows/page settings." *)
 PROCEDURE Start (nx, ny: INTEGER; );
 
-(* plstart: "Initialize PLplot, passing the device name and windows/page
+(* c_plstart: "Initialize PLplot, passing the device name and windows/page
    settings." *)
 PROCEDURE StartDev (devname: TEXT; nx, ny: INTEGER; );
 
-(* plstripa: "Add a point to a stripchart.  " *)
+(* c_plstripa: "Add a point to a stripchart.  " *)
 PROCEDURE AddStripchartPoint (id, pen: INTEGER; x, y: Float; );
 
-(* plstripc: "Create 1d stripchart." *)
+(* c_plstripc: "Create 1d stripchart." *)
 PROCEDURE CreateStripchart (xspec, yspec: TEXT;
                             xmin, xmax, xjump, ymin, ymax, xlpos, ylpos: Float;
                             y_ascl, acc, colbox, collab: INTEGER;
@@ -532,62 +539,66 @@ PROCEDURE CreateStripchart (xspec, yspec: TEXT;
                             VAR legline: ARRAY [0 .. 3] OF TEXT;
                             labx, laby, labtop: TEXT; ): INTEGER;
 
-(* plstripd: "Deletes and releases memory used by a stripchart.  " *)
+(* c_plstripd: "Deletes and releases memory used by a stripchart.  " *)
 PROCEDURE DeleteStripchart (id: INTEGER; );
 
-(* plstyl: "Set up a new line style." *)
+(* c_plstyl: "Set up a new line style." *)
 PROCEDURE SetNewLineStyle (READONLY mark, space: ARRAY OF INTEGER; );
 
-(* plsvpa: "Set the edges of the viewport to the specified absolute
+(* c_plsvpa: "Set the edges of the viewport to the specified absolute
    coordinates." *)
 PROCEDURE SetVPAbsolute (xmin, xmax, ymin, ymax: Float; );
 
-(* plsxax: "Set x axis labeling parameters." *)
+(* c_plsxax: "Set x axis labeling parameters." *)
 PROCEDURE SetXLabelParam (digmax, digits: INTEGER; );
 
-(* plsyax: "Set y axis labeling parameters." *)
+(* c_plsyax: "Set y axis labeling parameters." *)
 PROCEDURE SetYLabelParam (digmax, digits: INTEGER; );
 
-(* plsym: "Plot array y against x for n points using Hershey symbol
+(* c_plsym: "Plot array y against x for n points using Hershey symbol
    \"code\"" *)
 PROCEDURE PlotSymbols (READONLY x, y: FloatVector; code: INTEGER; );
 
-(* plszax: "Set z axis labeling parameters" *)
+(* c_plszax: "Set z axis labeling parameters" *)
 PROCEDURE SetZLabelParam (digmax, digits: INTEGER; );
 
-(* pltext: "Switch to text screen." *)
+(* c_pltext: "Switch to text screen." *)
 PROCEDURE ShowTextScreen ();
 
-(* plvasp: "Sets the edges of the viewport with the given aspect ratio,
+(* c_plvasp: "Sets the edges of the viewport with the given aspect ratio,
    leaving room for labels." *)
 PROCEDURE SetVPAspect (aspect: Float; );
 
-(* plvpas: "Create the largest viewport of the specified aspect ratio that
-   fits within the specified normalized subpage coordinates." *)
+(* c_plvpas: "Create the largest viewport of the specified aspect ratio
+   that fits within the specified normalized subpage coordinates." *)
 PROCEDURE CreateVPAspect (xmin, xmax, ymin, ymax, aspect: Float; );
 
-(* plvpor: "Create a viewport with the specified normalized subpage
+(* c_plvpor: "Create a viewport with the specified normalized subpage
    coordinates." *)
 PROCEDURE CreateVP (xmin, xmax, ymin, ymax: Float; );
 
-(* plvsta: "Define a \"standard\" viewport with seven character heights for
-   the left margin and four character heights everywhere else." *)
+(* c_plvsta: "Define a \"standard\" viewport with seven character heights
+   for the left margin and four character heights everywhere else." *)
 PROCEDURE SetStandardVP ();
 
-(* plw3d: "Set up a window for three-dimensional plotting." *)
+(* c_plw3d: "Set up a window for three-dimensional plotting." *)
 PROCEDURE Init3DWindow (basex, basey, height, xmin0, xmax0, ymin0, ymax0,
                           zmin0, zmax0, alt, az: Float; );
 
-(* plwid: "Set pen width." *)
+(* c_plwid: "Set pen width." *)
 PROCEDURE SetPenWidth (width: INTEGER; );
 
-(* plwind: "Set up world coordinates of the viewport boundaries (2d
+(* c_plwind: "Set up world coordinates of the viewport boundaries (2d
    plots)." *)
 PROCEDURE SetWindow (xmin, xmax, ymin, ymax: Float; );
 
-(* plxormod: "Set xor mode; mode = 1-enter, 0-leave, status = 0 if not
+(* c_plxormod: "Set xor mode; mode = 1-enter, 0-leave, status = 0 if not
    interactive device." *)
 PROCEDURE SetXORMode (mode: BOOLEAN; ): BOOLEAN;
+
+PROCEDURE PlotImage (READONLY z: FloatMatrix;
+                     xmin, xmax, ymin, ymax, zmin, zmax, dxmin, dxmax,
+                       dymin, dymax: Float; );
 
 
 TYPE Plotter0Result = RECORD x, y: Float;  END;
@@ -605,6 +616,12 @@ PROCEDURE Plotter2 (x, y: Float; pltr_data: REFANY; ): Plotter2Result;
 TYPE Plotter2PResult = RECORD x, y: Float;  END;
 PROCEDURE Plotter2P (x, y: Float; pltr_data: REFANY; ): Plotter2PResult;
 
+PROCEDURE F2Eval2 (ix, iy: INTEGER; plf2eval_data: REFANY; ): LONGREAL;
+
+PROCEDURE F2Eval (ix, iy: INTEGER; plf2eval_data: REFANY; ): LONGREAL;
+
+PROCEDURE F2EvalR (ix, iy: INTEGER; plf2eval_data: REFANY; ): LONGREAL;
+
 PROCEDURE ClearOpts ();
 
 PROCEDURE ResetOpts ();
@@ -612,6 +629,16 @@ PROCEDURE ResetOpts ();
 PROCEDURE SetUsage (program_string, usage_string: TEXT; );
 
 PROCEDURE OptUsage ();
+
+PROCEDURE SetFile (file: Cstdio.FILE_star; );
+
+
+TYPE HLS_RGBResult = RECORD r, g, b: Float;  END;
+PROCEDURE HLS_RGB (h, l, s: Float; ): HLS_RGBResult;
+
+
+TYPE RGB_HLSResult = RECORD h, l, s: Float;  END;
+PROCEDURE RGB_HLS (r, g, b: Float; ): RGB_HLSResult;
 
 
 END PLPlot.

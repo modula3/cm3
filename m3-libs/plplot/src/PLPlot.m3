@@ -11,6 +11,7 @@ UNSAFE MODULE PLPlot;
 IMPORT PLPlotRaw;
 IMPORT M3toC;
 IMPORT Ctypes AS C;
+IMPORT Cstdio;
 IMPORT Fmt;
 
 
@@ -1209,6 +1210,20 @@ PROCEDURE SetXORMode (mode: BOOLEAN; ): BOOLEAN =
     RETURN status;
   END SetXORMode;
 
+PROCEDURE PlotImage (READONLY z: FloatMatrix;
+                     xmin, xmax, ymin, ymax, zmin, zmax, dxmin, dxmax,
+                       dymin, dymax: Float; ) =
+  VAR
+    arg1: REF ARRAY OF ADDRESS;
+    nx                         := NUMBER(z);
+    ny                         := NUMBER(z[0]);
+  BEGIN
+    arg1 := NEW(REF ARRAY OF ADDRESS, NUMBER(z));
+    FOR i := 0 TO LAST(z) DO arg1[i] := ADR(z[i, 0]) END;
+    PLPlotRaw.PlotImage(arg1[0], nx, ny, xmin, xmax, ymin, ymax, zmin,
+                        zmax, dxmin, dxmax, dymin, dymax);
+  END PlotImage;
+
 PROCEDURE Plotter0 (x, y: Float; pltr_data: REFANY; ): Plotter0Result =
   VAR result: Plotter0Result;
   BEGIN
@@ -1237,6 +1252,21 @@ PROCEDURE Plotter2P (x, y: Float; pltr_data: REFANY; ): Plotter2PResult =
     RETURN result;
   END Plotter2P;
 
+PROCEDURE F2Eval2 (ix, iy: INTEGER; plf2eval_data: REFANY; ): LONGREAL =
+  BEGIN
+    RETURN PLPlotRaw.F2Eval2(ix, iy, plf2eval_data);
+  END F2Eval2;
+
+PROCEDURE F2Eval (ix, iy: INTEGER; plf2eval_data: REFANY; ): LONGREAL =
+  BEGIN
+    RETURN PLPlotRaw.F2Eval(ix, iy, plf2eval_data);
+  END F2Eval;
+
+PROCEDURE F2EvalR (ix, iy: INTEGER; plf2eval_data: REFANY; ): LONGREAL =
+  BEGIN
+    RETURN PLPlotRaw.F2EvalR(ix, iy, plf2eval_data);
+  END F2EvalR;
+
 PROCEDURE ClearOpts () =
   BEGIN
     PLPlotRaw.ClearOpts();
@@ -1263,6 +1293,25 @@ PROCEDURE OptUsage () =
   BEGIN
     PLPlotRaw.OptUsage();
   END OptUsage;
+
+PROCEDURE SetFile (file: Cstdio.FILE_star; ) =
+  BEGIN
+    PLPlotRaw.SetFile(file);
+  END SetFile;
+
+PROCEDURE HLS_RGB (h, l, s: Float; ): HLS_RGBResult =
+  VAR result: HLS_RGBResult;
+  BEGIN
+    PLPlotRaw.HLS_RGB(h, l, s, result.r, result.g, result.b);
+    RETURN result;
+  END HLS_RGB;
+
+PROCEDURE RGB_HLS (r, g, b: Float; ): RGB_HLSResult =
+  VAR result: RGB_HLSResult;
+  BEGIN
+    PLPlotRaw.RGB_HLS(r, g, b, result.h, result.l, result.s);
+    RETURN result;
+  END RGB_HLS;
 
 
 BEGIN
