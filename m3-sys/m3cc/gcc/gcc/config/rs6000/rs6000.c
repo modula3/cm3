@@ -39,6 +39,33 @@ Boston, MA 02111-1307, USA.  */
 #include "output.h"
 #include "toplev.h"
 
+#ifdef MACHO_PIC
+#include "apple/machopic.h"
+
+/* MACHO_PIC_LEAF_OPT  mach-o PIC leaf function optimisation
+
+   Normally, a leaf function requiring a PIC base register will save and
+   restore LR to/from the stack frame.  With this optimisation, such a 
+   function's prologue code will save and restore LR using a spare reg.
+
+   Additionally, a leaf function requiring a PIC base register will
+   normally use r31, requiring it to be saved and restored.  When
+   MACHO_PIC_LEAF_OPT is defined and a free volatile register is available,
+   that volatile register will act as the PIC base register.  */
+
+#define MACHO_PIC_LEAF_OPT
+
+#ifdef MACHO_PIC_LEAF_OPT
+static int machopic_pic_base_reg = 0;	/* if nonzero, reg# of PIC base reg  */
+
+static const int original_pic_offset_table_regnum = PIC_OFFSET_TABLE_REGNUM;
+#undef PIC_OFFSET_TABLE_REGNUM
+#define PIC_OFFSET_TABLE_REGNUM	(machopic_pic_base_reg ? \
+		machopic_pic_base_reg : original_pic_offset_table_regnum)
+#endif	/* MACHO_PIC_LEAF_OPT  */
+
+#endif	/* MACHO_PIC  */
+
 #ifndef TARGET_NO_PROTOTYPE
 #define TARGET_NO_PROTOTYPE 0
 #endif
@@ -71,6 +98,14 @@ static int trunc_defined;
 
 /* Set to non-zero once AIX common-mode calls have been defined.  */
 static int common_mode_defined;
+
+/* Save information from the "eh_epilog" pattern.  If set, the
+   function's epilog doesn't return to the caller, but to whatever's
+   in the RS6000_EH_EPILOG_RET_ADDR reg, after offsetting the stack
+   by RS6000_EH_EPILOG_SP_OFFS.  */
+
+rtx rs6000_eh_epilog_ret_addr,	/* where to "really" return to  */
+    rs6000_eh_epilog_sp_offs;	/* add to SP before "returning"  */
 
 /* Save information from a "cmpxx" operation until the branch or scc is
    emitted.  */
@@ -112,6 +147,699 @@ int rs6000_debug_arg;		/* debug argument handling */
 /* Flag to say the TOC is initialized */
 int toc_initialized;
 
+/* Flag to say whether a function is being inlined */
+int rs6000_inlining;
+
+/* AltiVec Programming Model.  */
+
+/* #pragma altivec_vrsave stuff.  */
+int current_vrsave_save_type = VRSAVE_NORMAL;	/* for the current function  */
+int standard_vrsave_save_type = VRSAVE_NORMAL;	/* "global" setting  */
+
+struct builtin {
+  /* A pointer to the type of the parameters for the builtin function.
+     There are at most three parameters.  */
+  tree *args[3];
+  /* A string giving the constraint letters for each parameter.  */
+  char *constraints;
+  /* A pointer to the type of the result of the builtin function.  */
+  tree *result;
+  /* The number of parameters for the builtin function.  */
+  int n_args : 8;
+  /* 1 if any pointer parameter may point to a const qualified version
+     of the same type.  */
+  unsigned const_ptr_ok : 1;
+  /* 1 if any pointer parameter may point to a volatile qualified version
+     of the same type.  */
+  unsigned volatile_ptr_ok : 1;
+  /* A nonzero value listed in enum builtin_optimize indicating the
+     equivalences for the given builtin function.  */
+  unsigned optimize : 4;
+  /* A unique mangled name for the builtin function.  (The mangling is
+     of the form <function>:<index>.)  */
+  char *name;
+  /* The spelling of the instruction corresponding to the builtin function.  */
+  char *insn_name;
+  /* The insn code for the builtin function.  */
+  int icode;
+  /* The assigned built-in function code for the builtin function.  */
+  enum built_in_function fcode;
+  /* The FUNCTION_DECL created for the builtin function.  */
+  tree decl;
+};
+
+#define BUILTIN_arg(b,i)		(b)->args[i]
+#define BUILTIN_constraint(b,i)		(b)->constraints[i]
+#define BUILTIN_result(b)		(b)->result
+#define BUILTIN_name(b)			(b)->name
+#define BUILTIN_insn_name(b)		(b)->insn_name
+#define BUILTIN_n_args(b)		(b)->n_args
+#define BUILTIN_const_ptr_ok(b)		(b)->const_ptr_ok
+#define BUILTIN_volatile_ptr_ok(b)	(b)->volatile_ptr_ok
+#define BUILTIN_optimize(b)		((enum builtin_optimize)(b)->optimize)
+#define BUILTIN_icode(b)		(b)->icode
+#define BUILTIN_fcode(b)		(b)->fcode
+#define BUILTIN_to_DECL(b)		(b)->decl
+
+/* These values are encoded by ops-to-gp into the vec.h table.  */
+enum builtin_optimize {
+  BUILTIN_zero_if_same = 1,
+  BUILTIN_copy_if_same = 2,
+  BUILTIN_vsldoi = 3,
+  BUILTIN_vspltisb = 4,
+  BUILTIN_vspltish = 5,
+  BUILTIN_vspltisw = 6,
+  BUILTIN_ones_if_same = 7,
+  BUILTIN_lvsl = 8,
+  BUILTIN_lvsr = 9,
+  BUILTIN_cmp_reverse = 10,
+  BUILTIN_abs = 11  
+};
+
+extern struct builtin *Builtin[];
+#define DECL_to_BUILTIN(d)		 \
+  Builtin[DECL_FUNCTION_CODE(d) - BUILT_IN_FIRST_TARGET_INTRINSIC]
+
+struct overloadx {
+  /* The name of the overloaded builtin function.  */
+  char *name;
+  /* The number of overloads for this name.  1 if the function has a
+     unique signature.  */
+  int n_fcns;
+  /* The number of arguments to each overload.  ops-to-gp validates that
+     this is the same for each overload.  */
+  int n_args;
+  /* An array of builtin function descriptors.  */
+  struct builtin **functions;
+  /* The assigned built-in function code for the overloaded builtin
+     function.  */
+  enum built_in_function fcode;
+  /* The FUNCTION_DECL created for the builtin function.  */
+  tree decl;
+};
+
+#define OVERLOAD_name(o)		(o)->name
+#define OVERLOAD_n_fcns(o)		(o)->n_fcns
+#define OVERLOAD_n_args(o)		(o)->n_args
+#define OVERLOAD_functions(o)		(o)->functions
+#define OVERLOAD_fcode(o)		(o)->fcode
+#define OVERLOAD_to_DECL(o)		(o)->decl
+
+extern struct overloadx Overload[];
+#define DECL_to_TARGET_OVERLOADED_INTRINSIC(d)		 \
+  Overload[DECL_FUNCTION_CODE(d) - BUILT_IN_FIRST_TARGET_OVERLOADED_INTRINSIC]
+
+/* Regard two pointer types T1 and T2 as the same by ignoring const
+   and volatile qualifiers as specified by SELF.  */
+
+static int
+funny_pointer_check (self, t1, t2)
+     struct builtin *self;
+     tree t1;
+     tree t2;
+{
+  if (!BUILTIN_const_ptr_ok(self)
+      && TYPE_READONLY (t2))
+    return 0;
+  if (!BUILTIN_volatile_ptr_ok(self)
+      && TYPE_VOLATILE (t2))
+    return 0;
+  return lang_comptypes (t1, lang_build_type_variant (t2, 0, 0));
+}
+
+/* Return whether parameter types FORMAL and ACTUAL are compatible.
+   Same as lang_comptypes except it removes any const-ness from ACTUAL.
+   This allows
+
+    x = vec_mergeh((const vector unsigned long) zero, blah);
+
+   to work on C++ (where the above CONST would cause our matching to fail.)
+   Play it very safe by furtling with the TYPE_READONLY only if required.  */
+
+static int
+lang_comptypes_ignoring_const (const tree formal, tree actual)
+{
+  int comptypes = lang_comptypes (formal, actual);
+
+  if (!comptypes && TYPE_MODE (actual) == SVmode && TYPE_READONLY (actual))
+    {
+      TYPE_READONLY (actual) = 0;
+      comptypes = lang_comptypes (formal, actual);
+      TYPE_READONLY (actual) = 1;
+    }
+
+  return comptypes;
+}
+
+/* A call to the FUNCTION_DECL FUNCTION with actual arguments PARAMS
+   is known to be a target-specific overloaded intrinsic.  Validate
+   the call and return the tree representing the selected overload
+   or NULL if the call is invalid.  */
+
+tree
+select_target_overloaded_intrinsic (function, params)
+     tree function;
+     tree params;
+{
+  extern tree default_conversion (tree);
+  tree parm;
+  struct overloadx *o = &DECL_to_TARGET_OVERLOADED_INTRINSIC (function);
+  int idx, i, match = -1;
+
+  if (list_length (params) == OVERLOAD_n_args (o))
+    {
+      /* Search for a parameter list that matches.  */
+      for (idx = 0; idx < OVERLOAD_n_fcns (o); idx++)
+	{
+	  struct builtin *self = OVERLOAD_functions (o)[idx];
+	  for (parm = params, i = 0; parm; parm = TREE_CHAIN (parm), i++)
+	    {
+	      tree t1 = *BUILTIN_arg (self, i);
+	      tree t2;
+	      tree val = TREE_VALUE (parm);
+	      if (TREE_CODE (val) == NON_LVALUE_EXPR)
+		val = TREE_OPERAND (val, 0);
+	      if (TREE_CODE (TREE_TYPE (val)) == ARRAY_TYPE
+		  || TREE_CODE (TREE_TYPE (val)) == FUNCTION_TYPE)
+		val = default_conversion (val);
+	      t2 = TREE_TYPE (val);
+	      if (TREE_CODE (val) == ERROR_MARK)
+		return NULL_TREE;
+              /* Parameters match if they are identical or if they are both
+		 integral, or if both are similar enough pointers for the
+		 specific overloaded function (i.e. some allow pointers to
+		 const and/or volatile qualified types.  */
+	      if (!(lang_comptypes_ignoring_const (t1, t2)
+		    || (POINTER_TYPE_P (t1)
+			&& POINTER_TYPE_P (t2)
+			&& funny_pointer_check(self,
+					       TREE_TYPE (t1),
+					       TREE_TYPE (t2)))
+		    || (INTEGRAL_TYPE_P (t1)
+			&& INTEGRAL_TYPE_P (t2))))
+		goto fail;
+	    }
+	  /* If there is more than one match, the tables are incorrect.  There
+	     shouldn't be any ambiguous overloaded builtin functions.  */
+	  if (match >= 0)
+	    abort();
+	  match = idx;
+	fail:;
+	}
+    }
+  if (match < 0) {
+    error("no instance of overloaded builtin function `%s' matches the parameter list",
+	  OVERLOAD_name(o));
+    return NULL_TREE;
+  }
+  /* Substitute the specific overloaded builtin function that we selected.  */
+  return BUILTIN_to_DECL (OVERLOAD_functions (o)[match]);
+}
+
+/* Expand the call to the FUNCTION_DECL FNDECL, is known to be a
+   target-specific intrinsic, with arguments ARGLIST.  Put the result
+   in TARGET if that's convenient (and in mode MODE if that's
+   convenient).  */
+
+extern rtx expand_expr ();
+
+rtx
+expand_target_intrinsic (fndecl, target, mode, arglist)
+     tree fndecl;
+     rtx target;
+     enum machine_mode mode;
+     tree arglist;
+{
+  tree name = DECL_ASSEMBLER_NAME (fndecl);
+  struct builtin *b = DECL_to_BUILTIN (fndecl);
+  rtx ops[5], insns;
+  tree t;
+  int i, n, c;
+  int icode;
+  const enum machine_mode *modes;
+
+  /* Check for various constant folding with the AltiVec builtin's.  */
+  switch (BUILTIN_optimize (b))
+    {
+    case BUILTIN_zero_if_same:
+      /* If the two operands are the same, the result is the zero vector.  */
+      if (list_length (arglist) == 2
+	  && operand_equal_p (TREE_VALUE (arglist),
+			      TREE_VALUE (TREE_CHAIN (arglist)), 0))
+	{
+	  t = build_vector (0, integer_zero_node, integer_zero_node,
+			    integer_zero_node, integer_zero_node);
+	  return immed_vector_const (t);
+	}
+      break;
+    case BUILTIN_copy_if_same:
+      /* If the two operands are the same, the result is the same as either
+	 operand.  */
+      if (list_length (arglist) == 2
+	  && operand_equal_p (TREE_VALUE (arglist),
+			      TREE_VALUE (TREE_CHAIN (arglist)), 0))
+	{
+	  return expand_expr (TREE_VALUE (arglist), NULL_RTX, VOIDmode, 0);
+	}
+      break;
+    case BUILTIN_ones_if_same:
+      /* If the two operands are the same, the result is the vector with
+	 all bits set.  */
+      if (list_length (arglist) == 2
+	  && operand_equal_p (TREE_VALUE (arglist),
+			      TREE_VALUE (TREE_CHAIN (arglist)), 0))
+	{
+	  t = build_int_2 (-1, 0);
+	  return immed_vector_const (build_vector (0, t, t, t, t));
+	}
+      break;
+    case BUILTIN_vsldoi:
+      /* vec_vsldoi(a,a,0) is the same as a.  */
+      if (list_length (arglist) == 3
+	  && operand_equal_p (TREE_VALUE (arglist),
+			      TREE_VALUE (TREE_CHAIN (arglist)), 0))
+	{
+	  t = TREE_VALUE (TREE_CHAIN (TREE_CHAIN (arglist)));
+	  if (TREE_CODE (t) == INTEGER_CST
+	      && TREE_INT_CST_LOW (t) == 0
+	      && TREE_INT_CST_HIGH (t) == 0)
+	    return expand_expr (TREE_VALUE (arglist), NULL_RTX, VOIDmode, 0);
+	}
+      break;
+    case BUILTIN_vspltisb:
+    case BUILTIN_vspltish:
+    case BUILTIN_vspltisw:
+      /* Change each of these into the appropriate vector constant.  */
+      if (list_length (arglist) == 1
+	  && TREE_CODE (TREE_VALUE (arglist)) == INTEGER_CST)
+	{
+	  i = TREE_INT_CST_LOW (TREE_VALUE (arglist));
+	  switch (BUILTIN_optimize (b))
+	    {
+	    case BUILTIN_vspltisb:
+	      i = (i & 0xff) | ((i & 0xff) << 8);
+	    case BUILTIN_vspltish:
+	      i = (i & 0xffff) | ((i & 0xffff) << 16);
+	    }
+	  t = build_int_2 (i, 0);
+	  return immed_vector_const (build_vector (0, t, t, t, t));
+	}
+      break;
+    case BUILTIN_lvsl:
+    case BUILTIN_lvsr:
+      /* Change each of these into the appropriate vector constant.  */
+      if (list_length (arglist) == 2
+	  && TREE_CODE (TREE_VALUE (arglist)) == INTEGER_CST
+	  && TREE_CODE (TREE_VALUE (TREE_CHAIN (arglist))) == INTEGER_CST)
+	{
+	  i = (TREE_INT_CST_LOW (TREE_VALUE (arglist))
+	       + TREE_INT_CST_LOW (TREE_VALUE (TREE_CHAIN (arglist)))) & 0xf;
+	  if (BUILTIN_optimize (b) == BUILTIN_lvsr)
+	    i = 0x10 - i;
+	  i = (i << 8) + i + 0x01;
+	  i = (i << 16) + i + 0x0202;
+	  t = build_vector (0,
+			    build_int_2 (i, 0),
+			    build_int_2 (i + 0x04040404, 0),
+			    build_int_2 (i + 0x04040404 * 2, 0),
+			    build_int_2 (i + 0x04040404 * 3, 0));
+	  return immed_vector_const (t);
+	}
+      break;
+    }
+
+  /* Expand each operand and check the constraints should the builtin function
+     use them.  */
+  for (t = arglist, n = 0; t; t = TREE_CHAIN (t), n++)
+    {
+      ops[n] = expand_expr (TREE_VALUE (t), NULL_RTX, VOIDmode, 0);
+      switch (c = BUILTIN_constraint(b, n))
+	{
+	case 'A':
+	case 'B':
+	case 'C':
+	case 'D':
+	case 'I':
+	case 'J':
+	case 'K':
+	case 'L':
+	case 'M':
+	case 'N':
+	case 'O':
+	case 'P':
+	  if (!(GET_CODE (ops[n]) == CONST_INT
+		&& CONST_OK_FOR_LETTER_P (INTVAL (ops[n]), c)))
+	    {
+	      error ("argument %d to built-in function `%s' does not satisfy constraint %c",
+		     n, BUILTIN_name(b), c);
+	      ops[n] = const0_rtx;
+	    }
+	  break;
+	case 'x':
+	  if (TREE_CODE (TREE_VALUE (t)) == ERROR_MARK)
+	    ops[n] = immed_vector_const (build_vector (0, 
+						       integer_zero_node,
+						       integer_zero_node,
+						       integer_zero_node,
+						       integer_zero_node));
+	  break;
+	}
+    }
+
+  if (BUILTIN_optimize (b) == BUILTIN_cmp_reverse) {
+    /* This is a reversed compare operation.  Just swap the two operands.  */
+    rtx temp = ops[0];
+    ops[0] = ops[1];
+    ops[1] = temp;
+
+  } else if (BUILTIN_optimize (b) == BUILTIN_abs) {
+    /* This is an abs operation.  */
+    char *op1, *op2;
+    n = i = 0;
+    switch (BUILTIN_insn_name (b)[0] - '0') {
+    case 1: /* vec_abs(s8) */
+      op2 = "vmaxsb";
+      op1 = "vsububm";
+      break;
+    case 2: /* vec_abs(s16) */
+      op2 = "vmaxsh";
+      op1 = "vsubuhm";
+      break;                 
+    case 3: /* vec_abs(s32) */
+      op2 = "vmaxsw";
+      op1 = "vsubuwm";
+      break;
+    case 4: /* vec_abs(f32) */
+      op2 = "vandc";
+      op1 = "vslw";
+      i = -1;
+      n = 1;
+      break;
+    case 5: /* vec_abss(s8) */
+      op2 = "vmaxsb";
+      op1 = "vsubsbs";
+      break;
+    case 6: /* vec_abss(s16) */
+      op2 = "vmaxsh";
+      op1 = "vsubshs";
+      break;
+    case 7: /* vec_abss(s32) */
+      op2 = "vmaxsw";
+      op1 = "vsubsws";
+      break;
+    default:
+      abort ();
+    }
+    t = build_int_2 (i, 0);
+    ops[1] = immed_vector_const (build_vector (0, t, t, t, t));
+
+    icode = CODE_FOR_xfxx_simple;
+    modes = &insn_operand_mode[icode][0];
+   
+    /* Check the predicates for the insn associated with the builtin.  */
+    for (i = 0; i < 2; i++)
+      if (! (*insn_operand_predicate[icode][1+i]) (ops[i], modes[i]))
+	ops[i] = copy_to_mode_reg (modes[1+i], ops[i]);
+    ops[2] = ops[n];
+
+    /* Generate the insn that computes the builtin.  */
+    if (!target
+	|| ! (*insn_operand_predicate[icode][0]) (target, mode))
+      target = gen_reg_rtx (mode);
+
+    ops[3] = gen_reg_rtx(SVmode);
+    emit_insn (gen_xfxx_simple (ops[3], ops[1], ops[2],
+				gen_rtx (SYMBOL_REF, Pmode, op1)));
+    emit_insn (gen_xfxx_simple (target, ops[0], ops[3],
+				gen_rtx (SYMBOL_REF, Pmode, op2)));
+    return target;
+  }
+
+  /* Add an additional operand that gives the spelling of the actual
+     instruction to be used.  */
+  ops[n++] = gen_rtx (SYMBOL_REF, Pmode, BUILTIN_insn_name (b));
+
+  emit_queue ();
+  start_sequence ();
+  {
+    rtx pat;
+    int has_result = (TREE_CODE(*BUILTIN_result(b)) != VOID_TYPE);
+
+    icode = BUILTIN_icode (b);
+    modes = &insn_operand_mode[icode][0];
+
+    /* Check the predicates for the insn associated with the builtin.  */
+    for (i = 0; i < n; i++)
+      if (! (*insn_operand_predicate[icode][has_result+i]) (ops[i], modes[i]))
+	ops[i] = copy_to_mode_reg (modes[has_result+i], ops[i]);
+
+    /* Generate the insn that computes the builtin.  */
+    if (has_result)
+      {
+	if (!target
+	    || ! (*insn_operand_predicate[icode][0]) (target, mode))
+	  target = gen_reg_rtx (mode);
+	if (n == 1)
+	  pat = GEN_FCN (icode) (target, ops[0]);
+	else if (n == 2)
+	  pat = GEN_FCN (icode) (target, ops[0], ops[1]);
+	else if (n == 3)
+	  pat = GEN_FCN (icode) (target, ops[0], ops[1], ops[2]);
+	else if (n == 4)
+	  pat = GEN_FCN (icode) (target, ops[0], ops[1], ops[2], ops[3]);
+	else
+	  abort ();
+      }
+    else
+      {
+	target = NULL_RTX;
+	if (n == 1)
+	  pat = GEN_FCN (icode) (ops[0]);
+	else if (n == 2)
+	  pat = GEN_FCN (icode) (ops[0], ops[1]);
+	else if (n == 3)
+	  pat = GEN_FCN (icode) (ops[0], ops[1], ops[2]);
+	else if (n == 4)
+	  pat = GEN_FCN (icode) (ops[0], ops[1], ops[2], ops[3]);
+	else
+	  abort ();
+      }
+    emit_insn (pat);
+  }
+  insns = get_insns ();
+  end_sequence ();
+  emit_insns (insns);
+
+  return target;
+}
+
+/* From c-decl.c or cp-decl.c  */
+extern tree float_type_node;
+extern tree long_integer_type_node;
+extern tree short_integer_type_node;
+extern tree signed_char_type_node;
+extern tree short_unsigned_type_node;
+extern tree long_unsigned_type_node;
+extern tree unsigned_char_type_node;
+
+extern tree vector_unsigned_char_type_node;
+extern tree vector_signed_char_type_node;
+extern tree vector_boolean_char_type_node;
+extern tree vector_unsigned_short_type_node;
+extern tree vector_signed_short_type_node;
+extern tree vector_boolean_short_type_node;
+extern tree vector_unsigned_long_type_node;
+extern tree vector_signed_long_type_node;
+extern tree vector_boolean_long_type_node;
+extern tree vector_float_type_node;
+extern tree vector_pixel_type_node;
+
+/* Type nodes specific to the set of AltiVec intrinsics.  */
+tree float_ptr_type_node;
+tree integer_ptr_type_node;
+tree long_integer_ptr_type_node;
+tree short_integer_ptr_type_node;
+tree signed_char_ptr_type_node;
+tree short_unsigned_ptr_type_node;
+tree long_unsigned_ptr_type_node;
+tree unsigned_char_ptr_type_node;
+tree unsigned_ptr_type_node;
+tree vector_boolean_char_ptr_type_node;
+tree vector_boolean_long_ptr_type_node;
+tree vector_boolean_short_ptr_type_node;
+tree vector_float_ptr_type_node;
+tree vector_pixel_ptr_type_node;
+tree vector_signed_char_ptr_type_node;
+tree vector_signed_long_ptr_type_node;
+tree vector_signed_short_ptr_type_node;
+tree vector_unsigned_char_ptr_type_node;
+tree vector_unsigned_long_ptr_type_node;
+tree vector_unsigned_short_ptr_type_node;
+
+/* Macros to map the names used in the intrinsic table.  */
+#define B_UID(X) \
+  ((enum built_in_function)(BUILT_IN_FIRST_TARGET_INTRINSIC+(X)))
+#define O_UID(X) \
+  ((enum built_in_function)(BUILT_IN_FIRST_TARGET_OVERLOADED_INTRINSIC+(X)))
+
+#define T_char_ptr		char_ptr_type_node
+#define T_float_ptr		float_ptr_type_node
+#define T_int			integer_type_node
+#define T_int_ptr		integer_ptr_type_node
+#define T_long_ptr		long_integer_ptr_type_node
+#define T_short_ptr		short_integer_ptr_type_node
+#define T_signed_char_ptr	signed_char_ptr_type_node
+#define T_unsigned_char_ptr	unsigned_char_ptr_type_node
+#define T_unsigned_int_ptr	unsigned_ptr_type_node
+#define T_unsigned_long_ptr	long_unsigned_ptr_type_node
+#define T_unsigned_short_ptr	short_unsigned_ptr_type_node
+#define T_vec_b16		vector_boolean_short_type_node
+#define T_vec_b16_ptr		vector_boolean_short_ptr_type_node
+#define T_vec_b32		vector_boolean_long_type_node
+#define T_vec_b32_ptr		vector_boolean_long_ptr_type_node
+#define T_vec_b8		vector_boolean_char_type_node
+#define T_vec_b8_ptr		vector_boolean_char_ptr_type_node
+#define T_vec_f32		vector_float_type_node
+#define T_vec_f32_ptr		vector_float_ptr_type_node
+#define T_vec_p16		vector_pixel_type_node
+#define T_vec_p16_ptr		vector_pixel_ptr_type_node
+#define T_vec_s16		vector_signed_short_type_node
+#define T_vec_s16_ptr		vector_signed_short_ptr_type_node
+#define T_vec_s32		vector_signed_long_type_node
+#define T_vec_s32_ptr		vector_signed_long_ptr_type_node
+#define T_vec_s8		vector_signed_char_type_node
+#define T_vec_s8_ptr		vector_signed_char_ptr_type_node
+#define T_vec_u16		vector_unsigned_short_type_node
+#define T_vec_u16_ptr		vector_unsigned_short_ptr_type_node
+#define T_vec_u32		vector_unsigned_long_type_node
+#define T_vec_u32_ptr		vector_unsigned_long_ptr_type_node
+#define T_vec_u8		vector_unsigned_char_type_node
+#define T_vec_u8_ptr		vector_unsigned_char_ptr_type_node
+#define T_void			void_type_node
+#define T_volatile_vec_u16	T_vec_u16
+#define T_cc24f			T_int
+#define T_cc24fd		T_int
+#define T_cc24fr		T_int
+#define T_cc24t			T_int
+#define T_cc24td		T_int
+#define T_cc24tr		T_int
+#define T_cc26f			T_int
+#define T_cc26fd		T_int
+#define T_cc26fr		T_int
+#define T_cc26t			T_int
+#define T_cc26td		T_int
+#define T_cc26tr		T_int
+#define T_immed_s5		T_int
+#define T_immed_u2		T_int
+#define T_immed_u4		T_int
+#define T_immed_u5		T_int
+#define T_volatile_void		T_void
+
+#include "vec.h"
+
+/* Return the parameter list for builtin function B using ENDLINK as the end
+   of the prototype.  */
+
+static tree
+altivec_ftype (b, endlink)
+     struct builtin *b;
+     tree endlink;
+{
+  tree parms = endlink;
+  int i;
+
+  for (i = BUILTIN_n_args(b) - 1; i >= 0; i--)
+    parms = tree_cons (NULL_TREE, *BUILTIN_arg(b, i), parms);
+
+  return build_function_type (*BUILTIN_result(b), parms);
+}
+
+/* Initialize the AltiVec builtin functions using ENDLINK as the end of the
+   prototypes created.  */
+
+void
+init_target_intrinsic (endlink, flag_altivec)
+     tree endlink;
+     int flag_altivec;
+{
+  tree decl;
+  struct overloadx *o;
+  struct builtin *b;
+  int i;
+  tree void_ftype_any;
+
+  if ((int)LAST_B_UID > (int)BUILT_IN_LAST_TARGET_INTRINSIC)
+    /* Increase BUILT_IN_LAST_TARGET_INTRINSIC.  */
+    abort ();
+
+  if ((int)LAST_O_UID > (int)BUILT_IN_LAST_TARGET_OVERLOADED_INTRINSIC)
+    /* Increase BUILT_IN_LAST_TARGET_OVERLOADED_INTRINSIC.  */
+    abort();
+
+  /* These only apply if -faltivec is specified.  */
+  if (!flag_altivec)
+    return;
+
+  current_vrsave_save_type = (TARGET_VRSAVE) ? VRSAVE_NORMAL : VRSAVE_OFF;
+  standard_vrsave_save_type = current_vrsave_save_type;
+
+  /* Additional types needed for the set of intrinsics.  */
+  void_ftype_any = build_function_type (void_type_node, NULL_TREE);
+  float_ptr_type_node = build_pointer_type (float_type_node);
+  integer_ptr_type_node = build_pointer_type (integer_type_node);
+  long_integer_ptr_type_node = build_pointer_type (long_integer_type_node);
+  short_integer_ptr_type_node = build_pointer_type (short_integer_type_node);
+  signed_char_ptr_type_node = build_pointer_type (signed_char_type_node);
+  short_unsigned_ptr_type_node = build_pointer_type (short_unsigned_type_node);
+  long_unsigned_ptr_type_node = build_pointer_type (long_unsigned_type_node);
+  unsigned_char_ptr_type_node = build_pointer_type (unsigned_char_type_node);
+  unsigned_ptr_type_node = build_pointer_type (unsigned_type_node);
+  vector_boolean_char_ptr_type_node = build_pointer_type (vector_boolean_char_type_node);
+  vector_boolean_long_ptr_type_node = build_pointer_type (vector_boolean_long_type_node);
+  vector_boolean_short_ptr_type_node = build_pointer_type (vector_boolean_short_type_node);
+  vector_float_ptr_type_node = build_pointer_type (vector_float_type_node);
+  vector_pixel_ptr_type_node = build_pointer_type (vector_pixel_type_node);
+  vector_signed_char_ptr_type_node = build_pointer_type (vector_signed_char_type_node);
+  vector_signed_long_ptr_type_node = build_pointer_type (vector_signed_long_type_node);
+  vector_signed_short_ptr_type_node = build_pointer_type (vector_signed_short_type_node);
+  vector_unsigned_char_ptr_type_node = build_pointer_type (vector_unsigned_char_type_node);
+  vector_unsigned_long_ptr_type_node = build_pointer_type (vector_unsigned_long_type_node);
+  vector_unsigned_short_ptr_type_node = build_pointer_type (vector_unsigned_short_type_node);
+
+  /* Walk the Overload table.  */
+  for (o = Overload; OVERLOAD_name (o); o++)
+    {
+      /* Walk each builtin for the overload.  */
+      for (i = 0; i < OVERLOAD_n_fcns(o); i++)
+	{
+	  /* Some overloads map to the same builtin.  Only declare the
+	     function once.  */
+	  b = OVERLOAD_functions (o)[i];
+	  if ((decl = BUILTIN_to_DECL (b)) == NULL_TREE)
+	    {
+	      /* Declare the function and record it's declaration.  */
+	      decl = lang_builtin_function (BUILTIN_name (b),
+					    altivec_ftype (b, endlink),
+					    BUILTIN_fcode (b),
+					    BUILTIN_insn_name (b));
+	      BUILTIN_to_DECL (b) = decl;
+	    }
+	}
+      /* If the function is overloaded or has a single overload with a
+	 different name, record the overload name as an overloaded
+	 builtin.  Give it a prototype that will match any set of
+	 parameters.  */
+      if (OVERLOAD_n_fcns (o) > 1
+	  || strcmp(BUILTIN_name (b), OVERLOAD_name (o)) != 0)
+	decl = lang_builtin_function (OVERLOAD_name (o),
+				      void_ftype_any,
+				      OVERLOAD_fcode (o),
+				      NULL_PTR);
+      /* Record the declaration of the overload (or non-overloaded
+	 and unique name declared as a non-overloaded builtin).  */
+      OVERLOAD_to_DECL (o) = decl;
+    }
+}
 
 /* Default register names.  */
 char rs6000_reg_names[][8] =
@@ -126,7 +854,11 @@ char rs6000_reg_names[][8] =
      "24", "25", "26", "27", "28", "29", "30", "31",
      "mq", "lr", "ctr","ap",
       "0",  "1",  "2",  "3",  "4",  "5",  "6",  "7",
-  "fpmem"
+  "fpmem", "vrsave",
+      "0",  "1",  "2",  "3",  "4",  "5",  "6",  "7",
+      "8",  "9", "10", "11", "12", "13", "14", "15",
+     "16", "17", "18", "19", "20", "21", "22", "23",
+     "24", "25", "26", "27", "28", "29", "30", "31"
 };
 
 #ifdef TARGET_REGNAMES
@@ -142,7 +874,11 @@ static char alt_reg_names[][8] =
   "%f24",  "%f25", "%f26", "%f27", "%f28", "%f29", "%f30", "%f31",
     "mq",    "lr",  "ctr",   "ap",
   "%cr0",  "%cr1", "%cr2", "%cr3", "%cr4", "%cr5", "%cr6", "%cr7",
- "fpmem"
+ "fpmem", "vrsave",
+   "%v0",   "%v1",  "%v2",  "%v3",  "%v4",  "%v5",  "%v6",  "%v7",
+   "%v8",   "%v9", "%v10", "%v11", "%v12", "%v13", "%v14", "%v15",
+  "%v16",  "%v17", "%v18", "%v19", "%v20", "%v21", "%v22", "%v23",
+  "%v24",  "%v25", "%v26", "%v27", "%v28", "%v29", "%v30", "%v31"
 };
 #endif
 
@@ -283,7 +1019,7 @@ rs6000_override_options (default_cpu)
 		break;
 	      }
 
-	  if (i == ptt_size)
+	  if (j == ptt_size)
 	    error ("bad value (%s) for %s switch", ptr->string, ptr->name);
 	}
     }
@@ -325,6 +1061,12 @@ rs6000_override_options (default_cpu)
 	}
     }
 
+  if (flag_pic == 1 && DEFAULT_ABI == ABI_MACOSX)
+    {
+      warning ("-fpic is not supported; -fPIC assumed");
+      flag_pic = 2;
+    }
+  else
   if (flag_pic && (DEFAULT_ABI == ABI_AIX))
     {
       warning ("-f%s ignored for AIX (all code is position independent)",
@@ -430,6 +1172,56 @@ rs6000_float_const (string, mode)
   return immed_real_const_1 (value, mode);
 }
 
+/* Create a CONST_DOUBLE like immed_double_const, except reverse the
+   two parts of the constant if the target is little endian.  */
+
+struct rtx_def *
+rs6000_immed_double_const (i0, i1, mode)
+     HOST_WIDE_INT i0, i1;
+     enum machine_mode mode;
+{
+  if (! WORDS_BIG_ENDIAN)
+    return immed_double_const (i1, i0, mode);
+
+  return immed_double_const (i0, i1, mode);
+}
+
+
+/* Return either PERMUTE or SIMPLE based on the best scheduling of INSN.  */
+
+char *
+choose_vec_easy (insn, permute, simple)
+     rtx insn;
+     char *permute;
+     char *simple;
+{
+  /* Remember our last choice.  */
+  static enum attr_type last_easy = TYPE_INTEGER;
+  /* First look at the previous instruction.  */
+  rtx prev = prev_active_insn (insn);
+  enum attr_type type = prev ? get_attr_type (prev) : TYPE_INTEGER;
+
+  /* If the previous instruction was VEC_EASY, its chosen type is in last_easy.  */
+  if (type == TYPE_VEC_EASY)
+    type = last_easy;
+
+  /* Attempt to alternate VEC_PERM and VEC_SIMPLE.  */
+  if (type == TYPE_VEC_PERM)
+    last_easy = TYPE_VEC_SIMPLE;
+  else if (type == TYPE_VEC_SIMPLE || type == TYPE_VEC_COMPLEX || type == TYPE_VEC_FP)
+    last_easy = TYPE_VEC_PERM;
+  else
+    {
+      /* Look at the next instruction to decide.  */
+      rtx next = next_active_insn (insn);
+      type = next ? get_attr_type (next) : TYPE_INTEGER;
+      /* Prefer VEC_PERM unless the next instruction conflicts.  */
+      last_easy = (type == TYPE_VEC_PERM ? TYPE_VEC_SIMPLE : TYPE_VEC_PERM);
+    }
+  insn_extract (insn);
+  return (last_easy == TYPE_VEC_SIMPLE ? simple : permute);
+}
+
 /* Return non-zero if this function is known to have a null epilogue.  */
 
 int
@@ -441,6 +1233,8 @@ direct_return ()
 
       if (info->first_gp_reg_save == 32
 	  && info->first_fp_reg_save == 64
+	  && info->first_vector_reg_save == 110
+	  && !info->vrsave_save_p
 	  && !info->lr_save_p
 	  && !info->cr_save_p
 	  && !info->push_p)
@@ -470,6 +1264,24 @@ count_register_operand(op, mode)
     return 0;
 
   if (REGNO (op) == COUNT_REGISTER_REGNUM)
+    return 1;
+
+  if (REGNO (op) > FIRST_PSEUDO_REGISTER)
+    return 1;
+
+  return 0;
+}
+
+/* Returns 1 if op is a vector register */
+int
+vector_register_operand(op, mode)
+     register rtx op;
+     enum machine_mode mode;
+{
+  if (GET_CODE (op) != REG)
+    return 0;
+
+  if (VECTOR_REGNO_P (REGNO (op)))
     return 1;
 
   if (REGNO (op) > FIRST_PSEUDO_REGISTER)
@@ -542,7 +1354,9 @@ gpc_reg_operand (op, mode)
 {
   return (register_operand (op, mode)
 	  && (GET_CODE (op) != REG
-	      || (REGNO (op) >= 67 && !FPMEM_REGNO_P (REGNO (op)))
+	      || (REGNO (op) >= 67
+		  && !FPMEM_REGNO_P (REGNO (op))
+		  && !VECTOR_REGNO_P (REGNO (op)))
 	      || REGNO (op) < 64));
 }
 
@@ -819,6 +1633,80 @@ easy_fp_constant (op, mode)
     abort ();
 }
 
+/* Return 1..8 indicating how to compute the value if the operand is a
+   CONST_VECTOR and it can be put into a register with one instruction.  */
+
+int
+easy_vector_constant (op)
+     register rtx op;
+
+{
+  unsigned HOST_WIDE_INT immed;
+  if (GET_CODE (op) != CONST_VECTOR
+      || GET_MODE (op) != SVmode)
+    return 0;
+
+  immed = CONST_VECTOR_0 (op);
+
+  /* If the four 32-bit words aren't the same, it can't be done unless it
+     matches an lvsl or lvsr value.  */
+  if (immed != CONST_VECTOR_1 (op)
+      || immed != CONST_VECTOR_2 (op)
+      || immed != CONST_VECTOR_3 (op))
+    {
+      if (immed + 0x04040404 == CONST_VECTOR_1 (op)
+	  && CONST_VECTOR_1 (op) + 0x04040404 == CONST_VECTOR_2 (op)
+	  && CONST_VECTOR_2 (op) + 0x04040404 == CONST_VECTOR_3 (op)
+	  && (immed >> 16) + 0x0202 == (immed & 0xffff)
+	  && (immed >> 24) + 1 == ((immed >> 16) & 0xff)
+	  && (immed >>= 24) <= 0x10)
+	{
+	  if (immed == 0x10)
+	    /* Use lvsr 0,0.  */
+	    return 7;
+	  else
+	    /* Use lvsl 0,immed. */
+	    return 8;
+	}
+      else
+	return 0;
+    }
+
+  /* vxor v,v,v and vspltisw v,0 will work.  */
+  else if (immed == 0)
+    return 1;
+
+  /* vcmpequw v,v,v and vspltisw v,-1 will work.  */
+  else if (immed + 1 == 0)
+    return 2;
+
+  /* vsubcuw v,v,v and vspltisw v,1 will work.  */
+  else if (immed == 1)
+    return 3;
+
+  /* vspltisw will work.  */
+  else if (immed + 16 < 32)
+    return 4;
+
+  /* The two 16-bit halves aren't the same.  */
+  else if (immed >> 16 != (immed & 0xffff))
+    return 0;
+
+  /* vspltish will work.  */
+  else if (((immed + 16) & 0xffff) < 32)
+    return 5;
+
+  /* The two 8-bit halves aren't the same.  */
+  else if (immed >> 24 != (immed & 0xff))
+    return 0;
+
+  /* vspltisb will work.  */
+  else if (((immed + 16) & 0xff) < 32)
+    return 6;
+
+  return 0;
+}
+
 /* Return 1 if the operand is in volatile memory.  Note that during the
    RTL generation phase, memory_operand does not return TRUE for
    volatile memory references.  So this function allows us to
@@ -881,6 +1769,17 @@ add_operand (op, mode)
   return (reg_or_short_operand (op, mode)
 	  || (GET_CODE (op) == CONST_INT
 	      && (INTVAL (op) & (~ (HOST_WIDE_INT) 0xffff0000)) == 0));
+}
+
+/* Return 1 if the operand is either 0 or -1.  */
+
+int
+zero_m1_operand (op, mode)
+    register rtx op;
+    enum machine_mode mode;
+{
+  return (GET_CODE (op) == CONST_INT
+          && (unsigned HOST_WIDE_INT) (INTVAL (op) + 1) < 2);
 }
 
 /* Return 1 if OP is a constant but not a valid add_operand.  */
@@ -952,6 +1851,48 @@ mask_operand (op, mode)
       last_bit_value ^= 1, transitions++;
 
   return transitions <= 2;
+}
+
+/*
+ * as above, but insist all the ones in the mask be contiguous
+ * (MB < ME)
+ */
+int
+narrow_mask_operand (op, mode)
+     register rtx op;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
+{
+  HOST_WIDE_INT c;
+  int i;
+  int last_bit_value;
+  int contiguous_ones_in_middle ;
+  int transitions = 0;
+
+  if (GET_CODE (op) != CONST_INT)
+    return 0;
+
+  c = INTVAL (op);
+
+  if (c == 0 || c == ~0)
+    return 0;
+
+  /* true if ones in the middle, zeroes on ends: 0000...1111...111...000 */
+  contiguous_ones_in_middle = !(c & 0x80000000) & !(c & 1) ;
+
+  /*
+   * O.K. to have the ones reach one end of the word;
+   * 000..111 and 111...000 don't have "contiguous_ones_in_middle",
+   * but they have only one "transition"
+   */
+
+  last_bit_value = c & 1;
+
+  for (i = 1; i < 32; i++)
+    if (((c >>= 1) & 1) != last_bit_value)
+      last_bit_value ^= 1, transitions++;
+
+  /* refuse non-contiguous masks of the form 111...000...111 */
+  return (transitions == 2 && contiguous_ones_in_middle) || (transitions == 1) ;
 }
 
 /* Return 1 if the operand is a constant that is a PowerPC64 mask.
@@ -1109,13 +2050,20 @@ call_operand (op, mode)
 
 
 /* Return 1 if the operand is a SYMBOL_REF for a function known to be in
-   this file and the function is not weakly defined. */
+   this file and the function is not weakly defined, or if the operand is
+   a LABEL_REF.  Used as an operand match constraint for function call
+   instructions.  We need to permit the LABEL_REF in order for
+   reload_ppc_pic_register to work.  */
 
 int
 current_file_function_operand (op, mode)
      register rtx op;
      enum machine_mode mode ATTRIBUTE_UNUSED;
 {
+#ifdef MACHO_PIC
+  if (GET_CODE (op) == LABEL_REF)
+    return 1;
+#endif
   return (GET_CODE (op) == SYMBOL_REF
 	  && (SYMBOL_REF_FLAG (op)
 	      || (op == XEXP (DECL_RTL (current_function_decl), 0)
@@ -1255,15 +2203,23 @@ init_cumulative_args (cum, fntype, libname, incoming)
   cum->prototype = (fntype && TYPE_ARG_TYPES (fntype));
   cum->call_cookie = CALL_NORMAL;
   cum->sysv_gregno = GP_ARG_MIN_REG;
+  cum->vregno = VECTOR_ARG_MIN_REG;
+  cum->num_vector = 0;
+  cum->is_incoming = incoming;
 
   if (incoming)
-    cum->nargs_prototype = 1000;		/* don't return a PARALLEL */
-
+    {
+      cum->is_varargs = (current_function_stdarg || current_function_varargs);
+      cum->nargs_prototype = 1000;              /* don't return a PARALLEL */
+    }
   else if (cum->prototype)
-    cum->nargs_prototype = (list_length (TYPE_ARG_TYPES (fntype)) - 1
-			    + (TYPE_MODE (TREE_TYPE (fntype)) == BLKmode
-			       || RETURN_IN_MEMORY (TREE_TYPE (fntype))));
-
+    {
+      tree last = tree_last (TYPE_ARG_TYPES (fntype));
+      cum->is_varargs = !(last && TREE_VALUE (last) == void_type_node);
+      cum->nargs_prototype = (list_length (TYPE_ARG_TYPES (fntype)) - 1
+			      + (TYPE_MODE (TREE_TYPE (fntype)) == BLKmode
+				 || RETURN_IN_MEMORY (TREE_TYPE (fntype))));
+    }
   else
     cum->nargs_prototype = 0;
 
@@ -1298,6 +2254,75 @@ init_cumulative_args (cum, fntype, libname, incoming)
       fprintf (stderr, " proto = %d, nargs = %d\n",
 	       cum->prototype, cum->nargs_prototype);
     }
+}
+
+/* Rearrange the argument or parameter list just before scanning it to
+   place locate the arguments.
+
+   For the Apple and AIX AltiVec Programming Model, non-vector
+   parameters are passed in the same registers and stack locations as
+   they would be if the vector parameters were not present.
+   Accomplish this by moving the vector parameters to the end of the
+   argument list.  */
+
+tree
+rearrange_arg_list (cum, args)
+     CUMULATIVE_ARGS *cum;
+     tree args;
+{
+  tree arg, value, next;
+  tree prev = NULL_TREE;
+  tree vector_args = NULL_TREE;
+  tree last_vector_arg = NULL_TREE;
+  tree vector_reg_args = NULL_TREE;
+  int i = 0;
+
+  /* Don't rearrange for SVR4 or varargs and stdarg.  */
+  if (DEFAULT_ABI == ABI_V4 || DEFAULT_ABI == ABI_SOLARIS || cum->is_varargs)
+    return args;
+
+  /* Remove all vector args.  */
+  for (arg = args; arg; arg = next)
+    {
+      next = TREE_CHAIN (arg);
+      value = (TREE_CODE (arg) == TREE_LIST ? TREE_VALUE (arg) : arg);
+      if (TREE_CODE (TREE_TYPE (value)) == VECTOR_TYPE)
+	{
+	  if (prev)
+	    TREE_CHAIN (prev) = next;
+	  else
+	    args = next;
+
+	  if (i++ < VECTOR_ARG_NUM_REG)
+	    {
+	      TREE_CHAIN (arg) = vector_reg_args;
+	      vector_reg_args = arg;
+	    }
+	  else
+	    {
+	      TREE_CHAIN (arg) = vector_args;
+	      last_vector_arg = vector_args = arg;
+	    }
+	}
+      else
+	prev = arg;
+    }
+  vector_reg_args = nreverse (vector_reg_args);
+  vector_args = nreverse (vector_args);
+
+  cum->num_vector = i;
+
+  if (last_vector_arg)
+    TREE_CHAIN (last_vector_arg) = vector_reg_args;
+  else
+    vector_args = vector_reg_args;
+
+  if (prev)
+    TREE_CHAIN (prev) = vector_args;
+  else
+    args = vector_args;
+
+  return args;
 }
 
 /* If defined, a C expression which determines whether, and in which
@@ -1340,6 +2365,15 @@ function_arg_boundary (mode, type)
      enum machine_mode mode;
      tree type;
 {
+  if (mode == SVmode
+      || (mode == BLKmode
+	  && DEFAULT_ABI != ABI_V4
+	  && DEFAULT_ABI != ABI_SOLARIS
+	  && TYPE_ALIGN (type) == 128))
+    /* Vector parameters must be 16-byte aligned.  This places them at
+       64 mod 128 from the arg pointer.  */
+    return 128;
+
   if ((DEFAULT_ABI == ABI_V4 || DEFAULT_ABI == ABI_SOLARIS)
       && (mode == DImode || mode == DFmode))
     return 64;
@@ -1351,6 +2385,52 @@ function_arg_boundary (mode, type)
     return (GET_MODE_SIZE (mode)) >= 8 ? 64 : 32;
 
   return (int_size_in_bytes (type) >= 8) ? 64 : 32;
+}
+
+int
+function_arg_mod_boundary (mode, type)
+     enum machine_mode mode;
+     tree type;
+{
+  if (mode == SVmode
+      || (mode == BLKmode 
+	  && DEFAULT_ABI != ABI_V4
+	  && DEFAULT_ABI != ABI_SOLARIS
+	  && TYPE_ALIGN (type) == 128))
+    /* Vector parameters must be 16-byte aligned.  This places them at 2 mod 4
+       in terms of words.  */
+    return 64;
+  return 0;
+}
+
+static int
+function_arg_skip (mode, type, words)
+     enum machine_mode mode;
+     tree type;
+     int words;
+{
+  if (mode == SVmode
+      || (mode == BLKmode 
+	  && DEFAULT_ABI != ABI_V4
+	  && DEFAULT_ABI != ABI_SOLARIS
+	  && TYPE_ALIGN (type) == 128))
+    /* Vector parameters must be 16-byte aligned.  This places them at 2 mod 4
+       in terms of words.  */
+    return ((6 - (words & 3)) & 3);
+  if (TARGET_32BIT && function_arg_boundary (mode, type) == 64)
+    return (words & 1);
+  return 0;
+}
+
+int
+no_reg_parm_stack_space (cum, entry)
+     CUMULATIVE_ARGS *cum;
+     rtx entry;
+{
+  return (!cum->is_varargs
+	  && entry
+	  && GET_CODE (entry) == REG
+	  && GET_MODE (entry) == SVmode);
 }
 
 /* Update the data in CUM to advance over an argument
@@ -1366,6 +2446,9 @@ function_arg_advance (cum, mode, type, named)
 {
   cum->nargs_prototype--;
 
+  if (cum->is_incoming && GET_MODE_CLASS (mode) == MODE_VECTOR)
+    named = 1;
+
   if (DEFAULT_ABI == ABI_V4 || DEFAULT_ABI == ABI_SOLARIS)
     {
       if (TARGET_HARD_FLOAT
@@ -1379,6 +2462,15 @@ function_arg_advance (cum, mode, type, named)
 	        cum->words += cum->words & 1;
 	      cum->words += RS6000_ARG_SIZE (mode, type, 1);
 	    }
+	}
+      else if (mode == SVmode)
+	{
+	  /* Vectors go in registers and don't occupy space in the GPRs.  */
+	  if (cum->vregno <= VECTOR_ARG_MAX_REG
+	      && cum->nargs_prototype >= -1)
+	    cum->vregno++;
+	  else
+	    cum->words += RS6000_ARG_SIZE (mode, type, 1);
 	}
       else
 	{
@@ -1401,7 +2493,7 @@ function_arg_advance (cum, mode, type, named)
 	    {
 	      /* Long long is aligned on the stack.  */
 	      if (n_words == 2)
-		cum->words += cum->words & 1;
+		  cum->words += cum->words & 1;
 	      cum->words += n_words;
 	    }
 
@@ -1423,13 +2515,20 @@ function_arg_advance (cum, mode, type, named)
     }
   else
     {
-      int align = (TARGET_32BIT && (cum->words & 1) != 0
-		   && function_arg_boundary (mode, type) == 64) ? 1 : 0;
-      cum->words += align;
+      int align = function_arg_skip (mode, type, cum->words);
 
+      cum->words += align;
       if (named)
 	{
-	  cum->words += RS6000_ARG_SIZE (mode, type, named);
+	  /* Vectors go in registers and don't occupy space in the GPRs.  */
+	  if (GET_MODE_CLASS (mode) == MODE_VECTOR
+	      && cum->nargs_prototype >= -1)
+	    cum->vregno++;
+
+	  /* Unless it's varargs or stdarg.  */
+	  if (GET_MODE_CLASS (mode) != MODE_VECTOR || cum->is_varargs)
+	    cum->words += RS6000_ARG_SIZE (mode, type, named);
+
 	  if (GET_MODE_CLASS (mode) == MODE_FLOAT && TARGET_HARD_FLOAT)
 	    cum->fregno++;
 	}
@@ -1438,6 +2537,8 @@ function_arg_advance (cum, mode, type, named)
 	{
 	  fprintf (stderr, "function_adv: words = %2d, fregno = %2d, ",
 		   cum->words, cum->fregno);
+	  fprintf (stderr, "vregno = %2d, num_vector = %2d, ",
+		   cum->vregno, cum->num_vector);
 	  fprintf (stderr, "nargs = %4d, proto = %d, mode = %4s, ",
 		   cum->nargs_prototype, cum->prototype, GET_MODE_NAME (mode));
 	  fprintf (stderr, "named = %d, align = %d\n", named, align);
@@ -1507,6 +2608,18 @@ function_arg (cum, mode, type, named)
 	  else
 	    return NULL;
 	}
+      else if (mode == SVmode)
+	{
+	  if (cum->nargs_prototype >= 0)
+	    {
+	      int vregno = cum->vregno;
+	      if (cum->num_vector > VECTOR_ARG_NUM_REG)
+	        vregno -= cum->num_vector - VECTOR_ARG_NUM_REG;
+	      if ((unsigned)vregno - VECTOR_ARG_MIN_REG < (unsigned)VECTOR_ARG_NUM_REG)
+		return gen_rtx (REG, mode, vregno);
+	    }
+	  return NULL;
+	}
       else
 	{
 	  int n_words;
@@ -1527,20 +2640,20 @@ function_arg (cum, mode, type, named)
 	  if (gregno + n_words - 1 <= GP_ARG_MAX_REG)
 	    return gen_rtx_REG (mode, gregno);
 	  else
-	    return NULL;
+	    return NULL_RTX;
 	}
     }
   else
     {
       int align = (TARGET_32BIT && (cum->words & 1) != 0
-	           && function_arg_boundary (mode, type) == 64) ? 1 : 0;
+                   && function_arg_boundary (mode, type) == 64) ? 1 : 0;
       int align_words = cum->words + align;
 
       if (!named)
 	return NULL_RTX;
 
       if (type && TREE_CODE (TYPE_SIZE (type)) != INTEGER_CST)
-        return NULL_RTX;
+	return NULL_RTX;
 
       if (USE_FP_FOR_ARG_P (*cum, mode, type))
 	{
@@ -1549,7 +2662,7 @@ function_arg (cum, mode, type, named)
 	          /* IBM AIX extended its linkage convention definition always
 		     to require FP args after register save area hole on the
 		     stack.  */
-	          && (DEFAULT_ABI != ABI_AIX
+		  && (DEFAULT_ABI != ABI_AIX
 		      || ! TARGET_XL_CALL
 		      || (align_words < GP_ARG_NUM_REG))))
 	    return gen_rtx_REG (mode, cum->fregno);
@@ -1574,11 +2687,47 @@ function_arg (cum, mode, type, named)
 				gen_rtx_REG (mode, cum->fregno),
 				const0_rtx)));
 	}
+      else if (mode == SVmode)
+	{
+	  if (cum->nargs_prototype >= 0)
+	    {
+	      int vregno = cum->vregno;
+	      if (cum->num_vector > VECTOR_ARG_NUM_REG)
+		vregno -= cum->num_vector - VECTOR_ARG_NUM_REG;
+	      if ((unsigned)vregno - VECTOR_ARG_MIN_REG < (unsigned)VECTOR_ARG_NUM_REG)
+		return gen_rtx_REG (mode, vregno);
+	      return NULL_RTX;
+	    }
+	  else if (align_words < GP_ARG_NUM_REG)
+	    {
+	      /* Claim that the vector value goes in both memory and GPRs.  See
+		 gen_movsv for how the GPR copy gets interpreted.
+		 Varargs vector regs must be saved in R5-R8 or R9-R10.  */
+	      int regno = (align_words < 3) ? 5 : 9;
+	      rtx reg = gen_rtx_REG (SVmode, regno);
+	      return gen_rtx (PARALLEL, mode,
+			      gen_rtvec (2,
+					 gen_rtx (EXPR_LIST, VOIDmode,
+						  NULL_RTX, const0_rtx),
+					 gen_rtx (EXPR_LIST, VOIDmode,
+						  reg, const0_rtx)));
+	    }
+	  else
+	    {
+	      /* This is for a vector arg to a varargs function which
+		 WILL NOT appear in the GPR area.  Just use memory.  */
+	    }
+
+	  return NULL_RTX;
+	}
       else if (align_words < GP_ARG_NUM_REG)
 	return gen_rtx_REG (mode, GP_ARG_MIN_REG + align_words);
       else
 	return NULL_RTX;
     }
+
+  /* If we haven't returned anything, we're in trouble.  */
+  abort ();
 }
 
 /* For an arg passed partly in registers and partly in memory,
@@ -1592,6 +2741,8 @@ function_arg_partial_nregs (cum, mode, type, named)
      tree type;
      int named;
 {
+  int words;
+
   if (! named)
     return 0;
 
@@ -1604,10 +2755,15 @@ function_arg_partial_nregs (cum, mode, type, named)
 	return 0;
     }
 
-  if (cum->words < GP_ARG_NUM_REG
-      && GP_ARG_NUM_REG < (cum->words + RS6000_ARG_SIZE (mode, type, named)))
+  if (type && TREE_CODE (type) == VECTOR_TYPE)
+    return 0;
+
+  words = cum->words;
+  words += function_arg_skip (mode, type, words);
+  if (words < GP_ARG_NUM_REG
+      && GP_ARG_NUM_REG < (words + RS6000_ARG_SIZE (mode, type, named)))
     {
-      int ret = GP_ARG_NUM_REG - cum->words;
+      int ret = GP_ARG_NUM_REG - words;
       if (ret && TARGET_DEBUG_ARG)
 	fprintf (stderr, "function_arg_partial_nregs: %d\n", ret);
 
@@ -1706,6 +2862,14 @@ setup_incoming_varargs (cum, mode, type, pretend_size, no_rtl)
       rs6000_sysv_varargs_p = 0;
 
       first_reg_offset = cum->words;
+
+      /* For varargs, vector values occupy memory locations, so count them.  */
+      if (GET_MODE_CLASS (mode) == MODE_VECTOR)
+	{
+	  first_reg_offset += function_arg_skip (mode, type, cum->words);
+	  first_reg_offset += RS6000_ARG_SIZE (mode, type, 1);
+	}
+
       if (MUST_PASS_IN_STACK (mode, type))
 	first_reg_offset += RS6000_ARG_SIZE (TYPE_MODE (type), type, 1);
     }
@@ -1835,9 +2999,9 @@ expand_builtin_saveregs (args)
   emit_move_insn (mem_gpr_fpr, tmp);
 
   /* Find the overflow area.  */
-  tmp = expand_binop (Pmode, add_optab, virtual_incoming_args_rtx,
+    tmp = expand_binop (Pmode, add_optab, virtual_incoming_args_rtx,
 		      GEN_INT (words * UNITS_PER_WORD),
-		      mem_overflow, 0, OPTAB_WIDEN);
+		        mem_overflow, 0, OPTAB_WIDEN);
   if (tmp != mem_overflow)
     emit_move_insn (mem_overflow, tmp);
 
@@ -2244,6 +3408,32 @@ store_multiple_operation (op, mode)
   return 1;
 }
 
+/* Return 1 if OP is an equality operator.  */
+
+int
+equality_operator (op, mode)
+     register rtx op;
+     enum machine_mode mode;
+{
+  enum rtx_code code = GET_CODE (op);
+  if (mode == VOIDmode && (code == EQ || code == NE))
+    return 1;
+  return 0;
+}
+
+/* Return 1 if OP is a vector comparison operator.  */
+
+int
+vector_comparison_operator (op, mode)
+     register rtx op;
+     enum machine_mode mode;
+{
+  enum rtx_code code = GET_CODE (op);
+  if (mode == SImode && (code == EQ || code == LT))
+    return 1;
+  return 0;
+}
+
 /* Return 1 if OP is a comparison operation that is valid for a branch insn.
    We only check the opcode against the mode of the CC value here.  */
 
@@ -2350,6 +3540,94 @@ includes_rshift_p (shiftop, andop)
 
   return (INTVAL (andop) & ~ shift_mask) == 0;
 }
+
+/*
+ * true if we can use a rotate to do the given shift, IFF the result is masked with mask
+ * shift_op is an operator, shift count is its constant count
+ * mask is a mask of contiguous ones, legal for use with rwlinm/rlwimi
+ */
+int
+rotatable_shift_and_mask( shift_op, mask)
+     register rtx shift_op;
+     register rtx mask ;
+{
+  rtx shift_count = XEXP ( shift_op, 1) ;
+  int sh = INTVAL ( shift_count) ;
+
+  /* assert( sh >= 0 ) ; *//* reject negative shifts * presumed disallowed by FE */
+
+  /* mask must not have ones on both ends * e.g. insist MB < ME */
+  if ( ! narrow_mask_operand( mask))
+    return 0 ;
+
+  switch (GET_CODE ( shift_op))
+    {
+    case ASHIFT:
+      return includes_lshift_p( shift_count, mask) ;
+
+    case ASHIFTRT:
+    case LSHIFTRT:
+      return includes_rshift_p( shift_count, mask) ;
+
+    default:
+      return 0 ;
+    }
+}
+
+int
+shift_operator( shift_op, ignored_mode)
+     register rtx shift_op;
+     enum machine_mode ignored_mode;
+{
+  switch (GET_CODE ( shift_op))
+    {
+    case ASHIFT:
+    case ASHIFTRT:
+    case LSHIFTRT:
+      return 1 ;
+
+    default:
+      return 0 ;
+    }
+}
+
+/*
+ * given a shift operator and a count,
+ * return a count to use with a left rotate and mask
+ * assumes the result will be masked to discard rotated bits
+ */
+int
+rotate_count( shift_op)
+     register rtx shift_op;
+{
+  int shift_count = INTVAL ( XEXP ( shift_op, 1)) ;
+
+  if (shift_count < 0)
+    return -1 ;
+
+  switch (GET_CODE ( shift_op))
+    {
+    case ASHIFT:
+      return shift_count ;
+
+    case ASHIFTRT:
+    case LSHIFTRT:
+      return 32 - shift_count ;
+
+    default:	/* never happens */
+      return -1 ;
+    }
+}
+
+unsigned
+ppc_mask_bits32 (rtx masksize, rtx maskstart)
+{
+  int start = 32 - (INTVAL (maskstart) & 31);  /* PPC-normalise bit#  */
+  int size = INTVAL (masksize) & 31;
+
+  return ((1 << start) - 1) & (((1 << size) - 1) << (start - size));
+}
+
 
 /* Return 1 if REGNO (reg1) == REGNO (reg2) - 1 making them candidates
    for lfq and stfq insns.
@@ -2475,6 +3753,19 @@ secondary_reload_class (class, mode, in)
   if ((regno == -1 || FP_REGNO_P (regno))
       && (class == FLOAT_REGS || class == NON_SPECIAL_REGS))
     return NO_REGS;
+
+  /* Easy constants, memory, and Vector registers
+     can go into Vector registers.  */
+  if (class == VECTOR_REGS
+      && (VECTOR_REGNO_P (regno)
+	  || (regno == -1
+	      && (GET_CODE (in) != CONST_VECTOR
+		  || easy_vector_constant (in)))))
+    return NO_REGS;
+
+  /* Memory vector constants need BASE_REGS in order to be loaded.  */
+  if (GET_CODE (in) == CONST_VECTOR && ! easy_vector_constant (in))
+    return BASE_REGS;
 
   /* We can copy among the CR registers.  */
   if ((class == CR_REGS || class == CR0_REGS)
@@ -2628,6 +3919,9 @@ rs6000_init_expanders ()
   rs6000_sysv_varargs_p = 0;
   rs6000_fpmem_size = 0;
   rs6000_fpmem_offset = 0;
+#ifndef MACHO_PIC
+  pic_offset_table_rtx = (rtx)0;
+#endif
 
   /* Arrange to save and restore machine status around nested functions.  */
   save_machine_status = rs6000_save_machine_status;
@@ -2957,7 +4251,7 @@ print_operand (file, x, code)
 	  || REGNO (XEXP (x, 0)) >= 32)
 	output_operand_lossage ("invalid %%P value");
 
-      fprintf (file, "%d", REGNO (XEXP (x, 0)));
+      fprintf (file, "%s", reg_names[REGNO (XEXP (x, 0))]);
       return;
 
     case 'R':
@@ -3206,6 +4500,7 @@ print_operand (file, x, code)
 	    case ABI_V4:
 	    case ABI_AIX_NODESC:
 	    case ABI_SOLARIS:
+	    case ABI_MACOSX:
 	      break;
 
 	    case ABI_NT:
@@ -3241,11 +4536,11 @@ print_operand (file, x, code)
 	  /* We need to handle PRE_INC and PRE_DEC here, since we need to
 	     know the width from the mode.  */
 	  if (GET_CODE (XEXP (x, 0)) == PRE_INC)
-	    fprintf (file, "%d(%d)", GET_MODE_SIZE (GET_MODE (x)),
-		     REGNO (XEXP (XEXP (x, 0), 0)));
+	    fprintf (file, "%d(%s)", GET_MODE_SIZE (GET_MODE (x)),
+		     reg_names[REGNO (XEXP (XEXP (x, 0), 0))]);
 	  else if (GET_CODE (XEXP (x, 0)) == PRE_DEC)
-	    fprintf (file, "%d(%d)", - GET_MODE_SIZE (GET_MODE (x)),
-		     REGNO (XEXP (XEXP (x, 0), 0)));
+	    fprintf (file, "%d(%s)", - GET_MODE_SIZE (GET_MODE (x)),
+		     reg_names[REGNO (XEXP (XEXP (x, 0), 0))]);
 	  else
 	    output_address (XEXP (x, 0));
 	}
@@ -3298,6 +4593,16 @@ print_operand_address (file, x)
       output_addr_const (file, XEXP (x, 1));
       fprintf (file, "@l(%s)", reg_names[ REGNO (XEXP (x, 0)) ]);
     }
+#ifdef MACHO_PIC
+  else if ((DEFAULT_ABI == ABI_MACOSX && !flag_pic) && !TARGET_64BIT
+	   && GET_CODE (x) == LO_SUM
+	   && GET_CODE (XEXP (x, 0)) == REG && CONSTANT_P (XEXP (x, 1)))
+    {
+      fprintf (file, "lo16(");
+      output_addr_const (file, XEXP (x, 1));
+      fprintf (file, ")(%s)", reg_names[ REGNO (XEXP (x, 0)) ]);
+    }
+#endif	/* MACHO_PIC */
   else
     abort ();
 }
@@ -3305,13 +4610,80 @@ print_operand_address (file, x)
 /* This page contains routines that are used to determine what the function
    prologue and epilogue code will do and write them out.  */
 
+typedef enum {
+	VOLATILE_FOR_PICBASE_REG,
+	VOLATILE_FOR_VRSAVE_REG
+} volatile_reg_type;
+
+/* ALLOC_VOLATILE_REG allocates a volatile register AFTER all gcc register
+   allocations have been done; we use it to grab an unused volatile reg
+   to hold the PIC base reg in the event that the current function makes no
+   procedure calls, and similarly to reserve an unused reg for holding
+   VRsave.
+   Returns -1 in case of failure (all volatile regs are in use.)  */
+
+static
+int
+alloc_volatile_reg (volatile_reg_type forwhat)
+{
+  switch (forwhat)
+    {
+      case VOLATILE_FOR_PICBASE_REG:		/* Use r12 for PicBase  */
+	if (! fixed_regs[12] && ! regs_ever_live[12])
+	  return 12;
+	break;
+
+      case VOLATILE_FOR_VRSAVE_REG:		/* any for VRsave reg  */
+	if (! rs6000_makes_calls ())
+        {
+	  int r;
+	  for (r = 10; r >= 2; --r)
+	    if (! fixed_regs[r] &&  ! regs_ever_live[r])
+	      return r;
+	}
+	break;
+
+      default:					/* Hmmm.  */
+	abort();
+	break;
+    }
+
+  return -1;					/* fail  */
+}
+
+
+/* VECTOR_REGS_LIVE_MASK returns a mask of the vector regs that are live.
+   The high bit corresponds to v0.  */
+
+static
+unsigned long
+vector_regs_live_mask (void)
+{
+  int r;
+  unsigned long mask = 0;
+
+  if (flag_altivec)
+    {
+      if (current_vrsave_save_type == VRSAVE_ALLON)
+	mask = -1;
+      else
+      if (current_vrsave_save_type == VRSAVE_NORMAL)
+        for (r = 78; r < 110; ++r)
+	  if (regs_ever_live[r])
+	    mask |= (0x80000000UL >> (r-78));
+    }
+
+  return mask;
+}
+
+
 /*  Return the first fixed-point register that is required to be saved. 32 if
     none.  */
 
 int
 first_reg_to_save ()
 {
-  int first_reg;
+  int first_reg, last_parm_reg;
 
   /* Find lowest numbered live register.  */
   for (first_reg = 13; first_reg <= 31; first_reg++)
@@ -3324,7 +4696,7 @@ first_reg_to_save ()
 	 before/after the .__mcount call plus an additional register
 	 for the static chain, if needed; use registers from 30 down to 22
 	 to do this.  */
-      if (DEFAULT_ABI == ABI_AIX)
+      if (DEFAULT_ABI == ABI_AIX || DEFAULT_ABI == ABI_MACOSX)
 	{
 	  int last_parm_reg, profile_first_reg;
 
@@ -3342,6 +4714,12 @@ first_reg_to_save ()
 	     Skip reg 31 which may contain the frame pointer.  */
 	  profile_first_reg = (33 - last_parm_reg
 			       - (current_function_needs_context ? 1 : 0));
+#ifdef MACHO_PIC
+	  /* Need to skip another reg to account for R31 being PICBASE
+	     (when flag_pic is set) or R30 being used as the frame pointer
+	     (when flag_pic is not set).  */
+	  --profile_first_reg;
+#endif
 	  /* Do not save frame pointer if no parameters needs to be saved.  */
 	  if (profile_first_reg == 31)
 	    profile_first_reg = 32;
@@ -3358,6 +4736,27 @@ first_reg_to_save ()
 	    first_reg = 30;
 	}
     }
+
+#ifdef MACHO_PIC
+  machopic_pic_base_reg = 0;   /* reset to zero  */
+  if (flag_pic && current_function_uses_pic_offset_table && 
+      (first_reg > PIC_OFFSET_TABLE_REGNUM))
+    {
+#ifdef MACHO_PIC_LEAF_OPT
+      /* If this is a leaf function, use a volatile reg to store PICbase.  */
+      if (! rs6000_makes_calls () && get_frame_size () < 32000)
+	{
+	  int r = alloc_volatile_reg (VOLATILE_FOR_PICBASE_REG);
+	  if (r > 0)
+	    {
+	      machopic_pic_base_reg = r;
+	      return first_reg;
+	    }
+	}
+#endif
+	return PIC_OFFSET_TABLE_REGNUM;
+    }
+#endif	/* MACHO_PIC  */
 
   return first_reg;
 }
@@ -3377,6 +4776,36 @@ first_fp_reg_to_save ()
   return first_reg;
 }
 
+/* Similar, for VECTOR regs.  */
+
+int
+first_vector_reg_to_save ()
+{
+  int first_reg;
+  extern int flag_altivec;
+
+#ifdef MACHO_PIC
+  /* For MACHOPIC, which does the SAVE/RESTORE WORLD stuff when
+    builtin_setjmp, etc., is called, having "live" vector regs
+    when flag_vec is zero is perfectly OK.  But we should be
+    using setjmp (), and *ALL* vector regs must be live, which
+    we take as v20.  */
+
+  if (!current_function_calls_setjmp && ! regs_ever_live[20+78])
+#endif
+
+  /* Consider none to be live if -faltivec isn't specified.  */
+  if (!flag_altivec)
+    return 110;
+
+  /* Find lowest numbered live register.  */
+  for (first_reg = 20 + 78; first_reg <= 109; first_reg++)
+    if (regs_ever_live[first_reg])
+      break;
+
+  return first_reg;
+}
+
 /* Return non-zero if this function makes calls.  */
 
 int
@@ -3387,8 +4816,47 @@ rs6000_makes_calls ()
   /* If we are profiling, we will be making a call to __mcount.
      Under the System V ABI's, we store the LR directly, so
      we don't need to do it here.  */
-  if (DEFAULT_ABI == ABI_AIX && profile_flag)
+  if ((DEFAULT_ABI == ABI_AIX || DEFAULT_ABI == ABI_MACOSX) && profile_flag)
     return 1;
+
+#if 0 && defined(MACHO_PIC_LEAF_OPT)
+  /* If the only CALL insn is the last thing done, turn it into a branch!
+     Won't work yet as we need to mangle the CALL_INSN into a JUMP_INSN.  */
+
+  if (DEFAULT_ABI == ABI_MACOSX && reload_completed && ! get_frame_size ())
+    {
+      for (insn = get_insns (); insn ; insn = next_nonnote_insn (insn))
+	if (GET_CODE (insn) == CALL_INSN)
+	  {
+	    insn = next_active_insn (insn);
+
+	    /* Sometimes we have a (set r3 r3) insn; ignore it!  */
+
+	    while (insn != NULL && GET_CODE (PATTERN (insn)) == SET)
+	      {
+		rtx set = single_set (insn);
+
+		if (set != NULL && GET_CODE (SET_DEST (set)) == REG
+		    && GET_CODE (SET_SRC (set)) == REG
+		    && REGNO (SET_DEST (set)) == REGNO (SET_SRC (set)))
+		  insn = next_active_insn (insn);
+		else
+		  break;	/* Oh dear.  out of luck.  */
+	      }
+
+	    if (insn == NULL || (GET_CODE (insn) == JUMP_INSN
+				 && GET_CODE (PATTERN (insn)) == RETURN))
+	      {
+		regs_ever_live[65] = 0;		/* Whoooaaaa!!  */
+		return 0;
+	      }
+
+	    return 1;
+	  }
+
+      return 0;
+    }
+#endif
 
   for (insn = get_insns (); insn; insn = next_insn (insn))
     if (GET_CODE (insn) == CALL_INSN)
@@ -3425,9 +4893,15 @@ rs6000_makes_calls ()
 		+---------------------------------------+
 		| Float/int conversion temporary (X)	| 24+P+A+L
 		+---------------------------------------+
-		| Save area for GP registers (G)	| 24+P+A+X+L
+		| Save area for Vector registers (Z)	| 24+P+A+L+X
 		+---------------------------------------+
-		| Save area for FP registers (F)	| 24+P+A+X+L+G
+		| alignment padding (Y)			| 24+P+A+L+X+Z
+		+---------------------------------------+
+		| saved VRsave (W)			| 24+P+A+L+X+Z+Y
+		+---------------------------------------+
+		| Save area for GP registers (G)	| 24+P+A+L+X+Z+Y+W
+		+---------------------------------------+
+		| Save area for FP registers (F)	| 24+P+A+L+X+Z+Y+W+G
 		+---------------------------------------+
 	old SP->| back chain to caller's caller		|
 		+---------------------------------------+
@@ -3453,11 +4927,17 @@ rs6000_makes_calls ()
 		+---------------------------------------+    
 		| Float/int conversion temporary (X)	| 8+P+A+V+L
 		+---------------------------------------+
-		| saved CR (C)				| 8+P+A+V+L+X
+		| Save area for Vector registers (Z)	| 8+P+A+V+L+X
+		+---------------------------------------+
+		| alignment padding (Y)			| 8+P+A+V+L+X+Z
+		+---------------------------------------+
+		| saved VRsave (W)			| 8+P+A+V+L+X+Z+Y
+		+---------------------------------------+
+		| saved CR (C)				| 8+P+A+V+L+X+Z+Y+W
 		+---------------------------------------+    
-		| Save area for GP registers (G)	| 8+P+A+V+L+X+C
+		| Save area for GP registers (G)	| 8+P+A+V+L+X+Z+Y+W+C
 		+---------------------------------------+    
-		| Save area for FP registers (F)	| 8+P+A+V+L+X+C+G
+		| Save area for FP registers (F)	| 8+P+A+V+L+X+Z+Y+W+C+G
 		+---------------------------------------+
 	old SP->| back chain to caller's caller		|
 		+---------------------------------------+
@@ -3552,10 +5032,13 @@ rs6000_stack_info ()
       && info_ptr->first_gp_reg_save > PIC_OFFSET_TABLE_REGNUM)
     info_ptr->gp_size = reg_size * (32 - PIC_OFFSET_TABLE_REGNUM);
   else
-    info_ptr->gp_size = reg_size * (32 - info_ptr->first_gp_reg_save);
+  info_ptr->gp_size = reg_size * (32 - info_ptr->first_gp_reg_save);
 
   info_ptr->first_fp_reg_save = first_fp_reg_to_save ();
   info_ptr->fp_size = 8 * (64 - info_ptr->first_fp_reg_save);
+
+  info_ptr->first_vector_reg_save = first_vector_reg_to_save ();
+  info_ptr->vector_size = 16 * (110 - info_ptr->first_vector_reg_save);
 
   /* Does this function call anything? */
   info_ptr->calls_p = rs6000_makes_calls ();
@@ -3611,8 +5094,13 @@ rs6000_stack_info ()
 #endif
       || (info_ptr->first_fp_reg_save != 64
 	  && !FP_SAVE_INLINE (info_ptr->first_fp_reg_save))
+      || (info_ptr->first_vector_reg_save != 110
+	  && !VECTOR_SAVE_INLINE (info_ptr->first_vector_reg_save))
       || (abi == ABI_V4 && current_function_calls_alloca)
       || (abi == ABI_SOLARIS && current_function_calls_alloca)
+#if defined(MACHO_PIC) && !defined(MACHO_PIC_LEAF_OPT)
+      || (flag_pic && current_function_uses_pic_offset_table)
+#endif
       || info_ptr->calls_p)
     {
       info_ptr->lr_save_p = 1;
@@ -3633,15 +5121,37 @@ rs6000_stack_info ()
   info_ptr->reg_size     = reg_size;
   info_ptr->fixed_size   = RS6000_SAVE_AREA;
   info_ptr->varargs_size = RS6000_VARARGS_AREA;
+  /* TODO: Not considering 16-byte alignment here. */
   info_ptr->vars_size    = RS6000_ALIGN (get_frame_size (), 8);
   info_ptr->parm_size    = RS6000_ALIGN (current_function_outgoing_args_size, 8);
   info_ptr->fpmem_size	 = (info_ptr->fpmem_p) ? 8 : 0;
-  info_ptr->save_size    = RS6000_ALIGN (info_ptr->fp_size
-				  + info_ptr->gp_size
-				  + info_ptr->cr_size
-				  + info_ptr->lr_size
-				  + info_ptr->toc_size
-				  + info_ptr->main_size, 8);
+
+  /* If nothing else is being saved, see if we can avoid saving VRsave
+     on the stack by using a volatile register to hold it.  */
+
+  if (vector_regs_live_mask ())
+    {
+      int vrsave_sz = reg_size;		/* assume we need to save on stack  */
+
+      info_ptr->vrsave_save_p = 1;	/* Need to save VRsave.  */
+
+      /* If we're not calling other functions, we can stash VRsave in
+	 a free volatile register.  */
+
+      if (info_ptr->lr_save_p == 0)
+	{
+	  /* If we have a spare volatile reg, use it for VRsave.  */
+	  if (alloc_volatile_reg (VOLATILE_FOR_VRSAVE_REG) > 0)
+	    vrsave_sz = 0;		/* no need to save on stack  */
+	}
+
+      info_ptr->vrsave_size = vrsave_sz;
+    }
+  /* Even if we're not touching VRsave, make sure there's room on the stack
+     for it, if it looks like we're calling SAVE_WORLD, which *will* attempt
+     to save it.  */
+  else if (info_ptr->first_vector_reg_save == 78+20)
+      info_ptr->vrsave_size = reg_size;
 
   /* Calculate the offsets */
   switch (abi)
@@ -3652,8 +5162,14 @@ rs6000_stack_info ()
 
     case ABI_AIX:
     case ABI_AIX_NODESC:
+    case ABI_MACOSX:
       info_ptr->fp_save_offset   = - info_ptr->fp_size;
       info_ptr->gp_save_offset   = info_ptr->fp_save_offset - info_ptr->gp_size;
+      info_ptr->vrsave_save_offset = info_ptr->gp_save_offset - info_ptr->vrsave_size;
+      info_ptr->align_size = (info_ptr->vector_size ? (16 - ((-info_ptr->vrsave_save_offset) % 16)) % 16 : 0);
+      info_ptr->vector_save_offset = info_ptr->vrsave_save_offset - info_ptr->align_size - info_ptr->vector_size;
+      if (- info_ptr->vector_save_offset > 220)
+	info_ptr->vector_outside_red_zone_p = 1;
       info_ptr->main_save_offset = info_ptr->gp_save_offset - info_ptr->main_size;
       info_ptr->cr_save_offset   = reg_size; /* first word when 64-bit.  */
       info_ptr->lr_save_offset   = 2*reg_size;
@@ -3665,7 +5181,10 @@ rs6000_stack_info ()
       info_ptr->gp_save_offset   = info_ptr->fp_save_offset - info_ptr->gp_size;
       info_ptr->cr_save_offset   = info_ptr->gp_save_offset - info_ptr->cr_size;
       info_ptr->toc_save_offset  = info_ptr->cr_save_offset - info_ptr->toc_size;
-      info_ptr->main_save_offset = info_ptr->toc_save_offset - info_ptr->main_size;
+      info_ptr->vrsave_save_offset = info_ptr->toc_save_offset - info_ptr->vrsave_size;
+      info_ptr->align_size = (info_ptr->vector_size ? (16 - ((-info_ptr->vrsave_save_offset) % 16)) % 16 : 0);
+      info_ptr->vector_save_offset = info_ptr->vrsave_save_offset - info_ptr->align_size - info_ptr->vector_size;
+      info_ptr->main_save_offset = info_ptr->vector_save_offset - info_ptr->main_size;
       info_ptr->lr_save_offset   = reg_size;
       break;
 
@@ -3686,6 +5205,16 @@ rs6000_stack_info ()
   if (info_ptr->fpmem_p
       && (info_ptr->main_save_offset - info_ptr->fpmem_size) % 8)
     info_ptr->fpmem_size += reg_size;
+
+  info_ptr->save_size    = RS6000_ALIGN (info_ptr->fp_size
+				  + info_ptr->gp_size
+				  + info_ptr->vector_size
+				  + info_ptr->vrsave_size
+				  + info_ptr->align_size
+				  + info_ptr->cr_size
+				  + info_ptr->lr_size
+				  + info_ptr->toc_size
+				  + info_ptr->main_size, 16);
 
   total_raw_size	 = (info_ptr->vars_size
 			    + info_ptr->parm_size
@@ -3717,7 +5246,7 @@ rs6000_stack_info ()
 
   else
     info_ptr->push_p = (frame_pointer_needed
-			|| write_symbols != NO_DEBUG
+			|| (abi != ABI_MACOSX && write_symbols != NO_DEBUG)
 			|| ((total_raw_size - info_ptr->fixed_size)
 			    > (TARGET_32BIT ? 220 : 288)));
 
@@ -3732,6 +5261,28 @@ rs6000_stack_info ()
   else
     info_ptr->fpmem_offset = 0;  
 
+#ifdef MACHO_PIC
+
+  /* For a *very* restricted set of circumstances, we can cut down the size of
+     prologs/epilogs by calling our own save/restore-the-world routines.
+     This would normally be used for C++ routines which use EH.  */
+
+  info_ptr->world_save_p = info_ptr->first_fp_reg_save == 14+32
+			   && info_ptr->first_gp_reg_save == 13
+			   && info_ptr->first_vector_reg_save == 78+20
+			   && info_ptr->cr_save_p;
+
+
+  /* Because the MACHO-PIC register save/restore routines only handle
+     F14 .. F31 and V20 .. V31 as per the ABI, abort if there's something
+     funny going on.  */
+
+  if (info_ptr->first_fp_reg_save < 14+32
+     || info_ptr->first_vector_reg_save < 78+20)
+    abort ();
+
+#endif
+
   /* Zero offsets if we're not saving those registers */
   if (info_ptr->fp_size == 0)
     info_ptr->fp_save_offset = 0;
@@ -3739,11 +5290,17 @@ rs6000_stack_info ()
   if (info_ptr->gp_size == 0)
     info_ptr->gp_save_offset = 0;
 
+  if (!info_ptr->vector_size)
+    info_ptr->vector_save_offset = 0;
+
   if (!info_ptr->lr_save_p)
     info_ptr->lr_save_offset = 0;
 
   if (!info_ptr->cr_save_p)
     info_ptr->cr_save_offset = 0;
+
+  if (!info_ptr->vrsave_save_p)
+    info_ptr->vrsave_save_offset = 0;
 
   if (!info_ptr->toc_save_p)
     info_ptr->toc_save_offset = 0;
@@ -3775,6 +5332,7 @@ debug_stack_info (info)
     case ABI_AIX:	 abi_string = "AIX";		break;
     case ABI_AIX_NODESC: abi_string = "AIX";		break;
     case ABI_V4:	 abi_string = "V.4";		break;
+    case ABI_MACOSX:	 abi_string = "MacOSX";		break;
     case ABI_SOLARIS:	 abi_string = "Solaris";	break;
     case ABI_NT:	 abi_string = "NT";		break;
     }
@@ -3787,6 +5345,9 @@ debug_stack_info (info)
   if (info->first_fp_reg_save != 64)
     fprintf (stderr, "\tfirst_fp_reg_save   = %5d\n", info->first_fp_reg_save);
 
+  if (info->first_vector_reg_save != 110)
+    fprintf (stderr, "\tfirst_vector_reg_save = %3d\n", info->first_vector_reg_save);
+
   if (info->lr_save_p)
     fprintf (stderr, "\tlr_save_p           = %5d\n", info->lr_save_p);
 
@@ -3795,6 +5356,13 @@ debug_stack_info (info)
 
   if (info->toc_save_p)
     fprintf (stderr, "\ttoc_save_p          = %5d\n", info->toc_save_p);
+
+  if (info->vrsave_save_p)
+    fprintf (stderr, "\tvrsave_save_p       = %5d  (live_mask=0x%08x)\n",
+		info->vrsave_save_p, vector_regs_live_mask ());
+
+  if (info->vector_outside_red_zone_p)
+    fprintf (stderr, "\tvector_outside_red_zone_p = %d\n", info->vector_outside_red_zone_p);
 
   if (info->push_p)
     fprintf (stderr, "\tpush_p              = %5d\n", info->push_p);
@@ -3811,11 +5379,17 @@ debug_stack_info (info)
   if (info->fpmem_p)
     fprintf (stderr, "\tfpmem_p             = %5d\n", info->fpmem_p);
 
+  if (info->world_save_p)
+    fprintf (stderr, "\tworld_save_p        = %5d\n", info->world_save_p);
+
   if (info->gp_save_offset)
     fprintf (stderr, "\tgp_save_offset      = %5d\n", info->gp_save_offset);
 
   if (info->fp_save_offset)
     fprintf (stderr, "\tfp_save_offset      = %5d\n", info->fp_save_offset);
+
+  if (info->vector_save_offset)
+    fprintf (stderr, "\tvector_save_offset  = %5d\n", info->vector_save_offset);
 
   if (info->lr_save_offset)
     fprintf (stderr, "\tlr_save_offset      = %5d\n", info->lr_save_offset);
@@ -3825,6 +5399,9 @@ debug_stack_info (info)
 
   if (info->toc_save_offset)
     fprintf (stderr, "\ttoc_save_offset     = %5d\n", info->toc_save_offset);
+
+  if (info->vrsave_save_offset)
+    fprintf (stderr, "\tvrsave_save_offset  = %5d\n", info->vrsave_save_offset);
 
   if (info->varargs_save_offset)
     fprintf (stderr, "\tvarargs_save_offset = %5d\n", info->varargs_save_offset);
@@ -3859,6 +5436,9 @@ debug_stack_info (info)
   if (info->fp_size)
     fprintf (stderr, "\tfp_size             = %5d\n", info->fp_size);
 
+  if (info->vector_size)
+    fprintf (stderr, "\tvector_size         = %5d\n", info->vector_size);
+
  if (info->lr_size)
     fprintf (stderr, "\tlr_size             = %5d\n", info->cr_size);
 
@@ -3868,6 +5448,9 @@ debug_stack_info (info)
  if (info->toc_size)
     fprintf (stderr, "\ttoc_size            = %5d\n", info->toc_size);
 
+  if (info->vrsave_size)
+    fprintf (stderr, "\tvrsave_size         = %5d\n", info->vrsave_size);
+
  if (info->main_size)
     fprintf (stderr, "\tmain_size           = %5d\n", info->main_size);
 
@@ -3876,6 +5459,9 @@ debug_stack_info (info)
 
   if (info->reg_size != 4)
     fprintf (stderr, "\treg_size            = %5d\n", info->reg_size);
+
+  if (info->align_size != 0)
+    fprintf (stderr, "\talign_size          = %5d\n", info->align_size);
 
   fprintf (stderr, "\n");
 }
@@ -3959,17 +5545,43 @@ rs6000_output_load_toc_table (file, reg)
     abort ();
 
 #else	/* !USING_SVR4_H */
+#ifdef MACHO_PIC
+  /* If we've got DWARF2, forget about PIC reg recalculation.  */
+#ifndef DWARF2_UNWIND_INFO
+  if (flag_pic && current_function_uses_pic_offset_table)
+    {
+      extern char *machopic_function_base_name ();
+      const char *pic_label = machopic_function_base_name ();
+      char buf[128];
+      const char *reload_label = buf;
+      const char *reg = reg_names[PIC_OFFSET_TABLE_REGNUM];
+      static int labelno = 0;
+
+      ++labelno;
+      ASM_GENERATE_INTERNAL_LABEL (buf, "L$reload$pic$", labelno);
+      if (*pic_label == '*') ++pic_label;
+      if (*reload_label == '*') ++reload_label;
+      fprintf (file, "\tbcl 20,31,%s\n%s:\n", reload_label, reload_label);
+      fprintf (file, "\tmflr %s\n", reg);
+      fprintf (file, "\taddis %s,%s,ha16(%s-%s)\n", reg, reg,
+			pic_label, reload_label);
+      fprintf (file, "\taddi %s,%s,lo16(%s-%s)\n", reg, reg,
+			pic_label, reload_label);
+    }
+#endif
+#else
   ASM_GENERATE_INTERNAL_LABEL (buf, "LCTOC", 0);
   asm_fprintf (file, TARGET_32BIT ? "\t{l|lwz} %s," : "\tld %s,",
 	       reg_names[reg]);
   assemble_name (file, buf);
   asm_fprintf (file, "(%s)\n", reg_names[2]);
+#endif /* MACHO_PIC  */
 #endif /* USING_SVR4_H */
 }
 
 
-/* Emit the correct code for allocating stack space.  If COPY_R12, make sure a copy
-   of the old frame is left in r12.  */
+/* Emit the correct code for allocating stack space.  If COPY_R12, make sure
+   a copy of the old frame is left in r12.  */
 
 void
 rs6000_allocate_stack_space (file, size, copy_r12)
@@ -4019,6 +5631,41 @@ rs6000_allocate_stack_space (file, size, copy_r12)
 }
 
 
+#ifndef ORDINARY_REG_NO
+/* The number of a register (other than zero) that can always be clobbered
+   by a called function without saving it first.  */
+#define ORDINARY_REG_NO 12
+#endif
+
+#ifdef MACHO_PIC
+/* Horrible hackery to determine whether a name is an ObjC method.  */
+int name_encodes_objc_method_p (const char *piclabel_name)
+{
+  return (piclabel_name[0] == '*'
+    && piclabel_name[1] == '"' ? (piclabel_name[2] == 'L'
+                                  && (piclabel_name[3] == '+'
+                                      || piclabel_name[3] == '-'))
+                               : (piclabel_name[1] == 'L'
+                                  && (piclabel_name[2] == '+'
+                                      || piclabel_name[2] == '-')));
+}
+#endif
+
+/* Emit code to load an integer register with a constant.  */
+static
+void
+asm_load_gp_reg_with_const (asm_file, regno, val)
+    FILE *asm_file;
+    int  regno, val;
+{
+  if ((unsigned HOST_WIDE_INT) ((val) + 0x8000) < 0x10000)
+    asm_fprintf (asm_file, "\tli %s,%d\n", reg_names[regno], val);
+  else
+    asm_fprintf (asm_file, "\t{liu|lis} %s,0x%x\n\t{oril|ori} %s,%s,0x%x\n",
+		reg_names[regno], (val >> 16) & 0xffff,
+		reg_names[regno], reg_names[regno], val & 0xffff);
+}
+
 /* Write function prologue.  */
 void
 output_prolog (file, size)
@@ -4031,6 +5678,30 @@ output_prolog (file, size)
   const char *load_reg;
   int sp_reg = 1;
   int sp_offset = 0;
+
+#ifdef MACHO_PIC
+  int lr_already_set_up_for_pic = 0;
+  int callers_lr_already_saved = 0;
+  int saved_world = 0;
+
+  /* Mach-O save/restore vector regs and "world" DO NOT FOLLOW C ABI
+     conventions.  Be warned now!!!  */
+
+  if (current_function_uses_pic_offset_table && flag_pic)
+    {
+      char *piclabel_name = machopic_function_base_name();
+      
+      if (name_encodes_objc_method_p (piclabel_name)
+	  /* If we're saving vector or FP regs via a function call,
+	     then don't bother with this ObjC R12 optimisation.  */
+	  && (info->first_vector_reg_save == 110
+	      || VECTOR_SAVE_INLINE (info->first_vector_reg_save))
+	  && (info->first_fp_reg_save == 64 
+	      || FP_SAVE_INLINE (info->first_fp_reg_save)))
+	/* Output pic base label.  */
+	ASM_OUTPUT_LABEL (file, piclabel_name);
+    }
+#endif	/* MACHO_PIC */
 
   if (TARGET_32BIT)
     {
@@ -4046,12 +5717,20 @@ output_prolog (file, size)
   if (TARGET_DEBUG_STACK)
     debug_stack_info (info);
 
+#ifndef MACHO_PIC
   /* Write .extern for any function we will call to save and restore fp
      values.  */
   if (info->first_fp_reg_save < 64 && !FP_SAVE_INLINE (info->first_fp_reg_save))
     fprintf (file, "\t.extern %s%d%s\n\t.extern %s%d%s\n",
 	     SAVE_FP_PREFIX, info->first_fp_reg_save - 32, SAVE_FP_SUFFIX,
 	     RESTORE_FP_PREFIX, info->first_fp_reg_save - 32, RESTORE_FP_SUFFIX);
+
+  /* Write .extern for any function we will call to save and restore vector
+     values.  */
+  if (info->first_vector_reg_save < 110 && !VECTOR_SAVE_INLINE (info->first_vector_reg_save))
+    fprintf (file, "\t.extern %s%d%s\n\t.extern %s%d%s\n",
+	     SAVE_VECTOR_PREFIX, info->first_vector_reg_save - 78, SAVE_VECTOR_SUFFIX,
+	     RESTORE_VECTOR_PREFIX, info->first_vector_reg_save - 78, RESTORE_VECTOR_SUFFIX);
 
   /* Write .extern for truncation routines, if needed.  */
   if (rs6000_trunc_used && ! trunc_defined)
@@ -4072,6 +5751,7 @@ output_prolog (file, size)
       fputs ("\t.extern __quous\n", file);
       common_mode_defined = 1;
     }
+#endif  /* MACHO_PIC */
 
   /* For V.4, update stack before we do any saving and set back pointer.  */
   if (info->push_p && (DEFAULT_ABI == ABI_V4 || DEFAULT_ABI == ABI_SOLARIS))
@@ -4087,9 +5767,43 @@ output_prolog (file, size)
   if (info->lr_save_p)
     asm_fprintf (file, "\tmflr %s\n", reg_names[0]);
 
-  /* If we need to save CR, put it into r12.  */
-  if (info->cr_save_p && sp_reg != 12)
-    asm_fprintf (file, "\tmfcr %s\n", reg_names[12]);
+#ifdef MACHO_PIC
+  if (info->world_save_p)
+    {
+      /* Our SAVE_WORLD and RESTORE_WORLD routines make a number of
+	 assumptions about the offsets of various bits of the stack
+	 frame.  Abort if things aren't what they should be.  */
+
+      if (info->gp_save_offset != -220
+	 || info->fp_save_offset != -144
+	 || info->lr_save_offset != 8
+	 || info->cr_save_offset != 4
+	 || ! info->push_p
+	 || ! info->lr_save_p
+	 || (flag_altivec && (info->vrsave_save_offset != -224
+			 || info->vector_save_offset != (-224-192))))
+	abort ();
+
+      asm_load_gp_reg_with_const (file, /*reg:*/ 11, - info->total_size);
+
+      /* SAVE_WORLD takes the caller's LR in R0 and the frame size
+	 in R11.  It also uses R12, so beware!  */
+
+      fprintf (file, "\tbl save_world\n");
+      if (current_function_uses_pic_offset_table && flag_pic)
+	{
+          ASM_OUTPUT_LABEL (file, machopic_function_base_name ());
+	  lr_already_set_up_for_pic = 1;
+	}
+      callers_lr_already_saved = 1;
+      saved_world = 1;
+      goto world_saved;
+    }
+#endif	/* MACHO_PIC */
+
+  /* If we need to save CR, put it into ORDINARY_REG_NO.  */
+  if (info->cr_save_p && sp_reg != ORDINARY_REG_NO && 0)
+    asm_fprintf (file, "\tmfcr %s\n", reg_names[ORDINARY_REG_NO]);
 
   /* Do any required saving of fpr's.  If only one or two to save, do it
      ourself.  Otherwise, call function.  Note that since they are statically
@@ -4103,8 +5817,36 @@ output_prolog (file, size)
 	asm_fprintf (file, "\tstfd %s,%d(%s)\n", reg_names[regno], loc, reg_names[sp_reg]);
     }
   else if (info->first_fp_reg_save != 64)
+#ifdef MACHO_PIC
+    {
+      /* We have to calculate the offset into saveFP to where we must call (!!)
+	 SAVEFP also saves the caller's LR -- placed into R0 above --
+	 into 8(R1).  SAVEFP/RESTOREFP should never be called to save
+	 or restore only F31.  */
+
+      if (info->lr_save_offset != 8 || info->first_fp_reg_save == 63)
+	abort ();
+
+      asm_fprintf (file, "\tbl saveFP");
+      if (info->first_fp_reg_save - 32 != 14)
+	asm_fprintf (file, "+%d", (info->first_fp_reg_save - 46) * 4);
+      asm_fprintf (file, " # f%d\n", info->first_fp_reg_save - 32);
+      callers_lr_already_saved = 1;
+
+      if (current_function_uses_pic_offset_table && flag_pic
+	  /* If this is the last CALL in the prolog, then we've got our PC.
+	     If we're saving AltiVec regs via a function, we're not last.  */
+	  && (info->first_vector_reg_save == 110 
+	      || VECTOR_SAVE_INLINE (info->first_vector_reg_save)))
+	{
+	  lr_already_set_up_for_pic = 1;
+	  ASM_OUTPUT_LABEL (file, machopic_function_base_name ());
+	}
+    }
+#else
     asm_fprintf (file, "\tbl %s%d%s\n", SAVE_FP_PREFIX,
 		 info->first_fp_reg_save - 32, SAVE_FP_SUFFIX);
+#endif
 
   /* Now save gpr's.  */
   if (! TARGET_MULTIPLE || info->first_gp_reg_save == 31 || TARGET_64BIT)
@@ -4136,23 +5878,28 @@ output_prolog (file, size)
 #endif
 
   /* Save lr if we used it.  */
-  if (info->lr_save_p)
-    asm_fprintf (file, store_reg, reg_names[0], info->lr_save_offset + sp_offset,
-		 reg_names[sp_reg]);
+  if (info->lr_save_p
+#ifdef MACHO_PIC
+      && !callers_lr_already_saved
+#endif
+     )
+    asm_fprintf (file, store_reg, reg_names[0],
+		 info->lr_save_offset + sp_offset, reg_names[sp_reg]);
 
   /* Save CR if we use any that must be preserved.  */
   if (info->cr_save_p)
     {
-      if (sp_reg == 12)	/* If r12 is used to hold the original sp, copy cr now */
+      if (sp_reg == ORDINARY_REG_NO || 1)
 	{
+	  /* If ORDINARY_REG_NO is used to hold original sp, copy cr now.  */
 	  asm_fprintf (file, "\tmfcr %s\n", reg_names[0]);
 	  asm_fprintf (file, store_reg, reg_names[0],
 		       info->cr_save_offset + sp_offset,
 		       reg_names[sp_reg]);
 	}
       else
-	asm_fprintf (file, store_reg, reg_names[12], info->cr_save_offset + sp_offset,
-		     reg_names[sp_reg]);
+	asm_fprintf (file, store_reg, reg_names[ORDINARY_REG_NO],
+		     info->cr_save_offset + sp_offset, reg_names[sp_reg]);
     }
 
   /* If we need PIC_OFFSET_TABLE_REGNUM, initialize it now */
@@ -4208,13 +5955,152 @@ output_prolog (file, size)
 	}
     }
 
-  /* Update stack and set back pointer unless this is V.4, which was done previously */
+  /* Update stack and set back pointer unless this is V.4,
+     which was done previously.  */
   if (info->push_p && DEFAULT_ABI != ABI_V4 && DEFAULT_ABI != ABI_SOLARIS)
-    rs6000_allocate_stack_space (file, info->total_size, FALSE);
+    {
+      /* We need to set SP_OFFSET or SP_REG if we're saving *any*
+         vector register -- INCLUDING VRsave.  */
+      if (info->vrsave_size || info->first_vector_reg_save != 110)
+	{
+	  if (info->total_size < 32767)
+	    sp_offset = info->total_size;
+	  else
+	    sp_reg = 12;
+	}
+      rs6000_allocate_stack_space (file, info->total_size, sp_reg == 12);
+    }
+
+  /* Do any required saving of vector registers.  If only one or two to save,
+     do it ourself.  Otherwise, call function.  Note that since they are
+     statically linked, we do not need a nop following them.  */
+  if (VECTOR_SAVE_INLINE (info->first_vector_reg_save))
+    {
+      int regno = info->first_vector_reg_save;
+      int loc   = info->vector_save_offset + sp_offset;
+
+      for ( ; regno < 110; regno++, loc += 16)
+	{
+	  if (TARGET_NEW_MNEMONICS)
+	    asm_fprintf (file, "\tli %s,%d\n", reg_names[0], loc);
+	  else
+	    asm_fprintf (file, "\tcal %s,%d(%s)\n", reg_names[0], loc,
+			 reg_names[0]);
+	  asm_fprintf (file, "\tstvx %s,%s,%s\n", reg_names[regno],
+		       reg_names[sp_reg], reg_names[0]);
+	}
+    }
+  else if (info->first_vector_reg_save != 110)
+    {
+      int loc = info->vector_save_offset + sp_offset + info->vector_size;
+      if (TARGET_NEW_MNEMONICS)
+	asm_fprintf (file, "\taddi %s,%s,%d\n", reg_names[0],
+		     reg_names[sp_reg], loc);
+      else
+	asm_fprintf (file, "\tcal %s,%d(%s)\n", reg_names[0], loc,
+		     reg_names[sp_reg]);
+
+#ifdef MACHO_PIC
+      /* A MACHO-PIC extension to the vector save routine is to have a
+	 variant which returns with VRsave in R11.  */
+      asm_fprintf (file, "\tbl saveVEC%s",
+			(info->vrsave_save_p) ? "_vr11" : "");
+      if (info->first_vector_reg_save - 78 != 20)
+	asm_fprintf (file, "+%d", (info->first_vector_reg_save - 98) * 8);
+      asm_fprintf (file, " # %d\n", info->first_vector_reg_save - 78);
+
+      if (current_function_uses_pic_offset_table && flag_pic)
+	{
+	  /* this is the last CALL in the prolog --> we've got our PC.  */
+	  if (lr_already_set_up_for_pic) abort ();	/* Impossible  */
+	  lr_already_set_up_for_pic = 1;
+	  ASM_OUTPUT_LABEL (file, machopic_function_base_name ());
+	}
+#else	
+      asm_fprintf (file, "\tbl %s%d%s\n", SAVE_VECTOR_PREFIX,
+		   info->first_vector_reg_save - 78, SAVE_VECTOR_SUFFIX);
+#endif
+    }
+
+#ifdef MACHO_PIC
+world_saved:
+#endif
+
+  /* Save VRsave if required.  */
+  if (info->vrsave_save_p)
+    {
+      int savevr;
+      const char *treg;
+      unsigned long mask = vector_regs_live_mask ();
+
+      if (!mask)
+	abort ();
+
+#ifdef MACHO_PIC
+      if (saved_world)
+	{
+	  treg = reg_names[0];
+	  savevr = 0;
+	  /* If the only registers marked LIVE are v20..v31, then this is
+	     simply a "save-all-regs-for-setjmp" type thing, so there's
+	     no need to change VRsave.  $$$ OR IS THERE?  */
+	  if (mask == 0xFFF && current_function_has_nonlocal_label)
+	      mask = 0;
+	}
+      else				/* "normal" function  */
+#endif
+	{
+	  /* If we're calling ._savevxx_vr, it returns with r11 set to VRsave,
+	     so there's no need to mfspr here.  */
+
+	  if (info->first_vector_reg_save == 110 
+	     || VECTOR_SAVE_INLINE (info->first_vector_reg_save))
+	    {
+	      savevr = alloc_volatile_reg (VOLATILE_FOR_VRSAVE_REG); 
+	      if (savevr <= 0) savevr = 11;
+	    fprintf (file, "\tmfspr %s,VRsave\n", reg_names[savevr]);
+	    }
+	  else
+	    savevr = 11;		/* function returns VRsave in R11  */
+
+ 	  if (info->vrsave_size != 0)	/* saving VRsave on stack.  */
+	    {
+	      treg = reg_names[savevr];	/* Use this reg to OR in bits.  */
+	      asm_fprintf (file, store_reg, treg,
+		info->vrsave_save_offset + sp_offset, reg_names[sp_reg]);
+	    }
+	  else				/* stashing VRsave in 'savevr'  */
+	    {
+	      /* Just use R0 as our temp reg.  */
+	      treg = reg_names[0];
+	    }
+        }					/* not saving the world... */
+
+      if (mask != 0)
+	{
+	  if (mask == 0xFFFFFFFF)		/* allon  */
+	    asm_fprintf (file, "\tli %s,-1\n", treg);
+	else
+	  {
+	    const char *src = reg_names[savevr];
+
+	    if (mask & 0xFFFF0000)
+	      {
+		asm_fprintf (file, "\toris %s,%s,0x%x\n", treg, src, mask>>16);
+		src = treg;
+	      }
+	    if (mask & 0x0000FFFF)
+	      asm_fprintf (file, "\tori %s,%s,0x%x\n", treg, src, mask&0xFFFF);
+	  }
+
+	  fprintf (file, "\tmtspr VRsave,%s\n", treg);
+	}
+    }
 
   /* Set frame pointer, if needed.  */
   if (frame_pointer_needed)
-    asm_fprintf (file, "\tmr %s,%s\n", reg_names[31], reg_names[1]);
+    asm_fprintf (file, "\tmr %s,%s\n",
+		 reg_names[FRAME_POINTER_REGNUM], reg_names[1]);
 
 #ifdef NAME__MAIN
   /* If we need to call a function to set things up for main, do so now
@@ -4286,6 +6172,134 @@ output_prolog (file, size)
       assemble_name (file, XSTR (XEXP (DECL_RTL (current_function_decl), 0), 0));
       fputs (".b:\n", file);
     }
+
+#ifdef MACHO_PIC
+  if (DEFAULT_ABI == ABI_MACOSX
+      && current_function_uses_pic_offset_table && flag_pic)
+    {
+      char *picbase = machopic_function_base_name ();
+      /* Save link register if profiling is enabled.  */
+      if (profile_flag)
+	fprintf (file, "\tmflr r0\n");
+      if (lr_already_set_up_for_pic)
+	fprintf (file, "\tmflr %s\n", reg_names[PIC_OFFSET_TABLE_REGNUM]);
+      else if (name_encodes_objc_method_p (picbase))
+	{
+	  /* ObjC method optimisation: r12 is guaranteed to point at us.
+	     The prolog already output the picbase label. 
+	     Set picbase from r12.  */
+	  if (PIC_OFFSET_TABLE_REGNUM != 12)
+	    fprintf (file, "\tmr %s,%s\n",
+		     reg_names[PIC_OFFSET_TABLE_REGNUM], reg_names[12]);
+	}
+      else
+	{
+#ifdef MACHO_PIC_LEAF_OPT
+	  /* If we're not saving LR in a stack frame for leaf functions,
+	     just save and restore it here.  */
+	  if (! info->lr_save_p)
+	    fprintf (file, "\tmflr %s\n", reg_names[0]);
+#endif
+	  /* Load pic base register.  */
+	  fprintf (file, "\tbcl 20,31,");
+	  assemble_name (file, picbase);
+	  fprintf (file, "\n");
+	  ASM_OUTPUT_LABEL (file, picbase);
+	  fprintf (file, "\tmflr %s\n", reg_names[PIC_OFFSET_TABLE_REGNUM]);
+#ifdef MACHO_PIC_LEAF_OPT
+	  if (! info->lr_save_p)
+	    fprintf (file, "\tmtlr %s\n", reg_names[0]);
+#endif
+	}
+
+#ifdef MACHO_PIC_LEAF_OPT
+      /* Run through the insns, changing references to the original
+	 PIC_OFFSET_TABLE_REGNUM to our new one (if they're different.)  */
+
+      if (PIC_OFFSET_TABLE_REGNUM != original_pic_offset_table_regnum)
+	{
+	  rtx insn;
+	  const int nregs = original_pic_offset_table_regnum + 1;
+	  rtx *reg_map = (rtx *) alloca (nregs * sizeof (rtx));
+
+	  bzero ((char *) reg_map, nregs * sizeof (rtx));
+	  reg_map[original_pic_offset_table_regnum] =
+				gen_rtx_REG (SImode, PIC_OFFSET_TABLE_REGNUM);
+
+	  for (insn = get_insns (); insn != NULL; insn = NEXT_INSN (insn))
+	    {
+	      if (GET_CODE (insn) == INSN)
+		{
+		  replace_regs (PATTERN (insn), reg_map, nregs, 0);
+		  replace_regs (REG_NOTES (insn), reg_map, nregs, 0);
+		}
+	      else
+	      if (GET_CODE (insn) == CALL_INSN)
+		abort ();
+	    }
+	}
+#endif	/* MACHO_PIC_LEAF_OPT  */
+    }
+#endif	/* MACHO_PIC  */
+
+#ifdef DWARF2_UNWIND_INFO 
+  /* Tell the DWARF subsystem where our saved registers live.  We "cheat"
+     and do it all in one swell foop here rather than interspersed throughout
+     the already gnarly code above.  */
+
+#if 0
+#define dwarf2out_reg_save(LAB,REG,OFFS)	\
+	fprintf (stderr, "%s: reg%d saved at CFA+%d\n", LAB, REG, OFFS), \
+	dwarf2out_reg_save(LAB,REG,OFFS)
+#define dwarf2out_return_save(LAB,OFFS)	\
+	fprintf (stderr, "%s: LR saved at CFA+%d\n", LAB, OFFS), \
+	dwarf2out_return_save(LAB,OFFS)
+#define dwarf2out_def_cfa(LAB,REG,OFFS)		\
+	fprintf (stderr, "%s: CFA is at: reg%d + %d\n", LAB, REG, OFFS), \
+	dwarf2out_def_cfa(LAB,REG,OFFS)
+#endif
+
+  if (dwarf2out_do_frame ())
+    {
+      int reg, offs;
+      const int frame_size = 0; //info->total_size;
+      int framereg = (frame_pointer_needed) ? FRAME_POINTER_REGNUM : 1;
+      char *label = dwarf2out_cfi_label ();
+
+      /* We only want this for exceptions, NOT debugging.
+	 And a leaf routine cannot possibly invoke any exceptions.  */
+
+      if (0 && ! info->lr_save_p)
+	abort ();
+
+      /* Define the canonical frame address -- if it's not SP+80 (which is
+	 set as the default in the CIE.)  */
+      if (framereg != 1 || info->total_size != RS6000_DEF_CFA_FRAMESIZE)
+	dwarf2out_def_cfa (label, framereg, info->total_size);
+
+      offs = frame_size + info->gp_save_offset;
+      for (reg = info->first_gp_reg_save ; reg < 32; ++reg, offs += reg_size)
+	dwarf2out_reg_save (label, reg, offs);
+      offs = frame_size + info->fp_save_offset;
+      for (reg = info->first_fp_reg_save ; reg < 64; ++reg, offs += 8)
+	dwarf2out_reg_save (label, reg, offs);
+      offs = frame_size + info->vector_save_offset;
+      for (reg = info->first_vector_reg_save ; reg < 110; ++reg, offs += 16)
+	dwarf2out_reg_save (label, reg, offs);
+
+      if (info->lr_save_p)
+	dwarf2out_return_save (label, frame_size + info->lr_save_offset);
+
+      if (info->vrsave_save_p)
+	dwarf2out_reg_save (label, 77, frame_size + info->vrsave_save_offset);
+
+      if (info->cr_save_p)
+        for (reg = 70; reg <= 72; ++reg)        /* CR2,CR3,CR4  */
+          if (regs_ever_live[reg])
+            dwarf2out_reg_save (label, reg, frame_size + info->cr_save_offset);
+    }
+#endif	/* DWARF2_UNWIND_INFO  */
+
 }
 
 /* Write function epilogue.  */
@@ -4299,7 +6313,16 @@ output_epilog (file, size)
   const char *load_reg = (TARGET_32BIT) ? "\t{l|lwz} %s,%d(%s)\n" : "\tld %s,%d(%s)\n";
   rtx insn = get_last_insn ();
   int sp_reg = 1;
+  int temp_reg_no = ORDINARY_REG_NO;
   int sp_offset = 0;
+  int dont_touch_lr = 0;
+  int lr_extra_offset = 0;
+  enum { none, call, branch } vrsave = none;
+  int i;
+
+  /* Following the function, the default setting is reset to what was 
+     in effect prior to that function.  */
+  current_vrsave_save_type = standard_vrsave_save_type;
 
   /* If the last insn was a BARRIER, we don't have to write anything except
      the trace table.  */
@@ -4307,6 +6330,39 @@ output_epilog (file, size)
     insn = prev_nonnote_insn (insn);
   if (insn == 0 ||  GET_CODE (insn) != BARRIER)
     {
+#ifdef MACHO_PIC
+      if (info->world_save_p)
+	{
+	  /* no need for BL -- just B there as rest_world will return to
+	     the saved LR (i.e., our caller.) 
+
+	     Note: be utterly paranoid about which registers are used to
+	     hold any exception-handling epilog info: encode them into the
+	     name of the rest_world routine which gets called.  */
+
+	  fprintf (file, "\tb rest_world%s%s%s\n", 
+	    (rs6000_eh_epilog_ret_addr) ? "_eh_" : "",
+	    (rs6000_eh_epilog_sp_offs) ? 
+			reg_names[REGNO (rs6000_eh_epilog_sp_offs)] : "",
+	    (rs6000_eh_epilog_ret_addr) ?
+			reg_names[REGNO (rs6000_eh_epilog_ret_addr)] : "");
+
+	  goto world_restored;
+	}
+      else
+      /* If we're doing an exceptional epilog, we MUST have saved the world.
+	 If not, die.  */
+      if (rs6000_eh_epilog_ret_addr != 0 || rs6000_eh_epilog_sp_offs != 0)
+	abort ();
+
+      /* If we have to restore more than two FP registers, we can branch to
+	 the RESTFP restore function.  It will pickup LR from 8(R1) and
+	 return to our caller.  */
+      dont_touch_lr = (info->first_fp_reg_save != 64 
+			&& !FP_SAVE_INLINE (info->first_fp_reg_save));
+
+#endif	/* MACHO_PIC */
+
       /* If we have a frame pointer, a call to alloca,  or a large stack
 	 frame, restore the old stack pointer using the backchain.  Otherwise,
 	 we know what size to update it with.  */
@@ -4315,30 +6371,82 @@ output_epilog (file, size)
 	{
 	  /* Under V.4, don't reset the stack pointer until after we're done
 	     loading the saved registers.  */
-	  if (DEFAULT_ABI == ABI_V4 || DEFAULT_ABI == ABI_SOLARIS)
-	    sp_reg = 11;
+	  if (DEFAULT_ABI == ABI_V4 || DEFAULT_ABI == ABI_SOLARIS
+	      || info->vector_outside_red_zone_p)
+	    {
+	      sp_reg = 11;
+	      if (ORDINARY_REG_NO == 11)	/* true for Mac OS X  */
+		temp_reg_no = 12;
+	    }
 
 	  asm_fprintf (file, load_reg, reg_names[sp_reg], 0, reg_names[1]);
 	}
       else if (info->push_p)
 	{
-	  if (DEFAULT_ABI == ABI_V4 || DEFAULT_ABI == ABI_SOLARIS)
+	  if (DEFAULT_ABI == ABI_V4 || DEFAULT_ABI == ABI_SOLARIS
+	      || info->vector_outside_red_zone_p)
 	    sp_offset = info->total_size;
 	  else
+#ifdef MACHO_PIC
+	  /* Emit: "lwz r0,xx+8(r1); la r1,xx(r1)" so the load comes first.  */
+	  if (info->lr_save_p && ! info->vrsave_save_p && info->total_size < 32767 + sp_offset)
+	    lr_extra_offset = info->total_size;
+	  else
+#endif
 	    asm_fprintf (file, "\t{cal|la} %s,%d(%s)\n",
 			 reg_names[1], info->total_size, reg_names[1]);
 	}
 
+      /* Determine if we will call or branch to a vector restore routine.  This
+	 effects how and when the link register is restored.  */
+      if (info->first_vector_reg_save != 110 && !VECTOR_SAVE_INLINE (info->first_vector_reg_save))
+	vrsave = (sp_offset == 0
+		  && sp_reg == 1
+		  && !(info->first_fp_reg_save != 64
+		       && !FP_SAVE_INLINE (info->first_fp_reg_save)) ? branch : call);
+
+      /* Restore VRsave if required.  Interleave with loading of LR.  */
+      if (info->vrsave_save_p)
+	{
+	  /* r10 is unlikely to be used from here on in :-)
+	     So use it as a parameter to ._restvxx   */ 
+	  int regnum = (vrsave != none) ? 10 : temp_reg_no;
+
+	  /* If saved on stack, pick it up  */
+	  if (info->vrsave_size != 0)
+	    asm_fprintf (file, load_reg, reg_names[regnum],
+		info->vrsave_save_offset + sp_offset, reg_names[sp_reg]);
+	  else
+	    regnum = alloc_volatile_reg (VOLATILE_FOR_VRSAVE_REG);
+
+	  if (regnum <= 0) abort ();
+
+	  /* Get the old lr if we saved it.  */
+	  if (info->lr_save_p && vrsave != call && ! dont_touch_lr)
+	    asm_fprintf (file, load_reg, reg_names[0],
+		info->lr_save_offset + sp_offset, reg_names[sp_reg]);
+
+	  /* ._restvxx will restore VRsave from r10.  */
+	  if (vrsave == none)
+	    asm_fprintf (file, "\tmtspr VRsave,%s\n", reg_names[regnum]);
+	}
+      else
       /* Get the old lr if we saved it.  */
-      if (info->lr_save_p)
-	asm_fprintf (file, load_reg, reg_names[0], info->lr_save_offset + sp_offset, reg_names[sp_reg]);
+      if (info->lr_save_p && vrsave != call && ! dont_touch_lr)
+	asm_fprintf (file, load_reg, reg_names[0], lr_extra_offset
+		+ info->lr_save_offset + sp_offset, reg_names[sp_reg]);
+
+      if (lr_extra_offset)
+	asm_fprintf (file, "\t{cal|la} %s,%d(%s)\n",
+		     reg_names[1], info->total_size, reg_names[1]);
 
       /* Get the old cr if we saved it.  */
       if (info->cr_save_p)
-	asm_fprintf (file, load_reg, reg_names[12], info->cr_save_offset + sp_offset, reg_names[sp_reg]);
+	asm_fprintf (file, load_reg, reg_names[temp_reg_no],
+		     info->cr_save_offset + sp_offset, reg_names[sp_reg]);
 
       /* Set LR here to try to overlap restores below.  */
-      if (info->lr_save_p)
+      if (info->lr_save_p && vrsave != call && ! dont_touch_lr)
 	asm_fprintf (file, "\tmtlr %s\n", reg_names[0]);
 
       /* Restore gpr's.  */
@@ -4365,7 +6473,27 @@ output_epilog (file, size)
 	  int loc   = info->fp_save_offset + sp_offset;
 
 	  for ( ; regno < 64; regno++, loc += 8)
-	    asm_fprintf (file, "\tlfd %s,%d(%s)\n", reg_names[regno], loc, reg_names[sp_reg]);
+	    asm_fprintf (file, "\tlfd %s,%d(%s)\n", reg_names[regno],
+				loc, reg_names[sp_reg]);
+	}
+
+      /* Restore vector registers if we can do it without calling a
+	 function.  */
+      if (VECTOR_SAVE_INLINE (info->first_vector_reg_save))
+	{
+	  int regno = info->first_vector_reg_save;
+	  int loc   = info->vector_save_offset + sp_offset;
+
+	  for ( ; regno < 110; regno++, loc += 16)
+	    {
+	      if (TARGET_NEW_MNEMONICS)
+		asm_fprintf (file, "\tli %s,%d\n", reg_names[0], loc);
+	      else
+		asm_fprintf (file, "\tcal %s,%d(%s)\n", reg_names[0], loc,
+			     reg_names[0]);
+	      asm_fprintf (file, "\tlvx %s,%s,%s\n", reg_names[regno],
+			   reg_names[sp_reg], reg_names[0]);
+	    }
 	}
 
       /* If we saved cr, restore it here.  Just those of cr2, cr3, and cr4
@@ -4374,7 +6502,74 @@ output_epilog (file, size)
 	asm_fprintf (file, "\tmtcrf %d,%s\n",
 		     (regs_ever_live[70] != 0) * 0x20
 		     + (regs_ever_live[71] != 0) * 0x10
-		     + (regs_ever_live[72] != 0) * 0x8, reg_names[12]);
+		     + (regs_ever_live[72] != 0) * 0x8,
+		     reg_names[temp_reg_no]);
+
+#ifdef DWARF2_UNWIND_INFO
+      /* NB: This hackery will only work for our exceptions stuff; we do
+	 not currently support general DWARF2 debugging info.  */
+
+      if (dwarf2out_do_frame ())
+	{
+	  int reg;
+	  char *label = dwarf2out_cfi_label ();
+
+	  for (reg = info->first_gp_reg_save ; reg < 32; ++reg)
+	    dwarf2out_restore_reg (label, reg);
+	  for (reg = info->first_fp_reg_save ; reg < 64; ++reg)
+	    dwarf2out_restore_reg (label, reg);
+	  for (reg = info->first_vector_reg_save ; reg < 110; ++reg)
+	    dwarf2out_restore_reg (label, reg);
+
+	  /* What about the return address?  */
+	  if (info->lr_save_p)
+	    dwarf2out_restore_reg (label, 65);
+
+	  if (info->vrsave_save_p)
+	    dwarf2out_restore_reg (label, 77);
+
+	  if (info->cr_save_p)
+	    for (reg = 70; reg <= 72; ++reg)        /* CR2,CR3,CR4  */
+	      if (regs_ever_live[reg])
+		dwarf2out_restore_reg (label, reg);
+	}
+#endif /* DWARF2_UNWIND_INFO  */
+
+      /* If we have to restore more than two VECTOR registers, branch to the
+	 restore function.  */
+      if (vrsave != none)
+	{
+	  int loc = info->vector_save_offset + sp_offset + info->vector_size;
+	  if (TARGET_NEW_MNEMONICS)
+	    asm_fprintf (file, "\taddi %s,%s,%d\n", reg_names[0],
+			 reg_names[sp_reg], loc);
+	  else
+	    asm_fprintf (file, "\tcal %s,%d(%s)\n", reg_names[0], loc,
+			 reg_names[sp_reg]);
+
+#ifdef MACHO_PIC
+	  /* A MACHO_PIC extension to the vector restore routine is to have
+	     a variant which sets the VRsave register to R10.  */
+	  asm_fprintf (file, "\t%s restVEC%s",
+			(vrsave == call) ? "bl" : "b",
+			(info->vrsave_save_p) ? "_vr10" : "");
+	  if (info->first_vector_reg_save - 78 != 20)
+	    asm_fprintf (file, "+%d", (info->first_vector_reg_save - 98) * 8);
+	  asm_fprintf (file, " # %d\n", info->first_vector_reg_save - 78);
+#else
+	  asm_fprintf (file, "\t%s %s%d%s\n",
+		       vrsave == call ? "bl" : "b",
+		       RESTORE_VECTOR_PREFIX,
+		       info->first_vector_reg_save - 78, RESTORE_VECTOR_SUFFIX);
+#endif
+
+	  /* Get the old lr if we saved it.  */
+	  if (info->lr_save_p && vrsave == call && ! dont_touch_lr)
+	    {
+	      asm_fprintf (file, load_reg, reg_names[0], info->lr_save_offset + sp_offset, reg_names[sp_reg]);
+	      asm_fprintf (file, "\tmtlr %s\n", reg_names[0]);
+	    }
+	}
 
       /* If this is V.4, unwind the stack pointer after all of the loads
 	 have been done */
@@ -4386,12 +6581,35 @@ output_epilog (file, size)
 
       /* If we have to restore more than two FP registers, branch to the
 	 restore function.  It will return to our caller.  */
-      if (info->first_fp_reg_save != 64 && !FP_SAVE_INLINE (info->first_fp_reg_save))
+      if (info->first_fp_reg_save != 64
+	  && !FP_SAVE_INLINE (info->first_fp_reg_save))
+#ifdef MACHO_PIC
+	{
+	  /* We have to calculate the offset into RESTFP to where we must
+	     call (!!)  RESTFP also restores the caller's LR from 8(R1).
+	     RESTFP should *never* be called to restore only F31.  */
+
+	  if (info->lr_save_offset != 8 || info->first_fp_reg_save == 63)
+	    abort ();
+
+	  asm_fprintf (file, "\tb restFP");
+	  if (info->first_fp_reg_save - 32 != 14)
+	    asm_fprintf (file, "+%d", (info->first_fp_reg_save - 46) * 4);
+	  asm_fprintf (file, " # f%d\n", info->first_fp_reg_save - 32);
+	}
+#else
 	asm_fprintf (file, "\tb %s%d%s\n", RESTORE_FP_PREFIX,
 		     info->first_fp_reg_save - 32, RESTORE_FP_SUFFIX);
-      else
+#endif
+      else if (vrsave != branch)
 	asm_fprintf (file, "\t{br|blr}\n");
     }
+
+#ifdef MACHO_PIC
+world_restored:
+#endif
+
+  rs6000_eh_epilog_sp_offs = rs6000_eh_epilog_ret_addr = NULL;
 
   /* Output a traceback table here.  See /usr/include/sys/debug.h for info
      on its format.
@@ -4445,6 +6663,7 @@ output_epilog (file, size)
 	 value for C for now.  There is no official value for Java,
          although IBM appears to be using 13.  There is no official value
 	 for Chill, so we've choosen 44 pseudo-randomly.  */
+      /* zlaski 2001-May-02: Obj-C++ will share the # with C++ */   
       if (! strcmp (language_string, "GNU C")
 	  || ! strcmp (language_string, "GNU Obj-C"))
 	i = 0;
@@ -4454,14 +6673,13 @@ output_epilog (file, size)
 	i = 3;
       else if (! strcmp (language_string, "GNU Pascal"))
 	i = 2;
-      else if (! strcmp (language_string, "GNU C++"))
+      else if (! strcmp (language_string, "GNU C++") 
+          || ! strcmp (language_string, "GNU Obj-C++"))
 	i = 9;
       else if (! strcmp (language_string, "GNU Java"))
 	i = 13;
       else if (! strcmp (language_string, "GNU CHILL"))
 	i = 44;
-      else if (! strcmp (language_string, "SRC Modula-3"))
-	i = 2; /* use Pascal for Modula-3. */
       else
 	abort ();
       fprintf (file, "%d,", i);
@@ -4703,6 +6921,7 @@ output_mi_thunk (file, thunk_fndecl, delta, function)
       prefix = ".";
       break;
 
+    case ABI_MACOSX:
     case ABI_V4:
     case ABI_AIX_NODESC:
     case ABI_SOLARIS:
@@ -4718,6 +6937,23 @@ output_mi_thunk (file, thunk_fndecl, delta, function)
      Otherwise, load up its address and jump to it.  */
 
   fname = XSTR (XEXP (DECL_RTL (function), 0), 0);
+
+#ifdef MACHO_PIC
+
+  /* Spew the "branch-without-link" instruction.  */
+  fprintf (file, "\tb %s", prefix);
+
+  /* If we're PIC and the function is not defined in this file,
+     we need to jump to a stub.  */
+
+  if (flag_pic && !machopic_name_defined_p (fname))
+    assemble_name (file, machopic_stub_name (fname));
+  else
+    assemble_name (file, fname);
+
+  fputs ("\n", file);
+
+#else	/* not MACHO_PIC  */
 
   if (current_file_function_operand (XEXP (DECL_RTL (function), 0))
       && ! lookup_attribute ("longcall",
@@ -4833,6 +7069,8 @@ output_mi_thunk (file, thunk_fndecl, delta, function)
 	  break;
 	}
     }
+#endif	/* ndef MACHO_PIC  */
+
 }
 
 
@@ -5151,6 +7389,7 @@ rs6000_gen_section_name (buf, filename, section_desc)
     *p = '\0';
 }
 
+#ifndef MACHO_PIC
 /* Write function profiler code. */
 
 void
@@ -5278,6 +7517,7 @@ output_function_profiler (file, labelno)
       break;
     }
 }
+#endif /* ndef MACHO_PIC */
 
 /* Adjust the cost of a scheduling dependency.  Return the new cost of
    a dependency LINK or INSN on DEP_INSN.  COST is the current cost.  */
@@ -5300,13 +7540,20 @@ rs6000_adjust_cost (insn, link, dep_insn, cost)
       /* Data dependency; DEP_INSN writes a register that INSN reads some
 	 cycles later.  */
 
+    switch (get_attr_type (insn))
+      {
+      case TYPE_JMPREG:
       /* Tell the first scheduling pass about the latency between a mtctr
 	 and bctr (and mtlr and br/blr).  The first scheduling pass will not
 	 know about this latency since the mtctr instruction, which has the
 	 latency associated to it, will be generated by reload.  */
-      if (get_attr_type (insn) == TYPE_JMPREG)
 	return TARGET_POWER ? 5 : 4;
-
+      case TYPE_STORE:
+      case TYPE_FPSTORE:
+	if (SET_SRC (PATTERN (insn)) == SET_DEST (PATTERN (dep_insn)))
+	  return cost - 3;
+	return cost;
+      }
       /* Fall out to return default cost.  */
     }
 

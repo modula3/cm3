@@ -142,7 +142,8 @@ Boston, MA 02111-1307, USA.  */
 %{mcpu=801: -mppc} \
 %{mcpu=821: -mppc} \
 %{mcpu=823: -mppc} \
-%{mcpu=860: -mppc}"
+%{mcpu=860: -mppc} \
+%{faltivec: -mvec}"
 
 #ifndef ASM_DEFAULT_SPEC
 #define ASM_DEFAULT_SPEC ""
@@ -279,6 +280,9 @@ extern int target_flags;
 /* Disable fused multiply/add operations */
 #define MASK_NO_FUSED_MADD	0x00020000
 
+/* Disable updating VRSAVE register.  */
+#define	MASK_NO_VRSAVE		0x00040000
+
 #define TARGET_POWER		(target_flags & MASK_POWER)
 #define TARGET_POWER2		(target_flags & MASK_POWER2)
 #define TARGET_POWERPC		(target_flags & MASK_POWERPC)
@@ -297,11 +301,13 @@ extern int target_flags;
 #define TARGET_STRING_SET	(target_flags & MASK_STRING_SET)
 #define TARGET_NO_UPDATE	(target_flags & MASK_NO_UPDATE)
 #define TARGET_NO_FUSED_MADD	(target_flags & MASK_NO_FUSED_MADD)
+#define TARGET_NO_VRSAVE	(target_flags & MASK_NO_VRSAVE)
 
 #define TARGET_32BIT		(! TARGET_64BIT)
 #define TARGET_HARD_FLOAT	(! TARGET_SOFT_FLOAT)
 #define TARGET_UPDATE		(! TARGET_NO_UPDATE)
 #define TARGET_FUSED_MADD	(! TARGET_NO_FUSED_MADD)
+#define TARGET_VRSAVE		(! TARGET_NO_VRSAVE)
 
 /* Pseudo target to indicate whether the object format is ELF
    (to get around not having conditional compilation in the md file)  */
@@ -390,6 +396,8 @@ extern int target_flags;
   {"no-update",		MASK_NO_UPDATE},				\
   {"fused-madd",	- MASK_NO_FUSED_MADD},				\
   {"no-fused-madd",	MASK_NO_FUSED_MADD},				\
+  {"vrsave",		- MASK_NO_VRSAVE},				\
+  {"no-vrsave",		MASK_NO_VRSAVE},				\
   SUBTARGET_SWITCHES							\
   {"",			TARGET_DEFAULT}}
 
@@ -552,6 +560,7 @@ extern int rs6000_debug_arg;		/* debug argument handling */
 #define UNITS_PER_WORD (! TARGET_POWERPC64 ? 4 : 8)
 #define MIN_UNITS_PER_WORD 4
 #define UNITS_PER_FP_WORD 8
+#define UNITS_PER_VECTOR_WORD 16
 
 /* Type used for ptrdiff_t, as a string used in a declaration.  */
 #define PTRDIFF_TYPE "int"
@@ -613,13 +622,16 @@ extern int rs6000_debug_arg;		/* debug argument handling */
 #define PARM_BOUNDARY (TARGET_32BIT ? 32 : 64)
 
 /* Boundary (in *bits*) on which stack pointer should be aligned.  */
-#define STACK_BOUNDARY (TARGET_32BIT ? 64 : 128)
+#define STACK_BOUNDARY 128
 
 /* Allocation boundary (in *bits*) for the code of a function.  */
 #define FUNCTION_BOUNDARY 32
 
 /* No data type wants to be aligned rounder than this.  */
-#define BIGGEST_ALIGNMENT 64
+#define BIGGEST_ALIGNMENT 128
+#define RS6000_DOUBLE_ALIGNMENT 64
+#define RS6000_LONGLONG_ALIGNMENT 64
+#define RS6000_VECTOR_ALIGNMENT 128
 
 /* AIX word-aligns FP doubles but doubleword-aligns 64-bit ints.  */
 #define ADJUST_FIELD_ALIGN(FIELD, COMPUTED) \
@@ -673,7 +685,8 @@ extern int rs6000_debug_arg;		/* debug argument handling */
 
    RS/6000 has 32 fixed-point registers, 32 floating-point registers,
    an MQ register, a count register, a link register, and 8 condition
-   register fields, which we view here as separate registers.
+   register fields, which we view here as separate registers.  AltiVec 
+   adds 32 vector registers and a VRsave register.
 
    In addition, the difference between the frame and argument pointers is
    a function of the number of registers saved, so we need to have a
@@ -685,27 +698,36 @@ extern int rs6000_debug_arg;		/* debug argument handling */
    a register, in order to work around problems in allocating stack storage
    in inline functions.  */
 
-#define FIRST_PSEUDO_REGISTER 77
+#define FIRST_PSEUDO_REGISTER 110
 
 /* 1 for registers that have pervasive standard uses
    and are not available for the register allocator.
 
    On RS/6000, r1 is used for the stack and r2 is used as the TOC pointer.
+   (On Mac OS X, r2 could be a volatile register.)
 
    cr5 is not supposed to be used.
 
    On System V implementations, r13 is fixed and not available for use.  */
+
+#ifndef FIXED_R2
+#define FIXED_R2  1
+#define ALLOC_R2_AS_VOLATILE  /* nothing  */
+#define ALLOC_R2_AS_FIXED       2,
+#endif
 
 #ifndef FIXED_R13
 #define FIXED_R13 0
 #endif
 
 #define FIXED_REGISTERS  \
-  {0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, FIXED_R13, 0, 0, \
+  {0, 1, FIXED_R2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, FIXED_R13, 0, 0, \
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
-   0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1}
+   0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, \
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 /* 1 for registers not available across function calls.
    These must include the FIXED_REGISTERS and also any
@@ -719,7 +741,9 @@ extern int rs6000_debug_arg;		/* debug argument handling */
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, \
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
-   1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1}
+   1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, \
+   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, \
+   1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 /* List the order in which to allocate registers.  Each register must be
    listed once, even those in FIXED_REGISTERS.
@@ -729,11 +753,17 @@ extern int rs6000_debug_arg;		/* debug argument handling */
 	fp13 - fp2	(not saved; incoming fp arg registers)
 	fp1		(not saved; return value)
  	fp31 - fp14	(saved; order given to save least number)
+	v0 - v1		(not saved or used for anything)
+	v13 - v3	(not saved; incoming vector arg registers)
+	v2		(not saved; return value)
+	v19 - v14	(not saved or used for anything)
+ 	v31 - v20	(saved; order given to save least number)
 	cr7, cr6	(not saved or special)
 	cr1		(not saved, but used for FP operations)
 	cr0		(not saved, but used for arithmetic operations)
 	cr4, cr3, cr2	(saved)
         r0		(not saved; cannot be base reg)
+	ALLOC_R2	(R2 : not saved; this is currently only for Mac OS X)
 	r9		(not saved; best for TImode)
 	r11, r10, r8-r4	(not saved; highest used first to make less conflict)
 	r3     		(not saved; return value register)
@@ -742,7 +772,7 @@ extern int rs6000_debug_arg;		/* debug argument handling */
 	mq		(not saved; best to use it if we can)
 	ctr		(not saved; when we have the choice ctr is better)
 	lr		(saved)
-        cr5, r1, r2, ap, fpmem (fixed)  */
+        cr5, r1, ALLOC_R2_AS_FIXED ap, fpmem (fixed)  */
 
 #define REG_ALLOC_ORDER					\
   {32, 							\
@@ -750,14 +780,20 @@ extern int rs6000_debug_arg;		/* debug argument handling */
    33,							\
    63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51,	\
    50, 49, 48, 47, 46, 					\
+   78, 79,						\
+   91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81,		\
+   80,							\
+   97, 96, 95, 94, 93, 92,				\
+   109, 108, 107, 106, 105, 104, 103, 102, 101, 100,	\
+   99, 98,						\
    75, 74, 69, 68, 72, 71, 70,				\
-   0,							\
+   0, ALLOC_R2_AS_VOLATILE				\
    9, 11, 10, 8, 7, 6, 5, 4,				\
    3,							\
    31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19,	\
    18, 17, 16, 15, 14, 13, 12,				\
    64, 66, 65, 						\
-   73, 1, 2, 67, 76}
+   73, 1, ALLOC_R2_AS_FIXED 67, 76, 77}
 
 /* True if register is floating-point.  */
 #define FP_REGNO_P(N) ((N) >= 32 && (N) <= 63)
@@ -774,6 +810,9 @@ extern int rs6000_debug_arg;		/* debug argument handling */
 /* True if register is an integer register.  */
 #define INT_REGNO_P(N) ((N) <= 31 || (N) == 67)
 
+/* True if register is vector.  */
+#define VECTOR_REGNO_P(N) ((N) >= 78 && (N) <= 109)
+
 /* True if register is the temporary memory location used for int/float
    conversion.  */
 #define FPMEM_REGNO_P(N) ((N) == FPMEM_REGNUM)
@@ -789,19 +828,23 @@ extern int rs6000_debug_arg;		/* debug argument handling */
 #define HARD_REGNO_NREGS(REGNO, MODE)					\
   (FP_REGNO_P (REGNO) || FPMEM_REGNO_P (REGNO)				\
    ? ((GET_MODE_SIZE (MODE) + UNITS_PER_FP_WORD - 1) / UNITS_PER_FP_WORD) \
-   : ((GET_MODE_SIZE (MODE) + UNITS_PER_WORD - 1) / UNITS_PER_WORD))
+   : (VECTOR_REGNO_P (REGNO)						\
+    ? ((GET_MODE_SIZE (MODE) + UNITS_PER_VECTOR_WORD - 1) / UNITS_PER_VECTOR_WORD) \
+    : ((GET_MODE_SIZE (MODE) + UNITS_PER_WORD - 1) / UNITS_PER_WORD)))
 
 /* Value is 1 if hard register REGNO can hold a value of machine-mode MODE.
    For POWER and PowerPC, the GPRs can hold any mode, but the float
    registers only can hold floating modes and DImode, and CR register only
    can hold CC modes.  We cannot put TImode anywhere except general
-   register and it must be able to fit within the register set. */
+   register and it must be able to fit within the register set.  For AltiVec,
+   SVmode can fit only in the vector registers.  */
 
 #define HARD_REGNO_MODE_OK(REGNO, MODE)					\
   (FP_REGNO_P (REGNO) ?							\
    (GET_MODE_CLASS (MODE) == MODE_FLOAT					\
     || (GET_MODE_CLASS (MODE) == MODE_INT				\
 	&& GET_MODE_SIZE (MODE) == UNITS_PER_FP_WORD))			\
+   : VECTOR_REGNO_P (REGNO) ? GET_MODE_CLASS (MODE) == MODE_VECTOR	\
    : CR_REGNO_P (REGNO) ? GET_MODE_CLASS (MODE) == MODE_CC		\
    : FPMEM_REGNO_P (REGNO) ? ((MODE) == DImode || (MODE) == DFmode)	\
    : ! INT_REGNO_P (REGNO) ? (GET_MODE_CLASS (MODE) == MODE_INT		\
@@ -821,6 +864,10 @@ extern int rs6000_debug_arg;		/* debug argument handling */
    ? GET_MODE_CLASS (MODE2) == MODE_CC		\
    : GET_MODE_CLASS (MODE2) == MODE_CC		\
    ? GET_MODE_CLASS (MODE1) == MODE_CC		\
+   : GET_MODE_CLASS (MODE1) == MODE_VECTOR	\
+   ? GET_MODE_CLASS (MODE2) == MODE_VECTOR	\
+   : GET_MODE_CLASS (MODE2) == MODE_VECTOR	\
+   ? GET_MODE_CLASS (MODE1) == MODE_VECTOR	\
    : 1)
 
 /* A C expression returning the cost of moving data from a register of class
@@ -833,6 +880,8 @@ extern int rs6000_debug_arg;		/* debug argument handling */
   ((CLASS1) == FLOAT_REGS && (CLASS2) == FLOAT_REGS ? 2		\
    : (CLASS1) == FLOAT_REGS && (CLASS2) != FLOAT_REGS ? 10	\
    : (CLASS1) != FLOAT_REGS && (CLASS2) == FLOAT_REGS ? 10	\
+   : (CLASS1) == VECTOR_REGS && (CLASS2) != VECTOR_REGS ? 40	\
+   : (CLASS1) != VECTOR_REGS && (CLASS2) == VECTOR_REGS ? 40	\
    : (((CLASS1) == SPECIAL_REGS || (CLASS1) == MQ_REGS		\
        || (CLASS1) == LINK_REGS || (CLASS1) == CTR_REGS		\
        || (CLASS1) == LINK_OR_CTR_REGS)				\
@@ -897,6 +946,10 @@ extern int rs6000_debug_arg;		/* debug argument handling */
       && flag_pic == 1)							\
     fixed_regs[PIC_OFFSET_TABLE_REGNUM]					\
       = call_used_regs[PIC_OFFSET_TABLE_REGNUM] = 1;			\
+  else if (DEFAULT_ABI == ABI_MACOSX && flag_pic)                     \
+    global_regs[PIC_OFFSET_TABLE_REGNUM] =				\
+	fixed_regs[PIC_OFFSET_TABLE_REGNUM] =				\
+		call_used_regs[PIC_OFFSET_TABLE_REGNUM] = 1;		\
 }
 
 /* Specify the registers used for certain standard purposes.
@@ -909,7 +962,9 @@ extern int rs6000_debug_arg;		/* debug argument handling */
 #define STACK_POINTER_REGNUM 1
 
 /* Base register for access to local variables of the function.  */
+#ifndef FRAME_POINTER_REGNUM
 #define FRAME_POINTER_REGNUM 31
+#endif
 
 /* Value should be nonzero if functions must have frame pointers.
    Zero means the frame pointer need not be set up (and parms
@@ -956,7 +1011,7 @@ extern int rs6000_debug_arg;		/* debug argument handling */
 
 /* The RS/6000 has three types of registers, fixed-point, floating-point,
    and condition registers, plus three special registers, MQ, CTR, and the
-   link register.
+   link register.  AltiVec adds a vector register class.
 
    However, r0 is special in that it cannot be used as a base register.
    So make a class for registers valid as base registers.
@@ -978,6 +1033,7 @@ enum reg_class
   GENERAL_REGS,
   FLOAT_REGS,
   NON_SPECIAL_REGS,
+  VECTOR_REGS,
   MQ_REGS,
   LINK_REGS,
   CTR_REGS,
@@ -986,6 +1042,7 @@ enum reg_class
   SPEC_OR_GEN_REGS,
   CR0_REGS,
   CR_REGS,
+  VRSAVE_REGS,
   NON_FLOAT_REGS,
   FPMEM_REGS,
   FLOAT_OR_FPMEM_REGS,
@@ -1004,6 +1061,7 @@ enum reg_class
   "GENERAL_REGS",							\
   "FLOAT_REGS",								\
   "NON_SPECIAL_REGS",							\
+  "VECTOR_REGS",							\
   "MQ_REGS",								\
   "LINK_REGS",								\
   "CTR_REGS",								\
@@ -1012,6 +1070,7 @@ enum reg_class
   "SPEC_OR_GEN_REGS",							\
   "CR0_REGS",								\
   "CR_REGS",								\
+  "VRSAVE_REGS",							\
   "NON_FLOAT_REGS",							\
   "FPMEM_REGS",								\
   "FLOAT_OR_FPMEM_REGS",						\
@@ -1024,23 +1083,25 @@ enum reg_class
 
 #define REG_CLASS_CONTENTS						\
 {									\
-  { 0x00000000, 0x00000000, 0x00000000 },	/* NO_REGS */		\
-  { 0xfffffffe, 0x00000000, 0x00000008 },	/* BASE_REGS */		\
-  { 0xffffffff, 0x00000000, 0x00000008 },	/* GENERAL_REGS */	\
-  { 0x00000000, 0xffffffff, 0x00000000 },	/* FLOAT_REGS */	\
-  { 0xffffffff, 0xffffffff, 0x00000008 },	/* NON_SPECIAL_REGS */	\
-  { 0x00000000, 0x00000000, 0x00000001 },	/* MQ_REGS */		\
-  { 0x00000000, 0x00000000, 0x00000002 },	/* LINK_REGS */		\
-  { 0x00000000, 0x00000000, 0x00000004 },	/* CTR_REGS */		\
-  { 0x00000000, 0x00000000, 0x00000006 },	/* LINK_OR_CTR_REGS */	\
-  { 0x00000000, 0x00000000, 0x00000007 },	/* SPECIAL_REGS */	\
-  { 0xffffffff, 0x00000000, 0x0000000f },	/* SPEC_OR_GEN_REGS */	\
-  { 0x00000000, 0x00000000, 0x00000010 },	/* CR0_REGS */		\
-  { 0x00000000, 0x00000000, 0x00000ff0 },	/* CR_REGS */		\
-  { 0xffffffff, 0x00000000, 0x0000ffff },	/* NON_FLOAT_REGS */	\
-  { 0x00000000, 0x00000000, 0x00010000 },	/* FPMEM_REGS */	\
-  { 0x00000000, 0xffffffff, 0x00010000 },	/* FLOAT_OR_FPMEM_REGS */ \
-  { 0xffffffff, 0xffffffff, 0x0001ffff }	/* ALL_REGS */		\
+  { 0x00000000, 0x00000000, 0x00000000, 0x00000000 }, /* NO_REGS */	\
+  { 0xfffffffe, 0x00000000, 0x00000008, 0x00000000 }, /* BASE_REGS */	\
+  { 0xffffffff, 0x00000000, 0x00000008, 0x00000000 }, /* GENERAL_REGS */\
+  { 0x00000000, 0xffffffff, 0x00000000, 0x00000000 }, /* FLOAT_REGS */	\
+  { 0xffffffff, 0xffffffff, 0x00000008, 0x00000000 }, /* NON_SPECIAL_REGS */ \
+  { 0x00000000, 0x00000000, 0xffffc000, 0x00003fff }, /* VECTOR_REGS */	\
+  { 0x00000000, 0x00000000, 0x00000001, 0x00000000 }, /* MQ_REGS */	\
+  { 0x00000000, 0x00000000, 0x00000002, 0x00000000 }, /* LINK_REGS */	\
+  { 0x00000000, 0x00000000, 0x00000004, 0x00000000 }, /* CTR_REGS */	\
+  { 0x00000000, 0x00000000, 0x00000006, 0x00000000 }, /* LINK_OR_CTR_REGS */ \
+  { 0x00000000, 0x00000000, 0x00000007, 0x00000000 }, /* SPECIAL_REGS */\
+  { 0xffffffff, 0x00000000, 0x0000000f, 0x00000000 }, /* SPEC_OR_GEN_REGS */ \
+  { 0x00000000, 0x00000000, 0x00000010, 0x00000000 }, /* CR0_REGS */	\
+  { 0x00000000, 0x00000000, 0x00000ff0, 0x00000000 }, /* CR_REGS */	\
+  { 0x00000000, 0x00000000, 0x00002000, 0x00000000 }, /* VRSAVE_REGS */	\
+  { 0xffffffff, 0x00000000, 0x00002fff, 0x00000000 }, /* NON_FLOAT_REGS */ \
+  { 0x00000000, 0x00000000, 0x00001000, 0x00000000 }, /* FPMEM_REGS */	\
+  { 0x00000000, 0xffffffff, 0x00001000, 0x00000000 }, /* FLOAT_OR_FPMEM_REGS */ \
+  { 0xffffffff, 0xffffffff, 0xffffffff, 0x00003fff }  /* ALL_REGS */	\
 }
 
 /* The same information, inverted:
@@ -1052,6 +1113,7 @@ enum reg_class
  ((REGNO) == 0 ? GENERAL_REGS		\
   : (REGNO) < 32 ? BASE_REGS		\
   : FP_REGNO_P (REGNO) ? FLOAT_REGS	\
+  : VECTOR_REGNO_P (REGNO) ? VECTOR_REGS \
   : (REGNO) == 68 ? CR0_REGS		\
   : CR_REGNO_P (REGNO) ? CR_REGS	\
   : (REGNO) == 64 ? MQ_REGS		\
@@ -1059,6 +1121,7 @@ enum reg_class
   : (REGNO) == 66 ? CTR_REGS		\
   : (REGNO) == 67 ? BASE_REGS		\
   : (REGNO) == 76 ? FPMEM_REGS		\
+  : (REGNO) == 77 ? VRSAVE_REGS		\
   : NO_REGS)
 
 /* The class value for index registers, and the one for base regs.  */
@@ -1074,17 +1137,25 @@ enum reg_class
    : (C) == 'q' ? MQ_REGS	\
    : (C) == 'c' ? CTR_REGS	\
    : (C) == 'l' ? LINK_REGS	\
+   : (C) == 'v' ? VECTOR_REGS	\
    : (C) == 'x' ? CR0_REGS	\
    : (C) == 'y' ? CR_REGS	\
    : (C) == 'z' ? FPMEM_REGS	\
    : NO_REGS)
 
-/* The letters I, J, K, L, M, N, and P in a register constraint string
-   can be used to stand for particular ranges of immediate operands.
+/* Allow the use of letters A, B, C, and D as constant contraints.  */
+#define EXTRA_CONSTANT_CONSTRAINTS
+
+/* The letters A, B, C, D, I, J, K, L, M, N, and P in a register constraint
+   string can be used to stand for particular ranges of immediate operands.
    This macro defines what the ranges are.
    C is the letter, and VALUE is a constant value.
    Return 1 if VALUE is in the range specified by C.
 
+   `A' is a signed 5-bit constant
+   `B' is a unsigned 5-bit constant
+   `C' is a unsigned 4-bit constant
+   `D' is a unsigned 2-bit constant
    `I' is a signed 16-bit constant
    `J' is a constant with only the high-order 16 bits non-zero
    `K' is a constant with only the low-order 16 bits non-zero
@@ -1095,7 +1166,11 @@ enum reg_class
    `P' is a constant whose negation is a signed 16-bit constant */
 
 #define CONST_OK_FOR_LETTER_P(VALUE, C)					\
-   ( (C) == 'I' ? (unsigned HOST_WIDE_INT) ((VALUE) + 0x8000) < 0x10000	\
+   ( (C) == 'A' ? (unsigned HOST_WIDE_INT) ((VALUE) + 16) < 32          \
+   : (C) == 'B' ? (unsigned HOST_WIDE_INT) (VALUE) < 32                 \
+   : (C) == 'C' ? (unsigned HOST_WIDE_INT) (VALUE) < 16                 \
+   : (C) == 'D' ? (unsigned HOST_WIDE_INT) (VALUE) < 4                  \
+   : (C) == 'I' ? (unsigned HOST_WIDE_INT) ((VALUE) + 0x8000) < 0x10000	\
    : (C) == 'J' ? ((VALUE) & (~ (HOST_WIDE_INT) 0xffff0000)) == 0	\
    : (C) == 'K' ? ((VALUE) & (~ (HOST_WIDE_INT) 0xffff)) == 0		\
    : (C) == 'L' ? (((VALUE) & 0xffff) == 0				\
@@ -1125,7 +1200,7 @@ enum reg_class
    'Q' means that is a memory operand that is just an offset from a reg.
    'R' is for AIX TOC entries.
    'S' is a constant that can be placed into a 64-bit mask operand
-   'T' is a consatnt that can be placed into a 32-bit mask operand
+   'T' is a constant that can be placed into a 32-bit mask operand
    'U' is for V.4 small data references.  */
 
 #define EXTRA_CONSTRAINT(OP, C)						\
@@ -1186,6 +1261,7 @@ enum rs6000_abi {
   ABI_NONE,
   ABI_AIX,			/* IBM's AIX */
   ABI_AIX_NODESC,		/* AIX calling sequence minus function descriptors */
+  ABI_MACOSX,			/* Apple Mac OS X */
   ABI_V4,			/* System V.4/eabi */
   ABI_NT,			/* Windows/NT */
   ABI_SOLARIS			/* Solaris */
@@ -1204,19 +1280,27 @@ extern enum rs6000_abi rs6000_current_abi;	/* available for use by subtarget */
 typedef struct rs6000_stack {
   int first_gp_reg_save;	/* first callee saved GP register used */
   int first_fp_reg_save;	/* first callee saved FP register used */
+  int first_vector_reg_save;	/* first callee saved VECTOR register used */
   int lr_save_p;		/* true if the link reg needs to be saved */
   int cr_save_p;		/* true if the CR reg needs to be saved */
+  int vrsave_save_p;		/* true if the VRsave reg needs to be saved */
   int toc_save_p;		/* true if the TOC needs to be saved */
   int push_p;			/* true if we need to allocate stack space */
   int calls_p;			/* true if the function makes any calls */
   int main_p;			/* true if this is main */
   int main_save_p;		/* true if this is main and we need to save args */
   int fpmem_p;			/* true if float/int conversion temp needed */
+  int vector_outside_red_zone_p;/* true if the vector register save area and/or
+				   the VRsave area are outside the red zone */
+  int world_save_p;		/* true if we're saving *everything*:
+				   r13-r31, cr, f13-f31, vrsave, v20-v31  */
   enum rs6000_abi abi;		/* which ABI to use */
   int gp_save_offset;		/* offset to save GP regs from initial SP */
   int fp_save_offset;		/* offset to save FP regs from initial SP */
+  int vector_save_offset;	/* offset to save VECTOR regs from initial SP */
   int lr_save_offset;		/* offset to save LR from initial SP */
   int cr_save_offset;		/* offset to save CR from initial SP */
+  int vrsave_save_offset;	/* offset to save VRsave from initial SP */
   int toc_save_offset;		/* offset to save the TOC pointer */
   int varargs_save_offset;	/* offset to save the varargs registers */
   int main_save_offset;		/* offset to save main's args */
@@ -1230,10 +1314,13 @@ typedef struct rs6000_stack {
   int fixed_size;		/* fixed size of stack frame */
   int gp_size;			/* size of saved GP registers */
   int fp_size;			/* size of saved FP registers */
+  int vector_size;		/* size of saved VECTOR registers */
   int cr_size;			/* size to hold CR if not in save_size */
+  int vrsave_size;		/* size to hold VRsave if not in save_size */
   int lr_size;			/* size to hold LR if not in save_size */
   int fpmem_size;		/* size to hold float/int conversion */
   int toc_size;			/* size to hold TOC if not in save_size */
+  int align_size;		/* size to hold alignment padding if not in save_size */
   int total_size;		/* total bytes allocated for stack */
 } rs6000_stack_t;
 
@@ -1279,9 +1366,9 @@ extern int rs6000_sysv_varargs_p;
    init_emit, once for each function, before code is generated. */
 #define INIT_EXPANDERS rs6000_init_expanders ()
 
-/* Size of V.4 varargs area in bytes */
+/* Size of V.4 varargs area in bytes.  Round to 0 mod 16. */
 #define RS6000_VARARGS_SIZE \
-  ((GP_ARG_NUM_REG * (TARGET_32BIT ? 4 : 8)) + (FP_ARG_NUM_REG * 8) + 8)
+  ((GP_ARG_NUM_REG * (TARGET_32BIT ? 4 : 8)) + (FP_ARG_NUM_REG * 8) + 8 + 8)
 
 /* Offset within stack frame to start allocating local variables at.
    If FRAME_GROWS_DOWNWARD, this is the offset to the END of the
@@ -1293,7 +1380,7 @@ extern int rs6000_sysv_varargs_p;
    outgoing parameter area.  */
 
 #define STARTING_FRAME_OFFSET						\
-  (RS6000_ALIGN (current_function_outgoing_args_size, 8)		\
+  (RS6000_ALIGN (current_function_outgoing_args_size, 16)		\
    + RS6000_VARARGS_AREA						\
    + RS6000_SAVE_AREA)
 
@@ -1304,8 +1391,15 @@ extern int rs6000_sysv_varargs_p;
    length of the outgoing arguments.  The default is correct for most
    machines.  See `function.c' for details.  */
 #define STACK_DYNAMIC_OFFSET(FUNDECL)					\
-  (RS6000_ALIGN (current_function_outgoing_args_size, 8)		\
+  (RS6000_ALIGN (current_function_outgoing_args_size, 16)		\
    + (STACK_POINTER_OFFSET))
+
+extern int rs6000_inlining;
+
+#define BEGIN_EXPAND_INLINE_FUNCTION() rs6000_inlining++
+#define END_EXPAND_INLINE_FUNCTION() rs6000_inlining--
+
+#define FRAME_ALIGN_MOD(a,o,s) ((a) == 16 && !((o) == 0 && (s) == 0) && !rs6000_inlining ? 8 : 0)
 
 /* If we generate an insn to push BYTES bytes,
    this says how many the stack pointer really advances by.
@@ -1321,6 +1415,9 @@ extern int rs6000_sysv_varargs_p;
    in a register.  The value is the number of bytes allocated to this
    area.  */
 #define REG_PARM_STACK_SPACE(FNDECL)	RS6000_REG_SAVE
+
+#define NO_REG_PARM_STACK_SPACE(CUM,ENTRY) \
+  no_reg_parm_stack_space(&CUM, ENTRY)
 
 /* Define this if the above stack space is to be considered part of the
    space allocated by the caller.  */
@@ -1358,14 +1455,18 @@ extern int rs6000_sysv_varargs_p;
 		&& TYPE_PRECISION (VALTYPE) < BITS_PER_WORD)	\
 	       || POINTER_TYPE_P (VALTYPE)			\
 	       ? word_mode : TYPE_MODE (VALTYPE),		\
-	       TREE_CODE (VALTYPE) == REAL_TYPE && TARGET_HARD_FLOAT ? 33 : 3)
+	   TREE_CODE (VALTYPE) == VECTOR_TYPE ? VECTOR_ARG_RETURN \
+	   : TREE_CODE (VALTYPE) == REAL_TYPE && TARGET_HARD_FLOAT \
+	   ? FP_ARG_RETURN : GP_ARG_RETURN)
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
 
-#define LIBCALL_VALUE(MODE)		\
-  gen_rtx_REG (MODE,			\
-	       GET_MODE_CLASS (MODE) == MODE_FLOAT && TARGET_HARD_FLOAT ? 33 : 3)
+#define LIBCALL_VALUE(MODE)						\
+  gen_rtx_REG (MODE,							\
+	   GET_MODE_CLASS (MODE) == MODE_VECTOR ? VECTOR_ARG_RETURN	\
+	   : GET_MODE_CLASS (MODE) == MODE_FLOAT && TARGET_HARD_FLOAT	\
+	   ? FP_ARG_RETURN : GP_ARG_RETURN)
 
 /* The definition of this macro implies that there are cases where
    a scalar value cannot be returned in registers.
@@ -1397,9 +1498,15 @@ extern int rs6000_sysv_varargs_p;
 #define FP_ARG_MAX_REG FP_ARG_AIX_MAX_REG
 #define FP_ARG_NUM_REG (FP_ARG_MAX_REG - FP_ARG_MIN_REG + 1)
 
+/* Minimum and maximum vector registers used to hold arguments.  */
+#define VECTOR_ARG_MIN_REG 80
+#define VECTOR_ARG_MAX_REG 91
+#define VECTOR_ARG_NUM_REG (VECTOR_ARG_MAX_REG - VECTOR_ARG_MIN_REG + 1)
+
 /* Return registers */
 #define GP_ARG_RETURN GP_ARG_MIN_REG
 #define FP_ARG_RETURN FP_ARG_MIN_REG
+#define VECTOR_ARG_RETURN VECTOR_ARG_MIN_REG
 
 /* Flags for the call/call_value rtl operations set up by function_arg */
 #define CALL_NORMAL		0x00000000	/* no special processing */
@@ -1411,17 +1518,22 @@ extern int rs6000_sysv_varargs_p;
 /* Define cutoff for using external functions to save floating point */
 #define FP_SAVE_INLINE(FIRST_REG) ((FIRST_REG) == 62 || (FIRST_REG) == 63)
 
+/* Define cutoff for using external functions to save vector registers */
+#define VECTOR_SAVE_INLINE(FIRST_REG) ((FIRST_REG) >= 108 && (FIRST_REG) <= 109)
+
 /* 1 if N is a possible register number for a function value
    as seen by the caller.
 
    On RS/6000, this is r3 and fp1.  */
-#define FUNCTION_VALUE_REGNO_P(N)  ((N) == GP_ARG_RETURN || ((N) == FP_ARG_RETURN))
+#define FUNCTION_VALUE_REGNO_P(N)  \
+ ((N) == GP_ARG_RETURN || ((N) == FP_ARG_RETURN) || ((N) == VECTOR_ARG_RETURN))
 
 /* 1 if N is a possible register number for function argument passing.
    On RS/6000, these are r3-r10 and fp1-fp13.  */
 #define FUNCTION_ARG_REGNO_P(N)						\
   (((unsigned)((N) - GP_ARG_MIN_REG) < (unsigned)(GP_ARG_NUM_REG))	\
-   || ((unsigned)((N) - FP_ARG_MIN_REG) < (unsigned)(FP_ARG_NUM_REG)))
+   || ((unsigned)((N) - FP_ARG_MIN_REG) < (unsigned)(FP_ARG_NUM_REG))	\
+   || ((unsigned)((N) - VECTOR_ARG_MIN_REG) < (unsigned)(VECTOR_ARG_NUM_REG)))
 
 
 /* Define a data type for recording info about an argument list
@@ -1440,7 +1552,7 @@ extern int rs6000_sysv_varargs_p;
    register, and `words' is the number of words used on the stack.
 
    The varargs/stdarg support requires that this structure's size
-   be a multiple of sizeof(int).  */
+   be a multiple of sizeof(int). */
 
 typedef struct rs6000_args
 {
@@ -1451,6 +1563,10 @@ typedef struct rs6000_args
   int prototype;		/* Whether a prototype was defined */
   int call_cookie;		/* Do special things for this call */
   int sysv_gregno;		/* next available GP register */
+  int vregno;			/* next available VECTOR register */
+  int num_vector;		/* # VECTOR args */
+  int is_incoming;		/* Is this a call or a function */
+  int is_varargs;		/* Is this a varargs call? */
 } CUMULATIVE_ARGS;
 
 /* Define intermediate macro to compute the size (in registers) of an argument
@@ -1474,6 +1590,9 @@ typedef struct rs6000_args
 
 #define INIT_CUMULATIVE_INCOMING_ARGS(CUM,FNTYPE,LIBNAME) \
   init_cumulative_args (&CUM, FNTYPE, LIBNAME, TRUE)
+
+#define REARRANGE_ARG_LIST(CUM,ARGS) \
+  rearrange_arg_list(&CUM, ARGS)
 
 /* Update the data in CUM to advance over an argument
    of mode MODE and data type TYPE.
@@ -1544,6 +1663,9 @@ typedef struct rs6000_args
 
 #define FUNCTION_ARG_BOUNDARY(MODE, TYPE) \
   function_arg_boundary (MODE, TYPE)
+
+#define FUNCTION_ARG_MOD_BOUNDARY(MODE, TYPE) \
+  function_arg_mod_boundary (MODE, TYPE)
 
 /* Perform any needed actions needed for a function that is receiving a
    variable number of arguments.
@@ -1642,7 +1764,7 @@ typedef struct rs6000_args
    frontend will generate a less efficient heavyweight thunk that calls
    FUNCTION instead of jumping to it.  The generic approach does not support
    varargs.  */
-#if TARGET_ELF
+#if TARGET_ELF || defined(MACHO_PIC)
 #define ASM_OUTPUT_MI_THUNK(FILE, THUNK_FNDECL, DELTA, FUNCTION) \
   output_mi_thunk (FILE, THUNK_FNDECL, DELTA, FUNCTION)
 #endif
@@ -1704,6 +1826,7 @@ typedef struct rs6000_args
    abi's store the return address.  */
 #define RETURN_ADDRESS_OFFSET						\
  ((DEFAULT_ABI == ABI_AIX						\
+   || DEFAULT_ABI == ABI_MACOSX					\
    || DEFAULT_ABI == ABI_AIX_NODESC)	? 8 :				\
   (DEFAULT_ABI == ABI_V4						\
    || DEFAULT_ABI == ABI_SOLARIS)	? (TARGET_32BIT ? 4 : 8) :	\
@@ -1908,6 +2031,7 @@ typedef struct rs6000_args
   && GET_CODE (XEXP (X, 0)) == REG			\
   && REG_OK_FOR_BASE_P (XEXP (X, 0))			\
   && LEGITIMATE_ADDRESS_INTEGER_P (XEXP (X, 1), 0)	\
+  && ((MODE) != SVmode || INTVAL (X) == 0)		\
   && (((MODE) != DFmode && (MODE) != DImode)		\
       || (TARGET_32BIT					\
 	  ? LEGITIMATE_ADDRESS_INTEGER_P (XEXP (X, 1), 4) \
@@ -1931,8 +2055,9 @@ typedef struct rs6000_args
   (GET_CODE (X) == REG && REG_OK_FOR_BASE_P (X))
 
 #define LEGITIMATE_LO_SUM_ADDRESS_P(MODE, X)		\
-  (TARGET_ELF						\
+  ((TARGET_ELF || DEFAULT_ABI == ABI_MACOSX)		\
    && !flag_pic && !TARGET_TOC				\
+   && (MODE) != SVmode					\
    && (MODE) != DImode					\
    && (MODE) != TImode					\
    && (TARGET_HARD_FLOAT || (MODE) != DFmode)		\
@@ -1985,6 +2110,8 @@ typedef struct rs6000_args
 
    Then check for the sum of a register and something not constant, try to
    load the other things into a register and return the sum.  */
+   
+extern struct rtx_def *legitimize_pic_address ();
 
 #define LEGITIMIZE_ADDRESS(X,OLDX,MODE,WIN)				\
 { if (GET_CODE (X) == PLUS && GET_CODE (XEXP (X, 0)) == REG		\
@@ -2011,7 +2138,7 @@ typedef struct rs6000_args
 		     force_reg (Pmode, force_operand (XEXP (X, 1), 0))); \
       goto WIN;								\
     }									\
-  else if (TARGET_ELF && TARGET_32BIT && TARGET_NO_TOC			\
+  else if ((TARGET_ELF || DEFAULT_ABI == ABI_MACOSX) && TARGET_32BIT && TARGET_NO_TOC	\
 	   && !flag_pic							\
 	   && GET_CODE (X) != CONST_INT					\
 	   && GET_CODE (X) != CONST_DOUBLE && CONSTANT_P (X)		\
@@ -2021,6 +2148,13 @@ typedef struct rs6000_args
       rtx reg = gen_reg_rtx (Pmode);					\
       emit_insn (gen_elf_high (reg, (X)));				\
       (X) = gen_rtx_LO_SUM (Pmode, reg, (X));				\
+      if ((MODE) == SVmode)						\
+	(X) = force_reg (Pmode, (X));					\
+      goto WIN;								\
+    }									\
+  else if (GET_CODE (X) == PLUS && (MODE) == SVmode)			\
+    {									\
+      (X) = force_operand ((X), NULL_RTX);				\
       goto WIN;								\
     }									\
 }
@@ -2046,6 +2180,15 @@ do {                                                                    \
                    BASE_REG_CLASS, GET_MODE (X), VOIDmode, 0, 0,        \
                    OPNUM, TYPE);                                        \
       goto WIN;                                                         \
+    }									\
+  if (GET_CODE (X) == PLUS && (MODE) == SVmode)				\
+    {									\
+      rtx orig_X = X;							\
+      X = copy_rtx (X);							\
+      push_reload (orig_X, NULL_RTX, &X, NULL_PTR,			\
+                   BASE_REG_CLASS, GET_MODE (X), VOIDmode, 0, 0,	\
+                   OPNUM, TYPE);					\
+      goto WIN;								\
     }									\
   if (GET_CODE (X) == PLUS                                              \
       && GET_CODE (XEXP (X, 0)) == REG                                  \
@@ -2108,7 +2251,9 @@ do {                                                                    \
    this macro is not defined, it is up to the machine-dependent files
    to allocate such a register (if necessary).  */
 
+#ifndef PIC_OFFSET_TABLE_REGNUM
 #define PIC_OFFSET_TABLE_REGNUM 30
+#endif
 
 /* Define this macro if the register defined by
    `PIC_OFFSET_TABLE_REGNUM' is clobbered by calls.  Do not define
@@ -2435,6 +2580,18 @@ extern int rs6000_trunc_used;
 #ifndef RESTORE_FP_PREFIX
 #define	RESTORE_FP_PREFIX "._restf"
 #define RESTORE_FP_SUFFIX ""
+#endif
+
+/* Prefix and suffix to use to saving vector */
+#ifndef SAVE_VECTOR_PREFIX
+#define	SAVE_VECTOR_PREFIX "._savev"
+#define SAVE_VECTOR_SUFFIX ""
+#endif
+
+/* Prefix and suffix to use to restoring vector */
+#ifndef RESTORE_VECTOR_PREFIX
+#define	RESTORE_VECTOR_PREFIX "._restv"
+#define RESTORE_VECTOR_SUFFIX ""
 #endif
 
 /* Function name to call to do profiling.  */
@@ -2907,6 +3064,41 @@ extern char rs6000_reg_names[][8];	/* register names (0 vs. %r0). */
   &rs6000_reg_names[75][0],	/* cr7  */				\
 									\
   &rs6000_reg_names[76][0],	/* fpmem */				\
+									\
+  &rs6000_reg_names[77][0],	/* vrsave */				\
+									\
+  &rs6000_reg_names[78][0],     /* v0  */				\
+  &rs6000_reg_names[79][0],	/* v1  */				\
+  &rs6000_reg_names[80][0],	/* v2  */				\
+  &rs6000_reg_names[81][0],	/* v3  */				\
+  &rs6000_reg_names[82][0],	/* v4  */				\
+  &rs6000_reg_names[83][0],	/* v5  */				\
+  &rs6000_reg_names[84][0],	/* v6  */				\
+  &rs6000_reg_names[85][0],	/* v7  */				\
+  &rs6000_reg_names[86][0],	/* v8  */				\
+  &rs6000_reg_names[87][0],	/* v9  */				\
+  &rs6000_reg_names[88][0],	/* v10 */				\
+  &rs6000_reg_names[89][0],	/* v11 */				\
+  &rs6000_reg_names[90][0],	/* v12 */				\
+  &rs6000_reg_names[91][0],	/* v13 */				\
+  &rs6000_reg_names[92][0],	/* v14 */				\
+  &rs6000_reg_names[93][0],	/* v15 */				\
+  &rs6000_reg_names[94][0],	/* v16 */				\
+  &rs6000_reg_names[95][0],	/* v17 */				\
+  &rs6000_reg_names[96][0],	/* v18 */				\
+  &rs6000_reg_names[97][0],	/* v19 */				\
+  &rs6000_reg_names[98][0],	/* v20 */				\
+  &rs6000_reg_names[99][0],	/* v21 */				\
+  &rs6000_reg_names[100][0],	/* v22 */				\
+  &rs6000_reg_names[101][0],	/* v23 */				\
+  &rs6000_reg_names[102][0],	/* v24 */				\
+  &rs6000_reg_names[103][0],	/* v25 */				\
+  &rs6000_reg_names[104][0],	/* v26 */				\
+  &rs6000_reg_names[105][0],	/* v27 */				\
+  &rs6000_reg_names[106][0],	/* v28 */				\
+  &rs6000_reg_names[107][0],	/* v29 */				\
+  &rs6000_reg_names[108][0],	/* v30 */				\
+  &rs6000_reg_names[109][0],	/* v31 */				\
 }
 
 /* print-rtl can't handle the above REGISTER_NAMES, so define the
@@ -2925,7 +3117,11 @@ extern char rs6000_reg_names[][8];	/* register names (0 vs. %r0). */
     "f24", "f25", "f26", "f27", "f28", "f29", "f30", "f31",		\
      "mq",  "lr", "ctr",  "ap",						\
     "cr0", "cr1", "cr2", "cr3", "cr4", "cr5", "cr6", "cr7",		\
-  "fpmem"								\
+  "fpmem", "vrsave",							\
+     "v0",  "v1",  "v2",  "v3",  "v4",  "v5",  "v6",  "v7",		\
+     "v8",  "v9", "v10", "v11", "v12", "v13", "v14", "v15",		\
+    "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23",		\
+    "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31"		\
 }
 
 /* Table of additional register names to use in user input.  */
@@ -2947,6 +3143,14 @@ extern char rs6000_reg_names[][8];	/* register names (0 vs. %r0). */
   {"fr20", 52}, {"fr21", 53}, {"fr22", 54}, {"fr23", 55},	\
   {"fr24", 56}, {"fr25", 57}, {"fr26", 58}, {"fr27", 59},	\
   {"fr28", 60}, {"fr29", 61}, {"fr30", 62}, {"fr31", 63},	\
+  {"v0",  78},  {"v1",  79},  {"v2",  80},  {"v3",  81},	\
+  {"v4",  82},  {"v5",  83},  {"v6",  84},  {"v7",  85},	\
+  {"v8",  86},  {"v9",  87},  {"v10", 88},  {"v11", 89},	\
+  {"v12", 90},  {"v13", 91},  {"v14", 92},  {"v15", 93},	\
+  {"v16", 94},  {"v17", 95},  {"v18", 96},  {"v19", 97},	\
+  {"v20", 98},  {"v21", 99},  {"v22", 100}, {"v23", 101},	\
+  {"v24", 102}, {"v25", 103}, {"v26", 104}, {"v27", 105},	\
+  {"v28", 106}, {"v29", 107}, {"v30", 108}, {"v31", 109},	\
   /* no additional names for: mq, lr, ctr, ap */		\
   {"cr0",  68}, {"cr1",  69}, {"cr2",  70}, {"cr3",  71},	\
   {"cr4",  72}, {"cr5",  73}, {"cr6",  74}, {"cr7",  75},	\
@@ -3113,7 +3317,9 @@ do {									\
 #define ASM_OUTPUT_ALIGNED_COMMON(FILE, NAME, SIZE, ALIGNMENT)	\
   do { fputs (".comm ", (FILE));			\
        RS6000_OUTPUT_BASENAME ((FILE), (NAME));		\
-       if ( (SIZE) > 4)					\
+       if ( (ALIGNMENT) >= 128)				\
+         fprintf ((FILE), ",%d,4\n", (SIZE));		\
+       else if ( (SIZE) > 4)				\
          fprintf ((FILE), ",%d,3\n", (SIZE));		\
        else						\
 	 fprintf( (FILE), ",%d\n", (SIZE));		\
@@ -3173,6 +3379,7 @@ do {									\
 /* Define the codes that are matched by predicates in rs6000.c.  */
 
 #define PREDICATE_CODES						\
+  {"zero_m1_operand", {CONST_INT}},				\
   {"short_cint_operand", {CONST_INT}},				\
   {"u_short_cint_operand", {CONST_INT}},			\
   {"non_short_cint_operand", {CONST_INT}},			\
@@ -3200,6 +3407,9 @@ do {									\
   {"mask_operand", {CONST_INT}},				\
   {"mask64_operand", {CONST_INT, CONST_DOUBLE}},		\
   {"count_register_operand", {REG}},				\
+  {"vector_register_operand", {REG}},				\
+  {"any_operand", {SUBREG, MEM, REG, CONST_INT, SYMBOL_REF,	\
+		   LABEL_REF, CONST_DOUBLE, PARALLEL}},         \
   {"fpmem_operand", {REG}},					\
   {"call_operand", {SYMBOL_REF, REG}},				\
   {"current_file_function_operand", {SYMBOL_REF}},		\
@@ -3207,12 +3417,15 @@ do {									\
 		     CONST_DOUBLE, SYMBOL_REF}}, 		\
   {"load_multiple_operation", {PARALLEL}},			\
   {"store_multiple_operation", {PARALLEL}},			\
+  {"equality_operator", {EQ, NE}},				\
+  {"vector_comparison_operator", {EQ, LT}},			\
   {"branch_comparison_operator", {EQ, NE, LE, LT, GE,		\
 				  GT, LEU, LTU, GEU, GTU}},	\
   {"scc_comparison_operator", {EQ, NE, LE, LT, GE,		\
 			       GT, LEU, LTU, GEU, GTU}},	\
   {"trap_comparison_operator", {EQ, NE, LE, LT, GE,		\
-				GT, LEU, LTU, GEU, GTU}},
+				GT, LEU, LTU, GEU, GTU}},	\
+  {"shift_operator", {ASHIFT, ASHIFTRT, LSHIFTRT}},
 
 /* uncomment for disabling the corresponding default options */
 /* #define  MACHINE_no_sched_interblock */
@@ -3229,7 +3442,16 @@ extern int optimize;
 extern int flag_expensive_optimizations;
 extern int frame_pointer_needed;
 
+enum {VRSAVE_OFF, VRSAVE_NORMAL, VRSAVE_ALLON};	/* #pragma altivec_vrsave  */
+extern int current_vrsave_save_type,	/* for the current function  */
+	   standard_vrsave_save_type;	/* state prior to current function  */
+
+/* zoe: for eh_epilog insn pattern  */
+extern struct rtx_def	*rs6000_eh_epilog_ret_addr,
+	   		*rs6000_eh_epilog_sp_offs;
+
 /* Declare functions in rs6000.c */
+extern char *choose_vec_easy ();
 extern void optimization_options ();
 extern void output_options ();
 extern void rs6000_override_options ();
@@ -3240,6 +3462,7 @@ extern struct rtx_def *find_addr_reg();
 extern int direct_return ();
 extern int get_issue_rate ();
 extern int any_operand ();
+extern int zero_m1_operand ();
 extern int short_cint_operand ();
 extern int u_short_cint_operand ();
 extern int non_short_cint_operand ();
@@ -3254,6 +3477,7 @@ extern int got_operand ();
 extern int got_no_const_operand ();
 extern int num_insns_constant ();
 extern int easy_fp_constant ();
+extern int easy_vector_constant ();
 extern int volatile_mem_operand ();
 extern int offsettable_mem_operand ();
 extern int mem_or_easy_const_operand ();
@@ -3266,6 +3490,7 @@ extern int mask64_operand ();
 extern int and64_operand ();
 extern int and_operand ();
 extern int count_register_operand ();
+extern int vector_register_operand ();
 extern int fpmem_operand ();
 extern int reg_or_mem_operand ();
 extern int lwa_operand ();
@@ -3274,6 +3499,7 @@ extern int current_file_function_operand ();
 extern int input_operand ();
 extern int small_data_operand ();
 extern void init_cumulative_args ();
+extern union tree_node *rearrange_arg_list ();
 extern void function_arg_advance ();
 extern int function_arg_boundary ();
 extern struct rtx_def *function_arg ();
@@ -3285,6 +3511,8 @@ extern struct rtx_def *rs6000_stack_temp ();
 extern int expand_block_move ();
 extern int load_multiple_operation ();
 extern int store_multiple_operation ();
+extern int equality_operator ();
+extern int vector_comparison_operator ();
 extern int branch_comparison_operator ();
 extern int scc_comparison_operator ();
 extern int trap_comparison_operator ();
@@ -3303,6 +3531,7 @@ extern void print_operand ();
 extern void print_operand_address ();
 extern int first_reg_to_save ();
 extern int first_fp_reg_to_save ();
+extern int first_vector_reg_to_save ();
 extern int rs6000_makes_calls ();
 extern rs6000_stack_t *rs6000_stack_info ();
 extern void output_prolog ();
@@ -3328,6 +3557,21 @@ extern int function_arg_padding ();
 extern void toc_section ();
 extern void private_data_section ();
 extern void rs6000_fatal_bad_address ();
+
+extern void init_target_intrinsic ();
+
+#define INIT_TARGET_INTRINSIC(ENDLINK) \
+  init_target_intrinsic(ENDLINK, flag_altivec)
+
+extern union tree_node *select_target_overloaded_intrinsic ();
+
+#define SELECT_TARGET_OVERLOADED_INTRINSIC(FUNCTION, PARAMS) \
+  select_target_overloaded_intrinsic(FUNCTION, PARAMS)
+
+extern struct rtx_def *expand_target_intrinsic ();
+
+#define EXPAND_TARGET_INTRINSIC(FNDECL, TARGET, MODE, ARGLIST) \
+  expand_target_intrinsic(FNDECL, TARGET, MODE, ARGLIST)
 
 /* See nonlocal_goto_receiver for when this must be set.  */
 
