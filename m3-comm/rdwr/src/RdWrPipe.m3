@@ -7,6 +7,7 @@
  *                                                                        
  * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
  * City of New York.  Blair MacIntyre, Computer Science Department.       
+ * See file COPYRIGHT-COLUMBIA for details.
  * 
  * Author          : Blair MacIntyre
  * Created On      : Mon Feb 20 17:43:14 1995
@@ -20,6 +21,9 @@
  * $Revision$
  * 
  * $Log$
+ * Revision 1.1.1.1  2001/12/02 00:29:10  wagner
+ * Blair MacIntyre's rdwr library
+ *
  * Revision 1.2  1997/08/11 20:36:21  bm
  * Various fixes
  *
@@ -31,7 +35,7 @@ MODULE RdWrPipe;
 
 IMPORT Rd, Wr, RdClass, WrClass, Thread, Atom, AtomList, IO, Fmt;
 (*UNUSED, but want to keep the following revelation honest.*)
-IMPORT UnsafeWr, UnsafeRd;
+IMPORT UnsafeWr, UnsafeRd; <*NOWARN*>
 FROM Thread IMPORT Alerted;
 
 (* Since we need to use the Mutex properties of Rd.T and Wr.T, we
