@@ -59,7 +59,7 @@ TYPE
 TYPE
   DirTile = {axis, lowerBorder, upperBorder, fixedPointLabel, gridMajor,
              gridMinor, ticksOutward, logarithmic, labelMajorUnconv,
-             labelMinorUnconv, ticksMajor, ticksMinor};
+             labelMajorConv, ticksMajor, ticksMinor};
   DirTileSet = SET OF DirTile;
 
 
@@ -130,24 +130,24 @@ PROCEDURE StartPage ();
 (* c_plbox: "Draw a box around the current viewport." *)
 PROCEDURE DrawBox (xopt : DirTileSet;
                    xtick: Float;
-                   nxsub: INTEGER;
+                   nxsub: CARDINAL;
                    yopt : DirTileSet;
                    ytick: Float;
-                   nysub: INTEGER;    );
+                   nysub: CARDINAL;   );
 
 (* c_plbox3: "This is the 3-d analogue of plbox()." *)
 PROCEDURE DrawBox3D (xopt  : DirTileSet;
                      xlabel: TEXT;
                      xtick : Float;
-                     nsubx : INTEGER;
+                     nsubx : CARDINAL;
                      yopt  : DirTileSet;
                      ylabel: TEXT;
                      ytick : Float;
-                     nsuby : INTEGER;
+                     nsuby : CARDINAL;
                      zopt  : DirTileSet;
                      zlabel: TEXT;
                      ztick : Float;
-                     nsubz : INTEGER;    );
+                     nsubz : CARDINAL;   );
 
 (* plPLFLTMatrix: "Calculate world coordinates and subpage from relative
    device coordinates." *)
@@ -432,7 +432,7 @@ PROCEDURE SetColorRGB (icol0, r, g, b: INTEGER; );
 PROCEDURE SetBGColor (r, g, b: INTEGER; );
 
 (* c_plscolor: "Globally turn color output on/off." *)
-PROCEDURE ToggleColor (color: INTEGER; );
+PROCEDURE ToggleColor (color: BOOLEAN; );
 
 (* c_plscompression: "Set the compression level." *)
 PROCEDURE SetCompression (compression: INTEGER; );

@@ -54,6 +54,8 @@ typedef void* PLPointer;
 typedef PLINT  PLArraySize;
 typedef PLINT  PLBOOL;
 
+typedef PLINT  PLCARD;
+
 typedef const PLFLT* PLFLTArray;
 typedef PLFLTArray PLFLTArraySzd;
 typedef PLFLTArray PLFLTArrayFst;
@@ -210,14 +212,14 @@ plbop(void);
 
 DOC(plbox, "Draw a box around the current viewport.")
 void
-plbox(const char *xopt, PLFLT xtick, PLINT nxsub,
-	const char *yopt, PLFLT ytick, PLINT nysub);
+plbox(const char *xopt, PLFLT xtick, PLCARD nxsub,
+	const char *yopt, PLFLT ytick, PLCARD nysub);
 
 DOC(plbox3, "This is the 3-d analogue of plbox().")
 void
-plbox3(const char *xopt, const char *xlabel, PLFLT xtick, PLINT nsubx,
-	 const char *yopt, const char *ylabel, PLFLT ytick, PLINT nsuby,
-	 const char *zopt, const char *zlabel, PLFLT ztick, PLINT nsubz);
+plbox3(const char *xopt, const char *xlabel, PLFLT xtick, PLCARD nsubx,
+	 const char *yopt, const char *ylabel, PLFLT ytick, PLCARD nsuby,
+	 const char *zopt, const char *zlabel, PLFLT ztick, PLCARD nsubz);
 
 DOC(plPLFLTMatrix, "Calculate world coordinates and subpage from relative device coordinates.")
 void
@@ -524,7 +526,7 @@ plscolbg(PLINT r, PLINT g, PLINT b);
 
 DOC(plscolor, "Globally turn color output on/off.")
 void
-plscolor(PLINT color);
+plscolor(PLBOOL color);
 
 DOC(plscompression, "Set the compression level.")
 void

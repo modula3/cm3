@@ -503,6 +503,8 @@ PlotterFunc = PROCEDURE (x,y: Float; data:REFANY;) : Point;
 %typemap("m3wrapintype") PLBOOL %{BOOLEAN%}
 %typemap("m3wrapargraw") PLBOOL %{ORD($1_name)%}
 
+%typemap("m3wrapintype") PLCARD %{CARDINAL%}
+
 %typemap("m3wrapargraw") char %{ORD($1_name)%}
 
 %typemap("m3wrapintype",numinputs=0) PLArraySize n %{%}
@@ -679,7 +681,7 @@ END;%}
 %insert(m3wrapintf) %{TYPE
 DirTile = {axis, lowerBorder, upperBorder, fixedPointLabel,
 gridMajor, gridMinor, ticksOutward, logarithmic,
-labelMajorUnconv, labelMinorUnconv,
+labelMajorUnconv, labelMajorConv,
 ticksMajor, ticksMinor};
 DirTileSet = SET OF DirTile;
 %}

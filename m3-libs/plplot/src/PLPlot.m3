@@ -99,10 +99,10 @@ PROCEDURE StartPage () =
 
 PROCEDURE DrawBox (xopt : DirTileSet;
                    xtick: Float;
-                   nxsub: INTEGER;
+                   nxsub: CARDINAL;
                    yopt : DirTileSet;
                    ytick: Float;
-                   nysub: INTEGER;    ) =
+                   nysub: CARDINAL;   ) =
   VAR
     arg1 : ARRAY [0 .. ORD(LAST(Tile)) + 1] OF CHAR;
     arg1i: CARDINAL                                 := 0;
@@ -127,15 +127,15 @@ PROCEDURE DrawBox (xopt : DirTileSet;
 PROCEDURE DrawBox3D (xopt  : DirTileSet;
                      xlabel: TEXT;
                      xtick : Float;
-                     nsubx : INTEGER;
+                     nsubx : CARDINAL;
                      yopt  : DirTileSet;
                      ylabel: TEXT;
                      ytick : Float;
-                     nsuby : INTEGER;
+                     nsuby : CARDINAL;
                      zopt  : DirTileSet;
                      zlabel: TEXT;
                      ztick : Float;
-                     nsubz : INTEGER;    ) =
+                     nsubz : CARDINAL;   ) =
   VAR
     arg1 : ARRAY [0 .. ORD(LAST(Tile)) + 1] OF CHAR;
     arg1i: CARDINAL                                 := 0;
@@ -883,9 +883,9 @@ PROCEDURE SetBGColor (r, g, b: INTEGER; ) =
     PLPlotRaw.SetBGColor(r, g, b);
   END SetBGColor;
 
-PROCEDURE ToggleColor (color: INTEGER; ) =
+PROCEDURE ToggleColor (color: BOOLEAN; ) =
   BEGIN
-    PLPlotRaw.ToggleColor(color);
+    PLPlotRaw.ToggleColor(ORD(color));
   END ToggleColor;
 
 PROCEDURE SetCompression (compression: INTEGER; ) =
