@@ -29,11 +29,13 @@ P="${P} table-list"
 P="${P} tempfiles"
 [ "${HAVE_TCL}" = "yes" -o -n "${CM3_ALL}" ] && P="${P} tcl"
 P="${P} tcp"
+[ "${M3OSTYPE}" = "POSIX" -o -n "${CM3_ALL}" ] && P="${P} udp"
 P="${P} libsio"
 P="${P} debug"
 P="${P} listfuncs"
 P="${P} patternmatching"
 P="${P} embutils"
+P="${P} binIO"
 
 # some CM3 communication extensions
 [ "${M3OSTYPE}" = "WIN32" -o -n "${CM3_ALL}" ] && P="${P} tapi"
