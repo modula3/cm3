@@ -30,22 +30,22 @@ CONST
 
 TYPE
   struct_rusage = RECORD
-    ru_utime: struct_timeval;  (* user time used *)
-    ru_stime: struct_timeval;  (* system time used *)
-    ru_maxrss: long;
-    ru_ixrss: long;            (* integral shared text size *)
-    ru_idrss: long;            (* integral unshared data " *)
-    ru_isrss: long;            (* integral unshared stack " *)
-    ru_minflt: long;           (* page reclaims *)
-    ru_majflt: long;           (* page faults *)
-    ru_nswap: long;            (* swaps *)
-    ru_inblock: long;          (* block input operations *)
-    ru_oublock: long;          (* block output operations *)
-    ru_msgsnd: long;           (* messages sent *)
-    ru_msgrcv: long;           (* messages received *)
-    ru_nsignals: long;         (* signals received *)
-    ru_nvcsw: long;            (* voluntary context switches *)
-    ru_nivcsw: long;           (* involuntary " *)
+    ru_utime: struct_timeval;		 (* user time used *)
+    ru_stime: struct_timeval;		 (* system time used *)
+    ru_maxrss: long;			 (* max resident set size *)
+    ru_ixrss: long;			 (* integral shared memory size *)
+    ru_idrss: long;			 (* integral unshared data " *)
+    ru_isrss: long;			 (* integral unshared stack " *)
+    ru_minflt: long;			 (* page reclaims *)
+    ru_majflt: long;			 (* page faults *)
+    ru_nswap: long;			 (* swaps *)
+    ru_inblock: long;			 (* block input operations *)
+    ru_oublock: long;			 (* block output operations *)
+    ru_msgsnd: long;			 (* messages sent *)
+    ru_msgrcv: long;			 (* messages received *)
+    ru_nsignals: long;			 (* signals received *)
+    ru_nvcsw: long;			 (* voluntary context switches *)
+    ru_nivcsw: long;			 (* involuntary " *)
   END;
   struct_rusage_star = UNTRACED REF struct_rusage;
 
