@@ -55,6 +55,8 @@ for r in ${REMOTE}; do
     --exclude=\*.flc \
     --exclude=www-install.sh \
     --exclude=ship-elegosoft-com \
+    --exclude=doc/help/reactor \
+    --exclude=doc/src_reports/*.ps* \
     * ${r}
 done
 
