@@ -44,6 +44,9 @@
 			<item> DocdExport </item>
 			<item> EmacsExport </item>
 			<item> EmacsdExport </item>
+			<item> Generic_implementation </item>
+			<item> Generic_interface </item>
+			<item> Generic_module </item>
 			<item> Gnuemacs </item>
 			<item> HtmlExport </item>
 			<item> LibExport </item>
@@ -65,7 +68,7 @@
 			<item> derived_implementation </item>
 			<item> derived_interface </item>
 			<item> export_interface </item>
-			<item> generic_immplementation </item>
+			<item> generic_implementation </item>
 			<item> generic_interface </item>
 			<item> generic_module </item>
 			<item> h_source </item>
