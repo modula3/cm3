@@ -8,7 +8,7 @@ Abstract: Special Functions
 
 *)
 FROM xUtils IMPORT Error,Err;
-FROM LongRealTrans IMPORT Zero, Half, One, Two, Tiny, Exp, Log;
+FROM LongRealTrans IMPORT Zero, Half, One, Two, Tiny, Exp, Ln;
 
 CONST Module = "xSpecFtn.";
 
@@ -94,7 +94,7 @@ BEGIN
               +c[4]/(z1+4.0d0)
               +c[5]/(z1+5.0d0)
               +c[6]/(z1+6.0d0);
-  tmp:=Log(x)*(z1+0.5d0)+(-x)+lnsqrt2pi+Log(series);
+  tmp:=Ln(x)*(z1+0.5d0)+(-x)+lnsqrt2pi+Ln(series);
   RETURN tmp;    
 END LnGamma;
 (*--------------------*)
@@ -115,7 +115,7 @@ PROCEDURE GammaP(a,x:T):T RAISES {Error}=
 (*returns incomplete Gamma P(a,x)=Gamma(a,x)/Gamma(a)*)
 CONST ftn = Module & "GammaP";
 VAR
-  factor:=Exp(-LnGamma(a)-x+a*Log(x));
+  factor:=Exp(-LnGamma(a)-x+a*Ln(x));
 BEGIN
   (*---check conditions---*)
   IF a<Zero OR x<Zero THEN
@@ -134,7 +134,7 @@ PROCEDURE GammaQ(a,x:T):T RAISES {Error}=
 (*also, Q(a,x)=1-P(a,x) *)
 CONST ftn = Module & "GammaQ";
 VAR
-  factor:=Exp(-LnGamma(a)-x+a*Log(x));
+  factor:=Exp(-LnGamma(a)-x+a*Ln(x));
 BEGIN
   (*---check conditions---*)
   IF a<Zero OR x<Zero THEN
@@ -307,7 +307,7 @@ BEGIN
   ELSIF x = Zero OR x = One THEN
     factor:=Zero;
   ELSE
-    factor:=Exp(a*Log(x)+b*Log(One-x)
+    factor:=Exp(a*Ln(x)+b*Ln(One-x)
              -(LnGamma(a)+LnGamma(b)-LnGamma(a+b)));
   END;
 
