@@ -1,0 +1,297 @@
+# CYGNUS LOCAL mpw (entire file)
+# Configuration fragment for GCC.
+
+# Only configure if C++ sources are present.
+If "`Exists "{srcdir}cp:"`" != ""
+	Set do_gxx 1
+End If
+
+If {do_gxx}
+	Set configdirs "cp"
+	Export configdirs
+End If
+
+forward-include "{srcdir}"config:m68k:xm-m68k.h 'm68k/xm-m68k.h'
+
+If "{host_canonical}" =~ /m68k-\Option-x-\Option-x/
+	forward-include "{srcdir}"config:m68k:xm-mpw.h config.h
+	forward-include "{srcdir}"config:m68k:xm-mpw.h hconfig.h
+Else If "{host_canonical}" =~ /powerpc-\Option-x-\Option-x/
+	forward-include "{srcdir}"config:rs6000:xm-mpw.h config.h
+	forward-include "{srcdir}"config:rs6000:xm-mpw.h hconfig.h
+End If
+
+Catenate "{srcdir}"mpw-gC > "{o}"xgC
+
+# Make local forward refs to assembler and linker.
+
+Echo '::gas:as.new {"Parameters"}' > "{o}"as
+Echo '::ld:ld.new {"Parameters"}' > "{o}"ld
+
+Set target_arch `echo {target_canonical} | sed -e 's/-.*-.*//'`
+
+If "{target_arch}" =~ /powerpc/
+	Set short_arch_name "ppc"
+	Set target_cpu "powerpc"
+Else
+	Set short_arch_name "{target_arch}"
+End If
+
+Set md_name {short_arch_name}:{short_arch_name}.md
+
+# Use default names for the output file.
+Set out_file "{srcdir}"config:{short_arch_name}:{short_arch_name}.c
+Set out_object_file "{objdir}"{short_arch_name}.c.o
+
+# Choose what to set up by looking at the target type.
+
+If "{target_canonical}" =~ /m68k-apple-macos/
+	forward-include "{srcdir}"config:m68k:xm-m68k.h tconfig.h
+	forward-include "{srcdir}"config:m68k:macos.h tm.h
+
+	forward-include "{srcdir}"config:m68k:coff.h 'm68k/coff.h'
+	forward-include "{srcdir}"config:m68k:m68k.h 'm68k/m68k.h'
+
+	Echo '#ifdef __LITTLE_ENDIAN__'			 > dp-bit.c
+	Echo '#define FLOAT_BIT_ORDER_MISMATCH'		>> dp-bit.c
+	Echo '#endif'					>> dp-bit.c
+	Catenate "{srcdir}"config:fp-bit.c		>> dp-bit.c
+
+	Echo '#define FLOAT'				 > fp-bit.c
+	Echo '#ifdef __LITTLE_ENDIAN__'			>> fp-bit.c
+	Echo '#define FLOAT_BIT_ORDER_MISMATCH'		>> fp-bit.c
+	Echo '#endif'					>> fp-bit.c
+	Catenate "{srcdir}"config:fp-bit.c		>> fp-bit.c
+
+	Echo '#define MULTILIB_SELECT "\' >multilib.h
+	Echo '. !msoft-float;\' >>multilib.h
+	Echo 'soft-float msoft-float;\' >>multilib.h
+	Echo '"' >>multilib.h
+
+Else If "{target_canonical}" =~ /powerpc-apple-macos/
+	# Change xm-rs6000.h to xm-mpw.h for bzero definition.
+	forward-include "{srcdir}"config:rs6000:xm-mpw.h tconfig.h
+	forward-include "{srcdir}"config:rs6000:macos.h tm.h
+	# Overrride the default output file.
+	Set out_file "{srcdir}"config:rs6000:rs6000.c
+	Set out_object_file "{objdir}"rs6000.c.o
+
+	# forward-include "{srcdir}"config:rs6000:rs6000.h
+	# Do this instead to work around yet another MPW C preprocessor bug.
+	sed -e 's/ TYPE_MODE (TREE_TYPE (TYPE)) / ((TREE_TYPE (TYPE))->type.mode) /' "{srcdir}"config:rs6000:rs6000.h >'rs6000/rs6000.h'
+
+	Echo '#ifdef __LITTLE_ENDIAN__'			 > dp-bit.c
+	Echo '#define FLOAT_BIT_ORDER_MISMATCH'		>> dp-bit.c
+	Echo '#endif'					>> dp-bit.c
+	Catenate "{srcdir}"config:fp-bit.c		>> dp-bit.c
+
+	Echo '#define FLOAT'				 > fp-bit.c
+	Echo '#ifdef __LITTLE_ENDIAN__'			>> fp-bit.c
+	Echo '#define FLOAT_BIT_ORDER_MISMATCH'		>> fp-bit.c
+	Echo '#endif'					>> fp-bit.c
+	Catenate "{srcdir}"config:fp-bit.c		>> fp-bit.c
+
+	Echo '/* */'					 > tmp-mlib.h
+	Echo 'static char *multilib_raw[] = {'		>> tmp-mlib.h
+	Echo '". !msoft-float;",'			>> tmp-mlib.h
+	Echo '"soft-float msoft-float;",'		>> tmp-mlib.h
+	Echo 'NULL'					>> tmp-mlib.h
+	Echo '};'					>> tmp-mlib.h
+	Echo 'static char *multilib_matches_raw[] = {'	>> tmp-mlib.h
+	Echo '"msoft-float msoft-float;",'		>> tmp-mlib.h
+	Echo 'NULL'					>> tmp-mlib.h
+	Echo '};'					>> tmp-mlib.h
+	Echo 'static char *multilib_extra = "";'	>> tmp-mlib.h
+	MoveIfChange tmp-mlib.h multilib.h
+
+	Set md_name rs6000:rs6000.md
+
+Else If "{target_canonical}" =~ /i386-\Option-x-go32/
+	forward-include "{srcdir}"config:i386:xm-go32.h tconfig.h
+	forward-include "{srcdir}"config:i386:go32.h tm.h
+
+	Echo '' >multilib.h
+
+Else If "{target_canonical}" =~ /mips-\Option-x-ecoff/
+	forward-include "{srcdir}"config:mips:xm-mips.h tconfig.h
+	# Assume the usage of gas.
+	Echo '#define TARGET_CPU_DEFAULT (16)'	>  tm.h.tem
+	Echo -n '#include "'			>> tm.h.tem
+	Echo -n "{srcdir}"config:mips:ecoff.h	>> tm.h.tem
+	Echo  	'"'				>> tm.h.tem
+	Echo -n '#include "'			>> tm.h.tem
+	Echo -n "{srcdir}"config:dbx.h		>> tm.h.tem
+	Echo  	'"'				>> tm.h.tem
+	MoveIfChange tm.h.tem tm.h
+
+	forward-include mips:mips.h 'mips/mips.h'
+	forward-include mips:ecoff.h 'mips/ecoff.h'
+
+	Echo '#define MULTILIB_SELECT "\' >multilib.h
+	Echo '. !msoft-float;\' >>multilib.h
+	Echo 'soft-float msoft-float;\' >>multilib.h
+	Echo '"' >>multilib.h
+
+
+Else If "{target_canonical}" =~ /mips-\Option-x-\Option-x/
+	forward-include "{srcdir}"config:mips:xm-mips.h tconfig.h
+	# Assume the usage of gas.
+	Echo '#define TARGET_CPU_DEFAULT (16)'	>  tm.h.tem
+	Echo -n '#include "'			>> tm.h.tem
+	Echo -n "{srcdir}"config:mips:elf.h	>> tm.h.tem
+	Echo  	'"'				>> tm.h.tem
+	MoveIfChange tm.h.tem tm.h
+
+	forward-include mips:mips.h 'mips/mips.h'
+	forward-include mips:ecoff.h 'mips/ecoff.h'
+
+	Echo '#define MULTILIB_SELECT "\' >multilib.h
+	Echo '. !msoft-float;\' >>multilib.h
+	Echo 'soft-float msoft-float;\' >>multilib.h
+	Echo '"' >>multilib.h
+
+Else If "{target_canonical}" =~ /sh-\Option-x-hms/
+	forward-include "{srcdir}"config:sh:xm-sh.h tconfig.h
+	# forward-include "{srcdir}"config:sh:sh.h tm.h
+	# Do this instead to work around yet another MPW C preprocessor bug.
+	sed -e 's/ TYPE_MODE (TREE_TYPE (TYPE)) / ((TREE_TYPE (TYPE))->type.mode) /' "{srcdir}"config:sh:sh.h >tm.h
+
+	Echo '#ifdef __LITTLE_ENDIAN__'			 > dp-bit.c
+	Echo '#define FLOAT_BIT_ORDER_MISMATCH'		>> dp-bit.c
+	Echo '#endif'					>> dp-bit.c
+	Catenate "{srcdir}"config:fp-bit.c		>> dp-bit.c
+
+	Echo '#define FLOAT'				 > fp-bit.c
+	Echo '#ifdef __LITTLE_ENDIAN__'			>> fp-bit.c
+	Echo '#define FLOAT_BIT_ORDER_MISMATCH'		>> fp-bit.c
+	Echo '#endif'					>> fp-bit.c
+	Catenate "{srcdir}"config:fp-bit.c		>> fp-bit.c
+
+	Echo '#define MULTILIB_SELECT "\' >multilib.h
+	Echo '. !ml;\' >>multilib.h
+	Echo 'ml ml;\' >>multilib.h
+	Echo '"' >>multilib.h
+
+End If
+
+Echo '/* generated by mpw-config.in */' > "{o}"specs.h
+Echo '/* generated by mpw-config.in */' > "{o}"options.h
+
+If {do_gxx}
+	Echo -n '#include "'		>> "{o}"specs.h
+	Echo -n "{srcdir}"		>> "{o}"specs.h
+	Echo 'cp:lang-specs.h"'		>> "{o}"specs.h
+	Echo -n '#include "'		>> "{o}"options.h
+	Echo -n "{srcdir}"		>> "{o}"options.h
+	Echo 'cp:lang-options.h"'	>> "{o}"options.h
+End If
+
+Echo '# From mpw-config.in'				 > "{o}"mk.tmp
+Echo "md_file = " "{srcdir}"config:"{md_name}"		>> "{o}"mk.tmp
+Echo "out_file = " {out_file}				>> "{o}"mk.tmp
+Echo "out_object_file = " {out_object_file}		>> "{o}"mk.tmp
+Echo "lang_specs_files = "				>> "{o}"mk.tmp
+Echo "lang_options_files = "				>> "{o}"mk.tmp
+# We set up the version this way because MPW make will paste the
+# complicated backquoted expression in for {version} if we use what's
+# in GCC's makefile, and the shell's interpreter gets confused about
+# the tricky quoting.
+Echo 'version = ' `sed -e 's/.*\"\([^ \"]*\)[ \"].*/\1/' < "{srcdir}"version.c` >> "{o}"mk.tmp
+# All of the supported configs use float-i64.h.
+Echo 'CROSS_FLOAT_H = "{s}"config:float-i64.h'		>> "{o}"mk.tmp
+Echo 'FLOAT_H = "{s}"config:float-i64.h'		>> "{o}"mk.tmp
+Echo 'EXTRA_HEADERS ='					>> "{o}"mk.tmp
+If "{target_canonical}" =~ /sh-hitachi-hms/
+	Echo 'LIBGCC1 = libgcc1-asm.a'			>> "{o}"mk.tmp
+	Echo 'LIB1ASMSRC = "{s}"config:sh:lib1funcs.asm' >> "{o}"mk.tmp
+	Echo 'LIB1ASMFUNCS = _ashiftrt _ashiftrt_n _ashiftlt _lshiftrt _movstr _mulsi3 _sdivsi3 _udivsi3' >> "{o}"mk.tmp
+	Echo 'LIB2FUNCS_EXTRA = fp-bit.c dp-bit.c'	>> "{o}"mk.tmp
+Else
+	Echo 'LIBGCC1 ='				>> "{o}"mk.tmp
+	Echo 'LIB1ASMSRC ='				>> "{o}"mk.tmp
+	Echo 'LIB1ASMFUNCS ='				>> "{o}"mk.tmp
+	Echo 'LIB2FUNCS_EXTRA ='			>> "{o}"mk.tmp
+End If
+Echo 'CRT0_S ='						>> "{o}"mk.tmp
+Echo 'MCRT0_S ='					>> "{o}"mk.tmp
+Echo '# End from mpw-config.in'				>> "{o}"mk.tmp
+
+# We also need to join some lines in the Makefile.in before the sed
+# process will work properly.  The funky little sed script works by
+# recognizing lines with a trailing '$@ \', adding the next line to
+# its "pattern space", editing out the backslash and line, then
+# putting the result out.
+
+sed -e '/$@ \\/{N;s/$@ \\./$@ /;P;D;}' \Option-d
+    "{srcdir}"Makefile.in >"{o}"hacked_Makefile.in1
+
+sed -e '/INCLUDES) \\/{N;s/INCLUDES) \\./INCLUDES) /;P;D;}' \Option-d
+    "{o}"hacked_Makefile.in1 >"{o}"hacked_Makefile.in2
+
+sed -e '/exp.o \\/{N;s/exp.o \\./exp.o /;P;D;}' \Option-d
+    "{o}"hacked_Makefile.in2 >"{o}"hacked_Makefile.in3
+
+sed -e '/version.o \\/{N;s/version.o \\./version.o /;P;D;}' \Option-d
+    "{o}"hacked_Makefile.in3 >"{o}"hacked_Makefile.in
+
+# CYGNUS LOCAL haifa
+If "{enable_haifa}" =~ /yes/
+	Echo "Using the Haifa scheduler."
+	sed -e 's!^SCHED_PREFIX =.*$!SCHED_PREFIX = haifa-!' -e 's!^SCHED_CFLAGS =.*$!SCHED_CFLAGS = -d HAIFA!' \Option-d
+	    "{o}"hacked_Makefile.in > "{o}"Makefile.xx
+	    Rename -y "{o}"Makefile.xx "{o}"hacked_Makefile.in
+End If
+# END CYGNUS LOCAL
+
+If {host_cc} =~ /mpw_c/
+
+	# Work around MPW C string length limitations.
+	
+	sed -e 's/spec\[4\]/spec[20]/' \Option-d
+	    -e 's/  -undef /","  -undef /' \Option-d
+	    -e 's/%{g\*} /","%{g*} /' \Option-d
+	    "{srcdir}"gcc.c >"{o}"hacked_gcc.new
+	MoveIfChange "{o}"hacked_gcc.new "{o}"hacked_gcc.c
+	
+	sed -e 's/^   CLOBBERs that/ "); printf ("  CLOBBERs that/' \Option-d
+	    "{srcdir}"genrecog.c >"{o}"hacked_genrecog.new
+	MoveIfChange "{o}"hacked_genrecog.new "{o}"hacked_genrecog.c
+	
+	# Work around yet another gross MPW C bug by editing some array references
+	# into semantically equivalent pointer arithmetc.
+	
+	sed -e 's/GET_MODE_SIZE (reload_\([a-z]*\)mode\[j\]/(mode_size[*(reload_\1mode+j)]/' \Option-d
+	    -e 's/XEXP (note, 0)/((note)->fld[0].rtx)/' \Option-d
+	    "{srcdir}"reload1.c >"{o}"hacked_reload1.new
+	MoveIfChange "{o}"hacked_reload1.new "{o}"hacked_reload1.c
+	
+	# Work around yet another weird MPW C bug.
+	
+	sed -e 's/normal\([:;]\)/abnormal\1/' "{srcdir}"expr.c >"{o}"hacked_expr.new
+	MoveIfChange "{o}"hacked_expr.new "{o}"hacked_expr.c
+
+	Echo '# Additional sed commands.' >"{o}"mk.sed
+
+	Echo '/gcc\.c/s/"{s}"gcc\.c/"{o}"hacked_gcc.c/'				>>"{o}"mk.sed
+	Echo '/gcc\.c/s/"{o}"gcc\.c/"{o}"hacked_gcc.c/'				>>"{o}"mk.sed
+	Echo '/expr.c/s/"{s}"expr\.c/"{o}"hacked_expr.c/'			>>"{o}"mk.sed
+	Echo '/expr.c.o/s/"{o}"expr\.c\.o/"{o}"hacked_expr.c.o/'		>>"{o}"mk.sed
+	Echo '/genrecog.c/s/"{s}"genrecog\.c/"{o}"hacked_genrecog.c/'		>>"{o}"mk.sed
+	Echo '/genrecog.c/s/"{srcdir}"genrecog\.c/"{o}"hacked_genrecog.c/'	>>"{o}"mk.sed
+	Echo '/genrecog.c.o/s/"{o}"genrecog\.c\.o/"{o}"hacked_genrecog.c.o/'	>>"{o}"mk.sed
+	Echo '/reload1.c/s/"{s}"reload1\.c/"{o}"hacked_reload1.c/'		>>"{o}"mk.sed
+	Echo '/reload1.c.o/s/"{o}"reload1\.c\.o/"{o}"hacked_reload1.c.o/'	>>"{o}"mk.sed
+
+Else If {host_cc} =~ /mwc\Option-x/
+
+	sed -e '/rtx_function/s/typedef rtx rtx_function /typedef rtx (\*rtx_function)/' \Option-d
+	    -e '/rtx_function/s/rtx_function \*/rtx_function /g' \Option-d
+	    "{srcdir}"stmt.c >"{o}"hacked_stmt.new
+	MoveIfChange "{o}"hacked_stmt.new "{o}"hacked_stmt.c
+
+	Echo '# Additional sed commands.' >"{o}"mk.sed
+
+	Echo '/stmt\.c/s/"{s}"stmt\.c/"{o}"hacked_stmt.c/'	>>"{o}"mk.sed
+	Echo '/stmt\.c/s/"{o}"stmt\.c/"{o}"hacked_stmt.c/'	>>"{o}"mk.sed
+
+End If

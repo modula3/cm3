@@ -1,0 +1,3 @@
+#CC=/usr/latest/bin/gcc
+#VERBOSE=-v 
+#CFLAGS= -g -O $(VERBOSE)
