@@ -10,6 +10,7 @@ PACKAGE = @PACKAGE@
 VERSION = @VERSION@
 
 SHELL = /bin/sh
+STAMP = echo timestamp >
 @SET_MAKE@
 
 srcdir = @srcdir@
@@ -69,7 +70,7 @@ INSTOBJEXT = @INSTOBJEXT@
 	$(MSGFMT) -o $@ $<
 
 .po.gmo:
-	file=$(srcdir)/`echo $* | sed 's,.*/,,'`.gmo \
+	file=`echo $* | sed 's,.*/,,'`.gmo \
 	  && rm -f $$file && $(GMSGFMT) -o $$file $<
 
 .po.cat:
@@ -79,8 +80,13 @@ INSTOBJEXT = @INSTOBJEXT@
 
 all: all-@USE_NLS@
 
-all-yes: $(srcdir)/cat-id-tbl.c $(CATALOGS)
+all-yes: $(CATALOGS) @MAINT@ $(srcdir)/cat-id-tbl.c 
 all-no:
+
+stamp-check-po: $(POTFILES)
+	$(STAMP) stamp-check-po
+
+check-po: stamp-check-po
 
 $(srcdir)/$(PACKAGE).pot: $(POTFILES)
 	$(XGETTEXT) --default-domain=$(PACKAGE) --directory=$(top_srcdir) \
@@ -187,12 +193,12 @@ dvi info tags TAGS ID:
 
 mostlyclean:
 	rm -f core core.* *.pox $(PACKAGE).po *.old.po cat-id-tbl.tmp
-	rm -fr *.o
+	rm -fr *.o stamp-check-pot
 
 clean: mostlyclean
 
 distclean: clean
-	rm -f Makefile Makefile.in POTFILES *.mo *.msg *.cat *.cat.m
+	rm -f Makefile Makefile.in POTFILES *.mo *.gmo *.msg *.cat *.cat.m
 
 maintainer-clean: distclean
 	@echo "This command is intended for maintainers to use;"

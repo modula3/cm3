@@ -1,23 +1,69 @@
-Fri Mar 16 12:46:19 GMT 2001 Bernd Schmidt  (bernds@redhat.com)
+2002-02-20  Release Manager
 
-	* gcc-2.95.3 Released.
+	* GCC 3.0.4 Released.
 
-Sun Oct 24 23:54:10 PDT 1999 Jeff Law  (law@cygnus.com)
+2002-02-20  Release Manager
 
-	* gcc-2.95.2 Released.
+	* GCC 3.0.4 Released.
 
-Mon Aug 16 01:29:24 PDT 1999 Jeff Law  (law@cygnus.com)
+2001-12-20  Release Manager
 
-	* gcc-2.95.1 Released.
+	* GCC 3.0.3 Released.
 
-Wed Jul 28 21:39:31 PDT 1999 Jeff Law  (law@cygnus.com)
+2001-10-23  Release Manager
 
-	* gcc-2.95 Released.
+	* GCC 3.0.2 Released.
 
-Sun Jul 25 23:40:51 PDT 1999 Jeff Law  (law@cygnus.com)
+2001-08-19  Release Manager
 
-	* gcc-2.95 Released.
+	* GCC 3.0.1 Released.
 
+2001-08-19  Release Manager
+
+	* GCC 3.0.1 Released.
+
+20010617 Release Manager
+
+        * GCC 3.0 Released.
+
+2001-05-25  Rainer Orth  <ro@TechFak.Uni-Bielefeld.DE>
+
+	* po2tbl.sed.in: Fixed typo.
+
+2000-09-18  Bruno Haible  <haible@clisp.cons.org>
+
+	* intl/dcgettext.c: Outside libc, use local variable names that don't
+	clash with those in libc.
+	* intl/bindtextdom.c: Likewise.
+	* intl/textdomain.c: Likewise.
+
+2000-09-05  John David Anglin <dave@hiauly1.hia.nrc.ca>
+
+	* gettext.h (nls_uint32): Choose via INT_MAX instead of UINT_MAX.
+
+2000-08-02  Zack Weinberg  <zack@wolery.cumb.org>
+
+	* dcgettext.c (find_msg): Initialize act before loop.
+	(guess_category_value): Add dummy uses of both parameters.
+	* localealias.c (read_alias_file): Cast arg of strchr to char *.
+
+2000-06-06  Philipp Thomas  <pthomas@suse.de>
+
+	* Makefile.in: Add -DIN_GCC to DEFS, add appropriate -I switches.
+	* dcgettext.c: Define _GNU_SOURCE before any system header is
+	included. Guard getcwd declaration with HAVE_DECL_GETCWD.
+	* loadmsgcat.c (_nl_load_domain): Cast st.st_size in compaison to
+	size_t.
+	* localealias.c: Define _GNU_SOURCE before any system header is
+	included. Don't use return value of memcpy because it could be a
+	macro defined in terms of bcopy.
+	(read_alias_file): Remove HAVE_MEMCPY guard and just don't use the
+	return value of memcpy. Cast argument to fgets and strlen to char *.
+	* explodename.c (_nl_explode_name): Cast codeset to unsigned char **
+	in call to _nl_normalize_codeset.
+	* l10nflist.c: Define _GNU_SOURCE before any system header is
+	included.
+	
 1998-04-29  Ulrich Drepper  <drepper@cygnus.com>
 
 	* intl/localealias.c (read_alias_file): Use unsigned char for

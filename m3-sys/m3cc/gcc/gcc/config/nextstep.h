@@ -1,6 +1,7 @@
 /* Operating system specific defines to be used when targeting GCC
    for NeXTSTEP.
-   Copyright (C) 1989, 90-93, 1996, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1989, 1990, 1991, 1992, 1993, 1996, 1997,
+   1999 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -80,10 +81,6 @@ Boston, MA 02111-1307, USA.  */
 /* Make -fnext-runtime the default.  */
 
 #define NEXT_OBJC_RUNTIME
-
-/* We have atexit.  */
-
-#define HAVE_ATEXIT
 
 /* Enable recent gcc to compile under the old gcc in Next release 1.0.  */
 
@@ -211,11 +208,6 @@ Boston, MA 02111-1307, USA.  */
 /* Define our object format type for crtstuff.c */
 #define OBJECT_FORMAT_MACHO
 
-/* Don't use .gcc_compiled symbols to communicate with GDB;
-   They interfere with numerically sorted symbol lists. */
-
-#undef	ASM_IDENTIFY_GCC
-#define ASM_IDENTIFY_GCC(asm_out_file)
 #undef	INIT_SECTION_ASM_OP
 #define INIT_SECTION_ASM_OP
 #undef	INVOKE__main
@@ -240,7 +232,7 @@ Boston, MA 02111-1307, USA.  */
        fprintf (FILE, ".reference .destructors_used\n");        \
       } while (0)
 
-#define EH_FRAME_SECTION_ASM_OP ".section __TEXT,__eh_frame,regular"
+#define EH_FRAME_SECTION_ASM_OP "\t.section __TEXT,__eh_frame,regular"
 
 /* Don't output a .file directive.  That is only used by the assembler for
    error reporting.  */
@@ -250,7 +242,6 @@ Boston, MA 02111-1307, USA.  */
 #undef	ASM_FILE_END
 #define ASM_FILE_END(FILE)					\
   do {								\
-    extern char *language_string;				\
     if (strcmp (language_string, "GNU C++") == 0)		\
       {								\
 	constructor_section ();					\
@@ -263,7 +254,7 @@ Boston, MA 02111-1307, USA.  */
 
 #undef	HANDLE_PRAGMA
 #define HANDLE_PRAGMA(GETC, UNGETC, NAME) handle_pragma (GETC, UNGETC, NAME)
-extern int handle_pragma ();
+extern int handle_pragma PARAMS ((int(*)(void), void (*)(int), const char *));
 
 /* Give methods pretty symbol names on NeXT. */
 
@@ -294,12 +285,12 @@ extern int handle_pragma ();
        else asm_fprintf (FILE, "%U%s", NAME); } while (0)
 
 #undef	ALIGN_ASM_OP
-#define ALIGN_ASM_OP		".align"
+#define ALIGN_ASM_OP		"\t.align\t"
 
 #undef	ASM_OUTPUT_ALIGN
 #define ASM_OUTPUT_ALIGN(FILE,LOG)	\
   if ((LOG) != 0)			\
-    fprintf (FILE, "\t%s %d\n", ALIGN_ASM_OP, (LOG))
+    fprintf (FILE, "%s%d\n", ALIGN_ASM_OP, (LOG))
 
 /* Ensure correct alignment of bss data.  */
 
@@ -324,11 +315,10 @@ extern int handle_pragma ();
 
 #undef	SECTION_FUNCTION
 #define SECTION_FUNCTION(FUNCTION, SECTION, DIRECTIVE, WAS_TEXT, OBJC)	\
+extern void FUNCTION PARAMS ((void));					\
 void									\
 FUNCTION ()								\
 {									\
-  extern void text_section ();					 	\
-  extern void objc_section_init ();					\
   extern int flag_no_mach_text_sections;				\
   									\
   if (WAS_TEXT && flag_no_mach_text_sections)       			\
@@ -358,6 +348,7 @@ FUNCTION ()								\
 
 #undef	EXTRA_SECTION_FUNCTIONS
 #define EXTRA_SECTION_FUNCTIONS			\
+extern void objc_section_init PARAMS ((void));	\
 SECTION_FUNCTION (const_section,		\
 		  in_const,			\
 		  ".const", 1, 0)		\

@@ -1,5 +1,5 @@
 /* Target definitions for GNU compiler for Intel 80386 running Interix
-   Parts Copyright (C) 1991, 1999 Free Software Foundation, Inc.
+   Parts Copyright (C) 1991, 1999, 2000 Free Software Foundation, Inc.
 
    Parts:
      by Douglas B. Rupp (drupp@cs.washington.edu).
@@ -57,9 +57,6 @@ Boston, MA 02111-1307, USA.  */
 
 #define ASM_LOAD_ADDR(loc, reg)   "     leal " #loc "," #reg "\n"
 
-/* For the sake of libgcc2.c, indicate target supports atexit.  */
-#define HAVE_ATEXIT
-
 /* cpp handles __STDC__ */
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES " \
@@ -68,7 +65,7 @@ Boston, MA 02111-1307, USA.  */
   -D_M_IX86=300 -D_X86_=1 \
   -D__stdcall=__attribute__((__stdcall__)) \
   -D__cdecl=__attribute__((__cdecl__)) \
-  -Asystem(unix) -Asystem(interix) -Asystem(interix) -Acpu(i386) -Amachine(i386)"
+  -Asystem=unix -Asystem=interix"
 
 #undef CPP_SPEC
 /* Write out the correct language type definition for the header files.  
@@ -86,7 +83,7 @@ Boston, MA 02111-1307, USA.  */
 -remap \
 %(cpp_cpu) \
 %{posix:-D_POSIX_SOURCE} \
--idirafter %$INTERIX_ROOT/usr/include"
+-isystem %$INTERIX_ROOT/usr/include"
 
 #undef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (i386 Interix)");
@@ -143,7 +140,7 @@ Boston, MA 02111-1307, USA.  */
 
 #define STRING_LIMIT	((unsigned) 256)
 
-#define STRING_ASM_OP	".string"
+#define STRING_ASM_OP	"\t.string\t"
 
 /* The routine used to output NUL terminated strings.  We use a special
    version of this for most svr4 targets because doing so makes the
@@ -155,9 +152,10 @@ Boston, MA 02111-1307, USA.  */
 #define ASM_OUTPUT_LIMITED_STRING(FILE, STR)				\
   do									\
     {									\
-      register unsigned char *_limited_str = (unsigned char *) (STR);	\
+      register const unsigned char *_limited_str =			\
+        (const unsigned char *) (STR);					\
       register unsigned ch;						\
-      fprintf ((FILE), "\t%s\t\"", STRING_ASM_OP);			\
+      fprintf ((FILE), "%s\"", STRING_ASM_OP);				\
       for (; (ch = *_limited_str); _limited_str++)			\
         {								\
 	  register int escape = ESCAPES[ch];				\
@@ -190,12 +188,13 @@ Boston, MA 02111-1307, USA.  */
 #define ASM_OUTPUT_ASCII(FILE, STR, LENGTH)				\
   do									\
     {									\
-      register unsigned char *_ascii_bytes = (unsigned char *) (STR);	\
-      register unsigned char *limit = _ascii_bytes + (LENGTH);		\
+      register const unsigned char *_ascii_bytes =			\
+        (const unsigned char *) (STR);					\
+      register const unsigned char *limit = _ascii_bytes + (LENGTH);	\
       register unsigned bytes_in_chunk = 0;				\
       for (; _ascii_bytes < limit; _ascii_bytes++)			\
         {								\
-	  register unsigned char *p;					\
+	  register const unsigned char *p;				\
 	  if (bytes_in_chunk >= 64)					\
 	    {								\
 	      fputc ('\n', (FILE));					\
@@ -266,7 +265,7 @@ Boston, MA 02111-1307, USA.  */
 
 #define USE_CONST_SECTION	1
 
-#define CONST_SECTION_ASM_OP	".section\t.rdata,\"r\""
+#define CONST_SECTION_ASM_OP	"\t.section\t.rdata,\"r\""
 
 /* Define the pseudo-ops used to switch to the .ctors and .dtors sections.
 
@@ -283,8 +282,8 @@ Boston, MA 02111-1307, USA.  */
    errors unless the .ctors and .dtors sections are marked as writable
    via the SHF_WRITE attribute.)  */
 
-#define CTORS_SECTION_ASM_OP	".section\t.ctors,\"x\""
-#define DTORS_SECTION_ASM_OP	".section\t.dtors,\"x\""
+#define CTORS_SECTION_ASM_OP	"\t.section\t.ctors,\"x\""
+#define DTORS_SECTION_ASM_OP	"\t.section\t.dtors,\"x\""
 
 /* A default list of other sections which we might be "in" at any given
    time.  For targets that use additional sections (e.g. .tdesc) you
@@ -306,8 +305,6 @@ Boston, MA 02111-1307, USA.  */
 
 #undef READONLY_DATA_SECTION
 #define READONLY_DATA_SECTION() const_section ()
-
-extern void text_section ();
 
 #define CONST_SECTION_FUNCTION						\
 void									\
@@ -364,8 +361,6 @@ dtors_section ()							\
 	   (DECL) && TREE_READONLY (DECL) ? "a" : "aw")
 #endif
 
-#define INT_ASM_OP		".long"
-
 /* The MS compilers take alignment as a number of bytes, so we do as well */
 #undef ASM_OUTPUT_ALIGN
 #define ASM_OUTPUT_ALIGN(FILE,LOG) \
@@ -376,7 +371,7 @@ dtors_section ()							\
 #define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)				\
   do {									\
     ctors_section ();							\
-    fprintf (FILE, "\t%s\t ", INT_ASM_OP);				\
+    fprintf (FILE, "%s", INT_ASM_OP);					\
     assemble_name (FILE, NAME);						\
     fprintf (FILE, "\n");						\
   } while (0)
@@ -386,7 +381,7 @@ dtors_section ()							\
 #define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)       				\
   do {									\
     dtors_section ();                   				\
-    fprintf (FILE, "\t%s\t ", INT_ASM_OP);				\
+    fprintf (FILE, "%s", INT_ASM_OP);					\
     assemble_name (FILE, NAME);              				\
     fprintf (FILE, "\n");						\
   } while (0)
@@ -395,12 +390,12 @@ dtors_section ()							\
    ld -r (specifically -rU). */
 #define CTOR_LISTS_DEFINED_EXTERNALLY 1
 
-#define SET_ASM_OP	".set"
+#define SET_ASM_OP	"\t.set\t"
 /* Output a definition (implements alias) */
 #define ASM_OUTPUT_DEF(FILE,LABEL1,LABEL2)				\
 do									\
 {									\
-    fprintf ((FILE), "\t%s\t", SET_ASM_OP);				\
+    fprintf ((FILE), "%s", SET_ASM_OP);					\
     assemble_name (FILE, LABEL1);					\
     fprintf (FILE, ",");						\
     assemble_name (FILE, LABEL2);					\
@@ -482,16 +477,17 @@ while (0)
 #undef  STRIP_NAME_ENCODING
 #define STRIP_NAME_ENCODING(VAR,SYMBOL_NAME)				\
 do {									\
-  char *_p;								\
-  char *_name = SYMBOL_NAME;						\
+  const char *_p;							\
+  const char *_name = SYMBOL_NAME;					\
   for (_p = _name; *_p && *_p != '@'; ++_p)				\
     ;									\
   if (*_p == '@')							\
     {									\
       int _len = _p - _name;						\
-      (VAR) = (char *) alloca (_len + 1);				\
-      strncpy ((VAR), _name, _len);					\
-      (VAR)[_len] = '\0';						\
+      char *_new_name = (char *) alloca (_len + 1);			\
+      strncpy (_new_name, _name, _len);					\
+      _new_name[_len] = '\0';						\
+      (VAR) = _new_name;						\
     }									\
   else									\
     (VAR) = _name;							\
@@ -528,7 +524,7 @@ do {									\
       enum sect_enum {SECT_RW, SECT_RO, SECT_EXEC} type;		\
     } *sections;							\
   struct section_info *s;						\
-  char *mode;								\
+  const char *mode;							\
   enum sect_enum type;							\
 									\
   for (s = sections; s; s = s->next)					\

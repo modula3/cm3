@@ -1,6 +1,7 @@
 /* Generate from machine description:
    - some #define configuration flags.
-   Copyright (C) 1987, 1991, 1997, 1998, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1991, 1997, 1998,
+   1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -23,41 +24,36 @@ Boston, MA 02111-1307, USA.  */
 #include "hconfig.h"
 #include "system.h"
 #include "rtl.h"
-#include "obstack.h"
+#include "errors.h"
+#include "gensupport.h"
 
-static struct obstack obstack;
-struct obstack *rtl_obstack = &obstack;
-
-#define obstack_chunk_alloc xmalloc
-#define obstack_chunk_free free
-
-/* Define this so we can link with print-rtl.o to get debug_rtx function.  */
-char **insn_name_ptr = 0;
 
 /* flags to determine output of machine description dependent #define's.  */
 static int max_recog_operands;  /* Largest operand number seen.  */
 static int max_dup_operands;    /* Largest number of match_dup in any insn.  */
 static int max_clobbers_per_insn;
-static int register_constraint_flag;
 static int have_cc0_flag;
 static int have_cmove_flag;
+static int have_cond_exec_flag;
 static int have_lo_sum_flag;
+static int have_peephole_flag;
+static int have_peephole2_flag;
 
 /* Maximum number of insns seen in a split.  */
 static int max_insns_per_split = 1;
 
+/* Maximum number of input insns for peephole2.  */
+static int max_insns_per_peep2;
+
 static int clobbers_seen_this_insn;
 static int dup_operands_seen_this_insn;
 
-void fatal PVPROTO ((const char *, ...))
-  ATTRIBUTE_PRINTF_1 ATTRIBUTE_NORETURN;
-void fancy_abort PROTO((void)) ATTRIBUTE_NORETURN;
-
-static void walk_insn_part PROTO((rtx, int, int));
-static void gen_insn PROTO((rtx));
-static void gen_expand PROTO((rtx));
-static void gen_split PROTO((rtx));
-static void gen_peephole PROTO((rtx));
+static void walk_insn_part PARAMS ((rtx, int, int));
+static void gen_insn PARAMS ((rtx));
+static void gen_expand PARAMS ((rtx));
+static void gen_split PARAMS ((rtx));
+static void gen_peephole PARAMS ((rtx));
+static void gen_peephole2 PARAMS ((rtx));
 
 /* RECOG_P will be non-zero if this pattern was seen in a context where it will
    be used to recognize, rather than just generate an insn. 
@@ -73,7 +69,7 @@ walk_insn_part (part, recog_p, non_pc_set_src)
 {
   register int i, j;
   register RTX_CODE code;
-  register char *format_ptr;
+  register const char *format_ptr;
 
   if (part == 0)
     return;
@@ -88,8 +84,6 @@ walk_insn_part (part, recog_p, non_pc_set_src)
     case MATCH_OPERAND:
       if (XINT (part, 0) > max_recog_operands)
 	max_recog_operands = XINT (part, 0);
-      if (XSTR (part, 2) && *XSTR (part, 2))
-	register_constraint_flag = 1;
       return;
 
     case MATCH_OP_DUP:
@@ -142,6 +136,11 @@ walk_insn_part (part, recog_p, non_pc_set_src)
 	  && GET_CODE (XEXP (part, 1)) == MATCH_OPERAND
 	  && GET_CODE (XEXP (part, 2)) == MATCH_OPERAND)
 	have_cmove_flag = 1;
+      break;
+
+    case COND_EXEC:
+      if (recog_p)
+	have_cond_exec_flag = 1;
       break;
 
     case REG: case CONST_INT: case SYMBOL_REF:
@@ -243,86 +242,43 @@ gen_peephole (peep)
   for (i = 0; i < XVECLEN (peep, 0); i++)
     walk_insn_part (XVECEXP (peep, 0, i), 1, 0);
 }
-
-PTR
-xmalloc (size)
-  size_t size;
+
+static void
+gen_peephole2 (peep)
+     rtx peep;
 {
-  register PTR val = (PTR) malloc (size);
+  int i, n;
 
-  if (val == 0)
-    fatal ("virtual memory exhausted");
+  /* Look through the patterns that are matched
+     to compute the maximum operand number.  */
+  for (i = XVECLEN (peep, 0) - 1; i >= 0; --i)
+    walk_insn_part (XVECEXP (peep, 0, i), 1, 0);
 
-  return val;
+  /* Look at the number of insns this insn can be matched from.  */
+  for (i = XVECLEN (peep, 0) - 1, n = 0; i >= 0; --i)
+    if (GET_CODE (XVECEXP (peep, 0, i)) != MATCH_DUP
+	&& GET_CODE (XVECEXP (peep, 0, i)) != MATCH_SCRATCH)
+      n++;
+  if (n > max_insns_per_peep2)
+    max_insns_per_peep2 = n;
 }
 
-PTR
-xrealloc (old, size)
-  PTR old;
-  size_t size;
-{
-  register PTR ptr;
-  if (old)
-    ptr = (PTR) realloc (old, size);
-  else
-    ptr = (PTR) malloc (size);
-  if (!ptr)
-    fatal ("virtual memory exhausted");
-  return ptr;
-}
+extern int main PARAMS ((int, char **));
 
-void
-fatal VPROTO ((const char *format, ...))
-{
-#ifndef ANSI_PROTOTYPES
-  const char *format;
-#endif
-  va_list ap;
-
-  VA_START (ap, format);
-
-#ifndef ANSI_PROTOTYPES
-  format = va_arg (ap, const char *);
-#endif
-
-  fprintf (stderr, "genconfig: ");
-  vfprintf (stderr, format, ap);
-  va_end (ap);
-  fprintf (stderr, "\n");
-  exit (FATAL_EXIT_CODE);
-}
-
-/* More 'friendly' abort that prints the line and file.
-   config.h can #define abort fancy_abort if you like that sort of thing.  */
-
-void
-fancy_abort ()
-{
-  fatal ("Internal gcc abort.");
-}
-
 int
 main (argc, argv)
      int argc;
      char **argv;
 {
   rtx desc;
-  FILE *infile;
-  register int c;
 
-  obstack_init (rtl_obstack);
+  progname = "genconfig";
 
   if (argc <= 1)
     fatal ("No input file name.");
 
-  infile = fopen (argv[1], "r");
-  if (infile == 0)
-    {
-      perror (argv[1]);
-      exit (FATAL_EXIT_CODE);
-    }
-
-  init_rtl ();
+  if (init_md_reader (argv[1]) != SUCCESS_EXIT_CODE)
+    return (FATAL_EXIT_CODE);
 
   printf ("/* Generated automatically by the program `genconfig'\n\
 from the machine description file `md'.  */\n\n");
@@ -335,45 +291,79 @@ from the machine description file `md'.  */\n\n");
 
   while (1)
     {
-      c = read_skip_spaces (infile);
-      if (c == EOF)
-	break;
-      ungetc (c, infile);
+      int line_no, insn_code_number = 0;
 
-      desc = read_rtx (infile);
-      if (GET_CODE (desc) == DEFINE_INSN)
-	gen_insn (desc);
-      if (GET_CODE (desc) == DEFINE_EXPAND)
-	gen_expand (desc);
-      if (GET_CODE (desc) == DEFINE_SPLIT)
-	gen_split (desc);
-      if (GET_CODE (desc) == DEFINE_PEEPHOLE)
-	gen_peephole (desc);
+      desc = read_md_rtx (&line_no, &insn_code_number);
+      if (desc == NULL)
+	break;
+	
+      switch (GET_CODE (desc)) 
+	{
+  	  case DEFINE_INSN:
+	    gen_insn (desc);
+	    break;
+	  
+	  case DEFINE_EXPAND:
+	    gen_expand (desc);
+	    break;
+
+	  case DEFINE_SPLIT:
+	    gen_split (desc);
+	    break;
+
+	  case DEFINE_PEEPHOLE2:
+	    have_peephole2_flag = 1;
+	    gen_peephole2 (desc);
+	    break;
+
+	  case DEFINE_PEEPHOLE:
+	    have_peephole_flag = 1;
+	    gen_peephole (desc);
+	    break;
+
+	  default:
+	    break;
+	}
     }
 
-  printf ("\n#define MAX_RECOG_OPERANDS %d\n", max_recog_operands + 1);
-
-  printf ("\n#define MAX_DUP_OPERANDS %d\n", max_dup_operands);
+  printf ("#define MAX_RECOG_OPERANDS %d\n", max_recog_operands + 1);
+  printf ("#define MAX_DUP_OPERANDS %d\n", max_dup_operands);
 
   /* This is conditionally defined, in case the user writes code which emits
      more splits than we can readily see (and knows s/he does it).  */
-  printf ("#ifndef MAX_INSNS_PER_SPLIT\n#define MAX_INSNS_PER_SPLIT %d\n#endif\n",
-	  max_insns_per_split);
-
-  if (register_constraint_flag)
-    printf ("#define REGISTER_CONSTRAINTS\n");
+  printf ("#ifndef MAX_INSNS_PER_SPLIT\n");
+  printf ("#define MAX_INSNS_PER_SPLIT %d\n", max_insns_per_split);
+  printf ("#endif\n");
 
   if (have_cc0_flag)
-    printf ("#define HAVE_cc0\n");
+    printf ("#define HAVE_cc0 1\n");
 
   if (have_cmove_flag)
-    printf ("#define HAVE_conditional_move\n");
+    printf ("#define HAVE_conditional_move 1\n");
+
+  if (have_cond_exec_flag)
+    printf ("#define HAVE_conditional_execution 1\n");
 
   if (have_lo_sum_flag)
-    printf ("#define HAVE_lo_sum\n");
+    printf ("#define HAVE_lo_sum 1\n");
+
+  if (have_peephole_flag)
+    printf ("#define HAVE_peephole 1\n");
+
+  if (have_peephole2_flag)
+    {
+      printf ("#define HAVE_peephole2 1\n");
+      printf ("#define MAX_INSNS_PER_PEEP2 %d\n", max_insns_per_peep2);
+    }
 
   fflush (stdout);
-  exit (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
-  /* NOTREACHED */
-  return 0;
+  return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
+}
+
+/* Define this so we can link with print-rtl.o to get debug_rtx function.  */
+const char *
+get_insn_name (code)
+     int code ATTRIBUTE_UNUSED;
+{
+  return NULL;
 }

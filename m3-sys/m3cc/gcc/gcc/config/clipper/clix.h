@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler.  Clipper/Clix version.
-   Copyright (C) 1988, 1993, 1996, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1993, 1996, 1997, 1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -20,7 +20,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
-#define CPP_PREDEFINES "-Dclipper -Dunix -Asystem(unix) -Asystem(svr3) -Acpu(clipper) -Amachine(clipper)"
+#define CPP_PREDEFINES "-Dclipper -Dunix -Asystem=unix -Asystem=svr3 -Acpu=clipper -Amachine=clipper"
 
 #undef STARTFILE_SPEC
 #define STARTFILE_SPEC  \
@@ -33,14 +33,11 @@ Boston, MA 02111-1307, USA.  */
 
 #define TARGET_MEM_FUNCTIONS
 
-#undef HAVE_ATEXIT
-#define HAVE_ATEXIT
-
 #define ASM_OUTPUT_ASCII(FILE,PTR,LEN)			\
 do {							\
-  unsigned char *s;					\
+  const unsigned char *s;				\
   int i;						\
-  for (i = 0, s = (unsigned char *)(PTR); i < (LEN); s++, i++)	\
+  for (i = 0, s = (const unsigned char *)(PTR); i < (LEN); s++, i++) \
     {							\
       if ((i % 8) == 0)					\
 	fputs ("\n\t.byte\t", (FILE));			\
@@ -74,9 +71,9 @@ do {							\
 
 
 #define ASM_LONG ".long"
-#define BSS_SECTION_ASM_OP  ".bss"
+#define BSS_SECTION_ASM_OP  "\t.bss"
 #undef INIT_SECTION_ASM_OP
-#define INIT_SECTION_ASM_OP ".section .init,\"x\""
+#define INIT_SECTION_ASM_OP "\t.section .init,\"x\""
 
 
 /* Define a few machine-specific details of the implementation of

@@ -1,8 +1,8 @@
 /* Generate from machine description:
-
    - some flags HAVE_... saying which simple standard instructions are
    available for this machine.
-   Copyright (C) 1987, 1991, 1995, 1998, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1991, 1995, 1998,
+   1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -26,68 +26,106 @@ Boston, MA 02111-1307, USA.  */
 #include "system.h"
 #include "rtl.h"
 #include "obstack.h"
+#include "errors.h"
+#include "gensupport.h"
 
-static struct obstack obstack;
-struct obstack *rtl_obstack = &obstack;
 
 #define obstack_chunk_alloc xmalloc
 #define obstack_chunk_free free
 
-void fatal PVPROTO ((const char *, ...))
-  ATTRIBUTE_PRINTF_1 ATTRIBUTE_NORETURN;
-void fancy_abort PROTO((void)) ATTRIBUTE_NORETURN;
-
-/* Names for patterns.  Need to allow linking with print-rtl.  */
-char **insn_name_ptr;
-
-/* Obstacks to remember normal, and call insns.  */
-static struct obstack call_obstack, normal_obstack;
+/* Obstack to remember insns with.  */
+static struct obstack obstack;
 
 /* Max size of names encountered.  */
 static int max_id_len;
 
-static int num_operands PROTO((rtx));
-static void gen_proto PROTO((rtx));
-static void gen_nonproto PROTO((rtx));
-static void gen_insn PROTO((rtx));
+/* Max operand encountered in a scan over some insn.  */
+static int max_opno;
 
+static void max_operand_1	PARAMS ((rtx));
+static int num_operands		PARAMS ((rtx));
+static void gen_proto		PARAMS ((rtx));
+static void gen_macro		PARAMS ((const char *, int, int));
+static void gen_insn		PARAMS ((rtx));
 
 /* Count the number of match_operand's found.  */
 
-static int
-num_operands (x)
+static void
+max_operand_1 (x)
      rtx x;
 {
-  int count = 0;
-  int i, j;
-  enum rtx_code code = GET_CODE (x);
-  char *format_ptr = GET_RTX_FORMAT (code);
+  register RTX_CODE code;
+  register int i;
+  register int len;
+  register const char *fmt;
 
-  if (code == MATCH_OPERAND)
-    return 1;
+  if (x == 0)
+    return;
 
-  if (code == MATCH_OPERATOR || code == MATCH_PARALLEL)
-    count++;
+  code = GET_CODE (x);
 
-  for (i = 0; i < GET_RTX_LENGTH (code); i++)
+  if (code == MATCH_OPERAND || code == MATCH_OPERATOR
+      || code == MATCH_PARALLEL)
+    max_opno = MAX (max_opno, XINT (x, 0));
+
+  fmt = GET_RTX_FORMAT (code);
+  len = GET_RTX_LENGTH (code);
+  for (i = 0; i < len; i++)
     {
-      switch (*format_ptr++)
+      if (fmt[i] == 'e' || fmt[i] == 'u')
+	max_operand_1 (XEXP (x, i));
+      else if (fmt[i] == 'E')
 	{
-	case 'u':
-	case 'e':
-	  count += num_operands (XEXP (x, i));
-	  break;
-
-	case 'E':
-	  if (XVEC (x, i) != NULL)
-	    for (j = 0; j < XVECLEN (x, i); j++)
-	      count += num_operands (XVECEXP (x, i, j));
-
-	  break;
+	  int j;
+	  for (j = 0; j < XVECLEN (x, i); j++)
+	    max_operand_1 (XVECEXP (x, i, j));
 	}
     }
+}
 
-  return count;
+static int
+num_operands (insn)
+     rtx insn;
+{
+  register int len = XVECLEN (insn, 1);
+  register int i;
+
+  max_opno = -1;
+
+  for (i = 0; i < len; i++)
+    max_operand_1 (XVECEXP (insn, 1, i));
+
+  return max_opno + 1;
+}
+
+/* Print out a wrapper macro for a function which corrects the number
+   of arguments it takes.  Any missing arguments are assumed to be at
+   the end.  */
+static void
+gen_macro (name, real, expect)
+     const char *name;
+     int real, expect;
+{
+  int i;
+
+  if (real > expect)
+    abort ();
+  if (real == 0)
+    abort ();
+
+  /* #define GEN_CALL(A, B, C, D) gen_call((A), (B)) */
+  fputs ("#define GEN_", stdout);
+  for (i = 0; name[i]; i++)
+    putchar (TOUPPER (name[i]));
+
+  putchar('(');
+  for (i = 0; i < expect - 1; i++)
+    printf ("%c, ", i + 'A');
+  printf ("%c) gen_%s (", i + 'A', name);
+
+  for (i = 0; i < real - 1; i++)
+    printf ("(%c), ", i + 'A');
+  printf ("(%c))\n", i + 'A');
 }
 
 /* Print out prototype information for a function.  */
@@ -97,37 +135,49 @@ gen_proto (insn)
      rtx insn;
 {
   int num = num_operands (insn);
-  printf ("extern rtx gen_%-*s PROTO((", max_id_len, XSTR (insn, 0));
+  const char *name = XSTR (insn, 0);
+
+  /* Many md files don't refer to the last two operands passed to the
+     call patterns.  This means their generator functions will be two
+     arguments too short.  Instead of changing every md file to touch
+     those operands, we wrap the prototypes in macros that take the
+     correct number of arguments.  */
+  if (name[0] == 'c' || name[0] == 's')
+    {
+      if (!strcmp (name, "call")
+	  || !strcmp (name, "call_pop")
+	  || !strcmp (name, "sibcall")
+	  || !strcmp (name, "sibcall_pop"))
+	gen_macro (name, num, 4);
+      else if (!strcmp (name, "call_value")
+	       || !strcmp (name, "call_value_pop")
+	       || !strcmp (name, "sibcall_value")
+	       || !strcmp (name, "sibcall_value_pop"))
+	gen_macro (name, num, 5);
+    }
+
+  printf ("extern struct rtx_def * gen_%-*s PARAMS ((", max_id_len, name);
 
   if (num == 0)
     printf ("void");
   else
     {
       while (num-- > 1)
-	printf ("rtx, ");
+	printf ("struct rtx_def *, ");
 
-      printf ("rtx");
+      printf ("struct rtx_def *");
     }
 
   printf ("));\n");
-}
 
-/* Print out a function declaration without a prototype.  */
-
-static void
-gen_nonproto (insn)
-     rtx insn;
-{
-  printf ("extern rtx gen_%s ();\n", XSTR (insn, 0));
 }
 
 static void
 gen_insn (insn)
      rtx insn;
 {
-  char *name = XSTR (insn, 0);
-  char *p;
-  struct obstack *obstack_ptr;
+  const char *name = XSTR (insn, 0);
+  const char *p;
   int len;
 
   /* Don't mention instructions whose names are the null string
@@ -159,79 +209,11 @@ gen_insn (insn)
       printf (")\n");
     }
 
-  /* Save the current insn, so that we can later put out appropriate
-     prototypes.  At present, most md files have the wrong number of
-     arguments for the call insns (call, call_value, call_pop,
-     call_value_pop) ignoring the extra arguments that are passed for
-     some machines, so by default, turn off the prototype.  */
-
-  obstack_ptr = (name[0] == 'c'
-		 && (!strcmp (name, "call")
-		     || !strcmp (name, "call_value")
-		     || !strcmp (name, "call_pop")
-		     || !strcmp (name, "call_value_pop")))
-    ? &call_obstack : &normal_obstack;
-
-  obstack_grow (obstack_ptr, &insn, sizeof (rtx));
-}
-
-PTR
-xmalloc (size)
-  size_t size;
-{
-  register PTR val = (PTR) malloc (size);
-
-  if (val == 0)
-    fatal ("virtual memory exhausted");
-
-  return val;
+  obstack_grow (&obstack, &insn, sizeof (rtx));
 }
 
-PTR
-xrealloc (old, size)
-  PTR old;
-  size_t size;
-{
-  register PTR ptr;
-  if (old)
-    ptr = (PTR) realloc (old, size);
-  else
-    ptr = (PTR) malloc (size);
-  if (!ptr)
-    fatal ("virtual memory exhausted");
-  return ptr;
-}
+extern int main PARAMS ((int, char **));
 
-void
-fatal VPROTO ((const char *format, ...))
-{
-#ifndef ANSI_PROTOTYPES
-  const char *format;
-#endif
-  va_list ap;
-
-  VA_START (ap, format);
-
-#ifndef ANSI_PROTOTYPES
-  format = va_arg (ap, const char *);
-#endif
-
-  fprintf (stderr, "genflags: ");
-  vfprintf (stderr, format, ap);
-  va_end (ap);
-  fprintf (stderr, "\n");
-  exit (FATAL_EXIT_CODE);
-}
-
-/* More 'friendly' abort that prints the line and file.
-   config.h can #define abort fancy_abort if you like that sort of thing.  */
-
-void
-fancy_abort ()
-{
-  fatal ("Internal gcc abort.");
-}
-
 int
 main (argc, argv)
      int argc;
@@ -239,28 +221,18 @@ main (argc, argv)
 {
   rtx desc;
   rtx dummy;
-  rtx *call_insns;
-  rtx *normal_insns;
+  rtx *insns;
   rtx *insn_ptr;
-  FILE *infile;
-  register int c;
 
-  obstack_init (rtl_obstack);
-  obstack_init (&call_obstack);
-  obstack_init (&normal_obstack);
+  progname = "genflags";
+  obstack_init (&obstack);
 
   if (argc <= 1)
     fatal ("No input file name.");
 
-  infile = fopen (argv[1], "r");
-  if (infile == 0)
-    {
-      perror (argv[1]);
-      exit (FATAL_EXIT_CODE);
-    }
-
-  init_rtl ();
-
+  if (init_md_reader (argv[1]) != SUCCESS_EXIT_CODE)
+    return (FATAL_EXIT_CODE);
+  
   printf ("/* Generated automatically by the program `genflags'\n\
 from the machine description file `md'.  */\n\n");
 
@@ -268,48 +240,32 @@ from the machine description file `md'.  */\n\n");
 
   while (1)
     {
-      c = read_skip_spaces (infile);
-      if (c == EOF)
-	break;
-      ungetc (c, infile);
+      int line_no, insn_code_number = 0;
 
-      desc = read_rtx (infile);
+      desc = read_md_rtx (&line_no, &insn_code_number);
+      if (desc == NULL)
+	break;
       if (GET_CODE (desc) == DEFINE_INSN || GET_CODE (desc) == DEFINE_EXPAND)
 	gen_insn (desc);
     }
 
   /* Print out the prototypes now.  */
   dummy = (rtx) 0;
-  obstack_grow (&call_obstack, &dummy, sizeof (rtx));
-  call_insns = (rtx *) obstack_finish (&call_obstack);
+  obstack_grow (&obstack, &dummy, sizeof (rtx));
+  insns = (rtx *) obstack_finish (&obstack);
 
-  obstack_grow (&normal_obstack, &dummy, sizeof (rtx));
-  normal_insns = (rtx *) obstack_finish (&normal_obstack);
-
-  printf ("\n#ifndef NO_MD_PROTOTYPES\n");
-  for (insn_ptr = normal_insns; *insn_ptr; insn_ptr++)
+  printf ("struct rtx_def;\n");
+  for (insn_ptr = insns; *insn_ptr; insn_ptr++)
     gen_proto (*insn_ptr);
-
-  printf ("\n#ifdef MD_CALL_PROTOTYPES\n");
-  for (insn_ptr = call_insns; *insn_ptr; insn_ptr++)
-    gen_proto (*insn_ptr);
-
-  printf ("\n#else /* !MD_CALL_PROTOTYPES */\n");
-  for (insn_ptr = call_insns; *insn_ptr; insn_ptr++)
-    gen_nonproto (*insn_ptr);
-
-  printf ("#endif /* !MD_CALL_PROTOTYPES */\n");
-  printf ("\n#else  /* NO_MD_PROTOTYPES */\n");
-  for (insn_ptr = normal_insns; *insn_ptr; insn_ptr++)
-    gen_nonproto (*insn_ptr);
-
-  for (insn_ptr = call_insns; *insn_ptr; insn_ptr++)
-    gen_nonproto (*insn_ptr);
-
-  printf ("#endif  /* NO_MD_PROTOTYPES */\n");
 
   fflush (stdout);
-  exit (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
-  /* NOTREACHED */
-  return 0;
+  return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
+}
+
+/* Define this so we can link with print-rtl.o to get debug_rtx function.  */
+const char *
+get_insn_name (code)
+     int code ATTRIBUTE_UNUSED;
+{
+  return NULL;
 }

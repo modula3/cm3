@@ -10,10 +10,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ * 3. [rescinded 22 July 1999]
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -31,13 +28,24 @@
  * SUCH DAMAGE.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#ifdef HAVE_LIMITS_H
 #include <limits.h>
-#include <ctype.h>
+#endif
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
 #include <errno.h>
+#ifdef NEED_DECLARATION_ERRNO
+extern int errno;
+#endif
 #if 0
 #include <stdlib.h>
 #endif
 #include "ansidecl.h"
+#include "safe-ctype.h"
 
 #ifndef ULONG_MAX
 #define	ULONG_MAX	((unsigned long)(~0L))		/* 0xFFFFFFFF */
@@ -66,7 +74,7 @@ strtoul(nptr, endptr, base)
 	 */
 	do {
 		c = *s++;
-	} while (isspace(c));
+	} while (ISSPACE(c));
 	if (c == '-') {
 		neg = 1;
 		c = *s++;
@@ -83,15 +91,15 @@ strtoul(nptr, endptr, base)
 	cutoff = (unsigned long)ULONG_MAX / (unsigned long)base;
 	cutlim = (unsigned long)ULONG_MAX % (unsigned long)base;
 	for (acc = 0, any = 0;; c = *s++) {
-		if (isdigit(c))
+		if (ISDIGIT(c))
 			c -= '0';
-		else if (isalpha(c))
-			c -= isupper(c) ? 'A' - 10 : 'a' - 10;
+		else if (ISALPHA(c))
+			c -= ISUPPER(c) ? 'A' - 10 : 'a' - 10;
 		else
 			break;
 		if (c >= base)
 			break;
-		if (any < 0 || acc > cutoff || acc == cutoff && c > cutlim)
+		if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim))
 			any = -1;
 		else {
 			any = 1;

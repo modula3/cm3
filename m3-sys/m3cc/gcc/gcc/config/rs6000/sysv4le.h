@@ -1,6 +1,6 @@
 /* Target definitions for GNU compiler for a little endian PowerPC
    running System V.4
-   Copyright (C) 1995, Free Software Foundation, Inc.
+   Copyright (C) 1995, 2000 Free Software Foundation, Inc.
    Contributed by Cygnus Support.
 
 This file is part of GNU CC.
@@ -20,8 +20,6 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-#include "rs6000/sysv4.h"
-
 #undef TARGET_DEFAULT
 #define TARGET_DEFAULT (MASK_POWERPC | MASK_NEW_MNEMONICS | MASK_LITTLE_ENDIAN)
 
@@ -33,8 +31,10 @@ Boston, MA 02111-1307, USA.  */
 
 #undef	LINK_TARGET_SPEC
 #define	LINK_TARGET_SPEC "\
-%{mbig: -oformat elf32-powerpc } %{mbig-endian: -oformat elf32-powerpc } \
-%{!mlittle: %{!mlittle-endian: %{!mbig: %{!mbig-endian: %{mcall-linux: -oformat elf32-powerpc}}}}}"
+%{mbig: --oformat elf32-powerpc } %{mbig-endian: --oformat elf32-powerpc } \
+%{!mlittle: %{!mlittle-endian: %{!mbig: %{!mbig-endian: \
+    %{mcall-linux: --oformat elf32-powerpc} \
+  }}}}"
 
 /* Define this macro as a C expression for the initializer of an
    array of string to tell the driver program which options are

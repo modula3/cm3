@@ -1,5 +1,6 @@
 /* Target definitions for GNU compiler for mc680x0 running System V.4
-   Copyright (C) 1991, 1993, 1994, 1995, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1993, 1994, 1995, 1996, 1998, 1999, 2000
+   Free Software Foundation, Inc.
    Contributed by Ron Guilmette (rfg@monkeys.com) and
    Fred Fish (fnf@cygnus.com).
 
@@ -26,11 +27,6 @@ Boston, MA 02111-1307, USA.  */
 
 #include "m68k/sgs.h"		/* The m68k/SVR4 assembler is SGS based */
 
-/* The SGS assembler requires a special definition of
-   ASM_IDENTIFY_GCC.  We combine the m68k/sgs.h and the svr4.h
-   definitions below.  */
-#undef ASM_IDENTIFY_GCC
-
 #include "svr4.h"		/* Pick up the generic SVR4 macros */
 
 /* See m68k.h.  7 means 68020 with 68881.  */
@@ -38,19 +34,6 @@ Boston, MA 02111-1307, USA.  */
 #ifndef TARGET_DEFAULT
 #define	TARGET_DEFAULT (MASK_BITFIELD|MASK_68881|MASK_68020)
 #endif
-
-/* When using an SGS assembler, modify the name of the artificial label which
-   identifies this file as having been compiled with gcc, and the macro that
-   emits such a label in the assembly output, to use '%' rather than '.'  */
-
-#undef ASM_IDENTIFY_GCC
-#define ASM_IDENTIFY_GCC(FILE)						\
-do									\
-  {									\
-    if (write_symbols != DBX_DEBUG)					\
-      fputs ("gcc2_compiled%:\n", FILE);				\
-  }									\
-while (0)
 
 /*  Override the definition of NO_DOLLAR_IN_LABEL in svr4.h, for special
     g++ assembler names.  When this is defined, g++ uses embedded '.'
@@ -75,7 +58,7 @@ while (0)
 
 #define CPP_PREDEFINES \
   "-Dm68k -Dunix -D__svr4__ -D__motorola__ \
- -Asystem(unix) -Asystem(svr4) -Acpu(m68k) -Amachine(m68k)"
+ -Asystem=unix -Asystem=svr4 -Acpu=m68k -Amachine=m68k"
 
 /* Test to see if the target includes a 68881 by default, and use CPP_SPEC
    to control whether or not __HAVE_68881__ is defined by default or not.
@@ -106,7 +89,7 @@ while (0)
 /* ??? svr4.h no longer defines this, and this is only used by m68k/amix.h.  */
 
 #undef BSS_ASM_OP
-#define BSS_ASM_OP	".lcomm"
+#define BSS_ASM_OP	"\t.lcomm\t"
 
 /* Register in which address to store a structure value is passed to a
    function.  The default in m68k.h is a1.  For m68k/SVR4 it is a0. */
@@ -141,7 +124,7 @@ while (0)
 
 #undef ASM_OUTPUT_SKIP
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
-  fprintf (FILE, "\t%s %u\n", SPACE_ASM_OP, (SIZE))
+  fprintf (FILE, "%s%u\n", SPACE_ASM_OP, (SIZE))
 
 /* 1 if N is a possible register number for a function value.
    For m68k/SVR4 allow d0, a0, or fp0 as return registers, for integral,
@@ -167,10 +150,10 @@ while (0)
 #undef FUNCTION_VALUE
 #define FUNCTION_VALUE(VALTYPE, FUNC)					\
   (TREE_CODE (VALTYPE) == REAL_TYPE && TARGET_68881			\
-   ? gen_rtx (REG, TYPE_MODE (VALTYPE), 16)				\
+   ? gen_rtx_REG (TYPE_MODE (VALTYPE), 16)				\
    : (POINTER_TYPE_P (VALTYPE)						\
-      ? gen_rtx (REG, TYPE_MODE (VALTYPE), 8)				\
-      : gen_rtx (REG, TYPE_MODE (VALTYPE), 0)))
+      ? gen_rtx_REG (TYPE_MODE (VALTYPE), 8)				\
+      : gen_rtx_REG (TYPE_MODE (VALTYPE), 0)))
 
 /* For compatibility with the large body of existing code which does not
    always properly declare external functions returning pointer types, the
@@ -179,11 +162,10 @@ while (0)
    neglected to properly declare the callee can still find the correct return
    value. */
 
-extern int current_function_returns_pointer;
 #define FUNCTION_EXTRA_EPILOGUE(FILE, SIZE)				\
 do {									\
-  if ((current_function_returns_pointer) && 				\
-      ! find_equiv_reg (0, get_last_insn (), 0, 0, 0, 8, Pmode))	\
+  if (current_function_returns_pointer					\
+      && ! find_equiv_reg (0, get_last_insn (), 0, 0, 0, 8, Pmode))	\
     asm_fprintf (FILE, "\tmov.l %Ra0,%Rd0\n");				\
 } while (0);
 
@@ -196,8 +178,8 @@ do {									\
 #define LIBCALL_VALUE(MODE)						\
   ((((MODE) == SFmode || (MODE) == DFmode || (MODE) == XFmode)		\
     && TARGET_68881)							\
-   ? gen_rtx (REG, (MODE), 16)						\
-   : gen_rtx (REG, (MODE), 0))
+   ? gen_rtx_REG ((MODE), 16)						\
+   : gen_rtx_REG ((MODE), 0))
 
 /* Boundary (in *bits*) on which stack pointer should be aligned.
    The m68k/SVR4 convention is to keep the stack pointer longword aligned. */
@@ -232,7 +214,7 @@ do {									\
 #define ASM_OUTPUT_ASCII(FILE,PTR,LEN)				\
 do {								\
   register int sp = 0, lp = 0, ch;				\
-  fprintf ((FILE), "\t%s ", BYTE_ASM_OP);			\
+  fprintf ((FILE), "%s", BYTE_ASM_OP);				\
   do {								\
     ch = (PTR)[sp];						\
     if (ch > ' ' && ! (ch & 0x80) && ch != '\\')		\
@@ -247,7 +229,7 @@ do {								\
       {								\
 	if ((sp % 10) == 0)					\
 	  {							\
-	    fprintf ((FILE), "\n\t%s ", BYTE_ASM_OP);		\
+	    fprintf ((FILE), "\n%s", BYTE_ASM_OP);		\
 	  }							\
 	else							\
 	  {							\
@@ -265,7 +247,7 @@ do {								\
 #define ASM_OUTPUT_CASE_END(FILE,NUM,TABLE)				\
 do {									\
   if (switch_table_difference_label_flag)				\
-    asm_fprintf ((FILE), "\t%s %LLD%d,%LL%d\n", SET_ASM_OP, (NUM), (NUM));\
+    asm_fprintf ((FILE), "%s%LLD%d,%LL%d\n", SET_ASM_OP, (NUM), (NUM)); \
   switch_table_difference_label_flag = 0;				\
 } while (0)
 
@@ -287,7 +269,7 @@ int switch_table_difference_label_flag;
    standard way to do switch table. */
 #undef ASM_OUTPUT_BEFORE_CASE_LABEL
 #define ASM_OUTPUT_BEFORE_CASE_LABEL(FILE,PREFIX,NUM,TABLE)		\
-  fprintf ((FILE), "\t%s &%d\n", SWBEG_ASM_OP, XVECLEN (PATTERN (TABLE), 1));
+  fprintf ((FILE), "%s&%d\n", SWBEG_ASM_OP, XVECLEN (PATTERN (TABLE), 1));
 
 /* In m68k svr4, a symbol_ref rtx can be a valid PIC operand if it is an
    operand of a function call. */
@@ -297,7 +279,8 @@ int switch_table_difference_label_flag;
     && ! (GET_CODE (X) == CONST_DOUBLE && CONST_DOUBLE_MEM (X)	\
 	  && GET_CODE (CONST_DOUBLE_MEM (X)) == MEM		\
 	  && symbolic_operand (XEXP (CONST_DOUBLE_MEM (X), 0), VOIDmode))) \
-   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X)))
+   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X))       \
+   || PCREL_GENERAL_OPERAND_OK)
 
 /* Turn off function cse if we are doing PIC. We always want function call
    to be done as `bsr foo@PLTPC', so it will force the assembler to create 
@@ -321,13 +304,13 @@ int switch_table_difference_label_flag;
 #undef TRAMPOLINE_TEMPLATE
 #define TRAMPOLINE_TEMPLATE(FILE)					\
 {									\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x227a));				\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (8));					\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x2f3a));				\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (8));					\
-  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x4e75));				\
-  ASM_OUTPUT_INT (FILE, const0_rtx);					\
-  ASM_OUTPUT_INT (FILE, const0_rtx);					\
+  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x227a));	\
+  ASM_OUTPUT_SHORT (FILE, GEN_INT (8));		\
+  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x2f3a));	\
+  ASM_OUTPUT_SHORT (FILE, GEN_INT (8));		\
+  ASM_OUTPUT_SHORT (FILE, GEN_INT (0x4e75));	\
+  ASM_OUTPUT_INT (FILE, const0_rtx);		\
+  ASM_OUTPUT_INT (FILE, const0_rtx);		\
 }
 
 /* Redefine since we are using a different trampoline */
@@ -341,6 +324,6 @@ int switch_table_difference_label_flag;
 #undef INITIALIZE_TRAMPOLINE
 #define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT)                       \
 {                                                                       \
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 10)), CXT); \
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 14)), FNADDR); \
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 10)), CXT); \
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 14)), FNADDR); \
 }

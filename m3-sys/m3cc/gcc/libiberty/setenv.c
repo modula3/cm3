@@ -21,6 +21,8 @@
 #endif
 
 #include "ansidecl.h"
+#include <sys/types.h> /* For `size_t' */
+#include <stdio.h>     /* For `NULL' */
 
 #include <errno.h>
 #if !defined(errno) && !defined(HAVE_ERRNO_DECL)
@@ -30,9 +32,6 @@ extern int errno;
 
 #if HAVE_STDLIB_H
 # include <stdlib.h>
-#else
-#include <sys/types.h> /* For `size_t' */
-#include <stdio.h>     /* For `NULL' */
 #endif
 #if HAVE_STRING_H
 # include <string.h>
@@ -64,7 +63,7 @@ setenv (name, value, replace)
      const char *value;
      int replace;
 {
-  register char **ep;
+  register char **ep = 0;
   register size_t size;
   const size_t namelen = strlen (name);
   const size_t vallen = strlen (value) + 1;
@@ -73,11 +72,13 @@ setenv (name, value, replace)
 
   size = 0;
   if (__environ != NULL)
-    for (ep = __environ; *ep != NULL; ++ep)
-      if (!strncmp (*ep, name, namelen) && (*ep)[namelen] == '=')
-	break;
-      else
-	++size;
+    {
+      for (ep = __environ; *ep != NULL; ++ep)
+	if (!strncmp (*ep, name, namelen) && (*ep)[namelen] == '=')
+	  break;
+	else
+	  ++size;
+    }
 
   if (__environ == NULL || *ep == NULL)
     {

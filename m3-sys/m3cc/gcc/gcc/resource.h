@@ -33,14 +33,20 @@ struct resources
   HARD_REG_SET regs;	/* Which registers are set or needed.  */
 };
 
-extern void mark_target_live_regs 	PROTO((rtx, rtx, struct resources *));
-extern void mark_set_resources		PROTO((rtx, struct resources *, int,
-					       int));
-extern void mark_referenced_resources	PROTO((rtx, struct resources *, int));
-extern void clear_hashed_info_for_insn	PROTO((rtx));
-extern void incr_ticks_for_insn		PROTO((rtx));
-extern void mark_end_of_function_resources PROTO ((rtx, int));
-extern void init_resource_info		PROTO((rtx));
-extern void free_resource_info		PROTO((void));
-extern rtx find_free_register		PROTO((rtx, char *, int,
-					       HARD_REG_SET *));
+/* The kinds of rtl mark_*_resources will consider */
+enum mark_resource_type
+{
+  MARK_SRC_DEST = 0,
+  MARK_SRC_DEST_CALL = 1,
+  MARK_DEST = 2
+};
+
+extern void mark_target_live_regs 	PARAMS ((rtx, rtx, struct resources *));
+extern void mark_set_resources		PARAMS ((rtx, struct resources *, int,
+					       enum mark_resource_type));
+extern void mark_referenced_resources	PARAMS ((rtx, struct resources *, int));
+extern void clear_hashed_info_for_insn	PARAMS ((rtx));
+extern void incr_ticks_for_insn		PARAMS ((rtx));
+extern void mark_end_of_function_resources PARAMS ((rtx, int));
+extern void init_resource_info		PARAMS ((rtx));
+extern void free_resource_info		PARAMS ((void));

@@ -36,7 +36,6 @@ Boston, MA 02111-1307, USA.  */
 #ifdef __EMX__
 #define EMX
 #define USG
-#define BSTRING
 #define HAVE_PUTENV
 #define HAVE_VPRINTF
 #define HAVE_STRERROR
@@ -68,8 +67,8 @@ int spawnvp (int modeflag, char *path, char *argv[]);
 #define OBJECT_SUFFIX ".obj"
 #endif
 
-/* This is required to make temporary file names unique on file
-   systems which severely restrict the length of file names. */
-#define MKTEMP_EACH_FILE
+/* Tell GCC about OS/2's bit bucket. */
+
+#define HOST_BIT_BUCKET "NUL"
 
 #include "i386/xm-i386.h"

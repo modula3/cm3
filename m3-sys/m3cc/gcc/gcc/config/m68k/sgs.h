@@ -1,13 +1,13 @@
 /* Definitions of target machine for GNU compiler for m68k targets using
    assemblers derived from AT&T "SGS" releases.
-   Copyright (C) 1991, 1993, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1993, 1996, 2000 Free Software Foundation, Inc.
    Written by Fred Fish (fnf@cygnus.com)
 
 This file is part of GNU CC.
 
 GNU CC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU CC is distributed in the hope that it will be useful,
@@ -32,18 +32,18 @@ Boston, MA 02111-1307, USA.  */
 
 /* SGS specific assembler pseudo ops. */
 
-#define	BYTE_ASM_OP		".byte"
-#define WORD_ASM_OP		".short"
-#define LONG_ASM_OP		".long"
-#define SPACE_ASM_OP		".space"
-#define ALIGN_ASM_OP		".align"
+#define	BYTE_ASM_OP		"\t.byte "
+#define WORD_ASM_OP		"\t.short "
+#define LONG_ASM_OP		"\t.long "
+#define SPACE_ASM_OP		"\t.space "
+#define ALIGN_ASM_OP		"\t.align "
 #undef GLOBAL_ASM_OP
-#define GLOBAL_ASM_OP		".global"
-#define SWBEG_ASM_OP		".swbeg"
-#define SET_ASM_OP		".set"
+#define GLOBAL_ASM_OP		"\t.global "
+#define SWBEG_ASM_OP		"\t.swbeg "
+#define SET_ASM_OP		"\t.set "
 
-#define UNALIGNED_SHORT_ASM_OP	".short"	/* Used in dwarfout.c */
-#define UNALIGNED_INT_ASM_OP	".long"		/* Used in dwarfout.c */
+#define UNALIGNED_SHORT_ASM_OP	"\t.short "	/* Used in dwarfout.c */
+#define UNALIGNED_INT_ASM_OP	"\t.long "		/* Used in dwarfout.c */
 
 #define ASM_PN_FORMAT		"%s_%d"		/* Format for private names */
 
@@ -102,19 +102,12 @@ Boston, MA 02111-1307, USA.  */
 
 #endif /* defined SUPPORT_SUN_FPA */
 
-/* When using an SGS assembler, modify the name of the artificial label which
-   identifies this file as having been compiled with gcc, and the macro that
-   emits such a label in the assembly output, to use '%' rather than '.' */
-
-#define ASM_IDENTIFY_GCC(FILE)				\
- { fprintf ((FILE), "%s:\n", "gcc2_compiled%"); }
-
 /* This is how to output an assembler line defining an `int' constant.  */
 /* The SGS assembler doesn't understand ".word". */
 
 #undef ASM_OUTPUT_SHORT
 #define ASM_OUTPUT_SHORT(FILE,VALUE)			\
-( fprintf ((FILE), "\t%s ", WORD_ASM_OP),		\
+( fprintf ((FILE), "%s", WORD_ASM_OP),			\
   output_addr_const ((FILE), (VALUE)),			\
   fprintf ((FILE), "\n"))
 
@@ -122,7 +115,7 @@ Boston, MA 02111-1307, USA.  */
 #define ASM_OUTPUT_LONG_DOUBLE(FILE,VALUE)  			\
 do { long l[3];							\
      REAL_VALUE_TO_TARGET_LONG_DOUBLE (VALUE, l);		\
-     fprintf ((FILE), "\t%s 0x%x,0x%x,0x%x\n", LONG_ASM_OP,	\
+     fprintf ((FILE), "%s0x%x,0x%x,0x%x\n", LONG_ASM_OP,	\
 	     l[0], l[1], l[2]);					\
    } while (0)
 
@@ -132,7 +125,7 @@ do { long l[3];							\
 #define ASM_OUTPUT_DOUBLE(FILE,VALUE)			\
 do { long l[2];						\
      REAL_VALUE_TO_TARGET_DOUBLE (VALUE, l);		\
-     fprintf ((FILE), "\t%s 0x%x,0x%x\n", LONG_ASM_OP,	\
+     fprintf ((FILE), "%s0x%x,0x%x\n", LONG_ASM_OP,	\
 	      l[0], l[1]);				\
    } while (0)
 
@@ -142,7 +135,7 @@ do { long l[2];						\
 #define ASM_OUTPUT_FLOAT(FILE,VALUE)			\
 do { long l;						\
      REAL_VALUE_TO_TARGET_SINGLE (VALUE, l);		\
-     fprintf ((FILE), "\t%s 0x%x\n", LONG_ASM_OP, l);	\
+     fprintf ((FILE), "%s0x%x\n", LONG_ASM_OP, l);	\
    } while (0)
 
 /* This is how to output an assembler line that says to advance the
@@ -151,7 +144,7 @@ do { long l;						\
 #undef ASM_OUTPUT_ALIGN
 #define ASM_OUTPUT_ALIGN(FILE,LOG)				\
   if ((LOG) > 0)						\
-    fprintf ((FILE), "\t%s \t%u\n", ALIGN_ASM_OP, 1 << (LOG));	\
+    fprintf ((FILE), "%s%u\n", ALIGN_ASM_OP, 1 << (LOG));	\
   else if ((LOG) > 31)						\
     abort ();
 
@@ -165,7 +158,7 @@ do { long l;						\
 #define ASM_OUTPUT_ASCII(FILE,PTR,LEN)				\
 do {								\
   register int sp = 0, lp = 0, ch;				\
-  fprintf ((FILE), "\t%s ", BYTE_ASM_OP);			\
+  fprintf ((FILE), "%s", BYTE_ASM_OP);				\
   do {								\
     ch = (PTR)[sp];						\
     if (ch > ' ' && ! (ch & 0x80) && ch != '\\')		\
@@ -180,7 +173,7 @@ do {								\
       {								\
 	if ((sp % 10) == 0)					\
 	  {							\
-	    fprintf ((FILE), "\n\t%s ", BYTE_ASM_OP);		\
+	    fprintf ((FILE), "\n%s", BYTE_ASM_OP);		\
 	  }							\
 	else							\
 	  {							\
@@ -238,7 +231,7 @@ do {								\
 
 #undef ASM_OUTPUT_SKIP
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
-  fprintf (FILE, "\t%s %u\n", SPACE_ASM_OP, (SIZE))
+  fprintf (FILE, "%s%u\n", SPACE_ASM_OP, (SIZE))
 
 /* Translate Motorola opcodes such as `jbeq' into SGS opcodes such
    as `beq.w'.
@@ -399,7 +392,7 @@ do {								\
    example, can identify that it is the start of a switch table. */
 
 #define ASM_OUTPUT_BEFORE_CASE_LABEL(FILE,PREFIX,NUM,TABLE)		\
-  fprintf ((FILE), "\t%s &%d\n", SWBEG_ASM_OP, XVECLEN (PATTERN (TABLE), 1));
+  fprintf ((FILE), "%s&%d\n", SWBEG_ASM_OP, XVECLEN (PATTERN (TABLE), 1));
 
 #define ASM_OUTPUT_CASE_LABEL(FILE,PREFIX,NUM,TABLE)			\
   do {									\
@@ -418,7 +411,7 @@ do {								\
 #undef ASM_OUTPUT_CASE_END
 #define ASM_OUTPUT_CASE_END(FILE,NUM,TABLE)		\
 { if (switch_table_difference_label_flag)		\
-    asm_fprintf (FILE, "\t%s %LLD%d,%LL%d-%LLI%d-2.b\n",\
+    asm_fprintf (FILE, "%s%LLD%d,%LL%d-%LLI%d-2.b\n",\
 		 SET_ASM_OP, (NUM), (NUM), (NUM));	\
   switch_table_difference_label_flag = 0; }
 
@@ -428,7 +421,7 @@ extern int switch_table_difference_label_flag;
 
 #undef ASM_OUTPUT_ADDR_DIFF_ELT
 #define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL)	\
-  asm_fprintf (FILE, "\t%s %LL%d-%LL%d\n", WORD_ASM_OP, VALUE, REL)
+  asm_fprintf (FILE, "%s%LL%d-%LL%d\n", WORD_ASM_OP, VALUE, REL)
 
 /* Currently, JUMP_TABLES_IN_TEXT_SECTION must be defined in order to
    keep switch tables in the text section. */

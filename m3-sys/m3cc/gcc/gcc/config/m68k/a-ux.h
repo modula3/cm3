@@ -1,5 +1,5 @@
 /* Definitions for Motorola 680x0 running A/UX
-   Copyright (C) 1996, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1996, 1998, 1999 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -27,14 +27,14 @@ Boston, MA 02111-1307, USA.  */
 #define TARGET_DEFAULT (MASK_BITFIELD|MASK_68881|MASK_68020)	/* 68020, 68881 */
 
 #define CPP_PREDEFINES "-Dunix -Dm68k -DAUX -DmacII \
--Asystem(unix) -Asystem(AUX) -Acpu(m68k) -Amachine(m68k) -Amachine(macII)"
+-Asystem=unix -Asystem=AUX -Acpu=m68k -Amachine=m68k -Amachine=macII"
 
 #define CPP_SPEC \
 "%{!msoft-float:%{!ansi:-Dmc68881 }-D__HAVE_68881__ }\
--Acpu(mc68000) -D__mc68000__ %{!ansi:-Dmc68000 }\
-%{!mc68000:%{!m68000:-Acpu(mc68020) -D__mc68020__ %{!ansi:-Dmc68020 }}}\
-%{m68030:-Acpu(mc68030) -D__mc68030__ %{!ansi:-Dmc68030 }}\
-%{m68040:-Acpu(mc68040) -D__mc68040__ %{!ansi:-Dmc68040 }}\
+-Acpu=mc68000 -D__mc68000__ %{!ansi:-Dmc68000 }\
+%{!mc68000:%{!m68000:-Acpu=mc68020 -D__mc68020__ %{!ansi:-Dmc68020 }}}\
+%{m68030:-Acpu=mc68030 -D__mc68030__ %{!ansi:-Dmc68030 }}\
+%{m68040:-Acpu=mc68040 -D__mc68040__ %{!ansi:-Dmc68040 }}\
 %{!ansi:%{!traditional:-D__STDC__=2 }}\
 %{sbsd:-D_BSD_SOURCE -DBSD }%{ZB:-D_BSD_SOURCE -DBSD }\
 %{ssysv:-D_SYSV_SOURCE -DSYSV -DUSG }%{ZS:-D_SYSV_SOURCE -DSYSV -DUSG }\
@@ -64,10 +64,8 @@ crt2.o%s "
 /*===================================================================*/
 /* Compilation environment -- mostly */
 
-#define NO_SYS_SIGLIST
-
 /* We provide atexit(), A/UX does not have it */
-#define HAVE_ATEXIT
+#define NEED_ATEXIT
 
 /* Generate calls to memcpy, memcmp and memset, as opposed to bcopy, bcmp,
    and bzero */
@@ -116,14 +114,14 @@ crt2.o%s "
 #undef FUNCTION_VALUE
 #define FUNCTION_VALUE(VALTYPE, FUNC)                                  \
   (TREE_CODE (VALTYPE) == REAL_TYPE && TARGET_68881                    \
-   ? gen_rtx (REG, TYPE_MODE (VALTYPE), 16)                            \
+   ? gen_rtx_REG (TYPE_MODE (VALTYPE), 16)                            \
    : (POINTER_TYPE_P (VALTYPE)		                               \
-      ? gen_rtx (REG, TYPE_MODE (VALTYPE), 8)                           \
-      : gen_rtx (REG, TYPE_MODE (VALTYPE), 0)))
+      ? gen_rtx_REG (TYPE_MODE (VALTYPE), 8)                           \
+      : gen_rtx_REG (TYPE_MODE (VALTYPE), 0)))
                     
 #undef LIBCALL_VALUE
 #define LIBCALL_VALUE(MODE)						\
-  gen_rtx (REG, (MODE), ((TARGET_68881 &&				\
+  gen_rtx_REG ((MODE), ((TARGET_68881 &&				\
 			 ((MODE) == SFmode || (MODE) == DFmode)) ? 16 : 0))
 
 /* 1 if N is a possible register number for a function value.
@@ -150,9 +148,8 @@ crt2.o%s "
 
 #define FUNCTION_EXTRA_EPILOGUE(FILE, SIZE)				\
 {									\
-  extern int current_function_returns_pointer;				\
-  if ((current_function_returns_pointer) &&				\
-      ! find_equiv_reg (0, get_last_insn (), 0, 0, 0, 8, Pmode))	\
+  if (current_function_returns_pointer					\
+      && ! find_equiv_reg (0, get_last_insn (), 0, 0, 0, 8, Pmode))	\
     asm_fprintf (FILE, "\t%s %Ra0,%Rd0\n", ASM_MOV_INSN);		\
 }
 
@@ -167,9 +164,9 @@ crt2.o%s "
 
 #undef FINALIZE_TRAMPOLINE
 #define FINALIZE_TRAMPOLINE(TRAMP)					\
-  emit_library_call(gen_rtx(SYMBOL_REF, Pmode, "__clear_cache"),	\
-		    0, VOIDmode, 2, TRAMP, Pmode,			\
-		    plus_constant(TRAMP, TRAMPOLINE_SIZE), Pmode);
+  emit_library_call (gen_rtx_SYMBOL_REF (Pmode, "__clear_cache"),	\
+		     0, VOIDmode, 2, TRAMP, Pmode,			\
+		     plus_constant (TRAMP, TRAMPOLINE_SIZE), Pmode);
 
 /* Clear the instruction cache from `beg' to `end'.  This makes an 
    inline system call to SYS_sysm68k.  The arguments are as follows:

@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler.  SNI SINIX version.
-   Copyright (C) 1996, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1996, 1997, 1999, 2000 Free Software Foundation, Inc.
    Contributed by Marco Walther (Marco.Walther@mch.sni.de).
 
 This file is part of GNU CC.
@@ -24,7 +24,7 @@ Boston, MA 02111-1307, USA.  */
 #define CPP_PREDEFINES "\
 -Dmips -Dunix -Dhost_mips -DMIPSEB -DR3000 -DSYSTYPE_SVR4 -Dsinix -DSNI \
 -D_mips -D_unix -D_host_mips -D_MIPSEB -D_R3000 -D_SYSTYPE_SVR4 \
--Asystem(unix) -Asystem(svr4) -Acpu(mips) -Amachine(mips)"
+-Asystem=unix -Asystem=svr4 -Acpu=mips -Amachine=mips"
 
 #define SUBTARGET_CPP_SIZE_SPEC "\
 -D__SIZE_TYPE__=unsigned\\ int -D__PTRDIFF_TYPE__=int"
@@ -54,32 +54,19 @@ Boston, MA 02111-1307, USA.  */
 #define getpagesize()	sysconf(_SC_PAGE_SIZE)
 #endif /*  L_trampoline */
 
-/* Use atexit for static constructors/destructors, instead of defining
-   our own exit function.  */
-#define HAVE_ATEXIT
-
 /* Generate calls to memcpy, etc., not bcopy, etc.  */
 #define TARGET_MEM_FUNCTIONS
 
 #define OBJECT_FORMAT_ELF
 
 #define	TARGET_DEFAULT	MASK_ABICALLS
-#define ABICALLS_ASM_OP ".option pic2"
+#define ABICALLS_ASM_OP "\t.option pic2"
 
 #define MACHINE_TYPE "SNI running SINIX 5.42"
 
 #define MIPS_DEFAULT_GVALUE	0
 
 #define NM_FLAGS	"-p"
-
-/* wir haben ein Problem, wenn in einem Assembler-File keine .text-section
-   erzeugt wird. Dann landen diese Pseudo-Labels in irgendeiner anderen
-   section, z.B. .reginfo. Das macht den ld sehr ungluecklich. */
-
-#define ASM_IDENTIFY_GCC(mw_stream) \
-	fprintf(mw_stream, "\t.ident \"gcc2_compiled.\"\n");
-
-#define ASM_IDENTIFY_LANGUAGE(STREAM)
 
 #define ASM_LONG	".word\t"
 #define ASM_GLOBAL	".rdata\n\t\t.globl\t"

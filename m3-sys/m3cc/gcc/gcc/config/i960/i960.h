@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler, for Intel 80960
-   Copyright (C) 1992, 1993, 1995, 1996, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1993, 1995, 1996, 1998, 1999, 2000
+   Free Software Foundation, Inc.
    Contributed by Steven McGeady, Intel Corp.
    Additional Work by Glenn Colon-Bonet, Jonathan Shapiro, Andy Wilson
    Converted to GCC 2.0 by Jim Wilson and Michael Tiemann, Cygnus Support.
@@ -27,7 +28,7 @@ Boston, MA 02111-1307, USA.  */
 #define MULTILIB_DEFAULTS { "mnumerics" }
 
 /* Names to predefine in the preprocessor for this target machine.  */
-#define CPP_PREDEFINES "-Di960 -Di80960 -DI960 -DI80960 -Acpu(i960) -Amachine(i960)"
+#define CPP_PREDEFINES "-Di960 -Di80960 -DI960 -DI80960 -Acpu=i960 -Amachine=i960"
 
 /* Name to predefine in the preprocessor for processor variations.  */
 #define	CPP_SPEC "%{mic*:-D__i960\
@@ -38,6 +39,7 @@ Boston, MA 02111-1307, USA.  */
 			%{mmc:-D__i960MC}\
 			%{mca:-D__i960CA}%{mcc:-D__i960CC}\
 			%{mcf:-D__i960CF}}\
+	%{msoft-float:-D_SOFT_FLOAT}\
 	%{mka:-D__i960KA__ -D__i960_KA__}\
 	%{mkb:-D__i960KB__ -D__i960_KB__}\
 	%{msa:-D__i960SA__ -D__i960_SA__}\
@@ -93,8 +95,13 @@ Boston, MA 02111-1307, USA.  */
 #define LIB_SPEC "%{!nostdlib:-lcg %{p:-lprof}%{pg:-lgprof}\
 	  %{mka:-lfpg}%{msa:-lfpg}%{mca:-lfpg}%{mcf:-lfpg} -lgnu}"
 
-/* Show we can debug even without a frame pointer.  */
-#define CAN_DEBUG_WITHOUT_FP
+/* Defining the macro shows we can debug even without a frame pointer.
+   Actually, we can debug without FP.  But defining the macro results in
+   that -O means FP elimination.  Addressing through sp requires
+   negative offset and more one word addressing in the most cases
+   (offsets except for 0-4095 require one more word).  Therefore we've
+   not defined the macro. */
+/*#define CAN_DEBUG_WITHOUT_FP*/
 
 /* Do leaf procedure and tail call optimizations for -O2 and higher.  */
 #define OPTIMIZATION_OPTIONS(LEVEL,SIZE)	\
@@ -125,8 +132,10 @@ Boston, MA 02111-1307, USA.  */
   fprintf (asm_out_file, "\t.type\t0x%x;", A)
 
 /* Handle pragmas for compatibility with Intel's compilers.  */
-#define HANDLE_PRAGMA(GET, UNGET, NAME) process_pragma (GET, UNGET, NAME)
-extern int process_pragma ();
+#define REGISTER_TARGET_PRAGMAS(PFILE) do {			\
+  cpp_register_pragma (PFILE, 0, "align", i960_pr_align);	\
+  cpp_register_pragma (PFILE, 0, "noalign", i960_pr_noalign);	\
+} while (0)
 
 /* Run-time compilation parameters selecting different hardware subsets.  */
 
@@ -230,94 +239,94 @@ extern int target_flags;
 
 #define TARGET_SWITCHES  \
   { {"sa", (TARGET_FLAG_K_SERIES|TARGET_FLAG_COMPLEX_ADDR),		\
-       "Generate SA code"},						\
+       N_("Generate SA code")},						\
     {"sb", (TARGET_FLAG_NUMERICS|TARGET_FLAG_K_SERIES|			\
 			TARGET_FLAG_COMPLEX_ADDR),			\
-       "Generate SB code"},						\
+       N_("Generate SB code")},						\
 /*  {"sc", (TARGET_FLAG_NUMERICS|TARGET_FLAG_PROTECTED|			\
 			TARGET_FLAG_MC|TARGET_FLAG_COMPLEX_ADDR),	\
-       "Generate SC code"}, */						\
+       N_("Generate SC code")}, */					\
     {"ka", (TARGET_FLAG_K_SERIES|TARGET_FLAG_COMPLEX_ADDR),		\
-       "Generate KA code"},						\
+       N_("Generate KA code")},						\
     {"kb", (TARGET_FLAG_NUMERICS|TARGET_FLAG_K_SERIES|			\
 			TARGET_FLAG_COMPLEX_ADDR),			\
-       "Generate KB code"},						\
+       N_("Generate KB code")},						\
 /*  {"kc", (TARGET_FLAG_NUMERICS|TARGET_FLAG_PROTECTED|			\
 			TARGET_FLAG_MC|TARGET_FLAG_COMPLEX_ADDR),	\
-       "Generate KC code"}, */						\
+       N_("Generate KC code")}, */					\
     {"ja", (TARGET_FLAG_K_SERIES|TARGET_FLAG_COMPLEX_ADDR),		\
-       "Generate JA code"},						\
+       N_("Generate JA code")},						\
     {"jd", (TARGET_FLAG_K_SERIES|TARGET_FLAG_COMPLEX_ADDR),		\
-       "Generate JD code"},						\
+       N_("Generate JD code")},						\
     {"jf", (TARGET_FLAG_NUMERICS|TARGET_FLAG_K_SERIES|			\
 			TARGET_FLAG_COMPLEX_ADDR),			\
-       "Generate JF code"},						\
+       N_("Generate JF code")},						\
     {"rp", (TARGET_FLAG_K_SERIES|TARGET_FLAG_COMPLEX_ADDR),		\
-       "generate RP code"},						\
+       N_("generate RP code")},						\
     {"mc", (TARGET_FLAG_NUMERICS|TARGET_FLAG_PROTECTED|			\
 			TARGET_FLAG_MC|TARGET_FLAG_COMPLEX_ADDR),	\
-       "Generate MC code"},						\
+       N_("Generate MC code")},						\
     {"ca", (TARGET_FLAG_C_SERIES|TARGET_FLAG_BRANCH_PREDICT|		\
 			TARGET_FLAG_CODE_ALIGN|TARGET_FLAG_COMPLEX_ADDR),\
-       "Generate CA code"},						\
+       N_("Generate CA code")},						\
 /*  {"cb", (TARGET_FLAG_NUMERICS|TARGET_FLAG_C_SERIES|			\
 			TARGET_FLAG_BRANCH_PREDICT|TARGET_FLAG_CODE_ALIGN),\
-       "Generate CB code"},						\
+       N_("Generate CB code")},						\
     {"cc", (TARGET_FLAG_NUMERICS|TARGET_FLAG_PROTECTED|			\
 			TARGET_FLAG_C_SERIES|TARGET_FLAG_BRANCH_PREDICT|\
 			TARGET_FLAG_CODE_ALIGN),			\
-       "Generate CC code"}, */						\
+       N_("Generate CC code")}, */					\
     {"cf", (TARGET_FLAG_C_SERIES|TARGET_FLAG_BRANCH_PREDICT|		\
 			TARGET_FLAG_CODE_ALIGN|TARGET_FLAG_COMPLEX_ADDR),\
-       "Generate CF code"},						\
+       N_("Generate CF code")},						\
     {"numerics", (TARGET_FLAG_NUMERICS),				\
-       "Use hardware floating point instructions"},			\
+       N_("Use hardware floating point instructions")},			\
     {"soft-float", -(TARGET_FLAG_NUMERICS),				\
-       "Use software floating point"},					\
+       N_("Use software floating point")},				\
     {"leaf-procedures", TARGET_FLAG_LEAFPROC,				\
-       "Use alternate leaf function entries"},				\
+       N_("Use alternate leaf function entries")},			\
     {"no-leaf-procedures", -(TARGET_FLAG_LEAFPROC),			\
-       "Do not use alternate leaf function entries"},			\
+       N_("Do not use alternate leaf function entries")},		\
     {"tail-call", TARGET_FLAG_TAILCALL,					\
-       "Perform tail call optimization"},				\
+       N_("Perform tail call optimization")},				\
     {"no-tail-call", -(TARGET_FLAG_TAILCALL),				\
-       "Do not perform tail call optimization"},			\
+       N_("Do not perform tail call optimization")},			\
     {"complex-addr", TARGET_FLAG_COMPLEX_ADDR, 				\
-       "Use complex addressing modes"},					\
+       N_("Use complex addressing modes")},				\
     {"no-complex-addr", -(TARGET_FLAG_COMPLEX_ADDR),			\
-       "Do not use complex addressing modes"},				\
+       N_("Do not use complex addressing modes")},			\
     {"code-align", TARGET_FLAG_CODE_ALIGN,				\
-       "Align code to 8 byte boundary"},				\
+       N_("Align code to 8 byte boundary")},				\
     {"no-code-align", -(TARGET_FLAG_CODE_ALIGN),			\
-       "Do not align code to 8 byte boundary"},				\
+       N_("Do not align code to 8 byte boundary")},			\
 /*  {"clean-linkage", (TARGET_FLAG_CLEAN_LINKAGE),			\
-       "Force use of prototypes"},					\
+       N_("Force use of prototypes")},					\
     {"no-clean-linkage", -(TARGET_FLAG_CLEAN_LINKAGE),			\
-       "Do not force use of prototypes"}, */				\
+       N_("Do not force use of prototypes")}, */			\
     {"ic-compat", TARGET_FLAG_IC_COMPAT2_0,				\
-       "Enable compatibility with iC960 v2.0"},				\
+       N_("Enable compatibility with iC960 v2.0")},			\
     {"ic2.0-compat", TARGET_FLAG_IC_COMPAT2_0,				\
-       "Enable compatibility with iC960 v2.0"},				\
+       N_("Enable compatibility with iC960 v2.0")},			\
     {"ic3.0-compat", TARGET_FLAG_IC_COMPAT3_0,				\
-       "Enable compatibility with iC960 v3.0"},				\
+       N_("Enable compatibility with iC960 v3.0")},			\
     {"asm-compat", TARGET_FLAG_ASM_COMPAT,				\
-       "Enable compatibility with ic960 assembler"},			\
+       N_("Enable compatibility with ic960 assembler")},		\
     {"intel-asm", TARGET_FLAG_ASM_COMPAT,				\
-       "Enable compatibility with ic960 assembler"},			\
+       N_("Enable compatibility with ic960 assembler")},		\
     {"strict-align", TARGET_FLAG_STRICT_ALIGN,				\
-       "Do not permit unaligned accesses"},				\
+       N_("Do not permit unaligned accesses")},				\
     {"no-strict-align", -(TARGET_FLAG_STRICT_ALIGN),			\
-       "Permit unaligned accesses"},					\
+       N_("Permit unaligned accesses")},				\
     {"old-align", (TARGET_FLAG_OLD_ALIGN|TARGET_FLAG_STRICT_ALIGN),	\
-       "Layout types like Intel's v1.3 gcc"},				\
+       N_("Layout types like Intel's v1.3 gcc")},			\
     {"no-old-align", -(TARGET_FLAG_OLD_ALIGN|TARGET_FLAG_STRICT_ALIGN),	\
-       "Do not layout types like Intel's v1.3 gcc"},			\
+       N_("Do not layout types like Intel's v1.3 gcc")},		\
     {"long-double-64", TARGET_FLAG_LONG_DOUBLE_64,			\
-       "Use 64 bit long doubles"},					\
+       N_("Use 64 bit long doubles")},					\
     {"link-relax", 0,							\
-       "Enable linker relaxation"},					\
+       N_("Enable linker relaxation")},					\
     {"no-link-relax", 0,						\
-       "Do not enable linker relaxation"},				\
+       N_("Do not enable linker relaxation")},				\
     SUBTARGET_SWITCHES                                                  \
     { "", TARGET_DEFAULT,						\
 	NULL}}
@@ -332,17 +341,17 @@ extern int target_flags;
 {								\
   if (TARGET_K_SERIES && TARGET_C_SERIES)			\
     {								\
-      warning ("conflicting architectures defined - using C series", 0); \
+      warning ("conflicting architectures defined - using C series"); \
       target_flags &= ~TARGET_FLAG_K_SERIES;			\
     }								\
   if (TARGET_K_SERIES && TARGET_MC)				\
     {								\
-      warning ("conflicting architectures defined - using K series", 0); \
+      warning ("conflicting architectures defined - using K series"); \
       target_flags &= ~TARGET_FLAG_MC;				\
     }								\
   if (TARGET_C_SERIES && TARGET_MC)				\
     {								\
-      warning ("conflicting architectures defined - using C series", 0);\
+      warning ("conflicting architectures defined - using C series");\
       target_flags &= ~TARGET_FLAG_MC;				\
     }								\
   if (TARGET_IC_COMPAT3_0)					\
@@ -352,7 +361,7 @@ extern int target_flags;
       target_flags |= TARGET_FLAG_CLEAN_LINKAGE;		\
       if (TARGET_IC_COMPAT2_0)					\
 	{							\
-	  warning ("iC2.0 and iC3.0 are incompatible - using iC3.0", 0); \
+	  warning ("iC2.0 and iC3.0 are incompatible - using iC3.0"); \
 	  target_flags &= ~TARGET_FLAG_IC_COMPAT2_0;		\
 	}							\
     }								\
@@ -363,7 +372,7 @@ extern int target_flags;
     }								\
   /* ??? See the LONG_DOUBLE_TYPE_SIZE definition below.  */	\
   if (TARGET_LONG_DOUBLE_64)					\
-    warning ("The -mlong-double-64 option does not work yet.", 0);\
+    warning ("The -mlong-double-64 option does not work yet.");\
   i960_initialize ();						\
 }
 
@@ -488,7 +497,11 @@ extern int target_flags;
 
 #define ROUND_TYPE_SIZE(TYPE, COMPUTED, SPECIFIED)		\
   ((TREE_CODE (TYPE) == REAL_TYPE && TYPE_MODE (TYPE) == XFmode)	\
-   ? build_int_2 (128, 0) : round_up (COMPUTED, SPECIFIED))
+   ? bitsize_int (128) : round_up (COMPUTED, SPECIFIED))
+#define ROUND_TYPE_SIZE_UNIT(TYPE, COMPUTED, SPECIFIED)		\
+  ((TREE_CODE (TYPE) == REAL_TYPE && TYPE_MODE (TYPE) == XFmode)	\
+   ? bitsize_int (16) : round_up (COMPUTED, SPECIFIED))
+
 
 /* Standard register usage.  */
 
@@ -572,7 +585,6 @@ extern int target_flags;
 /* Value is 1 if hard register REGNO can hold a value of machine-mode MODE.
    On 80960, the cpu registers can hold any mode but the float registers
    can only hold SFmode, DFmode, or XFmode.  */
-extern int hard_regno_mode_ok ();
 #define HARD_REGNO_MODE_OK(REGNO, MODE) hard_regno_mode_ok ((REGNO), (MODE))
 
 /* Value is 1 if it is a good idea to tie two pseudo registers
@@ -606,22 +618,30 @@ extern int hard_regno_mode_ok ();
 /* ??? It isn't clear to me why this is here.  Perhaps because of a bug (since
    fixed) in the definition of INITIAL_FRAME_POINTER_OFFSET which would have
    caused this to fail.  */
-/* ??? Must check current_function_has_nonlocal_goto, otherwise frame pointer
-   elimination messes up nonlocal goto sequences.  I think this works for other
-   targets because they use indirect jumps for the return which disables fp
-   elimination.  */
-#define FRAME_POINTER_REQUIRED \
-  (! leaf_function_p () || current_function_has_nonlocal_goto)
+#define FRAME_POINTER_REQUIRED (! leaf_function_p ())
 
-/* C statement to store the difference between the frame pointer
-   and the stack pointer values immediately after the function prologue.
+/* Definitions for register eliminations.
+
+   This is an array of structures.  Each structure initializes one pair
+   of eliminable registers.  The "from" register number is given first,
+   followed by "to".  Eliminations of the same "from" register are listed
+   in order of preference.. */
+
+#define ELIMINABLE_REGS	 {{FRAME_POINTER_REGNUM, STACK_POINTER_REGNUM}}
+
+/* Given FROM and TO register numbers, say whether this elimination is allowed.
+   Frame pointer elimination is automatically handled.  */
+#define CAN_ELIMINATE(FROM, TO) 1
+
+/* Define the offset between two registers, one to be eliminated, and
+   the other its replacement, at the start of a routine.
 
    Since the stack grows upward on the i960, this must be a negative number.
    This includes the 64 byte hardware register save area and the size of
    the frame.  */
 
-#define INITIAL_FRAME_POINTER_OFFSET(VAR) \
-  do { (VAR) = - (64 + compute_frame_size (get_frame_size ())); } while (0)
+#define INITIAL_ELIMINATION_OFFSET(FROM, TO, OFFSET)			\
+  do { (OFFSET) = - (64 + compute_frame_size (get_frame_size ())); } while (0)
 
 /* Base register for access to arguments of the function.  */
 #define ARG_POINTER_REGNUM 14
@@ -817,7 +837,7 @@ enum reg_class { NO_REGS, GLOBAL_REGS, LOCAL_REGS, LOCAL_OR_GLOBAL_REGS,
 #define OUTGOING_REG_PARM_STACK_SPACE
 
 /* Keep the stack pointer constant throughout the function.  */
-#define ACCUMULATE_OUTGOING_ARGS
+#define ACCUMULATE_OUTGOING_ARGS 1
 
 /* Value is 1 if returning from a function call automatically
    pops the arguments described by the number-of-args field in the call.
@@ -830,7 +850,7 @@ enum reg_class { NO_REGS, GLOBAL_REGS, LOCAL_REGS, LOCAL_OR_GLOBAL_REGS,
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
 
-#define LIBCALL_VALUE(MODE) gen_rtx ((REG), (MODE), 0)
+#define LIBCALL_VALUE(MODE) gen_rtx_REG ((MODE), 0)
 
 /* 1 if N is a possible register number for a function value
    as seen by the caller.
@@ -859,6 +879,18 @@ enum reg_class { NO_REGS, GLOBAL_REGS, LOCAL_REGS, LOCAL_OR_GLOBAL_REGS,
 
 #define SETUP_INCOMING_VARARGS(CUM,MODE,TYPE,PRETEND_SIZE,NO_RTL) \
   i960_setup_incoming_varargs(&CUM,MODE,TYPE,&PRETEND_SIZE,NO_RTL)
+
+/* Define the `__builtin_va_list' type for the ABI.  */
+#define BUILD_VA_LIST_TYPE(VALIST) \
+  (VALIST) = i960_build_va_list ()
+
+/* Implement `va_start' for varargs and stdarg.  */
+#define EXPAND_BUILTIN_VA_START(stdarg, valist, nextarg) \
+  i960_va_start (stdarg, valist, nextarg)
+
+/* Implement `va_arg'.  */
+#define EXPAND_BUILTIN_VA_ARG(valist, type) \
+  i960_va_arg (valist, type)
 
 /* Define a data type for recording info about an argument list
    during the scan of that argument list.  This data type should
@@ -924,7 +956,6 @@ struct cum_args { int ca_nregparms; int ca_nstackparms; };
    NAMED is nonzero if this argument is a named parameter
     (otherwise it is an extra parameter matching an ellipsis).  */
 
-extern struct rtx_def *i960_function_arg ();
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED)	\
   i960_function_arg(&CUM, MODE, TYPE, NAMED)
 
@@ -934,7 +965,7 @@ extern struct rtx_def *i960_function_arg ();
    otherwise, FUNC is 0.  */
 
 #define FUNCTION_VALUE(TYPE, FUNC) \
-  gen_rtx (REG, TYPE_MODE (TYPE), 0)
+  gen_rtx_REG (TYPE_MODE (TYPE), 0)
 
 /* Force aggregates and objects larger than 16 bytes to be returned in memory,
    since we only have 4 registers available for return values.  */
@@ -1130,7 +1161,6 @@ extern struct rtx_def *i960_function_arg ();
 
 /* On 80960, convert non-canonical addresses to canonical form.  */
 
-extern struct rtx_def *legitimize_address ();
 #define LEGITIMIZE_ADDRESS(X, OLDX, MODE, WIN)	\
 { rtx orig_x = (X);				\
   (X) = legitimize_address (X, OLDX, MODE);	\
@@ -1216,18 +1246,13 @@ extern struct rtx_def *legitimize_address ();
 
 extern struct rtx_def *i960_compare_op0, *i960_compare_op1;
 
-/* Define the function that build the compare insn for scc and bcc.  */
-
-extern struct rtx_def *gen_compare_reg ();
-
 /* Add any extra modes needed to represent the condition code.
 
    Also, signed and unsigned comparisons are distinguished, as
    are operations which are compatible with chkbit insns.  */
-#define EXTRA_CC_MODES CC_UNSmode, CC_CHKmode
-
-/* Define the names for the modes specified above.  */
-#define EXTRA_CC_NAMES "CC_UNS", "CC_CHK"
+#define EXTRA_CC_MODES		\
+    CC(CC_UNSmode, "CC_UNS")	\
+    CC(CC_CHKmode, "CC_CHK")
 
 /* Given a comparison code (EQ, NE, etc.) and the first operand of a COMPARE,
    return the mode to be used for the comparison.  For floating-point, CCFPmode
@@ -1306,11 +1331,11 @@ extern struct rtx_def *gen_compare_reg ();
 
 /* Output before read-only data.  */
 
-#define TEXT_SECTION_ASM_OP ".text"
+#define TEXT_SECTION_ASM_OP "\t.text"
 
 /* Output before writable data.  */
 
-#define DATA_SECTION_ASM_OP ".data"
+#define DATA_SECTION_ASM_OP "\t.data"
 
 /* How to refer to registers in assembler output.
    This sequence is indexed by compiler's hard-register-number (see above).  */
@@ -1543,6 +1568,13 @@ extern struct rtx_def *gen_compare_reg ();
 
 #define PRINT_OPERAND_ADDRESS(FILE, ADDR)	\
   i960_print_operand_addr (FILE, ADDR)
+
+/* Determine which codes are valid without a following integer.  These must
+   not be alphabetic (the characters are chosen so that
+   PRINT_OPERAND_PUNCT_VALID_P translates into a simple range change when
+   using ASCII).  */
+
+#define PRINT_OPERAND_PUNCT_VALID_P(CODE)   ((CODE) == '+')
 
 /* Output assembler code for a block containing the constant parts
    of a trampoline, leaving space for the variable parts.  */
@@ -1571,10 +1603,8 @@ extern struct rtx_def *gen_compare_reg ();
 
 #define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT)			\
 {									\
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 4)),	\
-		  FNADDR);						\
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 12)),	\
-		  CXT);							\
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 4)), FNADDR); \
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 12)), CXT); \
 }
 
 /* Generate RTL to flush the register windows so as to make arbitrary frames
@@ -1628,16 +1658,6 @@ extern enum insn_types i960_last_insn_type;
 		       CONST_DOUBLE, CONST}},				\
   {"power2_operand", {CONST_INT}},					\
   {"cmplpower2_operand", {CONST_INT}},
-
-/* Define functions in i960.c and used in insn-output.c.  */
-
-extern char *i960_output_ldconst ();
-extern char *i960_output_call_insn ();
-extern char *i960_output_ret_insn ();
-extern char *i960_output_move_double ();
-extern char *i960_output_move_double_zero ();
-extern char *i960_output_move_quad ();
-extern char *i960_output_move_quad_zero ();
 
 /* Defined in reload.c, and used in insn-recog.c.  */
 

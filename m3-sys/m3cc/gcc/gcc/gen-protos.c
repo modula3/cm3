@@ -1,5 +1,6 @@
 /* gen-protos.c - massages a list of prototypes, for use by fixproto.
-   Copyright (C) 1993, 94-96, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1994, 1995, 1996, 1998,
+   1999 Free Software Foundation, Inc.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
@@ -18,28 +19,31 @@ Foundation, 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 #include "hconfig.h"
 #include "system.h"
 #include "scan.h"
-#include "cpplib.h"
-#include "cpphash.h"
 #undef abort
 
 int verbose = 0;
-char *progname;
+const char *progname;
+
+static void add_hash		PARAMS ((const char *));
+static int parse_fn_proto	PARAMS ((char *, char *, struct fn_decl *));
 
 #define HASH_SIZE 2503 /* a prime */
 int hash_tab[HASH_SIZE];
 int next_index;
+int collisions;
 
 static void
 add_hash (fname)
-     char *fname;
+     const char *fname;
 {
   int i, i0;
 
   /* NOTE:  If you edit this, also edit lookup_std_proto in fix-header.c !! */
-  i = hashf (fname, strlen (fname), HASH_SIZE);
+  i = hashstr (fname, strlen (fname)) % HASH_SIZE;
   i0 = i;
   if (hash_tab[i] != 0)
     {
+      collisions++;
       for (;;)
 	{
 	  i = (i+1) % HASH_SIZE;
@@ -124,6 +128,8 @@ parse_fn_proto (start, end, fn)
   return 1;
 }
 
+extern int main PARAMS ((int, char **));
+
 int
 main (argc, argv)
      int argc ATTRIBUTE_UNUSED;
@@ -181,5 +187,8 @@ main (argc, argv)
     fprintf (outf, "  %d,\n", hash_tab[i]);
   fprintf (outf, "};\n");
 
+  fprintf (stderr, "gen-protos: %d entries %d collisions\n",
+	   next_index, collisions);
+  
   return 0;
 }

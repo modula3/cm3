@@ -14,11 +14,12 @@ later version.
 
 In addition to the permissions in the GNU General Public License, the
 Free Software Foundation gives you unlimited permission to link the
-compiled version of this file with other programs, and to distribute
-those programs without any restriction coming from the use of this
-file.  (The General Public License restrictions do apply in other
-respects; for example, they cover modification of the file, and
-distribution when not linked into another program.)
+compiled version of this file into combinations with other programs,
+and to distribute those combinations without any restriction coming
+from the use of this file.  (The General Public License restrictions
+do apply in other respects; for example, they cover modification of
+the file, and distribution when not linked into a combine
+executable.)
 
 This file is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -30,13 +31,6 @@ along with this program; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-/* As a special exception, if you link this library with files
-   compiled with GCC to produce an executable, this does not cause
-   the resulting executable to be covered by the GNU General Public License.
-   This exception does not however invalidate any other reasons why
-   the executable file might be covered by the GNU General Public License.  */
-
-	
 ; These routines are called using the standard TI register argument
 ; passing model.
 ; The following registers do not have to be saved:
@@ -65,7 +59,7 @@ Boston, MA 02111-1307, USA.  */
 
 ; r2 dividend, r3 divisor, r0 quotient
 ; clobbers r1, ar1
-#ifdef L_divqf3
+#ifdef L_divsf3
 	.text
         .global ___divqf3
 ___divqf3:
@@ -139,24 +133,29 @@ ___divqf3:
 	mpyf	r1, r0		; r0 = r[2] * (2.0 - r[2] * v) = r[3]
 ; End of 3rd iteration
 
-	or	080h, r0	; add 1 lsb to result. needed when complemeting
-				; 1.0 / 2.0
-	rnd	r0
+	rnd	r0		; Minimize error in x[3]'s LSBs
 
 ; Use modified last iteration
 ; r[4] = (r[3] * (1.0 - (v * r[3]))) + r[3]
 	mpyf3	r0, r3, r1	; r1 = r[3] * v
 	subrf	1.0, r1		; r1 = 1.0 - r[3] * v
 	mpyf	r0, r1		; r1 = r[3] * (1.0 - r[3] * v)
+	addf	r1, r0		; r0 = r[3] * (1.0 - r[3] * v) + r[3] = r[4]
+
+        rnd     r0              ; Minimize error in x[4]'s LSBs
 
 	bud	ar1		; Delayed branch
-	addf	r1, r0		; r0 = r[3] * (1.0 - r[3] * v) + r[3] = r[4]
-	.if .REGPARM == 0
-	mpyf	*-ar0(1), r0	; Multiply by the dividend
-	.else
-	mpyf	r2, r0		; Multiply by the dividend
-	.endif
-	rnd	r0
+
+        .if .REGPARM == 0
+        ldfu    *-ar0(1), r2    ; Dividend in mem has only 24 bits significance
+        .else
+        rnd     r2              ; Minimize error in reg dividend's LSBs
+				; since this may have 32 bit significance
+        .endif
+
+        mpyf    r2, r0          ; Multiply by the dividend
+        rnd     r0              ; Round result to 32 bits
+
 	; Branch occurs here
 #endif
 
@@ -166,7 +165,7 @@ ___divqf3:
 ;
 ; ar2 dividend, r2 divisor, r0 quotient
 ; clobbers r1, r3, ar0, ar1, ir0, ir1, rc, rs, re
-#ifdef L_divqi3
+#ifdef L_divsi3
 	.text
 	.global ___divqi3
 	.ref	udivqi3n
@@ -255,7 +254,7 @@ divq32:
 ;
 ; ar2 dividend, r2 divisor, r0 quotient, 
 ; clobbers r1, r3, ar0, ar1, ir0, ir1, rc, rs, re
-#ifdef L_udivqi3
+#ifdef L_udivsi3
 	.text
 	.global ___udivqi3
 	.global udivqi3n
@@ -366,7 +365,7 @@ qzero:
 	nop
 #endif
 
-#ifdef L_umodqi3
+#ifdef L_umodsi3
 	.text
 	.global	___umodqi3
 	.global	umodqi3n
@@ -482,7 +481,7 @@ uzero:	bud	ir1
 	nop
 #endif
 
-#ifdef L_modqi3
+#ifdef L_modsi3
 	.text
 	.global	___modqi3
 	.ref umodqi3n
@@ -606,7 +605,7 @@ ___unsfltcompare: .float 2147483648.0
 ;
 ; ar2 multiplier, r2 multiplicand, r0 product
 ; clobbers r1, r2, r3
-#ifdef L_mulqi3	
+#ifdef L_mulsi3	
 	.text
 	.global	___mulqi3
 ___mulqi3:
@@ -643,7 +642,7 @@ ___mulqi3:
 ; long1 and long2 on stack
 ; result in r0,r1
 ;
-#ifdef L_mulhi3
+#ifdef L_muldi3
 	.text
 	.global	___mulhi3
 #ifdef _TMS320C4x
@@ -725,7 +724,7 @@ ___mulhi3:
 ; src2 in r2
 ; result in r0
 ;
-#ifdef L_umulhi3_high
+#ifdef L_umuldi3_high
 	.text
 	.global	___umulhi3_high
 ___umulhi3_high:
@@ -771,7 +770,7 @@ ___umulhi3_high:
 ; src2 in r2
 ; result in r0
 ;
-#ifdef L_smulhi3_high
+#ifdef L_smuldi3_high
 	.text
 	.global	___smulhi3_high
 ___smulhi3_high:
@@ -823,9 +822,9 @@ ___smulhi3_high:
 ; long1 and long2 on stack
 ; divide in r0,r1
 ; modulo in r2,r3
-; routine takes a maximum of 64*9+21=597 cycles = 24 us @ 50Mhz
+; routine takes a maximum of 64*8+23=535 cycles = 21.4 us @ 50Mhz
 ;
-#ifdef L_udivhi3
+#ifdef L_udivdi3
 	.text
 	.global	___udivhi3
 	.global	___udivide
@@ -879,12 +878,13 @@ udiv0:
 
 	rolc	r2
 	subi3	ar0,r2,r3
-	xor	1,st
-	ldic	r3,r2
+	ldinc	r3,r2
 	rolc	r0
 udivend0:
 	rolc	r1
 
+	not	r0
+	not	r1
 	ldiu	0,r3
 	rets
 udiv1:
@@ -908,13 +908,14 @@ udiv1:
 	rolc	r3
 	subi3	ar0,r2,r4
 	subb3	ar1,r3,r5
-	xor	1,st
-	ldic	r4,r2
-	ldic	r5,r3
+	ldinc	r4,r2
+	ldinc	r5,r3
 	rolc	r0
 udivend1:
 	rolc	r1
 
+	not	r0
+	not	r1
 	pop	r5
 	pop	r4
 	rets
@@ -925,7 +926,7 @@ udivend1:
 ; long1 and long2 on stack
 ; result in r0,r1
 ;
-#ifdef L_umodhi3
+#ifdef L_umoddi3
 	.text
 	.global	___umodhi3
 	.ref ___modulo
@@ -948,7 +949,7 @@ ___umodhi3:
 ; long1 and long2 on stack
 ; result in r0,r1
 ;
-#ifdef L_divhi3
+#ifdef L_divdi3
 	.text
 	.global	___divhi3
 	.ref ___udivide
@@ -985,7 +986,7 @@ div3:
 ; long1 and long2 on stack
 ; result in r0,r1
 ;
-#ifdef L_modhi3
+#ifdef L_moddi3
 	.text
 	.global	___modhi3
 	.ref ___umodulo
@@ -1024,7 +1025,7 @@ mod3:
 ; input in r2
 ; result in r0,r1
 ;
-#ifdef L_fix_truncqfhi2
+#ifdef L_fix_truncsfdi2
 	.text
 	.global	___fix_truncqfhi2
 	.ref ufix_truncqfhi2n
@@ -1052,7 +1053,7 @@ ___fix_truncqfhi2:
 ; input in r2
 ; result in r0,r1
 ;
-#ifdef L_ufix_truncqfhi2
+#ifdef L_ufix_truncsfdi2
 	.text
 	.global	___ufix_truncqfhi2
 	.global	ufix_truncqfhi2n
@@ -1074,7 +1075,7 @@ ufix_truncqfhi2n:
 	ash	-24,r3
 	subi	31,r3
 	cmpi	32,r3
-	bge	ufix1
+	bgt	ufix1
 	cmpi	-32,r3
 	ble	ufix1
 	ldi	1,r0
@@ -1098,7 +1099,7 @@ ufix1:
 ; input on stack
 ; result in r0
 ;
-#ifdef L_floathiqf2
+#ifdef L_floatdisf2
 	.text
 	.global	___floathiqf2
 	.ref ufloathiqf2n
@@ -1119,7 +1120,7 @@ ___floathiqf2:
 ; input on stack
 ; result in r0
 ;
-#ifdef L_ufloathiqf2
+#ifdef L_ufloatdisf2
 	.text
 	.global	___ufloathiqf2
 	.global	ufloathiqf2n
@@ -1169,7 +1170,7 @@ uflt2:
 ; input in r2
 ; result in r0,r1
 ;
-#ifdef L_fix_trunchfhi2
+#ifdef L_fix_truncdfdi2
 	.text
 	.global	___fix_trunchfhi2
 	.ref ufix_trunchfhi2n
@@ -1198,7 +1199,7 @@ ___fix_trunchfhi2:
 ; input in r2
 ; result in r0,r1
 ;
-#ifdef L_ufix_trunchfhi2
+#ifdef L_ufix_truncdfdi2
 	.text
 	.global	___ufix_trunchfhi2
 	.global	ufix_trunchfhi2n
@@ -1221,7 +1222,7 @@ ufix_trunchfhi2n:
 	ash	-24,r3
 	subi	31,r3
 	cmpi	32,r3
-	bge	ufixh1
+	bgt	ufixh1
 	cmpi	-32,r3
 	ble	ufixh1
 	ldi	1,r0
@@ -1245,7 +1246,7 @@ ufixh1:
 ; input on stack
 ; result in r0
 ;
-#ifdef L_floathihf2
+#ifdef L_floatdidf2
 	.text
 	.global	___floathihf2
 	.ref ufloathihf2n
@@ -1266,7 +1267,7 @@ ___floathihf2:
 ; input on stack
 ; result in r0
 ;
-#ifdef L_ufloathihf2
+#ifdef L_ufloatdidf2
 	.text
 	.global	___ufloathihf2
 	.global	ufloathihf2n
@@ -1357,7 +1358,7 @@ ___ffs:
 ; input in r2, r3
 ; output in r0
 ;
-#ifdef L_mulhf3
+#ifdef L_muldf3
 	.global ___mulhf3
 	.text
 ___mulhf3:
@@ -1392,7 +1393,7 @@ ___mulhf3:
 ; calculate long double / long double
 ; r2 dividend, r3 divisor, r0 quotient
 ;
-#ifdef L_divhf3
+#ifdef L_divdf3
 	.global ___divhf3
 	.text
 ___divhf3:

@@ -1,6 +1,7 @@
 /* Definitions of target machine for GNU compiler.  Elxsi version.
-   Copyright (C) 1987, 1988, 1992, 1995, 1996 Free Software Foundation, Inc.
-   This port, contributed by Mike Stump <mrs@cygnus.com> in 1988, is the first
+   Copyright (C) 1987, 1988, 1992, 1995, 1996, 1998, 1999, 2000
+   Free Software Foundation, Inc.
+   Contributed by Mike Stump <mrs@cygnus.com> in 1988.  This is the first
    64 bit port of GNU CC.
    Based upon the VAX port.
 
@@ -8,7 +9,7 @@ This file is part of GNU CC.
 
 GNU CC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU CC is distributed in the hope that it will be useful,
@@ -24,7 +25,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
-#define CPP_PREDEFINES "-Delxsi -Dunix -Asystem(unix) -Acpu(elxsi) -Amachine(elxsi)"
+#define CPP_PREDEFINES "-Delxsi -Dunix -Asystem=unix -Acpu=elxsi -Amachine=elxsi"
 
 /* Print subsidiary information on the compiler version in use.  */
 
@@ -47,8 +48,8 @@ extern int target_flags;
    An empty string NAME is used to identify the default VALUE.  */
 
 #define TARGET_SWITCHES  \
-  { {"unix", 1, "Generate code the unix assembler can handle"},  \
-    {"embos", -1, "Generate code an embedded assembler can handle"},  \
+  { {"unix", 1, N_("Generate code the unix assembler can handle")},	\
+    {"embos", -1, N_("Generate code an embedded assembler can handle")},\
     { "", TARGET_DEFAULT, NULL}}
 
 /* Default target_flags if no switches specified.  */
@@ -234,7 +235,7 @@ enum reg_class { NO_REGS, GENERAL_REGS, ALL_REGS, LIM_REG_CLASSES };
    This is an initializer for a vector of HARD_REG_SET
    of length N_REG_CLASSES.  */
 
-#define REG_CLASS_CONTENTS {0, 0x07fff, 0xffff}
+#define REG_CLASS_CONTENTS {{0}, {0x07fff}, {0xffff}}
 
 /* The same information, inverted:
    Return the class number of the smallest class containing
@@ -319,14 +320,14 @@ enum reg_class { NO_REGS, GENERAL_REGS, ALL_REGS, LIM_REG_CLASSES };
 /* On the Vax the return value is in R0 regardless.  */   
 
 #define FUNCTION_VALUE(VALTYPE, FUNC)  \
-  gen_rtx (REG, TYPE_MODE (VALTYPE), 0)
+  gen_rtx_REG (TYPE_MODE (VALTYPE), 0)
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
 
 /* On the Vax the return value is in R0 regardless.  */   
 
-#define LIBCALL_VALUE(MODE)  gen_rtx (REG, MODE, 0)
+#define LIBCALL_VALUE(MODE)  gen_rtx_REG (MODE, 0)
 
 /* Define this if PCC uses the nonreentrant convention for returning
    structure and union values.  */
@@ -440,10 +441,9 @@ enum reg_class { NO_REGS, GENERAL_REGS, ALL_REGS, LIM_REG_CLASSES };
 { register int regno;							\
   register int cnt = 0;							\
   extern char call_used_regs[];						\
-  extern int current_function_calls_alloca;						\
   /* this conditional is ONLY here because there is a BUG;		\
-	     EXIT_IGNORE_STACK is ignored itself when the first part of		\
-	     the condition is true! (at least in version 1.35) */		\
+	     EXIT_IGNORE_STACK is ignored itself when the first part of	\
+	     the condition is true! (at least in version 1.35) */	\
   /* the 8*10 is for 64 bits of .r5 - .r14 */				\
   if (current_function_calls_alloca || (SIZE)>=(256-8*10)) {		\
     /* use .r4 as a temporary! Ok for now.... */			\
@@ -482,11 +482,11 @@ enum reg_class { NO_REGS, GENERAL_REGS, ALL_REGS, LIM_REG_CLASSES };
   else if (GET_CODE (ADDR) == PLUS && XEXP (ADDR, 0) == frame_pointer_rtx) \
     { rtx other_reg = XEXP (ADDR, 1);					\
       offset = 0;							\
-      regs = gen_rtx (PLUS, Pmode, stack_pointer_rtx, other_reg); }	\
+      regs = gen_rtx_PLUS (Pmode, stack_pointer_rtx, other_reg); }	\
   else if (GET_CODE (ADDR) == PLUS && XEXP (ADDR, 1) == frame_pointer_rtx) \
     { rtx other_reg = XEXP (ADDR, 0);					\
       offset = 0;							\
-      regs = gen_rtx (PLUS, Pmode, stack_pointer_rtx, other_reg); }	\
+      regs = gen_rtx_PLUS (Pmode, stack_pointer_rtx, other_reg); }	\
   if (offset >= 0)							\
     { int regno;							\
       extern char call_used_regs[];					\
@@ -715,7 +715,7 @@ enum reg_class { NO_REGS, GENERAL_REGS, ALL_REGS, LIM_REG_CLASSES };
   } while (0)
 
 /* Output at beginning of assembler file.  */
-#define ASM_FILE_START(FILE) fprintf (FILE, "");
+#define ASM_FILE_START(FILE) fputs ("", (FILE));
 
 /* Output to assembler file text saying following lines
    may contain character constants, extra white space, comments, etc.  */
@@ -883,7 +883,7 @@ enum reg_class { NO_REGS, GENERAL_REGS, ALL_REGS, LIM_REG_CLASSES };
    to a multiple of 2**LOG bytes.  */
 
 #define ASM_OUTPUT_ALIGN(FILE,LOG)  \
-  if (LOG!=0) fprintf (FILE, "\t.align\t%d\n", (LOG)); else 0
+  do { if (LOG!=0) fprintf (FILE, "\t.align\t%d\n", (LOG)); } while (0)
 
 /* This is how to output an assembler line
    that says to advance the location counter by SIZE bytes.  */
@@ -954,11 +954,6 @@ enum reg_class { NO_REGS, GENERAL_REGS, ALL_REGS, LIM_REG_CLASSES };
 
 #define PRINT_OPERAND_ADDRESS(FILE, ADDR)  \
  print_operand_address (FILE, ADDR)
-
-/* Functions used in the md file. */
-
-extern char *cmp_set();
-extern char *cmp_jmp();
 
 /* These are stubs, and have yet to bee written. */
 

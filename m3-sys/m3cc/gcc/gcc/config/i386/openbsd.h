@@ -1,6 +1,5 @@
 /* Configuration for an OpenBSD i386 target.
-   
-   Copyright (C) 1999 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -37,7 +36,8 @@ Boston, MA 02111-1307, USA.  */
   (MASK_80387 | MASK_IEEE_FP | MASK_FLOAT_RETURNS | MASK_NO_FANCY_MATH_387)
 
 /* Run-time target specifications */
-#define CPP_PREDEFINES "-D__unix__ -D__i386__ -D__OpenBSD__ -Asystem(unix) -Asystem(OpenBSD) -Acpu(i386) -Amachine(i386)"
+#define CPP_PREDEFINES "-D__unix__ -D__OpenBSD__ \
+ -Asystem=unix -Asystem=bsd -Asystem=OpenBSD"
 
 /* Layout of source language data types.  */
 
@@ -114,6 +114,8 @@ Boston, MA 02111-1307, USA.  */
    configuration files...  */
 #define DWARF2_UNWIND_INFO 0
 
+#undef ASM_PREFERRED_EH_DATA_FORMAT
+
 /* Assembler format: alignment output.  */
 
 /* A C statement to output to the stdio stream FILE an assembler
@@ -133,4 +135,7 @@ Boston, MA 02111-1307, USA.  */
 #endif
 
 /* Note that we pick up ASM_OUTPUT_MI_THUNK from unix.h.  */
+
+#undef ASM_COMMENT_START
+#define ASM_COMMENT_START ";#"
 

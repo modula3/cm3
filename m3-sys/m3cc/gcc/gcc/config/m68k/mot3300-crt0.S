@@ -93,6 +93,6 @@ __stop_monitor:
 	COMM	splimit%,4
 	COMM	environ,4
 
-	IDENT ("$Id: mot3300-crt0.S,v 1.1.1.2 1998/01/14 19:39:06 law Exp $")
+	IDENT ("$Id: mot3300-crt0.S,v 1.2 1998/12/16 21:07:03 law Exp $")
 	IDENT ("Contributed by Manfred Hollstein (manfred@lts.sel.alcatel.de)")
 	IDENT ("Corrections by Philippe De Muyter (phdm@macqel.be)")

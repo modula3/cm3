@@ -1,6 +1,7 @@
 /* Definitions of target machine for GNU compiler,
    SysV68 Motorola 3300 Delta Series.
-   Copyright (C) 1987, 93, 94, 95, 96, 1997, 1998, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000
+   Free Software Foundation, Inc.
    Contributed by Abramo and Roberto Bagnara (bagnara@dipisa.di.unipi.it)
    based on Alex Crain's 3B1 definitions.
    Maintained by Philippe De Muyter (phdm@info.ucl.ac.be).
@@ -36,6 +37,9 @@ Boston, MA 02111-1307, USA.  */
 #define NO_DOT_IN_LABEL
 
 #include "m68k/m68k.h"
+
+/* GDB expects a slightly different marker on this target.  */
+#define STABS_GCC_MARKER "gcc2_compiled%"
 
 /* See m68k.h.  0407 means 68020-68040.  */
 
@@ -145,10 +149,9 @@ Boston, MA 02111-1307, USA.  */
 
 #undef FUNCTION_EXTRA_EPILOGUE
 #define FUNCTION_EXTRA_EPILOGUE(FILE, SIZE)				\
-  { extern int current_function_returns_pointer;			\
-    if ((current_function_returns_pointer) &&				\
-      ! find_equiv_reg (0, get_last_insn (), 0, 0, 0, 8, Pmode))        \
-      asm_fprintf (FILE, "\tmov.l %Ra0,%Rd0\n"); } 
+{ if (current_function_returns_pointer					\
+      && ! find_equiv_reg (0, get_last_insn (), 0, 0, 0, 8, Pmode))	\
+    asm_fprintf (FILE, "\tmov.l %Ra0,%Rd0\n"); }
 
 #undef FUNCTION_PROFILER
 #define FUNCTION_PROFILER(FILE, LABEL_NO)	\
@@ -177,22 +180,22 @@ Boston, MA 02111-1307, USA.  */
 #define ASM_APP_OFF ""
 
 #undef TEXT_SECTION_ASM_OP
-#define TEXT_SECTION_ASM_OP "text"
+#define TEXT_SECTION_ASM_OP "\ttext"
 #undef DATA_SECTION_ASM_OP
-#define DATA_SECTION_ASM_OP "data"
+#define DATA_SECTION_ASM_OP "\tdata"
 #undef ASCII_DATA_ASM_OP
-#define	ASCII_DATA_ASM_OP "byte"
+#define	ASCII_DATA_ASM_OP "\tbyte\t"
 
 #undef SET_ASM_OP
-#define SET_ASM_OP "set"
+#define SET_ASM_OP "\tset\t"
 
 #endif /* USE_GAS */
 
 #ifdef USE_GLD
 /* Support the ctors and dtors sections for g++.  */
 
-#define CTORS_SECTION_ASM_OP	".section\t.ctors,\"x\""
-#define DTORS_SECTION_ASM_OP	".section\t.dtors,\"x\""
+#define CTORS_SECTION_ASM_OP	"\t.section\t.ctors,\"x\""
+#define DTORS_SECTION_ASM_OP	"\t.section\t.dtors,\"x\""
 
 /* A list of other sections which the compiler might be "in" at any
    given time.  */
@@ -264,17 +267,12 @@ dtors_section ()							\
     }
 #endif /* USE_GAS */
 
-/* The sysV68 assembler does not accept dots in labels.
-   Let's use percent instead  */
-
-#define ASM_IDENTIFY_GCC(FILE)        fputs("gcc2_compiled%:\n", FILE)
-
 /* Names to predefine in the preprocessor for this target machine.  */
 /* ihnp4!lmayk!lgm@eddie.mit.edu says mc68000 and m68k should not be here,
    on the other hand I don't care what he says.  */
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Dm68k -Dunix -DsysV68 -D__motorola__ -Asystem(unix) -Asystem(svr3) -Acpu(m68k) -Amachine(m68k)"
+#define CPP_PREDEFINES "-Dm68k -Dunix -DsysV68 -D__motorola__ -Asystem=unix -Asystem=svr3 -Acpu=m68k -Amachine=m68k"
 
 #undef TARGET_VERSION
 #ifndef USE_GAS
@@ -299,20 +297,21 @@ dtors_section ()							\
 /* sysV68 (brain damaged) cc convention support. */
 #define FUNCTION_VALUE(VALTYPE,FUNC) \
   (TREE_CODE (VALTYPE) == REAL_TYPE && TARGET_68881 	\
-   ? gen_rtx (REG, TYPE_MODE (VALTYPE), 16)		\
+   ? gen_rtx_REG (TYPE_MODE (VALTYPE), 16)		\
    : (POINTER_TYPE_P (VALTYPE)				\
-      ? gen_rtx (REG, TYPE_MODE (VALTYPE), 8)		\
-      : gen_rtx (REG, TYPE_MODE (VALTYPE), 0)))
+      ? gen_rtx_REG (TYPE_MODE (VALTYPE), 8)		\
+      : gen_rtx_REG (TYPE_MODE (VALTYPE), 0)))
 
 /* If TARGET_68881, SF and DF values are returned in fp0 instead of d0.  */
 
 /* Is LIBCALL_VALUE never called with a pointer ? */
 #undef LIBCALL_VALUE
-#define LIBCALL_VALUE(MODE)						   \
- gen_rtx (REG, (MODE),							   \
-	  ((TARGET_68881						   \
-	    && ((MODE) == SFmode || (MODE) == DFmode || (MODE) == XFmode)) \
-	   ? 16 : 0))
+#define LIBCALL_VALUE(MODE)					\
+ gen_rtx_REG ((MODE),						\
+	      ((TARGET_68881					\
+		&& ((MODE) == SFmode || (MODE) == DFmode	\
+		    || (MODE) == XFmode))			\
+	       ? 16 : 0))
 
 /* 1 if N is a possible register number for a function value.
    d0 may be used, and fp0 as well if -msoft-float is not specified.  */
@@ -333,7 +332,7 @@ dtors_section ()							\
    defined for reference from other files.  */
 
 #undef GLOBAL_ASM_OP
-#define GLOBAL_ASM_OP "global"
+#define GLOBAL_ASM_OP "\tglobal\t"
 #endif /* USE_GAS */
 
 /* Store in OUTPUT a string (made with alloca) containing
@@ -355,7 +354,7 @@ dtors_section ()							\
 #undef ASM_BYTE
 #define ASM_BYTE	".byte"
 #undef ASM_BYTE_OP
-#define ASM_BYTE_OP	".byte"
+#define ASM_BYTE_OP	"\t.byte\t"
 #else
 #undef ASM_LONG
 #define ASM_LONG	"long"
@@ -366,7 +365,7 @@ dtors_section ()							\
 #undef ASM_BYTE
 #define ASM_BYTE	"byte"
 #undef ASM_BYTE_OP
-#define ASM_BYTE_OP	"byte"
+#define ASM_BYTE_OP	"\tbyte\t"
 #endif /* USE_GAS */
 
 /* The sysV68 as doesn't know about double's and float's.  */
@@ -376,14 +375,14 @@ dtors_section ()							\
 #define ASM_OUTPUT_DOUBLE(FILE,VALUE)  \
 do { long l[2];						\
      REAL_VALUE_TO_TARGET_DOUBLE (VALUE, l);		\
-     fprintf (FILE, "\t%s 0x%x,0x%x\n", ASM_LONG, l[0], l[1]); \
+     fprintf (FILE, "\t%s 0x%lx,0x%lx\n", ASM_LONG, l[0], l[1]); \
    } while (0)
 
 #undef ASM_OUTPUT_LONG_DOUBLE
 #define ASM_OUTPUT_LONG_DOUBLE(FILE,VALUE)  				\
 do { long l[3];								\
      REAL_VALUE_TO_TARGET_LONG_DOUBLE (VALUE, l);			\
-     fprintf (FILE, "\t%s 0x%x,0x%x,0x%x\n", ASM_LONG, l[0], l[1], l[2]);	\
+     fprintf (FILE, "\t%s 0x%lx,0x%lx,0x%lx\n", ASM_LONG, l[0], l[1], l[2]); \
    } while (0)
 
 /* This is how to output an assembler line defining a `float' constant.  */
@@ -392,7 +391,7 @@ do { long l[3];								\
 #define ASM_OUTPUT_FLOAT(FILE,VALUE)  \
 do { long l;					\
      REAL_VALUE_TO_TARGET_SINGLE (VALUE, l);	\
-     fprintf ((FILE), "\t%s 0x%x\n", ASM_LONG, l);	\
+     fprintf ((FILE), "\t%s 0x%lx\n", ASM_LONG, l);	\
    } while (0)
 
 /* This is how to output an assembler line defining an `int' constant.  */
@@ -428,25 +427,25 @@ do { long l;					\
    to a multiple of 2**LOG bytes.  */
 
 #ifndef USE_GAS
-#define ALIGN_ASM_OP	"even"
+#define ALIGN_ASM_OP	"\teven"
 #else /* USE_GAS */
-#define ALIGN_ASM_OP	".even"
+#define ALIGN_ASM_OP	"\t.even"
 #endif /* USE_GAS */
 
 #undef ASM_OUTPUT_ALIGN
 #define ASM_OUTPUT_ALIGN(FILE,LOG)	\
   if ((LOG) >= 1)			\
-    fprintf (FILE, "\t%s\n", ALIGN_ASM_OP);
+    fprintf (FILE, "%s\n", ALIGN_ASM_OP);
 
 #ifndef USE_GAS
-#define SKIP_ASM_OP	"space"
+#define SKIP_ASM_OP	"\tspace\t"
 #else /* USE_GAS */
-#define SKIP_ASM_OP	".skip"
+#define SKIP_ASM_OP	"\t.skip\t"
 #endif /* USE_GAS */
 
 #undef ASM_OUTPUT_SKIP
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
-  fprintf (FILE, "\t%s %u\n", SKIP_ASM_OP, (SIZE))
+  fprintf (FILE, "%s%u\n", SKIP_ASM_OP, (SIZE))
 
 /* Can't use ASM_OUTPUT_SKIP in text section.  */
 
@@ -475,7 +474,7 @@ do { long l;					\
 #undef ASM_OUTPUT_ASCII
 #define ASM_OUTPUT_ASCII(FILE,PTR,LEN) \
   do { register int sp = 0, lp = 0;				\
-    fprintf ((FILE), "\t%s\t", ASM_BYTE_OP);			\
+    fprintf ((FILE), "%s", ASM_BYTE_OP);			\
   loop:								\
     if ((PTR)[sp] > ' ' && ! ((PTR)[sp] & 0x80) && (PTR)[sp] != '\\')	\
       { lp += 3;						\
@@ -486,7 +485,7 @@ do { long l;					\
     if (++sp < (LEN))						\
       {	if (lp > 60)						\
 	  { lp = 0;						\
-	    fprintf ((FILE), "\n\t%s ", ASCII_DATA_ASM_OP); }	\
+	    fprintf ((FILE), "\n%s", ASCII_DATA_ASM_OP); }	\
 	else							\
 	  putc (',', (FILE));					\
 	goto loop; }						\
@@ -522,7 +521,7 @@ do { long l;					\
 
 #undef ASM_GENERATE_INTERNAL_LABEL
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL, PREFIX, NUM)	\
-  sprintf ((LABEL), "%s%s%d", LOCAL_LABEL_PREFIX, (PREFIX), (NUM))
+  sprintf ((LABEL), "%s%s%ld", LOCAL_LABEL_PREFIX, (PREFIX), (long)(NUM))
 
 /* This is how to output an internal numbered label where
    PREFIX is the class of label and NUM is the number within the class.  */
@@ -773,8 +772,8 @@ do {(CUM).offset = 0;\
 
 #undef FUNCTION_ARG
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED) \
-(((CUM).libcall && (CUM).offset == 0) ? gen_rtx(REG, (MODE), 0)\
-: (TARGET_REGPARM && (CUM).offset < 8) ? gen_rtx (REG, (MODE), (CUM).offset / 4) : 0)
+(((CUM).libcall && (CUM).offset == 0) ? gen_rtx_REG ((MODE), 0)\
+: (TARGET_REGPARM && (CUM).offset < 8) ? gen_rtx_REG ((MODE), (CUM).offset / 4) : 0)
 
 #undef FUNCTION_ARG_PARTIAL_NREGS
 #define FUNCTION_ARG_PARTIAL_NREGS(CUM, MODE, TYPE, NAMED) \
@@ -800,7 +799,6 @@ do {(CUM).offset = 0;\
    so take that from libgcc2.c */
 
 #define NEED_ATEXIT 1
-#define HAVE_ATEXIT 1
 
 #define EXIT_BODY	\
   do								\
@@ -816,5 +814,5 @@ do {(CUM).offset = 0;\
   if (!TARGET_68040)			\
     ;					\
   else					\
-    emit_library_call (gen_rtx (SYMBOL_REF, Pmode, "__clear_insn_cache"), \
+    emit_library_call (gen_rtx_SYMBOL_REF (Pmode, "__clear_insn_cache"), \
 		       0, VOIDmode, 0)

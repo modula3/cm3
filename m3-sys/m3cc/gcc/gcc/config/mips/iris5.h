@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler.  Iris version 5.
-   Copyright (C) 1993, 1995, 1996, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1995, 1996, 1998, 2000,
+   2001 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -21,7 +22,7 @@ Boston, MA 02111-1307, USA.  */
 #ifndef TARGET_DEFAULT
 #define	TARGET_DEFAULT	MASK_ABICALLS
 #endif
-#define ABICALLS_ASM_OP ".option pic2"
+#define ABICALLS_ASM_OP "\t.option pic2"
 
 #include "mips/iris3.h"
 #include "mips/mips.h"
@@ -43,14 +44,17 @@ Boston, MA 02111-1307, USA.  */
 #define LD_INIT_SWITCH "-init"
 #define LD_FINI_SWITCH "-fini"
 
+/* The linker needs a space after "-o".  */
+#define SWITCHES_NEED_SPACES "o"
+
 /* Specify wchar_t types.  */
 #undef	WCHAR_TYPE
 #undef	WCHAR_TYPE_SIZE
 #undef	MAX_WCHAR_TYPE_SIZE
 
-#define WCHAR_TYPE	"long int"
-#define WCHAR_TYPE_SIZE	LONG_TYPE_SIZE
-#define MAX_WCHAR_TYPE_SIZE	MAX_LONG_TYPE_SIZE
+#define WCHAR_TYPE     "int"
+#define WCHAR_TYPE_SIZE        INT_TYPE_SIZE
+#define MAX_WCHAR_TYPE_SIZE    MAX_INT_TYPE_SIZE
 
 #define WORD_SWITCH_TAKES_ARG(STR)			\
  (DEFAULT_WORD_SWITCH_TAKES_ARG (STR)			\
@@ -67,7 +71,7 @@ Boston, MA 02111-1307, USA.  */
  "-Dunix -Dmips -Dsgi -Dhost_mips -DMIPSEB -D_MIPSEB -DSYSTYPE_SVR4 \
   -D_SVR4_SOURCE -D_MODERN_C -D__DSO__ \
   -D_MIPS_SIM=_MIPS_SIM_ABI32 -D_MIPS_SZPTR=32 \
-  -Asystem(unix) -Asystem(svr4) -Acpu(mips) -Amachine(sgi)"
+  -Asystem=unix -Asystem=svr4 -Acpu=mips -Amachine=sgi"
 
 #undef SUBTARGET_CPP_SPEC
 #define SUBTARGET_CPP_SPEC "\
@@ -151,6 +155,10 @@ do {						\
   fputs (" .text\n", FILE);			\
 } while (0)
 
+/* To get unaligned data, we have to turn off auto alignment.  */
+#define UNALIGNED_SHORT_ASM_OP		"\t.align 0\n\t.half\t"
+#define UNALIGNED_INT_ASM_OP		"\t.align 0\n\t.word\t"
+
 /* Also do this for libcalls.  */
 #define ASM_OUTPUT_EXTERNAL_LIBCALL(FILE, FUN)	\
   mips_output_external_libcall (FILE, XSTR (FUN, 0))
@@ -162,3 +170,26 @@ do {							\
   tree name_tree = get_identifier (NAME);		\
   TREE_ASM_WRITTEN (name_tree) = 1;			\
 } while (0)
+
+/* This is how we tell the assembler that a symbol is weak.  */
+
+#define ASM_OUTPUT_WEAK_ALIAS(FILE, NAME, VALUE)	\
+  do							\
+    {							\
+      ASM_GLOBALIZE_LABEL (FILE, NAME);			\
+      fputs ("\t.weakext\t", FILE);			\
+      assemble_name (FILE, NAME);			\
+      if (VALUE)					\
+        {						\
+          fputc (' ', FILE);				\
+          assemble_name (FILE, VALUE);			\
+        }						\
+      fputc ('\n', FILE);				\
+    }							\
+  while (0)
+
+#define ASM_WEAKEN_LABEL(FILE, NAME) ASM_OUTPUT_WEAK_ALIAS(FILE, NAME, 0)
+
+/* Handle #pragma weak and #pragma pack.  */
+#undef HANDLE_SYSV_PRAGMA
+#define HANDLE_SYSV_PRAGMA 1

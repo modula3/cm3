@@ -2,7 +2,7 @@
 /*
  *  server.c  Set up and handle communications with a server process.
  *
- *  Server Handling copyright 1992-1999 The Free Software Foundation
+ *  Server Handling copyright 1992-1999, 2001 The Free Software Foundation
  *
  *  Server Handling is free software.
  *  You may redistribute it and/or modify it under the terms of the
@@ -46,45 +46,21 @@
  * If you do not wish that, delete this exception notice.
  */
 #include "auto-host.h"
-#include "gansidecl.h"
+
+#include "ansidecl.h"
 #include "system.h"
 #include <signal.h>
 
 #include "server.h"
 
-/* If this particular system's header files define the macro `MAXPATHLEN',
-   we happily take advantage of it; otherwise we use a value which ought
-   to be large enough.  */
-#ifndef MAXPATHLEN
-# define MAXPATHLEN     4096
-#endif
-
-#ifndef STDIN_FILENO
-# define STDIN_FILENO	0
-#endif
-#ifndef STDOUT_FILENO
-# define STDOUT_FILENO	1
-#endif
-
-#ifdef DEBUG
-#define STATIC
-#else
-#define STATIC static
-#endif
-#ifndef tSCC
-#define tSCC static const char
-#endif
-#ifndef NUL
-#define NUL '\0'
-#endif
-
 #if !defined(volatile) && !defined(HAVE_VOLATILE)
 # define volatile
 #endif
 
-STATIC volatile bool read_pipe_timeout;
+STATIC volatile enum t_bool read_pipe_timeout;
+STATIC pid_t server_master_pid = NOPROCESS;
 
-static t_pchar def_args[] =
+tSCC* def_args[] =
 { (char *) NULL, (char *) NULL };
 STATIC t_pf_pair server_pair =
 { (FILE *) NULL, (FILE *) NULL };
@@ -95,7 +71,7 @@ STATIC pid_t server_id = NULLPROCESS;
  *  the terminating output line.
  */
 tSCC z_done[] = "ShElL-OuTpUt-HaS-bEeN-cOmPlEtEd";
-STATIC t_pchar p_cur_dir = (char *) NULL;
+tSCC* p_cur_dir = (char *) NULL;
 
 /*
  *  load_data
@@ -105,6 +81,7 @@ STATIC t_pchar p_cur_dir = (char *) NULL;
  *  The read data are stored in a malloc-ed string that is truncated
  *  to size at the end.  Input is assumed to be an ASCII string.
  */
+static char *load_data PARAMS ((FILE *));
 static char *
 load_data (fp)
      FILE *fp;
@@ -113,12 +90,10 @@ load_data (fp)
   size_t text_size;
   char *pz_scan;
   char z_line[1024];
+  t_bool got_done = BOOL_FALSE;
 
   text_size = sizeof (z_line) * 2;
-  pz_scan = pz_text = malloc (text_size);
-
-  if (pz_text == (char *) NULL)
-    return (char *) NULL;
+  pz_scan = pz_text = xmalloc (text_size);
 
   for (;;)
     {
@@ -130,7 +105,10 @@ load_data (fp)
         break;
 
       if (strncmp (z_line, z_done, sizeof (z_done) - 1) == 0)
-        break;
+	{
+	  got_done = BOOL_TRUE;
+	  break;
+	}
 
       strcpy (pz_scan, z_line);
       pz_scan += strlen (z_line);
@@ -139,33 +117,24 @@ load_data (fp)
       if (text_size - used_ct < sizeof (z_line))
         {
           size_t off = (size_t) (pz_scan - pz_text);
-          void *p;
 	  
           text_size += 4096;
-          p = realloc ((void *) pz_text, text_size);
-          if (p == (void *) NULL)
-            {
-              fprintf (stderr, "Failed to get 0x%08lX bytes\n",
-                      (long) text_size);
-              free ((void *) pz_text);
-              return (char *) NULL;
-            }
-          pz_text = (char *) p;
+          pz_text = xrealloc ((void *) pz_text, text_size);
           pz_scan = pz_text + off;
         }
     }
 
   alarm (0);
-  if (read_pipe_timeout)
+  if (read_pipe_timeout || ! got_done)
     {
       free ((void *) pz_text);
       return (char *) NULL;
     }
 
-  while ((pz_scan > pz_text) && isspace (pz_scan[-1]))
+  while ((pz_scan > pz_text) && ISSPACE (pz_scan[-1]))
     pz_scan--;
   *pz_scan = NUL;
-  return realloc ((void *) pz_text, strlen (pz_text) + 1);
+  return xrealloc ((void *) pz_text, strlen (pz_text) + 1);
 }
 
 
@@ -178,10 +147,12 @@ load_data (fp)
 void
 close_server ()
 {
-  if (server_id != NULLPROCESS)
+  if (  (server_id != NULLPROCESS)
+     && (server_master_pid == getpid ()))
     {
       kill ((pid_t) server_id, SIGKILL);
       server_id = NULLPROCESS;
+      server_master_pid = NOPROCESS;
       fclose (server_pair.pf_read);
       fclose (server_pair.pf_write);
       server_pair.pf_read = server_pair.pf_write = (FILE *) NULL;
@@ -194,9 +165,10 @@ close_server ()
  *  to our server, and also that if the server dies, we do not
  *  die from a sigpipe problem.
  */
+static void sig_handler PARAMS ((int));
 static void
 sig_handler (signo)
-     int signo;
+     int signo ATTRIBUTE_UNUSED;
 {
 #ifdef DEBUG
   /* FIXME: this is illegal to do in a signal handler.  */
@@ -214,13 +186,18 @@ sig_handler (signo)
  *  Also establishes the current directory to give to the
  *  server process at the start of every server command.
  */
+static void server_setup PARAMS ((void));
 static void
 server_setup ()
 {
   static int atexit_done = 0;
   
   if (atexit_done++ == 0)
-    atexit (&close_server);
+    atexit (close_server);
+  else
+    fputs ("NOTE: server restarted\n", stderr);
+
+  server_master_pid = getpid ();
 
   signal (SIGPIPE, sig_handler);
   signal (SIGALRM, sig_handler);
@@ -228,6 +205,29 @@ server_setup ()
   fputs ("trap : 1\n", server_pair.pf_write);
   fflush (server_pair.pf_write);
   p_cur_dir = getcwd ((char *) NULL, MAXPATHLEN + 1);
+}
+
+/*
+ *  find_shell
+ *
+ *  Locate a shell suitable for use.  For various reasons
+ *  (like the use of "trap" in server_setup(), it must be a
+ *  Bourne-like shell.
+ *
+ *  Most of the time, /bin/sh is preferred, but sometimes
+ *  it's quite broken (like on Ultrix).  autoconf lets you
+ *  override with $CONFIG_SHELL, so we do the same.
+ */
+
+static const char *find_shell PARAMS ((void));
+static const char *
+find_shell ()
+{
+  char * shell = getenv ("CONFIG_SHELL");
+  if (shell)
+    return shell;
+
+  return "/bin/sh";
 }
 
 
@@ -254,10 +254,16 @@ char *
 run_shell (pz_cmd)
      const char *pz_cmd;
 {
+  tSCC zNoServer[] = "Server not running, cannot run:\n%s\n\n";
+  t_bool retry = BOOL_TRUE;
+
+ do_retry:
   /*  IF the shell server process is not running yet,
       THEN try to start it.  */
   if (server_id == NULLPROCESS)
     {
+      def_args[0] = find_shell ();
+
       server_id = proc2_fopen (&server_pair, def_args);
       if (server_id > 0)
         server_setup ();
@@ -266,11 +272,8 @@ run_shell (pz_cmd)
   /*  IF it is still not running, THEN return the nil string.  */
   if (server_id <= 0)
     {
-      char *pz = (char *) malloc (1);
-      
-      if (pz != (char *) NULL)
-        *pz = '\0';
-      return pz;
+      fprintf (stderr, zNoServer, pz_cmd);
+      return xcalloc (1, 1);
     }
 
   /*  Make sure the process will pay attention to us, send the
@@ -284,11 +287,8 @@ run_shell (pz_cmd)
       THEN return an empty string.  */
   if (server_id == NULLPROCESS)
     {
-      char *pz = (char *) malloc (1);
-      
-      if (pz != (char *) NULL)
-        *pz = '\0';
-      return pz;
+      fprintf (stderr, zNoServer, pz_cmd);
+      return xcalloc (1, 1);
     }
 
   /*  Now try to read back all the data.  If we fail due to either a
@@ -298,13 +298,21 @@ run_shell (pz_cmd)
     
     if (pz == (char *) NULL)
       {
+	close_server ();
+
+	if (retry)
+	  {
+	    retry = BOOL_FALSE;
+	    goto do_retry;
+	  }
+
         fprintf (stderr, "CLOSING SHELL SERVER - command failure:\n\t%s\n",
                  pz_cmd);
-        close_server ();
-        pz = (char *) malloc (1);
-        if (pz != (char *) NULL)
-          *pz = '\0';
+        pz = xcalloc (1, 1);
       }
+#ifdef DEBUG
+    fprintf( stderr, "run_shell command success:  %s\n", pz );
+#endif
     return pz;
   }
 }

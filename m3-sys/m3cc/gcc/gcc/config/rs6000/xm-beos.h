@@ -1,5 +1,5 @@
 /* Configuration for GNU C-compiler for BeOS host.
-   Copyright (C) 1997 Free Software Foundation, Inc.
+   Copyright (C) 1997, 1999 Free Software Foundation, Inc.
    Contributed by Fred Fish (fnf@cygnus.com), based on xm-rs6000.h
    by Richard Kenner (kenner@vlsi1.ultra.nyu.edu).
 
@@ -20,12 +20,6 @@ You should have received a copy of the GNU General Public License
 along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
-
-
-/* #defines that need visibility everywhere.  */
-
-#define	FALSE	0
-#define	TRUE	1
 
 /* This describes the machine the compiler is hosted on.  */
 
@@ -57,14 +51,6 @@ extern void *alloca ();
 
 #undef bcopy
 #define bcopy(s,d,n)	memmove((d),(s),(n))
-#undef bzero
-#define bzero(d,n)	memset((d),0,(n))
-#undef bcmp
-#define bcmp(l,r,n)	memcmp((l),(r),(n))
-#undef index
-#define index		strchr
-#undef rindex
-#define rindex		strrchr
 
 /* BeOS is closer to USG than BSD */
 
@@ -77,9 +63,6 @@ extern void *alloca ();
 #endif
 #ifndef HAVE_PUTENV
 #define HAVE_PUTENV
-#endif
-#ifndef HAVE_ATEXIT
-#define HAVE_ATEXIT
 #endif
 #ifndef HAVE_RENAME
 #define HAVE_RENAME
@@ -94,4 +77,3 @@ extern void *alloca ();
 /* SYSTEM_INCLUDE_DIR is the location for system specific, non-POSIX headers. */
 
 #define SYSTEM_INCLUDE_DIR	"/boot/develop/headers/be"
-

@@ -1,6 +1,6 @@
 /* Target definitions for GNU compiler for Alliant FX/2800
    running Concentrix 2.2
-   Copyright (C) 1991, 1996, 1998, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1996, 1998, 1999, 2000 Free Software Foundation, Inc.
    Contributed by Howard Chu (hyc@hanauma.jpl.nasa.gov).
 
 This file is part of GNU CC.
@@ -38,7 +38,7 @@ Boston, MA 02111-1307, USA.  */
 /* atexit is not present prior to Concentrix 2.2. Uncomment the following
    if you're on 2.1 or older. */
  
-/* #undef HAVE_ATEXIT */
+/* #define NEED_ATEXIT */
 
 #define I860_STRICT_ABI_PROLOGUES
 
@@ -150,9 +150,9 @@ Boston, MA 02111-1307, USA.  */
    ".stab" directive instead of the 3 directives in BSD, and the order of
    arguments is slightly changed. */
 
-#define ASM_STABS_OP	".stab"
-#define ASM_STABN_OP	".stab"
-#define ASM_STABD_OP	".stab"
+#define ASM_STABS_OP	"\t.stab "
+#define ASM_STABN_OP	"\t.stab "
+#define ASM_STABD_OP	"\t.stab "
 
 #define DBX_MEMPARM_STABS_LETTER 'k'
 #define DBX_REGPARM_STABS_LETTER 'r'
@@ -264,7 +264,7 @@ Boston, MA 02111-1307, USA.  */
    the i860 running Concentrix 2.x.  */
 
 #undef CPP_PREDEFINES 
-#define CPP_PREDEFINES "-Di860 -Dunix -DBSD4_3 -Dalliant -Asystem(unix) -Asystem(bsd) -Acpu(i860) -Amachine(i860)"
+#define CPP_PREDEFINES "-Di860 -Dunix -DBSD4_3 -Dalliant -Asystem=unix -Asystem=bsd -Acpu=i860 -Amachine=i860"
 
 #undef I860_REG_PREFIX
 #undef ASM_COMMENT_START
@@ -339,7 +339,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* ??? Is this used anywhere?  */
 #undef BSS_ASM_OP
-#define BSS_ASM_OP	"\t.lcomm"
+#define BSS_ASM_OP	"\t.lcomm "
 
 #undef ASM_FILE_END
 #define ASM_FILE_END(FILE)					\

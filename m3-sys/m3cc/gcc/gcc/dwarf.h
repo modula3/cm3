@@ -237,6 +237,9 @@ enum dwarf_fundamental_type {
     FT_int64		= 0x9908,
     FT_signed_int64	= 0x9a08,
     FT_unsigned_int64	= 0x9b08,
+    FT_int128		= 0x9c10,
+    FT_signed_int128	= 0x9d10,
+    FT_unsigned_int128	= 0x9e10,
 
     FT_real32		= 0xa004,
     FT_real64		= 0xa108,
@@ -282,10 +285,10 @@ enum dwarf_subscr_data_formats {
 
 /* Derived from above for ease of use.  */
 
-#define FMT_CODE(_FUNDAMENTAL_TYPE_P, _UB_CONST_P, _LB_CONST_P) \
+#define FMT_CODE(_FUNDAMENTAL_TYPE_P, _LB_CONST_P, _UB_CONST_P) \
  (((_FUNDAMENTAL_TYPE_P) ? 0 : 4)	\
-  | ((_UB_CONST_P) ? 0 : 2)		\
-  | ((_LB_CONST_P) ? 0 : 1))
+  | ((_LB_CONST_P) ? 0 : 2)		\
+  | ((_UB_CONST_P) ? 0 : 1))
 
 /* Source language names and codes.  */
 
@@ -299,7 +302,8 @@ enum dwarf_source_language {
     LANG_FORTRAN77	= 0x00000007,
     LANG_FORTRAN90	= 0x00000008,
     LANG_PASCAL83	= 0x00000009,
-    LANG_MODULA2	= 0x0000000a
+    LANG_MODULA2	= 0x0000000a,
+    LANG_JAVA		= 0x0000000b
 };
 
 #define LANG_lo_user	0x00008000  /* implementation-defined range start */

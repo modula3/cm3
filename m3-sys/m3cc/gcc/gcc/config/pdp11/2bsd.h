@@ -1,12 +1,12 @@
 /* Definitions of target machine for GNU compiler, for a PDP with 2BSD
-   Copyright (C) 1995, 1996, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996, 1999, 2000 Free Software Foundation, Inc.
    Contributed by Michael K. Gschwind (mike@vlsivie.tuwien.ac.at).
 
 This file is part of GNU CC.
 
 GNU CC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU CC is distributed in the hope that it will be useful,
@@ -56,7 +56,7 @@ fprintf(FILE, "\tjmp cret\n");                                    	\
 #undef INITIAL_FRAME_POINTER_OFFSET  
 #define INITIAL_FRAME_POINTER_OFFSET(DEPTH_VAR)	\
 {								\
-  int offset, regno;		      				\
+  int offset;		      				\
   offset = get_frame_size();					\
   offset = (offset <= 2)? 0: (offset -2);			\
   (DEPTH_VAR) = offset+10;						\

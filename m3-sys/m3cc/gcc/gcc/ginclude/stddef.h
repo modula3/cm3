@@ -1,3 +1,32 @@
+/* Copyright (C) 1989, 1997, 1998, 1999, 2000 Free Software Foundation, Inc.
+
+This file is part of GNU CC.
+
+GNU CC is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
+
+GNU CC is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with GNU CC; see the file COPYING.  If not, write to
+the Free Software Foundation, 59 Temple Place - Suite 330,
+Boston, MA 02111-1307, USA.  */
+
+/* As a special exception, if you include this header file into source
+   files compiled by GCC, this header file does not by itself cause
+   the resulting executable to be covered by the GNU General Public
+   License.  This exception does not however invalidate any other
+   reasons why the executable file might be covered by the GNU General
+   Public License.  */
+
+/*
+ * ISO C Standard:  7.17  Common definitions  <stddef.h>
+ */
 #if (!defined(_STDDEF_H) && !defined(_STDDEF_H_) && !defined(_ANSI_STDDEF_H) \
      && !defined(__STDDEF_H__)) \
     || defined(__need_wchar_t) || defined(__need_size_t) \
@@ -240,16 +269,19 @@ typedef long ssize_t;
 #ifdef _BSD_RUNE_T_
 #if !defined (_ANSI_SOURCE) && !defined (_POSIX_SOURCE)
 typedef _BSD_RUNE_T_ rune_t;
+#if defined (__FreeBSD__)
+/* Why is this file so hard to maintain properly?  In constrast to
+   the comment above regarding BSD/386 1.1, on FreeBSD for as long
+   as the symbol has existed, _BSD_RUNE_T_ must not stay defined or
+   redundant typedefs will occur when stdlib.h is included after this file. */
+#undef _BSD_RUNE_T_
+#endif
 #endif
 #endif
 #endif
 
 #ifndef __WCHAR_TYPE__
-#ifdef __BEOS__
-#define __WCHAR_TYPE__ unsigned char
-#else
 #define __WCHAR_TYPE__ int
-#endif
 #endif
 #ifndef __cplusplus
 typedef __WCHAR_TYPE__ wchar_t;
@@ -270,7 +302,7 @@ typedef __WCHAR_TYPE__ wchar_t;
 #undef	__need_wchar_t
 #endif /* _STDDEF_H or __need_wchar_t.  */
 
-#if defined (_STDDEF_H) || defined (__need_wint_t)
+#if defined (__need_wint_t)
 #ifndef _WINT_T
 #define _WINT_T
 
@@ -284,9 +316,8 @@ typedef __WINT_TYPE__ wint_t;
 
 /*  In 4.3bsd-net2, leave these undefined to indicate that size_t, etc.
     are already defined.  */
-/*  BSD/OS 3.1 requires the MACHINE_ANSI_H check here.  FreeBSD 2.x apparently
-    does not, even though there is a check for MACHINE_ANSI_H above.  */
-#if defined(_ANSI_H_) || (defined(__bsdi__) && defined(_MACHINE_ANSI_H_))
+/*  BSD/OS 3.1 and FreeBSD [23].x require the MACHINE_ANSI_H check here.  */
+#if defined(_ANSI_H_) || defined(_MACHINE_ANSI_H_)
 /*  The references to _GCC_PTRDIFF_T_, _GCC_SIZE_T_, and _GCC_WCHAR_T_
     are probably typos and should be removed before 2.8 is released.  */
 #ifdef _GCC_PTRDIFF_T_
@@ -314,7 +345,7 @@ typedef __WINT_TYPE__ wint_t;
 #undef _WCHAR_T_
 #undef _BSD_WCHAR_T_
 #endif
-#endif /* _ANSI_H_ || ( __bsdi__ && _MACHINE_ANSI_H_ ) */
+#endif /* _ANSI_H_ || _MACHINE_ANSI_H_ */
 
 #endif /* __sys_stdtypes_h */
 
@@ -325,7 +356,11 @@ typedef __WINT_TYPE__ wint_t;
 #ifdef __GNUG__
 #define NULL __null
 #else   /* G++ */
+#ifndef __cplusplus
 #define NULL ((void *)0)
+#else   /* C++ */
+#define NULL 0
+#endif  /* C++ */
 #endif  /* G++ */
 #endif	/* NULL not defined and <stddef.h> or need NULL.  */
 #undef	__need_NULL

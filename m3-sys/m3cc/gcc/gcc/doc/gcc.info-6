@@ -1,0 +1,1194 @@
+This is doc/gcc.info, produced by makeinfo version 4.0b from
+doc/gcc.texi.
+
+INFO-DIR-SECTION Programming
+START-INFO-DIR-ENTRY
+* gcc: (gcc).                  The GNU Compiler Collection.
+END-INFO-DIR-ENTRY
+   This file documents the use and the internals of the GNU compiler.
+
+
+   Published by the Free Software Foundation
+59 Temple Place - Suite 330
+Boston, MA 02111-1307 USA
+
+
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
+1999, 2000, 2001 Free Software Foundation, Inc.
+
+
+   Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.1 or
+any later version published by the Free Software Foundation; with the
+Invariant Sections being "GNU General Public License" and "Funding Free
+Software", the Front-Cover texts being (a) (see below), and with the
+Back-Cover Texts being (b) (see below).  A copy of the license is
+included in the section entitled "GNU Free Documentation License".
+
+   (a) The FSF's Front-Cover Text is:
+
+   A GNU Manual
+
+   (b) The FSF's Back-Cover Text is:
+
+   You have freedom to copy and modify this GNU Manual, like GNU
+software.  Copies published by the Free Software Foundation raise
+funds for GNU development.
+
+
+File: gcc.info,  Node: M680x0 Options,  Next: M68hc1x Options,  Up: Submodel Options
+
+M680x0 Options
+--------------
+
+   These are the `-m' options defined for the 68000 series.  The default
+values for these options depends on which style of 68000 was selected
+when the compiler was configured; the defaults for the most common
+choices are given below.
+
+`-m68000'
+`-mc68000'
+     Generate output for a 68000.  This is the default when the
+     compiler is configured for 68000-based systems.
+
+     Use this option for microcontrollers with a 68000 or EC000 core,
+     including the 68008, 68302, 68306, 68307, 68322, 68328 and 68356.
+
+`-m68020'
+`-mc68020'
+     Generate output for a 68020.  This is the default when the
+     compiler is configured for 68020-based systems.
+
+`-m68881'
+     Generate output containing 68881 instructions for floating point.
+     This is the default for most 68020 systems unless `--nfp' was
+     specified when the compiler was configured.
+
+`-m68030'
+     Generate output for a 68030.  This is the default when the
+     compiler is configured for 68030-based systems.
+
+`-m68040'
+     Generate output for a 68040.  This is the default when the
+     compiler is configured for 68040-based systems.
+
+     This option inhibits the use of 68881/68882 instructions that have
+     to be emulated by software on the 68040.  Use this option if your
+     68040 does not have code to emulate those instructions.
+
+`-m68060'
+     Generate output for a 68060.  This is the default when the
+     compiler is configured for 68060-based systems.
+
+     This option inhibits the use of 68020 and 68881/68882 instructions
+     that have to be emulated by software on the 68060.  Use this
+     option if your 68060 does not have code to emulate those
+     instructions.
+
+`-mcpu32'
+     Generate output for a CPU32.  This is the default when the
+     compiler is configured for CPU32-based systems.
+
+     Use this option for microcontrollers with a CPU32 or CPU32+ core,
+     including the 68330, 68331, 68332, 68333, 68334, 68336, 68340,
+     68341, 68349 and 68360.
+
+`-m5200'
+     Generate output for a 520X "coldfire" family cpu.  This is the
+     default when the compiler is configured for 520X-based systems.
+
+     Use this option for microcontroller with a 5200 core, including
+     the MCF5202, MCF5203, MCF5204 and MCF5202.
+
+`-m68020-40'
+     Generate output for a 68040, without using any of the new
+     instructions.  This results in code which can run relatively
+     efficiently on either a 68020/68881 or a 68030 or a 68040.  The
+     generated code does use the 68881 instructions that are emulated
+     on the 68040.
+
+`-m68020-60'
+     Generate output for a 68060, without using any of the new
+     instructions.  This results in code which can run relatively
+     efficiently on either a 68020/68881 or a 68030 or a 68040.  The
+     generated code does use the 68881 instructions that are emulated
+     on the 68060.
+
+`-mfpa'
+     Generate output containing Sun FPA instructions for floating point.
+
+`-msoft-float'
+     Generate output containing library calls for floating point.
+     *Warning:* the requisite libraries are not available for all m68k
+     targets.  Normally the facilities of the machine's usual C
+     compiler are used, but this can't be done directly in
+     cross-compilation.  You must make your own arrangements to provide
+     suitable library functions for cross-compilation.  The embedded
+     targets `m68k-*-aout' and `m68k-*-coff' do provide software
+     floating point support.
+
+`-mshort'
+     Consider type `int' to be 16 bits wide, like `short int'.
+
+`-mnobitfield'
+     Do not use the bit-field instructions.  The `-m68000', `-mcpu32'
+     and `-m5200' options imply `-mnobitfield'.
+
+`-mbitfield'
+     Do use the bit-field instructions.  The `-m68020' option implies
+     `-mbitfield'.  This is the default if you use a configuration
+     designed for a 68020.
+
+`-mrtd'
+     Use a different function-calling convention, in which functions
+     that take a fixed number of arguments return with the `rtd'
+     instruction, which pops their arguments while returning.  This
+     saves one instruction in the caller since there is no need to pop
+     the arguments there.
+
+     This calling convention is incompatible with the one normally used
+     on Unix, so you cannot use it if you need to call libraries
+     compiled with the Unix compiler.
+
+     Also, you must provide function prototypes for all functions that
+     take variable numbers of arguments (including `printf'); otherwise
+     incorrect code will be generated for calls to those functions.
+
+     In addition, seriously incorrect code will result if you call a
+     function with too many arguments.  (Normally, extra arguments are
+     harmlessly ignored.)
+
+     The `rtd' instruction is supported by the 68010, 68020, 68030,
+     68040, 68060 and CPU32 processors, but not by the 68000 or 5200.
+
+`-malign-int'
+`-mno-align-int'
+     Control whether GCC aligns `int', `long', `long long', `float',
+     `double', and `long double' variables on a 32-bit boundary
+     (`-malign-int') or a 16-bit boundary (`-mno-align-int').  Aligning
+     variables on 32-bit boundaries produces code that runs somewhat
+     faster on processors with 32-bit busses at the expense of more
+     memory.
+
+     *Warning:* if you use the `-malign-int' switch, GCC will align
+     structures containing the above types  differently than most
+     published application binary interface specifications for the m68k.
+
+`-mpcrel'
+     Use the pc-relative addressing mode of the 68000 directly, instead
+     of using a global offset table.  At present, this option implies
+     `-fpic', allowing at most a 16-bit offset for pc-relative
+     addressing.  `-fPIC' is not presently supported with `-mpcrel',
+     though this could be supported for 68020 and higher processors.
+
+`-mno-strict-align'
+`-mstrict-align'
+     Do not (do) assume that unaligned memory references will be
+     handled by the system.
+
+
+File: gcc.info,  Node: M68hc1x Options,  Next: VAX Options,  Prev: M680x0 Options,  Up: Submodel Options
+
+M68hc1x Options
+---------------
+
+   These are the `-m' options defined for the 68hc11 and 68hc12
+microcontrollers.  The default values for these options depends on
+which style of microcontroller was selected when the compiler was
+configured; the defaults for the most common choices are given below.
+
+`-m6811'
+`-m68hc11'
+     Generate output for a 68HC11.  This is the default when the
+     compiler is configured for 68HC11-based systems.
+
+`-m6812'
+`-m68hc12'
+     Generate output for a 68HC12.  This is the default when the
+     compiler is configured for 68HC12-based systems.
+
+`-mauto-incdec'
+     Enable the use of 68HC12 pre and post auto-increment and
+     auto-decrement addressing modes.
+
+`-mshort'
+     Consider type `int' to be 16 bits wide, like `short int'.
+
+`-msoft-reg-count=COUNT'
+     Specify the number of pseudo-soft registers which are used for the
+     code generation.  The maximum number is 32.  Using more pseudo-soft
+     register may or may not result in better code depending on the
+     program.  The default is 4 for 68HC11 and 2 for 68HC12.
+
+
+File: gcc.info,  Node: VAX Options,  Next: SPARC Options,  Prev: M68hc1x Options,  Up: Submodel Options
+
+VAX Options
+-----------
+
+   These `-m' options are defined for the Vax:
+
+`-munix'
+     Do not output certain jump instructions (`aobleq' and so on) that
+     the Unix assembler for the Vax cannot handle across long ranges.
+
+`-mgnu'
+     Do output those jump instructions, on the assumption that you will
+     assemble with the GNU assembler.
+
+`-mg'
+     Output code for g-format floating point numbers instead of
+     d-format.
+
+
+File: gcc.info,  Node: SPARC Options,  Next: Convex Options,  Prev: VAX Options,  Up: Submodel Options
+
+SPARC Options
+-------------
+
+   These `-m' switches are supported on the SPARC:
+
+`-mno-app-regs'
+`-mapp-regs'
+     Specify `-mapp-regs' to generate output using the global registers
+     2 through 4, which the SPARC SVR4 ABI reserves for applications.
+     This is the default.
+
+     To be fully SVR4 ABI compliant at the cost of some performance
+     loss, specify `-mno-app-regs'.  You should compile libraries and
+     system software with this option.
+
+`-mfpu'
+`-mhard-float'
+     Generate output containing floating point instructions.  This is
+     the default.
+
+`-mno-fpu'
+`-msoft-float'
+     Generate output containing library calls for floating point.
+     *Warning:* the requisite libraries are not available for all SPARC
+     targets.  Normally the facilities of the machine's usual C
+     compiler are used, but this cannot be done directly in
+     cross-compilation.  You must make your own arrangements to provide
+     suitable library functions for cross-compilation.  The embedded
+     targets `sparc-*-aout' and `sparclite-*-*' do provide software
+     floating point support.
+
+     `-msoft-float' changes the calling convention in the output file;
+     therefore, it is only useful if you compile _all_ of a program with
+     this option.  In particular, you need to compile `libgcc.a', the
+     library that comes with GCC, with `-msoft-float' in order for this
+     to work.
+
+`-mhard-quad-float'
+     Generate output containing quad-word (long double) floating point
+     instructions.
+
+`-msoft-quad-float'
+     Generate output containing library calls for quad-word (long
+     double) floating point instructions.  The functions called are
+     those specified in the SPARC ABI.  This is the default.
+
+     As of this writing, there are no sparc implementations that have
+     hardware support for the quad-word floating point instructions.
+     They all invoke a trap handler for one of these instructions, and
+     then the trap handler emulates the effect of the instruction.
+     Because of the trap handler overhead, this is much slower than
+     calling the ABI library routines.  Thus the `-msoft-quad-float'
+     option is the default.
+
+`-mno-epilogue'
+`-mepilogue'
+     With `-mepilogue' (the default), the compiler always emits code for
+     function exit at the end of each function.  Any function exit in
+     the middle of the function (such as a return statement in C) will
+     generate a jump to the exit code at the end of the function.
+
+     With `-mno-epilogue', the compiler tries to emit exit code inline
+     at every function exit.
+
+`-mno-flat'
+`-mflat'
+     With `-mflat', the compiler does not generate save/restore
+     instructions and will use a "flat" or single register window
+     calling convention.  This model uses %i7 as the frame pointer and
+     is compatible with the normal register window model.  Code from
+     either may be intermixed.  The local registers and the input
+     registers (0-5) are still treated as "call saved" registers and
+     will be saved on the stack as necessary.
+
+     With `-mno-flat' (the default), the compiler emits save/restore
+     instructions (except for leaf functions) and is the normal mode of
+     operation.
+
+`-mno-unaligned-doubles'
+`-munaligned-doubles'
+     Assume that doubles have 8 byte alignment.  This is the default.
+
+     With `-munaligned-doubles', GCC assumes that doubles have 8 byte
+     alignment only if they are contained in another type, or if they
+     have an absolute address.  Otherwise, it assumes they have 4 byte
+     alignment.  Specifying this option avoids some rare compatibility
+     problems with code generated by other compilers.  It is not the
+     default because it results in a performance loss, especially for
+     floating point code.
+
+`-mno-faster-structs'
+`-mfaster-structs'
+     With `-mfaster-structs', the compiler assumes that structures
+     should have 8 byte alignment.  This enables the use of pairs of
+     `ldd' and `std' instructions for copies in structure assignment,
+     in place of twice as many `ld' and `st' pairs.  However, the use
+     of this changed alignment directly violates the Sparc ABI.  Thus,
+     it's intended only for use on targets where the developer
+     acknowledges that their resulting code will not be directly in
+     line with the rules of the ABI.
+
+`-mv8'
+`-msparclite'
+     These two options select variations on the SPARC architecture.
+
+     By default (unless specifically configured for the Fujitsu
+     SPARClite), GCC generates code for the v7 variant of the SPARC
+     architecture.
+
+     `-mv8' will give you SPARC v8 code.  The only difference from v7
+     code is that the compiler emits the integer multiply and integer
+     divide instructions which exist in SPARC v8 but not in SPARC v7.
+
+     `-msparclite' will give you SPARClite code.  This adds the integer
+     multiply, integer divide step and scan (`ffs') instructions which
+     exist in SPARClite but not in SPARC v7.
+
+     These options are deprecated and will be deleted in a future GCC
+     release.  They have been replaced with `-mcpu=xxx'.
+
+`-mcypress'
+`-msupersparc'
+     These two options select the processor for which the code is
+     optimised.
+
+     With `-mcypress' (the default), the compiler optimizes code for the
+     Cypress CY7C602 chip, as used in the SparcStation/SparcServer 3xx
+     series.  This is also appropriate for the older SparcStation 1, 2,
+     IPX etc.
+
+     With `-msupersparc' the compiler optimizes code for the SuperSparc
+     cpu, as used in the SparcStation 10, 1000 and 2000 series.  This
+     flag also enables use of the full SPARC v8 instruction set.
+
+     These options are deprecated and will be deleted in a future GCC
+     release.  They have been replaced with `-mcpu=xxx'.
+
+`-mcpu=CPU_TYPE'
+     Set the instruction set, register set, and instruction scheduling
+     parameters for machine type CPU_TYPE.  Supported values for
+     CPU_TYPE are `v7', `cypress', `v8', `supersparc', `sparclite',
+     `hypersparc', `sparclite86x', `f930', `f934', `sparclet',
+     `tsc701', `v9', and `ultrasparc'.
+
+     Default instruction scheduling parameters are used for values that
+     select an architecture and not an implementation.  These are `v7',
+     `v8', `sparclite', `sparclet', `v9'.
+
+     Here is a list of each supported architecture and their supported
+     implementations.
+
+              v7:             cypress
+              v8:             supersparc, hypersparc
+              sparclite:      f930, f934, sparclite86x
+              sparclet:       tsc701
+              v9:             ultrasparc
+
+`-mtune=CPU_TYPE'
+     Set the instruction scheduling parameters for machine type
+     CPU_TYPE, but do not set the instruction set or register set that
+     the option `-mcpu=CPU_TYPE' would.
+
+     The same values for `-mcpu=CPU_TYPE' are used for
+     `-mtune=CPU_TYPE', though the only useful values are those that
+     select a particular cpu implementation: `cypress', `supersparc',
+     `hypersparc', `f930', `f934', `sparclite86x', `tsc701',
+     `ultrasparc'.
+
+   These `-m' switches are supported in addition to the above on the
+SPARCLET processor.
+
+`-mlittle-endian'
+     Generate code for a processor running in little-endian mode.
+
+`-mlive-g0'
+     Treat register `%g0' as a normal register.  GCC will continue to
+     clobber it as necessary but will not assume it always reads as 0.
+
+`-mbroken-saverestore'
+     Generate code that does not use non-trivial forms of the `save' and
+     `restore' instructions.  Early versions of the SPARCLET processor
+     do not correctly handle `save' and `restore' instructions used with
+     arguments.  They correctly handle them used without arguments.  A
+     `save' instruction used without arguments increments the current
+     window pointer but does not allocate a new stack frame.  It is
+     assumed that the window overflow trap handler will properly handle
+     this case as will interrupt handlers.
+
+   These `-m' switches are supported in addition to the above on SPARC
+V9 processors in 64-bit environments.
+
+`-mlittle-endian'
+     Generate code for a processor running in little-endian mode.
+
+`-m32'
+`-m64'
+     Generate code for a 32-bit or 64-bit environment.  The 32-bit
+     environment sets int, long and pointer to 32 bits.  The 64-bit
+     environment sets int to 32 bits and long and pointer to 64 bits.
+
+`-mcmodel=medlow'
+     Generate code for the Medium/Low code model: the program must be
+     linked in the low 32 bits of the address space.  Pointers are 64
+     bits.  Programs can be statically or dynamically linked.
+
+`-mcmodel=medmid'
+     Generate code for the Medium/Middle code model: the program must
+     be linked in the low 44 bits of the address space, the text
+     segment must be less than 2G bytes, and data segment must be
+     within 2G of the text segment.  Pointers are 64 bits.
+
+`-mcmodel=medany'
+     Generate code for the Medium/Anywhere code model: the program may
+     be linked anywhere in the address space, the text segment must be
+     less than 2G bytes, and data segment must be within 2G of the text
+     segment.  Pointers are 64 bits.
+
+`-mcmodel=embmedany'
+     Generate code for the Medium/Anywhere code model for embedded
+     systems: assume a 32-bit text and a 32-bit data segment, both
+     starting anywhere (determined at link time).  Register %g4 points
+     to the base of the data segment.  Pointers are still 64 bits.
+     Programs are statically linked, PIC is not supported.
+
+`-mstack-bias'
+`-mno-stack-bias'
+     With `-mstack-bias', GCC assumes that the stack pointer, and frame
+     pointer if present, are offset by -2047 which must be added back
+     when making stack frame references.  Otherwise, assume no such
+     offset is present.
+
+
+File: gcc.info,  Node: Convex Options,  Next: AMD29K Options,  Prev: SPARC Options,  Up: Submodel Options
+
+Convex Options
+--------------
+
+   These `-m' options are defined for Convex:
+
+`-mc1'
+     Generate output for C1.  The code will run on any Convex machine.
+     The preprocessor symbol `__convex__c1__' is defined.
+
+`-mc2'
+     Generate output for C2.  Uses instructions not available on C1.
+     Scheduling and other optimizations are chosen for max performance
+     on C2.  The preprocessor symbol `__convex_c2__' is defined.
+
+`-mc32'
+     Generate output for C32xx.  Uses instructions not available on C1.
+     Scheduling and other optimizations are chosen for max performance
+     on C32.  The preprocessor symbol `__convex_c32__' is defined.
+
+`-mc34'
+     Generate output for C34xx.  Uses instructions not available on C1.
+     Scheduling and other optimizations are chosen for max performance
+     on C34.  The preprocessor symbol `__convex_c34__' is defined.
+
+`-mc38'
+     Generate output for C38xx.  Uses instructions not available on C1.
+     Scheduling and other optimizations are chosen for max performance
+     on C38.  The preprocessor symbol `__convex_c38__' is defined.
+
+`-margcount'
+     Generate code which puts an argument count in the word preceding
+     each argument list.  This is compatible with regular CC, and a few
+     programs may need the argument count word.  GDB and other
+     source-level debuggers do not need it; this info is in the symbol
+     table.
+
+`-mnoargcount'
+     Omit the argument count word.  This is the default.
+
+`-mvolatile-cache'
+     Allow volatile references to be cached.  This is the default.
+
+`-mvolatile-nocache'
+     Volatile references bypass the data cache, going all the way to
+     memory.  This is only needed for multi-processor code that does
+     not use standard synchronization instructions.  Making
+     non-volatile references to volatile locations will not necessarily
+     work.
+
+`-mlong32'
+     Type long is 32 bits, the same as type int.  This is the default.
+
+`-mlong64'
+     Type long is 64 bits, the same as type long long.  This option is
+     useless, because no library support exists for it.
+
+
+File: gcc.info,  Node: AMD29K Options,  Next: ARM Options,  Prev: Convex Options,  Up: Submodel Options
+
+AMD29K Options
+--------------
+
+   These `-m' options are defined for the AMD Am29000:
+
+`-mdw'
+     Generate code that assumes the `DW' bit is set, i.e., that byte and
+     halfword operations are directly supported by the hardware.  This
+     is the default.
+
+`-mndw'
+     Generate code that assumes the `DW' bit is not set.
+
+`-mbw'
+     Generate code that assumes the system supports byte and halfword
+     write operations.  This is the default.
+
+`-mnbw'
+     Generate code that assumes the systems does not support byte and
+     halfword write operations.  `-mnbw' implies `-mndw'.
+
+`-msmall'
+     Use a small memory model that assumes that all function addresses
+     are either within a single 256 KB segment or at an absolute
+     address of less than 256k.  This allows the `call' instruction to
+     be used instead of a `const', `consth', `calli' sequence.
+
+`-mnormal'
+     Use the normal memory model: Generate `call' instructions only when
+     calling functions in the same file and `calli' instructions
+     otherwise.  This works if each file occupies less than 256 KB but
+     allows the entire executable to be larger than 256 KB.  This is
+     the default.
+
+`-mlarge'
+     Always use `calli' instructions.  Specify this option if you expect
+     a single file to compile into more than 256 KB of code.
+
+`-m29050'
+     Generate code for the Am29050.
+
+`-m29000'
+     Generate code for the Am29000.  This is the default.
+
+`-mkernel-registers'
+     Generate references to registers `gr64-gr95' instead of to
+     registers `gr96-gr127'.  This option can be used when compiling
+     kernel code that wants a set of global registers disjoint from
+     that used by user-mode code.
+
+     Note that when this option is used, register names in `-f' flags
+     must use the normal, user-mode, names.
+
+`-muser-registers'
+     Use the normal set of global registers, `gr96-gr127'.  This is the
+     default.
+
+`-mstack-check'
+`-mno-stack-check'
+     Insert (or do not insert) a call to `__msp_check' after each stack
+     adjustment.  This is often used for kernel code.
+
+`-mstorem-bug'
+`-mno-storem-bug'
+     `-mstorem-bug' handles 29k processors which cannot handle the
+     separation of a mtsrim insn and a storem instruction (most 29000
+     chips to date, but not the 29050).
+
+`-mno-reuse-arg-regs'
+`-mreuse-arg-regs'
+     `-mno-reuse-arg-regs' tells the compiler to only use incoming
+     argument registers for copying out arguments.  This helps detect
+     calling a function with fewer arguments than it was declared with.
+
+`-mno-impure-text'
+`-mimpure-text'
+     `-mimpure-text', used in addition to `-shared', tells the compiler
+     to not pass `-assert pure-text' to the linker when linking a
+     shared object.
+
+`-msoft-float'
+     Generate output containing library calls for floating point.
+     *Warning:* the requisite libraries are not part of GCC.  Normally
+     the facilities of the machine's usual C compiler are used, but
+     this can't be done directly in cross-compilation.  You must make
+     your own arrangements to provide suitable library functions for
+     cross-compilation.
+
+`-mno-multm'
+     Do not generate multm or multmu instructions.  This is useful for
+     some embedded systems which do not have trap handlers for these
+     instructions.
+
+
+File: gcc.info,  Node: ARM Options,  Next: MN10200 Options,  Prev: AMD29K Options,  Up: Submodel Options
+
+ARM Options
+-----------
+
+   These `-m' options are defined for Advanced RISC Machines (ARM)
+architectures:
+
+`-mapcs-frame'
+     Generate a stack frame that is compliant with the ARM Procedure
+     Call Standard for all functions, even if this is not strictly
+     necessary for correct execution of the code.  Specifying
+     `-fomit-frame-pointer' with this option will cause the stack
+     frames not to be generated for leaf functions.  The default is
+     `-mno-apcs-frame'.
+
+`-mapcs'
+     This is a synonym for `-mapcs-frame'.
+
+`-mapcs-26'
+     Generate code for a processor running with a 26-bit program
+     counter, and conforming to the function calling standards for the
+     APCS 26-bit option.  This option replaces the `-m2' and `-m3'
+     options of previous releases of the compiler.
+
+`-mapcs-32'
+     Generate code for a processor running with a 32-bit program
+     counter, and conforming to the function calling standards for the
+     APCS 32-bit option.  This option replaces the `-m6' option of
+     previous releases of the compiler.
+
+`-mthumb-interwork'
+     Generate code which supports calling between the ARM and Thumb
+     instruction sets.  Without this option the two instruction sets
+     cannot be reliably used inside one program.  The default is
+     `-mno-thumb-interwork', since slightly larger code is generated
+     when `-mthumb-interwork' is specified.
+
+`-mno-sched-prolog'
+     Prevent the reordering of instructions in the function prolog, or
+     the merging of those instruction with the instructions in the
+     function's body.  This means that all functions will start with a
+     recognizable set of instructions (or in fact one of a choice from
+     a small set of different function prologues), and this information
+     can be used to locate the start if functions inside an executable
+     piece of code.  The default is `-msched-prolog'.
+
+`-mhard-float'
+     Generate output containing floating point instructions.  This is
+     the default.
+
+`-msoft-float'
+     Generate output containing library calls for floating point.
+     *Warning:* the requisite libraries are not available for all ARM
+     targets.  Normally the facilities of the machine's usual C
+     compiler are used, but this cannot be done directly in
+     cross-compilation.  You must make your own arrangements to provide
+     suitable library functions for cross-compilation.
+
+     `-msoft-float' changes the calling convention in the output file;
+     therefore, it is only useful if you compile _all_ of a program with
+     this option.  In particular, you need to compile `libgcc.a', the
+     library that comes with GCC, with `-msoft-float' in order for this
+     to work.
+
+`-mlittle-endian'
+     Generate code for a processor running in little-endian mode.  This
+     is the default for all standard configurations.
+
+`-mbig-endian'
+     Generate code for a processor running in big-endian mode; the
+     default is to compile code for a little-endian processor.
+
+`-mwords-little-endian'
+     This option only applies when generating code for big-endian
+     processors.  Generate code for a little-endian word order but a
+     big-endian byte order.  That is, a byte order of the form
+     `32107654'.  Note: this option should only be used if you require
+     compatibility with code for big-endian ARM processors generated by
+     versions of the compiler prior to 2.8.
+
+`-malignment-traps'
+     Generate code that will not trap if the MMU has alignment traps
+     enabled.  On ARM architectures prior to ARMv4, there were no
+     instructions to access half-word objects stored in memory.
+     However, when reading from memory a feature of the ARM
+     architecture allows a word load to be used, even if the address is
+     unaligned, and the processor core will rotate the data as it is
+     being loaded.  This option tells the compiler that such misaligned
+     accesses will cause a MMU trap and that it should instead
+     synthesise the access as a series of byte accesses.  The compiler
+     can still use word accesses to load half-word data if it knows
+     that the address is aligned to a word boundary.
+
+     This option is ignored when compiling for ARM architecture 4 or
+     later, since these processors have instructions to directly access
+     half-word objects in memory.
+
+`-mno-alignment-traps'
+     Generate code that assumes that the MMU will not trap unaligned
+     accesses.  This produces better code when the target instruction
+     set does not have half-word memory operations (i.e.
+     implementations prior to ARMv4).
+
+     Note that you cannot use this option to access unaligned word
+     objects, since the processor will only fetch one 32-bit aligned
+     object from memory.
+
+     The default setting for most targets is `-mno-alignment-traps',
+     since this produces better code when there are no half-word memory
+     instructions available.
+
+`-mshort-load-bytes'
+`-mno-short-load-words'
+     These are deprecated aliases for `-malignment-traps'.
+
+`-mno-short-load-bytes'
+`-mshort-load-words'
+     This are deprecated aliases for `-mno-alignment-traps'.
+
+`-mbsd'
+     This option only applies to RISC iX.  Emulate the native BSD-mode
+     compiler.  This is the default if `-ansi' is not specified.
+
+`-mxopen'
+     This option only applies to RISC iX.  Emulate the native
+     X/Open-mode compiler.
+
+`-mno-symrename'
+     This option only applies to RISC iX.  Do not run the assembler
+     post-processor, `symrename', after code has been assembled.
+     Normally it is necessary to modify some of the standard symbols in
+     preparation for linking with the RISC iX C library; this option
+     suppresses this pass.  The post-processor is never run when the
+     compiler is built for cross-compilation.
+
+`-mcpu=NAME'
+     This specifies the name of the target ARM processor.  GCC uses
+     this name to determine what kind of instructions it can emit when
+     generating assembly code.  Permissible names are: `arm2', `arm250',
+     `arm3', `arm6', `arm60', `arm600', `arm610', `arm620', `arm7',
+     `arm7m', `arm7d', `arm7dm', `arm7di', `arm7dmi', `arm70', `arm700',
+     `arm700i', `arm710', `arm710c', `arm7100', `arm7500', `arm7500fe',
+     `arm7tdmi', `arm8', `strongarm', `strongarm110', `strongarm1100',
+     `arm8', `arm810', `arm9', `arm9e', `arm920', `arm920t', `arm940t',
+     `arm9tdmi', `arm10tdmi', `arm1020t', `xscale'.
+
+`-mtune=NAME'
+     This option is very similar to the `-mcpu=' option, except that
+     instead of specifying the actual target processor type, and hence
+     restricting which instructions can be used, it specifies that GCC
+     should tune the performance of the code as if the target were of
+     the type specified in this option, but still choosing the
+     instructions that it will generate based on the cpu specified by a
+     `-mcpu=' option.  For some ARM implementations better performance
+     can be obtained by using this option.
+
+`-march=NAME'
+     This specifies the name of the target ARM architecture.  GCC uses
+     this name to determine what kind of instructions it can emit when
+     generating assembly code.  This option can be used in conjunction
+     with or instead of the `-mcpu=' option.  Permissible names are:
+     `armv2', `armv2a', `armv3', `armv3m', `armv4', `armv4t', `armv5',
+     `armv5t', `armv5te'.
+
+`-mfpe=NUMBER'
+`-mfp=NUMBER'
+     This specifies the version of the floating point emulation
+     available on the target.  Permissible values are 2 and 3.  `-mfp='
+     is a synonym for `-mfpe=', for compatibility with older versions
+     of GCC.
+
+`-mstructure-size-boundary=N'
+     The size of all structures and unions will be rounded up to a
+     multiple of the number of bits set by this option.  Permissible
+     values are 8 and 32.  The default value varies for different
+     toolchains.  For the COFF targeted toolchain the default value is
+     8.  Specifying the larger number can produce faster, more
+     efficient code, but can also increase the size of the program.
+     The two values are potentially incompatible.  Code compiled with
+     one value cannot necessarily expect to work with code or libraries
+     compiled with the other value, if they exchange information using
+     structures or unions.
+
+`-mabort-on-noreturn'
+     Generate a call to the function `abort' at the end of a `noreturn'
+     function.  It will be executed if the function tries to return.
+
+`-mlong-calls'
+`-mno-long-calls'
+     Tells the compiler to perform function calls by first loading the
+     address of the function into a register and then performing a
+     subroutine call on this register.  This switch is needed if the
+     target function will lie outside of the 64 megabyte addressing
+     range of the offset based version of subroutine call instruction.
+
+     Even if this switch is enabled, not all function calls will be
+     turned into long calls.  The heuristic is that static functions,
+     functions which have the `short-call' attribute, functions that
+     are inside the scope of a `#pragma no_long_calls' directive and
+     functions whose definitions have already been compiled within the
+     current compilation unit, will not be turned into long calls.  The
+     exception to this rule is that weak function definitions,
+     functions with the `long-call' attribute or the `section'
+     attribute, and functions that are within the scope of a `#pragma
+     long_calls' directive, will always be turned into long calls.
+
+     This feature is not enabled by default.  Specifying
+     `-mno-long-calls' will restore the default behaviour, as will
+     placing the function calls within the scope of a `#pragma
+     long_calls_off' directive.  Note these switches have no effect on
+     how the compiler generates code to handle function calls via
+     function pointers.
+
+`-mnop-fun-dllimport'
+     Disable support for the `dllimport' attribute.
+
+`-msingle-pic-base'
+     Treat the register used for PIC addressing as read-only, rather
+     than loading it in the prologue for each function.  The run-time
+     system is responsible for initialising this register with an
+     appropriate value before execution begins.
+
+`-mpic-register=REG'
+     Specify the register to be used for PIC addressing.  The default
+     is R10 unless stack-checking is enabled, when R9 is used.
+
+`-mpoke-function-name'
+     Write the name of each function into the text section, directly
+     preceding the function prologue.  The generated code is similar to
+     this:
+
+               t0
+                   .ascii "arm_poke_function_name", 0
+                   .align
+               t1
+                   .word 0xff000000 + (t1 - t0)
+               arm_poke_function_name
+                   mov     ip, sp
+                   stmfd   sp!, {fp, ip, lr, pc}
+                   sub     fp, ip, #4
+
+     When performing a stack backtrace, code can inspect the value of
+     `pc' stored at `fp + 0'.  If the trace function then looks at
+     location `pc - 12' and the top 8 bits are set, then we know that
+     there is a function name embedded immediately preceding this
+     location and has length `((pc[-3]) & 0xff000000)'.
+
+`-mthumb'
+     Generate code for the 16-bit Thumb instruction set.  The default
+     is to use the 32-bit ARM instruction set.
+
+`-mtpcs-frame'
+     Generate a stack frame that is compliant with the Thumb Procedure
+     Call Standard for all non-leaf functions.  (A leaf function is one
+     that does not call any other functions.)  The default is
+     `-mno-tpcs-frame'.
+
+`-mtpcs-leaf-frame'
+     Generate a stack frame that is compliant with the Thumb Procedure
+     Call Standard for all leaf functions.  (A leaf function is one
+     that does not call any other functions.)  The default is
+     `-mno-apcs-leaf-frame'.
+
+`-mcallee-super-interworking'
+     Gives all externally visible functions in the file being compiled
+     an ARM instruction set header which switches to Thumb mode before
+     executing the rest of the function.  This allows these functions
+     to be called from non-interworking code.
+
+`-mcaller-super-interworking'
+     Allows calls via function pointers (including virtual functions) to
+     execute correctly regardless of whether the target code has been
+     compiled for interworking or not.  There is a small overhead in
+     the cost of executing a function pointer if this option is enabled.
+
+
+File: gcc.info,  Node: MN10200 Options,  Next: MN10300 Options,  Prev: ARM Options,  Up: Submodel Options
+
+MN10200 Options
+---------------
+
+   These `-m' options are defined for Matsushita MN10200 architectures:
+`-mrelax'
+     Indicate to the linker that it should perform a relaxation
+     optimization pass to shorten branches, calls and absolute memory
+     addresses.  This option only has an effect when used on the
+     command line for the final link step.
+
+     This option makes symbolic debugging impossible.
+
+
+File: gcc.info,  Node: MN10300 Options,  Next: M32R/D Options,  Prev: MN10200 Options,  Up: Submodel Options
+
+MN10300 Options
+---------------
+
+   These `-m' options are defined for Matsushita MN10300 architectures:
+
+`-mmult-bug'
+     Generate code to avoid bugs in the multiply instructions for the
+     MN10300 processors.  This is the default.
+
+`-mno-mult-bug'
+     Do not generate code to avoid bugs in the multiply instructions
+     for the MN10300 processors.
+
+`-mam33'
+     Generate code which uses features specific to the AM33 processor.
+
+`-mno-am33'
+     Do not generate code which uses features specific to the AM33
+     processor.  This is the default.
+
+`-mno-crt0'
+     Do not link in the C run-time initialization object file.
+
+`-mrelax'
+     Indicate to the linker that it should perform a relaxation
+     optimization pass to shorten branches, calls and absolute memory
+     addresses.  This option only has an effect when used on the
+     command line for the final link step.
+
+     This option makes symbolic debugging impossible.
+
+
+File: gcc.info,  Node: M32R/D Options,  Next: M88K Options,  Prev: MN10300 Options,  Up: Submodel Options
+
+M32R/D Options
+--------------
+
+   These `-m' options are defined for Mitsubishi M32R/D architectures:
+
+`-mcode-model=small'
+     Assume all objects live in the lower 16MB of memory (so that their
+     addresses can be loaded with the `ld24' instruction), and assume
+     all subroutines are reachable with the `bl' instruction.  This is
+     the default.
+
+     The addressability of a particular object can be set with the
+     `model' attribute.
+
+`-mcode-model=medium'
+     Assume objects may be anywhere in the 32-bit address space (the
+     compiler will generate `seth/add3' instructions to load their
+     addresses), and assume all subroutines are reachable with the `bl'
+     instruction.
+
+`-mcode-model=large'
+     Assume objects may be anywhere in the 32-bit address space (the
+     compiler will generate `seth/add3' instructions to load their
+     addresses), and assume subroutines may not be reachable with the
+     `bl' instruction (the compiler will generate the much slower
+     `seth/add3/jl' instruction sequence).
+
+`-msdata=none'
+     Disable use of the small data area.  Variables will be put into
+     one of `.data', `bss', or `.rodata' (unless the `section'
+     attribute has been specified).  This is the default.
+
+     The small data area consists of sections `.sdata' and `.sbss'.
+     Objects may be explicitly put in the small data area with the
+     `section' attribute using one of these sections.
+
+`-msdata=sdata'
+     Put small global and static data in the small data area, but do not
+     generate special code to reference them.
+
+`-msdata=use'
+     Put small global and static data in the small data area, and
+     generate special instructions to reference them.
+
+`-G NUM'
+     Put global and static objects less than or equal to NUM bytes into
+     the small data or bss sections instead of the normal data or bss
+     sections.  The default value of NUM is 8.  The `-msdata' option
+     must be set to one of `sdata' or `use' for this option to have any
+     effect.
+
+     All modules should be compiled with the same `-G NUM' value.
+     Compiling with different values of NUM may or may not work; if it
+     doesn't the linker will give an error message--incorrect code will
+     not be generated.
+
+
+File: gcc.info,  Node: M88K Options,  Next: RS/6000 and PowerPC Options,  Prev: M32R/D Options,  Up: Submodel Options
+
+M88K Options
+------------
+
+   These `-m' options are defined for Motorola 88k architectures:
+
+`-m88000'
+     Generate code that works well on both the m88100 and the m88110.
+
+`-m88100'
+     Generate code that works best for the m88100, but that also runs
+     on the m88110.
+
+`-m88110'
+     Generate code that works best for the m88110, and may not run on
+     the m88100.
+
+`-mbig-pic'
+     Obsolete option to be removed from the next revision.  Use `-fPIC'.
+
+`-midentify-revision'
+     Include an `ident' directive in the assembler output recording the
+     source file name, compiler name and version, timestamp, and
+     compilation flags used.
+
+`-mno-underscores'
+     In assembler output, emit symbol names without adding an underscore
+     character at the beginning of each name.  The default is to use an
+     underscore as prefix on each name.
+
+`-mocs-debug-info'
+`-mno-ocs-debug-info'
+     Include (or omit) additional debugging information (about
+     registers used in each stack frame) as specified in the 88open
+     Object Compatibility Standard, "OCS".  This extra information
+     allows debugging of code that has had the frame pointer
+     eliminated.  The default for DG/UX, SVr4, and Delta 88 SVr3.2 is
+     to include this information; other 88k configurations omit this
+     information by default.
+
+`-mocs-frame-position'
+     When emitting COFF debugging information for automatic variables
+     and parameters stored on the stack, use the offset from the
+     canonical frame address, which is the stack pointer (register 31)
+     on entry to the function.  The DG/UX, SVr4, Delta88 SVr3.2, and
+     BCS configurations use `-mocs-frame-position'; other 88k
+     configurations have the default `-mno-ocs-frame-position'.
+
+`-mno-ocs-frame-position'
+     When emitting COFF debugging information for automatic variables
+     and parameters stored on the stack, use the offset from the frame
+     pointer register (register 30).  When this option is in effect,
+     the frame pointer is not eliminated when debugging information is
+     selected by the -g switch.
+
+`-moptimize-arg-area'
+`-mno-optimize-arg-area'
+     Control how function arguments are stored in stack frames.
+     `-moptimize-arg-area' saves space by optimizing them, but this
+     conflicts with the 88open specifications.  The opposite
+     alternative, `-mno-optimize-arg-area', agrees with 88open
+     standards.  By default GCC does not optimize the argument area.
+
+`-mshort-data-NUM'
+     Generate smaller data references by making them relative to `r0',
+     which allows loading a value using a single instruction (rather
+     than the usual two).  You control which data references are
+     affected by specifying NUM with this option.  For example, if you
+     specify `-mshort-data-512', then the data references affected are
+     those involving displacements of less than 512 bytes.
+     `-mshort-data-NUM' is not effective for NUM greater than 64k.
+
+`-mserialize-volatile'
+`-mno-serialize-volatile'
+     Do, or don't, generate code to guarantee sequential consistency of
+     volatile memory references.  By default, consistency is guaranteed.
+
+     The order of memory references made by the MC88110 processor does
+     not always match the order of the instructions requesting those
+     references.  In particular, a load instruction may execute before
+     a preceding store instruction.  Such reordering violates
+     sequential consistency of volatile memory references, when there
+     are multiple processors.   When consistency must be guaranteed,
+     GCC generates special instructions, as needed, to force execution
+     in the proper order.
+
+     The MC88100 processor does not reorder memory references and so
+     always provides sequential consistency.  However, by default, GCC
+     generates the special instructions to guarantee consistency even
+     when you use `-m88100', so that the code may be run on an MC88110
+     processor.  If you intend to run your code only on the MC88100
+     processor, you may use `-mno-serialize-volatile'.
+
+     The extra code generated to guarantee consistency may affect the
+     performance of your application.  If you know that you can safely
+     forgo this guarantee, you may use `-mno-serialize-volatile'.
+
+`-msvr4'
+`-msvr3'
+     Turn on (`-msvr4') or off (`-msvr3') compiler extensions related
+     to System V release 4 (SVr4).  This controls the following:
+
+       1. Which variant of the assembler syntax to emit.
+
+       2. `-msvr4' makes the C preprocessor recognize `#pragma weak'
+          that is used on System V release 4.
+
+       3. `-msvr4' makes GCC issue additional declaration directives
+          used in SVr4.
+
+     `-msvr4' is the default for the m88k-motorola-sysv4 and
+     m88k-dg-dgux m88k configurations.  `-msvr3' is the default for all
+     other m88k configurations.
+
+`-mversion-03.00'
+     This option is obsolete, and is ignored.
+
+`-mno-check-zero-division'
+`-mcheck-zero-division'
+     Do, or don't, generate code to guarantee that integer division by
+     zero will be detected.  By default, detection is guaranteed.
+
+     Some models of the MC88100 processor fail to trap upon integer
+     division by zero under certain conditions.  By default, when
+     compiling code that might be run on such a processor, GCC
+     generates code that explicitly checks for zero-valued divisors and
+     traps with exception number 503 when one is detected.  Use of
+     mno-check-zero-division suppresses such checking for code
+     generated to run on an MC88100 processor.
+
+     GCC assumes that the MC88110 processor correctly detects all
+     instances of integer division by zero.  When `-m88110' is
+     specified, both `-mcheck-zero-division' and
+     `-mno-check-zero-division' are ignored, and no explicit checks for
+     zero-valued divisors are generated.
+
+`-muse-div-instruction'
+     Use the div instruction for signed integer division on the MC88100
+     processor.  By default, the div instruction is not used.
+
+     On the MC88100 processor the signed integer division instruction
+     div) traps to the operating system on a negative operand.  The
+     operating system transparently completes the operation, but at a
+     large cost in execution time.  By default, when compiling code
+     that might be run on an MC88100 processor, GCC emulates signed
+     integer division using the unsigned integer division instruction
+     divu), thereby avoiding the large penalty of a trap to the
+     operating system.  Such emulation has its own, smaller, execution
+     cost in both time and space.  To the extent that your code's
+     important signed integer division operations are performed on two
+     nonnegative operands, it may be desirable to use the div
+     instruction directly.
+
+     On the MC88110 processor the div instruction (also known as the
+     divs instruction) processes negative operands without trapping to
+     the operating system.  When `-m88110' is specified,
+     `-muse-div-instruction' is ignored, and the div instruction is used
+     for signed integer division.
+
+     Note that the result of dividing `INT_MIN' by -1 is undefined.  In
+     particular, the behavior of such a division with and without
+     `-muse-div-instruction' may differ.
+
+`-mtrap-large-shift'
+`-mhandle-large-shift'
+     Include code to detect bit-shifts of more than 31 bits;
+     respectively, trap such shifts or emit code to handle them
+     properly.  By default GCC makes no special provision for large bit
+     shifts.
+
+`-mwarn-passed-structs'
+     Warn when a function passes a struct as an argument or result.
+     Structure-passing conventions have changed during the evolution of
+     the C language, and are often the source of portability problems.
+     By default, GCC issues no such warning.
+

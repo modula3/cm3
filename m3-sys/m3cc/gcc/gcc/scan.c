@@ -35,10 +35,7 @@ make_sstring_space (str, count)
   if (new_size <= cur_size)
     return;
   
-  if (str->base == NULL)
-    str->base = xmalloc (new_size);
-  else
-    str->base = xrealloc (str->base, new_size);
+  str->base = xrealloc (str->base, new_size);
   str->ptr = str->base + cur_size;
   str->limit = str->base + new_size;
 }
@@ -238,4 +235,19 @@ get_token (fp, s)
   MAKE_SSTRING_SPACE(s, 1);
   *s->ptr = 0;
   return c;
+}
+
+unsigned int
+hashstr (str, len)
+     const char *str;
+     unsigned int len;
+{
+  unsigned int n = len;
+  unsigned int r = 0;
+  const unsigned char *s = (const unsigned char *)str;
+
+  do
+    r = r * 67 + (*s++ - 113);
+  while (--n);
+  return r + len;
 }

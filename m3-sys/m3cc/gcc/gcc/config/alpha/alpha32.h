@@ -81,11 +81,13 @@ Boston, MA 02111-1307, USA.  */
 
 /* Output code to add DELTA to the first argument, and then jump to FUNCTION.
    Used for C++ multiple inheritance.  */
-
+/* ??? This is only used with the v2 ABI, and alpha.c makes assumptions
+   about current_function_is_thunk that are not valid with the v3 ABI.  */
+#if 0
 #undef ASM_OUTPUT_MI_THUNK
 #define ASM_OUTPUT_MI_THUNK(FILE, THUNK_FNDECL, DELTA, FUNCTION)	\
 do {									\
-  char *op, *fn_name = XSTR (XEXP (DECL_RTL (FUNCTION), 0), 0);		\
+  const char *op, *fn_name = XSTR (XEXP (DECL_RTL (FUNCTION), 0), 0);	\
   int reg;								\
 									\
   /* Mark end of prologue.  */						\
@@ -102,3 +104,4 @@ do {									\
   assemble_name (FILE, fn_name);					\
   fputc ('\n', FILE);							\
 } while (0)
+#endif

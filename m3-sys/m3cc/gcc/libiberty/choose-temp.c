@@ -19,9 +19,6 @@ Boston, MA 02111-1307, USA.  */
 
 /* This file exports two functions: choose_temp_base and make_temp_file.  */
 
-/* This file lives in at least two places: libiberty and gcc.
-   Don't change one without the other.  */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -33,6 +30,9 @@ Boston, MA 02111-1307, USA.  */
 #endif
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
 #endif
 #ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>   /* May get R_OK, etc. on some systems.  */
@@ -79,9 +79,11 @@ extern int mkstemps ();
    If success, DIR is returned.
    Otherwise NULL is returned.  */
 
-static char *
+static const char *try PARAMS ((const char *, const char *));
+
+static const char *
 try (dir, base)
-     char *dir, *base;
+     const char *dir, *base;
 {
   if (base != 0)
     return base;
@@ -102,7 +104,7 @@ try (dir, base)
 char *
 choose_temp_base ()
 {
-  char *base = 0;
+  const char *base = 0;
   char *temp_filename;
   int len;
   static char tmp[] = { DIR_SEPARATOR, 't', 'm', 'p', 0 };
@@ -145,9 +147,9 @@ choose_temp_base ()
 
 char *
 make_temp_file (suffix)
-     char *suffix;
+     const char *suffix;
 {
-  char *base = 0;
+  const char *base = 0;
   char *temp_filename;
   int base_len, suffix_len;
   int fd;

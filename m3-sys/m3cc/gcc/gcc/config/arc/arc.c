@@ -1,5 +1,6 @@
 /* Subroutines used for code generation on the Argonaut ARC cpu.
-   Copyright (C) 1994, 1995, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1997, 1998, 1999,
+   2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -20,8 +21,8 @@ Boston, MA 02111-1307, USA.  */
 
 /* ??? This is an old port, and is undoubtedly suffering from bit rot.  */
 
-#include <stdio.h>
 #include "config.h"
+#include "system.h"
 #include "tree.h"
 #include "rtl.h"
 #include "regs.h"
@@ -29,20 +30,22 @@ Boston, MA 02111-1307, USA.  */
 #include "real.h"
 #include "insn-config.h"
 #include "conditions.h"
-#include "insn-flags.h"
 #include "output.h"
 #include "insn-attr.h"
 #include "flags.h"
+#include "function.h"
 #include "expr.h"
 #include "recog.h"
+#include "toplev.h"
+#include "tm_p.h"
 
 /* Which cpu we're compiling for (NULL(=base), ???).  */
-char *arc_cpu_string;
+const char *arc_cpu_string;
 int arc_cpu_type;
 
 /* Name of mangle string to add to symbols to separate code compiled for each
    cpu (or NULL).  */
-char *arc_mangle_cpu;
+const char *arc_mangle_cpu;
 
 /* Save the operands last given to a compare for use when we
    generate a scc or bcc insn.  */
@@ -50,14 +53,14 @@ rtx arc_compare_op0, arc_compare_op1;
 
 /* Name of text, data, and rodata sections, as specified on command line.
    Selected by -m{text,data,rodata} flags.  */
-char *arc_text_string = ARC_DEFAULT_TEXT_SECTION;
-char *arc_data_string = ARC_DEFAULT_DATA_SECTION;
-char *arc_rodata_string = ARC_DEFAULT_RODATA_SECTION;
+const char *arc_text_string = ARC_DEFAULT_TEXT_SECTION;
+const char *arc_data_string = ARC_DEFAULT_DATA_SECTION;
+const char *arc_rodata_string = ARC_DEFAULT_RODATA_SECTION;
 
 /* Name of text, data, and rodata sections used in varasm.c.  */
-char *arc_text_section;
-char *arc_data_section;
-char *arc_rodata_section;
+const char *arc_text_section;
+const char *arc_data_section;
+const char *arc_rodata_section;
 
 /* Array of valid operand punctuation characters.  */
 char arc_punct_chars[256];
@@ -79,15 +82,17 @@ static int arc_ccfsm_target_label;
    arc_print_operand.  */
 static int last_insn_set_cc_p;
 static int current_insn_set_cc_p;
-static void record_cc_ref ();
-
-void arc_init_reg_tables ();
+static void record_cc_ref PARAMS ((rtx));
+static void arc_init_reg_tables PARAMS ((void));
+static int get_arc_condition_code PARAMS ((rtx));
 
 /* Called by OVERRIDE_OPTIONS to initialize various things.  */
 
 void
 arc_init (void)
 {
+  char *tmp;
+  
   if (arc_cpu_string == 0
       || !strcmp (arc_cpu_string, "base"))
     {
@@ -107,12 +112,12 @@ arc_init (void)
     }
 
   /* Set the pseudo-ops for the various standard sections.  */
-  arc_text_section = xmalloc (strlen (arc_text_string) + sizeof (ARC_SECTION_FORMAT) + 1);
-  sprintf (arc_text_section, ARC_SECTION_FORMAT, arc_text_string);
-  arc_data_section = xmalloc (strlen (arc_data_string) + sizeof (ARC_SECTION_FORMAT) + 1);
-  sprintf (arc_data_section, ARC_SECTION_FORMAT, arc_data_string);
-  arc_rodata_section = xmalloc (strlen (arc_rodata_string) + sizeof (ARC_SECTION_FORMAT) + 1);
-  sprintf (arc_rodata_section, ARC_SECTION_FORMAT, arc_rodata_string);
+  arc_text_section = tmp = xmalloc (strlen (arc_text_string) + sizeof (ARC_SECTION_FORMAT) + 1);
+  sprintf (tmp, ARC_SECTION_FORMAT, arc_text_string);
+  arc_data_section = tmp = xmalloc (strlen (arc_data_string) + sizeof (ARC_SECTION_FORMAT) + 1);
+  sprintf (tmp, ARC_SECTION_FORMAT, arc_data_string);
+  arc_rodata_section = tmp = xmalloc (strlen (arc_rodata_string) + sizeof (ARC_SECTION_FORMAT) + 1);
+  sprintf (tmp, ARC_SECTION_FORMAT, arc_rodata_string);
 
   arc_init_reg_tables ();
 
@@ -126,7 +131,7 @@ arc_init (void)
 }
 
 /* The condition codes of the ARC, and the inverse function.  */
-static char *arc_condition_codes[] =
+static const char *const arc_condition_codes[] =
 {
   "al", 0, "eq", "ne", "p", "n", "c", "nc", "v", "nv",
   "gt", "le", "ge", "lt", "hi", "ls", "pnz", 0
@@ -166,7 +171,7 @@ get_arc_condition_code (comparison)
 enum machine_mode
 arc_select_cc_mode (op, x, y)
      enum rtx_code op;
-     rtx x, y;
+     rtx x, y ATTRIBUTE_UNUSED;
 {
   switch (op)
     {
@@ -186,6 +191,8 @@ arc_select_cc_mode (op, x, y)
 	case ASHIFTRT :
 	case LSHIFTRT :
 	  return CCZNCmode;
+	default:
+	  break;
 	}
     }
   return CCmode;
@@ -237,7 +244,7 @@ unsigned int arc_mode_class [NUM_MACHINE_MODES];
 
 enum reg_class arc_regno_reg_class[FIRST_PSEUDO_REGISTER];
 
-void
+static void
 arc_init_reg_tables ()
 {
   int i;
@@ -308,8 +315,8 @@ arc_init_reg_tables ()
 
 int
 arc_valid_machine_decl_attribute (type, attributes, identifier, args)
-     tree type;
-     tree attributes;
+     tree type ATTRIBUTE_UNUSED;
+     tree attributes ATTRIBUTE_UNUSED;
      tree identifier;
      tree args;
 {
@@ -332,7 +339,7 @@ arc_valid_machine_decl_attribute (type, attributes, identifier, args)
 
 int
 arc_comp_type_attributes (type1, type2)
-     tree type1, type2;
+     tree type1 ATTRIBUTE_UNUSED, type2 ATTRIBUTE_UNUSED;
 {
   return 1;
 }
@@ -341,7 +348,7 @@ arc_comp_type_attributes (type1, type2)
 
 void
 arc_set_default_type_attributes (type)
-     tree type;
+     tree type ATTRIBUTE_UNUSED;
 {
 }
 
@@ -373,7 +380,7 @@ call_operand (op, mode)
 int
 symbolic_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   switch (GET_CODE (op))
     {
@@ -392,7 +399,7 @@ symbolic_operand (op, mode)
 int
 symbolic_memory_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   if (GET_CODE (op) == SUBREG)
     op = SUBREG_REG (op);
@@ -408,7 +415,7 @@ symbolic_memory_operand (op, mode)
 int
 short_immediate_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   if (GET_CODE (op) != CONST_INT)
     return 0;
@@ -421,7 +428,7 @@ short_immediate_operand (op, mode)
 int
 long_immediate_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   switch (GET_CODE (op))
     {
@@ -436,6 +443,8 @@ long_immediate_operand (op, mode)
 	 represented this way (the multiplication patterns can cause these
 	 to be generated).  They also occur for SFmode values.  */
       return 1;
+    default:
+      break;
     }
   return 0;
 }
@@ -449,7 +458,7 @@ long_immediate_operand (op, mode)
 int
 long_immediate_loadstore_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   if (GET_CODE (op) != MEM)
     return 0;
@@ -479,6 +488,8 @@ long_immediate_loadstore_operand (op, mode)
 	  && !SMALL_INT (INTVAL (XEXP (op, 1))))
 	return 1;
       return 0;
+    default:
+      break;
     }
   return 0;
 }
@@ -643,7 +654,7 @@ nonvol_nonimm_operand (op, mode)
 int
 const_sint32_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   /* All allowed constants will fit a CONST_INT.  */
   return (GET_CODE (op) == CONST_INT
@@ -657,7 +668,7 @@ const_sint32_operand (op, mode)
 int
 const_uint32_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
 #if HOST_BITS_PER_WIDE_INT > 32
   /* All allowed constants will fit a CONST_INT.  */
@@ -678,7 +689,7 @@ const_uint32_operand (op, mode)
 int
 proper_comparison_operator (op, mode)
     rtx op;
-    enum machine_mode mode;
+    enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   enum rtx_code code = GET_CODE (op);
 
@@ -706,10 +717,10 @@ gen_compare_reg (code, x, y)
   enum machine_mode mode = SELECT_CC_MODE (code, x, y);
   rtx cc_reg;
 
-  cc_reg = gen_rtx (REG, mode, 61);
+  cc_reg = gen_rtx_REG (mode, 61);
 
-  emit_insn (gen_rtx (SET, VOIDmode, cc_reg,
-		      gen_rtx (COMPARE, mode, x, y)));
+  emit_insn (gen_rtx_SET (VOIDmode, cc_reg,
+			  gen_rtx_COMPARE (mode, x, y)));
 
   return cc_reg;
 }
@@ -751,14 +762,14 @@ arc_double_limm_p (value)
 
    We do things a little weird here.  We're supposed to only allocate space
    for the anonymous arguments.  However we need to keep the stack eight byte
-   aligned.  So we round the space up if necessary, and leave it to va-arc.h
+   aligned.  So we round the space up if necessary, and leave it to va_start
    to compensate.  */
 
 void
 arc_setup_incoming_varargs (cum, mode, type, pretend_size, no_rtl)
      CUMULATIVE_ARGS *cum;
      enum machine_mode mode;
-     tree type;
+     tree type ATTRIBUTE_UNUSED;
      int *pretend_size;
      int no_rtl;
 {
@@ -785,10 +796,11 @@ arc_setup_incoming_varargs (cum, mode, type, pretend_size, no_rtl)
       int align_slop = size & 1;
       rtx regblock;
 
-      regblock = gen_rtx (MEM, BLKmode,
-			  plus_constant (arg_pointer_rtx,
-					 FIRST_PARM_OFFSET (0)
-					 + align_slop * UNITS_PER_WORD));
+      regblock = gen_rtx_MEM (BLKmode,
+			      plus_constant (arg_pointer_rtx,
+					     FIRST_PARM_OFFSET (0)
+					     + align_slop * UNITS_PER_WORD));
+      MEM_ALIAS_SET (regblock) = get_varargs_alias_set ();
       move_block_from_reg (first_reg_offset, regblock,
 			   MAX_ARC_PARM_REGS - first_reg_offset,
 			   ((MAX_ARC_PARM_REGS - first_reg_offset)
@@ -841,6 +853,8 @@ arc_address_cost (addr)
 	  }
 	break;
       }
+    default:
+      break;
     }
 
   return 4;
@@ -1059,10 +1073,10 @@ arc_compute_frame_size (size)
 void
 arc_save_restore (file, base_reg, offset, gmask, op)
      FILE *file;
-     char *base_reg;
+     const char *base_reg;
      unsigned int offset;
      unsigned int gmask;
-     char *op;
+     const char *op;
 {
   int regno;
 
@@ -1087,8 +1101,8 @@ arc_output_function_prologue (file, size)
      FILE *file;
      int size;
 {
-  char *sp_str = reg_names[STACK_POINTER_REGNUM];
-  char *fp_str = reg_names[FRAME_POINTER_REGNUM];
+  const char *sp_str = reg_names[STACK_POINTER_REGNUM];
+  const char *fp_str = reg_names[FRAME_POINTER_REGNUM];
   unsigned int gmask = current_frame_info.gmask;
   enum arc_function_type fn_type = arc_compute_function_type (current_function_decl);
 
@@ -1195,8 +1209,8 @@ arc_output_function_epilogue (file, size)
       unsigned int frame_size = size - pretend_size;
       int restored, fp_restored_p;
       int can_trust_sp_p = !current_function_calls_alloca;
-      char *sp_str = reg_names[STACK_POINTER_REGNUM];
-      char *fp_str = reg_names[FRAME_POINTER_REGNUM];
+      const char *sp_str = reg_names[STACK_POINTER_REGNUM];
+      const char *fp_str = reg_names[FRAME_POINTER_REGNUM];
 
       /* ??? There are lots of optimizations that can be done here.
 	 EG: Use fp to restore regs if it's closer.
@@ -1379,7 +1393,7 @@ arc_finalize_pic ()
 int
 shift_operator (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   switch (GET_CODE (op))
     {
@@ -1406,15 +1420,14 @@ shift_operator (op, mode)
 /* ??? We use the loop register here.  We don't use it elsewhere (yet) and
    using it here will give us a chance to play with it.  */
 
-char *
+const char *
 output_shift (operands)
      rtx *operands;
 {
-  static int loopend_lab;
   rtx shift = operands[3];
   enum machine_mode mode = GET_MODE (shift);
   enum rtx_code code = GET_CODE (shift);
-  char *shift_one;
+  const char *shift_one;
 
   if (mode != SImode)
     abort ();
@@ -1470,6 +1483,8 @@ output_shift (operands)
 	      /* The ARC doesn't have a rol insn.  Use something else.  */
 	      output_asm_insn ("asl.f 0,%0\n\tadc %0,0,0", operands);
 	      break;
+	    default:
+	      break;
 	    }
 	}
       /* Must loop.  */
@@ -1485,7 +1500,7 @@ output_shift (operands)
 	  if (optimize)
 	    {
 	      if (flag_pic)
-		sprintf ("lr %%4,[status]\n\tadd %%4,%%4,6\t%s single insn loop start",
+		sprintf (buf, "lr %%4,[status]\n\tadd %%4,%%4,6\t%s single insn loop start",
 			 ASM_COMMENT_START);
 	      else
 		sprintf (buf, "mov %%4,%%%%st(1f)\t%s (single insn loop start) >> 2",
@@ -1529,7 +1544,7 @@ output_shift (operands)
 
 void
 arc_initialize_trampoline (tramp, fnaddr, cxt)
-     rtx tramp, fnaddr, cxt;
+     rtx tramp ATTRIBUTE_UNUSED, fnaddr ATTRIBUTE_UNUSED, cxt ATTRIBUTE_UNUSED;
 {
 }
 
@@ -1599,9 +1614,11 @@ arc_print_operand (file, x, code)
 			     arc_condition_codes[arc_ccfsm_current_cc]);
 		}
 	      else
-		/* This insn is executed for either path, so don't
-		   conditionalize it at all.  */
-		; /* nothing to do */
+	        {
+		  /* This insn is executed for either path, so don't
+		     conditionalize it at all.  */
+		  ; /* nothing to do */
+		}
 	    }
 	  else
 	    {
@@ -1675,7 +1692,7 @@ arc_print_operand (file, x, code)
 
 	  split_double (x, &first, &second);
 	  fprintf (file, "0x%08lx",
-		   code == 'L' ? INTVAL (first) : INTVAL (second));
+		   (long)(code == 'L' ? INTVAL (first) : INTVAL (second)));
 	}
       else
 	output_operand_lossage ("invalid operand to %H/%L code");
@@ -1880,8 +1897,8 @@ record_cc_ref (insn)
 void
 arc_final_prescan_insn (insn, opvec, noperands)
      rtx insn;
-     rtx *opvec;
-     int noperands;
+     rtx *opvec ATTRIBUTE_UNUSED;
+     int noperands ATTRIBUTE_UNUSED;
 {
   /* BODY will hold the body of INSN.  */
   register rtx body = PATTERN (insn);
@@ -2150,7 +2167,7 @@ arc_final_prescan_insn (insn, opvec, noperands)
 	    arc_ccfsm_current_cc = ARC_INVERSE_CONDITION_CODE (arc_ccfsm_current_cc);
 	}
 
-      /* Restore recog_operand.  Getting the attributes of other insns can
+      /* Restore recog_data.  Getting the attributes of other insns can
 	 destroy this array, but final.c assumes that it remains intact
 	 across this call; since the insn has been recognized already we
 	 call insn_extract direct. */
@@ -2165,7 +2182,7 @@ arc_final_prescan_insn (insn, opvec, noperands)
 
 void
 arc_ccfsm_at_label (prefix, num)
-     char *prefix;
+     const char *prefix;
      int num;
 {
   if (arc_ccfsm_state == 3 && arc_ccfsm_target_label == num
@@ -2200,4 +2217,91 @@ arc_ccfsm_record_branch_deleted ()
      cc setter and user.  We need to undo the effect of calling record_cc_ref
      for the just deleted branch.  */
   current_insn_set_cc_p = last_insn_set_cc_p;
+}
+
+void
+arc_va_start (stdarg_p, valist, nextarg)
+     int stdarg_p;
+     tree valist;
+     rtx nextarg;
+{
+  /* See arc_setup_incoming_varargs for reasons for this oddity.  */
+  if (current_function_args_info < 8
+      && (current_function_args_info & 1))
+    nextarg = plus_constant (nextarg, UNITS_PER_WORD);
+
+  std_expand_builtin_va_start (stdarg_p, valist, nextarg);
+}
+
+rtx
+arc_va_arg (valist, type)
+     tree valist, type;
+{
+  rtx addr_rtx;
+  tree addr, incr;
+  tree type_ptr = build_pointer_type (type);
+
+  /* All aggregates are passed by reference.  All scalar types larger
+     than 8 bytes are passed by reference.  */
+
+  if (AGGREGATE_TYPE_P (type) || int_size_in_bytes (type) > 8)
+    {
+      tree type_ptr_ptr = build_pointer_type (type_ptr);
+
+      addr = build (INDIRECT_REF, type_ptr,
+		    build (NOP_EXPR, type_ptr_ptr, valist));
+
+      incr = build (PLUS_EXPR, TREE_TYPE (valist),
+		    valist, build_int_2 (UNITS_PER_WORD, 0));
+    }
+  else
+    {
+      HOST_WIDE_INT align, rounded_size;
+
+      /* Compute the rounded size of the type.  */
+      align = PARM_BOUNDARY / BITS_PER_UNIT;
+      rounded_size = (((TREE_INT_CST_LOW (TYPE_SIZE (type)) / BITS_PER_UNIT
+			+ align - 1) / align) * align);
+
+      /* Align 8 byte operands.  */
+      addr = valist;
+      if (TYPE_ALIGN (type) > BITS_PER_WORD)
+	{
+	  /* AP = (TYPE *)(((int)AP + 7) & -8)  */
+
+	  addr = build (NOP_EXPR, integer_type_node, valist);
+	  addr = fold (build (PLUS_EXPR, integer_type_node, addr,
+			      build_int_2 (7, 0)));
+	  addr = fold (build (BIT_AND_EXPR, integer_type_node, addr,
+			      build_int_2 (-8, 0)));
+	  addr = fold (build (NOP_EXPR, TREE_TYPE (valist), addr));
+	}
+
+      /* The increment is always rounded_size past the aligned pointer.  */
+      incr = fold (build (PLUS_EXPR, TREE_TYPE (addr), addr,
+			  build_int_2 (rounded_size, 0)));
+
+      /* Adjust the pointer in big-endian mode.  */
+      if (BYTES_BIG_ENDIAN)
+	{
+	  HOST_WIDE_INT adj;
+	  adj = TREE_INT_CST_LOW (TYPE_SIZE (type)) / BITS_PER_UNIT;
+	  if (rounded_size > align)
+	    adj = rounded_size;
+
+	  addr = fold (build (PLUS_EXPR, TREE_TYPE (addr), addr,
+			      build_int_2 (rounded_size - adj, 0)));
+	}
+    }
+
+  /* Evaluate the data address.  */
+  addr_rtx = expand_expr (addr, NULL_RTX, Pmode, EXPAND_NORMAL);
+  addr_rtx = copy_to_reg (addr_rtx);
+  
+  /* Compute new value for AP.  */
+  incr = build (MODIFY_EXPR, TREE_TYPE (valist), valist, incr);
+  TREE_SIDE_EFFECTS (incr) = 1;
+  expand_expr (incr, const0_rtx, VOIDmode, EXPAND_NORMAL);
+
+  return addr_rtx;
 }

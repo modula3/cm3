@@ -1,5 +1,5 @@
-/* system.h - Get common system includes and various definitions and
-   declarations based on autoconf macros.
+/* Get common system includes and various definitions and declarations based
+   on autoconf macros.
    Copyright (C) 1998, 1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
@@ -19,6 +19,7 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
+
 #ifndef __GCC_SYSTEM_H__
 #define __GCC_SYSTEM_H__
 
@@ -34,6 +35,18 @@ Boston, MA 02111-1307, USA.  */
 #include <varargs.h>
 #endif
 
+#ifndef va_copy
+# ifdef __va_copy
+#   define va_copy(d,s)  __va_copy((d),(s))
+# else
+#   define va_copy(d,s)  ((d) = (s))
+# endif
+#endif
+
+#ifdef HAVE_STDDEF_H
+# include <stddef.h>
+#endif
+
 #include <stdio.h>
 
 /* Define a generic NULL if one hasn't already been defined.  */
@@ -44,89 +57,40 @@ Boston, MA 02111-1307, USA.  */
 /* The compiler is not a multi-threaded application and therefore we
    do not have to use the locking functions.
 
-   NEED_DECLARATION_PUTC_UNLOCKED actually indicates whether or not
-   the IO code is multi-thread safe by default.  If it is not declared,
-   then do not worry about using the _unlocked functions.
+   HAVE_DECL_PUTC_UNLOCKED actually indicates whether or not the IO
+   code is multi-thread safe by default.  If it is set to 0, then do
+   not worry about using the _unlocked functions.
    
    fputs_unlocked is an extension and needs to be prototyped specially.  */
 
-#if defined HAVE_PUTC_UNLOCKED && !defined NEED_DECLARATION_PUTC_UNLOCKED
+#if defined HAVE_PUTC_UNLOCKED && (defined (HAVE_DECL_PUTC_UNLOCKED) && HAVE_DECL_PUTC_UNLOCKED)
 # undef putc
 # define putc(C, Stream) putc_unlocked (C, Stream)
 #endif
-#if defined HAVE_FPUTC_UNLOCKED && !defined NEED_DECLARATION_PUTC_UNLOCKED
+#if defined HAVE_FPUTC_UNLOCKED && (defined (HAVE_DECL_PUTC_UNLOCKED) && HAVE_DECL_PUTC_UNLOCKED)
 # undef fputc
 # define fputc(C, Stream) fputc_unlocked (C, Stream)
 #endif
-#if defined HAVE_FPUTS_UNLOCKED && !defined NEED_DECLARATION_PUTC_UNLOCKED
+#if defined HAVE_FPUTS_UNLOCKED && (defined (HAVE_DECL_PUTC_UNLOCKED) && HAVE_DECL_PUTC_UNLOCKED)
 # undef fputs
 # define fputs(String, Stream) fputs_unlocked (String, Stream)
-# ifdef NEED_DECLARATION_FPUTS_UNLOCKED
-extern int fputs_unlocked PROTO ((const char *, FILE *));
+# if defined (HAVE_DECL_FPUTS_UNLOCKED) && !HAVE_DECL_FPUTS_UNLOCKED
+extern int fputs_unlocked PARAMS ((const char *, FILE *));
 # endif
 #endif
 
-#include <ctype.h>
+/* There are an extraordinary number of issues with <ctype.h>.
+   The last straw is that it varies with the locale.  Use libiberty's
+   replacement instead.  */
+#include <safe-ctype.h>
 
-/* Jim Meyering writes:
-
-   "... Some ctype macros are valid only for character codes that
-   isascii says are ASCII (SGI's IRIX-4.0.5 is one such system --when
-   using /bin/cc or gcc but without giving an ansi option).  So, all
-   ctype uses should be through macros like ISPRINT...  If
-   STDC_HEADERS is defined, then autoconf has verified that the ctype
-   macros don't need to be guarded with references to isascii. ...
-   Defining isascii to 1 should let any compiler worth its salt
-   eliminate the && through constant folding."
-
-   Bruno Haible adds:
-
-   "... Furthermore, isupper(c) etc. have an undefined result if c is
-   outside the range -1 <= c <= 255. One is tempted to write isupper(c)
-   with c being of type `char', but this is wrong if c is an 8-bit
-   character >= 128 which gets sign-extended to a negative value.
-   The macro ISUPPER protects against this as well."  */
-
-#if defined (STDC_HEADERS) || (!defined (isascii) && !defined (HAVE_ISASCII))
-# define IN_CTYPE_DOMAIN(c) 1
-#else
-# define IN_CTYPE_DOMAIN(c) isascii(c)
+/* Define a default escape character; it's different for EBCDIC.  */
+#ifndef TARGET_ESC
+#define TARGET_ESC 033
 #endif
-
-#ifdef isblank
-# define ISBLANK(c) (IN_CTYPE_DOMAIN (c) && isblank (c))
-#else
-# define ISBLANK(c) ((c) == ' ' || (c) == '\t')
-#endif
-#ifdef isgraph
-# define ISGRAPH(c) (IN_CTYPE_DOMAIN (c) && isgraph (c))
-#else
-# define ISGRAPH(c) (IN_CTYPE_DOMAIN (c) && isprint (c) && !isspace (c))
-#endif
-
-#define ISPRINT(c) (IN_CTYPE_DOMAIN (c) && isprint (c))
-#define ISALNUM(c) (IN_CTYPE_DOMAIN (c) && isalnum (c))
-#define ISALPHA(c) (IN_CTYPE_DOMAIN (c) && isalpha (c))
-#define ISCNTRL(c) (IN_CTYPE_DOMAIN (c) && iscntrl (c))
-#define ISLOWER(c) (IN_CTYPE_DOMAIN (c) && islower (c))
-#define ISPUNCT(c) (IN_CTYPE_DOMAIN (c) && ispunct (c))
-#define ISSPACE(c) (IN_CTYPE_DOMAIN (c) && isspace (c))
-#define ISUPPER(c) (IN_CTYPE_DOMAIN (c) && isupper (c))
-#define ISXDIGIT(c) (IN_CTYPE_DOMAIN (c) && isxdigit (c))
-#define ISDIGIT_LOCALE(c) (IN_CTYPE_DOMAIN (c) && isdigit (c))
-
-/* ISDIGIT differs from ISDIGIT_LOCALE, as follows:
-   - Its arg may be any int or unsigned int; it need not be an unsigned char.
-   - It's guaranteed to evaluate its argument exactly once.
-   - It's typically faster.
-   Posix 1003.2-1992 section 2.5.2.1 page 50 lines 1556-1558 says that
-   only '0' through '9' are digits.  Prefer ISDIGIT to ISDIGIT_LOCALE unless
-   it's important to use the locale's definition of `digit' even when the
-   host does not conform to Posix.  */
-#define ISDIGIT(c) ((unsigned) (c) - '0' <= 9)
-
 
 #include <sys/types.h>
+
 #include <errno.h>
 
 #ifndef errno
@@ -148,6 +112,11 @@ extern int errno;
 
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>
+# ifdef USE_C_ALLOCA
+/* Note that systems that use glibc have a <stdlib.h> that includes
+   <alloca.h> that defines alloca, so let USE_C_ALLOCA override this. */
+# undef alloca
+#endif
 #endif
 
 #ifdef HAVE_UNISTD_H
@@ -189,6 +158,22 @@ extern int errno;
 #  endif /*(long long>long) && (LONG_LONG_MAX||LONGLONG_MAX||LLONG_MAX||GNUC)*/
 # endif /* defined(HOST_BITS_PER_LONG) && defined(HOST_BITS_PER_LONGLONG) */
 #endif /* ! HOST_WIDEST_INT */
+
+/* Infrastructure for defining missing _MAX and _MIN macros.  Note that
+   macros defined with these cannot be used in #if.  */
+
+/* The extra casts work around common compiler bugs.  */
+#define INTTYPE_SIGNED(t) (! ((t) 0 < (t) -1))
+/* The outer cast is needed to work around a bug in Cray C 5.0.3.0.
+   It is necessary at least when t == time_t.  */
+#define INTTYPE_MINIMUM(t) ((t) (INTTYPE_SIGNED (t) \
+                             ? ~ (t) 0 << (sizeof(t) * CHAR_BIT - 1) : (t) 0))
+#define INTTYPE_MAXIMUM(t) ((t) (~ (t) 0 - INTTYPE_MINIMUM (t)))
+
+/* Use that infrastructure to provide a few constants.  */
+#ifndef UCHAR_MAX
+# define UCHAR_MAX INTTYPE_MAXIMUM (unsigned char)
+#endif
 
 #ifdef TIME_WITH_SYS_TIME
 # include <sys/time.h>
@@ -238,6 +223,9 @@ extern int errno;
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 
+/* Returns the least number N such that N * Y >= X.  */
+#define CEIL(x,y) (((x) + (y) - 1) / (y))
+
 #ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
 #endif
@@ -258,127 +246,99 @@ extern int errno;
 #define WSTOPSIG WEXITSTATUS
 #endif
 
-
+/* The HAVE_DECL_* macros are three-state, undefined, 0 or 1.  If they
+   are defined to 0 then we must provide the relevant declaration
+   here.  These checks will be in the undefined state while configure
+   is running so be careful to test "defined (HAVE_DECL_*)".  */
 
 #ifndef bcopy
 # ifdef HAVE_BCOPY
-#  ifdef NEED_DECLARATION_BCOPY
-extern void bcopy ();
+#  if defined (HAVE_DECL_BCOPY) && !HAVE_DECL_BCOPY
+extern void bcopy PARAMS ((const PTR, PTR, size_t));
 #  endif
 # else /* ! HAVE_BCOPY */
 #  define bcopy(src,dst,len) memmove((dst),(src),(len))
 # endif
 #endif
 
-#ifndef bcmp
-# ifdef HAVE_BCMP
-#  ifdef NEED_DECLARATION_BCMP
-extern int bcmp ();
-#  endif
-# else /* ! HAVE_BCMP */
-#  define bcmp(left,right,len) memcmp ((left),(right),(len))
+#if defined (HAVE_DECL_ATOF) && !HAVE_DECL_ATOF
+extern double atof PARAMS ((const char *));
+#endif
+
+#if defined (HAVE_DECL_ATOL) && !HAVE_DECL_ATOL
+extern long atol PARAMS ((const char *));
+#endif
+
+#if defined (HAVE_DECL_FREE) && !HAVE_DECL_FREE
+extern void free PARAMS ((PTR));
+#endif
+
+#if defined (HAVE_DECL_GETCWD) && !HAVE_DECL_GETCWD
+extern char *getcwd PARAMS ((char *, size_t));
+#endif
+
+#if defined (HAVE_DECL_GETENV) && !HAVE_DECL_GETENV
+extern char *getenv PARAMS ((const char *));
+#endif
+
+#if defined (HAVE_DECL_GETOPT) && !HAVE_DECL_GETOPT
+extern int getopt PARAMS ((int, char * const *, const char *));
+#endif
+
+#if defined (HAVE_DECL_GETWD) && !HAVE_DECL_GETWD
+extern char *getwd PARAMS ((char *));
+#endif
+
+#if defined (HAVE_DECL_SBRK) && !HAVE_DECL_SBRK
+extern PTR sbrk PARAMS ((int));
+#endif
+
+#if defined (HAVE_DECL_STRSTR) && !HAVE_DECL_STRSTR
+extern char *strstr PARAMS ((const char *, const char *));
+#endif
+
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
+
+#if defined (HAVE_DECL_MALLOC) && !HAVE_DECL_MALLOC
+extern PTR malloc PARAMS ((size_t));
+#endif
+
+#if defined (HAVE_DECL_CALLOC) && !HAVE_DECL_CALLOC
+extern PTR calloc PARAMS ((size_t, size_t));
+#endif
+
+#if defined (HAVE_DECL_REALLOC) && !HAVE_DECL_REALLOC
+extern PTR realloc PARAMS ((PTR, size_t));
+#endif
+
+/* If the system doesn't provide strsignal, we get it defined in
+   libiberty but no declaration is supplied. */
+#ifndef HAVE_STRSIGNAL
+# ifndef strsignal
+extern const char *strsignal PARAMS ((int));
 # endif
 #endif
-
-#ifndef bzero
-# ifdef HAVE_BZERO
-#  ifdef NEED_DECLARATION_BZERO
-extern void bzero ();
-#  endif
-# else /* ! HAVE_BZERO */
-#  define bzero(dst,len) memset ((dst),0,(len))
-# endif
-#endif
-
-#ifndef index
-# ifdef HAVE_INDEX
-#  ifdef NEED_DECLARATION_INDEX
-extern char *index ();
-#  endif
-# else /* ! HAVE_INDEX */
-#  define index strchr
-# endif
-#endif
-
-#ifndef rindex
-# ifdef HAVE_RINDEX
-#  ifdef NEED_DECLARATION_RINDEX
-extern char *rindex ();
-#  endif
-# else /* ! HAVE_RINDEX */
-#  define rindex strrchr
-# endif
-#endif
-
-#ifdef NEED_DECLARATION_ATOF
-extern double atof ();
-#endif
-
-#ifdef NEED_DECLARATION_ATOL
-extern long atol();
-#endif
-
-#ifdef NEED_DECLARATION_FREE
-extern void free ();
-#endif
-
-#ifdef NEED_DECLARATION_GETCWD
-extern char *getcwd ();
-#endif
-
-#ifdef NEED_DECLARATION_GETENV
-extern char *getenv ();
-#endif
-
-#ifdef NEED_DECLARATION_GETWD
-extern char *getwd ();
-#endif
-
-#ifdef NEED_DECLARATION_SBRK
-extern char *sbrk ();
-#endif
-
-#ifdef NEED_DECLARATION_STRSTR
-extern char *strstr ();
-#endif
-
-#ifdef HAVE_STRERROR
-# ifdef NEED_DECLARATION_STRERROR
-#  ifndef strerror
-extern char *strerror ();
-#  endif
-# endif
-#else /* ! HAVE_STRERROR */
-extern int sys_nerr;
-extern char *sys_errlist[];
-#endif /* HAVE_STRERROR */
-
-#ifdef HAVE_STRSIGNAL
-# ifdef NEED_DECLARATION_STRSIGNAL
-#  ifndef strsignal
-extern char * strsignal ();
-#  endif
-# endif
-#else /* ! HAVE_STRSIGNAL */
-# ifndef SYS_SIGLIST_DECLARED
-#  ifndef NO_SYS_SIGLIST
-extern char * sys_siglist[];
-#  endif
-# endif
-#endif /* HAVE_STRSIGNAL */
 
 #ifdef HAVE_GETRLIMIT
-# ifdef NEED_DECLARATION_GETRLIMIT
+# if defined (HAVE_DECL_GETRLIMIT) && !HAVE_DECL_GETRLIMIT
 #  ifndef getrlimit
-extern int getrlimit ();
+#   ifdef ANSI_PROTOTYPES
+struct rlimit;
+#   endif
+extern int getrlimit PARAMS ((int, struct rlimit *));
 #  endif
 # endif
 #endif
 
 #ifdef HAVE_SETRLIMIT
-# ifdef NEED_DECLARATION_SETRLIMIT
+# if defined (HAVE_DECL_SETRLIMIT) && !HAVE_DECL_SETRLIMIT
 #  ifndef setrlimit
-extern int setrlimit ();
+#   ifdef ANSI_PROTOTYPES
+struct rlimit;
+#   endif
+extern int setrlimit PARAMS ((int, const struct rlimit *));
 #  endif
 # endif
 #endif
@@ -389,40 +349,32 @@ extern int setrlimit ();
 #define volatile
 #endif
 
-/* Redefine abort to report an internal error w/o coredump, and reporting the
-   location of the error in the source file.
-   Some files undefine abort again, so we must prototype the real thing
-   for their sake.  */
-#ifdef NEED_DECLARATION_ABORT
-extern void abort ();
+#if defined (HAVE_DECL_ABORT) && !HAVE_DECL_ABORT
+extern void abort PARAMS ((void));
 #endif
-extern void fatal PVPROTO((const char *, ...)) ATTRIBUTE_PRINTF_1 ATTRIBUTE_NORETURN;
 
-#if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 7)
-#define abort() fatal ("Internal compiler error at %s:%d\n", \
-		       trim_filename (__FILE__), __LINE__)
-#else
-#define abort() fatal ("Internal compiler error in `%s', at %s:%d\n"	\
-  "Please submit a full bug report.\n"	\
-  "See %s for instructions.", \
-  __PRETTY_FUNCTION__, trim_filename (__FILE__), __LINE__, GCCBUGURL)
-#endif /* recent gcc */
+/* 1 if we have C99 designated initializers.  */
+#if !defined(HAVE_DESIGNATED_INITIALIZERS)
+#define HAVE_DESIGNATED_INITIALIZERS \
+  ((GCC_VERSION >= 2007) || (__STDC_VERSION__ >= 199901L))
+#endif
 
-/* trim_filename is in toplev.c.  Define a stub macro for files that
-   don't link toplev.c.  toplev.h will reset it to the real version.  */
-#define trim_filename(x) (x)
+/* 1 if we have _Bool.  */
+#ifndef HAVE__BOOL
+# define HAVE__BOOL \
+   ((GCC_VERSION >= 3000) || (__STDC_VERSION__ >= 199901L))
+#endif
+
+
 
 /* Define a STRINGIFY macro that's right for ANSI or traditional C.
-   HAVE_CPP_STRINGIFY only refers to the stage1 compiler.  Assume that
-   (non-traditional) gcc used in stage2 or later has this feature.
-
    Note: if the argument passed to STRINGIFY is itself a macro, eg
    #define foo bar, STRINGIFY(foo) will produce "foo", not "bar".
    Although the __STDC__ case could be made to expand this via a layer
    of indirection, the traditional C case can not do so.  Therefore
    this behavior is not supported. */
 #ifndef STRINGIFY
-# if defined(HAVE_CPP_STRINGIFY) || (defined(__GNUC__) && defined(__STDC__))
+# ifdef HAVE_STRINGIZE
 #  define STRINGIFY(STRING) #STRING
 # else
 #  define STRINGIFY(STRING) "STRING"
@@ -446,6 +398,11 @@ extern void fatal PVPROTO((const char *, ...)) ATTRIBUTE_PRINTF_1 ATTRIBUTE_NORE
 /* Test if something is a character special file.  */
 #ifndef S_ISCHR
 #define S_ISCHR(m) (((m) & S_IFMT) == S_IFCHR)
+#endif
+
+/* Test if something is a block special file.  */
+#ifndef S_ISBLK
+#define S_ISBLK(m) (((m) & S_IFMT) == S_IFBLK)
 #endif
 
 /* Test if something is a socket.  */
@@ -492,7 +449,123 @@ extern void fatal PVPROTO((const char *, ...)) ATTRIBUTE_PRINTF_1 ATTRIBUTE_NORE
 # define mkdir(a,b) mkdir(a)
 #endif
 
+/* Provide a way to print an address via printf.  */
+#ifndef HOST_PTR_PRINTF
+# ifdef HAVE_PRINTF_PTR
+#  define HOST_PTR_PRINTF "%p"
+# else
+#  define HOST_PTR_PRINTF \
+    (sizeof (int) == sizeof (char *) ? "%x" \
+     : sizeof (long) == sizeof (char *) ? "%lx" : "%llx")
+# endif
+#endif /* ! HOST_PTR_PRINTF */
+
+/* By default, colon separates directories in a path.  */
+#ifndef PATH_SEPARATOR
+#define PATH_SEPARATOR ':'
+#endif
+
+#ifndef DIR_SEPARATOR
+#define DIR_SEPARATOR '/'
+#endif
+
+/* Define IS_DIR_SEPARATOR.  */
+#ifndef DIR_SEPARATOR_2
+# define IS_DIR_SEPARATOR(CH) ((CH) == DIR_SEPARATOR)
+#else /* DIR_SEPARATOR_2 */
+# define IS_DIR_SEPARATOR(CH) \
+	(((CH) == DIR_SEPARATOR) || ((CH) == DIR_SEPARATOR_2))
+#endif /* DIR_SEPARATOR_2 */
+
+/* Say how to test for an absolute pathname.  On Unix systems, this is if
+   it starts with a leading slash or a '$', the latter meaning the value of
+   an environment variable is to be used.  On machien with DOS-based
+   file systems, it is also absolute if it starts with a drive identifier.  */
+#ifdef HAVE_DOS_BASED_FILE_SYSTEM
+#define IS_ABSOLUTE_PATHNAME(STR) \
+  (IS_DIR_SEPARATOR ((STR)[0]) || (STR)[0] == '$' \
+   || ((STR)[0] != '\0' && (STR)[1] == ':' && IS_DIR_SEPARATOR ((STR)[2])))
+#else
+#define IS_ABSOLUTE_PATHNAME(STR) \
+  (IS_DIR_SEPARATOR ((STR)[0]) || (STR)[0] == '$')
+#endif
+
 /* Get libiberty declarations. */
 #include "libiberty.h"
+
+/* Make sure that ONLY_INT_FIELDS has an integral value.  */
+#ifdef ONLY_INT_FIELDS
+#undef ONLY_INT_FIELDS
+#define ONLY_INT_FIELDS 1
+#else
+#define ONLY_INT_FIELDS 0
+#endif 
+
+/* Provide a default for the HOST_BIT_BUCKET.
+   This suffices for POSIX-like hosts.  */
+
+#ifndef HOST_BIT_BUCKET
+#define HOST_BIT_BUCKET "/dev/null"
+#endif
+
+/* Enumerated bitfields are safe to use unless we've been explictly told
+   otherwise or if they are signed. */
+ 
+#define USE_ENUM_BITFIELDS (__GNUC__ || (!ONLY_INT_FIELDS && ENUM_BITFIELDS_ARE_UNSIGNED))
+
+#if USE_ENUM_BITFIELDS
+#define ENUM_BITFIELD(TYPE) enum TYPE
+#else
+#define ENUM_BITFIELD(TYPE) unsigned int
+#endif
+
+#ifndef offsetof
+#define offsetof(TYPE, MEMBER)	((size_t) &((TYPE *)0)->MEMBER)
+#endif
+
+/* Traditional C cannot initialize union members of structs.  Provide
+   a macro which expands appropriately to handle it.  This only works
+   if you intend to initalize the union member to zero since it relies
+   on default initialization to zero in the traditional C case.  */
+#ifdef __STDC__
+#define UNION_INIT_ZERO , {0}
+#else
+#define UNION_INIT_ZERO
+#endif
+
+/* GCC now gives implicit declaration warnings for undeclared builtins.  */
+#if defined(__GNUC__) && defined (__SIZE_TYPE__)
+extern void *alloca (__SIZE_TYPE__);
+#endif
+
+/* Various error reporting routines want to use __FUNCTION__.  */
+#if (GCC_VERSION < 2007)
+#ifndef __FUNCTION__
+#define __FUNCTION__ "?"
+#endif /* ! __FUNCTION__ */
+#endif
+
+/* Provide some sort of boolean type.  We use stdbool.h if it's
+  available.  This is dead last because various system headers might
+  mess us up.  */
+#undef bool
+#undef true
+#undef false
+#undef TRUE
+#undef FALSE
+
+#ifdef HAVE_STDBOOL_H
+# include <stdbool.h>
+#else
+# if !HAVE__BOOL
+typedef char _Bool;
+# endif
+# define bool _Bool
+# define true 1
+# define false 0
+#endif
+
+#define TRUE true
+#define FALSE false
 
 #endif /* __GCC_SYSTEM_H__ */

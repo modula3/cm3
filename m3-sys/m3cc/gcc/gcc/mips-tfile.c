@@ -2,7 +2,8 @@
    contain debugging information specified by the GNU compiler
    in the form of comments (the mips assembler does not support
    assembly access to debug information).
-   Copyright (C) 1991, 93-95, 97, 98, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1993, 1994, 1995, 1997, 1998,
+   1999, 2000, 2001 Free Software Foundation, Inc.
    Contributed by Michael Meissner (meissner@cygnus.com).
    
 This file is part of GNU CC.
@@ -601,6 +602,8 @@ Boston, MA 02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
+#include "version.h"
+#include "intl.h"
 
 #ifndef __SABER__
 #define saber_stop()
@@ -633,13 +636,12 @@ typedef const PTR_T CPTR_T;
    so they can't be static.  */
 
 extern void	pfatal_with_name
-				__proto((const char *));
-extern void	fancy_abort	__proto((void));
-       void	botch		__proto((const char *));
-extern void	xfree		__proto((PTR));
+				__proto((const char *)) ATTRIBUTE_NORETURN;
+extern void	fancy_abort	__proto((void)) ATTRIBUTE_NORETURN;
+       void	botch		__proto((const char *)) ATTRIBUTE_NORETURN;
 
-extern void	fatal		PVPROTO((const char *format, ...)) ATTRIBUTE_PRINTF_1;
-extern void	error		PVPROTO((const char *format, ...)) ATTRIBUTE_PRINTF_1;
+extern void	fatal		PARAMS ((const char *format, ...)) ATTRIBUTE_PRINTF_1 ATTRIBUTE_NORETURN;
+extern void	error		PARAMS ((const char *format, ...)) ATTRIBUTE_PRINTF_1;
 
 #ifndef MIPS_DEBUGGING_INFO
 
@@ -678,8 +680,6 @@ main ()
 #else
 #include <stab.h>  /* On BSD, use the system's stab.h.  */
 #endif /* not USG */
-
-#include "machmode.h"
 
 #ifdef __GNU_STAB__
 #define STAB_CODE_TYPE enum __stab_debug_code
@@ -1080,6 +1080,37 @@ typedef struct efdr {
 static efdr_t init_file = 
 {
   {			/* FDR structure */
+#ifdef __alpha
+    0,			/* adr:		memory address of beginning of file */
+    0,			/* cbLineOffset: byte offset from header for this file ln's */
+    0,			/* cbLine:	size of lines for this file */
+    0,			/* cbSs:	number of bytes in the ss */
+    0,			/* rss:		file name (of source, if known) */
+    0,			/* issBase:	file's string space */
+    0,			/* isymBase:	beginning of symbols */
+    0,			/* csym:	count file's of symbols */
+    0,			/* ilineBase:	file's line symbols */
+    0,			/* cline:	count of file's line symbols */
+    0,			/* ioptBase:	file's optimization entries */
+    0,			/* copt:	count of file's optimization entries */
+    0,			/* ipdFirst:	start of procedures for this file */
+    0,			/* cpd:		count of procedures for this file */
+    0,			/* iauxBase:	file's auxiliary entries */
+    0,			/* caux:	count of file's auxiliary entries */
+    0,			/* rfdBase:	index into the file indirect table */
+    0,			/* crfd:	count file indirect entries */
+    langC,		/* lang:	language for this file */
+    1,			/* fMerge:	whether this file can be merged */
+    0,			/* fReadin:	true if read in (not just created) */
+#ifdef HOST_WORDS_BIG_ENDIAN
+    1,			/* fBigendian:	if 1, compiled on big endian machine */
+#else
+    0,			/* fBigendian:	if 1, compiled on big endian machine */
+#endif
+    0,			/* fTrim:	whether the symbol table was trimmed */
+    GLEVEL_2,		/* glevel:	level this file was compiled with */
+    0,			/* reserved:	reserved for future use */
+#else
     0,			/* adr:		memory address of beginning of file */
     0,			/* rss:		file name (of source, if known) */
     0,			/* issBase:	file's string space */
@@ -1108,6 +1139,7 @@ static efdr_t init_file =
     0,			/* reserved:	reserved for future use */
     0,			/* cbLineOffset: byte offset from header for this file ln's */
     0,			/* cbLine:	size of lines for this file */
+#endif
   },
 
   (FDR *) 0,		/* orig_fdr:	original file header pointer */
@@ -1605,12 +1637,7 @@ STATIC symint_t	add_local_symbol
 					 symint_t,
 					 symint_t));
 
-STATIC symint_t	add_ext_symbol	__proto((const char *,
-					 const char *,
-					 st_t,
-					 sc_t,
-					 long,
-					 symint_t,
+STATIC symint_t	add_ext_symbol	__proto((EXTR *,
 					 int));
 
 STATIC symint_t	add_aux_sym_symint
@@ -1664,7 +1691,7 @@ STATIC void	parse_stabn	__proto((const char *));
 STATIC page_t  *read_seek	__proto((Size_t, off_t, const char *));
 STATIC void	copy_object	__proto((void));
 
-STATIC void	catch_signal	__proto((int));
+STATIC void	catch_signal	__proto((int)) ATTRIBUTE_NORETURN;
 STATIC page_t  *allocate_page	__proto((void));
 
 STATIC page_t  *allocate_multiple_pages
@@ -1693,7 +1720,6 @@ STATIC void	  free_thead		__proto((thead_t *));
 
 STATIC char	 *local_index		__proto((const char *, int));
 STATIC char	 *local_rindex		__proto((const char *, int));
-STATIC const char	 *my_strsignal		__proto((int));
 
 extern char  *mktemp			__proto((char *));
 extern long   strtol			__proto((const char *, char **, int));
@@ -1701,7 +1727,6 @@ extern long   strtol			__proto((const char *, char **, int));
 extern char *optarg;
 extern int   optind;
 extern int   opterr;
-extern char *version_string;
 
 /* List of assembler pseudo ops and beginning sequences that need
    special actions.  Someday, this should be a hash table, and such,
@@ -2033,23 +2058,24 @@ add_local_symbol (str_start, str_end_p1, type, storage, value, indx)
 /* Add an external symbol.  */
 
 STATIC symint_t
-add_ext_symbol (str_start, str_end_p1, type, storage, value, indx, ifd)
-     const char *str_start;		/* first byte in string */
-     const char *str_end_p1;		/* first byte after string */
-     st_t type;				/* symbol type */
-     sc_t storage;			/* storage class */
-     long value;			/* value of symbol */
-     symint_t indx;			/* index to local/aux. syms */
+add_ext_symbol (esym, ifd)
+     EXTR *esym;			/* symbol pointer */
      int ifd;				/* file index */
 {
+  const char *str_start;		/* first byte in string */
+  const char *str_end_p1;		/* first byte after string */
   register EXTR *psym;
   register varray_t *vp = &ext_symbols;
   shash_t *hash_ptr = (shash_t *) 0;
 
+  str_start = ORIG_ESTRS (esym->asym.iss);
+  str_end_p1 = str_start + strlen(str_start);
+
   if (debug > 1)
     {
-      const char *sc_str = sc_to_string (storage);
-      const char *st_str = st_to_string (type);
+      long value = esym->asym.value;
+      const char *sc_str = sc_to_string (esym->asym.sc);
+      const char *st_str = st_to_string (esym->asym.st);
 
       fprintf (stderr,
 	       "\tesym\tv= %10ld, ifd= %2d, sc= %-12s",
@@ -2067,11 +2093,9 @@ add_ext_symbol (str_start, str_end_p1, type, storage, value, indx, ifd)
 
   psym = &vp->last->datum->esym[ vp->objects_last_page++ ];
 
+  *psym = *esym;
   psym->ifd = ifd;
-  psym->asym.value = value;
-  psym->asym.st    = (unsigned) type;
-  psym->asym.sc    = (unsigned) storage;
-  psym->asym.index = indx;
+  psym->asym.index = indexNil;
   psym->asym.iss   = (str_start == (const char *) 0)
 			? 0
 			: add_string (&ext_strings,
@@ -2331,7 +2355,8 @@ get_tag (tag_start, tag_end_p1, indx, basic_type)
   tag_ptr->same_name	= hash_ptr->tag_ptr;
   tag_ptr->basic_type	= basic_type;
   tag_ptr->indx		= indx;
-  tag_ptr->ifd		= (indx == indexNil) ? -1 : cur_file_ptr->file_index;
+  tag_ptr->ifd		= (indx == indexNil
+			   ? (symint_t) -1 : cur_file_ptr->file_index);
   tag_ptr->same_block	= cur_tag_head->first_tag;
 
   cur_tag_head->first_tag = tag_ptr;
@@ -3252,7 +3277,7 @@ parse_def (name_start)
 
       if (diff)
 	{
-	  for (j = (sizeof (t.sizes) / sizeof (t.sizes[0])) - 1; j >= 0; j--)
+	  for (j = ARRAY_SIZE (t.sizes) - 1; j >= 0; j--)
 	    t.sizes[ j ] = ((j-diff) >= 0) ? t.sizes[ j-diff ] : 0;
 
 	  t.num_sizes = i + 1;
@@ -3851,7 +3876,7 @@ parse_input __proto((void))
 	p++;
 
       /* See if it's a directive we handle.  If so, dispatch handler.  */
-      for (i = 0; i < sizeof (pseudo_ops) / sizeof (pseudo_ops[0]); i++)
+      for (i = 0; i < ARRAY_SIZE (pseudo_ops); i++)
 	if (memcmp (p, pseudo_ops[i].name, pseudo_ops[i].len) == 0
 	    && ISSPACE ((unsigned char)(p[pseudo_ops[i].len])))
 	  {
@@ -4617,16 +4642,10 @@ copy_object __proto((void))
   for (es = 0; es < orig_sym_hdr.iextMax; es++)
     {
       register EXTR *eptr = orig_ext_syms + es;
-      register char *ename = ORIG_ESTRS (eptr->asym.iss);
       register unsigned ifd = eptr->ifd;
 
-      (void) add_ext_symbol (ename,
-			     ename + strlen (ename),
-			     (st_t) eptr->asym.st,
-			     (sc_t) eptr->asym.sc,
-			     eptr->asym.value,
-			     (symint_t) ((eptr->asym.index == indexNil) ? indexNil : 0),
-			     ((long) ifd < orig_sym_hdr.ifdMax) ? remap_file_number[ ifd ] : ifd);
+      (void) add_ext_symbol (eptr, ((long) ifd < orig_sym_hdr.ifdMax)
+			     ? remap_file_number[ ifd ] : ifd );
     }
 
 
@@ -4778,8 +4797,9 @@ copy_object __proto((void))
        remaining > 0;
        remaining -= num_write)
     {
-      num_write =
-	(remaining <= (int) sizeof (buffer)) ? remaining : sizeof (buffer);
+      num_write
+	= (remaining <= (int) sizeof (buffer))
+	  ? remaining : (int) sizeof (buffer);
       sys_read = fread ((PTR_T) buffer, 1, num_write, obj_in_stream);
       if (sys_read <= 0)
 	pfatal_with_name (obj_in_name);
@@ -4805,10 +4825,12 @@ copy_object __proto((void))
 
 /* Ye olde main program.  */
 
+extern int main PARAMS ((int, char **));
+
 int
 main (argc, argv)
      int argc;
-     char *argv[];
+     char **argv;
 {
   int iflag = 0;
   char *p = local_rindex (argv[0], '/');
@@ -4912,23 +4934,23 @@ main (argc, argv)
 
   if (object_name == (char *) 0 || had_errors || optind != argc - 1)
     {
-      fprintf (stderr, "Calling Sequence:\n");
-      fprintf (stderr, "\tmips-tfile [-d <num>] [-v] [-i <o-in-file>] -o <o-out-file> <s-file> (or)\n");
-      fprintf (stderr, "\tmips-tfile [-d <num>] [-v] [-I <o-in-file>] -o <o-out-file> <s-file> (or)\n");
-      fprintf (stderr, "\tmips-tfile [-d <num>] [-v] <s-file> <o-in-file> <o-out-file>\n");
+      fprintf (stderr, _("Calling Sequence:\n"));
+      fprintf (stderr, _("\tmips-tfile [-d <num>] [-v] [-i <o-in-file>] -o <o-out-file> <s-file> (or)\n"));
+      fprintf (stderr, _("\tmips-tfile [-d <num>] [-v] [-I <o-in-file>] -o <o-out-file> <s-file> (or)\n"));
+      fprintf (stderr, _("\tmips-tfile [-d <num>] [-v] <s-file> <o-in-file> <o-out-file>\n"));
       fprintf (stderr, "\n");
-      fprintf (stderr, "Debug levels are:\n");
-      fprintf (stderr, "    1\tGeneral debug + trace functions/blocks.\n");
-      fprintf (stderr, "    2\tDebug level 1 + trace externals.\n");
-      fprintf (stderr, "    3\tDebug level 2 + trace all symbols.\n");
-      fprintf (stderr, "    4\tDebug level 3 + trace memory allocations.\n");
+      fprintf (stderr, _("Debug levels are:\n"));
+      fprintf (stderr, _("    1\tGeneral debug + trace functions/blocks.\n"));
+      fprintf (stderr, _("    2\tDebug level 1 + trace externals.\n"));
+      fprintf (stderr, _("    3\tDebug level 2 + trace all symbols.\n"));
+      fprintf (stderr, _("    4\tDebug level 3 + trace memory allocations.\n"));
       return 1;
     }
 
 
   if (version)
     {
-      fprintf (stderr, "mips-tfile version %s", version_string);
+      fprintf (stderr, _("mips-tfile version %s"), version_string);
 #ifdef TARGET_VERSION
       TARGET_VERSION;
 #endif
@@ -5022,29 +5044,6 @@ main (argc, argv)
 }
 
 
-STATIC const char *
-my_strsignal (s)
-     int s;
-{
-#ifdef HAVE_STRSIGNAL
-  return strsignal (s);
-#else
-  if (s >= 0 && s < NSIG)
-    {
-# ifdef NO_SYS_SIGLIST
-      static char buffer[30];
-
-      sprintf (buffer, "Unknown signal %d", s);
-      return buffer;
-# else
-      return sys_siglist[s];
-# endif
-    }
-  else
-    return NULL;
-#endif /* HAVE_STRSIGNAL */
-}
-
 /* Catch a signal and exit without dumping core.  */
 
 STATIC void
@@ -5052,7 +5051,7 @@ catch_signal (signum)
      int signum;
 {
   (void) signal (signum, SIG_DFL);	/* just in case...  */
-  fatal (my_strsignal(signum));
+  fatal ("%s", strsignal(signum));
 }
 
 /* Print a fatal error message.  NAME is the text.
@@ -5111,10 +5110,7 @@ STATIC page_t *
 allocate_cluster (npages)
      Size_t npages;
 {
-  register page_t *value = (page_t *) calloc (npages, PAGE_USIZE);
-
-  if (value == 0)
-    fatal ("Virtual memory exhausted.");
+  register page_t *value = (page_t *) xcalloc (npages, PAGE_USIZE);
 
   if (debug > 3)
     fprintf (stderr, "\talloc\tnpages = %d, value = 0x%.8x\n", npages, value);
@@ -5297,7 +5293,7 @@ free_scope (ptr)
   alloc_counts[ (int)alloc_type_scope ].free_list.f_scope = ptr;
 
 #else
-  xfree ((PTR_T) ptr);
+  free ((PTR_T) ptr);
 #endif
 
 }
@@ -5454,7 +5450,7 @@ free_tag (ptr)
   alloc_counts[ (int)alloc_type_tag ].free_list.f_tag = ptr;
 
 #else
-  xfree ((PTR_T) ptr);
+  free ((PTR_T) ptr);
 #endif
 
 }
@@ -5512,7 +5508,7 @@ free_forward (ptr)
   alloc_counts[ (int)alloc_type_forward ].free_list.f_forward = ptr;
 
 #else
-  xfree ((PTR_T) ptr);
+  free ((PTR_T) ptr);
 #endif
 
 }
@@ -5570,7 +5566,7 @@ free_thead (ptr)
   alloc_counts[ (int)alloc_type_thead ].free_list.f_thead = ptr;
 
 #else
-  xfree ((PTR_T) ptr);
+  free ((PTR_T) ptr);
 #endif
 
 }
@@ -5582,7 +5578,7 @@ free_thead (ptr)
 
 /*VARARGS*/
 void
-fatal VPROTO((const char *format, ...))
+fatal VPARAMS ((const char *format, ...))
 {
 #ifndef ANSI_PROTOTYPES
   const char *format;
@@ -5612,7 +5608,7 @@ fatal VPROTO((const char *format, ...))
 
 /*VARARGS*/
 void
-error VPROTO((const char *format, ...))
+error VPARAMS ((const char *format, ...))
 {
 #ifndef ANSI_PROTOTYPES
   char *format;
@@ -5658,90 +5654,7 @@ void
 botch (s)
      const char *s;
 {
-  fatal (s);
-}
-
-/* Same as `malloc' but report error if no memory available.  */
-
-PTR
-xmalloc (size)
-  size_t size;
-{
-  register PTR value = (PTR) malloc (size);
-  if (value == 0)
-    fatal ("Virtual memory exhausted.");
-
-  if (debug > 3)
-    {
-      fputs ("\tmalloc\tptr = ", stderr);
-      fprintf (stderr, HOST_PTR_PRINTF, value);
-      fprintf (stderr, ", size = %10lu\n", (unsigned long) size);
-    }
-
-  return value;
-}
-
-/* Same as `calloc' but report error if no memory available.  */
-
-PTR
-xcalloc (size1, size2)
-  size_t size1, size2;
-{
-  register PTR value = (PTR) calloc (size1, size2);
-  if (value == 0)
-    fatal ("Virtual memory exhausted.");
-
-  if (debug > 3)
-    {
-      fputs ("\tcalloc\tptr = ", stderr);
-      fprintf (stderr, HOST_PTR_PRINTF, value);
-      fprintf (stderr, ", size1 = %10lu, size2 = %10lu [%lu]\n",
-	       (unsigned long) size1, (unsigned long) size2,
-	       (unsigned long) size1*size2);
-    }
-
-  return value;
-}
-
-/* Same as `realloc' but report error if no memory available.  */
-
-PTR
-xrealloc (ptr, size)
-  PTR ptr;
-  size_t size;
-{
-  register PTR result;
-  if (ptr)
-    result = (PTR) realloc (ptr, size);
-  else
-    result = (PTR) malloc (size);
-  if (!result)
-    fatal ("Virtual memory exhausted.");
-
-  if (debug > 3)
-    {
-      fputs ("\trealloc\tptr = ", stderr);
-      fprintf (stderr, HOST_PTR_PRINTF, result);
-      fprintf (stderr, ", size = %10lu, orig = ", size);
-      fprintf (stderr, HOST_PTR_PRINTF, ptr);
-      fputs ("\n", stderr);
-    }
-
-  return result;
-}
-
-void
-xfree (ptr)
-     PTR ptr;
-{
-  if (debug > 3)
-    {
-      fputs ("\tfree\tptr = ", stderr);
-      fprintf (stderr, HOST_PTR_PRINTF, ptr);
-      fputs ("\n", stderr);
-    }
-
-  free (ptr);
+  fatal ("%s", s);
 }
 
 

@@ -1,12 +1,13 @@
 /* Subroutines for insn-output.c for MIL-STD-1750.
-   Copyright (C) 1994, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999,
+   2000 Free Software Foundation, Inc.
    Contributed by O.M.Kellogg, DASA (kellogg@space.otn.dasa.de)
 
 This file is part of GNU CC.
 
 GNU CC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU CC is distributed in the hope that it will be useful,
@@ -21,15 +22,17 @@ Boston, MA 02111-1307, USA.  */
 
 #define __datalbl
 #include "config.h"
-#include <stdio.h>
-#include <string.h>
+#include "system.h"
 #include "rtl.h"
 #include "tree.h"
+#include "function.h"
 #include "expr.h"
 #define HAVE_cc0
 #include "conditions.h"
 #include "real.h"
 #include "regs.h"
+#include "output.h"
+#include "tm_p.h"
 
 struct datalabel_array datalbl[DATALBL_ARRSIZ];
 int datalbl_ndx = -1;
@@ -37,10 +40,12 @@ struct jumplabel_array jmplbl[JMPLBL_ARRSIZ];
 int jmplbl_ndx = -1;
 int label_pending = 0, program_counter = 0;
 enum section current_section = Normal;
-char *sectname[4] =
+const char *const sectname[4] =
 {"Init", "Normal", "Konst", "Static"};
 
-int
+static int which_bit PARAMS ((int));
+
+void
 notice_update_cc (exp)
      rtx exp;
 {
@@ -106,7 +111,7 @@ function_arg (cum, mode, type, named)
      int cum;
      enum machine_mode mode;
      tree type;
-     int named;
+     int named ATTRIBUTE_UNUSED;
 {
   int size;
 
@@ -117,7 +122,7 @@ function_arg (cum, mode, type, named)
   else
     size = GET_MODE_SIZE (mode);
   if (cum + size < 12)
-    return gen_rtx (REG, mode, cum);
+    return gen_rtx_REG (mode, cum);
   else
     return (rtx) 0;
 }
@@ -141,16 +146,15 @@ get_double (x)
 
 char *
 float_label (code, value)
-     char code;
+     int code;
      double value;
 {
-  int i = 1;
   static char label[32];
   char *p;
 
   label[0] = code;
   p = label + 1;
-  sprintf (p, "%lf", value);
+  sprintf (p, "%f", value);
   while (*p)
     {
       *p = (*p == '+') ? 'p' :
@@ -161,7 +165,7 @@ float_label (code, value)
 }
 
 
-char *
+const char *
 movcnt_regno_adjust (op)
      rtx *op;
 {
@@ -192,13 +196,13 @@ movcnt_regno_adjust (op)
   return outstr;
 }
 
-char *
+const char *
 mod_regno_adjust (instr, op)
-     char *instr;
+     const char *instr;
      rtx *op;
 {
   static char outstr[40];
-  char *r = (!strncmp (instr, "dvr", 3) ? "r" : "");
+  const char *r = (!strncmp (instr, "dvr", 3) ? "r" : "");
   int modregno_gcc = REGNO (op[3]), modregno_1750 = REGNO (op[0]) + 1;
 
   if (modregno_gcc == modregno_1750
@@ -263,7 +267,7 @@ memop_valid (op)
 int
 mov_memory_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return (GET_CODE (op) == MEM && GET_CODE (XEXP (op, 0)) == REG);
 }
@@ -272,7 +276,7 @@ mov_memory_operand (op, mode)
 int
 small_nonneg_const (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   if (GET_CODE (op) == CONST_INT && INTVAL (op) >= 0 && INTVAL (op) <= 15)
     return 1;
@@ -337,9 +341,9 @@ find_jmplbl (labelnum)
   return -1;
 }
 
-char *
+const char *
 branch_or_jump (condition, targetlabel_number)
-     char *condition;
+     const char *condition;
      int targetlabel_number;
 {
   static char buf[30];
@@ -422,6 +426,7 @@ static int addr_inc;
    'w' for int - 16
 */
 
+void
 print_operand (file, x, letter)
      FILE *file;
      rtx x;
@@ -474,7 +479,7 @@ print_operand (file, x, letter)
 /*    {
 	double value = get_double (x);
 	char fltstr[32];
-	sprintf (fltstr, "%lf", value);
+	sprintf (fltstr, "%f", value);
 
 	if (letter == 'D' || letter == 'E')
 	  {
@@ -508,7 +513,7 @@ print_operand (file, x, letter)
 	    if (!found)
 	      {
 		fprintf (stderr,
-		   "float value %lfnot found upon label reference\n", value);
+		   "float value %f not found upon label reference\n", value);
 		strcpy (datalbl[i = ++datalbl_ndx].value, fltstr);
 		datalbl[i].name = float_label (letter, value);
 		datalbl[i].size = (letter == 'G') ? 3 : 2;
@@ -523,20 +528,20 @@ print_operand (file, x, letter)
 	  fprintf (file, " %s  ;P_O cst_dbl ", fltstr);
       }
  */
-      fprintf (file, "%lf", get_double (x));
+      fprintf (file, "%f", get_double (x));
       break;
 
     case CONST_INT:
       if (letter == 'J')
-	fprintf (file, "%d", -INTVAL (x));
+	fprintf (file, HOST_WIDE_INT_PRINT_DEC, -INTVAL (x));
       else if (letter == 'b')
         fprintf (file, "%d", which_bit (INTVAL (x)));
       else if (letter == 'B')
         fprintf (file, "%d", which_bit (~INTVAL (x)));
       else if (letter == 'w')
-	fprintf (file, "%d", INTVAL (x) - 16);
+	fprintf (file, HOST_WIDE_INT_PRINT_DEC, INTVAL (x) - 16);
       else
-	fprintf (file, "%d", INTVAL (x));
+	fprintf (file, HOST_WIDE_INT_PRINT_DEC, INTVAL (x));
       break;
 
     case CODE_LABEL:
@@ -544,8 +549,10 @@ print_operand (file, x, letter)
       break;
 
     case CALL:
-      fprintf (file, "CALL nargs=%d, func is either '%s' or '%s'",
-       XEXP (x, 1), XSTR (XEXP (XEXP (x, 0), 1), 0), XSTR (XEXP (x, 0), 1));
+      fprintf (file, "CALL nargs=");
+      fprintf (file, HOST_PTR_PRINTF, XEXP (x, 1));
+      fprintf (file, ", func is either '%s' or '%s'",
+	       XSTR (XEXP (XEXP (x, 0), 1), 0), XSTR (XEXP (x, 0), 1));
       break;
 
     case PLUS:
@@ -586,6 +593,7 @@ print_operand (file, x, letter)
   addr_inc = 0;
 }
 
+void
 print_operand_address (file, addr)
      FILE *file;
      rtx addr;
@@ -716,7 +724,7 @@ one_bit_set_p (x)
  * Return the number of the least significant bit set, using the  same
  * convention for bit numbering as in the MIL-STD-1750 sb instruction.
  */
-int
+static int
 which_bit (x)
      int x;
 {

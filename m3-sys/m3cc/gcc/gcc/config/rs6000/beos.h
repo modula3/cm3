@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler, for BeOS.
-   Copyright (C) 1997 Free Software Foundation, Inc.
+   Copyright (C) 1997, 2000, 2001 Free Software Foundation, Inc.
    Contributed by Fred Fish (fnf@cygnus.com), based on aix41.h
    from David Edelsohn (edelsohn@npac.syr.edu).
 
@@ -26,19 +26,19 @@ Boston, MA 02111-1307, USA.  */
 #define	TARGET_XL_CALL		(target_flags & MASK_XL_CALL)
 #undef  SUBTARGET_SWITCHES
 #define SUBTARGET_SWITCHES		\
-  {"xl-call", 		MASK_XL_CALL},	\
-  {"no-xl-call",	- MASK_XL_CALL}, \
-  {"threads",		0},		\
+  {"xl-call", 		MASK_XL_CALL,					\
+   N_("Always pass floating-point arguments in memory") },		\
+  {"no-xl-call",	- MASK_XL_CALL,					\
+   N_("Don't always pass floating-point arguments in memory") },	\
+  {"threads",		0},						\
   {"pe",		0},
-
-#include "rs6000/rs6000.h"
 
 #undef ASM_SPEC
 #define ASM_SPEC "-u %(asm_cpu)"
 
 #undef CPP_PREDEFINES
 /* __POWERPC__ must be defined for some header files */
-#define CPP_PREDEFINES "-D__BEOS__ -D__POWERPC__ -Asystem(beos) -Acpu(powerpc) -Amachine(powerpc)"
+#define CPP_PREDEFINES "-D__BEOS__ -D__POWERPC__ -Asystem=beos -Acpu=powerpc -Amachine=powerpc"
 
 #undef CPP_SPEC
 #define CPP_SPEC "%{posix: -D_POSIX_SOURCE} %(cpp_cpu)"
@@ -78,24 +78,6 @@ Boston, MA 02111-1307, USA.  */
 
 #undef	MULTILIB_DEFAULTS
 #define	MULTILIB_DEFAULTS { "mcpu=powerpc" }
-
-/* These are not necessary when we pass -u to the assembler, and undefining
-   them saves a great deal of space in object files.  */
-
-#undef ASM_OUTPUT_EXTERNAL
-#undef ASM_OUTPUT_EXTERNAL_LIBCALL
-#define ASM_OUTPUT_EXTERNAL(FILE, DECL, NAME)	\
-{ rtx _symref = XEXP (DECL_RTL (DECL), 0);	\
-  if ((TREE_CODE (DECL) == VAR_DECL		\
-       || TREE_CODE (DECL) == FUNCTION_DECL)	\
-      && (NAME)[strlen (NAME) - 1] != ']')	\
-    {						\
-      char *_name = (char *) permalloc (strlen (XSTR (_symref, 0)) + 5); \
-      strcpy (_name, XSTR (_symref, 0));	\
-      strcat (_name, TREE_CODE (DECL) == FUNCTION_DECL ? "[DS]" : "[RW]"); \
-      XSTR (_symref, 0) = _name;		\
-    }						\
-}
 
 /* These empty definitions get rid of the attempt to link in crt0.o
    and any libraries like libc.a.

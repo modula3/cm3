@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler, for AMD Am29000 CPU.
-   Copyright (C) 1988, 90-97, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
+   2000, 2001 Free Software Foundation, Inc.
    Contributed by Richard Kenner (kenner@nyu.edu)
 
 This file is part of GNU CC.
@@ -22,7 +23,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
-#define CPP_PREDEFINES "-D_AM29K -D_AM29000 -D_EPI -Acpu(a29k) -Amachine(a29k)"
+#define CPP_PREDEFINES "-D_AM29K -D_AM29000 -D_EPI -Acpu=a29k -Amachine=a29k"
 
 /* Print subsidiary information on the compiler version in use.  */
 #define TARGET_VERSION
@@ -97,25 +98,25 @@ extern int target_flags;
 #define TARGET_MULTM		((target_flags & 1024) == 0)
 
 #define TARGET_SWITCHES			\
-  { {"dw", 1, "Generate code assuming DW bit is set"},			\
-    {"ndw", -1, "Generate code assuming DW bit is not set"},		\
-    {"bw", 2, "Generate code using byte writes"},			\
-    {"nbw", - (1|2), "Do not generate byte writes"},			\
-    {"small", 4, "Use small memory model"},				\
-    {"normal", - (4|8), "Use normal memory model"},			\
-    {"large", 8, "Use large memory model"},				\
-    {"29050", 16+128, "Generate 29050 code"},				\
-    {"29000", -16, "Generate 29000 code"},				\
-    {"kernel-registers", 32, "Use kernel global registers"},		\
-    {"user-registers", -32, "Use user global registers"},		\
-    {"stack-check", 64, "Emit stack checking code"},			\
-    {"no-stack-check", - 74, "Do not emit stack checking code"},	\
-    {"storem-bug", -128, "Work around storem hardware bug"},		\
-    {"no-storem-bug", 128, "Do not work around storem hardware bug"},	\
-    {"reuse-arg-regs", -256, "Store locals in argument registers"},	\
-    {"no-reuse-arg-regs", 256, "Do not store locals in arg registers"},	\
-    {"soft-float", 512, "Use software floating point"},			\
-    {"no-multm", 1024, "Do not generate multm instructions"},		\
+  { {"dw", 1, N_("Generate code assuming DW bit is set")},		\
+    {"ndw", -1, N_("Generate code assuming DW bit is not set")},	\
+    {"bw", 2, N_("Generate code using byte writes")},			\
+    {"nbw", - (1|2), N_("Do not generate byte writes")},		\
+    {"small", 4, N_("Use small memory model")},				\
+    {"normal", - (4|8), N_("Use normal memory model")},			\
+    {"large", 8, N_("Use large memory model")},				\
+    {"29050", 16+128, N_("Generate 29050 code")},			\
+    {"29000", -16, N_("Generate 29000 code")},				\
+    {"kernel-registers", 32, N_("Use kernel global registers")},	\
+    {"user-registers", -32, N_("Use user global registers")},		\
+    {"stack-check", 64, N_("Emit stack checking code")},		\
+    {"no-stack-check", - 74, N_("Do not emit stack checking code")},	\
+    {"storem-bug", -128, N_("Work around storem hardware bug")},	\
+    {"no-storem-bug", 128, N_("Do not work around storem hardware bug")},	\
+    {"reuse-arg-regs", -256, N_("Store locals in argument registers")},		\
+    {"no-reuse-arg-regs", 256, N_("Do not store locals in arg registers")},	\
+    {"soft-float", 512, N_("Use software floating point")},			\
+    {"no-multm", 1024, N_("Do not generate multm instructions")},		\
     {"", TARGET_DEFAULT, NULL}}
 
 #define TARGET_DEFAULT 3
@@ -219,7 +220,7 @@ extern int target_flags;
 /* Set this non-zero if unaligned move instructions are extremely slow.
 
    On the 29k, they trap.  */
-#define SLOW_UNALIGNED_ACCESS 1
+#define SLOW_UNALIGNED_ACCESS(MODE, ALIGN) 1
 
 /* Standard register usage.  */
 
@@ -591,7 +592,7 @@ enum reg_class { NO_REGS, LR0_REGS, GENERAL_REGS, BP_REGS, FC_REGS, CR_REGS,
 
 #define CONDITIONAL_REGISTER_USAGE		\
   {						\
-    char *p;					\
+    const char *p;				\
     int i;					\
 						\
     if (TARGET_KERNEL_REGISTERS)		\
@@ -653,10 +654,6 @@ enum reg_class { NO_REGS, LR0_REGS, GENERAL_REGS, BP_REGS, FC_REGS, CR_REGS,
 #define SECONDARY_RELOAD_CLASS(CLASS,MODE,IN) \
   secondary_reload_class (CLASS, MODE, IN)
 
-/* This function is used to get the address of an object.  */
-
-extern struct rtx_def *a29k_get_reloaded_address ();
-
 /* Return the maximum number of consecutive registers
    needed to represent mode MODE in a register of class CLASS.
 
@@ -671,7 +668,7 @@ extern struct rtx_def *a29k_get_reloaded_address ();
    involving a general register is cheap, but moving between the other types
    (even within a class) is two insns.  */
 
-#define REGISTER_MOVE_COST(CLASS1, CLASS2)	\
+#define REGISTER_MOVE_COST(MODE, CLASS1, CLASS2)	\
   ((CLASS1) == GENERAL_REGS || (CLASS2) == GENERAL_REGS ? 2 : 4)
 
 /* A C expressions returning the cost of moving data of MODE from a register to
@@ -719,7 +716,7 @@ extern struct rtx_def *a29k_get_reloaded_address ();
 /* Define this if the maximum size of all the outgoing args is to be
    accumulated and pushed during the prologue.  The amount can be
    found in the variable current_function_outgoing_args_size.  */
-#define ACCUMULATE_OUTGOING_ARGS
+#define ACCUMULATE_OUTGOING_ARGS 1
 
 /* Offset of first parameter from the argument pointer register value.  */
 
@@ -746,12 +743,12 @@ extern struct rtx_def *a29k_get_reloaded_address ();
    On 29k the value is found in gr96.  */
 
 #define FUNCTION_VALUE(VALTYPE, FUNC)  \
-  gen_rtx (REG, TYPE_MODE (VALTYPE), R_GR (96))
+  gen_rtx_REG (TYPE_MODE (VALTYPE), R_GR (96))
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
 
-#define LIBCALL_VALUE(MODE)  gen_rtx (REG, MODE, R_GR (96))
+#define LIBCALL_VALUE(MODE)  gen_rtx_REG (MODE, R_GR (96))
 
 /* 1 if N is a possible register number for a function value
    as seen by the caller.
@@ -846,7 +843,7 @@ extern struct rtx_def *a29k_get_reloaded_address ();
 
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED)			\
 ((CUM) < 16 && (NAMED) && ! MUST_PASS_IN_STACK (MODE, TYPE)	\
- ? gen_rtx(REG, (MODE), R_LR (2) + (CUM)) : 0)
+ ? gen_rtx_REG ((MODE), R_LR (2) + (CUM)) : 0)
 
 /* Define where a function finds its arguments.
    This is different from FUNCTION_ARG because of register windows.
@@ -856,8 +853,8 @@ extern struct rtx_def *a29k_get_reloaded_address ();
 
 #define FUNCTION_INCOMING_ARG(CUM, MODE, TYPE, NAMED)			\
 ((CUM) < 16 && (NAMED) && ! MUST_PASS_IN_STACK (MODE, TYPE)		\
- ? gen_rtx (REG, MODE,							\
-	    incoming_reg (CUM, A29K_ARG_SIZE (MODE, TYPE, NAMED)))	\
+ ? gen_rtx_REG (MODE,							\
+		incoming_reg (CUM, A29K_ARG_SIZE (MODE, TYPE, NAMED)))	\
  : 0)
 
 /* This indicates that an argument is to be passed with an invisible reference
@@ -911,7 +908,7 @@ extern struct rtx_def *a29k_get_reloaded_address ();
       if (! (NO_RTL) && first_reg_offset != 16)				\
 	move_block_from_reg						\
 	  (R_AR (0) + first_reg_offset,					\
-	   gen_rtx (MEM, BLKmode, virtual_incoming_args_rtx),		\
+	   gen_rtx_MEM (BLKmode, virtual_incoming_args_rtx),		\
 	   16 - first_reg_offset, (16 - first_reg_offset) * UNITS_PER_WORD); \
       PRETEND_SIZE = (16 - first_reg_offset) * UNITS_PER_WORD;		\
     }									\
@@ -932,7 +929,7 @@ extern int a29k_compare_fp_p;
    which can't be done until after register allocation, but must be done
    before final_start_function is called.  */
 
-extern char *a29k_function_name;
+extern const char *a29k_function_name;
 
 #define ASM_DECLARE_FUNCTION_NAME(FILE,NAME,DECL)	\
   a29k_function_name = NAME; \
@@ -998,7 +995,7 @@ extern char *a29k_function_name;
    && ! (needs_regstack_p () && uses_local_reg_p (PATTERN (INSN)))	\
    && (GET_CODE (PATTERN (INSN)) != SET					\
        || GET_CODE (SET_SRC (PATTERN (INSN))) != MEM			\
-       || ! rtx_varies_p (XEXP (SET_SRC (PATTERN (INSN)), 0))))
+       || ! rtx_varies_p (XEXP (SET_SRC (PATTERN (INSN)), 0), 0)))
 
 /* Output assembler code for a block containing the constant parts
    of a trampoline, leaving space for the variable parts.
@@ -1043,25 +1040,25 @@ extern char *a29k_function_name;
   rtx _val = force_reg (SImode, VALUE);					\
 									\
   _addr = memory_address (QImode, plus_constant (TRAMP, (CONST) + 3));	\
-  emit_move_insn (gen_rtx (MEM, QImode, _addr),				\
+  emit_move_insn (gen_rtx_MEM (QImode, _addr),				\
 		  gen_lowpart (QImode, _val));				\
 									\
   _temp = expand_shift (RSHIFT_EXPR, SImode, _val,			\
 		       build_int_2 (8, 0), 0, 1);			\
   _addr = memory_address (QImode, plus_constant (TRAMP, (CONST) + 1));	\
-  emit_move_insn (gen_rtx (MEM, QImode, _addr),				\
+  emit_move_insn (gen_rtx_MEM (QImode, _addr),				\
 		  gen_lowpart (QImode, _temp));				\
 									\
   _temp = expand_shift (RSHIFT_EXPR, SImode, _temp,			\
 		       build_int_2 (8, 0), _temp, 1);			\
   _addr = memory_address (QImode, plus_constant (TRAMP, (CONSTH) + 3));	\
-  emit_move_insn (gen_rtx (MEM, QImode, _addr),				\
+  emit_move_insn (gen_rtx_MEM (QImode, _addr),				\
 		  gen_lowpart (QImode, _temp));				\
 									\
   _temp = expand_shift (RSHIFT_EXPR, SImode, _temp,			\
 		       build_int_2 (8, 0), _temp, 1);			\
   _addr = memory_address (QImode, plus_constant (TRAMP, (CONSTH) + 1));	\
-  emit_move_insn (gen_rtx (MEM, QImode, _addr),				\
+  emit_move_insn (gen_rtx_MEM (QImode, _addr),				\
 		  gen_lowpart (QImode, _temp));				\
 }
 

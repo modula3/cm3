@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.
    For NCR Tower 32/4x0 and 32/6x0 running System V Release 3.
-   Copyright (C) 1990, 1993, 1994, 1996, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1993, 1994, 1996, 1997, 2000 Free Software Foundation, Inc.
    Contributed by Robert Andersson (ra@intsys.no), International Systems,
    Oslo, Norway.
 
@@ -37,7 +37,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
-#define CPP_PREDEFINES "-Dunix -Dtower32 -Dtower32_600 -D__motorola__ -Asystem(unix) -Asystem(svr3) -Acpu(m68k) -Amachine(m68k)"
+#define CPP_PREDEFINES "-Dunix -Dtower32 -Dtower32_600 -D__motorola__ -Asystem=unix -Asystem=svr3 -Acpu=m68k -Amachine=m68k"
 
 /* Define __HAVE_68881 in preprocessor only if -m68881 is specified.
    This will control the use of inline 68881 insns in certain macros.
@@ -66,11 +66,6 @@ Boston, MA 02111-1307, USA.  */
 /* Turn on SDB debugging info.  */
 
 #define SDB_DEBUGGING_INFO
-
-/* This is only useful if gdb is changed, but doesn't harm anyway.  */
-
-#define ASM_IDENTIFY_GCC(FILE) \
-  fprintf (FILE, "gcc2_compiled%%:\n")
 
 /* All the ASM_OUTPUT macros need to conform to the Tower as syntax.  */
 
@@ -185,10 +180,9 @@ Boston, MA 02111-1307, USA.  */
 
 #undef FUNCTION_EXTRA_EPILOGUE
 #define FUNCTION_EXTRA_EPILOGUE(FILE, SIZE)				\
-  { extern int current_function_returns_pointer;			\
-    if ((current_function_returns_pointer) &&				\
-      ! find_equiv_reg (0, get_last_insn (), 0, 0, 0, 8, Pmode))        \
-      asm_fprintf (FILE, "\tmov.l %Rd0,%Ra0\n"); } 
+{ if (current_function_returns_pointer					\
+      && ! find_equiv_reg (0, get_last_insn (), 0, 0, 0, 8, Pmode))	\
+    asm_fprintf (FILE, "\tmov.l %Rd0,%Ra0\n"); } 
 
 /* This is how to output an insn to push a register on the stack.
    It need not be very fast code.  */
@@ -210,10 +204,10 @@ Boston, MA 02111-1307, USA.  */
   output_file_directive ((FILE), main_input_filename))
 
 #undef TEXT_SECTION_ASM_OP
-#define TEXT_SECTION_ASM_OP "text"
+#define TEXT_SECTION_ASM_OP "\ttext"
 
 #undef DATA_SECTION_ASM_OP
-#define DATA_SECTION_ASM_OP "data"
+#define DATA_SECTION_ASM_OP "\tdata"
 
 /* This says how to output an assembler line to define a global common symbol.
    We use SIZE rather than ROUNDED, as this is what the native cc does.  */
@@ -246,7 +240,7 @@ Boston, MA 02111-1307, USA.  */
    defined for reference from other files.  */
 
 #undef GLOBAL_ASM_OP
-#define GLOBAL_ASM_OP "global"
+#define GLOBAL_ASM_OP "\tglobal\t"
 
 #undef ASM_GENERATE_INTERNAL_LABEL
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL, PREFIX, NUM)	\
@@ -594,18 +588,18 @@ do { fprintf (asm_out_file, "\ttag\t");	\
 
 #define ASM_LONG	"\tlong"
 #undef INIT_SECTION_ASM_OP
-#define INIT_SECTION_ASM_OP	"section\t~init"
+#define INIT_SECTION_ASM_OP	"\tsection\t~init"
 #undef FINI_SECTION_ASM_OP
-#define FINI_SECTION_ASM_OP	"section\t~fini"
+#define FINI_SECTION_ASM_OP	"\tsection\t~fini"
 #undef CONST_SECTION_ASM_OP
-#define CONST_SECTION_ASM_OP	"section\t~rodata"
+#define CONST_SECTION_ASM_OP	"\tsection\t~rodata"
 
 #define CTOR_LIST_BEGIN				\
   asm (INIT_SECTION_ASM_OP);			\
   asm ("clr.l -(%sp)")
 #define CTOR_LIST_END CTOR_LIST_BEGIN
 
-#define BSS_SECTION_ASM_OP	"section\t~bss"
+#define BSS_SECTION_ASM_OP	"\tsection\t~bss"
 
 #define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)	\
   do {						\

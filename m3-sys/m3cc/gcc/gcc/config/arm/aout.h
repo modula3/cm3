@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler, for ARM with a.out
-   Copyright (C) 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000
+   Free Software Foundation, Inc.
    Contributed by Richard Earnshaw (rearnsha@armltd.co.uk).
    
 This file is part of GNU CC.
@@ -25,25 +26,29 @@ Boston, MA 02111-1307, USA.  */
 
 /* The text to go at the start of the assembler file */
 #ifndef ASM_FILE_START
-#define ASM_FILE_START(STREAM)						    \
-{									    \
-  fprintf (STREAM,"%srfp\t.req\t%sr9\n", REGISTER_PREFIX, REGISTER_PREFIX); \
-  fprintf (STREAM,"%ssl\t.req\t%sr10\n", REGISTER_PREFIX, REGISTER_PREFIX); \
-  fprintf (STREAM,"%sfp\t.req\t%sr11\n", REGISTER_PREFIX, REGISTER_PREFIX); \
-  fprintf (STREAM,"%sip\t.req\t%sr12\n", REGISTER_PREFIX, REGISTER_PREFIX); \
-  fprintf (STREAM,"%ssp\t.req\t%sr13\n", REGISTER_PREFIX, REGISTER_PREFIX); \
-  fprintf (STREAM,"%slr\t.req\t%sr14\n", REGISTER_PREFIX, REGISTER_PREFIX); \
-  fprintf (STREAM,"%spc\t.req\t%sr15\n", REGISTER_PREFIX, REGISTER_PREFIX); \
+#define ASM_FILE_START(STREAM)		    \
+{					    \
+  asm_fprintf (STREAM,"%Rrfp\t.req\t%Rr9\n"); \
+  asm_fprintf (STREAM,"%Rsl\t.req\t%Rr10\n"); \
+  asm_fprintf (STREAM,"%Rfp\t.req\t%Rr11\n"); \
+  asm_fprintf (STREAM,"%Rip\t.req\t%Rr12\n"); \
+  asm_fprintf (STREAM,"%Rsp\t.req\t%Rr13\n"); \
+  asm_fprintf (STREAM,"%Rlr\t.req\t%Rr14\n"); \
+  asm_fprintf (STREAM,"%Rpc\t.req\t%Rr15\n"); \
 }
 #endif
 
+#ifndef ASM_APP_ON
 #define ASM_APP_ON  		""
+#endif
+#ifndef ASM_APP_OFF
 #define ASM_APP_OFF  		""
+#endif
 
 /* Switch to the text or data segment.  */
-#define TEXT_SECTION_ASM_OP  	".text"
-#define DATA_SECTION_ASM_OP  	".data"
-#define BSS_SECTION_ASM_OP   	".bss"
+#define TEXT_SECTION_ASM_OP  	"\t.text"
+#define DATA_SECTION_ASM_OP  	"\t.data"
+#define BSS_SECTION_ASM_OP   	"\t.bss"
 
 /* Note: If USER_LABEL_PREFIX or LOCAL_LABEL_PREFIX are changed,
    make sure that this change is reflected in the function
@@ -68,7 +73,7 @@ Boston, MA 02111-1307, USA.  */
   "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",  \
   "r8", "r9", "sl", "fp", "ip", "sp", "lr", "pc",  \
   "f0", "f1", "f2", "f3", "f4", "f5", "f6", "f7",  \
-  "cc", "sfp", "afp"				   \
+  "cc", "sfp", "afp"		   		   \
 }
 #endif
 
@@ -100,7 +105,7 @@ Boston, MA 02111-1307, USA.  */
 /* Arm Assembler barfs on dollars */
 #define DOLLARS_IN_IDENTIFIERS 0
 
-#define NO_DOLLAR_IN_LABEL
+#define NO_DOLLAR_IN_LABEL 1
 
 /* DBX register number for a given compiler register number */
 #define DBX_REGISTER_NUMBER(REGNO)  (REGNO)
@@ -118,39 +123,48 @@ Boston, MA 02111-1307, USA.  */
 
 /* Output a source filename for the debugger. RISCiX dbx insists that the
    ``desc'' field is set to compiler version number >= 315 (sic).  */
-#define DBX_OUTPUT_MAIN_SOURCE_FILENAME(STREAM,NAME) 			\
-do {									\
-  fprintf (STREAM, ".stabs ");						\
-  output_quoted_string (STREAM, NAME);					\
-  fprintf (STREAM, ",%d,0,315,%s\n", N_SO, &ltext_label_name[1]);	\
-  text_section ();							\
-  ASM_OUTPUT_INTERNAL_LABEL (STREAM, "Ltext", 0);			\
-} while (0)
+#define DBX_OUTPUT_MAIN_SOURCE_FILENAME(STREAM, NAME)			\
+  do									\
+    {									\
+      fprintf (STREAM, ".stabs ");					\
+      output_quoted_string (STREAM, NAME);				\
+      fprintf (STREAM, ",%d,0,315,%s\n", N_SO, &ltext_label_name[1]);	\
+      text_section ();							\
+      ASM_OUTPUT_INTERNAL_LABEL (STREAM, "Ltext", 0);			\
+    }									\
+  while (0)
   
 /* Output a function label definition.  */
 #ifndef ASM_DECLARE_FUNCTION_NAME
-#define ASM_DECLARE_FUNCTION_NAME(STREAM,NAME,DECL)	\
-{							\
-  if (TARGET_POKE_FUNCTION_NAME)			\
-    arm_poke_function_name ((STREAM), (NAME));		\
-  ASM_OUTPUT_LABEL (STREAM, NAME);			\
-}
+#define ASM_DECLARE_FUNCTION_NAME(STREAM, NAME, DECL)	\
+  do							\
+    {							\
+      ARM_DECLARE_FUNCTION_NAME (STREAM, NAME, DECL);   \
+      ASM_OUTPUT_LABEL (STREAM, NAME);			\
+    }							\
+  while (0)
 #endif
 
 #ifndef ASM_OUTPUT_LABEL
-#define ASM_OUTPUT_LABEL(STREAM,NAME)	\
-do {					\
-  assemble_name (STREAM,NAME);		\
-  fputs (":\n", STREAM);		\
-} while (0)
+#define ASM_OUTPUT_LABEL(STREAM, NAME)		\
+  do						\
+    {						\
+      assemble_name (STREAM,NAME);		\
+      fputs (":\n", STREAM);			\
+    }						\
+  while (0)
 #endif
      
 /* Output a globalising directive for a label.  */
 #ifndef ASM_GLOBALIZE_LABEL
-#define ASM_GLOBALIZE_LABEL(STREAM,NAME)  \
-  (fprintf (STREAM, "\t.global\t"),	  \
-   assemble_name (STREAM, NAME),	  \
-   fputc ('\n',STREAM))                   
+#define ASM_GLOBALIZE_LABEL(STREAM, NAME)	\
+  do						\
+    {						\
+      fprintf (STREAM, "\t.global\t");		\
+      assemble_name (STREAM, NAME);		\
+      fputc ('\n',STREAM);			\
+    }						\
+  while (0)
 #endif
 
 /* Make an internal label into a string.  */
@@ -159,103 +173,123 @@ do {					\
   sprintf (STRING, "*%s%s%u", LOCAL_LABEL_PREFIX, PREFIX, (unsigned int)(NUM))
 #endif
      
-/* Nothing special is done about jump tables */
-/* #define ASM_OUTPUT_CASE_LABEL(STREAM,PREFIX,NUM,TABLE)   */
-/* #define ASM_OUTPUT_CASE_END(STREAM,NUM,TABLE)	    */
-
 /* Construct a private name.  */
-#define ASM_FORMAT_PRIVATE_NAME(OUTVAR,NAME,NUMBER)  \
+#define ASM_FORMAT_PRIVATE_NAME(OUTVAR, NAME, NUMBER)  \
   ((OUTVAR) = (char *) alloca (strlen (NAME) + 10),  \
-   sprintf ((OUTVAR), "%s.%d", (NAME), (NUMBER)))
+   sprintf (OUTVAR, "%s.%d", NAME, NUMBER))
 
 /* Output an element of a dispatch table.  */
-#define ASM_OUTPUT_ADDR_VEC_ELT(STREAM,VALUE)  \
-   fprintf (STREAM, "\t.word\t%sL%d\n", LOCAL_LABEL_PREFIX, VALUE)
+#define ASM_OUTPUT_ADDR_VEC_ELT(STREAM, VALUE)  \
+  asm_fprintf (STREAM, "\t.word\t%LL%d\n", VALUE)
 
-#define ASM_OUTPUT_ADDR_DIFF_ELT(STREAM,BODY,VALUE,REL)  \
-   fprintf (STREAM, "\tb\t%sL%d\n", LOCAL_LABEL_PREFIX, (VALUE))
+#define ASM_OUTPUT_ADDR_DIFF_ELT(STREAM, BODY, VALUE, REL)  \
+  asm_fprintf (STREAM, "\tb\t%LL%d\n", VALUE)
 
 /* Output various types of constants.  For real numbers we output hex, with
    a comment containing the "human" value, this allows us to pass NaN's which
    the riscix assembler doesn't understand (it also makes cross-assembling
    less likely to fail). */
 
-#define ASM_OUTPUT_LONG_DOUBLE(STREAM,VALUE)				\
-do { char dstr[30];							\
-     long l[3];								\
-     REAL_VALUE_TO_TARGET_LONG_DOUBLE (VALUE, l);			\
-     REAL_VALUE_TO_DECIMAL (VALUE, "%.20g", dstr);			\
-     fprintf (STREAM, "\t.long 0x%lx,0x%lx,0x%lx\t%s long double %s\n", \
-	      l[0], l[1], l[2], ASM_COMMENT_START, dstr);		\
-   } while (0)
+#define ASM_OUTPUT_LONG_DOUBLE(STREAM, VALUE)				\
+  do									\
+    {									\
+      char dstr[30];							\
+      long l[3];							\
+      REAL_VALUE_TO_TARGET_LONG_DOUBLE (VALUE, l);			\
+      REAL_VALUE_TO_DECIMAL (VALUE, "%.20g", dstr);			\
+      asm_fprintf (STREAM,						\
+		   "\t.long 0x%lx,0x%lx,0x%lx\t%@ long double %s\n",	\
+		   l[0], l[1], l[2], dstr);				\
+    }									\
+  while (0)
 
-    
-#define ASM_OUTPUT_DOUBLE(STREAM, VALUE)  				\
-do { char dstr[30];							\
-     long l[2];								\
-     REAL_VALUE_TO_TARGET_DOUBLE (VALUE, l);				\
-     REAL_VALUE_TO_DECIMAL (VALUE, "%.14g", dstr);			\
-     fprintf (STREAM, "\t.long 0x%lx, 0x%lx\t%s double %s\n", l[0],	\
-	      l[1], ASM_COMMENT_START, dstr);				\
-   } while (0)
+#define ASM_OUTPUT_DOUBLE(STREAM, VALUE)				\
+  do									\
+    {									\
+      char dstr[30];							\
+      long l[2];							\
+      REAL_VALUE_TO_TARGET_DOUBLE (VALUE, l);				\
+      REAL_VALUE_TO_DECIMAL (VALUE, "%.14g", dstr);			\
+      asm_fprintf (STREAM, "\t.long 0x%lx, 0x%lx\t%@ double %s\n", l[0],\
+	           l[1], dstr);						\
+    }									\
+  while (0)
 
-#define ASM_OUTPUT_FLOAT(STREAM, VALUE)					\
-do { char dstr[30];							\
-     long l;								\
-     REAL_VALUE_TO_TARGET_SINGLE (VALUE, l);				\
-     REAL_VALUE_TO_DECIMAL (VALUE, "%.7g", dstr);			\
-     fprintf (STREAM, "\t.word 0x%lx\t%s float %s\n", l,		\
-	      ASM_COMMENT_START, dstr);					\
-   } while (0);
+#define ASM_OUTPUT_FLOAT(STREAM, VALUE)				\
+  do								\
+    {								\
+      char dstr[30];						\
+      long l;							\
+      REAL_VALUE_TO_TARGET_SINGLE (VALUE, l);			\
+      REAL_VALUE_TO_DECIMAL (VALUE, "%.7g", dstr);		\
+      asm_fprintf (STREAM, "\t.word 0x%lx\t%@ float %s\n", l,	\
+	           dstr);					\
+    }								\
+  while (0)
 
 #define ASM_OUTPUT_INT(STREAM, EXP)		\
-  {						\
-    fprintf (STREAM, "\t.word\t");		\
-    OUTPUT_INT_ADDR_CONST (STREAM, (EXP));	\
-    fputc ('\n', STREAM);			\
-  }
+  do						\
+    {						\
+      fprintf (STREAM, "\t.word\t");		\
+      OUTPUT_INT_ADDR_CONST (STREAM, EXP);	\
+      fputc ('\n', STREAM);			\
+    }						\
+  while (0)
 
-#define ASM_OUTPUT_SHORT(STREAM, EXP)  \
-  (fprintf (STREAM, "\t.short\t"),     \
-   output_addr_const (STREAM, (EXP)),  \
-   fputc ('\n', STREAM))
+#define ASM_OUTPUT_SHORT(STREAM, EXP)		\
+  do						\
+    {						\
+      fprintf (STREAM, "\t.short\t");		\
+      output_addr_const (STREAM, EXP);		\
+      fputc ('\n', STREAM);			\
+    }						\
+  while (0)
 
-#define ASM_OUTPUT_CHAR(STREAM, EXP)  \
-  (fprintf (STREAM, "\t.byte\t"),      \
-   output_addr_const (STREAM, (EXP)),  \
-   fputc ('\n', STREAM))
+#define ASM_OUTPUT_CHAR(STREAM, EXP)		\
+  do						\
+    {						\
+      fprintf (STREAM, "\t.byte\t");		\
+      output_addr_const (STREAM, EXP);		\
+      fputc ('\n', STREAM);			\
+    }						\
+  while (0)
 
 #define ASM_OUTPUT_BYTE(STREAM, VALUE)  	\
   fprintf (STREAM, "\t.byte\t%d\n", VALUE)
 
 #define ASM_OUTPUT_ASCII(STREAM, PTR, LEN)  \
-  output_ascii_pseudo_op ((STREAM), (unsigned char *)(PTR), (LEN))
+  output_ascii_pseudo_op (STREAM, (const unsigned char *)(PTR), LEN)
 
 /* Output a gap.  In fact we fill it with nulls.  */
 #define ASM_OUTPUT_SKIP(STREAM, NBYTES) 	\
-   fprintf (STREAM, "\t.space\t%d\n", NBYTES)
+  fprintf (STREAM, "\t.space\t%d\n", NBYTES)
 
 /* Align output to a power of two.  Horrible /bin/as.  */
 #ifndef ASM_OUTPUT_ALIGN  
-#define ASM_OUTPUT_ALIGN(STREAM, POWER)  \
-  do                                                           \
-    {                                                          \
-      register int amount = 1 << (POWER);                      \
-                                                               \
-      if (amount == 2)                                         \
-	fprintf (STREAM, "\t.even\n");                         \
-      else if (amount != 1)                                    \
-	fprintf (STREAM, "\t.align\t%d\n", amount - 4);        \
-    }							       \
+#define ASM_OUTPUT_ALIGN(STREAM, POWER)			\
+  do							\
+    {							\
+      register int amount = 1 << (POWER);		\
+							\
+      if (amount == 2)					\
+	fprintf (STREAM, "\t.even\n");			\
+      else if (amount != 1)				\
+	fprintf (STREAM, "\t.align\t%d\n", amount - 4);	\
+    }							\
   while (0)
 #endif
 
 /* Output a common block */
 #ifndef ASM_OUTPUT_COMMON
-#define ASM_OUTPUT_COMMON(STREAM, NAME, SIZE, ROUNDED)  		\
-  (fprintf (STREAM, "\t.comm\t"), 		     			\
-   assemble_name ((STREAM), (NAME)),		     			\
-   fprintf (STREAM, ", %d\t%s %d\n", ROUNDED, ASM_COMMENT_START, SIZE))
+#define ASM_OUTPUT_COMMON(STREAM, NAME, SIZE, ROUNDED)	\
+  do							\
+    {							\
+      fprintf (STREAM, "\t.comm\t");			\
+      assemble_name (STREAM, NAME);			\
+      asm_fprintf (STREAM, ", %d\t%@ %d\n", 		\
+	           ROUNDED, SIZE);			\
+    }							\
+  while (0)
 #endif
      
 /* Output a local common block.  /bin/as can't do this, so hack a
@@ -263,18 +297,20 @@ do { char dstr[30];							\
    which is guaranteed NOT to work since it doesn't define STATIC
    COMMON space but merely STATIC BSS space.  */
 #ifndef ASM_OUTPUT_ALIGNED_LOCAL
-#define ASM_OUTPUT_ALIGNED_LOCAL(STREAM,NAME,SIZE,ALIGN)		\
-  do {									\
-    bss_section ();							\
-    ASM_OUTPUT_ALIGN (STREAM, floor_log2 (ALIGN / BITS_PER_UNIT));	\
-    ASM_OUTPUT_LABEL (STREAM, NAME);					\
-    fprintf (STREAM, "\t.space\t%d\n", SIZE);				\
-  } while (0)
+#define ASM_OUTPUT_ALIGNED_LOCAL(STREAM, NAME, SIZE, ALIGN)		\
+  do									\
+    {									\
+      bss_section ();							\
+      ASM_OUTPUT_ALIGN (STREAM, floor_log2 (ALIGN / BITS_PER_UNIT));	\
+      ASM_OUTPUT_LABEL (STREAM, NAME);					\
+      fprintf (STREAM, "\t.space\t%d\n", SIZE);				\
+    }									\
+  while (0)
 #endif
      
 /* Output a zero-initialized block.  */
 #ifndef ASM_OUTPUT_ALIGNED_BSS
-#define ASM_OUTPUT_ALIGNED_BSS(STREAM,DECL,NAME,SIZE,ALIGN) \
+#define ASM_OUTPUT_ALIGNED_BSS(STREAM, DECL, NAME, SIZE, ALIGN) \
   asm_output_aligned_bss (STREAM, DECL, NAME, SIZE, ALIGN)
 #endif
      
@@ -284,7 +320,7 @@ do { char dstr[30];							\
 /* Output a #ident directive.  */
 #ifndef ASM_OUTPUT_IDENT
 #define ASM_OUTPUT_IDENT(STREAM,STRING)  \
-  fprintf (STREAM, "%s - - - ident %s\n", ASM_COMMENT_START, STRING)
+  asm_fprintf (STREAM, "%@ - - - ident %s\n", STRING)
 #endif
      
 /* The assembler's parentheses characters.  */
@@ -296,6 +332,6 @@ do { char dstr[30];							\
 #endif
 
 /* This works for GAS and some other assemblers.  */
-#define SET_ASM_OP		".set"
+#define SET_ASM_OP		"\t.set\t"
 
-#include "arm/arm.h"
+#include "arm.h"

@@ -1,5 +1,6 @@
 /* Subroutines used for code generation on AMD Am29000.
-   Copyright (C) 1987, 88, 90-94, 1995, 1997, 1999 Free Software
+   Copyright (C) 1987, 1988, 1990, 1991, 1992, 1993, 1994, 1995, 1997, 1998,
+   1999, 2000 Free Software
    Foundation, Inc. 
    Contributed by Richard Kenner (kenner@nyu.edu)
 
@@ -21,22 +22,28 @@ the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 #include "config.h"
-#include <stdio.h>
+#include "system.h"
 #include "rtl.h"
 #include "regs.h"
 #include "hard-reg-set.h"
 #include "real.h"
 #include "insn-config.h"
 #include "conditions.h"
-#include "insn-flags.h"
 #include "output.h"
 #include "insn-attr.h"
 #include "flags.h"
 #include "recog.h"
+#include "function.h"
 #include "expr.h"
 #include "obstack.h"
 #include "tree.h"
 #include "reload.h"
+#include "tm_p.h"
+
+static int shift_constant_operand PARAMS ((rtx, enum machine_mode, int));
+static void a29k_set_memflags_1 PARAMS ((rtx, int, int, int, int));
+static void compute_regstack_size PARAMS ((void));
+static void check_epilogue_internal_label PARAMS ((FILE *));
 
 #define min(A,B)	((A) < (B) ? (A) : (B))
 
@@ -69,7 +76,7 @@ static int a29k_first_epilogue_insn_used;
    contain the tag words prior to the declaration.  So the name must be stored
    away.  */
 
-char *a29k_function_name;
+const char *a29k_function_name;
 
 /* Mapping of registers to debug register numbers.  The only change is
    for the frame pointer and the register numbers used for the incoming
@@ -82,16 +89,13 @@ int a29k_debug_reg_map[FIRST_PSEUDO_REGISTER];
 
 rtx a29k_compare_op0, a29k_compare_op1;
 int a29k_compare_fp_p;
-
-/* Gives names for registers.  */
-extern char *reg_names[];
 
 /* Returns 1 if OP is a 8-bit constant. */
 
 int
 cint_8_operand (op, mode)
      register rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return GET_CODE (op) == CONST_INT && (INTVAL (op) & 0xffffff00) == 0;
 }
@@ -101,7 +105,7 @@ cint_8_operand (op, mode)
 int
 cint_16_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return GET_CODE (op) == CONST_INT && (INTVAL (op) & 0xffff0000) == 0;
 }
@@ -111,7 +115,7 @@ cint_16_operand (op, mode)
 int
 long_const_operand (op, mode)
      register rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   if (! CONSTANT_P (op))
     return 0;
@@ -133,7 +137,7 @@ long_const_operand (op, mode)
 static int
 shift_constant_operand (op, mode, val)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
      int val;
 {
   return ((GET_CODE (op) == CONST_INT && INTVAL (op) == val)
@@ -236,7 +240,7 @@ spec_reg_operand (op, mode)
 int
 accum_reg_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return (GET_CODE (op) == REG
 	  && REGNO (op) >= R_ACU (0) && REGNO (op) <= R_ACU (3));
@@ -349,7 +353,7 @@ add_operand (op, mode)
 int
 call_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   switch (GET_CODE (op))
     {
@@ -374,8 +378,6 @@ in_operand (op, mode)
      rtx op;
      enum machine_mode mode;
 {
-  rtx orig_op = op;
-
   if (! general_operand (op, mode))
     return 0;
 
@@ -446,7 +448,7 @@ out_operand (op, mode)
 int
 reload_memory_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   int regno = true_regnum (op);
 
@@ -492,19 +494,20 @@ a29k_set_memflags_1 (x, in_struct_p, scalar_p, volatile_p, unchanging_p)
     case SEQUENCE:
     case PARALLEL:
       for (i = XVECLEN (x, 0) - 1; i >= 0; i--)
-	a29k_set_memflags_1 (XVECEXP (x, 0, i), in_struct_p, volatile_p,
-			     unchanging_p);
+	a29k_set_memflags_1 (XVECEXP (x, 0, i), in_struct_p, scalar_p,
+			     volatile_p, unchanging_p);
       break;
 
     case INSN:
-      a29k_set_memflags_1 (PATTERN (x), in_struct_p, volatile_p,
+      a29k_set_memflags_1 (PATTERN (x), in_struct_p, scalar_p, volatile_p,
 			   unchanging_p);
       break;
 
     case SET:
-      a29k_set_memflags_1 (SET_DEST (x), in_struct_p, volatile_p,
+      a29k_set_memflags_1 (SET_DEST (x), in_struct_p, scalar_p, volatile_p,
 			   unchanging_p);
-      a29k_set_memflags_1 (SET_SRC (x), in_struct_p, volatile_p, unchanging_p);
+      a29k_set_memflags_1 (SET_SRC (x), in_struct_p, scalar_p, volatile_p,
+			   unchanging_p);
       break;
 
     case MEM:
@@ -512,6 +515,9 @@ a29k_set_memflags_1 (x, in_struct_p, scalar_p, volatile_p, unchanging_p)
       MEM_SCALAR_P (x) = scalar_p;
       MEM_VOLATILE_P (x) = volatile_p;
       RTX_UNCHANGING_P (x) = unchanging_p;
+      break;
+
+    default:
       break;
     }
 }
@@ -570,7 +576,7 @@ branch_operator (op, mode)
 int
 load_multiple_operation (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   int count = XVECLEN (op, 0) - 2;
   int dest_regno;
@@ -612,7 +618,7 @@ load_multiple_operation (op, mode)
 int
 store_multiple_operation (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   int num_special = TARGET_NO_STOREM_BUG ? 2 : 1;
   int count = XVECLEN (op, 0) - num_special;
@@ -724,7 +730,7 @@ masks_bits_for_special (reg, mask)
 int
 epilogue_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return next_active_insn (op) == 0 && a29k_first_epilogue_insn != 0;
 }
@@ -853,9 +859,10 @@ a29k_clobbers_to (insn, op)
 
   for (i = R_LR (2); i < high_regno; i++)
     CALL_INSN_FUNCTION_USAGE (insn)
-      = gen_rtx (EXPR_LIST, VOIDmode,
-		 gen_rtx (CLOBBER, VOIDmode, gen_rtx (REG, SImode, i)),
-		 CALL_INSN_FUNCTION_USAGE (insn));
+      = gen_rtx_EXPR_LIST (VOIDmode,
+			   gen_rtx_CLOBBER (VOIDmode,
+					    gen_rtx (REG, SImode, i)),
+			   CALL_INSN_FUNCTION_USAGE (insn));
 }
 
 /* These routines are used in finding insns to fill delay slots in the
@@ -895,7 +902,7 @@ int
 uses_local_reg_p (x)
      rtx x;
 {
-  char *fmt;
+  const char *fmt;
   int i, j;
 
   switch (GET_CODE (x))
@@ -910,6 +917,9 @@ uses_local_reg_p (x)
     case LABEL_REF:
     case SYMBOL_REF:
       return 0;
+
+    default:
+      break;
     }
 
   fmt = GET_RTX_FORMAT (GET_CODE (x));
@@ -1111,7 +1121,7 @@ print_operand (file, x, code)
 	{
 	  union real_extract u;
 
-	  bcopy ((char *) &CONST_DOUBLE_LOW (x), (char *) &u, sizeof u);
+	  memcpy ((char *) &u, (char *) &CONST_DOUBLE_LOW (x), sizeof u);
 	  fprintf (file, "$double1(%.20e)", u.d);
 	}
       else if (GET_CODE (x) == REG)
@@ -1175,8 +1185,8 @@ print_operand (file, x, code)
 	fprintf (file, "$float");
       else
 	fprintf (file, "$double%d", SUBREG_WORD (XEXP (x, 0)));
-      bcopy ((char *) &CONST_DOUBLE_LOW (SUBREG_REG (XEXP (x, 0))),
-	     (char *) &u, sizeof u);
+      memcpy ((char *) &u,
+	      (char *) &CONST_DOUBLE_LOW (SUBREG_REG (XEXP (x, 0))), sizeof u);
       fprintf (file, "(%.20e)", u.d);
     }
 
@@ -1185,7 +1195,7 @@ print_operand (file, x, code)
     {
       union real_extract u;
 
-      bcopy ((char *) &CONST_DOUBLE_LOW (x), (char *) &u, sizeof u);
+      memcpy ((char *) &u, (char *) &CONST_DOUBLE_LOW (x), sizeof u);
       fprintf (file, "$%s(%.20e)",
 	       GET_MODE (x) == SFmode ? "float" : "double0", u.d);
     }

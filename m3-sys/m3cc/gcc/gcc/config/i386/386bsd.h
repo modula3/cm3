@@ -9,7 +9,7 @@
 #include "i386/perform.h"
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Dunix -Di386 -D____386BSD____ -D__386BSD__ -DBSD_NET2 -Asystem(unix) -Asystem(bsd) -Acpu(i386) -Amachine(i386)"
+#define CPP_PREDEFINES "-Dunix -D____386BSD____ -D__386BSD__ -DBSD_NET2 -Asystem=unix -Asystem=bsd"
 
 /* Like the default, except no -lg.  */
 #define LIB_SPEC "%{!p:%{!pg:-lc}}%{p:-lc_p}%{pg:-lc_p}"
@@ -27,10 +27,6 @@
 
 #undef WCHAR_TYPE_SIZE
 #define WCHAR_TYPE_SIZE 16
-
-/* 386BSD does have atexit.  */
-
-#define HAVE_ATEXIT
 
 /* Redefine this to use %eax instead of %edx.  */
 #undef FUNCTION_PROFILER

@@ -1,5 +1,5 @@
 /* Definitions for Intel 386 running system V.
-   Copyright (C) 1988, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1996, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -42,7 +42,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* Specify predefined symbols in preprocessor.  */
 
-#define CPP_PREDEFINES "-Dunix -Asystem(svr3)"
+#define CPP_PREDEFINES "-Dunix -Asystem=svr3"
 
 #define CPP_SPEC "%(cpp_cpu) %{posix:-D_POSIX_SOURCE}"
 
@@ -78,8 +78,8 @@ Boston, MA 02111-1307, USA.  */
    Since a frame pointer will be required in such a function, it is OK
    that the stack pointer is not restored.  */
 
-#undef FRAME_POINTER_REQUIRED
-#define FRAME_POINTER_REQUIRED \
+#undef SUBTARGET_FRAME_POINTER_REQUIRED
+#define SUBTARGET_FRAME_POINTER_REQUIRED \
   (current_function_calls_setjmp || current_function_calls_longjmp)
 
 /* Modify ASM_OUTPUT_LOCAL slightly to test -msvr3-shlib.  */
@@ -108,7 +108,7 @@ Boston, MA 02111-1307, USA.  */
    constructor.  */
 
 #undef INIT_SECTION_ASM_OP
-#define INIT_SECTION_ASM_OP     ".section .init,\"x\""
+#define INIT_SECTION_ASM_OP     "\t.section .init,\"x\""
 
 #define CTOR_LIST_BEGIN				\
   asm (INIT_SECTION_ASM_OP);			\

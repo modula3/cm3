@@ -24,7 +24,7 @@ Boston, MA 02111-1307, USA.  */
 #define CPP_PREDEFINES "\
 -Dmips -Dunix -Dhost_mips -DMIPSEB -DR3000 -DSYSTYPE_SYSV \
 -D_mips -D_unix -D_host_mips -D_MIPSEB -D_R3000 -D_SYSTYPE_SYSV \
--Asystem(unix) -Asystem(svr3) -Acpu(mips) -Amachine(mips)"
+-Asystem=unix -Asystem=svr3 -Acpu=mips -Amachine=mips"
 
 #define STANDARD_INCLUDE_DIR "/sysv/usr/include"
 
@@ -77,9 +77,9 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_OUTPUT_ASCII
 #define ASM_OUTPUT_ASCII(FILE,PTR,LEN)			\
 do {							\
-  unsigned char *s;					\
+  const unsigned char *s;				\
   int i;						\
-  for (i = 0, s = (unsigned char *)(PTR); i < (LEN); s++, i++)	\
+  for (i = 0, s = (const unsigned char *)(PTR); i < (LEN); s++, i++) \
     {							\
       if ((i % 8) == 0)					\
 	fputs ("\n\t.byte\t", (FILE));			\

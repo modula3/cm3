@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.
    DECstation (OSF/1 reference port with OSF/rose) version.
-   Copyright (C) 1991, 1992, 1995, 1996, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1992, 1995, 1996, 1998, 1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -32,7 +32,7 @@ Boston, MA 02111-1307, USA.  */
 
 #define CPP_PREDEFINES "\
 -DOSF -DOSF1 -Dbsd4_2 -DMIPSEL -Dhost_mips -Dmips -Dunix -DR3000 -DSYSTYPE_BSD \
--Asystem(unix) -Asystem(xpg4) -Acpu(mips) -Amachine(mips)"
+-Asystem=unix -Asystem=xpg4 -Acpu=mips -Amachine=mips"
 
 #define SUBTARGET_CPP_SIZE_SPEC "\
 %{mlong64:-D__PTRDIFF_TYPE__=long\\ int} \
@@ -100,7 +100,7 @@ Boston, MA 02111-1307, USA.  */
 /* enable dwarf debugging for testing */
 #define DWARF_DEBUGGING_INFO
 /* This is needed by dwarfout.c.  */
-#define SET_ASM_OP	".set"
+#define SET_ASM_OP	"\t.set\t"
 
 /* Tell collect that the object format is OSF/rose.  */
 #define OBJECT_FORMAT_ROSE
@@ -113,38 +113,5 @@ Boston, MA 02111-1307, USA.  */
 /* Default to -G 0 unless doing ecoff work.  */
 #define MIPS_DEFAULT_GVALUE ((TARGET_MIPS_AS) ? 8 : 0)
 
-/* Use atexit for static constructors/destructors, instead of defining
-   our own exit function.  */
-#define HAVE_ATEXIT
-
 /* Generate calls to memcpy, etc., not bcopy, etc.  */
 #define TARGET_MEM_FUNCTIONS
-
-/* A C statement to output assembler commands which will identify
-   the object file as having been compiled with GNU CC (or another
-   GNU compiler).
-
-   If you don't define this macro, the string `gcc2_compiled.:' is
-   output.  This string is calculated to define a symbol which, on
-   BSD systems, will never be defined for any other reason.  GDB
-   checks for the presence of this symbol when reading the symbol
-   table of an executable.
-
-   On non-BSD systems, you must arrange communication with GDB in
-   some other fashion.  If GDB is not used on your system, you can
-   define this macro with an empty body.
-
-   On OSF/1, gcc2_compiled. confuses the kernel debugger, so don't
-   put it out.  */
-
-#define ASM_IDENTIFY_GCC(STREAM)
-
-/* Identify the front-end which produced this file.  To keep symbol
-   space down, and not confuse kdb, only do this if the language is
-   not C.  */
-
-#define ASM_IDENTIFY_LANGUAGE(STREAM)					\
-{									\
-  if (strcmp (lang_identify (), "c") != 0)				\
-    output_lang_identify (STREAM);					\
-}

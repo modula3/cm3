@@ -25,22 +25,15 @@ Boston, MA 02111-1307, USA.  */
 #include "ansidecl.h"
 #include "libiberty.h"
 
-#ifdef isspace
-#undef isspace
-#endif
-#define isspace(ch) ((ch) == ' ' || (ch) == '\t')
+#define ISBLANK(ch) ((ch) == ' ' || (ch) == '\t')
 
 /*  Routines imported from standard C runtime libraries. */
 
 #ifdef __STDC__
 
 #include <stddef.h>
-extern void *memcpy (void *s1, const void *s2, size_t n);	/* 4.11.2.1 */
-extern size_t strlen (const char *s);				/* 4.11.6.3 */
-extern void *malloc (size_t size);				/* 4.10.3.3 */
-extern void *realloc (void *ptr, size_t size);			/* 4.10.3.4 */
-extern void free (void *ptr);					/* 4.10.3.2 */
-extern char *strdup (const char *s);				/* Non-ANSI */
+#include <string.h>
+#include <stdlib.h>
 
 #else	/* !__STDC__ */
 
@@ -231,7 +224,7 @@ char *input;
       do
 	{
 	  /* Pick off argv[argc] */
-	  while (isspace (*input))
+	  while (ISBLANK (*input))
 	    {
 	      input++;
 	    }
@@ -264,7 +257,7 @@ char *input;
 	  arg = copybuf;
 	  while (*input != EOS)
 	    {
-	      if (isspace (*input) && !squote && !dquote && !bsquote)
+	      if (ISBLANK (*input) && !squote && !dquote && !bsquote)
 		{
 		  break;
 		}
@@ -330,7 +323,7 @@ char *input;
 	  argc++;
 	  argv[argc] = NULL;
 
-	  while (isspace (*input))
+	  while (ISBLANK (*input))
 	    {
 	      input++;
 	    }

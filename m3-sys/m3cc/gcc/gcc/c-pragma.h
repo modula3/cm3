@@ -1,5 +1,5 @@
 /* Pragma related interfaces.
-   Copyright (C) 1995, 1998, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1998, 1999, 2000, 2001 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -22,9 +22,9 @@ Boston, MA 02111-1307, USA.  */
 #define _C_PRAGMA_H
 
 #ifdef HANDLE_SYSV_PRAGMA
-/* Support #pragma weak iff ASM_WEAKEN_LABEL and ASM_OUTPUT_DEF are
+/* Support #pragma weak iff ASM_WEAKEN_LABEL and ASM_OUTPUT_WEAK_ALIAS are
    defined.  */
-#if defined (ASM_WEAKEN_LABEL) && defined (ASM_OUTPUT_DEF)
+#if defined (ASM_WEAKEN_LABEL) && defined (ASM_OUTPUT_WEAK_ALIAS)
 #define HANDLE_PRAGMA_WEAK SUPPORTS_WEAK
 #endif
 
@@ -39,9 +39,6 @@ Boston, MA 02111-1307, USA.  */
 /* If we are supporting #pragma pack(push... then we automatically
    support #pragma pack(<n>)  */
 #define HANDLE_PRAGMA_PACK 1
-#define PRAGMA_INSERT_ATTRIBUTES(node, pattr, prefix_attr) \
-  insert_pack_attributes (node, pattr, prefix_attr)
-extern void insert_pack_attributes PROTO((tree, tree *, tree *));
 #endif /* HANDLE_PRAGMA_PACK_PUSH_POP */
 
 
@@ -50,52 +47,27 @@ extern void insert_pack_attributes PROTO((tree, tree *, tree *));
 struct weak_syms
 {
   struct weak_syms * next;
-  char * name;
-  char * value;
+  const char * name;
+  const char * value;
 };
 
 /* Declared in varasm.c */
 extern struct weak_syms * weak_decls;
 
-extern int add_weak PROTO((char *, char *));
+extern int add_weak PARAMS ((const char *, const char *));
 #endif /* HANDLE_PRAGMA_WEAK */
 
+extern void init_pragma PARAMS ((void));
 
-#if defined HANDLE_PRAGMA_PACK || defined HANDLE_PRAGMA_WEAK
-/* Define HANDLE_GENERIC_PRAGMAS if any kind of front-end pragma
-   parsing is to be done.  The code in GCC's generic C source files
-   will only look for the definition of this constant.  They will
-   ignore definitions of HANDLE_PRAGMA_PACK and so on.  */
-#define HANDLE_GENERIC_PRAGMAS 1
+/* Duplicate prototypes for the register_pragma stuff and the typedef for
+   cpp_reader, to avoid dragging cpplib.h in almost everywhere... */
+#ifndef __GCC_CPPLIB__
+typedef struct cpp_reader cpp_reader;
+
+extern void cpp_register_pragma PARAMS ((cpp_reader *,
+					 const char *, const char *,
+					 void (*) PARAMS ((cpp_reader *))));
+extern void cpp_register_pragma_space PARAMS ((cpp_reader *, const char *));
 #endif
 
-
-#ifdef HANDLE_GENERIC_PRAGMAS
-enum pragma_state
-{
-  ps_start,
-  ps_done,
-#ifdef HANDLE_PRAGMA_WEAK
-  ps_weak,
-  ps_name,
-  ps_equals,
-  ps_value,
-#endif
-#ifdef HANDLE_PRAGMA_PACK
-  ps_pack,
-  ps_left,
-  ps_align,
-  ps_right,
-#endif
-#ifdef HANDLE_PRAGMA_PACK_PUSH_POP
-  ps_push, ps_pushcomma, ps_pushid, ps_pushcomma2,
-  ps_pop, ps_popcomma,
-#endif
-  ps_bad
-};
-
-/* Handle a C style pragma */
-extern int handle_pragma_token PROTO((const char *, tree));
-
-#endif /* HANDLE_GENERIC_PRAGMAS */
 #endif /* _C_PRAGMA_H */

@@ -19,6 +19,10 @@
 # include <config.h>
 #endif
 
+# ifndef _GNU_SOURCE
+#  define _GNU_SOURCE	1
+# endif
+
 #include <sys/types.h>
 
 #ifdef __GNUC__
@@ -58,9 +62,6 @@ void free ();
 #endif
 
 #if defined HAVE_STRING_H || defined _LIBC
-# ifndef _GNU_SOURCE
-#  define _GNU_SOURCE	1
-# endif
 # include <string.h>
 #else
 # include <strings.h>
@@ -84,6 +85,16 @@ void free ();
 #endif
 #include "hash-string.h"
 
+/* The internal variables in the standalone libintl.a must have different
+   names than the internal variables in GNU libc, otherwise programs
+   using libintl.a cannot be linked statically.  */
+#if !defined _LIBC
+# define _nl_default_default_domain _nl_default_default_domain__
+# define _nl_current_default_domain _nl_current_default_domain__
+# define _nl_default_dirname _nl_default_dirname__
+# define _nl_domain_bindings _nl_domain_bindings__
+#endif
+
 /* @@ end of prolog @@ */
 
 #ifdef _LIBC
@@ -98,7 +109,7 @@ void free ();
 # if !defined HAVE_GETCWD
 char *getwd ();
 #  define getcwd(buf, max) getwd (buf)
-# else
+# elif !defined (HAVE_DECL_GETCWD)
 char *getcwd ();
 # endif
 # ifndef HAVE_STPCPY
@@ -454,6 +465,7 @@ find_msg (domain_file, msgid)
   /* Now we try the default method:  binary search in the sorted
      array of messages.  */
   bottom = 0;
+  act = 0;
   top = domain->nstrings;
   while (bottom < top)
     {
@@ -546,6 +558,8 @@ guess_category_value (category, categoryname)
      const char *categoryname;
 {
   const char *retval;
+  (void) category;  /* shut up compiler */
+  (void) categoryname;  /* ditto */
 
   /* The highest priority value is the `LANGUAGE' environment
      variable.  This is a GNU extension.  */
