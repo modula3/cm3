@@ -16,6 +16,8 @@ REVEAL
 	upsample   := UpSample;
 	downsample := DownSample;
 	wrapcyclic := WrapCyclic;
+	reverse    := Reverse;
+	adjungate  := Adjungate;
 
     scale      := Scale;
     raise      := Raise;
@@ -32,14 +34,13 @@ PROCEDURE Init (SELF : T; first, last : IndexType) =
 
 PROCEDURE Copy (SELF : T) : T =
   VAR
-	c : T;
+	z := NEW(T);
   BEGIN
-	c := NEW(T);
-	c.init(SELF.first,SELF.first+NUMBER(SELF.data^));
+	z.init(SELF.first,SELF.first+NUMBER(SELF.data^));
 	FOR j:=FIRST(SELF.data^) TO LAST(SELF.data^) DO
-	  c.data[j] := SELF.data[j];
+	  z.data[j] := SELF.data[j];
 	END;
-	RETURN c;
+	RETURN z;
   END Copy;
 
 
@@ -66,10 +67,9 @@ PROCEDURE Translate (SELF : T; dist : IndexType) =
 
 PROCEDURE UpSample (x : T; factor : IndexType) : T =
   VAR
-	z : T;
+	z := NEW(T);
 
   BEGIN
-	z := NEW(T);
 	z.init(x.getfirst()*factor,(x.getlast()-1)*factor+1);
 	FOR i:=0 TO LAST(x.data^) DO
       z.data[i*factor] := x.data[i];
@@ -79,10 +79,9 @@ PROCEDURE UpSample (x : T; factor : IndexType) : T =
 
 PROCEDURE DownSample (x : T; factor : IndexType) : T =
   VAR
-	z : T;
+	z := NEW(T);
 
   BEGIN
-	z := NEW(T);
 	z.init (-((-x.getfirst()) DIV factor), (x.getlast()-1) DIV factor +1);
 	FOR i:=z.first TO z.first+LAST(z.data^) DO
       z.data[i-z.first] := x.data[i*factor-x.first];
@@ -92,11 +91,10 @@ PROCEDURE DownSample (x : T; factor : IndexType) : T =
 
 PROCEDURE WrapCyclic (x : T; length : IndexType) : T =
   VAR
-	z : T;
+	z := NEW(T);
 	j : IndexType;
 
   BEGIN
-	z := NEW(T);
 	z.init (0, length);
 	j := x.first MOD length;
 	FOR i:=0 TO LAST(z.data^) DO
@@ -108,6 +106,28 @@ PROCEDURE WrapCyclic (x : T; length : IndexType) : T =
 	END;
 	RETURN z;
   END WrapCyclic;
+
+PROCEDURE Reverse (SELF : T) : T =
+  VAR
+	z := NEW(T);
+  BEGIN
+	z.init(1-(SELF.first+NUMBER(SELF.data^)),1-SELF.first);
+	FOR j:=FIRST(z.data^) TO LAST(z.data^) DO
+	  z.data[j] := SELF.data[LAST(SELF.data^)+FIRST(z.data^)-j];
+	END;
+	RETURN z;
+  END Reverse;
+
+PROCEDURE Adjungate (SELF : T) : T =
+  VAR
+	z := NEW(T);
+  BEGIN
+	z.init(1-(SELF.first+NUMBER(SELF.data^)),1-SELF.first);
+	FOR j:=FIRST(z.data^) TO LAST(z.data^) DO
+	  z.data[j] := R.Conj(SELF.data[LAST(SELF.data^)+FIRST(z.data^)-j]);
+	END;
+	RETURN z;
+  END Adjungate;
 
 
 PROCEDURE Scale (x : T; factor : R.T) =
@@ -127,10 +147,9 @@ PROCEDURE Raise (x : T; offset : R.T) =
 
 PROCEDURE Convolve (x : T; y : T) : T =
   VAR
-	z : T;
+	z := NEW(T);
 
   BEGIN
-	z := NEW(T);
 	z.init(x.getfirst()+y.getfirst(),x.getlast()+y.getlast());
 	FOR i:=0 TO LAST(x.data^) DO
 	  FOR j:=0 TO LAST(y.data^) DO
@@ -142,11 +161,10 @@ PROCEDURE Convolve (x : T; y : T) : T =
 
 PROCEDURE Superpose (x : T; y : T) : T =
   VAR
-	z : T;
+	z := NEW(T);
 	j : IndexType;
 
   BEGIN
-	z := NEW(T);
 	z.init(MIN(x.getfirst(),y.getfirst()),MAX(x.getlast(),y.getlast()));
 	j := x.getfirst()-z.getfirst();
 	FOR i:=0 TO LAST(x.data^) DO
