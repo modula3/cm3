@@ -1,4 +1,4 @@
-% $Id: m3makefile,v 1.3 2004-02-20 16:37:09 thielema Exp $
+% $Id: m3makefile,v 1.4 2004-02-20 16:51:16 thielema Exp $
 
 % Here are syntax highlighting patterns for Kate and other KDE editors.
 % They allow for a nice look in Konqueror, etc.
@@ -13,7 +13,11 @@
 source("m3quake.xml")
 source("modula3.xml")
 
-exec("cd ../src; install modula3.xml m3quake.xml /opt/kde3/share/apps/katepart/syntax")
+>> ".M3SHIP" in
+  foreach file in ["m3quake.xml", "modula3.xml"]
+    write("install_file(\".." & SL & "src" & SL & file & "\", \"/opt/kde3/share/apps/katepart/syntax\", \"0644\")\n")
+  end
+end
 
 % Here are some Mimetypes that allow Konqueror
 % to detect Modula-3 related files.
@@ -25,4 +29,8 @@ exec("cd ../src; install modula3.xml m3quake.xml /opt/kde3/share/apps/katepart/s
 source("x-m3quake.desktop")
 source("x-modula3.desktop")
 
-exec("cd ../src; install x-modula3.desktop x-m3quake.desktop /opt/kde3/share/mimelnk/text")
+>> ".M3SHIP" in
+  foreach file in ["x-modula3.desktop", "x-m3quake.desktop"]
+    write("install_file(\".." & SL & "src" & SL & file & "\", \"/opt/kde3/share/mimelnk/text\", \"0644\")\n")
+  end
+end
