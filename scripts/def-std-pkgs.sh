@@ -84,6 +84,7 @@ P="${P} shownew"
 # showthread needs ThreadEvent, which does not exist on win32
 
 # The Juno-2 graphical constraint based editor
+[ "${M3OSTYPE}" != "WIN32" -o -n "${CM3_ALL}" ] && P="${P} pkl-fonts"
 [ "${M3OSTYPE}" != "WIN32" -o -n "${CM3_ALL}" ] && P="${P} juno-machine"
 [ "${M3OSTYPE}" != "WIN32" -o -n "${CM3_ALL}" ] && P="${P} juno-compiler"
 [ "${M3OSTYPE}" != "WIN32" -o -n "${CM3_ALL}" ] && P="${P} juno-app"
