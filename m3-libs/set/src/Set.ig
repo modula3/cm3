@@ -17,6 +17,8 @@ GENERIC INTERFACE Set(Elem);
    "READONLY", but not "VAR".
 *)
 
+CONST Brand = "(Set " & Elem.Brand & ")";
+
 TYPE 
   Public = OBJECT METHODS
     fromArray(READONLY a: ARRAY OF Elem.T): T;
