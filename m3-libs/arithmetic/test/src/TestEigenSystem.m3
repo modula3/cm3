@@ -6,7 +6,7 @@ MODULE TestEigenSystem EXPORTS Test;
 
 IMPORT LongRealEigenSystem    AS EigenSys,
        LongRealCharPolynomial AS CP,
-       LongRealMatrixFast     AS M,
+       LongRealMatrix         AS M,
        LongRealVector         AS V,
        LongRealPolynomial     AS P,
        LongRealMatrixFmtLex     AS MF,

@@ -5,7 +5,7 @@ IMPORT LongRealBasic AS R;
 IMPORT LongRealTrans AS RT;
 IMPORT LongRealVector      AS V;
 IMPORT LongRealVectorTrans AS VT;
-IMPORT LongRealMatrixBasic AS M;
+IMPORT LongRealMatrix      AS M;
 IMPORT LongRealMatrixTrans AS MT;
 
 IMPORT LongRealFmtLex AS RF;
