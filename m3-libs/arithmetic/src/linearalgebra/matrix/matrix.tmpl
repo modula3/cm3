@@ -17,11 +17,12 @@ readonly proc MatrixTrans (nm, field) is
   local rfield = field & "Basic"
   local rtrans = field & "Trans"
   local ctrans = nm & "Trans"
-  local eigen  = nm & "EigenSystem"
+  local cvsup  = nm & "VectorRep"
   local mfield = nm & "Matrix"
   local mtrans = nm & "MatrixTrans"
+  local eigen  = nm & "EigenSystem"
   build_generic_intf (mtrans, "MatrixTrans", [rfield,                        mfield], VISIBLE)
-  build_generic_impl (mtrans, "MatrixTrans", [rfield, rtrans, ctrans, eigen, mfield])
+  build_generic_impl (mtrans, "MatrixTrans", [rfield, rtrans, ctrans, cvsup, mfield, eigen])
 end
 
 readonly proc MatrixDecomposition (nm, rfield) is
