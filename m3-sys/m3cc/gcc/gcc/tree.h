@@ -839,9 +839,6 @@ struct tree_vec
 #define WITH_CLEANUP_EXPR_RTL(NODE) \
   (*(rtx *) &WITH_CLEANUP_EXPR_CHECK (NODE)->exp.operands[2])
 
-/* In a CALL_EXPR node.  */
-#define CALL_EXPR_CHAIN(NODE) (EXPR_CHECK (NODE)->exp.operands[2])
-
 /* In a CONSTRUCTOR node.  */
 #define CONSTRUCTOR_ELTS(NODE) TREE_OPERAND (CONSTRUCTOR_CHECK (NODE), 1)
 

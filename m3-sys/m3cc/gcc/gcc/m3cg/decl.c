@@ -45,11 +45,7 @@ m3_init_decl_processing ()
   t_word = t_word_32d;
   integer_type_node = t_int;
   unsigned_type_node = t_word;
-  char_type_node = t_int_8; 
-  /* FIXME: do we need this, too? 
-   * It seems we do; otherwise the compiler will abort when generating
-   * stabs debugging information (ow 2003-01-19)
-   */
+  /* char_type_node = t_int_8; FIXME: do we need this, too? */
 
   /* Set the type used for sizes and build the remaining common nodes. */
   set_sizetype (integer_type_node);
