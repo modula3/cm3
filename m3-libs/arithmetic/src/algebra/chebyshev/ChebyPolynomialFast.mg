@@ -59,6 +59,16 @@ BEGIN
   RETURN 0;
 END FindUpperExp;
 (*--------------------------*)
+PROCEDURE Abort(x:T;          (*abort the expansion*)
+                m:CARDINAL;   (*before the m-th term*)
+                ):T=
+VAR
+  z:=NEW(T,m);
+BEGIN
+  z^:=SUBARRAY(x^,0,m);
+  RETURN z;
+END Abort;
+(*--------------------------*)
 PROCEDURE Eval(x:T;           (*eval this polynomial*)
               xi:R.T          (*at this point*)
                ):R.T RAISES {Error}=
@@ -87,10 +97,14 @@ VAR
   n:=NUMBER(x^);
   z:=NEW(T,n-1);
 BEGIN
-  z[n-1]:=R.Zero;
-  z[n-2]:=FLOAT(2*(n-1),R.T)*x[n-1];
-  FOR j:=n-3 TO 0 BY -1 DO
-    z[j]:=z[j+2]+FLOAT(2*(j+1),R.T)*x[j+1];
+  IF n>=2 THEN
+    z[n-2]:=FLOAT(2*(n-1),R.T)*x[n-1];
+    IF n>=3 THEN
+      z[n-3]:=FLOAT(2*(n-2),R.T)*x[n-2];
+      FOR j:=n-4 TO 0 BY -1 DO
+        z[j]:=z[j+2]+FLOAT(2*(j+1),R.T)*x[j+1];
+      END;
+    END;
   END;
   RETURN z;
 END Derive;
@@ -102,12 +116,18 @@ VAR
   n:=NUMBER(x^);
   z:=NEW(T,n+1);
 BEGIN
-  z[0]:=R.Zero;
-  FOR j:=1 TO n-2 DO
-    z[j]:=(x[j-1]-x[j+1])/FLOAT(2*(j-1),R.T);
+  IF 0<=n THEN
+    z[0]:=R.Zero;
+    FOR j:=1 TO n-2 DO
+      z[j]:=(x[j-1]-x[j+1])/FLOAT(2*j,R.T);
+    END;
+    IF 2<=n THEN
+      z[n-1]:=x[n-2]/FLOAT(2*(n-1),R.T);
+    END;
+    IF 1<=n THEN
+      z[n  ]:=x[n-1]/FLOAT(2*(n  ),R.T);
+    END;
   END;
-  z[n-1]:=x[n-2]/FLOAT(2*(n-2),R.T);
-  z[n  ]:=x[n-1]/FLOAT(2*(n-1),R.T);
   RETURN z;
 END Integrate;
 (*==========================*)

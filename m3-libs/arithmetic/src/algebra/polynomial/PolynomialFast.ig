@@ -53,17 +53,19 @@ PROCEDURE Mul(x,y:T):T;  (*return x*y*)
 PROCEDURE Div(x,y:T):T RAISES {Error};  (*return x/y if possible*)
 (*PROCEDURE Mod(x,y:T):T RAISES {Error};  (*return x mod y*)*)
 PROCEDURE DivMod(x,y:T;        (*compute x/y *)
-              VAR r:T):T;     (*giving quotient with remainder r*)
+               VAR r:T):T;     (*giving quotient with remainder r*)
 
 PROCEDURE Eval(x:T;           (*eval this polynomial*)
-               xi:R.T          (*at this point*)
+              xi:R.T          (*at this point*)
                ):R.T;
 
-PROCEDURE Derive(x:T;           (*differentiate polynomial*)
-                 ):T;
-PROCEDURE EvalDerivative(x:T;          (*Eval this polynomial*)
-                xi:R.T;               (*for this argument*)
-           VAR pd:ARRAY OF R.T;      (*returning x(xi), x'(xi)...*)
-                );
+PROCEDURE Derive
+              (x:T;           (*differentiate polynomial*)
+               ):T;
+PROCEDURE EvalDerivative
+              (x:T;          (*Eval this polynomial*)
+              xi:R.T;               (*for this argument*)
+          VAR pd:ARRAY OF R.T;      (*returning x(xi), x'(xi)...*)
+               );
 (*==========================*)
 END PolynomialFast.

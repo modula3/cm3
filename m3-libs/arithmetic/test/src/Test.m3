@@ -63,12 +63,13 @@ BEGIN
   NewLine(); EVAL TestRoot();
   NewLine(); EVAL TestInterpolation();
   NewLine(); EVAL TestSLE();
-*)
   NewLine(); EVAL TestRandom();
-(*
   NewLine(); EVAL TestFFT();
   NewLine(); EVAL TestBigInteger();
   NewLine(); EVAL TestGCD();
   NewLine(); EVAL TestEigenSystem();
+*)
+  NewLine(); EVAL TestChebyshev();
+(*
 *)
 END Test.
