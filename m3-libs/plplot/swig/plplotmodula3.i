@@ -155,10 +155,10 @@ TYPE
 %rename("Replot") plreplot;
 %rename("SetCharacterHeight") plschr;
 %rename("SetColorMapDiscr") plscmap0;
-%rename("SetColorDiscr") plscmap0n;
+%rename("SetColorMapDiscrSize") plscmap0n;
 %rename("SetColorMapCont") plscmap1;
 %rename("SetColorCont") plscmap1l;
-%rename("SetColorMapSizeCont") plscmap1n;
+%rename("SetColorMapContSize") plscmap1n;
 %rename("SetColorRGB") plscol0;
 %rename("SetBGColor") plscolbg;
 %rename("ToggleColor") plscolor;
@@ -254,57 +254,63 @@ TYPE
 %rename("TranslateCursor") plTranslateCursor;
 
 
-%typemap("m3intype",numinputs=0) PLINT n %{%}
-%typemap("m3indecl")             PLINT n %{n:=NUMBER(data);%}
+%typemap("m3intype",numinputs=0) PLArraySize n %{%}
 
-%typemap("m3intype") PLFLT *Array %{READONLY data: V.TBody%}
-%typemap("m3rawarg") PLFLT *Array %{data[0]%}
+%typemap("m3intype") PLFLTArray %{READONLY $1_name: V.TBody%}
+%typemap("m3indecl") PLFLTArray %{n:=NUMBER($1_name);%}
+%typemap("m3rawarg") PLFLTArray %{$1_name[0]%}
 
-%typemap("m3intype") PLFLT *ArrayCk %{READONLY data$argnum: V.TBody%}
-%typemap("m3in")     PLFLT *ArrayCk %{IF NUMBER(data$argnum) # n THEN RAISE NA.Error(Err.bad_size) END;%}
-%typemap("m3rawarg") PLFLT *ArrayCk %{data$argnum[0]%}
-
-
-%typemap("m3intype") PLFLT *ArrayX %{READONLY x: V.TBody%}
-%typemap("m3rawarg") PLFLT *ArrayX %{x[0]%}
-
-%typemap("m3intype") PLFLT *ArrayY %{READONLY y: V.TBody%}
-%typemap("m3rawarg") PLFLT *ArrayY %{y[0]%}
+%typemap("m3intype") PLFLTArrayCk %{READONLY $1_name: V.TBody%}
+%typemap("m3in")     PLFLTArrayCk %{IF NUMBER($1_name) # n THEN RAISE NA.Error(Err.bad_size) END;%}
+%typemap("m3rawarg") PLFLTArrayCk %{$1_name[0]%}
 
 
-%typemap("m3intype") PLINT *Array %{READONLY data: ARRAY OF INTEGER%}
-%typemap("m3rawarg") PLINT *Array %{data[0]%}
 
-%typemap("m3intype") PLINT *ArrayCk %{READONLY data$argnum: ARRAY OF INTEGER%}
-%typemap("m3in")     PLINT *ArrayCk %{IF NUMBER(data$argnum) # n THEN RAISE NA.Error(Err.bad_size) END;%}
-%typemap("m3rawarg") PLINT *ArrayCk %{data$argnum[0]%}
+%typemap("m3intype") PLFLTArrayX %{READONLY $1_name: V.TBody%}
+%typemap("m3rawarg") PLFLTArrayX %{$1_name[0]%}
+%typemap("m3in")     PLINTArrayX %{IF NUMBER($1_name) # n THEN RAISE NA.Error(Err.bad_size) END;%}
 
-%typemap("m3intype") PLINT *ArrayCkMinus1 %{READONLY data$argnum: ARRAY OF INTEGER%}
-%typemap("m3in")     PLINT *ArrayCkMinus1 %{IF NUMBER(data$argnum) # n-1 THEN RAISE NA.Error(Err.bad_size) END;%}
-%typemap("m3rawarg") PLINT *ArrayCkMinus1 %{data$argnum[0]%}
+%typemap("m3intype") PLFLTArrayY %{READONLY $1_name: V.TBody%}
+%typemap("m3rawarg") PLFLTArrayY %{$1_name[0]%}
+%typemap("m3in")     PLINTArrayY %{IF NUMBER($1_name) # n THEN RAISE NA.Error(Err.bad_size) END;%}
 
 
-%typemap("m3intype",numinputs=0) PLINT nx %{%}
-%typemap("m3indecl")             PLINT nx %{nx:=NUMBER(matrix);%}
+%typemap("m3intype") PLINTArray %{READONLY $1_name: ARRAY OF INTEGER%}
+%typemap("m3indecl") PLINTArray %{n:=NUMBER($1_name);%}
+%typemap("m3rawarg") PLINTArray %{$1_name[0]%}
 
-%typemap("m3intype",numinputs=0) PLINT ny %{%}
-%typemap("m3indecl")             PLINT ny %{ny:=NUMBER(matrix[0]);%}
+%typemap("m3intype") PLINTArrayCk %{READONLY $1_name: ARRAY OF INTEGER%}
+%typemap("m3in")     PLINTArrayCk %{IF NUMBER($1_name) # n THEN RAISE NA.Error(Err.bad_size) END;%}
+%typemap("m3rawarg") PLINTArrayCk %{$1_name[0]%}
 
-%typemap("m3intype") PLFLT **Matrix %{READONLY matrix: M.TBody%}
-%typemap("m3indecl") PLFLT **Matrix %{tmpmat:=NEW(REF ARRAY OF ADDRESS,NUMBER(matrix));%}
-%typemap("m3in")     PLFLT **Matrix
-%{FOR i:=0 TO LAST(matrix) DO tmpmat[i] := ADR(matrix[i,0]) END;%}
-%typemap("m3rawarg") PLFLT **Matrix %{tmpmat[0]%}
-%typemap("rawintype") PLFLT **Matrix %{VAR matrix: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*)%}
+%typemap("m3intype") PLINTArrayCkInterim %{READONLY $1_name: ARRAY OF INTEGER%}
+%typemap("m3in")     PLINTArrayCkInterim %{IF NUMBER($1_name) # n-1 THEN RAISE NA.Error(Err.bad_size) END;%}
+%typemap("m3rawarg") PLINTArrayCkInterim %{$1_name[0]%}
 
-%typemap("m3intype") PLFLT **MatrixCk %{READONLY matrix: M.TBody%}
-%typemap("m3indecl") PLFLT **MatrixCk %{tmpmat:=NEW(REF ARRAY OF ADDRESS,NUMBER(matrix));%}
-%typemap("m3in")     PLFLT **MatrixCk
+
+%typemap("m3intype") PLFLTMatrix %{READONLY $1_name: M.TBody%}
+%typemap("m3indecl") PLFLTMatrix %{tmpmat:=NEW(REF ARRAY OF ADDRESS,NUMBER($1_name));
+nx:=NUMBER($1_name);
+ny:=NUMBER($1_name[0]);%}
+%typemap("m3in")     PLFLTMatrix
+%{FOR i:=0 TO LAST($1_name) DO tmpmat[i] := ADR($1_name[i,0]) END;%}
+%typemap("m3rawarg") PLFLTMatrix %{tmpmat[0]%}
+%typemap("rawintype") PLFLTMatrix %{VAR $1_name: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*)%}
+
+%typemap("m3intype",numinputs=0) PLArraySize nx %{%}
+%typemap("m3intype",numinputs=0) PLArraySize ny %{%}
+
+%typemap("m3intype") PLFLTMatrixCk %{READONLY $1_name: M.TBody%}
+%typemap("m3indecl") PLFLTMatrixCk
+%{tmpmat:=NEW(REF ARRAY OF ADDRESS,NUMBER($1_name));
+nx:=NUMBER($1_name);
+ny:=NUMBER($1_name[0]);%}
+%typemap("m3in")     PLFLTMatrixCk
 %{IF nx#NUMBER(x) THEN RAISE NA.Error(Err.bad_size) END;
 IF ny#NUMBER(y) THEN RAISE NA.Error(Err.bad_size) END;
-FOR i:=0 TO LAST(matrix) DO tmpmat[i] := ADR(matrix[i,0]) END;%}
-%typemap("m3rawarg") PLFLT **MatrixCk %{tmpmat[0]%}
-%typemap("rawintype") PLFLT **MatrixCk %{VAR matrix: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*)%}
+FOR i:=0 TO LAST($1_name) DO tmpmat[i] := ADR($1_name[i,0]) END;%}
+%typemap("m3rawarg") PLFLTMatrixCk %{tmpmat[0]%}
+%typemap("rawintype") PLFLTMatrixCk %{VAR $1_name: (*ARRAY OF*) ADDRESS (*REF ARRAY OF R.T*)%}
 
 
 
@@ -370,32 +376,12 @@ END;%}
 %feature("m3:multiretval") plHLS_RGB;
 %feature("m3:multiretval") plRGB_HLS;
 
-%typemap("m3intype",numinputs=0) PLFLT *OUTPUT ""
-%typemap("m3argouttype") PLFLT *OUTPUT "R.T"
+%typemap("m3intype",numinputs=0) PLFLTOutput ""
+%typemap("m3argouttype") PLFLTOutput "R.T"
 
-%typemap("m3intype",numinputs=0) PLINT *OUTPUT ""
-%typemap("m3argouttype") PLINT *OUTPUT "INTEGER"
+%typemap("m3intype",numinputs=0) PLINTOutput ""
+%typemap("m3argouttype") PLINTOutput "INTEGER"
 
-
-#ifdef AdditionalTypeInfo
-/* Test of new interface style. */
-typedef PLINT  PLFLT_ARRAY_SIZE;
-typedef PLFLT *PLFLT_ARRAY;
-typedef PLFLT *PLFLT_ARRAY_CK;
-
-%typemap("m3intype",numinputs=0) PLINT n %{%}
-
-%typemap("m3intype") PLFLT_ARRAY %{READONLY $1_name: V.TBody%}
-%typemap("m3indecl") PLFLT_ARRAY %{n:=NUMBER($1_name);%}
-%typemap("m3rawarg") PLFLT_ARRAY %{$1_name[0]%}
-
-%typemap("m3intype") PLFLT_ARRAY_CK %{READONLY $1_name: V.TBody%}
-%typemap("m3in")     PLFLT_ARRAY_CK %{IF NUMBER($1_name) # n THEN RAISE NA.Error(Err.bad_size) END;%}
-%typemap("m3rawarg") PLFLT_ARRAY_CK %{$1_name[0]%}
-
-void
-plline_new(PLFLT_ARRAY_SIZE n, PLFLT_ARRAY x, PLFLT_ARRAY_CK y);
-#endif
 
 /* swig compatible PLplot API definitions from here on. */
 %include plplotcapi.i
