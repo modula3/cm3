@@ -30,6 +30,7 @@ nedit.highlightPatterns: \
 		Comment:"%":"\\n"::Comment::\n\
 		Keyword:"<(and|contains|else|end|foreach|if|in|is|local|not|or|proc|readonly|return)>":::Keyword::\n\
 		String:"""":"""":"\\n":String::\n\
+		String Escape:"\\\\.":::String1:String:\n\
 		Builtin:"<(write|error|include|exec|cp_if|arglist|defined|empty|equal|escape|format|normalize|path|stale|unlink_file)>":::Identifier::\n\
 		MakeFunction:"<(BinExport|BindExport|CompiledGnuemacs|DocExport|DocdExport|EmacsExport|EmacsdExport|Gnuemacs|HtmlExport|LibExport|LibdExport|Library|ManExport|ManExport|ManPage|MandExport|MandExport|Netobj|Noweb|Program|build_standalone|bundle|c_source|derived_c|derived_h|derived_implementation|derived_interface|export_interface|[Gg]eneric_implementation|[Gg]eneric_interface|[Gg]eneric_module|h_source|hide_interface|implementation|import|import_lib|import_obj|import_version|include_dir|include_pkg|interface|library|m3_option|manPage|module|netobj|noweb|noweb_doc|override|pgm_source|program|remove_m3_option|resource|resource_named|s_source|source|template|build_generic_intf|build_generic_impl)>":::Subroutine::\n\
 		LibM3:"<(array_sort|Array_sort|list|List|list_sort|List_sort|pqueue|Pqueue|sequence|Sequence|sorted_table|Sorted_table|table|Table)>":::Subroutine1::\n\
@@ -37,7 +38,8 @@ nedit.highlightPatterns: \
 	}\n
 nedit.languageModes: \
 	Modula-3:.i3 .m3 .ig .mg .atg .frm::Smart::::\n\
-	Modula-3 Makefile:.tmpl m3makefile m3overrides::::::\n
+	Modula-3 Makefile:.tmpl m3makefile m3overrides cm3.cfg::::::\n\
+
 nedit.styles: \
 	Module:#eaa95e:Plain\n
 nedit.smartIndentInit: \
