@@ -1,7 +1,10 @@
 
-SECTIONS   = arch concept utils integer real32 real64 complex polynomial vector matrix root interpolation sle
+SECTIONS   = integer real32 real64 complex polynomial vector matrix root interpolation sle
 SECTIONTEX = $(patsubst %, section_%.tex, $(SECTIONS))
 SECTIONPDF = $(patsubst %, section_%.pdf, $(SECTIONS))
+
+DEPEND     = introduction arch concept utils preamble
+DEPENDTEX  = $(patsubst %, %.tex, $(DEPEND))
 
 .PHONY:	all clean
 
@@ -17,7 +20,7 @@ pdf:	m3na.pdf
 %.pdf:	%.tex
 	pdflatex $<
 
-m3na.pdf:	m3na.tex $(patsubst %, %.tex, $(SECTIONS))
+m3na.pdf:	m3na.tex $(patsubst %, %.tex, $(SECTIONS)) $(DEPENDTEX)
 
 # was the function of 'mkview' before
 section_%.tex:	%.tex

@@ -30,7 +30,7 @@ raw machine word operations like:
    \item  test for carry
 \end{itemize}
 
-It also does "matrixhematrixical" cardinal and integer operations
+It also does "mathematical" cardinal and integer operations
 like:
 \begin{itemize}
    \item  add
@@ -108,7 +108,7 @@ Word module's operations.  While these look like function
 calls (and thus slow), they are really compiled inline as
 the obvious assembler statisticements.
 
-What can go wrong?  Integer matrixh is a sure thing, so long as
+What can go wrong?  Integer matrix is a sure thing, so long as
 you don't overflow (e.g., go beyond $2^{31}-1$ for {\tt CARDINAL}) or
 underflow (e.g., go below $0$ for {\tt CARDINAL}s or $-2^{32}$ for
 {\tt INTEGER}s).  Modula-3 traps these conditions, but you should
@@ -279,11 +279,11 @@ Here is our approach to developing routines:
      \item Gather relevant sources (e.g., texts, code
      libraries, journal articles).  Determine an effective
      user interface.  Determine test cases from known-good
-     sources such as matrixh packages or handbooks.
+     sources such as matrix packages or handbooks.
      
      \item Study the problem until you can explain the standard
      implementation(s) line by line.  You may need to work
-     backwards and forwards from the matrixhematrixical formulas
+     backwards and forwards from the mathematical formulas
      to the code.  You typically need to work out simple
      (but not too simple) examples, e.g., 4x4 matrix.
      
@@ -314,11 +314,12 @@ Here is our approach to developing routines:
 
 When it comes time to worry about truncation errors and
 timing, look for normalization toward the center of the
-range.  The classic is the hypotenuse of a right triangle::
+range.  The classic is the hypotenuse of a right triangle:
 \begin{verbatim}
           hyp:=sqrt(a^2 + b^2); (*where a>b*)
-          (*a^2 is in danger of swamping b^2 in the
-          addition*)
+          (*a^2 is in danger of producing an overflow
+            although the final result
+            is perfectly in the representable range.*)
           
           (*Instead, do:*)
           r:=(b/a);
@@ -336,7 +337,7 @@ When it comes time to worry about speed, consider:
           \item Common subexpressions
       \end{itemize}
 
-     \item Unroll loops, esp if you know the algorithm will
+     \item Unroll loops, especially if you know the algorithm will
      only need a few iterations.
 \end{enumerate}
      
