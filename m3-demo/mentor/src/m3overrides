@@ -1,2 +1,0 @@
-override ("zeus", ROOT & "/m3-ui")
-override ("obliqrt", ROOT & "/m3-obliq")
