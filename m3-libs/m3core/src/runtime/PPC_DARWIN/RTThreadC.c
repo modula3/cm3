@@ -1,5 +1,4 @@
 /* Copyright according to COPYRIGHT-CMASS. */
-/* FIXME: copied from FreeBSD3 target. Probably needs to be changed. */
 
 /* This file implements the coroutine transfer: RTThread.Transfer */
 
