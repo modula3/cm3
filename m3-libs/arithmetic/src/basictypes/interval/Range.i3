@@ -19,12 +19,20 @@ TYPE
 PROCEDURE New (first: INTEGER; number: CARDINAL; ): T;
 
 <* INLINE *>
-PROCEDURE First (x: T; ): INTEGER;
+PROCEDURE First (READONLY x: T; ): INTEGER;
 
 <* INLINE *>
-PROCEDURE Last (x: T; ): INTEGER;
+PROCEDURE Last (READONLY x: T; ): INTEGER;
 
 <* INLINE *>
-PROCEDURE Number (x: T; ): CARDINAL;
+PROCEDURE Number (READONLY x: T; ): CARDINAL;
+
+
+
+<* INLINE *>
+PROCEDURE Add (READONLY x, y: T; ): T;
+
+<* INLINE *>
+PROCEDURE Scale (READONLY x: T; y: CARDINAL; ): T;
 
 END Range.
