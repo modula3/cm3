@@ -124,6 +124,10 @@ PROCEDURE Check (p: P) =
 PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
   VAR z0: INTEGER;  info: Type.Info;  sz: INTEGER;
   BEGIN
+    IF p.info.lazyAligned THEN
+      z0 := offset DIV 8 * 8;
+      RETURN (offset + sz) <= (z0 + Target.Integer.size);
+    END;
     EVAL Type.CheckInfo (p.baseType, info);
     sz := GetSize (p);
     IF (info.size = sz) THEN
@@ -132,11 +136,11 @@ PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
       (* the scalar crossing can't be any worse than in the full structure *)
       RETURN Type.IsAlignedOk (p.baseType, offset);
     ELSE
-    	IF Target.Allow_packed_byte_aligned THEN
-	      z0 := offset DIV 8 * 8;
-    	ELSE
-	      z0 := offset DIV Target.Integer.align * Target.Integer.align;
-    	END;
+      IF p.info.lazyAligned THEN
+        z0 := offset DIV 8 * 8;
+      ELSE
+        z0 := offset DIV Target.Integer.align * Target.Integer.align;
+      END;
       RETURN (offset + sz) <= (z0 + Target.Integer.size);
     END;
   END CheckAlign;

@@ -164,7 +164,7 @@ PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
     sz := TargetMap.Word_types [p.rep].size;
     z0: INTEGER;
   BEGIN
-  	IF Target.Allow_packed_byte_aligned THEN
+    IF p.info.lazyAligned THEN
       z0 := offset DIV 8 * 8;
     ELSE
       z0 := offset DIV Target.Integer.align * Target.Integer.align;

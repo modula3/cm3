@@ -23,7 +23,7 @@ CONST
     "}", "|", "<:", "=>", "*>",
 
     "INLINE", "EXTERNAL", "ASSERT", "UNUSED", "OBSOLETE", "TRACE",
-    "*CALLCONV*", "IMPLICIT", "DEBUG", "FATAL",
+    "*CALLCONV*", "IMPLICIT", "DEBUG", "LAZYALIGN", "STRICTALIGN", "FATAL",
 
     "AND", "ANY", "ARRAY", "AS",
     "BEGIN", "BITS", "BRANDED", "BY",

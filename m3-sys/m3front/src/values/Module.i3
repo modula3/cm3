@@ -27,6 +27,8 @@ PROCEDURE Compile (t: T);
 PROCEDURE IsSafe (): BOOLEAN;
 PROCEDURE IsInterface (): BOOLEAN;
 PROCEDURE IsExternal (): BOOLEAN;
+PROCEDURE LazyAlignmentOn (): BOOLEAN;
+PROCEDURE SetLazyAlignment (on: BOOLEAN);
 
 PROCEDURE ExportScope (t: T): Scope.T;
 

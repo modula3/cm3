@@ -123,7 +123,8 @@ PROCEDURE Check (p: P) =
     Scope.TypeCheck (p.fields, cs);
 
     (* assign the final offsets to each field *)
-    SizeAndAlignment (p.fields, p.recSize, p.align, is_solid);
+    SizeAndAlignment (p.fields, p.info.lazyAligned, p.recSize, p.align,
+                      is_solid);
 
     (* compute the hash value and per-field predicates *)
     p.info.isTraced := FALSE;
@@ -150,7 +151,7 @@ PROCEDURE Check (p: P) =
     p.info.class     := Type.Class.Record;
   END Check;
 
-PROCEDURE SizeAndAlignment (fields: Scope.T;
+PROCEDURE SizeAndAlignment (fields: Scope.T; lazyAligned: BOOLEAN;
                             VAR(*OUT*) recSize, recAlign: INTEGER;
                             VAR(*OUT*) is_solid: BOOLEAN) =
   VAR
@@ -200,7 +201,7 @@ PROCEDURE SizeAndAlignment (fields: Scope.T;
         newAlign := MAX (newAlign, Target.Integer.align);
       END;
       ***************************************************)
-      IF NOT FindAlignment (newAlign, fields) THEN
+      IF NOT FindAlignment (newAlign, fields, lazyAligned) THEN
         Error.Msg ("Could not find a legal alignment for the packed type.");
       END;
     END;
@@ -247,14 +248,15 @@ PROCEDURE SizeAndAlignment (fields: Scope.T;
     recAlign := newAlign;
   END SizeAndAlignment;
 
-PROCEDURE FindAlignment (VAR align: INTEGER;  fields: Scope.T): BOOLEAN =
+PROCEDURE FindAlignment (VAR align: INTEGER;  fields: Scope.T;
+                         lazyAligned: BOOLEAN): BOOLEAN =
   VAR x: INTEGER;
   BEGIN
     FOR a := FIRST (Target.Alignments) TO LAST (Target.Alignments) DO
       x := Target.Alignments[a];
       IF (x >= align) THEN
         (* see if all the fields are ok at this alignment *)
-        IF AlignmentOK (x, fields) THEN
+        IF AlignmentOK (x, fields, lazyAligned) THEN
           align := x;
           RETURN TRUE;
         END;
@@ -263,16 +265,22 @@ PROCEDURE FindAlignment (VAR align: INTEGER;  fields: Scope.T): BOOLEAN =
     RETURN FALSE;
   END FindAlignment;
 
-PROCEDURE AlignmentOK (align: INTEGER;  fields: Scope.T): BOOLEAN =
+PROCEDURE AlignmentOK (align: INTEGER;  fields: Scope.T;
+                       lazyAligned: BOOLEAN): BOOLEAN =
   VAR o: Value.T;  field: Field.Info;  rec_offs := 0;
+      origLazyAligned: BOOLEAN;
   BEGIN
     REPEAT
       o := Scope.ToList (fields);
       WHILE (o # NIL) DO
         Field.Split (o, field);
+        origLazyAligned := Type.IsLazyAligned (field.type);
+        Type.SetLazyAlignment (field.type, lazyAligned);
         IF NOT Type.IsAlignedOk (field.type, rec_offs + field.offset) THEN
+          Type.SetLazyAlignment (field.type, origLazyAligned);
           RETURN FALSE;
         END;
+        Type.SetLazyAlignment (field.type, origLazyAligned);
         o := o.next;
       END;
       rec_offs := (rec_offs + align) MOD Target.Integer.size;
@@ -290,7 +298,7 @@ PROCEDURE RoundUp (size, alignment: INTEGER): INTEGER =
 
 PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
   BEGIN
-    RETURN AlignmentOK (offset, p.fields);
+    RETURN AlignmentOK (offset, p.fields, p.info.lazyAligned);
   END CheckAlign;
 
 PROCEDURE Compiler (p: P) =

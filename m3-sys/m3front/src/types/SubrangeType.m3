@@ -186,11 +186,11 @@ PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
     sz := TargetMap.CG_Size[p.rep];
     z0: INTEGER;
   BEGIN
-  	IF Target.Allow_packed_byte_aligned THEN
+    IF p.info.lazyAligned THEN
       z0 := offset DIV 8 * 8;
-  	ELSE
+    ELSE
       z0 := offset DIV Target.Integer.align * Target.Integer.align;
-  	END;
+    END;
     RETURN (offset + sz) <= (z0 + Target.Integer.size);
   END CheckAlign;
 

@@ -16,14 +16,16 @@ TYPE
   TK = Token.T;
 
 TYPE
-  Attr    = { External, Inline, Implicit, CallConv, Obsolete, Unused };
+  Attr    = { External, Inline, Implicit, CallConv, Obsolete, Unused,
+              LazyAligned };
   AttrSet = SET OF Attr;
 CONST
   RevealOK    = AttrSet { };
-  ConstantOK  = AttrSet { Attr.Obsolete, Attr.Unused };
-  TypeOK      = AttrSet { Attr.Obsolete, Attr.Unused };
+  ConstantOK  = AttrSet { Attr.Obsolete, Attr.Unused, Attr.LazyAligned };
+  TypeOK      = AttrSet { Attr.Obsolete, Attr.Unused, Attr.LazyAligned };
   ExceptionOK = AttrSet { Attr.Obsolete, Attr.Unused, Attr.Implicit };
-  VariableOK  = AttrSet { Attr.Obsolete, Attr.Unused, Attr.External };
+  VariableOK  = AttrSet { Attr.Obsolete, Attr.Unused, Attr.External,
+                          Attr.LazyAligned };
   ProcedureOK = AttrSet { Attr.Obsolete, Attr.Unused, Attr.External,
                           Attr.Inline, Attr.CallConv };
 
@@ -37,6 +39,7 @@ PROCEDURE Parse (interface, top_level: BOOLEAN;  VAR fails: M3.ExSet) =
     att.isImplicit  := FALSE;
     att.alias       := M3ID.NoID;
     att.callingConv := NIL;
+    att.isLazyAligned := Module.LazyAlignmentOn ();
     LOOP
       CASE cur.token OF
       | TK.tEXTERNAL =>
@@ -65,6 +68,16 @@ PROCEDURE Parse (interface, top_level: BOOLEAN;  VAR fails: M3.ExSet) =
           att.callingConv := Target.FindConvention (M3ID.ToText (cur.id));
           got_cc := TRUE;
           GetToken (); (* convention name *)
+          Match (TK.tENDPRAGMA);
+      | TK.tLAZYALIGN =>
+          att.isLazyAligned := TRUE;
+          Module.SetLazyAlignment (TRUE);
+          GetToken (); (* LAZYALIGN *)
+          Match (TK.tENDPRAGMA);
+      | TK.tSTRICTALIGN =>
+          att.isLazyAligned := FALSE;
+          Module.SetLazyAlignment (FALSE);
+          GetToken (); (* LAZYALIGN *)
           Match (TK.tENDPRAGMA);
       ELSE EXIT;
       END;
