@@ -1,6 +1,6 @@
 MODULE TestBigInteger EXPORTS Test;
 (*Copyright (c) 1996, m3na project
-Abstract:  TestS for BigInteger module.
+Abstract:  Tests for BigInteger module.
 
 3/6/96    Harry George   Initial version
 

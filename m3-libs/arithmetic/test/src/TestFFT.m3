@@ -1,6 +1,6 @@
 MODULE TestFFT EXPORTS Test;
 (*Copyright (c) 1996, m3na project
-Abstract:  TestS for FFT module.
+Abstract:  Tests for FFT module.
 
 3/23/96  Harry George   Initial version
 

@@ -1,6 +1,6 @@
 MODULE TestBits EXPORTS Test;
 (*Copyright (c) 1996, m3na project
-Abstract:  TestS for Utils module.
+Abstract:  Tests for Utils module.
 
 1/1/96    Harry George   Initial version
 

@@ -1,6 +1,6 @@
 MODULE TestXYZ EXPORTS Test;
 (*Copyright (c) 1996, m3na project
-Abstract:  TestS for XYZ module.
+Abstract:  Tests for XYZ module.
 
 1/1/96    <name>   Initial version
 
