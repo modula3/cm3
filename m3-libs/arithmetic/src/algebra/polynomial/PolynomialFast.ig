@@ -1,4 +1,4 @@
-GENERIC INTERFACE PolynomialFast(V,R);
+GENERIC INTERFACE PolynomialFast(R,V,PB);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Direct access to polynomial functions
@@ -11,7 +11,7 @@ FROM NADefinitions IMPORT Error;
 (*==========================*)
 
 CONST
-  Brand = "Polynomial";
+  Brand = PB.Brand;
 
 TYPE
   (*interpretation is: a[0] + a[1]*xi + a[2]* xi^2...a[n]*xi^n *)

@@ -1,4 +1,4 @@
-GENERIC INTERFACE PolynomialFmtLex(P,RF);
+GENERIC INTERFACE PolynomialFmtLex(RF,P);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Direct access to Polynomial functions
