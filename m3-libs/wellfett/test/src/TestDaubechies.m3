@@ -3,14 +3,13 @@ MODULE TestDaubechies;
 IMPORT LongRealBasic               AS R,
        LongRealTrans               AS RT,
        LongRealSignal              AS S,
-       LongRealVectorFast          AS V,
+       LongRealVector              AS V,
 (*
-       LongRealVectorBasic         AS VB,
        LongRealComplexVectorTrans  AS CVT,
 *)
-       LongRealMatrixFast          AS M,
+       LongRealMatrix              AS M,
        LongRealCharPolynomial      AS CharPoly,
-       LongRealComplexRootBasic    AS CRt,
+       LongRealComplexRoot         AS CRt,
        LongRealRootApproximation   AS RootAppr,
        LongRealEigenSystem         AS Eigen,
        LongRealDaubechiesWavelet   AS Daub,

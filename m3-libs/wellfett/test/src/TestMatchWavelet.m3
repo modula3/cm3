@@ -2,16 +2,17 @@ MODULE TestMatchWavelet;
 
 IMPORT LongRealBasic AS R;
 IMPORT LongRealTrans AS RT;
-IMPORT LongRealComplexFast AS C;
+IMPORT LongRealComplex AS C;
 IMPORT LongRealComplexTrans AS CT;
 IMPORT Integer32IntegerPower AS IIntPow;
 IMPORT LongRealIntegerPower AS RIntPow;
 
-IMPORT LongRealVectorFast AS V;
+IMPORT LongRealVector AS V;
+IMPORT LongRealVectorFast AS VFs;
 IMPORT LongRealVectorSupport AS VS;
 IMPORT LongRealVectorTrans AS VT;
 
-IMPORT LongRealMatrixFast AS M;
+IMPORT LongRealMatrix AS M;
 IMPORT LongRealMatrixLapack AS LA;
 
 IMPORT LongRealFunctional AS Fn;
@@ -72,10 +73,10 @@ PROCEDURE MatchPattern (target                               : S.T;
 
     coef: LA.LS;
 
-    waveymin := MIN(V.Min(phivan.getData()^), V.Min(psi.getData()^));
-    waveymax := MAX(V.Max(phivan.getData()^), V.Max(psi.getData()^));
-    ymin := 1.1D0 * MIN(V.Min(target.getData()^), wavescale * waveymin);
-    ymax := 1.1D0 * MAX(V.Max(target.getData()^), wavescale * waveymax);
+    waveymin := MIN(VFs.Min(phivan.getData()^), VFs.Min(psi.getData()^));
+    waveymax := MAX(VFs.Max(phivan.getData()^), VFs.Max(psi.getData()^));
+    ymin := 1.1D0 * MIN(VFs.Min(target.getData()^), wavescale * waveymin);
+    ymax := 1.1D0 * MAX(VFs.Max(target.getData()^), wavescale * waveymax);
 
   (*
     CONST
