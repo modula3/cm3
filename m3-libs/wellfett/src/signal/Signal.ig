@@ -6,6 +6,12 @@ CONST Brand = "Signal";
 TYPE
   IndexType = INTEGER;
   SizeType = CARDINAL;
+  ScalingType = CARDINAL;        (*might be a scaling matrix for high
+                                    dimensional signals*)
+  SignalPP = ARRAY OF T;         (*VS.TBody*)(*discrete parallelepiped
+                                                containing signals, it is a
+                                                plain ARRAY in one
+                                                dimension*)
 
   T <: TPublic;
   TPublic =
@@ -40,13 +46,13 @@ TYPE
                                     always zero mean*)
       inner (with: T): R.T;
 
-      upsample   (factor: CARDINAL): T;
-      downsample (factor: CARDINAL): T;
-      wrapCyclic (length: CARDINAL): T;
-      slice      (num: CARDINAL): REF ARRAY OF T;
-      sliceRev   (num: CARDINAL): REF ARRAY OF T;
-      interleave (READONLY slice: ARRAY OF T): T;
-      interleaveRev (READONLY slice: ARRAY OF T):
+      upsample   (factor: ScalingType): T;
+      downsample (factor: ScalingType): T;
+      wrapCyclic (box: ScalingType): T;
+      slice      (num: ScalingType): REF SignalPP;
+      sliceRev   (num: ScalingType): REF SignalPP;
+      interleave (READONLY slice: SignalPP): T;
+      interleaveRev (READONLY slice: SignalPP):
                      T;          (*invocation like init()*)
       reverse (): T;
       adjoint (): T;
@@ -68,9 +74,9 @@ TYPE
       convolve      (with: T): T;
       autocorrelate (): T;
 
-      convolveDown (with: T; factor: CARDINAL):
+      convolveDown (with: T; factor: ScalingType):
                     T;           (*convolve and downsampling*)
-      upConvolve (with: T; factor: CARDINAL):
+      upConvolve (with: T; factor: ScalingType):
                   T;             (*convolve with upsampled 'with'*)
       convolveShort (with: T): T; (*convolve only in the interval where
                                      with 'with' is covered by the signal*)
