@@ -4,13 +4,13 @@
 
 INTERFACE ConnRW;
 
-IMPORT ConnFD, Rd, Wr;
+IMPORT StreamRd, StreamWr;
+IMPORT ConnFD;
 
-PROCEDURE NewRd(fd: ConnFD.T) : Rd.T;
-   (* produces a reader from a generic connection handle *)
+PROCEDURE NewRd(fd: ConnFD.T) : StreamRd.T;
+   (* produces a stream reader from a generic connection handle *)
 
-PROCEDURE NewWr(fd: ConnFD.T) : Wr.T;
-   (* produces a writer from a generic connection handle *)
+PROCEDURE NewWr(fd: ConnFD.T) : StreamWr.T;
+   (* produces a stream writer from a generic connection handle *)
 
 END ConnRW.
-

@@ -9,7 +9,7 @@
 
 INTERFACE TCPWin32;
 
-IMPORT TCP, ConnFD, WinSock;
+IMPORT TCP AS TCP, ConnFD AS ConnFD, WinSock;
 
 REVEAL
   TCP.T <: Public;

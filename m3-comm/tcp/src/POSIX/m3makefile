@@ -12,6 +12,7 @@ implementation("TCP")
 implementation("TCPExtras")
 implementation("TCPPeer")
 interface("TCPHack")
+interface("SockOpt")
 
 if equal (TARGET, "ALPHA_OSF") or equal(TARGET, "DS3100")
    implementation("TCPHack")
@@ -19,4 +20,8 @@ else
    implementation("TCPHackNull")
 end
 
-
+if equal(TARGET, "FreeBSD2") or equal(TARGET, "FreeBSD2p")
+   implementation("SockOptFBSD")
+else
+   implementation("SockOptOther")
+end

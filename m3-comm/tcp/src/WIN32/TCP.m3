@@ -11,7 +11,7 @@
 (*      modified on Sun Jan 12 16:16:54 PST 1992 by meehan  *)
 (*      modified on Sat Jan 11 16:55:00 PST 1992 by gnelson *)
 
-UNSAFE MODULE TCP EXPORTS TCP, TCPSpecial;
+UNSAFE MODULE TCP EXPORTS TCP, TCPMisc, TCPSpecial;
 
 IMPORT Atom, AtomList, ConnFD, IP, IPError, Rd, Wr, Thread;
 IMPORT Ctypes, WinSock, TCPWin32, Fmt;
@@ -121,21 +121,43 @@ PROCEDURE Connect (ep: IP.Endpoint): T
     RETURN t;
   END Connect;
 
-PROCEDURE StartConnect(ep: IP.Endpoint): T
+PROCEDURE StartConnect(to: IP.Endpoint;
+                       from: IP.Endpoint := IP.NullEndPoint): T
     RAISES {IP.Error} =
   VAR
     sock : WinSock.SOCKET;
     ok   := FALSE;
+    status: Ctypes.int;
+    True: Ctypes.int := 1;
+    fromName: SockAddrIn;
   BEGIN
     sock := NewSocket();
     InitSock(sock);
+
+    IF from # IP.NullEndPoint THEN  (* Bind to the "from" address. *)
+      EVAL WinSock.setsockopt(sock, WinSock.SOL_SOCKET, WinSock.SO_REUSEADDR,
+	ADR(True), BYTESIZE(True));
+      fromName.sin_family := WinSock.AF_INET;
+      fromName.sin_port := WinSock.htons(from.port);
+      fromName.sin_addr.s_addr := LOOPHOLE(from.addr, WinSock.u_long);
+      fromName.sin_zero := Sin_Zero;
+      status := WinSock.bind(sock, ADR(fromName), BYTESIZE(SockAddrIn));
+      IF status # 0 THEN
+	IF WinSock.WSAGetLastError() = WinSock.WSAEADDRINUSE THEN
+	  RaiseWSA(IP.PortBusy);
+	ELSE
+	  RaiseUnexpected();
+	END
+      END;
+    END;
+
     TRY
-      EVAL CheckConnect(sock, ep);
+      EVAL CheckConnect(sock, to);
       ok := TRUE;
     FINALLY
       IF NOT ok THEN EVAL WinSock.closesocket(sock); END;
     END;
-    RETURN NEW(T, sock := sock, ep := ep);
+    RETURN NEW(T, sock := sock, ep := to);
   END StartConnect;
 
 PROCEDURE FinishConnect(t: T; timeout: LONGREAL := -1.0D0): BOOLEAN
@@ -345,7 +367,7 @@ PROCEDURE GetBytesFD(
     END;
   END GetBytesFD;
 
-PROCEDURE PutBytesFD(t: T; VAR arr: ARRAY OF CHAR)
+PROCEDURE PutBytesFD(t: T; READONLY arr: ARRAY OF CHAR)
     RAISES {Wr.Failure, Thread.Alerted} =
   VAR pos := 0;  len: Ctypes.int;  err: INTEGER;
   BEGIN
@@ -441,6 +463,175 @@ PROCEDURE IOWait(sock: WinSock.SOCKET; read: BOOLEAN; alert: BOOLEAN;
       END;
     END;
   END IOWait;
+
+PROCEDURE RaiseWSA(a: Atom.T) RAISES {IP.Error} =
+  BEGIN
+    RAISE IP.Error(AtomList.List2(
+                       a, Atom.FromText(Fmt.Int(WinSock.WSAGetLastError()))));
+  END RaiseWSA;
+
+PROCEDURE RaiseUnexpected() RAISES {IP.Error} =
+  BEGIN
+    RaiseWSA(Unexpected);
+  END RaiseUnexpected;
+
+ PROCEDURE RaiseNoEC(a: Atom.T) RAISES {IP.Error} =
+  BEGIN
+    RAISE IP.Error(AtomList.List1(a));
+  END RaiseNoEC;
+  
+(*****************************************************************************)
+(* TCPMisc procedures. *)
+(*****************************************************************************)
+
+PROCEDURE AcceptFrom(c: Connector; VAR (*OUT*) peer: IP.Endpoint): T
+    RAISES {IP.Error, Thread.Alerted} =
+  VAR
+    addr: SockAddrIn;
+    addrSize: Ctypes.int := BYTESIZE(addr);
+    sock: WinSock.SOCKET;
+  BEGIN
+    LOOP
+      LOCK c DO
+        IF c.closed THEN RaiseNoEC(Closed); END;
+        sock := WinSock.accept(c.sock, ADR(addr), ADR(addrSize));
+      END;
+      IF sock # WinSock.INVALID_SOCKET THEN EXIT; END;
+      WITH errno = WinSock.WSAGetLastError() DO
+        IF errno = WinSock.WSAEMFILE (* OR errno = WinSock.WSAENFILE *) THEN
+          RaiseWSA(IP.NoResources);
+        ELSIF
+          errno = WinSock.WSAEWOULDBLOCK (* OR errno = WinSock.WSAEAGAIN *)
+          THEN
+          EVAL IOWait(c.sock, TRUE, TRUE);
+          (* SchedulerPosix.IOAlertWait(c.sock, TRUE); *)
+        ELSE
+          RaiseUnexpected();
+        END
+      END
+    END;
+    InitSock(sock);
+    peer.addr := LOOPHOLE(addr.sin_addr, IP.Address);
+    peer.port := WinSock.ntohs(addr.sin_port);
+    RETURN NEW(T, sock := sock, ep := IP.NullEndPoint);
+  END AcceptFrom;
+
+PROCEDURE CoalesceWrites(tcp: T; allow: BOOLEAN)
+  RAISES {IP.Error} =
+  VAR
+    noDelay: Ctypes.int;
+  BEGIN
+    IF allow THEN noDelay := 0 ELSE noDelay := 1 END;
+
+    LOCK tcp DO
+      IF tcp.closed THEN
+	RAISE IP.Error(AtomList.List1(Closed));
+      END;
+      IF WinSock.setsockopt(tcp.sock, WinSock.IPPROTO_TCP, WinSock.TCP_NODELAY,
+	ADR(noDelay), BYTESIZE(noDelay)) = -1 THEN
+	RaiseUnexpected();
+      END;
+    END;
+  END CoalesceWrites;
+
+PROCEDURE ConnectFrom(to, from: IP.Endpoint): T
+  RAISES {IP.Error, Thread.Alerted} =
+  VAR
+    t := StartConnect(to, from);
+    ok := FALSE;
+  BEGIN
+    TRY
+      EVAL FinishConnect(t);
+      ok := TRUE;
+    FINALLY
+     IF NOT ok THEN Close(t); END;
+    END;
+    RETURN t;
+  END ConnectFrom;
+
+PROCEDURE GetPeerName(tcp: T): IP.Endpoint
+  RAISES {IP.Error} =
+  VAR
+    addr: SockAddrIn;
+    len: Ctypes.int := BYTESIZE(addr);
+    ep: IP.Endpoint;
+  BEGIN
+    LOCK tcp DO
+      IF tcp.closed THEN
+	RAISE IP.Error(AtomList.List1(Closed));
+      END;
+      IF WinSock.getpeername(tcp.sock, ADR(addr), ADR(len)) = -1 THEN
+	RaiseUnexpected();
+      END;
+    END;
+
+    ep.addr := LOOPHOLE(addr.sin_addr, IP.Address);
+    ep.port := WinSock.ntohs(addr.sin_port);
+    RETURN ep;
+  END GetPeerName;
+
+PROCEDURE GetSockName(tcp: T): IP.Endpoint
+  RAISES {IP.Error} =
+  VAR
+    addr: SockAddrIn;
+    len: Ctypes.int := BYTESIZE(addr);
+    ep: IP.Endpoint;
+  BEGIN
+    LOCK tcp DO
+      IF tcp.closed THEN
+	RAISE IP.Error(AtomList.List1(Closed));
+      END;
+      IF WinSock.getsockname(tcp.sock, ADR(addr), ADR(len)) = -1 THEN
+	RaiseUnexpected();
+      END;
+    END;
+
+    ep.addr := LOOPHOLE(addr.sin_addr, IP.Address);
+    ep.port := WinSock.ntohs(addr.sin_port);
+    RETURN ep;
+  END GetSockName;
+
+PROCEDURE KeepAlive(tcp: T; allow: BOOLEAN)
+  RAISES {IP.Error} =
+  VAR
+    keepAlive: Ctypes.int;
+  BEGIN
+    IF allow THEN keepAlive := 1 ELSE keepAlive := 0 END;
+
+    LOCK tcp DO
+      IF tcp.closed THEN
+	RAISE IP.Error(AtomList.List1(Closed));
+      END;
+      IF WinSock.setsockopt(tcp.sock, WinSock.SOL_SOCKET, WinSock.SO_KEEPALIVE,
+	ADR(keepAlive), BYTESIZE(keepAlive)) = -1 THEN
+	RaiseUnexpected();
+      END;
+    END;
+  END KeepAlive;
+
+PROCEDURE LingerOnClose(tcp: T; allow: BOOLEAN)
+  RAISES {IP.Error} =
+  VAR
+    linger: WinSock.struct_linger;
+  BEGIN
+    IF allow THEN
+      linger.l_onoff := 1;
+      linger.l_linger := 1;
+    ELSE
+      linger.l_onoff := 0;
+      linger.l_linger := 0;
+    END;
+
+    LOCK tcp DO
+      IF tcp.closed THEN
+	RAISE IP.Error(AtomList.List1(Closed));
+      END;
+      IF WinSock.setsockopt(tcp.sock, WinSock.SOL_SOCKET, WinSock.SO_LINGER,
+	ADR(linger), BYTESIZE(linger)) = -1 THEN
+	RaiseUnexpected();
+      END;
+    END;
+  END LingerOnClose;
 
 BEGIN
 END TCP.

@@ -6,12 +6,17 @@
 (*      modified on Fri Jan  7 13:31:11 PST 1994 by msm    *)
 (*      modified on Sun Jan 12 16:16:54 PST 1992 by meehan *)
 (*      modified on Sat Jan 11 16:55:00 PST 1992 by gnelson *)
+(* $Id: TCP.m3,v 1.3 2003-07-28 14:12:14 wagner Exp $ *)
 
-UNSAFE MODULE TCP EXPORTS TCP, TCPSpecial;
+UNSAFE MODULE TCP EXPORTS TCP, TCPMisc, TCPSpecial;
 
-IMPORT Atom, AtomList, ConnFD, IP, IPError, Rd, Wr, Thread;
-IMPORT Usocket, Cerrno, Uerror, Uin, Unix, Uuio, Utypes,
-       TCPHack, TCPPosix, SchedulerPosix, Fmt, Word;
+IMPORT Atom, AtomList, IP, Rd, Wr, Thread;
+IMPORT Usocket, SockOpt, Uerror, Uin, Unix, Uuio, Utypes,
+       SchedulerPosix, Fmt, Word;
+IMPORT ConnFD;
+IMPORT Cerrno;
+IMPORT TCPHack;
+IMPORT TCPPosix;
 FROM Ctypes IMPORT char, int;
 
 REVEAL
@@ -39,27 +44,28 @@ CONST TCP_NODELAY = 1;
 
 CONST Sin_Zero = ARRAY [0 .. 7] OF char{VAL(0, char), ..};
 
+VAR ClosedErr: AtomList.T;
+
 PROCEDURE NewConnector (ep: IP.Endpoint): Connector RAISES {IP.Error} =
   VAR
     res                := NEW(Connector, ep := ep);
     name  : SockAddrIn;
     status: INTEGER;
-    True               := 1;
+    True: int := 1;  (* CONST *)
   BEGIN
     res.fd := Usocket.socket(Usocket.AF_INET, Usocket.SOCK_STREAM, 0 (* TCP*));
     IF res.fd = -1 THEN
       WITH errno = Cerrno.GetErrno() DO
         IF errno = Uerror.EMFILE OR errno = Uerror.ENFILE THEN
-          IPError.Raise(IP.NoResources);
+          Raise(IP.NoResources);
         ELSE
-          IPError.RaiseUnexpected();
+          RaiseUnexpected();
         END
       END
     END;
     MakeNonBlocking (res.fd);
-    EVAL Usocket.setsockopt(
-           res.fd, Usocket.SOL_SOCKET, Usocket.SO_REUSEADDR, ADR(True),
-           BYTESIZE(True));
+    EVAL Usocket.setsockopt(res.fd, SockOpt.SOL_SOCKET, SockOpt.SO_REUSEADDR,
+      ADR(True), BYTESIZE(True));
     name.sin_family := Usocket.AF_INET;
     name.sin_port := Uin.htons(ep.port);
     name.sin_addr.s_addr := LOOPHOLE(ep.addr, Utypes.u_int);
@@ -67,12 +73,12 @@ PROCEDURE NewConnector (ep: IP.Endpoint): Connector RAISES {IP.Error} =
     status := Usocket.bind(res.fd, ADR(name), BYTESIZE(SockAddrIn));
     IF status # 0 THEN
       IF Cerrno.GetErrno() = Uerror.EADDRINUSE THEN
-        IPError.Raise(IP.PortBusy);
+        Raise(IP.PortBusy);
       ELSE
-        IPError.RaiseUnexpected();
+        RaiseUnexpected();
       END
     END;
-    IF Usocket.listen(res.fd, 8) # 0 THEN IPError.RaiseUnexpected(); END;
+    IF Usocket.listen(res.fd, 8) # 0 THEN RaiseUnexpected(); END;
     RETURN res
   END NewConnector;
 
@@ -87,7 +93,7 @@ PROCEDURE GetEndPoint(c: Connector): IP.Endpoint =
     IF c.ep.port = IP.NullPort THEN
       namelen := BYTESIZE(SockAddrIn);
       IF Usocket.getsockname(c.fd, ADR(name), ADR(namelen)) # 0 THEN
-        IPError.Die()
+        Die()
       END;
       c.ep.port := Uin.ntohs(name.sin_port);
     END;
@@ -109,30 +115,52 @@ PROCEDURE Connect (ep: IP.Endpoint): T
     RETURN t;
   END Connect;
 
-PROCEDURE StartConnect(ep: IP.Endpoint): T
+PROCEDURE StartConnect(to: IP.Endpoint;
+                       from: IP.Endpoint := IP.NullEndPoint): T
     RAISES {IP.Error} =
   VAR
     fd: INTEGER;
+    status: int;
+    True: int := 1;  (* CONST *)
+    fromName: SockAddrIn;
     ok := FALSE;
   BEGIN
     fd := Usocket.socket(Usocket.AF_INET, Usocket.SOCK_STREAM, 0 (* TCP*));
     IF fd < 0 THEN
       WITH errno = Cerrno.GetErrno() DO
         IF errno = Uerror.EMFILE OR errno = Uerror.ENFILE THEN
-          IPError.Raise(IP.NoResources);
+          Raise(IP.NoResources);
         ELSE
-          IPError.RaiseUnexpected();
+          RaiseUnexpected();
         END;
       END;
     END;
     InitFD(fd);
+
+    IF from # IP.NullEndPoint THEN  (* Bind to the "from" address. *)
+      EVAL Usocket.setsockopt(fd, SockOpt.SOL_SOCKET, SockOpt.SO_REUSEADDR,
+	ADR(True), BYTESIZE(True));
+      fromName.sin_family := Usocket.AF_INET;
+      fromName.sin_port := Uin.htons(from.port);
+      fromName.sin_addr.s_addr := LOOPHOLE(from.addr, Utypes.u_int);
+      fromName.sin_zero := Sin_Zero;
+      status := Usocket.bind(fd, ADR(fromName), BYTESIZE(SockAddrIn));
+      IF status # 0 THEN
+	IF Cerrno.GetErrno() = Uerror.EADDRINUSE THEN
+	  Raise(IP.PortBusy);
+	ELSE
+	  RaiseUnexpected();
+	END
+      END;
+    END;
+
     TRY
-      EVAL CheckConnect(fd, ep);
+      EVAL CheckConnect(fd, to);
       ok := TRUE;
     FINALLY
       IF NOT ok THEN EVAL Unix.close(fd); END;
     END;
-    RETURN NEW(T, fd := fd, ep := ep);
+    RETURN NEW(T, fd := fd, ep := to);
   END StartConnect;
 
 PROCEDURE FinishConnect(t: T; timeout: LONGREAL := -1.0D0): BOOLEAN
@@ -176,51 +204,31 @@ PROCEDURE CheckConnect(fd: INTEGER; ep: IP.Endpoint) : BOOLEAN
     | Uerror.EISCONN => RETURN TRUE;
     | Uerror.EADDRNOTAVAIL,  Uerror.ECONNREFUSED, Uerror.EINVAL,
                Uerror.ECONNRESET, Uerror.EBADF =>
-        IPError.Raise(Refused);
+        Raise(Refused);
     | Uerror.ETIMEDOUT =>
-        IPError.Raise(Timeout);
+        Raise(Timeout);
     | Uerror.ENETUNREACH, Uerror.EHOSTUNREACH,  Uerror.EHOSTDOWN, Uerror.ENETDOWN =>
-        IPError.Raise(IP.Unreachable);
-    | <*NOWARN*> Uerror.EWOULDBLOCK, Uerror.EAGAIN,  Uerror.EINPROGRESS, Uerror.EALREADY =>
-    ELSE IPError.RaiseUnexpected();
+        Raise(IP.Unreachable);
+    | Uerror.EWOULDBLOCK, Uerror.EAGAIN,  Uerror.EINPROGRESS, Uerror.EALREADY =>  <*NOWARN*>
+    ELSE RaiseUnexpected();
     END;
     RETURN FALSE;
   END CheckConnect;
 
-PROCEDURE Accept (c: Connector): T
+PROCEDURE Accept(c: Connector): T
     RAISES {IP.Error, Thread.Alerted} =
   VAR
-    name                 : SockAddrIn;
-    nameSize             : INTEGER      := BYTESIZE(name);
-    fd                   : INTEGER;
+    ep: IP.Endpoint;
   BEGIN
-    LOOP
-      LOCK c DO
-        IF c.closed THEN IPError.Raise(Closed); END;
-        fd := Usocket.accept(c.fd, ADR(name), ADR(nameSize));
-      END;
-      WITH errno = Cerrno.GetErrno() DO
-        IF fd >= 0 THEN
-          EXIT
-        ELSIF errno = Uerror.EMFILE OR errno = Uerror.ENFILE THEN
-          IPError.Raise(IP.NoResources);
-        ELSIF errno = Uerror.EWOULDBLOCK OR errno = Uerror.EAGAIN THEN
-          EVAL SchedulerPosix.IOAlertWait(c.fd, TRUE);
-        ELSE
-          IPError.RaiseUnexpected();
-        END
-      END
-    END;
-    InitFD(fd);
-    RETURN NEW(T, fd := fd, ep := IP.NullEndPoint);
+    RETURN AcceptFrom(c, ep);
   END Accept;
 
 PROCEDURE CloseConnector(c: Connector) =
   BEGIN
     LOCK c DO
       IF NOT c.closed THEN
-        EVAL Unix.close(c.fd);
-        c.closed := TRUE;
+	EVAL Unix.close(c.fd);
+	c.closed := TRUE;
       END;
     END;
   END CloseConnector;
@@ -242,24 +250,13 @@ PROCEDURE EOF(t: T) : BOOLEAN =
 
 (* methods of TCP.T *)
 
-(*
-VAR SysSendBufSize: INTEGER := 128000;
-VAR SysRcvBufSize: INTEGER := 128000;
-*)
-
 PROCEDURE InitFD(fd: CARDINAL) =
   (* We assume that the runtime ignores SIGPIPE signals *)
   VAR
     one := 1;
     linger := Usocket.struct_linger{1, 1};
   BEGIN
-(*
-    EVAL Usocket.setsockopt(fd, Usocket.SOL_SOCKET, Usocket.SO_SNDBUF,
-                            ADR(SysSendBufSize), BYTESIZE(SysSendBufSize));
-    EVAL Usocket.setsockopt(fd, Usocket.SOL_SOCKET, Usocket.SO_RCVBUF,
-                            ADR(SysRcvBufSize), BYTESIZE(SysRcvBufSize));
-*)
-    EVAL Usocket.setsockopt(fd, Usocket.SOL_SOCKET, Usocket.SO_LINGER,
+    EVAL Usocket.setsockopt(fd, SockOpt.SOL_SOCKET, SockOpt.SO_LINGER,
                             ADR(linger), BYTESIZE(linger));
     EVAL Usocket.setsockopt(
            fd, Uin.IPPROTO_TCP, TCP_NODELAY, ADR(one), BYTESIZE(one));
@@ -271,7 +268,7 @@ PROCEDURE MakeNonBlocking(fd: INTEGER) =
     IF Unix.fcntl(fd, Unix.F_SETFL, 
         Word.Or(Unix.fcntl(fd, Unix.F_GETFL, 0), Unix.M3_NONBLOCK)) # 0
     THEN
-      IPError.Die();
+      Die();
     END;
   END MakeNonBlocking;
   
@@ -281,7 +278,7 @@ PROCEDURE Close(t: T) =
       IF NOT t.closed THEN
         EVAL Unix.close(t.fd);
         t.closed := TRUE;
-        t.error := IPError.ClosedErr;
+        t.error := ClosedErr;
       END;
     END;
   END Close;
@@ -306,20 +303,20 @@ PROCEDURE GetBytesFD(
         | Uerror.ETIMEDOUT => SetError(t,Timeout);
         | Uerror.ENETUNREACH, Uerror.EHOSTUNREACH,
              Uerror.EHOSTDOWN, Uerror.ENETDOWN => SetError(t,IP.Unreachable);
-        | <*NOWARN*> Uerror.EWOULDBLOCK, Uerror.EAGAIN =>
+        | Uerror.EWOULDBLOCK, Uerror.EAGAIN =>  <*NOWARN*>
             IF timeout = 0.0D0 OR
                    SchedulerPosix.IOAlertWait(t.fd, TRUE, timeout) =
                        SchedulerPosix.WaitResult.Timeout THEN
               RAISE ConnFD.TimedOut;
             END;
         ELSE
-            SetError(t, IPError.Unexpected);
+            SetError(t,Unexpected);
         END;
       END;
     END;
   END GetBytesFD;
 
-PROCEDURE PutBytesFD(t: T; VAR arr: ARRAY OF CHAR)
+PROCEDURE PutBytesFD(t: T; READONLY arr: ARRAY OF CHAR)
     RAISES {Wr.Failure, Thread.Alerted} =
   VAR pos := 0;
       len: INTEGER;
@@ -337,11 +334,11 @@ PROCEDURE PutBytesFD(t: T; VAR arr: ARRAY OF CHAR)
         | Uerror.ETIMEDOUT => SetError(t,Timeout);
         | Uerror.ENETUNREACH, Uerror.EHOSTUNREACH,
              Uerror.EHOSTDOWN, Uerror.ENETDOWN => SetError(t,IP.Unreachable);
-        | <*NOWARN*> Uerror.EWOULDBLOCK, Uerror.EAGAIN =>
+        | Uerror.EWOULDBLOCK, Uerror.EAGAIN =>  <*NOWARN*>
              EVAL SchedulerPosix.IOAlertWait(t.fd, FALSE);
              (* IF Thread.TestAlert() THEN RAISE Thread.Alerted END *)
         ELSE
-            SetError(t, IPError.Unexpected);
+            SetError(t,Unexpected);
         END
       END
     END;
@@ -381,7 +378,188 @@ PROCEDURE ShutdownOut(t: T) RAISES {Wr.Failure} =
     END;
   END ShutdownOut;
 
+PROCEDURE Raise(a: Atom.T) RAISES {IP.Error} =
+  BEGIN
+    RAISE IP.Error(AtomList.List2(a,
+                                  Atom.FromText(Fmt.Int(Cerrno.GetErrno()))));
+  END Raise;
+
+PROCEDURE RaiseUnexpected() RAISES {IP.Error} =
+  BEGIN
+    Raise(Unexpected);
+  END RaiseUnexpected;
+
+ PROCEDURE RaiseNoEC(a: Atom.T) RAISES {IP.Error} =
+  BEGIN
+    RAISE IP.Error(AtomList.List1(a));
+  END RaiseNoEC;
+  
+EXCEPTION FatalError;
+
+PROCEDURE Die() RAISES {} =
+  <* FATAL FatalError *>
+  BEGIN
+    RAISE FatalError;
+  END Die;
+
+(*****************************************************************************)
+(* TCPMisc procedures. *)
+(*****************************************************************************)
+
+PROCEDURE AcceptFrom(c: Connector; VAR (*OUT*) peer: IP.Endpoint): T
+    RAISES {IP.Error, Thread.Alerted} =
+  VAR
+    addr                 : SockAddrIn;
+    addrSize             : int      := BYTESIZE(addr);
+    fd                   : INTEGER;
+  BEGIN
+    LOOP
+      LOCK c DO
+        IF c.closed THEN RaiseNoEC(Closed); END;
+        fd := Usocket.accept(c.fd, ADR(addr), ADR(addrSize));
+      END;
+      WITH errno = Cerrno.GetErrno() DO
+        IF fd >= 0 THEN
+          EXIT
+        ELSIF errno = Uerror.EMFILE OR errno = Uerror.ENFILE THEN
+          Raise(IP.NoResources);
+        ELSIF
+          errno = Uerror.EWOULDBLOCK OR errno = Uerror.EAGAIN
+          THEN
+          EVAL SchedulerPosix.IOAlertWait(c.fd, TRUE);
+        ELSE
+          RaiseUnexpected();
+        END
+      END
+    END;
+    InitFD(fd);
+    peer.addr := LOOPHOLE(addr.sin_addr, IP.Address);
+    peer.port := Uin.ntohs(addr.sin_port);
+    RETURN NEW(T, fd := fd, ep := IP.NullEndPoint);
+  END AcceptFrom;
+
+PROCEDURE CoalesceWrites(tcp: T; allow: BOOLEAN)
+  RAISES {IP.Error} =
+  VAR
+    noDelay: int;
+  BEGIN
+    IF allow THEN noDelay := 0 ELSE noDelay := 1 END;
+
+    LOCK tcp DO
+      IF tcp.closed THEN
+	RAISE IP.Error(AtomList.List1(Closed));
+      END;
+      IF Usocket.setsockopt(tcp.fd, Uin.IPPROTO_TCP, TCP_NODELAY,
+	ADR(noDelay), BYTESIZE(noDelay)) = -1 THEN
+	RaiseUnexpected();
+      END;
+    END;
+  END CoalesceWrites;
+
+PROCEDURE ConnectFrom(to, from: IP.Endpoint): T
+  RAISES {IP.Error, Thread.Alerted} =
+  VAR
+    t := StartConnect(to, from);
+    ok := FALSE;
+  BEGIN
+    TRY
+      EVAL FinishConnect(t);
+      ok := TRUE;
+    FINALLY
+     IF NOT ok THEN Close(t); END;
+    END;
+    RETURN t;
+  END ConnectFrom;
+
+PROCEDURE GetPeerName(tcp: T): IP.Endpoint
+  RAISES {IP.Error} =
+  VAR
+    addr: SockAddrIn;
+    len: int := BYTESIZE(addr);
+    ep: IP.Endpoint;
+  BEGIN
+    LOCK tcp DO
+      IF tcp.closed THEN
+	RAISE IP.Error(AtomList.List1(Closed));
+      END;
+      IF Usocket.getpeername(tcp.fd, ADR(addr), ADR(len)) = -1 THEN
+	RaiseUnexpected();
+      END;
+    END;
+
+    ep.addr := LOOPHOLE(addr.sin_addr, IP.Address);
+    ep.port := Uin.ntohs(addr.sin_port);
+    RETURN ep;
+  END GetPeerName;
+
+PROCEDURE GetSockName(tcp: T): IP.Endpoint
+  RAISES {IP.Error} =
+  VAR
+    addr: SockAddrIn;
+    len: int := BYTESIZE(addr);
+    ep: IP.Endpoint;
+  BEGIN
+    LOCK tcp DO
+      IF tcp.closed THEN
+	RAISE IP.Error(AtomList.List1(Closed));
+      END;
+      IF Usocket.getsockname(tcp.fd, ADR(addr), ADR(len)) = -1 THEN
+	RaiseUnexpected();
+      END;
+    END;
+
+    ep.addr := LOOPHOLE(addr.sin_addr, IP.Address);
+    ep.port := Uin.ntohs(addr.sin_port);
+    RETURN ep;
+  END GetSockName;
+
+PROCEDURE KeepAlive(tcp: T; allow: BOOLEAN)
+  RAISES {IP.Error} =
+  VAR
+    keepAlive: int;
+  BEGIN
+    IF allow THEN keepAlive := 1 ELSE keepAlive := 0 END;
+
+    LOCK tcp DO
+      IF tcp.closed THEN
+	RAISE IP.Error(AtomList.List1(Closed));
+      END;
+      IF Usocket.setsockopt(tcp.fd, SockOpt.SOL_SOCKET, SockOpt.SO_KEEPALIVE,
+	ADR(keepAlive), BYTESIZE(keepAlive)) = -1 THEN
+	RaiseUnexpected();
+      END;
+    END;
+  END KeepAlive;
+
+PROCEDURE LingerOnClose(tcp: T; allow: BOOLEAN)
+  RAISES {IP.Error} =
+  VAR
+    linger: Usocket.struct_linger;
+  BEGIN
+    IF allow THEN
+      linger.l_onoff := 1;
+      linger.l_linger := 1;
+    ELSE
+      linger.l_onoff := 0;
+      linger.l_linger := 0;
+    END;
+
+    LOCK tcp DO
+      IF tcp.closed THEN
+	RAISE IP.Error(AtomList.List1(Closed));
+      END;
+      IF Usocket.setsockopt(tcp.fd, SockOpt.SOL_SOCKET, SockOpt.SO_LINGER,
+	ADR(linger), BYTESIZE(linger)) = -1 THEN
+	RaiseUnexpected();
+      END;
+    END;
+  END LingerOnClose;
+
 BEGIN
+  Refused := Atom.FromText("TCP.Refused");
+  Closed := Atom.FromText("TCP.Closed");
+  Timeout := Atom.FromText("TCP.Timeout");
+  ConnLost := Atom.FromText("TCP.ConnLost");
+  Unexpected := Atom.FromText("TCP.Unexpected");
+  ClosedErr := AtomList.List1(Closed);
 END TCP.
-
-

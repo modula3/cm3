@@ -4,6 +4,7 @@
 (* Last modified on Thu Jun  3 10:04:16 PDT 1993 by wobber *)
 (*      modified on Sun Jan 12 16:16:54 PST 1992 by meehan *)
 (*      modified on Sat Jan 11 16:55:00 PST 1992 by gnelson *)
+(* $Id: TCP.i3,v 1.2 2003-07-28 14:12:14 wagner Exp $ *)
 
 INTERFACE TCP;
 
@@ -25,7 +26,8 @@ INTERFACE TCP;
    at the heads of their queues are unblocked and a connection is 
    created between them. *)
 
-IMPORT Atom, ConnFD, IP, Thread;
+IMPORT Atom, IP, Thread;
+IMPORT ConnFD AS ConnFD;
 
 TYPE
   Connector <: ROOT;
@@ -38,7 +40,7 @@ TYPE
    following atoms: *)
 
 VAR
-  Refused, Closed, Timeout, ConnLost: Atom.T;
+  Refused, Closed, Timeout, ConnLost, Unexpected: Atom.T;
 
 (* "Refused" indicates that the destination endpoint does not
    exist, or has been closed.
@@ -79,7 +81,7 @@ PROCEDURE GetEndPoint(c: Connector): IP.Endpoint;
 (* Return the endpoint of "c". *)
 
 PROCEDURE CloseConnector(c: Connector);
-(* Close the connector "c".  Not yet implemented. *)
+(* Close the connector "c". *)
 
 PROCEDURE Connect (ep: IP.Endpoint): T
     RAISES {IP.Error, Thread.Alerted};

@@ -21,7 +21,7 @@ TYPE
   TRep = MUTEX OBJECT METHODS
     get(VAR arr: ARRAY OF CHAR; waitFor: LONGREAL := -1.0D0) : CARDINAL
         RAISES {Rd.Failure, Thread.Alerted, TimedOut};
-    put(VAR arr: ARRAY OF CHAR)
+    put(READONLY arr: ARRAY OF CHAR)
         RAISES {Wr.Failure, Thread.Alerted};
     shutdownIn() RAISES {Rd.Failure};
     shutdownOut() RAISES {Wr.Failure};
@@ -34,20 +34,3 @@ TYPE
         seconds. *)
 
 END ConnFD.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

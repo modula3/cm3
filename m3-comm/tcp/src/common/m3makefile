@@ -5,11 +5,15 @@
 
 Interface("IP")
 Module   ("IPError")
+Interface("StreamRd")
+Module("StreamRdClass")
+Interface("StreamWr")
+Module("StreamWrClass")
 Interface("TCP")
 Interface("TCPExtras")
 Interface("TCPPeer")
 Interface("TCPSpecial")
+Interface("TCPMisc")
 Interface("ConnFD")
 Module("ConnRW")
 Module("ConnMsgRW")
-
