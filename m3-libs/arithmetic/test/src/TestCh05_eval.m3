@@ -10,7 +10,7 @@ Abstract: Test driver for Modula-3 rendition of
 IMPORT Fmt,nr;
 FROM nr IMPORT REAL32,REAL64,COMPLEX;
 (*=======================*)
-CONST Module = "tch05_eval.";
+<*UNUSED*> CONST Module = "tch05_eval.";
 (*=======================*)
 TYPE
   V4 = ARRAY [0..3] OF REAL32;

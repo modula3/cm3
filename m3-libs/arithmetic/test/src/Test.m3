@@ -9,7 +9,7 @@ Abstract: Test driver for m3na library.
 IMPORT Stdio,Wr,Fmt;
 FROM xReal64 IMPORT REAL64,EPS;
 (*=======================*)
-CONST Module = "Test.";
+<*UNUSED*> CONST Module = "Test.";
 (*-----------------*)
 PROCEDURE msg(str:TEXT) =
 BEGIN
