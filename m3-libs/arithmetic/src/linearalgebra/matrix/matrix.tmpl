@@ -50,7 +50,7 @@ end
 readonly proc CharPolynomial (nm, rimpl) is
   local basic   = nm & "CharPolynomial"
   local rfield  = nm & rimpl
-  local rtfield = nm & "RootBasic"
+  local rtfield = nm & "Root"
   local mfield  = nm & "Matrix"
   build_generic_intf (basic, "CharPolynomial", [        rtfield, mfield], VISIBLE)
   build_generic_impl (basic, "CharPolynomial", [rfield, rtfield, mfield])
