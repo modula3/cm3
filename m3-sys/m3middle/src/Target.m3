@@ -149,7 +149,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
 
     CCs := NIL;
 
-		Allow_packed_byte_aligned := FALSE;
+    Allow_packed_byte_aligned := FALSE;
 		
     (* add the system-specific customization *)
     CASE sys OF
@@ -655,7 +655,6 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  EOL                       := "\n";
 
     |  31 => (* PPC_DARWIN *)
-      (* FIXME: please carefully check all the values *)
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
@@ -674,7 +673,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Global_handler_stack      := TRUE;
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
-                 Allow_packed_byte_aligned := TRUE;
+                 (* Allow_packed_byte_aligned := TRUE; use <*LAZYALIGN*>*)
 
     ELSE RETURN FALSE;
     END;
