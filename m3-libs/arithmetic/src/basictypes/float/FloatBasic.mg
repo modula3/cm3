@@ -5,6 +5,8 @@ Abstract: Generic wrapper routines for basic operations of float types
 
 *)
 
+FROM xUtils IMPORT Error, Err;
+
 <*UNUSED*> CONST Module = "FloatBasic.";
 (*==========================*)
 
@@ -15,9 +17,9 @@ PROCEDURE Sub(x,y:T):T = BEGIN RETURN x-y END Sub;
 PROCEDURE Neg(x:T):T   = BEGIN RETURN -x  END Neg;
 
 PROCEDURE Mul(x,y:T):T = BEGIN RETURN x*y END Mul;
-PROCEDURE Div(x,y:T):T = BEGIN RETURN x/y END Div;
-PROCEDURE Mod(x,y:T):T = BEGIN RETURN x MOD y END Mod;
-PROCEDURE Rec(x:T):T   = BEGIN RETURN One/x END Rec;
+PROCEDURE Div(x,y:T):T RAISES {Error} = BEGIN IF y=Zero THEN RAISE Error(Err.divide_by_zero) END; RETURN x/y END Div;
+PROCEDURE IntMod(x,y:T):T RAISES {Error} = BEGIN IF y=Zero THEN RAISE Error(Err.divide_by_zero) END; RETURN x MOD y END IntMod;
+PROCEDURE Rec(x:T):T RAISES {Error}   = BEGIN IF x=Zero THEN RAISE Error(Err.divide_by_zero) END; RETURN One/x END Rec;
 
 (*==========================*)
 BEGIN

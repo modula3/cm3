@@ -6,6 +6,7 @@ Abstract: Generic computations on integer types
 2/17/96  Harry George    Initial version
 *)
 
+FROM xUtils IMPORT Error;
 
 (*==========================*)
 
@@ -26,8 +27,9 @@ CONST
 <*INLINE*> PROCEDURE Neg(x:T):T;    (*return -x *)
 
 <*INLINE*> PROCEDURE Mul(x,y:T):T;  (*return x*y*)
-<*INLINE*> PROCEDURE Div(x,y:T):T;  (*return x/y*)
-<*INLINE*> PROCEDURE Mod(x,y:T):T;  (*return x mod y*)
+<*INLINE*> PROCEDURE Div(x,y:T):T RAISES {Error};  (*return x/y*)
+<*INLINE*> PROCEDURE Mod(x,y:T):T RAISES {Error};  (*return x mod y*)
+<*INLINE*> PROCEDURE DivMod(x,y:T;VAR r:T):T RAISES {Error};  (*return x/y and write the remainder in r*)
 
 (*============================*)
 (* Factoring                  *)
