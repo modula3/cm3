@@ -13,7 +13,7 @@ TYPE T <: Public;
      Public = Board.T OBJECT
      METHODS
        init (stable: SmallDB.T; recover: BOOLEAN): T 
-           RAISES {OSError.E, SmallDB.CorruptedDB, Pickle.Error};
+           RAISES {OSError.E, SmallDB.Failed, Pickle.Error};
      END;
 
 (* The "stable" argument to the "init" method is where the board must

@@ -57,7 +57,7 @@ PROCEDURE Update (stable: SmallDB.T; bd: BoardX.T; nr: NotifyRec.T)
   END Update;
 
 PROCEDURE Recover (stable: SmallDB.T; state: AtomicItemTbl.State)
-    RAISES {OSError.E, SmallDB.CorruptedDB, Pickle.Error} =
+    RAISES {OSError.E, SmallDB.Failed, Pickle.Error} =
   VAR uc := NEW (UpdateClosure, state := state);
   BEGIN
       stable.recoverUpdates (uc);

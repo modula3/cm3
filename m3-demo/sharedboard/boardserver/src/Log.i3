@@ -18,7 +18,7 @@ PROCEDURE Update (stable: SmallDB.T; bd: BoardX.T; nr: NotifyRec.T)
 *)
 
 PROCEDURE Recover (stable: SmallDB.T; state: AtomicItemTbl.State)
-    RAISES {OSError.E, SmallDB.CorruptedDB, Pickle.Error};
+    RAISES {OSError.E, SmallDB.Failed, Pickle.Error};
 (* Updates "state" by recovering updates logged in "stable". *)
 
 END Log.
