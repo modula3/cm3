@@ -1,19 +1,19 @@
 GENERIC MODULE BSplineWavelet(R, V, S, IntPow, DB);
 
-IMPORT NADefinitions AS NA;
+IMPORT Arithmetic AS Arith;
 
 PROCEDURE GeneratorMask (n: CARDINAL; base: [1 .. LAST(CARDINAL)]): S.T =
   VAR
     coef := R.One / R.FromInteger(base);
     atom := NEW(S.T).fromVector(V.NewUniform(base, coef));
-  <* FATAL NA.Error *>           (*Power can't fail for signals*)
+  <* FATAL Arith.Error *>           (*Power can't fail for signals*)
   BEGIN
     RETURN IntPow.MulPower(S.One, atom, n);
   END GeneratorMask;
 
 PROCEDURE WaveletMask (n, m: CARDINAL): S.T RAISES {DifferentParity} =
   VAR mask := WaveletMaskNoVan(n, m);
-  <* FATAL NA.Error *>           (*Power can't fail for signals*)
+  <* FATAL Arith.Error *>           (*Power can't fail for signals*)
   BEGIN
     mask := IntPow.MulPower(
               mask, NEW(S.T).fromArray(ARRAY OF R.T{R.Half, -R.Half}), m);

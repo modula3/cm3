@@ -12,7 +12,7 @@ IMPORT LongRealSignalFmtLex AS SF;
 IMPORT IO, Fmt, Wr, Thread;
 *)
 
-IMPORT NADefinitions AS NA;
+IMPORT Arithmetic AS Arith;
 
 PROCEDURE MatchPatternGenWav (target                                : S.T;
                               refineMask, generatorMask, waveletMask: S.T;
@@ -35,7 +35,7 @@ PROCEDURE MatchPatternGenWav (target                                : S.T;
     targetVec := target.clipToVector(first, size);
     basis     := M.New(numTranslates + 1, size);
 
-  <* FATAL NA.Error *>
+  <* FATAL Arith.Error *>
   BEGIN
     wavelet.clipToArray(first, basis[LAST(basis^)]);
     FOR j := firstTranslate TO lastTranslate DO
@@ -94,7 +94,7 @@ PROCEDURE MatchPatternGen (target                   : S.T;
     targetVec := target.clipToVector(first, size);
     basis     := M.New(numTranslates, size);
 
-  <* FATAL NA.Error *>
+  <* FATAL Arith.Error *>
   BEGIN
     FOR j := firstTranslate TO lastTranslate DO
       generator.clipToArray(first - twonit * j, basis[j - firstTranslate]);
@@ -133,7 +133,7 @@ PROCEDURE MatchPatternWav (target                 : S.T;
       targetCor2 := x.convolveDown(waveletMask.adjoint(), 2).getValue(0);
       <* ASSERT ABS(targetCor2 - targetCor) <= ABS(targetCor) * 1.0D-15 *>
     END;
-    <* FATAL NA.Error *>         (*Power can't fail since we use square
+    <* FATAL Arith.Error *>         (*Power can't fail since we use square
                                     matrices*)
     VAR
       refineSize  := refineMask.getNumber() - 1;

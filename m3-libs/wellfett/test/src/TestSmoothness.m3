@@ -22,7 +22,7 @@ IMPORT LongRealBasic                AS R,
        PLPlot                       AS PL;
 
 IMPORT IO, Fmt, Wr, Thread;
-(*IMPORT NADefinitions AS NA;*)
+(*IMPORT Arithmetic AS Arith;*)
 
 PROCEDURE DFTR2C1D (READONLY x: ARRAY OF R.T;
   (*flags := FFT.FlagSet{FFT.Flag.Estimate};*)): CV.T =

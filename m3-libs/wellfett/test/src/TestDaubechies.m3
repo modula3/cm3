@@ -24,7 +24,7 @@ IMPORT LongRealBasic  AS R,
        Thread,
        Wr,
        FloatMode,
-       NADefinitions;
+       Arithmetic;
 
 PROCEDURE Test () =
 
@@ -35,7 +35,7 @@ PROCEDURE Test () =
     sqr0, sqr1, specrad: R.T;
     eig                : REF CRt.RootArray;
   <* FATAL Thread.Alerted, Wr.Failure, FloatMode.Trap,
-    NADefinitions.Error *>
+    Arithmetic.Error *>
   BEGIN
     FOR n := 0 TO 10 DO
       x := Daub.FilterAbsSqr(n);

@@ -1,6 +1,6 @@
 GENERIC MODULE Signal(R, SignalRep, V, VS, P);
 
-FROM NADefinitions IMPORT Error;
+FROM Arithmetic IMPORT Error;
 
 REVEAL
   T = SignalRep.TPrivate BRANDED OBJECT
@@ -289,7 +289,7 @@ PROCEDURE DownSample (x: T; factor: ScalingType): T =
 PROCEDURE WrapCyclic (x: T; length: ScalingType): V.T =
   VAR
     (*vector must be initialized with zeros*)
-    z            := V.New(length);
+    z            := V.NewZero(length);
     j: IndexType := x.first MOD length;
 
   BEGIN

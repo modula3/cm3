@@ -37,7 +37,7 @@ IMPORT IO, Fmt, FileRd, Wr, Thread;
 
 IMPORT OSError, FloatMode, Lex, Rd;
 
-IMPORT NADefinitions AS NA;
+IMPORT Arithmetic AS Arith;
 
 PROCEDURE PlotFrame (READONLY abscissa       : V.TBody;
                      READONLY frame          : M.TBody;
@@ -97,7 +97,8 @@ PROCEDURE TestMatchPattern (target: S.T;
   RAISES {BSpl.DifferentParity} =
   (*The degree of freedom, i.e.  the number of parameters to minimize for,
      is 2*numTranslates*)
-  <* FATAL PL.SizeMismatch, NA.Error *> (*MulPower can't fail for signals*)
+  <* FATAL PL.SizeMismatch,
+    Arith.Error *>               (*MulPower can't fail for signals*)
   VAR
     hdual := BSpl.GeneratorMask(smooth).scale(R.Two).translate(2);
     gdual := BSpl.WaveletMask(smooth, vanishing).scale(R.Two);
@@ -163,7 +164,7 @@ PROCEDURE ComputeNormalEqu (target                                : S.T;
                             numLevels     : CARDINAL;
                             firstTranslate: INTEGER;
                             numTranslates : CARDINAL; ): NormEqu
-  RAISES {NA.Error} =
+  RAISES {Arith.Error} =
   VAR
     refineSize := refineMask.getNumber() - 1;
 
@@ -239,7 +240,7 @@ PROCEDURE TestNormalEqu () =
 
     error := MT.Norm1(M.Sub(covar, normEqu.mat)) / MT.Norm1(covar);
 
-  <* FATAL NA.Error, Thread.Alerted, Wr.Failure *>
+  <* FATAL Arith.Error, Thread.Alerted, Wr.Failure *>
   BEGIN
     IO.Put(
       Fmt.FN(
@@ -276,7 +277,7 @@ PROCEDURE TestSSE (x: V.T) =
     dx0 := V.FromArray(ARRAY OF R.T{1.0D-8, 0.0D0, 0.0D0});
     dx1 := V.FromArray(ARRAY OF R.T{0.0D0, 1.0D-8, 0.0D0});
     dx2 := V.FromArray(ARRAY OF R.T{0.0D0, 0.0D0, 1.0D-8});
-  <* FATAL NA.Error, Thread.Alerted, Wr.Failure *>
+  <* FATAL Arith.Error, Thread.Alerted, Wr.Failure *>
   BEGIN
     VAR
       rho     := RefnSm.ComputeSSE(x^);
@@ -307,7 +308,7 @@ PROCEDURE TestSSE (x: V.T) =
     END;
   END TestSSE;
 
-PROCEDURE InverseDSSE (x: V.T): V.T RAISES {NA.Error} =
+PROCEDURE InverseDSSE (x: V.T): V.T RAISES {Arith.Error} =
   (*Find the parameter vector y for which DSSE(y)=x*)
   CONST tol = 1.0D-14;
   (*VAR y := V.New(3);*)
@@ -325,11 +326,11 @@ PROCEDURE InverseDSSE (x: V.T): V.T RAISES {NA.Error} =
         *)
       END;
     END;
-    RAISE NA.Error(NA.Err.not_converging);
+    RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
   END InverseDSSE;
 
 PROCEDURE TestInverseDSSE (READONLY x0: ARRAY [0 .. 2] OF R.T) =
-  <* FATAL NA.Error, Thread.Alerted, Wr.Failure *>
+  <* FATAL Arith.Error, Thread.Alerted, Wr.Failure *>
   VAR
     x := V.FromArray(x0);
     y := InverseDSSE(x);
@@ -343,7 +344,7 @@ PROCEDURE TestInverseDSSE (READONLY x0: ARRAY [0 .. 2] OF R.T) =
 PROCEDURE DeriveDist (normalMat    : M.T;
                       targetCor    : V.T;
                       targetNormSqr: R.T;
-                      s            : S.T; ): FnD.T RAISES {NA.Error} =
+                      s            : S.T; ): FnD.T RAISES {Arith.Error} =
   VAR
     normals := M.MulV(normalMat, s.getData());
     dist := V.Inner(s.getData(), V.Sub(normals, V.Scale(targetCor, R.Two)))
@@ -355,7 +356,7 @@ PROCEDURE DeriveDist (normalMat    : M.T;
                  M.Scale(normalMat, R.Two)};
   END DeriveDist;
 
-PROCEDURE DeriveSSE (hdual, gdual0, s: S.T; ): FnD.T RAISES {NA.Error} =
+PROCEDURE DeriveSSE (hdual, gdual0, s: S.T; ): FnD.T RAISES {Arith.Error} =
   VAR
     gdual   := gdual0.superpose(hdual.upConvolve(s, 2));
     hprimal := gdual.alternate();
@@ -376,7 +377,7 @@ PROCEDURE DeriveSSE (hdual, gdual0, s: S.T; ): FnD.T RAISES {NA.Error} =
   END DeriveSSE;
 
 PROCEDURE DeriveWSSE (hdual, gdual0, s: S.T; c: R.T): FnD.T
-  RAISES {NA.Error} =
+  RAISES {Arith.Error} =
   (* In the fitting routine the expression hdual*s+gdual0*c is fitted to
      the target.  But the wavelet won't be smoother if s and c becomes
      smaller.  Instead hdual/c*s+gdual0, or more precisely
@@ -434,7 +435,7 @@ PROCEDURE DeriveWSSE (hdual, gdual0, s: S.T; c: R.T): FnD.T
   END DeriveWSSE;
 
 PROCEDURE TestDeriveWSSE () =
-  <* FATAL NA.Error *>
+  <* FATAL Arith.Error *>
   CONST
     delta = 1.0D-8;
   VAR
@@ -458,7 +459,7 @@ PROCEDURE TestDeriveWSSE () =
 PROCEDURE PutDervDif (READONLY der   : FnD.T;
                       READONLY derArr: ARRAY OF FnD.T;
                                delta : R.T             ) =
-  <* FATAL Thread.Alerted, Wr.Failure, NA.Error *>
+  <* FATAL Thread.Alerted, Wr.Failure, Arith.Error *>
   BEGIN
     (*compare first derivative (gradient) with the first difference*)
     IO.Put(VF.Fmt(V.Scale(der.first, delta)) & "\n");
@@ -491,7 +492,7 @@ PROCEDURE ExtendDervTarget (READONLY x        : FnD.T;
                                      target   : V.T;
                                      targetCor: V.T;
                                      wavelet0 : V.T    ): FnD.T
-  RAISES {NA.Error} =
+  RAISES {Arith.Error} =
   BEGIN
     RETURN
       FnD.T{zeroth :=
@@ -581,7 +582,7 @@ PROCEDURE VarDeriveRegularized (<* UNUSED *> SELF   : VarWavAmpMatching;
                                 READONLY mc: MatchCoef;
                                 waveletVec, waveletCor, targetVec: V.T; ):
   FnD.T =
-  <* FATAL NA.Error *>           (*size mismatches can't occur*)
+  <* FATAL Arith.Error *>        (*size mismatches can't occur*)
   BEGIN
     RETURN ExtendDervTarget(derdist, mc.lift.getData(), mc.wavelet0Amp,
                             waveletVec, waveletCor, targetVec);
@@ -600,7 +601,7 @@ PROCEDURE FixDeriveRegularized (<* UNUSED *> SELF   : FixedWavAmpMatching;
                                 READONLY mc: MatchCoef;
                                 <* UNUSED *> waveletVec, waveletCor,
                                                targetVec: V.T; ): FnD.T =
-  <* FATAL NA.Error *>           (*size mismatches can't occur*)
+  <* FATAL Arith.Error *>        (*size mismatches can't occur*)
   VAR
     zerovec := V.NewZero(mc.lift.getNumber());
   BEGIN
@@ -788,10 +789,10 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
                               dualBasis               : FilterBasis;
                               numLevels, numTranslates: CARDINAL;
                               smoothWeight            : R.T;         ):
-  MatchCoef RAISES {NA.Error} =
+  MatchCoef RAISES {Arith.Error} =
 
   <* UNUSED *>
-  PROCEDURE CheckDerivatives () RAISES {NA.Error} =
+  PROCEDURE CheckDerivatives () RAISES {Arith.Error} =
     CONST
       delta = 1.0D-8;
       cf    = 0.7D0;
@@ -879,7 +880,7 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
       matching: Matching;
 
     <* UNUSED *>
-    PROCEDURE ComputeOptCritDeriv (x: V.T): FnD.T RAISES {NA.Error} =
+    PROCEDURE ComputeOptCritDeriv (x: V.T): FnD.T RAISES {Arith.Error} =
       VAR
         (*SplitParamVec may return initWavelet0Amp as waveletAmp and this
            won't work if we compute the real derivative instead of a finite
@@ -901,13 +902,13 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
                                     mc.wavelet0Amp), smoothWeightFade));
       END ComputeOptCritDeriv;
 
-    PROCEDURE ComputeOptCritDiff (x: V.T): FnD.T RAISES {NA.Error} =
+    PROCEDURE ComputeOptCritDiff (x: V.T): FnD.T RAISES {Arith.Error} =
 
       PROCEDURE EstimateSmoothness (x: V.T): R.T =
         VAR
           hprimal := dualBasis.getLiftedWaveletMaskNoVan(
                        matching.splitParamVec(x)).adjoint();
-        <* FATAL NA.Error *>
+        <* FATAL Arith.Error *>
         BEGIN
           CASE 4 OF
           | 0 => RETURN RefnSm.SquareSmoothEstimate(hprimal);
@@ -1005,7 +1006,7 @@ PROCEDURE MatchPatternSmooth (target                  : S.T;
         BEGIN
           WHILE NOT precOk DO
             IF subIter >= maxSubIter THEN
-              RAISE NA.Error(NA.Err.not_converging);
+              RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
             END;
             INC(subIter);
             VAR der := ComputeOptCritDiff(x);
@@ -1034,7 +1035,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
                                     smallVanishing, numTranslates: CARDINAL;
                                   smoothWeight: R.T):
   ARRAY [0 .. 1] OF FB.T RAISES {BSpl.DifferentParity} =
-  <* FATAL NA.Error, PL.SizeMismatch, Thread.Alerted, Wr.Failure *>
+  <* FATAL Arith.Error, PL.SizeMismatch, Thread.Alerted, Wr.Failure *>
   VAR
     shiftVan      := 2 - smooth - vanishing;
     shiftSmallVan := (vanishing - smallVanishing) DIV 2 - 1;

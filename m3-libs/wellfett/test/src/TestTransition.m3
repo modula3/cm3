@@ -24,12 +24,12 @@ IMPORT LongRealFmtLex AS RF,
 
 IMPORT PLPlot AS PL;
 IMPORT IO, Fmt, Wr, Thread;
-IMPORT NADefinitions AS NA;
+IMPORT Arithmetic AS Arith;
 
 CONST AThird = 1.0D0 / 3.0D0;
 
 PROCEDURE PlotTransitionEV (mask: S.T) =
-  <* FATAL NA.Error, PL.SizeMismatch *>
+  <* FATAL Arith.Error, PL.SizeMismatch *>
   VAR
     ev := RefnSm.Eigenvalues(mask);
     x  := NEW(V.T, NUMBER(ev.eigenvalues^));
@@ -72,7 +72,7 @@ PROCEDURE AnimateTransitionEV () =
 
 
 PROCEDURE CurveTransitionEV (READONLY maskcoef0, maskcoef1: ARRAY OF R.T) =
-  <* FATAL NA.Error, PL.SizeMismatch *>
+  <* FATAL Arith.Error, PL.SizeMismatch *>
   CONST
     frames = 50;
   VAR
@@ -165,7 +165,7 @@ PROCEDURE EstimateSpecRad (mask: S.T): R.T =
   END EstimateSpecRad;
 
 PROCEDURE CompareEstimate (mask: S.T) =
-  <* FATAL NA.Error, Thread.Alerted, Wr.Failure *>
+  <* FATAL Arith.Error, Thread.Alerted, Wr.Failure *>
   BEGIN
     IO.Put(
       Fmt.FN(
@@ -182,7 +182,7 @@ PROCEDURE CompareEstimate (mask: S.T) =
   END CompareEstimate;
 
 PROCEDURE RandomMaskWithLeastEstimate (): S.T =
-  <* FATAL NA.Error *>
+  <* FATAL Arith.Error *>
   VAR
     rnd                           := NEW(Rnd.T).init();
     rndArr: ARRAY [0 .. 4] OF R.T;
@@ -203,7 +203,7 @@ PROCEDURE RandomMaskWithLeastEstimate (): S.T =
   END RandomMaskWithLeastEstimate;
 
 PROCEDURE RandomMask (size: CARDINAL): S.T =
-  <* FATAL NA.Error *>
+  <* FATAL Arith.Error *>
   VAR
     rnd    := NEW(Rnd.T).init();
     rndArr := NEW(REF ARRAY OF R.T, size);
@@ -218,7 +218,7 @@ PROCEDURE RandomMask (size: CARDINAL): S.T =
   END RandomMask;
 
 PROCEDURE CompareTranslatedMasks (mask0, mask1: S.T) =
-  <* FATAL NA.Error *>
+  <* FATAL Arith.Error *>
   BEGIN
     IO.Put(
       Fmt.FN(
@@ -301,7 +301,7 @@ PROCEDURE PlotEstimates () =
     lowerSqrEst  := V.New(numOrder);
     upperSqrEst  := V.New(numOrder);
     upperFrobEst := V.New(numOrder);
-  <* FATAL NA.Error, PL.SizeMismatch *>
+  <* FATAL Arith.Error, PL.SizeMismatch *>
   BEGIN
     PL.Init();
     FOR j := FIRST(order^) TO LAST(order^) DO

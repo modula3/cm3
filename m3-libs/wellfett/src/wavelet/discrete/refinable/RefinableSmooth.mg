@@ -1,7 +1,7 @@
 GENERIC MODULE RefinableSmooth(
 R, C, CT, V, VS, VT, CVT, M, Eigen, S, Refn, BSpl);
 
-IMPORT NADefinitions AS NA;
+IMPORT Arithmetic AS Arith;
 IMPORT IntBiList;
 
 TYPE
@@ -85,7 +85,7 @@ CONST
   Twelve = FLOAT(12.0, R.T);
 
 PROCEDURE ComputeSSE (READONLY y: ARRAY [0 .. 2] OF R.T): R.T =
-  <* FATAL NA.Error *>
+  <* FATAL Arith.Error *>
   VAR
     p1  := VS.Sum(y);
     p2  := VS.Inner(y, y);
@@ -96,7 +96,7 @@ PROCEDURE ComputeSSE (READONLY y: ARRAY [0 .. 2] OF R.T): R.T =
   END ComputeSSE;
 
 PROCEDURE ComputeDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): V.T =
-  <* FATAL NA.Error *>
+  <* FATAL Arith.Error *>
   VAR
     p1  := VS.Sum(y);
     p2  := VS.Inner(y, y);
@@ -111,7 +111,7 @@ PROCEDURE ComputeDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): V.T =
   END ComputeDSSE;
 
 PROCEDURE ComputeDDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
-  <* FATAL NA.Error *>
+  <* FATAL Arith.Error *>
     (*derived with mathematica*)
   VAR
     p1 := VS.Sum(y);
@@ -139,12 +139,12 @@ PROCEDURE SquareSmoothEstimate (x: S.T): R.T =
     RETURN ComputeSSE(hsums^);
   END SquareSmoothEstimate;
 
-PROCEDURE Eigenvalues (mask: S.T): Eigen.EV RAISES {NA.Error} =
+PROCEDURE Eigenvalues (mask: S.T): Eigen.EV RAISES {Arith.Error} =
   BEGIN
     RETURN Eigen.EigenValues(Refn.TransitionMatrix(mask));
   END Eigenvalues;
 
-PROCEDURE SpecRad (mask: S.T): R.T RAISES {NA.Error} =
+PROCEDURE SpecRad (mask: S.T): R.T RAISES {Arith.Error} =
   BEGIN
     (*
     IO.Put("TransitionSpecRad "&Fmt.Int(ncall)&"\n");
@@ -153,7 +153,7 @@ PROCEDURE SpecRad (mask: S.T): R.T RAISES {NA.Error} =
     RETURN CVT.NormInf(Eigenvalues(mask).eigenvalues);
   END SpecRad;
 
-PROCEDURE BSpline (x: S.T): R.T RAISES {NA.Error} =
+PROCEDURE BSpline (x: S.T): R.T RAISES {Arith.Error} =
   BEGIN
     RETURN EigenDistBSpline(Eigenvalues(x).eigenvalues);
   END BSpline;
