@@ -29,7 +29,7 @@ PROCEDURE GetMemory (size: INTEGER): ADDRESS =
     WITH addr = LOOPHOLE(0, ADDRESS),
          prot = Word.Or(Umman.PROT_READ, Umman.PROT_WRITE),
          flags = Word.Or(Umman.MAP_ANON, Umman.MAP_PRIVATE) DO
-      RETURN Umman.mmap(addr, size, prot, flags, -1, 0);
+      RETURN LOOPHOLE(Umman.mmap(addr, size, prot, flags, -1, 0), ADDRESS);
     END;
   END GetMemory;
 

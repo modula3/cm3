@@ -58,9 +58,9 @@ VAR p0, p1: Page := Nil;
 
 VAR desc: UNTRACED REF ARRAY OF Desc;
 
-VAR max_heap_size: INTEGER := -1;
-(** If "max_heap_size" is non-negative, the traced heap will not be
-    extended beyond "max_heap_size" bytes.  If "max_heap_size" is
+VAR max_heap: INTEGER := -1;
+(** If "max_heap" is non-negative, the traced heap will not be
+    extended beyond "max_heap" bytes.  If "max_heap" is
     negative, the traced heap will be allowed to grow until the
     underlying OS refuses to provide more memory.  *)
 
