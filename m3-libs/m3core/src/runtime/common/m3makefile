@@ -14,7 +14,9 @@
 %else
 %  import("m3gc-enhanced")
 %end
-import_lib("m3gcdefs", LIB_INSTALL)
+if equal(OS_TYPE, "POSIX")
+  import_lib("m3gcdefs", LIB_INSTALL)
+end
 pgm_source ("RTBuiltin.mx")
 
 Module    ("RTHooks")
