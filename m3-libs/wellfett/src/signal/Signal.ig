@@ -1,9 +1,8 @@
 
-INTERFACE Signal;
+GENERIC INTERFACE Signal(R);
 
 TYPE
   IndexType = INTEGER;
-  ElemType  = REAL;
 
   T <: Public;
   Public = OBJECT
@@ -20,8 +19,8 @@ TYPE
 	downsample (factor : IndexType) : T;
 	wrapcyclic (length : IndexType) : T;
 
-    scale      (factor : ElemType);
-    raise      (offset : ElemType);
+    scale      (factor : R.T);
+    raise      (offset : R.T);
 
     convolve   (with : T) : T;
     superpose  (with : T) : T;

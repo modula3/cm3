@@ -1,6 +1,7 @@
 import("libm3")
+import("m3na")
 
 include_dir("signal")
 include_dir("wavelet")
 
-Library("wavelib")
+library("wavelib")
