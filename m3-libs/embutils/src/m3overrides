@@ -1,0 +1,1 @@
+%override("m3core", "/proj/graphics/software/src/modula3-3.5.3/m3")
