@@ -1,7 +1,6 @@
 # The three first floating point functions listed in LIB1ASMFUNCS (_fixsfdi,
 # _floatdisf, and _fixunssfdi) are used to disable the inclusion of those
 # from libgcc2.c.  They do not actually exist in lib1funcs.asm.
-CROSS_LIBGCC1 = libgcc1-asm.a
 LIB1ASMSRC = h8300/lib1funcs.asm
 LIB1ASMFUNCS = _cmpsi2 _ucmpsi2 _divhi3 _divsi3 _mulhi3 _mulsi3 \
   _floatdisf _fixsfdi _fixunssfdi _fixunssfsi_asm

@@ -19,7 +19,6 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 
-#undef  LINK_SPEC
 #define LINK_SPEC							\
  "%{p:%e`-p' not supported; use `-pg' and gprof(1)}			\
   %{Wl,*:%*}								\
@@ -31,9 +30,6 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
       %{rdynamic:-export-dynamic}					\
       %{!dynamic-linker:-dynamic-linker /usr/libexec/ld-elf.so.1}}	\
     %{static:-Bstatic}}"
-
-#undef  ASM_SPEC
-#define ASM_SPEC "-x %{mconstant-gp} %{mauto-pic}"
 
 
 /************************[  Target stuff  ]***********************************/
@@ -57,33 +53,4 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #define TARGET_ELF		1
 
-#define DONT_USE_BUILTIN_SETJMP
 #define JMP_BUF_SIZE  76
-
-/* Output any profiling code before the prologue.  */
-
-#undef  PROFILE_BEFORE_PROLOGUE
-#define PROFILE_BEFORE_PROLOGUE 1
-
-/* A C statement or compound statement to output to FILE some assembler code to
-   call the profiling subroutine `mcount'.  */
-
-#undef FUNCTION_PROFILER
-#define FUNCTION_PROFILER(FILE, LABELNO)		\
-do {							\
-  char buf[20];						\
-  ASM_GENERATE_INTERNAL_LABEL (buf, "LP", LABELNO);	\
-  fputs ("\talloc out0 = ar.pfs, 8, 0, 4, 0\n", FILE);	\
-  if (TARGET_AUTO_PIC)					\
-    fputs ("\tmovl out3 = @gprel(", FILE);		\
-  else							\
-    fputs ("\taddl out3 = @ltoff(", FILE);		\
-  assemble_name (FILE, buf);				\
-  if (TARGET_AUTO_PIC)					\
-    fputs (");;\n", FILE);				\
-  else							\
-    fputs ("), r1;;\n", FILE);				\
-  fputs ("\tmov out1 = r1\n", FILE);			\
-  fputs ("\tmov out2 = b0\n", FILE);			\
-  fputs ("\tbr.call.sptk.many b0 = _mcount;;\n", FILE);	\
-} while (0)

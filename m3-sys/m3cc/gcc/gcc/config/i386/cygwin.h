@@ -1,6 +1,6 @@
 /* Operating system specific defines to be used when targeting GCC for
    hosting on Windows32, using a Unix style C library and tools.
-   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001
+   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002
    Free Software Foundation, Inc.
 
 This file is part of GNU CC.
@@ -18,7 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA. */
+Boston, MA 02111-1307, USA.  */
 
 #define YES_UNDERSCORES
 
@@ -26,11 +26,13 @@ Boston, MA 02111-1307, USA. */
 #define SDB_DEBUGGING_INFO 
 #define PREFERRED_DEBUGGING_TYPE DBX_DEBUG
 
-#include <stdio.h>	/* Required for FILE use below */
+#define TARGET_EXECUTABLE_SUFFIX ".exe"
+
+#include <stdio.h>
 #include "i386/gas.h"
 #include "dbxcoff.h"
 
-/* Augment TARGET_SWITCHES with the cygwin/no-cygwin options. */
+/* Augment TARGET_SWITCHES with the cygwin/no-cygwin options.  */
 #define MASK_WIN32 0x40000000 /* Use -lming32 interface */
 #define MASK_CYGWIN  0x20000000 /* Use -lcygwin interface */
 #define MASK_WINDOWS 0x10000000 /* Use windows interface */
@@ -89,6 +91,10 @@ Boston, MA 02111-1307, USA. */
 		       "-idirafter /usr/include/mingw}"
 #endif
 
+/* Get tree.c to declare a target-specific specialization of
+   merge_decl_attributes.  */
+#define TARGET_DLLIMPORT_DECL_ATTRIBUTES
+
 /* Support the __declspec keyword by turning them into attributes.
    We currently only support: dllimport and dllexport.
    Note that the current way we do this may result in a collision with
@@ -108,9 +114,9 @@ Boston, MA 02111-1307, USA. */
   %{mno-win32:%{mno-cygwin: %emno-cygwin and mno-win32 are not compatible}} \
   %{mno-cygwin:-D__MSVCRT__ -D__MINGW32__ %{mthreads:-D_MT} "\
     MINGW_INCLUDES "} \
-  %{!mno-cygwin:-D__CYGWIN32__ -D__CYGWIN__ -Dunix -D__unix__ -D__unix "\
+  %{!mno-cygwin:-D__CYGWIN32__ -D__CYGWIN__ %{!ansi:-Dunix} -D__unix__ -D__unix "\
     CYGWIN_INCLUDES "}\
-  %{mwin32|mno-cygwin:-DWIN32 -D_WIN32 -D__WIN32 -D__WIN32__ -DWINNT}\
+  %{mwin32|mno-cygwin:-DWIN32 -D_WIN32 -D__WIN32 -D__WIN32__ %{!ansi:-DWINNT}}\
   %{!mno-win32:" W32API_INC "}\
 "
 
@@ -124,7 +130,7 @@ Boston, MA 02111-1307, USA. */
 /* Normally, -lgcc is not needed since everything in it is in the DLL, but we
    want to allow things to be added to it when installing new versions of
    GCC without making a new CYGWIN.DLL, so we leave it.  Profiling is handled
-   by calling the init function from the prologue. */
+   by calling the init function from the prologue.  */
 
 #undef LIBGCC_SPEC
 #define LIBGCC_SPEC "%{mno-cygwin: %{mthreads:-lmingwthrd} -lmingw32} -lgcc %{mno-cygwin:-lmoldname -lmsvcrt}"
@@ -181,31 +187,8 @@ Boston, MA 02111-1307, USA. */
 /* Enable parsing of #pragma pack(push,<n>) and #pragma pack(pop).  */
 #define HANDLE_PRAGMA_PACK_PUSH_POP 1
 
-/* A C expression whose value is nonzero if IDENTIFIER with arguments ARGS
-   is a valid machine specific attribute for DECL.
-   The attributes in ATTRIBUTES have previously been assigned to DECL.  */
-
 union tree_node;
 #define TREE union tree_node *
-
-#undef VALID_MACHINE_DECL_ATTRIBUTE
-#define VALID_MACHINE_DECL_ATTRIBUTE(DECL, ATTRIBUTES, IDENTIFIER, ARGS) \
-  i386_pe_valid_decl_attribute_p (DECL, ATTRIBUTES, IDENTIFIER, ARGS)
-extern int i386_pe_valid_decl_attribute_p PARAMS ((TREE, TREE, TREE, TREE));
-
-/* A C expression whose value is nonzero if IDENTIFIER with arguments ARGS
-   is a valid machine specific attribute for TYPE.
-   The attributes in ATTRIBUTES have previously been assigned to TYPE.  */
-
-#undef VALID_MACHINE_TYPE_ATTRIBUTE
-#define VALID_MACHINE_TYPE_ATTRIBUTE(TYPE, ATTRIBUTES, IDENTIFIER, ARGS) \
-  i386_pe_valid_type_attribute_p (TYPE, ATTRIBUTES, IDENTIFIER, ARGS)
-extern int i386_pe_valid_type_attribute_p PARAMS ((TREE, TREE, TREE, TREE));
-
-extern union tree_node *i386_pe_merge_decl_attributes PARAMS ((TREE, TREE));
-#define MERGE_MACHINE_DECL_ATTRIBUTES(OLD, NEW) \
-  i386_pe_merge_decl_attributes ((OLD), (NEW))
-extern TREE i386_pe_merge_decl_attributes PARAMS ((TREE, TREE));
 
 /* Used to implement dllexport overriding dllimport semantics.  It's also used
    to handle vtables - the first pass won't do anything because
@@ -213,7 +196,7 @@ extern TREE i386_pe_merge_decl_attributes PARAMS ((TREE, TREE));
    It's also used to handle dllimport override semantics.  */
 #if 0
 #define REDO_SECTION_INFO_P(DECL) \
-  ((DECL_MACHINE_ATTRIBUTES (DECL) != NULL_TREE) \
+  ((DECL_ATTRIBUTES (DECL) != NULL_TREE) \
    || (TREE_CODE (DECL) == VAR_DECL && DECL_VIRTUAL_P (DECL)))
 #else
 #define REDO_SECTION_INFO_P(DECL) 1
@@ -221,38 +204,12 @@ extern TREE i386_pe_merge_decl_attributes PARAMS ((TREE, TREE));
 
 
 #undef EXTRA_SECTIONS
-#define EXTRA_SECTIONS in_ctor, in_dtor, in_drectve
+#define EXTRA_SECTIONS in_drectve
 
 #undef EXTRA_SECTION_FUNCTIONS
 #define EXTRA_SECTION_FUNCTIONS					\
-  CTOR_SECTION_FUNCTION						\
-  DTOR_SECTION_FUNCTION						\
   DRECTVE_SECTION_FUNCTION					\
   SWITCH_TO_SECTION_FUNCTION
-
-#define CTOR_SECTION_FUNCTION					\
-void								\
-ctor_section ()							\
-{								\
-  if (in_section != in_ctor)					\
-    {								\
-      fprintf (asm_out_file, "\t.section .ctor\n");		\
-      in_section = in_ctor;					\
-    }								\
-}
-void ctor_section PARAMS ((void));
-
-#define DTOR_SECTION_FUNCTION					\
-void								\
-dtor_section ()							\
-{								\
-  if (in_section != in_dtor)					\
-    {								\
-      fprintf (asm_out_file, "\t.section .dtor\n");		\
-      in_section = in_dtor;					\
-    }								\
-}
-void dtor_section PARAMS ((void));
 
 #define DRECTVE_SECTION_FUNCTION \
 void									\
@@ -284,31 +241,13 @@ switch_to_section (section, decl) 				\
       case in_text: text_section (); break; 			\
       case in_data: data_section (); break; 			\
       case in_named: named_section (decl, NULL, 0); break; 	\
-      case in_ctor: ctor_section (); break; 			\
-      case in_dtor: dtor_section (); break; 			\
       case in_drectve: drectve_section (); break; 		\
       default: abort (); break; 				\
     } 								\
 }
 
-#define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)	\
-  do {						\
-    ctor_section ();				\
-    fputs (ASM_LONG, FILE);			\
-    assemble_name (FILE, NAME);			\
-    fprintf (FILE, "\n");			\
-  } while (0)
-
-#define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)       	\
-  do {						\
-    dtor_section ();                   		\
-    fputs (ASM_LONG, FILE);			\
-    assemble_name (FILE, NAME);			\
-    fprintf (FILE, "\n");			\
-  } while (0)
-
 /* Don't allow flag_pic to propagate since gas may produce invalid code
-   otherwise. */
+   otherwise.  */
 
 #undef  SUBTARGET_OVERRIDE_OPTIONS
 #define SUBTARGET_OVERRIDE_OPTIONS					\
@@ -347,7 +286,9 @@ extern void i386_pe_encode_section_info PARAMS ((TREE));
 
 /* Utility used only in this file.  */
 #define I386_PE_STRIP_ENCODING(SYM_NAME) \
-  ((SYM_NAME) + ((SYM_NAME)[0] == '@' ? 3 : 0))
+  ((SYM_NAME) + ((SYM_NAME)[0] == '@' \
+		  ? ((SYM_NAME)[3] == '*' ? 4 : 3) : 0) \
+	      + ((SYM_NAME)[0] == '*' ? 1 : 0))
 
 /* This macro gets just the user-specified name
    out of the string in a SYMBOL_REF.  Discard
@@ -404,15 +345,15 @@ do {							\
 
 
 /* Emit code to check the stack when allocating more that 4000
-   bytes in one go. */
+   bytes in one go.  */
 
 #define CHECK_STACK_LIMIT 4000
 
 /* By default, target has a 80387, uses IEEE compatible arithmetic,
    and returns float values in the 387 and needs stack probes */
-#undef TARGET_DEFAULT
+#undef TARGET_SUBTARGET_DEFAULT
 
-#define TARGET_DEFAULT \
+#define TARGET_SUBTARGET_DEFAULT \
    (MASK_80387 | MASK_IEEE_FP | MASK_FLOAT_RETURNS | MASK_STACK_PROBE) 
 
 /* This is how to output an assembler line
@@ -429,69 +370,16 @@ do {							\
    symbols must be explicitly imported from shared libraries (DLLs).  */
 #define MULTIPLE_SYMBOL_SPACES
 
-#define UNIQUE_SECTION_P(DECL) DECL_ONE_ONLY (DECL)
 extern void i386_pe_unique_section PARAMS ((TREE, int));
 #define UNIQUE_SECTION(DECL,RELOC) i386_pe_unique_section (DECL, RELOC)
 
 #define SUPPORTS_ONE_ONLY 1
 
-/* A C statement to output something to the assembler file to switch to section
-   NAME for object DECL which is either a FUNCTION_DECL, a VAR_DECL or
-   NULL_TREE.  Some target formats do not support arbitrary sections.  Do not
-   define this macro in such cases.  */
-#undef ASM_OUTPUT_SECTION_NAME
-#define ASM_OUTPUT_SECTION_NAME(STREAM, DECL, NAME, RELOC)		\
-do {									\
-  static struct section_info						\
-    {									\
-      struct section_info *next;					\
-      char *name;							\
-      enum sect_enum {SECT_RW, SECT_RO, SECT_EXEC} type;		\
-    } *sections;							\
-  struct section_info *s;						\
-  const char *mode;							\
-  enum sect_enum type;							\
-									\
-  for (s = sections; s; s = s->next)					\
-    if (!strcmp (NAME, s->name))					\
-      break;								\
-									\
-  if (DECL && TREE_CODE (DECL) == FUNCTION_DECL)			\
-    type = SECT_EXEC, mode = "x";					\
-  else if (DECL && DECL_READONLY_SECTION (DECL, RELOC))			\
-    type = SECT_RO, mode = "";						\
-  else									\
-    {									\
-      type = SECT_RW;							\
-      if (DECL && TREE_CODE (DECL) == VAR_DECL				\
-	  && lookup_attribute ("shared", DECL_MACHINE_ATTRIBUTES (DECL))) \
-	mode = "ws";							\
-      else								\
-	mode = "w";							\
-    }									\
-									\
-  if (s == 0)								\
-    {									\
-      s = (struct section_info *) xmalloc (sizeof (struct section_info)); \
-      s->name = xmalloc ((strlen (NAME) + 1) * sizeof (*NAME));		\
-      strcpy (s->name, NAME);						\
-      s->type = type;							\
-      s->next = sections;						\
-      sections = s;							\
-      fprintf (STREAM, ".section\t%s,\"%s\"\n", NAME, mode);		\
-      /* Functions may have been compiled at various levels of		\
-	 optimization so we can't use `same_size' here.  Instead,	\
-	 have the linker pick one.  */					\
-      if ((DECL) && DECL_ONE_ONLY (DECL))				\
-	fprintf (STREAM, "\t.linkonce %s\n",				\
-		 TREE_CODE (DECL) == FUNCTION_DECL			\
-		 ? "discard" : "same_size");				\
-    }									\
-  else									\
-    {									\
-      fprintf (STREAM, ".section\t%s,\"%s\"\n", NAME, mode);		\
-    }									\
-} while (0)
+/* Switch into a generic section.  */
+#define TARGET_ASM_NAMED_SECTION  i386_pe_asm_named_section
+
+/* Select attributes for named sections.  */
+#define TARGET_SECTION_TYPE_FLAGS  i386_pe_section_type_flags
 
 /* Write the extra assembler code needed to declare a function
    properly.  If we are generating SDB debugging information, this
@@ -522,7 +410,7 @@ do {									\
 #define ASM_OUTPUT_EXTERNAL_LIBCALL(FILE, FUN) \
   i386_pe_declare_function_type (FILE, XSTR (FUN, 0), 1)
 
-/* This says out to put a global symbol in the BSS section. */
+/* This says out to put a global symbol in the BSS section.  */
 #undef ASM_OUTPUT_ALIGNED_BSS
 #define ASM_OUTPUT_ALIGNED_BSS(FILE, DECL, NAME, SIZE, ALIGN) \
   asm_output_aligned_bss ((FILE), (DECL), (NAME), (SIZE), (ALIGN))
@@ -535,14 +423,16 @@ do {									\
 #undef ASM_COMMENT_START
 #define ASM_COMMENT_START " #"
 
-/* DWARF2 Unwinding doesn't work with exception handling yet. */
+/* DWARF2 Unwinding doesn't work with exception handling yet.  To make it
+   work, we need to build a libgcc_s.dll, and dcrt0.o should be changed to
+   call __register_frame_info/__deregister_frame_info.  */
 #define DWARF2_UNWIND_INFO 0
 
-/* Don't assume anything about the header files. */
+/* Don't assume anything about the header files.  */
 #define NO_IMPLICIT_EXTERN_C
 
 #define SUBTARGET_PROLOGUE						\
-  if (profile_flag 							\
+  if (current_function_profile						\
       && MAIN_NAME_P (DECL_NAME (current_function_decl)))		\
      {									\
       emit_call_insn (gen_rtx (CALL, VOIDmode, 				\
@@ -573,8 +463,8 @@ extern int i386_pe_dllimport_name_p PARAMS ((const char *));
 #define BIGGEST_FIELD_ALIGNMENT 64
 
 /* A bitfield declared as `int' forces `int' alignment for the struct.  */
-#undef PCC_BITFIELDS_TYPE_MATTERS
-#define PCC_BITFIELDS_TYPE_MATTERS 1
+#undef PCC_BITFIELD_TYPE_MATTERS
+#define PCC_BITFIELD_TYPE_MATTERS 1
 #define GROUP_BITFIELDS_BY_ALIGN TYPE_NATIVE(rec)
 
 
@@ -583,8 +473,8 @@ extern int i386_pe_dllimport_name_p PARAMS ((const char *));
 #define SET_ASM_OP "\t.set\t"
 #endif
 
-/* Override GCC's relative pathname lookup unless otherwise told
-   by other subtargets.  */
+/* Override GCC's relative pathname lookup (ie., relocatability) unless
+   otherwise told by other subtargets.  */
 #ifndef WIN32_NO_ABSOLUTE_INST_DIRS
 #undef MD_STARTFILE_PREFIX
 #define MD_STARTFILE_PREFIX     "/usr/lib/"

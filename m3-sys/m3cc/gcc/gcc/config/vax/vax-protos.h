@@ -1,4 +1,4 @@
-/* Definitions of target machine for GNU compiler.  Vax version.
+/* Definitions of target machine for GNU compiler.  VAX version.
    Copyright (C) 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
@@ -25,6 +25,7 @@ extern void print_operand_address PARAMS ((FILE *, rtx));
 extern int vax_float_literal PARAMS ((rtx));
 extern int vax_address_cost PARAMS ((rtx));
 extern int vax_rtx_cost PARAMS ((rtx));
+extern int reg_was_0_p PARAMS ((rtx, rtx));
 #endif /* RTX_CODE */
 
 #ifdef REAL_VALUE_TYPE
@@ -36,3 +37,4 @@ extern void vms_check_external PARAMS ((tree, const char *, int));
 #endif /* TREE_CODE */
 
 extern void vms_flush_pending_externals PARAMS ((FILE *));
+extern void const_section PARAMS ((void));

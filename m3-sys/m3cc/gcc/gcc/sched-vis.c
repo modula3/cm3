@@ -1,24 +1,24 @@
 /* Instruction scheduling pass.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-   1999, 2000 Free Software Foundation, Inc.
+   1999, 2000, 2002 Free Software Foundation, Inc.
    Contributed by Michael Tiemann (tiemann@cygnus.com) Enhanced by,
    and currently maintained by, Jim Wilson (wilson@cygnus.com)
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the
-Free Software Foundation; either version 2, or (at your option) any
-later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to the Free
-the Free Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.  */
 
 #include "config.h"
@@ -87,9 +87,10 @@ int n_visual_lines;
 static unsigned visual_tbl_line_length;
 char *visual_tbl;
 int n_vis_no_unit;
-rtx vis_no_unit[10];
+#define MAX_VISUAL_NO_UNIT 20
+rtx vis_no_unit[MAX_VISUAL_NO_UNIT];
 
-/* Finds units that are in use in this fuction.  Required only
+/* Finds units that are in use in this function.  Required only
    for visualization.  */
 
 void
@@ -473,6 +474,12 @@ print_exp (buf, x, verbose)
       fun = "trap_if";
       op[0] = TRAP_CONDITION (x);
       break;
+    case PREFETCH:
+      fun = "prefetch";
+      op[0] = XEXP (x, 0);
+      op[1] = XEXP (x, 1);
+      op[2] = XEXP (x, 2);
+      break;
     case UNSPEC:
     case UNSPEC_VOLATILE:
       {
@@ -577,7 +584,7 @@ print_value (buf, x, verbose)
       if (REGNO (x) < FIRST_PSEUDO_REGISTER)
 	{
 	  int c = reg_names[REGNO (x)][0];
-	  if (c >= '0' && c <= '9')
+	  if (ISDIGIT (c))
 	    cur = safe_concat (buf, cur, "%");
 
 	  cur = safe_concat (buf, cur, reg_names[REGNO (x)]);
@@ -591,7 +598,7 @@ print_value (buf, x, verbose)
     case SUBREG:
       print_value (t, SUBREG_REG (x), verbose);
       cur = safe_concat (buf, cur, t);
-      sprintf (t, "#%d", SUBREG_WORD (x));
+      sprintf (t, "#%d", SUBREG_BYTE (x));
       cur = safe_concat (buf, cur, t);
       break;
     case SCRATCH:
@@ -844,8 +851,11 @@ void
 visualize_no_unit (insn)
      rtx insn;
 {
-  vis_no_unit[n_vis_no_unit] = insn;
-  n_vis_no_unit++;
+  if (n_vis_no_unit < MAX_VISUAL_NO_UNIT)
+    {
+      vis_no_unit[n_vis_no_unit] = insn;
+      n_vis_no_unit++;
+    }
 }
 
 /* Print insns scheduled in clock, for visualization.  */
@@ -901,7 +911,7 @@ void
 visualize_stall_cycles (stalls)
      int stalls;
 {
-  const char *prefix = ";;       ";
+  static const char *const prefix = ";;       ";
   const char *suffix = "\n";
   char *p;
 
@@ -918,7 +928,7 @@ visualize_stall_cycles (stalls)
   strcpy (p, prefix);
   p += strlen (prefix);
 
-  if ((unsigned)stalls >
+  if ((unsigned) stalls >
       visual_tbl_line_length - strlen (prefix) - strlen (suffix))
     {
       suffix = "[...]\n";

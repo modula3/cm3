@@ -23,7 +23,7 @@ Boston, MA 02111-1307, USA.  */
 /* Support generation of DWARF2 debugging info.  */
 #define DWARF2_DEBUGGING_INFO
 
-/* Don't assume anything about the header files. */
+/* Don't assume anything about the header files.  */
 #define NO_IMPLICIT_EXTERN_C
 
 #define HANDLE_SYSV_PRAGMA
@@ -45,29 +45,13 @@ Boston, MA 02111-1307, USA.  */
 #undef BSS_SECTION_ASM_OP
 #define BSS_SECTION_ASM_OP "\t.section\t.bss"
 
-/* Define the name of the .ctor section.  */
-#undef CTORS_SECTION_ASM_OP
-#define CTORS_SECTION_ASM_OP "\t.section .ctor"
-
 /* Define the name of the .data section.  */
 #undef DATA_SECTION_ASM_OP
 #define DATA_SECTION_ASM_OP "\t.section .data"
 
-/* Define the name of the .dtor section.  */
-#undef DTORS_SECTION_ASM_OP
-#define DTORS_SECTION_ASM_OP "\t.section .dtor"
-
-/* Define the name of the .eh_frame section.  */
-#undef EH_FRAME_SECTION_ASM_OP
-#define EH_FRAME_SECTION_ASM_OP "\t.section .eh_frame"
-
 /* Define the name of the .ident op.  */
 #undef IDENT_ASM_OP
 #define IDENT_ASM_OP "\t.ident\t"
-
-/* Define the name of the .int op.  */
-#undef INT_ASM_OP
-#define INT_ASM_OP "\t.long\t"
 
 /* Enable alias attribute support.  */
 #ifndef SET_ASM_OP
@@ -78,18 +62,6 @@ Boston, MA 02111-1307, USA.  */
 #undef TEXT_SECTION_ASM_OP
 #define TEXT_SECTION_ASM_OP "\t.section .text"
 
-/* How to output an unaligned integer.  */
-#undef UNALIGNED_INT_ASM_OP
-#define UNALIGNED_INT_ASM_OP "\t.long\t"
-
-/* How to output an unaligned double length integer.  */
-#undef UNALIGNED_DOUBLE_INT_ASM_OP
-#define UNALIGNED_DOUBLE_INT_ASM_OP "\t.quad\t"
-
-/* How to output an unaligned half length intenger.  */
-#undef UNALIGNED_SHORT_ASM_OP
-#define UNALIGNED_SHORT_ASM_OP "\t.short\t"
-
 /* Define standard DJGPP installation paths.                             */
 /* We override default /usr or /usr/local part with /dev/env/DJDIR which */
 /* points to actual DJGPP instalation directory.                         */
@@ -98,7 +70,7 @@ Boston, MA 02111-1307, USA.  */
 #undef STANDARD_INCLUDE_DIR
 #define STANDARD_INCLUDE_DIR "/dev/env/DJDIR/include/"
 
-/* Search for as.exe and ld.exe in DJGPP's binary directory. */ 
+/* Search for as.exe and ld.exe in DJGPP's binary directory.  */ 
 #undef MD_EXEC_PREFIX
 #define MD_EXEC_PREFIX "/dev/env/DJDIR/bin/"
 
@@ -151,65 +123,8 @@ Boston, MA 02111-1307, USA.  */
    unless user explicitly requests it.  */
 #undef LOCAL_INCLUDE_DIR
 
-/* Do not make only .exe if no executable file suffix was specified.  */
-/* Let the linker handle that.  */
-#undef NO_AUTO_EXE_SUFFIX
-#define NO_AUTO_EXE_SUFFIX
-
-#undef EXTRA_SECTIONS
-#define EXTRA_SECTIONS in_ctor, in_dtor
-
-#undef EXTRA_SECTION_FUNCTIONS
-#define EXTRA_SECTION_FUNCTIONS					\
-  CTOR_SECTION_FUNCTION						\
-  DTOR_SECTION_FUNCTION
-
-#define CTOR_SECTION_FUNCTION					\
-void								\
-ctor_section ()							\
-{								\
-  if (in_section != in_ctor)					\
-    {								\
-      fprintf (asm_out_file, "%s\n", CTORS_SECTION_ASM_OP);	\
-      in_section = in_ctor;					\
-    }								\
-}
-
-#define DTOR_SECTION_FUNCTION					\
-void								\
-dtor_section ()							\
-{								\
-  if (in_section != in_dtor)					\
-    {								\
-      fprintf (asm_out_file, "%s\n", DTORS_SECTION_ASM_OP);	\
-      in_section = in_dtor;					\
-    }								\
-}
-
-#define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)	\
-  do {						\
-    ctor_section ();				\
-    fputs (ASM_LONG, FILE);			\
-    assemble_name (FILE, NAME);			\
-    fprintf (FILE, "\n");			\
-  } while (0)
-
-/* Tell GCC how to output a section name. Add "x" for code sections.  */
-#define ASM_OUTPUT_SECTION_NAME(FILE, DECL, NAME, RELOC)\
-  do {									\
-    if ((DECL) && TREE_CODE (DECL) == FUNCTION_DECL)			\
-      fprintf ((FILE), "\t.section %s,\"x\"\n", (NAME));		\
-    else								\
-      fprintf ((FILE), "\t.section %s\n", (NAME));			\
-  } while (0)
-
-#define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)	\
-  do {						\
-    dtor_section ();                   		\
-    fputs (ASM_LONG, FILE);			\
-    assemble_name (FILE, NAME);              	\
-    fprintf (FILE, "\n");			\
-  } while (0)
+/* Switch into a generic section.  */
+#define TARGET_ASM_NAMED_SECTION  default_coff_asm_named_section
 
 /* Output at beginning of assembler file.  */
 /* The .file command should always begin the output.  */
@@ -273,8 +188,8 @@ dtor_section ()							\
 
 #undef SUBTARGET_SWITCHES
 #define SUBTARGET_SWITCHES \
-  { "no-bnu210", -MASK_BNU210, "Ignored (obsolete)." }, \
-  { "bnu210", MASK_BNU210, "Ignored (obsolete)." },
+  { "no-bnu210", -MASK_BNU210, "Ignored (obsolete)" }, \
+  { "bnu210", MASK_BNU210, "Ignored (obsolete)" },
 
 /* Warn that -mbnu210 is now obsolete.  */
 #undef  SUBTARGET_OVERRIDE_OPTIONS
@@ -283,7 +198,7 @@ do \
   { \
     if (target_flags & MASK_BNU210) \
       {	\
-        warning ("-mbnu210 is ignored (option is obsolete)."); \
+        warning ("-mbnu210 is ignored (option is obsolete)"); \
       }	\
   } \
 while (0)
@@ -291,11 +206,6 @@ while (0)
 /* Support for C++ templates.  */
 #undef MAKE_DECL_ONE_ONLY
 #define MAKE_DECL_ONE_ONLY(DECL) (DECL_WEAK (DECL) = 1)
-
-/* Additional support for C++ templates and support for
-   garbage collection.  */
-#undef UNIQUE_SECTION_P
-#define UNIQUE_SECTION_P(DECL) (DECL_ONE_ONLY (DECL))
 
 #undef UNIQUE_SECTION
 #define UNIQUE_SECTION(DECL,RELOC)				\
@@ -305,6 +215,8 @@ do {								\
   char *string;							\
 								\
   name = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (DECL));	\
+  /* Strip off any encoding in fnname.  */                      \
+  STRIP_NAME_ENCODING (name, name);                             \
 								\
   if (! DECL_ONE_ONLY (DECL))					\
     {								\

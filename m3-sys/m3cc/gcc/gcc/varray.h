@@ -1,32 +1,32 @@
 /* Virtual array support.
-   Copyright (C) 1998, 1999, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1998, 1999, 2000, 2002 Free Software Foundation, Inc.
    Contributed by Cygnus Solutions.
 
-   This file is part of GNU CC.
+   This file is part of GCC.
 
-   GNU CC is free software; you can redistribute it and/or modify it
+   GCC is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2, or (at your option)
    any later version.
 
-   GNU CC is distributed in the hope that it will be useful, but
-   WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   General Public License for more details.
+   GCC is distributed in the hope that it will be useful, but WITHOUT
+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+   License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GNU CC; see the file COPYING.  If not, write to the Free
-   the Free Software Foundation, 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+   along with GCC; see the file COPYING.  If not, write to the Free
+   the Free Software Foundation, 59 Temple Place - Suite 330, Boston,
+   MA 02111-1307, USA.  */
 
-#ifndef _VARRAY_H_
-#define _VARRAY_H_
+#ifndef GCC_VARRAY_H
+#define GCC_VARRAY_H
 
 #ifndef HOST_WIDE_INT
 #include "machmode.h"
 #endif
 
-#ifndef __GCC_SYSTEM_H__
+#ifndef GCC_SYSTEM_H
 #include "system.h"
 #endif
 
@@ -159,7 +159,7 @@ extern varray_type varray_init	PARAMS ((size_t, size_t, const char *));
 /* Free up memory allocated by the virtual array, but do not free any of the
    elements involved.  */
 #define VARRAY_FREE(vp) \
-  do { if (vp) { free (vp); vp = (varray_type)0; } } while (0)
+  do { if (vp) { free (vp); vp = (varray_type) 0; } } while (0)
 
 /* Grow/shrink the virtual array VA to N elements.  */
 extern varray_type varray_grow	PARAMS ((varray_type, size_t));
@@ -260,8 +260,8 @@ extern void varray_check_failed PARAMS ((varray_type, size_t,
 #define VARRAY_TOP_ULONG(VA)	        VARRAY_TOP (VA, ul)
 #define VARRAY_TOP_WIDE_INT(VA)	        VARRAY_TOP (VA, hint)
 #define VARRAY_TOP_UWIDE_INT(VA)	VARRAY_TOP (VA, uhint)
-#define VARRAY_TOP_GENERIC_PTR(VA,N)	VARRAY_TOP (VA, generic)
-#define VARRAY_TOP_CHAR_PTR(VA,N)	VARRAY_TOP (VA, cptr)
+#define VARRAY_TOP_GENERIC_PTR(VA)	VARRAY_TOP (VA, generic)
+#define VARRAY_TOP_CHAR_PTR(VA)		VARRAY_TOP (VA, cptr)
 #define VARRAY_TOP_RTX(VA)		VARRAY_TOP (VA, rtx)
 #define VARRAY_TOP_RTVEC(VA)	        VARRAY_TOP (VA, rtvec)
 #define VARRAY_TOP_TREE(VA)		VARRAY_TOP (VA, tree)
@@ -271,4 +271,4 @@ extern void varray_check_failed PARAMS ((varray_type, size_t,
 #define VARRAY_TOP_CONST_EQUIV(VA)	VARRAY_TOP (VA, const_equiv)
 #define VARRAY_TOP_BB(VA)		VARRAY_TOP (VA, bb)
 
-#endif /* _VARRAY_H_ */
+#endif /* ! GCC_VARRAY_H */

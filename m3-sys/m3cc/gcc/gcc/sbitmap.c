@@ -1,22 +1,22 @@
 /* Simple bitmaps.
    Copyright (C) 1999, 2000 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
@@ -96,10 +96,16 @@ void
 sbitmap_copy (dst, src)
      sbitmap dst, src;
 {
-  bcopy ((PTR) src->elms, (PTR) dst->elms,
-	 sizeof (SBITMAP_ELT_TYPE) * dst->size);
+  memcpy (dst->elms, src->elms, sizeof (SBITMAP_ELT_TYPE) * dst->size);
 }
 
+/* Determine if a == b.  */
+int
+sbitmap_equal (a, b)
+     sbitmap a, b;
+{
+  return !memcmp (a->elms, b->elms, sizeof (SBITMAP_ELT_TYPE) * a->size);
+}
 /* Zero all elements in a bitmap.  */
 
 void
@@ -231,6 +237,31 @@ sbitmap_a_and_b (dst, a, b)
   return changed;
 }
 
+/* Set DST to be (A xor B)).
+   Return non-zero if any change is made.  */
+
+int
+sbitmap_a_xor_b (dst, a, b)
+     sbitmap dst, a, b;
+{
+  unsigned int i;
+  sbitmap_ptr dstp, ap, bp;
+  int changed = 0;
+  
+  for (dstp = dst->elms, ap = a->elms, bp = b->elms, i = 0; i < dst->size;
+       i++, dstp++)
+    {
+      SBITMAP_ELT_TYPE tmp = *ap++ ^ *bp++;
+      
+      if (*dstp != tmp)
+	{
+	  changed = 1;
+	  *dstp = tmp;
+	}
+    }
+  return changed;
+}
+
 /* Set DST to be (A or B)).
    Return non-zero if any change is made.  */
 
@@ -325,6 +356,7 @@ sbitmap_a_and_b_or_c (dst, a, b, c)
   return changed;
 }
 
+#ifdef IN_GCC
 /* Set the bitmap DST to the intersection of SRC of successors of
    block number BB, using the new flow graph structures.  */
 
@@ -484,6 +516,7 @@ sbitmap_union_of_preds (dst, src, bb)
 	  *r++ |= *p++;
       }
 }
+#endif
 
 /* Return number of first bit set in the bitmap, -1 if none.  */
 

@@ -807,7 +807,7 @@ Tue Mar  5 02:27:35 1996  Jeffrey A. Law  <law@cygnus.com
 	(hppa_expand_prologue): If optimizing for space, emit an out of
 	line prologue.
 	(hppa_expand_epilogue): Similarly.
-	(override_options): Optimizing for space is not compatable with
+	(override_options): Optimizing for space is not compatible with
 	either profiling or PIC code generation.
 	* pa.md (outline_prologue_call): New pattern.
 	(outline_epilogue_call): Likewise.
@@ -3880,7 +3880,7 @@ Wed Dec  6 06:58:23 1995  Richard Earnshaw (rearnsha@armltd.co.uk)
 	using prog_mode attribute.
 	(function units "write_buf", "write_blockage"): Model the write buffer
 	as two function units, so that conflicts are avoided more often.
-	(funcion unit "core"): New function unit, so that elapsed cycles can
+	(function unit "core"): New function unit, so that elapsed cycles can
 	be more accurately determined.
 	(all anonymous patterns): Add names.
 	(mulsidi3, umulsidi3): New patterns available with fast multiply
@@ -4184,7 +4184,7 @@ Thu Nov 30 12:27:22 1995  Michael Meissner  <meissner@tiktok.cygnus.com>
 	(ASM_SPEC): Pass appropriate -mxxx switches to the assembler based
 	on the -mcpu=xxx options.
 	(ASM_OUTPUT_INT): Move here from eabi.h.
-	(ENCODE_SECTION_INFO): If -mcall-{nt,aixdesc} add approriate magic
+	(ENCODE_SECTION_INFO): If -mcall-{nt,aixdesc} add appropriate magic
 	so function name has two or one leading periods.
 	(ASM_OUTPUT_SOURCE_LINE): Delete, use version in svr4.h.
 	(trampoline macros): Call trampoline functions in rs6000.c.
@@ -4259,7 +4259,7 @@ Wed Nov 29 14:06:13 1995  Jim Wilson  <wilson@cygnus.com>
 
 Wed Nov 29 13:59:58 1995  J"orn Rennecke (amylaar@meolyon.hanse.de)
 
-	* c-decl.c (duplicate_decls): Add new paramter different_binding_level.
+	* c-decl.c (duplicate_decls): Add new parameter different_binding_level.
 	Lots of changes to use new new parameter.
 	(pushdecl): Delete variable declared_global.  New variable
 	different_binding_level and code to set it.  Move extern/static
@@ -5807,7 +5807,7 @@ Fri Jul 28 08:47:51 1995  Jim Wilson  <wilson@chestnut.cygnus.com>
 	(xcoffout_begin_function): Call dbxout_parms and
 	ASM_OUTPUT_SOURCE_LINE.
 
-	* va-mips.h: Change every occurance of #if __mips>=3 to
+	* va-mips.h: Change every occurrence of #if __mips>=3 to
 	#ifdef __mips64.
 	* mips/abi64.h (CPP_SPEC): Output -D__mips64 when -mips3, or -mips4,
 	or -mgp64.  Output -U__mips64 when -mgp32.
@@ -7968,7 +7968,7 @@ Tue May  9 18:25:34 1995  Richard Kenner  <kenner@vlsi1.ultra.nyu.edu>
 
 Tue May  9 15:52:05 1995  Michael Meissner  <meissner@cygnus.com>
 
-	* config.sub: Recognize powerpcle as the little endian varient of
+	* config.sub: Recognize powerpcle as the little endian variant of
 	the PowerPC.  Recgonize ppc as a PowerPC variant, and ppcle as a
 	powerpcle variant.  Convert pentium into i586, not i486.  Add p5
 	alias for i586.  Map new x86 variants p6, k5, nexgen into i586
@@ -9913,7 +9913,7 @@ Fri Mar 10 05:50:11 1995  Oliver Kellogg  (Oliver.Kellogg@RST13.DASA.DBMAIL.d400
 
 	* 1750a.c (sectname): Reverse Init and Normal.
 	(print_operand_address, case PLUS): Add case for LABEL_REF.
-	(print_operand_address, case LABEL_REF): Split fom SYMBOL_REF.
+	(print_operand_address, case LABEL_REF): Split from SYMBOL_REF.
 	(print_operand_address, case CODE_LABEL): New case.
 	(ASM_FILE_END): Delete.
 	* 1750a.h (FUNCTION_EPILOGUE): Restore stack before freeing local vars.

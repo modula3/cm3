@@ -1,6 +1,6 @@
 ;;- Machine description for HP PA-RISC architecture for GNU C compiler
-;;   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
-;;   Free Software Foundation, Inc.
+;;   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
+;;   2002 Free Software Foundation, Inc.
 ;;   Contributed by the Center for Software Science at the University
 ;;   of Utah.
 
@@ -2604,19 +2604,12 @@
 
 (define_insn ""
   [(set (match_operand:HI 0 "register_operand" "=r")
-	(high:HI (match_operand 1 "const_int_operand" "")))]
+	(plus:HI (match_operand:HI 1 "register_operand" "r")
+		 (match_operand 2 "const_int_operand" "J")))]
   ""
-  "ldil L'%G1,%0"
-  [(set_attr "type" "move")
-   (set_attr "length" "4")])
-
-(define_insn ""
-  [(set (match_operand:HI 0 "register_operand" "=r")
-	(lo_sum:HI (match_operand:HI 1 "register_operand" "r")
-		   (match_operand 2 "const_int_operand" "")))]
-  ""
-  "ldo R'%G2(%1),%0"
-  [(set_attr "type" "move")
+  "ldo %2(%1),%0"
+  [(set_attr "type" "binary")
+   (set_attr "pa_combine_type" "addmove")
    (set_attr "length" "4")])
 
 (define_expand "movqi"
@@ -2814,11 +2807,11 @@
   
   /* Fall through means we're going to use our block move pattern.  */
   operands[0]
-    = change_address (operands[0], VOIDmode,
-		      copy_to_mode_reg (SImode, XEXP (operands[0], 0)));
+    = replace_equiv_address (operands[0],
+			     copy_to_mode_reg (SImode, XEXP (operands[0], 0)));
   operands[1]
-    = change_address (operands[1], VOIDmode,
-		      copy_to_mode_reg (SImode, XEXP (operands[1], 0)));
+    = replace_equiv_address (operands[1],
+			     copy_to_mode_reg (SImode, XEXP (operands[1], 0)));
   operands[4] = gen_reg_rtx (SImode);
   operands[5] = gen_reg_rtx (SImode);
   operands[6] = gen_reg_rtx (SImode);
@@ -3505,7 +3498,7 @@
    (set_attr "length" "4")])
 
 (define_expand "floatunssisf2"
-  [(set (subreg:SI (match_dup 2) 1)
+  [(set (subreg:SI (match_dup 2) 4)
 	(match_operand:SI 1 "register_operand" ""))
    (set (subreg:SI (match_dup 2) 0)
 	(const_int 0))
@@ -3523,7 +3516,7 @@
 }")
 
 (define_expand "floatunssidf2"
-  [(set (subreg:SI (match_dup 2) 1)
+  [(set (subreg:SI (match_dup 2) 4)
 	(match_operand:SI 1 "register_operand" ""))
    (set (subreg:SI (match_dup 2) 0)
 	(const_int 0))
@@ -3660,22 +3653,14 @@
 (define_expand "adddi3"
   [(set (match_operand:DI 0 "register_operand" "")
 	(plus:DI (match_operand:DI 1 "register_operand" "")
-		 (match_operand:DI 2 "arith_operand" "")))]
+		 (match_operand:DI 2 "adddi3_operand" "")))]
   ""
   "")
-
-;; We allow arith_operand for operands2, even though strictly speaking it
-;; we would prefer to us arith11_operand since that's what the hardware
-;; can actually support.
-;;
-;; But the price of the extra reload in that case is worth the simplicity
-;; we get by allowing a trivial adddi3 expander to be used for both
-;; PA64 and PA32.
 
 (define_insn ""
   [(set (match_operand:DI 0 "register_operand" "=r")
 	(plus:DI (match_operand:DI 1 "register_operand" "%r")
-		 (match_operand:DI 2 "arith_operand" "rI")))]
+		 (match_operand:DI 2 "arith11_operand" "rI")))]
   "!TARGET_64BIT"
   "*
 {
@@ -3869,29 +3854,20 @@
 	      (clobber (match_dup 3))
 	      (clobber (reg:SI 26))
 	      (clobber (reg:SI 25))
-	      (clobber (reg:SI 31))])
+	      (clobber (match_dup 4))])
    (set (match_operand:SI 0 "general_operand" "") (reg:SI 29))]
   ""
   "
 {
+  operands[4] = gen_rtx_REG (SImode, TARGET_64BIT ? 2 : 31);
   if (TARGET_PA_11 && ! TARGET_DISABLE_FPREGS && ! TARGET_SOFT_FLOAT)
     {
       rtx scratch = gen_reg_rtx (DImode);
       operands[1] = force_reg (SImode, operands[1]);
       operands[2] = force_reg (SImode, operands[2]);
       emit_insn (gen_umulsidi3 (scratch, operands[1], operands[2]));
-      /* We do not want (subreg:SI (XX:DI) 1)) for TARGET_64BIT since
-	 that has no real meaning.  */
-      if (TARGET_64BIT)
-	{
-	  emit_insn (gen_rtx_SET (VOIDmode,
-				  operands[0],
-				  gen_rtx_SUBREG (SImode, scratch, 0)));
-	  DONE;
-	  
-	}
       emit_insn (gen_rtx_SET (VOIDmode, operands[0],
-			      gen_rtx_SUBREG (SImode, scratch, 1)));
+			      gen_rtx_SUBREG (SImode, scratch, GET_MODE_SIZE (SImode))));
       DONE;
     }
   operands[3] = gen_reg_rtx (SImode);
@@ -3930,7 +3906,7 @@
    (clobber (reg:SI 26))
    (clobber (reg:SI 25))
    (clobber (reg:SI 31))]
-  ""
+  "!TARGET_64BIT"
   "* return output_mul_insn (0, insn);"
   [(set_attr "type" "milli")
    (set (attr "length")
@@ -3942,21 +3918,29 @@
                      (const_int 0)))
             (const_int 4)
 
-;; NO_SPACE_REGS
-            (ne (symbol_ref "TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS")
+;; Out of reach PIC
+            (ne (symbol_ref "flag_pic")
                 (const_int 0))
-            (const_int 8)
+            (const_int 24)
 
-;; Out of reach, but not PIC or PORTABLE_RUNTIME
-;; same as NO_SPACE_REGS code
-            (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
-                     (const_int 0))
-                 (eq (symbol_ref "flag_pic")
-                     (const_int 0)))
-            (const_int 8)]
+;; Out of reach PORTABLE_RUNTIME
+            (ne (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                (const_int 0))
+            (const_int 20)]
 
-;; Out of range and either PIC or PORTABLE_RUNTIME
-	  (const_int 24)))])
+;; Out of reach, can use ble
+          (const_int 12)))])
+
+(define_insn ""
+  [(set (reg:SI 29) (mult:SI (reg:SI 26) (reg:SI 25)))
+   (clobber (match_operand:SI 0 "register_operand" "=a"))
+   (clobber (reg:SI 26))
+   (clobber (reg:SI 25))
+   (clobber (reg:SI 2))]
+  "TARGET_64BIT"
+  "* return output_mul_insn (0, insn);"
+  [(set_attr "type" "milli")
+   (set (attr "length") (const_int 4))])
 
 (define_expand "muldi3"
   [(set (match_operand:DI 0 "register_operand" "")
@@ -3984,10 +3968,10 @@
 						GEN_INT (32)));
   emit_move_insn (op2shifted, gen_rtx_LSHIFTRT (DImode, operands[2],
 						GEN_INT (32)));
-  op1r = gen_rtx_SUBREG (SImode, operands[1], 0);
-  op2r = gen_rtx_SUBREG (SImode, operands[2], 0);
-  op1l = gen_rtx_SUBREG (SImode, op1shifted, 0);
-  op2l = gen_rtx_SUBREG (SImode, op2shifted, 0);
+  op1r = gen_rtx_SUBREG (SImode, operands[1], 4);
+  op2r = gen_rtx_SUBREG (SImode, operands[2], 4);
+  op1l = gen_rtx_SUBREG (SImode, op1shifted, 4);
+  op2l = gen_rtx_SUBREG (SImode, op2shifted, 4);
 
   /* Emit multiplies for the cross products.  */
   emit_insn (gen_umulsidi3 (cross_product1, op2r, op1l));
@@ -4015,15 +3999,22 @@
 	      (clobber (match_dup 4))
 	      (clobber (reg:SI 26))
 	      (clobber (reg:SI 25))
-	      (clobber (reg:SI 31))])
+	      (clobber (match_dup 5))])
    (set (match_operand:SI 0 "general_operand" "") (reg:SI 29))]
   ""
   "
 {
   operands[3] = gen_reg_rtx (SImode);
-  operands[4] = gen_reg_rtx (SImode);
   if (TARGET_64BIT)
-    operands[4] = gen_rtx_REG (SImode, 2);
+    {
+      operands[5] = gen_rtx_REG (SImode, 2);
+      operands[4] = operands[5];
+    }
+  else
+    {
+      operands[5] = gen_rtx_REG (SImode, 31);
+      operands[4] = gen_reg_rtx (SImode);
+    }
   if (GET_CODE (operands[2]) == CONST_INT && emit_hpdiv_const (operands, 0))
     DONE;
 }")
@@ -4036,7 +4027,7 @@
    (clobber (reg:SI 26))
    (clobber (reg:SI 25))
    (clobber (reg:SI 31))]
-  ""
+  "!TARGET_64BIT"
   "*
    return output_div_insn (operands, 0, insn);"
   [(set_attr "type" "milli")
@@ -4049,21 +4040,32 @@
                      (const_int 0)))
             (const_int 4)
 
-;; NO_SPACE_REGS
-            (ne (symbol_ref "TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS")
+;; Out of reach PIC
+            (ne (symbol_ref "flag_pic")
                 (const_int 0))
-            (const_int 8)
+            (const_int 24)
 
-;; Out of reach, but not PIC or PORTABLE_RUNTIME
-;; same as NO_SPACE_REGS code
-            (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
-                     (const_int 0))
-                 (eq (symbol_ref "flag_pic")
-                     (const_int 0)))
-            (const_int 8)]
+;; Out of reach PORTABLE_RUNTIME
+            (ne (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                (const_int 0))
+            (const_int 20)]
 
-;; Out of range and either PIC or PORTABLE_RUNTIME
-	  (const_int 24)))])
+;; Out of reach, can use ble
+          (const_int 12)))])
+
+(define_insn ""
+  [(set (reg:SI 29)
+	(div:SI (reg:SI 26) (match_operand:SI 0 "div_operand" "")))
+   (clobber (match_operand:SI 1 "register_operand" "=a"))
+   (clobber (match_operand:SI 2 "register_operand" "=&r"))
+   (clobber (reg:SI 26))
+   (clobber (reg:SI 25))
+   (clobber (reg:SI 2))]
+  "TARGET_64BIT"
+  "*
+   return output_div_insn (operands, 0, insn);"
+  [(set_attr "type" "milli")
+   (set (attr "length") (const_int 4))])
 
 (define_expand "udivsi3"
   [(set (reg:SI 26) (match_operand:SI 1 "move_operand" ""))
@@ -4073,15 +4075,22 @@
 	      (clobber (match_dup 4))
 	      (clobber (reg:SI 26))
 	      (clobber (reg:SI 25))
-	      (clobber (reg:SI 31))])
+	      (clobber (match_dup 5))])
    (set (match_operand:SI 0 "general_operand" "") (reg:SI 29))]
   ""
   "
 {
   operands[3] = gen_reg_rtx (SImode);
-  operands[4] = gen_reg_rtx (SImode);
   if (TARGET_64BIT)
-    operands[4] = gen_rtx_REG (SImode, 2);
+    {
+      operands[5] = gen_rtx_REG (SImode, 2);
+      operands[4] = operands[5];
+    }
+  else
+    {
+      operands[5] = gen_rtx_REG (SImode, 31);
+      operands[4] = gen_reg_rtx (SImode);
+    }
   if (GET_CODE (operands[2]) == CONST_INT && emit_hpdiv_const (operands, 1))
     DONE;
 }")
@@ -4094,7 +4103,7 @@
    (clobber (reg:SI 26))
    (clobber (reg:SI 25))
    (clobber (reg:SI 31))]
-  ""
+  "!TARGET_64BIT"
   "*
    return output_div_insn (operands, 1, insn);"
   [(set_attr "type" "milli")
@@ -4107,21 +4116,32 @@
                      (const_int 0)))
             (const_int 4)
 
-;; NO_SPACE_REGS
-            (ne (symbol_ref "TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS")
+;; Out of reach PIC
+            (ne (symbol_ref "flag_pic")
                 (const_int 0))
-            (const_int 8)
+            (const_int 24)
 
-;; Out of reach, but not PIC or PORTABLE_RUNTIME
-;; same as NO_SPACE_REGS code
-            (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
-                     (const_int 0))
-                 (eq (symbol_ref "flag_pic")
-                     (const_int 0)))
-            (const_int 8)]
+;; Out of reach PORTABLE_RUNTIME
+            (ne (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                (const_int 0))
+            (const_int 20)]
 
-;; Out of range and either PIC or PORTABLE_RUNTIME
-	  (const_int 24)))])
+;; Out of reach, can use ble
+          (const_int 12)))])
+
+(define_insn ""
+  [(set (reg:SI 29)
+	(udiv:SI (reg:SI 26) (match_operand:SI 0 "div_operand" "")))
+   (clobber (match_operand:SI 1 "register_operand" "=a"))
+   (clobber (match_operand:SI 2 "register_operand" "=&r"))
+   (clobber (reg:SI 26))
+   (clobber (reg:SI 25))
+   (clobber (reg:SI 2))]
+  "TARGET_64BIT"
+  "*
+   return output_div_insn (operands, 1, insn);"
+  [(set_attr "type" "milli")
+   (set (attr "length") (const_int 4))])
 
 (define_expand "modsi3"
   [(set (reg:SI 26) (match_operand:SI 1 "move_operand" ""))
@@ -4131,14 +4151,21 @@
 	      (clobber (match_dup 4))
 	      (clobber (reg:SI 26))
 	      (clobber (reg:SI 25))
-	      (clobber (reg:SI 31))])
+	      (clobber (match_dup 5))])
    (set (match_operand:SI 0 "general_operand" "") (reg:SI 29))]
   ""
   "
 {
-  operands[4] = gen_reg_rtx (SImode);
   if (TARGET_64BIT)
-    operands[4] = gen_rtx_REG (SImode, 2);
+    {
+      operands[5] = gen_rtx_REG (SImode, 2);
+      operands[4] = operands[5];
+    }
+  else
+    {
+      operands[5] = gen_rtx_REG (SImode, 31);
+      operands[4] = gen_reg_rtx (SImode);
+    }
   operands[3] = gen_reg_rtx (SImode);
 }")
 
@@ -4149,7 +4176,7 @@
    (clobber (reg:SI 26))
    (clobber (reg:SI 25))
    (clobber (reg:SI 31))]
-  ""
+  "!TARGET_64BIT"
   "*
   return output_mod_insn (0, insn);"
   [(set_attr "type" "milli")
@@ -4162,21 +4189,31 @@
                      (const_int 0)))
             (const_int 4)
 
-;; NO_SPACE_REGS
-            (ne (symbol_ref "TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS")
+;; Out of reach PIC
+            (ne (symbol_ref "flag_pic")
                 (const_int 0))
-            (const_int 8)
+            (const_int 24)
 
-;; Out of reach, but not PIC or PORTABLE_RUNTIME
-;; same as NO_SPACE_REGS code
-            (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
-                     (const_int 0))
-                 (eq (symbol_ref "flag_pic")
-                     (const_int 0)))
-            (const_int 8)]
+;; Out of reach PORTABLE_RUNTIME
+            (ne (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                (const_int 0))
+            (const_int 20)]
 
-;; Out of range and either PIC or PORTABLE_RUNTIME
-	  (const_int 24)))])
+;; Out of reach, can use ble
+          (const_int 12)))])
+
+(define_insn ""
+  [(set (reg:SI 29) (mod:SI (reg:SI 26) (reg:SI 25)))
+   (clobber (match_operand:SI 0 "register_operand" "=a"))
+   (clobber (match_operand:SI 1 "register_operand" "=&r"))
+   (clobber (reg:SI 26))
+   (clobber (reg:SI 25))
+   (clobber (reg:SI 2))]
+  "TARGET_64BIT"
+  "*
+  return output_mod_insn (0, insn);"
+  [(set_attr "type" "milli")
+   (set (attr "length") (const_int 4))])
 
 (define_expand "umodsi3"
   [(set (reg:SI 26) (match_operand:SI 1 "move_operand" ""))
@@ -4186,14 +4223,21 @@
 	      (clobber (match_dup 4))
 	      (clobber (reg:SI 26))
 	      (clobber (reg:SI 25))
-	      (clobber (reg:SI 31))])
+	      (clobber (match_dup 5))])
    (set (match_operand:SI 0 "general_operand" "") (reg:SI 29))]
   ""
   "
 {
-  operands[4] = gen_reg_rtx (SImode);
   if (TARGET_64BIT)
-    operands[4] = gen_rtx_REG (SImode, 2);
+    {
+      operands[5] = gen_rtx_REG (SImode, 2);
+      operands[4] = operands[5];
+    }
+  else
+    {
+      operands[5] = gen_rtx_REG (SImode, 31);
+      operands[4] = gen_reg_rtx (SImode);
+    }
   operands[3] = gen_reg_rtx (SImode);
 }")
 
@@ -4204,7 +4248,7 @@
    (clobber (reg:SI 26))
    (clobber (reg:SI 25))
    (clobber (reg:SI 31))]
-  ""
+  "!TARGET_64BIT"
   "*
   return output_mod_insn (1, insn);"
   [(set_attr "type" "milli")
@@ -4217,21 +4261,31 @@
                      (const_int 0)))
             (const_int 4)
 
-;; NO_SPACE_REGS
-            (ne (symbol_ref "TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS")
+;; Out of reach PIC
+            (ne (symbol_ref "flag_pic")
                 (const_int 0))
-            (const_int 8)
+            (const_int 24)
 
-;; Out of reach, but not PIC or PORTABLE_RUNTIME
-;; same as NO_SPACE_REGS code
-            (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
-                     (const_int 0))
-                 (eq (symbol_ref "flag_pic")
-                     (const_int 0)))
-            (const_int 8)]
+;; Out of reach PORTABLE_RUNTIME
+            (ne (symbol_ref "TARGET_PORTABLE_RUNTIME")
+                (const_int 0))
+            (const_int 20)]
 
-;; Out of range and either PIC or PORTABLE_RUNTIME
-	  (const_int 24)))])
+;; Out of reach, can use ble
+          (const_int 12)))])
+
+(define_insn ""
+  [(set (reg:SI 29) (umod:SI (reg:SI 26) (reg:SI 25)))
+   (clobber (match_operand:SI 0 "register_operand" "=a"))
+   (clobber (match_operand:SI 1 "register_operand" "=&r"))
+   (clobber (reg:SI 26))
+   (clobber (reg:SI 25))
+   (clobber (reg:SI 2))]
+  "TARGET_64BIT"
+  "*
+  return output_mod_insn (1, insn);"
+  [(set_attr "type" "milli")
+   (set (attr "length") (const_int 4))])
 
 ;;- and instructions
 ;; We define DImode `and` so with DImode `not` we can get
@@ -4561,10 +4615,29 @@
   [(set_attr "type" "fpdivsgl")
    (set_attr "length" "4")])
 
-(define_insn "negdf2"
+;; Processors prior to PA 2.0 don't have a fneg instruction.  Fast
+;; negation can be done by subtracting from plus zero.  However, this
+;; violates the IEEE standard when negating plus and minus zero.
+(define_expand "negdf2"
+  [(parallel [(set (match_operand:DF 0 "register_operand" "")
+		   (neg:DF (match_operand:DF 1 "register_operand" "")))
+	      (use (match_dup 2))])]
+  "! TARGET_SOFT_FLOAT"
+{
+  if (TARGET_PA_20 || flag_unsafe_math_optimizations)
+    emit_insn (gen_negdf2_fast (operands[0], operands[1]));
+  else
+    {
+      operands[2] = force_reg (DFmode, immed_real_const_1 (dconstm1, DFmode));
+      emit_insn (gen_muldf3 (operands[0], operands[1], operands[2]));
+    }
+  DONE;
+})
+
+(define_insn "negdf2_fast"
   [(set (match_operand:DF 0 "register_operand" "=f")
 	(neg:DF (match_operand:DF 1 "register_operand" "f")))]
-  "! TARGET_SOFT_FLOAT"
+  "! TARGET_SOFT_FLOAT && (TARGET_PA_20 || flag_unsafe_math_optimizations)"
   "*
 {
   if (TARGET_PA_20)
@@ -4575,10 +4648,26 @@
   [(set_attr "type" "fpalu")
    (set_attr "length" "4")])
 
-(define_insn "negsf2"
+(define_expand "negsf2"
+  [(parallel [(set (match_operand:SF 0 "register_operand" "")
+		   (neg:SF (match_operand:SF 1 "register_operand" "")))
+	      (use (match_dup 2))])]
+  "! TARGET_SOFT_FLOAT"
+{
+  if (TARGET_PA_20 || flag_unsafe_math_optimizations)
+    emit_insn (gen_negsf2_fast (operands[0], operands[1]));
+  else
+    {
+      operands[2] = force_reg (SFmode, immed_real_const_1 (dconstm1, SFmode));
+      emit_insn (gen_mulsf3 (operands[0], operands[1], operands[2]));
+    }
+  DONE;
+})
+
+(define_insn "negsf2_fast"
   [(set (match_operand:SF 0 "register_operand" "=f")
 	(neg:SF (match_operand:SF 1 "register_operand" "f")))]
-  "! TARGET_SOFT_FLOAT"
+  "! TARGET_SOFT_FLOAT && (TARGET_PA_20 || flag_unsafe_math_optimizations)"
   "*
 {
   if (TARGET_PA_20)
@@ -4725,11 +4814,11 @@
 ;; We want to split this up during scheduling since we want both insns
 ;; to schedule independently.
 (define_split
-  [(set (match_operand:DF 0 "register_operand" "=f")
-	(plus:DF (mult:DF (match_operand:DF 1 "register_operand" "f")
-			  (match_operand:DF 2 "register_operand" "f"))
-		 (match_operand:DF 3 "register_operand" "f")))
-   (set (match_operand:DF 4 "register_operand" "=&f")
+  [(set (match_operand:DF 0 "register_operand" "")
+	(plus:DF (mult:DF (match_operand:DF 1 "register_operand" "")
+			  (match_operand:DF 2 "register_operand" ""))
+		 (match_operand:DF 3 "register_operand" "")))
+   (set (match_operand:DF 4 "register_operand" "")
 	(mult:DF (match_dup 1) (match_dup 2)))]
   "! TARGET_SOFT_FLOAT && TARGET_PA_20"
   [(set (match_dup 4) (mult:DF (match_dup 1) (match_dup 2)))
@@ -4754,11 +4843,11 @@
 ;; We want to split this up during scheduling since we want both insns
 ;; to schedule independently.
 (define_split
-  [(set (match_operand:SF 0 "register_operand" "=f")
-	(plus:SF (mult:SF (match_operand:SF 1 "register_operand" "f")
-			  (match_operand:SF 2 "register_operand" "f"))
-		 (match_operand:SF 3 "register_operand" "f")))
-   (set (match_operand:SF 4 "register_operand" "=&f")
+  [(set (match_operand:SF 0 "register_operand" "")
+	(plus:SF (mult:SF (match_operand:SF 1 "register_operand" "")
+			  (match_operand:SF 2 "register_operand" ""))
+		 (match_operand:SF 3 "register_operand" "")))
+   (set (match_operand:SF 4 "register_operand" "")
 	(mult:SF (match_dup 1) (match_dup 2)))]
   "! TARGET_SOFT_FLOAT && TARGET_PA_20"
   [(set (match_dup 4) (mult:SF (match_dup 1) (match_dup 2)))
@@ -4800,10 +4889,10 @@
    (set_attr "length" "8")])
 
 (define_split
-  [(set (match_operand:DF 0 "register_operand" "=f")
-	(neg:DF (mult:DF (match_operand:DF 1 "register_operand" "f")
-			 (match_operand:DF 2 "register_operand" "f"))))
-   (set (match_operand:DF 3 "register_operand" "=&f")
+  [(set (match_operand:DF 0 "register_operand" "")
+	(neg:DF (mult:DF (match_operand:DF 1 "register_operand" "")
+			 (match_operand:DF 2 "register_operand" ""))))
+   (set (match_operand:DF 3 "register_operand" "")
 	(mult:DF (match_dup 1) (match_dup 2)))]
   "! TARGET_SOFT_FLOAT && TARGET_PA_20"
   [(set (match_dup 3) (mult:DF (match_dup 1) (match_dup 2)))
@@ -4824,10 +4913,10 @@
    (set_attr "length" "8")])
 
 (define_split
-  [(set (match_operand:SF 0 "register_operand" "=f")
-	(neg:SF (mult:SF (match_operand:SF 1 "register_operand" "f")
-			 (match_operand:SF 2 "register_operand" "f"))))
-   (set (match_operand:SF 3 "register_operand" "=&f")
+  [(set (match_operand:SF 0 "register_operand" "")
+	(neg:SF (mult:SF (match_operand:SF 1 "register_operand" "")
+			 (match_operand:SF 2 "register_operand" ""))))
+   (set (match_operand:SF 3 "register_operand" "")
 	(mult:SF (match_dup 1) (match_dup 2)))]
   "! TARGET_SOFT_FLOAT && TARGET_PA_20"
   [(set (match_dup 3) (mult:SF (match_dup 1) (match_dup 2)))
@@ -4870,11 +4959,11 @@
    (set_attr "length" "8")])
 
 (define_split
-  [(set (match_operand:DF 0 "register_operand" "=f")
-	(plus:DF (neg:DF (mult:DF (match_operand:DF 1 "register_operand" "f")
-				  (match_operand:DF 2 "register_operand" "f")))
-		 (match_operand:DF 3 "register_operand" "f")))
-   (set (match_operand:DF 4 "register_operand" "=&f")
+  [(set (match_operand:DF 0 "register_operand" "")
+	(plus:DF (neg:DF (mult:DF (match_operand:DF 1 "register_operand" "")
+				  (match_operand:DF 2 "register_operand" "")))
+		 (match_operand:DF 3 "register_operand" "")))
+   (set (match_operand:DF 4 "register_operand" "")
 	(mult:DF (match_dup 1) (match_dup 2)))]
   "! TARGET_SOFT_FLOAT && TARGET_PA_20"
   [(set (match_dup 4) (mult:DF (match_dup 1) (match_dup 2)))
@@ -4897,11 +4986,11 @@
    (set_attr "length" "8")])
 
 (define_split
-  [(set (match_operand:SF 0 "register_operand" "=f")
-	(plus:SF (neg:SF (mult:SF (match_operand:SF 1 "register_operand" "f")
-				  (match_operand:SF 2 "register_operand" "f")))
-		 (match_operand:SF 3 "register_operand" "f")))
-   (set (match_operand:SF 4 "register_operand" "=&f")
+  [(set (match_operand:SF 0 "register_operand" "")
+	(plus:SF (neg:SF (mult:SF (match_operand:SF 1 "register_operand" "")
+				  (match_operand:SF 2 "register_operand" "")))
+		 (match_operand:SF 3 "register_operand" "")))
+   (set (match_operand:SF 4 "register_operand" "")
 	(mult:SF (match_dup 1) (match_dup 2)))]
   "! TARGET_SOFT_FLOAT && TARGET_PA_20"
   [(set (match_dup 4) (mult:SF (match_dup 1) (match_dup 2)))
@@ -4924,11 +5013,11 @@
    (set_attr "length" "8")])
 
 (define_split
-  [(set (match_operand:DF 0 "register_operand" "=f")
-	(minus:DF (match_operand:DF 3 "register_operand" "f")
-		  (mult:DF (match_operand:DF 1 "register_operand" "f")
-			   (match_operand:DF 2 "register_operand" "f"))))
-   (set (match_operand:DF 4 "register_operand" "=&f")
+  [(set (match_operand:DF 0 "register_operand" "")
+	(minus:DF (match_operand:DF 3 "register_operand" "")
+		  (mult:DF (match_operand:DF 1 "register_operand" "")
+			   (match_operand:DF 2 "register_operand" ""))))
+   (set (match_operand:DF 4 "register_operand" "")
 	(mult:DF (match_dup 1) (match_dup 2)))]
   "! TARGET_SOFT_FLOAT && TARGET_PA_20"
   [(set (match_dup 4) (mult:DF (match_dup 1) (match_dup 2)))
@@ -4951,11 +5040,11 @@
    (set_attr "length" "8")])
 
 (define_split
-  [(set (match_operand:SF 0 "register_operand" "=f")
-	(minus:SF (match_operand:SF 3 "register_operand" "f")
-		  (mult:SF (match_operand:SF 1 "register_operand" "f")
-			   (match_operand:SF 2 "register_operand" "f"))))
-   (set (match_operand:SF 4 "register_operand" "=&f")
+  [(set (match_operand:SF 0 "register_operand" "")
+	(minus:SF (match_operand:SF 3 "register_operand" "")
+		  (mult:SF (match_operand:SF 1 "register_operand" "")
+			   (match_operand:SF 2 "register_operand" ""))))
+   (set (match_operand:SF 4 "register_operand" "")
 	(mult:SF (match_dup 1) (match_dup 2)))]
   "! TARGET_SOFT_FLOAT && TARGET_PA_20"
   [(set (match_dup 4) (mult:SF (match_dup 1) (match_dup 2)))
@@ -4974,9 +5063,9 @@
    (set_attr "length" "8")])
 
 (define_split
-  [(set (match_operand:DF 0 "register_operand" "=f")
-	(neg:DF (abs:DF (match_operand:DF 1 "register_operand" "f"))))
-   (set (match_operand:DF 2 "register_operand" "=&f") (abs:DF (match_dup 1)))]
+  [(set (match_operand:DF 0 "register_operand" "")
+	(neg:DF (abs:DF (match_operand:DF 1 "register_operand" ""))))
+   (set (match_operand:DF 2 "register_operand" "") (abs:DF (match_dup 1)))]
   "! TARGET_SOFT_FLOAT && TARGET_PA_20"
   [(set (match_dup 2) (abs:DF (match_dup 1)))
    (set (match_dup 0) (neg:DF (abs:DF (match_dup 1))))]
@@ -4993,9 +5082,9 @@
    (set_attr "length" "8")])
 
 (define_split
-  [(set (match_operand:SF 0 "register_operand" "=f")
-	(neg:SF (abs:SF (match_operand:SF 1 "register_operand" "f"))))
-   (set (match_operand:SF 2 "register_operand" "=&f") (abs:SF (match_dup 1)))]
+  [(set (match_operand:SF 0 "register_operand" "")
+	(neg:SF (abs:SF (match_operand:SF 1 "register_operand" ""))))
+   (set (match_operand:SF 2 "register_operand" "") (abs:SF (match_dup 1)))]
   "! TARGET_SOFT_FLOAT && TARGET_PA_20"
   [(set (match_dup 2) (abs:SF (match_dup 1)))
    (set (match_dup 0) (neg:SF (abs:SF (match_dup 1))))]
@@ -5513,10 +5602,28 @@
 ;; from within its delay slot to set the value for the 2nd parameter to
 ;; the call.
 (define_insn "call_profiler"
-  [(unspec_volatile [(const_int 0)] 0)
-   (use (match_operand:SI 0 "const_int_operand" ""))]
+  [(call (mem:SI (match_operand 0 "call_operand_address" ""))
+	 (match_operand 1 "" ""))
+   (use (match_operand 2 "" ""))
+   (use (reg:SI 25))
+   (use (reg:SI 26))
+   (clobber (reg:SI 2))]
   ""
-  "{bl|b,l} _mcount,%%r2\;ldo %0(%%r2),%%r25"
+  "*
+{
+  rtx xoperands[3];
+
+  output_arg_descriptor (insn);
+
+  xoperands[0] = operands[0];
+  xoperands[1] = operands[2];
+  xoperands[2] = gen_label_rtx ();
+  output_asm_insn (\"{bl|b,l} %0,%%r2\;ldo %1-%2(%%r2),%%r25\", xoperands);
+
+  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, \"L\",
+			     CODE_LABEL_NUMBER (xoperands[2]));
+  return \"\";
+}"
   [(set_attr "type" "multi")
    (set_attr "length" "8")])
 
@@ -5642,7 +5749,7 @@
     {
       rtx reg = gen_reg_rtx (DImode);
       emit_insn (gen_extendsidi2 (reg, operands[0]));
-      operands[0] = gen_rtx_SUBREG (SImode, reg, 0);
+      operands[0] = gen_rtx_SUBREG (SImode, reg, 4);
     }
 
   if (!INT_5_BITS (operands[2]))
@@ -5694,9 +5801,6 @@
 		    gen_rtx_PLUS (word_mode, virtual_outgoing_args_rtx,
 				  GEN_INT (64)));
 
-  if (flag_pic && PIC_OFFSET_TABLE_SAVE_RTX == NULL_RTX)
-    hppa_init_pic_save ();
-
   /* Use two different patterns for calls to explicitly named functions
      and calls through function pointers.  This is necessary as these two
      types of calls use different calling conventions, and CSE might try
@@ -5725,7 +5829,7 @@
 
       /* After each call we must restore the PIC register, even if it
 	 doesn't appear to be used.  */
-      emit_move_insn (pic_offset_table_rtx, PIC_OFFSET_TABLE_SAVE_RTX);
+      emit_move_insn (pic_offset_table_rtx, hppa_pic_save_rtx ());
     }
   DONE;
 }")
@@ -5765,8 +5869,6 @@
   "TARGET_64BIT"
   "*
 {
-  rtx xoperands[2];
-
   /* ??? Needs more work.  Length computation, split into multiple insns,
      do not use %r22 directly, expose delay slot.  */
   return \"ldd 16(%0),%%r2\;ldd 24(%0),%%r27\;bve,l (%%r2),%%r2\;nop\";
@@ -5785,7 +5887,7 @@
   rtx xoperands[2];
 
   /* First the special case for kernels, level 0 systems, etc.  */
-  if (TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS)
+  if (TARGET_FAST_INDIRECT_CALLS)
     return \"ble 0(%%sr4,%%r22)\;copy %%r31,%%r2\";
 
   /* Now the normal case -- we can reach $$dyncall directly or
@@ -5820,8 +5922,8 @@
   [(set_attr "type" "dyncall")
    (set (attr "length")
      (cond [
-;; First NO_SPACE_REGS
-	    (ne (symbol_ref "TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS")
+;; First FAST_INDIRECT_CALLS
+	    (ne (symbol_ref "TARGET_FAST_INDIRECT_CALLS")
 		(const_int 0))
 	    (const_int 8)
 
@@ -5832,19 +5934,18 @@
 		     (const_int 0)))
 	    (const_int 8)
 
-;; Out of reach, but not PIC or PORTABLE_RUNTIME
-	    (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
-		     (const_int 0))
-		 (eq (symbol_ref "flag_pic")
-		     (const_int 0)))
-	    (const_int 12)
+;; Out of reach PIC
+	    (ne (symbol_ref "flag_pic")
+		(const_int 0))
+	    (const_int 24)
 
+;; Out of reach PORTABLE_RUNTIME
 	    (ne (symbol_ref "TARGET_PORTABLE_RUNTIME")
 		(const_int 0))
 	    (const_int 20)]
 
-;; Out of range PIC case
-	  (const_int 24)))])
+;; Out of reach, can use ble
+	  (const_int 12)))])
 
 (define_expand "call_value"
   [(parallel [(set (match_operand 0 "" "")
@@ -5866,9 +5967,6 @@
     emit_move_insn (arg_pointer_rtx,
 		    gen_rtx_PLUS (word_mode, virtual_outgoing_args_rtx,
 				  GEN_INT (64)));
-
-  if (flag_pic && PIC_OFFSET_TABLE_SAVE_RTX == NULL_RTX)
-    hppa_init_pic_save ();
 
   /* Use two different patterns for calls to explicitly named functions
      and calls through function pointers.  This is necessary as these two
@@ -5902,7 +6000,7 @@
 
       /* After each call we must restore the PIC register, even if it
 	 doesn't appear to be used.  */
-      emit_move_insn (pic_offset_table_rtx, PIC_OFFSET_TABLE_SAVE_RTX);
+      emit_move_insn (pic_offset_table_rtx, hppa_pic_save_rtx ());
     }
   DONE;
 }")
@@ -5964,7 +6062,7 @@
   rtx xoperands[2];
 
   /* First the special case for kernels, level 0 systems, etc.  */
-  if (TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS)
+  if (TARGET_FAST_INDIRECT_CALLS)
     return \"ble 0(%%sr4,%%r22)\;copy %%r31,%%r2\";
 
   /* Now the normal case -- we can reach $$dyncall directly or
@@ -5999,8 +6097,8 @@
   [(set_attr "type" "dyncall")
    (set (attr "length")
      (cond [
-;; First NO_SPACE_REGS
-	    (ne (symbol_ref "TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS")
+;; First FAST_INDIRECT_CALLS
+	    (ne (symbol_ref "TARGET_FAST_INDIRECT_CALLS")
 		(const_int 0))
 	    (const_int 8)
 
@@ -6011,19 +6109,18 @@
 		     (const_int 0)))
 	    (const_int 8)
 
-;; Out of reach, but not PIC or PORTABLE_RUNTIME
-	    (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
-		     (const_int 0))
-		 (eq (symbol_ref "flag_pic")
-		     (const_int 0)))
-	    (const_int 12)
+;; Out of reach PIC
+	    (ne (symbol_ref "flag_pic")
+		(const_int 0))
+	    (const_int 24)
 
+;; Out of reach PORTABLE_RUNTIME
 	    (ne (symbol_ref "TARGET_PORTABLE_RUNTIME")
 		(const_int 0))
 	    (const_int 20)]
 
-;; Out of range PIC case
-	  (const_int 24)))])
+;; Out of reach, can use ble
+	  (const_int 12)))])
 
 ;; Call subroutine returning any type.
 
@@ -6066,9 +6163,6 @@
 
   op = XEXP (operands[0], 0);
 
-  if (flag_pic && PIC_OFFSET_TABLE_SAVE_RTX == NULL_RTX)
-    hppa_init_pic_save ();
-
   /* We do not allow indirect sibling calls.  */
   call_insn = emit_call_insn (gen_sibcall_internal_symref (op, operands[1]));
 
@@ -6078,7 +6172,7 @@
 
       /* After each call we must restore the PIC register, even if it
 	 doesn't appear to be used.  */
-      emit_move_insn (pic_offset_table_rtx, PIC_OFFSET_TABLE_SAVE_RTX);
+      emit_move_insn (pic_offset_table_rtx, hppa_pic_save_rtx ());
     }
   DONE;
 }")
@@ -6124,9 +6218,6 @@
 
   op = XEXP (operands[1], 0);
 
-  if (flag_pic && PIC_OFFSET_TABLE_SAVE_RTX == NULL_RTX)
-    hppa_init_pic_save ();
-
   /* We do not allow indirect sibling calls.  */
   call_insn = emit_call_insn (gen_sibcall_value_internal_symref (operands[0],
 								 op,
@@ -6137,7 +6228,7 @@
 
       /* After each call we must restore the PIC register, even if it
 	 doesn't appear to be used.  */
-      emit_move_insn (pic_offset_table_rtx, PIC_OFFSET_TABLE_SAVE_RTX);
+      emit_move_insn (pic_offset_table_rtx, hppa_pic_save_rtx ());
     }
   DONE;
 }")
@@ -6487,8 +6578,9 @@
   [(set (pc)
 	(if_then_else
 	  (match_operator 2 "comparison_operator"
-	   [(plus:SI (match_operand:SI 0 "register_operand" "+!r,!*f,!*m")
-		     (match_operand:SI 1 "int5_operand" "L,L,L"))
+	   [(plus:SI
+	      (match_operand:SI 0 "reg_before_reload_operand" "+!r,!*f,*m")
+	      (match_operand:SI 1 "int5_operand" "L,L,L"))
 	    (const_int 0)])
 	  (label_ref (match_operand 3 "" ""))
 	  (pc)))
@@ -6544,7 +6636,7 @@
 	   [(match_operand:SI 1 "register_operand" "r,r,r,r") (const_int 0)])
 	  (label_ref (match_operand 3 "" ""))
 	  (pc)))
-   (set (match_operand:SI 0 "register_operand" "=!r,!*f,!*m,!*q")
+   (set (match_operand:SI 0 "reg_before_reload_operand" "=!r,!*f,*m,!*q")
 	(match_dup 1))]
   ""
 "* return output_movb (operands, insn, which_alternative, 0); "
@@ -6590,7 +6682,7 @@
 	   [(match_operand:SI 1 "register_operand" "r,r,r,r") (const_int 0)])
 	  (pc)
 	  (label_ref (match_operand 3 "" ""))))
-   (set (match_operand:SI 0 "register_operand" "=!r,!*f,!*m,!*q")
+   (set (match_operand:SI 0 "reg_before_reload_operand" "=!r,!*f,*m,!*q")
 	(match_dup 1))]
   ""
 "* return output_movb (operands, insn, which_alternative, 1); "
@@ -7025,7 +7117,7 @@
 	      (clobber (reg:SI 31))])
    (set (match_operand:SI 0 "register_operand" "")
 	(reg:SI 29))]
-  "! TARGET_PORTABLE_RUNTIME && !TARGET_64BIT"
+  "! TARGET_PORTABLE_RUNTIME && !TARGET_64BIT && !TARGET_ELF32"
   "
 {
   operands[2] = gen_reg_rtx (SImode);
@@ -7096,26 +7188,18 @@
                      (const_int 0)))
             (const_int 28)
 
-;; NO_SPACE_REGS
-            (ne (symbol_ref "TARGET_NO_SPACE_REGS || TARGET_FAST_INDIRECT_CALLS")
-                (const_int 0))
-            (const_int 32)
+;; Out of reach PIC
+	    (ne (symbol_ref "flag_pic")
+		(const_int 0))
+	    (const_int 44)
 
-;; Out of reach, but not PIC or PORTABLE_RUNTIME
-;; same as NO_SPACE_REGS code
-            (and (eq (symbol_ref "TARGET_PORTABLE_RUNTIME")
-                     (const_int 0))
-                 (eq (symbol_ref "flag_pic")
-                     (const_int 0)))
-            (const_int 32)
-
-;; PORTABLE_RUNTIME
+;; Out of reach PORTABLE_RUNTIME
 	    (ne (symbol_ref "TARGET_PORTABLE_RUNTIME")
 		(const_int 0))
 	    (const_int 40)]
 
-;; Out of range and PIC 
-	  (const_int 44)))])
+;; Out of reach, can use ble
+          (const_int 32)))])
 
 ;; On the PA, the PIC register is call clobbered, so it must
 ;; be saved & restored around calls by the caller.  If the call
@@ -7142,12 +7226,9 @@
   "flag_pic"
   "
 {
-  if (PIC_OFFSET_TABLE_SAVE_RTX == NULL_RTX)
-    hppa_init_pic_save ();
-
   /* Restore the PIC register.  Hopefully, this will always be from
      a stack slot.  The only registers that are valid after a
      builtin_longjmp are the stack and frame pointers.  */
-  emit_move_insn (pic_offset_table_rtx, PIC_OFFSET_TABLE_SAVE_RTX);
+  emit_move_insn (pic_offset_table_rtx, hppa_pic_save_rtx ());
   DONE;
 }")

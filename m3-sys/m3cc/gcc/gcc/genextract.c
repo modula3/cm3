@@ -2,22 +2,22 @@
    Copyright (C) 1987, 1991, 1992, 1993, 1997, 1998,
    1999, 2000 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 
 #include "hconfig.h"
@@ -102,9 +102,9 @@ static void
 gen_insn (insn)
      rtx insn;
 {
-  register int i;
-  register struct extraction *p;
-  register struct code_ptr *link;
+  int i;
+  struct extraction *p;
+  struct code_ptr *link;
 
   op_count = 0;
   dup_count = 0;
@@ -120,7 +120,7 @@ gen_insn (insn)
   else
     for (i = XVECLEN (insn, 1) - 1; i >= 0; i--)
       {
-	char *path = (char *) alloca (2);
+	char path[2];
 
 	path[0] = 'a' + i;
 	path[1] = 0;
@@ -183,10 +183,10 @@ walk_rtx (x, path)
      rtx x;
      const char *path;
 {
-  register RTX_CODE code;
-  register int i;
-  register int len;
-  register const char *fmt;
+  RTX_CODE code;
+  int i;
+  int len;
+  const char *fmt;
   int depth = strlen (path);
   char *newpath;
 
@@ -210,33 +210,34 @@ walk_rtx (x, path)
       break;
 
     case MATCH_DUP:
-    case MATCH_PAR_DUP:
       duplocs[dup_count] = xstrdup (path);
       dupnums[dup_count] = XINT (x, 0);
       dup_count++;
       break;
 
+    case MATCH_PAR_DUP:
     case MATCH_OP_DUP:
       duplocs[dup_count] = xstrdup (path);
       dupnums[dup_count] = XINT (x, 0);
       dup_count++;
       
-      newpath = (char *) alloca (depth + 2);
+      newpath = (char *) xmalloc (depth + 2);
       strcpy (newpath, path);
       newpath[depth + 1] = 0;
       
       for (i = XVECLEN (x, 1) - 1; i >= 0; i--)
         {
-	  newpath[depth] = '0' + i;
+	  newpath[depth] = (code == MATCH_OP_DUP ? '0' : 'a') + i;
 	  walk_rtx (XVECEXP (x, 1, i), newpath);
         }
+      free (newpath);
       return;
       
     case MATCH_OPERATOR:
       oplocs[XINT (x, 0)] = xstrdup (path);
       op_count = MAX (op_count, XINT (x, 0) + 1);
 
-      newpath = (char *) alloca (depth + 2);
+      newpath = (char *) xmalloc (depth + 2);
       strcpy (newpath, path);
       newpath[depth + 1] = 0;
 
@@ -245,13 +246,14 @@ walk_rtx (x, path)
 	  newpath[depth] = '0' + i;
 	  walk_rtx (XVECEXP (x, 2, i), newpath);
 	}
+      free (newpath);
       return;
 
     case MATCH_PARALLEL:
       oplocs[XINT (x, 0)] = xstrdup (path);
       op_count = MAX (op_count, XINT (x, 0) + 1);
 
-      newpath = (char *) alloca (depth + 2);
+      newpath = (char *) xmalloc (depth + 2);
       strcpy (newpath, path);
       newpath[depth + 1] = 0;
 
@@ -260,6 +262,7 @@ walk_rtx (x, path)
 	  newpath[depth] = 'a' + i;
 	  walk_rtx (XVECEXP (x, 2, i), newpath);
 	}
+      free (newpath);
       return;
 
     case ADDRESS:
@@ -270,7 +273,7 @@ walk_rtx (x, path)
       break;
     }
 
-  newpath = (char *) alloca (depth + 2);
+  newpath = (char *) xmalloc (depth + 2);
   strcpy (newpath, path);
   newpath[depth + 1] = 0;
 
@@ -293,6 +296,7 @@ walk_rtx (x, path)
 	    }
 	}
     }
+  free (newpath);
 }
 
 /* Given a PATH, representing a path down the instruction's
@@ -303,8 +307,8 @@ static void
 print_path (path)
      const char *path;
 {
-  register int len = strlen (path);
-  register int i;
+  int len = strlen (path);
+  int i;
 
   if (len == 0)
     {
@@ -356,9 +360,9 @@ main (argc, argv)
   progname = "genextract";
 
   if (argc <= 1)
-    fatal ("No input file name.");
+    fatal ("no input file name");
 
-  if (init_md_reader (argv[1]) != SUCCESS_EXIT_CODE)
+  if (init_md_reader_args (argc, argv) != SUCCESS_EXIT_CODE)
     return (FATAL_EXIT_CODE);
 
   /* Assign sequential codes to all entries in the machine description
@@ -383,8 +387,8 @@ from the machine description file `md'.  */\n\n");
   printf ("void\ninsn_extract (insn)\n");
   printf ("     rtx insn;\n");
   printf ("{\n");
-  printf ("  register rtx *ro = recog_data.operand;\n");
-  printf ("  register rtx **ro_loc = recog_data.operand_loc;\n");
+  printf ("  rtx *ro = recog_data.operand;\n");
+  printf ("  rtx **ro_loc = recog_data.operand_loc;\n");
   printf ("  rtx pat = PATTERN (insn);\n");
   printf ("  int i ATTRIBUTE_UNUSED;\n\n");
   printf ("  memset (ro, 0, sizeof (*ro) * MAX_RECOG_OPERANDS);\n");
@@ -430,9 +434,11 @@ from the machine description file `md'.  */\n\n");
 
       /* The vector in the insn says how many operands it has.
 	 And all it contains are operands.  In fact, the vector was
-	 created just for the sake of this function.  */
+	 created just for the sake of this function.  We need to set the
+	 location of the operands for sake of simplifications after
+	 extraction, like eliminating subregs.  */
       printf ("      for (i = XVECLEN (pat, 0) - 1; i >= 0; i--)\n");
-      printf ("          ro[i] = XVECEXP (pat, 0, i);\n");
+      printf ("          ro[i] = *(ro_loc[i] = &XVECEXP (pat, 0, i));\n");
       printf ("      break;\n\n");
     }
 

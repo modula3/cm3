@@ -1,6 +1,6 @@
-;; Machine description for GNU compiler, Vax Version
-;; Copyright (C) 1987, 1988, 1991, 1994, 1995, 1996, 1998, 1999, 2000
-;; Free Software Foundation, Inc.
+;; Machine description for GNU compiler, VAX Version
+;; Copyright (C) 1987, 1988, 1991, 1994, 1995, 1996, 1998, 1999, 2000, 2001,
+;; 2002 Free Software Foundation, Inc.
 
 ;; This file is part of GNU CC.
 
@@ -122,7 +122,7 @@
   ""
   "bitb %0,%1")
 
-;; The vax has no sCOND insns.  It does have add/subtract with carry
+;; The VAX has no sCOND insns.  It does have add/subtract with carry
 ;; which could be used to implement the sltu and sgeu patterns.  However,
 ;; to do this properly requires a complete rewrite of the compare insns
 ;; to keep them together with the sltu/sgeu insns until after the
@@ -146,7 +146,7 @@
    clrf %0
    movf %1,%0")
 
-;; Some vaxes don't support this instruction.
+;; Some VAXen don't support this instruction.
 ;;(define_insn "movti"
 ;;  [(set (match_operand:TI 0 "general_operand" "=g")
 ;;	(match_operand:TI 1 "general_operand" "g"))]
@@ -161,7 +161,7 @@
    clrq %0
    movq %D1,%0")
 
-;; The VAX move instructions have space-time tradeoffs.  On a microVAX
+;; The VAX move instructions have space-time tradeoffs.  On a MicroVAX
 ;; register-register mov instructions take 3 bytes and 2 CPU cycles.  clrl
 ;; takes 2 bytes and 3 cycles.  mov from constant to register takes 2 cycles
 ;; if the constant is smaller than 4 bytes, 3 cycles for a longword
@@ -184,17 +184,9 @@
   ""
   "*
 {
-  rtx link;
-  if (operands[1] == const1_rtx
-      && (link = find_reg_note (insn, REG_WAS_0, 0))
-      /* Make sure the insn that stored the 0 is still present.  */
-      && ! INSN_DELETED_P (XEXP (link, 0))
-      && GET_CODE (XEXP (link, 0)) != NOTE
-      /* Make sure cross jumping didn't happen here.  */
-      && no_labels_between_p (XEXP (link, 0), insn)
-      /* Make sure the reg hasn't been clobbered.  */
-      && ! reg_set_between_p (operands[0], XEXP (link, 0), insn))
+  if (operands[1] == const1_rtx && reg_was_0_p (insn, operands[0]))
     return \"incl %0\";
+
   if (GET_CODE (operands[1]) == SYMBOL_REF || GET_CODE (operands[1]) == CONST)
     {
       if (push_operand (operands[0], SImode))
@@ -229,16 +221,7 @@
   ""
   "*
 {
-  rtx link;
-  if (operands[1] == const1_rtx
-      && (link = find_reg_note (insn, REG_WAS_0, 0))
-      /* Make sure the insn that stored the 0 is still present.  */
-      && ! INSN_DELETED_P (XEXP (link, 0))
-      && GET_CODE (XEXP (link, 0)) != NOTE
-      /* Make sure cross jumping didn't happen here.  */
-      && no_labels_between_p (XEXP (link, 0), insn)
-      /* Make sure the reg hasn't been clobbered.  */
-      && ! reg_set_between_p (operands[0], XEXP (link, 0), insn))
+  if (operands[1] == const1_rtx && reg_was_0_p (insn, operands[0]))
     return \"incw %0\";
 
   if (GET_CODE (operands[1]) == CONST_INT)
@@ -283,16 +266,7 @@
   ""
   "*
 {
-  rtx link;
-  if (operands[1] == const1_rtx
-      && (link = find_reg_note (insn, REG_WAS_0, 0))
-      /* Make sure the insn that stored the 0 is still present.  */
-      && ! INSN_DELETED_P (XEXP (link, 0))
-      && GET_CODE (XEXP (link, 0)) != NOTE
-      /* Make sure cross jumping didn't happen here.  */
-      && no_labels_between_p (XEXP (link, 0), insn)
-      /* Make sure the reg hasn't been clobbered.  */
-      && ! reg_set_between_p (operands[0], XEXP (link, 0), insn))
+  if (operands[1] == const1_rtx && reg_was_0_p (insn, operands[0]))
     return \"incb %0\";
 
   if (GET_CODE (operands[1]) == CONST_INT)
@@ -525,7 +499,7 @@
    but it not faster on other models.
 
    "movab #(r1),r2" is usually shorter than "addl3 #,r1,r2", and is
-   faster on a VAX 3, but some VAXes (e.g. VAX 9000) will stall if
+   faster on a VAX 3, but some VAXen (e.g. VAX 9000) will stall if
    a register is used in an address too soon after it is set.
    Compromise by using movab only when it is shorter than the add
    or the base register in the address is one of sp, ap, and fp,
@@ -920,11 +894,11 @@
 ;  ""
 ;  "ediv %2,%1,%0,%3")
 
-;; Bit-and on the vax is done with a clear-bits insn.
+;; Bit-and on the VAX is done with a clear-bits insn.
 (define_expand "andsi3"
-  [(set (match_operand:SI 0 "general_operand" "=g")
-	(and:SI (not:SI (match_operand:SI 1 "general_operand" "g"))
-		(match_operand:SI 2 "general_operand" "g")))]
+  [(set (match_operand:SI 0 "nonimmediate_operand" "")
+	(and:SI (not:SI (match_operand:SI 1 "general_operand" ""))
+		(match_operand:SI 2 "general_operand" "")))]
   ""
   "
 {
@@ -945,9 +919,9 @@
 }")
 
 (define_expand "andhi3"
-  [(set (match_operand:HI 0 "general_operand" "=g")
-	(and:HI (not:HI (match_operand:HI 1 "general_operand" "g"))
-		(match_operand:HI 2 "general_operand" "g")))]
+  [(set (match_operand:HI 0 "nonimmediate_operand" "")
+	(and:HI (not:HI (match_operand:HI 1 "general_operand" ""))
+		(match_operand:HI 2 "general_operand" "")))]
   ""
   "
 {
@@ -961,15 +935,15 @@
     }
 
   if (GET_CODE (op1) == CONST_INT)
-    operands[1] = GEN_INT (65535 & ~INTVAL (op1));
+    operands[1] = GEN_INT (~INTVAL (op1));
   else
     operands[1] = expand_unop (HImode, one_cmpl_optab, op1, 0, 1);
 }")
 
 (define_expand "andqi3"
-  [(set (match_operand:QI 0 "general_operand" "=g")
-	(and:QI (not:QI (match_operand:QI 1 "general_operand" "g"))
-		(match_operand:QI 2 "general_operand" "g")))]
+  [(set (match_operand:QI 0 "nonimmediate_operand" "")
+	(and:QI (not:QI (match_operand:QI 1 "general_operand" ""))
+		(match_operand:QI 2 "general_operand" "")))]
   ""
   "
 {
@@ -983,7 +957,7 @@
    }
 
   if (GET_CODE (op1) == CONST_INT)
-    operands[1] = GEN_INT (255 & ~INTVAL (op1));
+    operands[1] = GEN_INT (~INTVAL (op1));
   else
     operands[1] = expand_unop (QImode, one_cmpl_optab, op1, 0, 1);
 }")
@@ -1159,7 +1133,7 @@
   ""
   "mcomb %1,%0")
 
-;; Arithmetic right shift on the vax works by negating the shift count,
+;; Arithmetic right shift on the VAX works by negating the shift count,
 ;; then emitting a right shift with the shift count negated.  This means
 ;; that all actual shift counts in the RTL will be positive.  This 
 ;; prevents converting shifts to ZERO_EXTRACTs with negative positions,
@@ -1212,7 +1186,7 @@
   return \"ashl %2,%1,%0\";
 }")
 
-;; Arithmetic right shift on the vax works by negating the shift count.
+;; Arithmetic right shift on the VAX works by negating the shift count.
 (define_expand "ashrdi3"
   [(set (match_operand:DI 0 "general_operand" "=g")
 	(ashiftrt:DI (match_operand:DI 1 "general_operand" "g")
@@ -1257,7 +1231,7 @@
   operands[4] = gen_lowpart (QImode, operands[2]);
 }")
 
-;; Rotate right on the vax works by negating the shift count.
+;; Rotate right on the VAX works by negating the shift count.
 (define_expand "rotrsi3"
   [(set (match_operand:SI 0 "general_operand" "=g")
 	(rotatert:SI (match_operand:SI 1 "general_operand" "g")
@@ -1322,7 +1296,9 @@
     }
   else
     operands[0]
-      = adj_offsettable_operand (operands[0], INTVAL (operands[2]) / 8);
+      = adjust_address (operands[0],
+			INTVAL (operands[1]) == 8 ? QImode : HImode,
+			INTVAL (operands[2]) / 8);
 
   CC_STATUS_INIT;
   if (INTVAL (operands[1]) == 8)
@@ -1348,7 +1324,9 @@
     }
   else
     operands[1]
-      = adj_offsettable_operand (operands[1], INTVAL (operands[3]) / 8);
+      = adjust_address (operands[1],
+			INTVAL (operands[2]) == 8 ? QImode : HImode,
+			INTVAL (operands[3]) / 8);
 
   if (INTVAL (operands[2]) == 8)
     return \"movzbl %1,%0\";
@@ -1373,7 +1351,9 @@
     }
   else
     operands[1]
-      = adj_offsettable_operand (operands[1], INTVAL (operands[3]) / 8);
+      = adjust_address (operands[1],
+			INTVAL (operands[2]) == 8 ? QImode : HImode,
+			INTVAL (operands[3]) / 8);
 
   if (INTVAL (operands[2]) == 8)
     return \"cvtbl %1,%0\";
@@ -1926,6 +1906,15 @@
   ""
   "ret")
 
+(define_expand "epilogue"
+  [(return)]
+  ""
+  "
+{
+  emit_jump_insn (gen_return ());
+  DONE;
+}")
+
 (define_insn "nop"
   [(const_int 0)]
   ""
@@ -1943,52 +1932,70 @@
 ;; and pass the first 4 along to the casesi1 pattern that really does the work.
 (define_expand "casesi"
   [(set (pc)
-	(if_then_else (leu (minus:SI (match_operand:SI 0 "general_operand" "g")
-				     (match_operand:SI 1 "general_operand" "g"))
-			   (match_operand:SI 2 "general_operand" "g"))
-		      (plus:SI (sign_extend:SI
-				(mem:HI
-				 (plus:SI (pc)
-					  (mult:SI (minus:SI (match_dup 0)
-							     (match_dup 1))
-						   (const_int 2)))))
-			       (label_ref:SI (match_operand 3 "" "")))
-		      (pc)))
+	(if_then_else
+	 (leu (minus:SI (match_operand:SI 0 "general_operand" "")
+			(match_operand:SI 1 "general_operand" ""))
+	      (match_operand:SI 2 "general_operand" ""))
+	 (plus:SI (sign_extend:SI
+		   (mem:HI (plus:SI (mult:SI (minus:SI (match_dup 0)
+						       (match_dup 1))
+					     (const_int 2))
+				    (pc))))
+		  (label_ref:SI (match_operand 3 "" "")))
+	 (pc)))
    (match_operand 4 "" "")]
   ""
   "
-  emit_insn (gen_casesi1 (operands[0], operands[1], operands[2], operands[3]));
+  emit_jump_insn (gen_casesi1 (operands[0], operands[1], operands[2], operands[3]));
   DONE;
 ")
 
 (define_insn "casesi1"
   [(set (pc)
-	(if_then_else (leu (minus:SI (match_operand:SI 0 "general_operand" "g")
-				     (match_operand:SI 1 "general_operand" "g"))
-			   (match_operand:SI 2 "general_operand" "g"))
-		      (plus:SI (sign_extend:SI
-				(mem:HI
-				 (plus:SI (pc)
-					  (mult:SI (minus:SI (match_dup 0)
-							     (match_dup 1))
-						   (const_int 2)))))
-			       (label_ref:SI (match_operand 3 "" "")))
-		      (pc)))]
+	(if_then_else
+	 (leu (minus:SI (match_operand:SI 0 "general_operand" "g")
+			(match_operand:SI 1 "general_operand" "g"))
+	      (match_operand:SI 2 "general_operand" "g"))
+	 (plus:SI (sign_extend:SI
+		   (mem:HI (plus:SI (mult:SI (minus:SI (match_dup 0)
+						       (match_dup 1))
+					     (const_int 2))
+				    (pc))))
+		  (label_ref:SI (match_operand 3 "" "")))
+	 (pc)))]
   ""
   "casel %0,%1,%2")
 
-;; This used to arise from the preceding by simplification
-;; if operand 1 is zero.  Perhaps it is no longer necessary.
+;; This can arise by simplification when operand 1 is a constant int.
+(define_insn ""
+  [(set (pc)
+	(if_then_else
+	 (leu (plus:SI (match_operand:SI 0 "general_operand" "g")
+		       (match_operand:SI 1 "const_int_operand" "n"))
+	      (match_operand:SI 2 "general_operand" "g"))
+	 (plus:SI (sign_extend:SI
+		   (mem:HI (plus:SI (mult:SI (plus:SI (match_dup 0)
+						      (match_dup 1))
+					     (const_int 2))
+				    (pc))))
+		  (label_ref:SI (match_operand 3 "" "")))
+	 (pc)))]
+  ""
+  "*
+{
+  operands[1] = GEN_INT (-INTVAL (operands[1]));
+  return \"casel %0,%1,%2\";
+}")
+
+;; This can arise by simplification when the base for the case insn is zero.
 (define_insn ""
   [(set (pc)
 	(if_then_else (leu (match_operand:SI 0 "general_operand" "g")
 			   (match_operand:SI 1 "general_operand" "g"))
 		      (plus:SI (sign_extend:SI
-				(mem:HI
-				 (plus:SI (pc)
-					  (mult:SI (minus:SI (match_dup 0)
-							     (const_int 0))
-						   (const_int 2)))))
+				(mem:HI (plus:SI (mult:SI (match_dup 0)
+							  (const_int 2))
+					(pc))))
 			       (label_ref:SI (match_operand 2 "" "")))
 		      (pc)))]
   ""

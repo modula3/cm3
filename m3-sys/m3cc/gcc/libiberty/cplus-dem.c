@@ -63,25 +63,6 @@ static char *ada_demangle  PARAMS ((const char *, int));
 
 extern void fancy_abort PARAMS ((void)) ATTRIBUTE_NORETURN;
 
-static const char *mystrstr PARAMS ((const char *, const char *));
-
-static const char *
-mystrstr (s1, s2)
-     const char *s1, *s2;
-{
-  register const char *p = s1;
-  register int len = strlen (s2);
-
-  for (; (p = strchr (p, *s2)) != 0; p++)
-    {
-      if (strncmp (p, s2, len) == 0)
-	{
-	  return (p);
-	}
-    }
-  return (0);
-}
-
 /* In order to allow a single demangler executable to demangle strings
    using various common values of CPLUS_MARKER, as well as any specific
    one set at compile time, we maintain a string containing all the
@@ -157,9 +138,9 @@ struct work_stuff
 
 static const struct optable
 {
-  const char *in;
-  const char *out;
-  int flags;
+  const char *const in;
+  const char *const out;
+  const int flags;
 } optable[] = {
   {"nw",	  " new",	DMGL_ANSI},	/* new (1.92,	 ansi) */
   {"dl",	  " delete",	DMGL_ANSI},	/* new (1.92,	 ansi) */
@@ -256,8 +237,14 @@ typedef enum type_kind_t
   tk_real
 } type_kind_t;
 
-struct demangler_engine libiberty_demanglers[] =
+const struct demangler_engine libiberty_demanglers[] =
 {
+  {
+    NO_DEMANGLING_STYLE_STRING,
+    no_demangling,
+    "Demangling disabled"
+  }
+  ,
   {
     AUTO_DEMANGLING_STYLE_STRING,
       auto_demangling,
@@ -850,7 +837,7 @@ enum demangling_styles
 cplus_demangle_set_style (style)
      enum demangling_styles style;
 {
-  struct demangler_engine *demangler = libiberty_demanglers; 
+  const struct demangler_engine *demangler = libiberty_demanglers; 
 
   for (; demangler->demangling_style != unknown_demangling; ++demangler)
     if (style == demangler->demangling_style)
@@ -868,7 +855,7 @@ enum demangling_styles
 cplus_demangle_name_to_style (name)
      const char *name;
 {
-  struct demangler_engine *demangler = libiberty_demanglers; 
+  const struct demangler_engine *demangler = libiberty_demanglers; 
 
   for (; demangler->demangling_style != unknown_demangling; ++demangler)
     if (strcmp (name, demangler->demangling_style_name) == 0)
@@ -880,7 +867,7 @@ cplus_demangle_name_to_style (name)
 /* char *cplus_demangle (const char *mangled, int options)
 
    If MANGLED is a mangled function name produced by GNU C++, then
-   a pointer to a malloced string giving a C++ representation
+   a pointer to a @code{malloc}ed string giving a C++ representation
    of the name will be returned; otherwise NULL will be returned.
    It is the caller's responsibility to free the string which
    is returned.
@@ -912,6 +899,10 @@ cplus_demangle (mangled, options)
 {
   char *ret;
   struct work_stuff work[1];
+
+  if (current_demangling_style == no_demangling)
+    return xstrdup (mangled);
+
   memset ((char *) work, 0, sizeof (work));
   work->options = options;
   if ((work->options & DMGL_STYLE_MASK) == 0)
@@ -920,7 +911,7 @@ cplus_demangle (mangled, options)
   /* The V3 ABI demangling is implemented elsewhere.  */
   if (GNU_V3_DEMANGLING || AUTO_DEMANGLING)
     {
-      ret = cplus_demangle_v3 (mangled);
+      ret = cplus_demangle_v3 (mangled, work->options);
       if (ret || GNU_V3_DEMANGLING)
 	return ret;
     }
@@ -1796,7 +1787,7 @@ demangle_integral_value (work, mangled, s)
 
       /* By default, we let the number decide whether we shall consume an
 	 underscore.  */
-      int consume_following_underscore = 0;
+      int multidigit_without_leading_underscore = 0;
       int leave_following_underscore = 0;
 
       success = 0;
@@ -1813,15 +1804,26 @@ demangle_integral_value (work, mangled, s)
 	     `m'-prefix we must do it here, using consume_count and
 	     adjusting underscores: we have to consume the underscore
 	     matching the prepended one.  */
-	  consume_following_underscore = 1;
+	  multidigit_without_leading_underscore = 1;
 	  string_appendn (s, "-", 1);
 	  (*mangled) += 2;
 	}
       else if (**mangled == '_')
 	{
 	  /* Do not consume a following underscore;
-	     consume_following_underscore will consume what should be
+	     multidigit_without_leading_underscore will consume what should be
 	     consumed.  */
+	  leave_following_underscore = 1;
+	}
+      else
+	{
+	  /* Since consume_count_with_underscores does not handle
+	     multi-digit numbers that do not start with an underscore,
+	     and this number can be an integer template parameter,
+	     we have to call consume_count. */
+	  multidigit_without_leading_underscore = 1;
+	  /* These multi-digit numbers never end on an underscore,
+	     so if there is one then don't eat it. */
 	  leave_following_underscore = 1;
 	}
 
@@ -1829,7 +1831,7 @@ demangle_integral_value (work, mangled, s)
 	 underscore, since consume_count_with_underscores expects
 	 the leading underscore (that we consumed) if it is to handle
 	 multi-digit numbers.  */
-      if (consume_following_underscore)
+      if (multidigit_without_leading_underscore)
 	value = consume_count (mangled);
       else
 	value = consume_count_with_underscores (mangled);
@@ -1847,7 +1849,7 @@ demangle_integral_value (work, mangled, s)
 	     is wrong.  If other (arbitrary) cases are followed by an
 	     underscore, we need to do something more radical.  */
 
-	  if ((value > 9 || consume_following_underscore)
+	  if ((value > 9 || multidigit_without_leading_underscore)
 	      && ! leave_following_underscore
 	      && **mangled == '_')
 	    (*mangled)++;
@@ -2243,7 +2245,7 @@ arm_pt (work, mangled, n, anchor, args)
 {
   /* Check if ARM template with "__pt__" in it ("parameterized type") */
   /* Allow HP also here, because HP's cfront compiler follows ARM to some extent */
-  if ((ARM_DEMANGLING || HP_DEMANGLING) && (*anchor = mystrstr (mangled, "__pt__")))
+  if ((ARM_DEMANGLING || HP_DEMANGLING) && (*anchor = strstr (mangled, "__pt__")))
     {
       int len;
       *args = *anchor + 6;
@@ -2258,9 +2260,9 @@ arm_pt (work, mangled, n, anchor, args)
     }
   if (AUTO_DEMANGLING || EDG_DEMANGLING)
     {
-      if ((*anchor = mystrstr (mangled, "__tm__"))
-          || (*anchor = mystrstr (mangled, "__ps__"))
-          || (*anchor = mystrstr (mangled, "__pt__")))
+      if ((*anchor = strstr (mangled, "__tm__"))
+          || (*anchor = strstr (mangled, "__ps__"))
+          || (*anchor = strstr (mangled, "__pt__")))
         {
           int len;
           *args = *anchor + 6;
@@ -2273,7 +2275,7 @@ arm_pt (work, mangled, n, anchor, args)
               return 1;
             }
         }
-      else if ((*anchor = mystrstr (mangled, "__S")))
+      else if ((*anchor = strstr (mangled, "__S")))
         {
  	  int len;
  	  *args = *anchor + 3;
@@ -2412,8 +2414,15 @@ demangle_arm_hp_template (work, mangled, n, declp)
             break;
           default:
             /* Not handling other HP cfront stuff */
-            if (!do_type (work, &args, &arg))
-              goto cfront_template_args_done;
+            {
+              const char* old_args = args;
+              if (!do_type (work, &args, &arg))
+                goto cfront_template_args_done;
+
+              /* Fail if we didn't make any progress: prevent infinite loop. */
+              if (args == old_args)
+                return;
+            }
 	  }
 	string_appends (declp, &arg);
 	string_append (declp, ",");
@@ -2574,7 +2583,7 @@ iterate_demangle_function (work, mangled, declp, scan)
   /* Do not iterate for some demangling modes, or if there's only one
      "__"-sequence.  This is the normal case.  */
   if (ARM_DEMANGLING || LUCID_DEMANGLING || HP_DEMANGLING || EDG_DEMANGLING
-      || mystrstr (scan + 2, "__") == NULL)
+      || strstr (scan + 2, "__") == NULL)
     {
       demangle_function_name (work, mangled, declp, scan);
       return 1;
@@ -2717,7 +2726,7 @@ demangle_prefix (work, mangled, declp)
 
   /*  This block of code is a reduction in strength time optimization
       of:
-      scan = mystrstr (*mangled, "__"); */
+      scan = strstr (*mangled, "__"); */
 
   {
     scan = *mangled;
@@ -2809,7 +2818,7 @@ demangle_prefix (work, mangled, declp)
 	    {
 	      scan++;
 	    }
-	  if ((scan = mystrstr (scan, "__")) == NULL || (*(scan + 2) == '\0'))
+	  if ((scan = strstr (scan, "__")) == NULL || (*(scan + 2) == '\0'))
 	    {
 	      /* No separator (I.E. "__not_mangled"), or empty signature
 		 (I.E. "__not_mangled_either__") */
@@ -4883,7 +4892,7 @@ string_append_template_idx (s, idx)
 
 static const char *program_name;
 static const char *program_version = VERSION;
-static int flags = DMGL_PARAMS | DMGL_ANSI;
+static int flags = DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE;
 
 static void demangle_it PARAMS ((char *));
 static void usage PARAMS ((FILE *, int)) ATTRIBUTE_NORETURN;
@@ -4896,7 +4905,8 @@ demangle_it (mangled_name)
 {
   char *result;
 
-  result = cplus_demangle (mangled_name, flags);
+  /* For command line args, also try to demangle type encodings.  */
+  result = cplus_demangle (mangled_name, flags | DMGL_TYPES);
   if (result == NULL)
     {
       printf ("%s\n", mangled_name);
@@ -4912,7 +4922,7 @@ static void
 print_demangler_list (stream)
      FILE *stream;
 {
-  struct demangler_engine *demangler; 
+  const struct demangler_engine *demangler; 
 
   fprintf (stream, "{%s", libiberty_demanglers->demangling_style_name);
   
@@ -4956,7 +4966,7 @@ extern int prepends_underscore;
 
 int strip_underscore = 0;
 
-static struct option long_options[] = {
+static const struct option long_options[] = {
   {"strip-underscores", no_argument, 0, '_'},
   {"format", required_argument, 0, 's'},
   {"help", no_argument, 0, 'h'},
@@ -5142,7 +5152,7 @@ main (argc, argv)
 	    {
 	      int skip_first = 0;
 
-	      if (mbuffer[0] == '.')
+	      if (mbuffer[0] == '.' || mbuffer[0] == '$')
 		++skip_first;
 	      if (strip_underscore && mbuffer[skip_first] == '_')
 		++skip_first;

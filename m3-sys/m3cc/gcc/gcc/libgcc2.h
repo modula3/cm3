@@ -2,48 +2,30 @@
 /* Copyright (C) 2000, 2001
    Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
-#ifndef __LIBGCC2_H__
-#define __LIBGCC2_H__
-
-typedef void (*__terminate_func_ptr)(void) __attribute__ ((__noreturn__));
+#ifndef GCC_LIBGCC2_H
+#define GCC_LIBGCC2_H
 
 extern int __gcc_bcmp (const unsigned char *, const unsigned char *, size_t);
 extern void __clear_cache (char *, char *);
-extern void __pure_virtual (void) __attribute__ ((__noreturn__));
-extern void __terminate (void) __attribute__ ((__noreturn__));
-extern __terminate_func_ptr __terminate_set_func (__terminate_func_ptr);
-extern void __default_terminate (void) __attribute__ ((__noreturn__));
-extern void *__throw_type_match (void *, void *, void *);
-extern void *__get_eh_context (void);
-extern void **__get_eh_info (void);
-extern void ***__get_dynamic_handler_chain (void);
-extern int __eh_rtime_match (void *);
-extern void __unwinding_cleanup (void);
-extern void __rethrow (void *);
-extern void __throw (void);
-extern void __sjthrow (void) __attribute__ ((__noreturn__));
-extern void __sjpopnthrow (void) __attribute__ ((__noreturn__));
 extern void __eprintf (const char *, const char *, unsigned int, const char *)
   __attribute__ ((__noreturn__));
-extern void *__eh_alloc (size_t);
-extern void __eh_free (void *);
 
 struct bb;
 extern void __bb_exit_func (void);
@@ -94,9 +76,7 @@ typedef unsigned int USItype	__attribute__ ((mode (SI)));
 /* These typedefs are usually forbidden on archs with UNITS_PER_WORD 2 */
 typedef		 int DItype	__attribute__ ((mode (DI)));
 typedef unsigned int UDItype	__attribute__ ((mode (DI)));
-/* We cannot represent a TItype constant on a machine with 32-bit
-   HOST_WIDE_INTs, so it doesn't make sense to define these types.  */
-#if MIN_UNITS_PER_WORD > 4 && HOST_BITS_PER_WIDE_INT >= 64
+#if MIN_UNITS_PER_WORD > 4
 /* These typedefs are usually forbidden on archs with UNITS_PER_WORD 4 */
 typedef		 int TItype	__attribute__ ((mode (TI)));
 typedef unsigned int UTItype	__attribute__ ((mode (TI)));
@@ -155,9 +135,7 @@ typedef int word_type __attribute__ ((mode (__word__)));
 #define float bogus_type
 #define double bogus_type
 
-/* We can only support a Wtype that fits within a HOST_WIDE_INT.  Otherwise,
-   DWtype overflows the tree and RTL types.  */
-#if MIN_UNITS_PER_WORD > 4 && HOST_BITS_PER_WIDE_INT >= 64
+#if MIN_UNITS_PER_WORD > 4
 #define W_TYPE_SIZE (8 * BITS_PER_UNIT)
 #define Wtype	DItype
 #define UWtype	UDItype
@@ -320,4 +298,4 @@ typedef union
 
 #include "longlong.h"
 
-#endif /* __LIBGCC2_H__ */
+#endif /* ! GCC_LIBGCC2_H */

@@ -1,22 +1,22 @@
 /* "Bag-of-pages" garbage collector for the GNU compiler.
-   Copyright (C) 1999, 2000, 2001 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2001, 2002 Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 #include "config.h"
 #include "system.h"
@@ -110,7 +110,7 @@ Boston, MA 02111-1307, USA.  */
      1: GC statistics only.
      2: Page-entry allocations/deallocations as well.
      3: Object allocations as well.
-     4: Object marks as well.   */
+     4: Object marks as well.  */
 #define GGC_DEBUG_LEVEL (0)
 
 #ifndef HOST_BITS_PER_PTR
@@ -405,7 +405,7 @@ ggc_allocated_p (p)
   base = &table->table[0];
 #endif
 
-  /* Extract the level 1 and 2 indicies.  */
+  /* Extract the level 1 and 2 indices.  */
   L1 = LOOKUP_L1 (p);
   L2 = LOOKUP_L2 (p);
 
@@ -432,7 +432,7 @@ lookup_page_table_entry(p)
   base = &table->table[0];
 #endif
 
-  /* Extract the level 1 and 2 indicies.  */
+  /* Extract the level 1 and 2 indices.  */
   L1 = LOOKUP_L1 (p);
   L2 = LOOKUP_L2 (p);
 
@@ -467,7 +467,7 @@ found:
   base = &table->table[0];
 #endif
 
-  /* Extract the level 1 and 2 indicies.  */
+  /* Extract the level 1 and 2 indices.  */
   L1 = LOOKUP_L1 (p);
   L2 = LOOKUP_L2 (p);
 
@@ -518,7 +518,7 @@ alloc_anon (pref, size)
 
   if (page == (char *) MAP_FAILED)
     {
-      perror ("Virtual memory exhausted");
+      perror ("virtual memory exhausted");
       exit (FATAL_EXIT_CODE);
     }
 
@@ -535,7 +535,7 @@ static inline size_t
 page_group_index (allocation, page)
      char *allocation, *page;
 {
-  return (size_t)(page - allocation) >> G.lg_pagesize;
+  return (size_t) (page - allocation) >> G.lg_pagesize;
 }
 
 /* Set and clear the in_use bit for this page in the page group.  */
@@ -592,7 +592,7 @@ alloc_page (order)
 
   if (p != NULL)
     {
-      /* Recycle the allocated memory from this page ... */
+      /* Recycle the allocated memory from this page ...  */
       *pp = p->next;
       page = p->page;
 
@@ -654,7 +654,7 @@ alloc_page (order)
 	alloc_size = entry_size + G.pagesize - 1;
       allocation = xmalloc (alloc_size);
 
-      page = (char *)(((size_t) allocation + G.pagesize - 1) & -G.pagesize);
+      page = (char *) (((size_t) allocation + G.pagesize - 1) & -G.pagesize);
       head_slop = page - allocation;
       if (multiple_pages)
 	tail_slop = ((size_t) allocation + alloc_size) & (G.pagesize - 1);
@@ -826,11 +826,11 @@ release_pages ()
 }
 
 /* This table provides a fast way to determine ceil(log_2(size)) for
-   allocation requests.  The minimum allocation size is four bytes.  */
+   allocation requests.  The minimum allocation size is eight bytes.  */
 
 static unsigned char size_lookup[257] = 
-{ 
-  2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 
+{
+  3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 
   4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 
   5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 
   6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 
@@ -987,7 +987,7 @@ ggc_set_mark (p)
   word = bit / HOST_BITS_PER_LONG;
   mask = (unsigned long) 1 << (bit % HOST_BITS_PER_LONG);
   
-  /* If the bit was previously set, skip it. */
+  /* If the bit was previously set, skip it.  */
   if (entry->in_use_p[word] & mask)
     return 1;
 
@@ -999,6 +999,35 @@ ggc_set_mark (p)
     fprintf (G.debug_file, "Marking %p\n", p);
 
   return 0;
+}
+
+/* Return 1 if P has been marked, zero otherwise. 
+   P must have been allocated by the GC allocator; it mustn't point to
+   static objects, stack variables, or memory allocated with malloc.  */
+
+int
+ggc_marked_p (p)
+     const void *p;
+{
+  page_entry *entry;
+  unsigned bit, word;
+  unsigned long mask;
+
+  /* Look up the page on which the object is alloced.  If the object
+     wasn't allocated by the collector, we'll probably die.  */
+  entry = lookup_page_table_entry (p);
+#ifdef ENABLE_CHECKING
+  if (entry == NULL)
+    abort ();
+#endif
+
+  /* Calculate the index of the object on the page; this is its bit
+     position in the in_use_p bitmap.  */
+  bit = (((const char *) p) - entry->page) / OBJECT_SIZE (entry->order);
+  word = bit / HOST_BITS_PER_LONG;
+  mask = (unsigned long) 1 << (bit % HOST_BITS_PER_LONG);
+  
+  return (entry->in_use_p[word] & mask) != 0;
 }
 
 /* Return the size of the gc-able object P.  */
@@ -1053,7 +1082,7 @@ init_ggc ()
 	  abort ();
       }
 
-    /* We have a good page, might as well hold onto it... */
+    /* We have a good page, might as well hold onto it...  */
     e = (struct page_entry *) xcalloc (1, sizeof (struct page_entry));
     e->bytes = G.pagesize;
     e->page = p;
@@ -1446,7 +1475,7 @@ ggc_print_statistics ()
   /* Collect some information about the various sizes of 
      allocation.  */
   fprintf (stderr, "\n%-5s %10s  %10s  %10s\n",
-	   "Log", "Allocated", "Used", "Overhead");
+	   "Size", "Allocated", "Used", "Overhead");
   for (i = 0; i < NUM_ORDERS; ++i)
     {
       page_entry *p;
@@ -1472,7 +1501,7 @@ ggc_print_statistics ()
 	  overhead += (sizeof (page_entry) - sizeof (long)
 		       + BITMAP_SIZE (OBJECTS_PER_PAGE (i) + 1));
 	}
-      fprintf (stderr, "%-5d %10ld%c %10ld%c %10ld%c\n", i,
+      fprintf (stderr, "%-5d %10ld%c %10ld%c %10ld%c\n", OBJECT_SIZE (i),
 	       SCALE (allocated), LABEL (allocated),
 	       SCALE (in_use), LABEL (in_use),
 	       SCALE (overhead), LABEL (overhead));

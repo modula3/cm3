@@ -1,7 +1,5 @@
-/*{{{  Introduction */ 
-
 /* FR30 specific functions.
-   Copyright (C) 1998, 1999, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1998, 1999, 2000, 2001, 2002 Free Software Foundation, Inc.
    Contributed by Cygnus Solutions.
 
 This file is part of GNU CC.
@@ -42,6 +40,8 @@ Boston, MA 02111-1307, USA.  */
 #include "except.h"
 #include "function.h"
 #include "tm_p.h"
+#include "target.h"
+#include "target-def.h"
 
 /*}}}*/
 /*{{{  Function Prologues & Epilogues */ 
@@ -118,6 +118,9 @@ static struct fr30_frame_info 	current_frame_info;
 /* Zero structure to initialize current_frame_info.  */
 static struct fr30_frame_info 	zero_frame_info;
 
+static rtx fr30_pass_by_reference PARAMS ((tree, tree));
+static rtx fr30_pass_by_value PARAMS ((tree, tree));
+
 #define FRAME_POINTER_MASK 	(1 << (FRAME_POINTER_REGNUM))
 #define RETURN_POINTER_MASK 	(1 << (RETURN_POINTER_REGNUM))
 
@@ -131,12 +134,20 @@ static struct fr30_frame_info 	zero_frame_info;
    && ! call_used_regs [regno]         )
 
 #define MUST_SAVE_FRAME_POINTER	 (regs_ever_live [FRAME_POINTER_REGNUM]  || frame_pointer_needed)
-#define MUST_SAVE_RETURN_POINTER (regs_ever_live [RETURN_POINTER_REGNUM] || profile_flag)
+#define MUST_SAVE_RETURN_POINTER (regs_ever_live [RETURN_POINTER_REGNUM] || current_function_profile)
 
 #if UNITS_PER_WORD == 4
 #define WORD_ALIGN(SIZE) (((SIZE) + 3) & ~3)
 #endif
-     
+
+/* Initialize the GCC target structure.  */
+#undef TARGET_ASM_ALIGNED_HI_OP
+#define TARGET_ASM_ALIGNED_HI_OP "\t.hword\t"
+#undef TARGET_ASM_ALIGNED_SI_OP
+#define TARGET_ASM_ALIGNED_SI_OP "\t.word\t"
+
+struct gcc_target targetm = TARGET_INITIALIZER;
+
 /* Returns the number of bytes offset between FROM_REG and TO_REG
    for the current function.  As a side effect it fills in the 
    current_frame_info structure, if the data is available.  */
@@ -200,7 +211,7 @@ fr30_compute_frame_size (from_reg, to_reg)
 
 /* Called after register allocation to add any instructions needed for the
    prologue.  Using a prologue insn is favored compared to putting all of the
-   instructions in the FUNCTION_PROLOGUE macro, since it allows the scheduler
+   instructions in output_function_prologue(), since it allows the scheduler
    to intermix instructions with the saves of the caller saved registers.  In
    some cases, it might be necessary to emit a barrier instruction as the last
    insn to prevent such scheduling.  */
@@ -323,13 +334,13 @@ fr30_expand_prologue ()
       RTX_FRAME_RELATED_P (insn) = 1;
     }
 
-  if (profile_flag || profile_block_flag)
+  if (current_function_profile)
     emit_insn (gen_blockage ());
 }
 
 /* Called after register allocation to add any instructions needed for the
-   epilogue.  Using a epilogue insn is favored compared to putting all of the
-   instructions in the FUNCTION_EPILOGUE macro, since it allows the scheduler
+   epilogue.  Using an epilogue insn is favored compared to putting all of the
+   instructions in output_function_epilogue(), since it allows the scheduler
    to intermix instructions with the restores of the caller saved registers.
    In some cases, it might be necessary to emit a barrier instruction as the
    first insn to prevent such scheduling.  */
@@ -469,7 +480,7 @@ fr30_print_operand (file, x, code)
       /* Compute the register name of the second register in a hi/lo
 	 register pair.  */
       if (GET_CODE (x) != REG)
-	output_operand_lossage ("fr30_print_operand: unrecognised %p code");
+	output_operand_lossage ("fr30_print_operand: unrecognized %%p code");
       else
 	fprintf (file, "r%d", REGNO (x) + 1);
       return;
@@ -489,7 +500,7 @@ fr30_print_operand (file, x, code)
 	case GTU: fprintf (file, "hi"); break;
 	case GEU: fprintf (file, "nc");  break;
 	default:
-	  output_operand_lossage ("fr30_print_operand: unrecognised %b code");
+	  output_operand_lossage ("fr30_print_operand: unrecognized %%b code");
 	  break;
 	}
       return;
@@ -510,7 +521,7 @@ fr30_print_operand (file, x, code)
 	case GTU: fprintf (file, "ls"); break;
 	case GEU: fprintf (file, "c"); break;
 	default:
-	  output_operand_lossage ("fr30_print_operand: unrecognised %B code");
+	  output_operand_lossage ("fr30_print_operand: unrecognized %%B code");
 	  break;
 	}
       return;
@@ -518,7 +529,7 @@ fr30_print_operand (file, x, code)
     case 'A':
       /* Print a signed byte value as an unsigned value.  */
       if (GET_CODE (x) != CONST_INT)
-	output_operand_lossage ("fr30_print_operand: invalid operand to %A code");
+	output_operand_lossage ("fr30_print_operand: invalid operand to %%A code");
       else
 	{
 	  HOST_WIDE_INT val;
@@ -535,14 +546,14 @@ fr30_print_operand (file, x, code)
       if (GET_CODE (x) != CONST_INT
 	  || INTVAL (x) < 16
 	  || INTVAL (x) > 32)
-	output_operand_lossage ("fr30_print_operand: invalid %x code");
+	output_operand_lossage ("fr30_print_operand: invalid %%x code");
       else
 	fprintf (file, "%d", INTVAL (x) - 16);
       return;
 
     case 'F':
       if (GET_CODE (x) != CONST_DOUBLE)
-	output_operand_lossage ("fr30_print_operand: invalid %F code");
+	output_operand_lossage ("fr30_print_operand: invalid %%F code");
       else
 	{
 	  REAL_VALUE_TYPE d;
@@ -1002,9 +1013,12 @@ fr30_move_double (operands)
 
 	  if (reverse)
 	    {
-	      emit_insn (gen_rtx_SET (VOIDmode, dest1, change_address (src, SImode, addr)));
-	      emit_insn (gen_rtx_SET (SImode, dest0, gen_rtx_REG (SImode, REGNO (addr))));
-	      emit_insn (gen_rtx_SET (SImode, dest0, plus_constant (dest0, UNITS_PER_WORD)));
+	      emit_insn (gen_rtx_SET (VOIDmode, dest1,
+				      adjust_address (src, SImode, 0)));
+	      emit_insn (gen_rtx_SET (SImode, dest0,
+				      gen_rtx_REG (SImode, REGNO (addr))));
+	      emit_insn (gen_rtx_SET (SImode, dest0,
+				      plus_constant (dest0, UNITS_PER_WORD)));
 
 	      new_mem = gen_rtx_MEM (SImode, dest0);
 	      MEM_COPY_ATTRIBUTES (new_mem, src);
@@ -1013,9 +1027,12 @@ fr30_move_double (operands)
 	    }
 	  else
 	    {
-	      emit_insn (gen_rtx_SET (VOIDmode, dest0, change_address (src, SImode, addr)));
-	      emit_insn (gen_rtx_SET (SImode, dest1, gen_rtx_REG (SImode, REGNO (addr))));
-	      emit_insn (gen_rtx_SET (SImode, dest1, plus_constant (dest1, UNITS_PER_WORD)));
+	      emit_insn (gen_rtx_SET (VOIDmode, dest0,
+				      adjust_address (src, SImode, 0)));
+	      emit_insn (gen_rtx_SET (SImode, dest1,
+				      gen_rtx_REG (SImode, REGNO (addr))));
+	      emit_insn (gen_rtx_SET (SImode, dest1,
+				      plus_constant (dest1, UNITS_PER_WORD)));
 
 	      new_mem = gen_rtx_MEM (SImode, dest1);
 	      MEM_COPY_ATTRIBUTES (new_mem, src);
@@ -1048,12 +1065,14 @@ fr30_move_double (operands)
       src0 = operand_subword (src, 0, TRUE, mode);
       src1 = operand_subword (src, 1, TRUE, mode);
       
-      emit_insn (gen_rtx_SET (VOIDmode, change_address (dest, SImode, addr), src0));
+      emit_insn (gen_rtx_SET (VOIDmode, adjust_address (dest, SImode, 0),
+			      src0));
 
-      if (REGNO (addr) == STACK_POINTER_REGNUM)
-	emit_insn (gen_rtx_SET (VOIDmode, change_address (dest, SImode, plus_constant (stack_pointer_rtx, UNITS_PER_WORD)), src1));
-      else if (REGNO (addr) == FRAME_POINTER_REGNUM)
-	emit_insn (gen_rtx_SET (VOIDmode, change_address (dest, SImode, plus_constant (frame_pointer_rtx, UNITS_PER_WORD)), src1));
+      if (REGNO (addr) == STACK_POINTER_REGNUM
+	  || REGNO (addr) == FRAME_POINTER_REGNUM)
+	emit_insn (gen_rtx_SET (VOIDmode,
+				adjust_address (dest, SImode, UNITS_PER_WORD),
+				src1));
       else
 	{
 	  rtx new_mem;
@@ -1073,7 +1092,7 @@ fr30_move_double (operands)
 	}
     }
   else
-    /* This should have been prevented by the contraints on movdi_insn.  */
+    /* This should have been prevented by the constraints on movdi_insn.  */
     abort ();
   
   val = gen_sequence ();
@@ -1081,10 +1100,3 @@ fr30_move_double (operands)
 
   return val;
 }
-
-/*}}}*/
-
-/* Local Variables: */
-/* folded-file: t   */
-/* End:		    */
-

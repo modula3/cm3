@@ -38,7 +38,7 @@ Boston, MA 02111-1307, USA.  */
 %{!shared: %{!static:-dc -dp}} \
 "
 
-/* Override the defaults. */
+/* Override the defaults.  */
 #undef LIB_DEFAULT_SPEC
 #define LIB_DEFAULT_SPEC "%(lib_netbsd)"
 
@@ -59,3 +59,8 @@ Boston, MA 02111-1307, USA.  */
 
 #undef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (PowerPC NetBSD/ELF)");
+
+/* Use STABS debugging information by default.  DWARF2 makes a mess of
+   the 1.5.2 linker.  */
+#undef  PREFERRED_DEBUGGING_TYPE
+#define PREFERRED_DEBUGGING_TYPE DBX_DEBUG

@@ -1,5 +1,5 @@
 /* Target definitions for GNU compiler for Intel 80386 running System V.4
-   Copyright (C) 1991 Free Software Foundation, Inc.
+   Copyright (C) 1991, 2001 Free Software Foundation, Inc.
 
    Written by Ron Guilmette (rfg@netcom.com).
 
@@ -20,9 +20,6 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-#include "i386/i386.h"	/* Base i386 target machine definitions */
-#include "i386/att.h"	/* Use the i386 AT&T assembler syntax */
-#include "svr4.h"	/* Definitions common to all SVR4 targets */
 
 #undef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (i386 System V Release 4)");
@@ -40,61 +37,6 @@ Boston, MA 02111-1307, USA.  */
    is supposed to be defined optionally by user programs--not by default.  */
 #define CPP_PREDEFINES \
   "-Dunix -D__svr4__ -Asystem=unix -Asystem=svr4"
-
-/* This is how to output assembly code to define a `float' constant.
-   We always have to use a .long pseudo-op to do this because the native
-   SVR4 ELF assembler is buggy and it generates incorrect values when we
-   try to use the .float pseudo-op instead.  */
-
-#undef ASM_OUTPUT_FLOAT
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)					\
-do { long value;							\
-     REAL_VALUE_TO_TARGET_SINGLE ((VALUE), value);			\
-     if (sizeof (int) == sizeof (long))					\
-         fprintf((FILE), "%s0x%x\n", ASM_LONG, value);			\
-     else								\
-         fprintf((FILE), "%s0x%lx\n", ASM_LONG, value);			\
-   } while (0)
-
-/* This is how to output assembly code to define a `double' constant.
-   We always have to use a pair of .long pseudo-ops to do this because
-   the native SVR4 ELF assembler is buggy and it generates incorrect
-   values when we try to use the .double pseudo-op instead.  */
-
-#undef ASM_OUTPUT_DOUBLE
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)					\
-do { long value[2];							\
-     REAL_VALUE_TO_TARGET_DOUBLE ((VALUE), value);			\
-     if (sizeof (int) == sizeof (long))					\
-       {								\
-         fprintf((FILE), "%s0x%x\n", ASM_LONG, value[0]);		\
-         fprintf((FILE), "%s0x%x\n", ASM_LONG, value[1]);		\
-       }								\
-     else								\
-       {								\
-         fprintf((FILE), "%s0x%lx\n", ASM_LONG, value[0]);		\
-         fprintf((FILE), "%s0x%lx\n", ASM_LONG, value[1]);		\
-       }								\
-   } while (0)
-
-
-#undef ASM_OUTPUT_LONG_DOUBLE
-#define ASM_OUTPUT_LONG_DOUBLE(FILE,VALUE)				\
-do { long value[3];							\
-     REAL_VALUE_TO_TARGET_LONG_DOUBLE ((VALUE), value);			\
-     if (sizeof (int) == sizeof (long))					\
-       {								\
-         fprintf((FILE), "%s0x%x\n", ASM_LONG, value[0]);		\
-         fprintf((FILE), "%s0x%x\n", ASM_LONG, value[1]);		\
-         fprintf((FILE), "%s0x%x\n", ASM_LONG, value[2]);		\
-       }								\
-     else								\
-       {								\
-         fprintf((FILE), "%s0x%lx\n", ASM_LONG, value[0]);		\
-         fprintf((FILE), "%s0x%lx\n", ASM_LONG, value[1]);		\
-         fprintf((FILE), "%s0x%lx\n", ASM_LONG, value[2]);		\
-       }								\
-   } while (0)
 
 /* Output at beginning of assembler file.  */
 /* The .file command should always begin the output.  */
@@ -134,7 +76,7 @@ do { long value[3];							\
 	    }								\
 	  for (p = _ascii_bytes; p < limit && *p != '\0'; p++)		\
 	    continue;							\
-	  if (p < limit && (p - _ascii_bytes) <= STRING_LIMIT)		\
+	  if (p < limit && (p - _ascii_bytes) <= (long) STRING_LIMIT)	\
 	    {								\
 	      if (bytes_in_chunk > 0)					\
 		{							\
@@ -159,19 +101,6 @@ do { long value[3];							\
     }									\
   while (0)
 
-/* This is how to output an element of a case-vector that is relative.
-   This is only used for PIC code.  See comments by the `casesi' insn in
-   i386.md for an explanation of the expression this outputs. */
-
-#undef ASM_OUTPUT_ADDR_DIFF_ELT
-#define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL) \
-  fprintf (FILE, "\t.long _GLOBAL_OFFSET_TABLE_+[.-%s%d]\n", LPREFIX, VALUE)
-
-/* Indicate that jump tables go in the text section.  This is
-   necessary when compiling PIC code.  */
-
-#define JUMP_TABLES_IN_TEXT_SECTION (flag_pic)
-
 /* A C statement (sans semicolon) to output to the stdio stream
    FILE the assembler definition of uninitialized global DECL named
    NAME whose size is SIZE bytes and alignment is ALIGN bytes.
@@ -186,7 +115,7 @@ do { long value[3];							\
   do {									\
     if ((SIZE) == 4 && ((ENCODING) & 0x70) == DW_EH_PE_datarel)		\
       {									\
-        fputs (UNALIGNED_INT_ASM_OP, FILE);				\
+        fputs (ASM_LONG, FILE);						\
         assemble_name (FILE, XSTR (ADDR, 0));				\
 	fputs (((ENCODING) & DW_EH_PE_indirect ? "@GOT" : "@GOTOFF"), FILE); \
         goto DONE;							\

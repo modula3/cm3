@@ -27,9 +27,9 @@ Boston, MA 02111-1307, USA.  */
 
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES "\
-  -D__IA64__ -D__ia64 -D__ia64__ -D__hpux -D__hpux__ -Dhpux -Dunix \
-  -D__BIG_ENDIAN__ -D_LONGLONG -D__ELF__ \
-  -Asystem=hpux -Asystem=posix -Asystem=unix -Acpu=ia64 -Amachine=ia64 \
+  -D__IA64__ -D__hpux -D__hpux__ -Dhpux -Dunix \
+  -D__BIG_ENDIAN__ -D_LONGLONG \
+  -Asystem=hpux -Asystem=posix -Asystem=unix \
   -D_UINT128_T"
 
 /* -D__fpreg=long double is needed to compensate for the lack of __fpreg
@@ -40,14 +40,14 @@ Boston, MA 02111-1307, USA.  */
 #undef CPP_SPEC
 #define CPP_SPEC "\
   %{mcpu=itanium:-D__itanium__} \
-  -D__LP64__ -D__LONG_MAX__=9223372036854775807L \
+  %{mlp64:-D__LP64__ -D_LP64 -D__LONG_MAX__=9223372036854775807L} \
   %{!ansi:%{!std=c*:%{!std=i*: -D_HPUX_SOURCE -D__STDC_EXT__}}} \
   -D__fpreg=long\\ double \
   -D__float80=long\\ double \
   -D__float128=long\\ double"
 
-#undef ASM_SPEC
-#define ASM_SPEC "-x %{mconstant-gp} %{mauto-pic}"
+#undef  ASM_EXTRA_SPEC
+#define ASM_EXTRA_SPEC "%{milp32:-milp32} %{mlp64:-mlp64}"
 
 #undef ENDFILE_SPEC
 
@@ -71,7 +71,18 @@ Boston, MA 02111-1307, USA.  */
 #undef  LIB_SPEC
 #define LIB_SPEC "%{!shared:%{!symbolic:-lc}}"
 
-#define DONT_USE_BUILTIN_SETJMP
+#undef SUBTARGET_SWITCHES
+#define SUBTARGET_SWITCHES \
+  { "ilp32",    MASK_ILP32,     "Generate ILP32 code" }, \
+  { "lp64",    -MASK_ILP32,     "Generate LP64 code" },
+
+/* A C expression whose value is zero if pointers that need to be extended
+   from being `POINTER_SIZE' bits wide to `Pmode' are sign-extended and
+   greater then zero if they are zero-extended and less then zero if the
+   ptr_extend instruction should be used.  */
+
+#define POINTERS_EXTEND_UNSIGNED -1
+
 #define JMP_BUF_SIZE  (8 * 76)
 
 #undef CONST_SECTION_ASM_OP
@@ -83,15 +94,29 @@ Boston, MA 02111-1307, USA.  */
 #undef TARGET_DEFAULT
 #define TARGET_DEFAULT (MASK_DWARF2_ASM | MASK_BIG_ENDIAN)
 
-/* We need this macro to output DWARF2 information correctly.  The macro
-   is defined in dwarf2out.c, but it will not do section relative offsets
-   which messes up our ability to debug using gdb.  */
+/* This needs to be set to force structure arguments with a single
+   field to be treated as structures and not as the type of their
+   field.  Without this a structure with a single char will be
+   returned just like a char variable and that is wrong on HP-UX
+   IA64.  TARGET_STRUCT_ARG_REG_LITTLE_ENDIAN triggers the special
+   structure handling, this macro simply ensures that single field
+   structures are always treated like structures.  */
 
-#undef ASM_OUTPUT_DWARF_OFFSET
-#define ASM_OUTPUT_DWARF_OFFSET(FILE,LABEL)				\
- do {									\
-	fprintf ((FILE), "\t%s\t", UNALIGNED_OFFSET_ASM_OP);		\
-	fprintf ((FILE), "@secrel(");                                   \
-	assemble_name (FILE, LABEL);					\
-	fprintf ((FILE), ")");                                          \
-  } while (0)
+#define MEMBER_TYPE_FORCES_BLK(FIELD) 1
+
+/* Override the setting of FUNCTION_ARG_REG_LITTLE_ENDIAN in
+   defaults.h.  Setting this to true means that we are not passing
+   structures in registers in the "normal" big-endian way.  See
+   See section 8.5 of the "Itanium Software Conventions and Runtime
+   Architecture", specifically Table 8-1 and the explanation of Byte 0
+   alignment and LSB alignment and a description of how structures
+   are passed.  */
+
+#define FUNCTION_ARG_REG_LITTLE_ENDIAN 1
+
+#undef FUNCTION_ARG_PADDING
+#define FUNCTION_ARG_PADDING(MODE, TYPE) \
+	ia64_hpux_function_arg_padding ((MODE), (TYPE))
+
+#undef PAD_VARARGS_DOWN
+#define PAD_VARARGS_DOWN (!AGGREGATE_TYPE_P (type))

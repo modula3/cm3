@@ -1,5 +1,5 @@
 /* Demangler for IA64 / g++ V3 ABI.
-   Copyright (C) 2000, 2001 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2001, 2002 Free Software Foundation, Inc.
    Written by Alex Samuel <samuel@codesourcery.com>. 
 
    This file is part of GNU CC.
@@ -8,6 +8,15 @@
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
+
+   In addition to the permissions in the GNU General Public License, the
+   Free Software Foundation gives you unlimited permission to link the
+   compiled version of this file into combinations with other programs,
+   and to distribute those combinations without any restriction coming
+   from the use of this file.  (The General Public License restrictions
+   do apply in other respects; for example, they cover modification of
+   the file, and distribution when not linked into a combined
+   executable.)
 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -424,7 +433,7 @@ string_list_delete (node)
   while (node != NULL)
     {
       string_list_t next = node->next;
-      free (node);
+      dyn_string_delete ((dyn_string_t) node);
       node = next;
     }
 }
@@ -889,7 +898,7 @@ static status_t demangle_number_literally
 static status_t demangle_identifier
   PARAMS ((demangling_t, int, dyn_string_t));
 static status_t demangle_operator_name
-  PARAMS ((demangling_t, int, int *));
+  PARAMS ((demangling_t, int, int *, int *));
 static status_t demangle_nv_offset
   PARAMS ((demangling_t));
 static status_t demangle_v_offset
@@ -938,10 +947,8 @@ static status_t demangle_discriminator
   PARAMS ((demangling_t, int));
 static status_t cp_demangle
   PARAMS ((const char *, dyn_string_t, int));
-#ifdef IN_LIBGCC2
 static status_t cp_demangle_type
   PARAMS ((const char*, dyn_string_t));
-#endif
 
 /* When passed to demangle_bare_function_type, indicates that the
    function's return type is not encoded before its parameter types.  */
@@ -1318,7 +1325,7 @@ demangle_unqualified_name (dm, suppress_return_type)
       if (peek == 'c' && peek_char_next (dm) == 'v')
 	*suppress_return_type = 1;
 
-      RETURN_IF_ERROR (demangle_operator_name (dm, 0, &num_args));
+      RETURN_IF_ERROR (demangle_operator_name (dm, 0, &num_args, NULL));
     }
   else if (peek == 'C' || peek == 'D')
     {
@@ -1494,7 +1501,9 @@ demangle_identifier (dm, length, identifier)
 /* Demangles and emits an <operator-name>.  If SHORT_NAME is non-zero,
    the short form is emitted; otherwise the full source form
    (`operator +' etc.) is emitted.  *NUM_ARGS is set to the number of
-   operands that the operator takes.  
+   operands that the operator takes.  If TYPE_ARG is non-NULL,
+   *TYPE_ARG is set to 1 if the first argument is a type and 0
+   otherwise.
 
     <operator-name>
                   ::= nw        # new           
@@ -1544,24 +1553,26 @@ demangle_identifier (dm, length, identifier)
                   ::= cl        # ()            
                   ::= ix        # []            
                   ::= qu        # ?
-                  ::= sz        # sizeof 
+		  ::= st        # sizeof (a type)
+                  ::= sz        # sizeof (an expression)
                   ::= cv <type> # cast        
 		  ::= v [0-9] <source-name>  # vendor extended operator  */
 
 static status_t
-demangle_operator_name (dm, short_name, num_args)
+demangle_operator_name (dm, short_name, num_args, type_arg)
      demangling_t dm;
      int short_name;
      int *num_args;
+     int *type_arg;
 {
   struct operator_code
   {
     /* The mangled code for this operator.  */
-    const char *code;
+    const char *const code;
     /* The source name of this operator.  */
-    const char *name;
+    const char *const name;
     /* The number of arguments this operator takes.  */
-    int num_args;
+    const int num_args;
   };
 
   static const struct operator_code operators[] = 
@@ -1626,6 +1637,10 @@ demangle_operator_name (dm, short_name, num_args)
 
   DEMANGLE_TRACE ("operator-name", dm);
 
+  /* Assume the first argument is not a type.  */
+  if (type_arg)
+    *type_arg = 0;
+
   /* Is this a vendor-extended operator?  */
   if (c0 == 'v' && IS_DIGIT (c1))
     {
@@ -1642,6 +1657,16 @@ demangle_operator_name (dm, short_name, num_args)
       /* Demangle the converted-to type.  */
       RETURN_IF_ERROR (demangle_type (dm));
       *num_args = 0;
+      return STATUS_OK;
+    }
+
+  /* Is it the sizeof variant that takes a type?  */
+  if (c0 == 's' && c1 == 't')
+    {
+      RETURN_IF_ERROR (result_add (dm, " sizeof"));
+      *num_args = 1;
+      if (type_arg)
+	*type_arg = 1;
       return STATUS_OK;
     }
 
@@ -1842,11 +1867,27 @@ demangle_special_name (dm)
 
   if (peek == 'G')
     {
-      /* A guard variable name.  Consume the G.  */
+      /* Consume the G.  */
       advance_char (dm);
-      RETURN_IF_ERROR (demangle_char (dm, 'V'));
-      RETURN_IF_ERROR (result_add (dm, "guard variable for "));
-      RETURN_IF_ERROR (demangle_name (dm, &unused));
+      switch (peek_char (dm))
+	{
+	case 'V':
+	  /* A guard variable name.  */
+	  advance_char (dm);
+	  RETURN_IF_ERROR (result_add (dm, "guard variable for "));
+	  RETURN_IF_ERROR (demangle_name (dm, &unused));
+	  break;
+
+	case 'R':
+	  /* A reference temporary.  */
+	  advance_char (dm);
+	  RETURN_IF_ERROR (result_add (dm, "reference temporary for "));
+	  RETURN_IF_ERROR (demangle_name (dm, &unused));
+	  break;
+	  
+	default:
+	  return "Unrecognized <special-name>.";
+	}
     }
   else if (peek == 'T')
     {
@@ -3131,6 +3172,7 @@ demangle_expression (dm)
     /* An operator expression.  */
     {
       int num_args;
+      int type_arg;
       status_t status = STATUS_OK;
       dyn_string_t operator_name;
 
@@ -3138,7 +3180,8 @@ demangle_expression (dm)
 	 operations in infix notation, capture the operator name
 	 first.  */
       RETURN_IF_ERROR (result_push (dm));
-      RETURN_IF_ERROR (demangle_operator_name (dm, 1, &num_args));
+      RETURN_IF_ERROR (demangle_operator_name (dm, 1, &num_args,
+					       &type_arg));
       operator_name = (dyn_string_t) result_pop (dm);
 
       /* If it's binary, do an operand first.  */
@@ -3159,7 +3202,10 @@ demangle_expression (dm)
       
       /* Emit its second (if binary) or only (if unary) operand.  */
       RETURN_IF_ERROR (result_add_char (dm, '('));
-      RETURN_IF_ERROR (demangle_expression (dm));
+      if (type_arg)
+	RETURN_IF_ERROR (demangle_type (dm));
+      else
+	RETURN_IF_ERROR (demangle_expression (dm));
       RETURN_IF_ERROR (result_add_char (dm, ')'));
 
       /* The ternary operator takes a third operand.  */
@@ -3517,14 +3563,13 @@ cp_demangle (name, result, style)
    dyn_string_t.  On success, returns STATUS_OK.  On failiure, returns
    an error message, and the contents of RESULT are unchanged.  */
 
-#ifdef IN_LIBGCC2
 static status_t
 cp_demangle_type (type_name, result)
      const char* type_name;
      dyn_string_t result;
 {
   status_t status;
-  demangling_t dm = demangling_new (type_name);
+  demangling_t dm = demangling_new (type_name, DMGL_GNU_V3);
   
   if (dm == NULL)
     return STATUS_ALLOCATION_FAILED;
@@ -3555,6 +3600,7 @@ cp_demangle_type (type_name, result)
   return status;
 }
 
+#if defined(IN_LIBGCC2) || defined(IN_GLIBCPP_V3)
 extern char *__cxa_demangle PARAMS ((const char *, char *, size_t *, int *));
 
 /* ia64 ABI-mandated entry point in the C++ runtime library for performing
@@ -3662,7 +3708,7 @@ __cxa_demangle (mangled_name, output_buffer, length, status)
     }
 }
 
-#else /* !IN_LIBGCC2 */
+#else /* ! (IN_LIBGCC2 || IN_GLIBCPP_V3) */
 
 /* Variant entry point for integration with the existing cplus-dem
    demangler.  Attempts to demangle MANGLED.  If the demangling
@@ -3671,20 +3717,35 @@ __cxa_demangle (mangled_name, output_buffer, length, status)
    If the demangling failes, returns NULL.  */
 
 char *
-cplus_demangle_v3 (mangled)
+cplus_demangle_v3 (mangled, options)
      const char* mangled;
+     int options;
 {
   dyn_string_t demangled;
   status_t status;
+  int type = !!(options & DMGL_TYPES);
 
-  /* If this isn't a mangled name, don't pretend to demangle it.  */
-  if (strncmp (mangled, "_Z", 2) != 0)
-    return NULL;
+  if (mangled[0] == '_' && mangled[1] == 'Z')
+    /* It is not a type.  */
+    type = 0;
+  else
+    {
+      /* It is a type. Stop if we don't want to demangle types. */
+      if (!type)
+	return NULL;
+    }
+
+  flag_verbose = !!(options & DMGL_VERBOSE);
 
   /* Create a dyn_string to hold the demangled name.  */
   demangled = dyn_string_new (0);
   /* Attempt the demangling.  */
-  status = cp_demangle ((char *) mangled, demangled, 0);
+  if (!type)
+    /* Appears to be a function or variable name.  */
+    status = cp_demangle (mangled, demangled, 0);
+  else
+    /* Try to demangle it as the name of a type.  */
+    status = cp_demangle_type (mangled, demangled);
 
   if (STATUS_NO_ERROR (status))
     /* Demangling succeeded.  */
@@ -3808,11 +3869,15 @@ java_demangle_v3 (mangled)
 
   free (cplus_demangled);
   
-  return_value = dyn_string_release (demangled);
+  if (demangled)
+    return_value = dyn_string_release (demangled);
+  else
+    return_value = NULL;
+
   return return_value;
 }
 
-#endif /* IN_LIBGCC2 */
+#endif /* IN_LIBGCC2 || IN_GLIBCPP_V3 */
 
 
 /* Demangle NAME in the G++ V3 ABI demangling style, and return either
@@ -3852,6 +3917,7 @@ demangle_v3_with_details (name)
 }
 
 
+#ifndef IN_GLIBCPP_V3
 /* Return non-zero iff NAME is the mangled form of a constructor name
    in the G++ V3 ABI demangling style.  Specifically, return:
    - '1' if NAME is a complete object constructor,
@@ -3894,6 +3960,7 @@ is_gnu_v3_mangled_dtor (name)
   else
     return 0;
 }
+#endif /* IN_GLIBCPP_V3 */
 
 
 #ifdef STANDALONE_DEMANGLER
@@ -3929,7 +3996,7 @@ print_usage (fp, exit_value)
 }
 
 /* Option specification for getopt_long.  */
-static struct option long_options[] = 
+static const struct option long_options[] = 
 {
   { "help",    no_argument, NULL, 'h' },
   { "strict",  no_argument, NULL, 's' },

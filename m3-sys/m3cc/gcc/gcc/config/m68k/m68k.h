@@ -1,7 +1,7 @@
 /* Definitions of target machine for GNU compiler.
    Sun 68000/68020 version.
    Copyright (C) 1987, 1988, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-   2000, 2001 Free Software Foundation, Inc.
+   2000, 2001, 2002 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -24,6 +24,16 @@ Boston, MA 02111-1307, USA.  */
 /* Note that some other tm.h files include this one and then override
    many of the definitions that relate to assembler syntax.  */
 
+
+/* Classify the groups of pseudo-ops used to assemble QI, HI and SI
+   quantities.  */
+#define INT_OP_STANDARD	0	/* .byte, .short, .long */
+#define INT_OP_DOT_WORD	1	/* .byte, .word, .long */
+#define INT_OP_NO_DOT   2	/* byte, short, long */
+#define INT_OP_DC	3	/* dc.b, dc.w, dc.l */
+
+/* Set the default */
+#define INT_OP_GROUP INT_OP_DOT_WORD
 
 /* Names to predefine in the preprocessor for this target machine.  */
 
@@ -93,7 +103,7 @@ extern int target_flags;
    The 68040 will execute all 68030 and 68881/2 instructions, but some
    of them must be emulated in software by the OS.  When TARGET_68040 is
    turned on, these instructions won't be used.  This code will still
-   run on a 68030 and 68881/2. */
+   run on a 68030 and 68881/2.  */
 #define MASK_68040	256
 #define TARGET_68040 (target_flags & MASK_68040)
 
@@ -106,7 +116,7 @@ extern int target_flags;
    The 68060 will execute all 68030 and 68881/2 instructions, but some
    of them must be emulated in software by the OS.  When TARGET_68060 is
    turned on, these instructions won't be used.  This code will still
-   run on a 68030 and 68881/2. */
+   run on a 68030 and 68881/2.  */
 #define MASK_68060	1024
 #define TARGET_68060 (target_flags & MASK_68060)
 
@@ -137,7 +147,7 @@ extern int target_flags;
 #define MASK_PCREL	8192
 #define TARGET_PCREL	(target_flags & MASK_PCREL)
 
-/* Relax strict alignment. */
+/* Relax strict alignment.  */
 #define MASK_NO_STRICT_ALIGNMENT 16384
 #define TARGET_STRICT_ALIGNMENT  (~target_flags & MASK_NO_STRICT_ALIGNMENT)
 
@@ -178,11 +188,11 @@ extern int target_flags;
     { "nofpa", - MASK_FPA,						\
       N_("Do not generate code for a Sun FPA") },			\
     { "sky", -(MASK_FPA|MASK_68040_ONLY|MASK_68881),			\
-      N_("") },								\
+      N_("Generate code for a Sun Sky board") },			\
     { "sky", MASK_SKY,							\
-      N_("") },								\
+      N_("Generate code for a Sun Sky board") },			\
     { "nosky", - MASK_SKY,						\
-      N_("") },								\
+      N_("Do not use Sky linkage convention") },			\
     { "68881", - (MASK_FPA|MASK_SKY),					\
       N_("Generate code for a 68881") },				\
     { "68881", MASK_68881, "" },					\
@@ -290,7 +300,7 @@ extern int target_flags;
 
 /* Define if you don't want extended real, but do want to use the
    software floating point emulator for REAL_ARITHMETIC and
-   decimal <-> binary conversion. */
+   decimal <-> binary conversion.  */
 /* #define REAL_ARITHMETIC */
 
 /* Define this if most significant bit is lowest numbered
@@ -343,7 +353,7 @@ extern int target_flags;
    Most published ABIs say that ints should be aligned on 16 bit
    boundaries, but cpus with 32 bit busses get better performance
    aligned on 32 bit boundaries.  Coldfires without a misalignment
-   module require 32 bit alignment. */
+   module require 32 bit alignment.  */
 #define BIGGEST_ALIGNMENT (TARGET_ALIGN_INT ? 32 : 16)
 
 /* Set this nonzero if move instructions will actually fail to work
@@ -356,10 +366,10 @@ extern int target_flags;
 /* Align loop starts for optimal branching.  */
 #define LOOP_ALIGN(LABEL) (m68k_align_loops)
 
-/* This is how to align an instruction for optimal branching. */
+/* This is how to align an instruction for optimal branching.  */
 #define LABEL_ALIGN_AFTER_BARRIER(LABEL) (m68k_align_jumps)
 
-#define SELECT_RTX_SECTION(MODE, X)					\
+#define SELECT_RTX_SECTION(MODE, X, ALIGN)				\
 {									\
   if (!flag_pic)							\
     readonly_data_section();						\
@@ -395,8 +405,8 @@ extern int target_flags;
 #define FIRST_PSEUDO_REGISTER 56
 #endif
 
-/* This defines the register which is used to hold the offset table for PIC. */
-#define PIC_OFFSET_TABLE_REGNUM 13
+/* This defines the register which is used to hold the offset table for PIC.  */
+#define PIC_OFFSET_TABLE_REGNUM (flag_pic ? 13 : INVALID_REGNUM)
 
 #ifndef SUPPORT_SUN_FPA
 
@@ -433,7 +443,7 @@ extern int target_flags;
    On the 68000, only the stack pointer is such.  */
 
 /* fpa0 is also reserved so that it can be used to move data back and
-   forth between high fpa regs and everything else. */
+   forth between high fpa regs and everything else.  */
 
 #define FIXED_REGISTERS        \
  {/* Data registers.  */       \
@@ -478,43 +488,43 @@ extern int target_flags;
 
 #ifdef SUPPORT_SUN_FPA
 
-#define CONDITIONAL_REGISTER_USAGE \
-{ 						\
-  int i; 					\
-  HARD_REG_SET x; 				\
-  if (! TARGET_FPA)				\
-    { 						\
-      COPY_HARD_REG_SET (x, reg_class_contents[(int)FPA_REGS]); \
-      for (i = 0; i < FIRST_PSEUDO_REGISTER; i++ ) \
-       if (TEST_HARD_REG_BIT (x, i)) 		\
-	fixed_regs[i] = call_used_regs[i] = 1; 	\
-    } 						\
-  if (! TARGET_68881)				\
-    { 						\
-      COPY_HARD_REG_SET (x, reg_class_contents[(int)FP_REGS]); \
-      for (i = 0; i < FIRST_PSEUDO_REGISTER; i++ ) \
-       if (TEST_HARD_REG_BIT (x, i)) 		\
-	fixed_regs[i] = call_used_regs[i] = 1; 	\
-    } 						\
-  if (flag_pic)					\
-    fixed_regs[PIC_OFFSET_TABLE_REGNUM]		\
-      = call_used_regs[PIC_OFFSET_TABLE_REGNUM] = 1;\
+#define CONDITIONAL_REGISTER_USAGE				\
+{ 								\
+  int i; 							\
+  HARD_REG_SET x; 						\
+  if (! TARGET_FPA)						\
+    { 								\
+      COPY_HARD_REG_SET (x, reg_class_contents[(int)FPA_REGS]);	\
+      for (i = 0; i < FIRST_PSEUDO_REGISTER; i++ )		\
+       if (TEST_HARD_REG_BIT (x, i)) 				\
+	fixed_regs[i] = call_used_regs[i] = 1; 			\
+    } 								\
+  if (! TARGET_68881)						\
+    { 								\
+      COPY_HARD_REG_SET (x, reg_class_contents[(int)FP_REGS]);	\
+      for (i = 0; i < FIRST_PSEUDO_REGISTER; i++ )		\
+       if (TEST_HARD_REG_BIT (x, i)) 				\
+	fixed_regs[i] = call_used_regs[i] = 1; 			\
+    } 								\
+  if (PIC_OFFSET_TABLE_REGNUM != INVALID_REGNUM)		\
+    fixed_regs[PIC_OFFSET_TABLE_REGNUM]				\
+      = call_used_regs[PIC_OFFSET_TABLE_REGNUM] = 1;		\
 }
 #else
-#define CONDITIONAL_REGISTER_USAGE \
-{ 						\
-  int i; 					\
-  HARD_REG_SET x; 				\
-  if (! TARGET_68881)				\
-    { 						\
-      COPY_HARD_REG_SET (x, reg_class_contents[(int)FP_REGS]); \
-      for (i = 0; i < FIRST_PSEUDO_REGISTER; i++ ) \
-       if (TEST_HARD_REG_BIT (x, i)) 		\
-	fixed_regs[i] = call_used_regs[i] = 1; 	\
-    } 						\
-  if (flag_pic)					\
-    fixed_regs[PIC_OFFSET_TABLE_REGNUM]		\
-      = call_used_regs[PIC_OFFSET_TABLE_REGNUM] = 1;\
+#define CONDITIONAL_REGISTER_USAGE				\
+{ 								\
+  int i; 							\
+  HARD_REG_SET x; 						\
+  if (! TARGET_68881)						\
+    { 								\
+      COPY_HARD_REG_SET (x, reg_class_contents[(int)FP_REGS]);	\
+      for (i = 0; i < FIRST_PSEUDO_REGISTER; i++ )		\
+       if (TEST_HARD_REG_BIT (x, i)) 				\
+	fixed_regs[i] = call_used_regs[i] = 1; 			\
+    } 								\
+  if (PIC_OFFSET_TABLE_REGNUM != INVALID_REGNUM)		\
+    fixed_regs[PIC_OFFSET_TABLE_REGNUM]				\
+      = call_used_regs[PIC_OFFSET_TABLE_REGNUM] = 1;		\
 }
 
 #endif /* defined SUPPORT_SUN_FPA */
@@ -651,7 +661,7 @@ enum reg_class {
 
 #define N_REG_CLASSES (int) LIM_REG_CLASSES
 
-/* Give names of register classes as strings for dump file.   */
+/* Give names of register classes as strings for dump file.  */
 
 #define REG_CLASS_NAMES \
  { "NO_REGS", "DATA_REGS",              \
@@ -704,7 +714,7 @@ enum reg_class { NO_REGS, LO_FPA_REGS, FPA_REGS, FP_REGS,
 
 #define N_REG_CLASSES (int) LIM_REG_CLASSES
 
-/* Give names of register classes as strings for dump file.   */
+/* Give names of register classes as strings for dump file.  */
 
 #define REG_CLASS_NAMES \
  { "NO_REGS", "LO_FPA_REGS", "FPA_REGS", "FP_REGS",  \
@@ -739,7 +749,7 @@ enum reg_class { NO_REGS, LO_FPA_REGS, FPA_REGS, FP_REGS,
    reg number REGNO.  This could be a conditional expression
    or could index an array.  */
 
-extern enum reg_class regno_reg_class[];
+extern const enum reg_class regno_reg_class[];
 #define REGNO_REG_CLASS(REGNO) (regno_reg_class[(REGNO)>>3])
 
 #endif /* SUPPORT_SUN_FPA */
@@ -754,7 +764,7 @@ extern enum reg_class regno_reg_class[];
    machine description; we zorch the constraint letters that aren't
    appropriate for a specific target.  This allows us to guarantee
    that a specific kind of register will not be used for a given target
-   without fiddling with the register classes above. */
+   without fiddling with the register classes above.  */
 
 #ifndef SUPPORT_SUN_FPA
 
@@ -957,6 +967,11 @@ extern enum reg_class regno_reg_class[];
    On the 5200 (coldfire), sp@- in a byte insn pushes just a byte.  */
 #define PUSH_ROUNDING(BYTES) (TARGET_5200 ? BYTES : ((BYTES) + 1) & ~1)
 
+/* We want to avoid trying to push bytes.  */
+#define MOVE_BY_PIECES_P(SIZE, ALIGN) \
+  (move_by_pieces_ninsns (SIZE, ALIGN) < MOVE_RATIO \
+    && (((SIZE) >=16 && (ALIGN) >= 16) || (TARGET_5200)))
+
 /* Offset of first parameter from the argument pointer register value.  */
 #define FIRST_PARM_OFFSET(FNDECL) 8
 
@@ -1081,176 +1096,11 @@ extern enum reg_class regno_reg_class[];
 		      : GET_MODE_SIZE (MODE))))  		\
  ? 2 - (CUM) / 4 : 0)
 
-/* Generate the assembly code for function entry. */
-#define FUNCTION_PROLOGUE(FILE, SIZE) output_function_prologue(FILE, SIZE)
-
 /* Output assembler code to FILE to increment profiler label # LABELNO
    for profiling a function entry.  */
 
 #define FUNCTION_PROFILER(FILE, LABELNO)  \
   asm_fprintf (FILE, "\tlea %LLP%d,%Ra0\n\tjsr mcount\n", (LABELNO))
-
-/* Output assembler code to FILE to initialize this source file's
-   basic block profiling info, if that has not already been done.  */
-
-#define FUNCTION_BLOCK_PROFILER(FILE, BLOCK_OR_LABEL)	\
-do							\
-  {							\
-    switch (profile_block_flag)				\
-      {							\
-      case 2:						\
-        asm_fprintf (FILE, "\tpea %d\n\tpea %LLPBX0\n\tjsr %U__bb_init_trace_func\n\taddql %I8,%Rsp\n", \
-                           (BLOCK_OR_LABEL)); \
-        break;						\
-							\
-      default:						\
-        asm_fprintf (FILE, "\ttstl %LLPBX0\n\tbne %LLPI%d\n\tpea %LLPBX0\n\tjsr %U__bb_init_func\n\taddql %I4,%Rsp\n%LLPI%d:\n", \
-                           (BLOCK_OR_LABEL), (BLOCK_OR_LABEL)); \
-        break;						\
-      }							\
-  }							\
-while(0)
-
-/* Output assembler code to FILE to increment the counter for
-   the BLOCKNO'th basic block in this source file.  */
-
-#define BLOCK_PROFILER(FILE, BLOCKNO)	\
-do							\
-  {							\
-    switch (profile_block_flag)				\
-      {							\
-      case 2:						\
-        asm_fprintf (FILE, "\tmovel %Ra1,%Rsp@-\n\tlea ___bb,%Ra1\n\tmovel %I%d,%Ra1@(0)\n\tmovel %I%LLPBX0,%Ra1@(4)\n\tmovel %Rsp@+,%Ra1\n\tjsr %U__bb_trace_func\n", \
-                           BLOCKNO);			\
-        break;						\
-							\
-      default:						\
-        asm_fprintf (FILE, "\taddql %I1,%LLPBX2+%d\n", 4 * BLOCKNO); \
-        break;						\
-      }							\
-  }							\
-while(0)
-
-/* Output assembler code to FILE to indicate return from 
-   a function during basic block profiling. */
-
-#define FUNCTION_BLOCK_PROFILER_EXIT(FILE)		\
-  asm_fprintf (FILE, "\tjsr %U__bb_trace_ret\n");
-
-/* Save all registers which may be clobbered by a function call.
-   MACHINE_STATE_SAVE and MACHINE_STATE_RESTORE are target-code macros,
-   used in libgcc2.c.  They may not refer to TARGET_* macros !!! */
-#if defined (__mc68010__) || defined(mc68010) \
-	|| defined(__mc68020__) || defined(mc68020) \
-	|| defined(__mc68030__) || defined(mc68030) \
-	|| defined(__mc68040__) || defined(mc68040) \
-	|| defined(__mcpu32__) || defined(mcpu32)
-#define MACHINE_STATE_m68010_up
-#endif
-
-#ifdef MOTOROLA
-#if defined(__mcf5200__)
-#define MACHINE_STATE_SAVE(id)		\
-    {					\
-      asm ("sub.l 20,%sp");		\
-      asm ("movm.l &0x0303,4(%sp)");	\
-      asm ("move.w %ccr,%d0");		\
-      asm ("movm.l &0x0001,(%sp)");	\
-    }
-#else /* !__mcf5200__ */
-#if defined(MACHINE_STATE_m68010_up)
-#ifdef __HPUX_ASM__
-/* HPUX assembler does not accept %ccr.  */
-#define MACHINE_STATE_SAVE(id)		\
-    {					\
-      asm ("move.w %cc,-(%sp)");	\
-      asm ("movm.l &0xc0c0,-(%sp)");	\
-    }
-#else /* ! __HPUX_ASM__ */
-#define MACHINE_STATE_SAVE(id)		\
-    {					\
-      asm ("move.w %ccr,-(%sp)");	\
-      asm ("movm.l &0xc0c0,-(%sp)");	\
-    }
-#endif /* __HPUX_ASM__ */
-#else /* !MACHINE_STATE_m68010_up */
-#define MACHINE_STATE_SAVE(id)		\
-    {					\
-      asm ("move.w %sr,-(%sp)");	\
-      asm ("movm.l &0xc0c0,-(%sp)");	\
-    }
-#endif /* MACHINE_STATE_m68010_up */
-#endif /* __mcf5200__ */
-#else /* !MOTOROLA */
-#if defined(__mcf5200__)
-#define MACHINE_STATE_SAVE(id)		\
-    {					\
-      asm ("subl %#20,%/sp" : );	\
-      asm ("movml %/d0/%/d1/%/a0/%/a1,%/sp@(4)" : ); \
-      asm ("movew %/cc,%/d0" : );	\
-      asm ("movml %/d0,%/sp@" : );	\
-    }
-#else /* !__mcf5200__ */
-#if defined(MACHINE_STATE_m68010_up)
-#define MACHINE_STATE_SAVE(id)		\
-    {					\
-      asm ("movew %/cc,%/sp@-" : );	\
-      asm ("moveml %/d0/%/d1/%/a0/%/a1,%/sp@-" : ); \
-    }
-#else /* !MACHINE_STATE_m68010_up */
-#define MACHINE_STATE_SAVE(id)		\
-    {					\
-      asm ("movew %/sr,%/sp@-" : );	\
-      asm ("moveml %/d0/%/d1/%/a0/%/a1,%/sp@-" : ); \
-    }
-#endif /* MACHINE_STATE_m68010_up */
-#endif /* __mcf5200__ */
-#endif /* MOTOROLA */
-
-/* Restore all registers saved by MACHINE_STATE_SAVE. */
-
-#ifdef MOTOROLA
-#if defined(__mcf5200__)
-#define MACHINE_STATE_RESTORE(id)	\
-    {					\
-      asm ("movm.l (%sp),&0x0001");	\
-      asm ("move.w %d0,%ccr");		\
-      asm ("movm.l 4(%sp),&0x0303");	\
-      asm ("add.l 20,%sp");		\
-    }
-#else /* !__mcf5200__ */
-#ifdef __HPUX_ASM__
-/* HPUX assembler does not accept %ccr.  */
-#define MACHINE_STATE_RESTORE(id)	\
-    {					\
-      asm ("movm.l (%sp)+,&0x0303");	\
-      asm ("move.w (%sp)+,%cc");	\
-    }
-#else /* ! __HPUX_ASM__ */
-#define MACHINE_STATE_RESTORE(id)	\
-    {					\
-      asm ("movm.l (%sp)+,&0x0303");	\
-      asm ("move.w (%sp)+,%ccr");	\
-    }
-#endif /* __HPUX_ASM__ */
-#endif /* __mcf5200__ */
-#else /* !MOTOROLA */
-#if defined(__mcf5200__)
-#define MACHINE_STATE_RESTORE(id)	\
-    {					\
-      asm ("movml %/sp@,%/d0" : );	\
-      asm ("movew %/d0,%/cc" : );	\
-      asm ("movml %/sp@(4),%/d0/%/d1/%/a0/%/a1" : ); \
-      asm ("addl %#20,%/sp" : );	\
-    }
-#else /* !__mcf5200__ */
-#define MACHINE_STATE_RESTORE(id)	\
-    {					\
-      asm ("moveml %/sp@+,%/d0/%/d1/%/a0/%/a1" : ); \
-      asm ("movew %/sp@+,%/cc" : );	\
-    }
-#endif /* __mcf5200__ */
-#endif /* MOTOROLA */
 
 /* EXIT_IGNORE_STACK should be nonzero if, when returning from a function,
    the stack pointer does not matter.  The value is tested only in
@@ -1259,9 +1109,6 @@ while(0)
 
 #define EXIT_IGNORE_STACK 1
 
-/* Generate the assembly code for function exit. */
-#define FUNCTION_EPILOGUE(FILE, SIZE) output_function_epilogue (FILE, SIZE)
-  
 /* This is a hook for other tm files to change.  */
 /* #define FUNCTION_EXTRA_EPILOGUE(FILE, SIZE) */
 
@@ -1460,11 +1307,11 @@ __transfer_from_trampoline ()					\
 
 #define LEGITIMATE_PIC_OPERAND_P(X)	\
   ((! symbolic_operand (X, VOIDmode)				\
-    && ! (GET_CODE (X) == CONST_DOUBLE && CONST_DOUBLE_MEM (X)	\
-	  && GET_CODE (CONST_DOUBLE_MEM (X)) == MEM		\
-	  && symbolic_operand (XEXP (CONST_DOUBLE_MEM (X), 0),	\
-			       VOIDmode)))			\
-   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X))	\
+    && ! (GET_CODE (X) == CONST_DOUBLE && mem_for_const_double (X) != 0	\
+	  && GET_CODE (mem_for_const_double (X)) == MEM			\
+	  && symbolic_operand (XEXP (mem_for_const_double (X), 0),	\
+			       VOIDmode))) 				\
+   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X))		\
    || PCREL_GENERAL_OPERAND_OK)
 
 /* The macros REG_OK_FOR..._P assume that the arg is a REG rtx
@@ -1669,14 +1516,8 @@ __transfer_from_trampoline ()					\
 /* Define as C expression which evaluates to nonzero if the tablejump
    instruction expects the table to contain offsets from the address of the
    table.
-   Do not define this if the table should contain absolute addresses. */
+   Do not define this if the table should contain absolute addresses.  */
 #define CASE_VECTOR_PC_RELATIVE 1
-
-/* Specify the tree operation to be used to convert reals to integers.  */
-#define IMPLICIT_FIX_EXPR FIX_ROUND_EXPR
-
-/* This is the kind of divide that is easiest to do in the general case.  */
-#define EASY_DIV_EXPR TRUNC_DIV_EXPR
 
 /* Define this as 1 if `char' should by default be signed; else as 0.  */
 #define DEFAULT_SIGNED_CHAR 1
@@ -1687,9 +1528,6 @@ __transfer_from_trampoline ()					\
 /* Max number of bytes we can move from memory to memory
    in one reasonably fast instruction.  */
 #define MOVE_MAX 4
-
-/* Define this if zero-extension is slow (more than one real instruction).  */
-#define SLOW_ZERO_EXTEND
 
 /* Nonzero if access to memory by bytes is slow and undesirable.  */
 #define SLOW_BYTE_ACCESS 0
@@ -1867,7 +1705,7 @@ __transfer_from_trampoline ()					\
    an empty string, or any arbitrary string (such as ".", ".L%", etc)
    without having to make any other changes to account for the specific
    definition.  Note it is a string literal, not interpreted by printf
-   and friends. */
+   and friends.  */
 
 #define LOCAL_LABEL_PREFIX ""
 
@@ -1953,55 +1791,7 @@ __transfer_from_trampoline ()					\
    This is suitable for output with `assemble_name'.  */
 
 #define ASM_GENERATE_INTERNAL_LABEL(LABEL,PREFIX,NUM)	\
-  sprintf (LABEL, "*%s%s%d", LOCAL_LABEL_PREFIX, PREFIX, NUM)
-
-/* This is how to output a `long double' extended real constant. */
-  
-#define ASM_OUTPUT_LONG_DOUBLE(FILE,VALUE)  				\
-do { long l[3];								\
-     REAL_VALUE_TO_TARGET_LONG_DOUBLE (VALUE, l);			\
-     fprintf (FILE, "\t.long 0x%lx,0x%lx,0x%lx\n", l[0], l[1], l[2]);	\
-   } while (0)
-  
-/* This is how to output an assembler line defining a `double' constant.  */
-
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)				\
-  do { char dstr[30];						\
-       REAL_VALUE_TO_DECIMAL (VALUE, "%.20g", dstr);		\
-       fprintf (FILE, "\t.double 0r%s\n", dstr);		\
-     } while (0)
-
-/* This is how to output an assembler line defining a `float' constant.  */
-
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)			\
-do { long l;						\
-     REAL_VALUE_TO_TARGET_SINGLE (VALUE, l);		\
-     fprintf (FILE, "\t.long 0x%lx\n", l);		\
-   } while (0)
-
-/* This is how to output an assembler line defining an `int' constant.  */
-
-#define ASM_OUTPUT_INT(FILE,VALUE)  \
-( fprintf (FILE, "\t.long "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* Likewise for `char' and `short' constants.  */
-
-#define ASM_OUTPUT_SHORT(FILE,VALUE)  \
-( fprintf (FILE, "\t.word "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-#define ASM_OUTPUT_CHAR(FILE,VALUE)  \
-( fprintf (FILE, "\t.byte "),			\
-  output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
-
-/* This is how to output an assembler line for a numeric constant byte.  */
-
-#define ASM_OUTPUT_BYTE(FILE,VALUE)  \
-  fprintf (FILE, "\t.byte 0x%x\n", (VALUE))
+  sprintf (LABEL, "*%s%s%ld", LOCAL_LABEL_PREFIX, PREFIX, (long)(NUM))
 
 /* This is how to output an insn to push a register on the stack.
    It need not be very fast code.  */
@@ -2063,21 +1853,6 @@ do { long l;						\
 #define ASM_FORMAT_PRIVATE_NAME(OUTPUT, NAME, LABELNO)	\
 ( (OUTPUT) = (char *) alloca (strlen ((NAME)) + 10),	\
   sprintf ((OUTPUT), "%s.%d", (NAME), (LABELNO)))
-
-/* Define the parentheses used to group arithmetic operations
-   in assembler code.  */
-
-#define ASM_OPEN_PAREN "("
-#define ASM_CLOSE_PAREN ")"
-
-/* Define results of standard character escape sequences.  */
-#define TARGET_BELL 007
-#define TARGET_BS 010
-#define TARGET_TAB 011
-#define TARGET_NEWLINE 012
-#define TARGET_VT 013
-#define TARGET_FF 014
-#define TARGET_CR 015
 
 /* Output a float value (represented as a C double) as an immediate operand.
    This macro is a 68k-specific macro.  */
@@ -2144,7 +1919,7 @@ do { long l;						\
        or print pair of registers as rx:ry.
    'y' for a FPA insn (print pair of registers as rx:ry).  This also outputs
        CONST_DOUBLE's as SunFPA constant RAM registers if
-       possible, so it should not be used except for the SunFPA. */
+       possible, so it should not be used except for the SunFPA.  */
 
 #define PRINT_OPERAND_PUNCT_VALID_P(CODE)				\
   ((CODE) == '.' || (CODE) == '#' || (CODE) == '-'			\
@@ -2195,6 +1970,21 @@ extern int m68k_align_jumps;
 extern int m68k_align_funcs;
 extern int m68k_last_compare_had_fp_operands;
 
+
+/* Define the codes that are matched by predicates in m68k.c.  */
+
+#define PREDICATE_CODES							\
+  {"general_src_operand", {CONST_INT, CONST_DOUBLE, CONST, SYMBOL_REF,	\
+			   LABEL_REF, SUBREG, REG, MEM}},		\
+  {"nonimmediate_src_operand", {SUBREG, REG, MEM}},			\
+  {"memory_src_operand", {SUBREG, MEM}},				\
+  {"not_sp_operand", {SUBREG, REG, MEM}},				\
+  {"pcrel_address", {SYMBOL_REF, LABEL_REF, CONST}},			\
+  {"const_uint32_operand", {CONST_INT, CONST_DOUBLE}},			\
+  {"const_sint32_operand", {CONST_INT}},				\
+  {"valid_dbcc_comparison_p", {EQ, NE, GTU, LTU, GEU, LEU,		\
+			       GT, LT, GE, LE}},			\
+  {"extend_operator", {SIGN_EXTEND, ZERO_EXTEND}},
 
 /*
 Local variables:

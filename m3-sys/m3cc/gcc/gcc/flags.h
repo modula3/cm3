@@ -1,23 +1,23 @@
-/* Compilation switch flag definitions for GNU CC.
+/* Compilation switch flag definitions for GCC.
    Copyright (C) 1987, 1988, 1994, 1995, 1996, 1997, 1998, 1999, 2000
    Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 #ifndef GCC_FLAGS_H
 #define GCC_FLAGS_H
@@ -32,7 +32,10 @@ enum debug_info_type
   SDB_DEBUG,	    /* Write COFF for (old) SDB (using sdbout.c).  */
   DWARF_DEBUG,	    /* Write Dwarf debug info (using dwarfout.c).  */
   DWARF2_DEBUG,	    /* Write Dwarf v2 debug info (using dwarf2out.c).  */
-  XCOFF_DEBUG	    /* Write IBM/Xcoff debug info (using dbxout.c).  */
+  XCOFF_DEBUG,	    /* Write IBM/Xcoff debug info (using dbxout.c).  */
+  VMS_DEBUG,        /* Write VMS debug info (using vmsdbgout.c).  */
+  VMS_AND_DWARF2_DEBUG /* Write VMS debug info (using vmsdbgout.c).
+                          and DWARF v2 debug info (using dwarf2out.c).  */
 };
 
 /* Specify which kind of debugging info to generate.  */
@@ -42,7 +45,7 @@ enum debug_info_level
 {
   DINFO_LEVEL_NONE,	/* Write no debugging info.  */
   DINFO_LEVEL_TERSE,	/* Write minimal info to support tracebacks only.  */
-  DINFO_LEVEL_NORMAL,	/* Write info for all declarations (and line table). */
+  DINFO_LEVEL_NORMAL,	/* Write info for all declarations (and line table).  */
   DINFO_LEVEL_VERBOSE	/* Write normal info plus #define/#undef info.  */
 };
 
@@ -89,7 +92,7 @@ extern int extra_warnings;
 
 /* Nonzero to warn about unused variables, functions et.al.  Use
    set_Wunused() to update the -Wunused-* flags that correspond to the
-   -Wunused option. */
+   -Wunused option.  */
 
 extern void set_Wunused PARAMS ((int setting));
 
@@ -119,7 +122,7 @@ extern int warn_uninitialized;
 
 extern int warn_unknown_pragmas;
 
-/* Nonzero means warn about all declarations which shadow others.   */
+/* Nonzero means warn about all declarations which shadow others.  */
 
 extern int warn_shadow;
 
@@ -132,7 +135,7 @@ extern int warn_switch;
 
 extern int warn_return_type;
 
-/* Warn about functions which might be candidates for attribute noreturn. */
+/* Warn about functions which might be candidates for attribute noreturn.  */
 
 extern int warn_missing_noreturn;
 
@@ -141,12 +144,6 @@ extern int warn_missing_noreturn;
    due to a misaligned access).  */
 
 extern int warn_cast_align;
-
-/* Nonzero means warn about any identifiers that match in the first N
-   characters.  The value N is in `id_clash_len'.  */
-
-extern int warn_id_clash;
-extern int id_clash_len;
 
 /* Nonzero means warn about any objects definitions whose size is larger
    than N bytes.  Also want about function definitions whose returned
@@ -172,23 +169,24 @@ extern int warn_padded;
 
 extern int warn_disabled_optimization;
 
+/* Nonzero means warn about uses of __attribute__((deprecated)) 
+   declarations.  */
+
+extern int warn_deprecated_decl;
+
 /* Nonzero if generating code to do profiling.  */
 
 extern int profile_flag;
 
-/* Nonzero if generating code to do profiling on the basis of basic blocks.  */
-
-extern int profile_block_flag;
-
-/* Nonzero if generating code to profile program flow graph arcs. */
+/* Nonzero if generating code to profile program flow graph arcs.  */
 
 extern int profile_arc_flag;
 
-/* Nonzero if generating info for gcov to calculate line test coverage. */
+/* Nonzero if generating info for gcov to calculate line test coverage.  */
 
 extern int flag_test_coverage;
 
-/* Nonzero indicates that branch taken probabilities should be calculated. */
+/* Nonzero indicates that branch taken probabilities should be calculated.  */
 
 extern int flag_branch_probabilities;
 
@@ -272,12 +270,16 @@ extern int flag_unroll_loops;
 extern int flag_unroll_all_loops;
 
 /* Nonzero forces all invariant computations in loops to be moved
-   outside the loop. */
+   outside the loop.  */
 
 extern int flag_move_all_movables;
 
+/* Nonzero enables prefetch optimizations for arrays in loops.  */
+
+extern int flag_prefetch_loop_arrays;
+
 /* Nonzero forces all general induction variables in loops to be
-   strength reduced. */
+   strength reduced.  */
 
 extern int flag_reduce_all_givs;
 
@@ -327,21 +329,27 @@ extern int flag_volatile_global;
 
 extern int flag_volatile_static;
 
-/* Nonzero allows GCC to violate some IEEE or ANSI rules regarding math
-   operations in the interest of optimization.  For example it allows
-   GCC to assume arguments to sqrt are nonnegative numbers, allowing
-   faster code for sqrt to be generated. */
-
-extern int flag_fast_math;
-
 /* Nonzero allows GCC to optimize sibling and tail recursive calls.  */
 
 extern int flag_optimize_sibling_calls;
 
 /* Nonzero means the front end generally wants `errno' maintained by math
-   operations, like built-in SQRT, unless overridden by flag_fast_math.  */
+   operations, like built-in SQRT.  */
 
 extern int flag_errno_math;
+
+/* Nonzero means that unsafe floating-point math optimizations are allowed
+   for the sake of speed.  IEEE compliance is not guaranteed, and operations
+   are allowed to assume that their arguments and results are "normal"
+   (e.g., nonnegative for SQRT).  */
+
+extern int flag_unsafe_math_optimizations;
+
+/* Zero means that floating-point math operations cannot generate a
+   (user-visible) trap.  This is the case, for example, in nonstop
+   IEEE 754 arithmetic.  */
+
+extern int flag_trapping_math;
 
 /* 0 means straightforward implementation of complex divide acceptable.
    1 means wide ranges of inputs must work for complex divide.
@@ -371,6 +379,11 @@ extern int flag_keep_inline_functions;
    does the right thing with #pragma interface.  */
 
 extern int flag_no_inline;
+
+/* Nonzero means that we don't want inlining by virtue of -fno-inline,
+   not just because the tree inliner turned us off.  */
+
+extern int flag_really_no_inline;
 
 /* Nonzero if we are only using compiler to check syntax errors.  */
 
@@ -408,16 +421,16 @@ extern int flag_schedule_speculative_load;
 extern int flag_schedule_speculative_load_dangerous;
 
 /* flag_branch_on_count_reg means try to replace add-1,compare,branch tupple
-   by a cheaper branch, on a count register. */
+   by a cheaper branch, on a count register.  */
 extern int flag_branch_on_count_reg;
 
 /* This option is set to 1 on -fsingle-precision-constant option which is
    used to convert the floating point constants to single precision 
-   constants. */
+   constants.  */
 
 extern int flag_single_precision_constant;
 
-/* Nonzero means put things in delayed-branch slots if supported. */
+/* Nonzero means put things in delayed-branch slots if supported.  */
 
 extern int flag_delayed_branch;
 
@@ -450,6 +463,10 @@ extern int flag_exceptions;
 /* Nonzero means generate frame unwind info table when supported */
 
 extern int flag_unwind_tables;
+
+/* Nonzero means generate frame unwind info table exact at each insn boundary */
+
+extern int flag_asynchronous_unwind_tables;
 
 /* Nonzero means don't place uninitialized global data in common storage
    by default.  */
@@ -523,7 +540,7 @@ extern int flag_regmove;
 /* Instrument functions with calls at entry and exit, for profiling.  */
 extern int flag_instrument_function_entry_exit;
 
-/* Perform a peephole pass before sched2. */
+/* Perform a peephole pass before sched2.  */
 extern int flag_peephole2;
 
 /* Try to guess branch probablities.  */
@@ -544,6 +561,11 @@ extern int flag_bounded_pointers;
    For CHILL: defaults to off.  */
 extern int flag_bounds_check;
 
+/* This will attempt to merge constant section constants, if 1 only
+   string constants and constants from constant pool, if 2 also constant
+   variables.  */
+extern int flag_merge_constants;
+
 /* If one, renumber instruction UIDs to reduce the number of
    unused UIDs if there are a lot of instructions.  If greater than
    one, unconditionally renumber instruction UIDs.  */
@@ -557,18 +579,9 @@ extern int flag_renumber_insns;
 
 extern int frame_pointer_needed;
 
-/* Nonzero if GCC must add code to check memory access (used by Checker).  */
-
-extern int flag_check_memory_usage;
-
 /* Nonzero if the generated code should trap on signed overflow
    for PLUS / SUB / MULT.  */
 extern int flag_trapv;
-
-/* Nonzero if GCC must prefix function names (used with
-   flag_check_memory_usage).  */
-
-extern int flag_prefix_function_name;
 
 /* Value of the -G xx switch, and whether it was passed or not.  */
 extern int g_switch_value;
@@ -581,10 +594,13 @@ extern int g_switch_set;
 
 extern int align_loops;
 extern int align_loops_log;
+extern int align_loops_max_skip;
 extern int align_jumps;
 extern int align_jumps_log;
+extern int align_jumps_max_skip;
 extern int align_labels;
 extern int align_labels_log;
+extern int align_labels_max_skip;
 extern int align_functions;
 extern int align_functions_log;
 
@@ -605,6 +621,15 @@ extern enum graph_dump_types graph_dump_format;
 
 extern int flag_no_ident;
 
+/* Nonzero if we want to perform enhanced load motion during gcse.  */
+
+extern int flag_gcse_lm;
+
+/* Nonzero if we want to perform store motion after gcse.  */
+
+extern int flag_gcse_sm;
+
+
 /* Nonzero means we should do dwarf2 duplicate elimination.  */
 
 extern int flag_eliminate_dwarf2_dups;
@@ -616,4 +641,4 @@ extern int flag_detailed_statistics;
 /* Nonzero means enable synchronous exceptions for non-call instructions.  */
 extern int flag_non_call_exceptions;
 
-#endif /* GCC_FLAGS_H */
+#endif /* ! GCC_FLAGS_H */

@@ -1088,6 +1088,12 @@ else
 	GDB_TK=""
 fi
 
+all_build_modules=
+if test x"${build_alias}" != x"${host_alias}"
+then
+  all_build_modules='$(ALL_BUILD_MODULES_LIST)'
+fi
+
 for subdir in . ${subdirs} ; do
 
     # ${subdir} is relative path from . to the directory we're currently
@@ -1295,7 +1301,7 @@ EOF
             esac
             # real copy now in ${subdir}/Makefile.tem
 
-            # prepend warning about editting, and a bunch of variables.
+            # prepend warning about editing, and a bunch of variables.
             rm -f ${Makefile}
             cat > ${Makefile} <<EOF
 # ${NO_EDIT}
@@ -1364,9 +1370,14 @@ EOF
             # remove any form feeds.
             if [ -z "${subdirs}" ]; then
                 rm -f ${subdir}/Makefile.tm2
-                sed -e "s:^SUBDIRS[ 	]*=.*$:SUBDIRS = ${configdirs}:" \
-                    -e "s:^NONSUBDIRS[ 	]*=.*$:NONSUBDIRS = ${noconfigdirs}:" \
+                sedtemp=sed.$$
+                cat >$sedtemp <<EOF
+s:^SUBDIRS[ 	]*=.*$:SUBDIRS = ${configdirs}:
+s:^NONSUBDIRS[ 	]*=.*$:NONSUBDIRS = ${noconfigdirs}:
+EOF
+                sed -f $sedtemp \
                     ${subdir}/Makefile.tem > ${subdir}/Makefile.tm2
+                rm -f $sedtemp
                 rm -f ${subdir}/Makefile.tem
                 mv ${subdir}/Makefile.tm2 ${subdir}/Makefile.tem
 	    fi
@@ -1384,6 +1395,7 @@ EOF
                     -e "s|^oldincludedir[ 	]*=.*$|oldincludedir = ${oldincludedir}|" \
                     -e "s|^infodir[ 	]*=.*$|infodir = ${infodir}|" \
                     -e "s|^mandir[ 	]*=.*$|mandir = ${mandir}|" \
+		    -e "s|^ALL_BUILD_MODULES =.*|ALL_BUILD_MODULES =${all_build_modules}|" \
 		    -e "/^CC[ 	]*=/{
 			:loop1
 			/\\\\$/ N

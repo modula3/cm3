@@ -22,9 +22,6 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-#include "i386/i386.h"	/* Base i386 target machine definitions */
-#include "i386/att.h"	/* Use the i386 AT&T assembler syntax */
-#include "ptx4.h"	/* Rest of definitions (non architecture dependent) */
 
 #undef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (i386 Sequent Dynix/ptx Version 4)");
@@ -42,61 +39,6 @@ Boston, MA 02111-1307, USA.  */
    is supposed to be defined optionally by user programs--not by default.  */
 #define CPP_PREDEFINES \
   "-Dunix -D_SEQUENT_ -Asystem=unix -Asystem=ptx4"
-
-/* This is how to output assembly code to define a `float' constant.
-   We always have to use a .long pseudo-op to do this because the native
-   SVR4 ELF assembler is buggy and it generates incorrect values when we
-   try to use the .float pseudo-op instead.  */
-
-#undef ASM_OUTPUT_FLOAT
-#define ASM_OUTPUT_FLOAT(FILE,VALUE)					\
-do { long value;							\
-     REAL_VALUE_TO_TARGET_SINGLE ((VALUE), value);			\
-     if (sizeof (int) == sizeof (long))					\
-         fprintf((FILE), "%s0x%x\n", ASM_LONG, value);			\
-     else								\
-         fprintf((FILE), "%s0x%lx\n", ASM_LONG, value);			\
-   } while (0)
-
-/* This is how to output assembly code to define a `double' constant.
-   We always have to use a pair of .long pseudo-ops to do this because
-   the native SVR4 ELF assembler is buggy and it generates incorrect
-   values when we try to use the .double pseudo-op instead.  */
-
-#undef ASM_OUTPUT_DOUBLE
-#define ASM_OUTPUT_DOUBLE(FILE,VALUE)					\
-do { long value[2];							\
-     REAL_VALUE_TO_TARGET_DOUBLE ((VALUE), value);			\
-     if (sizeof (int) == sizeof (long))					\
-       {								\
-         fprintf((FILE), "%s0x%x\n", ASM_LONG, value[0]);		\
-         fprintf((FILE), "%s0x%x\n", ASM_LONG, value[1]);		\
-       }								\
-     else								\
-       {								\
-         fprintf((FILE), "%s0x%lx\n", ASM_LONG, value[0]);		\
-         fprintf((FILE), "%s0x%lx\n", ASM_LONG, value[1]);		\
-       }								\
-   } while (0)
-
-
-#undef ASM_OUTPUT_LONG_DOUBLE
-#define ASM_OUTPUT_LONG_DOUBLE(FILE,VALUE)				\
-do { long value[3];							\
-     REAL_VALUE_TO_TARGET_LONG_DOUBLE ((VALUE), value);			\
-     if (sizeof (int) == sizeof (long))					\
-       {								\
-         fprintf((FILE), "%s0x%x\n", ASM_LONG, value[0]);		\
-         fprintf((FILE), "%s0x%x\n", ASM_LONG, value[1]);		\
-         fprintf((FILE), "%s0x%x\n", ASM_LONG, value[2]);		\
-       }								\
-     else								\
-       {								\
-         fprintf((FILE), "%s0x%lx\n", ASM_LONG, value[0]);		\
-         fprintf((FILE), "%s0x%lx\n", ASM_LONG, value[1]);		\
-         fprintf((FILE), "%s0x%lx\n", ASM_LONG, value[2]);		\
-       }								\
-   } while (0)
 
 #undef DBX_REGISTER_NUMBER
 #define DBX_REGISTER_NUMBER(n)  svr4_dbx_register_map[n]
@@ -126,7 +68,7 @@ do { long value[3];							\
 	    }								\
 	  for (p = _ascii_bytes; p < limit && *p != '\0'; p++)		\
 	    continue;							\
-	  if (p < limit && (p - _ascii_bytes) <= STRING_LIMIT)		\
+	  if (p < limit && (p - _ascii_bytes) <= (long) STRING_LIMIT)	\
 	    {								\
 	      if (bytes_in_chunk > 0)					\
 		{							\
@@ -150,16 +92,3 @@ do { long value[3];							\
         fprintf ((FILE), "\n");						\
     }									\
   while (0)
-
-/* This is how to output an element of a case-vector that is relative.
-   This is only used for PIC code.  See comments by the `casesi' insn in
-   i386.md for an explanation of the expression this outputs. */
-
-#undef ASM_OUTPUT_ADDR_DIFF_ELT
-#define ASM_OUTPUT_ADDR_DIFF_ELT(FILE, BODY, VALUE, REL) \
-  fprintf (FILE, "\t.long _GLOBAL_OFFSET_TABLE_+[.-%s%d]\n", LPREFIX, VALUE)
-
-/* Indicate that jump tables go in the text section.  This is
-   necessary when compiling PIC code.  */
-
-#define JUMP_TABLES_IN_TEXT_SECTION 1

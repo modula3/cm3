@@ -1,6 +1,6 @@
 /* Subroutines used for code generation on the Argonaut ARC cpu.
-   Copyright (C) 1994, 1995, 1997, 1998, 1999,
-   2000 Free Software Foundation, Inc.
+   Copyright (C) 1994, 1995, 1997, 1998, 1999, 2000, 2001, 2002
+   Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -38,6 +38,8 @@ Boston, MA 02111-1307, USA.  */
 #include "recog.h"
 #include "toplev.h"
 #include "tm_p.h"
+#include "target.h"
+#include "target-def.h"
 
 /* Which cpu we're compiling for (NULL(=base), ???).  */
 const char *arc_cpu_string;
@@ -85,7 +87,29 @@ static int current_insn_set_cc_p;
 static void record_cc_ref PARAMS ((rtx));
 static void arc_init_reg_tables PARAMS ((void));
 static int get_arc_condition_code PARAMS ((rtx));
+const struct attribute_spec arc_attribute_table[];
+static tree arc_handle_interrupt_attribute PARAMS ((tree *, tree, tree, int, bool *));
+static bool arc_assemble_integer PARAMS ((rtx, unsigned int, int));
+static void arc_output_function_prologue PARAMS ((FILE *, HOST_WIDE_INT));
+static void arc_output_function_epilogue PARAMS ((FILE *, HOST_WIDE_INT));
+
+/* Initialize the GCC target structure.  */
+#undef TARGET_ASM_ALIGNED_HI_OP
+#define TARGET_ASM_ALIGNED_HI_OP "\t.hword\t"
+#undef TARGET_ASM_ALIGNED_SI_OP
+#define TARGET_ASM_ALIGNED_SI_OP "\t.word\t"
+#undef TARGET_ASM_INTEGER
+#define TARGET_ASM_INTEGER arc_assemble_integer
 
+#undef TARGET_ASM_FUNCTION_PROLOGUE
+#define TARGET_ASM_FUNCTION_PROLOGUE arc_output_function_prologue
+#undef TARGET_ASM_FUNCTION_EPILOGUE
+#define TARGET_ASM_FUNCTION_EPILOGUE arc_output_function_epilogue
+#undef TARGET_ATTRIBUTE_TABLE
+#define TARGET_ATTRIBUTE_TABLE arc_attribute_table
+
+struct gcc_target targetm = TARGET_INITIALIZER;
+
 /* Called by OVERRIDE_OPTIONS to initialize various things.  */
 
 void
@@ -227,7 +251,7 @@ enum arc_mode_class {
 
 /* Value is 1 if register/mode pair is acceptable on arc.  */
 
-unsigned int arc_hard_regno_mode_ok[] = {
+const unsigned int arc_hard_regno_mode_ok[] = {
   T_MODES, T_MODES, T_MODES, T_MODES, T_MODES, T_MODES, T_MODES, T_MODES,
   T_MODES, T_MODES, T_MODES, T_MODES, T_MODES, T_MODES, T_MODES, T_MODES,
   T_MODES, T_MODES, T_MODES, T_MODES, T_MODES, T_MODES, T_MODES, D_MODES,
@@ -311,46 +335,42 @@ arc_init_reg_tables ()
    interrupt - for interrupt functions
 */
 
-/* Return nonzero if IDENTIFIER is a valid decl attribute.  */
+const struct attribute_spec arc_attribute_table[] =
+{
+  /* { name, min_len, max_len, decl_req, type_req, fn_type_req, handler } */
+  { "interrupt", 1, 1, true,  false, false, arc_handle_interrupt_attribute },
+  { NULL,        0, 0, false, false, false, NULL }
+};
 
-int
-arc_valid_machine_decl_attribute (type, attributes, identifier, args)
-     tree type ATTRIBUTE_UNUSED;
-     tree attributes ATTRIBUTE_UNUSED;
-     tree identifier;
+/* Handle an "interrupt" attribute; arguments as in
+   struct attribute_spec.handler.  */
+static tree
+arc_handle_interrupt_attribute (node, name, args, flags, no_add_attrs)
+     tree *node ATTRIBUTE_UNUSED;
+     tree name;
      tree args;
+     int flags ATTRIBUTE_UNUSED;
+     bool *no_add_attrs;
 {
-  if (identifier == get_identifier ("__interrupt__")
-      && list_length (args) == 1
-      && TREE_CODE (TREE_VALUE (args)) == STRING_CST)
+  tree value = TREE_VALUE (args);
+
+  if (TREE_CODE (value) != STRING_CST)
     {
-      tree value = TREE_VALUE (args);
-
-      if (!strcmp (TREE_STRING_POINTER (value), "ilink1")
-	   || !strcmp (TREE_STRING_POINTER (value), "ilink2"))
-	return 1;
+      warning ("argument of `%s' attribute is not a string constant",
+	       IDENTIFIER_POINTER (name));
+      *no_add_attrs = true;
     }
-  return 0;
+  else if (strcmp (TREE_STRING_POINTER (value), "ilink1")
+	   && strcmp (TREE_STRING_POINTER (value), "ilink2"))
+    {
+      warning ("argument of `%s' attribute is not \"ilink1\" or \"ilink2\"",
+	       IDENTIFIER_POINTER (name));
+      *no_add_attrs = true;
+    }
+
+  return NULL_TREE;
 }
 
-/* Return zero if TYPE1 and TYPE are incompatible, one if they are compatible,
-   and two if they are nearly compatible (which causes a warning to be
-   generated).  */
-
-int
-arc_comp_type_attributes (type1, type2)
-     tree type1 ATTRIBUTE_UNUSED, type2 ATTRIBUTE_UNUSED;
-{
-  return 1;
-}
-
-/* Set the default attributes for TYPE.  */
-
-void
-arc_set_default_type_attributes (type)
-     tree type ATTRIBUTE_UNUSED;
-{
-}
 
 /* Acceptable arguments to the call insn.  */
 
@@ -800,7 +820,8 @@ arc_setup_incoming_varargs (cum, mode, type, pretend_size, no_rtl)
 			      plus_constant (arg_pointer_rtx,
 					     FIRST_PARM_OFFSET (0)
 					     + align_slop * UNITS_PER_WORD));
-      MEM_ALIAS_SET (regblock) = get_varargs_alias_set ();
+      set_mem_alias_set (regblock, get_varargs_alias_set ());
+      set_mem_align (regblock, BITS_PER_WORD);
       move_block_from_reg (first_reg_offset, regblock,
 			   MAX_ARC_PARM_REGS - first_reg_offset,
 			   ((MAX_ARC_PARM_REGS - first_reg_offset)
@@ -959,7 +980,7 @@ arc_compute_function_type (decl)
   fn_type = ARC_FUNCTION_NORMAL;
 
   /* Now see if this is an interrupt handler.  */
-  for (a = DECL_MACHINE_ATTRIBUTES (current_function_decl);
+  for (a = DECL_ATTRIBUTES (current_function_decl);
        a;
        a = TREE_CHAIN (a))
     {
@@ -1094,12 +1115,34 @@ arc_save_restore (file, base_reg, offset, gmask, op)
     }
 }
 
+/* Target hook to assemble an integer object.  The ARC version needs to
+   emit a special directive for references to labels and function
+   symbols.  */
+
+static bool
+arc_assemble_integer (x, size, aligned_p)
+     rtx x;
+     unsigned int size;
+     int aligned_p;
+{
+  if (size == UNITS_PER_WORD && aligned_p
+      && ((GET_CODE (x) == SYMBOL_REF && SYMBOL_REF_FLAG (x))
+	  || GET_CODE (x) == LABEL_REF))
+    {
+      fputs ("\t.word\t%st(", asm_out_file);
+      output_addr_const (asm_out_file, x);
+      fputs (")\n", asm_out_file);
+      return true;
+    }
+  return default_assemble_integer (x, size, aligned_p);
+}
+
 /* Set up the stack and frame pointer (if desired) for the function.  */
 
-void
+static void
 arc_output_function_prologue (file, size)
      FILE *file;
-     int size;
+     HOST_WIDE_INT size;
 {
   const char *sp_str = reg_names[STACK_POINTER_REGNUM];
   const char *fp_str = reg_names[FRAME_POINTER_REGNUM];
@@ -1172,12 +1215,12 @@ arc_output_function_prologue (file, size)
 }
 
 /* Do any necessary cleanup after a function to restore stack, frame,
-   and regs. */
+   and regs.  */
 
-void
+static void
 arc_output_function_epilogue (file, size)
      FILE *file;
-     int size;
+     HOST_WIDE_INT size;
 {
   rtx epilogue_delay = current_function_epilogue_delay_list;
   int noepilogue = FALSE;
@@ -1287,7 +1330,7 @@ arc_output_function_epilogue (file, size)
 
       /* Emit the return instruction.  */
       {
-	static int regs[4] = {
+	static const int regs[4] = {
 	  0, RETURN_ADDR_REGNUM, ILINK1_REGNUM, ILINK2_REGNUM
 	};
 	fprintf (file, "\tj.d %s\n", reg_names[regs[fn_type]]);
@@ -1663,7 +1706,7 @@ arc_print_operand (file, x, code)
 	  fputc (']', file);
 	}
       else
-	output_operand_lossage ("invalid operand to %R code");
+	output_operand_lossage ("invalid operand to %%R code");
       return;
     case 'S' :
       if ((GET_CODE (x) == SYMBOL_REF && SYMBOL_REF_FLAG (x))
@@ -1695,7 +1738,7 @@ arc_print_operand (file, x, code)
 		   (long)(code == 'L' ? INTVAL (first) : INTVAL (second)));
 	}
       else
-	output_operand_lossage ("invalid operand to %H/%L code");
+	output_operand_lossage ("invalid operand to %%H/%%L code");
       return;
     case 'A' :
       {
@@ -1719,7 +1762,7 @@ arc_print_operand (file, x, code)
 	    fputs (".a", file);
 	}
       else
-	output_operand_lossage ("invalid operand to %U code");
+	output_operand_lossage ("invalid operand to %%U code");
       return;
     case 'V' :
       /* Output cache bypass indicator for a load/store insn.  Volatile memory
@@ -1730,7 +1773,7 @@ arc_print_operand (file, x, code)
 	    fputs (".di", file);
 	}
       else
-	output_operand_lossage ("invalid operand to %V code");
+	output_operand_lossage ("invalid operand to %%V code");
       return;
     case 0 :
       /* Do nothing special.  */
@@ -1907,7 +1950,7 @@ arc_final_prescan_insn (insn, opvec, noperands)
      an if/then/else), and things need to be reversed.  */
   int reverse = 0;
 
-  /* If we start with a return insn, we only succeed if we find another one. */
+  /* If we start with a return insn, we only succeed if we find another one.  */
   int seeking_return = 0;
   
   /* START_INSN will hold the insn from where we start looking.  This is the
@@ -2066,7 +2109,7 @@ arc_final_prescan_insn (insn, opvec, noperands)
 	      /* Succeed if the following insn is the target label.
 		 Otherwise fail.  
 		 If return insns are used then the last insn in a function 
-		 will be a barrier. */
+		 will be a barrier.  */
 	      next_must_be_target_label_p = TRUE;
 	      break;
 
@@ -2085,7 +2128,7 @@ arc_final_prescan_insn (insn, opvec, noperands)
       	      /* If this is an unconditional branch to the same label, succeed.
 		 If it is to another label, do nothing.  If it is conditional,
 		 fail.  */
-	      /* ??? Probably, the test for the SET and the PC are unnecessary. */
+	      /* ??? Probably, the test for the SET and the PC are unnecessary.  */
 
 	      if (GET_CODE (scanbody) == SET
 		  && GET_CODE (SET_DEST (scanbody)) == PC)
@@ -2147,7 +2190,7 @@ arc_final_prescan_insn (insn, opvec, noperands)
 	      if (!this_insn)
 	        {
 		  /* Oh dear! we ran off the end, give up.  */
-		  insn_extract (insn);
+		  extract_insn_cached (insn);
 		  arc_ccfsm_state = 0;
 		  arc_ccfsm_target_insn = NULL;
 		  return;
@@ -2169,9 +2212,8 @@ arc_final_prescan_insn (insn, opvec, noperands)
 
       /* Restore recog_data.  Getting the attributes of other insns can
 	 destroy this array, but final.c assumes that it remains intact
-	 across this call; since the insn has been recognized already we
-	 call insn_extract direct. */
-      insn_extract (insn);
+	 across this call.  */
+      extract_insn_cached (insn);
     }
 }
 

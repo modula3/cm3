@@ -1,23 +1,23 @@
 /* Declarations for interface to insn recognizer and insn-output.c.
-   Copyright (C) 1987, 1996, 1997, 1998,
-   1999, 2000 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1996, 1997, 1998, 1999, 2000, 2001
+   Free Software Foundation, Inc.
 
-This file is part of GNU CC.
+This file is part of GCC.
 
-GNU CC is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+GCC is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2, or (at your option) any later
+version.
 
-GNU CC is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+along with GCC; see the file COPYING.  If not, write to the Free
+Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+02111-1307, USA.  */
 
 /* Random number that should be large enough for all purposes.  */
 #define MAX_RECOG_ALTERNATIVES 30
@@ -77,6 +77,7 @@ extern int recog_memoized_1		PARAMS ((rtx));
 extern int check_asm_operands		PARAMS ((rtx));
 extern int asm_operand_ok		PARAMS ((rtx, const char *));
 extern int validate_change		PARAMS ((rtx, rtx *, rtx, int));
+extern int insn_invalid_p		PARAMS ((rtx));
 extern int apply_change_group		PARAMS ((void));
 extern int num_validated_changes	PARAMS ((void));
 extern void cancel_changes		PARAMS ((int));
@@ -119,6 +120,7 @@ extern int mode_dependent_address_p	PARAMS ((rtx));
 
 extern int recog			PARAMS ((rtx, rtx, int *));
 extern void add_clobbers		PARAMS ((rtx, int));
+extern int added_clobbers_hard_reg_p	PARAMS ((int));
 extern void insn_extract		PARAMS ((rtx));
 extern void extract_insn		PARAMS ((rtx));
 extern void extract_constrain_insn_cached PARAMS ((rtx));
@@ -213,15 +215,15 @@ typedef rtx (*insn_gen_fn) PARAMS ((rtx, ...));
 
 struct insn_operand_data
 {
-  insn_operand_predicate_fn predicate;
+  const insn_operand_predicate_fn predicate;
 
-  const char *constraint;
+  const char *const constraint;
 
-  enum machine_mode mode;
+  const ENUM_BITFIELD(machine_mode) mode : 16;
 
-  char strict_low;
+  const char strict_low;
 
-  char eliminable;
+  const char eliminable;
 };
 
 /* Legal values for insn_data.output_format.  Indicate what type of data
@@ -233,15 +235,15 @@ struct insn_operand_data
 
 struct insn_data
 {
-  const char *name;
+  const char *const name;
   const PTR output;
-  insn_gen_fn genfun;
-  const struct insn_operand_data *operand;
+  const insn_gen_fn genfun;
+  const struct insn_operand_data *const operand;
 
-  char n_operands;
-  char n_dups;
-  char n_alternatives;
-  char output_format;
+  const char n_operands;
+  const char n_dups;
+  const char n_alternatives;
+  const char output_format;
 };
 
 extern const struct insn_data insn_data[];
