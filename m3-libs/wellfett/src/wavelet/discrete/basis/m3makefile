@@ -36,4 +36,5 @@ DyadicFilterBank("LongReal",        "LongRealBasic")
 DyadicFilterBank("LongRealComplex", "LongRealComplex")
 %DyadicFilterBank("ExtendedComplex", "ExtendedComplex")
 
+import("plplot")
 module("LongRealWaveletPlot")
