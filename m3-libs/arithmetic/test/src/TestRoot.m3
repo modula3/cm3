@@ -16,6 +16,7 @@ IMPORT Fmt,
        LongRealComplexTrans  AS CT,
        LongRealComplexFmtLex AS CF,
        LongRealComplexPolynomialBasic AS CP,
+       LongRealComplexRootBasic       AS Rt,
        LongRealRootApproximation      AS RtA,
        Integer32Basic        AS I,
        Integer32RootBasic    AS IR,
@@ -43,6 +44,31 @@ BEGIN
   df:=(x-r2)*(x-r3)+(x-r1)*(x-r3)+(x-r1)*(x-r2);
 END myfun2;
 
+PROCEDURE TestPolyRoots (p:CP.T; READONLY rt:Rt.RootArray) =
+BEGIN
+(*
+  Msg(Fmt.FN("{%s,%s}\n", ARRAY OF TEXT
+      {CF.Fmt(rt[0]), CF.Fmt(rt[1])}));
+  Msg(Fmt.FN("0 = {%s,%s}\n", ARRAY OF TEXT
+      {CF.Fmt(CP.Eval(xc,rt[0])), CF.Fmt(CP.Eval(xc,rt[1]))}));
+  <*ASSERT CT.AbsSqr(CP.Eval(xc,rt[0]))<RT.Eps*>
+  <*ASSERT CT.AbsSqr(CP.Eval(xc,rt[1]))<RT.Eps*>
+*)
+  Msg("{");
+  FOR j:=0 TO LAST(rt) DO
+    Msg(CF.Fmt(rt[j]) & ", ");
+  END;
+  Msg("}\n");
+  Msg("zero check: ");
+  FOR j:=0 TO LAST(rt) DO
+(*
+    Msg(CF.Fmt(CP.Eval(p,rt[j])) & ", ");
+*)
+    <*ASSERT CT.AbsSqr(CP.Eval(p,rt[j]))<RT.Eps*>
+  END;
+  Msg("\n");
+END TestPolyRoots;
+
 (*=========================*)
 (* Quadratics              *)
 (*=========================*)
@@ -57,18 +83,13 @@ PROCEDURE TestQuadratic():BOOLEAN=
     Msg(Fmt.FN("Solve %s+%s*t+%s*t^2=0  -->  ",
                ARRAY OF TEXT{RF.Fmt(x[0]), RF.Fmt(x[1]), RF.Fmt(x[2])}));
     rt := RtA.QuadraticReal(x);
-    Msg(Fmt.FN("{%s,%s}\n", ARRAY OF TEXT
-        {CF.Fmt(rt[0]), CF.Fmt(rt[1])}));
 
     (*evaluate polynomial for the found roots*)
     xc := CP.New(2);
     xc[0] := C.T{x[0], R.Zero};
     xc[1] := C.T{x[1], R.Zero};
     xc[2] := C.T{x[2], R.Zero};
-    Msg(Fmt.FN("0 = {%s,%s}\n", ARRAY OF TEXT
-        {CF.Fmt(CP.Eval(xc,rt[0])), CF.Fmt(CP.Eval(xc,rt[1]))}));
-    <*ASSERT CT.AbsSqr(CP.Eval(xc,rt[0]))<RT.Eps*>
-    <*ASSERT CT.AbsSqr(CP.Eval(xc,rt[1]))<RT.Eps*>
+    TestPolyRoots (xc, rt);
 
     xc[0] := C.T{x[0], x[0]};
     xc[1] := C.T{x[1], x[1]};
@@ -76,12 +97,15 @@ PROCEDURE TestQuadratic():BOOLEAN=
     Msg(Fmt.FN("Solve %s+%s*t+%s*t^2=0  -->  ",
                ARRAY OF TEXT{CF.Fmt(xc[0]), CF.Fmt(xc[1]), CF.Fmt(xc[2])}));
     rt := RtA.QuadraticComplex(xc^);
-    Msg(Fmt.FN("{%s,%s}\n", ARRAY OF TEXT
-        {CF.Fmt(rt[0]), CF.Fmt(rt[1])}));
-    Msg(Fmt.FN("0 = {%s,%s}\n", ARRAY OF TEXT
-        {CF.Fmt(CP.Eval(xc,rt[0])), CF.Fmt(CP.Eval(xc,rt[1]))}));
-    <*ASSERT CT.AbsSqr(CP.Eval(xc,rt[0]))<RT.Eps*>
-    <*ASSERT CT.AbsSqr(CP.Eval(xc,rt[1]))<RT.Eps*>
+    TestPolyRoots (xc, rt);
+
+    xc[0] := C.T{x[0], x[0]+R.One};
+    xc[1] := C.T{x[1], x[1]-R.One};
+    xc[2] := C.T{x[2], x[2]};
+    Msg(Fmt.FN("Solve %s+%s*t+%s*t^2=0  -->  ",
+               ARRAY OF TEXT{CF.Fmt(xc[0]), CF.Fmt(xc[1]), CF.Fmt(xc[2])}));
+    rt := RtA.QuadraticComplex(xc^);
+    TestPolyRoots (xc, rt);
   END TestSingle;
 
 CONST
