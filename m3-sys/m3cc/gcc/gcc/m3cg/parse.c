@@ -630,8 +630,8 @@ static void debug_field (name)
 
   DECL_NAME (f) = get_identifier (name);
   TREE_TYPE (f) = t_int;
-  DECL_FIELD_OFFSET (f) = v_zero;
-  DECL_FIELD_BIT_OFFSET (f) = v_zero;
+  DECL_FIELD_OFFSET (f) = size_zero_node;
+  DECL_FIELD_BIT_OFFSET (f) = bitsize_zero_node;
   /* XXX DECL_BIT_FIELD_TYPE ? */
 
   layout_decl (f, 1);
