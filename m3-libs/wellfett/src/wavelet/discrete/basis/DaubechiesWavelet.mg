@@ -17,19 +17,24 @@ PROCEDURE FilterAbsSqr(n : CARDINAL) : S.T =
 
 PROCEDURE FilterPureAbsSqr(n : CARDINAL) : S.T =
   VAR
-    pow := NEW(S.T).fromArray(ARRAY OF R.T{R.One});
-    sum := NEW(S.T).init(0,1);
-    binom : R.T := R.One;
+    sum :  S.T;
     fac := NEW(S.T).fromArray(ARRAY OF R.T{-Quarter,Half,-Quarter}, -1);
-    summand := NEW(REF ARRAY OF S.T, n);
+    coef  := NEW(REF ARRAY OF R.T,n);
+    binom :  R.T := R.One;
   BEGIN
-    FOR k:=1 TO n DO
-      summand[k-1] := pow.scale(binom);
-      pow := pow.convolve(fac);
-      binom := binom*FLOAT(n-1+k,R.T)/FLOAT(k,R.T);
-    END;
-    FOR k:=n-1 TO 0 BY -1 DO
-      sum := sum.superpose(summand[k]);
+    IF n=0 THEN
+      RETURN NEW(S.T).fromArray(ARRAY OF R.T{R.Zero});
+    ELSE
+      FOR k:=1 TO n DO
+	coef[k-1] := binom;
+	binom := binom*FLOAT(n-1+k,R.T)/FLOAT(k,R.T);
+      END;
+      (*use Horner's scheme for more numerical stability*)
+      sum := NEW(S.T).fromArray(ARRAY OF R.T{coef[n-1]});
+      FOR k:=n-2 TO 0 BY -1 DO
+	sum := sum.convolve(fac);
+	sum := sum.superpose(NEW(S.T).fromArray(ARRAY OF R.T{coef[k]}));
+      END;
     END;
     RETURN sum;
   END FilterPureAbsSqr;
