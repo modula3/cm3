@@ -6,6 +6,7 @@ module("TestDaubechies")
 module("TestTransition")
 module("TestBSpline")
 module("TestMatchWavelet")
+module("TestCDFLifting")
 implementation("Main")
 
 program("test")
