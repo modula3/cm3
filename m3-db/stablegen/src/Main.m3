@@ -13,6 +13,8 @@ MODULE Main;
 IMPORT Process, RTCollector;
 IMPORT Type, TypeNames, StablegenArgs, StablegenError, GenCode;
 IMPORT M3CFETool, M3ToolFrame, M3Context;
+IMPORT M3AST_all; <*NOWARN*> (* this cannot be omitted; it defines the particular
+                     revelations for all the AST nodes *)
 
 (* \subsection{Procedure DoRun}
    "DoRun" reads the run string

@@ -90,5 +90,5 @@ PROCEDURE CrashPoint(nr: INTEGER) =
   END CrashPoint;
 
 BEGIN
-  level := 0
+  level := 0;
 END Log.

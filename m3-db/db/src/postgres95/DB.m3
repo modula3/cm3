@@ -7,7 +7,7 @@ IMPORT WeakRef;
 FROM Text IMPORT Equal, Sub, FindChar, Length, GetChar;
 IMPORT ASCII;
 IMPORT PQ, Postgres;
-FROM M3toC IMPORT TtoS, CopyTtoS, StoT, CopyStoT;
+FROM M3toC IMPORT SharedTtoS, FreeSharedS, CopyTtoS, StoT, CopyStoT;
 FROM Ctypes IMPORT int;
 IMPORT Scan, Lex, FloatMode, Fmt, TextRd, Rd, Thread;
 IMPORT FmtTime, Text;
@@ -706,7 +706,10 @@ PROCEDURE SQL (t: T; query: TEXT): PQ.PGresult_star RAISES {Error} =
   VAR result: PQ.PGresult_star;
   BEGIN
     IF Debug THEN IO.Put ("SQL: " & query & "\n") END;
-    result := PQ.PQexec (t.hdbc, TtoS(query));
+    VAR str := SharedTtoS(query); BEGIN
+      result := PQ.PQexec (t.hdbc, str);
+      FreeSharedS(query, str);
+    END;
     IF result = NIL THEN 
       RAISE Error (NEW(ErrorDesc,
                        description := CopyStoT(PQ.PQerrorMessage(t.hdbc))));
