@@ -1890,8 +1890,12 @@ PROCEDURE CIEqual (a, b: TEXT): BOOLEAN =
     IF (len # Text.Length (b)) THEN RETURN FALSE; END;
     nxt := 0;
     WHILE (nxt < len) DO
+(* FIXME
       Text.SetChars (buf_a, a, nxt);
       Text.SetChars (buf_b, b, nxt);
+*)
+      Text.SetChars (buf_a, Text.Sub(a, nxt));
+      Text.SetChars (buf_b, Text.Sub(b, nxt));
       FOR i := 0 TO MIN (NUMBER (buf_a), len-nxt) - 1 DO
         IF lcase[buf_a[i]] # lcase[buf_b[i]] THEN RETURN FALSE; END;
       END;

@@ -46,7 +46,10 @@ PROCEDURE Add (x: TEXT): T =
   BEGIN
     body[len-1] := 0;
     FOR i := 0 TO len-1 DO
+(* FIXME
       body[i] := ORD (Text.GetWideChar (x, i));
+*)
+      body[i] := ORD (Text.GetChar (x, i));
     END;
     IF (next_t = NIL) THEN next_t := NEW (T) END;
     next_t.prefix := NIL;

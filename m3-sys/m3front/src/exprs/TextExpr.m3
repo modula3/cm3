@@ -223,9 +223,15 @@ PROCEDURE Cat (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     ELSIF (wa # NIL) AND (wb # NIL) THEN
       c := New16 (M3WString.Concat (wa, wb));
     ELSIF (sa # NIL) THEN  (* wb # NIL *)
+      <* ASSERT FALSE *> 
+(* FIXME
       c := New16 (M3WString.Concat (M3WString.Add (M3String.ToText (sa)), wb));
+*)
     ELSE (*wa # NIL  AND  sb # NIL*)
+      <* ASSERT FALSE *> 
+(* FIXME
       c := New16 (M3WString.Concat (wa, M3WString.Add (M3String.ToText (sb))));
+*)
     END;
     RETURN TRUE;
   END Cat;

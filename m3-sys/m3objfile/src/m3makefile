@@ -11,5 +11,6 @@ Module ("M3ObjFile")
 Module ("MasmObjFile")
 Module ("NTObjFile")
 
+include("../../../compat.quake")
 build_standalone ()
 Library ("m3objfile")
