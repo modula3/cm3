@@ -6,16 +6,19 @@ Abstract: Integers of arbitrary size
 Daniel Beer
 *)
 
-IMPORT Word AS W, BigIntegerBasic;
+IMPORT Word AS W, BigIntegerBasic AS BI;
 FROM xUtils IMPORT Error;
 
 (*==========================*)
 
 REVEAL
-  BigIntegerBasic.Value = BRANDED "BigIntegerValue" REF ARRAY OF W.T;
+  BI.Value = BRANDED "BigIntegerValue" REF ARRAY OF W.T;
 
 TYPE
-  T = BigIntegerBasic.T;
+  Value = BI.Value;
+  T = BI.T;
+
+PROCEDURE Clear ((*OUT*)v : Value);
 
 <*INLINE*>
 PROCEDURE IsZero (READONLY x : T) : BOOLEAN;
@@ -34,6 +37,7 @@ TYPE
       bit  : [0..W.Size-1];
     END;
 
+PROCEDURE AddBitPos (READONLY x,y : BitPos) : BitPos; (*only for testing*)
 PROCEDURE SubBitPos (READONLY x,y : BitPos) : BitPos;
 PROCEDURE CompareBitPos (READONLY x,y : BitPos) : [-1..1];
 PROCEDURE BitPosEndToBegin (READONLY x : BitPos) : BitPos;

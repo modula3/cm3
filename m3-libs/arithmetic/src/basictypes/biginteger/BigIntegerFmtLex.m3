@@ -8,7 +8,7 @@ Abstract: Integers of arbitrary size
 IMPORT Rd, Thread, FloatMode, Lex AS L, Fmt AS F, Text, TextRd, Word;
 IMPORT BigIntegerRep   AS BR;
 IMPORT BigIntegerBasic AS BB;
-FROM xUtils IMPORT Error;
+FROM xUtils IMPORT Error, Err;
 
 <*UNUSED*> CONST Module = "BigIntegerFmtLex.";
 (*==========================*)
@@ -54,19 +54,23 @@ PROCEDURE Lex(txt: TEXT; defaultBase: [2..16]): INTEGER
 
 
 
-PROCEDURE FastFmt(READONLY x: T; base: Base; pad: [1..Word.Size]): TEXT =
+PROCEDURE FastFmtU(READONLY x: T; base: Base; pad: [1..Word.Size]): TEXT =
   VAR
     txt : TEXT;
   BEGIN
-    txt := F.Unsigned(x.data[x.size-1],base);
-    FOR k:=x.size-2 TO 0 BY -1 DO
-      txt := txt & F.Pad (F.Unsigned(x.data[k],base), pad, '0');
+    IF x.size=0 THEN
+      RETURN "0";
+    ELSE
+      txt := F.Unsigned(x.data[x.size-1],base);
+      FOR k:=x.size-2 TO 0 BY -1 DO
+        txt := txt & F.Pad (F.Unsigned(x.data[k],base), pad, '0');
+      END;
     END;
     RETURN txt;
-  END FastFmt;
+  END FastFmtU;
 
 (*can be optimized with a division routine that is specialised to small divisors*)
-PROCEDURE SlowFmt(x: T; base: Base): TEXT =
+PROCEDURE SlowFmtU(x: T; base: Base): TEXT =
   VAR
     r, b  : T;
     txt   := "";
@@ -85,25 +89,25 @@ PROCEDURE SlowFmt(x: T; base: Base): TEXT =
         END;
       END;
     EXCEPT
-      | Error(err) => EVAL err; <*ASSERT FALSE*>
+      | Error(err) => <*ASSERT err#Err.divide_by_zero*>
     END;
     IF Text.Empty(txt) THEN
       RETURN "0";
     ELSE
       RETURN txt;
     END;
-  END SlowFmt;
+  END SlowFmtU;
 
 PROCEDURE Fmt(READONLY x: T; base: Base := 10): TEXT =
   VAR
     txt : TEXT;
   BEGIN
     CASE base OF
-      |  2 => txt := FastFmt(x, 2,Word.Size);
-      |  4 => txt := FastFmt(x, 4,Word.Size DIV 2);
-      | 16 => txt := FastFmt(x,16,Word.Size DIV 4);
+      |  2 => txt := FastFmtU(x, 2,Word.Size);
+      |  4 => txt := FastFmtU(x, 4,Word.Size DIV 2);
+      | 16 => txt := FastFmtU(x,16,Word.Size DIV 4);
     ELSE
-      txt := SlowFmt(x,base);
+      txt := SlowFmtU(x,base);
     END;
     IF x.sign THEN
       RETURN "-" & txt;
