@@ -39,6 +39,17 @@ BEGIN
   END;
 END ScaleUpRoots;
 
+PROCEDURE ScaleUpRootsFull(VAR x:TBody; c:R.T)=
+VAR
+  pow:R.T;
+BEGIN
+  pow:=c;
+  FOR j:=LAST(x)-1 TO 0 BY -1 DO
+    x[j]:=R.Mul(x[j],pow);
+    pow:=R.Mul(pow,c);
+  END;
+END ScaleUpRootsFull;
+
 (*-----------------*)
 (*reverse ScaleUpRoots*)
 (*
@@ -90,23 +101,60 @@ BEGIN
 END ScaleDownRoots;
 
 
+PROCEDURE FromCardinal(n:CARDINAL):R.T=
+VAR
+  z:R.T;
+BEGIN
+  z:=R.Zero;
+  FOR j:=1 TO n DO
+    z:=R.Add(z,R.One);
+  END;
+  RETURN z;
+END FromCardinal;
+
 (*-----------------*)
 PROCEDURE Add(
                x,y:T):T=
 <*FATAL Error*> (*'indivisible' cannot occur*)
 VAR
   qx,qy:T;  (*polynomials with scaled roots, necessary for eliminating non-one leading coefficients*)
-  px,py:REF PowerSumSeq;
+  px,py,pz:REF PowerSumSeq;
   cx,cy:R.T;
+  nrx,nry:R.T;  (*number of roots*)
+  binom,
+  rn,rk,rnp,
+  sum:R.T;
   nz:CARDINAL:=LAST(x^)*LAST(y^);
 BEGIN
   cx:=x[LAST(x^)];
   cy:=y[LAST(y^)];
   qx:=ScaleUpRoots(x);
   qy:=ScaleUpRoots(y);
+  ScaleUpRootsFull(qx^,cy);
+  ScaleUpRootsFull(qy^,cx);
   px:=ToPowerSumSeq(qx,nz);
   py:=ToPowerSumSeq(qy,nz);
-  RETURN FromPowerSumSeq(px^);
+  pz:=NEW(REF PowerSumSeq,nz);
+  nrx:=FromCardinal(LAST(x^));
+  nry:=FromCardinal(LAST(y^));
+  rn:=R.Zero;
+  FOR n:=0 TO LAST(pz^) DO
+    rn:=R.Add(rn,R.One);
+    rk:=R.Zero;
+    binom:=R.One;
+    rnp:=rn;
+    (*applying binomial theorem:
+      (x+y)^n=x^n+n*x^(n-1)*y+...+y^n*)
+    sum:=R.Add(R.Mul(nrx,py[n]),R.Mul(nry,px[n]));
+    FOR k:=1 TO n DO
+      rk:=R.Add(rk,R.One);
+      binom:=R.Div(R.Mul(binom,rnp),rk);
+      rnp:=R.Sub(rnp,R.One);
+      sum:=R.Add(sum,R.Mul(binom,R.Mul(px[k-1],py[n-k])));
+    END;
+    pz[n]:=sum;
+  END;
+  RETURN FromPowerSumSeq(pz^);
 END Add;
 (*-----------------*)
 PROCEDURE Sub(

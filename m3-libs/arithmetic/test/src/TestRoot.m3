@@ -495,12 +495,21 @@ VAR
 BEGIN
   Debug(1,ftn,"begin\n");
   TestSingle(ARRAY OF I.T{2},ARRAY OF I.T{3},I.Mul,IR.Mul);
-  TestSingle(ARRAY OF I.T{1,1,1,1},ARRAY OF I.T{3},I.Mul,IR.Mul);
   TestSingle(ARRAY OF I.T{1,1},ARRAY OF I.T{3},I.Mul,IR.Mul);
+  TestSingle(ARRAY OF I.T{1,1,1,1},ARRAY OF I.T{3},I.Mul,IR.Mul);
   TestSingle(ARRAY OF I.T{1,1},ARRAY OF I.T{2,2},I.Mul,IR.Mul);
   TestSingle(ARRAY OF I.T{1,-1,2},ARRAY OF I.T{0,2},I.Mul,IR.Mul);
   TestSingle(ARRAY OF I.T{1,-1,2},ARRAY OF I.T{1,-1},I.Mul,IR.Mul);
   TestSingle(ARRAY OF I.T{2,2},ARRAY OF I.T{3,3},I.Mul,IR.Mul);
+
+  TestSingle(ARRAY OF I.T{2},ARRAY OF I.T{3},I.Add,IR.Add);
+  TestSingle(ARRAY OF I.T{2},ARRAY OF I.T{3,0},I.Add,IR.Add);
+  TestSingle(ARRAY OF I.T{1,1},ARRAY OF I.T{3},I.Add,IR.Add);
+  TestSingle(ARRAY OF I.T{1,1,1,1},ARRAY OF I.T{3},I.Add,IR.Add);
+  TestSingle(ARRAY OF I.T{1,1},ARRAY OF I.T{2,2},I.Add,IR.Add);
+  TestSingle(ARRAY OF I.T{1,-1,2},ARRAY OF I.T{0,2},I.Add,IR.Add);
+  TestSingle(ARRAY OF I.T{1,-1,2},ARRAY OF I.T{1,-1},I.Add,IR.Add);
+  TestSingle(ARRAY OF I.T{2,2},ARRAY OF I.T{3,3},I.Add,IR.Add);
 
   VAR
     x,y,z:IR.T;
