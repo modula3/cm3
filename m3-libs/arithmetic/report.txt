@@ -3,13 +3,24 @@ for myself:
 todo:
   - quake templates, generic modules
      - generic parameter should be ordered in increasing complexity
-        this is opposite to the current ordering
-        but conforms to libm3
+        this conforms to libm3
+        but unfortunately I started with the reverse order
      - reduce number parameters to template procedures,
        build final module names within that procedures
+     - define conventions for prototypes of such template procedures
+  - exceptions
+     - The number of different exceptions should be kept at a minimum,
+       because every procedure has to declare all exceptions
+       that the called procedures may throw.
+       But the exceptions should be meaningful.
+       The current solution with an enumeration type
+       for Err is not expressive enough.
+       What about objects?
+
   - Hash routines
   - (*OUT*) for remainder of DivMod
   - ODE by Simon Hood
+  - Lex routines (I have needed them so far)
   - Tex output of numbers
      - check for necessarity of parentheses by giving the precedence of the surrounding operation
      - polynomials: vector (1,2,3) or variable based output 1x^0+2x^1+3x^2, optionally output x^0 as 1 and x^1 as x and suppress zero coefficients
@@ -24,7 +35,7 @@ people:
 Harry George	http://www.seanet.com/~hgg9140/math/index.html
 Warren D. Smith	http://www.neci.nec.com/homepages/wds/myresume.html
 Thomas Brupbacher	http://research.compaq.com/SRC/modula-3/html/acks.html
-Simon Hood
+Simon Hood	e-mail?
 
 -------------------------------------
 

@@ -1,4 +1,4 @@
-GENERIC INTERFACE PolarBasic(C,R);
+GENERIC INTERFACE PolarBasic(R,C);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Complex numbers in polar coordinates
