@@ -5,7 +5,7 @@ if [ "$SYSINFO_DONE" != "yes" ] ; then
 
 SYSINFO_DONE="yes"
 
-UNAME=`uname`
+UNAME=${UNAME:-`uname`}
 
 PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
 
@@ -95,46 +95,58 @@ strip_exe() {
 case "${UNAME}" in
 
   Windows*|WinNT*|Cygwin*|CYGWIN*)
-    CM3_OSTYPE=WIN32
-    CM3_TARGET=NT386
-    CM3_INSTALL="c:/cm3"
-    CM3_GCC_BACKEND=no
-    HAVE_SERIAL=yes
-    EXE=".exe"
-    SL='\\\\'
-    SYSLIBS="ADVAPI32.LIB GDI32.LIB KERNEL32.LIB ODBC32.LIB"
-    SYSLIBS="${SYSLIBS} OPENGL32.LIB WSOCK32.LIB COMDLG32.LIB"
-    SYSLIBS="${SYSLIBS} GLU32.LIB NETAPI32.LIB ODBCCP32.LIB USER32.LIB"
-    L="c:/cm3/lib d:/cm3/lib e:/cm3/lib c:/reactor5/lib d:/reactor5/lib"
-    L="${L} e:/reactor5/lib c:/reactor/lib d:/reactor/lib"
-    L="${L} e:/reactor/lib /usr/local/cm3/lib /usr/local/reactor/lib"
-    L="${L} /usr/cm3/lib /usr/reactor/lib"
-    CM3LIBSEARCHPATH="${L}"
-    CM3BINSEARCHPATH="`echo ${L} | sed -e 's/lib/bin/g'`"
-    if f="`find_file KERNEL32.LIB ${L}`" ; then
-      SYSLIBDIR="`dirname $f`"
+    if [ x$TARGET = xNT386GNU ] ; then
+      CM3_OSTYPE=POSIX
+      CM3_TARGET=NT386GNU
+      GMAKE=${GMAKE:-make}
     else
-      SYSLIBDIR="unknown"
-    fi
-    D="c:/msdev/bin d:/msdev/bin e:/msdev/bin f:/msdev/bin g:/msdev/bin"
-    if f="`find_file cl.exe ${D}`" ; then
-      XDEV_BIN="`dirname ${f}`"
-      XDEV_LIB="`dirname ${XDEV_BIN}`/lib"
-    else
-      XDEV_LIB=""
-      XDEV_BIN=""
-    fi
-    if [ -f /usr/bin/tar.exe ] ; then
-      TAR=/usr/bin/tar.exe
-    fi
-    GMAKE=${GMAKE:-make}
+      CM3_OSTYPE=WIN32
+      CM3_TARGET=NT386
+      CM3_INSTALL="c:/cm3"
+      CM3_GCC_BACKEND=no
+      HAVE_SERIAL=yes
+      EXE=".exe"
+      SL='\\\\'
+      SYSLIBS="ADVAPI32.LIB GDI32.LIB KERNEL32.LIB ODBC32.LIB"
+      SYSLIBS="${SYSLIBS} OPENGL32.LIB WSOCK32.LIB COMDLG32.LIB"
+      SYSLIBS="${SYSLIBS} GLU32.LIB NETAPI32.LIB ODBCCP32.LIB USER32.LIB"
+      L="c:/cm3/lib d:/cm3/lib e:/cm3/lib c:/reactor5/lib d:/reactor5/lib"
+      L="${L} e:/reactor5/lib c:/reactor/lib d:/reactor/lib"
+      L="${L} e:/reactor/lib /usr/local/cm3/lib /usr/local/reactor/lib"
+      L="${L} /usr/cm3/lib /usr/reactor/lib"
+      CM3LIBSEARCHPATH="${L}"
+      CM3BINSEARCHPATH="`echo ${L} | sed -e 's/lib/bin/g'`"
+      if f="`find_file KERNEL32.LIB ${L}`" ; then
+        SYSLIBDIR="`dirname $f`"
+      else
+        SYSLIBDIR="unknown"
+      fi
+      D="c:/msdev/bin d:/msdev/bin e:/msdev/bin f:/msdev/bin g:/msdev/bin"
+      if f="`find_file cl.exe ${D}`" ; then
+        XDEV_BIN="`dirname ${f}`"
+        XDEV_LIB="`dirname ${XDEV_BIN}`/lib"
+      else
+        XDEV_LIB=""
+        XDEV_BIN=""
+      fi
+      if [ -f /usr/bin/tar.exe ] ; then
+        TAR=/usr/bin/tar.exe
+      fi
+      GMAKE=${GMAKE:-make}
 
-    cygpath() {
-      /usr/bin/cygpath $@
-    }
-    strip_exe() {
-      return 0;
-    }
+      cygpath() {
+        /usr/bin/cygpath $@
+      }
+      strip_exe() {
+        return 0;
+      }
+    fi
+  ;;
+
+  NT386GNU*)
+    CM3_OSTYPE=POSIX
+    CM3_TARGET=NT386GNU
+    GMAKE=${GMAKE:-make}
   ;;
 
   FreeBSD*)

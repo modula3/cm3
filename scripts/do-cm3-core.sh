@@ -21,7 +21,7 @@ fi
 . "$ROOT/scripts/pkgcmds.sh"
 
 P=""
-P="${P} m3gc-simple"
+[ ${TARGET} != NT386 ] && P="${P} m3gc-simple"
 if syscall_wrappers_exist && [ -z "$M3GC_SIMPLE" ] ; then
   [ ${TARGET} != NT386 ] && P="${P} m3gc-enhanced"
 fi

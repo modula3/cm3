@@ -32,7 +32,9 @@ fi
 
 L=""
 P=""
-L="${L} m3-libs/m3gc-simple"
+if [ $CROSS_TARGET != NT386GNU ] ; then
+  L="${L} m3-libs/m3gc-simple"
+fi
 #L="${L} m3-libs/m3gc-enhanced"
 L="${L} m3-libs/m3core"
 L="${L} m3-libs/libm3"
