@@ -27,12 +27,17 @@ PROCEDURE TestShades () =
       ymax := 5.0D0;
       m := M.DiagonalFromArray(
              V.TBody{1.0D0, -1.0D0, 0.0D0, -2.0D0, 2.0D0});
+      width  := 5.0D0;
+      height := 5.0D0;
     BEGIN
       PL.SetFGColorDiscr(1);
       PL.SetEnvironment(xmin, xmax, ymin, ymax);
       PL.PlotShades(
-        m^, NIL, xmin, xmax, ymin, ymax, V.ArithSeq(10, -2.0D0, 0.4D0)^, 0,
+        m^, NIL, xmin, xmax, ymin, ymax, V.ArithSeq(10, -2.5D0, 0.5D0)^, 0,
         0, 0, PLRaw.FillPolygon, TRUE, PL.Plotter0, NIL);
+      PL.SetEnvironment(xmin, xmax, ymin, ymax);
+      PL.PlotImage(m^, 0.0D0, width, 0.0D0, height, -2.0D0, 2.0D0, 0.0D0,
+                   width, 0.0D0, height);
     END;
     PL.Exit();
   END TestShades;
