@@ -6,6 +6,7 @@ Abstract: vector formatting
 2/17/96  Harry George    Convert from Objects to ADT's
 *)
 IMPORT Wr,Thread;
+FROM FmtLexSupport IMPORT Precedence;
 (*==========================*)
 TYPE
   T = V.T;
@@ -14,9 +15,11 @@ TYPE
                elemStyle            := RF.FmtStyle{};
              END;
 
-  TexDirection = {horizontal, vertical};
+  TexFlag    = {vertical  (*row or column vector?*)
+               };
+  TexFlagSet = SET OF TexFlag;
   TexStyle = RECORD
-               dir              := TexDirection.horizontal;
+               flags            := TexFlagSet{};
                sep       : TEXT := " \\quad ";
                elemStyle        := RF.TexStyle{};
              END;
@@ -25,7 +28,7 @@ TYPE
 PROCEDURE Lex(str:TEXT):T;
 *)
 PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}) : TEXT RAISES {Thread.Alerted, Wr.Failure};
-PROCEDURE Tex (x : T; READONLY style := TexStyle{}) : TEXT RAISES {Thread.Alerted, Wr.Failure};
+PROCEDURE Tex (x : T; READONLY style := TexStyle{}; within := Precedence.sum) : TEXT RAISES {Thread.Alerted, Wr.Failure};
 
 (*==========================*)
 END VectorFmtLex.
