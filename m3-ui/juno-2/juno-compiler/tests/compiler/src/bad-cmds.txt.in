@@ -1,9 +1,0 @@
-IF VAR a,b IN a = MAX(b,2) -> SKIP END FI
-IF VAR x IN x = 3 -> IF VAR y IN INT(y) -> SKIP END FI END FI
-IF VAR a,b,d,e IN INT(d) AND 2=e*d AND a+6=b AND 8=a -> SKIP END FI
-IF VAR w IN (E x :: x*x=w) OR (E y :: y*y=3) -> SKIP END FI
-IF VAR x IN NOT NOT NOT x = 3 -> SKIP END FI
-IF VAR x, y IN NOT NOT x = 2 OR y = 3 -> SKIP END FI
-IF VAR x IN NOT NOT NOT (E y :: y = x) AND x = x / 2 -> SKIP END FI
-IF VAR x IN x := 1, 2 END FI
-IF VAR x, y IN x, y := 1 END FI
