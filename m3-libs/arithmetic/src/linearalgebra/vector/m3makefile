@@ -1,0 +1,20 @@
+import("libm3")
+
+include("vector.tmpl")
+
+%generic_module("VectorBasic")
+%VectorBasic("Real",            "RealBasic")
+%VectorBasic("LongReal",        "LongRealBasic")
+%VectorBasic("Extended",        "ExtendedBasic")
+%VectorBasic("Integer32",       "Integer32Basic")
+%VectorBasic("LongRealComplex", "LongRealComplexBasic")
+
+generic_module("VectorFast")
+VectorFast("Real",     "RealBasic")
+VectorFast("LongReal", "LongRealBasic")
+VectorFast("Extended", "ExtendedBasic")
+
+generic_module("VectorFmtLex")
+VectorFmtLex("Real",     "RealVectorFast",     "RealFmtLex")
+VectorFmtLex("LongReal", "LongRealVectorFast", "LongRealFmtLex")
+VectorFmtLex("Extended", "ExtendedVectorFast", "ExtendedFmtLex")
