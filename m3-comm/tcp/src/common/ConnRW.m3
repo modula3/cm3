@@ -8,17 +8,20 @@
 
 MODULE ConnRW;
 
-IMPORT ConnFD, Rd, Wr, RdClass, WrClass, Thread;
+IMPORT
+  Rd, StreamRd, Wr, StreamWr, RdClass, StreamRdClass, WrClass,
+  StreamWrClass, Thread;
+IMPORT ConnFD;
 
 TYPE
-   RdT = Rd.T BRANDED OBJECT
+   RdT = StreamRd.T BRANDED OBJECT
     fd: ConnFD.T;
   OVERRIDES
     seek := RdSeek;
     close := RdClose
   END;
 
-  WrT = Wr.T BRANDED OBJECT
+  WrT = StreamWr.T BRANDED OBJECT
     fd: ConnFD.T;
   OVERRIDES
     seek := WrSeek;
@@ -28,7 +31,7 @@ TYPE
 
 CONST BufferSize = 8192;
 
-PROCEDURE NewRd(fd: ConnFD.T) : Rd.T =
+PROCEDURE NewRd(fd: ConnFD.T) : StreamRd.T =
   BEGIN
     RETURN NEW(RdT, fd := fd, 
         buff := NEW(REF ARRAY OF CHAR, BufferSize),
@@ -41,7 +44,7 @@ PROCEDURE NewRd(fd: ConnFD.T) : Rd.T =
         closed := FALSE);
   END NewRd;
 
-PROCEDURE NewWr(fd: ConnFD.T) : Wr.T =
+PROCEDURE NewWr(fd: ConnFD.T) : StreamWr.T =
   BEGIN
     RETURN NEW(WrT, fd := fd,
         buff := NEW(REF ARRAY OF CHAR, BufferSize),
@@ -71,6 +74,7 @@ PROCEDURE RdSeek(rd: RdT; <*UNUSED*> pos: CARDINAL;
     IF len > 0 THEN
       rd.lo := rd.cur;
       rd.hi := rd.cur + len;
+      StreamRdClass.DontOverflow(rd);
       RETURN RdClass.SeekResult.Ready
     ELSE
       RETURN RdClass.SeekResult.Eof;
@@ -92,6 +96,7 @@ PROCEDURE WrFlush(wr: WrT) RAISES {Wr.Failure, Thread.Alerted} =
     wr.fd.put(SUBARRAY(wr.buff^, 0, wr.cur-wr.lo));
     wr.lo := wr.cur;
     wr.hi := wr.lo + NUMBER(wr.buff^);
+    StreamWrClass.DontOverflow(wr);
   END WrFlush;
   
 PROCEDURE WrClose(wr: WrT) RAISES {Wr.Failure} =

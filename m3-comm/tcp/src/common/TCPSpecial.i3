@@ -14,7 +14,8 @@ PROCEDURE EOF(t: TCP.T) : BOOLEAN;
    this connection, and the connection indicates end-of-file (e.g.
    the other side closed it. *)
 
-PROCEDURE StartConnect(ep: IP.Endpoint) : TCP.T
+PROCEDURE StartConnect(to: IP.Endpoint;
+                       from: IP.Endpoint := IP.NullEndPoint): TCP.T
     RAISES {IP.Error};
 
 (* "StartConnect" initiates a request to connect to the destination
