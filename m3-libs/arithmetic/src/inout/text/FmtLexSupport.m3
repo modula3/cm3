@@ -1,13 +1,14 @@
 MODULE FmtLexSupport;
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details*)
 
 IMPORT Rd, Thread;
 IMPORT Lex AS L;
 
-<*UNUSED*>
-CONST Module = "FmtLexSupport.";
+<* UNUSED *>
+CONST
+  Module = "FmtLexSupport.";
 
-PROCEDURE Parenthesize (t: TEXT; inner, outer: Precedence): TEXT =
+PROCEDURE Parenthesize (t: TEXT; inner, outer: Precedence; ): TEXT =
   BEGIN
     IF inner < outer THEN
       RETURN "\\left(" & t & "\\right)";

@@ -1,9 +1,11 @@
 MODULE TestRandom EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details Abstract: Tests for Rand
+(* Arithmetic for Modula-3, see doc for details Abstract: Tests for Rand
    module.
 
-   3/16/96 Harry George Initial version (basic structure) 3/17/96 Warren
-   Smith Normal, Gamma, and Dirichlet *)
+   3/16/96 Harry George Initial version (basic structure)
+
+   3/17/96 Warren Smith Normal, Gamma, and Dirichlet *)
+
 IMPORT LongRealBasic            AS R,
        LongRealFmtLex           AS RF,
        RandomBasic,
@@ -21,11 +23,11 @@ IMPORT LongRealBasic            AS R,
        RandomWolframCA          AS Wolf;
 IMPORT Statistic, Fmt, Arithmetic AS Arith;
 
-(*=======================*)
+
 CONST Module = "TestRandom.";
 
-(*--------------------------*)
-PROCEDURE PrintStats (name: TEXT; READONLY data: ARRAY OF R.T) =
+
+PROCEDURE PrintStats (name: TEXT; READONLY data: ARRAY OF R.T; ) =
   CONST fmtStyle = RF.FmtStyle{prec := 6, style := Fmt.Style.Fix};
   VAR r := Statistic.FromData(data);
   BEGIN
@@ -38,7 +40,7 @@ PROCEDURE PrintStats (name: TEXT; READONLY data: ARRAY OF R.T) =
           & RF.Fmt(r.skew, fmtStyle) & " kurt=" & RF.Fmt(r.kurt, fmtStyle)
           & "\n");
   END PrintStats;
-(*----------------------*)
+
 PROCEDURE TestEngines (): BOOLEAN =
   CONST
     ftn = Module & "TestEngines";
@@ -53,15 +55,15 @@ PROCEDURE TestEngines (): BOOLEAN =
     combslow := NEW(CombSlow.T).init();
     combfast := NEW(CombFast.T).init();
 
-  (*------------------------*)
-  PROCEDURE DoEngine (name: TEXT; rand: RandomBasic.T) =
+
+  PROCEDURE DoEngine (name: TEXT; rand: RandomBasic.T; ) =
     VAR data := NEW(R.Array, N);
     <* FATAL Arith.Error *>
     BEGIN
       FOR i := n1 TO nn DO data[i] := rand.uniform(); END;
       PrintStats(name, data^);
     END DoEngine;
-  (*----------------------*)
+
 
   BEGIN
     Debug(1, ftn, "begin\n");
@@ -76,7 +78,7 @@ PROCEDURE TestEngines (): BOOLEAN =
 
     RETURN result;
   END TestEngines;
-(*----------------------------------------*)
+
 PROCEDURE TestCombined (): BOOLEAN =
   CONST ftn = Module & "TestCombined";
   VAR
@@ -108,7 +110,7 @@ PROCEDURE TestCombined (): BOOLEAN =
 
     RETURN result;
   END TestCombined;
-(*----------------------*)
+
 PROCEDURE TestUniform (): BOOLEAN =
   CONST
     ftn = Module & "TestUniform";
@@ -136,7 +138,7 @@ PROCEDURE TestUniform (): BOOLEAN =
 
     RETURN result;
   END TestUniform;
-(*----------------------*)
+
 PROCEDURE TestExponential (): BOOLEAN =
   CONST
     ftn = Module & "TestExponential";
@@ -155,7 +157,7 @@ PROCEDURE TestExponential (): BOOLEAN =
     RETURN result;
   END TestExponential;
 
-(*----------------------*)
+
 PROCEDURE TestNormal (): BOOLEAN =
   CONST
     ftn = Module & "TestNormal";
@@ -173,7 +175,7 @@ PROCEDURE TestNormal (): BOOLEAN =
     PrintStats("Normal (Gaussian): mean=0, var=1", data1^);
     RETURN result;
   END TestNormal;
-(*----------------------*)
+
 PROCEDURE TestBinomial (): BOOLEAN =
   CONST
     ftn        = Module & "TestBinomial";
@@ -207,7 +209,7 @@ PROCEDURE TestBinomial (): BOOLEAN =
 
     RETURN result;
   END TestBinomial;
-(*----------------------*)
+
 PROCEDURE TestGamma (): BOOLEAN =
   CONST
     ftn = Module & "TestGamma";
@@ -233,7 +235,7 @@ PROCEDURE TestGamma (): BOOLEAN =
     PrintStats("gamma(5.1)", data3^);
     RETURN result;
   END TestGamma;
-(*----------------------*)
+
 PROCEDURE TestDirichlet (): BOOLEAN =
   CONST
     ftn = Module & "TestDirichlet";
@@ -254,7 +256,7 @@ PROCEDURE TestDirichlet (): BOOLEAN =
     RETURN result;
   END TestDirichlet;
 
-(*-------------------------*)
+
 PROCEDURE TestRandom (): BOOLEAN =
   <* UNUSED *>
   CONST
@@ -279,6 +281,6 @@ PROCEDURE TestRandom (): BOOLEAN =
     EVAL TestDirichlet();
     RETURN result;
   END TestRandom;
-(*=======================*)
+
 BEGIN
 END TestRandom.

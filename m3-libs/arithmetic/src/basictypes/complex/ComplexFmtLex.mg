@@ -1,5 +1,5 @@
 GENERIC MODULE ComplexFmtLex(R, RF);
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT Rd, Thread;
 (*IMPORT Fmt AS F;*)
@@ -9,10 +9,11 @@ IMPORT FloatMode;
 IMPORT FmtLexSupport AS FSup;
 FROM FmtLexSupport IMPORT Precedence;
 
-<*UNUSED*>
-CONST Module = "ComplexFmtLex.";
+<* UNUSED *>
+CONST
+  Module = "ComplexFmtLex.";
 
-PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT =
+PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}; ): TEXT =
   (**Generate in format "COMPLEX{re:=1.0,im:=2.0}"
      Uses simple F.Real if c.im=0.0.
      style and precision can be overridden*)
@@ -29,7 +30,7 @@ PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT =
 
 PROCEDURE Tex (READONLY x     : T;
                READONLY style       := TexStyle{};
-                        within      := Precedence.Sum): TEXT =
+                        within      := Precedence.Sum; ): TEXT =
   VAR t: TEXT;
   BEGIN
     IF R.IsZero(x.im) THEN

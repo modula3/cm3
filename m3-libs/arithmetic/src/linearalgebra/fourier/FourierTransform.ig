@@ -8,7 +8,7 @@ GENERIC INTERFACE FourierTransform(C);
 
    3/18/96 Warren Smith Initial version *)
 
-(*==========================*)
+
 (**************************************
 Reorders array a[0..n-1] so that element[i] is
 swapped with element[reverse-bit-order[i]].
@@ -20,7 +20,7 @@ we swap(f+1,n/2+r) with no test needed and we do
 swap(f,r) if r>f and also swap(n-1-f,n-1-r) if f,r both <n/2.
 ***************************************************)
 
-PROCEDURE ReOrder (VAR a: ARRAY OF C.T);
+PROCEDURE ReOrder (VAR a: ARRAY OF C.T; );
 
 
 
@@ -37,13 +37,13 @@ To do an FFT of some data, therefore, we would call
 I have separated the routines this way because I want to be able to
 avoid the ReOrder when computing convolutions and correlations.
 ****************************************)
-PROCEDURE FFTwithWrongOrderedInput (VAR a        : ARRAY OF C.T;
-                                        direction: [-1 .. 1]     );
+PROCEDURE FFTwithWrongOrderedInput
+  (VAR a: ARRAY OF C.T; direction: [-1 .. 1]; );
 
 
 
-(*----------------------------*)
+
 PROCEDURE Test ();
-(*perform assertions*)
-(*==========================*)
+(* perform assertions*)
+
 END FourierTransform.

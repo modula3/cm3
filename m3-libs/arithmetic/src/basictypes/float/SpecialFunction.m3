@@ -1,19 +1,19 @@
 MODULE SpecialFunction;
-(*Arithmetic for Modula-3, see doc for details
+(* Arithmetic for Modula-3, see doc for details
 
    Abstract: Special Functions
 
-   2/3/96 Harry George Initial version 2/17/96 Harry George Export to
-   xReal64
+   2/3/96 Harry George Initial version
 
-   *)
+   2/17/96 Harry George Export to xReal64 *)
+
 IMPORT Arithmetic AS Arith;
 FROM LongRealTrans IMPORT Zero, Half, One, Two, Eps, Tiny, Exp, Ln;
 
 CONST Module = "SpecialFunction.";
 
-(*==========================*)
-PROCEDURE Factorial (n: CARDINAL): T =
+
+PROCEDURE Factorial (n: CARDINAL; ): T =
   CONST
     max = 34;
     cache = ARRAY [0 .. max] OF
@@ -44,11 +44,11 @@ PROCEDURE Factorial (n: CARDINAL): T =
     END;
   END Factorial;
 
-(*--------------------*)
+
 CONST max_factln = 70;
 VAR factln_cache: ARRAY [2 .. max_factln] OF T;
-PROCEDURE LnFactorial (n: CARDINAL): T =
-  (*returns ln(n!) as a real*)
+PROCEDURE LnFactorial (n: CARDINAL; ): T =
+  (* returns ln(n!) as a real*)
   VAR z: T;
   BEGIN
     IF n < 2 THEN
@@ -66,16 +66,16 @@ PROCEDURE LnFactorial (n: CARDINAL): T =
     RETURN z;
   END LnFactorial;
 
-(*--------------------*)
-PROCEDURE Gamma (x: T): T =
-  (*returns Gamma(x))*)
+
+PROCEDURE Gamma (x: T; ): T =
+  (* returns Gamma(x))*)
   BEGIN
     RETURN Exp(LnGamma(x));
   END Gamma;
 
-(*--------------------*)
-PROCEDURE LnGamma (x: T): T =
-  (*returns ln(Gamma(x))*)
+
+PROCEDURE LnGamma (x: T; ): T =
+  (* returns ln(Gamma(x))*)
   TYPE coefs = ARRAY [0 .. N] OF T;
   CONST
     N         = 6;
@@ -97,25 +97,25 @@ PROCEDURE LnGamma (x: T): T =
     RETURN z;
   END LnGamma;
 
-(*--------------------*)
-PROCEDURE Binomial (n, k: CARDINAL): T RAISES {Arith.Error} =
-  (*returns Binomial coefficient for "n over k"*)
+
+PROCEDURE Binomial (n, k: CARDINAL; ): T RAISES {Arith.Error} =
+  (* returns Binomial coefficient for "n over k"*)
   <* UNUSED *>
   CONST
     ftn = Module & "Binomial";
   VAR z: T;
   BEGIN
     IF k > n THEN
-      (*n must be > k*)
+      (* n must be > k*)
       RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
     END;
     z := Exp(LnFactorial(n) - LnFactorial(k) - LnFactorial(n - k));
     RETURN z;
   END Binomial;
 
-(*-------------------*)
-PROCEDURE GammaP (a, x: T): T RAISES {Arith.Error} =
-  (*returns incomplete Gamma P(a,x)=Gamma(a,x)/Gamma(a)*)
+
+PROCEDURE GammaP (a, x: T; ): T RAISES {Arith.Error} =
+  (* returns incomplete Gamma P(a,x)=Gamma(a,x)/Gamma(a)*)
   <* UNUSED *>
   CONST
     ftn = Module & "GammaP";
@@ -123,7 +123,7 @@ PROCEDURE GammaP (a, x: T): T RAISES {Arith.Error} =
   BEGIN
     (*---check conditions---*)
     IF a < Zero OR x < Zero THEN
-      (*must have a>0 and x>0*)
+      (* must have a>0 and x>0*)
       RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
     END;
     IF x < (a + One) THEN
@@ -133,10 +133,10 @@ PROCEDURE GammaP (a, x: T): T RAISES {Arith.Error} =
     END;
   END GammaP;
 
-(*-------------------*)
-PROCEDURE GammaQ (a, x: T): T RAISES {Arith.Error} =
-  (*returns incomplete Gamma Q(a,x)=Gamma(a,x)/Gamma(a)*)
-  (*also, Q(a,x)=1-P(a,x) *)
+
+PROCEDURE GammaQ (a, x: T; ): T RAISES {Arith.Error} =
+  (* returns incomplete Gamma Q(a,x)=Gamma(a,x)/Gamma(a)*)
+  (* also, Q(a,x)=1-P(a,x) *)
   <* UNUSED *>
   CONST
     ftn = Module & "GammaQ";
@@ -144,7 +144,7 @@ PROCEDURE GammaQ (a, x: T): T RAISES {Arith.Error} =
   BEGIN
     (*---check conditions---*)
     IF a < Zero OR x < Zero THEN
-      (*must have a>0 and x>0*)
+      (* must have a>0 and x>0*)
       RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
     END;
     IF x < (a + One) THEN
@@ -154,10 +154,10 @@ PROCEDURE GammaQ (a, x: T): T RAISES {Arith.Error} =
     END;
   END GammaQ;
 
-(*-------------------*)
-PROCEDURE GamSer (a, x: T): T RAISES {Arith.Error} =
-  (*helper for GammaP and GammaQ*)
-  (*generates Gamma(a,x)/Gamma(a) via series*)
+
+PROCEDURE GamSer (a, x: T; ): T RAISES {Arith.Error} =
+  (* helper for GammaP and GammaQ*)
+  (* generates Gamma(a,x)/Gamma(a) via series*)
   <* UNUSED *>
   CONST
     ftn = Module & "GamSer";
@@ -177,14 +177,14 @@ PROCEDURE GamSer (a, x: T): T RAISES {Arith.Error} =
       sum := sum + term;
       IF ABS(term) < eps THEN RETURN sum; END;
     END;
-    (*if we got here, we are in trouble*)
+    (* if we got here, we are in trouble*)
     RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
   END GamSer;
 
-(*-------------------*)
-PROCEDURE GamCF (a, x: T): T RAISES {Arith.Error} =
-  (*helper for GammaP and GammaQ*)
-  (*generates Gamma(a,x) via continued fractions*)
+
+PROCEDURE GamCF (a, x: T; ): T RAISES {Arith.Error} =
+  (* helper for GammaP and GammaQ*)
+  (* generates Gamma(a,x) via continued fractions*)
   <* UNUSED *>
   CONST
     ftn = Module & "GamCF";
@@ -220,14 +220,14 @@ PROCEDURE GamCF (a, x: T): T RAISES {Arith.Error} =
       bj := m * (m - a);
       aj := aj + Two;
     END;
-    (*if we got here, we had a problem*)
+    (* if we got here, we had a problem*)
     RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
 
   END GamCF;
 
-(*--------------------*)
-PROCEDURE Erf (x: T): T RAISES {Arith.Error} =
-  (*returns error function of x*)
+
+PROCEDURE Erf (x: T; ): T RAISES {Arith.Error} =
+  (* returns error function of x*)
   BEGIN
     IF x < Zero THEN
       RETURN -GammaP(Half, x * x);
@@ -236,9 +236,9 @@ PROCEDURE Erf (x: T): T RAISES {Arith.Error} =
     END;
   END Erf;
 
-(*--------------------*)
-PROCEDURE ErfC (x: T): T RAISES {Arith.Error} =
-  (*returns 1-Erf(x) *)
+
+PROCEDURE ErfC (x: T; ): T RAISES {Arith.Error} =
+  (* returns 1-Erf(x) *)
   BEGIN
     IF x < Zero THEN
       RETURN Two - GammaQ(Half, x * x);
@@ -247,16 +247,16 @@ PROCEDURE ErfC (x: T): T RAISES {Arith.Error} =
     END;
   END ErfC;
 
-(*--------------------*)
-PROCEDURE Beta (x, y: T): T =
-  (*returns Gamma(x)*Gamma(y)/Gamma(x+y*)
+
+PROCEDURE Beta (x, y: T; ): T =
+  (* returns Gamma(x)*Gamma(y)/Gamma(x+y*)
   BEGIN
     RETURN Exp(LnGamma(x) + LnGamma(y) - LnGamma(x + y));
   END Beta;
 
-(*--------------------*)
-PROCEDURE BetaCF (a, b, x: T): T RAISES {Arith.Error} =
-  (*helper for BetaI, returns continued fraction*)
+
+PROCEDURE BetaCF (a, b, x: T; ): T RAISES {Arith.Error} =
+  (* helper for BetaI, returns continued fraction*)
   <* UNUSED *>
   CONST
     ftn = Module & "BetaCF";
@@ -303,23 +303,23 @@ PROCEDURE BetaCF (a, b, x: T): T RAISES {Arith.Error} =
       f := f * delta;
       IF ABS(delta - One) < eps THEN RETURN f; END;
     END;
-    (*if we got here, we had a problem*)
+    (* if we got here, we had a problem*)
     RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
   END BetaCF;
 
-(*--------------------*)
-PROCEDURE BetaI (a, b, x: T): T RAISES {Arith.Error} =
-  (*returns incomplete Beta Ix(a,b) *)
+
+PROCEDURE BetaI (a, b, x: T; ): T RAISES {Arith.Error} =
+  (* returns incomplete Beta Ix(a,b) *)
   <* UNUSED *>
   CONST
     ftn = Module & "BetaI";
   VAR factor: T;
   BEGIN
     IF a <= Zero OR b <= Zero THEN
-      (*must have a>Zero and b>Zero*)
+      (* must have a>Zero and b>Zero*)
       RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
     ELSIF x < Zero OR x > One THEN
-      (*must have Zero < x < One*)
+      (* must have Zero < x < One*)
       RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
     ELSIF x = Zero OR x = One THEN
       factor := Zero;
@@ -336,7 +336,7 @@ PROCEDURE BetaI (a, b, x: T): T RAISES {Arith.Error} =
     END;
   END BetaI;
 
-(*==========================*)
+
 BEGIN
   FOR i := FIRST(factln_cache) TO LAST(factln_cache) DO
     factln_cache[i] := Zero;

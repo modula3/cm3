@@ -1,5 +1,5 @@
 MODULE RandomCombinedSlow;
-(*Gnu CopyLefted.*)
+(* Gnu CopyLefted. *)
 (*
 Abstract:
 Pseudo-random number generator by Warren D. Smith.
@@ -292,8 +292,8 @@ explains the results of the Marsaglia test battery above.
                          "InitDone" flag in Init proc.
 *)
 
-IMPORT LongRealBasic AS R,
-       LongRealTrans AS RT,
+IMPORT LongRealBasic            AS R,
+       LongRealTrans            AS RT,
        RandomIteratedSquaring   AS IterSqr,
        RandomSubtractiveFibo1   AS SubFibo1,
        RandomSubtractiveFibo2   AS SubFibo2,
@@ -301,26 +301,28 @@ IMPORT LongRealBasic AS R,
        RandomQuaternaryFibo     AS QuaFibo,
        RandomImprovedMcGill     AS McGill,
        RandomWolframCA          AS Wolf,
-       Word, FloatMode;
+       Word,
+       FloatMode;
 IMPORT RandomRep;
 
-<*UNUSED*>
-CONST Module = "RandomCombinedSlow.";
-(*==========================*)
+<* UNUSED *>
+CONST
+  Module = "RandomCombinedSlow.";
 
-(*------------------*)
-REVEAL T = TPublic BRANDED OBJECT
-    subfibo1:SubFibo1.T;
-    subfibo2:SubFibo2.T;
-    mulfibo:MulFibo.T;
-    quafibo:QuaFibo.T;
-    mcgill:McGill.T;
-    wolf:Wolf.T;
-  OVERRIDES
-    init:=Init;
-    generateWord:=GenerateWord;
-    generateReal:=GenerateReal;
-  END;
+
+REVEAL
+  T = TPublic BRANDED OBJECT
+        subfibo1: SubFibo1.T;
+        subfibo2: SubFibo2.T;
+        mulfibo : MulFibo.T;
+        quafibo : QuaFibo.T;
+        mcgill  : McGill.T;
+        wolf    : Wolf.T;
+      OVERRIDES
+        init         := Init;
+        generateWord := GenerateWord;
+        generateReal := GenerateReal;
+      END;
 
 (******************************************************
 The random words output by this generator ought to be extremely
@@ -345,28 +347,27 @@ parameters in the CONST declarations (Optimizer on. Asserts on.):
     FasterRandWord      80
   Math.sin             130  (for comparison)
 **********************************************)
-PROCEDURE GenerateWord(SELF:T):Word.T =
+PROCEDURE GenerateWord (SELF: T; ): Word.T =
   BEGIN
-    RETURN Word.Plus(
-               Word.Plus(
-         Word.Plus( SELF.subfibo2.engine(), SELF.mulfibo.engine() ),
-         Word.Plus( SELF.quafibo.engine(), SELF.mcgill.engine() ) ),
-              ORD(SELF.wolf.engine()) );
+    RETURN
+      Word.Plus(
+        Word.Plus(Word.Plus(SELF.subfibo2.engine(), SELF.mulfibo.engine()),
+                  Word.Plus(SELF.quafibo.engine(), SELF.mcgill.engine())),
+        ORD(SELF.wolf.engine()));
   END GenerateWord;
 
-PROCEDURE GenerateReal(SELF:T):R.T=
-  <*FATAL FloatMode.Trap*>
+PROCEDURE GenerateReal (SELF: T; ): R.T =
+  <* FATAL FloatMode.Trap *>
   VAR
-    x : R.T;
+    x: R.T;
   BEGIN
-    x := R.Scalb(
-         R.Scalb( FLOAT( GenerateWord(SELF), R.T ) , 6-Word.Size )
-             + FLOAT( GenerateWord(SELF), R.T ), -Word.Size );
+    x := R.Scalb(R.Scalb(FLOAT(GenerateWord(SELF), R.T), 6 - Word.Size)
+                   + FLOAT(GenerateWord(SELF), R.T), -Word.Size);
     <* ASSERT -RT.Half <= x *>
     <* ASSERT x < 0.52D0 *>
-    IF x < R.Zero THEN x := x+R.One; END;
+    IF x < R.Zero THEN x := x + R.One; END;
     x := x - SELF.subfibo1.engine();
-    IF x < R.Zero THEN x := x+R.One; END;
+    IF x < R.Zero THEN x := x + R.One; END;
     <* ASSERT x >= R.Zero *>
     <* ASSERT x < R.One *>
     RETURN x;
@@ -376,23 +377,20 @@ PROCEDURE GenerateReal(SELF:T):R.T=
 If fixed=FALSE (the default) will use the time as seed.
 If TRUE will use a particular fixed seed.
 *************************************************************)
-PROCEDURE Init(SELF:T;fixed : BOOLEAN := FALSE):T=
-  VAR
-    is:=NEW(IterSqr.T).init(fixed);
+PROCEDURE Init (SELF: T; fixed: BOOLEAN := FALSE; ): T =
   BEGIN
-    SELF.subfibo1:=NEW(SubFibo1.T).init(is);
-    SELF.subfibo2:=NEW(SubFibo2.T).init(is);
-    SELF.mulfibo :=NEW(MulFibo .T).init(is);
-    SELF.quafibo :=NEW(QuaFibo .T).init(is);
-    SELF.mcgill  :=NEW(McGill  .T).init(is);
-    SELF.wolf    :=NEW(Wolf    .T).init(is);
-    (* rev 'em up by 60 calls to Uni01() *)
-    FOR i:=0 TO 60 DO
-      EVAL SELF.generateReal();
+    WITH is = NEW(IterSqr.T).init(fixed) DO
+      SELF.subfibo1 := NEW(SubFibo1.T).init(is);
+      SELF.subfibo2 := NEW(SubFibo2.T).init(is);
+      SELF.mulfibo := NEW(MulFibo.T).init(is);
+      SELF.quafibo := NEW(QuaFibo.T).init(is);
+      SELF.mcgill := NEW(McGill.T).init(is);
+      SELF.wolf := NEW(Wolf.T).init(is);
     END;
+    (* rev 'em up by 60 calls to Uni01() *)
+    FOR i := 0 TO 60 DO EVAL SELF.generateReal(); END;
     RETURN SELF;
   END Init;
 
-(*==========================*)
 BEGIN
 END RandomCombinedSlow.

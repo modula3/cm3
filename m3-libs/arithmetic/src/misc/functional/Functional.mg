@@ -6,16 +6,16 @@ IMPORT Arithmetic AS Arith;
 <* UNUSED *>
 CONST
   Module = "Functional.";
-(*==========================*)
 
-PROCEDURE EvalCentralDiff2 (f: Func; x, dx: V.T): FD.T
+
+PROCEDURE EvalCentralDiff2 (f: Func; x, dx: V.T; ): FD.T
   RAISES {Arith.Error} =
   VAR
     der := FD.T{
              f(x), NEW(V.T, NUMBER(x^)), NEW(M.T, NUMBER(x^), NUMBER(x^))};
-    xn := V.Copy(x);             (*we will modify this copy - this can
+    xn := V.Copy(x);             (* we will modify this copy - this can
                                     cause unexpected results if the
-                                    function f stores the pointer to x1*)
+                                    function f stores the pointer to x1 *)
     dxi: R.T;
   BEGIN
     FOR i := FIRST(x^) TO LAST(x^) DO
@@ -54,10 +54,8 @@ PROCEDURE EvalCentralDiff2 (f: Func; x, dx: V.T): FD.T
     RETURN der;
   END EvalCentralDiff2;
 
-PROCEDURE FindStationaryPoint (f      : FuncDeriv2;
-                               x      : V.T;
-                               tol    : R.T;
-                               maxiter: CARDINAL    ): V.T
+PROCEDURE FindStationaryPoint
+  (f: FuncDeriv2; x: V.T; tol: R.T; maxiter: CARDINAL; ): V.T
   RAISES {Arith.Error} =
   BEGIN
     FOR iter := 0 TO maxiter - 1 DO
@@ -73,6 +71,6 @@ PROCEDURE FindStationaryPoint (f      : FuncDeriv2;
     RAISE Arith.Error(NEW(Arith.ErrorNoConvergence).init());
   END FindStationaryPoint;
 
-(*==========================*)
+
 BEGIN
 END Functional.

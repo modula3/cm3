@@ -1,5 +1,5 @@
 GENERIC INTERFACE MatrixFmtLex(RF, M);
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details*)
 (*
 FROM Arithmetic IMPORT Error;
 *)
@@ -16,12 +16,12 @@ TYPE
                elemStyle           := RF.FmtStyle{};
              END;
 
-PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT
+PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}; ): TEXT
   RAISES {Thread.Alerted, Wr.Failure};
 
 TYPE TexStyle = RECORD elemStyle := RF.TexStyle{};  END;
 
-PROCEDURE Tex (x: T; READONLY style := TexStyle{}): TEXT
+PROCEDURE Tex (x: T; READONLY style := TexStyle{}; ): TEXT
   RAISES {Thread.Alerted, Wr.Failure};
 
 TYPE

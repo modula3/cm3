@@ -1,12 +1,12 @@
 MODULE TestXYZ EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details
 
-(*Abstract: Tests for XYZ module.*)
+   Abstract: Tests for XYZ module. *)
 
 
-(*=======================*)
+
 CONST Module = "TestXYZ.";
-(*----------------------*)
+
 PROCEDURE TestABC (): BOOLEAN =
   CONST ftn = Module & "TestABC";
   VAR result := TRUE;
@@ -15,7 +15,7 @@ PROCEDURE TestABC (): BOOLEAN =
 
     RETURN result;
   END TestABC;
-(*-------------------------*)
+
 PROCEDURE TestXYZ (): BOOLEAN =
   CONST ftn = Module & "TestXYZ";
   VAR result := TRUE;
@@ -24,6 +24,6 @@ PROCEDURE TestXYZ (): BOOLEAN =
     EVAL TestABC();
     RETURN result;
   END TestXYZ;
-(*=======================*)
+
 BEGIN
 END TestXYZ.

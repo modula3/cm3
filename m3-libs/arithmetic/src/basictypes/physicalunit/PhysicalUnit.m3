@@ -1,7 +1,5 @@
 MODULE PhysicalUnit;
-(*Arithmetic for Modula-3, see doc for details
-
-   *)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT                           (*IntIntTbl AS Tbl,*)
   Integer32Basic AS I,
@@ -13,14 +11,14 @@ IMPORT Arithmetic AS Arith;
 <* UNUSED *>
 CONST
   Module = "PhysicalUnit.";
-(*==========================*)
+
 
 PROCEDURE New (): T =
   BEGIN
     RETURN NEW(T).init(sizeHint := 10);
   END New;
 
-PROCEDURE FromArray (READONLY x: ARRAY OF ExpType): T =
+PROCEDURE FromArray (READONLY x: ARRAY OF ExpType; ): T =
   VAR
     y                 := New();
     replaced: BOOLEAN;
@@ -36,7 +34,7 @@ PROCEDURE FromArray (READONLY x: ARRAY OF ExpType): T =
     RETURN y;
   END FromArray;
 
-PROCEDURE Copy (x: T): T =
+PROCEDURE Copy (x: T; ): T =
   VAR
     y                  := New();
     it                 := x.iterate();
@@ -50,7 +48,7 @@ PROCEDURE Copy (x: T): T =
     RETURN y;
   END Copy;
 
-PROCEDURE Equal (x, y: T): BOOLEAN =
+PROCEDURE Equal (x, y: T; ): BOOLEAN =
   VAR
     it                        := x.iterate();
     unit, xexp, yexp: ExpType;
@@ -65,12 +63,12 @@ PROCEDURE Equal (x, y: T): BOOLEAN =
     RETURN TRUE;
   END Equal;
 
-PROCEDURE IsZero (x: T): BOOLEAN =
+PROCEDURE IsZero (x: T; ): BOOLEAN =
   BEGIN
     RETURN x.size() = 0;
   END IsZero;
 
-PROCEDURE Put (x: T; unit: INTEGER; exp: ExpType) =
+PROCEDURE Put (x: T; unit: INTEGER; exp: ExpType; ) =
   BEGIN
     IF exp # 0 THEN
       VAR replaced := x.put(unit, exp);
@@ -80,7 +78,7 @@ PROCEDURE Put (x: T; unit: INTEGER; exp: ExpType) =
     END;
   END Put;
 
-PROCEDURE Add (x, y: T): T =
+PROCEDURE Add (x, y: T; ): T =
   VAR
     z                         := New();
     it                        := x.iterate();
@@ -98,7 +96,7 @@ PROCEDURE Add (x, y: T): T =
     RETURN z;
   END Add;
 
-PROCEDURE Sub (x, y: T): T =
+PROCEDURE Sub (x, y: T; ): T =
   VAR
     z                         := New();
     it                        := x.iterate();
@@ -116,7 +114,7 @@ PROCEDURE Sub (x, y: T): T =
     RETURN z;
   END Sub;
 
-PROCEDURE Neg (x: T): T =
+PROCEDURE Neg (x: T; ): T =
   VAR
     y                  := New();
     it                 := x.iterate();
@@ -130,7 +128,7 @@ PROCEDURE Neg (x: T): T =
     RETURN y;
   END Neg;
 
-PROCEDURE Scale (x: T; y: ExpType): T =
+PROCEDURE Scale (x: T; y: ExpType; ): T =
   VAR
     z                  := New();
     it                 := x.iterate();
@@ -146,7 +144,7 @@ PROCEDURE Scale (x: T; y: ExpType): T =
     RETURN z;
   END Scale;
 
-PROCEDURE ScaleDiv (x: T; y: ExpType): T RAISES {Arith.Error} =
+PROCEDURE ScaleDiv (x: T; y: ExpType; ): T RAISES {Arith.Error} =
   VAR
     z                  := New();
     it                 := x.iterate();
@@ -160,7 +158,7 @@ PROCEDURE ScaleDiv (x: T; y: ExpType): T RAISES {Arith.Error} =
     RETURN z;
   END ScaleDiv;
 
-PROCEDURE ScaleReal (x: T; y: R.T): T RAISES {Arith.Error} =
+PROCEDURE ScaleReal (x: T; y: R.T; ): T RAISES {Arith.Error} =
   VAR
     z                         := New();
     it                        := x.iterate();
@@ -178,7 +176,7 @@ PROCEDURE ScaleReal (x: T; y: R.T): T RAISES {Arith.Error} =
     RETURN z;
   END ScaleReal;
 
-PROCEDURE Norm1 (x: T): ExpType =
+PROCEDURE Norm1 (x: T; ): ExpType =
   VAR
     it                 := x.iterate();
     unit, exp: ExpType;
@@ -188,7 +186,7 @@ PROCEDURE Norm1 (x: T): ExpType =
     RETURN sum;
   END Norm1;
 
-PROCEDURE NormInf (x: T): ExpType =
+PROCEDURE NormInf (x: T; ): ExpType =
   VAR
     it                 := x.iterate();
     unit, exp: ExpType;
@@ -198,6 +196,6 @@ PROCEDURE NormInf (x: T): ExpType =
     RETURN max;
   END NormInf;
 
-(*==========================*)
+
 BEGIN
 END PhysicalUnit.

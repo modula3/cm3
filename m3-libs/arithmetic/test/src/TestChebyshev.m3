@@ -1,12 +1,10 @@
 MODULE TestChebyshev EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details 
+(* Arithmetic for Modula-3, see doc for details
 
-   Abstract: Test driver for Modula-3
-   rendition of Numerical Recipes in C, 1992.
+   Abstract: Test driver for Modula-3 rendition of Numerical Recipes in C,
+   1992.
 
-   12/27/95 Harry George Initial version: Ch 5
-
-   *)
+   12/27/95 Harry George Initial version: Ch 5 *)
 
 IMPORT Fmt;
 IMPORT LongRealBasic           AS R,
@@ -14,12 +12,13 @@ IMPORT LongRealBasic           AS R,
        LongRealChebyPolynomial AS CP,
        Arithmetic;
 
-<*FATAL Arithmetic.Error *>
+<* FATAL Arithmetic.Error *>
 
-(*=======================*)
-CONST Module = "TestChebyshev.";
-(*=======================*)
-(*-----------------------*)
+
+CONST
+  Module = "TestChebyshev.";
+
+
 PROCEDURE TestEulerSum (): BOOLEAN =
   CONST ftn = Module & "TestEulerSum";
   VAR result := TRUE;
@@ -27,7 +26,7 @@ PROCEDURE TestEulerSum (): BOOLEAN =
     Debug(1, ftn, "begin\n");
     RETURN result;
   END TestEulerSum;
-(*-----------------------*)
+
 PROCEDURE TestCheby (): BOOLEAN =
   CONST ftn = Module & "TestCheby";
   VAR
@@ -53,7 +52,7 @@ PROCEDURE TestCheby (): BOOLEAN =
             & Fmt.LongReal(y1, prec := 4) & ", cheby:"
             & Fmt.LongReal(y2, prec := 4) & ", mono: "
             & Fmt.LongReal(CP.Eval(monomial, x), prec := 4) & "\n");
-      <*ASSERT ABS(y1-y2) < 0.00001D0 *>
+      <* ASSERT ABS(y1 - y2) < 0.00001D0 *>
     END;
 
     Msg("Doing derivatives and integrals\n");
@@ -81,16 +80,17 @@ PROCEDURE TestCheby (): BOOLEAN =
             & Fmt.LongReal(y1, prec := 4) & ", d sin: "
             & Fmt.LongReal(y2, prec := 4) & ", St sin: "
             & Fmt.LongReal(y3, prec := 4) & "\n");
-      <*ASSERT ABS(y1-y2) < 0.00001D0 *>
-      <*ASSERT ABS(y1+y3) < 0.00001D0 *>
+      <* ASSERT ABS(y1 - y2) < 0.00001D0 *>
+      <* ASSERT ABS(y1 + y3) < 0.00001D0 *>
     END;
 
     RETURN result;
   END TestCheby;
-(*-----------------------*)
+
 PROCEDURE TestChebyshev (): BOOLEAN =
-  <*UNUSED*>
-  CONST ftn = Module & "TestChebyshev";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "TestChebyshev";
   BEGIN
     NewLine();
     EVAL TestEulerSum();
@@ -98,6 +98,6 @@ PROCEDURE TestChebyshev (): BOOLEAN =
     EVAL TestCheby();
     RETURN TRUE;
   END TestChebyshev;
-(*=======================*)
+
 BEGIN
 END TestChebyshev.

@@ -26,7 +26,7 @@ PROCEDURE Dump (READONLY x: T; ): TEXT =
   END Dump;
 *)
 
-PROCEDURE FastFmtU (READONLY x: T; base: F.Base; pad: [1 .. Word.Size]):
+PROCEDURE FastFmtU (READONLY x: T; base: F.Base; pad: [1 .. Word.Size]; ):
   TEXT =
   VAR txt: TEXT;
   BEGIN
@@ -43,7 +43,7 @@ PROCEDURE FastFmtU (READONLY x: T; base: F.Base; pad: [1 .. Word.Size]):
 
 (* can be optimized with a division routine that is specialised to small
    divisors *)
-PROCEDURE SlowFmtU (x: T; base: F.Base): TEXT =
+PROCEDURE SlowFmtU (x: T; base: F.Base; ): TEXT =
   VAR
     qr                             := BB.QuotRem{x, BB.Zero};
     b    : T;
@@ -70,7 +70,7 @@ PROCEDURE SlowFmtU (x: T; base: F.Base): TEXT =
     IF Text.Empty(txt) THEN RETURN "0"; ELSE RETURN txt; END;
   END SlowFmtU;
 
-PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT =
+PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}; ): TEXT =
   VAR txt: TEXT;
   BEGIN
     CASE style.base OF
@@ -84,7 +84,7 @@ PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT =
   END Fmt;
 
 PROCEDURE Tex
-  (x: T; READONLY style := TexStyle{}; <* UNUSED *> within: Precedence):
+  (x: T; READONLY style := TexStyle{}; <* UNUSED *> within: Precedence; ):
   TEXT =
   BEGIN
     IF style.base = 10 THEN

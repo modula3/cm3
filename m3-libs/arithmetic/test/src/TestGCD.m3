@@ -1,7 +1,7 @@
 MODULE TestGCD EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details Abstract: Tests for GCD module.
+(* Arithmetic for Modula-3, see doc for details
 
-   *)
+   Abstract: Tests for GCD module. *)
 
 IMPORT Integer32GCD                    AS IG,
        Integer32ComplexGCD             AS ICG,
@@ -21,11 +21,11 @@ IMPORT Integer32GCD                    AS IG,
        *)
        Arithmetic;
 
-(*=======================*)
+
 CONST Module = "TestGCD.";
 
-(*----------------------*)
-<*FATAL Arithmetic.Error*>
+
+<* FATAL Arithmetic.Error *>
 PROCEDURE TestIntegerGCD (): BOOLEAN =
   CONST
     ftn = Module & "TestIntegerGCD";
@@ -44,14 +44,14 @@ PROCEDURE TestIntegerGCD (): BOOLEAN =
                        ARRAY OF TEXT{F.Int(i), F.Int(j), F.Int(gcd),
                                      F.Int(i), F.Int(j), F.Int(IG.LCM(i,j))}));
         *)
-        <*ASSERT gcd=IG.GCD(j,i)*>
-        <*ASSERT i=0 OR i MOD gcd=0 AND j MOD gcd=0*>
+        <* ASSERT gcd = IG.GCD(j, i) *>
+        <* ASSERT i = 0 OR i MOD gcd = 0 AND j MOD gcd = 0 *>
       END;
     END;
 
     RETURN result;
   END TestIntegerGCD;
-(*----------------------*)
+
 PROCEDURE TestComplexGCD (): BOOLEAN =
   CONST
     ftn = Module & "TestComplexGCD";
@@ -98,14 +98,13 @@ PROCEDURE TestComplexGCD (): BOOLEAN =
                                              F.Int(i), F.Int(j),
                                              F.Int(gcd1.re), F.Int(gcd1.im)}));
             *)
-            <*ASSERT IC.IsZero(x) OR
-                     IC.IsZero(y) OR
-                     (*x and y must be divisible by gcd*)
-                     IC.IsZero(IC.Mod(x,gcd0)) AND
-                     IC.IsZero(IC.Mod(y,gcd0)) AND
-                     (*gcd0 and gcd1 must be equal upto a unit*)
-                     IC.IsZero(IC.Mod(gcd0,gcd1)) AND
-                     IC.IsZero(IC.Mod(gcd1,gcd0)) *>
+            <* ASSERT IC.IsZero(x) OR IC.IsZero(y) OR
+                        (* x and y must be divisible by gcd*)
+                        IC.IsZero(IC.Mod(x, gcd0))
+                          AND IC.IsZero(IC.Mod(y, gcd0)) AND
+                          (* gcd0 and gcd1 must be equal upto a unit*)
+                          IC.IsZero(IC.Mod(gcd0, gcd1))
+                          AND IC.IsZero(IC.Mod(gcd1, gcd0)) *>
           END;
         END;
       END;
@@ -113,8 +112,8 @@ PROCEDURE TestComplexGCD (): BOOLEAN =
 
     RETURN result;
   END TestComplexGCD;
-(*----------------------*)
-<*UNUSED*>
+
+<* UNUSED *>
 PROCEDURE TestBigComplexGCD (): BOOLEAN =
   CONST ftn = Module & "TestBigComplexGCD";
   VAR
@@ -141,9 +140,9 @@ PROCEDURE TestBigComplexGCD (): BOOLEAN =
                                              F.Int(k), F.Int(l),
                                              BF.Fmt(gcd.re), BF.Fmt(gcd.im)}));
             *)
-            <*ASSERT BC.Equal(gcd,BCG.GCD(y,x))*>
-            <*ASSERT BC.IsZero(BC.Mod(x,gcd))*>
-            <*ASSERT BC.IsZero(BC.Mod(y,gcd))*>
+            <* ASSERT BC.Equal(gcd, BCG.GCD(y, x)) *>
+            <* ASSERT BC.IsZero(BC.Mod(x, gcd)) *>
+            <* ASSERT BC.IsZero(BC.Mod(y, gcd)) *>
           END;
         END;
       END;
@@ -151,8 +150,8 @@ PROCEDURE TestBigComplexGCD (): BOOLEAN =
 
     RETURN result;
   END TestBigComplexGCD;
-(*----------------------*)
-PROCEDURE IntToFrac (n: INTEGER): BFr.T =
+
+PROCEDURE IntToFrac (n: INTEGER; ): BFr.T =
   BEGIN
     RETURN BFr.T{n := B.FromInteger(n), d := B.One};
   END IntToFrac;
@@ -163,7 +162,7 @@ PROCEDURE TestPolynomialGCD (): BOOLEAN =
     result                                := TRUE;
   BEGIN
     Debug(1, ftn, "begin\n");
-    (*This is a typical example where the naive Euclidean algorithm fails
+    (* This is a typical example where the naive Euclidean algorithm fails
        due to the fact that none of the operands can be reduced by the
        other one.*)
     fac0 := BFrP.New(2);
@@ -195,14 +194,16 @@ PROCEDURE TestPolynomialGCD (): BOOLEAN =
       Msg(F.FN("gcd(%s,%s) = %s\n",
                ARRAY OF TEXT{BFrPF.Fmt(poly0),BFrPF.Fmt(poly1),BFrPF.Fmt(gcd)}));
     *)
-    (*fac0 and gcd must be equal upto a unit*)
-    <*ASSERT BFrP.IsZero(BFrP.Mod(gcd,fac0)) AND BFrP.IsZero(BFrP.Mod(fac0,gcd))*>
+    (* fac0 and gcd must be equal upto a unit*)
+    <* ASSERT BFrP.IsZero(BFrP.Mod(gcd, fac0))
+                AND BFrP.IsZero(BFrP.Mod(fac0, gcd)) *>
     RETURN result;
   END TestPolynomialGCD;
-(*-------------------------*)
+
 PROCEDURE TestGCD (): BOOLEAN =
-  <*UNUSED*>
-  CONST ftn = Module & "TestGCD";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "TestGCD";
   VAR result := TRUE;
   BEGIN
     NewLine();
@@ -215,6 +216,6 @@ PROCEDURE TestGCD (): BOOLEAN =
 
     RETURN result;
   END TestGCD;
-(*=======================*)
+
 BEGIN
 END TestGCD.

@@ -1,5 +1,5 @@
 GENERIC INTERFACE IntegerFmtLex(I);
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT Rd, Wr, Thread;
 IMPORT Fmt AS F;
@@ -12,19 +12,19 @@ TYPE T = I.T;
 
 TYPE FmtStyle = RECORD base: F.Base := 10;  END;
 
-<*INLINE*>
-PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT;
+<* INLINE *>
+PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}; ): TEXT;
 
 PROCEDURE FmtArray (READONLY a        : ARRAY OF T;
                              style                   := FmtStyle{};
                              cellwidth: CARDINAL     := 4;
-                             linewidth: CARDINAL     := 60          ): TEXT
+                             linewidth: CARDINAL     := 60;         ): TEXT
   RAISES {Thread.Alerted, Wr.Failure};
 
 TYPE TexStyle = RECORD base: F.Base := 10;  END;
 
-PROCEDURE Tex (x: T; READONLY style := TexStyle{}; within := Precedence.Sum):
-  TEXT;
+PROCEDURE Tex
+  (x: T; READONLY style := TexStyle{}; within := Precedence.Sum; ): TEXT;
 
 TYPE LexStyle = RECORD base: F.Base := 10;  END;
 

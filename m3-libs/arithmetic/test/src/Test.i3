@@ -3,12 +3,12 @@ INTERFACE Test;
 IMPORT LongRealBasic AS R;
 FROM LongRealTrans IMPORT Eps;
 
-(*from the driver---*)
+(*----from the driver---*)
 VAR verbosity: [0 .. 3] := 3;
-PROCEDURE Msg (str: TEXT);
+PROCEDURE Msg (str: TEXT; );
 PROCEDURE NewLine ();
-PROCEDURE Debug (level: [0 .. 3]; ftn, str: TEXT);
-PROCEDURE Verify (ftn, str: TEXT; expected, found: R.T; eps: R.T := Eps):
+PROCEDURE Debug (level: [0 .. 3]; ftn, str: TEXT; );
+PROCEDURE Verify (ftn, str: TEXT; expected, found: R.T; eps: R.T := Eps; ):
   BOOLEAN;
 
 (*---from the Test units---*)

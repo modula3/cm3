@@ -1,5 +1,5 @@
 GENERIC INTERFACE EulerSum(R);
-(*Arithmetic for Modula-3, see doc for details
+(* Arithmetic for Modula-3, see doc for details
 
    Abstract: Approximately sum up the function values
    f(0)+f(1)+f(2)+...+f(x) for given f and x, x might be a fraction
@@ -9,11 +9,10 @@ GENERIC INTERFACE EulerSum(R);
 
    *** seems to be untested, maybe unfunctional *** *)
 
-PROCEDURE EulerSum (VAR sum  : R.T;       (*partial sum to date*)
-                        term : R.T;       (*jth value*)
-                        jterm: CARDINAL;  (*which j*)
-                    VAR nterm: CARDINAL (*how high is n so far*)
+PROCEDURE EulerSum (VAR sum  : R.T;       (* partial sum to date *)
+                        term : R.T;       (* jth value *)
+                        jterm: CARDINAL;  (* which j *)
+                    VAR nterm: CARDINAL;  (* how high is n so far *)
   );
 
-(*========================*)
 END EulerSum.

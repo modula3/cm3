@@ -1,9 +1,8 @@
 MODULE TestVector EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details Abstract: Tests for Vector module.
+(* Arithmetic for Modula-3, see doc for details
 
-   1/1/96 <name> Initial version
+   Abstract: Tests for Vector module. *)
 
-   *)
 (*IMPORT Arithmetic AS Arith;*)
 IMPORT                           (*LongRealBasic AS R,*)
   LongRealFmtLex       AS RF,
@@ -11,11 +10,11 @@ IMPORT                           (*LongRealBasic AS R,*)
   LongRealVectorTrans  AS VT,
   LongRealVectorFmtLex AS VF;
 
-(*=======================*)
+
 CONST Module = "TestVector.";
 
-(*----------------------*)
-<*FATAL ANY*>
+
+<* FATAL ANY *>
 PROCEDURE TestVectorBasic (): BOOLEAN =
   CONST
     ftn = Module & "TestVectorBasic";
@@ -55,16 +54,17 @@ PROCEDURE TestVectorBasic (): BOOLEAN =
 
     RETURN result;
   END TestVectorBasic;
-(*-------------------------*)
+
 PROCEDURE TestVector (): BOOLEAN =
-  <*UNUSED*>
-  CONST ftn = Module & "TestVector";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "TestVector";
   VAR result := TRUE;
   BEGIN
     NewLine();
     EVAL TestVectorBasic();
     RETURN result;
   END TestVector;
-(*=======================*)
+
 BEGIN
 END TestVector.

@@ -1,15 +1,14 @@
 MODULE TestBits EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details Abstract: Tests for Utils module.
+(* Arithmetic for Modula-3, see doc for details Abstract: Tests for Utils
+   module.
 
-   1/1/96 Harry George Initial version
-
-   *)
+   1/1/96 Harry George Initial version *)
 
 IMPORT Bits AS B;
 IMPORT Fmt, Text;
-(*=======================*)
+
 CONST Module = "TestBits.";
-(*----------------------*)
+
 PROCEDURE TestWhichEndian (): BOOLEAN =
   CONST ftn = Module & "TestWhichEndian";
   VAR result := TRUE;
@@ -24,7 +23,7 @@ PROCEDURE TestWhichEndian (): BOOLEAN =
     END;
     RETURN result;
   END TestWhichEndian;
-(*----------------------*)
+
 PROCEDURE TestFmt (): BOOLEAN =
   CONST
     ftn = Module & "TestFmt";
@@ -39,7 +38,7 @@ PROCEDURE TestFmt (): BOOLEAN =
 
     RETURN result;
   END TestFmt;
-(*----------------------*)
+
 PROCEDURE TestReverse (): BOOLEAN =
   CONST
     ftn   = Module & "TestReverse";
@@ -50,15 +49,15 @@ PROCEDURE TestReverse (): BOOLEAN =
     Debug(1, ftn, "begin\n");
     Msg(B.Fmt(x, nbits + 2) & " reverses to "
           & B.Fmt(B.Reverse(x, nbits), nbits + 2) & "\n");
-    <*ASSERT B.Reverse(x,nbits)=2_1101 *>
+    <* ASSERT B.Reverse(x, nbits) = 2_1101 *>
 
     RETURN result;
   END TestReverse;
-(*======================*)
+
 CONST textdata = "the quick brown fox jumped over the lazy dog";
 VAR str: ARRAY [0 .. 20] OF CHAR;
 
-(*----------------------*)
+
 PROCEDURE TestHashPJW (): BOOLEAN =
   CONST ftn = Module & "TestHashPJW";
   VAR result := TRUE;
@@ -71,7 +70,7 @@ PROCEDURE TestHashPJW (): BOOLEAN =
     END;
     RETURN result;
   END TestHashPJW;
-(*----------------------*)
+
 PROCEDURE TestHashELF (): BOOLEAN =
   CONST ftn = Module & "TestHashELF";
   VAR result := TRUE;
@@ -84,7 +83,7 @@ PROCEDURE TestHashELF (): BOOLEAN =
 
     RETURN result;
   END TestHashELF;
-(*----------------------*)
+
 PROCEDURE TestBits (): BOOLEAN =
   CONST ftn = Module & "TestBits";
   VAR result := TRUE;
@@ -102,6 +101,6 @@ PROCEDURE TestBits (): BOOLEAN =
     EVAL TestHashELF();
     RETURN result;
   END TestBits;
-(*=======================*)
+
 BEGIN
 END TestBits.

@@ -1,5 +1,5 @@
 GENERIC INTERFACE PhysicalValueFmtLex(CF, PV, DB);
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
 
 TYPE T = PV.T;
@@ -10,7 +10,7 @@ TYPE
                elemStyle            := CF.FmtStyle{};
              END;
 
-PROCEDURE Fmt (READONLY x: T; READONLY style: FmtStyle): TEXT;
+PROCEDURE Fmt (READONLY x: T; READONLY style: FmtStyle; ): TEXT;
 
 (*
 TYPE

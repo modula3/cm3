@@ -1,5 +1,5 @@
 MODULE PhysicalUnitFmtLex;
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT PhysicalUnit AS U;
 (*IMPORT Rd, Wr, TextWr, Thread;*)
@@ -7,10 +7,11 @@ IMPORT Fmt AS F;
 (*IMPORT Lex AS L;*)
 (*IMPORT FloatMode;*)
 
-<*UNUSED*>
-CONST Module = "PhysicalUnitFmtLex.";
+<* UNUSED *>
+CONST
+  Module = "PhysicalUnitFmtLex.";
 
-PROCEDURE Fmt (unit: T): TEXT =
+PROCEDURE Fmt (unit: T; ): TEXT =
   VAR
     it             := unit.iterate();
     dim: INTEGER;

@@ -1,13 +1,12 @@
 GENERIC INTERFACE Polynomial(R, V, PI);
-(*Arithmetic for Modula-3, see doc for details *)
+(* Arithmetic for Modula-3, see doc for details *)
 
-(*==========================*)
 
 CONST Brand = R.Brand & "Polynomial";
 
 TYPE
-  (*interpretation is: a[0] + a[1]*xi + a[2]* xi^2...a[n]*xi^n *)
-  (*text form is: T4{a0,a1,a2,a3} *)
+  (* interpretation is: a[0] + a[1]*xi + a[2]* xi^2...a[n]*xi^n *)
+  (* text form is: T4{a0,a1,a2,a3} *)
   TBody = PI.TBody;
   T = PI.T;
   QuotRem = PI.QuotRem;
@@ -26,7 +25,7 @@ VAR
   Zero: T;                       (*CONST*)
   One : T;                       (*CONST*)
 
-PROCEDURE New (degree: CARDINAL): T; (*make a poly for a0..an*)
+PROCEDURE New (degree: CARDINAL; ): T; (* make a poly for a0..an*)
 
 CONST
   FromArray = V.FromArray;
@@ -52,5 +51,4 @@ CONST
   EvalDerivative = PI.EvalDerivative;
   Compose        = PI.Compose;
 
-(*==========================*)
 END Polynomial.

@@ -1,9 +1,7 @@
 MODULE TestUnit EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details Abstract:
+(* Arithmetic for Modula-3, see doc for details Abstract:
 
-   Tests for PhysicalUnit and related modules.
-
-   *)
+   Tests for PhysicalUnit and related modules. *)
 
 IMPORT PhysicalUnit                       AS U,
        LongRealPhysicalValue              AS PV,
@@ -19,9 +17,9 @@ IMPORT Fmt;
 
 IMPORT Arithmetic AS Arith;
 
-(*=======================*)
+
 CONST Module = "TestUnit.";
-(*----------------------*)
+
 PROCEDURE TestCalc (): BOOLEAN =
   CONST ftn = Module & "TestCalc";
   VAR
@@ -47,7 +45,8 @@ PROCEDURE TestCalc (): BOOLEAN =
     TRY
       y := PV.T{2.0D0, U.FromArray(SI.length)};
       z := PV.Add(x, y);
-      <* ASSERT FALSE *>         (*the previous should throw an exception*)
+      <* ASSERT FALSE *>         (* the previous should throw an
+                                    exception*)
     EXCEPT
     | Arith.Error (err) =>
         <* ASSERT NOT ISTYPE(err, Arith.ErrorUnitMismatch) *>
@@ -55,7 +54,7 @@ PROCEDURE TestCalc (): BOOLEAN =
 
     RETURN result;
   END TestCalc;
-(*----------------------*)
+
 PROCEDURE TestFmt (): BOOLEAN =
   CONST ftn = Module & "TestFmt";
   VAR
@@ -114,7 +113,7 @@ PROCEDURE TestFmt (): BOOLEAN =
 
     RETURN result;
   END TestFmt;
-(*-------------------------*)
+
 PROCEDURE TestUnit (): BOOLEAN =
   <* UNUSED *>
   CONST
@@ -127,6 +126,6 @@ PROCEDURE TestUnit (): BOOLEAN =
     EVAL TestFmt();
     RETURN result;
   END TestUnit;
-(*=======================*)
+
 BEGIN
 END TestUnit.

@@ -12,10 +12,10 @@ IMPORT LongRealBasic        AS R,
        LongRealMatrix       AS M,
        LongRealMatrixFmtLex AS MF;
 
-(*=======================*)
+
 CONST Module = "TestMatrix.";
 
-(*----------------------*)
+
 <*FATAL ANY*>
 PROCEDURE TestMatrixBasic (): BOOLEAN =
   CONST
@@ -52,7 +52,7 @@ PROCEDURE TestMatrixBasic (): BOOLEAN =
     RETURN result;
   END TestMatrixBasic;
 
-(*----------------------*)
+
 <*FATAL ANY*>
 PROCEDURE TestConstruct (): BOOLEAN =
   CONST ftn = Module & "TestConstruct";
@@ -89,7 +89,7 @@ PROCEDURE TestConstruct (): BOOLEAN =
     RETURN result;
   END TestConstruct;
 
-(*-------------------------*)
+
 PROCEDURE TestMatrix (): BOOLEAN =
   <*UNUSED*>
   CONST ftn = Module & "TestMatrix";
@@ -101,6 +101,6 @@ PROCEDURE TestMatrix (): BOOLEAN =
     EVAL TestConstruct();
     RETURN result;
   END TestMatrix;
-(*=======================*)
+
 BEGIN
 END TestMatrix.

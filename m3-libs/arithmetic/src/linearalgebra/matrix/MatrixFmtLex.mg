@@ -1,5 +1,5 @@
 GENERIC MODULE MatrixFmtLex(RF, V, VF, M);
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT Rd, Wr, TextWr, Thread;
 IMPORT Fmt AS F;
@@ -7,10 +7,11 @@ IMPORT Lex AS L;
 IMPORT FloatMode;
 IMPORT FmtLexSupport AS FSup;
 
-<*UNUSED*>
-CONST Module = "MatrixFmtLex.";
+<* UNUSED *>
+CONST
+  Module = "MatrixFmtLex.";
 
-PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT
+PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}; ): TEXT
   RAISES {Thread.Alerted, Wr.Failure} =
   VAR wr := TextWr.New();
   BEGIN
@@ -31,7 +32,7 @@ PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT
     RETURN TextWr.ToText(wr);
   END Fmt;
 
-PROCEDURE Dup (str: TEXT; n: CARDINAL): TEXT
+PROCEDURE Dup (str: TEXT; n: CARDINAL; ): TEXT
   RAISES {Thread.Alerted, Wr.Failure} =
   VAR wr := TextWr.New();
   BEGIN
@@ -39,7 +40,7 @@ PROCEDURE Dup (str: TEXT; n: CARDINAL): TEXT
     RETURN TextWr.ToText(wr);
   END Dup;
 
-PROCEDURE Tex (x: T; READONLY style := TexStyle{}): TEXT
+PROCEDURE Tex (x: T; READONLY style := TexStyle{}; ): TEXT
   RAISES {Thread.Alerted, Wr.Failure} =
   VAR wr := TextWr.New();
   BEGIN
@@ -73,26 +74,25 @@ PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
     m    := NUMBER(item.row^);
   BEGIN
     TRY
-      (*read the values into a list*)
+      (* read the values into a list *)
       WHILE NOT FSup.CheckChar(rd, style.matTerm) DO
         item := NEW(List, prev := item, row := VF.Lex(rd, vectorLexStyle));
         IF NUMBER(item.row^) # m THEN
-          RAISE L.Error;         (*should be NA.Error, size_mismatch*)
+          RAISE L.Error;         (* should be NA.Error, size_mismatch *)
         END;
         INC(n);
       END;
     EXCEPT
-    | Rd.EndOfFile =>            (*treat like termination character*)
+    | Rd.EndOfFile =>            (* treat like termination character *)
     END;
 
-    (*copy the list elements into the vector's array*)
-    VAR z := NEW(M.T, n, m);
-    BEGIN
+    (* copy the list elements into the vector's array *)
+    WITH z = NEW(M.T, n, m) DO
       FOR i := n - 1 TO 0 BY -1 DO
         z[i] := item.row^;
         item := item.prev;
       END;
-      <*ASSERT item=NIL*>
+      <* ASSERT item = NIL *>
       RETURN z;
     END;
   END Lex;

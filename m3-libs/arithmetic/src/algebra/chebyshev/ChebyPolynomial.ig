@@ -1,5 +1,5 @@
 GENERIC INTERFACE ChebyPolynomial(P, CP);
-(*Arithmetic for Modula-3, see doc for details
+(* Arithmetic for Modula-3, see doc for details
 
    Abstract: Chebyshev polynomials and approximation of functions by sums
    of chebyshev polynomials *)
@@ -30,5 +30,4 @@ CONST
   Derive       = CP.Derive;
   Integrate    = CP.Integrate;
 
-(*========================*)
 END ChebyPolynomial.

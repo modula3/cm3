@@ -1,7 +1,7 @@
 INTERFACE RandomCombinedFast;
-(*Gnu CopyLefted.*)
+(* Gnu CopyLefted. *)
 (*
-Abstract: Psuedo-random number generator by Warren D. Smith.
+Abstract: Pseudo-random number generator by Warren D. Smith.
 Runtimes (in 100 MHz pentium clock ticks per call, roughly):
     RandWord           470
     Uni01             1000
@@ -32,7 +32,7 @@ statistical evidence of flaws in any of these generators, please
 tell me at wds@research.NJ.NEC.COM.
 ************************************************************)
 
-(*==========================*)
+
 (*** Initializes all random number generators here. Quite slow.
 If fixed=FALSE (the default) will incorporate the
    time into the seed.
@@ -41,7 +41,8 @@ If TRUE will use a particular fixed seed.
 TYPE
   T <: TPublic;
 
-  TPublic = RandomBasic.T OBJECT METHODS init (fixed : BOOLEAN := FALSE): T; END;
+  TPublic =
+    RandomBasic.T OBJECT METHODS init (fixed: BOOLEAN := FALSE; ): T; END;
 
-(*==========================*)
+
 END RandomCombinedFast.

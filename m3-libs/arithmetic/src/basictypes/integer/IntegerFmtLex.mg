@@ -1,5 +1,5 @@
 GENERIC MODULE IntegerFmtLex(I);
-(*Arithmetic for Modula-3, see doc for details
+(* Arithmetic for Modula-3, see doc for details
 
    Abstract: Integers
 
@@ -12,10 +12,11 @@ IMPORT TextWr;
 FROM FmtLexSupport IMPORT Precedence;
 
 
-<*UNUSED*>
-CONST Module = "IntegerFmtLex.";
+<* UNUSED *>
+CONST
+  Module = "IntegerFmtLex.";
 
-PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT =
+PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}; ): TEXT =
   BEGIN
     RETURN F.Int(x, style.base);
   END Fmt;
@@ -23,7 +24,7 @@ PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT =
 PROCEDURE FmtArray (READONLY a        : ARRAY OF I.T;
                              style                     := FmtStyle{};
                              cellwidth: CARDINAL       := 4;
-                             linewidth: CARDINAL       := 60          ):
+                             linewidth: CARDINAL       := 60;         ):
   TEXT RAISES {Thread.Alerted, Wr.Failure} =
   VAR
     wr        := TextWr.New();
@@ -47,9 +48,8 @@ PROCEDURE FmtArray (READONLY a        : ARRAY OF I.T;
     RETURN TextWr.ToText(wr);
   END FmtArray;
 
-PROCEDURE Tex (         x     : T;
-               READONLY style              := TexStyle{}; <*UNUSED*>
-                        within: Precedence                           ):
+PROCEDURE Tex
+  (x: T; READONLY style := TexStyle{}; <* UNUSED *> within: Precedence; ):
   TEXT =
   BEGIN
     IF style.base = 10 THEN

@@ -1,11 +1,12 @@
 GENERIC MODULE PolynomialFast(R, VR);
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
+
 IMPORT Arithmetic AS Arith;
 
 CONST Module = "PolynomialFast.";
 
-(*--------------------*)
-PROCEDURE Eval (x: T; xi: R.T): R.T =
+
+PROCEDURE Eval (x: T; xi: R.T; ): R.T =
   VAR
     l := LAST(x^);
     y := x[l];
@@ -14,8 +15,8 @@ PROCEDURE Eval (x: T; xi: R.T): R.T =
     RETURN y;
   END Eval;
 
-(*-----------------*)
-PROCEDURE Add (x, y: T): T =
+
+PROCEDURE Add (x, y: T; ): T =
   VAR
     xn := NUMBER(x^);
     xl := xn - 1;
@@ -35,8 +36,8 @@ PROCEDURE Add (x, y: T): T =
     END;
     RETURN z;
   END Add;
-(*-----------------*)
-PROCEDURE Sub (x, y: T): T =
+
+PROCEDURE Sub (x, y: T; ): T =
   VAR
     xn := NUMBER(x^);
     xl := xn - 1;
@@ -56,14 +57,14 @@ PROCEDURE Sub (x, y: T): T =
     RETURN z;
   END Sub;
 
-(*---------------------*)
-PROCEDURE IsZero (x: T): BOOLEAN =
+
+PROCEDURE IsZero (x: T; ): BOOLEAN =
   BEGIN
     RETURN x = NIL OR x[0] = R.Zero;
   END IsZero;
 
-(*---------------------*)
-PROCEDURE Equal (x, y: T): BOOLEAN =
+
+PROCEDURE Equal (x, y: T; ): BOOLEAN =
   VAR
     xl := LAST(x^);
     yl := LAST(y^);
@@ -78,8 +79,8 @@ PROCEDURE Equal (x, y: T): BOOLEAN =
     RETURN TRUE;
   END Equal;
 
-(*---------------------*)
-PROCEDURE Mul (x, y: T): T =
+
+PROCEDURE Mul (x, y: T; ): T =
   VAR
     xn := NUMBER(x^);
     yn := NUMBER(y^);
@@ -95,8 +96,8 @@ PROCEDURE Mul (x, y: T): T =
     RETURN z;
   END Mul;
 
-(*---------------------*)
-PROCEDURE Div (x, y: T): T RAISES {Arith.Error} =
+
+PROCEDURE Div (x, y: T; ): T RAISES {Arith.Error} =
   VAR qr := DivMod(x, y);
   BEGIN
     IF NOT IsZero(qr.rem) THEN
@@ -105,8 +106,8 @@ PROCEDURE Div (x, y: T): T RAISES {Arith.Error} =
     RETURN qr.quot;
   END Div;
 
-(*---------------------*)
-PROCEDURE DivMod (x, y: T): QuotRem =
+
+PROCEDURE DivMod (x, y: T; ): QuotRem =
   <* UNUSED *>
   CONST
     ftn = Module & "DivMod";
@@ -157,16 +158,15 @@ PROCEDURE DivMod (x, y: T): QuotRem =
     RETURN QuotRem{q, VR.Copy(SUBARRAY(r^, 0, NUMBER(y^) - 1))};
   END DivMod;
 
-(*---------------------*)
-PROCEDURE Derive (x: T;          (*differentiate polynomial*)
-  ): T =
+
+PROCEDURE Derive (x: T; ): T =
   VAR q := NEW(T, LAST(x^));
   BEGIN
     FOR n := 0 TO LAST(q^) DO q[n] := x[n + 1] * FLOAT(n + 1, R.T); END;
     RETURN q;
   END Derive;
 
-(*---------------------*)
+
 PROCEDURE EvalDerivative (x: T; xi: R.T; n: CARDINAL; ): REF ARRAY OF R.T =
   (*Given a poly with coefs x, find the value at xi as pd[0], and nd more
      EvalDerivativeatives as pd[1]..pd[pdl]. *)
@@ -199,7 +199,7 @@ PROCEDURE EvalDerivative (x: T; xi: R.T; n: CARDINAL; ): REF ARRAY OF R.T =
     RETURN pd;
   END EvalDerivative;
 
-(*--------------------*)
+
 (*Horner's scheme with polynomial as argument*)
 PROCEDURE Compose (x, y: T; ): T =
   VAR z := NEW(T, 1);
@@ -212,6 +212,6 @@ PROCEDURE Compose (x, y: T; ): T =
     RETURN z;
   END Compose;
 
-(*==========================*)
+
 BEGIN
 END PolynomialFast.

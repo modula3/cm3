@@ -4,10 +4,10 @@ IMPORT Arithmetic AS Arith;
 IMPORT LongRealBasic AS R, LongRealTrans AS RT, SpecialFunction AS SF;
 
 CONST Module = "Statistic.";
-(*==========================*)
-(*----------------------*)
+
+
 PROCEDURE FromData (READONLY data: ARRAY OF R.T; ): T =
-  (*using the 2 pass approach*)
+  (* using the 2 pass approach *)
   <* UNUSED *>
   CONST
     ftn = Module & "describe";
@@ -67,7 +67,7 @@ PROCEDURE FromData (READONLY data: ARRAY OF R.T; ): T =
     RETURN r;
   END FromData;
 
-(*---------------------*)
+
 PROCEDURE ComputeAvrgVar (READONLY data: ARRAY OF R.T; ): AvrgVar =
   VAR
     n                             := FLOAT(NUMBER(data), R.T);
@@ -87,13 +87,13 @@ PROCEDURE ComputeAvrgVar (READONLY data: ARRAY OF R.T; ): AvrgVar =
     avrgVar.var := (avrgVar.var - sumdelta * sumdelta / n) / (n - R.One);
     RETURN avrgVar;
   END ComputeAvrgVar;
-(*---------------------*)
+
 PROCEDURE TTest (READONLY data1, data2: ARRAY OF R.T; ): TTestResult
   RAISES {Arith.Error} =
-  (*Given data and data2 equal length R.Arrays, find t, which shows how
+  (* Given data and data2 equal length R.Arrays, find t, which shows how
      close the means are, and find prob, which is small if this similarity
      is unlikely to be due to chance.  Note that their variances need to be
-     similar.*)
+     similar. *)
   <* UNUSED *>
   CONST
     ftn = Module & "TTest";
@@ -120,11 +120,11 @@ PROCEDURE TTest (READONLY data1, data2: ARRAY OF R.T; ): TTestResult
     END;
   END TTest;
 
-(*--------------------*)
+
 PROCEDURE FTest (READONLY data1, data2: ARRAY OF R.T; ): FTestResult
   RAISES {Arith.Error} =
-  (*do F-test, returning F and the probability that a difference between
-     vars is due to chance*)
+  (* do F-test, returning F and the probability that a difference between
+     vars is due to chance *)
   <* UNUSED *>
   CONST
     ftn = Module & "FTest";
@@ -135,7 +135,7 @@ PROCEDURE FTest (READONLY data1, data2: ARRAY OF R.T; ): FTestResult
     result  : FTestResult;
   BEGIN
     IF var1 < RT.Tiny OR var2 < RT.Tiny THEN
-      (*vars cannot = 0*)
+      (* vars cannot = 0 *)
       RAISE Arith.Error(NEW(Arith.ErrorOutOfRange).init());
     END;
     IF var2 > var1 THEN
@@ -152,12 +152,12 @@ PROCEDURE FTest (READONLY data1, data2: ARRAY OF R.T; ): FTestResult
     IF result.prob > R.One THEN result.prob := R.Two - result.prob; END;
     RETURN result;
   END FTest;
-(*----------------------*)
-PROCEDURE ChiSqr1 (READONLY bins : ARRAY OF R.T;  (*actual bin counts*)
-                   READONLY ebins: ARRAY OF R.T;  (*expected bin counts*)
+
+PROCEDURE ChiSqr1 (READONLY bins : ARRAY OF R.T;  (* actual bin counts *)
+                   READONLY ebins: ARRAY OF R.T;  (* expected bin counts *)
                    constraints: CARDINAL := 1; ): ChiSqrResult
   RAISES {Arith.Error} =
-  (*bins has an integer number of events in each bin, ebins has the
+  (* bins has an integer number of events in each bin, ebins has the
      expected number in each bin (possibly non integer), contraints gives
      the constraint count which reduces the df from the number of bins.
      chsq then is a measure of the difference in the bin-by-bin numbers,
@@ -188,12 +188,12 @@ PROCEDURE ChiSqr1 (READONLY bins : ARRAY OF R.T;  (*actual bin counts*)
     END;
   END ChiSqr1;
 
-(*----------------------------*)
-PROCEDURE ChiSqr2 (READONLY bins1: ARRAY OF R.T;  (*actual bin1 counts*)
-                   READONLY bins2: ARRAY OF R.T;  (*actual bin2 counts*)
+
+PROCEDURE ChiSqr2 (READONLY bins1: ARRAY OF R.T;  (* actual bin1 counts *)
+                   READONLY bins2: ARRAY OF R.T;  (* actual bin2 counts *)
                    constraints: CARDINAL := 1; ): ChiSqrResult
   RAISES {Arith.Error} =
-  (*bins1 and bins2 have an integer number of events in each bin,
+  (* bins1 and bins2 have an integer number of events in each bin,
      contraints gives the constraint count which reduces the df from the
      number of bins.  chsq then is a measure of the difference in the
      bin-by-bin numbers, while prob gives the significance of that measure.
@@ -223,6 +223,6 @@ PROCEDURE ChiSqr2 (READONLY bins1: ARRAY OF R.T;  (*actual bin1 counts*)
     END;
   END ChiSqr2;
 
-(*==========================*)
+
 BEGIN
 END Statistic.

@@ -1,6 +1,8 @@
 GENERIC MODULE RootApproximation(R, RT, RRt, C, CT, CP, CRt);
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
+
 FROM Arithmetic IMPORT Error;
+
 (**
 IMPORT LongRealComplexVectorFmtLex AS VF,
        LongRealComplexFmtLex AS CF,
@@ -8,18 +10,16 @@ IMPORT LongRealComplexVectorFmtLex AS VF,
        IO;
 **)
 
-<*UNUSED*>
-CONST Module = "RootApproximation.";
-(*==========================*)
+<* UNUSED *>
+CONST
+  Module = "RootApproximation.";
 
-(*=====================*)
+
 (* Quadratics *)
-(*=====================*)
 
-(*---------------------*)
-PROCEDURE RealQuadratic (READONLY x: RealPolynomial2;  (*coefs*)
-  ): RootArray2 =
-  (*Given a*t^2+b*t+c=0, solve for t.*)
+
+PROCEDURE RealQuadratic (READONLY x: RealPolynomial2; ): RootArray2 =
+  (* Given a*t^2+b*t+c=0, solve for t. *)
   VAR
     a                    := x[2];
     b                    := x[1];
@@ -32,13 +32,13 @@ PROCEDURE RealQuadratic (READONLY x: RealPolynomial2;  (*coefs*)
       q2 := RT.SqRt(-disc) / a * RT.Half;
       RETURN RootArray2{C.T{re := q1, im := q2}, C.T{re := q1, im := -q2}};
     ELSE
-      (*avoid cancelation*)
+      (* avoid cancelation *)
       IF b < R.Zero THEN
         q := RT.Half * (-b + RT.SqRt(disc));
       ELSE
         q := RT.Half * (-b - RT.SqRt(disc));
       END;
-      (*fails because Sgn(0)=0 :
+      (* fails because Sgn(0)=0 :
          q:=-RT.Half*(b+RT.Sgn(b)*RT.SqRt(disc)); *)
       q1 := q / a;
       q2 := c / q;
@@ -46,10 +46,10 @@ PROCEDURE RealQuadratic (READONLY x: RealPolynomial2;  (*coefs*)
                C.T{re := q1, im := R.Zero}, C.T{re := q2, im := R.Zero}};
     END;
   END RealQuadratic;
-(*---------------------*)
-PROCEDURE ComplexQuadratic (READONLY x: ComplexPolynomial2;  (*coefs*)
-  ): RootArray2 RAISES {Error} =
-  (*Given a*t^2+b*t+c=0, solve for t.*)
+
+PROCEDURE ComplexQuadratic (READONLY x: ComplexPolynomial2; ): RootArray2
+  RAISES {Error} =
+  (* Given a*t^2+b*t+c=0, solve for t. *)
   CONST c4 = FLOAT(4.0, R.T);
   VAR
     a                       := x[2];
@@ -69,25 +69,25 @@ PROCEDURE ComplexQuadratic (READONLY x: ComplexPolynomial2;  (*coefs*)
     q := C.Scale(C.Sub(disc_sqrt, b), RT.Half);
     RETURN RootArray2{C.Div(q, a), C.Div(c, q)};
   END ComplexQuadratic;
-(*---------------------*)
-PROCEDURE RealNewtonMaehli (x: RRt.T): REF CRt.RootArray RAISES {Error} =
+
+PROCEDURE RealNewtonMaehli (x: RRt.T; ): REF CRt.RootArray RAISES {Error} =
   VAR xc := NEW(CRt.T, NUMBER(x^));
   BEGIN
     FOR j := 0 TO LAST(xc^) DO xc[j] := C.T{x[j], R.Zero}; END;
     RETURN ComplexNewtonMaehli(xc);
   END RealNewtonMaehli;
-(*---------------------*)
+
 
 (**
   calculates all zeros simultanously
   calculation is made with complex numbers to catch all zeros
   iteration is aborted if polynomial value at these points is small enough
 **)
-PROCEDURE ComplexNewtonMaehli (x: CRt.T): REF CRt.RootArray
+PROCEDURE ComplexNewtonMaehli (x: CRt.T; ): REF CRt.RootArray
   RAISES {Error} =
   CONST
     maxArgError = RT.Eps * FLOAT(10.0, R.T); (* error in the argument r *)
-  <*UNUSED*>
+  <* UNUSED *>
   CONST
     maxValError = RT.Eps * FLOAT(100.0, R.T); (* error in the value p(r) *)
   VAR
@@ -115,7 +115,7 @@ PROCEDURE ComplexNewtonMaehli (x: CRt.T): REF CRt.RootArray
             y      := CP.EvalDerivative(x, z[j], 2);
             sumRec := C.Zero;
           BEGIN
-            (*iterating := iterating OR (norm(y) > maxValError);*)
+            (* iterating := iterating OR (norm(y) > maxValError);*)
 
             FOR k := 0 TO LAST(z^) DO
               IF j # k THEN
@@ -150,6 +150,5 @@ PROCEDURE ComplexNewtonMaehli (x: CRt.T): REF CRt.RootArray
   END ComplexNewtonMaehli;
 
 
-(*==========================*)
 BEGIN
 END RootApproximation.

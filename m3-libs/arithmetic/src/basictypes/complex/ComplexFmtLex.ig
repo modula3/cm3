@@ -1,7 +1,7 @@
 GENERIC INTERFACE ComplexFmtLex(RF, C);
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
-(*Abstract: Formatting and parsing complex numbers*)
+(* Abstract: Formatting and parsing complex numbers *)
 
 IMPORT Rd, Thread;
 IMPORT Lex AS L;
@@ -14,14 +14,17 @@ TYPE T = C.T;
 
 TYPE FmtStyle = RECORD elemStyle := RF.FmtStyle{};  END;
 
-PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT;
-(*outputs as "COMPLEX{re:=<r>; im:=<r>}" Uses simple F.Real if x.im=0.0.*)
+PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}; ): TEXT;
+(* outputs as "COMPLEX{re:=<r>; im:=<r>}" Uses simple F.Real if
+   x.im=0.0. *)
+
 
 TYPE TexStyle = RECORD elemStyle := RF.TexStyle{};  END;
 
 PROCEDURE Tex (READONLY x     : T;
                READONLY style       := TexStyle{};
-                        within      := Precedence.Sum): TEXT;
+                        within      := Precedence.Sum; ): TEXT;
+
 
 TYPE
   LexStyle = RECORD

@@ -1,16 +1,19 @@
-GENERIC MODULE FourierTransform(R,RT,C,CT);
-(*By Warren D. Smith, May 1985, March 1996. Gnu Copylefted.*)
+GENERIC MODULE FourierTransform(R, RT, C, CT);
+(* By Warren D.  Smith, May 1985, March 1996.  Gnu Copylefted. *)
 (*
 Abstract: Fast Fourier Transforms (FFT's)
 
 3/18/96  Warren Smith    Initial version
+
 3/23/96  Harry George    Tweaked to fit m3na library
 *)
 
 IMPORT Word;
 
-<*UNUSED*> CONST Module = "FourierTransform.";
-(*==========================*)
+<* UNUSED *>
+CONST
+  Module = "FourierTransform.";
+
 (*********************************************************
 "In place" FFT routine with array length:  N = a power of 2.
 
@@ -268,15 +271,14 @@ output.
 A complete list of FFT applications is far too huge to discuss here...
 ************************************************************************)
 
-CONST
-  TrigTabSize = 40;
+CONST TrigTabSize = 40;
 
-VAR (* CONST after initialization: *)
+VAR                              (* CONST after initialization: *)
   (* cos( pi / 2^k ): *)
-  PrecomputedCos : ARRAY [0 .. TrigTabSize-1] OF R.T;
+  PrecomputedCos: ARRAY [0 .. TrigTabSize - 1] OF R.T;
 
   (* sin( pi / 2^k ): *)
-  PrecomputedSin : ARRAY [0 .. TrigTabSize-1] OF R.T;
+  PrecomputedSin: ARRAY [0 .. TrigTabSize - 1] OF R.T;
 
 (***********************************************************
 Uses repeated application of the bisection identities
@@ -285,15 +287,17 @@ starting from the values with t=pi and t=pi/2 as special cases.
 We see no reason to trust trig routines sin() and cos()
 although we will trust sqrt() and division.
 **************************************************************)
-PROCEDURE PreComputeTrigTables() =
+PROCEDURE PreComputeTrigTables () =
   BEGIN
     PrecomputedCos[0] := R.MinusOne;
     PrecomputedCos[1] := R.Zero;
     PrecomputedSin[0] := R.Zero;
     PrecomputedSin[1] := R.One;
-    FOR k:=2 TO TrigTabSize-1 DO
-      PrecomputedCos[k] := RT.SqRt( RT.Half*(R.One+PrecomputedCos[k-1]) );
-      PrecomputedSin[k] := RT.Half * PrecomputedSin[k-1] / PrecomputedCos[k];
+    FOR k := 2 TO TrigTabSize - 1 DO
+      PrecomputedCos[k] :=
+        RT.SqRt(RT.Half * (R.One + PrecomputedCos[k - 1]));
+      PrecomputedSin[k] :=
+        RT.Half * PrecomputedSin[k - 1] / PrecomputedCos[k];
     END;
   END PreComputeTrigTables;
 
@@ -307,9 +311,10 @@ and if r, 0<=r<n/2 is the bit-reverse of f,
 we swap(f+1,n/2+r) with no test needed and we do
 swap(f,r) if r>f and also swap(n-1-f,n-1-r) if f,r both <n/2.
 ***************************************************)
-PROCEDURE ReOrder (VAR a: ARRAY OF C.T) =
+PROCEDURE ReOrder (VAR a: ARRAY OF C.T; ) =
   (* a[] overwritten by permutation. *)
-  <*INLINE*> PROCEDURE Swap (x, y: CARDINAL) =
+  <* INLINE *>
+  PROCEDURE Swap (x, y: CARDINAL; ) =
     VAR tmp: C.T;
     BEGIN
       (*ASSERT(isbitreverse(x,y,n))*)
@@ -327,11 +332,11 @@ PROCEDURE ReOrder (VAR a: ARRAY OF C.T) =
     nm1  : CARDINAL := n - 1;
   BEGIN
     <* ASSERT n > 0 *>
-    <* ASSERT Word.And(n-1, n) = 0 *>
+    <* ASSERT Word.And(n - 1, n) = 0 *>
     (** n must be a power of 2. **)
     r := 0;
     FOR f := 0 TO nb2m1 BY 2 DO
-      <* ASSERT f+1 < nb2+r *>
+      <* ASSERT f + 1 < nb2 + r *>
       Swap(f + 1, nb2 + r);
       IF f < r THEN
         Swap(f, r);
@@ -356,17 +361,18 @@ To do an FFT of some data, therefore, we would call
 I have separated the routines this way because I want to be able to
 avoid the ReOrder when computing convolutions and correlations.
 ****************************************)
-PROCEDURE FFTwithWrongOrderedInput(VAR a: ARRAY OF C.T; direction: [-1..1]) =
+PROCEDURE FFTwithWrongOrderedInput
+  (VAR a: ARRAY OF C.T; direction: [-1 .. 1]; ) =
   VAR
     n                         : CARDINAL := NUMBER(a);
     nm1                       : CARDINAL := n - 1;
     ur, ui, wr, wi, tr, ti, zz: R.T;
     k, j, L2, L, ip           : CARDINAL;
-    dir                       := FLOAT(direction,R.T);
+    dir                                  := FLOAT(direction, R.T);
   BEGIN
     <* ASSERT direction # 0 *>
     <* ASSERT n > 0 *>
-    <* ASSERT Word.And(n-1, n) = 0 *>
+    <* ASSERT Word.And(n - 1, n) = 0 *>
     (** n must be a power of 2 and n>=1. **)
 
     (* Now for FFT main loop *)
@@ -425,7 +431,7 @@ but with the large-indexed part of the x[] and y[] arrays zeroed
 so that the wraparound terms are all 0. To compute correlations,
 you can do a convolution with the y[] array in reverse order.
 ***********************************
-PROCEDURE CircularConvolution(a: ARRAY OF C.T; scale: R.T)
+PROCEDURE CircularConvolution(a: ARRAY OF C.T; scale:R.T;)
 NOT IMPLEMENTED YET
 *********************************)
 
@@ -434,86 +440,82 @@ Slow FT routine, useful for debugging fast one.
  b[k] = sum from m=0 to N-1 of a[m]*exp(2 pi i direction m k/N)
 where direction = +1 or -1.
 *****************************************************)
-PROCEDURE SlowFT(READONLY a: ARRAY OF C.T;
-                  direction: [-1..1]): REF ARRAY OF C.T =
+PROCEDURE SlowFT (READONLY a: ARRAY OF C.T; direction: [-1 .. 1]; ):
+  REF ARRAY OF C.T =
   VAR
-    n   := NUMBER(a);
-    b   := NEW (REF ARRAY OF C.T,n);
-    sum :  C.T;
-    dir := FLOAT(direction,R.T);
-    kn  :  R.T;
+    n        := NUMBER(a);
+    b        := NEW(REF ARRAY OF C.T, n);
+    sum: C.T;
+    dir      := FLOAT(direction, R.T);
+    kn : R.T;
   BEGIN
     <* ASSERT direction # 0 *>
-    FOR k:=0 TO n-1 DO
+    FOR k := 0 TO n - 1 DO
       sum := C.Zero;
-      kn  := dir * RT.TwoPi * FLOAT(k, R.T) / FLOAT(n, R.T);
-      FOR m:=0 TO n-1 DO
-        sum := C.Add(sum,
-                 C.Mul( a[m],
-                   CT.ExpI(kn * FLOAT(m, R.T))));
+      kn := dir * RT.TwoPi * FLOAT(k, R.T) / FLOAT(n, R.T);
+      FOR m := 0 TO n - 1 DO
+        sum := C.Add(sum, C.Mul(a[m], CT.ExpI(kn * FLOAT(m, R.T))));
       END;
       b[k] := sum;
     END;
     RETURN b;
   END SlowFT;
-(*=================================================*)
+
 (**** Test driver. ****)
-PROCEDURE Test() =
-VAR
-  a:=NEW(REF ARRAY OF C.T,128);
-  b:=NEW(REF ARRAY OF C.T,128);
-  n := NUMBER(a^);
-  x : CARDINAL;
+PROCEDURE Test () =
+  VAR
+    a           := NEW(REF ARRAY OF C.T, 128);
+    b           := NEW(REF ARRAY OF C.T, 128);
+    n           := NUMBER(a^);
+    x: CARDINAL;
   BEGIN
     <* ASSERT NUMBER(b^) = n *>
 
     (* initialize a[] to psu-random complex numbers... *)
     x := 432531;
-    FOR j:=LAST(a^) TO FIRST(a^) BY -1 DO
-      x := x * 57 MOD 1048583; (* 57 is generator, mod this prime *)
-      a[j].re := FLOAT( x, R.T );
-      x := x * 57 MOD 1048583; (* 57 is generator, mod this prime *)
-      a[j].im := FLOAT( x, R.T );
+    FOR j := LAST(a^) TO FIRST(a^) BY -1 DO
+      x := x * 57 MOD 1048583;   (* 57 is generator, mod this prime *)
+      a[j].re := FLOAT(x, R.T);
+      x := x * 57 MOD 1048583;   (* 57 is generator, mod this prime *)
+      a[j].im := FLOAT(x, R.T);
     END;
 
     (* make copy b of a: *)
-    b^:=a^;
+    b^ := a^;
     ReOrder(a^);
     ReOrder(a^);
     (* check reordering twice yields identity: *)
-    FOR j:=LAST(a^) TO FIRST(a^) BY -1 DO
-      <* ASSERT CT.Norm1( C.Sub(a[j], b[j]) ) < FLOAT (0.000000001D0,R.T) *>
+    FOR j := LAST(a^) TO FIRST(a^) BY -1 DO
+      <* ASSERT CT.Norm1(C.Sub(a[j], b[j])) < FLOAT(0.000000001D0, R.T) *>
     END;
 
     (* forward transform of 'a' in place: *)
     ReOrder(a^);
     FFTwithWrongOrderedInput(a^, 1);
 
-    VAR
-      c := SlowFT(b^, 1);
+    VAR c := SlowFT(b^, 1);
 
     BEGIN
       (* check slow and fast give same result: *)
-      FOR j:=LAST(a^) TO FIRST(a^) BY -1 DO
-        <* ASSERT CT.Norm1( C.Sub(a[j], c[j]) ) < FLOAT (0.0001D0, R.T) *>
+      FOR j := LAST(a^) TO FIRST(a^) BY -1 DO
+        <* ASSERT CT.Norm1(C.Sub(a[j], c[j])) < FLOAT(0.0001D0, R.T) *>
       END;
     END;
 
     (* backward: *)
     ReOrder(a^);
     FFTwithWrongOrderedInput(a^, -1);
-    FOR j:=LAST(a^) TO FIRST(a^) BY -1 DO
-      a[j] := C.Scale(a[j], R.One/FLOAT(n, R.T));
+    FOR j := LAST(a^) TO FIRST(a^) BY -1 DO
+      a[j] := C.Scale(a[j], R.One / FLOAT(n, R.T));
     END;
 
     (* check get original back: *)
-    FOR j:=LAST(a^) TO FIRST(a^) BY -1 DO
-      <* ASSERT CT.Norm1( C.Sub(a[j], b[j]) ) < FLOAT (0.0000001D0, R.T) *>
+    FOR j := LAST(a^) TO FIRST(a^) BY -1 DO
+      <* ASSERT CT.Norm1(C.Sub(a[j], b[j])) < FLOAT(0.0000001D0, R.T) *>
     END;
   END Test;
 
 
-(*==========================*)
 BEGIN
   PreComputeTrigTables();
 END FourierTransform.

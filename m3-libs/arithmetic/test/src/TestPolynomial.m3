@@ -1,24 +1,24 @@
 MODULE TestPolynomial EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details Abstract: Tests for Poly module.
+(* Arithmetic for Modula-3, see doc for details
 
-   2/4/96 Harry George Initial version
+   Abstract: Tests for Poly module.
 
-   *)
+   2/4/96 Harry George Initial version *)
 
 IMPORT (*IO,Wr,*) Fmt;
 IMPORT LongRealBasic            AS R,
        LongRealFmtLex           AS RF,
        LongRealPolynomial       AS P,
        LongRealPolynomialFmtLex AS PF;
-(*=======================*)
+
 CONST Module = "TestPolynomial.";
 
-(*=======================*)
+
 TYPE
   Poly4 = ARRAY [0 .. 3] OF R.T;
   Poly5 = ARRAY [0 .. 4] OF R.T;
-(*-----------------------*)
-<*FATAL ANY*>
+
+<* FATAL ANY *>
 PROCEDURE TestAdd (): BOOLEAN =
   CONST ftn = Module & "TestAdd";
   VAR
@@ -33,10 +33,10 @@ PROCEDURE TestAdd (): BOOLEAN =
     Msg("v=" & PF.Fmt(v) & "\n");
     Msg("u+v=" & PF.Fmt(P.Add(u, v)) & "\n");
     Msg("v+u=" & PF.Fmt(P.Add(v, u)) & "\n");
-    <*ASSERT P.Equal(P.Add(u,v),P.Add(v,u))*>
+    <* ASSERT P.Equal(P.Add(u, v), P.Add(v, u)) *>
     RETURN result;
   END TestAdd;
-(*-----------------------*)
+
 PROCEDURE TestSub (): BOOLEAN =
   CONST ftn = Module & "TestSub";
   VAR
@@ -51,11 +51,11 @@ PROCEDURE TestSub (): BOOLEAN =
     Msg("v=" & PF.Fmt(v) & "\n");
     Msg("u-v=" & PF.Fmt(P.Sub(u, v)) & "\n");
     Msg("v-u=" & PF.Fmt(P.Sub(v, u)) & "\n");
-    <*ASSERT P.Equal(P.Add(u,P.Neg(v)),P.Sub(u,v))*>
-    <*ASSERT P.Equal(P.Add(v,P.Sub(u,v)),u)*>
+    <* ASSERT P.Equal(P.Add(u, P.Neg(v)), P.Sub(u, v)) *>
+    <* ASSERT P.Equal(P.Add(v, P.Sub(u, v)), u) *>
     RETURN result;
   END TestSub;
-(*-----------------------*)
+
 PROCEDURE TestMul (): BOOLEAN =
   CONST ftn = Module & "TestMul";
   VAR
@@ -70,10 +70,10 @@ PROCEDURE TestMul (): BOOLEAN =
     Msg("v=" & PF.Fmt(v) & "\n");
     Msg("u*v=" & PF.Fmt(P.Mul(u, v)) & "\n");
     Msg("v*u=" & PF.Fmt(P.Mul(v, u)) & "\n");
-    <*ASSERT P.Equal(P.Mul(u,v),P.Mul(v,u))*>
+    <* ASSERT P.Equal(P.Mul(u, v), P.Mul(v, u)) *>
     RETURN result;
   END TestMul;
-(*-----------------------*)
+
 PROCEDURE TestDiv (): BOOLEAN =
   CONST ftn = Module & "TestDiv";
   VAR
@@ -90,16 +90,16 @@ PROCEDURE TestDiv (): BOOLEAN =
     Msg("u/v=");
     qr := P.DivMod(u, v);
     Msg(PF.Fmt(qr.quot) & " rem=" & PF.Fmt(qr.rem) & "\n");
-    <*ASSERT NUMBER(qr.rem^)<NUMBER(v^)*>
-    <*ASSERT P.Equal(P.Add(P.Mul(v,qr.quot),qr.rem),u)*>
+    <* ASSERT NUMBER(qr.rem^) < NUMBER(v^) *>
+    <* ASSERT P.Equal(P.Add(P.Mul(v, qr.quot), qr.rem), u) *>
     Msg("v/u=");
     qr := P.DivMod(v, u);
     Msg(PF.Fmt(qr.quot) & " rem=" & PF.Fmt(qr.rem) & "\n");
-    <*ASSERT NUMBER(qr.rem^)<NUMBER(u^)*>
-    <*ASSERT P.Equal(P.Add(P.Mul(u,qr.quot),qr.rem),v)*>
+    <* ASSERT NUMBER(qr.rem^) < NUMBER(u^) *>
+    <* ASSERT P.Equal(P.Add(P.Mul(u, qr.quot), qr.rem), v) *>
     RETURN result;
   END TestDiv;
-(*-----------------------*)
+
 PROCEDURE TestDeriv (): BOOLEAN =
   CONST
     ftn = Module & "TestDeriv";
@@ -120,17 +120,18 @@ PROCEDURE TestDeriv (): BOOLEAN =
         Msg("x=" & RF.Fmt(x));
         FOR i := 0 TO nd DO
           Msg(" d" & Fmt.Int(i) & "=" & RF.Fmt(pd[i]));
-          <*ASSERT pd[i]=P.Eval(p[i],x)*>
+          <* ASSERT pd[i] = P.Eval(p[i], x) *>
         END;
       END;
       Msg("\n");
     END;
     RETURN result;
   END TestDeriv;
-(*-------------------------*)
+
 PROCEDURE TestPolynomial (): BOOLEAN =
-  <*UNUSED*>
-  CONST ftn = Module & "TestPolynomial";
+  <* UNUSED *>
+  CONST
+    ftn = Module & "TestPolynomial";
   VAR result := TRUE;
   BEGIN
     NewLine();
@@ -145,6 +146,6 @@ PROCEDURE TestPolynomial (): BOOLEAN =
     EVAL TestDeriv();
     RETURN result;
   END TestPolynomial;
-(*=======================*)
+
 BEGIN
 END TestPolynomial.

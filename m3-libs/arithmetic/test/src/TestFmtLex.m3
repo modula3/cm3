@@ -1,7 +1,7 @@
 MODULE TestFmtLex EXPORTS Test;
-(*Arithmetic for Modula-3, see doc for details*)
+(* Arithmetic for Modula-3, see doc for details *)
 
-(*Abstract: Tests for FmtLex module.*)
+(* Abstract: Tests for FmtLex module. *)
 
 IMPORT LongRealBasic        AS R,
        LongRealMatrix       AS M,
@@ -13,11 +13,11 @@ IMPORT IO, Lex, TextRd;
 IMPORT Rd, Wr, Thread;
 IMPORT FloatMode;
 
-(*=======================*)
+
 CONST Module = "TestFmtLex.";
 
 
-(*----------------------*)
+
 PROCEDURE TestMatrixIO (): BOOLEAN =
   CONST ftn = Module & "TestMatrixIO";
   CONST
@@ -56,7 +56,7 @@ PROCEDURE TestMatrixIO (): BOOLEAN =
 
     RETURN result;
   END TestMatrixIO;
-(*-------------------------*)
+
 PROCEDURE TestFmtLex (): BOOLEAN =
   <* UNUSED *>
   CONST
@@ -67,6 +67,6 @@ PROCEDURE TestFmtLex (): BOOLEAN =
     EVAL TestMatrixIO();
     RETURN result;
   END TestFmtLex;
-(*=======================*)
+
 BEGIN
 END TestFmtLex.

@@ -1,16 +1,17 @@
 GENERIC MODULE Combinatoric(R);
-(*Arithmetic for Modula-3, see doc for details
+(* Arithmetic for Modula-3, see doc for details
 
    Abstract: Combinatoric operations *)
 
 FROM Arithmetic IMPORT Error;
 
-<*UNUSED*>
-CONST Module = "Combinatoric.";
-(*==========================*)
+<* UNUSED *>
+CONST
+  Module = "Combinatoric.";
 
-(* Faculty of n *)
-PROCEDURE Factorial (n: T): T =
+
+(* Factorial of n *)
+PROCEDURE Factorial (n: T; ): T =
   VAR num := R.One;
 
   BEGIN
@@ -22,7 +23,7 @@ PROCEDURE Factorial (n: T): T =
   END Factorial;
 
 (* Permutations *)
-PROCEDURE Permutations (READONLY n: ARRAY OF T): T =
+PROCEDURE Permutations (READONLY n: ARRAY OF T; ): T =
   (**
   possible optimizations:
   1. start with the biggest number n[j],
@@ -34,7 +35,7 @@ PROCEDURE Permutations (READONLY n: ARRAY OF T): T =
     num       := R.One;
     k, div: T;
 
-  <*FATAL Error*>
+  <* FATAL Error *>
   BEGIN
     IF NUMBER(n) = 0 THEN RETURN R.One; END;
     k := n[0];
@@ -50,7 +51,7 @@ PROCEDURE Permutations (READONLY n: ARRAY OF T): T =
   END Permutations;
 
 (* Variationen ohne Wiederholung von n zur Klasse k *)
-PROCEDURE Arrangements (n, k: T): T =
+PROCEDURE Arrangements (n, k: T; ): T =
   VAR num := R.One;
 
   BEGIN
@@ -63,13 +64,13 @@ PROCEDURE Arrangements (n, k: T): T =
   END Arrangements;
 
 (* Variationen mit Wiederholung von n zur Klasse k *)
-(*similar to the routine IntegerPower*)
-PROCEDURE ArrangementsR (n, k: T): T =
+(* similar to the routine IntegerPower*)
+PROCEDURE ArrangementsR (n, k: T; ): T =
   VAR
     num := R.One;
     qr  := R.QuotRem{k, R.Zero};
 
-  <*FATAL Error*>
+  <* FATAL Error *>
   BEGIN
     WHILE NOT R.IsZero(qr.quot) DO
       qr := R.DivMod(qr.quot, R.Two);
@@ -80,13 +81,13 @@ PROCEDURE ArrangementsR (n, k: T): T =
   END ArrangementsR;
 
 (* Kombinationen ohne Wiederholung von n zur Klasse k *)
-PROCEDURE Combinations (n, k: T): T =
+PROCEDURE Combinations (n, k: T; ): T =
   BEGIN
     RETURN Permutations(ARRAY OF T{k, R.Sub(n, k)});
   END Combinations;
 
 (* Kombinationen mit Wiederholung von n zur Klasse k *)
-PROCEDURE CombinationsR (n, k: T): T =
+PROCEDURE CombinationsR (n, k: T; ): T =
   BEGIN
     (*
     RETURN Combinations (n+k-1, k);
@@ -95,8 +96,6 @@ PROCEDURE CombinationsR (n, k: T): T =
     RETURN Permutations(ARRAY OF T{R.Sub(n, R.One), k});
   END CombinationsR;
 
-
-(*==========================*)
 
 BEGIN
 END Combinatoric.

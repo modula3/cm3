@@ -26,17 +26,17 @@ IMPORT Thread, Wr, Fmt;
 CONST Module = "TestSLE.";
 <* FATAL Thread.Alerted, Wr.Failure, Arith.Error *>
 
-  (*=====================================*)
+
 TYPE
   M3x3 = ARRAY [0 .. 2] OF ARRAY [0 .. 2] OF R.T;
   V3 = ARRAY [0 .. 2] OF R.T;
 
 VAR rand := NEW(Rand.T).init();
 
-(*---------------------*)
+
 PROCEDURE BuildAX (VAR (*OUT*) A, C, D       : M.T;
                    VAR (*OUT*) knownX, foundX: V.T;
-                               size          : CARDINAL := 3) =
+                               size          : CARDINAL := 3; ) =
   <* UNUSED *>
   CONST
     ftn = Module & "BuildAX";
@@ -48,7 +48,7 @@ PROCEDURE BuildAX (VAR (*OUT*) A, C, D       : M.T;
     A := NEW(M.T, n, n);
     C := NEW(M.T, n, n);
     D := NEW(M.T, n, n);
-    knownX := NEW(V.T, n);       (*X is an nx1 matrix*)
+    knownX := NEW(V.T, n);       (* X is an nx1 matrix *)
     foundX := NEW(V.T, n);
 
     FOR i := n1 TO nn DO
@@ -60,18 +60,18 @@ PROCEDURE BuildAX (VAR (*OUT*) A, C, D       : M.T;
     END (*for*);
 
   END BuildAX;
-(*---------------------*)
-PROCEDURE BuildB (VAR (*OUT*) B: V.T; A: M.T; knownX: V.T) =
+
+PROCEDURE BuildB (VAR (*OUT*) B: V.T; A: M.T; knownX: V.T; ) =
   <* UNUSED *>
   CONST
     ftn = Module & "BuildB";
   BEGIN
     B := M.MulV(A, knownX);
   END BuildB;
-(*---------------------*)
+
 PROCEDURE BuildData (VAR (*OUT*) A, C, D          : M.T;
                      VAR (*OUT*) B, knownX, foundX: V.T;
-                                 size             : CARDINAL := 3) =
+                                 size             : CARDINAL := 3; ) =
   <* UNUSED *>
   CONST
     ftn = Module & "BuildData";
@@ -79,7 +79,7 @@ PROCEDURE BuildData (VAR (*OUT*) A, C, D          : M.T;
     BuildAX(A, C, D, knownX, foundX, size);
     BuildB(B, A, knownX);
   END BuildData;
-(*--------------------*)
+
 PROCEDURE TestBacksub (): BOOLEAN =
   CONST ftn = Module & "TestBacksub";
   VAR
@@ -89,7 +89,7 @@ PROCEDURE TestBacksub (): BOOLEAN =
     C   : M.T;
     D   : M.T;
 
-    knownX: V.T;                 (*X is an nx1 matrix*)
+    knownX: V.T;                 (* X is an nx1 matrix *)
     foundX: V.T;
 
     result := TRUE;
@@ -113,7 +113,7 @@ PROCEDURE TestBacksub (): BOOLEAN =
 
     RETURN result;
   END TestBacksub;
-(*--------------------*)
+
 PROCEDURE TestHouseholder (): BOOLEAN =
   CONST ftn = Module & "TestHouseholder";
   VAR
@@ -122,7 +122,7 @@ PROCEDURE TestHouseholder (): BOOLEAN =
     C: M.T;
     D: M.T;
 
-    knownX: V.T;                 (*X is an nx1 matrix*)
+    knownX: V.T;                 (* X is an nx1 matrix *)
     foundX: V.T;
 
     result := TRUE;
@@ -136,7 +136,7 @@ PROCEDURE TestHouseholder (): BOOLEAN =
     Msg("HouseHolder(A)=" & MF.Fmt(A));
     RETURN result;
   END TestHouseholder;
-(*--------------------*)
+
 PROCEDURE TestTridiag (): BOOLEAN =
   CONST
     ftn = Module & "TestTridiag";
@@ -193,9 +193,9 @@ PROCEDURE TestLU (): BOOLEAN RAISES {} =
                                     V.TBody{0.0D0, 0.8D0, 0.0D0, 0.0D0},
                                     V.TBody{0.0D0, 0.0D0, -0.1D0, 0.0D0}})};
 
-    knownX := V.FromArray(V.TBody{0.7D0, 1.3D0, -0.2D0, 0.3D0}); (*X is an
+    knownX := V.FromArray(V.TBody{0.7D0, 1.3D0, -0.2D0, 0.3D0}); (* X is an
                                                                     nx1
-                                                                    matrix*)
+                                                                    matrix *)
 
   BEGIN
     Debug(1, ftn, "begin\n");
@@ -303,7 +303,7 @@ PROCEDURE TestDeterminant (): BOOLEAN RAISES {} =
     RETURN TRUE;
   END TestDeterminant;
 
-(*------------------------*)
+
 PROCEDURE TestSLE (): BOOLEAN =
   BEGIN
     NewLine();
@@ -318,6 +318,6 @@ PROCEDURE TestSLE (): BOOLEAN =
     EVAL TestDeterminant();
     RETURN TRUE;
   END TestSLE;
-(*=======================*)
+
 BEGIN
 END TestSLE.

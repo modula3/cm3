@@ -19,24 +19,24 @@ TYPE
   TMRow = ARRAY OF T;
   TMBody = ARRAY OF TMRow;       (* matrix of matrices *)
 
-PROCEDURE New (m, n: CARDINAL): T; (* make New mxn matrix *)
-PROCEDURE FromArray (READONLY x: TBody): T;
-PROCEDURE RowFromArray (READONLY x: V.TBody): T;
-PROCEDURE ColumnFromArray (READONLY x: V.TBody): T;
-PROCEDURE DiagonalFromArray (READONLY x: V.TBody): T;
+PROCEDURE New (m, n: CARDINAL; ): T; (* make New mxn matrix *)
+PROCEDURE FromArray (READONLY x: TBody; ): T;
+PROCEDURE RowFromArray (READONLY x: V.TBody; ): T;
+PROCEDURE ColumnFromArray (READONLY x: V.TBody; ): T;
+PROCEDURE DiagonalFromArray (READONLY x: V.TBody; ): T;
 <* INLINE *>
-PROCEDURE RowFromVector (x: V.T): T;
+PROCEDURE RowFromVector (x: V.T; ): T;
 <* INLINE *>
-PROCEDURE ColumnFromVector (x: V.T): T;
+PROCEDURE ColumnFromVector (x: V.T; ): T;
 <* INLINE *>
-PROCEDURE DiagonalFromVector (x: V.T): T;
-PROCEDURE FromMatrixArray (READONLY x: TMBody): T;
-PROCEDURE FromScalar (x: R.T): T;
-PROCEDURE Copy (x: T): T;
+PROCEDURE DiagonalFromVector (x: V.T; ): T;
+PROCEDURE FromMatrixArray (READONLY x: TMBody; ): T;
+PROCEDURE FromScalar (x: R.T; ): T;
+PROCEDURE Copy (x: T; ): T;
 
-PROCEDURE NewZero (m, n: CARDINAL): T; (* create zero matrix *)
-PROCEDURE NewOne (n: CARDINAL): T; (* create identity matrix *)
-PROCEDURE Cyclic (x: V.T; size: CARDINAL; shift: INTEGER := 1):
+PROCEDURE NewZero (m, n: CARDINAL; ): T; (* create zero matrix *)
+PROCEDURE NewOne (n: CARDINAL; ): T; (* create identity matrix *)
+PROCEDURE Cyclic (x: V.T; size: CARDINAL; shift: INTEGER := 1; ):
   T;                             (* each row is 'x' shifted by 'shift' to
                                     the right compared to the row above *)
 
@@ -59,17 +59,18 @@ CONST
   Trace       = MI.Trace;        (* sum of the diagonal elements *)
   Determinant = MI.Determinant;
 
-PROCEDURE GetRow (x: T; k: CARDINAL): V.T;
-PROCEDURE GetColumn (x: T; k: CARDINAL): V.T;
+PROCEDURE GetRow (x: T; k: CARDINAL; ): V.T;
+PROCEDURE GetColumn (x: T; k: CARDINAL; ): V.T;
 
 TYPE
   ApplyFtn = PROCEDURE (x: R.T);
-  MapFtn = PROCEDURE (x: R.T): R.T;
-  ReduceFtn = PROCEDURE (x, y: R.T): R.T;
+  MapFtn = PROCEDURE (x: R.T; ): R.T;
+  ReduceFtn = PROCEDURE (x, y: R.T; ): R.T;
 
-PROCEDURE Apply (x: T; f: ApplyFtn);
-PROCEDURE Map (x: T; f: MapFtn): T;
-PROCEDURE ReduceRows (x: T; f: ReduceFtn; READONLY init: V.TBody): V.T;
-PROCEDURE ReduceColumns (x: T; f: ReduceFtn; READONLY init: V.TBody): V.T;
+PROCEDURE Apply (x: T; f: ApplyFtn; );
+PROCEDURE Map (x: T; f: MapFtn; ): T;
+PROCEDURE ReduceRows (x: T; f: ReduceFtn; READONLY init: V.TBody; ): V.T;
+PROCEDURE ReduceColumns (x: T; f: ReduceFtn; READONLY init: V.TBody; ):
+  V.T;
 
 END Matrix.

@@ -7,7 +7,7 @@ IMPORT BigIntegerRep AS Rep;
 <* UNUSED *>
 CONST
   Module = "BigInteger.";
-(*==========================*)
+
 
 <* UNUSED *>
 PROCEDURE FastCopy (READONLY x: T; ): T =
@@ -196,7 +196,7 @@ PROCEDURE Mod (READONLY x, y: T; ): T RAISES {Arith.Error} =
     RETURN DivMod(x, y).rem;
   END Mod;
 
-(*==========================*)
+
 BEGIN
   Zero := FromInteger(0);
   One := FromInteger(1);

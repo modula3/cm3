@@ -1,33 +1,34 @@
 MODULE RandomWolframCA;
-(*Gnu CopyLefted.*)
+(* Gnu CopyLefted. *)
 (*
 Abstract:
 Pseudo-random number generator by Warren D. Smith.
 *)
 
-IMPORT RandomBasic,
-       Word;
+IMPORT RandomBasic, Word;
 IMPORT RandomRep;
 
-<*UNUSED*> CONST Module = "RandomWolframCA.";
-(*==========================*)
+<* UNUSED *>
+CONST
+  Module = "RandomWolframCA.";
 
-(*------------------*)
 CONST
   wolfnum = 5;
-  MSbit = Word.LeftShift(2_1, Word.Size-1);
+  MSbit   = Word.LeftShift(2_1, Word.Size - 1);
 
-REVEAL T = TPublic BRANDED OBJECT
-    wolfarr : ARRAY [0 .. wolfnum-1] OF Word.T; (* initialize with random bits *)
-  OVERRIDES
-    init:=Init;
-    engine:=Engine;
-  END;
+REVEAL
+  T = TPublic BRANDED OBJECT
+        wolfarr: ARRAY [0 .. wolfnum - 1] OF Word.T;  (* initialize with
+                                                         random bits *)
+      OVERRIDES
+        init   := Init;
+        engine := Engine;
+      END;
 
-PROCEDURE Init(SELF:T;initrng:RandomBasic.T):T=
+PROCEDURE Init (SELF: T; initrng: RandomBasic.T; ): T =
   VAR
-    BEGIN
-    FOR i:=wolfnum-1 TO 0 BY -1 DO
+  BEGIN
+    FOR i := wolfnum - 1 TO 0 BY -1 DO
       SELF.wolfarr[i] := initrng.generateWord();
     END;
     RETURN SELF;
@@ -53,32 +54,32 @@ would be the same as Wolfram on its LS bits, but will generate a full word
 at a time.
 *********************************************************)
 
-PROCEDURE Engine(SELF:T) : BOOLEAN =
+PROCEDURE Engine (SELF: T; ): BOOLEAN =
   VAR
-    origcarry, carry, borrow : BOOLEAN;
-    x, a, b : Word.T;
+    origcarry, carry, borrow: BOOLEAN;
+    x, a, b                 : Word.T;
   BEGIN
-    borrow    :=  ( Word.And( SELF.wolfarr[0], 2_1 ) # 0 );
-    origcarry :=  ( Word.And( SELF.wolfarr[LAST(SELF.wolfarr)], MSbit ) # 0 );
-    FOR i:=LAST(SELF.wolfarr) TO FIRST(SELF.wolfarr) BY -1 DO
-      x := SELF.wolfarr[i]; (* old word *)
-      IF i>0 THEN (* get carry from word below [borrow is from word above] *)
-        carry :=  ( Word.And( SELF.wolfarr[i-1], MSbit ) # 0 );
+    borrow := (Word.And(SELF.wolfarr[0], 2_1) # 0);
+    origcarry := (Word.And(SELF.wolfarr[LAST(SELF.wolfarr)], MSbit) # 0);
+    FOR i := LAST(SELF.wolfarr) TO FIRST(SELF.wolfarr) BY -1 DO
+      x := SELF.wolfarr[i];      (* old word *)
+      IF i > 0 THEN              (* get carry from word below [borrow is
+                                    from word above] *)
+        carry := (Word.And(SELF.wolfarr[i - 1], MSbit) # 0);
       ELSE
         carry := origcarry;
       END;
-      a := Word.RightShift(x,1);
-      a := Word.Or( a, Word.LeftShift(ORD(borrow), Word.Size-1) );
-      b := Word.LeftShift(x,1);
-      b := Word.Or( b, ORD(carry) );
+      a := Word.RightShift(x, 1);
+      a := Word.Or(a, Word.LeftShift(ORD(borrow), Word.Size - 1));
+      b := Word.LeftShift(x, 1);
+      b := Word.Or(b, ORD(carry));
       (* CA update formula -> new word: *)
       SELF.wolfarr[i] := Word.Xor(a, Word.Or(x, b));
       (* get borrow from old word for next time: *)
-      borrow :=  ( Word.And( x, 2_1 ) # 0 );
+      borrow := (Word.And(x, 2_1) # 0);
     END;
     RETURN borrow;
   END Engine;
 
-(*==========================*)
 BEGIN
 END RandomWolframCA.

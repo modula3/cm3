@@ -1,5 +1,5 @@
 GENERIC INTERFACE ComplexFast(R);
-(*Arithmetic for Modula-3, see doc for details
+(* Arithmetic for Modula-3, see doc for details
 
    Abstract: Generic complex number type
 
@@ -10,7 +10,6 @@ GENERIC INTERFACE ComplexFast(R);
 IMPORT FloatMode;
 FROM Arithmetic IMPORT Error;
 
-(*==========================*)
 
 CONST Brand = R.Brand & "Complex";
 
@@ -25,41 +24,41 @@ CONST
   MinusOne = T{re := R.MinusOne, im := R.Zero};
   Half     = T{re := R.Half, im := R.Zero};
 
-<*INLINE*>
-PROCEDURE FromInteger (x: INTEGER): T;
+<* INLINE *>
+PROCEDURE FromInteger (x: INTEGER; ): T;
 
-<*INLINE*>
-PROCEDURE Add (READONLY x, y: T): T; (*return x+y*)
-<*INLINE*>
-PROCEDURE Sub (READONLY x, y: T): T; (*return x-y*)
-<*INLINE*>
-PROCEDURE Neg (READONLY x: T): T; (*return -x *)
-<*INLINE*>
-PROCEDURE Conj (READONLY x: T): T; (*return complex conjugated of x*)
-<*INLINE*>
-PROCEDURE IsZero (READONLY x: T): BOOLEAN;
-<*INLINE*>
-PROCEDURE Equal (READONLY x, y: T): BOOLEAN; (*return x=y*)
+<* INLINE *>
+PROCEDURE Add (READONLY x, y: T; ): T; (* x+y *)
+<* INLINE *>
+PROCEDURE Sub (READONLY x, y: T; ): T; (* x-y *)
+<* INLINE *>
+PROCEDURE Neg (READONLY x: T; ): T; (* -x *)
+<* INLINE *>
+PROCEDURE Conj (READONLY x: T; ): T; (* complex conjugated of x *)
+<* INLINE *>
+PROCEDURE IsZero (READONLY x: T; ): BOOLEAN;
+<* INLINE *>
+PROCEDURE Equal (READONLY x, y: T; ): BOOLEAN; (* x=y *)
 
-<*INLINE*>
-PROCEDURE Mul (READONLY x, y: T): T; (*return x*y*)
-<*INLINE*>
-PROCEDURE Div (READONLY x, y: T): T RAISES {Error}; (*return x/y*)
-<*INLINE*>
-PROCEDURE Rec (READONLY x: T): T RAISES {Error}; (*return 1/x*)
-<*INLINE*>
-PROCEDURE Mod (READONLY x, y: T): T
-  RAISES {Error};                (*return x mod y, which is always 0 for
-                                    rational numbers*)
-<*INLINE*>
-PROCEDURE DivMod (READONLY x, y: T): QuotRem
-  RAISES {Error};                (*return x/y and write the remainder in r,
-                                    which is in turn 0*)
+<* INLINE *>
+PROCEDURE Mul (READONLY x, y: T; ): T; (* x*y *)
+<* INLINE *>
+PROCEDURE Div (READONLY x, y: T; ): T RAISES {Error}; (* x/y *)
+<* INLINE *>
+PROCEDURE Rec (READONLY x: T; ): T RAISES {Error}; (* 1/x *)
+<* INLINE *>
+PROCEDURE Mod (READONLY x, y: T; ): T
+  RAISES {Error};                (* x mod y, which is always 0 for rational
+                                    numbers *)
+<* INLINE *>
+PROCEDURE DivMod (READONLY x, y: T; ): QuotRem
+  RAISES {Error};                (* return x/y and write the remainder in
+                                    r, which is in turn 0 *)
 
-<*INLINE*>
-PROCEDURE Square (READONLY x: T): T; (*return x*x*)
-<*INLINE*>
-PROCEDURE Scale (READONLY x: T; y: R.T): T; (*return x*y*)
+<* INLINE *>
+PROCEDURE Square (READONLY x: T; ): T; (* x*x *)
+<* INLINE *>
+PROCEDURE Scale (READONLY x: T; y: R.T; ): T; (* x*y *)
 
 (*---- Floating point representations ----*)
 
@@ -69,16 +68,15 @@ TYPE
            exp: INTEGER;
          END;
 
-<*INLINE*>
-PROCEDURE Normalize (READONLY x: T): TExp;
+<* INLINE *>
+PROCEDURE Normalize (READONLY x: T; ): TExp;
 
-<*INLINE*>
-PROCEDURE Scalb (READONLY x: T; n: INTEGER): T RAISES {FloatMode.Trap};
+<* INLINE *>
+PROCEDURE Scalb (READONLY x: T; n: INTEGER; ): T RAISES {FloatMode.Trap};
 
-<*INLINE*>
-PROCEDURE ILogb (READONLY x: T): INTEGER;
-(*This is not really a logarithm of x or its absolute value, but something
-   between the magnitudes of x.re and x.im, usable for normalization.*)
+<* INLINE *>
+PROCEDURE ILogb (READONLY x: T; ): INTEGER;
+(* This is not really a logarithm of x or its absolute value, but something
+   between the magnitudes of x.re and x.im, usable for normalization. *)
 
-(*==========================*)
 END ComplexFast.
