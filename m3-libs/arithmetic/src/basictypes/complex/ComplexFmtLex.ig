@@ -8,9 +8,7 @@ Abstract: Formatting and parsing complex numbers
 3/23/96 Harry George    Incorporated Warren Smith's implementations
 *)
 
-(*
-FROM NADefinitions IMPORT Error;
-*)
+(*FROM NADefinitions IMPORT Error;*)
 FROM FmtLexSupport IMPORT Precedence;
 
 (*==========================*)
