@@ -62,13 +62,10 @@ Information page</a>.</p>
 
   <li><a href="#misc">Miscellaneous</a>
   <ol>
-    <li><a href="#memexhausted">Virtual memory exhausted</a></li>
     <li><a href="#friend">Friend Templates</a></li>
     <li><a href="#dso"><code>dynamic_cast</code>, <code>throw</code>, <code>typeid</code> don't work with shared libraries</a></li>
     <li><a href="#generated_files">Why do I need autoconf, bison, xgettext, automake, etc?</a></li>
     <li><a href="#picflag-needed">Why can't I build a shared library?</a></li>
-    <li><a href="#squangle">How to work around too long C++ symbol names? 
-	 (<tt>-fsquangle</tt>)</a></li>
     <li><a href="#vtables">When building C++, the linker says my constructors, destructors or virtual tables are undefined, but I defined them</a></li>
     <li><a href="#incremental">Will GCC someday include an incremental linker?</a></li>
   </ol></li>
@@ -332,7 +329,7 @@ the library name in <code>-soname</code> or <code>-h</code> options.</p>
 <p>GCC searches the PATH for an assembler and a loader, but it only
 does so after searching a directory list hard-coded in the GCC
 executables.  Since, on most platforms, the hard-coded list includes
-directories in which the system asembler and loader can be found, you
+directories in which the system assembler and loader can be found, you
 may have to take one of the following actions to arrange that GCC uses
 the GNU versions of those programs.</p>
 
@@ -451,20 +448,6 @@ no additional flags.</p>
 <h1>Miscellaneous</h1>
 
 
-
-<h2><a name="memexhausted">Virtual memory exhausted error</a></h2>
-
-<p> This error means your system ran out of memory; this can happen for large
-files, particularly when optimizing.  If you're getting this error you should
-consider trying to simplify your files or reducing the optimization level.</p>
-
-<p>Note that using -pedantic or -Wreturn-type can cause an explosion in the
-amount of memory needed for template-heavy C++ code, such as code that uses
-STL.  Also note that -Wall includes -Wreturn-type, so if you use -Wall you
-will need to specify -Wno-return-type to turn it off.</p>
-
-
-<hr />
 <h2><a name="friend">Friend Templates</a></h2>
 
 <p>In order to make a specialization of a template function a friend
@@ -634,33 +617,6 @@ support PIC in this manner.  For example:</p>
 	gcc -c -fPIC myfile.c
 	gcc -shared -o libmyfile.so -fPIC myfile.o
 </pre>
-
-
-<hr />
-<h2><a name="squangle">How to work around too long C++ symbol names
-(<tt>-fsquangle</tt>)</a></h2>
-
-<p>This question does not apply to GCC 3.0 or later versions, which
-have a new C++ ABI with much shorter mangled names.</p>
-
-<p>If the standard assembler of your platform can't cope with the
-large symbol names that the default g++ name mangling mechanism
-produces, your best bet is to use GNU as, from the GNU binutils
-package.</p>
-
-<p>Unfortunately, GNU as does not support all platforms supported by
-GCC, so you may have to use an experimental work-around: the
-<tt>-fsquangle</tt> option, that enables compression of symbol names.</p>
-
-<p>Note that this option is still under development, and subject to
-change.  Since it modifies the name mangling mechanism, you'll need to
-build libstdc++ and any other C++ libraries with this option enabled.
-Furthermore, if this option changes its behavior in the future, you'll
-have to rebuild them all again. :-(</p>
-
-<p>This option can be enabled by default by initializing
-`flag_do_squangling' with `1' in `gcc/cp/decl2.c' (it is not
-initialized by default), then rebuilding GCC and any C++ libraries.</p>
 
 
 <hr />
