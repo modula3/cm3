@@ -59,21 +59,19 @@ END Fmt;
 PROCEDURE Reverse(x:Word.T;               (*given this number*)
                   nbits:[1..Word.Size];   (*using the low n bits*)
                   ):Word.T=               (*return reversed bit pattern*)
-(*The idea is to let the least bit rotate to the
-negative bit of a 2's complement integer, and test
-for <0.  If <0, then increment the tmp2.  Negative
-or not, shift tmp2 up*)
 VAR
-  tmp1:INTEGER:=x;
-  tmp2:=0;
+  y:Word.T:=Word.And(x,1);
 BEGIN
-  FOR j:=0 TO nbits-1 DO
-    IF tmp1<0 THEN INC(tmp2); END;
-    tmp2:=Word.LeftShift(tmp2,1);
-    tmp1:=Word.RightRotate(tmp1,1);
+  FOR j:=0 TO nbits-2 DO
+    x:=Word.RightShift(x,1);
+    (*machine oriented implementations would use a
+      rotate-through-carry operation instead*)
+    y:=Word.Or(
+         Word.LeftShift(y,1),
+         Word.And(x,1)
+       );
   END;
-  IF tmp1<0 THEN INC(tmp2); END;
-  RETURN tmp2;
+  RETURN y;
 END Reverse;
 (*--------------------*)
 PROCEDURE HashPJW(READONLY str: ARRAY OF CHAR; (*given this string*)
