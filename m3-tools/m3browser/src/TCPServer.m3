@@ -11,6 +11,7 @@ MODULE TCPServer;
 
 IMPORT Text, Thread, Time, TCP, IP, ConnFD, Rd, Wr, Atom, AtomList;
 IMPORT TCPPeer;
+IMPORT HTTP, App;
 
 REVEAL
   T = Thread.Closure BRANDED OBJECT
@@ -124,6 +125,15 @@ PROCEDURE Server (closure: Thread.Closure): REFANY =
                 request := request & Text.FromChars (SUBARRAY (buf, 0, j));
               UNTIL (j < len OR len = 0);
 
+              (* recover escaped content *)
+              TRY
+                request := HTTP.UnescapeURLEntry(request, App.defaultLog);
+              EXCEPT
+                App.Error(e) => 
+                request :=
+                    "HTTP/1.0 400 Bad request: " & e & "\r\n";
+                self.err_log("bad request from " & TCPPeer.GetName(channel));
+              END;
               (* process it *)
               request := self.handler (self, request);
             ELSE

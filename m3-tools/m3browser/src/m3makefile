@@ -6,6 +6,7 @@
 
 import ("libm3")
 import ("tcp")
+import ("http")
 import ("m3scan")
 import ("m3markup")
 
