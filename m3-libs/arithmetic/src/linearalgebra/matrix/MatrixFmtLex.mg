@@ -78,7 +78,7 @@ BEGIN
   Wr.PutText(wr,"}\n");
   FOR i:=FIRST(x^) TO LAST(x^) DO
     FOR j:=FIRST(x[i]) TO LAST(x[i]) DO
-      Wr.PutText(wr,RF.Fmt(x[i,j],style.elemStyle));
+      Wr.PutText(wr,RF.Tex(x[i,j],style.elemStyle));
       IF j<LAST(x[i]) THEN Wr.PutText(wr," & "); END;
     END;
     Wr.PutText(wr," \\\\\n");

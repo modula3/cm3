@@ -6,6 +6,7 @@ Abstract: Integers
 2/17/96  Harry George    Initial version
 *)
 IMPORT Fmt AS F, Wr,TextWr,Thread;
+FROM FmtLexSupport IMPORT Precedence;
 
 
 <*UNUSED*>CONST Module = "IntegerFmtLex.";
@@ -40,6 +41,15 @@ BEGIN
   Wr.PutText(wr,"}\n");
   RETURN TextWr.ToText(wr);
 END FmtArray;
+
+PROCEDURE Tex (x : T; READONLY style := TexStyle{}; <*UNUSED*>within : Precedence) : TEXT =
+  BEGIN
+    IF style.base=10 THEN
+      RETURN F.Int (x, style.base);
+    ELSE
+      RETURN F.Int (x, style.base) & "_{" & F.Int (style.base) & "}";
+    END;
+  END Tex;
 
 (*==========================*)
 BEGIN

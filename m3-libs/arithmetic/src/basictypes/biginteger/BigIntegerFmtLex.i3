@@ -8,6 +8,7 @@ Abstract: Formatting of integers of arbitrary size
 IMPORT (*Lex AS L, FloatMode, Rd, Thread,*)
        BigIntegerBasic AS B, Fmt AS F;
 
+FROM FmtLexSupport IMPORT Precedence;
 
 (*==========================*)
 
@@ -24,8 +25,7 @@ PROCEDURE Scan(txt: TEXT; defaultBase: Base := 10): INTEGER
 *)
 PROCEDURE Fmt (READONLY x : T; READONLY style := FmtStyle{}) : TEXT;
 
-CONST
-  Tex = Fmt;
+PROCEDURE Tex (x : T; READONLY style := TexStyle{}; within := Precedence.sum) : TEXT;
 
 (*==========================*)
 END BigIntegerFmtLex.

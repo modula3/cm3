@@ -10,6 +10,7 @@ IMPORT (*Rd, Thread, FloatMode, Lex AS L, TextRd,*)
        Word;
 IMPORT BigIntegerRep   AS BR;
 IMPORT BigIntegerBasic AS BB;
+FROM FmtLexSupport IMPORT Precedence;
 FROM NADefinitions IMPORT Error, Err;
 
 <*UNUSED*> CONST Module = "BigIntegerFmtLex.";
@@ -117,6 +118,15 @@ PROCEDURE Fmt(READONLY x: T; READONLY style := FmtStyle{}): TEXT =
       RETURN txt;
     END;
   END Fmt;
+
+PROCEDURE Tex (x : T; READONLY style := TexStyle{}; within : Precedence) : TEXT =
+  BEGIN
+    IF style.base=10 THEN
+      RETURN Fmt (x, FmtStyle{base:=style.base});
+    ELSE
+      RETURN Fmt (x, FmtStyle{base:=style.base}) & "_{" & F.Int (style.base) & "}";
+    END;
+  END Tex;
 
 (*
 PROCEDURE WriteLongNumber (READONLY x : LongNumber) =

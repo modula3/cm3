@@ -13,9 +13,11 @@ IMPORT TempFiles AS Tmp;
 IMPORT LongRealBasic      AS R,
        LongRealVectorFast AS V,
        LongRealMatrixFast AS M,
-       LongRealFmtLex       AS RF,
-       LongRealVectorFmtLex AS VF,
-       LongRealMatrixFmtLex AS MF;
+       LongRealFmtLex        AS RF,
+       LongRealVectorFmtLex  AS VF,
+       LongRealMatrixFmtLex  AS MF,
+       LongRealComplexFast   AS C,
+       LongRealComplexFmtLex AS CF;
 
 
 (*=======================*)
@@ -50,6 +52,12 @@ BEGIN
   Wr.PutText(out,"=" & VF.Tex(x,style:=VF.TexStyle{dir:=VF.TexDirection.horizontal}));
   Wr.PutText(out,"\\cdot" & MF.Tex(A));
   Wr.PutText(out,"\\cdot" & VF.Tex(x,style:=VF.TexStyle{dir:=VF.TexDirection.vertical}));
+  Wr.PutText(out,"$$\n");
+  Wr.PutText(out,"$$\n");
+  Wr.PutText(out,CF.Tex(C.T{0.0D20,0.0D0})&",");
+  Wr.PutText(out,CF.Tex(C.T{1.0D20,0.0D0})&",");
+  Wr.PutText(out,CF.Tex(C.T{1.0D20,-10.0D23})&",");
+  Wr.PutText(out,CF.Tex(C.T{0.0D0,2.5D0}));
   Wr.PutText(out,"$$\n");
   Wr.PutText(out,"\\end{document}\n");
 

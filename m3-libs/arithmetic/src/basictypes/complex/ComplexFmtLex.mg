@@ -11,6 +11,7 @@ Abstract: Formatting and parsing complex numbers
                           The ones with beginning caps are wds's
 *)
 (*FROM NADefinitions IMPORT Error,Err;*)
+FROM FmtLexSupport IMPORT Precedence, Parenthesize;
 
 <*UNUSED*> CONST Module = "ComplexFmtLex.";
 
@@ -31,13 +32,30 @@ VAR
   t:TEXT;
 BEGIN
   IF R.IsZero(x.im) THEN
-    t:=RF.Fmt(x.re);
+    t:=RF.Fmt(x.re,style.elemStyle);
   ELSE
     t:="Complex{re:=" & RF.Fmt(x.re,style.elemStyle) & ","
              & "im:=" & RF.Fmt(x.im,style.elemStyle) & "}";
   END;
   RETURN t;
 END Fmt;
+
+PROCEDURE Tex (READONLY x : T; READONLY style := TexStyle{}; within := Precedence.sum) : TEXT =
+VAR
+  t:TEXT;
+BEGIN
+  IF R.IsZero(x.im) THEN
+    t:=RF.Tex(x.re,style.elemStyle,within);
+  ELSIF R.IsZero(x.re) THEN
+    t:=Parenthesize(RF.Tex(x.im,style.elemStyle,Precedence.product) & " i",
+                    Precedence.product,within);
+  ELSE
+    t:=Parenthesize(RF.Tex(x.re,style.elemStyle,Precedence.sum) & " + " &
+                    RF.Tex(x.im,style.elemStyle,Precedence.product) & " i",
+                    Precedence.sum,within);
+  END;
+  RETURN t;
+END Tex;
 
 (*==========================*)
 BEGIN
