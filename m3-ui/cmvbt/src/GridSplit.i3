@@ -1,6 +1,6 @@
 
-(* Copyright 1997 Critical Mass, Inc. All Rights Reserved.
-   See file COPYRIGHT for full description. *)
+(* Copyright 1996-2000 Critical Mass, Inc. All Rights Reserved. *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 INTERFACE GridSplit;
 
