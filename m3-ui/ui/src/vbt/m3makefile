@@ -1,0 +1,40 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Fri Oct 28 17:06:51 PDT 1994 by kalsow
+%      modified on Sat Feb 27 00:17:43 PST 1993 by msm
+%      modified on Fri Apr 03 11:35:57 PST 1992 by muller
+
+Interface ("Latin1Key")
+Interface ("KeyboardKey")
+Interface ("Trestle")
+Interface ("TrestleComm")
+Interface ("VBTTuning")
+
+Interface ("BatchRep")
+interface ("PaintExt")
+
+Module ("PlttFrnds")
+Module ("VBT")
+Module ("VBTClass")
+Module ("Batch")
+Module ("PaintPrivate")
+Module ("VBTRep")
+Module ("TrestleClass")
+Module ("ScrnPixmap")
+Module ("ScrnColorMap")
+Module ("BatchUtil")
+Module ("ScrnCursor")
+Module ("ScrnFont")
+Module ("ScrnPaintOp")
+Module ("PaintOp")
+Module ("Palette")
+Module ("Font")
+Module ("Cursor")
+Module ("Pixmap")
+Module ("ScreenType")
+
+Module ("MouseSplit")
+Module ("MiscDetail")
+

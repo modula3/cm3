@@ -1,0 +1,34 @@
+Last modified on Mon Jan 15 13:25:10 PST 1996 by heydon
+
+This directory contains a test of the "DblBufferVBT" interface. When
+built, it produces a Trestle application called "StarAnim". The
+program has a "Quit" button for exiting the application, and a "Run"
+button for running the animation.
+
+The animation demonstrates a discovery made by the mathematician Rida
+Farouki: if you walk along the graph of the curve y = x^4 carrying a
+beam that extends one unit in each direction, the inner tip of the
+beam traces out a 5-pointed star.
+
+For efficiency, the animation uses the "DblBufferVBT" saved buffer
+facility. Each frame of the animation can be divided into three parts:
+the background common to all frames (the black curve and the text),
+the permanent paint that should be included in all subsequent frames
+(the red path), and the ephemeral paint that should only be included
+in this frame (the beam).
+
+The background is painted only once at the start of the animation. On
+each frame, the off-screen buffer is restored from the saved buffer,
+the permanent ink is painted, the off-screen buffer is saved to the
+saved buffer (so the permanent ink will be restored on the subsequent
+frame), the ephemeral beam is painted, and finally, all the paint is
+"sync"ed to the screen.
+
+To see that the double-buffer is working efficiently, you can run the
+"StarAnim" program under m3gdb. Interrupt the program and do:
+
+  (m3gdb) set la m3
+  (m3gdb) set DblBufferVBT.showSyncRect := TRUE
+
+This will show the outline of the rectangle copied to the screen from
+the off-screen buffer on each "sync" operation.

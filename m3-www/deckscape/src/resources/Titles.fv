@@ -1,0 +1,21 @@
+(ZChild %titlesDialog
+  (Insert "macros.fv")
+  (Shape (Width + inf)
+    (Border (Pen 2)
+      (VBox
+        (HBox 
+          (Shape (Width + inf) (ZMove (Text %titlesDlgBanner "Goto Page ...")))
+          (ZGrow (Pixmap "grow.pbm")))
+        (VBox
+          (Shape (Height 75 - 50 + Inf) (Browser %titlesBrowser Quick (BgColor "VeryLightGray")))
+          Bar
+          (Glue 10)
+          (HBox (Glue 10) 
+            (NoStretch "Document number: ") 
+            (NoStretch (Numeric FirstFocus %titlesNumeric (Min 1))) (Glue 10)
+            Fill)
+          (Glue 10)
+          (HBox 
+            (DefaultBtn titlesButton "Goto") 
+            (CloseBtn "Cancel"))
+          (Glue 10))))))

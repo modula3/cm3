@@ -1,0 +1,293 @@
+Last modified on Sat Jul 10 11:31:18 PDT 1993 by mhb   
+Create on Jul 28 1992 by steveg and mhb
+
+
+The purpose of this note is to explain more precisely what the locking 
+levels are of the various Algorithm and View methods. In particular, 
+to clarify how an algorithm is notified of a user gesture in a view. 
+This note assumes that you are familiar with the Zeus framework. 
+
+There is one lock of interest, VBT.mu, and thus, there are two locking 
+levels: LL=0 (VBT.mu is not held) and LL=VBT.mu (VBT.mu is held). 
+A session is in one of three states (S): Idle, Running, Paused. The 
+state is maintained and enforced by Zeus. 
+
+There is one additional rule about algorithm and view methods: A 
+client may never invoke an algorithm or view method directly (other 
+than a subtype calling the method in the parent supertype). 
+
+1) Here's the story from the user's perspective:
+
+  The user selects a session, algorithm and set of views.  The algorithm 
+  is started by selecting "Go" or "Step" on the Zeus control panel.  
+
+  The views are unresponsive to mouse clicks while the algorithm 
+  is running.  (There is a distinctive cursor to indicate this.)  
+
+  The algorithm can be suspended by selecting "Pause" or "Step" on 
+  the control panel.  While the algorithm is suspended, the views 
+  are responsive to mouse clicks.  (A different cursor appears over 
+  the views to indicate the state change.)  
+
+  The algorithm can be resumed by selecting "Resume" or "Step" (The 
+  algorithm is suspended after the next output event if "Step" is 
+  selected). 
+
+  Eventually the algorithm finishes or the user "Abort"s it.
+
+2) Here's the story from the algorithm's perspective:
+
+  The simplest sequence of calls is:
+
+	New install delete
+
+  If the algorithm is run, then the simplest sequence of calls is:
+
+	New install run delete
+
+  The algorithm may be run repeatedly, so the sequence of calls really 
+  looks like this: 
+
+	New install run* delete
+
+  The New procedure and install and delete methods are called with 
+  VBT.mu locked.  The run method is called with no locks. 
+
+  The session state goes from Idle to Running just before the run 
+  method is called.  It returns to Idle right after the run method 
+  returns. 
+
+  After any output event, the session state may become Paused if 
+  the user has indicated that the algorithm should be suspended. 
+  The output event doesn't return to the algorithm until the user 
+  indicates that the algorithm should resume. 
+
+  While in the Paused state, the algorithm's feedback methods may 
+  be invoked by user actions. These will be invoked with VBT.mu locked, 
+  and may in turn generate update events.  (Note, the distinction 
+  between output and update events is that output events hold no 
+  locks, while update events hold VBT.mu.) 
+
+  The reactivity method of the algorithm is called when the algorithm 
+  is suspended and when it is resumed.  Right after the algorithm 
+  enters the Paused state the reactivity method is called to "enable" 
+  feedback events.  Just before it exits the Paused state, it is 
+  called to "disable" feedback events. 
+
+  Here is the regular expression for reactivity and feedback calls. 
+  (These calls are in a different thread than the run method. The 
+  calls may occur while the run method's thread is suspended after 
+  any output event.  VBT.mu is held during each of these calls.): 
+
+	(reactivity(TRUE) feedback* reactivity(FALSE))*
+
+  The snapshot and restore methods are called with VBT.mu held.  
+  The algorithm's snapshot method may be called when the session 
+  is Idle or Paused. The restore method may be called only when the 
+  algorithm is Idle. These restrictions are enforced by Zeus. 
+
+  Table of locking level and state during algorithm calls:
+
+       New        procedure     LL=VBT.mu   S=Idle
+       install    method        LL=VBT.mu   S=Idle
+       delete     method        LL=VBT.mu   S=Idle
+
+       run	  method	LL=0        S=Running
+       feedback	  methods	LL=VBT.mu   S=Paused
+
+       reactivity method        LL=VBT.mu   S=Paused
+       snapshot   method        LL=VBT.mu   S=Idle or Paused
+       restore    method        LL=VBT.mu   S=Idle
+
+
+
+3) Here's the story from a view's perspective:
+
+  The simplest sequence of calls is:
+
+	New install delete
+
+  If an algorithm is run, then the simplest sequence of calls is:
+
+	New install startrun endrun delete
+
+  If an algorithm is run repeatedly, the sequence of calls looks like this:
+
+	New install (startrun endrun)* delete
+
+  When there are output events, the method calls happen between the 
+  calls to startrun and endrun: 
+
+	New install (startrun output* endrun)* delete
+
+  The New procedure and install and delete methods are called with 
+  VBT.mu locked.  The startrun, endrun and output event methods are 
+  called with no locks. 
+
+  Feedback events are trickier, so we'll look at the full story including 
+  user, zeus, algorithm and view. (All actions occur with VBT.mu 
+  held.  We indicate the intervals when VBT.mu is not held) 
+
+  1) The user suspends the session. (VBT.mu is acquired and released
+     during this operation)
+
+  2) Next output event from algorithm blocks before returning. 
+     (State <= Paused) (VBT.mu is acquired and released) 
+
+  LOCK VBT.mu DO 
+    3) The views' and algorithm's reactivity methods 
+       are called to "enable" feedback events. 
+
+    4) The reactivity VBT over the view is enabled to allow user 
+       actions.  (Cursor changes.)  Note: this is the action of the 
+       default view reactivity method, it is not required. 
+  END 
+
+  5) User performs some input gesture on the view.
+
+  LOCK VBT.mu DO
+    6) Trestle calls the view's mouse, position or key method (as 
+       appropriate.) 
+
+    7) The view generates a feedback event
+
+    8) Zeus makes a call on the algorithm's feedback method.
+
+    9) Algorithm generates update event
+
+    10) Zeus makes calls update event method of all views
+
+    11) If the algorithm generates multiple update events to handle 
+        the feedback event, steps 9 and 10 are repeated 
+
+    12) Feedback event finished
+  END
+
+  13) If the user performs multiple input gestures, steps 5 through 
+      12 are repeated.  (VBT.mu acquired and released for each user
+      gesture) 
+
+  14) The user resumes the session. (VBT.mu is acquired and released)
+
+  LOCK VBT.mu
+    15) The views' and animation's reactivity methods are called 
+        to disable feedback events. 
+
+    16) The reactivity VBT over the view is "disabled".  (Cursor 
+        changes.) Note: like step 3, this is only the action of the 
+        default view reactivity method.
+  END 
+
+  18) Output event returns to algorithm.  (State = Running, LL={}) 
+      (VBT.mu is acquired and released) 
+
+  So, back to a view's point of view, the full regular expression 
+  for the sequence of calls is: 
+ 
+  New install 
+    (startrun
+       (output event  |
+        reactivity(TRUE)
+          (Trestle event
+            feedback event
+            (update event)*
+          )*
+        reactivity(FALSE)
+        )*
+    endrun)*
+  delete
+
+  The state of the session is as follows:
+
+	IF between calls to reactivity(TRUE) and reactivity(FALSE) THEN
+	   session.state := Paused
+        ELSIF after call to startrun and before call to endrun THEN
+           session.state := Running
+        ELSE
+           session.state := Idle
+        END;
+
+  Calls to snapshot can happen any time the session is Idle or Paused. 
+  Calls to restore happen when the session is Idle. These restrictions 
+  are enforced by Zeus. 
+
+  Here's a table of locking level and state during view calls:
+
+       New        procedure     LL=VBT.mu   S=Idle
+       install    method        LL=VBT.mu   S=Idle
+       delete     method        LL=VBT.mu   S=Idle
+
+       startrun	  method	LL=0        S=Idle
+       output     methods       LL=0        S=Running
+       update	  methods	LL=VBT.mu   S=Paused
+       endrun	  method	LL=0        S=Idle
+
+       reactivity method        LL=VBT.mu   S=Paused
+       snapshot   method        LL=VBT.mu   S=Idle or Paused
+       restore    method        LL=VBT.mu   S=Idle
+
+
+
+4) There are three types of procedures in the IE interface - output, 
+   update, and feedback events. The following table shows the typical 
+   caller, locking level, and state for each type of procedure. 
+
+        type		caller		locking level	state
+ 	----		------		-------------	-----
+	output		alg.run		LL=0		S=Running
+	update		alg.feedback	LL=VBT.mu	S=Paused
+	feedback	view.mouse	LL=VBT.mu	S=Paused
+
+
+
+5) Here are snippets are key pieces of code:
+
+
+   The Run button is only enabled when S=Idle; it forks a thread:
+
+	<* LL=0, S=Idle *>
+	foreach view v in session, v.startrun();
+	LOCK VBT.mu DO session.state := Running END;
+	session.alg.run()
+	LOCK VBT.mu DO session.state := Idle END;
+	foreach view v in session, v.endrun();
+        
+   The body of an output event XXX in FooIE.m3 (generated by Zume):
+
+	PROCEDURE XXX(alg: Algorithm.T; ...) =
+          <* LL=0, S=Running *>
+          BEGIN
+  	    foreach view v in session, call v.oeXXX (..);
+            IF user requested to pause system THEN
+              LOCK VBT.mu DO 
+                session.state := Paused; 
+  	        session.alg.reactivity(TRUE);
+  	        foreach view v in session, call v.reactivity (TRUE);
+              END;
+              wait until user clicks Resume or Abort
+              LOCK VBT.mu DO 
+                session.state := Paused; 
+                session.alg.reactivity(FALSE);
+	        foreach view v in session, call v.reactivity (FALSE);
+              END;
+            END;
+	  END XXX;
+
+   The body of an update event YYY in FooIE.m3:
+
+	PROCEDURE YYY(alg: Algorithm.T; ...) =
+          <* LL=VBT.mu, S=Paused *>
+          BEGIN 
+            foreach view v in session, call v.ueYYY(...)
+          END YYY;
+          
+   The body of a feedback event ZZZ in FooIE.m3:
+
+	PROCEDURE ZZZ(view: View.T; ...) =
+	  <* LL=VBT.mu, S=Paused *>
+          BEGIN
+	    session.alg.feZZZ(...)
+          END ZZZ;
+
+   ZeusPanel provide entries to help algorithms that want
+   to wait for a feedback event; see StartFeedback and EndFeedback.

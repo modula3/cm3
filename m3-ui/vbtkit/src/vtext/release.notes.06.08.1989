@@ -1,0 +1,19 @@
+I've just released a new version of the vtext package, used in Ivy and
+elsewhere.
+
+Among the changes:
+
+ * VText can now display visible tabs in a style other than \011.  When
+   creating a VFont, if NOT ('\t' IN visibles), then tabs display as
+   '\011'.  Otherwise, if whiteTabs is TRUE, they display as a variable
+   amount of white space.  Otherwise, they display as a special symbol of
+   the same varying width.
+
+ * VText can now display a visible end-of-buffer indicator.  The "eob"
+   parameter in a VOptions is a BOOLEAN that controls this.
+
+ * VText tries to display variable-width fonts in a more flash-free
+   fashion.
+
+Cheers,
+John

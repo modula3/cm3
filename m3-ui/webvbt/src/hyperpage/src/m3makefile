@@ -1,0 +1,11 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Thu Jan 12 08:20:42 PST 1995 by kalsow
+
+import ("ui")
+
+Module ("HyperPage")
+
+library ("m3web")

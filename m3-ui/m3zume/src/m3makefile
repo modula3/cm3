@@ -1,0 +1,15 @@
+% Copyright (C) 1995, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Wed Feb 15 08:17:20 PST 1995 by kalsow
+
+import ("libm3")
+
+include_dir    ("templates")
+module         ("EventFile")
+module         ("Template")
+implementation ("Main")
+
+Program  ("m3zume")
+ManPage  ("m3zume",1)

@@ -1,0 +1,14 @@
+/* Copyright (C)-ip992, Digital Equipment Corporation                        */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Mon Jan 15 13:15:27 PST 1996 by heydon                   */
+
+override	("ui", "../../../..")
+
+import		("libm3")
+import		("ui")
+
+module		("R2")
+implementation	("StarAnim")
+program		("StarAnim")

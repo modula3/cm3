@@ -1,0 +1,10 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Tue Nov  1 09:24:09 PST 1994 by kalsow
+
+implementation ("JVSink")
+implementation ("Jv")
+implementation ("JvsBuffer")
+

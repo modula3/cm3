@@ -1,0 +1,6 @@
+(Shape
+  (Insert "macros.fv")
+  (MButton %button
+    (HBox 
+      (Shape (Width + 0) (Pixmap %icon "mapped.pbm"))
+      (Text %text LeftAlign "xxxx"))))

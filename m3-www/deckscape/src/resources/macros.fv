@@ -1,0 +1,25 @@
+#| FormsVBT macros |#
+#|============================================================================|#
+
+(LabelFont (Family "helvetica") (WeightName "bold") (Width "*") (PointSize 120))  
+  #| Used for static text, including buttons and menus |#
+
+(Macro NoStretch BOA (item)
+   `(Shape (Width + 0) ,item))
+
+(Macro DefaultBtn BOA (name label)
+   `(HBox (Glue 10 + Inf) (Shape (Width 60) 
+      (Border (Button %,name ,label))) (Glue 10 + Inf)))
+
+(Macro Btn BOA (name label)
+   `(HBox (Glue 10 + Inf) (Shape (Width 60) 
+      (Rim (Button %,name ,label))) (Glue 10 + Inf)))
+
+(Macro CloseBtn BOA (label)
+   `(HBox (Glue 10 + Inf) (Shape (Width 60) 
+      (Rim (CloseButton ,label))) (Glue 10 + Inf)))
+
+(Macro DefaultCloseBtn BOA (label)
+   `(HBox (Glue 10 + Inf) (Shape (Width 60) 
+      (Border (CloseButton ,label))) (Glue 10 + Inf)))
+

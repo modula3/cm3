@@ -1,0 +1,14 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Thu Sep  7 08:57:15 PDT 1995 by najork
+%      modified on Tue Feb  7 11:30:11 PST 1995 by kalsow
+
+import    ("libm3")
+
+Interface ("JVSink")  
+Interface ("JVDecomp")
+Interface ("Jva")     
+
+Library   ("jvideo")

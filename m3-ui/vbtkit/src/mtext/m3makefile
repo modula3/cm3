@@ -1,0 +1,14 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Mon Dec 20 15:50:50 PST 1993 by kalsow
+%      modified on Fri May 14 00:02:02 PDT 1993 by meehan
+%      modified on Tue Jun 16 19:33:13 PDT 1992 by muller
+
+Module ("MText")
+Module ("MTextRd")
+
+Interface ("MTextPrivate")
+module ("MTextDs")
+Module ("MTextDebug")

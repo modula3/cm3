@@ -1,0 +1,209 @@
+(* Copyright (C) 1992, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+(*                                                                           *)
+(* by Steve Glassman, Mark Manasse and Greg Nelson           *)
+(* Last modified on Mon Feb 24 13:57:11 PST 1992 by muller   *)
+(*      modified on Sat Nov  2 16:09:15 PST 1991 by gnelson  *)
+(*      modified on Wed Sep 11 17:12:15 PDT 1991 by msm      *)
+<*PRAGMA LL*>
+
+INTERFACE Latin1Key;
+
+(* Define constants for the ISO-Latin-1 keyboard symbols.  *)
+
+CONST 
+  space = 16_020;
+  exclam = 16_021;
+  quotedbl = 16_022;
+  numbersign = 16_023;
+  dollar = 16_024;
+  percent = 16_025;
+  ampersand = 16_026;
+  apostrophe = 16_027; (* = right quote *)
+  parenleft = 16_028;
+  parenright = 16_029;
+  asterisk = 16_02a;
+  plus = 16_02b;
+  comma = 16_02c;
+  minus = 16_02d;
+  period = 16_02e;
+  slash = 16_02f;
+  zero = 16_030;
+  one = 16_031;
+  two = 16_032;
+  three = 16_033;
+  four = 16_034;
+  five = 16_035;
+  six = 16_036;
+  seven = 16_037;
+  eight = 16_038;
+  nine = 16_039;
+  colon = 16_03a;
+  semicolon = 16_03b;
+  less = 16_03c;
+  equal = 16_03d;
+  greater = 16_03e;
+  question = 16_03f;
+  at = 16_040;
+  A = 16_041;
+  B = 16_042;
+  C = 16_043;
+  D = 16_044;
+  E = 16_045;
+  F = 16_046;
+  G = 16_047;
+  H = 16_048;
+  I = 16_049;
+  J = 16_04a;
+  K = 16_04b;
+  L = 16_04c;
+  M = 16_04d;
+  N = 16_04e;
+  O = 16_04f;
+  P = 16_050;
+  Q = 16_051;
+  R = 16_052;
+  S = 16_053;
+  T = 16_054;
+  U = 16_055;
+  V = 16_056;
+  W = 16_057;
+  X = 16_058;
+  Y = 16_059;
+  Z = 16_05a;
+  bracketleft = 16_05b;
+  backslash = 16_05c;
+  bracketright = 16_05d;
+  asciicircum = 16_05e;
+  underscore = 16_05f;
+  grave = 16_060; (* = left quote *)
+  a = 16_061;
+  b = 16_062;
+  c = 16_063;
+  d = 16_064;
+  e = 16_065;
+  f = 16_066;
+  g = 16_067;
+  h = 16_068;
+  i = 16_069;
+  j = 16_06a;
+  k = 16_06b;
+  l = 16_06c;
+  m = 16_06d;
+  n = 16_06e;
+  o = 16_06f;
+  p = 16_070;
+  q = 16_071;
+  r = 16_072;
+  s = 16_073;
+  t = 16_074;
+  u = 16_075;
+  v = 16_076;
+  w = 16_077;
+  x = 16_078;
+  y = 16_079;
+  z = 16_07a;
+  braceleft = 16_07b;
+  bar = 16_07c;
+  braceright = 16_07d;
+  asciitilde = 16_07e;
+
+  nobreakspace = 16_0a0;
+  exclamdown = 16_0a1;
+  cent = 16_0a2;
+  sterling = 16_0a3;
+  currency = 16_0a4;
+  yen = 16_0a5;
+  brokenbar = 16_0a6;
+  section = 16_0a7;
+  diaeresis = 16_0a8;
+  copyright = 16_0a9;
+  ordfeminine = 16_0aa;
+  guillemotleft = 16_0ab;	(* left angle quotation mark *)
+  notsign = 16_0ac;
+  hyphen = 16_0ad;
+  registered = 16_0ae;
+  macron = 16_0af;
+  degree = 16_0b0;
+  plusminus = 16_0b1;
+  twosuperior = 16_0b2;
+  threesuperior = 16_0b3;
+  acute = 16_0b4;
+  mu = 16_0b5;
+  paragraph = 16_0b6;
+  periodcentered = 16_0b7;
+  cedilla = 16_0b8;
+  onesuperior = 16_0b9;
+  masculine = 16_0ba;
+  guillemotright = 16_0bb;	(* right angle quotation mark *)
+  onequarter = 16_0bc;
+  onehalf = 16_0bd;
+  threequarters = 16_0be;
+  questiondown = 16_0bf;
+  Agrave = 16_0c0;
+  Aacute = 16_0c1;
+  Acircumflex = 16_0c2;
+  Atilde = 16_0c3;
+  Adiaeresis = 16_0c4;
+  Aring = 16_0c5;
+  AE = 16_0c6;
+  Ccedilla = 16_0c7;
+  Egrave = 16_0c8;
+  Eacute = 16_0c9;
+  Ecircumflex = 16_0ca;
+  Ediaeresis = 16_0cb;
+  Igrave = 16_0cc;
+  Iacute = 16_0cd;
+  Icircumflex = 16_0ce;
+  Idiaeresis = 16_0cf;
+  ETH = 16_0d0;
+  Ntilde = 16_0d1;
+  Ograve = 16_0d2;
+  Oacute = 16_0d3;
+  Ocircumflex = 16_0d4;
+  Otilde = 16_0d5;
+  Odiaeresis = 16_0d6;
+  multiply = 16_0d7;
+  Ooblique = 16_0d8;
+  Ugrave = 16_0d9;
+  Uacute = 16_0da;
+  Ucircumflex = 16_0db;
+  Udiaeresis = 16_0dc;
+  Yacute = 16_0dd;
+  THORN = 16_0de;
+  ssharp = 16_0df;
+  agrave = 16_0e0;
+  aacute = 16_0e1;
+  acircumflex = 16_0e2;
+  atilde = 16_0e3;
+  adiaeresis = 16_0e4;
+  aring = 16_0e5;
+  ae = 16_0e6;
+  ccedilla = 16_0e7;
+  egrave = 16_0e8;
+  eacute = 16_0e9;
+  ecircumflex = 16_0ea;
+  ediaeresis = 16_0eb;
+  igrave = 16_0ec;
+  iacute = 16_0ed;
+  icircumflex = 16_0ee;
+  idiaeresis = 16_0ef;
+  eth = 16_0f0;
+  ntilde = 16_0f1;
+  ograve = 16_0f2;
+  oacute = 16_0f3;
+  ocircumflex = 16_0f4;
+  otilde = 16_0f5;
+  odiaeresis = 16_0f6;
+  division = 16_0f7;
+  oslash = 16_0f8;
+  ugrave = 16_0f9;
+  uacute = 16_0fa;
+  ucircumflex = 16_0fb;
+  udiaeresis = 16_0fc;
+  yacute = 16_0fd;
+  thorn = 16_0fe;
+  ydiaeresis = 16_0ff;
+
+END Latin1Key.

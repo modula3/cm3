@@ -1,0 +1,22 @@
+/* Copyright (C) 1992, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Thu Feb 17 20:27:53 PST 1994 by najork                   */
+/*      modified on Wed Nov 24 15:06:47 PST 1993 by steveg                   */
+/*      modified on Tue Feb 11 17:33:02 PST 1992 by muller                   */
+
+Interface ("X")
+Interface ("Xatom")
+Interface ("Xmbuf")
+
+Interface ("Xct")
+Interface ("Xmu")
+Interface ("Xrm")
+Interface ("Xt")
+Module ("XtC")
+Module ("XtE")
+Module ("XtN")
+Module ("XtR")
+
+Interface ("Xaw")

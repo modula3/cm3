@@ -1,0 +1,17 @@
+(ZChild %urlDialog
+  (Insert "macros.fv")
+  (Shape (Width + inf)
+    (Border (Pen 2)
+      (VBox
+        (HBox 
+           (Shape (Width + inf) (ZMove (Text %urlDlgBanner "Open URL ...")))
+           (ZGrow (Pixmap "grow.pbm")))
+        (VBox
+          (Rim (Pen 10)
+            (Frame Lowered (BgColor "VeryLightGray")
+              (TypeIn %urlTypein (FirstFocus TRUE) ExpandOnDemand)))
+          (HBox 
+            (DefaultBtn urlButton "Open") 
+            (Btn urlHomeButton "Home") 
+            (CloseBtn "Cancel"))
+          (Glue 10))))))

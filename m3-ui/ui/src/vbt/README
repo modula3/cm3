@@ -1,0 +1,327 @@
+% This file provides an overview of the Trestle windowing toolkit.  Ignore
+% the typesetting commands; they are for typesetting the Trestle Reference
+% Manual.
+
+\medskip\noindent{\bf The Trestle abstraction}.\hskip 5pt
+A {\tt Trestle.T} is a connection to a window system.  The window system
+is assumed to have a keyboard, a pointing device, and one or more
+display screens.  For example, in Trestle-on-X, a {\tt Trestle.T} is
+implemented by a connection to an X server.  \index{Trestle abstraction,
+introduced}
+
+Each screen is a raster display, whose image is stored in a frame buffer
+containing a rectangular array of pixels.  Changing the contents of
+a frame buffer is called {\it painting}, since it changes the image
+displayed to the user.  The different screens can be of different types
+(e.g., color or black and white).
+
+Trestle imposes an {\tt hv}-coordinate system on each display screen,
+in which the {\tt h} coordinate increases from left to right and the
+{\tt v} coordinate increases from top to bottom.  The {\tt Trestle}
+interface allows you to determine the number of screens and also their
+types, dimensions, and the positions of their coordinate origins.
+\index{coordinate system of screen}
+
+We will call the pointing device the mouse, although it might be a
+stylus or other instrument.  The mouse generally has one or more buttons
+that the user can click down and up.
+\index{mouse} \index{pointing device}
+
+The system displays a {\it cursor}, a small arrow or other image that points
+at some pixel of some screen.  By moving the mouse the user can move
+the cursor around the screen or from one screen to another.  Applications
+can change the shape of the cursor to convey information to the user.
+\index{cursor}
+
+The complete {\tt Trestle} interface is described 
+in Section \ref{TrestleSection}.
+
+\medskip\noindent{\bf The VBT abstraction}.\hskip 5pt
+The key abstraction in Trestle is the ``virtual bitmap terminal'' or
+{\tt VBT}.  A {\tt VBT} represents a share of the keyboard, mouse,
+and displays.  {\tt VBT}s are comparable to the windows, widgets, and
+viewers of other systems.
+\index{VBT abstraction, introduced}
+
+An application is generally organized as a tree of {\tt VBT}s, with
+the root {\tt VBT} representing the top-level application window.  The
+internal nodes are called {\it split} {\tt VBT}s or {\it parent} {\tt
+VBT}s: they divide their screens between one or more child {\tt VBT}s
+according to some layout depending on the class of split.  At the leaves
+of the tree are {\tt VBT}s that contain no subwindows.
+\index{split VBT, introduced}
+\index{parent VBT, introduced}
+\index{leaf VBT, introduced}
+
+A typical application consists of a number of leaf {\tt VBT}s whose
+behavior is specific to that application, together with some more leaf
+{\tt VBT}s that provide buttons, scrollbars, and other ``interactors'',
+all held together by a tree of splits that define the
+geometric layout.  A split with only one child is called a {\it filter}.
+For example, a {\tt BorderedVBT} is a filter that adds a border around
+the child's screen.  A split that can have more than one child is
+called a {\it proper split}.  For example, an {\tt HVSplit} is a split
+in which the children are laid out horizontally or vertically.
+\index{proper split}
+\index{filter}
+
+Sections \ref{SplitSection}, \ref{FilterSection}, and \ref{LeafSection}
+describe Trestle's built-in proper splits, filters, and leaves.
+
+To obtain a share of a Trestle display, an application creates a {\tt
+VBT} and ``installs'' it with the procedure {\tt Trestle.Install},
+which allocates some portion of some display to the {\tt VBT}, within
+which the application can paint.  The {\tt VBT} is said to be {\it
+installed} and is called a {\it top-level window}.  The size and
+position of top-level windows depends on the arguments to {\tt
+Trestle.Install} and on the whim of the window manager.
+\index{installing a top level window}
+\index{top level window}
+
+A {\tt VBT} imposes an {\tt hv}-coordinate system on its screen.  A
+top-level {\tt VBT}'s coordinate system need not be the same as the
+coordinate system of the screen on which it is installed.  The
+translation between the two coordinate systems can be determined through
+the {\tt Trestle.ScreenOf} procedure.
+\index{coordinate system of a VBT}
+
+In a split {\tt VBT}, the translation between the parent and child
+coordinate systems depends on the class of the split.  Trestle provides
+one filter ({\tt TranslateVBT}) whose sole purpose is to position
+the child coordinate system origin at the northwest corner of the
+child's domain, since this is convenient for some applications.  All
+the other built-in splits make the child coordinate system agree with
+the parent coordinate system, since this is usually the most convenient.
+\index{coordinate translation from parent to child} 
+
+Information flows through a {\tt VBT} in two directions.  Painting
+commands travel from the leaves of the tree towards the root.  Events
+like mouse clicks and cursor positions travel from the root towards
+the leaves.  A {\tt VBT} is an object with methods for handling events;
+to deliver an event to a {\tt VBT}, the system invokes the appropriate
+method.  The {\tt VBT} interface in Section \ref{VBTSection} specifies
+the event-handling methods and the painting procedures.
+
+The screen of a {\tt VBT} is {\it forgetful}; that is, its contents
+can be lost at any time, at which point the system activates its {\tt
+repaint} method, which is expected to repaint what has been lost.
+Similarly, the height, width, and coordinate origin of a {\tt VBT}'s
+screen can change at any time, in which case the system activates its
+{\tt reshape} method.  Finally, the type of the pixels in a {\tt VBT}'s
+screen can change (e.g., from color to monochrome), in which case the
+system activates its {\tt rescreen} method.  These events reflect the
+fact that the user of the window system can expose portions of a
+top-level window, reshape top-level windows, and move top-level windows
+from one display to another.
+
+\medskip\noindent{\bf Selections and event-time}.\hskip 5pt
+From the user's point of view, a selection is a highlighted occurrence
+of text or other data that can be made in a window via some gesture,
+such as sweeping with the mouse.  Selections are supported to make
+it easy for users to cut and paste text and other data between windows.
+A particular selection is always in at most one window at a time, namely
+the ``owner'' of the selection.  If a selection is in no window at
+all, its owner is {\tt NIL}.
+\index{selections, introduced} \index{cut buffer}
+
+From the programmer's point of view, the selection owner is a {\tt
+VBT}-valued variable shared between all applications.  The procedure
+{\tt VBT.Acquire} is used to acquire a selection.  Whenever a {\tt
+VBT} acquires a selection, the previous owner is notified, so that
+it can take down any highlighting or other feedback.  Any {\tt VBT}
+can own a selection, not just a top-level window.
+
+The procedures {\tt VBT.Read} and {\tt VBT.Write} are used to read
+or write the value of the selection.  Calls to {\tt Read} and {\tt
+Write} are implemented by locating the selection owner (which could
+be in the same address space as the caller to {\tt Read} or {\tt Write},
+or in a different address space) and activating its {\tt read} or {\tt
+write} method, which is responsible for doing the work.  The selection
+values communicated by {\tt Read} and {\tt Write} can be of any type
+that can be pickled (see Section 3.6 of {\it Systems Programming with
+Modula-3} \cite{SPwM3}); in particular, they can be of type {\tt TEXT}.
+\index{reading a selection (introduction)}
+\index{writing a selection (introduction)}
+
+The {\tt VBT} to which user keystrokes are directed is called the {\it
+keyboard focus}.  Some window managers define the focus to be the window
+containing the cursor; other window managers move the focus in response
+to mouse clicks.  Trestle applications work with either kind of window
+manager.
+\index{keyboard focus, introduced}
+
+Trestle classifies the keyboard focus as a selection, since it is a
+global {\tt VBT}-valued variable that can be acquired and released.  If
+you want to receive keystrokes, you must acquire the focus.  If this
+succeeds, you should provide some feedback to the user, for example
+by displaying a blinking caret.  (Even if the window manager is
+identifying the top-level window containing the focus, you should still
+let the user know which subwindow contains the focus.)  When you are
+notified that you have lost the focus, you should take down the
+feedback.
+ 
+It is also possible to send any selection owner a ``miscellaneous
+code'', which will be delivered by activating the {\tt misc} method in
+the owner.  For example, the way that Trestle notifies a window that
+it no longer owns a selection is by sending it a miscellaneous code
+of type {\tt Lost}.  Miscellaneous codes are also used for other
+purposes; for example, to notify windows that they have been
+deleted.
+
+\medskip\noindent{\bf The event-time protocol}.\hskip 5pt
+There are many potential race conditions involving selections.  For
+example, suppose that the user clicks in window {\tt A}, expecting it
+to acquire the keyboard focus.  But window {\tt A} is slow---perhaps
+it is paging or blocked in a call to a server that is being
+debugged---and does not respond.  So the user clicks in another
+window {\tt B}, which acquires the keyboard focus, and types away.  A
+few minutes later, window {\tt A} comes to life and grabs the keyboard
+focus.  Suddenly and unexpectedly the user's typing is redirected
+to {\tt A} instead of {\tt B}. Similar race conditions can occur with 
+selections other than the keyboard focus---for example, you select
+a file name, then activate a {\tt delete} command by clicking, then wonder
+how long you must wait before it is safe to make another selection.
+\index{race conditions in the user interface}
+
+Trestle uses the {\it event-time protocol} to deal with these race
+conditions.  This means that Trestle keeps track of the {\it current
+event time}, which is the timestamp of the last keystroke, mouseclick,
+or miscellaneous code that has been delivered to any {\tt VBT}.  Attempts
+to read, write, or acquire a selection must be accompanied by a
+timestamp, and if this timestamp does not agree with the current event
+time, the attempt fails.  This guarantees that only {\tt VBTs} that are
+responding to the user's latest action can access the selections.
+\index{event time protocol, introduced} 
+
+When Trestle activates a window's method to deliver it an event, 
+it generally waits for the method to return before it delivers 
+any events to any other windows.  This gives the window a fair 
+chance to use the time stamp in the event to access the selections.
+However, if the method takes an unreasonably long time---more 
+than a few seconds---Trestle may give up on the window and start 
+delivering events to other windows anyway.
+
+As a consequence, if you must do a long-running computation in
+response to a user event, then you should fork the computation in
+a separate thread and return from the method promptly, to avoid
+delaying the user, who may want to click in another window.  You
+should also do any operations that require accessing the selections
+from the main thread before the method returns, since an event-time
+operation in the forked thread will fail if the user has continued
+typing or clicking during the forked computation.
+
+
+\medskip\noindent{\bf The geometry interfaces}.\hskip 5pt
+The interfaces {\tt Axis}, {\tt Point}, {\tt Rect}, {\tt Region}, {\tt Trapezoid}, and
+{\tt Path} are explained in Section \ref{GeometrySection}.  In brief,
+{\tt Axis.T.Hor} and {\tt Axis.T.Ver} name the horizontal and vertical
+coordinate axes; a {\tt Point.T} (or simply a {\it point}) is a pair of
+integers representing a point in the plane; a {\tt Rect.T} is a rectangle
+of points whose sides are parallel to the coordinate axes; a
+{\tt Region.T} is an arbitrary set of points represented as a sorted
+array of rectangles; a {\tt Trapezoid.T} is a set of points bounded by
+two horizontal lines and two lines with arbitrary slopes; and a
+{\tt Path.T} is a path in the plane represented by a sequence of straight
+and curved segments.
+\index{geometry interfaces, introduced}
+ 
+\medskip\noindent{\bf Resources}.\hskip 5pt
+A {\it pixmap} is a rectangular array of pixels.  A {\it bitmap} is
+a pixmap in which the pixels are one bit deep.  For example, a large
+pixmap could represent a photographic image; a small bitmap could
+represent a cursor shape.  Trestle also uses a pixmap to represent
+the infinite texture that results from tiling the plane with
+translations of the pixmap.  Thus whether a pixmap represents an
+infinite texture or a bounded image depends only on the context in
+which it is used.
+\index{textures, introduced}
+\index{pixmaps, introduced}
+\index{bitmaps, introduced}
+
+A {\it font} is a typeface suitable for painting text.
+\index{fonts, introduced}
+
+A {\it painting operation} is an operation code for changing the
+values of pixels in the frame buffer of a display screen.
+\index{painting operation code, introduced}
+
+Pixmaps, cursor shapes, fonts, and painting operations are collectively
+called {\it resources}.  Resources come in both {\it screen-independent}
+and {\it screen-dependent} forms.  A screen-independent resource varies
+with the screentype to produce a similar effect on all types of screens.
+For example, two important screen-independent painting operations are
+{\tt PaintOp.Fg} and {\tt PaintOp.Bg}, which set pixels to a screen's
+foreground and background colors.  In contrast, a screen-dependent
+resource is useful only on a particular screentype.  If it is used
+on a {\tt VBT} with the wrong type of screen, the system won't crash,
+but the effect will be non-deterministic---a screen-dependent painting
+operation that blackens a pixel on a black-and-white screen might set
+a 24-bit pixel to chartreuse on a true-color screen.  \index{resources,
+introduced}
+
+Screen-independent resources are convenient, but screen-dependent
+resources are sometimes necessary for exploiting the capabilities of
+specific display hardware.
+
+The screen-independent resource types are called {\tt Pixmap.T}, {\tt
+Cursor.T}, {\tt Font.T}, and {\tt PaintOp.T}.  The interfaces where
+these types are defined also provide procedures for generating useful
+resources.  For example, {\tt PaintOp.FromRGB} will produce a
+screen-independent painting operation that sets a pixel to a particular
+color; {\tt Font.FromName} will produce a screen-independent font given
+the name of the typeface.
+
+The corresponding screen-dependent resources are {\tt ScrnPixmap.T},
+{\tt ScrnCursor.T}, {\tt ScrnFont.T}, and {\tt ScrnPaintOp.T}.  The
+interfaces where these types are defined also specify the
+representations of the raw values---the layout of pixmaps in memory,
+the attributes of fonts, and similar details that all sane people prefer
+to avoid.
+   
+Converting a screen-independent resource into the corresponding
+screen-dependent resource for a particular type of screen is called
+{\it resolving} the resource.  The {\tt Palette} interface will give
+you a screen-independent resource if you give it a closure for resolving
+the resource.  You can therefore use the {\tt Palette} interface to
+construct your own screen-independent resources.  For example, you
+could produce a ({\tt PaintOp.T}, {\tt Font.T}) pair that produces
+red Times Roman text on a color display and black italic text on a
+black-and-white display; or a {\tt Pixmap.T} that selects between a
+low and a high resolution bitmap depending on the screen resolution.
+
+The closure for resolving the resource will be invoked automatically
+when a top-level window moves to a new screentype for the first time.
+The closure will be passed an argument of type {\tt ScreenType.T},
+which represents a type of display screen.  A {\tt ScreenType.T}
+determines the depth of the screen's pixels (e.g., one or eight), the
+method for associating a color with a pixel value (e.g., color-mapped
+or true-color), the set of allowed operations on its pixels, and the
+repositories for screen-dependent fonts, cursors, and pixmaps that
+can be used on the screen.
+\index{screentypes, introduced}
+
+\medskip\noindent{\bf Implementing your own splits}.\hskip 5pt
+Most applications can be built by using Trestle's built-in splits
+and leaves, together with one or more leaf {\tt VBT}s specific to
+the application.  If you are programming a more sophisticated
+application, you may want to augment the built-in splits with some
+of your own.  Section \ref{VBTClassSection} introduces the interfaces
+that allow you to do this. 
+
+To implement a leaf {\tt VBT}, you only have to supply methods to
+handle the events that flow down the tree (from the root to the leaves).
+To implement a split {\tt VBT}, you also have to supply methods to
+handle the information that flows up the tree, such as painting
+commands or commands to change the cursor shape.  The {\tt VBTClass}
+interface declares these methods and presents their specifications. 
+
+Very few splits override the method for painting, since the default
+behavior, which is to clip to the child's domain and relay the painting
+to the parent, is usually what is desired.  But some splits do override
+this method: for example, the {\tt ZSplit}, whose child windows are
+allowed to overlap one another, has a paint method that clips its
+children's painting to the visible parts of their domains.  And the top
+level window has a painting method that translates {\tt VBT} painting
+commands into X painting commands and relays them to the X server.
+The interfaces {\tt Batch}, {\tt BatchUtil}, and {\tt PaintPrivate}
+reveal the details necessary to override painting methods.
