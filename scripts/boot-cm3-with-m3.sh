@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: boot-cm3-with-m3.sh,v 1.3 2001-02-13 17:40:48 wagner Exp $
+# $Id: boot-cm3-with-m3.sh,v 1.4 2001-02-13 23:31:49 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -33,6 +33,7 @@ P="${P} m3front"
 P="${P} m3quake"
 [ "${GCC_BACKEND}" = yes ] && P="${P} m3cc"
 P="${P} cm3"
+P="${P} cminstall"
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]

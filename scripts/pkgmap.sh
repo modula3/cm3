@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.3 2001-02-12 22:39:00 wagner Exp $
+# $Id: pkgmap.sh,v 1.4 2001-02-13 23:31:49 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -66,7 +66,7 @@ if [ -z "${PKGS}" ] ; then
 fi
 
 for PKG in ${PKGS} ; do
-  echo " === package ${PKG} ==="
+  echo "=== package ${PKG} ==="
   exec_cmd "$PKG"
   res=$?
   if [ "$res" != "0" ] ; then
