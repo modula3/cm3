@@ -79,6 +79,10 @@ cygpath() {
   echo "$2"
 }
 
+strip_exe() {
+  strip $@
+}
+
 # evaluate uname information
 case "${UNAME}" in
 
@@ -118,6 +122,8 @@ case "${UNAME}" in
 
     cygpath() {
       /usr/bin/cygpath $@
+    }
+    strip_exe() {
     }
   ;;
 
