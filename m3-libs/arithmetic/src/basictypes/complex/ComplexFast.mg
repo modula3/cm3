@@ -146,6 +146,34 @@ BEGIN
   RETURN z;
 END ScaleInt;
 
+
+(*-------------------*)
+
+PROCEDURE FrExp (READONLY x: T; VAR exp: INTEGER): T =
+  VAR
+    expr, expi : INTEGER;
+  BEGIN
+    EVAL R.FrExp(x.re,expr);
+    EVAL R.FrExp(x.im,expi);
+    exp := (expr+expi) DIV 2;
+    RETURN T{R.LdExp(x.re,-exp),R.LdExp(x.im,-exp)};
+  END FrExp;
+
+PROCEDURE LdExp (READONLY x: T; exp: INTEGER): T =
+  BEGIN
+    RETURN T{R.LdExp(x.re,exp),R.LdExp(x.im,exp)};
+  END LdExp;
+
+PROCEDURE ModF (READONLY x: T; VAR(*OUT*) i: T): T =
+  VAR
+    y : T;
+  BEGIN
+    y.re := R.ModF (x.re, i.re);
+    y.im := R.ModF (x.im, i.im);
+    RETURN y;
+  END ModF;
+
+
 (*==========================*)
 BEGIN
 END ComplexFast.

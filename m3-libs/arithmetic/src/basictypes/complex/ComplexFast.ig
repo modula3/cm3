@@ -42,5 +42,21 @@ CONST
 <*INLINE*> PROCEDURE Scale (READONLY x:T; y:R.T):T;  (*return x*y*)
 <*OBSOLETE*> PROCEDURE ScaleInt(x:T;y:INTEGER):T;  (*return x*y*)
 
+(*---- Floating point representations ----*)
+
+<*INLINE*> PROCEDURE FrExp (READONLY x: T; VAR exp: INTEGER): T;
+(* returns a value y and sets exp such that x = y * 2^exp,
+    where ABS(y.re*y.im) is "close to" 1.
+   this can be used to improve numerical condition *)
+
+<*INLINE*> PROCEDURE LdExp (READONLY x: T; exp: INTEGER): T;
+(* returns x * 2^exp. *)
+
+<*INLINE*> PROCEDURE ModF (READONLY x: T; VAR(*OUT*) i: T): T;
+(* splits the argument "x" into an integer part "i" and a fractional part "f"
+   such that "f + i = x" and such that "f" and "i" both have the same sign as
+   "x", and returns "f". Although "i" is a LONGREAL, it is set to an integral
+   value. *)
+
 (*==========================*)
 END ComplexFast.
