@@ -1,8 +1,0 @@
-If a syntax highlighting description is found for the first time
-some information is copied to
-.kde/share/config/katesyntaxhighlightingrc
-
-It is not updated later though.
-
-I have laid a link to these files into
-/opt/kde3/share/apps/katepart/syntax
