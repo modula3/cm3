@@ -66,10 +66,5 @@ PROCEDURE asLong (val: off_t): long =
     RETURN val;
   END asLong;
 
-PROCEDURE assignOffT (VAR dest: off_t; src: long) =
-  BEGIN
-    dest := src;
-  END assignOffT;
-
 BEGIN
 END Utypes.

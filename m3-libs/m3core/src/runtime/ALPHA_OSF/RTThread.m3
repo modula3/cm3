@@ -87,30 +87,34 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
 
 (*------------------------------------ manipulating the SIGVTALRM handler ---*)
 
+VAR
+  ThreadSwitchSignal: Usignal.sigset_t;
+
 PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
-  VAR sv, osv: Usignal.struct_sigvec;  i: INTEGER;
+  VAR new, old: Usignal.struct_sigaction;
   BEGIN
-    sv.sv_handler := handler;
-    sv.sv_mask    := Usignal.empty_sv_mask;
-    sv.sv_flags   := 0;
-    i := Usignal.sigvec (Usignal.SIGVTALRM, sv, osv);
-    <*ASSERT i = 0*>
+    new.sa_handler := handler;
+    new.sa_flags := Word.Or(Usignal.SA_RESTART, Usignal.SA_SIGINFO);
+    WITH i = Usignal.sigemptyset(new.sa_mask) DO
+      <* ASSERT i = 0 *>
+    END;
+    WITH i = Usignal.sigaction (Usignal.SIGVTALRM, new, old) DO
+      <* ASSERT i = 0 *>
+    END;
   END setup_sigvtalrm;
 
 PROCEDURE allow_sigvtalrm () =
-  VAR i : Word.T;
   BEGIN
-    i := Usignal.sigsetmask (0);
-    i := Word.And (i, Word.Not (Usignal.sigmask (Usignal.SIGVTALRM)));
-    EVAL Usignal.sigsetmask (i); 
+    WITH i = Usignal.sigprocmask(Usignal.SIG_UNBLOCK, ThreadSwitchSignal) DO
+      <* ASSERT i = 0 *>
+    END;
   END allow_sigvtalrm;
 
 PROCEDURE disallow_sigvtalrm () =
-  VAR i : Word.T;
   BEGIN
-    i := Usignal.sigsetmask (0);
-    i := Word.Or (i, Usignal.sigmask (Usignal.SIGVTALRM));
-    EVAL Usignal.sigsetmask (i); 
+    WITH i = Usignal.sigprocmask(Usignal.SIG_BLOCK, ThreadSwitchSignal) DO
+      <* ASSERT i = 0 *>
+    END;
   END disallow_sigvtalrm;
 
 (*--------------------------------------------- exception handling support --*)
@@ -141,5 +145,11 @@ PROCEDURE PopEFrame (frame: ADDRESS) =
   END PopEFrame;
 
 BEGIN
+  WITH i = Usignal.sigemptyset(ThreadSwitchSignal) DO
+    <* ASSERT i = 0 *>
+  END;
+  WITH i = Usignal.sigaddset(ThreadSwitchSignal, Usignal.SIGVTALRM) DO
+    <* ASSERT i = 0 *>
+  END;
 END RTThread.
 
