@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: boot-cm3-build-on-target.sh,v 1.4 2003-06-25 15:03:41 wagner Exp $
+# $Id: boot-cm3-build-on-target.sh,v 1.5 2003-07-10 22:16:05 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -46,8 +46,8 @@ L="${L} m3-sys/m3linker"
 L="${L} m3-sys/m3front"
 L="${L} m3-sys/m3quake"
 P="${P} m3-sys/cm3"
-L="${L} m3-sys/m3scanner"
-L="${L} m3-sys/m3tools"
+#L="${L} m3-sys/m3scanner"
+#L="${L} m3-sys/m3tools"
 #P="${P} m3-sys/m3cgcat"
 #P="${P} m3-sys/m3cggen"
 P="${P} m3-tools/m3bundle"
@@ -133,6 +133,7 @@ for p in ${P}; do
   if [ "$DOCLEAN" = obj ] ; then
     ${GMAKE} PROGNAME="${pkg}" LIBS="`get_libs ${pkg}`" clean-obj
   fi
-  ${GMAKE} PROGNAME="${pkg}" LIBS="`get_libs ${pkg}`" all
+  ${GMAKE} PROGNAME="${pkg}" LINKFLAGS="${GCWRAPFLAGS}" \
+           LIBS="`get_libs ${pkg}`" all
 done
 

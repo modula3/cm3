@@ -1,11 +1,12 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.32 2003-06-25 15:03:41 wagner Exp $
+# $Id: sysinfo.sh,v 1.33 2003-07-10 22:16:05 wagner Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
 SYSINFO_DONE="yes"
 
 UNAME=${UNAME:-`uname`}
+UNAMEM=${UNAMEM:=`uname -m`}
 
 PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
 
@@ -92,6 +93,7 @@ strip_exe() {
 
 #-----------------------------------------------------------------------------
 # evaluate uname information
+export GCWRAPFLAGS=""
 case "${UNAME}" in
 
   Windows*|WinNT*|Cygwin*|CYGWIN*)
@@ -183,8 +185,13 @@ case "${UNAME}" in
 
   Linux*)
     CM3_OSTYPE=POSIX
-    CM3_TARGET=LINUXLIBC6
     GMAKE=${GMAKE:-make}
+    GCWRAPFLAGS="-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
+    if [ "${UNAMEM}" = "ppc" ] ; then
+      CM3_TARGET=PPC_LINUX
+    else
+      CM3_TARGET=LINUXLIBC6
+    fi
   ;;
 
   # more need to be added here, I haven't got all the platform info ready
