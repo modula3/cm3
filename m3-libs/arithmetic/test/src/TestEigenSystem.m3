@@ -9,7 +9,6 @@ IMPORT LongRealEigenSystem    AS EigenSys,
        LongRealMatrixFast     AS M,
        LongRealVectorFast     AS V,
        LongRealPolynomialFast AS P,
-       LongRealBasic          AS R,
        LongRealMatrixFmtLex     AS MF,
        LongRealPolynomialFmtLex AS PF;
 IMPORT Wr, Stdio, Thread, Fmt, NADefinitions;
@@ -145,9 +144,6 @@ PROCEDURE RunTestA() RAISES {}=
 
   VAR
     a := NEW( M.T, 5, 5);
-    d := NEW( V.T, 5);
-    e := NEW( V.T, 5);
-    e2 := NEW( V.T, 5);
   BEGIN
     a^ := aWR;
 
