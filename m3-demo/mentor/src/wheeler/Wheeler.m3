@@ -37,8 +37,9 @@ PROCEDURE ToString(t: TEXT): String =
   END ToString;
 
 PROCEDURE TFS(s: String): TEXT =
+  VAR l := SLength(s) - 1;
   BEGIN
-    RETURN Text.FromChars(s^);
+    RETURN Text.FromChars(SUBARRAY(s^, 0, l));
   END TFS;
 
 PROCEDURE SLength(s: String): CARDINAL =
@@ -98,7 +99,7 @@ PROCEDURE Ws(alg: T; pause, finalOnly: BOOLEAN;
   PROCEDURE Rotate(s: String; i: CARDINAL): String =
     (* Return a new string that is "s" rotated "i" positions
        to the left (cyclically). *)
-    VAR sn := NUMBER(s^)-1;
+    VAR sn := SLength(s); (* NUMBER(s^)-1; *)
         res := NEW(String, sn+1);
     BEGIN
       FOR j := 0 TO sn-1 DO
