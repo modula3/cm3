@@ -13,7 +13,8 @@ PROCEDURE Sub (READONLY x, y: T): V.T RAISES {Error};
 PROCEDURE Neg (READONLY x: T): V.T;
 
 PROCEDURE Scale (READONLY x: T; y: R.T): V.T;
-PROCEDURE Inner (READONLY x, y: T): R.T RAISES {Error};
+PROCEDURE Inner (READONLY x, y: T): R.T RAISES {Error}; (*adjoint x*)
+PROCEDURE Dot(READONLY x, y: T): R.T RAISES {Error};
 
 PROCEDURE Sum (READONLY x: T): R.T;
 

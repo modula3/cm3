@@ -72,15 +72,25 @@ PROCEDURE Scale (READONLY x: T; y: R.T): V.T =
 
 (*-----------------*)
 PROCEDURE Inner (READONLY x, y: T): R.T RAISES {Error} =
-  VAR sum: R.T;
+  VAR sum := R.Zero;
   BEGIN
     AssertEqualSize(x, y);
-    sum := R.Zero;
     FOR i := FIRST(x) TO LAST(x) DO
       sum := R.Add(sum, R.Mul(R.Conj(x[i]), y[i]));
     END;
     RETURN sum;
   END Inner;
+
+(*-----------------*)
+PROCEDURE Dot (READONLY x, y: T): R.T RAISES {Error} =
+  VAR sum := R.Zero;
+  BEGIN
+    AssertEqualSize(x, y);
+    FOR i := FIRST(x) TO LAST(x) DO
+      sum := R.Add(sum, R.Mul(x[i], y[i]));
+    END;
+    RETURN sum;
+  END Dot;
 
 (*-----------------*)
 (**

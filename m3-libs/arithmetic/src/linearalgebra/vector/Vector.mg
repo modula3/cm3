@@ -114,6 +114,12 @@ PROCEDURE Inner (x, y: T): R.T RAISES {Error} =
   END Inner;
 
 (*-----------------*)
+PROCEDURE Dot (x, y: T): R.T RAISES {Error} =
+  BEGIN
+    RETURN VR.Dot(x^, y^);
+  END Dot;
+
+(*-----------------*)
 (**
    should be generalized to finding an orthonormal basis
    of the space orthogonal to a given set of vectors

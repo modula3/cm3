@@ -14,6 +14,7 @@ PROCEDURE Neg (READONLY x: T): V.T;
 
 PROCEDURE Scale (READONLY x: T; y: R.T): V.T;
 PROCEDURE Inner (READONLY x, y: T): R.T RAISES {Error};
+CONST Dot = Inner;
 
 PROCEDURE Sum (READONLY x: T): R.T;
 PROCEDURE Max (READONLY x: T): R.T;

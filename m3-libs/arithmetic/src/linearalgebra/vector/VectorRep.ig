@@ -19,6 +19,7 @@ CONST
 
   Scale = VI.Scale;
   Inner = VI.Inner;
+  Dot = VI.Dot;
 
   Sum = VI.Sum;
 
