@@ -20,6 +20,12 @@ readonly proc MatrixDecomposition (nm, mfield, vfield, rfield, rtrans) is
   build_generic_impl (basic, "MatrixDecomposition", [mfield, vfield, rfield, rtrans])
 end
 
+readonly proc EigenSystem (nm, mfield, vfield, rfield, rtrans) is
+  local basic = nm & "EigenSystem"
+  build_generic_intf (basic, "EigenSystem", [mfield, vfield, rfield], VISIBLE)
+  build_generic_impl (basic, "EigenSystem", [mfield, vfield, rfield, rtrans])
+end
+
 readonly proc MatrixFmtLex (nm, matrix, rfmt) is
   local basic = nm & "MatrixFmtLex"
   build_generic_intf (basic, "MatrixFmtLex", [matrix, rfmt], VISIBLE)
