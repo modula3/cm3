@@ -1,0 +1,5 @@
+
+override ("libm3", ROOT & "/m3-libs")
+override ("tcp", ROOT & "/m3-comm")
+override ("ui", ROOT & "/m3-ui")
+override ("vbtkit", ROOT & "/m3-ui")
