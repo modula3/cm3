@@ -8,6 +8,12 @@ readonly proc PhysicalValue (nm, field) is
   build_generic_impl (basic, "PhysicalValue", [field])
 end
 
+readonly proc UnitDatabase (nm, field) is
+  local basic = nm & "UnitDatabase"
+  build_generic_intf (basic, "UnitDatabase", [field], VISIBLE)
+  build_generic_impl (basic, "UnitDatabase", [field])
+end
+
 
 readonly proc PhysicalValueFmtLex (nm, cfield, rfield, rfmt) is
   local basic = nm & "PhysicalValueFmtLex"

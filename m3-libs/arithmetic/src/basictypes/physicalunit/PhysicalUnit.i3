@@ -20,8 +20,9 @@ TYPE
   T = Tbl.Default;
   ExpType = INTEGER;
 
-PROCEDURE New  () : T;
-PROCEDURE Copy (x : T) : T;
+PROCEDURE New       () : T;
+PROCEDURE FromArray (READONLY x : ARRAY OF ExpType) : T;
+PROCEDURE Copy      (x : T) : T;
 
 PROCEDURE Equal  (x, y : T) : BOOLEAN;
 PROCEDURE IsZero (x : T) : BOOLEAN;
