@@ -700,8 +700,8 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Structure_size_boundary   := 8;
                  Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 4096 * Char.size;
-                 Jumpbuf_size              := (26 + 36 + 129 + 1 + 1) * 
-                                              Address.size;
+                 Jumpbuf_size              := 58 * Address.size + 
+                                              32 * Address.size + 4;
                  Jumpbuf_align             := Word64.align;
                  Fixed_frame_size          := 8 * Address.size;
                  Guard_page_size           := 0 * Char.size;
