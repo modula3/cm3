@@ -7,14 +7,14 @@ REVEAL
 	fromArray := FromArray;
 	copy      := Copy;
 
-	getfirst  := GetFirst;
-	getlast   := GetLast;
-	getnumber := GetNumber;
+	getFirst  := GetFirst;
+	getLast   := GetLast;
+	getNumber := GetNumber;
 
 	translate  := Translate;
 	upsample   := UpSample;
 	downsample := DownSample;
-	wrapcyclic := WrapCyclic;
+	wrapCyclic := WrapCyclic;
 	reverse    := Reverse;
 	adjungate  := Adjungate;
 
@@ -76,7 +76,7 @@ PROCEDURE UpSample (x : T; factor : IndexType) : T =
 	z := NEW(T);
 
   BEGIN
-	z.init(x.getfirst()*factor,(x.getlast()-1)*factor+1);
+	z.init(x.getFirst()*factor,(x.getLast()-1)*factor+1);
 	FOR i:=0 TO LAST(x.data^) DO
       z.data[i*factor] := x.data[i];
 	END;
@@ -88,7 +88,7 @@ PROCEDURE DownSample (x : T; factor : IndexType) : T =
 	z := NEW(T);
 
   BEGIN
-	z.init (-((-x.getfirst()) DIV factor), (x.getlast()-1) DIV factor +1);
+	z.init (-((-x.getFirst()) DIV factor), (x.getLast()-1) DIV factor +1);
 	FOR i:=z.first TO z.first+LAST(z.data^) DO
       z.data[i-z.first] := x.data[i*factor-x.first];
 	END;
@@ -156,7 +156,7 @@ PROCEDURE Convolve (x : T; y : T) : T =
 	z := NEW(T);
 
   BEGIN
-	z.init(x.getfirst()+y.getfirst(),x.getlast()+y.getlast());
+	z.init(x.getFirst()+y.getFirst(),x.getLast()+y.getLast());
 	FOR i:=0 TO LAST(x.data^) DO
 	  FOR j:=0 TO LAST(y.data^) DO
 		z.data[i+j] := R.Add(z.data[i+j], R.Mul(x.data[i], y.data[j]));
@@ -171,12 +171,12 @@ PROCEDURE Superpose (x : T; y : T) : T =
 	j : IndexType;
 
   BEGIN
-	z.init(MIN(x.getfirst(),y.getfirst()),MAX(x.getlast(),y.getlast()));
-	j := x.getfirst()-z.getfirst();
+	z.init(MIN(x.getFirst(),y.getFirst()),MAX(x.getLast(),y.getLast()));
+	j := x.getFirst()-z.getFirst();
 	FOR i:=0 TO LAST(x.data^) DO
 	  z.data[i+j] := R.Add (z.data[i+j], x.data[i]);
 	END;
-	j := y.getfirst()-z.getfirst();
+	j := y.getFirst()-z.getFirst();
 	FOR i:=0 TO LAST(y.data^) DO
 	  z.data[i+j] := R.Add (z.data[i+j], y.data[i]);
 	END;

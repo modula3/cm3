@@ -11,14 +11,15 @@ TYPE
 	fromArray(READONLY arr : ARRAY OF R.T; first : IndexType := 0);
 	copy() : T;
 
-	getfirst()  : IndexType;
-	getlast()   : IndexType;
-	getnumber() : IndexType;
+    (*simply 'first' would collide with a instance variable*)
+	getFirst()  : IndexType;
+	getLast()   : IndexType;
+	getNumber() : IndexType;
 
 	translate  (dist   : IndexType);
 	upsample   (factor : IndexType) : T;
 	downsample (factor : IndexType) : T;
-	wrapcyclic (length : IndexType) : T;
+	wrapCyclic (length : IndexType) : T;
 	reverse    () : T;
 	adjungate  () : T;
 
