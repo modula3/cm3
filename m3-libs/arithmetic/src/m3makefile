@@ -3,6 +3,10 @@
 
 import("libm3")
 
+%import_lib("gsl","/usr/lib")
+%import_lib("gslcblas","/usr/lib")
+
+
 
 include_dir("lowlevel")
 
