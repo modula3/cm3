@@ -1,0 +1,21 @@
+%
+%  Quake functions to instantiate operations on generic matrices.
+%
+
+readonly proc MatrixBasic (nm, vfield, rfield) is
+  local basic = nm & "MatrixBasic"
+  build_generic_intf (basic, "MatrixBasic", [vfield, rfield], VISIBLE)
+  build_generic_impl (basic, "MatrixBasic", [vfield, rfield])
+end
+
+readonly proc MatrixFast (nm, vfield, rfield) is
+  local basic = nm & "MatrixFast"
+  build_generic_intf (basic, "MatrixFast", [vfield, rfield], VISIBLE)
+  build_generic_impl (basic, "MatrixFast", [vfield, rfield])
+end
+
+readonly proc MatrixFmtLex (nm, matrix, rfmt) is
+  local basic = nm & "MatrixFmtLex"
+  build_generic_intf (basic, "MatrixFmtLex", [matrix], VISIBLE)
+  build_generic_impl (basic, "MatrixFmtLex", [matrix, rfmt])
+end
