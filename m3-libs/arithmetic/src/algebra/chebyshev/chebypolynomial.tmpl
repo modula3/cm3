@@ -2,10 +2,13 @@
 %  Quake functions to instantiate operations on chebyshev polynomials.
 %
 
-readonly proc ChebyPolynomialFast (nm, rfield) is
-  local basic  = nm & "ChebyPolynomialFast"
-  local rtrans = nm & "Trans"
-  local pfield = nm & "Polynomial"
-  build_generic_intf (basic, "ChebyPolynomialFast", [rfield, pfield], VISIBLE)
-  build_generic_impl (basic, "ChebyPolynomialFast", [rfield, rtrans])
+readonly proc ChebyPolynomial (nm, impl, rfield) is
+  local rtrans   = nm & "Trans"
+  local pfield   = nm & "Polynomial"
+  local base     = nm & "ChebyPolynomial"
+  local instimpl = base & impl
+  build_generic_intf (base,     "ChebyPolynomial",      [pfield, instimpl], VISIBLE)
+  build_generic_impl (base,     "ChebyPolynomial",      [])
+  build_generic_intf (instimpl, "ChebyPolynomial"&impl, [rfield, pfield], VISIBLE)
+  build_generic_impl (instimpl, "ChebyPolynomial"&impl, [rfield, rtrans])
 end

@@ -7,7 +7,7 @@ Abstract:  Tests for BigInteger module.
 *)
 
 IMPORT
-  BigIntegerBasic        AS B,
+  BigInteger             AS B,
   BigIntegerRep          AS BR,
   BigIntegerFmtLex       AS BF,
   BigIntegerMatrix       AS BM,

@@ -8,7 +8,7 @@ IMPORT
   Integer32GCD               AS IG,
   Integer32ComplexGCD        AS ICG,
   Integer32ComplexBasic      AS IC,
-  BigIntegerBasic            AS B,
+  BigInteger                 AS B,
   BigIntegerComplexBasic     AS BC,
   BigIntegerComplexGCD       AS BCG,
   BigIntegerFractionBasic         AS BFr,

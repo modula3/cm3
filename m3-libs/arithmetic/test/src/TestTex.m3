@@ -13,7 +13,7 @@ IMPORT TempFiles AS Tmp;
 IMPORT LongRealBasic            AS R,
        LongRealComplexFast      AS C,
        LongRealPolarBasic       AS Polar,
-       BigIntegerBasic          AS B,
+       BigInteger               AS B,
        BigIntegerFractionBasic  AS Fr,
        LongRealVector           AS V,
        LongRealMatrix           AS M,
