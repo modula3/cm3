@@ -48,7 +48,7 @@ BEGIN
   TRY
     y:=PV.T{2.0D0,U.FromArray(SI.length)};
     z:=PV.Add(x,y);
-    <*ASSERT TRUE*>  (*the previous should throw an exception*)
+    <*ASSERT FALSE*>  (*the previous should throw an exception*)
   EXCEPT
     | Error(err) => <*ASSERT err=Err.unit_mismatch*>
   END;
