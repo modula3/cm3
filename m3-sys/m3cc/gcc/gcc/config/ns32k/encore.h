@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler.  ENCORE NS32000 version.
-   Copyright (C) 1988, 1993 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1993, 2000 Free Software Foundation, Inc.
    Adapted by Robert Brown (brown@harvard.harvard.edu) from the Sequent
    version by Michael Tiemann (tiemann@mcc.com).
 
@@ -55,7 +55,7 @@ Boston, MA 02111-1307, USA.  */
 #define TARGET_VERSION fprintf (stderr, " (32000, Encore syntax)");
 /* Note Encore does not standardly do -Dencore.  */
 /* budd: should have a -ns32332 (or -apc) switch! but no harm for now */
-#define CPP_PREDEFINES "-Dns32000 -Dn16 -Dns16000 -Dns32332 -Dunix -Asystem(unix) -Acpu(ns32k) -Amachine(ns32k)"
+#define CPP_PREDEFINES "-Dns32000 -Dn16 -Dns16000 -Dns32332 -Dunix -Asystem=unix -Acpu=ns32k -Amachine=ns32k"
 
 /* Ignore certain cpp directives used in header files on sysV.  */
 #define SCCS_DIRECTIVE
@@ -172,7 +172,7 @@ do {							\
     
 /* Assembler pseudo-op for shared data segment. */
 
-#define SHARED_SECTION_ASM_OP ".shrdata"
+#define SHARED_SECTION_ASM_OP "\t.shrdata"
 
 /* This says how to output an assembler line
    to define a shared common symbol. */

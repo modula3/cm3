@@ -1,5 +1,6 @@
 /* Definitions of target machine for GNU compiler.  HP-UX 68000/68020 version.
-   Copyright (C) 1987, 88, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1988, 1993, 1994, 1995, 1996, 1997, 1999, 2000
+   Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -55,10 +56,6 @@ Boston, MA 02111-1307, USA.  */
 
 /* Be compatible with system stddef.h.  */
 #define SIZE_TYPE "unsigned int"
-
-/* Use atexit for static constructors/destructors, instead of defining
-   our own exit function.  */
-#define HAVE_ATEXIT
 
 #include "m68k/m68k.h"
 
@@ -130,7 +127,7 @@ Boston, MA 02111-1307, USA.  */
 /* These are the ones defined by HPUX cc, plus mc68000 for uniformity with
    GCC on other 68000 systems.  */
 
-#define CPP_PREDEFINES "-Dhp9000s200 -Dhp9000s300 -DPWB -Dhpux -Dunix -D__hp9000s300 -D__hp9000s200 -D__PWB -D__hpux -D__unix -D__motorola__ -Asystem(unix) -Asystem(hpux) -Acpu(m68k) -Amachine(m68k)"
+#define CPP_PREDEFINES "-Dhp9000s200 -Dhp9000s300 -DPWB -Dhpux -Dunix -D__hp9000s300 -D__hp9000s200 -D__PWB -D__hpux -D__unix -D__motorola__ -Asystem=unix -Asystem=hpux -Acpu=m68k -Amachine=m68k"
 
 /* Every structure or union's size must be a multiple of 2 bytes.  */
 
@@ -232,12 +229,12 @@ Boston, MA 02111-1307, USA.  */
 #define TEXT_SECTION_ASM_OP "text"
 #define DATA_SECTION_ASM_OP "data"
 #endif
-#define	ASCII_DATA_ASM_OP "byte"
+#define	ASCII_DATA_ASM_OP "\tbyte\t"
  
 /* This is the command to make the user-level label named NAME
    defined for reference from other files.  */
 
-#define GLOBAL_ASM_OP "global"
+#define GLOBAL_ASM_OP "\tglobal\t"
 
 /* This says how to output an assembler line
    to define a global common symbol.  */
@@ -562,7 +559,7 @@ do { register int i;			\
 	putc('\n', (f));		\
 	inside = FALSE;			\
       }					\
-      fprintf((f), "\t%s ", ASCII_DATA_ASM_OP);	\
+      fprintf((f), "%s", ASCII_DATA_ASM_OP);	\
     }					\
     if ((p)[i] < 32 || (p)[i] == '\\' || (p)[i] == '"' || (p)[i] == 127) {	\
       if (inside) {			\
@@ -610,10 +607,6 @@ do { register int i;			\
     { fprintf ((FILE), "mov"); (PTR) += 4; }		\
 }
 
-/* Prevent output of `gcc_compiled.:'.  */
-
-#define ASM_IDENTIFY_GCC(FILE)
-
 #else /* not HPUX_ASM */
 
 #undef FUNCTION_PROFILER
@@ -635,7 +628,8 @@ do { register int i;			\
     && ! (GET_CODE (X) == CONST_DOUBLE && CONST_DOUBLE_MEM (X)	\
 	  && GET_CODE (CONST_DOUBLE_MEM (X)) == MEM		\
 	  && symbolic_operand (XEXP (CONST_DOUBLE_MEM (X), 0), VOIDmode))) \
-   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X)))
+   || (GET_CODE (X) == SYMBOL_REF && SYMBOL_REF_FLAG (X))       \
+   || PCREL_GENERAL_OPERAND_OK)
 
 /* hpux8 and later have C++ compatible include files, so do not
    pretend they are `extern "C"'.  */

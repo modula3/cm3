@@ -1,6 +1,7 @@
 /* Definitions of target machine for GNU compiler.
    Motorola m88100 running DG/UX.
-   Copyright (C) 1988, 92, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1992, 1993, 1994, 1995, 1996, 1997, 2000
+   Free Software Foundation, Inc.
    Contributed by Michael Tiemann (tiemann@mcc.com)
    Currently maintained by (gcc@dg-rtp.dg.com)
 
@@ -29,9 +30,6 @@ Boston, MA 02111-1307, USA.  */
 #define PREFERRED_DEBUGGING_TYPE \
   (TARGET_SVR4 ? DWARF_DEBUG : SDB_DEBUG)
 
-#ifndef VERSION_INFO2
-#define VERSION_INFO2   "$Revision$"
-#endif
 #ifndef NO_BUGS
 #define AS_BUG_IMMEDIATE_LABEL
 /* The DG/UX 4.30 assembler doesn't accept the symbol `fcr63'.  */
@@ -76,7 +74,7 @@ Boston, MA 02111-1307, USA.  */
 
 #undef	CPP_PREDEFINES
 #define CPP_PREDEFINES "-Dm88000 -Dm88k -Dunix -DDGUX -D__CLASSIFY_TYPE__=2\
-   -D__svr4__ -Asystem(unix) -Acpu(m88k) -Amachine(m88k)"
+   -D__svr4__ -Asystem=unix -Acpu=m88k -Amachine=m88k"
 
 /* If -m88100 is in effect, add -Dm88100; similarly for -m88110.
    Here, the CPU_DEFAULT is assumed to be -m88000.  If not -ansi,
@@ -181,14 +179,14 @@ Boston, MA 02111-1307, USA.  */
     if (TARGET_SVR4)							\
       {									\
 	if (TARGET_88110)						\
-	  fprintf (FILE, "\t%s\t \"%s\"\n", VERSION_ASM_OP, "04.00");   \
+	  fprintf (FILE, "%s\"%s\"\n", VERSION_ASM_OP, "04.00");	\
 	else								\
-	  fprintf (FILE, "\t%s\t \"%s\"\n", VERSION_ASM_OP, "03.00");   \
+	  fprintf (FILE, "%s\"%s\"\n", VERSION_ASM_OP, "03.00");	\
       }									\
     if (write_symbols != NO_DEBUG && !TARGET_NOLEGEND)			\
       {									\
 	fprintf (FILE, ";legend_info -fix-bb -h\"gcc-%s\" -s\"%s\"",	\
-		 VERSION_STRING, main_input_filename);			\
+		 version_string, main_input_filename);			\
 	fputs (flag_traditional ? " -lc" : " -lansi-c", FILE);		\
 	if (TARGET_STANDARD)						\
 	  fputs (" -keep-std", FILE);					\
@@ -217,30 +215,30 @@ Boston, MA 02111-1307, USA.  */
 #if defined (CRT_BEGIN) || defined (CRT_END) || defined (L__main)
 /* routines to invoke global constructors and destructors are always COFF 
    to enable linking mixed COFF and ELF objects */
-#define FINI_SECTION_ASM_OP ("section  .fini,\"x\"")
+#define FINI_SECTION_ASM_OP ("\tsection  .fini,\"x\"")
 #ifndef BCS
 #define INIT_SECTION_PREAMBLE asm ("\taddu\tr31,r31,0x20")
 #endif
 #undef	INIT_SECTION_ASM_OP
-#define INIT_SECTION_ASM_OP ("section\t .init,\"x\"")
+#define INIT_SECTION_ASM_OP ("\tsection\t .init,\"x\"")
 #undef	CTORS_SECTION_ASM_OP
-#define CTORS_SECTION_ASM_OP ("section\t .ctors,\"d\"")
+#define CTORS_SECTION_ASM_OP ("\tsection\t .ctors,\"d\"")
 #undef	DTORS_SECTION_ASM_OP
-#define DTORS_SECTION_ASM_OP ("section\t .dtors,\"d\"")
+#define DTORS_SECTION_ASM_OP ("\tsection\t .dtors,\"d\"")
 #undef OBJECT_FORMAT_ELF
 #else
 #undef        INIT_SECTION_ASM_OP
 #define INIT_SECTION_ASM_OP (TARGET_SVR4                      \
-                           ? "section\t .init,\"xa\""         \
-                           : "section\t .init,\"x\"")
+                           ? "\tsection\t .init,\"xa\""         \
+                           : "\tsection\t .init,\"x\"")
 #undef        CTORS_SECTION_ASM_OP
 #define CTORS_SECTION_ASM_OP (TARGET_SVR4                     \
-                            ? "section\t .ctors,\"aw\""       \
-                            : "section\t .ctors,\"d\"")
+                            ? "\tsection\t .ctors,\"aw\""       \
+                            : "\tsection\t .ctors,\"d\"")
 #undef        DTORS_SECTION_ASM_OP
 #define DTORS_SECTION_ASM_OP (TARGET_SVR4                     \
-                            ? "section\t .dtors,\"aw\""       \
-                            : "section\t .dtors,\"d\"")
+                            ? "\tsection\t .dtors,\"aw\""       \
+                            : "\tsection\t .dtors,\"d\"")
 #endif /* crtstuff.c */
 
 /* The lists of global object constructors and global destructors are always

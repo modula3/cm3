@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler.  MERLIN NS32000 version.
-   Copyright (C) 1990, 1994 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1994, 2000 Free Software Foundation, Inc.
    By Mark Mason (mason@reed.bitnet, pyramid!unify!mason@uunet.uu.net).
 
 This file is part of GNU CC.
@@ -48,7 +48,7 @@ Boston, MA 02111-1307, USA.  */
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES \
 	"-Dns32000 -Dns32k -Dns16000 -Dmerlin -Dunix -DUtek -Dbsd \
-	-Asystem(unix) -Asystem(bsd) -Acpu(ns32k) -Amachine(ns32k)"
+	-Asystem=unix -Asystem=bsd -Acpu=ns32k -Amachine=ns32k"
 
 /* This is how to align the code that follows an unconditional branch.
    Don't define it, since it confuses the assembler (we hear).  */
@@ -56,7 +56,7 @@ Boston, MA 02111-1307, USA.  */
 #undef LABEL_ALIGN_AFTER_BARRIER
 
 /* Assembler pseudo-op for shared data segment. */
-#define SHARED_SECTION_ASM_OP ".shdata"
+#define SHARED_SECTION_ASM_OP "\t.shdata"
 
 /* %$ means print the prefix for an immediate operand. */
 

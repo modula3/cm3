@@ -1,0 +1,1204 @@
+This is doc/gcc.info, produced by makeinfo version 4.0b from
+doc/gcc.texi.
+
+INFO-DIR-SECTION Programming
+START-INFO-DIR-ENTRY
+* gcc: (gcc).                  The GNU Compiler Collection.
+END-INFO-DIR-ENTRY
+   This file documents the use and the internals of the GNU compiler.
+
+
+   Published by the Free Software Foundation
+59 Temple Place - Suite 330
+Boston, MA 02111-1307 USA
+
+
+   Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
+1999, 2000, 2001 Free Software Foundation, Inc.
+
+
+   Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.1 or
+any later version published by the Free Software Foundation; with the
+Invariant Sections being "GNU General Public License" and "Funding Free
+Software", the Front-Cover texts being (a) (see below), and with the
+Back-Cover Texts being (b) (see below).  A copy of the license is
+included in the section entitled "GNU Free Documentation License".
+
+   (a) The FSF's Front-Cover Text is:
+
+   A GNU Manual
+
+   (b) The FSF's Back-Cover Text is:
+
+   You have freedom to copy and modify this GNU Manual, like GNU
+software.  Copies published by the Free Software Foundation raise
+funds for GNU development.
+
+
+File: gcc.info,  Node: VMS Install,  Next: Collect2,  Prev: Cross-Compiler,  Up: Installation
+
+Installing GNU CC on VMS
+========================
+
+   The VMS version of GNU CC is distributed in a backup saveset
+containing both source code and precompiled binaries.
+
+   To install the `gcc' command so you can use the compiler easily, in
+the same manner as you use the VMS C compiler, you must install the VMS
+CLD file for GNU CC as follows:
+
+  1. Define the VMS logical names `GNU_CC' and `GNU_CC_INCLUDE' to
+     point to the directories where the GNU CC executables
+     (`gcc-cpp.exe', `gcc-cc1.exe', etc.) and the C include files are
+     kept respectively.  This should be done with the commands:
+
+          $ assign /system /translation=concealed -
+            disk:[gcc.] gnu_cc
+          $ assign /system /translation=concealed -
+            disk:[gcc.include.] gnu_cc_include
+
+     with the appropriate disk and directory names.  These commands can
+     be placed in your system startup file so they will be executed
+     whenever the machine is rebooted.  You may, if you choose, do this
+     via the `GCC_INSTALL.COM' script in the `[GCC]' directory.
+
+  2. Install the `GCC' command with the command line:
+
+          $ set command /table=sys$common:[syslib]dcltables -
+            /output=sys$common:[syslib]dcltables gnu_cc:[000000]gcc
+          $ install replace sys$common:[syslib]dcltables
+
+  3. To install the help file, do the following:
+
+          $ library/help sys$library:helplib.hlb gcc.hlp
+
+     Now you can invoke the compiler with a command like `gcc /verbose
+     file.c', which is equivalent to the command `gcc -v -c file.c' in
+     Unix.
+
+   If you wish to use GNU C++ you must first install GNU CC, and then
+perform the following steps:
+
+  1. Define the VMS logical name `GNU_GXX_INCLUDE' to point to the
+     directory where the preprocessor will search for the C++ header
+     files.  This can be done with the command:
+
+          $ assign /system /translation=concealed -
+            disk:[gcc.gxx_include.] gnu_gxx_include
+
+     with the appropriate disk and directory name.  If you are going to
+     be using a C++ runtime library, this is where its install
+     procedure will install its header files.
+
+  2. Obtain the file `gcc-cc1plus.exe', and place this in the same
+     directory that `gcc-cc1.exe' is kept.
+
+     The GNU C++ compiler can be invoked with a command like `gcc /plus
+     /verbose file.cc', which is equivalent to the command `g++ -v -c
+     file.cc' in Unix.
+
+   We try to put corresponding binaries and sources on the VMS
+distribution tape.  But sometimes the binaries will be from an older
+version than the sources, because we don't always have time to update
+them.  (Use the `/version' option to determine the version number of
+the binaries and compare it with the source file `version.c' to tell
+whether this is so.)  In this case, you should use the binaries you get
+to recompile the sources.  If you must recompile, here is how:
+
+  1. Execute the command procedure `vmsconfig.com' to set up the files
+     `tm.h', `config.h', `aux-output.c', and `md.', and to create files
+     `tconfig.h' and `hconfig.h'.  This procedure also creates several
+     linker option files used by `make-cc1.com' and a data file used by
+     `make-l2.com'.
+
+          $ @vmsconfig.com
+
+  2. Setup the logical names and command tables as defined above.  In
+     addition, define the VMS logical name `GNU_BISON' to point at the
+     to the directories where the Bison executable is kept.  This
+     should be done with the command:
+
+          $ assign /system /translation=concealed -
+            disk:[bison.] gnu_bison
+
+     You may, if you choose, use the `INSTALL_BISON.COM' script in the
+     `[BISON]' directory.
+
+  3. Install the `BISON' command with the command line:
+
+          $ set command /table=sys$common:[syslib]dcltables -
+            /output=sys$common:[syslib]dcltables -
+            gnu_bison:[000000]bison
+          $ install replace sys$common:[syslib]dcltables
+
+  4. Type `@make-gcc' to recompile everything (alternatively, submit
+     the file `make-gcc.com' to a batch queue).  If you wish to build
+     the GNU C++ compiler as well as the GNU CC compiler, you must
+     first edit `make-gcc.com' and follow the instructions that appear
+     in the comments.
+
+  5. In order to use GCC, you need a library of functions which GCC
+     compiled code will call to perform certain tasks, and these
+     functions are defined in the file `libgcc2.c'.  To compile this
+     you should use the command procedure `make-l2.com', which will
+     generate the library `libgcc2.olb'.  `libgcc2.olb' should be built
+     using the compiler built from the same distribution that
+     `libgcc2.c' came from, and `make-gcc.com' will automatically do
+     all of this for you.
+
+     To install the library, use the following commands:
+
+          $ library gnu_cc:[000000]gcclib/delete=(new,eprintf)
+          $ library gnu_cc:[000000]gcclib/delete=L_*
+          $ library libgcc2/extract=*/output=libgcc2.obj
+          $ library gnu_cc:[000000]gcclib libgcc2.obj
+
+     The first command simply removes old modules that will be replaced
+     with modules from `libgcc2' under different module names.  The
+     modules `new' and `eprintf' may not actually be present in your
+     `gcclib.olb'--if the VMS librarian complains about those modules
+     not being present, simply ignore the message and continue on with
+     the next command.  The second command removes the modules that
+     came from the previous version of the library `libgcc2.c'.
+
+     Whenever you update the compiler on your system, you should also
+     update the library with the above procedure.
+
+  6. You may wish to build GCC in such a way that no files are written
+     to the directory where the source files reside.  An example would
+     be the when the source files are on a read-only disk.  In these
+     cases, execute the following DCL commands (substituting your
+     actual path names):
+
+          $ assign dua0:[gcc.build_dir.]/translation=concealed, -
+                   dua1:[gcc.source_dir.]/translation=concealed  gcc_build
+          $ set default gcc_build:[000000]
+
+     where the directory `dua1:[gcc.source_dir]' contains the source
+     code, and the directory `dua0:[gcc.build_dir]' is meant to contain
+     all of the generated object files and executables.  Once you have
+     done this, you can proceed building GCC as described above.  (Keep
+     in mind that `gcc_build' is a rooted logical name, and thus the
+     device names in each element of the search list must be an actual
+     physical device name rather than another rooted logical name).
+
+  7. *If you are building GNU CC with a previous version of GNU CC, you
+     also should check to see that you have the newest version of the
+     assembler*.  In particular, GNU CC version 2 treats global constant
+     variables slightly differently from GNU CC version 1, and GAS
+     version 1.38.1 does not have the patches required to work with GCC
+     version 2.  If you use GAS 1.38.1, then `extern const' variables
+     will not have the read-only bit set, and the linker will generate
+     warning messages about mismatched psect attributes for these
+     variables.  These warning messages are merely a nuisance, and can
+     safely be ignored.
+
+     If you are compiling with a version of GNU CC older than 1.33,
+     specify `/DEFINE=("inline=")' as an option in all the
+     compilations.  This requires editing all the `gcc' commands in
+     `make-cc1.com'.  (The older versions had problems supporting
+     `inline'.)  Once you have a working 1.33 or newer GNU CC, you can
+     change this file back.
+
+  8. If you want to build GNU CC with the VAX C compiler, you will need
+     to make minor changes in `make-cccp.com' and `make-cc1.com' to
+     choose alternate definitions of `CC', `CFLAGS', and `LIBS'.  See
+     comments in those files.  However, you must also have a working
+     version of the GNU assembler (GNU as, aka GAS) as it is used as
+     the back end for GNU CC to produce binary object modules and is
+     not included in the GNU CC sources.  GAS is also needed to compile
+     `libgcc2' in order to build `gcclib' (see above); `make-l2.com'
+     expects to be able to find it operational in
+     `gnu_cc:[000000]gnu-as.exe'.
+
+     To use GNU CC on VMS, you need the VMS driver programs `gcc.exe',
+     `gcc.com', and `gcc.cld'.  They are distributed with the VMS
+     binaries (`gcc-vms') rather than the GNU CC sources.  GAS is also
+     included in `gcc-vms', as is Bison.
+
+     Once you have successfully built GNU CC with VAX C, you should use
+     the resulting compiler to rebuild itself.  Before doing this, be
+     sure to restore the `CC', `CFLAGS', and `LIBS' definitions in
+     `make-cccp.com' and `make-cc1.com'.  The second generation
+     compiler will be able to take advantage of many optimizations that
+     must be suppressed when building with other compilers.
+
+   Under previous versions of GNU CC, the generated code would
+occasionally give strange results when linked with the sharable
+`VAXCRTL' library.  Now this should work.
+
+   Even with this version, however, GNU CC itself should not be linked
+with the sharable `VAXCRTL'.  The version of `qsort' in `VAXCRTL' has a
+bug (known to be present in VMS versions V4.6 through V5.5) which
+causes the compiler to fail.
+
+   The executables are generated by `make-cc1.com' and `make-cccp.com'
+use the object library version of `VAXCRTL' in order to make use of the
+`qsort' routine in `gcclib.olb'.  If you wish to link the compiler
+executables with the shareable image version of `VAXCRTL', you should
+edit the file `tm.h' (created by `vmsconfig.com') to define the macro
+`QSORT_WORKAROUND'.
+
+   `QSORT_WORKAROUND' is always defined when GNU CC is compiled with
+VAX C, to avoid a problem in case `gcclib.olb' is not yet available.
+
+
+File: gcc.info,  Node: Collect2,  Next: Header Dirs,  Prev: VMS Install,  Up: Installation
+
+`collect2'
+==========
+
+   GNU CC uses a utility called `collect2' on nearly all systems to
+arrange to call various initialization functions at start time.
+
+   The program `collect2' works by linking the program once and looking
+through the linker output file for symbols with particular names
+indicating they are constructor functions.  If it finds any, it creates
+a new temporary `.c' file containing a table of them, compiles it, and
+links the program a second time including that file.
+
+   The actual calls to the constructors are carried out by a subroutine
+called `__main', which is called (automatically) at the beginning of
+the body of `main' (provided `main' was compiled with GNU CC).  Calling
+`__main' is necessary, even when compiling C code, to allow linking C
+and C++ object code together.  (If you use `-nostdlib', you get an
+unresolved reference to `__main', since it's defined in the standard
+GCC library.  Include `-lgcc' at the end of your compiler command line
+to resolve this reference.)
+
+   The program `collect2' is installed as `ld' in the directory where
+the passes of the compiler are installed.  When `collect2' needs to
+find the _real_ `ld', it tries the following file names:
+
+   * `real-ld' in the directories listed in the compiler's search
+     directories.
+
+   * `real-ld' in the directories listed in the environment variable
+     `PATH'.
+
+   * The file specified in the `REAL_LD_FILE_NAME' configuration macro,
+     if specified.
+
+   * `ld' in the compiler's search directories, except that `collect2'
+     will not execute itself recursively.
+
+   * `ld' in `PATH'.
+
+   "The compiler's search directories" means all the directories where
+`gcc' searches for passes of the compiler.  This includes directories
+that you specify with `-B'.
+
+   Cross-compilers search a little differently:
+
+   * `real-ld' in the compiler's search directories.
+
+   * `TARGET-real-ld' in `PATH'.
+
+   * The file specified in the `REAL_LD_FILE_NAME' configuration macro,
+     if specified.
+
+   * `ld' in the compiler's search directories.
+
+   * `TARGET-ld' in `PATH'.
+
+   `collect2' explicitly avoids running `ld' using the file name under
+which `collect2' itself was invoked.  In fact, it remembers up a list
+of such names--in case one copy of `collect2' finds another copy (or
+version) of `collect2' installed as `ld' in a second place in the
+search path.
+
+   `collect2' searches for the utilities `nm' and `strip' using the
+same algorithm as above for `ld'.
+
+
+File: gcc.info,  Node: Header Dirs,  Prev: Collect2,  Up: Installation
+
+Standard Header File Directories
+================================
+
+   `GCC_INCLUDE_DIR' means the same thing for native and cross.  It is
+where GNU CC stores its private include files, and also where GNU CC
+stores the fixed include files.  A cross compiled GNU CC runs
+`fixincludes' on the header files in `$(tooldir)/include'.  (If the
+cross compilation header files need to be fixed, they must be installed
+before GNU CC is built.  If the cross compilation header files are
+already suitable for ISO C and GNU CC, nothing special need be done).
+
+   `GPLUSPLUS_INCLUDE_DIR' means the same thing for native and cross.
+It is where `g++' looks first for header files.  The C++ library
+installs only target independent header files in that directory.
+
+   `LOCAL_INCLUDE_DIR' is used only for a native compiler.  It is
+normally `/usr/local/include'.  GNU CC searches this directory so that
+users can install header files in `/usr/local/include'.
+
+   `CROSS_INCLUDE_DIR' is used only for a cross compiler.  GNU CC
+doesn't install anything there.
+
+   `TOOL_INCLUDE_DIR' is used for both native and cross compilers.  It
+is the place for other packages to install header files that GNU CC will
+use.  For a cross-compiler, this is the equivalent of `/usr/include'.
+When you build a cross-compiler, `fixincludes' processes any header
+files in this directory.
+
+
+File: gcc.info,  Node: C Extensions,  Next: C++ Extensions,  Prev: Installation,  Up: Top
+
+Extensions to the C Language Family
+***********************************
+
+   GNU C provides several language features not found in ISO standard C.
+(The `-pedantic' option directs GCC to print a warning message if any
+of these features is used.)  To test for the availability of these
+features in conditional compilation, check for a predefined macro
+`__GNUC__', which is always defined under GCC.
+
+   These extensions are available in C and Objective C.  Most of them
+are also available in C++.  *Note Extensions to the C++ Language: C++
+Extensions, for extensions that apply _only_ to C++.
+
+   Some features that are in ISO C99 but not C89 or C++ are also, as
+extensions, accepted by GCC in C89 mode and in C++.
+
+* Menu:
+
+* Statement Exprs::     Putting statements and declarations inside expressions.
+* Local Labels::        Labels local to a statement-expression.
+* Labels as Values::    Getting pointers to labels, and computed gotos.
+* Nested Functions::    As in Algol and Pascal, lexical scoping of functions.
+* Constructing Calls::	Dispatching a call to another function.
+* Naming Types::        Giving a name to the type of some expression.
+* Typeof::              `typeof': referring to the type of an expression.
+* Lvalues::             Using `?:', `,' and casts in lvalues.
+* Conditionals::        Omitting the middle operand of a `?:' expression.
+* Long Long::		Double-word integers---`long long int'.
+* Complex::             Data types for complex numbers.
+* Hex Floats::          Hexadecimal floating-point constants.
+* Zero Length::         Zero-length arrays.
+* Variable Length::     Arrays whose length is computed at run time.
+* Variadic Macros::	Macros with a variable number of arguments.
+* Escaped Newlines::    Slightly looser rules for escaped newlines.
+* Multi-line Strings::  String literals with embedded newlines.
+* Subscripting::        Any array can be subscripted, even if not an lvalue.
+* Pointer Arith::       Arithmetic on `void'-pointers and function pointers.
+* Initializers::        Non-constant initializers.
+* Compound Literals::   Compound literals give structures, unions
+                         or arrays as values.
+* Designated Inits::	Labeling elements of initializers.
+* Cast to Union::       Casting to union type from any member of the union.
+* Case Ranges::		`case 1 ... 9' and such.
+* Mixed Declarations::	Mixing declarations and code.
+* Function Attributes:: Declaring that functions have no side effects,
+                         or that they can never return.
+* Attribute Syntax::    Formal syntax for attributes.
+* Function Prototypes:: Prototype declarations and old-style definitions.
+* C++ Comments::        C++ comments are recognized.
+* Dollar Signs::        Dollar sign is allowed in identifiers.
+* Character Escapes::   `\e' stands for the character <ESC>.
+* Variable Attributes::	Specifying attributes of variables.
+* Type Attributes::	Specifying attributes of types.
+* Alignment::           Inquiring about the alignment of a type or variable.
+* Inline::              Defining inline functions (as fast as macros).
+* Extended Asm::        Assembler instructions with C expressions as operands.
+                         (With them you can define ``built-in'' functions.)
+* Asm Labels::          Specifying the assembler name to use for a C symbol.
+* Explicit Reg Vars::   Defining variables residing in specified registers.
+* Alternate Keywords::  `__const__', `__asm__', etc., for header files.
+* Incomplete Enums::    `enum foo;', with details to follow.
+* Function Names::	Printable strings which are the name of the current
+			 function.
+* Return Address::      Getting the return or frame address of a function.
+* Other Builtins::      Other built-in functions.
+
+
+File: gcc.info,  Node: Statement Exprs,  Next: Local Labels,  Up: C Extensions
+
+Statements and Declarations in Expressions
+==========================================
+
+   A compound statement enclosed in parentheses may appear as an
+expression in GNU C.  This allows you to use loops, switches, and local
+variables within an expression.
+
+   Recall that a compound statement is a sequence of statements
+surrounded by braces; in this construct, parentheses go around the
+braces.  For example:
+
+     ({ int y = foo (); int z;
+        if (y > 0) z = y;
+        else z = - y;
+        z; })
+
+is a valid (though slightly more complex than necessary) expression for
+the absolute value of `foo ()'.
+
+   The last thing in the compound statement should be an expression
+followed by a semicolon; the value of this subexpression serves as the
+value of the entire construct.  (If you use some other kind of statement
+last within the braces, the construct has type `void', and thus
+effectively no value.)
+
+   This feature is especially useful in making macro definitions "safe"
+(so that they evaluate each operand exactly once).  For example, the
+"maximum" function is commonly defined as a macro in standard C as
+follows:
+
+     #define max(a,b) ((a) > (b) ? (a) : (b))
+
+But this definition computes either A or B twice, with bad results if
+the operand has side effects.  In GNU C, if you know the type of the
+operands (here let's assume `int'), you can define the macro safely as
+follows:
+
+     #define maxint(a,b) \
+       ({int _a = (a), _b = (b); _a > _b ? _a : _b; })
+
+   Embedded statements are not allowed in constant expressions, such as
+the value of an enumeration constant, the width of a bit-field, or the
+initial value of a static variable.
+
+   If you don't know the type of the operand, you can still do this,
+but you must use `typeof' (*note Typeof::) or type naming (*note Naming
+Types::).
+
+   Statement expressions are not supported fully in G++, and their fate
+there is unclear.  (It is possible that they will become fully supported
+at some point, or that they will be deprecated, or that the bugs that
+are present will continue to exist indefinitely.)  Presently, statement
+expressions do not work well as default arguments.
+
+   In addition, there are semantic issues with statement-expressions in
+C++.  If you try to use statement-expressions instead of inline
+functions in C++, you may be surprised at the way object destruction is
+handled.  For example:
+
+     #define foo(a)  ({int b = (a); b + 3; })
+
+does not work the same way as:
+
+     inline int foo(int a) { int b = a; return b + 3; }
+
+In particular, if the expression passed into `foo' involves the
+creation of temporaries, the destructors for those temporaries will be
+run earlier in the case of the macro than in the case of the function.
+
+   These considerations mean that it is probably a bad idea to use
+statement-expressions of this form in header files that are designed to
+work with C++.  (Note that some versions of the GNU C Library contained
+header files using statement-expression that lead to precisely this
+bug.)
+
+
+File: gcc.info,  Node: Local Labels,  Next: Labels as Values,  Prev: Statement Exprs,  Up: C Extensions
+
+Locally Declared Labels
+=======================
+
+   Each statement expression is a scope in which "local labels" can be
+declared.  A local label is simply an identifier; you can jump to it
+with an ordinary `goto' statement, but only from within the statement
+expression it belongs to.
+
+   A local label declaration looks like this:
+
+     __label__ LABEL;
+
+or
+
+     __label__ LABEL1, LABEL2, ...;
+
+   Local label declarations must come at the beginning of the statement
+expression, right after the `({', before any ordinary declarations.
+
+   The label declaration defines the label _name_, but does not define
+the label itself.  You must do this in the usual way, with `LABEL:',
+within the statements of the statement expression.
+
+   The local label feature is useful because statement expressions are
+often used in macros.  If the macro contains nested loops, a `goto' can
+be useful for breaking out of them.  However, an ordinary label whose
+scope is the whole function cannot be used: if the macro can be
+expanded several times in one function, the label will be multiply
+defined in that function.  A local label avoids this problem.  For
+example:
+
+     #define SEARCH(array, target)                     \
+     ({                                                \
+       __label__ found;                                \
+       typeof (target) _SEARCH_target = (target);      \
+       typeof (*(array)) *_SEARCH_array = (array);     \
+       int i, j;                                       \
+       int value;                                      \
+       for (i = 0; i < max; i++)                       \
+         for (j = 0; j < max; j++)                     \
+           if (_SEARCH_array[i][j] == _SEARCH_target)  \
+             { value = i; goto found; }                \
+       value = -1;                                     \
+      found:                                           \
+       value;                                          \
+     })
+
+
+File: gcc.info,  Node: Labels as Values,  Next: Nested Functions,  Prev: Local Labels,  Up: C Extensions
+
+Labels as Values
+================
+
+   You can get the address of a label defined in the current function
+(or a containing function) with the unary operator `&&'.  The value has
+type `void *'.  This value is a constant and can be used wherever a
+constant of that type is valid.  For example:
+
+     void *ptr;
+     ...
+     ptr = &&foo;
+
+   To use these values, you need to be able to jump to one.  This is
+done with the computed goto statement(1), `goto *EXP;'.  For example,
+
+     goto *ptr;
+
+Any expression of type `void *' is allowed.
+
+   One way of using these constants is in initializing a static array
+that will serve as a jump table:
+
+     static void *array[] = { &&foo, &&bar, &&hack };
+
+   Then you can select a label with indexing, like this:
+
+     goto *array[i];
+
+Note that this does not check whether the subscript is in bounds--array
+indexing in C never does that.
+
+   Such an array of label values serves a purpose much like that of the
+`switch' statement.  The `switch' statement is cleaner, so use that
+rather than an array unless the problem does not fit a `switch'
+statement very well.
+
+   Another use of label values is in an interpreter for threaded code.
+The labels within the interpreter function can be stored in the
+threaded code for super-fast dispatching.
+
+   You may not use this mechanism to jump to code in a different
+function.  If you do that, totally unpredictable things will happen.
+The best way to avoid this is to store the label address only in
+automatic variables and never pass it as an argument.
+
+   An alternate way to write the above example is
+
+     static const int array[] = { &&foo - &&foo, &&bar - &&foo,
+                                  &&hack - &&foo };
+     goto *(&&foo + array[i]);
+
+This is more friendly to code living in shared libraries, as it reduces
+the number of dynamic relocations that are needed, and by consequence,
+allows the data to be read-only.
+
+   ---------- Footnotes ----------
+
+   (1) The analogous feature in Fortran is called an assigned goto, but
+that name seems inappropriate in C, where one can do more than simply
+store label addresses in label variables.
+
+
+File: gcc.info,  Node: Nested Functions,  Next: Constructing Calls,  Prev: Labels as Values,  Up: C Extensions
+
+Nested Functions
+================
+
+   A "nested function" is a function defined inside another function.
+(Nested functions are not supported for GNU C++.)  The nested function's
+name is local to the block where it is defined.  For example, here we
+define a nested function named `square', and call it twice:
+
+     foo (double a, double b)
+     {
+       double square (double z) { return z * z; }
+     
+       return square (a) + square (b);
+     }
+
+   The nested function can access all the variables of the containing
+function that are visible at the point of its definition.  This is
+called "lexical scoping".  For example, here we show a nested function
+which uses an inherited variable named `offset':
+
+     bar (int *array, int offset, int size)
+     {
+       int access (int *array, int index)
+         { return array[index + offset]; }
+       int i;
+       ...
+       for (i = 0; i < size; i++)
+         ... access (array, i) ...
+     }
+
+   Nested function definitions are permitted within functions in the
+places where variable definitions are allowed; that is, in any block,
+before the first statement in the block.
+
+   It is possible to call the nested function from outside the scope of
+its name by storing its address or passing the address to another
+function:
+
+     hack (int *array, int size)
+     {
+       void store (int index, int value)
+         { array[index] = value; }
+     
+       intermediate (store, size);
+     }
+
+   Here, the function `intermediate' receives the address of `store' as
+an argument.  If `intermediate' calls `store', the arguments given to
+`store' are used to store into `array'.  But this technique works only
+so long as the containing function (`hack', in this example) does not
+exit.
+
+   If you try to call the nested function through its address after the
+containing function has exited, all hell will break loose.  If you try
+to call it after a containing scope level has exited, and if it refers
+to some of the variables that are no longer in scope, you may be lucky,
+but it's not wise to take the risk.  If, however, the nested function
+does not refer to anything that has gone out of scope, you should be
+safe.
+
+   GCC implements taking the address of a nested function using a
+technique called "trampolines".   A paper describing them is available
+as `http://people.debian.org/~karlheg/Usenix88-lexic.pdf'.
+
+   A nested function can jump to a label inherited from a containing
+function, provided the label was explicitly declared in the containing
+function (*note Local Labels::).  Such a jump returns instantly to the
+containing function, exiting the nested function which did the `goto'
+and any intermediate functions as well.  Here is an example:
+
+     bar (int *array, int offset, int size)
+     {
+       __label__ failure;
+       int access (int *array, int index)
+         {
+           if (index > size)
+             goto failure;
+           return array[index + offset];
+         }
+       int i;
+       ...
+       for (i = 0; i < size; i++)
+         ... access (array, i) ...
+       ...
+       return 0;
+     
+      /* Control comes here from `access'
+         if it detects an error.  */
+      failure:
+       return -1;
+     }
+
+   A nested function always has internal linkage.  Declaring one with
+`extern' is erroneous.  If you need to declare the nested function
+before its definition, use `auto' (which is otherwise meaningless for
+function declarations).
+
+     bar (int *array, int offset, int size)
+     {
+       __label__ failure;
+       auto int access (int *, int);
+       ...
+       int access (int *array, int index)
+         {
+           if (index > size)
+             goto failure;
+           return array[index + offset];
+         }
+       ...
+     }
+
+
+File: gcc.info,  Node: Constructing Calls,  Next: Naming Types,  Prev: Nested Functions,  Up: C Extensions
+
+Constructing Function Calls
+===========================
+
+   Using the built-in functions described below, you can record the
+arguments a function received, and call another function with the same
+arguments, without knowing the number or types of the arguments.
+
+   You can also record the return value of that function call, and
+later return that value, without knowing what data type the function
+tried to return (as long as your caller expects that data type).
+
+ - Built-in Function: void * __builtin_apply_args ()
+     This built-in function returns a pointer to data describing how to
+     perform a call with the same arguments as were passed to the
+     current function.
+
+     The function saves the arg pointer register, structure value
+     address, and all registers that might be used to pass arguments to
+     a function into a block of memory allocated on the stack.  Then it
+     returns the address of that block.
+
+ - Built-in Function: void * __builtin_apply (void (*FUNCTION)(), void
+          *ARGUMENTS, size_t SIZE)
+     This built-in function invokes FUNCTION with a copy of the
+     parameters described by ARGUMENTS and SIZE.
+
+     The value of ARGUMENTS should be the value returned by
+     `__builtin_apply_args'.  The argument SIZE specifies the size of
+     the stack argument data, in bytes.
+
+     This function returns a pointer to data describing how to return
+     whatever value was returned by FUNCTION.  The data is saved in a
+     block of memory allocated on the stack.
+
+     It is not always simple to compute the proper value for SIZE.  The
+     value is used by `__builtin_apply' to compute the amount of data
+     that should be pushed on the stack and copied from the incoming
+     argument area.
+
+ - Built-in Function: void __builtin_return (void *RESULT)
+     This built-in function returns the value described by RESULT from
+     the containing function.  You should specify, for RESULT, a value
+     returned by `__builtin_apply'.
+
+
+File: gcc.info,  Node: Naming Types,  Next: Typeof,  Prev: Constructing Calls,  Up: C Extensions
+
+Naming an Expression's Type
+===========================
+
+   You can give a name to the type of an expression using a `typedef'
+declaration with an initializer.  Here is how to define NAME as a type
+name for the type of EXP:
+
+     typedef NAME = EXP;
+
+   This is useful in conjunction with the statements-within-expressions
+feature.  Here is how the two together can be used to define a safe
+"maximum" macro that operates on any arithmetic type:
+
+     #define max(a,b) \
+       ({typedef _ta = (a), _tb = (b);  \
+         _ta _a = (a); _tb _b = (b);     \
+         _a > _b ? _a : _b; })
+
+   The reason for using names that start with underscores for the local
+variables is to avoid conflicts with variable names that occur within
+the expressions that are substituted for `a' and `b'.  Eventually we
+hope to design a new form of declaration syntax that allows you to
+declare variables whose scopes start only after their initializers;
+this will be a more reliable way to prevent such conflicts.
+
+
+File: gcc.info,  Node: Typeof,  Next: Lvalues,  Prev: Naming Types,  Up: C Extensions
+
+Referring to a Type with `typeof'
+=================================
+
+   Another way to refer to the type of an expression is with `typeof'.
+The syntax of using of this keyword looks like `sizeof', but the
+construct acts semantically like a type name defined with `typedef'.
+
+   There are two ways of writing the argument to `typeof': with an
+expression or with a type.  Here is an example with an expression:
+
+     typeof (x[0](1))
+
+This assumes that `x' is an array of pointers to functions; the type
+described is that of the values of the functions.
+
+   Here is an example with a typename as the argument:
+
+     typeof (int *)
+
+Here the type described is that of pointers to `int'.
+
+   If you are writing a header file that must work when included in ISO
+C programs, write `__typeof__' instead of `typeof'.  *Note Alternate
+Keywords::.
+
+   A `typeof'-construct can be used anywhere a typedef name could be
+used.  For example, you can use it in a declaration, in a cast, or
+inside of `sizeof' or `typeof'.
+
+   * This declares `y' with the type of what `x' points to.
+
+          typeof (*x) y;
+
+   * This declares `y' as an array of such values.
+
+          typeof (*x) y[4];
+
+   * This declares `y' as an array of pointers to characters:
+
+          typeof (typeof (char *)[4]) y;
+
+     It is equivalent to the following traditional C declaration:
+
+          char *y[4];
+
+     To see the meaning of the declaration using `typeof', and why it
+     might be a useful way to write, let's rewrite it with these macros:
+
+          #define pointer(T)  typeof(T *)
+          #define array(T, N) typeof(T [N])
+
+     Now the declaration can be rewritten this way:
+
+          array (pointer (char), 4) y;
+
+     Thus, `array (pointer (char), 4)' is the type of arrays of 4
+     pointers to `char'.
+
+
+File: gcc.info,  Node: Lvalues,  Next: Conditionals,  Prev: Typeof,  Up: C Extensions
+
+Generalized Lvalues
+===================
+
+   Compound expressions, conditional expressions and casts are allowed
+as lvalues provided their operands are lvalues.  This means that you
+can take their addresses or store values into them.
+
+   Standard C++ allows compound expressions and conditional expressions
+as lvalues, and permits casts to reference type, so use of this
+extension is deprecated for C++ code.
+
+   For example, a compound expression can be assigned, provided the last
+expression in the sequence is an lvalue.  These two expressions are
+equivalent:
+
+     (a, b) += 5
+     a, (b += 5)
+
+   Similarly, the address of the compound expression can be taken.
+These two expressions are equivalent:
+
+     &(a, b)
+     a, &b
+
+   A conditional expression is a valid lvalue if its type is not void
+and the true and false branches are both valid lvalues.  For example,
+these two expressions are equivalent:
+
+     (a ? b : c) = 5
+     (a ? b = 5 : (c = 5))
+
+   A cast is a valid lvalue if its operand is an lvalue.  A simple
+assignment whose left-hand side is a cast works by converting the
+right-hand side first to the specified type, then to the type of the
+inner left-hand side expression.  After this is stored, the value is
+converted back to the specified type to become the value of the
+assignment.  Thus, if `a' has type `char *', the following two
+expressions are equivalent:
+
+     (int)a = 5
+     (int)(a = (char *)(int)5)
+
+   An assignment-with-arithmetic operation such as `+=' applied to a
+cast performs the arithmetic using the type resulting from the cast,
+and then continues as in the previous case.  Therefore, these two
+expressions are equivalent:
+
+     (int)a += 5
+     (int)(a = (char *)(int) ((int)a + 5))
+
+   You cannot take the address of an lvalue cast, because the use of its
+address would not work out coherently.  Suppose that `&(int)f' were
+permitted, where `f' has type `float'.  Then the following statement
+would try to store an integer bit-pattern where a floating point number
+belongs:
+
+     *&(int)f = 1;
+
+   This is quite different from what `(int)f = 1' would do--that would
+convert 1 to floating point and store it.  Rather than cause this
+inconsistency, we think it is better to prohibit use of `&' on a cast.
+
+   If you really do want an `int *' pointer with the address of `f',
+you can simply write `(int *)&f'.
+
+
+File: gcc.info,  Node: Conditionals,  Next: Long Long,  Prev: Lvalues,  Up: C Extensions
+
+Conditionals with Omitted Operands
+==================================
+
+   The middle operand in a conditional expression may be omitted.  Then
+if the first operand is nonzero, its value is the value of the
+conditional expression.
+
+   Therefore, the expression
+
+     x ? : y
+
+has the value of `x' if that is nonzero; otherwise, the value of `y'.
+
+   This example is perfectly equivalent to
+
+     x ? x : y
+
+In this simple case, the ability to omit the middle operand is not
+especially useful.  When it becomes useful is when the first operand
+does, or may (if it is a macro argument), contain a side effect.  Then
+repeating the operand in the middle would perform the side effect
+twice.  Omitting the middle operand uses the value already computed
+without the undesirable effects of recomputing it.
+
+
+File: gcc.info,  Node: Long Long,  Next: Complex,  Prev: Conditionals,  Up: C Extensions
+
+Double-Word Integers
+====================
+
+   ISO C99 supports data types for integers that are at least 64 bits
+wide, and as an extension GCC supports them in C89 mode and in C++.
+Simply write `long long int' for a signed integer, or `unsigned long
+long int' for an unsigned integer.  To make an integer constant of type
+`long long int', add the suffix `LL' to the integer.  To make an
+integer constant of type `unsigned long long int', add the suffix `ULL'
+to the integer.
+
+   You can use these types in arithmetic like any other integer types.
+Addition, subtraction, and bitwise boolean operations on these types
+are open-coded on all types of machines.  Multiplication is open-coded
+if the machine supports fullword-to-doubleword a widening multiply
+instruction.  Division and shifts are open-coded only on machines that
+provide special support.  The operations that are not open-coded use
+special library routines that come with GCC.
+
+   There may be pitfalls when you use `long long' types for function
+arguments, unless you declare function prototypes.  If a function
+expects type `int' for its argument, and you pass a value of type `long
+long int', confusion will result because the caller and the subroutine
+will disagree about the number of bytes for the argument.  Likewise, if
+the function expects `long long int' and you pass `int'.  The best way
+to avoid such problems is to use prototypes.
+
+
+File: gcc.info,  Node: Complex,  Next: Hex Floats,  Prev: Long Long,  Up: C Extensions
+
+Complex Numbers
+===============
+
+   ISO C99 supports complex floating data types, and as an extension GCC
+supports them in C89 mode and in C++, and supports complex integer data
+types which are not part of ISO C99.  You can declare complex types
+using the keyword `_Complex'.  As an extension, the older GNU keyword
+`__complex__' is also supported.
+
+   For example, `_Complex double x;' declares `x' as a variable whose
+real part and imaginary part are both of type `double'.  `_Complex
+short int y;' declares `y' to have real and imaginary parts of type
+`short int'; this is not likely to be useful, but it shows that the set
+of complex types is complete.
+
+   To write a constant with a complex data type, use the suffix `i' or
+`j' (either one; they are equivalent).  For example, `2.5fi' has type
+`_Complex float' and `3i' has type `_Complex int'.  Such a constant
+always has a pure imaginary value, but you can form any complex value
+you like by adding one to a real constant.  This is a GNU extension; if
+you have an ISO C99 conforming C library (such as GNU libc), and want
+to construct complex constants of floating type, you should include
+`<complex.h>' and use the macros `I' or `_Complex_I' instead.
+
+   To extract the real part of a complex-valued expression EXP, write
+`__real__ EXP'.  Likewise, use `__imag__' to extract the imaginary
+part.  This is a GNU extension; for values of floating type, you should
+use the ISO C99 functions `crealf', `creal', `creall', `cimagf',
+`cimag' and `cimagl', declared in `<complex.h>' and also provided as
+built-in functions by GCC.
+
+   The operator `~' performs complex conjugation when used on a value
+with a complex type.  This is a GNU extension; for values of floating
+type, you should use the ISO C99 functions `conjf', `conj' and `conjl',
+declared in `<complex.h>' and also provided as built-in functions by
+GCC.
+
+   GCC can allocate complex automatic variables in a noncontiguous
+fashion; it's even possible for the real part to be in a register while
+the imaginary part is on the stack (or vice-versa).  None of the
+supported debugging info formats has a way to represent noncontiguous
+allocation like this, so GCC describes a noncontiguous complex variable
+as if it were two separate variables of noncomplex type.  If the
+variable's actual name is `foo', the two fictitious variables are named
+`foo$real' and `foo$imag'.  You can examine and set these two
+fictitious variables with your debugger.
+
+   A future version of GDB will know how to recognize such pairs and
+treat them as a single variable with a complex type.
+
+
+File: gcc.info,  Node: Hex Floats,  Next: Zero Length,  Prev: Complex,  Up: C Extensions
+
+Hex Floats
+==========
+
+   ISO C99 supports floating-point numbers written not only in the usual
+decimal notation, such as `1.55e1', but also numbers such as `0x1.fp3'
+written in hexadecimal format.  As a GNU extension, GCC supports this
+in C89 mode (except in some cases when strictly conforming) and in C++.
+In that format the `0x' hex introducer and the `p' or `P' exponent
+field are mandatory.  The exponent is a decimal number that indicates
+the power of 2 by which the significant part will be multiplied.  Thus
+`0x1.f' is 1 15/16, `p3' multiplies it by 8, and the value of `0x1.fp3'
+is the same as `1.55e1'.
+
+   Unlike for floating-point numbers in the decimal notation the
+exponent is always required in the hexadecimal notation.  Otherwise the
+compiler would not be able to resolve the ambiguity of, e.g., `0x1.f'.
+This could mean `1.0f' or `1.9375' since `f' is also the extension for
+floating-point constants of type `float'.
+
+
+File: gcc.info,  Node: Zero Length,  Next: Variable Length,  Prev: Hex Floats,  Up: C Extensions
+
+Arrays of Length Zero
+=====================
+
+   Zero-length arrays are allowed in GNU C.  They are very useful as the
+last element of a structure which is really a header for a
+variable-length object:
+
+     struct line {
+       int length;
+       char contents[0];
+     };
+     
+     struct line *thisline = (struct line *)
+       malloc (sizeof (struct line) + this_length);
+     thisline->length = this_length;
+
+   In ISO C89, you would have to give `contents' a length of 1, which
+means either you waste space or complicate the argument to `malloc'.
+
+   In ISO C99, you would use a "flexible array member", which is
+slightly different in syntax and semantics:
+
+   * Flexible array members are written as `contents[]' without the `0'.
+
+   * Flexible array members have incomplete type, and so the `sizeof'
+     operator may not be applied.  As a quirk of the original
+     implementation of zero-length arrays, `sizeof' evaluates to zero.
+
+   * Flexible array members may only appear as the last member of a
+     `struct' that is otherwise non-empty.  GCC currently allows
+     zero-length arrays anywhere.  You may encounter problems, however,
+     defining structures containing only a zero-length array.  Such
+     usage is deprecated, and we recommend using zero-length arrays
+     only in places in which flexible array members would be allowed.
+
+   GCC versions before 3.0 allowed zero-length arrays to be statically
+initialized.  In addition to those cases that were useful, it also
+allowed initializations in situations that would corrupt later data.
+Non-empty initialization of zero-length arrays is now deprecated.
+
+   Instead GCC allows static initialization of flexible array members.
+This is equivalent to defining a new structure containing the original
+structure followed by an array of sufficient size to contain the data.
+I.e. in the following, `f1' is constructed as if it were declared like
+`f2'.
+
+     struct f1 {
+       int x; int y[];
+     } f1 = { 1, { 2, 3, 4 } };
+     
+     struct f2 {
+       struct f1 f1; int data[3];
+     } f2 = { { 1 }, { 2, 3, 4 } };
+
+The convenience of this extension is that `f1' has the desired type,
+eliminating the need to consistently refer to `f2.f1'.
+
+   This has symmetry with normal static arrays, in that an array of
+unknown size is also written with `[]'.
+
+   Of course, this extension only makes sense if the extra data comes at
+the end of a top-level object, as otherwise we would be overwriting
+data at subsequent offsets.  To avoid undue complication and confusion
+with initialization of deeply nested arrays, we simply disallow any
+non-empty initialization except when the structure is the top-level
+object.  For example:
+
+     struct foo { int x; int y[]; };
+     struct bar { struct foo z; };
+     
+     struct foo a = { 1, { 2, 3, 4 } };        // Valid.
+     struct bar b = { { 1, { 2, 3, 4 } } };    // Invalid.
+     struct bar c = { { 1, { } } };            // Valid.
+     struct foo d[1] = { { 1 { 2, 3, 4 } } };  // Invalid.
+
+
+File: gcc.info,  Node: Variable Length,  Next: Variadic Macros,  Prev: Zero Length,  Up: C Extensions
+
+Arrays of Variable Length
+=========================
+
+   Variable-length automatic arrays are allowed in ISO C99, and as an
+extension GCC accepts them in C89 mode and in C++.  (However, GCC's
+implementation of variable-length arrays does not yet conform in detail
+to the ISO C99 standard.)  These arrays are declared like any other
+automatic arrays, but with a length that is not a constant expression.
+The storage is allocated at the point of declaration and deallocated
+when the brace-level is exited.  For example:
+
+     FILE *
+     concat_fopen (char *s1, char *s2, char *mode)
+     {
+       char str[strlen (s1) + strlen (s2) + 1];
+       strcpy (str, s1);
+       strcat (str, s2);
+       return fopen (str, mode);
+     }
+
+   Jumping or breaking out of the scope of the array name deallocates
+the storage.  Jumping into the scope is not allowed; you get an error
+message for it.
+
+   You can use the function `alloca' to get an effect much like
+variable-length arrays.  The function `alloca' is available in many
+other C implementations (but not in all).  On the other hand,
+variable-length arrays are more elegant.
+
+   There are other differences between these two methods.  Space
+allocated with `alloca' exists until the containing _function_ returns.
+The space for a variable-length array is deallocated as soon as the
+array name's scope ends.  (If you use both variable-length arrays and
+`alloca' in the same function, deallocation of a variable-length array
+will also deallocate anything more recently allocated with `alloca'.)
+
+   You can also use variable-length arrays as arguments to functions:
+
+     struct entry
+     tester (int len, char data[len][len])
+     {
+       ...
+     }
+
+   The length of an array is computed once when the storage is allocated
+and is remembered for the scope of the array in case you access it with
+`sizeof'.
+
+   If you want to pass the array first and the length afterward, you can
+use a forward declaration in the parameter list--another GNU extension.
+
+     struct entry
+     tester (int len; char data[len][len], int len)
+     {
+       ...
+     }
+
+   The `int len' before the semicolon is a "parameter forward
+declaration", and it serves the purpose of making the name `len' known
+when the declaration of `data' is parsed.
+
+   You can write any number of such parameter forward declarations in
+the parameter list.  They can be separated by commas or semicolons, but
+the last one must end with a semicolon, which is followed by the "real"
+parameter declarations.  Each forward declaration must match a "real"
+declaration in parameter name and data type.  ISO C99 does not support
+parameter forward declarations.
+

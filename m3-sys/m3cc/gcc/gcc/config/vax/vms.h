@@ -1,5 +1,5 @@
 /* Output variables, constants and external declarations, for GNU compiler.
-   Copyright (C) 1988, 1994, 1995, 1996, 1997 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1994, 1995, 1996, 1997, 1999 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -41,7 +41,7 @@ Boston, MA 02111-1307, USA.  */
    and GNU CPP is not used on VMS except with GNU C.  */
 #define CPP_PREDEFINES \
 "-Dvax -Dvms -DVMS -D__vax__ -D__vms__ -D__VMS__\
- -D__GNUC__=2 -D__GNUC_MINOR__=7 -Asystem(vms) -Acpu(vax) -Amachine(vax)"
+ -D__GNUC__=2 -D__GNUC_MINOR__=7 -Asystem=vms -Acpu=vax -Amachine=vax"
 
 /* These match the definitions used in VAXCRTL, the VMS C run-time library */
 
@@ -94,8 +94,7 @@ Boston, MA 02111-1307, USA.  */
  * setting of -4 will end up adding them right back again, but don't bother.
  */
 #define MAYBE_VMS_FUNCTION_PROLOGUE(FILE)	\
-{ extern char *current_function_name;		\
-  char *p = current_function_name;		\
+{ const char *p = current_function_name;	\
   int is_main = strcmp ("main", p) == 0;	\
   while (!is_main && *p != '\0')		\
     {						\
@@ -298,9 +297,6 @@ const_section ()					\
   assemble_name ((FILE), (NAME));					\
   fputc ('\n', (FILE));							\
 }
-
-/* True for VMS V4.6 and later.  */
-#define HAVE_ATEXIT
 
 /* The following definitions are used in libgcc2.c with the __main
    function.  The _SHR symbol is used when the sharable image library

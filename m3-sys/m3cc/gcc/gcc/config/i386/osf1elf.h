@@ -1,10 +1,9 @@
 /* OSF/1 1.3 now is compitable with SVR4, so include sysv4.h, and
-   put difference here.  */
+   put difference here.
+   Copyright (C) 2000 Free Software Foundation, Inc. */
 
 #include <stdio.h>
 #include "i386/sysv4.h"	/* Base i386 target machine definitions */
-#define _sys_siglist sys_siglist
-extern char *sys_siglist[];
 
 #undef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (i386 OSF/1)");
@@ -20,6 +19,7 @@ extern char *sys_siglist[];
 /* Note, -fpic and -fPIC are equivalent */
 #undef  CPP_SPEC
 #define CPP_SPEC "\
+%(cpp_cpu) \
 %{fpic: -D__SHARED__} %{fPIC: %{!fpic: -D__SHARED__}} \
 %{.S:	%{!ansi:%{!traditional:%{!traditional-cpp:%{!ftraditional: -traditional}}}}} \
 %{.S:	-D__LANGUAGE_ASSEMBLY %{!ansi:-DLANGUAGE_ASSEMBLY}} \
@@ -31,7 +31,7 @@ extern char *sys_siglist[];
 
 /* -mmcount or -mno-mcount should be used with -pg or -p */
 #undef  CC1_SPEC
-#define CC1_SPEC "%{p: %{!mmcount: %{!mno-mcount: -mno-mcount }}} \
+#define CC1_SPEC "%(cc1_cpu) %{p: %{!mmcount: %{!mno-mcount: -mno-mcount }}} \
 %{!p: %{pg: %{!mmcount: %{!mno-mcount: -mno-mcount }}}}"
 
 /* Note, -D__NO_UNDERSCORES__ -D__ELF__ are provided in the older version of
@@ -39,7 +39,8 @@ extern char *sys_siglist[];
    */
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES \
-  "-D__NO_UNDERSCORES__ -D__ELF__ -DOSF -DOSF1 -Di386 -Dunix -Asystem(xpg4) -Asystem(osf1) -Acpu(i386) -Amachine(i386)"
+  "-D__NO_UNDERSCORES__ -D__ELF__ -DOSF -DOSF1 -Dunix \
+   -Asystem=unix -Asystem=xpg4 -Asystem=osf1"
 
 /* current OSF/1 doesn't provide separate crti.o and gcrti.o (and also, crtn.o
    and gcrtn.o) for profile.  */
@@ -84,21 +85,6 @@ extern char *sys_siglist[];
 #undef  LIBGCC_SPEC
 #define LIBGCC_SPEC "%{!shared:%{!symbolic:libgcc.a%s}}"
 
-/* A C statement to output assembler commands which will identify the object
-  file as having been compile with GNU CC. We don't need or want this for
-  OSF1. */
-#undef ASM_IDENTIFY_GCC
-#define ASM_IDENTIFY_GCC(FILE)
-
-/* Identify the front-end which produced this file.  To keep symbol
-   space down, and not confuse kdb, only do this if the language is
-   not C.  */
-#define ASM_IDENTIFY_LANGUAGE(STREAM)                                   \
-{                                                                       \
-  if (strcmp (lang_identify (), "c") != 0)                              \
-    output_lang_identify (STREAM);                                      \
-}
-
 /* Specify size_t, ptrdiff_t, and wchar_t types.  */
 #undef  SIZE_TYPE
 #undef  PTRDIFF_TYPE
@@ -121,7 +107,8 @@ extern char *sys_siglist[];
 
 #undef	SUBTARGET_SWITCHES
 #define SUBTARGET_SWITCHES						\
-     { "mcount",		-MASK_NO_MCOUNT, "Profiling uses mcount" },			\
+     { "mcount",		-MASK_NO_MCOUNT,			\
+       N_("Profiling uses mcount") },					\
      { "no-mcount",		 MASK_NO_MCOUNT, "" },
 
 /* This macro generates the assembly code for function entry.

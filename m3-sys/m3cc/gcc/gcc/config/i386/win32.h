@@ -2,7 +2,8 @@
    hosting on Windows NT 3.x, using a Unix style C library and tools,
    as distinct from winnt.h, which is used to build GCC for use with a
    windows style library and tool set and uses the Microsoft tools.
-   Copyright (C) 1995-1998 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000
+   Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -47,21 +48,25 @@ Boston, MA 02111-1307, USA. */
 #define TARGET_NOP_FUN_DLLIMPORT (target_flags & MASK_NOP_FUN_DLLIMPORT)
 
 #undef  SUBTARGET_SWITCHES
-#define SUBTARGET_SWITCHES \
-    { "win32",                           MASK_WIN32, "Use Mingw32 interface" }, \
-    { "cygwin",                          MASK_CYGWIN, "Use Cygwin interface"  },  \
-    { "windows",                         MASK_WINDOWS, "Use bare Windows interface" }, \
-    { "dll",                             MASK_DLL, "Generate code for a DLL" },     \
-    { "nop-fun-dllimport",		 MASK_NOP_FUN_DLLIMPORT, "Ignore dllimport for functions" }, \
-    { "no-nop-fun-dllimport",		 MASK_NOP_FUN_DLLIMPORT, "" },
+#define SUBTARGET_SWITCHES						\
+    { "win32",			MASK_WIN32,				\
+      N_("Use Mingw32 interface") },					\
+    { "cygwin",			MASK_CYGWIN,				\
+      N_("Use Cygwin interface")  },					\
+    { "windows",		MASK_WINDOWS,				\
+      N_("Use bare Windows interface") },				\
+    { "dll",			MASK_DLL,				\
+      N_("Generate code for a DLL") },					\
+    { "nop-fun-dllimport",	MASK_NOP_FUN_DLLIMPORT,			\
+      N_("Ignore dllimport for functions") }, 				\
+    { "no-nop-fun-dllimport",	MASK_NOP_FUN_DLLIMPORT, "" },
 
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-D_WIN32 \
-  -DWINNT  -D_X86_=1 -D__STDC__=1\
+#define CPP_PREDEFINES "-D_WIN32 -DWINNT -D_X86_=1 \
   -D__stdcall=__attribute__((__stdcall__)) \
   -D__cdecl=__attribute__((__cdecl__)) \
-  -Asystem(winnt)"
+  -Asystem=winnt"
 
 #undef STARTFILE_SPEC
 
@@ -97,7 +102,6 @@ Boston, MA 02111-1307, USA. */
    so take that from libgcc2.c */
 
 #define NEED_ATEXIT 1
-#define HAVE_ATEXIT 1     
 
 #undef EXTRA_SECTIONS
 #define EXTRA_SECTIONS in_ctor, in_dtor
@@ -132,7 +136,7 @@ dtor_section ()							\
 #define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)	\
   do {						\
     ctor_section ();				\
-    fprintf (FILE, "%s\t", ASM_LONG);		\
+    fputs (ASM_LONG, FILE);			\
     assemble_name (FILE, NAME);			\
     fprintf (FILE, "\n");			\
   } while (0)
@@ -140,7 +144,7 @@ dtor_section ()							\
 #define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)       	\
   do {						\
     dtor_section ();                   		\
-    fprintf (FILE, "%s\t", ASM_LONG);		\
+    fputs (ASM_LONG, FILE);			\
     assemble_name (FILE, NAME);              	\
     fprintf (FILE, "\n");			\
   } while (0)
@@ -186,16 +190,17 @@ while (0)
 #undef  STRIP_NAME_ENCODING
 #define STRIP_NAME_ENCODING(VAR,SYMBOL_NAME)				\
 do {									\
-  char *_p;								\
-  char *_name = ((SYMBOL_NAME) + ((SYMBOL_NAME)[0] == '*'));		\
+  const char *_p;							\
+  const char *_name = ((SYMBOL_NAME) + ((SYMBOL_NAME)[0] == '*'));	\
   for (_p = _name; *_p && *_p != '@'; ++_p)				\
     ;									\
   if (*_p == '@')							\
     {									\
       int _len = _p - _name;						\
-      (VAR) = (char *) alloca (_len + 1);				\
-      strncpy ((VAR), _name, _len);					\
-      (VAR)[_len] = '\0';						\
+      char *_new_name = (char *) alloca (_len + 1);			\
+      strncpy (_new_name, _name, _len);					\
+      _new_name[_len] = '\0';						\
+      (VAR) = _new_name;						\
     }									\
   else									\
     (VAR) = _name;							\
@@ -267,14 +272,10 @@ do {								\
 
 #define SUBTARGET_PROLOGUE						\
   if (profile_flag 							\
-      && strcmp (IDENTIFIER_POINTER (DECL_NAME (current_function_decl)),\
-		 "main") == 0)						\
+      && MAIN_NAME_P (DECL_NAME (current_function_decl))		\
      {									\
       rtx xops[1];							\
       xops[0] = gen_rtx_MEM (FUNCTION_MODE,				\
 			 gen_rtx (SYMBOL_REF, Pmode, "_monstartup"));	\
-      if (do_rtl)							\
-	emit_call_insn (gen_rtx (CALL, VOIDmode, xops[0], const0_rtx));	\
-      else								\
-	output_asm_insn (AS1 (call,%P1), xops);			\
+      emit_call_insn (gen_rtx (CALL, VOIDmode, xops[0], const0_rtx));	\
      }

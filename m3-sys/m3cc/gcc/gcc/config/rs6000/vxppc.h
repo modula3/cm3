@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler.  Vxworks PowerPC version.
-   Copyright (C) 1996 Free Software Foundation, Inc.
+   Copyright (C) 1996, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -20,53 +20,36 @@ Boston, MA 02111-1307, USA.  */
 
 /* This file just exists to give specs for the PowerPC running on VxWorks.  */
 
-#include "rs6000/sysv4.h"
+/* Reset defaults */
+#undef	CPP_OS_DEFAULT_SPEC
+#define CPP_OS_DEFAULT_SPEC "%(cpp_os_vxworks)"
 
-/* ??? This file redefines CPP_SPEC which is wrong.  It should instead define
-   one of the extra specs that gets included in CPP_SPEC.  For instance,
-   CPP_OS_DEFAULT_SPEC.  The mrelocatable line was copied from CPP_SYSV_SPEC.
-   There is probably other stuff missing.  */
+#undef	LIB_DEFAULT_SPEC
+#define LIB_DEFAULT_SPEC "%(lib_vxworks)"
 
-#undef CPP_SPEC
-#define CPP_SPEC "%{posix: -D_POSIX_SOURCE} %(cpp_sysv) %(cpp_endian) %(cpp_cpu) \
-%{mads: %(cpp_os_ads) } \
-%{myellowknife: %(cpp_os_yellowknife) } \
-%{mmvme: %(cpp_os_mvme) } \
-%{msim: %(cpp_os_sim) } \
-%{mcall-linux: %(cpp_os_linux) } \
-%{mcall-solaris: %(cpp_os_solaris) } \
-%{!mads: %{!myellowknife: %{!mmvme: %{!msim: %{!mcall-linux: %{!mcall-solaris: %(cpp_os_default) }}}}}} \
-%{!DCPU=*: \
-  %{!mcpu*: -DCPU=PPC603} \
-  %{mcpu=powerpc: -DCPU=PPC603} \
-  %{mcpu=403: -DCPU=PPC403} \
-  %{mcpu=601: -DCPU=PPC601} \
-  %{mcpu=603: -DCPU=PPC603} \
-  %{mcpu=604: -DCPU=PPC604}}"
+#undef	STARTFILE_DEFAULT_SPEC
+#define STARTFILE_DEFAULT_SPEC "%(startfile_vxworks)"
+
+#undef	ENDFILE_DEFAULT_SPEC
+#define ENDFILE_DEFAULT_SPEC "%(endfile_vxworks)"
+
+#undef	LINK_START_DEFAULT_SPEC
+#define LINK_START_DEFAULT_SPEC "%(link_start_vxworks)"
+
+#undef	LINK_OS_DEFAULT_SPEC
+#define LINK_OS_DEFAULT_SPEC "%(link_os_vxworks)"
 
 #undef CPP_PREDEFINES
 #define CPP_PREDEFINES "\
--D__vxworks -Asystem(vxworks) -Asystem(embedded) \
--Acpu(powerpc) -Amachine(powerpc)"
+-D__vxworks -D__vxworks__ -Asystem=vxworks -Asystem=embedded \
+-Acpu=powerpc -Amachine=powerpc"
 
-/* VxWorks does all the library stuff itself.  */
+/* Don't define _LITTLE_ENDIAN or _BIG_ENDIAN */
+#undef	CPP_ENDIAN_BIG_SPEC
+#define CPP_ENDIAN_BIG_SPEC "-D__BIG_ENDIAN__ -Amachine=bigendian"
 
-#undef LIB_SPEC
-#define LIB_SPEC ""
-
-/* VxWorks uses object files, not loadable images.  make linker just
-   combine objects. */
-
-#undef LINK_SPEC
-#define LINK_SPEC "-r"
-
-/* VxWorks provides the functionality of crt0.o and friends itself.  */
-
-#undef STARTFILE_SPEC
-#define STARTFILE_SPEC ""
-
-#undef ENDFILE_SPEC
-#define ENDFILE_SPEC ""
+#undef	CPP_ENDIAN_LITTLE_SPEC
+#define CPP_ENDIAN_LITTLE_SPEC "-D__LITTLE_ENDIAN__ -Amachine=littleendian"
 
 /* We use stabs-in-elf for debugging */
 #undef PREFERRED_DEBUGGING_TYPE

@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler.  SEQUENT NS32000 version.
-   Copyright (C) 1987 Free Software Foundation, Inc.
+   Copyright (C) 1987, 2000 Free Software Foundation, Inc.
    Contributed by Michael Tiemann (tiemann@mcc.com)
 
 This file is part of GNU CC.
@@ -37,7 +37,7 @@ Boston, MA 02111-1307, USA.  */
 #define TARGET_VERSION fprintf (stderr, " (32000, Sequent syntax)");
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Dns32000 -Dsequent -Dunix -Asystem(unix) -Asystem(bsd) -Acpu(ns32k) -Amachine(ns32k)"
+#define CPP_PREDEFINES "-Dns32000 -Dsequent -Dunix -Asystem=unix -Asystem=bsd -Acpu=ns32k -Amachine=ns32k"
 
 /* Link with libg.a when debugging, for dbx's sake.  */
 
@@ -57,7 +57,7 @@ Boston, MA 02111-1307, USA.  */
 #undef LABEL_ALIGN_AFTER_BARRIER
 
 /* Assembler pseudo-op for shared data segment. */
-#define SHARED_SECTION_ASM_OP ".shdata"
+#define SHARED_SECTION_ASM_OP "\t.shdata"
 
 /* Control how stack adjust insns are output.  */
 #define SEQUENT_ADJUST_STACK

@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.
    Motorola 88100 in an 88open ABI environment.
-   Copyright (C) 1990, 1991 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1991, 2000 Free Software Foundation, Inc.
 
    Written by Ron Guilmette (rfg@netcom.com).
    Contributed to FSF by Network Computing Devices.
@@ -38,7 +38,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* Identify the compiler.  */
 #undef  VERSION_INFO1
-#define VERSION_INFO1 "88open ABI, "
+#define VERSION_INFO1 "88open ABI"
 
 /* Default switches */
 #undef	TARGET_DEFAULT
@@ -51,7 +51,7 @@ Boston, MA 02111-1307, USA.  */
 
 #undef  CPP_PREDEFINES
 #define CPP_PREDEFINES \
-  "-Dm88000 -Dm88k -Dunix -D__svr4__ -Amachine(m88k) -Acpu(m88k) -Asystem(unix) -Asystem(svr4)"
+  "-Dm88000 -Dm88k -Dunix -D__svr4__ -Amachine=m88k -Acpu=m88k -Asystem=unix -Asystem=svr4"
 
 /* For the AT&T SVR4 port, the function is _mcount.  */
 #undef	FUNCTION_PROFILER
@@ -60,9 +60,9 @@ Boston, MA 02111-1307, USA.  */
 
 /* Override svr4.h and m88k.h.  */
 #undef	INIT_SECTION_ASM_OP
-#define INIT_SECTION_ASM_OP "section\t.init,\"xa\",#progbits"
+#define INIT_SECTION_ASM_OP "\tsection\t.init,\"xa\",#progbits"
 #undef	FINI_SECTION_ASM_OP
-#define FINI_SECTION_ASM_OP "section\t.fini,\"xa\",#progbits"
+#define FINI_SECTION_ASM_OP "\tsection\t.fini,\"xa\",#progbits"
 
 /* Define the pseudo-ops used to switch to the .ctors and .dtors sections.
  
@@ -80,6 +80,6 @@ Boston, MA 02111-1307, USA.  */
    via the SHF_WRITE attribute.)  */
  
 #undef	CTORS_SECTION_ASM_OP
-#define CTORS_SECTION_ASM_OP	"section\t.ctors,\"aw\""
+#define CTORS_SECTION_ASM_OP	"\tsection\t.ctors,\"aw\""
 #undef	DTORS_SECTION_ASM_OP
-#define DTORS_SECTION_ASM_OP	"section\t.dtors,\"aw\""
+#define DTORS_SECTION_ASM_OP	"\tsection\t.dtors,\"aw\""

@@ -18,10 +18,6 @@ along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-/* #defines that need visibility everywhere.  */
-#define FALSE 0
-#define TRUE 1
-
 /* Other configurations get these via autoconfig.  */
 #define STDC_HEADERS 1
 #define HAVE_STDLIB_H 1
@@ -98,9 +94,9 @@ Boston, MA 02111-1307, USA.  */
    pnt1_ = pnt_ - 1;						\
    while (*++pnt1_)						\
      if ((*pnt1_ >= 'A' && *pnt1_ <= 'Z')) *pnt1_ |= 0x20;	\
-   pnt1_ = rindex (pnt_, ']'); 					\
-   pnt1_ = (pnt1_ == 0 ? rindex (pnt_, '>') : pnt1_);		\
-   pnt1_ = (pnt1_ == 0 ? rindex (pnt_, ':') : pnt1_);		\
+   pnt1_ = strrchr (pnt_, ']'); 				\
+   pnt1_ = (pnt1_ == 0 ? strrchr (pnt_, '>') : pnt1_);		\
+   pnt1_ = (pnt1_ == 0 ? strrchr (pnt_, ':') : pnt1_);		\
    (pnt1_ == 0 ? pnt_ : pnt1_ + 1);				\
  })
 
@@ -204,3 +200,6 @@ extern void *alloca(unsigned);
 extern char *alloca();
 #endif
 #endif
+
+#define OBJECT_SUFFIX ".obj"
+#define EXECUTABLE_SUFFIX ".exe"

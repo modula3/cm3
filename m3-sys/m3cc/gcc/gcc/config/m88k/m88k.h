@@ -1,6 +1,7 @@
 /* Definitions of target machine for GNU compiler for
    Motorola m88100 in an 88open OCS/BCS environment.
-   Copyright (C) 1988, 92-97, 1998 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000
+   Free Software Foundation, Inc.
    Contributed by Michael Tiemann (tiemann@cygnus.com).
    Currently maintained by (gcc@dg-rtp.dg.com)
 
@@ -93,9 +94,9 @@ enum processor_type {
 
 /* External variables/functions defined in m88k.c.  */
 
-extern char *m88k_pound_sign;
-extern char *m88k_short_data;
-extern char *m88k_version;
+extern const char *m88k_pound_sign;
+extern const char *m88k_short_data;
+extern const char *m88k_version;
 extern char m88k_volatile_code;
 
 extern unsigned m88k_gp_threshold;
@@ -111,54 +112,12 @@ extern struct rtx_def *m88k_compare_op1;
 
 extern enum processor_type m88k_cpu;
 
-extern int null_prologue ();
-extern int integer_ok_for_set ();
-extern int m88k_debugger_offset ();
-
-
-extern void emit_bcnd ();
-extern void expand_block_move ();
-extern void m88k_layout_frame ();
-extern void m88k_expand_prologue ();
-extern void m88k_begin_prologue ();
-extern void m88k_end_prologue ();
-extern void m88k_expand_epilogue ();
-extern void m88k_begin_epilogue ();
-extern void m88k_end_epilogue ();
-extern void output_function_profiler ();
-extern void output_function_block_profiler ();
-extern void output_block_profiler ();
-extern void output_file_start ();
-extern void output_ascii ();
-extern void output_label ();
-extern void print_operand ();
-extern void print_operand_address ();
-
-extern char *output_load_const_int ();
-extern char *output_load_const_float ();
-extern char *output_load_const_double ();
-extern char *output_load_const_dimode ();
-extern char *output_and ();
-extern char *output_ior ();
-extern char *output_xor ();
-extern char *output_call ();
-
-extern struct rtx_def *emit_test ();
-extern struct rtx_def *legitimize_address ();
-extern struct rtx_def *legitimize_operand ();
-extern struct rtx_def *m88k_function_arg ();
-extern struct rtx_def *m88k_builtin_saveregs ();
-
-extern enum m88k_instruction classify_integer ();
-
 /* external variables defined elsewhere in the compiler */
 
 extern int target_flags;			/* -m compiler switches */
 extern int frame_pointer_needed;		/* current function has a FP */
-extern int current_function_pretend_args_size;	/* args size without ... */
 extern int flag_delayed_branch;			/* -fdelayed-branch */
 extern int flag_pic;				/* -fpic */
-extern char * reg_names[];
 
 /* Specify the default monitors.  The meaning of these values can
    be obtained by doing "grep MONITOR_GCC *m88k*".  Generally, the
@@ -191,26 +150,11 @@ extern char * reg_names[];
    Redefined in sysv3.h, sysv4.h, dgux.h, and luna.h.  */
 #define CPP_PREDEFINES "-Dm88000 -Dm88k -Dunix -D__CLASSIFY_TYPE__=2"
 
-#define TARGET_VERSION fprintf (stderr, " (%s%s)", \
-				VERSION_INFO1, VERSION_INFO2)
+#define TARGET_VERSION fprintf (stderr, " (%s)", VERSION_INFO1)
 
-/* Print subsidiary information on the compiler version in use.
-   Redefined in sysv4.h, and luna.h.  */
-#define VERSION_INFO1	"m88k, "
-#ifndef VERSION_INFO2
-#define VERSION_INFO2   "$Revision$"
+#ifndef VERSION_INFO1
+#define VERSION_INFO1	"m88k"
 #endif
-
-#ifndef VERSION_STRING
-#define VERSION_STRING  version_string
-#ifdef __STDC__
-#define TM_RCS_ID      "@(#)" __FILE__ " $Revision$ " __DATE__
-#else
-#define TM_RCS_ID      "$What: <@(#) m88k.h,v	1.1.1.2.2.2> $"
-#endif  /* __STDC__ */
-#else
-#define TM_RCS_ID      "@(#)" __FILE__ " " VERSION_INFO2 " " __DATE__
-#endif  /* VERSION_STRING */
 
 /* Run-time compilation parameters selecting different hardware subsets.  */
 
@@ -346,7 +290,7 @@ extern char * reg_names[];
 									     \
     if (m88k_short_data)						     \
       {									     \
-	char *p = m88k_short_data;					     \
+	const char *p = m88k_short_data;				     \
 	while (*p)							     \
 	  if (*p >= '0' && *p <= '9')					     \
 	    p++;							     \
@@ -645,10 +589,6 @@ extern char * reg_names[];
       }							\
   }
 
-/* These interfaces that don't apply to the m88000.  */
-/* OVERLAPPING_REGNO_P(REGNO) 0 */
-/* INSN_CLOBBERS_REGNO_P(INSN, REGNO) 0 */
-
 /* True if register is an extended register.  */
 #define XRF_REGNO_P(N) ((N) < FIRST_PSEUDO_REGISTER && (N) >= FIRST_EXTENDED_REGISTER)
  
@@ -753,8 +693,8 @@ extern char * reg_names[];
   static int leaf[] = REG_LEAF_ALLOC_ORDER;			\
   static int nonleaf[] = REG_ALLOC_ORDER;			\
 								\
-  bcopy (regs_ever_live[1] ? nonleaf : leaf, reg_alloc_order,	\
-	 FIRST_PSEUDO_REGISTER * sizeof (int));			\
+  memcpy (reg_alloc_order, regs_ever_live[1] ? nonleaf : leaf,	\
+	  FIRST_PSEUDO_REGISTER * sizeof (int));		\
 }
 
 /*** Register Classes ***/
@@ -932,7 +872,7 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
    `current_function_outgoing_args_size'.  No space will be pushed
    onto the stack for each call; instead, the function prologue should
    increase the stack frame size by this amount.  */
-#define ACCUMULATE_OUTGOING_ARGS
+#define ACCUMULATE_OUTGOING_ARGS 1
 
 /* Offset from the stack pointer register to the first location at which
    outgoing arguments are placed.  Use the default value zero.  */
@@ -991,9 +931,8 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
    If the precise function being called is known, FUNC is its FUNCTION_DECL;
    otherwise, FUNC is 0.  */
 #define FUNCTION_VALUE(VALTYPE, FUNC) \
-  gen_rtx (REG, \
-	   TYPE_MODE (VALTYPE) == BLKmode ? SImode : TYPE_MODE (VALTYPE), \
-	   2)
+  gen_rtx_REG (TYPE_MODE (VALTYPE) == BLKmode ? SImode : TYPE_MODE (VALTYPE), \
+	       2)
 
 /* Define this if it differs from FUNCTION_VALUE.  */
 /* #define FUNCTION_OUTGOING_VALUE(VALTYPE, FUNC) ... */
@@ -1013,7 +952,7 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
-#define LIBCALL_VALUE(MODE)  gen_rtx (REG, MODE, 2)
+#define LIBCALL_VALUE(MODE)  gen_rtx_REG (MODE, 2)
 
 /* True if N is a possible register number for a function value
    as seen by the caller.  */
@@ -1093,7 +1032,19 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
 
 /* Generate necessary RTL for __builtin_saveregs().
    ARGLIST is the argument list; see expr.c.  */
-#define EXPAND_BUILTIN_SAVEREGS(ARGLIST) m88k_builtin_saveregs (ARGLIST)
+#define EXPAND_BUILTIN_SAVEREGS() m88k_builtin_saveregs ()
+
+/* Define the `__builtin_va_list' type for the ABI.  */
+#define BUILD_VA_LIST_TYPE(VALIST) \
+  (VALIST) = m88k_build_va_list ()
+
+/* Implement `va_start' for varargs and stdarg.  */
+#define EXPAND_BUILTIN_VA_START(stdarg, valist, nextarg) \
+  m88k_va_start (stdarg, valist, nextarg)
+
+/* Implement `va_arg'.  */
+#define EXPAND_BUILTIN_VA_ARG(valist, type) \
+  m88k_va_arg (valist, type)
 
 /* Generate the assembly code for function entry. */
 #define FUNCTION_PROLOGUE(FILE, SIZE) m88k_begin_prologue(FILE, SIZE)
@@ -1240,8 +1191,8 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
 
 #define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT)			\
 {									\
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 40)), FNADDR); \
-  emit_move_insn (gen_rtx (MEM, SImode, plus_constant (TRAMP, 36)), CXT); \
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 40)), FNADDR); \
+  emit_move_insn (gen_rtx_MEM (SImode, plus_constant (TRAMP, 36)), CXT); \
 }
 
 /*** Library Subroutine Names ***/
@@ -1253,9 +1204,7 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
 
 /*** Addressing Modes ***/
 
-#define EXTRA_CC_MODES CCEVENmode
-
-#define EXTRA_CC_NAMES "CCEVEN"
+#define EXTRA_CC_MODES CC(CCEVENmode, "CCEVEN")
 
 #define SELECT_CC_MODE(OP,X,Y) CCmode
 
@@ -1419,23 +1368,23 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
 #define LEGITIMIZE_ADDRESS(X,OLDX,MODE,WIN)			\
 {								\
   if (GET_CODE (X) == PLUS && CONSTANT_ADDRESS_P (XEXP (X, 1)))	\
-    (X) = gen_rtx (PLUS, SImode, XEXP (X, 0),			\
-		   copy_to_mode_reg (SImode, XEXP (X, 1)));	\
+    (X) = gen_rtx_PLUS (SImode, XEXP (X, 0),			\
+			copy_to_mode_reg (SImode, XEXP (X, 1))); \
   if (GET_CODE (X) == PLUS && CONSTANT_ADDRESS_P (XEXP (X, 0)))	\
-    (X) = gen_rtx (PLUS, SImode, XEXP (X, 1),			\
-		   copy_to_mode_reg (SImode, XEXP (X, 0)));	\
+    (X) = gen_rtx_PLUS (SImode, XEXP (X, 1),			\
+			copy_to_mode_reg (SImode, XEXP (X, 0))); \
   if (GET_CODE (X) == PLUS && GET_CODE (XEXP (X, 0)) == MULT)	\
-    (X) = gen_rtx (PLUS, SImode, XEXP (X, 1),			\
-		   force_operand (XEXP (X, 0), 0));		\
+    (X) = gen_rtx_PLUS (SImode, XEXP (X, 1),			\
+			force_operand (XEXP (X, 0), 0));	\
   if (GET_CODE (X) == PLUS && GET_CODE (XEXP (X, 1)) == MULT)	\
-    (X) = gen_rtx (PLUS, SImode, XEXP (X, 0),			\
-		   force_operand (XEXP (X, 1), 0));		\
+    (X) = gen_rtx_PLUS (SImode, XEXP (X, 0),			\
+			force_operand (XEXP (X, 1), 0));	\
   if (GET_CODE (X) == PLUS && GET_CODE (XEXP (X, 0)) == PLUS)	\
-    (X) = gen_rtx (PLUS, Pmode, force_operand (XEXP (X, 0), NULL_RTX),\
-		   XEXP (X, 1));				\
+    (X) = gen_rtx_PLUS (Pmode, force_operand (XEXP (X, 0), NULL_RTX),\
+			XEXP (X, 1));				\
   if (GET_CODE (X) == PLUS && GET_CODE (XEXP (X, 1)) == PLUS)	\
-    (X) = gen_rtx (PLUS, Pmode, XEXP (X, 0),			\
-		   force_operand (XEXP (X, 1), NULL_RTX));	\
+    (X) = gen_rtx_PLUS (Pmode, XEXP (X, 0),			\
+			force_operand (XEXP (X, 1), NULL_RTX));	\
   if (GET_CODE (X) == SYMBOL_REF || GET_CODE (X) == CONST	\
 	   || GET_CODE (X) == LABEL_REF)			\
     (X) = legitimize_address (flag_pic, X, 0, 0);		\
@@ -1499,6 +1448,13 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
   {"relop_no_unsigned", {EQ, NE, LT, LE, GE, GT}},			\
   {"equality_op", {EQ, NE}},						\
   {"pc_or_label_ref", {PC, LABEL_REF}},
+
+/* A list of predicates that do special things with modes, and so
+   should not elicit warnings for VOIDmode match_operand.  */
+
+#define SPECIAL_MODE_PREDICATES		\
+  "partial_ccmode_register_operand",	\
+  "pc_or_label_ref",
 
 /* The case table contains either words or branch instructions.  This says
    which.  We always claim that the vector is PC-relative.  It is position
@@ -1576,7 +1532,7 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
    `short' in a prototype should actually be passed as an
    `int'.  In addition to avoiding errors in certain cases of
    mismatch, it also makes for better code on certain machines.  */
-#define PROMOTE_PROTOTYPES
+#define PROMOTE_PROTOTYPES 1
 
 /* Define this macro if a float function always returns float
    (even in traditional mode).  Redefined in luna.h.  */
@@ -1584,7 +1540,7 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
 
 /* We assume that the store-condition-codes instructions store 0 for false
    and some other value for true.  This is the value stored for true.  */
-#define STORE_FLAG_VALUE -1
+#define STORE_FLAG_VALUE (-1)
 
 /* Specify the machine mode that pointers have.
    After generation of rtl, the compiler makes no further distinction
@@ -1741,49 +1697,49 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
 #undef	IDENT_ASM_OP
 
 /* These are used in varasm.c as well.  */
-#define TEXT_SECTION_ASM_OP	"text"
-#define DATA_SECTION_ASM_OP	"data"
+#define TEXT_SECTION_ASM_OP	"\ttext"
+#define DATA_SECTION_ASM_OP	"\tdata"
 
 /* Other sections.  */
 #define CONST_SECTION_ASM_OP (TARGET_SVR4			\
-			      ? "section\t .rodata,\"a\""	\
-			      : "section\t .rodata,\"x\"")
+			      ? "\tsection\t .rodata,\"a\""	\
+			      : "\tsection\t .rodata,\"x\"")
 #define TDESC_SECTION_ASM_OP (TARGET_SVR4			\
-			      ? "section\t .tdesc,\"a\""	\
-			      : "section\t .tdesc,\"x\"")
+			      ? "\tsection\t .tdesc,\"a\""	\
+			      : "\tsection\t .tdesc,\"x\"")
 
 /* These must be constant strings for crtstuff.c.  */
-#define CTORS_SECTION_ASM_OP	"section\t .ctors,\"d\""
-#define DTORS_SECTION_ASM_OP	"section\t .dtors,\"d\""
-#define INIT_SECTION_ASM_OP	"section\t .init,\"x\""
-#define FINI_SECTION_ASM_OP	"section\t .fini,\"x\""
+#define CTORS_SECTION_ASM_OP	"\tsection\t .ctors,\"d\""
+#define DTORS_SECTION_ASM_OP	"\tsection\t .dtors,\"d\""
+#define INIT_SECTION_ASM_OP	"\tsection\t .init,\"x\""
+#define FINI_SECTION_ASM_OP	"\tsection\t .fini,\"x\""
 
 /* These are pretty much common to all assemblers.  */
-#define IDENT_ASM_OP		"ident"
-#define FILE_ASM_OP		"file"
-#define SECTION_ASM_OP		"section"
-#define SET_ASM_OP		"def"
-#define GLOBAL_ASM_OP		"global"
-#define ALIGN_ASM_OP		"align"
-#define SKIP_ASM_OP		"zero"
-#define COMMON_ASM_OP		"comm"
-#define BSS_ASM_OP		"bss"
-#define FLOAT_ASM_OP		"float"
-#define DOUBLE_ASM_OP		"double"
-#define INT_ASM_OP		"word"
+#define IDENT_ASM_OP		"\tident\t"
+#define FILE_ASM_OP		"\tfile\t"
+#define SECTION_ASM_OP		"\tsection\t"
+#define SET_ASM_OP		"\tdef\t"
+#define GLOBAL_ASM_OP		"\tglobal\t"
+#define ALIGN_ASM_OP		"\talign\t"
+#define SKIP_ASM_OP		"\tzero\t"
+#define COMMON_ASM_OP		"\tcomm\t"
+#define BSS_ASM_OP		"\tbss\t"
+#define FLOAT_ASM_OP		"\tfloat\t"
+#define DOUBLE_ASM_OP		"\tdouble\t"
+#define INT_ASM_OP		"\tword\t"
 #define ASM_LONG		INT_ASM_OP
-#define SHORT_ASM_OP		"half"
-#define CHAR_ASM_OP		"byte"
-#define ASCII_DATA_ASM_OP	"string"
+#define SHORT_ASM_OP		"\thalf\t"
+#define CHAR_ASM_OP		"\tbyte\t"
+#define ASCII_DATA_ASM_OP	"\tstring\t"
 
 /* These are particular to the global pool optimization.  */
-#define SBSS_ASM_OP		"sbss"
-#define SCOMM_ASM_OP		"scomm"
-#define SDATA_SECTION_ASM_OP	"sdata"
+#define SBSS_ASM_OP		"\tsbss\t"
+#define SCOMM_ASM_OP		"\tscomm\t"
+#define SDATA_SECTION_ASM_OP	"\tsdata"
 
 /* These are specific to PIC.  */
-#define TYPE_ASM_OP		"type"
-#define SIZE_ASM_OP		"size"
+#define TYPE_ASM_OP		"\ttype\t"
+#define SIZE_ASM_OP		"\tsize\t"
 #ifndef AS_BUG_POUND_TYPE /* Faulty assemblers require @ rather than #.  */
 #undef	TYPE_OPERAND_FMT
 #define TYPE_OPERAND_FMT	"#%s"
@@ -1797,15 +1753,15 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
        fputc ('\n', FILE); } while (0)
 
 /* These are specific to version 03.00 assembler syntax.  */
-#define INTERNAL_ASM_OP		"local"
-#define VERSION_ASM_OP		"version"
-#define UNALIGNED_SHORT_ASM_OP	"uahalf"
-#define UNALIGNED_INT_ASM_OP	"uaword"
-#define PUSHSECTION_ASM_OP	"section"
-#define POPSECTION_ASM_OP	"previous"
+#define INTERNAL_ASM_OP		"\tlocal\t"
+#define VERSION_ASM_OP		"\tversion\t"
+#define UNALIGNED_SHORT_ASM_OP	"\tuahalf\t"
+#define UNALIGNED_INT_ASM_OP	"\tuaword\t"
+#define PUSHSECTION_ASM_OP	"\tsection\t"
+#define POPSECTION_ASM_OP	"\tprevious"
 
 /* These are specific to the version 04.00 assembler syntax.  */
-#define REQUIRES_88110_ASM_OP	"requires_88110"
+#define REQUIRES_88110_ASM_OP	"\trequires_88110"
 
 /* Output any initial stuff to the assembly file.  Always put out
    a file directive, even if not debugging.
@@ -1851,22 +1807,25 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
     if (TARGET_SVR4)							\
       {									\
 	if (TARGET_88110)						\
-	  fprintf (FILE, "\t%s\t \"%s\"\n", VERSION_ASM_OP, "04.00");   \
+	  fprintf (FILE, "%s\"%s\"\n", VERSION_ASM_OP, "04.00");	\
 	else								\
-	  fprintf (FILE, "\t%s\t \"%s\"\n", VERSION_ASM_OP, "03.00");   \
+	  fprintf (FILE, "%s\"%s\"\n", VERSION_ASM_OP, "03.00");	\
       }									\
   } while (0)
 
 /* Override svr[34].h.  */
 #undef	ASM_FILE_START
 #define ASM_FILE_START(FILE) \
-  output_file_start (FILE, f_options, sizeof f_options / sizeof f_options[0], \
-		     W_options, sizeof W_options / sizeof W_options[0])
+  output_file_start (FILE, \
+	(struct m88k_lang_independent_options *) f_options, \
+	ARRAY_SIZE (f_options), \
+	(struct m88k_lang_independent_options *) W_options, \
+	ARRAY_SIZE (W_options))
 
 #undef	ASM_FILE_END
 
 #define ASM_OUTPUT_SOURCE_FILENAME(FILE, NAME) \
-  fprintf (FILE, "\t%s\t \"%s\"\n", FILE_ASM_OP, NAME)
+  fprintf (FILE, "%s\"%s\"\n", FILE_ASM_OP, NAME)
 
 #ifdef SDB_DEBUGGING_INFO
 #undef ASM_OUTPUT_SOURCE_LINE
@@ -1900,7 +1859,7 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
 #define ASM_OUTPUT_OPCODE(STREAM, PTR)					\
   {									\
     int ch;								\
-    char *orig_ptr;							\
+    const char *orig_ptr;						\
 									\
     for (orig_ptr = (PTR);						\
 	 (ch = *(PTR)) && ch != ' ' && ch != '\t' && ch != '\n' && ch != '%'; \
@@ -1931,7 +1890,7 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
    is our `condition code' register), so that condition codes can easily
    be clobbered by an asm.  The carry bit in the PSR is now used.  */
 
-#define ADDITIONAL_REGISTER_NAMES	{"psr", 0, "cc", 0}
+#define ADDITIONAL_REGISTER_NAMES	{{"psr", 0}, {"cc", 0}}
 
 /* How to renumber registers for dbx and gdb.  */
 #define DBX_REGISTER_NUMBER(REGNO) (REGNO)
@@ -1946,7 +1905,7 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
   do {									\
     if (DECLARE_ASM_NAME)						\
       {									\
-	fprintf (FILE, "\t%s\t ", TYPE_ASM_OP);				\
+	fprintf (FILE, "%s", TYPE_ASM_OP);				\
 	assemble_name (FILE, NAME);					\
 	putc (',', FILE);						\
 	fprintf (FILE, TYPE_OPERAND_FMT, "function");			\
@@ -1961,7 +1920,7 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
   do {									    \
     if (DECLARE_ASM_NAME)						    \
       {									    \
-	fprintf (FILE, "\t%s\t ", TYPE_ASM_OP);				    \
+	fprintf (FILE, "%s", TYPE_ASM_OP);				    \
 	assemble_name (FILE, NAME);					    \
 	putc (',', FILE);						    \
 	fprintf (FILE, TYPE_OPERAND_FMT, "object");			    \
@@ -1970,7 +1929,7 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
 	if (!flag_inhibit_size_directive && DECL_SIZE (DECL))		    \
 	  {								    \
             size_directive_output = 1;					    \
-	    fprintf (FILE, "\t%s\t ", SIZE_ASM_OP);			    \
+	    fprintf (FILE, "%s", SIZE_ASM_OP);				    \
 	    assemble_name (FILE, NAME);					    \
 	    fprintf (FILE, ",%d\n",  int_size_in_bytes (TREE_TYPE (DECL))); \
 	  }								    \
@@ -1987,7 +1946,7 @@ enum reg_class { NO_REGS, AP_REG, XRF_REGS, GENERAL_REGS, AGRF_REGS,
 #undef ASM_FINISH_DECLARE_OBJECT
 #define ASM_FINISH_DECLARE_OBJECT(FILE, DECL, TOP_LEVEL, AT_END)	 \
 do {									 \
-     char *name = XSTR (XEXP (DECL_RTL (DECL), 0), 0);			 \
+     const char *name = XSTR (XEXP (DECL_RTL (DECL), 0), 0);		 \
      if (!flag_inhibit_size_directive && DECL_SIZE (DECL)		 \
 	 && DECLARE_ASM_NAME						 \
          && ! AT_END && TOP_LEVEL					 \
@@ -1995,7 +1954,7 @@ do {									 \
 	 && !size_directive_output)					 \
        {								 \
 	 size_directive_output = 1;					 \
-	 fprintf (FILE, "\t%s\t ", SIZE_ASM_OP);			 \
+	 fprintf (FILE, "%s", SIZE_ASM_OP);				 \
 	 assemble_name (FILE, name);					 \
 	 fprintf (FILE, ",%d\n",  int_size_in_bytes (TREE_TYPE (DECL))); \
        }								 \
@@ -2014,7 +1973,7 @@ do {									 \
 	    labelno++;							\
 	    ASM_GENERATE_INTERNAL_LABEL (label, "Lfe", labelno);	\
 	    ASM_OUTPUT_INTERNAL_LABEL (FILE, "Lfe", labelno);		\
-	    fprintf (FILE, "\t%s\t ", SIZE_ASM_OP);			\
+	    fprintf (FILE, "%s", SIZE_ASM_OP);				\
 	    assemble_name (FILE, (FNAME));				\
 	    fprintf (FILE, ",%s-", &label[1]);				\
 	    assemble_name (FILE, (FNAME));				\
@@ -2032,7 +1991,7 @@ do {									 \
    defined for reference from other files.  */
 #define ASM_GLOBALIZE_LABEL(FILE,NAME)			\
   do {							\
-    fprintf (FILE, "\t%s\t ", GLOBAL_ASM_OP);		\
+    fprintf (FILE, "%s", GLOBAL_ASM_OP);		\
     assemble_name (FILE, NAME);				\
     putc ('\n', FILE);					\
   } while (0)
@@ -2059,7 +2018,7 @@ do {									 \
 #undef ASM_OUTPUT_INTERNAL_LABEL
 #ifdef AS_BUG_DOT_LABELS /* The assembler requires a declaration of local.  */
 #define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)			\
-  fprintf (FILE, TARGET_SVR4 ? ".%s%d:\n\t%s\t .%s%d\n" : "@%s%d:\n", \
+  fprintf (FILE, TARGET_SVR4 ? ".%s%d:\n%s.%s%d\n" : "@%s%d:\n", \
 	   PREFIX, NUM, INTERNAL_ASM_OP, PREFIX, NUM)
 #else
 #define ASM_OUTPUT_INTERNAL_LABEL(FILE,PREFIX,NUM)			\
@@ -2119,8 +2078,8 @@ do {									 \
   do {									\
     union { REAL_VALUE_TYPE d; long l[2]; } x;				\
     x.d = (VALUE);							\
-    fprintf (FILE, "\t%s\t 0x%.8x, 0x%.8x\n", INT_ASM_OP,			\
-	     x.l[0], x.l[1]);						\
+    fprintf (FILE, "%s0x%.8lx, 0x%.8lx\n", INT_ASM_OP,			\
+	     (long) x.l[0], (long) x.l[1]);				\
   } while (0)
 
 /* This is how to output an assembler line defining a `float' constant.  */
@@ -2128,32 +2087,32 @@ do {									 \
   do {									\
     int i;								\
     FLOAT_TO_INT_INTERNAL (VALUE, i);					\
-    fprintf (FILE, "\t%s\t 0x%.8x\n", INT_ASM_OP, i);			\
+    fprintf (FILE, "%s0x%.8x\n", INT_ASM_OP, i);			\
   } while (0)
 
 /* Likewise for `int', `short', and `char' constants.  */
 #define ASM_OUTPUT_INT(FILE,VALUE)					\
-( fprintf (FILE, "\t%s\t ", INT_ASM_OP),				\
+( fprintf (FILE, "%s", INT_ASM_OP),					\
   output_addr_const (FILE, (VALUE)),					\
   fprintf (FILE, "\n"))
 
 #define ASM_OUTPUT_SHORT(FILE,VALUE)					\
-( fprintf (FILE, "\t%s\t ", SHORT_ASM_OP),				\
+( fprintf (FILE, "%s", SHORT_ASM_OP),					\
   output_addr_const (FILE, (VALUE)),					\
   fprintf (FILE, "\n"))
 
 #define ASM_OUTPUT_CHAR(FILE,VALUE)					\
-( fprintf (FILE, "\t%s\t ", CHAR_ASM_OP),				\
+( fprintf (FILE, "%s", CHAR_ASM_OP),					\
   output_addr_const (FILE, (VALUE)),					\
   fprintf (FILE, "\n"))
 
 /* This is how to output an assembler line for a numeric constant byte.  */
 #define ASM_OUTPUT_BYTE(FILE,VALUE)  \
-  fprintf (FILE, "\t%s\t 0x%x\n", CHAR_ASM_OP, (VALUE))
+  fprintf (FILE, "%s0x%x\n", CHAR_ASM_OP, (VALUE))
 
 /* The single-byte pseudo-op is the default.  Override svr[34].h.  */
 #undef	ASM_BYTE_OP
-#define ASM_BYTE_OP "byte"
+#define ASM_BYTE_OP "\tbyte\t"
 #undef	ASM_OUTPUT_ASCII
 #define ASM_OUTPUT_ASCII(FILE, P, SIZE)  \
   output_ascii (FILE, ASCII_DATA_ASM_OP, 48, P, SIZE)
@@ -2206,7 +2165,7 @@ do {									 \
    to a multiple of 2**LOG bytes.  */
 #define ASM_OUTPUT_ALIGN(FILE,LOG)	\
   if ((LOG) != 0)			\
-    fprintf (FILE, "\t%s\t %d\n", ALIGN_ASM_OP, 1<<(LOG))
+    fprintf (FILE, "%s%d\n", ALIGN_ASM_OP, 1<<(LOG))
 
 /* On the m88100, align the text address to half a cache boundary when it
    can only be reached by jumping.  Pack code tightly when compiling
@@ -2217,7 +2176,7 @@ do {									 \
 /* Override svr[34].h.  */
 #undef	ASM_OUTPUT_SKIP
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
-  fprintf (FILE, "\t%s\t %u\n", SKIP_ASM_OP, (SIZE))
+  fprintf (FILE, "%s%u\n", SKIP_ASM_OP, (SIZE))
 
 /* Override svr4.h.  */
 #undef	ASM_OUTPUT_EXTERNAL_LIBCALL
@@ -2228,7 +2187,7 @@ do {									 \
 #undef	ASM_OUTPUT_COMMON
 #undef	ASM_OUTPUT_ALIGNED_COMMON
 #define ASM_OUTPUT_COMMON(FILE, NAME, SIZE, ROUNDED)	\
-( fprintf ((FILE), "\t%s\t ",				\
+( fprintf ((FILE), "%s",				\
 	   ((SIZE) ? (SIZE) : 1) <= m88k_gp_threshold ? SCOMM_ASM_OP : COMMON_ASM_OP), \
   assemble_name ((FILE), (NAME)),			\
   fprintf ((FILE), ",%u\n", (SIZE) ? (SIZE) : 1))
@@ -2238,7 +2197,7 @@ do {									 \
 #undef	ASM_OUTPUT_LOCAL
 #undef	ASM_OUTPUT_ALIGNED_LOCAL
 #define ASM_OUTPUT_LOCAL(FILE, NAME, SIZE, ROUNDED)	\
-( fprintf ((FILE), "\t%s\t ",				\
+( fprintf ((FILE), "%s",				\
 	   ((SIZE) ? (SIZE) : 1) <= m88k_gp_threshold ? SBSS_ASM_OP : BSS_ASM_OP), \
   assemble_name ((FILE), (NAME)),			\
   fprintf ((FILE), ",%u,%d\n", (SIZE) ? (SIZE) : 1, (SIZE) <= 4 ? 4 : 8))
@@ -2319,7 +2278,7 @@ do {									 \
 #define PUT_SDB_SCL(a)						\
   do {								\
     register int s = (a);					\
-    register char *scl;						\
+    register const char *scl;					\
     switch (s)							\
       {								\
       case C_EFCN:	scl = "end of function";	break;	\
@@ -2359,9 +2318,10 @@ do {									 \
   do {								\
     register int t = (a);					\
     static char buffer[100];					\
-    register char *p = buffer, *q;				\
+    register char *p = buffer;					\
+    register const char *q;					\
     register int typ = t;					\
-    register int i,d;						\
+    register int i;						\
 								\
     for (i = 0; i <= 5; i++)					\
       {								\
@@ -2613,6 +2573,7 @@ sdata_section ()							\
 #define ENCODE_SECTION_INFO(DECL)					\
   do {									\
     if (m88k_gp_threshold > 0)						\
+    {									\
       if (TREE_CODE (DECL) == VAR_DECL)					\
 	{								\
 	  if (!TREE_READONLY (DECL) || TREE_SIDE_EFFECTS (DECL))	\
@@ -2627,6 +2588,7 @@ sdata_section ()							\
 	       && flag_writable_strings					\
 	       && TREE_STRING_LENGTH (DECL) <= m88k_gp_threshold)	\
 	SYMBOL_REF_FLAG (XEXP (TREE_CST_RTL (DECL), 0)) = 1;		\
+    }									\
   } while (0)
 
 /* Print operand X (an rtx) in assembler syntax to file FILE.

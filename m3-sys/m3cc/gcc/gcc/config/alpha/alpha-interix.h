@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler, for DEC Alpha
    running Windows/NT.
-   Copyright (C) 1995, 1996, 1999 Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996, 1999, 2000 Free Software Foundation, Inc.
 
    Donn Terry, Softway Systems, Inc.
    From code
@@ -33,13 +33,13 @@ Boston, MA 02111-1307, USA.  */
   -D__alpha -D__alpha__\
   -D__stdcall= \
   -D__cdecl= \
-  -Asystem(unix) -Asystem(interix) -Asystem(interix) -Acpu(alpha) -Amachine(alpha)"
+  -Asystem=unix -Asystem=interix -Acpu=alpha -Amachine=alpha"
 
 #undef CPP_SUBTARGET_SPEC
 #define CPP_SUBTARGET_SPEC "\
 -remap \
 %{posix:-D_POSIX_SOURCE} \
--idirafter %$INTERIX_ROOT/usr/include"
+-isystem %$INTERIX_ROOT/usr/include"
 
 #undef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (alpha Interix)");
@@ -62,12 +62,6 @@ Boston, MA 02111-1307, USA.  */
 #undef PUT_SDB_BLOCK_START
 #undef PUT_SDB_BLOCK_END
 
-/* the following are OSF linker (not gld) specific... we don't want them */
-#undef HAS_INIT_SECTION
-#undef LD_INIT_SWITCH
-#undef LD_FINI_SWITCH
-
-
 /* The following are needed for C++, but also needed for profiling */
 
 /* Support const sections and the ctors and dtors sections for g++.
@@ -80,7 +74,7 @@ Boston, MA 02111-1307, USA.  */
 
 #define USE_CONST_SECTION	1
 
-#define CONST_SECTION_ASM_OP	".rdata"
+#define CONST_SECTION_ASM_OP	"\t.rdata"
 
 /* Define the pseudo-ops used to switch to the .ctors and .dtors sections.
 
@@ -97,8 +91,8 @@ Boston, MA 02111-1307, USA.  */
    errors unless the .ctors and .dtors sections are marked as writable
    via the SHF_WRITE attribute.)  */
 
-#define CTORS_SECTION_ASM_OP	".ctors"
-#define DTORS_SECTION_ASM_OP	".dtors"
+#define CTORS_SECTION_ASM_OP	"\t.ctors"
+#define DTORS_SECTION_ASM_OP	"\t.dtors"
 
 /* A default list of other sections which we might be "in" at any given
    time.  For targets that use additional sections (e.g. .tdesc) you
@@ -120,8 +114,6 @@ Boston, MA 02111-1307, USA.  */
 
 #undef READONLY_DATA_SECTION
 #define READONLY_DATA_SECTION() const_section ()
-
-extern void text_section ();
 
 #define CONST_SECTION_FUNCTION						\
 void									\
@@ -158,14 +150,14 @@ dtors_section ()							\
     }									\
 }
 
-#define INT_ASM_OP		".long"
+#define INT_ASM_OP		"\t.long\t"
 
 /* A C statement (sans semicolon) to output an element in the table of
    global constructors.  */
 #define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)				\
   do {									\
     ctors_section ();							\
-    fprintf (FILE, "\t%s\t ", INT_ASM_OP);				\
+    fprintf (FILE, "%s", INT_ASM_OP);					\
     assemble_name (FILE, NAME);						\
     fprintf (FILE, "\n");						\
   } while (0)
@@ -175,7 +167,7 @@ dtors_section ()							\
 #define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)       				\
   do {									\
     dtors_section ();                   				\
-    fprintf (FILE, "\t%s\t ", INT_ASM_OP);				\
+    fprintf (FILE, "%s", INT_ASM_OP);					\
     assemble_name (FILE, NAME);              				\
     fprintf (FILE, "\n");						\
   } while (0)
@@ -184,7 +176,7 @@ dtors_section ()							\
    ld -r (specifically -rU). */
 #define CTOR_LISTS_DEFINED_EXTERNALLY 1
 
-#define SET_ASM_OP	".set"
+#define SET_ASM_OP	"\t.set\t"
 /* Output a definition (implements alias) */
 #define ASM_OUTPUT_DEF(FILE,LABEL1,LABEL2)				\
 do									\
@@ -211,6 +203,7 @@ while (0)
 
 /* DWARF2 Unwinding doesn't work with exception handling yet. */
 #undef DWARF2_UNWIND_INFO
+#define DWARF2_UNWIND_INFO 0
 
 /* Don't assume anything about the header files. */
 #define NO_IMPLICIT_EXTERN_C

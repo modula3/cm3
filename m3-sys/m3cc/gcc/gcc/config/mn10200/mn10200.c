@@ -1,5 +1,5 @@
 /* Subroutines for insn-output.c for Matsushita MN10200 series
-   Copyright (C) 1997 Free Software Foundation, Inc.
+   Copyright (C) 1997, 1998, 1999, 2000 Free Software Foundation, Inc.
    Contributed by Jeff Law (law@cygnus.com).
 
 This file is part of GNU CC.
@@ -20,21 +20,24 @@ the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
 #include "config.h"
-#include <stdio.h>
+#include "system.h"
 #include "rtl.h"
+#include "tree.h"
 #include "regs.h"
 #include "hard-reg-set.h"
 #include "real.h"
 #include "insn-config.h"
 #include "conditions.h"
-#include "insn-flags.h"
 #include "output.h"
 #include "insn-attr.h"
 #include "flags.h"
 #include "recog.h"
 #include "expr.h"
-#include "tree.h"
+#include "function.h"
 #include "obstack.h"
+#include "ggc.h"
+#include "toplev.h"
+#include "tm_p.h"
 
 /* Global registers known to hold the value zero.
 
@@ -56,6 +59,8 @@ Boston, MA 02111-1307, USA.  */
 rtx zero_dreg;
 rtx zero_areg;
 
+static void count_tst_insns PARAMS ((int *));
+
 /* Note whether or not we need an out of line epilogue.  */
 static int out_of_line_epilogue;
 
@@ -71,6 +76,8 @@ asm_file_start (file)
   else
     fprintf (file, "\n\n");
   output_file_directive (file, main_input_filename);
+  ggc_add_rtx_root (&zero_dreg, 1);
+  ggc_add_rtx_root (&zero_areg, 1);
 }
 
 /* Print operand X using operand code CODE to assembly language output file
@@ -275,7 +282,7 @@ print_operand (file, x, code)
 	if (GET_CODE (x) != MEM)
 	  abort ();
 	if (GET_CODE (XEXP (x, 0)) == REG)
-	  x = gen_rtx (PLUS, PSImode, XEXP (x, 0), GEN_INT (0));
+	  x = gen_rtx_PLUS (PSImode, XEXP (x, 0), GEN_INT (0));
 	else
 	  x = XEXP (x, 0);
 	fputc ('(', file);
@@ -482,7 +489,7 @@ total_frame_size ()
 
   for (i = 0; i < FIRST_PSEUDO_REGISTER; i++)
     {
-      if (regs_ever_live[i] && !call_used_regs[i] && ! fixed_regs[i]
+      if ((regs_ever_live[i] && !call_used_regs[i] && ! fixed_regs[i])
 	  || (i == FRAME_POINTER_REGNUM && frame_pointer_needed))
 	size += 4;
     }
@@ -594,12 +601,12 @@ expand_prologue ()
 	      if (!regs_ever_live[2])
 		{
 		  regs_ever_live[2] = 1;
-		  zero_dreg = gen_rtx (REG, HImode, 2);
+		  zero_dreg = gen_rtx_REG (HImode, 2);
 		}
 	      if (!regs_ever_live[3])
 		{
 		  regs_ever_live[3] = 1;
-		  zero_dreg = gen_rtx (REG, HImode, 3);
+		  zero_dreg = gen_rtx_REG (HImode, 3);
 		}
 	    }
 
@@ -611,12 +618,12 @@ expand_prologue ()
 	      if (!regs_ever_live[5])
 		{
 		  regs_ever_live[5] = 1;
-		  zero_areg = gen_rtx (REG, HImode, 5);
+		  zero_areg = gen_rtx_REG (HImode, 5);
 		}
 	      if (!regs_ever_live[6])
 		{
 		  regs_ever_live[6] = 1;
-		  zero_areg = gen_rtx (REG, HImode, 6);
+		  zero_areg = gen_rtx_REG (HImode, 6);
 		}
 	    }
 
@@ -638,14 +645,14 @@ expand_prologue ()
     {
       emit_insn (gen_addpsi3 (stack_pointer_rtx, stack_pointer_rtx,
 			      GEN_INT (-4)));
-      emit_move_insn (gen_rtx (MEM, PSImode, stack_pointer_rtx),
-		      gen_rtx (REG, PSImode, STATIC_CHAIN_REGNUM));
+      emit_move_insn (gen_rtx_MEM (PSImode, stack_pointer_rtx),
+		      gen_rtx_REG (PSImode, STATIC_CHAIN_REGNUM));
     }
 
   if (frame_pointer_needed)
     {
       /* Store a2 into a0 temporarily.  */
-      emit_move_insn (gen_rtx (REG, PSImode, 4), frame_pointer_rtx);
+      emit_move_insn (gen_rtx_REG (PSImode, 4), frame_pointer_rtx);
 
       /* Set up the frame pointer.  */
       emit_move_insn (frame_pointer_rtx, stack_pointer_rtx);
@@ -661,7 +668,7 @@ expand_prologue ()
   for (i = 0, offset = outgoing_args_size;
        i < FIRST_PSEUDO_REGISTER; i++)
     {
-      if (regs_ever_live[i] && !call_used_regs[i] && ! fixed_regs[i]
+      if ((regs_ever_live[i] && !call_used_regs[i] && ! fixed_regs[i])
 	  || (i == FRAME_POINTER_REGNUM && frame_pointer_needed))
 	{
 	  int regno;
@@ -670,11 +677,10 @@ expand_prologue ()
 	     register 4 (a0).  */
 	  regno = (i == FRAME_POINTER_REGNUM && frame_pointer_needed) ? 4 : i;
 	
-	  emit_move_insn (gen_rtx (MEM, PSImode,
-				   gen_rtx (PLUS, Pmode,
-					    stack_pointer_rtx,
-					    GEN_INT (offset))),
-			  gen_rtx (REG, PSImode, regno));
+	  emit_move_insn (gen_rtx_MEM (PSImode,
+				       plus_constant (stack_pointer_rtx,
+						      offset)),
+			  gen_rtx_REG (PSImode, regno));
 	  offset += 4;
 	}
     }
@@ -683,10 +689,10 @@ expand_prologue ()
      expects to find it.  */
   if (current_function_needs_context)
     {
-      emit_move_insn (gen_rtx (REG, PSImode, STATIC_CHAIN_REGNUM),
+      emit_move_insn (gen_rtx_REG (PSImode, STATIC_CHAIN_REGNUM),
 		      gen_rtx (MEM, PSImode,
-			       gen_rtx (PLUS, PSImode, stack_pointer_rtx,
-					GEN_INT (size))));
+			       gen_rtx_PLUS (PSImode, stack_pointer_rtx,
+					     GEN_INT (size))));
     }
 }
 
@@ -754,7 +760,7 @@ expand_epilogue ()
   /* Restore each register.  */
   for (i = 0; i < FIRST_PSEUDO_REGISTER; i++)
     {
-      if (regs_ever_live[i] && !call_used_regs[i] && ! fixed_regs[i]
+      if ((regs_ever_live[i] && !call_used_regs[i] && ! fixed_regs[i])
 	  || (i == FRAME_POINTER_REGNUM && frame_pointer_needed))
 	{
 	  int regno;
@@ -764,11 +770,9 @@ expand_epilogue ()
 	  regno = ((i == FRAME_POINTER_REGNUM && frame_pointer_needed)
 		   ? temp_regno : i);
 	
-	  emit_move_insn (gen_rtx (REG, PSImode, regno),
-			  gen_rtx (MEM, PSImode,
-				   gen_rtx (PLUS, Pmode,
-					    basereg,
-					    GEN_INT (offset))));
+	  emit_move_insn (gen_rtx_REG (PSImode, regno),
+			  gen_rtx_MEM (PSImode,
+				       plus_constant (basereg, offset)));
 	  offset += 4;
 	}
     }
@@ -778,7 +782,7 @@ expand_epilogue ()
       /* Deallocate this frame's stack.  */
       emit_move_insn (stack_pointer_rtx, frame_pointer_rtx);
       /* Restore the old frame pointer.  */
-      emit_move_insn (frame_pointer_rtx, gen_rtx (REG, PSImode, temp_regno));
+      emit_move_insn (frame_pointer_rtx, gen_rtx_REG (PSImode, temp_regno));
     }
   else if (size)
     {
@@ -817,24 +821,24 @@ notice_update_cc (body, insn)
     case CC_NONE_0HIT:
       /* Insn does not change CC, but the 0'th operand has been changed.  */
       if (cc_status.value1 != 0
-	  && reg_overlap_mentioned_p (recog_operand[0], cc_status.value1))
+	  && reg_overlap_mentioned_p (recog_data.operand[0], cc_status.value1))
 	cc_status.value1 = 0;
       break;
 
     case CC_SET_ZN:
-      /* Insn sets the Z,N flags of CC to recog_operand[0].
+      /* Insn sets the Z,N flags of CC to recog_data.operand[0].
 	 V,C is in an unusable state.  */
       CC_STATUS_INIT;
       cc_status.flags |= CC_OVERFLOW_UNUSABLE | CC_NO_CARRY;
-      cc_status.value1 = recog_operand[0];
+      cc_status.value1 = recog_data.operand[0];
       break;
 
     case CC_SET_ZNV:
-      /* Insn sets the Z,N,V flags of CC to recog_operand[0].
+      /* Insn sets the Z,N,V flags of CC to recog_data.operand[0].
 	 C is in an unusable state.  */
       CC_STATUS_INIT;
       cc_status.flags |= CC_NO_CARRY;
-      cc_status.value1 = recog_operand[0];
+      cc_status.value1 = recog_data.operand[0];
       break;
 
     case CC_COMPARE:
@@ -859,7 +863,7 @@ notice_update_cc (body, insn)
 int
 call_address_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return (GET_CODE (op) == SYMBOL_REF || GET_CODE (op) == REG);
 }
@@ -869,9 +873,22 @@ call_address_operand (op, mode)
 int
 constant_memory_operand (op, mode)
      rtx op;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   return GET_CODE (op) == MEM && CONSTANT_ADDRESS_P (XEXP (op, 0));
+}
+
+/* Return true if OP is valid for a psi mode truncation operand.
+   It must either be a memory operand which is valid for a PSImode
+   address, or if it is not a memory operand at all.  */
+int
+psimode_truncation_operand (op, mode)
+     rtx op;
+     enum machine_mode mode;
+{
+  return (general_operand (op, mode)
+	  && (GET_CODE (op) != MEM
+	      || memory_address_p (PSImode, XEXP (op, 0))));
 }
 
 /* What (if any) secondary registers are needed to move IN with mode
@@ -885,8 +902,6 @@ secondary_reload_class (class, mode, in, input)
      rtx in;
      int input;
 {
-  int regno;
-
   /* Memory loads less than a full word wide can't have an
      address or stack pointer destination.  They must use
      a data register as an intermediate register.  */
@@ -943,7 +958,7 @@ secondary_reload_class (class, mode, in, input)
 int
 nshift_operator (x, mode)
      rtx x;
-     enum machine_mode mode;
+     enum machine_mode mode ATTRIBUTE_UNUSED;
 {
   switch (GET_CODE (x))
     {
@@ -972,14 +987,14 @@ expand_a_shift (mode, code, operands)
   /* need a loop to get all the bits we want  - we generate the
      code at emit time, but need to allocate a scratch reg now  */
 
-  emit_insn (gen_rtx
-	     (PARALLEL, VOIDmode,
+  emit_insn (gen_rtx_PARALLEL
+	     (VOIDmode,
 	      gen_rtvec (2,
-			 gen_rtx (SET, VOIDmode, operands[0],
-				  gen_rtx (code, mode,
-					   operands[0], operands[2])),
-			 gen_rtx (CLOBBER, VOIDmode,
-				  gen_rtx (SCRATCH, HImode, 0)))));
+			 gen_rtx_SET (VOIDmode, operands[0],
+				      gen_rtx (code, mode,
+					       operands[0], operands[2])),
+			 gen_rtx_CLOBBER (VOIDmode,
+					  gen_rtx_SCRATCH (HImode)))));
 
   return 1;
 }
@@ -1020,7 +1035,7 @@ enum shift_mode
 
 struct shift_insn
 {
-  char *assembler;
+  const char *assembler;
   int cc_valid;
 };
 
@@ -1045,6 +1060,10 @@ static const struct shift_insn shift_one[3][3] =
       { "asr\t%0", CC_NO_CARRY },
   },
 };
+
+static enum shift_alg get_shift_alg PARAMS ((enum shift_type,
+					     enum machine_mode, int,
+					     const char **, int *));
 
 /* Given CPU, MODE, SHIFT_TYPE, and shift count COUNT, determine the best
    algorithm for doing the shift.  The assembler code is stored in ASSEMBLER.
@@ -1213,15 +1232,14 @@ get_shift_alg (shift_type, mode, count, assembler_p, cc_valid_p)
 
 /* Emit the assembler code for doing shifts.  */
 
-char *
+const char *
 emit_a_shift (insn, operands)
-     rtx insn;
+     rtx insn ATTRIBUTE_UNUSED;
      rtx *operands;
 {
   static int loopend_lab;
-  char *assembler;
+  const char *assembler;
   int cc_valid;
-  rtx inside = PATTERN (insn);
   rtx shift = operands[3];
   enum machine_mode mode = GET_MODE (shift);
   enum rtx_code code = GET_CODE (shift);
@@ -1374,10 +1392,10 @@ function_arg (cum, mode, type, named)
   switch (cum->nbytes / UNITS_PER_WORD)
     {
     case 0:
-      result = gen_rtx (REG, mode, 0);
+      result = gen_rtx_REG (mode, 0);
       break;
     case 1:
-      result = gen_rtx (REG, mode, 1);
+      result = gen_rtx_REG (mode, 1);
       break;
     default:
       result = 0;
@@ -1436,7 +1454,44 @@ function_arg_partial_nregs (cum, mode, type, named)
   return (nregs * UNITS_PER_WORD - cum->nbytes) / UNITS_PER_WORD;
 }
 
-char *
+rtx
+mn10200_va_arg (valist, type)
+     tree valist, type;
+{
+  HOST_WIDE_INT align, rsize;
+  tree t, ptr, pptr;
+
+  /* Compute the rounded size of the type.  */
+  align = PARM_BOUNDARY / BITS_PER_UNIT;
+  rsize = (((int_size_in_bytes (type) + align - 1) / align) * align);
+
+  t = build (POSTINCREMENT_EXPR, TREE_TYPE (valist), valist, 
+	     build_int_2 ((rsize > 8 ? 4 : rsize), 0));
+  TREE_SIDE_EFFECTS (t) = 1;
+
+  ptr = build_pointer_type (type);
+
+  /* "Large" types are passed by reference.  */
+  if (rsize > 8)
+    {
+      pptr = build_pointer_type (ptr);
+      t = build1 (NOP_EXPR, pptr, t);
+      TREE_SIDE_EFFECTS (t) = 1;
+
+      t = build1 (INDIRECT_REF, ptr, t);
+      TREE_SIDE_EFFECTS (t) = 1;
+    }
+  else
+    {
+      t = build1 (NOP_EXPR, ptr, t);
+      TREE_SIDE_EFFECTS (t) = 1;
+    }
+
+  /* Calculate!  */
+  return force_reg (Pmode, expand_expr (t, NULL_RTX, Pmode, EXPAND_NORMAL));
+}
+
+const char *
 output_tst (operand, insn)
      rtx operand, insn;
 {
@@ -1521,6 +1576,7 @@ output_tst (operand, insn)
 
    It accepts anything that is a general operand or the sum of the
    stack pointer and a general operand.  */
+int
 extendpsi_operand (op, mode)
      rtx op;
      enum machine_mode mode;

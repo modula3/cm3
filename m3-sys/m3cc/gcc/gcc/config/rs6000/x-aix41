@@ -7,6 +7,3 @@ ALLOCA=alloca.o
 # for a native compiler, but this is as good a place as any
 # to define the symbol).
 CLIB=-lld
-
-# f771 and cc1plus overflow the AIX TOC
-BOOT_LDFLAGS=-Wl,-bbigtoc

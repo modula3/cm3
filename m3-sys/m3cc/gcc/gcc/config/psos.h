@@ -1,7 +1,7 @@
 /* Operating system specific defines to be used when targeting GCC for some
    embedded system running pSOS. We assume GNU tools with ELF, but
    try to maintain compatibility with the MRI tools. Based on svr4.h.
-   Copyright (C) 1996 Free Software Foundation, Inc.
+   Copyright (C) 1996, 1999, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -67,18 +67,6 @@ Boston, MA 02111-1307, USA.
 
 #define TARGET_MEM_FUNCTIONS
 
-
-/* When using stabs, gcc2_compiled must be a stabs entry, not an
-   ordinary symbol, or gdb won't see it.  The stabs entry must be
-   before the N_SO in order for gdb to find it.  */
-
-#define ASM_IDENTIFY_GCC(FILE)						\
-do									\
-  {									\
-    fputs (".stabs \"gcc2_compiled.\", 0x3c, 0, 0, 0\n", FILE);	\
-  }									\
-while (0)
-
 /* This is how we tell the assembler that a symbol is weak.  */
 
 #define ASM_WEAKEN_LABEL(FILE,NAME) \
@@ -96,8 +84,8 @@ while (0)
 /* Define the pseudo-ops used to switch to the .ctors and .dtors
    sections. */
 
-#define CTORS_SECTION_ASM_OP	".section\t.ctors,\"aw\""
-#define DTORS_SECTION_ASM_OP	".section\t.dtors,\"aw\""
+#define CTORS_SECTION_ASM_OP	"\t.section\t.ctors,\"aw\""
+#define DTORS_SECTION_ASM_OP	"\t.section\t.dtors,\"aw\""
 
 /* A default list of other sections which we might be "in" at any given
    time.  For targets that use additional sections (e.g. .tdesc) you
@@ -115,8 +103,6 @@ while (0)
 #define EXTRA_SECTION_FUNCTIONS						\
   CTORS_SECTION_FUNCTION						\
   DTORS_SECTION_FUNCTION
-
-extern void text_section ();
 
 #define CTORS_SECTION_FUNCTION						\
 void									\
@@ -144,12 +130,12 @@ dtors_section ()							\
    global constructors.  */
 
 #ifndef INT_ASM_OP
-#define INT_ASM_OP		".long"
+#define INT_ASM_OP		"\t.long\t"
 #endif
 #define ASM_OUTPUT_CONSTRUCTOR(FILE,NAME)				\
   do {									\
     ctors_section ();							\
-    fprintf (FILE, "\t%s\t ", INT_ASM_OP);				\
+    fprintf (FILE, "%s", INT_ASM_OP);					\
     assemble_name (FILE, NAME);						\
     fprintf (FILE, "\n");						\
   } while (0)
@@ -160,7 +146,7 @@ dtors_section ()							\
 #define ASM_OUTPUT_DESTRUCTOR(FILE,NAME)       				\
   do {									\
     dtors_section ();                   				\
-    fprintf (FILE, "\t%s\t ", INT_ASM_OP);				\
+    fprintf (FILE, "%s", INT_ASM_OP);					\
     assemble_name (FILE, NAME);              				\
     fprintf (FILE, "\n");						\
   } while (0)
@@ -175,9 +161,3 @@ dtors_section ()							\
 /* For pSOS we use DBX debugging info.  */
 
 #define DBX_DEBUGGING_INFO
-
-
-/* Prevent generation of an exit function.  */
-
-#define HAVE_ATEXIT
-

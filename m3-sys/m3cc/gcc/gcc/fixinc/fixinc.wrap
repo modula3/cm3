@@ -57,7 +57,7 @@ if [ -r $INPUT/$file ]; then
 #ifdef __cplusplus
 # define exception __math_exception
 #endif
-#include_next <math.h>
+ #include_next <math.h>
 #ifdef __cplusplus
 # undef exception
 #endif
@@ -86,7 +86,7 @@ if [ -r $INPUT/$file ]; then
 #ifdef __cplusplus
 # define queue __stream_queue
 #endif
-#include_next <sys/stream.h>
+ #include_next <sys/stream.h>
 #ifdef __cplusplus
 # undef queue
 #endif
@@ -116,7 +116,7 @@ if [ -r $INPUT/$file ]; then
 #ifdef __cplusplus
 # define bool __curses_bool_t
 #endif
-#include_next <curses.h>
+ #include_next <curses.h>
 #ifdef __cplusplus
 # undef bool
 #endif
@@ -132,13 +132,5 @@ __EOF__
 fi
 
 done
-
-if [ x${INSTALL_ASSERT_H} != x ]
-then
-  cd ${ORIG_DIR}
-  rm -f include/assert.h
-  cp ${srcdir}/assert.h include/assert.h || exit 1
-  chmod a+r include/assert.h
-fi
 
 exit 0

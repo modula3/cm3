@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler, Citicorp/TTI Unicom PBD
    version (using GAS and COFF (encapsulated is unacceptable) )
-   Copyright (C) 1990, 1996 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1996, 2000 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -24,7 +24,7 @@ Boston, MA 02111-1307, USA.  */
 /* Names to predefine in the preprocessor for this target machine.  */
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Dsparc -DUnicomPBD -Dunix -D__GCC_NEW_VARARGS__ -Asystem(unix) -Acpu(sparc) -Amachine(sparc)"
+#define CPP_PREDEFINES "-Dsparc -DUnicomPBD -Dunix -D__GCC_NEW_VARARGS__ -Asystem=unix -Acpu=sparc -Amachine=sparc"
 
 /* We want DBX format for use with gdb under COFF.  */
 
@@ -153,4 +153,4 @@ Boston, MA 02111-1307, USA.  */
 	     line, sym_lineno, sym_lineno);		\
     sym_lineno += 1; }
 
-#define ASM_INT_OP ".long "
+#define ASM_INT_OP "\t.long "

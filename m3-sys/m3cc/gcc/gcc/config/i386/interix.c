@@ -78,7 +78,8 @@ i386_pe_unique_section (decl, reloc)
      int reloc;
 {
   int len;
-  char *name,*string,*prefix;
+  const char *name;
+  char *string,*prefix;
 
   name = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (decl));
   /* Strip off any encoding in fnname.  */
@@ -92,6 +93,9 @@ i386_pe_unique_section (decl, reloc)
      without a .rdata section.  */
   if (TREE_CODE (decl) == FUNCTION_DECL)
     prefix = ".text$";
+/* else if (DECL_INITIAL (decl) == 0
+	   || DECL_INITIAL (decl) == error_mark_node)
+    prefix = ".bss"; */
   else if (DECL_READONLY_SECTION (decl, reloc))
 #ifdef READONLY_DATA_SECTION
     prefix = ".rdata$";

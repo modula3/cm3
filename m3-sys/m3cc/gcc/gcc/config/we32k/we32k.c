@@ -1,12 +1,13 @@
 /* Subroutines for insn-output.c for AT&T we32000 Family.
+   Copyright (C) 1991, 1992, 1997, 1998, 1999, 2000
+   Free Software Foundation, Inc.
    Contributed by John Wehle (john@feith1.uucp)
-   Copyright (C) 1991, 1992, 1997 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
 GNU CC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 1, or (at your option)
+the Free Software Foundation; either version 2, or (at your option)
 any later version.
 
 GNU CC is distributed in the hope that it will be useful,
@@ -21,10 +22,14 @@ Boston, MA 02111-1307, USA.  */
 
 
 #include "config.h"
-#include <stdio.h>
+#include "system.h"
+#include "insn-config.h"
 #include "rtl.h"
+#include "function.h"
 #include "real.h"
-
+#include "recog.h"
+#include "output.h"
+#include "tm_p.h"
 
 void
 output_move_double (operands)
@@ -36,7 +41,7 @@ output_move_double (operands)
 
   if (GET_CODE (operands[0]) == REG) 
     {
-      lsw_operands[0] = gen_rtx (REG, SImode, REGNO (operands[0]) + 1);
+      lsw_operands[0] = gen_rtx_REG (SImode, REGNO (operands[0]) + 1);
       msw_dreg = operands[0];
     }
   else if (GET_CODE (operands[0]) == MEM && offsettable_memref_p (operands[0]))
@@ -46,7 +51,7 @@ output_move_double (operands)
 
   if (GET_CODE (operands[1]) == REG) 
     {
-      lsw_operands[1] = gen_rtx (REG, SImode, REGNO (operands[1]) + 1);
+      lsw_operands[1] = gen_rtx_REG (SImode, REGNO (operands[1]) + 1);
       lsw_sreg = lsw_operands[1];
     }
   else if (GET_CODE (operands[1]) == MEM && offsettable_memref_p (operands[1])) 
@@ -115,7 +120,7 @@ output_push_double (operands)
   rtx lsw_operands[1];
 
   if (GET_CODE (operands[0]) == REG)
-    lsw_operands[0] = gen_rtx (REG, SImode, REGNO (operands[0]) + 1);
+    lsw_operands[0] = gen_rtx_REG (SImode, REGNO (operands[0]) + 1);
   else if (GET_CODE (operands[0]) == MEM && offsettable_memref_p (operands[0]))
     lsw_operands[0] = adj_offsettable_operand (operands[0], 4);
   else if (GET_CODE (operands[0]) == CONST_DOUBLE)

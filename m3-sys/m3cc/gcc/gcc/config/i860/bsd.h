@@ -5,7 +5,7 @@
 
 #define DBX_DEBUGGING_INFO
 
-#define ASCII_DATA_ASM_OP ".byte"
+#define ASCII_DATA_ASM_OP "\t.byte\t"
 #define	ASM_OUTPUT_ASCII(f, p, size)	\
 do { register unsigned i;		\
   int inside;				\
@@ -18,7 +18,7 @@ do { register unsigned i;		\
 	putc('\n', (f));		\
 	inside = FALSE;			\
       }					\
-      fprintf((f), "\t%s ", ASCII_DATA_ASM_OP);	\
+      fprintf((f), "%s", ASCII_DATA_ASM_OP);	\
     }					\
     if ((p)[i] < 32 || (p)[i] == '\\' || (p)[i] == '"' || (p)[i] >= 127) {	\
       if (inside) {			\

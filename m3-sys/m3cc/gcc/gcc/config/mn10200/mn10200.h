@@ -1,5 +1,7 @@
-/* Definitions of target machine for GNU compiler. Matsushita MN10200 series
-   Copyright (C) 1997 Free Software Foundation, Inc.
+/* Definitions of target machine for GNU compiler.
+   Matsushita MN10200 series
+   Copyright (C) 1997, 1998, 1999, 2000, 2001
+   Free Software Foundation, Inc.
    Contributed by Jeff Law (law@cygnus.com).
 
 This file is part of GNU CC.
@@ -53,7 +55,7 @@ extern int target_flags;
    An empty string NAME is used to identify the default VALUE.  */
 
 #define TARGET_SWITCHES  \
-  {{ "", TARGET_DEFAULT}}
+  {{ "", TARGET_DEFAULT, 0}}
 
 #ifndef TARGET_DEFAULT
 #define TARGET_DEFAULT 0
@@ -249,11 +251,11 @@ enum reg_class {
    of length N_REG_CLASSES.  */
 
 #define REG_CLASS_CONTENTS  			\
-{     0,		/* No regs      */	\
-   0x0f,		/* DATA_REGS */		\
-   0xf0,		/* ADDRESS_REGS */	\
-   0xff,		/* GENERAL_REGS */    	\
-   0xff,		/* ALL_REGS 	*/	\
+{     {0},		/* No regs      */	\
+   {0x0f},		/* DATA_REGS */		\
+   {0xf0},		/* ADDRESS_REGS */	\
+   {0xff},		/* GENERAL_REGS */    	\
+   {0xff},		/* ALL_REGS 	*/	\
 }
 
 /* The same information, inverted:
@@ -298,11 +300,11 @@ enum reg_class {
    in some cases it is preferable to use a more restrictive class.  */
 
 #define PREFERRED_RELOAD_CLASS(X,CLASS) \
-  ((GET_MODE (X) != PSImode) ? DATA_REGS : CLASS)
+  ((GET_MODE (X) != PSImode && GET_MODE (X) != VOIDmode) ? DATA_REGS : CLASS)
 
 /* We want to use DATA_REGS for anything that is not PSImode.  */
 #define LIMIT_RELOAD_CLASS(MODE, CLASS) \
-  ((MODE != PSImode) ? DATA_REGS : CLASS)
+  ((MODE != PSImode && MODE != VOIDmode) ? DATA_REGS : CLASS)
 
 /* We have/need secondary reloads on the mn10200.  Mostly to deal
    with problems using address registers.  */
@@ -401,7 +403,7 @@ enum reg_class {
 
    We allow frame pointers to be eliminated when not having one will
    not interfere with debugging.  */
-#define ACCUMULATE_OUTGOING_ARGS
+#define ACCUMULATE_OUTGOING_ARGS 1
 #define FRAME_POINTER_REQUIRED 0
 #define CAN_DEBUG_WITHOUT_FP
 
@@ -504,10 +506,12 @@ struct cum_arg { int nbytes; };
    NAMED is nonzero if this argument is a named parameter
     (otherwise it is an extra parameter matching an ellipsis).  */
 
-extern struct rtx_def *function_arg();
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED) \
   function_arg (&CUM, MODE, TYPE, NAMED)
 
+/* Implement `va_arg'.  */
+#define EXPAND_BUILTIN_VA_ARG(valist, type) \
+  mn10200_va_arg (valist, type)
 
 /* For "large" items, we pass them by invisible reference, and the
    callee is responsible for copying the data item if it might be
@@ -524,12 +528,12 @@ extern struct rtx_def *function_arg();
    otherwise, FUNC is 0.   */
    
 #define FUNCTION_VALUE(VALTYPE, FUNC) \
-  gen_rtx (REG, TYPE_MODE (VALTYPE), TYPE_MODE (VALTYPE) == PSImode ? 4 : 0)
+  gen_rtx_REG (TYPE_MODE (VALTYPE), TYPE_MODE (VALTYPE) == PSImode ? 4 : 0)
 
 /* Define how to find the value returned by a library function
    assuming the value has mode MODE.  */
 
-#define LIBCALL_VALUE(MODE) gen_rtx (REG, MODE, (MODE) == PSImode ? 4 : 0)
+#define LIBCALL_VALUE(MODE) gen_rtx_REG (MODE, (MODE) == PSImode ? 4 : 0)
 
 /* 1 if N is a possible register number for a function value.  */
 
@@ -590,9 +594,9 @@ extern struct rtx_def *function_arg();
 
 #define INITIALIZE_TRAMPOLINE(TRAMP, FNADDR, CXT)			\
 {									\
-  emit_move_insn (gen_rtx (MEM, PSImode, plus_constant ((TRAMP), 20)),  \
+  emit_move_insn (gen_rtx_MEM (PSImode, plus_constant ((TRAMP), 20)),	\
 		  (CXT));						\
-  emit_move_insn (gen_rtx (MEM, PSImode, plus_constant ((TRAMP), 24)),  \
+  emit_move_insn (gen_rtx_MEM (PSImode, plus_constant ((TRAMP), 24)),	\
 		  (FNADDR));						\
 }
 
@@ -601,7 +605,7 @@ extern struct rtx_def *function_arg();
 
 #define RETURN_ADDR_RTX(COUNT, FRAME)   \
   ((COUNT == 0)                         \
-   ? gen_rtx (MEM, Pmode, frame_pointer_rtx) \
+   ? gen_rtx_MEM (Pmode, frame_pointer_rtx) \
    : (rtx) 0)
 
 
@@ -779,7 +783,7 @@ extern struct rtx_def *function_arg();
 
 /* Make moves between different classes more expensive than moves
    within the same class.  */
-#define REGISTER_MOVE_COST(CLASS1, CLASS2)  (CLASS1 != CLASS2 ? 4 : 2)
+#define REGISTER_MOVE_COST(MODE, CLASS1, CLASS2)  (CLASS1 != CLASS2 ? 4 : 2)
 
 /* Provide the costs of a rtl expression.  This is in the body of a
    switch on CODE. 
@@ -894,7 +898,7 @@ do { char dstr[30];					\
 #undef ASM_OUTPUT_LABELREF
 #define ASM_OUTPUT_LABELREF(FILE, NAME)	          \
   do {                                            \
-  char* real_name;                                \
+  const char* real_name;                          \
   STRIP_NAME_ENCODING (real_name, (NAME));        \
   fprintf (FILE, "_%s", real_name);               \
   } while (0)           
@@ -979,10 +983,6 @@ do { char dstr[30];					\
   ((GET_CODE (X) == PLUS ? OFFSET : 0) \
     + (frame_pointer_needed ? 0 : -total_frame_size ()))
 
-/* We need to prepend underscores.  */
-#define ASM_OUTPUT_DWARF2_ADDR_CONST(FILE,ADDR) \
-  fprintf ((FILE), "\t%s\t_%s", UNALIGNED_WORD_ASM_OP, (ADDR))
-  
 /* Define to use software floating point emulator for REAL_ARITHMETIC and
    decimal <-> binary conversion. */
 #define REAL_ARITHMETIC
@@ -1047,27 +1047,23 @@ do { char dstr[30];					\
 #define INIT_TARGET_OPTABS \
   do { \
     sdiv_optab->handlers[(int) HImode].libfunc		\
-      = gen_rtx (SYMBOL_REF, Pmode, DIVHI3_LIBCALL);	\
+      = init_one_libfunc (DIVHI3_LIBCALL);		\
     smod_optab->handlers[(int) HImode].libfunc		\
-      = gen_rtx (SYMBOL_REF, Pmode, MODHI3_LIBCALL);	\
+      = init_one_libfunc (MODHI3_LIBCALL);		\
   } while (0)
 
 /* The assembler op to get a word.  */
 
 #define FILE_ASM_OP "\t.file\n"
 
-extern void asm_file_start ();
-extern void print_operand ();
-extern void print_operand_address ();
-extern void expand_prologue ();
-extern void expand_epilogue ();
-extern void notice_update_cc ();
-extern int call_address_operand ();
-extern enum reg_class secondary_reload_class ();
-extern char *emit_a_shift ();
-extern int current_function_needs_context;
-extern char *output_tst ();
-extern int extendpsi_operand ();
-extern int rtx_equal_function_value_matters;
+#define PREDICATE_CODES							\
+  {"call_address_operand",	{ SYMBOL_REF, REG }},			\
+  {"constant_memory_operand",	{ MEM }},				\
+  {"psimode_truncation_operand",{ PLUS, CONST_INT, CONST_DOUBLE, CONST,	\
+				  SYMBOL_REF, LABEL_REF, SUBREG, REG, MEM }},\
+  {"extendpsi_operand",		{ PLUS, CONST_INT, CONST_DOUBLE, CONST,	\
+				  SYMBOL_REF, LABEL_REF, SUBREG, REG, MEM }}, \
+  {"nshift_operator",		{ ASHIFTRT, LSHIFTRT, ASHIFT }},
+
 extern struct rtx_def *zero_dreg;
 extern struct rtx_def *zero_areg;
