@@ -1,4 +1,4 @@
-/* $Id: m3overrides,v 1.1.1.1 2001-09-19 11:40:10 wagner Exp $ */
+/* $Id: m3overrides,v 1.2 2001-09-19 15:02:59 wagner Exp $ */
 
 /* Copyright (c) 2000 California Institute of Technology */
 /* All rights reserved. See the file COPYRIGHT for a full description. */
@@ -17,8 +17,9 @@ include("../m3overrides")
 
 /* these are the packages that are part of this distribution */
 /* .parsertop is made by the Makefile before building anything */
-include(".parsertop")
-override("ktoklib", _PARSER_TOP)
+%include(".parsertop")
+_PARSER_TOP = TOP & "/parserlib"
+%override("ktoklib", _PARSER_TOP)
 override("klexlib", _PARSER_TOP)
 override("kyacclib", _PARSER_TOP)
 override("parserlib", _PARSER_TOP)
