@@ -1,4 +1,4 @@
-(* $Id: Term.m3,v 1.1.1.1 2001-09-19 11:40:10 wagner Exp $ *)
+(* $Id: Term.m3,v 1.2 2001-09-19 14:10:17 wagner Exp $ *)
 
 UNSAFE MODULE Term;
 IMPORT Stdio;
