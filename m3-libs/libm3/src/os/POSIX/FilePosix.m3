@@ -8,9 +8,9 @@
 
 UNSAFE MODULE FilePosix;
 
-IMPORT Ctypes, File, FS, M3toC, OSError, OSErrorPosix, Pipe,
+IMPORT Cerrno, Ctypes, File, FS, M3toC, OSError, OSErrorPosix, Pipe,
   RegularFile, SchedulerPosix, Terminal, Uerror, Unix, Ustat, Uuio,
-  Word;
+  Word, Utypes;
 
 REVEAL 
   File.T = T BRANDED OBJECT OVERRIDES
@@ -100,7 +100,10 @@ PROCEDURE FileStatus(h: File.T): File.Status RAISES {OSError.E} =
     ELSE <* ASSERT FALSE *>
     END;
     status.modificationTime := FLOAT(statBuf.st_mtime, LONGREAL);
-    status.size := statBuf.st_size;
+    WITH size = Utypes.asLong(statBuf.st_size) DO
+      IF size < 0 THEN OSErrorPosix.Raise() END;
+      status.size := size;
+    END;
     RETURN status
   END FileStatus;  
 
@@ -124,19 +127,19 @@ PROCEDURE RegularFileWrite(
     h: RegularFile.T;
     READONLY b: ARRAY OF File.Byte)
   RAISES {OSError.E} =
-  VAR p_b: ADDRESS := ADR(b[0]);
-  BEGIN
+  VAR
+    p_b: ADDRESS := ADR(b[0]);
+    bytes := NUMBER(b);
+    bytesWritten: INTEGER;  BEGIN
     IF NOT(Direction.Write IN h.ds) THEN BadDirection(); END;
-    WITH bytesWritten1 = Uuio.write(h.fd, p_b, NUMBER(b)) DO
-      IF bytesWritten1 < 0 THEN OSErrorPosix.Raise() END;
+    LOOP
+      bytesWritten := Uuio.write(h.fd, p_b, bytes);
+      IF bytesWritten < 0 THEN OSErrorPosix.Raise() END;
       (* Partial write if media is full, quota exceeded, etc. *)
-      IF bytesWritten1 < NUMBER(b) THEN
-        WITH bytesWritten2 = Uuio.write(
-            h.fd, p_b+bytesWritten1, NUMBER(b)-bytesWritten1) DO
-          IF bytesWritten2 < 0 THEN OSErrorPosix.Raise() END;
-          <* ASSERT FALSE *>
-        END
-      END
+      IF bytesWritten = bytes THEN EXIT END;
+      <* ASSERT bytesWritten > 0 *>
+      INC(p_b, bytesWritten);
+      DEC(bytes, bytesWritten);
     END
   END RegularFileWrite;
 
@@ -163,14 +166,15 @@ PROCEDURE RegularFileLock(h: RegularFile.T): BOOLEAN RAISES {OSError.E} =
   VAR flock := Unix.struct_flock {
     l_type := Unix.F_WRLCK,
     l_whence := Unix.L_SET,
-    l_start := 0,
-    l_len := 0, (* i.e., whole file *)
     l_pid := 0}; (* don't care *)
   BEGIN
     IF Unix.fcntl(h.fd, Unix.F_SETLK, LOOPHOLE(ADR(flock), Ctypes.long)) < 0
-    THEN
-      IF Uerror.errno = Uerror.EACCES
-      OR Uerror.errno = Uerror.EAGAIN THEN RETURN FALSE END;
+     THEN
+      WITH errno = Cerrno.GetErrno() DO
+        IF errno = Uerror.EACCES OR errno = Uerror.EAGAIN THEN
+          RETURN FALSE
+        END;
+      END;
       OSErrorPosix.Raise()
     END;
     RETURN TRUE
@@ -184,8 +188,6 @@ PROCEDURE RegularFileUnlock(h: RegularFile.T) RAISES {OSError.E} =
   VAR flock := Unix.struct_flock {
     l_type := Unix.F_UNLCK,
     l_whence := Unix.L_SET,
-    l_start := 0,
-    l_len := 0, (* i.e., whole file *)
     l_pid := 0}; (* don't care *)
   BEGIN
     IF Unix.fcntl(h.fd, Unix.F_SETLK, LOOPHOLE(ADR(flock), Ctypes.long)) < 0
@@ -219,7 +221,7 @@ PROCEDURE IntermittentRead(
       END;
 
       status := Uuio.read(h.fd, p_b, NUMBER(b));
-      errno := Uerror.errno;
+      errno := Cerrno.GetErrno();
 
       IF Unix.fcntl(h.fd, Unix.F_SETFL, old_mode) # 0 THEN
 	OSErrorPosix.Raise()
@@ -260,7 +262,7 @@ PROCEDURE IntermittentWrite(h: File.T; READONLY b: ARRAY OF File.Byte)
       END;
 
       status := Uuio.write(h.fd, p, n);
-      errno := Uerror.errno;
+      errno := Cerrno.GetErrno();
 
       IF Unix.fcntl(h.fd, Unix.F_SETFL, old_mode) # 0 THEN
 	OSErrorPosix.Raise()

@@ -6,7 +6,7 @@
 
 MODULE OSErrorPosix EXPORTS OSError, OSErrorPosix;
 
-IMPORT Atom, AtomList, Fmt, OSError, Text, Uerror;
+IMPORT Atom, AtomList, Cerrno, Fmt, OSError, Text, Uerror;
 
 VAR cache := ARRAY [0..Uerror.Max] OF Atom.T {NIL, ..};
 (* The table is initialized lazily. *)
@@ -53,7 +53,7 @@ PROCEDURE Raise0(errno: INTEGER) RAISES {OSError.E} =
 
 PROCEDURE Raise() RAISES {OSError.E} =
   BEGIN
-    Raise0(Uerror.errno)
+    Raise0(Cerrno.GetErrno())
   END Raise;
 
 BEGIN
