@@ -1,6 +1,6 @@
 #!/bin/sh
 # Configuration script for GNU CC
-#   Copyright (C) 1988, 90, 91, 92, 93, 94, 1995 Free Software Foundation, Inc.
+#   Copyright (C) 1988, 90-5, 1996 Free Software Foundation, Inc.
 
 #This file is part of GNU CC.
 
@@ -36,6 +36,7 @@
 #	   --with-gnu-as	arrange to work with GAS.
 #	   --with-stabs		arrange to use stabs instead of host debug format.
 #	   --with-elf		arrange to use elf instead of host debug format.
+#	   --with-cpu=type	specify to compile for a specific CPU on rs6000/powerpc
 #	   --enable-FOO, --enable-FOO=BAR include feature FOO (parameter BAR)
 #	   --disable-FOO	do not include feature FOO
 #	   --nfp		assume system has no FPU.
@@ -45,13 +46,13 @@
 #				apply to executable names.
 #
 # If configure succeeds, it leaves its status in config.status.
-# If configure fails after disturbing the status quo, 
+# If configure fails after disturbing the status quo,
 # 	config.status is removed.
 #
 
 progname=$0
 
-# Default --srcdir to the directory where the script is found, 
+# Default --srcdir to the directory where the script is found,
 # if a directory was specified.
 # The second sed call is to convert `.//configure' to `./configure'.
 srcdir=`echo $0 | sed 's|//|/|' | sed 's|/[^/]*$||'`
@@ -68,7 +69,7 @@ prefix=/usr/local
 # On systems where GCC is the native compiler, $prefix should be
 # /usr. But the user can change it with configure --prefix=/foo/bar
 native_prefix=/usr
- 
+
 # local_prefix specifies where to find the directory /usr/local/include
 # We don't use $(prefix) for this
 # because we always want GCC to search /usr/local/include
@@ -76,15 +77,21 @@ native_prefix=/usr
 # Think THREE TIMES before specifying any other value for this!
 # DO NOT make this use $prefix!
 local_prefix=/usr/local
+# CYGNUS LOCAL: local_prefix
+# For our purposes, this must be prefix.  This is apparently
+# only done for the benefit of glibc, and we don't use glibc.
+local_prefix='$(prefix)'
+# END CYGNUS LOCAL
 # Default is to let the Makefile set exec_prefix from $(prefix)
 exec_prefix='$(prefix)'
 #
-# The default g++ include directory is $(libdir)/g++-include.
-gxx_include_dir='$(libdir)/g++-include'
 
 # Default --program-transform-name to nothing.
 program_transform_name=
 program_transform_set=
+# CYGNUS LOCAL --site
+site=
+# END CYGNUS LOCAL
 
 remove=rm
 hard_link=ln
@@ -133,10 +140,6 @@ do
     local_prefix=$arg
     next_arg=
     ;;
-  --gxx-include-dir)
-    gxx_include_dir=$arg
-    next_arg=
-    ;;
   --exec-prefix)
     exec_prefix=$arg
     next_arg=
@@ -148,7 +151,7 @@ do
     fi
     program_transform_set=yes
     next_arg=
-    ;;    
+    ;;
   --program-prefix)
     if [ -n "${arg}" ]; then
       program_transform_name="${program_transform_name} -e s,^,`echo ${arg} | sed -e 's/\\\\/\\\\\\\\/g' -e 's/\\\$/$$/g'`,"
@@ -161,6 +164,10 @@ do
       program_transform_name="${program_transform_name} -e s,\$\$,`echo ${arg} | sed -e 's/\\\\/\\\\\\\\/g' -e 's/\\\$/$$/g'`,"
     fi
     program_transform_set=yes
+    next_arg=
+    ;;
+  --site) # CYGNUS LOCAL: --site
+    site=${arg}
     next_arg=
     ;;
   --x-*)
@@ -189,19 +196,19 @@ do
 	;;
      -host=* | --host=* | --hos=* | --ho=*)
 	host=`echo $arg | sed 's/-*h[a-z]*=//'`
-	;; 
+	;;
      -target | --target | --targe | --targ | --tar | --ta | --t)
 	next_arg=--target
 	;;
      -target=* | --target=* | --targe=* | --targ=* | --tar=* | --ta=* | --t=*)
 	target=`echo $arg | sed 's/-*t[a-z]*=//'`
-	;; 
+	;;
      -build | --build | --buil | --bui | --bu | --b)
 	next_arg=--build
 	;;
      -build=* | --build=* | --buil=* | --bui=* | --bu=* | --b=*)
 	build=`echo $arg | sed 's/-*b[a-z]*=//'`
-	;; 
+	;;
      -prefix | --prefix | --prefi | --pref | --pre | --pr | --p)
 	next_arg=--prefix
 	;;
@@ -222,11 +229,6 @@ do
 	| --gxx-incl | --gxx-inc | --gxx-in | --gxx-i | --gxx- \
 	| --gxx | --gxx | --gx | --g)
 	next_arg=--gxx-include-dir
-	;;
-     -gxx-include-dir=* | --gxx-include-dir=* | --gxx-include=* \
-	| --gxx-incl=* | --gxx-inc=* | --gxx-in=* | --gxx-i=* \
-	| --gxx-=* | --gxx=* | --gxx=* | --gxx=* | --g=*)
-	gxx_include_dir=`echo $arg | sed 's/-*g[-a-z]*=//'`
 	;;
      -exec-prefix | --exec-prefix | --exec-prefi | --exec-pref | --exec-pre \
 	| --exec-pr | --exec-p | --exec- | --exec | --exe | --ex | --e)
@@ -286,6 +288,12 @@ do
 	fi
 	program_transform_set=yes
 	;;
+     -site | --site | --sit) # CYGNUS LOCAL: --site
+	next_arg=--site
+	;;
+     -site=* | --site=* | --sit=* | --si=*) # CYGNUS LOCAL: --site
+	site=`echo ${arg} | sed 's/^[-a-z]*=//'`
+	;;
      -with-gnu-ld | --with-gnu-ld | --with-gnu-l)
 	gnu_ld=yes
 	;;
@@ -307,8 +315,18 @@ do
 	|--elf | --el | --e)
 	elf=yes
 	;;
-     -with-* | --with-*) ;; #ignored
-     -without-* | --without-*) ;; #ignored
+     -with-* | --with-*)
+	case "$arg" in
+	*=*)	optarg=`echo $arg | sed 's:^[^=]*=::;s:-:_:g'` ;;
+	*)	optarg=yes ;;
+	esac
+	withopt=`echo ${arg} | sed 's:^-*::;s:=.*$::;s:-:_:g'`
+	eval $withopt="$optarg"
+	;;
+     -without-* | --without-*)
+	withopt=`echo ${arg} | sed 's:^-*without-:with_:;s:-:_:g'`
+	eval $withopt=no
+	;;
      -disable-* | --disable-*)
 	enableopt=`echo ${arg} | sed 's:^-*disable-:enable_:;s:-:_:g'`
 	eval $enableopt=no
@@ -424,7 +442,7 @@ then
 	if [ x$host != x ]
 	then
 		build=$host
-	
+
 	# This way of testing the result of a command substitution is
 	# defined by Posix.2 (section 3.9.1) as well as traditional shells.
 	elif build=`${srcdir}/config.guess`
@@ -480,9 +498,6 @@ canon_target=`/bin/sh $srcdir/config.sub $target` || exit 1
 # that came from the host machine.
 for machine in $canon_build $canon_host $canon_target; do
 
-	cpu_type=
-	xm_file=
-	tm_file=
 	out_file=
 	xmake_file=
 	tmake_file=
@@ -491,7 +506,9 @@ for machine in $canon_build $canon_host $canon_target; do
 	extra_parts=
 	extra_programs=
 	extra_objs=
+	extra_host_objs=
 	extra_gcc_objs=
+	float_format=
 	# Set this to force installation and use of collect2.
 	use_collect2=
 	# Set this to override the default target model.
@@ -509,7 +526,42 @@ for machine in $canon_build $canon_host $canon_target; do
 	truncate_target=
 	# Set this if gdb needs a dir command with `dirname $out_file`
 	gdb_needs_out_file_path=
+	# Set this to the tag of the Objective-C runtime thread file to compile
+	objc_thread_file=
 
+	# Set default cpu_type, tm_file and xm_file so it can be updated in
+	# each machine entry.
+	cpu_type=`echo $machine | sed 's/-.*$//'`
+	case $machine in
+	arm*-*-*)
+		cpu_type=arm
+		;;
+	c*-convex-*)
+		cpu_type=convex
+		;;
+	i[3456]86-*-*)
+		cpu_type=i386
+		;;
+	hppa*-*-*)
+		cpu_type=pa
+		;;
+	m68000-*-*)
+		cpu_type=m68k
+		;;
+	mips*-*-*)
+		cpu_type=mips
+		;;
+	powerpc*-*-*)
+		cpu_type=rs6000
+		;;
+	sparc*-*-*)
+		cpu_type=sparc
+		;;
+	esac
+
+	tm_file=${cpu_type}/${cpu_type}.h
+	xm_file=${cpu_type}/xm-${cpu_type}.h
+	
 	case $machine in
 	# Support site-specific machine types.
 	*local*)
@@ -529,29 +581,45 @@ for machine in $canon_build $canon_host $canon_target; do
 	1750a-*-*)
 		;;
 	a29k-*-bsd* | a29k-*-sym1*)
-		tm_file=a29k/unix.h
+		tm_file="${tm_file} a29k/unix.h"
 		xm_file=a29k/xm-unix.h
 		xmake_file=a29k/x-unix
-		tmake_file=a29k/t-a29k
 		use_collect2=yes
 		;;
 	a29k-*-udi | a29k-*-coff)
+		tm_file="${tm_file} dbxcoff.h a29k/udi.h"
 		tmake_file=a29k/t-a29kbare
-		tm_file=a29k/a29k-udi.h
 		;;
 	a29k-*-vxworks*)
+		tm_file="${tm_file} dbxcoff.h a29k/udi.h a29k/vx29k.h"
 		tmake_file=a29k/t-vx29k
-		tm_file=a29k/vx29k.h
 		extra_parts="crtbegin.o crtend.o"
 		;;
 	a29k-*-*)			# Default a29k environment.
 		use_collect2=yes
 		;;
+	alpha-*-linux*ecoff*)
+		tm_file="${tm_file} alpha/linux.h"
+		xm_file="${xm_file} alpha/xm-linux.h"
+		objc_thread_file=posix
+		target_cpu_default=4
+		xmake_file=none
+		fixincludes=Makefile.in
+		gas=yes gnu_ld=yes
+		;;
+	alpha-*-linux*)
+		tm_file="${tm_file} alpha/linux.h alpha/elf.h"
+		xm_file="${xm_file} alpha/xm-linux.h"
+		target_cpu_default=4
+		xmake_file=none
+		fixincludes=Makefile.in
+		extra_parts="crtbegin.o crtbeginS.o crtend.o crtendS.o"
+		gas=yes gnu_ld=yes
+		;;
 	alpha-dec-osf[23456789]*)
-		tm_file=alpha/osf2.h
 		if [ x$stabs = xyes ]
 		then
-			tm_file=alpha/gdb-osf2.h
+			tm_file="${tm_file} dbx.h"
 		fi
 		if [ x$gas != xyes ]
 		then
@@ -561,10 +629,10 @@ for machine in $canon_build $canon_host $canon_target; do
 		use_collect2=yes
 		;;
 	alpha-dec-osf1.2)
-		tm_file=alpha/osf12.h
+		tm_file="${tm_file} alpha/osf12.h"
 		if [ x$stabs = xyes ]
 		then
-			tm_file=alpha/gdb-osf12.h
+			tm_file="${tm_file} dbx.h"
 		fi
 		if [ x$gas != xyes ]
 		then
@@ -576,7 +644,7 @@ for machine in $canon_build $canon_host $canon_target; do
 	alpha-*-osf*)
 		if [ x$stabs = xyes ]
 		then
-			tm_file=alpha/gdb.h
+			tm_file="${tm_file} dbx.h"
 		fi
 		if [ x$gas != xyes ]
 		then
@@ -586,17 +654,28 @@ for machine in $canon_build $canon_host $canon_target; do
 		use_collect2=yes
 		;;
 	alpha-*-winnt3*)
-		tm_file=alpha/win-nt.h
-		xm_file=alpha/xm-winnt.h
+		tm_file="${tm_file} alpha/win-nt.h"
+		target_cpu_default=64
+		xm_file="${xm_file} config/winnt/xm-winnt.h alpha/xm-winnt.h"
 		tmake_file=t-libc-ok
 		xmake_file=winnt/x-winnt
-		extra_objs=oldnames.o
+		extra_host_objs=oldnames.o
 		extra_gcc_objs="spawnv.o oldnames.o"
 		fixincludes=fixinc.winnt
 		if [ x$gnu_ld != xyes ]
 		then
 			extra_programs=ld.exe
 		fi
+		objc_thread_file=win32
+		;;
+	arm-*-coff* | armel-*-coff*)
+		tm_file=arm/coff.h
+		tmake_file=arm/t-bare
+		;;
+	arm-*-pe*)			# CYGNUS LOCAL
+		tm_file=arm/pe.h
+		tmake_file=arm/t-pe
+		extra_objs=pe.o
 		;;
 	arm-*-riscix1.[01]*)		# Acorn RISC machine (early versions)
 		tm_file=arm/riscix1-1.h
@@ -614,52 +693,50 @@ for machine in $canon_build $canon_host $canon_target; do
 		use_collect2=yes
 		;;
 	arm-semi-aout | armel-semi-aout)
-		cpu_type=arm
 		tm_file=arm/semi.h
 		tmake_file=arm/t-semi
+		fixincludes=Makefile.in # There is nothing to fix
+		;;
+	arm-semi-aof | armel-semi-aof)
+		tm_file=arm/semiaof.h
+		tmake_file=arm/t-semiaof
 		fixincludes=Makefile.in # There is nothing to fix
 		;;
 	arm-*-*)			# generic version
 		;;
 	c1-convex-*)			# Convex C1
-		cpu_type=convex
-		tm_file=convex/convex1.h
+		target_cpu_default=1
 		use_collect2=yes
 		fixincludes=Makefile.in
 		;;
 	c2-convex-*)			# Convex C2
-		cpu_type=convex
-		tm_file=convex/convex2.h
+		target_cpu_default=2
 		use_collect2=yes
 		fixincludes=Makefile.in
 		;;
 	c32-convex-*)
-		cpu_type=convex
-		tm_file=convex/convex32.h	# Convex C32xx
+		target_cpu_default=4
 		use_collect2=yes
 		fixincludes=Makefile.in
 		;;
 	c34-convex-*)
-		cpu_type=convex
-		tm_file=convex/convex34.h	# Convex C34xx
+		target_cpu_default=8
 		use_collect2=yes
 		fixincludes=Makefile.in
 		;;
 	c38-convex-*)
-		cpu_type=convex
-		tm_file=convex/convex38.h	# Convex C38xx
+		target_cpu_default=16		
 		use_collect2=yes
 		fixincludes=Makefile.in
 		;;
 	clipper-intergraph-clix*)
-		broken_install=yes
-		cpu_type=clipper
+		tm_file="${tm_file} svr3.h clipper/clix.h"
 		xm_file=clipper/xm-clix.h
-		tm_file=clipper/clix.h
+		xmake_file=clipper/x-clix
 		extra_headers=va-clipper.h
 		extra_parts="crtbegin.o crtend.o"
-		xmake_file=clipper/x-clix
 		install_headers_dir=install-headers-cpio
+		broken_install=yes
 		;;
 	dsp16xx-*)
 		;;
@@ -670,182 +747,182 @@ for machine in $canon_build $canon_host $canon_target; do
 #	fx80-alliant-*)			# Alliant FX/80
 #		;;
 	h8300-*-*)
-		cpu_type=h8300
+		float_format=i32
+		;;
+	hppa1.1-*-pro*)
+		tm_file="pa/pa-pro.h ${tm_file} pa/pa-pro-end.h"
+		xm_file=pa/xm-papro.h
+		tmake_file=pa/t-pro
 		;;
 	hppa1.1-*-osf*)
-		cpu_type=pa
-		tm_file=pa/pa1-osf.h
+		target_cpu_default=1
+		tm_file="${tm_file} pa/pa-osf.h"
 		use_collect2=yes
 		fixincludes=Makefile.in
 		;;
 	hppa1.0-*-osf*)
-		cpu_type=pa
-		tm_file=pa/pa-osf.h
+		tm_file="${tm_file} pa/pa-osf.h"
 		use_collect2=yes
 		fixincludes=Makefile.in
 		;;
 	hppa1.1-*-bsd*)
-		cpu_type=pa
-		tm_file=pa/pa1.h
+		target_cpu_default=1
 		use_collect2=yes
 		fixincludes=Makefile.in
 		;;
 	hppa1.0-*-bsd*)
-		cpu_type=pa
 		use_collect2=yes
 		fixincludes=Makefile.in
 		;;
 	hppa1.0-*-hpux7*)
-		cpu_type=pa
+		tm_file="pa/pa-oldas.h ${tm_file} pa/pa-hpux7.h"
 		xm_file=pa/xm-pahpux.h
 		xmake_file=pa/x-pa-hpux
-		tmake_file=pa/t-pa
 		if [ x$gas = xyes ]
 		then
-			tm_file=pa/pa-gux7.h
-		else
-			tm_file=pa/pa-hpux7.h
+			tm_file="${tm_file} pa/gas.h"
 		fi
 		broken_install=yes
 		install_headers_dir=install-headers-cpio
 		use_collect2=yes
 		;;
 	hppa1.0-*-hpux8.0[0-2]*)
-		cpu_type=pa
+		tm_file="${tm_file} pa/pa-hpux.h"
 		xm_file=pa/xm-pahpux.h
 		xmake_file=pa/x-pa-hpux
-		tmake_file=pa/t-pa
 		if [ x$gas = xyes ]
 		then
-			tm_file=pa/pa-ghpux.h
+			tm_file="${tm_file} pa/pa-gas.h"
 		else
-			tm_file=pa/pa-oldas.h
+			tm_file="pa/pa-oldas.h ${tm_file}"
 		fi
 		broken_install=yes
 		install_headers_dir=install-headers-cpio
 		use_collect2=yes
 		;;
 	hppa1.1-*-hpux8.0[0-2]*)
-		cpu_type=pa
+		target_cpu_default=1
+		tm_file="${tm_file} pa/pa-hpux.h"
 		xm_file=pa/xm-pahpux.h
 		xmake_file=pa/x-pa-hpux
-		tmake_file=pa/t-pa
 		if [ x$gas = xyes ]
 		then
-			tm_file=pa/pa1-ghpux.h
+			tm_file="${tm_file} pa/pa-gas.h"
 		else
-			tm_file=pa/pa1-oldas.h
+			tm_file="pa/pa-oldas.h ${tm_file}"
 		fi
 		broken_install=yes
 		install_headers_dir=install-headers-cpio
 		use_collect2=yes
 		;;
-	hppa1.1-*-hpux9* | \
+	hppa1.1-*-hpux8*)
+		target_cpu_default=1
+		tm_file="${tm_file} pa/pa-hpux.h"
+		xm_file=pa/xm-pahpux.h
+		xmake_file=pa/x-pa-hpux
+		if [ x$gas = xyes ]
+		then
+			tm_file="${tm_file} pa/pa-gas.h"
+		fi
+		broken_install=yes
+		install_headers_dir=install-headers-cpio
+		use_collect2=yes
+		;;
+	hppa1.0-*-hpux8*)
+		tm_file="${tm_file} pa/pa-hpux.h"
+		xm_file=pa/xm-pahpux.h
+		xmake_file=pa/x-pa-hpux
+		if [ x$gas = xyes ]
+		then
+			tm_file="${tm_file} pa/pa-gas.h"
+		fi
+		broken_install=yes
+		install_headers_dir=install-headers-cpio
+		use_collect2=yes
+		;;
 	hppa1.1-*-hpux10*)
-		cpu_type=pa
+		target_cpu_default=1
+		tm_file="${tm_file} pa/pa-hpux.h pa/pa-hpux10.h"
 		xm_file=pa/xm-pahpux.h
 		xmake_file=pa/x-pa-hpux
-		tmake_file=pa/t-pa
 		if [ x$gas = xyes ]
 		then
-			tm_file=pa/pa1-ghpux9.h
-		else
-			tm_file=pa/pa1-hpux9.h
+			tm_file="${tm_file} pa/pa-gas.h"
 		fi
 		broken_install=yes
 		install_headers_dir=install-headers-cpio
 		use_collect2=yes
 		;;
-	hppa1.0-*-hpux9* | \
 	hppa1.0-*-hpux10*)
-		cpu_type=pa
+		tm_file="${tm_file} pa/pa-hpux.h pa/pa-hpux10.h"
 		xm_file=pa/xm-pahpux.h
 		xmake_file=pa/x-pa-hpux
-		tmake_file=pa/t-pa
 		if [ x$gas = xyes ]
 		then
-			tm_file=pa/pa-ghpux9.h
-		else
-			tm_file=pa/pa-hpux9.h
+			tm_file="${tm_file} pa/pa-gas.h"
 		fi
 		broken_install=yes
 		install_headers_dir=install-headers-cpio
 		use_collect2=yes
 		;;
 	hppa1.1-*-hpux*)
-		cpu_type=pa
+		target_cpu_default=1
+		tm_file="${tm_file} pa/pa-hpux.h pa/pa-hpux9.h"
 		xm_file=pa/xm-pahpux.h
 		xmake_file=pa/x-pa-hpux
-		tmake_file=pa/t-pa
 		if [ x$gas = xyes ]
 		then
-			tm_file=pa/pa1-ghpux.h
-		else
-			tm_file=pa/pa1-hpux.h
+			tm_file="${tm_file} pa/pa-gas.h"
 		fi
 		broken_install=yes
 		install_headers_dir=install-headers-cpio
 		use_collect2=yes
 		;;
 	hppa1.0-*-hpux*)
-		cpu_type=pa
+		tm_file="${tm_file} pa/pa-hpux.h pa/pa-hpux9.h"
 		xm_file=pa/xm-pahpux.h
 		xmake_file=pa/x-pa-hpux
-		tmake_file=pa/t-pa
 		if [ x$gas = xyes ]
 		then
-			tm_file=pa/pa-ghpux.h
-		else
-			tm_file=pa/pa-hpux.h
+			tm_file="${tm_file} pa/pa-gas.h"
 		fi
 		broken_install=yes
 		install_headers_dir=install-headers-cpio
 		use_collect2=yes
 		;;
 	hppa1.1-*-hiux*)
-		cpu_type=pa
+		target_cpu_default=1
+		tm_file="${tm_file} pa/pa-hpux.h pa/pa-hiux.h"
 		xm_file=pa/xm-pahpux.h
 		xmake_file=pa/x-pa-hpux
-		tmake_file=pa/t-pa
 		if [ x$gas = xyes ]
 		then
-			tm_file=pa/pa1-ghiux.h
-		else
-			tm_file=pa/pa1-hiux.h
+			tm_file="${tm_file} pa/pa-gas.h"
 		fi
 		broken_install=yes
 		install_headers_dir=install-headers-cpio
 		use_collect2=yes
 		;;
 	hppa1.0-*-hiux*)
-		cpu_type=pa
+		tm_file="${tm_file} pa/pa-hpux.h pa/pa-hiux.h"
 		xm_file=pa/xm-pahpux.h
 		xmake_file=pa/x-pa-hpux
-		tmake_file=pa/t-pa
 		if [ x$gas = xyes ]
 		then
-			tm_file=pa/pa-ghiux.h
-		else
-			tm_file=pa/pa-hiux.h
+			tm_file="${tm_file} pa/pa-gas.h"
 		fi
 		broken_install=yes
 		install_headers_dir=install-headers-cpio
 		use_collect2=yes
 		;;
 	hppa*-*-lites*)
-		cpu_type=pa
-		tm_file=pa/pa1.h
+		target_cpu_default=1
 		use_collect2=yes
 		fixincludes=Makefile.in
 		;;
 	i370-*-mvs*)
-		cpu_type=i370
-		tm_file=i370/mvs.h
-		xm_file=i370/xm-mvs.h
-		out_file=i370/mvs370.c
 		;;
-	i[345]86-ibm-aix*)		# IBM PS/2 running AIX
-		cpu_type=i386
+	i[3456]86-ibm-aix*)		# IBM PS/2 running AIX
                 if [ x$gas = xyes ]
 		then
 			tm_file=i386/aix386.h
@@ -860,23 +937,21 @@ for machine in $canon_build $canon_host $canon_target; do
 		broken_install=yes
 		;;
 	i486-ncr-sysv4*)		# NCR 3000 - i486 running system V.4
-		cpu_type=i386
 		xm_file=i386/xm-sysv4.h
 		xmake_file=i386/x-ncr3000
 		tm_file=i386/sysv4.h
 		extra_parts="crtbegin.o crtend.o"
 		tmake_file=i386/t-crtpic
 		;;
-	i[345]86-next-*)
-		cpu_type=i386
+	i[3456]86-next-*)
 		tm_file=i386/next.h
 		out_file=i386/next.c
 		xm_file=i386/xm-next.h
 		tmake_file=i386/t-next
 		xmake_file=i386/x-next
+		objc_thread_file=mach
 		;;
-	i[345]86-sequent-bsd*) 		# 80386 from Sequent
-		cpu_type=i386
+	i[3456]86-sequent-bsd*) 		# 80386 from Sequent
 		use_collect2=yes
 		if [ x$gas = xyes ]
 		then
@@ -885,8 +960,7 @@ for machine in $canon_build $canon_host $canon_target; do
 			tm_file=i386/sequent.h
 		fi
 		;;
-	i[345]86-sequent-ptx1*)
-		cpu_type=i386
+	i[3456]86-sequent-ptx1*)
 		xm_file=i386/xm-sysv3.h
 		xmake_file=i386/x-sysv3
 		tm_file=i386/seq-sysv3.h
@@ -896,12 +970,21 @@ for machine in $canon_build $canon_host $canon_target; do
 		install_headers_dir=install-headers-cpio
 		broken_install=yes
 		;;
-	i[345]86-sequent-ptx2* | i[345]86-sequent-sysv*)
-		cpu_type=i386
+	i[3456]86-sequent-ptx2* | i[3456]86-sequent-sysv3*)
 		xm_file=i386/xm-sysv3.h
 		xmake_file=i386/x-sysv3
 		tm_file=i386/seq2-sysv3.h
 		tmake_file=i386/t-crtstuff
+		extra_parts="crtbegin.o crtend.o"
+		fixincludes=fixinc.ptx
+		install_headers_dir=install-headers-cpio
+		broken_install=yes
+		;;
+	i[3456]86-sequent-ptx4* | i[3456]86-sequent-sysv4*)
+		xm_file=i386/xm-sysv4.h
+		xmake_file=x-svr4
+		tm_file=i386/ptx4-i.h
+		tmake_file=t-svr4
 		extra_parts="crtbegin.o crtend.o"
 		fixincludes=fixinc.ptx
 		install_headers_dir=install-headers-cpio
@@ -912,35 +995,40 @@ for machine in $canon_build $canon_host $canon_target; do
 		tm_file=i386/sun.h
 		use_collect2=yes
 		;;
-	i[345]86-*-aout*)
-		cpu_type=i386
+	i[3456]86-*-aout*)
 		tm_file=i386/i386-aout.h
 		tmake_file=i386/t-i386bare
 		;;
-	i[345]86-*-bsdi* | i[345]86-*-bsd386*)
-		cpu_type=i386
+	i[3456]86-*-bsdi* | i[345]86-*-bsd386*)
 		tm_file=i386/bsd386.h
 		xm_file=i386/xm-bsd386.h
 #		tmake_file=t-libc-ok
 		;;
-	i[345]86-*-bsd*)
-		cpu_type=i386
+	i[3456]86-*-bsd*)
 		tm_file=i386/386bsd.h
 		xm_file=i386/xm-bsd386.h
 #		tmake_file=t-libc-ok
 # Next line turned off because both 386BSD and BSD/386 use GNU ld.
 #		use_collect2=yes
 		;;
-	i[345]86-*-freebsd*)
-		cpu_type=i386
+	i[3456]86-*-freebsdelf*)
+		tm_file="i386/i386.h i386/att.h linux.h i386/freebsd-elf.h i386/perform.h"
+		xm_file=i386/xm-freebsd.h
+		# On FreeBSD, the headers are already ok.
+		fixincludes=Makefile.in
+		xmake_file=i386/x-freebsd
+		gas=yes
+		gnu_ld=yes
+		stabs=yes
+		;;
+	i[3456]86-*-freebsd*)
 		tm_file=i386/freebsd.h
 		xm_file=i386/xm-freebsd.h
 		# On FreeBSD, the headers are already ok.
 		fixincludes=Makefile.in
 		xmake_file=i386/x-freebsd
 		;;
-	i[345]86-*-netbsd*)
-		cpu_type=i386
+	i[3456]86-*-netbsd*)
 		tm_file=i386/netbsd.h
 		xm_file=i386/xm-netbsd.h
 		# On NetBSD, the headers are already okay.
@@ -948,16 +1036,15 @@ for machine in $canon_build $canon_host $canon_target; do
 		tmake_file=t-libc-ok
 		xmake_file=x-netbsd
 		;;
-	i[345]86-*-coff*)
-		cpu_type=i386
+	i[3456]86-*-coff*)
 		tm_file=i386/i386-coff.h
 		tmake_file=i386/t-i386bare
 		;;
-	i[345]86-*-gnu*)
-		cpu_type=i386	# GNU supports this CPU; rest done below.
+	i[3456]86-*-dos)		# CYGNUS LOCAL raw DOS somehow???!
 		;;
-	i[345]86-*-isc*)		# 80386 running ISC system
-		cpu_type=i386
+	i[3456]86-*-gnu*)
+		;;
+	i[3456]86-*-isc*)		# 80386 running ISC system
 		xm_file=i386/xm-isc.h
 		case $machine in
 		  i[345]86-*-isc[34]*)
@@ -972,7 +1059,7 @@ for machine in $canon_build $canon_host $canon_target; do
 		then
 			tm_file=i386/iscdbx.h
 			tmake_file=i386/t-svr3dbx
-			extra_parts="crtbegin.o crtend.o svr3.ifile svr3z.ifile"
+			extra_parts="svr3.ifile svr3z.ifile"
 		else
 			tm_file=i386/isccoff.h
 			tmake_file=i386/t-crtstuff
@@ -981,42 +1068,51 @@ for machine in $canon_build $canon_host $canon_target; do
 		install_headers_dir=install-headers-cpio
 		broken_install=yes
 		;;
-	i[345]86-*-linux*oldld*)	# Intel 80386's running Linux
-		cpu_type=i386		# with a.out format using pre BFD linkers
-		xm_file=i386/xm-linux.h
-		xmake_file=x-linux
+	i[3456]86-*-linux*oldld*)	# Intel 80386's running Linux
+		xm_file=i386/xm-linux.h # with a.out format using pre BFD linkers
+		xmake_file=x-linux-aout
+		tmake_file="t-linux-aout i386/t-crtstuff"
 		tm_file=i386/linux-oldld.h
 		fixincludes=Makefile.in #On Linux, the headers are ok already.
 		broken_install=yes
 		gnu_ld=yes
+		objc_thread_file=posix
 		;;
-	i[345]86-*-linux*aout*)		# Intel 80386's running Linux
-		cpu_type=i386		# with a.out format
-		xm_file=i386/xm-linux.h
-		xmake_file=x-linux
+	i[3456]86-*-linux*aout*)		# Intel 80386's running Linux
+		xm_file=i386/xm-linux.h		# with a.out format
+		xmake_file=x-linux-aout
+		tmake_file="t-linux-aout i386/t-crtstuff"
 		tm_file=i386/linux-aout.h
 		fixincludes=Makefile.in #On Linux, the headers are ok already.
 		broken_install=yes
 		gnu_ld=yes
+		objc_thread_file=posix
 		;;
-	i[345]86-*-linux*)		# Intel 80386's running Linux
-		cpu_type=i386		# with ELF format
-		xm_file=i386/xm-linux.h
+	i[3456]86-*-linux*)		# Intel 80386's running Linux
+		xm_file=i386/xm-linux.h # with ELF format
 		xmake_file=x-linux
 		tm_file=i386/linux.h
+		tmake_file="t-linux i386/t-crtstuff"
+		extra_parts="crtbegin.o crtbeginS.o crtend.o crtendS.o"
 		fixincludes=Makefile.in #On Linux, the headers are ok already.
 		broken_install=yes
 		gnu_ld=yes
-		# Don't use it. Linux uses a slightly different one.
-		# The real one comes with the Linux C library.
-		#extra_parts="crtbegin.o crtend.o"
+		objc_thread_file=posix
 		;;
-      i[345]86-go32-msdos | i[345]86-*-go32)
-              cpu_type=i386
-              tm_file=i386/go32.h
-              ;;
-	i[345]86-*-lynxos*)
-		cpu_type=i386
+	i[3456]86-go32-msdos | i[3456]86-*-go32*)
+		xm_file=i386/xm-go32.h
+		tm_file=i386/go32.h
+		xmake_file=i386/x-go32	# CYGNUS LOCAL
+		tmake_file=i386/t-go32
+		;;
+	i[3456]86-moss-msdos* | i[3456]86-*-moss*)
+		tm_file=i386/moss.h
+		tmake_file=t-libc-ok
+		fixincludes=Makefile.in
+		gnu_ld=yes
+		gas=yes
+		;;
+	i[3456]86-*-lynxos*)
 		if [ x$gas = xyes ]
 		then
 			tm_file=i386/lynx.h
@@ -1027,14 +1123,12 @@ for machine in $canon_build $canon_host $canon_target; do
 		tmake_file=i386/t-i386bare
 		xmake_file=x-lynx
 		;;
-	i[345]86-*-mach*)
-		cpu_type=i386
+	i[3456]86-*-mach*)
 		tm_file=i386/mach.h
 #		tmake_file=t-libc-ok
 		use_collect2=yes
 		;;
-	i[345]86-*-osfrose*)		# 386 using OSF/rose
-		cpu_type=i386
+	i[3456]86-*-osfrose*)		# 386 using OSF/rose
                 if [ x$elf = xyes ]
 		then
 			tm_file=i386/osfelf.h
@@ -1045,10 +1139,30 @@ for machine in $canon_build $canon_host $canon_target; do
 		fi
 		xm_file=i386/xm-osf.h
 		xmake_file=i386/x-osfrose
+		tmake_file=i386/t-osf
 		extra_objs=halfpic.o
 		;;
-	i[345]86-*-sco3.2v4*)	 	# 80386 running SCO 3.2v4 system
+	i[345]86-go32-rtems*)
 		cpu_type=i386
+		xm_file=i386/xm-go32.h
+		tm_file=i386/go32-rtems.h
+		tmake_file=i386/t-go32
+		;;
+	i[345]86-*-rtems*)
+		cpu_type=i386
+		tm_file=i386/i386-rtems.h
+		tmake_file=i386/t-i386bare
+		;;
+	i[3456]86-*-sco3.2v5*)		# 80386 running SCO Open Server 5
+		xm_file=i386/xm-sco5.h
+		xmake_file=i386/x-sco5
+		fixincludes=fixinc.sco
+		broken_install=yes
+		tm_file=i386/sco5.h
+		tmake_file=i386/t-sco5
+		extra_parts="crtbegin.o crtend.o crtbeginS.o crtendS.o"
+		;;
+	i[3456]86-*-sco3.2v4*)	 	# 80386 running SCO 3.2v4 system
 		xm_file=i386/xm-sco.h
 		xmake_file=i386/x-sco4
 		fixincludes=fixinc.sco
@@ -1064,9 +1178,9 @@ for machine in $canon_build $canon_host $canon_target; do
 			tmake_file=i386/t-crtstuff
 			extra_parts="crtbegin.o crtend.o"
 		fi
+		truncate_target=yes
 		;;
-	i[345]86-*-sco*)	 	# 80386 running SCO system
-		cpu_type=i386
+	i[3456]86-*-sco*)	 	# 80386 running SCO system
 		xm_file=i386/xm-sco.h
 		xmake_file=i386/x-sco
 		broken_install=yes
@@ -1083,31 +1197,46 @@ for machine in $canon_build $canon_host $canon_target; do
 		fi
 		truncate_target=yes
 		;;
-	i[345]86-*-solaris2* | i[345]86-*-sunos5*)
-		cpu_type=i386
+	i[3456]86-*-solaris2*)
 		xm_file=i386/xm-sysv4.h
-		tm_file=i386/sol2.h
+		if [ x$stabs = xyes ]
+		then
+			tm_file=i386/sol2gdb.h
+		else
+			tm_file=i386/sol2.h
+		fi
 		tmake_file=i386/t-sol2
 		extra_parts="crt1.o crti.o crtn.o crtbegin.o crtend.o"
 		xmake_file=x-svr4
 		fixincludes=fixinc.svr4
 		broken_install=yes
+		objc_thread_file=solaris
 		;;
-	i[345]86-*-sysv4*)		# Intel 80386's running system V.4
-		cpu_type=i386
+	i[3456]86-*-elf*)		# CYGNUS LOCAL i386-elf
 		xm_file=i386/xm-sysv4.h
+		tm_file=i386/i386elf.h
+		tmake_file=i386/t-i386elf
+		xmake_file=x-svr4
+		;;
+	i[3456]86-*-sysv4* | i[3456]86-*-unixware)	# Intel 80386's running system V.4
+							# CYGNUS LOCAL: unixware
+		xm_file=i386/xm-sysv4.h
+		tm_file=i386/sysv4.h
 		if [ x$stabs = xyes ]
 		then
-			tm_file=i386/sysv4gdb.h
-		else
-			tm_file=i386/sysv4.h
+			tm_file="${tm_file} dbx.h"
 		fi
 		tmake_file=i386/t-crtpic
 		xmake_file=x-svr4
 		extra_parts="crtbegin.o crtend.o"
 		;;
-	i[345]86-*-sysv*)		# Intel 80386's running system V
-		cpu_type=i386
+	i[3456]86-*-netware)		# Intel 80386's running netware
+					# CYGNUS LOCAL
+		tm_file=i386/netware.h
+		tmake_file=i386/t-netware
+		fixincludes=Makefile.in
+		;;
+	i[3456]86-*-sysv*)		# Intel 80386's running system V
 		xm_file=i386/xm-sysv3.h
 		xmake_file=i386/x-sysv3
 		if [ x$gas = xyes ]
@@ -1134,100 +1263,125 @@ for machine in $canon_build $canon_host $canon_target; do
 		tmake_file=i386/t-vsta
 		xmake_file=i386/x-vsta
 		;;
-	i[345]86-*-winnt3*)
-		cpu_type=i386
+	i[3456]86-*-pe | i[3456]86-*-cygwin32)
+		xm_file=i386/xm-cygwin32.h
+		tmake_file=i386/t-cygwin32
+		tm_file=i386/cygwin32.h
+		xmake_file=i386/x-cygwin32
+		extra_objs=winnt.o
+		;;
+	i[3456]86-*-winnt3*)
 		tm_file=i386/win-nt.h
 		out_file=i386/i386.c
 		xm_file=i386/xm-winnt.h
 		xmake_file=winnt/x-winnt
 		tmake_file=i386/t-winnt
-		extra_objs="winnt.o oldnames.o"
+		extra_host_objs="winnt.o oldnames.o"
 		extra_gcc_objs="spawnv.o oldnames.o"
 		fixincludes=fixinc.winnt
 		if [ x$gnu_ld != xyes ]
 		then
 			extra_programs=ld.exe
 		fi
+		objc_thread_file=win32
 		;;
+	i[3456]86-dg-dgux)
+		# CYGNUS LOCAL -- make up for missing files
+		# temporary until missing files are added to FSF
+		xm_file=i386/xm-sysv4.h
+		out_file=i386/dgux.c
+		tm_file=i386/dgux.h
+		tmake_file=i386/t-crtpic
+		xmake_file=x-svr4
+		extra_parts="crtbegin.o crtend.o"
+		#tmake_file=i386/t-dgux
+		#xmake_file=i386/x-dgux
+		fixincludes=fixinc.dgux
+		# END CYGNUS LOCAL -- make up for missing files
+              ;;
 	i860-alliant-*)		# Alliant FX/2800
-		xm_file=i860/xm-fx2800.h
+		tm_file="${tm_file} svr4.h i860/sysv4.h i860/fx2800.h"
+		xm_file="${xm_file} i860/xm-fx2800.h"
 		xmake_file=i860/x-fx2800
-		tm_file=i860/fx2800.h
 		tmake_file=i860/t-fx2800
 		extra_parts="crtbegin.o crtend.o"
 		;;
 	i860-*-bsd*)
+		tm_file="${tm_file} i860/bsd.h"
 		if [ x$gas = xyes ]
 		then
-			tm_file=i860/bsd-gas.h
-		else
-			tm_file=i860/bsd.h
+			tm_file="${tm_file} i860/bsd-gas.h"
 		fi
 		use_collect2=yes
 		;;
 	i860-*-mach*)
-		xm_file=i860/xm-i860.h
-		tm_file=i860/mach.h
+		tm_file="${tm_file} i860/mach.h"
 		tmake_file=t-libc-ok
 		;;
 	i860-*-osf*)			# Intel Paragon XP/S, OSF/1AD
-		xm_file=i860/xm-paragon.h
-		tm_file=i860/paragon.h
+		tm_file="${tm_file} svr3.h i860/paragon.h"
+		xm_file="${xm_file} xm-svr3.h"
 		tmake_file=t-osf
 		broken_install=yes
 		;;
 	i860-*-sysv3*)
-		xm_file=i860/xm-sysv3.h
+		tm_file="${tm_file} svr3.h i860/sysv3.h"
+		xm_file="${tm_file} xm-svr3.h"
 		xmake_file=i860/x-sysv3
-		tm_file=i860/sysv3.h
 		extra_parts="crtbegin.o crtend.o"
 		;;
 	i860-*-sysv4*)
-		xm_file=i860/xm-sysv4.h
+		tm_file="${tm_file} svr4.h i860/sysv4.h"
+		xm_file="${xm_file} xm-svr3.h"
 		xmake_file=i860/x-sysv4
-		tm_file=i860/sysv4.h
 		tmake_file=t-svr4
 		extra_parts="crtbegin.o crtend.o"
 		;;
 	i960-wrs-vxworks5 | i960-wrs-vxworks5.0*)
+		tm_file="${tm_file} i960/vx960.h"
 		tmake_file=i960/t-vxworks960
-		tm_file=i960/vx960.h
 		use_collect2=yes
 		;;
 	i960-wrs-vxworks5*)
+		tm_file="${tm_file} dbxcoff.h i960/i960-coff.h i960/vx960-coff.h"
 		tmake_file=i960/t-vxworks960
-		tm_file=i960/vx960-coff.h
 		use_collect2=yes
 		;;
 	i960-wrs-vxworks*)
+		tm_file="${tm_file} i960/vx960.h"
 		tmake_file=i960/t-vxworks960
-		tm_file=i960/vx960.h
+		use_collect2=yes
+		;;
+	i960-intel-nindy)		# CYGNUS LOCAL
+		tmake_file=i960/t-vxworks960
 		use_collect2=yes
 		;;
 	i960-*-coff*)
+		tm_file="${tm_file} dbxcoff.h i960/i960-coff.h"
 		tmake_file=i960/t-960bare
-		tm_file=i960/i960-coff.h
+		use_collect2=yes
+		;;
+	i960-*-rtems)
+		tmake_file=i960/t-960bare
+		tm_file=i960/i960-rtems.h
 		use_collect2=yes
 		;;
 	i960-*-*)			# Default i960 environment.
 		use_collect2=yes
 		;;
 	m68000-convergent-sysv*)
-		cpu_type=m68k
-		xm_file=m68k/xm-3b1.h
 		tm_file=m68k/ctix.h
+		xm_file=m68k/xm-3b1.h
 		use_collect2=yes
 		extra_headers=math-68881.h
 		;;
 	m68000-hp-bsd*)			# HP 9000/200 running BSD
-		cpu_type=m68k
 		tm_file=m68k/hp2bsd.h
 		xmake_file=m68k/x-hp2bsd
 		use_collect2=yes
 		extra_headers=math-68881.h
 		;;
 	m68000-hp-hpux*)		# HP 9000 series 300
-		cpu_type=m68k
 		xm_file=m68k/xm-hp320.h
 		if [ x$gas = xyes ]
 		then
@@ -1242,20 +1396,23 @@ for machine in $canon_build $canon_host $canon_target; do
 		use_collect2=yes
 		extra_headers=math-68881.h
 		;;
+	m68000-ericsson-OSE |\
+	m68000-ericsson-ose)		# CYGNUS LOCAL
+		tm_file=m68k/ose68000.h
+		tmake_file=m68k/t-ose68
+		extra_headers=math-68881.h # looks wrong, but apparently not.
+		;;
 	m68000-sun-sunos3*)
-		cpu_type=m68k
 		tm_file=m68k/sun2.h
 		use_collect2=yes
 		extra_headers=math-68881.h
 		;;
 	m68000-sun-sunos4*)
-		cpu_type=m68k
 		tm_file=m68k/sun2o4.h
 		use_collect2=yes
 		extra_headers=math-68881.h
 		;;
 	m68000-att-sysv*)
-		cpu_type=m68k
 		xm_file=m68k/xm-3b1.h
 		if [ x$gas = xyes ]
 		then
@@ -1266,17 +1423,63 @@ for machine in $canon_build $canon_host $canon_target; do
 		use_collect2=yes
 		extra_headers=math-68881.h
 		;;
-	m68k-apollo-*)
-		xmake_file=m68k/x-apollo68
+	m68k-apple-aux*)		# Apple Macintosh running A/UX
+		xm_file=m68k/xm-aux.h
+		tmake_file=m68k/t-aux
+		broken_install=yes
+		install_headers_dir=install-headers-cpio
+		extra_headers=math-68881.h
+		extra_parts="crt1.o mcrt1.o maccrt1.o crt2.o crtn.o"
+		tm_file=
+		if [ "$gnu_ld" = yes ]
+		then
+			tm_file="${tm_file} m68k/auxgld.h"
+		else
+			tm_file="${tm_file} m68k/auxld.h"
+		fi
+		if [ "$gas" = yes ]
+		then
+			tm_file="${tm_file} m68k/auxgas.h"
+		else
+			tm_file="${tm_file} m68k/auxas.h"
+		fi
+		tm_file="${tm_file} m68k/aux.h"
+		;;
+	m68000-ncr-sysv*)		# NCR Tower 32 SVR3, CYGNUS LOCAL
+		tm_file=m68k/tower-as.h
+		xm_file=m68k/xm-tower.h
+		xmake_file=m68k/x-tower
+		tmake_file=m68k/t-svr3
+		extra_headers=math-68881.h
+		;;
+	m68010-adobe-scout)		# CYGNUS LOCAL
+		cpu_type=m68k
+		tm_file=m68k/m68000-aout.h
+		tmake_file=t-adobe
+		;;
+	m68k-ericsson-OSE |\
+	m68k-ericsson-ose)		# CYGNUS LOCAL
+		tm_file=m68k/ose68k.h
+		tmake_file=m68k/t-ose68
+		extra_headers=math-68881.h
+		;;
+	m68k-apollo-sysv*)		# CYGNUS LOCAL
+		xmake_file=m68k/x-apollo68v
 		tm_file=m68k/apollo68.h
+		use_collect2=yes
+		extra_headers=math-68881.h
+		;;
+	m68k-apollo-*)
+		tm_file=m68k/apollo68.h
+		xmake_file=m68k/x-apollo68
 		use_collect2=yes
 		extra_headers=math-68881.h
 		;;
 	m68k-altos-sysv*)		   # Altos 3068
 		if [ x$gas = xyes ]
 		then
-		        xm_file=m68k/xm-altos3068.h
 		        tm_file=m68k/altos3068.h
+		        xm_file=m68k/xm-altos3068.h
 		else
 			echo "The Altos is supported only with the GNU assembler" 1>&2
 			exit 1
@@ -1308,16 +1511,30 @@ for machine in $canon_build $canon_host $canon_target; do
 		extra_headers=math-68881.h
 		;;
 	m68k-motorola-sysv*)
+		tm_file=m68k/mot3300.h
 		xm_file=m68k/xm-mot3300.h
-		xmake_file=m68k/x-mot3300
 		if [ x$gas = xyes ]
 		then
-			tm_file=m68k/mot3300g.h
+			xmake_file=m68k/x-mot3300-gas
+			if [ x$gnu_ld = xyes ]
+			then
+				tmake_file=m68k/t-mot3300-gald
+			else
+				tmake_file=m68k/t-mot3300-gas
+				use_collect2=yes
+			fi
 		else
-			tm_file=m68k/mot3300.h
-			gdb_needs_out_file_path=yes
+			xmake_file=m68k/x-mot3300
+			if [ x$gnu_ld = xyes ]
+			then
+				tmake_file=m68k/t-mot3300-gld
+			else
+				tmake_file=m68k/t-mot3300
+				use_collect2=yes
+			fi
 		fi
-		use_collect2=yes
+		gdb_needs_out_file_path=yes
+		extra_parts="crt0.o mcrt0.o"
 		extra_headers=math-68881.h
 		;;
 	m68k-ncr-sysv*)			# NCR Tower 32 SVR3
@@ -1453,6 +1670,7 @@ for machine in $canon_build $canon_host $canon_target; do
 		tmake_file=m68k/t-next
 		xmake_file=m68k/x-next
 		extra_headers=math-68881.h
+		objc_thread_file=mach
 		;;
 	m68k-sun-sunos3*)
 		if [ x$nfp = xyes ]
@@ -1471,7 +1689,22 @@ for machine in $canon_build $canon_host $canon_target; do
 		else
 			tm_file=m68k/sun3.h
 		fi
+		xm_file=m68k/xm-sun3.h
 		use_collect2=yes
+		extra_headers=math-68881.h
+		;;
+	m68k-tandem-*)			# Tandem ST-2000 CYGNUS LOCAL
+		tm_file=m68k/st2000.h
+		extra_headers=math-68881.h
+		;;
+	m68*-netx-vxworks*)		# CYGNUS LOCAL
+		tm_file=m68k/netx68k.h
+		tmake_file=m68k/t-vxworks68
+		extra_headers=math-68881.h
+		;;
+	m680[01234]0-wrs-vxworks*)	# CYGNUS LOCAL
+		tm_file=m68k/vxm68k.h
+		tmake_file=m68k/t-vxworks68
 		extra_headers=math-68881.h
 		;;
 	m68k-wrs-vxworks*)
@@ -1484,9 +1717,36 @@ for machine in $canon_build $canon_host $canon_target; do
 		tm_file=m68k/m68k-aout.h
 		extra_headers=math-68881.h
 		;;
+	m680[0234]0-*-aout* |\
+	m683[03]2-*-aout*)		# CYGNUS LOCAL
+		tmake_file=m68k/t-m68kbare
+		tm_file=m68k/m68k-aout.h
+		extra_headers=math-68881.h
+		;;
 	m68k-*-coff*)
 		tmake_file=m68k/t-m68kbare
 		tm_file=m68k/m68k-coff.h
+		if [ x$stabs = xyes ]; then
+			tm_file="${tm_file} dbx.h"
+		fi
+		extra_headers=math-68881.h
+		;;
+	m680[0234]0-*-coff* |\
+	m683[03]2-*-coff*)		# CYGNUS LOCAL
+		tmake_file=m68k/t-m68kbare
+		tm_file=m68k/m68k-coff.h
+		if [ x$stabs = xyes ]; then
+			tm_file="${tm_file} dbx.h"
+		fi
+		extra_headers=math-68881.h
+		;;
+	m68360-*-coff*)			# CYGNUS LOCAL
+		tmake_file=m68k/t-m68kbare
+		tm_file=m68k/m68360-coff.h
+		extra_headers=math-68881.h
+		;;
+	m68000-*-os68k*)		# CYGNUS LOCAL
+		tm_file=m68k/os68000.h
 		extra_headers=math-68881.h
 		;;
 	m68k-*-lynxos*)
@@ -1502,13 +1762,16 @@ for machine in $canon_build $canon_host $canon_target; do
 		extra_headers=math-68881.h
 		;;
 	m68k-*-netbsd*)
-		cpu_type=m68k
 		tm_file=m68k/netbsd.h
 		xm_file=m68k/xm-netbsd.h
 		# On NetBSD, the headers are already okay.
 		fixincludes=Makefile.in
 		tmake_file=t-libc-ok
 		xmake_file=x-netbsd
+		;;
+	m68k-*-os68k*)			# CYGNUS LOCAL
+		tm_file=m68k/os68000.h
+		extra_headers=math-68881.h
 		;;
 	m68k-*-sysv3*)			# Motorola m68k's running system V.3
 		xm_file=m68k/xm-m68kv.h
@@ -1523,45 +1786,61 @@ for machine in $canon_build $canon_host $canon_target; do
 		extra_parts="crtbegin.o crtend.o"
 		extra_headers=math-68881.h
 		;;
+	m68020-*-elf* | m68k-*-elf*)	# CYGNUS LOCAL m68k-elf
+		tm_file=m68k/m68020-elf.h
+		xm_file=m68k/xm-m68kv.h
+		tmake_file=m68k/t-m68kelf
+		header_files=math-68881.h
+		;;
 	m68k-*-linux*aout*)		# Motorola m68k's running Linux
 		xm_file=m68k/xm-linux.h	# with a.out format
 		xmake_file=x-linux
 		tm_file=m68k/linux-aout.h
-		tmake_file=m68k/t-linux
+		tmake_file="t-linux-aout m68k/t-linux-aout"
 		fixincludes=Makefile.in #On Linux, the headers are ok already.
 		extra_headers=math-68881.h
 		gnu_ld=yes
+		objc_thread_file=posix
 		;;
 	m68k-*-linux*)			# Motorola m68k's running Linux
 		xm_file=m68k/xm-linux.h	# with ELF format
 		xmake_file=x-linux
 		tm_file=m68k/linux.h
-		tmake_file=m68k/t-linux
+		tmake_file="t-linux m68k/t-linux"
+		extra_parts="crtbegin.o crtbeginS.o crtend.o crtendS.o"
 		fixincludes=Makefile.in #On Linux, the headers are ok already.
 		extra_headers=math-68881.h
 		gnu_ld=yes
-		# Don't use it. Linux uses a slightly different one.
-		# The real one comes with the Linux C library.
-		#extra_parts="crtbegin.o crtend.o"
+		objc_thread_file=posix
 		;;
+	m68k-*-psos*)
+		tmake_file=m68k/t-m68kbare
+		tm_file=m68k/m68k-psos.h
+		extra_headers=math-68881.h
+		;;
+	m68k-*-rtems*)
+		tmake_file=m68k/t-m68kbare
+		tm_file=m68k/m68k-rtems.h
+		extra_headers=math-68881.h
+		;;
+
 	m88k-dg-dgux*)
 		case $machine in
 		  m88k-dg-dguxbcs*)
 		    tm_file=m88k/dguxbcs.h
-		    xmake_file=m88k/x-dguxbcs
+		    tmake_file=m88k/t-dguxbcs
 		    ;;
 		  *)
 		    tm_file=m88k/dgux.h
-		    xmake_file=m88k/x-dgux
+		    tmake_file=m88k/t-dgux
 		    ;;
 		esac
 		extra_parts="crtbegin.o bcscrtbegin.o crtend.o m88kdgux.ld"
 		broken_install=yes
+		xmake_file=m88k/x-dgux
 		if [ x$gas = xyes ]
 		then
 			tmake_file=m88k/t-dgux-gas
-		else
-			tmake_file=m88k/t-dgux
 		fi
 		fixincludes=fixinc.dgux
 		;;
@@ -1586,12 +1865,14 @@ for machine in $canon_build $canon_host $canon_target; do
 		fi
 		;;
 	m88k-*-aout*)
-		cpu_type=m88k
 		tm_file=m88k/m88k-aout.h
 		;;
 	m88k-*-coff*)
-		cpu_type=m88k
 		tm_file=m88k/m88k-coff.h
+		tmake_file=m88k/t-bug
+		;;
+	m88110-*-coff*)	# CYGNUS LOCAL
+		tm_file=m88k/m88110-coff.h
 		tmake_file=m88k/t-bug
 		;;
 	m88k-*-luna*)
@@ -1620,6 +1901,11 @@ for machine in $canon_build $canon_host $canon_target; do
 		xmake_file=m88k/x-sysv4
 		tmake_file=m88k/t-sysv4
 		;;
+	mips-ncd-elf*)			# CYGNUS LOCAL
+		tm_file=mips/ncd.h
+		tmake_file=mips/t-ncd
+		xm_file=mips/xm-sysv.h
+		;;
 	mips-sgi-irix6*)		# SGI System V.4., IRIX 6
 		tm_file=mips/iris6.h
 		xm_file=mips/xm-iris6.h
@@ -1629,6 +1915,7 @@ for machine in $canon_build $canon_host $canon_target; do
 		tmake_file=mips/t-iris6
 		# See comment in mips/iris[56].h files.
 		use_collect2=yes
+		objc_thread_file=irix
 		;;
 	mips-sgi-irix5cross64)		# Irix5 host, Irix 6 target, cross64
 		tm_file=mips/cross64.h
@@ -1639,15 +1926,15 @@ for machine in $canon_build $canon_host $canon_target; do
 		tmake_file=mips/t-cross64
 		# See comment in mips/iris[56].h files.
 		use_collect2=yes
+		objc_thread_file=irix
 		;;
 	mips-sgi-irix5*)		# SGI System V.4., IRIX 5
 		if [ x$gas = xyes ]
 		then
+			tm_file=mips/iris5gas.h
 			if [ x$stabs = xyes ]
 			then
-				tm_file=mips/iris5gdb.h
-			else
-				tm_file=mips/iris5gas.h
+				tm_file="${tm_file} dbx.h"
 			fi
 		else
 			tm_file=mips/iris5.h
@@ -1660,12 +1947,12 @@ for machine in $canon_build $canon_host $canon_target; do
 		tmake_file=mips/t-mips-gas
 		# See comment in mips/iris5.h file.
 		use_collect2=yes
+		objc_thread_file=irix
 		;;
 	mips-sgi-irix4loser*)		# Mostly like a MIPS.
+		tm_file=mips/iris4loser.h
 		if [ x$stabs = xyes ]; then
-			tm_file=mips/iris4gl.h
-		else
-			tm_file=mips/iris4loser.h
+			tm_file="${tm_file} dbx.h"
 		fi
 		xm_file=mips/xm-iris4.h
 		broken_install=yes
@@ -1680,12 +1967,12 @@ for machine in $canon_build $canon_host $canon_target; do
 		then
 			use_collect2=yes
 		fi
+		objc_thread_file=irix
 		;;
 	mips-sgi-irix4*)		# Mostly like a MIPS.
+		tm_file=mips/iris4.h
 		if [ x$stabs = xyes ]; then
-			tm_file=mips/iris4-gdb.h
-		else
-			tm_file=mips/iris4.h
+			tm_file="${tm_file} dbx.h"
 		fi
 		xm_file=mips/xm-iris4.h
 		broken_install=yes
@@ -1700,12 +1987,12 @@ for machine in $canon_build $canon_host $canon_target; do
 		then
 			use_collect2=yes
 		fi
+		objc_thread_file=irix
 		;;
 	mips-sgi-*)			# Mostly like a MIPS.
+		tm_file=mips/iris3.h
 		if [ x$stabs = xyes ]; then
-			tm_file=mips/iris3-gdb.h
-		else
-			tm_file=mips/iris3.h
+			tm_file="${tm_file} dbx.h"
 		fi
 		xm_file=mips/xm-iris3.h
 		broken_install=yes
@@ -1729,10 +2016,9 @@ for machine in $canon_build $canon_host $canon_target; do
 		use_collect2=yes
 		;;
 	mips-dec-osf*)			# Decstation running OSF/1 as shipped by DIGITAL
+		tm_file=mips/dec-osf1.h
 		if [ x$stabs = xyes ]; then
-			tm_file=mips/dec-gosf1.h
-		else
-			tm_file=mips/dec-osf1.h
+			tm_file="${tm_file} dbx.h"
 		fi
 		xmake_file=mips/x-dec-osf1
 		if [ x$gas = xyes ]
@@ -1749,8 +2035,6 @@ for machine in $canon_build $canon_host $canon_target; do
 		;;
 	mips-dec-bsd*)                  # Decstation running 4.4 BSD
               tm_file=mips/dec-bsd.h
-              xmake_file=
-              tmake_file=
               fixincludes=
 	      if [ x$gas = xyes ]
 	      then
@@ -1773,10 +2057,9 @@ for machine in $canon_build $canon_host $canon_target; do
 		prefix=$native_prefix
 		;;
 	mips-sony-bsd* | mips-sony-newsos*)	# Sony NEWS 3600 or risc/news.
+		tm_file=mips/news4.h
 		if [ x$stabs = xyes ]; then
-			tm_file=mips/news4-gdb.h
-		else
-			tm_file=mips/news4.h
+			tm_file="${tm_file} dbx.h"
 		fi
 		if [ x$gas = xyes ]
 		then
@@ -1793,10 +2076,9 @@ for machine in $canon_build $canon_host $canon_target; do
 	mips-sony-sysv*)		# Sony NEWS 3800 with NEWSOS5.0.
 					# That is based on svr4.
 		# t-svr4 is not right because this system doesn't use ELF.
+		tm_file=mips/news5.h
 		if [ x$stabs = xyes ]; then
-			tm_file=mips/news5-gdb.h
-		else
-			tm_file=mips/news5.h
+			tm_file="${tm_file} dbx.h"
 		fi
 		xm_file=mips/xm-news.h
 		if [ x$gas = xyes ]
@@ -1810,11 +2092,33 @@ for machine in $canon_build $canon_host $canon_target; do
 			use_collect2=yes
 		fi
 		;;
-	mips-tandem-sysv4*)		# Tandem S2 running NonStop UX
+		# CYGNUS LOCAL ian/nec 4800
+		# This is a host port only, and won't work as a target.
+	mips*-nec-sysv4*)		# MIPS NEC SVR4
+		tm_file=mips/svr4-t.h
 		if [ x$stabs = xyes ]; then
-			tm_file=mips/svr4-t-gdb.h
+			tm_file="${tm_file} dbx.h"
+		fi
+		xm_file=mips/xm-sysv4.h
+		xmake_file=x-svr4
+		if [ x$gas = xyes ]
+		then
+			tmake_file=mips/t-mips-gas
+			extra_parts="crtbegin.o crtend.o"
 		else
-			tm_file=mips/svr4-t.h
+			tmake_file=mips/t-mips
+			extra_passes="mips-tfile mips-tdump"
+		fi
+		if [ x$gnu_ld != xyes ]
+		then
+			use_collect2=yes
+		fi
+		;;
+		# END CYGNUS LOCAL ian/nec 4800
+	mips-tandem-sysv4*)		# Tandem S2 running NonStop UX
+		tm_file=mips/svr4-t.h
+		if [ x$stabs = xyes ]; then
+			tm_file="${tm_file} dbx.h"
 		fi
 		xm_file=mips/xm-sysv4.h
 		xmake_file=mips/x-sysv
@@ -1833,10 +2137,9 @@ for machine in $canon_build $canon_host $canon_target; do
 		broken_install=yes
 		;;
 	mips-*-ultrix* | mips-dec-mach3)	# Decstation.
+		tm_file=mips/ultrix.h
 		if [ x$stabs = xyes ]; then
-			tm_file=mips/ultrix-gdb.h
-		else
-			tm_file=mips/ultrix.h
+			tm_file="${tm_file} dbx.h"
 		fi
 		xmake_file=mips/x-ultrix
 		if [ x$gas = xyes ]
@@ -1852,10 +2155,9 @@ for machine in $canon_build $canon_host $canon_target; do
 		fi
 	        ;;
 	mips-*-riscos[56789]bsd*)
-		if [ x$stabs = xyes ]; then	# MIPS BSD 4.3, RISC-OS 5.0
-			tm_file=mips/bsd-5-gdb.h
-		else
-			tm_file=mips/bsd-5.h
+		tm_file=mips/bsd-5.h	# MIPS BSD 4.3, RISC-OS 5.0
+		if [ x$stabs = xyes ]; then
+			tm_file="${tm_file} dbx.h"
 		fi
 		if [ x$gas = xyes ]
 		then
@@ -1871,10 +2173,9 @@ for machine in $canon_build $canon_host $canon_target; do
 		broken_install=yes
 	        ;;
 	mips-*-bsd* | mips-*-riscosbsd* | mips-*-riscos[1234]bsd*)
-		if [ x$stabs = xyes ]; then	# MIPS BSD 4.3, RISC-OS 4.0
-			tm_file=mips/bsd-4-gdb.h
-		else
-			tm_file=mips/bsd-4.h
+		tm_file=mips/bsd-4.h	# MIPS BSD 4.3, RISC-OS 4.0
+		if [ x$stabs = xyes ]; then
+			tm_file="${tm_file} dbx.h"
 		fi
 		if [ x$gas = xyes ]
 		then
@@ -1890,10 +2191,9 @@ for machine in $canon_build $canon_host $canon_target; do
 		broken_install=yes
 	        ;;
 	mips-*-riscos[56789]sysv4*)
-		if [ x$stabs = xyes ]; then	# MIPS System V.4., RISC-OS 5.0
-			tm_file=mips/svr4-5-gdb.h
-		else
-			tm_file=mips/svr4-5.h
+		tm_file=mips/svr4-5.h	# MIPS System V.4., RISC-OS 5.0
+		if [ x$stabs = xyes ]; then
+			tm_file="${tm_file} dbx.h"
 		fi
 		xm_file=mips/xm-sysv4.h
 		xmake_file=mips/x-sysv
@@ -1911,10 +2211,9 @@ for machine in $canon_build $canon_host $canon_target; do
 		broken_install=yes
 		;;
 	mips-*-sysv4* | mips-*-riscos[1234]sysv4* | mips-*-riscossysv4*)
-		if [ x$stabs = xyes ]; then	# MIPS System V.4. RISC-OS 4.0
-			tm_file=mips/svr4-4-gdb.h
-		else
-			tm_file=mips/svr4-4.h
+		tm_file=mips/svr4-4.h	# MIPS System V.4. RISC-OS 4.0
+		if [ x$stabs = xyes ]; then
+			tm_file="${tm_file} dbx.h"
 		fi
 		xm_file=mips/xm-sysv.h
 		xmake_file=mips/x-sysv
@@ -1932,10 +2231,9 @@ for machine in $canon_build $canon_host $canon_target; do
 		broken_install=yes
 		;;
 	mips-*-riscos[56789]sysv*)
-		if [ x$stabs = xyes ]; then	# MIPS System V.3, RISC-OS 5.0
-			tm_file=mips/svr3-5-gdb.h
-		else
-			tm_file=mips/svr3-5.h
+		tm_file=mips/svr3-5.h	# MIPS System V.3, RISC-OS 5.0
+		if [ x$stabs = xyes ]; then
+			tm_file="${tm_file} dbx.h"
 		fi
 		xm_file=mips/xm-sysv.h
 		xmake_file=mips/x-sysv
@@ -1953,10 +2251,9 @@ for machine in $canon_build $canon_host $canon_target; do
 		broken_install=yes
 		;;
 	mips-*-sysv* | mips-*-riscos*sysv*)
-		if [ x$stabs = xyes ]; then	# MIPS System V.3, RISC-OS 4.0
-			tm_file=mips/svr3-4-gdb.h
-		else
-			tm_file=mips/svr3-4.h
+		tm_file=mips/svr3-4.h	# MIPS System V.3, RISC-OS 4.0
+		if [ x$stabs = xyes ]; then
+			tm_file="${tm_file} dbx.h"
 		fi
 		xm_file=mips/xm-sysv.h
 		xmake_file=mips/x-sysv
@@ -1974,10 +2271,9 @@ for machine in $canon_build $canon_host $canon_target; do
 		broken_install=yes
 		;;
 	mips-*-riscos[56789]*)			# Default MIPS RISC-OS 5.0.
+		tm_file=mips/mips-5.h
 		if [ x$stabs = xyes ]; then
-			tm_file=mips/mips-5-gdb.h
-		else
-			tm_file=mips/mips-5.h
+			tm_file="${tm_file} dbx.h"
 		fi
 		if [ x$gas = xyes ]
 		then
@@ -1992,61 +2288,69 @@ for machine in $canon_build $canon_host $canon_target; do
 		broken_install=yes
 		;;
 	mips-*-gnu*)
-		cpu_type=mips	# GNU supports this CPU; rest done below.
 		;;
 	mipsel-*-ecoff*)
-		cpu_type=mips
+		tm_file=mips/ecoffl.h
 		if [ x$stabs = xyes ]; then
-		    tm_file=mips/ecoffl-gdb.h
-		else
-		    tm_file=mips/ecoffl.h
+			tm_file="${tm_file} dbx.h"
 		fi
 		tmake_file=mips/t-ecoff
 		;;
 	mips-*-ecoff*)
+		tm_file=mips/ecoff.h
 		if [ x$stabs = xyes ]; then
-		    tm_file=mips/ecoff-gdb.h
-		else
-		    tm_file=mips/ecoff.h
+			tm_file="${tm_file} dbx.h"
 		fi
 		tmake_file=mips/t-ecoff
 		broken_install=yes
 		;;
 	mipsel-*-elf*)
-		cpu_type=mips
 		tm_file=mips/elfl.h
 		tmake_file=mips/t-ecoff
 		;;
 	mips-*-elf*)
-		cpu_type=mips
 		tm_file=mips/elf.h
 		tmake_file=mips/t-ecoff
 		;;
 	mips64el-*-elf*)
-		cpu_type=mips
 		tm_file=mips/elfl64.h
 		tmake_file=mips/t-ecoff
 		;;
 	mips64orionel-*-elf*)
-		cpu_type=mips
 		tm_file=mips/elflorion.h
 		tmake_file=mips/t-ecoff
 		;;
 	mips64-*-elf*)
-		cpu_type=mips
 		tm_file=mips/elf64.h
 		tmake_file=mips/t-ecoff
 		;;
 	mips64orion-*-elf*)
-		cpu_type=mips
 		tm_file=mips/elforion.h
 		tmake_file=mips/t-ecoff
 		;;
+		# CYGNUS LOCAL jsmith/vr4300
+	mips64vr4300-*-elf*)
+		tm_file=mips/elfb4300.h
+		tmake_file=mips/t-vr4300
+		;;
+	mips64vr4300el-*-elf*)
+		tm_file=mips/elfl4300.h
+		tmake_file=mips/t-vr4300
+		# END CYGNUS LOCAL
+		;;
+		# CYGNUS LOCAL jsmith/vr4100
+	mips64vr4100-*-elf*)
+		tm_file=mips/elfb4100.h
+		tmake_file=mips/t-vr4100
+		;;
+	mips64vr4100el-*-elf*)
+		tm_file=mips/elfl4100.h
+		tmake_file=mips/t-vr4100
+		# END CYGNUS LOCAL
+		;;
 	mips-*-*)				# Default MIPS RISC-OS 4.0.
 		if [ x$stabs = xyes ]; then
-			tm_file=mips/mips-4-gdb.h
-		else
-			tm_file=mips/mips.h
+			tm_file="${tm_file} dbx.h"
 		fi
 		if [ x$gas = xyes ]
 		then
@@ -2106,6 +2410,11 @@ for machine in $canon_build $canon_host $canon_target; do
 		fixincludes=Makefile.in
 		xmake_file=x-netbsd
 		;;
+        pdp11-*-bsd)
+		tm_file="${tm_file} pdp11/2bsd.h"
+                ;;
+        pdp11-*-*)
+		;;
 	pyramid-*-*)
 		cpu_type=pyr
 		xmake_file=pyr/x-pyr
@@ -2118,22 +2427,65 @@ for machine in $canon_build $canon_host $canon_target; do
 		xmake_file=romp/x-mach
 		use_collect2=yes
 		;;
-	powerpc-ibm-aix[456789].*)
-		cpu_type=rs6000
-		tm_file=rs6000/aix41ppc.h
-		tmake_file=rs6000/t-newas
-		use_collect2=yes
+	powerpc-*-macos* | powerpc-*-mpw*)	# CYGNUS LOCAL
+		tm_file=rs6000/macos.h
+		xm_file=rs6000/xm-mpw.h
+		fixincludes=Makefile.in
 		;;
-	powerpc-ibm-aix*)
-		cpu_type=rs6000
-		tm_file=rs6000/powerpc.h
+	powerpc-*-netware*)			# CYGNUS LOCAL
+		tm_file=rs6000/netware.h
 		tmake_file=rs6000/t-rs6000
-		use_collect2=yes
+		fixincludes=Makefile.in
 		;;
-	powerpc-*-sysv4* | powerpc-*-elf*)
+	powerpc-*-sysv* | powerpc-*-elf*)
+		tm_file=rs6000/sysv4.h
+		xm_file=rs6000/xm-sysv4.h
+		if [ x$gas = xyes ]
+		then
+			tmake_file=rs6000/t-ppcgas
+		else
+			tmake_file=rs6000/t-ppc
+		fi
+		xmake_file=rs6000/x-sysv4
+		;;
+	powerpc-*-eabiaix*)
+		tm_file=rs6000/eabiaix.h
+		tmake_file=rs6000/t-ppcgas
+		fixincludes=Makefile.in
+		;;
+	powerpc-*-eabisim*)
+		tm_file=rs6000/eabisim.h
+		tmake_file=rs6000/t-ppcgas
+		fixincludes=Makefile.in
+		;;
+	powerpc-*-eabi*)
+		tm_file=rs6000/eabi.h
+		if [ x$gas = xyes ]
+		then
+			tmake_file=rs6000/t-ppcgas
+		else
+			tmake_file=rs6000/t-ppc
+		fi
+		fixincludes=Makefile.in
+		;;
+	powerpc-*-linux*)
+		tm_file=rs6000/linux.h
+		xm_file=rs6000/xm-sysv4.h
+		out_file=rs6000/rs6000.c
+		if [ x$gas = xyes ]
+		then
+			tmake_file=rs6000/t-ppcgas
+		else
+			tmake_file=rs6000/t-ppc
+		fi
+		xmake_file=rs6000/x-sysv4
+		fixincludes=Makefile.in
+		objc_thread_file=posix
+		;;
+	powerpc-*-rtems*)
 		cpu_type=rs6000
 		xm_file=rs6000/xm-sysv4.h
-		tm_file=rs6000/sysv4.h
+		tm_file=rs6000/powerpc-rtems.h
 		if [ x$gas = xyes ]
 		then
 		     tmake_file=rs6000/t-ppcgas
@@ -2142,98 +2494,107 @@ for machine in $canon_build $canon_host $canon_target; do
 		fi
 		xmake_file=rs6000/x-sysv4
 		;;
-	powerpc-*-eabiaix*)
-		cpu_type=rs6000
-		tm_file=rs6000/eabiaix.h
-		tmake_file=rs6000/t-eabiaix
-		fixincludes=Makefile.in
-		;;
-	powerpc-*-eabisim*)
-		cpu_type=rs6000
-		tm_file=rs6000/eabisim.h
-		tmake_file=rs6000/t-eabisim
-		fixincludes=Makefile.in
-		;;
-	powerpc-*-eabi*)
-		cpu_type=rs6000
-		tm_file=rs6000/eabi.h
-		if [ x$gas = xyes ]
-		then
-		     tmake_file=rs6000/t-eabigas
-		else
-		     tmake_file=rs6000/t-eabi
-		fi
-		fixincludes=Makefile.in
-		;;
-	powerpcle-*-sysv4* | powerpcle-*-elf*)
-		cpu_type=rs6000
-		xm_file=rs6000/xm-sysv4.h
+	powerpcle-*-sysv* | powerpcle-*-elf*)
 		tm_file=rs6000/sysv4le.h
+		xm_file=rs6000/xm-sysv4.h
 		if [ x$gas = xyes ]
 		then
-		     tmake_file=rs6000/t-ppclegas
+			tmake_file=rs6000/t-ppcgas
 		else
-		     tmake_file=rs6000/t-ppc
+			tmake_file=rs6000/t-ppc
 		fi
 		xmake_file=rs6000/x-sysv4
 		;;
 	powerpcle-*-eabisim*)
-		cpu_type=rs6000
 		tm_file=rs6000/eabilesim.h
-		tmake_file=rs6000/t-eabisim
+		tmake_file=rs6000/t-ppcgas
 		fixincludes=Makefile.in
 		;;
 	powerpcle-*-eabi*)
-		cpu_type=rs6000
 		tm_file=rs6000/eabile.h
 		if [ x$gas = xyes ]
 		then
-		     tmake_file=rs6000/t-eabilegas
+			tmake_file=rs6000/t-ppcgas
 		else
-		     tmake_file=rs6000/t-eabi
+			tmake_file=rs6000/t-ppc
 		fi
 		fixincludes=Makefile.in
 		;;
+        powerpcle-*-winnt* )
+                tm_file=rs6000/win-nt.h
+                tmake_file=rs6000/t-winnt
+#               extra_objs=pe.o
+		fixincludes=Makefile.in
+		objc_thread_file=win32
+		;;
+	powerpcle-*-pe | powerpcle-*-cygwin32)
+		tm_file=rs6000/cygwin32.h
+		xm_file=rs6000/xm-cygwin32.h
+		tmake_file=rs6000/t-winnt
+		xmake_file=rs6000/x-cygwin32
+#		extra_objs=pe.o
+		fixincludes=Makefile.in
+		objc_thread_file=win32
+		;;
+	powerpcle-*-solaris2*)
+		tm_file=rs6000/sol2.h
+		xm_file=rs6000/xm-sysv4.h
+		if [ x$gas = xyes ]
+		then
+			tmake_file=rs6000/t-ppcgas
+		else
+			tmake_file=rs6000/t-solaris
+		fi
+		xmake_file=rs6000/x-sysv4
+		fixincludes=fixinc.svr4
+		;;
 	rs6000-ibm-aix3.[01]*)
 		tm_file=rs6000/aix31.h
-		tmake_file=rs6000/t-rs6000
 		xmake_file=rs6000/x-aix31
 		use_collect2=yes
 		;;
-	rs6000-ibm-aix3.2.[456789]*)
+	rs6000-ibm-aix3.2.[456789]* | powerpc-ibm-aix3.2.[456789]*)
 		tm_file=rs6000/aix3newas.h
-		tmake_file=rs6000/t-newas
+		if [ x$canon_host != x$canon_target ]
+		then
+			tmake_file=rs6000/t-xnewas
+		else
+			tmake_file=rs6000/t-newas
+		fi
 		use_collect2=yes
 		;;
-	rs6000-ibm-aix[456789].*)
+	rs6000-ibm-aix[456789].* | powerpc-ibm-aix[456789].*)
 		tm_file=rs6000/aix41.h
-		tmake_file=rs6000/t-newas
+		if [ x$canon_host != x$canon_target ]
+		then
+			tmake_file=rs6000/t-xnewas
+		else
+			tmake_file=rs6000/t-newas
+		fi
 		xmake_file=rs6000/x-aix31
 		use_collect2=yes
 		;;
 	rs6000-ibm-aix*)
 		use_collect2=yes
-		tmake_file=rs6000/t-rs6000
 		;;
 	rs6000-bull-bosx)
-		tmake_file=rs6000/t-rs6000
 		use_collect2=yes
 		;;
 	rs6000-*-mach*)
-		xm_file=rs6000/xm-mach.h
 		tm_file=rs6000/mach.h
-		tmake_file=rs6000/t-rs6000
+		xm_file=rs6000/xm-mach.h
 		xmake_file=rs6000/x-mach
 		use_collect2=yes
 		;;
 	rs6000-*-lynxos*)
-		xmake_file=rs6000/x-lynx
-		xm_file=rs6000/xm-lynx.h
 		tm_file=rs6000/lynx.h
+		xm_file=rs6000/xm-lynx.h
 		tmake_file=rs6000/t-rs6000
+		xmake_file=rs6000/x-lynx
 		use_collect2=yes
 		;;
-	sh-*-*)
+	sh-*-*) 			# CYGNUS LOCAL
+		float_format=sh3e
 		cpu_type=sh
 		;;
 	sparc-tti-*)
@@ -2241,14 +2602,13 @@ for machine in $canon_build $canon_host $canon_target; do
 		xm_file=sparc/xm-pbd.h
 		;;
 	sparc-wrs-vxworks* | sparclite-wrs-vxworks*)
-		cpu_type=sparc
 		tm_file=sparc/vxsparc.h
 		tmake_file=sparc/t-vxsparc
 		use_collect2=yes
 		;;
 	sparc-*-aout*)
 		tmake_file=sparc/t-sparcbare
-		tm_file=sparc/sparc-aout.h
+		tm_file=sparc/aout.h
 		;;
 	sparc-*-netbsd*)
 		tm_file=sparc/netbsd.h
@@ -2272,14 +2632,19 @@ for machine in $canon_build $canon_host $canon_target; do
 		tmake_file=sparc/t-sunos41
 		xmake_file=x-lynx
 		;;
-	sparc-*-solaris2* | sparc-*-sunos5*)
-		xm_file=sparc/xm-sol2.h
+	sparc-*-rtems*)
+		tmake_file=sparc/t-sparcbare
+		tm_file=sparc/sparc-rtems.h
+		;;
+	sparc-*-solaris2*)
 		tm_file=sparc/sol2.h
+		xm_file=sparc/xm-sol2.h
 		tmake_file=sparc/t-sol2
 		xmake_file=sparc/x-sysv4
-		extra_parts="crt1.o crti.o crtn.o gmon.o crtbegin.o crtend.o"
+		extra_parts="crt1.o crti.o crtn.o gcrt1.o gmon.o crtbegin.o crtend.o"
 		fixincludes=fixinc.svr4
 		broken_install=yes
+		objc_thread_file=solaris
 		;;
 	sparc-*-sunos4.0*)
 		tm_file=sparc/sunos4.h
@@ -2296,30 +2661,29 @@ for machine in $canon_build $canon_host $canon_target; do
 		use_collect2=yes
 		;;
 	sparc-*-sysv4*)
-		xm_file=sparc/xm-sysv4.h
 		tm_file=sparc/sysv4.h
+		xm_file=sparc/xm-sysv4.h
 		tmake_file=t-svr4
 		xmake_file=sparc/x-sysv4
 		extra_parts="crtbegin.o crtend.o"
 		;;
+	sparclet-*-aout*)
+		tm_file=sparc/splet.h
+		tmake_file=sparc/t-splet
+		;;
 	sparclite-*-coff*)
-		cpu_type=sparc
 		tm_file=sparc/litecoff.h
 		tmake_file=sparc/t-sparclite
 		;;
-	sparclite-*-*)
-		cpu_type=sparc
-		tm_file=sparc/lite.h
+	sparclite-*-aout*)
+		tm_file="sparc/lite.h aoutos.h"
 		tmake_file=sparc/t-sparclite
-		use_collect2=yes
 		;;
 	sparc64-*-aout*)
-		cpu_type=sparc
 		tmake_file=sparc/t-sp64
 		tm_file=sparc/sp64-aout.h
 		;;
 	sparc64-*-elf*)
-		cpu_type=sparc
 		tmake_file=sparc/t-sp64
 		tm_file=sparc/sp64-elf.h
 		extra_parts="crtbegin.o crtend.o"
@@ -2337,41 +2701,41 @@ for machine in $canon_build $canon_host $canon_target; do
 #		;;
 	vax-*-bsd*)			# vaxen running BSD
 		use_collect2=yes
+		float_format=vax
 		;;
 	vax-*-sysv*)			# vaxen running system V
-		xm_file=vax/xm-vaxv.h
-		tm_file=vax/vaxv.h
+		tm_file="${tm_file} vax/vaxv.h"
+		xm_file="${tm_file} vax/xm-vaxv.h"
+		float_format=vax
 		;;
 	vax-*-netbsd*)
-		tm_file=vax/netbsd.h
-		xm_file=vax/xm-netbsd.h
+		tm_file="${tm_file} netbsd.h vax/netbsd.h"
+		xm_file="${xm_file} xm-netbsd.h"
 		tmake_file=t-libc-ok
 		# On NetBSD, the headers are already okay.
 		fixincludes=Makefile.in
 		xmake_file=x-netbsd
+		float_format=vax
 		;;
 	vax-*-ultrix*)			# vaxen running ultrix
-		tm_file=vax/ultrix.h
+		tm_file="${tm_file} vax/ultrix.h"
 		use_collect2=yes
+		float_format=vax
 		;;
 	vax-*-vms*)			# vaxen running VMS
 		xm_file=vax/xm-vms.h
 		tm_file=vax/vms.h
+		float_format=vax
 		;;
-        pdp11-*-bsd)
-		xm_file=pdp11/xm-pdp11.h
-		tm_file=pdp11/2bsd.h
-		tmake_file=pdp11/t-pdp11
-                ;;
-        pdp11-*-*)
-		xm_file=pdp11/xm-pdp11.h
-		tm_file=pdp11/pdp11.h
-		tmake_file=pdp11/t-pdp11
+	vax-*-*)			# vax default entry
+		float_format=vax
 		;;
 	we32k-att-sysv*)
-		cpu_type=we32k
+		xm_file="${xm_file} xm-svr3"
 		use_collect2=yes
 		;;
+ 	z8k-*-*)			# Zilog Z8000
+ 		;;			# CYGNUS LOCAL
 	*)
 		echo "Configuration $machine not supported" 1>&2
 		exit 1
@@ -2385,7 +2749,7 @@ for machine in $canon_build $canon_host $canon_target; do
 		# supports are matched above and just set $cpu_type.
 		xm_file=${cpu_type}/xm-gnu.h
 		tm_file=${cpu_type}/gnu.h
-		extra_parts="crtbegin.o crtbeginS.o crtend.o crtendS.o"
+		extra_parts="crtbegin.o crtend.o"
 		# GNU always uses ELF.
 		elf=yes
 		# GNU tools are the only tools.
@@ -2393,10 +2757,8 @@ for machine in $canon_build $canon_host $canon_target; do
 		gas=yes
 		# On GNU, the headers are already okay.
 		fixincludes=Makefile.in
-		# Don't build libgcc1.c, because there is no non-GNU
-		# compiler to build it with.  The GNU system C library will
-		# include assembly versions of any needed functions.
-		tmake_file=t-libc-ok
+		xmake_file=x-linux	# These details are the same as Linux.
+		tmake_file=t-gnu	# These are not.
 		;;
 	*-*-sysv4*)
 		fixincludes=fixinc.svr4
@@ -2410,44 +2772,86 @@ for machine in $canon_build $canon_host $canon_target; do
 		;;
 	esac
 
-	# Distinguish i386 from i486/i586.
-	# ??? For the moment we treat i586 as an i486.
+	# Distinguish i[3456]86
 	# Also, do not run mips-tfile on MIPS if using gas.
+	# Process --with-cpu= for PowerPC/rs6000
+	target_cpu_default2=
 	case $machine in
-	i[45]86-*-*)
-		target_cpu_default=2
+	i486-*-*)
+		target_cpu_default2=1
 		;;
-	mips*-*-*)
-		if [ x$gas = xyes ]
-		then
-			target_cpu_default=16
-		fi
+	i586-*-*)
+		target_cpu_default2=2
+		;;
+	i686-*-*)
+		target_cpu_default2=3
 		;;
 	alpha-*-*)
 		if [ x$gas = xyes ]
 		then
-			target_cpu_default=4
+			target_cpu_default2=4
 		fi
+		;;
+	# CYGNUS LOCAL m68k embedded
+	m68*-*-*)
+		target_cpu_default2=M68K_CPU_"`echo $machine | sed 's/-.*$//'`"
+		;;
+	# END CYGNUS LOCAL
+	mips*-*-*)
+		if [ x$gas = xyes ]
+		then
+			target_cpu_default2=16
+		fi
+		;;
+	powerpc*-*-* | rs6000-*-*)
+		case "x$with_cpu" in
+			x)
+				;;
+
+			xcommon | xpower | xpower2 | xpowerpc | xrios \
+			  | xrios2 | xrsc | xrsc1 | x403 | x601 | x602 \
+			  | x603 | x603e | x604 | x620 | xrs6000)
+				target_cpu_default2="'\"$with_cpu\"'"
+				;;
+
+			xyes | xno)
+				echo "--with-cpu must be passed a value" 1>&2
+				exit 1
+				;;
+
+			*)
+				echo "Unknown cpu used with --with-cpu=$with_cpu" 1>&2
+				exit 1
+				;;
+		esac
+		;;
+	sparc*-*-*)
+		target_cpu_default2=TARGET_CPU_"`echo $machine | sed 's/-.*$//'`"
 		;;
 	esac
 
+	if [ x$target_cpu_default2 != x ]
+	then
+		if [ x$target_cpu_default != x ]
+		then
+			target_cpu_default="(${target_cpu_default}+${target_cpu_default2})"
+		else
+			target_cpu_default=$target_cpu_default2
+		fi
+	fi
+
 	# No need for collect2 if we have the GNU linker.
-	case x$gnu_ld in 
+	case x$gnu_ld in
 	xyes)
 		use_collect2=
 		;;
 	esac
 
-# Default certain vars that apply to both host and target in turn.
-	if [ x$cpu_type = x ]
-	then cpu_type=`echo $machine | sed 's/-.*$//'`
-	fi
-
 # Save data on machine being used to compile GCC in build_xm_file.
 # Save data on host machine in vars host_xm_file and host_xmake_file.
 	if [ x$pass1done = x ]
 	then
-		if [ x$xm_file = x ]
+		if [ x"$xm_file" = x ]
 		then build_xm_file=$cpu_type/xm-$cpu_type.h
 		else build_xm_file=$xm_file
 		fi
@@ -2455,67 +2859,143 @@ for machine in $canon_build $canon_host $canon_target; do
 	else
 		if [ x$pass2done = x ]
 		then
-			if [ x$xm_file = x ]
+			if [ x"$xm_file" = x ]
 			then host_xm_file=$cpu_type/xm-$cpu_type.h
 			else host_xm_file=$xm_file
 			fi
-			if [ x$xmake_file = x ]
+			if [ x"$xmake_file" = x ]
 			then xmake_file=$cpu_type/x-$cpu_type
 			fi
-			host_xmake_file=$xmake_file
+			host_xmake_file="$xmake_file"
 			host_broken_install=$broken_install
 			host_install_headers_dir=$install_headers_dir
 			host_truncate_target=$truncate_target
+			host_extra_gcc_objs=$extra_gcc_objs
+			host_extra_objs=$extra_host_objs
 			pass2done=yes
 		fi
 	fi
 done
 
+extra_objs="${host_extra_objs} ${extra_objs}"
+
 # Default the target-machine variables that were not explicitly set.
-if [ x$tm_file = x ]
+if [ x"$tm_file" = x ]
 then tm_file=$cpu_type/$cpu_type.h; fi
 
 if [ x$extra_headers = x ]
 then extra_headers=; fi
 
-if [ x$xm_file = x ]
+if [ x"$xm_file" = x ]
 then xm_file=$cpu_type/xm-$cpu_type.h; fi
 
-md_file=$cpu_type/$cpu_type.md
+# CYGNUS LOCAL: Allow target to set md_file.
+if [ x$md_file = x ]
+then md_file=$cpu_type/$cpu_type.md; fi
 
 if [ x$out_file = x ]
 then out_file=$cpu_type/$cpu_type.c; fi
 
-if [ x$tmake_file = x ]
+if [ x"$tmake_file" = x ]
 then tmake_file=$cpu_type/t-$cpu_type
 fi
+
+if [ x$float_format = x ]
+then float_format=i64
+fi
+
+# CYGNUS LOCAL: dejagnu
+if [ -f ${srcdir}/testsuite/configure ]; then
+	test -d testsuite || mkdir testsuite
+
+	STARTDIR=`pwd`
+	cd testsuite
+
+	${CONFIG_SHELL-sh} $srcdir/testsuite/configure \
+		$arguments --srcdir=$srcdir/testsuite
+
+	cd $STARTDIR
+fi
+# END CYGNUS LOCAL
 
 # Say what files are being used for the output code and MD file.
 echo "Using \`$srcdir/config/$out_file' to output insns."
 echo "Using \`$srcdir/config/$md_file' as machine description file."
-echo "Using \`$srcdir/config/$tm_file' as target machine macro file."
-echo "Using \`$srcdir/config/$host_xm_file' as host machine macro file."
-if [ $host_xm_file != $build_xm_file ]; then
-	echo "Using \`$srcdir/config/$build_xm_file' as build machine macro file."
+
+count=a
+for f in $tm_file; do
+	count=${count}x
+done
+if [ $count = ax ]; then
+	echo "Using \`$srcdir/config/$tm_file' as target machine macro file."
+else
+	echo "Using the following target machine macro files:"
+	for f in $tm_file; do
+		echo "	$srcdir/config/$f"
+	done
 fi
 
-# Set up the list of links to be made.
-# $links is the list of link names, and $files is the list of names to link to.
-files="$host_xm_file $tm_file $xm_file $build_xm_file"
+count=a
+for f in $host_xm_file; do
+	count=${count}x
+done
+if [ $count = ax ]; then
+	echo "Using \`$srcdir/config/$host_xm_file' as host machine macro file."
+else
+	echo "Using the following host machine macro files:"
+	for f in $host_xm_file; do
+		echo "	$srcdir/config/$f"
+	done
+fi
+
+if [ "$host_xm_file" != "$build_xm_file" ]; then
+	count=a
+	for f in $build_xm_file; do
+		count=${count}x
+	done
+	if [ $count = ax ]; then
+		echo "Using \`$srcdir/config/$build_xm_file' as build machine macro file."
+	else
+		echo "Using the following build machine macro files:"
+		for f in $build_xm_file; do
+			echo "	$srcdir/config/$f"
+		done
+	fi
+fi
+
+if [ x$objc_thread_file = x ]
+then objc_thread_file=single
+fi
+echo "Using \`$srcdir/objc/thr-${objc_thread_file}.c' as Objective-C Runtime thread file."
+
+# Set up the header files.
+# $links is the list of header files to create.
+# $vars is the list of shell variables with file names to include.
+vars="host_xm_file tm_file xm_file build_xm_file"
 links="config.h tm.h tconfig.h hconfig.h"
 
 rm -f config.bak
 if [ -f config.status ]; then mv -f config.status config.bak; fi
 
 # Make the links.
-while [ -n "$files" ]
+while [ -n "$vars" ]
 do
 	# set file to car of files, files to cdr of files
-	set $files; file=$1; shift; files=$*
+	set $vars; var=$1; shift; vars=$*
 	set $links; link=$1; shift; links=$*
 
 	rm -f $link
-	echo "#include \"$file\"" >$link
+
+	# Define TARGET_CPU_DEFAULT if the system wants one.
+	# This substitutes for lots of *.h files.
+	if [ x$target_cpu_default != x -a $link = tm.h ]
+	then
+		echo "#define TARGET_CPU_DEFAULT $target_cpu_default" >>$link
+	fi
+
+	for file in `eval echo '$'$var`; do
+		echo "#include \"$file\"" >>$link
+	done
 done
 
 # Truncate the target if necessary
@@ -2588,7 +3068,14 @@ do
 	# Re-adjust the path
 	case $oldsrcdir in
 	/*)
-		srcdir=$oldsrcdir/$subdir
+		case $subdir in
+		.)
+			srcdir=$oldsrcdir
+			;;
+		*)
+			srcdir=$oldsrcdir/$subdir
+			;;
+		esac
 		;;
 	*)
 		case $subdir in
@@ -2638,21 +3125,31 @@ do
 		echo "source ${srcdir}/.gdbinit" >> .gdbinit
 		;;
 	esac
-	
+
 	# Conditionalize the makefile for this host machine.
-	if [ -f ${mainsrcdir}/config/${host_xmake_file} ]
+	dep_host_xmake_file=
+	rm -f Makefile.xx Makefile.ll
+	merged_frags=
+	for f in .. ${host_xmake_file}
+	do
+		if [ -f ${mainsrcdir}/config/$f ]
+		then
+			cat ${mainsrcdir}/config/$f >> Makefile.ll
+			if [ x"${merged_frags}" != x ]
+			then
+				merged_frags="${merged_frags} and "
+			fi
+			merged_frags="${merged_frags}${f}"
+			dep_host_xmake_file="${dep_host_xmake_file} \$(srcdir)/config/$f"
+		fi
+	done
+	if [ x"${merged_frags}" != x ]
 	then
-		rm -f Makefile.xx
-		sed -e "/####host/  r ${mainsrcdir}/config/${host_xmake_file}" Makefile.tem > Makefile.xx
-		echo "Merged ${host_xmake_file}."
+		sed -e "/####host/  r Makefile.ll" Makefile.tem > Makefile.xx
+		echo "Merged ${merged_frags}."
 		rm -f Makefile.tem
 		mv Makefile.xx Makefile.tem
-		dep_host_xmake_file=${host_xmake_file}
-	else
-	# Say in the makefile that there is no host_xmake_file,
-	# by using a name which (when interpreted relative to $srcdir/config)
-	# will duplicate another dependency: $srcdir/Makefile.in.
-		dep_host_xmake_file=../Makefile.in
+		rm -f Makefile.ll
 	fi
 
 	# Add a definition for MAKE if system wants one.
@@ -2696,7 +3193,7 @@ do
 		rm -f Makefile.tem
 		mv Makefile.xx Makefile.tem
 	fi
-	
+
 	# Set EXTRA_PASSES according to extra_passes.
 	# This substitutes for lots of t-* files.
 	if [ "x$extra_passes" = x ]
@@ -2707,7 +3204,7 @@ do
 		rm -f Makefile.tem
 		mv Makefile.xx Makefile.tem
 	fi
-	
+
 	# Set EXTRA_PARTS according to extra_parts.
 	# This substitutes for lots of t-* files.
 	if [ "x$extra_parts" = x ]
@@ -2740,13 +3237,13 @@ do
 		mv Makefile.xx Makefile.tem
 	fi
 
-	# Set EXTRA_GCC_OBJS according to extra_gcc_objs.
-	# This substitutes for lots of t-* files.
-	if [ "x$extra_gcc_objs" = x ]
+	# Set EXTRA_GCC_OBJS according to host_extra_gcc_objs.
+	# This substitutes for lots of x-* files.
+	if [ "x$host_extra_gcc_objs" = x ]
 	then true
 	else
 		rm -f Makefile.xx
-		sed "s|^EXTRA_GCC_OBJS =|EXTRA_GCC_OBJS = $extra_gcc_objs|" Makefile.tem > Makefile.xx
+		sed "s|^EXTRA_GCC_OBJS =|EXTRA_GCC_OBJS = $host_extra_gcc_objs|" Makefile.tem > Makefile.xx
 		rm -f Makefile.tem
 		mv Makefile.xx Makefile.tem
 	fi
@@ -2763,21 +3260,7 @@ do
 		rm -f Makefile.tem
 		mv Makefile.xx Makefile.tem
 	fi
-	
-	# Add -DTARGET_CPU_DEFAULT for toplev.c if system wants one.
-	# This substitutes for lots of *.h files.
-	if [ x$target_cpu_default = x ]
-	then true
-	else
-		rm -f Makefile.xx
-	# This used cat, but rfg@netcom.com said that ran into NFS bugs.
-		sed -e "/^# Makefile for GNU C compiler./c\\
-MAYBE_TARGET_DEFAULT = -DTARGET_CPU_DEFAULT=$target_cpu_default\\
-\# Makefile for GNU C compiler." Makefile.tem > Makefile.xx
-		rm -f Makefile.tem
-		mv Makefile.xx Makefile.tem
-	fi
-	
+
 	# Set MD_DEPS if the real md file is in md.pre-cpp.
 	# Set MD_CPP to the cpp to pass the md file through.  Md files use ';'
 	# for line oriented comments, so we must always use a GNU cpp.  If
@@ -2799,21 +3282,22 @@ MAYBE_TARGET_DEFAULT = -DTARGET_CPU_DEFAULT=$target_cpu_default\\
 		rm -f Makefile.tem
 		mv Makefile.xx Makefile.tem
 	fi
-	
+
 	# If we have gas in the build tree, make a link to it.
 	if [ -f ../gas/Makefile ]; then
 		rm -f as; $symbolic_link ../gas/as.new as 2>/dev/null
 	fi
-	
+
 	# If we have ld in the build tree, make a link to it.
 	if [ -f ../ld/Makefile ]; then
-		if [ x$use_collect2 = x ]; then
-			rm -f ld; $symbolic_link ../ld/ld.new ld 2>/dev/null
-		else
+# CYGNUS LOCAL jason tlink
+#		if [ x$use_collect2 = x ]; then
+#			rm -f ld; $symbolic_link ../ld/ld.new ld 2>/dev/null
+#		else
 			rm -f collect-ld; $symbolic_link ../ld/ld.new collect-ld 2>/dev/null
-		fi
+#		fi
 	fi
-	
+
 	# If using -program-transform-name, override the installation names.
 	if [ "x${program_transform_set}" = "xyes" ] ; then
 		sed -e "s/^program_transform_name[ 	]*=.*$/program_transform_name = $program_transform_name/" \
@@ -2823,21 +3307,69 @@ MAYBE_TARGET_DEFAULT = -DTARGET_CPU_DEFAULT=$target_cpu_default\\
 		mv Makefile.xx Makefile.tem
 	fi
 	
+	# CYGNUS LOCAL: dejagnu
+	# Define variables host_canonical and build_canonical
+	# because some Cygnus local changes in the Makefile depend on them.
+	echo host_canonical = ${canon_host} > Makefile.xx
+	echo build_canonical = ${canon_build} >> Makefile.xx
+	if [ "${canon_host}" = "${canon_target}" ] ; then
+	    cat Makefile.tem >> Makefile.xx
+	else
+	    sed -e "s!target_subdir =.*!target_subdir = ${target}/!" \
+		< Makefile.tem >> Makefile.xx
+	fi
+	mv Makefile.xx Makefile.tem
+	# END CYGNUS LOCAL
+	
 	# Conditionalize the makefile for this target machine.
-	if [ -f ${mainsrcdir}/config/${tmake_file} ]
+	dep_tmake_file=
+	rm -f Makefile.xx Makefile.ll
+	merged_frags=
+	for f in .. ${tmake_file}
+	do
+		if [ -f ${mainsrcdir}/config/$f ]
+		then
+			cat ${mainsrcdir}/config/$f >> Makefile.ll
+			if [ x"${merged_frags}" != x ]
+			then
+				merged_frags="${merged_frags} and "
+			fi
+			merged_frags="${merged_frags}$f"
+			dep_tmake_file="${dep_tmake_file} \$(srcdir)/config/$f"
+		fi
+	done
+	if [ x"${merged_frags}" != x ]
 	then
-		rm -f Makefile.xx
-		sed -e "/####target/  r ${mainsrcdir}/config/${tmake_file}" Makefile.tem > Makefile.xx
-		echo "Merged ${tmake_file}."
+		sed -e "/####target/  r Makefile.ll" Makefile.tem > Makefile.xx
+		echo "Merged ${merged_frags}."
 		rm -f Makefile.tem
 		mv Makefile.xx Makefile.tem
-		dep_tmake_file=${tmake_file}
-	else
-	# Say in the makefile that there is no tmake_file,
-	# by using a name which (when interpreted relative to $srcdir/config)
-	# will duplicate another dependency: $srcdir/Makefile.in.
-		dep_tmake_file=../Makefile.in
+		rm -f Makefile.ll
 	fi
+	
+	# CYGNUS LOCAL: --site
+	# Conditionalize the makefile for this site.
+	if [ -f ${mainsrcdir}/config/ms-${site} ]
+	then
+		rm -f Makefile.xx
+		sed -e "/####site/  r ${mainsrcdir}/config/ms-${site}" Makefile.tem > Makefile.xx
+		echo "Merged ms-${site}."
+		rm -f Makefile.tem
+		mv Makefile.xx Makefile.tem
+	fi
+	# END CYGNUS LOCAL
+	
+	# CYGNUS LOCAL inhibit_libc
+	# If this is a cross compilation, then define inhibit_libc in
+	# LIBGCC2_CFLAGS.  This will cause __eprintf to be left out of
+	# libgcc.a, but that's OK because libc should have its own version of
+	# assert.h.
+	if [ x$host != x$target ]; then
+	  sed -e 's/^\(LIBGCC2_CFLAGS[ 	]*=[ 	]*\)/\1-Dinhibit_libc /' Makefile.tem > Makefile.tem2
+	  rm -f Makefile.tem
+	  mv Makefile.tem2 Makefile.tem
+	fi
+	# END CYGNUS LOCAL
 	
 	# If this is the top level Makefile, add the language fragments.
 	# Languages are added via two mechanisms.  Some information must be
@@ -2850,6 +3382,7 @@ MAYBE_TARGET_DEFAULT = -DTARGET_CPU_DEFAULT=$target_cpu_default\\
 		# These (without "all_") are set in each config-lang.in.
 		# `language' must be a single word so is spelled singularly.
 		all_languages=
+		all_boot_languages=
 		all_compilers=
 		all_stagestuff=
 		all_diff_excludes=
@@ -2863,6 +3396,7 @@ MAYBE_TARGET_DEFAULT = -DTARGET_CPU_DEFAULT=$target_cpu_default\\
 			if [ $s != ".." ]
 			then
 				language=
+				boot_language=
 				compilers=
 				stagestuff=
 				diff_excludes=
@@ -2874,6 +3408,10 @@ MAYBE_TARGET_DEFAULT = -DTARGET_CPU_DEFAULT=$target_cpu_default\\
 				fi
 				all_lang_makefiles="$all_lang_makefiles ${mainsrcdir}/$s/Make-lang.in ${mainsrcdir}/$s/Makefile.in"
 				all_languages="$all_languages $language"
+				if [ "x$boot_language" = xyes ]
+				then
+					all_boot_languages="$all_boot_languages $language"
+				fi
 				all_compilers="$all_compilers $compilers"
 				all_stagestuff="$all_stagestuff $stagestuff"
 				all_diff_excludes="$all_diff_excludes $diff_excludes"
@@ -2884,8 +3422,10 @@ MAYBE_TARGET_DEFAULT = -DTARGET_CPU_DEFAULT=$target_cpu_default\\
 		sed -e "/####language fragments/ r Makefile.ll" Makefile.tem > Makefile.xx
 		rm -f Makefile.tem
 		mv Makefile.xx Makefile.tem
+		subdirs=`echo $subdirs`
 		sed -e "s|^SUBDIRS[ 	]*=.*$|SUBDIRS = $subdirs|" \
 		    -e "s|^LANGUAGES[ 	]*=[ 	]*\(.*\)$|LANGUAGES = \1 $all_languages|" \
+		    -e "s|^BOOT_LANGUAGES[ 	]*=[ 	]*\(.*\)$|BOOT_LANGUAGES = \1 $all_boot_languages|" \
 		    -e "s|^COMPILERS[ 	]*=[ 	]*\(.*\)$|COMPILERS = \1 $all_compilers|" \
 		    -e "s|^LANG_MAKEFILES[ 	]*=.*$|LANG_MAKEFILES = $all_lang_makefiles|" \
 		    -e "s|^LANG_STAGESTUFF[ 	]*=.*$|LANG_STAGESTUFF = $all_stagestuff|" \
@@ -2956,20 +3496,41 @@ MAYBE_TARGET_DEFAULT = -DTARGET_CPU_DEFAULT=$target_cpu_default\\
 	fi
 
 	out_object_file=`basename $out_file .c`.o
+
+# CYGNUS LOCAL haifa
+	# Override SCHED_OBJ and SCHED_CFLAGS to enable the Haifa scheduler.
+	if [ x$enable_haifa = xyes ]; then
+	    echo "Using the Haifa scheduler."
+	    sed -e "s!^SCHED_PREFIX =.*\$!SCHED_PREFIX = haifa-!" -e "s!^SCHED_CFLAGS =.*\$!SCHED_CFLAGS = -DHAIFA!" \
+		< Makefile.tem >> Makefile.xx
+	    mv Makefile.xx Makefile.tem
+	fi
+	if [ x$enable_haifa != x ]; then
+	    # Explicitly remove files that need to be recompiled for the Haifa scheduler.
+	    for x in genattrtab.o toplev.o loop.o unroll.o *sched.o; do
+		if [ -f $x ]; then
+		    echo "Removing $x"
+		    rm -f $x
+		fi
+	    done
+	fi
+# END CYGNUS LOCAL
 	
 	# Remove all formfeeds, since some Makes get confused by them.
 	# Also arrange to give the variables `target', `host_xmake_file',
 	# `tmake_file', `prefix', `local_prefix', `exec_prefix', `FIXINCLUDES'
 	# `out_file', `out_object', `md_file', `lang_specs_files',
-	# `lang_options_files', and `INSTALL_HEADERS_DIR' values in the
-	# Makefile from the values they have in this script.
+	# `lang_options_files', `INSTALL_HEADERS_DIR', and `CROSS_FLOAT_H'
+	# values in the Makefile from the values they have in this script.
+	# CYGNUS LOCAL: FLOAT_H, objdir
 	rm -f Makefile.xx
 	rm -f aux-output.c aux-output.o md
 	# Create an empty Makefile.sed first, to work around a Nextstep 3.3 bug.
 	echo 's|||' > Makefile.sed
 	rm Makefile.sed
 	echo 's|||' > Makefile.sed
-	echo "s|^target=.*$|target=${target}|" >> Makefile.sed
+	echo "s|^target=.*$|target=${canon_target}|" >> Makefile.sed
+	echo "s|^target_alias=.*$|target_alias=${target}|" >> Makefile.sed
 	echo "s|^xmake_file=.*$|xmake_file=${dep_host_xmake_file}|" >> Makefile.sed
 	echo "s|^tmake_file=.*$|tmake_file=${dep_tmake_file}|" >> Makefile.sed
 	echo "s|^version=.*$|version=${version}|" >> Makefile.sed
@@ -2977,44 +3538,64 @@ MAYBE_TARGET_DEFAULT = -DTARGET_CPU_DEFAULT=$target_cpu_default\\
 	echo "s|^out_file=.*$|out_file=${srcdir}/config/${out_file}|" >> Makefile.sed
 	echo "s|^out_object_file=.*$|out_object_file=${out_object_file}|" >> Makefile.sed
 	echo "s|^md_file=.*$|md_file=${md_file}|" >> Makefile.sed
-	echo "s|^tm_file=.*$|tm_file=${srcdir}/config/${tm_file}|" >> Makefile.sed
-	echo "s|^host_xm_file=.*$|host_xm_file=${srcdir}/config/${host_xm_file}|" >> Makefile.sed
-	echo "s|^build_xm_file=.*$|build_xm_file=${srcdir}/config/${build_xm_file}|" >> Makefile.sed
+	tm_file_sub=
+	for f in $tm_file; do
+		tm_file_sub="${tm_file_sub} ${srcdir}/config/$f"
+	done
+	echo "s|^tm_file=.*$|tm_file=${tm_file_sub}|" >> Makefile.sed
+	host_xm_file_sub=
+	for f in $host_xm_file; do
+		host_xm_file_sub="${host_xm_file_sub} ${srcdir}/config/$f"
+	done
+	echo "s|^host_xm_file=.*$|host_xm_file=${host_xm_file_sub}|" >> Makefile.sed
+	build_xm_file_sub=
+	for f in $build_xm_file; do
+		build_xm_file_sub="${build_xm_file_sub} ${srcdir}/config/$f"
+	done
+	echo "s|^build_xm_file=.*$|build_xm_file=${build_xm_file_sub}|" >> Makefile.sed
 	echo "s|^lang_specs_files=.*$|lang_specs_files=${lang_specs_files}|" >> Makefile.sed
 	echo "s|^lang_options_files=.*$|lang_options_files=${lang_options_files}|" >> Makefile.sed
+	echo "s|^OBJC_THREAD_FILE=.*$|OBJC_THREAD_FILE=thr-${objc_thread_file}|" >> Makefile.sed
 	echo "s|^prefix[ 	]*=.*|prefix = $prefix|" >> Makefile.sed
-	echo "s|^gxx_include_dir[ 	]*=.*|gxx_include_dir = $gxx_include_dir|" >> Makefile.sed
 	echo "s|^local_prefix[ 	]*=.*|local_prefix = $local_prefix|" >> Makefile.sed
 	echo "s|^exec_prefix[ 	]*=.*|exec_prefix = $exec_prefix|" >> Makefile.sed
 	echo "s|^FIXINCLUDES[ 	]*=.*|FIXINCLUDES = $fixincludes|" >> Makefile.sed
 	echo "s|^INSTALL_HEADERS_DIR[ 	]*=.*$|INSTALL_HEADERS_DIR = ${host_install_headers_dir}|" >> Makefile.sed
+	echo "s|^FLOAT_H[ 	]*=.*|FLOAT_H=\$(srcdir)/config/float-${float_format}.h|" >> Makefile.sed
+	echo "s|^CROSS_FLOAT_H[ 	]*=.*|CROSS_FLOAT_H=\$(srcdir)/config/float-${float_format}.h|" >> Makefile.sed
+	echo "s|^objdir[ 	]*=.*|objdir=`pwd`|" >> Makefile.sed
 	sed -f Makefile.sed Makefile.tem > Makefile.xx
 	rm -f Makefile.tem Makefile.sed
 	mv Makefile.xx Makefile.tem
-	
+
 	# Install Makefile for real, after making final changes.
 	# Define macro CROSS_COMPILE in compilation if this is a cross-compiler.
 	# Also use all.cross instead of all.internal, and add cross-make to Makefile.
-	if [ x$canon_host = x$canon_target ]
+	if [ x$canon_host != x$canon_target ]
 	then
-		rm -f Makefile
-	  	if [ x$canon_host = x$canon_build ]
-		then
-			mv Makefile.tem Makefile
-		else
-	#		When building gcc with a cross-compiler, we need to fix a
-	#		few things.
-			echo "build= $build" > Makefile
-	    		sed -e "s|objc-runtime$||" \
-			    -e "/####build/  r ${mainsrcdir}/build-make" Makefile.tem >> Makefile
-			rm -f Makefile.tem Makefile.xx
-		fi
-	else
-		rm -f Makefile
-		echo "CROSS=-DCROSS_COMPILE" > Makefile
-		sed -e "/####cross/  r ${mainsrcdir}/cross-make" Makefile.tem >> Makefile
-		rm -f Makefile.tem Makefile.xx
+		rm -f Makefile.xx
+		echo "CROSS=-DCROSS_COMPILE" > Makefile.xx
+		sed -e "/####cross/  r ${mainsrcdir}/cross-make" Makefile.tem >> Makefile.xx
+		rm -f Makefile.tem
+		mv Makefile.xx Makefile.tem
 	fi
+
+	# When building gcc with a cross-compiler, we need to fix a few things.
+	# This must come after cross-make as we want all.build to override
+	# all.cross.
+  	if [ x$canon_build != x$canon_host ]
+	then
+		rm -f Makefile.xx
+		echo "build= $build" > Makefile.xx
+		echo "host= $host" >> Makefile.xx
+    		sed -e "s|objc-runtime$||" \
+		    -e "/####build/  r ${mainsrcdir}/build-make" Makefile.tem >> Makefile.xx
+		rm -f Makefile.tem
+		mv Makefile.xx Makefile.tem
+	fi
+
+	rm -f Makefile
+	mv Makefile.tem Makefile
 
 	echo "Created \`$subdir/Makefile'."
 
@@ -3029,7 +3610,7 @@ MAYBE_TARGET_DEFAULT = -DTARGET_CPU_DEFAULT=$target_cpu_default\\
 
 	cd $STARTDIR
 done   # end of current-dir SUBDIRS loop
-	
+
 srcdir=$savesrcdir
 
 # Describe the chosen configuration in config.status.

@@ -1,6 +1,57 @@
-Noteworthy changes in GCC version 2.7.2.1:
+Noteworthy changes in GCC version 2.8.0:
 
-This release fixes some serious bugs discovered since the 2.7.2 release.
+The following new targets are supported:
+
+    Solaris 2.5 running on UltraSPARC's.
+    The sparclet cpu (a.out file format).
+    Solaris 2.51 running on PowerPC's.
+    Linux running on PowerPC's.
+
+New features for the Hitachi H8/300(H).
+
+    -malign-300
+
+New features for SPARC-based systems:
+
+    -mcpu=xxx
+    -mtune=xxx
+    -mimpure-text and -mno-impure-text
+
+New features for PowerPC-based systems running either System V, Linux, Solaris,
+or embedded systems:
+
+    -mregnames
+    -meabi
+    -mcall-linux
+    -mcall-solaris
+    -mcall-sysv-eabi
+    -mcall-sysv-noeabi
+    -msdata
+    -memb
+    -mtune=xxx
+    -msim
+    -mmvme
+
+Options -mno-v8 and -mno-sparclite are no longer supported on SPARC
+targets.  Options -mcypress, -mv8, -msupersparc, -msparclite, -mf930,
+and -mf934 are deprecated and will be deleted in GCC 2.9.
+Use -mcpu=xxx instead.
+
+GCC on the PA requires either gas-2.6 or the HP assembler; for best
+results using GAS is highly recommended.
+
+Aix 4.1 GCC targets now default to -mcpu=common so that programs compiled can
+be moved between rs6000 and powerpc based systems.  A consequence of this is
+that -static won't work, and that some programs may be slightly slower.
+
+You can select the default value to use for -mcpu=xxx on rs6000 and powerpc
+targets by using the --with-cpu=xxx option when confiuring the compiler.  In
+addition, a new options, -mtune=xxx was added that selects the machine to
+schedule for but does not select the architecture level.
+
+Directory names used for storing the multilib libraries on System V and
+embedded PowerPC systems have been shortened to work with commands like tar
+that have fixed limits on pathname size.
 
 Noteworthy changes in GCC version 2.7.2:
 
