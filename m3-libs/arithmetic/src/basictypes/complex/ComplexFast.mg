@@ -13,6 +13,8 @@ was xComplex.m3
                           The ones with beginning caps are wds's
 *)
 
+FROM xUtils IMPORT Error, Err;
+
 <*UNUSED*> CONST Module = "ComplexFast.";
 (*==========================*)
 
@@ -73,26 +75,30 @@ BEGIN
 END Mul;
 
 (*-------------------*)
-PROCEDURE Div(READONLY x,y : T) : T =
+PROCEDURE Div(READONLY x,y : T) : T RAISES {Error} =
   VAR
     z : T;
     denom : R.T;
   BEGIN
     denom := y.re*y.re + y.im*y.im;
-    <* ASSERT denom > FLOAT(0.0,R.T) *>
+    IF denom=R.Zero THEN
+	  RAISE Error(Err.divide_by_zero);
+	END;
     z.re := (  x.re * y.re + x.im * y.im) / denom;
     z.im := (- x.re * y.im + x.im * y.re) / denom;
     RETURN z;
   END Div;
 
 (*-------------------*)
-PROCEDURE Rec(READONLY x : T) : T =
+PROCEDURE Rec(READONLY x : T) : T RAISES{Error} =
   VAR
     z : T;
     denom : R.T;
   BEGIN
     denom := x.re*x.re + x.im*x.im;
-    <* ASSERT denom > FLOAT(0.0,R.T) *>
+    IF denom=R.Zero THEN
+	  RAISE Error(Err.divide_by_zero);
+	END;
     z.re :=  x.re / denom;
     z.im := -x.im / denom;
     RETURN z;

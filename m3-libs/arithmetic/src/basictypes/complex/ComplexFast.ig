@@ -14,6 +14,8 @@ Originally was xComplex
 
 *)
 
+FROM xUtils IMPORT Error;
+
 (*==========================*)
 
 TYPE
@@ -31,9 +33,8 @@ CONST
 <*INLINE*> PROCEDURE Conj(READONLY x:T):T;   (*return complex conjugated of x*)
 
 <*INLINE*> PROCEDURE Mul(READONLY x,y:T):T;  (*return x*y*)
-<*INLINE*> PROCEDURE Div(READONLY x,y:T):T;  (*return x/y*)
-<*INLINE*> PROCEDURE Mod(READONLY x,y:T):T;  (*return x mod y*)
-<*INLINE*> PROCEDURE Rec(READONLY x:T):T;    (*return 1/x*)
+<*INLINE*> PROCEDURE Div(READONLY x,y:T):T RAISES {Error};  (*return x/y*)
+<*INLINE*> PROCEDURE Rec(READONLY x:T):T RAISES {Error};    (*return 1/x*)
 
 <*INLINE*> PROCEDURE Square(READONLY x:T):T;         (*return x*x*)
 <*INLINE*> PROCEDURE Scale (READONLY x:T; y:R.T):T;  (*return x*y*)

@@ -51,14 +51,8 @@ END Pow;
 (*----------------*)
 PROCEDURE Exp( 
                 READONLY c:C.T):C.T=
-VAR
-  tmp:C.T;
-  ex:R.T;
 BEGIN
-  ex:=Rt.Exp(c.re);
-  tmp.re:= ex*Rt.Cos(c.im);
-  tmp.im:= ex*Rt.Sin(c.im);
-  RETURN tmp;
+  RETURN C.Scale(C.T{Rt.Cos(c.im),Rt.Sin(c.im)},Rt.Exp(c.re));
 END Exp;
 
 (*----------------*)
@@ -67,7 +61,8 @@ PROCEDURE Ln(
 VAR
   tmp:C.T;
 BEGIN
-  tmp.re:= Rt.Ln(Abs(c));
+  (*tmp.re:= R.Div(Rt.Ln(AbsSqr(c)),R.Two);*)
+  tmp.re:= Rt.Ln(AbsSqr(c)) / R.Two;
   tmp.im:= Arg(c);
   RETURN tmp;
 END Ln;
@@ -247,7 +242,7 @@ BEGIN
   RETURN C.Neg(C.Mul(C.I,Ln(C.Add(x,y))));
 END ArcCos;
 
-PROCEDURE ArcTan (READONLY x : C.T) : C.T =
+PROCEDURE ArcTan (READONLY x : C.T) : C.T RAISES{Error} =
 VAR
   y : C.T;
 BEGIN
@@ -265,6 +260,7 @@ END Abs;
 
 PROCEDURE AbsSqr (READONLY x : C.T) : R.T =
 BEGIN
+(*  RETURN C.Mul(x,C.Conj(x));  it's a real number, but the type is still C.T *)
   RETURN x.re * x.re + x.im * x.im;
 END AbsSqr;
 
@@ -273,21 +269,27 @@ VAR
   r : R.T;
   z : C.T;
 BEGIN
-  r := Abs(x);
-  z.re := r + x.re;
-  IF z.re < R.Zero THEN (* mathematically impossible, can be caused by rounding *)
-    z.re := R.Zero;
-  ELSE
-    z.re := Rt.SqRt (R.Div(z.re,R.Two));
-  END;
+  TRY
+	r := Abs(x);
+	z.re := R.Add (r, x.re);
+	IF R.Compare(z.re, R.Zero) < 0 THEN (* mathematically impossible, can be caused by rounding *)
+      z.re := R.Zero;
+	ELSE
+      z.re := Rt.SqRt (R.Div(z.re,R.Two));
+	END;
 
-  z.im := r - x.re;
-  IF z.im < R.Zero THEN (* mathematically impossible, can be caused by rounding *)
-    z.im := R.Zero;
-  ELSIF x.im >= R.Zero THEN  (* instead of using the Sgn function *)
-    z.im :=        Rt.SqRt (R.Div(z.im,R.Two));
-  ELSE
-    z.im := R.Neg (Rt.SqRt (R.Div(z.im,R.Two)));
+	z.im := R.Sub (r, x.re);
+	IF R.Compare(z.im, R.Zero) < 0 THEN (* mathematically impossible, can be caused by rounding *)
+      z.im := R.Zero;
+	ELSE
+      z.im := Rt.SqRt (R.Div(z.im,R.Two));
+      IF R.Compare(x.im, R.Zero) < 0 THEN  (* instead of using the Sgn function *)
+    	z.im := R.Neg (z.im);
+      END;
+	END;
+
+  EXCEPT
+    Error(err) => EVAL err; (*IF err#Err.divide_by_zero THEN RAISE Error(err) END;*) (*division by zero never occurs, although Div() can throw it potentially*)
   END;
   (* Root is on the same side as the radicand with respect to the real axis. *)
   RETURN z;

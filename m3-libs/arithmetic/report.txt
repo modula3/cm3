@@ -21,6 +21,9 @@ METHODS
 
 match, but if the RAISES statement is also given the compiler seems to see a difference in both declarations and thus outputs "procedure redefined (Uniform)"
 
+may be that xUtils are not imported in one of these modules
+ - the compiler complains about type incompabilities before knowing of the identifiers
+
 ---------------
 
 It would be of great help, if the compiler tells me with which (implicitly given) declaration the new one conflicts and where it is was done, e.g.

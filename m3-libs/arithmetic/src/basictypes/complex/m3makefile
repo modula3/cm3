@@ -8,9 +8,9 @@ ComplexBasic("LongReal", "LongRealBasic")
 ComplexBasic("Extended", "ExtendedBasic")
 
 generic_module("ComplexFast")
-ComplexFast("Real",     "Real")
-ComplexFast("LongReal", "LongReal")
-ComplexFast("Extended", "Extended")
+ComplexFast("Real",     "RealBasic")
+ComplexFast("LongReal", "LongRealBasic")
+ComplexFast("Extended", "ExtendedBasic")
 
 
 generic_module("ComplexTrans")

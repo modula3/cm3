@@ -13,6 +13,8 @@ was xComplex.m3
                           The ones with beginning caps are wds's
 *)
 
+FROM xUtils IMPORT Error, Err;
+
 <*UNUSED*> CONST Module = "ComplexBasic.";
 (*==========================*)
 
@@ -66,30 +68,27 @@ BEGIN
   RETURN z;
 END Mul;
 
+PROCEDURE DivScale(READONLY x,y:T;):T RAISES {Error} =
+VAR
+  denom : R.T;
+BEGIN
+  denom := R.Add(R.Mul(x.re,x.re),R.Mul(y.im,y.im));
+  IF R.Equal (denom, R.Zero) THEN
+    RAISE Error(Err.divide_by_zero);
+  END;
+  RETURN T{R.Div(x.re,denom),R.Div(x.im,denom)};
+END DivScale;
+
 (*-------------------*)
-PROCEDURE Div(READONLY x,y : T) : T =
-  VAR
-    z : T;
-    denom : R.T;
+PROCEDURE Div(READONLY x,y : T) : T RAISES {Error} =
   BEGIN
-    denom := R.Add(R.Mul(x.re,x.re),R.Mul(y.im,y.im));
-    <* ASSERT R.Compare (denom, R.Zero) > 0 *>
-    z.re := R.Div (R.Add(      R.Mul(x.re,y.re) ,R.Mul(x.im,y.im)), denom);
-    z.im := R.Div (R.Add(R.Neg(R.Mul(x.re,y.im)),R.Mul(x.im,y.re)), denom);
-    RETURN z;
+    RETURN DivScale(Mul(x,Conj(y)),y);
   END Div;
 
 (*-------------------*)
-PROCEDURE Rec(READONLY x : T) : T =
-  VAR
-    z : T;
-    denom : R.T;
+PROCEDURE Rec(READONLY x : T) : T RAISES {Error} =
   BEGIN
-    denom := R.Add(R.Mul(x.re,x.re),R.Mul(x.im,x.im));
-    <* ASSERT R.Compare (denom, R.Zero) > 0 *>
-    z.re :=       R.Div(x.re,denom);
-    z.im := R.Neg(R.Div(x.im,denom));
-    RETURN z;
+    RETURN DivScale(Conj(x),x);
   END Rec;
 
 (*-------------------*)

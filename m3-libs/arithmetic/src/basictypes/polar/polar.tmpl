@@ -5,7 +5,7 @@
 readonly proc PolarBasic (nm, cfield, ctrans, rfield, rtrans) is
   local basic = nm & "PolarBasic"
   build_generic_intf (basic, "PolarBasic", [cfield, rfield], VISIBLE)
-  build_generic_impl (basic, "PolarBasic", [cfield, ctrans, rtrans])
+  build_generic_impl (basic, "PolarBasic", [cfield, ctrans, rfield, rtrans])
 end
 
 readonly proc PolarFmtLex (nm, pfield, rfmt) is
