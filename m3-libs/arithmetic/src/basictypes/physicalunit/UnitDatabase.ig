@@ -1,4 +1,4 @@
-GENERIC INTERFACE UnitDatabase(R);
+GENERIC INTERFACE UnitDatabase(R,CU,CUList);
 
 IMPORT PhysicalUnit AS U;
 
@@ -15,8 +15,8 @@ TYPE
     };
   UsualUnitFlagSet = SET OF UsualUnitFlags;
 
-  UsualUnit =
-    REF RECORD
+REVEAL
+  CU.UsualUnit=BRANDED REF RECORD
       next     : UsualUnit;
       unit     : U.T;
       scales   : REF ARRAY OF ScaledUnit;
@@ -24,17 +24,13 @@ TYPE
       flags    : SET OF UsualUnitFlags;
     END;
 
+TYPE
+  UsualUnit = CU.UsualUnit;
+
   ScaledUnit =
     RECORD
       symbol : TEXT;
       mag    : R.T;
-    END;
-
-  CompositeUnit =
-    REF RECORD
-      next : CompositeUnit;
-      uu   : UsualUnit;
-      exp  : U.ExpType;
     END;
 
 
@@ -60,6 +56,6 @@ PROCEDURE AddUnit(VAR db:T;
                   flags:=UsualUnitFlagSet{};
                   READONLY scales:ScaledUnitInitArray);
 
-PROCEDURE DecomposeUnit(READONLY db:T;unit:U.T):CompositeUnit;
+PROCEDURE DecomposeUnit(READONLY db:T;unit:U.T):CUList.T;
 
 END UnitDatabase.

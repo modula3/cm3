@@ -1,4 +1,4 @@
-GENERIC MODULE UnitDatabase(R);
+GENERIC MODULE UnitDatabase(CU,CUList);
 
 IMPORT PhysicalUnit AS U;
 
@@ -40,119 +40,129 @@ BEGIN
 END AddUnit;
 
 (*
-PROCEDURE DecomposeUnit(READONLY db:T;unit:U.T):CompositeUnit=
-VAR
-  v      : VALUE;
-  ucList : CompositeUnitPtr := NIL;
-  uc     : UnitComponentPtr;
-  maxUU,
-  uu     : UsualUnitPtr := NIL;
-  minDiff, diff,
-  minExp,  minAbsExp, exp, maxExp,
-  n      : INTEGER;
-  remain : VALUE;
+PROCEDURE NextItem(VAR uu:UsualUnit):BOOLEAN=
+  BEGIN
+    uu:=uu.next;
+    RETURN uu#NIL;
+  END NextItem;
+*)
 
-BEGIN
-(*WriteString ("CreateCompositeUnit (memPool : PoolHeaderPtr; unit : UnitArrPtr) : CompositeUnitPtr;"+&10); *)
-  ucList.Init();
-  v.z.r  := 1;  (* # 0 *)
-  v.unit := unit;
-  IF NOT ValueOne.EqualUnit (v) THEN
-    (*WriteFormat ("unit %ld, %lx, [%ld, %ld, %ld, %ld, %ld]"+&10, data := unit'RANGE, ANYPTR(unit), unit[0], unit[1], unit[2], unit[3], unit[4]); *)
-    remain.New (unit'RANGE);
-    v.CopyUnit (remain);
-    ucList.factor := 1.;
-
-    REPEAT
-      minDiff := minDiff'MAX;
-      maxExp  := 0;
-      uu := FuncDict (funcDict).usualUnits.First();
-      WHILE uu#NIL DO
-        minAbsExp := minAbsExp'MAX;
-        minExp    := 0;
-        n:=remain.unit'RANGE;
-        WHILE minAbsExp>0
-          AND_WHILE n>0 DO
-            DEC (n);
-            IF uu.basicUnit[n]#0 THEN
-              exp := remain.unit[n] DIV uu.basicUnit[n]; (* exp = 0 does not necessary mean that remain.unit[n] = 0 *)
-              IF = OR ((minExp#0) AND ((minExp>0) # (exp>0))) THEN
-                minAbsExp := 0;
-                minExp    := 0;
-              OR_IF (exp>0)
-                AND_IF (minAbsExp>exp) THEN
-                  minAbsExp := exp;
-                  minExp    := exp;
-                END
-              OR_IF (exp<0)
-                AND_IF (minAbsExp>-exp) THEN
-                  minAbsExp := -exp;
-                  minExp    :=  exp;
-                END
-              END;
+(*find the usual unit incl. exponent which matches best to the given unit*)
+PROCEDURE FindBestUU(READONLY db:T;remain:U.T;isFirst:BOOLEAN):CU.T=
+  VAR
+    maxUU  : UsualUnit := NIL;
+    uu     := db.first;
+    minDiff: U.ExpType := LAST(U.ExpType);
+    maxExp : U.ExpType := 0;
+  BEGIN
+    WHILE uu#NIL DO
+      (*find the maximum sensible exponent for the current usual unit*)
+      VAR
+        minAbsExp  :U.ExpType:=LAST(U.ExpType);
+        minExp     :U.ExpType:=0;
+      BEGIN
+        VAR
+          it:=uu.unit.iterate();
+          dim:INTEGER;
+          uuExp,rmExp,
+          exp        :U.ExpType;
+        BEGIN
+          WHILE minAbsExp>0 AND it.next(dim,uuExp) DO
+            <*ASSERT dim>0*>
+            rmExp := 0;
+            EVAL remain.get(dim,rmExp);
+            exp := rmExp DIV uuExp;
+            (* exp = 0 does not necessary mean that rmExp = 0 *)
+            IF exp=0 OR (minExp#0 AND (minExp>0) # (exp>0)) THEN
+              minAbsExp := 0;
+              minExp    := 0;
+            ELSIF exp>0 THEN
+              IF minAbsExp>exp THEN
+                minAbsExp := exp;
+                minExp    := exp;
+              END
+            ELSIF exp<0 THEN
+              IF minAbsExp>-exp THEN
+                minAbsExp := -exp;
+                minExp    :=  exp;
+              END
             END;
+          END;
+        END;
 
-          ELSE
-            diff := 0;
-            n := remain.unit'RANGE;
-            WHILE n>0 DO
-              DEC (n);
-              IF remain.unit[n]>0 THEN
-                INC (diff, remain.unit[n] - uu.basicUnit[n] * minExp);
+        IF minAbsExp>0 THEN
+          VAR
+            it:=remain.iterate();
+            diff:U.ExpType:=0;
+            dim:INTEGER;
+            uuExp,rmExp:U.ExpType;
+          BEGIN
+            WHILE it.next(dim,rmExp) DO
+              <*ASSERT dim>0*>
+              uuExp:=0;
+              EVAL uu.unit.get(dim,uuExp);
+              IF rmExp>0 THEN
+                INC (diff, rmExp - uuExp * minExp);
               ELSE
-                DEC (diff, remain.unit[n] - uu.basicUnit[n] * minExp);
+                DEC (diff, rmExp - uuExp * minExp);
               END;
             END;
             (*WriteFormat ("%s, minExp %ld, diff %ld, mindiff %ld, component? %ld"+&10, data := uu.mainUnit.name.data'ADR, minExp, diff, minDiff, CAST(SHORTINT,uu.isComponent)); *)
 
-            IF ((diff<minDiff) OR
-                ((maxExp<=0) AND (minExp>0) AND (diff<=minDiff))) AND
-               (uu.isComponent OR ((ucList.first=NIL) AND (diff=0)))  THEN
+            IF (diff<minDiff OR
+                (maxExp<=0 AND minExp>0 AND diff<=minDiff)) AND
+               (NOT UsualUnitFlags.independent IN uu.flags OR
+                (isFirst AND diff=0))  THEN
               minDiff := diff;
               maxUU   := uu;
               maxExp  := minExp;
             END;
+          END;
 
-          END
         END;
-        uu := FuncDict (funcDict).usualUnits.Next (uu);
       END;
 
-      n:=remain.unit'RANGE;
-      WHILE n>0 DO
-        DEC (n);
-        DEC (remain.unit[n], maxUU.basicUnit[n] * maxExp);
-      END;
-
-      memPool.NewPooled (uc);
-      uc.uu  := maxUU;
-      uc.exp := maxExp;
-      (*the factor of the first unit is excluded for now,
-        it will be considered when searching for an appropriate prefix*)
-      IF ucList.first#NIL THEN
-        ucList.factor := ucList.factor * maxUU.mainUnit.constant.value.z.r ^ LONGREAL(maxExp);
-      END;
-      ucList.InsertBottom (uc);
-
-    UNTIL minDiff=0;
-    (*WriteFormat ("total units %ld"+&10, data := ucList.Count()); *)
-    (*WriteFormat ("unit list first %lx"+&10, data := ANYPTR(ucList.first)); *)
-
-    IF ucList.first.exp < 0 THEN
-      uc := ucList.first;
-      WHILE uc#NIL
-        AND_WHILE uc.exp<=0 DO
-          uc := uc.next;
-        ELSE
-          ucList.InsertAfter (uc, ucList.RemoveFirst());
-        END
-      END;
+      uu := uu.next;
     END;
 
+    RETURN CU.T{uu := maxUU, exp := maxExp};
+  END FindBestUU;
+
+
+PROCEDURE DecomposeUnit(READONLY db:T;unit:U.T):CUList.T=
+VAR
+  ucList : CUList.T := NIL;
+  remain := U.Copy(unit);
+
+BEGIN
+  WHILE NOT U.IsZero (remain) DO
+    (* prepend the new unit *)
+    ucList:=CUList.Cons(FindBestUU(db,remain,ucList=NIL),ucList);
+
+    (* extract the found usual unit from the given one *)
+    remain:=U.Sub(remain,U.Scale(ucList.head.uu.unit,ucList.head.exp));
   END;
+
+  (*reverse order and
+    sort usual units with negative exponent to the end*)
+  VAR
+    ucPos,ucNeg:CUList.T:=NIL;
+    ucFirst:CUList.T:=NIL;
+  BEGIN
+    WHILE ucList#NIL DO
+      ucFirst:=ucList;
+      ucList:=ucList.tail;
+      IF ucFirst.head.exp < 0 THEN
+        ucNeg := CUList.Append(ucFirst,ucNeg);
+      ELSE
+        ucPos := CUList.Append(ucFirst,ucPos);
+      END;
+    END;
+    ucList:=CUList.AppendD(ucPos,ucNeg);
+  END;
+
   RETURN ucList;
 END DecomposeUnit;
-*)
 
 BEGIN
 END UnitDatabase.
