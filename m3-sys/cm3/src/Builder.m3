@@ -167,6 +167,8 @@ PROCEDURE CompileUnits (main     : TEXT;
     IF NOT Target.Init (s.target) THEN
       Msg.FatalError (NIL, "unrecognized target machine: TARGET = ", s.target);
     END;
+    Target.Has_stack_walker := GetConfigBool(s, "M3_USE_STACK_WALKER",
+                                             Target.Has_stack_walker);
 
     s.host_os := GetOSType (s, "NAMING_CONVENTIONS");
     IF (GetDefn (s, "TARGET_NAMING") = NIL)
