@@ -7,6 +7,8 @@ Abstract:  Approximately sum up the function values
            it may not converge but there are possibly
            good approximations before it starts to diverge
 
+*** seems to be untested, maybe unfunctional ***
+
 12/13/95   Harry George      Initial version
 1/22/96    Harry George      Change to m3na project
 *)
