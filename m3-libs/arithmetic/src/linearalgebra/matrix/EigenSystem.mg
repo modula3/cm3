@@ -236,8 +236,8 @@ PROCEDURE EigenSort(VAR vects: M.T;
             q := vects[k,i];
             vects[k,i] := vects[k,j];
             vects[k,j] := q;
-	  END; (* for *)
-	END; (* if *)
+          END; (* for *)
+        END; (* if *)
       END; (* for *)
     END; (* for *)
   END EigenSort;
@@ -291,31 +291,31 @@ PROCEDURE Tred1(n: CARDINAL;
           g := R.Zero;
           FOR k:=FIRST(a[0]) TO j DO
             g := g + a[j,k]*a[i,k];
-	  END; (* for *)
+          END; (* for *)
           FOR k:=j+1 TO l DO
             g := g + a[k,j]*a[i,k];
-	  END; (* for *)
-					 (* form element of p *)
+          END; (* for *)
+					(* form element of p *)
           e[j] := g/h;
           g := e[j];
           f := f+ g*a[i,j];
-	END; (* for *)
-					 (* form K *)
+        END; (* for *)
+				(* form K *)
         h := f/(h+h);
-					 (* form reduced A *)
+        (* form reduced A *)
         FOR j:=FIRST(a[0]) TO l DO
           f := a[i,j];
           e[j] := e[j]-h*f;
           g := e[j];
           FOR k:=FIRST(a[0]) TO j DO
             a[j,k] := a[j,k] - f*e[k] - g*a[i,k];
-	  END; (* for *)
-	END; (* for *)
-       END; (* if *)
-					 (* now for all cases of h *)
-       h := d[i];
-       d[i] := a[i,i];
-       a[i,i] := h;
+          END; (* for *)
+        END; (* for *)
+      END; (* if *)
+			(* now for all cases of h *)
+      h := d[i];
+      d[i] := a[i,i];
+      a[i,i] := h;
     END; (* for *)
   END Tred1;
 
@@ -365,14 +365,14 @@ PROCEDURE Tred2(n: CARDINAL;
           g := R.Zero;
           FOR k:=firstD TO j DO
             g := g + a[j,k]*a[i,k];
-	  END; (* for *)
+          END; (* for *)
           FOR k:=j+1 TO l DO
             g := g + a[k,j]*a[i,k];
-	  END; (* for *)
+          END; (* for *)
 					 (* form element of p *)
           e[j] := g/h;
           f := f+ g*a[j,i];
-	END; (* for *)
+        END; (* for *)
 					 (* form K *)
         hh := f/(h+h);
 					 (* form reduced A *)
@@ -382,11 +382,11 @@ PROCEDURE Tred2(n: CARDINAL;
           g := e[j];
           FOR k:=firstD TO j DO
             a[j,k] := a[j,k] - f*e[k] - g*a[i,k];
-	  END; (* for *)
-	END; (* for *)
-       END; (* if *)
+          END; (* for *)
+        END; (* for *)
+      END; (* if *)
           					 (* now for all cases of h *)
-       d[i] :=  h;
+      d[i] :=  h;
     END; (* for *)
     d[0] := R.Zero;
     e[0] := R.Zero;
@@ -399,11 +399,11 @@ PROCEDURE Tred2(n: CARDINAL;
           g:=R.Zero;
           FOR k:=0 TO l DO
             g := g + a[i,k]*a[k,j];
-	  END; (* for *)
+          END; (* for *)
           FOR k:=firstD TO l DO
             a[k,j] := a[k,j] - g*a[k,i];
-	  END; (* for *)
-	END; (* for *)
+          END; (* for *)
+        END; (* for *)
       END; (* if *)
       d[i] := a[i,i];
       a[i,i] := R.One;

@@ -37,7 +37,6 @@ END Lex;
 (*-----------------*)
 PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}):TEXT
                RAISES {Thread.Alerted, Wr.Failure} =
-CONST width = 12;
 VAR
   m:=NUMBER(x^);    mf:=FIRST(x^);   ml:=LAST(x^);
   n:=NUMBER(x[0]);  nf:=FIRST(x[0]); nl:=LAST(x[0]);
@@ -47,7 +46,7 @@ BEGIN
   FOR i:=mf TO ml DO
     Wr.PutText(wr,"V" & F.Int(n) & "{");
     FOR j:= nf TO nl DO
-      Wr.PutText(wr,F.Pad(RF.Fmt(x[i,j],style.elemStyle),width));
+      Wr.PutText(wr,F.Pad(RF.Fmt(x[i,j],style.elemStyle),style.width));
       IF j#nl THEN Wr.PutText(wr,", "); END;
     END;
     Wr.PutText(wr,"}");

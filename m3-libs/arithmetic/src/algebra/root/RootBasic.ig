@@ -92,6 +92,13 @@ PROCEDURE FromPowerSumSeq(READONLY x:PowerSumSeq):T RAISES{Error};
 (*Inverse to ToPowerSumSeq
   Err.indivisible is raised if x is not a sequence of power sums*)
 
+(*
+PROCEDURE Deflate(x:T;        (*divide this polynomial*)
+                  c:R.T;      (* by (xi-c) *)
+                  VAR rem:R.T);(*leaving remainder -- possibly 0*)
+PROCEDURE Discriminant(x:T;        (*product of all possible differences of roots*)
+                      ):T;
+*)
 
 (*==========================*)
 END RootBasic.
