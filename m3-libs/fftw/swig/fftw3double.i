@@ -1,0 +1,123 @@
+
+%module FFTWLongReal
+
+%ignore fftw_iodim_do_not_use_me;
+%ignore fftw_r2r_kind_do_not_use_me;
+
+%insert(m3rawintf) %{
+TYPE
+  Plan    <: ADDRESS;
+  Complex = RECORD r, i: LONGREAL; END;
+  IODim   = RECORD n, is, os: CARDINAL; END;
+  FILE    = ADDRESS;
+  R2RKind = {
+    R2HC,    HC2R,    DHT,
+    REDFT00, REDFT01, REDFT10, REDFT11,
+    RODFT00, RODFT01, RODFT10, RODFT11
+  };
+%}
+
+%typemap(m3rawintype)  fftw_plan       %{Plan%};
+%typemap(m3rawintype)  fftw_complex *  %{ARRAY OF Complex%};
+%typemap(m3rawintype)  fftw_iodim *    %{IODim%};
+%typemap(m3rawintype)  fftw_r2r_kind * %{R2RKind%};
+%typemap(m3rawrettype) fftw_plan       %{Plan%};
+
+
+%typemap(m3rawintype)  void    %{ADDRESS%};
+// fftw_export_wisdom
+%typemap(m3rawintype)  void (*)(char c, void *)
+  %{PROCEDURE (c:CHAR; buf:ADDRESS;)%};
+// fftw_import_wisdom
+%typemap(m3rawintype)  int (*)(void *)
+  %{PROCEDURE (buf:ADDRESS;):CARDINAL%};
+
+
+
+%ignore FFTW_FORWARD;
+%ignore FFTW_BACKWARD;
+%ignore FFTW_MEASURE;
+%ignore FFTW_DESTROY_INPUT;
+%ignore FFTW_UNALIGNED;
+%ignore FFTW_CONSERVE_MEMORY;
+%ignore FFTW_EXHAUSTIVE;
+%ignore FFTW_PRESERVE_INPUT;
+%ignore FFTW_PATIENT;
+%ignore FFTW_ESTIMATE;
+%ignore FFTW_ESTIMATE_PATIENT;
+%ignore FFTW_BELIEVE_PCOST;
+%ignore FFTW_DFT_R2HC_ICKY;
+%ignore FFTW_NONTHREADED_ICKY;
+%ignore FFTW_NO_BUFFERING;
+%ignore FFTW_NO_INDIRECT_OP;
+%ignore FFTW_ALLOW_LARGE_GENERIC;
+%ignore FFTW_NO_RANK_SPLITS;
+%ignore FFTW_NO_VRANK_SPLITS;
+%ignore FFTW_NO_VRECURSE;
+%ignore FFTW_NO_SIMD;
+
+
+
+// adapt to Modula-3 conform names
+
+%rename("Execute") fftw_execute;
+%rename("PlanDFT") fftw_plan_dft;
+%rename("PlanDFT1D") fftw_plan_dft_1d;
+%rename("PlanDFT2D") fftw_plan_dft_2d;
+%rename("PlanDFT3D") fftw_plan_dft_3d;
+%rename("PlanManyDFT") fftw_plan_many_dft;
+%rename("PlanGuruDFT") fftw_plan_guru_dft;
+%rename("PlanGuruSplitDFT") fftw_plan_guru_split_dft;
+%rename("ExecuteDFT") fftw_execute_dft;
+%rename("ExecuteSplitDFT") fftw_execute_split_dft;
+%rename("PlanManyDFTR2C") fftw_plan_many_dft_r2c;
+%rename("PlanDFTR2C") fftw_plan_dft_r2c;
+%rename("PlanDFTR2C1D") fftw_plan_dft_r2c_1d;
+%rename("PlanDFTR2C2D") fftw_plan_dft_r2c_2d;
+%rename("PlanDFTR2C3D") fftw_plan_dft_r2c_3d;
+%rename("PlanManyDFTC2R") fftw_plan_many_dft_c2r;
+%rename("PlanDFTC2R") fftw_plan_dft_c2r;
+%rename("PlanDFTC2R1D") fftw_plan_dft_c2r_1d;
+%rename("PlanDFTC2R2D") fftw_plan_dft_c2r_2d;
+%rename("PlanDFTC2R3D") fftw_plan_dft_c2r_3d;
+%rename("PlanGuruDFTR2C") fftw_plan_guru_dft_r2c;
+%rename("PlanGuruDFTC2R") fftw_plan_guru_dft_c2r;
+%rename("PlanGuruSplitDFTR2C") fftw_plan_guru_split_dft_r2c;
+%rename("PlanGuruSplitDFTC2R") fftw_plan_guru_split_dft_c2r;
+%rename("ExecuteDFTR2C") fftw_execute_dft_r2c;
+%rename("ExecuteDFTC2R") fftw_execute_dft_c2r;
+%rename("ExecuteSplitDFTR2C") fftw_execute_split_dft_r2c;
+%rename("ExecuteSplitDFTC2R") fftw_execute_split_dft_c2r;
+%rename("PlanManyR2R") fftw_plan_many_r2r;
+%rename("PlanR2R") fftw_plan_r2r;
+%rename("PlanR2R1D") fftw_plan_r2r_1d;
+%rename("PlanR2R2D") fftw_plan_r2r_2d;
+%rename("PlanR2R3D") fftw_plan_r2r_3d;
+%rename("PlanGuruR2R") fftw_plan_guru_r2r;
+%rename("ExecuteR2R") fftw_execute_r2r;
+%rename("DestroyPlan") fftw_destroy_plan;
+%rename("ForgetWisdom") fftw_forget_wisdom;
+%rename("Cleanup") fftw_cleanup;
+%rename("PlanWithNThreads") fftw_plan_with_nthreads;
+%rename("InitThreads") fftw_init_threads;
+%rename("CleanupThreads") fftw_cleanup_threads;
+%rename("ExportWisdomToFile") fftw_export_wisdom_to_file;
+%rename("ExportWisdomToString") fftw_export_wisdom_to_string;
+%rename("ExportWisdom") fftw_export_wisdom;
+%rename("ImportSystemWisdom") fftw_import_system_wisdom;
+%rename("ImportWisdomFromFile") fftw_import_wisdom_from_file;
+%rename("ImportWisdomFromString") fftw_import_wisdom_from_string;
+%rename("ImportWisdom") fftw_import_wisdom;
+%rename("FPrintPlan") fftw_fprint_plan;
+%rename("PrintPlan") fftw_print_plan;
+%rename("Malloc") fftw_malloc;
+%rename("Free") fftw_free;
+%rename("Flops") fftw_flops;
+
+/* This is the original fftw3.h file
+   without the FFTW_DEFINE_API macro calls. */
+%include fftw3base.h
+
+/* We want only float type per module.
+   Chose LONGREAL here. */
+FFTW_DEFINE_API(FFTW_MANGLE_DOUBLE, double, fftw_complex)
