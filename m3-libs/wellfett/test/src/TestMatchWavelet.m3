@@ -89,7 +89,8 @@ PROCEDURE PlotFrame (READONLY abscissa       : V.TBody;
    change.*)
 
 PROCEDURE MatchPattern (target                               : S.T;
-                        levels, smooth, vanishing, translates: CARDINAL)
+                        levels, smooth, vanishing, translates: CARDINAL;
+                        plot := TRUE; ): SimpleApprox
   RAISES {BSpl.DifferentParity} =
   (*The degree of freedom, i.e.  the number of parameters to minimize for,
      is 2*translates*)
@@ -128,9 +129,6 @@ PROCEDURE MatchPattern (target                               : S.T;
 
     target.clipToArray(first, targetvec^);
 
-    PL.Init();
-    PlotFrame(abscissa^, SUBARRAY(basis^, 0, 2 * translates),
-              basis[LAST(basis^)], targetvec^);
     (*
     IO.Put(Fmt.FN("normal matrix %s, right hand side %s\n",
                   ARRAY OF
@@ -142,6 +140,7 @@ PROCEDURE MatchPattern (target                               : S.T;
       coef := LA.LeastSquares(basis, ARRAY OF V.T{targetvec},
                               flags := LA.LSFlagSet{LA.LSFlag.transposed})[
                 0];
+      approx := M.MulTV(basis, coef.x);
     BEGIN
       IO.Put(Fmt.FN("translates %s, size %s, residuum %s, %s\n",
                     ARRAY OF
@@ -151,11 +150,20 @@ PROCEDURE MatchPattern (target                               : S.T;
       IO.Put(Fmt.FN("residuum - %s\n", ARRAY OF TEXT{RF.Fmt(coef.res)}));
       *)
 
-      PL.SetFGColorDiscr(4);
-      PL.PlotLines(abscissa^, M.MulTV(basis, coef.x)^);
+      IF plot THEN
+        PL.Init();
+        PlotFrame(abscissa^, SUBARRAY(basis^, 0, 2 * translates),
+                  basis[LAST(basis^)], targetvec^);
+        PL.SetFGColorDiscr(4);
+        PL.PlotLines(abscissa^, approx^);
+        PL.Exit();
+      END;
+      RETURN SimpleApprox{
+               NEW(S.T).fromArray(
+                 SUBARRAY(coef.x^, 0, 2 * translates), 1 - translates),
+               coef.x[LAST(coef.x^)], NEW(S.T).fromVector(approx, first)};
     END;
 
-    PL.Exit();
   END MatchPattern;
 
 (** SSE  - Square Smoothness Estimate,
@@ -1133,13 +1141,13 @@ PROCEDURE Test () =
   BEGIN
     CASE Example.matchRampSmooth OF
     | Example.matchBSpline =>
-        MatchPattern(
-          Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50),
-          numlevel, 4, 0, 5);
+        EVAL MatchPattern(
+               Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50),
+               numlevel, 4, 0, 5);
     | Example.matchBSplineVan =>
-        MatchPattern(
-          Refn.Refine(S.One, BSpl.GeneratorMask(1), 7).translate(10),
-          numlevel, 4, 2, 5);
+        EVAL MatchPattern(
+               Refn.Refine(S.One, BSpl.GeneratorMask(1), 7).translate(10),
+               numlevel, 4, 2, 5);
     | Example.matchRamp =>
         (* The figures given here previously was wrong because the
            generator was convolved with (1,0,-1) instead of (1,-1)
@@ -1148,9 +1156,9 @@ PROCEDURE Test () =
            0.649776682132423, -0.175806649674353, -0.875993675942413,
            -0.856283049545732, -0.458477950438848, -0.31397715987086,
            -0.11516417311729, ...} 0.330691666379811 *)
-        MatchPattern(NEW(S.T).fromArray(
-                       V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^, -256),
-                     numlevel, 4, 6, 5);
+        EVAL MatchPattern(NEW(S.T).fromArray(V.ArithSeq(512, -1.0D0,
+                                                        2.0D0 / 512.0D0)^,
+                                             -256), numlevel, 4, 6, 5);
     | Example.matchRampSmooth =>
         (*
           EVAL TestMatchPatternSmooth(NEW(S.T).fromArray(
@@ -1183,7 +1191,7 @@ PROCEDURE Test () =
 
     | Example.matchBSplineWavelet =>
         (*
-          MatchPattern(
+          EVAL MatchPattern(
             Refn.Refine(
               BSpl.WaveletMask(2, 8), BSpl.GeneratorMask(2), numlevel).scale(
             FLOAT(unit,R.T)  ).translate(10), numlevel, 2, 8, 5);
@@ -1194,19 +1202,19 @@ PROCEDURE Test () =
                numlevel, 2, 8, 8, 5, 1.0D-10);
     | Example.matchSincSmooth =>
         (*
-          MatchPattern(
+          EVAL MatchPattern(
             NEW(S.T).fromArray(V.Neg(SincVector(2048, unit))^, unit - 2048), numlevel,
             4, 6, 10);
         *)
         FOR scale := 3 TO 10 DO
           VAR size := 5 * scale * unit;
           BEGIN
-            MatchPattern(
-              NEW(S.T).fromArray(V.Neg(ModulateReal(
-                                         SincVector(size, scale * unit),
-                                         FLOAT(scale * unit, R.T) * 4.0D0
-                                           / 3.0D0))^, unit - size),
-              numlevel, 4, 0, 20);
+            EVAL MatchPattern(
+                   NEW(S.T).fromArray(
+                     V.Neg(ModulateReal(
+                             SincVector(size, scale * unit),
+                             FLOAT(scale * unit, R.T) * 4.0D0 / 3.0D0))^,
+                     unit - size), numlevel, 4, 0, 20);
           END;
           (** which scale achieves best match?
              3 - 22.1834569283071
@@ -1220,12 +1228,12 @@ PROCEDURE Test () =
           *)
           VAR size := 5 * scale * unit;
           BEGIN
-            MatchPattern(
-              NEW(S.T).fromArray(V.Neg(ModulateImag(
-                                         SincVector(size, scale * unit),
-                                         FLOAT(scale * unit, R.T) * 4.0D0
-                                           / 3.0D0))^, unit - size),
-              numlevel, 3, 1, 20);
+            EVAL MatchPattern(
+                   NEW(S.T).fromArray(
+                     V.Neg(ModulateImag(
+                             SincVector(size, scale * unit),
+                             FLOAT(scale * unit, R.T) * 4.0D0 / 3.0D0))^,
+                     unit - size), numlevel, 3, 1, 20);
           END;
           (** which scale achieves best match?
              3 - 40.9491273229196
@@ -1249,7 +1257,7 @@ PROCEDURE Test () =
             IO.Put("scale: "&Fmt.Int(scale)&"\n");
             VAR size := 5 * scale * unit;
             BEGIN
-              MatchPattern(
+              EVAL MatchPattern(
                 NEW(S.T).fromArray(
                   ModulateReal(V.Neg(GaussianVector(size, scale * unit)),
                                FLOAT(scale * unit, R.T))^, unit - size),
@@ -1257,7 +1265,7 @@ PROCEDURE Test () =
             END;
             VAR size := 5 * scale * unit;
             BEGIN
-              MatchPattern(NEW(S.T).fromArray(
+              EVAL MatchPattern(NEW(S.T).fromArray(
                              ModulateImag(GaussianVector(size, scale * unit),
                                           FLOAT(scale * unit, R.T))^,
                              unit - size), numlevel, 3, 1, 20);
@@ -1277,9 +1285,9 @@ PROCEDURE Test () =
     | Example.matchLongRamp =>
         (*matching a pattern with 1 vanishing moment with a wavelet of 9
            vanishing moments can't work obviously*)
-        MatchPattern(NEW(S.T).fromArray(
-                       V.ArithSeq(2048, -1.0D0, 2.0D0 / 2048.0D0)^,
-                       unit - 1024), numlevel, 3, 9, 5);
+        EVAL MatchPattern(NEW(S.T).fromArray(
+                            V.ArithSeq(2048, -1.0D0, 2.0D0 / 2048.0D0)^,
+                            unit - 1024), numlevel, 3, 9, 5);
       (*
       EVAL TestMatchPatternSmooth(
         NEW(S.T).fromArray(
