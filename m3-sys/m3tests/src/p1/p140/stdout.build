@@ -1,0 +1,16 @@
+"../src/Main.m3", line 66: warning: exception is never raised: Main.E
+"../src/Main.m3", line 81: warning: exception is never raised: Main.E
+"../src/Main.m3", line 96: warning: exception is never raised: Main.E
+"../src/Main.m3", line 102: warning: exception is never raised: Main.E
+"../src/Main.m3", line 120: warning: exception is never raised: Main.EA
+"../src/Main.m3", line 335: warning: exception is never raised: Main.EI
+"../src/Main.m3", line 340: warning: exception is never raised: Main.E
+"../src/Main.m3", line 353: warning: exception is never raised: Main.EI
+"../src/Main.m3", line 359: warning: exception is never raised: Main.E
+"../src/Main.m3", line 359: warning: exception is never raised: Main.EA
+"../src/Main.m3", line 396: warning: exception is never raised: Main.E
+"../src/Main.m3", line 396: warning: exception is never raised: Main.EI
+"../src/Main.m3", line 400: warning: exception is never raised: Main.EA
+"../src/Main.m3", line 410: warning: exception is never raised: Main.EI
+"../src/Main.m3", line 417: warning: exception is never raised: Main.E
+15 warnings encountered

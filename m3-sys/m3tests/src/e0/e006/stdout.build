@@ -1,0 +1,13 @@
+"../src/Main.m3", line 20: undefined (Rd.Failure)
+"../src/Main.m3", line 20: is not an exception (Rd.Failure)
+"../src/Main.m3", line 21: undefined (Wr.Failure)
+"../src/Main.m3", line 21: is not an exception (Wr.Failure)
+"../src/Main.m3", line 21: undefined (Wr.Failure)
+"../src/Main.m3", line 21: undefined (Rd.Failure)
+"../src/Main.m3", line 20: exception(s) don't have a return argument
+"../src/Main.m3", line 20: variable has no type (reason)
+"../src/Main.m3", line 20: incompatible types (x)
+"../src/Main.m3", line 21: exception(s) don't have a return argument
+"../src/Main.m3", line 21: variable has no type (reason)
+"../src/Main.m3", line 21: incompatible types (x)
+12 errors encountered

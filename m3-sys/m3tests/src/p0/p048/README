@@ -1,0 +1,66 @@
+Return-Path: 
+Delivery-Date: Mon, 19 Mar 90 02:31:57 PST
+Received: by jumbo; id AA23817; Mon, 19 Mar 90 02:31:46 PST
+Received: by decpa.pa.dec.com; id AA15919; Mon, 19 Mar 90 02:31:41 -0800
+Received: from margaux.inria.fr by inria.inria.fr (5.61+/89.0.8) via Fnet-EUnet id AA13779; Mon, 19 Mar 90 11:30:33 +0100 (MET)
+Received: by margaux.inria.fr
+	(5.61+/IDA-1.2.8) id AA01694; Mon, 19 Mar 90 11:30:30 +0100
+Date: Mon, 19 Mar 90 11:30:30 +0100
+From: Jean-Louis Dufour <dufour@margaux.inria.fr>
+Message-Id: <9003191030.AA01694@margaux.inria.fr>
+To: m3-request
+Subject: Bug of the old version.
+
+This bug can't be observed in the last version of the compiler, because of the
+impossibility of passing a local procedure as an argument, but if you plan to
+re-introduce this functionality in the next version, this may interest you.
+
+The following program reads lines on the standard input and prints them reversed.
+At each character corresponds a recursive procedure call (procedure Foo), and when
+an End-of-line is encountered, a closure is called (procedure AfficheReste)
+which prints the last character and calls the same closure at the preceding level
+of recursivity.
+
+------------------Cut Here-------------------------
+MODULE Main;
+IMPORT Wr, Rd, Stdio, Char;
+
+PROCEDURE FinAffiche () =
+BEGIN
+  Wr.PutChar (Stdio.stdout, Char.NL)
+END FinAffiche;
+
+PROCEDURE Foo (AfficheReste: PROCEDURE ()) =
+  VAR c: CHAR;
+  PROCEDURE Affiche () =
+  BEGIN
+    Wr.PutChar (Stdio.stdout, c);
+    AfficheReste ()
+  END Affiche;
+BEGIN
+  c := Rd.GetChar (Stdio.stdin);
+  IF c = Char.NL
+  THEN AfficheReste ()
+  ELSE Foo (Affiche)
+  END
+END Foo;
+
+BEGIN
+  LOOP
+    Foo (FinAffiche)
+  END
+END Main.
+------------------Cut Here-------------------------
+
+The front-end detects no error, but the generated C is syntactically wrong,
+and cc aborts. The problem is the expression generated for the procedure
+call "AfficheReste ()" in the body of the procedure Foo, which is:
+
+(*(parent->_AfficheReste)) ((*(parent->_AfficheReste))_closure);
+
+and which should be:
+
+(*(parent->_AfficheReste)) (parent->_AfficheReste_closure);
+
+
+                     Jean-Louis Dufour  (dufour@margaux.inria.fr)

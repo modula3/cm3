@@ -1,0 +1,4 @@
+"../src/A.i3", line 7: warning: not used (Alerted)
+1 warning encountered
+"../src/Main.m3", line 11: undefined (A.Alerted)
+1 error encountered

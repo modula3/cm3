@@ -1,0 +1,56 @@
+Delivery-Date: Mon, 03 Sep 90 09:25:21 PDT
+Received: by jumbo.pa.dec.com; id AA00126; Mon, 3 Sep 90 09:17:46 -0700
+Received: by jumbo.pa.dec.com; id AA00122; Mon, 3 Sep 90 09:17:40 -0700
+Received: by decpa.pa.dec.com; id AA10969; Mon, 3 Sep 90 09:17:31 -0700
+Received: from pbinfo.uni-paderborn.de 
+	by unido.informatik.uni-dortmund.de with SMTP via EUnet (UNIDO-2.0.2.c) via EUnet
+	for src.dec.com
+	id AS05441; Mon, 3 Sep 90 18:04:45 +0100
+Received: from thor by pbinfo.uni-paderborn.de with SMTP
+	(5.61++/PB-3.41) id AA06070; Mon, 3 Sep 90 18:08:07 +0200
+Received: by thor.uni-paderborn.de
+	(5.61++/PB-3.41) id AA18683; Mon, 3 Sep 90 18:08:04 +0200
+From: Thomas Roemke <modula-3@uni-paderborn.de>
+Message-Id: <9009031608.AA18683@thor.uni-paderborn.de>
+Subject: Question about BRANDED
+To: m3
+Date: Mon, 3 Sep 90 18:08:02 MET DST
+X-Mailer: ELM [version 2.3 PL6]
+
+
+
+I've got a question about brands. The report says:
+	'All brands in a program must be distinct'
+
+Does that mean all brands in a module have to be distinct
+or does that mean all brands in all modules of a program
+have to be distinct ?
+
+I got a little bit confused, because m3 compiles the following 
+program without warnings and the executable doesn't raise an exception: 
+
+MODULE a
+	EXPORTS Main;
+
+	TYPE b = BRANDED "string" REF INTEGER;
+	TYPE d = BRANDED "string" REF INTEGER;
+
+VAR a: b;
+    c: d;
+BEGIN
+      a := c;
+END a.
+
+Is the program correct ?
+
+Have 'a' and 'c' the same type ?
+
+
+
+Thomas
+
+
+-- 
+(*	Thomas Roemke, University Paderborn, FRG
+	modula-3@uni-paderborn.de
+	..!uunet!mcsun!unido!pbinfo!modula-3	*)

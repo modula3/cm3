@@ -1,0 +1,4 @@
+"../src/Main.m3", line 9: illegal recursive declaration (N)
+"../src/Main.m3", line 9: unsafe '+'
+"../src/Main.m3", line 9: value is not constant
+3 errors encountered

@@ -1,0 +1,8 @@
+"../src/Main.m3", line 16: BITS FOR size too small, must be at least (16)
+"../src/Main.m3", line 23: BITS FOR size too small, must be at least (32)
+"../src/Main.m3", line 21: SRC Modula-3 restriction: scalars in packed fields cannot cross word boundaries
+"../src/Main.m3", line 21: BITS FOR size too small, must be at least (32)
+"../src/Main.m3", line 25: SRC Modula-3 restriction: scalars in packed fields cannot cross word boundaries
+"../src/Main.m3", line 85: LOOPHOLE: expression's size differs from type's
+"../src/Main.m3", line 89: LOOPHOLE: expression's size differs from type's
+7 errors encountered

@@ -1,0 +1,5 @@
+"../src/A.m3", line 7: warning: exception is never raised: A.A
+"../src/A.m3", line 7: warning: exception is never raised: A.C
+"../src/A.m3", line 7: procedure redefined (Foo)
+"../src/A.m3", line 7: warning: not used (Foo)
+1 error and 3 warnings encountered

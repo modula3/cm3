@@ -1,0 +1,40 @@
+/proj/m3/pkg/m3tests package -- created Mon Dec 16 16:20:45 PST 1991 by kalsow
+current owner kalsow
+
+
+This directory contains test programs for the Modula-3 compiler. 
+
+These tests are intended to be used by the people working on the
+compiler.
+
+There are 5 types of tests:
+
+  1. CODE tests: tiny modules where the code output by the compiler
+      is what's of interest.
+  2. PROG tests: complete programs where the output of the program
+      is what's of interest.
+  3. ERROR tests: modules containing static errors where the generated
+       error messages are of interest.
+  4. RUNTIME tests: modules containing runtime error where the generated
+       error messages are of interest.
+  5. MISC tests (x): programs or modules that require a human to test
+       because they have non-deterministic or timing dependent behavior.
+
+The following tests are known to fail in the current release (2.0):
+
+        - p031  is non-deterministic
+        - p090  ADR(VALUE REAL FORMAL) mips cc generates bad code
+        - p096  elaborate constant methods.  no hope.
+        - e015, e018, e022, e028 illegal recursive declarations
+
+The following tests are known to fail in the current release (1.6):
+
+	- c056
+	- c094
+	- c115
+	- c121
+        - p059, on DS3100 when optimization is enabled. 
+                (this is actually a bug in cc, Ultrix 4.0)
+        - p083
+
+

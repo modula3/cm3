@@ -1,0 +1,21 @@
+Delivery-Date: Tue, 06 Nov 90 03:13:58 PST
+Received: by jumbo.pa.dec.com; id AA26479; Tue, 6 Nov 90 03:13:45 -0800
+Received: by decwrl.dec.com; id AA12040; Mon, 5 Nov 90 20:17:15 -0800
+Received: from arcturia.parc.xerox.com by arisia.Xerox.COM with SMTP
+	(5.61+/IDA-1.2.8/gandalf) id AA22097; Mon, 5 Nov 90 17:02:43 -0800
+Received: by arcturia.parc.xerox.com
+	(5.61+/IDA-1.2.8/gandalf) id AA29377; Mon, 5 Nov 90 17:02:57 PST
+Message-Id: <9011060102.AA29377@arcturia.parc.xerox.com>
+Date: Mon, 5 Nov 90 17:02:57 PST
+From: David Goldberg <goldberg@parc.xerox.com>
+To: m3-request
+Subject: compiler bug
+
+THe 1.5 compiler goes into an infinite loop on the following (illegal) program:
+
+IMPORT C;
+
+  EXTERNAL Foo(arg: ADDRESS);
+
+END C.
+

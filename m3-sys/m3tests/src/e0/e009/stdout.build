@@ -1,0 +1,4 @@
+"../src/Main.m3", line 13: warning: exception is never raised: <ANY>
+"../src/Main.m3", line 17: default is incompatible with method type (apply)
+"../src/Main.m3", line 17: procedure is not compatible with method (apply)
+2 errors and 1 warning encountered

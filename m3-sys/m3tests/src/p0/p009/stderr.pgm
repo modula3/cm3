@@ -1,0 +1,80 @@
+---- Ord ----
+
+Ord (E1.a) = 0 [0]
+Ord (E1.c) = 2 [2]
+Ord (17)   = 17 [17]
+
+Ord (a)  = 0 [0]
+Ord (c1) = 2 [2]
+Ord (c2) = 3 [3]
+Ord (x)  = 17 [17]
+Ord (y)  = 17 [17]
+
+---- Val ----
+
+(Val (0, E1)  = E1.a) = TRUE [true]
+(Val (2, E1)  = E1.c) = TRUE [true]
+(Val (2, E2)  = E1.c) = TRUE [true]
+(Val (17, E3)        = 17 [17]
+(Val (17, INTEGER)   = 17 [17]
+
+(Val (z, E1) = E1.d) = TRUE [true]
+(Val (z, E2) = E1.d) = TRUE [true]
+(Val (x, E3)         = 17 [17]
+(Val (x, INTEGER)    = 17 [17]
+(Val (y, E3)         = 17 [17]
+(Val (y, INTEGER)    = 17 [17]
+
+---- Number ----
+
+NUMBER (E1) = 7 [7]
+NUMBER (E2) = 4 [4]
+NUMBER (E3) = 34 [34]
+NUMBER (E4) = 0 [0]
+NUMBER (A1) = 7 [7]
+NUMBER (a1) = 7 [7]
+NUMBER (A2) = 4 [4]
+NUMBER (a2) = 4 [4]
+NUMBER (A3) = 34 [34]
+NUMBER (a3) = 34 [34]
+NUMBER (A4) = 0 [0]
+NUMBER (a4) = 0 [0]
+NUMBER (a5^) = 10 [10]
+
+---- First ----
+
+(FIRST (E1) = E1.a) = TRUE [true]
+(FIRST (E2) = E1.b) = TRUE [true]
+FIRST  (E3) = 12 [12]
+FIRST  (E4) = 0 [0]
+(FIRST (A1) = E1.a) = TRUE [true]
+(FIRST (a1) = E1.a) = TRUE [true]
+(FIRST (A2) = E1.b) = TRUE [true]
+(FIRST (a2) = E1.b) = TRUE [true]
+FIRST  (A3) = 12 [12]
+FIRST  (a3) = 12 [12]
+FIRST  (A4) = 0 [0]
+FIRST  (a4) = 0 [0]
+FIRST  (a5^) = 0 [0]
+FIRST (INTEGER) = -2147483648 [-2147483648]
+
+---- Last ----
+
+(LAST (E1) = E1.g) = TRUE [true]
+(LAST (E2) = E1.e) = TRUE [true]
+LAST  (E3) = 45 [45]
+LAST  (E4) = -1 [-1]
+
+(LAST (A1) = E1.g) = TRUE [true]
+(LAST (a1) = E1.g) = TRUE [true]
+(LAST (A2) = E1.e) = TRUE [true]
+(LAST (a2) = E1.e) = TRUE [true]
+LAST  (A3) = 45 [45]
+LAST  (a3) = 45 [45]
+LAST  (A4) = -1 [-1]
+LAST  (a4) = -1 [-1]
+LAST  (a5^) = 9 [9]
+LAST (INTEGER) = 2147483647 [2147483647]
+
+
+0 error(s) and 0 warning(s) detected

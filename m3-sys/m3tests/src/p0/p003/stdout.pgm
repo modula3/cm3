@@ -1,0 +1,49 @@
+true  = TRUE
+false = FALSE
+
+0    = 0
+179  = 179
+-83  = -83
+1000 = 1000
+
+(5) 179  = 1204
+(5) -83  = -313
+(5) 1000 = 13000
+
+12.34, 6, Sci           =  1.234000e+01
+12.34, 6, Fix           = 12.340000
+12.34, 6, Auto          = 12.34
+12.34, 6, Sci,  Literal =  1.234000e+01
+12.34, 6, Fix,  Literal = 12.340000
+12.34, 6, Auto, Literal = 12.34
+
+12.34, 1, Sci           =  1.2e+01
+12.34, 1, Fix           = 12.3
+12.34, 1, Auto          = 12
+12.34, 1, Sci,  Literal =  1.2e+01
+12.34, 1, Fix,  Literal = 12.3
+12.34, 1, Auto, Literal = 12
+
+178.3456e-23, 6, Sci           =  1.783450e-21
+178.3456e-23, 6, Fix           = 0.000000
+178.3456e-23, 6, Auto          = 1.78345e-21
+178.3456e-23, 6, Sci,  Literal =  1.783450e-21
+178.3456e-23, 6, Fix,  Literal = 0.000000
+178.3456e-23, 6, Auto, Literal = 1.78345e-21
+
+178.3456e-23, 1, Sci           =  1.8e-21
+178.3456e-23, 1, Fix           = 0.0
+178.3456e-23, 1, Auto          = 1.8e-21
+178.3456e-23, 1, Sci,  Literal =  1.8e-21
+178.3456e-23, 1, Fix,  Literal = 0.0
+178.3456e-23, 1, Auto, Literal = 1.8e-21
+
+z = z
+
+++++zzzz = ++++zzzz
+zzzz++++ = zzzz++++
++aaaaaaa = +aaaaaaa
+aaaaaaaa = aaaaaaaa
+aaaaaaaa = aaaaaaaa
+
+done.

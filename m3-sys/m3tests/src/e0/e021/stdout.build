@@ -1,0 +1,4 @@
+"../src/Main.m3", line 10: illegal recursive type declaration
+"../src/Main.m3", line 10: illegal recursive declaration (v)
+"../src/Main.m3", line 12: too many values specified
+3 errors encountered
