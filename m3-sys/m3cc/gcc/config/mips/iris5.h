@@ -50,6 +50,10 @@ Boston, MA 02111-1307, USA.  */
 #define WCHAR_TYPE_SIZE	LONG_TYPE_SIZE
 #define MAX_WCHAR_TYPE_SIZE	MAX_LONG_TYPE_SIZE
 
+#define WORD_SWITCH_TAKES_ARG(STR)			\
+ (DEFAULT_WORD_SWITCH_TAKES_ARG (STR)			\
+  || !strcmp (STR, "rpath"))
+
 /* ??? _MIPS_SIM and _MIPS_SZPTR should eventually depend on options when
    options for them exist.  */
 
@@ -81,6 +85,8 @@ Boston, MA 02111-1307, USA.  */
 %{!mlong64:-D__SIZE_TYPE__=unsigned\\ int -D__PTRDIFF_TYPE__=int} \
 %{mips3:-U__mips -D__mips=3 -D__mips64} \
 %{mgp32:-U__mips64} %{mgp64:-D__mips64} \
+%{msingle-float:%{!msoft-float:-D__mips_single_float}} \
+%{m4650:%{!msoft-float:-D__mips_single_float}} \
 %{EB:-UMIPSEL -U_MIPSEL -U__MIPSEL -U__MIPSEL__ -D_MIPSEB -D__MIPSEB -D__MIPSEB__ %{!ansi:-DMIPSEB}} \
 %{EL:-UMIPSEB -U_MIPSEB -U__MIPSEB -U__MIPSEB__ -D_MIPSEL -D__MIPSEL -D__MIPSEL__ %{!ansi:-DMIPSEL}}"
 
@@ -90,6 +96,7 @@ Boston, MA 02111-1307, USA.  */
 %{bestGnum} %{shared} %{non_shared} \
 %{call_shared} %{no_archive} %{exact_version} \
 %{!shared:%{!non_shared:%{!call_shared: -call_shared -no_unresolved}}} \
+%{rpath} \
 -_SYSTYPE_SVR4"
 
 /* We now support shared libraries.  */

@@ -1,5 +1,5 @@
 /* Definitions for code generation pass of GNU compiler.
-   Copyright (C) 1987, 91, 92, 93, 94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 91-95, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -17,13 +17,6 @@ You should have received a copy of the GNU General Public License
 along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
-
-
-#ifndef __STDC__
-#ifndef const
-#define const
-#endif
-#endif
 
 /* The default branch cost is 1.  */
 #ifndef BRANCH_COST
@@ -78,6 +71,11 @@ extern int current_function_uses_pic_offset_table;
 
 /* The arg pointer hard register, or the pseudo into which it was copied.  */
 extern rtx current_function_internal_arg_pointer;
+
+/* CYGNUS LOCAL -- Branch Prediction */
+/* Whether static branch prediction is used in this function.  */
+extern int current_function_uses_expect;
+/* END CYGNUS LOCAL -- Branch Prediction */
 
 /* Nonzero means stack pops must not be deferred, and deferred stack
    pops must not be output.  It is nonzero inside a function call,
@@ -306,6 +304,9 @@ extern optab movstrict_optab;	/* Move, preserving high part of register.  */
 
 extern optab cmp_optab;		/* Compare insn; two operands.  */
 extern optab tst_optab;		/* tst insn; compare one operand against 0 */
+/* CYGNUS LOCAL -- branch prediction */
+extern optab expect_optab;	/* Expected value */
+/* END CYGNUS LOCAL -- branch prediction */
 
 /* Unary operations */
 extern optab neg_optab;		/* Negation */
@@ -364,6 +365,8 @@ extern rtx memcmp_libfunc;
 extern rtx bcmp_libfunc;
 extern rtx memset_libfunc;
 extern rtx bzero_libfunc;
+
+extern rtx throw_libfunc;
 
 extern rtx eqhf2_libfunc;
 extern rtx nehf2_libfunc;
@@ -470,6 +473,9 @@ extern enum insn_code movcc_gen_code[NUM_MACHINE_MODES];
 
 /* This array records the insn_code of insns to perform block moves.  */
 extern enum insn_code movstr_optab[NUM_MACHINE_MODES];
+
+/* This array records the insn_code of insns to perform block clears.  */
+extern enum insn_code clrstr_optab[NUM_MACHINE_MODES];
 
 /* Define functions given in optabs.c.  */
 
@@ -624,15 +630,25 @@ extern void move_block_to_reg PROTO((int, rtx, int, enum machine_mode));
    The number of registers to be filled is NREGS.  */
 extern void move_block_from_reg PROTO((int, rtx, int, int));
 
+/* Load a BLKmode value into non-consecutive registers represented by a
+   PARALLEL.  */
+extern void emit_group_load PROTO((rtx, rtx));
+/* Store a BLKmode value from non-consecutive registers represented by a
+   PARALLEL.  */
+extern void emit_group_store PROTO((rtx, rtx));
+
 /* Mark REG as holding a parameter for the next CALL_INSN.  */
-extern void use_reg PROTO((rtx*, rtx));
+extern void use_reg PROTO((rtx *, rtx));
 /* Mark NREGS consecutive regs, starting at REGNO, as holding parameters
    for the next CALL_INSN.  */
-extern void use_regs PROTO((rtx*, int, int));
+extern void use_regs PROTO((rtx *, int, int));
+/* Mark a PARALLEL as holding a parameter for the next CALL_INSN.  */
+extern void use_group_regs PROTO((rtx *, rtx));
 
 /* Write zeros through the storage of OBJECT.
-   If OBJECT has BLKmode, SIZE is its length in bytes.  */
-extern void clear_storage PROTO((rtx, rtx));
+   If OBJECT has BLKmode, SIZE is its length in bytes and ALIGN is its
+   alignment.  */
+extern void clear_storage PROTO((rtx, rtx, int));
 
 /* Emit insns to set X from Y.  */
 extern rtx emit_move_insn PROTO((rtx, rtx));
@@ -828,9 +844,6 @@ extern void emit_stack_restore PROTO((enum save_level, rtx, rtx));
    says how many bytes.  */
 extern rtx allocate_dynamic_stack_space PROTO((rtx, rtx, int));
 
-/* Emit code to copy function value to a new temp reg and return that reg.  */
-extern rtx function_value ();
-
 /* Return an rtx that refers to the value returned by a library call
    in its original home.  This becomes invalid if any more code is emitted.  */
 extern rtx hard_libcall_value PROTO((enum machine_mode));
@@ -845,6 +858,7 @@ extern rtx store_bit_field PROTO((rtx, int, int, enum machine_mode, rtx, int, in
 extern rtx extract_bit_field PROTO((rtx, int, int, int, rtx, enum machine_mode, enum machine_mode, int, int));
 extern rtx expand_mult PROTO((enum machine_mode, rtx, rtx, rtx, int));
 extern rtx expand_mult_add PROTO((rtx, rtx, rtx, rtx,enum machine_mode, int));
+extern rtx expand_mult_highpart_adjust PROTO((enum machine_mode, rtx, rtx, rtx, rtx, int));
 
 extern rtx assemble_static_space PROTO((int));
 
@@ -852,3 +866,13 @@ extern rtx assemble_static_space PROTO((int));
    It is up to the language front end to install a hook
    if it has any such codes that expand_expr needs to know about.  */
 extern rtx (*lang_expand_expr) ();
+
+#ifdef TREE_CODE
+/* Build bytecode call descriptor for function SUBR. */
+extern rtx bc_build_calldesc PROTO((tree));
+
+/* Emit a type code to be used by the runtime support in handling
+   parameter passing.   The type code consists of the machine mode
+   plus the minimal alignment shifted left 8 bits.  */
+extern tree bc_runtime_type_code PROTO((tree));
+#endif

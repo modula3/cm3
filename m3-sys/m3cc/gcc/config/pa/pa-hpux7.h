@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler, for HP-UX.
-   Copyright (C) 1991, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1995, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -22,11 +22,6 @@ Boston, MA 02111-1307, USA.  */
 #define TARGET_DEFAULT 0
 #endif
 
-/* HPUX 7 has the old assembler.  */
-#define HP_FP_ARG_DESCRIPTOR_REVERSED
-
-#include "pa/pa.h"
-
 /* Make GCC agree with types.h.  */
 #undef SIZE_TYPE
 #undef PTRDIFF_TYPE
@@ -44,4 +39,4 @@ Boston, MA 02111-1307, USA.  */
 #define LIB_SPEC "%{!p:%{!pg:-lc}}%{p: -L/lib/libp/ -lc}%{pg: -L/lib/libp/ -lc}"
 
 #undef CPP_PREDEFINES
-#define CPP_PREDEFINES "-Dhppa -Dhp9000s800 -D__hp9000s800 -Dhp9k8 -DPWB -Dhpux -Dunix -D_HPUX_SOURCE -Asystem(unix) -Asystem(hpux) -Acpu(hppa) -Amachine(hppa)"
+#define CPP_PREDEFINES "-Dhppa -Dhp9000s800 -D__hp9000s800 -Dhp9k8 -DPWB -Dhpux -Dunix -Asystem(unix) -Asystem(hpux) -Acpu(hppa) -Amachine(hppa)"

@@ -172,13 +172,18 @@ char *note_insn_name[] = { 0                    , "NOTE_INSN_DELETED",
 			   "NOTE_INSN_FUNCTION_END", "NOTE_INSN_SETJMP",
 			   "NOTE_INSN_LOOP_CONT", "NOTE_INSN_LOOP_VTOP",
 			   "NOTE_INSN_PROLOGUE_END", "NOTE_INSN_EPILOGUE_BEG",
-			   "NOTE_INSN_DELETED_LABEL", "NOTE_INSN_FUNCTION_BEG"};
+			   "NOTE_INSN_DELETED_LABEL", "NOTE_INSN_FUNCTION_BEG",
+			   "NOTE_INSN_EH_REGION_BEG", "NOTE_INSN_EH_REGION_END",
+			     /* CYGNUS LOCAL: gcov */
+			   "NOTE_REPEATED_LINE_NUMBER" };
 
 char *reg_note_name[] = { "", "REG_DEAD", "REG_INC", "REG_EQUIV", "REG_WAS_0",
 			  "REG_EQUAL", "REG_RETVAL", "REG_LIBCALL",
 			  "REG_NONNEG", "REG_NO_CONFLICT", "REG_UNUSED",
 			  "REG_CC_SETTER", "REG_CC_USER", "REG_LABEL",
-			  "REG_DEP_ANTI", "REG_DEP_OUTPUT" };
+			    /* CYGNUS LOCAL: gcov */
+			  "REG_DEP_ANTI", "REG_DEP_OUTPUT", "REG_BR_PROB",
+			  "REG_EXEC_COUNT" };
 
 /* Allocate an rtx vector of N elements.
    Store the length, and initialize all elements to zero.  */
@@ -278,7 +283,7 @@ copy_rtx (orig)
     case PC:
     case CC0:
     case SCRATCH:
-      /* SCRATCH must be shared because they represent distinct values. */
+      /* SCRATCH must be shared because they represent distinct values.  */
       return orig;
 
     case CONST:

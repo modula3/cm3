@@ -1,5 +1,5 @@
 /* Target definitions for GNU compiler for Sparc running System V.4
-   Copyright (C) 1991, 1992, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1991, 1992, 1995, 1996 Free Software Foundation, Inc.
 
    Written by Ron Guilmette (rfg@netcom.com).
 
@@ -64,8 +64,8 @@ Boston, MA 02111-1307, USA.  */
 /* Pass -K to the assembler when PIC.  */
 #undef ASM_SPEC
 #define ASM_SPEC \
-  "%{V} %{v:%{!V:-V}} %{Qy:} %{!Qn:-Qy} %{n} %{T} %{Ym,*} %{Yd,*} %{Wa,*:%*} \
-   %{fpic:-K PIC} %{fPIC:-K PIC}"
+  "%{v:-V} %{Qy:} %{!Qn:-Qy} %{n} %{T} %{Ym,*} %{Yd,*} %{Wa,*:%*} \
+   %{fpic:-K PIC} %{fPIC:-K PIC} %(asm_cpu)"
 
 /* Must use data section for relocatable constants when pic.  */
 #undef SELECT_RTX_SECTION
@@ -185,7 +185,8 @@ do { ASM_OUTPUT_ALIGN ((FILE), Pmode == SImode ? 2 : 3);		\
 #define ASM_OUTPUT_SECTION_NAME(FILE, DECL, NAME) \
 do {									\
   if ((DECL) && TREE_CODE (DECL) == FUNCTION_DECL)			\
-    fprintf (FILE, ".section\t\"%s\",#alloc,#execinstr\n", (NAME));	\
+    fprintf (FILE, ".section\t\"%s%s\",#alloc,#execinstr\n",		\
+	     flag_function_sections ? ".text%" : "", (NAME));		\
   else if ((DECL) && TREE_READONLY (DECL))				\
     fprintf (FILE, ".section\t\"%s\",#alloc\n", (NAME));		\
   else									\
@@ -260,3 +261,10 @@ do { long value[4];							\
 	     4 * blockn, 4 * blockn, 4 * blockn); \
 }
 
+/* A C statement (sans semicolon) to output to the stdio stream
+   FILE the assembler definition of uninitialized global DECL named
+   NAME whose size is SIZE bytes and alignment is ALIGN bytes.
+   Try to use asm_output_aligned_bss to implement this macro.  */
+
+#define ASM_OUTPUT_ALIGNED_BSS(FILE, DECL, NAME, SIZE, ALIGN) \
+  asm_output_aligned_bss (FILE, DECL, NAME, SIZE, ALIGN)

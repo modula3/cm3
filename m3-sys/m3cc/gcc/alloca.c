@@ -25,6 +25,13 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+
 #ifdef emacs
 #include "blockinput.h"
 #endif
@@ -60,13 +67,30 @@ long i00afunc ();
 #define ADDRESS_FUNCTION(arg) &(arg)
 #endif
 
+/* CYGNUS LOCAL mpw */
+#ifdef MPW_C
+/* MPW C plays games with the stack pointer, in much the same way that GCC
+   does, but unfortunately it can't be told to be careful around alloca.
+   So instead of looking at sp, we look at the frame pointer of alloca's
+   caller, which is known to always be defined and not to change within
+   its scope of definition.  Doing this requires a direct function that
+   picks up the caller's a6, using the single instruction "move.l (a6),d0".  */
+     
+static char *frame_pointer_value() = 0x2016;
+
+#undef  ADDRESS_FUNCTION
+#define ADDRESS_FUNCTION(arg) (frame_pointer_value())
+#endif /* MPW_C */
+/* END CYGNUS LOCAL */
 #if __STDC__
 typedef void *pointer;
 #else
 typedef char *pointer;
 #endif
 
+#ifndef NULL
 #define	NULL	0
+#endif
 
 /* Different portions of Emacs need to call different versions of
    malloc.  The Emacs executable needs alloca to call xmalloc, because
@@ -171,7 +195,7 @@ alloca (size)
 #endif
 
   /* Reclaim garbage, defined as all alloca'd storage that
-     was allocated from deeper in the stack than currently. */
+     was allocated from deeper in the stack than currently.  */
 
   {
     register header *hp;	/* Traverses linked list.  */
@@ -208,6 +232,9 @@ alloca (size)
   {
     register pointer new = malloc (sizeof (header) + size);
     /* Address of header.  */
+
+    if (new == 0)
+      abort();
 
     ((header *) new)->h.next = last_alloca_header;
     ((header *) new)->h.deep = depth;
@@ -338,7 +365,7 @@ struct stk_trailer
 
 #ifdef CRAY2
 /* Determine a "stack measure" for an arbitrary ADDRESS.
-   I doubt that "lint" will like this much. */
+   I doubt that "lint" will like this much.  */
 
 static long
 i00afunc (long *address)

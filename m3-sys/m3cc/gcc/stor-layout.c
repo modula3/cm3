@@ -1,5 +1,5 @@
 /* C-compiler utilities for types and variables storage layout
-   Copyright (C) 1987, 88, 92, 93, 94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 88, 92, 93, 94, 95, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -24,6 +24,7 @@ Boston, MA 02111-1307, USA.  */
 
 #include "tree.h"
 #include "flags.h"
+#include "except.h"
 #include "function.h"
 
 #define CEIL(x,y) (((x) + (y) - 1) / (y))
@@ -211,6 +212,11 @@ layout_decl (decl, known_align)
   register enum tree_code code = TREE_CODE (decl);
   int spec_size = DECL_FIELD_SIZE (decl);
 
+/* CYGNUS LOCAL mpw */
+#ifdef PROGRESS
+  PROGRESS (1);
+#endif /* PROGRESS */
+/* END CYGNUS LOCAL */
   if (code == CONST_DECL)
     return;
 
@@ -254,13 +260,14 @@ layout_decl (decl, known_align)
       DECL_BIT_FIELD_TYPE (decl) = DECL_BIT_FIELD (decl) ? type : 0;
       if (maximum_field_alignment != 0)
 	DECL_ALIGN (decl) = MIN (DECL_ALIGN (decl), maximum_field_alignment);
-      else if (flag_pack_struct)
+      else if (DECL_PACKED (decl))
 	DECL_ALIGN (decl) = MIN (DECL_ALIGN (decl), BITS_PER_UNIT);
     }
 
   if (DECL_BIT_FIELD (decl)
       && TYPE_SIZE (type) != 0
-      && TREE_CODE (TYPE_SIZE (type)) == INTEGER_CST)
+      && TREE_CODE (TYPE_SIZE (type)) == INTEGER_CST
+      && GET_MODE_CLASS (TYPE_MODE (type)) == MODE_INT)
     {
       register enum machine_mode xmode
 	= mode_for_size (TREE_INT_CST_LOW (DECL_SIZE (decl)), MODE_INT, 1);
@@ -276,6 +283,14 @@ layout_decl (decl, known_align)
 	  DECL_BIT_FIELD (decl) = 0;
 	}
     }
+
+  /* Turn off DECL_BIT_FIELD if we won't need it set.  */
+  if (DECL_BIT_FIELD (decl) && TYPE_MODE (type) == BLKmode
+      && known_align % TYPE_ALIGN (type) == 0
+      && DECL_SIZE (decl) != 0
+      && (TREE_CODE (DECL_SIZE (decl)) != INTEGER_CST
+	  || (TREE_INT_CST_LOW (DECL_SIZE (decl)) % BITS_PER_UNIT) == 0))
+    DECL_BIT_FIELD (decl) = 0;
 
   /* Evaluate nonconstant size only once, either now or as soon as safe.  */
   if (DECL_SIZE (decl) != 0 && TREE_CODE (DECL_SIZE (decl)) != INTEGER_CST)
@@ -352,6 +367,9 @@ layout_record (rec)
 #ifdef BIGGEST_FIELD_ALIGNMENT
       desired_align = MIN (desired_align, BIGGEST_FIELD_ALIGNMENT);
 #endif
+#ifdef ADJUST_FIELD_ALIGN
+      desired_align = ADJUST_FIELD_ALIGN (field, desired_align);
+#endif
 
       /* Record must have at least as much alignment as any field.
 	 Otherwise, the alignment of the field within the record
@@ -379,7 +397,7 @@ layout_record (rec)
 	      int type_align = TYPE_ALIGN (TREE_TYPE (field));
 	      if (maximum_field_alignment != 0)
 		type_align = MIN (type_align, maximum_field_alignment);
-	      else if (flag_pack_struct)
+	      else if (TYPE_PACKED (rec))
 		type_align = MIN (type_align, BITS_PER_UNIT);
 
 	      record_align = MAX (record_align, type_align);
@@ -421,9 +439,7 @@ layout_record (rec)
 	  && TREE_TYPE (field) != error_mark_node
 	  && DECL_BIT_FIELD_TYPE (field)
 	  && !DECL_PACKED (field)
-	  /* If #pragma pack is in effect, turn off this feature.  */
 	  && maximum_field_alignment == 0
-	  && !flag_pack_struct
 	  && !integer_zerop (DECL_SIZE (field)))
 	{
 	  int type_align = TYPE_ALIGN (TREE_TYPE (field));
@@ -458,7 +474,7 @@ layout_record (rec)
 
 	  if (maximum_field_alignment != 0)
 	    type_align = MIN (type_align, maximum_field_alignment);
-	  else if (flag_pack_struct)
+	  else if (TYPE_PACKED (rec))
 	    type_align = MIN (type_align, BITS_PER_UNIT);
 
 	  /* A bit field may not span the unit of alignment of its type.
@@ -500,7 +516,7 @@ layout_record (rec)
 	  /* Do nothing.  */;
 	else if (TREE_CODE (dsize) == INTEGER_CST
 		 && TREE_INT_CST_HIGH (dsize) == 0
-		 && TREE_INT_CST_LOW (dsize) + const_size > const_size)
+		 && TREE_INT_CST_LOW (dsize) + const_size >= const_size)
 	  /* Use const_size if there's no overflow.  */
 	  const_size += TREE_INT_CST_LOW (dsize);
 	else
@@ -661,6 +677,11 @@ layout_type (type)
   int old;
   tree pending_statics;
 
+/* CYGNUS LOCAL mpw */
+#ifdef PROGRESS
+  PROGRESS (1);
+#endif /* PROGRESS */
+/* END CYGNUS LOCAL */
   if (type == 0)
     abort ();
 
@@ -687,6 +708,7 @@ layout_type (type)
 
     case INTEGER_TYPE:
     case ENUMERAL_TYPE:
+    case CHAR_TYPE:
       if (TREE_CODE (TYPE_MIN_VALUE (type)) == INTEGER_CST
 	  && tree_int_cst_sgn (TYPE_MIN_VALUE (type)) >= 0)
 	TREE_UNSIGNED (type) = 1;
@@ -923,7 +945,7 @@ layout_type (type)
       break;
 
     /* Pascal and Chill types */
-    case BOOLEAN_TYPE:		 /* store one byte/boolean for now. */
+    case BOOLEAN_TYPE:		 /* store one byte/boolean for now.  */
       TYPE_MODE (type) = QImode;
       TYPE_SIZE (type) = size_int (GET_MODE_BITSIZE (TYPE_MODE (type)));
       TYPE_PRECISION (type) = 1;
@@ -931,13 +953,6 @@ layout_type (type)
       if (TREE_CODE (TYPE_MIN_VALUE (type)) == INTEGER_CST
 	  && tree_int_cst_sgn (TYPE_MIN_VALUE (type)) >= 0)
  	TREE_UNSIGNED (type) = 1;
-      break;
-
-    case CHAR_TYPE:
-      TYPE_MODE (type) = QImode;
-      TYPE_SIZE (type) = size_int (GET_MODE_BITSIZE (TYPE_MODE (type)));
-      TYPE_PRECISION (type) = GET_MODE_BITSIZE (TYPE_MODE (type));
-      TYPE_ALIGN (type) = GET_MODE_ALIGNMENT (TYPE_MODE (type));
       break;
 
     case SET_TYPE:
@@ -987,6 +1002,20 @@ layout_type (type)
 	      && TREE_CODE (type) != QUAL_UNION_TYPE
 	      && TREE_CODE (type) != ARRAY_TYPE)))
     TYPE_ALIGN (type) = GET_MODE_ALIGNMENT (TYPE_MODE (type));
+
+/* CYGNUS LOCAL i960-80bit */
+  /* Do machine-dependent extra alignment.  */
+#ifdef ROUND_TYPE_ALIGN
+  TYPE_ALIGN (type)
+    = ROUND_TYPE_ALIGN (type, TYPE_ALIGN (type), BITS_PER_UNIT);
+#endif
+
+#ifdef ROUND_TYPE_SIZE
+  if (TYPE_SIZE (type) != 0)
+    TYPE_SIZE (type)
+      = ROUND_TYPE_SIZE (type, TYPE_SIZE (type), TYPE_ALIGN (type));
+#endif
+/* END CYGNUS LOCAL */
 
   /* Evaluate nonconstant size only once, either now or as soon as safe.  */
   if (TYPE_SIZE (type) != 0 && TREE_CODE (TYPE_SIZE (type)) != INTEGER_CST)
@@ -1193,7 +1222,11 @@ get_best_mode (bitsize, bitpos, align, largest_mode, volatilep)
       || (largest_mode != VOIDmode && unit > GET_MODE_BITSIZE (largest_mode)))
     return VOIDmode;
 
-  if (SLOW_BYTE_ACCESS && ! volatilep)
+  if (SLOW_BYTE_ACCESS
+      /* CYGNUS LOCAL unaligned-struct-hack */
+      && ! flag_unaligned_struct_hack
+      /* END CYGNUS LOCAL */
+      && ! volatilep)
     {
       enum machine_mode wide_mode = VOIDmode, tmode;
 

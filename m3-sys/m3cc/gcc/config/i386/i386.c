@@ -1,5 +1,5 @@
 /* Subroutines for insn-output.c for Intel X86.
-   Copyright (C) 1988, 1992, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1988, 1992, 1994, 1995, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -16,7 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with GNU CC; see the file COPYING.  If not, write to
 the Free Software Foundation, 59 Temple Place - Suite 330,
-Boston, MA 02111-1307, USA.  */
+Boston, MA 02111-1307, USA. */
 
 #include <stdio.h>
 #include <setjmp.h>
@@ -33,6 +33,7 @@ Boston, MA 02111-1307, USA.  */
 #include "insn-attr.h"
 #include "tree.h"
 #include "flags.h"
+#include "except.h"
 #include "function.h"
 
 #ifdef EXTRA_CONSTRAINT
@@ -43,6 +44,46 @@ Boston, MA 02111-1307, USA.  */
 /* The previous line used to be #error, but some compilers barf
    even if the conditional was untrue.  */
 #endif
+
+enum reg_mem			/* Type of an operand for ix86_{binary,unary}_operator_ok */
+{
+  reg_p,
+  mem_p,
+  imm_p
+};
+
+/* Processor costs (relative to an add) */
+struct processor_costs i386_cost = {	/* 386 specific costs */
+  1,					/* cost of an add instruction (2 cycles) */
+  1,					/* cost of a lea instruction */
+  3,					/* variable shift costs */
+  2,					/* constant shift costs */
+  6,					/* cost of starting a multiply */
+  1,					/* cost of multiply per each bit set */
+  23					/* cost of a divide/mod */
+};
+
+struct processor_costs i486_cost = {	/* 486 specific costs */
+  1,					/* cost of an add instruction */
+  1,					/* cost of a lea instruction */
+  3,					/* variable shift costs */
+  2,					/* constant shift costs */
+  12,					/* cost of starting a multiply */
+  1,					/* cost of multiply per each bit set */
+  40					/* cost of a divide/mod */
+};
+
+struct processor_costs pentium_cost = {
+  1,					/* cost of an add instruction */
+  1,					/* cost of a lea instruction */
+  3,					/* variable shift costs */
+  1,					/* constant shift costs */
+  12,					/* cost of starting a multiply */
+  1,					/* cost of multiply per each bit set */
+  25					/* cost of a divide/mod */
+};
+
+struct processor_costs *ix86_cost = &pentium_cost;
 
 #define AT_BP(mode) (gen_rtx (MEM, (mode), frame_pointer_rtx))
 
@@ -80,6 +121,16 @@ struct rtx_def *i386_compare_op0 = NULL_RTX;
 struct rtx_def *i386_compare_op1 = NULL_RTX;
 struct rtx_def *(*i386_compare_gen)(), *(*i386_compare_gen_eq)();
 
+/* which cpu are we scheduling for */
+enum processor_type ix86_cpu;
+
+/* which instruction set architecture to use.  */
+int ix86_isa;
+
+/* Strings to hold which cpu and instruction set architecture  to use.  */
+char *ix86_cpu_string;		/* for -mcpu=<xxx> */
+char *ix86_isa_string;		/* for -misa=<xxx> */
+
 /* Register allocation order */
 char *i386_reg_alloc_order;
 static char regs_allocated[FIRST_PSEUDO_REGISTER];
@@ -97,7 +148,6 @@ int i386_align_loops;				/* power of two alignment for loops */
 int i386_align_jumps;				/* power of two alignment for non-loop jumps */
 int i386_align_funcs;				/* power of two alignment for functions */
 
-
 /* Sometimes certain combinations of command options do not make
    sense on a particular target machine.  You can define a macro
    `OVERRIDE_OPTIONS' to take account of this.  This macro, if
@@ -110,9 +160,27 @@ int i386_align_funcs;				/* power of two alignment for functions */
 void
 override_options ()
 {
-  int ch, i, regno;
+  int ch, i, j, regno;
   char *p;
   int def_align;
+
+  static struct ptt
+    {
+      char *name;		/* Canonical processor name.  */
+      enum processor_type processor; /* Processor type enum value.  */
+      struct processor_costs *cost; /* Processor costs */
+      int target_enable;	/* Target flags to enable.  */
+      int target_disable;	/* Target flags to disable.  */
+    } processor_target_table[]
+      = {{PROCESSOR_COMMON_STRING, PROCESSOR_COMMON, &i486_cost, 0, 0},
+	   {PROCESSOR_I386_STRING, PROCESSOR_I386, &i386_cost, 0, 0},
+	   {PROCESSOR_I486_STRING, PROCESSOR_I486, &i486_cost, 0, 0},
+	   {PROCESSOR_I586_STRING, PROCESSOR_PENTIUM, &pentium_cost, 0, 0},
+	   {PROCESSOR_PENTIUM_STRING, PROCESSOR_PENTIUM, &pentium_cost, 0, 0},
+	   {PROCESSOR_I686_STRING, PROCESSOR_PENTIUMPRO, &pentium_cost, 0, 0},
+	   {PROCESSOR_PENTIUMPRO_STRING, PROCESSOR_PENTIUMPRO, &pentium_cost, 0, 0}};
+
+  int ptt_size = sizeof (processor_target_table) / sizeof (struct ptt);
 
 #ifdef SUBTARGET_OVERRIDE_OPTIONS
   SUBTARGET_OVERRIDE_OPTIONS;
@@ -141,6 +209,45 @@ override_options ()
 
 	  regs_allocated[regno] = 1;
 	}
+    }
+
+  /* Get the architectural level.  */
+  if (ix86_isa_string == (char *)0)
+      ix86_isa_string = PROCESSOR_DEFAULT_STRING;
+
+  for (i = 0; i < ptt_size; i++)
+    if (! strcmp (ix86_isa_string, processor_target_table[i].name))
+      {
+	ix86_isa = processor_target_table[i].processor;
+	if (ix86_cpu_string == (char *)0)
+	  ix86_cpu_string = processor_target_table[i].name;
+	break;
+      }
+
+  if (i == ptt_size)
+    {
+      error ("bad value (%s) for -misa= switch", ix86_isa_string);
+      ix86_isa_string = PROCESSOR_DEFAULT_STRING;
+      ix86_isa = PROCESSOR_DEFAULT;
+    }
+
+  for (j = 0; j < ptt_size; j++)
+    if (! strcmp (ix86_cpu_string, processor_target_table[j].name))
+      {
+	ix86_cpu = processor_target_table[j].processor;
+	if (i > j && (int)ix86_isa >= (int)PROCESSOR_PENTIUMPRO)
+	  error ("-mcpu=%s does not support -march=%s", ix86_cpu_string, ix86_isa_string);
+
+	target_flags |= processor_target_table[j].target_enable;
+	target_flags &= ~processor_target_table[j].target_disable;
+	break;
+      }
+
+  if (j == ptt_size)
+    {
+      error ("bad value (%s) for -mcpu= switch", ix86_cpu_string);
+      ix86_cpu_string = PROCESSOR_DEFAULT_STRING;
+      ix86_cpu = PROCESSOR_DEFAULT;
     }
 
   /* Validate -mregparm= value */
@@ -185,6 +292,13 @@ override_options ()
     }
   else
     i386_align_funcs = def_align;
+
+  if (TARGET_OMIT_LEAF_FRAME_POINTER)	/* keep nonleaf frame pointers */
+    flag_omit_frame_pointer = 1;
+
+  /* pic references don't explicitly mention pic_offset_table_rtx */
+  if (flag_pic)
+    target_flags &= ~MASK_SCHEDULE_PROLOGUE;
 }
 
 /* A C statement (sans semicolon) to choose the order in which to
@@ -231,54 +345,26 @@ order_regs_for_local_alloc ()
 	}
     }
 
-  /* If users did not specify a register allocation order, favor eax
-     normally except if DImode variables are used, in which case
-     favor edx before eax, which seems to cause less spill register
-     not found messages.  */
+  /* If users did not specify a register allocation order, use natural order */
   else
     {
-      rtx insn;
-
       for (i = 0; i < FIRST_PSEUDO_REGISTER; i++)
 	reg_alloc_order[i] = i;
-
-      if (optimize)
-	{
-	  int use_dca = FALSE;
-
-	  for (insn = get_insns (); insn; insn = NEXT_INSN (insn))
-	    {
-	      if (GET_CODE (insn) == INSN)
-		{
-		  rtx set = NULL_RTX;
-		  rtx pattern = PATTERN (insn);
-
-		  if (GET_CODE (pattern) == SET)
-		    set = pattern;
-
-		  else if ((GET_CODE (pattern) == PARALLEL
-			    || GET_CODE (pattern) == SEQUENCE)
-			   && GET_CODE (XVECEXP (pattern, 0, 0)) == SET)
-		    set = XVECEXP (pattern, 0, 0);
-
-		  if (set && GET_MODE (SET_SRC (set)) == DImode)
-		    {
-		      use_dca = TRUE;
-		      break;
-		    }
-		}
-	    }
-
-	  if (use_dca)
-	    {
-	      reg_alloc_order[0] = 1;	/* edx */
-	      reg_alloc_order[1] = 2;	/* ecx */
-	      reg_alloc_order[2] = 0;	/* eax */
-	    }
-	}
     }
 }
 
+
+void
+optimization_options (level)
+     int level;
+{
+  /* For -O2, and beyond, turn off -fschedule-insns by default.  It tends to
+     make the problem with not enough registers even worse */
+#ifdef INSN_SCHEDULING
+  if (level > 1)
+    flag_schedule_insns = 0;
+#endif
+}
 
 /* Return nonzero if IDENTIFIER with arguments ARGS is a valid machine specific
    attribute for DECL.  The attributes in ATTRIBUTES have previously been
@@ -380,31 +466,30 @@ i386_return_pops_args (fundecl, funtype, size)
      tree fundecl;
      tree funtype;
      int size;
-{
+{ 
   int rtd = TARGET_RTD;
 
   if (TREE_CODE (funtype) == IDENTIFIER_NODE)
     return 0;
 
-  /* Cdecl functions override -mrtd, and never pop the stack */
-  if (lookup_attribute ("cdecl", TYPE_ATTRIBUTES (funtype)))
+    /* Cdecl functions override -mrtd, and never pop the stack */
+  if (!lookup_attribute ("cdecl", TYPE_ATTRIBUTES (funtype))) {
+  
+    /* Stdcall functions will pop the stack if not variable args */
+    if (lookup_attribute ("stdcall", TYPE_ATTRIBUTES (funtype)))
+      rtd = 1;
+  
+    if (rtd
+        && (TYPE_ARG_TYPES (funtype) == NULL_TREE
+	    || (TREE_VALUE (tree_last (TYPE_ARG_TYPES (funtype))) == void_type_node)))
+      return size;
+  }
+  
+  /* Lose any fake structure return argument */
+  if (aggregate_value_p (TREE_TYPE (funtype)))
+    return GET_MODE_SIZE (Pmode);
+  
     return 0;
-
-  /* Stdcall functions will pop the stack if not variable args */
-  if (lookup_attribute ("stdcall", TYPE_ATTRIBUTES (funtype)))
-    rtd = 1;
-
-  if (rtd)
-    {
-      if (TYPE_ARG_TYPES (funtype) == NULL_TREE
-	  || (TREE_VALUE (tree_last (TYPE_ARG_TYPES (funtype))) == void_type_node))
-	return size;
-
-      if (aggregate_value_p (TREE_TYPE (funtype)))
-	return GET_MODE_SIZE (Pmode);
-    }
-
-  return 0;
 }
 
 
@@ -1289,7 +1374,7 @@ standard_80387_constant_p (x)
 
   set_float_handler (handler);
   REAL_VALUE_FROM_CONST_DOUBLE (d, x);
-  is0 = REAL_VALUES_EQUAL (d, dconst0);
+  is0 = REAL_VALUES_EQUAL (d, dconst0) && !REAL_VALUE_MINUS_ZERO (d);
   is1 = REAL_VALUES_EQUAL (d, dconst1);
   set_float_handler (NULL_PTR);
 
@@ -1447,9 +1532,182 @@ symbolic_reference_mentioned_p (op)
   return 0;
 }
 
-/* This function generates the assembly code for function entry.
-   FILE is an stdio stream to output the code to.
-   SIZE is an int: how many units of temporary storage to allocate. */
+/* Attempt to expand a binary operator.  Make the expansion closer to the
+   actual machine, then just general_operand, which will allow 3 separate
+   memory references (one output, two input) in a single insn.  Return
+   whether the insn fails, or succeeds.  */
+
+int
+ix86_expand_binary_operator (code, mode, operands)
+     enum rtx_code code;
+     enum machine_mode mode;
+     rtx operands[];
+{
+  rtx insn;
+  int i;
+  int modified;
+
+  /* Recognize <var1> = <value> <op> <var1> for commutative operators */
+  if (GET_RTX_CLASS (code) == 'c'
+      && (rtx_equal_p (operands[0], operands[2])
+	  || immediate_operand (operands[1], mode)))
+    {
+      rtx temp = operands[1];
+      operands[1] = operands[2];
+      operands[2] = temp;
+    }
+
+  /* If optimizing, copy to regs to improve CSE */
+  if (TARGET_PSEUDO && optimize && ((reload_in_progress | reload_completed) == 0))
+    {
+      if (GET_CODE (operands[1]) == MEM && !rtx_equal_p (operands[0], operands[1]))
+	operands[1] = force_reg (GET_MODE (operands[1]), operands[1]);
+
+      if (GET_CODE (operands[2]) == MEM)
+	operands[2] = force_reg (GET_MODE (operands[2]), operands[2]);
+
+      if (GET_CODE (operands[1]) == CONST_INT && code == MINUS)
+	{
+	  rtx temp = gen_reg_rtx (GET_MODE (operands[0]));
+	  emit_move_insn (temp, operands[1]);
+	  operands[1] = temp;
+	  return TRUE;
+	}	  
+    }
+
+  if (!ix86_binary_operator_ok (code, mode, operands))
+    {
+      /* If not optimizing, try to make a valid insn (optimize code previously did
+	 this above to improve chances of CSE) */
+
+      if ((!TARGET_PSEUDO || !optimize)
+	  && ((reload_in_progress | reload_completed) == 0)
+	  && (GET_CODE (operands[1]) == MEM || GET_CODE (operands[2]) == MEM))
+	{
+	  modified = FALSE;
+	  if (GET_CODE (operands[1]) == MEM && !rtx_equal_p (operands[0], operands[1]))
+	    {
+	      operands[1] = force_reg (GET_MODE (operands[1]), operands[1]);
+	      modified = TRUE;
+	    }
+
+	  if (GET_CODE (operands[2]) == MEM)
+	    {
+	      operands[2] = force_reg (GET_MODE (operands[2]), operands[2]);
+	      modified = TRUE;
+	    }
+
+	  if (GET_CODE (operands[1]) == CONST_INT && code == MINUS)
+	    {
+	      rtx temp = gen_reg_rtx (GET_MODE (operands[0]));
+	      emit_move_insn (temp, operands[1]);
+	      operands[1] = temp;
+	      return TRUE;
+	    }	  
+
+	  if (modified && !ix86_binary_operator_ok (code, mode, operands))
+	    return FALSE;
+	}
+      else
+	return FALSE;
+    }
+
+  return TRUE;
+}
+
+/* Return TRUE or FALSE depending on whether the binary operator meets the
+   appropriate constraints.  */
+
+int
+ix86_binary_operator_ok (code, mode, operands)
+     enum rtx_code code;
+     enum machine_mode mode;
+     rtx operands[3];
+{
+  return (GET_CODE (operands[1]) != MEM || GET_CODE (operands[2]) != MEM)
+    && (GET_CODE (operands[1]) != CONST_INT || GET_RTX_CLASS (code) == 'c');
+}
+
+/* Attempt to expand a unary operator.  Make the expansion closer to the
+   actual machine, then just general_operand, which will allow 2 separate
+   memory references (one output, one input) in a single insn.  Return
+   whether the insn fails, or succeeds.  */
+
+int
+ix86_expand_unary_operator (code, mode, operands)
+     enum rtx_code code;
+     enum machine_mode mode;
+     rtx operands[];
+{
+  rtx insn;
+
+  /* If optimizing, copy to regs to improve CSE */
+  if (TARGET_PSEUDO
+      && optimize
+      && ((reload_in_progress | reload_completed) == 0)
+      && GET_CODE (operands[1]) == MEM)
+    {
+      operands[1] = force_reg (GET_MODE (operands[1]), operands[1]);
+    }
+
+  if (!ix86_unary_operator_ok (code, mode, operands))
+    {
+      if ((!TARGET_PSEUDO || !optimize)
+	  && ((reload_in_progress | reload_completed) == 0)
+	  && GET_CODE (operands[1]) == MEM)
+	{
+	  operands[1] = force_reg (GET_MODE (operands[1]), operands[1]);
+	  if (!ix86_unary_operator_ok (code, mode, operands))
+	    return FALSE;
+	}
+      else
+	return FALSE;
+    }
+
+  return TRUE;
+}
+
+/* Return TRUE or FALSE depending on whether the unary operator meets the
+   appropriate constraints.  */
+
+int
+ix86_unary_operator_ok (code, mode, operands)
+     enum rtx_code code;
+     enum machine_mode mode;
+     rtx operands[2];
+{
+  return TRUE;
+}
+
+
+
+static rtx pic_label_rtx;
+
+/* This function generates code for -fpic that loads %ebx with
+   with the return address of the caller and then returns.  */
+void
+asm_output_function_prefix (file, name)
+    FILE * file;
+    char * name;
+{
+  rtx xops[2];
+  int pic_reg_used = flag_pic && (current_function_uses_pic_offset_table
+				  || current_function_uses_const_pool);
+  xops[0] = pic_offset_table_rtx;
+  xops[1] = stack_pointer_rtx;
+
+  /* deep branch prediction favors having a return for every call */
+  if (pic_reg_used && TARGET_DEEP_BRANCH_PREDICTION)
+    {
+      if (pic_label_rtx == 0)
+      pic_label_rtx = (rtx) gen_label_rtx ();
+      ASM_OUTPUT_INTERNAL_LABEL (file, "L", CODE_LABEL_NUMBER (pic_label_rtx));
+      output_asm_insn ("movl (%1),%0", xops);
+      output_asm_insn ("ret", xops);
+    }
+}
+
+/* Set up the stack and frame (if desired) for the function.  */
 
 void
 function_prologue (file, size)
@@ -1461,18 +1719,45 @@ function_prologue (file, size)
   rtx xops[4];
   int pic_reg_used = flag_pic && (current_function_uses_pic_offset_table
 				  || current_function_uses_const_pool);
+  long tsize = get_frame_size ();
 
+  /* pic references don't explicitly mention pic_offset_table_rtx */
+  if (TARGET_SCHEDULE_PROLOGUE)
+    return;
+  
   xops[0] = stack_pointer_rtx;
   xops[1] = frame_pointer_rtx;
-  xops[2] = GEN_INT (size);
+  xops[2] = GEN_INT (tsize);
+
+
   if (frame_pointer_needed)
     {
-      output_asm_insn ("push%L1 %1", xops);
-      output_asm_insn (AS2 (mov%L0,%0,%1), xops);
+      output_asm_insn ("push%L1 %1", xops); 
+      output_asm_insn (AS2 (mov%L0,%0,%1), xops); 
     }
 
-  if (size)
+/* CYGNUS LOCAL sac/win32 */
+#if defined(CHECK_STACK_LIMIT) 
+  if (tsize)
+    {
+      if (tsize < CHECK_STACK_LIMIT)
+	output_asm_insn (AS2 (sub%L0,%2,%0), xops);
+      else 
+	{
+	xops[3] = gen_rtx (REG, SImode, 0);
+	output_asm_insn (AS2 (mov%L0,%2,%3), xops);
+      
+	xops[3] = gen_rtx (SYMBOL_REF, Pmode, "_alloca");
+	output_asm_insn (AS1 (call,%P3), xops);
+      }
+    }
+#else
+/* END CYGNUS LOCAL */
+  if (tsize)
     output_asm_insn (AS2 (sub%L0,%2,%0), xops);
+/* CYGNUS LOCAL sac/win32 */
+#endif
+/* END CYGNUS LOCAL */
 
   /* Note If use enter it is NOT reversed args.
      This one is not reversed from intel!!
@@ -1492,30 +1777,161 @@ function_prologue (file, size)
 	output_asm_insn ("push%L0 %0", xops);
       }
 
-  if (pic_reg_used)
+  if (pic_reg_used && TARGET_DEEP_BRANCH_PREDICTION)
     {
       xops[0] = pic_offset_table_rtx;
-      xops[1] = (rtx) gen_label_rtx ();
+      if (pic_label_rtx == 0)
+	pic_label_rtx = (rtx) gen_label_rtx ();
+      xops[1] = pic_label_rtx;
 
+      output_asm_insn (AS1 (call,%P1), xops);
+      output_asm_insn ("addl $_GLOBAL_OFFSET_TABLE_,%0", xops);
+    }
+  else if (pic_reg_used)
+    {
+    xops[0] = pic_offset_table_rtx;
+    xops[1] = (rtx) gen_label_rtx ();
+ 
       output_asm_insn (AS1 (call,%P1), xops);
       ASM_OUTPUT_INTERNAL_LABEL (file, "L", CODE_LABEL_NUMBER (xops[1]));
       output_asm_insn (AS1 (pop%L0,%0), xops);
       output_asm_insn ("addl $_GLOBAL_OFFSET_TABLE_+[.-%P1],%0", xops);
+  } 
+}
+
+/* This function generates the assembly code for function entry.
+   FILE is an stdio stream to output the code to.
+   SIZE is an int: how many units of temporary storage to allocate. */
+
+void
+ix86_expand_prologue ()
+{
+  register int regno;
+  int limit;
+  rtx xops[4];
+  int pic_reg_used = flag_pic && (current_function_uses_pic_offset_table
+				  || current_function_uses_const_pool);
+  long tsize = get_frame_size ();
+
+  if (!TARGET_SCHEDULE_PROLOGUE)
+    return;
+  
+  xops[0] = stack_pointer_rtx;
+  xops[1] = frame_pointer_rtx;
+  xops[2] = GEN_INT (tsize);
+
+
+  if (frame_pointer_needed)
+    {
+      emit_insn (gen_rtx (SET, 0,
+			  gen_rtx (MEM, SImode,
+				   gen_rtx (PRE_DEC, SImode, stack_pointer_rtx)),
+			  frame_pointer_rtx));
+      emit_move_insn (xops[1], xops[0]);
     }
+
+/* CYGNUS LOCAL sac/win32 */
+#if defined(CHECK_STACK_LIMIT)
+  if (tsize)
+    {
+      if (tsize < CHECK_STACK_LIMIT)
+	/* FIXME: Do we need addsi3 of -ve here?  */
+	emit_insn (gen_subsi3 (xops[0], xops[0], xops[2]));
+/*	output_asm_insn (AS2 (sub%L0,%2,%0), xops);*/
+      else 
+	{
+	  xops[3] = gen_rtx (REG, SImode, 0);
+/*	  output_asm_insn (AS2 (mov%L0,%2,%3), xops);*/
+	  emit_move_insn (xops[3], xops[2]);
+	  xops[3] = gen_rtx (MEM, FUNCTION_MODE,
+			     gen_rtx (SYMBOL_REF, Pmode, "_alloca"));
+	  emit_call_insn (gen_rtx (CALL, VOIDmode,
+				   xops[3], const0_rtx));
+/*	  output_asm_insn (AS1 (call,%P3), xops);*/
+	}
+    }
+#else
+/* END CYGNUS LOCAL */
+  if (tsize)
+    emit_insn (gen_rtx (SET, SImode,
+			  xops[0],
+			  gen_rtx (MINUS, SImode,
+				   xops[0],
+				   xops[2])));
+
+/* CYGNUS LOCAL sac/win32 */
+#endif
+/* END CYGNUS LOCAL */
+
+  /* Note If use enter it is NOT reversed args.
+     This one is not reversed from intel!!
+     I think enter is slower.  Also sdb doesn't like it.
+     But if you want it the code is:
+     {
+     xops[3] = const0_rtx;
+     output_asm_insn ("enter %2,%3", xops);
+     }
+     */
+  limit = (frame_pointer_needed ? FRAME_POINTER_REGNUM : STACK_POINTER_REGNUM);
+  for (regno = limit - 1; regno >= 0; regno--)
+    if ((regs_ever_live[regno] && ! call_used_regs[regno])
+	|| (regno == PIC_OFFSET_TABLE_REGNUM && pic_reg_used))
+      {
+	xops[0] = gen_rtx (REG, SImode, regno);
+	emit_insn (gen_rtx (SET, 0,
+			    gen_rtx (MEM, SImode,
+				     gen_rtx (PRE_DEC, SImode, stack_pointer_rtx)),
+			  xops[0]));
+      }
+
+  if (pic_reg_used && TARGET_DEEP_BRANCH_PREDICTION)
+    {
+      xops[0] = pic_offset_table_rtx;
+      if (pic_label_rtx == 0)
+	pic_label_rtx = (rtx) gen_label_rtx ();
+      xops[1] = pic_label_rtx;
+
+      emit_insn (gen_prologue_get_pc (xops[0], gen_rtx (CONST_INT, Pmode, CODE_LABEL_NUMBER(xops[1]))));
+      emit_insn (gen_prologue_set_got (xops[0], 
+		 gen_rtx (SYMBOL_REF, Pmode, "$_GLOBAL_OFFSET_TABLE_"), 
+		 gen_rtx (CONST_INT, Pmode, CODE_LABEL_NUMBER(xops[1]))));
+    }
+  else if (pic_reg_used)
+    {
+    xops[0] = pic_offset_table_rtx;
+    xops[1] = (rtx) gen_label_rtx ();
+ 
+      emit_insn (gen_prologue_get_pc (xops[0], gen_rtx (CONST_INT, Pmode, CODE_LABEL_NUMBER(xops[1]))));
+      emit_insn (gen_pop (xops[0]));
+      emit_insn (gen_prologue_set_got (xops[0], 
+		 gen_rtx (SYMBOL_REF, Pmode, "$_GLOBAL_OFFSET_TABLE_"), 
+		 gen_rtx (CONST_INT, Pmode, CODE_LABEL_NUMBER (xops[1]))));
+  } 
+}
+
+/* Restore function stack, frame, and registers. */ 
+
+void
+function_epilogue (file, size)
+     FILE *file;
+     int size;
+{
 }
 
 /* Return 1 if it is appropriate to emit `ret' instructions in the
    body of a function.  Do this only if the epilogue is simple, needing a
    couple of insns.  Prior to reloading, we can't tell how many registers
-   must be saved, so return 0 then.
+   must be saved, so return 0 then.  Return 0 if there is no frame 
+   marker to de-allocate.
 
    If NON_SAVING_SETJMP is defined and true, then it is not possible
    for the epilogue to be simple, so return 0.  This is a special case
-   since NON_SAVING_SETJMP will not cause regs_ever_live to change until
-   final, but jump_optimize may need to know sooner if a `return' is OK.  */
+   since NON_SAVING_SETJMP will not cause regs_ever_live to change
+   until final, but jump_optimize may need to know sooner if a
+   `return' is OK.  */
 
 int
-simple_386_epilogue ()
+ix86_can_use_return_insn_p ()
 {
   int regno;
   int nregs = 0;
@@ -1546,9 +1962,7 @@ simple_386_epilogue ()
    SIZE is an int: how many units of temporary storage to deallocate. */
 
 void
-function_epilogue (file, size)
-     FILE *file;
-     int size;
+ix86_expand_epilogue ()
 {
   register int regno;
   register int nregs, limit;
@@ -1556,6 +1970,7 @@ function_epilogue (file, size)
   rtx xops[3];
   int pic_reg_used = flag_pic && (current_function_uses_pic_offset_table
 				  || current_function_uses_const_pool);
+  long tsize = get_frame_size ();
 
   /* Compute the number of registers to pop */
 
@@ -1579,7 +1994,7 @@ function_epilogue (file, size)
      leal, this is faster.  For now restore multiple registers the old
      way. */
 
-  offset = -size - (nregs * UNITS_PER_WORD);
+  offset = -tsize - (nregs * UNITS_PER_WORD);
 
   xops[2] = stack_pointer_rtx;
 
@@ -1587,8 +2002,9 @@ function_epilogue (file, size)
     {
       if (frame_pointer_needed)
 	{
-	  xops[0] = adj_offsettable_operand (AT_BP (Pmode), offset);
-	  output_asm_insn (AS2 (lea%L2,%0,%2), xops);
+	  xops[0] = adj_offsettable_operand (AT_BP (QImode), offset);
+	  emit_insn (gen_movsi_lea (xops[2], XEXP (xops[0], 0)));
+/*	  output_asm_insn (AS2 (lea%L2,%0,%2), xops);*/
 	}
 
       for (regno = 0; regno < limit; regno++)
@@ -1596,7 +2012,8 @@ function_epilogue (file, size)
 	    || (regno == PIC_OFFSET_TABLE_REGNUM && pic_reg_used))
 	  {
 	    xops[0] = gen_rtx (REG, SImode, regno);
-	    output_asm_insn ("pop%L0 %0", xops);
+	    emit_insn (gen_pop (xops[0]));
+/*	    output_asm_insn ("pop%L0 %0", xops);*/
 	  }
     }
   else
@@ -1606,30 +2023,47 @@ function_epilogue (file, size)
 	{
 	  xops[0] = gen_rtx (REG, SImode, regno);
 	  xops[1] = adj_offsettable_operand (AT_BP (Pmode), offset);
-	  output_asm_insn (AS2 (mov%L0,%1,%0), xops);
+	  emit_move_insn (xops[0], xops[1]);
+/*	  output_asm_insn (AS2 (mov%L0,%1,%0), xops);*/
 	  offset += 4;
 	}
 
   if (frame_pointer_needed)
     {
-      /* On i486, mov & pop is faster than "leave". */
+      /* If not an i386, mov & pop is faster than "leave". */
 
-      if (!TARGET_386)
+      if (TARGET_USE_LEAVE)
+	emit_insn (gen_leave());
+/*	output_asm_insn ("leave", xops);*/
+      else
 	{
 	  xops[0] = frame_pointer_rtx;
-	  output_asm_insn (AS2 (mov%L2,%0,%2), xops);
-	  output_asm_insn ("pop%L0 %0", xops);
+	  xops[1] = stack_pointer_rtx;
+	  emit_insn (gen_epilogue_set_stack_ptr());
+/*	  output_asm_insn (AS2 (mov%L2,%0,%2), xops);*/
+	  emit_insn (gen_pop (xops[0]));
+/*	  output_asm_insn ("pop%L0 %0", xops);*/
 	}
-      else
-	output_asm_insn ("leave", xops);
     }
-  else if (size)
+  else if (tsize)
     {
       /* If there is no frame pointer, we must still release the frame. */
 
-      xops[0] = GEN_INT (size);
-      output_asm_insn (AS2 (add%L2,%0,%2), xops);
+      xops[0] = GEN_INT (tsize);
+      emit_insn (gen_rtx (SET, SImode,
+			  xops[2],
+			  gen_rtx (PLUS, SImode,
+				   xops[2],
+				   xops[0])));
+/*      output_asm_insn (AS2 (add%L2,%0,%2), xops);*/
     }
+
+#ifdef FUNCTION_BLOCK_PROFILER_EXIT
+  if (profile_block_flag == 2)
+    {
+      FUNCTION_BLOCK_PROFILER_EXIT(file);
+    }
+#endif
 
   if (current_function_pops_args && current_function_args_size)
     {
@@ -1643,15 +2077,24 @@ function_epilogue (file, size)
 	{
 	  /* ??? Which register to use here? */
 	  xops[0] = gen_rtx (REG, SImode, 2);
-	  output_asm_insn ("pop%L0 %0", xops);
-	  output_asm_insn (AS2 (add%L2,%1,%2), xops);
-	  output_asm_insn ("jmp %*%0", xops);
+	  emit_insn (gen_pop (xops[0]));
+/*	  output_asm_insn ("pop%L0 %0", xops);*/
+	  emit_insn (gen_rtx (SET, SImode,
+			      xops[2],
+			      gen_rtx (PLUS, SImode,
+				       xops[1],
+				       xops[2])));
+/*	  output_asm_insn (AS2 (add%L2,%1,%2), xops);*/
+	  emit_jump_insn (xops[0]);
+/*	  output_asm_insn ("jmp %*%0", xops);*/
 	}
       else
-	  output_asm_insn ("ret %1", xops);
+	emit_jump_insn (gen_return_pop_internal (xops[1]));
+/*	  output_asm_insn ("ret %1", xops);*/
     }
   else
-    output_asm_insn ("ret", xops);
+/*    output_asm_insn ("ret", xops);*/
+ emit_jump_insn (gen_return_internal ());
 }
 
 
@@ -1847,30 +2290,41 @@ legitimate_address_p (mode, addr, strict)
 	}
     }
 
-  /* Validate displacement */
+  /* Validate displacement
+     Constant pool addresses must be handled special.  They are
+     considered legitimate addresses, but only if not used with regs.
+     When printed, the output routines know to print the reference with the
+     PIC reg, even though the PIC reg doesn't appear in the RTL. */
   if (disp)
     {
-      if (!CONSTANT_ADDRESS_P (disp))
+      if (GET_CODE (disp) == SYMBOL_REF
+	  && CONSTANT_POOL_ADDRESS_P (disp)
+	  && !base
+	  && !indx)
+	;
+
+      else if (!CONSTANT_ADDRESS_P (disp))
 	{
 	  ADDR_INVALID ("Displacement is not valid.\n", disp);
 	  return FALSE;
 	}
 
-      if (GET_CODE (disp) == CONST_DOUBLE)
+      else if (GET_CODE (disp) == CONST_DOUBLE)
 	{
 	  ADDR_INVALID ("Displacement is a const_double.\n", disp);
 	  return FALSE;
 	}
 
-      if (flag_pic && SYMBOLIC_CONST (disp) && base != pic_offset_table_rtx
-	  && (indx != pic_offset_table_rtx || scale != NULL_RTX))
+      else if (flag_pic && SYMBOLIC_CONST (disp)
+	       && base != pic_offset_table_rtx
+	       && (indx != pic_offset_table_rtx || scale != NULL_RTX))
 	{
 	  ADDR_INVALID ("Displacement is an invalid pic reference.\n", disp);
 	  return FALSE;
 	}
 
-      if (HALF_PIC_P () && HALF_PIC_ADDRESS_P (disp)
-	  && (base != NULL_RTX || indx != NULL_RTX))
+      else if (HALF_PIC_P () && HALF_PIC_ADDRESS_P (disp)
+	       && (base != NULL_RTX || indx != NULL_RTX))
 	{
 	  ADDR_INVALID ("Displacement is an invalid half-pic reference.\n", disp);
 	  return FALSE;
@@ -2281,15 +2735,61 @@ output_pic_addr_const (file, x, code)
     }
 }
 
+
+/* Append the correct conditional move suffix which corresponds to CODE */
+
+static void
+put_condition_code (code, file)
+    enum rtx_code code;
+    FILE * file;
+{
+  switch (code)
+    {
+      case NE: 
+	  if (cc_prev_status.flags & CC_Z_IN_NOT_C)
+	    fputs ("b", file);
+	  else
+	    fputs ("ne", file);
+	  return;
+      case EQ: 
+	  if (cc_prev_status.flags & CC_Z_IN_NOT_C)
+	    fputs ("ae", file);
+	  else
+	    fputs ("e", file);
+	  return;
+      case GE: 
+	  fputs ("ge", file); return;
+      case GT: 
+	  fputs ("g", file); return;
+      case LE: 
+	  fputs ("le", file); return;
+      case LT: 
+	  fputs ("l", file); return;
+      case GEU: 
+	  fputs ("ae", file); return;
+      case GTU: 
+	  fputs ("a", file); return;
+      case LEU: 
+	  fputs ("be", file); return;
+      case LTU: 
+	  fputs ("b", file); return;
+      default: output_operand_lossage ("Invalid %%C operand");
+    }
+}
+
 /* Meaning of CODE:
    f -- float insn (print a CONST_DOUBLE as a float rather than in hex).
    D,L,W,B,Q,S -- print the opcode suffix for specified size of operand.
+   C -- print opcode suffix for set/cmov insn.
+   N -- like C, but print reversed condition
    R -- print the prefix for register names.
    z -- print the opcode suffix for the size of the current operand.
    * -- print a star (in certain assembler syntax)
    w -- print the operand as if it's a "word" (HImode) even if it isn't.
    c -- don't print special prefixes before constant operands.
    J -- print the appropriate jump operand.
+   s -- print a shift double count, followed by the assemblers argument
+	delimiter.
 */
 
 void
@@ -2405,6 +2905,23 @@ print_operand (file, x, code)
 	    /* no matching branches for GT nor LE */
 	    }
 	  abort ();
+
+	case 's':
+	  if (GET_CODE (x) == CONST_INT || ! SHIFT_DOUBLE_OMITS_COUNT)
+	    {
+	      PRINT_OPERAND (file, x, 0);
+	      fputs (AS2C (,) + 1, file);
+	    }
+	  return;
+
+	  /* This is used by the conditional move instructions.  */
+	case 'C':
+	  put_condition_code (GET_CODE (x), file);
+	  return;
+	  /* like above, but reverse condition */
+	case 'N':
+	  put_condition_code (reverse_condition (GET_CODE (x)), file);
+	  return;
 
 	default:
 	  {
@@ -2645,6 +3162,16 @@ notice_update_cc (exp)
       /* Jumps do not alter the cc's.  */
       if (SET_DEST (exp) == pc_rtx)
 	return;
+#ifdef IS_STACK_MODE
+      /* Moving into a memory of stack_mode may have been moved
+         in between the use and set of cc0 by loop_spl(). So
+         old value of cc.status must be retained */
+      if(GET_CODE(SET_DEST(exp))==MEM 
+         && IS_STACK_MODE(GET_MODE(SET_DEST(exp))))
+        {
+          return;
+        }
+#endif
       /* Moving register or memory into a register:
 	 it doesn't alter the cc's, but it might invalidate
 	 the RTX's which we remember the cc's came from.
@@ -2667,9 +3194,11 @@ notice_update_cc (exp)
 	  && (REG_P (SET_SRC (exp))
 	      || GET_RTX_CLASS (GET_CODE (SET_SRC (exp))) == '<'))
 	{
-	  if (cc_status.value1 && GET_CODE (cc_status.value1) == MEM)
+	  if (cc_status.value1 && GET_CODE (cc_status.value1) == MEM
+	      || reg_mentioned_p (SET_DEST (exp), cc_status.value1))
 	    cc_status.value1 = 0;
-	  if (cc_status.value2 && GET_CODE (cc_status.value2) == MEM)
+	  if (cc_status.value2 && GET_CODE (cc_status.value2) == MEM
+	      || reg_mentioned_p (SET_DEST (exp), cc_status.value2))
 	    cc_status.value2 = 0;
 	  return;
 	}
@@ -3025,6 +3554,15 @@ output_float_compare (insn, operands)
   rtx body = XVECEXP (PATTERN (insn), 0, 0);
   int unordered_compare = GET_MODE (SET_SRC (body)) == CCFPEQmode;
 
+  rtx tmp;
+  if (! STACK_TOP_P (operands[0]))
+    {
+      tmp = operands[0];
+      operands[0] = operands[1];
+      operands[1] = tmp;
+      cc_status.flags |= CC_REVERSED;
+    }
+    
   if (! STACK_TOP_P (operands[0]))
     abort ();
 
@@ -3092,7 +3630,35 @@ output_fp_cc0_set (insn)
   output_asm_insn (AS1 (fnsts%W0,%0), xops);
 
   if (! TARGET_IEEE_FP)
-    return "sahf";
+    {
+      if (!(cc_status.flags & CC_REVERSED))
+        {
+          next = next_cc0_user (insn);
+        
+          if (GET_CODE (next) == JUMP_INSN
+              && GET_CODE (PATTERN (next)) == SET
+              && SET_DEST (PATTERN (next)) == pc_rtx
+              && GET_CODE (SET_SRC (PATTERN (next))) == IF_THEN_ELSE)
+            {
+              code = GET_CODE (XEXP (SET_SRC (PATTERN (next)), 0));
+            }
+          else if (GET_CODE (PATTERN (next)) == SET)
+            {
+              code = GET_CODE (SET_SRC (PATTERN (next)));
+            }
+          else
+            {
+              return "sahf";
+            }
+          if (code == GT || code == LT || code == EQ || code == NE
+              || code == LE || code == GE)
+            { /* We will test eax directly */
+              cc_status.flags |= CC_TEST_AX;
+              RET;
+            }
+        }
+      return "sahf";
+    }
 
   next = next_cc0_user (insn);
   if (next == NULL_RTX)
@@ -3242,4 +3808,918 @@ assign_386_stack_local (mode, n)
       = assign_stack_local (mode, GET_MODE_SIZE (mode), 0);
 
   return i386_stack_locals[(int) mode][n];
+}
+
+
+int is_mul(op,mode)
+    register rtx op;
+    enum machine_mode mode;
+{
+  return (GET_CODE (op) == MULT);
+}
+
+int is_div(op,mode)
+    register rtx op;
+    enum machine_mode mode;
+{
+  return (GET_CODE (op) == DIV);
+}
+
+
+#ifdef NOTYET
+/* Create a new copy of an rtx.
+   Recursively copies the operands of the rtx,
+   except for those few rtx codes that are sharable.
+   Doesn't share CONST  */
+
+rtx
+copy_all_rtx (orig)
+     register rtx orig;
+{
+  register rtx copy;
+  register int i, j;
+  register RTX_CODE code;
+  register char *format_ptr;
+
+  code = GET_CODE (orig);
+
+  switch (code)
+    {
+    case REG:
+    case QUEUED:
+    case CONST_INT:
+    case CONST_DOUBLE:
+    case SYMBOL_REF:
+    case CODE_LABEL:
+    case PC:
+    case CC0:
+    case SCRATCH:
+      /* SCRATCH must be shared because they represent distinct values. */
+      return orig;
+
+#if 0
+    case CONST:
+      /* CONST can be shared if it contains a SYMBOL_REF.  If it contains
+	 a LABEL_REF, it isn't sharable.  */
+      if (GET_CODE (XEXP (orig, 0)) == PLUS
+	  && GET_CODE (XEXP (XEXP (orig, 0), 0)) == SYMBOL_REF
+	  && GET_CODE (XEXP (XEXP (orig, 0), 1)) == CONST_INT)
+	return orig;
+      break;
+#endif
+      /* A MEM with a constant address is not sharable.  The problem is that
+	 the constant address may need to be reloaded.  If the mem is shared,
+	 then reloading one copy of this mem will cause all copies to appear
+	 to have been reloaded.  */
+    }
+
+  copy = rtx_alloc (code);
+  PUT_MODE (copy, GET_MODE (orig));
+  copy->in_struct = orig->in_struct;
+  copy->volatil = orig->volatil;
+  copy->unchanging = orig->unchanging;
+  copy->integrated = orig->integrated;
+  /* intel1 */
+  copy->is_spill_rtx = orig->is_spill_rtx;
+  
+  format_ptr = GET_RTX_FORMAT (GET_CODE (copy));
+
+  for (i = 0; i < GET_RTX_LENGTH (GET_CODE (copy)); i++)
+    {
+      switch (*format_ptr++)
+	{
+	case 'e':
+	  XEXP (copy, i) = XEXP (orig, i);
+	  if (XEXP (orig, i) != NULL)
+	    XEXP (copy, i) = copy_rtx (XEXP (orig, i));
+	  break;
+
+	case '0':
+	case 'u':
+	  XEXP (copy, i) = XEXP (orig, i);
+	  break;
+
+	case 'E':
+	case 'V':
+	  XVEC (copy, i) = XVEC (orig, i);
+	  if (XVEC (orig, i) != NULL)
+	    {
+	      XVEC (copy, i) = rtvec_alloc (XVECLEN (orig, i));
+	      for (j = 0; j < XVECLEN (copy, i); j++)
+		XVECEXP (copy, i, j) = copy_rtx (XVECEXP (orig, i, j));
+	    }
+	  break;
+
+	case 'w':
+	  XWINT (copy, i) = XWINT (orig, i);
+	  break;
+
+	case 'i':
+	  XINT (copy, i) = XINT (orig, i);
+	  break;
+
+	case 's':
+	case 'S':
+	  XSTR (copy, i) = XSTR (orig, i);
+	  break;
+
+	default:
+	  abort ();
+	}
+    }
+  return copy;
+}
+
+
+/* try to rewrite a memory address to make it valid */
+void 
+rewrite_address (mem_rtx)
+     rtx mem_rtx;
+{
+  rtx index_rtx, base_rtx, offset_rtx, scale_rtx, ret_rtx;
+  int scale = 1;
+  int offset_adjust = 0;
+  int was_only_offset = 0;
+  rtx mem_addr = XEXP (mem_rtx, 0);
+  char *storage = (char *) oballoc (0);
+  int in_struct = 0;
+  int is_spill_rtx = 0;
+
+  in_struct = MEM_IN_STRUCT_P (mem_rtx);
+  is_spill_rtx = RTX_IS_SPILL_P (mem_rtx);
+
+  if (GET_CODE (mem_addr) == PLUS &&
+      GET_CODE (XEXP (mem_addr, 1)) == PLUS &&
+      GET_CODE (XEXP (XEXP (mem_addr, 1), 0)) == REG)
+    {				/* this part is utilized by the combiner */
+      ret_rtx =
+	gen_rtx (PLUS, GET_MODE (mem_addr),
+		 gen_rtx (PLUS, GET_MODE (XEXP (mem_addr, 1)),
+			  XEXP (mem_addr, 0),
+			  XEXP (XEXP (mem_addr, 1), 0)),
+		 XEXP (XEXP (mem_addr, 1), 1));
+      if (memory_address_p (GET_MODE (mem_rtx), ret_rtx))
+	{
+	  XEXP (mem_rtx, 0) = ret_rtx;
+	  RTX_IS_SPILL_P (ret_rtx) = is_spill_rtx;
+	  return;
+	}
+      obfree (storage);
+    }
+
+  /* this part is utilized by loop.c */
+  /* If the address contains PLUS (reg,const) and this pattern is invalid
+     in this case - try to rewrite the address to make it valid  intel1
+  */
+  storage = (char *) oballoc (0);
+  index_rtx = base_rtx = offset_rtx = NULL;
+  /* find the base index and offset elements of the memory address */
+  if (GET_CODE (mem_addr) == PLUS)
+    {
+      if (GET_CODE (XEXP (mem_addr, 0)) == REG)
+	{
+	  if (GET_CODE (XEXP (mem_addr, 1)) == REG)
+	    {
+	      base_rtx = XEXP (mem_addr, 1);
+	      index_rtx = XEXP (mem_addr, 0);
+	    }
+	  else
+	    {
+	      base_rtx = XEXP (mem_addr, 0);
+	      offset_rtx = XEXP (mem_addr, 1);
+	    }
+	}
+      else if (GET_CODE (XEXP (mem_addr, 0)) == MULT)
+	{
+	  index_rtx = XEXP (mem_addr, 0);
+	  if (GET_CODE (XEXP (mem_addr, 1)) == REG)
+	    {
+	      base_rtx = XEXP (mem_addr, 1);
+	    }
+	  else
+	    {
+	      offset_rtx = XEXP (mem_addr, 1);
+	    }
+	}
+      else if (GET_CODE (XEXP (mem_addr, 0)) == PLUS)
+	{
+	  /* intel1 */
+	  if (GET_CODE (XEXP (XEXP (mem_addr, 0), 0)) == PLUS &&
+	      GET_CODE (XEXP (XEXP (XEXP (mem_addr, 0), 0), 0)) == MULT &&
+	      GET_CODE (XEXP (XEXP (XEXP (XEXP (mem_addr, 0), 0), 0), 0)) == REG &&
+	      GET_CODE (XEXP (XEXP (XEXP (XEXP (mem_addr, 0), 0), 0), 1)) == CONST_INT &&
+	      GET_CODE (XEXP (XEXP (XEXP (mem_addr, 0), 0), 1)) == CONST_INT &&
+	      GET_CODE (XEXP (XEXP (mem_addr, 0), 1)) == REG &&
+	      GET_CODE (XEXP (mem_addr, 1)) == SYMBOL_REF)
+	    {
+	      index_rtx = XEXP (XEXP (XEXP (mem_addr, 0), 0), 0);
+	      offset_rtx = XEXP (mem_addr, 1);
+	      base_rtx = XEXP (XEXP (mem_addr, 0), 1);
+	      offset_adjust = INTVAL (XEXP (XEXP (XEXP (mem_addr, 0), 0), 1));
+	    }
+	  else
+	    {
+	      offset_rtx = XEXP (mem_addr, 1);
+	      index_rtx = XEXP (XEXP (mem_addr, 0), 0);
+	      base_rtx = XEXP (XEXP (mem_addr, 0), 1);
+	    }
+	}
+      else if (GET_CODE (XEXP (mem_addr, 0)) == CONST_INT)
+	{
+	  was_only_offset = 1;
+	  index_rtx = NULL;
+	  base_rtx = NULL;
+	  offset_rtx = XEXP (mem_addr, 1);
+	  offset_adjust = INTVAL (XEXP (mem_addr, 0));
+	  if (offset_adjust == 0)
+	    {
+	      XEXP (mem_rtx, 0) = offset_rtx;
+	      RTX_IS_SPILL_P (XEXP (mem_rtx, 0)) = is_spill_rtx;
+	      return;
+	    }
+	}
+      else
+	{
+	  obfree (storage);
+	  return;
+	}
+    }
+  else if (GET_CODE (mem_addr) == MULT)
+    {
+      index_rtx = mem_addr;
+    }
+  else
+    {
+      obfree (storage);
+      return;
+    }
+  if (index_rtx && GET_CODE (index_rtx) == MULT)
+    {
+      if (GET_CODE (XEXP (index_rtx, 1)) != CONST_INT)
+	{
+	  obfree (storage);
+	  return;
+	}
+      scale_rtx = XEXP (index_rtx, 1);
+      scale = INTVAL (scale_rtx);
+      index_rtx = copy_all_rtx (XEXP (index_rtx, 0));
+    }
+  /* now find which of the elements are invalid and try to fix them */
+  if (index_rtx && GET_CODE (index_rtx) == CONST_INT && base_rtx == NULL)
+    {
+      offset_adjust = INTVAL (index_rtx) * scale;
+      if (offset_rtx && GET_CODE (offset_rtx) == CONST &&
+	  GET_CODE (XEXP (offset_rtx, 0)) == PLUS)
+	{
+	  if (GET_CODE (XEXP (XEXP (offset_rtx, 0), 0)) == SYMBOL_REF &&
+	      GET_CODE (XEXP (XEXP (offset_rtx, 0), 1)) == CONST_INT)
+	    {
+	      offset_rtx = copy_all_rtx (offset_rtx);
+	      XEXP (XEXP (offset_rtx, 0), 1) =
+		gen_rtx (CONST_INT, 0, INTVAL (XEXP (XEXP (offset_rtx, 0), 1)) + offset_adjust);
+	      if (!CONSTANT_P (offset_rtx))
+		{
+		  obfree (storage);
+		  return;
+		}
+	    }
+	}
+      else if (offset_rtx && GET_CODE (offset_rtx) == SYMBOL_REF)
+	{
+	  offset_rtx =
+	    gen_rtx (CONST, GET_MODE (offset_rtx),
+		     gen_rtx (PLUS, GET_MODE (offset_rtx),
+			      offset_rtx,
+			      gen_rtx (CONST_INT, 0, offset_adjust)));
+	  if (!CONSTANT_P (offset_rtx))
+	    {
+	      obfree (storage);
+	      return;
+	    }
+	}
+      else if (offset_rtx && GET_CODE (offset_rtx) == CONST_INT)
+	{
+	  offset_rtx = gen_rtx (CONST_INT, 0, INTVAL (offset_rtx) + offset_adjust);
+	}
+      else if (!offset_rtx)
+	{
+	  offset_rtx = gen_rtx (CONST_INT, 0, 0);
+	}
+      RTX_IS_SPILL_P (XEXP (mem_rtx, 0)) = is_spill_rtx;
+      XEXP (mem_rtx, 0) = offset_rtx;
+      return;
+    }
+  if (base_rtx && GET_CODE (base_rtx) == PLUS &&
+      GET_CODE (XEXP (base_rtx, 0)) == REG &&
+      GET_CODE (XEXP (base_rtx, 1)) == CONST_INT)
+    {
+      offset_adjust += INTVAL (XEXP (base_rtx, 1));
+      base_rtx = copy_all_rtx (XEXP (base_rtx, 0));
+    }
+  else if (base_rtx && GET_CODE (base_rtx) == CONST_INT)
+    {
+      offset_adjust += INTVAL (base_rtx);
+      base_rtx = NULL;
+    }
+  if (index_rtx && GET_CODE (index_rtx) == PLUS &&
+      GET_CODE (XEXP (index_rtx, 0)) == REG &&
+      GET_CODE (XEXP (index_rtx, 1)) == CONST_INT)
+    {
+      offset_adjust += INTVAL (XEXP (index_rtx, 1)) * scale;
+      index_rtx = copy_all_rtx (XEXP (index_rtx, 0));
+    }
+  if (index_rtx)
+    {
+      if (!LEGITIMATE_INDEX_P (index_rtx)
+      && !(index_rtx == stack_pointer_rtx && scale == 1 && base_rtx == NULL))
+	{
+	  obfree (storage);
+	  return;
+	}
+    }
+  if (base_rtx)
+    {
+      if (!LEGITIMATE_INDEX_P (base_rtx) && GET_CODE (base_rtx) != REG)
+	{
+	  obfree (storage);
+	  return;
+	}
+    }
+  if (offset_adjust != 0)
+    {
+      if (offset_rtx)
+	{
+	  if (GET_CODE (offset_rtx) == CONST &&
+	      GET_CODE (XEXP (offset_rtx, 0)) == PLUS)
+	    {
+	      if (GET_CODE (XEXP (XEXP (offset_rtx, 0), 0)) == SYMBOL_REF &&
+		  GET_CODE (XEXP (XEXP (offset_rtx, 0), 1)) == CONST_INT)
+		{
+		  offset_rtx = copy_all_rtx (offset_rtx);
+		  XEXP (XEXP (offset_rtx, 0), 1) =
+		    gen_rtx (CONST_INT, 0, INTVAL (XEXP (XEXP (offset_rtx, 0), 1)) + offset_adjust);
+		  if (!CONSTANT_P (offset_rtx))
+		    {
+		      obfree (storage);
+		      return;
+		    }
+		}
+	    }
+	  else if (GET_CODE (offset_rtx) == SYMBOL_REF)
+	    {
+	      offset_rtx =
+		gen_rtx (CONST, GET_MODE (offset_rtx),
+			 gen_rtx (PLUS, GET_MODE (offset_rtx),
+				  offset_rtx,
+				  gen_rtx (CONST_INT, 0, offset_adjust)));
+	      if (!CONSTANT_P (offset_rtx))
+		{
+		  obfree (storage);
+		  return;
+		}
+	    }
+	  else if (GET_CODE (offset_rtx) == CONST_INT)
+	    {
+	      offset_rtx = gen_rtx (CONST_INT, 0, INTVAL (offset_rtx) + offset_adjust);
+	    }
+	  else
+	    {
+	      obfree (storage);
+	      return;
+	    }
+	}
+      else
+	{
+	  offset_rtx = gen_rtx (CONST_INT, 0, offset_adjust);
+	}
+      if (index_rtx)
+	{
+	  if (base_rtx)
+	    {
+	      if (scale != 1)
+		{
+		  if (GET_CODE (offset_rtx) == CONST_INT &&
+		      INTVAL (offset_rtx) == 0)
+		    {
+		      ret_rtx = gen_rtx (PLUS, GET_MODE (base_rtx),
+			     gen_rtx (MULT, GET_MODE (index_rtx), index_rtx,
+				      scale_rtx),
+					 base_rtx);
+		    }
+		  else
+		    {
+		      ret_rtx = gen_rtx (PLUS, GET_MODE (offset_rtx),
+					 gen_rtx (PLUS, GET_MODE (base_rtx),
+			     gen_rtx (MULT, GET_MODE (index_rtx), index_rtx,
+				      scale_rtx),
+						  base_rtx),
+					 offset_rtx);
+		    }
+		}
+	      else
+		{
+		  if (GET_CODE (offset_rtx) == CONST_INT &&
+		      INTVAL (offset_rtx) == 0)
+		    {
+		      ret_rtx = gen_rtx (PLUS, GET_MODE (index_rtx), index_rtx, base_rtx);
+		    }
+		  else
+		    {
+		      ret_rtx = gen_rtx (PLUS, GET_MODE (offset_rtx),
+			     gen_rtx (PLUS, GET_MODE (index_rtx), index_rtx,
+				      base_rtx),
+					 offset_rtx);
+		    }
+		}
+	    }
+	  else
+	    {
+	      if (scale != 1)
+		{
+		  if (GET_CODE (offset_rtx) == CONST_INT &&
+		      INTVAL (offset_rtx) == 0)
+		    {
+		      ret_rtx = gen_rtx (MULT, GET_MODE (index_rtx), index_rtx, scale_rtx);
+		    }
+		  else
+		    {
+		      ret_rtx =
+			gen_rtx (PLUS, GET_MODE (offset_rtx),
+			     gen_rtx (MULT, GET_MODE (index_rtx), index_rtx,
+				      scale_rtx),
+				 offset_rtx);
+		    }
+		}
+	      else
+		{
+		  if (GET_CODE (offset_rtx) == CONST_INT &&
+		      INTVAL (offset_rtx) == 0)
+		    {
+		      ret_rtx = index_rtx;
+		    }
+		  else
+		    {
+		      ret_rtx = gen_rtx (PLUS, GET_MODE (index_rtx), index_rtx, offset_rtx);
+		    }
+		}
+	    }
+	}
+      else
+	{
+	  if (base_rtx)
+	    {
+	      if (GET_CODE (offset_rtx) == CONST_INT &&
+		  INTVAL (offset_rtx) == 0)
+		{
+		  ret_rtx = base_rtx;
+		}
+	      else
+		{
+		  ret_rtx = gen_rtx (PLUS, GET_MODE (base_rtx), base_rtx, offset_rtx);
+		}
+	    }
+	  else if (was_only_offset)
+	    {
+	      ret_rtx = offset_rtx;
+	    }
+	  else
+	    {
+	      obfree (storage);
+	      return;
+	    }
+	}
+      XEXP (mem_rtx, 0) = ret_rtx;
+      RTX_IS_SPILL_P (XEXP (mem_rtx, 0)) = is_spill_rtx;
+      return;
+    }
+  else
+    {
+      obfree (storage);
+      return;
+    }
+}
+#endif /* NOTYET */
+
+
+/* return 1 if the first insn to set cc before insn also sets the register
+   reg_rtx - otherwise return 0 */
+int
+last_to_set_cc (reg_rtx, insn)
+     rtx reg_rtx, insn;
+{
+  rtx prev_insn = PREV_INSN (insn);
+
+  while (prev_insn)
+    {
+      if (GET_CODE (prev_insn) == NOTE)
+	;
+
+      else if (GET_CODE (prev_insn) == INSN)
+	{
+	  if (GET_CODE (PATTERN (prev_insn)) != SET)
+	    return (0);
+
+	  if (rtx_equal_p (SET_DEST (PATTERN (prev_insn)), reg_rtx))
+	    {
+	      if (sets_condition_code (SET_SRC (PATTERN (prev_insn))))
+		return (1);
+
+	      return (0);
+	    }
+
+	  else if (!doesnt_set_condition_code (SET_SRC (PATTERN (prev_insn))))
+	    return (0);
+	}
+
+      else
+	return (0);
+
+      prev_insn = PREV_INSN (prev_insn);
+    }
+
+  return (0);
+}
+
+
+int
+doesnt_set_condition_code (pat)
+     rtx pat;
+{
+  switch (GET_CODE (pat))
+    {
+    case MEM:
+    case REG:
+      return (1);
+
+    default:
+      return (0);
+
+    }
+}
+
+
+int
+sets_condition_code (pat)
+     rtx pat;
+{
+  switch (GET_CODE (pat))
+    {
+    case PLUS:
+    case MINUS:
+    case AND:
+    case IOR:
+    case XOR:
+    case NOT:
+    case NEG:
+    case MULT:
+    case DIV:
+    case MOD:
+    case UDIV:
+    case UMOD:
+      return (1);
+
+    default:
+      return (0);
+
+    }
+}
+
+
+int
+str_immediate_operand (op, mode)
+     register rtx op;
+     enum machine_mode mode;
+{
+  if (GET_CODE (op) == CONST_INT && INTVAL (op) <= 32 && INTVAL (op) >= 0)
+    {
+      return (1);
+    }
+  return (0);
+}
+
+
+int
+is_fp_insn (insn)
+     rtx insn;
+{
+  if (GET_CODE (insn) == INSN && GET_CODE (PATTERN (insn)) == SET
+      && (GET_MODE (SET_DEST (PATTERN (insn))) == DFmode
+	  || GET_MODE (SET_DEST (PATTERN (insn))) == SFmode
+	  || GET_MODE (SET_DEST (PATTERN (insn))) == XFmode))
+    {
+      return (1);
+    }
+
+  return (0);
+}
+
+/*
+  Return 1 if the mode of the SET_DEST of insn is floating point
+  and it is not an fld or a move from memory to memory.
+  Otherwise return 0 */
+int
+is_fp_dest (insn)
+     rtx insn;
+{
+  if (GET_CODE (insn) == INSN && GET_CODE (PATTERN (insn)) == SET
+      && (GET_MODE (SET_DEST (PATTERN (insn))) == DFmode
+	  || GET_MODE (SET_DEST (PATTERN (insn))) == SFmode
+	  || GET_MODE (SET_DEST (PATTERN (insn))) == XFmode)
+      && GET_CODE (SET_DEST (PATTERN (insn))) == REG
+      && REGNO (SET_DEST (PATTERN (insn))) >= FIRST_FLOAT_REG
+      && GET_CODE (SET_SRC (insn)) != MEM)
+    {
+      return (1);
+    }
+
+  return (0);
+}
+
+/*
+  Return 1 if the mode of the SET_DEST floating point and is memory
+  and the source is a register.  
+*/
+int
+is_fp_store (insn)
+     rtx insn;
+{
+  if (GET_CODE (insn) == INSN && GET_CODE (PATTERN (insn)) == SET
+      && (GET_MODE (SET_DEST (PATTERN (insn))) == DFmode
+	  || GET_MODE (SET_DEST (PATTERN (insn))) == SFmode
+	  || GET_MODE (SET_DEST (PATTERN (insn))) == XFmode)
+      && GET_CODE (SET_DEST (PATTERN (insn))) == MEM
+      && GET_CODE (SET_SRC (PATTERN (insn))) == REG)
+    {
+      return (1);
+    }
+
+  return (0);
+}
+
+
+/*
+  Return 1 if dep_insn sets a register which insn uses as a base
+  or index to reference memory.
+  otherwise return 0 */
+
+int
+agi_dependent (insn, dep_insn)
+     rtx insn, dep_insn;
+{
+  if (GET_CODE (dep_insn) == INSN
+      && GET_CODE (PATTERN (dep_insn)) == SET
+      && GET_CODE (SET_DEST (PATTERN (dep_insn))) == REG)
+    {
+      return (reg_mentioned_in_mem (SET_DEST (PATTERN (dep_insn)), insn));
+    }
+
+  if (GET_CODE (dep_insn) == INSN && GET_CODE (PATTERN (dep_insn)) == SET
+      && GET_CODE (SET_DEST (PATTERN (dep_insn))) == MEM
+      && push_operand (SET_DEST (PATTERN (dep_insn)),
+                       GET_MODE (SET_DEST (PATTERN (dep_insn)))))
+    {
+      return (reg_mentioned_in_mem (stack_pointer_rtx, insn));
+    }
+  
+  return (0);
+}
+
+
+/*
+  Return 1 if reg is used in rtl as a base or index for a memory ref
+  otherwise return 0. */
+
+int
+reg_mentioned_in_mem (reg, rtl)
+     rtx reg, rtl;
+{
+  register char *fmt;
+  register int i;
+  register enum rtx_code code;
+
+  if (rtl == NULL)
+    return (0);
+
+  code = GET_CODE (rtl);
+
+  switch (code)
+    {
+    case HIGH:
+    case CONST_INT:
+    case CONST:
+    case CONST_DOUBLE:
+    case SYMBOL_REF:
+    case LABEL_REF:
+    case PC:
+    case CC0:
+    case SUBREG:
+      return (0);
+
+
+    }
+
+  if (code == MEM && reg_mentioned_p (reg, rtl))
+    return (1);
+
+  fmt = GET_RTX_FORMAT (code);
+  for (i = GET_RTX_LENGTH (code) - 1; i >= 0; i--)
+    {
+      if (fmt[i] == 'E')
+	{
+	  register int j;
+	  for (j = XVECLEN (rtl, i) - 1; j >= 0; j--)
+	    {
+	      if (reg_mentioned_in_mem (reg, XVECEXP (rtl, i, j)))
+		return 1;
+	    }
+	}
+
+      else if (fmt[i] == 'e' && reg_mentioned_in_mem (reg, XEXP (rtl, i)))
+	return 1;
+    }
+
+  return (0);
+}
+
+/* Output the approprate insns for doing strlen if not just doing repnz; scasb
+
+   operands[0] = result, initialized with the startaddress
+   operands[1] = alignment of the address.
+   operands[2] = scratch register, initialized with the startaddress when
+   		 not aligned, otherwise undefined
+
+   This is just the body. It needs the initialisations mentioned above and
+   some address computing at the end.  These things are done in i386.md.  */
+
+char *
+output_strlen_unroll (operands)
+     rtx operands[];
+{
+  rtx xops[18];
+
+  xops[0] = operands[0];		/* Result */
+  /*        operands[1];                 * Alignment */
+  xops[1] = operands[2];		/* Scratch */
+  xops[2] = GEN_INT (0);
+  xops[3] = GEN_INT (2);
+  xops[4] = GEN_INT (3);
+  xops[5] = GEN_INT (4);
+  /* xops[6] = gen_label_rtx ();	 * label when aligned to 3-byte */
+  /* xops[7] = gen_label_rtx ();	 * label when aligned to 2-byte */
+  xops[8] = gen_label_rtx ();		/* label of main loop */
+  if(TARGET_USE_Q_REG && QI_REG_P (xops[1]))
+    xops[9] = gen_label_rtx ();		/* pentium optimisation */
+  xops[10] = gen_label_rtx ();		/* end label 2 */
+  xops[11] = gen_label_rtx ();		/* end label 1 */
+  xops[12] = gen_label_rtx ();		/* end label */
+  /* xops[13]				 * Temporary used */
+  xops[14] = GEN_INT (0xff);
+  xops[15] = GEN_INT (0xff00);
+  xops[16] = GEN_INT (0xff0000);
+  xops[17] = GEN_INT (0xff000000);
+
+    /* Loop to check 1..3 bytes for null to get an aligned pointer */
+
+    /* is there a known alignment and is it less then 4 */
+  if (GET_CODE (operands[1]) != CONST_INT || INTVAL (operands[1]) < 4)
+    {
+	/* is there a known alignment and is it not 2 */
+      if (GET_CODE (operands[1]) != CONST_INT || INTVAL (operands[1]) != 2)
+	{
+	  xops[6] = gen_label_rtx ();	/* label when aligned to 3-byte */
+	  xops[7] = gen_label_rtx ();	/* label when aligned to 2-byte */
+
+	    /* leave just the 3 lower bits */
+	    /* if this is a q-register, then the high part is used later */
+	    /* therefore user andl rather than andb */
+	  output_asm_insn (AS2 (and%L1,%4,%1), xops);
+	    /* is aligned to 4-byte adress when zero */
+	  output_asm_insn (AS1 (je,%l8), xops);
+	    /* side-effect even Parity when %eax == 3 */
+	  output_asm_insn (AS1 (jp,%6), xops);
+
+	    /* is it aligned to 2 bytes ? */
+	  if (QI_REG_P (xops[1]))
+	    output_asm_insn (AS2 (cmp%L1,%3,%1), xops);
+	  else
+	    output_asm_insn (AS2 (cmp%L1,%3,%1), xops);
+	  output_asm_insn (AS1 (je,%7), xops);
+	}
+      else
+        {
+            /* since the alignment is 2, we have to check 2 or 0 bytes */
+
+	    /* check if is aligned to 4 - byte */
+	  output_asm_insn (AS2 (and%L1,%3,%1), xops);
+	    /* is aligned to 4-byte adress when zero */
+	  output_asm_insn (AS1 (je,%l8), xops);
+        }
+
+      xops[13] = gen_rtx (MEM, QImode, xops[0]);
+	/* now, compare the bytes */
+	/* compare with the high part of a q-reg gives shorter code */
+      if (QI_REG_P (xops[1]))
+        {
+            /* compare the first n unaligned byte on a byte per byte basis */
+          output_asm_insn (AS2 (cmp%B1,%h1,%13), xops);
+            /* when zero we reached the end */
+          output_asm_insn (AS1 (je,%l12), xops);
+            /* increment the address */
+          output_asm_insn (AS1 (inc%L0,%0), xops);
+
+	    /* not needed with an alignment of 2 */
+	  if (GET_CODE (operands[1]) != CONST_INT || INTVAL (operands[1]) != 2)
+	    {
+	      ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "L", CODE_LABEL_NUMBER (xops[7]));
+	      output_asm_insn (AS2 (cmp%B1,%h1,%13), xops);
+	      output_asm_insn (AS1 (je,%l12), xops);
+	      output_asm_insn (AS1 (inc%L0,%0), xops);
+
+	      ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "L", CODE_LABEL_NUMBER (xops[6]));
+	    }
+          output_asm_insn (AS2 (cmp%B1,%h1,%13), xops);
+        }
+      else
+        {
+          output_asm_insn (AS2 (cmp%B13,%2,%13), xops);
+          output_asm_insn (AS1 (je,%l12), xops);
+          output_asm_insn (AS1 (inc%L0,%0), xops);
+
+	  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "L", CODE_LABEL_NUMBER (xops[7]));
+          output_asm_insn (AS2 (cmp%B13,%2,%13), xops);
+          output_asm_insn (AS1 (je,%l12), xops);
+          output_asm_insn (AS1 (inc%L0,%0), xops);
+
+	  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "L", CODE_LABEL_NUMBER (xops[6]));
+          output_asm_insn (AS2 (cmp%B13,%2,%13), xops);
+        }
+      output_asm_insn (AS1 (je,%l12), xops);
+      output_asm_insn (AS1 (inc%L0,%0), xops);
+    }
+
+    /* Generate loop to check 4 bytes at a time */
+    /* IMHO it is not a good idea to align this loop.  It gives only */
+    /* huge programs, but does not help to speed up */
+  /* ASM_OUTPUT_LOOP_ALIGN (asm_out_file); */
+  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "L", CODE_LABEL_NUMBER (xops[8]));
+
+  xops[13] = gen_rtx (MEM, SImode, xops[0]);
+  output_asm_insn (AS2 (mov%L1,%13,%1), xops);
+
+  if (QI_REG_P (xops[1]))
+    {
+      /* On i586 it is faster to combine the hi- and lo- part as
+	 a kind of lookahead.  If anding both yields zero, then one
+	 of both *could* be zero, otherwise none of both is zero;
+	 this saves one instruction, on i486 this is slower
+	 tested with P-90, i486DX2-66, AMD486DX2-66  */
+      if(TARGET_PENTIUM)
+        {
+	  output_asm_insn (AS2 (test%B1,%h1,%b1), xops);
+	  output_asm_insn (AS1 (jne,%l9), xops);
+        }
+
+	/* check first byte */
+      output_asm_insn (AS2 (test%B1,%b1,%b1), xops);
+      output_asm_insn (AS1 (je,%l12), xops);
+
+	/* check second byte */
+      output_asm_insn (AS2 (test%B1,%h1,%h1), xops);
+      output_asm_insn (AS1 (je,%l11), xops);
+
+      if(TARGET_PENTIUM)
+          ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "L", CODE_LABEL_NUMBER (xops[9]));
+    }
+  else
+    {
+	/* check first byte */
+      output_asm_insn (AS2 (test%L1,%14,%1), xops);
+      output_asm_insn (AS1 (je,%l12), xops);
+
+	/* check second byte */
+      output_asm_insn (AS2 (test%L1,%15,%1), xops);
+      output_asm_insn (AS1 (je,%l11), xops);
+    }
+
+    /* check third byte */
+  output_asm_insn (AS2 (test%L1,%16,%1), xops);
+  output_asm_insn (AS1 (je,%l10), xops);
+  
+    /* check fourth byte and increment address */
+  output_asm_insn (AS2 (add%L0,%5,%0), xops);
+  output_asm_insn (AS2 (test%L1,%17,%1), xops);
+  output_asm_insn (AS1 (jne,%l8), xops);
+
+    /* now generate fixups when the compare stops within a 4-byte word */
+  output_asm_insn (AS2 (sub%L0,%4,%0), xops);
+
+  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "L", CODE_LABEL_NUMBER (xops[10]));
+  output_asm_insn (AS1 (inc%L0,%0), xops);
+
+  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "L", CODE_LABEL_NUMBER (xops[11]));
+  output_asm_insn (AS1 (inc%L0,%0), xops);
+
+  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "L", CODE_LABEL_NUMBER (xops[12]));
+
+  RET;
 }

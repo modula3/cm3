@@ -1,5 +1,5 @@
 /* Subroutines used for code generation on the DEC Alpha.
-   Copyright (C) 1992, 1993, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1993, 1994, 1995, 1996 Free Software Foundation, Inc.
    Contributed by Richard Kenner (kenner@vlsi1.ultra.nyu.edu)
 
 This file is part of GNU CC.
@@ -38,6 +38,27 @@ Boston, MA 02111-1307, USA.  */
 #include "obstack.h"
 #include "tree.h"
 
+/* Specify which cpu to schedule for. */
+ enum processor_type alpha_cpu;
+
+/* Specify how accurate floating-point traps need to be.  */
+
+enum alpha_trap_precision alpha_tp;
+
+/* Specify the floating-point rounding mode.  */
+
+enum alpha_fp_rounding_mode alpha_fprm;
+
+/* Specify which things cause traps.  */
+
+enum alpha_fp_trap_mode alpha_fptm;
+
+/* Strings decoded into the above options.  */
+char *alpha_cpu_string;		/* -mcpu=ev[4|5] */
+char *alpha_tp_string;		/* -mtrap-precision=[p|s|i] */
+char *alpha_fprm_string;	/* -mfp-rounding-mode=[n|m|c|d] */
+char *alpha_fptm_string;	/* -mfp-trap-mode=[n|u|su|sui] */
+
 /* Save information from a "cmpxx" operation until the branch or scc is
    emitted.  */
 
@@ -54,6 +75,10 @@ char *alpha_function_name;
 
 static int inside_function = FALSE;
 
+/* Non-zero if an instruction that may cause a trap is pending.  */
+
+static int trap_pending = 0;
+
 /* Nonzero if the current function needs gp.  */
 
 int alpha_function_needs_gp;
@@ -63,7 +88,95 @@ extern int rtx_equal_function_value_matters;
 
 /* Declarations of static functions.  */
 static void alpha_set_memflags_1  PROTO((rtx, int, int, int));
+static rtx alpha_emit_set_const_1 PROTO((rtx, enum machine_mode,
+					 HOST_WIDE_INT, int));
 static void add_long_const	PROTO((FILE *, HOST_WIDE_INT, int, int, int));
+
+/* Parse target option strings. */
+
+void
+override_options ()
+{
+  alpha_cpu = PROCESSOR_EV4;
+
+  if (alpha_cpu_string)
+    {
+      if (! strcmp (alpha_cpu_string, "ev4")
+	  || ! strcmp (alpha_cpu_string, "21064"))
+	alpha_cpu = PROCESSOR_EV4;
+      else if (! strcmp (alpha_cpu_string, "ev5")
+	       || ! strcmp (alpha_cpu_string, "21164"))
+	alpha_cpu = PROCESSOR_EV5;
+      else
+	error ("bad value `%s' for -mcpu switch", alpha_cpu_string);
+    }
+
+  alpha_tp = ALPHA_TP_PROG;
+  alpha_fprm = ALPHA_FPRM_NORM;
+  alpha_fptm = ALPHA_FPTM_N;
+
+  if (TARGET_IEEE)
+    {
+      alpha_tp = ALPHA_TP_INSN;
+      alpha_fptm = ALPHA_FPTM_SU;
+    }
+
+  if (TARGET_IEEE_WITH_INEXACT)
+    {
+      alpha_tp = ALPHA_TP_INSN;
+      alpha_fptm = ALPHA_FPTM_SUI;
+    }
+
+  if (alpha_tp_string)
+    {
+      if (! strcmp (alpha_tp_string, "p"))
+	alpha_tp = ALPHA_TP_PROG;
+      else if (! strcmp (alpha_tp_string, "f"))
+	alpha_tp = ALPHA_TP_FUNC;
+      else if (! strcmp (alpha_tp_string, "i"))
+	alpha_tp = ALPHA_TP_INSN;
+      else
+	error ("bad value `%s' for -mtrap-precision switch", alpha_tp_string);
+    }
+
+  if (alpha_fprm_string)
+    {
+      if (! strcmp (alpha_fprm_string, "n"))
+	alpha_fprm = ALPHA_FPRM_NORM;
+      else if (! strcmp (alpha_fprm_string, "m"))
+	alpha_fprm = ALPHA_FPRM_MINF;
+      else if (! strcmp (alpha_fprm_string, "c"))
+	alpha_fprm = ALPHA_FPRM_CHOP;
+      else if (! strcmp (alpha_fprm_string,"d"))
+	alpha_fprm = ALPHA_FPRM_DYN;
+      else
+	error ("bad value `%s' for -mfp-rounding-mode switch",
+	       alpha_fprm_string);
+    }
+
+  if (alpha_fptm_string)
+    {
+      if (strcmp (alpha_fptm_string, "n") == 0)
+	alpha_fptm = ALPHA_FPTM_N;
+      else if (strcmp (alpha_fptm_string, "u") == 0)
+	alpha_fptm = ALPHA_FPTM_U;
+      else if (strcmp (alpha_fptm_string, "su") == 0)
+	alpha_fptm = ALPHA_FPTM_SU;
+      else if (strcmp (alpha_fptm_string, "sui") == 0)
+	alpha_fptm = ALPHA_FPTM_SUI;
+      else
+	error ("bad value `%s' for -mfp-trap-mode switch", alpha_fptm_string);
+    }
+
+  /* Do some sanity checks on the above option. */
+
+  if ((alpha_fptm == ALPHA_FPTM_SU || alpha_fptm == ALPHA_FPTM_SUI)
+      && alpha_tp != ALPHA_TP_INSN)
+    {
+      warning ("fp software completion requires -mtrap-precision=i");
+      alpha_tp = ALPHA_TP_INSN;
+    }
+}
 
 /* Returns 1 if VALUE is a mask that contains full bytes of zero or ones.  */
 
@@ -370,7 +483,8 @@ call_operand (op, mode)
   if (mode != Pmode)
     return 0;
 
-  return (GET_CODE (op) == SYMBOL_REF || GET_CODE (op) == REG);
+  return (GET_CODE (op) == SYMBOL_REF
+	  || (GET_CODE (op) == REG && REGNO (op) == 27));
 }
 
 /* Return 1 if OP is a valid Alpha comparison operator.  Here we know which
@@ -459,10 +573,7 @@ aligned_memory_operand (op, mode)
     op = XEXP (op, 0);
 
   return (GET_CODE (op) == REG
-	  && (REGNO (op) == STACK_POINTER_REGNUM
-	      || op == hard_frame_pointer_rtx
-	      || (REGNO (op) >= FIRST_VIRTUAL_REGISTER
-		  && REGNO (op) <= LAST_VIRTUAL_REGISTER)));
+	  && REGNO_POINTER_ALIGN (REGNO (op)) >= 4);
 }
 
 /* Similar, but return 1 if OP is a MEM which is not alignable.  */
@@ -496,10 +607,17 @@ unaligned_memory_operand (op, mode)
     op = XEXP (op, 0);
 
   return (GET_CODE (op) != REG
-	  || (REGNO (op) != STACK_POINTER_REGNUM
-	      && op != hard_frame_pointer_rtx
-	      && (REGNO (op) < FIRST_VIRTUAL_REGISTER
-		  || REGNO (op) > LAST_VIRTUAL_REGISTER)));
+	  || REGNO_POINTER_ALIGN (REGNO (op)) < 4);
+}
+
+/* Return 1 if OP is either a register or an unaligned memory location.  */
+
+int
+reg_or_unaligned_mem_operand (op, mode)
+     rtx op;
+     enum machine_mode mode;
+{
+  return register_operand (op, mode) || unaligned_memory_operand (op, mode);
 }
 
 /* Return 1 if OP is any memory location.  During reload a pseudo matches.  */
@@ -560,11 +678,13 @@ get_aligned_mem (ref, paligned_mem, pbitnum)
   *pbitnum = GEN_INT ((offset & 3) * 8);
 }
 
-/* Similar, but just get the address.  Handle the two reload cases.  */
+/* Similar, but just get the address.  Handle the two reload cases.  
+   Add EXTRA_OFFSET to the address we return.  */
 
 rtx
-get_unaligned_address (ref)
+get_unaligned_address (ref, extra_offset)
      rtx ref;
+     int extra_offset;
 {
   rtx base;
   HOST_WIDE_INT offset = 0;
@@ -590,7 +710,7 @@ get_unaligned_address (ref)
   if (GET_CODE (base) == PLUS)
     offset += INTVAL (XEXP (base, 1)), base = XEXP (base, 0);
 
-  return plus_constant (base, offset);
+  return plus_constant (base, offset + extra_offset);
 }
 
 /* Subfunction of the following function.  Update the flags of any MEM
@@ -669,6 +789,26 @@ alpha_emit_set_const (target, mode, c, n)
      HOST_WIDE_INT c;
      int n;
 {
+  rtx pat;
+  int i;
+
+  /* Try 1 insn, then 2, then up to N. */
+  for (i = 1; i <= n; i++)
+    if ((pat = alpha_emit_set_const_1 (target, mode, c, i)) != 0)
+      return pat;
+
+  return 0;
+}
+
+/* Internal routine for the above to check for N or below insns.  */
+
+static rtx
+alpha_emit_set_const_1 (target, mode, c, n)
+     rtx target;
+     enum machine_mode mode;
+     HOST_WIDE_INT c;
+     int n;
+{
   HOST_WIDE_INT new = c;
   int i, bits;
   /* Use a pseudo if highly optimizing and still generating RTL.  */
@@ -713,12 +853,7 @@ alpha_emit_set_const (target, mode, c, n)
 
       if (c == low || (low == 0 && extra == 0))
 	return copy_to_suggested_reg (GEN_INT (c), target, mode);
-      else if (n >= 2 + (extra != 0)
-	       /* We can't do this when SImode if HIGH required adjustment.
-		  This is because the code relies on an implicit overflow
-		  which is invisible to the RTL.  We can thus get incorrect
-		  code if the two ldah instructions are combined.  */
-	       && ! (mode == SImode && extra != 0))
+      else if (n >= 2 + (extra != 0))
 	{
 	  temp = copy_to_suggested_reg (GEN_INT (low), subtarget, mode);
 
@@ -829,6 +964,127 @@ alpha_emit_set_const (target, mode, c, n)
 
   return 0;
 }
+
+#if HOST_BITS_PER_WIDE_INT == 64
+/* Having failed to find a 3 insn sequence in alpha_emit_set_const,
+   fall back to a straight forward decomposition.  We do this to avoid
+   exponential run times encountered when looking for longer sequences
+   with alpha_emit_set_const.  */
+
+rtx
+alpha_emit_set_long_const (target, c)
+     rtx target;
+     HOST_WIDE_INT c;
+{
+  /* Use a pseudo if highly optimizing and still generating RTL.  */
+  rtx subtarget
+    = (flag_expensive_optimizations && rtx_equal_function_value_matters
+       ? 0 : target);
+  HOST_WIDE_INT d1, d2, d3, d4;
+  rtx r;
+
+  /* Decompose the entire word */
+  d1 = ((c & 0xffff) ^ 0x8000) - 0x8000;
+  c -= d1;
+  d2 = ((c & 0xffffffff) ^ 0x80000000) - 0x80000000;
+  c = (c - d2) >> 32;
+  d3 = ((c & 0xffff) ^ 0x8000) - 0x8000;
+  c -= d3;
+  d4 = ((c & 0xffffffff) ^ 0x80000000) - 0x80000000;
+
+  if (c - d4 != 0)
+    abort();
+
+  /* Construct the high word */
+  if (d3 == 0)
+    r = copy_to_suggested_reg (GEN_INT (d4), subtarget, DImode);
+  else if (d4 == 0)
+    r = copy_to_suggested_reg (GEN_INT (d3), subtarget, DImode);
+  else
+    r = expand_binop (DImode, add_optab, GEN_INT (d3), GEN_INT (d4),
+		      subtarget, 0, OPTAB_WIDEN);
+
+  /* Shift it into place */
+  r = expand_binop (DImode, ashl_optab, r, GEN_INT (32), 
+		    subtarget, 0, OPTAB_WIDEN);
+
+  /* Add in the low word */
+  if (d2 != 0)
+    r = expand_binop (DImode, add_optab, r, GEN_INT (d2),
+		      subtarget, 0, OPTAB_WIDEN);
+  if (d1 != 0)
+    r = expand_binop (DImode, add_optab, r, GEN_INT (d1),
+		      subtarget, 0, OPTAB_WIDEN);
+
+  if (subtarget == 0)
+    r = copy_to_suggested_reg(r, target, DImode);
+
+  return r;
+}
+#endif /* HOST_BITS_PER_WIDE_INT == 64 */
+
+/* Rewrite a comparison against zero CMP of the form
+   (CODE (cc0) (const_int 0)) so it can be written validly in
+   a conditional move (if_then_else CMP ...).
+   If both of the operands that set cc0 are non-zero we must emit
+   an insn to perform the compare (it can't be done within
+   the conditional move). */
+rtx
+alpha_emit_conditional_move (cmp, mode)
+     rtx cmp;
+     enum machine_mode mode;
+{
+  enum rtx_code code = GET_CODE (cmp);
+  enum rtx_code cmov_code = NE;
+  rtx op0 = alpha_compare_op0;
+  rtx op1 = alpha_compare_op1;
+  enum machine_mode cmp_mode
+    = (GET_MODE (op0) == VOIDmode ? DImode : GET_MODE (op0));
+  enum machine_mode cmp_op_mode = alpha_compare_fp_p ? DFmode : DImode;
+  rtx tem;
+
+  if (alpha_compare_fp_p != FLOAT_MODE_P (mode))
+    return 0;
+
+  /* We may be able to use a conditional move directly.
+     This avoids emitting spurious compares. */
+  if (signed_comparison_operator (cmp, cmp_op_mode)
+      && (op0 == CONST0_RTX (cmp_mode) || op1 == CONST0_RTX (cmp_mode)))
+    return gen_rtx (code, VOIDmode, op0, op1);
+
+  /* We can't put the comparison insides a conditional move;
+     emit a compare instruction and put that inside the
+     conditional move.  Make sure we emit only comparisons we have;
+     swap or reverse as necessary.  */
+
+  switch (code)
+    {
+    case EQ:  case LE:  case LT:  case LEU:  case LTU:
+      /* We have these compares: */
+      break;
+
+    case NE:
+      /* This must be reversed. */
+      code = reverse_condition (code);
+      cmov_code = EQ;
+      break;
+
+    case GE:  case GT:  case GEU:  case GTU:
+      /* These must be swapped.  Make sure the new first operand is in
+	 a register.  */
+      code = swap_condition (code);
+      tem = op0, op0 = op1, op1 = tem;
+      op0 = force_reg (cmp_mode, op0);
+      break;
+
+    default:
+      abort ();
+    }
+
+  tem = gen_reg_rtx (cmp_op_mode);
+  emit_move_insn (tem, gen_rtx (code, cmp_op_mode, op0, op1));
+  return gen_rtx (cmov_code, VOIDmode, tem, CONST0_RTX (cmp_op_mode));
+}
 
 /* Adjust the cost of a scheduling dependency.  Return the new cost of
    a dependency LINK or INSN on DEP_INSN.  COST is the current cost.  */
@@ -848,6 +1104,29 @@ alpha_adjust_cost (insn, link, dep_insn, cost)
 
   if (REG_NOTE_KIND (link) != 0)
     return 0;
+
+  /* EV5 costs are as given in alpha.md; exceptions are given here. */
+  if (alpha_cpu == PROCESSOR_EV5)
+    {
+      /* And the lord DEC sayeth:  "A special bypass provides an effective
+	 latency of 0 cycles for an ICMP or ILOG insn producing the test
+	 operand of an IBR or CMOV insn." */
+      if (recog_memoized (dep_insn) >= 0
+	  && (get_attr_type (dep_insn) == TYPE_ICMP
+	      || get_attr_type (dep_insn) == TYPE_ILOG)
+	  && recog_memoized (insn) >= 0
+	  && (get_attr_type (insn) == TYPE_IBR
+	      || (get_attr_type (insn) == TYPE_CMOV
+		  && !((set = single_set (dep_insn)) != 0
+		       && GET_CODE (PATTERN (insn)) == SET
+		       && GET_CODE (SET_SRC (PATTERN (insn))) == IF_THEN_ELSE
+		       && (rtx_equal_p (SET_DEST (set),
+					XEXP (SET_SRC (PATTERN (insn)), 1))
+			   || rtx_equal_p (SET_DEST (set),
+					   XEXP (SET_SRC (PATTERN (insn)), 2)))))))
+	return 1;
+      return cost;
+    } 
 
   /* If INSN is a store insn and DEP_INSN is setting the data being stored,
      we can sometimes lower the cost.  */
@@ -878,7 +1157,8 @@ alpha_adjust_cost (insn, link, dep_insn, cost)
      for the address in loads and stores.  */
 
   if (recog_memoized (dep_insn) >= 0
-      && get_attr_type (dep_insn) == TYPE_IADDLOG)
+      && (get_attr_type (dep_insn) == TYPE_IADD
+	  || get_attr_type (dep_insn) == TYPE_ILOG))
     switch (get_attr_type (insn))
       {
       case TYPE_LD:
@@ -915,6 +1195,67 @@ print_operand (file, x, code)
 
   switch (code)
     {
+    case '&':
+      /* Generates fp-rounding mode suffix: nothing for normal, 'c' for
+	 chopped, 'm' for minus-infinity, and 'd' for dynamic rounding
+	 mode.  alpha_fprm controls which suffix is generated.  */
+      switch (alpha_fprm)
+	{
+	case ALPHA_FPRM_NORM:
+	  break;
+	case ALPHA_FPRM_MINF: 
+	  fputc ('m', file);
+	  break;
+	case ALPHA_FPRM_CHOP:
+	  fputc ('c', file);
+	  break;
+	case ALPHA_FPRM_DYN:
+	  fputc ('d', file);
+	  break;
+	}
+      break;
+
+    case '\'':
+      /* Generates trap-mode suffix for instructions that accept the su
+	 suffix only (cmpt et al).  */
+      if (alpha_tp == ALPHA_TP_INSN)
+	fputs ("su", file);
+      break;
+
+    case ')':
+      /* Generates trap-mode suffix for instructions that accept the u, su,
+	 and sui suffix.  This is the bulk of the IEEE floating point
+	 instructions (addt et al).  */
+      switch (alpha_fptm)
+	{
+	case ALPHA_FPTM_N:
+	  break;
+	case ALPHA_FPTM_U:
+	  fputc ('u', file);
+	  break;
+	case ALPHA_FPTM_SU:
+	  fputs ("su", file);
+	  break;
+	case ALPHA_FPTM_SUI:
+	  fputs ("sui", file);
+	  break;
+	}
+      break;
+
+    case '+':
+      /* Generates trap-mode suffix for instructions that accept the sui
+	 suffix (cvtqt and cvtqs).  */
+      switch (alpha_fptm)
+	{
+	case ALPHA_FPTM_N: case ALPHA_FPTM_U:
+	case ALPHA_FPTM_SU:	/* cvtqt/cvtqs can't cause underflow */
+	  break;
+	case ALPHA_FPTM_SUI:
+	  fputs ("sui", file);
+	  break;
+	}
+      break;
+
     case 'r':
       /* If this operand is the constant zero, write it as "$31".  */
       if (GET_CODE (x) == REG)
@@ -1238,7 +1579,7 @@ direct_return ()
 /* Write a version stamp.  Don't write anything if we are running as a
    cross-compiler.  Otherwise, use the versions in /usr/include/stamp.h.  */
 
-#if !defined(CROSS_COMPILE) && !defined(_WIN32)
+#if !defined(CROSS_COMPILE) && !defined(_WIN32) && !defined(__linux__)
 #include <stamp.h>
 #endif
 
@@ -1351,11 +1692,20 @@ output_prolog (file, size)
      to the .ent directive, the lex_level, is ignored by the assembler,
      so we might as well omit it.  */
      
-  fprintf (file, "\t.ent ");
-  assemble_name (file, alpha_function_name);
-  fprintf (file, "\n");
+  if (!flag_inhibit_size_directive)
+    {
+      fprintf (file, "\t.ent ");
+      assemble_name (file, alpha_function_name);
+      fprintf (file, "\n");
+    }
   ASM_OUTPUT_LABEL (file, alpha_function_name);
   inside_function = TRUE;
+
+  if (TARGET_IEEE_CONFORMANT && !flag_inhibit_size_directive)
+    /* Set flags in procedure descriptor to request IEEE-conformant
+       math-library routines.  The value we set it to is PDSC_EXC_IEEE
+       (/usr/include/pdsc.h). */
+    fprintf (file, "\t.eflag 48\n");
 
   /* Set up offsets to alpha virtual arg/local debugging pointer.  */
 
@@ -1369,6 +1719,12 @@ output_prolog (file, size)
      We never need a GP for Windows/NT.  */
 
   alpha_function_needs_gp = 0;
+
+#ifdef TARGET_PROFILING_NEEDS_GP
+  if (profile_flag)
+    alpha_function_needs_gp = 1;
+#endif
+
   for (insn = get_insns (); insn; insn = NEXT_INSN (insn))
     if ((GET_CODE (insn) == CALL_INSN)
 	|| (GET_RTX_CLASS (GET_CODE (insn)) == 'i'
@@ -1381,7 +1737,7 @@ output_prolog (file, size)
 	break;
       }
 
-  if (WINDOWS_NT == 0)
+  if (TARGET_WINDOWS_NT == 0)
     {
       if (alpha_function_needs_gp)
 	fprintf (file, "\tldgp $29,0($27)\n");
@@ -1452,10 +1808,13 @@ output_prolog (file, size)
     }
 
   /* Describe our frame.  */
-  fprintf (file, "\t.frame $%d,%d,$26,%d\n", 
-	   (frame_pointer_needed
-	    ? HARD_FRAME_POINTER_REGNUM : STACK_POINTER_REGNUM),
-	   frame_size, current_function_pretend_args_size);
+  if (!flag_inhibit_size_directive)
+    {
+      fprintf (file, "\t.frame $%d,%d,$26,%d\n", 
+	       (frame_pointer_needed
+	        ? HARD_FRAME_POINTER_REGNUM : STACK_POINTER_REGNUM),
+	       frame_size, current_function_pretend_args_size);
+    }
     
   /* Save register 26 if any other register needs to be saved.  */
   if (sa_size != 0)
@@ -1477,7 +1836,7 @@ output_prolog (file, size)
       }
 
   /* Print the register mask and do floating-point saves.  */
-  if (reg_mask)
+  if (reg_mask && !flag_inhibit_size_directive)
     fprintf (file, "\t.mask 0x%x,%d\n", reg_mask,
 	     actual_start_reg_offset - frame_size);
 
@@ -1494,7 +1853,7 @@ output_prolog (file, size)
       }
 
   /* Print the floating-point mask, if we've saved any fp register.  */
-  if (reg_mask)
+  if (reg_mask && !flag_inhibit_size_directive)
     fprintf (file, "\t.fmask 0x%x,%d\n", reg_mask,
 	     actual_start_reg_offset - frame_size + int_reg_save_area_size);
 
@@ -1504,7 +1863,8 @@ output_prolog (file, size)
     fprintf (file, "\tbis $30,$30,$15\n");
 
   /* End the prologue and say if we used gp.  */
-  fprintf (file, "\t.prologue %d\n", alpha_function_needs_gp);
+  if (!flag_inhibit_size_directive)
+    fprintf (file, "\t.prologue %d\n", alpha_function_needs_gp);
 }
 
 /* Write function epilogue.  */
@@ -1534,6 +1894,8 @@ output_epilog (file, size)
   if (insn == 0 || GET_CODE (insn) != BARRIER)
     {
       int fp_offset = 0;
+
+      final_prescan_insn (NULL_RTX, NULL_PTR, 0);
 
       /* If we have a frame pointer, restore SP from it.  */
       if (frame_pointer_needed)
@@ -1598,9 +1960,12 @@ output_epilog (file, size)
     }
 
   /* End the function.  */
-  fprintf (file, "\t.end ");
-  assemble_name (file, alpha_function_name);
-  fprintf (file, "\n");
+  if (!flag_inhibit_size_directive)
+    {
+      fprintf (file, "\t.end ");
+      assemble_name (file, alpha_function_name);
+      fprintf (file, "\n");
+    }
   inside_function = FALSE;
 
   /* Show that we know this function if it is called again.  */
@@ -1655,7 +2020,7 @@ alpha_output_filename (stream, name)
 	fprintf (stream, "\t#@stabs\n");
     }
 
-  else if (!TARGET_GAS && write_symbols == DBX_DEBUG)
+  else if (write_symbols == DBX_DEBUG)
     {
       ASM_GENERATE_INTERNAL_LABEL (ltext_label_name, "Ltext", 0);
       fprintf (stream, "%s ", ASM_STABS_OP);
@@ -1687,7 +2052,7 @@ alpha_output_lineno (stream, line)
      FILE *stream;
      int line;
 {
-  if (! TARGET_GAS && write_symbols == DBX_DEBUG)
+  if (write_symbols == DBX_DEBUG)
     {
       /* mips-tfile doesn't understand .stabd directives.  */
       ++sym_lineno;
@@ -1696,4 +2061,334 @@ alpha_output_lineno (stream, line)
     }
   else
     fprintf (stream, "\n\t.loc\t%d %d\n", num_source_filenames, line);
+}
+
+/* Structure to show the current status of registers and memory.  */
+
+struct shadow_summary
+{
+  struct {
+    unsigned long i     : 32;	/* Mask of int regs */
+    unsigned long fp    : 32;	/* Mask of fp regs */
+    unsigned long mem   :  1;	/* mem == imem | fpmem */
+  } used, defd;
+};
+
+/* Summary the effects of expression X on the machine.  Update SUM, a pointer
+   to the summary structure.  SET is nonzero if the insn is setting the
+   object, otherwise zero.  */
+
+static void
+summarize_insn (x, sum, set)
+     rtx x;
+     struct shadow_summary *sum;
+     int set;
+{
+  char *format_ptr;
+  int i, j;
+
+  if (x == 0)
+    return;
+
+  switch (GET_CODE (x))
+    {
+      /* ??? Note that this case would be incorrect if the Alpha had a
+	 ZERO_EXTRACT in SET_DEST.  */
+    case SET:
+      summarize_insn (SET_SRC (x), sum, 0);
+      summarize_insn (SET_DEST (x), sum, 1);
+      break;
+
+    case CLOBBER:
+      summarize_insn (XEXP (x, 0), sum, 1);
+      break;
+
+    case USE:
+      summarize_insn (XEXP (x, 0), sum, 0);
+      break;
+
+    case PARALLEL:
+      for (i = XVECLEN (x, 0) - 1; i >= 0; i--)
+	summarize_insn (XVECEXP (x, 0, i), sum, 0);
+      break;
+
+    case REG:
+      {
+	int regno = REGNO (x);
+	unsigned long mask = 1UL << (regno % 32);
+
+	if (regno == 31 || regno == 63)
+	  break;
+
+	if (set)
+	  {
+	    if (regno < 32)
+	      sum->defd.i |= mask;
+	    else
+	      sum->defd.fp |= mask;
+	  }
+	else
+	  {
+	    if (regno < 32)
+	      sum->used.i  |= mask;
+	    else
+	      sum->used.fp |= mask;
+	  }
+	}
+      break;
+
+    case MEM:
+      if (set)
+	sum->defd.mem = 1;
+      else
+	sum->used.mem = 1;
+
+      /* Find the regs used in memory address computation: */
+      summarize_insn (XEXP (x, 0), sum, 0);
+      break;
+
+    case SUBREG:
+      summarize_insn (SUBREG_REG (x), sum, 0);
+      break;
+
+    case CONST_INT:   case CONST_DOUBLE:
+    case SYMBOL_REF:  case LABEL_REF:     case CONST:
+      break;
+
+      /* Handle common unary and binary ops for efficiency.  */
+    case COMPARE:  case PLUS:    case MINUS:   case MULT:      case DIV:
+    case MOD:      case UDIV:    case UMOD:    case AND:       case IOR:
+    case XOR:      case ASHIFT:  case ROTATE:  case ASHIFTRT:  case LSHIFTRT:
+    case ROTATERT: case SMIN:    case SMAX:    case UMIN:      case UMAX:
+    case NE:       case EQ:      case GE:      case GT:        case LE:
+    case LT:       case GEU:     case GTU:     case LEU:       case LTU:
+      summarize_insn (XEXP (x, 0), sum, 0);
+      summarize_insn (XEXP (x, 1), sum, 0);
+      break;
+
+    case NEG:  case NOT:  case SIGN_EXTEND:  case ZERO_EXTEND:
+    case TRUNCATE:  case FLOAT_EXTEND:  case FLOAT_TRUNCATE:  case FLOAT:
+    case FIX:  case UNSIGNED_FLOAT:  case UNSIGNED_FIX:  case ABS:
+    case SQRT:  case FFS: 
+      summarize_insn (XEXP (x, 0), sum, 0);
+      break;
+
+    default:
+      format_ptr = GET_RTX_FORMAT (GET_CODE (x));
+      for (i = GET_RTX_LENGTH (GET_CODE (x)) - 1; i >= 0; i--)
+	switch (format_ptr[i])
+	  {
+	  case 'e':
+	    summarize_insn (XEXP (x, i), sum, 0);
+	    break;
+
+	  case 'E':
+	    for (j = XVECLEN (x, i) - 1; j >= 0; j--)
+	      summarize_insn (XVECEXP (x, i, j), sum, 0);
+	    break;
+
+	  default:
+	    abort ();
+	  }
+    }
+}
+
+/* This function is executed just prior to the output of assembler code for
+   INSN to modify the extracted operands so they will be output differently.
+
+   OPVEC is the vector containing the operands extracted from INSN, and
+   NOPERANDS is the number of elements of the vector which contain meaningful
+   data for this insn.  The contents of this vector are what will be used to
+   convert the insn template into assembler code, so you can change the
+   assembler output by changing the contents of the vector.
+
+   We use this function to ensure a sufficient number of `trapb' instructions
+   are in the code when the user requests code with a trap precision of
+   functions or instructions.
+
+   In naive mode, when the user requests a trap-precision of "instruction", a
+   trapb is needed after every instruction that may generate a trap (and after
+   jsr/bsr instructions, because called functions may import a trap from the
+   caller).  This ensures that the code is resumption safe but it is also slow.
+
+   When optimizations are turned on, we delay issuing a trapb as long as
+   possible.  In this context, a trap shadow is the sequence of instructions
+   that starts with a (potentially) trap generating instruction and extends to
+   the next trapb or call_pal instruction (but GCC never generates call_pal by
+   itself).  We can delay (and therefore sometimes omit) a trapb subject to the
+   following conditions:
+
+   (a) On entry to the trap shadow, if any Alpha register or memory location
+   contains a value that is used as an operand value by some instruction in
+   the trap shadow (live on entry), then no instruction in the trap shadow
+   may modify the register or memory location.
+
+   (b) Within the trap shadow, the computation of the base register for a
+   memory load or store instruction may not involve using the result
+   of an instruction that might generate an UNPREDICTABLE result.
+
+   (c) Within the trap shadow, no register may be used more than once as a
+   destination register.  (This is to make life easier for the trap-handler.)
+
+   (d) The trap shadow may not include any branch instructions.
+
+     */
+
+void
+final_prescan_insn (insn, opvec, noperands)
+     rtx insn;
+     rtx *opvec;
+     int noperands;
+{
+  static struct shadow_summary shadow = {0, 0, 0, 0, 0};
+
+#define CLOSE_SHADOW				\
+  do						\
+    {						\
+      fputs ("\ttrapb\n", asm_out_file);	\
+      trap_pending = 0;				\
+      bzero ((char *) &shadow,  sizeof shadow);	\
+    }						\
+  while (0)
+
+  if (alpha_tp == ALPHA_TP_PROG)
+    return;
+
+  if (trap_pending)
+    switch (alpha_tp)
+      {
+      case ALPHA_TP_FUNC:
+	/* Generate one trapb before epilogue (indicated by INSN==0) */
+	if (insn == 0)
+	  CLOSE_SHADOW;
+	break;
+
+      case ALPHA_TP_INSN:
+	if (optimize && insn != 0)
+	  {
+	    struct shadow_summary sum = {0, 0, 0};
+
+	    switch (GET_CODE(insn))
+	      {
+	      case INSN:
+		summarize_insn (PATTERN (insn), &sum, 0);
+
+		if ((sum.defd.i & shadow.defd.i)
+		    || (sum.defd.fp & shadow.defd.fp))
+		  {
+		    /* (c) would be violated */
+		    CLOSE_SHADOW;
+		    break;
+		  }
+
+		/* Combine shadow with summary of current insn: */
+		shadow.used.i     |= sum.used.i;
+		shadow.used.fp    |= sum.used.fp;
+		shadow.used.mem   |= sum.used.mem;
+		shadow.defd.i     |= sum.defd.i;
+		shadow.defd.fp    |= sum.defd.fp;
+		shadow.defd.mem   |= sum.defd.mem;
+
+		if ((sum.defd.i & shadow.used.i)
+		    || (sum.defd.fp & shadow.used.fp)
+		    || (sum.defd.mem & shadow.used.mem))
+		  {
+		    /* (a) would be violated (also takes care of (b)).  */
+		    if (get_attr_trap (insn) == TRAP_YES
+			&& ((sum.defd.i & sum.used.i)
+			    || (sum.defd.fp & sum.used.fp)))
+		      abort ();
+
+		    CLOSE_SHADOW;
+		    break;
+		  }
+		break;
+
+	      case JUMP_INSN:
+	      case CALL_INSN:
+	      case CODE_LABEL:
+		CLOSE_SHADOW;
+		break;
+
+	      default:
+		abort ();
+	      }
+	  }
+	else
+	  CLOSE_SHADOW;
+	break;
+      }
+
+  if (insn != 0 && get_attr_trap (insn) == TRAP_YES)
+    {
+      if (optimize && !trap_pending && GET_CODE (insn) == INSN)
+	summarize_insn (PATTERN (insn), &shadow, 0);
+      trap_pending = 1;
+    }
+}
+
+/* Check a floating-point value for validity for a particular machine mode.  */
+
+static char *float_strings[] =
+{
+   "1.70141173319264430e+38", /* 2^127 (2^24 - 1) / 2^24 */
+  "-1.70141173319264430e+38",
+   "2.93873587705571877e-39", /* 2^-128 */
+  "-2.93873587705571877e-39"
+};
+
+static REAL_VALUE_TYPE float_values[4];
+static int inited_float_values = 0;
+
+int
+check_float_value (mode, d, overflow)
+     enum machine_mode mode;
+     REAL_VALUE_TYPE *d;
+     int overflow;
+{
+
+  if (TARGET_IEEE || TARGET_IEEE_CONFORMANT || TARGET_IEEE_WITH_INEXACT)
+    return 0;
+
+  if (inited_float_values == 0)
+    {
+      int i;
+      for (i = 0; i < 4; i++)
+	float_values[i] = REAL_VALUE_ATOF (float_strings[i], DFmode);
+
+      inited_float_values = 1;
+    }
+
+  if (mode == SFmode)
+    {
+      REAL_VALUE_TYPE r;
+
+      bcopy ((char *) d, (char *) &r, sizeof (REAL_VALUE_TYPE));
+      if (REAL_VALUES_LESS (float_values[0], r))
+	{
+	  bcopy ((char *) &float_values[0], (char *) d,
+		 sizeof (REAL_VALUE_TYPE));
+	  return 1;
+	}
+      else if (REAL_VALUES_LESS (r, float_values[1]))
+	{
+	  bcopy ((char *) &float_values[1], (char *) d,
+		 sizeof (REAL_VALUE_TYPE));
+	  return 1;
+	}
+      else if (REAL_VALUES_LESS (dconst0, r)
+		&& REAL_VALUES_LESS (r, float_values[2]))
+	{
+	  bcopy ((char *) &dconst0, (char *) d, sizeof (REAL_VALUE_TYPE));
+	  return 1;
+	}
+      else if (REAL_VALUES_LESS (r, dconst0)
+		&& REAL_VALUES_LESS (float_values[3], r))
+	{
+	  bcopy ((char *) &dconst0, (char *) d, sizeof (REAL_VALUE_TYPE));
+	  return 1;
+	}
+    }
+
+  return 0;
 }

@@ -1,1 +1,7 @@
 CLIB=-lm
+
+# CYGNUS LOCAL: vsta
+# FIXME: This should be done in a better way, but how?  The problem is
+# that we can't build protoize.
+LANGUAGES=c c++ objective-c
+# END CYGNUS LOCAL

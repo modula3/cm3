@@ -2,7 +2,7 @@
    the floating point routines in libgcc1.c for targets without hardware
    floating point.  */
 
-/* Copyright (C) 1994, 1995 Free Software Foundation, Inc.
+/* Copyright (C) 1994, 1995, 1996 Free Software Foundation, Inc.
 
 This file is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
@@ -61,6 +61,49 @@ Boston, MA 02111-1307, USA.  */
    NO_NANS: Disable nan and infinity handling
    SMALL_MACHINE: Useful when operations on QIs and HIs are faster
      than on an SI */
+
+/* We don't currently support extended floats (long doubles) on machines
+   without hardware to deal with them.
+
+   These stubs are just to keep the linker from complaining about unresolved
+   references which can be pulled in from libio & libstdc++, even if the
+   user isn't using long doubles.  However, they may generate an unresolved
+   external to abort if abort is not used by the function, and the stubs
+   are referenced from within libc, since libgcc goes before and after the
+   system library.  */
+
+#ifdef EXTENDED_FLOAT_STUBS
+__truncxfsf2 (){ abort(); }
+__extendsfxf2 (){ abort(); }
+__addxf3 (){ abort(); }
+__divxf3 (){ abort(); }
+__eqxf2 (){ abort(); }
+__extenddfxf2 (){ abort(); }
+__gtxf2 (){ abort(); }
+__lexf2 (){ abort(); }
+__ltxf2 (){ abort(); }
+__mulxf3 (){ abort(); }
+__negxf2 (){ abort(); }
+__nexf2 (){ abort(); }
+__subxf3 (){ abort(); }
+__truncxfdf2 (){ abort(); }
+
+__trunctfsf2 (){ abort(); }
+__extendsftf2 (){ abort(); }
+__addtf3 (){ abort(); }
+__divtf3 (){ abort(); }
+__eqtf2 (){ abort(); }
+__extenddftf2 (){ abort(); }
+__gttf2 (){ abort(); }
+__letf2 (){ abort(); }
+__lttf2 (){ abort(); }
+__multf3 (){ abort(); }
+__negtf2 (){ abort(); }
+__netf2 (){ abort(); }
+__subtf3 (){ abort(); }
+__trunctfdf2 (){ abort(); }
+#else	/* !EXTENDED_FLOAT_STUBS, rest of file */
+
 
 typedef SFtype __attribute__ ((mode (SF)));
 typedef DFtype __attribute__ ((mode (DF)));
@@ -901,13 +944,15 @@ _fpdiv_parts (fp_number_type * a,
     {
       return b;
     }
+
+  a->sign = a->sign ^ b->sign;
+
   if (isinf (a) || iszero (a))
     {
       if (a->class == b->class)
 	return nan ();
       return a;
     }
-  a->sign = a->sign ^ b->sign;
 
   if (isinf (b))
     {
@@ -1350,3 +1395,4 @@ df_to_sf (DFtype arg_a)
 }
 
 #endif
+#endif /* !EXTENDED_FLOAT_STUBS */

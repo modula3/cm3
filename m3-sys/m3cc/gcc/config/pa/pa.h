@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler, for the HP Spectrum.
-   Copyright (C) 1992, 1993, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1993, 1994, 1995, 1996 Free Software Foundation, Inc.
    Contributed by Michael Tiemann (tiemann@cygnus.com) of Cygnus Support
    and Tim Moore (moore@defmacro.cs.utah.edu) of the Center for
    Software Science at the University of Utah.
@@ -32,6 +32,14 @@ enum cmp_type				/* comparison type */
 /* For long call handling.  */
 extern unsigned int total_code_bytes;
 
+/* CYGNUS LOCAL mentoropt/law */
+/* The PA port uses the delay slot reorganizer to combine unrelated
+   insns after reload has completed.  This variable determines if we're
+   in the machine (first) dependent reorg pass, or in the normal
+   reorg pass.  */
+extern int first_reorg_pass;
+/* END CYGNUS LOCAL */
+
 /* Which processor to schedule for.  */
 
 enum processor_type
@@ -49,7 +57,7 @@ extern enum processor_type pa_cpu;
 
 /* Print subsidiary information on the compiler version in use.  */
 
-#define TARGET_VERSION fprintf (stderr, " (hppa)");
+#define TARGET_VERSION fputs (" (hppa)", stderr);
 
 /* Run-time compilation parameters selecting different hardware subsets.  */
 
@@ -70,24 +78,17 @@ extern int target_flags;
    never cross a space boundary.  Such assumptions are generally safe for
    building kernels and statically linked executables.  Code compiled with
    this option will fail miserably if the executable is dynamically linked
-   or uses nested functions!  */
-#define TARGET_FAST_INDIRECT_CALLS (target_flags & 4)
+   or uses nested functions!
+
+   This is also used to trigger agressive unscaled index addressing.  */
+#define TARGET_NO_SPACE_REGS (target_flags & 4)
 
 /* Allow unconditional jumps in the delay slots of call instructions.  */
 #define TARGET_JUMP_IN_DELAY (target_flags & 8)
 
-/* In rare cases, a millicode call via "bl" can not be turned into
-   a millicode call using "ble" (when SHLIB_INFO subspace is very large).
-
-   This option forces just millicode calls to use inline long-calls
-   This is far more efficient than the old long-call option which forced
-   every function to be called indirectly (as is still the case for
-   TARGET_PORTABLE_RUNTIME).
-
-   ??? What about simple jumps, they can suffer from the same problem.
-   Would require significant surgery in pa.md.  */
-
-#define TARGET_MILLICODE_LONG_CALLS (target_flags & 16)
+/* Optimize for space.  Currently this only turns on out of line
+   prologues and epilogues.  */
+#define TARGET_SPACE (target_flags & 16)
 
 /* Disable indexed addressing modes.  */
 
@@ -112,6 +113,13 @@ extern int target_flags;
 
 #define TARGET_SOFT_FLOAT (target_flags & 256)
 
+/* Use 3-insn load/store sequences for access to large data segments
+   in shared libraries on hpux10.  */
+#define TARGET_LONG_LOAD_STORE (target_flags & 512)
+
+/* Use a faster sequence for indirect calls.  */
+#define TARGET_FAST_INDIRECT_CALLS (target_flags & 1024)
+
 /* Macro to define tables used to set the flags.
    This is a list in braces of pairs in braces,
    each pair being { "NAME", VALUE }
@@ -125,24 +133,33 @@ extern int target_flags;
    {"pa-risc-1-1", 1},		\
    {"disable-fpregs", 2},	\
    {"no-disable-fpregs", -2},	\
-   {"fast-indirect-calls", 4},	\
-   {"no-fast-indirect-calls", -4},\
+   {"no-space-regs", 4},	\
+   {"space-regs", -4},		\
    {"jump-in-delay", 8},	\
    {"no-jump-in-delay", -8},	\
-   {"millicode-long-calls", 16},\
-   {"no-millicode-long-calls", -16},\
+   {"space", 16},		\
+   {"no-space", -16},		\
    {"disable-indexing", 32},	\
    {"no-disable-indexing", -32},\
-   {"portable-runtime", 64+16},\
-   {"no-portable-runtime", -(64+16)},\
+   {"portable-runtime", 64},	\
+   {"no-portable-runtime", -64},\
    {"gas", 128},		\
    {"no-gas", -128},		\
    {"soft-float", 256},		\
    {"no-soft-float", -256},	\
-   { "", TARGET_DEFAULT}}
+   {"long-load-store", 512},	\
+   {"no-long-load-store", -512},\
+   {"fast-indirect-calls", 1024},\
+   {"no-fast-indirect-calls", -1024},\
+   {"linker-opt", 0},		\
+   { "", TARGET_DEFAULT | TARGET_CPU_DEFAULT}}
 
 #ifndef TARGET_DEFAULT
 #define TARGET_DEFAULT 0x88		/* TARGET_GAS + TARGET_JUMP_IN_DELAY */
+#endif
+
+#ifndef TARGET_CPU_DEFAULT
+#define TARGET_CPU_DEFAULT 0
 #endif
 
 #define TARGET_OPTIONS			\
@@ -151,6 +168,11 @@ extern int target_flags;
 }
 
 #define OVERRIDE_OPTIONS override_options ()
+
+/* CYGNUS LOCAL mentoropt/law */
+#define OPTIMIZATION_OPTIONS(OPTIMIZE) \
+  flag_shorten_lifetimes = (OPTIMIZE >= 1);
+/* END CYGNUS LOCAL */
 
 #define DBX_DEBUGGING_INFO
 #define DEFAULT_GDB_EXTENSIONS 1
@@ -209,23 +231,28 @@ extern int target_flags;
 /* gdb needs a null N_SO at the end of each file for scattered loading. */
 
 #undef	DBX_OUTPUT_MAIN_SOURCE_FILE_END
-#define DBX_OUTPUT_MAIN_SOURCE_FILE_END(FILE, FILENAME)			\
+#define DBX_OUTPUT_MAIN_SOURCE_FILE_END(FILE, FILENAME) \
+  text_section (); \
+  if (!TARGET_PORTABLE_RUNTIME) \
+    fputs ("\t.SPACE $TEXT$\n\t.NSUBSPA $CODE$,QUAD=0,ALIGN=8,ACCESS=44,CODE_ONLY\n", FILE); \
+  else \
+    fprintf (FILE, "%s\n", TEXT_SECTION_ASM_OP); \
   fprintf (FILE,							\
-	   "%s\n\t.stabs \"%s\",%d,0,0,L$text_end\nL$text_end:\n",\
-	   TEXT_SECTION_ASM_OP, "" , N_SO)
+	   "\t.stabs \"\",%d,0,0,L$text_end0000\nL$text_end0000:\n", N_SO)
 
-#if (TARGET_DEFAULT & 1) == 0
+#if ((TARGET_DEFAULT | TARGET_CPU_DEFAULT) & 1) == 0
 #define CPP_SPEC "%{msnake:-D__hp9000s700 -D_PA_RISC1_1}\
- %{mpa-risc-1-1:-D__hp9000s700 -D_PA_RISC1_1}"
+ %{mpa-risc-1-1:-D__hp9000s700 -D_PA_RISC1_1}\
+ %{!ansi: -D_HPUX_SOURCE -D_HIUX_SOURCE}"
 #else
-#define CPP_SPEC "%{!mpa-risc-1-0:%{!mnosnake:%{!msoft-float:-D__hp9000s700 -D_PA_RISC1_1}}}"
+#define CPP_SPEC "%{!mpa-risc-1-0:%{!mnosnake:%{!msoft-float:-D__hp9000s700 -D_PA_RISC1_1}}} %{!ansi: -D_HPUX_SOURCE -D_HIUX_SOURCE}"
 #endif
 
 /* Defines for a K&R CC */
 
 #define CC1_SPEC "%{pg:} %{p:}"
 
-#define LINK_SPEC "%{!shared:-u main} %{shared:-b}"
+#define LINK_SPEC "%{mlinker-opt:-O} %{!shared:-u main} %{shared:-b}"
 
 /* We don't want -lg.  */
 #ifndef LIB_SPEC
@@ -248,20 +275,35 @@ extern int target_flags;
 /* Machine dependent reorg pass.  */
 #define MACHINE_DEPENDENT_REORG(X) pa_reorg(X)
 
+/* CYGNUS LOCAL mentoropt/law */
+/* We run the machine independent reorg pass more than once, so we must
+   save reorg's USE insns until after the last time reorg is run.
+
+   This expression is nonzero when reorg must save the USE insns it
+   creates.  */
+#define REORG_SAVE_USE_INSNS (first_reorg_pass == 1)
+/* END CYGNUS LOCAL */
+
 /* Names to predefine in the preprocessor for this target machine.  */
 
-#define CPP_PREDEFINES "-Dhppa -Dhp9000s800 -D__hp9000s800 -Dhp9k8 -Dunix -D_HPUX_SOURCE -Dhp9000 -Dhp800 -Dspectrum -DREVARGV -Asystem(unix) -Asystem(bsd) -Acpu(hppa) -Amachine(hppa)"
+#define CPP_PREDEFINES "-Dhppa -Dhp9000s800 -D__hp9000s800 -Dhp9k8 -Dunix -Dhp9000 -Dhp800 -Dspectrum -DREVARGV -Asystem(unix) -Asystem(bsd) -Acpu(hppa) -Amachine(hppa)"
 
 /* HPUX has a program 'chatr' to list the dependencies of dynamically
    linked executables and shared libraries.  */
 #define LDD_SUFFIX "chatr"
-/* look for lines like "dynamic   /usr/lib/X11R5/libX11.sl".  */
+/* Look for lines like "dynamic   /usr/lib/X11R5/libX11.sl"
+   or "static    /usr/lib/X11R5/libX11.sl".  */
 #define PARSE_LDD_OUTPUT(PTR)					\
 do {								\
   while (*PTR == ' ') PTR++;					\
   if (strncmp (PTR, "dynamic", sizeof ("dynamic") - 1) == 0)	\
     {								\
       PTR += sizeof ("dynamic") - 1;				\
+      while (*p == ' ') PTR++;					\
+    }								\
+  else if (strncmp (PTR, "static", sizeof ("static") - 1) == 0)	\
+    {								\
+      PTR += sizeof ("static") - 1;				\
       while (*p == ' ') PTR++;					\
     }								\
   else								\
@@ -320,8 +362,12 @@ do {								\
    Don't define this if it is equal to PARM_BOUNDARY */
 #define MAX_PARM_BOUNDARY 64
 
-/* Boundary (in *bits*) on which stack pointer should be aligned.  */
-#define STACK_BOUNDARY 512
+/* Boundary (in *bits*) on which stack pointer is always aligned;
+   certain optimizations in combine depend on this.
+
+   GCC for the PA always rounds its stacks to a 512bit boundary,
+   but that happens late in the compilation process.  */
+#define STACK_BOUNDARY 64
 
 /* Allocation boundary (in *bits*) for the code of a function.  */
 #define FUNCTION_BOUNDARY 32
@@ -487,10 +533,10 @@ do {								\
 #define REG_ALLOC_ORDER \
  {					\
   /* caller-saved fp regs.  */		\
-  40, 41, 42, 43, 44, 45, 46, 47,	\
   68, 69, 70, 71, 72, 73, 74, 75,	\
   76, 77, 78, 79, 80, 81, 82, 83,	\
   84, 85, 86, 87,			\
+  40, 41, 42, 43, 44, 45, 46, 47,	\
   32, 33, 34, 35, 36, 37, 38, 39,	\
   /* caller-saved general regs.  */	\
   19, 20, 21, 22, 23, 24, 25, 26,	\
@@ -551,9 +597,9 @@ do {								\
 /* Base register for access to local variables of the function.  */
 #define FRAME_POINTER_REGNUM 3
 
-/* Value should be nonzero if functions must have frame pointers. */
-#define FRAME_POINTER_REQUIRED (current_function_calls_alloca)
-
+/* Value should be nonzero if functions must have frame pointers.  */
+#define FRAME_POINTER_REQUIRED \
+  (current_function_calls_alloca)
 
 /* C statement to store the difference between the frame pointer
    and the stack pointer values immediately after the function prologue.
@@ -584,7 +630,7 @@ do {								\
 /* SOM ABI says that objects larger than 64 bits are returned in memory.  */
 #define DEFAULT_PCC_STRUCT_RETURN 0
 #define RETURN_IN_MEMORY(TYPE)	\
-  (int_size_in_bytes (TYPE) > 8 || TREE_ADDRESSABLE (TYPE))
+  (int_size_in_bytes (TYPE) > 8)
 
 /* Register in which address to store a structure value
    is passed to a function.  */
@@ -710,11 +756,15 @@ enum reg_class { NO_REGS, R1_REGS, GENERAL_REGS, FP_REGS, GENERAL_OR_FP_REGS,
 #define PREFERRED_RELOAD_CLASS(X,CLASS) (CLASS)
 
 /* Return the register class of a scratch register needed to copy IN into
-   or out of a register in CLASS in MODE.  If it can be done directly,
-   NO_REGS is returned.  */
+   or out of a register in CLASS in MODE.  If it can be done directly
+   NO_REGS is returned. 
+
+  Avoid doing any work for the common case calls.  */
 
 #define SECONDARY_RELOAD_CLASS(CLASS,MODE,IN) \
-  secondary_reload_class (CLASS, MODE, IN)
+  ((CLASS == BASE_REG_CLASS && GET_CODE (IN) == REG		\
+    && REGNO (IN) < FIRST_PSEUDO_REGISTER)			\
+   ? NO_REGS : secondary_reload_class (CLASS, MODE, IN))
 
 /* On the PA it is not possible to directly move data between
    GENERAL_REGS and FP_REGS.  */
@@ -730,6 +780,17 @@ enum reg_class { NO_REGS, R1_REGS, GENERAL_REGS, FP_REGS, GENERAL_OR_FP_REGS,
 #define CLASS_MAX_NREGS(CLASS, MODE)					\
   (!TARGET_SNAKE && (CLASS) == FP_REGS ? 1 :				\
    ((GET_MODE_SIZE (MODE) + UNITS_PER_WORD - 1) / UNITS_PER_WORD))
+
+/* CYGNUS LOCAL mentoropt/law */
+/* We do not want to record equivalences for expressions which are
+   likely to cause a spill of %r1 or %sar if they are used. 
+
+   XXX Don't handle %sar yet.  */
+#define DONT_RECORD_EQUIVALENCE(NOTE) \
+  (symbolic_operand (XEXP (NOTE, 0), VOIDmode) \
+   && !read_only_operand (XEXP (NOTE, 0), VOIDmode))
+/* END CYGNUS LOCAL */
+
 
 /* Stack layout; function entry, exit and calling.  */
 
@@ -850,7 +911,7 @@ enum reg_class { NO_REGS, R1_REGS, GENERAL_REGS, FP_REGS, GENERAL_OR_FP_REGS,
    if any, which holds the structure-value-address).
    Thus 4 or more means all following args should go on the stack.  */
 
-struct hppa_args {int words, nargs_prototype; };
+struct hppa_args {int words, nargs_prototype, indirect; };
 
 #define CUMULATIVE_ARGS struct hppa_args
 
@@ -858,8 +919,9 @@ struct hppa_args {int words, nargs_prototype; };
    for a call to a function whose data type is FNTYPE.
    For a library call, FNTYPE is 0.  */
 
-#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME) \
+#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME,INDIRECT) \
   (CUM).words = 0, 							\
+  (CUM).indirect = INDIRECT,						\
   (CUM).nargs_prototype = (FNTYPE && TYPE_ARG_TYPES (FNTYPE)		\
 			   ? (list_length (TYPE_ARG_TYPES (FNTYPE)) - 1	\
 			      + (TYPE_MODE (TREE_TYPE (FNTYPE)) == BLKmode \
@@ -869,10 +931,11 @@ struct hppa_args {int words, nargs_prototype; };
 
 
 /* Similar, but when scanning the definition of a procedure.  We always
-   set NARGS_PROTOTYPE large so we never return an EXPR_LIST.  */
+   set NARGS_PROTOTYPE large so we never return a PARALLEL.  */
 
 #define INIT_CUMULATIVE_INCOMING_ARGS(CUM,FNTYPE,IGNORE) \
   (CUM).words = 0,				\
+  (CUM).indirect = 0,				\
   (CUM).nargs_prototype = 1000
 
 /* Figure out the size in words of the function argument. */
@@ -950,13 +1013,13 @@ struct hppa_args {int words, nargs_prototype; };
       || (CUM).nargs_prototype > 0)					\
       ? gen_rtx (REG, (MODE),						\
 		 (FUNCTION_ARG_SIZE ((MODE), (TYPE)) > 1		\
-		  ? (((!current_call_is_indirect 			\
+		  ? (((!(CUM).indirect 					\
 		       || TARGET_PORTABLE_RUNTIME)			\
 		      && (MODE) == DFmode				\
 		      && ! TARGET_SOFT_FLOAT)				\
 		     ? ((CUM).words ? 38 : 34)				\
 		     : ((CUM).words ? 23 : 25))				\
-		  : (((!current_call_is_indirect			\
+		  : (((!(CUM).indirect					\
 		       || TARGET_PORTABLE_RUNTIME)			\
 		      && (MODE) == SFmode				\
 		      && ! TARGET_SOFT_FLOAT)				\
@@ -965,16 +1028,23 @@ struct hppa_args {int words, nargs_prototype; };
 							      (TYPE))))))\
    /* We are calling a non-prototyped function with floating point	\
       arguments using the portable conventions.  */			\
-   : gen_rtx (EXPR_LIST, VOIDmode,					\
-	      gen_rtx (REG, (MODE),					\
-		       (FUNCTION_ARG_SIZE ((MODE), (TYPE)) > 1		\
-			? ((CUM).words ? 38 : 34)			\
-			: (32 + 2 * (CUM).words))),			\
-	      gen_rtx (REG, (MODE),					\
-		       (FUNCTION_ARG_SIZE ((MODE), (TYPE)) > 1		\
-			? ((CUM).words ? 23 : 25)			\
-			: (27 - (CUM).words - FUNCTION_ARG_SIZE ((MODE),\
-								 (TYPE)))))) \
+   : gen_rtx (PARALLEL, (MODE),						\
+	      gen_rtvec							\
+	      (2,							\
+	       gen_rtx (EXPR_LIST, VOIDmode,				\
+			gen_rtx (REG, (MODE),				\
+				 (FUNCTION_ARG_SIZE ((MODE), (TYPE)) > 1 \
+				  ? ((CUM).words ? 38 : 34)		\
+				  : (32 + 2 * (CUM).words))),		\
+			const0_rtx),					\
+	       gen_rtx (EXPR_LIST, VOIDmode,				\
+			gen_rtx (REG, (MODE),				\
+				 (FUNCTION_ARG_SIZE ((MODE), (TYPE)) > 1 \
+				  ? ((CUM).words ? 23 : 25)		\
+				  : (27 - (CUM).words -			\
+				     FUNCTION_ARG_SIZE ((MODE),		\
+							(TYPE))))),	\
+			const0_rtx)))					\
   /* Pass this parameter in the stack.  */				\
   : 0)
 
@@ -1018,6 +1088,29 @@ extern enum cmp_type hppa_branch_type;
        fprintf (FILE, ",ARGW%d=FR", (ARG1));} while (0)
 #endif
 
+#define ASM_OUTPUT_MI_THUNK(FILE, THUNK_FNDECL, DELTA, FUNCTION) \
+{ char *my_name = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (THUNK_FNDECL)); \
+  char *target_name = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (FUNCTION)); \
+  output_function_prologue (FILE, 0); \
+  if (VAL_14_BITS_P (DELTA)) \
+    fprintf (FILE, "\tb %s\n\tldo %d(%%r26),%%r26\n", target_name, DELTA); \
+  else \
+    fprintf (FILE, "\taddil L%%%d,%r26\n\tb %s\n\tldo R%%%d(%%r1),%%r26\n", \
+	     DELTA, target_name, DELTA); \
+  fprintf (FILE, "\n\t.EXIT\n\t.PROCEND\n"); \
+}
+
+#define ASM_OUTPUT_FUNCTION_PREFIX(FILE, NAME) \
+  {									\
+    char *name;								\
+    STRIP_NAME_ENCODING (name, NAME);					\
+    if (!TARGET_PORTABLE_RUNTIME && TARGET_GAS && in_section == in_text) \
+      fputs ("\t.NSUBSPA $CODE$,QUAD=0,ALIGN=8,ACCESS=44,CODE_ONLY\n", FILE); \
+    else if (! TARGET_PORTABLE_RUNTIME && TARGET_GAS)			\
+      fprintf (FILE,							\
+	       "\t.SUBSPA %s\n", name);				\
+  }
+    
 #define ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL) \
     do { tree fntype = TREE_TYPE (TREE_TYPE (DECL));			\
 	 tree tree_type = TREE_TYPE (DECL);				\
@@ -1067,7 +1160,7 @@ extern enum cmp_type hppa_branch_type;
 		     /* Passing structs by invisible reference uses	\
 			one general register.  */			\
 		     if (arg_size > 2					\
-			 || TREE_ADDRESSABLE (DECL_ARG_TYPE (parm)))\
+			 || TREE_ADDRESSABLE (DECL_ARG_TYPE (parm)))	\
 		       arg_size = 1;					\
 		     if (arg_size == 2 && i <= 2)			\
 		       {						\
@@ -1091,11 +1184,11 @@ extern enum cmp_type hppa_branch_type;
 		   fprintf (FILE, ",ARGW%d=GR", i);			\
 	       }							\
 	     if (TYPE_MODE (fntype) == DFmode && ! TARGET_SOFT_FLOAT)	\
-	       fprintf (FILE, ",RTNVAL=FR");				\
+	       fputs (",RTNVAL=FR", FILE);				\
 	     else if (TYPE_MODE (fntype) == SFmode && ! TARGET_SOFT_FLOAT) \
-	       fprintf (FILE, ",RTNVAL=FU");				\
+	       fputs (",RTNVAL=FU", FILE);				\
 	     else if (fntype != void_type_node)				\
-	       fprintf (FILE, ",RTNVAL=GR");				\
+	       fputs (",RTNVAL=GR", FILE);				\
 	     fputs ("\n", FILE);					\
 	   }} while (0)
 
@@ -1175,17 +1268,17 @@ extern union tree_node *current_function_decl;
 
 #define TRAMPOLINE_TEMPLATE(FILE) \
   {							\
-    fprintf (FILE, "\tldw	36(0,%%r22),%%r21\n");	\
-    fprintf (FILE, "\tbb,>=,n	%%r21,30,.+16\n");	\
-    fprintf (FILE, "\tdepi	0,31,2,%%r21\n");	\
-    fprintf (FILE, "\tldw	4(0,%%r21),%%r19\n");	\
-    fprintf (FILE, "\tldw	0(0,%%r21),%%r21\n");	\
-    fprintf (FILE, "\tldsid	(0,%%r21),%%r1\n");	\
-    fprintf (FILE, "\tmtsp	%%r1,%%sr0\n");		\
-    fprintf (FILE, "\tbe	0(%%sr0,%%r21)\n");	\
-    fprintf (FILE, "\tldw	40(0,%%r22),%%r29\n");	\
-    fprintf (FILE, "\t.word	0\n");			\
-    fprintf (FILE, "\t.word	0\n");			\
+    fputs ("\tldw	36(0,%r22),%r21\n", FILE);	\
+    fputs ("\tbb,>=,n	%r21,30,.+16\n", FILE);	\
+    fputs ("\tdepi	0,31,2,%r21\n", FILE);		\
+    fputs ("\tldw	4(0,%r21),%r19\n", FILE);	\
+    fputs ("\tldw	0(0,%r21),%r21\n", FILE);	\
+    fputs ("\tldsid	(0,%r21),%r1\n", FILE);	\
+    fputs ("\tmtsp	%r1,%sr0\n", FILE);		\
+    fputs ("\tbe	0(%sr0,%r21)\n", FILE);	\
+    fputs ("\tldw	40(0,%r22),%r29\n", FILE);	\
+    fputs ("\t.word	0\n", FILE);			\
+    fputs ("\t.word	0\n", FILE);			\
   }
 
 /* Length in units of the trampoline for entering a nested function.
@@ -1309,10 +1402,6 @@ extern struct rtx_def *hppa_builtin_saveregs ();
    these things in insns and then not re-recognize the insns, causing
    constrain_operands to fail.
 
-   Also note `Q' accepts any memory operand during the reload pass.
-   This includes out-of-range displacements in reg+d addressing.
-   This makes for better code.  (??? For 2.5 address this issue).
-
    `R' is unused.
 
    `S' is unused.
@@ -1321,16 +1410,27 @@ extern struct rtx_def *hppa_builtin_saveregs ();
 #define EXTRA_CONSTRAINT(OP, C)				\
   ((C) == 'Q' ?						\
    (IS_RELOADING_PSEUDO_P (OP)				\
-    || (GET_CODE (OP) == MEM 				\
-	&& reload_in_progress)				\
     || (GET_CODE (OP) == MEM				\
 	&& memory_address_p (GET_MODE (OP), XEXP (OP, 0))\
-	&& ! symbolic_memory_operand (OP, VOIDmode)))	\
+	&& ! symbolic_memory_operand (OP, VOIDmode)	\
+        && !(GET_CODE (XEXP (OP, 0)) == PLUS		\
+	     && (GET_CODE (XEXP (XEXP (OP, 0), 0)) == MULT\
+		 || GET_CODE (XEXP (XEXP (OP, 0), 1)) == MULT))))\
+   : ((C) == 'R' ?					\
+     (GET_CODE (OP) == MEM				\
+      && GET_CODE (XEXP (OP, 0)) == PLUS		\
+      && (GET_CODE (XEXP (XEXP (OP, 0), 0)) == MULT	\
+	  || GET_CODE (XEXP (XEXP (OP, 0), 1)) == MULT)	\
+      && (move_operand (OP, GET_MODE (OP))		\
+	  || memory_address_p (GET_MODE (OP), XEXP (OP, 0))))\
    : ((C) == 'T' ? 					\
       (GET_CODE (OP) == MEM				\
        /* Using DFmode forces only short displacements	\
 	  to be recognized as valid in reg+d addresses.  */\
-       && memory_address_p (DFmode, XEXP (OP, 0))) : 0))
+       && memory_address_p (DFmode, XEXP (OP, 0))	\
+       && !(GET_CODE (XEXP (OP, 0)) == PLUS		\
+	    && (GET_CODE (XEXP (XEXP (OP, 0), 0)) == MULT\
+		|| GET_CODE (XEXP (XEXP (OP, 0), 1)) == MULT))) : 0)))
 
 /* The macros REG_OK_FOR..._P assume that the arg is a REG rtx
    and check its validity for a certain class.
@@ -1425,6 +1525,15 @@ extern struct rtx_def *hppa_builtin_saveregs ();
 		     || ((MODE) != SFmode && (MODE) != DFmode))) \
 		|| INT_5_BITS (index)))			\
 	  goto ADDR;					\
+      if (! TARGET_SOFT_FLOAT				\
+	  && base					\
+	  && (mode == SFmode || mode == DFmode)		\
+	  && GET_CODE (index) == MULT			\
+	  && GET_CODE (XEXP (index, 0)) == REG		\
+	  && REG_OK_FOR_BASE_P (XEXP (index, 0))	\
+	  && GET_CODE (XEXP (index, 1)) == CONST_INT	\
+	  && INTVAL (XEXP (index, 1)) == (mode == SFmode ? 4 : 8))\
+	goto ADDR;					\
     }							\
   else if (GET_CODE (X) == LO_SUM			\
 	   && GET_CODE (XEXP (X, 0)) == REG		\
@@ -1506,6 +1615,7 @@ extern struct rtx_def *hppa_legitimize_address ();
   (TREE_CODE (DECL) == FUNCTION_DECL					\
    || (TREE_CODE (DECL) == VAR_DECL					\
        && TREE_READONLY (DECL) && ! TREE_SIDE_EFFECTS (DECL)		\
+       && (! DECL_INITIAL (DECL) || ! reloc_needed (DECL_INITIAL (DECL))) \
        && !flag_pic)							\
    || (*tree_code_type[(int) TREE_CODE (DECL)] == 'c'			\
        && !(TREE_CODE (DECL) == STRING_CST && flag_writable_strings)))
@@ -1537,6 +1647,26 @@ while (0)
 			     1 + (SYMBOL_NAME)[1] == '@'\
 			     : (SYMBOL_NAME)[0] == '@'))
 
+/* On hpux10, the linker will give an error if we have a reference
+   in the read-only data section to a symbol defined in a shared
+   library.  Therefore, expressions that might require a reloc can
+   not be placed in the read-only data section.  */
+#define SELECT_SECTION(EXP,RELOC) \
+  if (TREE_CODE (EXP) == VAR_DECL \
+      && TREE_READONLY (EXP) \
+      && !TREE_THIS_VOLATILE (EXP) \
+      && DECL_INITIAL (EXP) \
+      && (DECL_INITIAL (EXP) == error_mark_node \
+          || TREE_CONSTANT (DECL_INITIAL (EXP))) \
+      && !reloc) \
+    readonly_data_section (); \
+  else if (TREE_CODE_CLASS (TREE_CODE (EXP)) == 'c' \
+	   && !(TREE_CODE (EXP) == STRING_CST && flag_writable_strings) \
+	   && !reloc) \
+    readonly_data_section (); \
+  else \
+    data_section ();
+   
 /* Arghh.  This is used for stuff in the constant pool; this may include
    function addresses on the PA, which during PIC code generation must
    reside in the data space.  Unfortunately, there's no way to determine
@@ -1571,6 +1701,11 @@ while (0)
    in one reasonably fast instruction.  */
 #define MOVE_MAX 8
 
+/* Higher than the default as we prefer to use simple move insns
+   (better scheduling and delay slot filling) and because our
+   built-in block move is really a 2X unrolled loop.  */
+#define MOVE_RATIO 4
+
 /* Define if operations between registers always perform the operation
    on the full register even if a narrower mode is specified.  */
 #define WORD_REGISTER_OPERATIONS
@@ -1585,7 +1720,7 @@ while (0)
 #define SLOW_BYTE_ACCESS 1
 
 /* Do not break .stabs pseudos into continuations.  */
-#define DBX_CONTIN_LENGTH 0
+#define DBX_CONTIN_LENGTH 4000
 
 /* Value is 1 if truncating an integer of INPREC bits to OUTPREC bits
    is done just by pretending it is already truncated.  */
@@ -1685,27 +1820,60 @@ while (0)
    switch on CODE.  The purpose for the cost of MULT is to encourage
    `synth_mult' to find a synthetic multiply when reasonable.  */
 
-#define RTX_COSTS(X,CODE,OUTER_CODE) \
-  case MULT:							\
-    return (TARGET_SNAKE && ! TARGET_DISABLE_FPREGS		\
-	    && ! TARGET_SOFT_FLOAT				\
-	    ? COSTS_N_INSNS (8) : COSTS_N_INSNS (20)); 		\
-  case DIV:							\
-  case UDIV:							\
-  case MOD:							\
-  case UMOD:							\
-    return COSTS_N_INSNS (60);					\
-  case PLUS:							\
-    if (GET_CODE (XEXP (X, 0)) == MULT				\
-	&& shadd_operand (XEXP (XEXP (X, 0), 1), VOIDmode))	\
-      return (2 + rtx_cost (XEXP (XEXP (X, 0), 0), OUTER_CODE)	\
-	      + rtx_cost (XEXP (X, 1), OUTER_CODE));		\
-    break;
+#define RTX_COSTS(X,CODE,OUTER_CODE)					\
+  case MULT:								\
+    if (GET_MODE_CLASS (GET_MODE (X)) == MODE_FLOAT)			\
+      return COSTS_N_INSNS (3);						\
+    return (TARGET_SNAKE && ! TARGET_DISABLE_FPREGS && ! TARGET_SOFT_FLOAT) \
+	    ? COSTS_N_INSNS (8) : COSTS_N_INSNS (20);	\
+  case DIV:								\
+    if (GET_MODE_CLASS (GET_MODE (X)) == MODE_FLOAT)			\
+      return COSTS_N_INSNS (14);					\
+  case UDIV:								\
+  case MOD:								\
+  case UMOD:								\
+    return COSTS_N_INSNS (60);						\
+  case PLUS: /* this includes shNadd insns */				\
+  case MINUS:								\
+    if (GET_MODE_CLASS (GET_MODE (X)) == MODE_FLOAT)			\
+      return COSTS_N_INSNS (3);						\
+    return COSTS_N_INSNS (1);						\
+  case ASHIFT:								\
+  case ASHIFTRT:							\
+  case LSHIFTRT:							\
+    return COSTS_N_INSNS (1);
 
 /* Adjust the cost of dependencies.  */
 
 #define ADJUST_COST(INSN,LINK,DEP,COST) \
   (COST) = pa_adjust_cost (INSN, LINK, DEP, COST)
+
+/* Adjust scheduling priorities.  We use this to try and keep addil
+   and the next use of %r1 close together.  */
+#define ADJUST_PRIORITY(PREV) \
+  {								\
+    rtx set = single_set (PREV);				\
+    rtx src, dest;						\
+    if (set)							\
+      {								\
+        src = SET_SRC (set);					\
+	dest = SET_DEST (set);					\
+	if (GET_CODE (src) == LO_SUM				\
+	    && symbolic_operand (XEXP (src, 1), VOIDmode)	\
+	    && ! read_only_operand (XEXP (src, 1), VOIDmode))   \
+	  INSN_PRIORITY (PREV) >>= 3;				\
+        else if (GET_CODE (src) == MEM				\
+		 && GET_CODE (XEXP (src, 0)) == LO_SUM		\
+		 && symbolic_operand (XEXP (XEXP (src, 0), 1), VOIDmode)\
+		 && ! read_only_operand (XEXP (XEXP (src, 0), 1), VOIDmode))\
+	  INSN_PRIORITY (PREV) >>= 1;				\
+	else if (GET_CODE (dest) == MEM				\
+		 && GET_CODE (XEXP (dest, 0)) == LO_SUM		\
+		 && symbolic_operand (XEXP (XEXP (dest, 0), 1), VOIDmode)\
+		 && ! read_only_operand (XEXP (XEXP (dest, 0), 1), VOIDmode))\
+	  INSN_PRIORITY (PREV) >>= 3;				\
+      }								\
+  }
 
 /* Handling the special cases is going to get too complicated for a macro,
    just call `pa_adjust_insn_length' to do the real work.  */
@@ -1752,14 +1920,14 @@ while (0)
 /* Output at beginning of assembler file.  */
 
 #define ASM_FILE_START(FILE) \
-do { fprintf (FILE, "\t.SPACE $PRIVATE$\n\
+do { fputs ("\t.SPACE $PRIVATE$\n\
 \t.SUBSPA $DATA$,QUAD=1,ALIGN=8,ACCESS=31\n\
 \t.SUBSPA $BSS$,QUAD=1,ALIGN=8,ACCESS=31,ZERO,SORT=82\n\
 \t.SPACE $TEXT$\n\
 \t.SUBSPA $LIT$,QUAD=0,ALIGN=8,ACCESS=44\n\
 \t.SUBSPA $CODE$,QUAD=0,ALIGN=8,ACCESS=44,CODE_ONLY\n\
 \t.IMPORT $global$,DATA\n\
-\t.IMPORT $$dyncall,MILLICODE\n");\
+\t.IMPORT $$dyncall,MILLICODE\n", FILE);\
      if (profile_flag)\
        fprintf (FILE, "\t.IMPORT _mcount, CODE\n");\
      if (write_symbols != NO_DEBUG) \
@@ -1777,7 +1945,7 @@ do { fprintf (FILE, "\t.SPACE $PRIVATE$\n\
 #define ASM_APP_OFF ""
 
 /* We don't yet know how to identify GCC to HP-PA machines.  */
-#define ASM_IDENTIFY_GCC(FILE) fprintf (FILE, "; gcc_compiled.:\n")
+#define ASM_IDENTIFY_GCC(FILE) fputs ("; gcc_compiled.:\n", FILE)
 
 /* Output before code.  */
 
@@ -1802,7 +1970,41 @@ do { fprintf (FILE, "\t.SPACE $PRIVATE$\n\
 
 /* Define the .bss section for ASM_OUTPUT_LOCAL to use. */
 
-#define EXTRA_SECTIONS in_bss, in_readonly_data
+#ifndef CTORS_SECTION_FUNCTION
+#define EXTRA_SECTIONS in_readonly_data
+#define CTORS_SECTION_FUNCTION
+#define DTORS_SECTION_FUNCTION
+#else
+#define EXTRA_SECTIONS in_readonly_data, in_ctors, in_dtors
+#endif
+
+/* Switch into a generic section.
+   This is currently only used to support section attributes.
+
+   We make the section read-only and executable for a function decl,
+   read-only for a const data decl, and writable for a non-const data decl.  */
+#define ASM_OUTPUT_SECTION_NAME(FILE, DECL, NAME) \
+  if (DECL && TREE_CODE (DECL) == FUNCTION_DECL)		\
+    {								\
+      fputs ("\t.SPACE $TEXT$\n", FILE);			\
+      fprintf (FILE,						\
+	       "\t.SUBSPA %s,QUAD=0,ALIGN=8,ACCESS=44,CODE_ONLY,SORT=24\n", \
+	       NAME);						\
+    }								\
+  else if (DECL && TREE_READONLY (DECL))			\
+    {								\
+      fputs ("\t.SPACE $TEXT$\n", FILE);			\
+      fprintf (FILE,						\
+	       "\t.SUBSPA %s,QUAD=0,ALIGN=8,ACCESS=44,SORT=16\n", \
+	       NAME);						\
+    }								\
+  else								\
+    {								\
+      fputs ("\t.SPACE $PRIVATE$\n", FILE);			\
+      fprintf (FILE,						\
+	       "\t.SUBSPA %s,QUAD=1,ALIGN=8,ACCESS=31,SORT=16\n", \
+	       NAME);						\
+    }
 
 /* FIXME: HPUX ld generates incorrect GOT entries for "T" fixups
    which reference data within the $TEXT$ space (for example constant
@@ -1819,15 +2021,6 @@ do { fprintf (FILE, "\t.SPACE $PRIVATE$\n\
 
 #define EXTRA_SECTION_FUNCTIONS						\
 void									\
-bss_section ()								\
-{									\
-  if (in_section != in_bss)						\
-    {									\
-      fprintf (asm_out_file, "%s\n", BSS_SECTION_ASM_OP);		\
-      in_section = in_bss;						\
-    }									\
-}									\
-void									\
 readonly_data ()							\
 {									\
   if (in_section != in_readonly_data)					\
@@ -1838,7 +2031,9 @@ readonly_data ()							\
 	fprintf (asm_out_file, "%s\n", READONLY_DATA_ASM_OP);		\
       in_section = in_readonly_data;					\
     }									\
-}
+}									\
+CTORS_SECTION_FUNCTION							\
+DTORS_SECTION_FUNCTION
 
 
 /* How to refer to registers in assembler output.
@@ -1888,15 +2083,22 @@ readonly_data ()							\
        fputc ('\n', FILE); } while (0)
 
 /* This is how to output a command to make the user-level label named NAME
-   defined for reference from other files.  */
+   defined for reference from other files.
+
+   We call assemble_name, which in turn sets TREE_SYMBOL_REFERENCED.  This
+   macro will restore the original value of TREE_SYMBOL_REFERENCED to avoid
+   placing useless function definitions in the output file.  */
 
 #define ASM_OUTPUT_EXTERNAL(FILE, DECL, NAME)	\
-  do { fputs ("\t.IMPORT ", FILE);				\
+  do { int save_referenced;					\
+       save_referenced = TREE_SYMBOL_REFERENCED (DECL_ASSEMBLER_NAME (DECL)); \
+       fputs ("\t.IMPORT ", FILE);					\
 	 assemble_name (FILE, NAME);				\
        if (FUNCTION_NAME_P (NAME))     				\
 	 fputs (",CODE\n", FILE);				\
        else							\
 	 fputs (",DATA\n", FILE);				\
+       TREE_SYMBOL_REFERENCED (DECL_ASSEMBLER_NAME (DECL)) = save_referenced; \
      } while (0)
 
 /* The bogus HP assembler requires ALL external references to be
@@ -1963,27 +2165,31 @@ readonly_data ()							\
        fprintf (FILE, "\t.word 0x%lx\n", l);				\
      } while (0)
 
-/* This is how to output an assembler line defining an `int' constant.  */
+/* This is how to output an assembler line defining an `int' constant. 
+
+   This is made more complicated by the fact that functions must be
+   prefixed by a P% as well as code label references for the exception
+   table -- otherwise the linker chokes.  */
 
 #define ASM_OUTPUT_INT(FILE,VALUE)  \
-{ fprintf (FILE, "\t.word ");			\
+{ fputs ("\t.word ", FILE);			\
   if (function_label_operand (VALUE, VOIDmode)	\
       && !TARGET_PORTABLE_RUNTIME)		\
-    fprintf (FILE, "P%%");			\
+    fputs ("P%", FILE);				\
   output_addr_const (FILE, (VALUE));		\
-  fprintf (FILE, "\n");}
+  fputs ("\n", FILE);}
 
 /* Likewise for `short' and `char' constants.  */
 
 #define ASM_OUTPUT_SHORT(FILE,VALUE)  \
-( fprintf (FILE, "\t.half "),			\
+( fputs ("\t.half ", FILE),			\
   output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
+  fputs ("\n", FILE))
 
 #define ASM_OUTPUT_CHAR(FILE,VALUE)  \
-( fprintf (FILE, "\t.byte "),			\
+( fputs ("\t.byte ", FILE),			\
   output_addr_const (FILE, (VALUE)),		\
-  fprintf (FILE, "\n"))
+  fputs ("\n", FILE))
 
 /* This is how to output an assembler line for a numeric constant byte.  */
 
@@ -2118,7 +2324,7 @@ readonly_data ()							\
 	abort ();							\
       else if (flag_pic == 2)						\
 	fputs ("RT'", FILE);						\
-      output_global_address (FILE, XEXP (addr, 1));			\
+      output_global_address (FILE, XEXP (addr, 1), 0);			\
       fputs ("(", FILE);						\
       output_operand (XEXP (addr, 0), 0);				\
       fputs (")", FILE);						\
@@ -2140,10 +2346,14 @@ extern char *output_fp_move_double ();
 extern char *output_block_move ();
 extern char *output_cbranch ();
 extern char *output_bb ();
+extern char *output_bvb ();
 extern char *output_dbra ();
 extern char *output_movb ();
+extern char *output_parallel_movb ();
+extern char *output_parallel_addb ();
 extern char *output_return ();
 extern char *output_call ();
+extern char *output_millicode_call ();
 extern char *output_mul_insn ();
 extern char *output_div_insn ();
 extern char *output_mod_insn ();
@@ -2154,53 +2364,33 @@ extern struct rtx_def *legitimize_pic_address ();
 extern struct rtx_def *gen_cmp_fp ();
 extern void hppa_encode_label ();
 
-#if 0
-#define PREDICATE_CODES \
-  {"reg_or_0_operand", {SUBREG, REG, CONST_INT, CONST_DOUBLE}},		\
-  {"reg_or_cint_move_operand", {SUBREG, REG, CONST_INT}},		\
-  {"arith_operand", {SUBREG, REG, CONST_INT}},				\
-  {"arith32_operand", {SUBREG, REG, CONST_INT}},			\
-  {"arith11_operand", {SUBREG, REG, CONST_INT}},			\
-  {"arith5_operand", {SUBREG, REG, CONST_INT}},				\
-  {"pre_cint_operand", {CONST_INT}},					\
-  {"post_cint_operand", {CONST_INT}},					\
-  {"int5_operand", {CONST_INT}},					\
-  {"uint5_operand", {CONST_INT}},					\
-  {"uint32_operand", {CONST_INT}},					\
-  {"int11_operand", {CONST_INT}},					\
-  {"and_operand", {SUBREG, REG, CONST_INT}},				\
-  {"ior_operand", {CONST_INT}},						\
-  {"lhs_lshift_operand", {SUBREG, REG, CONST_INT}},			\
-  {"lhs_lshift_cint_operand", {CONST_INT}},				\
-  {"plus_xor_ior_operator", {PLUS, XOR, IOR}},				\
-  {"shadd_operand", {CONST_INT}},					\
-  {"eq_neq_comparison_operator", {EQ, NE}},				\
-  {"movb_comparison_operator", {EQ, NE, LT, GE}},			\
-  {"pc_or_label_operand", {LABEL_REF, PC}},				\
-  {"symbolic_operand", {SYMBOL_REF, LABEL_REF, CONST}},			\
-  {"reg_or_nonsymb_mem_operand", {SUBREG, REG, MEM}},			\
-  {"move_operand", {SUBREG, REG, CONST_INT, MEM}},			\
-  {"pic_label_operand", {LABEL_REF, CONST}},				\
-  {"function_label_operand", {SYMBOL_REF}},				\
-  {"reg_or_0_or_nonsymb_mem_operand", {SUBREG, REG, CONST_INT,		\
-				       CONST_DOUBLE, MEM}},		\
-  {"div_operand", {REG, CONST_INT}},					\
-  {"call_operand_address", {SYMBOL_REF, LABEL_REF, CONST_INT,		\
-			    CONST_DOUBLE, CONST, HIGH}},
-#endif
-
 /* We want __gcc_plt_call to appear in every program built by
    gcc, so we make a reference to it out of __main.
    We use the asm statement to fool the optimizer into not
    removing the dead (but important) initialization of
    REFERENCE.  */
 
-#define DO_GLOBAL_DTORS_BODY \
-do { \
-  extern void __gcc_plt_call (); \
-  void (*reference)() = &__gcc_plt_call; \
-  func_ptr *p; \
-  __asm__ ("" : : "r" (reference)); \
-  for (p = __DTOR_LIST__ + 1; *p; ) \
-    (*p++) (); \
+#define DO_GLOBAL_DTORS_BODY			\
+do {						\
+  extern void __gcc_plt_call ();		\
+  void (*reference)() = &__gcc_plt_call;	\
+  func_ptr *p;					\
+  __asm__ ("" : : "r" (reference));		\
+  for (p = __DTOR_LIST__ + 1; *p; )		\
+    (*p++) ();					\
 } while (0)
+
+/* The current return address is in [%sp-20].  */
+#define RETURN_ADDR_RTX(COUNT, FRAME)						\
+  ((COUNT == 0)									\
+   ? gen_rtx (MEM, Pmode,							\
+	      memory_address (Pmode, plus_constant (FRAME,			\
+						    -5 * UNITS_PER_WORD)))	\
+   : (rtx) 0)
+
+/* Used to mask out junk bits from the return address, such as
+   processor state, interrupt status, condition codes and the like.  */
+#define MASK_RETURN_ADDR \
+  /* The priviledge level is in the two low order bits, mask em out	\
+     of the return address.  */						\
+  (GEN_INT (0xfffffffc))

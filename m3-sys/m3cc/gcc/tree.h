@@ -1,5 +1,5 @@
 /* Front-end tree definitions for GNU compiler.
-   Copyright (C) 1989, 1993, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1989, 1993, 1994, 1995, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -33,6 +33,12 @@ enum tree_code {
 
   LAST_AND_UNUSED_TREE_CODE	/* A convenient way to get a value for
 				   NUM_TREE_CODE.  */
+/* CYGNUS LOCAL mpw */
+#ifdef MPW_C
+  /* Work around an enum bug by forcing the enum to be int-sized. */  
+  , tree_code_intifier = 1000000
+#endif /* MPW_C */
+/* END CYGNUS LOCAL */
 };
 
 #undef DEFTREECODE
@@ -97,12 +103,18 @@ enum built_in_function
   BUILT_IN_APPLY_ARGS,
   BUILT_IN_APPLY,
   BUILT_IN_RETURN,
+  BUILT_IN_SETJMP,
+  BUILT_IN_LONGJMP,
 
   /* C++ extensions */
   BUILT_IN_NEW,
   BUILT_IN_VEC_NEW,
   BUILT_IN_DELETE,
   BUILT_IN_VEC_DELETE,
+
+  /* CYGNUS LOCAL -- branch prediction */
+  BUILT_IN_EXPECT,
+  /* END CYGNUS LOCAL -- branch prediction */
 
   /* Upper bound on non-language-specific builtins. */
   END_BUILTINS
@@ -166,9 +178,110 @@ struct tree_common
   unsigned lang_flag_4 : 1;
   unsigned lang_flag_5 : 1;
   unsigned lang_flag_6 : 1;
-  /* There is room for two more flags.  */
+  /* There is room for three more flags.  */
 };
 
+/* The following table lists the uses of each of the above flags and
+   for which types of nodes they are defined.  Note that expressions
+   include decls.
+
+   addressable_flag:
+
+       TREE_ADDRESSABLE in
+   	   VAR_DECL, FUNCTION_DECL, CONSTRUCTOR, LABEL_DECL, ..._TYPE
+	   IDENTIFIER_NODE
+
+   static_flag:
+
+       TREE_STATIC in
+           VAR_DECL, FUNCTION_DECL, CONSTRUCTOR
+       TREE_NO_UNUSED_WARNING in
+           CONVERT_EXPR, NOP_EXPR, COMPOUND_EXPR
+       TREE_VIA_VIRTUAL in
+           TREE_LIST or TREE_VEC
+       TREE_CONSTANT_OVERFLOW in
+           INTEGER_CST, REAL_CST, COMPLEX_CST
+       TREE_SYMBOL_REFERENCED in
+           IDENTIFIER_NODE
+
+   public_flag:
+
+       TREE_OVERFLOW in
+           INTEGER_CST, REAL_CST, COMPLEX_CST
+       TREE_PUBLIC in
+           VAR_DECL or FUNCTION_DECL
+       TREE_VIA_PUBLIC in
+           TREE_LIST or TREE_VEC
+
+   private_flag:
+
+       TREE_VIA_PRIVATE in
+           TREE_LIST or TREE_VEC
+       TREE_PRIVATE in
+           ??? unspecified nodes
+
+   protected_flag:
+
+       TREE_VIA_PROTECTED in
+           TREE_LIST
+       TREE_PROTECTED in
+           BLOCK
+	   ??? unspecified nodes
+
+   side_effects_flag:
+
+       TREE_SIDE_EFFECTS in
+           all expressions
+
+   volatile_flag:
+
+       TREE_THIS_VOLATILE in
+           all expressions
+       TYPE_VOLATILE in
+           ..._TYPE
+
+   readonly_flag:
+
+       TREE_READONLY in
+           VAR_DECL, PARM_DECL, FIELD_DECL, ..._REF
+       ITERATOR_BOUND_P in
+           VAR_DECL if iterator (C)
+       TYPE_READONLY in
+           ..._TYPE
+
+   constant_flag:
+
+       TREE_CONSTANT in
+           all expressions
+
+   permanent_flag: TREE_PERMANENT in all nodes
+
+   unsigned_flag:
+
+       TREE_UNSIGNED in
+           INTEGER_TYPE, ENUMERAL_TYPE, FIELD_DECL
+       DECL_BUILT_IN_NONANSI in
+           FUNCTION_DECL
+       TREE_PARMLIST in
+           TREE_PARMLIST (C++)
+
+   asm_written_flag:
+
+       TREE_ASM_WRITTEN in
+           VAR_DECL, FUNCTION_DECL, RECORD_TYPE, UNION_TYPE, QUAL_UNION_TYPE
+	   BLOCK
+
+   used_flag:
+
+       TREE_USED in
+           expressions, IDENTIFIER_NODE
+
+   raises_flag:
+
+       TREE_RAISES in
+           expressions
+
+							  */
 /* Define accessors for the fields that all tree nodes have
    (though some fields are not used for all kinds of nodes).  */
 
@@ -620,6 +733,10 @@ struct tree_block
    If set in a SET_TYPE, indicates a bitstring type. */
 #define TYPE_STRING_FLAG(NODE) ((NODE)->type.string_flag)
 
+/* If non-NULL, this is a upper bound of the size (in bytes) of an
+   object of the given ARRAY_TYPE.  This allows temporaries to be allocated. */
+#define TYPE_ARRAY_MAX_SIZE(ARRAY_TYPE) TYPE_MAX_VALUE (ARRAY_TYPE)
+
 /* Indicates that objects of this type must be initialized by calling a
    function when they are created.  */
 #define TYPE_NEEDS_CONSTRUCTING(NODE) ((NODE)->type.needs_constructing_flag)
@@ -791,6 +908,8 @@ struct tree_type
 #define DECL_ARGUMENTS(NODE) ((NODE)->decl.arguments)
 /* In FUNCTION_DECL, holds the decl for the return value.  */
 #define DECL_RESULT(NODE) ((NODE)->decl.result)
+/* For a TYPE_DECL, holds the "original" type.  (TREE_TYPE has the copy.) */
+#define DECL_ORIGINAL_TYPE(NODE) ((NODE)->decl.result)
 /* In PARM_DECL, holds the type as written (perhaps a function or array).  */
 #define DECL_ARG_TYPE_AS_WRITTEN(NODE) ((NODE)->decl.result)
 /* For a FUNCTION_DECL, holds the tree of BINDINGs.
@@ -900,12 +1019,16 @@ struct tree_type
 #define TYPE_DECL_SUPPRESS_DEBUG(NODE) ((NODE)->decl.external_flag)
    
 
-/* In VAR_DECL and PARM_DECL nodes, nonzero means declared `register'.
-   In LABEL_DECL nodes, nonzero means that an error message about
-   jumping into such a binding contour has been printed for this label.  */
+/* In VAR_DECL and PARM_DECL nodes, nonzero means declared `register'.  */
 #define DECL_REGISTER(NODE) ((NODE)->decl.regdecl_flag)
+/* In LABEL_DECL nodes, nonzero means that an error message about
+   jumping into such a binding contour has been printed for this label.  */
+#define DECL_ERROR_ISSUED(NODE) ((NODE)->decl.regdecl_flag)
 /* In a FIELD_DECL, indicates this field should be bit-packed.  */
 #define DECL_PACKED(NODE) ((NODE)->decl.regdecl_flag)
+/* In a FUNCTION_DECL with a non-zero DECL_CONTEXT, indicates that a
+   static chain is not needed.  */
+#define DECL_NO_STATIC_CHAIN(NODE) ((NODE)->decl.regdecl_flag)
 
 /* Nonzero in a ..._DECL means this variable is ref'd from a nested function.
    For VAR_DECL nodes, PARM_DECL nodes, and FUNCTION_DECL nodes.
@@ -961,6 +1084,12 @@ struct tree_type
 
 /* Used to indicate that this DECL has weak linkage.  */
 #define DECL_WEAK(NODE) ((NODE)->decl.weak_flag)
+
+/* CYGNUS LOCAL arm/pe */
+/* Used in TREE_PUBLIC decls to indicate that copies of this DECL in
+   multiple translation units should be merged.  */
+#define DECL_ONE_ONLY(NODE) ((NODE)->decl.transparent_union)
+/* END CYGNUS LOCAL */
 
 /* Additional flags for language-specific uses.  */
 #define DECL_LANG_FLAG_0(NODE) ((NODE)->decl.lang_flag_0)
@@ -1063,56 +1192,11 @@ union tree_node
   struct tree_exp exp;
   struct tree_block block;
  };
-
-/* Add prototype support.  */
-#ifndef PROTO
-#if defined (USE_PROTOTYPES) ? USE_PROTOTYPES : defined (__STDC__)
-#define PROTO(ARGS) ARGS
-#else
-#define PROTO(ARGS) ()
-#endif
-#endif
-
-#ifndef VPROTO
-#ifdef __STDC__
-#define PVPROTO(ARGS)		ARGS
-#define VPROTO(ARGS)            ARGS
-#define VA_START(va_list,var)  va_start(va_list,var)
-#else
-#define PVPROTO(ARGS)		()
-#define VPROTO(ARGS)            (va_alist) va_dcl
-#define VA_START(va_list,var)  va_start(va_list)
-#endif
-#endif
-
-#ifndef STDIO_PROTO
-#ifdef BUFSIZ
-#define STDIO_PROTO(ARGS) PROTO(ARGS)
-#else
-#define STDIO_PROTO(ARGS) ()
-#endif
-#endif
+
+#include "gansidecl.h"
 
 #define NULL_TREE (tree) NULL
 
-/* Define a generic NULL if one hasn't already been defined.  */
-
-#ifndef NULL
-#define NULL 0
-#endif
-
-#ifndef GENERIC_PTR
-#if defined (USE_PROTOTYPES) ? USE_PROTOTYPES : defined (__STDC__)
-#define GENERIC_PTR void *
-#else
-#define GENERIC_PTR char *
-#endif
-#endif
-
-#ifndef NULL_PTR
-#define NULL_PTR ((GENERIC_PTR)0)
-#endif
-
 /* The following functions accept a wide integer argument.  Rather than
    having to cast on every function call, we use a macro instead, that is
    defined here and in rtl.h.  */
@@ -1132,6 +1216,8 @@ extern char *xrealloc			PROTO((void *, size_t));
 extern char *xmalloc ();
 extern char *xrealloc ();
 #endif
+
+extern char *xstrdup			PROTO((char *));
 
 extern char *oballoc			PROTO((int));
 extern char *permalloc			PROTO((int));
@@ -1226,19 +1312,38 @@ extern tree make_tree ();
 extern tree build_type_attribute_variant PROTO((tree, tree));
 extern tree build_decl_attribute_variant PROTO((tree, tree));
 
+/* CYGNUS LOCAL dje/pe */
+extern tree merge_machine_decl_attributes PROTO((tree, tree));
+extern tree merge_machine_type_attributes PROTO((tree, tree));
+/* END CYGNUS LOCAL */
+
+/* CYGNUS LOCAL dje prefix attributes */
+/* Split a list of declspecs and attributes into two.  */
+
+extern void split_specs_attrs		PROTO((tree, tree *, tree *));
+
+/* Strip attributes from a list of combined specs and attrs.  */
+
+extern tree strip_attrs			PROTO((tree));
+/* END CYGNUS LOCAL */
+
 /* Return 1 if an attribute and its arguments are valid for a decl or type.  */
 
-int valid_machine_attribute		PROTO((tree, tree, tree, tree));
+extern int valid_machine_attribute	PROTO((tree, tree, tree, tree));
 
 /* Given a tree node and a string, return non-zero if the tree node is
    a valid attribute name for the string.  */
 
-int is_attribute_p			PROTO((char *, tree));
+extern int is_attribute_p		PROTO((char *, tree));
 
 /* Given an attribute name and a list of attributes, return the list element
    of the attribute or NULL_TREE if not found.  */
 
-tree lookup_attribute			PROTO((char *, tree));
+extern tree lookup_attribute		PROTO((char *, tree));
+
+/* Given two attributes lists, return a list of their union.  */
+
+extern tree merge_attributes		PROTO((tree, tree));
 
 /* Given a type node TYPE, and CONSTP and VOLATILEP, return a type
    for the same kind of data as TYPE describes.
@@ -1362,6 +1467,17 @@ extern int lvalue_or_else		PROTO((tree, char *));
 
 extern tree save_expr			PROTO((tree));
 
+/* unsave_expr (EXP) returns an expression equivalent to EXP but it
+   can be used multiple times and will evaluate EXP, in it's entirety
+   each time.  */
+
+extern tree unsave_expr			PROTO((tree));
+
+/* unsave_expr_now (EXP) resets EXP in place, so that it can be
+   expanded again.  */
+
+extern tree unsave_expr_now		PROTO((tree));
+
 /* Return 1 if EXP contains a PLACEHOLDER_EXPR; i.e., if it represents a size
    or offset that depends on a field within a record.
 
@@ -1376,12 +1492,6 @@ extern int contains_placeholder_p	PROTO((tree));
    contains only arithmetic expressions.  */
 
 extern tree substitute_in_expr		PROTO((tree, tree, tree));
-
-/* Given a type T, a FIELD_DECL F, and a replacement value R,
-   return a new type with all size expressions that contain F
-   updated by replacing the reference to F with R.  */
-
-extern tree substitute_in_type		PROTO((tree, tree, tree));
 
 /* variable_size (EXP) is like save_expr (EXP) except that it
    is for the special case of something that is part of a
@@ -1555,9 +1665,9 @@ extern void (*incomplete_decl_finalize_hook) ();
 
 /* In tree.c */
 extern char *perm_calloc			PROTO((int, long));
-extern tree get_set_constructor_bits		PROTO((tree, char*, int));
+extern tree get_set_constructor_bits		PROTO((tree, char *, int));
 extern tree get_set_constructor_bytes		PROTO((tree,
-						       unsigned char*, int));
+						       unsigned char *, int));
 
 /* In stmt.c */
 

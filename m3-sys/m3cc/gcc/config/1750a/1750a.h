@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler.
-   Copyright (C) 1994, 1995 Free Software Foundation, Inc.
-   Contributed by O.M.Kellogg, DASA (kellogg@space.otn.dasa.de)
+   Copyright (C) 1994, 1995, 1996 Free Software Foundation, Inc.
+   Contributed by O.M.Kellogg, DASA (oliver.kellogg@space.otn.dasa.de)
 
 This file is part of GNU CC.
 
@@ -66,7 +66,7 @@ extern struct jumplabel_array jmplbl[];
 extern int datalbl_ndx, jmplbl_ndx, label_pending, program_counter;
 extern enum section current_section;
 extern char *sectname[4];
-extern char *strdup(), *float_label();
+extern char *xstrdup(), *float_label();
 #endif
 /*--------------------------------------------------------------------*/
 
@@ -206,8 +206,9 @@ extern char *strdup(), *float_label();
    registers listed in CALL_USED_REGISTERS, keeping the others
    available for storage of persistent values.  */
 
-#define REG_ALLOC_ORDER \
+/* #define REG_ALLOC_ORDER \
    { 2, 0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }
+ */
 
 /* Return number of consecutive hard regs needed starting at reg REGNO
    to hold something of mode MODE.
@@ -255,8 +256,18 @@ extern char *strdup(), *float_label();
 /* Register in which static-chain is passed to a function. */
 #define STATIC_CHAIN_REGNUM 13
 
+/* Place in which caller passes the structure value address.
+   0 means push the value on the stack like an argument. 
+   #define STRUCT_VALUE 0
+*/
+
 /* Register in which address to store a structure value
-   is passed to a function. */
+   arrives in the function.  
+   #define STRUCT_VALUE_INCOMING 0
+*/
+
+/* Register in which address to store a structure value
+   is passed to a function.  */
 #define STRUCT_VALUE_REGNUM 12
 
 /* Define this to be 1 if all structure return values must be in memory. */
@@ -362,7 +373,9 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
 
 /* Similar, but for floating constants, and defining letter 'G'.
    Here VALUE is the CONST_DOUBLE rtx itself.  */
-#define CONST_DOUBLE_OK_FOR_LETTER_P(VALUE, C)  0
+#define CONST_DOUBLE_OK_FOR_LETTER_P(VALUE, C)  \
+  ((C) == 'G' ? ((VALUE) == CONST0_RTX (HFmode)         \
+                 || (VALUE) == CONST0_RTX (TQFmode)) : 0)
 
 /* Optional extra constraints for this machine.
 
@@ -504,7 +517,7 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
 
    For 1750A, the offset starts at 0.  */
 
-#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME)   ((CUM) = 0)
+#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME,INDIRECT)   ((CUM) = 0)
 
 /* Update the data in CUM to advance over an argument
    of mode MODE and data type TYPE.
@@ -599,7 +612,7 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
    functions that have frame pointers.
    No definition is equivalent to always zero.  */
 
-#define EXIT_IGNORE_STACK 1
+#define EXIT_IGNORE_STACK 0
 
 /* This macro generates the assembly code for function exit,
    on machines that need it.  If FUNCTION_EPILOGUE is not defined
@@ -625,7 +638,7 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
    ADDR should be a variable name. */
 
 #define FIX_FRAME_POINTER_ADDRESS(ADDR,DEPTH)  \
-   fprintf(stderr,"FIX_FRAME_POINTER_ADDRESS called, DEPTH=%d\n"), \
+   fprintf(stderr,"FIX_FRAME_POINTER_ADDRESS called, depth=%d\n"), \
            DEPTH), abort()
 
 /* Store in the variable DEPTH the initial difference between the
@@ -732,9 +745,9 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
 #ifdef REG_OK_STRICT
 
 /* Nonzero if X is a hard reg that can be used as an index.  */
-#define REG_OK_FOR_INDEX_P(X) (REGNO (X) >= 12 && REGNO (X) <= 15)
+#define REG_OK_FOR_INDEX_P(X) REGNO_OK_FOR_INDEX_P(REGNO(X))
 /* Nonzero if X is a hard reg that can be used as a base reg.  */
-#define REG_OK_FOR_BASE_P(X)  (REGNO (X) > 0 && REGNO (X) <= 15)
+#define REG_OK_FOR_BASE_P(X)  REGNO_OK_FOR_BASE_P(REGNO(X))
 
 #else
 
@@ -817,8 +830,11 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
 
 /* Max number of bytes we can move from memory to memory
    in one reasonably fast instruction.  */
-/* (was: "1750: not counting the MOV instruction") */
-#define MOVE_MAX 16
+#define MOVE_MAX 65536
+
+/* MOVE_RATIO is the number of move instructions that is better than a
+   block move.  */
+#define MOVE_RATIO 4
 
 /* Define this if zero-extension is slow (more than one real instruction).  */
 /* #define SLOW_ZERO_EXTEND */
@@ -1054,7 +1070,7 @@ enum reg_class { NO_REGS, R2, R0_1, INDEX_REGS, BASE_REGS, ALL_REGS, LIM_REG_CLA
 	   check_section(Konst);				\
 	   fprintf(FILE,"K%s\n",NAME);				\
 	   fflush(FILE);					\
-	   datalbl[++datalbl_ndx].name = (char *)strdup (NAME);	\
+	   datalbl[++datalbl_ndx].name = (char *)xstrdup (NAME);\
 	   datalbl[datalbl_ndx].size = 0;			\
 	   label_pending = 1;					\
 	}							\

@@ -1,7 +1,6 @@
 /* Definitions of target machine for GNU compiler, for SPARC running Solaris 2
-   Copyright 1992, 1995 Free Software Foundation, Inc.
-
-   Written by Ron Guilmette (rfg@netcom.com).
+   Copyright 1992, 1995, 1996 Free Software Foundation, Inc.
+   Contributed by Ron Guilmette (rfg@netcom.com).
    Additional changes by David V. Henkel-Wallace (gumby@cygnus.com).
 
 This file is part of GNU CC.
@@ -32,16 +31,31 @@ Boston, MA 02111-1307, USA.  */
 
 #undef CPP_SPEC
 #define CPP_SPEC "\
-   %{compat-bsd:-iwithprefixbefore ucbinclude -I/usr/ucbinclude}\
-   %{msparclite:-D__sparclite__} %{mv8:-D__sparc_v8__}\
-   %{msupersparc:-D__supersparc__ -D__sparc_v8__}"
+%{compat-bsd:-iwithprefixbefore ucbinclude -I/usr/ucbinclude} \
+%(cpp_cpu) \
+"
 
 /* The sun bundled assembler doesn't accept -Yd, (and neither does gas).
    It's safe to pass -s always, even if -g is not used. */
 #undef ASM_SPEC
-#define ASM_SPEC \
-  "%{V} %{v:%{!V:-V}} %{Qy:} %{!Qn:-Qy} %{n} %{T} %{Ym,*} %{Wa,*:%*} -s \
-   %{fpic:-K PIC} %{fPIC:-K PIC}"
+#define ASM_SPEC "\
+%{v:-V} %{Qy:} %{!Qn:-Qy} %{n} %{T} %{Ym,*} %{Wa,*:%*} -s \
+%{fpic:-K PIC} %{fPIC:-K PIC} \
+%(asm_cpu) \
+"
+
+/* This is here rather than in sparc.h because it's not known what
+   other assemblers will accept.  */
+#if TARGET_CPU_DEFAULT == TARGET_CPU_sparc64
+#undef ASM_DEFAULT_SPEC
+#define ASM_DEFAULT_SPEC "-xarch=v8plus"
+#endif
+#undef ASM_CPU_SPEC
+#define ASM_CPU_SPEC "\
+%{mcpu=v8plus:-xarch=v8plus} \
+%{mcpu=ultrasparc:-xarch=v8plus} \
+%{!mcpu*:%(asm_default)} \
+"
 
 /* However it appears that Solaris 2.0 uses the same reg numbering as
    the old BSD-style system did. */
@@ -59,18 +73,6 @@ Boston, MA 02111-1307, USA.  */
 #undef ASM_OUTPUT_SKIP
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
   fprintf (FILE, "\t.skip %u\n", (SIZE))
-
-#undef ASM_OUTPUT_ALIGNED_LOCAL
-#define ASM_OUTPUT_ALIGNED_LOCAL(FILE, NAME, SIZE, ALIGN)		\
-do {									\
-  fputs ("\t.local\t", (FILE));		\
-  assemble_name ((FILE), (NAME));					\
-  putc ('\n', (FILE));							\
-  ASM_OUTPUT_ALIGNED_COMMON (FILE, NAME, SIZE, ALIGN);			\
-} while (0)
-
-#undef COMMON_ASM_OP
-#define COMMON_ASM_OP "\t.common"
 
 /* This is how to output a definition of an internal numbered label where
    PREFIX is the class of label and NUM is the number within the class.  */
@@ -102,7 +104,10 @@ do {									\
 #undef STARTFILE_SPEC
 #define STARTFILE_SPEC "%{!shared: \
 			 %{!symbolic: \
-			  %{p:mcrt1.o%s}%{!p:crt1.o%s} %{pg:gmon.o%s}}} \
+			  %{p:mcrt1.o%s} \
+                          %{!p: \
+	                    %{pg:gcrt1.o%s gmon.o%s} \
+                            %{!pg:crt1.o%s}}}} \
 			crti.o%s \
 			%{ansi:values-Xc.o%s} \
 			%{!ansi: \
@@ -124,10 +129,10 @@ do {									\
 /* This should be the same as in svr4.h, except with -R added.  */
 #undef LINK_SPEC
 #define LINK_SPEC \
-  "%{h*} %{V} %{v:%{!V:-V}} \
+  "%{h*} %{v:-V} \
    %{b} %{Wl,*:%*} \
    %{static:-dn -Bstatic} \
-   %{shared:-G -dy -z text %{!h*:%{o*:-h %*}}} \
+   %{shared:-G -dy %{!mimpure-text:-z text} %{!h*:%{o*:-h %*}}} \
    %{symbolic:-Bsymbolic -G -dy -z text %{!h*:%{o*:-h %*}}} \
    %{G:-G} \
    %{YP,*} \
@@ -148,17 +153,10 @@ do {									\
 
 #undef SWITCH_TAKES_ARG
 #define SWITCH_TAKES_ARG(CHAR) \
-  (   (CHAR) == 'D' \
-   || (CHAR) == 'U' \
-   || (CHAR) == 'o' \
-   || (CHAR) == 'e' \
-   || (CHAR) == 'u' \
-   || (CHAR) == 'I' \
-   || (CHAR) == 'm' \
-   || (CHAR) == 'L' \
+  (DEFAULT_SWITCH_TAKES_ARG(CHAR) \
    || (CHAR) == 'R' \
-   || (CHAR) == 'A' \
    || (CHAR) == 'h' \
+   || (CHAR) == 'x' \
    || (CHAR) == 'z')
 
 /* ??? This does not work in SunOS 4.x, so it is not enabled in sparc.h.

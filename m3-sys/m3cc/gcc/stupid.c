@@ -1,5 +1,5 @@
 /* Dummy data flow analysis for GNU compiler in nonoptimizing mode.
-   Copyright (C) 1987, 1991, 1994, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 1991, 1994, 1995, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -65,6 +65,11 @@ static int *uid_suid;
 
 static int last_call_suid;
 
+/* Record the suid of the last NOTE_INSN_SETJMP
+   so we can tell whether a pseudo reg crosses any setjmp.  */
+
+static int last_setjmp_suid;
+
 /* Element N is suid of insn where life span of pseudo reg N ends.
    Element is  0 if register N has not been seen yet on backward scan.  */
 
@@ -87,6 +92,10 @@ static char *regs_live;
    its size.  */
 
 static char *regs_change_size;
+
+/* Indexed by reg number, nonzero if reg crosses a setjmp.  */
+
+static char *regs_crosses_setjmp;
 
 /* Indexed by insn's suid, the set of hard regs live after that insn.  */
 
@@ -148,6 +157,7 @@ stupid_life_analysis (f, nregs, file)
     }
 
   last_call_suid = i + 1;
+  last_setjmp_suid = i + 1;
   max_suid = i + 1;
 
   max_regno = nregs;
@@ -165,6 +175,9 @@ stupid_life_analysis (f, nregs, file)
 
   regs_change_size = (char *) alloca (nregs * sizeof (char));
   bzero ((char *) regs_change_size, nregs * sizeof (char));
+
+  regs_crosses_setjmp = (char *) alloca (nregs * sizeof (char));
+  bzero ((char *) regs_crosses_setjmp, nregs * sizeof (char));
 
   reg_renumber = (short *) oballoc (nregs * sizeof (short));
   for (i = 0; i < FIRST_PSEUDO_REGISTER; i++)
@@ -215,6 +228,10 @@ stupid_life_analysis (f, nregs, file)
       if (GET_RTX_CLASS (GET_CODE (insn)) == 'i')
 	stupid_mark_refs (PATTERN (insn), insn);
 
+      if (GET_CODE (insn) == NOTE
+	  && NOTE_LINE_NUMBER (insn) == NOTE_INSN_SETJMP)
+	last_setjmp_suid = INSN_SUID (insn);
+
       /* Mark all call-clobbered regs as live after each call insn
 	 so that a pseudo whose life span includes this insn
 	 will not go in one of them.
@@ -253,8 +270,9 @@ stupid_life_analysis (f, nregs, file)
     {
       register int r = reg_order[i];
 
-      /* Some regnos disappear from the rtl.  Ignore them to avoid crash.  */
-      if (regno_reg_rtx[r] == 0)
+      /* Some regnos disappear from the rtl.  Ignore them to avoid crash. 
+	 Also don't allocate registers that cross a setjmp.  */
+      if (regno_reg_rtx[r] == 0 || regs_crosses_setjmp[r])
 	continue;
 
       /* Now find the best hard-register class for this pseudo register */
@@ -308,8 +326,8 @@ stupid_reg_compare (r1p, r2p)
 /* Find a block of SIZE words of hard registers in reg_class CLASS
    that can hold a value of machine-mode MODE
      (but actually we test only the first of the block for holding MODE)
-   currently free from after insn whose suid is BIRTH
-   through the insn whose suid is DEATH,
+   currently free from after insn whose suid is BORN_INSN
+   through the insn whose suid is DEAD_INSN,
    and return the number of the first of them.
    Return -1 if such a block cannot be found.
 
@@ -336,6 +354,13 @@ stupid_find_reg (call_preserved, class, mode,
 #ifdef ELIMINABLE_REGS
   static struct {int from, to; } eliminables[] = ELIMINABLE_REGS;
 #endif
+
+  /* If this register's life is more than 5,000 insns, we probably
+     can't allocate it, so don't waste the time trying.  This avoids
+     quadratic behavior on programs that have regularly-occurring
+     SAVE_EXPRs.  */
+  if (dead_insn > born_insn + 5000)
+    return -1;
 
   COPY_HARD_REG_SET (used,
 		     call_preserved ? call_used_reg_set : fixed_reg_set);
@@ -450,13 +475,13 @@ stupid_mark_refs (x, insn)
 
 		  /* The following line is for unused outputs;
 		     they do get stored even though never used again.  */
-		  MARK_LIVE_AFTER (insn, regno);
+		  MARK_LIVE_AFTER (insn, regno+j);
 
 		  /* When a hard reg is clobbered, mark it in use
 		     just before this insn, so it is live all through.  */
 		  if (code == CLOBBER && INSN_SUID (insn) > 0)
 		    SET_HARD_REG_BIT (after_insn_hard_regs[INSN_SUID (insn) - 1],
-				      regno);
+				      regno+j);
 		}
 	    }
 	  /* For pseudo regs, record where born, where dead, number of
@@ -487,6 +512,9 @@ stupid_mark_refs (x, insn)
 
 	      if (last_call_suid < reg_where_dead[regno])
 		reg_n_calls_crossed[regno] += 1;
+
+	      if (last_setjmp_suid < reg_where_dead[regno])
+		regs_crosses_setjmp[regno] = 1;
 	    }
 	}
 

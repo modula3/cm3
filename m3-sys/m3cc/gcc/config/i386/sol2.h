@@ -1,7 +1,6 @@
 /* Target definitions for GNU compiler for Intel 80386 running Solaris 2
-   Copyright (C) 1993, 1995 Free Software Foundation, Inc.
-
-   Written by Fred Fish (fnf@cygnus.com).
+   Copyright (C) 1993, 1995, 1996 Free Software Foundation, Inc.
+   Contributed by Fred Fish (fnf@cygnus.com).
 
 This file is part of GNU CC.
 
@@ -54,7 +53,7 @@ Boston, MA 02111-1307, USA.  */
 /* This should be the same as in svr4.h, except with -R added.  */
 #undef LINK_SPEC
 #define LINK_SPEC \
-  "%{h*} %{V} %{v:%{!V:-V}} \
+  "%{h*} %{v:-V} \
    %{b} %{Wl,*:%*} \
    %{static:-dn -Bstatic} \
    %{shared:-G -dy -z text} \
@@ -76,16 +75,8 @@ Boston, MA 02111-1307, USA.  */
 
 #undef SWITCH_TAKES_ARG
 #define SWITCH_TAKES_ARG(CHAR) \
-  (   (CHAR) == 'D' \
-   || (CHAR) == 'U' \
-   || (CHAR) == 'o' \
-   || (CHAR) == 'e' \
-   || (CHAR) == 'u' \
-   || (CHAR) == 'I' \
-   || (CHAR) == 'm' \
-   || (CHAR) == 'L' \
+  (DEFAULT_SWITCH_TAKES_ARG(CHAR) \
    || (CHAR) == 'R' \
-   || (CHAR) == 'A' \
    || (CHAR) == 'h' \
    || (CHAR) == 'z')
 

@@ -201,7 +201,9 @@ static rtx initial_reg_note_copy PROTO((rtx, struct inline_remap *));
 static void final_reg_note_copy PROTO((rtx, struct inline_remap *));
 static void copy_loop_body PROTO((rtx, rtx, struct inline_remap *, rtx, int,
 				  enum unroll_types, rtx, rtx, rtx, rtx));
-static void iteration_info PROTO((rtx, rtx *, rtx *, rtx, rtx));
+/* CYGNUS LOCAL -- Haifa scheduler */
+void iteration_info PROTO((rtx, rtx *, rtx *, rtx, rtx));
+/* END CYGNUS LOCAL */
 static rtx approx_final_value PROTO((enum rtx_code, rtx, int *, int *));
 static int find_splittable_regs PROTO((enum unroll_types, rtx, rtx, rtx, int));
 static int find_splittable_givs PROTO((struct iv_class *,enum unroll_types,
@@ -1039,6 +1041,17 @@ unroll_loop (loop_end, insn_count, loop_start, end_insert_before,
 	  /* Set unroll type to MODULO now.  */
 	  unroll_type = UNROLL_MODULO;
 	  loop_preconditioned = 1;
+
+/* CYGNUS LOCAL haifa */
+#ifdef HAIFA
+	  if (loop_n_iterations > 0)
+	    loop_unroll_iter[ loop_number(loop_start, loop_end) ] = 
+	      loop_n_iterations - loop_n_iterations % (abs_inc * unroll_number);
+	  else
+	    /* inform loop.c about the new initial value */
+	    loop_start_value[ loop_number(loop_start, loop_end) ] = initial_value;
+#endif
+/* END CYGNUS LOCAL haifa */
 	}
     }
 
@@ -1052,6 +1065,16 @@ unroll_loop (loop_end, insn_count, loop_start, end_insert_before,
     }
 
   /* At this point, we are guaranteed to unroll the loop.  */
+
+  /* CYGNUS LOCAL -- Haifa scheduler */
+#ifdef HAIFA
+  /* inform loop.c about the factor of unrolling */
+  if (unroll_type == UNROLL_COMPLETELY)
+    loop_unroll_factor[ loop_number(loop_start, loop_end) ] = -1;
+  else
+    loop_unroll_factor[ loop_number(loop_start, loop_end) ] = unroll_number;
+#endif	/* HAIFA */
+  /* END CYGNUS LOCAL -- Haifa scheduler */
 
   /* For each biv and giv, determine whether it can be safely split into
      a different variable for each unrolled copy of the loop body.
@@ -1104,6 +1127,10 @@ unroll_loop (loop_end, insn_count, loop_start, end_insert_before,
 	  map->reg_map[REGNO (v->dest_reg)] = v->src_reg;
 #endif
     }
+
+  /* Use our current register alignment and pointer flags.  */
+  map->regno_pointer_flag = regno_pointer_flag;
+  map->regno_pointer_align = regno_pointer_align;
 
   /* If the loop is being partially unrolled, and the iteration variables
      are being split, and are being renamed for the split, then must fix up
@@ -1602,10 +1629,15 @@ copy_loop_body (copy_start, copy_end, map, exit_label, last_iteration,
 	      for (tv = bl->giv; tv; tv = tv->next_iv)
 		if (tv->giv_type == DEST_ADDR && tv->same == v)
 		  {
-		    int this_giv_inc = INTVAL (giv_inc);
+		    int this_giv_inc;
+
+		    /* If this DEST_ADDR giv was not split, then ignore it.  */
+		    if (*tv->location != tv->dest_reg)
+		      continue;
 
 		    /* Scale this_giv_inc if the multiplicative factors of
 		       the two givs are different.  */
+		    this_giv_inc = INTVAL (giv_inc);
 		    if (tv->mult_val != v->mult_val)
 		      this_giv_inc = (this_giv_inc / INTVAL (v->mult_val)
 				      * INTVAL (tv->mult_val));
@@ -2194,7 +2226,9 @@ biv_total_increment (bl, loop_start, loop_end)
    Initial_value and/or increment are set to zero if their values could not
    be calculated.  */
 
-static void
+/* CYGNUS LOCAL haifa */
+void
+/* END CYGNUS LOCAL haifa */
 iteration_info (iteration_var, initial_value, increment, loop_start, loop_end)
      rtx iteration_var, *initial_value, *increment;
      rtx loop_start, loop_end;
@@ -2776,7 +2810,7 @@ find_splittable_givs (bl, unroll_type, loop_start, loop_end, increment,
 			 Try to validate both the first and the last
 			 address resulting from loop unrolling, if
 			 one fails, then can't do const elim here.  */
-		      if (! verify_addresses (v, giv_inc, unroll_number))
+		      if (verify_addresses (v, giv_inc, unroll_number))
 			{
 			  /* Save the negative of the eliminated const, so
 			     that we can calculate the dest_reg's increment
@@ -2998,7 +3032,7 @@ reg_dead_after_loop (reg, loop_start, loop_end)
 	      if (GET_CODE (PATTERN (insn)) == RETURN)
 		break;
 	      else if (! simplejump_p (insn)
-		       /* Prevent infinite loop following infinite loops. */
+		       /* Prevent infinite loop following infinite loops.  */
 		       || jump_count++ > 20)
 		return 0;
 	      else

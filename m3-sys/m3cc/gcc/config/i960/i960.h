@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler, for Intel 80960
-   Copyright (C) 1992, 1993, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1993, 1995, 1996 Free Software Foundation, Inc.
    Contributed by Steven McGeady, Intel Corp.
    Additional Work by Glenn Colon-Bonet, Jonathan Shapiro, Andy Wilson
    Converted to GCC 2.0 by Jim Wilson and Michael Tiemann, Cygnus Support.
@@ -108,18 +108,18 @@ Boston, MA 02111-1307, USA.  */
 
 /* Generate SDB style debugging information.  */
 #define SDB_DEBUGGING_INFO
+#define EXTENDED_SDB_BASIC_TYPES
 
 /* Generate DBX_DEBUGGING_INFO by default.  */
 #define PREFERRED_DEBUGGING_TYPE DBX_DEBUG
 
-/* Redefine this to print in hex and adjust values like GNU960.  The extra
-   bit is used to handle the type long double.  Gcc does not support long
-   double in sdb output, but we do support the non-standard format.  */
+/* Redefine this to print in hex.  No value adjustment is necessary
+   anymore.  */
 #define PUT_SDB_TYPE(A) \
-  fprintf (asm_out_file, "\t.type\t0x%x;", (A & 0xf) + 2 * (A & ~0xf))
+  fprintf (asm_out_file, "\t.type\t0x%x;", A)
 
 /* Handle pragmas for compatibility with Intel's compilers.  */
-#define HANDLE_PRAGMA(FILE) process_pragma (FILE)
+#define HANDLE_PRAGMA(FILE, NODE) process_pragma (FILE, NODE)
 
 /* Run-time compilation parameters selecting different hardware subsets.  */
 
@@ -342,8 +342,11 @@ extern int target_flags;
 /* Width in bits of a pointer.  See also the macro `Pmode' defined below.  */
 #define POINTER_SIZE 32
 
-/* Width in bits of a long double.  Identical to double for now.  */
-#define	LONG_DOUBLE_TYPE_SIZE	64
+/* Width in bits of a long double.  Define to 96, and let ROUND_TYPE_ALIGN
+   adjust the alignment for speed.  */
+/* CYGNUS LOCAL i960-80bit */
+#define	LONG_DOUBLE_TYPE_SIZE 96
+/* END CYGNUS LOCAL */
 
 /* Allocation boundary (in *bits*) for storing pointers in memory.  */
 #define POINTER_BOUNDARY 32
@@ -402,13 +405,14 @@ extern int target_flags;
 #define ROUND_TYPE_ALIGN(TYPE, COMPUTED, SPECIFIED)		\
   ((TREE_CODE (TYPE) == REAL_TYPE && TYPE_MODE (TYPE) == XFmode)	   \
    ? 128  /* Put 80 bit floating point elements on 128 bit boundaries.  */ \
-   : ((!TARGET_OLD_ALIGN && TREE_CODE (TYPE) == RECORD_TYPE)		   \
+   : ((!TARGET_OLD_ALIGN && !TYPE_PACKED (TYPE)				   \
+       && TREE_CODE (TYPE) == RECORD_TYPE)				   \
       ? i960_round_align (MAX ((COMPUTED), (SPECIFIED)), TYPE_SIZE (TYPE)) \
       : MAX ((COMPUTED), (SPECIFIED))))
 
 #define ROUND_TYPE_SIZE(TYPE, COMPUTED, SPECIFIED)		\
   ((TREE_CODE (TYPE) == REAL_TYPE && TYPE_MODE (TYPE) == XFmode)	\
-   ? build_int_2 (128, 0) : (COMPUTED))
+   ? build_int_2 (128, 0) : round_up (COMPUTED, SPECIFIED))
 
 /* Standard register usage.  */
 
@@ -651,8 +655,9 @@ enum reg_class { NO_REGS, GLOBAL_REGS, LOCAL_REGS, LOCAL_OR_GLOBAL_REGS,
 #define CONST_OK_FOR_LETTER_P(VALUE, C)  				\
   ((C) == 'I' ? (((unsigned) (VALUE)) <= 31)				\
    : (C) == 'J' ? ((VALUE) == 0)					\
-      : (C) == 'K' ? ((VALUE) > -32 && (VALUE) <= 0)			\
-	: 0)
+   : (C) == 'K' ? ((VALUE) >= -31 && (VALUE) <= 0)			\
+   : (C) == 'M' ? ((VALUE) >= -32 && (VALUE) <= 0)			\
+   : 0)
 
 /* Similar, but for floating constants, and defining letters G and H.
    Here VALUE is the CONST_DOUBLE rtx itself.
@@ -802,7 +807,7 @@ struct cum_args { int ca_nregparms; int ca_nstackparms; };
 
    On 80960, the offset always starts at 0; the first parm reg is g0.  */
 
-#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME)	\
+#define INIT_CUMULATIVE_ARGS(CUM,FNTYPE,LIBNAME,INDIRECT)	\
   ((CUM).ca_nregparms = 0, (CUM).ca_nstackparms = 0)
 
 /* Update the data in CUM to advance over an argument
@@ -1104,7 +1109,7 @@ extern struct rtx_def *legitimize_address ();
 
 /* Define this to be nonzero if shift instructions ignore all but the low-order
    few bits. */
-#define SHIFT_COUNT_TRUNCATED 1
+#define SHIFT_COUNT_TRUNCATED 0
 
 /* Value is 1 if truncating an integer of INPREC bits to OUTPREC bits
    is done just by pretending it is already truncated.  */
@@ -1502,6 +1507,7 @@ extern enum insn_types i960_last_insn_type;
   {"fpmove_src_operand", {CONST_INT, CONST_DOUBLE, CONST, SYMBOL_REF,	\
 			  LABEL_REF, SUBREG, REG, MEM}},		\
   {"arith_operand", {SUBREG, REG, CONST_INT}},				\
+  {"logic_operand", {SUBREG, REG, CONST_INT}},				\
   {"fp_arith_operand", {SUBREG, REG, CONST_DOUBLE}},			\
   {"signed_arith_operand", {SUBREG, REG, CONST_INT}},			\
   {"literal", {CONST_INT}},						\
@@ -1521,6 +1527,8 @@ extern enum insn_types i960_last_insn_type;
 extern char *i960_output_ldconst ();
 extern char *i960_output_call_insn ();
 extern char *i960_output_ret_insn ();
+extern char *i960_output_move_double ();
+extern char *i960_output_move_quad ();
 
 /* Defined in reload.c, and used in insn-recog.c.  */
 

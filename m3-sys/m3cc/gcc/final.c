@@ -1,5 +1,5 @@
 /* Convert RTL to assembler code and output it, for GNU compiler.
-   Copyright (C) 1987, 88, 89, 92, 93, 94, 1995 Free Software Foundation, Inc.
+   Copyright (C) 1987, 88, 89, 92-5, 1996 Free Software Foundation, Inc.
 
 This file is part of GNU CC.
 
@@ -67,6 +67,7 @@ Boston, MA 02111-1307, USA.  */
 #include "hard-reg-set.h"
 #include "defaults.h"
 #include "output.h"
+#include "except.h"
 
 /* Get N_SLINE and N_SOL from stab.h if we can expect the file to exist.  */
 #if defined (DBX_DEBUGGING_INFO) || defined (XCOFF_DEBUGGING_INFO)
@@ -94,6 +95,12 @@ Boston, MA 02111-1307, USA.  */
 #ifndef INT_TYPE_SIZE
 #define INT_TYPE_SIZE BITS_PER_WORD
 #endif
+
+/* CYGNUS LOCAL: gcov */
+#ifndef LONG_TYPE_SIZE
+#define LONG_TYPE_SIZE BITS_PER_WORD
+#endif
+/* END CYGNUS LOCAL */
 
 /* If we aren't using cc0, CC_STATUS_INIT shouldn't exist.  So define a
    null default for it to save conditionalization later.  */
@@ -134,6 +141,11 @@ static char *last_filename;
 /* Number of basic blocks seen so far;
    used if profile_block_flag is set.  */
 static int count_basic_blocks;
+
+/* CYGNUS LOCAL: gcov */
+/* Number of instrumented arcs when profile_arc_flag is set.  */
+extern int count_instrumented_arcs;
+/* END CYGNUS LOCAL */
 
 /* Nonzero while outputting an `asm' with operands.
    This means that inconsistencies are the user's fault, so don't abort.
@@ -309,14 +321,25 @@ end_final (filename)
 {
   int i;
 
-  if (profile_block_flag)
+  /* CYGNUS LOCAL: gcov */
+  if (profile_block_flag || profile_arc_flag)
     {
       char name[20];
       int align = exact_log2 (BIGGEST_ALIGNMENT / BITS_PER_UNIT);
-      int size = (POINTER_SIZE / BITS_PER_UNIT) * count_basic_blocks;
-      int rounded = size;
+      /* CYGNUS LOCAL: gcov */
+      int size, rounded;
       struct bb_list *ptr;
       struct bb_str *sptr;
+      /* CYGNUS LOCAL: gcov */
+      int long_bytes = LONG_TYPE_SIZE / BITS_PER_UNIT;
+      int pointer_bytes = POINTER_SIZE / BITS_PER_UNIT;
+
+      /* CYGNUS LOCAL: gcov */
+      if (profile_block_flag)
+	size = long_bytes * count_basic_blocks;
+      else
+	size = long_bytes * count_instrumented_arcs;
+      rounded = size;
 
       rounded += (BIGGEST_ALIGNMENT / BITS_PER_UNIT) - 1;
       rounded = (rounded / (BIGGEST_ALIGNMENT / BITS_PER_UNIT)
@@ -324,8 +347,8 @@ end_final (filename)
 
       data_section ();
 
-      /* Output the main header, of 10 words:
-	 0:  1 if this file's initialized, else 0.
+      /* Output the main header, of 11 words:
+	 0:  1 if this file is initialized, else 0.
 	 1:  address of file name (LPBX1).
 	 2:  address of table of counts (LPBX2).
 	 3:  number of counts in the table.
@@ -337,52 +360,81 @@ end_final (filename)
 	 6:  Number of bytes in this header.
 	 7:  address of table of function names (LPBX4).
 	 8:  address of table of line numbers (LPBX5) or 0.
-	 9:  address of table of file names (LPBX6) or 0.  */
+	 9:  address of table of file names (LPBX6) or 0.
+	10:  space reserved for basic block profiling.  */
 
       ASM_OUTPUT_ALIGN (asm_out_file, align);
 
       ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "LPBX", 0);
       /* zero word */
-      assemble_integer (const0_rtx, UNITS_PER_WORD, 1);
+      /* CYGNUS LOCAL: gcov */
+      assemble_integer (const0_rtx, long_bytes, 1);
 
       /* address of filename */
       ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 1);
-      assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name), UNITS_PER_WORD, 1);
+      /* CYGNUS LOCAL: gcov */
+      assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name), pointer_bytes, 1);
 
       /* address of count table */
       ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 2);
-      assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name), UNITS_PER_WORD, 1);
+      /* CYGNUS LOCAL: gcov */
+      assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name), pointer_bytes, 1);
 
-      /* count of the # of basic blocks */
-      assemble_integer (GEN_INT (count_basic_blocks), UNITS_PER_WORD, 1);
+      /* CYGNUS LOCAL: gcov */
+      /* count of the # of basic blocks or # of instrumented arcs */
+      if (profile_block_flag)
+	assemble_integer (GEN_INT (count_basic_blocks), long_bytes, 1);
+      else
+	assemble_integer (GEN_INT (count_instrumented_arcs), long_bytes,
+			  1);
 
       /* zero word (link field) */
-      assemble_integer (const0_rtx, UNITS_PER_WORD, 1);
+      /* CYGNUS LOCAL: gcov */
+      assemble_integer (const0_rtx, pointer_bytes, 1);
 
       /* address of basic block start address table */
-      ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 3);
-      assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name), UNITS_PER_WORD, 1);
+      /* CYGNUS LOCAL: gcov */
+      if (profile_block_flag)
+	{
+	  ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 3);
+	  assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name), pointer_bytes,
+			    1);
+	}
+      else
+	assemble_integer (const0_rtx, pointer_bytes, 1);
 
       /* byte count for extended structure.  */
-      assemble_integer (GEN_INT (10 * UNITS_PER_WORD), UNITS_PER_WORD, 1);
+      /* CYGNUS LOCAL: gcov */
+      assemble_integer (GEN_INT (10 * UNITS_PER_WORD), long_bytes, 1);
 
       /* address of function name table */
-      ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 4);
-      assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name), UNITS_PER_WORD, 1);
+      /* CYGNUS LOCAL: gcov */
+      if (profile_block_flag)
+	{
+	  ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 4);
+	  assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name), pointer_bytes,
+			    1);
+	}
+      else
+	assemble_integer (const0_rtx, pointer_bytes, 1);
 
       /* address of line number and filename tables if debugging.  */
-      if (write_symbols != NO_DEBUG)
+      /* CYGNUS LOCAL: gcov (12 lines) */
+      if (write_symbols != NO_DEBUG && profile_block_flag)
 	{
 	  ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 5);
-	  assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name), UNITS_PER_WORD, 1);
+	  assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name), pointer_bytes, 1);
 	  ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 6);
-	  assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name), UNITS_PER_WORD, 1);
+	  assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name), pointer_bytes, 1);
 	}
       else
 	{
-	  assemble_integer (const0_rtx, UNITS_PER_WORD, 1);
-	  assemble_integer (const0_rtx, UNITS_PER_WORD, 1);
+	  assemble_integer (const0_rtx, pointer_bytes, 1);
+	  assemble_integer (const0_rtx, pointer_bytes, 1);
 	}
+
+      /* space for extension ptr (link field) */
+      assemble_integer (const0_rtx, UNITS_PER_WORD, 1);
 
       /* Output the file name changing the suffix to .d for Sun tcov
 	 compatibility.  */
@@ -396,12 +448,16 @@ end_final (filename)
 	strcat (data_file, "/");
 	strcat (data_file, filename);
 	strip_off_ending (data_file, len);
-	strcat (data_file, ".d");
+	/* CYGNUS LOCAL: gcov */
+	if (profile_block_flag)
+	  strcat (data_file, ".d");
+	else
+	  strcat (data_file, ".da");
 	assemble_string (data_file, strlen (data_file) + 1);
       }
 
       /* Make space for the table of counts.  */
-      if (flag_no_common || size == 0)
+      if (size == 0)
 	{
 	  /* Realign data section.  */
 	  ASM_OUTPUT_ALIGN (asm_out_file, align);
@@ -426,54 +482,72 @@ end_final (filename)
 	}
 
       /* Output any basic block strings */
-      readonly_data_section ();
-      if (sbb_head)
+      /* CYGNUS LOCAL: gcov */
+      if (profile_block_flag)
 	{
-	  ASM_OUTPUT_ALIGN (asm_out_file, align);
-	  for (sptr = sbb_head; sptr != 0; sptr = sptr->next)
+	  readonly_data_section ();
+	  if (sbb_head)
 	    {
-	      ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "LPBC", sptr->label_num);
-	      assemble_string (sptr->string, sptr->length);
+	      ASM_OUTPUT_ALIGN (asm_out_file, align);
+	      for (sptr = sbb_head; sptr != 0; sptr = sptr->next)
+		{
+		  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "LPBC",
+					     sptr->label_num);
+		  assemble_string (sptr->string, sptr->length);
+		}
 	    }
 	}
 
       /* Output the table of addresses.  */
-      /* Realign in new section */
-      ASM_OUTPUT_ALIGN (asm_out_file, align);
-      ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "LPBX", 3);
-      for (i = 0; i < count_basic_blocks; i++)
+      /* CYGNUS LOCAL: gcov */
+      if (profile_block_flag)
 	{
-	  ASM_GENERATE_INTERNAL_LABEL (name, "LPB", i);
-	  assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name),
-			    UNITS_PER_WORD, 1);
+	  /* Realign in new section */
+	  ASM_OUTPUT_ALIGN (asm_out_file, align);
+	  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "LPBX", 3);
+	  for (i = 0; i < count_basic_blocks; i++)
+	    {
+	      /* CYGNUS LOCAL: gcov */
+	      ASM_GENERATE_INTERNAL_LABEL (name, "LPB", i);
+	      assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name),
+				pointer_bytes, 1);
+	    }
 	}
 
       /* Output the table of function names.  */
-      ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "LPBX", 4);
-      for ((ptr = bb_head), (i = 0); ptr != 0; (ptr = ptr->next), i++)
+      /* CYGNUS LOCAL: gcov */
+      if (profile_block_flag)
 	{
-	  if (ptr->func_label_num >= 0)
+	  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "LPBX", 4);
+	  for ((ptr = bb_head), (i = 0); ptr != 0; (ptr = ptr->next), i++)
 	    {
-	      ASM_GENERATE_INTERNAL_LABEL (name, "LPBC", ptr->func_label_num);
-	      assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name),
-				UNITS_PER_WORD, 1);
+	      if (ptr->func_label_num >= 0)
+		{
+		  ASM_GENERATE_INTERNAL_LABEL (name, "LPBC",
+					       ptr->func_label_num);
+		  assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name),
+				    pointer_bytes, 1);
+		}
+	      else
+		assemble_integer (const0_rtx, pointer_bytes, 1);
 	    }
-	  else
-	    assemble_integer (const0_rtx, UNITS_PER_WORD, 1);
+
+	  for ( ; i < count_basic_blocks; i++)
+	    assemble_integer (const0_rtx, pointer_bytes, 1);
 	}
 
-      for ( ; i < count_basic_blocks; i++)
-	assemble_integer (const0_rtx, UNITS_PER_WORD, 1);
-
-      if (write_symbols != NO_DEBUG)
+      /* CYGNUS LOCAL: gcov */
+      if (write_symbols != NO_DEBUG && profile_block_flag)
 	{
 	  /* Output the table of line numbers.  */
 	  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "LPBX", 5);
 	  for ((ptr = bb_head), (i = 0); ptr != 0; (ptr = ptr->next), i++)
-	    assemble_integer (GEN_INT (ptr->line_num), UNITS_PER_WORD, 1);
+	    /* CYGNUS LOCAL gcov */
+	    assemble_integer (GEN_INT (ptr->line_num), long_bytes, 1);
 
 	  for ( ; i < count_basic_blocks; i++)
-	    assemble_integer (const0_rtx, UNITS_PER_WORD, 1);
+	    /* CYGNUS LOCAL gcov */
+	    assemble_integer (const0_rtx, long_bytes, 1);
 
 	  /* Output the table of file names.  */
 	  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "LPBX", 6);
@@ -481,22 +555,32 @@ end_final (filename)
 	    {
 	      if (ptr->file_label_num >= 0)
 		{
-		  ASM_GENERATE_INTERNAL_LABEL (name, "LPBC", ptr->file_label_num);
+		  /* CYGNUS LOCAL: gcov */
+		  ASM_GENERATE_INTERNAL_LABEL (name, "LPBC",
+					       ptr->file_label_num);
 		  assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name),
-				    UNITS_PER_WORD, 1);
+				    pointer_bytes, 1);
 		}
 	      else
-		assemble_integer (const0_rtx, UNITS_PER_WORD, 1);
+		/* CYGNUS LOCAL gcov */
+		assemble_integer (const0_rtx, pointer_bytes, 1);
 	    }
 
 	  for ( ; i < count_basic_blocks; i++)
-	    assemble_integer (const0_rtx, UNITS_PER_WORD, 1);
+	    /* CYGNUS LOCAL gcov */
+	    assemble_integer (const0_rtx, pointer_bytes, 1);
 	}
 
       /* End with the address of the table of addresses,
 	 so we can find it easily, as the last word in the file's text.  */
-      ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 3);
-      assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name), UNITS_PER_WORD, 1);
+      /* CYGNUS LOCAL: gcov */
+      if (profile_block_flag)
+	{
+	  /* CYGNUS LOCAL: gcov */
+	  ASM_GENERATE_INTERNAL_LABEL (name, "LPBX", 3);
+	  assemble_integer (gen_rtx (SYMBOL_REF, Pmode, name), pointer_bytes,
+			    1);
+	}
     }
 }
 
@@ -705,7 +789,7 @@ shorten_branches (first)
 #endif
 	  /* Inside a delay slot sequence, we do not do any branch shortening
 	     if the shortening could change the number of delay slots
-	     of the branch. */
+	     of the branch.  */
 	  for (i = 0; i < XVECLEN (body, 0); i++)
 	    {
 	      rtx inner_insn = XVECEXP (body, 0, i);
@@ -893,7 +977,7 @@ final_start_function (first, file, optimize)
   /* For SDB and XCOFF, the function beginning must be marked between
      the function label and the prologue.  We always need this, even when
      -g1 was used.  Defer on MIPS systems so that parameter descriptions
-     follow function entry. */
+     follow function entry.  */
 #if defined(SDB_DEBUGGING_INFO) && !defined(MIPS_DEBUGGING_INFO)
   if (write_symbols == SDB_DEBUG)
     sdbout_begin_function (last_linenum);
@@ -957,7 +1041,7 @@ profile_after_prologue (file)
 #ifdef FUNCTION_BLOCK_PROFILER
   if (profile_block_flag)
     {
-      FUNCTION_BLOCK_PROFILER (file, profile_label_no);
+      FUNCTION_BLOCK_PROFILER (file, count_basic_blocks);
     }
 #endif /* FUNCTION_BLOCK_PROFILER */
 
@@ -971,14 +1055,16 @@ static void
 profile_function (file)
      FILE *file;
 {
-  int align = MIN (BIGGEST_ALIGNMENT, POINTER_SIZE);
+  /* CYGNUS LOCAL: gcov */
+  int align = MIN (BIGGEST_ALIGNMENT, LONG_TYPE_SIZE);
   int sval = current_function_returns_struct;
   int cxt = current_function_needs_context;
 
   data_section ();
   ASM_OUTPUT_ALIGN (file, floor_log2 (align / BITS_PER_UNIT));
   ASM_OUTPUT_INTERNAL_LABEL (file, "LP", profile_label_no);
-  assemble_integer (const0_rtx, POINTER_SIZE / BITS_PER_UNIT, 1);
+  /* CYGNUS LOCAL: gcov */
+  assemble_integer (const0_rtx, LONG_TYPE_SIZE / BITS_PER_UNIT, 1);
 
   text_section ();
 
@@ -1113,6 +1199,10 @@ add_bb (file)
      count of times it was entered.  */
 #ifdef BLOCK_PROFILER
   BLOCK_PROFILER (file, count_basic_blocks);
+  /* CYGNUS LOCAL: gcov */
+#endif
+#ifdef HAVE_cc0
+  /* END CYGNUS LOCAL */
   CC_STATUS_INIT;
 #endif
 
@@ -1148,7 +1238,7 @@ add_bb_string (string, perm_p)
       string = p;
     }
   else
-    for (ptr = sbb_head; ptr != (struct bb_str *)0; ptr = ptr->next)
+    for (ptr = sbb_head; ptr != (struct bb_str *) 0; ptr = ptr->next)
       if (ptr->string == string)
 	break;
 
@@ -1191,6 +1281,8 @@ final (first, file, optimize, prescan)
 
   last_ignored_compare = 0;
   new_block = 1;
+
+  check_exception_handler_labels ();
 
   /* Make a map indicating which line numbers appear in this function.
      When producing SDB debugging info, delete troublesome line number
@@ -1294,6 +1386,25 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
       if (NOTE_LINE_NUMBER (insn) == NOTE_INSN_LOOP_END)
 	break;
 
+      if (NOTE_LINE_NUMBER (insn) == NOTE_INSN_EH_REGION_BEG)
+	{
+	  ASM_OUTPUT_INTERNAL_LABEL (file, "LEHB", NOTE_BLOCK_NUMBER (insn));
+	  add_eh_table_entry (NOTE_BLOCK_NUMBER (insn));
+#ifdef ASM_OUTPUT_EH_REGION_BEG
+	  ASM_OUTPUT_EH_REGION_BEG (file, NOTE_BLOCK_NUMBER (insn));
+#endif
+	  break;
+	}
+
+      if (NOTE_LINE_NUMBER (insn) == NOTE_INSN_EH_REGION_END)
+	{
+	  ASM_OUTPUT_INTERNAL_LABEL (file, "LEHE", NOTE_BLOCK_NUMBER (insn));
+#ifdef ASM_OUTPUT_EH_REGION_END
+	  ASM_OUTPUT_EH_REGION_END (file, NOTE_BLOCK_NUMBER (insn));
+#endif
+	  break;
+	}
+
       if (NOTE_LINE_NUMBER (insn) == NOTE_INSN_PROLOGUE_END)
 	{
 #ifdef FUNCTION_END_PROLOGUE
@@ -1317,7 +1428,7 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	{
 #if defined(SDB_DEBUGGING_INFO) && defined(MIPS_DEBUGGING_INFO)
 	  /* MIPS stabs require the parameter descriptions to be after the
-	     function entry point rather than before. */
+	     function entry point rather than before.  */
 	  if (write_symbols == SDB_DEBUG)
 	    sdbout_begin_function (last_linenum);
 	  else
@@ -1487,6 +1598,11 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
       if (prescan > 0)
 	break;
       new_block = 1;
+
+#ifdef FINAL_PRESCAN_LABEL
+      FINAL_PRESCAN_INSN (insn, NULL_PTR, 0);
+#endif
+
 #ifdef SDB_DEBUGGING_INFO
       if (write_symbols == SDB_DEBUG && LABEL_NAME (insn))
 	sdbout_label (insn);
@@ -1747,35 +1863,39 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	   and the next statement should reexamine the variable
 	   to compute the condition codes.  */
 
-	if (optimize
-	    && GET_CODE (body) == SET
-	    && GET_CODE (SET_DEST (body)) == CC0
-	    && insn != last_ignored_compare)
+	if (optimize)
 	  {
-	    if (GET_CODE (SET_SRC (body)) == SUBREG)
-	      SET_SRC (body) = alter_subreg (SET_SRC (body));
-	    else if (GET_CODE (SET_SRC (body)) == COMPARE)
+	    rtx set = single_set(insn);
+
+	    if (set
+		&& GET_CODE (SET_DEST (set)) == CC0
+		&& insn != last_ignored_compare)
 	      {
-		if (GET_CODE (XEXP (SET_SRC (body), 0)) == SUBREG)
-		  XEXP (SET_SRC (body), 0)
-		    = alter_subreg (XEXP (SET_SRC (body), 0));
-		if (GET_CODE (XEXP (SET_SRC (body), 1)) == SUBREG)
-		  XEXP (SET_SRC (body), 1)
-		    = alter_subreg (XEXP (SET_SRC (body), 1));
-	      }
-	    if ((cc_status.value1 != 0
-		 && rtx_equal_p (SET_SRC (body), cc_status.value1))
-		|| (cc_status.value2 != 0
-		    && rtx_equal_p (SET_SRC (body), cc_status.value2)))
-	      {
-		/* Don't delete insn if it has an addressing side-effect.  */
-		if (! FIND_REG_INC_NOTE (insn, 0)
-		    /* or if anything in it is volatile.  */
-		    && ! volatile_refs_p (PATTERN (insn)))
+		if (GET_CODE (SET_SRC (set)) == SUBREG)
+		  SET_SRC (set) = alter_subreg (SET_SRC (set));
+		else if (GET_CODE (SET_SRC (set)) == COMPARE)
 		  {
-		    /* We don't really delete the insn; just ignore it.  */
-		    last_ignored_compare = insn;
-		    break;
+		    if (GET_CODE (XEXP (SET_SRC (set), 0)) == SUBREG)
+		      XEXP (SET_SRC (set), 0)
+			= alter_subreg (XEXP (SET_SRC (set), 0));
+		    if (GET_CODE (XEXP (SET_SRC (set), 1)) == SUBREG)
+		      XEXP (SET_SRC (set), 1)
+			= alter_subreg (XEXP (SET_SRC (set), 1));
+		  }
+		if ((cc_status.value1 != 0
+		     && rtx_equal_p (SET_SRC (set), cc_status.value1))
+		    || (cc_status.value2 != 0
+			&& rtx_equal_p (SET_SRC (set), cc_status.value2)))
+		  {
+		    /* Don't delete insn if it has an addressing side-effect.  */
+		    if (! FIND_REG_INC_NOTE (insn, 0)
+			/* or if anything in it is volatile.  */
+			&& ! volatile_refs_p (PATTERN (insn)))
+		      {
+			/* We don't really delete the insn; just ignore it.  */
+			last_ignored_compare = insn;
+			break;
+		      }
 		  }
 	      }
 	  }
@@ -1856,12 +1976,29 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	  }
 
 	/* Make same adjustments to instructions that examine the
-	   condition codes without jumping (if this machine has them).  */
+	   condition codes without jumping and instructions that
+	   handle conditional moves (if this machine has either one).  */
 
 	if (cc_status.flags != 0
 	    && GET_CODE (body) == SET)
 	  {
-	    switch (GET_CODE (SET_SRC (body)))
+	    rtx cond_rtx, then_rtx, else_rtx;
+	    
+	    if (GET_CODE (insn) != JUMP_INSN
+		&& GET_CODE (SET_SRC (body)) == IF_THEN_ELSE)
+	      {
+		cond_rtx = XEXP (SET_SRC (body), 0);
+		then_rtx = XEXP (SET_SRC (body), 1);
+		else_rtx = XEXP (SET_SRC (body), 2);
+	      }
+	    else
+	      {
+		cond_rtx = SET_SRC (body);
+		then_rtx = const_true_rtx;
+		else_rtx = const0_rtx;
+	      }
+	    
+	    switch (GET_CODE (cond_rtx))
 	      {
 	      case GTU:
 	      case GT:
@@ -1875,18 +2012,26 @@ final_scan_insn (insn, file, optimize, prescan, nopeepholes)
 	      case NE:
 		{
 		  register int result;
-		  if (XEXP (SET_SRC (body), 0) != cc0_rtx)
+		  if (XEXP (cond_rtx, 0) != cc0_rtx)
 		    break;
-		  result = alter_cond (SET_SRC (body));
+		  result = alter_cond (cond_rtx);
 		  if (result == 1)
-		    validate_change (insn, &SET_SRC (body), const_true_rtx, 0);
+		    validate_change (insn, &SET_SRC (body), then_rtx, 0);
 		  else if (result == -1)
-		    validate_change (insn, &SET_SRC (body), const0_rtx, 0);
+		    validate_change (insn, &SET_SRC (body), else_rtx, 0);
 		  else if (result == 2)
 		    INSN_CODE (insn) = -1;
+		  if (SET_DEST (body) == SET_SRC (body))
+		    {
+		      PUT_CODE (insn, NOTE);
+		      NOTE_LINE_NUMBER (insn) = NOTE_INSN_DELETED;
+		      NOTE_SOURCE_FILE (insn) = 0;
+		      break;
+		    }
 		}
 	      }
 	  }
+
 #endif
 
 	/* Do machine-specific peephole optimizations if desired.  */
@@ -2730,8 +2875,8 @@ asm_fprintf VPROTO((FILE *file, char *p, ...))
   VA_START (argptr, p);
 
 #ifndef __STDC__
-  file = va_arg (argptr, FILE*);
-  p = va_arg (argptr, char*);
+  file = va_arg (argptr, FILE *);
+  p = va_arg (argptr, char *);
 #endif
 
   buf[0] = '%';
@@ -2953,7 +3098,7 @@ split_double (value, first, second)
       /* Note, this converts the REAL_VALUE_TYPE to the target's
 	 format, splits up the floating point double and outputs
 	 exactly 32 bits of it into each of l[0] and l[1] --
-	 not necessarily BITS_PER_WORD bits. */
+	 not necessarily BITS_PER_WORD bits.  */
       REAL_VALUE_TO_TARGET_DOUBLE (r, l);
 
       *first = GEN_INT ((HOST_WIDE_INT) l[0]);
@@ -2992,7 +3137,8 @@ leaf_function_p ()
 {
   rtx insn;
 
-  if (profile_flag || profile_block_flag)
+  /* CYGNUS LOCAL: gcov */
+  if (profile_flag || profile_block_flag || profile_arc_flag)
     return 0;
 
   for (insn = get_insns (); insn; insn = NEXT_INSN (insn))
