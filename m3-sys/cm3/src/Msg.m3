@@ -18,10 +18,10 @@ PROCEDURE SetLevel (new: Level) =
 
 PROCEDURE UsageError (a, b, c: TEXT := NIL) =
   BEGIN
-    Out (a, b, c, Wr.EOL);
-    Out ("usage: ", Params.Get (0));
-    Out (" [-?] [options] [sources...] [objs...] [libs...] [-o pgm|-a lib|-c] ");
-    Out (Wr.EOL);
+    OutE (a, b, c, Wr.EOL);
+    OutE ("usage: ", Params.Get (0));
+    OutE (" [-?] [options] [sources...] [objs...] [libs...] [-o pgm|-a lib|-c] ");
+    OutE (Wr.EOL);
     FatalError (NIL, "bad usage");
   END UsageError;
 
@@ -41,9 +41,9 @@ PROCEDURE FatalError (args: AtomList.T;  a, b, c, d: TEXT := NIL) =
   BEGIN
     (** Out (Wr.EOL, "Fatal Error: ", a, b, c, d, Wr.EOL); **)
     crashing := TRUE;
-    Out (Wr.EOL);
-    Out ("Fatal Error: ", a, b, c, d, e);
-    Out (Wr.EOL, Wr.EOL);
+    OutE (Wr.EOL);
+    OutE ("Fatal Error: ", a, b, c, d, e);
+    OutE (Wr.EOL, Wr.EOL);
     Process.Exit (1);
   END FatalError;
 
@@ -51,7 +51,7 @@ PROCEDURE Error (args: AtomList.T;  a, b, c, d: TEXT := NIL) =
   VAR e := OSErr (args);
   BEGIN
     (** Out (Wr.EOL, "Fatal Error: ", a, b, c, d, Wr.EOL); **)
-    Out (a, b, c, d, e, Wr.EOL);
+    OutE (a, b, c, d, e, Wr.EOL);
   END Error;
 
 PROCEDURE Debug (a, b, c, d: TEXT := NIL) =
@@ -94,8 +94,17 @@ PROCEDURE OutL (a, b: TEXT;  l: Arg.List) =
     Out (Wr.EOL);
   END OutL;
 
+PROCEDURE OutE (a, b, c, d, e, f, g: TEXT := NIL) =
+  BEGIN
+    OutX (Stdio.stderr, a, b, c, d, e, f, g);
+  END OutE;
+
 PROCEDURE Out (a, b, c, d, e, f, g: TEXT := NIL) =
-  VAR wr := Stdio.stdout;
+  BEGIN
+    OutX (Stdio.stdout, a, b, c, d, e, f, g);
+  END Out;
+
+PROCEDURE OutX (wr : Wr.T; a, b, c, d, e, f, g: TEXT := NIL) =
   BEGIN
     TRY
       IF (a # NIL) THEN Wr.PutText (wr, a) END;
@@ -116,7 +125,7 @@ PROCEDURE Out (a, b, c, d, e, f, g: TEXT := NIL) =
           FatalError (NIL, "interrupted -- unable to write file: <stdout>");
         END;
     END;
-  END Out;
+  END OutX;
 
 BEGIN
 END Msg.
