@@ -1,4 +1,5 @@
-(* Copyright (C) 1996, Critical Mass, Inc.   All rights reserved.       *)
+(* Copyright (C) 1996-2000, Critical Mass, Inc.   All rights reserved.  *)
+(* See file COPYRIGHT-CMASS for details.                                *)
 (*                                                                      *)
 (* Dr. Hans-Walter Latz, 24.10.1996: added support for non-US keyboards *)
 
