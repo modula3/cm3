@@ -1,6 +1,6 @@
 INTERFACE MachineIDPosix;
 
-<*EXTERNAL MachineIDPosix__CCanGet*>
+<*EXTERNAL MachineIDPosixC__CanGet*>
 PROCEDURE CCanGet (id: ADDRESS): BOOLEAN;
 
 END MachineIDPosix.

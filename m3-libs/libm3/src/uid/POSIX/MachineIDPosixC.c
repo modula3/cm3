@@ -13,7 +13,7 @@
 #include <netdb.h>
 #include <string.h>
 
-int MachineIDPosix__CanGet(char *id) {
+int MachineIDPosixC__CanGet(char *id) {
   int i;
   char hostname[128];
   struct hostent *hostent;
