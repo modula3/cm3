@@ -1,0 +1,84 @@
+r infXYZ		# =>  Infinity, "XYZ"
+-> Infinity
+-> "XYZ"
+
+r -infXYZ		# => -Infinity, "XYZ"
+-> -Infinity
+-> "XYZ"
+
+r INFINITYXYZ		# =>  Infinity, "XYZ"
+-> Infinity
+-> "XYZ"
+
+r -INFINITYXYZ		# => -Infinity, "XYZ"
+-> -Infinity
+-> "XYZ"
+
+r nanXYZ		# => NaN, "XYZ"
+-> NaN
+-> "XYZ"
+
+r NaNXYZ		# => NaN, "XYZ"
+-> NaN
+-> "XYZ"
+
+l infXYZ		# =>  Infinity, "XYZ"
+-> Infinity
+-> "XYZ"
+
+l -infXYZ		# => -Infinity, "XYZ"
+-> -Infinity
+-> "XYZ"
+
+l INFINITYXYZ		# =>  Infinity, "XYZ"
+-> Infinity
+-> "XYZ"
+
+l -INFINITYXYZ		# => -Infinity, "XYZ"
+-> -Infinity
+-> "XYZ"
+
+l nanXYZ		# => NaN, "XYZ"
+-> NaN
+-> "XYZ"
+
+l NaNXYZ		# => NaN, "XYZ"
+-> NaN
+-> "XYZ"
+
+e infXYZ		# =>  Infinity, "XYZ"
+-> Infinity
+-> "XYZ"
+
+e -infXYZ		# => -Infinity, "XYZ"
+-> -Infinity
+-> "XYZ"
+
+e INFINITYXYZ		# =>  Infinity, "XYZ"
+-> Infinity
+-> "XYZ"
+
+e -INFINITYXYZ		# => -Infinity, "XYZ"
+-> -Infinity
+-> "XYZ"
+
+e nanXYZ		# => NaN, "XYZ"
+-> NaN
+-> "XYZ"
+
+e NaNXYZ		# => NaN, "XYZ"
+-> NaN
+-> "XYZ"
+
+r inXYZ			# => "XYZ"
+** Raised "Lex.Error"
+-> "XYZ"
+
+r infiXYZ		# => "XYZ"
+** Raised "Lex.Error"
+-> "XYZ"
+
+r naXYZ			# => "XYZ"
+** Raised "Lex.Error"
+-> "XYZ"
+

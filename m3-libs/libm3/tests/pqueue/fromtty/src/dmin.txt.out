@@ -1,0 +1,36 @@
+> fromelts e d c b a z y x w
+"e" => 1
+"d" => 2
+"c" => 3
+"b" => 4
+"a" => 5
+"z" => 6
+"y" => 7
+"x" => 8
+"w" => 9
+> dmin
+"a"
+> dmin
+"b"
+> dmin
+"c"
+> dmin
+"d"
+> dmin
+"e"
+> dmin
+"w"
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 3
+pq.heap = Elts{NIL, "x", "y", "z", NIL (X6)}
+> dmin
+"x"
+> dmin
+"y"
+> dmin
+"z"
+> dmin
+Queue is empty
+> dmin
+Queue is empty
+> ^D

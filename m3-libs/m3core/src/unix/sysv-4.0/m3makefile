@@ -1,0 +1,33 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Wed Aug 17 14:47:58 PDT 1994 by kalsow  
+%      modified on Wed Jun  9 17:03:31 PDT 1993 by harrison
+%      modified on Tue Mar 24 21:36:54 PST 1992 by muller
+
+Interface (Udir)
+Module    (Uerror)
+Interface (Uexec)
+Interface (Ugrp)
+Module    (Uin)
+Interface (Uipc)
+Interface (Umman)
+Module    (Umsg)
+Module    (Unetdb)
+Interface (Unix)
+Interface (Uprocess)
+Interface (Upwd)
+Interface (Uresource)
+Interface (Usem)
+Interface (Ushm)
+Module    (Usignal)
+Interface (Usocket)
+Interface (Ustat)
+Interface (Utime)
+Module    (Utypes)
+Interface (Uugid)
+Interface (Uuio)
+Interface (Uutmp)
+
+

@@ -1,0 +1,21 @@
+% Copyright (C) 1993 Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Mon Sep 20 12:29:20 PDT 1993 by kalsow 
+
+%
+%  Quake functions to instantiate a generic array sort.
+%
+
+readonly proc Array_sort (nm, elt) is
+  local sort = nm & "ArraySort"
+  build_generic_intf (sort, "ArraySort", [elt], VISIBLE)
+  build_generic_impl (sort, "ArraySort", [elt])
+end
+
+readonly proc array_sort (nm, elt) is
+  local sort = nm & "ArraySort"
+  build_generic_intf (sort, "ArraySort", [elt], HIDDEN)
+  build_generic_impl (sort, "ArraySort", [elt])
+end

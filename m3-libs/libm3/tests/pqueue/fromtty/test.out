@@ -1,0 +1,19 @@
+> LAST(pq.heap^) = 0; pq.sz = 0
+pq.heap = Elts{NIL}
+> "c" => 1
+> "a" => 2
+> LAST(pq.heap^) = 3; pq.sz = 2
+pq.heap = Elts{NIL, "a", "c", NIL}
+> "d" => 3
+> "z" => 4
+> "y" => 5
+> "w" => 6
+> LAST(pq.heap^) = 7; pq.sz = 6
+pq.heap = Elts{NIL, "a", "c", "d", "z", "y", "w", NIL}
+> "car" => 7
+"cat" => 8
+"dog" => 9
+"pooch" => 10
+> LAST(pq.heap^) = 7; pq.sz = 4
+pq.heap = Elts{NIL, "car", "cat", "dog", "pooch", NIL (X3)}
+> 

@@ -1,0 +1,84 @@
+# Last modified on Wed Mar 16 14:00:24 PST 1994 by heydon
+
+# This file tests formating of floating-point numbers with the "Fmt.Auto"
+# style. This file always requests a precision at least the number of digits
+# after the decimal, so it does not test the rounding functionality of the
+# "Fmt" implementation; see the test file "round.txt.in" for those tests.
+
+# Set the rounding mode for the rest of this test file (for lexing only)
+m NearestElseEven
+
+# Scientific notation output --------------------------------------------------
+
+# boundary cases
+
+r A 0 5.0e6		# "5e6",      "5.0e6"
+r A 0 5.0e-6		# "5e-6",     "5.0e-6"
+r A 3 1.287e6		# "1.287e6",  ditto
+r A 4 1.287e6		# "1.287e6",  ditto
+l A 0 5.0e6		# "5e6",      "5.0d6"
+l A 0 5.0e-6		# "5e-6",     "5.0d-6"
+l A 3 1.287e6		# "1.287e6",  "1.287d6"
+l A 4 1.287e6		# "1.287e6",  "1.287d6"
+e A 0 5.0e6		# "5e6",      "5.0x6"
+e A 0 5.0e-6		# "5e-6",     "5.0x-6"
+e A 3 1.287e6		# "1.287e6",  "1.287x6"
+e A 4 1.287e6		# "1.287e6",  "1.287x6"
+
+# normal numbers
+
+r A -1 1.17549435e-38		# "1.1754944e-38",           ditto
+r A -1 -1.0e-37			# "-1e-37",                  "-1.0e-37"
+l A -1 2.2250738585072014d-308	# "2.2250738585072014e-308", ditto (e->d)
+l A -1 -2d-309			# "-2e-309",                 "-2.0d-309"
+
+# denormal numbers
+
+r A -1 7.1e-46			# "1e-45",    "1.0e-45"
+r A -1 7.0e-46			# "0",        "0.0"
+l A -1 2.5e-324			# "5e-324",   "5.0d-324"
+l A -1 2.4e-324			# "0",        "0.0"
+
+# Fixpoint notation output ----------------------------------------------------
+
+# boundary cases
+
+r A 0 5.0e5		# "500000",   	 "500000.0"
+r A 0 5.0e-5		# "0.00005",  	 ditto
+r A 3 1.287e5		# "128700",   	 "128700.0"
+r A 3 1.287e-5		# "0.00001287",  ditto
+r A 6 -1.287e-5		# "-0.00001287", ditto
+l A 0 5.0e5		# "500000",   	 "500000.0d0"
+l A 0 5.0e-5		# "0.00005",  	 "0.00005d0"
+l A 3 1.287e5		# "128700",   	 "128700.0d0"
+l A 3 1.287e-5		# "0.00001287",  "0.00001287d0"
+l A 6 -1.287e-5		# "-0.00001287", "-0.00001287d0"
+e A 0 5.0e5		# "500000",   	 "500000.0x0"
+e A 0 5.0e-5		# "0.00005",  	 "0.00005x0"
+e A 3 1.287e5		# "128700",   	 "128700.0x0"
+e A 3 1.287e-5		# "0.00001287",  "0.00001287x0"
+e A 6 -1.287e-5		# "-0.00001287", "-0.00001287x0"
+
+# varying locations of decimal
+
+r A 3 1.234e-2		# "0.01234", ditto
+r A 3 1.234e-1		# "0.1234",  ditto
+r A 3 1.234e0		# "1.234",   ditto
+r A 3 1.234e1		# "12.34",   ditto
+r A 3 1.234e2		# "123.4",   ditto
+r A 3 1.234e3		# "1234",    "1234.0"
+r A 3 1.234e4		# "12340",   "12340.0"
+l A 3 1.234e-2		# "0.01234", "0.01234d0"
+l A 3 1.234e-1		# "0.1234",  "0.1234d0"
+l A 3 1.234e0		# "1.234",   "1.234d0"
+l A 3 1.234e1		# "12.34",   "12.34d0"
+l A 3 1.234e2		# "123.4",   "123.4d0"
+l A 3 1.234e3		# "1234",    "1234.0d0"
+l A 3 1.234e4		# "12340",   "12340.0d0"
+e A 3 1.234e-2		# "0.01234", "0.01234x0"
+e A 3 1.234e-1		# "0.1234",  "0.1234x0"
+e A 3 1.234e0		# "1.234",   "1.234x0"
+e A 3 1.234e1		# "12.34",   "12.34x0"
+e A 3 1.234e2		# "123.4",   "123.4x0"
+e A 3 1.234e3		# "1234",    "1234.0x0"
+e A 3 1.234e4		# "12340",   "12340.0x0"

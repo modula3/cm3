@@ -1,0 +1,34 @@
+# Last modified on Wed Dec  8 00:30:31 PST 1993 by heydon
+#
+# This file tests that the Lex implemenation parses NaN's and infinities
+# correctly on IEEE implementations.
+
+# single-precision
+r infXYZ		# =>  Infinity, "XYZ"
+r -infXYZ		# => -Infinity, "XYZ"
+r INFINITYXYZ		# =>  Infinity, "XYZ"
+r -INFINITYXYZ		# => -Infinity, "XYZ"
+r nanXYZ		# => NaN, "XYZ"
+r NaNXYZ		# => NaN, "XYZ"
+
+# double-precision
+l infXYZ		# =>  Infinity, "XYZ"
+l -infXYZ		# => -Infinity, "XYZ"
+l INFINITYXYZ		# =>  Infinity, "XYZ"
+l -INFINITYXYZ		# => -Infinity, "XYZ"
+l nanXYZ		# => NaN, "XYZ"
+l NaNXYZ		# => NaN, "XYZ"
+
+# extended-precision
+e infXYZ		# =>  Infinity, "XYZ"
+e -infXYZ		# => -Infinity, "XYZ"
+e INFINITYXYZ		# =>  Infinity, "XYZ"
+e -INFINITYXYZ		# => -Infinity, "XYZ"
+e nanXYZ		# => NaN, "XYZ"
+e NaNXYZ		# => NaN, "XYZ"
+
+# lex errors
+r inXYZ			# => "XYZ"
+r infiXYZ		# => "XYZ"
+r naXYZ			# => "XYZ"
+

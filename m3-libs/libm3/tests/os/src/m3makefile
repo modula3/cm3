@@ -1,0 +1,15 @@
+/* Copyright (C) 1993, Digital Equipment Corporation        */
+/* All rights reserved.                                     */
+/* See the file COPYRIGHT for a full description.           */
+
+/* Last modified on Thu Apr 14 15:50:57 PDT 1994 by mcjones */
+
+import(libm3)
+
+build_standalone()
+
+module(PathnameTests)
+interface(Subr)
+module(TextSubrTbl)
+implementation(OSTest)
+program(OSTest)

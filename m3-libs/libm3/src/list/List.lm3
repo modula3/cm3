@@ -1,0 +1,89 @@
+(* Copyright (C) 1993 Digital Equipment Corporation                *)
+(* All rights reserved.                                            *)
+(* See the file COPYRIGHT for a full description.                  *)
+(* Last modified on Fri Jun 18 17:07:05 PDT 1993 by horning        *)
+
+GENERIC INTERFACE List(Elem);
+<*
+WHERE FUNCTIONAL(Elem.Equal(k1, k2: Key.T): BOOLEAN)
+
+TRAITS list(Elem.T)
+
+(* These module-global macros encapsulate the passing of state to the
+   LSL-defined operators. *)
+LET acyclic(t)      BE acyclic(t, T.tail)               IN
+LET acyclic'(t)     BE acyclic(t, T.tail')              IN
+LET fresh(t)        BE fresh(t, T.tail, T.tail')        IN
+LET freshTo(t1, t2) BE freshTo(t1, t2, T.tail, T.tail') IN
+LET iTail'(t, i)    BE iTail(t, i, T.tail')             IN
+LET last(t)         BE last(t, T.tail)                  IN
+LET reach(t)        BE reach(t, T.tail)                 IN
+LET seq(t)          BE seq(t, T.head, T.tail)           IN
+LET seq'(t)         BE seq(t, T.head', T.tail')         IN
+
+PROCEDURE Cons(READONLY head: Elem.T; tail: T): T;
+  ENSURES NEW(RESULT) /\ RESULT.head' = head /\ RESULT.tail' = tail
+
+PROCEDURE List1(READONLY e1: Elem.T): T;
+  ENSURES fresh(RESULT) /\ seq'(RESULT) = {e1}
+  CLAIM RESULT.head' = e1 /\ RESULT.tail' = NIL
+
+PROCEDURE List2(READONLY e1, e2: Elem.T): T;
+  ENSURES fresh(RESULT} /\ seq'(RESULT) = {e1} |- e2
+
+PROCEDURE List3(READONLY e1, e2, e3: Elem.T): T;
+  ENSURES fresh(RESULT) /\ seq'(RESULT) = {e1} |- e2 |- e3
+
+PROCEDURE FromArray(READONLY e: ARRAY OF Elem.T): T;
+  ENSURES fresh(RESULT) /\ seq'(RESULT) = e
+
+PROCEDURE Length(l: T): CARDINAL;
+  REQUIRES acyclic(l)
+  ENSURES RESULT = len(seq(l))
+
+PROCEDURE Nth(l: T; n: CARDINAL): Elem.T;
+  REQUIRES acyclic(l)
+  CHECKS n < len(seq(l))
+  ENSURES RESULT = seq(l)[n]
+
+PROCEDURE Member(l: T; READONLY e: Elem.T): BOOLEAN;
+  REQUIRES acyclic(l)
+  ENSURES RESULT = \exists i: [0..len(seq(l))-1]
+                     (Elem.Equal(e, seq(l)[i]))
+
+PROCEDURE Append(l1: T; l2: T): T;
+  REQUIRES acyclic(l1) /\ acyclic(l2)
+  ENSURES freshTo(RESULT, l2)
+    /\ isPrefix(seq(l1), seq'(RESULT))
+    /\ iTail'(RESULT, len(seq(l1))) = l2
+    /\ acyclic'(RESULT)
+  CLAIM seq'(RESULT) = seq(l1) || seq(l2)
+
+PROCEDURE AppendD(l1: T; l2: T): T;
+  REQUIRES acyclic(l1) /\ acyclic(l2)
+  MODIFIES last(l1).tail
+  ENSURES 
+    (IF l1 = NIL THEN RESULT = l2 /\ UNCHANGED(ALL)
+                 ELSE RESULT = l1 /\ last(l1).tail' = l2)
+    /\ acyclic'(RESULT)
+  CLAIM seq'(RESULT) = seq(l1) || seq(l2)
+
+PROCEDURE Reverse(l: T): T;
+  REQUIRES acyclic(l)
+  ENSURES fresh(RESULT)
+    /\ seq'(RESULT) = reverse(seq(l))
+    /\ acyclic'(RESULT)
+
+PROCEDURE ReverseD(l: T): T;
+  REQUIRES acyclic(l)
+  MODIFIES T.tail
+  ENSURES IF l = NIL THEN RESULT = NIL
+          ELSE RESULT = last(l) /\ l.tail' = NIL
+            /\ \forall t: T
+                 (IF t \in reach(l)
+                  THEN t.tail \neq NIL => t.tail.tail' = t
+                  ELSE UNCHANGED(t.tail))
+    /\ acyclic'(RESULT)
+  CLAIM seq'(RESULT) = reverse(seq(l))
+*>
+END List.
