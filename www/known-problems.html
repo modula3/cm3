@@ -36,6 +36,12 @@
         missing cygwin.dll</a><br>
       <br>
       <a href="#p_3">3 Release 5.1.1</a><br>
+      <br>
+      <a href="#p_4">4 Release 5.1.2-5.1.8</a><br>
+      &nbsp;&nbsp;    
+      <a href="#p_4_1">4.1 Linkage failure: missing -L before library
+      paths (installer bug)</a><br>
+      &nbsp;&nbsp;    
     </p>
 
     <a name="p_1">
@@ -266,6 +272,64 @@
       Problems and notes specific to release 5.1.1:
     </p>
 
+    <a name="p_4">
+    <h3>4 Release 5.1.2 - 5.1.8</h3>
+    </a>
+
+    <p>
+      Problems and notes specific to release 5.1.8:
+    </p>
+
+    <a name="p_4_1">
+    <h4>
+      4.1 Linkage failure: missing -L before library paths (installer bug)
+    </h4>
+    </a>
+
+    <p>
+      <b>Platforms:</b> all
+    </p>
+
+    <p>
+      <b>Description:</b>
+      The compiler complains about non-existant library files when
+      trying to link with libraries that were not present at
+      installation time but have been installed later. This is due to
+      a bug in the installation program <tt>cminstall</tt> which
+      forgets to prepend the string "-L" to all library paths for
+      libraries that haven't actually been found by it. Thus the
+      system library definitions in the configuration file
+      <tt>cm3.cfg</tt> used by the system linker are sometimes
+      incorrect.
+    </p>
+
+    <p>
+      <b>Solution:</b>
+      Add the missing -L to all system library definitions in
+      <tt>cm3.cfg</tt> where it is missing. For example, the
+      corresponding section in a FreeBSD4 configuration file (located
+      at <tt>/usr/local/cm3/bin/cm3.cfg</tt> by default) might look
+      like this (with all library path options added):
+    </p>
+    <pre>
+SYSTEM_LIBS = {
+  "LIBC"       : [ "-lm" ],
+  "LEX-YACC"   : [ "-L/usr/lib", "-ll" ],
+% "FLEX-BISON" : [ "-L/usr/lib", "-lfl" ],
+  "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
+  "OPENGL"     : [ "-L/usr/X11R6/lib", "-lGLU", "-lGL", "-lXext" ],
+  "MOTIF"      : [ "-L/usr/X11R6/lib", "-lXm" ],
+  "X11"        : [ "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext",
+                   "-lXt", "-lSM", "-lICE", "-lX11" ],
+  "TCP"        : [ ],
+  "ODBC"       : [ "-L/usr/local/lib", "-lodbc" ]
+}
+    </pre>
+    <p>
+      The problem has been corrected shortly after the release of CM3
+      5.1.8.
+    </p>
+
     <!--
     <h4></h4>
 
@@ -286,7 +350,7 @@
     <address><a href="mailto:m3-support@elego.de">Olaf Wagner</a></address>
 <!-- Created: Fri Mar  2 10:51:41 MET 2001 -->
 <!-- hhmts start -->
-Last modified: Sun Jun 10 12:04:37 MET DST 2001
+Last modified: Sat Jan 12 15:40:43 CET 2002
 <!-- hhmts end -->
   </body>
 </html>
