@@ -11,8 +11,8 @@ IMPORT LongRealVectorTrans AS VT;
 IMPORT LongRealMatrixFast AS M;
 IMPORT LongRealMatrixLapack AS LA;
 
-IMPORT LongRealFunctionalDeriv2 AS FD;
 IMPORT LongRealFunctional AS Fn;
+IMPORT LongRealFunctionalDeriv2 AS FnD;
 
 IMPORT LongRealSignal AS S;
 IMPORT LongRealSignalIntegerPower AS SIntPow;
@@ -228,19 +228,19 @@ PROCEDURE TestInverseDSSE (READONLY x0: ARRAY [0 .. 2] OF R.T) =
 PROCEDURE DeriveDist (normalMat    : M.T;
                       targetCor    : V.T;
                       targetNormSqr: R.T;
-                      s            : S.T; ): FD.T RAISES {NA.Error} =
+                      s            : S.T; ): FnD.T RAISES {NA.Error} =
   VAR
     normals := M.MulV(normalMat, s.getData());
     dist := V.Inner(s.getData(), V.Sub(normals, V.Scale(targetCor, R.Two)))
               + targetNormSqr;
 
   BEGIN
-    RETURN FD.T{zeroth := dist, first :=
-                V.Scale(V.Sub(normals, targetCor), R.Two), second :=
-                M.Scale(normalMat, R.Two)};
+    RETURN FnD.T{zeroth := dist, first :=
+                 V.Scale(V.Sub(normals, targetCor), R.Two), second :=
+                 M.Scale(normalMat, R.Two)};
   END DeriveDist;
 
-PROCEDURE DeriveSSE (hdual, gdual0, s: S.T; ): FD.T RAISES {NA.Error} =
+PROCEDURE DeriveSSE (hdual, gdual0, s: S.T; ): FnD.T RAISES {NA.Error} =
   VAR
     gdual   := gdual0.superpose(s.upsample(2).convolve(hdual));
     hprimal := gdual.alternate();
@@ -255,12 +255,12 @@ PROCEDURE DeriveSSE (hdual, gdual0, s: S.T; ): FD.T RAISES {NA.Error} =
     RETURN polypart;
     *)
     RETURN
-      FD.T{zeroth := ComputeSSE(hsums^), first :=
-           M.MulV(dsums, ComputeDSSE(hsums^)), second :=
-           M.Mul(M.Mul(dsums, ComputeDDSSE(hsums^)), M.Transpose(dsums))};
+      FnD.T{zeroth := ComputeSSE(hsums^), first :=
+            M.MulV(dsums, ComputeDSSE(hsums^)), second :=
+            M.Mul(M.Mul(dsums, ComputeDDSSE(hsums^)), M.Transpose(dsums))};
   END DeriveSSE;
 
-PROCEDURE DeriveWSSE (hdual, gdual0, s: S.T; c: R.T): FD.T
+PROCEDURE DeriveWSSE (hdual, gdual0, s: S.T; c: R.T): FnD.T
   RAISES {NA.Error} =
   (* In the fitting routine the expression hdual*s+gdual0*c is fitted to
      the target.  But the wavelet won't be smoother if s and c becomes
@@ -305,18 +305,18 @@ PROCEDURE DeriveWSSE (hdual, gdual0, s: S.T; c: R.T): FD.T
                         3).getData()) * (R.MinusOne / (c * c));
     END;
 
-    RETURN FD.T{zeroth := sse, first := M.MulV(dcsums, dsse), second :=
-                M.Add(M.Mul(M.Mul(dcsums, ddsse), M.Transpose(dcsums)),
-                      M.FromMatrixArray(
-                        ARRAY OF
-                          ARRAY OF M.T{
-                          ARRAY [0 .. 1] OF
-                            M.T{M.NewZero(s.getNumber(), s.getNumber()),
-                                M.ColumnFromVector(dgsums)},
-                          ARRAY [0 .. 1] OF
-                            M.T{M.RowFromVector(dgsums),
-                                M.FromScalar(
-                                  V.Inner(dsse, csums) * -2.0D0 / c)}}))};
+    RETURN FnD.T{zeroth := sse, first := M.MulV(dcsums, dsse), second :=
+                 M.Add(M.Mul(M.Mul(dcsums, ddsse), M.Transpose(dcsums)),
+                       M.FromMatrixArray(
+                         ARRAY OF
+                           ARRAY OF M.T{
+                           ARRAY [0 .. 1] OF
+                             M.T{M.NewZero(s.getNumber(), s.getNumber()),
+                                 M.ColumnFromVector(dgsums)},
+                           ARRAY [0 .. 1] OF
+                             M.T{M.RowFromVector(dgsums),
+                                 M.FromScalar(
+                                   V.Inner(dsse, csums) * -2.0D0 / c)}}))};
   END DeriveWSSE;
 
 PROCEDURE TestDeriveWSSE () =
@@ -329,7 +329,7 @@ PROCEDURE TestDeriveWSSE () =
     sdelta := NEW(S.T).fromArray(ARRAY OF R.T{delta}, s.getFirst());
     c      := 0.73D0;
     der    := DeriveWSSE(hdual, gdual0, s, c);
-    derArr := NEW(REF ARRAY OF FD.T, s.getNumber() + 1);
+    derArr := NEW(REF ARRAY OF FnD.T, s.getNumber() + 1);
   BEGIN
     FOR i := 0 TO s.getNumber() - 1 DO
       derArr[i] :=
@@ -340,9 +340,9 @@ PROCEDURE TestDeriveWSSE () =
   END TestDeriveWSSE;
 
 
-PROCEDURE PutDervDif (READONLY der   : FD.T;
-                      READONLY derArr: ARRAY OF FD.T;
-                               delta : R.T            ) =
+PROCEDURE PutDervDif (READONLY der   : FnD.T;
+                      READONLY derArr: ARRAY OF FnD.T;
+                               delta : R.T             ) =
   <*FATAL Thread.Alerted, Wr.Failure, NA.Error *>
   BEGIN
     (*compare first derivative (gradient) with the first difference*)
@@ -370,34 +370,34 @@ PROCEDURE PutDervDif (READONLY der   : FD.T;
 
 (*extend derivatives by information that are contributed by optimizing the
    amplitude of the target*)
-PROCEDURE ExtendDervTarget (READONLY x        : FD.T;
+PROCEDURE ExtendDervTarget (READONLY x        : FnD.T;
                                      lift     : V.T;
                                      targetAmp: R.T;
                                      target   : V.T;
                                      targetCor: V.T;
-                                     wavelet0 : V.T   ): FD.T
+                                     wavelet0 : V.T    ): FnD.T
   RAISES {NA.Error} =
   BEGIN
     RETURN
-      FD.T{zeroth :=
-           x.zeroth + R.Two * targetAmp * V.Inner(targetCor, lift)
-             + targetAmp * targetAmp * V.Inner(target, target)
-             - R.Two * targetAmp * V.Inner(wavelet0, target), first :=
-           V.FromVectorArray(
-             ARRAY OF
-               V.T{V.Add(x.first, V.Scale(targetCor, targetAmp * R.Two)),
-                   V.FromScalar(
-                     R.Two * (V.Inner(lift, targetCor)
-                                + targetAmp * V.Inner(target, target)
-                                - V.Inner(wavelet0, target)))}), second :=
-           M.FromMatrixArray(
-             ARRAY [0 .. 1], [0 .. 1] OF
-               M.T{ARRAY OF
-                     M.T{x.second,
-                         M.ColumnFromArray(V.Scale(targetCor, R.Two)^)},
-                   ARRAY OF
-                     M.T{M.RowFromArray(V.Scale(targetCor, R.Two)^),
-                         M.FromScalar(V.Inner(target, target) * R.Two)}})};
+      FnD.T{zeroth :=
+            x.zeroth + R.Two * targetAmp * V.Inner(targetCor, lift)
+              + targetAmp * targetAmp * V.Inner(target, target)
+              - R.Two * targetAmp * V.Inner(wavelet0, target), first :=
+            V.FromVectorArray(
+              ARRAY OF
+                V.T{V.Add(x.first, V.Scale(targetCor, targetAmp * R.Two)),
+                    V.FromScalar(
+                      R.Two * (V.Inner(lift, targetCor)
+                                 + targetAmp * V.Inner(target, target)
+                                 - V.Inner(wavelet0, target)))}), second :=
+            M.FromMatrixArray(
+              ARRAY [0 .. 1], [0 .. 1] OF
+                M.T{ARRAY OF
+                      M.T{x.second,
+                          M.ColumnFromArray(V.Scale(targetCor, R.Two)^)},
+                    ARRAY OF
+                      M.T{M.RowFromArray(V.Scale(targetCor, R.Two)^),
+                          M.FromScalar(V.Inner(target, target) * R.Two)}})};
   END ExtendDervTarget;
 
 PROCEDURE TranslatesBasis (generatorvan: S.T;
@@ -422,10 +422,10 @@ TYPE
                 amp : R.T;       (*coefficient of the target function*)
               END;
 
-PROCEDURE MatchPatternSmooth (target                : S.T;
-                              hdual, gdual, hdualvan: S.T;
-                              levels, translates    : CARDINAL;
-                              smoothWeight          : R.T;      ):
+PROCEDURE MatchPatternSmooth (target                 : S.T;
+                              hdual, gdual0, hdualvan: S.T;
+                              levels, translates     : CARDINAL;
+                              smoothWeight           : R.T;      ):
   MatchCoef RAISES {NA.Error} =
 
   <*UNUSED*>
@@ -438,12 +438,13 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
          considered*)
       y := NEW(S.T).fromArray(
              ARRAY OF R.T{0.2D0, -0.3D0, 0.0D0, -0.1D0, 0.0D0, 0.4D0}, -3);
-      der := FD.Add(DeriveDist(normalMat, waveletCor, waveletNormSqr, y),
-                    FD.Scale(DeriveSSE(hdualvan, gdual, y), smoothWeight));
-      derArr := NEW(REF ARRAY OF FD.T, NUMBER(der.first^));
+      der := FnD.Add(
+               DeriveDist(normalMat, waveletCor, waveletNormSqr, y),
+               FnD.Scale(DeriveSSE(hdualvan, gdual0, y), smoothWeight));
+      derArr := NEW(REF ARRAY OF FnD.T, NUMBER(der.first^));
       extder := ExtendDervTarget(
                   der, y.getData(), cf, targetVec, targetCor, waveletVec);
-      extderArr := NEW(REF ARRAY OF FD.T, NUMBER(extder.first^));
+      extderArr := NEW(REF ARRAY OF FnD.T, NUMBER(extder.first^));
 
     BEGIN
       FOR j := 0 TO LAST(derArr^) DO
@@ -452,8 +453,9 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
                               ARRAY OF R.T{delta}, j + y.getFirst()));
         BEGIN
           derArr[j] :=
-            FD.Add(DeriveDist(normalMat, waveletCor, waveletNormSqr, yp),
-                   FD.Scale(DeriveSSE(hdualvan, gdual, yp), smoothWeight));
+            FnD.Add(
+              DeriveDist(normalMat, waveletCor, waveletNormSqr, yp),
+              FnD.Scale(DeriveSSE(hdualvan, gdual0, yp), smoothWeight));
           extderArr[j] :=
             ExtendDervTarget(derArr[j], yp.getData(), cf, targetVec,
                              targetCor, waveletVec);
@@ -469,7 +471,7 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
 
   VAR
     generatorvan := Refn.Refine(hdualvan.scale(RT.SqRtTwo), hdual, levels);
-    wavelet := Refn.Refine(gdual.scale(R.One / RT.SqRtTwo), hdual, levels);
+    wavelet := Refn.Refine(gdual0.scale(R.One / RT.SqRtTwo), hdual, levels);
 
     unit   := IIntPow.Power(2, levels);
     twonit := 2 * unit;
@@ -503,7 +505,8 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
     CONST tol = 1.0D-10;
     VAR yfirst := -translates;
 
-    PROCEDURE ComputeOptCritDeriv (x: V.T): FD.T RAISES {NA.Error} =
+    <*UNUSED*>
+    PROCEDURE ComputeOptCritDeriv (x: V.T): FnD.T RAISES {NA.Error} =
       VAR
         cf := x[LAST(x^)];
         y := NEW(S.T).fromArray(
@@ -516,10 +519,37 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
         IO.Put(
           Fmt.FN("y %s, cf %s\n", ARRAY OF TEXT{SF.Fmt(y), RF.Fmt(cf)}));
         *)
-        RETURN FD.Add(derwavdist,
-                      FD.Scale(
-                        DeriveWSSE(hdualvan, gdual, y, cf), smoothWeight));
+        RETURN FnD.Add(
+                 derwavdist, FnD.Scale(DeriveWSSE(hdualvan, gdual0, y, cf),
+                                       smoothWeight));
       END ComputeOptCritDeriv;
+
+    PROCEDURE ComputeOptCritDiff (x: V.T): FnD.T RAISES {NA.Error} =
+
+      PROCEDURE ComputeOptCrit (x: V.T): R.T =
+        VAR
+          c := x[LAST(x^)];
+          s := NEW(S.T).fromArray(
+                 SUBARRAY(x^, FIRST(x^), NUMBER(x^) - 1), yfirst);
+          hsdual  := s.upsample(2).convolve(hdual);
+          gdual   := gdual0.superpose(hsdual.scale(1.0D0 / c));
+          hprimal := gdual.alternate();
+
+          hsums := hprimal.wrapCyclic(3).getData();
+
+          (*computing all the derivatives is a waste of time*)
+          derdist := DeriveDist(normalMat, targetCor, targetNormSqr, s);
+          derwavdist := ExtendDervTarget(derdist, s.getData(), c,
+                                         waveletVec, waveletCor, targetVec);
+        BEGIN
+          RETURN derwavdist.zeroth + smoothWeight * ComputeSSE(hsums^);
+        END ComputeOptCrit;
+
+      VAR dx := V.New(NUMBER(x^));
+      BEGIN
+        FOR i := FIRST(dx^) TO LAST(dx^) DO dx[i] := 1.0D-1 END;
+        RETURN Fn.EvalCentralDiff2(ComputeOptCrit, x, dx);
+      END ComputeOptCritDiff;
 
     (* use this initialization if you want to compare the results with
        MatchPattern
@@ -527,10 +557,10 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
        V.New(2 * translates+1) *)
     VAR
       optvec := Fn.FindStationaryPoint(
-                  ComputeOptCritDeriv, V.FromVectorArray(
-                                         ARRAY OF
-                                           V.T{V.ArithSeq(2 * translates),
-                                               V.FromScalar(R.One)}), tol,
+                  ComputeOptCritDiff, V.FromVectorArray(
+                                        ARRAY OF
+                                          V.T{V.ArithSeq(2 * translates),
+                                              V.FromScalar(R.One)}), tol,
                   100);
 
     BEGIN
