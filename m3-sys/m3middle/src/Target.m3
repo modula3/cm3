@@ -37,7 +37,9 @@ CONST
     (* 22 *) "SUN3",
     (* 23 *) "SUN386",
     (* 24 *) "UMAX",
-    (* 25 *) "VAX"
+    (* 25 *) "VAX",
+    (* 26 *) "FreeBSD3",
+    (* 27 *) "FreeBSD4"
   };
 
 VAR (*CONST*)
@@ -244,7 +246,7 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Aligned_procedures        := TRUE;
                  EOL                       := "\n";
 
-    |  5, 6 => (* FreeBSD, FreeBSD2 *)
+    |  5, 6, 26, 27 => (* FreeBSD, FreeBSD2, FreeBSD3, FreeBSD4 *)
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
