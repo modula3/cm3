@@ -29,14 +29,19 @@ PROCEDURE ComputeDualFilterBank (primal: ARRAY Filter OF S.T; ):
                  primal[Filter.lowpass].alternate()};
   END ComputeDualFilterBank;
 
-PROCEDURE ComputeBasisFunctions (bank     : ARRAY Basis, Filter OF S.T;
-                                 numlevels: CARDINAL                    ):
+PROCEDURE ExtractRefinementMasks (READONLY bank: ARRAY Basis, Filter OF S.T; ):
+  ARRAY Basis OF S.T =
+  BEGIN
+    RETURN ARRAY Basis OF
+             S.T{bank[Basis.primal, Filter.lowpass].scale(R.Two),
+                 bank[Basis.dual, Filter.lowpass].scale(R.Two)};
+  END ExtractRefinementMasks;
+
+PROCEDURE ComputeBasisFunctions (READONLY bank: ARRAY Basis, Filter OF S.T;
+                                 READONLY refn     : ARRAY Basis OF S.T;
+                                          numlevels: CARDINAL            ):
   BasisFunctions =
-  VAR
-    refn := ARRAY Basis OF
-              S.T{bank[Basis.primal, Filter.lowpass].scale(R.Two),
-                  bank[Basis.dual, Filter.lowpass].scale(R.Two)};
-    basis: BasisFunctions;
+  VAR basis: BasisFunctions;
   BEGIN
     FOR b := FIRST(basis) TO LAST(basis) DO
       FOR f := FIRST(basis[b]) TO LAST(basis[b]) DO
@@ -51,34 +56,56 @@ PROCEDURE PlotOrthogonal (h: S.T; numlevels: CARDINAL) =
     PlotBiorthogonal(h, h.adjoint().translate(1), numlevels);
   END PlotOrthogonal;
 
-PROCEDURE PlotBiorthogonal (hdual, gdual: S.T; numlevels: CARDINAL) =
-  VAR dual := ARRAY Filter OF S.T{hdual, gdual};
+PROCEDURE PlotBiorthogonal (hDual, gDual: S.T; numlevels: CARDINAL) =
+  VAR
+    dual := ARRAY Filter OF S.T{hDual, gDual};
+    bank := FilterBank{ComputeDualFilterBank(dual), dual};
   BEGIN
-    PlotBank(FilterBank{ComputeDualFilterBank(dual), dual}, numlevels);
+    PlotBank(bank, ExtractRefinementMasks(bank), numlevels);
   END PlotBiorthogonal;
 
-PROCEDURE PlotBiorthogonalYLim (hdual, gdual: S.T;
+PROCEDURE PlotBiorthogonalYLim (hDual, gDual: S.T;
                                 numlevels   : CARDINAL;
                                 ymin, ymax  : R.T       ) =
   VAR
-    dual := ARRAY Filter OF S.T{hdual, gdual};
-    grid := R.One / RIntPow.Power(R.Two, numlevels);
-    basis := ComputeBasisFunctions(
-               FilterBank{ComputeDualFilterBank(dual), dual}, numlevels);
+    dual  := ARRAY Filter OF S.T{hDual, gDual};
+    bank  := FilterBank{ComputeDualFilterBank(dual), dual};
+    refn  := ExtractRefinementMasks(bank);
+    grid  := R.One / RIntPow.Power(R.Two, numlevels);
+    basis := ComputeBasisFunctions(bank, refn, numlevels);
   BEGIN
     DoPlot(basis, ymin, ymax, grid);
   END PlotBiorthogonalYLim;
 
-PROCEDURE PlotAny (hprimal, gprimal, hdual, gdual: S.T; numlevels: CARDINAL) =
+PROCEDURE PlotAny (refnPrimal, refnDual          : S.T;
+                   hPrimal, gPrimal, hDual, gDual: S.T;
+                   numlevels                     : CARDINAL) =
   BEGIN
-    PlotBank(FilterBank{ARRAY Filter OF S.T{hprimal, gprimal},
-                        ARRAY Filter OF S.T{hdual, gdual}}, numlevels);
+    PlotBank(FilterBank{ARRAY Filter OF S.T{hPrimal, gPrimal},
+                        ARRAY Filter OF S.T{hDual, gDual}},
+             ARRAY Basis OF S.T{refnPrimal, refnDual}, numlevels);
   END PlotAny;
 
-PROCEDURE PlotBank (bank: FilterBank; numlevels: CARDINAL) =
+PROCEDURE PlotAnyYLim (refnPrimal, refnDual          : S.T;
+                       hPrimal, gPrimal, hDual, gDual: S.T;
+                       numlevels                     : CARDINAL;
+                       ymin, ymax                    : R.T       ) =
+  VAR
+    grid := R.One / RIntPow.Power(R.Two, numlevels);
+    basis := ComputeBasisFunctions(
+               FilterBank{ARRAY Filter OF S.T{hPrimal, gPrimal},
+                          ARRAY Filter OF S.T{hDual, gDual}},
+               ARRAY Basis OF S.T{refnPrimal, refnDual}, numlevels);
+  BEGIN
+    DoPlot(basis, ymin, ymax, grid);
+  END PlotAnyYLim;
+
+PROCEDURE PlotBank (READONLY bank     : FilterBank;
+                    READONLY refn     : ARRAY Basis OF S.T;
+                             numlevels: CARDINAL            ) =
   VAR
     grid  := R.One / RIntPow.Power(R.Two, numlevels);
-    basis := ComputeBasisFunctions(bank, numlevels);
+    basis := ComputeBasisFunctions(bank, refn, numlevels);
     ymin := MIN(
               MIN(VR.Min(basis[Basis.primal, Filter.lowpass].getData()^),
                   VR.Min(basis[Basis.primal, Filter.highpass].getData()^)),
