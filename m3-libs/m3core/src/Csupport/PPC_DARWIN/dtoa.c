@@ -9,18 +9,8 @@
 #define IEEE_MC68k
 #endif
 
-#include "dtoa.h"
+#ifdef  IEEE_8087
+#undef  IEEE_8087
+#endif
 
-/* Apparently libc defines both "__dtoa" and "dtoa".  ???  */
-#if 0
-char * __dtoa       
-#ifdef KR_headers
-        (d, mode, ndigits, decpt, sign, rve)
-        double d; int mode, ndigits, *decpt, *sign; char **rve;
-#else 
-        (double d, int mode, int ndigits, int *decpt, int *sign, char **rve)
-#endif
-{
-  return dtoa(d, mode, ndigits, decpt, sign, rve);
-}
-#endif
+#include "dtoa.h"
