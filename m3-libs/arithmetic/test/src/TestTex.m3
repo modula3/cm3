@@ -17,13 +17,16 @@ IMPORT LongRealBasic            AS R,
        BigIntegerFractionBasic  AS Fr,
        LongRealVectorFast       AS V,
        LongRealMatrixFast       AS M,
+       LongRealComplexPolynomialBasic AS P,
+
        LongRealFmtLex           AS RF,
        LongRealComplexFmtLex    AS CF,
        LongRealPolarFmtLex      AS PolarF,
        BigIntegerFmtLex         AS BF,
        BigIntegerFractionFmtLex AS FrF,
        LongRealVectorFmtLex     AS VF,
-       LongRealMatrixFmtLex     AS MF;
+       LongRealMatrixFmtLex     AS MF,
+       LongRealComplexPolynomialFmtLex AS PF;
 
 
 (*=======================*)
@@ -68,7 +71,7 @@ BEGIN
   END;
 
   CONST
-    yc = ARRAY OF C.T{
+    y = ARRAY OF C.T{
            C.T{0.0D20,0.0D0},
            C.T{1.0D20,0.0D0},
            C.T{3.0D23,-4.0D23},
@@ -77,9 +80,9 @@ BEGIN
          };
   BEGIN
     Wr.PutText(out,"\\begin{eqnarray*}\n");
-    FOR j:=0 TO LAST(yc) DO
-      Wr.PutText(out,CF.Tex(yc[j])&"&=&");
-      Wr.PutText(out,PolarF.Tex(Polar.FromComplex(yc[j]))&"\\\\\n");
+    FOR j:=0 TO LAST(y) DO
+      Wr.PutText(out,CF.Tex(y[j])&"&=&");
+      Wr.PutText(out,PolarF.Tex(Polar.FromComplex(y[j]))&"\\\\\n");
     END;
     Wr.PutText(out,"\\end{eqnarray*}\n");
   END;
@@ -108,6 +111,27 @@ BEGIN
     END;
     Wr.PutText(out,"\\end{array}\n");
     Wr.PutText(out,"$$\n");
+  END;
+
+  VAR
+    y := NEW(REF ARRAY OF P.T,4);
+  TYPE
+    Flag = PF.TexFlag;
+  BEGIN
+    y^ := ARRAY OF P.T{
+            P.FromArray(ARRAY OF C.T{}),
+            P.FromArray(ARRAY OF C.T{C.T{0.0D20,0.0D0}}),
+            P.FromArray(ARRAY OF C.T{C.T{0.0D20,0.5D0},C.T{3.0D23,-4.0D23},C.T{1.0D0,0.0D0}}),
+            P.FromArray(ARRAY OF C.T{C.T{-1.0D0,0.0D0},C.Zero,C.Zero,C.T{0.0D0,1.0D0}})
+          };
+    Wr.PutText(out,"\\begin{eqnarray*}\n");
+    FOR j:=0 TO LAST(y^) DO
+      Wr.PutText(out,"\\lefteqn{" & PF.Tex(y[j]) & ":}\\\\\n");
+      Wr.PutText(out,PF.Tex(y[j],style:=PF.TexStyle{flags:=PF.TexFlagSet{Flag.powerSum}}) & "&=&");
+      Wr.PutText(out,PF.Tex(y[j],style:=PF.TexStyle{flags:=
+                       PF.TexFlagSet{Flag.powerSum,Flag.simplePower,Flag.omitZero,Flag.reverse}})&"\\\\\n");
+    END;
+    Wr.PutText(out,"\\end{eqnarray*}\n");
   END;
 
   Wr.PutText(out,"\\end{document}\n");

@@ -21,10 +21,11 @@ readonly proc PolynomialFast (nm, field, rimpl) is
   build_generic_impl (fast,  "PolynomialFast",  [rfield])
 end
 
-readonly proc PolynomialFmtLex (nm, pimpl) is
-  local poly  = nm & "Polynomial" & pimpl
-  local pfmt  = nm & "PolynomialFmtLex"
-  local rfmt  = nm & "FmtLex"
-  build_generic_intf (pfmt, "PolynomialFmtLex", [rfmt, poly], VISIBLE)
-  build_generic_impl (pfmt, "PolynomialFmtLex", [rfmt      ])
+readonly proc PolynomialFmtLex (nm, field, rimpl, pimpl) is
+  local pfmt   = nm & "PolynomialFmtLex"
+  local rfield = field & rimpl
+  local rfmt   = field & "FmtLex"
+  local pfield = field & "Polynomial" & pimpl
+  build_generic_intf (pfmt, "PolynomialFmtLex", [        rfmt, pfield], VISIBLE)
+  build_generic_impl (pfmt, "PolynomialFmtLex", [rfield, rfmt        ])
 end
