@@ -6,9 +6,11 @@ Abstract: Test driver for m3na library.
 1/27/96   Harry George   converted to m3na format
 *)
 
-IMPORT Stdio,Wr,LongRealBasic AS R,xReal64;
+IMPORT Stdio,Thread,Wr,LongRealBasic AS R,xReal64;
 (*FROM LongRealTrans IMPORT Eps;*)
 CONST Eps=xReal64.EPS;
+
+<*FATAL Thread.Alerted, Wr.Failure*>
 
 (*=======================*)
 <*UNUSED*> CONST Module = "Test.";
@@ -59,7 +61,7 @@ BEGIN
   (*NewLine(); EVAL TestMatrix();*)
   NewLine(); EVAL TestPolynomial();
   NewLine(); EVAL TestRoot();
-  (*NewLine(); EVAL TestInterpolation();*)
+  NewLine(); EVAL TestInterpolation();
   (*NewLine(); EVAL TestSLE();*)
   (*NewLine(); EVAL TestRandom();*)
   (*NewLine(); EVAL TestFFT();*)

@@ -6,14 +6,16 @@ Abstract: Test driver for interpolation.
 1/29/96   Harry George   converted to m3na format
 *)
 
-IMPORT IO,Wr,Fmt,xInterp;
-IMPORT xReal64 AS R;
-FROM xReal64 IMPORT REAL64,Array,sin,cos;
+IMPORT LongRealBasic  AS R,
+       LongRealFmtLex AS RF,
+       LongRealInterpolation AS Ip,
+       xUtils;
+FROM LongRealTrans IMPORT Sin;
 (*=======================*)
 CONST
   Module = "TestInterpolation.";
-VAR
 (*=======================*)
+<*FATAL xUtils.Error*>
 (*----------------------*)
 PROCEDURE TestLinear():BOOLEAN=
 CONST
@@ -21,88 +23,89 @@ CONST
 VAR
   result:=TRUE;
   n:=100;  n1:=0; nn:=n-1;
-  scale:=1.0D0/FLOAT(n,REAL64);
-  xa:=NEW(Array,n);
-  ya:=NEW(Array,n);
-  x,y1,y2,dy,offset:REAL64;
+  scale:=1.0D0/FLOAT(n,R.T);
+  xa:=NEW(REF ARRAY OF R.T,n);
+  ya:=NEW(REF ARRAY OF R.T,n);
+  x,y1,y2:R.T;
   stepsize:=n DIV 5;
 BEGIN
   Debug(1,ftn,"begin\n");
 
   FOR i:=n1 TO nn DO
-    xa[i]:=3.0D0*FLOAT(i,REAL64)*scale; (*range of 0..3.0*)
-    ya[i]:=sin(xa[i]);
+    xa[i]:=3.0D0*FLOAT(i,R.T)*scale; (*range of 0..3.0*)
+    ya[i]:=Sin(xa[i]);
   END;
 
   FOR i:=n1 TO nn BY stepsize DO
     x:=xa[i]+0.1D0;
-    y1:=sin(x);
-    y2:=xInterp.linear(xa^,ya^,x);
-    Msg("linear: x=" & R.fmt(x)
-    & "\n y1=" & R.fmt(y1)
-    & "\n y2=" & R.fmt(y2)
-    & "\n dy=" & R.fmt(y2-y1)
-    & " relerr=" & R.fmt((y2-y1)/y1)
+    y1:=Sin(x);
+    y2:=Ip.Linear(xa^,ya^,x);
+    Msg("linear: x=" & RF.Fmt(x)
+    & "\n y1=" & RF.Fmt(y1)
+    & "\n y2=" & RF.Fmt(y2)
+    & "\n dy=" & RF.Fmt(y2-y1)
+    & " relerr=" & RF.Fmt((y2-y1)/y1)
     & "\n");
   END;
   RETURN result;
 END TestLinear;
 
 (*----------------------*)
-PROCEDURE TestNewt():BOOLEAN=
+PROCEDURE TestNewton():BOOLEAN=
 CONST
-  ftn = Module & "TestNewt";
+  ftn = Module & "TestNewton";
 VAR
   result:=TRUE;
   n:=10;  n1:=0; nn:=n-1;
-  scale:=1.0D0/FLOAT(n,REAL64);
-  xa:=NEW(Array,n);
-  ya:=NEW(Array,n);
-  x,y1,y2,dy,offset:REAL64;
+  scale:=1.0D0/FLOAT(n,R.T);
+  xa:=NEW(REF ARRAY OF R.T,n);
+  ya:=NEW(REF ARRAY OF R.T,n);
+  x,y1,y2,dy,offset:R.T;
   stepsize:=n DIV 5;
 BEGIN
   Debug(1,ftn,"begin\n");
 
   FOR i:=n1 TO nn DO
-    xa[i]:=3.0D0*FLOAT(i,REAL64)*scale; (*range of 0..3.0*)
-    ya[i]:=sin(xa[i]);
+    xa[i]:=3.0D0*FLOAT(i,R.T)*scale; (*range of 0..3.0*)
+    ya[i]:=Sin(xa[i]);
   END;
 
   offset:=0.1D0;
   FOR i:=n1 TO nn BY stepsize DO
     x:=xa[i]+offset;
-    y1:=sin(x);
-    y2:=xInterp.newt(xa^,ya^,x,dy);
-    Msg("10-point: x=" & R.fmt(x)
-    & "\n y1=" & R.fmt(y1)
-    & "\n y2=" & R.fmt(y2)
-    & "\n dy=" & R.fmt(dy)
-    & " relerr=" & R.fmt((y2-y1)/y1)
+    y1:=Sin(x);
+    y2:=Ip.Newton(xa^,ya^,x,dy);
+    Msg("10-point: x=" & RF.Fmt(x)
+    & "\n y1=" & RF.Fmt(y1)
+    & "\n y2=" & RF.Fmt(y2)
+    & "\n dy=" & RF.Fmt(dy)
+    & " relerr=" & RF.Fmt((y2-y1)/y1)
     & "\n");
   END;
 
   offset:=0.1D0;
   FOR i:=5 TO 7 DO
     x:=xa[i]+offset;
-    y1:=sin(x);
-    y2:=xInterp.newt(xa^,ya^,x,dy,start:=5, len:=4);
-    Msg("4-point: x=" & R.fmt(x)
-    & "\n y1=" & R.fmt(y1)
-    & "\n y2=" & R.fmt(y2)
-    & "\n dy=" & R.fmt(dy)
-    & " relerr=" & R.fmt((y2-y1)/y1)
+    y1:=Sin(x);
+    y2:=Ip.Newton(xa^,ya^,x,dy,start:=5, len:=4);
+    Msg("4-point: x=" & RF.Fmt(x)
+    & "\n y1=" & RF.Fmt(y1)
+    & "\n y2=" & RF.Fmt(y2)
+    & "\n dy=" & RF.Fmt(dy)
+    & " relerr=" & RF.Fmt((y2-y1)/y1)
     & "\n");
   END;
 
   RETURN result;
-END TestNewt;
+END TestNewton;
 (*-------------------------*)
 PROCEDURE TestInterpolation():BOOLEAN=
+<*UNUSED*>
 CONST ftn = Module & "TestInterpolation";
 VAR result:=TRUE;
 BEGIN
   NewLine(); EVAL TestLinear();
-  NewLine(); EVAL TestNewt();
+  NewLine(); EVAL TestNewton();
   RETURN result;
 END TestInterpolation;
 (*=======================*)
