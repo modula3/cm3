@@ -47,7 +47,7 @@ PROCEDURE ShowBSplWavelets () =
   <*FATAL BSpl.DifferentParity*>
   BEGIN
     PL.Init();
-    WP.PlotWavelets(BSpl.GeneratorMask(3), BSpl.WaveletMask(3, 9), 6);
+    WP.PlotBiorthogonal(BSpl.GeneratorMask(3), BSpl.WaveletMask(3, 9), 6);
     PL.Exit();
   END ShowBSplWavelets;
 

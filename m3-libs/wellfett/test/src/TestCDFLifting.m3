@@ -50,8 +50,8 @@ PROCEDURE LiftCDFEven (order: R.T; num: CARDINAL) =
                  ARRAY OF TEXT{RF.Fmt(hscaled.sum()), SF.Fmt(hscaled)}));
       END;
       PL.StartPage();
-      (*WP.PlotWavelets(h, g, 6);*)
-      WP.PlotWavelets(
+      (*WP.PlotBiorthogonal(h, g, 6);*)
+      WP.PlotBiorthogonal(
         h.scale(R.One / h.sum()), g.scale(R.One / g.sum()), 6);
       PL.StopPage();
       orderupper := orderupper + R.Two;
@@ -98,8 +98,8 @@ PROCEDURE LiftCDFOdd (order: R.T; num: CARDINAL) =
                  ARRAY OF TEXT{RF.Fmt(hscaled.sum()), SF.Fmt(hscaled)}));
       END;
       PL.StartPage();
-      WP.PlotWavelets(h, g, 6);
-      (*WP.PlotWavelets( h.scale(R.One / h.sum()), g.scale(R.One /
+      WP.PlotBiorthogonal(h, g, 6);
+      (*WP.PlotBiorthogonal( h.scale(R.One / h.sum()), g.scale(R.One /
          g.sum()), 6);*)
       PL.StopPage();
       orderupper := orderupper + R.Two;
