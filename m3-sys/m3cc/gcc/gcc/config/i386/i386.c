@@ -284,25 +284,25 @@ struct processor_costs athlon_cost = {
   8,					/* "large" insn */
   9,					/* MOVE_RATIO */
   4,					/* cost for loading QImode using movzbl */
-  {4, 5, 4},				/* cost of loading integer registers
+  {3, 4, 3},				/* cost of loading integer registers
 					   in QImode, HImode and SImode.
 					   Relative to reg-reg move (2).  */
-  {2, 3, 2},				/* cost of storing integer registers */
+  {3, 4, 3},				/* cost of storing integer registers */
   4,					/* cost of reg,reg fld/fst */
-  {6, 6, 20},				/* cost of loading fp registers
+  {4, 4, 12},				/* cost of loading fp registers
 					   in SFmode, DFmode and XFmode */
-  {4, 4, 16},				/* cost of loading integer registers */
+  {6, 6, 8},				/* cost of loading integer registers */
   2,					/* cost of moving MMX register */
-  {2, 2},				/* cost of loading MMX registers
+  {4, 4},				/* cost of loading MMX registers
 					   in SImode and DImode */
-  {2, 2},				/* cost of storing MMX registers
+  {4, 4},				/* cost of storing MMX registers
 					   in SImode and DImode */
   2,					/* cost of moving SSE register */
-  {2, 2, 8},				/* cost of loading SSE registers
+  {4, 4, 6},				/* cost of loading SSE registers
 					   in SImode, DImode and TImode */
-  {2, 2, 8},				/* cost of storing SSE registers
+  {4, 4, 5},				/* cost of storing SSE registers
 					   in SImode, DImode and TImode */
-  6,					/* MMX or SSE register to integer */
+  5,					/* MMX or SSE register to integer */
   64,					/* size of prefetch block */
   6,					/* number of parallel prefetches */
 };
@@ -906,6 +906,27 @@ override_options ()
 
   int const pta_size = sizeof (processor_alias_table) / sizeof (struct pta);
 
+  /* Set the default values for switches whose default depends on TARGET_64BIT
+     in case they weren't overwriten by command line options.  */
+  if (TARGET_64BIT)
+    {
+      if (flag_omit_frame_pointer == 2)
+	flag_omit_frame_pointer = 1;
+      if (flag_asynchronous_unwind_tables == 2)
+	flag_asynchronous_unwind_tables = 1;
+      if (flag_pcc_struct_return == 2)
+	flag_pcc_struct_return = 0;
+    }
+  else
+    {
+      if (flag_omit_frame_pointer == 2)
+	flag_omit_frame_pointer = 0;
+      if (flag_asynchronous_unwind_tables == 2)
+	flag_asynchronous_unwind_tables = 0;
+      if (flag_pcc_struct_return == 2)
+	flag_pcc_struct_return = 1;
+    }
+
 #ifdef SUBTARGET_OVERRIDE_OPTIONS
   SUBTARGET_OVERRIDE_OPTIONS;
 #endif
@@ -1213,13 +1234,14 @@ optimization_options (level, size)
   if (level > 1)
     flag_schedule_insns = 0;
 #endif
-  if (TARGET_64BIT && optimize >= 1)
-    flag_omit_frame_pointer = 1;
-  if (TARGET_64BIT)
-    {
-      flag_pcc_struct_return = 0;
-      flag_asynchronous_unwind_tables = 1;
-    }
+  /* The default values of these switches depend on the TARGET_64BIT
+     that is not known at this moment.  Mark these values with 2 and
+     let user the to override these.  In case there is no command line option
+     specifying them, we will set the defaults in override_options.  */
+  if (optimize >= 1)
+    flag_omit_frame_pointer = 2;
+  flag_pcc_struct_return = 2;
+  flag_asynchronous_unwind_tables = 2;
 }
 
 /* Table of valid machine attributes.  */
@@ -1649,7 +1671,11 @@ classify_argument (mode, type, classes, bit_offset)
 {
   int bytes =
     (mode == BLKmode) ? int_size_in_bytes (type) : (int) GET_MODE_SIZE (mode);
-  int words = (bytes + UNITS_PER_WORD - 1) / UNITS_PER_WORD;
+  int words = (bytes + (bit_offset % 64) / 8 + UNITS_PER_WORD - 1) / UNITS_PER_WORD;
+
+  /* Variable sized structures are always passed on the stack.  */
+  if (mode == BLKmode && type && TREE_CODE (TYPE_SIZE (type)) != INTEGER_CST)
+    return 0;
 
   if (type && AGGREGATE_TYPE_P (type))
     {
@@ -3206,7 +3232,7 @@ q_regs_operand (op, mode)
     return 0;
   if (GET_CODE (op) == SUBREG)
     op = SUBREG_REG (op);
-  return QI_REG_P (op);
+  return ANY_QI_REG_P (op);
 }
 
 /* Return true if op is a NON_Q_REGS class register.  */
@@ -6123,7 +6149,10 @@ print_operand_address (file, addr)
   int scale;
 
   if (! ix86_decompose_address (addr, &parts))
-    abort ();
+    {
+      output_operand_lossage ("Wrong address expression or operand constraint");
+      return;
+    }
 
   base = parts.base;
   index = parts.index;
@@ -6855,8 +6884,7 @@ ix86_expand_vector_move (mode, operands)
   /* Make operand1 a register if it isn't already.  */
   if ((reload_in_progress | reload_completed) == 0
       && !register_operand (operands[0], mode)
-      && !register_operand (operands[1], mode)
-      && operands[1] != CONST0_RTX (mode))
+      && !register_operand (operands[1], mode))
     {
       rtx temp = force_reg (GET_MODE (operands[1]), operands[1]);
       emit_move_insn (operands[0], temp);
@@ -8237,7 +8265,7 @@ ix86_expand_int_movcc (operands)
 		  clob = gen_rtx_CLOBBER (VOIDmode, clob);
 
 		  tmp = gen_rtx_SET (VOIDmode, out, tmp);
-		  tmp = gen_rtx_PARALLEL (VOIDmode, gen_rtvec (2, tmp, clob));
+		  tmp = gen_rtx_PARALLEL (VOIDmode, gen_rtvec (2, copy_rtx (tmp), clob));
 		  emit_insn (tmp);
 		}
 	      else
@@ -9505,7 +9533,7 @@ ix86_expand_clrstr (src, count_exp, align_exp)
 				 gen_rtx_SUBREG (SImode, zeroreg, 0)));
       if (TARGET_64BIT && (align <= 4 || count == 0))
 	{
-	  rtx label = ix86_expand_aligntest (countreg, 2);
+	  rtx label = ix86_expand_aligntest (countreg, 4);
 	  emit_insn (gen_strsetsi (destreg,
 				   gen_rtx_SUBREG (SImode, zeroreg, 0)));
 	  emit_label (label);
@@ -10954,14 +10982,10 @@ static const struct builtin_description bdesc_2arg[] =
   { MASK_SSE, CODE_FOR_vmmaskcmpv4sf3, "__builtin_ia32_cmpeqss", IX86_BUILTIN_CMPEQSS, EQ, 0 },
   { MASK_SSE, CODE_FOR_vmmaskcmpv4sf3, "__builtin_ia32_cmpltss", IX86_BUILTIN_CMPLTSS, LT, 0 },
   { MASK_SSE, CODE_FOR_vmmaskcmpv4sf3, "__builtin_ia32_cmpless", IX86_BUILTIN_CMPLESS, LE, 0 },
-  { MASK_SSE, CODE_FOR_vmmaskcmpv4sf3, "__builtin_ia32_cmpgtss", IX86_BUILTIN_CMPGTSS, LT, 1 },
-  { MASK_SSE, CODE_FOR_vmmaskcmpv4sf3, "__builtin_ia32_cmpgess", IX86_BUILTIN_CMPGESS, LE, 1 },
   { MASK_SSE, CODE_FOR_vmmaskcmpv4sf3, "__builtin_ia32_cmpunordss", IX86_BUILTIN_CMPUNORDSS, UNORDERED, 0 },
   { MASK_SSE, CODE_FOR_vmmaskncmpv4sf3, "__builtin_ia32_cmpneqss", IX86_BUILTIN_CMPNEQSS, EQ, 0 },
   { MASK_SSE, CODE_FOR_vmmaskncmpv4sf3, "__builtin_ia32_cmpnltss", IX86_BUILTIN_CMPNLTSS, LT, 0 },
   { MASK_SSE, CODE_FOR_vmmaskncmpv4sf3, "__builtin_ia32_cmpnless", IX86_BUILTIN_CMPNLESS, LE, 0 },
-  { MASK_SSE, CODE_FOR_vmmaskncmpv4sf3, "__builtin_ia32_cmpngtss", IX86_BUILTIN_CMPNGTSS, LT, 1 },
-  { MASK_SSE, CODE_FOR_vmmaskncmpv4sf3, "__builtin_ia32_cmpngess", IX86_BUILTIN_CMPNGESS, LE, 1 },
   { MASK_SSE, CODE_FOR_vmmaskncmpv4sf3, "__builtin_ia32_cmpordss", IX86_BUILTIN_CMPORDSS, UNORDERED, 0 },
 
   { MASK_SSE, CODE_FOR_sminv4sf3, "__builtin_ia32_minps", IX86_BUILTIN_MINPS, 0, 0 },
@@ -12355,17 +12379,33 @@ ix86_register_move_cost (mode, class1, class2)
      enum reg_class class1, class2;
 {
   /* In case we require secondary memory, compute cost of the store followed
-     by load.  In case of copying from general_purpose_register we may emit
-     multiple stores followed by single load causing memory size mismatch
-     stall.  Count this as arbitarily high cost of 20.  */
+     by load.  In order to avoid bad register allocation choices, we need 
+     for this to be *at least* as high as the symmetric MEMORY_MOVE_COST.  */
+
   if (ix86_secondary_memory_needed (class1, class2, mode, 0))
     {
-      int add_cost = 0;
+      int cost = 1;
+
+      cost += MAX (MEMORY_MOVE_COST (mode, class1, 0),
+		   MEMORY_MOVE_COST (mode, class1, 1));
+      cost += MAX (MEMORY_MOVE_COST (mode, class2, 0),
+		   MEMORY_MOVE_COST (mode, class2, 1));
+      
+      /* In case of copying from general_purpose_register we may emit multiple
+         stores followed by single load causing memory size mismatch stall.
+         Count this as arbitarily high cost of 20.  */
       if (CLASS_MAX_NREGS (class1, mode) > CLASS_MAX_NREGS (class2, mode))
-	  add_cost = 20;
-      return (MEMORY_MOVE_COST (mode, class1, 0)
-	      + MEMORY_MOVE_COST (mode, class2, 1) + add_cost);
+	cost += 20;
+
+      /* In the case of FP/MMX moves, the registers actually overlap, and we
+	 have to switch modes in order to treat them differently.  */
+      if ((MMX_CLASS_P (class1) && MAYBE_FLOAT_CLASS_P (class2))
+          || (MMX_CLASS_P (class2) && MAYBE_FLOAT_CLASS_P (class1)))
+	cost += 20;
+
+      return cost;
     }
+
   /* Moves between SSE/MMX and integer unit are expensive.  */
   if (MMX_CLASS_P (class1) != MMX_CLASS_P (class2)
       || SSE_CLASS_P (class1) != SSE_CLASS_P (class2))
@@ -12640,14 +12680,15 @@ x86_field_alignment (field, computed)
      int computed;
 {
   enum machine_mode mode;
-  if (TARGET_64BIT || DECL_USER_ALIGN (field) || TARGET_ALIGN_DOUBLE)
+  tree type = TREE_TYPE (field);
+
+  if (TARGET_64BIT || TARGET_ALIGN_DOUBLE)
     return computed;
-  mode = TYPE_MODE (TREE_CODE (TREE_TYPE (field)) == ARRAY_TYPE
-		    ? get_inner_array_type (field) : TREE_TYPE (field));
-  if ((mode == DFmode || mode == DCmode
-      || mode == DImode || mode == CDImode)
-      && !TARGET_ALIGN_DOUBLE)
+  mode = TYPE_MODE (TREE_CODE (type) == ARRAY_TYPE
+		    ? get_inner_array_type (type) : type);
+  if (mode == DFmode || mode == DCmode
+      || GET_MODE_CLASS (mode) == MODE_INT
+      || GET_MODE_CLASS (mode) == MODE_COMPLEX_INT)
     return MIN (32, computed);
   return computed;
 }
-

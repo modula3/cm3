@@ -46,8 +46,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #ifdef PUSH_ROUNDING
 
+#ifndef PUSH_ARGS_REVERSED
 #if defined (STACK_GROWS_DOWNWARD) != defined (ARGS_GROW_DOWNWARD)
 #define PUSH_ARGS_REVERSED  PUSH_ARGS
+#endif
 #endif
 
 #endif
@@ -2708,6 +2710,12 @@ expand_call (exp, target, ignore)
       if (pass == 0)
 	{
 	  argblock = virtual_incoming_args_rtx;
+	  argblock
+#ifdef STACK_GROWS_DOWNWARD
+	    = plus_constant (argblock, current_function_pretend_args_size);
+#else
+	    = plus_constant (argblock, -current_function_pretend_args_size);
+#endif
 	  stored_args_map = sbitmap_alloc (args_size.constant);
 	  sbitmap_zero (stored_args_map);
 	}
@@ -3666,6 +3674,14 @@ emit_library_call_value_1 (retval, orgfun, value, fn_type, outmode, nargs, p)
 #endif
 	    ;
 
+	  /* If this was a CONST function, it is now PURE since
+	     it now reads memory.  */
+	  if (flags & ECF_CONST)
+	    {
+	      flags &= ~ECF_CONST;
+	      flags |= ECF_PURE;
+	    }
+
 	  if (GET_MODE (val) == MEM && ! must_copy)
 	    slot = val;
 	  else if (must_copy)
@@ -4268,7 +4284,7 @@ store_one_arg (arg, argblock, flags, variable_size, reg_parm_stack_space)
      struct arg_data *arg;
      rtx argblock;
      int flags;
-     int variable_size ATTRIBUTE_UNUSED;
+     int variable_size;
      int reg_parm_stack_space;
 {
   tree pval = arg->tree_value;
@@ -4343,14 +4359,22 @@ store_one_arg (arg, argblock, flags, variable_size, reg_parm_stack_space)
 		  emit_move_insn (arg->save_area, stack_area);
 		}
 	    }
+
+	  /* Now that we have saved any slots that will be overwritten
+	     by this store, mark all slots this store will use.  We
+	     must do this before we actually expand the argument since
+	     the expansion itself may trigger library calls which might
+	     need to use the same stack slot. We only do it if we can't
+	     pass all arguments to a library call in registers.  */
+	  if (arg->partial)
+	    {
+	      for (i = lower_bound; i < upper_bound; i++)
+		stack_usage_map[i] = 1;
+
+	      /* Set it so that we don't do it again.  */
+	      variable_size = 1;
+	    }
 	}
-      /* Now that we have saved any slots that will be overwritten by this
-	 store, mark all slots this store will use.  We must do this before
-	 we actually expand the argument since the expansion itself may
-	 trigger library calls which might need to use the same stack slot.  */
-      if (argblock && ! variable_size && arg->stack)
-	for (i = lower_bound; i < upper_bound; i++)
-	  stack_usage_map[i] = 1;
     }
 
   /* If this isn't going to be placed on both the stack and in registers,
@@ -4491,7 +4515,8 @@ store_one_arg (arg, argblock, flags, variable_size, reg_parm_stack_space)
 	     emit_push_insn for BLKmode is careful to avoid it.  */
 	  excess = (arg->size.constant - int_size_in_bytes (TREE_TYPE (pval))
 		    + partial * UNITS_PER_WORD);
-	  size_rtx = expr_size (pval);
+	  size_rtx = expand_expr (size_in_bytes (TREE_TYPE (pval)),
+				  NULL_RTX, TYPE_MODE (sizetype), 0);
 	}
 
       if ((flags & ECF_SIBCALL) && GET_CODE (arg->value) == MEM)
@@ -4576,6 +4601,11 @@ store_one_arg (arg, argblock, flags, variable_size, reg_parm_stack_space)
       if (partial == 0)
 	arg->value = arg->stack_slot;
     }
+
+  if (ACCUMULATE_OUTGOING_ARGS && !(flags & ECF_SIBCALL)
+      && argblock && ! variable_size && arg->stack)
+    for (i = lower_bound; i < upper_bound; i++)
+      stack_usage_map[i] = 1;
 
   /* Once we have pushed something, pops can't safely
      be deferred during the rest of the arguments.  */

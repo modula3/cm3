@@ -48,6 +48,7 @@ extern int lhd_staticp PARAMS ((tree));
 extern void lhd_clear_binding_stack PARAMS ((void));
 extern void lhd_print_tree_nothing PARAMS ((FILE *, tree, int));
 extern void lhd_set_yydebug PARAMS ((int));
+extern tree lhd_expr_size PARAMS ((tree));
 
 /* Declarations of default tree inlining hooks.  */
 tree lhd_tree_inlining_walk_subtrees		PARAMS ((tree *, int *,
@@ -85,6 +86,7 @@ tree lhd_tree_inlining_convert_parm_for_inlining PARAMS ((tree, tree, tree));
 #define LANG_HOOKS_PRINT_TYPE		lhd_print_tree_nothing
 #define LANG_HOOKS_PRINT_IDENTIFIER	lhd_print_tree_nothing
 #define LANG_HOOKS_SET_YYDEBUG		lhd_set_yydebug
+#define LANG_HOOKS_EXPR_SIZE		lhd_expr_size
 
 /* Tree inlining hooks.  */
 #define LANG_HOOKS_TREE_INLINING_WALK_SUBTREES lhd_tree_inlining_walk_subtrees
@@ -102,6 +104,8 @@ tree lhd_tree_inlining_convert_parm_for_inlining PARAMS ((tree, tree, tree));
   lhd_tree_inlining_copy_res_decl_for_inlining
 #define LANG_HOOKS_TREE_INLINING_ANON_AGGR_TYPE_P \
   lhd_tree_inlining_anon_aggr_type_p
+#define LANG_HOOKS_TREE_INLINING_VAR_MOD_TYPE_P \
+  hook_tree_bool_false
 #define LANG_HOOKS_TREE_INLINING_START_INLINING \
   lhd_tree_inlining_start_inlining
 #define LANG_HOOKS_TREE_INLINING_END_INLINING \
@@ -118,6 +122,7 @@ tree lhd_tree_inlining_convert_parm_for_inlining PARAMS ((tree, tree, tree));
   LANG_HOOKS_TREE_INLINING_AUTO_VAR_IN_FN_P, \
   LANG_HOOKS_TREE_INLINING_COPY_RES_DECL_FOR_INLINING, \
   LANG_HOOKS_TREE_INLINING_ANON_AGGR_TYPE_P, \
+  LANG_HOOKS_TREE_INLINING_VAR_MOD_TYPE_P, \
   LANG_HOOKS_TREE_INLINING_START_INLINING, \
   LANG_HOOKS_TREE_INLINING_END_INLINING, \
   LANG_HOOKS_TREE_INLINING_CONVERT_PARM_FOR_INLINING \
@@ -156,6 +161,7 @@ int lhd_tree_dump_type_quals			PARAMS ((tree));
   LANG_HOOKS_PRINT_TYPE, \
   LANG_HOOKS_PRINT_IDENTIFIER, \
   LANG_HOOKS_SET_YYDEBUG, \
+  LANG_HOOKS_EXPR_SIZE, \
   LANG_HOOKS_TREE_INLINING_INITIALIZER, \
   LANG_HOOKS_TREE_DUMP_INITIALIZER \
 }
