@@ -7,6 +7,10 @@ Abstract: Vector math
 *)
 FROM NADefinitions IMPORT Error;
 (*==========================*)
+
+CONST
+  Brand = R.Brand & "Vector";
+
 TYPE
   (*text form: "V6{a0,a1,a2,a3,a4,a5}"*)
   TBody = ARRAY OF R.T;

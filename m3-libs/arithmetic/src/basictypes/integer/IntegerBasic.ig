@@ -10,6 +10,9 @@ FROM NADefinitions IMPORT Error;
 
 (*==========================*)
 
+CONST
+  Brand = It.Brand;
+
 TYPE
   T = I.T;
   Array = REF ARRAY OF T;

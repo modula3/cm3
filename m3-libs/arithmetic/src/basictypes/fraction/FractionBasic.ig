@@ -10,6 +10,9 @@ FROM NADefinitions IMPORT Error;
 
 (*==========================*)
 
+CONST
+  Brand = R.Brand & "Fraction";
+
 TYPE
   T = RECORD n,d: R.T; END;  (* Numerator, Denominator *)
 

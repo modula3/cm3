@@ -17,7 +17,7 @@ FROM NADefinitions IMPORT Error;
 (*==========================*)
 
 CONST
-  Brand = "Root";
+  Brand = R.Brand & "Root";
 
 TYPE
   (*interpretation is: a[0] + a[1]*xi + a[2]* xi^2...a[n]*xi^n *)
