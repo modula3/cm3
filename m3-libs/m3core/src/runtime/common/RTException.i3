@@ -1,7 +1,8 @@
 (* Copyright (C) 1990, Digital Equipment Corporation           *)
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
-(* Portions Copyright 1997, Critical Mass, Inc.                *)
+(* Portions Copyright 1996-2000, Critical Mass, Inc.           *)
+(* See file COPYRIGHT-CMASS for details.                       *)
 
 (* This interface provides access to the runtime machinery that
    raises exceptions.  *)

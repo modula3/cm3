@@ -9,7 +9,7 @@
 UNSAFE MODULE RTHeapDep;
 
 IMPORT RT0u, RTMachine, RTHeapRep, RTCollectorSRC;
-IMPORT Cstdlib, Ctypes, Umman, Unix, Uresource, Usignal, Utypes, Utime, Word;
+IMPORT Cstdlib, Ctypes, Umman, Unix, Uresource, Usignal, Utypes, Word;
 
 VAR
   initialized                           := FALSE;
@@ -161,20 +161,17 @@ PROCEDURE Core (             sig : Ctypes.int;
 (* System-call faults are handled in RTHeapDepC.c *)
 
 PROCEDURE TimeUsed (): REAL =
-  VAR
-    usage: Uresource.struct_rusage;
-    ret := Uresource.getrusage(Uresource.RUSAGE_SELF, ADR(usage));
+  VAR usage: Uresource.struct_rusage;
   BEGIN
-    <* ASSERT ret # -1 *>
-    RETURN TimevalSecs(usage.ru_utime) + TimevalSecs(usage.ru_stime);
+    VAR ret := Uresource.getrusage(Uresource.RUSAGE_SELF, ADR(usage));
+    BEGIN
+      <* ASSERT ret # -1 *>
+    END;
+    RETURN (FLOAT(usage.ru_utime.tv_sec)
+              + FLOAT(usage.ru_utime.tv_usec) / 1000000.0)
+             + (FLOAT(usage.ru_utime.tv_sec)
+                  + FLOAT(usage.ru_utime.tv_usec) / 1000000.0);
   END TimeUsed;
-
-PROCEDURE TimevalSecs(READONLY t: Utime.struct_timeval): REAL =
-  (* Return the number of seconds represented by "t" as a floating-
-     point number. *)
-  BEGIN
-    RETURN FLOAT(t.tv_sec) + (FLOAT(t.tv_usec) / 1.0e6)
-  END TimevalSecs;
 
 PROCEDURE VMFaultTime (): REAL =
   BEGIN
