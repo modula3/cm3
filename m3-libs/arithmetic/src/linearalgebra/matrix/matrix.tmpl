@@ -64,3 +64,20 @@ readonly proc MatrixFmtLex (nm, mimpl) is
   build_generic_intf (mfmt, "MatrixFmtLex", [rfmt, mfield], VISIBLE)
   build_generic_impl (mfmt, "MatrixFmtLex", [rfmt])
 end
+
+readonly proc InstantiateFortranPart (nm, src, ext, type, prefix) is
+  local floatsrc = "Float" & src & ext
+  local target   = nm      & src & ext
+  local fullsrc  = path()&"/"&floatsrc
+  source(floatsrc)
+  if stale(target,fullsrc)
+    exec("perl -p -e \"s/Float/"&type&"/;s/EXTERNAL x/EXTERNAL "&prefix&"/\"", fullsrc, ">" & target)
+  end
+end
+
+readonly proc InstantiateFortran (nm, src, type, prefix) is
+  InstantiateFortranPart (nm, src, ".i3", type, prefix)
+  InstantiateFortranPart (nm, src, ".m3", type, prefix)
+  derived_interface      (nm & src,VISIBLE)
+  derived_implementation (nm & src)
+end

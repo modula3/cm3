@@ -1,4 +1,4 @@
-INTERFACE LongRealMatrixLapack;
+INTERFACE FloatMatrixLapack;
 (*Copyright (c) 1996, m3na project
 
    Abstract: Low level interfaces to LAPACK
@@ -10,7 +10,7 @@ INTERFACE LongRealMatrixLapack;
 
 (*==========================*)
 
-IMPORT LongRealBasic AS R;
+IMPORT FloatBasic AS R;
 
 (*
 For more information on array layout in Modula 3
@@ -21,7 +21,7 @@ http://groups.google.com/groups?hl=en&lr=&ie=UTF-8&threadm=61711f1e.0209141948.3
 
 TYPE SelectProc = PROCEDURE (x, y: R.T): BOOLEAN;
 
-<*EXTERNAL dgees_*>
+<*EXTERNAL xgees_*>
 PROCEDURE GEES (READONLY JOBVS : CHAR;
                 READONLY SORT  : CHAR;
                          SELECT: SelectProc;
@@ -38,7 +38,7 @@ PROCEDURE GEES (READONLY JOBVS : CHAR;
                 VAR      BWORK : (*ARRAY OF*) BOOLEAN;
                 VAR      INFO  : INTEGER                     );
 
-<*EXTERNAL dgees_*>
+<*EXTERNAL xgees_*>
 PROCEDURE GEES_ADDR (READONLY JOBVS : CHAR;
                 READONLY SORT  : CHAR;
                          SELECT: SelectProc;
@@ -56,4 +56,4 @@ PROCEDURE GEES_ADDR (READONLY JOBVS : CHAR;
                 VAR      INFO  : INTEGER                     );
 
 (*==========================*)
-END LongRealMatrixLapack.
+END FloatMatrixLapack.

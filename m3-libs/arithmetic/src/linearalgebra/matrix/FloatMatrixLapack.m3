@@ -1,4 +1,4 @@
-MODULE LongRealMatrixLapack;
+MODULE FloatMatrixLapack;
 (*Copyright (c) 1996, m3na project
 
 Abstract: <describe>
@@ -6,9 +6,9 @@ Abstract: <describe>
 1/1/96  <name>    Initial version
 *)
 
-<*UNUSED*> CONST Module = "LongRealMatrixLapack.";
+<*UNUSED*> CONST Module = "FloatMatrixLapack.";
 (*==========================*)
 
 (*==========================*)
 BEGIN
-END LongRealMatrixLapack.
+END FloatMatrixLapack.
