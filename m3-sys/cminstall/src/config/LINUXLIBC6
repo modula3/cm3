@@ -93,9 +93,9 @@ END_CONFIG
 
 BIN_INSTALL   = INSTALL_ROOT & "/bin"        % executables
 if M3_PROFILING 
-  LIB_INSTALL   = INSTALL_ROOT & "libp"       % libraries
+  LIB_INSTALL   = INSTALL_ROOT & "/libp"       % libraries
 else
-  LIB_INSTALL   = INSTALL_ROOT & "lib"        % libraries
+  LIB_INSTALL   = INSTALL_ROOT & "/lib"        % libraries
 end
 PKG_INSTALL   = INSTALL_ROOT & "/pkg"        % packages
 DOC_INSTALL   = INSTALL_ROOT & "/doc"        % documents
