@@ -37,7 +37,9 @@ readonly Platform_info = {
   "SUN386"    : "i386-sun-sunos4.1",
   "Tru64v5"   : "alpha-dec-osf1",
   "UMAX"      : "encore-bsd",
-  "VAX"       : "vax-dec-ultrix"
+  "VAX"       : "vax-dec-ultrix",
+  "I386_DARWIN" : "i486-unknown-bsd",
+  "PPC_DARWIN"  : "powerpc-apple-linux-gnu"
 }
 
 if not defined("SL")
