@@ -71,7 +71,9 @@ CONST
 <*INLINE*> PROCEDURE Expm1 (x: T): T; (*returns e^(x-1) *)
 <*INLINE*> PROCEDURE Ln    (x: T): T; (*returns ln(x) *)
 <*INLINE*> PROCEDURE Ln1p  (x: T): T; (*returns ln(1+x) *)
+<*INLINE*> PROCEDURE Lb    (x: T): T; (*returns log2(x) *)
 <*INLINE*> PROCEDURE Lg    (x: T): T; (*returns log10(x) *)
+<*INLINE*> PROCEDURE Log   (x, y: T): T; (*returns log_y(x) *)
 <*INLINE*> PROCEDURE Pow   (x, y: T): T; (*returns x^y *)
 <*INLINE*> PROCEDURE SqRt  (x: T): T; (*returns square root of x*)
 
