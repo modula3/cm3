@@ -366,11 +366,35 @@ prepare_call_address (funexp, fndecl, call_fusage, reg_parm_seen, sibcallp)
      int reg_parm_seen;
      int sibcallp;
 {
+  return prepare_call_address_nested (funexp, fndecl, call_fusage,
+				      reg_parm_seen, sibcallp, NULL_TREE);
+}
+
+/* Like prepare_call_address, but with an extra parameter to allow an
+   explicit static chain to be passed. */
+
+rtx
+prepare_call_address_nested (funexp, fndecl, call_fusage, reg_parm_seen,
+			     sibcallp, static_chain_expr)
+     rtx funexp;
+     tree fndecl;
+     rtx *call_fusage;
+     int reg_parm_seen;
+     int sibcallp;
+     tree static_chain_expr;
+{
   rtx static_chain_value = 0;
 
   funexp = protect_from_queue (funexp, 0);
 
-  if (fndecl != 0)
+  if (static_chain_expr != NULL_TREE)
+    {
+      /* Use explicitly passed static chain (Modula-3). */
+      static_chain_value = expand_expr (static_chain_expr,
+					static_chain_rtx, VOIDmode, 0);
+      static_chain_value = protect_from_queue (static_chain_value, 0);
+    }
+  else if (fndecl != 0)
     /* Get possible static chain value for nested function in C.  */
     static_chain_value = lookup_static_chain (fndecl);
 
@@ -3026,8 +3050,9 @@ expand_call (exp, target, ignore)
 	    use_reg (&call_fusage, struct_value_rtx);
 	}
 
-      funexp = prepare_call_address (funexp, fndecl, &call_fusage,
-				     reg_parm_seen, pass == 0);
+      funexp = prepare_call_address_nested (funexp, fndecl, &call_fusage,
+				     reg_parm_seen, pass == 0,
+				     CALL_EXPR_CHAIN (exp));
 
       load_register_parameters (args, num_actuals, &call_fusage, flags);
 

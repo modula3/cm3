@@ -467,8 +467,10 @@ DEFTREECODE (BIND_EXPR, "bind_expr", 'e', 3)
 
 /* Function call.  Operand 0 is the function.
    Operand 1 is the argument list, a list of expressions
-   made out of a chain of TREE_LIST nodes.  */
-DEFTREECODE (CALL_EXPR, "call_expr", 'e', 2)
+   made out of a chain of TREE_LIST nodes.
+   Modula-3 extension: operand 2, if not NULL_TREE, is an explicit
+   static link to be used by the function. */
+DEFTREECODE (CALL_EXPR, "call_expr", 'e', 3)
 
 /* Call a method.  Operand 0 is the method, whose type is a METHOD_TYPE.
    Operand 1 is the expression for "self".
