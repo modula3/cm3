@@ -3,6 +3,7 @@ MODULE TestMatchWavelet;
 IMPORT LongRealBasic AS R;
 IMPORT LongRealTrans AS RT;
 IMPORT Integer32IntegerPower AS IIntPow;
+IMPORT LongRealIntegerPower AS RIntPow;
 
 IMPORT LongRealVectorFast AS V;
 IMPORT LongRealVectorSupport AS VS;
@@ -39,9 +40,9 @@ PROCEDURE MatchPattern (target                               : S.T;
     hdual := BSpl.GeneratorMask(smooth);
     gdual := BSpl.WaveletMask(smooth, vanishing);
     vancore := SIntPow.MulPower(
-                 hdual, NEW(S.T).fromArray(
-                          ARRAY OF R.T{1.0D0, 0.0D0, -1.0D0}, -2),
-                 vanishing);
+                 hdual,
+                 NEW(S.T).fromArray(ARRAY OF R.T{1.0D0, 0.0D0, -1.0D0}),
+                 vanishing).translate(2 - smooth - vanishing);
     phivan := Refn.Refine(vancore.scale(RT.SqRtTwo), hdual, levels);
     psi    := Refn.Refine(gdual.scale(R.One / RT.SqRtTwo), hdual, levels);
 
@@ -52,30 +53,38 @@ PROCEDURE MatchPattern (target                               : S.T;
               psi.getLast(), phivan.getLast() + twonit * (translates - 1));
     size := last - first + 1;
 
-    twopow   := FLOAT(unit, R.T);
-    grid     := R.One / twopow;
-    abscissa := V.ArithSeq(size, FLOAT(first, R.T) * grid, grid);
+    twopow    := FLOAT(unit, R.T);
+    grid      := R.One / twopow;
+    wavescale := RT.SqRt(twopow);
+    abscissa  := V.ArithSeq(size, FLOAT(first, R.T) * grid, grid);
 
     targetvec := V.New(size);
     basis     := M.New(2 * translates + 1, size);
 
     coef: LA.LS;
 
-  CONST
-    ymin = -1.5D0;
-    ymax = 1.5D0;
+    waveymin := MIN(V.Min(phivan.getData()^), V.Min(psi.getData()^));
+    waveymax := MAX(V.Max(phivan.getData()^), V.Max(psi.getData()^));
+    ymin := 1.1D0 * MIN(V.Min(target.getData()^), wavescale * waveymin);
+    ymax := 1.1D0 * MAX(V.Max(target.getData()^), wavescale * waveymax);
+
+  (*
+    CONST
+      ymin = -1.5D0;
+      ymax = 1.5D0;
+  *)
 
   BEGIN
     PL.Init();
     PL.SetEnvironment(
       abscissa[FIRST(abscissa^)], abscissa[LAST(abscissa^)], ymin, ymax);
 
-    psi.scale(twopow).clipToArray(first, basis[LAST(basis^)]);
+    psi.scale(wavescale).clipToArray(first, basis[LAST(basis^)]);
     PL.SetColor0(1);
     PL.PlotLines(abscissa^, basis[LAST(basis^)]);
     PL.SetColor0(2);
     FOR j := -translates TO translates - 1 DO
-      phivan.scale(twopow).clipToArray(
+      phivan.scale(wavescale).clipToArray(
         first - twonit * j, basis[j + translates]);
       PL.PlotLines(abscissa^, basis[j + translates]);
     END;
@@ -84,10 +93,12 @@ PROCEDURE MatchPattern (target                               : S.T;
     PL.SetColor0(3);
     PL.PlotLines(abscissa^, targetvec^);
 
+    (*
     IO.Put(Fmt.FN("normal matrix %s, right hand side %s\n",
                   ARRAY OF
                     TEXT{MF.Fmt(M.MulMMA(basis)),
                          VF.Fmt(M.MulV(basis, targetvec))}));
+    *)
 
     coef :=
       LA.LeastSquares(basis, ARRAY OF V.T{targetvec},
@@ -567,14 +578,16 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
         derwavdist := ExtendDervTarget(derdist, mc.lift.getData(), mc.amp,
                                        waveletVec, waveletCor, targetVec);
 
-        dx               := V.New(NUMBER(x^));
+        dx  := V.New(NUMBER(x^));
+        dxv := VT.Norm1(x) * 1.0D-4;
+        (*dx := V.Scale(x, 1.0D-2);*)
         dersmooth: FnD.T;
 
       <*FATAL Thread.Alerted, Wr.Failure*>
       BEGIN
         IO.Put(
           Fmt.FN("ComputeOptCritDiff for x=%s", ARRAY OF TEXT{VF.Fmt(x)}));
-        FOR i := FIRST(dx^) TO LAST(dx^) DO dx[i] := 1.0D-3 END;
+        FOR i := FIRST(dx^) TO LAST(dx^) DO dx[i] := dxv END;
         CASE 1 OF
         | 0 =>
             dersmooth := Fn.EvalCentralDiff2(SquareSmoothEstimate, x, dx);
@@ -583,9 +596,10 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
           <*ASSERT FALSE*>
         END;
         IO.Put(
-          Fmt.FN("dist %s, smooth %s\n", ARRAY OF
-                                           TEXT{RF.Fmt(derwavdist.zeroth),
-                                                RF.Fmt(dersmooth.zeroth)}));
+          Fmt.FN("dist %s, smooth %s, weight %s\n",
+                 ARRAY OF
+                   TEXT{RF.Fmt(derwavdist.zeroth),
+                        RF.Fmt(dersmooth.zeroth), RF.Fmt(smoothWeight)}));
         IO.Put(
           Fmt.FN("dist' %ssmooth' %s\n",
                  ARRAY OF
@@ -594,22 +608,48 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
       END ComputeOptCritDiff;
 
 
-    VAR
-    initX := V.FromVectorArray(
-               ARRAY OF
-                 V.T{         
-                 V.New(2 * translates), V.FromScalar(R.One)}); 
- (*V.ArithSeq(2 * translates, -0.5D0,
-                                  0.1D0),*)
-    (* use this initialization if you want to compare the results with
-       MatchPattern
+    CONST
+      maxIter   = 5;
+      smoothFac = 2.0D0;
 
-       initX := V.New(2 * translates+1) *)
+    VAR
+      (*
+      x := V.FromVectorArray(
+             ARRAY OF V.T{V.New(2 * translates), V.FromScalar(R.One)});
+      *)
+      x := V.FromVectorArray(
+             ARRAY OF
+               V.T{V.ArithSeq(2 * translates, -0.45D0, 0.1D0),
+                   V.FromScalar(R.One)});
+      (* use this initialization if you want to compare the results with
+         MatchPattern
+
+         x := V.New(2 * translates+1) *)
+      precOk : BOOLEAN;
+      subiter: CARDINAL;
 
     BEGIN
-      RETURN
-        SplitParamVec(
-          Fn.FindStationaryPoint(ComputeOptCritDiff, initX, tol, 100));
+      smoothWeight := smoothWeight / RIntPow.Power(smoothFac, maxIter);
+      FOR iter := 0 TO maxIter DO
+        precOk := FALSE;
+        subiter := 0;
+        WHILE NOT precOk DO
+          IF subiter >= 15 THEN RAISE NA.Error(NA.Err.not_converging); END;
+          INC(subiter);
+          VAR der := ComputeOptCritDiff(x);
+          BEGIN
+            x := V.Sub(x, LA.LeastSquares(
+                            der.second, ARRAY OF V.T{der.first})[0].x);
+            precOk := VT.Norm1(der.first) <= tol * RT.Abs(der.zeroth);
+          END;
+        END;
+        smoothWeight := smoothWeight * smoothFac;
+      END;
+      IF precOk OR TRUE THEN
+        RETURN SplitParamVec(x);
+      ELSE
+        RAISE NA.Error(NA.Err.not_converging);
+      END;
     END;
   END MatchPatternSmooth;
 
@@ -623,8 +663,8 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
     gdual0 := BSpl.WaveletMask(smooth, vanishing);
     hdualvan := SIntPow.MulPower(
                   hdual, NEW(S.T).fromArray(
-                           ARRAY OF R.T{1.0D0, 0.0D0, -1.0D0}, -2),
-                  vanishing);
+                           ARRAY OF R.T{1.0D0, 0.0D0, -1.0D0}).translate(
+                           2 - smooth - vanishing), vanishing);
     mc := MatchPatternSmooth(target, hdual, gdual0, hdualvan, levels,
                              translates, smoothWeight);
     s := SIntPow.MulPower(
@@ -700,11 +740,11 @@ PROCEDURE SincVector (size, width: CARDINAL): V.T =
 PROCEDURE Test () =
   <*FATAL BSpl.DifferentParity*>
   TYPE
-    Example = {matchBSpline, matchBSplineVan, matchRamp, matchRampSmooth,
-               matchSincSmooth, matchLongRamp, testSSE, testInverseDSSE,
-               testDeriveWSSE};
+    Example = {matchBSpline, matchBSplineVan, matchBSplineWavelet,
+               matchRamp, matchRampSmooth, matchSincSmooth, matchLongRamp,
+               testSSE, testInverseDSSE, testDeriveWSSE};
   BEGIN
-    CASE Example.matchRampSmooth OF
+    CASE Example.matchBSplineWavelet OF
     | Example.matchBSpline =>
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50), 6,
@@ -723,11 +763,28 @@ PROCEDURE Test () =
            -0.11516417311729, ...} 0.330691666379811 *)
         MatchPattern(
           NEW(S.T).fromArray(
-            V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^, -256), 6, 4, 2, 5);
+            V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^, -256), 6, 4, 6, 5);
     | Example.matchRampSmooth =>
+        (*
+          TestMatchPatternSmooth(NEW(S.T).fromArray(
+                                   V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^,
+                                   -256), 6, 4, 2, 5, 50.0D0);
+          TestMatchPatternSmooth(NEW(S.T).fromArray(
+                                   V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^,
+                                   -256), 6, 4, 4, 5, 20.0D0);
+        *)
         TestMatchPatternSmooth(NEW(S.T).fromArray(
                                  V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^,
-                                 -256), 6, 4, 2, 5, 0.0D0);
+                                 -256), 6, 4, 6, 5, 5.0D0);
+    | Example.matchBSplineWavelet =>
+        MatchPattern(Refn.Refine(BSpl.WaveletMask(2, 2),
+                                 BSpl.GeneratorMask(2), 6).scale(64.0D0),
+                     6, 8, 2, 5);
+      (*
+      TestMatchPatternSmooth(Refn.Refine(BSpl.WaveletMask(2,8),
+                               BSpl.GeneratorMask(2), 6).scale(64.0D0),
+                   6, 2,8, 5, 1.0D0);
+      *)
     | Example.matchSincSmooth =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
