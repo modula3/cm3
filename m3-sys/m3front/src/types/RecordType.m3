@@ -200,9 +200,8 @@ PROCEDURE SizeAndAlignment (fields: Scope.T;
         newAlign := MAX (newAlign, Target.Integer.align);
       END;
       ***************************************************)
-      (* find an alignment that avoids scalar word crossings *)
       IF NOT FindAlignment (newAlign, fields) THEN
-        Error.Msg ("SRC Modula-3 restriction: scalars in packed fields cannot cross word boundaries");
+        Error.Msg ("Could not find a legal alignment for the packed type.");
       END;
     END;
 

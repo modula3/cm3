@@ -885,7 +885,11 @@ PROCEDURE GenRefDesc (t: T) =
 PROCEDURE ScalarAlign (t: TT;  offset: INTEGER): BOOLEAN =
   VAR u := Check (t);
   BEGIN
-    RETURN (offset MOD u.info.alignment = 0);
+  	IF Target.Allow_packed_byte_aligned THEN
+    	RETURN (offset MOD 8 = 0);
+  	ELSE
+     	RETURN (offset MOD u.info.alignment = 0);
+   END;
   END ScalarAlign;
 
 BEGIN
