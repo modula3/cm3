@@ -1,0 +1,71 @@
+.\" Copyright (C) 1992, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.\" File: m3.1
+.\" Last modified on Fri Mar 11 02:25:28 PST 1994 by luca
+.nh
+.TH obliq 1
+.SH Name
+Obliq \- a lightweight language for network objects
+
+.SH Syntax
+.B obliq
+[options]
+
+.SH Description
+
+An interactive interpreter for the Obliq language.
+Obliq is a small, statically scoped, untyped language. It is 
+object-oriented, higher-order, and distributed. State is 
+local to an address space, while computation can migrate 
+over the network. The distributed computation mechanism is 
+based on Modula-3 Network Objects.
+
+Obliq requires copies of netobjd to be running on all appropriate 
+machines, if network objects are to be used.
+
+.SH Options
+
+.TP
+.BI \-min
+obliq interpreter with minimum libraries
+.TP
+.BI \-std
+obliq interpreter with standard libraries
+.TP
+.BI \-ui
+obliq interpreter with user-iterface libraries
+.TP
+.BI \-anim
+obliq interpreter with animation libraries
+.TP
+.BI \-af93
+ obliq of the Animation Festival '93 (obsolete)
+
+.SH SRC Documentation
+
+    /src/hypertext/SRC/obliq/Obliq.html    (quick start, for mosaic)
+
+.SH External Site Documentation 
+    (in /proj/m3/pkg/..., or equivalent)
+
+    ...obliqdoc/src/Obliq.html/           (quick start, for mosaic)
+    ...obliqdoc/src/ObliqPaper.ps         (paper/manual, for printing)
+    ...obliqdoc/src/ObliqPaper-html/ObliqPaper.html (same, for mosaic)
+    ...obliqdoc/src/Example/*.obl         (example programs)
+
+.SH See Also
+
+    obliqsrv
+    netobjd
+    The Modula-3 Network Objects documentation
+    "Obliq: A language with distributed scope" (Obliq.ps, above)
+
+.SH Author Of Object
+
+  Luca Cardelli
+
+.SH Author Of Documentation
+
+  Luca Cardelli

@@ -1,0 +1,32 @@
+  rects_failure: Exception 
+  rects_new(): Rects 
+    An empty display list of rectangles.
+  rects_setWorld(r: Rects, w: Real, e: Real, n: Real, s: Real): Ok
+    Set the world coordinates.
+  rects_setMargin(r: Rects, w: Real, e: Real, n: Real, s: Real): Ok
+    Set the window margin in points.
+  rects_setMins(r: Rects, wd: Real, ht: Real): Ok
+    Set the minimum size for displaying an item, in points.
+  rects_setBg(r: Rects, c: Color): Ok
+    Set the window background color.
+  rects_setN(r: Rects, n: Int, redisplay: Bool): Ok
+    Set the number of rectangles in the display list; they do not exist yet.
+  rects_setPosition(r: Rects, n: Int, w: Real, e: Real, n: Real, s: Real,
+      redisplay: Bool): Ok
+    Set the position of the nth rectangle, then it exists.
+  rects_getPosition(r: Rects, n: Int): [4*Real]
+    Get the position of the nth rectangle; w,e,n,s.
+  rects_setColor(r: Rects, n: Int, c: Color, redisplay: Bool): Ok
+    Set the color of the nth rectangle, then it exists.
+  rects_delete(r: Rects, n: Int, redisplay: Bool): Ok
+    Delete the nth rectangle; then it does not exist.
+  rects_exists(r: Rects, n: Int): Ok
+    Does the nth rectangle exist.
+  rects_draw(r: Rects, n: Int): Ok
+    Draw the nth rectangle.
+  rects_erase(r: Rects, n: Int): Ok
+    Erase the nth rectangle.
+  rects_show(r: Rects): Ok 
+    Show the window.
+  rects_hide(r: Rects): Ok 
+    Hide the window.

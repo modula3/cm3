@@ -1,0 +1,202 @@
+sys_printText("Started SAFE VISUAL OBLIQ Interpreter...\n");
+sys_printText("Installing Visual Obliq support.\n\n");
+sys_printFlush();
+
+(* check if a network object daemon is running 
+    start one if necessary
+*)
+
+var NetObjPing =
+{
+  ping => meth(s) 
+	true
+ end
+};
+
+
+var NODexists = false;
+try
+	net_export("VONetObjPing", "", NetObjPing);
+
+	if net_import("VONetObjPing", "").ping() then
+			NODexists:=true;
+	end
+except else
+end;
+
+if not(NODexists) then
+	processNew(["netobjd","&"], false);
+	sys_printText("Starting Network object daemon...\n");
+	pause(1.0);
+else
+	sys_printText("Network object daemon already present.\n");
+end;
+
+sys_printFlush();
+
+
+var installVOA = true;
+
+try 
+  net_import("vos", "").ping();
+  installVOA := false;
+  sys_printText("Visual Obliq Agent already present!\n");
+except else
+end;
+
+if installVOA then
+  let fv = 
+    "(Shape (Width 600) (Height 300) (Font" &
+    "\"-\*-helvetica-bold-\*R-\*240-\*\") (LabelFont" &
+    "\"-\*-helvetica-bold-\*R-\*240-\*\") (VBox (Text (BgColor" &
+    "\"DarkBrown\") (Color \"White\") \"Session Request\") (Text (Color" &
+    "\"DarkBrown\") \"You are invited to join a session of\") (Text (Color" &
+    "\"Red\") (Name name) \"foo\") Fill (HBox Fill (Button (Name accept)" &
+    "(BgColor \"PaleGreen\") (Rim (Pen 5) \"Accept\")) Fill (Button (Name " &
+    "reject) (BgColor \"LightRed\") (Rim (Pen 5) \"Reject\")) Fill) Fill))";
+
+  let vos = {
+    Install => meth(s, constructor, name)
+      let noticeform = form_new(fv);
+      form_putText(noticeform, "name", "", name, false);
+      form_attach(noticeform, "accept", 
+        proc(fv) 
+          form_hide(fv);
+          (constructor)(volibLocal);
+          end);
+      form_attach(noticeform, "reject", 
+        proc(fv) 
+          form_hide(fv); 
+          ok 
+          end);
+      form_show(noticeform);
+      ok
+      end,
+     ping => meth(s)
+        true
+     end
+    };
+  net_export("vos", "", vos);
+sys_printText("Started Visual Obliq Agent on " & sys_address & " ...\n");
+end;
+sys_printFlush();
+
+(*************** derived from cgiserver.obl **********************************************)
+var installSSN = true;
+
+try 
+  net_import("vossns", "").ping();
+  installSSN := false;
+  sys_printText("Visual Obliq Session Agent  already present!\n");
+except else
+end;
+
+if installSSN then
+
+	let MakeHtmlLink = proc(message, linkto)
+		"<A HREF=\"" & linkto & "\">" & message &   "</A>";
+	end;
+
+
+	let sessnob =
+	{
+		sessions => [],
+
+		 ping => meth(s)
+        	 	true
+     	 	end,
+
+		addNew => meth(s, name, site)
+
+			(* check if it is already registered, if so return  	   *)
+			(* this is ok because this would mean the new	     *)
+			(* session object will supersede the earlier object *)
+			(* by the same name.                                                  *)
+
+			var exists = false;
+	     		foreach i in s.sessions do
+				if (i.n is name) and (i.s is site) then 
+					exists := true;
+				end;
+			end;
+
+			if not (exists) then
+				s.sessions := s.sessions @
+						[{ n => name,
+			  			    s =>  site }];
+			end;
+		end,
+
+		genListing => meth(s, partialcmd)
+			var l = "Content-type: text/html\n\n\n" &
+				"<TITLE>List of Sessions</TITLE>\n<UL>\n" &
+				"<H2>Sessions Registered with this Server</H2>\n" &
+				"(Generated automatically by vossns@" & sys_address & ")<P><P>\n" &
+				"<i>This page lists a set of Visual Obliq Sessions that are currently in progress. " &
+				"You may join a session by clicking on a corresponding link. This will cause the " &
+				"session-constructor to be imported within a 'safe' Visual Obliq interpreter on " &
+				" your site. Whenever the imported program tries to access " &
+	       			"a file or spawn a process you will be notified and allowed to abort it, unless the action" &
+        			" is allowed in your </i>.vo.exempt<i> file.</i><P><P>\n";
+			foreach i in s.sessions do
+				try 
+					let sessnob = net_import(i.n, i.s);
+					sessnob.New; (* just to see if the constructor proc is available *)
+					 (* If the session was dead there would be an exception by this time
+				    	this helps us make sure the session really exists *)
+					l := l & "<LI> " & MakeHtmlLink( i.n & " at " & i.s, partialcmd & "+" &  i.n & "+" & i.s);
+				except
+				else
+				end;
+			end;
+			l := l & "\n";
+
+		(* Uncomment these lines to debug output html
+			sys_printText(l);
+			sys_printFlush();		
+		*)
+			l
+		end
+	
+	};
+
+	net_export("vossns", "", sessnob);
+	sys_printText("Registered  Visual Obliq Name-Server vossns@" & sys_address & "\n");
+end;
+
+(* Create a compute engine called VOReceiver *)
+var installVOR = true;
+
+try 
+	let n = net_importEngine("VOReceiver", "");
+	installVOR := false;
+except
+else
+	net_exportEngine("VOReceiver", "", 0);
+	sys_printText("Created a Visual Obliq Receiver -  VOReceiver@" & sys_address & "\n");
+end;
+
+
+sys_printFlush();
+(********************************************************************************************)
+
+if (installVOA or installSSN or installVOR) then
+	sys_printText("\nVisual Obliq support is now in operation.\nYou may proceed.\n\n");
+	sys_printFlush();
+	loop
+		pause(2000.0);
+	end;
+else
+sys_printText("\nVisual Obliq support in operation.\n Please delete the window that pops up now.\n\n");
+sys_printFlush();
+end;
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,75 @@
+.\" This file generated automatically by mtextoman(1)
+.nh
+.TH "mtex2man" "1"
+.SH "NAME"
+.PP
+mtex2man \- translate mtex(7) files to man format
+.SH "SYNTAX"
+.PP
+\fBmtex2man\fR
+.SH "DESCRIPTION"
+.PP
+\fImtex2man\fR is a filter that reads a file in mtex(7) format from its standard input, and writes a \fIman\fR\-format file to
+standard output suitable for viewing with nroff(1)/troff(1) and the man(7) or
+man.nopage(7) macro packages.
+.PP
+\fImtex2man\fR is written entirely in LIM (see lim(1)).
+.SH "SPECIAL CHARACTERS"
+.PP
+There are two special characters for the man output format. Here
+are the characters and the strings they are translated to by
+mtex2man(1):
+.PP
+\*(lq\-\*(rq becomes \*(lq\\\-\*(rq
+.br
+\*(lq\\\*(rq becomes \*(lq\\\\\*(rq
+.BR
+.PP
+To prevent the first character from being translated within the
+scope of a \fIroff\fR environment, you must escape it with a
+\\ (backslash) character.
+.PP
+Since the backslash character is the escape character used by mtex,
+the way to signal one in the input is by escaping it. Hence, the
+second translation listed above says that \*(lq\\\\\*(rq in the input
+become \*(lq\\\\\*(rq in the output.
+.SH "DIAGNOSTICS"
+.PP
+See the Diagnostics section of the
+mtex(7) manpage for a complete description.
+.SH "BUGS"
+.PP
+The \\tt command for typesetting in fixed\-width font is currently
+ignored.
+.PP
+For now, there is no way to produce a single \\ (backslash)
+character in a \fIroff\fR environment.
+.PP
+An escaped backslash character (\\\\) should not be used in
+arguments to the \\item command within the description
+environment. There seems to be a problem with using backslash in
+arguments to certain man(7) macros.
+.PP
+The " (double\-quote) character should not be used in arguments to the
+\\manpage and \\section commands. This problem seems to be due to a
+mistake in the design of nroff(1)/troff(1), which uses this character
+literally in some contexts but as a method of quoting in others.
+.PP
+Links are not indicated in any way.
+.SH "SEE ALSO"
+.PP
+mtex(7),
+mtex2html(1),
+mtex2tex(1),
+nroff(1), troff(1), man(7), man.nopage(7)
+
+This man page is also available as a hypertext document under Mosaic at URL
+http://src\-www.pa.dec.com/SRC/man/DS/mtex2man.1.html.
+.PP
+.SH "AUTHOR OF PROGRAM AND DOCUMENTATION"
+.PP
+Allan Heydon
+(heydon@src.dec.com)
+.EX
+Last modified on Mon Feb  6 16:46:23 PST 1995 by heydon
+.EE

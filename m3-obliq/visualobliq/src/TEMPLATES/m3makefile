@@ -1,0 +1,24 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Mon Jun 27 15:26:10 PDT 1994 by bharat  */
+/*      modified on Sat Oct 23 22:49:57 PDT 1993 by mhb     */
+
+resource ("booleanTEMPLATE.fv")
+resource ("browserTEMPLATE.fv")
+resource ("buttonTEMPLATE.fv")
+resource ("choiceTEMPLATE.fv")
+resource ("filebrowserTEMPLATE.fv")
+resource ("formTEMPLATE.fv")
+resource ("frameTEMPLATE.fv")
+resource ("hscrollTEMPLATE.fv")
+resource ("menuTEMPLATE.fv")
+resource ("numericTEMPLATE.fv")
+resource ("testTEMPLATE.fv")
+resource ("textTEMPLATE.fv")
+resource ("texteditTEMPLATE.fv")
+resource ("typeinTEMPLATE.fv")
+resource ("vscrollTEMPLATE.fv")
+resource ("videoTEMPLATE.fv")
+

@@ -1,0 +1,246 @@
+(* Copyright (C) 1995, Digital Equipment Corporation.       *)
+(* All rights reserved.                                     *)
+(* See the file COPYRIGHT for a full description.           *)
+(*                                                          *)
+(* Last modified on Tue Jan 10 11:50:14 PST 1995 by mhb     *)
+
+module vorestrict;
+
+sys_pushSilence();
+
+var isAllowed = 0;
+var isBlocked = 0;
+
+(
+var allowList = [];
+var blockList = [];
+let nullstring = proc(t)
+	let len = text_length(t);
+	var null = true;
+	for i = 0 to len-1 do
+		let c = text_char(t, i);
+		null := null and (c is ' ')
+				or (c is '\t');
+	end;
+	null;
+end;
+
+(* test if a is a postfix of b *)
+let postfix = proc(a,b) 
+	let alen = text_length(a);
+	let blen = text_length(b);
+	if (alen > blen) then
+		false;
+	else
+		a is text_sub(b, blen-alen, alen);			
+	end;
+end;
+
+(* test if a is a prefix of b *)
+let prefix = proc(a,b)
+	let alen = text_length(a);
+	let blen = text_length(b);
+	if (alen > blen) then
+		false;
+	else
+		a is text_sub(b, 0, alen);			
+	end;
+ end;
+
+let equal = proc(a,b) a is b end;
+
+try 
+let txt = volibLocal.LoadFile(sys_getEnvVar("HOME")
+	& "/.vorestrict");
+let list = text_explode("\n", txt);
+var curmode = "";
+
+foreach line in list do
+	if not (nullstring(line)) then
+		let teline = text_explode(" \t", line);
+		if text_char(teline[0], 0) is '#' then
+		   ok; (* comment ignore *)
+		elsif 
+		     text_char(teline[0], 0) is '@' then	
+			curmode := teline[0];
+		else
+			var thislist = [];
+			var flexible = false;
+			foreach word in text_explode(" \t", line) do
+				if word is "..." then flexible := true;
+				elsif text_char(word, text_length(word)-1)
+					is '*' then
+				thislist := thislist @ 
+				[{pattern =>  text_sub(word, 0,
+						text_length(word) -1),
+				  check => "isPrefix?"}];
+				   
+				elsif text_char(word,0) is '*' then
+				thislist := thislist @
+                                [{pattern =>  text_sub(word, 1,
+                                                text_length(word) -1),
+                                  check => "isPostfix?"}];
+				else
+				thislist := thislist @
+				[{pattern => word, check => "isEqual?"}]
+				end;
+			end;
+			if curmode is "@allow" then
+				allowList := allowList @ 
+				[{FlexibleArity => flexible,
+			           Words => thislist } ];
+			elsif curmode is "@block" then
+				blockList := blockList @ 
+				[{FlexibleArity => flexible,
+				   Words => thislist}];
+			end;
+		end;
+	end;
+end;
+except
+else
+end; 
+
+let matches = proc(datum, cmd)
+	if  
+	      (cmd.FlexibleArity  and  (#(datum) >= #(cmd.Words)))
+		or 
+	      (#(datum) is #(cmd.Words))
+       then
+		  var matches = true;
+		  for i = 0 to #(cmd.Words)-1 do
+		     let chk = cmd.Words[i].check;
+		     if chk is "isEqual?" then 
+			matches := matches and equal(datum[i], cmd.Words[i].pattern);
+		     elsif chk is "isPrefix?" then 
+			matches := matches and prefix(cmd.Words[i].pattern, datum[i]);
+		     else
+		 	matches := matches and postfix(cmd.Words[i].pattern, datum[i]);
+		     end;
+		  end;  	   
+ 		matches;
+	else
+	 	false;
+	end;
+end;
+
+isAllowed := proc(cmd)
+	var allowed = false;
+	foreach i in allowList do
+		allowed := allowed or matches(cmd, i);
+	end;
+	allowed;
+end;
+
+isBlocked := proc(cmd)
+	var blocked = false;
+	foreach i in blockList do
+		blocked := blocked or matches(cmd, i);
+	end;
+	blocked;
+end;
+
+);
+
+
+let prcs = process_new(processor, ["voquery"], false);
+
+let inpipe = process_out(prcs);
+let outpipe = process_in(prcs);
+
+let askUser = proc(mesg)
+	wr_putText(outpipe, mesg & "\n");
+	wr_flush(outpipe);
+	rd_getChar(inpipe) is 'y';
+end;
+
+
+let protViolation  = exception("Protection Violation");
+
+(* Redefine the restriction procs *)
+processNew := proc(nameAndArgs, mergeOut) 
+	let cmdlist = ["processNew"] @ nameAndArgs;
+	if isAllowed(cmdlist) then
+		process_new(processor, nameAndArgs, mergeOut);
+	elsif not (isBlocked(cmdlist)) then
+		let msg = "Start Process : " & text_implode(' ', nameAndArgs) & " ?";
+		if askUser(msg) then
+			process_new(processor, nameAndArgs, mergeOut)
+		else
+			 raise(protViolation)
+		end;
+	else
+		raise(protViolation)	
+	end;
+end;
+ 
+
+rdOpen := proc(fnm) 
+	let cmdlist = ["rdOpen",  fnm];
+	if isAllowed(cmdlist) then
+			rd_open(fileSys, fnm);
+	elsif not (isBlocked(cmdlist)) then
+		let msg = "Read File: " & fnm & " ?";
+		if askUser(msg) then
+			rd_open(fileSys, fnm);
+		else
+			 raise(protViolation)
+		end;
+	else
+		raise(protViolation);
+	end;
+end;
+ 
+wrOpen := proc(fnm) 
+	let cmdlist = ["wdOpen",  fnm];
+	if isAllowed(cmdlist) then
+			wr_open(fileSys, fnm);
+	elsif not (isBlocked(cmdlist)) then
+		let msg = "Write File: " & fnm & " ?";
+		if askUser(msg) then
+			wr_open(fileSys, fnm);
+		else
+			 raise(protViolation)
+		end;
+	else
+		raise(protViolation);
+	end;
+end;
+
+wrOpenAppend := proc(fnm) 
+	let cmdlist = ["wrOpenAppend",  fnm];
+	if isAllowed(cmdlist) then
+			wr_openAppend(fileSys, fnm);
+	elsif not (isBlocked(cmdlist)) then
+		let msg = "Append to File: " & fnm & " ?";
+		if askUser(msg) then
+			wr_openAppend(fileSys, fnm);
+		else
+			 raise(protViolation)
+		end;
+	else
+		raise(protViolation);
+	end;
+end;
+
+volibLocal.processNew := meth(s, n , mer)
+	processNew(n, mer)
+end;
+
+volibLocal.rdOpen := meth(s, fnm)
+	rdOpen(fnm)
+end;
+
+volibLocal.wrOpen := meth(s, fnm)
+	wrOpen(fnm)
+end;
+
+volibLocal.wrOpenAppend := meth(s, fnm)
+	wrOpenAppend(fnm)
+end;
+
+(* After this if  processor, fileSys and fileSysReader
+    are hidden these three procedures are the only
+    means of accessing the processor/filesystem *)
+
+sys_popSilence();

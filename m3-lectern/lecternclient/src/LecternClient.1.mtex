@@ -1,0 +1,49 @@
+\begin{html}
+\<IMG SRC="../vpLogo36.gif" ALIGN=middle ALT=""\>\<P\>
+\end{html}
+\manpage{LecternClient}{LecternClient}{1}
+\section{NAME}
+LecternClient - send request to Lectern
+\section{SYNTAX}
+\bf{LecternClient pathname}
+
+or:
+
+\bf{LecternClient -l arg...} 
+
+or:
+
+\bf{LecternClient -f path}
+
+\section{DESCRIPTION}
+This program sends a message to the latest instance of Lectern that was
+started by the current user on the current machine.  If it can't contact an
+instance of Lectern, it attempts to start another one.
+
+See
+\link{Lectern.1.html}{Lectern(1)}
+for the interpretation of the arguments.  When LecternClient is called with a
+single pathname, it is made absolute if necessary (by prefixing it with the
+pathname of the current working directory) and passed to Lectern. When
+LecternClient is called with the \bf{-f} option, its single argument is interpreted
+as the name of a file containing one or more lines, each of which is passed
+unchanged to Lectern. When LecternClient is called with the \bf{-l} option, its
+remaining arguments are passed uninterpreted to Lectern.
+\section{AUTHOR}
+\link{http://www.research.digital.com/SRC/people/Paul_McJones/bio.html}{Paul McJones}
+
+\section{SEE ALSO}
+\link{Lectern.1.html}{Lectern(1)}
+
+\section{COPYRIGHT}
+
+\begin{flushleft}
+Copyright 1994 Digital Equipment Corporation.\newline
+Distributed only by permission.\newline
+\end{flushleft}
+
+\begin{verbatim}
+Last modified on Fri Feb 17 17:43:10 PST 1995 by birrell  
+     modified on Sun Jan  1 09:33:26 PST 1995 by glassman 
+     modified on Mon Jul 25 16:56:11 PDT 1994 by mcjones 
+\end{verbatim}

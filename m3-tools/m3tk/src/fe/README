@@ -1,0 +1,9 @@
+m3tk-fe.2 package -- created Fri Apr 3 10:34:07 PST 1992 by mjordan
+current owner mjordan
+
+This package provides the compiler front-end of the Modula-3 toolkit.
+The interfaces are not usually invoked directly, see "M3ToolFrame".
+
+M3CFETool       Compiler front-end tool, i.e. with user interface
+M3CGoList       Compile a set of units together
+M3CGo           Compile a single unit. Provides an extension facility.

@@ -1,0 +1,16 @@
+ (Shape %textatt (Height 200)
+   (VBox 
+     (Glue 10)
+     (Title "Text")
+     (Glue 10)
+      (RField tOrientation "Orientation : " (HBox (Choice %LeftAlign Inverting "Left Align")
+                                            (Choice %Center Inverting "Center")
+                                            (Choice %RightAlign Inverting "RightAlign")
+                                            ) 20 Center 100)
+  
+       (Glue 10)
+     (LField "Value :" 500 (TypeIn ExpandOnDemand (TabTo name) %tVal
+                                             (BgColor "White") (Value "Text") ) )
+      Fill
+   )
+  )

@@ -1,0 +1,38 @@
+  thread_mutex(): Mutex
+    (also 'mutex()') A new mutex.
+  thread_condition(): Condition
+    (also 'condition()') A new condition.
+  Some(T) thread_self(): Thread(T)
+    The current thread.
+  All(T) thread_fork(f: ()->T, stackSize: Int): Thread(T)
+    (also 'fork(f,n)') Fork a new thread executing f. If stackSize is zero, a 
+    small default size is used.
+  All(T) thread_join(th: Thread(T)): T
+    (also 'join(th)') Wait for a thread to complete, and return the result of 
+    its procedure.
+  thread_wait(mx: Mutex, cd: Condition): Ok
+    (also 'wait(mx,cd)') Wait on a mutex and a condition.
+  thread_acquire(mx: Mutex): Ok
+    Acquire a mutex (use lock ... end instead).
+  thread_release(mx: Mutex): Ok
+    Release a mutex (use lock ... end instead)
+  thread_broadcast(cd: Condition): Ok
+    (also 'broadcast(cd)') Wake-up to all threads waiting on a condition. 
+  thread_signal(cd: Condition): Ok
+    (also 'signal(cd)') Wake-up at least one thread waiting on a condition.
+  thread_pause(r: Real): Ok
+    (also 'pause(r)') Pause the current thread for r seconds.
+  All(T) thread_lock(m: Mutex, body: ()->T): T
+    Execute under a locked mutex (use lock ... end instead).
+  thread_alerted: Exception
+    (See the threads spec.)
+  All(T) thread_alert(t: Thread(T)): Ok
+    (See the threads spec.)
+  thread_testAlert(): Bool
+    (See the threads spec.)
+  thread_alertWait(mx: Mutex, cd: Condition): Ok ! thread_alerted
+    (See the threads spec.)
+  All(T) thread_alertJoin(th: Thread(T)): Ok ! thread_alerted
+    (See the threads spec.)
+  thread_alertPause(r: Real): Ok ! thread_alerted
+    (See the threads spec.)

@@ -1,0 +1,156 @@
+#| FormsVBT macros used by Postcard's forms.                                  |#
+#| The first few are easy to modify to change details of the appearance.      |#
+#|============================================================================|#
+
+(Macro if2D BOA (for2D for3D) `,for3D)
+  #| The body should say "for2D" to get 2-D look, and "for3D" for 3-D look |#
+
+(Font (Family "helvetica") (WeightName "bold") (Width "*") (PointSize 120))
+  #| This gets overridden by the font specified in the configuration file.
+     Except that DirMenu (in the file browser dialogs) is wierd. |#
+
+(LabelFont (Family "helvetica") (WeightName "bold") (PointSize 120))
+  #| Used for static text, including buttons, menus and status line |#
+
+(Macro bgMain1 () `(BgColor  0.325 0.585 0.65))   #|  HSV 0.533 0.50 0.65  |#
+(Macro bgMain2 () `(BgColor 0.425 0.765 0.85))    #|  HSV 0.533 0.50 0.85  |#
+;(Macro bgMain3 () `(BgColor 0.9 0.98 1.0))        #|  HSV 0.533 0.10 1.00  |#
+(Macro bgMain3 () `(BgColor 1 1 1))               #|  HSV 0.000 0.00 1.00   |#
+  #| The above three macros are used only within the following macros; they're
+     not used in the forms themselves. |#
+
+(DarkShadow 0.075 0.135 0.15)                     #|  HSV 0.533 0.50 0.15  |#
+(LightShadow 0.5 0.9 1.0)                         #|  HSV 0.533 0.50 1.00  |#
+
+(Macro bgActive () `(if2D (bgMain1) (bgMain1)))
+  #| Used for most buttons and menus |#
+(Macro bgPassive () `(if2D (bgMain2) (bgMain1)))
+  #| Used for passive areas, and top left menu anchors in main window, and
+     up/down arrow buttons in main window |#
+(Macro bgContents () `(if2D (bgMain3) (bgMain3)))
+  #| Used for content areas (browser, display and composition sub-windows) |#
+(Macro bgScroll () `(if2D (bgMain2) (bgMain1)))
+  #| Scroll bars in content areas |#
+(Macro bgHilite () `(bgMain2))
+  #| Browser selection highlight |#
+(Macro bgInput () `(if2D (bgMain3) (bgMain2)))
+  #| Type-in areas |#
+
+
+#|===========================================================================|#
+#| The remainder of these macros are not intended for customization by users |#
+
+
+#| Graphical differences between 2D and 3D ... |#
+
+(if2D (ShadowSize 0) (ShadowSize 1.5))
+(Macro barIf2D () `(if2D (Bar 1) (Glue 0)))
+(Macro ridgeOrBar () `(if2D (Bar 1) (Ridge)))
+(Macro menuSep ()
+  `(if2D (Shape (Height 1) (Width 1) (Texture)) (Chisel)))
+(Macro borderIf2D BOA (body) `(if2D (Border (Pen 1) ,body) ,body))
+
+
+#| Buttons within pop-up dialogs ... |#
+
+(Macro btnDecorate BOA (body surround (width 1))
+  `(,surround (Pen ,width) (borderIf2D (Shape (bgActive) (Width 54) ,body))))
+(Macro btn BOA (name prompt)
+  `(btnDecorate (Button ,name ,prompt) Rim))
+(Macro closeBtn BOA (name prompt)
+  `(btnDecorate (CloseButton ,name ,prompt) Rim))
+(Macro btnDefault BOA (name prompt)
+  `(btnDecorate (Button ,name ,prompt) Border))
+(Macro closeBtnDefault BOA (name prompt)
+  `(btnDecorate (CloseButton ,name ,prompt) Border))
+(Macro anchor BOA (prompt popup)
+  `(Rim (Pen 1)
+     (borderIf2D
+       (Shape (bgActive)
+         (Menu
+            (HBox ,prompt
+              (Shape (Width + 0) (Pixmap "menuArrow.pbm"))
+              (Glue 3))
+            ,popup)
+     ))))
+
+
+#| Message content areas (display and composition) ... |#
+
+(Macro contents BOA (body)
+  `(VBox (ShadowSize 0) (bgScroll) (Bar 1) ,body (Bar 1)))
+
+
+#| Other macros for dialogs ... |#
+
+(Macro num BOA (name min max (width 72) (nargs ()))
+  `(borderIf2D (Shape (Width ,width) (Height + 0)
+     (Numeric ,name ,@nargs (bgInput) (Min ,min) (Max ,max)))))
+
+#| Text area |#
+(Macro input BOA (body)
+  `(Frame Lowered (borderIf2D (Border (Pen 0) (bgInput) ,body))))
+
+#| Full width read-only message |#
+(Macro message BOA (name (value "Coming Soon"))
+  `(input
+     (Shape (Width 250) (Height 50)
+       (TypeIn ExpandOnDemand (TurnMargin 0) ReadOnly ,name (Value ,value)))))
+
+#| Full width editable text arg |#
+(Macro param BOA (name)
+  `(VBox
+     (Glue 3)
+     (HBox
+       (Glue 18)
+       (input (Shape (Width 316)
+         (TypeIn ,name ExpandOnDemand FirstFocus))))
+     (Glue 9)))
+
+#| Binary choice |#
+(Macro binary BOA (nameA a nameB b)
+  `(Radio
+     (HBox
+       (Filter
+         (Shape
+           (Width 0 + Infinity)
+           (Choice
+             ,nameA
+             =TRUE
+             (Text LeftAlign ,a))))
+       (Glue 6)
+       (Filter
+         (Shape
+           (Width 0 + Infinity)
+           (Choice ,nameB (Text LeftAlign ,b)))))))
+
+#| Decoration for any ZChildren |#
+(Macro zDecorate BOA (body)
+  `(Rim (Pen 2) (borderIf2D (borderIf2D (Rim (bgPassive) (Pen 6) ,body))))
+  )
+
+#| Undecorated transient pop-ups, as in Postcard help pop-ups |#
+(Macro zPop BOA (name body (at (At 0.5 0.5)))
+  `(ZChild ,name ,at (Border (Pen 1) (Frame (zDecorate ,body))))
+  )
+
+#| Simple dialogs using ZChassis |#
+(Macro dlg BOA (name title body (at (At 0.5 0.5)))
+  `(ZChassis ,name ,at NoClose (Title ,title) (zDecorate ,body))
+  )
+
+#| Close button for dialog title bar |#
+(Macro dlgClose BOA (name)
+  `(HBox
+     (Button ,name (Rim (Pen 3) (Pixmap "upArrow.pbm")))
+     (barIf2D)))
+(Macro dlgNoClose () `(Glue 0))
+
+#| Dialog with custom title bar; needn't be statically in a ZSplit |#
+(Macro dlgT BOA (name close title body)
+  `(VBox ,name
+     (HBox ,close (ZMove ,title))
+     (barIf2D)
+     (Frame (zDecorate ,body))))
+
+(bgActive)

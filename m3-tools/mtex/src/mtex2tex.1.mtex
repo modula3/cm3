@@ -1,0 +1,114 @@
+\manpage{mtex2tex Man Page}{mtex2tex}{1}
+
+\section{NAME}
+
+mtex2tex - translate mtex(7) files to LaTeX format
+
+\section{SYNTAX}
+
+\bf{mtex2tex}
+
+\section{DESCRIPTION}
+
+\it{mtex2tex} is a filter that reads a file in
+\link{mtex.7.html}{mtex(7)} format from its standard input, and
+writes a \it{LaTeX}-format file to standard output suitable for
+processing with latex(1).
+
+In the output produced by \it{mtex2tex}, the title of the manpage is
+a LaTeX \tt{\\section}, and the sections of the manpage are LaTeX
+\tt{\\subsection}s. The output does not contain a
+\tt{\\documentstyle} declaration, nor \tt{\\begin\{document\}} and
+\tt{\\end\{document\}} environment brackets. It is assumed that the
+output from this filter will be \tt{\\input} into some other
+top-level LaTeX document containing these commands, like this:
+
+\begin{verbatim}
+  \documentstyle{article}
+  \begin{document}
+  \title{The \it{mtex} Package Manpages}
+  \author{Harvey Throgenbottom}
+  \date{\today}
+  \maketitle
+  \input{mtex.7.tex}
+  \input{mtex2html.1.tex}
+  \input{mtex2man.1.tex}
+  \input{mtex2tex.1.tex}
+  \end{document}
+\end{verbatim}
+
+\it{mtex2tex} is written entirely in LIM (see lim(1)).
+
+\section{SPECIAL CHARACTERS}
+
+There are several special characters for the LaTeX output format. Here
+are the characters and the strings they are translated to by
+mtex2tex(1):
+
+\begin{flushleft}
+``\tt{$}'' becomes ``\tt{\\$}''\newline
+``\tt{&}'' becomes ``\tt{\\&}''\newline
+``\tt{%}'' becomes ``\tt{\\%}''\newline
+``\tt{#}'' becomes ``\tt{\\#}''\newline
+``\tt{_}'' becomes ``\tt{\\_}''\newline
+``\tt{\{}'' becomes ``\tt{\\\{}''\newline
+``\tt{\}}'' becomes ``\tt{\\\}}''\newline
+``\tt{~}'' becomes ``\tt{\{\\tt\\symbol\{\'176\}\}}''\newline
+``\tt{^}'' becomes ``\tt{\{\\tt\\symbol\{\'136\}\}}''\newline
+``\tt{\\}'' becomes ``\tt{\{\\tt\\symbol\{\'134\}\}}''
+\end{flushleft}
+
+To prevent these characters from being translated within the
+scope of a \it{tex} environment, you must escape them with a
+\tt{\\} (backslash) character.
+
+\section{DIAGNOSTICS}
+
+See the \link{mtex.7.html#Diagnostics}{Diagnostics} section
+of the mtex(7) manpage for a complete description.
+
+\section{BUGS}
+
+There is no way to specify that the space following a period should
+be the interword space in the case that the period does not end the
+sentence. Similarly, there is no way to indicate that a period
+following an uppercase letter actually ends a sentence.
+
+By default, most LaTeX document styles do not skip a line to start a
+new paragraph. Instead, they indent the first line of the
+paragraph. This can lead to formatting anomalies compared to the
+HTML- and man-formatted versions of a manpage.
+
+By default, most LaTeX document styles skip a line between list
+environment items, even if no new paragraph is indicated
+between them.
+
+By default, most LaTeX document styles skip a line before the first
+line of an environment and after the last line of the environment,
+even if no new paragraph is indicated there.
+
+The text following items in a description environment does not start
+on a new line.
+
+Links are not indicated in any way.
+
+\section{SEE ALSO}
+
+\link{mtex.7.html}{mtex(7)},
+\link{mtex2html.1.html}{mtex2html(1)},
+\link{mtex2man.1.html}{mtex2man(1)},
+xmosaic(1)
+\begin{roff}
+
+This man page is also available as a hypertext document under Mosaic at URL
+\tt{http://src-www.pa.dec.com/SRC/man/DS/mtex2tex.1.html}.
+\end{roff}
+
+\section{AUTHOR OF PROGRAM AND DOCUMENTATION}
+
+\link{http://src-www.pa.dec.com/SRC/people/Allan_Heydon/bio.html}{Allan Heydon}
+(\tt{heydon@src.dec.com})
+
+\begin{verbatim}
+Last modified on Mon Feb  6 16:46:23 PST 1995 by heydon
+\end{verbatim}

@@ -1,0 +1,6 @@
+  X`PEX`Base_New(title: Text, x y w h: Int): X`PEX`Base ! GraphicsBase_Failure
+  X`PEX`Base_NewStd(): X`PEX`Base ! GraphicsBase_Failure              
+WHERE                                                                
+  X`PEX`Base <: GraphicsBase & { changeTitle: (Text) => Ok,           
+                                 awaitDelete: () => Ok, 
+                                 destroy: () => Ok }

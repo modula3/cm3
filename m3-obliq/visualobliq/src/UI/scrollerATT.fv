@@ -1,0 +1,23 @@
+ (Shape %scrolleratt (Height 200)
+   (VBox 
+     (Glue 10)
+     (Title "Scroller")
+     (Glue 5)
+     (BoxAround 90
+     (VBox  
+       (Glue 5)
+         (HBox (Field "Min  :" 150  (Numeric (TabTo scrMax) %scrMin  ))
+                Fill
+                (Field "Max  :" 150  (Numeric (TabTo scrThu) %scrMax  )))
+      (Glue 5)
+         (HBox (Field "Thumb  :" 150  (Numeric (TabTo scrStep) %scrThu  ))
+                Fill
+               (Field "Step  :" 150  (Numeric (TabTo scrVal) %scrStep  )))
+      (Glue 5)
+         ( HBox Fill (Field "Value :" 150  (Numeric (TabTo scrStep) %scrVal  ))
+                Fill Fill)
+       (Glue 5)
+      ))
+      Fill
+   )
+  )

@@ -1,0 +1,31 @@
+  RasterModeProp_NewConst(lt: RasterMode): RasterModePropVal   
+  RasterModeProp_NewSync(ah: AnimHandle, lt: RasterMode): RasterModePropVal
+  RasterModeProp_NewAsync(beh: RasterModePropAsyncBeh): RasterModePropVal
+  RasterModeProp_NewDep(beh: RasterModePropDepBeh): RasterModePropVal
+  RasterModeProp_NewConstBeh(lt: RasterMode): RasterModePropConstBeh
+  RasterModeProp_NewSyncBeh(ah: AnimHandle, 
+                            lt: RasterMode): RasterModePropSyncBeh
+  RasterModeProp_NewAsyncBeh(compute: M1):RasterModePropAsyncBeh  
+  RasterModeProp_NewDepBeh(compute: M2):RasterModePropDepBeh      
+  RasterModeProp_NewRequest(start dur: Num, value: M3): RasterModePropRequest
+WHERE                                                                   
+  RasterModePropName <: PropName & 
+      { bind: (v: RasterModePropVal) => Prop }           
+  RasterModePropVal <: PropVal & { getBeh: () => RasterModePropBeh,
+                                   setBeh: (RasterModePropBeh) => Ok,
+                                   get: () => RasterMode,         
+                                   value: (Num) => RasterMode }   
+  RasterModePropBeh <: PropBeh                                        
+  RasterModePropConstBeh <: RasterModePropBeh & 
+      { set: (RasterMode) => Ok }          
+  RasterModePropSyncBeh <: RasterModePropBeh &                     
+      { addRequest: (RasterModePropRequest) => Ok ! Prop_BadInterval,
+        change: (RasterMode,Num) => Ok ! Prop_BadInterval }         
+  RasterModePropAsyncBeh <: RasterModePropBeh & { compute: M1 }    
+  RasterModePropDepBeh <: RasterModePropBeh & { compute: M2 }      
+  RasterModePropRequest <: PropRequest & { value: M3 }                
+  M1 = Self (X <: RasterModePropAsyncBeh) (Real) => RasterMode    
+  M2 = Self (X <: RasterModePropDepBeh) (Real) => RasterMode      
+  M3 = Self (X <: RasterModePropRequest) (RasterMode,Real) => RasterMode
+  RasterMode = Text  (one of "Hollow", "Solid", "Empty")       
+  Num = Real + Int

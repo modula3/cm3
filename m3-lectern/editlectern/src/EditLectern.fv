@@ -1,0 +1,238 @@
+; Copyright (C) 1994, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+; Last modified on Fri Jul 14 15:16:38 PDT 1995 by mcjones
+;
+(Shape %top (Height + Inf) (Width 425 - 200 + Inf)
+; (ShadowSize 0)
+; (BgColor "White")
+  (Macro TLA BOA (x) `(Text LeftAlign ,x))
+  (Macro TRA BOA (x) `(Text RightAlign ,x))
+  (Macro BOX (pens child)
+    (IF (= pens '())
+      child
+      `(Border
+         (Pen ,(Nth pens 0))
+         (Rim (Pen ,(Nth pens 1))
+           (BOX (pens ,(NthTail pens 2)) (child ,child))))))
+  (Macro COMMAND BOA (name label (k "") (type (MButton)))
+    `(,@type
+       ,name
+       (HBox
+	 (TLA ,label)
+	 Fill
+	 (TRA ,k))))
+  (Macro FILEDIALOG
+      (Name BgColor DarkShadow Title fbName OKName OKLabel
+       cancelName (cancelLabel "Cancel") helperName (ReadOnly FALSE)
+       (other ()))
+    `(ZChassis %,Name
+;      (BgColor ,BgColor) (LightShadow "White") (DarkShadow ,DarkShadow)
+       (Title ,Title)
+       (Shape (Width 300 - 200 + Inf) (ShadowSize 2)
+         (Rim
+           (Pen 10)
+           (VBox
+             (HBox
+               (Shape (Width 150 + Inf) (Height 150 + Inf)
+                 (VBox (LabelFont "fixed")
+                   (DirMenu (For ,fbName))
+                   (Glue 6)
+                   (Frame Lowered
+                     (FileBrowser %,fbName))))
+               Fill
+               (Shape (Width 100)
+                 (VBox
+                   Fill
+                   (Button %,OKName ,OKLabel)
+                   (Glue 10)
+                   (Filter (CloseButton %,cancelName ,cancelLabel)))))
+             (Glue 6)
+             (HBox
+               (Shape (Width 30) "File:")
+               (Frame Lowered
+                 (Helper %,helperName FirstFocus (For ,fbName))))
+             ,@other)))))
+  (Macro FILEMENU ()
+    `(Menu
+      (HBox
+        (Fill)
+        (Shape (Width + 0) "File")
+        (Shape (Width + 0) (Pixmap "menuArrow.pbm"))
+        (Glue 3)
+        (Fill))
+      (VBox 
+        (PopMButton (For OpenDialog)
+          (HBox (Text LeftAlign "Open ...")))
+        (COMMAND %saveMB "Save")
+        (COMMAND %saveAsMB "Save As ...")
+        (COMMAND %closeMB "Close")
+        (COMMAND %quitMB "Quit")
+        (Bar)
+        (PopMButton %aboutMB (For AboutDialog)
+          (HBox (Text LeftAlign "About")))
+        )
+      )
+    )
+  (Macro LABEL BOA (name)
+         `(Shape (Width + 0) (Text LeftAlign ,(Cat name ": "))))
+  (ZSplit
+    (Filter (ZBackground %zbackground
+      (VBox
+        (Glue 3)
+        (HBox %menubar
+          (Glue 5)
+          (FILEMENU)
+          (Glue 20)
+          (Radio %defer
+            (HBox
+              (Choice %deferFALSE =TRUE "Process immediately")
+              (Glue 5)
+              (Choice %deferTRUE "Just log to ~/EditLectern.log")
+              )
+            )
+          Fill
+          )
+        (Glue 3)
+        Ridge
+        (VTile
+        (Filter %main Vanish
+          (Shape (VBox
+	    (Glue 5)
+	    (HBox
+              (LABEL "Image")
+              (Numeric %contents (TabTo imagenumber) =1)
+              (Shape (Width + 0) (Text LeftAlign " is contents"))
+              (Fill))
+	    (Glue 5)
+	    (HBox
+              (LABEL "Image")
+              (Numeric %imagenumber (TabTo index) =1)
+              (LABEL " is Page")
+              (Numeric %pagenumber (TabTo index) =1)
+              (Fill)
+              )
+	    (Glue 5)
+	    (HBox
+              (Radio %indexCh
+                (HBox
+		  (Choice %indexPage =TRUE "Page:")
+		  (Glue 5)
+		  (Choice %indexImage "Image:")
+                  )
+              )
+              (Numeric %index =1)
+              (Shape (Width + 0) (Text LeftAlign " is index"))
+              (Fill)
+              )
+	    (Glue 5)
+	    (HBox (LABEL "Gamma")
+	      (Radio %gammaCh
+		(HBox
+		  (Choice %gammaNormal =TRUE "Normal")
+		  (Glue 5)
+		  (Choice %gammaDarker "Darker")
+		  )
+		)
+	      (Glue 5)
+	      (Shape
+		(Width 48)
+		(Frame (TypeIn %gamma ="1.0")))
+	      (Fill)
+	      )
+	    (Glue 5)
+;           (HBox (LABEL "Date") (Glue 5) (Frame (TypeIn %date)) (Fill))
+	    (Glue 5)
+	    (VBox
+	      (HBox
+		(LABEL "Attribute")
+		(Frame
+		  (Shape
+		    (Width 72) (Height 36 + 100 )
+		    (Browser %attributes Quick)))
+		(Fill)
+                )
+	      (Glue 3)
+	      (VBox
+		(HBox
+		  (Glue 10)
+		  (Shape (Width 36) (LABEL "Key"))
+		  (Glue 5)
+		  (Frame (TypeIn %key (TabTo value) ExpandOnDemand))
+		  (Glue 5)
+		  (Shape (Width 40)(Button %attrDelete "Delete"))
+		  (Fill)
+		  )
+		(Glue 3)
+		(HBox
+		  (Glue 10)
+		  (Shape (Width 36) (LABEL "Value"))
+		  (Glue 5)
+		  (Shape (Height + Inf)
+                         (Frame (TypeIn %value (TabTo key) ExpandOnDemand)))
+		  (Glue 5)
+		  (Shape (Width 40) (Button %attrSet "Set"))
+		  (Fill)
+		  )
+                (Glue 5)
+		)
+	      )
+            ))
+          )
+        (Shape (Height 24 + Inf) (Frame (TextEdit %typescript ReadOnly)))
+        ))
+      )
+    )
+    (FILEDIALOG %OpenDialog
+      (BgColor "VeryPaleGreen")
+      (DarkShadow "RatherDarkGreen")
+      (Title "Open ...")
+      (fbName openFile)
+      (ReadOnly TRUE)
+      (OKName open)
+      (OKLabel "Open")
+      (cancelName cancelOpen)
+      (helperName odh)
+      )
+    (FILEDIALOG %SaveAsDialog
+      (BgColor "VeryPaleGreen")
+      (DarkShadow "RatherDarkGreen")
+      (Title "Save As ...")
+      (fbName saveAsFile)
+      (ReadOnly TRUE)
+      (OKName saveAs)
+      (OKLabel "Save")
+      (cancelName cancelSaveAs)
+      (helperName sadh)
+      )
+    (ZChassis %AboutDialog
+      (Title "About EditLectern")
+      (Rim
+        (Pen 20)
+        (VBox
+          (Pixmap "digitalLogo.pbm")
+          (Glue 6)
+          "Version 0.2 of July 14, 1995"
+          "Copyright \251 1994 Digital Equipment Corp."
+          "Send comments to mcjones@pa.dec.com"
+          )
+        )
+      )
+    (ZChild %CancelDialog
+      (Frame
+        (VBox
+          (ZMove "Cancel")
+          Bar
+          (Rim (Pen 20) (Button %cancel "Cancel"))
+          )
+        )
+      )
+    (ZChassis %ErrorDialog
+      (Title "Error")
+      (Rim
+        (Pen 20)
+        (Text %errorMsg "?")
+        )
+      )
+    )
+  )

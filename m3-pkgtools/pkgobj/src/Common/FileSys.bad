@@ -1,0 +1,65 @@
+(* Copyright 1992 Digital Equipment Corporation.               *)
+(* Distributed only by permission.                             *)
+(* FileSys.i3 *)
+(* Last modified on Wed May 12 14:52:03 PDT 1993 by wobber *)
+
+INTERFACE FileSys;
+
+IMPORT TextList, OSError, Rd, Time, Wr;
+(* (semi) OS-independent file system types and ops *)
+
+TYPE
+  Path = TextList.T;
+
+  FilePerm = CARDINAL;
+  FileType = {Normal, SLink, Dir, Other};
+  FileInfo = RECORD
+               type: FileType;
+               date: Time.T;
+               length: CARDINAL; (* in bytes ... files only *)
+               perm: FilePerm;
+               referent: Path; (* only for type = SLink *)
+             END;
+
+TYPE
+  Enumeration = TextList.T;
+
+CONST
+  FilePermNorm = 1;        (* 644 on Ultrix *)
+  FilePermExec = 2;        (* 755 on Ultrix *)
+  FilePermReadOnly = 3;    (* 444 on Ultrix *)
+
+TYPE
+  ErrorClass = {NoRoomInFS, IO, Access, Lookup, Other};
+
+  T = OBJECT METHODS
+    path(p: Path; fs: T := NIL) : Path;
+    absPath(p: Path; fs: T := NIL) : Path RAISES {OSError.E};
+    openRead(p: Path) : Rd.T RAISES {OSError.E};
+    openWrite(p: Path) : Wr.T RAISES {OSError.E};
+    openAppend(p: Path) : Wr.T RAISES {OSError.E};
+    enumerate(p: Path) : Enumeration RAISES {OSError.E};
+    getInfo(p: Path; VAR info: FileInfo;
+            followLink: BOOLEAN := FALSE) RAISES {OSError.E};
+    makeDir(p: Path) RAISES {OSError.E};
+    setModified(p: Path; date: Time.T) RAISES {OSError.E};
+    setMode(p: Path; perm: FilePerm) RAISES {OSError.E};
+    rename(src, dest: Path) RAISES {OSError.E};
+    remove(p: Path; recursive: BOOLEAN := FALSE) RAISES {OSError.E};
+    link(p: Path; tgt: Path) RAISES {OSError.E};
+    slink(p: Path; referent: Path) RAISES {OSError.E};
+    access(p: Path; write: BOOLEAN; fail: BOOLEAN := FALSE) RAISES {OSError.E};
+    freeSpace(p: Path) : CARDINAL RAISES {OSError.E}; END;
+    
+   (*
+       freeSpace -- Returns the number of user 1KB block available in the
+                    file system volume which contains "p".
+    *)
+
+VAR cwdFS: T;
+
+PROCEDURE New(p: Path; t: T := NIL) : T;
+
+PROCEDURE ClassifyError(e: OSError.Code) : ErrorClass;
+
+END FileSys.

@@ -1,0 +1,30 @@
+  FillStyleProp_NewConst(lt: FillStyle): FillStylePropVal   
+  FillStyleProp_NewSync(ah: AnimHandle, lt: FillStyle): FillStylePropVal
+  FillStyleProp_NewAsync(beh: FillStylePropAsyncBeh): FillStylePropVal
+  FillStyleProp_NewDep(beh: FillStylePropDepBeh): FillStylePropVal
+  FillStyleProp_NewConstBeh(lt: FillStyle): FillStylePropConstBeh
+  FillStyleProp_NewSyncBeh(ah: AnimHandle, lt: FillStyle): FillStylePropSyncBeh
+  FillStyleProp_NewAsyncBeh(compute: M1):FillStylePropAsyncBeh  
+  FillStyleProp_NewDepBeh(compute: M2):FillStylePropDepBeh      
+  FillStyleProp_NewRequest(start dur: Num, value: M3): FillStylePropRequest
+WHERE                                                                   
+  FillStylePropName <: PropName & 
+      { bind: (v: FillStylePropVal) => Prop }           
+  FillStylePropVal <: PropVal & { getBeh: () => FillStylePropBeh,
+                                      setBeh: (FillStylePropBeh) => Ok,
+                                      get: () => FillStyle,         
+                                      value: (Num) => FillStyle }   
+  FillStylePropBeh <: PropBeh                                        
+  FillStylePropConstBeh <: FillStylePropBeh & 
+      { set: (FillStyle) => Ok }          
+  FillStylePropSyncBeh <: FillStylePropBeh &                     
+      { addRequest: (FillStylePropRequest) => Ok ! Prop_BadInterval,
+        change: (FillStyle,Num) => Ok ! Prop_BadInterval }         
+  FillStylePropAsyncBeh <: FillStylePropBeh & { compute: M1 }    
+  FillStylePropDepBeh <: FillStylePropBeh & { compute: M2 }      
+  FillStylePropRequest <: PropRequest & { value: M3 }                
+  M1 = Self (X <: FillStylePropAsyncBeh) (Real) => FillStyle    
+  M2 = Self (X <: FillStylePropDepBeh) (Real) => FillStyle      
+  M3 = Self (X <: FillStylePropRequest) (FillStyle,Real) => FillStyle
+  FillStyle = Text  (one of "Solid", "Hollow", "Empty")       
+  Num = Real + Int

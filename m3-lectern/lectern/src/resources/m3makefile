@@ -1,0 +1,37 @@
+/* Copyright 1992 Digital Equipment Corporation.               */
+/* Distributed only by permission.                             */
+/* See the file COPYRIGHT for a full description.              */
+/*      modified on Fri Jun 16 17:18:32 PDT 1995 by mcjones    */
+/*      modified on Wed Apr 19 14:28:14 PDT 1995 by birrell    */
+
+resource("bookmark.pbm")
+resource("diary.pbm")
+resource("downArrowKey.pbm")
+resource("editTile.pbm")
+resource("find.fv")
+resource("grab.1.pbm")
+resource("grab.2.pbm")
+resource("hand.1.pbm")
+resource("hand.2.pbm")
+resource("lasso.1.pbm")
+resource("lasso.2.pbm")
+resource("linkTile.fv")
+resource("links.fv")
+resource("logo")
+resource("menu.fv")
+resource("menuArrow.pbm")
+resource("newTile.pbm")
+resource("popup.fv")
+resource("rightArrowKey.pbm")
+resource("shared.fv")
+resource("target.1.pbm")
+resource("target.2.pbm")
+resource("toolbar.fv")
+resource("upArrow.pbm")
+resource("upDownArrow.pbm")
+resource("upDownArrow1.pbm")
+resource("upDownArrow2.pbm")
+resource("viewing.fv")
+resource("wait.1.pbm")
+resource("wait.2.pbm")
+bundle("LecternBundle")

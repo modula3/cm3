@@ -1,0 +1,59 @@
+\begin{html}
+\<IMG SRC="../vpLogo36.gif" ALIGN=middle ALT=""\>\<P\>
+\end{html}
+\manpage{LecternToHTML}{LecternToHTML}{1}
+
+\section{NAME}
+LecternToHTML - generate HTML describing repository of Lectern documents
+\section{SYNTAX}
+\bf{LecternToHTML [-quiet] path}
+
+\section{DESCRIPTION}
+
+This program walks a subtree of the filesystem rooted at the specified
+path, and annotates each directory, say \tt{p}, by creating files named
+\tt{p/.ascending.html} and \tt{p/.descending.html} that each contain
+an HTML document describing the contents of that directory.  Each such
+document contains a hypertext link for each Lectern document and for
+each subdirectory containing (directly or indirectly) one or more
+Lectern documents.  If a directory contains no Lectern documents, no
+\tt{.ascending.html} or \tt{.descending.html} file is generated for it.  The
+hypertext link for a document is labeled with title, author and date
+attributes extracted from the Lectern document file -- see 
+\link{BuildLectern.1.html}{BuildLectern}{1}.
+
+The hypertext link for a directory, say q, is labeled with the
+contents of the file named \tt{q/.title}, if such a file exists;
+otherwise the path \tt{q} is used as the label. The referent for this link
+is \tt{q/index.html} if the directory \tt{q/} contains a file or symbolic link
+named \tt{index.html} or \tt{q/.ascending.html} otherwise.
+
+If a directory contains a file named \tt{.prefix}, its contents are
+inserted at the beginning of the generated HTML.  Similarly, if a file
+named \tt{.postfix} exists, its contents are inserted at the end.
+
+If \tt{-quiet} is not specified, \bf{LecternToHTML} prints to standard
+error the name of each directory or file it visits.
+
+\section{AUTHOR}
+\link{http://www.research.digital.com/SRC/people/Paul_McJones/bio.html}{Paul McJones}
+
+\section{SEE ALSO}
+\link{Lectern.1.html}{Lectern(1)}, 
+\link{BuildLectern.1.html}{BuildLectern(1)}, 
+\link{BuildLecternIndex.1.html}{BuildLecternIndex(1)}
+
+\section{COPYRIGHT}
+
+\begin{flushleft}
+Copyright 1994 Digital Equipment Corporation.\newline
+Distributed only by permission.\newline
+\end{flushleft}
+
+
+\begin{verbatim}
+ Last modified on Fri Feb 17 17:45:14 PST 1995 by birrell  
+      modified on Sun Jan  1 09:33:44 PST 1995 by glassman 
+      modified on Tue Aug 30 15:27:12 PDT 1994 by mcjones 
+\end{verbatim}
+

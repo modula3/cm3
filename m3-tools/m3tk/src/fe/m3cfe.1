@@ -1,0 +1,25 @@
+.SH "COMPILER FRONT-END TOOL OPTIONS"
+.TP
+\-\fBInterfaces\fP \fIinterfaces\fP \fB\-Modules\fP \fImodules\fP 
+The (names of the) interfaces and modules to compile. The
+location of an interface or module is found by looking it
+up on the search path. These names must conform to the Modula-3
+syntax for a module or interface name. Pathnames are not
+allowed.
+.TP
+\-\fBPathNames\fP \fIpathnames\fP
+The names of files from which to compile an interface or module.
+Only files with pathnames ending in the set of legal Modula-3 source file
+extensions are compiled. Files with other extensions are silently ignored.
+.TP
+.B \-PrintUnits
+Print the name of each unit as it is compiled and the
+file from which it was read. The indentation indicates the
+import depth.
+.TP
+.B \-TTimings
+Generate output on the time taken to execute the compiler phases.
+.PP
+The \fB\-PathNames\fP keyword is the only one that is optional,
+so `m3tool Foo.m3' is the same as `m3tool -PathNames Foo.m3' (and
+as `m3tool -pn Foo.m3').

@@ -1,0 +1,66 @@
+TOP-LEVEL PHRASES                    	any term or definition ended by ";"
+  a;                                 	
+
+DEFINITIONS (identifiers are denoted by "x", terms are denoted by "a")
+  let x1=a1,...,xn=an                	definition of constant identifiers
+  let rec x1=a1,...,xn=an            	definition of recursive procedures
+  var x1=a1,...,xn=an                	definition of updatable identifiers
+
+SEQUENCES (denoted by "s")           	each "ai" (a term or a definition) is
+  a1;...;an                          	executed; yields "an" (or "ok" if n=0)
+
+TERMS (denoted by "a","b","c"; identifiers are denoted by "x","l"; modules are denoted by "m")
+  x	m_x                      	identifiers
+  x:=a                               	assignment
+
+  ok  true  false  'a'  "abc"  3  1.5	constants
+
+  [a1,...,an]                     	arrays
+  a[b]	a[b]:=c               	        array selection, array update
+  a[b for b']	a[b for b']:=c        	subarray selection, subarray update
+
+  option l => s end              	term "s" tagged by "l"
+
+  proc(x1,...,xn) s end              	procedures
+  a(b1,...,bn)                       	procedure invocation
+  m_x(a1,...,an)                     	invocation of "x" from module "m"
+  a b c                              	infix (right-ass.) version of "b(a,c)"
+
+  meth(x,x1,...,xn) s end            	method with self "x"
+  {l1=>a1,...,ln=>an}                	object with fields named "l1"..."ln"
+  {protected, serialized, ...}           	protected and serialized object
+  {l1=>alias l2 of a2 end,...}        	object with delegated fields
+  a.l    a.l(a1, ..., an)            	field selection / method invocation
+  a.l:=b                             	field update / method override
+  clone(a1,...,an)                      object cloning
+  a1.l1:=alias l2 of a2 end             field delegation
+  delegate a1 to a2 end 	        object delegation
+
+  d                                  	definition
+  if s1 then s2                      	conditional
+    elsif s3 then s4... else sn end  	  ("elsif", "else" optional)
+  a andif b	a orif b             	conditional conjunction/disjunction
+  case s of l1(x1)=>s1,...,               case over the tag "li" of an option
+    ln(xn)=>sn else s0 end     	          binding "xi" in "si" ("else" optional)
+  loop s end                         	loop
+  for i=a to b do s end              	iteration through successive integers
+  foreach i in a do s end            	iteration through an array
+  foreach i in a map s end           	yielding an array of the results
+  exit                               	exit the innermost loop, for, foreach
+
+  exception("exc")                   	new exception value named "exc"
+  raise(a)                           	raise an exception
+  try s except                       	exception capture
+    a1=>s1,...,an=>sn else s0 end     	  ("else" optional)
+  try s1 finally s2 end                	finalization
+
+  condition()  signal(a)  broadcast(a)	creating and signaling a condition
+  watch s1 until s2 end                	waiting for a signal and a boolean guard
+  fork(a1,a2)    join(a)	        forking and joining a thread
+  pause(a)	                        pausing the current thread 
+
+  mutex()	                        creating a mutex
+  lock s1 do s2 end                	locking a mutex in a scope
+  wait(a1,a2)                	        waiting on a mutex for a condition
+
+  (s)                                	block structure / precedence group

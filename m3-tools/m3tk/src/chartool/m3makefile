@@ -1,0 +1,20 @@
+/* Copyright (C) 1993, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Wed May  5 21:03:18 PDT 1993 by mjordan                  */
+
+Interface("M3CharTool")
+Interface("M3CharPreds")
+Generic_interface("M3CharNode")
+Interface("M3CharTypesToChange")
+Interface("M3CharStatsToConsider")
+Interface("M3CharExprsToReplace")
+Interface("M3CharExprsToConsider")
+
+implementation("M3CharTool")
+implementation("M3CharPreds")
+implementation("M3CharTypesToChange")
+implementation("M3CharStatsToConsider")
+implementation("M3CharExprsToReplace")
+implementation("M3CharExprsToConsider")

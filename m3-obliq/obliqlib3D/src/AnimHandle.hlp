@@ -1,0 +1,3 @@
+  AnimHandle_New(): AnimHandle                               
+WHERE                                                        
+  AnimHandle <: ProxiedObj & { animate: () => Ok }            

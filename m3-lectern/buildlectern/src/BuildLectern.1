@@ -1,0 +1,507 @@
+.\" This file generated automatically by mtextoman(1)
+.nh
+.TH "BuildLectern" "1"
+.SH "NAME"
+BuildLectern \- building or editing Lectern files
+.SH "SYNTAX"
+\fBBuildLectern options... dest\fR
+.SH "DESCRIPTION"
+This program constructs in the file named \fBdest\fR a Lectern document composed
+of page images, attributes and other data, suitable for viewing with
+Lectern(1),
+and suitable for indexing with 
+BuildLecternIndex(1).
+The page images
+come from files each containing a single image, or from a file containing a
+PostScript job, or from pre\-existing Lectern documents.  The resulting
+documents include computed copies of the images at reduced scales, and derived
+OCR data.
+.PP
+Note: the arguments to BuildLectern are processed sequentially (as
+described below): an argument such as \fB\-PScolor\fR
+affects only input files later in the argument list.
+.PP
+Caution: it is surprisingly easy to forget the \fBdest\fR argument, and
+this can cause BuildLectern to think that the name of your last input
+file is the intended destination, and so to write the output there.
+.PP
+The program constructs the document in a temporary file in the same
+directory as the final destination; on success the temporary file is
+renamed as the destination, and on failure the temporary file is
+deleted.  So it is acceptable to use this program to modify a file
+in\-place by naming the same destination file in an
+\fB\-images\fR,
+\fB\-include\fR or
+\fB\-rescale\fR
+option.
+.PP
+Uncolored Lectern documents generally occupy about 100 KBytes per
+page, if you use the \fB\-noUnscaled\fR option.
+The unscaled images (not normally included for PostScript jobs) add
+about 100 KBytes per page, and color roughly doubles the size.  If you
+use the \fB\-only 3\fR option, the size is reduced to
+about 35 KBytes per page.
+.PP
+This program constructs various temporary files in the same directory as the
+final destination file.  These include a temporary copy of the output, and a
+temporary copy of one image if the image is color or in TIFF format or comes
+from standard input or PostScript.  The temporary output file is the same size
+as the final output, and the temporary image copy can be up to 32 MBytes (for
+300 DPI 24\-bit color plus the corresponding black and white).  You need to
+have this much disk space available!
+.PP
+For the purposes of describing the behavior of this program, the
+images within a Lectern document should be viewed as being numbered
+sequentially from 1, regardless of the user's notion of how pages are
+numbered.  The \fB\-page1\fR option allows you to
+specify the user's notion of page numbering, but does not affect the
+\fIimage numbers\fR considered by this program.  (Programmers should
+note that the internal format of a Lectern document uses yet another
+numbering system for pages, starting from 0; but that need not concern
+users of this program.)
+.PP
+The program constructs the document by processing its arguments
+sequentially.  While doing so, it maintains a \fIcurrent image
+number\fR (initially 1), a \fImode\fR (initially \fIsimplex\fR), a
+\fIcurrent gamma value\fR (initially 1.0), a \fIcurrent resolution\fR (initially
+300 DPI), a flag indicating whether to include the unscaled images in
+the output file (initially set), and an \fIOCR
+flag\fR (initially \fIclear\fR unless BuildLectern was linked with an
+OCR library, in which case it is \fIreal\fR).  The destination document
+initially has no images, no attributes and no
+\fIoriginal\fR; its \fIcontents\fR
+is 0 (meaning \fIundefined\fR), its \fIpage1\fR is 1
+(meaning the first image), and its \fIindex\fR is 0
+(meaning \fIundefined\fR).
+.PP
+If an argument is not one of the options described below, it should be
+a file's pathname.  The named file should contain either the image of
+a single page at the current resolution, in PBM, PGM, PPM, or TIFF
+format, a Lectern file, or a PostScript job.  It is also possible to
+read a PostScript job from standard input, by specifying \- as the file
+name on the command line.
+.PP
+When the program encounters an image file, it copies the image into
+the document at the current image number, and updates the current
+image number: if the mode is \fIsimplex\fR it adds 1,
+if the mode is \fIrecto\fR it adds 2 and if the mode is
+\fIverso\fR it subtracts 2 (subject to a minimum of 1).
+While copying the image, the program creates copies of the image at
+reduced scales (using the current gamma value), and applies an OCR
+algorithm to the image unless the \fIOCR flag\fR is
+not real.  The reduced images are scaled down by the integer nearest to
+(\fIcurrent resolution\fR * \fIn\fR / 300),
+for \fIn\fR equal to 2, 3, and 4 (but see \fB\-only\fR).
+The original image is copied to the output only if the
+\fIinclude unscaled flag\fR is set.  Note the
+\fB\-stdin\fR option, which provides an alternative way
+to process a sequence of images without keeping them all in files.
+.PP
+When the program encounters a Lectern file, its contents are included as if
+\fB\-include file 1 999999\fR had been specified.
+.PP
+When the program encounters a PostScript job, the Ghostscript
+interpreter is run to produce a sequence of images and OCR data (if
+the \fIOCR flag\fR is not cleared), which are copied
+into the document in the normal way.  While processing a PostScript
+job, the program consults these additional variables: an image type
+(initially \fIblack&white\fR), an orientation (initially
+\fIportrait\fR), a scale (initially 1.0), and a flag indicating whether
+to include the PostScript in the final document (initially set).
+Also, different defaults are used for several normal variables:
+\fIgamma\fR is 0.454, the
+\fIinclude unscaled flag\fR is cleared, and
+the \fIOCR flag\fR is \fIfake\fR.  The image type
+enforces an upper bound on the kind of images that will be produced by
+the PostScript interpreter, with \fIblack&white\fR < \fIgrayscale\fR <
+\fIcolor\fR.
+.PP
+Whenever the program is placing a color image into \fBdest\fR, it reduces the
+set of colors in the image to a small set, chosen from a 4 by 4 by 4 color
+cube (i.e., 64 colors), so that the image will be suitable for color
+mapped monitors.  Similarly, it reduces the set of grays in a grayscale
+image to 16 gray levels.  Note that this means that any subsequent
+rescaling or other image processing will be based on an image from which
+information has been lost, so the image quality might then suffer.  There
+is no loss of information for black\-and\-white images.
+.SH "EXAMPLES"
+.PP
+The simplest use is to invoke the program with a PostScript job constituting
+the entire document.
+.PP
+This will construct in \fBdest\fR a Lectern document consisting of the pages
+produced by the PostScript job, each scaled to the various resolutions, with
+no imaging adjustments and no attributes.  When you view such a document with
+Lectern, the pages will be numbered from 1 and the \fBContents\fR and \fBIndex\fR
+commands will not work.  For example:
+.EX
+   BuildLectern a.ps a.lect
+.EE
+You can assemble a document from several PostScript files:
+.EX
+   BuildLectern cover.ps chap1.ps chap2.ps chap3.ps index.ps book.lect
+.EE
+Note that concatenating PostScript files is non\-trivial, so
+BuildLectern doesn't try; instead it just keeps the first PostScript
+file it encounters as the document's \fIoriginal\fR.  In this case, it
+may be better to specify \fB\-PSnoOriginal\fR
+before the first PostScript argument.
+.PP
+If you have a set of image files resulting from scanning a document, you can
+use BuildLectern to build a document from them like this:
+.EX
+   BuildLectern *.tif a.lect
+.EE
+Alternatively, if the document was scanned from two\-sided originals you might
+use a command line such as the following:
+.EX
+   BuildLectern \-recto *.fronts.tif \-verso *.backs.tif a.lect
+.EE
+If you just want to preview or display images, and the images were created
+at 300 DPI and you want to display at 100 DPI, you could use:
+.EX
+   BuildLectern \-only 3 *.pbm a.lect
+.EE
+A third common usage pattern is to construct a new document from
+an existing one, adding attributes, specifying the location of contents
+and index pages, or modifying the images' gamma adjustments.  You could
+do these in a single run of BuildLectern, or incrementally in several
+separate runs.  For example:
+.EX
+   BuildLectern a.lect \-contents 3 \-index 57 b.lect
+.EE
+or, equivalently:
+.EX
+   BuildLectern \-include a.lect 1 9999 \-contents 3 \-index 57 b.lect
+.EE
+or:
+.EX
+   BuildLectern b.lect \-author: "Andrew Birrell" c.lect
+.EE
+or:
+.EX
+   BuildLectern \-gamma 0.45 \-rescale a.lect 1 9999 \-index 59 d.lect
+.EE
+There are a few additional options, described below.  You can also use
+the options to perform detailed re\-arrangements, such as replacing a single
+page of a document, or constructing a single document from multiple documents,
+or selectively modifying the gamma adjustments of individual pages.
+.SH "THE OPTIONS"
+.PP
+The complete set of options is as follows.  (BuildLectern ignores case when
+checking for options.)
+.PP
+.PD 0
+.RS 0
+.TP 6
+\fB\-contents integer\fR
+Specifies that the image containing the start of the document's 
+table of contents is the image numbered \fBinteger\fR, counting from 
+1 (regardless of the user's notion of page numbering).
+.IP
+.TP 6
+\fB\-gamma number\fR
+Sets the current gamma value to the given \fBnumber\fR, which should 
+be in the range [0.1 .. 10.0].  The current gamma value affects 
+the appearance of the reduced scale images that the program creates.  
+Gamma adjustment alters the mid\-tones of an image, leaving pure 
+white and pure black unchanged.  Gamma values greater 
+than 1.0 lighten the image, and values less than 1.0 darken it.  
+See also the 
+\fB\-rescale\fR
+ option, which lets you iterate on the 
+choice of gamma values.  The current gamma value has no effect 
+on the unscaled images of the document.  On most documents a 
+gamma value somewhere in the range 0.4 to 1.0 is satisfactory. 
+.IP
+.TP 6
+\fB\-image integer\fR
+Sets the current image number to be the given integer (which
+must be no less than 1). 
+.IP
+.TP 6
+\fB\-images file from for\fR
+This option is the same as the \fB\-include\fR option,
+except that only the images (and their scaled versions and OCR data)
+are copied.  None of the source file's attributes and miscellaneous
+data (\fIpage1\fR, \fIcontents\fR, \fIindex\fR and \fIoriginal\fR values)
+is copied, only the images.
+.IP
+.TP 6
+\fB\-include file from for\fR
+Includes the contents of a pre\-existing Lectern document residing in
+\fBfile\fR into the current document, by copying.  All the
+miscellaneous data are copied: the \fIpage1\fR value, the \fIcontents\fR
+value, the \fIindex\fR value, the \fIoriginal\fR, and the attributes,
+unless the corresponding datum is already defined for the destination
+document.  (In other words, any miscellaneous data specified by an
+explicit command line option, or by an earlier
+\fB\-include\fR or \fB\-rescale\fR will
+dominate data from \fBfile\fR).
+.PD
+.IP
+.PD 0
+The images in \fBfile\fR starting at the image numbered \fBfrom\fR
+(counting from 1) are copied into the current document starting at the
+current image number (even if there is already such an image); after
+each image is copied, the current image number is modified in the same
+way as it is after processing an image file, with due regard to the
+current mode (\fIrecto\fR, \fIverso\fR, or
+\fIsimplex\fR).  Images are copied until \fBfor\fR
+images have been copied or until the last image in \fBfile\fR has been
+copied.  The relevant scaled images and OCR data are copied from
+\fBfile\fR intact along with the original unscaled images (except that
+the unscaled images are omitted if the
+\fIinclude unscaled flag\fR is not currently
+set).  See also the \fB\-rescale\fR option, which is
+similar, but recreates the scaled images using the current gamma
+value; and the \fB\-images\fR option, which is similar
+but does not copy the miscellaneous data.
+.IP
+.TP 6
+\fB\-includeUnscaled\fR
+Sets the \fIinclude unscaled flag\fR, which controls whether original, unscaled,
+images are written to \fBdest\fR.
+.IP
+.TP 6
+\fB\-index integer\fR
+Specifies that the image containing the start of the document's 
+index pages is the image numbered \fBinteger\fR, in the user's notion
+of page numbering.  For example, if you have used the option
+\fB\-page1 3\fR, and the document hardcopy has the first index page with
+a page number of 17 printed on it, you would say \fB\-index 17\fR (in
+this example, the index starts on the 20th image, counting from 1).
+Note that the meaning of this option is affected by any previous
+use of the \fB\-page1\fR, 
+\fB\-include\fR
+or
+\fB\-rescale\fR
+options.
+.IP
+.TP 6
+\fB\-key: value\fR
+For any string \fBkey\fR, adds a key\-value pair to the document
+with the given key and value.  For example, the option
+\fB\-author: Andrew\fR specifies that the attribute \fBauthor\fR has the value
+\fBAndrew\fR.  Adding an attribute with a given key implicitly removes any
+previous attribute with the identical key (case is significant).
+.IP
+.TP 6
+\fB\-noAttribute key\fR
+If there is an attribute in the document with a key identical 
+to \fBkey\fR (case is significant), remove it.  This is useful primarily 
+to remove attributes that were copied in by using the
+\fB\-include\fR
+option. 
+.IP
+.TP 6
+\fB\-noOCR\fR
+Clears the \fIOCR flag\fR, thus preventing any OCR data from being
+generated (either by running the \fIreal\fR OCR
+algorithm or by doing \fIfake\fR OCR as part of
+interpreting PostScript) for subsequent images.
+.IP
+.TP 6
+\fB\-noUnscaled\fR
+Clears the \fIinclude unscaled flag\fR, which controls whether original,
+unscaled, images are written to \fBdest\fR.
+.IP
+.TP 6
+\fB\-only n\fR
+For subsequent pages, BuildLectern will compute only one version of
+the image, being the original image scaled down by a factor of \fBn\fR.
+(By default, BuildLectern includes three versions: the original image
+scaled down by factors of 4, 3, and 2.)  With this option, OCR
+processing is disabled.  This option also affects images processed by
+the
+\fB\-rescale\fR
+option, but not those copied by the 
+\fB\-include\fR
+or 
+\fB\-images\fR,
+options. The purpose of this option is to permit fast document
+construction when only one scale and no OCR is needed, for example to
+proof PostScript files or to present slides.  If both \fB\-only\fR and
+\fB\-resolution\fR are used, \fB\-only\fR must come
+first, since \fB\-resolution\fR alters the exact scale values used.
+.IP
+.TP 6
+\fB\-original file\fR
+Copy the contents of \fBfile\fR into the document as the document's 
+\fIoriginal\fR.  This is intended to be the PostScript that was used 
+to create the document, and if it is available it will be used 
+by 
+Lectern(1),
+for printing the document, in preference to printing 
+the images themselves.  (Potentially it could also be used to 
+generate images at other resolutions, but certainly not today 
+and probably never.) 
+.IP
+.TP 6
+\fB\-page1 integer\fR
+Specifies that the image which the user thinks of as the document's 
+page 1 (i.e. the image whose hardcopy page has the digit \*(lq1\*(rq printed
+on it) is the image numbered \fBinteger\fR, counting from 1.
+.IP
+.TP 6
+\fB\-PSblackAndWhite\fR
+Sets the image type used for processing a PostScript job to black&white.
+.IP
+.TP 6
+\fB\-PScolor\fR
+Sets the image type used for processing a PostScript job to color.
+.IP
+.TP 6
+\fB\-PSfakeOCR\fR
+Sets the \fIOCR flag\fR to \fIfake\fR, which means that when PostScript is being
+interpreted, OCR data will be derived as a side\-effect, rather than by running
+the actual OCR algorithm.
+.IP
+.TP 6
+\fB\-PSgray\fR
+Sets the image type used for processing a PostScript job to grayscale.
+.IP
+.TP 6
+\fB\-PSgs\fR
+Specifies the pathname of the Ghostscript executable (by default, \fIgs\fR).
+.IP
+.TP 6
+\fB\-PSincludeOriginal\fR
+.PD
+.IP
+.PD 0
+Sets the \fIinclude original flag\fR, which controls whether a PostScript
+job is included as the \fIoriginal\fR in \fBdest\fR.
+.IP
+.TP 6
+\fB\-PSlandscape\fR
+Sets the orientation to \fIlandscape\fR, which causes output from a
+PostScript job to be rotated 90 degrees clockwise.  If this results in
+upside\-down images, use \fB\-PSlandscapeOther\fR instead.
+.IP
+.TP 6
+\fB\-PSlandscapeOther\fR
+Sets the orientation to \fIupside\-down landscape\fR, which causes output from a
+PostScript job to be rotated 90 degrees counter\-clockwise.  If this results in
+upside\-down images, use \fB\-PSlandscape\fR instead.
+.IP
+.TP 6
+\fB\-PSportrait\fR
+Sets the orientation \fIportrait\fR, which causes output from a PostScript job to
+be used as\-is.
+.IP
+.TP 6
+\fB\-PSnoOriginal\fR
+Clears the \fIinclude original flag\fR, which controls whether a PostScript job is
+included as the \fIoriginal\fR in dest.
+.IP
+.TP 6
+\fB\-PSscale number\fR
+Sets the scale factor to \fBnumber\fR, which causes PostScript jobs to
+generate images of \fBnumber\fR*300DPI (which are then reduced in the
+normal way).  For example, \fB\-PSScale 1.1\fR increases the final image size by 10%.
+.IP
+.TP 6
+\fB\-realOCR\fR
+Sets the \fIOCR flag\fR to \fIreal\fR, which causes OCR data for
+subsequent images to be acquired by running the OCR algorithm (even
+when processing PostScript files).
+.IP
+.TP 6
+\fB\-recto\fR
+Sets the mode to \fIrecto\fR.  In this mode the current image number 
+increases by 2 after processing an image file or while processing 
+an \fB\-include\fR
+option.  The expectation is that while in \fIrecto\fR 
+mode the program will be processing the recto (odd\-numbered or 
+front) pages of the document, in ascending order, and that \fIrecto\fR 
+mode will be followed by an equal number of images in \fIverso\fR 
+mode. 
+.IP
+.TP 6
+\fB\-resolution integer\fR
+Sets the current resolution of image files (PNM and TIFF) to
+\fBinteger\fR instead of the default, 300 DPI.  If both
+\fB\-only\fR and \fB\-resolution\fR are used, \fB\-only\fR
+must come first, since \fB\-resolution\fR alters the exact scale values
+used.
+.IP
+.TP 6
+\fB\-rescale file from for\fR
+This option is the same as the 
+\fB\-include\fR option, except that 
+while copying images from \fBfile\fR, the existing scaled images 
+are discarded and replaced by new ones created with the current 
+gamma value.  This allows you to iterate on the gamma value for 
+a document, or for particular images in a document. 
+.IP
+.TP 6
+\fB\-simplex\fR
+Sets the mode to \fIsimplex\fR.  In this mode the current image number 
+increases by 1 after processing an image file or while processing 
+an \fB\-include\fR option.  This contrasts with 
+\fIrecto\fR and 
+\fIverso\fR 
+modes. 
+.IP
+.TP 6
+\fB\-stdin\fR
+Processes a sequence of images from standard input, as if the images
+had been presented in separate files. The images should be in PPM, PGM or PBM
+raw (binary) format, and should appear sequentially on standard input,
+optionally separated by white space. The sequence is terminated by end of
+file on standard input.  Note that TIFF images and non\-raw PNM images are
+not yet supported in this option. This option
+is intended primarily for passing images produced by gs(1)
+into BuildLectern through a pipe. This avoids the use of a large amount
+of temporary disk storage for the complete set of images, since this
+option keeps only one image on disk at a time. Note that you can't just pipe
+the standard output of gs(1) into BuildLectern, since gs writes status messages
+on its standard output. Instead, give gs(1) an option such as
+.EX
+   "\-sOutputFile=|BuildLectern foo.lect \-stdin"
+.EE
+including the quotes.
+.IP
+.TP 6
+\fB\-verbose\fR
+Writes details of the image scaling and OCR operations to the standard
+error stream.
+.IP
+.TP 6
+\fB\-verso\fR
+Sets the mode to \fIverso\fR and immediately subtracts 1 from the current image
+number (recall that the current image number will have been increased by 2
+after processing the final \fIrecto\fR image).  In this mode the current image
+number decreases by 2 after processing an image file or while processing an
+\fB\-include\fR option.  You will get an error message if this process would result in
+an image having a number less than 1.  The expectation is that
+\fIverso\fR mode will be set immediately after \fIrecto\fR mode, and
+that while in \fIverso\fR mode the program will be processing the verso
+(even\-numbered or back) pages of the document, in descending order.
+.RE
+.PD
+.PP
+.SH "SEE ALSO"
+.PP
+EditLectern(1),
+Lectern(1),
+pstotext(1)
+.SH "PROGRAMS INVOKED AS SUB\-PROGRAMS"
+gs(1), pgmtopbm(1), ppmtopgm(1), tifftopnm(1).
+.SH "AUTHORS"
+Andrew D. Birrell and 
+Paul McJones
+.SH "COPYRIGHT"
+.PP
+Copyright 1994 Digital Equipment Corporation.
+.br
+Distributed only by permission.
+.br
+.BR
+.PP
+.EX
+Last modified on Fri Jun  7 14:16:12 PDT 1996 by mcjones 
+     modified on Wed Jun  7 17:09:13 PDT 1995 by birrell 
+     modified on Sun Jan  1 16:18:32 PST 1995 by glassman
+.EE
