@@ -5,7 +5,7 @@ Abstract:  Tests for WordEx module.
 3/23/96 Harry George   Initial version
 
 *)
-IMPORT xWordEx;
+IMPORT WordEx;
 
 (*=======================*)
 CONST
@@ -29,7 +29,7 @@ VAR
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
-  xWordEx.Test();
+  WordEx.Test();
   Msg("ok\n");
   RETURN result;
 END TestWordex;

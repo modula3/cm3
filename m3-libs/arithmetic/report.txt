@@ -1,7 +1,6 @@
 for myself:
 
 todo:
-  - remove dependency from xWordEx
   - physical units
   - Interpolation, Random/RNG01/RNG02, Stat
   - ODE
