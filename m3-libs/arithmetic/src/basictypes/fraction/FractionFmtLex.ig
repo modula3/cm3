@@ -12,7 +12,7 @@ TYPE
   T = Fr.T;
   FmtStyle = RECORD elemStyle := RF.FmtStyle{}; END;
 
-PROCEDURE Lex(str:TEXT):Fr.T RAISES {Error};
+(*PROCEDURE Lex(str:TEXT):Fr.T RAISES {Error};*)
         (*reads after the "FRACTION{" in FRACTION{re:=<r>; im:=<r>},
         thru the "}"*)
 PROCEDURE Fmt (READONLY x : T; READONLY style := FmtStyle{}) : TEXT;
