@@ -35,7 +35,7 @@ SUBDIRS =
 
 # Selection of languages to be made.
 # This is overridden by configure.
-LANGUAGES = c objective-c proto cm3cg
+LANGUAGES = c objective-c proto
 
 ALLOCA =
 ALLOCA_FLAGS =
@@ -495,7 +495,7 @@ FLAGS_TO_PASS = \
 
 # A list of all the language-specific executables.
 # This is overridden by configure.
-COMPILERS = cc1$(exeext) cc1obj$(exeext) cm3cg$(exeext)
+COMPILERS = cc1$(exeext) cc1obj$(exeext)
 
 # Language-specific object files for C.
 C_OBJS = c-parse.o c-lang.o c-lex.o c-pragma.o \
@@ -510,9 +510,6 @@ BC_OBJS = bc-emit.o bc-optab.o
 
 # Bytecode header files constructed at build time; vmsconfig.com wants this.
 BC_ALL = bc-arity.h bc-opcode.h bc-opname.h
-
-# Language-specific object files for cm3cg
-CM3CG_OBJS = c-convert.o m3.o
 
 # Language-independent object files.
 OBJS = toplev.o version.o tree.o print-tree.o stor-layout.o fold-const.o \
@@ -641,10 +638,9 @@ C c: cc1
 OBJC objc: cc1obj objc-runtime
 OBJECTIVE-C objective-c: cc1obj objc-runtime
 PROTO: proto
-M3CG m3cg: cm3cg
 
 # Tell GNU make these are phony targets.
-.PHONY: C c OBJC objc OBJECTIVE-C objective-c PROTO proto M3CG m3cg
+.PHONY: C c OBJC objc OBJECTIVE-C objective-c PROTO proto
 
 # Really, really stupid make features, such as SUN's KEEP_STATE, may force
 # a target to build even if it is up-to-date.  So we must verify that
@@ -701,9 +697,6 @@ cc1: $(P) $(C_OBJS) $(OBJS) $(BC_OBJS) $(LIBDEPS)
 
 cc1obj: $(P) $(OBJC_OBJS) $(OBJS) $(BC_OBJS) $(LIBDEPS)
 	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ $(OBJC_OBJS) $(OBJS) $(BC_OBJS) $(LIBS)
-
-cm3cg: $(P) $(CM3CG_OBJS) $(OBJS) $(BC_OBJS) $(LIBDEPS)
-	$(CC) $(ALL_CFLAGS) $(LDFLAGS) -o $@ $(CM3CG_OBJS) $(OBJS) $(BC_OBJS) $(LIBS)
 
 # Copy float.h from its source.
 gfloat.h: $(FLOAT_H)
@@ -1136,10 +1129,6 @@ objc-act.o : objc-act.c $(CONFIG_H) $(TREE_H) $(RTL_H) c-tree.h c-lex.h \
 # A file used by all variants of C.
 
 c-common.o : c-common.c $(CONFIG_H) $(TREE_H) c-tree.h c-lex.h flags.h
-
-# Modula-3 language specific files.
-
-m3.o : m3.c $(CONFIG_H) $(RTL_H) $(TREE_H) input.h flags.h insn-codes.h expr.h
 
 # Language-independent files.
 
