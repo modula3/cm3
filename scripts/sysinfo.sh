@@ -11,7 +11,7 @@ PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
 
 #-----------------------------------------------------------------------------
 # set some defaults
-CM3VERSION="5.1.3"
+CM3VERSION=${CM3VERSION:-"5.1.3"}
 CM3_GCC_BACKEND=yes
 CM3_GDB=no
 CM3_INSTALL=/usr/local/cm3
@@ -19,8 +19,8 @@ EXE=""
 SL="/"
 SYSLIBDIR="/usr/local/cm3/lib"
 SYSLIBS=""
-DEV_LIB=""
-DEV_BIN=""
+XDEV_LIB=""
+XDEV_BIN=""
 TAR=tar
 
 if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
@@ -115,11 +115,11 @@ case "${UNAME}" in
     fi
     D="c:/msdev/bin d:/msdev/bin e:/msdev/bin f:/msdev/bin g:/msdev/bin"
     if f="`find_file cl.exe ${D}`" ; then
-      DEV_BIN="`dirname ${f}`"
-      DEV_LIB="`dirname ${DEV_BIN}`/lib"
+      XDEV_BIN="`dirname ${f}`"
+      XDEV_LIB="`dirname ${XDEV_BIN}`/lib"
     else
-      DEV_LIB=""
-      DEV_BIN=""
+      XDEV_LIB=""
+      XDEV_BIN=""
     fi
     if [ -f /usr/bin/tar.exe ] ; then
       TAR=/usr/bin/tar.exe
@@ -161,6 +161,9 @@ case "${UNAME}" in
 
   # more need to be added here, I haven't got all the platform info ready
 esac
+
+DEV_BIN=${DEV_BIN:-${XDEV_BIN}}
+DEV_LIB=${DEV_LIB:-${XDEV_LIB}}
 
 #-----------------------------------------------------------------------------
 # define the exported values
