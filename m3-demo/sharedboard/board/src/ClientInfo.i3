@@ -11,6 +11,8 @@ INTERFACE ClientInfo;
 IMPORT RectR, NetObj, Thread,
        Callback;
 
+CONST Brand = "ClientInfo 1.0";
+
 TYPE  T = NetObj.T OBJECT 
   METHODS
     getScope (): RectR.T RAISES {NetObj.Error, Thread.Alerted};
