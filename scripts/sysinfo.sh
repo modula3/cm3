@@ -93,7 +93,8 @@ strip_exe() {
 
 #-----------------------------------------------------------------------------
 # evaluate uname information
-export GCWRAPFLAGS=""
+GCWRAPFLAGS=""
+export GCWRAPFLAGS
 case "${UNAME}" in
 
   Windows*|WinNT*|Cygwin*|CYGWIN*)
