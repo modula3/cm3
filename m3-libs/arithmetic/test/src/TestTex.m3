@@ -6,7 +6,7 @@ Abstract:  Tests for Tex module.
 
 *)
 
-IMPORT FileWr, Wr, Fmt, Process;
+IMPORT FileWr, Wr, Process;
 IMPORT Thread, OSError;
 IMPORT TempFiles AS Tmp;
 

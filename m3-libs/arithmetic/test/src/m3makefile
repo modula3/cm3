@@ -4,17 +4,6 @@ import("tempfiles")
 %override("m3na","../../..")
 import("m3na")
 
-% if you import 'blas' functions like 'e_wsfe' cannot be found
-% if you then switch to 'gslcblas', compile, switch back to 'blas'
-% then it can be compiled
-%import_lib("blas","/usr/lib")
-
-import_lib("g2c","/usr/lib")  % needed for blas and lapack, part of the f2c package, I guess
-import_lib("blas","/usr/lib")
-import_lib("lapack","/usr/lib")
-%import_lib("lapack","/home/ignacio/lib")
-%import_lib("lapack","/home/thielema/lib/ix86-linux2")
-
 implementation("TestWordEx")
 implementation("TestBits")
 implementation("TestInteger")
