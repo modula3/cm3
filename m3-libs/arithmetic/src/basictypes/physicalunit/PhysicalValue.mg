@@ -97,7 +97,7 @@ PROCEDURE Mod(READONLY x,y:T):T RAISES {Error} =
   END Mod;
 
 (*-------------------*)
-PROCEDURE DivMod(READONLY x,y:T;VAR r:T):T RAISES {Error} =
+PROCEDURE DivMod(READONLY x,y:T;VAR (*OUT*) r:T):T RAISES {Error} =
   VAR
     q:T;
   BEGIN

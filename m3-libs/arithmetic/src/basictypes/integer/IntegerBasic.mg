@@ -45,7 +45,7 @@ PROCEDURE Mod(x,y:T):T RAISES {Error} =
     IF y=0 THEN RAISE Error(Err.divide_by_zero) END;
     RETURN x MOD y;
   END Mod;
-PROCEDURE DivMod(x,y:T;VAR r:T):T RAISES {Error} =
+PROCEDURE DivMod(x,y:T;VAR (*OUT*) r:T):T RAISES {Error} =
   BEGIN
     IF y=0 THEN RAISE Error(Err.divide_by_zero) END;
     r:=x MOD y;
