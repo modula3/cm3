@@ -109,6 +109,16 @@ There should be a warning if a variable is passed to a READONLY and a VAR parame
 
 ---------------
 
+TYPE
+  T = BITS 32 FOR [-16_80000000..16_7FFFFFFF];
+
+"../src/na/integer/Integer32.i3", line 10: subrange lower bound is not constant
+1 error encountered
+
+seems that the lower bound is too small
+
+---------------
+
 Design question:
 
 Is it better to create a pair interface,module for every set of functions for the same datatype

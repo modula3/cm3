@@ -16,14 +16,13 @@ FROM xUtils IMPORT Error;
 (*handles the case that the leading coefficient c is not 1
   multiplies all roots with c to fix that,
   callers must remember this constant for interpreting the power sum*)
-PROCEDURE ToPowerSumSeqExt(x:T):REF PowerSumSeq=
-VAR
-  c,pow:R.T;
+PROCEDURE ScaleUpRoots(x:T):T=
 BEGIN
   IF R.Equal(x[LAST(x^)],R.One) THEN
-    RETURN ToPowerSumSeq(x);
+    RETURN x;
   ELSE
     VAR
+      c,pow:R.T;
       y := NEW(T,NUMBER(x^));
     BEGIN
       c:=x[LAST(x^)];
@@ -34,10 +33,60 @@ BEGIN
         y[j]:=R.Mul(x[j],pow);
         pow:=R.Mul(pow,c);
       END;
-      RETURN ToPowerSumSeq(y);
+      RETURN y;
     END;
   END;
-END ToPowerSumSeqExt;
+END ScaleUpRoots;
+
+(*-----------------*)
+(*reverse ScaleUpRoots*)
+(*
+PROCEDURE ScaleDownRoots(x:T; c:R.T):T=
+<*FATAL Error*> (*Err.indivisible should not occur, if x and c are chosen properly*)
+BEGIN
+  IF R.Equal(c,R.One) THEN
+    RETURN x;
+  ELSE
+    VAR
+      pow:R.T;
+      y := NEW(T,NUMBER(x^));
+    BEGIN
+      pow:=c;
+      y[LAST(y^)  ]:=c;
+      y[LAST(y^)-1]:=x[LAST(x^)-1];
+      FOR j:=LAST(x^)-2 TO 0 BY -1 DO
+        y[j]:=R.Div(x[j],pow);
+        pow:=R.Mul(pow,c);
+      END;
+      RETURN y;
+    END;
+  END;
+END ScaleDownRoots;
+*)
+
+(*reverse ScaleUpRoots
+  divide all roots by c and
+  scale the coefficients by c^(n-exp) to achieve fraction free coefficients*)
+PROCEDURE ScaleDownRoots(VAR x:TBody; c:R.T; exp:INTEGER)=
+<*FATAL Error*> (*Err.indivisible should not occur, if x and c are chosen properly*)
+BEGIN
+  IF NOT R.Equal(c,R.One) THEN
+    VAR
+      pow:R.T;
+    BEGIN
+      pow:=c;
+      FOR j:=exp+1 TO LAST(x) DO
+        x[j]:=R.Mul(x[j],pow);
+        pow:=R.Mul(pow,c);
+      END;
+      pow:=c;
+      FOR j:=exp-1 TO 0 BY -1 DO
+        x[j]:=R.Div(x[j],pow);
+        pow:=R.Mul(pow,c);
+      END;
+    END;
+  END;
+END ScaleDownRoots;
 
 
 (*-----------------*)
@@ -45,10 +94,17 @@ PROCEDURE Add(
                x,y:T):T=
 <*FATAL Error*> (*'indivisible' cannot occur*)
 VAR
+  qx,qy:T;  (*polynomials with scaled roots, necessary for eliminating non-one leading coefficients*)
   px,py:REF PowerSumSeq;
+  cx,cy:R.T;
+  nz:CARDINAL:=LAST(x^)*LAST(y^);
 BEGIN
-  px:=ToPowerSumSeq(x);
-  py:=ToPowerSumSeq(y);
+  cx:=x[LAST(x^)];
+  cy:=y[LAST(y^)];
+  qx:=ScaleUpRoots(x);
+  qy:=ScaleUpRoots(y);
+  px:=ToPowerSumSeq(qx,nz);
+  py:=ToPowerSumSeq(qy,nz);
   RETURN FromPowerSumSeq(px^);
 END Add;
 (*-----------------*)
@@ -102,12 +158,33 @@ PROCEDURE Mul(
                x,y:T):T=
 <*FATAL Error*> (*'indivisible' cannot occur*)
 VAR
+  qx,qy:T;  (*polynomials with scaled roots, necessary for eliminating non-one leading coefficients*)
   px,py:REF PowerSumSeq;
   cx,cy:R.T;
+  nx:CARDINAL:=LAST(x^);
+  ny:CARDINAL:=LAST(y^);
+  nz:CARDINAL:=nx*ny;
+  z:T;
 BEGIN
-  cx:=x[LAST(x^)]; px:=ToPowerSumSeq(x);
-  cy:=y[LAST(y^)]; py:=ToPowerSumSeq(y);
-  RETURN FromPowerSumSeq(px^);
+  cx:=x[LAST(x^)];
+  cy:=y[LAST(y^)];
+  qx:=ScaleUpRoots(x);
+  qy:=ScaleUpRoots(y);
+  px:=ToPowerSumSeq(qx,nz);
+  py:=ToPowerSumSeq(qy,nz);
+  (*assume that py is an independent buffer
+    which can be messed here*)
+  FOR j:=0 TO LAST(py^) DO
+    py[j] := R.Mul(px[j],py[j]);
+  END;
+  z:=FromPowerSumSeq(py^);
+(*more factors might be canceled in some cases (e.g. 1 as zero?)
+  ScaleDownRoots(z^,cx,nx+2*ny-4);
+  ScaleDownRoots(z^,cy,ny+2*nx-4);
+*)
+  ScaleDownRoots(z^,cx,nz-ny);
+  ScaleDownRoots(z^,cy,nz-nx);
+  RETURN z; (*for testing*)
 END Mul;
 
 (*---------------------*)
@@ -159,37 +236,87 @@ BEGIN
 END GCD;
 
 (*--------------------*)
+(*simple and inefficient method: successively multiply linear factors*)
+PROCEDURE FromRoots(READONLY root : ARRAY OF R.T):T=
+VAR
+  z:=P.One;
+  fac:=P.New(1);
+BEGIN
+  fac[1]:=R.One;
+  FOR j:=0 TO LAST(root) DO
+    fac[0]:=R.Neg(root[j]);
+    z:=P.Mul(z,fac);
+  END;
+  RETURN z;
+END FromRoots;
+
+(*--------------------*)
 PROCEDURE ElimMultRoots(x:T):T=
 BEGIN
   (*we need a special GCD for this purpose*)
   RETURN (GCD(x,P.Derive(x)));
 END ElimMultRoots;
 
+
 (*given the sequence x of power sums,
   return the next one with respect to the polynomial y*)
 (*consider x as a cyclic buffer for successive sums of powers of the roots*)
 PROCEDURE GetNextPowerSum(READONLY x:PowerSumSeq; k:CARDINAL; y:T):R.T=
 VAR
-  c,pow,z:R.T;
+  z:R.T;
 BEGIN
-  c:=y[LAST(y^)];
   z:=R.Zero;
-  FOR j:=LAST(x^) TO 0 BY -1 DO
+  FOR j:=LAST(x) TO 0 BY -1 DO
     IF k=0 THEN
       k:=LAST(x);
     ELSE
       DEC(k);
     END;
-    z:=R.Add(z,R.Mul());
+    z:=R.Add(z,R.Mul(x[k],y[j]));
   END;
+  RETURN R.Neg(z);
 END GetNextPowerSum;
 
-PROCEDURE PowN(READONLY x:T;
-                        y:CARDINAL):T=
+(*could be sped up by factorizing the exponent into primes*)
+PROCEDURE PowN(x:T;
+               y:CARDINAL):T=
+(*select each n-th element from the power sum sequence*)
+VAR
+  ps,psz:REF PowerSumSeq;
+  j,k,l,m:CARDINAL;
+  cp:R.T;
 BEGIN
-  RETURN x;
+  IF y=0 THEN
+    RETURN One;
+  ELSE
+    ps:=ToPowerSumSeq(x,LAST(x^));
+    psz:=NEW(REF PowerSumSeq,NUMBER(ps^));
+    k:=y-1;
+    j:=0;
+    WHILE k<NUMBER(ps^) DO
+      psz[j]:=ps[k];
+      INC(j);
+      INC(k,y);
+    END;
+    l:=0;
+    m:=NUMBER(ps^);
+    WHILE j<NUMBER(psz^) DO
+      WHILE m<=k DO
+        cp:=GetNextPowerSum(ps^,l,x);
+        ps[l]:=cp;
+        INC(m);
+        INC(l);
+        IF l=NUMBER(ps^) THEN
+          l:=0;
+        END;
+      END;
+      psz[j]:=cp;
+      INC(j);
+      INC(k,y);
+    END;
+    RETURN FromPowerSumSeq(psz^);
+  END;
 END PowN;
-
 
 (*
   s[k] - the elementary symmetric polynomial of degree k
@@ -213,22 +340,27 @@ END PowN;
   but have alternating signs, too.
 *)
 
-PROCEDURE ToPowerSumSeq(x:T):REF PowerSumSeq=
+PROCEDURE ToPowerSumSeq(x:T;m:CARDINAL):REF PowerSumSeq=
 VAR
-  y:=NEW(T,NUMBER(x^)-1);
+  y:=NEW(T,m);
   sum:R.T;
   div:R.T;
 BEGIN
   <*ASSERT R.Equal(x[LAST(x^)],R.One)*>
   x[LAST(x^)]:=R.One;
   div:=R.One;
-  FOR n:=1 TO LAST(x^) DO
+  FOR n:=1 TO MIN(m,LAST(x^)) DO
     sum:=R.Mul(x[LAST(x^)-n],div);
     FOR j:=1 TO n-1 DO
       sum:=R.Add(sum,R.Mul(y[j-1],x[LAST(x^)-n+j]));
     END;
     y[n-1]:=R.Neg(sum);  (*R.Div(sum,x[LAST(x^)]), but it is only divisible if the leading coefficient is one, what we asserted at the beginning*)
     div:=R.Add(div,R.One);
+  END;
+  IF m>LAST(x^) THEN
+    FOR n:=LAST(x^) TO LAST(y^) DO
+      y[n]:=GetNextPowerSum(SUBARRAY(y^,n-LAST(x^),LAST(x^)),0,x);
+    END;
   END;
   RETURN y;
 END ToPowerSumSeq;

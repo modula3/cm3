@@ -19,7 +19,7 @@ VAR
 BEGIN
   Debug(1,ftn,"begin\n");
 
-  RETURN result;   
+  RETURN result;
 END TestABC;
 (*-------------------------*)
 PROCEDURE TestXYZ():BOOLEAN=
