@@ -1,7 +1,0 @@
-override ("formsvbt", ROOT & "/m3-ui")
-override ("web", ROOT & "/m3-www")
-override ("obliq", ROOT & "/m3-obliq")
-override ("obliqlibm3", ROOT & "/m3-obliq")
-override ("obliqui", ROOT & "/m3-obliq")
-override ("obliqanim", ROOT & "/m3-obliq")
-override ("obliqparse", ROOT & "/m3-obliq")
