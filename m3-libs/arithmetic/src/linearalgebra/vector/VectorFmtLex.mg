@@ -1,0 +1,55 @@
+GENERIC MODULE VectorFmtLex(Rf);
+(*
+Abstract:
+
+6/6/87    hgeorge
+          Initial version.
+
+2/11/89   hgeorge
+          To work with generic matrices.
+
+11/20/94  Harry George
+          Converted to Modula3 dynamic arrays.
+
+12/18/95  Harry George
+          ...and back to fully instantiated for REAL32.
+
+1/27/96   Harry George
+          Converted to OO format, and R.T          
+
+2/17/96   Harry George   Converted from OO to ADT format
+*)
+FROM xUtils IMPORT Error,Err;
+IMPORT Wr,TextWr,Fmt AS F,Thread;
+
+<*UNUSED*> CONST Module = "VectorFmt.";
+
+(*-----------------*)
+<*UNUSED*>
+PROCEDURE Lex( 
+               str:TEXT):T =
+BEGIN
+  RAISE Error(Err.not_implemented);
+END Lex;
+(*-----------------*)
+PROCEDURE Fmt( 
+            v:T; 
+            style:=F.Style.Fix;
+            prec:=2):TEXT RAISES {Thread.Alerted, Wr.Failure} = 
+CONST width = 12;
+VAR
+  wr:=TextWr.New();
+BEGIN
+  Wr.PutText(wr,"V" & F.Int(NUMBER(v^)) & "{");
+  FOR i:=FIRST(v^) TO LAST(v^) DO
+    Wr.PutText(wr,F.Pad(Rf.Fmt(v[i],style,prec),width)); 
+    IF i#LAST(v^) THEN Wr.PutText(wr,", "); END;
+  END;
+  Wr.PutText(wr,"}\n");
+  RETURN TextWr.ToText(wr);
+END Fmt;
+
+
+(*-----------------*)
+BEGIN
+END VectorFmtLex.
