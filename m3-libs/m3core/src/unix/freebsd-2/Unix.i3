@@ -766,7 +766,7 @@ CONST (* whence *)
   L_XTND = 2;
 
 <*EXTERNAL "m3_lseek"*>
- PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
+ PROCEDURE lseek (d: int; offset: int; whence: int): int;
 (* ok *)
 
 (*** mkfifo - make a FIFO (named pipe) ***)
@@ -919,9 +919,9 @@ TYPE
 
 (*** truncate, ftruncate - truncate a file to a specified length ***)
 <*EXTERNAL "m3_truncate" *> 
-   PROCEDURE truncate (path: char_star; length: off_t): int;
+   PROCEDURE truncate (path: char_star; length: int): int;
 <*EXTERNAL "m3_ftruncate" *> 
-   PROCEDURE ftruncate (fd, length: off_t): int;
+   PROCEDURE ftruncate (fd, length: int): int;
 (* ok *)
 
 (* not implemented 
