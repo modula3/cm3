@@ -22,12 +22,12 @@ PROCEDURE SquareMethod (A      : M.T;
   EigenPair RAISES {Error};
 
 TYPE
-  EVGenFlag = LA.EVGenFlag;
-  EVGenFlagSet = LA.EVGenFlagSet;
+  EVFlag = LA.EVFlag;
+  EVFlagSet = LA.EVFlagSet;
 
   EV = LA.EV;
 
-CONST EigenValuesGen = LA.EigenValuesGen;
+CONST EigenValues = LA.EigenValues;
 
 
 (* Unoptimised translations from
