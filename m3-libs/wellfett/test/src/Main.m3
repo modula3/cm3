@@ -1,7 +1,7 @@
 MODULE Main;
 
-IMPORT TestTransition;
+IMPORT TestMatchWavelet;
 
 BEGIN
-  TestTransition.Test();
+  TestMatchWavelet.Test();
 END Main.
