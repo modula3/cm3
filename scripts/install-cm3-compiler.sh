@@ -20,8 +20,8 @@ fi
 
 FRONTEND="${INSTALLROOT}/bin/cm3"
 BACKEND="${INSTALLROOT}/bin/cm3cg"
-FRONTEND_SRC="${ROOT}/m3-sys/cm3/${CM3_TARGET}/cm3"
-BACKEND_SRC="${ROOT}/m3-sys/m3cc/${CM3_TARGET}/cm3cg"
+FRONTEND_SRC="${ROOT}/m3-sys/cm3/${TARGET}/cm3"
+BACKEND_SRC="${ROOT}/m3-sys/m3cc/${TARGET}/cm3cg"
 
 usage()
 {
