@@ -21,6 +21,12 @@ MatrixDecomposition("Real",     "RealMatrixFast",     "RealVectorFast",     "Rea
 MatrixDecomposition("LongReal", "LongRealMatrixFast", "LongRealVectorFast", "LongRealBasic", "LongRealTrans")
 MatrixDecomposition("Extended", "ExtendedMatrixFast", "ExtendedVectorFast", "ExtendedBasic", "ExtendedTrans")
 
+module("EigenSystem")
+%generic_module("EigenSystem")
+%EigenSystem("Real",     "RealMatrixFast",     "RealVectorFast",     "RealBasic",     "RealTrans")
+%EigenSystem("LongReal", "LongRealMatrixFast", "LongRealVectorFast", "LongRealBasic", "LongRealTrans")
+%EigenSystem("Extended", "ExtendedMatrixFast", "ExtendedVectorFast", "ExtendedBasic", "ExtendedTrans")
+
 generic_module("MatrixFmtLex")
 MatrixFmtLex("Real",     "RealMatrixFast",     "RealFmtLex")
 MatrixFmtLex("LongReal", "LongRealMatrixFast", "LongRealFmtLex")
