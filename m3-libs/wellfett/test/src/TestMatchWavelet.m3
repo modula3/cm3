@@ -49,7 +49,7 @@ PROCEDURE MatchPattern (target                               : S.T;
               psi.getLast(), phivan.getLast() + twonit * (translates - 1));
     size := last - first + 1;
 
-    twopow     :=  FLOAT(unit, R.T);
+    twopow   := FLOAT(unit, R.T);
     grid     := R.One / twopow;
     abscissa := V.ArithSeq(size, FLOAT(first, R.T) * grid, grid);
 
@@ -58,20 +58,22 @@ PROCEDURE MatchPattern (target                               : S.T;
 
     coef: LA.LS;
 
-CONST ymin=-1.5D0;ymax=1.5D0;
+  CONST
+    ymin = -1.5D0;
+    ymax = 1.5D0;
 
   BEGIN
     PL.Init();
     PL.SetEnvironment(
-      abscissa[FIRST(abscissa^)], abscissa[LAST(abscissa^)], ymin,
-      ymax);
+      abscissa[FIRST(abscissa^)], abscissa[LAST(abscissa^)], ymin, ymax);
 
     psi.scale(twopow).clipToArray(first, basis[LAST(basis^)]);
     PL.SetColor0(1);
     PL.PlotLines(abscissa^, basis[LAST(basis^)]);
     PL.SetColor0(2);
     FOR j := -translates TO translates - 1 DO
-      phivan.scale(twopow).clipToArray(first - twonit * j, basis[j + translates]);
+      phivan.scale(twopow).clipToArray(
+        first - twonit * j, basis[j + translates]);
       PL.PlotLines(abscissa^, basis[j + translates]);
     END;
 
@@ -517,17 +519,21 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
                     TEXT{MF.Fmt(normalMat)}));
     *)
 
-    CONST tol = 1.0D-14;
+    CONST tol = 1.0D-10;
     VAR
       yfirst := -translates;
-      y      := NEW(S.T).fromArray(V.New(2 * translates)^, yfirst);
-      cf     := R.Zero;
-    (*
-      cf     := R.One;
       y      := NEW(S.T).fromArray(V.ArithSeq(2 * translates)^, yfirst);
+      cf     := R.One;
+    (* use this initialization if you want to compare the results with
+       MatchPattern
+
+       y := NEW(S.T).fromArray(V.New(2 * translates)^, yfirst); cf :=
+       R.Zero; *)
+    (*
       y := V.FromVectorArray(
              ARRAY OF V.T{V.ArithSeq(2 * translates), V.FromScalar(R.One)});
     *)
+
     BEGIN
       FOR j := 0 TO 100 DO
         VAR
@@ -547,16 +553,14 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
           derdist := DeriveDist(normalMat, targetCor, targetNormSqr, y);
           derwavdist := ExtendDervTarget(derdist, y.getData(), cf,
                                          waveletVec, waveletCor, targetVec);
-          der := derwavdist;
-        (*
-der := AddDerv(
-derwavdist, ScaleDerv(DeriveWSSE(hdualvan, gdual, y, cf),
-           smoothWeight));
-           *)
+          der := AddDerv(derwavdist,
+                         ScaleDerv(DeriveWSSE(hdualvan, gdual, y, cf),
+                                   smoothWeight));
 
         (* targetdiff := V.Sub(targetVec, M.MulTV(basis, y.getData()));
            targetdist := V.Inner(targetdiff, targetdiff); *)
         BEGIN
+          (*
           IO.Put(
             Fmt.FN(
               "normal matrix %s, right hand side %s =?= %s, dist %s\n",
@@ -564,6 +568,7 @@ derwavdist, ScaleDerv(DeriveWSSE(hdualvan, gdual, y, cf),
                 TEXT{MF.Fmt(M.Scale(der.second, RT.Half)),
                      VF.Fmt(V.Scale(der.first, RT.Half)),
                      VF.Fmt(M.MulV(basis, targetVec)), RF.Fmt(der.zeroth)}));
+          *)
 
           IF VT.Norm1(der.first) <= tol * RT.Abs(der.zeroth) THEN
             RETURN MatchCoef{y, cf};
@@ -609,13 +614,15 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
            mc.lift, NEW(S.T).fromArray(ARRAY OF R.T{1.0D0, -1.0D0}, -1),
            vanishing);
     gdual0a := gdual0.scale(mc.amp / RT.SqRtTwo);
-    gdual := gdual0a.superpose(
-               s.upsample(2).convolve(hdual.scale(RT.SqRtTwo)));
+    gduala := gdual0a.superpose(
+                s.upsample(2).convolve(hdual.scale(RT.SqRtTwo)));
+    gdual := gdual0.superpose(
+               s.upsample(2).convolve(hdual.scale(R.Two / mc.amp)));
     unit          := IIntPow.Power(2, levels);
     twopow        := FLOAT(unit, R.T);
     grid          := R.One / twopow;
     psidual0      := Refn.Refine(gdual0a, hdual, levels);
-    psidual       := Refn.Refine(gdual, hdual, levels);
+    psidual       := Refn.Refine(gduala, hdual, levels);
     leftpsidual0  := FLOAT(psidual0.getFirst(), R.T) * grid;
     rightpsidual0 := FLOAT(psidual0.getLast(), R.T) * grid;
     leftpsidual   := FLOAT(psidual.getFirst(), R.T) * grid;
@@ -633,7 +640,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
         "optimal lift %s,\ncyclic wrap of gdual %s\n",
         ARRAY OF TEXT{SF.Fmt(s), SF.Fmt(gdual.alternate().wrapCyclic(3))}));
     PL.Init();
-    CASE 1 OF
+    CASE 0 OF
     | 0 => WP.PlotWavelets(hdual, gdual, levels);
     | 1 =>
         PL.SetEnvironment(MIN(lefttarget, leftpsidual),
@@ -656,7 +663,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
 PROCEDURE Test () =
   <*FATAL BSpl.DifferentParity*>
   BEGIN
-    CASE 2 OF
+    CASE 3 OF
     | 0 =>
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50), 6,
@@ -665,25 +672,21 @@ PROCEDURE Test () =
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(1), 7).translate(10), 6, 4,
           2, 5);
-      (* The figures given here previously was wrong because the generator
-         was convolved with (1,0,-1) instead of (1,-1) translates 5, size
-         1917, residuum 0.00340514677538585, V11{0.186869299925214,
-         0.269986933917237, 0.670508585560263, 0.649776682132423,
-         -0.175806649674353, -0.875993675942413, -0.856283049545732,
-         -0.458477950438848, -0.31397715987086, -0.11516417311729, ...}
-         0.330691666379811
-      *)
     | 2 =>
+        (* The figures given here previously was wrong because the
+           generator was convolved with (1,0,-1) instead of (1,-1)
+           translates 5, size 1917, residuum 0.00340514677538585,
+           V11{0.186869299925214, 0.269986933917237, 0.670508585560263,
+           0.649776682132423, -0.175806649674353, -0.875993675942413,
+           -0.856283049545732, -0.458477950438848, -0.31397715987086,
+           -0.11516417311729, ...} 0.330691666379811 *)
         MatchPattern(
           NEW(S.T).fromArray(
-            V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^, -256), 6, 4, 2, 5);
-      (*
-      y Signal[-5..4]{0.0591062446152401, 0.0903181993065596, 0.285545159210211, -0.136564892299842, 1.27478030776691, -0.587901480689649, -0.234139988943924, -0.21826373576695, -0.103008677224905, -0.0482341791772408}, cf -0.096377134505568
-      *)
+            V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^, -256), 6, 4, 10, 5);
     | 3 =>
         TestMatchPatternSmooth(NEW(S.T).fromArray(
                                  V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^,
-                                 -256), 6, 4, 2, 5, 0.0D0);
+                                 -256), 6, 4, 10, 5, 100.0D0);
     | 4 =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(
