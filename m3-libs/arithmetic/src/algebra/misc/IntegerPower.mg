@@ -12,19 +12,20 @@ FROM xUtils IMPORT Error, Err;
 (*==========================*)
 (*----------------------*)
 
-PROCEDURE IntegerPower(x:T; y:PositiveInteger):T =
+PROCEDURE IntegerPower(x:T; y0:PositiveInteger):T =
 (*we cannot always count on the existence of general Zero and One,
   e.g. for matrices. This makes things a bit ugly*)
 VAR
   pow  := x;
   z    :  T;
   init := FALSE;
+  y    :  CARDINAL := y0;  (*0 will occur as final value*)
 BEGIN
   TRY
     WHILE y>0 DO
       IF y MOD 2 # 0 THEN
         IF init THEN
-          z := R.Add(z,pow);
+          z := R.Mul(z,pow);
         ELSE
           z := pow;
           init := TRUE;

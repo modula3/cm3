@@ -26,7 +26,9 @@ PROCEDURE Equal(x,y:T):BOOLEAN RAISES {Error};  (*return x=y*)
 
 PROCEDURE Scale(x:T; factor:R.T);            (*x:=x*factor*)
 PROCEDURE Inner(x,y:T):R.T RAISES {Error};   (*<x,y>*)
-<*UNUSED*>
-PROCEDURE Cross(x,y:T):T RAISES {Error}; (*x x y*)       
+(* should be generalized to finding an orthonormal basis
+   of the space orthogonal to a given set of vectors
+PROCEDURE Cross(x,y:T):T RAISES {Error}; (*x x y*)
+*)
 (*==========================*)
 END VectorBasic.
