@@ -1,0 +1,20 @@
+import("libm3")
+
+include("polynomial.tmpl")
+
+%generic_module("PolynomialBasic")
+%PolynomialBasic("Real",            "RealBasic")
+%PolynomialBasic("LongReal",        "LongRealBasic")
+%PolynomialBasic("Extended",        "ExtendedBasic")
+%PolynomialBasic("Integer32",       "Integer32Basic")
+%PolynomialBasic("LongRealComplex", "LongRealComplexBasic")
+
+generic_module("PolynomialFast")
+PolynomialFast("Real",     "RealBasic")
+PolynomialFast("LongReal", "LongRealBasic")
+PolynomialFast("Extended", "ExtendedBasic")
+
+generic_module("PolynomialFmtLex")
+PolynomialFmtLex("Real",     "RealPolynomialFast",     "RealFmtLex")
+PolynomialFmtLex("LongReal", "LongRealPolynomialFast", "LongRealFmtLex")
+PolynomialFmtLex("Extended", "ExtendedPolynomialFast", "ExtendedFmtLex")
