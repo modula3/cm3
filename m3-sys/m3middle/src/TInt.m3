@@ -20,16 +20,52 @@ CONST (* IMPORTS *)
 
 CONST
   Mask     = RShift (Word.Not (0), Word.Size - ChunkSize);
+  M1       = RShift (Word.Not (0), 1);
+  M2       = RShift (Word.Not (0), 2);
   SignMask = LShift (1, ChunkSize - 1);
   Base     = Mask + 1;
   Digits   = ARRAY [0..9] OF CHAR { '0','1','2','3','4','5','6','7','8','9'};
   Ten      = Int { IChunks {10, 0, 0, 0}};
 
+VAR xxx := FALSE; 
+
 PROCEDURE FromInt (x: INTEGER;  VAR r: Int): BOOLEAN =
   BEGIN
+    IF xxx THEN (* true for debugging only *)
+      IO.Put("WordSize:    ");
+      IO.PutInt(Word.Size);
+      IO.Put("\n");
+      IO.Put("ChunkSize:   ");
+      IO.PutInt(ChunkSize);
+      IO.Put("\n");
+      IO.Put("Word.Not(0): ");
+      IO.PutInt(Word.Not(0));
+      IO.Put("\n");
+      IO.Put("Mask:        ");
+      IO.PutInt(Mask);
+      IO.Put("\n");
+      IO.Put("M1:          ");
+      IO.PutInt(M1);
+      IO.Put("\n");
+      IO.Put("M2:          ");
+      IO.PutInt(M2);
+      IO.Put("\n");
+      IO.Put("SignMask:    ");
+      IO.PutInt(SignMask);
+      IO.Put("\n");
+      IO.Put("Base:        ");
+      IO.PutInt(Base);
+      IO.Put("\n");
+      xxx := FALSE;
+    END;
     FOR i := 0 TO last_chunk DO
       r.x [i] := And (x, Mask);
       x := x DIV Base;
+    END;
+    (* OutInt("FromInt(1)", r); *)
+    IF NOT calledFromInit THEN
+      r := Expand(r);
+      (* OutInt("FromInt(2)", r); *)
     END;
     RETURN (x = 0 OR x = -1);
   END FromInt;
@@ -391,18 +427,55 @@ PROCEDURE Expand (READONLY a: Int): Int =
     END;
     IF NOT inited THEN Init () END;
     TWord.And (a, sign_mask, sign);
-    IF NOT EQ (sign, Zero) THEN
+    IF EQ (sign, Zero) THEN
+      TWord.And (res, mask, res);
+    ELSE
       TWord.Or (res, mask2, res);
     END;
     RETURN res;
   END Expand;
 
 PROCEDURE OutInt (READONLY name: TEXT; READONLY a: Int; nl := TRUE) =
-  BEGIN
+
+  PROCEDURE OutDigit (a: INTEGER) =
+    BEGIN
+      CASE a MOD 16 OF
+        0 => IO.PutChar('0');
+      | 1 => IO.PutChar('1');
+      | 2 => IO.PutChar('2');
+      | 3 => IO.PutChar('3');
+      | 4 => IO.PutChar('4');
+      | 5 => IO.PutChar('5');
+      | 6 => IO.PutChar('6');
+      | 7 => IO.PutChar('7');
+      | 8 => IO.PutChar('8');
+      | 9 => IO.PutChar('9');
+      | 10 => IO.PutChar('a');
+      | 11 => IO.PutChar('b');
+      | 12 => IO.PutChar('c');
+      | 13 => IO.PutChar('d');
+      | 14 => IO.PutChar('e');
+      | 15 => IO.PutChar('f');
+      END;
+    END OutDigit;
+
+  PROCEDURE OutINT (a: INTEGER; n := 3) =
+    VAR m, r: INTEGER;
+    BEGIN
+      m := a MOD 16;
+      r := a DIV 16;
+      IF n > 0 THEN
+        OutINT (r, n - 1);
+      END;
+      OutDigit (m);
+    END OutINT;
+
+  BEGIN (* OutInt *)
     IO.Put (name & ":");
     FOR i := last_chunk TO 0 BY -1 DO
       IO.Put (" ");
-      IO.PutInt (a.x [i]);
+      (* IO.PutInt (a.x [i]); *)
+      OutINT (a.x [i]);
     END;
     IF nl THEN
       IO.Put ("\r\n");
@@ -415,9 +488,11 @@ PROCEDURE Init () =
     target_int_bytesize := Integer.size DIV 8;
   BEGIN
     IF inited THEN RETURN END;
+    calledFromInit := TRUE;
     EVAL FromInt (255, byte_mask);
     EVAL FromInt (8, byte_shift);
     EVAL FromInt (128, sign_mask);
+    calledFromInit := FALSE;
     mask := byte_mask;
     FOR i := 2 TO target_int_bytesize DO
       TWord.Shift (mask, byte_shift, mask);
@@ -426,6 +501,7 @@ PROCEDURE Init () =
     END;
     TWord.Not (mask, mask2);
     (* OutInt ("target word mask", mask); *)
+    (* OutInt ("target word mask2", mask2); *)
     (* OutInt ("target word sign_mask", sign_mask); *)
     inited := TRUE;
   END Init;
@@ -434,5 +510,6 @@ VAR
   inited := FALSE;
   mask, mask2: Int;
   sign_mask: Int;
+  calledFromInit := FALSE;
 BEGIN
 END TInt.
