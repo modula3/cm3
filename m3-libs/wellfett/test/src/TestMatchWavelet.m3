@@ -2,6 +2,7 @@ MODULE TestMatchWavelet;
 
 IMPORT LongRealBasic AS R;
 IMPORT LongRealTrans AS RT;
+IMPORT LongRealIntegerPower AS RIntPow;
 IMPORT Integer32IntegerPower AS IIntPow;
 
 IMPORT LongRealVectorFast AS V;
@@ -254,97 +255,190 @@ PROCEDURE AddDerv (READONLY x, y: Deriv2): Deriv2 RAISES {NA.Error} =
              V.Add(x.first, y.first), second := M.Add(x.second, y.second)};
   END AddDerv;
 
-PROCEDURE ScaleDerv (READONLY x: Deriv2; y: R.T): Deriv2
-   =
+PROCEDURE ScaleDerv (READONLY x: Deriv2; y: R.T): Deriv2 =
   BEGIN
     RETURN Deriv2{zeroth := x.zeroth * y, first := V.Scale(x.first, y),
                   second := M.Scale(x.second, y)};
   END ScaleDerv;
 
+PROCEDURE PutDervDif (READONLY der   : Deriv2;
+                      READONLY derArr: ARRAY OF Deriv2;
+                               delta : R.T              ) =
+  BEGIN
+    (*compare first derivative (gradient) with the first difference*)
+    IO.Put(VF.Fmt(V.Scale(der.first, delta)) & "\n");
+    FOR j := 0 TO LAST(derArr) DO
+      IO.Put(Fmt.FN("der[%s] %s, %s\n",
+                    ARRAY OF
+                      TEXT{Fmt.Int(j (* + y.getFirst()*)),
+                           RF.Fmt(derArr[j].zeroth - der.zeroth),
+                           RF.Fmt(der.first[j] * delta)}));
+    END;
+
+    (*compare second derivative with the first difference of the first
+       derivative*)
+    FOR j := 0 TO LAST(derArr) DO
+      IO.Put(
+        Fmt.FN("der[%s] %s, %s\n",
+               ARRAY OF
+                 TEXT{Fmt.Int(j (*+ y.getFirst()*)),
+                      VF.Fmt(V.Sub(derArr[j].first, der.first)),
+                      VF.Fmt(V.Scale(M.GetRow(der.second, j), delta))}));
+    END;
+  END PutDervDif;
+
+
+(*extend derivatives by information that are contributed by optimizing the
+   amplitude of the target*)
+PROCEDURE ExtendDervTarget (READONLY x        : Deriv2;
+                                     lift     : V.T;
+                                     targetAmp: R.T;
+                                     target   : V.T;
+                                     targetCor: V.T;
+                                     wavelet0 : V.T     ): Deriv2 =
+  BEGIN
+    RETURN
+      Deriv2{
+        zeroth := x.zeroth + R.Two * targetAmp * V.Inner(targetCor, lift)
+                    + targetAmp * targetAmp * V.Inner(target, target)
+                    - R.Two * targetAmp * V.Inner(wavelet0, target),
+        first :=
+        V.FromVectorArray(
+          ARRAY OF
+            V.T{
+            V.Add(x.first, V.Scale(targetCor, targetAmp * R.Two)),
+            V.FromScalar(R.Two * (V.Inner(lift, targetCor)
+                                    + targetAmp * V.Inner(target, target)
+                                    - V.Inner(wavelet0, target)))}),
+        second :=
+        M.FromMatrixArray(
+          ARRAY [0 .. 1], [0 .. 1] OF
+            M.T{
+            ARRAY OF
+              M.T{x.second, M.ColumnFromArray(V.Scale(targetCor, R.Two)^)},
+            ARRAY OF
+              M.T{M.RowFromArray(V.Scale(targetCor, R.Two)^),
+                  M.FromScalar(V.Inner(target, target) * R.Two)}})};
+  END ExtendDervTarget;
+
+TYPE
+  MatchCoef = RECORD
+                lift     : S.T;
+                targetAmp: R.T;  (*coefficient of the target function*)
+              END;
+
 PROCEDURE MatchPatternSmooth (target                : S.T;
                               hdual, gdual, hdualvan: S.T;
                               levels, translates    : CARDINAL;
-                              smoothWeight          : R.T;      ): S.T
-  RAISES {NA.Error} =
+                              smoothWeight          : R.T;      ):
+  MatchCoef RAISES {NA.Error} =
+
+  <*UNUSED*>
+  PROCEDURE CheckDerivatives () =
+    CONST
+      delta = 1.0D-8;
+      cf    = 0.7D0;
+    VAR
+      (*this array length can only be used if a total of 6 translates is considered*)
+      y := NEW(S.T).fromArray(
+             ARRAY OF R.T{0.2D0, -0.3D0, 0.0D0, -0.1D0, 0.0D0, 0.4D0}, -3);
+      der := AddDerv(
+               DeriveDist(normalMat, waveletCor, waveletNormSqr, y),
+               ScaleDerv(DeriveRho(hdualvan, gdual, y), smoothWeight));
+      derArr := NEW(REF ARRAY OF Deriv2, NUMBER(der.first^));
+      extder := ExtendDervTarget(
+                  der, y.getData(), cf, targetVec, targetCor, waveletVec);
+      extderArr := NEW(REF ARRAY OF Deriv2, NUMBER(extder.first^));
+
+    BEGIN
+      FOR j := 0 TO LAST(derArr^) DO
+        VAR
+          yp := y.superpose(NEW(S.T).fromArray(
+                              ARRAY OF R.T{delta}, j + y.getFirst()));
+        BEGIN
+          derArr[j] :=
+            AddDerv(
+              DeriveDist(normalMat, waveletCor, waveletNormSqr, yp),
+              ScaleDerv(DeriveRho(hdualvan, gdual, yp), smoothWeight));
+          extderArr[j] :=
+            ExtendDervTarget(derArr[j], yp.getData(), cf, targetVec,
+                             targetCor, waveletVec);
+        END;
+      END;
+      extderArr[LAST(extderArr^)] :=
+        ExtendDervTarget(
+          der, y.getData(), cf + delta, targetVec, targetCor, waveletVec);
+
+      PutDervDif(der, derArr^, delta);
+      PutDervDif(extder, extderArr^, delta);
+    END CheckDerivatives;
+
+
+  PROCEDURE TranslatesBasis (): M.T =
+    VAR basis := M.New(2 * translates, size);
+    BEGIN
+      FOR j := -translates TO translates - 1 DO
+        generatorvan.clipToArray(first - twonit * j, basis[j + translates]);
+        (*
+              targetCor[j + translates] :=
+                VS.Inner(basis[j + translates], targetVec^);
+        *)
+      END;
+      RETURN basis;
+    END TranslatesBasis;
+
   VAR
-    phivan := Refn.Refine(hdualvan.scale(RT.SqRtTwo), hdual, levels);
-    psi    := Refn.Refine(gdual.scale(R.One / RT.SqRtTwo), hdual, levels);
+    generatorvan := Refn.Refine(hdualvan.scale(RT.SqRtTwo), hdual, levels);
+    wavelet := Refn.Refine(gdual.scale(R.One / RT.SqRtTwo), hdual, levels);
 
     unit   := IIntPow.Power(2, levels);
     twonit := 2 * unit;
-    first  := MIN(psi.getFirst(), phivan.getFirst() - twonit * translates);
-    last := MAX(
-              psi.getLast(), phivan.getLast() + twonit * (translates - 1));
+    first := MIN(target.getFirst(),
+                 generatorvan.getFirst() - twonit * translates);
+    last := MAX(target.getLast(),
+                generatorvan.getLast() + twonit * (translates - 1));
     size := last - first + 1;
 
-    targetVec := V.Sub(target.clipToVector(first, size),
-                       psi.clipToVector(first, size));
-    basis              := M.New(2 * translates, size);
-    normalMat    : M.T;
-    targetCor    : V.T;
-    targetNormSqr      := V.Inner(targetVec, targetVec);
+    waveletVec     := wavelet.clipToVector(first, size);
+    waveletNormSqr := V.Inner(waveletVec, waveletVec);
+    targetVec      := target.clipToVector(first, size);
+    targetNormSqr  := V.Inner(targetVec, targetVec);
+    (* the target vector might have been clipped, thus
+       V.Inner(target.getData(),target.getData()) may be different *)
+
+    basis      := TranslatesBasis();
+    normalMat  := M.MMA(basis);
+    targetCor  := M.MulV(basis, targetVec);
+    waveletCor := M.MulV(basis, waveletVec);
 
   BEGIN
-    FOR j := -translates TO translates - 1 DO
-      phivan.clipToArray(first - twonit * j, basis[j + translates]);
-      (*
-            targetCor[j + translates] :=
-              VS.Inner(basis[j + translates], targetVec^);
-      *)
-    END;
-
-    normalMat := M.MMA(basis);
-    targetCor := M.MulV(basis, targetVec);
-
     (*
-    CONST delta = 1.0D-8;
-    VAR
-      y := NEW(S.T).fromArray(
-             ARRAY OF R.T{0.2D0, -0.3D0, 0.0D0, -0.1D0, 0.0D0, 0.4D0}, -3);
-      der := Derivatives(
-               hdual, gdual, y, normalMat, targetCor, targetNormSqr);
-      derArr := NEW(REF ARRAY OF Deriv2, y.getNumber());
-    BEGIN
-      FOR j := 0 TO LAST(derArr^) DO
-        derArr[j] :=
-          Derivatives(hdual, gdual, y.superpose(NEW(S.T).fromArray(
-                                                  ARRAY OF R.T{delta},
-                                                  j + y.getFirst())),
-                      normalMat, targetCor, targetNormSqr);
-      END;
-
-      IO.Put(VF.Fmt(V.Scale(der.first, delta)) & "\n");
-      FOR j := 0 TO LAST(derArr^) DO
-        IO.Put(Fmt.FN("der[%s] %s, %s\n",
-                      ARRAY OF
-                        TEXT{Fmt.Int(j + y.getFirst()),
-                             RF.Fmt(derArr[j].zeroth - der.zeroth),
-                             RF.Fmt(der.first[j] * delta)}));
-      END;
-      FOR j := 0 TO LAST(derArr^) DO
-        IO.Put(
-          Fmt.FN("der[%s] %s, %s\n",
-                 ARRAY OF
-                   TEXT{Fmt.Int(j + y.getFirst()),
-                        VF.Fmt(V.Sub(derArr[j].first, der.first)),
-                        VF.Fmt(V.Scale(M.GetRow(der.second, j), delta))}));
-      END;
-    END;
+    CheckDerivatives();
     *)
+
     CONST tol = 1.0D-14;
-    (*VAR y := NEW(S.T).fromArray(V.New(2 * translates)^, -translates);*)
-    VAR y := NEW(S.T).fromArray(V.ArithSeq(2 * translates)^, -translates);
+    VAR
+      yfirst := -translates;
+      y      := NEW(S.T).fromArray(V.ArithSeq(2 * translates)^, yfirst);
+      cf     := R.One;
+    (*
+          y := V.FromVectorArray(
+                 ARRAY OF V.T{V.ArithSeq(2 * translates), V.FromScalar(R.One)});
+    *)
     BEGIN
       FOR j := 0 TO 100 DO
         VAR
           der := AddDerv(
-                   DeriveDist(normalMat, targetCor, targetNormSqr, y),
+                   DeriveDist(normalMat, waveletCor, waveletNormSqr, y),
                    ScaleDerv(DeriveRho(hdualvan, gdual, y), smoothWeight));
-        (*targetdiff := V.Sub(targetVec, M.MulTV(basis, y.getData()));
+          extder := ExtendDervTarget(der, y.getData(), cf, targetVec,
+                                     targetCor, waveletVec);
+
+        (* targetdiff := V.Sub(targetVec, M.MulTV(basis, y.getData()));
            targetdist := V.Inner(targetdiff, targetdiff); *)
         BEGIN
-          IF VT.Norm1(der.first) <= tol * RT.Abs(der.zeroth) THEN
-            RETURN y;
+          IF VT.Norm1(extder.first) <= tol * RT.Abs(extder.zeroth) THEN
+            RETURN MatchCoef{y, cf};
           END;
           (*
                     IO.Put(Fmt.FN("derivatives %s, %s, %s\n",
@@ -352,14 +446,17 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
                                     TEXT{RF.Fmt(der.zeroth), VF.Fmt(der.first),
                                          MF.Fmt(der.second)}));
           *)
-          y := y.superpose(NEW(S.T).fromVector(
-                             LA.LeastSquaresGen(
-                               der.second, ARRAY OF V.T{V.Neg(der.first)})[
-                               0].x, first := y.getFirst()));
-          (*
-            IO.Put(Fmt.FN("y %s, DRho(y) %s\n",
-                         ARRAY OF TEXT{VF.Fmt(y), VF.Fmt(ComputeDRho(y^))}));
-          *)
+          VAR
+            vec := LA.LeastSquaresGen(
+                     extder.second, ARRAY OF V.T{V.Neg(extder.first)})[0].x;
+          BEGIN
+            cf := cf + vec[LAST(vec^)];
+            y := y.superpose(NEW(S.T).fromArray(SUBARRAY(vec^, FIRST(vec^),
+                                                         NUMBER(vec^) - 1),
+                                                yfirst));
+            IO.Put(
+              Fmt.FN("y %s, cf %s\n", ARRAY OF TEXT{SF.Fmt(y), RF.Fmt(cf)}));
+          END;
         END;
       END;
       RAISE NA.Error(NA.Err.not_converging);
@@ -371,34 +468,54 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
                                   smoothWeight: R.T)
   RAISES {BSpl.DifferentParity} =
   <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
+  CONST
+    ymin = -1.5D0;
+    ymax = 1.5D0;
   VAR
     hdual := BSpl.GeneratorMask(smooth);
     gdual := BSpl.WaveletMask(smooth, vanishing);
     hdualvan := SIntPow.MulPower(hdual, NEW(S.T).fromArray(
                                           ARRAY OF R.T{1.0D0, -1.0D0}, -1),
                                  vanishing);
-    s := MatchPatternSmooth(target, hdual, gdual, hdualvan, levels,
-                            translates, smoothWeight);
-    gdualopt := gdual.superpose(s.upsample(2).convolve(hdualvan));
-  (*
-      unit     := IIntPow.Power(2, levels);
-      grid     := R.One / FLOAT(unit, R.T);
-      abscissa := V.ArithSeq(size, FLOAT(first, R.T) * grid, grid);
-  *)
+    mc := MatchPatternSmooth(target, hdual, gdual, hdualvan, levels,
+                             translates, smoothWeight);
+    s        := mc.lift;
+    gdualopt := gdual.superpose(s.upsample(2).convolve(hdualvan).scale(-8.0D0));
+
+    unit         := IIntPow.Power(2, levels);
+    grid         := R.One / FLOAT(unit, R.T);
+    twopow       := RIntPow.Power(R.Two, levels);
+    psidual      := Refn.Refine(gdualopt, hdual, levels).scale(twopow);
+    leftpsidual  := FLOAT(psidual.getFirst(), R.T) * grid;
+    rightpsidual := FLOAT(psidual.getLast(), R.T) * grid;
+    lefttarget   := FLOAT(target.getFirst(), R.T) * grid;
+    righttarget  := FLOAT(target.getLast(), R.T) * grid;
   BEGIN
     IO.Put(
       Fmt.FN("optimal lift %s,\ncyclice wrap of gdual %s\n",
              ARRAY OF
                TEXT{SF.Fmt(s), SF.Fmt(gdualopt.alternate().wrapCyclic(3))}));
     PL.Init();
-    WP.PlotWavelets(hdual, gdualopt, 6);
+    CASE 1 OF
+    | 0 => WP.PlotWavelets(hdual, gdualopt, levels);
+    | 1 =>
+        PL.SetEnvironment(MIN(lefttarget, leftpsidual),
+                          MAX(righttarget, rightpsidual), ymin, ymax);
+        PL.PlotLines(V.ArithSeq(target.getNumber(), lefttarget, grid)^,
+                     target.scale(mc.targetAmp).getData()^);
+		     PL.SetColor0(2);
+        PL.PlotLines(V.ArithSeq(psidual.getNumber(), leftpsidual, grid)^,
+                     psidual.getData()^);
+    ELSE
+      <*ASSERT FALSE*>
+    END;
     PL.Exit();
   END TestMatchPatternSmooth;
 
 PROCEDURE Test () =
   <*FATAL BSpl.DifferentParity*>
   BEGIN
-    CASE 3 OF
+    CASE 2 OF
     | 0 =>
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50), 6,
@@ -407,19 +524,29 @@ PROCEDURE Test () =
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(1), 7).translate(10), 6, 4,
           2, 5);
+(*
+0.515299272019265, 1.09394334049039, 2.37421841031068, 0.167484610002095, -1.6496475444949, -4.50118081829745, -2.99168284568131, -2.07333727163662, -1.13262489000281, -0.469773425085895
+-0.482838852151025
+*)
     | 2 =>
         MatchPattern(
           NEW(S.T).fromArray(
             V.ArithSeq(512, -0.01D0, 0.02D0 / 512.0D0)^, -256), 6, 4, 2, 5);
+(*
+y Signal[-5..4]{0.0591062446152401, 0.0903181993065596, 0.285545159210211, -0.136564892299842, 1.27478030776691, -0.587901480689649, -0.234139988943924, -0.21826373576695, -0.103008677224905, -0.0482341791772408}, cf -0.096377134505568
+*)
     | 3 =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(
-            V.ArithSeq(512, -0.01D0, 0.02D0 / 512.0D0)^, -256), 6, 3, 3, 5,
-          1000000000.0D0);
+            V.ArithSeq(512, -0.01D0, 0.02D0 / 512.0D0)^, -256), 6, 4, 2, 5, 0.0D0);
     | 4 =>
+        TestMatchPatternSmooth(NEW(S.T).fromArray(
+                                 V.ArithSeq(2048, -1.0D0, 2.0D0 / 2048.0D0)^,
+                                 -1024), 6, 3, 9, 1, 100.0D0);
+    | 5 =>
         TestRho(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
         TestRho(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0}));
-    | 5 =>
+    | 6 =>
         TestInverseDRho(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0});
         TestInverseDRho(ARRAY OF R.T{1.0D0, 1.0D0, 0.1D0});
         TestInverseDRho(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0});
