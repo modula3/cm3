@@ -305,6 +305,11 @@ PROCEDURE OutChars(
     RAISES {Wr.Failure, Thread.Alerted};
 (* Marshal a char array in native format. *)
 
+PROCEDURE OutWideChars(
+    c: Conn; READONLY chars: ARRAY OF WIDECHAR)
+    RAISES {Wr.Failure, Thread.Alerted};
+(* Marshal a wide char array in native format. *)
+
 PROCEDURE OutBytes(
     c: Conn; READONLY bytes: ARRAY OF Byte8)
     RAISES {Wr.Failure, Thread.Alerted};
@@ -354,6 +359,12 @@ PROCEDURE InChars(
     VAR chars: ARRAY OF CHAR)
     RAISES {NetObj.Error, Rd.Failure, Thread.Alerted};
 (* Unmarshal a char array of length "NUMBER(chars)". *)
+
+PROCEDURE InWideChars(
+    c: Conn; rep: DataRep;
+    VAR chars: ARRAY OF WIDECHAR)
+    RAISES {NetObj.Error, Rd.Failure, Thread.Alerted};
+(* Unmarshal a wide char array of length "NUMBER(chars)". *)
 
 PROCEDURE InBytes(
     c: Conn; VAR bytes: ARRAY OF Byte8)
