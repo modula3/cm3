@@ -74,7 +74,6 @@ BEGIN
   NewLine(); EVAL TestUnit();
   NewLine(); EVAL TestLapack();
   NewLine(); EVAL TestTex();
-  NewLine(); EVAL TestPLPlot();
   NewLine(); EVAL TestFunctional();
 *)
 END Test.
