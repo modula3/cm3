@@ -34,7 +34,7 @@ PROCEDURE Refine (start, mask: S.T; levels: CARDINAL; shift: CARDINAL := 2):
   S.T =
   BEGIN
     WHILE levels > 0 DO
-      start := start.upsample(shift).convolve(mask);
+      start := mask.upConvolve(start, shift);
       DEC(levels);
     END;
     RETURN start;

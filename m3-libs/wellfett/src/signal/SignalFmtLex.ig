@@ -1,22 +1,21 @@
-GENERIC INTERFACE SignalFmtLex(RF,Signal);
+GENERIC INTERFACE SignalFmtLex(RF, Signal);
 
-IMPORT Wr,Thread;
+IMPORT Wr, Thread;
 (*==========================*)
 
-REVEAL
-  Signal.T <: T;
+REVEAL Signal.T <: T;
 
 TYPE
-  FmtStyle = RECORD elemStyle := RF.FmtStyle{}; END;
+  FmtStyle = RECORD elemStyle := RF.FmtStyle{};  END;
   T = Signal.TPublic OBJECT
-    METHODS
-    fmt (READONLY style := FmtStyle{}) : TEXT
-      RAISES {Thread.Alerted, Wr.Failure} := Fmt;
-  END;
+      METHODS
+        fmt (READONLY style := FmtStyle{}): TEXT
+             RAISES {Thread.Alerted, Wr.Failure} := Fmt;
+      END;
 
 (*PROCEDURE Lex(str:TEXT):T;*)
-PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}) : TEXT
-            RAISES {Thread.Alerted, Wr.Failure};
+PROCEDURE Fmt (x: T; READONLY style := FmtStyle{}): TEXT
+  RAISES {Thread.Alerted, Wr.Failure};
 
 (*==========================*)
 END SignalFmtLex.
