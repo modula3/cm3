@@ -22,6 +22,12 @@ CONST
   Two         = FLOAT(2.0D0,T);
   MinusOne    = FLOAT(-1.0D0,T);
 
+(*used for Vector.Min, Vector.Max*)
+VAR (* CONST after initialization *)
+  NegInf : T;
+  PosInf : T;
+  Nan    : T;
+
 CONST
   Equal   = RTy.Equal;
   Compare = RTy.Compare;
