@@ -1,13 +1,24 @@
 MODULE TestRoot EXPORTS Test;
 (*Copyright (c) 1996, Harry George*)
 FROM NADefinitions IMPORT Error, Err;
-IMPORT Fmt, LongRealBasic AS R, LongRealTrans AS RT, LongRealFmtLex AS RF,
-       LongRealComplex AS C, LongRealComplexTrans AS CT,
-       LongRealComplexFmtLex AS CF, LongRealComplexPolynomial AS CP,
-       LongRealComplexPolynomialFmtLex AS CPF, LongRealComplexRoot AS Rt,
-       LongRealRootApproximation AS RtA, LongRealFindZero AS FZ,
-       Integer32Basic AS I, Integer32Root AS IR, Integer32Polynomial AS IP,
-       Integer32PolynomialFmtLex AS IPF, Thread, Wr;
+IMPORT Fmt,
+       LongRealBasic                   AS R,
+       LongRealTrans                   AS RT,
+       LongRealFmtLex                  AS RF,
+       LongRealComplex                 AS C,
+       LongRealComplexTrans            AS CT,
+       LongRealComplexFmtLex           AS CF,
+       LongRealComplexPolynomial       AS CP,
+       LongRealComplexPolynomialFmtLex AS CPF,
+       LongRealComplexRoot             AS Rt,
+       LongRealRootApproximation       AS RtA,
+       LongRealFindZero                AS FZ,
+       Integer32Basic                  AS I,
+       Integer32Root                   AS IR,
+       Integer32Polynomial             AS IP,
+       Integer32PolynomialFmtLex       AS IPF,
+       Thread,
+       Wr;
 
 <*FATAL Error*>
 (*=======================*)
