@@ -1,10 +1,42 @@
-GENERIC MODULE DaubechiesWavelet(R, S, IntPow);
+GENERIC MODULE DaubechiesWavelet(R, RT, S, IntPow);
 
 IMPORT Arithmetic AS Arith;
 
 CONST
-  Half    = FLOAT(0.50D0, R.T);
-  Quarter = FLOAT(0.25D0, R.T);
+  Half    = R.Half;
+  Quarter = Half * Half;
+
+PROCEDURE Filter (n: CARDINAL): S.T =
+  VAR
+    sum := FilterPure(n);
+    fac := NEW(S.T).fromArray(ARRAY OF R.T{Half, Half}, 0);
+  <* FATAL Arith.Error *>        (* Power can't fail for signals *)
+  BEGIN
+    RETURN IntPow.MulPower(sum, fac, n);
+  END Filter;
+
+PROCEDURE FilterPure (n: CARDINAL): S.T =
+  BEGIN
+    CASE n OF
+    | 0, 1 => RETURN S.One;
+    | 2 =>
+        WITH w = RT.Pi / FLOAT(12, R.T) DO
+          RETURN NEW(S.T).fromArray(
+                   ARRAY OF
+                     R.T{RT.SqRtTwo * RT.Cos(w), -RT.SqRtTwo * RT.Sin(w)});
+        END;
+    | 4 =>
+        RETURN NEW(S.T).fromArray(
+                 ARRAY OF
+                   R.T{FLOAT(2.3037781330694596D-1, R.T),
+                       FLOAT(-2.066646826819176D-1, R.T),
+                       FLOAT(7.52726188069721D-2, R.T),
+                       FLOAT(-1.05974017849973D-2, R.T)}).scale(
+                 FLOAT(8, R.T) * RT.SqRtTwo);
+    ELSE
+      <* ASSERT FALSE, "Sorry this order is not supported." *>
+    END;
+  END FilterPure;
 
 PROCEDURE FilterAbsSqr (n: CARDINAL): S.T =
   VAR
