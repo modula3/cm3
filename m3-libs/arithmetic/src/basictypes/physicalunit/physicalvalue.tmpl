@@ -2,13 +2,14 @@
 %  Quake functions to instantiate operations on generic physical entities.
 %
 
-readonly proc PhysicalValue (nm, field) is
-  local basic = nm & "PhysicalValue"
-  build_generic_intf (basic, "PhysicalValue", [field], VISIBLE)
-  build_generic_impl (basic, "PhysicalValue", [field])
+readonly proc PhysicalValue (nm, field, rfast) is
+  local basic  = nm & "PhysicalValue"
+  local rfield = field & rfast
+  build_generic_intf (basic, "PhysicalValue", [rfield], VISIBLE)
+  build_generic_impl (basic, "PhysicalValue", [rfield])
 end
 
-readonly proc UnitDatabase (nm, field) is
+readonly proc UnitDatabase (nm, field, rfast) is
   local udb    = nm & "UnitDatabase"
   local uu     = nm & "UsualUnit"
   local uulist = uu & "List"
@@ -16,31 +17,32 @@ readonly proc UnitDatabase (nm, field) is
   local cu     = nm & "CompositeUnit"
   local culist = cu & "List"
   list(cu, cu)
-  build_generic_intf (uu,  "UsualUnit",     [field], VISIBLE)
+  local rfield = field & rfast
+  build_generic_intf (uu,  "UsualUnit",     [rfield], VISIBLE)
   build_generic_impl (uu,  "UsualUnit",     [])
   build_generic_intf (cu,  "CompositeUnit", [uulist], VISIBLE)
   build_generic_impl (cu,  "CompositeUnit", [])
-  build_generic_intf (udb, "UnitDatabase",  [field, uu, uulist,     culist], VISIBLE)
-  build_generic_impl (udb, "UnitDatabase",  [       uu, uulist, cu, culist])
+  build_generic_intf (udb, "UnitDatabase",  [rfield, uu, uulist,     culist], VISIBLE)
+  build_generic_impl (udb, "UnitDatabase",  [        uu, uulist, cu, culist])
 end
 
-readonly proc SIUnit (nm, field) is
+readonly proc SIUnit (nm, field, rfast) is
   local siunit  = nm & "SIUnit"
-  local rfield  = nm & "Basic"
-  local rtrans  = nm & "Trans"
-  local ruu     = nm & "UsualUnit"
+  local rfield  = field & rfast
+  local rtrans  = field & "Trans"
+  local ruu     = field & "UsualUnit"
   local ruulist = ruu & "List"
-  local rudb    = nm & "UnitDatabase"
+  local rudb    = field & "UnitDatabase"
   build_generic_intf (siunit, "SIUnit", [rudb], VISIBLE)
   build_generic_impl (siunit, "SIUnit", [rtrans, ruu, ruulist, rudb])
 end
 
 
-readonly proc PhysicalValueFmtLex (nm, field, complex) is
+readonly proc PhysicalValueFmtLex (nm, field, rfast, complex, cfast) is
   local fmt     = nm & "PhysicalValueFmtLex"
-  local rfield  = field & "Basic"
+  local rfield  = field & rfast
   local rtrans  = field & "Trans"
-  local cfield  = nm & "Basic"
+  local cfield  = nm & cfast
   local ctrans  = nm & "Trans"
   local cfmt    = nm & "FmtLex"
   local cpv     = nm & "PhysicalValue"

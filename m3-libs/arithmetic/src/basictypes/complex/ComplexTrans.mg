@@ -1,4 +1,4 @@
-GENERIC MODULE ComplexTrans(C,R,RT);
+GENERIC MODULE ComplexTrans(R,RT,C);
 (*Copyright (x) 1996, m3na project
 
 Abstract: Transcendental functions of complex numbers.

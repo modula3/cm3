@@ -1,4 +1,4 @@
-GENERIC INTERFACE ComplexTrans(C,R);
+GENERIC INTERFACE ComplexTrans(R,C);
 (*Copyright (x) 1996, m3na project
 
 Abstract: Transcendental functions of complex numbers.
