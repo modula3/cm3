@@ -61,7 +61,7 @@ typedef int PLINT;
 %pragma(modula3) unsafe="true";
 %pragma(modula3) library="m3plplot";
 
-%insert(m3makefile) %{% compiled / works with with CM3 5.2.6 2002-05-18
+%insert(m3makefile) %{% compiled / works with with CM3 5.2.6 2003-06-27
 %import_lib("plplotd","/usr/lib")
 import_lib("plplotd","/home/thielema/applications/plplot/lib")%}
 
