@@ -44,7 +44,7 @@ VAR   factln_cache:ARRAY [2..max_factln] OF T;
 PROCEDURE LnFactorial(n:CARDINAL):T=
 (*returns ln(n!) as a real*)
 VAR
-  tmp:T;
+  z:T;
 BEGIN
   IF n<2 THEN
     RETURN Zero;
@@ -53,24 +53,24 @@ BEGIN
   END;
 
   (*---check the cache---*)
-  tmp:=factln_cache[n];
-  IF tmp=Zero THEN
-    tmp:=LnGamma(FLOAT(n,T)+One);
-    factln_cache[n]:=tmp;
+  z:=factln_cache[n];
+  IF z=Zero THEN
+    z:=LnGamma(FLOAT(n,T)+One);
+    factln_cache[n]:=z;
   END;
-  RETURN tmp;  
+  RETURN z;  
 END LnFactorial;
 
 (*--------------------*)
-PROCEDURE Gamma(z:T):T=
-(*returns Gamma(z))*)
+PROCEDURE Gamma(x:T):T=
+(*returns Gamma(x))*)
 BEGIN
-  RETURN Exp(LnGamma(z));
+  RETURN Exp(LnGamma(x));
 END Gamma;
 
 (*--------------------*)
-PROCEDURE LnGamma(z:T):T=
-(*returns ln(Gamma(z))*)
+PROCEDURE LnGamma(x:T):T=
+(*returns ln(Gamma(x))*)
 TYPE coefs=ARRAY [0..N] OF T;
 CONST
   N=6;
@@ -84,31 +84,31 @@ CONST
           0.1208650973866179d-2,
           -0.5395239384953d-5};
 VAR
-  z1:=FLOAT(z,T)-1.0d0;
-  x,tmp,series:T;       
+  x1:=FLOAT(x,T)-1.0d0;
+  y,z,series:T;
 BEGIN
-  x:=z1+gam+0.5d0;
-  series:=c[0]+c[1]/(z1+1.0d0)
-              +c[2]/(z1+2.0D0)
-              +c[3]/(z1+3.0d0)
-              +c[4]/(z1+4.0d0)
-              +c[5]/(z1+5.0d0)
-              +c[6]/(z1+6.0d0);
-  tmp:=Ln(x)*(z1+0.5d0)+(-x)+lnsqrt2pi+Ln(series);
-  RETURN tmp;    
+  y:=x1+gam+0.5d0;
+  series:=c[0]+c[1]/(x1+1.0d0)
+              +c[2]/(x1+2.0d0)
+              +c[3]/(x1+3.0d0)
+              +c[4]/(x1+4.0d0)
+              +c[5]/(x1+5.0d0)
+              +c[6]/(x1+6.0d0);
+  z:=Ln(y)*(x1+0.5d0)+(-y)+lnsqrt2pi+Ln(series);
+  RETURN z;    
 END LnGamma;
 (*--------------------*)
 PROCEDURE Binomial(n,k:CARDINAL):T RAISES {Error}=
 (*returns Binomial coefficient for "n over k"*)
 CONST ftn = Module & "Binomial";
-VAR tmp:T;
+VAR z:T;
 BEGIN
   IF k>n THEN
     (*n must be > k*)
     RAISE Error(Err.out_of_range);
   END;
-  tmp:=Exp(LnFactorial(n)-LnFactorial(k)-LnFactorial(n-k));
-  RETURN tmp;
+  z:=Exp(LnFactorial(n)-LnFactorial(k)-LnFactorial(n-k));
+  RETURN z;
 END Binomial;
 (*-------------------*)
 PROCEDURE GammaP(a,x:T):T RAISES {Error}=
@@ -237,10 +237,10 @@ BEGIN
   END;
 END ErfC;
 (*--------------------*)
-PROCEDURE Beta(z,w:T):T=
-(*returns Gamma(z)*Gamma(w)/Gamma(z+w)*)
+PROCEDURE Beta(x,y:T):T=
+(*returns Gamma(x)*Gamma(y)/Gamma(x+y*)
 BEGIN
-  RETURN Exp(LnGamma(z)+LnGamma(w)-LnGamma(z+w));
+  RETURN Exp(LnGamma(x)+LnGamma(y)-LnGamma(x+y));
 END Beta;
 (*--------------------*)
 PROCEDURE BetaCF(a,b,x:T):T RAISES {Error}=
