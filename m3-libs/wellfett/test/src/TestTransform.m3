@@ -19,8 +19,6 @@ IMPORT LongRealSignalFmtLex AS SF;
 IMPORT PLPlot AS PL;
 IMPORT IO, Fmt, Wr, Thread;
 
-IMPORT NADefinitions AS NA;
-
 FROM TestMatchWavelet IMPORT TestMatchPatternSmooth;
 
 
@@ -72,7 +70,7 @@ PROCEDURE PlotSWT (         x        : S.T;
     right := FLOAT(xrec.getLast(), R.T) * grid;
 
   PROCEDURE PlotBand (x: S.T; ) =
-    <*FATAL NA.Error*>(*Number of filters and channels will always match*)
+    <*FATAL PL.SizeMismatch*>(*Number of filters and channels will always match*)
     BEGIN
       PL.SetFGColorDiscr(1);
       PL.SetEnvironment(
@@ -109,7 +107,7 @@ PROCEDURE PlotDWT (         x        : S.T;
     right := FLOAT(xrec.getLast(), R.T) * grid;
 
   PROCEDURE PlotBand (x: S.T; grid: R.T; ) =
-    <*FATAL NA.Error*>(*Number of filters and channels will always match*)
+    <*FATAL PL.SizeMismatch*>(*Number of filters and channels will always match*)
     BEGIN
       PL.SetFGColorDiscr(1);
       PL.SetEnvironment(

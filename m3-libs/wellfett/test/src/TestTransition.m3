@@ -33,7 +33,7 @@ IMPORT NADefinitions AS NA;
 CONST AThird = 1.0D0 / 3.0D0;
 
 PROCEDURE PlotTransitionEV (mask: S.T) =
-  <*FATAL NA.Error*>
+  <*FATAL NA.Error, PL.SizeMismatch*>
   VAR
     ev := RefnSm.Eigenvalues(mask);
     x  := NEW(V.T, NUMBER(ev.eigenvalues^));
@@ -76,7 +76,7 @@ PROCEDURE AnimateTransitionEV () =
 
 
 PROCEDURE CurveTransitionEV (READONLY maskcoef0, maskcoef1: ARRAY OF R.T) =
-  <*FATAL NA.Error*>
+  <*FATAL NA.Error, PL.SizeMismatch*>
   CONST frames = 50;
   VAR
     mask0 := NEW(S.T).fromArray(maskcoef0);
@@ -303,7 +303,7 @@ PROCEDURE PlotEstimates () =
     lowerSqrEst  := V.New(numOrder);
     upperSqrEst  := V.New(numOrder);
     upperFrobEst := V.New(numOrder);
-  <*FATAL NA.Error*>
+  <*FATAL NA.Error, PL.SizeMismatch*>
   BEGIN
     PL.Init();
     FOR j := FIRST(order^) TO LAST(order^) DO
