@@ -27,7 +27,6 @@ PROCEDURE TestHistogram () =
   END TestHistogram;
 
 PROCEDURE TestCurve () =
-  <*FATAL PL.SizeMismatch*>
   BEGIN
     (* Initialize plplot *)
     PL.SetEnvironment(-RT.TwoPi, RT.TwoPi, -1.1D0, 1.1D0);
