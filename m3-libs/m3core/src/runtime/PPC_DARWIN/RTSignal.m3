@@ -17,7 +17,7 @@ TYPE
 VAR
   DefaultHandler   : Usignal.SignalHandler;
   IgnoreSignal     : Usignal.SignalHandler;
-  initial_handlers : ARRAY [0..5] OF Usignal.struct_sigaction;
+  initial_handlers : ARRAY [0..6] OF Usignal.struct_sigaction;
 
 PROCEDURE InstallHandlers () =
   BEGIN
@@ -30,6 +30,7 @@ PROCEDURE InstallHandlers () =
     SetHandler (3, Usignal.SIGSEGV, SegV);
     SetHandler (4, Usignal.SIGPIPE, IgnoreSignal);
     SetHandler (5, Usignal.SIGTERM, Shutdown);
+    SetHandler (6, Usignal.SIGBUS,  SegV);
   END InstallHandlers;
 
 PROCEDURE SetHandler (id: INTEGER; sig: int;  handler: Usignal.SignalHandler) =
