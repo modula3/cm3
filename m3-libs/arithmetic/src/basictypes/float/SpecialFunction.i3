@@ -25,67 +25,64 @@ TYPE
 (*============================*)
 (* Really special functions   *)
 (*============================*)
-PROCEDURE sgn(a:T):T;
-(*IF a >=0.0 THEN RETURN 1.0 ELSE RETURN -1.0; END:*)
-
-PROCEDURE factorial(n:CARDINAL):T;
+PROCEDURE Factorial(n:CARDINAL):T;
 (*return n! as a real*)
 
-PROCEDURE ln_factorial(n:CARDINAL):T;
+PROCEDURE LnFactorial(n:CARDINAL):T;
 (*returns ln(n!) as a real*)
 
-PROCEDURE gamma(z:T):T;
-(*returns gamma(z)*)
+PROCEDURE Gamma(z:T):T;
+(*returns Gamma(z)*)
 
-PROCEDURE ln_gamma(z:T):T;
-(*returns ln(gamma(z))*)
+PROCEDURE LnGamma(z:T):T;
+(*returns ln(Gamma(z))*)
 
 
-PROCEDURE binomial(n,k:CARDINAL):T RAISES {Error};
-(*returns binomial coefficient for "n over k"*)
+PROCEDURE Binomial(n,k:CARDINAL):T RAISES {Error};
+(*returns Binomial coefficient for "n over k"*)
 
-PROCEDURE gamma_p(a,x:T):T RAISES {Error};
-(*returns incomplete gamma P(a,x)=gamma(a,x)/Gamma(a)*)
+PROCEDURE GammaP(a,x:T):T RAISES {Error};
+(*returns incomplete Gamma P(a,x)=Gamma(a,x)/Gamma(a)*)
 
-PROCEDURE gamma_q(a,x:T):T RAISES {Error};
-(*returns incomplete gamma Q(a,x)=Gamma(a,x)/Gamma(a)*)
+PROCEDURE GammaQ(a,x:T):T RAISES {Error};
+(*returns incomplete Gamma Q(a,x)=Gamma(a,x)/Gamma(a)*)
 (*also, Q(a,x)=1-P(a,x) *)
 
 (*Notes for in-lines:
 |1. Cumulative Poisson Probability:
 |   Px(<k)=probability that the number of events will be
 |   between 0 and k-1 inclusive, given mean=x.
-|     Px(<k)=gamma_q(k,x)
+|     Px(<k)=GammaQ(k,x)
 |2. Chi-Square Probability:
 |   P(X2|df)=probability that observed chi-square should be
 |   less than X2, given df degrees of freedom. 
-|     P(X2|df)=gamma_p(df/2.0,X2/2.0); P(0|df)=0, P(inf|df)=1
+|     P(X2|df)=GammaP(df/2.0,X2/2.0); P(0|df)=0, P(inf|df)=1
 |   Complementary form:
-|     Q(X2|df)=gamma_q(df/2.0,X2/2.0); Q(0|df)=1, Q(inf|df)=0
+|     Q(X2|df)=GammaQ(df/2.0,X2/2.0); Q(0|df)=1, Q(inf|df)=0
 *)
 
-PROCEDURE erf(x:T):T RAISES {Error};
+PROCEDURE Erf(x:T):T RAISES {Error};
 (*returns error function of x*)
 
-PROCEDURE erfc(x:T):T RAISES {Error};
-(*returns 1-erf(x) *)
+PROCEDURE ErfC(x:T):T RAISES {Error};
+(*returns 1-Erf(x) *)
 
-PROCEDURE beta(z,w:T):T;
-(*returns gamma(z)*gamma(w)/gamma(z+w)*)
+PROCEDURE Beta(z,w:T):T;
+(*returns Gamma(z)*Gamma(w)/Gamma(z+w)*)
 
-PROCEDURE betai(a,b,x:T):T RAISES {Error};
-(*returns incomplete beta Ix(a,b) *)
+PROCEDURE BetaI(a,b,x:T):T RAISES {Error};
+(*returns incomplete Beta Ix(a,b) *)
 (*Notes for in-lines:
 |1. Student's t-test distribution for df degrees of freedom is
-|     A(t|df) = 1.0-betai(df/2,1/2,df/(df+t^2))
+|     A(t|df) = 1.0-BetaI(df/2,1/2,df/(df+t^2))
 |   In other words, big A means t should probably be smaller
 |2. F-test distribution for df1 and df2 degrees of freedom is
-|     A(F|df1,df2) = betai(df1/2,df2/2,df2/(df2+df1*F))
+|     A(F|df1,df2) = BetaI(df1/2,df2/2,df2/(df2+df1*F))
 |    
 |3. Cumulative binomial probability for event which has
 |   probability p of occurring in each trial,
 |   having the event occur k or moe times in n trials is
-|     P(= betai(k,n-k+1,p)
+|     P(= BetaI(k,n-k+1,p)
 *)
 
 
