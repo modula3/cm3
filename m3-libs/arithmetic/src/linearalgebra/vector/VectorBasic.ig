@@ -31,6 +31,12 @@ PROCEDURE Scale(x:T; y:R.T):T;            (*x:=x*factor*)
 PROCEDURE Inner(x,y:T):R.T RAISES {Error};   (*<x,y>*)
 (* should be generalized to finding an orthonormal basis
    of the space orthogonal to a given set of vectors
+   one way to do this:
+     let the matrix have size (n,m) with less columns than rows (m<n)
+     clip the matrix to size (m+1,m) and create a column vector orthogonal to it
+     the j-th component is computed by the determinant of the limitted matrix
+     with the j-th row removed
+     now iterate to the matrix of size (m+2,m+1) and so on
 PROCEDURE Cross(x,y:T):T RAISES {Error}; (*x x y*)
 *)
 (*==========================*)

@@ -9,12 +9,20 @@
 (*                                                                       *)
 (*                                                                       *)
 
-GENERIC INTERFACE EigenSystem(M,V);
+GENERIC INTERFACE EigenSystem(M,V,RT);
+
+FROM NADefinitions IMPORT Error;
 
 EXCEPTION
   ArrayTooSmall;
   NoConvergence;
   ArraySizesDontMatch;
+
+PROCEDURE PowerMethod(     A       : M.T;
+                       VAR v       : V.T;
+					       tol     := RT.Tiny;
+                           maxiter : CARDINAL := 100;
+						         ) : RT.T RAISES {Error};
 
 PROCEDURE Jacobi( VAR a         :M.T;
                   dim           :INTEGER;
