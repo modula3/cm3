@@ -37,9 +37,19 @@ REVEAL
 %typemap(m3rawintype)  fftw_plan       %{Plan%};
 %typemap(m3rawinmode)  fftw_plan       %{%};
 %typemap(m3rawrettype) fftw_plan       %{Plan%};
-%typemap(m3rawintype)  fftw_complex *  %{ARRAY OF Complex%};
 %typemap(m3rawintype)  fftw_iodim *    %{IODim%};
 %typemap(m3rawintype)  fftw_r2r_kind * %{R2RKind%};
+
+%typemap(m3rawintype)  fftw_complex *  %{Complex%};
+%typemap(m3rawintype)  fftw_complex_array_1d *  %{(* ARRAY OF *) Complex%};
+%typemap(m3rawintype)  fftw_complex_array_2d *  %{(* ARRAY OF ARRAY OF *) Complex%};
+%typemap(m3rawintype)  fftw_complex_array_3d *  %{(* ARRAY OF ARRAY OF ARRAY OF *) Complex%};
+
+%typemap(m3rawinmode)  fftw_complex_array_1d *in,
+                       fftw_complex_array_2d *in,
+                       fftw_complex_array_3d *in,
+		       double *in
+		         %{READONLY%};
 
 
 %typemap(m3rawintype)  void  * %{ADDRESS%};
@@ -57,6 +67,7 @@ FROM FFTWLongRealRaw IMPORT R2RKind, IODim;
 TYPE
   Plan    <: REFANY;
   Complex = RECORD r, i: LONGREAL; END;
+  Sign = [-1..1];
 %}
 
 %insert(m3wrapimpl) %{
@@ -70,11 +81,41 @@ REVEAL
 %typemap(m3wrapinmode)  fftw_plan       %{%};
 %typemap(m3wraprettype) fftw_plan       %{Plan%};
 %typemap(m3wrapargraw)  fftw_plan       %{$input^%};
-%typemap(m3wrapintype)  fftw_complex *  %{ARRAY OF Complex%};
+%typemap(m3wrapretvar)  fftw_plan       %{plan:=NEW(Plan);%};
+%typemap(m3wrapretraw)  fftw_plan       %{plan^%};
+%typemap(m3wrapretconv) fftw_plan       %{plan%};
+
 %typemap(m3wrapintype)  double *        %{LONGREAL%};
 %typemap(m3wrapintype)  fftw_iodim *    %{IODim%};
+%typemap(m3wrapintype)  int sign        %{Sign%};
+
 %typemap(m3wrapintype)  fftw_r2r_kind * %{ARRAY OF R2RKind%};
 %typemap(m3wrapintype)  fftw_r2r_kind   %{R2RKind%};
+%typemap(m3wrapargraw)  fftw_r2r_kind   %{ORD($input)%};
+
+%typemap(m3wrapintype)  fftw_complex_array_1d *  %{ARRAY OF Complex%};
+%typemap(m3wrapintype)  fftw_complex_array_2d *  %{ARRAY OF ARRAY OF Complex%};
+%typemap(m3wrapintype)  fftw_complex_array_3d *  %{ARRAY OF ARRAY OF ARRAY OF Complex%};
+%typemap(m3wrapintype)  fftw_complex_tensor   *  %{REFANY (* Tensor of Complex *) %};
+
+%typemap(m3wrapintype)  fftw_real_array_1d *  %{ARRAY OF LONGREAL%};
+%typemap(m3wrapintype)  fftw_real_array_2d *  %{ARRAY OF ARRAY OF LONGREAL%};
+%typemap(m3wrapintype)  fftw_real_array_3d *  %{ARRAY OF ARRAY OF ARRAY OF LONGREAL%};
+%typemap(m3wrapintype)  fftw_real_tensor   *  %{REFANY (* Tensor of LONGREAL *) %};
+
+%typemap(m3wrapargraw)  fftw_complex_array_1d *, fftw_real_array_1d *  %{$input[0]%};
+%typemap(m3wrapargraw)  fftw_complex_array_2d *, fftw_real_array_2d *  %{$input[0,0]%};
+%typemap(m3wrapargraw)  fftw_complex_array_3d *, fftw_real_array_3d *  %{$input[0,0,0]%};
+%typemap(m3wrapargraw)  fftw_complex_tensor   *, fftw_real_tensor   *  %{$input%};
+
+%typemap(m3wrapinmode)  fftw_complex_array_1d *in,
+                        fftw_complex_array_2d *in,
+                        fftw_complex_array_3d *in,
+			fftw_real_array_1d *in,
+                        fftw_real_array_2d *in,
+                        fftw_real_array_3d *in
+			  %{READONLY%};
+
 
 %typemap(m3wrapintype)  void  * %{REFANY%};
 %typemap(m3wraprettype) void  * %{REFANY%};
@@ -176,14 +217,14 @@ REVEAL
 %ignore fftw_execute_split_dft;
 %ignore fftw_plan_many_dft_r2c;
 %ignore fftw_plan_dft_r2c;
-%ignore fftw_plan_dft_r2c_1d;
-%ignore fftw_plan_dft_r2c_2d;
-%ignore fftw_plan_dft_r2c_3d;
+//%ignore fftw_plan_dft_r2c_1d;
+//%ignore fftw_plan_dft_r2c_2d;
+//%ignore fftw_plan_dft_r2c_3d;
 %ignore fftw_plan_many_dft_c2r;
 %ignore fftw_plan_dft_c2r;
-%ignore fftw_plan_dft_c2r_1d;
-%ignore fftw_plan_dft_c2r_2d;
-%ignore fftw_plan_dft_c2r_3d;
+//%ignore fftw_plan_dft_c2r_1d;
+//%ignore fftw_plan_dft_c2r_2d;
+//%ignore fftw_plan_dft_c2r_3d;
 %ignore fftw_plan_guru_dft_r2c;
 %ignore fftw_plan_guru_dft_c2r;
 %ignore fftw_plan_guru_split_dft_r2c;
@@ -194,9 +235,9 @@ REVEAL
 %ignore fftw_execute_split_dft_c2r;
 %ignore fftw_plan_many_r2r;
 %ignore fftw_plan_r2r;
-%ignore fftw_plan_r2r_1d;
-%ignore fftw_plan_r2r_2d;
-%ignore fftw_plan_r2r_3d;
+//%ignore fftw_plan_r2r_1d;
+//%ignore fftw_plan_r2r_2d;
+//%ignore fftw_plan_r2r_3d;
 %ignore fftw_plan_guru_r2r;
 %ignore fftw_execute_r2r;
 %ignore fftw_destroy_plan;
