@@ -292,8 +292,8 @@ explains the results of the Marsaglia test battery above.
                          "InitDone" flag in Init proc.
 *)
 
-IMPORT Word, Math, Tick, TimeStamp;
-FROM xReal64 IMPORT REAL64;
+IMPORT LongRealBasic AS R,
+       Word, Math, Tick, TimeStamp;
 FROM RandomBasic IMPORT RandomGen;
 IMPORT RandomRep;
 
@@ -329,7 +329,7 @@ BEGIN
   RETURN t;
 END slow_init;
 
-PROCEDURE slow_engine(<*UNUSED*>self:slow):REAL64=
+PROCEDURE slow_engine(<*UNUSED*>self:slow):R.T=
 CONST
   ftn= Module & "slow_engine";
 BEGIN
@@ -362,7 +362,7 @@ BEGIN
   RETURN t;
 END fast_init;
 
-PROCEDURE fast_engine(<*UNUSED*>self:fast):REAL64=
+PROCEDURE fast_engine(<*UNUSED*>self:fast):R.T=
 CONST
   ftn= Module & "fast_engine";
 BEGIN

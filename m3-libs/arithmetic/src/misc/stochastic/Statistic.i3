@@ -6,8 +6,7 @@ Abstract: Statistics routines
 3/16/96  Harry George    Initial version
 *)
 FROM xUtils IMPORT Error;
-IMPORT xReal64 AS R;
-FROM xReal64 IMPORT REAL64;
+IMPORT LongRealBasic AS R;
 
 (*==========================*)
 TYPE
@@ -19,7 +18,7 @@ TYPE
                      var,  (*variance*)
                      skew, (*skew*)
                      kurt  (*kurtosis*)
-                     :REAL64;
+                     :R.T;
               END;
 
 PROCEDURE describe(data:R.Array;
@@ -29,7 +28,7 @@ PROCEDURE describe(data:R.Array;
 PROCEDURE ttest(data1,data2:R.Array;
                 VAR t,    (*Student's t-test*)
                     prob  (*probability of insignificance*)
-                    :REAL64) RAISES {Error};
+                    :R.T) RAISES {Error};
 (*Do Student's t test.
 Find t, which shows how close the means are, and
 find prob, which is small if this similarity is unlikely to
@@ -39,7 +38,7 @@ similar.*)
 PROCEDURE ftest(data1,data2:R.Array;
             VAR f,    (*F value*)
                 prob  (*probability of significance*)
-                :REAL64) RAISES {Error};
+                :R.T) RAISES {Error};
 (*do F-test, returning F and the probability that
 a difference between vars is due to chance*)
 
@@ -47,9 +46,9 @@ PROCEDURE chi_sqr1
                (bins:R.Array;     (*actual bin counts*)
                 ebins:R.Array;     (*expected bin counts*)
                 constraints:CARDINAL:=1;
-                VAR df:REAL64;    (*degrees of freedom*)
-                VAR chsq:REAL64;  (*chi squared*)
-                VAR prob:REAL64   (*probability of significance*)
+                VAR df:R.T;    (*degrees of freedom*)
+                VAR chsq:R.T;  (*chi squared*)
+                VAR prob:R.T   (*probability of significance*)
                 ) RAISES {Error};
 (*bins has an integer number of events in each bin, ebins
 has the expected number in each bin (possibly non integer),
@@ -67,9 +66,9 @@ PROCEDURE chi_sqr2
                (bins1:R.Array;    (*actual bin1 counts*)
                 bins2:R.Array;    (*actual bin2 counts*)
                 constraints:CARDINAL:=1;
-                VAR df:REAL64;    (*degrees of freedom*)
-                VAR chsq:REAL64;  (*chi squared*)
-                VAR prob:REAL64   (*probability of significance*)
+                VAR df:R.T;    (*degrees of freedom*)
+                VAR chsq:R.T;  (*chi squared*)
+                VAR prob:R.T   (*probability of significance*)
                 ) RAISES {Error};
 (*bins1 and bins2 have an integer number of events in each bin,
 contraints gives the constraint count which reduces the

@@ -11,14 +11,15 @@ To do: (Lemming)
  - Check if the Error exception of the 'uniform' method
    can be catched in the procedures which make use of 'uniform'
 *)
-FROM xReal64 IMPORT REAL64;
-IMPORT xReal64 AS R, xUtils;
+IMPORT LongRealBasic AS R,
+       LongRealTrans AS RT,
+       xUtils;
 FROM xUtils IMPORT Error;
 
 (*==========================*)
 CONST
   (*---safe boundaries for 0.0 .. 1.0 range---*)
-  Min  = R.EPS*5.0D0;
+  Min  = RT.Eps*5.0D0;
   Max  = 1.0D0 - Min;
 
 TYPE
@@ -28,15 +29,15 @@ TYPE
     init(seed  :[FIRST(INTEGER)..-1]:=-1
               ):RandomGen RAISES {Error};
 
-    engine():REAL64; (*raw engine; returns Min..Max*)
+    engine():R.T; (*raw engine; returns Min..Max*)
 
-    uniform(min:REAL64:=Min;  (*from min*)
-            max:REAL64:=Max   (*to max*)
-              ):REAL64
+    uniform(min:R.T:=Min;  (*from min*)
+            max:R.T:=Max   (*to max*)
+              ):R.T
               (*RAISES{xUtils.Error}*);        (*return uniform deviate*)
 
 
-    exponential():REAL64;   (*exponential, mean=1 *)
+    exponential():R.T;   (*exponential, mean=1 *)
 
     (*-----------------------------------------*)
     (* Gaussian or Normal distributions have   *)
@@ -44,18 +45,18 @@ TYPE
     (* To get mean=m and stddeviation=s:       *)
     (*     value:=m + s*rand.gaussian();       *)
     (*-----------------------------------------*)
-    gaussian():REAL64;     (*gaussian, mean=0, var=1 *)
+    gaussian():R.T;     (*gaussian, mean=0, var=1 *)
 
-    gamma(a : REAL64) : REAL64;
+    gamma(a : R.T) : R.T;
 
     dirichlet(p:R.Array);
 
-    poisson(m:REAL64    (*mean*)
-           ):REAL64;    (*Poisson, integer returned as real*)
+    poisson(m:R.T    (*mean*)
+           ):R.T;    (*Poisson, integer returned as real*)
 
-    binomial(p:REAL64;  (*probability*)
+    binomial(p:R.T;  (*probability*)
              n:INTEGER  (*trials*)
-            ):REAL64;   (*Binomial, returned as real*)
+            ):R.T;   (*Binomial, returned as real*)
   END;
 
 
