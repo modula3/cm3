@@ -2,27 +2,36 @@
 %  Quake functions to instantiate operations on generic complex numbers.
 %
 
-readonly proc ComplexBasic (nm, field) is
-  local basic = nm & "ComplexBasic"
-  build_generic_intf (basic, "ComplexBasic", [field], VISIBLE)
-  build_generic_impl (basic, "ComplexBasic", [field])
+readonly proc ComplexBasic (nm, field, rfast) is
+  local basic  = nm & "ComplexBasic"
+  local rfield = field & rfast
+  build_generic_intf (basic, "ComplexBasic", [rfield], VISIBLE)
+  build_generic_impl (basic, "ComplexBasic", [rfield])
 end
 
-readonly proc ComplexFast (nm, field) is
-  local basic = nm & "ComplexFast"
-  build_generic_intf (basic, "ComplexFast", [field], VISIBLE)
-  build_generic_impl (basic, "ComplexFast", [field])
+readonly proc ComplexFast (nm, field, rfast) is
+  local basic  = nm & "ComplexFast"
+  local rfield = field & rfast
+  build_generic_intf (basic, "ComplexFast", [rfield], VISIBLE)
+  build_generic_impl (basic, "ComplexFast", [rfield])
 end
 
 
-readonly proc ComplexTrans (nm, cfield, rfield, rtrans) is
+readonly proc ComplexTrans (nm, field, rfast, cfast) is
   local basic = nm & "ComplexTrans"
+  local rfield = field & rfast
+  local rtrans = field & "Trans"
+  local cfield = field & "Complex" & cfast
+  local ctrans = field & "ComplexTrans"
   build_generic_intf (basic, "ComplexTrans", [cfield, rfield], VISIBLE)
   build_generic_impl (basic, "ComplexTrans", [cfield, rfield, rtrans])
 end
 
-readonly proc ComplexFmtLex (nm, cfield, rfield, rfmt) is
-  local basic = nm & "ComplexFmtLex"
+readonly proc ComplexFmtLex (nm, field, rfast, cfast) is
+  local basic  = nm & "ComplexFmtLex"
+  local rfield = field & rfast
+  local rfmt   = field & "FmtLex"
+  local cfield = field & "Complex" & cfast
   build_generic_intf (basic, "ComplexFmtLex", [cfield, rfmt], VISIBLE)
   build_generic_impl (basic, "ComplexFmtLex", [rfield, rfmt])
 end
