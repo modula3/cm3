@@ -7,13 +7,14 @@ FROM NADefinitions IMPORT Error;
 *)
 
 (*==========================*)
-TYPE
-  T = P.T;
-  FmtStyle = RECORD elemStyle := RF.FmtStyle{};  END;
-  TexStyle = RECORD elemStyle := RF.TexStyle{};  END;
+TYPE T = P.T;
+
+TYPE FmtStyle = RECORD elemStyle := RF.FmtStyle{};  END;
 
 PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT;
 (*as "POLAR{radius:=<r>; angle:=<r>}"*)
+
+TYPE TexStyle = RECORD elemStyle := RF.TexStyle{};  END;
 
 PROCEDURE Tex (READONLY x     : T;
                READONLY style       := TexStyle{};
