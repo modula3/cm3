@@ -35,7 +35,7 @@ TYPE
       translate (dist: IndexType): T;
       scale     (factor: R.T): T;
       (*obviously, raise must be limitted to a finite interval*)
-      raise     (offset: R.T; first, number: IndexType): T;
+      raise (offset: R.T; first, number: IndexType): T;
 
       (*inplace operations*)
       translateD (dist: IndexType);
@@ -44,6 +44,9 @@ TYPE
       convolve  (with: T): T;
       superpose (with: T): T;
     END;
+
+PROCEDURE Add (x: T; y: T): T;
+PROCEDURE Mul (x: T; y: T): T;
 
 
 END Signal.
