@@ -117,6 +117,7 @@ returns determinant
 (* QR Factoring             *)
 (*==========================*)
 
+(*
 (*=============================*)
 (* Singular Value Decomposition*)
 (*=============================*)
@@ -149,5 +150,7 @@ PROCEDURE SVDSolve(U,V,W:M.T; (*decomposition*)
                     b:V.T;     (*rightside*)
                     VAR x:V.T    (*result*)
                    ) RAISES {Error};
+*)
+
 (*==========================*)
 END MatrixDecomposition.

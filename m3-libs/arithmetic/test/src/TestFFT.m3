@@ -6,39 +6,29 @@ Abstract:  Tests for FFT module.
 
 *)
 
-IMPORT xFFT;
+IMPORT LongRealFourierTransform AS FT;
 (*=======================*)
 CONST
   Module = "TestFFT.";
 (*----------------------*)
-PROCEDURE TestABC():BOOLEAN=
+PROCEDURE TestBasicFFT():BOOLEAN=
 CONST
-  ftn = Module & "TestABC";
+  ftn = Module & "TestBasicFFT";
 VAR
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
-
-  RETURN result;
-END TestABC;
-(*----------------------*)
-PROCEDURE TestBasic_FFT():BOOLEAN=
-CONST
-  ftn = Module & "TestBasic_FFT";
-VAR
-  result:=TRUE;
-BEGIN
-  Debug(1,ftn,"begin\n");
-  xFFT.Test();
+  FT.Test();
   Msg("if we got here, FFT is ok\n");
   RETURN result;
-END TestBasic_FFT;
+END TestBasicFFT;
 (*-------------------------*)
 PROCEDURE TestFFT():BOOLEAN=
+<*UNUSED*>
 CONST ftn = Module & "TestFFT";
 VAR result:=TRUE;
 BEGIN
-  NewLine(); EVAL TestBasic_FFT();
+  NewLine(); EVAL TestBasicFFT();
   RETURN result;
 END TestFFT;
 (*=======================*)

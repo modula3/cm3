@@ -1,4 +1,4 @@
-MODULE tch05_eval EXPORTS TestS;
+MODULE TestCh05_eval EXPORTS TestS;
 (*Copyright (c) 1995, Harry George
 Abstract: Test driver for Modula-3 rendition of
           Numerical Recipes in C, 1992.
@@ -8,7 +8,7 @@ Abstract: Test driver for Modula-3 rendition of
 *)
 
 IMPORT Fmt,nr;
-FROM nr IMPORT REAL32,REAL64,COMPLEX;
+FROM nr IMPORT REAL32,COMPLEX;
 (*=======================*)
 <*UNUSED*> CONST Module = "tch05_eval.";
 (*=======================*)
@@ -129,13 +129,13 @@ PROCEDURE TestRatval():BOOLEAN=
 CONST
   ftn = Module & "TestRatval";
 TYPE
-  V3 = ARRAY [0..2] OF REAL64;
-  V4 = ARRAY [0..3] OF REAL64;
+  V3 = ARRAY [0..2] OF R.T;
+  V4 = ARRAY [0..3] OF R.T;
 VAR
   result:=TRUE;
   num:=NEW(nr.dVector,3);
   den:=NEW(nr.dVector,4);
-  x,d:REAL64;
+  x,d:R.T;
 BEGIN
   Debug(1,ftn,"begin\n");
   num^:=V3{1.0d0,2.0d0,3.0d0};
@@ -257,4 +257,4 @@ BEGIN
 END TestEvalfun;
 (*=======================*)
 BEGIN
-END tch05_eval.
+END TestCh05_eval.

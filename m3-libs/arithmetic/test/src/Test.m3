@@ -6,9 +6,8 @@ Abstract: Test driver for m3na library.
 1/27/96   Harry George   converted to m3na format
 *)
 
-IMPORT Stdio,Thread,Wr,LongRealBasic AS R,xReal64;
-(*FROM LongRealTrans IMPORT Eps;*)
-CONST Eps=xReal64.EPS;
+IMPORT Stdio,Thread,Wr,LongRealBasic AS R;
+FROM LongRealTrans IMPORT Eps;
 
 <*FATAL Thread.Alerted, Wr.Failure*>
 
