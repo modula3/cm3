@@ -1,0 +1,5 @@
+if equal (OS_TYPE, "WIN32") 
+  override("rdwr", "\\arm3")
+else
+  override("rdwr", "/proj/graphics/arm3")
+end
