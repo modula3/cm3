@@ -33,6 +33,8 @@ IMPORT LongRealWaveletPlot AS WP;
 IMPORT PLPlot AS PL;
 IMPORT IO, Fmt, FileRd, Wr, Thread;
 
+IMPORT OSError, FloatMode, Lex, Rd;
+
 IMPORT NADefinitions AS NA;
 
 PROCEDURE PlotFrame (READONLY abscissa       : V.TBody;
@@ -1147,18 +1149,115 @@ PROCEDURE ModulateImag (x: V.T; period: R.T): V.T =
   END ModulateImag;
 
 
+(*multiplicate signal with ramp (linear progression)*)
+PROCEDURE MulRamp (x: S.T; scale: R.T; ): S.T =
+  VAR
+    xData := x.getData();
+    zData := NEW(V.T, x.getNumber());
+    j     := 0;
+  BEGIN
+    FOR i := x.getFirst() TO x.getLast() DO
+      zData[j] := xData[j] * FLOAT(i, R.T) * scale;
+      INC(j);
+    END;
+    RETURN NEW(S.T).fromVector(zData, x.getFirst());
+  END MulRamp;
+
+PROCEDURE CheckVanishingMoments () =
+  CONST
+    size  = 1024;
+    width = 300;
+    step  = 50;
+    scale = R.One / FLOAT(size, R.T);
+  VAR difSig := NEW(S.T);
+  BEGIN
+    CASE 2 OF
+    | 0 =>
+        difSig := NEW(S.T).fromVector(GaussianVector(size, width), -size);
+    | 1 =>
+        difSig := NEW(S.T).fromVector(GaussianVector(size, width), -size);
+        difSig := difSig.translate(-size DIV 4).scale(0.9D0).superpose(
+                    difSig.translate(size DIV 3).scale(0.3D0));
+    | 2 =>
+        difSig :=
+          NEW(S.T).fromVector(V.NewUniform(size + 1, R.Half), -size DIV 2);
+    ELSE
+    END;
+
+    FOR i := 0 TO 20 DO
+      (*
+      VAR
+        minX := FLOAT(difSig.getFirst(), R.T);
+        maxX := FLOAT(difSig.getLast(), R.T);
+      BEGIN
+        PL.Init();
+        PL.SetEnvironment(minX, maxX, -R.One, R.One);
+        PL.PlotLines(V.ArithSeq(difSig.getNumber(), minX, R.One)^,
+                     difSig.getData()^);
+        PL.Exit();
+      END;
+      *)
+      (*versions of the Sig multiplied with ...*)
+      VAR
+        polyDifSig      := difSig; (*...  power function*)
+        chebyDifSig     := difSig; (*...  chebyshev function*)
+        chebyDifSigPrev := MulRamp(difSig, scale);
+      BEGIN
+        FOR j := 0 TO i DO
+          VAR
+            polyMom := polyDifSig.sum() / VT.Norm1(polyDifSig.getData());
+            chebyMom := chebyDifSig.sum() / VT.Norm1(chebyDifSig.getData());
+          BEGIN
+            IO.Put(
+              Fmt.FN("%2s. moment: %20s, %20s\n",
+                     ARRAY OF
+                       TEXT{Fmt.Int(j), RF.Fmt(polyMom), RF.Fmt(chebyMom)}));
+          END;
+	  (*
+          VAR
+            minX     := FLOAT(difSig.getFirst(), R.T);
+            maxX     := FLOAT(difSig.getLast(), R.T);
+            abscissa := V.ArithSeq(difSig.getNumber(), minX, R.One);
+          BEGIN
+            PL.Init();
+            PL.SetEnvironment(minX, maxX, -R.One, R.One);
+            PL.SetFGColorDiscr(2);
+            PL.PlotLines(abscissa^, polyDifSig.getData()^);
+            PL.SetFGColorDiscr(3);
+            PL.PlotLines(abscissa^, chebyDifSig.getData()^);
+            PL.Exit();
+          END;
+	  *)
+
+          polyDifSig := MulRamp(polyDifSig, scale);
+          (*apply recursive construction of chebyshev polynomials*)
+          VAR
+            tmp := MulRamp(chebyDifSig, scale * R.Two).superpose(
+                     chebyDifSigPrev.negate());
+          BEGIN
+            chebyDifSigPrev := chebyDifSig;
+            chebyDifSig := tmp;
+          END;
+        END;
+        IO.Put("\n");
+      END;
+      difSig :=
+        difSig.translate(step).superpose(difSig.translate(-step).negate());
+    END;
+  END CheckVanishingMoments;
+
 PROCEDURE Test () =
   CONST
     numlevel = 6;
     unit     = 64;
   TYPE
-    Example =
-      {matchBSpline, matchBSplineVan, matchBSplineWavelet, matchRamp,
-       matchRampSmooth, matchSincSmooth, matchGaussian, matchLongRamp,
-       matchMassPeak, testSSE, testInverseDSSE, testDeriveWSSE};
+    Example = {matchBSpline, matchBSplineVan, matchBSplineWavelet,
+               matchRamp, matchRampSmooth, matchSincSmooth, matchGaussian,
+               matchLongRamp, matchMassPeak, checkVanishingMoments,
+               testSSE, testInverseDSSE, testDeriveWSSE};
   <*FATAL BSpl.DifferentParity*>
   BEGIN
-    CASE Example.matchMassPeak OF
+    CASE Example.checkVanishingMoments OF
     | Example.matchBSpline =>
         TestMatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50),
@@ -1318,6 +1417,7 @@ PROCEDURE Test () =
         CONST
           clipFirst  = 15500;
           clipNumber = 2500;
+        <*FATAL OSError.E, FloatMode.Trap, Lex.Error, Rd.Failure, Thread.Alerted*>
         VAR
           rd := FileRd.Open(
                   "/home/thielema/projects/industry/bruker/data/Datasets/T/Normal/spectrum_28_23.dat");
@@ -1337,6 +1437,7 @@ PROCEDURE Test () =
           PL.PlotLines(clipX^, clipY^);
           PL.Exit();
         END;
+    | Example.checkVanishingMoments => CheckVanishingMoments();
     | Example.testSSE =>
         TestSSE(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
         TestSSE(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0}));
