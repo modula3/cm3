@@ -515,6 +515,7 @@ TYPE
     OBJECT
       lp,                        (*--h--*)
         lpVan,                   (*lp*(1,0,-1)^m*)
+        lpSmooth,                (*lp*(1,1)^m1*)
         lpSmallVan,              (*lp*(1,0,-1)^m0*(1,1)^m1 with m=m0+m1*)
         lpNoVan,                 (*lp*(1,1)^m, lpVan with (1,-1)^m
                                     removed*)
@@ -606,7 +607,7 @@ PROCEDURE NoVanGetFilterBank (         SELF: NoVanFilterBasis;
   VAR
     bank := ARRAY [0 .. 1] OF
               FB.T{FB.DualToPrimal(
-                     FB.T{SELF.lp,
+                     FB.T{SELF.lpSmooth,
                           SELF.hp.superpose(
                             SELF.lpVan.upConvolve(
                               mc.lift.scale(R.One / mc.wavelet0Amp), 2))}),
@@ -616,8 +617,8 @@ PROCEDURE NoVanGetFilterBank (         SELF: NoVanFilterBasis;
        doesn't work without it.*)
     IF SELF.negateWavelet THEN
       RETURN ARRAY OF
-               FB.T{FB.T{bank[0, 0].negate(), bank[0, 1]},
-                    FB.T{bank[1, 0], bank[1, 1].negate()}};
+               FB.T{FB.T{bank[0, 0].negate(), bank[0, 1].negate()},
+                    FB.T{bank[1, 0], bank[1, 1]}};
     ELSE
       RETURN bank;
     END;
@@ -629,6 +630,23 @@ PROCEDURE NoVanGetFilterBank (         SELF: NoVanFilterBasis;
                                SELF.lpVan.upConvolve(
                                  mc.lift.scale(R.One / mc.wavelet0Amp), 2))}),
                       FB.T{SELF.lp, SELF.getShapeWaveletMask(mc)}};
+    *)
+    (*
+      Check if vanishing moments are added correctly.
+      Note that the Dual filters are used for Analysis!
+
+          vanBank := ARRAY [0 .. 1] OF
+                       FB.T{FB.T{bank[0, 0], bank[0, 1]},
+                            FB.T{bank[1, 0], SIntPow.MulPower(
+                                               bank[1, 1], vanAtom, van1)}};
+          VAR primal := FB.DualToPrimal(vanBank[1]);
+          BEGIN
+            IO.Put(
+              Fmt.FN("Filter bank should be:\n%s\n%s\n%s\n%s\n",
+                     ARRAY OF
+                       TEXT{SF.Fmt(vanBank[0, 0]), SF.Fmt(primal[0]),
+                            SF.Fmt(vanBank[0, 1]), SF.Fmt(primal[1])}));
+          END;
     *)
   END NoVanGetFilterBank;
 
@@ -916,6 +934,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
     gdual0 := BSpl.WaveletMask(smooth, vanishing);
     hdualvan := SIntPow.MulPower(hdual, bigVanAtom, vanishing).translate(
                   shiftVan);
+    hdualsmooth := BSpl.GeneratorMask(smooth + vanishing - smallVanishing);
 
     (*GeneratorMask uses factors (0.5,0.5), Vanishing moments (0.5,-0.5),
        this results in (0.25,-0.25) but the lifting mask is convolved with
@@ -942,8 +961,9 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
     dualBasis := NEW(            (*StdFilterBasis*)
                    NoVanFilterBasis, lp := hdual, hp := gdual0,
                    lpVan := hdualvan, lpSmallVan := hdualsmallvan,
-                   hpSmallVan := gdual0smallvan, lpNoVan := hdualnovan,
-                   hpNoVan := gdual0novan, shiftSmallVan := shiftSmallVan,
+                   lpSmooth := hdualsmooth, hpSmallVan := gdual0smallvan,
+                   lpNoVan := hdualnovan, hpNoVan := gdual0novan,
+                   shiftSmallVan := shiftSmallVan,
                    negateWavelet := (vanishing DIV 2) MOD 2 # 0);
 
     (*
