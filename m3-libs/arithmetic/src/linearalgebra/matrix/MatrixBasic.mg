@@ -1,4 +1,4 @@
-GENERIC MODULE MatrixBasic(V,R);
+GENERIC MODULE MatrixBasic(R,V);
 (*
 Abstract:
 

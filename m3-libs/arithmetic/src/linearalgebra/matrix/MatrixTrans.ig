@@ -1,4 +1,4 @@
-GENERIC INTERFACE MatrixTrans(M,R);
+GENERIC INTERFACE MatrixTrans(R,M);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Matrix math

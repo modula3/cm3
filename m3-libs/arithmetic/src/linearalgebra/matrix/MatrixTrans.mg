@@ -1,4 +1,4 @@
-GENERIC MODULE MatrixTrans(M,Eigen,CT,R,RT);
+GENERIC MODULE MatrixTrans(R,RT,CT,Eigen,M);
 (*
 Abstract:
 

@@ -1,4 +1,4 @@
-GENERIC INTERFACE MatrixBasic(V,R);
+GENERIC INTERFACE MatrixBasic(R,V);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Direct access to matrix functions

@@ -1,4 +1,4 @@
-GENERIC INTERFACE MatrixFast(V,R,MB);
+GENERIC INTERFACE MatrixFast(R,V,MB);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Direct access to matrix functions

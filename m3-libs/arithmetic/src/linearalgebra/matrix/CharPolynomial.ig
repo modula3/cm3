@@ -1,4 +1,4 @@
-GENERIC INTERFACE CharPolynomial(M,Rt);
+GENERIC INTERFACE CharPolynomial(Rt,M);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Characteristic polynomial of a matrix
