@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.37 2003-11-18 06:16:47 hosking Exp $
+# $Id: sysinfo.sh,v 1.38 2004-03-27 12:03:55 wagner Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -169,13 +169,20 @@ case "${UNAME}" in
 
   Darwin*)
     CM3_OSTYPE=POSIX
+    # detect the m3 platform (Darwin runs on ppc and ix86
     case "`uname -p`" in
       powerpc*)
-	    CM3_TARGET=PPC_DARWIN;;
+        CM3_TARGET=PPC_DARWIN;;
       i[3456]86*)
-            M3GC_SIMPLE=yes
-            export M3GC_SIMPLE
-            CM3_TARGET=I386_DARWIN;;
+        M3GC_SIMPLE=yes
+        export M3GC_SIMPLE
+        CM3_TARGET=I386_DARWIN;;
+    esac
+    # disable system call wrappers and enhanced gc on older systems
+    case "`uname -r`" in
+      6.8)
+        M3GC_SIMPLE=yes
+        export M3GC_SIMPLE;;
     esac
     GMAKE=${GMAKE:-make}
   ;;
