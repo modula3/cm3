@@ -499,6 +499,35 @@ PROCEDURE LUInverseD (VAR A: M.TBody; READONLY index: IndexArray): M.T
     RETURN B;
   END LUInverseD;
 
+
+
+
+PROCEDURE Cholesky (A: M.T): CholeskyResult =
+  VAR
+    L := M.NewOne(NUMBER(A^));
+    D := V.New(NUMBER(A^));
+  BEGIN
+    FOR i := FIRST(A^) TO LAST(A^) DO
+      WITH d = D[i] DO
+        d := A[i, i];
+        FOR k := FIRST(A^) TO i - 1 DO
+          d := d - L[i, k] * L[i, k] * D[k];
+        END;
+        FOR j := i + 1 TO LAST(A^) DO
+          WITH l = L[j, i] DO
+            l := A[j, i];
+            FOR m := FIRST(A^) TO i - 1 DO
+              l := l - L[j, m] * L[i, m] * D[m];
+            END;
+            l := l / d;
+          END;
+        END;
+      END;
+    END;
+    RETURN CholeskyResult{L, D};
+  END Cholesky;
+
+
 (* Singular Value Decomposition*)
 
 (*
