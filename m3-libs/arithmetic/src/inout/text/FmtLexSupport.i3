@@ -3,7 +3,7 @@ INTERFACE FmtLexSupport;
 
 (*Abstract: Support for FmtLex type modules*)
 
-IMPORT Rd;
+IMPORT Rd, Thread;
 IMPORT Lex AS L;
 
 TYPE
@@ -21,11 +21,13 @@ PROCEDURE Parenthesize (t: TEXT; inner, outer: Precedence; ): TEXT;
    parentheses if necessary and t unmodified if parentheses are not
    required.*)
 
-PROCEDURE AssertSeparator (rd: Rd.T; sep: CHAR; ) RAISES {L.Error};
+PROCEDURE AssertChar (rd: Rd.T; sep: CHAR; )
+  RAISES {L.Error, Rd.Failure, Thread.Alerted};
 (*Assert that the next non-space character is the separator 'sep' otherwise
    raise the Error.*)
 
-PROCEDURE CheckSeparator (rd: Rd.T; sep: CHAR; ): BOOLEAN;
+PROCEDURE CheckChar (rd: Rd.T; sep: CHAR; ): BOOLEAN
+  RAISES {Rd.EndOfFile, Rd.Failure, Thread.Alerted};
 (*Check that the next non-space character is the separator 'sep' and return
    TRUE in that case.*)
 

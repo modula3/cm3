@@ -16,7 +16,8 @@ PROCEDURE Parenthesize (t: TEXT; inner, outer: Precedence): TEXT =
     END;
   END Parenthesize;
 
-PROCEDURE AssertSeparator (rd: Rd.T; sep: CHAR; ) RAISES {L.Error} =
+PROCEDURE AssertChar (rd: Rd.T; sep: CHAR; )
+  RAISES {L.Error, Rd.Failure, Thread.Alerted} =
   BEGIN
     TRY
       L.Skip(rd, SET OF CHAR{' '});
@@ -25,23 +26,21 @@ PROCEDURE AssertSeparator (rd: Rd.T; sep: CHAR; ) RAISES {L.Error} =
         RAISE L.Error;
       END;
     EXCEPT
-    | Rd.EndOfFile, Rd.Failure, Thread.Alerted => RAISE L.Error;
+    | Rd.EndOfFile => RAISE L.Error;
     END;
-  END AssertSeparator;
+  END AssertChar;
 
-PROCEDURE CheckSeparator (rd: Rd.T; sep: CHAR; ): BOOLEAN =
+PROCEDURE CheckChar (rd: Rd.T; sep: CHAR; ): BOOLEAN
+  RAISES {Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
   BEGIN
-    TRY
-      L.Skip(rd, SET OF CHAR{' '});
-      IF sep # ' ' AND Rd.GetChar(rd) # sep THEN
-        Rd.UnGetChar(rd);
-        RETURN FALSE;
-      END;
-    EXCEPT
-    | Rd.EndOfFile, Rd.Failure, Thread.Alerted => RETURN FALSE;
+    L.Skip(rd, SET OF CHAR{' '});
+    IF sep # ' ' AND Rd.GetChar(rd) # sep THEN
+      Rd.UnGetChar(rd);
+      RETURN FALSE;
+    ELSE
+      RETURN TRUE;
     END;
-    RETURN TRUE;
-  END CheckSeparator;
+  END CheckChar;
 
 BEGIN
 END FmtLexSupport.
