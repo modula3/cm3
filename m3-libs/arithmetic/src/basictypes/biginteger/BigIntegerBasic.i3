@@ -28,6 +28,7 @@ TYPE
              size : INTEGER;  (*not all entries in 'data' may be used*)
              sign : BOOLEAN;
            END;
+  QuotRem = RECORD quot, rem: T END;
 
 (*PROCEDURE Init (VAR r : LIST OF T);*)
 PROCEDURE FromInteger (x : INTEGER) : T;
@@ -60,7 +61,7 @@ PROCEDURE Mul (READONLY x, y : T) : T;
 PROCEDURE Div (READONLY x, y : T) : T RAISES {Error};
 PROCEDURE Rec (READONLY x : T) : T RAISES {Error}; 
 PROCEDURE Mod (READONLY x, y : T) : T RAISES {Error};
-PROCEDURE DivMod (READONLY x, y : T; VAR r : T) : T RAISES {Error};
+PROCEDURE DivMod (READONLY x, y : T) : QuotRem RAISES {Error};
 
 (*==========================*)
 END BigIntegerBasic.

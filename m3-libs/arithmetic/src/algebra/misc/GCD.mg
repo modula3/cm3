@@ -60,7 +60,6 @@ PROCEDURE BezoutGCD(u,v:T; VAR (*OUT*) c : ARRAY [0..1],[0..1] OF T) : T =
 \ 1 0 / \ 1 -a / - \ 0 1 /
 *)
 VAR
-  w,q:T;
   next:ARRAY [0..1] OF T;
 BEGIN
   c[0,0] := R.One;
@@ -69,13 +68,16 @@ BEGIN
   c[1,1] := R.One;
   TRY
     WHILE NOT R.IsZero(v) DO
-      q:=R.DivMod(u,v,w);
-      u:=v;
-      v:=w;
-      next[0]:=R.Sub(c[0,0],R.Mul(c[0,0],q));
-      next[1]:=R.Sub(c[0,1],R.Mul(c[0,1],q));
-      c[0] := c[1];
-      c[1] := next;
+      VAR
+        qr:=R.DivMod(u,v);
+      BEGIN
+        u:=v;
+        v:=qr.rem;
+        next[0]:=R.Sub(c[0,0],R.Mul(c[0,0],qr.quot));
+        next[1]:=R.Sub(c[0,1],R.Mul(c[0,1],qr.quot));
+        c[0] := c[1];
+        c[1] := next;
+      END;
     END;
   EXCEPT
     Error(err) => <*ASSERT err#Err.divide_by_zero*>
@@ -97,34 +99,31 @@ but the coefficients k*c00 and k*c01 are to large and can be reduced:
 By dividing k*c00 by c10 with remainder one obtains the smallest possible coefficient for u and the coefficent for v cannot not to large since it is limitted by w and u and its coefficient.
 *)
 VAR
-  gcd, k, f, r : T;
-BEGIN
   gcd := BezoutGCD(u,v,c);
-  k := R.Div(w,gcd);
+  k   := R.Div(w,gcd);
+  fr  :  R.QuotRem;
+BEGIN
   c[0,0] := R.Mul(c[0,0],k);
   c[0,1] := R.Mul(c[0,1],k);
   (*reduce c[0,0] and c[0,1]*)
-  f := R.DivMod(c[0,0],c[1,0],r);
-  c[0,0] := r;
-  c[0,1] := R.Sub(c[0,1],R.Mul(f,c[1,1]));
+  fr := R.DivMod(c[0,0],c[1,0]);
+  c[0,0] := fr.rem;
+  c[0,1] := R.Sub(c[0,1],R.Mul(fr.quot,c[1,1]));
 END Bezout;
 
 PROCEDURE MACDecompose(u,v:T; VAR (*OUT*) mac : MAC) : T =
-VAR
-  w:T;
 BEGIN
   TRY
     mac:=NIL;
     WHILE NOT R.IsZero(v) DO
       VAR
-        newmac := NEW(MAC);
+        qr     := R.DivMod(u,v);
+        newmac := NEW(MAC,factor:=qr.quot,next:=mac);
       BEGIN
-        newmac.factor:=R.DivMod(u,v,w);
-        newmac.next:=mac;
         mac:=newmac;
+        u:=v;
+        v:=qr.rem;
       END;
-      u:=v;
-      v:=w;
     END;
   EXCEPT
     Error(err) => <*ASSERT err#Err.divide_by_zero*>

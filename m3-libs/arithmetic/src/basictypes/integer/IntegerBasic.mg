@@ -30,6 +30,7 @@ PROCEDURE Div(x,y:T):T RAISES {Error} =
     IF x MOD y # 0 THEN RAISE Error(Err.indivisible) END;
     RETURN x DIV y;
   END Div;
+
 PROCEDURE Rec(x:T):T RAISES {Error} =
   BEGIN
     CASE x OF
@@ -45,11 +46,10 @@ PROCEDURE Mod(x,y:T):T RAISES {Error} =
     IF y=0 THEN RAISE Error(Err.divide_by_zero) END;
     RETURN x MOD y;
   END Mod;
-PROCEDURE DivMod(x,y:T;VAR (*OUT*) r:T):T RAISES {Error} =
+PROCEDURE DivMod(x,y:T): QuotRem RAISES {Error} =
   BEGIN
     IF y=0 THEN RAISE Error(Err.divide_by_zero) END;
-    r:=x MOD y;
-    RETURN x DIV y;
+    RETURN QuotRem{x MOD y, x DIV y};
   END DivMod;
 
 

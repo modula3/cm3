@@ -21,6 +21,7 @@ CONST
 
 TYPE
   T = RECORD re,im: R.T; END;
+  QuotRem = RECORD quot, rem: T END;
 
 (*Zero and One non-constant in some modules
 CONST
@@ -47,7 +48,7 @@ VAR
 <*INLINE*> PROCEDURE Div(READONLY x,y:T):T RAISES {Error};  (*return x/y*)
 <*INLINE*> PROCEDURE Rec(READONLY x:T):T RAISES {Error};    (*return 1/x*)
 <*INLINE*> PROCEDURE Mod(READONLY x,y:T):T RAISES {Error};  (*return x mod y*)
-<*INLINE*> PROCEDURE DivMod(READONLY x,y:T;VAR (*OUT*) r:T):T RAISES {Error};  (*return x/y and write the remainder in r*)
+<*INLINE*> PROCEDURE DivMod(READONLY x,y:T): QuotRem RAISES {Error};  (*return x/y and write the remainder in r*)
 
 <*INLINE*> PROCEDURE Square(READONLY x:T):T;         (*return x*x*)
 <*INLINE*> PROCEDURE Scale (READONLY x:T; y:R.T):T;  (*return x*y*)

@@ -75,13 +75,13 @@ END Arrangements;
 PROCEDURE ArrangementsR (n, k : T) : T =
 VAR
   num := R.One;
-  r   :  T;
+  qr  := R.QuotRem{k,R.Zero};
 
 BEGIN
   TRY
-    WHILE NOT R.IsZero(k) DO
-      k := R.DivMod(k,R.Two,r);
-      IF NOT R.IsZero(r) THEN
+    WHILE NOT R.IsZero(qr.quot) DO
+      qr := R.DivMod(qr.quot,R.Two);
+      IF NOT R.IsZero(qr.rem) THEN
         num := R.Mul(num,n);
       END;
       n := R.Mul(n,n);

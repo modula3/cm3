@@ -75,16 +75,17 @@ PROCEDURE FastFmtU(READONLY x: T; base: F.Base; pad: [1..Word.Size]): TEXT =
 (*can be optimized with a division routine that is specialised to small divisors*)
 PROCEDURE SlowFmtU(x: T; base: F.Base): TEXT =
   VAR
-    r, b  : T;
+    qr    := BB.QuotRem{x,BB.Zero};
+    b     : T;
     txt   := "";
     digit : [0..LAST(F.Base)-1];
   BEGIN
     TRY
       b := BB.FromInteger(base);
       WHILE NOT BB.IsZero(x) DO
-        x := BR.DivModU(x,b,r);
-        <*ASSERT r.size<=1*>
-        digit := r.data[0];
+        qr := BR.DivModU(qr.quot,b);
+        <*ASSERT qr.rem.size<=1*>
+        digit := qr.rem.data[0];
         IF digit<10 THEN
           txt := Text.FromChar(VAL(ORD('0')+digit,CHAR)) & txt;
         ELSE

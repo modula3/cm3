@@ -20,8 +20,9 @@ TYPE
   (*this is not only a reuse because of laziness,
     more than this, a polynomial can be treated as vector
     and behaves like a vector of arbitrary size*)
-  TBody = V.TBody;
-  T     = V.T;
+  TBody   = V.TBody;
+  T       = V.T;
+  QuotRem = PB.QuotRem;
 
 (*
 CONST
@@ -50,8 +51,8 @@ CONST Scale = V.Scale;
 PROCEDURE Mul(x,y:T):T;  (*return x*y*)
 PROCEDURE Div(x,y:T):T RAISES {Error};  (*return x/y if possible*)
 (*PROCEDURE Mod(x,y:T):T RAISES {Error};  (*return x mod y*)*)
-PROCEDURE DivMod(x,y:T;        (*compute x/y *)
-               VAR r:T):T;     (*giving quotient with remainder r*)
+PROCEDURE DivMod(x,y:T):QuotRem RAISES {Error};  
+             (*compute quotient x/y and remainder*)
 
 PROCEDURE Eval(x:T;           (*eval this polynomial*)
               xi:R.T          (*at this point*)

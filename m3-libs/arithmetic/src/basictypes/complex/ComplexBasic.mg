@@ -167,22 +167,19 @@ PROCEDURE Mod(READONLY x,y:T):T RAISES {Error} =
   END Mod;
 
 (*-------------------*)
-PROCEDURE DivMod(READONLY x,y:T;VAR (*OUT*) r:T):T RAISES {Error} =
+PROCEDURE DivMod(READONLY x,y:T): QuotRem RAISES {Error} =
   VAR
-    denom : R.T;
-    xbig,
-    q     : T;
-  BEGIN
     denom := R.Add(R.Mul(y.re,y.re),R.Mul(y.im,y.im));
     (* Err.divide_by_zero will be thrown by Div*)
     xbig := MulConj(x,y);
-    q.re := R.DivMod(xbig.re,denom,r.re);
-    q.im := R.DivMod(xbig.im,denom,r.im);
-    r := Mul(r,y);  (*in fact, r is now AbsSqr(y) as big as before*)
+    re := R.DivMod(xbig.re,denom);
+    im := R.DivMod(xbig.im,denom);
+    r := Mul(T{re.rem,im.rem},y);  (*in fact, r is now AbsSqr(y) as big as before*)
+  BEGIN
     r.re := R.Div(r.re,denom);  (*is always divisible*)
     r.im := R.Div(r.im,denom);
     <*ASSERT Equal(r,Mod(x,y))*>
-    RETURN q;
+    RETURN QuotRem{T{re.quot,im.quot},r};
   END DivMod;
 
 

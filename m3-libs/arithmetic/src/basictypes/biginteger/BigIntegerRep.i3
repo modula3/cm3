@@ -17,6 +17,7 @@ REVEAL
 TYPE
   Value = BI.Value;
   T = BI.T;
+  QuotRem = BI.QuotRem;
 
 PROCEDURE Clear ((*OUT*)v : Value);
 
@@ -26,7 +27,7 @@ PROCEDURE AddU (READONLY x, y : T) : T;
 PROCEDURE SubU (READONLY x, y : T) : T;
 PROCEDURE CompareU (READONLY x, y : T) : [-1..1];
 PROCEDURE MulU (READONLY x, y : T) : T;
-PROCEDURE DivModU (x, y : T; VAR r : T) : T RAISES {Error};
+PROCEDURE DivModU (x, y : T) : QuotRem RAISES {Error};
 
 TYPE
   BitPos =

@@ -187,16 +187,15 @@ BEGIN
 END Div;
 
 (*---------------------*)
-PROCEDURE DivMod(
-               x,y:T;
-           VAR r:T):T RAISES {Error} =
+PROCEDURE DivMod(x,y:T):QuotRem RAISES {Error} =
 <*UNUSED*>
 CONST ftn = Module & "DivMod";
 VAR
   xn:=NUMBER(x^);                xl:=LAST(x^);
   yn:=NUMBER(y^); y0:=FIRST(y^); yl:=LAST(y^);
-  q:T;
-  qtmp,ymax:R.T;
+  q,r:T;
+  qtmp:R.QuotRem;
+  ymax:R.T;
   qn,q0,ql,qi,ri2:CARDINAL;
 BEGIN
   (*---Copy numerator into r---*)
@@ -206,7 +205,7 @@ BEGIN
   IF xl<yl THEN
     (*can't do any Divides at all*)
     q:=NEW(T,1); q[0]:=R.Zero;
-    RETURN q;
+    RETURN QuotRem{q,r};
   END;
 
   (*---setup quotient---*)
@@ -216,32 +215,28 @@ BEGIN
   (*---find the dominant denominator term---*)
   ymax:=y[yl];
 
-
   (*---compute---*)
   qi:=ql+1;
   FOR ri:=xl TO (xl-ql) BY-1 DO
     DEC(qi);
-    qtmp:=R.DivMod(r[ri],ymax,r[ri]);
-    q[qi]:=qtmp;
+    qtmp:=R.DivMod(r[ri],ymax);
+    q[qi]:=qtmp.quot;
+    r[ri]:=qtmp.rem;
     ri2:=ri;
     FOR yi:=yl-1 TO y0 BY -1 DO
       DEC(ri2);
-      r[ri2]:=R.Sub(r[ri2],R.Mul(qtmp,y[yi]));
+      r[ri2]:=R.Sub(r[ri2],R.Mul(qtmp.quot,y[yi]));
     END;
   END;
-  r := Strip(r);
-  RETURN Strip(q);
+  RETURN QuotRem{Strip(q),Strip(r)};
 END DivMod;
 
 (*--------------------*)
 PROCEDURE Mod(x,y:T):T RAISES {Error} =
 (*Using DivMod is not optimal.
   One may save a bit space for the quotient.*)
-VAR
-  z:T;
 BEGIN
-  EVAL DivMod(x,y,z);
-  RETURN z;
+  RETURN DivMod(x,y).rem;
 END Mod;
 
 

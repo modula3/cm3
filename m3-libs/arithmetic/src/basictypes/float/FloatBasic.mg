@@ -33,7 +33,7 @@ PROCEDURE CheckDivisor(x:T) RAISES {Error} =
 PROCEDURE Mul(x,y:T):T = BEGIN RETURN x*y END Mul;
 PROCEDURE Div(x,y:T):T RAISES {Error} = BEGIN CheckDivisor(y); RETURN x/y END Div;
 PROCEDURE Mod(<*UNUSED*>x:T;y:T):T RAISES {Error} = BEGIN CheckDivisor(y); RETURN Zero END Mod;
-PROCEDURE DivMod(x,y:T;VAR (*OUT*) r:T):T RAISES {Error} = BEGIN CheckDivisor(y); r := Zero; RETURN x/y END DivMod;
+PROCEDURE DivMod(x,y:T): QuotRem RAISES {Error} = BEGIN CheckDivisor(y); RETURN QuotRem{x/y,Zero} END DivMod;
 PROCEDURE IntMod(x,y:T):T RAISES {Error} = BEGIN IF y=Zero THEN RAISE Error(Err.divide_by_zero) END; RETURN x MOD y END IntMod;
 PROCEDURE Rec(x:T):T RAISES {Error}   = BEGIN IF x=Zero THEN RAISE Error(Err.divide_by_zero) END; RETURN One/x END Rec;
 PROCEDURE ScaleInt(x:T;y:INTEGER):T = BEGIN RETURN x*FLOAT(y,T) END ScaleInt;

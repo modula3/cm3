@@ -99,7 +99,7 @@ CONST
   cycles  = 4*13;
 VAR
   x, y    : B.T;
-  q, r    : B.T;
+  qr      : B.QuotRem;
   result  := TRUE;
   sh      := BR.BitPos{0,0};
 BEGIN
@@ -157,12 +157,12 @@ BEGIN
 *)
   Msg(F.FN("x = 16_%s   y = 16_%s\n",
            ARRAY OF TEXT{BF.Fmt(x,base16Style), BF.Fmt(y,base16Style)}));
-  q := BR.DivModU(x,y,r);
+  qr := BR.DivModU(x,y);
   Msg(F.FN("q = 16_%s   r = 16_%s\n",
-           ARRAY OF TEXT{BF.Fmt(q,base16Style), BF.Fmt(r,base16Style)}));
-  q.sign := FALSE;
-  r.sign := FALSE;
-  <*ASSERT B.Equal(x,BR.AddU(r,BR.MulU(q,y)))*>
+           ARRAY OF TEXT{BF.Fmt(qr.quot,base16Style), BF.Fmt(qr.rem,base16Style)}));
+  qr.quot.sign := FALSE;
+  qr.rem .sign := FALSE;
+  <*ASSERT B.Equal(x,BR.AddU(qr.rem,BR.MulU(qr.quot,y)))*>
 
   <*ASSERT NOT B.IsZero(B.Mod(B.FromInteger(16_4f7d3f), B.FromInteger(16_37))) *>
 
