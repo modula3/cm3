@@ -5,15 +5,18 @@
 #include <sys/uio.h>
 #include <signal.h>
 
-static int (*RTHeapRep_Fault)(void *, int);
-static void (*RTCSRC_FinishVM)();
-
-void set_RTHeapRep_Fault(void *p) {
-  RTHeapRep_Fault = p;
+void set_RTHeapRep_Fault(void *p)
+{
+/* Do nothing.
+  This function exists for interface compatibility with m3gc-enhanced.
+*/
 }
 
-void set_RTCSRC_FinishVM(void *p) {
-  RTCSRC_FinishVM = p;
+void set_RTCSRC_FinishVM(void *p)
+{
+/* Do nothing.
+  This function exists for interface compatibility with m3gc-enhanced.
+*/
 }
 
 int
