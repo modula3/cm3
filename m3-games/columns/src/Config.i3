@@ -5,12 +5,13 @@
 (* Last modified on Tue Feb 11 17:40:36 PST 1992 by muller         *)
 (*      modified on Fri Dec 22 15:26:58 1989 by kalsow         *)
 
-INTERFACE Config;
-
 (* Config defines the board configuration for columns *)
 
-TYPE Point = RECORD x, y: INTEGER END;
-TYPE Piece = REF ARRAY OF Point;
+INTERFACE Config;
+
+IMPORT Point;
+
+TYPE Piece = REF ARRAY OF Point.T;
 
 TYPE PieceList = REF ARRAY OF Piece;
 TYPE FreqList  = REF ARRAY OF REAL;

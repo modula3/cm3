@@ -34,6 +34,7 @@ VAR
   longReal: M3AST_AS.LongReal_type;
   extended: M3AST_AS.Extended_type;
   char: M3AST_AS.TYPE_SPEC;
+  widechar: M3AST_AS.WideChar_type;
   text: M3AST_AS.TYPE_SPEC;
   null: M3AST_AS.Null_type;
   boolean: M3AST_AS.TYPE_SPEC;
@@ -73,6 +74,11 @@ PROCEDURE Char(): M3AST_AS.TYPE_SPEC RAISES {}=
   BEGIN
     RETURN char;
   END Char;
+
+PROCEDURE WideChar(): M3AST_AS.WideChar_type RAISES {}=
+  BEGIN
+    RETURN widechar;
+  END WideChar;
 
 PROCEDURE Text(): M3AST_AS.TYPE_SPEC RAISES {}=
   BEGIN
@@ -168,6 +174,7 @@ PROCEDURE Init(n: M3AST_AS.SRC_NODE) RAISES {}=
 BEGIN
   charpos := 0;
   integer := NEW(M3AST_AS.Integer_type).init(); Init(integer);
+  widechar := NEW(M3AST_AS.WideChar_type).init(); Init(widechar);
   real := NEW(M3AST_AS.Real_type).init(); Init(real);
   longReal := NEW(M3AST_AS.LongReal_type).init(); Init(longReal);
   extended := NEW(M3AST_AS.Extended_type).init(); Init(extended);

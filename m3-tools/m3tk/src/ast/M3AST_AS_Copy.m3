@@ -640,6 +640,13 @@ PROCEDURE Integer_type(
     RETURN SRC_NODE(n, NEW(M3AST_AS.Integer_type).init());
   END Integer_type;
 
+PROCEDURE WideChar_type(
+    n: M3AST_AS_F.WideChar_type; <*UNUSED*> h: AST_CopyRep.Handle;
+    ): AST.NODE=
+  BEGIN
+    RETURN SRC_NODE(n, NEW(M3AST_AS.WideChar_type).init());
+  END WideChar_type;
+
 PROCEDURE Real_type(
     n: M3AST_AS_F.Real_type; <*UNUSED*> h: AST_CopyRep.Handle;
     ): AST.NODE=
@@ -1037,6 +1044,13 @@ PROCEDURE Text_literal(
     RETURN LITERAL(n, SRC_NODE(n, NEW(M3AST_AS.Text_literal).init()));
   END Text_literal;
 
+PROCEDURE WideText_literal(
+    n: M3AST_AS_F.WideText_literal; <*UNUSED*> h: AST_CopyRep.Handle;
+    ): AST.NODE=
+  BEGIN
+    RETURN LITERAL(n, SRC_NODE(n, NEW(M3AST_AS.WideText_literal).init()));
+  END WideText_literal;
+
 
 PROCEDURE Char_literal(
     n: M3AST_AS_F.Char_literal; <*UNUSED*> h: AST_CopyRep.Handle;
@@ -1044,6 +1058,13 @@ PROCEDURE Char_literal(
   BEGIN
     RETURN LITERAL(n, SRC_NODE(n, NEW(M3AST_AS.Char_literal).init()));
   END Char_literal;
+
+PROCEDURE WideChar_literal(
+    n: M3AST_AS_F.WideChar_literal; <*UNUSED*> h: AST_CopyRep.Handle;
+    ): AST.NODE=
+  BEGIN
+    RETURN LITERAL(n, SRC_NODE(n, NEW(M3AST_AS.WideChar_literal).init()));
+  END WideChar_literal;
 
 
 PROCEDURE Exp_used_id(

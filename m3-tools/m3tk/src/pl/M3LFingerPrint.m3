@@ -24,7 +24,7 @@
 
 UNSAFE MODULE M3LFingerPrint;
 
-IMPORT Text, TextExtras, TextF, ASCII;
+IMPORT Text, TextExtras, ASCII;
 IMPORT M3LTypeToText, FingerPrint;
 
 
@@ -53,8 +53,8 @@ PROCEDURE Incremental(
                 LOOPHOLE(M3LTypeToText.TypeIndexChars, ASCII.Set), pos) DO
         WITH sectionLength = pos - prev DO
           IF sectionLength # 0 THEN
-            FingerPrint.DataIncremental(
-                ADR(text[prev]), sectionLength, f.f1, f.f2);
+            FingerPrint.TextSubIncremental(
+                text, prev, sectionLength, f.f1, f.f2);
             INC(handle.count, sectionLength);
           END;
         END;
@@ -64,7 +64,7 @@ PROCEDURE Incremental(
         limit: CARDINAL;
         index: CARDINAL := 0;
       BEGIN
-        CASE text[pos] OF <*NOWARN*>
+        CASE Text.GetChar (text, pos) OF <*NOWARN*>
         | M3LTypeToText.TypeIndexOneCh => limit := pos + 1;
         | M3LTypeToText.TypeIndexTwoCh => limit := pos + 2;
         | M3LTypeToText.TypeIndexThreeCh => limit := pos + 3;
@@ -73,10 +73,10 @@ PROCEDURE Incremental(
         LOOP
           INC(pos);
           IF pos > limit THEN EXIT END;
-          WITH ch = text[pos] DO
+          WITH ch = Text.GetChar(text, pos) DO
             IF ch = M3LTypeToText.TypeIndexManyCh THEN INC(pos); EXIT END;
             index := index * M3LTypeToText.TypeIndexBase +
-                (ORD(text[pos]) - ORD(M3LTypeToText.TypeIndexFirstDigitCh));
+                (ORD(Text.GetChar(text, pos)) - ORD(M3LTypeToText.TypeIndexFirstDigitCh));
           END;
         END;
         WITH component = handle.components[index] DO

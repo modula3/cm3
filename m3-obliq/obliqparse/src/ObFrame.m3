@@ -1,8 +1,12 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
 MODULE ObFrame;
-IMPORT ObErr, SynWr, SynScan, Rd, TextRd, Lex, FileRd, Text, OSError, Pathname, ObLib, ObValue, SynLocation, ObEval, Thread;
+IMPORT ObErr, SynWr, SynScan, Rd, TextRd, Lex, FileRd, Text, OSError,
+       Pathname, ObLib, ObValue, SynLocation, ObEval, Thread,
+       ObCommand, Fmt, Fingerprint, Pickle2 AS Pickle, Wr,
+       PickleStubs, NetObj, TextList;
 IMPORT Env AS ProcessEnv;
+IMPORT ObPathSep;
 
 PROCEDURE FmtSearchPath(searchPath: SearchPath): TEXT  =
   BEGIN
@@ -16,19 +20,26 @@ PROCEDURE FmtSearchPath(searchPath: SearchPath): TEXT  =
   END FmtSearchPath;
 
 PROCEDURE LexSearchPath(rd: TextRd.T): SearchPath =
-  <*FATAL Rd.Failure, Thread.Alerted*>
   VAR item, junk: TEXT; rest: SearchPath;
   BEGIN
-    IF Rd.EOF(rd) THEN RETURN NIL
-    ELSE
-      junk := Lex.Scan(rd, Lex.Blanks + SET OF CHAR{SearchPathSeparator});
-      item := Lex.Scan(rd, Lex.NonBlanks - SET OF CHAR{SearchPathSeparator});
-      IF Text.Empty(junk) AND Text.Empty(item) THEN RETURN NIL END;
-      rest := LexSearchPath(rd);
-      IF Text.Empty(item) THEN RETURN rest;
-      ELSIF NOT Pathname.Valid(item) THEN RETURN rest;
-      ELSE RETURN NEW(SearchPath, first:=item, rest:=rest);
+    TRY
+      IF Rd.EOF(rd) (* NOWARN *) THEN RETURN NIL
+      ELSE
+        junk := 
+            Lex.Scan(rd, (* NOWARN *)
+                     Lex.Blanks + SET OF CHAR{SearchPathSeparator}); (*NOWARN*)
+        item := 
+            Lex.Scan(rd, (* NOWARN *)
+                     Lex.NonBlanks - SET OF CHAR{SearchPathSeparator});(*NOWARN*)
+        IF Text.Empty(junk) AND Text.Empty(item) THEN RETURN NIL END;
+        rest := LexSearchPath(rd);
+        IF Text.Empty(item) THEN RETURN rest;
+        ELSIF NOT Pathname.Valid(item) THEN RETURN rest;
+        ELSE RETURN NEW(SearchPath, first:=item, rest:=rest);
+        END;
       END;
+    EXCEPT
+    | Rd.Failure, Thread.Alerted => RETURN NIL; 
     END;
   END LexSearchPath;
 
@@ -80,9 +91,23 @@ PROCEDURE ModuleFrame(sc: SynScan.T; name, for: TEXT;
     LoadImports(sc, imports, env);
   END ModuleFrame;
 
-PROCEDURE ModuleEnd(sc: SynScan.T) =
+PROCEDURE ModuleEnd(sc: SynScan.T; ideList: NameList) =
+  VAR qual := "qualify";
+      first := TRUE;
   BEGIN
-    SynScan.PushInput(sc, "<none>", TextRd.New("qualify;\n"), TRUE, TRUE);
+    IF ideList # NIL THEN
+      qual := qual & " exporting";
+    END;
+    WHILE ideList # NIL DO
+      IF first THEN 
+        first := FALSE;
+        qual := qual & " " & ideList.first;
+      ELSE
+        qual := qual & ", " & ideList.first;
+      END;
+      ideList := ideList.rest;
+    END;
+    SynScan.PushInput(sc, "<none>", TextRd.New(qual & ";\n"), TRUE, TRUE);
   END ModuleEnd;
 
 PROCEDURE LoadImports(sc: SynScan.T; imports: NameList; env: Env) 
@@ -189,26 +214,55 @@ TYPE
         Eval := FrameLibEval;
       END;
 
-PROCEDURE QualifyFrame(env: Env): Env =
+PROCEDURE InNameList(name: TEXT; list: NameList): BOOLEAN = 
+  BEGIN
+    WHILE list # NIL DO
+      IF Text.Equal(name, list.first) THEN RETURN TRUE END;
+      list := list.rest;
+    END;
+    RETURN FALSE;
+  END InNameList;
+
+PROCEDURE QualifyFrame(env: Env; ideList: NameList): Env =
   VAR scanValueEnv: ObValue.Env;
-    frameSize: INTEGER; opCodes: REF ObLib.OpCodes;
-    library: ObLib.T; newLibEnv: ObLib.Env; newEnv: Env;
+      frameCount, frameSize: INTEGER; opCodes: REF ObLib.OpCodes;
+      library: ObLib.T; newLibEnv: ObLib.Env; newEnv: Env;
+      seen, tail: TextList.T := NIL;
   BEGIN
     IF Text.Empty(env.frameName) THEN RETURN env END;
     scanValueEnv := env.valueEnv;
     frameSize := 0;
+    frameCount := 0;
     LOOP 
       IF scanValueEnv=env.nextFrame.valueEnv THEN EXIT END; 
-      INC(frameSize);
+      IF ideList = NIL OR InNameList(scanValueEnv.name.text, ideList) THEN
+        IF NOT TextList.Member(seen, scanValueEnv.name.text) THEN
+          (* want a list of the elements in the same order *)
+          IF seen = NIL THEN
+            tail := TextList.List1(scanValueEnv.name.text);
+            seen := tail;
+          ELSE
+            tail.tail := TextList.List1(scanValueEnv.name.text);
+            tail := tail.tail;
+          END;
+          INC(frameSize);
+        END;
+      END;
+      INC(frameCount);
       scanValueEnv:=scanValueEnv.rest;
     END; 
     opCodes := NEW(REF ObLib.OpCodes, frameSize);
     scanValueEnv := env.valueEnv;
-    FOR i:=0 TO frameSize-1 DO
-      opCodes[i] := 
-          NEW(FrameOpCode, name:=scanValueEnv.name.text,
-              arity := -2, fixity := ObLib.OpFixity.Qualified,
-              val := NARROW(scanValueEnv, ObValue.LocalEnv).val);
+    frameSize := 0;
+    FOR i:=0 TO frameCount-1 DO
+      IF seen # NIL AND Text.Equal(scanValueEnv.name.text, seen.head) THEN
+        seen := seen.tail;
+        opCodes[frameSize] := 
+            NEW(FrameOpCode, name:=scanValueEnv.name.text,
+                arity := -2, fixity := ObLib.OpFixity.Qualified,
+                val := NARROW(scanValueEnv, ObValue.LocalEnv).val);
+        INC(frameSize);
+      END;
       scanValueEnv:=scanValueEnv.rest;
     END;
     library := NEW(FrameLib, name:=env.forName, opCodes:=opCodes);
@@ -227,7 +281,7 @@ PROCEDURE QualifyFrame(env: Env): Env =
     RETURN newEnv;
   END QualifyFrame;
 
-PROCEDURE FrameLibEval(<*UNUSED*>self: FrameLib; opCode: ObLib.OpCode;
+PROCEDURE FrameLibEval(self: FrameLib; opCode: ObLib.OpCode;
                        arity: ObLib.OpArity; READONLY args: ObValue.ArgArray; 
                        <*UNUSED*>temp: BOOLEAN; loc: SynLocation.T)
   : ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
@@ -240,9 +294,48 @@ PROCEDURE FrameLibEval(<*UNUSED*>self: FrameLib; opCode: ObLib.OpCode;
       ObValue.RaiseError("Too many arguments", loc);
       <*ASSERT FALSE*>
     ELSE
-      RETURN ObEval.Call(frameOpCode.val, SUBARRAY(args, 0, arity), loc);
+      TYPECASE frameOpCode.val OF
+      | ObValue.ValFun(fun) =>
+        RETURN ObEval.Call(fun, SUBARRAY(args, 0, arity), loc);
+      ELSE
+         ObValue.RaiseError("Not expecting argument list for: " &
+          self.name & "_" & opCode.name, loc);
+         <*ASSERT FALSE*>
+      END;
     END;
   END FrameLibEval;
+
+TYPE
+  HelpCommand = ObCommand.T OBJECT
+    short, long: TEXT;
+  END;
+
+PROCEDURE AddHelpFrame(name, sort, short, long: TEXT; 
+                          <*UNUSED*>env: Env) =
+  (* add a help file for this module *)
+  BEGIN
+    ObCommand.Register(ObLib.helpCommandSet,
+                       NEW(HelpCommand, name:=name, 
+                           sortingName:= sort,
+                           short := short, long := long,
+                           Exec:= Help));
+  END AddHelpFrame;
+
+PROCEDURE Help (comm: ObCommand.T; arg : TEXT; <* UNUSED *> data : REFANY) =
+  VAR self := NARROW(comm, HelpCommand);
+  BEGIN
+    IF Text.Equal (arg, "!") THEN
+      SynWr.Text (SynWr.out, 
+                  "  " & Fmt.Pad (self.name, 18, ' ', Fmt.Align.Left) & 
+                  "(" & self.short & ")\n");
+    ELSIF Text.Equal (arg, "?") THEN
+      SynWr.Text (SynWr.out, self.long);
+      SynWr.NewLine (SynWr.out);
+    ELSE
+      SynWr.Text(SynWr.out, "Command " & self.name & ": bad argument: " & arg);
+      SynWr.NewLine (SynWr.out);
+    END;
+  END Help;
 
 PROCEDURE Setup()  =
   VAR envPath: TEXT;
@@ -258,5 +351,80 @@ PROCEDURE Setup()  =
     END;
   END Setup;
 
+TYPE
+  ObFrameSpecial = Pickle.Special BRANDED OBJECT
+                       OVERRIDES
+                         write := WriteLib;
+                         read := ReadLib;
+                       END;
+  
+TYPE
+  LocalHandle = OpCodeHandle OBJECT
+                       OVERRIDES
+                         getOpCodes := GetOpCodes;
+                       END;
+
+VAR
+  handle := NEW(LocalHandle);
+
+(* Implementation note:  I think this is guaranteed to work.  The only
+   worry is if the library can disappear via garbage collection
+   between the time the pickle is written and the time GetOpCodes is
+   called.  I don't think this can happen.  Since all netobj calls are
+   synchronous, the higher level caller of the pickler will write all
+   the info and then wait for the return value from the remote call.
+   The remote process reads all the info, which includes calling
+   ReadLib below and potentially calling GetOpCodes, before the remote
+   procedure is executed and the return value written. *)
+
+PROCEDURE GetOpCodes (<*UNUSED*>self: LocalHandle; 
+                      ts: Fingerprint.T): REF ObLib.OpCodes=
+  VAR lib := ObLib.LookupFP(ts);
+  BEGIN
+    IF lib = NIL THEN RETURN NIL END;
+    RETURN lib.opCodes;
+  END GetOpCodes; 
+
+PROCEDURE WriteLib (<*UNUSED*>ts: ObFrameSpecial; 
+                    ref: REFANY; out: Pickle.Writer)
+  RAISES {Pickle.Error, Wr.Failure, Thread.Alerted} =
+  VAR o := NARROW(ref, FrameLib);
+  BEGIN
+    ObLib.CheckFP(o);
+    PickleStubs.OutBytes(out, o.ts.byte);
+    PickleStubs.OutText(out, o.name);
+    PickleStubs.OutRef(out, handle);
+  END WriteLib; 
+
+PROCEDURE ReadLib (<*UNUSED*>ts: ObFrameSpecial;
+                   in: Pickle.Reader;
+                   id: Pickle.RefID):REFANY
+  RAISES {Pickle.Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
+  VAR fp: Fingerprint.T;
+      rHandle: OpCodeHandle;
+      lib: FrameLib := NIL;
+      name: TEXT;
+  BEGIN
+    PickleStubs.InBytes(in, fp.byte);
+    name := PickleStubs.InText(in);
+    rHandle := PickleStubs.InRef(in);
+
+    lib := ObLib.LookupFP(fp);
+    IF lib = NIL THEN
+      TRY
+        lib := NEW(FrameLib, name:=name, opCodes:= NIL, ts:=fp);
+        in.noteRef(lib, id);
+        lib.opCodes := rHandle.getOpCodes(fp);
+        (* check again, using the full object *)
+        lib := ObLib.LookupFP(fp, lib);
+      EXCEPT NetObj.Error => END;
+    ELSE
+      in.noteRef(lib, id);
+    END;
+    RETURN lib;
+  END ReadLib;
+
 BEGIN
+  Pickle.RegisterSpecial(NEW(ObFrameSpecial, sc := TYPECODE(FrameLib)));
+  SearchPathSeparator := ObPathSep.SearchPathSeparator;
 END ObFrame.

@@ -15,6 +15,10 @@ IMPORT AnchorBtnVBT, TextVBT, BorderedVBT, MenuBtnVBT, Split, HVSplit;
 IMPORT ButtonVBT, Axis, Font, VBTClass, Fmt, Process, HVBar;
 IMPORT ZIO;
 
+CONST (* Copied from RTHeapInfo.i3 due to version skew... *)
+  SENDING_TYPES  = -23;
+  SENDING_COUNTS = -24;
+
 TYPE
   Vector = REF ARRAY OF INTEGER;
 
@@ -73,53 +77,12 @@ VAR
   lap_title   : TextVBT.T;
   display     : BarGraphVBT;
   max_value   : INTEGER := 10;
+  max_stat    : INTEGER := 0;
   disp_stat   : INTEGER := 0;
   compare     : CompareProc := CompareCnts;
   colors      : REF ARRAY OF PaintOp.T;
   started     : BOOLEAN := FALSE;
   lap_running : BOOLEAN := FALSE;
-
-(*--------------------------------------------- initial type descriptions ---*)
-
-PROCEDURE GetTypes () =
-  <*FATAL Rd.EndOfFile*>
-  VAR n: INTEGER;
-  BEGIN
-    n := ZIO.GetInt ();
-    type_names  := NEW (REF ARRAY OF TEXT, n);
-    type_sizes  := NewVec (n);
-    cur_cnts    := NewVec (n);
-    cur_bytes   := NewVec (n);
-    total_cnts  := NewVec (n);
-    total_bytes := NewVec (n);
-    lap_cnts    := NewVec (n);
-    lap_bytes   := NewVec (n);
-    sort_map    := NewVec (n);
-
-    FOR i := 0 TO n-1 DO
-      type_sizes[i] := ZIO.GetInt ();
-      type_names[i] := FixName (ZIO.GetText ());
-    END;
-
-    FOR i := 0 TO n-1 DO sort_map[i] := i; END;
-
-    n_types := n;
-    CreateColors ();
-  END GetTypes;
-
-PROCEDURE FixName (t: TEXT): TEXT =
-  VAR i: INTEGER;  len := Text.Length (t);
-  BEGIN
-    IF len > 3
-      AND Text.GetChar (t, 0) = 'T'
-      AND Text.GetChar (t, 1) = 'C'
-      AND Text.GetChar (t, 2) = '=' THEN
-      i := 3;
-      WHILE (i < len) AND (Text.GetChar (t, i) # ' ') DO INC (i) END;
-      IF (i < len) THEN t := Text.Sub (t, i+1); END;
-    END;
-    RETURN t;
-  END FixName;
 
 (*-------------------------------------------------------- build the VBTs ---*)
 
@@ -227,6 +190,7 @@ PROCEDURE SetControl (i: INTEGER) =
 (*---------------------------------------------------------------- colors ---*)
 
 PROCEDURE CreateColors () =
+  (* LL=display *)
   VAR j: INTEGER := 0;
   BEGIN
     colors := NEW (REF ARRAY OF PaintOp.T, n_types);
@@ -239,6 +203,7 @@ PROCEDURE CreateColors () =
   END CreateColors;
 
 PROCEDURE NewColor (i: INTEGER): PaintOp.T =
+  (* LL=display *)
   VAR rgb: Color.T;  hsv: Color.HSV;
   BEGIN
     hsv.h := FLOAT (i) / FLOAT (n_types);
@@ -399,45 +364,139 @@ PROCEDURE TWidth (txt: TEXT): INTEGER =
 (*---------------------------------------------------------------------------*)
 
 PROCEDURE Run () =
-  VAR n_elts, n, cnt, size: INTEGER;  cnts, bytes: Vector;
+  VAR cmd: INTEGER;
   BEGIN
     TRY
       LOOP
-        cnts := NewVec (n_types);
-        bytes := NewVec (n_types);
-
-        (* read the sample *)
-        n_elts := ZIO.GetInt ();
-        FOR i := 0 TO n_elts-1 DO
-          n    := ZIO.GetInt ();
-          cnt  := ZIO.GetInt ();
-          size := type_sizes [n];
-          IF size >= 0
-            THEN size := size * cnt;
-            ELSE size := ZIO.GetInt ();
-          END;
-          cnts [n]  := cnt;
-          bytes [n] := size;
+        cmd := ZIO.GetInt ();
+        IF    (cmd = SENDING_COUNTS) THEN GetData ();
+        ELSIF (cmd = SENDING_TYPES)  THEN GetTypes ();
+        ELSE  (* the data stream is out of synch, just ignore the data... *)
         END;
-
-        (* update the globals *)
-        LOCK display DO
-          cur_cnts  := cnts;
-          cur_bytes := bytes;
-          FOR i := 0 TO n_types-1 DO
-            total_cnts[i]  := Word.Plus (total_cnts[i], cnts[i]);
-            total_bytes[i] := Word.Plus (total_bytes[i], bytes[i]);
-          END;
-          UpdateMax ();
-          Sort ();
-        END;
-
-        display.redisplay ();
       END;
     EXCEPT
     | Rd.EndOfFile =>
     END;
   END Run;
+
+(*----------------------------------------------------- type descriptions ---*)
+
+PROCEDURE GetTypes ()
+  RAISES {Rd.EndOfFile} =
+  VAR
+    n_new           : INTEGER;
+    new_n_types     : INTEGER;
+    new_type_names  : REF ARRAY OF TEXT;
+    new_type_sizes  : Vector;
+    new_cur_cnts    : Vector;
+    new_cur_bytes   : Vector;
+    new_total_cnts  : Vector;
+    new_total_bytes : Vector;
+    new_lap_cnts    : Vector;
+    new_lap_bytes   : Vector;
+    new_sort_map    : Vector;
+  BEGIN
+    n_new := ZIO.GetInt ();
+    new_n_types := n_types + n_new;
+
+    new_type_names  := NEW (REF ARRAY OF TEXT, new_n_types);
+    new_type_sizes  := NewVec (new_n_types);
+    new_cur_cnts    := NewVec (new_n_types);
+    new_cur_bytes   := NewVec (new_n_types);
+    new_total_cnts  := NewVec (new_n_types);
+    new_total_bytes := NewVec (new_n_types);
+    new_lap_cnts    := NewVec (new_n_types);
+    new_lap_bytes   := NewVec (new_n_types);
+    new_sort_map    := NewVec (new_n_types);
+
+    IF (n_types > 0) THEN
+      (* preserve the old data *)
+      SUBARRAY (new_type_names^,  0, n_types) := type_names^;
+      SUBARRAY (new_type_sizes^,  0, n_types) := type_sizes^;
+      SUBARRAY (new_cur_cnts^,    0, n_types) := cur_cnts^;
+      SUBARRAY (new_cur_bytes^,   0, n_types) := cur_bytes^;
+      SUBARRAY (new_total_cnts^,  0, n_types) := total_cnts^;
+      SUBARRAY (new_total_bytes^, 0, n_types) := total_bytes^;
+      SUBARRAY (new_lap_cnts^,    0, n_types) := lap_cnts^;
+      SUBARRAY (new_lap_bytes^,   0, n_types) := lap_bytes^;
+    END;
+
+    (* read the new type descriptors *)
+    FOR i := n_types TO new_n_types-1 DO
+      new_type_sizes[i] := ZIO.GetInt ();
+      new_type_names[i] := FixName (ZIO.GetText ());
+    END;
+
+    FOR i := 0 TO new_n_types-1 DO new_sort_map[i] := i; END;
+
+    (* finally, fix up the globals *)
+    LOCK display DO
+      type_names  := new_type_names;
+      type_sizes  := new_type_sizes;
+      cur_cnts    := new_cur_cnts;
+      cur_bytes   := new_cur_bytes;
+      total_cnts  := new_total_cnts;
+      total_bytes := new_total_bytes;
+      lap_cnts    := new_lap_cnts;
+      lap_bytes   := new_lap_bytes;
+      sort_map    := new_sort_map;
+      n_types     := new_n_types;
+      CreateColors ();
+      Sort ();
+    END;
+  END GetTypes;
+
+PROCEDURE FixName (t: TEXT): TEXT =
+  VAR i: INTEGER;  len := Text.Length (t);
+  BEGIN
+    IF len > 3
+      AND Text.GetChar (t, 0) = 'T'
+      AND Text.GetChar (t, 1) = 'C'
+      AND Text.GetChar (t, 2) = '=' THEN
+      i := 3;
+      WHILE (i < len) AND (Text.GetChar (t, i) # ' ') DO INC (i) END;
+      IF (i < len) THEN t := Text.Sub (t, i+1); END;
+    END;
+    RETURN t;
+  END FixName;
+
+(*----------------------------------------------------------- sample data ---*)
+
+PROCEDURE GetData ()
+  RAISES {Rd.EndOfFile} =
+  VAR n_elts, n, cnt, size: INTEGER;  cnts, bytes: Vector;
+  BEGIN
+    cnts := NewVec (n_types);
+    bytes := NewVec (n_types);
+
+    (* read the sample *)
+    n_elts := ZIO.GetInt ();
+    FOR i := 0 TO n_elts-1 DO
+      n    := ZIO.GetInt ();
+      cnt  := ZIO.GetInt ();
+      size := type_sizes [n];
+      IF size >= 0
+        THEN size := size * cnt;
+        ELSE size := ZIO.GetInt ();
+      END;
+      cnts [n]  := cnt;
+      bytes [n] := size;
+    END;
+
+    (* update the globals *)
+    LOCK display DO
+      cur_cnts  := cnts;
+      cur_bytes := bytes;
+      FOR i := 0 TO n_types-1 DO
+        total_cnts[i]  := Word.Plus (total_cnts[i], cnts[i]);
+        total_bytes[i] := Word.Plus (total_bytes[i], bytes[i]);
+      END;
+      UpdateMax ();
+      Sort ();
+    END;
+
+    display.redisplay ();
+  END GetData;
 
 PROCEDURE GetStat (i: INTEGER): INTEGER =
   VAR v: INTEGER;
@@ -463,10 +522,13 @@ PROCEDURE GetStat (i: INTEGER): INTEGER =
 PROCEDURE UpdateMax () =
   VAR max := 0;
   BEGIN
-    max := 0;
     FOR i := 0 TO n_types-1 DO max := MAX (max, GetStat (i)); END;
 
-    IF (max > max_value) THEN
+    IF (disp_stat # max_stat) THEN
+      (* we've changed stats since the last update *)
+      max_value := (3 * max + 1) DIV 2;
+      max_stat := disp_stat;
+    ELSIF (max > max_value) THEN
       (* make it bigger *)
       max_value := (3 * max + 1) DIV 2;
     ELSIF (3 * max  < 2 * max_value) AND (max > 5) THEN
@@ -675,7 +737,6 @@ PROCEDURE NewVec (n: INTEGER): Vector =
 
 BEGIN
   SetupVBT ();
-  GetTypes ();
   Run ();
   Trestle.AwaitDelete (root);
 END ShowNew.

@@ -13,6 +13,7 @@ IMPORT SynWr, Text, ObLib, ObCommand, Bundle, ObliqBdl2;
     ObLib.RegisterHelp("pickle", HelpPickle);
     ObLib.RegisterHelp("process", HelpProcess);
     ObLib.RegisterHelp("thread", HelpThread);
+    ObLib.RegisterHelp("random", HelpRandom);
   END Setup;
 
   PROCEDURE HelpRd(self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL) =
@@ -107,6 +108,20 @@ IMPORT SynWr, Text, ObLib, ObCommand, Bundle, ObliqBdl2;
 	SynWr.NewLine(SynWr.out);
       END;
     END HelpThread;
+
+  PROCEDURE HelpRandom(self: ObCommand.T; arg: TEXT; <*UNUSED*>data: REFANY:=NIL)  =
+    BEGIN
+      IF Text.Equal(arg, "!") THEN
+        SynWr.Text(SynWr.out, "  random            (the built-in random library)\n");
+      ELSIF Text.Equal(arg, "?") THEN
+        SynWr.Text(SynWr.out, Bundle.Get(ObliqBdl2.Get(),"ObliqHelpRandom"));
+        SynWr.NewLine(SynWr.out);
+      ELSE
+	SynWr.Text(SynWr.out, "Command " & self.name 
+	  & ": bad argument: " & arg);
+	SynWr.NewLine(SynWr.out);
+      END;
+    END HelpRandom;
 
 BEGIN
 END ObLibM3Help.

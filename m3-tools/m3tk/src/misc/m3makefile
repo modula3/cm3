@@ -5,8 +5,6 @@
 /* Last modified on Tue Dec 21 10:48:16 PST 1993 by detlefs                  */
 /*      modified on Wed May  5 20:47:28 PDT 1993 by mjordan                  */
 
-m3_option("-times")
-
 Interface("M3ArgsCL")
 Interface("M3Args")
 Interface("M3Time")

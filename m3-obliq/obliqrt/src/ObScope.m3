@@ -302,12 +302,35 @@ PROCEDURE ScopeTerm(term: ObTree.Term; libEnv: ObLib.Env;
 	  LookupTermGlobals(newGlobal, local, libEnv,
 	    (*in-out*)global, (*in-out*)node.globalsNo)
     | ObTree.TermClone(node) =>
-        node.objsNo := ScopeTermList(node.objs, libEnv, local, (*in-out*)global);
+        node.objsNo := ScopeTermList(node.objs, libEnv, local, 
+                                     (*in-out*)global);
+    | ObTree.TermNotify(node) =>
+        local1 := local;
+	ScopeTerm(node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
+        local1 := local;
+	ScopeTerm(node.withObj, libEnv, (*in-out*)local1, (*in-out*)global);
+    | ObTree.TermPickler(node) =>
+        local1 := local;
+	ScopeTerm(node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
+        local1 := local;
+	ScopeTerm(node.pklIn, libEnv, (*in-out*)local1, (*in-out*)global);
+        local1 := local;
+	ScopeTerm(node.pklOut, libEnv, (*in-out*)local1, (*in-out*)global);
+    | ObTree.TermReplicate(node) =>
+        node.argsNo := ScopeTermList(node.args, libEnv, local, 
+                                     (*in-out*)global);
+    | ObTree.TermRemote(node) =>
+        local1 := local;
+	ScopeTerm(node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
+    | ObTree.TermSimple(node) =>
+        local1 := local;
+	ScopeTerm(node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
     | ObTree.TermSelect(node) =>
         local1 := local;
         ScopeTerm(node.obj, libEnv, (*in-out*)local1, (*in-out*)global);
         IF node.invoke THEN
-	  node.argsNo := ScopeTermList(node.args, libEnv, local, (*in-out*)global);
+	  node.argsNo := ScopeTermList(node.args, libEnv, local, 
+                                       (*in-out*)global);
 	END;
     | ObTree.TermRedirect(node) =>
         local1 := local;

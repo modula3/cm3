@@ -49,7 +49,7 @@ PROCEDURE PackageSetup() =
   END PackageSetup;
 
 PROCEDURE New(swr: SynWr.T; env: GrammarEnv; 
-              stackSize: CARDINAL := 1024): T =
+              stackSize: CARDINAL := 10240): T =
   BEGIN
     RETURN 
       NEW(T, stack := NEW(REF ARRAY OF Tree, stackSize),

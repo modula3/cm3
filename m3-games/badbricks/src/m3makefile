@@ -8,5 +8,6 @@ import ("ui")
 
 implementation ("BadBricks")
 
+m3_option ("-gui")
 Program ("BadBricks")
 ManPage ("BadBricks","6")

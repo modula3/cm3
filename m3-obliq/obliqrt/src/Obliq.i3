@@ -178,6 +178,50 @@ FROM ObValue IMPORT Error, Exception;
   (* Return a description of the origin of an object.
      The precise format is not determined at this moment. *)
 
+(* ====== Replicated Objects ====== *)
+
+  PROCEDURE ReplicaAcquireLock(object: Val; loc:SynLocation.T:=NIL)
+    RAISES {Exception};
+    (* Acquire a global lock on the replicated object.  It is an
+       exception if it is not a replicated object. *)
+  PROCEDURE ReplicaReleaseLock(object: Val; loc: SynLocation.T:=NIL)
+    RAISES {Exception};
+    (* Release a global lock from the replicated object.  It is an
+       exception if it is not a replicated object. *)
+
+  PROCEDURE ReplicaSetNodeName(name: TEXT := NIL; 
+                               loc: SynLocation.T:=NIL) : TEXT
+    RAISES {Exception, Error};
+    (* Set the "node name" of the process for replicated object
+       system.  Each process has a name, which defaults to the machine
+       name if the name passed in is NIL or the empty string.  The
+       name used is returned. *)
+
+  PROCEDURE ReplicaSetDefaultSequencer(host, name: TEXT; 
+                                       loc: SynLocation.T:=NIL): TEXT
+    RAISES {Exception, Error};
+    (* Select the process to be used as the default sequencer for the
+       replicated object system.  The host is the machine the process
+       is running on, and the name is the the name of that process, as
+       set locally with "ReplicaSetNodeName."  The name of the
+       sequencer is returned. *)
+
+  PROCEDURE ReplicaNotify(object: Val; notifyObj: Val;
+                          loc: SynLocation.T := NIL): Val
+    RAISES {Exception};
+    (* Create a callback object on the replicated object "object."
+       The notification methods are in the simple object "notifyObj".
+       See the ObValueNotify interface for a more detailed description of
+       the relationship between the objects. *)
+
+  PROCEDURE ReplicaCancelNotifier(object: Val; loc: SynLocation.T := NIL)
+    RAISES {Exception};
+    (* Cancel a callback object.  If all the references to a callback
+       object are dropped, when it is garbage collected the
+       notification will be cancelled.   However, if it is desirable
+       to ensure that notification is cancelled immediately, this
+       function can be called. *)
+
 (* ====== Arrays ====== *)
 
   PROCEDURE NewArray(READONLY vals: Vals): Val;

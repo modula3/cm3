@@ -36,3 +36,17 @@
     (See the threads spec.)
   thread_alertPause(r: Real): Ok ! thread_alerted
     (See the threads spec.)
+  thread_pool(maxThreads maxIdleThreads stackSize: int): WorkerPool
+    create a new thread worker pool, with at most maxThreads active
+    threads, maxIdleThreads idle threads.  If stackSize is zero, a 
+    small default size is used.
+  thread_addWork(pool: WorkerPool, work: ()->ok): Ok
+    add a piece of work to the work queue for the thread pool.  work 
+    is represented by a procedure that performs the work
+  thread_stealWorker(pool: WorkerPool): Bool
+    steal a worker thread from a worker pool.  Removes the current thread
+    from the list of threads performing work for the pool (allowing another
+    to be created).   If a piece of work will require a thread to be idle 
+    for a long period of time,  this function can be called.
+  thread_finish(pool: WorkerPool): Ok
+    wait for all the work in the thread pool work queue to be finished.

@@ -25,7 +25,7 @@ PROCEDURE GetHostName (): TEXT RAISES {Error} =
       IF status # 0 THEN
         RAISE Error;
       END;
-      RETURN M3toC.StoT (ADR (name));
+      RETURN M3toC.CopyStoT (ADR (name));
 
     FINALLY
       (* Unregister the WinSock DLL -- required! *)

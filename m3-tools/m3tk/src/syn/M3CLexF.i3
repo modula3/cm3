@@ -43,8 +43,8 @@ TYPE FriendPart = M3CLex.Public OBJECT
     unget(ch: CHAR);
     readId(firstCh: CHAR): M3CToken.T RAISES {Rd.Failure};
     readNumericLiteral(firstCh: CHAR): M3CToken.T RAISES {Rd.Failure};
-    readCharLiteral(): M3CToken.T RAISES {Rd.Failure};
-    readTextLiteral(): M3CToken.T RAISES {Rd.Failure};
+    readCharLiteral(wide: BOOLEAN): M3CToken.T RAISES {Rd.Failure};
+    readTextLiteral(wide: BOOLEAN): M3CToken.T RAISES {Rd.Failure};
     readCommentOrPragma(isComment: BOOLEAN) RAISES {Rd.Failure};
   END;
  

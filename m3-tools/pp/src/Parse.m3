@@ -38,7 +38,7 @@ PROCEDURE Init (         inputFile      : TEXT;
     fontInfo.fcf := fbe.GetFont(info.fixedCommentFont);
     fontInfo.ff  := fbe.GetFont(info.fixedFont);
     spaceWidth   := fbe.CharWidth(' ', fontInfo.bf);
-    IF inputFile # NIL THEN infile := M3toC.TtoS(inputFile); END;
+    IF inputFile # NIL THEN infile := M3toC.SharedTtoS(inputFile); END;
     initParser(
       infile      := infile,
       output      := output,
@@ -66,6 +66,7 @@ PROCEDURE Init (         inputFile      : TEXT;
       col         := Col,
       end         := Formatter.End
     );
+    IF infile # NIL THEN M3toC.FreeSharedS(inputFile, infile) END;
   END Init;
 
 (*------------------------------------------------------------ C wrappers ---*)

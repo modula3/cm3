@@ -297,6 +297,11 @@ PROCEDURE GetBounds(
         EVAL M3CBackEnd.StdUnaryTypeOp(M3CStdProcs.T.Last, integerType, high);
         RETURN M3CBackEnd.NumStatus.Valid;
 
+    | M3AST_AS.WideChar_type(wideCharType) =>
+        EVAL M3CBackEnd.StdUnaryTypeOp(M3CStdProcs.T.First, wideCharType, low);
+        EVAL M3CBackEnd.StdUnaryTypeOp(M3CStdProcs.T.Last, wideCharType, high);
+        RETURN M3CBackEnd.NumStatus.Valid;
+
     | M3AST_AS.Enumeration_type(enumType) =>
         VAR
           ord := enumType.sm_num_elements;
@@ -342,6 +347,8 @@ PROCEDURE Number(
         RETURN M3CBackEnd.NumStatus.Unknown;
     | M3AST_AS.Integer_type =>
         RETURN M3CBackEnd.NumStatus.Overflow
+    | M3AST_AS.WideChar_type(wideCharType) =>
+        RETURN M3CBackEnd.Val(NUMBER(WIDECHAR), wideCharType, number);
     | M3AST_AS.Enumeration_type(enumType) =>
         RETURN M3CBackEnd.Val(enumType.sm_num_elements, enumType, number);
     | M3AST_AS.Subrange_type =>
@@ -764,6 +771,7 @@ PROCEDURE EvalSpecialCall(
               END;
 
           | M3AST_AS.Subrange_type,
+            M3AST_AS.WideChar_type,
             M3AST_AS.Enumeration_type =>
               IF pf = M3CStdProcs.T.Number THEN
                 ChkVal(call, Number(ts, er));
@@ -1108,6 +1116,17 @@ PROCEDURE Eval(
           END;
         END;
 
+    | M3AST_AS.WideText_literal(text_literal) =>
+        VAR
+          literal := text_literal.lx_litrep;
+        BEGIN
+          IF LiteralLastChar(literal) = '\"' THEN
+            ChkVal(e, M3CBackEnd.LiteralValue(e, er));
+          ELSE
+            M3Error.Report(e, "bad wide text literal");
+          END;
+        END;
+
     | M3AST_AS.Char_literal(char_literal) =>
         VAR
           literal := char_literal.lx_litrep;
@@ -1116,6 +1135,17 @@ PROCEDURE Eval(
             ChkVal(e, M3CBackEnd.LiteralValue(e, er));
           ELSE
             M3Error.Report(e, "bad character literal");
+          END;
+        END;
+
+    | M3AST_AS.WideChar_literal(char_literal) =>
+        VAR
+          literal := char_literal.lx_litrep;
+        BEGIN
+          IF LiteralLastChar(literal) = '\'' THEN
+            ChkVal(e, M3CBackEnd.LiteralValue(e, er));
+          ELSE
+            M3Error.Report(e, "bad wide character literal");
           END;
         END;
         
@@ -1131,7 +1161,7 @@ PROCEDURE Eval(
             IF Mode.WalkConst IN mode AND NOT CanAppearInConst(defId) THEN
               error := TRUE;
             END;
-        ELSE
+        (**ELSE -- unreachable   WKK 5/27/97 **)
           (* error reported elsewhere *)
         END; (* case *)
 

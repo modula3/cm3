@@ -134,6 +134,7 @@ TYPE
   LongReal_type = Previous_View.LongReal_type;
   Extended_type = Previous_View.Extended_type;
   Integer_type = Previous_View.Integer_type;
+  WideChar_type = Previous_View.WideChar_type;
   Null_type = Previous_View.Null_type;
   RefAny_type = Previous_View.RefAny_type;
   Address_type = Previous_View.Address_type;
@@ -169,7 +170,9 @@ TYPE
   LongReal_literal = Previous_View.LongReal_literal;
   Extended_literal = Previous_View.Extended_literal;
   Char_literal = Previous_View.Char_literal;
+  WideChar_literal = Previous_View.WideChar_literal;
   Text_literal = Previous_View.Text_literal;
+  WideText_literal = Previous_View.WideText_literal;
   Nil_literal = Previous_View.Nil_literal;
   Exp_used_id = Previous_View.Exp_used_id;
   Call = Previous_View.Call;

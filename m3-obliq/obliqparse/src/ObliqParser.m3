@@ -12,10 +12,14 @@ FROM ObValue IMPORT Error, Exception;
   VAR setupDone := FALSE;
 
   PROCEDURE PackageSetup() =
-  <*FATAL SynParse.Fail*>
   BEGIN
     SynParse.PackageSetup();
-    MetaParser.PackageSetup();
+    TRY
+      MetaParser.PackageSetup(); (* NOWARN *)
+    EXCEPT
+    | SynParse.Fail =>
+      Process.Crash("Fatal error trying to parse MetaSyn grammar");
+    END;
     Obliq.PackageSetup();
     
     IF NOT setupDone THEN
@@ -36,7 +40,7 @@ FROM ObValue IMPORT Error, Exception;
         IF obliqClauseList = NIL THEN
           actions := MetaParser.NewActionTable();
           ObParseFrame.RegisterActions(actions);
-          ObParseTree.RegisterActions(actions);
+          ObParseTree.RegisterActions(actions); (* NOWARN *)
           obliqClauseList := 
               MetaParser.NewClauseList(actions, "obliq.gr",
                                        TextRd.New(Bundle.Get(ObliqBdl.Get(),
@@ -109,16 +113,19 @@ FROM ObValue IMPORT Error, Exception;
       | ObFrame.Module(node) =>
 	    ObFrame.ModuleFrame(p.Scanner(), node.name, node.for,
 	      node.imports, env);
-      | ObFrame.EndModule =>
-	    ObFrame.ModuleEnd(p.Scanner());
+      | ObFrame.AddHelp(node) =>
+	    ObFrame.AddHelpFrame(node.name, node.sort, node.short,
+                                 node.long, env); 
+      | ObFrame.EndModule(node) =>
+	    ObFrame.ModuleEnd(p.Scanner(), node.ideList);
       | ObFrame.Establish(node) =>
 	    env := ObFrame.EstablishFrame(node.name, node.for, env);
       | ObFrame.Save(node) =>
 	    env := ObFrame.SaveFrame(node.name, node.name, env);
       | ObFrame.Delete(node) =>
 	    env := ObFrame.DeleteFrame(node.name, env);
-      | ObFrame.Qualify =>
-	    env := ObFrame.QualifyFrame(env);
+      | ObFrame.Qualify(node) =>
+	    env := ObFrame.QualifyFrame(env, node.ideList);
       | ObTree.PhraseCommand, 
         ObTree.PhraseTerm =>
           val := Obliq.EvalPhrase(phrase, (*in-out*) env, loc);

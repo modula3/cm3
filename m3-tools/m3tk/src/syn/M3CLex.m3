@@ -450,29 +450,45 @@ PROCEDURE ReadEscape(
     t: T;
     hashValue: M3CHash.Value;
     VAR buffer: Buffer;
-    VAR pos: CARDINAL)
+    VAR pos: CARDINAL;
+    wide: BOOLEAN)
     : BOOLEAN
     RAISES {Rd.Failure, Rd.EndOfFile}=
   CONST
+    SimpleEscapes = ASCII.Set{ 'n', 't', 'r', 'f', '\\', '\'', '\"'};
     OctalDigits = ASCII.Set{'0'..'7'};
-    ValidEscapes = ASCII.Set{
-        'n', 't', 'r', 'f', '\\', '\'', '\"'} +
-        OctalDigits;
+    HexDigits = ASCII.Set{'0'..'9', 'a'..'f', 'A'..'F' };
+    OctalCnt = ARRAY BOOLEAN(*wide*) OF [0..7] { 2, 5 };
+    HexCnt   = ARRAY BOOLEAN(*wide*) OF [0..7] { 1, 3 };
   VAR
     ch: CHAR;
   BEGIN
     ch := Get(t);
-    IF ch IN ValidEscapes THEN
+    IF ch IN SimpleEscapes THEN
       HashAndBufferPut(ch, hashValue, buffer, pos);
-      IF ch IN OctalDigits THEN
-        FOR i := 1 TO 2 DO
-          ch := Get(t);
-          IF ch IN OctalDigits THEN
-            HashAndBufferPut(ch, hashValue, buffer, pos);
-          ELSE
-            Unget(t, ch);
-            RETURN FALSE;
-          END;
+      RETURN TRUE;
+    ELSIF ch IN OctalDigits THEN
+      HashAndBufferPut(ch, hashValue, buffer, pos);
+      FOR i := 1 TO OctalCnt[wide] DO
+        ch := Get(t);
+        IF ch IN OctalDigits THEN
+          HashAndBufferPut(ch, hashValue, buffer, pos);
+        ELSE
+          Unget(t, ch);
+          RETURN FALSE;
+        END;
+      END;
+      RETURN TRUE;
+    ELSIF (ch = 'x') THEN
+      (* hex literal *)
+      HashAndBufferPut(ch, hashValue, buffer, pos);
+      FOR i := 0 TO HexCnt[wide] DO
+        ch := Get(t);
+        IF ch IN HexDigits THEN
+          HashAndBufferPut(ch, hashValue, buffer, pos);
+        ELSE
+          Unget(t, ch);
+          RETURN FALSE;
         END;
       END;
       RETURN TRUE;
@@ -483,7 +499,7 @@ PROCEDURE ReadEscape(
   END ReadEscape;
 
 
-PROCEDURE ReadCharLiteral(t: T): M3CToken.T RAISES {Rd.Failure}=
+PROCEDURE ReadCharLiteral(t: T;  wide: BOOLEAN): M3CToken.T RAISES {Rd.Failure}=
   VAR
     ch: CHAR;
     hashValue := t.hashValue;
@@ -492,13 +508,14 @@ PROCEDURE ReadCharLiteral(t: T): M3CToken.T RAISES {Rd.Failure}=
     ok := TRUE;
   BEGIN
     hashValue.reset();
+    IF wide THEN HashAndBufferPut('W', hashValue, buffer, pos);  END;
     HashAndBufferPut('\'', hashValue, buffer, pos);
     TRY
       ch := Get(t);
       IF ch IN ASCII.Graphics - ASCII.Set{'\''} THEN
         HashAndBufferPut(ch, hashValue, buffer, pos);
         IF ch = '\\' THEN
-          ok := ReadEscape(t, hashValue, buffer, pos);
+          ok := ReadEscape(t, hashValue, buffer, pos, wide);
         END;
         ch := Get(t);
         IF ch = '\'' THEN
@@ -516,11 +533,14 @@ PROCEDURE ReadCharLiteral(t: T): M3CToken.T RAISES {Rd.Failure}=
     END;
     INC(t.offset, pos - 1);
     EnterLiteral(t, ok, hashValue, buffer, pos);
-    RETURN M3CToken.CharLiteral;
+    IF wide
+      THEN RETURN M3CToken.WideCharLiteral;
+      ELSE RETURN M3CToken.CharLiteral;
+    END;
   END ReadCharLiteral;
 
 
-PROCEDURE ReadTextLiteral(t: T): M3CToken.T RAISES {Rd.Failure}=
+PROCEDURE ReadTextLiteral(t: T;  wide: BOOLEAN): M3CToken.T RAISES {Rd.Failure}=
   VAR
     ch: CHAR;
     hashValue := t.hashValue;
@@ -529,6 +549,7 @@ PROCEDURE ReadTextLiteral(t: T): M3CToken.T RAISES {Rd.Failure}=
     ok := TRUE;
   BEGIN
     hashValue.reset();
+    IF wide THEN HashAndBufferPut('W', hashValue, buffer, pos);  END;
     HashAndBufferPut('\"', hashValue, buffer, pos);
     TRY
       LOOP
@@ -536,7 +557,7 @@ PROCEDURE ReadTextLiteral(t: T): M3CToken.T RAISES {Rd.Failure}=
         IF ch IN ASCII.Graphics THEN
           HashAndBufferPut(ch, hashValue, buffer, pos);
           IF ch = '\\' THEN
-            IF NOT ReadEscape(t, hashValue, buffer, pos) THEN ok := FALSE END;
+            IF NOT ReadEscape(t, hashValue, buffer, pos, wide) THEN ok := FALSE END;
           ELSIF ch = '\"' THEN
             EXIT;
           ELSE
@@ -553,7 +574,10 @@ PROCEDURE ReadTextLiteral(t: T): M3CToken.T RAISES {Rd.Failure}=
     END;
     INC(t.offset, pos - 1);
     EnterLiteral(t, ok, hashValue, buffer, pos);
-    RETURN M3CToken.TextLiteral;
+    IF wide
+      THEN RETURN M3CToken.WideTextLiteral;
+      ELSE RETURN M3CToken.TextLiteral;
+    END;
   END ReadTextLiteral;
 
 
@@ -620,7 +644,7 @@ PROCEDURE ReadCommentOrPragma(t: T; isComment: BOOLEAN) RAISES {Rd.Failure}=
     endOfSection: ASCII.Set;
     buffer := t.tokenBuffer;
   CONST
-    EndOfLine = ASCII.Set{'\n', '\f'};
+    EndOfLine = ASCII.Set{'\n', '\r', '\f'};
   BEGIN
     IF isComment THEN
       startChar := '(';
@@ -688,21 +712,35 @@ PROCEDURE GetNext(t: T) RAISES {Rd.Failure}=
         t.startOfToken := t.offset;
         ch := Get(t); INC(t.offset);
         CASE ch OF
-        | '\t', ' ', '\013', '\f', '\r' =>
-        | '\n' =>
+        | '\t', ' ', '\013', '\f' =>
+        | '\n', '\r' =>
             INC(t.line);
             t.offset := 0;
         | 'A'..'Z', 'a'..'z' =>
+            IF (ch = 'W') THEN
+              (* check for a wide-char or wide-text literal *)
+              ch := Get(t); INC(t.offset);
+              IF (ch = '\'') THEN
+                t.currentTok := ReadCharLiteral(t, wide := TRUE);
+                EXIT;
+              ELSIF (ch = '\"') THEN
+                t.currentTok := ReadTextLiteral(t, wide := TRUE);
+                EXIT;
+              ELSE
+                Unget(t, ch); DEC(t.offset);
+                ch := 'W';
+              END;
+            END;
             t.currentTok := ReadId(t, ch);
             EXIT;
         | '0'..'9'=>
             t.currentTok := ReadNumericLiteral(t, ch);
             EXIT;
         | '\'' =>
-            t.currentTok := ReadCharLiteral(t);
+            t.currentTok := ReadCharLiteral(t, wide := FALSE);
             EXIT;
         | '\"' =>
-            t.currentTok := ReadTextLiteral(t);
+            t.currentTok := ReadTextLiteral(t, wide := FALSE);
             EXIT;
         | '+' =>
             t.currentTok := M3CToken.Plus;

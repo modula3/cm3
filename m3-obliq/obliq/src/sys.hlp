@@ -12,3 +12,7 @@
     Can be raised by Modula-3 code during a sys_call.
   Some(T)Some(U) sys_call(name: Text, args: [T]): U ! sys_callFailure
     Call a pre-registered Modula-3 procedure.
+  sys_timeNow: Real
+    The current time
+  sys_timeGrain: Real
+    The time clock granularity

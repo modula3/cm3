@@ -1,8 +1,10 @@
 (* Copyright 1991 Digital Equipment Corporation.               *)
 (* Distributed only by permission.                             *)
 
-MODULE ObLib;
-IMPORT SynLocation, ObCommand, Text;
+UNSAFE MODULE ObLib;
+IMPORT SynLocation, ObCommand, Text, Pickle2 AS Pickle, Wr, Thread,
+       TimeStamp, Fingerprint, ObLibTbl, Rd, WeakerRef, WeakRef,
+       PickleStubs, RTAllocator;
 
   PROCEDURE Setup()  =
   BEGIN
@@ -70,5 +72,95 @@ IMPORT SynLocation, ObCommand, Text;
       RETURN FALSE;
     END EncodeTermOp;
 
+REVEAL
+  ObLibSpecial = Pickle.Special BRANDED OBJECT
+                       OVERRIDES
+                         write := WriteLib;
+                         read := ReadLib;
+                       END;
+  
+PROCEDURE LookupFP (fp: Fingerprint.T; newLib: T): T =
+  VAR lib: T := NIL;
+      wref, wrefOld: WeakerRef.T;
+  BEGIN
+    LOCK mu DO
+      IF libTbl.get(fp, wref) THEN
+        lib := WeakRef.ToRef(wref.weakRef);
+      END;
+      IF lib = NIL AND newLib # NIL THEN
+        wref := NEW(WeakerRef.T, weakRef:=WeakRef.FromRef(newLib, CleanupLib));
+        IF NOT libTbl.put(fp, wref) THEN
+          EVAL libTbl.delete(fp, wrefOld);
+          EVAL libTbl.put(fp, wref);
+        END;
+        lib := newLib;
+      END;
+      RETURN lib;
+    END;
+  END LookupFP;
+
+PROCEDURE CheckFP (lib: T) = 
+  VAR wref: WeakerRef.T;
+  BEGIN
+    LOCK mu DO
+      IF Fingerprint.Equal(lib.ts, Fingerprint.Zero) THEN
+        lib.ts := ComputeFP();
+        wref := NEW(WeakerRef.T, weakRef:=WeakRef.FromRef(lib, CleanupLib));
+        EVAL libTbl.put(lib.ts, wref);
+      END;
+    END;
+  END CheckFP;
+
+PROCEDURE ComputeFP() : Fingerprint.T =
+  VAR ts := TimeStamp.New();
+  BEGIN
+    RETURN Fingerprint.FromChars(
+             LOOPHOLE(ts, ARRAY [0..15] OF CHAR), Fingerprint.OfEmpty);
+  END ComputeFP;
+
+PROCEDURE CleanupLib(<*UNUSED*>READONLY self: WeakRef.T; ref: REFANY) =
+  VAR lib: T := ref; 
+      val: WeakerRef.T;
+  BEGIN
+    LOCK mu DO
+      EVAL libTbl.delete(lib.ts, val);
+    END;
+  END CleanupLib;
+
+VAR 
+  libTbl: ObLibTbl.T := NEW(ObLibTbl.Default).init();
+
+VAR
+  mu := NEW(MUTEX);
+
+PROCEDURE WriteLib (<*UNUSED*>ts: ObLibSpecial; 
+                    ref: REFANY; out: Pickle.Writer)
+  RAISES {Pickle.Error, Wr.Failure, Thread.Alerted} =
+  VAR o := NARROW(ref, T);
+  BEGIN
+    CheckFP(o);
+    out.writeType(TYPECODE(ref));
+    PickleStubs.OutBytes(out, o.ts.byte);
+    PickleStubs.OutText(out, o.name);
+    PickleStubs.OutRef(out, o.opCodes);
+  END WriteLib; 
+
+PROCEDURE ReadLib (<*UNUSED*>ts: ObLibSpecial;
+                   in: Pickle.Reader;
+                   id: Pickle.RefID):REFANY
+  RAISES {Pickle.Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
+  VAR ac := in.readType();
+      lib := NARROW(RTAllocator.NewTraced(ac),T);
+  BEGIN
+    PickleStubs.InBytes(in, lib.ts.byte);
+    lib := LookupFP(lib.ts, lib);
+    in.noteRef(lib, id);
+
+    lib.name := PickleStubs.InText(in);
+    lib.opCodes := PickleStubs.InRef(in);
+    RETURN lib;
+  END ReadLib;
+
 BEGIN
+  Pickle.RegisterSpecial(NEW(ObLibSpecial, sc := TYPECODE(T)));
 END ObLib.

@@ -241,6 +241,7 @@ PROCEDURE DoIt(h: Handle; parent, n: M3AST_AS.SRC_NODE_C)=
     | M3AST_AS.Subtype_reveal(q) => Subtype_reveal(h, q);
     | M3AST_AS.Named_type(q) => Named_type(h, q)
     | M3AST_AS.Integer_type(q) => Integer_type(h, q)
+    | M3AST_AS.WideChar_type(q) => WideChar_type(h, q)
     | M3AST_AS.Real_type(q) => Real_type(h, q)
     | M3AST_AS.LongReal_type(q) => LongReal_type(h, q)
     | M3AST_AS.Extended_type(q) => Extended_type(h, q)
@@ -640,6 +641,12 @@ PROCEDURE Integer_type(
   BEGIN
     Append(h, n, NewToken(M3CToken.INTEGER_));
   END Integer_type;
+
+PROCEDURE WideChar_type(
+    h: Handle; n: M3AST_AS.WideChar_type)=
+  BEGIN
+    Append(h, n, NewToken(M3CToken.WIDECHAR_));
+  END WideChar_type;
 
 PROCEDURE Real_type(
     h: Handle; n: M3AST_AS.Real_type;)=

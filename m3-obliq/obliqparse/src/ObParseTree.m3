@@ -393,17 +393,26 @@ IMPORT SynLocation, SynScan, Text, SynParse, ObLib, ObTree, MetaParser;
  PROCEDURE BuildTermObj(<*UNUSED*>self: SynParse.Action; p: SynParse.T; base: INTEGER;
       READONLY info: SynLocation.Info): SynParse.Tree =
     VAR protected: BOOLEAN; serialized: ObTree.Sync;
+        semantics := ObTree.SharingSemantics.Remote;
     BEGIN
       protected := NARROW(p.stack[base+1], BoolTemp).bool;
       IF NARROW(p.stack[base+2], BoolTemp).bool THEN
         serialized := ObTree.Sync.Monitored;
       ELSE serialized := ObTree.Sync.None;
       END;
+
+      IF NARROW(p.stack[base+3], BoolTemp).bool THEN
+        semantics := ObTree.SharingSemantics.Replicated;
+      END;
+      IF NARROW(p.stack[base+4], BoolTemp).bool THEN
+        semantics := ObTree.SharingSemantics.Simple;
+      END;
       RETURN 
         NEW(ObTree.TermObj, location:=SynLocation.NewLineLocation(info),
 	  protected := protected, 
           sync := serialized,
-          fields:=p.stack[base+3]);
+          semantics := semantics,
+          fields:=p.stack[base+5]);
     END BuildTermObj;
 
   TYPE BoolTemp = 
@@ -459,6 +468,19 @@ IMPORT SynLocation, SynScan, Text, SynParse, ObLib, ObTree, MetaParser;
 	  globalsNo := -1);
     END BuildTermMeth;
 
+ PROCEDURE BuildTermUpdateMeth(<*UNUSED*>self: SynParse.Action; p: SynParse.T; base: INTEGER;
+      READONLY info: SynLocation.Info): SynParse.Tree  =
+    BEGIN
+      RETURN 
+        NEW(ObTree.TermMeth,location:=SynLocation.NewLineLocation(info),
+	  binders:=p.stack[base+1],
+	  bindersNo := -1,
+	  body:=p.stack[base+2],
+	  globals := NIL,
+	  globalsNo := -1, 
+          update := TRUE);
+    END BuildTermUpdateMeth; 
+
  PROCEDURE BuildTermClone(<*UNUSED*>self: SynParse.Action; p: SynParse.T; base: INTEGER;
       READONLY info: SynLocation.Info): SynParse.Tree  =
     BEGIN
@@ -466,6 +488,51 @@ IMPORT SynLocation, SynScan, Text, SynParse, ObLib, ObTree, MetaParser;
         NEW(ObTree.TermClone,location:=SynLocation.NewLineLocation(info),
 	  objs:=p.stack[base+1]);
     END BuildTermClone;
+
+ PROCEDURE BuildTermNotify(<*UNUSED*>self: SynParse.Action; p: SynParse.T; base: INTEGER;
+      READONLY info: SynLocation.Info): SynParse.Tree  =
+    BEGIN
+      RETURN 
+        NEW(ObTree.TermNotify,location:=SynLocation.NewLineLocation(info),
+            obj:=p.stack[base+1], withObj:=p.stack[base+2]);
+    END BuildTermNotify;
+
+ PROCEDURE BuildTermPickler(<*UNUSED*>self: SynParse.Action; p: SynParse.T; base: INTEGER;
+      READONLY info: SynLocation.Info): SynParse.Tree  =
+    BEGIN
+      RETURN 
+        NEW(ObTree.TermPickler, 
+            location:=SynLocation.NewLineLocation(info),
+            obj:=p.stack[base+1], pklIn:=p.stack[base+2],
+            pklOut:=p.stack[base+3]);
+    END BuildTermPickler; 
+
+ PROCEDURE BuildTermReplicate(<*UNUSED*>self: SynParse.Action; 
+                              p: SynParse.T; base: INTEGER;
+                              READONLY info: SynLocation.Info): SynParse.Tree =
+    BEGIN
+      RETURN 
+        NEW(ObTree.TermReplicate,location:=SynLocation.NewLineLocation(info),
+	  args:=p.stack[base+1]);
+    END BuildTermReplicate; 
+
+ PROCEDURE BuildTermRemote(<*UNUSED*>self: SynParse.Action; 
+                              p: SynParse.T; base: INTEGER;
+                              READONLY info: SynLocation.Info): SynParse.Tree =
+    BEGIN
+      RETURN 
+        NEW(ObTree.TermRemote,location:=SynLocation.NewLineLocation(info),
+	  obj:=p.stack[base+1]);
+    END BuildTermRemote; 
+
+ PROCEDURE BuildTermSimple(<*UNUSED*>self: SynParse.Action; 
+                              p: SynParse.T; base: INTEGER;
+                              READONLY info: SynLocation.Info): SynParse.Tree =
+    BEGIN
+      RETURN 
+        NEW(ObTree.TermSimple,location:=SynLocation.NewLineLocation(info),
+	  obj:=p.stack[base+1]);
+    END BuildTermSimple; 
 
  PROCEDURE BuildTermRedirect(<*UNUSED*>self: SynParse.Action; p: SynParse.T;
       base: INTEGER; READONLY info: SynLocation.Info): SynParse.Tree  =
@@ -962,9 +1029,15 @@ IMPORT SynLocation, SynScan, Text, SynParse, ObLib, ObTree, MetaParser;
     MetaParser.Register("BuildTermObjFieldSingle", BuildTermObjFieldSingle, actions);
     MetaParser.Register("BuildTermObjFieldNil", BuildTermObjFieldNil, actions);
     MetaParser.Register("BuildTermClone", BuildTermClone, actions);
+    MetaParser.Register("BuildTermNotify", BuildTermNotify, actions);
+    MetaParser.Register("BuildTermPickler", BuildTermPickler, actions);
+    MetaParser.Register("BuildTermReplicate", BuildTermReplicate, actions);
+    MetaParser.Register("BuildTermSimple", BuildTermSimple, actions);
+    MetaParser.Register("BuildTermRemote", BuildTermRemote, actions);
     MetaParser.Register("BuildTermRedirect", BuildTermRedirect, actions);
     MetaParser.Register("BuildTermProc", BuildTermProc, actions);
     MetaParser.Register("BuildTermMeth", BuildTermMeth, actions);
+    MetaParser.Register("BuildTermUpdateMeth", BuildTermUpdateMeth, actions);
     MetaParser.Register("BuildTermLoop", BuildTermLoop, actions);
     MetaParser.Register("BuildTermExit", BuildTermExit, actions);
     MetaParser.Register("BuildTermFor", BuildTermFor, actions);

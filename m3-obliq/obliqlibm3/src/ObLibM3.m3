@@ -4,7 +4,7 @@
 MODULE ObLibM3;
 IMPORT SynLocation, Text, ObLib, ObValue, Obliq, Rd, Wr, Process, FloatMode,
   Thread, Stdio, Pipe, FileRd, FileWr, OSError, Fmt, Lex, TextRd, TextWr, 
-  NetObj, Pickle2 AS Pickle, Word;
+  NetObj, Pickle2 AS Pickle, Word, SharedObj, Random;
 
   VAR setupDone := FALSE;
 
@@ -25,6 +25,7 @@ IMPORT SynLocation, Text, ObLib, ObValue, Obliq, Rd, Wr, Process, FloatMode,
     SetupWord();
     SetupPickle();
     SetupProc();
+    SetupRandom();
   END Setup;
 
 (* ============ "rd" package ============ *)
@@ -121,9 +122,9 @@ TYPE
               <*ASSERT FALSE*>
             END;
             rd1 := TextRd.New(text1);
-            RETURN NEW(ValRd, what:="<a reader>", picklable:=FALSE, rd:=rd1);
+            RETURN NEW(ValRd, what:="<a reader>", tag:="Reader", picklable:=FALSE, rd:=rd1);
        | RdCode.Stdin => 
-            RETURN NEW(ValRd, what:="<stdin reader>", picklable:=FALSE, 
+            RETURN NEW(ValRd, what:="<stdin reader>", tag:="Reader", picklable:=FALSE, 
               rd:=Stdio.stdin);
        | RdCode.Open => 
             TYPECASE args[1] OF | ObValue.ValFileSystem(node) => fileSys1:=node;
@@ -139,6 +140,7 @@ TYPE
             END;
             rd1 := fileSys1.remote.OpenRead(text1);
             RETURN NEW(ValRd, what:="<'" & text1 & "' reader>", 
+                       tag := "Reader",
                        picklable:=FALSE, rd:=rd1);
         | RdCode.GetChar => 
             TYPECASE args[1] OF | ValRd(node) => rd1 := node.rd;
@@ -401,13 +403,13 @@ TYPE
             RETURN wrFailureException;
         | WrCode.New =>
             wr1 := TextWr.New();
-            RETURN NEW(ValWr, what:="<a writer>", 
+            RETURN NEW(ValWr, what:="<a writer>", tag:="Writer", 
                 picklable:=FALSE, wr:=wr1);
         | WrCode.Stdout => 
-            RETURN NEW(ValWr, what:="<stdout writer>", 
+            RETURN NEW(ValWr, what:="<stdout writer>", tag:="Writer", 
               picklable:=FALSE, wr:=Stdio.stdout);
         | WrCode.Stderr => 
-            RETURN NEW(ValWr, what:="<stderr writer>", 
+            RETURN NEW(ValWr, what:="<stderr writer>", tag:="Writer", 
               picklable:=FALSE, wr:=Stdio.stderr);
         | WrCode.Open => 
             TYPECASE args[1] OF | ObValue.ValFileSystem(node) => fileSys1:=node;
@@ -415,7 +417,7 @@ TYPE
             TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
             ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); <*ASSERT FALSE*>END;
             wr1 := fileSys1.remote.OpenWrite(text1);
-            RETURN NEW(ValWr, what:="<'" & text1 & "' writer>", 
+            RETURN NEW(ValWr, what:="<'" & text1 & "' writer>", tag:="Writer", 
                        picklable:=FALSE, wr:=wr1);
         | WrCode.OpenAppend => 
             TYPECASE args[1] OF | ObValue.ValFileSystem(node) => fileSys1:=node;
@@ -423,7 +425,7 @@ TYPE
             TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
             ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); <*ASSERT FALSE*>END;
             wr1 := fileSys1.remote.OpenAppend(text1);
-            RETURN NEW(ValWr, what:="<'" & text1 & "' writer>", 
+            RETURN NEW(ValWr, what:="<'" & text1 & "' writer>", tag:="Writer", 
                        picklable:=FALSE, wr:=wr1);
        | WrCode.ToText =>
             TYPECASE args[1] OF | ValWr(node) => wr1 := node.wr;
@@ -906,6 +908,9 @@ TYPE
       | NetObj.Error(atoms) =>
           ObValue.RaiseNetException(self.name&"_"&opCode.name, atoms, loc);
           <*ASSERT FALSE*>
+      | SharedObj.Error(atoms) =>
+          ObValue.RaiseSharedException(self.name&"_"&opCode.name, atoms, loc);
+          <*ASSERT FALSE*>
       END;
     END EvalPickle;
 
@@ -1026,17 +1031,21 @@ TYPE
           ELSE
             stderrRd := NEW(FileRd.T).init(stderrR);
           END;
-          RETURN NEW(ValProc, what:="<a process>",  picklable:=FALSE, 
+          RETURN NEW(ValProc, what:="<a process>", tag:="Process",
+                     picklable:=FALSE, 
             proc:=proc,
             in := 
-              NEW(ValWr, what:="<a process stdin writer>", picklable:=FALSE, 
+              NEW(ValWr, what:="<a process stdin writer>",
+                  tag:="Writer", picklable:=FALSE, 
                 wr:=stdinWr), 
             out := 
-              NEW(ValRd, what:="<a process stdout reader>", picklable:=FALSE, 
-                rd := stdoutRd),
+              NEW(ValRd, what:="<a process stdout reader>", 
+                  tag:="Reader",picklable:=FALSE, 
+                  rd := stdoutRd),
             err := 
-              NEW(ValRd, what:="<a process stderr reader>", picklable:=FALSE, 
-                rd := stderrRd));
+              NEW(ValRd, what:="<a process stderr reader>",
+                  tag:="Reader", picklable:=FALSE, 
+                  rd := stderrRd));
       | ProcCode.In => 
           TYPECASE args[1] OF | ValProc(node) => proc1 := node;
           ELSE ObValue.BadArgType(1, "process", self.name, opCode.name, loc); <*ASSERT FALSE*>
@@ -1112,11 +1121,12 @@ TYPE
           RETURN ObValue.NewObject(
             NEW(ObValue.ObjFieldValue, 
               label:="r",
-              val:=NEW(ValRd, what:="<a pipe reader>", picklable:=FALSE, 
-                  rd:=rd1),
+              val:=NEW(ValRd, what:="<a pipe reader>", tag:="Reader",
+                       picklable:=FALSE, rd:=rd1),
               rest:=NEW(ObValue.ObjFieldValue(
                 label:="w",
-                val:=NEW(ValWr, what:="<a pipe writer>", picklable:=FALSE, 
+                val:=NEW(ValWr, what:="<a pipe writer>",
+                     tag:="Writer", picklable:=FALSE, 
                   wr:=wr1),
                 rest:=NIL)));
             );
@@ -1132,6 +1142,74 @@ TYPE
                                self.name&"_"&opCode.name, atoms, loc);<*ASSERT FALSE*>
       END;
     END EvalProc;
+
+(* ============ "random" package ============ *)
+
+TYPE
+  RandomCode = {Int, Real};
+
+  RandomOpCode =  
+    ObLib.OpCode OBJECT
+        code: RandomCode;
+      END;
+    
+  PackageRandom = 
+    ObLib.T OBJECT
+      OVERRIDES
+        Eval:=EvalRandom;
+      END;
+
+  PROCEDURE NewRandomOC(name: TEXT; arity: INTEGER; code: RandomCode)
+    : RandomOpCode =
+  BEGIN
+    RETURN NEW(RandomOpCode, name:=name, arity:=arity, code:=code);
+  END NewRandomOC;
+
+  PROCEDURE SetupRandom() =
+  TYPE OpCodes = ARRAY OF ObLib.OpCode;
+  VAR opCodes: REF OpCodes;
+  BEGIN
+    opCodes := NEW(REF OpCodes, NUMBER(RandomCode));
+    opCodes^ :=
+      OpCodes{
+      NewRandomOC("int",  2, RandomCode.Int),
+      NewRandomOC("real", 2, RandomCode.Real)
+      };
+    ObLib.Register(
+      NEW(PackageRandom, name:="random", opCodes:=opCodes));
+  END SetupRandom;
+
+  PROCEDURE EvalRandom(self: PackageRandom; opCode: ObLib.OpCode; 
+                       <*UNUSED*>arity: ObLib.OpArity; READONLY args: ObValue.ArgArray; 
+                       <*UNUSED*>temp: BOOLEAN; loc: SynLocation.T)
+      : ObValue.Val RAISES {ObValue.Error} =
+    VAR real1, real2: LONGREAL; int1, int2: INTEGER;
+    BEGIN
+      CASE NARROW(opCode, RandomOpCode).code OF
+      | RandomCode.Int => 
+          TYPECASE args[1] OF | ObValue.ValInt(node) => int1:=node.int;
+          ELSE ObValue.BadArgType(1, "int", self.name, opCode.name, loc); <*ASSERT FALSE*> END;
+          TYPECASE args[2] OF | ObValue.ValInt(node) => int2:=node.int;
+          ELSE ObValue.BadArgType(2, "int", self.name, opCode.name, loc); <*ASSERT FALSE*> END;
+          LOCK randomMu DO
+            RETURN Obliq.NewInt(random.integer(int1,int2))
+          END;
+      | RandomCode.Real => 
+          TYPECASE args[1] OF | ObValue.ValReal(node) => real1:=node.real;
+          ELSE ObValue.BadArgType(1, "real", self.name, opCode.name, loc); <*ASSERT FALSE*> END;
+          TYPECASE args[2] OF | ObValue.ValReal(node) => real2:=node.real;
+          ELSE ObValue.BadArgType(2, "real", self.name, opCode.name, loc); <*ASSERT FALSE*> END;
+          LOCK randomMu DO
+            RETURN Obliq.NewReal(random.longreal(real1,real2))
+          END;
+      ELSE
+        ObValue.BadOp(self.name, opCode.name, loc);<*ASSERT FALSE*> 
+      END;
+    END EvalRandom;
+
+VAR 
+  randomMu := NEW(MUTEX);
+  random := NEW(Random.Default).init();
 
 BEGIN
 END ObLibM3.
