@@ -1,4 +1,4 @@
-CM3 Free Distribution -- scripts/README $Id: README,v 1.2 2001-02-12 22:39:00 wagner Exp $
+CM3 Free Distribution -- scripts/README $Id: README,v 1.3 2001-02-13 17:40:48 wagner Exp $
 
 This directory contains various scripts that can be used to compile /
 build / bootstrap part or all of the CM3 source distribution.
@@ -37,7 +37,7 @@ Here are some short notes about the purpose of each script:
 sysinfo.sh [include]
 ----------
   defines variables containing general system information, specifying
-  the OSTYPE (WIN32|POSIX), compiler TARGET, if a GCC_BACKEND is used,
+  the M3OSTYPE (WIN32|POSIX), compiler TARGET, if a GCC_BACKEND is used,
   the INSTALLROOT etc. This script needs to be adapted for every new
   supported platform.
 

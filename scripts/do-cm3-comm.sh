@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-comm.sh,v 1.2 2001-02-12 22:39:00 wagner Exp $
+# $Id: do-cm3-comm.sh,v 1.3 2001-02-13 17:40:48 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -22,7 +22,7 @@ fi
 
 P=""
 P="${P} tcp"
-[ "${OSTYPE}" = "WIN32" ] && P="${P} tapi"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} tapi"
 [ "${HAVE_SERIAL}" = "yes" ] && P="${P} serial"
 P="${P} netobj"
 P="${P} netobjd"

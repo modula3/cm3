@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgcmds.sh,v 1.3 2001-02-12 22:43:04 wagner Exp $
+# $Id: pkgcmds.sh,v 1.4 2001-02-13 17:40:48 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -47,13 +47,13 @@ if type cm3 2>/dev/null >/dev/null ; then
   CLEANLOCAL="${CM3_CLEANLOCAL}"
   BUILDGLOBAL="${CM3_BUILDGLOBAL}"
   CLEANGLOBAL="${CM3_CLEANGLOBAL}"
-  SHIP="{$CM3_SHIP}"
+  SHIP="${CM3_SHIP}"
 elif type m3build 2>/dev/null >/dev/null ; then
   BUILDLOCAL="${PM3_BUILDLOCAL}"
   CLEANLOCAL="${PM3_CLEANLOCAL}"
   BUILDGLOBAL="${PM3_BUILDGLOBAL}"
   CLEANGLOBAL="${PM3_CLEANGLOBAL}"
-  SHIP="{$CM3_SHIP}"
+  SHIP="${CM3_SHIP}"
 else
   if [ -z "${BUILDLOCAL}" -o -z "${BUILDGLOBAL}" -o -z "${SHIP}" ] ; then
     echo "cm3 or m3build not found in your path, don't know how to compile" \

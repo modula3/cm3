@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-core.sh,v 1.2 2001-02-12 22:39:00 wagner Exp $
+# $Id: do-cm3-core.sh,v 1.3 2001-02-13 17:40:48 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -24,7 +24,7 @@ P=""
 P="${P} m3core"
 P="${P} libm3"
 P="${P} m3middle"
-[ "${OSTYPE}" = "WIN32" ] && P="${P} m3objfile"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3objfile"
 P="${P} m3linker"
 [ "${GCC_BACKEND}" != yes ] && P="${P} m3back"
 [ "${GCC_BACKEND}" != yes ] && P="${P} m3staloneback"
@@ -38,10 +38,10 @@ P="${P} m3cgcat"
 P="${P} m3cggen"
 [ "${M3GDB}" = yes ] && P="${P} m3gdb"
 P="${P} m3bundle"
-[ "${OSTYPE}" = "WIN32" ] && P="${P} mklib"
-[ "${OSTYPE}" = "WIN32" ] && P="${P} dll2lib"
-[ "${OSTYPE}" = "WIN32" ] && P="${P} fix_nl"
-[ "${OSTYPE}" = "WIN32" ] && P="${P} libdump"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} dll2lib"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} fix_nl"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} libdump"
 P="${P} bitvector"
 P="${P} digraph"
 P="${P} parseparams"

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-std.sh,v 1.2 2001-02-12 22:39:00 wagner Exp $
+# $Id: do-cm3-std.sh,v 1.3 2001-02-13 17:40:48 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -34,10 +34,10 @@ P="${P} m3cgcat"
 P="${P} m3cggen"
 #[ "${M3GDB}" = yes ] && P="${P} m3gdb" # not yet tested anywhere
 P="${P} m3bundle"
-[ "${OSTYPE}" = "WIN32" ] && P="${P} mklib"
-[ "${OSTYPE}" = "WIN32" ] && P="${P} dll2lib"
-[ "${OSTYPE}" = "WIN32" ] && P="${P} fix_nl"
-[ "${OSTYPE}" = "WIN32" ] && P="${P} libdump"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} dll2lib"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} fix_nl"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} libdump"
 
 # more useful quasi-standard libraries
 P="${P} bitvector"
@@ -53,7 +53,7 @@ P="${P} tempfiles"
 P="${P} tcp"
 
 # some CM3 communication extensions
-[ "${OSTYPE}" = "WIN32" ] && P="${P} tapi"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} tapi"
 [ "${HAVE_SERIAL}" = "yes" ] && P="${P} serial"
 
 # network objects -- distributed programming
@@ -63,7 +63,7 @@ P="${P} m3tk"
 P="${P} stubgen"
 
 # the standard graphical user interface: trestle and formsvbt
-[ "${OSTYPE}" != "WIN32" ] && P="${P} X11R4"
+[ "${M3OSTYPE}" != "WIN32" ] && P="${P} X11R4"
 P="${P} ui"
 P="${P} vbtkit"
 P="${P} tcp"

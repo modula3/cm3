@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: boot-cm3-with-m3.sh,v 1.2 2001-02-12 22:39:00 wagner Exp $
+# $Id: boot-cm3-with-m3.sh,v 1.3 2001-02-13 17:40:48 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -25,7 +25,7 @@ export BUILDARGS
 
 P=""
 P="${P} m3middle"
-[ "${OSTYPE}" = "WIN32" ] && P="${P} m3objfile"
+[ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3objfile"
 P="${P} m3linker"
 [ "${GCC_BACKEND}" != yes ] && P="${P} m3back"
 [ "${GCC_BACKEND}" != yes ] && P="${P} m3staloneback"
