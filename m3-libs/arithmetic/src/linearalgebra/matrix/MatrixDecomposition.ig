@@ -84,7 +84,7 @@ PROCEDURE LUBackSubst (LU: LUFactors; b: V.T; ): V.T;
 PROCEDURE LUInverse (LU: LUFactors; ): M.T;
 
 PROCEDURE LUDet (LU: LUFactors; ): R.T RAISES {Error};
-(*after LUFactor on A and no backsubs, returns determinant *)
+(* after LUFactor on A and no backsubs, returns determinant *)
 
 PROCEDURE Inverse (A: M.T; ): M.T RAISES {Error};
 

@@ -2,15 +2,26 @@
 %  Quake functions to instantiate operations on generic matrices.
 %
 
-readonly proc Matrix (nm, impl, rfield) is
+readonly proc MatrixBasic (nm, rfield) is
   local vfield   = nm & "Vector"
   local vrep     = nm & "VectorRep"
   local base     = nm & "Matrix"
-  local instimpl = base & impl
-  build_generic_intf (base,     "Matrix",        [rfield, vfield, instimpl], VISIBLE)
-  build_generic_impl (base,     "Matrix",        [rfield, vfield])
-  build_generic_intf (instimpl, "Matrix" & impl, [rfield, vfield], VISIBLE)
-  build_generic_impl (instimpl, "Matrix" & impl, [rfield, vfield, vrep])
+  local impl     = base & "Basic"
+  build_generic_intf (base, "Matrix",      [rfield, vfield, impl], VISIBLE)
+  build_generic_impl (base, "Matrix",      [rfield, vfield])
+  build_generic_intf (impl, "MatrixBasic", [rfield, vfield], VISIBLE)
+  build_generic_impl (impl, "MatrixBasic", [rfield, vfield, vrep, base])
+end
+
+readonly proc MatrixFast (nm, rfield) is
+  local vfield   = nm & "Vector"
+  local base     = nm & "Matrix"
+  local impl     = base & "Fast"
+  local decomp   = nm & "MatrixDecomposition"
+  build_generic_intf (base, "Matrix",     [rfield, vfield, impl], VISIBLE)
+  build_generic_impl (base, "Matrix",     [rfield, vfield])
+  build_generic_intf (impl, "MatrixFast", [rfield, vfield], VISIBLE)
+  build_generic_impl (impl, "MatrixFast", [rfield, vfield, base, decomp])
 end
 
 readonly proc MatrixTrans (nm, field) is
