@@ -3,10 +3,11 @@
 
 # PROGNAME must be set on the command line as well as LIBS
 
-CC    := gcc
-CM3CG := cm3cg
-AS    := as
-AR    := ar
+CC     := gcc
+CM3CG  := cm3cg
+CCOPTS := -fPIC
+AS     := as
+AR     := ar
 #STATIC := -static
 
 .PHONY: clean-as clean-obj clean all
@@ -31,13 +32,13 @@ $(PROGNAME): $(OBJECTS)
 	$(CC) $(STATIC) -o $(PROGNAME) $(OBJECTS) $(LIBS)
 
 %.o: %.c
-	$(CC) -o $@ -c $<
+	$(CC) $(CCOPTS) -o $@ -c $<
 
 %.ms: %.mc
-	$(CM3CG) -quiet -o $@ $<
+	$(CM3CG) $(CCOPTS) -quiet -o $@ $<
 
 %.is: %.ic
-	$(CM3CG) -quiet -o $@ $<
+	$(CM3CG) $(CCOPTS) -quiet -o $@ $<
 
 %.mo: %.ms
 	$(AS) -o $@ $<
