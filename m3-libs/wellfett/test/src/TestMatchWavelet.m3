@@ -33,6 +33,34 @@ IMPORT IO, Fmt, Wr, Thread;
 
 IMPORT NADefinitions AS NA;
 
+PROCEDURE PlotFrame (READONLY abscissa       : V.TBody;
+                     READONLY frame          : M.TBody;
+                     READONLY wavelet, target: V.TBody; ) =
+  VAR
+    waveymin := MIN(VFs.Min(frame[0]), VFs.Min(wavelet));
+    waveymax := MAX(VFs.Max(frame[0]), VFs.Max(wavelet));
+    ymin     := 1.1D0 * MIN(VFs.Min(target), waveymin);
+    ymax     := 1.1D0 * MAX(VFs.Max(target), waveymax);
+
+  <*FATAL NA.Error*>(*vector size mismatch can't occur*)
+  BEGIN
+    PL.SetFGColorDiscr(7);
+    PL.SetEnvironment(
+      abscissa[FIRST(abscissa)], abscissa[LAST(abscissa)], ymin, ymax,
+      axis := PL.TileSet{PL.Tile.box, PL.Tile.ticks, PL.Tile.axes,
+                         PL.Tile.gridMajor, PL.Tile.gridMinor});
+
+    PL.SetFGColorDiscr(1);
+    PL.PlotLines(abscissa, wavelet);
+    PL.SetFGColorDiscr(2);
+    FOR j := FIRST(frame) TO LAST(frame) DO
+      PL.PlotLines(abscissa, frame[j]);
+    END;
+
+    PL.SetFGColorDiscr(3);
+    PL.PlotLines(abscissa, target);
+  END PlotFrame;
+
 (*{RT.Half, R.Zero, -RT.Half} instead of {R.One, R.Zero, -R.One} has the
    advantage that the sum of the coefficients of the primal filter doesn't
    change.*)
@@ -46,11 +74,11 @@ PROCEDURE MatchPattern (target                               : S.T;
   VAR
     hdual := BSpl.GeneratorMask(smooth);
     gdual := BSpl.WaveletMask(smooth, vanishing);
-    vancore := SIntPow.MulPower(
-                 hdual, NEW(S.T).fromArray(
-                          ARRAY OF R.T{RT.Half, R.Zero, -RT.Half}),
-                 vanishing).translate(2 - smooth - vanishing);
-    phivan := Refn.Refine(vancore, hdual, levels);
+    hdualvan := SIntPow.MulPower(
+                  hdual, NEW(S.T).fromArray(
+                           ARRAY OF R.T{RT.Half, R.Zero, -RT.Half}),
+                  vanishing).translate(2 - smooth - vanishing);
+    phivan := Refn.Refine(hdualvan, hdual, levels);
     psi    := Refn.Refine(gdual, hdual, levels);
 
     unit   := IIntPow.Power(2, levels);
@@ -68,41 +96,18 @@ PROCEDURE MatchPattern (target                               : S.T;
     targetvec := V.New(size);
     basis     := M.New(2 * translates + 1, size);
 
-    coef: LA.LS;
-
-    waveymin := MIN(VFs.Min(phivan.getData()^), VFs.Min(psi.getData()^));
-    waveymax := MAX(VFs.Max(phivan.getData()^), VFs.Max(psi.getData()^));
-    ymin := 1.1D0 * MIN(VFs.Min(target.getData()^), wavescale * waveymin);
-    ymax := 1.1D0 * MAX(VFs.Max(target.getData()^), wavescale * waveymax);
-
-  (*
-    CONST
-      ymin = -1.5D0;
-      ymax = 1.5D0;
-  *)
-
   BEGIN
-    PL.Init();
-    PL.SetFGColorDiscr(7);
-    PL.SetEnvironment(
-      abscissa[FIRST(abscissa^)], abscissa[LAST(abscissa^)], ymin, ymax,
-      axis := PL.TileSet{PL.Tile.box, PL.Tile.ticks, PL.Tile.axes,
-                         PL.Tile.gridMajor, PL.Tile.gridMinor});
-
     psi.scale(wavescale).clipToArray(first, basis[LAST(basis^)]);
-    PL.SetFGColorDiscr(1);
-    PL.PlotLines(abscissa^, basis[LAST(basis^)]);
-    PL.SetFGColorDiscr(2);
     FOR j := -translates TO translates - 1 DO
       phivan.scale(wavescale).clipToArray(
         first - twonit * j, basis[j + translates]);
-      PL.PlotLines(abscissa^, basis[j + translates]);
     END;
 
     target.clipToArray(first, targetvec^);
-    PL.SetFGColorDiscr(3);
-    PL.PlotLines(abscissa^, targetvec^);
 
+    PL.Init();
+    PlotFrame(abscissa^, SUBARRAY(basis^, 0, 2 * translates),
+              basis[LAST(basis^)], targetvec^);
     (*
     IO.Put(Fmt.FN("normal matrix %s, right hand side %s\n",
                   ARRAY OF
@@ -110,19 +115,22 @@ PROCEDURE MatchPattern (target                               : S.T;
                          VF.Fmt(M.MulV(basis, targetvec))}));
     *)
 
-    coef :=
-      LA.LeastSquares(basis, ARRAY OF V.T{targetvec},
-                      flags := LA.LSFlagSet{LA.LSFlag.transposed})[0];
-    IO.Put(Fmt.FN("translates %s, size %s, residuum %s, %s\n",
-                  ARRAY OF
-                    TEXT{Fmt.Int(translates), Fmt.Int(size),
-                         RF.Fmt(coef.res), VF.Fmt(coef.x)}));
-    (*
-    IO.Put(Fmt.FN("residuum - %s\n", ARRAY OF TEXT{RF.Fmt(coef.res)}));
-    *)
+    VAR
+      coef := LA.LeastSquares(basis, ARRAY OF V.T{targetvec},
+                              flags := LA.LSFlagSet{LA.LSFlag.transposed})[
+                0];
+    BEGIN
+      IO.Put(Fmt.FN("translates %s, size %s, residuum %s, %s\n",
+                    ARRAY OF
+                      TEXT{Fmt.Int(translates), Fmt.Int(size),
+                           RF.Fmt(coef.res), VF.Fmt(coef.x)}));
+      (*
+      IO.Put(Fmt.FN("residuum - %s\n", ARRAY OF TEXT{RF.Fmt(coef.res)}));
+      *)
 
-    PL.SetFGColorDiscr(4);
-    PL.PlotLines(abscissa^, M.MulTV(basis, coef.x)^);
+      PL.SetFGColorDiscr(4);
+      PL.PlotLines(abscissa^, M.MulTV(basis, coef.x)^);
+    END;
 
     PL.Exit();
   END MatchPattern;
@@ -494,20 +502,26 @@ TYPE
       getLSGeneratorMask (): S.T;
       getLSWavelet0Mask  (): S.T;
       getLiftedWaveletMaskNoVan (READONLY mc: MatchCoef): S.T := GetLiftedWaveletMaskNoVan;
+      getShapeWaveletMask (READONLY mc: MatchCoef): S.T;
+      plotBase            (READONLY mc: MatchCoef; levels: CARDINAL; );
     END;
 
   StdFilterBasis = FilterBasis OBJECT
                    OVERRIDES
-                     getRefineMask      := StdGetRefineMask;
-                     getLSGeneratorMask := StdGetLSGeneratorMask;
-                     getLSWavelet0Mask  := StdGetLSWavelet0Mask;
+                     getRefineMask       := StdGetRefineMask;
+                     getLSGeneratorMask  := StdGetLSGeneratorMask;
+                     getLSWavelet0Mask   := StdGetLSWavelet0Mask;
+                     getShapeWaveletMask := StdGetShapeWaveletMask;
+                     plotBase            := StdPlotBase;
                    END;
 
   NoVanFilterBasis = FilterBasis OBJECT
                      OVERRIDES
-                       getRefineMask      := NoVanGetRefineMask;
-                       getLSGeneratorMask := NoVanGetLSGeneratorMask;
-                       getLSWavelet0Mask  := NoVanGetLSWavelet0Mask;
+                       getRefineMask       := NoVanGetRefineMask;
+                       getLSGeneratorMask  := NoVanGetLSGeneratorMask;
+                       getLSWavelet0Mask   := NoVanGetLSWavelet0Mask;
+                       getShapeWaveletMask := NoVanGetShapeWaveletMask;
+                       plotBase            := NoVanPlotBase;
                      END;
 
 PROCEDURE GetLiftedWaveletMaskNoVan (         SELF: FilterBasis;
@@ -535,6 +549,24 @@ PROCEDURE StdGetLSWavelet0Mask (SELF: StdFilterBasis; ): S.T =
     RETURN SELF.hp0;
   END StdGetLSWavelet0Mask;
 
+PROCEDURE StdGetShapeWaveletMask (         SELF: StdFilterBasis;
+                                  READONLY mc  : MatchCoef;      ): S.T =
+  BEGIN
+    RETURN SELF.hp0.superpose(SELF.lpvan.upConvolve(
+                                mc.lift.scale(R.One / mc.wavelet0Amp), 2));
+  END StdGetShapeWaveletMask;
+
+PROCEDURE StdPlotBase (         SELF  : StdFilterBasis;
+                       READONLY mc    : MatchCoef;
+                                levels: CARDINAL;       ) =
+  CONST
+    ymin = -3.5D0;
+    ymax = 3.5D0;
+  BEGIN
+    WP.PlotBiorthogonalYLim(
+      SELF.getRefineMask(), SELF.getShapeWaveletMask(mc), levels, ymin,
+      ymax);
+  END StdPlotBase;
 
 PROCEDURE NoVanGetRefineMask (SELF: NoVanFilterBasis; ): S.T =
   BEGIN
@@ -548,8 +580,37 @@ PROCEDURE NoVanGetLSGeneratorMask (SELF: NoVanFilterBasis; ): S.T =
 
 PROCEDURE NoVanGetLSWavelet0Mask (SELF: NoVanFilterBasis; ): S.T =
   BEGIN
-    RETURN SELF.hp0;
+    RETURN SELF.hp0novan;
   END NoVanGetLSWavelet0Mask;
+
+PROCEDURE NoVanGetShapeWaveletMask (         SELF: NoVanFilterBasis;
+                                    READONLY mc  : MatchCoef;        ):
+  S.T =
+  BEGIN
+    RETURN
+      SELF.hp0novan.superpose(
+        SELF.lpnovan.upConvolve(mc.lift.scale(R.One / mc.wavelet0Amp), 2));
+  END NoVanGetShapeWaveletMask;
+
+PROCEDURE NoVanPlotBase (         SELF  : NoVanFilterBasis;
+                         READONLY mc    : MatchCoef;
+                                  levels: CARDINAL;         ) =
+  CONST
+    ymin = -3.5D0;
+    ymax = 3.5D0;
+  VAR
+    refnPrimal := SELF.hp0.superpose(
+                    SELF.lpvan.upConvolve(
+                      mc.lift.scale(R.One / mc.wavelet0Amp), 2)).alternate();
+    refnDual := SELF.lp;
+    lpPrimal := refnPrimal;
+    hpPrimal := refnDual.alternate();
+    lpDual   := SELF.lp;
+    hpDual   := SELF.getShapeWaveletMask(mc);
+  BEGIN
+    WP.PlotAnyYLim(refnPrimal.scale(R.Two), refnDual.scale(R.Two),
+                   lpPrimal, hpPrimal, lpDual, hpDual, levels, ymin, ymax);
+  END NoVanPlotBase;
 
 
 TYPE
@@ -620,7 +681,10 @@ PROCEDURE MatchPatternSmooth (target            : S.T;
                  generatorvan.getFirst() - twonit * translates);
     last := MAX(wavelet.getLast(),
                 generatorvan.getLast() + twonit * (translates - 1));
-    size := last - first + 1;
+    size      := last - first + 1;
+    wavescale := FLOAT(unit, R.T);
+    grid      := R.One / FLOAT(unit, R.T);
+    abscissa  := V.ArithSeq(size, FLOAT(first, R.T) * grid, grid);
 
     waveletVec     := wavelet.clipToVector(first, size);
     waveletNormSqr := V.Inner(waveletVec, waveletVec);
@@ -635,6 +699,10 @@ PROCEDURE MatchPatternSmooth (target            : S.T;
     waveletCor := M.MulV(basis, waveletVec);
 
   BEGIN
+    PL.Init();
+    PlotFrame(abscissa^, M.Scale(basis, wavescale)^,
+              V.Scale(waveletVec, wavescale)^, targetVec^);
+    PL.Exit();
     (*
     CheckDerivatives();
 
@@ -643,8 +711,9 @@ PROCEDURE MatchPatternSmooth (target            : S.T;
                     TEXT{MF.Fmt(normalMat)}));
     *)
 
-    VAR yfirst := -translates;
-    VAR matching: Matching;
+    VAR
+      yfirst             := -translates;
+      matching: Matching;
 
     <*UNUSED*>
     PROCEDURE ComputeOptCritDeriv (x: V.T): FnD.T RAISES {NA.Error} =
@@ -726,9 +795,6 @@ PROCEDURE MatchPatternSmooth (target            : S.T;
       smoothFac  = 2.0D0;
       maxSubIter = 30;
 
-      ymin = -3.5D0;
-      ymax = 3.5D0;
-
       tol     = 1.0D-4;
       difdist = 1.0D-5;
 
@@ -786,17 +852,12 @@ PROCEDURE MatchPatternSmooth (target            : S.T;
             END;
           END;
         END;
-        VAR
-          mc := matching.splitParamVec(x);
-          gdual := dualBasis.hp0.superpose(
-                     dualBasis.lpvan.upConvolve(
-                       mc.lift.scale(R.One / mc.wavelet0Amp), 2));
-        BEGIN
-          PL.StartPage();
-          WP.PlotWaveletsYLim(
-            dualBasis.getRefineMask(), gdual, levels, ymin, ymax);
-          (*PL.StopPage();*)
-        END;
+
+        (*draw resulting wavelet base*)
+        PL.StartPage();
+        dualBasis.plotBase(matching.splitParamVec(x), levels);
+        (*PL.StopPage();*)
+
         smoothWeightFade := smoothWeightFade * smoothFac;
       END;
       PL.Exit();
@@ -825,9 +886,10 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
                                                                    mask*)
     gdual0novan := BSpl.WaveletMask(smooth + vanishing, 0);
 
-    dualBasis := NEW(StdFilterBasis, lp := hdual, hp0 := gdual0,
-                     lpvan := hdualvan, lpnovan := hdualnovan,
-                     hp0novan := gdual0novan);
+    dualBasis := NEW(            (*StdFilterBasis*)
+                   NoVanFilterBasis, lp := hdual, hp0 := gdual0,
+                   lpvan := hdualvan, lpnovan := hdualnovan,
+                   hp0novan := gdual0novan);
 
     (*
     mc := MatchCoef{NEW(S.T).fromArray(
@@ -878,7 +940,7 @@ gdual := GetLiftedPrimalGeneratorMask(hdual,gdual0,MatchCoef{lift:=s,wavelet0Amp
                   GetLiftedPrimalGeneratorMask( hdualnovan, gdual0novan,
                   mc).alternate(), vanatom, vanishing))*)}));
     CASE 2 OF
-    | 0 => PL.Init(); WP.PlotWavelets(hdual, gdual, levels); PL.Exit();
+    | 0 => PL.Init(); WP.PlotBiorthogonal(hdual, gdual, levels); PL.Exit();
     | 1 =>
         PL.Init();
         PL.SetEnvironment(
@@ -985,7 +1047,7 @@ PROCEDURE Test () =
                matchRamp, matchRampSmooth, matchSincSmooth, matchGaussian,
                matchLongRamp, testSSE, testInverseDSSE, testDeriveWSSE};
   BEGIN
-    CASE Example.matchGaussian OF
+    CASE Example.matchRampSmooth OF
     | Example.matchBSpline =>
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50),
@@ -1016,7 +1078,7 @@ PROCEDURE Test () =
         *)
         TestMatchPatternSmooth(NEW(S.T).fromArray(
                                  V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^,
-                                 -256), numlevel, 4, 6, 5, 5.0D0);
+                                 -256), numlevel, 3, 5, 5, 1.0D-5);
     | Example.matchBSplineWavelet =>
         (*
           MatchPattern(
