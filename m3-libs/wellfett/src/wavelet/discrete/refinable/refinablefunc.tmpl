@@ -10,6 +10,6 @@ readonly proc RefinableFunc (nm, field, rimpl, cfield, cimpl, vimpl, cvimpl, mim
   local mfield  = field & "Matrix" & mimpl
   local eigen   = field & "EigenSystem"
   local signal  = field & "Signal"
-  build_generic_intf (basic, "RefinableFunc", [rfield,                  mfield, eigen, signal], VISIBLE)
-  build_generic_impl (basic, "RefinableFunc", [rfield, vfield, cvfield, mfield, eigen, signal])
+  build_generic_intf (basic, "RefinableFunc", [rfield,          mfield, eigen, signal], VISIBLE)
+  build_generic_impl (basic, "RefinableFunc", [rfield, cvfield, mfield, eigen, signal])
 end
