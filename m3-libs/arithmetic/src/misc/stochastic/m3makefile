@@ -2,9 +2,21 @@ import("libm3")
 
 module("RandomBasic")
 interface("RandomRep")
+
 %module("RandomNumber01")
 module("RandomDECSRC")
 module("RandomParkMiller")
 module("RandomBayesDurham")
-module("RandomNumber02")
+
+%%module("RandomNumber02")
+%module("RandomCombinedSlow")
+%module("RandomCombinedFast")
+module("RandomImprovedMcGill")
+module("RandomIteratedSquaring")
+module("RandomMultiplicativeFibo")
+module("RandomQuaternaryFibo")
+module("RandomSubtractiveFibo1")
+module("RandomSubtractiveFibo2")
+module("RandomWolframCA")
+
 module("Statistic")
