@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-doc-dist.sh,v 1.1 2001-02-24 16:52:54 wagner Exp $
+# $Id: make-doc-dist.sh,v 1.2 2002-04-07 15:46:20 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -29,7 +29,7 @@ header "building CM3 doc distribution in ${ARCHIVE}"
 #
 
 if [ "$1" = "-gen" ] ; then
-  cd "${ROOT}/doc/help" || exit 1
+  cd "${ROOT}/doc/help/gen_html" || exit 1
   rm -f html_gen/m3db 
   m3tohtml -v -root /usr/local/cm3/pkg `cd /usr/local/cm3/pkg && /bin/ls -d *`
 fi
