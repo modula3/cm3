@@ -41,7 +41,8 @@ readonly _FloatPieces = {
   "UMAX"       : _float_le,
   "VAX"        : [ "VAX" ],
   "I386_DARWIN": _float_le, % FIXME: is this correct?
-  "PPC_DARWIN" : _float_be  % FIXME: is this correct?
+  "PPC_DARWIN" : _float_be,
+  "PPC_LINUX"  : _float_be
 }
 
 if _FloatPieces contains TARGET
