@@ -39,5 +39,15 @@ PROCEDURE Adjungate(x:T):T;                  (*x^**)
 PROCEDURE Trace(x:T):R.T;    (*sum of the diagonal elements*)
 (*PROCEDURE Determinant(x:T):R.T;*)
 
+TYPE
+  ApplyFtn  = PROCEDURE (x:R.T);
+  MapFtn    = PROCEDURE (x:R.T):R.T;
+  ReduceFtn = PROCEDURE (x,y:R.T):R.T;
+
+PROCEDURE Apply(x:T;f:ApplyFtn);
+PROCEDURE Map(x:T;f:MapFtn):T;
+PROCEDURE ReduceRows(x:T;f:ReduceFtn;READONLY init:V.TBody):V.T;
+PROCEDURE ReduceColumns(x:T;f:ReduceFtn;READONLY init:V.TBody):V.T;
+
 (*==========================*)
 END MatrixBasic.
