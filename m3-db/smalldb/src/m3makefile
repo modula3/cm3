@@ -9,6 +9,12 @@
 import("libm3")
 
 Module("SmallDB")
-module("OSSupport")
+if equal (OS_TYPE, "WIN32")
+  interface("OSSupport")
+  interface("OSSupportWIN32IF")
+  implementation("OSSupportWIN32")
+else
+  module("OSSupport")
+end
 
 Library("m3smalldb")
