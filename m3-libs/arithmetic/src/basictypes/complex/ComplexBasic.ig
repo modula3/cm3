@@ -33,6 +33,8 @@ CONST
 <*INLINE*> PROCEDURE Mul(READONLY x,y:T):T;  (*return x*y*)
 <*INLINE*> PROCEDURE Div(READONLY x,y:T):T RAISES {Error};  (*return x/y*)
 <*INLINE*> PROCEDURE Rec(READONLY x:T):T RAISES {Error};    (*return 1/x*)
+<*INLINE*> PROCEDURE Mod(READONLY x,y:T):T RAISES {Error};  (*return x mod y*)
+<*INLINE*> PROCEDURE DivMod(READONLY x,y:T;VAR r:T):T RAISES {Error};  (*return x/y and write the remainder in r*)
 
 <*INLINE*> PROCEDURE Square(READONLY x:T):T;         (*return x*x*)
 <*INLINE*> PROCEDURE Scale (READONLY x:T; y:R.T):T;  (*return x*y*)
