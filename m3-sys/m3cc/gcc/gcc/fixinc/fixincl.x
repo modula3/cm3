@@ -5,7 +5,7 @@
  * files which are fixed to work correctly with ANSI C and placed in a
  * directory that GNU C will search.
  *
- * This file contains 142 fixup descriptions.
+ * This file contains 151 fixup descriptions.
  *
  * See README for more information.
  *
@@ -248,6 +248,38 @@ static const char* apzAab_Fd_Zero_Selectbits_HPatch[] = {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * *
  *
+ *  Description of Aab_Solaris_Sys_Varargs_H fix
+ */
+tSCC zAab_Solaris_Sys_Varargs_HName[] =
+     "AAB_solaris_sys_varargs_h";
+
+/*
+ *  File name selection pattern
+ */
+tSCC zAab_Solaris_Sys_Varargs_HList[] =
+  "|sys/varargs.h|";
+/*
+ *  Machine/OS name selection pattern
+ */
+tSCC* apzAab_Solaris_Sys_Varargs_HMachs[] = {
+        "*-*-solaris*",
+        (const char*)NULL };
+#define AAB_SOLARIS_SYS_VARARGS_H_TEST_CT  0
+#define aAab_Solaris_Sys_Varargs_HTests   (tTestDesc*)NULL
+
+/*
+ *  Fix Command Arguments for Aab_Solaris_Sys_Varargs_H
+ */
+static const char* apzAab_Solaris_Sys_Varargs_HPatch[] = {
+"#ifdef __STDC__\n\
+#include <stdarg.h>\n\
+#else\n\
+#include <varargs.h>\n\
+#endif\n",
+    (char*)NULL };
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
  *  Description of Aab_Sun_Memcpy fix
  */
 tSCC zAab_Sun_MemcpyName[] =
@@ -293,38 +325,6 @@ extern char *memset();\n\
 #endif /* __STDC__ */\n\n\
 extern int memcmp();\n\n\
 #endif /* __memory_h__ */\n",
-    (char*)NULL };
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * *
- *
- *  Description of Aab_Solaris_Sys_Varargs_H fix
- */
-tSCC zAab_Solaris_Sys_Varargs_HName[] =
-     "AAB_solaris_sys_varargs_h";
-
-/*
- *  File name selection pattern
- */
-tSCC zAab_Solaris_Sys_Varargs_HList[] =
-  "|sys/varargs.h|";
-/*
- *  Machine/OS name selection pattern
- */
-tSCC* apzAab_Solaris_Sys_Varargs_HMachs[] = {
-        "*-*-solaris*",
-        (const char*)NULL };
-#define AAB_SOLARIS_SYS_VARARGS_H_TEST_CT  0
-#define aAab_Solaris_Sys_Varargs_HTests   (tTestDesc*)NULL
-
-/*
- *  Fix Command Arguments for Aab_Solaris_Sys_Varargs_H
- */
-static const char* apzAab_Solaris_Sys_Varargs_HPatch[] = {
-"#ifdef __STDC__\n\
-#include <stdarg.h>\n\
-#else\n\
-#include <varargs.h>\n\
-#endif\n",
     (char*)NULL };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -772,6 +772,43 @@ static tTestDesc aAlpha___AssertTests[] = {
 static const char* apzAlpha___AssertPatch[] = {
     "format",
     "__assert(const char *, const char *, int)",
+    (char*)NULL };
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *  Description of Alpha___Extern_Prefix fix
+ */
+tSCC zAlpha___Extern_PrefixName[] =
+     "alpha___extern_prefix";
+
+/*
+ *  File name selection pattern
+ */
+tSCC zAlpha___Extern_PrefixList[] =
+  "|sys/stat.h|";
+/*
+ *  Machine/OS name selection pattern
+ */
+tSCC* apzAlpha___Extern_PrefixMachs[] = {
+        "alpha*-dec-osf5*",
+        (const char*)NULL };
+
+/*
+ *  content selection pattern - do fix if pattern found
+ */
+tSCC zAlpha___Extern_PrefixSelect0[] =
+       "#[ \t]*if[ \t]*defined\\(__DECC\\)";
+
+#define    ALPHA___EXTERN_PREFIX_TEST_CT  1
+static tTestDesc aAlpha___Extern_PrefixTests[] = {
+  { TT_EGREP,    zAlpha___Extern_PrefixSelect0, (regex_t*)NULL }, };
+
+/*
+ *  Fix Command Arguments for Alpha___Extern_Prefix
+ */
+static const char* apzAlpha___Extern_PrefixPatch[] = {
+    "format",
+    "%0 || defined(__PRAGMA_EXTERN_PREFIX)",
     (char*)NULL };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -1868,6 +1905,122 @@ static const char* apzHpux11_Cpp_Pow_InlinePatch[] = {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * *
  *
+ *  Description of Hpux10_Ctype_Declarations1 fix
+ */
+tSCC zHpux10_Ctype_Declarations1Name[] =
+     "hpux10_ctype_declarations1";
+
+/*
+ *  File name selection pattern
+ */
+tSCC zHpux10_Ctype_Declarations1List[] =
+  "|ctype.h|";
+/*
+ *  Machine/OS name selection pattern
+ */
+#define apzHpux10_Ctype_Declarations1Machs (const char**)NULL
+
+/*
+ *  content selection pattern - do fix if pattern found
+ */
+tSCC zHpux10_Ctype_Declarations1Select0[] =
+       "^#[ \t]*define _toupper\\(__c\\)[ \t]*__toupper\\(__c\\)";
+
+/*
+ *  content bypass pattern - skip fix if pattern found
+ */
+tSCC zHpux10_Ctype_Declarations1Bypass0[] =
+       "^[ \t]*extern[ \t]*int[ \t]*__tolower[ \t]*\\(";
+
+#define    HPUX10_CTYPE_DECLARATIONS1_TEST_CT  2
+static tTestDesc aHpux10_Ctype_Declarations1Tests[] = {
+  { TT_NEGREP,   zHpux10_Ctype_Declarations1Bypass0, (regex_t*)NULL },
+  { TT_EGREP,    zHpux10_Ctype_Declarations1Select0, (regex_t*)NULL }, };
+
+/*
+ *  Fix Command Arguments for Hpux10_Ctype_Declarations1
+ */
+static const char* apzHpux10_Ctype_Declarations1Patch[] = {
+    "format",
+    "#ifdef _PROTOTYPES\n\
+extern int __tolower(int);\n\
+extern int __toupper(int);\n\
+#else /* NOT _PROTOTYPES */\n\
+extern int __tolower();\n\
+extern int __toupper();\n\
+#endif /* _PROTOTYPES */\n\n\
+%0\n",
+    (char*)NULL };
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *  Description of Hpux10_Ctype_Declarations2 fix
+ */
+tSCC zHpux10_Ctype_Declarations2Name[] =
+     "hpux10_ctype_declarations2";
+
+/*
+ *  File name selection pattern
+ */
+tSCC zHpux10_Ctype_Declarations2List[] =
+  "|ctype.h|";
+/*
+ *  Machine/OS name selection pattern
+ */
+#define apzHpux10_Ctype_Declarations2Machs (const char**)NULL
+
+/*
+ *  content selection pattern - do fix if pattern found
+ */
+tSCC zHpux10_Ctype_Declarations2Select0[] =
+       "^#  if defined\\(_SB_CTYPE_MACROS\\) && \\!defined\\(__lint\\)";
+
+/*
+ *  content bypass pattern - skip fix if pattern found
+ */
+tSCC zHpux10_Ctype_Declarations2Bypass0[] =
+       "^[ \t]*extern[ \t]*int[ \t]*_isalnum[ \t]*\\(";
+
+#define    HPUX10_CTYPE_DECLARATIONS2_TEST_CT  2
+static tTestDesc aHpux10_Ctype_Declarations2Tests[] = {
+  { TT_NEGREP,   zHpux10_Ctype_Declarations2Bypass0, (regex_t*)NULL },
+  { TT_EGREP,    zHpux10_Ctype_Declarations2Select0, (regex_t*)NULL }, };
+
+/*
+ *  Fix Command Arguments for Hpux10_Ctype_Declarations2
+ */
+static const char* apzHpux10_Ctype_Declarations2Patch[] = {
+    "format",
+    "%0\n\n\
+#ifdef _PROTOTYPES\n\
+     extern int _isalnum(int);\n\
+     extern int _isalpha(int);\n\
+     extern int _iscntrl(int);\n\
+     extern int _isdigit(int);\n\
+     extern int _isgraph(int);\n\
+     extern int _islower(int);\n\
+     extern int _isprint(int);\n\
+     extern int _ispunct(int);\n\
+     extern int _isspace(int);\n\
+     extern int _isupper(int);\n\
+     extern int _isxdigit(int);\n\
+#  else /* not _PROTOTYPES */\n\
+     extern int _isalnum();\n\
+     extern int _isalpha();\n\
+     extern int _iscntrl();\n\
+     extern int _isdigit();\n\
+     extern int _isgraph();\n\
+     extern int _islower();\n\
+     extern int _isprint();\n\
+     extern int _ispunct();\n\
+     extern int _isspace();\n\
+     extern int _isupper();\n\
+     extern int _isxdigit();\n\
+#endif /* _PROTOTYPES */\n",
+    (char*)NULL };
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
  *  Description of Hpux11_Fabsf fix
  */
 tSCC zHpux11_FabsfName[] =
@@ -2051,6 +2204,83 @@ static const char* apzHpux8_Bogus_InlinesPatch[] = { "sed",
     "-e", "s@inline double abs(double [a-z][a-z]*) {.*}@@",
     "-e", "s@inline int sqr(int [a-z][a-z]*) {.*}@@",
     "-e", "s@inline double sqr(double [a-z][a-z]*) {.*}@@",
+    (char*)NULL };
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *  Description of Hpux_Ctype_Macros fix
+ */
+tSCC zHpux_Ctype_MacrosName[] =
+     "hpux_ctype_macros";
+
+/*
+ *  File name selection pattern
+ */
+tSCC zHpux_Ctype_MacrosList[] =
+  "|ctype.h|";
+/*
+ *  Machine/OS name selection pattern
+ */
+#define apzHpux_Ctype_MacrosMachs (const char**)NULL
+
+/*
+ *  content selection pattern - do fix if pattern found
+ */
+tSCC zHpux_Ctype_MacrosSelect0[] =
+       "((: |\\()__SB_masks \\? )(__SB_masks\\[__(alnum|c)\\] & _IS)";
+
+#define    HPUX_CTYPE_MACROS_TEST_CT  1
+static tTestDesc aHpux_Ctype_MacrosTests[] = {
+  { TT_EGREP,    zHpux_Ctype_MacrosSelect0, (regex_t*)NULL }, };
+
+/*
+ *  Fix Command Arguments for Hpux_Ctype_Macros
+ */
+static const char* apzHpux_Ctype_MacrosPatch[] = {
+    "format",
+    "%1(int)%3",
+    (char*)NULL };
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *  Description of Hpux_Long_Double fix
+ */
+tSCC zHpux_Long_DoubleName[] =
+     "hpux_long_double";
+
+/*
+ *  File name selection pattern
+ */
+tSCC zHpux_Long_DoubleList[] =
+  "|stdlib.h|";
+/*
+ *  Machine/OS name selection pattern
+ */
+#define apzHpux_Long_DoubleMachs (const char**)NULL
+
+/*
+ *  content selection pattern - do fix if pattern found
+ */
+tSCC zHpux_Long_DoubleSelect0[] =
+       "extern[ \t]long_double[ \t]strtold";
+
+/*
+ *  content bypass pattern - skip fix if pattern found
+ */
+tSCC zHpux_Long_DoubleBypass0[] =
+       "long_double_t";
+
+#define    HPUX_LONG_DOUBLE_TEST_CT  2
+static tTestDesc aHpux_Long_DoubleTests[] = {
+  { TT_NEGREP,   zHpux_Long_DoubleBypass0, (regex_t*)NULL },
+  { TT_EGREP,    zHpux_Long_DoubleSelect0, (regex_t*)NULL }, };
+
+/*
+ *  Fix Command Arguments for Hpux_Long_Double
+ */
+static const char* apzHpux_Long_DoublePatch[] = { "sed",
+    "-e", "/^#[ \t]*ifndef _LONG_DOUBLE/,/\\/\\* _LONG_DOUBLE \\*\\//D",
+    "-e", "s/long_double/long double/g",
     (char*)NULL };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -2350,6 +2580,88 @@ static const char* apzIrix_Limits_ConstPatch[] = {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * *
  *
+ *  Description of Irix___Restrict fix
+ */
+tSCC zIrix___RestrictName[] =
+     "irix___restrict";
+
+/*
+ *  File name selection pattern
+ */
+tSCC zIrix___RestrictList[] =
+  "|internal/sgimacros.h|";
+/*
+ *  Machine/OS name selection pattern
+ */
+tSCC* apzIrix___RestrictMachs[] = {
+        "mips-sgi-irix6.5",
+        (const char*)NULL };
+
+/*
+ *  content selection pattern - do fix if pattern found
+ */
+tSCC zIrix___RestrictSelect0[] =
+       "(#ifdef __c99\n\
+)(#[ \t]*define __restrict restrict)";
+
+#define    IRIX___RESTRICT_TEST_CT  1
+static tTestDesc aIrix___RestrictTests[] = {
+  { TT_EGREP,    zIrix___RestrictSelect0, (regex_t*)NULL }, };
+
+/*
+ *  Fix Command Arguments for Irix___Restrict
+ */
+static const char* apzIrix___RestrictPatch[] = {
+    "format",
+    "%1#  ifndef __cplusplus\n\
+%2\n\
+#  endif",
+    (char*)NULL };
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *  Description of Irix_Socklen_T fix
+ */
+tSCC zIrix_Socklen_TName[] =
+     "irix_socklen_t";
+
+/*
+ *  File name selection pattern
+ */
+tSCC zIrix_Socklen_TList[] =
+  "|sys/socket.h|";
+/*
+ *  Machine/OS name selection pattern
+ */
+tSCC* apzIrix_Socklen_TMachs[] = {
+        "mips-sgi-irix6.5",
+        (const char*)NULL };
+
+/*
+ *  content selection pattern - do fix if pattern found
+ */
+tSCC zIrix_Socklen_TSelect0[] =
+       "(#define _SOCKLEN_T\n\
+)(typedef u_int32_t socklen_t;)";
+
+#define    IRIX_SOCKLEN_T_TEST_CT  1
+static tTestDesc aIrix_Socklen_TTests[] = {
+  { TT_EGREP,    zIrix_Socklen_TSelect0, (regex_t*)NULL }, };
+
+/*
+ *  Fix Command Arguments for Irix_Socklen_T
+ */
+static const char* apzIrix_Socklen_TPatch[] = {
+    "format",
+    "%1#if _NO_XOPEN4 && _NO_XOPEN5\n\
+typedef int socklen_t;\n\
+#else\n\
+%2\n\
+#endif /* _NO_XOPEN4 && _NO_XOPEN5 */",
+    (char*)NULL };
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
  *  Description of Irix_Stdio_Va_List fix
  */
 tSCC zIrix_Stdio_Va_ListName[] =
@@ -2381,6 +2693,45 @@ static tTestDesc aIrix_Stdio_Va_ListTests[] = {
 static const char* apzIrix_Stdio_Va_ListPatch[] = {
     "format",
     "%1, __gnuc_va_list",
+    (char*)NULL };
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *  Description of Irix_Wcsftime fix
+ */
+tSCC zIrix_WcsftimeName[] =
+     "irix_wcsftime";
+
+/*
+ *  File name selection pattern
+ */
+tSCC zIrix_WcsftimeList[] =
+  "|internal/wchar_core.h|";
+/*
+ *  Machine/OS name selection pattern
+ */
+tSCC* apzIrix_WcsftimeMachs[] = {
+        "mips-sgi-irix6.5",
+        (const char*)NULL };
+
+/*
+ *  content selection pattern - do fix if pattern found
+ */
+tSCC zIrix_WcsftimeSelect0[] =
+       "#if _NO_XOPEN5\n\
+(extern size_t[ \t]+wcsftime.*const char *.*)";
+
+#define    IRIX_WCSFTIME_TEST_CT  1
+static tTestDesc aIrix_WcsftimeTests[] = {
+  { TT_EGREP,    zIrix_WcsftimeSelect0, (regex_t*)NULL }, };
+
+/*
+ *  Fix Command Arguments for Irix_Wcsftime
+ */
+static const char* apzIrix_WcsftimePatch[] = {
+    "format",
+    "#if _NO_XOPEN5 && !defined(__c99)\n\
+%1",
     (char*)NULL };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -3654,35 +4005,70 @@ static const char* apzSco_UtimePatch[] = {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- *  Description of Solaris_Mutex_Init fix
+ *  Description of Solaris_Mutex_Init_1 fix
  */
-tSCC zSolaris_Mutex_InitName[] =
-     "solaris_mutex_init";
+tSCC zSolaris_Mutex_Init_1Name[] =
+     "solaris_mutex_init_1";
 
 /*
  *  File name selection pattern
  */
-tSCC zSolaris_Mutex_InitList[] =
+tSCC zSolaris_Mutex_Init_1List[] =
   "|pthread.h|";
 /*
  *  Machine/OS name selection pattern
  */
-#define apzSolaris_Mutex_InitMachs (const char**)NULL
+#define apzSolaris_Mutex_Init_1Machs (const char**)NULL
 
 /*
  *  content selection pattern - do fix if pattern found
  */
-tSCC zSolaris_Mutex_InitSelect0[] =
-       "@\\(#\\)pthread.h[ \t]+1.[0-9]+[ \t]+[0-9/]+ SMI";
+tSCC zSolaris_Mutex_Init_1Select0[] =
+       "@\\(#\\)pthread.h[ \t]+1.1[0-9][ \t]+9[567]/[0-9/]+ SMI";
 
-#define    SOLARIS_MUTEX_INIT_TEST_CT  1
-static tTestDesc aSolaris_Mutex_InitTests[] = {
-  { TT_EGREP,    zSolaris_Mutex_InitSelect0, (regex_t*)NULL }, };
+#define    SOLARIS_MUTEX_INIT_1_TEST_CT  1
+static tTestDesc aSolaris_Mutex_Init_1Tests[] = {
+  { TT_EGREP,    zSolaris_Mutex_Init_1Select0, (regex_t*)NULL }, };
 
 /*
- *  Fix Command Arguments for Solaris_Mutex_Init
+ *  Fix Command Arguments for Solaris_Mutex_Init_1
  */
-static const char* apzSolaris_Mutex_InitPatch[] = {
+static const char* apzSolaris_Mutex_Init_1Patch[] = { "sed",
+    "-e", "/define[ \t]*PTHREAD_MUTEX_INI/s/{0, 0,/{{{0}, 0}, {{{0}}},/\n\
+/define[ \t]*PTHREAD_COND_INI/s/{0,/{{{0},0},/",
+    (char*)NULL };
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *  Description of Solaris_Mutex_Init_2 fix
+ */
+tSCC zSolaris_Mutex_Init_2Name[] =
+     "solaris_mutex_init_2";
+
+/*
+ *  File name selection pattern
+ */
+tSCC zSolaris_Mutex_Init_2List[] =
+  "|pthread.h|";
+/*
+ *  Machine/OS name selection pattern
+ */
+#define apzSolaris_Mutex_Init_2Machs (const char**)NULL
+
+/*
+ *  content selection pattern - do fix if pattern found
+ */
+tSCC zSolaris_Mutex_Init_2Select0[] =
+       "@\\(#\\)pthread.h[ \t]+1.[0-9]+[ \t]+[0-9/]+ SMI";
+
+#define    SOLARIS_MUTEX_INIT_2_TEST_CT  1
+static tTestDesc aSolaris_Mutex_Init_2Tests[] = {
+  { TT_EGREP,    zSolaris_Mutex_Init_2Select0, (regex_t*)NULL }, };
+
+/*
+ *  Fix Command Arguments for Solaris_Mutex_Init_2
+ */
+static const char* apzSolaris_Mutex_Init_2Patch[] = {
     "format",
     "#if __STDC__ - 0 == 0 && !defined(_NO_LONGLONG)\n\
 %0\n\
@@ -5581,9 +5967,9 @@ static const char* apzX11_SprintfPatch[] = {
  *
  *  List of all fixes
  */
-#define REGEX_COUNT          151
+#define REGEX_COUNT          163
 #define MACH_LIST_SIZE_LIMIT 279
-#define FIX_COUNT            142
+#define FIX_COUNT            151
 
 /*
  *  Enumerate the fixes
@@ -5593,8 +5979,8 @@ typedef enum {
     AAB_FD_ZERO_ASM_POSIX_TYPES_H_FIXIDX,
     AAB_FD_ZERO_GNU_TYPES_H_FIXIDX,
     AAB_FD_ZERO_SELECTBITS_H_FIXIDX,
-    AAB_SUN_MEMCPY_FIXIDX,
     AAB_SOLARIS_SYS_VARARGS_H_FIXIDX,
+    AAB_SUN_MEMCPY_FIXIDX,
     AAB_SVR4_REPLACE_BYTEORDER_FIXIDX,
     AAB_ULTRIX_ANSI_COMPAT_FIXIDX,
     AAB_ULTRIX_LIMITS_FIXIDX,
@@ -5605,6 +5991,7 @@ typedef enum {
     AIX_SYSWAIT_FIXIDX,
     AIX_VOLATILE_FIXIDX,
     ALPHA___ASSERT_FIXIDX,
+    ALPHA___EXTERN_PREFIX_FIXIDX,
     ALPHA_ASSERT_FIXIDX,
     ALPHA_GETOPT_FIXIDX,
     ALPHA_PARENS_FIXIDX,
@@ -5634,11 +6021,15 @@ typedef enum {
     HP_SYSFILE_FIXIDX,
     HPUX10_CPP_POW_INLINE_FIXIDX,
     HPUX11_CPP_POW_INLINE_FIXIDX,
+    HPUX10_CTYPE_DECLARATIONS1_FIXIDX,
+    HPUX10_CTYPE_DECLARATIONS2_FIXIDX,
     HPUX11_FABSF_FIXIDX,
     HPUX11_SIZE_T_FIXIDX,
     HPUX11_UINT32_C_FIXIDX,
     HPUX11_VSNPRINTF_FIXIDX,
     HPUX8_BOGUS_INLINES_FIXIDX,
+    HPUX_CTYPE_MACROS_FIXIDX,
+    HPUX_LONG_DOUBLE_FIXIDX,
     HPUX_MAXINT_FIXIDX,
     HPUX_SYSTIME_FIXIDX,
     INT_ABORT_FREE_AND_EXIT_FIXIDX,
@@ -5647,7 +6038,10 @@ typedef enum {
     IP_MISSING_SEMI_FIXIDX,
     IRIX_ASM_APOSTROPHE_FIXIDX,
     IRIX_LIMITS_CONST_FIXIDX,
+    IRIX___RESTRICT_FIXIDX,
+    IRIX_SOCKLEN_T_FIXIDX,
     IRIX_STDIO_VA_LIST_FIXIDX,
+    IRIX_WCSFTIME_FIXIDX,
     ISC_FMOD_FIXIDX,
     ISC_OMITS_WITH_STDC_FIXIDX,
     KANDR_CONCAT_FIXIDX,
@@ -5681,7 +6075,8 @@ typedef enum {
     RS6000_PARAM_FIXIDX,
     SCO_STATIC_FUNC_FIXIDX,
     SCO_UTIME_FIXIDX,
-    SOLARIS_MUTEX_INIT_FIXIDX,
+    SOLARIS_MUTEX_INIT_1_FIXIDX,
+    SOLARIS_MUTEX_INIT_2_FIXIDX,
     SOLARIS_STDIO_TAG_FIXIDX,
     SOLARIS_WIDEC_FIXIDX,
     STATSSWTCH_FIXIDX,
@@ -5754,15 +6149,15 @@ tFixDesc fixDescList[ FIX_COUNT ] = {
      AAB_FD_ZERO_SELECTBITS_H_TEST_CT, FD_MACH_ONLY | FD_REPLACEMENT,
      aAab_Fd_Zero_Selectbits_HTests,   apzAab_Fd_Zero_Selectbits_HPatch, 0 },
 
-  {  zAab_Sun_MemcpyName,    zAab_Sun_MemcpyList,
-     apzAab_Sun_MemcpyMachs,
-     AAB_SUN_MEMCPY_TEST_CT, FD_MACH_ONLY | FD_REPLACEMENT,
-     aAab_Sun_MemcpyTests,   apzAab_Sun_MemcpyPatch, 0 },
-
   {  zAab_Solaris_Sys_Varargs_HName,    zAab_Solaris_Sys_Varargs_HList,
      apzAab_Solaris_Sys_Varargs_HMachs,
      AAB_SOLARIS_SYS_VARARGS_H_TEST_CT, FD_MACH_ONLY | FD_REPLACEMENT,
      aAab_Solaris_Sys_Varargs_HTests,   apzAab_Solaris_Sys_Varargs_HPatch, 0 },
+
+  {  zAab_Sun_MemcpyName,    zAab_Sun_MemcpyList,
+     apzAab_Sun_MemcpyMachs,
+     AAB_SUN_MEMCPY_TEST_CT, FD_MACH_ONLY | FD_REPLACEMENT,
+     aAab_Sun_MemcpyTests,   apzAab_Sun_MemcpyPatch, 0 },
 
   {  zAab_Svr4_Replace_ByteorderName,    zAab_Svr4_Replace_ByteorderList,
      apzAab_Svr4_Replace_ByteorderMachs,
@@ -5813,6 +6208,11 @@ tFixDesc fixDescList[ FIX_COUNT ] = {
      apzAlpha___AssertMachs,
      ALPHA___ASSERT_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
      aAlpha___AssertTests,   apzAlpha___AssertPatch, 0 },
+
+  {  zAlpha___Extern_PrefixName,    zAlpha___Extern_PrefixList,
+     apzAlpha___Extern_PrefixMachs,
+     ALPHA___EXTERN_PREFIX_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
+     aAlpha___Extern_PrefixTests,   apzAlpha___Extern_PrefixPatch, 0 },
 
   {  zAlpha_AssertName,    zAlpha_AssertList,
      apzAlpha_AssertMachs,
@@ -5959,6 +6359,16 @@ tFixDesc fixDescList[ FIX_COUNT ] = {
      HPUX11_CPP_POW_INLINE_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
      aHpux11_Cpp_Pow_InlineTests,   apzHpux11_Cpp_Pow_InlinePatch, 0 },
 
+  {  zHpux10_Ctype_Declarations1Name,    zHpux10_Ctype_Declarations1List,
+     apzHpux10_Ctype_Declarations1Machs,
+     HPUX10_CTYPE_DECLARATIONS1_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
+     aHpux10_Ctype_Declarations1Tests,   apzHpux10_Ctype_Declarations1Patch, 0 },
+
+  {  zHpux10_Ctype_Declarations2Name,    zHpux10_Ctype_Declarations2List,
+     apzHpux10_Ctype_Declarations2Machs,
+     HPUX10_CTYPE_DECLARATIONS2_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
+     aHpux10_Ctype_Declarations2Tests,   apzHpux10_Ctype_Declarations2Patch, 0 },
+
   {  zHpux11_FabsfName,    zHpux11_FabsfList,
      apzHpux11_FabsfMachs,
      HPUX11_FABSF_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
@@ -5983,6 +6393,16 @@ tFixDesc fixDescList[ FIX_COUNT ] = {
      apzHpux8_Bogus_InlinesMachs,
      HPUX8_BOGUS_INLINES_TEST_CT, FD_MACH_ONLY,
      aHpux8_Bogus_InlinesTests,   apzHpux8_Bogus_InlinesPatch, 0 },
+
+  {  zHpux_Ctype_MacrosName,    zHpux_Ctype_MacrosList,
+     apzHpux_Ctype_MacrosMachs,
+     HPUX_CTYPE_MACROS_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
+     aHpux_Ctype_MacrosTests,   apzHpux_Ctype_MacrosPatch, 0 },
+
+  {  zHpux_Long_DoubleName,    zHpux_Long_DoubleList,
+     apzHpux_Long_DoubleMachs,
+     HPUX_LONG_DOUBLE_TEST_CT, FD_MACH_ONLY,
+     aHpux_Long_DoubleTests,   apzHpux_Long_DoublePatch, 0 },
 
   {  zHpux_MaxintName,    zHpux_MaxintList,
      apzHpux_MaxintMachs,
@@ -6024,10 +6444,25 @@ tFixDesc fixDescList[ FIX_COUNT ] = {
      IRIX_LIMITS_CONST_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
      aIrix_Limits_ConstTests,   apzIrix_Limits_ConstPatch, 0 },
 
+  {  zIrix___RestrictName,    zIrix___RestrictList,
+     apzIrix___RestrictMachs,
+     IRIX___RESTRICT_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
+     aIrix___RestrictTests,   apzIrix___RestrictPatch, 0 },
+
+  {  zIrix_Socklen_TName,    zIrix_Socklen_TList,
+     apzIrix_Socklen_TMachs,
+     IRIX_SOCKLEN_T_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
+     aIrix_Socklen_TTests,   apzIrix_Socklen_TPatch, 0 },
+
   {  zIrix_Stdio_Va_ListName,    zIrix_Stdio_Va_ListList,
      apzIrix_Stdio_Va_ListMachs,
      IRIX_STDIO_VA_LIST_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
      aIrix_Stdio_Va_ListTests,   apzIrix_Stdio_Va_ListPatch, 0 },
+
+  {  zIrix_WcsftimeName,    zIrix_WcsftimeList,
+     apzIrix_WcsftimeMachs,
+     IRIX_WCSFTIME_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
+     aIrix_WcsftimeTests,   apzIrix_WcsftimePatch, 0 },
 
   {  zIsc_FmodName,    zIsc_FmodList,
      apzIsc_FmodMachs,
@@ -6194,10 +6629,15 @@ tFixDesc fixDescList[ FIX_COUNT ] = {
      SCO_UTIME_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
      aSco_UtimeTests,   apzSco_UtimePatch, 0 },
 
-  {  zSolaris_Mutex_InitName,    zSolaris_Mutex_InitList,
-     apzSolaris_Mutex_InitMachs,
-     SOLARIS_MUTEX_INIT_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
-     aSolaris_Mutex_InitTests,   apzSolaris_Mutex_InitPatch, 0 },
+  {  zSolaris_Mutex_Init_1Name,    zSolaris_Mutex_Init_1List,
+     apzSolaris_Mutex_Init_1Machs,
+     SOLARIS_MUTEX_INIT_1_TEST_CT, FD_MACH_ONLY,
+     aSolaris_Mutex_Init_1Tests,   apzSolaris_Mutex_Init_1Patch, 0 },
+
+  {  zSolaris_Mutex_Init_2Name,    zSolaris_Mutex_Init_2List,
+     apzSolaris_Mutex_Init_2Machs,
+     SOLARIS_MUTEX_INIT_2_TEST_CT, FD_MACH_ONLY | FD_SUBROUTINE,
+     aSolaris_Mutex_Init_2Tests,   apzSolaris_Mutex_Init_2Patch, 0 },
 
   {  zSolaris_Stdio_TagName,    zSolaris_Stdio_TagList,
      apzSolaris_Stdio_TagMachs,
