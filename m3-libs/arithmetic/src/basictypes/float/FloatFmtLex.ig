@@ -15,6 +15,7 @@ TYPE
                prec    :  CARDINAL := R.MaxSignifDigits - 3;
                literal := FALSE;
              END;
+  TexStyle = FmtStyle;
 
 (*
 CONST
@@ -23,5 +24,8 @@ CONST
 
 <*INLINE*>
 PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}) : TEXT;
+
+CONST
+  Tex = Fmt;
 
 END FloatFmtLex.
