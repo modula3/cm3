@@ -51,20 +51,24 @@ END NewLine;
 
 (*=======================*)
 BEGIN
+(*
   NewLine(); EVAL TestWordEx();
-  (*NewLine(); EVAL TestBits();*)
+  NewLine(); EVAL TestBits();
   NewLine(); EVAL TestInteger();
   NewLine(); EVAL TestReal64();
   NewLine(); EVAL TestComplex();
-  (*NewLine(); EVAL TestVector();*)
-  (*NewLine(); EVAL TestMatrix();*)
+  NewLine(); EVAL TestVector();
+  NewLine(); EVAL TestMatrix();
   NewLine(); EVAL TestPolynomial();
   NewLine(); EVAL TestRoot();
   NewLine(); EVAL TestInterpolation();
-  (*NewLine(); EVAL TestSLE();*)
-  (*NewLine(); EVAL TestRandom();*)
-  (*NewLine(); EVAL TestFFT();*)
-  (*NewLine(); EVAL TestBigInteger();*)
-  (*NewLine(); EVAL TestGCD();*)
+  NewLine(); EVAL TestSLE();
+*)
+  NewLine(); EVAL TestRandom();
+(*
+  NewLine(); EVAL TestFFT();
+  NewLine(); EVAL TestBigInteger();
+  NewLine(); EVAL TestGCD();
   NewLine(); EVAL TestEigenSystem();
+*)
 END Test.
