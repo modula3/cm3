@@ -32,7 +32,7 @@ VAR
   y := T{NEW(Value,x.size),x.size,x.sign};
 
 BEGIN
-  y.data^ := x.data^;
+  y.data^ := SUBARRAY(x.data^,0,LAST(y.data^));
   RETURN y;
 END Copy;
 
