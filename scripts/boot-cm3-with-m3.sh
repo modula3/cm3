@@ -16,7 +16,17 @@ else
   export root
 fi
 
-BUILDARGS="-DBOOT"
+if m="`type m3build 2>/dev/null`" ; then
+  if echo $m | grep pm3 >/dev/null 2>/dev/null ; then
+    IBUILDARGS="-DBOOT -DPM3"
+  else
+    IBUILDARGS="-DBOOT"
+  fi
+else
+  IBUILDARGS="-DBOOT"
+fi
+BUILDARGS="${BUILDARGS:-${IBUILDARGS}}"
+
 export BUILDARGS
 
 . "$sysinfo"
@@ -33,7 +43,7 @@ P="${P} m3front"
 P="${P} m3quake"
 [ "${GCC_BACKEND}" = yes ] && P="${P} m3cc"
 P="${P} cm3"
-P="${P} cminstall"
+echo ${BUILDARGS} | grep PM3 >/dev/null 2>/dev/null || P="${P} cminstall"
 [ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
 
 USAGE="
