@@ -308,6 +308,7 @@ m3_fcntl(int fd, int request, int arg)
   return result;
 }
 
+#ifdef SYS_fsctl
 int
 fsctl (const char *path, unsigned long request, void *data,
        unsigned long option)
@@ -321,6 +322,7 @@ fsctl (const char *path, unsigned long request, void *data,
   EXIT_CRITICAL;
   return result;
 }
+#endif
 
 int
 fstat(int fd, struct stat *buf)
