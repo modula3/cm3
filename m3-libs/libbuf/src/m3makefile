@@ -1,0 +1,6 @@
+
+import("libm3")
+Module("Buf")
+Module("Wx")
+
+Library("libbuf")
