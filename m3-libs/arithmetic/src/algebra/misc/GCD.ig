@@ -33,14 +33,20 @@ PROCEDURE Bezout(u,v,w:T; VAR (*OUT*) c : ARRAY [0..1],[0..1] OF T) RAISES {Erro
   . w must be divisible by GCD(u,v),
   otherwise Err.indivisible is raised. *)
 
-(*
-PROCEDURE MACDecompose(u,v:T; VAR (*OUT*) mac : RList.T) : T;
+(*no need to instantiate a list type for that purpose*)
+TYPE
+  MAC =
+    REF RECORD
+      next   : MAC;
+      factor : T;
+    END;
+
+PROCEDURE MACDecompose(u,v:T; VAR (*OUT*) mac : MAC) : T;
 (*returns the greatest common divisor of u and v
   and writes a list of Multiply&Accumulate operations to 'mac'
   Start with x := GCD(u,v); y := Zero;
   Iterate    y := y + x*mac; Swap(x,y); mac := mac.tail;
   at the end u=x and v=y *)
-*)
 
 (*==========================*)
 END GCD.
