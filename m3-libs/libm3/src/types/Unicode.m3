@@ -1,4 +1,5 @@
-(* Copyright 1997, Critical Mass, Inc.  All rights reserved. *)
+(* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 (* This module is based on the Unicode 2.0 mapping tables:
         ftp://unicode.org/pub/UNIDATA/UnicodeData-2.0.14.txt
