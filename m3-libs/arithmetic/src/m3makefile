@@ -58,15 +58,16 @@ export_interface("xInterp")
 module("xSLE")
 export_interface("xSLE")
 
-module("xRand")
-interface("xRandP")
-export_interface("xRand")
+% xRandP cannot be found, when the package is imported for testing
+%module("xRand")
+%interface("xRandP")
+%export_interface("xRand")
 
-module("xRNG01")
-export_interface("xRNG01")
+%module("xRNG01")
+%export_interface("xRNG01")
 
-module("xRNG02")
-export_interface("xRNG02")
+%module("xRNG02")
+%export_interface("xRNG02")
 
 module("xStat")
 export_interface("xStat")
@@ -83,4 +84,8 @@ export_interface("xFFT")
 %module("xStat")
 %export_interface("xStat")
 
-library("m3na")
+% this is also given in the m3makefile in the directory above
+% if the statement is given twice, no quake error is thrown
+% but the .M3EXPORT file remain incomplete and thus modules
+% will not be found, if importing this library somewhere
+%library("m3na")
