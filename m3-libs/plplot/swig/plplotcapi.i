@@ -48,20 +48,27 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 typedef void* PLPointer;
 
 typedef PLINT  PLArraySize;
-typedef PLFLT* PLFLTArray;
-typedef PLFLT* PLFLTArrayCk;
-typedef PLINT* PLINTArray;
-typedef PLINT* PLINTArrayCk;
-typedef PLINT* PLINTArrayCkInterim;
 
-typedef PLINT* PLINTOutput;
+typedef PLFLT* PLFLTArray;
+typedef PLFLTArray PLFLTArrayFst;
+typedef PLFLTArray PLFLTArrayCk;
+typedef PLFLTArray PLFLTArrayX;
+typedef PLFLTArray PLFLTArrayY;
+
+typedef PLINT* PLINTArray;
+typedef PLINTArray PLINTArrayFst;
+typedef PLINTArray PLINTArrayCk;
+typedef PLINTArray PLINTArrayCkInterim;
+
 typedef PLFLT* PLFLTOutput;
+typedef PLINT* PLINTOutput;
 typedef char*  PLCharOutput;
 
 typedef PLFLT* PLFLTInOut;
 
-typedef PLFLT** Matrix;
-typedef PLFLT** MatrixCk;
+typedef PLFLT** PLFLTMatrix;
+typedef PLFLTMatrix  PLFLTMatrixFst;
+typedef PLFLTMatrix  PLFLTMatrixCk;
 
 /*--------------------------------------------------------------------------*\
  * Complex data types and other good stuff
@@ -189,7 +196,7 @@ plaxes(PLFLT x0, PLFLT y0, const char *xopt, PLFLT xtick, PLINT nxsub,
 
 DOC(plbin,"Plot a histogram using x to store data values and y to store frequencies.")
 void
-plbin(PLArraySize n, PLFLTArray x, PLFLTArrayCk y, PLINT center);
+plbin(PLArraySize n, PLFLTArrayFst x, PLFLTArrayCk y, PLINT center);
 
 DOC(plbop, "Start new page.  Should only be used with pleop().")
 void
@@ -224,8 +231,8 @@ plcol1(PLFLT col1);
 
 DOC(plcont, "Draw a contour plot.")
 void
-plcont(PLFLTMatrix z, PLArraySize nx, PLArraySize ny, PLINT kx, PLINT lx,
-	 PLINT ky, PLINT ly, PLFLTArray x, PLArraySize n,
+plcont(PLFLTMatrixFst z, PLArraySize nx, PLArraySize ny, PLINT kx, PLINT lx,
+	 PLINT ky, PLINT ly, PLFLTArrayFst x, PLArraySize n,
 	 pltr_func pltr,
 	 PLPointer OBJECT_DATA);
 
@@ -252,11 +259,11 @@ pleop(void);
 
 DOC(plerrx, "Plot horizontal error bars (xmin(i),y(i)) to (xmax(i),y(i)).")
 void
-plerrx(PLArraySize n, PLFLTArray xmin, PLFLTArrayCk xmax, PLFLTArrayCk y);
+plerrx(PLArraySize n, PLFLTArrayFst xmin, PLFLTArrayCk xmax, PLFLTArrayCk y);
 
 DOC(plerry, "Plot vertical error bars (x,ymin(i)) to (x(i),ymax(i)).")
 void
-plerry(PLArraySize n, PLFLTArray x, PLFLTArrayCk ymin, PLFLTArrayCk ymax);
+plerry(PLArraySize n, PLFLTArrayFst x, PLFLTArrayCk ymin, PLFLTArrayCk ymax);
 
 DOC(plfamadv, "Advance to the next family file on the next new page.")
 void
@@ -264,11 +271,11 @@ plfamadv(void);
 
 DOC(plfill, "Pattern fills the polygon bounded by the input points.")
 void
-plfill(PLArraySize n, PLFLTArray x, PLFLTArrayCk y);
+plfill(PLArraySize n, PLFLTArrayFst x, PLFLTArrayCk y);
 
 DOC(plfill3, "Pattern fills the 3d polygon bounded by the input points.")
 void
-plfill3(PLArraySize n, PLFLTArray x, PLFLTArrayCk y, PLFLTArrayCk z);
+plfill3(PLArraySize n, PLFLTArrayFst x, PLFLTArrayCk y, PLFLTArrayCk z);
 
 DOC(plflush, "Flush the output stream.  Use sparingly, if at all.")
 void
@@ -384,7 +391,7 @@ plgzax(PLINTOutput digmax, PLINTOutput digits);
 
 DOC(plhist, "Draw histogram.")
 void
-plhist(PLArraySize n, PLFLTArray x, PLFLT datmin, PLFLT datmax,
+plhist(PLArraySize n, PLFLTArrayFst x, PLFLT datmin, PLFLT datmax,
 	 PLINT nbin, PLINT oldwin);
 
 DOC(plhls, "Set current color (map 0) by hue, lightness, and saturation.")
@@ -409,11 +416,11 @@ pllightsource(PLFLT x, PLFLT y, PLFLT z);
 
 DOC(plline, "Draw line segments connecting a series of points.")
 void
-plline(PLArraySize n, PLFLTArray x, PLFLTArrayCk y);
+plline(PLArraySize n, PLFLTArrayFst x, PLFLTArrayCk y);
 
 DOC(plline3, "Draw a line in 3 space.")
 void
-plline3(PLArraySize n, PLFLTArray x, PLFLTArrayCk y, PLFLTArrayCk z);
+plline3(PLArraySize n, PLFLTArrayFst x, PLFLTArrayCk y, PLFLTArrayCk z);
 
 DOC(pllsty, "Set line style.")
 void
@@ -427,7 +434,7 @@ plmesh(PLFLTArrayX x, PLFLTArrayY y, PLFLTMatrixCk z,
 DOC(plmeshc, "Plot a 3-d contoured mesh representation of the function z[x][y].")
 void
 plmeshc(PLFLTArrayX x, PLFLTArrayY y, PLFLTMatrixCk z,
-	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArray clevel, PLINT n);
+	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArrayFst clevel, PLArraySize n);
 
 DOC(plmkstrm, "Create a new stream and makes it the default.")
 void
@@ -446,28 +453,28 @@ plot3d(PLFLTArrayX x, PLFLTArrayY y, PLFLTMatrixCk z,
 DOC(plot3dc, "Plot a 3-d contoured representation of the function z[x][y].")
 void
 plot3dc(PLFLTArrayX x, PLFLTArrayY y, PLFLTMatrixCk z,
-	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArray clevel, PLINT n);
+	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArrayFst clevel, PLArraySize n);
 
 DOC(plsurf3d, "Plot a 3-d contoured surface representation of the function z[x][y].")
 void
 plsurf3d(PLFLTArrayX x, PLFLTArrayY y, PLFLTMatrixCk z,
-	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArray clevel, PLINT n);
+	 PLArraySize nx, PLArraySize ny, PLINT opt, PLFLTArrayFst clevel, PLArraySize n);
 
 DOC(plpat, "Set fill pattern directly.")
 void
-plpat(PLArraySize n, PLINTArray inc, PLINTArrayCk del);
+plpat(PLArraySize n, PLINTArrayFst inc, PLINTArrayCk del);
 
 DOC(plpoin, "Plot array y against x for n points using ASCII code \"code\".")
 void
-plpoin(PLArraySize n, PLFLTArray x, PLFLTArrayCk y, PLINT code);
+plpoin(PLArraySize n, PLFLTArrayFst x, PLFLTArrayCk y, PLINT code);
 
 DOC(plpoin3, "Draw a series of points in 3 space.")
 void
-plpoin3(PLArraySize n, PLFLTArray x, PLFLTArrayCk y, PLFLTArrayCk z, PLINT code);
+plpoin3(PLArraySize n, PLFLTArrayFst x, PLFLTArrayCk y, PLFLTArrayCk z, PLINT code);
 
 DOC(plpoly3, "Draw a polygon in 3 space. ")
 void
-plpoly3(PLArraySize n, PLFLTArray x, PLFLTArrayCk y, PLFLTArrayCk z, PLINTArrayCkInterim draw,
+plpoly3(PLArraySize n, PLFLTArrayFst x, PLFLTArrayCk y, PLFLTArrayCk z, PLINTArrayCkInterim draw,
 	    PLINT flag);
 
 DOC(plprec, "Set the floating point precision (in number of places) in numeric labels.")
@@ -492,7 +499,7 @@ plschr(PLFLT def, PLFLT scale);
 
 DOC(plscmap0, "Set color map 0 colors by 8 bit RGB values.")
 void
-plscmap0(PLINTArray r, PLINTArrayCk g, PLINTArrayCk b, PLArraySize n);
+plscmap0(PLINTArrayFst r, PLINTArrayCk g, PLINTArrayCk b, PLArraySize n);
 
 DOC(plscmap0n, "Set number of colors in cmap 0.")
 void
@@ -500,11 +507,11 @@ plscmap0n(PLINT ncol0);
 
 DOC(plscmap1, "Set color map 1 colors by 8 bit RGB values.")
 void
-plscmap1(PLINTArray r, PLINTArrayCk g, PLINTArrayCk b, PLArraySize n);
+plscmap1(PLINTArrayFst r, PLINTArrayCk g, PLINTArrayCk b, PLArraySize n);
 
 DOC(plscmap1l, "Set color map 1 colors using a piece-wise linear relationship between intensity [0,1] (cmap 1 index) and position in HLS or RGB color space.")
 void
-plscmap1l(PLINT itype, PLArraySize n, PLFLTArray pos,
+plscmap1l(PLINT itype, PLArraySize n, PLFLTArrayFst pos,
 	    PLFLTArrayCk coord1, PLFLTArrayCk coord2, PLFLTArrayCk coord3,
        PLINTArrayCkInterim rev);
 
@@ -571,9 +578,9 @@ plsfnam(const char *fnam);
 
 DOC(plshades, "Shade regions with continuous range of colours.")
 void 
-plshades( PLFLTMatrix a, PLArraySize nx, PLArraySize ny, defined_func df,
+plshades( PLFLTMatrixFst a, PLArraySize nx, PLArraySize ny, defined_func df,
 	  PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
-	  PLFLTArray x, PLArraySize n, PLINT fill_width,
+	  PLFLTArrayFst x, PLArraySize n, PLINT fill_width,
 	  PLINT cont_color, PLINT cont_width,
 	  fill_func ff, PLINT rectangular,
 	  pltr_func pltr,
@@ -581,7 +588,7 @@ plshades( PLFLTMatrix a, PLArraySize nx, PLArraySize ny, defined_func df,
 
 DOC(plshade, "Shade region with discrete colour, pattern fill.")
 void 
-plshade(PLFLTMatrix a, PLArraySize nx, PLArraySize ny, defined_func df,
+plshade(PLFLTMatrixFst a, PLArraySize nx, PLArraySize ny, defined_func df,
 	  PLFLT left, PLFLT right, PLFLT bottom, PLFLT top,
 	  PLFLT shade_min, PLFLT shade_max,
 	  PLINT sh_cmap, PLFLT sh_color, PLINT sh_width,
@@ -618,7 +625,7 @@ plsstrm(PLINT strm);
 
 DOC(plssub, "Set the number of subwindows in x and y.")
 void
-plssub(PLArraySize nx, PLArraySize ny);
+plssub(PLINT nx, PLINT ny);
 
 DOC(plssym, "Set symbol height.")
 void
@@ -626,11 +633,11 @@ plssym(PLFLT def, PLFLT scale);
 
 DOC(plstar, "Initialize PLplot, passing in the windows/page settings.")
 void
-plstar(PLArraySize nx, PLArraySize ny);
+plstar(PLINT nx, PLINT ny);
 
 DOC(plstart, "Initialize PLplot, passing the device name and windows/page settings.")
 void
-plstart(const char *devname, PLArraySize nx, PLArraySize ny);
+plstart(const char *devname, PLINT nx, PLINT ny);
 
 DOC(plstripa, "Add a point to a stripchart. ")
 void
@@ -643,7 +650,7 @@ plstripc(PLINTOutput id, char *xspec, char *yspec,
 	PLFLT xlpos, PLFLT ylpos,
 	PLINT y_ascl, PLINT acc,
 	PLINT colbox, PLINT collab,
-	PLINTArray colline, PLINTArrayCk styline, char *legline[4],
+	PLINTArrayFst colline, PLINTArrayCk styline, char *legline[4],
 	char *labx, char *laby, char *labtop);
 
 DOC(plstripd, "Deletes and releases memory used by a stripchart. ")
@@ -652,7 +659,7 @@ plstripd(PLINT id);
 
 DOC(plstyl, "Set up a new line style.")
 void
-plstyl(PLArraySize n, PLINTArray mark, PLINTArrayCk space);
+plstyl(PLArraySize n, PLINTArrayFst mark, PLINTArrayCk space);
 
 DOC(plsvpa, "Set the edges of the viewport to the specified absolute coordinates.")
 void
@@ -668,7 +675,7 @@ plsyax(PLINT digmax, PLINT digits);
 
 DOC(plsym, "Plot array y against x for n points using Hershey symbol \"code\"")
 void
-plsym(PLArraySize n, PLFLTArray x, PLFLTArrayCk y, PLINT code);
+plsym(PLArraySize n, PLFLTArrayFst x, PLFLTArrayCk y, PLINT code);
 
 DOC(plszax, "Set z axis labeling parameters")
 void
