@@ -18,6 +18,7 @@ REVEAL
         getLast   := GetLast;
         getNumber := GetNumber;
         getData   := GetData;
+        getValue  := GetValue;
 
         sum   := Sum;
         inner := Inner;
@@ -40,8 +41,9 @@ REVEAL
 
         alternate := Alternate;
 
-        convolve  := Mul;
-        superpose := Add;
+        superpose     := Add;
+        convolve      := Mul;
+        autocorrelate := Autocorrelate;
       END;
 
 
@@ -144,6 +146,15 @@ PROCEDURE GetData (SELF: T): P.T =
   BEGIN
     RETURN SELF.data;
   END GetData;
+
+PROCEDURE GetValue (SELF: T; pos: IndexType): R.T =
+  BEGIN
+    IF SELF.first <= pos AND pos < SELF.first + NUMBER(SELF.data^) THEN
+      RETURN SELF.data[pos - SELF.first];
+    ELSE
+      RETURN R.Zero;
+    END;
+  END GetValue;
 
 
 PROCEDURE Sum (SELF: T): R.T =
@@ -375,6 +386,11 @@ PROCEDURE Add (x: T; y: T): T =
     END;
     RETURN z;
   END Add;
+
+PROCEDURE Autocorrelate (x: T): T =
+  BEGIN
+    RETURN x.adjoint().convolve(x);
+  END Autocorrelate;
 
 
 BEGIN

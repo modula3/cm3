@@ -2,7 +2,7 @@ GENERIC MODULE RefinableFunc(R, CVT, M, Eigen, S);
 
 IMPORT NADefinitions AS NA;
 
-PROCEDURE TransitionMatrix (mask: S.T; shift: CARDINAL := 2): M.T =
+PROCEDURE RadicBandMatrix (mask: S.T; shift: CARDINAL := 2): M.T =
   VAR
     (*the size of the matrix is the maximum possible with still avoiding of
        zeros on the diagonal from outside the support of the mask*)
@@ -13,12 +13,16 @@ PROCEDURE TransitionMatrix (mask: S.T; shift: CARDINAL := 2): M.T =
       mask.clipToArray(mask.getLast() - j * shift, z[j]);
     END;
     RETURN z;
+  END RadicBandMatrix;
+
+PROCEDURE TransitionMatrix (mask: S.T; shift: CARDINAL := 2): M.T =
+  BEGIN
+    RETURN RadicBandMatrix(mask.autocorrelate(), shift);
   END TransitionMatrix;
 
 PROCEDURE TransitionEV (mask: S.T): Eigen.EV RAISES {NA.Error} =
   BEGIN
-    RETURN Eigen.EigenValues(
-             TransitionMatrix(mask.adjoint().convolve(mask)));
+    RETURN Eigen.EigenValues(TransitionMatrix(mask));
   END TransitionEV;
 
 PROCEDURE TransitionSpecRad (mask: S.T): R.T RAISES {NA.Error} =
