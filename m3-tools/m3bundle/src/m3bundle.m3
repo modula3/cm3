@@ -303,7 +303,7 @@ PROCEDURE ParseOptions (next_arg: PROCEDURE (): TEXT): BOOLEAN =
     LOOP
       arg := next_arg ();
       IF (arg = NIL) THEN
-        RETURN TRUE;
+        RETURN module # NIL;
       ELSIF Text.Equal (arg, "-name") THEN
         module  := next_arg ();
         IF (module = NIL) THEN RETURN FALSE END;
