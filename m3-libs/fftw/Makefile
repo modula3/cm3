@@ -13,7 +13,7 @@ runtest:
 	cd test && cm3 && LINUXLIBC6/test
 
 fftw:	src/m3makefile $(patsubst %, src/%, $(M3FILES))
-	cm3
+	cm3 -O
 
 src/LongRealFFTW.i3:	swig/fftw3double.i swig/fftw3float.i swig/fftw3longdouble.i \
                         swig/fftw3base.i swig/fftw3base.h
