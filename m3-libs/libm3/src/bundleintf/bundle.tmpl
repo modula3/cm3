@@ -12,6 +12,12 @@ RESOURCES = {} % list of resources to bundle
 readonly rsrc_extensions = [ ".i3", ".ic", ".is", ".io", "_i.o",
                              ".m3", ".mc", ".ms", ".mo", "_m.o" ]
 
+if defined("M3BUNDLE")
+  _M3BUNDLE = M3BUNDLE
+else
+  _M3BUNDLE = BIN_USE & SL & "m3bundle"
+end
+
 readonly proc resource_named(rd, x) is
   RESOURCES{rd} = path_of(x)
 end
@@ -44,7 +50,7 @@ readonly proc bundle(m) is
       end
     end
     if anystale
-      exec(BIN_USE & SL & "m3bundle", "-name", m, arglist("-F", elements))
+      exec(_M3BUNDLE, "-name", m, arglist("-F", elements))
     end
     RESOURCES = {} % so we don't keep capturing the same ones...
   end
