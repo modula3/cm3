@@ -1,0 +1,38 @@
+/* Copyright (C) 1994, Digital Equipment Corporation           */
+/* All rights reserved.                                        */
+/* See the file COPYRIGHT for a full description.              */
+/*                                                             */
+/* Last modified on Thu Jun 20 15:30:48 PDT 1996 by heydon     */
+/*      modified on Mon May 23 23:42:44 PDT 1994 by najork     */
+/*      modified on Thu Sep 24 11:16:45 PDT 1992 by mhb        */
+/*      modified on Wed Jul 29 23:47:39 PDT 1992 by johnh      */
+/*      modified on Mon Jul 27  2:19:38 PDT 1992 by sclafani   */
+
+import    ("zeus")
+
+list      ("Real", "RealType")
+
+zume      ("Binpack")
+oblume    ("Binpack", "myview")
+
+module    ("BinpackAux")
+module    ("AlgFFSimple")
+module    ("AlgFFPromptForWeights")
+module    ("AlgFFCodeView")
+module    ("AlgFF")
+module    ("PackingView1")
+module    ("PackingView2")
+module    ("PackingView3")
+module    ("PackingView4")
+
+resource  ("binpackinput.fv")
+resource  ("binpackprompt.fv")
+resource  ("alg.c")
+resource  ("binpackFFvar.fv")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation ("Main")
+  bundle         ("BinpackBundle")
+  program        ("binpack")
+end
+

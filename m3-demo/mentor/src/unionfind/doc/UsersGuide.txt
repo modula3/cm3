@@ -1,0 +1,164 @@
+Last modified on Fri Aug 19 16:32:44 PDT 1994 by heydon
+
+The Algorithms
+~~~~~~~~~~~~~~
+
+The UnionFind(1) animation program offers six Union-Find algorithms,
+as described in the "UnionFindAlgs.txt" file:
+
+  List, No Heuristics      List algorithm w/ no heuristics
+  List, Union by Rank      List algorithm w/ the union-by-rank heuristic
+  Tree, No Heuristics      Tree algorithm w/ no heuristics
+  Tree, Path Compression   Tree algorithm w/ the path compression heuristic
+  Tree, Union by Rank      Tree algorithm w/ the union-by-rank heuristic
+  Tree, Both Heuristics    Tree algorithm w/ both heuristics
+
+The Input Form
+~~~~~~~~~~~~~~
+
+When you select any of the six algorithms listed above, you get the
+same input form under the "Input for algorithm" section of the Zeus
+control panel. The top "Input:" line of the form offers two choices:
+"Random" and "From File".
+
+If you click on "Random", you get a form that allows you to select the
+number of sets and the number of Union operations. When you run an
+algorithm with random input, the algorithm starts by creating the
+indicated number of sets, and then repeatedly selects two nodes at
+random and performs the Union operation on them. This includes
+performing Find operations on each of the selected nodes to determine
+which roots to merge. The two nodes selected at each step may already
+be in the same set (i.e., have the same representative or root), in
+which case no data structures are merged.
+
+There is also a boolean check box that allows you to specify that a
+fixed seed should be used. If this box is checked, the behavior of the
+algorithm is determined deterministically from the number of sets and
+Union operations you've specified.
+
+If you clicked on "From File", you get a form that allows you to
+select a file in the file system. In any given directory, all
+directories are displayed, but only those files with a ".sx" extension
+are displayed. You can double-click on a directory name to see the
+contents of that directory. You can also use the button above the file
+browser to quickly move to any ancestor directory. To select an input
+file, just click on it, and it will be highlighted. Any ".sx" input
+file you select should conform to the input file format described in
+"InputFileFormat.txt". See "ExampleInput.sx" for a sample input file.
+
+The Views
+~~~~~~~~~
+
+In addition to the transcript view, there are six views available in
+the UnionFind algorithm:
+
+1. Tree.obl
+
+This view displays the tree data structures maintained by the
+algorithms, as well as the detailed actions of the algorithms. Each
+node is labeled with its name.
+
+If the algorithm you are running uses the union by rank heuristic,
+horizontal red bars are displayed over each tree to indicate the rank
+of that tree. Initially, every node has rank 0, so the bars have zero
+width; they look like short black vertical line segments.
+
+A Find operation on the node "x" begins by drawing an orange and red
+highlight around the node "x". The red highlight moves up the tree to
+the root, each edge along the path being thickened as it goes. When it
+gets to the root, a blue highlight is drawn around the representative
+node. If the algorithm uses path compression, the red highlight
+changes to purple, and the purple highlight moves back down the path
+of thick edges to "x", making each edge thin again on the way back
+down.
+
+A Union operation on the nodes "x" and "y" begins by drawing orange
+highlights around both nodes. Unless both nodes are known to be roots,
+nested Find operations are then performed and rendered as described in
+the previous paragraph. At the end of this process, the representative
+(root) nodes will be highlighted with blue. If they are not the same
+node, then the trees are joined by a thick red edge from one root to
+the other, and the trees are rearranged to reflect the new tree
+topology.
+
+2. BigTree.obl
+
+This is very much like the "Tree.obl" view, but it is meant for
+displaying larger data sets. This view elides certain displays in the
+"Tree.obl" view. First, the labels on the nodes are not displayed.
+Second, there are no animated highlights associated with the Find
+operation. Instead, when the Find operation is performed on some node
+"x", a thick black line is drawn from "x" to the root of its tree to
+indicate "x"'s representative, and a blue highlight is drawn around
+the representative. However, the Union operations and those of
+changing the parent of a node are animated.
+
+3. FindLength.obl
+
+This view shows a history of the lengths of the paths traversed in
+each Find operation. There are vertical red bars for each path length,
+starting with paths of lengths 0 (these correspond to Find operations
+performed on roots). The number below each bar is the corresponding
+path length, and the height of each bar is the number of Find
+operations on that path length. This number is also displayed in the
+center of the bar. (Actually, the heights of the bars are proportional
+to the square root of this number.)
+
+Along the bottom of the view are two statistical figures: a "Total"
+and an "Average". The total is the sum of the Find paths, that is, the
+sum over the bars of the product of the path length represented by
+that bar and the number of Find operations for that path length. The
+average is the average path length per Find operation.
+
+Since the path length per Find is the dominant cost of the Tree
+algorithm, this view is primarily useful with the four variants of
+that algorithm.
+
+4. ChangeParent.obl
+
+This view shows a history of the number of nodes whose parent pointers
+had to be changed per Union operation. The view is very similar to the
+"FindLength" view described above, but here the bars correspond to the
+number of parent pointers that were changed in the course of a Union
+operation. Since there is always at least one parent pointer changed
+per Union (namely, the second root's parent pointer), the leftmost bar
+is labeled "1".
+
+Since the number of parent pointers changed per Union is the dominant
+cost of the List algorithm, this view is primarily useful with the two
+variants of that algorithm.
+
+5. NodeDepth.obl
+
+This view shows an abstraction of the tree topology. In particular, it
+counts the number of nodes at each node depth. There is a vertical
+purple bar for each node depth (starting with 0), and the height of
+each bar is the number of nodes at that depth. The number below each
+bar is the depth, and the label inside each bar is the number of nodes
+at that depth. (Actually, the height of each bar is proportional to
+the square root of the number of nodes at the indicated depth.)
+
+This view is self-scaling: the bars are scaled vertically so that
+tallest bar fills the view, and they are scaled horizontally so that
+only the relevant bars are shown.
+
+The average node depth is shown along the bottom of the view.
+
+6. AverageDepth.obl
+
+This view shows a history of the average node depth (whose value is
+printed in the "NodeDepth" view described above) over time. Each time
+the average node depth changes, a new vertical purple bar is drawn
+corresponding to the new average depth.
+
+Like the "NodeDepth" view, this view is also self-scaling. The bars
+are scaled vertically so that the tallest bar fills the view, and they
+are scaled horizontally so they fill the view in that direction as
+well. The height of that tallest bar is printed along the bottom of
+the view.
+
+This view is especially useful in conjunction with the Tree algorithms
+using the path compression heuristic, or with the List algorithms.
+Usually, the average node depth grows monotonically, but it decreases
+due to path compressions in the Tree algorithm case and Union
+operations in the List algorithm case.

@@ -1,0 +1,17 @@
+(* Copyright (C) 1992, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+
+IMPORT Sort;
+
+ALGDATA
+  a: Sort.Keys;
+  N: CARDINAL;
+
+OUTPUT Init(N: CARDINAL [Fmt.Int]; passes: CARDINAL [Fmt.Int]);
+OUTPUT SetVal(i: CARDINAL [Fmt.Int]; val: Sort.Key [Fmt.Int]);
+OUTPUT SwapElts(i,j: CARDINAL [Fmt.Int]);
+OUTPUT StartPass();
+
+UPDATE UpdateVal(i: CARDINAL [Fmt.Int]; val: Sort.Key [Fmt.Int]);
+FEEDBACK ChangeVal(i: CARDINAL [Fmt.Int]; new: Sort.Key [Fmt.Int]);

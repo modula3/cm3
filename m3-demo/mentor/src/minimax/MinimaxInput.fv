@@ -1,0 +1,71 @@
+; Copyright (C) 1993, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(VBox
+ (Bar)
+ (HBox
+   (Glue 5)
+   (VBox
+     (Glue 5)
+     (Text Center "Player A")
+     (Glue 5)
+     (Radio %AHumanComp =AHuman
+       (VBox
+         (Choice %AHuman  (Text LeftAlign "Human"))
+         (Choice %AMinimax (Text LeftAlign "Minimax"))
+         (HBox (Glue 30)
+           (VBox
+             (HBox (Text "Depth:") (Glue 5)
+               (Numeric (Min 1) (Max 10) %ADepth =3))
+               (VBox (Text LeftAlign "Heuristic:")
+               (HBox (Glue 10)
+                  (Radio %AHexpawn =AHPTrivial
+                     (VBox
+                        (Choice %AHPTrivial (Text LeftAlign "Trivial"))
+                        (Choice %AHPSmart (Text LeftAlign "Smart"))
+                        Fill
+                      )
+                   )
+                 )
+               )
+              )
+            )
+         )
+      )
+   )
+  (Glue 5)                 
+  (Bar)
+  (Glue 5)
+(HBox
+  (VBox
+     (Glue 5)
+     (Text Center "Player B")
+     (Glue 5)
+     (Radio %BHumanComp =BHuman
+       (VBox
+         (Choice %BHuman  (Text LeftAlign "Human"))
+         (Choice %BMinimax (Text LeftAlign "Minimax"))
+         (HBox (Glue 30)
+            (VBox
+              (HBox (Text "Depth:") (Glue 5)
+                    (Numeric (Min 1) (Max 10) %BDepth =3))
+              (VBox (Text LeftAlign "Heuristic:")
+              (HBox (Glue 10)
+                    (Radio %BHexpawn =BHPTrivial
+                      (VBox
+                        (Choice %BHPTrivial (Text LeftAlign "Trivial"))
+                        (Choice %BHPSmart (Text LeftAlign "Smart"))
+                        Fill
+                      )
+                     )
+                 )
+               ))
+              )
+            )
+         )
+      )
+   ) 
+(Glue 5)
+))
+

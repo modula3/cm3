@@ -1,0 +1,17 @@
+(Weich)
+
+This directory contains the tests for the stable object package
+
+The current version does not test the stub generator. The stable object
+StableTest.T was generated manually.
+
+To run the test do the following:
+
+* first compile in this directory (by calling m3build)
+* edit shell script "maketest"; set the variables in the first few lines according
+  to your site
+* run "maketest"
+
+The outcome is a number of calles of the test program. All tests should 
+return "passed"!
+

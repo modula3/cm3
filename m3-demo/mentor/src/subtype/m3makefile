@@ -1,0 +1,24 @@
+/* Copyright 1993 Digital Equipment Corporation. */
+/* Distributed only by permission. */
+/* Last modified on Thu Jun 20 15:44:51 PDT 1996 by heydon     */
+/*      modified on Thu Feb  9 09:43:21 PST 1995 by kalsow     */
+/*      modified on Thu Aug 18 16:43:42 PDT 1994 by mhb        */
+/*      modified on Mon Aug 30 09:50:59 PDT 1993 by hania      */
+/*      modified on Wed Jul 28 18:07:17 1993 by luca       */
+
+import ("zeus")
+
+zume ("Subtype")
+
+oblume ("Subtype", "view1")
+
+module ("AlgSubtype")
+
+resource ("subtypeinput.fv")
+resource ("alg_m3.code")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation ("Main")
+  bundle ("SubtypeBundle")
+  program ("subtype")
+end

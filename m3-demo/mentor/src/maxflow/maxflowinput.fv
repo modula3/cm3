@@ -1,0 +1,43 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(VBox 
+  (Glue 10)
+  (HBox 
+    (Shape (Width + 0) "Capacity for new edges: ") 
+    (Border (TypeIn %capacity ="3.0"))
+    (Glue 20))
+  (Glue 10)
+  (HBox
+    (Shape (Width + 0) "Label prefix for new vertex: ") 
+    (Border (TypeIn %vertexname =""))
+    (Glue 20))
+  (Glue 10) (Bar) (Glue 10)
+  (HBox
+    (Shape (Width + 0) "Create edge between vertex: ") 
+    (Border (TypeIn %vertex0))
+    (Glue 20))
+  (Glue 10)
+  (HBox
+    (Shape (Width + 0) "   and vertex: ") 
+    (Border (TypeIn %vertex1))
+    (Glue 20)
+    (Button %DoEdge " DO IT ")
+    (Glue 20))
+  (Glue 10) (Bar) (Glue 10)
+  (Filter Dormant (HBox
+    (Glue 10)
+    (Button %Save "Save/use Pkl file")
+    (Glue 10)
+    (Border (TypeIn %filename =""))
+    (Glue 20) Fill))
+  (Glue 10)
+  (VBox
+    (Shape (Height + 0) (Text LeftAlign "Canned data files:"))
+    (Border (Shape (Height 100 + Inf)
+      (Browser =0 %asciifilename 
+        (Items "data.backedge" "data.big" "data.big2" "data.fin" "data.simple")
+        ))))
+  (Glue 10)
+)

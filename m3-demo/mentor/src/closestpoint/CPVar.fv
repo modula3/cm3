@@ -1,0 +1,21 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(Scale
+  (HScale 1)
+  (VScale 1)
+  (Rim
+    (Pen 10)
+    (VBox
+      (HBox
+        (Text RightAlign "Number of Points: ")
+        Fill
+        (Text LeftAlign %N "")
+        Fill)
+      (Glue 10)
+      (HBox
+        (Text RightAlign "Min length: ")
+        Fill
+        (Text LeftAlign %min "")
+        Fill))))

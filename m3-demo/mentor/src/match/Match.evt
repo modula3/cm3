@@ -1,0 +1,12 @@
+(* Copyright (C) 1993, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+
+
+IMPORT Match, VBT;
+
+OUTPUT   Init (READONLY clues: Match.Clues[Match.ClueName]);
+
+OUTPUT   SetState(i,j: INTEGER[Fmt.Int]; state: Match.State[Match.StateName]);
+
+FEEDBACK Selected(key: INTEGER[Fmt.Int]; READONLY cd: VBT.MouseRec[Match.FmtMouseRec]);

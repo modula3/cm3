@@ -1,0 +1,31 @@
+@DFSTC
+PROCEDURE DFSTC(a: ARRAY OF ARRAY OF BOOLEAN; V: INTEGER) @=
+  VAR now: INTEGER := -1;
+      val := NEW(REF ARRAY OF INTEGER, V);
+      current: INTEGER;
+
+  BEGIN
+    @7 FOR k := 0 TO V-1 DO @
+    @8   now := -1; current := k; @
+    @9   FOR j := V-1 DO val[j] := -1 END; @
+    @10     Visit(k) @
+         END;
+       END;
+  END DFSTC;
+@DFSTC
+
+  @VISIT
+  PROCEDURE Visit(k: INTEGER) @=
+    BEGIN
+    @1 INC(now); val[k] := now;@
+    @2 a[current, t] := TRUE; @
+    @3 FOR t := 0 TO V-1 DO @
+    @4  IF a[k, t] THEN @
+    @5    IF val[t] < 0 THEN @
+    @6      Visit(t); @
+          END;
+        END;
+      END;
+    END Visit;
+  @VISIT
+

@@ -1,0 +1,15 @@
+/* Makefile for tcp library (generic) */
+/* Copyright 1993 Digital Equipment Corporation. */
+/* Distributed only by permission. */
+/* Last modified on Tue Jan 25 18:07:39 PST 1994 by wobber     */
+
+Interface("IP")
+Module   ("IPError")
+Interface("TCP")
+Interface("TCPExtras")
+Interface("TCPPeer")
+Interface("TCPSpecial")
+Interface("ConnFD")
+Module("ConnRW")
+Module("ConnMsgRW")
+

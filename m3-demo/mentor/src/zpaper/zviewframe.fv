@@ -1,0 +1,16 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+
+(Border (Shape (Width 750 - 600 + INF) (Height 500 - 400 + INF)
+  (BgColor "White")
+  (Macro B () 
+    `(Bar 1))
+  (Macro G (name)
+    `(Rim (Pen 3) (Shape (Width 0 + INF) (Height 0 + INF) (Generic %,name))))
+  (VBox
+    (Shape (Height 0) (Width 0 + INF) (Numeric %cells =6))
+    (HBox (G (name v1)) (B) (G (name v2)) (B) (G (name v3)))
+    (B)
+    (HBox (G (name v4)) (B) (G (name v5)) (B) (G (name v6))))))

@@ -1,0 +1,184 @@
+SHARED ON-LINE BOARDS
+
+The "boardclient" program lets you view and edit on-line boards.
+
+TOP MENU BAR
+============
+
+The File Menu
+=============
+
+Create  
+  Creates a new board. It uses the file pathname specified to create
+  a directory and uses the directory to store the contents of the board.
+  The server machine specified must be running the "boardserver" program.
+  As a feedback,  the name of the server and the board directory are
+  printed in the space above the menus.
+
+Open   
+  Opens an existing board. 
+
+Save
+  Flushes the contents of the board to disk. Note that even without this
+  command the stable state of the board is continually updated, albeit in
+  the background. 
+
+Close
+  Closes the view of the board.
+
+Remove
+  Removes the board from existence, stable state and all. This succeeds
+  only if no client is viewing the board. If you have a view open
+  yourself, you must close it first.
+
+Quit
+  Quits the "boardclient" program.
+
+Font, Size, and Color Menu
+==========================
+
+These menus govern the attributes with which new items will be created.
+However, they do not change the attributes of existing items on the board.
+As a feedback, the name of the server and board printed above the menu bar
+acquires the selected attributes.
+
+In order to get a good range of font sizes, you must be running a version
+of X server that supports scalable fonts, such as X11R5. This is also
+necessary for zooming on text. Versions of X that do not provide scalable
+fonts will substitue a default font for unavailable sizes.
+
+
+SIDE BAR
+========
+
+The side bar is divided into 3 panels: one to edit items, one to change the
+focus of the view, and one that feedbacks the mousekey bindings for choices
+selected in the first two panels.
+
+The Edit Panel
+==============
+
+There are a number of choices available:
+
+Text
+  The user may left-click anywhere on the board and start typing.
+  Carriage return positions the cursor a line below the start of the
+  previous line. (Each line begins a new item.)
+  Backspace can be used to delete characters upto the start of the line. 
+  The attributes font/size/color may be changed at any time without
+  necessarily beginning a new line. (Each such change begins a new item.)
+
+  The user may select text in an xterm and paste it on the view with a
+  middle-click. The text acquires the font/size/color currently selected.
+
+Draw
+  Currently, "rules" are the only geometric figures that can be drawn.
+  Sweeping the left mouse button highlights the boundary of the rule. The
+  foloowing upclick creates a rule with the boundary and fills it with the
+  selected color. 
+
+Select
+  This choice allows the user to select items and invoke events on those
+  items. There are two ways to select items. Sweeping with the left button
+  highlights a rectangle, and all items whose bounding boxes lie within are
+  selected. The selected items get highlighted in gray.
+  Middle-click selects an item whose bounding box is below the
+  pointer, if any; if there are more than one such item, an item is
+  randomly chosen. It is not possible to cumulate selected items. Each left
+  or middle click discards the previous selection. Once the user has
+  selected items, he may switch to other choices (like focusing) before
+  invoking events on the seleceted items; the items selected remain so.
+
+  Sweeping the right button allows the user to move the selected items. 
+  A highlighted rectangle directs the movement.
+
+The following buttons are available:
+  
+Unselect
+  Unselects the set of selected items.
+
+Delete
+  Deletes the set of selected items.
+  
+Undo
+  Undoes the last creation/deletion of items. (For example, if the user
+  pasted some text containing a number of lines, "undo" will delete all
+  those lines in one step.) Currently there is no support   for undoing
+  modifications to the items. Pressing the button again will undo the
+  previous set of creations/deletions. The last 100 sets of
+  creations/deletions can be undone inthis way. Keeping the button pressed
+  autorepeats the undo.
+
+Refresh
+  The user would not have to use this if the program were free of bugs. It
+  may be used to repaint the view, say, to get rid of any extraneuos
+  graphics left on the view.
+
+
+The Focus Panel
+===============
+
+Choosing "Focus" allows the user to zoom and pan the view on the board. 
+
+Zooming
+  Pressing the left button magnifies the view, while pressing the right
+  button reduces it. Sweeping the pointer while zooimng pans the view at the
+  same time. The point on the board that was below the pointer at the time of
+  the down click follows the pointer.
+
+Panning
+  Pressing the middle button drags the view. The point on the board that
+  was below the pointer at the time of the down click follows the pointer.
+  This is a degenerate case of zooming.
+
+Zoom Rate
+  The zoom rate can be controlled by the scroll bar provided. As a
+  feedback, the   current rate is displayed above the scroll bar. This
+  figure denotes the fraction by which the sizes of items change every
+  second. (As an aside, zooming changes the sizes exponentially, not
+  linearly.)  Views which can be repainted fast zoom in   short steps, each
+  changing the size of items by a little amount. Others zoom in long steps,
+  each changing the size with a larger factor. But zoom rate still controls
+  the zooming achieved with resoect to real time.
+
+Offset and Scale
+  The focus of the view involves two attributes: 
+    - the "offset" of the NW  corner of the view from the origin of the
+      board coordinates.
+    - the "scale"; that is, the number of pixels in the view per unit
+      length of the board coordinate.
+
+  While zooming/panning, the changes in these attributes are reflected in 3
+  slots in the panel. These slots can also be used as a way of changing the
+  focus by specifying desired values for the focus. To do so, the user may
+  click in any slot and input the new value, ending with a carriage return.
+
+Reset
+  The reset button is a quick way of setting the focus to the "bas" level",
+  that is, with offset (0.0, 0.0), and scale 1.0. 
+
+LIMITATIONS
+===========
+
+Zoom Control
+  Zooming does not quite stop as sson as the mouse key is released. As a
+  result it is possible to overshoot the desired zoom level.
+
+Focus limitations
+  The precision of floating point numbers used for the board coordinates
+  limits the freedom is setting the focus. For example, when focus
+  multiplied with offset.[h,v] is roughly 10^7, weird things may happen in
+  creating items.
+
+Access Control
+  There is no access control in editing items.
+  The "boardserver" does restrict saving the board state on the disk depending
+  upon the permission mode of the named directory, but even there, it uses
+  its own effective uid, rather than that of the user in whose behalf it is
+  working. 
+
+Please send bugs to greg@src.dec.com, and a copy to umesh@lcs.mit.edu.
+
+Authors of Object: 
+  Umesh Maheshwari (summer intern)
+  Greg Nelson (host)

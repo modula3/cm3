@@ -1,0 +1,93 @@
+.\" Copyright (C) 1995, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.\" Last modified on Wed Jun 14 13:00:56 PDT 1995 by kalsow 
+.nh
+.TH Fours 1
+.SH NAME
+Fours \- collection of simple Tetris-like games
+
+.\"------------------------------------------------------------------------
+.SH SYNTAX
+.B Fours
+[-scores]
+
+.\"------------------------------------------------------------------------
+.SH DESCRIPTION
+
+.PP
+These are simple games of real-time bin packing.  During the game
+objects composed of 2, 3, 4 or 5 squares appear at the top of board
+and drift downward.  They stop when they land on the bottom of the board
+or another object.  During an object's fall, you can control the
+location and orientation of the object.  The following keys control
+falling objects:
+
+.nf
+       d     - moves the object 1 square to the left
+       f     - rotates the object 90 degrees counterclockwise
+       j     - rotates the object 90 degrees clockwise
+       k     - moves the object 1 square to the right
+       space - drops the object as many squares as possible
+                 and scores points
+.fi
+
+.PP
+Whenever a solid row of objects is built, the row disappers and you're
+awarded some points.  The game is finished when an object is stuck in
+the top row.
+
+.PP
+The object is to score more points than anyone else you know.
+
+.PP
+Click "Go" to start the game.
+
+.PP
+If "-scores" is specified, the score file is printed and no game
+is started.
+
+.PP
+Your best score is retained in a file.  If the environment variable
+"GAMEALIAS" is defined, it will be used as your name in the score
+file.  Otherwise, your login name is used.
+
+.\"------------------------------------------------------------------------
+.SH BUGS/MISFEATURES
+
+.PP
+Be serious, this is a quick hack.
+
+.\"------------------------------------------------------------------------
+.SH TASKS FOR THE BORED
+
+.PP
+    Do a better job with the animation.
+
+.PP
+    Add non-90-degree rotations.
+
+.PP
+    Add sound effects.
+
+.PP
+    Pick beautiful colors.
+
+.PP
+    Build a multi-player version....
+
+.\"------------------------------------------------------------------------
+.SH ACKNOWLEDGEMENTS
+
+.PP
+I saw a similar game called "tetris" on a PC.
+
+.\"------------------------------------------------------------------------
+.SH AUTHOR OF OBJECT
+Bill Kalsow
+
+.SH AUTHOR OF DOCUMENTATION
+Bill Kalsow
+
+

@@ -1,0 +1,37 @@
+/* Copyright (C) 1994, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+/*                                                                           */
+/* Last modified on Thu Jun 20 15:45:47 PDT 1996 by heydon                   */
+/*      modified on Mon Jan  9 12:04:50 PST 1995 by najork                   */
+/*      modified on Sun Aug 21 12:34:43 PDT 1994 by mhb                      */
+/*      modified on Tue Jul 26 16:41:26 PDT 1994 by shillner                 */
+
+import		("zeus")
+
+zume		("UnionFind")
+oblume		("UnionFind", "Tree")
+oblume		("UnionFind", "BigTree")
+oblume		("UnionFind", "FindLength")
+oblume		("UnionFind", "ChangeParent")
+oblume		("UnionFind", "NodeDepth")
+oblume		("UnionFind", "AverageDepth")
+
+interface	("TreeNode")
+module		("AlgSimple")
+module		("AlgCompress")
+module		("AlgUnionByRank")
+module		("AlgBoth")
+module		("AlgQuickFind")
+module		("AlgList")
+module		("UFInput")
+
+resource	("UnionFind.fv")
+
+if not defined ("MENTOR_UMBRELLA") 
+  implementation ("Main")
+  bundle         ("UnionFindBundle")
+  program        ("UnionFind")
+end
+
+

@@ -1,0 +1,22 @@
+; Copyright (C) 1994, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(Scale
+  (HScale 1)
+  (VScale 1)
+  (Rim
+    (Pen 10)
+    (HBox
+      (Shape (Width + 0) (VBox
+        (Text RightAlign "# of bins: ")
+        (Text RightAlign "# of items: ")
+        (Text RightAlign "current weight: ")
+        (Text RightAlign "probing bin #: ")
+        (Text RightAlign "total missing weights: ")))
+      (Shape (Width 50) (VBox
+        (Text %B "")
+        (Text %N "")
+        (Text %wt "")
+        (Text %bin "")
+        (Text %lost ""))))))

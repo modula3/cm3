@@ -1,0 +1,10 @@
+Last modified on Fri Aug 19 16:46:15 PDT 1994 by heydon
+
+This directory contains Zeus snapshots of the "UnionFind" examples
+demoed at Center Meeting on 8/17/94.
+
+  byRank.ss    Tree alg with union by rank on random input
+  compress.ss  Tree alg with path compression on random input
+  junoVer.ss   Tree alg with both heuristics on simple Juno log input
+  list32.ss    List alg with union by rank on worst-case file input
+  simple.ss    Tree alg with no heuristics on random input

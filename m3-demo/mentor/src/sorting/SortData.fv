@@ -1,0 +1,17 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(Rim
+  (Pen 20)
+  (VBox
+    (HBox (Shape (Width + 0) "How many elements to sort?") (Numeric %data))
+    (Glue 5)
+    (HBox
+      (Glue 24)
+      (Radio
+        (VBox
+          (Choice %random =TRUE (Text LeftAlign "Random"))
+          (Choice %increasing (Text LeftAlign "Increasing"))
+          (Choice %decreasing (Text LeftAlign "Decreasing"))))
+      Fill)))

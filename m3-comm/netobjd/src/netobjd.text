@@ -1,0 +1,69 @@
+                                                             netobjd(1)
+
+
+NAME
+    netobjd - the Network Object agent daemon
+
+SYNTAX
+    netobjd &
+
+DESCRIPTION
+
+    The Network Objects package provides a simple but powerful
+    facility for remote method invocation in the context of Modula3.
+    Under Network Objects, all subtypes of the object type NetObj.T
+    are treated specially in that they can be passed to remote address
+    spaces by reference.  This remote reference appears at the destination
+    as a surrogate object  which is a subtype of the original object type.
+    If the original type has methods, these methods can be remotely invoked
+    through the surrogate.
+
+    The netobjd program provides a mechanism to publish objects for
+    use by other address spaces.  It implements a table which maps textual
+    into objects.  A service provider, for example, might advertise its
+    service by registering an object with netobjd under some well-defined
+    name.  Similarly, a client might gain access to this service by
+    retrieving the server's object from the netobjd insatnce on the
+    server's machine.
+
+    There should be only one instance of netobjd per machine.  This one
+    instance is the machine-wide default agent for all imports and
+    exports of network objects.
+
+    The netobjd program listens on a well known socket (currently
+    TCP socket 9786) for incoming requests.
+
+DOCUMENTATION
+
+    An overview of Network Objects can be found in:
+
+         /proj/doc/NetObjOverview.ps
+
+    A reference manual can be found in:
+
+         /proj/doc/NetObjMan.ps
+
+
+RESTRICTIONS
+
+    Since netobjd is often run in background, it is easy to forget that
+    an instance is running.  The second instance of netobjd will fail
+    with a TCP error when it attempts to open its listener socket.
+
+    If an instance of netobjd dies, all of the objects that were registered
+    in its table are lost.  There currently is no standard mechanism for
+    restarting netobj after a failure.  Even if netobjd is restarted,
+    there is currently no stable record of the objects held by previous
+    instantiations.
+    
+AUTHOR OF OBJECT
+    wobber
+
+AUTHOR OF DOCUMENTATION
+    same 
+
+Last modified on Wed Jan 26 13:06:07 PST 1994 by wobber
+
+# Copyright (c) 1994 Digital Equipment Corporation.
+# Distributed only by permission.
+

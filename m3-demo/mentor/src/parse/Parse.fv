@@ -1,0 +1,16 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(VBox
+  (Glue 10)
+  (Rim
+    (Pen 10)
+    (HBox
+      (VBox (Shape (Width + 0)(Height + 0) "Input: ") Fill)
+      (Border
+        (Shape
+          (Width 180) (Height 50)
+          (TextEdit %input ="zeus = able + baker * (cat + dog)")))
+      Fill))
+  (Glue 10))

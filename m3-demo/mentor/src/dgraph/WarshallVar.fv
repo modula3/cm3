@@ -1,0 +1,19 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(Scale
+  (HScale 1)
+  (VScale 1)
+  (BgColor "White")
+  (Rim
+    (Pen 10)
+    (HBox      
+      (VBox
+        (Text (Color "Red") RightAlign "y: ")
+        (Text (Color "Green") RightAlign "x: ")
+        (Text (Color "Blue") RightAlign "j: "))
+      (VBox
+        (Text RightAlign %y "")
+        (Text RightAlign %x "")
+        (Text RightAlign %j "")))))

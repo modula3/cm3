@@ -1,0 +1,111 @@
+; Copyright (C) 1992, Digital Equipment Corporation
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+
+(Shape
+  (Width + Inf)
+  (Rim
+    (Pen 8)
+    (Macro Fixed BOA (child) `(Shape (Width + 0) (Height + 0) ,child))
+    (Macro
+      Divider
+      BOA
+      (name str)
+      `(PageButton
+         (ShadowSize 0.0)
+         (For ,name)
+         (Boolean
+           (ShadowSize 1.5)
+           (HBox
+             (VBox Fill Bar Fill)
+             (Shape (Width + 0) (Height + 0) ,str)
+             (VBox Fill Bar Fill)))))
+    (Macro
+      Dividee
+      BOA
+      (name child)
+      `(TSplit Flex =0 %,name Circular (Generic) ,child))
+    (VBox
+      (Glue 4 + 0)
+      (HBox
+        (Shape (Width + 0) "Number of buckets: ")
+        (Numeric (Min 1) (Max 1000) %Buckets =29)
+        Fill)
+      (Glue 4 + 0)
+      (HBox
+        (Boolean %PauseOnDeletes =FALSE (Text LeftAlign "  Pause On Deletes"))
+        Fill)
+      (Glue 4 + 0)
+      (HBox
+        (Shape (Width + 0) "Number of operations: ")
+        (Numeric (Min 1) (Max 10000) %Ops =100)
+        Fill)
+      (Glue 4 + 0)
+      (Shape (Height + 0) (Text LeftAlign "Key generation:"))
+      (HBox
+        (Radio
+          (VBox
+            (Choice %Random =FALSE (Text LeftAlign "  Random"))
+            (Choice %Conseq =TRUE (Text LeftAlign "  Consequtive"))))
+        Fill)
+      (HBox
+        (Shape (Width + 0) "Number of initial inserts: ")
+        (Numeric (Min 0) (Max 10000) %InitInserts =29)
+        Fill)
+      (HBox
+        (Shape (Width + 0) "Number of initial deletes: ")
+        (Numeric (Min 0) (Max 10000) %InitDeletes =10)
+        Fill)
+      (HBox
+        (Shape (Width + 0) "Percentage of inserts: ")
+        (Numeric (Min 0) (Max 100) %Inserts =20)
+        Fill)
+      (HBox
+        (Shape (Width + 0) "Percentage of deletes: ")
+        (Numeric (Min 0) (Max 100) %Deletes =20)
+        Fill)
+      (HBox
+        (Shape (Width + 0) "Percentage of successful finds: ")
+        (Numeric (Min 0) (Max 100) %SuccFinds =5)
+        Fill)
+      (HBox
+        (Shape (Width + 0) "Fixed ``Random'' Sequence: ")
+        (Boolean %FixedRandom =FALSE "")
+        Fill)
+      (Glue 10)
+      (Divider viewFormT "Input for view")
+      (Dividee
+        viewFormT
+        (HBox
+          (Fill)
+          (Shape
+            (Width + 0)
+            (VBox
+              (HBox
+                (Shape (Width + 0) "Normal Color: ")
+                (TypeIn %NormalColor ="QuiteLightBlue"))
+              (HBox
+                (Shape (Width + 0) "Nil Color: ")
+                (TypeIn %NilColor ="QuiteLightYellow"))
+              (HBox
+                (Shape (Width + 0) "Empty Color: ")
+                (TypeIn %EmptyColor ="QuiteLightBrown"))
+              (HBox
+                (Shape (Width + 0) "Compare Color: ")
+                (TypeIn %CompareColor ="LightOrange"))
+              (HBox
+                (Shape (Width + 0) "New Color: ")
+                (TypeIn %NewColor ="QuiteLightGreen"))
+              (HBox
+                (Shape (Width + 0) "Check Deletable Color: ")
+                (TypeIn %CheckDeletableColor ="QuiteLightMagenta"))
+              (HBox
+                (Shape (Width + 0) "Check Hash Position Color: ")
+                (TypeIn %CheckHashPositionColor ="QuiteLightCyan"))
+              (HBox
+                (Shape (Width + 0) "Operation Highlight Color: ")
+                (TypeIn %OperationHighlightColor ="Violet"))
+              (HBox
+                (Shape (Width + 0) "Item Color: ")
+                (TypeIn %ItemColor ="QuiteLightGreenishBlue"))))
+          (Fill))))))

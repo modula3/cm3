@@ -1,0 +1,11 @@
+
+import ("libm3")
+
+%% c_source ("structs")
+%% c_program ("foo")
+
+interface ("TAPI")
+implementation ("structs")
+program ("foo2")
+
+

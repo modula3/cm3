@@ -1,0 +1,55 @@
+Last modified on Thu Aug 18 19:39:05 PDT 1994 by heydon
+
+The UnionFind Zeus animation accepts input from one of two sources:
+random input, or input specified in a file. This note documents the
+input file format.
+
+UnionFind input files are symbolic expressions as defined by the
+Modula-3 "Sx" interface (SRC Research Report #113, Section 3.4). By
+convention, such files have the extension ".sx". The "Sx" reader
+ignores comments starting with ";" up to and including the next
+newline character.
+
+A UnionFind input file should have the following syntax:
+
+  <File>            ::= "(" <NewCmd>* <FinishedSetsCmd> <OpCmd>* ")"
+  <NewCmd>          ::= <NewOneCmd> | <NewGroupCmd>
+  <NewOneCmd>       ::= "(" "NewSet" <Name> ")"
+  <NewGroupCmd>     ::= "(" "NewSets" <Number> ")"
+  <FinishedSetsCmd> ::= "(" "FinishedSets" ")"
+  <OpCmd>           ::= <FindCmd> | <UnionCmd>
+  <FindCmd>         ::= "(" "Find" <Number> ")"
+  <UnionCmd>        ::= "(" "Union" <Number> <Number> <Boolean> ")"
+  <Name>            ::= Modula-3 text string literal
+  <Number>          ::= Modula-3 integer literal
+  <Boolean>         ::= "TRUE" | "FALSE"
+
+The file "ExampleInput.sx" in this directory contains a sample input
+file. There are also examples in the "../junoLogs" directory.
+
+Each new set is assigned a non-negative integer index. The indices are
+assigned implicitly by the animation when it reads the input file. The
+animation maintains a "next available index", initially 0. It is
+important to understant how these implicit indices are assigned, since
+the arguments to <FindCmd> and <UnionCmd> refer to sets by their
+index.
+
+The effect of a <NewOneCmd> is to create a single set with the name
+<Name> whose index is the next available index, and to increment the
+next available index. The effect of a <NewGroupCmd> is to create
+<Number> new sets with sequential indices starting at the current
+index, and to increment the next available index by <Number>. The
+names of these nodes are formed from their indices. The <NewOneCmd>'s
+and <NewGroupCmd>'s can be intermixed freely.
+
+The <FinishedSetsCmd> must immediately follow the <NewCmd>'s, before
+the appearance of any <OpCmd>'s.
+
+The <FindCmd> starts a find operation on the set whose index is the
+given <Number>.
+
+The <UnionCmd> starts a union operation on the sets whose indices are
+the given <Number>'s. If the final <Boolean> argument is "TRUE", then
+the named nodes must both be roots of their equivalence classes, and
+the union operation will not perform a nested find operation on each
+of its arguments.

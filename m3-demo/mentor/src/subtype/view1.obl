@@ -1,0 +1,459 @@
+(* Copyright (C) 1993, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
+
+
+(*
+let SHOW =
+  proc(t, x)
+    sys_printText(t & " = "); 
+    sys_print(x, 10); 
+    sys_printText("\n"); 
+    sys_printFlush();
+  end;
+*)
+
+type Point = [2*Real];
+
+    let makeBezierPathProc = proc (cpp:[4*Point]):(Real)->Point,
+        (*------------------------------------------------------------
+           cpp = array of four control points [x,y]
+           Return a parametric procedure that traces the bezier curve
+           from cpp[0] to cpp[3] with control points cpp[1] and cpp[2].
+        ------------------------------------------------------------*)
+        let x000 = cpp[0][0],  y000 = cpp[0][1],
+            x001 = cpp[1][0],  y001 = cpp[1][1],
+            x011 = cpp[2][0],  y011 = cpp[2][1],
+            x111 = cpp[3][0],  y111 = cpp[3][1];
+        proc (t)
+            let s = 1.0-t;
+            let sss = s*s*s,
+                sst = s*s*t*3.0,
+                stt = s*t*t*3.0,
+                ttt = t*t*t;
+            [
+                (sss*x000) + (sst*x001) + (stt*x011) + (ttt*x111),
+                (sss*y000) + (sst*y001) + (stt*y011) + (ttt*y111)
+            ]
+        end;
+    end;
+
+let max : (Int,Int)->Int =
+  proc(n, m)
+    if n > m then n else m end
+  end;
+
+let abs : (Real)->Real = 
+  proc(x) 
+    if x > 0.0 then x else -x end 
+  end;
+
+let rec exp : (Int,Int)->Int =
+  proc(n, m)
+    if m<=0 then 1 else n * exp(n, m-1) end
+  end;
+
+type Node = 
+  Option typeBot:Vertex, typeTop:Vertex, typeFun:Vertex end;
+
+let nodeVertex : (Node) -> Vertex  =
+  proc(node)
+    case node of
+      typeBot(bot) => bot,
+      typeTop(top) => top,
+      typeFun(fun) => fun
+    end;
+  end;
+
+let edgeBezier: (Graph, Edge, Vertex, Vertex, Real, Bool)->Ok =
+  proc(g, e, v1, v2, scale, rightward)
+    let c1 = graph_newVertex(g);
+    let c2 = graph_newVertex(g);
+    let v1p = graph_getVertexPosition(v1);
+    let v2p = graph_getVertexPosition(v2);
+
+    let v1x = v1p[0], v1y = v1p[1];
+    let v2x = v2p[0], v2y = v2p[1];
+
+    let dx = abs(v2x-v1x)*scale;
+    let dy = abs(v1y-v2y)*scale;
+
+    if rightward
+    then
+      if v1x > v2x then
+        graph_moveVertex(c1, v1x+dx, v1y+dy, false);
+        graph_moveVertex(c2, v2x+(dy-dx), v2y-dy, false);
+      else
+        graph_moveVertex(c1, v1x+(dy-dx), v1y+dy, false);
+        graph_moveVertex(c2, v2x+dx, v2y-dy, false);
+      end;
+    else 
+      if v1x > v2x then
+        graph_moveVertex(c1, v1x-(dy-dx), v1y+dy, false);
+        graph_moveVertex(c2, v2x-dx, v2y-dy, false);
+      else
+        graph_moveVertex(c1, v1x-dx, v1y+dy, false);
+        graph_moveVertex(c2, v2x-(dy-dx), v2y-dy, false);
+      end;
+    end;
+    graph_moveEdgeBezier(e, v1, v2, c1, c2, false);
+  end;
+  
+let travTrail: [Int] = array_new(100, -1);
+var travTop: Int = -1;
+
+let travNotice: (Int)->Ok =
+  proc(index)
+    travTop := travTop+1;
+    travTrail[travTop] := index;
+  end;
+
+let travSeen: (Int)->Bool =
+  proc(index)
+    var found = false;
+    for i = 0 to travTop do
+      if travTrail[i] is index then found:=true; exit end
+    end;
+    found;
+  end;
+
+let rec depth1: (EvtObj, Int)->Int =
+  proc(s, nodeIndex)
+    if travSeen(nodeIndex) then 1
+    else
+      travNotice(nodeIndex);
+      case s.nodes[nodeIndex] of
+        typeBot(bot) => 1,
+        typeTop(top) => 1,
+        typeFun(fun) => 
+          let domDepth = depth1(s, s.doms[nodeIndex]);
+          let rngDepth = depth1(s, s.rngs[nodeIndex]);
+          1 + max(domDepth, rngDepth);
+      end
+    end 
+  end;
+
+let depth =
+  proc(s:EvtObj, nodeIndex:Int):Int,
+    travTop := -1;
+    depth1(s, nodeIndex);
+  end;
+
+let rec layout1 =
+  proc(s, nodeIndex, x, y, n, exp2n)
+    if travSeen(nodeIndex) then ok
+    else
+      travNotice(nodeIndex);
+      let size = 1.0/float(s.depth);
+        case s.nodes[nodeIndex] of
+        typeBot(bot) => 
+          graph_setVertexSize(bot, size, size);
+          graph_moveVertex(bot, x/exp2n, y, false),
+        typeTop(top) => 
+          graph_setVertexSize(top, size, size);
+          graph_moveVertex(top, x/exp2n, y, false),
+        typeFun(fun) => 
+          graph_setVertexSize(fun, size, size);
+          graph_moveVertex(fun, x/exp2n, y, false);
+          let displ = float(exp(2,n-2));
+          layout1(s, s.doms[nodeIndex], x-displ, y+1.0, n-1, exp2n);
+          layout1(s, s.rngs[nodeIndex], x+displ, y+1.0, n-1, exp2n);
+          let vDom = nodeVertex(s.nodes[s.doms[nodeIndex]]);
+          let vRng = nodeVertex(s.nodes[s.rngs[nodeIndex]]);
+          let eDom = s.edges[s.domEdges[nodeIndex]];
+          let eRng = s.edges[s.rngEdges[nodeIndex]];
+          graph_moveEdge(eDom, fun, vDom, false);
+          graph_moveEdge(eRng, fun, vRng, false);
+          if nodeIndex > s.doms[nodeIndex] then (* back dom edge *)
+            (* --- edgeBezier(s.graphvbt, eDom, fun, vDom, 0.75, false) *)
+            edgeBezier(s.graphvbt, eDom, fun, vDom, 5.0*size, false);
+          elsif nodeIndex is s.doms[nodeIndex] then (* self-loop dom edge *)
+            let vDom1 = graph_newVertex(s.graphvbt);
+            let vDomXY = graph_getVertexPosition(vDom);
+            graph_moveVertex(vDom1, 
+              vDomXY[0]-(size/16.0), vDomXY[1]+(size/16.0), false);
+            edgeBezier(s.graphvbt, eDom, vDom1, fun, 175.0*size, false);
+          end;
+          if nodeIndex > s.rngs[nodeIndex] then (* back rng edge *)
+            (* --- edgeBezier(s.graphvbt, eRng, fun, vRng, 0.75, true) *)
+            edgeBezier(s.graphvbt, eRng, fun, vRng, 5.0*size, true);
+          elsif nodeIndex is s.rngs[nodeIndex] then (* self-loop rng edge *)
+            let vRng1 = graph_newVertex(s.graphvbt);
+            let vRngXY = graph_getVertexPosition(vRng);
+            graph_moveVertex(vRng1, 
+              vRngXY[0]+(size/16.0), vRngXY[1]+(size/16.0), false);
+            edgeBezier(s.graphvbt, eRng, vRng1, fun, 175.0*size, true);
+          end;
+      end
+    end 
+  end;
+
+let layout =
+  proc(s, nodeIndex, x, y, n, exp2n)
+    travTop := -1;
+    layout1(s, nodeIndex, x, y, n, exp2n);
+  end;
+
+let moveVToVI =
+  proc(s, v, vIndex)
+    let vTo = nodeVertex(s.nodes[vIndex]);
+    let vToXY = graph_getVertexPosition(vTo);
+    graph_moveVertex(v, vToXY[0], vToXY[1], true);
+  end;   
+
+let moveVAlongEI =
+  proc(s, v, eIndex, vIndex, forward)
+    if eIndex<0 then moveVToVI(s, v, vIndex);
+    else
+      let e = s.edges[eIndex];
+      let eCtrl = graph_getEdgeControls(e);
+      if #(eCtrl) is 0 then
+	if forward then moveVToVI(s, v, vIndex)
+	else
+          let eVert = graph_getEdgeVertices(e);
+          let vTo = eVert[0];
+          let vToXY = graph_getVertexPosition(vTo);
+          graph_moveVertex(v, vToXY[0], vToXY[1], true);
+	end;
+      else
+	let tail = if forward then 0 else 1 end;
+	let head = if forward then 1 else 0 end;
+        let eVert = graph_getEdgeVertices(e);
+	let vTailXY = graph_getVertexPosition(eVert[tail]);
+	let vHeadXY = graph_getVertexPosition(eVert[head]);
+	let cTailXY = graph_getVertexPosition(eCtrl[tail]);
+	let cHeadXY = graph_getVertexPosition(eCtrl[head]);
+	let p = makeBezierPathProc([vTailXY,cTailXY,cHeadXY,vHeadXY]);
+        graph_moveVertexOnPath(v, p);
+      end
+    end
+  end;
+
+let variance =
+  proc(s, subIndex, supIndex)
+    let xSub = float(s.depth)/6.0;
+    let xSup = float(s.depth)/10.0;
+    let y = ~1.5/float(s.depth);
+    let yLo = ~1.0/float(s.depth);
+    let yHi = ~2.0/float(s.depth);
+    if subIndex < supIndex then (* covariant *)
+      graph_moveVertex(s.varianceNW, -xSub, y, true);
+      graph_moveVertex(s.varianceSW, -xSub, y, true);
+      graph_moveVertex(s.varianceNE, xSup, yHi, true);
+      graph_moveVertex(s.varianceSE, xSup, yLo, true);
+    else (* contravariant *)
+      graph_moveVertex(s.varianceNW, -xSup, yHi, true);
+      graph_moveVertex(s.varianceSW, -xSup, yLo, true);
+      graph_moveVertex(s.varianceNE, xSub, y, true);
+      graph_moveVertex(s.varianceSE, xSub, y, true);
+    end;
+  end;
+
+let hiLiPair =
+  proc(s, subIndex, supIndex, subLeadingEdgeIndex, supLeadingEdgeIndex,
+      forward)
+    if subIndex < supIndex then (* covariant *)
+      moveVAlongEI(s, s.cursorW, subLeadingEdgeIndex, subIndex, forward);
+      moveVAlongEI(s, s.cursorE, supLeadingEdgeIndex, supIndex, forward);
+      graph_animate(s.graphvbt, 0.0, 2.0);
+    else (* contravariant *)
+      moveVAlongEI(s, s.cursorE, subLeadingEdgeIndex, subIndex, forward);
+      moveVAlongEI(s, s.cursorW, supLeadingEdgeIndex, supIndex, forward);
+      graph_animate(s.graphvbt, 0.0, 2.0);
+    end;
+  end;
+  
+let hiLiPairColor =
+  proc(s, subIndex, supIndex, clr)
+    variance(s, subIndex, supIndex);
+    let c = color_named(clr);
+    graph_setEdgeColor(s.cursorStem, c);
+    graph_setVertexHiLiColor(s.cursorWHiLi, c);
+    graph_setVertexHiLiColor(s.cursorEHiLi, c);
+    graph_animate(s.graphvbt, 0.0, 0.0);
+    graph_redisplay(s.graphvbt);
+  end;
+
+let view =
+
+{
+graphvbt => graph_new(),
+
+nodes => array_new(50, ok),
+edges => array_new(50, ok),
+
+doms =>  array_new(50, -1),
+rngs =>  array_new(50, -1),
+domEdges =>  array_new(50, -1),
+rngEdges =>  array_new(50, -1),
+
+cursorW => ok,
+cursorWHiLi => ok,
+cursorE => ok,
+cursorEHiLi => ok,
+cursorStem => ok,
+
+varianceNW => ok,
+varianceNE => ok,
+varianceSW => ok,
+varianceSE => ok,
+varianceP => ok,
+
+depth => 0,
+
+Setup => meth (s)
+  s.cursorW := graph_newVertex(s.graphvbt);
+  graph_setVertexShape(s.cursorW, "ellipse");
+  s.cursorWHiLi := graph_newVertexHiLi(s.cursorW);
+  s.cursorE := graph_newVertex(s.graphvbt);
+  graph_setVertexShape(s.cursorE, "ellipse");
+  s.cursorEHiLi := graph_newVertexHiLi(s.cursorE);
+  s.cursorStem := graph_newEdge(s.cursorW,s.cursorE);
+  graph_setEdgeColor(s.cursorStem, color_named("cyan"));
+  s.varianceNW := graph_newVertex(s.graphvbt);
+  s.varianceNE := graph_newVertex(s.graphvbt);
+  s.varianceSW := graph_newVertex(s.graphvbt);
+  s.varianceSE := graph_newVertex(s.graphvbt);
+  s.varianceP := graph_newPolygon([s.varianceNE,s.varianceNW,s.varianceSW,s.varianceSE]);
+  graph_setPolygonColor(s.varianceP, color_named("cyan"));
+end,
+
+Begin => meth (s, lftRoot, rhtRoot)
+  let lftDepth = depth(s, lftRoot);
+  let rhtDepth = depth(s, rhtRoot);
+  let n = max(lftDepth, rhtDepth);
+  let halfWidth = float(exp(2, n-1));
+  let width = 2.0*halfWidth;
+  let margin = 3.0/float(n);
+  graph_setWorld(s.graphvbt, -(float(n)+margin), float(n)+margin,
+    -margin, float(n-1)+margin);
+  s.depth := n;
+  graph_setVertexSize(s.cursorW, 0.15/float(n), 0.15/float(n));
+  graph_setVertexSize(s.cursorE, 0.15/float(n), 0.15/float(n));
+  graph_setVertexHiLiBorder(s.cursorWHiLi, 0.8/float(n), 0.8/float(n));
+  graph_setVertexHiLiBorder(s.cursorEHiLi, 0.8/float(n), 0.8/float(n));
+  graph_setVertexHiLiColor(s.cursorWHiLi, color_named("cyan"));
+  graph_setVertexHiLiColor(s.cursorEHiLi, color_named("cyan"));
+  graph_setEdgeWidth(s.cursorStem, (1.0/float(n))*0.6);
+  layout(s, lftRoot, -halfWidth, 0.0, n, width/float(n));
+  layout(s, rhtRoot, halfWidth, 0.0, n, width/float(n));
+  graph_redisplay(s.graphvbt);
+end,
+
+NewBot => meth (s, index)
+  let v = graph_newVertex(s.graphvbt);
+  graph_setVertexShape(v, "ellipse");
+  graph_setVertexColor(v, color_named("PaleBlueViolet"));
+  graph_setVertexLabel(v, "Bot");
+  graph_setVertexLabelColor(v, color_named("black"));
+  s.nodes[index] := option typeBot => v end;
+end,
+
+NewTop => meth (s, index)
+  let v = graph_newVertex(s.graphvbt);
+  graph_setVertexShape(v, "ellipse");
+  graph_setVertexColor(v, color_named("PaleVioletRed"));
+  graph_setVertexLabel(v, "Top");
+  graph_setVertexLabelColor(v, color_named("black"));
+  s.nodes[index] := option typeTop => v end;
+end,
+
+NewFun => meth (s, index, domEdgeIndex, rngEdgeIndex)
+  let v = graph_newVertex(s.graphvbt);
+  graph_setVertexShape(v, "ellipse");
+  graph_setVertexColor(v, color_named("PaleGreen"));
+  graph_setVertexLabel(v, "->");
+  graph_setVertexLabelColor(v, color_named("black"));
+  s.nodes[index] := option typeFun => v end;
+
+  let eDom = graph_newEdge(v, v);
+  let eRng = graph_newEdge(v, v);
+  graph_setEdgeColor(eDom, color_named("CadetBlue"));
+  graph_setEdgeColor(eRng, color_named("CadetBlue"));
+  s.edges[domEdgeIndex] := eDom;
+  s.edges[rngEdgeIndex] := eRng;
+  s.domEdges[index] := domEdgeIndex;
+  s.rngEdges[index] := rngEdgeIndex;
+end,
+
+NewDomRng => meth (s, index, domIndex, rngIndex)
+  let v = nodeVertex(s.nodes[index]);
+  s.doms[index] := domIndex;
+  s.rngs[index] := rngIndex;
+end,
+
+NewLoop => meth (s, fromIndex, toIndex)
+  ok
+end,
+
+Enter => 
+  meth (s, subIndex, supIndex, subLeadingEdgeIndex, supLeadingEdgeIndex)
+    hiLiPairColor(s, subIndex, supIndex, "cyan");
+    hiLiPair(s, subIndex, supIndex, subLeadingEdgeIndex, supLeadingEdgeIndex, true);
+  end,
+
+Exit => 
+  meth (s, subIndex, supIndex, subLeadingEdgeIndex, supLeadingEdgeIndex, result)
+    if result then
+      hiLiPairColor(s, subIndex, supIndex, "green");
+    else
+      hiLiPairColor(s, subIndex, supIndex, "red");
+    end;
+    hiLiPairColor(s, subIndex, supIndex, "VeryPaleCyan");
+    hiLiPair(s, subIndex, supIndex, subLeadingEdgeIndex, supLeadingEdgeIndex, false);
+  end,
+
+BotLessAnyOK => 
+  meth (s, subIndex, supIndex, subLeadingEdgeIndex, supLeadingEdgeIndex)
+    hiLiPairColor(s, subIndex, supIndex, "green");
+  end,
+
+TopLessTopOK => 
+  meth (s, subIndex, supIndex, subLeadingEdgeIndex, supLeadingEdgeIndex)
+    hiLiPairColor(s, subIndex, supIndex, "green");
+  end,
+
+TopLessNonTopKO => 
+  meth (s, subIndex, supIndex, subLeadingEdgeIndex, supLeadingEdgeIndex)
+    hiLiPairColor(s, subIndex, supIndex, "red");
+  end,
+
+FunLessBotKO => 
+  meth (s, subIndex, supIndex, subLeadingEdgeIndex, supLeadingEdgeIndex)
+    hiLiPairColor(s, subIndex, supIndex, "red");
+  end,
+
+FunLessTopOK => 
+  meth (s, subIndex, supIndex, subLeadingEdgeIndex, supLeadingEdgeIndex)
+    hiLiPairColor(s, subIndex, supIndex, "green");
+  end,
+
+FunLessFun => 
+  meth (s, subIndex, supIndex, subLeadingEdgeIndex, supLeadingEdgeIndex)
+    ok
+  end,
+
+SeenOK => 
+  meth (s, subIndex, supIndex)
+    hiLiPairColor(s, subIndex, supIndex, "Yellow");
+  end,
+
+Notice => 
+  meth (s, subIndex, supIndex)
+    hiLiPairColor(s, subIndex, supIndex, "BluishCyan");
+  end,
+
+OK => 
+  meth (s, subIndex, supIndex, subLeadingEdgeIndex, supLeadingEdgeIndex)
+    graph_setPolygonColor(s.varianceP, color_named("DarkGreen"));
+    hiLiPairColor(s, subIndex, supIndex, "DarkGreen");
+  end,
+
+KO => 
+  meth (s, subIndex, supIndex, subLeadingEdgeIndex, supLeadingEdgeIndex)
+    graph_setPolygonColor(s.varianceP, color_named("DarkRed"));
+    hiLiPairColor(s, subIndex, supIndex, "DarkRed");
+  end,
+
+};
+

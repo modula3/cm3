@@ -1,0 +1,28 @@
+@DFS
+PROCEDURE DepthFirstSearch(a: ARRAY OF ARRAY OF BOOLEAN; V: INTEGER) @=
+  VAR now: INTEGER := -1;
+      val := NEW(REF ARRAY OF INTEGER, V);
+
+  BEGIN
+    @6 FOR k := V-1 DO val[k] := -1 END; @
+    @7 FOR k := 0 TO V-1 DO @
+    @8   IF val[k] < 0 THEN @
+    @9     Visit(k) @
+         END;
+       END;
+  @10 END DepthFirstSearch; @
+@DFS
+
+@VISIT
+PROCEDURE Visit(k: INTEGER) @=
+  BEGIN
+@1  INC(now); val[k] := now;@
+@2  FOR t := 0 TO V-1 DO @
+@3    IF a[k, t] THEN @
+@4      IF val[t] < 0 THEN @
+@5        Visit(t); @
+      END;
+    END;
+  END;
+END Visit;
+  @VISIT
