@@ -1,0 +1,78 @@
+<HTML><HEAD>
+<TITLE>The SGML Parser Library</TITLE>
+</HEAD>
+<BODY>
+<DIV CLASS=HEAD>
+<SPAN CLASS=AUTHOR>Michel Dagenais</SPAN>
+<SPAN CLASS=COPYRIGHT>Michel Dagenais, GNU Library General Public License, 1997</SPAN>
+<ADDRESS>
+michel.dagenais@polymtl.ca<BR>
+Ecole Polytechnique<BR>
+C.P. 6079, Succ. Centre-Ville<BR>
+Montreal, Quebec, H3C 3A7</ADDRESS>
+<SPAN CLASS=DATE>8 October 1997</SPAN>
+<SPAN CLASS=KEYWORD>HTML</SPAN>
+<SPAN CLASS=KEYWORD>SGML</SPAN>
+<SPAN CLASS=KEYWORD>documentation</SPAN>
+<SPAN CLASS=KEYWORD>parser</SPAN>
+<SPAN CLASS=KEYWORD>medium audience</SPAN>
+</DIV>
+<H1>The SGML Parser Library</H1>
+
+<DIV CLASS=ABSTRACT>
+<P>
+This library reads SGML document types definitions and parses SGML files
+accordingly. It may be used for parsing, checking, or converting SGML
+files.
+</DIV>
+
+<P>
+The Standard
+Generalized Markup Language (SGML) is a structured document representation
+suitable for document manipulation, exchange and storage
+<A HREF="http://www.sil.org/sgml/sgml.html">[SGML]</A>. Among other
+things SGML is the format upon which is based HTML, the World Wide
+Web Hypertext Markup Language <A HREF="http://www.w3.org/">[HTML]</A>.
+
+<H2>Organization</H2>
+
+<P>
+A first version of this library was built on top of James Clark
+NSGMLS C++ SGML parser, a fully validating and stable parser.
+Subsequent versions may still use the NSGMLS parser, if the quake variable
+<TT>USE_NSGMLS</TT> is true in the <TT>m3makefile</TT> when compiling
+the library, but default to a native Modula-3 XML/SGML parser.
+XML is a subset of SGML being defined by the World Wide Web consortium
+<A HREF="http://www.w3.org/">[XML]</A>.
+<P>
+The native Modula-3 library was developed with the goal of removing
+dependencies on foreign packages (NSGMLS) which needed to be installed
+separately. Implementing a fully validating SGML parser, however,
+is a significant task (NSGMLS weights in at 50000 lines).
+Thus, a subset of SGML, based on XML, was implemented; several secondary
+options are not implemented. Nonetheless, the
+implementation goes beyond XML since the HTML 3.2/4.0 document type
+definitions needed to be handled, as well as common HTML documents.
+Among other things, tags validation was required in order to detect and
+supply omitted tags.
+<P>
+Therefore, while the native Modula-3 SGML parser backend still has
+some limitations, a large part of the needed underlying machinery has
+been implemented. It has been relatively easy to extend as more
+features were required. It is expected to continue evolving as it gains
+more widespread use and as the XML standard matures.
+<P>
+The default path for catalogs is PKG_INSTALL/sgml/src/dtd,
+where PKG_INSTALL is defined in the <TT>m3build</TT> template
+(e.g. /usr/local/modula3-3.6/lib/m3/pkg) for the Modula-3 parser.
+For NSGMLS, the default value depends on how it was compiled.
+Document type definitions are provided in this package for HTML 3.2,
+HTML 4.0, Math HTML, and Linuxdoc.
+
+<UL CLASS=MD.SKIP>
+<LI><A REL=INCLUDE HREF="SGML.i3"> The SGML interface </A>
+<LI><A REL=INCLUDE HREF="SGMLPrint.i3"> The SGMLPrint interface </A>
+</UL>
+</BODY>
+</HTML>
+
