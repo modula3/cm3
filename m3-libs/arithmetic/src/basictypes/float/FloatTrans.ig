@@ -1,4 +1,4 @@
-GENERIC INTERFACE FloatTrans(R,RB);
+GENERIC INTERFACE FloatTrans(R,RB,RX);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Generic wrapper routines for (mainly) transcendent functions
@@ -8,7 +8,7 @@ If R.T is
   LONGREAL, then the instantiated module is a wrapper for Math with procedure names conforming to the conventions
   EXTENDED, then the instantiated module may be used for transcendental computations but the precision is only that of LONGREAL because this is the precision of the standard C math library
 
-SqRt should through an exception if applied to negative numbers
+SqRt should throw an exception if applied to negative numbers
 *)
 
 (*==========================*)
@@ -27,7 +27,7 @@ CONST
   One         = RB.One;
   MinusOne    = RB.MinusOne;
   Two         = RB.Two;
-  SqrtTwo     = FLOAT(1.414213562373095D0,T);
+  SqRtTwo     = FLOAT(1.414213562373095D0,T);
   LnTwo       = FLOAT(0.693147180559945D0,T);  (*ln(2) *)
 
   Pi          = FLOAT(3.141592653589793D0,T);
@@ -57,9 +57,7 @@ CONST
   Huge = R.MaxFinite/FLOAT(1000.0,T); (*nearly infinite*)
   (*Eps  = Pow(FLOAT(R.Base,T),-FLOAT(R.Precision,T));  (*approx relative machine precision*)  *)
   (*Eps  = LongFloat.Scalb(One,-R.Precision);*)
-
-VAR
-  Eps : T;
+  Eps  = RX.Eps;
 
 <*INLINE*> PROCEDURE Abs   (c:T):T;       (*return magnitude*)
 <*INLINE*> PROCEDURE AbsSqr(c:T):T;       (*return square of the magnitude*)
