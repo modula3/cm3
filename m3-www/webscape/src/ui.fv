@@ -1,0 +1,65 @@
+(ZSplit 
+  (Font (Family "helvetica") (PointSize 120) (WeightName "Bold"))
+  (LabelFont (Family "helvetica") (PointSize 120) (WeightName "Bold"))
+  (Macro T BOA (a) `(Shape (Width + 0) ,a))
+  (Macro B BOA (name label) `(HBox (Glue 2) (Filter (Button (Name ,name) ,label))))
+  (Macro MB BOA (name label) `(MButton (Name ,name) (Text LeftAlign (Margin 14.5) ,label)))
+  (Macro MBC BOA (name label) `(Choice MenuStyle CheckMark (Name ,name) (Text LeftAlign ,label)))
+  (Macro MBB BOA (name label) `(Boolean MenuStyle CheckMark (Name ,name) (Text LeftAlign ,label)))
+  (VBox 
+    (Glue 4)
+    (HBox 
+      (Glue 10)
+      (B back "Back")
+      (B forward "Forward")
+      (B home "Home")
+      (Glue 10)
+      (B reload "Reload")
+      (B open "Open...")
+      (Glue 10)
+      (B stop "Stop")
+      (Text %pageCounts "a/b")
+      (Menu (HBox "  " (Pixmap "menuArrow.pbm")(Pixmap "menuArrow.pbm")(Pixmap "menuArrow.pbm") "  ")
+        (Radio %displayStyle =displayImages (VBox
+          (MBC displayUgly       "Ugly (but fast?) Text")
+          (MBC displayNoImages   "No Images")
+          (MBC displayImages     "Images")
+          (MBC displayBackground "Images in background")
+          Chisel
+          (MBB useZippers "Use Zippers")
+          Chisel
+          (MB debug "Debugging stuff")
+      )))
+      (Glue 2)  
+      (Guard (B quit "Quit"))
+      (Glue 10))
+    (Glue 4)
+    (HBox 
+      (Glue 5) 
+      (T "Location:  ")
+      (Frame Lowered (BgColor "VeryLightGray") (Filter (TypeIn ExpandOnDemand %url)))
+      (Glue 20))
+    (Glue 4)
+    (Bar 2)
+    (Shape (Height + 0) (Text (BgColor "white") %title "???"))
+    (Bar)
+    (Shape (Width 600 - 300 + Inf) (Height 500 - 400 + Inf) (Generic %contents)))
+(ZChassis (Title "Open Location") %OpenDlg
+  (Filter Dormant (Rim (Pen 20)
+    (VBox
+      (HBox 
+        (T "Open Location:")
+        (Shape (Width 200 + Inf) 
+          (Frame Lowered (BgColor "VeryLightGray") (TypeIn ExpandOnDemand %openurl))))
+        (Glue 10)
+        (Chisel)
+        (Glue 10)
+        (HBox 
+          (Border (CloseButton %openopen "Open")) 
+          Fill Fill 
+          (B openclear "Clear") 
+          Fill
+          (B openpaste "Paste") 
+          Fill Fill 
+          (CloseButton "Cancel"))))))
+)  

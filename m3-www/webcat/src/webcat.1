@@ -1,0 +1,44 @@
+.nh
+.TH webcat 1
+.SH NAME
+webcat \- get a WWW (web) page using the HTTP protocol; print to stdout
+.SH SYNTAX
+\fBwebcat\fR [\fB-options\fR] \fIurl\fR
+.SH DESCRIPTION
+The webcat program retrieves the specified URL and prints 
+the contents to stdout.  With no options, it prints the contents
+of the page, stripping the header.  With the -head option you get only
+the header and not the contents.
+.PP
+If the URL starts with /, it will be interpreted relative to the
+environment variable WWW_HOME.  Otherwise it will be treated as an
+absolute URL.
+.PP
+The webcat program uses http_proxy and no_proxy variables; if the
+specified URL matches the string in no_proxy, then the host is contacted 
+directly.  Otherwise the request goes through the proxy server named in http_proxy.
+See http://info.cern.ch/hypertext/WWW/Daemon/User/Proxies/ProxyClients.html
+for details.
+.SH OPTIONS
+These options can appear in any combination:
+.TP 18
+\fB-debug\fR
+Print the header, and then the contents of the page.  Without
+this option, prints just the contents, no header.
+.TP 18
+\fB-head\fR
+Print only the header, and not the contents of the page.  Without
+this option, prints the contents, no header.  If -debug option is 
+in effect, -head is a no-op.
+\fB-post argSTring\fR
+Do a post request, passing in the arg string.
+.TP 18
+\fB-noCache
+add a no-cache field to the request. 
+.TP 18
+\fB-proxy <server>
+send the request through the specified proxy server
+.TP 18
+.SH AUTHOR
+Steve Glassman
+

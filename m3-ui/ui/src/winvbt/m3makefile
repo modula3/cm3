@@ -1,0 +1,31 @@
+% Copyright (C) 1995, Digital Equipment Corporation
+% Digital Internal Use Only
+% All rights reserved.
+%
+% Last modified on Tue Aug  6 11:02:45 PDT 1996 by najork
+%       Created on Mon Jan 16 09:40:13 PST 1995 by najork
+
+write ("-------------------------------------------------------------------\n")
+write ("This is an unfinished, experimental version of Trestle on Windows. \n")
+write ("It requires Windows NT or Windows 95.                              \n")
+write ("Not every Trestle program will work, although many simple ones do  \n")
+write ("(for example, solitaire, badbricks, etc.)                          \n")
+write ("-------------------------------------------------------------------\n")
+
+module ("WinContext")
+
+implementation ("TrestleOS")
+implementation ("PictureImpl")
+implementation ("TrestleConf")
+
+Module ("WinTrestle")
+Module ("WinScreenType")
+module ("WinPaint")
+interface ("WinScreenTypePrivate")
+module ("WinScrnColorMap")
+module ("WinScrnCursor")
+module ("WinScrnFont")
+module ("WinScrnPaintOp")
+module ("WinScrnPixmap")
+module ("WinKey")
+module ("WinMsg")

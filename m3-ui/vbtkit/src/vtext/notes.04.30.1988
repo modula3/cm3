@@ -1,0 +1,78 @@
+N O T E S   O N   V T E X T :
+
+ * Made ComputeLine always read first character
+ * Changed semantics of clicking at top, bottom
+
+ * Extra colors for turns, dividers
+ * Changed style names
+ * Added clip mode
+ * Assume NoHighlight is most common
+ * Redraw is renamed Bad
+ * Rearrange is renamed Move
+ * Note don't use NoHighlight, OverlapStyle
+
+ * RAISES clauses everywhere
+ * If error, no guarantee on consistency
+ * Shoudn't look inside views
+ * Added VFont, MakeVFont
+ * Removed MoveCaretFromIndex (use MoveCaret instead)
+ * IsNil means an argument was NIL
+
+ * Made Underline 2 pixels high
+
+ * Eliminated Start
+
+ * Removed vtext^.caret, interval^.hl, interval^.hr
+ * Split Pounce
+ * Added ConcurrentUpdate, LineIndex
+ * Fixed ComputeLine
+
+ * Implemented markers
+ * BoxStyle implemented
+ * Efficiency hacks
+
+ * repaint less (rearrange doesn't)
+ * SplitRegion, MergeRegion, Rearrange take a "scroll" argument
+ * Redraw doesn't update
+ * Redraw now obeys its rect arg
+
+ * last line is not a priori turned
+
+ * Removed charBox, charWidth from a VText record
+
+ * Back to old cursor
+ * Added VText.InsertSub
+ * SplitRegion no longer does an update
+
+ * Problem with Coral.DrawVText
+ * VTPounce may do implicit update
+ * Special hard-to-see caret
+ * Macintosh-style selector for new-line
+
+ * Made LinesBetween take a short-cut; changed its interface
+ * Changed "text" component to "mtext"
+ * Got rid of UpdateHighlights
+ * Added concurrent updating
+ * Added Quiesce, QuiesceRegion
+ * Document new "update" philosophy
+
+ * Eliminated anchorTop parameters to MergeRegion, Rearrange
+
+ * Added "TempHead", "CopyHead" to pantheon
+ * Removed start, newStart from exported list
+ * Added Start function
+
+ * Tabs, control characters work
+ * Moved "intervals" from exported part
+ * Switched caret to use xor (bad)
+ * Eliminated MoveOrigin, unused anywhere
+
+ * Changed most routines in EText.mod not to call Update
+ * Fixed the scroll-bar operations to call Update, therefore
+ * Fixed EText to compute desiredColumn only as needed
+
+ * Removed usesTty, String, DefaultWindow, ReadyForCommand from VTextDisplay
+ * Removed Restore from VTextDisplay
+ * Fixed UpLines to work well with narrow (or zero-width) windows
+ * Fixed VText to compute line width correctly (was off by leftMargin)
+ * Reorganized VText to separate out VTextRegion, others

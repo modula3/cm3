@@ -1,0 +1,164 @@
+{% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Thu Jan  7 10:51:40 PST 1993 by muller
+%
+\font\ttslant=cmsltt10
+\font\ttstraight=cmtt10
+\font\rmslant=cmsl10
+\def\tt{\ttstraight}
+\def\indentation{24pt}
+\def\tab{$ $\hbox to \indentation{\hss}}
+\long\def\procspec#1{{\advance\leftskip by \indentation
+  \noindent\rightskip = 0pt plus2em\rmslant\def\tt{\ttslant}\ignorerm#1}}
+\def\ignorerm\rm{}
+\def\display{\tab\parskip=0pt\advance\baselineskip by -0.5pt\tt }
+\def\progmode{\advance\baselineskip by -0.5pt}
+\par{\tt\parskip=0pt\parindent=0pt\progmode
+}\par\medskip\noindent
+{\rm  A {\tt HyperPage.T} is the in-memory representation of an HTML page.
+   Each page has the following properties:
+   \par
+\par\medskip {\display ~~~~an~underlying~body~of~HTML}\noindent\par
+{\display ~~~~a~line~breaking~width~specified~in~pixels}\noindent\par
+{\display ~~~~a~set~of~display~"looks"}\noindent\par
+{\display ~~~~a~bounding~box~specified~in~pixels~with~northwest~corner~at~(0,0)}\noindent\par
+{\display ~~~~a~region~with~a~highlighted~background}\noindent\par
+{\display ~~~~a~numbered~set~of~links,~each~one~hilighted~or~not}\noindent\par
+{\display ~~~~a~set~of~named~anchor~locations}\noindent\par
+{\display ~~~~a~collection~of~named~images}\noindent\par
+{\display ~~~~a~title}\noindent\par
+\medskip\noindent%
+\par}\par{\tt\parskip=0pt\parindent=0pt\progmode
+\par\medskip \par\medskip
+\tab INTERFACE~HyperPage;\par\medskip
+\tab IMPORT~Rd,~VBT,~Point,~Rect,~PaintOp;\par\medskip
+\tab TYPE\par
+\tab ~~T~<:~Public;\par
+\tab ~~Public~=~OBJECT~METHODS\par\medskip
+\tab ~~~~init~(src~~~~~~~~~~~:~Rd.T;\par
+\tab ~~~~~~~~~~width~~~~~~~~~:~CARDINAL~:=~800;\par
+\tab ~~~~~~~~~~looks~~~~~~~~~:~Looks~~~~:=~NIL;\par
+\tab ~~~~~~~~~~delayedImages~:~BOOLEAN~~:=~FALSE):~T;\par\medskip
+\tab ~~~~resetWidth~(newWidth:~INTEGER;~~READONLY~before~:=~Point.Origin):~Point.T;\par
+\tab ~~~~resetLooks~(newLooks:~Looks;~~READONLY~before~:=~Point.Origin):~Point.T;\par\medskip
+\tab ~~~~(\char'052{}-------------------------------------------------------~VBT~support~---\char'052{})\par\medskip
+\tab ~~~~size~():~Point.T;\par
+\tab ~~~~paint~(dest:~VBT.T;~~READONLY~offset:~Point.T;~~READONLY~clip:~Rect.T);\par
+\tab ~~~~hiliteBackground~(READONLY~from,~to:~Point.T);\par
+\tab ~~~~getText~(READONLY~from,~to:~Point.T):~TEXT;\par
+\tab ~~~~translate~(READONLY~p:~Point.T):~Location;\par\medskip
+\tab ~~~~(\char'052{}------------------------------------------------------~HTML~support~---\char'052{})\par\medskip
+\tab ~~~~getTitle~():~TEXT;\par
+\tab ~~~~locateAnchor~(nm:~TEXT):~Point.T;\par
+\tab ~~~~getLink~(n:~CARDINAL):~TEXT;\par
+\tab ~~~~setLinkLooks~(n:~CARDINAL;~~hilite:~BOOLEAN);\par
+\tab ~~~~useImage~(nm:~TEXT;~~image:~Rd.T);\par
+\tab ~~~~fetchImage~(nm:~TEXT):~Rd.T;\par
+\tab ~~~~noteError~(msg:~TEXT);\par\medskip
+\tab ~~END;}\par\medskip\noindent
+{\rm  Given a hyperpage {\tt p},
+\par
+   {\tt p.init (s, w, l, d)} initializes {\tt p} by parsing the HTML in {\tt s}
+   and breaking lines when necessary to keep the image in a rectangle
+   no more than {\tt w} pixels wide.  The resulting image is painted
+   with looks {\tt l}.  If {\tt d} is {\tt TRUE}, inline images are not fetched
+   until they're needed by the {\tt paint} method.  Otherwise, inline images
+   are fetched during the {\tt init} call.  After {\tt p.init} returns, {\tt s} is
+   no longer used.
+\par
+   {\tt p.resetWidth (w, x)} recomputes the line breaking attempting to keep
+   {\tt p}'s bounding box no more than {\tt w} pixels wide.  The value returned
+   is the new location in {\tt p}'s image that corresponds to the location {\tt x}
+   prior to the call.
+\par
+   {\tt p.resetLooks (l, x)} recomputes {\tt p}'s bounding box using the new looks
+   {\tt l}.  The value returned is the new location in {\tt p}'s image that
+   corresponds to the location {\tt x} prior to the call.  Changing the values
+   of a Looks record after it's attached to a hyperpage may cause
+   unpredictable painting.
+\par
+   {\tt p.size()} returns the southeast corner of {\tt p}'s bounding box.  Note
+   that changing {\tt p}'s line breaking width, changing its looks, or
+   providing a new image may change its bounding box.
+\par
+   {\tt p.paint (v, o, c)} paints the piece of {\tt p}'s image contained
+   in {\tt clip} (in {\tt p}'s coordinate system) at offset {\tt o} (in {\tt v}'s
+   coordinate system) in {\tt v}.  Note that if {\tt p} was initialized with
+   {\tt delayedImages} {\tt TRUE}, {\tt p.fetchImage} may be called during the
+   painting.
+\par
+   {\tt p.hiliteBackground (a, b)} sets {\tt p}'s background hilight to the region
+   from {\tt a} to {\tt b}.  This call does not automatically repaint {\tt p}.
+\par
+   {\tt p.getText (a, b)} returns the plain text contained in the region from
+   {\tt a} to {\tt b}.  No HTML markup or images contained in the region are
+   returned.
+\par
+   {\tt p.translate (x)} returns the HTML interpretion corresponding to the
+   point {\tt x} in {\tt p}'s image.  See below for a description of the possible
+   interpretations.
+\par
+   {\tt p.getTitle()} returns {\tt p}'s title string.   {\tt NIL} is returned if no
+   title was specified in {\tt p}'s underlying HTML.
+   \par
+   {\tt p.locateAnchor (n)} returns the location in {\tt p}'s coordinate system
+   that corresponds to the anchor named {\tt n}.  If there is no such anchor,
+   {\tt (-1,-1)} is returned.
+\par
+   {\tt p.getLink (n)} returns the URL attached to the {\tt n}-th hypertext link
+   in {\tt p}.  If {\tt n} is greater than the number of links in {\tt p}, {\tt NIL} is
+   returned.
+\par
+   {\tt p.setLinkLooks (n, b)} sets the hilight of {\tt p}'s {\tt n}-th link to {\tt b}.
+   Hilighted links are displayed in the background {\tt linkColor} of {\tt p}'s
+   looks.  Non-highlighted links are displayed in the corresponding
+   foreground color.  Initially no links are hilighted.
+\par
+   {\tt p.useImage (n, r)} causes {\tt p} to use the image in {\tt r} wherever it
+   it must display an image named {\tt n}.  {\tt r} is not used after the
+   call returns.  Note that providing a new image may change {\tt p}'s
+   bounding box.
+\par
+   {\tt p.fetchImage (n)} should return a reader containing the bits
+   of the image named {\tt n}.  If the call returns {\tt NIL}, {\tt p} paints
+   a default image.  Clients should override this a method since
+   the meaning of {\tt n} is usually relative to {\tt p}.  The default
+   method always returns {\tt NIL}.  Once all images of {\tt p} have been
+   fetched, {\tt p.fetchImage (NIL)} is called to indicate that whatever
+   connection state might be retained is no longer needed.  Note that
+   providing a new image may change {\tt p}'s bounding box.
+\par
+   {\tt p.noteError (x)} is called to report illegal HTML constructs.
+   The default method ignores the message {\tt x}.
+\par}\par{\tt\parskip=0pt\parindent=0pt\progmode
+\par\medskip \par\medskip
+\tab TYPE~(\char'052{}~"static"~display~attributes~of~the~image~\char'052{})\par
+\tab ~~Looks~=~REF~RECORD\par
+\tab ~~~~fontFamily~:~TEXT;~~~~~~(\char'052{}~"Helvetica",~"Times-Roman",~...~\char'052{})\par
+\tab ~~~~fontSize~~~:~INTEGER;~~~(\char'052{}~the~point~size~of~"normal"~text.~\char'052{})\par
+\tab ~~~~background~:~PaintOp.T;~(\char'052{}~background~colors~~\char'052{})\par
+\tab ~~~~textColor~~:~PaintOp.T;~(\char'052{}~normal~text~colors~\char'052{})\par
+\tab ~~~~linkColor~~:~PaintOp.T;~(\char'052{}~link~colors~~~~~~~~\char'052{})\par
+\tab ~~END;\par\medskip
+\tab TYPE\par
+\tab ~~LocKind~=~\char'173{}~Other,~OnLink,~OnImage,~OnMap~\char'175{};\par\medskip
+\tab ~~Location~=~RECORD\par
+\tab ~~~~kind~~~:~LocKind;\par
+\tab ~~~~text~~~:~TEXT;\par
+\tab ~~~~offset~:~Point.T;\par
+\tab ~~END;}\par\medskip\noindent
+{\rm  Each point in an HTML image has some semantic interpretation.  The
+   possible interpretations for a point {\tt p} are:
+\par
+\par\medskip {\display ~~~"(OnLink,~t,~o)"~means~that~"p"~is~on~a~hypertext~link~named~"t".}\noindent\par
+{\display ~~~"(OnImage,~t,~o)"~means~that~"p"~is~on~an~image~named~"t".}\noindent\par
+{\display ~~~"(OnMap,~t,~o)"~means~that~"p"~is~over~an~active~map~named~"t"}\noindent\par
+{\display ~~~~~~~at~offset~"o"~relative~to~the~map's~northwest~corner.}\noindent\par
+{\display ~~~"(Other,~t,~o)"~means~that~"p"~is~somewhere~else.}\noindent\par
+\par}\par{\tt\parskip=0pt\parindent=0pt\progmode
+\par\medskip \par\medskip
+\tab END~HyperPage.}\par\medskip\noindent
+
+}

@@ -1,0 +1,261 @@
+; Copyright (C) 1994, Digital Equipment Corporation                         
+; All rights reserved.                                                      
+; See the file COPYRIGHT for a full description.                            
+
+(Scale
+  %scale
+  (HScale 1)
+  (VScale 1)
+  (Shape
+    (Width + inf)
+    (Height + Inf)
+    (Macro Fixed BOA (child) `(Shape (Width + 0) (Height + 0) ,child))
+    (Macro Left BOA (child) `(Fixed (HBox ,child Fill)))
+    (Macro LeftText BOA (child) `(Text LeftAlign ,child))
+    (ZSplit
+      (HBox
+        (VBox
+          (Rim
+            (Pen 8)
+            (VBox
+              (HBox
+                (VBox
+                  Fill
+                  (HBox
+                    (Menu
+                      (Shape (Width 50) (Height 30) (Pixmap "zeusIcon.pbm"))
+                      (Border
+                        (Shape
+                          (Width 100)
+                          (VBox
+                            (PopMButton
+                              (For AboutDialog)
+                              (LeftText "About ..."))
+                            (PopMButton
+                              (For ConfigDialog)
+                              (LeftText "Configure ..."))
+                            (Bar 1)
+                            (PopMButton
+                              (For SnapshotDialog)
+                              (LeftText "Snapshot ..."))
+                            (Filter
+                              (PopMButton
+                                %restoreBtn
+                                (For RestoreDialog)
+                                (LeftText "Restore ...")))
+                            (Bar 1)
+                            (MButton %photoBtn (LeftText "Photo"))
+                            (MButton %clearAlbum (LeftText "Clear Album"))
+                            (Bar 1)
+                            (Filter
+                              (MButton
+                                %recordBtn
+                                (Text LeftAlign %recordBtnText "Record ...")))
+                            (Filter
+                              (MButton %grabData (LeftText "Grab Data")))
+                            (Filter
+                              (MButton %futurePause (LeftText "Future Pause")))
+                            (Filter
+                              (MButton
+                                %playbackBtn
+                                (Text
+                                  LeftAlign
+                                  %playbackBtnText
+                                  "Playback ...")))
+                            (Bar 1)
+                            (MButton %delViews (LeftText "Delete All Views"))
+                            (Bar 1)
+                            (MButton
+                              %quit
+                              (BgColor "LightPink")
+                              (LeftText "Quit"))))))
+                    (Glue 12)
+                    (VBox
+                      (Menu
+                        (Shape (Width 50) (Height 30) "Sessions")
+                        (Border
+                          (VBox
+                            (Boolean
+                              MenuStyle
+                              %inTrestle
+                              =FALSE
+                              (LeftText "Install sessions in Trestle"))
+                            (Bar 1)
+                            (Filter (VBox %sessionMenu)))))
+                      Fill))
+                  (Glue 8)
+                  Fill
+                  (HBox
+                    (Filter
+                      (Shape (Width 25) (Border (TypeIn %restoreShortcut))))
+                    (Fixed (Text %sessName "Null"))
+                    Fill))
+                (Glue 12)
+                (HBox
+                  (Fixed
+                    (VBox
+                      (VBox
+                        (Shape (Height + 0) (Text LeftAlign %status "Idle")))
+                      (Shape (Height 6) Fill)
+                      (HBox
+                        (Filter
+                          (Shape
+                            (Width 50)
+                            (Button %goBtn (Text %goText "GO"))))
+                        (Glue 12)
+                        (Filter
+                          (Shape (Width 50) (TrillButton %stepBtn "STEP")))
+                        (Glue 12)
+                        (Filter (Shape (Width 50) (Button %abortBtn "ABORT")))
+                        (Glue 0))
+                      (Glue 8)
+                      (HBox
+                        (Fixed (Text LeftAlign "Animation time (sec): "))
+                        (Text %delayText "1.0")
+                        Fill)
+                      (Scroller %delay =550 (Min 0) (Max 1000)))))
+                Fill)
+              (Generic %sessionFV)
+              (Glue 0)))))
+      (ZChild
+        %AboutDialog
+        (Border
+          (CloseButton
+            (Rim
+              (Pen 2)
+              (VBox
+                (Shape (Height 0) (Text LeftAlign %VersionTxt "Version"))
+                (Text LeftAlign "Send comments to mhb@src.dec.com")
+                (Glue 4)
+                Ridge
+                (Glue 4)
+                (Pixmap (Color "DarkBlue") "digital.pbm"))))))
+      (ZChassis
+        %ConfigDialog
+        (Title "Configuration")
+        (Shape
+          (Width 310 + 0)
+          (Height + 0)
+          (Rim
+            (Pen 16)
+            (VBox
+              (HBox
+                (Shape (Width + 0) "Maximum speed up:")
+                (Glue 8)
+                (Frame Lowered (TypeIn %maxSpeedFactor ="10.0"))
+                Fill)
+              (Glue 8)
+              (HBox
+                (Text LeftAlign "Delays are as fractions of animation delay:")
+                Fill)
+              (Glue 8)
+              (HBox
+                (Shape (Width 140) "    Minimum event delay: ")
+                (Shape (Width 30) (Text RightAlign %minDelayText "0.10"))
+                (Border (Scroller %minDelayFrac =10 (Min 0) (Max 100))))
+              (Glue 8)
+              (HBox
+                (Shape (Width 140) "    Code view event delay: ")
+                (Shape (Width 30) (Text RightAlign %codeDelayText "0.40"))
+                (Border (Scroller %codeDelayFrac =40 (Min 0) (Max 100))))
+              (Glue 8)
+              (HBox
+                (Shape (Width + 0) (Text LeftAlign "Step detail:"))
+                (Numeric %priority =1 (Min 0) (Max 9))
+                Fill)
+              (Glue 8)
+              (HBox
+                (Shape (Width + 0) "Photo size (mm) Width:")
+                (Glue 8)
+                (Frame Lowered (TypeIn %photoWidth ="30.0"))
+                (Glue 8)
+                (Shape (Width + 0) "Height:")
+                (Glue 8)
+                (Frame Lowered (TypeIn %photoHeight ="30.0"))
+                Fill)
+              (Glue 8)))))
+      (ZChassis
+        %SnapshotDialog
+        (Title "File in which to save snapshot?")
+        (Rim
+          (Pen 8)
+          (VBox
+            (Frame
+              Lowered
+              (Helper (For snapshot) (BgColor "VeryLightGrey") %snapshotName))
+            (Glue 8)
+            (Frame
+              Lowered
+              (Shape
+                (Width 280 + Infinity)
+                (Height 100 + Infinity)
+                (FileBrowser (BgColor "VeryLightGrey") %snapshot))))))
+      (ZChassis
+        %RestoreDialog
+        (Title "File from which to restore snapshot:")
+        (Filter
+          %restoreContents
+          (Rim
+            (Pen 8)
+            (VBox
+              (Frame
+                Lowered
+                (Helper (For restore) (BgColor "VeryLightGrey") %restoreName))
+              (Glue 8)
+              (Frame
+                Lowered
+                (Shape
+                  (Width 280 + Infinity)
+                  (Height 100 + Infinity)
+                  (FileBrowser (BgColor "VeryLightGrey") %restore ReadOnly)))))))
+      (ZChassis
+        %RecordDialog
+        (Title "File in which to save transcript?")
+        (Rim
+          (Pen 8)
+          (VBox
+            (Frame
+              Lowered
+              (Helper (For record) (BgColor "VeryLightGrey") %recordName))
+            (Glue 8)
+            (Frame
+              Lowered
+              (Shape
+                (Width 280 + Infinity)
+                (Height 100 + Infinity)
+                (FileBrowser (BgColor "VeryLightGrey") %record))))))
+      (ZChassis
+        %PlaybackDialog
+        (Title "Transcript file to play back?")
+        (Rim
+          (Pen 8)
+          (VBox
+            (Frame
+              Lowered
+              (Helper (For playback) (BgColor "VeryLightGrey") %playbackName))
+            (Glue 8)
+            (Frame
+              Lowered
+              (Shape
+                (Width 280 + Infinity)
+                (Height 100 + Infinity)
+                (FileBrowser (BgColor "VeryLightGrey") %playback))))))
+      (ZChassis
+        (BgColor "LightPink")
+        (DarkShadow "DarkPink")
+        %ErrorDialog
+        (Title "Error")
+        (Rim
+          (Pen 16)
+          (VBox
+            (Shape
+              (Width 200 + Infinity)
+              (Height 100 + Infinity)
+              (Border (TextEdit %error ReadOnly)))
+            (Glue 16)
+            (HBox
+              (Shape (Width 90) (CloseButton %errClearAndShut "Clear & Shut"))
+              (Glue 30) Fill
+              (Shape (Width 50) (Button %errClear "Clear"))
+              (Glue 30) Fill
+              (Shape (Width 50) (CloseButton "Shut")))))))))

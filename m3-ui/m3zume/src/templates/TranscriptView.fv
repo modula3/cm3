@@ -1,0 +1,24 @@
+; Copyright (C) 1995, Digital Equipment Corporation.
+; All rights reserved.
+; See the file COPYRIGHT for a full description.
+;
+; Last modified on Wed Feb  8 15:37:06 PST 1995 by kalsow
+
+;********************************************************************
+;  NOTE: This file is generated automatically from the event 
+;        definition file #(_ALGNAME_).evt.
+;********************************************************************
+
+(VBox
+  (Rim
+    (Pen 2)
+    (HBox
+      (VBox (Glue 4) (Shape (Height + Inf) (Button %clear "CLEAR")) (Glue 4))
+      (Glue 4)
+      (VBox
+        (Boolean =TRUE %alg (Text LeftAlign "Algorithm events"))
+        (Boolean =FALSE %zeus (Text LeftAlign "Zeus events"))
+        (Boolean =TRUE %args (Text LeftAlign "Display args to events")))
+      Fill))
+  (Bar 1)
+  (Shape (ShadowSize 0) (Height 200 + INF) (TextEdit ReadOnly %transcript)))

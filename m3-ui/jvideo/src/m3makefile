@@ -1,0 +1,8 @@
+% Copyright (C) 1995, Digital Equipment Corporation      
+% Digital Internal Use Only                              
+% All rights reserved.                                   
+%                                                        
+% Last modified on Thu Sep  7 09:25:33 PDT 1995 by najork
+%       Created on Thu Sep  7 09:24:15 PDT 1995 by najork
+
+include_dir (OS_TYPE)

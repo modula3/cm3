@@ -1,0 +1,5 @@
+xbmtopbm contractArrow.xbm    >contractArrow.pbm
+xbmtopbm contractOnArrow.xbm  >contractOnArrow.pbm
+xbmtopbm emptyArrow.xbm       >emptyArrow.pbm
+xbmtopbm expandArrow.xbm      >expandArrow.pbm
+xbmtopbm expandOnArrow.xbm    >expandOnArrow.pbm

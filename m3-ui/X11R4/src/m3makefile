@@ -1,0 +1,24 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Wed Oct 11 13:48:14 PDT 1995 by najork
+%      modified on Fri Oct 28 16:46:57 PDT 1994 by kalsow
+%      modified on Wed Nov 24 15:27:44 PST 1993 by steveg
+%      modified on Fri Apr 30 12:17:55 PDT 1993 by mjordan
+%      modified on Tue Feb 11 17:34:10 PST 1992 by muller
+
+if SYSTEM_LIBS contains "X11"
+
+  import("libm3")
+  import_sys_lib ("X11")
+
+  if equal(TARGET, "ALPHA_OSF")
+    include_dir (TARGET)
+  else
+    include_dir ("Vanilla")
+  end
+  include_dir ("Common")
+  Library ("m3X11R4")
+
+end

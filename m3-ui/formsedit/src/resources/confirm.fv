@@ -1,0 +1,23 @@
+(Macro Confirm (Name question yes no cancel cancelMsg)
+  `(ZChild %,Name
+     (BgColor "VeryPaleBlue")
+     (LightShadow "White")
+     (DarkShadow "VeryDarkBlue")
+     (Shape (Width 300)
+       (BOX (pens (2 2 1 26))
+	 (child
+	  (VBox
+	   ,question
+	   (Glue 20)
+	   (HBox
+	    Fill
+	    (VBox
+             (Button %,yes (BgColor "Green") (Shape (Width 80) "Yes"))
+             (Glue 10)
+             (Button %,no (BgColor "Red") (Shape (Width 80) "No")))
+            (Glue 20)
+            (VBox
+             Fill
+             (Filter %,cancel
+                     (CloseButton (Shape (Width 80) ,cancelMsg))))
+            Fill)))))))

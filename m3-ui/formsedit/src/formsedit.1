@@ -1,0 +1,76 @@
+.\" Copyright (C) 1992, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.\" Last modified on Wed Jan  4 11:09:57 PST 1995 by glassman
+.\"      modified on Thu Aug  6  0:37:12 PDT 1992 by meehan
+.\"      modified on Tue Jun 16 22:02:31 PDT 1992 by muller
+.\"      modified on Mon Mar  9 11:30:34 PST 1992 by kalsow
+.nh
+.TH formsedit 1
+.SH NAME
+formsedit - user interface builder for FormsVBT
+
+.SH SYNTAX
+.B formsedit
+[-options] [file]
+        
+.SH DESCRIPTION
+
+.B formsedit 
+is a user-interface builder for FormsVBT. The program supports a text view
+("editor") and a result view.  The editor's user interface
+should be self-explanatory.
+
+.SH OPTIONS
+
+.TP
+.BI \-d[isplay]
+This sets the X "display" parameter for the editor window. The
+syntax is
+            <name> :[:] <display> [ . <screen>]
+        where
+            <name> is any string not containing ":"
+            <display> and <screen> are cardinals.
+        (Blanks are not allowed.  They're used here just for clarity.) 
+        Two colons indicate DECnet.
+        Example:
+            :0.0
+            africa:0
+            myrtle.pa.dec.com:0.1
+        The default is taken from the DISPLAY environment variable.
+
+.TP
+.BI \-g[eometry]
+        This sets the X "geometry" (size and placement) parameter for
+        the editor window, The syntax is
+            <width> [ x <height>] [<sign> <horiz> [<sign> <vert>]]
+        where
+            <width>, <height>, <horiz>, and <vert> are cardinals.
+            <sign> is either + or -
+        <horiz> and <vert> indicate the displacement from a corner,
+        according to the <sign>s:
+                      Hsign Vsign corner
+                        +     +     NW
+                        +     -     SW
+                        -     +     NE
+                        -     -     SE
+       Examples:
+           1024x80
+           640x840+10-20
+           +10+10
+           200x200-0-0
+       The default is 600x250-10-10.
+
+
+
+
+
+
+
+
+
+
+
+
+
