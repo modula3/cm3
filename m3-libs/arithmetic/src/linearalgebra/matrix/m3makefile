@@ -28,15 +28,16 @@ MatrixDecomposition("Real",     "Fast")
 MatrixDecomposition("LongReal", "Fast")
 MatrixDecomposition("Extended", "Fast")
 
+%LAPACKToModula3("Real",     "Real",     "MatrixLapackRaw", "s", "S")
+%LAPACKToModula3("LongReal", "LongReal", "MatrixLapackRaw", "d", "D")
+generic_module("FloatMatrixLapack")
+Lapack("Real",     "Fast")
+Lapack("LongReal", "Fast")
+
 generic_module("EigenSystem")
 EigenSystem("Real",     "Fast")
 EigenSystem("LongReal", "Fast")
 %EigenSystem("Extended", "Fast")
-
-LAPACKToModula3("Real",     "Real",     "MatrixLapackRaw", "s", "S")
-LAPACKToModula3("LongReal", "LongReal", "MatrixLapackRaw", "d", "D")
-module("RealMatrixLapackRaw")
-module("LongRealMatrixLapackRaw")
 
 generic_module("CharPolynomial")
 CharPolynomial("Real",            "Fast",  "Basic")
