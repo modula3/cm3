@@ -14,6 +14,11 @@ FROM BigIntegerBasic IMPORT Value, Zero;
 (*==========================*)
 
 
+PROCEDURE IsZero (READONLY x : T) : BOOLEAN =
+BEGIN
+  RETURN x.size=0 OR x.size=1 AND x.data[0]=0;
+END IsZero;
+
 <*INLINE*>
 PROCEDURE MinMax (VAR min, max : INTEGER; a, b : INTEGER) =
 BEGIN
