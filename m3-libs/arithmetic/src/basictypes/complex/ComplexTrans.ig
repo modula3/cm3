@@ -41,5 +41,21 @@ PROCEDURE ArcCos(READONLY x:C.T):C.T RAISES {Error}; (*return arccos(x) *)
 PROCEDURE ArcSin(READONLY x:C.T):C.T RAISES {Error}; (*return arcsin(x) *)
 PROCEDURE ArcTan(READONLY x:C.T):C.T RAISES {Error}; (*return arctan(x) *)
 
+(*---- Floating point representations ----*)
+
+<*INLINE*> PROCEDURE FrExp (READONLY x: C.T; VAR exp: INTEGER): C.T;
+(* returns a value y and sets exp such that x = y * 2^exp,
+    where ABS(y.re*y.im) is "close to" 1.
+   this can be used to improve numerical condition *)
+
+<*INLINE*> PROCEDURE LdExp (READONLY x: C.T; exp: INTEGER): C.T;
+(* returns x * 2^exp. *)
+
+<*INLINE*> PROCEDURE ModF (READONLY x: C.T; VAR(*OUT*) i: C.T): C.T;
+(* splits the argument "x" into an integer part "i" and a fractional part "f"
+   such that "f + i = x" and such that "f" and "i" both have the same sign as
+   "x", and returns "f". Although "i" is a LONGREAL, it is set to an integral
+   value. *)
+
 (*==========================*)
 END ComplexTrans.

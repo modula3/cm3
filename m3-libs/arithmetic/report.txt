@@ -1,10 +1,12 @@
 for myself:
 
 todo:
+  - separate generic GCD from integer module
+  - fast integer power by binary decomposition of exponent
   - physical units
   - combinatorics and number theory with bigintegers
-  - fast integer power by binary decomposition of exponent
-  - separate generic GCD from integer module
+    calculating binomial coefficients might be sped up by
+    keeping a list of machine size integer factors
   - (overflow check in integer modules)
   - (extract common average factors to prevent overflow and underflow
     for real number based complex Abs(), complex Div(), vector norm)

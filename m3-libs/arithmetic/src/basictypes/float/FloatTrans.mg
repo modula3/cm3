@@ -192,7 +192,7 @@ BEGIN
 END Sgn;
 
 
-PROCEDURE FrExp (x: T;  VAR exp: INTEGER): T =
+PROCEDURE FrExp (x: T; VAR exp: INTEGER): T =
   BEGIN
     RETURN FLOAT(Math.frexp(FLOAT(x,LONGREAL),exp),T);
   END FrExp;
