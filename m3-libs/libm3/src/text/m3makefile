@@ -1,1 +1,2 @@
 Module("TextExtras")
+Module("Unicode")
