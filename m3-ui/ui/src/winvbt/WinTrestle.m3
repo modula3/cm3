@@ -2,14 +2,15 @@
 (* Digital Internal Use Only                                                 *)
 (* All rights reserved.                                                      *)
 (*                                                                           *)
+(* Last modified on Tue Nov  5 09:41:36 PST 1996 by najork                   *)
 (* Last modified on Mon Nov  4 14:10:28 PST 1996 by najork                   *)
 (*       Created on Mon Jan 16 10:05:17 PST 1995 by najork                   *)
 
 
 UNSAFE MODULE WinTrestle;
 
-IMPORT Axis, Batch, Cstring, Ctypes, Fmt, M3toC, Point, ProperSplit, Rect, 
-       Region, RTCollectorSRC, RTHeapDep, RTHeapRep, RTParams, RTLinker, 
+IMPORT Axis, Batch, Cstring, Ctypes, Env, Fmt, M3toC, Point, ProperSplit,
+       Rect, Region, RTCollectorSRC, RTHeapDep, RTHeapRep, RTParams, RTLinker, 
        ScrnColorMap, ScrnCursor, ScrnPixmap, Split, Text, Thread,
        Trestle, TrestleClass, TrestleImpl, VBT, VBTClass, VBTRep, WinBase, 
        WinDef, WinGDI, WinKey, WinMsg, WinPaint, WinScreenType,
@@ -1179,6 +1180,9 @@ PROCEDURE WindowProc (hwnd   : WinDef.HWND;
     | WinUser.WM_KEYUP =>
         VBTKeyPress (hwnd, wParam, FALSE);
 
+    | WinUser.WM_CHAR =>
+        VBTCharPress (hwnd, wParam);
+
     | WinUser.WM_LBUTTONDOWN =>
         ButtonEvent (hwnd, lParam, wParam, Button.Left, Transition.Press);
 
@@ -1730,6 +1734,68 @@ PROCEDURE VBTKeyPress (hwnd: WinDef.HWND;  wParam: WinDef.WPARAM;  down: BOOLEAN
       VBTClass.Key (v, VBT.KeyRec {keysym, time, down, modifiers});
     END;
   END VBTKeyPress;
+
+PROCEDURE VBTCharPress (hwnd: WinDef.HWND;  wParam: WinDef.WPARAM) =
+  (* need to update the per-Trestle modifier set and translate the Windows
+     virtual key into a Trestle KeySym. *)
+  VAR
+    v         := GetVBT (hwnd);
+    keysym    := wParam;
+    time      := WinUser.GetMessageTime();
+    modifiers := GetModifiers ();
+  BEGIN
+    (* ------ uncomment to debug character input ---------
+    IF keysym < 256 THEN
+      DEBUG("WM_CHAR: code = " & Fmt.Int(keysym) & " char = " &
+            Text.FromChar(VAL(keysym, CHAR)) & 
+            ModifiersToText(modifiers) & "\n");
+    ELSE
+      DEBUG("WM_CHAR: code = " & Fmt.Int(keysym) & 
+            ModifiersToText(modifiers) & "\n");
+    END;
+       ------ *)
+    (*** If the VBT is already deleted, bail out ***)
+    IF (v = NIL)THEN RETURN; END;
+
+    modifiers := modifiers - VBT.Modifiers{VBT.Modifier.Control};
+    (* simulate the key up and down events for Trestle *)
+    IF useEvent_WM_CHAR THEN
+      LOCK VBT.mu DO
+        VBTClass.Key (v, VBT.KeyRec {keysym, time, TRUE, modifiers});
+        VBTClass.Key (v, VBT.KeyRec {keysym, time, FALSE, modifiers});
+      END;
+    END;
+  END VBTCharPress;
+
+PROCEDURE ModifiersToText(m : VBT.Modifiers) : TEXT = <*NOWARN*>
+  VAR res := "";
+  BEGIN
+    IF VBT.Modifier.Shift IN m THEN
+      res := res & " shift";
+    END; 
+    IF VBT.Modifier.Lock IN m THEN
+      res := res & " lock";
+    END; 
+    IF VBT.Modifier.Control IN m THEN
+      res := res & " control";
+    END; 
+    IF VBT.Modifier.Option IN m THEN
+      res := res & " option";
+    END; 
+    IF VBT.Modifier.Mod0 IN m THEN
+      res := res & " mod0";
+    END; 
+    IF VBT.Modifier.Mod1 IN m THEN
+      res := res & " mod1";
+    END; 
+    IF VBT.Modifier.Mod2 IN m THEN
+      res := res & " mod2";
+    END; 
+    IF VBT.Modifier.Mod3 IN m THEN
+      res := res & " mod3";
+    END;
+    RETURN res;
+  END ModifiersToText;
 
 TYPE
   Button = {None, Left, Middle, Right};
@@ -2493,6 +2559,16 @@ PROCEDURE DumpSystemPalette (hdc : WinDef.HDC) =
 
 (*-------------------------------------------------------- initialization ---*)
 
+VAR 
+  useEvent_WM_CHAR := FALSE;
 BEGIN
+  WITH v = Env.Get("USE_EVENT_WM_CHAR") DO
+    IF v # NIL THEN
+      useEvent_WM_CHAR := Text.Length(v) = 0 OR
+                          Text.GetChar(v, 0) = '1' OR
+                          Text.GetChar(v, 0) = 'y' OR
+                          Text.GetChar(v, 0) = 'Y';
+    END;
+  END;
   CreateTrestle ();
 END WinTrestle.
