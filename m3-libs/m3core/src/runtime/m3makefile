@@ -34,7 +34,9 @@ readonly EXCEPTION_IMPL = {
   "SUN3"       : "ex_frame",
   "SUN386"     : "ex_frame",
   "UMAX"       : "ex_frame",
-  "VAX"        : "ex_frame"
+  "VAX"        : "ex_frame",
+  "I386_DARWIN": "ex_frame",
+  "PPC_DARWIN" : "ex_frame"
 }
 
 include_dir ("common")

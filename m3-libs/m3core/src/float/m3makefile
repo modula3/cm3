@@ -38,7 +38,9 @@ readonly _FloatPieces = {
   "SUN3"       : _float_be,
   "SUN386"     : [ "IEEE", "IEEE-le", "SUN386" ],
   "UMAX"       : _float_le,
-  "VAX"        : [ "VAX" ]
+  "VAX"        : [ "VAX" ],
+  "I386_DARWIN": _float_le, % FIXME: is this correct?
+  "PPC_DARWIN" : _float_be  % FIXME: is this correct?
 }
 
 if _FloatPieces contains TARGET

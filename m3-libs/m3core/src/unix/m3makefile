@@ -41,7 +41,9 @@ readonly _UnixPieces = {
   "SUN3"       : [ "ultrix-3-1.generic", "ultrix-3-1.SUN3" ],
   "SUN386"     : [ "ultrix-3-1.generic", "ultrix-3-1.SUN386" ],
   "UMAX"       : [ "ultrix-3-1.generic", "ultrix-3-1.UMAX" ],
-  "VAX"        : [ "ultrix-3-1.generic", "ultrix-3-1.VAX" ]
+  "VAX"        : [ "ultrix-3-1.generic", "ultrix-3-1.VAX" ],
+  "I386_DARWIN": [ "darwin-generic", "darwin-i386" ],
+  "PPC_DARWIN" : [ "darwin-generic", "darwin-ppc" ]
 }
 
 if _UnixPieces contains TARGET
