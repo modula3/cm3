@@ -228,6 +228,18 @@ BEGIN
 END DivMod;
 
 (*--------------------*)
+PROCEDURE Mod(x,y:T):T RAISES {Error} =
+(*Using DivMod is not optimal.
+  One may save a bit space for the quotient.*)
+VAR
+  z:T;
+BEGIN
+  EVAL DivMod(x,y,z);
+  RETURN z;
+END Mod;
+
+
+(*--------------------*)
 (*Horner's scheme*)
 PROCEDURE Eval( 
                 x:T;

@@ -1,0 +1,23 @@
+import("libm3")
+
+template("gcd")
+template("integerpower")
+
+
+generic_module("IntegerPower")
+IntegerPower("BigInteger",           "BigIntegerBasic")
+IntegerPower("BigIntegerComplex",    "BigIntegerComplexBasic")
+IntegerPower("BigIntegerPolynomial", "BigIntegerPolynomialBasic")
+IntegerPower("BigIntegerMatrix",     "BigIntegerMatrixBasic")
+IntegerPower("LongRealComplex",      "LongRealComplexFast")
+IntegerPower("LongRealPolynomial",   "LongRealPolynomialFast")
+IntegerPower("LongRealMatrix",       "LongRealMatrixFast")
+
+generic_module("GCD")
+GCD("Integer32",            "Integer32Basic")
+GCD("Integer32Complex",     "Integer32ComplexBasic")
+GCD("BigInteger",           "BigIntegerBasic")
+GCD("BigIntegerComplex",    "BigIntegerComplexBasic")
+GCD("BigIntegerPolynomial", "BigIntegerPolynomialBasic")
+% GCD will not work with floating point numbers,
+% because values that should be zero, aren't zero most often

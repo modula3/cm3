@@ -16,6 +16,8 @@ include_dir("vector")
 include_dir("matrix")
 include_dir("polynomial")
 
+include_dir("algebra")
+
 
 module("xUtils")
 export_interface("xUtils")
