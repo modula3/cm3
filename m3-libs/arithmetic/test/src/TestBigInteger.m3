@@ -13,7 +13,8 @@ IMPORT
   xInteger   AS I,
   xWordEx AS Wx,
   Word AS W,
-  Fmt AS F;
+  Fmt AS F,
+  Text;
 (*=======================*)
 CONST
   Module = "tBigInteger.";
@@ -35,6 +36,36 @@ BEGIN
   msg("Plus " & F.Int(W.Plus(3,2)) & "\n");
   RETURN result;
 END test_basic;
+(*----------------------*)
+PROCEDURE test_power():BOOLEAN=
+CONST
+  ftn = Module & "test_power";
+  cycles  = 52;
+VAR
+  x, y, z : B.T;
+  fff     : TEXT;
+  result  := TRUE;
+BEGIN
+  debug(1,ftn,"begin\n");
+  x := B.FromInteger(8);
+  y := B.One;
+  z := B.Zero;
+
+  FOR j:=0 TO cycles DO
+    msg(F.Pad(F.Int(j),2) & ": 16_" & FL.Fmt(z,16) & ": 2_" & FL.Fmt(z,2) & "\n");
+    z := Br.AddU(z,y);
+    y := Br.MulU(y,x);
+  END;
+  z := Br.MulU(z,B.FromInteger(7));
+  fff := FL.Fmt(z,16)
+  msg("multiply with 7: 16_" & fff & ": 2_" & FL.Fmt(z,2) & "\n");
+  <*ASSERT Text.Length(fff) = (cycles DIV 4)*3 *>
+  FOR j:=0 TO Text.Length(fff) DO
+    <*ASSERT Text.GetChar(fff,j)='f'*>
+  END;
+
+  RETURN result;
+END test_power;
 (*----------------------*)
 PROCEDURE test_fibonacci():BOOLEAN=
 CONST
@@ -65,7 +96,6 @@ CONST
   ftn = Module & "test_pseudoprime";
 VAR
   x : ARRAY [0..3] OF B.T;
-  r : B.T;
   result:=TRUE;
   prime0, prime1 : BOOLEAN;
 BEGIN
@@ -92,6 +122,7 @@ CONST ftn = Module & "test_BigInteger";
 VAR result:=TRUE;
 BEGIN
   newline(); EVAL test_basic();
+  newline(); EVAL test_power();
   (*newline(); EVAL test_fibonacci();*)
   newline(); EVAL test_pseudoprime();
 
