@@ -59,3 +59,6 @@ pid_t __wrap_wait3(union wait *status, int options, struct rusage *rusage)
   return result;
 }
 
+int pthread_equal (pthread_t thread1, pthread_t thread2) {
+  return thread1 == thread2;
+}

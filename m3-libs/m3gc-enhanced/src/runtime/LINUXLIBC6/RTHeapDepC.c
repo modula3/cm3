@@ -256,7 +256,7 @@ char *tokenp, *argv[];
   
   { char *t, **a;
 
-    for (t = tokenp, a = argv; t; t++, a++) {
+    for (t = tokenp, a = argv; *t; t++, a++) {
       if (A_TOKEN_PTR(*t)) {
         MAKE_READABLE(*a);
       }
@@ -513,8 +513,7 @@ int getdents(unsigned int fd, struct dirent *dirp, unsigned int count)
   return result;
 }
 
-#if 0 /* FIXME: disabled, no easy way to call */
-int __getdirentries(int fd, char *buf, size_t nbytes, long *basep);
+int __real_getdirentries(int fd, char *buf, size_t nbytes, long *basep);
 
 int __wrap_getdirentries(int fd, char *buf, size_t nbytes, long *basep)
 { int result;
@@ -522,11 +521,11 @@ int __wrap_getdirentries(int fd, char *buf, size_t nbytes, long *basep)
   ENTER_CRITICAL;
   MAKE_WRITABLE(buf);
   MAKE_WRITABLE(basep);
-  result = __getdirentries(fd, buf, nbytes, basep);
+  result = __real_getdirentries(fd, buf, nbytes, basep);
   EXIT_CRITICAL;
   return result;
 }
-#endif
+
 /*
 int getdomainname(name, namelen)
 char *name;
@@ -565,11 +564,7 @@ int grouplist[];
   return result;
 }
 
-#if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 2
-int getitimer(__itimer_which_t which, struct itimerval *value)
-#else
-int getitimer(enum __itimer_which which, struct itimerval *value)
-#endif
+int getitimer(int which, struct itimerval *value)
 { int result;
 
   ENTER_CRITICAL;
@@ -615,16 +610,12 @@ int getpeername(int sockfd, struct sockaddr *addr, socklen_t *paddrlen)
   return result;
 }
 
-#if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 2
-int getrlimit(__rlimit_resource_t resource, struct rlimit *rlp)
-#else
-int getrlimit(enum __rlimit_resource resource, struct rlimit *rlp)
-#endif
+int getrlimit(int resource, struct rlimit *rlim)
 { int result;
 
   ENTER_CRITICAL;
-  MAKE_WRITABLE(rlp);
-  result = syscall(SYS_getrlimit, resource, rlp);
+  MAKE_WRITABLE(rlim);
+  result = syscall(SYS_getrlimit, resource, rlim);
   EXIT_CRITICAL;
   return result;
 }
@@ -875,11 +866,7 @@ int msgrcv(int msqid, void *msgp, size_t msgsz, long int msgtyp, int msgflg)
   return result;
 }
 
-#if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 2
-int msgsnd(int msqid, __const void *msgp, size_t msgsz, int msgflg)
-#else
-int msgsnd(int msqid, void *msgp, size_t msgsz, int msgflg)
-#endif
+int msgsnd(int msqid, const void *msgp, size_t msgsz, int msgflg)
 { int result;
 
   ENTER_CRITICAL;
@@ -1285,13 +1272,9 @@ int namelen;
   return result;
 }
 
-#if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 2
-int setitimer(__itimer_which_t which, __const struct itimerval *value,
-              struct itimerval *ovalue)
-#else
-int setitimer(enum __itimer_which which, const struct itimerval *value, 
-   struct itimerval *ovalue)
-#endif
+int setitimer(int which,
+	      const struct itimerval *value,
+	      struct itimerval *ovalue)
 { int result;
 
   ENTER_CRITICAL;
@@ -1317,16 +1300,12 @@ char *file;
 }
 */
 
-#if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 2
-int setrlimit(__rlimit_resource_t resource, __const struct rlimit *rlp)
-#else
-int setrlimit(enum __rlimit_resource resource, const struct rlimit *rlp)
-#endif
+int setrlimit(int resource, const struct rlimit *rlim)
 { int result;
 
   ENTER_CRITICAL;
-  MAKE_READABLE(rlp);
-  result = syscall(SYS_setrlimit, resource, rlp);
+  MAKE_READABLE(rlim);
+  result = syscall(SYS_setrlimit, resource, rlim);
   EXIT_CRITICAL;
   return result;
 }
@@ -1734,3 +1713,6 @@ pid_t clone(sp, flags)
   return result;
 }
 
+int pthread_equal (pthread_t thread1, pthread_t thread2) {
+  return thread1 == thread2;
+}
