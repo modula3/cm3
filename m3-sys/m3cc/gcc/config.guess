@@ -1,0 +1,5 @@
+#!/bin/sh
+# CYGNUS LOCAL entire file
+# (Use the Cygnus top-level config.guess rather than FSF's version.)
+guesssys=`echo $0 | sed 's|config.guess|../config.guess|'`
+exec ${guesssys} "$@"
