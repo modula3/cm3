@@ -1,8 +1,2 @@
 
-%% -- temporary hack
-%% if equal (OS_TYPE, "WIN32")
-%%   include_dir ("..\\..\\fake_unix")
-%% end
-
-interface      ("Userial")
 implementation ("SerialPort")
