@@ -17,16 +17,43 @@ PROCEDURE New(
 BEGIN
   RETURN NEW(T,n+1);
 END New;
+
 (*--------------------*)
 PROCEDURE Copy( 
                p:T):T=
 VAR
-  n:=NUMBER(p^);
-  tmp:=NEW(T,n);
+  q:=NEW(T,NUMBER(p^));
 BEGIN
-  tmp^:=p^;
-  RETURN tmp;
+  q^:=p^;
+  RETURN q;
 END Copy;
+
+(*--------------------*)
+PROCEDURE Strip( 
+                p:T):T=
+VAR
+  n:=LAST(p^);
+BEGIN
+  WHILE n>FIRST(p^) AND R.Equal(p[n],R.Zero) DO
+    DEC(n);
+  END;
+  IF n=LAST(p^) THEN
+    RETURN p;
+  ELSE
+    VAR
+      q:=NEW(T,n+1);
+    BEGIN
+      q^:=SUBARRAY(p^,0,n);
+(*
+  WHILE n>=FIRST(p^) DO
+    q[n]:=p[n];
+  END;
+*)
+      RETURN q;
+    END;
+  END;
+END Strip;
+
 
 (*--------------------*)
 (*
@@ -52,6 +79,7 @@ BEGIN
 END One;
 *)
 (*--------------------*)
+(*Horner's scheme*)
 PROCEDURE Eval( 
                 p:T;
                 x:R.T
@@ -82,7 +110,7 @@ BEGIN
     FOR i:=0 TO p1nn      DO p[i]:=R.Add(p1[i],p2[i]); END;
     FOR i:=p1nn+1 TO p2nn DO p[i]:=            p2[i];  END;
   END;
-  RETURN p;
+  RETURN Strip(p);
 END Add;
 (*-----------------*)
 PROCEDURE Sub( 
@@ -100,7 +128,7 @@ BEGIN
     FOR i:=0 TO p1nn      DO p[i]:=R.Sub(p1[i],p2[i]); END;
     FOR i:=p1nn+1 TO p2nn DO p[i]:=      R.Neg(p2[i]); END;
   END;
-  RETURN p;
+  RETURN Strip(p);
 END Sub;
 
 (*---------------------*)
@@ -135,18 +163,57 @@ BEGIN
       p[i+j]:=R.Add(p[i+j],R.Mul(p1[i],p2[j]));
     END;
   END;
-  RETURN p;
+  RETURN Strip(p);
 END Mul;
 
 (*---------------------*)
 PROCEDURE Div( 
                p1,p2:T):T RAISES {Error}=
+<*UNUSED*>
+CONST ftn = Module & "Div";
 VAR
-  r,q:T;
+  p1n:=NUMBER(p1^);                  p1nn:=LAST(p1^); 
+  p2n:=NUMBER(p2^); p20:=FIRST(p2^); p2nn:=LAST(p2^);
+  q,r:T;
+  qtmp,p2max:R.T;
+  qn,q0,qnn,qi,ri2:CARDINAL;
 BEGIN
-  q:=DivMod(p1,p2,r);
-  IF NOT Equal(r,Zero) THEN
-    RAISE Error(Err.indivisible);
+  (*---Copy numerator into r---*)
+  r:=NEW(T,p1n); r^:=p1^;
+
+  (*---check for quick exit---*)
+  IF p1nn<p2nn THEN
+    (*can't do any Divides at all*)
+    q:=NEW(T,1); q[0]:=R.Zero;
+    RETURN q;
+  END;
+
+  (*---setup quotient---*)
+  qn:=p1n-p2n+1;
+  q:=NEW(T,qn); q0:=FIRST(q^); qnn:=LAST(q^);
+
+  (*---find the dominant denominator term---*)
+  p2max:=p2[p2nn];
+
+
+  (*---compute---*)
+  qi:=qnn+1;
+  FOR ri:=p1nn TO (p1nn-qnn) BY-1 DO
+    DEC(qi);
+    qtmp:=R.Div(r[ri],p2max);
+    q[qi]:=qtmp;
+    ri2:=ri;
+    r[ri2]:=R.Zero;  (*subtraction of values that should be equal does not work for floating point numbers*)
+    FOR p2i:=p2nn-1 TO p20 BY -1 DO
+      DEC(ri2);
+      r[ri2]:=R.Sub(r[ri2],R.Mul(qtmp,p2[p2i]));
+    END;
+  END;
+  (*This check will probably fail on floating point numbers*)
+  FOR ri:=(p1nn-qnn)-1 TO 0 BY -1 DO
+    IF NOT R.Equal(r[ri],R.Zero) THEN
+      RAISE Error(Err.indivisible);
+    END;
   END;
   RETURN q;
 END Div;
@@ -186,15 +253,16 @@ BEGIN
   qi:=qnn+1;
   FOR ri:=p1nn TO (p1nn-qnn) BY-1 DO
     DEC(qi);
-    qtmp:=R.Div(r[ri],p2max);
+    qtmp:=R.DivMod(r[ri],p2max,r[ri]);
     q[qi]:=qtmp;
-    ri2:=ri+1;
-    FOR p2i:=p2nn TO p20 BY -1 DO
+    ri2:=ri;
+    FOR p2i:=p2nn-1 TO p20 BY -1 DO
       DEC(ri2);
       r[ri2]:=R.Sub(r[ri2],R.Mul(qtmp,p2[p2i]));
     END;
   END;
-  RETURN q;
+  r := Strip(r);
+  RETURN Strip(q);
 END DivMod;
 
 (*-----------------------*)
