@@ -1,5 +1,5 @@
-import (libm3)
+import ("libm3")
 
-implementation (Main)
+implementation ("Main")
 
-program(test)
+program("test")
