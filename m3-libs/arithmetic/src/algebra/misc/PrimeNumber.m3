@@ -1592,6 +1592,10 @@ VAR
 BEGIN
   IF n<MAXPRIME THEN RETURN primes[n]=1; END;
 
+  IF n MOD 2 = 0 THEN
+    RETURN FALSE;
+  END;
+
   fac:=3;
   fac2:=9;
   WHILE fac2<=n DO
