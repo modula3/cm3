@@ -91,8 +91,14 @@ PROCEDURE MatchPattern (target                               : S.T;
     PL.Exit();
   END MatchPattern;
 
+(** SSE  - Square Smoothness Estimate,
+           that is the estimate that depends on the sum of the squares of the eigenvalues
+    WSSE - Weighted Square Smoothness Estimate,
+           workaround that takes into account that the gdual0 filter (alias psi0)
+           was amplified within the linear least squares term
+*)
 
-PROCEDURE ComputeRho (READONLY y: ARRAY [0 .. 2] OF R.T): R.T =
+PROCEDURE ComputeSSE (READONLY y: ARRAY [0 .. 2] OF R.T): R.T =
   <*FATAL NA.Error*>
   VAR
     p1  := VS.Sum(y);
@@ -101,9 +107,9 @@ PROCEDURE ComputeRho (READONLY y: ARRAY [0 .. 2] OF R.T): R.T =
     dif := 3.0D0 * p2 - p12;
   BEGIN
     RETURN dif * dif + 2.0D0 * p12 * p12;
-  END ComputeRho;
+  END ComputeSSE;
 
-PROCEDURE ComputeDRho (READONLY y: ARRAY [0 .. 2] OF R.T): V.T =
+PROCEDURE ComputeDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): V.T =
   <*FATAL NA.Error*>
   VAR
     p1  := VS.Sum(y);
@@ -116,9 +122,9 @@ PROCEDURE ComputeDRho (READONLY y: ARRAY [0 .. 2] OF R.T): V.T =
   BEGIN
     FOR i := 0 TO LAST(y) DO z[i] := p1d + y[i] * p2d; END;
     RETURN z;
-  END ComputeDRho;
+  END ComputeDSSE;
 
-PROCEDURE ComputeDDRho (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
+PROCEDURE ComputeDDSSE (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
   <*FATAL NA.Error*>
   (*derived with mathematica*)
   VAR
@@ -135,9 +141,9 @@ PROCEDURE ComputeDDRho (READONLY y: ARRAY [0 .. 2] OF R.T): M.T =
       z[i, i] := z[i, i] + (3.0D0 * y[i] - 2.0D0 * p1) * y[i] + p2;
     END;
     RETURN M.Scale(z, 24.0D0);
-  END ComputeDDRho;
+  END ComputeDDSSE;
 
-PROCEDURE TestRho (x: V.T) =
+PROCEDURE TestSSE (x: V.T) =
   VAR
     dx0 := V.FromArray(ARRAY OF R.T{1.0D-8, 0.0D0, 0.0D0});
     dx1 := V.FromArray(ARRAY OF R.T{0.0D0, 1.0D-8, 0.0D0});
@@ -145,11 +151,11 @@ PROCEDURE TestRho (x: V.T) =
   <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
   BEGIN
     VAR
-      rho     := ComputeRho(x^);
-      rho0    := ComputeRho(V.Add(x, dx0)^);
-      rho1    := ComputeRho(V.Add(x, dx1)^);
-      rho2    := ComputeRho(V.Add(x, dx2)^);
-      gradrho := V.Scale(ComputeDRho(x^), 1.0D-8);
+      rho     := ComputeSSE(x^);
+      rho0    := ComputeSSE(V.Add(x, dx0)^);
+      rho1    := ComputeSSE(V.Add(x, dx1)^);
+      rho2    := ComputeSSE(V.Add(x, dx2)^);
+      gradrho := V.Scale(ComputeDSSE(x^), 1.0D-8);
     BEGIN
       IO.Put(
         Fmt.FN("rho %s, difrho={%s,%s,%s}, approxdiff=%s\n",
@@ -158,11 +164,11 @@ PROCEDURE TestRho (x: V.T) =
                       RF.Fmt(rho2 - rho), VF.Fmt(gradrho)}));
     END;
     VAR
-      gradrho   := ComputeDRho(x^);
-      gradrho0  := ComputeDRho(V.Add(x, dx0)^);
-      gradrho1  := ComputeDRho(V.Add(x, dx1)^);
-      gradrho2  := ComputeDRho(V.Add(x, dx2)^);
-      jacobirho := M.Scale(ComputeDDRho(x^), 1.0D-8);
+      gradrho   := ComputeDSSE(x^);
+      gradrho0  := ComputeDSSE(V.Add(x, dx0)^);
+      gradrho1  := ComputeDSSE(V.Add(x, dx1)^);
+      gradrho2  := ComputeDSSE(V.Add(x, dx2)^);
+      jacobirho := M.Scale(ComputeDDSSE(x^), 1.0D-8);
     BEGIN
       IO.Put(
         Fmt.FN("gradrho %s, difgradrho={%s,%s,%s}, approxdiff=%s\n",
@@ -171,40 +177,40 @@ PROCEDURE TestRho (x: V.T) =
                       VF.Fmt(V.Sub(gradrho1, gradrho)),
                       VF.Fmt(V.Sub(gradrho2, gradrho)), MF.Fmt(jacobirho)}));
     END;
-  END TestRho;
+  END TestSSE;
 
-PROCEDURE InverseDRho (x: V.T): V.T RAISES {NA.Error} =
-  (*Find the parameter vector y for which DRho(y)=x*)
+PROCEDURE InverseDSSE (x: V.T): V.T RAISES {NA.Error} =
+  (*Find the parameter vector y for which DSSE(y)=x*)
   CONST tol = 1.0D-14;
   (*VAR y := V.New(3);*)
   VAR y := x;                    (*zero is a bad initial value*)
   BEGIN
     FOR j := 0 TO 100 DO
-      VAR ax := ComputeDRho(y^);
+      VAR ax := ComputeDSSE(y^);
       BEGIN
         IF VT.Norm1(V.Sub(ax, x)) <= tol * VT.Norm1(x) THEN RETURN y; END;
         y :=
           V.Add(y, LA.LeastSquaresGen(
-                     ComputeDDRho(y^), ARRAY OF V.T{V.Sub(x, ax)})[0].x);
+                     ComputeDDSSE(y^), ARRAY OF V.T{V.Sub(x, ax)})[0].x);
         (*
-          IO.Put(Fmt.FN("y %s, DRho(y) %s\n",
-                       ARRAY OF TEXT{VF.Fmt(y), VF.Fmt(ComputeDRho(y^))}));
+          IO.Put(Fmt.FN("y %s, DSSE(y) %s\n",
+                       ARRAY OF TEXT{VF.Fmt(y), VF.Fmt(ComputeDSSE(y^))}));
         *)
       END;
     END;
     RAISE NA.Error(NA.Err.not_converging);
-  END InverseDRho;
+  END InverseDSSE;
 
-PROCEDURE TestInverseDRho (READONLY x0: ARRAY [0 .. 2] OF R.T) =
+PROCEDURE TestInverseDSSE (READONLY x0: ARRAY [0 .. 2] OF R.T) =
   <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
   VAR
     x := V.FromArray(x0);
-    y := InverseDRho(x);
+    y := InverseDSSE(x);
   BEGIN
     IO.Put(
-      Fmt.FN("x %s, ComputeDRho(y) %s, y %s\n",
-             ARRAY OF TEXT{VF.Fmt(x), VF.Fmt(ComputeDRho(y^)), VF.Fmt(y)}));
-  END TestInverseDRho;
+      Fmt.FN("x %s, ComputeDSSE(y) %s, y %s\n",
+             ARRAY OF TEXT{VF.Fmt(x), VF.Fmt(ComputeDSSE(y^)), VF.Fmt(y)}));
+  END TestInverseDSSE;
 
 TYPE
   Deriv2 = RECORD
@@ -228,7 +234,7 @@ PROCEDURE DeriveDist (normalMat    : M.T;
                   M.Scale(normalMat, R.Two)};
   END DeriveDist;
 
-PROCEDURE DeriveRho (hdual, gdual0, s: S.T; ): Deriv2 RAISES {NA.Error} =
+PROCEDURE DeriveSSE (hdual, gdual0, s: S.T; ): Deriv2 RAISES {NA.Error} =
   VAR
     gdual   := gdual0.superpose(s.upsample(2).convolve(hdual));
     hprimal := gdual.alternate();
@@ -243,10 +249,90 @@ PROCEDURE DeriveRho (hdual, gdual0, s: S.T; ): Deriv2 RAISES {NA.Error} =
     RETURN polypart;
     *)
     RETURN
-      Deriv2{zeroth := ComputeRho(hsums^), first :=
-             M.MulV(dsums, ComputeDRho(hsums^)), second :=
-             M.Mul(M.Mul(dsums, ComputeDDRho(hsums^)), M.Transpose(dsums))};
-  END DeriveRho;
+      Deriv2{zeroth := ComputeSSE(hsums^), first :=
+             M.MulV(dsums, ComputeDSSE(hsums^)), second :=
+             M.Mul(M.Mul(dsums, ComputeDDSSE(hsums^)), M.Transpose(dsums))};
+  END DeriveSSE;
+
+PROCEDURE DeriveWSSE (hdual, gdual0, s: S.T; c: R.T): Deriv2
+  RAISES {NA.Error} =
+  (* In the fitting routine the expression hdual*s+gdual0*c is fitted to
+     the target.  But the wavelet won't be smoother if s and c becomes
+     smaller.  Instead hdual/c*s+gdual0, or more precisely
+     gprimal/c*s+hprimal0, is the quantity we have to apply our estimate
+     to.
+
+     The whole computation is horribly inefficient but this is for research
+     only! *)
+  VAR
+    hsdual   := s.upsample(2).convolve(hdual);
+    gdual    := gdual0.superpose(hsdual.scale(1.0D0 / c));
+    hprimal  := gdual.alternate();
+    gprimal  := hdual.alternate();
+    gsprimal := hsdual.alternate();
+
+    hsums := hprimal.wrapCyclic(3).getData();
+    dsums := M.Cyclic(gprimal.scale(1.0D0 / c).translate(
+                        2 * s.getFirst()).wrapCyclic(3).getData(),
+                      s.getNumber(), -1);
+    csums := gsprimal.wrapCyclic(3).scale(-1.0D0 / (c * c)).getData();
+    dcsums := M.FromMatrixArray(
+                ARRAY OF
+                  ARRAY OF M.T{
+                  ARRAY [0 .. 0] OF M.T{dsums},
+                  ARRAY [0 .. 0] OF M.T{M.RowFromVector(csums)}});
+
+    sse   := ComputeSSE(hsums^);
+    dsse  := ComputeDSSE(hsums^);
+    ddsse := ComputeDDSSE(hsums^);
+
+    dgsums := V.New(s.getNumber());
+
+  BEGIN
+    (*
+    IO.Put(MF.Fmt(dsums) & "\n");
+    RETURN polypart;
+    *)
+    FOR i := 0 TO s.getNumber() - 1 DO
+      dgsums[i] :=
+        V.Inner(dsse, gprimal.translate(2 * (s.getFirst() + i)).wrapCyclic(
+                        3).getData()) * (R.MinusOne / (c * c));
+    END;
+
+    RETURN
+      Deriv2{
+        zeroth := sse, first := M.MulV(dcsums, dsse), second :=
+        M.Add(M.Mul(M.Mul(dcsums, ddsse), M.Transpose(dcsums)),
+              M.FromMatrixArray(
+                ARRAY OF
+                  ARRAY OF M.T{
+                  ARRAY [0 .. 1] OF
+                    M.T{M.NewZero(s.getNumber(), s.getNumber()),
+                        M.ColumnFromVector(dgsums)},
+                  ARRAY [0 .. 1] OF
+                    M.T{M.RowFromVector(dgsums),
+                        M.FromScalar(V.Inner(dsse, csums) * -2.0D0 / c)}}))};
+  END DeriveWSSE;
+
+PROCEDURE TestDeriveWSSE () =
+  CONST delta = 1.0D-8;
+  VAR
+    hdual  := NEW(S.T).fromArray(ARRAY OF R.T{0.23D0, 1.678D0, -0.85D0});
+    gdual0 := NEW(S.T).fromArray(ARRAY OF R.T{0.723D0, -1.078D0, 0.585D0});
+    s      := NEW(S.T).fromArray(ARRAY OF R.T{0.2D0, -0.3D0, 0.1D0});
+    sdelta := NEW(S.T).fromArray(ARRAY OF R.T{delta}, s.getFirst());
+    c      := 0.73D0;
+    der    := DeriveWSSE(hdual, gdual0, s, c);
+    derArr := NEW(REF ARRAY OF Deriv2, s.getNumber() + 1);
+  BEGIN
+    FOR i := 0 TO s.getNumber() - 1 DO
+      derArr[i] :=
+        DeriveWSSE(hdual, gdual0, s.superpose(sdelta.translate(i)), c);
+    END;
+    derArr[LAST(derArr^)] := DeriveWSSE(hdual, gdual0, s, c + delta);
+    PutDervDif(der, derArr^, delta);
+  END TestDeriveWSSE;
+
 
 PROCEDURE AddDerv (READONLY x, y: Deriv2): Deriv2 RAISES {NA.Error} =
   BEGIN
@@ -279,7 +365,7 @@ PROCEDURE PutDervDif (READONLY der   : Deriv2;
        derivative*)
     FOR j := 0 TO LAST(derArr) DO
       IO.Put(
-        Fmt.FN("der[%s] %s, %s\n",
+        Fmt.FN("der[%s]\n %s %s\n",
                ARRAY OF
                  TEXT{Fmt.Int(j (*+ y.getFirst()*)),
                       VF.Fmt(V.Sub(derArr[j].first, der.first)),
@@ -361,7 +447,7 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
              ARRAY OF R.T{0.2D0, -0.3D0, 0.0D0, -0.1D0, 0.0D0, 0.4D0}, -3);
       der := AddDerv(
                DeriveDist(normalMat, waveletCor, waveletNormSqr, y),
-               ScaleDerv(DeriveRho(hdualvan, gdual, y), smoothWeight));
+               ScaleDerv(DeriveSSE(hdualvan, gdual, y), smoothWeight));
       derArr := NEW(REF ARRAY OF Deriv2, NUMBER(der.first^));
       extder := ExtendDervTarget(
                   der, y.getData(), cf, targetVec, targetCor, waveletVec);
@@ -376,7 +462,7 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
           derArr[j] :=
             AddDerv(
               DeriveDist(normalMat, waveletCor, waveletNormSqr, yp),
-              ScaleDerv(DeriveRho(hdualvan, gdual, yp), smoothWeight));
+              ScaleDerv(DeriveSSE(hdualvan, gdual, yp), smoothWeight));
           extderArr[j] :=
             ExtendDervTarget(derArr[j], yp.getData(), cf, targetVec,
                              targetCor, waveletVec);
@@ -433,7 +519,7 @@ PROCEDURE MatchPatternSmooth (target                : S.T;
         VAR
           der := AddDerv(
                    DeriveDist(normalMat, waveletCor, waveletNormSqr, y),
-                   ScaleDerv(DeriveRho(hdualvan, gdual, y), smoothWeight));
+                   ScaleDerv(DeriveSSE(hdualvan, gdual, y), smoothWeight));
           extder := ExtendDervTarget(der, y.getData(), cf, targetVec,
                                      targetCor, waveletVec);
 
@@ -532,7 +618,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
 PROCEDURE Test () =
   <*FATAL BSpl.DifferentParity*>
   BEGIN
-    CASE 3 OF
+    CASE 7 OF
     | 0 =>
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50), 6,
@@ -563,12 +649,13 @@ PROCEDURE Test () =
             V.ArithSeq(2048, -1.0D0, 2.0D0 / 2048.0D0)^, -1024), 6, 3, 9,
           1, 100.0D0);
     | 5 =>
-        TestRho(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
-        TestRho(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0}));
+        TestSSE(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
+        TestSSE(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0}));
     | 6 =>
-        TestInverseDRho(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0});
-        TestInverseDRho(ARRAY OF R.T{1.0D0, 1.0D0, 0.1D0});
-        TestInverseDRho(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0});
+        TestInverseDSSE(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0});
+        TestInverseDSSE(ARRAY OF R.T{1.0D0, 1.0D0, 0.1D0});
+        TestInverseDSSE(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0});
+    | 7 => TestDeriveWSSE();
     ELSE
       <*ASSERT FALSE*>
     END;
