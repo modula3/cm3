@@ -124,6 +124,15 @@ BEGIN
   RETURN z;
 END Scale;
 
+(*----------------*)
+PROCEDURE ScaleInt(x:T;y:INTEGER):T=
+VAR
+  z:T;
+BEGIN
+  z.re:=x.re*FLOAT(y,R.T);
+  z.im:=x.im*FLOAT(y,R.T);
+  RETURN z;
+END ScaleInt;
 
 (*==========================*)
 BEGIN

@@ -1,4 +1,4 @@
-GENERIC MODULE PolynomialFast(R);
+GENERIC MODULE PolynomialBasic(R);
 (*Copyright (c) 1995, Harry George
 
 Abstract: Polynomials.
@@ -9,7 +9,7 @@ Abstract: Polynomials.
 *)
 FROM xUtils IMPORT Error,Err;
 
-CONST Module = "PolynomialFast.";
+CONST Module = "PolynomialBasic.";
 
 (*--------------------*)
 PROCEDURE New( 
@@ -52,37 +52,35 @@ BEGIN
 END One;
 *)
 (*--------------------*)
-<*OBSOLETE*>
 PROCEDURE Eval( 
                 p:T;
                 x:R.T
                 ):R.T=
 VAR
-  n:=NUMBER(p^); nn:=n-1;
-  tmp:=p[nn];
+  nn:=LAST(p^);
+  y:=p[nn];
 BEGIN
-  FOR i:=nn-1 TO 1 BY -1 DO
-    tmp:=p[i]+x*tmp;
+  FOR i:=nn-1 TO 0 BY -1 DO
+    y:=R.Add(p[i],R.Mul(x,y));
   END;
-  tmp:=p[0]+tmp;  (*is this correct?*)
-  RETURN tmp;
+  RETURN y;
 END Eval;
 
 (*-----------------*)
 PROCEDURE Add( 
                p1,p2:T):T=
 VAR
-  p1n:=NUMBER(p1^); p1nn:=p1n-1;
-  p2n:=NUMBER(p2^); p2nn:=p2n-1;
-  maxn:=MAX(p1n,p2n);
+  p1nn:=LAST(p1^);
+  p2nn:=LAST(p2^);
+  maxn:=MAX(NUMBER(p1^),NUMBER(p2^));
   p:=NEW(T,maxn);
 BEGIN
   IF p1nn>=p2nn THEN
-    FOR i:=0 TO p2nn      DO p[i]:=p1[i]+p2[i]; END;
-    FOR i:=p2nn+1 TO p1nn DO p[i]:=p1[i];       END;
+    FOR i:=0 TO p2nn      DO p[i]:=R.Add(p1[i],p2[i]); END;
+    FOR i:=p2nn+1 TO p1nn DO p[i]:=      p1[i];        END;
   ELSE
-    FOR i:=0 TO p1nn      DO p[i]:=p1[i]+p2[i]; END;
-    FOR i:=p1nn+1 TO p2nn DO p[i]:=      p2[i]; END;
+    FOR i:=0 TO p1nn      DO p[i]:=R.Add(p1[i],p2[i]); END;
+    FOR i:=p1nn+1 TO p2nn DO p[i]:=            p2[i];  END;
   END;
   RETURN p;
 END Add;
@@ -90,17 +88,17 @@ END Add;
 PROCEDURE Sub( 
                p1,p2:T):T=
 VAR
-  p1n:=NUMBER(p1^); p1nn:=p1n-1;
-  p2n:=NUMBER(p2^); p2nn:=p2n-1;
-  maxn:=MAX(p1n,p2n);
+  p1nn:=LAST(p1^);
+  p2nn:=LAST(p2^);
+  maxn:=MAX(NUMBER(p1^),NUMBER(p2^));
   p:=NEW(T,maxn);
 BEGIN
   IF p1nn>=p2nn THEN
-    FOR i:=0 TO p2nn      DO p[i]:=p1[i]-p2[i]; END;
-    FOR i:=p2nn+1 TO p1nn DO p[i]:=p1[i];       END;
+    FOR i:=0 TO p2nn      DO p[i]:=R.Sub(p1[i],p2[i]); END;
+    FOR i:=p2nn+1 TO p1nn DO p[i]:=      p1[i];        END;
   ELSE
-    FOR i:=0 TO p1nn      DO p[i]:=p1[i]-p2[i]; END;
-    FOR i:=p1nn+1 TO p2nn DO p[i]:=     -p2[i]; END;
+    FOR i:=0 TO p1nn      DO p[i]:=R.Sub(p1[i],p2[i]); END;
+    FOR i:=p1nn+1 TO p2nn DO p[i]:=      R.Neg(p2[i]); END;
   END;
   RETURN p;
 END Sub;
@@ -109,15 +107,16 @@ END Sub;
 PROCEDURE Mul( 
                p1,p2:T):T=
 VAR
-  p1n:=NUMBER(p1^); p2n:=NUMBER(p2^);
-  pn:=p1n+p2n-1; p0:=0; pnn:=pn-1;
+  p1n:=NUMBER(p1^);
+  p2n:=NUMBER(p2^);
+  pn:=p1n+p2n-1;
   p:=NEW(T,pn);
 BEGIN
-  FOR i:=p0 TO pnn DO p[i]:=R.Zero; END;
+  FOR i:=FIRST(p^) TO LAST(p^) DO p[i]:=R.Zero; END;
 
   FOR i:=0 TO p1n-1 DO
     FOR j:=0 TO p2n-1 DO
-      p[i+j]:=p[i+j]+p1[i]*p2[j];
+      p[i+j]:=R.Add(p[i+j],R.Mul(p1[i],p2[j]));
     END;
   END;
   RETURN p;
@@ -126,7 +125,7 @@ END Mul;
 (*---------------------*)
 PROCEDURE DivMod( 
                p1,p2:T;
-           VAR r:T):T=
+           VAR r:T):T RAISES {Error} =
 <*UNUSED*>
 CONST ftn = Module & "DivMod";
 VAR
@@ -141,7 +140,7 @@ BEGIN
 
   (*---check for quick exit---*)
   IF p1nn<p2nn THEN
-    (*can't do any DivModides at all*)
+    (*can't do any Divides at all*)
     q:=NEW(T,1); q[0]:=R.Zero;
     RETURN q;
   END;
@@ -158,12 +157,12 @@ BEGIN
   qi:=qnn+1;
   FOR ri:=p1nn TO (p1nn-qnn) BY-1 DO
     DEC(qi);
-    qtmp:=r[ri]/p2max;
+    qtmp:=R.Div(r[ri],p2max);
     q[qi]:=qtmp;
     ri2:=ri+1;
     FOR p2i:=p2nn TO p20 BY -1 DO
       DEC(ri2);
-      r[ri2]:=r[ri2]-qtmp*p2[p2i];
+      r[ri2]:=R.Sub(r[ri2],R.Mul(qtmp,p2[p2i]));
     END;
   END;
   RETURN q;
@@ -195,7 +194,7 @@ VAR
   q:=NEW(T,LAST(p^));
 BEGIN
   FOR n:=0 TO LAST(q^) DO
-    q[n]:=p[n+1]*FLOAT(n+1,R.T);
+    q[n]:=R.ScaleInt(p[n+1],n+1);
   END;
   RETURN q;
 END Derive;
@@ -229,20 +228,20 @@ BEGIN
   (*---collect the raw values---*)
   FOR i:=pnn-1 TO p0 BY -1 DO
     FOR j:=pdnn TO 1 BY -1 DO
-      pd[j]:=pd[j-1]+x*pd[j];
+      pd[j]:=R.Add(pd[j-1],R.Mul(x,pd[j]));
     END;
-    pd[0]:=p[i]+x*pd[0];
+    pd[0]:=R.Add(p[i],R.Mul(x,pd[0]));
   END;
 
   (*---fix the factorials---*) 
   fact:=R.One;
   FOR i:=0 TO pdnn DO
-    pd[i]:=fact*pd[i];
-	fact:=fact*FLOAT(i+1,R.T);
+    pd[i]:=R.Mul(pd[i],fact);
+	fact:=R.ScaleInt(fact,i+1);
   END;
- 
+
 END EvalDerivate; 
 
 (*==========================*)
 BEGIN
-END PolynomialFast.
+END PolynomialBasic.
