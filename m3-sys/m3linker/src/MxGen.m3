@@ -1,8 +1,9 @@
-(* Copyright 1997, Critical Mass, Inc.  All rights reserved. *)
+(* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 MODULE MxGen;
 
-IMPORT Wr, Thread, Stdio;
+IMPORT Fmt, Wr, Thread, Stdio;
 IMPORT Mx, MxRep, MxMap, M3ID, Target;
 IMPORT M3CG, M3CG_Ops, TInt, TargetMap;
 
@@ -16,7 +17,12 @@ TYPE
     verbose       : BOOLEAN      := FALSE;
     gui           : BOOLEAN      := FALSE;
     genC          : BOOLEAN      := FALSE;
+    lazyInit      : BOOLEAN      := TRUE;
     main_units    : UnitInfo     := NIL;
+    all_units     : UnitInfo     := NIL;
+    top_units     : UnitInfo     := NIL;
+    used_units    : UnitInfo     := NIL;
+    imported_units: UnitInfo     := NIL;
 
     (* C output information *)
     wr            : Wr.T         := NIL;
@@ -34,10 +40,20 @@ TYPE
     binder  : TEXT;
   END;
 
+PROCEDURE ContainsUnit (ui: UnitInfo; u: Mx.Unit): BOOLEAN =
+  BEGIN
+    WHILE ui # NIL DO
+      IF ui.unit = u THEN RETURN TRUE END;
+      ui := ui.next;
+    END;
+    RETURN FALSE;
+  END ContainsUnit;
+
 (*------------------------------------------------------------------------*)
 
 PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
-                        verbose: BOOLEAN;  windowsGUI: BOOLEAN) =
+                        verbose: BOOLEAN;  windowsGUI: BOOLEAN;
+                        lazy := FALSE) =
   VAR s: State;
   BEGIN
     <*ASSERT  (c_output = NIL) # (cg_output = NIL) *>
@@ -49,12 +65,20 @@ PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
     s.gui       := windowsGUI;
     s.genC      := (s.wr # NIL);
     s.eol       := Target.EOL;
+    s.lazyInit  := lazy;
 
+    IF verbose THEN
+      INC(debugLevel);
+    END;
     IF s.genC
       THEN GenCTypeDecls (s);
       ELSE GenCGTypeDecls (s);
     END;
-    ImportMain (s);
+    IF lazy THEN
+      ImportMain (s);
+    ELSE
+      ImportTopUnits (s);
+    END;
     IF s.genC
       THEN GenerateCEntry (s);
       ELSE GenerateCGEntry (s);
@@ -71,7 +95,7 @@ PROCEDURE GenCGTypeDecls (VAR s: State) =
   VAR
     interface    : M3CG.Var;
     struct_align := MAX (Target.Structure_size_boundary, Target.Address.align)
-                       DIV Target.Byte;   (* == min structure alignment (bytes)*)
+                      DIV Target.Byte; (* == min structure alignment (bytes)*)
   BEGIN
     s.cg.begin_unit ();
     s.cg.set_source_file ("_m3main.mc");
@@ -117,10 +141,118 @@ PROCEDURE ImportMain (VAR s: State) =
     END;
   END ImportMain;
 
+PROCEDURE ImportTopUnits (VAR s: State) =
+  VAR
+    main  := M3ID.Add ("Main");
+    mods  := s.base.modules;
+    units := MxMap.GetData (mods);
+    u, v  : Mx.Unit;
+    ui    : UnitInfo;
+    found : BOOLEAN;
+  BEGIN
+    s.main_units := NIL;
+
+    FOR i := 0 TO LAST (units^) DO
+      u := units[i].value;
+      IF (u # NIL) THEN
+        Debug (2, UnitName (u));
+        FOR i := u.exported_units.start
+              TO u.exported_units.start + u.exported_units.cnt - 1 DO
+          IF (u.info[i] = main) THEN
+            s.main_units := NEW (UnitInfo, unit := u, next := s.main_units);
+            s.main_units.binder := UnitName (s.main_units.unit);
+            EXIT;
+          END;
+        END;
+        IF u.imported_units.cnt > 0 THEN
+          found := FALSE;
+          FOR i := u.imported_units.start
+            TO u.imported_units.start + u.imported_units.cnt - 1 DO
+            v := MxMap.Get (mods, u.info[i]);
+            IF v # NIL AND v # u THEN
+              Debug (2, "  imports ", UnitName (v));
+              found := TRUE;
+              IF NOT ContainsUnit (s.imported_units, v) THEN
+                s.imported_units := 
+                    NEW (UnitInfo, unit := v, next := s.imported_units);
+              END;
+            END;
+          END;
+        END;
+        IF u.used_modules.cnt > 0 THEN
+          found := FALSE;
+          FOR i := u.used_modules.start
+            TO u.used_modules.start + u.used_modules.cnt - 1 DO
+            v := MxMap.Get (mods, u.info[i]);
+            IF v # NIL AND v # u THEN
+              Debug (2, "  uses ", UnitName (v));
+              found := TRUE;
+              IF NOT ContainsUnit (s.used_units, v) THEN
+                s.used_units := 
+                    NEW (UnitInfo, unit := v, next := s.used_units);
+              END;
+            END;
+          END;
+        END;
+        s.all_units := NEW (UnitInfo, unit := u, next := s.all_units);
+      END;
+    END;
+
+    FOR i := 0 TO LAST (units^) DO
+      u := units[i].value;
+      IF (u # NIL) THEN
+        Debug (3, "checking unit ", UnitName (u));
+        IF NOT ContainsUnit (s.imported_units, u) AND 
+          NOT ContainsUnit (s.used_units, u) AND
+          NOT ContainsUnit (s.main_units, u) THEN
+          Debug (3, "  --> not used ==> top unit");
+          s.top_units := NEW (UnitInfo, unit := u, next := s.top_units);
+          s.top_units.binder := UnitName (s.top_units.unit);
+        ELSE
+          Debug (3, "  --> used");
+        END;
+      END;
+    END;
+
+    DumpUnits("Main Units:", s.main_units);
+    DumpUnits("Imported Units:", s.imported_units);
+    DumpUnits("Used Units:", s.used_units);
+    DumpUnits("Top Units:", s.top_units);
+
+    (* concatenate main and other top units *)
+    (*
+    ui := s.top_units;
+    IF ui # NIL THEN
+      WHILE ui.next # NIL DO
+        ui := ui.next;
+      END;
+      ui.next := s.main_units;
+      s.main_units := s.top_units;
+    END;
+    *)
+
+    (* import all top units different from Main *)
+    ui := s.top_units;
+    WHILE ui # NIL DO
+      ImportUnit (s, ui);
+      ui := ui.next;
+    END;
+
+    (* import all main units *)
+    ui := s.main_units;
+    WHILE ui # NIL DO
+      ImportUnit (s, ui);
+      ui := ui.next;
+    END;
+    IF s.main_units = NIL THEN
+      Err (s, "No module implements \"Main\".", s.eol);
+    END;
+  END ImportTopUnits;
+
 PROCEDURE ImportUnit (VAR s: State;  ui: UnitInfo) =
   VAR u := ui.unit;
   BEGIN
-    ui.binder := M3ID.ToText (u.name) & BinderSuffix [u.interface];
+    ui.binder := UnitName (u);
     IF s.genC THEN
       Out (s, "extern void* ", ui.binder, "();", s.eol);
     ELSE
@@ -131,13 +263,54 @@ PROCEDURE ImportUnit (VAR s: State;  ui: UnitInfo) =
     END;
   END ImportUnit;
 
+PROCEDURE UnitName (u: Mx.Unit): TEXT =
+  BEGIN
+    IF u = NIL THEN RETURN "NIL" END;
+    RETURN M3ID.ToText (u.name) & BinderSuffix [u.interface];
+  END UnitName;
+
+PROCEDURE DumpUnits (h: TEXT; units: UnitInfo) =
+  VAR n := 1; nstr: TEXT;
+  BEGIN
+    IF debugLevel < 1 THEN RETURN END;
+    Debug (1, h);
+    WHILE (units # NIL) DO
+      IF units.binder = NIL THEN
+        units.binder := UnitName (units.unit);
+      END;
+      nstr := Fmt.F("%4s ", Fmt.Int(n));
+      INC(n);
+      Debug (1, nstr, units.binder);
+      units := units.next;
+    END;
+    Debug (1);
+  END DumpUnits;
+
 (*------------------------------------------------------------------------*)
 
 PROCEDURE GenerateCEntry (VAR s: State) =
-  VAR ui: UnitInfo;
+
+  PROCEDURE GenAddUnits(ui: UnitInfo) =
+    BEGIN
+      WHILE (ui # NIL) DO
+        Out (s, "  RTLinker__AddUnit (", ui.binder, ");", s.eol);
+        ui := ui.next;
+      END;
+    END GenAddUnits;
+
+  PROCEDURE GenAddUnitImports(ui: UnitInfo) =
+    BEGIN
+      IF s.lazyInit THEN RETURN END;
+      WHILE (ui # NIL) DO
+        Out (s, "  RTLinker__AddUnitImports (", ui.binder, ");", s.eol);
+        ui := ui.next;
+      END;
+    END GenAddUnitImports;
+
   BEGIN
     Out (s, "extern void RTLinker__InitRuntime ();", s.eol);
     Out (s, "extern void RTLinker__AddUnit ();", s.eol);
+    Out (s, "extern void RTLinker__AddUnitImports ();", s.eol);
     Out (s, "extern void RTProcess__Exit ();", s.eol, s.eol);
 
     IF (s.gui) THEN
@@ -157,11 +330,9 @@ PROCEDURE GenerateCEntry (VAR s: State) =
       Out (s, "  RTLinker__InitRuntime (argc, argv, envp, 0);", s.eol);
     END;
 
-    ui := s.main_units;
-    WHILE (ui # NIL) DO
-      Out (s, "  RTLinker__AddUnit (", ui.binder, ");", s.eol);
-      ui := ui.next;
-    END;
+    GenAddUnitImports(s.main_units);
+    GenAddUnits(s.top_units);
+    GenAddUnits(s.main_units);
 
     Out (s, "  RTProcess__Exit (0);", s.eol);
     Out (s, "  return 0;", s.eol);
@@ -175,6 +346,7 @@ PROCEDURE GenerateCGEntry (VAR s: State) =
     main      : M3CG.Proc;
     run_proc  : M3CG.Proc;
     link_proc : M3CG.Proc;
+    link_proc2: M3CG.Proc;
     exit_proc : M3CG.Proc;
     getenv    : M3CG.Proc;
     winapi    : Target.CallingConvention;
@@ -185,9 +357,34 @@ PROCEDURE GenerateCGEntry (VAR s: State) =
     prev      : M3CG.Var;
     mode      : M3CG.Var;
     src_line  : INTEGER := 2;
-    ui        : UnitInfo;
     int_t     := Target.Integer.cg_type;
     addr_t    := Target.CGType.Addr;
+
+  PROCEDURE GenAddUnits(ui: UnitInfo) =
+    BEGIN
+      WHILE (ui # NIL) DO
+        s.cg.set_source_line (src_line);  INC (src_line);
+        s.cg.start_call_direct (link_proc, 0, Target.CGType.Void);
+        s.cg.load_procedure (ui.cg_proc);
+        s.cg.pop_param (addr_t);
+        s.cg.call_direct (link_proc, Target.CGType.Void);
+        ui := ui.next;
+      END;
+    END GenAddUnits;
+
+  PROCEDURE GenAddUnitImports(ui: UnitInfo) =
+    BEGIN
+      IF s.lazyInit THEN RETURN END;
+      WHILE (ui # NIL) DO
+        s.cg.set_source_line (src_line);  INC (src_line);
+        s.cg.start_call_direct (link_proc2, 0, Target.CGType.Void);
+        s.cg.load_procedure (ui.cg_proc);
+        s.cg.pop_param (addr_t);
+        s.cg.call_direct (link_proc2, Target.CGType.Void);
+        ui := ui.next;
+      END;
+    END GenAddUnitImports;
+
   BEGIN
     run_proc := s.cg.import_procedure (M3ID.Add ("RTLinker__InitRuntime"), 4,
                                        Target.CGType.Void, Target.DefaultCall);
@@ -198,6 +395,11 @@ PROCEDURE GenerateCGEntry (VAR s: State) =
 
     link_proc := s.cg.import_procedure (M3ID.Add ("RTLinker__AddUnit"), 1,
                                        Target.CGType.Void, Target.DefaultCall);
+    EVAL DeclareParam (s, "m", addr_t);
+
+    link_proc2 := s.cg.import_procedure (M3ID.Add ("RTLinker__AddUnitImports"),
+                                         1, Target.CGType.Void,
+                                         Target.DefaultCall);
     EVAL DeclareParam (s, "m", addr_t);
 
     exit_proc := s.cg.import_procedure (M3ID.Add ("RTProcess__Exit"), 1,
@@ -282,15 +484,9 @@ PROCEDURE GenerateCGEntry (VAR s: State) =
     END;
     s.cg.call_direct (run_proc, Target.CGType.Void);
 
-    ui := s.main_units;
-    WHILE (ui # NIL) DO
-      s.cg.set_source_line (src_line);  INC (src_line);
-      s.cg.start_call_direct (link_proc, 0, Target.CGType.Void);
-      s.cg.load_procedure (ui.cg_proc);
-      s.cg.pop_param (addr_t);
-      s.cg.call_direct (link_proc, Target.CGType.Void);
-      ui := ui.next;
-    END;
+    GenAddUnitImports(s.main_units);
+    GenAddUnits(s.top_units);
+    GenAddUnits(s.main_units);
 
     (*  RTProcess.Exit (0); *)
     s.cg.set_source_line (src_line);  INC (src_line);
@@ -344,6 +540,26 @@ PROCEDURE Out (VAR s: State;  a, b, c, d: TEXT := NIL) =
     IF (d # NIL) THEN Wr.PutText (s.wr, d) END;
   END Out;
 
+PROCEDURE Debug (level: INTEGER; a, b, c, d: TEXT := NIL) =
+  BEGIN
+    IF debugLevel >= level THEN
+      Msg (a, b, c, d);
+    END;
+  END Debug;
+
+PROCEDURE Msg (a, b, c, d: TEXT := NIL) =
+  <*FATAL Wr.Failure, Thread.Alerted*>
+  BEGIN
+    WITH wr = Stdio.stdout DO
+      IF (a # NIL) THEN Wr.PutText (wr, a) END;
+      IF (b # NIL) THEN Wr.PutText (wr, b) END;
+      IF (c # NIL) THEN Wr.PutText (wr, c) END;
+      IF (d # NIL) THEN Wr.PutText (wr, d) END;
+      Wr.PutText(wr, Wr.EOL);
+    END;
+  END Msg;
+
 BEGIN
+  debugLevel := 0;
 END MxGen.
 

@@ -8,6 +8,8 @@ INTERFACE Item;
 
 IMPORT Word, RectR;
 
+CONST Brand = "Item 1.0";
+
 TYPE T <: Public;
      Public = OBJECT
        id: ID;

@@ -20,8 +20,11 @@ readonly _RandomPieces = {
   "ARM"        : [ _LittleEndian ],
   "DS3100"     : [ _LittleEndian ],
   "DS3100_OSF" : [ _LittleEndian ],
+  "FBSD_ALPHA" : [ _LittleEndian ],
   "FreeBSD"    : [ _LittleEndian ],
   "FreeBSD2"   : [ _LittleEndian ],
+  "FreeBSD3"   : [ _LittleEndian ],
+  "FreeBSD4"   : [ _LittleEndian ],
   "HP300"      : [ _BigEndian ],
   "HPPA"       : [ _BigEndian ],
   "IBMR2"      : [ _BigEndian ],
@@ -29,6 +32,7 @@ readonly _RandomPieces = {
   "IRIX5"      : [ _BigEndian ],
   "LINUX"      : [ _LittleEndian ],
   "LINUXELF"   : [ _LittleEndian ],
+  "LINUXLIBC6" : [ _LittleEndian ],
   "NEXT"       : [ _BigEndian ],
   "NT386"      : [ _LittleEndian ],
   "OKI"        : [ _LittleEndian ],
@@ -40,7 +44,9 @@ readonly _RandomPieces = {
   "SUN3"       : [ _BigEndian ],
   "SUN386"     : [ _LittleEndian ],
   "UMAX"       : [ _LittleEndian ],
-  "VAX"        : [ _VAX ]
+  "VAX"        : [ _VAX ],
+  "I386_DARWIN": [ _LittleEndian ],
+  "PPC_DARWIN" : [ _BigEndian ]
 }
 
 if _RandomPieces contains TARGET

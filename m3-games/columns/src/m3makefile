@@ -6,6 +6,7 @@
 %      modified on Wed Jan 12 15:55:18 PST 1994 by kalsow
 %      modified on Mon May 04 15:16:48 PDT 1992 by muller
 
+import ("libbuf")
 import ("vbtkit")
 
 %
@@ -28,7 +29,6 @@ end
 cp_if ("ScoreDir.i0", "ScoreDir.i3")
 derived_interface ("ScoreDir", HIDDEN)
 
-module ("Buf")
 module ("ScoreFile")
 
 module ("Bars")

@@ -1,4 +1,5 @@
-(* Copyright 1995-96 Critical Mass, Inc. All rights reserved.    *)
+(* Copyright 1996-2000 Critical Mass, Inc. All rights reserved.    *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 MODULE Main;
 
@@ -51,7 +52,6 @@ PROCEDURE DoIt () =
   END DoIt;
 
 PROCEDURE ParseCmdLine () =
-  VAR arg: TEXT;
   BEGIN
     FOR i := 1 TO Params.Count - 1 DO
       ParseArg (Params.Get (i));

@@ -1,4 +1,5 @@
-% Copyright 1996 Critical Mass, Inc. All rights reserved.
+% Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
+% See file COPYRIGHT-CMASS for details.
 % 
 % Standard configuration file for Alpha/AXP running OSF/1.
 %
@@ -6,7 +7,11 @@
 %-------------------------------------------------- compilation environment ---
 
 readonly TARGET       = "ALPHA_OSF"           % code generation target
-readonly BUILD_DIR    = TARGET                % directory for results
+if M3_PROFILING 
+  readonly BUILD_DIR  = TARGET & "p"     % directory for results
+else
+  readonly BUILD_DIR  = TARGET           % directory for results
+end
 readonly OS_TYPE      = "POSIX"               % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "64BITS"              % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "alpha-dec-osf1"      % "cpu-vendor-os" string for GNU
@@ -43,17 +48,23 @@ INITIAL_REACTOR_EDITOR = "emacsclient"
 % at <line>.
 
 %------------------------------------------------------------- export paths ---
-% During the installation, destination directories that do not exists 
+% During the installation, destination directories that do not exist
 % will be created. You need the necessary permissions to do so; otherwise,
 % the installation will fail, but can be restarted after you have 
 % fixed the permissions.
 
 % INSTALL_ROOT = "/usr/local/"
-INSTALL_ROOT = "/proj/cmass/install.2/ALPHA_OSF/"
+% INSTALL_ROOT = "/proj/cmass/install.2/ALPHA_OSF/"
+INSTALL_ROOT = "/usr/local/cm3/"
+
 %-- handy for installations that keep all M3 stuff together
 
 BIN_INSTALL   = INSTALL_ROOT & "bin"        % executables
-LIB_INSTALL   = INSTALL_ROOT & "lib"        % libraries
+if M3_PROFILING 
+  LIB_INSTALL   = INSTALL_ROOT & "libp"       % libraries
+else
+  LIB_INSTALL   = INSTALL_ROOT & "lib"        % libraries
+end
 PKG_INSTALL   = INSTALL_ROOT & "pkg"        % packages
 DOC_INSTALL   = INSTALL_ROOT & "doc"        % documents
 EMACS_INSTALL = INSTALL_ROOT & "elisp"      % emacs lisp code
@@ -86,15 +97,15 @@ readonly INSTALL_IMPLS = TRUE
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"       : [ "-ldnet_stub", "-lm" ],
+  "LIBC"       : [ "-ldnet_stub", "-lm", "-lexc" ],
   "LEX-YACC"   : [ "-L/usr/lib", "-ll" ],
   "FLEX-BISON" : [ "-L/usr/lib", "-lfl" ],
   "POSTGRES95" : [ "-L/usr/lib", "-lpq" ],
 %  "OPENGL"      : [ "-L/usr/lib", "-lGLU", "-lGL", "-lXext" ],
-  "DECPEX"     : [ "-L/usr/shlib", "-ldecpex" ],
+%  "DECPEX"     : [ "-L/usr/shlib", "-ldecpex" ],
   "MOTIF"      : [ "-L/usr/lib", "-lXm" ],
   "X11"        : [ "-L/usr/lib", "-lXaw", "-lXmu",
-                   "-lXext", "-lXt", "-lX11" ],
+                   "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ],
   "TCP"        : [ ]
 }
 
@@ -120,11 +131,10 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP",
 readonly m3back = "@" & BIN_USE & "/cm3cg"
 
 proc m3_backend (source, object, optimize, debug) is
-  local args = [ "-quiet", source, "-o", object ]
-  %ZZZ local args = [ "-quiet", "-fPIC", source, "-o", object ]
-  %ZZZ   It seems that -fPIC isn't needed!  cool.
+  local args = [ "-quiet", "-fPIC", source, "-o", object ]
   if optimize  args += "-O2"  end
   if debug     args += "-g"  end
+  if M3_PROFILING args += "-p" end
   return try_exec (m3back, args)
 end
 
@@ -142,13 +152,17 @@ M3_BACKEND_MODE = "3"
 
 proc compile_c (source, object, options, optimize, debug) is
   local args = [ "-ieee_with_no_inexact", options ]
-  if optimize  args += "-O"  end
-  if debug     args += "-g"  end
+  if optimize  args += "-O1"  end
+  if debug     args += "-g3"  end
+  if object    args += [ "-o", object ] end
+  if M3_PROFILING args += "-p" end
   return try_exec ("@/bin/cc", args, "-c", source)
 end
 
 %---------------------------------------------------------------- assembler ---
-% "assemble" is called to assemble .s or .asm files.
+% "assemble" is called to assemble .s or .asm files.  Note that this function
+% is only called if your program or library explicitly includes assembly source
+% code, the system distributed by Critical Mass does not.
 
 readonly m3fixup = "@" & BIN_USE & "/mips-tfile"
 % The default assembler isn't smart enough to include debugging
@@ -157,7 +171,7 @@ readonly m3fixup = "@" & BIN_USE & "/mips-tfile"
 
 proc assemble (source, object) is
   local ret_code = 0
-  ret_code = try_exec ("@/bin/as", source, "-o", object)
+  ret_code = try_exec ("@/bin/as", source, "-oldas", "-g", "-o", object)
   if not equal (ret_code, 0) return ret_code end
   ret_code = try_exec (m3fixup, "-o", object, source)
   return ret_code
@@ -171,6 +185,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local ret_code = 0
   local lib_a    = format ("lib%s.a", lib)
   local lib_so   = format ("lib%s.so", lib)
+  local lib_sox  = format ("lib%s.so.5", lib)
 
   % first, build the non-shared library
   ret_code = try_exec ("@/bin/ar", "crusl", lib_a, objects)
@@ -179,14 +194,20 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   if shared
     % then, build the shared library
     ret_code = try_exec ("@/usr/bin/ld -shared -expect_unresolved end -o",
-                         lib_so, "-all", lib_a, "-none", imported_libs, "-lc")
+                         lib_sox, "-soname", lib_sox, "-all", lib_a, "-none", imported_libs, "-lc")
     if not equal (ret_code, 0) return ret_code end
 
+    % create the version aliases
+    link_file(lib_sox, lib_so)
+
     % finally, make sure the shared library stuff gets installed properly
-    install_derived (lib_so)
+    install_derived (lib_sox)
+    install_derived_link (lib_sox, lib_so)
+    install_link_to_derived (lib_sox, LIB_INSTALL)
     install_link_to_derived (lib_so, LIB_INSTALL)
   else
     delete_file (lib_so)
+    delete_file (lib_sox)
   end
 
   return 0
@@ -198,14 +219,18 @@ end
 % files that should be deleted or shipped.
 
 proc skip_lib (lib, shared) is
-  local lib_so = format ("lib%s.so", lib)
+  local lib_so   = format ("lib%s.so", lib)
+  local lib_sox  = format ("lib%s.so.5", lib)
 
   if shared
     % make sure the shared library stuff gets installed properly
+    install_derived (lib_sox)
     install_derived (lib_so)
+    install_link_to_derived (lib_sox, LIB_INSTALL)
     install_link_to_derived (lib_so, LIB_INSTALL)
   else
     delete_file (lib_so)
+    delete_file (lib_sox)
   end
 
   return 0
@@ -217,11 +242,12 @@ end
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local linker = [ "@/bin/cc", "-ieee_with_no_inexact" ]
   local args = [ "-o", prog, options, objects, imported_libs ]
+  if M3_PROFILING args += "-p" end
   if shared
-    return try_exec (linker, "-call_shared", "-Wl,-rpath," & LIB_USE, args) %ZZZ
-    %ZZZ return try_exec (linker, "-non_shared", args)
+    %ZZZ return try_exec (linker, "-call_shared", "-rpath", LIB_USE, args)
+    return try_exec (linker, "-noso", args, "-so_archive")
   else
-    return try_exec (linker, "-non_shared", args)
+    return try_exec (linker, "-noso", args, "-so_archive")
   end
 end
 
@@ -264,7 +290,7 @@ M3_SPLIT_LIBNAMES = TRUE
 % --- pass "-R" flags to the linker too...
 
 % M3_BOOTSTRAP = TRUE
-% --- generate bootstrap code (assembly) instead of finaly object code
+% --- generate bootstrap code (assembly) instead of final object code
 
 % M3_COMPILE_ONCE = TRUE
 % --- don't recompile code to improve opaque object references
@@ -304,7 +330,7 @@ end
 % To use the GNU defaults for CC and CFLAGS, specify "*".
 %
 
-GNU_CC     = "*"
-GNU_CFLAGS = "*"
-GNU_MAKE   = "make"
+GNU_CC     = "gcc"
+GNU_CFLAGS = "-O2 -g"
+GNU_MAKE   = "gmake"
 

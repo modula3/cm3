@@ -12,4 +12,8 @@ PROCEDURE Annotate (rd: Rd.T;  wr: Wr.T;  path: TEXT)
   RAISES {Thread.Alerted, Wr.Failure, Rd.Failure};
 (* copy the Modula-3 source in "rd" to "wr" adding HTML annotations. *)
 
+PROCEDURE Simple (rd: Rd.T;  wr: Wr.T;  path: TEXT)
+  RAISES {Thread.Alerted, Wr.Failure, Rd.Failure};
+(* copy from source into dest without annotations and minimal HTML markup *)
+
 END MarkUp.

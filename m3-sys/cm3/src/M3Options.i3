@@ -1,4 +1,5 @@
-(* Copyright 1996 Critical Mass, Inc. All rights reserved.    *)
+(* Copyright 1996-2000 Critical Mass, Inc. All rights reserved.    *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 (* "M3Options" defines various global flags and settings *)
 
@@ -10,7 +11,7 @@ VAR
   major_mode : Mode     := Mode.Build;
 
 TYPE
-  Mode = { Build, Clean, Ship, Find };
+  Mode = { Build, Clean, Ship, Find, Depend };
 
 END M3Options.
 

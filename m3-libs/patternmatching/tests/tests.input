@@ -1,0 +1,175 @@
+# Tests for RegEx.[im]3
+#
+# Run this with ./Main -unix < tests.input
+#
+#
+# PATTERN	SUBJECT		RESULT
+#
+
+##
+## Single components
+##
+
+$		""		TRUE
+a		a		TRUE
+[^a]		b		TRUE
+[]]		]		ERROR
+^[a]]*$		a]		TRUE
+[a]		a		TRUE
+^		""		TRUE
+.		a		TRUE
+[a-c]		a		TRUE
+[a-c]		b		TRUE
+[a-c]		c		TRUE
+# two components
+a$		a		TRUE
+^a		aa		TRUE
+# star operations
+a*		""		TRUE
+a*		a		TRUE
+a*		aa		TRUE
+a*b		aab		TRUE
+[a]*		""		TRUE
+[a]*		a		TRUE
+[a]*		aa		TRUE
+[^a]*		""		TRUE
+[^a]*		b		TRUE
+[^a]*		bb		TRUE
+[ab]*		ab		TRUE
+.*	abaabaabaabaabaabaabaabaabaabaabaabaabaabaabaabaaba	TRUE
+^abc[a-c]*cba$ abcaaaaaabbbbbbbbbccccccbacbacbacbacbacbacba	TRUE
+
+##
+## Test extended matching operators *
+##
+
+a*		""		TRUE
+a*		a		TRUE
+a*		aa		TRUE
+#
+[a]*		""		TRUE
+[a]*		a		TRUE
+[a]*		aa		TRUE
+\(\)\1$		""		TRUE
+\(x\)\1*	x		TRUE
+\(x\)\1*	xxx		TRUE
+
+##
+## test a long match
+##
+
+[a-c]*b* abababababababababababababababababababababababababababab TRUE
+
+##
+## Tests for \( and \) and \DIGIT
+##
+
+\(x\)				x				TRUE
+^\(x\)\1$			xx				TRUE
+\(\)\1$				""				TRUE
+\(x\)\1*			x				TRUE
+\(x\)\1*			xxx				TRUE
+^\([a-z]*\)\([A-Z]*\)\2\1$	abcdefgABCDEFGABCDEFGabcdefg	TRUE
+\([^A-Z]\)\1 			cc				TRUE
+
+##
+## various misc tests
+##
+
+abc	abc	TRUE
+abc	xbc	FALSE
+abc	axc	FALSE
+abc	abx	FALSE
+abc	xabcy	TRUE
+abc	ababc	TRUE
+ab*c	abc	TRUE
+ab*bc	abc	TRUE
+ab*bc	abbc	TRUE
+ab*bc	abbbbc	TRUE
+^abc$	abc	TRUE
+^abc$	abcc	FALSE
+^abc	abcc	TRUE
+^abc$	aabc	FALSE
+abc$	aabc	TRUE
+^	abc	TRUE
+a.c	abc	TRUE
+a.c	axc	TRUE
+a.*c	axyzc	TRUE
+a.*c	axyzd	FALSE
+a[bc]d	abc	FALSE
+a[bc]d	abd	TRUE
+a[b-d]e	abd	FALSE
+a[b-d]e	ace	TRUE
+a[b-d]	aac	TRUE
+a[-b]	a-	TRUE
+a[b-]	a-	TRUE
+[k]	ab	FALSE
+a[b-a]	""	ERROR
+a[]b	""	ERROR
+a[	""	ERROR
+a]	a]	TRUE
+a[]]b	a]b	ERROR
+a[^bc]d	aed	TRUE
+a[^bc]d	abd	FALSE
+a[^-b]c	adc	TRUE
+a[^-b]c	a-c	FALSE
+a[^]b]c	a]c	FALSE
+a[^]b]c	adc	TRUE
+()ef	def	FALSE
+()*	""	FALSE
+*a	""	FALSE
+^*	""	FALSE
+$*	""	TRUE
+(*)b	""	FALSE
+$b	b	FALSE
+a\	""	FALSE
+a\(b	a(b	ERROR
+a\(*b	ab	ERROR
+a\(*b	a((b	ERROR
+a\\b	a\b	TRUE
+
+((a))	abc	FALSE
+(a)b(c)	abc	FALSE
+a**	""	TRUE
+[^ab]*	cde	TRUE
+""	abc	TRUE
+abc	""	FALSE
+a*	""	TRUE
+abcd	abcd	TRUE
+a\(bc\)d	abcd	TRUE
+abcd*efg	abcdefg	TRUE
+ab*	xabyabbbz	TRUE
+ab*	xayabbbz	TRUE
+[abhgefdc]ij	hij	TRUE
+a\([bc]*\)c*	abc	TRUE
+a\([bc]*\)\(c*d\)	abcd	TRUE
+a[bcd]*dcdcde	adcdcde	TRUE
+\(\(a\)\(b\)c\)\(d\)	abcd	TRUE
+"[ -~]*"	abc	TRUE
+[a-zA-Z_][a-zA-Z0-9_]*	alpha	TRUE
+"multiple words of text"	uh-uh	FALSE
+"multiple words"	"multiple words, yeah"	TRUE
+\(.*\)c\(.*\)	abcde	TRUE
+"(\(.*\), \(.*\))"	"(a, b)"	TRUE
+
+##
+## other tests
+##
+
+abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz TRUE
+^[a-z]*$ abcdefghijklmnopqrstuvwxyz TRUE
+^[a-l]*$ abcdefghijkl TRUE
+^[a-m]*$ abcdefghijklm TRUE
+^[a-n]*$ abcdefghijklmn TRUE
+^[a-o]*$ abcdefghijklmno TRUE
+^[a-p]*$ abcdefghijklmnop TRUE
+^[a-q]*$ abcdefghijklmnopq TRUE
+^[a-r]*$ abcdefghijklmnopqr TRUE
+^[a-s]*$ abcdefghijklmnopqrs TRUE
+##
+## END OF TESTS!
+##
+
+
+
+

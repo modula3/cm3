@@ -17,6 +17,9 @@ if defined ("AT_SRC") m3_option("-O") end
 import("libm3")
 import("tcp")
 
+if defined("_NETOBJ_OVERRIDE")
+  template("netobj-ov")
+end
 template("netobj")
 
 include_dir("netobjrt")

@@ -1,4 +1,5 @@
-(* Copyright 1996 Critical Mass, Inc. All rights reserved.    *)
+(* Copyright 1996-2000 Critical Mass, Inc. All rights reserved.    *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 MODULE Dirs;
 
@@ -7,7 +8,8 @@ IMPORT Msg, M3Options, M3Path, Wr;
 
 CONST
   ModeVerb = ARRAY M3Options.Mode OF TEXT {
-    "building in ", "cleaning ", "shipping from ", "searching from " };
+    "building in ", "cleaning ", "shipping from ", "searching from ",
+    "computing dependencies in " };
 
 VAR
   built_derived := FALSE;
@@ -73,7 +75,13 @@ PROCEDURE SetUp (target: TEXT) =
         built_derived := TRUE;
         MkDir (to_derived);
       END;
-      Msg.Out ("--- ", ModeVerb [M3Options.major_mode], to_derived, " ---", Wr.EOL);
+      IF M3Options.major_mode = M3Options.Mode.Depend THEN
+        Msg.Verbose ("--- ", ModeVerb [M3Options.major_mode], to_derived, 
+                     " ---", Wr.EOL);
+      ELSE
+        Msg.Out ("--- ", ModeVerb [M3Options.major_mode], to_derived, 
+                 " ---", Wr.EOL);
+      END;
       ChDir (to_derived);
     END;
   END SetUp;

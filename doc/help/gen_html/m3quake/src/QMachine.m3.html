@@ -1,0 +1,2018 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: m3quake/src/QMachine.m3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>m3quake/src/QMachine.m3</H2></A><HR>
+<inModule>
+<PRE></PRE> Copyright (C) 1995, Digital Equipment Corporation           
+ All rights reserved.                                        
+ See the file COPYRIGHT for a full description.              
+                                                             
+ Last modified on Tue Feb 28 15:59:51 PST 1995 by kalsow     
+
+<P><PRE>MODULE <module><implements><A HREF="QMachine.i3.html">QMachine</A></implements></module>;
+
+IMPORT <A HREF="../../libm3/src/atom/Atom.i3.html">Atom</A>, <A HREF="../../libm3/derived/AtomList.i3.html">AtomList</A>, <A HREF="../../libm3/derived/IntRefTbl.i3.html">IntRefTbl</A>, <A HREF="../../libm3/src/params/Env.i3.html">Env</A>, <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../libm3/src/rw/FileWr.i3.html">FileWr</A>;
+IMPORT <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../libm3/src/rw/Stdio.i3.html">Stdio</A>, <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="../../libm3/derived/TextSeq.i3.html">TextSeq</A>;
+IMPORT <A HREF="../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>, <A HREF="../../libm3/src/os/Common/Pipe.i3.html">Pipe</A>, <A HREF="../../libm3/src/os/Common/Process.i3.html">Process</A>, <A HREF="../../libm3/src/os/Common/File.i3.html">File</A>, <A HREF="../../libm3/src/os/Common/FS.i3.html">FS</A>, <A HREF="../../m3core/src/runtime/common/RTParams.i3.html">RTParams</A>;
+IMPORT <A HREF="../../m3middle/src/M3Buf.i3.html">M3Buf</A>, <A HREF="../../m3middle/src/M3File.i3.html">M3File</A>, <A HREF="../../m3middle/src/M3Process.i3.html">M3Process</A>, <A HREF="../../m3middle/src/POSIX/CoffTime.i3.html">CoffTime</A>;
+IMPORT <A HREF="QIdent.i3.html">QIdent</A>, <A HREF="QValue.i3.html">QValue</A>, <A HREF="QVal.i3.html">QVal</A>, <A HREF="QCode.i3.html">QCode</A>, <A HREF="QCompiler.i3.html">QCompiler</A>, <A HREF="../derived/QVTbl.i3.html">QVTbl</A>, <A HREF="../derived/QVSeq.i3.html">QVSeq</A>, <A HREF="QScanner.i3.html">QScanner</A>;
+FROM <A HREF="Quake.i3.html">Quake</A> IMPORT Error, ID, IDMap, NoID;
+</PRE><BLOCKQUOTE><EM> IMPORT IO; </EM></BLOCKQUOTE><PRE>
+
+CONST
+  OnUnix = (CoffTime.EpochAdjust = 0.0d0);
+
+TYPE
+  QK = QValue.Kind;
+  Op = QCode.Op;
+
+REVEAL
+  <A NAME="T">T</A> = T_ BRANDED &quot;QMachine.T&quot; OBJECT
+    reg       : Registers;
+    scopes    : ScopeStack     := NIL;
+    stack     : ValueStack     := NIL;
+    loops     : LoopStack      := NIL;
+    output    : OutputStack    := NIL;
+    frames    : FrameStack     := NIL;
+    includes  : IncludeStack   := NIL;
+    globals   : IntRefTbl.T    := NIL;  (* ID -&gt; QValue.Binding *)
+    tmp_files : TextSeq.T      := NIL;
+    tracing   : BOOLEAN        := FALSE;
+    do_echo   : BOOLEAN        := FALSE;
+    last_cp   : QCode.Stream   := NIL;
+    bindings  : QValue.Binding := NIL;
+    buffers   : BufStack;
+    default_wr: Wr.T;
+    shell     : TEXT         := NIL;
+    sh_option : TEXT         := NIL;
+    tmp_dir   : TEXT         := NIL;
+  OVERRIDES
+    init      := Init;
+    evaluate  := Evaluate;
+    get       := Get;
+    put       := Put;
+    lookup    := LookUp;
+    push      := Push;
+    pop       := Pop;
+    error     := Err;
+    cleanup   := CleanUp;
+    include   := Include;
+    normalize := Normalize;
+    start_call:= StartCall;
+    call_proc := CallProc;
+    cp_if     := CopyIfNew;
+    make_dir  := MakeDir;
+    cur_file  := CurFile;
+    cur_path  := CurPath;
+    cur_wr    := CurWr;
+    set_wr    := SetWr;
+    exec_echo := ExecEcho;
+  END;
+
+TYPE
+  Registers = RECORD
+    cp : QCode.Stream   := NIL; (* code pointer *)
+    pc : INTEGER        := 0;   (* program counter *)
+    xp : INTEGER        := 0;   (* scope stack pointer *)
+    sp : INTEGER        := 0;   (* value stack pointer *)
+    lp : INTEGER        := 0;   (* loop stack pointer *)
+    op : INTEGER        := 0;   (* output stack pointer *)
+    fp : INTEGER        := 0;   (* frame pointer *)
+    ln : INTEGER        := 0;   (* line number *)
+    ip : INTEGER        := 0;   (* include stack pointer *)
+    pi : QCode.ProcInfo := NIL; (* procedure info *)
+    fn : BOOLEAN        := FALSE; (* =&gt; expect return result *)
+  END;
+
+TYPE
+  ScopeStack   = REF ARRAY OF QValue.Scope;
+  ValueStack   = REF ARRAY OF QValue.T;
+  LoopStack    = REF ARRAY OF LoopInfo;
+  OutputStack  = REF ARRAY OF OutputInfo;
+  FrameStack   = REF ARRAY OF FrameInfo;
+  IncludeStack = REF ARRAY OF IncludeInfo;
+
+TYPE
+  LoopInfo = RECORD
+    iter     : QVTbl.Iterator  := NIL;
+    array    : QVSeq.T         := NIL;
+    next_elt : INTEGER         := 0;
+    variable : QValue.Binding  := NIL;
+  END;
+
+TYPE
+  OutputInfo = RECORD
+    name : TEXT := NIL;
+    wr   : Wr.T := NIL;
+  END;
+
+TYPE
+  FrameInfo = RECORD
+    proc   : QValue.Proc := NIL;
+    saved  : Registers;
+    outer  : BOOLEAN;  (* TRUE =&gt; exit eval loop when the frame is popped *)
+  END;
+
+TYPE
+  IncludeInfo = RECORD
+    file   : QCode.Stream;
+    old_cp : QCode.Stream;
+    old_pc : INTEGER;
+  END;
+
+TYPE
+  BufStack = RECORD
+    tos  : INTEGER := 0;
+    bufs : ARRAY [0..9] OF M3Buf.T;
+  END;
+</PRE>-------------------------------------------------------- initialization ---
+
+<P><PRE>PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (t: T;  map: IDMap): T =
+  BEGIN
+    t.map        := map;
+    t.scopes     := NEW (ScopeStack,  40);
+    t.stack      := NEW (ValueStack,  100);
+    t.loops      := NEW (LoopStack,   20);
+    t.output     := NEW (OutputStack, 10);
+    t.frames     := NEW (FrameStack,  40);
+    t.includes   := NEW (IncludeStack, 10);
+    t.globals    := NEW (IntRefTbl.Default).init ();
+    t.default_wr := Stdio.stdout;
+
+    InitOSEnv (t);
+    InitBuiltins (t);
+
+    EVAL PushScope (t);  (* so that &quot;local&quot; variables have a place to go *)
+    RETURN t;
+  END Init;
+</PRE>------------------------------------------------------------ evaluation ---
+
+<P><PRE>PROCEDURE <A NAME="Evaluate"><procedure>Evaluate</procedure></A> (t: T;  s: QCode.Stream)
+  RAISES {Error, Thread.Alerted} =
+  BEGIN
+    PushInclude (t, s, t.reg);
+    Eval (t);
+  END Evaluate;
+
+PROCEDURE <A NAME="Eval"><procedure>Eval</procedure></A> (t: T)
+  RAISES {Error, Thread.Alerted} =
+  VAR
+    op   : QCode.Op;
+    arg  : INTEGER;
+    val  : QValue.T;
+    val2 : QValue.T;
+    arr  : QVSeq.T;
+    tbl  : QVTbl.T;
+    int  : INTEGER;
+    bind : QValue.Binding;
+    txt  : TEXT;
+    buf  : M3Buf.T;
+    done : BOOLEAN;
+  BEGIN
+    LOOP
+      IF (t.tracing) THEN TraceInstruction (t) END;
+      WITH z = t.reg.cp.instrs [t.reg.pc] DO op := z.op;  arg := z.a; END;
+      INC (t.reg.pc);
+
+      CASE op OF
+
+      | Op.Integer =&gt;
+          val.kind := QK.Integer;
+          val.int  := arg;
+          val.ref  := NIL;
+          Push (t, val);
+
+      | Op.String =&gt;
+          val.kind := QK.String;
+          val.int  := arg;
+          val.ref  := NIL;
+          Push (t, val);
+
+      | Op.BuildArray =&gt;
+          arr := NEW (QVSeq.T).init (arg);
+          FOR i := 0 TO arg-1 DO  Pop (t, val);  arr.addlo (val);  END;
+          val.kind := QK.Array;
+          val.int  := 0;
+          val.ref  := arr;
+          Push (t, val);
+          arr := NIL;
+          val.ref := NIL;
+
+      | Op.BuildTable =&gt;
+          tbl := NEW (QVTbl.Default).init();
+          FOR i := arg-1 TO 0 BY -2 DO
+            Pop (t, val2);
+            Pop (t, val);
+            EVAL tbl.put (QVal.ToID (t, val), val2);
+          END;
+          val.kind := QK.Table;
+          val.int  := 0;
+          val.ref  := tbl;
+          Push (t, val);
+          tbl := NIL;
+          val.ref := NIL;
+          val2.ref := NIL;
+
+      | Op.GetEnv =&gt;
+          PushText (t, Env.Get (t.map.id2txt (arg)));
+
+      | Op.PushProc =&gt;
+          val.kind := QK.Proc;
+          val.int  := 0;
+          val.ref  := NEW (QValue.Proc, info := t.reg.cp.procs [arg],
+                           env  := t.scopes [0]);
+                         (*env  := t.scopes [t.reg.xp-1]);*)
+          (* In quake all procedures are global, and we don't want
+             dynamic scoping... *)
+          Push (t, val);
+          val.ref := NIL;
+
+      | Op.IsMember =&gt;
+          Pop (t, val);  int := QVal.ToID (t, val);
+          Pop (t, val);  tbl := QVal.ToTable (t, val);
+          PushBool (t, tbl.get (int, val));
+          tbl := NIL;
+          val.ref := NIL;
+
+      | Op.Concat =&gt;
+          Pop (t, val2);
+          Pop (t, val);
+          buf := GetBuf (t);
+          QVal.ToBuf (t, val, buf);
+          QVal.ToBuf (t, val2, buf);
+          PushText (t, M3Buf.ToText (buf));
+          FreeBuf (t, buf);
+          buf := NIL;
+          val2.ref := NIL;
+          val.ref := NIL;
+
+      | Op.And =&gt;
+          Pop (t, val2);
+          Pop (t, val);
+          PushBool (t, QVal.ToBool (t, val) AND QVal.ToBool (t, val2));
+          val2.ref := NIL;
+          val.ref := NIL;
+
+      | Op.Or =&gt;
+          Pop (t, val2);
+          Pop (t, val);
+          PushBool (t, QVal.ToBool (t, val) OR QVal.ToBool (t, val2));
+          val2.ref := NIL;
+          val.ref := NIL;
+
+      | Op.Not =&gt;
+          Pop (t, val);
+          PushBool (t, NOT QVal.ToBool (t, val));
+          val.ref := NIL;
+
+      | Op.IndexTable =&gt;
+          Pop (t, val);  int := QVal.ToID (t, val);
+          Pop (t, val);  tbl := QVal.ToTable (t, val);
+          IF NOT tbl.get (int, val) THEN
+            Err (t, Fmt.F (&quot;table does not contain entry for: \&quot;%s\&quot;&quot;,
+                           t.map.id2txt (int)));
+          END;
+          Push (t, val);
+          tbl := NIL;
+          val.ref := NIL;
+
+      | Op.SubscriptArray =&gt;
+          Pop (t, val);  int := QVal.ToInt (t, val);
+          Pop (t, val);  arr := QVal.ToArray (t, val);
+          IF (int &lt; 0) OR (arr.size() &lt;= int) THEN
+            Err (t, &quot;array subscript out of bounds: &quot; &amp; Fmt.Int (int));
+          END;
+          Push (t, arr.get(int));
+          arr := NIL;
+          val.ref := NIL;
+
+      | Op.InitForeach =&gt;
+          Pop (t, val);
+          PushLoop (t, arg, val);
+          val.ref := NIL;
+
+      | Op.NextForeach =&gt;
+          IF NOT IterateLoop (t) THEN
+            PopLoop (t);
+            INC (t.reg.pc, arg);
+          END;
+
+      | Op.Goto =&gt;
+          INC (t.reg.pc, arg);
+
+      | Op.IfFalse =&gt;
+          Pop (t, val);
+          IF NOT QVal.ToBool (t, val) THEN INC (t.reg.pc, arg); END;
+          val.ref := NIL;
+
+      | Op.Halt =&gt;
+          PopInclude (t);
+          (**
+          IF (t.reg.ip &lt;= 0) THEN EXIT; END;
+          **)
+          EXIT;
+
+      | Op.PushScope =&gt;
+          EVAL PushScope (t);
+
+      | Op.PopScope =&gt;
+          PopScope (t);
+
+      | Op.DefineG =&gt;
+          bind := DefineGlobal (t, arg, readonly := FALSE);
+          Pop (t, bind.value);
+
+      | Op.DefineGR =&gt;
+          bind := DefineGlobal (t, arg, readonly := TRUE);
+          Pop (t, bind.value);
+
+      | Op.DefineL =&gt;
+          bind := Define (t, arg, readonly := FALSE);
+          Pop (t, bind.value);
+
+      | Op.DefineLR =&gt;
+          bind := Define (t, arg, readonly := TRUE);
+          Pop (t, bind.value);
+
+      | Op.LoadVar =&gt;
+          bind := LookUp (t, arg);
+          IF (bind # NIL) THEN
+            Push (t, bind.value);
+          ELSIF strict_variables THEN
+            Err (t, &quot;undefined variable: &quot; &amp; t.map.id2txt (arg));
+          ELSE
+            PushText (t, t.map.id2txt (arg));
+          END;
+
+      | Op.Assign =&gt;
+          bind := LookUp (t, arg);
+          IF (bind = NIL) THEN
+            bind := DefineGlobal (t, arg, readonly := FALSE);
+          ELSIF bind.readonly THEN
+            Err (t, &quot;cannot assign to readonly variable: &quot; &amp; t.map.id2txt(arg));
+          END;
+          Pop (t, val);
+          bind.value := val;
+
+      | Op.AssignTable =&gt;
+          Pop (t, val);
+          Pop (t, val2);  int := QVal.ToID (t, val2);
+          Pop (t, val2);  tbl := QVal.ToTable (t, val2);
+          EVAL tbl.put (int, val);
+          tbl := NIL;
+          val.ref := NIL;
+          val2.ref := NIL;
+
+      | Op.AssignArray =&gt;
+          Pop (t, val);
+          Pop (t, val2);  int := QVal.ToInt (t, val2);
+          Pop (t, val2);  arr := QVal.ToArray (t, val2);
+          IF (int &lt; 0) OR (arr.size() &lt;= int) THEN
+            Err (t, &quot;array subscript out of bounds: &quot; &amp; Fmt.Int (int));
+          END;
+          arr.put (int, val);
+          arr := NIL;
+          val.ref := NIL;
+          val2.ref := NIL;
+
+      | Op.Append =&gt;
+          Pop (t, val);
+          Pop (t, val2);  arr := QVal.ToArray (t, val2);
+          arr.addhi (val);
+          arr := NIL;
+          val.ref := NIL;
+          val2.ref := NIL;
+
+      | Op.StartRedirect =&gt;
+          Pop (t, val);  txt := QVal.ToText (t, val);
+          PushOutput (t, txt, append := FALSE);
+          txt := NIL;
+          val.ref := NIL;
+
+      | Op.StartAppendRedirect =&gt;
+          Pop (t, val);  txt := QVal.ToText (t, val);
+          PushOutput (t, txt, append := TRUE);
+          txt := NIL;
+          val.ref := NIL;
+
+      | Op.EndRedirect =&gt;
+          PopOutput (t);
+
+      | Op.StartCall =&gt;
+          PushFrame (t);
+
+      | Op.CallProc =&gt;
+          DoCall (t, arg, FALSE, FALSE);
+
+      | Op.CallFunc =&gt;
+          DoCall (t, arg, TRUE, FALSE);
+
+      | Op.SetLine =&gt;
+          t.reg.ln := arg;
+
+      | Op.ReturnValue =&gt;
+          CheckReturn (t, TRUE);
+          Pop (t, val);
+          done := PopFrame (t);
+          Push (t, val);
+          IF done THEN EXIT; END;
+
+      | Op.Return =&gt;
+          CheckReturn (t, FALSE);
+          IF PopFrame (t) THEN EXIT END;
+
+      END; (* case *)
+    END; (* loop *)
+  END Eval;
+
+PROCEDURE <A NAME="TraceInstruction"><procedure>TraceInstruction</procedure></A> (t: T)
+  RAISES {Thread.Alerted} =
+  BEGIN
+    TRY
+      PrintTrace (t);
+    EXCEPT Wr.Failure =&gt;
+      t.tracing := FALSE;
+    END;
+  END TraceInstruction;
+
+PROCEDURE <A NAME="PrintTrace"><procedure>PrintTrace</procedure></A> (t: T)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  VAR op: QCode.Op;  arg: INTEGER;
+  BEGIN
+    IF (t.last_cp # t.reg.cp) THEN
+      Print (&quot;****** &quot;);
+      IF (t.reg.cp # NIL) THEN
+        Print (t.map.id2txt (t.reg.cp.source_file));
+      END;
+      Print (&quot; ******&quot;, Wr.EOL);
+      t.last_cp := t.reg.cp;
+    END;
+
+    WITH z = t.reg.cp.instrs [t.reg.pc] DO op := z.op;  arg := z.a; END;
+
+    FOR i := 1 TO t.reg.xp DO  Print (&quot;.&quot;); END;
+    Print (Fmt.Pad (Fmt.Int (t.reg.pc),4,' ',Fmt.Align.Left));
+    Print (&quot; &quot;, QCode.OpName[op]);
+    CASE QCode.OpFormat [op] OF
+    | 0 =&gt; (*done*)
+    | 1 =&gt; Print (&quot;  &quot;, Fmt.Int (arg));
+    | 2 =&gt; Print (&quot;  (&quot;, Fmt.Int (arg), &quot;) \&quot;&quot;);
+           Print (t.map.id2txt (arg), &quot;\&quot;&quot;);
+    | 3 =&gt; Print (&quot;  pc+(&quot;, Fmt.Int (arg), &quot;) =&gt; &quot;,
+                  Fmt.Int (t.reg.pc + 1 + arg));
+    END;
+    Print (Wr.EOL);
+    FlushIO ();
+  END PrintTrace;
+</PRE>------------------------------------------------------- procedure calls ---
+
+<P><PRE>PROCEDURE <A NAME="PushFrame"><procedure>PushFrame</procedure></A> (t: T)
+  RAISES {Error} =
+  VAR val: QValue.T;
+  BEGIN
+    Pop (t, val);  (* the procedure value *)
+    StartCall (t, val);
+  END PushFrame;
+
+PROCEDURE <A NAME="StartCall"><procedure>StartCall</procedure></A> (t: T;  READONLY proc: QValue.T)
+  RAISES {Error} =
+  BEGIN
+    IF (t.reg.fp &gt;= NUMBER (t.frames^)) THEN ExpandFrames (t); END;
+    WITH f = t.frames[t.reg.fp] DO
+      f.proc  := QVal.ToProc (t, proc);
+      f.saved := t.reg;
+    END;
+    INC (t.reg.fp);
+  END StartCall;
+
+PROCEDURE <A NAME="ExpandFrames"><procedure>ExpandFrames</procedure></A> (t: T) =
+  VAR n := NUMBER (t.frames^);  new := NEW (FrameStack, n+n);
+  BEGIN
+    SUBARRAY (new^, 0, n) := t.frames^;
+    t.frames := new;
+  END ExpandFrames;
+
+PROCEDURE <A NAME="CallProc"><procedure>CallProc</procedure></A> (t: T;  n_args: INTEGER;  isFunc: BOOLEAN)
+  RAISES {Error, Thread.Alerted} =
+  BEGIN
+    DoCall (t, n_args, isFunc, TRUE);
+    Eval (t);
+  END CallProc;
+
+PROCEDURE <A NAME="DoCall"><procedure>DoCall</procedure></A> (t: T;  n_args: INTEGER;  isFunc, outer: BOOLEAN)
+  RAISES {Error, Thread.Alerted} =
+  VAR p: QValue.Proc;  s: QValue.Scope;  val: QValue.T;
+  BEGIN
+    WITH f = t.frames[t.reg.fp-1] DO
+      f.outer := outer;
+      p := f.proc;
+      IF (p.info.n_args # n_args) AND (p.info.n_args &gt;= 0) THEN
+        Err (t, Fmt.F (&quot;%s to procedure %s (expected %s, received %s)&quot;,
+                       &quot;wrong number of parameters passed&quot;,
+                       t.map.id2txt (p.info.name),
+                       Fmt.Int (p.info.n_args), Fmt.Int (n_args)));
+      END;
+      IF (p.info.builtin) THEN
+        (* we save and restore the registers in case a builtin
+           procedure is on the stack when an error is raised *)
+        f.saved.pi := t.reg.pi;
+        f.saved.pc := t.reg.pc;
+        f.saved.cp := t.reg.cp;
+        f.saved.ln := t.reg.ln;
+        f.saved.fn := t.reg.fn;
+        t.reg.pi := p.info;
+        t.reg.pc := 0;
+        t.reg.cp := NIL;
+        t.reg.ln := 0;
+        t.reg.fn := isFunc;
+        p.info.handler (t, n_args);
+        IF (p.info.handler = DoInclude) THEN
+          (* the builtin include() function pops its own frame! *)
+        ELSE
+          CheckReturn (t, p.info.isFunc);
+          IF p.info.isFunc THEN
+            Pop (t, val);
+            EVAL PopFrame (t);
+            Push (t, val);
+          ELSE
+            EVAL PopFrame (t);
+          END;
+        END;
+      ELSE
+        f.saved.pi := t.reg.pi;
+        f.saved.pc := t.reg.pc;
+        f.saved.cp := t.reg.cp;
+        f.saved.ln := t.reg.ln;
+        t.reg.pi := p.info;
+        t.reg.pc := p.info.entry;
+        t.reg.cp := p.info.code;
+        t.reg.fn := isFunc;
+        s := PushScope (t);
+        s.parent := p.env;  (* use procedure's static link *)
+        (* scope debugging
+        VAR m := &quot;\n&quot;; BEGIN
+          FOR i := 0 TO t.reg.xp -1 DO
+            m := m &amp; &quot; s: &quot; &amp; Fmt.Int(t.scopes[i].id);
+            IF t.scopes[i].parent = NIL THEN
+              m := m &amp; &quot; p: NIL\n&quot;;
+            ELSE
+              m := m &amp; &quot; p: &quot; &amp; Fmt.Int(t.scopes[i].parent.id) &amp; &quot;\n&quot;;
+            END;
+          END;
+          IO.Put(&quot;scopes (DoCall):&quot; &amp; m);
+        END;
+        *)
+        &lt;*ASSERT s.parent # s*&gt;
+      END;
+    END;
+  END DoCall;
+
+PROCEDURE <A NAME="PopFrame"><procedure>PopFrame</procedure></A> (t: T): BOOLEAN
+  RAISES {Error, Thread.Alerted} =
+  VAR val: QValue.T;
+  BEGIN
+    DEC (t.reg.fp);
+    WITH f = t.frames[t.reg.fp] DO
+      f.proc := NIL;
+      WHILE (t.reg.ip &gt; f.saved.ip) DO PopInclude (t); END;
+      t.reg.pi := f.saved.pi;  f.saved.pi := NIL;
+      t.reg.cp := f.saved.cp;  f.saved.cp := NIL;
+      t.reg.pc := f.saved.pc;
+      t.reg.ln := f.saved.ln;
+      t.reg.fn := f.saved.fn;
+      WHILE (t.reg.xp &gt; f.saved.xp) DO PopScope (t);   END;
+      WHILE (t.reg.sp &gt; f.saved.sp) DO Pop (t, val);   END;
+      WHILE (t.reg.lp &gt; f.saved.lp) DO PopLoop (t);    END;
+      WHILE (t.reg.op &gt; f.saved.op) DO PopOutput (t);  END;
+      RETURN f.outer;
+    END;
+  END PopFrame;
+
+PROCEDURE <A NAME="CheckReturn"><procedure>CheckReturn</procedure></A> (t: T;  with_value: BOOLEAN)
+  RAISES {Error} =
+  BEGIN
+    IF (t.reg.fp &lt; 1) THEN
+      Err (t, &quot;return not in a function or procedure&quot;);
+    END;
+    IF (t.reg.fn = with_value) THEN
+      (* ok *)
+    ELSIF (t.reg.fn) THEN
+      Err (t, &quot;expected return value is missing&quot;);
+    ELSE
+      Err (t, &quot;unexpected return value&quot;);
+    END;
+  END CheckReturn;
+</PRE>------------------------------------------------------- global bindings ---
+
+<P><PRE>PROCEDURE <A NAME="Get"><procedure>Get</procedure></A> (t: T;  name: ID;  VAR(*OUT*) value: QValue.T): BOOLEAN =
+  VAR ref: REFANY;
+  BEGIN
+    IF t.globals.get (name, ref) THEN
+      value := NARROW (ref, QValue.Binding).value;
+      RETURN TRUE;
+    ELSE
+      RETURN FALSE;
+    END;
+  END Get;
+
+PROCEDURE <A NAME="Put"><procedure>Put</procedure></A> (t: T;  name: ID;  READONLY value: QValue.T)
+  RAISES {Error} =
+  VAR bind := DefineGlobal (t, name, readonly := FALSE);
+  BEGIN
+    bind.value := value;
+  END Put;
+</PRE>----------------------------------------------- scopes &amp; local bindings ---
+
+<P><PRE>PROCEDURE <A NAME="PushScope"><procedure>PushScope</procedure></A> (t: T): QValue.Scope =
+  VAR m := &quot;\n&quot;;
+  BEGIN
+    IF (t.reg.xp &gt;= NUMBER (t.scopes^)) THEN ExpandScopes (t); END;
+    WITH s = t.scopes [t.reg.xp] DO
+      IF (s = NIL) THEN
+        s := NEW (QValue.Scope);
+        s.id := nextScopeId;
+        INC (nextScopeId);
+      END;
+      IF (t.reg.xp &gt; 0)
+        THEN s.parent := t.scopes[t.reg.xp-1];
+        ELSE s.parent := NIL;
+      END;
+      &lt;*ASSERT s.parent # s*&gt;
+      (* scope debugging
+      FOR i := 0 TO t.reg.xp DO
+        m := m &amp; &quot; s: &quot; &amp; Fmt.Int(t.scopes[i].id);
+        IF t.scopes[i].parent = NIL THEN
+          m := m &amp; &quot; p: NIL\n&quot;;
+        ELSE
+          m := m &amp; &quot; p: &quot; &amp; Fmt.Int(t.scopes[i].parent.id) &amp; &quot;\n&quot;;
+        END;
+      END;
+      IO.Put(&quot;scopes:&quot; &amp; m);
+      *)
+      IF s.parent # NIL THEN
+        IF s.parent.parent = s THEN
+          TRY
+            Err (t, &quot;loop in scopes, t.reg.xp = &quot; &amp; Fmt.Int(t.reg.xp) &amp; m);
+          EXCEPT
+            Error(e) =&gt;
+            TRY
+              Wr.PutText(Stdio.stderr, e);
+            EXCEPT ELSE END;
+          END;
+          s.parent.parent := NIL;
+        END;
+      END;
+      INC (t.reg.xp);
+      RETURN s;
+    END;
+  END PushScope;
+
+VAR nextScopeId := 0;
+
+PROCEDURE <A NAME="ExpandScopes"><procedure>ExpandScopes</procedure></A> (t: T) =
+  VAR n := NUMBER (t.scopes^);  new := NEW (ScopeStack, n+n);
+  BEGIN
+    SUBARRAY (new^, 0, n) := t.scopes^;
+    t.scopes := new;
+  END ExpandScopes;
+
+PROCEDURE <A NAME="PopScope"><procedure>PopScope</procedure></A> (t: T) =
+  VAR b, last_b: QValue.Binding;
+  BEGIN
+    DEC (t.reg.xp);
+    WITH s = t.scopes [t.reg.xp] DO
+      b := s.bindings;
+      IF (b # NIL) THEN
+        (* recycle the bindings *)
+        WHILE (b # NIL) DO
+          b.readonly  := FALSE;
+          b.name      := NoID;
+          b.value.ref := NIL;
+          last_b := b;
+          b := b.next;
+        END;
+        last_b.next := t.bindings;
+        t.bindings := s.bindings;
+        s.bindings := NIL;
+      END;
+      s.parent := NIL;
+    END;
+  END PopScope;
+
+PROCEDURE <A NAME="Define"><procedure>Define</procedure></A> (t: T;  id: ID;  readonly: BOOLEAN): QValue.Binding
+  RAISES {Error} =
+  VAR old, new: QValue.Binding;
+  BEGIN
+    (* IO.Put(&quot;Define(&quot; &amp; Fmt.Int(id) &amp; &quot;)\n&quot;); *)
+    WITH s = t.scopes [t.reg.xp-1] DO
+      old := s.bindings;
+      new := NewBinding (t);
+      new.next     := old;
+      new.name     := id;
+      new.readonly := readonly;
+      WHILE (old # NIL) DO
+        IF (old.name = id) THEN
+          Err (t, &quot;duplicate symbol defined: &quot; &amp; t.map.id2txt (id));
+        END;
+        old := old.next;
+      END;
+      s.bindings := new;
+    END;
+    RETURN new;
+  END Define;
+
+PROCEDURE <A NAME="DefineGlobal"><procedure>DefineGlobal</procedure></A> (t: T;  id: ID;  readonly: BOOLEAN): QValue.Binding
+  RAISES {Error} =
+  VAR ref: REFANY;  bind: QValue.Binding;
+  BEGIN
+    IF t.globals.get (id, ref) THEN
+      bind := ref;
+    ELSE
+      bind := NewBinding (t);
+      bind.name := id;
+      bind.readonly := FALSE;
+      EVAL t.globals.put (id, bind);
+    END;
+    IF (bind.readonly) THEN
+      Err (t, &quot;cannot redefine readonly global symbol: &quot; &amp; t.map.id2txt (id));
+    END;
+    bind.readonly := readonly;
+    RETURN bind;
+  END DefineGlobal;
+
+PROCEDURE <A NAME="LookUp"><procedure>LookUp</procedure></A> (t: T;  id: ID): QValue.Binding =
+  VAR s: QValue.Scope;  b: QValue.Binding;  ref: REFANY;
+  BEGIN
+    (* IO.Put(&quot;LookUp(&quot; &amp; Fmt.Int(id) &amp; &quot;)\n&quot;); *)
+    (* try the local scopes first *)
+    IF (t.reg.xp &gt; 0) THEN
+      s := t.scopes [t.reg.xp-1];
+      WHILE (s # NIL) DO
+        b := s.bindings;
+        WHILE (b # NIL) DO
+          IF (b.name = id) THEN RETURN b; END;
+          b := b.next;
+        END;
+        s := s.parent;
+      END;
+    END;
+
+    (* finally try the globals *)
+    IF t.globals.get (id, ref)
+      THEN RETURN ref;
+      ELSE RETURN NIL;
+    END;
+  END LookUp;
+
+PROCEDURE <A NAME="NewBinding"><procedure>NewBinding</procedure></A> (t: T): QValue.Binding =
+  VAR b := t.bindings;
+  BEGIN
+    IF (b # NIL) THEN
+      t.bindings := b.next;
+      b.next := NIL;
+    ELSE
+      b := NEW (QValue.Binding);
+    END;
+    RETURN b;
+  END NewBinding;
+</PRE>------------------------------------------------------------ data stack ---
+
+<P><PRE>PROCEDURE <A NAME="Push"><procedure>Push</procedure></A> (t: T;  READONLY value: QValue.T) =
+  BEGIN
+    IF (t.reg.sp &gt;= NUMBER (t.stack^)) THEN ExpandStack (t); END;
+    t.stack [t.reg.sp] := value;
+    INC (t.reg.sp);
+  END Push;
+
+PROCEDURE <A NAME="ExpandStack"><procedure>ExpandStack</procedure></A> (t: T) =
+  VAR n := NUMBER (t.stack^);  new := NEW (ValueStack, n+n);
+  BEGIN
+    SUBARRAY (new^, 0, n) := t.stack^;
+    t.stack := new;
+  END ExpandStack;
+
+PROCEDURE <A NAME="Pop"><procedure>Pop</procedure></A> (t: T;  VAR(*OUT*) value: QValue.T) RAISES {Error} =
+  BEGIN
+    IF (t.reg.sp &lt;= 0) THEN Err (t, &quot;empty stack&quot;); END;
+    DEC (t.reg.sp);
+    WITH z = t.stack [t.reg.sp] DO
+      value := z;
+      z.ref := NIL;
+    END;
+  END Pop;
+
+PROCEDURE <A NAME="PushText"><procedure>PushText</procedure></A> (t: T;  s: TEXT) =
+  VAR v: QValue.T;
+  BEGIN
+    IF (s = NIL) THEN s := &quot;&quot;; END;
+    v.kind := QK.String;
+    v.int  := t.map.txt2id (s);
+    v.ref  := NIL;
+    Push (t, v);
+  END PushText;
+
+PROCEDURE <A NAME="PushBool"><procedure>PushBool</procedure></A> (t: T;  b: BOOLEAN) =
+  VAR v: QValue.T;
+  BEGIN
+    v.kind := QK.String;
+    v.int  := t.map.boolean [b];
+    v.ref  := NIL;
+    Push (t, v);
+  END PushBool;
+
+PROCEDURE <A NAME="PushInt"><procedure>PushInt</procedure></A> (t: T;  i: INTEGER) =
+  VAR v: QValue.T;
+  BEGIN
+    v.kind := QK.Integer;
+    v.int  := i;
+    v.ref  := NIL;
+    Push (t, v);
+  END PushInt;
+
+PROCEDURE <A NAME="PushID"><procedure>PushID</procedure></A> (t: T;  nm: ID) =
+  VAR v: QValue.T;
+  BEGIN
+    v.kind := QK.String;
+    v.int  := nm;
+    v.ref  := NIL;
+    Push (t, v);
+  END PushID;
+
+PROCEDURE <A NAME="PopText"><procedure>PopText</procedure></A> (t: T): TEXT  RAISES {Error} =
+  VAR v: QValue.T;
+  BEGIN
+    Pop (t, v);
+    RETURN QVal.ToText (t, v);
+  END PopText;
+
+PROCEDURE <A NAME="PopBool"><procedure>PopBool</procedure></A> (t: T): BOOLEAN  RAISES {Error} =
+  VAR v: QValue.T;
+  BEGIN
+    Pop (t, v);
+    RETURN QVal.ToBool (t, v);
+  END PopBool;
+
+PROCEDURE <A NAME="PopInt"><procedure>PopInt</procedure></A> (t: T): INTEGER  RAISES {Error} =
+  VAR v: QValue.T;
+  BEGIN
+    Pop (t, v);
+    RETURN QVal.ToInt (t, v);
+  END PopInt;
+
+PROCEDURE <A NAME="PopID"><procedure>PopID</procedure></A> (t: T): ID  RAISES {Error} =
+  VAR v: QValue.T;
+  BEGIN
+    Pop (t, v);
+    RETURN QVal.ToID (t, v);
+  END PopID;
+</PRE>---------------------------------------------------------- output stack ---
+
+<P><PRE>PROCEDURE <A NAME="PushOutput"><procedure>PushOutput</procedure></A> (t: T;  nm: TEXT;  append: BOOLEAN)
+  RAISES {Error} =
+  BEGIN
+    IF (t.reg.op &gt;= NUMBER (t.output^)) THEN ExpandOutput (t); END;
+    WITH o = t.output [t.reg.op] DO
+      o.name := nm;
+      TRY
+        IF (append)
+          THEN o.wr := FileWr.OpenAppend (nm);
+          ELSE o.wr := FileWr.Open (nm);
+        END;
+      EXCEPT OSError.E(ec) =&gt;
+        Err (t, Fmt.F (&quot;unable to open \&quot;%s\&quot; for writing%s&quot;, nm, OSErr(ec)));
+      END;
+    END;
+    INC (t.reg.op);
+  END PushOutput;
+
+PROCEDURE <A NAME="ExpandOutput"><procedure>ExpandOutput</procedure></A> (t: T) =
+  VAR n := NUMBER (t.output^);  new := NEW (OutputStack, n+n);
+  BEGIN
+    SUBARRAY (new^, 0, n) := t.output^;
+    t.output := new;
+  END ExpandOutput;
+
+PROCEDURE <A NAME="PopOutput"><procedure>PopOutput</procedure></A> (t: T)
+  RAISES {Error, Thread.Alerted} =
+  BEGIN
+    DEC (t.reg.op);
+    WITH o = t.output [t.reg.op] DO
+      TRY
+        Wr.Close (o.wr);
+        o.wr := NIL;
+        o.name := NIL;
+      EXCEPT Wr.Failure(ec) =&gt;
+        Err (t, Fmt.F (&quot;unable to close \&quot;%s\&quot;%s&quot;, o.name, OSErr(ec)));
+      END;
+    END;
+  END PopOutput;
+
+PROCEDURE <A NAME="CurWr"><procedure>CurWr</procedure></A> (t: T): Wr.T =
+  BEGIN
+    IF (t.reg.op &lt;= 0)
+      THEN RETURN t.default_wr;
+      ELSE RETURN t.output [t.reg.op-1].wr;
+    END;
+  END CurWr;
+
+PROCEDURE <A NAME="SetWr"><procedure>SetWr</procedure></A> (t: T;  wr: Wr.T) =
+  BEGIN
+    IF (t.reg.op &lt;= 0)
+      THEN t.default_wr := wr;
+      ELSE t.output [t.reg.op-1].wr := wr;
+    END;
+  END SetWr;
+</PRE>------------------------------------------------------------ loop stack ---
+
+<P><PRE>PROCEDURE <A NAME="PushLoop"><procedure>PushLoop</procedure></A> (t: T;  nm: ID;  READONLY elts: QValue.T)
+  RAISES {Error} =
+  VAR tbl: QVTbl.T;  arr: QVSeq.T;
+  BEGIN
+    IF (t.reg.lp &gt;= NUMBER (t.loops^)) THEN ExpandLoops (t); END;
+    WITH x = t.loops [t.reg.lp] DO
+      IF (elts.kind = QK.Table) THEN
+        tbl := elts.ref;
+        x.iter := tbl.iterate ();
+      ELSIF (elts.kind = QK.Array) THEN
+        arr := elts.ref;
+        x.array := arr;
+        x.next_elt := 0;
+      ELSE
+        Err (t, &quot;\&quot;foreach\&quot; not applied to an array or table&quot;);
+      END;
+      EVAL PushScope (t);
+      x.variable := Define (t, nm, readonly := TRUE);
+    END;
+    INC (t.reg.lp);
+  END PushLoop;
+
+PROCEDURE <A NAME="ExpandLoops"><procedure>ExpandLoops</procedure></A> (t: T) =
+  VAR n := NUMBER (t.loops^);  new := NEW (LoopStack, n+n);
+  BEGIN
+    SUBARRAY (new^, 0, n) := t.loops^;
+    t.loops := new;
+  END ExpandLoops;
+
+PROCEDURE <A NAME="IterateLoop"><procedure>IterateLoop</procedure></A> (t: T): BOOLEAN =
+  VAR int: INTEGER;  val: QValue.T;
+  BEGIN
+    WITH x = t.loops [t.reg.lp-1] DO
+      IF (x.iter # NIL) THEN (* we're iterating over a table *)
+        IF NOT x.iter.next (int, val) THEN RETURN FALSE; END;
+        WITH z = x.variable.value DO
+          z.kind := QK.String;
+          z.int  := int;
+          z.ref  := NIL;
+        END;
+      ELSE (* we're iterating over an array *)
+        IF (x.next_elt &gt;= x.array.size()) THEN RETURN FALSE; END;
+        x.variable.value := x.array.get (x.next_elt);
+        INC (x.next_elt);
+      END;
+    END;
+    RETURN TRUE;
+  END IterateLoop;
+
+PROCEDURE <A NAME="PopLoop"><procedure>PopLoop</procedure></A> (t: T) =
+  BEGIN
+    PopScope (t);
+    DEC (t.reg.lp);
+    WITH x = t.loops [t.reg.lp] DO
+      x.iter     := NIL;
+      x.array    := NIL;
+      x.variable := NIL;
+    END;
+  END PopLoop;
+</PRE>--------------------------------------------------------- include stack ---
+
+<P><PRE>PROCEDURE <A NAME="PushInclude"><procedure>PushInclude</procedure></A> (t: T;  s: QCode.Stream;  VAR reg: Registers) =
+  BEGIN
+    IF (reg.ip &gt;= NUMBER (t.includes^)) THEN ExpandIncludes (t); END;
+    WITH x = t.includes [reg.ip] DO
+      x.file   := s;
+      x.old_cp := reg.cp;
+      x.old_pc := reg.pc;
+    END;
+    reg.cp := s;
+    reg.pc := 0;
+    INC (reg.ip);
+  END PushInclude;
+
+PROCEDURE <A NAME="ExpandIncludes"><procedure>ExpandIncludes</procedure></A> (t: T) =
+  VAR n := NUMBER (t.includes^);  new := NEW (IncludeStack, n+n);
+  BEGIN
+    SUBARRAY (new^, 0, n) := t.includes^;
+    t.includes := new;
+  END ExpandIncludes;
+
+PROCEDURE <A NAME="PopInclude"><procedure>PopInclude</procedure></A> (t: T) =
+  BEGIN
+    DEC (t.reg.ip);
+    WITH x = t.includes [t.reg.ip] DO
+      t.reg.cp := x.old_cp;
+      t.reg.pc := x.old_pc;
+      x.file   := NIL;
+      x.old_cp := NIL;
+    END;
+  END PopInclude;
+</PRE>----------------------------------------------------- OS dependent goo! ---
+
+<P><PRE>PROCEDURE <A NAME="InitOSEnv"><procedure>InitOSEnv</procedure></A> (t: T) =
+  BEGIN
+    IF OnUnix THEN
+      t.shell     := &quot;/bin/sh&quot;;
+      t.sh_option := &quot;-c&quot;;
+      t.tmp_dir   := GetEnv (&quot;TEMP&quot;, &quot;/tmp&quot;);
+    ELSE
+      t.shell     := GetEnv (&quot;COMSPEC&quot;, &quot;COMMAND.COM&quot;);
+      t.sh_option := &quot;/c&quot;;
+      t.tmp_dir   := GetEnv (&quot;TEMP&quot;, &quot;C:\\TEMP&quot;);
+    END;
+  END InitOSEnv;
+
+PROCEDURE <A NAME="GetEnv"><procedure>GetEnv</procedure></A> (variable, default: TEXT): TEXT =
+  VAR val := Env.Get (variable);
+  BEGIN
+    IF (val = NIL) THEN val := default; END;
+    RETURN val;
+  END GetEnv;
+</PRE>---------------------------------------------------- builtin procedures ---
+
+<P><PRE>TYPE
+  Builtin = RECORD
+    name    : TEXT;
+    proc    : QCode.BuiltinProc;
+    n_args  : INTEGER;
+    is_func : BOOLEAN;
+  END;
+
+CONST
+  Builtins = ARRAY OF Builtin {
+    Builtin {&quot;arglist&quot;,     DoArgList,   2, TRUE},
+    Builtin {&quot;cp_if&quot;,       DoCopyIfNew, 2, FALSE},
+    Builtin {&quot;defined&quot;,     DoDefined,   1, TRUE},
+    Builtin {&quot;empty&quot;,       DoEmpty,     1, TRUE},
+    Builtin {&quot;equal&quot;,       DoEqual,     2, TRUE},
+    Builtin {&quot;error&quot;,       DoError,     1, FALSE},
+    Builtin {&quot;escape&quot;,      DoEscape,    1, TRUE},
+    Builtin {&quot;exec&quot;,        DoExec,     -1, FALSE},
+    Builtin {&quot;file&quot;,        DoFile,      0, TRUE},
+    Builtin {&quot;format&quot;,      DoFormat,   -1, TRUE},
+    Builtin {&quot;include&quot;,     DoInclude,   1, FALSE},
+    Builtin {&quot;make_dir&quot;,    DoMakeDir,   1, FALSE},
+    Builtin {&quot;normalize&quot;,   DoNormalize, 2, TRUE},
+    Builtin {&quot;path&quot;,        DoPath,      0, TRUE},
+    Builtin {&quot;stale&quot;,       DoStale,     2, TRUE},
+    Builtin {&quot;try_exec&quot;,    DoTryExec,  -1, TRUE},
+    Builtin {&quot;unlink_file&quot;, DoUnlink,    1, TRUE},
+    Builtin {&quot;write&quot;,       DoWrite,    -1, FALSE},
+    Builtin {&quot;TRACE_INSTR&quot;, DoTrace,     0, FALSE}
+  };
+
+PROCEDURE <A NAME="InitBuiltins"><procedure>InitBuiltins</procedure></A> (t: T) =
+  VAR b: QValue.Binding;
+  BEGIN
+    FOR i := FIRST (Builtins) TO LAST (Builtins) DO
+      WITH z = Builtins [i] DO
+        b := NewBuiltin (t, z.name, z.proc, z.n_args, z.is_func);
+        EVAL t.globals.put (b.name, b);
+      END;
+    END;
+    b := NewConst (t, &quot;TRUE&quot;, t.map.boolean [TRUE]);
+    EVAL t.globals.put (b.name, b);
+    b := NewConst (t, &quot;FALSE&quot;, t.map.boolean [FALSE]);
+    EVAL t.globals.put (b.name, b);
+  END InitBuiltins;
+
+PROCEDURE <A NAME="NewBuiltin"><procedure>NewBuiltin</procedure></A> (t       : T;
+                      nm      : TEXT;
+                      handler : QCode.BuiltinProc;
+                      n_args  : INTEGER;
+                      isFunc  : BOOLEAN): QValue.Binding =
+  VAR
+    id   := t.map.txt2id (nm);
+    info := NEW (QCode.ProcInfo, name := id, isFunc := isFunc,
+                   n_args := n_args, builtin := TRUE, handler := handler);
+    proc := NEW (QValue.Proc, info := info, env := NIL);
+    bind := NEW (QValue.Binding, name := info.name, readonly := TRUE);
+  BEGIN
+    bind.value.kind := QValue.Kind.Proc;
+    bind.value.int  := 0;
+    bind.value.ref  := proc;
+    RETURN bind;
+  END NewBuiltin;
+
+PROCEDURE <A NAME="NewConst"><procedure>NewConst</procedure></A> (t: T;  nm: TEXT;  val: ID): QValue.Binding =
+  VAR
+    id   := t.map.txt2id (nm);
+    bind := NEW (QValue.Binding, name := id, readonly := TRUE);
+  BEGIN
+    bind.value.kind := QValue.Kind.String;
+    bind.value.int  := val;
+    bind.value.ref  := NIL;
+    RETURN bind;
+  END NewConst;
+
+PROCEDURE <A NAME="DoArgList"><procedure>DoArgList</procedure></A> (t: T;  n_args: INTEGER)
+  RAISES {Error, Thread.Alerted} =
+  CONST
+    Max_args       = 10;
+    Max_arg_length = 1024;
+  VAR
+    prefix, args : TEXT;
+    split        : TextSeq.T;
+    val0, val1   : QValue.T;
+    file         : TEXT;
+    wr           : Wr.T;
+    buf          : M3Buf.T;
+  BEGIN
+    &lt;*ASSERT n_args = 2 *&gt;
+    buf := GetBuf (t);
+    Pop (t, val1);
+    QVal.ToBuf (t, val1, buf);
+    args  := M3Buf.ToText (buf);
+    split := SplitArgs (args);
+    FreeBuf (t, buf);
+
+    Pop (t, val0);
+    prefix := QVal.ToText (t, val0);
+
+    (* check for the easy case *)
+    IF (split.size () &lt;= Max_args)
+      AND (Text.Length (args) &lt;= Max_arg_length) THEN
+      Push (t, val1);
+      RETURN;
+    END;
+
+    TRY
+      file := UniqueTempFile (t);
+      wr := FileWr.Open (file);
+      TRY
+        FOR i := 0 TO split.size()-1  DO
+          Wr.PutText (wr, split.get(i));
+          Wr.PutText (wr, Wr.EOL);
+        END;
+      FINALLY
+        Wr.Close (wr);
+      END;
+
+      PushText (t, prefix &amp; file);
+    EXCEPT
+    | Wr.Failure(ec) =&gt;
+        Err (t, &quot;unable to write on \&quot;&quot; &amp; file &amp; &quot;\&quot;&quot; &amp; OSErr (ec));
+    | OSError.E(ec) =&gt;
+        Err (t, &quot;unable to write on \&quot;&quot; &amp; file &amp; &quot;\&quot;&quot; &amp; OSErr (ec));
+    END;
+  END DoArgList;
+
+PROCEDURE <A NAME="DoCopyIfNew"><procedure>DoCopyIfNew</procedure></A> (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR val: QValue.T;  src, dest: TEXT;
+  BEGIN
+    &lt;*ASSERT n_args = 2 *&gt;
+    Pop (t, val);  dest := QVal.ToText (t, val);
+    Pop (t, val);  src  := QVal.ToText (t, val);
+    CopyIfNew (t, src, dest);
+  END DoCopyIfNew;
+
+PROCEDURE <A NAME="CopyIfNew"><procedure>CopyIfNew</procedure></A> (t: T;  src, dest: TEXT) RAISES {Error} =
+  VAR equal := FALSE;
+  BEGIN
+    IF M3File.IsDirectory (dest) THEN
+      dest := Pathname.Join (dest, Pathname.Last (src), NIL);
+    END;
+
+    TRY
+      equal := M3File.IsEqual (src, dest);
+    EXCEPT OSError.E =&gt;
+    END;
+
+    TRY
+      IF NOT equal THEN M3File.Copy (src, dest); END;
+    EXCEPT OSError.E(ec) =&gt;
+      Err (t, Fmt.F (&quot;unable to copy \&quot;%s\&quot; to \&quot;%s\&quot;%s&quot;,
+                     src, dest, OSErr (ec)));
+    END;
+  END CopyIfNew;
+
+PROCEDURE <A NAME="DoDefined"><procedure>DoDefined</procedure></A> (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR val: QValue.T;
+  BEGIN
+    &lt;*ASSERT n_args = 1 *&gt;
+    Pop (t, val);
+    PushBool (t, LookUp (t, QVal.ToID (t, val)) # NIL);
+  END DoDefined;
+
+PROCEDURE <A NAME="DoEmpty"><procedure>DoEmpty</procedure></A> (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR empty := FALSE;  val: QValue.T;
+  BEGIN
+    &lt;*ASSERT n_args = 1 *&gt;
+    Pop (t, val);
+    CASE val.kind OF
+    | QK.Integer =&gt; empty := FALSE;
+    | QK.String  =&gt; empty := (val.int = t.map.boolean[FALSE]);
+    | QK.Array   =&gt; empty := NARROW (val.ref, QVSeq.T).size() = 0;
+    | QK.Table   =&gt; empty := NARROW (val.ref, QVTbl.T).size() = 0;
+    ELSE
+      Err (t, &quot;\&quot;empty\&quot; not applied to a string, table, or array&quot;);
+    END;
+    PushBool (t, empty);
+  END DoEmpty;
+
+PROCEDURE <A NAME="DoEqual"><procedure>DoEqual</procedure></A> (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR v1, v2: QValue.T;  eq := FALSE;
+  BEGIN
+    &lt;*ASSERT n_args = 2 *&gt;
+    Pop (t, v1);
+    Pop (t, v2);
+    IF (v1.kind = v2.kind) THEN
+      CASE v1.kind OF
+      | QK.Var     =&gt; eq := (v1.int = v2.int) AND (v1.ref = v2.ref);
+      | QK.Integer =&gt; eq := (v1.int = v2.int);
+      | QK.String  =&gt; eq := (v1.int = v2.int);
+      | QK.Table   =&gt; eq := (v1.ref = v2.ref);
+      | QK.Array   =&gt; eq := (v1.ref = v2.ref);
+      | QK.Proc    =&gt; eq := (v1.ref = v2.ref);
+      END;
+    END;
+    PushBool (t, eq);
+  END DoEqual;
+
+PROCEDURE <A NAME="DoError"><procedure>DoError</procedure></A> (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR val: QValue.T;
+  BEGIN
+    &lt;*ASSERT n_args = 1 *&gt;
+    Pop (t, val);
+    Err (t, QVal.ToText (t, val));
+  END DoError;
+
+PROCEDURE <A NAME="DoEscape"><procedure>DoEscape</procedure></A> (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR
+    val     : QValue.T;
+    txt     : TEXT;
+    buf     : M3Buf.T;
+    ch      : CHAR;
+    len     : INTEGER;
+    out_len : INTEGER;
+    out_buf : ARRAY [0..199] OF CHAR;
+    in_buf  : ARRAY [0..199] OF CHAR;
+    new_ch  : BOOLEAN := FALSE;
+  BEGIN
+    &lt;*ASSERT n_args = 1 *&gt;
+    Pop (t, val);  txt := QVal.ToText (t, val);
+    len := Text.Length (txt);
+    IF (len+len &lt;= NUMBER (out_buf)) THEN
+      out_len := 0;
+      Text.SetChars (in_buf, txt);
+      FOR i := 0 TO len-1 DO
+        ch := Text.GetChar (txt, i);
+        IF (ch = '\134') THEN
+          out_buf[out_len] := ch; INC (out_len);
+          new_ch := TRUE;
+        END;
+        out_buf [out_len] := ch;  INC (out_len);
+      END;
+      IF (new_ch)
+        THEN PushText (t, Text.FromChars (SUBARRAY (out_buf, 0, out_len)));
+        ELSE Push (t, val);
+      END;
+    ELSE
+      buf := GetBuf (t);
+      FOR i := 0 TO len - 1 DO
+        ch := Text.GetChar (txt, i);
+        IF (ch = '\134') THEN M3Buf.PutChar (buf, ch); new_ch := TRUE; END;
+        M3Buf.PutChar (buf, ch);
+      END;
+      txt := M3Buf.ToText (buf);
+      FreeBuf (t, buf);
+      IF (new_ch)
+        THEN PushText (t, txt);
+        ELSE Push (t, val);
+      END;
+    END;
+  END DoEscape;
+
+PROCEDURE <A NAME="ExecEcho"><procedure>ExecEcho</procedure></A> (t: T;  b: BOOLEAN): BOOLEAN =
+  VAR old := t.do_echo;
+  BEGIN
+    t.do_echo := b;
+    RETURN old;
+  END ExecEcho;
+
+TYPE
+  ExecInfo = RECORD
+    command       : TEXT;
+    exit_code     : INTEGER;
+    ignore_errors : BOOLEAN;
+  END;
+
+PROCEDURE <A NAME="DoExec"><procedure>DoExec</procedure></A> (t: T;  n_args: INTEGER)
+  RAISES {Error, Thread.Alerted} =
+  VAR info := ExecCommand (t, n_args);
+  BEGIN
+    IF (info.exit_code # 0) AND NOT info.ignore_errors THEN
+      Err (t, Fmt.F(&quot;exit %s: %s&quot;, Fmt.Int(info.exit_code), info.command));
+    END;
+  END DoExec;
+
+PROCEDURE <A NAME="DoTryExec"><procedure>DoTryExec</procedure></A> (t: T;  n_args: INTEGER)
+  RAISES {Error, Thread.Alerted} =
+  VAR info := ExecCommand (t, n_args);
+  BEGIN
+    IF (info.ignore_errors) THEN info.exit_code := 0; END;
+    PushInt (t, info.exit_code);
+  END DoTryExec;
+
+PROCEDURE <A NAME="ExecCommand"><procedure>ExecCommand</procedure></A> (t: T;  n_args: INTEGER): ExecInfo
+  RAISES {Error, Thread.Alerted} =
+  VAR
+    info         : ExecInfo;
+    echo         := TRUE;
+    first        := TRUE;
+    n            : INTEGER;
+    handle       : Process.T;
+    stdin, stdout, stderr: File.T;
+    args         : ARRAY [0..1] OF TEXT;
+    buf          : M3Buf.T;
+    n_shell_args : INTEGER;
+    quake_in     : Pipe.T;
+    process_out  : Pipe.T;
+    wr           : Wr.T := CurWr (t);
+    wd           : TEXT;
+    inbuf        : ARRAY [0..255] OF CHAR;
+  BEGIN
+    info.command := &quot;&quot;;
+    info.exit_code := 0;
+    info.ignore_errors := FALSE;
+    IF (n_args &lt;= 0) THEN RETURN info; END;
+
+    (* pack the arguments into a single string &amp; pop the stack *)
+    buf   := GetBuf (t);
+    FOR i := t.reg.sp - n_args TO t.reg.sp - 1 DO
+      IF (first) THEN first := FALSE;  ELSE  M3Buf.PutChar (buf, ' ');  END;
+      QVal.ToBuf (t, t.stack[i], buf);
+      t.stack[i].ref := NIL;
+    END;
+    t.reg.sp := t.reg.sp - n_args;
+    info.command := M3Buf.ToText (buf);
+    FreeBuf (t,  buf);
+
+    (* strip the leading magic characters *)
+    n := 0;
+    WHILE n &lt; Text.Length (info.command) DO
+      CASE Text.GetChar (info.command, n) OF
+      | '@' =&gt; echo := FALSE;
+      | '-' =&gt; info.ignore_errors := TRUE;
+      ELSE EXIT;
+      END;
+      INC (n);
+    END;
+    info.command := Text.Sub (info.command, n);
+
+    (* echo the command &amp; flush any pending output *)
+    TRY
+      IF echo OR t.do_echo THEN
+        Wr.PutText (wr, info.command);
+        Wr.PutText (wr, Wr.EOL);
+      END;
+      FlushIO ();
+    EXCEPT Wr.Failure (ec) =&gt;
+      Err (t, &quot;write failed&quot; &amp; OSErr (ec));
+    END;
+
+    wd := ExtractInitialDir (info.command);
+
+    args [0] := t.sh_option;
+    args [1] := info.command;
+    n_shell_args := 2;
+
+    (* finally, execute the command *)
+    TRY
+      Process.GetStandardFileHandles (stdin, stdout, stderr);
+      Pipe.Open (hr := quake_in, hw := process_out);
+      TRY
+        (* fire up the subprocess *)
+        handle := Process.Create (t.shell, SUBARRAY (args, 0, n_shell_args),
+                                 stdin := stdin, stdout := process_out,
+                                 stderr := process_out, wd := wd);
+        (* close our copy of the writing end of the output pipe *)
+        process_out.close ();
+        LOOP (* send anything coming through the pipe to the quake output file *)
+          n := M3File.Read (quake_in, inbuf, NUMBER (inbuf));
+          IF (n &lt;= 0) THEN EXIT; END;
+          Wr.PutString (wr, SUBARRAY (inbuf, 0, n));
+        END;
+      FINALLY
+        quake_in.close ();
+        FlushIO ();
+      END;
+    EXCEPT
+    | Thread.Alerted =&gt;
+        KillProcess (handle);
+        RAISE Thread.Alerted;
+    | Wr.Failure (ec) =&gt;
+        KillProcess (handle);
+        Err (t, &quot;write failed&quot; &amp; OSErr (ec));
+    | OSError.E (ec) =&gt;
+        KillProcess (handle);
+        Err (t, Fmt.F (&quot;exec failed%s *** %s&quot;, OSErr (ec), info.command));
+    END;
+
+    (* wait for everything to shutdown... *)
+    info.exit_code := Process.Wait (handle);
+    RETURN info;
+  END ExecCommand;
+
+PROCEDURE <A NAME="ExtractInitialDir"><procedure>ExtractInitialDir</procedure></A> (VAR cmd: TEXT): TEXT =
+  (* search for &quot;cd &lt;dir&gt; |&quot; or &quot;cd &lt;dir&gt; ;&quot; prefix in &quot;cmd&quot;.
+     If it's found, return &quot;&lt;dir&gt;&quot; and remove the prefix from &quot;cmd&quot;.
+     Otherwise, return &quot;NIL&quot;. *)
+  VAR
+    len := Text.Length (cmd);
+    buf : ARRAY [0..99] OF CHAR;
+    start, stop: INTEGER;
+    dir: TEXT;
+  BEGIN
+    IF (len &lt; 5) THEN RETURN NIL; END;
+    Text.SetChars (buf, cmd);
+    start := 0;
+    WHILE (start &lt; len) AND (buf[start] = ' ') DO INC (start); END;
+    IF (start+4 &gt;= len)     THEN RETURN NIL; END;
+    IF (buf[start]   # 'c') THEN RETURN NIL; END;
+    IF (buf[start+1] # 'd') THEN RETURN NIL; END;
+    IF (buf[start+2] # ' ') THEN RETURN NIL; END;
+    INC (start, 3);
+    WHILE (start &lt; len) AND (buf[start] = ' ') DO INC (start); END;
+    stop := start;
+    WHILE (stop &lt; len) AND (buf[stop] # ' ')
+      AND (buf[stop] # '|') AND (buf[stop] # ';') DO INC (stop); END;
+    IF (stop &lt;= start) THEN RETURN NIL; END;
+    dir := Text.FromChars (SUBARRAY (buf, start, stop - start));
+    WHILE (stop &lt; len) AND (buf[stop] = ' ') DO INC (stop); END;
+    IF (stop &gt;= len) THEN RETURN NIL; END;
+    IF (buf[stop] # '|') AND (buf[stop] # ';') THEN RETURN NIL; END;
+    cmd := Text.Sub (cmd, stop+1);
+    RETURN dir;
+  END ExtractInitialDir;
+
+PROCEDURE <A NAME="KillProcess"><procedure>KillProcess</procedure></A> (handle: Process.T) =
+  BEGIN
+    IF (handle # NIL) THEN
+      TRY
+        M3Process.Interrupt (handle);
+      EXCEPT OSError.E =&gt;
+        (* ignore *)
+      END;
+    END;
+  END KillProcess;
+
+PROCEDURE <A NAME="DoFile"><procedure>DoFile</procedure></A> (t: T;  n_args: INTEGER) =
+  BEGIN
+    &lt;*ASSERT n_args = 0 *&gt;
+    PushText (t, CurFile (t));
+  END DoFile;
+
+PROCEDURE <A NAME="CurFile"><procedure>CurFile</procedure></A> (t: T): TEXT =
+  BEGIN
+    RETURN t.map.id2txt (t.includes[t.reg.ip-1].file.source_file);
+  END CurFile;
+
+PROCEDURE <A NAME="DoFormat"><procedure>DoFormat</procedure></A> (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR
+    val     : QValue.T;
+    n       : INTEGER;
+    format  : TEXT;
+    strings := NEW (REF ARRAY OF TEXT, n_args - 1);
+  BEGIN
+    &lt;*ASSERT n_args &gt; 0 *&gt;
+    n := 0;
+    FOR i := t.reg.sp - n_args + 1 TO t.reg.sp - 1 DO
+      strings [n] := QVal.ToText (t, t.stack[i]);  INC (n);
+      t.stack[i].ref := NIL;
+    END;
+    DEC (t.reg.sp, n_args - 1);
+    Pop (t, val);
+    format := QVal.ToText (t, val);
+    PushText (t, Fmt.FN (format, strings^));
+  END DoFormat;
+
+PROCEDURE <A NAME="DoInclude"><procedure>DoInclude</procedure></A> (t: T;  n_args: INTEGER) RAISES {Error, Thread.Alerted} =
+  VAR path: TEXT;  val: QValue.T;
+  BEGIN
+    &lt;*ASSERT n_args = 1 *&gt;
+    Pop (t, val);  path := QVal.ToText (t, val);
+    IncludeFile (t, path, from_code := TRUE);
+  END DoInclude;
+
+PROCEDURE <A NAME="Include"><procedure>Include</procedure></A> (t: T;  path: TEXT) RAISES {Error, Thread.Alerted} =
+  BEGIN
+    IncludeFile (t, path, from_code := FALSE);
+  END Include;
+
+PROCEDURE <A NAME="IncludeFile"><procedure>IncludeFile</procedure></A> (t: T;  path: TEXT;  from_code: BOOLEAN)
+  RAISES {Error, Thread.Alerted} =
+  VAR old_path: TEXT;  code: QCode.Stream;
+  BEGIN
+    IF NOT Pathname.Absolute (path) THEN
+      old_path := CurFile (t);
+      path := Pathname.Join (Pathname.Prefix (old_path), path, NIL);
+    END;
+
+    TRY
+      code := QCompiler.CompileFile (path, t.map);
+    EXCEPT Error(msg) =&gt;
+      Err (t, msg);
+    END;
+
+    (****
+    WITH f = t.frames [t.reg.fp-1] DO
+      PushInclude (t, code, f.saved);
+      t.reg.ip := f.saved.ip;
+    END;
+    ****)
+
+    IF (from_code) THEN
+      EVAL PopFrame (t); (* pop the call to &quot;include()&quot; *)
+    END;
+    PushInclude (t, code, t.reg);
+    Eval (t);
+  END IncludeFile;
+
+PROCEDURE <A NAME="DoMakeDir"><procedure>DoMakeDir</procedure></A> (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR val: QValue.T;  dir: TEXT;
+  BEGIN
+    &lt;*ASSERT n_args = 1 *&gt;
+    Pop (t, val);  dir := QVal.ToText (t, val);
+    MakeDir (t, dir);
+  END DoMakeDir;
+
+PROCEDURE <A NAME="MakeDir"><procedure>MakeDir</procedure></A> (t: T;  dir: TEXT)  RAISES {Error} =
+  VAR parent: TEXT;
+  BEGIN
+    IF dir = NIL THEN RETURN END;
+    IF M3File.IsDirectory (dir) THEN RETURN END;
+
+    parent := Pathname.Prefix (dir);
+    IF (parent # NIL) AND NOT PathEqual (parent, dir) THEN
+      MakeDir (t, parent);
+    END;
+
+    TRY
+      FS.CreateDirectory (dir);
+    EXCEPT OSError.E (ec) =&gt;
+      Err (t, Fmt.F (&quot;unable to create directory \&quot;%s\&quot;%s&quot;, dir, OSErr (ec)));
+    END;
+  END MakeDir;
+
+PROCEDURE <A NAME="DoNormalize"><procedure>DoNormalize</procedure></A> (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR val: QValue.T;  unfixed, prefix: TEXT;
+  BEGIN
+    &lt;*ASSERT n_args = 2 *&gt;
+    Pop (t, val);  unfixed := QVal.ToText (t, val);
+    Pop (t, val);  prefix  := QVal.ToText (t, val);
+    PushText (t, Normalize (t, prefix, unfixed));
+  END DoNormalize;
+
+PROCEDURE <A NAME="Normalize"><procedure>Normalize</procedure></A> (t: T;  prefix, unfixed: TEXT): TEXT  RAISES {Error} =
+  VAR unfixedArcs, prefixArcs: Pathname.Arcs;
+  BEGIN
+    TRY
+      unfixedArcs := Pathname.Decompose(unfixed);
+    EXCEPT Pathname.Invalid =&gt;
+      Err (t, Fmt.F (&quot;invalid path (\&quot;%s\&quot;) in normalize&quot;, unfixed));
+    END;
+
+    TRY
+      prefixArcs := Pathname.Decompose(prefix);
+    EXCEPT Pathname.Invalid =&gt;
+      Err (t, Fmt.F (&quot;invalid path (\&quot;%s\&quot;) in normalize&quot;, prefix));
+    END;
+
+    TRY
+      RETURN Pathname.Compose (StripPrefix (t, prefixArcs,
+                                   CanonicalizePath (unfixedArcs)));
+    EXCEPT Pathname.Invalid =&gt;
+      Err (t, Fmt.F (&quot;invalid path in normalize(\&quot;%s\&quot;, \&quot;%s\&quot;)&quot;,
+                     prefix, unfixed));
+    END;
+    RETURN NIL;
+  END Normalize;
+
+PROCEDURE <A NAME="DoPath"><procedure>DoPath</procedure></A> (t: T;  n_args: INTEGER) =
+  BEGIN
+    &lt;*ASSERT n_args = 0 *&gt;
+    PushText (t, CurPath (t));
+  END DoPath;
+
+PROCEDURE <A NAME="CurPath"><procedure>CurPath</procedure></A> (t: T): TEXT =
+  BEGIN
+    RETURN Pathname.Prefix (CurFile (t));
+  END CurPath;
+
+PROCEDURE <A NAME="DoStale"><procedure>DoStale</procedure></A> (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR
+    val, val2 : QValue.T;
+    arr       : QVSeq.T;
+    dep       : TEXT;
+    target    : TEXT;
+    t_status  : File.Status;
+    d_status  : File.Status;
+  BEGIN
+    &lt;*ASSERT n_args = 2 *&gt;
+    Pop (t, val2);  (* dependencies *)
+    Pop (t, val);   target := QVal.ToText (t, val);
+
+    TRY
+      t_status := FS.Status (target);
+      IF (val2.kind = QK.Array) THEN
+        arr := val2.ref;
+        FOR i := 0 TO arr.size() - 1 DO
+          dep := QVal.ToText (t, arr.get (i));
+          d_status := FS.Status (dep);
+          IF t_status.modificationTime &lt; d_status.modificationTime THEN
+            PushBool (t, TRUE);
+            RETURN;
+          END;
+        END;
+      ELSE
+        dep := QVal.ToText (t, val2);
+        d_status := FS.Status (dep);
+        IF t_status.modificationTime &lt; d_status.modificationTime THEN
+          PushBool (t, TRUE);
+          RETURN;
+        END;
+      END;
+    EXCEPT OSError.E =&gt;
+      PushBool (t, TRUE);
+      RETURN;
+    END;
+
+    PushBool (t, FALSE);
+  END DoStale;
+
+PROCEDURE <A NAME="DoUnlink"><procedure>DoUnlink</procedure></A> (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR val: QValue.T;  ok := FALSE;
+  BEGIN
+    &lt;*ASSERT n_args = 1 *&gt;
+    Pop (t, val);
+    TRY
+      FS.DeleteFile (QVal.ToText (t, val));
+      ok := TRUE;
+    EXCEPT OSError.E =&gt;
+      ok := FALSE;
+    END;
+    PushBool (t, ok);
+  END DoUnlink;
+
+PROCEDURE <A NAME="DoWrite"><procedure>DoWrite</procedure></A> (t: T;  n_args: INTEGER)
+  RAISES {Error, Thread.Alerted} =
+  VAR wr := CurWr (t);  buf := GetBuf (t);  txt: TEXT;
+  BEGIN
+    (* write the arguments to an internal buffer &amp; pop the stack *)
+    FOR i := t.reg.sp - n_args TO t.reg.sp - 1 DO
+      QVal.ToBuf (t, t.stack[i], buf);
+      t.stack[i].ref := NIL;
+    END;
+    t.reg.sp := t.reg.sp - n_args;
+    txt := M3Buf.ToText (buf);
+    FreeBuf (t, buf);
+
+    TRY Wr.PutText (wr, txt);
+    EXCEPT Wr.Failure (ec) =&gt; Err (t, &quot;write failed&quot; &amp; OSErr (ec));
+    END;
+  END DoWrite;
+
+PROCEDURE <A NAME="DoTrace"><procedure>DoTrace</procedure></A> (t: T;  n_args: INTEGER) =
+  BEGIN
+    &lt;*ASSERT n_args = 0*&gt;
+    t.tracing := NOT t.tracing;
+  END DoTrace;
+</PRE>-------------------------------------------------------- memory buffers ---
+ We don't use TRY/FINALLY or worry about buffers that aren't freed.
+   In the rare cases when they're not returned, the collector get them. 
+
+<P><PRE>PROCEDURE <A NAME="GetBuf"><procedure>GetBuf</procedure></A> (t: T): M3Buf.T =
+  VAR buf: M3Buf.T;
+  BEGIN
+    IF (t.buffers.tos &gt; 0) THEN
+      DEC (t.buffers.tos);
+      WITH z = t.buffers.bufs [t.buffers.tos] DO  buf := z; z := NIL;  END;
+    ELSE
+      buf := M3Buf.New ();
+    END;
+    RETURN buf;
+  END GetBuf;
+
+PROCEDURE <A NAME="FreeBuf"><procedure>FreeBuf</procedure></A> (t: T;  buf: M3Buf.T) =
+  BEGIN
+    IF (t.buffers.tos &lt; NUMBER (t.buffers.bufs)) THEN
+      t.buffers.bufs [t.buffers.tos] := buf;
+      INC (t.buffers.tos);
+    END;
+  END FreeBuf;
+</PRE>------------------------------------------------------------ temp files ---
+
+<P><PRE>PROCEDURE <A NAME="CleanUp"><procedure>CleanUp</procedure></A> (t: T) =
+  VAR n: INTEGER;  path: TEXT;
+  BEGIN
+    IF (t.tmp_files # NIL) THEN
+      n := t.tmp_files.size ();
+      WHILE (n &gt; 0) DO
+        path := t.tmp_files.remlo ();
+        TRY
+          FS.DeleteFile (path);
+        EXCEPT OSError.E =&gt;
+          (* ignore *)
+        END;
+        DEC (n);
+      END;
+    END;
+  END CleanUp;
+
+PROCEDURE <A NAME="UniqueTempFile"><procedure>UniqueTempFile</procedure></A> (t: T): TEXT =
+  VAR root, file: TEXT;  seq := 0;
+  BEGIN
+    root := Pathname.Join (t.tmp_dir, &quot;qk&quot;, NIL);
+    file := root;
+    LOOP
+      TRY
+        EVAL FS.Status (file);
+      EXCEPT OSError.E =&gt;
+        EXIT;
+      END;
+      INC (seq);
+      file := root &amp; &quot;_&quot; &amp; Fmt.Int (seq);
+    END;
+    IF (t.tmp_files = NIL) THEN t.tmp_files := NEW (TextSeq.T).init(); END;
+    t.tmp_files.addhi (file);
+    RETURN file;
+  END UniqueTempFile;
+</PRE>------------------------------------------------------------------ misc ---
+
+<P><PRE>PROCEDURE <A NAME="Err"><procedure>Err</procedure></A> (t: T;  msg: TEXT) RAISES {Error} =
+  VAR buf := GetBuf (t);  txt: TEXT;  line: INTEGER;
+  BEGIN
+    IF FindErrorFile (t, txt, line) THEN
+      M3Buf.PutText (buf, &quot;\&quot;&quot;);
+      M3Buf.PutText (buf, txt);
+      M3Buf.PutText (buf, &quot;\&quot;, line &quot;);
+      M3Buf.PutInt  (buf, line);
+      M3Buf.PutText (buf, &quot;: &quot;);
+    END;
+    M3Buf.PutText (buf, &quot;quake runtime error: &quot;);
+    M3Buf.PutText (buf, msg);
+    M3Buf.PutText (buf, Wr.EOL);
+    M3Buf.PutText (buf, Wr.EOL);
+    M3Buf.PutText (buf, &quot;--procedure--  -line-  -file---&quot;);
+    M3Buf.PutText (buf, Wr.EOL);
+    DumpFrame (t, buf, t.reg);
+    FOR i := t.reg.fp-1 TO 0 BY -1 DO
+      DumpFrame (t, buf, t.frames[i].saved);
+    END;
+    txt := M3Buf.ToText (buf);
+    FreeBuf (t, buf);
+    RAISE Error (txt);
+  END Err;
+
+PROCEDURE <A NAME="FindErrorFile"><procedure>FindErrorFile</procedure></A> (t: T;  VAR(*OUT*) file: TEXT;
+                                VAR(*OUT*) line: INTEGER): BOOLEAN =
+  BEGIN
+    IF FindErrorFrame (t, t.reg, file, line) THEN RETURN TRUE; END;
+    FOR i := t.reg.fp-1 TO 0 BY -1 DO
+      IF FindErrorFrame (t, t.frames[i].saved, file, line) THEN RETURN TRUE; END;
+    END;
+    RETURN FALSE;
+  END FindErrorFile;
+
+PROCEDURE <A NAME="FindErrorFrame"><procedure>FindErrorFrame</procedure></A> (t    : T;
+                 READONLY reg  : Registers;
+               VAR(*OUT*) file : TEXT;
+               VAR(*OUT*) line : INTEGER): BOOLEAN =
+  BEGIN
+    IF reg.cp = NIL THEN RETURN FALSE; END;
+    (* else, we're executing in user-written quake code *)
+    file := t.map.id2txt (reg.cp.source_file);
+    line := MAX (1, reg.ln);
+    RETURN TRUE;
+  END FindErrorFrame;
+
+PROCEDURE <A NAME="DumpFrame"><procedure>DumpFrame</procedure></A> (t: T;  buf: M3Buf.T;  READONLY reg: Registers) =
+  BEGIN
+    IF (reg.pi = NIL)
+      THEN Out (buf, &quot;&quot;, 13);
+      ELSE Out (buf, t.map.id2txt (reg.pi.name), 13);
+    END;
+    M3Buf.PutText (buf, &quot;  &quot;);
+    IF (reg.ln &gt; 0)
+      THEN Out (buf, Fmt.Int (reg.ln), -6);
+      ELSE Out (buf, &quot;--&quot;, -6);
+    END;
+    M3Buf.PutText (buf, &quot;  &quot;);
+    IF (reg.cp = NIL)
+      THEN M3Buf.PutText (buf, &quot;&lt;builtin&gt;&quot;);
+      ELSE M3Buf.PutText (buf, t.map.id2txt (reg.cp.source_file));
+    END;
+    M3Buf.PutText (buf, Wr.EOL);
+  END DumpFrame;
+
+PROCEDURE <A NAME="Out"><procedure>Out</procedure></A> (buf: M3Buf.T;  txt: TEXT;  width: INTEGER) =
+  VAR len := Text.Length (txt);
+  BEGIN
+    IF (width &lt; 0) THEN
+      width := -width;
+      WHILE (len &lt; width) DO M3Buf.PutChar (buf, ' '); INC (len); END;
+      M3Buf.PutText (buf, txt);
+    ELSE
+      M3Buf.PutText (buf, txt);
+      WHILE (len &lt; width) DO M3Buf.PutChar (buf, ' '); INC (len); END;
+    END;
+  END Out;
+
+PROCEDURE <A NAME="OSErr"><procedure>OSErr</procedure></A> (args: AtomList.T): TEXT =
+  VAR msg : TEXT := NIL;
+  BEGIN
+    WHILE (args # NIL) DO
+      IF (msg = NIL) THEN  msg := &quot;: &quot;;  ELSE  msg := msg &amp; &quot;  ***  &quot;;  END;
+      msg  := msg &amp; Atom.ToText (args.head);
+      args := args.tail;
+    END;
+    RETURN msg;
+  END OSErr;
+
+PROCEDURE <A NAME="CanonicalizePath"><procedure>CanonicalizePath</procedure></A> (path: Pathname.Arcs): Pathname.Arcs =
+  (* Remove '..' and '.' components from &quot;path&quot;. *)
+  VAR found := FALSE;  arc: TEXT;  new: Pathname.Arcs;  pending: INTEGER;
+  BEGIN
+    FOR i := 0 TO path.size () - 1 DO
+      arc := path.get (i);
+      IF (arc # NIL) AND
+        (PathEqual (arc, Pathname.Current)
+          OR PathEqual (arc, Pathname.Parent)) THEN
+        found := TRUE;
+        EXIT;
+      END;
+    END;
+
+    IF NOT found THEN RETURN path; END;
+
+    new := NEW(Pathname.Arcs).init();
+    pending := 0;
+    FOR i := 0 TO path.size() - 1 DO
+      arc := path.get(i);
+      IF (arc = NIL) THEN
+        new.addhi (arc);  (* leave the NIL arcs in place (?) *)
+      ELSIF PathEqual(arc, Pathname.Current) THEN
+        (* skip it *)
+      ELSIF PathEqual(arc, Pathname.Parent) THEN
+        INC(pending);
+      ELSIF pending &gt; 0 THEN
+        DEC(pending);
+      ELSE
+        new.addhi(arc);
+      END;
+    END;
+
+    WHILE pending &gt; 0 DO new.addhi(Pathname.Parent); DEC(pending); END;
+    RETURN new;
+  END CanonicalizePath;
+
+PROCEDURE <A NAME="StripPrefix"><procedure>StripPrefix</procedure></A> (t: T;  prefix, path: Pathname.Arcs): Pathname.Arcs
+  RAISES {Error} =
+  VAR
+    path_sz, prefix_sz: INTEGER;
+    path_txt, prefix_txt: TEXT;
+    result: Pathname.Arcs;
+  BEGIN
+    TRY
+      path_txt   := Pathname.Compose (path);
+      prefix_txt := Pathname.Compose (prefix);
+      path_sz    := path.size ();
+      prefix_sz  := prefix.size ();
+
+      IF PathEqual (path_txt, prefix_txt) THEN
+        result := NEW (Pathname.Arcs).init (1);
+        result.addhi (NIL);
+        RETURN result;
+      END;
+
+      IF NOT Pathname.Absolute(path_txt)
+      OR NOT Pathname.Absolute(prefix_txt) THEN
+        RETURN path;
+      END;
+    EXCEPT Pathname.Invalid =&gt;
+      Err (t, &quot;internal error: invalid pathname in StripPrefix&quot;);
+    END;
+
+    (* make sure &quot;prefix&quot; really is a prefix of &quot;path&quot; *)
+    IF (prefix_sz &gt; path_sz) THEN RETURN path; END;
+    FOR i := 0 TO prefix_sz - 1 DO
+      IF NOT PathEqual (prefix.get(i), path.get(i)) THEN
+        RETURN path;
+      END;
+    END;
+
+    result := TextSeq.Sub (path, prefix_sz);
+    result.addlo (NIL);  (* make it a relative path *)
+    RETURN result;
+  END StripPrefix;
+
+PROCEDURE <A NAME="PathEqual"><procedure>PathEqual</procedure></A> (a, b: TEXT): BOOLEAN =
+  BEGIN
+    IF Text.Equal (a, b) THEN RETURN TRUE; END;
+    IF OnUnix THEN RETURN FALSE; END;
+    RETURN CIEqual (a, b);
+
+  END PathEqual;
+
+PROCEDURE <A NAME="CIEqual"><procedure>CIEqual</procedure></A> (a, b: TEXT): BOOLEAN =
+  (* on Win32, try a case-insensitive match... *)
+  VAR len, nxt: INTEGER;  buf_a, buf_b: ARRAY [0..127] OF CHAR;
+  BEGIN
+    len := Text.Length (a);
+    IF (len # Text.Length (b)) THEN RETURN FALSE; END;
+    nxt := 0;
+    WHILE (nxt &lt; len) DO
+      Text.SetChars (buf_a, a, nxt);
+      Text.SetChars (buf_b, b, nxt);
+      FOR i := 0 TO MIN (NUMBER (buf_a), len-nxt) - 1 DO
+        IF lcase[buf_a[i]] # lcase[buf_b[i]] THEN RETURN FALSE; END;
+      END;
+      INC (nxt, NUMBER (buf_a));
+    END;
+    RETURN TRUE;
+  END CIEqual;
+
+PROCEDURE <A NAME="SplitArgs"><procedure>SplitArgs</procedure></A> (txt: TEXT): TextSeq.T =
+  VAR
+    seq   := NEW (TextSeq.T).init ();
+    i     := 0;
+    len   := Text.Length (txt);
+    start : INTEGER;
+  BEGIN
+    WHILE i &lt; len DO
+      WHILE i &lt; len AND QScanner.WhiteSpace [Text.GetChar (txt, i)] DO INC(i); END;
+      start := i;
+      WHILE i &lt; len AND NOT QScanner.WhiteSpace [Text.GetChar (txt, i)] DO INC(i); END;
+      IF i &gt; start THEN seq.addhi (Text.Sub (txt, start, i - start)); END;
+    END;
+    RETURN seq;
+  END SplitArgs;
+
+PROCEDURE <A NAME="Print"><procedure>Print</procedure></A> (a, b, c, d: TEXT := NIL)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  VAR wr := Stdio.stdout;
+  BEGIN
+    IF (wr = NIL) THEN (*try...*) wr := Stdio.stderr; END;
+    IF (a # NIL) THEN Wr.PutText (wr, a); END;
+    IF (b # NIL) THEN Wr.PutText (wr, b); END;
+    IF (c # NIL) THEN Wr.PutText (wr, c); END;
+    IF (d # NIL) THEN Wr.PutText (wr, d); END;
+  END Print;
+
+PROCEDURE <A NAME="FlushIO"><procedure>FlushIO</procedure></A> ()
+  RAISES {Wr.Failure, Thread.Alerted} =
+  BEGIN
+    IF (Stdio.stdout # NIL) THEN Wr.Flush (Stdio.stdout); END;
+    IF (Stdio.stderr # NIL) THEN Wr.Flush (Stdio.stderr); END;
+  END FlushIO;
+
+VAR
+  strict_variables := NOT RTParams.IsPresent (&quot;oldquake&quot;);
+  lcase : ARRAY CHAR OF CHAR;
+BEGIN
+  FOR c := FIRST (lcase) TO LAST (lcase) DO lcase[c] := c; END;
+  FOR c := 'A' TO 'Z' DO
+    lcase[c] := VAL (ORD (c) - ORD ('A') + ORD ('a'), CHAR);
+  END;
+END QMachine.
+</PRE>
+</inModule>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

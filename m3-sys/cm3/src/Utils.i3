@@ -30,6 +30,8 @@ PROCEDURE Copy (old_file, new_file: TEXT);
 PROCEDURE CopyText (old_file, new_file: TEXT);
 PROCEDURE IsEqual (a, b: TEXT): BOOLEAN;
 PROCEDURE LinkFile (from, to: TEXT);
+PROCEDURE IsFile (file: TEXT): BOOLEAN;
+PROCEDURE IsDir (file: TEXT): BOOLEAN;
 
 PROCEDURE NoteLocalFileTimes ();
 PROCEDURE LocalModTime     (file: TEXT): INTEGER;

@@ -1922,6 +1922,7 @@ PROCEDURE NewProcessor (): ValProcessor =
 PROCEDURE RegisterSysCall (name: TEXT; clos: SysCallClosure) =
   VAR v: Refany.T;
   BEGIN
+    <* ASSERT sysCallTable # NIL *>
     IF clos = NIL THEN
       EVAL sysCallTable.delete(name, (*out*) v);
     ELSE

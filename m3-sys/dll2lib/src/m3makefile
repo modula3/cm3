@@ -1,5 +1,5 @@
 
-override ("m3tools", "h:\\m3-sys")
+%%override ("m3tools", "h:\\m3-sys")
 import ("m3tools")
 
 module ("DLL")

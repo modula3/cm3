@@ -1210,6 +1210,7 @@ PROCEDURE RedrawFisheye (v: T; clip: Rect.T; withText := TRUE) =
              Point.T{p.h, p.v + 6}, op := PaintOp.Fg);
 
     pixmap := VBT.Capture(v.offscreen, VBT.Domain(v), br);
+    IF pixmap = NIL THEN RETURN END;
     VBT.PaintScrnPixmap(v, src := pixmap, delta := Point.Origin);
     VBT.Sync(v);
     pixmap.free();

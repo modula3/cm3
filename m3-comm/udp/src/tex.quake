@@ -1,0 +1,104 @@
+% Created on Sun Nov 23 07:05:44 PST 1997 by heydon
+% Last modified on Fri Dec 11 16:04:09 PST 1998 by heydon
+% Copyright (C) 1997, Digital Equipment Corporation
+
+% This is a quake(1) file that defines procedure for tranlating
+% Modula-3 interfaces into PostScript by way of m3totex(1),
+% latex(1), and dvips(1). This code was adapted from code written
+% by Bill Kalsow and Paul McJones, and found in the file
+% /proj/m3/pkg/pubint-ip/src/m3makefile.
+
+% These procedures are used by first invoking the following procedures
+% to declare the document's sources:
+%
+%                         Source Name    Derived Name
+% local_tex(nm)  	  nm.tex         None
+% local_frag(nm) 	  nm.frag        nm.f.tex
+% local_i3(nm)   	  nm.i3          nm.i.tex
+% local_ig(nm)   	  nm.ig          nm.ig.tex
+% remote_i3(nm, pkg, dir) pkg/dir/nm.i3  nm.i.tex
+% remote_ig(nm, pkg, dir) pkg/dir/nm.ig  nm.ig.tex
+%
+% Note: A ".frag" file is a LaTeX source file enclosed by a single
+% Modula-3 (*...*) comment.
+%
+% Then, to produce the document, invoke the following procedure:
+%
+% Document(nm) - produce the files named "nm.ps" and "nm.txt"
+%
+% The "Document" procedure assumes the existence of a source file
+% named "nm.tex". This should be the top-level LaTeX source file
+% that declares the document style and then \input's all of the
+% relevant sources as produced by the above procedures.
+
+readonly M3TOTEX = "m3totex" %--- or "/proj/system/bin/m3totex"
+readonly LATEX   = "latex"   %--- or "/contrib/system/bin/latex"
+readonly BIBTEX  = "bibtex"  %--- or "/contrib/system/bin/bibtex"
+readonly DVIPS   = "dvips"   %--- or "/contrib/system/bin/dvips"
+readonly DETEX   = "detex"   %--- or "/proj/system/bin/detex"
+
+tex_pieces = []  % all the generated TeX pieces
+
+readonly proc local_tex (nm) is
+  local src = path_of (nm)
+  if stale (nm, src)  link_file (src, nm)  end
+  deriveds (nm, no_extension)
+  tex_pieces += nm
+end
+
+readonly proc gen_tex (source, dest) is
+  if stale (dest, source)
+    exec (M3TOTEX, source, dest)
+  end
+  deriveds (dest, no_extension)
+  tex_pieces += dest
+end
+
+readonly proc local_frag (nm) is
+  gen_tex (path_of (nm & ".frag"), nm & ".f.tex")
+end
+
+readonly proc local_i3 (nm) is
+  gen_tex (path_of (nm & ".i3"), nm & ".i.tex")
+end
+
+readonly proc local_ig (nm) is
+  gen_tex (path_of (nm & ".ig"), nm & ".ig.tex")
+end
+
+readonly proc remote_i3 (nm, pkg, dir) is
+  gen_tex (format ("%s%s%s.i3", Location (pkg, dir), SL, nm), nm & ".i.tex")
+end
+
+readonly proc remote_ig (nm, pkg, dir) is
+  gen_tex (format ("%s%s%s.ig", Location (pkg, dir), SL, nm), nm & ".ig.tex")
+end
+
+readonly proc Document (nm) is
+  local TEXFILE = nm & ".tex"
+  local BIBFILE = nm & ".bib"
+  local DVIFILE = nm & ".dvi"
+  local AUXFILE = nm & ".aux"
+  local PSFILE  = nm & ".ps"
+  local any_stale = ""
+  
+  % add the root document to the list of TeX sources
+  local_tex (TEXFILE)
+  local_tex (BIBFILE)
+
+  % check for new sources
+  foreach f in tex_pieces
+    if not any_stale and stale (DVIFILE, f) any_stale = "TRUE" end
+  end
+  
+  if any_stale
+    exec (LATEX, TEXFILE)                % run the document through latex
+    exec (BIBTEX, nm)                    % get the references
+    exec (LATEX, TEXFILE)                % again to correct references
+    exec (LATEX, TEXFILE)                % yet again to correct references
+    exec (DVIPS, "-o", PSFILE, DVIFILE)  % generate PostScript
+    % exec (DETEX, nm, "> "& nm & ".txt")% generate ".txt" version
+  end
+  
+  deriveds (nm, [".aux", ".bbl", ".blg", ".dvi",".log", ".ps", ".txt"])
+end

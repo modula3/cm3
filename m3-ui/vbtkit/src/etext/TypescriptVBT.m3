@@ -2,7 +2,9 @@
 (* All rights reserved.                                                      *)
 (* See the file COPYRIGHT for a full description.                            *)
 (*                                                                           *)
-(* Last modified on Mon Nov  4 13:10:08 PST 1996 by najork     *)
+(* Last modified on Tue Dec 15 13:50:16 PST 1998 by heydon     *)
+(*      modified on Tue Dec 15 12:00:00 EST 1998 by rcoleburn  *)
+(*      modified on Mon Nov  4 13:10:08 PST 1996 by najork     *)
 (*      modified on Mon Jan 30 15:15:24 PST 1995 by kalsow     *)
 (*      modified on Sun Aug 28 10:13:28 PDT 1994 by mhb        *)
 (*      modified on Fri Jul  9 11:01:44 PDT 1993 by wobber     *)
@@ -12,32 +14,43 @@
 (*      modified on Thu May 17  9:54:12 PDT 1990 by mcjones    *)
 <* PRAGMA LL *>
 
+(* 12/15/1998:  Summary of Patches by R. C. Coleburn
+
+   I was having trouble with calls to ClearHistory getting a checked
+   runtime error on the DEC() call.  After looking at the code, it
+   seems that the typeinStart and outputEnd fields are not being 
+   properly protected to ensure they are updated/used in sync with
+   one another in a multithreaded environment.  I patched the code
+   to move lines that modified typeinStart to be inside the lock of
+   v.mu that is being held for modifications of the outputEnd field.
+*)
+
 MODULE TypescriptVBT;
 
 (** Here's how the typescript works:
 
     The vtext holds the underlying text.
-    0 <= outputEnd <= typeinStart <= len(vtext).
+    0 <= outputEnd <= tp.typeinStart <= len(vtext).
 
     vtext[0 .. outputEnd-1] is the "history".  It is accessible to
     neither the reader nor the writer.  ClearHistory "erases" this,
     i.e., deletes that section of the vtext and decrements outputEnd
-    and typeinStart accordingly.
+    and tp.typeinStart accordingly.
 
     Wr.Flush inserts characters at outputEnd, in the "middle" of the
-    vtext.  After the insertion, outputEnd and typeinStart are
+    vtext.  After the insertion, outputEnd and tp.typeinStart are
     incremented by the number of inserted characters.
 
-    vtext[outputEnd .. typeinStart-1] is the section that's accessible
+    vtext[outputEnd .. tp.typeinStart-1] is the section that's accessible
     to the reader.  RSeek copies characters from this part of the vtext.
-    If outputEnd = typeinStart (i.e., if there are no characters
+    If outputEnd = tp.typeinStart (i.e., if there are no characters
     available) and dontBlock is false, then RSeek calls Wr.Flush and
     waits for inputReady to be signaled.
 
     vtext[typeinStart .. len(vtext) - 1] contains typed-in characters.
     That is, keyboard input is appended to the end of the vtext.  This
     segment is editable.  When Return is typed, a Newline is appended,
-    typeinStart is set to len(vtext), and inputReady is signaled, thus
+    tp.typeinStart is set to len(vtext), and inputReady is signaled, thus
     making the input line accessible to the reader.
 
 **)
@@ -75,7 +88,7 @@ REVEAL
              flush      := WFlush;
              typescript := WrTypescript
            END;
-        
+
 REVEAL
   Port = TextPort.T BRANDED OBJECT
            v: T
@@ -126,9 +139,9 @@ PROCEDURE WFlush (wr: Writer) RAISES {Thread.Alerted} =
     LOCK v.mu DO
       TextPort.Replace (tp, v.outputEnd, v.outputEnd,
                         Text.FromChars (SUBARRAY (wr.buff^, 0, nchars)));
-      INC (v.outputEnd, nchars)
+      INC (v.outputEnd, nchars);
+      INC (tp.typeinStart, nchars); (* moved this line to be inside the LOCK -RCC *)
     END;
-    INC (tp.typeinStart, nchars);
     wr.lo := wr.cur;
     wr.hi := wr.lo + NUMBER (wr.buff^);
     IF normP THEN TextPort.Normalize (tp) ELSE VBT.Mark (tp) END;
@@ -181,7 +194,10 @@ PROCEDURE ReturnAction (tp: Port; READONLY event: VBT.KeyRec) =
     IF event.modifiers = VBT.Modifiers {} AND NOT tp.getReadOnly () THEN
       TextPort.Seek (tp, TextPort.Length (tp));
       TextPort.Insert (tp, Wr.EOL);
-      tp.typeinStart := TextPort.Length (tp);
+      LOCK tp.v.mu DO
+        (* added LOCK -RCC *)
+        tp.typeinStart := TextPort.Length (tp)
+      END;
       (* activate the reading client *)
       Thread.Signal (tp.v.inputReady);
       TextPort.Normalize (tp)
@@ -199,8 +215,10 @@ PROCEDURE Interrupt (v: T; time: VBT.TimeStamp) =
   BEGIN
     TextPort.Seek (v.tp, length);
     TextPort.Insert (v.tp, "^C");
-    LOCK v.mu DO v.outputEnd := length + 2 END; (* flush all pending typein *)
-    v.tp.typeinStart := length + 2;
+    LOCK v.mu DO (* flush all pending typein *) 
+      v.outputEnd := length + 2; 
+      v.tp.typeinStart := length + 2; (* moved this line to be inside the LOCK -RCC *)
+    END;
     v.handleInterrupt (time)
   END Interrupt;
 
@@ -225,12 +243,12 @@ PROCEDURE RdTypescript (r: Reader): T =
   BEGIN 
     RETURN r.v
   END RdTypescript;
-  
+
 PROCEDURE WrTypescript (r: Writer): T =
   BEGIN 
     RETURN r.v
   END WrTypescript;
-  
+
 PROCEDURE GetHistory (v: T): TEXT =
   BEGIN
     LOCK v.mu DO RETURN TextPort.GetText (v.tp, 0, v.outputEnd) END
@@ -246,7 +264,7 @@ PROCEDURE ClearHistory (v: T) =
     VBT.Mark (v.tp)
   END ClearHistory;
 
-  
+
 (**************************  Special controls  **************************)
 
 PROCEDURE SetThread (v: T; thread: Thread.T := NIL) =

@@ -1,4 +1,5 @@
-(* Copyright 1996 Critical Mass, Inc. All rights reserved.    *)
+(* Copyright 1996-2000 Critical Mass, Inc. All rights reserved.    *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 MODULE Builder;
 
@@ -66,6 +67,20 @@ PROCEDURE CleanUp () =
     END;
   END CleanUp;
 
+PROCEDURE EmitPkgImports (READONLY units: M3Unit.Set) =
+  VAR src := units.head;
+  BEGIN
+    WHILE (src # NIL) DO
+      IF (src.imported) AND (src.kind = UK.M3LIB) THEN
+        WITH name = M3ID.ToText(src.loc.pkg) DO
+          Msg.Out (" ", name);
+        END;
+      END;
+      src := src.next;
+    END;
+    Msg.Out (Wr.EOL);
+  END EmitPkgImports; 
+
 (*-------------------------------------------------- general compilation ---*)
 (* The "global" variables of a compilation are passed around in a "State". *)
 
@@ -107,6 +122,8 @@ TYPE
     gui           : BOOLEAN;            (* generate a Windows GUI subsystem prog *)
     do_coverage   : BOOLEAN;            (* compile and link for coverage *)
     broken_linker : BOOLEAN;            (* linker can't do build_standalone() *)
+    lazy_init     : BOOLEAN;            (* only initialize the main module and
+                                           its imports *)
     Rpath_flag    : TEXT;               (* linker needs -R switches too... *)
     link_coverage : TEXT;               (* coverage library *)
     m3_front_flags: Arg.List;           (* configuration options for the front *)
@@ -180,6 +197,7 @@ PROCEDURE CompileUnits (main     : TEXT;
     s.gui            := GetConfigBool (s, "M3_WINDOWS_GUI");
     s.do_coverage    := GetConfigBool (s, "M3_COVERAGE");
     s.broken_linker  := GetConfigBool (s, "M3_NEED_STANDALONE_LINKS");
+    s.lazy_init      := GetConfigBool (s, "M3_LAZY_MODULE_INIT", TRUE);
     s.Rpath_flag     := GetConfigText (s, "M3_SHARED_LIB_ARG");
     s.link_coverage  := GetConfigText (s, "M3_COVERAGE_LIB");
     s.m3_front_flags := GetConfigArray (s, "M3_FRONT_FLAGS");
@@ -245,10 +263,10 @@ PROCEDURE GetConfigInt (s: State;  symbol: TEXT): INTEGER =
     RETURN 0;
   END GetConfigInt;
 
-PROCEDURE GetConfigBool (s: State;  symbol: TEXT): BOOLEAN =
+PROCEDURE GetConfigBool (s: State;  symbol: TEXT; default := FALSE): BOOLEAN =
   VAR bind := GetDefn (s, symbol);
   BEGIN
-    IF (bind = NIL) THEN RETURN FALSE; END;
+    IF (bind = NIL) THEN RETURN default; END;
     TRY
       RETURN QVal.ToBool (s.machine, bind.value);
     EXCEPT Quake.Error (msg) =>
@@ -432,6 +450,7 @@ PROCEDURE BuildLibraryPool (s: State) =
   BEGIN
     WHILE (src # NIL) DO
       IF (src.imported) AND (src.kind = UK.M3LIB) THEN
+        (* Msg.Explain ("imported package ", M3ID.ToText(src.name)); *)
         ETimer.Push (M3Timers.inhale);
         Msg.Commands ("inhale ", UnitPath (src));
         ux := GetUnitLinkInfo (src, imported := TRUE);
@@ -1830,7 +1849,8 @@ PROCEDURE GenerateCMain (s: State;  Main_O: TEXT) =
     Msg.Commands ("generate ", init_code);
     wr := Utils.OpenWriter (init_code, fatal := TRUE);
     MxGen.GenerateMain (s.link_base, wr, NIL, Msg.level >= Msg.Level.Debug,
-                        s.gui AND (s.target_os = M3Path.OSKind.Win32));
+                        s.gui AND (s.target_os = M3Path.OSKind.Win32),
+                        s.lazy_init);
     Utils.CloseWriter (wr, init_code);
     ETimer.Pop ();
         
@@ -1928,7 +1948,8 @@ PROCEDURE GenCGMain (s: State;  object: TEXT) =
     cg := M3Backend.Open (wr, object);
     IF (cg # NIL) THEN
       MxGen.GenerateMain (s.link_base, NIL, cg, Msg.level >= Msg.Level.Debug,
-                          s.gui AND (s.target_os = M3Path.OSKind.Win32));
+                          s.gui AND (s.target_os = M3Path.OSKind.Win32), 
+                          s.lazy_init);
       M3Backend.Close(cg);
     ELSE
       IF (NOT s.keep_files) THEN Utils.Remove (object); END;
@@ -1990,7 +2011,9 @@ PROCEDURE BuildCProgram (s: State;  shared: BOOLEAN) =
       PushArray (s, pgm_objects);
       PushArray (s, import_libs);
       PushBool  (s, shared);
-      EVAL CallProc (s, s.linker);
+      IF CallProc (s, s.linker) THEN
+        s.compile_failed := TRUE;
+      END;
     ETimer.Pop ();
   END BuildCProgram;
 
@@ -2069,7 +2092,9 @@ PROCEDURE BuildProgram (s: State;  shared: BOOLEAN) =
       PushArray (s, pgm_objects);
       PushArray (s, import_libs);
       PushBool  (s, shared);
-      EVAL CallProc (s, s.linker);
+      IF CallProc (s, s.linker) THEN
+        s.compile_failed := TRUE;
+      END;
     ETimer.Pop ();
   END BuildProgram;
 
@@ -2243,7 +2268,8 @@ PROCEDURE BuildBootProgram (s: State) =
   PROCEDURE EmitMain (wr: Wr.T) RAISES {} =
     BEGIN
       MxGen.GenerateMain (s.link_base, wr, NIL, Msg.level >=Msg.Level.Debug,
-                          s.gui AND (s.target_os = M3Path.OSKind.Win32));
+                          s.gui AND (s.target_os = M3Path.OSKind.Win32), 
+                          s.lazy_init);
     END EmitMain;
 
   BEGIN
@@ -2372,7 +2398,9 @@ PROCEDURE BuildLibrary (s: State;  shared: BOOLEAN) =
       PushArray (s, lib_objects);
       PushArray (s, import_libs);
       PushBool  (s, shared);
-      EVAL CallProc (s, s.librarian);
+      IF CallProc (s, s.librarian) THEN
+        s.compile_failed := TRUE;
+      END;
     ETimer.Pop ();
   END BuildLibrary;
 

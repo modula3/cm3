@@ -1,10 +1,11 @@
-(* Copyright 1995-96 Critical Mass, Inc. All rights reserved. *)
+(* Copyright 1996-2000 Critical Mass, Inc. All rights reserved. *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 (* This interface defines misc. TEXT manipulation routines. *)
 
 MODULE Text2;
 
-IMPORT ASCII, Text, Text8, Word;
+IMPORT ASCII, Text, Text8, TextClass, Word;
 
 PROCEDURE CIEqual (a, b: TEXT): BOOLEAN =
   VAR
@@ -111,6 +112,35 @@ PROCEDURE SleazyLen (a: TEXT): CARDINAL =
     IF (a = NIL) THEN RETURN 0; END;
     RETURN Text.Length (a);
   END SleazyLen;
+
+PROCEDURE FindChars(t: TEXT; s: ASCII.Set := ASCII.Spaces) : BOOLEAN =
+  BEGIN
+    FOR i := 0 TO Text.Length(t) -1 DO
+      IF Text.GetChar(t, i) IN s THEN
+        RETURN TRUE;
+      END;
+    END;
+    RETURN FALSE;
+  END FindChars;
+
+PROCEDURE RemoveChars(t: TEXT; s: ASCII.Set := ASCII.Spaces) : TEXT =
+  VAR 
+    len := Text.Length(t);
+    res :  Text8.T;
+    cc  := 0;
+    a   : CHAR;
+  BEGIN
+    res := Text8.Create(len);
+    FOR i := 0 TO len - 1 DO
+      a := TextClass.GetChar(t, i);
+      IF a IN s THEN
+        INC(cc);
+      ELSE
+        res.contents[i-cc] := a;
+      END;
+    END;
+    RETURN Text8.New(SUBARRAY(res.contents^, 0, len - cc));
+  END RemoveChars;
 
 BEGIN
 END Text2.

@@ -2,7 +2,8 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 (*                                                             *)
-(* Portions Copyright 1996, Critical Mass, Inc.                *)
+(* Portions Copyright 1996-2000, Critical Mass, Inc.           *)
+(* See file COPYRIGHT-CMASS for details.                       *)
 (*                                                             *)
 (* Last modified on Tue Dec 20 08:43:00 PST 1994 by kalsow     *)
 (*      modified on Wed Sep 22 11:52:08 PDT 1993 by mcjones    *)
@@ -12,6 +13,7 @@ UNSAFE MODULE ProcessWin32 EXPORTS Process;
 
 IMPORT File, FileWin32, LazyConsole, M3toC, OSError, OSErrorWin32, Pathname,
   RTProcess, Text, WinDef, WinNT, WinBase, Word;
+(* IMPORT RTIO; *)
 
 REVEAL T = BRANDED OBJECT 
     waitOk := TRUE;
@@ -30,7 +32,7 @@ PROCEDURE Create(
   : T RAISES {OSError.E} =
   VAR
     t := NEW(T);
-    cmdLine := ConvertArgs(cmd, params);
+    cmdLine : WinNT.LPCSTR;
     lpEnvironment: WinDef.LPVOID := NIL;
     wdAddr: WinNT.LPSTR := NIL;
     startupInfo := WinBase.STARTUPINFO{
@@ -49,6 +51,11 @@ PROCEDURE Create(
       hStdError     := PrepHandle (stderr)};
   BEGIN
     TRY
+      IF cmd # NIL AND Text.GetChar(cmd, 0) = '`' THEN
+        cmdLine := ConvertArgsQ(Text.Sub(cmd, 1), params);
+      ELSE
+        cmdLine := ConvertArgs(cmd, params);
+      END;
       IF env # NIL THEN lpEnvironment := ADR(ConvertEnv(env)[0]) END;
       IF wd # NIL THEN wdAddr := M3toC.SharedTtoS(wd) END;
       IF WinBase.CreateProcess(
@@ -99,18 +106,19 @@ PROCEDURE CloseHandle (h: WinNT.HANDLE)
 
 PROCEDURE ConvertArgs(cmd: Pathname.T; READONLY params: ARRAY OF TEXT)
   : WinNT.LPCSTR =
+  CONST Q = "\"";
   VAR
     l, k := 0;
     result: REF ARRAY OF CHAR;
-    cmdL := Text.Length(cmd);
+    cmdL := Text.Length(cmd)+2;
   BEGIN
     INC(l, cmdL+1);
     FOR i := 0 TO NUMBER(params)-1 DO
       INC(l, Text.Length(params[i])+1)
     END;
     result := NEW(REF ARRAY OF CHAR, l+1);
-    k := l; l := 0; result[l] := '\000';
-    Text.SetChars(result^, cmd); 
+    k := l; l := 0; result[k] := '\000';
+    Text.SetChars(result^, Q & cmd & Q);
     INC(l, cmdL); result[l] := ' '; INC(l);
     FOR i := 0 TO NUMBER(params)-1 DO
       Text.SetChars(SUBARRAY(result^, l, k-l), params[i]);
@@ -119,6 +127,39 @@ PROCEDURE ConvertArgs(cmd: Pathname.T; READONLY params: ARRAY OF TEXT)
     END;
     RETURN ADR(result[0])
   END ConvertArgs;
+
+PROCEDURE ConvertArgsQ(cmd: Pathname.T; READONLY params: ARRAY OF TEXT)
+  : WinNT.LPCSTR =
+  CONST Q = "\"";
+  VAR
+    l, k := 0;
+    result: REF ARRAY OF CHAR;
+    cmdL := Text.Length(cmd)+2;
+  BEGIN
+    INC(l, cmdL+1);
+    FOR i := 0 TO NUMBER(params)-1 DO
+      INC(l, Text.Length(params[i])+3)
+    END;
+    result := NEW(REF ARRAY OF CHAR, l+1);
+    k := l; l := 0; result[k] := '\000';
+    Text.SetChars(result^, Q & cmd & Q);
+    INC(l, cmdL); result[l] := ' '; INC(l);
+    FOR i := 0 TO NUMBER(params)-1 DO
+      Text.SetChars(SUBARRAY(result^, l, k-l), Q & params[i] & Q);
+      INC(l, Text.Length(params[i])+2);
+      result[l] := ' '; INC(l)
+    END;
+    (*
+    FOR i := FIRST(result^) TO LAST(result^) DO
+      RTIO.PutChar(result^[i]);
+      RTIO.Flush();
+    END;
+    RTIO.PutChar('\r');
+    RTIO.PutChar('\n');
+    RTIO.Flush();
+    *)
+    RETURN ADR(result[0])
+  END ConvertArgsQ;
 
 PROCEDURE ConvertEnv(env: REF ARRAY OF TEXT): REF ARRAY OF CHAR =
   VAR k: CARDINAL; chars: REF ARRAY OF CHAR;
@@ -148,15 +189,15 @@ PROCEDURE Wait(p: T): ExitCode =
     p.waitOk := FALSE;
     TRY
       IF WinBase.WaitForSingleObject(p.info.hProcess, WinBase.INFINITE) #
-         WinBase.WAIT_OBJECT_0 THEN RAISE InternalError 
+	 WinBase.WAIT_OBJECT_0 THEN RAISE InternalError 
       END;
       IF WinBase.GetExitCodeProcess(p.info.hProcess, ADR(status)) = 0 THEN
-        error := WinBase.GetLastError();
-        RAISE InternalError
+	error := WinBase.GetLastError();
+	RAISE InternalError
       END;
     FINALLY
-      CloseHandle (p.info.hProcess);
-      CloseHandle (p.info.hThread);
+      TRY CloseHandle(p.info.hProcess) EXCEPT ELSE END;
+      TRY CloseHandle(p.info.hThread) EXCEPT ELSE END;
     END;
     RETURN Word.And(status, LAST(ExitCode))
   END Wait;
@@ -180,7 +221,7 @@ PROCEDURE GetID(p: T): ID =
   BEGIN RETURN LOOPHOLE(p.info.hProcess, ID) END GetID;
 
 PROCEDURE GetMyID(): ID =
-  BEGIN RETURN LOOPHOLE(WinBase.GetCurrentProcess(), ID) END GetMyID;
+  BEGIN RETURN LOOPHOLE(WinBase.GetCurrentProcessId(), ID) END GetMyID;
 
 VAR
   stdin_g  := GetFileHandle(WinBase.STD_INPUT_HANDLE,  FileWin32.Read);

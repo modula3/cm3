@@ -1,0 +1,567 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <META HTTP-EQUIV="Content-Type" CONTENT="text/html">
+    <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+    <META HTTP-EQUIV="Resource-type" CONTENT="document"> 
+    <META HTTP-EQUIV="Description" CONTENT="Modula-3 Resource Page"> 
+    <META HTTP-EQUIV="Distribution" CONTENT="global"> 
+    <META HTTP-EQUIV="Keywords" CONTENT="m3, modula-3, modula3, M3, Modula-3, modula-3, cm3, CM3, FreeCM3">
+    <META HTTP-EQUIV="Reply-to" CONTENT="webmaster@m3.org"> 
+    <LINK HREF="../style/normal.css" REL="stylesheet" TYPE="text/css">
+    <title>Free Critical Mass Modula-3 (CM3)</title>
+  </head>
+
+  <body bgcolor="#ffffff">
+    <h2>Critical Mass Modula-3 (CM3) release 5.1</h2>
+
+    <center>
+    <p>
+      Welcome to the first official release of Critical Mass Modula-3
+      version 5.1!
+    </p>
+    </center>
+
+    <h3>What is it</h3>
+
+    <p>
+      <b>CM3 5.1</b> is the first <b>open source</b> release of 
+      Critical Mass Modula-3. It is a complete easy-to-use and
+      easy-to-install Modula-3 system that contains considerable
+      enhancements over its ancestor DEC SRC Modula-3. Read <a
+      href="about-cm3.html">About CM3 5.1</a> to learn more.
+    </p>
+
+    <p>
+      All the sources are available under the free DEC SRC style
+      copyright. Please read <a href="COPYRIGHT-CMASS">
+      COPYRIGHT-CMASS</a> and <a
+      href="COPYRIGHT-DEC">COPYRIGHT-DEC</a>. <a
+      href="http://www.elego-software-solutions.com">Elego Software
+      Solutions</a> has supported the CM3 5.1 project but does not own
+      any copyrights; the release of the code has been done on request
+      and with explicit authorization from Critical Mass, Inc.
+    </p>
+
+    <p>
+      Please read all the available information before downloading any
+      archives.
+    </p>
+
+    <h3>Contents</h3>
+
+    <multicol cols="3">
+      <center>
+        <a href="#news">News</a><br>
+        &middot;<br>
+        <a href="about-cm3.html">About CM3 5.1</a><br>
+        &middot;<br>
+        <a href="about-cm3.html#if-changes">CM3 5.1 IF Changes and Performance</a><br>
+        &middot;<br>
+        <a href="doc/index.html">CM3 5.1 Documentation</a><br>
+        &middot;<br>
+        <a href="installation.html">Installation Notes</a><br>
+        &middot;<br>
+        <a href="plans.html">Plans</a><br>
+        &middot;<br>
+        <a href="todo.html">Things to do</a><br>
+        &middot;<br>
+        <a href="package-status.html">Package Status</a><br>
+        &middot;<br>
+        <a href="known-problems.html">Known Problems</a><br>
+        &middot;<br>
+        <a href="booting.html">Booting CM3 using M3</a><br>
+        &middot;<br>
+        <a href="porting.html">Porting CM3</a><br>
+        &middot;<br>
+        <a href="cm3-and-elego.html">CM3 and Elego ComPact</a><br>
+        &middot;<br>
+        <a href="cm3-problem-report.html">CM3 Problem Report</a><br>
+        &middot;<br>
+        <a href="download.html">Download</a><br>
+        &middot;<br>
+        <a href="cvsup-cm3.html">Downloading CM3 with CVSup</a><br>
+        &middot;<br>
+        <a href="cvs-cm3.html">Downloading CM3 with Anonymous CVS</a><br>
+        &middot;<br>
+        <a href="cm3-cm-rules.html">CM3 Configuration Management Rules</a><br>
+        &middot;<br>
+        <a href="http://www.elegosoft.com/cgi-bin/cvsweb.cgi">CM3 CVS Repository online</a><br>
+        &middot;<br>
+      </center>
+    </multicol>
+
+    <hr>
+    <h3>Contributions and Acknowledgements</h3>
+
+    <p>
+      A lot of people have contributed to the original M3 release by
+      DEC SRC, and the current code release is almost entirely the
+      work of members of Critical Mass. I don't know all the names and
+      cannot provide a list here. It would also not have been possible
+      for me to setup this distribution without PM3 Modula-3.
+    </p>
+
+    <p>
+      Several people have contributed to this open source
+      release of CM3 5.1 since the announcement of its availability
+      for test. I hope I will be able to write up a page with their
+      names some time around the official public release. Please don't
+      be annoyed if you don't find your name mentioned here yet; I
+      think it's better to concentrate on the software for some time.
+    </p>
+
+    <hr>
+    <a name="news"><h3>News</h3></a>
+
+    <dl>
+      <dt>2002-04-08</dt>
+      <dd>
+        <p>
+          The document archive has been updated. <a
+          href="cm3-doc-5.1.8.tgz">cm3-doc-5.1.8.tgz</a> now contains
+          all the current generated package documentation as of
+          2002-04-08. CM3 now also includes <em>m3browser</em>, the
+          well-known HTTP server that generates HTML documentation
+          about installed packages on the fly, fully cross-referenced
+          down to the type-level. <em>m3browser</em> has been imported
+          from the PM3 distribution, together with the packages
+          <em>m3scan</em> and <em>m3markup</em>, all of which reside
+          in <em>m3-tools</em>. At the same time, some buffer
+          implementations used in several packages have been extracted
+          into their own library, <em>libbuf</em>. These changes are
+          currently only available via CVS and CVSup.
+        </p>
+      </dd>
+      <dt>2002-04-02</dt>
+      <dd>
+        <p>
+          I've added another <a href="src-update-2002-04-02.tgz">5.1.8 
+            fix archive</a> for those without CVSup and CVS
+          ambitions. This archive contains all changed files since
+          the 5.1.8 release of CM3.
+        </p>
+      </dd>
+      <dt>2002-02-19</dt>
+      <dd>
+        <p>
+          You can now <a href="http://www.elegosoft.com/cgi-bin/cvsweb.cgi">browse
+	   the CM3 CVS repository</a> online with your webbrowser.
+	 </p>
+      </dd>
+      <dt>2002-02-12</dt>
+      <dd>
+        <p>
+          A bug in the binary installation archives of 5.1.8 for all
+          POSIX platforms has been found. It is easy to fix,
+          though. See 
+          <a href="known-problems.html#p_4_2">
+            4.2 [Release 5.1.8] Linkage failure on POSIX platforms due
+                to wrong paths (/pub/lang/m3/cm3-dist) in binary
+                installation archives
+          </a> for details. As this can be easily corrected manually
+          after the installation, no new distribution archives have
+          been created.
+        </p>
+      </dd>
+      <dt>2002-01-12</dt>
+      <dd>
+        <p>
+          The master CVS repository for CM3 has been moved to
+          www.elegosoft.com. This means that everybody who wants to
+          work on the CM3 sources directly can get write access if he
+          provides an ssh key (protocol version 2 (DSA)
+          preferred). Send email to 
+          <a href="mailto:m3-support@elego.de">m3-support@elego.de</a>
+          if you are interested, and have a look at the <a
+          href="cm3-cm-rules.html">CM3 configuration management
+          rules</a>.
+        </p>
+      </dd>
+      <dt>2002-01-11</dt>
+      <dd>
+        <p>
+          A bug in the installation program has been fixed. See <a
+          href="known-problems.html#p_4_1">4.1 Linkage failure:
+          missing -L before library paths (installer bug)</a> for
+          details. As this can be easily corrected manually after the
+          installation, no new distribution archives have been
+          created.
+        </p>
+      </dd>
+      <dt>2001-12-21</dt>
+      <dd>
+        <p>
+          As always with new releases, some bugs appear right after
+          creating the archives :-( Instead of building new release
+          archives, I've created a <a href="src-update-2001-12-21.tgz">5.1.8 
+            fix archive</a> for those without CVSup and CVS ambitions.
+        </p>
+      </dd>
+      <dt>2001-12-20</dt>
+      <dd>
+        <p>
+          CM3 5.1.8 has been released. New distribution archives have
+          been placed on the servers for most of the active
+          platforms. Changes include bug-fixes to the compiler
+          (backend and quake interpreter), extraction of the system
+          call wrappers from m3core into m3gc-enhanced, and addition of
+          and fixes for lots of packages, concerning obliq, shared
+          objects, graphics, and general useful libraries. A more
+          detailed list of the changes can be found 
+          <a href="cm3-5.1.8-details.txt">here</a>.
+        </p>
+      </dd>
+      <dt>2001-11-25</dt>
+      <dd>
+        <p>
+          Some new distribution archives have been placed on the server,
+          including some fixes to the compiler and documentation. The
+          current release number is now 5.1.6. Those who have installed
+          5.1.3 or 5.1.4 should rather get the updates via CVSup or CVS
+          than download the big distribution archives. Not all binary
+          installation packages have been rebuilt and updated yet; a
+          full build will probably be deferred until some of the more
+          substantial changes currently in work are finished.
+        </p>
+      </dd>
+      <dt>2001-09-20</dt>
+      <dd>
+        <p>
+          In addition to <a href="cvsup-cm3.html">CVSup access</a>, now
+          <a href="cvs-cm3.html">anonymous CVS pserver access</a> has
+          been set up, too.
+        </p>
+      </dd>
+      <dt>2001-09-19</dt>
+      <dd>
+        <p>
+          <a href="src-update-2001-09-19.tgz"
+             type="application/octet-stream">src-update-2001-09-19.tgz</a>
+          has been added, which adds a fix for compilation of m3core on
+          Linux systems using glibc 2.2, some minor package fixes, and
+          the <a href="http://www.async.caltech.edu/~kp/parserlib/">parser
+          tools</a> and <a href="http://www.async.caltech.edu/~kp/gmodule/">
+            template generator</a> distribution from the California
+          Institute of Technology, contributed by Karl
+          Papadantonakis. 
+        </p>
+        <p>
+          Some progress has been made on improving the infrastructure
+          of the cm3 source distribution: A <a href="cvsup-cm3.html">
+            cm3 CVSup server</a> has been
+          installed, and the cm3 repository is replicated once every
+          night. As there are still unresolved issues with the domain
+          registration for the machine the server is located on, it
+          can currently only be contacted as
+          ds217-115-141-112.dedicated.hosteurope.de or via IP number
+          217.115.141.112. The CVSup server currently knows about the
+          collections cm3, cm3-caltech-parser, cm3-doc, cm3-m3-comm,
+          cm3-m3-db, cm3-m3-demo, cm3-m3-games, cm3-m3-lectern,
+          cm3-m3-libs, cm3-m3-mail, cm3-m3-obliq, cm3-m3-pkgtools,
+          cm3-m3-sys, cm3-m3-tools, cm3-m3-ui, cm3-m3-www,
+          cm3-scripts, cm3-www. Anonymous CVS pserver access will be
+          added soon, too.
+        </p>
+      </dd>
+      <dt>2001-05-12</dt>
+      <dd>
+        <p>
+          <a href="src-update-2001-05-12.tgz"
+             type="application/octet-stream">src-update-2001-05-12.tgz</a>
+          has been added, which contains the differences between
+          releases 5.1.3 and 5.1.4. These are: (1) A fix for
+          m3core/src/text/TextSub.m3, (2) the addition of the <a
+            href="http://www.research.compaq.com/SRC/juno-2/">Juno-2</a>
+          packages, which contain a graphical constraint based editor,
+          (3) a <tt>do-cm3-std.bat</tt> script (untested), and (4)
+          several minor script fixes and improvements.
+        </p>
+        <p>
+          5.1.4 is also available as the source archive <a
+            href="OUTDATED.html">cm3-src-std-5.1.4.tgz</a>,
+          and as a binary installation archive for FreeBSD3. I haven't
+          yet been able to build more distribution archives, but hope
+          to get round to it next week. This should be no big problem,
+          since everybody can easily use the update archive to upgrade
+          his/her system.
+        </p>
+      </dd>
+      <dt>2001-04-11</dt>
+      <dd>
+        <p>
+          Put up another binary installation archive for WIN32,
+          cm3-min-WIN32-NT386-5.1.3a.tgz, for download. The libraries
+          and programs in this archive are built with a recent version
+          of the Microsoft C tools.
+        </p>
+      </dd>
+      <dt>2001-04-08</dt>
+      <dd>
+        <p>
+          A simple build script for NT/Win2000 cmd shells has been
+          added to the latest scripts archive. Some obsolete passages
+          from the web pages have been removed, and some final
+          adjustments before the official release have been made.
+        </p>
+        <p>
+        </p>
+      </dd>
+
+      <dt>2001-04-06</dt>
+      <dd>
+        <p>
+          The first archives of the official CM3 5.1.3 release
+          have been created. CM3 5.1.3 contains a work-around for the
+          DLL creation / linker problem on NT386 (which actually seems
+          to be a C compiler problem), a last-minute fix for dynamic
+          linked executable on LINUXLIBC6, an almost completely fixed
+          HTML documentation tree, and several minor fixes. The binary
+          installation still supports only four platforms: NT386
+          Windows 95/98/ME/NT/2000 on x86), LINUXLIBC6 (Linux with
+          glibc 2.1 on x86), FreeBSD3 (FreeBSD 3.X (4.X, 5.X?)) on
+          x86, and Solaris (SunOS 5.6, 5.7, 5.8) on SPARC. On all
+          these platforms dynamic linking and incremental and
+          generational garbage collection is implemented.
+        </p>
+        <p>
+          Once all archives are created and uploaded, some old stuff
+          will be removed, cm3-unofficial will be renamed cm3, and an
+          announcement will be posted to the m3 newsgroup.
+        </p>
+        <!--
+        <p>
+        </p>
+        <p>
+        </p>
+        -->
+      </dd>
+
+      <dt>2001-03-11</dt>
+      <dd>
+        <p>
+          A chapter about
+          <a href="about-cm3.html#if-changes">CM3 5.1 Interface Changes
+            and Performance</a> has been added, as well as some
+            updates to the TODO lists.
+        </p>
+        <p>
+          A new source update archive 
+          <!--<a href="src-update-2001-03-11.tgz"
+             type="application/octet-stream">-->src-update-2001-03-11.tgz
+          <!--</a>-->
+          has also been created which contains the following latest
+          changes:
+          updates and fixes for packages cm3 (minimal profiling support
+          for some POSIX systems), cminstall (win32 improvements), libm3
+          (changed ProcessWin32 module), m3core (FreeBSD4 dtoa fix),
+          scripts, and CMASS copyright texts.
+        </p>
+        <p>
+          The scripts archive has been updated, too.
+        </p>
+      </dd>
+
+      <dt>2001-03-06</dt>
+      <dd>
+        <p>
+          Added a new installer for WIN32 which replaces filenames
+          with spaces by their 8.3 equivalent.
+        </p>
+      </dd>
+
+      <dt>2001-03-01 (20 hours later)</dt>
+      <dd>
+        <p>
+          Several source and binary distributions have been upgraded
+          to patch level 1 (cm3 5.1.1). This patch level includes all
+          the fixes and extensions prior to 2001-03-01 (described
+          below) plus the following recent changes:
+        </p>
+        <ul>
+          <li>
+            fixes for packages <tt>postgres95</tt> and
+            <tt>smalldb</tt> (conditional compilation and win32
+            extensions)
+          </li>
+          <li>
+            cm3 now defines the quake variables <tt>CM3_VERSION</tt>,
+            <tt>CM3_CREATED</tt>, and <tt>EOL</tt>. Based on these
+            values, conditional compilation in m3makefiles should be
+            easy. 
+          </li>
+          <li>
+            The installer now looks for several other archives to
+            unpack and installs them if found, including docs, fixes,
+            and misc. On win32, the missing <tt>cygwin.dll</tt> for
+            <tt>tar.exe</tt> has been added. 
+          </li>
+          <li>
+            cm3 has a new option <tt>-depend</tt>, which writes a
+            makefile dependency line containing the package
+            dependencies.
+          </li>
+          <li>
+            As usual, several scripts have been fixed ;-) and some new
+            ones provided.
+          </li>
+        </ul>
+        <p>
+          The TODO and package status lists have been updated. Some
+          platform notes have been added on the installation page.
+        </p>
+        <p></p>
+      </dd>
+
+      <dt>2001-03-01</dt>
+      <dd>
+        <p>
+          A problem report page has been added. Problem reports will be
+          sent to the GNATS database at elego Software Solutions GmbH.
+        </p>
+        <p></p>
+      </dd>
+
+      <dt>2001-02-24</dt>
+      <dd>
+        <p>
+          The most important news is that now <b>documentation</b> is
+          available for CM3 5.1. Much is still missing and not
+          everything is up-to-date, but there is a complete set of
+          documents for all standard packages and interfaces; the nice
+          interfaces overview page from Critical Mass' Reactor
+          distribution has been updated. 
+        </p>
+        <p>
+          The <tt>m3tohtml</tt> program (which was broken due to several
+          interface changes in the standard libraries) has been
+          fixed. I have also added a user-friendlier frontend, some
+          documentation (try `-h'), and made it more robust. It
+          has been used to generate all the current package
+          documentation in HTML, and you should also be able to use it
+          for your own purposes without much effort.
+        </p>
+        <ul>
+          <li>
+            Get the documentation archive from 
+            <a href="OUTDATED.html">cm3-doc-5.1.0.tgz</a>.
+          </li>
+          <li>
+            The source fixes for m3tohtml and the db and odbc
+            libraries are in <a href="OUTDATED.html">src-update-2001-02-24.tgz</a>.
+          </li>
+          <li>
+            A new scripts archive is in <a href="OUTDATED.html">
+              cm3-scripts-2001-02-21.tgz</a>.
+          </li>
+        </ul>
+        <p></p>
+      </dd>
+
+      <dt>2001-02-21</dt>
+      <dd>
+        <ul>
+          <li>
+            Some porting notes have finally been added. See 
+            <a href="porting.html">Porting CM3</a>.
+          </li>
+          <li>
+            The LINUXLIBC6 extensions are missing in the current
+            source archives. Get <a href="src-update-2001-02-21.tgz"
+              type="application/octet-stream">src-update-2001-02-21.tgz</a>
+            from the download page.
+          </li>
+          <li>
+            <a href="OUTDATED.html">cm3-scripts-2001-02-21.tgz</a>
+            contains a current version of all the scripts. A new
+            scripts archive will be published from time to time.
+          </li>
+        </ul>
+        <p></p>
+      </dd>
+
+      <dt>2001-02-19</dt>
+      <dd>
+        Several items have been added today:
+        <ul>
+          <li>
+            The first source update containing fixes for all the
+            m3override files in <a href="m3override-update.tgz"
+              type="application/octet-stream">m3override-update.tgz</a>.
+          </li>
+          <li>
+            A table with information about the <a
+            href="package-status.html">status of all
+            packages</a>. This is of course still very incomplete.
+          </li>
+          <li>
+            Instructions how to use <a href="cm3-and-elego.html">CM3
+              5.1 together with Elego ComPact</a> have been added.
+          </li>
+          <li>
+            A snapshot of the CVS repository can be accessed via the
+            <a href="download.html">Download Page</a>.
+          </li>
+          <li>
+            Added src-update-2001-02-19.tgz. See 
+            <a href="download.html">Download Page</a>. 
+          </li>
+        </ul>
+        <p></p>
+      </dd>
+      <dt>2001-02-18</dt>
+      <dd>
+        A binary boot archive for the SOLgnu target (SunOS on SPARC)
+        is now available. See the <a href="download.html">Download
+        Page</a>. 
+        <p></p>
+      </dd>
+<!--
+      <dt></dt>
+      <dd>
+      </dd>
+      <dt></dt>
+      <dd>
+      </dd>
+      <dt></dt>
+      <dd>
+      </dd>
+      <dt></dt>
+      <dd>
+      </dd>
+      <dt></dt>
+      <dd>
+      </dd>
+-->
+    </dl>
+    <p>
+    </p>
+
+    <hr>
+    <font size="-1">
+    <a href="about-cm3.html">About CM3 5.1</a> &middot;
+    <a href="about-cm3.html#if-changes">CM3 5.1 IF Changes and Performance</a>
+    &middot;
+    <a href="doc/index.html">CM3 5.1 Documentation</a> &middot;
+    <a href="installation.html">Installation Notes</a> &middot;
+    <a href="plans.html">Plans</a> &middot;
+    <a href="todo.html">Things to do</a> &middot;
+    <a href="package-status.html">Package Status</a> &middot;
+    <a href="known-problems.html">Known Problems</a> &middot;
+    <a href="booting.html">Booting CM3 using M3</a> &middot;
+    <a href="porting.html">Porting CM3</a> &middot;
+    <a href="cm3-and-elego.html">CM3 and Elego ComPact</a> &middot;
+    <a href="cm3-problem-report.html">CM3 Problem Report</a> &middot;
+    <a href="download.html">Download</a> &middot;
+    <a href="cvsup-cm3.html">CVSup Access</a> &middot;
+    <a href="cvs-cm3.html">CVS PServer Access</a> &middot;
+    <a href="cm3-cm-rules.html">CM3 Configuration Management Rules</a>
+    </font>
+    <hr>
+    <address><a href="mailto:m3-support@elego.de">m3-support@elego.de</a></address>
+<!-- Created: Fri Feb 16 14:00:24 MET 2001 -->
+<!-- hhmts start -->
+Last modified: Tue Sep 24 10:56:47 CEST 2002
+<!-- hhmts end -->
+  </body>
+</html>

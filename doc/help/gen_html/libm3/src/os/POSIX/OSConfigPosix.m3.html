@@ -1,0 +1,207 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: libm3/src/os/POSIX/OSConfigPosix.m3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>libm3/src/os/POSIX/OSConfigPosix.m3</H2></A><HR>
+<inModule>
+<PRE></PRE> Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. 
+ See file COPYRIGHT-CMASS for details. 
+
+<P><PRE>UNSAFE MODULE <module>OSConfigPosix</module> EXPORTS <A HREF="OSConfig.i3.html"><implements>OSConfig</A></implements>;
+
+IMPORT <A HREF="../../../../m3core/derived/Compiler.i3.html">Compiler</A>, <A HREF="../../params/Env.i3.html">Env</A>, <A HREF="../../../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="../Common/OSError.i3.html">OSError</A>, <A HREF="../Common/Process.i3.html">Process</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Uutsname.i3.html">Uutsname</A>;
+
+VAR
+  host_name  : TEXT := NIL;
+  host_arch  : TEXT := NIL;
+  os_name    : TEXT := NIL;
+  os_version : TEXT := NIL;
+  user_name  : TEXT := NIL;
+  user_home  : TEXT := NIL;
+
+PROCEDURE <A NAME="HostName"><procedure>HostName</procedure></A> (): TEXT =
+  BEGIN
+    IF (host_name = NIL) THEN Init ();  END;
+    RETURN host_name;
+  END HostName;
+
+PROCEDURE <A NAME="HostArchitecture"><procedure>HostArchitecture</procedure></A> (): TEXT =
+  BEGIN
+    IF (host_arch = NIL) THEN Init (); END;
+    RETURN host_arch;
+  END HostArchitecture;
+
+PROCEDURE <A NAME="OSName"><procedure>OSName</procedure></A> (): TEXT =
+  BEGIN
+    IF (os_name = NIL) THEN Init (); END;
+    RETURN os_name;
+  END OSName;
+
+PROCEDURE <A NAME="OSVersion"><procedure>OSVersion</procedure></A> (): TEXT =
+  BEGIN
+    IF (os_version = NIL) THEN Init (); END;
+    RETURN os_version;
+  END OSVersion;
+
+PROCEDURE <A NAME="UserName"><procedure>UserName</procedure></A> (): TEXT =
+  BEGIN
+    IF user_name = NIL THEN InitUserName (); END;
+    RETURN user_name;
+  END UserName;
+
+PROCEDURE <A NAME="UserHome"><procedure>UserHome</procedure></A> (): TEXT =
+  BEGIN
+    IF user_home = NIL THEN InitUserHome (); END;
+    RETURN user_home;
+  END UserHome;
+</PRE>---------------------------------------------------------- internal ---
+
+<P><PRE>PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> () =
+  VAR uts: Uutsname.struct_utsname;
+  BEGIN
+    IF os_version # NIL THEN RETURN; END;
+    IF Uutsname.uname (ADR (uts)) &gt;= 0 THEN
+      host_name  := M3toC.CopyStoT (ADR (uts.nodename[0]));
+      host_arch  := M3toC.CopyStoT (ADR (uts.machine[0]));
+      os_name    := M3toC.CopyStoT (ADR (uts.sysname[0]));
+      os_version := M3toC.CopyStoT (ADR (uts.release[0]));
+    ELSE
+      host_name  := &quot;&lt;unknown&gt;&quot;;
+      host_arch  := DefaultArch [ORD(Compiler.ThisPlatform)];
+      os_name    := DefaultOSName [ORD(Compiler.ThisPlatform)];
+      os_version := &quot;&quot;;
+    END;
+  END Init;
+
+CONST
+  DefaultOSName = ARRAY [0..49] (* Compiler.Platform *) OF TEXT {
+   (* AIX386     *)  &quot;AIX&quot;,
+   (* ALPHA_OSF  *)  &quot;Digital Unix&quot;,
+   (* AP3000     *)  &quot;Unix&quot;,
+   (* ARM        *)  &quot;Unix&quot;,
+   (* DS3100     *)  &quot;Ultrix&quot;,
+   (* FreeBSD    *)  &quot;FreeBSD&quot;,
+   (* FreeBSD2   *)  &quot;FreeBSD&quot;,
+   (* HP300      *)  &quot;HP/UX&quot;,
+   (* HPPA       *)  &quot;HP/UX&quot;,
+   (* IBMR2      *)  &quot;AIX&quot;,
+   (* IBMRT      *)  &quot;AIX&quot;,
+   (* IRIX5      *)  &quot;Irix&quot;,
+   (* LINUX      *)  &quot;Linux&quot;,
+   (* LINUXELF   *)  &quot;Linux&quot;,
+   (* NEXT       *)  &quot;NextOS&quot;,
+   (* NT386      *)  &quot;Win32&quot;,
+   (* OKI        *)  &quot;Unix&quot;,
+   (* OS2        *)  &quot;OS/2&quot;,
+   (* SEQUENT    *)  &quot;Unix&quot;,
+   (* SOLgnu     *)  &quot;Solaris&quot;,
+   (* SOLsun     *)  &quot;Solaris&quot;,
+   (* SPARC      *)  &quot;SunOS&quot;,
+   (* SUN3       *)  &quot;SunOS&quot;,
+   (* SUN386     *)  &quot;SunOS&quot;,
+   (* UMAX       *)  &quot;Unix&quot;,
+   (* VAX        *)  &quot;Ultrix&quot;,
+   (* FreeBSD3   *)  &quot;FreeBSD&quot;,
+   (* FreeBSD4   *)  &quot;FreeBSD&quot;,
+   (* FBSD_ALPHA *)  &quot;FreeBSD&quot;,
+   (* LINUXLIBC6 *)  &quot;Linux&quot;,
+   (* I386_DARWIN*)  &quot;Darwin&quot;,
+   (* PPC_DARWIN *)  &quot;Darwin&quot;,
+   ..
+  };
+
+CONST
+  DefaultArch = ARRAY [0..49] (* Compiler.Platform *) OF TEXT {
+   (* AIX386     *)  &quot;i386&quot;,
+   (* ALPHA_OSF  *)  &quot;alpha&quot;,
+   (* AP3000     *)  &quot;apollo&quot;,
+   (* ARM        *)  &quot;acorn risc&quot;,
+   (* DS3100     *)  &quot;mips&quot;,
+   (* FreeBSD    *)  &quot;i486&quot;,
+   (* FreeBSD2   *)  &quot;i486&quot;,
+   (* HP300      *)  &quot;hp300&quot;,
+   (* HPPA       *)  &quot;hppa&quot;,
+   (* IBMR2      *)  &quot;IBM romp&quot;,
+   (* IBMRT      *)  &quot;IBM RT&quot;,
+   (* IRIX5      *)  &quot;mips&quot;,
+   (* LINUX      *)  &quot;i486&quot;,
+   (* LINUXELF   *)  &quot;i486&quot;,
+   (* NEXT       *)  &quot;m68K&quot;,
+   (* NT386      *)  &quot;i486&quot;,
+   (* OKI        *)  &quot;m68K&quot;,
+   (* OS2        *)  &quot;i486&quot;,
+   (* SEQUENT    *)  &quot;m68K&quot;,
+   (* SOLgnu     *)  &quot;sparc&quot;,
+   (* SOLsun     *)  &quot;sparc&quot;,
+   (* SPARC      *)  &quot;sparc&quot;,
+   (* SUN3       *)  &quot;sparc3&quot;,
+   (* SUN386     *)  &quot;i386&quot;,
+   (* UMAX       *)  &quot;m68K&quot;,
+   (* VAX        *)  &quot;vax&quot;,
+   (* FreeBSD3   *)  &quot;i486&quot;,
+   (* FreeBSD4   *)  &quot;i486&quot;,
+   (* FBSD_ALPHA *)  &quot;i486&quot;,
+   (* LINUXLIBC6 *)  &quot;i486&quot;,
+   (* I386_DARWIN*)  &quot;i486&quot;,
+   (* PPC_DARWIN *)  &quot;ppc&quot;,
+   ..
+  };
+
+PROCEDURE <A NAME="InitUserName"><procedure>InitUserName</procedure></A> () =
+  BEGIN
+    IF user_name # NIL THEN RETURN; END;
+
+    user_name := Env.Get (&quot;USER&quot;);
+    IF user_name # NIL THEN RETURN; END;
+
+    user_name := &quot;&lt;unknown user&gt;&quot;;
+  END InitUserName;
+
+PROCEDURE <A NAME="InitUserHome"><procedure>InitUserHome</procedure></A> () =
+  BEGIN
+    IF user_home # NIL THEN RETURN; END;
+
+    user_home := Env.Get (&quot;HOME&quot;);
+    IF user_home # NIL THEN RETURN; END;
+
+    TRY user_home := Process.GetWorkingDirectory ();
+    EXCEPT OSError.E =&gt;
+    END;
+    IF user_home # NIL THEN RETURN; END;
+
+    user_home := &quot;/tmp&quot;;
+  END InitUserHome;
+
+BEGIN
+END OSConfigPosix.
+</PRE>
+</inModule>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

@@ -10,9 +10,13 @@ readonly Platform_info = {
   "ALPHA_OSF" : "alpha-dec-osf1",
   "AP3000"    : "apollo68-bsd",
   "ARM"       : "arm--riscos",
+  "BSDI4"     : "i386-unknown-freebsdelf",
   "DS3100"    : "decstation",
+  "FBSD_ALPHA": "alpha-unknown-freebsd",
   "FreeBSD"   : "i486-unknown-bsd",
-  "FreeBSD2"  : "i486-unknown-bsd",
+  "FreeBSD2"  : "i486-unknown-freebsd",
+  "FreeBSD3"  : "i486-unknown-freebsdelf",
+  "FreeBSD4"  : "i486-unknown-freebsdelf",
   "HP300"     : "m68k-hp-hpux",
   "HPPA"      : "hppa1.1-hp-hpux",
   "IBMR2"     : "rs6000-ibm-aix3.2",
@@ -20,8 +24,10 @@ readonly Platform_info = {
   "IRIX5"     : "mips-sgi-irix5",
   "LINUX"     : "i486--linux",
   "LINUXELF"  : "i486--linuxelf",
+  "LINUXLIBC6": "i486--linuxelf",
   "NEXT"      : "next-bsd",
   "NT386"     : "i486--nt",
+  "NT386GNU"  : "i486--cygwin32",
   "OKI"       : "i860--sysv4.0",
   "SEQUENT"   : "i386-sequent-bsd",
   "SOLgnu"    : "sparc-sun-solaris2",
@@ -29,9 +35,21 @@ readonly Platform_info = {
   "SPARC"     : "sparc-sun-sunos4.1",
   "SUN3"      : "m68k-sun-sunos4.1",
   "SUN386"    : "i386-sun-sunos4.1",
+  "Tru64v5"   : "alpha-dec-osf1",
   "UMAX"      : "encore-bsd",
-  "VAX"       : "vax-dec-ultrix"
+  "VAX"       : "vax-dec-ultrix",
+  "I386_DARWIN" : "i486-unknown-bsd",
+  "PPC_DARWIN"  : "powerpc-apple-linux-gnu"
 }
+
+if not defined("SL")
+  if equal(TARGET, "NT386")
+    % we assume that we use cygwin for everything under NT386GNU
+    SL = "\\"
+  else
+    SL = "/"
+  end
+end
 
 readonly proc GNU_platform (x) is
   if Platform_info contains x
@@ -70,7 +88,7 @@ readonly proc get_overrides (nm, ov) is
   if equal (ov, "*")
     return ""
   else
-    return format ("%s=\"%s\"", nm, ov)
+    return format ("%s=\"%s\" ", nm, ov)
   end
 end
 
@@ -85,7 +103,7 @@ if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 % figure out where we're going to build the beast
 local build_dir = "."  % let m3build set the build directory
 if not equal (M3CC_HOST, M3CC_TARGET)
-  build_dir = "../" & BUILD_DIR & "-" & M3CC_TARGET
+  build_dir = ".." & SL & BUILD_DIR & "-" & M3CC_TARGET
 end
 
 % make sure the derived directory exists
@@ -93,21 +111,23 @@ if stale (build_dir, build_dir)
   exec ("mkdir", build_dir)
 end
 
-if not defined ("no_config")
-  % configure the sources
-  exec ("cd", build_dir, "; ../gcc/configure", M3CC_CONFIG, "--srcdir=../gcc",
-           "--host=" & GNU_platform (M3CC_HOST),
-           "--build=" & GNU_platform (M3CC_HOST),
-           "--target=" & GNU_platform (M3CC_TARGET))
+done  = ".configure-done"
+donep = build_dir & SL & done
+if defined ("FORCE")
+  exec("-cd " & build_dir & " && test -f Makefile && gmake distclean")
+  exec("-cd " & build_dir & " && rm -f cm3cg")
+  exec("-rm -f " & donep)
 end
 
-% misc fixups & ship commands
-pgms = "cm3cg"
-if equal (M3CC_HOST, M3CC_TARGET)
-  BindExport ("cm3cg")
-  if equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF")
-    pgms = "cm3cg mips-tfile"
-    BindExport ("mips-tfile")
+if not defined ("no_config")
+  % configure the sources
+  if stale(donep, donep)
+    exec ("cd", build_dir, "; .." & SL & "gcc" & SL & "configure", M3CC_CONFIG,
+             "--srcdir=.." & SL & "gcc",
+             "--host=" & GNU_platform (M3CC_HOST),
+             "--build=" & GNU_platform (M3CC_HOST),
+             "--target=" & GNU_platform (M3CC_TARGET),
+             "&& echo \"done\" > " & done)
   end
 end
 
@@ -115,7 +135,27 @@ end
 ARG0 = get_overrides ("CC", M3CC_CC)
 ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
 
-% finally, compile it
-exec ("cd", build_dir, ";", M3CC_MAKE, ARG0, ARG1, pgms)
+% build commands
+cmds = "cd " & build_dir & "; "
+postcp = cmds & "cp -p gcc" & SL & "cm3cg ."
+cmds = cmds & "cd libiberty; " & M3CC_MAKE & "; "
+cmds = cmds & "cd .." & SL & "gcc; " & M3CC_MAKE & " " & 
+       ARG0 & " " & ARG1 & " cm3cg"
 
+if equal (M3CC_HOST, M3CC_TARGET)
+  BindExport ("cm3cg")
+  if equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF")
+    pgms = "LANGUAGES='m3cg mips-tfile'"
+    BindExport ("mips-tfile")
+    postcp = "cp -p gcc" & SL & "cm3cg . && cp -p gcc" & SL & "mips-tfile ."
+  end
+end
+
+% finally, compile it
+exec (cmds)
+%write (cmds & EOL)
+%write (postcp & EOL)
+if defined("postcp")
+  exec(postcp)
+end
 

@@ -1,12 +1,14 @@
-(* Copyright 1996 Critical Mass, Inc. All rights reserved.    *)
+(* Copyright 1996-2000 Critical Mass, Inc. All rights reserved.    *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 MODULE Main;
 
-IMPORT Fmt, M3Timers, Pathname, Process, Quake, Time, Wr;
-IMPORT RTCollector, RTCollectorSRC, RTParams, RTutils, Thread;
+IMPORT M3Timers, Pathname, Process, Quake;
+IMPORT RTCollector, RTCollectorSRC, RTParams, RTutils, Thread, Wr;
 
 IMPORT Builder, Dirs, M3Build, M3Options, Makefile, Msg, Utils, WebFile;
-IMPORT MxConfig AS M3Config, CMKey, CMCurrent;
+IMPORT MxConfig AS M3Config(*, CMKey, CMCurrent *);
+(* IMPORT Fmt, Time; only needed for key and expiration check *)
 
 VAR
   config    : TEXT          := NIL;
@@ -37,13 +39,23 @@ PROCEDURE DoIt () =
     TRY
       TRY
         (* figure out what we're trying to do *)
-        Makefile.ScanCommandLine ();
+        VAR
+          defs := Makefile.ScanCommandLine ();
+          name, val: TEXT;
+          iter := defs.iterate();
+        BEGIN
+          WHILE iter.next(name, val) DO
+            Quake.Define(mach, name, val);
+          END;
+        END;
 
         (* define the site configuration *)
         Msg.Verbose ("EVAL (\"", config, "\")");
         Quake.Run (mach, config);
 
+        (* -- disabled 
         CheckExpire (Quake.LookUp (mach, "INSTALL_KEY"));
+        *)
 
         (* figure out where we are and get where we want to be *)
         build_dir := Quake.LookUp (mach, "BUILD_DIR");
@@ -73,14 +85,21 @@ PROCEDURE DoIt () =
 
     EXCEPT
     | Quake.Error (msg) =>
-        Msg.Error (NIL, msg);
+        IF NOT M3Build.done THEN
+          Msg.Error (NIL, msg);
+          M3Options.exit_code := 2;
+        END;
     | Thread.Alerted =>
         Msg.FatalError (NIL, "interrupted");
     END;
 
+    IF M3Options.exit_code # 0 THEN
+      Msg.Out("Fatal Error: package build failed", Wr.EOL);
+    END;
     Process.Exit (M3Options.exit_code);
   END DoIt;
 
+(* -- disabled --
 PROCEDURE CheckExpire (passwd: TEXT) =
   CONST Day = 24.0d0 * 3600.0d0;
   CONST FirstWarning = 7.0d0 * Day;
@@ -136,6 +155,7 @@ PROCEDURE BuyIt () =
       Msg.Error (NIL, "--- ", BuyMsg[i]);
     END;
   END BuyIt;
+*)
 
 (*------------------------------------------------- process shutdown ---*)
 

@@ -1,13 +1,14 @@
-(* The  Telephony  API  is jointly copyrighted by Intel and Microsoft.  You are *)
-(* granted  a royalty free worldwide, unlimited license to make copies, and use *)
-(* the   API/SPI  for  making  applications/drivers  that  interface  with  the *)
-(* specification provided that this paragraph and the Intel/Microsoft copyright *)
-(* statement is maintained as is in the text and source code files. *)
+(* The Telephony API is jointly copyrighted by Intel and Microsoft. You are  *)
+(* granted a royalty free worldwide, unlimited license to make copies, and   *)
+(* use the API/SPI for making applications/drivers that interface with the   *)
+(* specification provided that this paragraph and the Intel/Microsoft        *)
+(* copyright statement is maintained as is in the text and source code       *)
+(* files.                                                                    *)
+(* Copyright 1995 Microsoft, all rights reserved.                            *)
+(* Portions copyright 1992, 1993 Intel/Microsoft, all rights reserved.       *)
 
-(* Copyright 1995 Microsoft, all rights reserved. *)
-(* Portions copyright 1992, 1993 Intel/Microsoft, all rights reserved. *)
-
-(* Translation to Modula-3 Copyright 1996 Critical Mass, Inc. All rights reserved. *)
+(* Translation to Modula-3 Copyright 1996-2000 Critical Mass, Inc.           *)
+(* All rights reserved. See file COPYRIGHT-CMASS for details.                *)
 
 UNSAFE INTERFACE TAPI;
 

@@ -219,6 +219,7 @@ PROCEDURE Init (self: T; title: TEXT; x, y, w, h: INTEGER): T
                              GLX.GLX_DEPTH_SIZE, 16, (* depth buf > 16 bits *)
                              GLX.GLX_DOUBLEBUFFER,   (* double buffer       *)
                              X.None};                (* ... that's it!      *)
+    cstr     : Ctypes.char_star;
   BEGIN
     IF conn = NIL THEN
       conn := NEW (Connection).init ();
@@ -302,11 +303,13 @@ PROCEDURE Init (self: T; title: TEXT; x, y, w, h: INTEGER): T
                                       X.PointerMotionMask)))))));
   
           (*** set the window's title ***)
+          cstr := M3toC.SharedTtoS (title);
           X.XChangeProperty (dpy, window, Xatom.XA_WM_NAME, Xatom.XA_STRING, 8,
                              X.PropModeReplace,
-                             LOOPHOLE (M3toC.TtoS (title), 
+                             LOOPHOLE (cstr,
                                        Ctypes.unsigned_char_star),
                              Text.Length (title));
+	  M3toC.FreeSharedS(title, cstr);
           (* ask the WM to send ClientMessage events when f.kill is chosen *)
           EVAL X.XSetWMProtocols (dpy, window, ADR (conn.wm_delete_window), 1);
 
@@ -443,7 +446,9 @@ PROCEDURE LargeCursor (self : T) =
 
 
 PROCEDURE ChangeTitle (self: T; title : TEXT) =
+  VAR cstr : Ctypes.char_star;
   BEGIN
+    cstr := M3toC.SharedTtoS (title);
     LOCK conn DO
       X.XChangeProperty (conn.dpy, 
                          self.window, 
@@ -451,10 +456,11 @@ PROCEDURE ChangeTitle (self: T; title : TEXT) =
                          Xatom.XA_STRING, 
                          8,
                          X.PropModeReplace,
-                         LOOPHOLE (M3toC.TtoS (title), 
+                         LOOPHOLE (cstr,
                                    Ctypes.unsigned_char_star),
                          Text.Length (title));
     END;
+    M3toC.FreeSharedS(title, cstr);
   END ChangeTitle;
 
 
@@ -2455,6 +2461,8 @@ PROCEDURE InitConnection (self : Connection) : Connection =
   VAR
     errBase : Ctypes.int;
     evtBase : Ctypes.int;
+    cstr1   : Ctypes.char_star;
+    cstr2   : Ctypes.char_star;
   BEGIN
     (*** open the display ***)
 
@@ -2465,11 +2473,14 @@ PROCEDURE InitConnection (self : Connection) : Connection =
 
     (*** "internalize" some X atoms ***)
 
+    cstr1 := M3toC.CopyTtoS ("WM_PROTOCOLS");
+    cstr2 := M3toC.CopyTtoS ("WM_DELETE_WINDOW");
     self.wm_protocols := 
-       X.XInternAtom(self.dpy,M3toC.TtoS ("WM_PROTOCOLS"), X.False);
+       X.XInternAtom(self.dpy, cstr1, X.False);
     self.wm_delete_window := 
-       X.XInternAtom(self.dpy,M3toC.TtoS ("WM_DELETE_WINDOW"), X.False);
-
+       X.XInternAtom(self.dpy, cstr2, X.False);
+    M3toC.FreeCopiedS(cstr1);
+    M3toC.FreeCopiedS(cstr2);
     (* Check whether the GL extension is available on the server *)
     WITH res = GLX.glXQueryExtension (self.dpy, ADR(errBase), ADR(evtBase)) DO
       self.avail := res = X.True;

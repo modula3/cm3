@@ -116,9 +116,9 @@ PROCEDURE Put (v: T; addr: IP.Address) RAISES {InvalidAddress} =
     txt := Conv(addr.a[0]);
   BEGIN
     FOR i := 1 TO 3 DO
-      txt := "." & Conv(addr.a[i]);
+      txt := txt & "." & Conv(addr.a[i]); 
     END;
-    TextPort.PutText (v, txt);
+    TextPort.SetText(v, txt);
   END Put;
 
 BEGIN
