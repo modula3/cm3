@@ -189,9 +189,9 @@ VAR
   y : R.T;
 BEGIN
   (*a workaround to prevent NaNs and Zeros*)
-  x := C.FrExp(x0, exp);
+  x := C.Normalize(x0, exp);
   y := RT.SqRt(AbsSqr(x));
-  RETURN R.LdExp(y,exp);
+  RETURN R.Scalb(y,exp);
 END Abs;
 
 (*

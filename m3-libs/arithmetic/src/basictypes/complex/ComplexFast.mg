@@ -13,6 +13,7 @@ was xComplex.m3
                           The ones with beginning caps are wds's
 *)
 
+IMPORT FloatMode;
 FROM xUtils IMPORT Error, Err;
 
 <*UNUSED*> CONST Module = "ComplexFast.";
@@ -94,8 +95,8 @@ PROCEDURE Div(READONLY x0,y0 : T) : T RAISES {Error} =
     exp     : INTEGER;
   BEGIN
     (*avoid overflow and underflow by conditioning*)
-    y := FrExp(y0,exp);
-    x := LdExp(x0,-exp);
+    y := Normalize(y0,exp);
+    x := Scalb(x0,-exp);
     denom := y.re*y.re + y.im*y.im;
     IF denom=R.Zero THEN
       RAISE Error(Err.divide_by_zero);
@@ -112,14 +113,14 @@ PROCEDURE Rec(READONLY x0 : T) : T RAISES{Error} =
     denom : R.T;
     exp   : INTEGER;
   BEGIN
-    x := FrExp(x0,exp);
+    x := Normalize(x0,exp);
     denom := x.re*x.re + x.im*x.im;
     IF denom=R.Zero THEN
       RAISE Error(Err.divide_by_zero);
     END;
     z.re :=  x.re / denom;
     z.im := -x.im / denom;
-    RETURN LdExp(z,exp);
+    RETURN Scalb(z,exp);
   END Rec;
 
 (*-------------------*)
@@ -155,29 +156,21 @@ END ScaleInt;
 
 (*-------------------*)
 
-PROCEDURE FrExp (READONLY x: T; VAR exp: INTEGER): T =
-  VAR
-    expr, expi : INTEGER;
+PROCEDURE Normalize (READONLY x: T; VAR exp: INTEGER): T =
   BEGIN
-    EVAL R.FrExp(x.re,expr);
-    EVAL R.FrExp(x.im,expi);
-    exp := (expr+expi) DIV 2;
-    RETURN T{R.LdExp(x.re,-exp),R.LdExp(x.im,-exp)};
-  END FrExp;
+    exp := ILogb (x);
+    RETURN Scalb(x,-exp);
+  END Normalize;
 
-PROCEDURE LdExp (READONLY x: T; exp: INTEGER): T =
+PROCEDURE ILogb (READONLY x: T): INTEGER =
   BEGIN
-    RETURN T{R.LdExp(x.re,exp),R.LdExp(x.im,exp)};
-  END LdExp;
+    RETURN (R.ILogb(x.re)+R.ILogb(x.im)) DIV 2;
+  END ILogb;
 
-PROCEDURE ModF (READONLY x: T; VAR(*OUT*) i: T): T =
-  VAR
-    y : T;
+PROCEDURE Scalb (READONLY x: T; exp: INTEGER): T RAISES {FloatMode.Trap} =
   BEGIN
-    y.re := R.ModF (x.re, i.re);
-    y.im := R.ModF (x.im, i.im);
-    RETURN y;
-  END ModF;
+    RETURN T{R.Scalb(x.re,exp),R.Scalb(x.im,exp)};
+  END Scalb;
 
 
 (*==========================*)
