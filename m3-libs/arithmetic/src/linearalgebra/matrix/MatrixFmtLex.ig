@@ -1,4 +1,4 @@
-GENERIC INTERFACE MatrixFmtLex(M,RF);
+GENERIC INTERFACE MatrixFmtLex(RF,M);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Direct access to matrix functions

@@ -9,7 +9,7 @@
 (*                                                                       *)
 (*                                                                       *)
 
-GENERIC INTERFACE EigenSystem(M,V,RT);
+GENERIC INTERFACE EigenSystem(RT,V,M);
 
 FROM NADefinitions IMPORT Error;
 

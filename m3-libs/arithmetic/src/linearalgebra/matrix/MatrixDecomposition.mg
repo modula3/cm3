@@ -1,4 +1,4 @@
-GENERIC MODULE MatrixDecomposition(M,V,R,RT);
+GENERIC MODULE MatrixDecomposition(R,RT,V,M);
 (*
 Abstract:
 

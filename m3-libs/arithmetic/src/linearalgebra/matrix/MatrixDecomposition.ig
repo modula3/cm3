@@ -1,4 +1,4 @@
-GENERIC INTERFACE MatrixDecomposition(M,V,R);
+GENERIC INTERFACE MatrixDecomposition(R,V,M);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Simultaneous Linear Equations.
