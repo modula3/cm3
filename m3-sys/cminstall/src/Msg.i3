@@ -1,13 +1,15 @@
-(* Copyright 1996, Critical Mass, Inc.  All rights reserved. *)
+(* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 INTERFACE Msg;
 
-IMPORT AtomList;
+IMPORT AtomList, TextSeq;
 
 VAR Debugging := FALSE;
 
-PROCEDURE AskBool (question, default: TEXT): BOOLEAN;
-PROCEDURE Ask     (question, default: TEXT): TEXT;
+PROCEDURE AskBool   (question, default: TEXT): BOOLEAN;
+PROCEDURE Ask       (question, default: TEXT; suf : TEXT := NIL): TEXT;
+PROCEDURE AskChoice (question: TEXT; choices : TextSeq.T): TEXT;
 
 PROCEDURE Debug (a, b, c, d: TEXT := NIL);
 PROCEDURE Out   (a, b, c, d, e, f: TEXT := NIL);

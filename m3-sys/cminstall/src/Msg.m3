@@ -1,13 +1,14 @@
-(* Copyright 1996, Critical Mass, Inc.  All rights reserved. *)
+(* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 MODULE Msg;
 
-IMPORT AtomList, FileWr, OS, OSError, Process, Rd, Stdio;
-IMPORT Text, Text2, TextWr, Thread, Wr;
+IMPORT AtomList, FileWr, Fmt, OS, OSError, Process, Rd, Stdio;
+IMPORT Text, Text2, TextSeq, TextWr, Thread, Wr;
 
 CONST
   SupportMsg =
-    "Please feel free to contact support@cmass.com to troubleshoot this problem.";
+    "Please feel free to contact m3-support@elego.de to troubleshoot this problem.";
 
 VAR
   log_wr: Wr.T := TextWr.New ();
@@ -32,15 +33,22 @@ PROCEDURE AskBool (question, default: TEXT): BOOLEAN =
     END;
   END AskBool;
 
-PROCEDURE Ask (question, default: TEXT): TEXT =
-  VAR txt: TEXT;  q_len := Text.Length (question);
+PROCEDURE Ask (question, default: TEXT; suf : TEXT := NIL): TEXT =
+  VAR txt: TEXT;  q_len := Text.Length (question); s_len := 0;
   BEGIN
     OutX (question);
+    IF suf # NIL THEN s_len := Text.Length(suf) END;
     IF Text.GetChar (question, q_len - 1) # ' ' THEN  OutX (" ");  END;
     IF default # NIL THEN
-      IF q_len + Text.Length (default) >= 70 THEN OutX (Wr.EOL); OutX ("   "); END;
-      OutX ("[");  OutX (default);  OutX ("] ");
+      IF q_len + Text.Length (default) + s_len >= 70 THEN 
+        OutX (Wr.EOL); OutX ("   ");
+      END;
+      OutX ("[");  OutX (default);  OutX ("]");
     END;
+    IF suf # NIL THEN
+      OutX (suf);
+    END;
+    OutX(" ");
     FlushX ();
     TRY
       txt := Rd.GetLine (Stdio.stdin);
@@ -56,6 +64,32 @@ PROCEDURE Ask (question, default: TEXT): TEXT =
     END;
     RETURN txt;
   END Ask;
+
+PROCEDURE AskChoice (question: TEXT; choices : TextSeq.T): TEXT =
+  VAR
+    i := 0;
+    result : TEXT := NIL;
+    item : TEXT;
+  BEGIN
+    IF choices.size() = 0 THEN
+      RETURN Ask(question, NIL);
+    END;
+    WHILE result = NIL OR Text.Equal(result, ".") OR
+      Text.Equal(result, "+") OR Text.Equal(result, "-") DO
+      IF result # NIL THEN
+        IF Text.Equal(result, "+") OR Text.Equal(result, ".") THEN
+          INC(i);
+          IF i >= choices.size() THEN i := 0 END;
+        ELSIF Text.Equal(result, "-") THEN
+          DEC(i);
+          IF i < 0 THEN i := choices.size() - 1 END;
+        END;
+      END;
+      item := "(" & Fmt.Int(i + 1) & " of " & Fmt.Int(choices.size()) & ")";
+      result := Ask(question, choices.get(i), item);
+    END;
+    RETURN result;
+  END AskChoice;
 
 PROCEDURE Debug (a, b, c, d: TEXT := NIL) =
   BEGIN
