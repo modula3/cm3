@@ -7,6 +7,7 @@ Abstract: Integers
 *)
 
 FROM xUtils IMPORT Error, Err;
+IMPORT Word AS W;
 
 <*UNUSED*> CONST Module = "IntegerBasic.";
 (*==========================*)
@@ -40,6 +41,44 @@ PROCEDURE DivMod(x,y:T;VAR r:T):T RAISES {Error} =
     r:=x MOD y;
     RETURN x DIV y;
   END DivMod;
+
+
+PROCEDURE GCD(x,y:T):T=
+VAR
+  xt,yt:[0..BITSIZE(T)]:=0;
+  z:T:=One;
+BEGIN
+  IF x=0 THEN
+    RETURN y;
+  END;
+  IF y=0 THEN
+    RETURN x;
+  END;
+  (*This will be optimized to bit shift operations I hope*)
+  (*count the factor 2*)
+  WHILE x MOD 2 = 0 DO
+    x:=x DIV 2;
+    INC(xt);
+  END;
+  WHILE y MOD 2 = 0 DO
+    y:=y DIV 2;
+    INC(yt);
+  END;
+  WHILE x#y DO
+    IF x<=y THEN
+      z:=y-x;
+    ELSE
+      z:=x-y;
+      x:=y;
+    END;
+    (*both x and y are odd, thus there difference is even*)
+    WHILE z MOD 2 = 0 DO
+      z:=z DIV 2;
+    END;
+    y:=z;
+  END;
+  RETURN W.LeftShift(x,MIN(xt,yt));
+END GCD;
 
 (*==========================*)
 BEGIN
