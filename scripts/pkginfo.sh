@@ -63,7 +63,7 @@ listpkgs() {
 
 syscall_wrappers_exist() {
   T1="${ROOT}/m3-libs/m3core/src/runtime/${TARGET}/RTHeapDepC.c"
-  T1="${ROOT}/m3-libs/m3gc-enhanced/src/runtime/${TARGET}/RTHeapDepC.c"
+  T2="${ROOT}/m3-libs/m3gc-enhanced/src/runtime/${TARGET}/RTHeapDepC.c"
   if [ -f "$T1" ] ; then
     return 0
   fi
