@@ -66,6 +66,21 @@
 			<item>WHILE</item>
 			<item>WITH</item>
 		</list>
+		<list name="blockBegins">
+			<item>INTERFACE</item>
+			<!--<item>MODULE</item> won't work, because implementations have also a BEGIN -->
+			<item>RECORD</item>
+			<item>OBJECT</item>
+			<item>TRY</item>
+			<item>CASE</item>
+			<item>WITH</item>
+			<item>LOCK</item>
+			<item>LOOP</item>
+			<item>WHILE</item>
+			<item>FOR</item>
+			<item>IF</item>
+			<item>BEGIN</item>
+		</list>
 		<list name="types">
 			<item>ADDRESS</item>
 			<item>BOOLEAN</item>
@@ -118,6 +133,10 @@
 		</list>
 		<contexts>
 			<context attribute="Normal Text" lineEndContext="#stay" name="Normal">
+				<keyword      attribute="Keyword" context="#stay" String="blockBegins" beginRegion="Block" />
+				<StringDetect attribute="Keyword" context="#stay" String="END"         endRegion=  "Block" />
+				<StringDetect attribute="Keyword" context="#stay" String="REPEAT"      beginRegion="RepeatUntil" />
+				<StringDetect attribute="Keyword" context="#stay" String="UNTIL"       endRegion=  "RepeatUntil" />
 				<keyword attribute="Keyword" context="#stay" String="keywords"/>
 				<keyword attribute="Type" context="#stay" String="types"/>
 				<keyword attribute="Function" context="#stay" String="functions"/>
@@ -128,11 +147,17 @@
 				<RegExpr attribute="Char" context="#stay" String="'[^']'" />
 				<DetectChar attribute="String" context="String" char="&quot;" />
 				<Detect2Chars attribute="Pragma" context="Pragma1" char="&lt;" char1="*"/>
+				<StringDetect attribute="Comment" context="#stay" String="(*&gt;&gt;&gt;*)" beginRegion="CustomRegion"/>
+				<StringDetect attribute="Comment" context="#stay" String="(*&lt;&lt;&lt;*)" endRegion=  "CustomRegion"/>
 				<Detect2Chars attribute="Comment" context="CommentNest0" char="(" char1="*"/>
 				<!-- Modula 3 allows for arbitrary nesting of comments -  Kate does not so.
 				     Instead we used a maximum nesting of four levels
 					  which should be enough for most cases.
 					  This comment seems to block parsing of the rest of the 'context' environment. -->
+         	<!--
+				<StringDetect attribute="Keyword" context="#stay" String="PROCEDURE"   beginRegion="Procedure" />
+				<RegExpr      attribute="Keyword" context="#stay" String="END *\w+;"   endRegion=  "Procedure" />
+            -->
 			</context>
 			<context attribute="String" lineEndContext="#pop" name="String">
 				<DetectChar attribute="String" context="#pop" char="&quot;"/>
