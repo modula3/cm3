@@ -11,7 +11,7 @@ CONST
   OS_names = ARRAY [0..1] OF TEXT { "POSIX", "WIN32" };
 
 CONST
-  Platform_names = ARRAY [0..29] OF TEXT {
+  Platform_names = ARRAY [0..31] OF TEXT {
     "AIX386", "ALPHA_OSF", "AP3000", "ARM", "DS3100",
     "FreeBSD", "FreeBSD2", "HP300", "HPPA", "IBMR2",
     "IBMRT", "IRIX5", "LINUX", "LINUXELF", "NEXT",
