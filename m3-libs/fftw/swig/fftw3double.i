@@ -189,8 +189,11 @@ PROCEDURE CleanupPlan(<*UNUSED*> READONLY w: WeakRef.T; r: REFANY) =
 	fftw_complex_array_3d *out, fftw_real_array_3d *out
 	  "SizeMismatch";
 
-%typemap(m3wrapintype)  void  * %{REFANY%};
 %typemap(m3wraprettype) void  * %{REFANY%};
+
+// never tested if this is sensible
+%typemap(m3wrapintype)  void  *data %{REFANY%};
+%typemap(m3wrapargraw)  void  *data %{LOOPHOLE(data,ADDRESS)%};
 
 // fftw_export_wisdom
 %typemap(m3wrapintype)  void (*)(char c, void *)
@@ -303,21 +306,8 @@ PROCEDURE CleanupPlan(<*UNUSED*> READONLY w: WeakRef.T; r: REFANY) =
 %ignore fftw_plan_r2r;
 %ignore fftw_plan_guru_r2r;
 %ignore fftw_execute_r2r;
-%ignore fftw_plan_with_nthreads;
-%ignore fftw_init_threads;
-%ignore fftw_cleanup_threads;
-%ignore fftw_export_wisdom_to_file;
-%ignore fftw_export_wisdom_to_string;
-%ignore fftw_export_wisdom;
-%ignore fftw_import_system_wisdom;
-%ignore fftw_import_wisdom_from_file;
-%ignore fftw_import_wisdom_from_string;
-%ignore fftw_import_wisdom;
-%ignore fftw_fprint_plan;
-%ignore fftw_print_plan;
 %ignore fftw_malloc;
 %ignore fftw_free;
-%ignore fftw_flops;
 
 
 /* This is the original fftw3.h file
