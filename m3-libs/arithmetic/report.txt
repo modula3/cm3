@@ -1,10 +1,8 @@
 for myself:
 
 todo:
-  - Binomial: do n trials
-  - physical units
-  - Random/RNG01/RNG02, Stat
   - ODE
+  - physical units
   - Hash routines
   - BRANDED strings
   - (*OUT*) for remainder of DivMod
@@ -26,6 +24,7 @@ people:
 Harry George	http://www.seanet.com/~hgg9140/math/index.html
 Warren D. Smith	http://www.neci.nec.com/homepages/wds/myresume.html
 Thomas Brupbacher	http://research.compaq.com/SRC/modula-3/html/acks.html
+Simon Hood
 
 -------------------------------------
 

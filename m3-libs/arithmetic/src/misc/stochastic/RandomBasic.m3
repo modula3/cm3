@@ -336,15 +336,22 @@ BEGIN
 END Poisson;
 *)
 (*-------------------*)
-PROCEDURE Binomial(SELF:T;
+(*an alternative for Binomial which is probably slower than Binomial
+  but has the potential to be sped up
+  if one can sum up the first n binomial coefficients fast*)
+(*partition the interval [0,1] into pieces
+  with sizes according to the probabilities *)
+<*UNUSED*>
+PROCEDURE BinomialIntervalPartition
+                 (SELF:T;
                      p:R.T;
                      n:CARDINAL
                      ):CARDINAL=
 
   PROCEDURE Calc(p,q:R.T):CARDINAL =
   VAR
-    qp:=q/p;
-    prob:=RP.Power(p,n);
+    pq:=p/q;
+    prob:=RP.Power(q,n);
     rnd:=SELF.generateReal();
     den:=R.Zero;
     num:=FLOAT(n,R.T);
@@ -353,7 +360,7 @@ PROCEDURE Binomial(SELF:T;
     WHILE prob<rnd DO
       rnd:=rnd-prob;
       den:=den+R.One;
-      prob:=prob*qp*num/den;
+      prob:=prob*pq*num/den;
       num:=num-R.One;
       INC(k);
     END;
@@ -369,6 +376,23 @@ BEGIN
   ELSE
     RETURN   Calc(p,R.One-p);
   END;
+END BinomialIntervalPartition;
+
+(*-------------------*)
+PROCEDURE Binomial(SELF:T;
+                     p:R.T;
+                     n:CARDINAL
+                     ):CARDINAL=
+<*UNUSED*> CONST ftn = Module & "Binomial";
+VAR
+  cnt:CARDINAL:=0;
+BEGIN
+  FOR i:=0 TO n-1 DO
+    IF SELF.generateReal()<=p THEN
+      INC(cnt);
+    END;
+  END;
+  RETURN cnt;
 END Binomial;
 
 (*==========================*)
