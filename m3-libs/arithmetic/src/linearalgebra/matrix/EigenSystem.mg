@@ -1,16 +1,3 @@
-(* -*- Modula-3 -*-
-
-   Routines to solve eigenvalue problems.  Unoptimised translations from
-   Wilkinson+Reinsch, Linear Algebra, Grundlehren der mathematischen
-   Wissenschaften in Einzeldarstellungen, Band 186, Springer Verlag
-
-   The re-implementation of the original algorythms tries to follow the
-   original Algol sources as close as possible.
-
-   First Version Thomas Brupbacher (thomas@chem.ubc.ca)
-
-   *)
-
 GENERIC MODULE EigenSystem(R,RT,C,V,CV,M,ML);
 (*
 IMPORT Wr, Stdio, IO, Fmt,
@@ -176,6 +163,14 @@ PROCEDURE EigenValuesGen (A: M.T; flags:= EVGenFlagSet{}): EV RAISES {Error} =
              sdim, eigRe[0], eigIm[0],
              result.schur[0,0], NUMBER(result.schur^),
 	     work[0], NUMBER(work^), bwork[0], success);
+
+    (*A finer error analysis is possible!
+      In some cases partial results should be returned*)
+    IF success<0 THEN
+      RAISE Error(Err.b1_too_small); (*nonsense :-)*)
+    ELSIF success>0 THEN
+      RAISE Error(Err.not_converging);
+    END;
 
     result.upperTri := M.Transpose(A);
 
