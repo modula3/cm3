@@ -12,9 +12,12 @@ UNSAFE MODULE RTLinker EXPORTS RTLinker, RTModule;
 
 IMPORT Cstdlib, Cstring;
 IMPORT RT0, RTParams, RTHeapRep;
-IMPORT RTTypeSRC, RTSignal, RTThreadInit, RTHeapInfo, RTLinkerX;
+IMPORT RTTypeSRC, RTSignal, RTThreadInit, RTHeapInfo, RTLinkerX, 
+       RTIO;
+(* IMPORT RTHeapDebug; *) 
 
 VAR
+  traceInit   := FALSE;
   init_done   := FALSE;
   n_modules   := 0;
   n_fixed     := 0;
@@ -38,11 +41,16 @@ PROCEDURE InitRuntime (p_argc: INTEGER;  p_argv, p_envp, p_instance: ADDRESS) =
 
     (* initialize the rest of the modules we'll be calling *)
     AddUnit (RTLinkerX.RTLinker_I3);  (* myself! *)
+    AddUnit (RTLinkerX.RT0_I3);
     AddUnit (RTLinkerX.RTSignal_I3);
     AddUnit (RTLinkerX.RTParams_I3);
+    AddUnit (RTLinkerX.RTDebug_I3);
+    AddUnit (RTLinkerX.RTError_I3);
     AddUnit (RTLinkerX.RTHeapRep_I3);
     AddUnit (RTLinkerX.RTThreadInit_I3);
     AddUnit (RTLinkerX.RTHeapInfo_I3);
+    AddUnit (RTLinkerX.RTHeapDebug_I3);
+    AddUnit (RTLinkerX.RTIO_I3);
 
     (* finally, initialize the runtime. *)
     RTSignal.InstallHandlers ();
@@ -50,12 +58,23 @@ PROCEDURE InitRuntime (p_argc: INTEGER;  p_argv, p_envp, p_instance: ADDRESS) =
     RTHeapRep.Init ();
     RTThreadInit.Init ();
     RTHeapInfo.Init ();
+    IF RTParams.IsPresent("tracelinker") THEN
+      traceInit := TRUE;
+    END;
+
+    AddUnit (RTLinkerX.RTDebug_M3);
+    AddUnit (RTLinkerX.RTError_M3);
+    AddUnit (RTLinkerX.RTType_M3);
+    AddUnit (RTLinkerX.RTPacking_M3);
+    AddUnit (RTLinkerX.RTTipe_M3);
+    AddUnit (RTLinkerX.RTException_M3);
   END InitRuntime;
 
 PROCEDURE FixImports (m: RT0.ModulePtr) =
   VAR imp: RT0.ImportPtr;
   BEGIN
     IF (m = NIL) THEN RETURN; END;
+    TraceModule("FixImports: ", m);
     imp := m.imports;
     WHILE (imp # NIL) DO
       IF (imp.import = NIL) THEN  imp.import := imp.binder (0);  END;
@@ -72,16 +91,42 @@ CONST
   LS_Ready   = 3;
   LS_Stacked = 4;  (* LS_Stacked+n => init_stack[n] holds the init info *)
 
+PROCEDURE AddUnitI (m: RT0.ModulePtr) =
+  BEGIN
+    IF (m = NIL) THEN RETURN END;
+    TraceModule("AddUnitI: ", m);
+    IF (m.link_state = LS_Initial) THEN FindModules (m);  END;
+    IF (m.link_state = LS_Linked)  THEN FixTypes ();      END;
+    IF (m.link_state = LS_TypesOK) THEN RunMainBody (m);  END;
+  END AddUnitI;
+
 PROCEDURE AddUnit (b: RT0.Binder) =
   VAR m: RT0.ModulePtr;
   BEGIN
     IF (b = NIL) THEN RETURN END;
     m := b(0);
     IF (m = NIL) THEN RETURN END;
-    IF (m.link_state = LS_Initial) THEN FindModules (m);  END;
-    IF (m.link_state = LS_Linked)  THEN FixTypes ();      END;
-    IF (m.link_state = LS_TypesOK) THEN RunMainBody (m);  END;
+    (* RTHeapDebug.CheckHeap(); *)
+    AddUnitI(m);
   END AddUnit;
+
+PROCEDURE AddUnitImports (b: RT0.Binder) =
+  VAR m: RT0.ModulePtr;
+      imp: RT0.ImportPtr;
+  BEGIN
+    IF (b = NIL) THEN RETURN END;
+    m := b(0);
+    IF (m = NIL) THEN RETURN END;
+    TraceModule("AddUnitImports: ", m);
+    imp := m.imports;
+    WHILE (imp # NIL) DO
+      IF (imp.import = NIL) THEN
+        imp.import := imp.binder (0);
+      END;
+      AddUnitI(imp.import);
+      imp := imp.next;
+    END;
+  END AddUnitImports;
 
 (****
 PROCEDURE DumpModules () =
@@ -116,6 +161,7 @@ PROCEDURE FindModules (m: RT0.ModulePtr) =
     mp : UNTRACED REF RT0.ModulePtr;
     imp: RT0.ImportPtr;
   BEGIN
+    TraceModule("FindModules: ", m);
     LinkModule (m);
     WHILE (n < n_modules) DO
       mp := modules + n * ADRSIZE (RT0.ModulePtr);
@@ -133,6 +179,7 @@ PROCEDURE LinkModule (m: RT0.ModulePtr) =
   VAR mp: UNTRACED REF RT0.ModulePtr;
   BEGIN
     IF (m # NIL) AND (m.link_state = LS_Initial) THEN
+      TraceModuleAndImports("LinkModule: ", m);
       (* add this module to the list of known modules *)
       IF n_modules >= max_modules THEN ExpandModuleTable (); END;
       mp := modules + n_modules * ADRSIZE (RT0.ModulePtr);
@@ -171,6 +218,7 @@ PROCEDURE FixTypes () =
     mp := modules + start * ADRSIZE (RT0.ModulePtr);
     FOR i := start TO stop DO
       IF (mp^ # NIL) AND (mp^.link_state = LS_Linked) THEN
+        TraceModule("FixTypes: module types: ", mp^);
         DeclareModuleTypes (mp^);
       END;
       INC (mp, ADRSIZE (mp^));
@@ -180,6 +228,7 @@ PROCEDURE FixTypes () =
     mp := modules + start * ADRSIZE (RT0.ModulePtr);
     FOR i := start TO stop DO
       IF (mp^ # NIL) AND (mp^.link_state = LS_Linked) THEN
+        TraceModule("FixTypes: type links: ", mp^);
         ResolveTypeLinks (mp^);
       END;
       INC (mp, ADRSIZE (mp^));
@@ -192,6 +241,7 @@ PROCEDURE FixTypes () =
     FOR i := start TO stop DO
       IF (mp^ # NIL) AND (mp^.link_state = LS_Linked) THEN
         mp^.link_state := LS_TypesOK;
+        TraceModule("FixTypes: verify: ", mp^);
         VerifyModuleTypes (mp^);
       END;
       INC (mp, ADRSIZE (mp^));
@@ -208,9 +258,13 @@ PROCEDURE DeclareModuleTypes (m: RT0.ModulePtr) =
     next  : ADDRESS;
   BEGIN
     (* register the typecells *)
+    TraceModule("DeclareModuleTypes: ", m);
     type := m.type_cells;  m.type_cells := NIL;
     WHILE (type # NIL) DO
       next := type.next;  type.next := NIL;
+      TraceMsgS("  type ", type.name);
+      TraceMsgI("    typecode ", type.typecode);
+      TraceMsgI("    typeid   ", type.selfID);
       RTTypeSRC.AddTypecell (type, m);
       type := next;
     END;
@@ -284,6 +338,7 @@ PROCEDURE RunMainBody (m: RT0.ModulePtr) =
     desc_offset: INTEGER;
   BEGIN
     IF (m = NIL) THEN RETURN; END;
+    TraceModuleAndImports("RunMainBody: ", m);
     IF (m.link_state = LS_Ready)   THEN RETURN (* already done. *) END;
     IF (m.link_state < LS_TypesOK) THEN RETURN (* not even prepped! *) END;
 
@@ -327,7 +382,10 @@ PROCEDURE RunMainBody (m: RT0.ModulePtr) =
         desc2 := init_stack + i * ADRSIZE (InitDesc);
         m2 := desc2.module;
         m2.link_state := LS_Ready;
-        IF (m2.binder # NIL) THEN EVAL m2.binder (1); END;
+        IF (m2.binder # NIL) THEN 
+          TraceModule("RunMainBody: exec: ", m2);
+          EVAL m2.binder (1);
+        END;
       END;
       desc := init_stack + desc_offset;
       init_depth := desc.low_link;
@@ -338,6 +396,7 @@ PROCEDURE ExpandInitStack () =
   CONST InitialStackSize = 200;
   VAR new_inits: ADDRESS;  n_bytes: INTEGER;
   BEGIN
+    TraceMsgI("ExpandInitStack: ", max_init_stack);
     IF max_init_stack = 0 THEN
       (* first time... *)
       max_init_stack := InitialStackSize;
@@ -386,6 +445,92 @@ PROCEDURE FromDataAddress (x: ADDRESS): RT0.ModulePtr =
     END;
     RETURN best;
   END FromDataAddress;
+
+(*------------------------------------------------------- trace support ---*)
+
+PROCEDURE OutModuleName (m: RT0.ModulePtr) =
+  BEGIN
+    IF NOT traceInit THEN RETURN END;
+    IF m = NIL THEN
+      (* RTIO.PutText("NIL"); *)
+      RETURN;
+    END;
+    IF m.file = NIL THEN
+      RTIO.PutText("NIL");
+    ELSE
+      RTIO.PutString(m.file);
+    END;
+    RTIO.PutText("(");
+    RTIO.PutInt(m.link_state);
+    RTIO.PutText(")");
+    RTIO.Flush();
+  END OutModuleName;
+
+PROCEDURE OutModuleImports (m: RT0.ModulePtr) =
+  VAR imp: RT0.ImportPtr;
+  BEGIN
+    IF NOT traceInit THEN RETURN END;
+    imp := m.imports;
+    WHILE (imp # NIL) DO
+      IF imp.import # NIL THEN
+        RTIO.PutText("  ");
+        OutModuleName(imp.import);
+        RTIO.PutText("\r\n");
+      END;
+      imp := imp.next;
+    END;
+    RTIO.Flush();
+  END OutModuleImports;
+
+PROCEDURE OutModuleAndImports (m: RT0.ModulePtr) =
+  BEGIN
+    IF NOT traceInit THEN RETURN END;
+    OutModuleName(m);
+    RTIO.PutText("\r\n");
+    OutModuleImports(m);
+  END OutModuleAndImports;
+
+PROCEDURE TraceModule(s: TEXT; m: RT0.ModulePtr) =
+  BEGIN
+    IF NOT traceInit THEN RETURN END;
+    RTIO.PutText(s);
+    OutModuleName(m);
+    RTIO.PutText("\r\n");
+    RTIO.Flush();
+  END TraceModule;
+
+PROCEDURE TraceModuleAndImports(s: TEXT; m: RT0.ModulePtr) =
+  BEGIN
+    IF NOT traceInit THEN RETURN END;
+    RTIO.PutText(s);
+    OutModuleAndImports(m);
+  END TraceModuleAndImports;
+
+<*UNUSED*> PROCEDURE TraceMsg(s: TEXT) =
+  BEGIN
+    IF NOT traceInit THEN RETURN END;
+    RTIO.PutText(s);
+    RTIO.PutText("\r\n");
+    RTIO.Flush();
+  END TraceMsg;
+
+PROCEDURE TraceMsgI(s: TEXT; i: INTEGER) =
+  BEGIN
+    IF NOT traceInit THEN RETURN END;
+    RTIO.PutText(s);
+    RTIO.PutInt(i);
+    RTIO.PutText("\r\n");
+    RTIO.Flush();
+  END TraceMsgI;
+
+PROCEDURE TraceMsgS(s: TEXT; s2: RT0.String) =
+  BEGIN
+    IF NOT traceInit THEN RETURN END;
+    RTIO.PutText(s);
+    RTIO.PutString(s2);
+    RTIO.PutText("\r\n");
+    RTIO.Flush();
+  END TraceMsgS;
 
 BEGIN
 END RTLinker.

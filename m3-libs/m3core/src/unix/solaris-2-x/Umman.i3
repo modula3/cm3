@@ -34,11 +34,9 @@ CONST
 
   (* other flags to mmap (or-ed in to MAP_SHARED or MAP_PRIVATE *)
   MAP_FIXED     = 16_10;		 (* user assigns address *)
-  MAP_NORESERVE = 16_00;		 (* don't reserve needed swap area *)
-
-  (* these flags not yet implemented *)
-  MAP_RENAME  = 16_20;			 (* rename private pages to a file *)
-  MAP_INHERIT = 16_80;			 (* inherit this mapping across exec *)
+  MAP_NORESERVE = 16_40;		 (* don't reserve needed swap area *)
+  MAP_ANON      = 16_100;		 (* map anonymous pages directly *)
+  MAP_ANONYMOUS = MAP_ANON;
 
   (* advice to madvise *)
   MADV_NORMAL     = 0;			 (* no further special treatment *)
@@ -48,7 +46,8 @@ CONST
   MADV_DONTNEED   = 4;			 (* don't need these pages *)
 
   (* flags to msync *)
-  MS_SYNC       = 0;			 (* wait for msync *)
+  MS_OLDSYNC    = 0;
+  MS_SYNC       = 4;			 (* wait for msync *)
   MS_ASYNC      = 1;			 (* return immediately *)
   MS_INVALIDATE = 2;			 (* invalidate caches *)
 

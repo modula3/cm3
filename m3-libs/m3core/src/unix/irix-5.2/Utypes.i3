@@ -111,8 +111,8 @@ CONST
 TYPE
   int32_t      = int;
   uint32_t     = unsigned_int;
-  int64_t      = RECORD hi, lo: int END;
-  uint64_t     = RECORD hi, lo: unsigned_int END;
+  int64_t      = RECORD val := ARRAY[0..1] OF int32_t {0,0}; END;
+  uint64_t     = int64_t;
   psint_t      = int32_t;
   psunsigned_t = uint32_t;
   scint_t      = int32_t;
@@ -311,5 +311,8 @@ PROCEDURE FD_SET   (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_CLEAR (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_ISSET (n: int; p: UNTRACED REF fd_set): int;
 PROCEDURE FD_ZERO  (p: UNTRACED REF fd_set);
+
+PROCEDURE asLong(val: off_t): long;
+PROCEDURE assignOffT (VAR dest: off_t; src: long);
 
 END Utypes.
