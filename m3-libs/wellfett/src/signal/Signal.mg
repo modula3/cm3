@@ -1,5 +1,7 @@
 GENERIC MODULE Signal(R, SignalRep, V, P);
 
+FROM NADefinitions IMPORT Error, Err;
+
 REVEAL
   T = SignalRep.TPrivate BRANDED OBJECT
       OVERRIDES
@@ -87,7 +89,11 @@ PROCEDURE GetData (SELF: T): P.T =
 
 PROCEDURE Offset (SELF: T): R.T =
   BEGIN
-    RETURN V.Sum(SELF.data^);
+    TRY
+      RETURN R.Div(V.Sum(SELF.data^), R.FromInteger(NUMBER(SELF.data^)));
+    EXCEPT
+    | Error (err) => <*ASSERT err=Err.divide_by_zero*> RETURN R.Zero;
+    END;
   END Offset;
 
 
