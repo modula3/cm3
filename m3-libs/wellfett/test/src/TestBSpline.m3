@@ -27,7 +27,6 @@ PROCEDURE ShowFilters () =
   END ShowFilters;
 
 PROCEDURE Reconstruction (hdual, gdual: S.T): S.T =
-  <*FATAL BSpl.DifferentParity*>
   VAR
     prod0 := gdual.alternate().convolve(hdual);
     prod1 := hdual.alternate().convolve(gdual);
@@ -39,8 +38,8 @@ PROCEDURE CheckPerfectReconstruction () =
   <*FATAL BSpl.DifferentParity, Thread.Alerted, Wr.Failure*>
   VAR hdual, gdual: S.T;
   BEGIN
-    FOR i := 0 TO 5 DO
-      FOR j := i MOD 2 TO 5 BY 2 DO
+    FOR i := 0 TO 6 DO
+      FOR j := i MOD 2 TO 8 BY 2 DO
         IO.Put(
           Fmt.FN("CDF-%s,%s: %s\n",
                  ARRAY OF
