@@ -17,6 +17,11 @@ PROCEDURE Sub(x,y:T):T = BEGIN RETURN x-y END Sub;
 PROCEDURE Neg(x:T):T   = BEGIN RETURN -x  END Neg;
 PROCEDURE Conj(x:T):T  = BEGIN RETURN  x  END Conj;
 
+PROCEDURE IsZero(x:T):BOOLEAN =
+  BEGIN
+    RETURN x=Zero;
+  END IsZero;
+
 PROCEDURE Mul(x,y:T):T = BEGIN RETURN x*y END Mul;
 PROCEDURE Div(x,y:T):T RAISES {Error} =
   BEGIN
@@ -143,18 +148,22 @@ PROCEDURE GCD(u,v:T):T=
 VAR
   w:CARDINAL;
 BEGIN
-  WHILE NOT Equal(u,Zero) DO
-    w:=Mod(v,u);
-    v:=u;
-    u:=w;
+  TRY
+    WHILE NOT IsZero(u) DO
+      w:=Mod(v,u);
+      v:=u;
+      u:=w;
+    END;
+  (*
+    WHILE u#0 DO
+      w:=v MOD u;
+      v:=u;
+      u:=w;
+    END;
+  *)
+  EXCEPT
+    Error(err) => <*ASSERT err#Err.divide_by_zero*>
   END;
-(*
-  WHILE u#0 DO
-    w:=v MOD u;
-    v:=u;
-    u:=w;
-  END;
-*)
   RETURN v;
 END GCD;
 

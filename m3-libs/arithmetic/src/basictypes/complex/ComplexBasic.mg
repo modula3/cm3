@@ -58,6 +58,12 @@ BEGIN
 END Conj;
 
 (*----------------*)
+PROCEDURE IsZero(READONLY x:T):BOOLEAN =
+BEGIN
+  RETURN R.IsZero(x.re) AND R.IsZero(x.im);
+END IsZero;
+
+(*----------------*)
 PROCEDURE Equal(READONLY x,y:T):BOOLEAN =
 BEGIN
   RETURN R.Equal(x.re,y.re) AND R.Equal(x.im,y.im);

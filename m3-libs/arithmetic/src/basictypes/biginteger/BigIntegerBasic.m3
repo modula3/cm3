@@ -222,8 +222,9 @@ END Mod;
 
 (*==========================*)
 BEGIN
-  Zero := FromInteger(0);
-  One  := FromInteger(1);
+  Zero     := FromInteger(0);
+  One      := FromInteger(1);
+  MinusOne := FromInteger(-1);
 
 (*  billion := FromInteger (1000000000);  *)
 END BigIntegerBasic.

@@ -64,6 +64,12 @@ BEGIN
 END Conj;
 
 (*----------------*)
+PROCEDURE IsZero(READONLY x:T):BOOLEAN =
+BEGIN
+  RETURN x.re=R.Zero AND x.im=R.Zero;
+END IsZero;
+
+(*----------------*)
 PROCEDURE Equal(READONLY x,y:T):BOOLEAN =
 BEGIN
   RETURN x.re=y.re AND x.im=y.im;

@@ -15,6 +15,11 @@ PROCEDURE Sub(x,y:T):T = BEGIN RETURN x-y END Sub;
 PROCEDURE Neg(x:T):T   = BEGIN RETURN -x  END Neg;
 PROCEDURE Conj(x:T):T  = BEGIN RETURN  x  END Conj;
 
+PROCEDURE IsZero(x:T):BOOLEAN =
+  BEGIN
+    RETURN x=Zero;
+  END IsZero;
+
 <*INLINE*>
 PROCEDURE CheckDivisor(x:T) RAISES {Error} =
   BEGIN

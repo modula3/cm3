@@ -34,22 +34,17 @@ PROCEDURE Strip(
 VAR
   n:=LAST(x^);
 BEGIN
-  IF R.Equal(x[n],R.Zero) THEN
+  IF NOT R.IsZero(x[n]) THEN
     RETURN x;
   ELSE
     REPEAT
       DEC(n);
-    UNTIL n=FIRST(x^) OR NOT R.Equal(x[n],R.Zero);
+    UNTIL n=FIRST(x^) OR NOT R.IsZero(x[n]);
   END;
   VAR
     y:=NEW(T,n+1);
   BEGIN
     y^:=SUBARRAY(x^,0,NUMBER(y^));
-(*
-    WHILE n>=FIRST(x^) DO
-      y[n]:=x[n];
-    END;
-*)
     RETURN y;
   END;
 END Strip;
@@ -91,6 +86,12 @@ BEGIN
   END;
   RETURN Strip(z);
 END Sub;
+
+(*---------------------*)
+PROCEDURE IsZero(x:T):BOOLEAN =
+BEGIN
+  RETURN x=NIL OR R.IsZero(x[0]);
+END IsZero;
 
 (*---------------------*)
 PROCEDURE Equal(x,y:T):BOOLEAN =
@@ -280,7 +281,7 @@ PROCEDURE EvalDerivate(
                  x:T;      (*Evaluate the poly with these coefs*)
                  xi:R.T;    (*for this argument*)
              VAR pd:ARRAY OF R.T;  (*returning x(xi), x'(xi)...*)
-                 ) RAISES {Error}=
+                 )=
 (*Given a poly with coefs x, find the value at xi as pd[0],
 and nd more EvalDerivateatives as pd[1]..pd[pdl].
 *)
