@@ -28,6 +28,7 @@ CONST u = ARRAY OF TEXT {
   "    -dir|-dest <outdir>              create output in directory outdir",
   "    -d|-debug                        display debug output",
   "    -v|-verbose                      be verbose",
+  "    -p <pre-process-filter>          filter the sources before processing",
   "",
   "SEMANTICS",
   "",
@@ -100,6 +101,9 @@ PROCEDURE ProcessParameters() =
         IF pp.keywordPresent("-root") OR pp.keywordPresent("-pkgroot") THEN
           pkgRoot := pp.getNext();
         END;
+        IF pp.keywordPresent("-p") THEN
+          preprocess := pp.getNext();
+        END;
         IF pp.keywordPresent("-dir") OR pp.keywordPresent("-dest") THEN
           outdir := pp.getNext();
         END;
@@ -135,6 +139,7 @@ VAR
   nTargets : INTEGER;
   force := FALSE;
   outdir : TEXT := NIL;
+  preprocess: TEXT := NIL;
 
 PROCEDURE ReadFileList () =
   <*FATAL Rd.EndOfFile, Rd.Failure, Thread.Alerted*>
@@ -158,7 +163,11 @@ PROCEDURE ReadFileList () =
       | FilePath.Kind.M3 => fk := "M3"; Add();
       | FilePath.Kind.IG => fk := "IG"; Add();
       | FilePath.Kind.MG => fk := "MG"; Add();
+      | FilePath.Kind.FV => fk := "FV"; Add();
       | FilePath.Kind.TMPL => fk := "TMPL"; Add();
+      | FilePath.Kind.QUAKE => fk := "QUAKE"; Add();
+      | FilePath.Kind.H => fk := "H"; Add();
+      | FilePath.Kind.C => fk := "C"; Add();
       ELSE
         fk := "??";
         V("  ", fk, ": ", file);
@@ -301,7 +310,16 @@ PROCEDURE UpdateDB () =
   END UpdateDB;
 
 PROCEDURE GenerateHTML () =
-  CONST TmpFile = "/tmp/m3tohtml.tmp";
+  CONST 
+    TmpFile = "/tmp/m3tohtml.tmp";
+    M3Sources = SET OF FilePath.Kind{
+      FilePath.Kind.I3,
+      FilePath.Kind.M3,
+      FilePath.Kind.IG,
+      FilePath.Kind.MG,
+      FilePath.Kind.TMPL,
+      FilePath.Kind.QUAKE
+    };
   VAR s := sources;  rd: Rd.T;  wr: Wr.T;  n := 0;  args: ARRAY [0..1] OF TEXT;
   BEGIN  
     WHILE (s # NIL) DO
@@ -310,8 +328,13 @@ PROCEDURE GenerateHTML () =
 
         args[0] := s.from;
         args[1] := TmpFile;
-        IF Process.Wait (Process.Create ("PREPROCESS", args)) = 0 THEN
-          rd := FileRd.Open (TmpFile);
+        IF preprocess = NIL OR
+           Process.Wait (Process.Create (preprocess, args)) = 0 THEN
+          IF preprocess = NIL THEN
+            rd := FileRd.Open (s.from);
+          ELSE
+            rd := FileRd.Open (TmpFile);
+          END;
           WITH dir = Pathname.Prefix(s.to) DO
             IF dir # NIL THEN
               IF NOT FSUtils.IsDir(dir) THEN
@@ -324,7 +347,11 @@ PROCEDURE GenerateHTML () =
           EXCEPT ELSE
             F("cannot open ", s.to & ".html");
           END;
-          MarkUp.Annotate (rd, wr, s.to);
+          IF s.kind IN M3Sources THEN
+            MarkUp.Annotate (rd, wr, s.to);
+          ELSE
+            MarkUp.Simple (rd, wr, s.to);
+          END;
           Wr.Close (wr);
           Rd.Close (rd);
         ELSE
@@ -373,6 +400,11 @@ PROCEDURE GenerateIndex () =
     GenIndex (wr, "href/IG", FilePath.Kind.IG, "Generic interfaces", names^);
     GenIndex (wr, "href/M3", FilePath.Kind.M3, "Modules", names^);
     GenIndex (wr, "href/MG", FilePath.Kind.MG, "Generic modules", names^);
+    GenIndex (wr, "href/MG", FilePath.Kind.TMPL, "Templates", names^);
+    GenIndex (wr, "href/MG", FilePath.Kind.QUAKE, "Quake code", names^);
+    GenIndex (wr, "href/MG", FilePath.Kind.FV, "FormsVBT code", names^);
+    GenIndex (wr, "href/MG", FilePath.Kind.H, "C Headers", names^);
+    GenIndex (wr, "href/MG", FilePath.Kind.C, "C Sources", names^);
     Wr.PutText (wr, "</UL>\n</BODY>\n</HTML>\n");
     Wr.Close (wr);
   END GenerateIndex;
@@ -382,9 +414,6 @@ PROCEDURE GenIndex (wr: Wr.T;  file: TEXT;  kind: FilePath.Kind;  title: TEXT;
   <*FATAL Wr.Failure, Thread.Alerted *>
   VAR cnt := 0;  s := sources;
   BEGIN
-    Wr.PutText (wr, "<H2>");
-    Wr.PutText (wr, title);
-    Wr.PutText (wr, "</H2>\n<P>\n");
     WHILE (s # NIL) DO
       IF s.kind = kind THEN
         names [cnt] := s.to;  INC (cnt);
@@ -392,6 +421,9 @@ PROCEDURE GenIndex (wr: Wr.T;  file: TEXT;  kind: FilePath.Kind;  title: TEXT;
       s := s.next;
     END;
     IF cnt > 0 THEN
+      Wr.PutText (wr, "<H2>");
+      Wr.PutText (wr, title);
+      Wr.PutText (wr, "</H2>\n<P>\n");
       HTMLDir.GenDir (SUBARRAY (names, 0, cnt), wr, file,
                       "Critical Mass Modula-3: " & title, 70);
     END;

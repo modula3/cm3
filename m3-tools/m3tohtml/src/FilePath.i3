@@ -12,7 +12,7 @@ PROCEDURE Normalize (dest, src: TEXT): TEXT;
 PROCEDURE Classify (path: TEXT): Kind;
 (* classify the file based on its suffix *)
 
-TYPE Kind = { I3, M3, IG, MG, TMPL, other };
+TYPE Kind = { I3, M3, IG, MG, TMPL, QUAKE, FV, H, C, other };
 
 END FilePath.
 
