@@ -1,9 +1,15 @@
 import("libm3")
 
 template("findzero")
+template("interpolation")
 
 
 generic_module("FindZero")
 FindZero("Real",     "RealTrans",     "RealBasic")
 FindZero("LongReal", "LongRealTrans", "LongRealBasic")
 FindZero("Extended", "ExtendedTrans", "ExtendedBasic")
+
+generic_module("Interpolation")
+Interpolation("Real",     "RealTrans",     "RealBasic")
+Interpolation("LongReal", "LongRealTrans", "LongRealBasic")
+Interpolation("Extended", "ExtendedTrans", "ExtendedBasic")
