@@ -18,6 +18,8 @@ todo:
        What about objects?
        What about List of objects?
      - overflow check (at least in integer modules)
+  - separate the whole libraries into pieces that are usually used together,
+       that are three libraries: realarithmetic, longrealarithmetic, extendedarithmetic
 
   - distinguishing between e.g. VectorBasic and VectorFast
     makes things complicated,
