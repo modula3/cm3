@@ -15,6 +15,7 @@ CONST Module = "IntegerBasic.";
 PROCEDURE Add(x,y:T):T = BEGIN RETURN x+y END Add;
 PROCEDURE Sub(x,y:T):T = BEGIN RETURN x-y END Sub;
 PROCEDURE Neg(x:T):T   = BEGIN RETURN -x  END Neg;
+PROCEDURE Conj(x:T):T  = BEGIN RETURN  x  END Conj;
 
 PROCEDURE Mul(x,y:T):T = BEGIN RETURN x*y END Mul;
 PROCEDURE Div(x,y:T):T RAISES {Error} =

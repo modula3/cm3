@@ -24,6 +24,7 @@ CONST
 <*INLINE*> PROCEDURE Add(x,y:T):T;  (*return x+y*)
 <*INLINE*> PROCEDURE Sub(x,y:T):T;  (*return x-y*)
 <*INLINE*> PROCEDURE Neg(x:T):T;    (*return -x *)
+<*INLINE*> PROCEDURE Conj(x:T):T;   (*return x*)
 
 <*INLINE*> PROCEDURE Mul(x,y:T):T;  (*return x*y*)
 <*INLINE*> PROCEDURE Div(x,y:T):T RAISES {Error};  (*return x/y*)
@@ -31,7 +32,7 @@ CONST
 <*INLINE*> PROCEDURE DivMod(x,y:T;VAR r:T):T RAISES {Error};  (*return x/y and write the remainder 0 in r*)
 <*INLINE*> PROCEDURE IntMod(x,y:T):T RAISES {Error};  (*return x mod y*)
 <*INLINE*> PROCEDURE Rec(x:T):T RAISES {Error};    (*return 1/x*)
-<*INLINE*> PROCEDURE ScaleInt(x:T;y:INTEGER):T;  (*return x*y*)
+<*OBSOLETE*> PROCEDURE ScaleInt(x:T;y:INTEGER):T;  (*return x*y*)
 
 (*==========================*)
 END FloatBasic.
