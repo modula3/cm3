@@ -6,6 +6,12 @@ FROM RT IMPORT Tiny, Eps;
 
 CONST Module = "MatrixDecomposition";
 
+PROCEDURE AssertSquareForm (READONLY x: M.TBody; ) =
+  BEGIN
+    <* ASSERT NUMBER(x) = NUMBER(x[0]), "Matrix must have square form." *>
+  END AssertSquareForm;
+
+
 (*==========================*)
 (* Triangluar Matrices *)
 (*==========================*)
@@ -21,42 +27,40 @@ A x = b can be solved for b by back substitution
 PROCEDURE BackSubst (A: M.T; x, b: V.T) RAISES {Arith.Error} =
 
   VAR
-    m        := NUMBER(A^);
-    m1       := FIRST(A^);
-    mm       := LAST(A^);
-    n        := NUMBER(A[0]);
-    tmp: R.T;
+    m  := NUMBER(A^);
+    m1 := FIRST(A^);
+    mm := LAST(A^);
+    n  := NUMBER(A[0]);
+
   BEGIN
-    IF (m # n) OR (NUMBER(x^) # n) OR (NUMBER(b^) # n) THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    <* ASSERT m = n AND NUMBER(x^) = n AND NUMBER(b^) = n,
+                "Matrix and vector sizes must match." *>
 
     FOR row := mm TO m1 BY -1 DO
       IF ABS(b[row]) < Tiny THEN
         RAISE Arith.Error(NEW(Arith.ErrorDivisionByZero).init());
       END;
-      tmp := b[row];
-      FOR col := row + 1 TO mm DO tmp := tmp - A[row, col] * x[col]; END;
-      x[row] := tmp / A[row, row];
+      WITH tmp = b[row] DO
+        FOR col := row + 1 TO mm DO tmp := tmp - A[row, col] * x[col]; END;
+        x[row] := tmp / A[row, row];
+      END;
     END;
   END BackSubst;
 
 (* Tridiagonal Matrices *)
 (*------------------------*)
-PROCEDURE HouseHolderD (A: M.T) RAISES {Arith.Error} = (*nxn*)
+PROCEDURE HouseHolderD (A: M.T) = (*nxn*)
   (*Convert A to tridiagonal form (destroying original A)*)
   VAR
     n                                 := NUMBER(A^);
     n1                                := FIRST(A^);
     nn                                := LAST(A^);
-    m                                 := NUMBER(A[0]);
     u                                 := NEW(V.T, n);
     t                                 := NEW(M.T, n, n);
     sum, rootsum, w, h, uau, b23: R.T;
+
   BEGIN
-    IF n # m THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    AssertSquareForm(A^);
 
     FOR row := n1 TO nn - 2 DO
       sum := R.Zero;
@@ -98,23 +102,18 @@ PROCEDURE HouseHolderD (A: M.T) RAISES {Arith.Error} = (*nxn*)
   END HouseHolderD;
 
 (*---------------------*)
-PROCEDURE SplitTridiagonal (A: M.T; ): Tridiagonals RAISES {Arith.Error} =
+PROCEDURE SplitTridiagonal (A: M.T; ): Tridiagonals =
 
   VAR
-    n            := NUMBER(A^);
-    n1           := FIRST(A^);
-    nn           := LAST(A^);
-    m            := NUMBER(A[0]);
-    a, b, c: V.T;
+    n  := NUMBER(A^);
+    n1 := FIRST(A^);
+    nn := LAST(A^);
+    a  := NEW(V.T, n);
+    b  := NEW(V.T, n);
+    c  := NEW(V.T, n);
 
   BEGIN
-    IF n # m THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
-
-    a := NEW(V.T, n);
-    b := NEW(V.T, n);
-    c := NEW(V.T, n);
+    AssertSquareForm(A^);
 
     a[n1] := R.Zero;
     b[n1] := A[n1, n1];
@@ -154,11 +153,11 @@ PROCEDURE SolveTridiagonal (t: Tridiagonals; r: V.T; VAR u: V.T)
     n1       := FIRST(r^);
     nn       := LAST(r^);
     d        := NEW(V.T, n);
+
   BEGIN
     (*---check preconditions---*)
-    IF NUMBER(a^) # n OR NUMBER(b^) # n OR NUMBER(c^) # n THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    <* ASSERT NUMBER(a^) = n AND NUMBER(b^) = n AND NUMBER(c^) = n,
+                "Diagonals must have the same size." *>
     IF ABS(b[n1]) < Tiny THEN
       RAISE Arith.Error(NEW(Arith.ErrorAlmostZero).init());
     END;
@@ -211,9 +210,7 @@ VAR
   tmp:R.T;
   pndx:CARDINAL;
 BEGIN
-  IF (m#n) OR (NUMBER(x^)#n) OR (NUMBER(b^)#n) THEN
-    RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-  END;
+<*ASSERT m=n AND NUMBER(x^)=n AND NUMBER(b^)=n, "Matrix and vector sizes must match."*>
 
   FOR row:=n1 TO nn-1 DO
     IF pivot THEN
@@ -256,7 +253,7 @@ PROCEDURE LUFactor (Aorig: M.T; ): LUFactors RAISES {Arith.Error} =
     RETURN LUFactors{L, U, index, sign};
   END LUFactor;
 
-PROCEDURE LUBackSubst (LU: LUFactors; b: V.T; ): V.T RAISES {Arith.Error} =
+PROCEDURE LUBackSubst (LU: LUFactors; b: V.T; ): V.T =
   <* UNUSED *>
   CONST
     ftn = "LUBackSubst";
@@ -266,7 +263,7 @@ PROCEDURE LUBackSubst (LU: LUFactors; b: V.T; ): V.T RAISES {Arith.Error} =
     RETURN B;
   END LUBackSubst;
 
-PROCEDURE LUInverse (LU: LUFactors; ): M.T RAISES {Arith.Error} =
+PROCEDURE LUInverse (LU: LUFactors; ): M.T =
   <* UNUSED *>
   CONST
     ftn = "LUInverse";
@@ -276,10 +273,9 @@ PROCEDURE LUInverse (LU: LUFactors; ): M.T RAISES {Arith.Error} =
     B   : M.T;
 
   BEGIN
-    IF n # NUMBER(LU.L^) OR n # NUMBER(LU.L[0]) OR n # NUMBER(LU.U^)
-         OR n # NUMBER(LU.U[0]) THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    <* ASSERT n = NUMBER(LU.L^) AND n = NUMBER(LU.L[0])
+                AND n = NUMBER(LU.U^) AND n = NUMBER(LU.U[0]),
+                "Matrix and vector sizes must match." *>
 
     B := M.New(n, n);
     FOR i := 0 TO n - 1 DO
@@ -302,9 +298,7 @@ PROCEDURE Inverse (Aorig: M.T; ): M.T RAISES {Arith.Error} =
     sign : [-1 .. 1];
 
   BEGIN
-    IF n # NUMBER(A[0]) THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    AssertSquareForm(A^);
 
     B := M.NewOne(n);
     index := NEW(REF IndexArray, n);
@@ -350,9 +344,8 @@ PROCEDURE LUFactorD (VAR A    : M.TBody;
     tmprow                  := NEW(V.T, n1 + 1);
 
   BEGIN
-    IF (m1 # n1) OR (m1 # n2) THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    <* ASSERT m1 = n1 AND m1 = n2,
+                "Matrix and permutation vector sizes must match." *>
 
     (*---track the row switching parity via d---*)
     d := 1;
@@ -430,15 +423,14 @@ PROCEDURE LUFactorD (VAR A    : M.TBody;
 (*-----------------*)
 PROCEDURE LUBackSubstD (VAR      A    : M.TBody;
                         VAR      B    : V.TBody;
-                        READONLY index: IndexArray) RAISES {Arith.Error} =
+                        READONLY index: IndexArray) =
   BEGIN
     LUBackSubstSep(A, A, B, index);
   END LUBackSubstD;
 
 PROCEDURE LUBackSubstSep (VAR      A, U : M.TBody;
                           VAR      B    : V.TBody;
-                          READONLY index: IndexArray)
-  RAISES {Arith.Error} =
+                          READONLY index: IndexArray) =
   <* UNUSED *>
   CONST
     ftn = "LUBackSubstSep";
@@ -450,10 +442,9 @@ PROCEDURE LUBackSubstSep (VAR      A, U : M.TBody;
     m2                             := LAST(B); (*num rows*)
     ii, ip: [-1 .. LAST(CARDINAL)];
     sum   : R.T;
+
   BEGIN
-    IF m1 # n1 OR m2 # m1 THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    <* ASSERT m1 = n1 AND m1 = m2, "Matrix and vector sizes must match." *>
 
     (*---find first non-zero---*)
     ii := Af - 1;                (*marker for first non-zero coeff*)
@@ -479,8 +470,7 @@ PROCEDURE LUBackSubstSep (VAR      A, U : M.TBody;
     END (* for *);
   END LUBackSubstSep;
 (*-----------------*)
-PROCEDURE LUInverseD (VAR A: M.TBody; READONLY index: IndexArray): M.T
-  RAISES {Arith.Error} =
+PROCEDURE LUInverseD (VAR A: M.TBody; READONLY index: IndexArray): M.T =
   <* UNUSED *>
   CONST
     ftn = "LUInverse";
@@ -489,9 +479,7 @@ PROCEDURE LUInverseD (VAR A: M.TBody; READONLY index: IndexArray): M.T
     B: M.T;
 
   BEGIN
-    IF n # NUMBER(A[0]) THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    AssertSquareForm(A);
 
     B := M.NewOne(n);
 

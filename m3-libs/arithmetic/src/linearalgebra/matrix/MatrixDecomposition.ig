@@ -30,14 +30,14 @@ PROCEDURE BackSubst (A: M.T; x, b: V.T) RAISES {Error};
 |                      aN   bN
    *)
 
-PROCEDURE HouseHolderD (A: M.T) RAISES {Error}; (*nxn*)
+PROCEDURE HouseHolderD (A: M.T); (*nxn*)
 (*Convert A to tridiagonal form (destroying original A)*)
 
 TYPE Tridiagonals = RECORD a, b, c: V.T;  END;
 
 PROCEDURE SplitTridiagonal (A: M.T;  (* matrix that contains only three
                                         central diagonals, not checked *)
-  ): Tridiagonals RAISES {Error};
+  ): Tridiagonals;
 
 
 PROCEDURE SolveTridiagonal (t: Tridiagonals; r: V.T; VAR u: V.T)
@@ -79,9 +79,9 @@ TYPE
 
 PROCEDURE LUFactor (A: M.T; ): LUFactors RAISES {Error};
 
-PROCEDURE LUBackSubst (LU: LUFactors; b: V.T; ): V.T RAISES {Error};
+PROCEDURE LUBackSubst (LU: LUFactors; b: V.T; ): V.T;
 
-PROCEDURE LUInverse (LU: LUFactors; ): M.T RAISES {Error};
+PROCEDURE LUInverse (LU: LUFactors; ): M.T;
 
 PROCEDURE LUDet (LU: LUFactors; ): R.T RAISES {Error};
 (*after LUFactor on A and no backsubs, returns determinant *)
@@ -103,12 +103,12 @@ PROCEDURE LUFactorD (VAR A: M.TBody;  (* in: matrix to factorize, out:
 PROCEDURE LUBackSubstD (VAR A: M.TBody;
                         VAR B: V.TBody;  (* in: right hand side b, out:
                                             solution vector x *)
-                        READONLY index: IndexArray) RAISES {Error};
+                        READONLY index: IndexArray);
 (* After LUfactor on A, solves A dot x = b. *)
 
 PROCEDURE LUInverseD (VAR A: M.TBody;  (* A must be LU factorized inplace,
                                           it will be destroyed *)
-                      READONLY index: IndexArray): M.T RAISES {Error};
+                      READONLY index: IndexArray): M.T;
 
 
 

@@ -21,10 +21,9 @@ PROCEDURE EigenValues (A: M.T; flags := EVFlagSet{}): EV
     bwork            := NEW(REF ARRAY OF BOOLEAN, NUMBER(A^));
     success: INTEGER;
     result : EV;
+
   BEGIN
-    IF NUMBER(A^) # NUMBER(A[0]) THEN
-      RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-    END;
+    <* ASSERT NUMBER(A^) = NUMBER(A[0]), "Matrix must have square form!" *>
 
     result.eigenvalues := CV.New(NUMBER(A^));
 
@@ -89,9 +88,7 @@ PROCEDURE LeastSquares (A: M.T; READONLY B: ARRAY OF V.T; flags: LSFlagSet):
     END;
 
     FOR j := 0 TO LAST(X^) DO
-      IF NUMBER(X[j]) # bsize THEN
-        RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
-      END;
+      <* ASSERT NUMBER(X[j]) = bsize, "Matrix and vector size must match." *>
       SUBARRAY(X[j], 0, bsize) := B[j]^;
     END;
 

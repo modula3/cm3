@@ -11,7 +11,7 @@ CONST
    power sums if we compute the trace of successive powers of x*)
 PROCEDURE CharPolynomial (x: M.T): Rt.T =
   BEGIN
-    <* ASSERT NUMBER(x^) = NUMBER(x[0]), "Matrix must be square form!" *>
+    <* ASSERT NUMBER(x^) = NUMBER(x[0]), "Matrix must have square form!" *>
     VAR
       p   := NEW(REF Rt.PowerSumSeq, NUMBER(x^));
       pow := x;
