@@ -4,6 +4,7 @@ template("physicalvalue")
 
 
 module("PhysicalUnit")
+module("PhysicalUnitFmtLex")
 
 generic_module("PhysicalValue")
 PhysicalValue("Integer32",       "Integer32Basic")

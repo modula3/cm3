@@ -1,4 +1,10 @@
 GENERIC INTERFACE UsualUnit(R);
+(*
+  Data type for units that are of common use.
+  Where units like meter 'm' and second 's' are base units,
+  the unit 'Pa=N/m²' is a composed unit,
+  but it is commonly used.
+*)
 
 IMPORT PhysicalUnit AS U;
 

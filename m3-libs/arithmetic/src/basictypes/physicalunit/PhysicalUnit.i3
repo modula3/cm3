@@ -4,7 +4,7 @@ INTERFACE PhysicalUnit;
 Abstract: Computations with vectors of exponents of physical units.
           It will most commonly be used in connection with
           some type of numerical values as provided by
-          PhysicalUnitValue
+          PhysicalValue
 
 1/1/96  <name>    Initial version
 *)
@@ -34,6 +34,9 @@ PROCEDURE Neg  (x : T) : T;
 PROCEDURE Scale     (x : T; y : ExpType) : T;
 PROCEDURE ScaleDiv  (x : T; y : ExpType) : T RAISES {Error};
 PROCEDURE ScaleReal (x : T; y : R.T) : T RAISES {Error};
+
+PROCEDURE Norm1   (x : T) : ExpType;
+PROCEDURE NormInf (x : T) : ExpType;
 
 (*==========================*)
 END PhysicalUnit.
