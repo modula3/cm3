@@ -11,7 +11,7 @@ TYPE
   IndexArray = ARRAY OF CARDINAL;
 
 (*==========================*)
-(* Triangluar Matrices      *)
+(* Triangular Matrices      *)
 (*==========================*)
 (*A triangular matrix A is of the form:
 | a11 a12 a13 a14

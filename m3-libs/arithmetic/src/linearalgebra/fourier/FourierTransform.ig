@@ -1,10 +1,12 @@
 GENERIC INTERFACE FourierTransform(C);
-(*Arithmetic for Modula-3, see doc for details
+(* Arithmetic for Modula-3, see doc for details
 
-Abstract: Fast Fourier Transforms (FFT's)
+   Abstract: Fast Fourier Transforms (FFT's)
 
-3/18/96  Warren Smith    Initial version
-*)
+   Much more sophisticated routines can be found in the Modula-3 interface
+   to the FFTW library.
+
+   3/18/96 Warren Smith Initial version *)
 
 (*==========================*)
 (**************************************
@@ -35,14 +37,13 @@ To do an FFT of some data, therefore, we would call
 I have separated the routines this way because I want to be able to
 avoid the ReOrder when computing convolutions and correlations.
 ****************************************)
-PROCEDURE FFTwithWrongOrderedInput(
-              VAR a: ARRAY OF C.T;
-              direction: [-1..1]);
+PROCEDURE FFTwithWrongOrderedInput (VAR a        : ARRAY OF C.T;
+                                        direction: [-1 .. 1]     );
 
 
 
 (*----------------------------*)
-PROCEDURE Test();
+PROCEDURE Test ();
 (*perform assertions*)
 (*==========================*)
 END FourierTransform.
