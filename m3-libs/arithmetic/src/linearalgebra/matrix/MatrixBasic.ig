@@ -20,6 +20,7 @@ TYPE
   T     = REF TBody;
 
 PROCEDURE New(m,n:CARDINAL):T; (*make New mxn matrix*)
+PROCEDURE FromArray(READONLY x:TBody):T;
 PROCEDURE Copy(x:T):T;
 
 PROCEDURE NewZero(m,n:CARDINAL):T;               (*create zero matrix*)
@@ -36,11 +37,11 @@ PROCEDURE MulV(A:T;b:V.T):V.T RAISES {Error};  (*A * b*)
 PROCEDURE Transpose(x:T):T;                  (*x^T*)
 PROCEDURE Adjungate(x:T):T;                  (*x^**)
 
-PROCEDURE GetRow(x:T;k:CARDINAL):V.T;
-PROCEDURE GetColumn(x:T;k:CARDINAL):V.T;
-
 PROCEDURE Trace(x:T):R.T;    (*sum of the diagonal elements*)
 (*PROCEDURE Determinant(x:T):R.T;*)
+
+PROCEDURE GetRow(x:T;k:CARDINAL):V.T;
+PROCEDURE GetColumn(x:T;k:CARDINAL):V.T;
 
 TYPE
   ApplyFtn  = PROCEDURE (x:R.T);

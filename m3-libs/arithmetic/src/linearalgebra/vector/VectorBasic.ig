@@ -13,6 +13,7 @@ TYPE
   T     = REF TBody;
 
 PROCEDURE New(n:CARDINAL):T; (*make new vector with n components T*)
+PROCEDURE FromArray(READONLY x:TBody):T;
 PROCEDURE Copy(x:T):T;
 
 (*

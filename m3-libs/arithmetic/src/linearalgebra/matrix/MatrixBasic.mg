@@ -31,6 +31,16 @@ BEGIN
   RETURN NEW(T,m,n);
 END New;
 (*-----------------*)
+PROCEDURE FromArray(READONLY x:TBody):T=
+VAR
+  m:=NUMBER(x);
+  n:=NUMBER(x[0]);
+  z:=NEW(T,m,n);
+BEGIN
+  z^:=x;
+  RETURN z;
+END FromArray;
+(*-----------------*)
 PROCEDURE Copy(
                 x:T):T =
 VAR

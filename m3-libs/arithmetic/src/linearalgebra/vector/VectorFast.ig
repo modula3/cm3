@@ -1,4 +1,4 @@
-GENERIC INTERFACE VectorFast(R);
+GENERIC INTERFACE VectorFast(R,VB);
 (*Copyright (c) 1996, m3na project
 
 Abstract: Vector math
@@ -12,8 +12,10 @@ TYPE
   TBody = ARRAY OF R.T;
   T     = REF TBody;
 
-PROCEDURE New(n:CARDINAL):T; (*make new vector with n components T*)
-PROCEDURE Copy(x:T):T;
+CONST
+  New       = VB.New;
+  FromArray = VB.FromArray;
+  Copy      = VB.Copy;
 
 (*
 PROCEDURE Zero(x:T);                   (*set to zero*)

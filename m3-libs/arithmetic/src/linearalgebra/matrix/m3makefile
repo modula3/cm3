@@ -4,9 +4,6 @@ template("matrix")
 
 
 generic_module("MatrixBasic")
-MatrixBasic("Real",            "RealVectorBasic",             "RealBasic")
-MatrixBasic("LongReal",        "LongRealVectorBasic",         "LongRealBasic")
-MatrixBasic("Extended",        "ExtendedVectorBasic",         "ExtendedBasic")
 MatrixBasic("LongRealComplex", "LongRealComplexVectorBasic",  "LongRealComplexBasic")
 MatrixBasic("Integer32",       "Integer32VectorBasic",        "Integer32Basic")
 MatrixBasic("BigInteger",      "BigIntegerVectorBasic",       "BigIntegerBasic")
@@ -17,9 +14,9 @@ MatrixFast("LongReal", "LongRealVectorFast", "LongRealBasic")
 MatrixFast("Extended", "ExtendedVectorFast", "ExtendedBasic")
 
 generic_module("MatrixTrans")
-%MatrixTrans("Real",     "RealMatrixFast",     "RealEigenSystem",     "RealTrans",     "RealBasic",     "RealTrans")
+MatrixTrans("Real",     "RealMatrixFast",     "RealEigenSystem",     "RealTrans",     "RealBasic",     "RealTrans")
 MatrixTrans("LongReal", "LongRealMatrixFast", "LongRealEigenSystem", "LongRealTrans", "LongRealBasic", "LongRealTrans")
-%MatrixTrans("Extended", "ExtendedMatrixFast", "ExtendedEigenSystem", "ExtendedTrans", "ExtendedBasic", "ExtendedTrans")
+MatrixTrans("Extended", "ExtendedMatrixFast", "ExtendedEigenSystem", "ExtendedTrans", "ExtendedBasic", "ExtendedTrans")
 %MatrixTrans("RealComplex",     "RealComplexMatrixFast",     "RealComplexEigenSystem",     "RealComplexTrans",     "RealBasic",     "RealTrans")
 %MatrixTrans("LongRealComplex", "LongRealComplexMatrixFast", "LongRealComplexEigenSystem", "LongRealComplexTrans", "LongRealBasic", "LongRealTrans")
 %MatrixTrans("ExtendedComplex", "ExtendedComplexMatrixFast", "ExtendedComplexEigenSystem", "ExtendedComplexTrans", "ExtendedBasic", "ExtendedTrans")
@@ -30,9 +27,9 @@ MatrixDecomposition("LongReal", "LongRealMatrixFast", "LongRealVectorFast", "Lon
 MatrixDecomposition("Extended", "ExtendedMatrixFast", "ExtendedVectorFast", "ExtendedBasic", "ExtendedTrans")
 
 generic_module("EigenSystem")
-%EigenSystem("Real",     "RealMatrixFast",     "RealVectorFast",    "RealBasic",     "RealTrans")
+EigenSystem("Real",     "RealMatrixFast",     "RealVectorFast",    "RealBasic",     "RealTrans")
 EigenSystem("LongReal", "LongRealMatrixFast", "LongRealVectorFast", "LongRealBasic", "LongRealTrans")
-%EigenSystem("Extended", "ExtendedMatrixFast", "ExtendedVectorFast", "ExtendedBasic", "ExtendedTrans")
+EigenSystem("Extended", "ExtendedMatrixFast", "ExtendedVectorFast", "ExtendedBasic", "ExtendedTrans")
 
 generic_module("CharPolynomial")
 CharPolynomial("Real",            "RealMatrixFast",              "RealRootBasic",             "RealBasic")

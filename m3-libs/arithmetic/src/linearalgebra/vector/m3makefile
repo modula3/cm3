@@ -4,9 +4,6 @@ template("vector")
 
 
 generic_module("VectorBasic")
-VectorBasic("Real",               "RealBasic")
-VectorBasic("LongReal",           "LongRealBasic")
-VectorBasic("Extended",           "ExtendedBasic")
 VectorBasic("RealComplex",        "RealComplexBasic")
 VectorBasic("LongRealComplex",    "LongRealComplexBasic")
 VectorBasic("ExtendedComplex",    "ExtendedComplexBasic")

@@ -24,21 +24,6 @@ FROM NADefinitions IMPORT Error,Err;
 <*UNUSED*> CONST Module = "VectorFast.";
 
 (*-----------------*)
-PROCEDURE New(  n:CARDINAL):T =
-BEGIN
-  RETURN NEW(T,n);
-END New;
-(*-----------------*)
-PROCEDURE Copy(  x:T):T =
-VAR
-  n:=NUMBER(x^);
-  y:=NEW(T,n);
-BEGIN
-  y^:=x^;
-  RETURN y;
-END Copy;
-
-(*-----------------*)
 <*INLINE*>
 PROCEDURE AssertEqualSize(
                  x,y:T) RAISES {Error}=

@@ -9,9 +9,12 @@ readonly proc VectorBasic (nm, field) is
 end
 
 readonly proc VectorFast (nm, field) is
-  local basic = nm & "VectorFast"
-  build_generic_intf (basic, "VectorFast", [field], VISIBLE)
-  build_generic_impl (basic, "VectorFast", [field])
+  local basic = nm & "VectorBasic"
+  local fast  = nm & "VectorFast"
+  build_generic_intf (basic, "VectorBasic", [field], VISIBLE)
+  build_generic_impl (basic, "VectorBasic", [field])
+  build_generic_intf (fast,  "VectorFast",  [field, basic], VISIBLE)
+  build_generic_impl (fast,  "VectorFast",  [field])
 end
 
 readonly proc VectorTrans (nm, vector, cfield, ctrans, rfield, rtrans) is
