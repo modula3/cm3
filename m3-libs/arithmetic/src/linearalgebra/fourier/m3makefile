@@ -4,6 +4,6 @@ template("fourier")
 
 
 generic_module("FourierTransform")
-FourierTransform("Real",     "RealComplexFast",     "RealComplexTrans",     "RealBasic",     "RealTrans")
-FourierTransform("LongReal", "LongRealComplexFast", "LongRealComplexTrans", "LongRealBasic", "LongRealTrans")
-FourierTransform("Extended", "ExtendedComplexFast", "ExtendedComplexTrans", "ExtendedBasic", "ExtendedTrans")
+FourierTransform("Real",     "Real",     "Basic", "Fast")
+FourierTransform("LongReal", "LongReal", "Basic", "Fast")
+FourierTransform("Extended", "Extended", "Basic", "Fast")

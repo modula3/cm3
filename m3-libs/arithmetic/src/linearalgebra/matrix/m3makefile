@@ -4,22 +4,24 @@ template("matrix")
 
 
 generic_module("MatrixBasic")
-MatrixBasic("LongRealComplex",  "LongRealComplexBasic", "LongRealComplexVectorBasic")
-MatrixBasic("Integer32",        "Integer32Basic",       "Integer32VectorBasic")
-MatrixBasic("BigInteger",       "BigIntegerBasic",      "BigIntegerVectorBasic")
+MatrixBasic("LongRealComplex",  "LongRealComplex", "Basic", "Basic")
+MatrixBasic("Integer32",        "Integer32",       "Basic", "Basic")
+MatrixBasic("BigInteger",       "BigInteger",      "Basic", "Basic")
 
 generic_module("MatrixFast")
-MatrixFast("Real",     "RealBasic",     "RealVectorFast")
-MatrixFast("LongReal", "LongRealBasic", "LongRealVectorFast")
-MatrixFast("Extended", "ExtendedBasic", "ExtendedVectorFast")
+MatrixFast("Real",     "Real",     "Basic", "Fast")
+MatrixFast("LongReal", "LongReal", "Basic", "Fast")
+MatrixFast("Extended", "Extended", "Basic", "Fast")
 
 generic_module("MatrixTrans")
-MatrixTrans("Real",             "Fast",  "Real",     "",        "Basic")
-MatrixTrans("LongReal",         "Fast",  "LongReal", "",        "Basic")
-%MatrixTrans("Extended",         "Fast",  "Extended", "",        "Basic")
-%MatrixTrans("RealComplex",     "Basic", "Real",     "Complex", "Fast")
-%MatrixTrans("LongRealComplex", "Basic", "LongReal", "Complex", "Fast")
-%MatrixTrans("ExtendedComplex", "Basic", "Extended", "Complex", "Fast")
+MatrixTrans("Real",            "Real",     "Basic", "",        "Basic", "Fast")
+MatrixTrans("LongReal",        "LongReal", "Basic", "",        "Basic", "Fast")
+% no EXTENDED EigenSystem
+%MatrixTrans("Extended",        "Extended", "Basic", "",        "Basic", "Fast")
+% no Complex EigenSystem
+%MatrixTrans("RealComplex",     "Real",     "Basic", "Complex", "Fast",  "Basic")
+%MatrixTrans("LongRealComplex", "LongReal", "Basic", "Complex", "Fast",  "Basic")
+%MatrixTrans("ExtendedComplex", "Extended", "Basic", "Complex", "Fast",  "Basic")
 
 generic_module("MatrixDecomposition")
 MatrixDecomposition("Real",     "Fast")

@@ -2,28 +2,32 @@
 %  Quake functions to instantiate operations on generic matrices.
 %
 
-readonly proc MatrixBasic (nm, rfield, vfield) is
-  local basic = nm & "MatrixBasic"
+readonly proc MatrixBasic (nm, field, rimpl, vimpl) is
+  local basic  = nm & "MatrixBasic"
+  local rfield = field & rimpl
+  local vfield = field & "Vector" & vimpl
   build_generic_intf (basic, "MatrixBasic", [rfield, vfield], VISIBLE)
   build_generic_impl (basic, "MatrixBasic", [rfield, vfield])
 end
 
-readonly proc MatrixFast (nm, rfield, vfield) is
-  local basic = nm & "MatrixBasic"
-  local fast  = nm & "MatrixFast"
+readonly proc MatrixFast (nm, field, rimpl, vimpl) is
+  local basic  = nm & "MatrixBasic"
+  local fast   = nm & "MatrixFast"
+  local rfield = field & rimpl
+  local vfield = field & "Vector" & vimpl
   build_generic_intf (basic, "MatrixBasic", [rfield, vfield], VISIBLE)
   build_generic_impl (basic, "MatrixBasic", [rfield, vfield])
   build_generic_intf (fast,  "MatrixFast",  [rfield, vfield, basic], VISIBLE)
   build_generic_impl (fast,  "MatrixFast",  [rfield, vfield])
 end
 
-readonly proc MatrixTrans (nm, impl, real, complex, cimpl) is
+readonly proc MatrixTrans (nm, real, rimpl, complex, cimpl, mimpl) is
   local basic = nm & "MatrixTrans"
-  local rfield = real & "Basic"
+  local rfield = real & rimpl
   local rtrans = real & "Trans"
   local ctrans = real & complex & "Trans"
   local eigen  = nm & "EigenSystem"
-  local mfield = nm & "Matrix" & impl
+  local mfield = nm & "Matrix" & mimpl
   build_generic_intf (basic, "MatrixTrans", [rfield,                        mfield], VISIBLE)
   build_generic_impl (basic, "MatrixTrans", [rfield, rtrans, ctrans, eigen, mfield])
 end

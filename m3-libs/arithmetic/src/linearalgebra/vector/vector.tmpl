@@ -2,22 +2,24 @@
 %  Quake functions to instantiate operations on generic vectors.
 %
 
-readonly proc VectorBasic (nm, field) is
-  local basic = nm & "VectorBasic"
-  build_generic_intf (basic, "VectorBasic", [field], VISIBLE)
-  build_generic_impl (basic, "VectorBasic", [field])
+readonly proc VectorBasic (nm, field, rimpl) is
+  local basic  = nm & "VectorBasic"
+  local rfield = field & rimpl
+  build_generic_intf (basic, "VectorBasic", [rfield], VISIBLE)
+  build_generic_impl (basic, "VectorBasic", [rfield])
 end
 
-readonly proc VectorFast (nm, field) is
-  local basic = nm & "VectorBasic"
-  local fast  = nm & "VectorFast"
-  build_generic_intf (basic, "VectorBasic", [field], VISIBLE)
-  build_generic_impl (basic, "VectorBasic", [field])
-  build_generic_intf (fast,  "VectorFast",  [field, basic], VISIBLE)
-  build_generic_impl (fast,  "VectorFast",  [field])
+readonly proc VectorFast (nm, field, rimpl) is
+  local basic  = nm & "VectorBasic"
+  local fast   = nm & "VectorFast"
+  local rfield = field & rimpl
+  build_generic_intf (basic, "VectorBasic", [rfield], VISIBLE)
+  build_generic_impl (basic, "VectorBasic", [rfield])
+  build_generic_intf (fast,  "VectorFast",  [rfield, basic], VISIBLE)
+  build_generic_impl (fast,  "VectorFast",  [rfield])
 end
 
-readonly proc VectorTrans (nm, vimpl, real, complex, cimpl) is
+readonly proc VectorTrans (nm, real, complex, cimpl, vimpl) is
   local rfield = real & "Basic"
   local rtrans = real & "Trans"
   local cfield = real & complex & cimpl
