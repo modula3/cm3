@@ -1,6 +1,6 @@
 (* Copyright (c) 2000 California Institute of Technology *)
 (* All rights reserved. See the file COPYRIGHT for a full description. *)
-(* $Id: Recte.i3,v 1.1.1.1 2001-09-19 11:40:10 wagner Exp $ *)
+(* $Id: Recte.i3,v 1.2 2001-09-19 15:30:31 wagner Exp $ *)
 
 INTERFACE Recte;
 (* Like Rect.i3, but my implementation doesn't have any problem
