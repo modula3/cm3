@@ -505,68 +505,111 @@ PROCEDURE MatchPatternSmooth (target                 : S.T;
     CONST tol = 1.0D-10;
     VAR yfirst := -translates;
 
+    PROCEDURE SplitParamVec (x: V.T): MatchCoef =
+      BEGIN
+        RETURN
+          MatchCoef{NEW(S.T).fromArray(
+                      SUBARRAY(x^, FIRST(x^), NUMBER(x^) - 1), yfirst),
+                    x[LAST(x^)]};
+      END SplitParamVec;
+
+    PROCEDURE GetPrimalGeneratorMask (READONLY mc: MatchCoef): S.T =
+      VAR
+        hsdual := mc.lift.upsample(2).convolve(hdual);
+        gdual  := gdual0.superpose(hsdual.scale(1.0D0 / mc.amp));
+      BEGIN
+        RETURN gdual.alternate();
+      END GetPrimalGeneratorMask;
+
     <*UNUSED*>
     PROCEDURE ComputeOptCritDeriv (x: V.T): FnD.T RAISES {NA.Error} =
       VAR
-        cf := x[LAST(x^)];
-        y := NEW(S.T).fromArray(
-               SUBARRAY(x^, FIRST(x^), NUMBER(x^) - 1), yfirst);
-        derdist := DeriveDist(normalMat, targetCor, targetNormSqr, y);
-        derwavdist := ExtendDervTarget(derdist, y.getData(), cf,
+        mc := SplitParamVec(x);
+        derdist := DeriveDist(normalMat, targetCor, targetNormSqr, mc.lift);
+        derwavdist := ExtendDervTarget(derdist, mc.lift.getData(), mc.amp,
                                        waveletVec, waveletCor, targetVec);
       BEGIN
         (*
         IO.Put(
           Fmt.FN("y %s, cf %s\n", ARRAY OF TEXT{SF.Fmt(y), RF.Fmt(cf)}));
         *)
-        RETURN FnD.Add(
-                 derwavdist, FnD.Scale(DeriveWSSE(hdualvan, gdual0, y, cf),
-                                       smoothWeight));
+        RETURN FnD.Add(derwavdist, FnD.Scale(DeriveWSSE(hdualvan, gdual0,
+                                                        mc.lift, mc.amp),
+                                             smoothWeight));
       END ComputeOptCritDeriv;
 
     PROCEDURE ComputeOptCritDiff (x: V.T): FnD.T RAISES {NA.Error} =
 
-      PROCEDURE ComputeOptCrit (x: V.T): R.T =
+      PROCEDURE SquareSmoothEstimate (x: V.T): R.T =
         VAR
-          c := x[LAST(x^)];
-          s := NEW(S.T).fromArray(
-                 SUBARRAY(x^, FIRST(x^), NUMBER(x^) - 1), yfirst);
-          hsdual  := s.upsample(2).convolve(hdual);
-          gdual   := gdual0.superpose(hsdual.scale(1.0D0 / c));
-          hprimal := gdual.alternate();
+          hsums := GetPrimalGeneratorMask(SplitParamVec(x)).wrapCyclic(
+                     3).getData();
 
-          hsums := hprimal.wrapCyclic(3).getData();
-
-          (*computing all the derivatives is a waste of time*)
-          derdist := DeriveDist(normalMat, targetCor, targetNormSqr, s);
-          derwavdist := ExtendDervTarget(derdist, s.getData(), c,
-                                         waveletVec, waveletCor, targetVec);
         BEGIN
-          RETURN derwavdist.zeroth + smoothWeight * ComputeSSE(hsums^);
-        END ComputeOptCrit;
+          (*IO.Put("ComputeOptCrit\n");*)
+          RETURN ComputeSSE(hsums^);
+        END SquareSmoothEstimate;
 
-      VAR dx := V.New(NUMBER(x^));
+      PROCEDURE TransitionSpecRad (x: V.T): R.T RAISES {NA.Error} =
+        VAR hprimal := GetPrimalGeneratorMask(SplitParamVec(x));
+        BEGIN
+          (*
+          IO.Put("TransitionSpecRad "&Fmt.Int(ncall)&"\n");
+          INC(ncall);
+          *)
+          RETURN Refn.TransitionSpecRad(hprimal);
+        END TransitionSpecRad;
+
+      VAR
+        (*ncall:=0;*)
+        mc := SplitParamVec(x);
+        derdist := DeriveDist(normalMat, targetCor, targetNormSqr, mc.lift);
+        derwavdist := ExtendDervTarget(derdist, mc.lift.getData(), mc.amp,
+                                       waveletVec, waveletCor, targetVec);
+
+        dx               := V.New(NUMBER(x^));
+        dersmooth: FnD.T;
+
+      <*FATAL Thread.Alerted, Wr.Failure*>
       BEGIN
-        FOR i := FIRST(dx^) TO LAST(dx^) DO dx[i] := 1.0D-1 END;
-        RETURN Fn.EvalCentralDiff2(ComputeOptCrit, x, dx);
+        IO.Put(
+          Fmt.FN("ComputeOptCritDiff for x=%s", ARRAY OF TEXT{VF.Fmt(x)}));
+        FOR i := FIRST(dx^) TO LAST(dx^) DO dx[i] := 1.0D-3 END;
+        CASE 1 OF
+        | 0 =>
+            dersmooth := Fn.EvalCentralDiff2(SquareSmoothEstimate, x, dx);
+        | 1 => dersmooth := Fn.EvalCentralDiff2(TransitionSpecRad, x, dx);
+        ELSE
+          <*ASSERT FALSE*>
+        END;
+        IO.Put(
+          Fmt.FN("dist %s, smooth %s\n", ARRAY OF
+                                           TEXT{RF.Fmt(derwavdist.zeroth),
+                                                RF.Fmt(dersmooth.zeroth)}));
+        IO.Put(
+          Fmt.FN("dist' %ssmooth' %s\n",
+                 ARRAY OF
+                   TEXT{VF.Fmt(derwavdist.first), VF.Fmt(dersmooth.first)}));
+        RETURN FnD.Add(derwavdist, FnD.Scale(dersmooth, smoothWeight));
       END ComputeOptCritDiff;
 
+
+    VAR
+    initX := V.FromVectorArray(
+               ARRAY OF
+                 V.T{         
+                 V.New(2 * translates), V.FromScalar(R.One)}); 
+ (*V.ArithSeq(2 * translates, -0.5D0,
+                                  0.1D0),*)
     (* use this initialization if you want to compare the results with
        MatchPattern
 
-       V.New(2 * translates+1) *)
-    VAR
-      optvec := Fn.FindStationaryPoint(
-                  ComputeOptCritDiff, V.FromVectorArray(
-                                        ARRAY OF
-                                          V.T{V.ArithSeq(2 * translates),
-                                              V.FromScalar(R.One)}), tol,
-                  100);
+       initX := V.New(2 * translates+1) *)
 
     BEGIN
-      RETURN MatchCoef{NEW(S.T).fromArray(SUBARRAY(optvec^, FIRST(optvec^),
-                                                   NUMBER(optvec^) - 1),
-                                          yfirst), optvec[LAST(optvec^)]};
+      RETURN
+        SplitParamVec(
+          Fn.FindStationaryPoint(ComputeOptCritDiff, initX, tol, 100));
     END;
   END MatchPatternSmooth;
 
@@ -614,7 +657,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
         "optimal lift %s,\ncyclic wrap of gdual %s\n",
         ARRAY OF TEXT{SF.Fmt(s), SF.Fmt(gdual.alternate().wrapCyclic(3))}));
     PL.Init();
-    CASE 1 OF
+    CASE 0 OF
     | 0 => WP.PlotWavelets(hdual, gdual, levels);
     | 1 =>
         PL.SetEnvironment(
@@ -656,17 +699,21 @@ PROCEDURE SincVector (size, width: CARDINAL): V.T =
 
 PROCEDURE Test () =
   <*FATAL BSpl.DifferentParity*>
+  TYPE
+    Example = {matchBSpline, matchBSplineVan, matchRamp, matchRampSmooth,
+               matchSincSmooth, matchLongRamp, testSSE, testInverseDSSE,
+               testDeriveWSSE};
   BEGIN
-    CASE 4 OF
-    | 0 =>
+    CASE Example.matchRampSmooth OF
+    | Example.matchBSpline =>
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50), 6,
           4, 0, 5);
-    | 1 =>
+    | Example.matchBSplineVan =>
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(1), 7).translate(10), 6, 4,
           2, 5);
-    | 2 =>
+    | Example.matchRamp =>
         (* The figures given here previously was wrong because the
            generator was convolved with (1,0,-1) instead of (1,-1)
            translates 5, size 1917, residuum 0.00340514677538585,
@@ -677,27 +724,27 @@ PROCEDURE Test () =
         MatchPattern(
           NEW(S.T).fromArray(
             V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^, -256), 6, 4, 2, 5);
-    | 3 =>
+    | Example.matchRampSmooth =>
         TestMatchPatternSmooth(NEW(S.T).fromArray(
                                  V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^,
                                  -256), 6, 4, 2, 5, 0.0D0);
-    | 4 =>
+    | Example.matchSincSmooth =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(V.Neg(SincVector(2048, 64))^, 64 - 2048), 6,
           4, 2, 10, 0.0D0);
-    | 5 =>
+    | Example.matchLongRamp =>
         TestMatchPatternSmooth(
           NEW(S.T).fromArray(
             V.ArithSeq(2048, -1.0D0, 2.0D0 / 2048.0D0)^, -1024), 6, 3, 9,
           1, 100.0D0);
-    | 6 =>
+    | Example.testSSE =>
         TestSSE(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
         TestSSE(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0}));
-    | 7 =>
+    | Example.testInverseDSSE =>
         TestInverseDSSE(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0});
         TestInverseDSSE(ARRAY OF R.T{1.0D0, 1.0D0, 0.1D0});
         TestInverseDSSE(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0});
-    | 8 => TestDeriveWSSE();
+    | Example.testDeriveWSSE => TestDeriveWSSE();
     ELSE
       <*ASSERT FALSE*>
     END;
