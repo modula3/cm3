@@ -131,9 +131,14 @@ PROCEDURE CurveExamples()=
       ARRAY OF R.T{-2.0D0, 1.0D0, 0.0D0, 1.0D0,-2.0D0},
       ARRAY OF R.T{ 2.0D0, 1.0D0, 0.0D0, 1.0D0, 2.0D0}
     );
+    (* This example shows that the estimation can be arbitrarily bad. *)
     CurveTransitionEV(
-      ARRAY OF R.T{-1.0D0, 0.0D0, 0.0D0, 1.0D0},
-      ARRAY OF R.T{-1.0D0, 0.0D0, 0.0D0, 2.0D0}
+      ARRAY OF R.T{ 0.3333D0, 0.3333D0, 0.3333D0, 0.0D0},
+      ARRAY OF R.T{ 2.3333D0, 0.3333D0, 0.3333D0,-2.0D0}
+    );
+    CurveTransitionEV(
+      ARRAY OF R.T{ 0.5D0, 0.0D0, 0.0D0, 0.5D0},
+      ARRAY OF R.T{-3.0D0, 0.0D0, 0.0D0, 4.0D0}
     );
     CurveTransitionEV(
       ARRAY OF R.T{-2.0D0, 1.0D0, 1.0D0,-2.0D0},
@@ -213,7 +218,7 @@ PROCEDURE CompareEstimate(mask:S.T)=
       {SF.Fmt(mask),RF.Fmt(specRad),RF.Fmt(specRadUpper)}));
   END CompareEstimate;
 
-PROCEDURE RandomEstimateCheck()=
+PROCEDURE RandomMaskWithLeastEstimate():S.T=
   <*FATAL NA.Error *>
   VAR
     rnd    := NEW(Rnd.T).init();
@@ -229,25 +234,40 @@ PROCEDURE RandomEstimateCheck()=
 	slice[j].raiseD((1.0D0/3.0D0-slice[j].offset())/
                            FLOAT(slice[j].getNumber(),R.T));
       END;
-      CompareEstimate(NEW(S.T).interleave(slice^));
+      RETURN NEW(S.T).interleave(slice^);
     END;
-  END RandomEstimateCheck;
+  END RandomMaskWithLeastEstimate;
 
 PROCEDURE EstimateChecks()=
   BEGIN
-    FOR n:=0 TO 10 DO
-      RandomEstimateCheck();
+    CASE 1 OF
+    | 0 =>
+      FOR n:=0 TO 10 DO
+        CompareEstimate(RandomMaskWithLeastEstimate());
+      END;
+    | 1 =>
+      (* This example shows that the estimation can be arbitrarily bad. *)
+      VAR
+        maskArr := ARRAY [0..3] OF R.T{0.0D0,1.0D0/3.0D0,1.0D0/3.0D0,0.0D0};
+      BEGIN
+        FOR n:=0 TO 10 DO
+          maskArr[0]:=FLOAT(n,R.T);
+          maskArr[3]:=1.0D0/3.0D0-maskArr[0];
+          CompareEstimate(NEW(S.T).fromArray(maskArr));
+        END;
+      END;
+    ELSE <*ASSERT FALSE*>
     END;
   END EstimateChecks;
 
 
 PROCEDURE Test()=
   BEGIN
-    CASE 2 OF
+    CASE 1 OF
     | 0 => AnimateTransitionEV();
     | 1 => CurveExamples();
     | 2 => EstimateChecks();
-    ELSE
+    ELSE <*ASSERT FALSE*>
     END;
   END Test;
 
