@@ -12,7 +12,7 @@ TYPE
   T = R.T;
   FmtStyle = RECORD
                style   := F.Style.Auto;
-               prec    :  CARDINAL := R.MaxSignifDigits - 1;
+               prec    :  CARDINAL := R.MaxSignifDigits - 3;
                literal := FALSE;
              END;
 
