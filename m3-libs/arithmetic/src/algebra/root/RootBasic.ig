@@ -23,7 +23,7 @@ TYPE
   (*interpretation is: a[0] + a[1]*xi + a[2]* xi^2...a[n]*xi^n *)
 
   TBody = P.TBody;
-  T = REF TBody;
+  T     = P.T;
 
 (* It's not possible to obtain a pointer to a constant array.
    We can not turn T from a reference type to an array type,
@@ -55,7 +55,10 @@ PROCEDURE Mod(x,y:T):T RAISES {Error};  (*return x mod y*)
 PROCEDURE DivMod(x,y:T;                 (*compute x/y *)
               VAR r:T):T RAISES {Error};   (*giving quotient with remainder r (always zero)*)
 
-PROCEDURE FromRoots(READONLY root : ARRAY OF R.T):T;
+TYPE
+  RootArray = ARRAY OF R.T;
+
+PROCEDURE FromRoots(READONLY root : RootArray):T;
 (*Create polynomial which has the roots as specified in array 'root'*)
 
 (*
