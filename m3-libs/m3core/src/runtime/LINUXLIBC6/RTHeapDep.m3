@@ -103,8 +103,7 @@ PROCEDURE Fault (sig : Ctypes.int;
                  uap : Uucontext.ucontext_t_star) =
   BEGIN
     (* try handling memory fault using "RTHeapRep.Fault" *)
-    (* IF RTHeapRep.Fault(LOOPHOLE(uap.uc_mcontext.cr2, ADDRESS), mode) THEN *)
-    IF RTHeapRep.Fault(LOOPHOLE(uap.uc_mcontext.cr2, ADDRESS)) THEN
+    IF RTHeapRep.Fault(LOOPHOLE(uap.uc_mcontext.cr2, ADDRESS), mode) THEN
       RETURN;
     END;
     (* otherwise, use "defaultSIGSEGV" to handle the fault *)
