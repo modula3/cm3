@@ -1,5 +1,7 @@
 P=""
 # base libraries
+P="${P} m3gc-simple"
+#P="${P} m3gc-enhanced"
 P="${P} m3core"
 P="${P} libm3"
 
@@ -35,6 +37,8 @@ P="${P} debug"
 P="${P} listfuncs"
 P="${P} patternmatching"
 P="${P} embutils"
+P="${P} m3tk-misc"
+P="${P} http"
 P="${P} binIO"
 
 # some CM3 communication extensions
