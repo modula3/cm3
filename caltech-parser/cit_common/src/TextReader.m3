@@ -18,7 +18,7 @@
 (*  software outside of the United States of America may require an          *)
 (*  export license.                                                          *)
 (*                                                                           *)
-(* $Id: TextReader.m3,v 1.1.1.1 2001-09-19 11:40:10 wagner Exp $ *)
+(* $Id: TextReader.m3,v 1.2 2001-09-19 13:27:07 wagner Exp $ *)
 MODULE TextReader;
 IMPORT Text, TextList;
 (*IMPORT Debug,Fmt;*)
