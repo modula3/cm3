@@ -307,7 +307,6 @@ VAR InitDone:=FALSE;  (*is the big Init done yet?*)
 (*------------------*)
 REVEAL slow = T BRANDED OBJECT
   OVERRIDES
-    init:=slow_init;
     engine:=slow_engine;
   END;
 
@@ -341,7 +340,6 @@ END slow_engine;
 (*------------------*)
 REVEAL fast = T BRANDED OBJECT
   OVERRIDES
-    init:=fast_init;
     engine:=fast_engine;
   END;
 
