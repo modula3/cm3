@@ -1,4 +1,4 @@
-GENERIC MODULE VectorFmtLex(Rf);
+GENERIC MODULE VectorFmtLex(RF);
 (*
 Abstract:
 
@@ -32,17 +32,15 @@ BEGIN
   RAISE Error(Err.not_implemented);
 END Lex;
 (*-----------------*)
-PROCEDURE Fmt( 
-            x:T; 
-            style:=F.Style.Fix;
-            prec:=2):TEXT RAISES {Thread.Alerted, Wr.Failure} = 
+PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}):TEXT
+               RAISES {Thread.Alerted, Wr.Failure} =
 CONST width = 12;
 VAR
   wr:=TextWr.New();
 BEGIN
   Wr.PutText(wr,"V" & F.Int(NUMBER(x^)) & "{");
   FOR i:=FIRST(x^) TO LAST(x^) DO
-    Wr.PutText(wr,F.Pad(Rf.Fmt(x[i],style,prec),width)); 
+    Wr.PutText(wr,F.Pad(RF.Fmt(x[i],style.elemStyle),width)); 
     IF i#LAST(x^) THEN Wr.PutText(wr,", "); END;
   END;
   Wr.PutText(wr,"}\n");

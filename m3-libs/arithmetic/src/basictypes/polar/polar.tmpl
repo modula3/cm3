@@ -10,6 +10,6 @@ end
 
 readonly proc PolarFmtLex (nm, pfield, rfmt) is
   local basic = nm & "PolarFmtLex"
-  build_generic_intf (basic, "PolarFmtLex", [pfield], VISIBLE)
-  build_generic_impl (basic, "PolarFmtLex", [pfield, rfmt])
+  build_generic_intf (basic, "PolarFmtLex", [pfield, rfmt], VISIBLE)
+  build_generic_impl (basic, "PolarFmtLex", [        rfmt])
 end

@@ -1,4 +1,4 @@
-GENERIC INTERFACE PolarFmtLex(P);
+GENERIC INTERFACE PolarFmtLex(P,RF);
 (*Copyright (c) 1996, m3na project
   
 Abstract: Complex numbers in polar coordinates
@@ -9,11 +9,13 @@ Abstract: Complex numbers in polar coordinates
 *)
 
 FROM xUtils IMPORT Error;
-IMPORT Fmt AS F;
 
-PROCEDURE Fmt(VALUE c:P.T;
-        style:F.Style:=F.Style.Fix;
-        prec:CARDINAL:=3):TEXT;
+(*==========================*)
+TYPE
+  T = P.T;
+  FmtStyle = RECORD elemStyle := RF.FmtStyle{}; END;
+
+PROCEDURE Fmt (READONLY x : T; READONLY style := FmtStyle{}) : TEXT;
         (*as "POLAR{radius:=<r>; angle:=<r>}"*)
         
 (*==========================*)

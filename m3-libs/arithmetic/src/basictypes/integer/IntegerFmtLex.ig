@@ -6,13 +6,12 @@ Abstract: Generic formatting and parsing of integer types
 2/17/96  Harry George    Initial version
 *)
 
-IMPORT Thread, Wr;
+IMPORT Thread, Wr, Fmt AS F;
 
 (*==========================*)
 TYPE
   T = I.T;
-  Base = [2..16];
-  FmtStyle = RECORD base : Base := 10; END;
+  FmtStyle = RECORD base : F.Base := 10; END;
 
 <*INLINE*>
 PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}) : TEXT;

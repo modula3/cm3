@@ -27,8 +27,8 @@ PROCEDURE Fmt (READONLY x : T; READONLY style := FmtStyle{}) : TEXT =
 VAR
   t:TEXT;
 BEGIN
-  t:="FRACTION{n:=" & RF.Fmt(x.n,style.elemStyle) & "D0,"
-            & "d:=" & RF.Fmt(x.d,style.elemStyle) & "D0}";
+  t:="FRACTION{n:=" & RF.Fmt(x.n,style.elemStyle) & ","
+            & "d:=" & RF.Fmt(x.d,style.elemStyle) & "}";
 	RETURN t;
 END Fmt;
 

@@ -22,6 +22,6 @@ end
 
 readonly proc VectorFmtLex (nm, vector, rfmt) is
   local basic = nm & "VectorFmtLex"
-  build_generic_intf (basic, "VectorFmtLex", [vector], VISIBLE)
+  build_generic_intf (basic, "VectorFmtLex", [vector, rfmt], VISIBLE)
   build_generic_impl (basic, "VectorFmtLex", [rfmt])
 end

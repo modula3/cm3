@@ -5,15 +5,14 @@ Abstract: Formatting of integers of arbitrary size
 
 *)
 
+IMPORT BigIntegerBasic AS B, Lex AS L, Fmt AS F, FloatMode, Rd, Thread;
+
+
 (*==========================*)
-
-IMPORT BigIntegerBasic AS B, Lex AS L, FloatMode, Rd, Thread;
-
 
 TYPE
   T = B.T;
-  Base = [2..16];
-  FmtStyle = RECORD base : Base := 10; END;
+  FmtStyle = RECORD base : F.Base := 10; END;
 
 (*
 PROCEDURE Lex(rd: Rd.T; defaultBase: Base := 10): INTEGER

@@ -3,9 +3,6 @@ GENERIC INTERFACE FractionFmtLex(Fr,RF);
   
 Abstract: Formatting and parsing fraction numbers
 
-1/1/96  Harry George    Initial version
-2/17/96 Harry George    Converted from Objects to ADT's
-3/23/96 Harry George    Incorporated Warren Smith's implementations
 *)
 
 FROM xUtils IMPORT Error;
@@ -13,7 +10,6 @@ FROM xUtils IMPORT Error;
 (*==========================*)
 TYPE
   T = Fr.T;
-  Base = [2..16];
   FmtStyle = RECORD elemStyle := RF.FmtStyle{}; END;
 
 PROCEDURE Lex(str:TEXT):Fr.T RAISES {Error};

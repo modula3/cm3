@@ -1,4 +1,4 @@
-GENERIC MODULE MatrixFmtLex(Rf);
+GENERIC MODULE MatrixFmtLex(RF);
 (*
 Abstract:
 
@@ -34,10 +34,8 @@ BEGIN
 END Lex;
 *)
 (*-----------------*)
-PROCEDURE Fmt( 
-            x:T; 
-            style:=F.Style.Fix;
-            prec:=2):TEXT RAISES {Thread.Alerted, Wr.Failure}= 
+PROCEDURE Fmt (x : T; READONLY style := FmtStyle{}):TEXT
+               RAISES {Thread.Alerted, Wr.Failure} =
 CONST width = 12;
 VAR
   m:=NUMBER(x^);    mf:=FIRST(x^);   ml:=LAST(x^);
@@ -48,7 +46,7 @@ BEGIN
   FOR i:=mf TO ml DO
     Wr.PutText(wr,"V" & F.Int(n) & "{");
     FOR j:= nf TO nl DO
-      Wr.PutText(wr,F.Pad(Rf.Fmt(x[i,j],style,prec),width));
+      Wr.PutText(wr,F.Pad(RF.Fmt(x[i,j],style.elemStyle),width));
       IF j#nl THEN Wr.PutText(wr,", "); END;
     END;
     Wr.PutText(wr,"}");
