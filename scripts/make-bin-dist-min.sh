@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.2 2001-02-13 23:31:49 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.3 2001-02-13 23:41:53 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -79,5 +79,6 @@ tar -C "${TMPDIR}" -czf "${TMPDIR}/${ARCHIVE2}" cminstall${EXE} ${ARCHIVE1} \
   || exit 1
 ls -l "${ARCHIVE2}"
 echo "cleaning up"
+rm -f "${TMPDIR}/cminstall${EXE}"
 rm -rf "${INSTALLROOT}"
 rm -f "${TMPDIR}/${ARCHIVE1}"
