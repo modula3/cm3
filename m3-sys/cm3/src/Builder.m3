@@ -2006,7 +2006,9 @@ PROCEDURE BuildCProgram (s: State;  shared: BOOLEAN) =
       PushArray (s, pgm_objects);
       PushArray (s, import_libs);
       PushBool  (s, shared);
-      EVAL CallProc (s, s.linker);
+      IF CallProc (s, s.linker) THEN
+        s.compile_failed := TRUE;
+      END;
     ETimer.Pop ();
   END BuildCProgram;
 
@@ -2085,7 +2087,9 @@ PROCEDURE BuildProgram (s: State;  shared: BOOLEAN) =
       PushArray (s, pgm_objects);
       PushArray (s, import_libs);
       PushBool  (s, shared);
-      EVAL CallProc (s, s.linker);
+      IF CallProc (s, s.linker) THEN
+        s.compile_failed := TRUE;
+      END;
     ETimer.Pop ();
   END BuildProgram;
 
@@ -2388,7 +2392,9 @@ PROCEDURE BuildLibrary (s: State;  shared: BOOLEAN) =
       PushArray (s, lib_objects);
       PushArray (s, import_libs);
       PushBool  (s, shared);
-      EVAL CallProc (s, s.librarian);
+      IF CallProc (s, s.librarian) THEN
+        s.compile_failed := TRUE;
+      END;
     ETimer.Pop ();
   END BuildLibrary;
 
