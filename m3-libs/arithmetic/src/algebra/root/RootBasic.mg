@@ -13,6 +13,34 @@ FROM xUtils IMPORT Error;
 
 
 (*-----------------*)
+(*handles the case that the leading coefficient c is not 1
+  multiplies all roots with c to fix that,
+  callers must remember this constant for interpreting the power sum*)
+PROCEDURE ToPowerSumSeqExt(x:T):REF PowerSumSeq=
+VAR
+  c,pow:R.T;
+BEGIN
+  IF R.Equal(x[LAST(x^)],R.One) THEN
+    RETURN ToPowerSumSeq(x);
+  ELSE
+    VAR
+      y := NEW(T,NUMBER(x^));
+    BEGIN
+      c:=x[LAST(x^)];
+      pow:=c;
+      y[LAST(y^)  ]:=R.One;
+      y[LAST(y^)-1]:=x[LAST(x^)-1];
+      FOR j:=LAST(x^)-2 TO 0 BY -1 DO
+        y[j]:=R.Mul(x[j],pow);
+        pow:=R.Mul(pow,c);
+      END;
+      RETURN ToPowerSumSeq(y);
+    END;
+  END;
+END ToPowerSumSeqExt;
+
+
+(*-----------------*)
 PROCEDURE Add(
                x,y:T):T=
 <*FATAL Error*> (*'indivisible' cannot occur*)
@@ -75,9 +103,10 @@ PROCEDURE Mul(
 <*FATAL Error*> (*'indivisible' cannot occur*)
 VAR
   px,py:REF PowerSumSeq;
+  cx,cy:R.T;
 BEGIN
-  px:=ToPowerSumSeq(x);
-  py:=ToPowerSumSeq(y);
+  cx:=x[LAST(x^)]; px:=ToPowerSumSeq(x);
+  cy:=y[LAST(y^)]; py:=ToPowerSumSeq(y);
   RETURN FromPowerSumSeq(px^);
 END Mul;
 
@@ -140,8 +169,19 @@ END ElimMultRoots;
   return the next one with respect to the polynomial y*)
 (*consider x as a cyclic buffer for successive sums of powers of the roots*)
 PROCEDURE GetNextPowerSum(READONLY x:PowerSumSeq; k:CARDINAL; y:T):R.T=
+VAR
+  c,pow,z:R.T;
 BEGIN
-  
+  c:=y[LAST(y^)];
+  z:=R.Zero;
+  FOR j:=LAST(x^) TO 0 BY -1 DO
+    IF k=0 THEN
+      k:=LAST(x);
+    ELSE
+      DEC(k);
+    END;
+    z:=R.Add(z,R.Mul());
+  END;
 END GetNextPowerSum;
 
 PROCEDURE PowN(READONLY x:T;
