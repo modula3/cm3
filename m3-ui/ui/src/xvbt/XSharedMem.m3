@@ -93,10 +93,10 @@ PROCEDURE SameHost (trsl: XClient.T): BOOLEAN =
 
     TRY
       IF NOT IP.GetHostByName(display, displayAddr) THEN RETURN FALSE; END;
+      RETURN displayAddr = IP.GetHostAddr();
     EXCEPT
     | IP.Error => RETURN FALSE;
     END;
-    RETURN displayAddr = IP.GetHostAddr();
   END SameHost;
 
 PROCEDURE DisplayHost (trsl: XClient.T): TEXT =
