@@ -9,7 +9,10 @@ Daniel Beer
 IMPORT Word AS W, xWordEx AS Wx;
 FROM xUtils IMPORT Error, Err;
 FROM BigIntegerBasic  IMPORT Zero;
-(*IMPORT IO,Fmt,BigIntegerFmtLex AS BF;*)
+(*
+IMPORT IO,Fmt,BigIntegerFmtLex AS BF;
+CONST base16Style = BF.FmtStyle{base:=16};
+*)
 
 <*UNUSED*> CONST Module = "BigIntegerRep.";
 (*==========================*)
@@ -125,9 +128,9 @@ BEGIN
     RETURN 1
   ELSE
     FOR j:=x.size-1 TO 0 BY -1 DO
-      IF x.data[j] < y.data[j] THEN
+      IF W.LT(x.data[j], y.data[j]) THEN
         RETURN -1
-      ELSIF x.data[j] > y.data[j] THEN
+      ELSIF W.GT(x.data[j], y.data[j]) THEN
         RETURN 1
       END;
     END;
@@ -253,6 +256,21 @@ a=2^-i   b=2^-j
 *)
 
 
+(*
+PROCEDURE FmtBitPos (sh : BitPos) : TEXT =
+BEGIN
+  RETURN Fmt.FN("{%s,%s}",
+            ARRAY OF TEXT {Fmt.Int(sh.word),Fmt.Int(sh.bit)});
+END FmtBitPos;
+
+PROCEDURE FmtBig (x : T) : TEXT =
+BEGIN
+  RETURN Fmt.FN("(size %s) 16_%s",
+       ARRAY OF TEXT {Fmt.Int(x.size),BF.Fmt(x,style:=base16Style)});
+END FmtBig;
+*)
+
+
 PROCEDURE SubBitPos (READONLY x,y : BitPos) : BitPos =
 BEGIN
   IF x.bit >= y.bit THEN
@@ -300,7 +318,7 @@ PROCEDURE GetMSBPos (READONLY x : T) : BitPos =
 BEGIN
 (*
 IO.Put(Fmt.FN("GetMSBPos (size %s) 16_%s\t",
-       ARRAY OF TEXT {Fmt.Int(x.size),BF.Fmt(x,style:=BF.FmtStyle{base:=16})}));
+       ARRAY OF TEXT {Fmt.Int(x.size),BF.Fmt(x,style:=base16Style)}));
 IO.Put(Fmt.FN("MSB of %s: %s\n",
        ARRAY OF TEXT {Fmt.Unsigned(x.data[x.size-1]),
                       Fmt.Int(Wx.FindMostSignifBit(x.data[x.size-1]))}));
@@ -313,7 +331,12 @@ PROCEDURE GetSubword (READONLY x : T; sh : BitPos) : W.T =
 VAR
   probs : W.T := 0;
 BEGIN
-  EVAL Wx.RightShiftWithProbscosis(x.data[sh.word+1],sh.bit,probs);
+(*
+IO.Put(Fmt.FN("GetSubword of %s at %s\n",ARRAY OF TEXT{FmtBig(x),FmtBitPos(sh)}));
+*)
+  IF sh.bit>0 THEN (*avoid access to non-existing fields*)
+    EVAL Wx.RightShiftWithProbscosis(x.data[sh.word+1],sh.bit,probs);
+  END;
   IF sh.word<0 THEN
     RETURN probs;
   ELSE
@@ -335,8 +358,10 @@ VAR
 BEGIN
 (*
 IO.Put(Fmt.FN("x 16_%s - SHL (y 16_%s * z 16_%s, {%s,%s})\n",
-            ARRAY OF TEXT {BF.Fmt(x,16),BF.Fmt(y,16),Fmt.Unsigned(z),
-            Fmt.Int(sh.word),Fmt.Int(sh.bit)}));
+            ARRAY OF TEXT {
+              BF.Fmt(x,base16Style),BF.Fmt(y,base16Style),
+              Fmt.Unsigned(z),
+              Fmt.Int(sh.word),Fmt.Int(sh.bit)}));
 *)
   hi := 0;
   probs := 0;
@@ -400,11 +425,17 @@ VAR
 BEGIN
 (*
 IO.Put(Fmt.FN("DivModU (size %s) 16_%s by (size %s) 16_%s\n",
-       ARRAY OF TEXT {Fmt.Int(x.size),BF.Fmt(x,style:=BF.FmtStyle{base:=16}),
-                      Fmt.Int(y.size),BF.Fmt(y,style:=BF.FmtStyle{base:=16})}));
+       ARRAY OF TEXT {Fmt.Int(x.size),BF.Fmt(x,style:=base16Style),
+                      Fmt.Int(y.size),BF.Fmt(y,style:=base16Style)}));
 *)
   IF y.size = 0 THEN
     RAISE Error(Err.divide_by_zero);
+  END;
+
+  (*this check is necessary, we would access non-existing data otherwise*)
+  IF x.size = 0 THEN
+    r := x;
+    RETURN r;  (*the quotient is zero, too*)
   END;
 
   r.data := NEW(Value,x.size+2);
