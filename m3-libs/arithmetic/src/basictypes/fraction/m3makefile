@@ -1,0 +1,10 @@
+import("libm3")
+
+include("fraction.tmpl")
+
+generic_module("FractionBasic")
+FractionBasic("Integer32",     "Integer32Basic")
+
+
+generic_module("FractionFmtLex")
+FractionFmtLex("Integer32", "Integer32FractionBasic", "Integer32Basic", "Integer32FmtLex")

@@ -5,6 +5,7 @@ import("libm3")
 
 
 include_dir("integer")
+include_dir("fraction")
 
 include_dir("float")
 include_dir("complex")
