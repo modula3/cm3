@@ -39,7 +39,7 @@ readonly Platform_info = {
   "UMAX"      : "encore-bsd",
   "VAX"       : "vax-dec-ultrix",
   "I386_DARWIN" : "i486-unknown-bsd",
-  "PPC_DARWIN"  : "powerpc-apple-linux-gnu"
+  "PPC_DARWIN"  : "powerpc-apple-darwin5.4"
 }
 
 if not defined("SL")
