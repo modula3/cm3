@@ -7,21 +7,30 @@ readonly proc MatrixBasic (nm, rfield) is
   local vrep     = nm & "VectorRep"
   local base     = nm & "Matrix"
   local impl     = base & "Basic"
-  build_generic_intf (base, "Matrix",      [rfield, vfield, impl], VISIBLE)
-  build_generic_impl (base, "Matrix",      [rfield, vfield])
-  build_generic_intf (impl, "MatrixBasic", [rfield, vfield], VISIBLE)
-  build_generic_impl (impl, "MatrixBasic", [rfield, vfield, vrep, base])
+  MatrixGeneral(nm, rfield, "Basic")
+  build_generic_impl (impl, "MatrixBasic", [rfield, vfield, vrep])
 end
 
 readonly proc MatrixFast (nm, rfield) is
   local vfield   = nm & "Vector"
   local base     = nm & "Matrix"
   local impl     = base & "Fast"
+  local support  = nm & "MatrixSupport"
   local decomp   = nm & "MatrixDecomposition"
-  build_generic_intf (base, "Matrix",     [rfield, vfield, impl], VISIBLE)
-  build_generic_impl (base, "Matrix",     [rfield, vfield])
-  build_generic_intf (impl, "MatrixFast", [rfield, vfield], VISIBLE)
-  build_generic_impl (impl, "MatrixFast", [rfield, vfield, base, decomp])
+  MatrixGeneral(nm, rfield, "Fast")
+  build_generic_impl (impl, "MatrixFast", [rfield, vfield, support, decomp])
+end
+
+readonly proc MatrixGeneral (nm, rfield, implsuf) is
+  local vfield   = nm & "Vector"
+  local base     = nm & "Matrix"
+  local support  = nm & "MatrixSupport"
+  local impl     = base & implsuf
+  build_generic_intf (impl, "Matrix" & implsuf, [rfield, vfield, support], VISIBLE)
+  build_generic_intf (base,    "Matrix",        [rfield, vfield, support, impl], VISIBLE)
+  build_generic_impl (base,    "Matrix",        [rfield, vfield])
+  build_generic_intf (support, "MatrixSupport", [rfield], VISIBLE)
+  build_generic_impl (support, "MatrixSupport", [rfield])
 end
 
 readonly proc MatrixTrans (nm, field) is

@@ -129,32 +129,6 @@ PROCEDURE Copy (x: T; ): T =
     RETURN z;
   END Copy;
 
-
-PROCEDURE NewZero (m, n: CARDINAL; ): T =
-  VAR
-    mf := 0;
-    ml := m - 1;
-    nf := 0;
-    nl := n - 1;
-    z  := NEW(T, m, n);
-  BEGIN
-    FOR i := mf TO ml DO FOR j := nf TO nl DO z[i, j] := R.Zero; END; END;
-    RETURN z;
-  END NewZero;
-
-PROCEDURE NewOne (n: CARDINAL; ): T =
-  VAR
-    nf := 0;
-    nl := n - 1;
-    z  := NEW(T, n, n);
-  BEGIN
-    FOR i := nf TO nl DO
-      z[i, i] := R.One;
-      FOR j := nf TO i - 1 DO z[i, j] := R.Zero; z[j, i] := R.Zero; END;
-    END;
-    RETURN z;
-  END NewOne;
-
 PROCEDURE Cyclic (x: V.T; size: CARDINAL; shift: INTEGER; ): T =
   VAR
     z             := New(size, NUMBER(x^));
@@ -171,15 +145,6 @@ PROCEDURE Cyclic (x: V.T; size: CARDINAL; shift: INTEGER; ): T =
     END;
     RETURN z;
   END Cyclic;
-
-PROCEDURE Transpose (x: T; ): T =
-  VAR z := NEW(T, NUMBER(x[0]), NUMBER(x^));
-  BEGIN
-    FOR i := FIRST(x[0]) TO LAST(x[0]) DO
-      FOR j := FIRST(x^) TO LAST(x^) DO z[i, j] := x[j, i]; END;
-    END;
-    RETURN z;
-  END Transpose;
 
 
 

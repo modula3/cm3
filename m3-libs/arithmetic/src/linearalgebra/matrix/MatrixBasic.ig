@@ -1,10 +1,7 @@
-GENERIC INTERFACE MatrixBasic(R, V);
+GENERIC INTERFACE MatrixBasic(R, V, MS);
 (* Arithmetic for Modula-3, see doc for details *)
 
-TYPE
-  TRow = ARRAY OF R.T;
-  TBody = ARRAY OF TRow;
-  T = REF TBody;
+TYPE T = MS.T;
 
 PROCEDURE Add (x, y: T; ): T;    (* x + y *)
 PROCEDURE Sub (x, y: T; ): T;    (* x - y *)
@@ -21,6 +18,7 @@ PROCEDURE MulMMA (x: T; ): T;    (* x*x^* *)
 PROCEDURE MulMAM (x: T; ): T;    (* x^**x *)
 
 PROCEDURE Trace (x: T; ): R.T;   (* sum of the diagonal elements *)
-PROCEDURE Determinant (x: T; ): R.T;
+
+CONST Determinant = MS.Determinant;
 
 END MatrixBasic.

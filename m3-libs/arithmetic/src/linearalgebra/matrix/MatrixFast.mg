@@ -1,4 +1,4 @@
-GENERIC MODULE MatrixFast(R, V, M, MD);
+GENERIC MODULE MatrixFast(R, V, MS, MD);
 (* Arithmetic for Modula-3, see doc for details *)
 
 IMPORT Arithmetic;
@@ -11,11 +11,6 @@ PROCEDURE AssertEqualSize (x, y: T; ) =
                 "Sizes of matrices must match." *>
   END AssertEqualSize;
 
-<* INLINE *>
-PROCEDURE AssertEqualWidth (n, m: CARDINAL; ) =
-  BEGIN
-    <* ASSERT n = m, "Width or height of operands don't match." *>
-  END AssertEqualWidth;
 
 PROCEDURE IsZero (x: T; ): BOOLEAN =
   BEGIN
@@ -84,7 +79,7 @@ PROCEDURE Mul (x, y: T; ): T =
     z: T;
 
   BEGIN
-    AssertEqualWidth(NUMBER(y^), n);
+    MS.AssertEqualWidth(NUMBER(y^), n);
     z := NEW(T, m, p);
     FOR i := FIRST(x^) TO LAST(x^) DO
       FOR j := FIRST(y[0]) TO LAST(y[0]) DO
@@ -103,7 +98,7 @@ PROCEDURE Mul (x, y: T; ): T =
 PROCEDURE MulV (x: T; y: V.T; ): V.T =
   VAR z := NEW(V.T, NUMBER(x^));
   BEGIN
-    AssertEqualWidth(NUMBER(x[0]), NUMBER(y^));
+    MS.AssertEqualWidth(NUMBER(x[0]), NUMBER(y^));
 
     FOR i := FIRST(x^) TO LAST(x^) DO
       VAR sum := R.Zero;
@@ -120,7 +115,7 @@ PROCEDURE MulV (x: T; y: V.T; ): V.T =
 PROCEDURE MulTV (x: T; y: V.T; ): V.T =
   VAR z := NEW(V.T, NUMBER(x[0]));
   BEGIN
-    AssertEqualWidth(NUMBER(x^), NUMBER(y^));
+    MS.AssertEqualWidth(NUMBER(x^), NUMBER(y^));
 
     FOR i := FIRST(x[0]) TO LAST(x[0]) DO
       VAR sum := R.Zero;
@@ -173,12 +168,6 @@ PROCEDURE Trace (x: T; ): R.T =
 
 (* CONST Adjoint = M.Transpose; *)
 
-<* INLINE *>
-PROCEDURE Adjoint (x: T; ): T =
-  BEGIN
-    RETURN M.Transpose(x);
-  END Adjoint;
-
 
 PROCEDURE Determinant (x: T; ): R.T =
   BEGIN
@@ -187,9 +176,9 @@ PROCEDURE Determinant (x: T; ): R.T =
     EXCEPT
     | Arithmetic.Error =>
         (* Although the determinant is always defined, the fast Gauﬂ
-           algorithm fails sometimes.  In this cases we should fall back to
-           the algorithm of MatrixBasic. *)
-        <* ASSERT FALSE *>
+           algorithm fails sometimes.  In this cases we fall back to the
+           division-free algorithm. *)
+        RETURN MS.Determinant(x);
     END;
   END Determinant;
 
