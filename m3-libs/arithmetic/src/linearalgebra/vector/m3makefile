@@ -1,6 +1,7 @@
 import("libm3")
 
-include("vector.tmpl")
+template("vector")
+
 
 generic_module("VectorBasic")
 VectorBasic("Real",            "RealBasic")

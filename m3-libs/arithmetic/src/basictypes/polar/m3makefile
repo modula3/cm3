@@ -1,6 +1,7 @@
 import("libm3")
 
-include("polar.tmpl")
+template("polar")
+
 
 generic_module("PolarBasic")
 PolarBasic("Real",     "RealComplexBasic",     "RealComplexTrans",     "RealBasic",	"RealTrans")

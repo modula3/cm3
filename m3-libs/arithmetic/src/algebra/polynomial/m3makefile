@@ -1,6 +1,7 @@
 import("libm3")
 
-include("polynomial.tmpl")
+template("polynomial")
+
 
 generic_module("PolynomialBasic")
 PolynomialBasic("Real",            "RealBasic")

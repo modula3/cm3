@@ -2,7 +2,7 @@
 import("libm3")
 
 
-include("integer.tmpl")
+template("integer")
 
 Interface("Integer8")
 Interface("Integer16")

@@ -1,6 +1,7 @@
 import("libm3")
 
-include("complex.tmpl")
+template("complex")
+
 
 generic_module("ComplexBasic")
 ComplexBasic("Real",     "RealBasic")
