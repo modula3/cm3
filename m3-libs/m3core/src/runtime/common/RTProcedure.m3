@@ -7,7 +7,7 @@
 
 UNSAFE MODULE RTProcedure EXPORTS RTProcedure, RTProcedureSRC;
 
-IMPORT RT0, RTMisc, RTModule, Fingerprint, Word;
+IMPORT RT0, RTModule, Fingerprint, Word;
 
 CONST
   Max_procedure_length = 20000; (* more than 99% of procedures are shorter
@@ -36,14 +36,14 @@ VAR
 
 PROCEDURE ToFingerprint (<*UNUSED*> p: Proc): Fingerprint.T =
   BEGIN
-    RTMisc.FatalError (NIL, 0, "RTProcedure.ToFingerprint is not supported");
-    RETURN Fingerprint.Zero;
+    <*ASSERT FALSE, "RTProcedure.ToFingerprint is not supported" *>
+    RETURN Fingerprint.Zero; <*NOWARN*>
   END ToFingerprint;
 
 PROCEDURE FromFingerprint (<*UNUSED*> READONLY fp: Fingerprint.T): Proc =
   BEGIN
-    RTMisc.FatalError (NIL, 0, "RTProcedure.FromFingerprint is not supported");
-    RETURN NIL;
+    <*ASSERT FALSE, "RTProcedure.FromFingerprint is not supported" *>
+    RETURN NIL; <*NOWARN*>
   END FromFingerprint;
 
 (*-------------------------------------------------------- RTProcedureSRC ---*)

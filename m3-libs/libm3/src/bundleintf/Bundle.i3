@@ -12,12 +12,11 @@ INTERFACE Bundle;
 TYPE T <: REFANY;
 
 PROCEDURE Get (bundle: T; element: TEXT): TEXT;
-(* If an element namemd "element" was bundled into "bundle", then
+(* If an element named "element" was bundled into "bundle", then
    return the contents of "element" as a "TEXT".  Otherwise, 
    return NIL. *)
 
-(********** UNIMPLEMENTED **********)
-PROCEDURE Elts (bundle: T): REF ARRAY OF TEXT;
-(* Returns a list of elements that are bundled into "bundle". *)
+PROCEDURE EltNames (bundle: T): REF ARRAY OF TEXT;
+(* Returns a list of the names of the elements that are bundled into "bundle". *)
 
 END Bundle.

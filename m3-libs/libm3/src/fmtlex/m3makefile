@@ -13,7 +13,3 @@ Module ("FmtBuf")
 Interface ("FmtBufF")
 Interface ("FmtBufTest")
 
-% old backward-compatibility stuff
-Module ("OldFmt")
-Module ("OldLex")
-Module ("OldScan")

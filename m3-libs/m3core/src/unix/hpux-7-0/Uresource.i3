@@ -60,7 +60,7 @@ CONST
   RLIMIT_CORE  = 4;		(* core file size *)
   RLIMIT_RSS   = 5;		(* resident set size *)
   RLIMIT_NOFILE = 6;		(* maximum number of open files *)
-  RLIMIT_OPEN_MAX = RLIMIT_NOFILE; (* maximum number of open files *)
+  RLIMIT_OPEN_MAX = RLIMIT_NOFILE;  (* maximum number of open files *)
 
   RLIM_NLIMITS = 7;		(* number of resource limits *)
 

@@ -13,6 +13,7 @@ IMPORT Bundle;
 REVEAL Bundle.T = BRANDED OBJECT
     METHODS
       get  (element: TEXT): TEXT;
+      getNames (): REF ARRAY OF TEXT;
     END;
 
 END BundleRep.

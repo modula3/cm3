@@ -2,34 +2,54 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 (*                                                            *)
-(* Last modified on Mon Nov 21 13:17:16 PST 1994 by kalsow    *)
+(* Last modified on Wed Jul 30 13:55:56 EST 1997 by hosking   *)
+(*      modified on Mon Nov 21 13:12:29 PST 1994 by kalsow    *)
 (*      modified on Wed Dec 23 17:24:49 PST 1992 by jdd       *)
 (*      modified on Thu Nov 12 15:56:32 PST 1992 by muller    *)
 
-UNSAFE MODULE RTThread;
+UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
-IMPORT Usignal;
-
-CONST 
-  SP_pos = 1;
-  FP_pos = 3;
+IMPORT Uframe, Usignal, Unix, Umman, Uucontext, RTMisc, Word;
 
 PROCEDURE SP (READONLY s: State): ADDRESS =
   BEGIN
-    RETURN LOOPHOLE (s [SP_pos], ADDRESS);
+    RETURN LOOPHOLE (s.uc_mcontext.gregs.sp, ADDRESS);
   END SP;
 
 (*--------------------------------------------------------- thread stacks ---*)
 
+VAR page_bytes : CARDINAL := 0;
+VAR stack_slop : CARDINAL;
+
 PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
+  VAR i: INTEGER;  start: ADDRESS;
   BEGIN
+    IF page_bytes = 0 THEN
+      page_bytes := Unix.getpagesize ();
+      stack_slop := 2 * (page_bytes DIV BYTESIZE (INTEGER));
+    END;
+
+    (* allocate enough so that we're guaranteed to get a full, aligned page *)
+    INC (size, stack_slop);
     s.words := NEW (StackSpace, size);
-    s.first := ADR (s.words[0]);
-    s.last  := s.first + size * ADRSIZE (s.words[0]);
+
+    (* find the aligned page and unmap it *)
+    start := RTMisc.Align (ADR (s.words[0]), page_bytes);
+    i := Umman.mprotect (start, page_bytes, Umman.PROT_NONE);
+    <* ASSERT i = 0 *>
+    (* finally, set the bounds of the usable region *)
+    s.first := start + page_bytes;
+    s.last  := ADR (s.words[0]) + size * ADRSIZE (s.words[0]);
   END NewStack;
 
 PROCEDURE DisposeStack (VAR s: Stack) =
+  VAR i: INTEGER;  start := RTMisc.Align (ADR (s.words[0]), page_bytes);
   BEGIN
+    (* find the aligned page and re-map it *)
+    i := Umman.mprotect (start, page_bytes, Umman.PROT_READ+Umman.PROT_WRITE);
+    <* ASSERT i = 0 *>
+
+    (* and finally, free the storage *)
     DISPOSE (s.words);
     s.words := NIL;
     s.first := NIL;
@@ -39,49 +59,85 @@ PROCEDURE DisposeStack (VAR s: Stack) =
 PROCEDURE FlushStackCache () =
   VAR d: State;
   BEGIN
-    Transfer (d, d);
+    EVAL Save(d);
   END FlushStackCache;
 
 (*-------------------------------------------------- modifying the models ---*)
 
 PROCEDURE UpdateStateForNewSP (VAR s: State; offset: INTEGER) =
   BEGIN
-    INC (s [SP_pos], offset);
-    INC (s [FP_pos], offset);
+    INC (s.uc_mcontext.gregs.sp, offset);
   END UpdateStateForNewSP;
 
-PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
-                               <*UNUSED*> offset: INTEGER) =
+PROCEDURE UpdateFrameForNewSP (a: ADDRESS; offset: INTEGER) =
+  VAR f := LOOPHOLE(a, Uframe.struct_frame_star);
   BEGIN
+    INC (f.fr_savfp, offset);
+    f.fr_savpc := 0;
   END UpdateFrameForNewSP;
 
 (*------------------------------------ manipulating the SIGVTALRM handler ---*)
 
 VAR
-  ThreadSwitchSignal: Usignal.sigset_t;
+  ThreadSwitchSignal: Uucontext.sigset_t;
 
 PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
   VAR sv, osv: Usignal.struct_sigaction;  i: INTEGER;
   BEGIN
     sv.sa_handler := handler;
-    sv.sa_flags   := 0;
+    sv.sa_flags   := Word.Or (Usignal.SA_RESTART, Usignal.SA_SIGINFO);
+    i := Usignal.sigemptyset (sv.sa_mask);
+    <* ASSERT i = 0 *>
     i := Usignal.sigaction (Usignal.SIGVTALRM, sv, osv);
     <* ASSERT i = 0 *>
   END setup_sigvtalrm;
 
 PROCEDURE allow_sigvtalrm () =
-  VAR i : Usignal.sigset_t;
   BEGIN
-    EVAL Usignal.sigprocmask(Usignal.SIG_UNBLOCK, ThreadSwitchSignal, i)
+    WITH i = Usignal.sigprocmask(Usignal.SIG_UNBLOCK, ThreadSwitchSignal) DO
+      <* ASSERT i = 0 *>
+    END;
   END allow_sigvtalrm;
 
 PROCEDURE disallow_sigvtalrm () =
-  VAR i : Usignal.sigset_t;
   BEGIN
-    EVAL Usignal.sigprocmask(Usignal.SIG_BLOCK, ThreadSwitchSignal, i)
+    WITH i = Usignal.sigprocmask(Usignal.SIG_BLOCK, ThreadSwitchSignal) DO
+      <* ASSERT i = 0 *>
+    END;
   END disallow_sigvtalrm;
 
-BEGIN
-  (*mask_sigvtalrm(ThreadSwitchSignal); This was in the  from IBMR2 *)
-END RTThread.
+(*--------------------------------------------- exception handling support --*)
 
+PROCEDURE GetCurrentHandlers (): ADDRESS=
+  BEGIN
+    RETURN handlerStack;
+  END GetCurrentHandlers;
+
+PROCEDURE SetCurrentHandlers (h: ADDRESS)=
+  BEGIN
+    handlerStack := h;
+  END SetCurrentHandlers;
+
+(*RTHooks.PushEFrame*)
+PROCEDURE PushEFrame (frame: ADDRESS) =
+  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
+  VAR f := LOOPHOLE (frame, Frame);
+  BEGIN
+    f.next := handlerStack;
+    handlerStack := f;
+  END PushEFrame;
+
+(*RTHooks.PopEFrame*)
+PROCEDURE PopEFrame (frame: ADDRESS) =
+  BEGIN
+    handlerStack := frame;
+  END PopEFrame;
+
+BEGIN
+  WITH i = Usignal.sigemptyset(ThreadSwitchSignal) DO
+    <* ASSERT i = 0 *>
+  END;
+  WITH i = Usignal.sigaddset(ThreadSwitchSignal, Usignal.SIGVTALRM) DO
+    <* ASSERT i = 0 *>
+  END;
+END RTThread.

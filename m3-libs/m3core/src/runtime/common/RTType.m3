@@ -1,61 +1,89 @@
-(* Copyright (C) 1990, Digital Equipment Corporation           *)
-(* All rights reserved.                                        *)
-(* See the file COPYRIGHT for a full description.              *)
+(* Copyright 1997, Critical Mass, Inc.  All rights reserved. *)
 
-(* Last modified on Mon Jun  3 16:57:11 PDT 1996 by heydon     *)
-(*      modified on Mon Jun  5 10:28:26 PDT 1995 by kalsow     *)
-(*      modified on Fri May 28 14:54:41 PDT 1993 by muller     *)
+UNSAFE MODULE RTType EXPORTS RTType, RTTypeSRC, RTHooks;
 
-UNSAFE MODULE RTType EXPORTS RTType, RTTypeSRC;
-
-IMPORT RT0, RT0u, RTMisc, RTModule, RTHeapRep, M3toC;
-IMPORT Ctypes, Cstdlib, Cstring, Word;
-FROM RTIO IMPORT PutInt, PutString, PutText, PutAddr, PutHex, Flush;
+IMPORT RT0, RTMisc, RTException, RTHeapRep, RTModule, M3toC;
+IMPORT Ctypes, Cstdlib, Cstring, Word, RuntimeError;
 
 TYPE
- TypePtr = UNTRACED REF RT0.TypeDefn;
+  TK  = RT0.TypeKind;
+  RTE = RuntimeError.T;
+
+TYPE
+  InfoPtr = UNTRACED REF Info;
+  Info = RECORD
+    def      : RT0.TypeDefn;
+    opaqueID : INTEGER;
+    module   : RT0.ModulePtr;
+  END;
+
+VAR
+  types     := InfoMap {"typecodes", TypecodeEq, TypecodeRehash, 1024, 1024};
+  uids      := InfoMap {"typeuids",  UIDEq, UIDRehash, 1024, 512};
+  brands    := InfoMap {"brands",    BrandEq, BrandRehash, 512, 256};
 
 (*------------------------------------------------ user callable routines ---*)
 
 PROCEDURE MaxTypecode (): Typecode =
   BEGIN
-    RETURN RT0u.nTypes - 1;
+    RETURN types.cnt - 1;
   END MaxTypecode;
 
 PROCEDURE IsSubtype (a, b: Typecode): BOOLEAN =
-  VAR t := Get (b);
+  VAR t: RT0.TypeDefn;
   BEGIN
-    IF (a >= RT0u.nTypes) THEN BadType (a) END;
-    IF (a = 0)            THEN RETURN TRUE END;
-    RETURN (t.typecode <= a AND a <= t.lastSubTypeTC);
+    IF (a = 0) THEN RETURN TRUE END;
+    IF (a >= types.cnt) THEN
+      <*NOWARN*> EVAL VAL (-1, CARDINAL);  (* force a range fault *)
+    END;
+    t := Get (a);
+    IF (t = NIL) THEN RETURN FALSE; END;
+    IF (t.typecode = b) THEN RETURN TRUE END;
+    WHILE (t.kind = ORD (TK.Obj)) DO
+      IF (t.link_state = 0) THEN FinishTypecell (t, NIL); END;
+      t := LOOPHOLE (t, RT0.ObjectTypeDefn).parent; 
+      IF (t = NIL) THEN RETURN FALSE; END;
+      IF (t.typecode = b) THEN RETURN TRUE; END;
+    END;
+    IF (t.traced # 0)
+      THEN RETURN (b = RT0.RefanyTypecode);
+      ELSE RETURN (b = RT0.AddressTypecode);
+    END;
   END IsSubtype;
 
 PROCEDURE Supertype (tc: Typecode): Typecode =
-  VAR t := Get (tc);
+  VAR t := Get (tc);  ot := LOOPHOLE (t, RT0.ObjectTypeDefn);
   BEGIN
-    IF (t.parent = NIL)
-      THEN RETURN NoSuchType;
-      ELSE RETURN t.parent.typecode;
-    END;
+    IF (t.kind # ORD (TK.Obj)) THEN RETURN NoSuchType; END;
+    IF (t.link_state = 0) THEN FinishTypecell (t, NIL); END;
+    IF (ot.parent = NIL) THEN RETURN NoSuchType; END;
+    RETURN ot.parent.typecode;
   END Supertype;
 
 PROCEDURE IsTraced (tc: Typecode): BOOLEAN =
   VAR t := Get (tc);
   BEGIN
-    RETURN t.traced # 0;
+    RETURN (t.traced # 0);
   END IsTraced;
 
 PROCEDURE Get (tc: Typecode): RT0.TypeDefn =
-  VAR p: TypePtr := RT0u.types + tc * ADRSIZE (RT0.TypeDefn);
+  VAR p: SlotPtr := types.map + tc * ADRSIZE (InfoPtr);
   BEGIN
-    IF (tc >= RT0u.nTypes) THEN BadType (tc) END;
-    RETURN p^;
+    IF (tc >= types.cnt) THEN
+      <*NOWARN*> EVAL VAL (-1, CARDINAL);  (* force a range fault *)
+    ELSIF (p^ = NIL) THEN
+      Fail (RTE.MissingType, NIL, NIL, NIL);
+    END;
+    RETURN p^.def;
   END Get;
 
 PROCEDURE GetNDimensions (tc: Typecode): CARDINAL =
   VAR t := Get (tc);
   BEGIN
-    RETURN t.nDimensions;
+    IF (t.kind = ORD (TK.Array))
+      THEN RETURN LOOPHOLE (t, RT0.ArrayTypeDefn).nDimensions;
+      ELSE RETURN 0;
+    END;
   END GetNDimensions;
 
 PROCEDURE TypeName (ref: REFANY): TEXT =
@@ -76,691 +104,748 @@ PROCEDURE TypeDefnToName (t: RT0.TypeDefn): TEXT =
     RETURN M3toC.CopyStoT (LOOPHOLE (t.name, Ctypes.char_star));
   END TypeDefnToName;
 
+(*--------------------------------------------------------------- RTHooks ---*)
+
+PROCEDURE CheckIsType (ref: REFANY;  type: ADDRESS(*RT0.TypeDefn*)): INTEGER =
+  BEGIN
+    RETURN ORD (IsSubtype (TYPECODE (ref),
+                           LOOPHOLE (type, RT0.TypeDefn).typecode));
+  END CheckIsType;
+
+PROCEDURE ScanTypecase (ref: REFANY;
+                        x: ADDRESS(*ARRAY [0..] OF Cell*)): INTEGER =
+  VAR p: UNTRACED REF TypecaseCell;  i: INTEGER;  tc, xc: Typecode;
+  BEGIN
+    IF (ref = NIL) THEN RETURN 0; END;
+    tc := TYPECODE (ref);
+    p := x;  i := 0;
+    LOOP
+      IF (p.uid = 0) THEN RETURN i; END;
+      IF (p.defn = NIL) THEN
+        p.defn := FindType (p.uid);
+        IF (p.defn = NIL) THEN
+          Fail (RTE.MissingType, RTModule.FromDataAddress(x),
+                LOOPHOLE (p.uid, ADDRESS), NIL);
+        END;
+      END;
+      xc := LOOPHOLE (p.defn, RT0.TypeDefn).typecode;
+      IF (tc = xc) OR IsSubtype (tc, xc) THEN RETURN i; END;
+      INC (p, ADRSIZE (p^));  INC (i);
+    END;
+  END ScanTypecase;
+
 (*--------------------------------------------------- UID -> typecell map ---*)
 
-TYPE
- IDMap = RECORD uid: INTEGER;  defn: RT0.TypeDefn END;
-
-VAR
-  (* map from type id to typecode, sorted by type id. *)
-  n_type_ids : INTEGER;
-  type_ids   : ADDRESS; (* REF ARRAY [0..n_type_ids-1] OF IDMap *)
-
 PROCEDURE FindType (id: INTEGER): RT0.TypeDefn =
-  VAR
-    base : ADDRESS  := type_ids;
-    lo   : CARDINAL := 0;
-    hi   : CARDINAL := n_type_ids;
-    mid  : CARDINAL; 
-    p    : UNTRACED REF IDMap;
+  VAR pi := FindSlot (uids, id, NIL);  def: RT0.TypeDefn;
   BEGIN
-    WHILE (lo < hi) DO
-      mid := (lo + hi) DIV 2;
-      p := base + mid * ADRSIZE (p^);
-      IF (id < p.uid)
-        THEN hi := mid;
-        ELSE lo := mid + 1;
-      END;
-    END;
-    IF (lo > 0) THEN DEC (lo) END;
-    p := base + lo * ADRSIZE (p^);
-    IF (p.uid # id) THEN RETURN NIL END;
-    RETURN p.defn;
+    IF (pi^ = NIL) THEN RETURN NIL; END;
+    def := pi^.def;
+    IF (def = NIL) THEN RETURN NIL; END;
+    IF (def.link_state = 0) THEN FinishTypecell (def, pi^.module); END;
+    RETURN def;
   END FindType;
+
+(*------------------------------------------------- brand -> typecell map ---*)
+
+PROCEDURE NoteBrand (info: InfoPtr) =
+  VAR pi := FindSlot (brands, HashBrand (info.def.brand_ptr), info);
+  BEGIN
+    IF (pi^ = NIL) THEN
+      (* it's a new brand, record the new entry *)
+      pi^ := info;  INC (brands.cnt);
+    ELSE
+      Fail (RTE.DuplicateBrand, info.module, info.def, pi^.def);
+    END;
+  END NoteBrand;
 
 (*-------------------------------------------------------- initialization ---*)
 
+PROCEDURE AddTypecell (def: RT0.TypeDefn;  m: RT0.ModulePtr) =
+  VAR pi := FindSlot (uids, def.selfID, NIL);  in: InfoPtr;
+  BEGIN
+    IF (pi^ = NIL) THEN
+      (* this is a new type *)
+      in  := NewInfo ();
+      in.def := def;
+      in.module := m;
+      in.opaqueID := 0;
+      pi^ := in;  INC (uids.cnt);  (* record him in the UID map *)
+      AssignTypecode (in);
+      IF (def.brand_ptr # NIL) THEN NoteBrand (in); END;
+    ELSIF (pi^.def = NIL) THEN
+      (* this is the first typecell for this UID *)
+      pi^.def := def;
+      pi^.module := m;
+      AssignTypecode (pi^);
+      IF (def.brand_ptr # NIL) THEN NoteBrand (pi^); END;
+    ELSE
+      (* this is a duplicate typecell *)
+      NoteDuplicate (pi^, def, m);
+    END;
+  END AddTypecell;
+
+PROCEDURE NoteDuplicate (in: InfoPtr;  new: RT0.TypeDefn;
+                         new_mod: RT0.ModulePtr) =
+  VAR old := in.def;
+  BEGIN
+    IF (in.module = NIL) THEN in.module := new_mod; END;
+    new.next := old.next;  old.next := new;
+    IF (old.name = NIL) THEN old.name := new.name; END;
+    IF (new.brand_ptr # NIL) THEN
+      Fail (RTE.DuplicateBrand, new_mod, new, old);
+    END;
+    IF (old.link_state # 0) THEN UpdateCell (old, new); END;
+  END NoteDuplicate;
+
+PROCEDURE AssignTypecode (in: InfoPtr) =
+  VAR pi: SlotPtr;
+  BEGIN
+    IF (types.cnt = 0) THEN AssignBuiltinTypes (); END;
+    pi := FindSlot (types, types.cnt, NIL);
+    <*ASSERT pi^ = NIL*>
+    in.def.typecode := types.cnt;
+    pi^ := in;  INC (types.cnt);
+  END AssignTypecode;
+
+PROCEDURE FinishObjectTypes () =
+  VAR p: SlotPtr := types.map;
+  BEGIN
+    FOR i := 0 TO types.cnt-1 DO
+      IF (p^ = NIL) THEN
+        Fail (RTE.MissingType, NIL, NIL, NIL);
+      ELSIF (p^.def = NIL) THEN
+        Fail (RTE.MissingType, NIL, NIL, NIL);
+      ELSIF (p^.def.link_state = 0) THEN
+        FinishTypecell (p^.def, p^.module);
+        IF (p^.def.link_state = 0) THEN
+          Fail (RTE.MissingType, RTModule.FromDataAddress (p^.def), NIL, NIL);
+        END;
+      END;
+      INC (p, ADRSIZE (p^));
+    END;
+  END FinishObjectTypes;
+
+PROCEDURE FinishTypecell (def: RT0.TypeDefn;  m: RT0.ModulePtr) =
+  VAR
+    odef, t, u: RT0.ObjectTypeDefn;
+    a: UNTRACED REF ADDRESS;
+  BEGIN
+    IF (def.link_state # 0) THEN RETURN; END;
+
+    IF (def.kind = ORD (TK.Obj)) THEN
+      (* finish the object definition, if possible *)
+      odef := LOOPHOLE (def, RT0.ObjectTypeDefn);
+
+      IF (odef.parent = NIL) THEN
+        odef.parent := FindType (odef.parentID);
+        IF (odef.parent = NIL) THEN
+          (* we still can't finish this guy yet! *)
+          RETURN;
+        END;
+
+        (* check for a cycle in the parent links *)
+        t := odef;  u := odef;
+        WHILE (u # NIL) AND (t # NIL) DO
+          t := LOOPHOLE (t.parent, RT0.ObjectTypeDefn);
+          IF (t = NIL) OR (t.common.kind # ORD (TK.Obj)) THEN EXIT; END;
+          u := LOOPHOLE (u.parent, RT0.ObjectTypeDefn);
+          IF (u = NIL) OR (u.common.kind # ORD (TK.Obj)) THEN EXIT; END;
+          u := LOOPHOLE (u.parent, RT0.ObjectTypeDefn);
+          IF (u = NIL) OR (u.common.kind # ORD (TK.Obj)) THEN EXIT; END;
+          IF (t = u) THEN
+            IF (m = NIL) THEN m := RTModule.FromDataAddress (def); END;
+            Fail (RTE.SupertypeCycle, m, odef, NIL);
+            RETURN;
+          END;
+        END;
+      END;
+
+      IF (odef.parent # NIL) THEN
+        IF (odef.parent.link_state = 0) THEN
+          FinishTypecell (odef.parent, NIL);
+          IF (odef.parent.link_state = 0) THEN
+            (* we still can't finish this guy yet! *)
+            RETURN;
+          END;
+        END;
+      END;
+
+      IF (odef.parent # NIL) AND (odef.dataOffset = 0) THEN
+        t := LOOPHOLE (odef.parent, RT0.ObjectTypeDefn);
+        IF (t.common.kind # ORD (TK.Obj)) THEN
+          odef.dataOffset   := ADRSIZE (ADDRESS);
+          odef.methodOffset := 0;
+        ELSE
+          odef.dataOffset := RTMisc.Upper (t.common.dataSize, def.dataAlignment);
+          INC (def.dataSize, odef.dataOffset);
+          def.dataAlignment := MAX (def.dataAlignment, t.common.dataAlignment);
+          odef.methodOffset := t.methodSize;
+          INC (odef.methodSize, odef.methodOffset);
+        END;
+      END;
+
+      (* allocate my default method list *)
+      IF (odef.methodSize > 0) AND (odef.defaultMethods = NIL) THEN
+        odef.defaultMethods := Malloc (odef.methodSize);
+
+        (* initialize my method suite from my parent *)
+        IF (t.common.kind = ORD (TK.Obj)) AND (t.defaultMethods # NIL) THEN
+          RTMisc.Copy (t.defaultMethods, odef.defaultMethods, t.methodSize);
+        END;
+
+        (* call the link proc to fill in any other methods... *)
+        IF (odef.linkProc # NIL) THEN   odef.linkProc (def); END;
+      END;
+
+      (* initialize any remaining methods to the undefined procedure *)
+      IF (odef.methodSize > 0) THEN
+        a := odef.defaultMethods;
+        FOR j := 0 TO odef.methodSize DIV BYTESIZE (ADDRESS) - 1 DO
+          IF (a^ = NIL) THEN a^ := LOOPHOLE (UndefinedMethod, ADDRESS) END;
+          INC (a, ADRSIZE (a^));
+        END;
+      END;
+    END;
+
+    (* everybody gets a size that's a multiple of a header word *)
+    def.dataSize := RTMisc.Upper (def.dataSize, BYTESIZE (RTHeapRep.Header));
+
+    (* check that all data alignments are small powers of two so that
+|          "RTMisc.Align (addr, alignment)"
+       can be safely replaced by
+|          "addr + align [Word.And (addr, 7), alignment]"
+       in "RTHeapRep.AllocTraced".*)
+    IF  (def.dataAlignment # 4) AND (def.dataAlignment # 8)
+    AND (def.dataAlignment # 1) AND (def.dataAlignment # 2) THEN
+      IF (m = NIL) THEN m := RTModule.FromDataAddress (m); END;
+      Fail (RTE.ValueOutOfRange, m, def, NIL);
+    END;
+
+    (* ensure that any equivalent typecells are also "finished" *)
+    VAR d: RT0.TypeDefn := def;  BEGIN
+      WHILE (d.next # NIL) DO  d := d.next;  UpdateCell (def, d);  END;
+    END;
+
+    def.link_state := 1;
+  END FinishTypecell;
+
+PROCEDURE UpdateCell (old, new: RT0.TypeDefn) =
+  (* make sure any computed information is copied into the new cell *)
+  BEGIN
+    new.typecode       := old.typecode;
+    new.link_state     := old.link_state;
+    new.dataAlignment  := old.dataAlignment;
+    new.dataSize       := old.dataSize;
+
+    IF (new.kind = ORD (TK.Obj)) THEN
+      VAR
+        onew := LOOPHOLE (new, RT0.ObjectTypeDefn);
+        oold := LOOPHOLE (old, RT0.ObjectTypeDefn);
+      BEGIN
+        onew.dataOffset     := oold.dataOffset;
+        onew.methodOffset   := oold.methodOffset;
+        onew.methodSize     := oold.methodSize;
+        onew.defaultMethods := oold.defaultMethods;
+        onew.parent         := oold.parent;
+      END;
+    END;
+  END UpdateCell;
+
+PROCEDURE ResolveTypeLink (uid: INTEGER;  t: RT0.TypeLinkPtr;  m: RT0.ModulePtr) =
+  VAR pi := FindSlot (uids, uid, NIL);
+  BEGIN
+    IF (pi^ = NIL) OR (pi^.def = NIL) THEN
+      Fail (RTE.MissingType, m, LOOPHOLE (uid, ADDRESS), NIL);
+    ELSE
+      t.defn     := pi^.def;
+      t.typecode := pi^.def.typecode;
+    END;
+  END ResolveTypeLink;
+
+PROCEDURE NoteFullRevelation (r: RT0.RevPtr;  m: RT0.ModulePtr) =
+  VAR rhs, lhs: InfoPtr;  p_rhs, p_lhs: SlotPtr;  old_tc: INTEGER;
+  BEGIN
+    p_rhs := FindSlot (uids, r.rhs_id, NIL);  rhs := NIL;
+    p_lhs := FindSlot (uids, r.lhs_id, NIL);  lhs := NIL;
+    IF (p_rhs^ # NIL) THEN rhs := p_rhs^; END;
+    IF (p_lhs^ # NIL) THEN lhs := p_lhs^; END;
+
+    IF (rhs = NIL) OR (rhs.def = NIL) THEN
+      Fail (RTE.MissingType, m, LOOPHOLE (r.rhs_id, ADDRESS), NIL);
+    END;
+
+    IF (lhs = NIL) THEN
+      p_lhs^ := rhs;  INC (uids.cnt);  (* ok, remember the binding *)
+      IF (rhs.opaqueID # 0) AND (rhs.opaqueID # r.lhs_id) THEN
+        Fail (RTE.OpaqueTypeRedefined, m, LOOPHOLE (r.lhs_id, ADDRESS),
+              LOOPHOLE (r.rhs_id, ADDRESS));
+      END;
+      rhs.opaqueID := r.lhs_id;
+
+    ELSIF (lhs = rhs) THEN
+      (* ok, the two types are already identified *)
+
+    ELSIF (r.lhs_id = RT0.TextLiteralID) AND (lhs.def = NIL) THEN
+
+      (* steal the RHS typecell for the opaque type *)
+      old_tc := rhs.def.typecode;
+      rhs.def.typecode := RT0.TextLitTypecode;
+      rhs.opaqueID := RT0.TextLiteralID;
+      p_lhs^ := rhs; (* fix the UID mapping *)
+
+      (* fix the old RHS typecode to use the LHS info & a dummy typecell *)
+      p_lhs := types.map + old_tc * ADRSIZE (InfoPtr);
+      p_lhs^ := lhs;
+      lhs.def := ADR (Dummy1_typecell);
+      lhs.def.typecode := old_tc;
+      lhs.opaqueID := 0;
+
+      (* fix the LHS typecode to use the new RHS info *)
+      p_lhs := types.map + RT0.TextLitTypecode * ADRSIZE (InfoPtr);
+      p_lhs^ := rhs;
+
+    ELSIF (r.lhs_id = RT0.MutexID) AND (lhs.def = NIL) THEN
+
+      (* steal the RHS typecell for the opaque type *)
+      old_tc := rhs.def.typecode;
+      rhs.def.typecode := RT0.MutexTypecode;
+      rhs.opaqueID := RT0.MutexID;
+      p_lhs^ := rhs; (* fix the UID mapping *)
+
+      (* fix the old RHS typecode to use the LHS info & a dummy typecell *)
+      p_lhs := types.map + old_tc * ADRSIZE (InfoPtr);
+      p_lhs^ := lhs;
+      lhs.def := ADR (Dummy3_typecell);
+      lhs.def.typecode := old_tc;
+      lhs.opaqueID := 0;
+
+      (* fix the LHS typecode to use the new RHS info *)
+      p_lhs := types.map + RT0.MutexTypecode * ADRSIZE (InfoPtr);
+      p_lhs^ := rhs;
+
+    ELSE
+      Fail (RTE.OpaqueTypeRedefined, m, LOOPHOLE (r.lhs_id, ADDRESS),
+            LOOPHOLE (r.rhs_id, ADDRESS));
+    END;
+  END NoteFullRevelation;
+
+PROCEDURE VerifyPartialRevelation (r: RT0.RevPtr;  m: RT0.ModulePtr) =
+  VAR rhs, lhs: InfoPtr;  p_rhs, p_lhs: SlotPtr;
+  BEGIN
+    p_rhs := FindSlot (uids, r.rhs_id, NIL);  rhs := NIL;
+    p_lhs := FindSlot (uids, r.lhs_id, NIL);  lhs := NIL;
+    IF (p_rhs^ # NIL) THEN rhs := p_rhs^; END;
+    IF (p_lhs^ # NIL) THEN lhs := p_lhs^; END;
+
+    IF (lhs = NIL) OR (lhs.def = NIL) THEN
+      Fail (RTE.MissingType, m, LOOPHOLE (r.lhs_id, ADDRESS), NIL);
+    ELSIF (rhs = NIL) OR (rhs.def = NIL) THEN
+      Fail (RTE.MissingType, m, LOOPHOLE (r.rhs_id, ADDRESS), NIL);
+    ELSIF NOT IsSubtype (lhs.def.typecode, rhs.def.typecode) THEN
+      Fail (RTE.InconsistentRevelation, m, LOOPHOLE (r.lhs_id, ADDRESS),
+            LOOPHOLE (r.rhs_id, ADDRESS));
+    END;
+  END VerifyPartialRevelation;
+
+(*--------------------------------------------------------- builtin types ---*)
+
+PROCEDURE AssignBuiltinTypes () =
+  BEGIN
+    GenOpaque  (RT0.TextLiteralID, RT0.TextLitTypecode);
+    GenOpaque  (RT0.MutexID,       RT0.MutexTypecode);
+    GenBuiltin (ADR (NULL_typecell),     "NULL");
+    GenBuiltin (ADR (REFANY_typecell),   "REFANY");
+    GenBuiltin (ADR (ADDRESS_typecell),  "ADDRESS");
+    GenBuiltin (ADR (ROOT_typecell),     "ROOT");
+    GenBuiltin (ADR (UNROOT_typecell),   "UNTRACED ROOT");
+    types.cnt := MAX (types.cnt, RT0.FirstUserTypecode);
+  END AssignBuiltinTypes;
+
+PROCEDURE GenBuiltin (def: RT0.TypeDefn;  nm: TEXT) =
+  VAR pi: SlotPtr;  in := NewInfo ();
+  BEGIN
+    def.name    := LOOPHOLE (M3toC.FlatTtoS (nm), RT0.String);
+    in.module   := NIL;
+    in.def      := def;
+    in.opaqueID := 0;
+    pi := FindSlot (uids, def.selfID, NIL);
+    <*ASSERT pi^ = NIL*>
+    pi^ := in;  INC (uids.cnt);
+    pi := FindSlot (types, def.typecode, NIL);
+    <*ASSERT pi^ = NIL*>
+    pi^ := in;  INC (types.cnt);
+  END GenBuiltin;
+
+PROCEDURE GenOpaque (uid: INTEGER;  typecode: INTEGER) =
+  VAR pi: SlotPtr;  in := NewInfo ();
+  BEGIN
+    in.def := NIL;
+    in.module := NIL;
+    in.opaqueID := uid;
+    pi := FindSlot (uids, uid, NIL);
+    <*ASSERT pi^ = NIL*>
+    pi^ := in;  INC (uids.cnt);
+    pi := FindSlot (types, typecode, NIL);
+    <*ASSERT pi^ = NIL*>
+    pi^ := in;  INC (types.cnt);
+  END GenOpaque;
+
 VAR
-  init_done := FALSE;
-  null  : RT0.TypeDefn;
-  text  : RT0.TypeDefn;
-  root  : RT0.TypeDefn;
-  uroot : RT0.TypeDefn;
+  Dummy1_typecell := RT0.Typecell {
+    typecode      := 0,
+    selfID        := -1,
+    fp            := RT0.Fingerprint {-1, -1},
+    traced        := 0,
+    kind          := ORD (TK.Ref),
+    link_state    := 0,
+    dataAlignment := 1,
+    dataSize      := 0,
+    type_map      := NIL,
+    gc_map        := NIL,
+    type_desc     := NIL,
+    initProc      := NIL,
+    brand_ptr     := NIL,
+    name          := NIL,
+    next          := NIL
+  };
+  Dummy3_typecell := RT0.Typecell {
+    typecode      := 0,
+    selfID        := -3,
+    fp            := RT0.Fingerprint {-3, -3},
+    traced        := 0,
+    kind          := ORD (TK.Ref),
+    link_state    := 0,
+    dataAlignment := 1,
+    dataSize      := 0,
+    type_map      := NIL,
+    gc_map        := NIL,
+    type_desc     := NIL,
+    initProc      := NIL,
+    brand_ptr     := NIL,
+    name          := NIL,
+    next          := NIL
+  };
 
-PROCEDURE Init () =
+(* FP ("$null") ==> 16_248000006c6c756e => 16_48ec756e = 1223456110 *)
+VAR
+  NULL_typecell := RT0.Typecell {
+    typecode      := RT0.NilTypecode,
+    selfID        := 16_48ec756e,
+    fp            := RT0.Fingerprint {16_24800000, 16_6c6c756e},
+    traced        := 0,
+    kind          := ORD (TK.Ref),
+    link_state    := 0,
+    dataAlignment := 1,
+    dataSize      := 0,
+    type_map      := NIL,
+    gc_map        := NIL,
+    type_desc     := NIL,
+    initProc      := NIL,
+    brand_ptr     := NIL,
+    name          := NIL,
+    next          := NIL
+  };
+
+(* FP ("$objectadr") ==> 16_f80919c87187be41 => 16_898ea789 = -1987139703 *)
+VAR
+  UNROOT_typecell := RT0.ObjectTypecell {
+    common := RT0.Typecell {
+      typecode      := RT0.UnRootTypecode,
+      selfID        := -1987139703,
+      fp            := RT0.Fingerprint {-133621304(*16_f80919c8*), 16_7187be41},
+      traced        := 0,
+      kind          := ORD (TK.Obj),
+      link_state    := 0,
+      dataAlignment := BYTESIZE (ADDRESS),
+      dataSize      := BYTESIZE (ADDRESS),
+      type_map      := NIL,
+      gc_map        := NIL,
+      type_desc     := NIL,
+      initProc      := NIL,
+      brand_ptr     := NIL,
+      name          := NIL,
+      next          := NIL },
+    parentID      := ADDRESS_uid,
+    linkProc      := NIL,
+    dataOffset    := ADRSIZE (ADDRESS),
+    methodOffset  := 0,
+    methodSize    := 0,
+    defaultMethods:= NIL,
+    parent        := NIL
+  };
+
+(* FP ("$objectref") ==> 16_f80919c86586ad41 => 16_9d8fb489 = -1651526519 *)
+VAR
+  ROOT_typecell := RT0.ObjectTypecell {
+    common := RT0.Typecell {
+      typecode      := RT0.RootTypecode,
+      selfID        := -1651526519,
+      fp            := RT0.Fingerprint {-133621304(*16_f80919c8*), 16_6586ad41},
+      traced        := 1,
+      kind          := ORD (TK.Obj),
+      link_state    := 0,
+      dataAlignment := BYTESIZE (ADDRESS),
+      dataSize      := BYTESIZE (ADDRESS),
+      type_map      := NIL,
+      gc_map        := NIL,
+      type_desc     := NIL,
+      initProc      := NIL,
+      brand_ptr     := NIL,
+      name          := NIL,
+      next          := NIL },
+    parentID      := REFANY_uid,
+    linkProc      := NIL,
+    dataOffset    := ADRSIZE (ADDRESS),
+    methodOffset  := 0,
+    methodSize    := 0,
+    defaultMethods:= NIL,
+    parent        := NIL
+  };
+
+(* FP ("$refany") ==> 16_65722480796e6166 => 16_1c1c45e6 = 471614950 *)
+CONST
+  REFANY_uid = 16_1c1c45e6;
+VAR
+  REFANY_typecell := RT0.Typecell {
+    typecode      := RT0.RefanyTypecode,
+    selfID        := REFANY_uid,
+    fp            := RT0.Fingerprint {16_65722480, 16_796e6166},
+    traced        := 1,
+    kind          := ORD (TK.Ref),
+    link_state    := 0,
+    dataAlignment := BYTESIZE (ADDRESS),
+    dataSize      := BYTESIZE (ADDRESS),
+    type_map      := NIL,
+    gc_map        := NIL,
+    type_desc     := NIL,
+    initProc      := NIL,
+    brand_ptr     := NIL,
+    name          := NIL,
+    next          := NIL
+  };
+
+(* FP ("$address") ==> 16_628a21916aca01f2 => 16_8402063 = 138420323 *)
+CONST
+  ADDRESS_uid = 138420323;
+VAR
+  ADDRESS_typecell := RT0.Typecell {
+    typecode      := RT0.AddressTypecode,
+    selfID        := ADDRESS_uid,
+    fp            := RT0.Fingerprint {16_628a2191, 16_6aca01f2},
+    traced        := 0,
+    kind          := ORD (TK.Ref),
+    link_state    := 0,
+    dataAlignment := BYTESIZE (ADDRESS),
+    dataSize      := BYTESIZE (ADDRESS),
+    type_map      := NIL,
+    gc_map        := NIL,
+    type_desc     := NIL,
+    initProc      := NIL,
+    brand_ptr     := NIL,
+    name          := NIL,
+    next          := NIL
+  };
+
+(*----------------------------------------------------------- Info cells ---*)
+
+CONST
+  InfoChunk = 512;
+
+TYPE
+  InfoVec = UNTRACED REF ARRAY [0..InfoChunk-1] OF Info;
+
+VAR
+  n_info    : CARDINAL := InfoChunk;
+  info_pool : InfoVec  := NIL;
+
+PROCEDURE NewInfo (): InfoPtr =
+  VAR p: InfoPtr;
   BEGIN
-    <* ASSERT NOT init_done *>
-    init_done := TRUE;
+    IF (n_info >= InfoChunk) THEN
+      info_pool := Malloc (InfoChunk * BYTESIZE (Info));
+      n_info := 0;
+    END;
+    p := info_pool + n_info * ADRSIZE (Info);
+    INC (n_info);
+    RETURN p;
+  END NewInfo;
 
-    RegisterTypes ();
-    CheckOpaques ();
-    CheckBrands ();
-    FindChildren ();
-    CheckParents ();
-    AssignTypecodes ();
-    FixLinks ();
-    FixSizes ();
-    CallSetupProcs ();
-    CheckRevelations ();
-    RTHeapRep.CheckTypes ();
-  END Init;
+(*---------------------------------------------------- key->InfoPtr maps ---*)
 
-PROCEDURE RegisterTypes () =
-  (* "register" each typecell with a distinct temporary typecode *)
+TYPE
+  SlotPtr = UNTRACED REF InfoPtr;
+
+  InfoMap = RECORD
+    name         : TEXT;
+    is_equal     : PROCEDURE (key: INTEGER;  aux: ADDRESS;  info: InfoPtr): BOOLEAN;
+    rehash       : PROCEDURE (info: InfoPtr;  VAR key1, key2: INTEGER);
+    initial_size : CARDINAL;
+    full         : CARDINAL;
+    cnt          : CARDINAL := 0;
+    max          : CARDINAL := 0;  (* must be a power of two! *)
+    mask         : INTEGER  := 0;
+    map          : ADDRESS  := NIL;  (* UNTRACED REF ARRAY [0..max-1] OF InfoPtr *)
+  END;
+
+PROCEDURE FindSlot (VAR m: InfoMap;  key: INTEGER;  aux: ADDRESS): SlotPtr =
+  VAR x: INTEGER;  pi: SlotPtr;
+  BEGIN
+    IF (m.map = NIL) OR (m.cnt >= m.full) THEN Expand (m); END;
+    x  := Word.And (m.mask, key);
+    pi := m.map + x * ADRSIZE (InfoPtr);
+    LOOP
+      IF (pi^ = NIL) OR m.is_equal (key, aux, pi^) THEN
+        (* we found an empty slot or a match *)
+        RETURN pi;
+      END;
+      INC (x); INC (pi, ADRSIZE (pi^));
+      IF (x >= m.max) THEN x := 0;  pi := m.map;  END;
+    END;
+  END FindSlot;
+
+PROCEDURE Expand (VAR m: InfoMap) =
+  CONST NOKEY = FIRST(INTEGER);
   VAR
-    mi  : RT0.ModulePtr;
-    t   : RT0.TypeDefn;
-    cnt, key : INTEGER;
-    tp, x, y, z : TypePtr;
+    new : InfoMap;
+    pi, pt: SlotPtr;
+    key1, key2: INTEGER;
   BEGIN
-    (* count the typecells *)
-    cnt := 0;
-    FOR i := 0 TO RT0u.nModules - 1 DO
-      mi := RTModule.Get (i);
-      t := mi.type_cells;
-      WHILE (t # NIL) DO INC (cnt); t := t.next; END;
-    END;
+    IF m.map = NIL THEN
+      (* First time... *)
+      m.cnt  := 0;
+      m.max  := m.initial_size;  (* must be a power of two *)
+      m.mask := m.max - 1;
+      m.map  := Malloc (m.max * BYTESIZE (InfoPtr));
+    ELSE
+      new := m;
+      new.cnt  := 0;
+      new.full := m.full + m.full;
+      new.max  := m.max + m.max;
+      new.mask := new.max - 1;
+      new.map  := Malloc (new.max * BYTESIZE (InfoPtr));
 
-    (* allocate the space *)
-    RT0u.nTypes      := cnt;
-    RT0u.types       := Cstdlib.malloc (cnt * BYTESIZE (t));
-    RT0u.alloc_cnts  := Cstdlib.malloc (cnt * BYTESIZE (INTEGER));
-    RT0u.alloc_bytes := Cstdlib.malloc (cnt * BYTESIZE (INTEGER));
-
-    (* initialize the allocation counts *)
-    RTMisc.Zero (RT0u.alloc_cnts,  cnt * BYTESIZE (INTEGER));
-    RTMisc.Zero (RT0u.alloc_bytes, cnt * BYTESIZE (INTEGER));
-
-    (* collect pointers to all the typecells *)
-    tp := RT0u.types;
-    FOR i := 0 TO RT0u.nModules - 1 DO
-      mi := RTModule.Get (i);
-      t := mi.type_cells;
-      WHILE (t # NIL) DO
-        tp^ := t;  INC (tp, ADRSIZE (t));
-        t := t.next;
-      END;
-    END;
-
-    (* sort the cells by uid *)
-    x := RT0u.types;
-    FOR i := 1 TO cnt-1 DO
-      tp := x + i * ADRSIZE (t);
-      t := tp^;
-      key := t.selfID;
-      y := x + (i - 1) * ADRSIZE (t);
-      WHILE (y >= x) AND (y^.selfID > key) DO
-        z := y + ADRSIZE (t);
-        z^ := y^;
-        DEC (y, ADRSIZE (t));
-      END;
-      z := y + ADRSIZE (t);
-      z^ := t;
-    END;
-
-    (* remove duplicates, but keep names *)
-    cnt := 1;
-    x := RT0u.types;
-    y := x;
-    FOR i := 1 TO RT0u.nTypes-1 DO
-      INC (y, ADRSIZE (t));
-      IF x^.selfID = y^.selfID THEN
-        (* a duplicate, if we don't have one yet, save the name *)
-        IF (x^.name = NIL) THEN x^.name := y^.name; END;
-      ELSE (* a new typecell *)
-        INC (cnt);
-        INC (x, ADRSIZE (t));
-        x^ := y^;
-      END;
-    END;
-    RT0u.nTypes := cnt;
-  END RegisterTypes;
-
-PROCEDURE CheckOpaques () =
-  (* build the UID->Defn maps including the opaque types *)
-  VAR
-    cnt : INTEGER;
-    mi  : RT0.ModulePtr;
-    t   : RT0.TypeDefn;
-    r   : RT0.RevPtr;
-    s, v: UNTRACED REF IDMap;
-    tp  : TypePtr;
-  BEGIN
-    (* count the opaques *)
-    cnt := RT0u.nTypes;
-    FOR i := 0 TO RT0u.nModules - 1 DO
-      mi := RTModule.Get (i);
-      r := mi.full_rev;
-      IF (r # NIL) THEN
-        WHILE (r.lhs_id # 0) DO INC (cnt);  INC (r, ADRSIZE (r^)); END;
-      END;
-    END;
-
-    (* allocate the space *)
-    n_type_ids := cnt;
-    type_ids   := Cstdlib.malloc (cnt * BYTESIZE (IDMap));
-
-    (* initialize the map with the concrete typecells *)
-    tp := RT0u.types;
-    s  := type_ids;
-    FOR i := 0 TO RT0u.nTypes-1 DO
-      t := tp^;
-      s.uid  := t.selfID;
-      s.defn := t;
-      INC (tp, ADRSIZE (tp^));
-      INC (s, ADRSIZE (s^));
-    END;
-    n_type_ids := RT0u.nTypes;
-
-    (* finally, add each of the opaque types *)
-    FOR i := 0 TO RT0u.nModules - 1 DO
-      mi := RTModule.Get (i);
-      r := mi.full_rev;
-      IF (r # NIL) THEN
-        WHILE (r.lhs_id # 0) DO
-          t := FindType (r.lhs_id);
-          IF (t # NIL) THEN DuplicateLHS (mi, r, t) END;
-          t := FindType (r.rhs_id);
-          IF (t = NIL) THEN UndefinedRHS (mi, r) END;
-
-          (* insert the new entry *)
-          v := type_ids + n_type_ids * ADRSIZE (v^);
-          s := v - ADRSIZE (v^);
-          WHILE (s >= type_ids) AND (s.uid > r.lhs_id) DO
-            v^ := s^;
-            DEC (v, ADRSIZE (v^));
-            DEC (s, ADRSIZE (s^));
+      (* re-insert the existing elements *)
+      pi := m.map;
+      FOR i := 0 TO m.max-1 DO
+        IF (pi^ # NIL) THEN
+          key1 := NOKEY;  key2 := NOKEY;
+          m.rehash (pi^, key1, key2);
+          IF (key1 # NOKEY) THEN
+            pt := FindSlot (new, key1, pi^);
+            IF (pt^ = NIL) THEN pt^ := pi^; INC (new.cnt); END;
           END;
-          v.uid  := r.lhs_id;
-          v.defn := t;
-          INC (n_type_ids);
-
-          INC (r, ADRSIZE (r^));
-        END;
-      END;
-    END;
-  END CheckOpaques;
-
-PROCEDURE CheckBrands () =
-  (* ensure that all brands are distinct *)
-  VAR
-    t, a, b : RT0.TypeDefn;
-    tp      : TypePtr;
-    hash    : INTEGER;
-    buckets := ARRAY [0..292] OF RT0.TypeDefn {NIL, ..};
-  BEGIN
-    (* Hash each type with a non-nil brand into the table
-       using the type's sibling pointer to resolve collisions. *)
-    tp := RT0u.types;
-    FOR i := 0 TO RT0u.nTypes-1 DO
-      t := tp^;
-      IF (t.brand # NIL) THEN
-        hash := HashString (t.brand) MOD NUMBER (buckets);
-        t.sibling := buckets[hash];
-        buckets[hash] := t;
-      END;
-      INC (tp, ADRSIZE (tp^));
-    END;
-
-    (* Run the naive O(n^2) check on each hash bucket. *)
-    FOR i := 0 TO LAST (buckets) DO
-      a := buckets[i];
-      WHILE (a # NIL) DO
-        b := a.sibling;
-        WHILE (b # NIL) DO
-          IF Cstring.strcmp (LOOPHOLE(a.brand, Ctypes.char_star),
-                             LOOPHOLE(b.brand, Ctypes.char_star)) = 0 THEN
-            StartError ();
-            PutText    ("Two types have the same brand: \"");
-            PutString  (a.brand);
-            PutText    ("\"\n***    ");
-            PutType    (a);
-            PutText    ("\n***    ");
-            PutType    (b);
-            EndError   ();
+          IF (key2 # NOKEY) THEN
+            pt := FindSlot (new, key2, pi^);
+            IF (pt^ = NIL) THEN pt^ := pi^; INC (new.cnt); END;
           END;
-          b := b.sibling;
         END;
-        a := a.sibling;
+        INC (pi, ADRSIZE (pi^));
       END;
+
+      (* free the old map and reset it to the new one *)
+      Cstdlib.free (m.map);
+      m := new;      
     END;
+  END Expand;
 
-    (* Reset the sibling pointers. *)
-    tp := RT0u.types;
-    FOR i := 0 TO RT0u.nTypes-1 DO
-      tp^.sibling := NIL;
-      INC (tp, ADRSIZE (tp^));
-    END;
-  END CheckBrands;
-
-
-PROCEDURE HashString (cp: UNTRACED REF CHAR): INTEGER =
-  VAR hash := 0;
+PROCEDURE TypecodeEq (key: INTEGER;  <*UNUSED*>aux: ADDRESS;
+                      info: InfoPtr): BOOLEAN =
   BEGIN
-    WHILE (cp^ # '\000') DO
+    RETURN info.def.typecode = key;
+  END TypecodeEq;
+
+PROCEDURE TypecodeRehash (info: InfoPtr;  VAR key1: INTEGER;
+                          <*UNUSED*>VAR key2: INTEGER) =
+  BEGIN
+    key1 := info.def.typecode;
+  END TypecodeRehash;
+
+PROCEDURE UIDEq (key: INTEGER;  <*UNUSED*>aux: ADDRESS;
+                 info: InfoPtr): BOOLEAN =
+  BEGIN
+    RETURN (info.opaqueID = key)
+        OR ((info.def # NIL) AND (info.def.selfID = key));
+  END UIDEq;
+
+PROCEDURE UIDRehash (info: InfoPtr;  VAR key1, key2: INTEGER) =
+  BEGIN
+    IF (info.def # NIL)    THEN key1 := info.def.selfID; END;
+    IF (info.opaqueID # 0) THEN key2 := info.opaqueID;   END;
+  END UIDRehash;
+
+PROCEDURE BrandEq (<*UNUSED*> key: INTEGER;  aux: ADDRESS;
+                   info: InfoPtr): BOOLEAN =
+  VAR
+    x: RT0.BrandPtr := LOOPHOLE (aux, InfoPtr).def.brand_ptr;
+    y: RT0.BrandPtr;
+  BEGIN
+    IF (info.def = NIL) OR (info.def.brand_ptr = NIL) THEN RETURN FALSE; END;
+    y := info.def.brand_ptr;
+    RETURN (x.length = y.length)
+       AND Cstring.memcmp (ADR(x.chars[0]), ADR(y.chars[0]), x.length) = 0;
+  END BrandEq;
+
+PROCEDURE BrandRehash (info: InfoPtr;  VAR key1: INTEGER;
+                       <*UNUSED*>VAR key2: INTEGER) =
+  BEGIN
+    IF (info.def # NIL) AND (info.def.brand_ptr # NIL) THEN
+      key1 := HashBrand (info.def.brand_ptr);
+    END;
+  END BrandRehash;
+
+PROCEDURE HashBrand (b: RT0.BrandPtr): INTEGER =
+  VAR
+    hash : INTEGER := 0;
+    len  : INTEGER := b.length;
+    cp   : UNTRACED REF CHAR := ADR (b.chars[0]);
+  BEGIN
+    WHILE (len > 0) DO
       hash := Word.Plus (Word.LeftShift (hash, 1), ORD (cp^));
-      INC (cp, BYTESIZE (cp^));
+      INC (cp, BYTESIZE (cp^));  DEC (len);
     END;
     RETURN hash;
-  END HashString;
+  END HashBrand;
 
-PROCEDURE FindChildren () =
-  VAR tp: TypePtr;  t, p: RT0.TypeDefn;
+PROCEDURE Malloc (n_bytes: INTEGER): ADDRESS =
+  VAR res := Cstdlib.malloc (n_bytes);
   BEGIN
-    tp := RT0u.types;
-    FOR i := 0 TO RT0u.nTypes -1 DO
-      t := tp^;
-      IF (t.parentID # 0) THEN
-        p := FindType (t.parentID);
-        IF (p = NIL) THEN BadParent (t) END;
-        t.parent := p;
-        t.sibling := p.children;
-        p.children := t;
-      END;
-      INC (tp, ADRSIZE (tp^));
-    END;
-  END FindChildren;
-
-PROCEDURE CheckParents () =
-  VAR tp: TypePtr;  t, u: RT0.TypeDefn;
-  BEGIN
-    tp := RT0u.types;
-    FOR i := 0 TO RT0u.nTypes -1 DO
-      t := tp^;  u := t;
-      WHILE (u # NIL) AND (t # NIL) DO
-        t := t.parent;
-        u := u.parent;
-        IF (u = NIL) THEN EXIT; END;
-        u := u.parent;
-        IF (t = u) THEN ParentCycle (tp^);  EXIT; END;
-      END;
-      INC (tp, ADRSIZE (tp^));
-    END;
-  END CheckParents;
-
-PROCEDURE AssignTypecodes () =
-  VAR
-    tp, up        : TypePtr;
-    t, u          : RT0.TypeDefn;
-    next_typecode : INTEGER;
-  BEGIN
-    (* find the types with reserved typecodes *)
-    null  := FindType (16_48ec756e);
-    text  := FindType (16_50f86574);
-    root  := FindType (16_ffffffff9d8fb489);
-    uroot := FindType (16_ffffffff898ea789);
-
-    (* reset the typecodes *)
-    tp := RT0u.types;
-    FOR i := 0 TO RT0u.nTypes-1 DO
-      tp^.typecode := LAST (RT0.Typecode);
-      INC (tp, ADRSIZE (tp^));
-    END;
-
-    (* assign the fixed typecodes *)
-    null.typecode := RT0.NilTypecode;   null.lastSubTypeTC := RT0.NilTypecode;
-    text.typecode := RT0.TextTypecode;  text.lastSubTypeTC := RT0.TextTypecode;
-    next_typecode := MAX (RT0.NilTypecode, RT0.TextTypecode) + 1;
-
-    (* assign the OBJECT typecodes *)
-    AssignObjectTypecode (root, next_typecode);
-    AssignObjectTypecode (uroot, next_typecode);
-
-    (* assign the remaining REF typecodes *)
-    tp := RT0u.types;
-    FOR i := 0 TO RT0u.nTypes-1 DO
-      t := tp^;
-      IF (t.typecode = LAST (RT0.Typecode)) THEN
-        t.typecode := next_typecode;
-        t.lastSubTypeTC := next_typecode;
-        INC (next_typecode);
-      END;
-      INC (tp, ADRSIZE (tp^));
-    END;
-
-    <* ASSERT next_typecode = RT0u.nTypes *>
-
-    (* shuffle the typecells into their correct slots *)
-    tp := RT0u.types;
-    FOR i := 0 TO RT0u.nTypes-1 DO
-      t := tp^;
-      WHILE (t.typecode # i) DO
-        up := RT0u.types + t.typecode * ADRSIZE (up^);
-        u := up^;
-        up^ := t;
-        t := u;
-      END;
-      tp^ := t;
-      INC (tp, ADRSIZE (tp^));
-    END;
-  END AssignTypecodes;
-
-PROCEDURE AssignObjectTypecode (t: RT0.TypeDefn;  VAR next: INTEGER) =
-  VAR u: RT0.TypeDefn;
-  BEGIN
-    <* ASSERT t.typecode = LAST (RT0.Typecode) *>
-    t.typecode := next;  INC (next);
-    u := t.children;
-    WHILE (u # NIL) DO
-      AssignObjectTypecode (u, next);
-      u := u.sibling;
-    END;
-    t.lastSubTypeTC := next-1;
-  END AssignObjectTypecode;
-
-PROCEDURE FixLinks () =
-  VAR
-    mi   : RT0.ModulePtr;
-    t, u : UNTRACED REF RT0.TypeLink;
-    defn : RT0.TypeDefn;
-  BEGIN
-    FOR i := 0 TO RT0u.nModules - 1 DO
-      mi := RTModule.Get (i);
-      t := mi.type_cell_ptrs;
-      WHILE (t # NIL) DO
-        u := t.next;
-        defn := FindType (t.type);
-        IF (defn = NIL) THEN BadTypeId (mi, t.type) END;
-        t.next := defn;
-        t.type := defn.typecode;
-        t := u;
-      END;
-    END;
-  END FixLinks;
-
-PROCEDURE FixSizes () =
-  (* fix the data(method) sizes and offsets *)
-  VAR t: RT0.TypeDefn;  tp: TypePtr;
-  BEGIN
-    (* make sure that all the REF types are some multiple of header words *)
-    tp := RT0u.types;
-    FOR i := 0 TO RT0u.nTypes-1 DO
-      t := tp^;
-      IF (t.typecode # RT0.NilTypecode)
-        AND (t.parent = NIL)
-        AND (t.children = NIL) THEN
-        t.dataSize := RTMisc.Upper (t.dataSize, BYTESIZE (RTHeapRep.Header));
-      END;
-      INC (tp, ADRSIZE (tp^));
-    END;
-
-    (* fix the objects *)
-    FixObjectSizes (root);
-    FixObjectSizes (uroot);
-  END FixSizes;
-
-PROCEDURE FixObjectSizes (t: RT0.TypeDefn) =
-  VAR u: RT0.TypeDefn;
-  BEGIN
-    (* fix my sizes *)
-    u := t.parent;
-    IF (u # NIL) THEN
-      t.dataOffset := RTMisc.Upper (u.dataSize, t.dataAlignment);
-      INC (t.dataSize, t.dataOffset);
-      t.dataAlignment := MAX (t.dataAlignment, u.dataAlignment);
-      t.methodOffset := u.methodSize;
-      INC (t.methodSize, t.methodOffset);
-    END;
-    t.dataSize := RTMisc.Upper (t.dataSize, BYTESIZE (RTHeapRep.Header));
-
-    (* allocate my default method list *)
-    t.defaultMethods := Cstdlib.malloc (t.methodSize);
-    IF (t.defaultMethods = NIL) THEN
-      StartError ();
-      PutText ("unable to allocate method suite for ");
-      PutType (t);
-      EndError ();
-    END;
-    RTMisc.Zero (t.defaultMethods,  t.methodSize);
-
-    (* fix my children *)
-    u := t.children;
-    WHILE (u # NIL) DO
-      FixObjectSizes (u);
-      u := u.sibling;
-    END;
-  END FixObjectSizes;
-
-PROCEDURE CallSetupProcs () =
-  VAR t: RT0.TypeDefn;  tp: TypePtr;
-  BEGIN
-    (* set up the REF types *)
-    tp := RT0u.types;
-    FOR i := 0 TO RT0u.nTypes-1 DO
-      t := tp^;
-      IF (t.parent = NIL) AND (t.children = NIL) AND (t.linkProc # NIL) THEN
-        t.linkProc (t);
-      END;
-      INC (tp, ADRSIZE (tp^));
-    END;
-
-    (* set up the objects *)
-    SetupObject (root);
-    SetupObject (uroot);
-  END CallSetupProcs;
-
-PROCEDURE SetupObject (t: RT0.TypeDefn) =
-  VAR u: RT0.TypeDefn;  a: UNTRACED REF ADDRESS;
-  BEGIN
-    (* initialize my method suite from my parent *)
-    u := t.parent;
-    IF (u # NIL) THEN
-      RTMisc.Copy (u.defaultMethods, t.defaultMethods, u.methodSize);
-    END;
-    LOOPHOLE (t.defaultMethods, UNTRACED REF INTEGER)^ := t.typecode;
-
-    (* initialize any remaining methods to the undefined procedure *)
-    a := t.defaultMethods + ADRSIZE (ADDRESS);
-    FOR j := 1 TO t.methodSize DIV BYTESIZE (ADDRESS) - 1 DO
-      IF (a^ = NIL) THEN a^ := LOOPHOLE (UndefinedMethod, ADDRESS) END;
-      INC (a, ADRSIZE (ADDRESS));
-    END;
-
-    (* call my setup proc *)
-    IF (t.linkProc # NIL) THEN t.linkProc (t) END;
-
-    (* set up my children *)
-    u := t.children;
-    WHILE (u # NIL) DO
-      SetupObject (u);
-      u := u.sibling;
-    END;
-  END SetupObject;
-
-PROCEDURE CheckRevelations () =
-  VAR
-    mi  : RT0.ModulePtr;
-    r   : RT0.RevPtr;
-    lhs : RT0.TypeDefn;
-    rhs : RT0.TypeDefn;
-  BEGIN
-    FOR i := 0 TO RT0u.nModules - 1 DO
-      mi := RTModule.Get (i);
-      r := mi.partial_rev;
-      IF (r # NIL) THEN
-        WHILE (r.lhs_id # 0) DO
-          lhs := FindType (r.lhs_id);
-          rhs := FindType (r.rhs_id);
-          IF (lhs = NIL) OR (rhs = NIL)
-            OR (lhs.typecode < rhs.typecode)
-            OR (rhs.lastSubTypeTC < lhs.typecode) THEN
-            BadRevelation (mi, r, lhs, rhs);
-          END;
-          INC (r, ADRSIZE (r^));
-        END;
-      END;
-    END;
-  END CheckRevelations;
+    IF (res = NIL) THEN RAISE RuntimeError.E (RTE.OutOfMemory); END;
+    RTMisc.Zero (res, n_bytes);
+    RETURN res;
+  END Malloc;
 
 (*-------------------------------------------------------- runtime errors ---*)
 
-PROCEDURE UndefinedMethod () =
+PROCEDURE UndefinedMethod (self: REFANY) =
+  VAR
+    tc   : INTEGER       := TYPECODE (self);
+    info : InfoPtr       := types.map + tc * ADRSIZE (Info);
+    def  : RT0.TypeDefn  := NIL;
+    m    : RT0.ModulePtr := NIL;
   BEGIN
-    RTMisc.FatalError (NIL, 0, "attempted invocation of undefined method");
+    IF (tc < types.cnt) AND (info # NIL) THEN
+      def := info.def;
+      m := info.module;
+    END;
+    Fail (RTE.UndefinedMethod, m, def, NIL);
   END UndefinedMethod;
 
-PROCEDURE BadType (tc: Typecode) =
+PROCEDURE Fail (rte: RTE;  m: RT0.ModulePtr;  x, y: ADDRESS) =
+  <*FATAL ANY*>
+  VAR a: RT0.RaiseActivation;
   BEGIN
-    RTMisc.FatalErrorI ("improper typecode: ", tc);
-  END BadType;
-
-(*----------------------------------------------------------- init errors ---*)
-
-PROCEDURE StartError () =
-  BEGIN
-    PutText ("\n\n***\n*** ");
-  END StartError;
-
-PROCEDURE EndError () =
-  BEGIN
-    PutText ("\n***");
-    Flush ();
-    RTMisc.FatalError (NIL, 0, "unable to initialize runtime types");
-  END EndError;
-
-PROCEDURE BadTypeId (mi: RT0.ModulePtr;  id: INTEGER) =
-  BEGIN
-    StartError ();
-    PutText    ("unable to resolve type id: ");
-    PutHex     (id);
-    PutText    ("\n***    in ");
-    PutModule  (mi);
-    EndError   ();
-  END BadTypeId;
-
-PROCEDURE DuplicateLHS (mi: RT0.ModulePtr;  r: RT0.RevPtr;  t: RT0.TypeDefn) =
-  BEGIN
-    StartError ();
-    PutText    ("opaque type redefined: ");
-    PutText    ("\n***    REVEAL _t");
-    PutHex     (r.lhs_id);
-    PutText    (" = _t");
-    PutHex     (r.rhs_id);
-    PutText    ("\n***    in ");
-    PutModule  (mi);
-    PutText    ("\n***    but, already = ");
-    PutType    (t);
-    EndError   ();
-  END DuplicateLHS;
-
-PROCEDURE UndefinedRHS (mi: RT0.ModulePtr;  r: RT0.RevPtr) =
-  BEGIN
-    StartError ();
-    PutText    ("opaque type revealed as undefined type: ");
-    PutText    ("\n***    REVEAL _t");
-    PutHex     (r.lhs_id);
-    PutText    (" = _t");
-    PutHex     (r.rhs_id);
-    PutText    ("\n***    in ");
-    PutModule  (mi);
-    EndError   ();
-  END UndefinedRHS;
-
-PROCEDURE BadParent (t: RT0.TypeDefn) =
-  BEGIN
-    StartError ();
-    PutText    ("super type undefined:\n***    child = ");
-    PutType    (t);
-    PutText    ("\n***    parent = _t");
-    PutHex     (t.parentID);
-    EndError   ();
-  END BadParent;
-
-PROCEDURE ParentCycle (t: RT0.TypeDefn) =
-  VAR u: RT0.TypeDefn;
-  BEGIN
-    StartError ();
-    PutText    ("illegal cycle in super types:\n***    child  = ");
-    PutType    (t);
-    u := t.parent;
-    WHILE (u # NIL) DO
-      PutText    ("\n***    parent = ");
-      PutType    (u);
-      IF (u = t) THEN EXIT; END;
-      u := u.parent;
-    END;
-    EndError   ();
-  END ParentCycle;
-
-PROCEDURE BadRevelation (mi: RT0.ModulePtr;  r: RT0.RevPtr;
-                         lhs, rhs: RT0.TypeDefn) =
-  BEGIN
-    StartError ();
-    PutText    ("inconsistent partial revelation: ");
-    PutText    ("\n***    REVEAL _t");
-    PutHex     (r.lhs_id);
-    PutText    (" <: _t");
-    PutHex     (r.rhs_id);
-    PutText    ("\n***           ");
-    PutType    (lhs);
-    PutText    (" <: ");
-    PutType    (rhs);
-    PutText    ("\n***    in ");
-    PutModule  (mi);
-    EndError   ();
-  END BadRevelation;
-
-(*---------------------------------------------------- internal debugging ---*)
-
-(***********************************
-PROCEDURE ShowTypes (full := TRUE) =
-  VAR t: RT0.TypeDefn;
-  BEGIN
-    PutText ("Here are the types: nTypes = ");
-    PutInt  (RT0u.nTypes);
-    PutText ("\n");
-    FOR i := 0 TO RT0u.nTypes-1 DO
-      t := Get (i);
-      WHILE (t # NIL) DO
-        PutType (t); PutText ("\n");
-        IF full THEN
-          PutText ("  data   ");
-          PutText ("  S= "); PutInt (t.dataSize);
-          PutText ("  A= "); PutInt (t.dataAlignment);
-          PutText ("  O= "); PutInt (t.dataOffset);
-          PutText ("\n");
-          IF (t.methodSize # 0) OR (t.methodOffset # 0) THEN
-            PutText ("  method ");
-            PutText ("  S= ");  PutInt (t.methodSize);
-            PutText ("  O= ");  PutInt (t.methodOffset);
-            PutText ("\n");
-          END;
-          IF (t.nDimensions # 0) OR (t.elementSize # 0) THEN
-            PutText (" array   ");
-            PutText ("  D= ");  PutInt (t.nDimensions);
-            PutText ("  S= ");  PutInt (t.elementSize);
-            PutText ("\n");
-          END;
-        END;
-      END;
-    END;
-    Flush ();
-    EVAL ShowTypes; (* to prevent an "unused symbol" warning *)
-  END ShowTypes;
-************************************)
-
-PROCEDURE PutType (t: RT0.TypeDefn) =
-  BEGIN
-    PutText ("[");
-    PutAddr (t);
-
-    IF (t # NIL) THEN
-      PutText ("  _t");
-      PutHex  (t.selfID);
-
-      PutText ("  typecode= ");
-      PutInt  (t.typecode, 3);
-      IF (t.lastSubTypeTC # 0) THEN
-        PutText (" .. ");
-        PutInt  (t.lastSubTypeTC, 3);
-      END;
-
-      IF (t.name # NIL) THEN
-        PutText   ("  ");
-        PutString (t.name);
-      END;
-    END;
-
-    PutText ("]");
-  END PutType;
-
-PROCEDURE PutModule (mi: RT0.ModulePtr) =
-  BEGIN
-    IF (mi.file = NIL)
-      THEN PutText ("???");
-      ELSE PutString (mi.file);
-    END;
-  END PutModule;
+    a.exception   := RuntimeError.Self ();
+    a.arg         := LOOPHOLE (ORD (rte), RT0.ExceptionArg);
+    a.module      := m;
+    a.line        := 0;
+    a.pc          := NIL;
+    a.info0       := x;
+    a.info1       := y;
+    a.un_except   := NIL;
+    a.un_arg      := NIL;
+    RTException.Raise (a);
+  END Fail;
 
 BEGIN
 END RTType.

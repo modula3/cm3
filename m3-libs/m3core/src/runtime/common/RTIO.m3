@@ -7,7 +7,7 @@
 
 UNSAFE MODULE RTIO;
 
-IMPORT TextF, Word, RT0, RTOS;
+IMPORT RT0, RTOS, Text, Word;
 
 VAR
   len : INTEGER := 0;
@@ -67,7 +67,9 @@ PROCEDURE PutAddr (a: ADDRESS;  width: INTEGER) =
 
 PROCEDURE PutText (t: TEXT) =
   BEGIN
-    PutChars (ADR (t[0]), NUMBER (t^) - 1);
+    FOR i := 0 TO Text.Length (t)-1 DO
+      PutChar (Text.GetChar (t, i));
+    END;
   END PutText;
 
 PROCEDURE Flush () =

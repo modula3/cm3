@@ -9,4 +9,6 @@
 
 Interface ("Thread")
 Interface ("Scheduler")
+Interface ("MutexRep")
+
 

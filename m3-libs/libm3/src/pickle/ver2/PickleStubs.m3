@@ -16,11 +16,15 @@ FROM PickleRd IMPORT myPacking;
 FROM ConvertPacking IMPORT Kind;
 FROM Swap IMPORT Int32, Int64On32, Int64On64;
 
-IMPORT Rd, Wr, Text, TextF, Thread, RdClass, WrClass, UnsafeRd, UnsafeWr,
-       Swap; 
+IMPORT Rd, Wr, Text, TextClass, Text8, Text16, Thread;
+IMPORT RdClass, WrClass, UnsafeRd, UnsafeWr, Swap; 
 
 REVEAL RdClass.Private <: MUTEX;
 REVEAL WrClass.Private <: MUTEX;
+
+TYPE
+  CharPtr  = UNTRACED REF ARRAY [0..65535] OF CHAR;
+  WCharPtr = UNTRACED REF ARRAY [0..65535] OF WIDECHAR;
 
 (*---------marshalling/unmarshalling routines-----------*)
 
@@ -53,11 +57,49 @@ PROCEDURE InChars(reader: Pickle.Reader; VAR arr: ARRAY OF CHAR)
     END;
   END InChars;
 
+PROCEDURE InWideChars(reader: Pickle.Reader; VAR arr: ARRAY OF WIDECHAR)
+    RAISES {Pickle.Error, Rd.Failure, Thread.Alerted} =
+  VAR cnt: INTEGER := NUMBER(arr);  p: CharPtr;  n: INTEGER;
+  BEGIN
+    IF cnt <= 0 THEN RETURN; END;
+    INC(cnt, cnt);  (* == # of 8-bit characters *)
+    p := LOOPHOLE(ADR(arr[0]), CharPtr);
+    WHILE (cnt > 0) DO
+      n := MIN(cnt, NUMBER(p^));
+      IF reader.rd.getSub(SUBARRAY(p^, 0, n)) # n THEN
+        RaiseUnmarshalFailure();
+      END;
+      INC(p, ADRSIZE(p^));  DEC(cnt, NUMBER(p^));
+    END;
+    CASE reader.conversion OF
+    | Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =>
+        (* ok *)
+    | Kind.Swap, Kind.Swap32to64, Kind.Swap64to32 =>
+        (* we need to byte swap *)
+        FOR i := 0 TO LAST(arr) DO
+          WITH z = arr[i] DO  z := VAL (Swap.Swap2U (ORD (z)), WIDECHAR);  END;
+        END;
+    END;
+  END InWideChars;
+
 PROCEDURE OutChars(writer: Pickle.Writer; READONLY arr: ARRAY OF CHAR)
     RAISES {Wr.Failure, Thread.Alerted} =
   BEGIN
     writer.wr.putString(arr);
   END OutChars;
+
+PROCEDURE OutWideChars(writer: Pickle.Writer; READONLY arr: ARRAY OF WIDECHAR)
+    RAISES {Wr.Failure, Thread.Alerted} =
+  VAR cnt: INTEGER := NUMBER (arr);  p: CharPtr;
+  BEGIN
+    IF cnt <= 0 THEN RETURN; END;
+    INC(cnt, cnt);  (* == # of 8-bit characters *)
+    p := LOOPHOLE(ADR(arr[0]), CharPtr);
+    WHILE (cnt > 0) DO
+      writer.wr.putString(SUBARRAY(p^, 0, MIN (cnt, NUMBER(p^))));
+      INC(p, ADRSIZE(p^)); DEC(cnt, NUMBER(p^));
+    END;
+  END OutWideChars;
 
 PROCEDURE InBytes(reader: Pickle.Reader; VAR arr: ARRAY OF Byte8)
     RAISES {Pickle.Error, Rd.Failure, Thread.Alerted} =
@@ -302,33 +344,121 @@ PROCEDURE OutBoolean(writer: Pickle.Writer; bool: BOOLEAN)
 PROCEDURE InText(reader: Pickle.Reader) : TEXT
    RAISES {Pickle.Error, Rd.Failure, Thread.Alerted} =
   VAR len: INTEGER;
-  VAR text: TEXT;
   BEGIN
     len := InInt32(reader);
     IF len = -1 THEN
       RETURN NIL;
+    ELSIF len = 0 THEN
+      RETURN "";
     ELSIF len < 0 THEN
       RaiseUnmarshalFailure();
+      RETURN NIL;
+    ELSIF InByte(reader) # ORD(FALSE) THEN
+      RETURN InText16(reader, len);
     ELSE
-      text := NEW(TEXT, len+1);
-      InChars(reader, SUBARRAY(text^, 0, len));
-      text[len] := '\000';
+      RETURN InText8(reader, len);
     END;
-    RETURN text;
   END InText;
 
-PROCEDURE OutText(writer: Pickle.Writer; READONLY text: TEXT)
-   RAISES {Wr.Failure, Thread.Alerted} =
-  VAR len: INTEGER;
+PROCEDURE InText16(reader: Pickle.Reader;  len: INTEGER) : TEXT
+   RAISES {Pickle.Error, Rd.Failure, Thread.Alerted} =
+  VAR buf: ARRAY [0..255] OF WIDECHAR;  txt16: Text16.T;
   BEGIN
-    IF text # NIL THEN
-      len := Text.Length(text);
+    IF len <= NUMBER(buf) THEN
+      WITH z = SUBARRAY(buf, 0, len) DO
+        InWideChars(reader, z);
+        RETURN Text.FromWideChars(z);
+      END;
     ELSE
-      len := -1;
+      txt16 := Text16.Create(len);
+      InWideChars(reader, SUBARRAY(txt16.contents^, 0, len));
+      RETURN txt16;
     END;
-    OutInt32(writer, len);
-    IF len > 0 THEN OutChars(writer, SUBARRAY(text^, 0, len)); END;
+  END InText16;
+
+PROCEDURE InText8(reader: Pickle.Reader;  len: INTEGER) : TEXT
+   RAISES {Pickle.Error, Rd.Failure, Thread.Alerted} =
+  VAR buf: ARRAY [0..255] OF CHAR;  txt8: Text8.T;
+  BEGIN
+    IF len <= NUMBER(buf) THEN
+      WITH z = SUBARRAY(buf, 0, len) DO
+        InChars(reader, z);
+        RETURN Text.FromChars(z);
+      END;
+    ELSE
+      txt8 := Text8.Create(len);
+      InChars(reader, SUBARRAY(txt8.contents^, 0, len));
+      RETURN txt8;
+    END;
+  END InText8;
+
+PROCEDURE OutText(writer: Pickle.Writer; txt: TEXT)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  VAR info: TextClass.Info;
+  BEGIN
+    IF txt = NIL THEN
+      OutInt32(writer, -1);
+    ELSE
+      txt.get_info (info);
+      OutInt32(writer, info.length);
+      IF info.length > 0 THEN
+        OutByte(writer, ORD(info.wide));
+        IF info.wide THEN
+          IF info.start # NIL
+            THEN OutString16(writer, info.start, info.length);
+            ELSE OutText16(writer, txt, info.length);
+          END;
+        ELSE (* 8-bit characters only *)
+          IF info.start # NIL
+            THEN OutString8(writer, info.start, info.length);
+            ELSE OutText8(writer, txt, info.length);
+          END;
+        END;
+      END;
+    END;
   END OutText;
+
+PROCEDURE OutText16(writer: Pickle.Writer;  txt: TEXT;  len: INTEGER)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  VAR cnt := 0;  buf: ARRAY [0..511] OF WIDECHAR;
+  BEGIN
+    WHILE cnt < len DO
+      Text.SetWideChars (buf, txt, start := cnt);
+      OutWideChars(writer, SUBARRAY(buf, 0, MIN (len-cnt, NUMBER(buf))));
+      INC(cnt, NUMBER(buf));
+    END;
+  END OutText16;
+
+PROCEDURE OutString16(writer: Pickle.Writer;  start: ADDRESS;  len: INTEGER)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  VAR p: WCharPtr := start;
+  BEGIN
+    WHILE (len > 0) DO
+      OutWideChars(writer, SUBARRAY(p^, 0, MIN(len, NUMBER(p^))));
+      INC(p, ADRSIZE (p^));  DEC(len, NUMBER(p^));
+    END;
+  END OutString16;
+
+PROCEDURE OutText8(writer: Pickle.Writer;  txt: TEXT;  len: INTEGER)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  VAR cnt := 0;  buf: ARRAY [0..511] OF CHAR;
+  BEGIN
+    WHILE cnt < len DO
+      Text.SetChars (buf, txt, start := cnt);
+      OutChars(writer, SUBARRAY(buf, 0, MIN (len-cnt, NUMBER(buf))));
+      INC(cnt, NUMBER(buf));
+    END;
+  END OutText8;
+
+PROCEDURE OutString8(writer: Pickle.Writer;  start: ADDRESS;  len: INTEGER)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  VAR p: CharPtr := start;
+  BEGIN
+    WHILE (len > 0) DO
+      OutChars(writer, SUBARRAY(p^, 0, MIN(len, NUMBER(p^))));
+      INC(p, ADRSIZE(p^));  DEC(len, NUMBER(p^));
+    END;
+  END OutString8;
 
 PROCEDURE SwapReal(i: REAL) : REAL =
   BEGIN

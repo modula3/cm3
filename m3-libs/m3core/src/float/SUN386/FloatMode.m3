@@ -12,7 +12,7 @@ UNSAFE MODULE FloatMode;
    thread *)
 
 (*
- * Unsafe because TtoS is potentially unsafe, however it is not in
+ * Unsafe because FlatTtoS is potentially unsafe, however it is not in
  * our use of it.
  *)
 FROM FPU IMPORT ieee_flags;
@@ -218,10 +218,10 @@ PROCEDURE BuildConversionArrays () =
 
   BEGIN
     FOR i := FIRST(rndModes) TO LAST(rndModes) DO
-      rndModeToSunOs[i] := M3toC.TtoS(rndModes[i]);
+      rndModeToSunOs[i] := M3toC.FlatTtoS(rndModes[i]);
     END;
     FOR i := FIRST(flags) TO LAST(flags) DO
-      flagToSunOs[i] := M3toC.TtoS(flags[i]);
+      flagToSunOs[i] := M3toC.FlatTtoS(flags[i]);
     END;
   END BuildConversionArrays;
 
@@ -232,13 +232,13 @@ VAR
   flagToSunOs: ARRAY Flag OF Ctypes.char_star;
   clearAllStr: Ctypes.char_star;
 BEGIN
-  setStr := M3toC.TtoS("set");
-  directionStr := M3toC.TtoS("direction");
-  getStr := M3toC.TtoS("get");
-  exceptionStr := M3toC.TtoS("exception");
-  nullStr := M3toC.TtoS("");
-  clearStr := M3toC.TtoS("clear");
-  clearAllStr := M3toC.TtoS ("clearall");
+  setStr := M3toC.FlatTtoS("set");
+  directionStr := M3toC.FlatTtoS("direction");
+  getStr := M3toC.FlatTtoS("get");
+  exceptionStr := M3toC.FlatTtoS("exception");
+  nullStr := M3toC.FlatTtoS("");
+  clearStr := M3toC.FlatTtoS("clear");
+  clearAllStr := M3toC.FlatTtoS ("clearall");
 
   BuildConversionArrays();
 

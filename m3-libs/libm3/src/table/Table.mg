@@ -27,7 +27,7 @@ TYPE
 REVEAL
   Default = Public BRANDED DefaultBrand OBJECT
     minLogBuckets: CARDINAL; (* minimum value for Log_2(initial size) *)
-    buckets: REF ARRAY OF EntryList;
+    buckets: Buckets;
     logBuckets: CARDINAL; (* CEILING(Log2(NUMBER(buckets^))) *)
     maxEntries: CARDINAL; (* maximum number of entries *)
     minEntries: CARDINAL; (* minimum number of entries *)
@@ -43,7 +43,11 @@ REVEAL
     keyHash := KeyHash
   END;
 
-TYPE EntryList = REF RECORD
+TYPE
+  Buckets = REF ARRAY OF EntryList;
+
+TYPE
+  EntryList = REF RECORD
     key: Key.T;
     value: Value.T;
     tail: EntryList
@@ -66,14 +70,13 @@ CONST
   MinDensity = 0.20; (* min numEntries/NUMBER(buckets) *)
   IdealDensity = 0.50;
 
-TYPE DefaultIterator = OBJECT METHODS
-    next(VAR (*OUT*) k: Key.T; VAR (*OUT*) v: Value.T) : BOOLEAN
-  END BRANDED OBJECT
-    tbl: Default;
-    this: EntryList; (* next entry to visit if non-NIL *)
-    bucket: CARDINAL; (* next bucket if < NUMBER(tbl.buckets^) *)
-    done: BOOLEAN; (* TRUE if next() has returned FALSE *)
+TYPE DefaultIterator = Iterator BRANDED OBJECT
+    tbl    : Default   := NIL;
+    this   : EntryList := NIL;   (* next entry to visit if non-NIL *)
+    bucket : CARDINAL  := 0;     (* next bucket if < NUMBER(tbl.buckets^) *)
+    done   : BOOLEAN   := FALSE; (* TRUE if next() has returned FALSE *)
   OVERRIDES
+    init := InitIterator;
     next := Next
   END;
 
@@ -172,8 +175,7 @@ PROCEDURE Size(tbl: Default): CARDINAL =
 
 PROCEDURE Iterate(tbl: Default): Iterator =
   BEGIN
-    RETURN NEW(DefaultIterator,
-      tbl := tbl, this := NIL, bucket := 0, done := FALSE)
+    RETURN NEW(DefaultIterator, tbl := tbl).init();
   END Iterate;
 
 PROCEDURE KeyHash(<*UNUSED*> tbl: Default; READONLY k: Key.T): Word.T =
@@ -206,7 +208,7 @@ PROCEDURE NewBuckets(tbl: Default; logBuckets: CARDINAL) =
   (* Allocate "2^logBuckets" buckets. *)
   BEGIN
     WITH numBuckets = Word.LeftShift(1, logBuckets) DO
-      tbl.buckets := NEW(REF ARRAY OF EntryList, numBuckets);
+      tbl.buckets := NEW(Buckets, numBuckets);
       WITH b = tbl.buckets^ DO
         FOR i := FIRST(b) TO LAST(b) DO b[i] := NIL END
       END;
@@ -255,6 +257,14 @@ PROCEDURE Rehash(tbl: Default; logBuckets: CARDINAL) =
 (* Iterator methods *)
 (********************)
 
+PROCEDURE InitIterator (i: DefaultIterator): Iterator =
+  BEGIN
+    i.this   := NIL;
+    i.bucket := 0;
+    i.done   := FALSE;
+    RETURN i;
+  END InitIterator;
+
 PROCEDURE Next(i: DefaultIterator; VAR key: Key.T; VAR val: Value.T): BOOLEAN =
   BEGIN
     BEGIN
@@ -274,6 +284,46 @@ PROCEDURE Next(i: DefaultIterator; VAR key: Key.T; VAR val: Value.T): BOOLEAN =
       END
     END
   END Next;
+
+(************
+PROCEDURE Dump (tbl: Default;  key_dump: PROCEDURE (key: Key.T)) =
+  VAR e: EntryList;  hash, slot: INTEGER;
+  BEGIN
+    IO.Put ("DUMP  min_log=");    IO.PutInt (tbl.minLogBuckets);
+    IO.Put ("  log=");    IO.PutInt (tbl.logBuckets);
+    IO.Put ("  max=");    IO.PutInt (tbl.maxEntries);
+    IO.Put ("  min=");    IO.PutInt (tbl.minEntries);
+    IO.Put ("  num=");    IO.PutInt (tbl.numEntries);
+    IO.Put ("  mult=");   IO.PutInt (Multiplier);
+    IO.Put ("\r\n");
+    FOR i := 0 TO LAST (tbl.buckets^) DO
+      e := tbl.buckets[i];
+      IF e # NIL THEN
+        IO.Put ("  bucket ");
+        IO.PutInt (i);
+        WHILE (e # NIL) DO
+          IO.Put ("  (");
+          key_dump (e.key);
+          IO.Put (" ");
+          hash := tbl.keyHash (e.key);
+          IO.PutInt (hash);
+          slot := Word.Times (hash, Multiplier);
+          IO.Put ("  ");
+          IO.PutInt (slot);
+          slot := Word.RightShift (Word.Times (hash, Multiplier),
+                                   Word.Size - tbl.logBuckets);
+          IF (slot # i) THEN
+            IO.Put (" *** ");
+            IO.PutInt (slot);
+          END;
+          IO.Put (")");
+          e := e.tail;
+        END;
+        IO.Put ("\r\n");
+      END;
+    END;
+  END Dump;
+**************)
 
 BEGIN
   (* The multiplier == 2^BITSIZE(Word.T) / phi *)

@@ -40,8 +40,8 @@ PROCEDURE exect(
 
 (* options bits for the second argument of wait3. *)
 CONST
-  WNOHANG = 1;			 (* dont hang in wait *)
-  WUNTRACED = 2;		 (* tell about stopped, untraced children *)
+  WNOHANG   = 8_100;		 (* dont hang in wait *)
+  WUNTRACED = 8_004;		 (* tell about stopped, untraced children *)
 
 TYPE
   w_A = Ctypes.unsigned_int;

@@ -20,9 +20,6 @@ IMPORT Random;
 TYPE
   Cmp = [-1 .. +1]; (* comparison:  <, =, > *)
 
-CONST
-  NextChild = ARRAY Cmp OF [0..1] { 0, 1, 1 };
-
 TYPE
   Public = T OBJECT METHODS
     init(): Default;
@@ -31,7 +28,7 @@ TYPE
 
 REVEAL
   Default = Public BRANDED DefaultBrand OBJECT
-    h          : Node;          (* the root of the tree is h.child[1] *)
+    h          : Node;          (* the root of the tree is h.hi *)
     rand       : Random.T;      (* used to generate priorities for heap *)
     sz         : CARDINAL := 0; (* number of entries *)
     topL, topR : Node;          (* used in SplitNode *)
@@ -51,7 +48,8 @@ TYPE
   Node = REF RECORD
     key     : Key.T;
     value   : Value.T;
-    child   := ARRAY [0..1] OF Node { NIL, NIL };
+    lo      : Node := NIL;
+    hi      : Node := NIL;
     priority: INTEGER    (* random num; tree is a heap on these *)
   END;
 
@@ -78,17 +76,17 @@ PROCEDURE Validate (table: Default) RAISES {} =
         <* ASSERT table.keyCompare (x.key, upperBound) = -1 *>
       END;
       <* ASSERT parentPriority >= x.priority *>
-      IF x.child[0] # NIL THEN
-        V (x.child[0], x.priority, lowerBound, x.key, checkLowerBound, TRUE);
+      IF x.lo # NIL THEN
+        V (x.lo, x.priority, lowerBound, x.key, checkLowerBound, TRUE);
       END;
-      IF x.child[1] # NIL THEN
-        V (x.child[1], x.priority, x.key, upperBound, TRUE, checkUpperBound);
+      IF x.hi # NIL THEN
+        V (x.hi, x.priority, x.key, upperBound, TRUE, checkUpperBound);
       END
     END V;
   BEGIN
-    <* ASSERT (table.h.priority = MaxPriority) AND (table.h.child[0] = NIL) *>
-    IF table.h.child[1] # NIL THEN
-      V(table.h.child[1], MaxPriority, table.h.key, table.h.key, FALSE, FALSE)
+    <* ASSERT (table.h.priority = MaxPriority) AND (table.h.lo = NIL) *>
+    IF table.h.hi # NIL THEN
+      V(table.h.hi, MaxPriority, table.h.key, table.h.key, FALSE, FALSE)
       (* h.key is just a valid element of type Key.T; it never participates
          in a comparison *)
     END;
@@ -119,12 +117,15 @@ PROCEDURE FindNode (           tbl  : Default;
   VAR cmp: Cmp;
   BEGIN
     f := tbl.h;
-    x := f.child[1];
+    x := f.hi;
     WHILE (x # NIL) DO
       cmp := tbl.keyCompare (k, x.key);
       IF cmp = 0 THEN RETURN TRUE; END;
       f := x;
-      x := x.child [NextChild [cmp]];
+      IF (cmp < 0)
+        THEN x := x.lo;
+        ELSE x := x.hi;
+      END:
     END;
     RETURN FALSE;
   END FindNode;
@@ -134,13 +135,16 @@ PROCEDURE Get (           tbl : Default;
                READONLY   k   : Key.T;
                VAR(*OUT*) v   : Value.T): BOOLEAN =
   VAR
-    x   : Node := tbl.h.child[1];
+    x   : Node := tbl.h.hi;
     cmp : Cmp;
   BEGIN
     WHILE (x # NIL) DO
       cmp := tbl.keyCompare (k, x.key);
       IF cmp = 0 THEN  v := x.value;  RETURN TRUE; END;
-      x := x.child [NextChild [cmp]];
+      IF (cmp < 0)
+        THEN x := x.lo;
+        ELSE x := x.hi;
+      END;
     END;
     RETURN FALSE;
   END Get;
@@ -167,19 +171,19 @@ PROCEDURE SplitNode (            tbl     : Default;
   BEGIN
     WHILE (toSplit # NIL) DO
       CASE tbl.keyCompare (toSplit.key, splitKey) OF
-      | -1 => x.child[1] := toSplit;  x := toSplit;
-              toSplit := toSplit.child[1];
+      | -1 => x.hi := toSplit;  x := toSplit;
+              toSplit := toSplit.hi;
       |  0 => found := TRUE;  (* delete toSplit *)
-              y.child[0] := toSplit.child[1];  y := toSplit;
-              toSplit := toSplit.child[0];
-      | +1 => y.child[0] := toSplit;  y := toSplit;
-              toSplit := toSplit.child[0];
+              y.lo := toSplit.hi;  y := toSplit;
+              toSplit := toSplit.lo;
+      | +1 => y.lo := toSplit;  y := toSplit;
+              toSplit := toSplit.lo;
       END;
     END;
-    x.child[1] := NIL;
-    y.child[0] := NIL;
-    outL := tbl.topL.child[1];
-    outR := tbl.topR.child[0];
+    x.hi := NIL;
+    y.lo := NIL;
+    outL := tbl.topL.hi;
+    outR := tbl.topR.lo;
     RETURN found;
   END SplitNode;
 
@@ -187,23 +191,29 @@ PROCEDURE Put (tbl: Default; READONLY k: Key.T; READONLY v: Value.T): BOOLEAN =
   VAR
     cmp  : Cmp     := 1;     (* initially, x is right child of f *)
     f    : Node    := tbl.h; (* father of x *)
-    x    : Node    := f.child[1];
+    x    : Node    := f.hi;
     pri  : INTEGER := tbl.rand.integer(0, LAST(INTEGER));
   BEGIN
     WHILE (x # NIL) AND (pri < x.priority) DO
       cmp := tbl.keyCompare (k, x.key);
       IF cmp = 0 THEN  x.value := v;  RETURN TRUE;  END;
       f := x;
-      x := x.child [NextChild [cmp]];
+      IF (cmp < 0)
+        THEN x := x.lo;
+        ELSE x := x.hi;
+      END;
     END;
 
     (* didn't find a match and we have a "big" heap priority => insert *)
     VAR
       new   := NEW (Node, key := k, value := v, priority := pri);
-      found := (x # NIL) AND SplitNode (tbl, k, x,new.child[0],new.child[1]);
+      found := (x # NIL) AND SplitNode (tbl, k, x,new.lo,new.hi);
     BEGIN
       IF NOT found THEN INC(tbl.sz) END;
-      f.child [NextChild [cmp]] := new;
+      IF (cmp < 0)
+        THEN f.lo := new;
+        ELSE f.hi := new;
+      END;
       RETURN found;
     END;
   END Put;
@@ -225,23 +235,29 @@ PROCEDURE Concat (table: Default;  left, right: Node): Node =
     WHILE (left # right) DO (* depends on disjoint trees with NIL leaves *)
       IF (left = NIL) THEN
         upper := right;
-        right := right.child[0];
+        right := right.lo;
         next  := 0;
       ELSIF (right = NIL) OR (left.priority > right.priority) THEN
         upper := left;
-        left  := left.child[1];
+        left  := left.hi;
         next  := 1;
       ELSE (* left.priority <= right.priority *)
         upper := right;
-        right := right.child[0];
+        right := right.lo;
         next  := 0;
       END;
-      f.child[prev] := upper;
+      IF (prev = 0)
+        THEN f.lo := upper;
+        ELSE f.hi := upper;
+      END;
       f := upper;
       prev := next;
     END;
-    f.child[prev] := NIL;
-    RETURN table.topNode.child[1];
+    IF (prev = 0)
+      THEN f.lo := NIL;
+      ELSE f.hi := NIL;
+    END;
+    RETURN table.topNode.hi;
   END Concat;
 
 PROCEDURE Delete (           tbl : Default;
@@ -249,21 +265,28 @@ PROCEDURE Delete (           tbl : Default;
                   VAR(*OUT*) v   : Value.T) : BOOLEAN =
   VAR
     f    : Node   := tbl.h;
-    x    : Node   := f.child[1];
-    next : [0..1] := 1;
+    x    : Node   := f.hi;
+    prev : [0..1] := 1;
     cmp  : Cmp;
+    n    : Node;
   BEGIN
     WHILE (x # NIL) DO
       cmp := tbl.keyCompare (k, x.key);
       IF cmp = 0 THEN
-        f.child[next] := Concat (tbl, x.child[0], x.child[1]);
+        n := Concat (tbl, x.lo, x.hi);
+        IF (prev = 0)
+          THEN f.lo := n;
+          ELSE f.hi := n;
+        END;
         v := x.value;
         DEC(tbl.sz);
         RETURN TRUE;
       END;
-      next := NextChild [cmp];
       f := x;
-      x := x.child [next];
+      IF (cmp < 0)
+        THEN x := x.lo;  prev := 0;
+        ELSE x := x.hi;  prev := 1;
+      END;
     END;
     RETURN FALSE;
   END Delete;
@@ -290,20 +313,15 @@ TYPE
     top   : CARDINAL := 0;
     stack : ARRAY [0 .. MaxStack] OF Node
   OVERRIDES
+    init := InitIterator;
     next := Next;
     seek := Seek
   END;
 
 PROCEDURE IterateOrdered (table: Default; up: BOOLEAN := TRUE): Iterator =
-  VAR it := NEW(DefaultIterator, table := table, ascend := up);  n: Node;
+  VAR it := NEW(DefaultIterator, table := table, ascend := up);
   BEGIN
-    IF up THEN
-      it.stack[it.top] := table.h;
-    ELSE
-      n := NEW(Node);
-      n.child[0] := table.h.child[1];
-      it.stack[it.top] := n;
-    END;
+    EVAL it.init();
     RETURN it;
   END IterateOrdered;
 
@@ -311,6 +329,19 @@ PROCEDURE Iterate (table: Default): Tbl.Iterator =
   BEGIN
     RETURN table.iterateOrdered()
   END Iterate;
+
+PROCEDURE InitIterator (it: DefaultIterator): Tbl.Iterator =
+  VAR n: Node;
+  BEGIN
+    it.done := FALSE;
+    it.top  := 0;
+    IF it.ascend
+      THEN n := it.table.h;
+      ELSE n := NEW(Node, lo := it.table.h.hi);
+    END;
+    it.stack[it.top] := n;
+    RETURN it;
+  END InitIterator;
 
 PROCEDURE Next (            it   : DefaultIterator;
                 VAR (*OUT*) key  : Key.T;
@@ -324,10 +355,12 @@ PROCEDURE Next (            it   : DefaultIterator;
     x    : Node   := it.stack[it.top];
     next : [0..1] := ORD (it.ascend);
     prev : [0..1] := ORD (NOT it.ascend);
+    n    : Node;
   BEGIN
     <* ASSERT NOT it.done *>
 
-    IF x.child[next] = NIL THEN
+    IF (next = 0) THEN n := x.lo; ELSE n := x.hi; END;
+    IF n = NIL THEN
       IF it.top = 0 THEN  it.done := TRUE; RETURN FALSE;  END;
       DEC(it.top);
       x := it.stack[it.top];
@@ -338,10 +371,12 @@ PROCEDURE Next (            it   : DefaultIterator;
 
     (* Replace the top of the stack with its "next" child,    *)
     (* and push the path to the most previous descendant of x *)
-    x := x.child[next];
+    IF (next = 0) THEN x := x.lo; ELSE x := x.hi; END;
     it.stack[it.top] := x;
-    WHILE (x.child[prev] # NIL) DO
-      x := x.child[prev];
+    LOOP
+      IF (prev = 0) THEN n := x.lo; ELSE n := x.hi; END;
+      IF (n = NIL) THEN EXIT; END;
+      x := n;
       INC(it.top);
       it.stack[it.top] := x
     END;
@@ -375,12 +410,12 @@ PROCEDURE Seek (it: DefaultIterator; READONLY key: Key.T) =
        comparisons with keys that have not been explicitly set, such
        as tbl.h.key. *)
     x := it.stack[it.top];
-    IF (x # tbl.h) AND (x.child[0] # tbl.h.child[1])   (* not a virgin stack *)
+    IF (x # tbl.h) AND (x.lo # tbl.h.hi)   (* not a virgin stack *)
        AND (tbl.keyCompare (key, x.key) # cmpval) THEN
       it.top := 0;
       IF it.ascend
         THEN n := tbl.h;
-        ELSE n := NEW (Node);  n.child[0] := tbl.h.child[1];
+        ELSE n := NEW (Node);  n.lo := tbl.h.hi;
       END;
       it.stack[0] := n;
     END;
@@ -413,7 +448,7 @@ PROCEDURE Seek (it: DefaultIterator; READONLY key: Key.T) =
     topelt := it.stack[top];
     x := topelt;
     LOOP
-      x := x.child [NextChild [cmp]];
+      IF (cmp < 0) THEN x := x.lo; ELSE x := x.hi; END;
       IF x = NIL THEN EXIT END;
       cmp := tbl.keyCompare (key, x.key);
       IF cmp = 0 THEN cmp := -cmpval; END;

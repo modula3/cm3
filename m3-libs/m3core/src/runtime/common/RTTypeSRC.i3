@@ -25,11 +25,26 @@ PROCEDURE TypecodeName (tc: RT0.Typecode): TEXT;
 
 PROCEDURE FindType (id: INTEGER): RT0.TypeDefn;
 (* Returns the type descriptor with UID id.  If no such type exists,
-   reutrns NIL. *)
+   returns NIL. *)
 
 (*------------------------------------------------------------------ setup --*)
 
-PROCEDURE Init ();
-(* called by the startup code to initialize the runtime type system. *)
+PROCEDURE AddTypecell (tc: RT0.TypeDefn;  m: RT0.ModulePtr);
+(* add "tc" to the list of registered typecells *)
+
+PROCEDURE NoteFullRevelation (r: RT0.RevPtr;  m: RT0.ModulePtr);
+(* Declare the opaque-concrete type binding in "r". *)
+
+PROCEDURE ResolveTypeLink (uid: INTEGER;  t: RT0.TypeLinkPtr;  m: RT0.ModulePtr);
+(* Fixes "t" to refer to the type corresponding to "uid".  It is a
+   checked runtime error if the type is not known. *)
+
+PROCEDURE FinishObjectTypes ();
+(* Finish initializing any OBJECT typecells.  It is a checked runtime
+   error if any of the object typecells refers to an unknown supertype. *)
+
+PROCEDURE VerifyPartialRevelation (r: RT0.RevPtr;  m: RT0.ModulePtr);
+(* Verify that revelation "r" from module "m" is consistent with
+   the rest of the registered types. *)
 
 END RTTypeSRC.

@@ -15,14 +15,14 @@ VAR env_c : CARDINAL := 0;
 
 PROCEDURE ArgC (): CARDINAL =
   BEGIN
-    RETURN RTLinker.info.argc;
+    RETURN RTLinker.argc;
   END ArgC;
 
 PROCEDURE GetArg (n: CARDINAL): TEXT =
-  VAR p: Ctypes.char_star_star := RTLinker.info.argv + n * ADRSIZE (ADDRESS);
+  VAR p: Ctypes.char_star_star := RTLinker.argv + n * ADRSIZE (ADDRESS);
       a: ARRAY [0..1] OF INTEGER;
   BEGIN
-    IF (n >= RTLinker.info.argc) THEN
+    IF (n >= RTLinker.argc) THEN
       n := 2;  n := a[n];  (* force a subscript fault *)
     END;
     RETURN M3toC.StoT (p^);
@@ -31,7 +31,7 @@ PROCEDURE GetArg (n: CARDINAL): TEXT =
 PROCEDURE EnvC (): CARDINAL =
   VAR
     cnt  : CARDINAL := 0;
-    envp : Ctypes.char_star_star := RTLinker.info.envp;
+    envp : Ctypes.char_star_star := RTLinker.envp;
   BEGIN
     IF (env_c = 0) THEN
       WHILE envp^ # NIL DO
@@ -44,7 +44,7 @@ PROCEDURE EnvC (): CARDINAL =
   END EnvC;
 
 PROCEDURE GetEnv (n: CARDINAL): TEXT =
-  VAR p: Ctypes.char_star_star := RTLinker.info.envp + n * ADRSIZE (ADDRESS);
+  VAR p: Ctypes.char_star_star := RTLinker.envp + n * ADRSIZE (ADDRESS);
       a: ARRAY [0..1] OF INTEGER;
   BEGIN
     IF (n >= EnvC ()) THEN

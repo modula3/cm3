@@ -12,7 +12,8 @@ IMPORT File, OSError, Pipe, WinNT;
    field, "handle". *)
 
 TYPE T = File.Public OBJECT
-    handle: WinNT.HANDLE
+    handle: WinNT.HANDLE;
+    ds: DirectionSet; 
   END;
 
 REVEAL File.T <: T;

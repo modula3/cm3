@@ -153,7 +153,7 @@ PROCEDURE setitimer (which: int;
 
 (* Reentrant equivalents *)
 
-PROCEDURE ctime_r (clock: long_star; buf: char_star;  buflen: int): char_star;
+PROCEDURE ctime_r (clock: long_star; buf: char_star; buflen: int): char_star;
 PROCEDURE localtime_r (clock: long_star; res: struct_tm_star): struct_tm_star;
 PROCEDURE gmtime_r (clock: long_star; res: struct_tm_star): struct_tm_star;
 PROCEDURE asctime_r(tm: struct_tm_star; buf: char_star; buflen: int):char_star;

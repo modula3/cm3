@@ -2,7 +2,7 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 
-(* Last modified on Thu Mar 28 14:15:01 PST 1996 by heydon     *)
+(* Last modified on Wed Aug 18 20:33:57 PDT 1993 by heydon     *)
 (*      modified on Fri Nov  3 14:14:31 PDT 1989 by muller     *)
 (*      modified on Fri Oct 20 11:16:20 PDT 1989 by kalsow     *)
 (*      modified on Fri Jan 20 12:42:01 PDT 1989 by glassman   *)
@@ -116,7 +116,7 @@ CONST
 
 <*EXTERNAL*> PROCEDURE rint (x: LONGREAL): LONGREAL;
 (* returns the nearest integer value to x.
-   Note: the Modula-3 function ROUND may be appropriate. *)
+   Note: the Modula-3 function ROUND may  be appropriate. *)
 
 <*EXTERNAL*> PROCEDURE fabs (x: LONGREAL): LONGREAL;
 (* returns the absolute value of x.
@@ -142,24 +142,11 @@ TYPE Complex = RECORD x, y: LONGREAL END;
 <*EXTERNAL*> PROCEDURE ldexp (x: LONGREAL; exp: INTEGER): LONGREAL;
 (* returns x * 2^exp. *)
 
-<*EXTERNAL*> PROCEDURE modf (x: LONGREAL; VAR (*OUT*) i: LONGREAL): LONGREAL;
+<*EXTERNAL*> PROCEDURE modf (x: LONGREAL; VAR(*OUT*) i: LONGREAL): LONGREAL;
 (* splits the argument "x" into an integer part "i" and a fractional part "f"
    such that "f + i = x" and such that "f" and "i" both have the same sign as
    "x", and returns "f". Although "i" is a LONGREAL, it is set to an integral
    value. *)
-
-
-(*---- Modulo functions ----*)
-
-<*EXTERNAL*> PROCEDURE fmod (x, y: LONGREAL): LONGREAL;
-(* returns the remainder of dividing x by y.
-   Note: use the built-in Modula-3 function MOD. *)
-
-<*EXTERNAL*> PROCEDURE drem (x, y: LONGREAL): LONGREAL;
-<*EXTERNAL*> PROCEDURE remainder (x, y: LONGREAL): LONGREAL;
-(* returns the remainder "r = x - n * y", where "n = ROUND(x/y)".
-   Note: the Modula-3 functions MOD and ROUND may be appropriate. *)
-
 
 (*---- Error functions ----*)
 
@@ -195,7 +182,19 @@ TYPE Complex = RECORD x, y: LONGREAL END;
 <*EXTERNAL*> PROCEDURE y1 (x: LONGREAL): LONGREAL;
 (* returns the first-order Bessel function of second kind on x. *)
 
-<*EXTERNAL*> PROCEDURE yn (n: INTEGER; x: LONGREAL): LONGREAL;
+<*EXTERNAL*> PROCEDURE yn (n: INTEGER;  x: LONGREAL): LONGREAL;
 (* returns the n th-order Bessel function of second kind on x. *)
 
+(*---- Modulo functions ----*)
+
+<*EXTERNAL*> PROCEDURE fmod (x, y: LONGREAL): LONGREAL;
+(* returns the remainder of dividing x by y.
+   Note: use the built-in Modula-3 function MOD. *)
+
+<*EXTERNAL*> PROCEDURE drem (x, y: LONGREAL): LONGREAL;
+<*EXTERNAL*> PROCEDURE remainder (x, y: LONGREAL): LONGREAL;
+(* returns remainder "r = x - n*y", where "n = ROUND(x/y)".
+   Note: the Modula-3 functions MOD and ROUND may be appropriate. *)
+
 END Math.
+

@@ -10,28 +10,34 @@
 
 MODULE Scan;
 
-IMPORT Rd, Thread, FloatMode, Lex, Text, TextRd, TextF, Word;
+IMPORT Rd, Thread, FloatMode, Lex, Text, TextRd, Word;
 <*FATAL Rd.Failure, Thread.Alerted*>
 
-PROCEDURE ScanWord (txt: TEXT): Rd.T RAISES {Lex.Error} =
-  (* Ensure that "txt" contains exactly on non-blank substring,
-     and return its span [start..stop) *)
-  VAR len := LAST (txt^);  x := 0;  start, stop: INTEGER;
+PROCEDURE Skip (txt: TEXT;  len, start: INTEGER;  blanks: BOOLEAN): INTEGER =
+  (* Return the index of the first character of "txt" at or beyond "start"
+     that's not in "chars". *)
+  VAR
+    i   : CARDINAL := NUMBER(buf);
+    buf : ARRAY [0..63] OF CHAR;
   BEGIN
-    (* skip leading white space *)
-    WHILE (x < len) AND (txt[x] IN Lex.Blanks) DO INC (x); END;
-    start := x;
-
-    (* skip the non-blank word *)
-    WHILE (x < len) AND (NOT txt[x] IN Lex.Blanks) DO INC (x); END;
-    stop := x;
-
-    (* verify that the rest of the string is blank *)
-    WHILE (x < len) DO
-      IF (NOT txt[x] IN Lex.Blanks) THEN RAISE Lex.Error; END;
-      INC (x);
+    LOOP
+      IF (start >= len) THEN RETURN len; END;
+      IF (i >= NUMBER (buf)) THEN i := 0; Text.SetChars (buf, txt, start);  END;
+      IF (buf[i] IN Lex.Blanks) # blanks THEN RETURN start; END;
+      INC (start);  INC (i);
     END;
+  END Skip;
 
+PROCEDURE ScanWord (txt: TEXT): Rd.T RAISES {Lex.Error} =
+  (* Ensure that "txt" contains exactly one non-blank substring,
+     and return its span [start..stop) *)
+  VAR
+    len    := Text.Length (txt);
+    start  := Skip (txt, len, 0,     blanks := TRUE);
+    stop   := Skip (txt, len, start, blanks := FALSE);
+    finish := Skip (txt, len, stop,  blanks := TRUE);
+  BEGIN
+    IF finish < len THEN RAISE Lex.Error; END;
     RETURN TextRd.New (Text.Sub (txt, start, stop-start));
   END ScanWord;
 

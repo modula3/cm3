@@ -11,10 +11,10 @@ PROCEDURE Get (bundle: T; element: TEXT): TEXT =
     RETURN bundle.get(element)
   END Get;
 
-PROCEDURE Elts (<* UNUSED *> bundle: T): REF ARRAY OF TEXT =
+PROCEDURE EltNames (bundle: T): REF ARRAY OF TEXT =
   BEGIN
-    <* ASSERT FALSE *>
-  END Elts;
+    RETURN bundle.getNames ();
+  END EltNames;
 
 BEGIN
 END Bundle.

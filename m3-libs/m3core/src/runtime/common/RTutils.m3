@@ -22,10 +22,16 @@ TYPE
     size  : INTEGER := 0;
   END;
 
+  Link = RECORD
+    children : INTEGER;
+    next     : INTEGER;
+  END;
+
 TYPE
   R = REF ARRAY OF TypeDesc;
   Map = REF ARRAY OF INTEGER;
   StatList = REF ARRAY OF Stat;
+  LinkList = REF ARRAY OF Link;
             
   Visitor = RTHeapRep.RefVisitor OBJECT
               r         : R;
@@ -34,6 +40,8 @@ TYPE
             OVERRIDES
               visit := Walk
             END;
+
+CONST NO_LINK = RTType.NoSuchType;  (* an impossible typecode *)
 
 VAR v := NewVisitor ();
     
@@ -73,9 +81,9 @@ PROCEDURE Delta (v1, v2: Visitor): Visitor =
     v.countSum := v1.countSum - v2.countSum;
     v.sizeSum := v1.sizeSum - v2.sizeSum;
     FOR i := 0 TO LAST (v.r^) DO
-      WITH a = v.r[i], b = v2.r[i] DO
-        DEC (a.total.count, b.total.count);
-        DEC (a.total.size,  b.total.size);
+      WITH x = v.r[i].total, a = v1.r[i].total, b = v2.r[i].total DO
+        x.count := a.count - b.count;
+        x.size  := a.size  - b.size;
       END;
     END;
     RETURN v
@@ -90,7 +98,8 @@ PROCEDURE Report (v: Visitor;
     nPrinted := 0;
     map := NEW (Map, NUMBER (v.r^));
     sums: R;
-    defn, root: RT0.TypeDefn;
+    links: LinkList := NIL;
+    root: RT0.Typecode;
   BEGIN
     (* report an entry for each distinct type *)
     FOR i := 0 TO LAST (map^) DO map[i] := i; END;
@@ -132,9 +141,10 @@ PROCEDURE Report (v: Visitor;
 
     (* report an entry for each tree of object types *)
     IF byTypeHierarchy THEN
-      root := RTType.Get (TYPECODE (ROOT));
+      root := TYPECODE (ROOT);
+      links := FindChildLinks ();
       sums := NEW (R, NUMBER (v.r^));
-      SumTrees (sums, v.r);
+      SumTrees (sums, v.r, links);
       FOR i := 0 TO LAST (map^) DO map[i] := i; END;
       CASE presentation OF
       | HeapPresentation.ByTypecode  => (*SKIP*)
@@ -151,9 +161,8 @@ PROCEDURE Report (v: Visitor;
 	IF (nPrinted >= window) THEN EXIT; END;
 	WITH tc = map[i], zz = sums[tc] DO
 	  IF (zz.total.count > 0) OR (NOT suppressZeros) THEN
-	    defn := RTType.Get (tc);
-	    IF defn.parent = root THEN
-	      EVAL PrintTree (sums, 0, tc, suppressZeros);
+            IF RTType.Supertype (tc) = root THEN
+	      PrintTree (sums, links, 0, tc, suppressZeros);
 	      RTIO.PutChar ('\n');
 	    END;
 	    INC(nPrinted);
@@ -210,30 +219,52 @@ PROCEDURE PrintSites (tc : INTEGER;
     IF (n_sites > 1) AND (window > 1) THEN RTIO.PutChar ('\n'); END;
   END PrintSites;
 
-PROCEDURE SumTrees (sums, cnts: R) =
-  VAR defn: RT0.TypeDefn;
+PROCEDURE FindChildLinks (): LinkList =
+  VAR
+    n := RTType.MaxTypecode () + 1;
+    links := NEW (LinkList, n);
+    tc: RT0.Typecode;
+  BEGIN
+    FOR i := 0 TO n-1 DO
+      WITH z = links[i] DO z.children := NO_LINK; z.next := NO_LINK; END;
+    END;
+    FOR i := 0 TO n-1 DO
+      tc := RTType.Supertype (i);
+      IF (tc # RTType.NoSuchType) AND (0 <= tc) AND (tc < n) THEN
+        WITH parent = links[tc] DO
+          links[i].next := parent.children;
+          parent.children := i;
+        END;
+      END;
+    END;
+    RETURN links;
+  END FindChildLinks;
+
+PROCEDURE SumTrees (sums, cnts: R;  links: LinkList) =
+  VAR x: INTEGER;
   BEGIN
     FOR i := 0 TO LAST (sums^) DO
-      defn := RTType.Get (i);
-      FOR j := defn.typecode TO defn.lastSubTypeTC DO
-        IF (0 <= j) AND (j <= LAST (cnts^)) THEN
-          INC (sums[i].total.count, cnts[j].total.count);
-          INC (sums[i].total.size, cnts[j].total.size);
+      x := links[i].children;
+      WHILE (x # NO_LINK) DO
+        IF (0 <= x) AND (x <= LAST (cnts^)) THEN
+          INC (sums[i].total.count, cnts[x].total.count);
+          INC (sums[i].total.size, cnts[x].total.size);
         END;
+        x := links[x].next;
       END;
     END;
   END SumTrees;
 
-PROCEDURE PrintTree (sums: R;  indent, tc: INTEGER;
-                     suppressZeros: BOOLEAN): INTEGER =
-  VAR maxChild := RTType.Get(tc).lastSubTypeTC;
+PROCEDURE PrintTree (sums: R;  links: LinkList;  indent, tc: INTEGER;
+                     suppressZeros: BOOLEAN) =
+  VAR x: INTEGER;
   BEGIN
     PrintNode (sums, indent, tc, suppressZeros);
-    INC (tc);
-    WHILE (tc <= maxChild) DO
-      tc := PrintTree (sums, indent+1, tc, suppressZeros);
+    x := links[tc].children;
+    WHILE (x # NO_LINK) DO
+      PrintTree (sums, links, indent+1, x, suppressZeros);
+      x := links[x].next;
     END;
-    RETURN tc;
   END PrintTree;
 
 PROCEDURE PrintNode (sums: R;  indent, tc: INTEGER;  suppressZeros: BOOLEAN) =

@@ -4,7 +4,6 @@
 %
 % Last modified on Tue May  2 11:37:20 PDT 1995 by kalsow
 
-implementation ("RTException")
-interface ("RTExRep")
+module ("RTExFrame")
 c_source ("RTStackC")
 

@@ -1,6 +1,7 @@
 (* Copyright (C) 1992, Xerox                                                 *)
 (* All rights reserved.                                                      *)
-(* Last modified on Thu May 13 13:24:29 PDT 1993 by mcjones                  *)
+(* Last modified on Wed Jul 30 13:55:56 EST 1997 by hosking                  *)
+(*      modified on Thu May 13 13:24:29 PDT 1993 by mcjones                  *)
 (*      modified on Thu Apr 29 15:51:24 PDT 1993 by muller                   *)
 (*      modified on Wed Sep 25 00:33:01 1991 by goldberg@xerox.parc.com      *)
 
@@ -38,7 +39,7 @@ PROCEDURE GetRounding(): RoundingMode;
 (* Return the rounding mode for the calling thread. *)
 
 TYPE Flag = {Invalid, Inexact, Overflow, Underflow,
-  DivByZero, IntOverflow, IntDivByZero};
+  DivByZero, IntOverflow, IntDivByZero, Subscript};
 
 (* Associated with each thread is a set of boolean status flags
    recording whether the condition represented by the flag has

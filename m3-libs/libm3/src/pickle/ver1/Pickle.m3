@@ -10,8 +10,8 @@
 
 UNSAFE MODULE Pickle;
 
-IMPORT Rd, RT0, RTAllocator, RTCollector, RTHeap, RTHeapRep, RTType, RTTypeFP,
-       RTTypeMap, Thread, UnsafeWr, Word, Wr, Fingerprint;
+IMPORT BuiltinSpecials, Rd, RT0, RTAllocator, RTCollector, RTHeap;
+IMPORT RTHeapRep, RTType, RTTypeFP, RTTypeMap, Thread, Word, Wr, Fingerprint;
 
 (* *)
 (* Syntax of a pickle, and constants pertaining thereto *)
@@ -83,13 +83,8 @@ TYPE
   RefArray = REF ARRAY OF REFANY;
     (* array indexed by index in pickle, yields REFANY *)
   TypeTable = REF ARRAY OF INTEGER;
-    (* indexed by RTType.TypeCode, yields pickle-relative
-       typecode *)
-    (* Or indexed by pickle-relative typecode, yields
-       RTTypes.TypeCode *)
-  SpecialTable = REF ARRAY OF Special;
-    (* indexed by RTType.TypeCode, yields Special for nearest
-       super-type *)
+    (* indexed by RTType.TypeCode, yields pickle-relative typecode *)
+    (* Or indexed by pickle-relative typecode, yields RTTypes.TypeCode *)
 
 REVEAL
   Writer = WriterPublic BRANDED "Pickle.Writer 1.0" OBJECT
@@ -161,7 +156,7 @@ TYPE
   Trailer = ARRAY HT OF CHAR;     (* a pickle trailer string *)
 
 CONST
-  InitRefCapacity = 99;           (* Init size of {Reader,Writer}.refs *)
+  InitRefCapacity  = 99;          (* Init size of {Reader,Writer}.refs *)
   InitTypeCapacity = 99;          (* Init size of *.pklToTC *)
 
 
@@ -169,8 +164,6 @@ CONST
 (* Global variables (gasp!); initialized in main body *)
 (* *)
 
-VAR specialsMu := NEW(MUTEX);
-VAR specials: SpecialTable;       (* LL >= specialsMu *)
 VAR myHeader: Header;             (* header for pickles we write *)
 VAR myTrailer: Trailer;           (* trailer for pickles we write *)
 VAR nullReaderRef: REF INTEGER;   (* null value for reader.refs entries *)
@@ -327,20 +320,14 @@ PROCEDURE WriteRef(writer: Writer; r: REFANY)
               END;
               (* CAUTION: don't use "entry" after here, because
                  it might be invalidated by extendWriterRefs *)
-              LOCK specialsMu DO
-                sp := specials[TYPECODE(r)];
-              END;
-              LOCK writer.wr DO
-                UnsafeWr.FastPutChar(writer.wr, '5');
-              END;
+              Wr.PutChar(writer.wr, '5');
+              sp := GetSpecial (TYPECODE (r));
               writer.writeType(sp.sc);
               sp.write(r, writer);
               EXIT
             ELSIF entry.r = r THEN
               (* recycled *)
-              LOCK writer.wr DO
-                UnsafeWr.FastPutChar(writer.wr, '1');
-              END;
+              Wr.PutChar(writer.wr, '1');
               writer.writeInt(entry.index);
               EXIT
             ELSE
@@ -355,6 +342,14 @@ PROCEDURE WriteRef(writer: Writer; r: REFANY)
     END;(*IF level=0 THEN ELSE*)
   END WriteRef;
 
+PROCEDURE ExtendWriterTypes(writer: Writer) =
+  (* Extend writer.pklToTC *)
+    VAR old := writer.pklToTC;
+  BEGIN
+    writer.pklToTC := NEW(TypeTable, NUMBER(writer.pklToTC^) * 2);
+    SUBARRAY(writer.pklToTC^, 0, NUMBER(old^)) := old^;
+  END ExtendWriterTypes;
+
 PROCEDURE WriteType(writer: Writer; tc: INTEGER)
         RAISES { Wr.Failure, Thread.Alerted } =
     VAR fp: Fingerprint.T;
@@ -362,21 +357,18 @@ PROCEDURE WriteType(writer: Writer; tc: INTEGER)
     WITH pickleTC = writer.tcToPkl[tc] DO
       IF pickleTC = 0 THEN
         INC(writer.tcCount);
+        IF writer.tcCount >= NUMBER(writer.pklToTC^) THEN
+          ExtendWriterTypes(writer);
+        END;
         pickleTC := writer.tcCount;
         writer.pklToTC[writer.tcCount] := tc;
         fp := RTTypeFP.ToFingerprint(tc);
-        LOCK writer.wr DO
-          UnsafeWr.FastPutChar(writer.wr, VAL(0, CHAR));
-          UnsafeWr.FastPutString(writer.wr, LOOPHOLE(fp, CharFP));
-        END;
+        Wr.PutChar(writer.wr, VAL(0, CHAR));
+        Wr.PutString(writer.wr, LOOPHOLE(fp, CharFP));
       ELSIF pickleTC < 255 THEN
-        LOCK writer.wr DO
-          UnsafeWr.FastPutChar(writer.wr, VAL(pickleTC, CHAR));
-        END;
+        Wr.PutChar(writer.wr, VAL(pickleTC, CHAR));
       ELSE
-        LOCK writer.wr DO
-          UnsafeWr.FastPutChar(writer.wr, VAL(255, CHAR));
-        END;
+        Wr.PutChar(writer.wr, VAL(255, CHAR));
         writer.writeInt(pickleTC);
       END;
     END;
@@ -385,10 +377,7 @@ PROCEDURE WriteType(writer: Writer; tc: INTEGER)
 PROCEDURE WriteInt(writer: Writer; i: INTEGER)
         RAISES { Wr.Failure, Thread.Alerted } =
   BEGIN
-    LOCK writer.wr DO
-      UnsafeWr.FastPutString(
-        writer.wr, LOOPHOLE(ADR(i), UNTRACED REF CharInt32)^);
-    END;
+    Wr.PutString(writer.wr, LOOPHOLE(ADR(i), UNTRACED REF CharInt32)^);
   END WriteInt;
 
 (* *)
@@ -446,12 +435,10 @@ PROCEDURE TCFromIndex(reader: Reader; index: INTEGER): TypeCode
   END TCFromIndex;
 
 PROCEDURE InvokeSpecial(reader: Reader; sc: TypeCode): REFANY
-      RAISES { Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted } =
-    VAR sp: Special; r: REFANY; id: RefID;
+  RAISES { Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted } =
+  VAR sp: Special; r: REFANY; id: RefID;
   BEGIN
-    LOCK specialsMu DO
-      sp := specials[sc];
-    END;
+    sp := GetSpecial (sc);
     IF sp.sc # sc THEN
       RAISE Error("Can't read pickle (Special not defined)")
     END;
@@ -591,25 +578,87 @@ PROCEDURE NoteRef(reader: Reader; ref: REFANY; id: RefID) =
   END NoteRef;
   
 
-(* *)
-(* Specials, including RootSpecial *)
-(* *)
 
-EXCEPTION DuplicateSpecial; <* FATAL DuplicateSpecial *>
+(*---------------------------------------------------------------- specials ---*)
 
-PROCEDURE RegisterSpecial(sp: Special) =
+TYPE
+  SpecialTable = REF ARRAY OF Special;
+    (* indexed by RTType.TypeCode, yields Special for nearest super-type *)
+
+VAR
+  specialsMu     := NEW(MUTEX);
+  specials       : SpecialTable := NIL;     (* LL >= specialsMu *)
+  theRootSpecial : Special;                 (* LL >= specialsMu *)
+
+PROCEDURE GetSpecial (tc: TypeCode): Special =
+  (* LL = 0 *)
   BEGIN
     LOCK specialsMu DO
-      IF specials[sp.sc].sc = sp.sc THEN
-        RAISE DuplicateSpecial;
+      IF (specials = NIL) THEN InitSpecials (); END;
+      IF (tc >= NUMBER (specials^)) THEN ExpandSpecials (); END;
+      RETURN specials[tc];
+    END;
+  END GetSpecial;
+
+PROCEDURE InitSpecials() =
+  (* LL >= specialsMu *)
+  VAR max_type := RTType.MaxTypecode ();
+  BEGIN
+    theRootSpecial := NEW(Special, sc := RT0.NilTypecode);
+    specials := NEW(SpecialTable, max_type+1);
+    FOR i := 0 TO LAST(specials^) DO
+      specials[i] := theRootSpecial;
+    END;
+    Thread.Release (specialsMu);
+    TRY BuiltinSpecials.Register ();
+    FINALLY Thread.Acquire (specialsMu);
+    END;
+  END InitSpecials;
+
+PROCEDURE ExpandSpecials() =
+  (* LL >= specialsMu *)
+  VAR max_type := RTType.MaxTypecode ();
+  BEGIN
+    IF (max_type > LAST (specials^)) THEN
+      VAR new_sp := NEW (SpecialTable, max_type+1);  BEGIN
+        SUBARRAY (new_sp^, 0, NUMBER (specials^)) := specials^;
+        FOR i := NUMBER (specials^) TO LAST (new_sp^) DO
+          new_sp[i] := FindBestSpecial (i);
+        END;
       END;
+    END;
+  END ExpandSpecials;
+
+PROCEDURE FindBestSpecial (tc: TypeCode): Special =
+  VAR sp: Special;
+  BEGIN
+    LOOP
+      tc := RTType.Supertype (tc);
+      IF (tc = RTType.NoSuchType) THEN
+        RETURN theRootSpecial;
+      END;
+      IF (0 <= tc) AND (tc < NUMBER (specials^)) THEN
+        sp := specials [tc];
+        IF (sp # NIL) THEN RETURN sp; END;
+      END;
+    END;
+  END FindBestSpecial;
+
+EXCEPTION DuplicateSpecial;
+
+PROCEDURE RegisterSpecial(sp: Special) =
+  <* FATAL DuplicateSpecial *>
+  VAR xp: Special;
+  BEGIN
+    xp := GetSpecial (sp.sc);
+    IF xp.sc = sp.sc THEN RAISE DuplicateSpecial; END;
+    LOCK specialsMu DO
       FOR i := 0 TO LAST(specials^) DO
         IF (i#RT0.NilTypecode) AND RTType.IsSubtype(i,sp.sc) THEN
           (* i is a sub-type of this special *)
           IF (specials[i].sc = RT0.NilTypecode) OR
                       RTType.IsSubtype(sp.sc, specials[i].sc) THEN
-            (* previous special for i isn't more specific than
-               sp.sc *)
+            (* previous special for i isn't more specific than sp.sc *)
             specials[i] := sp;
           END;
         END;
@@ -690,14 +739,18 @@ PROCEDURE RootSpecialRead(<*UNUSED*> sp: Special;
     VAR r: REFANY;
     VAR ac := reader.readType();
   BEGIN
-    nDim := RTType.GetNDimensions(ac);
-    IF nDim > 0 THEN
-      FOR i := 0 TO nDim-1 DO
-        shape[i] := reader.readInt();
+    TRY
+      nDim := RTType.GetNDimensions(ac);
+      IF nDim > 0 THEN
+        FOR i := 0 TO nDim-1 DO
+          shape[i] := reader.readInt();
+        END;
+        r := RTAllocator.NewTracedArray(ac, SUBARRAY(shape, 0, nDim));
+      ELSE
+        r := RTAllocator.NewTraced(ac);
       END;
-      r := RTAllocator.NewTracedArray(ac, SUBARRAY(shape, 0, nDim));
-    ELSE
-      r := RTAllocator.NewTraced(ac);
+    EXCEPT RTAllocator.OutOfMemory =>
+      RAISE Error("Can't red pickle (out of memory)")
     END;
     reader.noteRef(r, id);
     reader.nextAddr := RTHeap.GetDataAdr(r);
@@ -712,10 +765,7 @@ PROCEDURE RootSpecialRead(<*UNUSED*> sp: Special;
     RETURN r
   END RootSpecialRead;
 
-
-(* *)
-(* Initialization *)
-(* *)
+(*---------------------------------------------------------- initialization ---*)
 
 PROCEDURE InitHeader() =
     VAR test: BITS 16 FOR [0..32767];
@@ -745,20 +795,9 @@ PROCEDURE InitHeader() =
     myTrailer[HT.t2] := Trailer2;
   END InitHeader;
 
-PROCEDURE InitSpecials() =
-    VAR theRootSpecial: Special;
-  BEGIN
-    theRootSpecial := NEW(Special, sc := RT0.NilTypecode);
-    specials := NEW(SpecialTable, RTType.MaxTypecode()+1);
-    FOR i := 0 TO LAST(specials^) DO
-      specials[i] := theRootSpecial;
-    END;
-  END InitSpecials;
-
 BEGIN
 
   InitHeader();
-  InitSpecials();
   nullReaderRef := NEW(REF INTEGER);
   
 END Pickle.

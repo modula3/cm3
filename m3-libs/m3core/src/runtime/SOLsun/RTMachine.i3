@@ -2,23 +2,26 @@
 (* All rights reserved.                                     *)
 (* See the file COPYRIGHT for a full description.           *)
 (*                                                          *)
-(* Last modified on Tue May  2 11:43:35 PDT 1995 by kalsow  *)
+(* Last modified on Wed Jul 30 13:55:56 EST 1997 by hosking *)
+(*      modified on Tue May  2 11:43:35 PDT 1995 by kalsow  *)
 
 (* This interface defines platform (machine + OS) dependent
    types and constants. *)
 
 INTERFACE RTMachine;
 
-IMPORT Csetjmp;
+IMPORT Uucontext;
 
 (*--------------------------------------------------------- thread state ---*)
 
 TYPE
-  State = Csetjmp.jmp_buf;
+  (* State = Csetjmp.jmp_buf; *)
+  State = Uucontext.ucontext_t;
   (* The machine state is saved in a "State".  This type is really
      opaque to the client, i.e. it does not need to be an array. *)
 
-<*EXTERNAL "_setjmp" *>
+(* <*EXTERNAL "_setjmp" *> *)
+<*EXTERNAL "getcontext" *>
 PROCEDURE SaveState (VAR s: State): INTEGER;
 (* Capture the currently running thread's state *)
 
@@ -48,7 +51,19 @@ CONST
    whose implementation you might use as a reference. *)
 
 CONST
-  VMHeap = FALSE;
+  VMHeap = TRUE;
+
+(* If "VMHeap" is true, "AtomicWrappers" indicates whether the wrappers
+   that validate parameters passed to system calls are atomic with
+   respect to the collector.  *)
+
+CONST
+  AtomicWrappers = TRUE;
+
+(*** hooks for the C wrapper functions ***)
+
+<*EXTERNAL*> VAR RTHeapRep_Fault: ADDRESS;  (* => RTHeapRep.Fault *)
+<*EXTERNAL*> VAR RTCSRC_FinishVM: ADDRESS;  (* => RTCollectorSRC.FinishVM *)
 
 (*--------------------------------------------------------- thread stacks ---*)
 
@@ -71,11 +86,17 @@ CONST
 (* The "FrameInfo" type must minimally include fields named "pc" and "sp". *)
 
 CONST
-  Has_stack_walker = FALSE;
+  Has_stack_walker = TRUE;
   (* Indicates whether this platform supports the stack walking functions
      defined in the "RTStack" interface. *)
 
-TYPE FrameInfo = RECORD pc, sp: ADDRESS END;
+TYPE
+  FrameInfo = RECORD
+    pc, sp  : ADDRESS;       (* sp here is actually SPARC fp *)
+    true_sp : ADDRESS;
+    ctxt    : Uucontext.ucontext_t;
+    lock    : INTEGER;       (* to ensure that ctxt isn't overrun!! *)
+  END;
 
 END RTMachine.
 

@@ -8,7 +8,7 @@
 UNSAFE MODULE RTTypeFP;
 
 IMPORT Word, Fingerprint;
-IMPORT RT0, RT0u, RTType;
+IMPORT RT0, RTType;
 FROM RTType IMPORT Typecode;
 
 VAR map : UNTRACED REF ARRAY OF INTEGER := NIL;
@@ -38,7 +38,7 @@ PROCEDURE FromFingerprint (READONLY fp_in: Fingerprint.T): Typecode =
 
 PROCEDURE BuildFPMap () =
   VAR
-    n   := RT0u.nTypes;
+    n   := RTType.MaxTypecode () + 1;
     n_m := 3 * n;
     m   := NEW (UNTRACED REF ARRAY OF INTEGER, n_m);
     t   : RT0.TypeDefn;
