@@ -8,7 +8,7 @@
 
 UNSAFE MODULE RTHeapDep;
 
-IMPORT RT0u, RTMachine, RTHeapRep, RTCollectorSRC;
+IMPORT RT0u, RTMachine, RTHeapRep, RTCollectorSRC, RTVM;
 IMPORT Cstdlib, Ctypes, Umman, Unix, Uresource, Usignal, Utypes, Word;
 
 VAR
@@ -165,6 +165,7 @@ PROCEDURE VMFaultTime (): REAL =
   END VMFaultTime;
 
 BEGIN
+  VM := RTVM.VMHeap();
   IF VM THEN
     RTMachine.RTHeapRep_Fault  := LOOPHOLE (RTHeapRep.Fault, ADDRESS);
     RTMachine.RTCSRC_FinishVM  := LOOPHOLE (RTCollectorSRC.FinishVM, ADDRESS);
