@@ -141,31 +141,6 @@ BEGIN
   RETURN ndx;
 END Factor;
 *)
-(*----------------------*)
-PROCEDURE GCD(u,v:T):T=
-(*returns the greatest common denominator for u and v.*)
-(*use Euclid's algorithm*)
-VAR
-  w:CARDINAL;
-BEGIN
-  TRY
-    WHILE NOT IsZero(u) DO
-      w:=Mod(v,u);
-      v:=u;
-      u:=w;
-    END;
-  (*
-    WHILE u#0 DO
-      w:=v MOD u;
-      v:=u;
-      u:=w;
-    END;
-  *)
-  EXCEPT
-    Error(err) => <*ASSERT err#Err.divide_by_zero*>
-  END;
-  RETURN v;
-END GCD;
 
 (*==========================*)
 BEGIN

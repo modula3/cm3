@@ -21,9 +21,9 @@ CONST
 *)
 (*Zero and One aren't constants in some modules*)
 VAR
-  Zero,
-  One,
-  MinusOne : T;
+  Zero     : T;
+  One      : T;
+(*  MinusOne : T;  *)
 
 <*INLINE*> PROCEDURE Add(READONLY x,y:T):T;  (*return x+y*)
 <*INLINE*> PROCEDURE Sub(READONLY x,y:T):T;  (*return x-y*)

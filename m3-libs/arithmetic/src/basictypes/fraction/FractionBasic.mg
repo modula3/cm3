@@ -1,4 +1,4 @@
-GENERIC MODULE FractionBasic(R);
+GENERIC MODULE FractionBasic(R,GCD);
 (*Copyright (c) 1996, m3na project
   
 Abstract: Fraction numbers and basic operations
@@ -15,7 +15,7 @@ PROCEDURE Cancel (READONLY x : T):T RAISES {Error} =
 VAR
   gcd : R.T;
 BEGIN
-  gcd := R.GCD (x.n, x.d);
+  gcd := GCD.GCD (x.n, x.d);
   RETURN T{R.Div(x.n,gcd),R.Div(x.d,gcd)};
 END Cancel;
 
@@ -27,7 +27,7 @@ VAR
   z : T;
 BEGIN
   TRY
-    gcd := R.GCD (x.d, y.d);
+    gcd := GCD.GCD (x.d, y.d);
     xdc := R.Div (x.d, gcd);
     ydc := R.Div (y.d, gcd);
     z.n := R.Add (R.Mul(x.n,ydc), R.Mul(y.n,xdc));
@@ -48,7 +48,7 @@ VAR
   z : T;
 BEGIN
   TRY
-    gcd := R.GCD (x.d, y.d);
+    gcd := GCD.GCD (x.d, y.d);
     xdc := R.Div (x.d, gcd);
     ydc := R.Div (y.d, gcd);
     z.n := R.Sub (R.Mul(x.n,ydc), R.Mul(y.n,xdc));
@@ -100,11 +100,11 @@ VAR
   z   : T;
 BEGIN
   TRY
-    gcd := R.GCD(x.n, y.d);
+    gcd := GCD.GCD(x.n, y.d);
     z.n := R.Div(x.n, gcd);
     z.d := R.Div(y.d, gcd);
 
-    gcd := R.GCD(y.n, x.d);
+    gcd := GCD.GCD(y.n, x.d);
     z.n := R.Mul(z.n, R.Div(y.n, gcd));
     z.d := R.Mul(z.d, R.Div(x.d, gcd));
   EXCEPT
@@ -119,11 +119,11 @@ VAR
   gcd : R.T;
   z   : T;
 BEGIN
-  gcd := R.GCD(x.n, y.n);
+  gcd := GCD.GCD(x.n, y.n);
   z.n := R.Div(x.n, gcd);
   z.d := R.Div(y.n, gcd);
 
-  gcd := R.GCD(y.d, x.d);
+  gcd := GCD.GCD(y.d, x.d);
   z.n := R.Mul(z.n, R.Div(y.d, gcd));
   z.d := R.Mul(z.d, R.Div(x.d, gcd));
 
@@ -162,7 +162,7 @@ VAR
   xdc, ydc : R.T;
   z : T;
 BEGIN
-  gcd := R.GCD (x.d, y.d);
+  gcd := GCD.GCD (x.d, y.d);
   xdc := R.Div (x.d, gcd);
   ydc := R.Div (y.d, gcd);
   z.n := R.Mod (R.Mul(x.n,ydc), R.Mul(y.n,xdc));
@@ -191,5 +191,5 @@ END Scale;
 BEGIN
   Zero     := T{n:=R.Zero,     d:=R.One};
   One      := T{n:=R.One,      d:=R.One};
-  MinusOne := T{n:=R.MinusOne, d:=R.One};
+(* MinusOne := T{n:=R.MinusOne, d:=R.One}; *)
 END FractionBasic.
