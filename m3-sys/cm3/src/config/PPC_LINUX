@@ -8,7 +8,7 @@
 %M3_PROFILING = TRUE  % set by cm3 since 5.1.2
 %M3_PROFILING = FALSE
 
-readonly TARGET       = "LINUXLIBC6"      % code generation target
+readonly TARGET       = "PPC_LINUX"      % code generation target
 if M3_PROFILING 
   readonly BUILD_DIR  = TARGET & "p"     % code generation target
 else
@@ -16,7 +16,7 @@ else
 end
 readonly OS_TYPE      = "POSIX"           % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"          % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "i486--linuxelf"  % "cpu-vendor-os" string for GNU
+readonly GNU_PLATFORM = "powerpc-apple-linuxelf"  % "cpu-vendor-os" string for GNU
 readonly INSTALL_KEY  = "9R52-K7A2-2K32"
 
 readonly NAMING_CONVENTIONS = "0"
