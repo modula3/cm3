@@ -1,19 +1,29 @@
-% Copyright 1996-2000, Critical Mass, Inc.  All rights reserved.
-% See file COPYRIGHT-CMASS for details.
-
 import("libm3")
+
+% compile in a stub if no lib to link against
 
 if SYSTEM_LIBS contains "ODBC"
   include_dir ("odbc")
 else
-  include_dir ("postgres95")
+  implementation("ODBCDBStub")
 end
 
-Interface ("DB")
-
-if equal (TARGET, "ALPHA_OSF")
-  % missing libpq.a => can't build local .so file ...
-  build_standalone ()
+if SYSTEM_LIBS contains "MYSQL"
+  include_dir ("mysql")
+else
+  implementation("MySQLDBStub")
 end
 
-Library ("db")
+if SYSTEM_LIBS contains "POSTGRESQL"
+  include_dir ("postgresql")
+else
+  implementation("PostgreSQLDBStub")
+end
+
+Interface("DB")
+implementation("DB")
+interface("MySQLDB")
+interface("PostgreSQLDB")
+interface("ODBCDB")
+
+library("db")

@@ -10,6 +10,23 @@ MODULA-3 INTERFACES FOR ACCESSING DATABASES
 
 RELEASE HISTORY
 
+RELEASE 0.5 Feb 2003
+
+	This release is only lightly tested (only the select functionality 
+	has been tested) and is not robust or complete. Use with caution.
+	
+	The main features added are:
+		- DB interface reorganised to allow multiple database interfaces
+		- MySQL support
+		- PostgreSQL support
+	
+	There are demos for each of these new features.
+	
+	Support for each database interface is enabled by including MYSQL, POSTGRESQL
+	or ODBC in your system libs.
+	
+	Any questions or problems to darko@peter.com.au
+
 RELEASE 0.41, 22 June 1996
 
    DB can now deal with restrictive ODBC drivers that don't allow

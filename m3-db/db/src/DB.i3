@@ -1,6 +1,12 @@
 (* Copyright (C) 1996-2000, Critical Mass, Inc.  All Rights Reserved. *)
 (* See file COPYRIGHT-CMASS for details. *)
 
+(*	Modified by Darko Volaric September 2002
+		Added functionality to support use of multiple database client interfaces concurrently.
+		Supported interfaces are: PostgreSQL, MySQL and ODBC. This interface should be source
+		compatible with the previous version. Please email darko@peter.com.au with any problems.
+*)
+
 (* 
    DB is the safe Modula-3 interface for relational databases.  It
    defines two primary abstractions: database connections and
@@ -10,19 +16,63 @@
 INTERFACE DB;
 
 (*------------------------------------------------------- connections ---*)
+
+TYPE
+	InterfaceList = REF ARRAY OF Interface;
+	(* A database interface, usualy one for each type of database server *)
+	Interface <: InterfacePublic;
+	InterfacePublic = OBJECT 
+		name: TEXT;
+	METHODS
+		set_default();
+		connect(
+			database, user_id, password: TEXT;
+			server: TEXT := NIL;
+		): T  RAISES {Error};
+		get_data_sources(): DescList  RAISES {Error};
+		get_drivers(): DescList  RAISES {Error};
+	END;
+
+PROCEDURE GetInterfaces(): InterfaceList;
+(*	Returns a list of Interface objects that describe the available interfaces
+		in this implementation *)
+
+PROCEDURE GetDefaultInterface(): Interface;
+
+PROCEDURE FindInterface(name: TEXT): Interface  RAISES {Error};
+(*	Returns the interface with the given name, or NIL if not found *)
+
+(*  The following functions are provided for compatibily with the previous version of the interface. 
+		The methods of the Interface object should be used instead. *)
+
+PROCEDURE Connect (
+	database, user_id, password: TEXT; (* Establish a connection to the named "database" using "user_id" and
+																				"password" as authentication credentials. *)
+	server: TEXT := NIL;	(* Connect to the server running on this host. May be a host name or IP number *)
+	interface: Interface := NIL; (* Use this interface to connect. If not specified the default interface is used *)
+): T  RAISES {Error};
+
+PROCEDURE GetDataSources (): DescList  RAISES {Error};
+(* Returns the names and descriptions of the data sources that are
+   available from the local server. *)
+
+PROCEDURE GetDrivers (): DescList  RAISES {Error};
+(* Returns the names and descriptions of the drivers that are
+   available from the local server. *)
+
+TYPE DescList = REF RECORD  name, description: TEXT;  next: DescList;  END;
+
+
+
 (*
    A "DB.T", or connection, represents a single connection to a database.
    Multiple connections may exist within one application and each may be
    used concurrently by multiple threads.
 *)
 
-PROCEDURE Connect (database, user_id, password: TEXT): T  RAISES {Error};
-(* Establish a connection to the named "database" using "user_id" and
-  "password" as authentication credentials. *)
-
 TYPE
   (* a database connection *)
-  T <: Public;  Public = OBJECT METHODS
+  T = OBJECT METHODS
     disconnect ()              RAISES {Error};
     new_stmt (): Stmt          RAISES {Error};
     auto_commit (on: BOOLEAN)  RAISES {Error};
@@ -66,7 +116,7 @@ TYPE
 
 TYPE
   (* a SQL database statement (query or update) *)
-  Stmt <: StmtPublic;  StmtPublic = MUTEX OBJECT METHODS
+  Stmt = MUTEX OBJECT METHODS
     prepare (operation: TEXT)       RAISES {Error};
     execute (operation: TEXT)       RAISES {Error};
     fetch ():  Results              RAISES {Error};
@@ -173,19 +223,6 @@ TYPE
 
   "st.connection()" returns the underlying database connection used by "st".
 *)
-
-(*--------------------------------------- misc. DB server information ---*)
-
-PROCEDURE GetDataSources (): DescList  RAISES {Error};
-(* Returns the names and descriptions of the data sources that are
-   available from the local server. *)
-
-PROCEDURE GetDrivers (): DescList  RAISES {Error};
-(* Returns the names and descriptions of the drivers that are
-   available from the local server. *)
-
-TYPE DescList = REF RECORD  name, description: TEXT;  next: DescList;  END;
-
 
 (*--------------------------------------------- errors and exceptions ---*)
 
