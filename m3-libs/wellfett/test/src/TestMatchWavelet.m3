@@ -84,50 +84,32 @@ PROCEDURE PlotFrame (READONLY abscissa       : V.TBody;
     PlotLines(abscissa, target);
   END PlotFrame;
 
-(*{RT.Half, R.Zero, -RT.Half} instead of {R.One, R.Zero, -R.One} has the
-   advantage that the sum of the coefficients of the primal filter doesn't
-   change.*)
-
-PROCEDURE MatchPattern (target                               : S.T;
-                        levels, smooth, vanishing, translates: CARDINAL;
-                        plot := TRUE; ): SimpleApprox
-  RAISES {BSpl.DifferentParity} =
-  (*The degree of freedom, i.e.  the number of parameters to minimize for,
-     is 2*translates*)
-  <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
+PROCEDURE MatchPattern (target                                : S.T;
+                        refineMask, generatorMask, waveletMask: S.T;
+                        numLevels, numTranslates              : CARDINAL; ):
+  SimpleApprox =
   VAR
-    hdual := BSpl.GeneratorMask(smooth);
-    gdual := BSpl.WaveletMask(smooth, vanishing);
-    hdualvan := SIntPow.MulPower(
-                  hdual, NEW(S.T).fromArray(
-                           ARRAY OF R.T{RT.Half, R.Zero, -RT.Half}),
-                  vanishing).translate(2 - smooth - vanishing);
-    phivan := Refn.Refine(hdualvan, hdual, levels);
-    psi    := Refn.Refine(gdual, hdual, levels);
+    generator := Refn.Refine(generatorMask, refineMask, numLevels);
+    wavelet   := Refn.Refine(waveletMask, refineMask, numLevels);
 
-    unit   := IIntPow.Power(2, levels);
-    twonit := 2 * unit;
-    first  := MIN(psi.getFirst(), phivan.getFirst() - twonit * translates);
-    last := MAX(
-              psi.getLast(), phivan.getLast() + twonit * (translates - 1));
+    twonit := IIntPow.MulPower(2, 2, numLevels);
+    first := MIN(wavelet.getFirst(),
+                 generator.getFirst() - twonit * numTranslates);
+    last := MAX(wavelet.getLast(),
+                generator.getLast() + twonit * (numTranslates - 1));
     size := last - first + 1;
 
-    twopow    := FLOAT(unit, R.T);
-    grid      := R.One / twopow;
-    wavescale := twopow;
-    abscissa  := V.ArithSeq(size, FLOAT(first, R.T) * grid, grid);
+    targetVec := V.New(size);
+    basis     := M.New(2 * numTranslates + 1, size);
 
-    targetvec := V.New(size);
-    basis     := M.New(2 * translates + 1, size);
-
+  <*FATAL NA.Error*>
   BEGIN
-    psi.scale(wavescale).clipToArray(first, basis[LAST(basis^)]);
-    FOR j := -translates TO translates - 1 DO
-      phivan.scale(wavescale).clipToArray(
-        first - twonit * j, basis[j + translates]);
+    wavelet.clipToArray(first, basis[LAST(basis^)]);
+    FOR j := -numTranslates TO numTranslates - 1 DO
+      generator.clipToArray(first - twonit * j, basis[j + numTranslates]);
     END;
 
-    target.clipToArray(first, targetvec^);
+    target.clipToArray(first, targetVec^);
 
     (*
     IO.Put(Fmt.FN("normal matrix %s, right hand side %s\n",
@@ -137,34 +119,65 @@ PROCEDURE MatchPattern (target                               : S.T;
     *)
 
     VAR
-      coef := LA.LeastSquares(basis, ARRAY OF V.T{targetvec},
+      coef := LA.LeastSquares(basis, ARRAY OF V.T{targetVec},
                               flags := LA.LSFlagSet{LA.LSFlag.transposed})[
                 0];
       approx := M.MulTV(basis, coef.x);
+
+    <*FATAL Thread.Alerted, Wr.Failure*>
     BEGIN
-      IO.Put(Fmt.FN("translates %s, size %s, residuum %s, %s\n",
+      IO.Put(Fmt.FN("numTranslates %s, size %s, residuum %s, %s\n",
                     ARRAY OF
-                      TEXT{Fmt.Int(translates), Fmt.Int(size),
+                      TEXT{Fmt.Int(numTranslates), Fmt.Int(size),
                            RF.Fmt(coef.res), VF.Fmt(coef.x)}));
       (*
       IO.Put(Fmt.FN("residuum - %s\n", ARRAY OF TEXT{RF.Fmt(coef.res)}));
       *)
 
-      IF plot THEN
-        PL.Init();
-        PlotFrame(abscissa^, SUBARRAY(basis^, 0, 2 * translates),
-                  basis[LAST(basis^)], targetvec^);
-        PL.SetFGColorDiscr(4);
-        PL.PlotLines(abscissa^, approx^);
-        PL.Exit();
-      END;
-      RETURN SimpleApprox{
-               NEW(S.T).fromArray(
-                 SUBARRAY(coef.x^, 0, 2 * translates), 1 - translates),
-               coef.x[LAST(coef.x^)], NEW(S.T).fromVector(approx, first)};
+      RETURN
+        SimpleApprox{NEW(S.T).fromArray(
+                       SUBARRAY(coef.x^, 0, 2 * numTranslates),
+                       -numTranslates), coef.x[LAST(coef.x^)],
+                     NEW(S.T).fromVector(approx, first), basis, targetVec};
     END;
-
   END MatchPattern;
+
+(*{RT.Half, R.Zero, -RT.Half} instead of {R.One, R.Zero, -R.One} has the
+   advantage that the sum of the coefficients of the primal filter doesn't
+   change.*)
+
+PROCEDURE TestMatchPattern (target: S.T;
+                            numLevels, smooth, vanishing, numTranslates: CARDINAL; )
+  RAISES {BSpl.DifferentParity} =
+  (*The degree of freedom, i.e.  the number of parameters to minimize for,
+     is 2*numTranslates*)
+  <*FATAL NA.Error*>
+  VAR
+    hdual := BSpl.GeneratorMask(smooth).scale(R.Two).translate(2);
+    gdual := BSpl.WaveletMask(smooth, vanishing).scale(R.Two);
+    hdualvan := SIntPow.MulPower(
+                  hdual, NEW(S.T).fromArray(
+                           ARRAY OF R.T{RT.Half, R.Zero, -RT.Half}),
+                  vanishing).translate(-smooth - vanishing);
+    approx := MatchPattern(
+                target, hdual, hdualvan, gdual, numLevels, numTranslates);
+
+    unit   := IIntPow.MulPower(1, 2, numLevels);
+    twopow := FLOAT(unit, R.T);
+    grid   := R.One / twopow;
+
+    first    := approx.approx.getFirst();
+    size     := approx.approx.getNumber();
+    abscissa := V.ArithSeq(size, FLOAT(first, R.T) * grid, grid);
+
+  BEGIN
+    PL.Init();
+    PlotFrame(abscissa^, SUBARRAY(approx.basis^, 0, 2 * numTranslates),
+              approx.basis[LAST(approx.basis^)], approx.targetPad^);
+    PL.SetFGColorDiscr(4);
+    PL.PlotLines(abscissa^, approx.approx.getData()^);
+    PL.Exit();
+  END TestMatchPattern;
 
 (** SSE  - Square Smoothness Estimate,
            that is the estimate that depends on the sum of the squares of the eigenvalues
@@ -417,17 +430,18 @@ PROCEDURE ExtendDervTarget (READONLY x        : FnD.T;
                           M.FromScalar(V.Inner(target, target) * R.Two)}})};
   END ExtendDervTarget;
 
-PROCEDURE TranslatesBasis (generatorvan: S.T;
-                           first       : INTEGER;
-                           twonit, size: CARDINAL;
-                           translates  : CARDINAL  ): M.T =
-  VAR basis := M.New(2 * translates, size);
+PROCEDURE TranslatesBasis (generatorvan : S.T;
+                           first        : INTEGER;
+                           twonit, size : CARDINAL;
+                           numTranslates: CARDINAL  ): M.T =
+  VAR basis := M.New(2 * numTranslates, size);
   BEGIN
-    FOR j := -translates TO translates - 1 DO
-      generatorvan.clipToArray(first - twonit * j, basis[j + translates]);
+    FOR j := -numTranslates TO numTranslates - 1 DO
+      generatorvan.clipToArray(
+        first - twonit * j, basis[j + numTranslates]);
       (*
-            targetCor[j + translates] :=
-              VS.Inner(basis[j + translates], targetVec^);
+            targetCor[j + numTranslates] :=
+              VS.Inner(basis[j + numTranslates], targetVec^);
       *)
     END;
     RETURN basis;
@@ -539,7 +553,7 @@ TYPE
       getLiftedWaveletMaskNoVan (READONLY mc: MatchCoef; ): S.T := GetLiftedWaveletMaskNoVan;
       getShapeWaveletMask (READONLY mc: MatchCoef; ): S.T := GetShapeWaveletMask;
       getFilterBank (READONLY mc: MatchCoef; ): ARRAY [0 .. 1] OF FB.T;
-      plotBase      (READONLY mc: MatchCoef; levels: CARDINAL; );
+      plotBase      (READONLY mc: MatchCoef; numLevels: CARDINAL; );
     END;
 
   StdFilterBasis = FilterBasis OBJECT
@@ -593,18 +607,18 @@ PROCEDURE StdGetFilterBank (SELF: StdFilterBasis; READONLY mc: MatchCoef; ):
   ARRAY [0 .. 1] OF FB.T =
   VAR dual := FB.T{SELF.getRefineMask(), SELF.getShapeWaveletMask(mc)};
   BEGIN
-    RETURN ARRAY OF FB.T{FB.DualToPrimal(dual), dual};
+    RETURN ARRAY OF FB.T{FB.GetComplement(dual), dual};
   END StdGetFilterBank;
 
-PROCEDURE StdPlotBase (         SELF  : StdFilterBasis;
-                       READONLY mc    : MatchCoef;
-                                levels: CARDINAL;       ) =
+PROCEDURE StdPlotBase (         SELF     : StdFilterBasis;
+                       READONLY mc       : MatchCoef;
+                                numLevels: CARDINAL;       ) =
   CONST
     ymin = -3.5D0;
     ymax = 3.5D0;
   BEGIN
     WP.PlotBiorthogonalYLim(
-      SELF.getRefineMask(), SELF.getShapeWaveletMask(mc), levels, ymin,
+      SELF.getRefineMask(), SELF.getShapeWaveletMask(mc), numLevels, ymin,
       ymax);
   END StdPlotBase;
 
@@ -613,7 +627,7 @@ PROCEDURE NoVanGetFilterBank (         SELF: NoVanFilterBasis;
   ARRAY [0 .. 1] OF FB.T =
   VAR
     bank := ARRAY [0 .. 1] OF
-              FB.T{FB.DualToPrimal(
+              FB.T{FB.GetComplement(
                      FB.T{SELF.lp,
                           SELF.hp.superpose(
                             SELF.lpVan.upConvolve(
@@ -631,7 +645,7 @@ PROCEDURE NoVanGetFilterBank (         SELF: NoVanFilterBasis;
     END;
     (*
         RETURN ARRAY OF
-                 FB.T{FB.DualToPrimal(
+                 FB.T{FB.GetComplement(
                         FB.T{SELF.lp,
                              SELF.hp.superpose(
                                SELF.lpVan.upConvolve(
@@ -646,7 +660,7 @@ PROCEDURE NoVanGetFilterBank (         SELF: NoVanFilterBasis;
                        FB.T{FB.T{bank[0, 0], bank[0, 1]},
                             FB.T{bank[1, 0], SIntPow.MulPower(
                                                bank[1, 1], vanAtom, van1)}};
-          VAR primal := FB.DualToPrimal(vanBank[1]);
+          VAR primal := FB.GetComplement(vanBank[1]);
           BEGIN
             IO.Put(
               Fmt.FN("Filter bank should be:\n%s\n%s\n%s\n%s\n",
@@ -657,9 +671,9 @@ PROCEDURE NoVanGetFilterBank (         SELF: NoVanFilterBasis;
     *)
   END NoVanGetFilterBank;
 
-PROCEDURE NoVanPlotBase (         SELF  : NoVanFilterBasis;
-                         READONLY mc    : MatchCoef;
-                                  levels: CARDINAL;         ) =
+PROCEDURE NoVanPlotBase (         SELF     : NoVanFilterBasis;
+                         READONLY mc       : MatchCoef;
+                                  numLevels: CARDINAL;         ) =
   CONST
     ymin = -8.0D0;
     ymax = 8.0D0;
@@ -670,7 +684,7 @@ PROCEDURE NoVanPlotBase (         SELF  : NoVanFilterBasis;
   BEGIN
     WP.PlotAnyYLim(
       refnPrimal.scale(R.Two), refnDual.scale(R.Two), bank[0, 0],
-      bank[0, 1], bank[1, 0], bank[1, 1], levels, ymin, ymax);
+      bank[0, 1], bank[1, 0], bank[1, 1], numLevels, ymin, ymax);
   END NoVanPlotBase;
 
 
@@ -681,11 +695,11 @@ TYPE
       wavelet0Amp, targetAmp: R.T;  (*coefficient of the target function*)
     END;
 
-PROCEDURE MatchPatternSmooth (target            : S.T;
-                              dualBasis         : FilterBasis;
-                              levels, translates: CARDINAL;
-                              smoothWeight      : R.T;         ): MatchCoef
-  RAISES {NA.Error} =
+PROCEDURE MatchPatternSmooth (target                  : S.T;
+                              dualBasis               : FilterBasis;
+                              numLevels, numTranslates: CARDINAL;
+                              smoothWeight            : R.T;         ):
+  MatchCoef RAISES {NA.Error} =
 
   <*UNUSED*>
   PROCEDURE CheckDerivatives () RAISES {NA.Error} =
@@ -730,16 +744,16 @@ PROCEDURE MatchPatternSmooth (target            : S.T;
 
   VAR
     generatorvan := Refn.Refine(dualBasis.getLSGeneratorMask(),
-                                dualBasis.getRefineMask(), levels);
+                                dualBasis.getRefineMask(), numLevels);
     wavelet := Refn.Refine(dualBasis.getLSWavelet0Mask(),
-                           dualBasis.getRefineMask(), levels);
+                           dualBasis.getRefineMask(), numLevels);
 
-    unit   := IIntPow.Power(2, levels);
+    unit   := IIntPow.Power(2, numLevels);
     twonit := 2 * unit;
     first := MIN(wavelet.getFirst(),
-                 generatorvan.getFirst() - twonit * translates);
+                 generatorvan.getFirst() - twonit * numTranslates);
     last := MAX(wavelet.getLast(),
-                generatorvan.getLast() + twonit * (translates - 1));
+                generatorvan.getLast() + twonit * (numTranslates - 1));
     size      := last - first + 1;
     wavescale := FLOAT(unit, R.T);
     grid      := R.One / FLOAT(unit, R.T);
@@ -752,7 +766,8 @@ PROCEDURE MatchPatternSmooth (target            : S.T;
     (* the target vector might have been clipped, thus
        V.Inner(target.getData(),target.getData()) may be different *)
 
-    basis := TranslatesBasis(generatorvan, first, twonit, size, translates);
+    basis := TranslatesBasis(
+               generatorvan, first, twonit, size, numTranslates);
     normalMat  := M.MulMMA(basis);
     targetCor  := M.MulV(basis, targetVec);
     waveletCor := M.MulV(basis, waveletVec);
@@ -771,7 +786,7 @@ PROCEDURE MatchPatternSmooth (target            : S.T;
     *)
 
     VAR
-      yfirst             := -translates;
+      yfirst             := -numTranslates;
       matching: Matching;
 
     <*UNUSED*>
@@ -860,19 +875,19 @@ PROCEDURE MatchPatternSmooth (target            : S.T;
     VAR
       (*
       x := V.FromVectorArray(
-             ARRAY OF V.T{V.New(2 * translates), V.FromScalar(R.One)});
+             ARRAY OF V.T{V.New(2 * numTranslates), V.FromScalar(R.One)});
       *)
       (*
       x := V.FromVectorArray(
              ARRAY OF
-               V.T{V.ArithSeq(2 * translates, -0.45D0, 0.1D0),
+               V.T{V.ArithSeq(2 * numTranslates, -0.45D0, 0.1D0),
                    V.FromScalar(R.One)});
       *)
       (* use this initialization if you want to compare the results with
          MatchPattern
 
-         x := V.New(2 * translates + 1); *)
-      initlift := NEW(S.T).init(yfirst, 2 * translates);
+         x := V.New(2 * numTranslates + 1); *)
+      initlift := NEW(S.T).init(yfirst, 2 * numTranslates);
       initderdist := DeriveDist(
                        normalMat, targetCor, targetNormSqr, initlift);
       initderwavdist := ExtendDervTarget(
@@ -915,7 +930,7 @@ PROCEDURE MatchPatternSmooth (target            : S.T;
 
         (*draw resulting wavelet base*)
         PL.StartPage();
-        dualBasis.plotBase(matching.splitParamVec(x), levels);
+        dualBasis.plotBase(matching.splitParamVec(x), numLevels);
         (*PL.StopPage();*)
 
         smoothWeightFade := smoothWeightFade * smoothWeightProgr;
@@ -926,8 +941,8 @@ PROCEDURE MatchPatternSmooth (target            : S.T;
   END MatchPatternSmooth;
 
 PROCEDURE TestMatchPatternSmooth (target: S.T;
-                                  levels, smooth, vanishing,
-                                    smallVanishing, translates: CARDINAL;
+                                  numLevels, smooth, vanishing,
+                                    smallVanishing, numTranslates: CARDINAL;
                                   smoothWeight: R.T):
   ARRAY [0 .. 1] OF FB.T RAISES {BSpl.DifferentParity} =
   <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
@@ -976,7 +991,7 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
                       ARRAY OF R.T{1.0D0, 0.0D0, 0.0D0, 1.0D0}), 1.5D0};
     *)
     mc := MatchPatternSmooth(
-            target, dualBasis, levels, translates, smoothWeight);
+            target, dualBasis, numLevels, numTranslates, smoothWeight);
     vanAtom := NEW(S.T).fromArray(ARRAY OF R.T{RT.Half, -RT.Half});
     s := SIntPow.MulPower(
            mc.lift.translate(shiftVan DIV 2), vanAtom, vanishing);
@@ -987,11 +1002,11 @@ PROCEDURE TestMatchPatternSmooth (target: S.T;
     (*
 gdual := GetLiftedPrimalGeneratorMask(hdual,gdual0,MatchCoef{lift:=s,wavelet0Amp:=mc.wavelet0Amp,targetAmp:=R.One});
     *)
-    unit          := IIntPow.Power(2, levels);
+    unit          := IIntPow.Power(2, numLevels);
     twopow        := FLOAT(unit, R.T);
     grid          := R.One / twopow;
-    psidual0      := Refn.Refine(gdual0a, hdual, levels);
-    psidual       := Refn.Refine(gduala, hdual, levels);
+    psidual0      := Refn.Refine(gdual0a, hdual, numLevels);
+    psidual       := Refn.Refine(gduala, hdual, numLevels);
     leftpsidual0  := FLOAT(psidual0.getFirst(), R.T) * grid;
     rightpsidual0 := FLOAT(psidual0.getLast(), R.T) * grid;
     leftpsidual   := FLOAT(psidual.getFirst(), R.T) * grid;
@@ -1031,7 +1046,10 @@ gdual := GetLiftedPrimalGeneratorMask(hdual,gdual0,MatchCoef{lift:=s,wavelet0Amp
                   GetLiftedPrimalGeneratorMask( hdualnovan, gdual0novan,
                   mc).alternate(), vanatom, vanishing))*)}));
     CASE 2 OF
-    | 0 => PL.Init(); WP.PlotBiorthogonal(hdual, gdual, levels); PL.Exit();
+    | 0 =>
+        PL.Init();
+        WP.PlotBiorthogonal(hdual, gdual, numLevels);
+        PL.Exit();
     | 1 =>
         PL.Init();
         PL.SetEnvironment(
@@ -1141,24 +1159,25 @@ PROCEDURE Test () =
   BEGIN
     CASE Example.matchRampSmooth OF
     | Example.matchBSpline =>
-        EVAL MatchPattern(
-               Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50),
-               numlevel, 4, 0, 5);
+        TestMatchPattern(
+          Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50),
+          numlevel, 4, 0, 5);
     | Example.matchBSplineVan =>
-        EVAL MatchPattern(
-               Refn.Refine(S.One, BSpl.GeneratorMask(1), 7).translate(10),
-               numlevel, 4, 2, 5);
+        TestMatchPattern(
+          Refn.Refine(S.One, BSpl.GeneratorMask(1), 7).translate(10),
+          numlevel, 4, 2, 5);
     | Example.matchRamp =>
         (* The figures given here previously was wrong because the
            generator was convolved with (1,0,-1) instead of (1,-1)
-           translates 5, size 1917, residuum 0.00340514677538585,
+           numTranslates 5, size 1917, residuum 0.00340514677538585,
            V11{0.186869299925214, 0.269986933917237, 0.670508585560263,
            0.649776682132423, -0.175806649674353, -0.875993675942413,
            -0.856283049545732, -0.458477950438848, -0.31397715987086,
            -0.11516417311729, ...} 0.330691666379811 *)
-        EVAL MatchPattern(NEW(S.T).fromArray(V.ArithSeq(512, -1.0D0,
-                                                        2.0D0 / 512.0D0)^,
-                                             -256), numlevel, 4, 6, 5);
+        TestMatchPattern(
+          NEW(S.T).fromArray(
+            V.ArithSeq(512, -1.0D0, 2.0D0 / 512.0D0)^, -256), numlevel, 4,
+          6, 5);
     | Example.matchRampSmooth =>
         (*
           EVAL TestMatchPatternSmooth(NEW(S.T).fromArray(
@@ -1191,7 +1210,7 @@ PROCEDURE Test () =
 
     | Example.matchBSplineWavelet =>
         (*
-          EVAL MatchPattern(
+          TestMatchPattern(
             Refn.Refine(
               BSpl.WaveletMask(2, 8), BSpl.GeneratorMask(2), numlevel).scale(
             FLOAT(unit,R.T)  ).translate(10), numlevel, 2, 8, 5);
@@ -1202,19 +1221,19 @@ PROCEDURE Test () =
                numlevel, 2, 8, 8, 5, 1.0D-10);
     | Example.matchSincSmooth =>
         (*
-          EVAL MatchPattern(
+          TestMatchPattern(
             NEW(S.T).fromArray(V.Neg(SincVector(2048, unit))^, unit - 2048), numlevel,
             4, 6, 10);
         *)
         FOR scale := 3 TO 10 DO
           VAR size := 5 * scale * unit;
           BEGIN
-            EVAL MatchPattern(
-                   NEW(S.T).fromArray(
-                     V.Neg(ModulateReal(
-                             SincVector(size, scale * unit),
-                             FLOAT(scale * unit, R.T) * 4.0D0 / 3.0D0))^,
-                     unit - size), numlevel, 4, 0, 20);
+            TestMatchPattern(
+              NEW(S.T).fromArray(V.Neg(ModulateReal(
+                                         SincVector(size, scale * unit),
+                                         FLOAT(scale * unit, R.T) * 4.0D0
+                                           / 3.0D0))^, unit - size),
+              numlevel, 4, 0, 20);
           END;
           (** which scale achieves best match?
              3 - 22.1834569283071
@@ -1228,12 +1247,12 @@ PROCEDURE Test () =
           *)
           VAR size := 5 * scale * unit;
           BEGIN
-            EVAL MatchPattern(
-                   NEW(S.T).fromArray(
-                     V.Neg(ModulateImag(
-                             SincVector(size, scale * unit),
-                             FLOAT(scale * unit, R.T) * 4.0D0 / 3.0D0))^,
-                     unit - size), numlevel, 3, 1, 20);
+            TestMatchPattern(
+              NEW(S.T).fromArray(V.Neg(ModulateImag(
+                                         SincVector(size, scale * unit),
+                                         FLOAT(scale * unit, R.T) * 4.0D0
+                                           / 3.0D0))^, unit - size),
+              numlevel, 3, 1, 20);
           END;
           (** which scale achieves best match?
              3 - 40.9491273229196
@@ -1257,7 +1276,7 @@ PROCEDURE Test () =
             IO.Put("scale: "&Fmt.Int(scale)&"\n");
             VAR size := 5 * scale * unit;
             BEGIN
-              EVAL MatchPattern(
+              TestMatchPattern(
                 NEW(S.T).fromArray(
                   ModulateReal(V.Neg(GaussianVector(size, scale * unit)),
                                FLOAT(scale * unit, R.T))^, unit - size),
@@ -1265,7 +1284,7 @@ PROCEDURE Test () =
             END;
             VAR size := 5 * scale * unit;
             BEGIN
-              EVAL MatchPattern(NEW(S.T).fromArray(
+              TestMatchPattern(NEW(S.T).fromArray(
                              ModulateImag(GaussianVector(size, scale * unit),
                                           FLOAT(scale * unit, R.T))^,
                              unit - size), numlevel, 3, 1, 20);
@@ -1285,9 +1304,9 @@ PROCEDURE Test () =
     | Example.matchLongRamp =>
         (*matching a pattern with 1 vanishing moment with a wavelet of 9
            vanishing moments can't work obviously*)
-        EVAL MatchPattern(NEW(S.T).fromArray(
-                            V.ArithSeq(2048, -1.0D0, 2.0D0 / 2048.0D0)^,
-                            unit - 1024), numlevel, 3, 9, 5);
+        TestMatchPattern(NEW(S.T).fromArray(
+                           V.ArithSeq(2048, -1.0D0, 2.0D0 / 2048.0D0)^,
+                           unit - 1024), numlevel, 3, 9, 5);
       (*
       EVAL TestMatchPatternSmooth(
         NEW(S.T).fromArray(

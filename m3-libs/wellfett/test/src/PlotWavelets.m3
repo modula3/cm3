@@ -8,6 +8,7 @@ IMPORT LongRealVector AS V;
 IMPORT LongRealVectorFast AS VFs;
 
 IMPORT LongRealSignal AS S;
+IMPORT LongRealSignalIntegerPower AS SIntPow;
 IMPORT LongRealRefinableFunc AS Refn;
 IMPORT LongRealDyadicFilterBank AS FB;
 
@@ -28,7 +29,7 @@ TYPE Box = RECORD horizontal, vertical: ARRAY [0 .. 1] OF R.T;  END;
 
 CONST psOutput = TRUE;
 
-PROCEDURE PLOpenPS (fileName: TEXT; ) =
+PROCEDURE PLInitPS (fileName: TEXT; ) =
   BEGIN
     IF psOutput THEN
       PL.SetDevice("ps");
@@ -43,7 +44,7 @@ PROCEDURE PLOpenPS (fileName: TEXT; ) =
     ELSE
       PL.Init();
     END;
-  END PLOpenPS;
+  END PLInitPS;
 
 PROCEDURE PlotSignal (func: S.T; READONLY bounds: Box; grid: R.T; ) =
   <*FATAL NA.Error*>(*Number of filters and channels will always match*)
@@ -59,15 +60,16 @@ PROCEDURE PlotSignal (func: S.T; READONLY bounds: Box; grid: R.T; ) =
   END PlotSignal;
 
 
-PROCEDURE PlotApproximation (fileName                : TEXT;
-                             target                  : S.T;
-                             smooth, vanishing       : CARDINAL;
+PROCEDURE PlotApproximation (fileName                              : TEXT;
+                             target                                : S.T;
+                             refineMask, generatorMask, waveletMask: S.T;
                              numLevels, numTranslates: CARDINAL; ) =
   VAR
     unit := IIntPow.MulPower(1, 2, numLevels);
     grid := R.Half / FLOAT(unit, R.T);
     approx := TestMatchWavelet.MatchPattern(
-                target, numLevels, smooth, vanishing, numTranslates, FALSE);
+                target, refineMask, generatorMask, waveletMask, numLevels,
+                numTranslates);
 
     bounds := Box{horizontal :=
                   ARRAY OF
@@ -76,29 +78,50 @@ PROCEDURE PlotApproximation (fileName                : TEXT;
                   vertical := ARRAY OF
                                 R.T{1.1D0 * VFs.Min(target.getData()^),
                                     1.1D0 * VFs.Max(target.getData()^)}};
+    bigBounds := Box{horizontal := bounds.horizontal, vertical :=
+                     ARRAY OF
+                       R.T{bounds.vertical[0] / approx.wavelet0Amp,
+                           bounds.vertical[1] / approx.wavelet0Amp}};
+
     paddedTarget := target.clip(target.getFirst() - 3 * unit,
                                 target.getNumber() + 6 * unit);
 
+    waveletLiftedMask := waveletMask.superpose(
+                           generatorMask.upConvolve(
+                             approx.lift.scale(R.Rec(approx.wavelet0Amp)),
+                             2));
+    waveletLifted := Refn.Refine(waveletLiftedMask, refineMask, numLevels);
+    complement    := FB.GetComplement(FB.T{generatorMask, waveletLifted});
+
   BEGIN
-    PLOpenPS(fileName & "-orig");
+    PLInitPS(fileName & "-orig");
     PlotSignal(paddedTarget, bounds, grid);
     PL.Exit();
 
-    PLOpenPS(fileName & "-approx");
+    (*'approx' and 'lifted' should be the same*)
+    PLInitPS(fileName & "-approx");
     PlotSignal(approx.approx, bounds, grid);
+    PL.Exit();
+
+    PLInitPS(fileName & "-lifted");
+    PlotSignal(waveletLifted, bigBounds, grid);
+    PL.Exit();
+
+    PLInitPS(fileName & "-compl-gen");
+    PlotSignal(complement[0], bigBounds, grid);
     PL.Exit();
   END PlotApproximation;
 
-PROCEDURE PlotLiftingBasis (fileName                  : TEXT;
-                            generatorMask, waveletMask: S.T;
-                            numLevels, numTranslates  : CARDINAL; ) =
+PROCEDURE PlotLiftingBasis (fileName                              : TEXT;
+                            refineMask, generatorMask, waveletMask: S.T;
+                            numLevels, numTranslates: CARDINAL; ) =
   VAR
     unit       := IIntPow.MulPower(2, 2, numLevels);
     grid       := R.One / FLOAT(unit, R.T);
-    generator  := Refn.Refine(generatorMask, generatorMask, numLevels);
-    wavelet    := Refn.Refine(waveletMask, generatorMask, numLevels);
-    firstTrans := 1 - numTranslates;
-    lastTrans  := numTranslates;
+    generator  := Refn.Refine(generatorMask, refineMask, numLevels);
+    wavelet    := Refn.Refine(waveletMask, refineMask, numLevels);
+    firstTrans := -numTranslates;
+    lastTrans  := numTranslates - 1;
     bounds := Box{
                 horizontal :=
                 ARRAY OF
@@ -111,7 +134,7 @@ PROCEDURE PlotLiftingBasis (fileName                  : TEXT;
 
   <*FATAL NA.Error*>(*Number of filters and channels will always match*)
   BEGIN
-    PLOpenPS(fileName);
+    PLInitPS(fileName);
 
     PL.SetFGColorDiscr(1);
     PL.SetEnvironment(bounds.horizontal[0], bounds.horizontal[1],
@@ -142,7 +165,7 @@ PROCEDURE PlotWavelet (fileName                  : TEXT;
     func := Refn.Refine(waveletMask, generatorMask, numLevels);
 
   BEGIN
-    PLOpenPS(fileName);
+    PLInitPS(fileName);
 
     IF bounds = NIL THEN
       bounds := NEW(REF Box,
@@ -162,9 +185,10 @@ PROCEDURE PlotWavelet (fileName                  : TEXT;
 PROCEDURE Test () =
   <*FATAL BSpl.DifferentParity*>
   CONST
-    numLevels       = 7;
-    cdfDualSmooth   = 3;
-    cdfPrimalSmooth = 5;
+    numLevels         = 7;
+    cdfDualSmooth     = 3;
+    cdfPrimalSmooth   = 5;
+    cdf31Primalsmooth = 1;
   VAR
     unit := IIntPow.MulPower(1, 2, numLevels);
     cdfName := Fmt.FN("cdf-%s-%s", ARRAY OF
@@ -175,9 +199,20 @@ PROCEDURE Test () =
                       R.Two).translate(-1),
                     BSpl.WaveletMask(cdfDualSmooth, cdfPrimalSmooth).scale(
                       R.Two).translate(1)};
-    cdfPrimal := FB.DualToPrimal(cdfDual);
+    cdfPrimal := FB.GetComplement(cdfDual);
     cdfBounds := NEW(REF Box, horizontal := ARRAY OF R.T{-4.0D0, 5.0D0},
                      vertical := ARRAY OF R.T{-3.0D0, 3.0D0});
+
+    cdf31DualWaveletMask := BSpl.WaveletMask(
+                              cdfDualSmooth, cdf31Primalsmooth).scale(
+                              R.Two).translate(1);
+    cdf31DualGeneratorVanMask := SIntPow.MulPower(
+                                   cdfDual[0],
+                                   NEW(S.T).fromArray(
+                                     ARRAY OF R.T{R.Half, R.Zero, -R.Half}),
+                                   cdf31Primalsmooth).translate(
+                                   2 - cdf31Primalsmooth - cdfDualSmooth);
+
     (*
         cdf4Dual := FB.T{BSpl.GeneratorMask(4).scale(R.Two).translate(-1),
                          BSpl.WaveletMask(4, 4).scale(R.Two).translate(1)};
@@ -192,12 +227,23 @@ PROCEDURE Test () =
                      0.030841381835987D0, -0.187034811718881D0,
                      -0.0279837694169838D0, 0.63088076792959D0,
                      0.714846570552542D0, 0.230377813308855D0});
+
   BEGIN
+    (*The problem should be completely symmetric, but it isn't.  When the
+       ramp is shifted to the left by 2..3 then lifting filter is
+       approximately symmetric.*)
     PlotApproximation(
-      "ramp", NEW(S.T).fromArray(
-                V.ArithSeq(2048, -1.0D0, 2.0D0 / 2048.0D0)^, unit - 1024),
-      cdfDualSmooth, 1, numLevels, 8);
-    PlotLiftingBasis("liftingbasis", cdfDual[0], cdfDual[1], numLevels, 8);
+      "ramp",
+      NEW(S.T).fromArray(
+        V.ArithSeq(2048 + 1, -1.0D0, 2.0D0 / 2048.0D0)^, unit - 2 - 1024),
+      cdfDual[0].translate(2), cdf31DualGeneratorVanMask,
+      cdf31DualWaveletMask.translate(-2), numLevels, 8);
+
+    (*doubled generator amplitude for nicer appearance*)
+    PlotLiftingBasis("liftingbasis", cdfDual[0].translate(2),
+                     cdf31DualGeneratorVanMask.scale(R.Two),
+                     cdf31DualWaveletMask.translate(-2), numLevels, 8);
+
     PlotWavelet(
       cdfName & "-dual-gen", cdfDual[0], cdfDual[0], numLevels, cdfBounds);
     PlotWavelet(
