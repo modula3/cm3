@@ -64,6 +64,8 @@ PROCEDURE ElimMultRoots(x:T):T;
 
 PROCEDURE PowN(x:T;
                y:CARDINAL):T;  (*return x^y*)
+PROCEDURE PowNSlow(x:T;
+                   y:CARDINAL):T;  (*return x^y*)
 (*The number of roots doesn't change,
   thus PowN(x,2) is very different from Mul(x,x)
   because in the latter case every root is multiplied with _each_ other.*)
