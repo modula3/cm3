@@ -17,12 +17,12 @@ else {
           "integer",
           "real32",
           "real64",
-          "cmplx",
-          "poly",
-          "vect",
-          "mat",
+          "complex",
+          "polynomial",
+          "vector",
+          "matrix",
           "root",
-          "interp",
+          "interpolation",
           "sle");
 };
           

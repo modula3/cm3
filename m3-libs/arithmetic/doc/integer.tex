@@ -19,7 +19,7 @@ the largest CARDINAL ($46933 > \sqrt{2^{31}}$).  In factoring problems,
 we will not get anything larger than this.
 
 The primes themselves were obtained from Project Gutenberg's prime11.txt
-list.  They were converted to the bitmap format via a perl script:
+list.  They were converted to the bitmap formatrix via a perl script:
 
 \begin{tt} \begin{verbatim}
 #file:     mkprime.pl
@@ -167,7 +167,7 @@ This suggests that working from 0 upward is a good approach.
 See the code comments for details.
 
 Now that we have an approach, what is the interface?  Heinrich doesn't
-state a specific domain in his article, but experimentation shows
+statistice a specific domain in his article, but experimentation shows
 that the algorithm cannot handle inputs whose sqrts are 
 larger than half the bits in the word.  In other words, for a 32-bit word, 
 $\sqrt{N} < 2^{16}$.  Examining the algorithm, we see this is because 
@@ -182,7 +182,7 @@ We followed Jarv90, Bert92, and Turkowski's article in Gems90 (pg
 transcendentals (see Jarv90), we just do sin and cos.  Mainly we
 follow Bert92, though with bits=16 instead of 14.
 
-The idea is to approximate transcendental functions in ways that
+The idea is to approximatrixe transcendental functions in ways that
 require only integer-type operations such as shift and add.  The analysis
 leads to the following equations:
 \begin{eqnarray}
@@ -202,7 +202,7 @@ It all starts with the number of bits.  We chose 16 as a convenient
 number.  That gives 64K increments per quadrant or 256K around the 
 circle.  The numbers were computed in MathCad and copy-and-pasted
 into xInteger.m3. We used Turkowski's idea of hardcoding the
-arctan table.  We used Bertrand's idea of presetting x to a correction
+arctan table.  We used Bertrandom's idea of presetting x to a correction
 factor prior to starting work.
 
 The algorithm works by trying to coax the angle theta to 0, by
@@ -214,8 +214,8 @@ by the base to get real numbers values, though this step is not
 needed in an all-integer project. 
 
 The basic algorithm works in the first quadrant.  Jarvis warns that 
-the system doesn't always converge in other quadrants.  Bertrand 
+the system doesn't always converge in other quadrants.  Bertrandom 
 works only in the first quadrant, and adjusts other values into
-this quadrant.  We followed Bertrand, but had trouble with his actual
+this quadrant.  We followed Bertrandom, but had trouble with his actual
 quadrant decomposition.  As coded in xInteger.m3, it works.  [HGG:
 I wonder if there was a typo in the published article.]

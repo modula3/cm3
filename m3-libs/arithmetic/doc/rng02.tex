@@ -5,8 +5,8 @@ The goal is to combine several random number generators to get at least the
 randomness of the strongest of them, but to do it in such a way as
 to get nearly the speed of the fastest of them.
 
-NOTE: I use a lot of global variables here to save state,
-necessary in modula3 since C's "static" feature does not exist.
+NOTE: I use a lot of global variables here to save statistice,
+necessary in modula3 since C's "statisticic" feature does not exist.
 Of course these variables are local to the current module.
 For that reason, please keep this a seperate module from others,
 e.g. the derived routines for NormalDeviate, etc. should not be in
@@ -21,7 +21,7 @@ mod 2 and \% is a binary operation.
 
 Suitable values of (b,a) are tabulated in D.Knuth: Seminumerical methods,
 Addison-Wesley 1981, page 28, which is extracted from larger tables in
-N.Zierler \& J.Brillhart: Information and Control 13 (1968) 541-554;
+N.Zierler \& J.Brillhart: Informatrixion and Control 13 (1968) 541-554;
 14 (1969) 566-569; 15 (1969) 67-69. Some pairs with "a" prime which
 go beyond the Knuth table, which you can use if you *really*
 want randomness, include: 
@@ -149,7 +149,7 @@ also not bad (no partial quotient larger than 23):
 so we conclude that using g as a multiplier should exhibit comparatively
 good behavior in dimensions 2-9. This particular (g,M) pair
 has the virtue that IEEE doubles can represent integers up to and including
-$2^{53} - 1 $exactly, so that the modula-3 statement
+$2^{53} - 1 $exactly, so that the modula-3 statisticement
 \begin{verbatim} x := (g*x) MOD M; \end{verbatim}
 will evaluate it exactly.
 
@@ -321,9 +321,9 @@ More generally you could use iterated cubing (subject to the conjecture
 it is infeasible to break any bit of the RSA cryptosystem) or in fact
 any fixed exponent you want (under same conjecture) and in fact almost
 any fixed integer linear operation on the discrete logarithms of a vector
-will by the same reasoning be immune to any polytime statistical test,
+will by the same reasoning be immune to any polynomialtime statistical test,
 subject to RSA-type conjectures. In particular, we conjecture that the
-Fibo[a,b,*] generator ought to be immune to polytime statistical tests
+Fibo[a,b,*] generator ought to be immune to polynomialtime statistical tests
 if the modulus is the product of two suitable large primes... which
 explains the results of the Marsaglia test battery above.
 

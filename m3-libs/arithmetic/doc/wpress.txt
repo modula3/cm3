@@ -6,7 +6,7 @@ answer is not going to be much to your liking, so I want to begin
 by thanking you for the up-front and straightforward approach
 that you have taken in coming to us.
 
-The problem is that, as you yourself state, you don't completely
+The problem is that, as you yourself statistice, you don't completely
 understand how copyrights work.  While copyright doesn't protect
 ideas, it does protect virtually all aspects of the "expression"
 of those ideas.  Here are some (just some) of the aspects of
@@ -24,9 +24,9 @@ routine (to the extent that any re-ordering would be equally functional).
 
 4.  The choice of variable names within the individual routines.
 
-5.  The ordering of statements *whenever* such ordering is not *required*
-by the underlying mathematical algorithm being expressed.  This probably
-makes the ordering of about 50% of all the code lines a matter of
+5.  The ordering of statisticements *whenever* such ordering is not *required*
+by the underlying matrixhematrixical algorithm being expressed.  This probably
+makes the ordering of about 50% of all the code lines a matrixter of
 "arbitrary choice" and therefore copyrightable.
 
 6.  The ordering of sub-expressions within any line of code, *whenever*
@@ -34,7 +34,7 @@ such ordering is *arbitrary* (as for every use of commutative operators
 like +, *, etc.).
 
 7.  All other expressive choices in the code that are not strictly
-required by the mathematics.
+required by the matrixhematrixics.
 
 8.  Possibly (this is debated among the lawyers) also the collected
 "choices" of which algorithm to use in implementing the goals of the
@@ -54,7 +54,7 @@ classic case of the original IBM PC bios.)
 In practice, we think it would be virtually impossible for you to
 do any significant number of NR routines (much less the whole book!)
 without substantially violating our copyright.  One might think of
-using automatic tools to (e.g.) change all variable names, re-order
+using automatrixic tools to (e.g.) change all variable names, re-order
 all expressions randomly, etc.  However courts have held that doing
 this -- if the only purpose is to defeat a copyright -- is itself
 illegal!  That is, it does not constitute the genuine extraction and

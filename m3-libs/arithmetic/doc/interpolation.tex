@@ -4,21 +4,21 @@ xarr,yarr), and given an x, use interpolation to find y.
 
 There are general purpose approaches, and also some
 specialized to general polynomials and others specialized to 
-orthogonal approximations
-such as Chebyshev approximations.  Here we consider only the
+orthogonal approximatrixions
+such as Chebyshev approximatrixions.  Here we consider only the
 general cases.
 
 The first step is to find the closest xa value as a start
-point.  Then one can interpolate from that value and its
+point.  Then one can interpolationolate from that value and its
 yarr pair.  We can do linear, quadtraic, nth order
 polynomial interpolations.
 
-\subsection*{interp\_linear}
+\subsection*{interpolation\_linear}
 Pretty straightforward.  I found it giving errors of 1--5\%
 for a 10-value sin table, and 0.01\% error for a 100-value
 sin table.
 
-\subsection*{interp\_poly}
+\subsection*{interpolation\_polynomial}
 NR92 describes it on pg 109.  In the basic P form, the
 result is a polynomial with n terms, of which all but 1
 (e.g., k) go to zero.  So one then has:
@@ -101,7 +101,7 @@ xa is still in the 0\dots n-1 form, so I have to replace all {\tt i}
 with {\tt i-1}.  I capture the resulting xa accesses as xi for
 x[i] in 3.1.5 and xim1 for x[i+m+1] in 3.1.5.
 
-To do offsetting (e.g., to do 4 point interp out of a much
+To do offsetting (e.g., to do 4 point interpolation out of a much
 larger table): The idea is to pass start and len with
 defaults of 0.  If $len \ne 0$ then we know we need to do
 partial access.  From there, we use symbolic start and end
