@@ -56,11 +56,11 @@ CONST
   N = 10000; n1=0; nn=N-1;
 VAR
   result:=TRUE;
-  decsrc  :=DECSRC.New();
-  parkmill:=ParkMill.New();
-  baydur  :=BayDur.New();
-  combslow:=CombSlow.New();
-  combfast:=CombFast.New();
+  decsrc  :=NEW(DECSRC.T).init();
+  parkmill:=NEW(ParkMill.T).init();
+  baydur  :=NEW(BayDur.T).init();
+  combslow:=NEW(CombSlow.T).init();
+  combfast:=NEW(CombFast.T).init();
 
   (*------------------------*)
   PROCEDURE DoEngine(name:TEXT; rand:RandomBasic.T)=
@@ -92,13 +92,13 @@ PROCEDURE TestCombined():BOOLEAN=
 CONST
   ftn = Module & "TestCombined";
 VAR
-  is:=IterSqr.New();
-  subfibo1:=SubFibo1.New(is);
-  subfibo2:=SubFibo2.New(is);
-  mulfibo :=MulFibo.New(is);
-  quafibo :=QuaFibo.New(is);
-  mcgill  :=McGill.New(is);
-  wolf    :=Wolf.New(is);
+  is:=NEW(IterSqr.T).init();
+  subfibo1:=NEW(SubFibo1.T).init(is);
+  subfibo2:=NEW(SubFibo2.T).init(is);
+  mulfibo :=NEW(MulFibo.T).init(is);
+  quafibo :=NEW(QuaFibo.T).init(is);
+  mcgill  :=NEW(McGill.T).init(is);
+  wolf    :=NEW(Wolf.T).init(is);
   result:=TRUE;
 BEGIN
   Debug(1,ftn,"begin\n");
@@ -127,7 +127,7 @@ CONST
   N = 10000; n1 = 0; nn = N-1;
 VAR
   result:=TRUE;
-  rand:=CombFast.New();
+  rand:=NEW(CombFast.T).init();
   data1:=NEW(R.Array,N);
   data2:=NEW(R.Array,N);
   data3:=NEW(R.Array,N);
@@ -152,7 +152,7 @@ CONST
   N = 10000; n1=0; nn=N-1;
 VAR
   result:=TRUE;
-  rand:=CombFast.New();
+  rand:=NEW(CombFast.T).init();
   data1:=NEW(R.Array,N);
 BEGIN
   Debug(1,ftn,"begin\n");
@@ -171,7 +171,7 @@ CONST
   N = 10000; n1=0; nn=N-1;
 VAR
   result:=TRUE;
-  rand:=CombFast.New();
+  rand:=NEW(CombFast.T).init();
   data1:=NEW(R.Array,N);
 BEGIN
   Debug(1,ftn,"begin\n");
@@ -190,7 +190,7 @@ CONST
   numBuckets = 15;
 VAR
   result:=TRUE;
-  rand:=CombFast.New();
+  rand:=NEW(CombFast.T).init();
   data1:=NEW(R.Array,N);
   count:=NEW(REF ARRAY OF CARDINAL,numBuckets+1);
   curcnt:CARDINAL;
@@ -222,7 +222,7 @@ CONST
   N = 10000; n1=0; nn=N-1;
 VAR
   result:=TRUE;
-  rand:=CombFast.New();
+  rand:=NEW(CombFast.T).init();
   data1:=NEW(R.Array,N);
   data2:=NEW(R.Array,N);
   data3:=NEW(R.Array,N);
@@ -247,7 +247,7 @@ CONST
 VAR
   result:=TRUE;
 (*
-  rand:=CombFast.New();
+  rand:=NEW(CombFast.T).init();
   data1:=NEW(R.Array,N);
   data2:=NEW(R.Array,N);
   data3:=NEW(R.Array,N);

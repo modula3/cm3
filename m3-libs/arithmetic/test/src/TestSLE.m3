@@ -29,7 +29,7 @@ TYPE
   V3   = ARRAY [0..2] OF R.T;
 
 VAR
-  rand:=Rand.New();
+  rand:=NEW(Rand.T).init();
 
 (*---------------------*)
 (*---------------------*)
