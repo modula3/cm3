@@ -52,15 +52,23 @@ END Zero;
 
 
 (*-----------------*)
+<*INLINE*>
+PROCEDURE AssertEqualSize( 
+                 v1,v2:T) RAISES {Error}=
+BEGIN
+  IF NUMBER(v1^) # NUMBER(v2^) THEN
+    RAISE Error(Err.bad_size);
+  END;
+END AssertEqualSize;
+
+(*-----------------*)
 PROCEDURE Add( 
                  v1,v2:T):T RAISES {Error}=
 (*v1:=v1+v2*)
 VAR
   tmp:T;
 BEGIN
-  IF NUMBER(v1^) # NUMBER(v2^) THEN
-    RAISE Error(Err.bad_size);
-  END;
+  AssertEqualSize(v1,v2);
   tmp:=NEW(T,NUMBER(v1^));
   FOR i:=FIRST(v1^) TO LAST(v1^) DO
     tmp[i]:=R.Add(v1[i],v2[i]);
@@ -75,9 +83,7 @@ PROCEDURE Sub(
 VAR
   tmp:T;
 BEGIN
-  IF NUMBER(v1^) # NUMBER(v2^) THEN
-    RAISE Error(Err.bad_size);
-  END;
+  AssertEqualSize(v1,v2);
   tmp:=NEW(T,NUMBER(v1^));
   FOR i:=FIRST(v1^) TO LAST(v1^) DO
     tmp[i]:=R.Sub(v1[i],v2[i]);
@@ -86,8 +92,9 @@ BEGIN
 END Sub;
 
 (*---------------------*)
-PROCEDURE Equal(v1,v2:T):BOOLEAN =
+PROCEDURE Equal(v1,v2:T):BOOLEAN RAISES {Error} =
 BEGIN
+  AssertEqualSize(v1,v2);
   FOR i:=FIRST(v1^) TO LAST(v2^) DO
     IF NOT R.Equal(v1[i],v2[i]) THEN
       RETURN FALSE;
@@ -115,10 +122,7 @@ PROCEDURE Inner(
 VAR
   sum:R.T;
 BEGIN
-  IF NUMBER(v1^) # NUMBER(v2^) THEN
-    RAISE Error(Err.bad_size);
-  END;
-
+  AssertEqualSize(v1,v2);
   sum:=R.Zero;
   FOR i:=FIRST(v1^) TO LAST(v1^) DO
     sum:=R.Add(sum,R.Mul(R.Conj(v1[i]),v2[i]));
