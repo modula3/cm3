@@ -19,23 +19,10 @@ PROCEDURE PlotWavelets (hdual, gdual: S.T; levels: CARDINAL) =
     hprimal := gdual.alternate();
     gprimal := hdual.alternate();
 
-    phiprimal      := Refn.Refine(hprimal, hprimal, levels).scale(twopow);
-    psiprimal      := Refn.Refine(gprimal, hprimal, levels).scale(twopow);
-    leftphiprimal  := FLOAT(phiprimal.getFirst(), R.T) * grid;
-    rightphiprimal := FLOAT(phiprimal.getLast(), R.T) * grid;
-    leftpsiprimal  := FLOAT(psiprimal.getFirst(), R.T) * grid;
-    rightpsiprimal := FLOAT(psiprimal.getLast(), R.T) * grid;
-    leftprimal     := MIN(leftphiprimal, leftpsiprimal);
-    rightprimal    := MAX(rightphiprimal, rightpsiprimal);
-
-    phidual      := Refn.Refine(hdual, hdual, levels).scale(twopow);
-    psidual      := Refn.Refine(gdual, hdual, levels).scale(twopow);
-    leftphidual  := FLOAT(phidual.getFirst(), R.T) * grid;
-    rightphidual := FLOAT(phidual.getLast(), R.T) * grid;
-    leftpsidual  := FLOAT(psidual.getFirst(), R.T) * grid;
-    rightpsidual := FLOAT(psidual.getLast(), R.T) * grid;
-    leftdual     := MIN(leftphidual, leftpsidual);
-    rightdual    := MAX(rightphidual, rightpsidual);
+    phiprimal := Refn.Refine(hprimal, hprimal, levels).scale(twopow);
+    psiprimal := Refn.Refine(gprimal, hprimal, levels).scale(twopow);
+    phidual   := Refn.Refine(hdual, hdual, levels).scale(twopow);
+    psidual   := Refn.Refine(gdual, hdual, levels).scale(twopow);
 
     ymin := MIN(
               MIN(V.Min(phiprimal.getData()^), V.Min(psiprimal.getData()^)),
@@ -45,27 +32,63 @@ PROCEDURE PlotWavelets (hdual, gdual: S.T; levels: CARDINAL) =
               MAX(V.Max(phidual.getData()^), V.Max(psidual.getData()^)));
 
   BEGIN
-    TRY
-      PL.SubPlots(2, 2);
-      PL.SetEnvironment(leftprimal, rightprimal, ymin, ymax);
-      PL.PlotLines(V.ArithSeq(phiprimal.getNumber(), leftphiprimal, grid)^,
-                   phiprimal.getData()^);
-      PL.SetEnvironment(leftdual, rightdual, ymin, ymax);
-      PL.PlotLines(V.ArithSeq(phidual.getNumber(), leftphidual, grid)^,
-                   phidual.getData()^);
-
-      PL.SetEnvironment(leftprimal, rightprimal, ymin, ymax);
-      PL.PlotLines(V.ArithSeq(psiprimal.getNumber(), leftpsiprimal, grid)^,
-                   psiprimal.getData()^);
-      PL.SetEnvironment(leftdual, rightdual, ymin, ymax);
-      PL.PlotLines(V.ArithSeq(psidual.getNumber(), leftpsidual, grid)^,
-                   psidual.getData()^);
-    EXCEPT
-    | Error (err) => EVAL err;
-      <*ASSERT FALSE*>(*PlotLines may complain about inconsistent vector
-                         sizes but we give no reason for it.*)
-    END;
+    DoPlot(phiprimal, psiprimal, phidual, psidual, ymin, ymax,grid);
   END PlotWavelets;
+
+PROCEDURE PlotWaveletsYLim (hdual, gdual: S.T;
+                            levels      : CARDINAL;
+                            ymin, ymax  : R.T       ) =
+  VAR
+    twopow  := RIntPow.Power(R.Two, levels);
+    grid    := 1.0D0 / twopow;
+    hprimal := gdual.alternate();
+    gprimal := hdual.alternate();
+
+    phiprimal := Refn.Refine(hprimal, hprimal, levels).scale(twopow);
+    psiprimal := Refn.Refine(gprimal, hprimal, levels).scale(twopow);
+    phidual   := Refn.Refine(hdual, hdual, levels).scale(twopow);
+    psidual   := Refn.Refine(gdual, hdual, levels).scale(twopow);
+  BEGIN
+    DoPlot(phiprimal, psiprimal, phidual, psidual, ymin, ymax,grid);
+  END PlotWaveletsYLim;
+
+PROCEDURE DoPlot (phiprimal, psiprimal, phidual, psidual: S.T;
+                  ymin, ymax                            : R.T;
+                  grid                                  : R.T  ) =
+  VAR
+    leftphiprimal  := FLOAT(phiprimal.getFirst(), R.T) * grid;
+    rightphiprimal := FLOAT(phiprimal.getLast(), R.T) * grid;
+    leftpsiprimal  := FLOAT(psiprimal.getFirst(), R.T) * grid;
+    rightpsiprimal := FLOAT(psiprimal.getLast(), R.T) * grid;
+    leftprimal     := MIN(leftphiprimal, leftpsiprimal);
+    rightprimal    := MAX(rightphiprimal, rightpsiprimal);
+
+    leftphidual  := FLOAT(phidual.getFirst(), R.T) * grid;
+    rightphidual := FLOAT(phidual.getLast(), R.T) * grid;
+    leftpsidual  := FLOAT(psidual.getFirst(), R.T) * grid;
+    rightpsidual := FLOAT(psidual.getLast(), R.T) * grid;
+    leftdual     := MIN(leftphidual, leftpsidual);
+    rightdual    := MAX(rightphidual, rightpsidual);
+
+  <*FATAL Error*>
+  BEGIN
+    (*PlotLines may complain about inconsistent vector sizes but we won't
+       give it a reason for complaints.*)
+    PL.SetSubWindows(2, 2);
+    PL.SetEnvironment(leftprimal, rightprimal, ymin, ymax);
+    PL.PlotLines(V.ArithSeq(phiprimal.getNumber(), leftphiprimal, grid)^,
+                 phiprimal.getData()^);
+    PL.SetEnvironment(leftdual, rightdual, ymin, ymax);
+    PL.PlotLines(V.ArithSeq(phidual.getNumber(), leftphidual, grid)^,
+                 phidual.getData()^);
+
+    PL.SetEnvironment(leftprimal, rightprimal, ymin, ymax);
+    PL.PlotLines(V.ArithSeq(psiprimal.getNumber(), leftpsiprimal, grid)^,
+                 psiprimal.getData()^);
+    PL.SetEnvironment(leftdual, rightdual, ymin, ymax);
+    PL.PlotLines(V.ArithSeq(psidual.getNumber(), leftpsidual, grid)^,
+                 psidual.getData()^);
+  END DoPlot;
 
 BEGIN
 END LongRealWaveletPlot.
