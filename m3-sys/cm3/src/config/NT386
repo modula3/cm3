@@ -166,7 +166,7 @@ end
 %%  to avoid relocating them everytime they're loaded....
 
 %% m3_lib_flags = [ "-debugtype:cv", "-machine:i386" ]
-m3_lib_flags = [ ]
+m3_lib_flags = [ "-ign:__real" ]
 
 proc make_lib (lib, options, objects, imported_libs, shared) is
   local ret_code  = "0"
