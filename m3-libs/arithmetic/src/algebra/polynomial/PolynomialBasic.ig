@@ -42,7 +42,8 @@ PROCEDURE Sub(p1,p2:T):T;  (*return p1-p2*)
 PROCEDURE Equal(p1,p2:T):BOOLEAN;  (*return p1=p2*)
 
 PROCEDURE Mul(p1,p2:T):T;  (*return p1*p2*)
-PROCEDURE DivMod(p1,p2:T;        (*compute p1/p2 *) 
+PROCEDURE Div(p1,p2:T):T RAISES {Error};  (*return p1/p2 if possible*)
+PROCEDURE DivMod(p1,p2:T;                 (*compute p1/p2 *) 
               VAR r:T):T RAISES {Error};   (*giving quotient with remainder r*)
 (*
 PROCEDURE deflate(p:T;        (*divide this polynomial*)

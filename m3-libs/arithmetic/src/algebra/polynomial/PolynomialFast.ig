@@ -17,9 +17,15 @@ TYPE
   TBody = ARRAY OF R.T;
   T = BRANDED "Polynomial" REF TBody;
 
+(*
 CONST
   Zero    =  TBody{R.Zero};
   One     =  TBody{R.One};
+*)
+
+VAR
+  Zero    : T;
+  One     : T;
 
 PROCEDURE New(n:CARDINAL):T;    (*make a poly for a0..an*)
 PROCEDURE Copy(p:T):T;       (*copy p to a New poly*)
@@ -36,6 +42,7 @@ PROCEDURE Sub(p1,p2:T):T;  (*return p1-p2*)
 PROCEDURE Equal(p1,p2:T):BOOLEAN;  (*return p1=p2*)
 
 PROCEDURE Mul(p1,p2:T):T;  (*return p1*p2*)
+PROCEDURE Div(p1,p2:T):T RAISES {Error};  (*return p1/p2 if possible*)
 PROCEDURE DivMod(p1,p2:T;        (*compute p1/p2 *) 
               VAR r:T):T;     (*giving quotient with remainder r*)
 (*

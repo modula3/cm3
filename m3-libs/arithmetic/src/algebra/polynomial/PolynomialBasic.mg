@@ -139,6 +139,19 @@ BEGIN
 END Mul;
 
 (*---------------------*)
+PROCEDURE Div( 
+               p1,p2:T):T RAISES {Error}=
+VAR
+  r,q:T;
+BEGIN
+  q:=DivMod(p1,p2,r);
+  IF NOT Equal(r,Zero) THEN
+    RAISE Error(Err.indivisible);
+  END;
+  RETURN q;
+END Div;
+
+(*---------------------*)
 PROCEDURE DivMod( 
                p1,p2:T;
            VAR r:T):T RAISES {Error} =
