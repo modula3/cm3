@@ -10,7 +10,8 @@ REVEAL
         fromArray := FromArray;
         copy      := Copy;
 
-        clipToArray := ClipToArray;
+        clipToArray  := ClipToArray;
+        clipToVector := ClipToVector;
 
         getFirst  := GetFirst;
         getLast   := GetLast;
@@ -108,6 +109,13 @@ PROCEDURE ClipToArray (x: T; first: IndexType; VAR y: V.TBody) =
     SUBARRAY(y, yl, yr - yl) := SUBARRAY(x.data^, xl, xr - xl);
     VS.Clear(SUBARRAY(y, yr, NUMBER(y) - yr));
   END ClipToArray;
+
+PROCEDURE ClipToVector (x: T; first, size: IndexType): V.T =
+  VAR z := V.New(size);
+  BEGIN
+    ClipToArray(x, first, z^);
+    RETURN z;
+  END ClipToVector;
 
 PROCEDURE GetFirst (SELF: T): IndexType =
   BEGIN
