@@ -1,5 +1,1 @@
-
-XXDIR = { "WIN32" : "N:\\m3-ui", "POSIX" : "/proj/cmass/src.2/m3-ui" }
-WORKDIR = XXDIR {OS_TYPE}
-
-override ("ui", WORKDIR)
+override ("ui", ROOT & "/m3-ui")
