@@ -1,15 +1,14 @@
 INTERFACE PLPlotRaw;
 (*Copyright (c) 1996, m3na project
 
-Abstract: Raw low level interface to plplot library
-          'plplot' let you create function graphs
-          directly from a program
-          in X11 window or in a postscript file etc.
-          'Raw' means that this is a direct conversion
-          from the C header file that lacks any comfort of Modula 3.
-          Please use the high level wrappers from 'PLPlot' instead.
+   Abstract: Raw low level interface to plplot library
 
-*)
+   'plplot' let you create function graphs directly from a program in X11
+   window or in a postscript file etc.  'Raw' means that this is a direct
+   conversion from the C header file that lacks any comfort of Modula 3.
+   Please use the high level wrappers from 'PLPlot' instead.
+
+   *)
 
 IMPORT Ctypes AS C;
 
@@ -19,66 +18,82 @@ TYPE
   PLINT = C.int;
   PLFLT = C.double;
   PLFLT_star = UNTRACED REF PLFLT;
+  bool  = BITS BITSIZE(PLINT) FOR BOOLEAN;
 
 CONST
-  PL_PARSE_PARTIAL = 16_0000;  (* For backward compatibility *)
-  PL_PARSE_FULL  = 16_0001;  (* Process fully & exit if error *)
-  PL_PARSE_QUIET   = 16_0002;  (* Don't issue messages *)
-  PL_PARSE_NODELETE = 16_0004;  (* Don't delete options after *)
-    (* processing *)
-  PL_PARSE_SHOWALL  = 16_0008;  (* Show invisible options *)
-  PL_PARSE_OVERRIDE = 16_0010;  (* Obsolete *)
+  PL_PARSE_PARTIAL  = 16_0000;   (* For backward compatibility *)
+  PL_PARSE_FULL     = 16_0001;   (* Process fully & exit if error *)
+  PL_PARSE_QUIET    = 16_0002;   (* Don't issue messages *)
+  PL_PARSE_NODELETE = 16_0004;   (* Don't delete options after *)
+  (* processing *)
+  PL_PARSE_SHOWALL   = 16_0008;  (* Show invisible options *)
+  PL_PARSE_OVERRIDE  = 16_0010;  (* Obsolete *)
   PL_PARSE_NOPROGRAM = 16_0020;  (* Program name NOT in *argv[0].. *)
-  PL_PARSE_NODASH  = 16_0040;  (* Set if leading dash NOT required *)
-  PL_PARSE_SKIP  = 16_0080;  (* Skip over unrecognized args *)
+  PL_PARSE_NODASH    = 16_0040;  (* Set if leading dash NOT required *)
+  PL_PARSE_SKIP      = 16_0080;  (* Skip over unrecognized args *)
 
 <*EXTERNAL*>
-PROCEDURE plParseOpts(p_argc : C.int_star; argv : C.char_star_star; mode : PLINT) : C.int;
+PROCEDURE plParseOpts (p_argc: C.int_star;
+                       argv  : C.char_star_star;
+                       mode  : PLINT             ): C.int;
 (* Process options list using current options info. *)
 
 <*EXTERNAL c_plinit*>
-PROCEDURE plinit();
+PROCEDURE plinit ();
 (* Initializes PLplot, using preset or default options *)
 
 <*EXTERNAL c_plend*>
-PROCEDURE plend();
+PROCEDURE plend ();
 (* End a plotting session for all open streams. *)
 
 
 
 <*EXTERNAL c_plenv*>
-PROCEDURE plenv(xmin:PLFLT; xmax:PLFLT; ymin:PLFLT; ymax:PLFLT;
-	just:PLINT; axis:PLINT);
+PROCEDURE plenv (xmin: PLFLT;
+                 xmax: PLFLT;
+                 ymin: PLFLT;
+                 ymax: PLFLT;
+                 just: PLINT;
+                 axis: PLINT  );
 (* Simple interface for defining viewport and window. *)
+
+<*EXTERNAL c_plxormod*>
+PROCEDURE plxormod (mode: PLINT; VAR status: PLINT);
+(* set xor mode; mode = 1-enter, 0-leave, status = 0 if not interactive
+   device *)
 
 
 
 <*EXTERNAL c_plcol0*>
-PROCEDURE plcol0(icol0:PLINT);
+PROCEDURE plcol0 (icol0: PLINT);
 (* Set color, map 0.  Argument is integer between 0 and 15. *)
 
 <*EXTERNAL c_plcol1*>
-PROCEDURE plcol1(icol1:PLFLT);
-(* Set color, map 1.  Argument is a float between 0. and 1. *)
+PROCEDURE plcol1 (icol1: PLFLT);
+(* Set color, map 1.  Argument is a float between 0.  and 1. *)
 
 
 <*EXTERNAL c_pllab*>
-PROCEDURE pllab(xlabel, ylabel, tlabel:C.const_char_star);
+PROCEDURE pllab (xlabel, ylabel, tlabel: C.const_char_star);
 (* Simple routine for labelling graphs. *)
 
 
 <*EXTERNAL c_plpoin*>
-PROCEDURE plpoin(n:PLINT; READONLY x,y:(*ARRAY OF*) PLFLT; code:PLINT);
+PROCEDURE plpoin (n: PLINT; READONLY x, y: (*ARRAY OF*) PLFLT; code: PLINT);
 (* Plots array y against x for n points using ASCII code "code".*)
 
 
 <*EXTERNAL c_plline*>
-PROCEDURE plline(n:PLINT; READONLY x,y:(*ARRAY OF*) PLFLT);
+PROCEDURE plline (n: PLINT; READONLY x, y: (*ARRAY OF*) PLFLT);
 (* Draws line segments connecting a series of points. *)
 
 <*EXTERNAL c_plhist*>
-PROCEDURE plhist(n:PLINT; READONLY data:(*ARRAY OF*)PLFLT; datmin:PLFLT; datmax:PLFLT;
-	 nbin:PLINT; oldwin:PLINT);
+PROCEDURE plhist (         n     : PLINT;
+                  READONLY data  : (*ARRAY OF*) PLFLT;
+                           datmin: PLFLT;
+                           datmax: PLFLT;
+                           nbin  : PLINT;
+                           oldwin: PLINT               );
 (* Draws a histogram of n values of a variable in array data[0..n-1] *)
 
 
@@ -101,7 +116,7 @@ PROCEDURE c_plcol0(icol0:PLINT);
 
 <*EXTERNAL*>
 PROCEDURE c_plhist(n:PLINT; data:PLFLT_star; datmin:PLFLT; datmax:PLFLT;
-	 nbin:PLINT; oldwin:PLINT);
+         nbin:PLINT; oldwin:PLINT);
 (* Draws a histogram of n values of a variable in array data[0..n-1] *)
 
 <*EXTERNAL*>
@@ -117,7 +132,7 @@ END PLPlotRaw.
 (*
 /* $Id$
 
-    Copyright (C) 1992 by 
+    Copyright (C) 1992 by
     Maurice J. LeBrun, Geoff Furnish, Tony Richardson.
 
     Macros and prototypes for the PLplot package.  This header file must
@@ -135,7 +150,7 @@ END PLPlotRaw.
     Note: some systems allow the Fortran & C namespaces to clobber each
     other.  So for PLplot to work from Fortran, we do some rather nasty
     things to the externally callable C function names.  This shouldn't
-    affect any user programs in C as long as this file is included. 
+    affect any user programs in C as long as this file is included.
 */
 
 #ifndef __PLPLOT_H__
@@ -145,11 +160,11 @@ END PLPlotRaw.
 
 /*--------------------------------------------------------------------------*\
  *    USING PLplot
- * 
- * To use PLplot from C or C++, it is only necessary to 
- * 
+ *
+ * To use PLplot from C or C++, it is only necessary to
+ *
  *      #include "plplot.h"
- * 
+ *
  * This file does all the necessary setup to make PLplot accessible to
  * your program as documented in the manual.  Additionally, this file
  * allows you to request certain behavior by defining certain symbols
@@ -166,7 +181,7 @@ END PLPlotRaw.
  * will conform to this rule in order to keep namespace pollution of the
  * user code to a minimum.  All the PLplot source files actually include
  * "plplotP.h", which includes this file as well as all the internally-
- * visible declarations, etc.  
+ * visible declarations, etc.
 \*--------------------------------------------------------------------------*/
 
 /* The majority of PLplot source files require these, so.. */
@@ -322,7 +337,7 @@ typedef void* PLPointer;
 #define PL_PARSE_FULL		0x0001	/* Process fully & exit if error */
 #define PL_PARSE_QUIET		0x0002	/* Don't issue messages */
 #define PL_PARSE_NODELETE	0x0004	/* Don't delete options after */
-					/* processing */
+                                        /* processing */
 #define PL_PARSE_SHOWALL	0x0008	/* Show invisible options */
 #define PL_PARSE_OVERRIDE	0x0010	/* Obsolete */
 #define PL_PARSE_NOPROGRAM	0x0020	/* Program name NOT in *argv[0].. */
@@ -711,7 +726,7 @@ typedef struct {
 #define    c_plgyax	plgyax
 #define    c_plgzax	plgzax
 #define    c_plhist	plhist
-#define    c_plhls	plhls       
+#define    c_plhls	plhls
 #define    c_plinit	plinit
 #define    c_pljoin	pljoin
 #define    c_pllab	pllab
@@ -815,9 +830,9 @@ typedef struct {
 extern "C" {
 #endif
 
-	/* All void types */
+        /* All void types */
 
-	/* C routines callable from stub routines come first */
+        /* C routines callable from stub routines come first */
 
 /* set the format of the contour labels */
 
@@ -845,7 +860,7 @@ plarrows(PLFLT *u, PLFLT *v, PLFLT *x, PLFLT *y, PLINT n,
 
 void
 c_plaxes(PLFLT x0, PLFLT y0, const char *xopt, PLFLT xtick, PLINT nxsub,
-	 const char *yopt, PLFLT ytick, PLINT nysub);
+         const char *yopt, PLFLT ytick, PLINT nysub);
 
 /* Plot a histogram using x to store data values and y to store frequencies */
 
@@ -861,22 +876,22 @@ c_plbop(void);
 
 void
 c_plbox(const char *xopt, PLFLT xtick, PLINT nxsub,
-	const char *yopt, PLFLT ytick, PLINT nysub);
+        const char *yopt, PLFLT ytick, PLINT nysub);
 
 /* This is the 3-d analogue of plbox(). */
 
 void
 c_plbox3(const char *xopt, const char *xlabel, PLFLT xtick, PLINT nsubx,
-	 const char *yopt, const char *ylabel, PLFLT ytick, PLINT nsuby,
-	 const char *zopt, const char *zlabel, PLFLT ztick, PLINT nsubz);
+         const char *yopt, const char *ylabel, PLFLT ytick, PLINT nsuby,
+         const char *zopt, const char *zlabel, PLFLT ztick, PLINT nsubz);
 
 /* Calculate world coordinates and subpage from relative device coordinates. */
 
 void
 c_plcalc_world(PLFLT rx, PLFLT ry, PLFLT *wx, PLFLT *wy, PLINT *window);
-   
+
 /* Clear current subpage. */
-   
+
 void
 c_plclear(void);
 
@@ -891,27 +906,27 @@ void
 c_plcol1(PLFLT col1);
 
 /* Draws a contour plot from data in f(nx,ny).  Is just a front-end to
- * plfcont, with a particular choice for f2eval and f2eval_data. 
+ * plfcont, with a particular choice for f2eval and f2eval_data.
  */
 
 void
 c_plcont(PLFLT **f, PLINT nx, PLINT ny, PLINT kx, PLINT lx,
-	 PLINT ky, PLINT ly, PLFLT *clevel, PLINT nlevel,
-	 void ( *pltr) (PLFLT, PLFLT, PLFLT *, PLFLT *, PLPointer),
-	 PLPointer pltr_data);
+         PLINT ky, PLINT ly, PLFLT *clevel, PLINT nlevel,
+         void ( *pltr) (PLFLT, PLFLT, PLFLT *, PLFLT *, PLPointer),
+         PLPointer pltr_data);
 
 /* Draws a contour plot using the function evaluator f2eval and data stored
  * by way of the f2eval_data pointer.  This allows arbitrary organizations
- * of 2d array data to be used. 
+ * of 2d array data to be used.
  */
 
 void
 plfcont(PLFLT ( *f2eval) (PLINT, PLINT, PLPointer),
-	PLPointer f2eval_data,
-	PLINT nx, PLINT ny, PLINT kx, PLINT lx,
-	PLINT ky, PLINT ly, PLFLT *clevel, PLINT nlevel,
-	void ( *pltr) (PLFLT, PLFLT, PLFLT *, PLFLT *, PLPointer),
-	PLPointer pltr_data);
+        PLPointer f2eval_data,
+        PLINT nx, PLINT ny, PLINT kx, PLINT lx,
+        PLINT ky, PLINT ly, PLFLT *clevel, PLINT nlevel,
+        void ( *pltr) (PLFLT, PLFLT, PLFLT *, PLFLT *, PLPointer),
+        PLPointer pltr_data);
 
 /* Copies state parameters from the reference stream to the current stream. */
 
@@ -944,7 +959,7 @@ c_plend1(void);
 
 void
 c_plenv(PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
-	PLINT just, PLINT axis);
+        PLINT just, PLINT axis);
 
 
 /* similar to plenv() above, but in multiplot mode does not advance the subpage,
@@ -952,7 +967,7 @@ c_plenv(PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
 
 void
 c_plenv0(PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
-	PLINT just, PLINT axis);
+        PLINT just, PLINT axis);
 
 /* End current page.  Should only be used with plbop(). */
 
@@ -1058,7 +1073,7 @@ c_plglevel(PLINT *p_level);
 
 void
 c_plgpage(PLFLT *p_xp, PLFLT *p_yp,
-	  PLINT *p_xleng, PLINT *p_yleng, PLINT *p_xoff, PLINT *p_yoff);
+          PLINT *p_xleng, PLINT *p_yleng, PLINT *p_xoff, PLINT *p_yoff);
 
 /* Switches to graphics screen. */
 
@@ -1109,7 +1124,7 @@ c_plgzax(PLINT *p_digmax, PLINT *p_digits);
 
 void
 c_plhist(PLINT n, PLFLT *data, PLFLT datmin, PLFLT datmax,
-	 PLINT nbin, PLINT oldwin);
+         PLINT nbin, PLINT oldwin);
 
 /* Set current color (map 0) by hue, lightness, and saturation. */
 
@@ -1158,8 +1173,8 @@ plmap( void ( *mapform)(PLINT, PLFLT *, PLFLT * ), char *type,
 
 /* Plot the latitudes and longitudes on the background. */
 
-void 
-plmeridians( void ( *mapform)(PLINT, PLFLT *, PLFLT * ), 
+void
+plmeridians( void ( *mapform)(PLINT, PLFLT *, PLFLT * ),
                PLFLT dlong, PLFLT dlat,
                PLFLT minlong, PLFLT maxlong, PLFLT minlat, PLFLT maxlat );
 
@@ -1172,7 +1187,7 @@ c_plmesh(PLFLT *x, PLFLT *y, PLFLT **z, PLINT nx, PLINT ny, PLINT opt);
 
 void
 c_plmeshc(PLFLT *x, PLFLT *y, PLFLT **z, PLINT nx, PLINT ny, PLINT opt,
-	  PLFLT *clevel, PLINT nlevel);
+          PLFLT *clevel, PLINT nlevel);
 
 /* Creates a new stream and makes it the default.  */
 
@@ -1183,24 +1198,24 @@ c_plmkstrm(PLINT *p_strm);
 
 void
 c_plmtex(const char *side, PLFLT disp, PLFLT pos, PLFLT just,
-	 const char *text);
+         const char *text);
 
 /* Plots a 3-d representation of the function z[x][y]. */
 
 void
 c_plot3d(PLFLT *x, PLFLT *y, PLFLT **z,
-	 PLINT nx, PLINT ny, PLINT opt, PLINT side);
+         PLINT nx, PLINT ny, PLINT opt, PLINT side);
 
 /* Plots a 3-d representation of the function z[x][y] with contour. */
 
 void
 c_plot3dc(PLFLT *x, PLFLT *y, PLFLT **z,
-	 PLINT nx, PLINT ny, PLINT opt,
-	 PLFLT *clevel, PLINT nlevel);
+         PLINT nx, PLINT ny, PLINT opt,
+         PLFLT *clevel, PLINT nlevel);
 
-/* 
+/*
  * definitions for the opt argument in plot3dc() and plsurf3d()
- * 
+ *
  * DRAW_LINEX *must* be 1 and DRAW_LINEY *must* be 2, because of legacy code!
  */
 
@@ -1230,7 +1245,7 @@ c_plot3dc(PLFLT *x, PLFLT *y, PLFLT **z,
 
 void
 c_plsurf3d(PLFLT *x, PLFLT *y, PLFLT **z, PLINT nx, PLINT ny,
-	   PLINT opt, PLFLT *clevel, PLINT nlevel);
+           PLINT opt, PLFLT *clevel, PLINT nlevel);
 
 /* Set fill pattern directly. */
 
@@ -1312,7 +1327,7 @@ c_plscmap1(PLINT *r, PLINT *g, PLINT *b, PLINT ncol1);
 
 void
 c_plscmap1l(PLINT itype, PLINT npts, PLFLT *intensity,
-	    PLFLT *coord1, PLFLT *coord2, PLFLT *coord3, PLINT *rev);
+            PLFLT *coord1, PLFLT *coord2, PLFLT *coord3, PLINT *rev);
 
 /* Set a given color from color map 0 by 8 bit RGB value */
 
@@ -1349,7 +1364,7 @@ c_plsdidev(PLFLT mar, PLFLT aspect, PLFLT jx, PLFLT jy);
 
 void
 c_plsdimap(PLINT dimxmin, PLINT dimxmax, PLINT dimymin, PLINT dimymax,
-	   PLFLT dimxpmm, PLFLT dimypmm);
+           PLFLT dimxpmm, PLFLT dimypmm);
 
 /* Set plot orientation, specifying rotation in units of pi/2. */
 
@@ -1382,52 +1397,52 @@ void
 c_plsfnam(const char *fnam);
 
 /* Shade region. */
-void 
+void
 c_plshades( PLFLT **a, PLINT nx, PLINT ny, PLINT ( *defined) (PLFLT, PLFLT),
-	  PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
-	  PLFLT *clevel, PLINT nlevel, PLINT fill_width,
-	  PLINT cont_color, PLINT cont_width,
-	  void ( *fill) (PLINT, PLFLT *, PLFLT * ), PLINT rectangular,
-	  void ( *pltr) (PLFLT, PLFLT, PLFLT *, PLFLT *, PLPointer),
-	  PLPointer pltr_data);
+          PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax,
+          PLFLT *clevel, PLINT nlevel, PLINT fill_width,
+          PLINT cont_color, PLINT cont_width,
+          void ( *fill) (PLINT, PLFLT *, PLFLT * ), PLINT rectangular,
+          void ( *pltr) (PLFLT, PLFLT, PLFLT *, PLFLT *, PLPointer),
+          PLPointer pltr_data);
 
-   
-void 
+
+void
 c_plshade(PLFLT **a, PLINT nx, PLINT ny, PLINT ( *defined) (PLFLT, PLFLT),
-	  PLFLT left, PLFLT right, PLFLT bottom, PLFLT top,
-	  PLFLT shade_min, PLFLT shade_max,
-	  PLINT sh_cmap, PLFLT sh_color, PLINT sh_width,
-	  PLINT min_color, PLINT min_width,
-	  PLINT max_color, PLINT max_width,
-	  void ( *fill) (PLINT, PLFLT *, PLFLT * ), PLINT rectangular,
-	  void ( *pltr) (PLFLT, PLFLT, PLFLT *, PLFLT *, PLPointer),
-	  PLPointer pltr_data);
+          PLFLT left, PLFLT right, PLFLT bottom, PLFLT top,
+          PLFLT shade_min, PLFLT shade_max,
+          PLINT sh_cmap, PLFLT sh_color, PLINT sh_width,
+          PLINT min_color, PLINT min_width,
+          PLINT max_color, PLINT max_width,
+          void ( *fill) (PLINT, PLFLT *, PLFLT * ), PLINT rectangular,
+          void ( *pltr) (PLFLT, PLFLT, PLFLT *, PLFLT *, PLPointer),
+          PLPointer pltr_data);
 
-void 
+void
 plshade1(PLFLT *a, PLINT nx, PLINT ny, PLINT ( *defined) (PLFLT, PLFLT),
-	 PLFLT left, PLFLT right, PLFLT bottom, PLFLT top,
-	 PLFLT shade_min, PLFLT shade_max,
-	 PLINT sh_cmap, PLFLT sh_color, PLINT sh_width,
-	 PLINT min_color, PLINT min_width,
-	 PLINT max_color, PLINT max_width,
-	 void ( *fill) (PLINT, PLFLT *, PLFLT * ), PLINT rectangular,
-	 void ( *pltr) (PLFLT, PLFLT, PLFLT *, PLFLT *, PLPointer),
-	 PLPointer pltr_data);
+         PLFLT left, PLFLT right, PLFLT bottom, PLFLT top,
+         PLFLT shade_min, PLFLT shade_max,
+         PLINT sh_cmap, PLFLT sh_color, PLINT sh_width,
+         PLINT min_color, PLINT min_width,
+         PLINT max_color, PLINT max_width,
+         void ( *fill) (PLINT, PLFLT *, PLFLT * ), PLINT rectangular,
+         void ( *pltr) (PLFLT, PLFLT, PLFLT *, PLFLT *, PLPointer),
+         PLPointer pltr_data);
 
-void 
+void
 plfshade(PLFLT ( *f2eval) (PLINT, PLINT, PLPointer),
-	 PLPointer f2eval_data,
-	 PLFLT ( *c2eval) (PLINT, PLINT, PLPointer),
-	 PLPointer c2eval_data,
-	 PLINT nx, PLINT ny, 
-	 PLFLT left, PLFLT right, PLFLT bottom, PLFLT top,
-	 PLFLT shade_min, PLFLT shade_max,
-	 PLINT sh_cmap, PLFLT sh_color, PLINT sh_width,
-	 PLINT min_color, PLINT min_width,
-	 PLINT max_color, PLINT max_width,
-	 void ( *fill) (PLINT, PLFLT *, PLFLT * ), PLINT rectangular,
-	 void ( *pltr) (PLFLT, PLFLT, PLFLT *, PLFLT *, PLPointer),
-	 PLPointer pltr_data);
+         PLPointer f2eval_data,
+         PLFLT ( *c2eval) (PLINT, PLINT, PLPointer),
+         PLPointer c2eval_data,
+         PLINT nx, PLINT ny,
+         PLFLT left, PLFLT right, PLFLT bottom, PLFLT top,
+         PLFLT shade_min, PLFLT shade_max,
+         PLINT sh_cmap, PLFLT sh_color, PLINT sh_width,
+         PLINT min_color, PLINT min_width,
+         PLINT max_color, PLINT max_width,
+         void ( *fill) (PLINT, PLFLT *, PLFLT * ), PLINT rectangular,
+         void ( *pltr) (PLFLT, PLFLT, PLFLT *, PLFLT *, PLPointer),
+         PLPointer pltr_data);
 
 /* Set up lengths of major tick marks. */
 
@@ -1448,7 +1463,7 @@ c_plsori(PLINT ori);
 
 void
 c_plspage(PLFLT xp, PLFLT yp, PLINT xleng, PLINT yleng,
-	  PLINT xoff, PLINT yoff);
+          PLINT xoff, PLINT yoff);
 
 /* Set the pause (on end-of-page) status */
 
@@ -1484,12 +1499,12 @@ c_plstart(const char *devname, PLINT nx, PLINT ny);
 
 void
 c_plstripc(PLINT *id, char *xspec, char *yspec,
-	PLFLT xmin, PLFLT xmax, PLFLT xjump, PLFLT ymin, PLFLT ymax,
-	PLFLT xlpos, PLFLT ylpos,
-	PLINT y_ascl, PLINT acc,
-	PLINT colbox, PLINT collab,
-	PLINT colline[], PLINT styline[], char *legline[],
-	char *labx, char *laby, char *labtop);
+        PLFLT xmin, PLFLT xmax, PLFLT xjump, PLFLT ymin, PLFLT ymax,
+        PLFLT xlpos, PLFLT ylpos,
+        PLINT y_ascl, PLINT acc,
+        PLINT colbox, PLINT collab,
+        PLINT colline[], PLINT styline[], char *legline[],
+        char *labx, char *laby, char *labtop);
 
 /* Add a point to a stripchart.  */
 
@@ -1504,9 +1519,9 @@ c_plstripd(PLINT id);
   /* plots a 2d image (or a matrix too large for plshade() ) */
 
 void
-plimage( PLFLT **data, PLINT nx, PLINT ny, 
-	 PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax, PLFLT zmin, PLFLT zmax,
-	 PLFLT Dxmin, PLFLT Dxmax, PLFLT Dymin, PLFLT Dymax);
+plimage( PLFLT **data, PLINT nx, PLINT ny,
+         PLFLT xmin, PLFLT xmax, PLFLT ymin, PLFLT ymax, PLFLT zmin, PLFLT zmax,
+         PLFLT Dxmin, PLFLT Dxmax, PLFLT Dymin, PLFLT Dymax);
 
 /* Set up a new line style */
 
@@ -1575,8 +1590,8 @@ c_plvsta(void);
 
 void
 c_plw3d(PLFLT basex, PLFLT basey, PLFLT height, PLFLT xmin0,
-	PLFLT xmax0, PLFLT ymin0, PLFLT ymax0, PLFLT zmin0,
-	PLFLT zmax0, PLFLT alt, PLFLT az);
+        PLFLT xmax0, PLFLT ymin0, PLFLT ymax0, PLFLT zmin0,
+        PLFLT zmax0, PLFLT alt, PLFLT az);
 
 /* Set pen width. */
 
@@ -1616,7 +1631,7 @@ plsKeyEH(void ( *KeyEH) (PLGraphicsIn *, void *, int * ), void *KeyEH_data);
 
 void
 plsButtonEH(void ( *ButtonEH) (PLGraphicsIn *, void *, int * ),
-	    void *ButtonEH_data);
+            void *ButtonEH_data);
 
 /* Sets an optional user bop handler */
 
@@ -1638,7 +1653,7 @@ plsError(PLINT *errcode, char *errmsg);
 void
 plsexit(int ( *handler) (char * ));
 
-	/* Transformation routines */
+        /* Transformation routines */
 
 /* Identity transformation. */
 
@@ -1675,10 +1690,10 @@ pltr2f(PLFLT x, PLFLT y, PLFLT *tx, PLFLT *ty, void *pltr_data);
 
 /* Example linear transformation function for contour plotter. */
 
-void 
+void
 xform(PLFLT x, PLFLT y, PLFLT * tx, PLFLT * ty);
 
-	/* Function evaluators */
+        /* Function evaluators */
 
 /* Does a lookup from a 2d function array.  Array is of type (PLFLT ** ), */
 /* and is column dominant (normal C ordering). */
@@ -1698,7 +1713,7 @@ plf2eval(PLINT ix, PLINT iy, PLPointer plf2eval_data);
 PLFLT
 plf2evalr(PLINT ix, PLINT iy, PLPointer plf2eval_data);
 
-	/* Command line parsing utilities */
+        /* Command line parsing utilities */
 
 /* Clear internal option table info structure. */
 
@@ -1740,7 +1755,7 @@ plParseOpts(int *p_argc, char **argv, PLINT mode);
 void
 plOptUsage(void);
 
-	/* Miscellaneous */
+        /* Miscellaneous */
 
 /* Set the output file pointer */
 
@@ -1764,7 +1779,7 @@ pl_cmd(PLINT op, void *ptr);
 
 /* Return full pathname for given file if executable */
 
-int 
+int
 plFindName(char *p);
 
 /* Looks for the specified executable file according to usual search path. */
@@ -1788,7 +1803,7 @@ plGetInt(char *s);
 PLFLT
 plGetFlt(char *s);
 
-	/* Nice way to allocate space for a vectored 2d grid */
+        /* Nice way to allocate space for a vectored 2d grid */
 
 /* Allocates a block of memory for use as a 2-d grid of PLFLT's.  */
 
