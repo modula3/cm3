@@ -123,7 +123,7 @@ readonly m3back = "@" & BIN_USE & "/cm3cg"
 %readonly m3back = "@" & "/proj/cmass/src.2/m3-sys/m3cc/" & TARGET & "/cm3cg"
 
 proc m3_backend (source, object, optimize, debug) is
-  local args = [ "-quiet", source, "-o", object ]
+  local args = [ "-quiet", source, "-o", object, "-fPIC", "-gstabs" ]
   if optimize  args += "-O"  end
   if debug     args += "-g"  end
   if M3_PROFILING args += "-p" end
@@ -326,5 +326,5 @@ end
 %
 
 GNU_CC     = "gcc"
-GNU_CFLAGS = "-O"
+GNU_CFLAGS = "-g"
 GNU_MAKE   = "make"
