@@ -52,6 +52,11 @@ PROCEDURE MexicanHat (t: R.T; ): R.T =
     END;
   END MexicanHat;
 
+PROCEDURE GaussianDiff (t: R.T; ): R.T =
+  BEGIN
+    RETURN t * RT.Exp(-t * t / R.Two);
+  END GaussianDiff;
+
 PROCEDURE DiracTransform () =
   CONST
     width     = 201;
@@ -62,9 +67,10 @@ PROCEDURE DiracTransform () =
     ymin = 0.0D0;
     ymax = FLOAT(numScales, R.T);
   VAR
-    y := CWT.Analysis(
-           S.One, MexicanHat, width,
-           V.GeomSeq(numScales, 30.0D0, RT.Pow(R.Half, R.One / 20.0D0))^);
+    y := CWT.Analyse(
+           S.One, GaussianDiff, width,
+           V.GeomSeq(numScales, 30.0D0, RT.Pow(R.Half, R.One / 20.0D0))^,
+	   NEW(CWT.AnalysisFourier));
     m := NEW(M.T, numScales, width);
   BEGIN
     PL.Init();

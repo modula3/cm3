@@ -2,67 +2,117 @@ GENERIC MODULE ContinuousWaveletTransform(R, V, VS, RT, RV, S, C, CV, FFT);
 
 
 (* One can improve performance a lot here: Eliminate the monolithic Fourier
-   transforms by using overlapping blocks for convolution.  Store FFTW
-   plans to accelerate repeated FFT application. *)
+   transforms by using overlapping blocks for convolution.  Maybe FFTW
+   supports that in a future version.  Store FFTW plans to accelerate
+   repeated FFT application. *)
 
-REVEAL
-  AnalysisHandle = BRANDED REF RECORD
-                                 xFT    : CV.T;
-                                 size   : CARDINAL;
-                                 wavelet: Wavelet;
-                                 first  : INTEGER;
-                                 width  : Width;
-                               END;
 
-PROCEDURE Analysis (         x      : S.T;
-                             wavelet: Wavelet;
-                             width  : Width;
-                    READONLY scales : RV.T;    ): T =
-  VAR
-    y := NEW(T, NUMBER(scales));
-    h := AnalysisInit(x, wavelet, width);
+PROCEDURE Analyse (         x       : S.T;
+                            wavelet : Wavelet;
+                            width   : Width;
+                   READONLY scales  : RV.T;
+                            analysis: Analysis; ): T =
+  VAR y := NEW(T, NUMBER(scales));
   BEGIN
+    IF analysis = NIL THEN analysis := NEW(AnalysisFourier); END;
+    EVAL analysis.init(x, wavelet, width);
     FOR i := FIRST(scales) TO LAST(scales) DO
-      y[i] := AnalysisScale(h, scales[i]);
+      y[i] := analysis.scale(scales[i]);
     END;
     RETURN y;
-  END Analysis;
+  END Analyse;
 
 
-PROCEDURE AnalysisInit (x: S.T; wavelet: Wavelet; width: Width; ):
-  AnalysisHandle =
+REVEAL
+  AnalysisFourier = Analysis BRANDED OBJECT
+                      xFT    : CV.T;
+                      first  : INTEGER;
+                      number : CARDINAL;
+                      wavelet: Wavelet;
+                      width  : Width;
+                    OVERRIDES
+                      init  := AnalysisFourierInit;
+                      scale := AnalysisFourierScale;
+                    END;
+
+PROCEDURE AnalysisFourierInit (h      : AnalysisFourier;
+                               x      : S.T;
+                               wavelet: Wavelet;
+                               width  : Width;           ): Analysis =
   VAR
-    xSize  := x.getNumber();
-    size   := xSize + width - 1;
-    padded := NEW(V.T, size);
+    xNumber := x.getNumber();
+    number  := xNumber + width - 1;
+    padded  := NEW(V.T, number);
   BEGIN
     <* ASSERT width MOD 2 = 1,
-                "'width' must be odd in order to assure that the resulting signal can be represented as Signal.T" *>
-    SUBARRAY(padded^, 0, xSize) := x.getData()^;
-    VS.Clear(SUBARRAY(padded^, xSize, size - xSize));
-    RETURN NEW(AnalysisHandle, xFT := FFT.DFTR2C1D(padded^), size := size,
-               wavelet := wavelet,
-               first := x.getFirst() - (width - 1) DIV 2, width := width);
-  END AnalysisInit;
+                "'width' must be odd in order to assure "
+                  & "that the resulting signal can be represented as Signal.T" *>
+    SUBARRAY(padded^, 0, xNumber) := x.getData()^;
+    VS.Clear(SUBARRAY(padded^, xNumber, number - xNumber));
+    h.xFT := FFT.DFTR2C1D(padded^);
+    h.number := number;
+    h.wavelet := wavelet;
+    h.first := x.getFirst() - (width - 1) DIV 2;
+    h.width := width;
+    RETURN h;
+  END AnalysisFourierInit;
 
-PROCEDURE AnalysisScale (h: AnalysisHandle; scale: R.T; ): S.T =
+PROCEDURE DiscretizeWavelet (    wavelet: Wavelet;
+                                 scale  : R.T;
+                             VAR samples: V.TBody; ) =
   VAR
-    wav    := NEW(V.T, h.size);
-    center := (h.width - 1) DIV 2;
+    center := LAST(samples) DIV 2;
     amp    := R.One / RT.SqRt(scale);
   BEGIN
-    FOR i := 0 TO h.width - 1 DO
-      wav[i] := amp * h.wavelet(R.FromInteger(i - center) / scale);
+    FOR i := FIRST(samples) TO LAST(samples) DO
+      samples[i] := amp * wavelet(R.FromInteger(i - center) / scale);
     END;
+  END DiscretizeWavelet;
+
+PROCEDURE AnalysisFourierScale (h: AnalysisFourier; scale: R.T; ): S.T =
+  VAR wav := NEW(V.T, h.number);
+  BEGIN
+    DiscretizeWavelet(h.wavelet, scale, SUBARRAY(wav^, 0, h.width));
     VS.Clear(SUBARRAY(wav^, h.width, NUMBER(wav^) - h.width));
     WITH wavFT = FFT.DFTR2C1D(wav^)^ DO
       FOR i := FIRST(wavFT) TO LAST(wavFT) DO
         wavFT[i] := C.Mul(wavFT[i], h.xFT[i]);
       END;
       RETURN
-        NEW(S.T).fromVector(FFT.DFTC2R1D(wavFT, h.size MOD 2), h.first);
+        NEW(S.T).fromVector(FFT.DFTC2R1D(wavFT, h.number MOD 2), h.first);
     END;
-  END AnalysisScale;
+  END AnalysisFourierScale;
+
+
+REVEAL
+  AnalysisNaive = Analysis BRANDED OBJECT
+                    x      : S.T;
+                    wavelet: Wavelet;
+                    width  : Width;
+                  OVERRIDES
+                    init  := AnalysisNaiveInit;
+                    scale := AnalysisNaiveScale;
+                  END;
+
+PROCEDURE AnalysisNaiveInit (h      : AnalysisNaive;
+                             x      : S.T;
+                             wavelet: Wavelet;
+                             width  : Width;         ): Analysis =
+  BEGIN
+    h.x := x;
+    h.wavelet := wavelet;
+    h.width := width;
+    RETURN h;
+  END AnalysisNaiveInit;
+
+PROCEDURE AnalysisNaiveScale (h: AnalysisNaive; scale: R.T; ): S.T =
+  VAR wav := NEW(V.T, h.width);
+  BEGIN
+    DiscretizeWavelet(h.wavelet, scale, wav^);
+    RETURN h.x.convolve(NEW(S.T).fromVector(wav, (h.width - 1) DIV 2));
+  END AnalysisNaiveScale;
+
+
 
 
 
