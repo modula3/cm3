@@ -31,8 +31,9 @@ PROCEDURE Do (READONLY w      : CWT.TBody;
         ELSE
           dif := R.Half * (scales[i + 1] - scales[i - 1]);
         END;
-        PutScale(synthesis, w[i], scales[i],
-                 dif / (scales[i] * RT.SqRt(scales[i])));
+        WITH sc = scales[i] DO
+          PutScale(synthesis, w[i], sc, dif / (sc * sc * RT.SqRt(sc)));
+        END;
       END;
     END;
     RETURN Finish(synthesis);
