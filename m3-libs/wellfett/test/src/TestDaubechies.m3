@@ -27,8 +27,7 @@ PROCEDURE Test()=
     x     : S.T;
     v     : V.T;
     trans : M.T;
-    specrad0,
-    specrad1 : R.T;
+    specrad : R.T;
     eig   : REF CRt.RootArray;
   <*FATAL Thread.Alerted, Wr.Failure, FloatMode.Trap, NADefinitions.Error*>
   BEGIN
@@ -51,16 +50,12 @@ PROCEDURE Test()=
         RF.Fmt(Eigen.PowerMethod(trans,v)),
         VF.Fmt(v)}));
 
-    FOR n:=1 TO 15 DO
+    FOR n:=1 TO 45 DO
       x := Daub.FilterPureAbsSqr(n);
       trans := Refn.TransitionMatrix(x);
-      eig := RootAppr.RealNewtonMaehli(
-               CharPoly.CharPolynomial(trans)
-             );
-      specrad0 := CVT.NormInf(eig);
-      specrad1 := Eigen.SquareMethod(trans,v);
-      IO.Put(Fmt.FN("%s: spectral radius %s ~ %s\n",
-        ARRAY OF TEXT{Fmt.Int(n),RF.Fmt(specrad0),RF.Fmt(specrad1)}));
+      specrad := Eigen.SquareMethod(trans,v,tol:=1.0D-6);
+      IO.Put(Fmt.FN("%s: spectral radius %s\n",
+        ARRAY OF TEXT{Fmt.Int(n),RF.Fmt(specrad)}));
     END;
   END Test;
 
