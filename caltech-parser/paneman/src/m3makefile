@@ -35,6 +35,9 @@ module("MiniPane")
 interface("ListPane")
 Starter("ListPane", "ListPane")
 
+template("queue")
+generic_module("Queue")
+
 module("Pane")
 module("PaneFrame")
 Liste("Pane", "Pane")
