@@ -1,4 +1,5 @@
-GENERIC MODULE RefinableSmooth(R, C, CT, V, VS, VT, M, S, Refn, BSpl);
+GENERIC MODULE RefinableSmooth(
+R, C, CT, V, VS, VT, CVT, M, Eigen, S, Refn, BSpl);
 
 IMPORT NADefinitions AS NA;
 IMPORT IntBiList;
@@ -138,18 +139,23 @@ PROCEDURE SquareSmoothEstimate (x: S.T): R.T =
     RETURN ComputeSSE(hsums^);
   END SquareSmoothEstimate;
 
-PROCEDURE SpecRad (x: S.T): R.T RAISES {NA.Error} =
+PROCEDURE Eigenvalues (mask: S.T): Eigen.EV RAISES {NA.Error} =
+  BEGIN
+    RETURN Eigen.EigenValues(Refn.TransitionMatrix(mask));
+  END Eigenvalues;
+
+PROCEDURE SpecRad (mask: S.T): R.T RAISES {NA.Error} =
   BEGIN
     (*
     IO.Put("TransitionSpecRad "&Fmt.Int(ncall)&"\n");
     INC(ncall);
     *)
-    RETURN Refn.TransitionSpecRad(x);
+    RETURN CVT.NormInf(Eigenvalues(mask).eigenvalues);
   END SpecRad;
 
 PROCEDURE BSpline (x: S.T): R.T RAISES {NA.Error} =
   BEGIN
-    RETURN EigenDistBSpline(Refn.TransitionEV(x).eigenvalues);
+    RETURN EigenDistBSpline(Eigenvalues(x).eigenvalues);
   END BSpline;
 
 PROCEDURE Binomial (x: S.T): R.T =
