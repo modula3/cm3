@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-std.sh,v 1.5 2001-03-01 22:57:06 wagner Exp $
+# $Id: do-cm3-std.sh,v 1.6 2003-07-25 10:03:50 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -38,7 +38,7 @@ ${GEN_CMDS}"
 show_usage $@
 
 type m3bundle >/dev/null 2>/dev/null || \
-  "$ROOT/scripts/do-pkg.sh" buildship m3bundle
+  . "$ROOT/scripts/do-pkg.sh" buildship m3bundle
 
 OPTIONS=`extract_options $@`
 ACTION=`map_action $@`
