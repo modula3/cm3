@@ -19,133 +19,133 @@ BEGIN
 END New;
 (*--------------------*)
 PROCEDURE Copy( 
-               p:T):T=
+               x:T):T=
 VAR
-  n:=NUMBER(p^);
-  tmp:=NEW(T,n);
+  n:=NUMBER(x^);
+  z:=NEW(T,n);
 BEGIN
-  tmp^:=p^;
-  RETURN tmp;
+  z^:=x^;
+  RETURN z;
 END Copy;
 
 (*--------------------*)
 (*
 PROCEDURE Zero( 
-               p:T)=
+               x:T)=
 VAR
-  n:=NUMBER(p^); n1:=0; nn:=n-1;
+  n:=NUMBER(x^); n1:=0; nn:=n-1;
 BEGIN
   FOR i:=n1 TO nn DO
-    p[i]:=R.Zero;
+    x[i]:=R.Zero;
   END;
 END Zero;
 (*--------------------*)
 PROCEDURE One( 
-               p:T)=
+               x:T)=
 VAR
-  n:=NUMBER(p^); n0:=0; nn:=n-1;
+  n:=NUMBER(x^); n0:=0; nn:=n-1;
 BEGIN
-  p[0]:=R.One;
+  x[0]:=R.One;
   FOR i:=n0+1 TO nn DO
-    p[i]:=R.Zero;
+    x[i]:=R.Zero;
   END;
 END One;
 *)
 (*--------------------*)
 <*OBSOLETE*>
 PROCEDURE Eval( 
-                p:T;
-                x:R.T
+                x:T;
+                xi:R.T
                 ):R.T=
 VAR
-  n:=NUMBER(p^); nn:=n-1;
-  tmp:=p[nn];
+  n:=NUMBER(x^); nn:=n-1;
+  z:=x[nn];
 BEGIN
   FOR i:=nn-1 TO 1 BY -1 DO
-    tmp:=p[i]+x*tmp;
+    z:=x[i]+xi*z;
   END;
-  tmp:=p[0]+tmp;  (*is this correct?*)
-  RETURN tmp;
+  z:=x[0]+z;  (*is this correct?*)
+  RETURN z;
 END Eval;
 
 (*-----------------*)
 PROCEDURE Add( 
-               p1,p2:T):T=
+               x,y:T):T=
 VAR
-  p1n:=NUMBER(p1^); p1nn:=p1n-1;
-  p2n:=NUMBER(p2^); p2nn:=p2n-1;
+  p1n:=NUMBER(x^); p1nn:=p1n-1;
+  p2n:=NUMBER(y^); p2nn:=p2n-1;
   maxn:=MAX(p1n,p2n);
-  p:=NEW(T,maxn);
+  z:=NEW(T,maxn);
 BEGIN
   IF p1nn>=p2nn THEN
-    FOR i:=0 TO p2nn      DO p[i]:=p1[i]+p2[i]; END;
-    FOR i:=p2nn+1 TO p1nn DO p[i]:=p1[i];       END;
+    FOR i:=0 TO p2nn      DO z[i]:=x[i]+y[i]; END;
+    FOR i:=p2nn+1 TO p1nn DO z[i]:=x[i];       END;
   ELSE
-    FOR i:=0 TO p1nn      DO p[i]:=p1[i]+p2[i]; END;
-    FOR i:=p1nn+1 TO p2nn DO p[i]:=      p2[i]; END;
+    FOR i:=0 TO p1nn      DO z[i]:=x[i]+y[i]; END;
+    FOR i:=p1nn+1 TO p2nn DO z[i]:=      y[i]; END;
   END;
-  RETURN p;
+  RETURN z;
 END Add;
 (*-----------------*)
 PROCEDURE Sub( 
-               p1,p2:T):T=
+               x,y:T):T=
 VAR
-  p1n:=NUMBER(p1^); p1nn:=p1n-1;
-  p2n:=NUMBER(p2^); p2nn:=p2n-1;
+  p1n:=NUMBER(x^); p1nn:=p1n-1;
+  p2n:=NUMBER(y^); p2nn:=p2n-1;
   maxn:=MAX(p1n,p2n);
-  p:=NEW(T,maxn);
+  z:=NEW(T,maxn);
 BEGIN
   IF p1nn>=p2nn THEN
-    FOR i:=0 TO p2nn      DO p[i]:=p1[i]-p2[i]; END;
-    FOR i:=p2nn+1 TO p1nn DO p[i]:=p1[i];       END;
+    FOR i:=0 TO p2nn      DO z[i]:=x[i]-y[i]; END;
+    FOR i:=p2nn+1 TO p1nn DO z[i]:=x[i];       END;
   ELSE
-    FOR i:=0 TO p1nn      DO p[i]:=p1[i]-p2[i]; END;
-    FOR i:=p1nn+1 TO p2nn DO p[i]:=     -p2[i]; END;
+    FOR i:=0 TO p1nn      DO z[i]:=x[i]-y[i]; END;
+    FOR i:=p1nn+1 TO p2nn DO z[i]:=     -y[i]; END;
   END;
-  RETURN p;
+  RETURN z;
 END Sub;
 
 (*---------------------*)
-PROCEDURE Equal(p1,p2:T):BOOLEAN =
+PROCEDURE Equal(x,y:T):BOOLEAN =
 VAR
-  p1nn:=LAST(p1^);
-  p2nn:=LAST(p2^);
+  p1nn:=LAST(x^);
+  p2nn:=LAST(y^);
 BEGIN
   IF p1nn>=p2nn THEN
-    FOR i:=0 TO p2nn      DO IF NOT p1[i]#p2[i]  THEN RETURN FALSE END END;
-    FOR i:=p2nn+1 TO p1nn DO IF NOT p1[i]#R.Zero THEN RETURN FALSE END END;
+    FOR i:=0 TO p2nn      DO IF NOT x[i]#y[i]  THEN RETURN FALSE END END;
+    FOR i:=p2nn+1 TO p1nn DO IF NOT x[i]#R.Zero THEN RETURN FALSE END END;
   ELSE
-    FOR i:=0 TO p1nn      DO IF NOT p1[i]#p2[i]  THEN RETURN FALSE END END;
-    FOR i:=p1nn+1 TO p2nn DO IF NOT R.Zero#p2[i] THEN RETURN FALSE END END;
+    FOR i:=0 TO p1nn      DO IF NOT x[i]#y[i]  THEN RETURN FALSE END END;
+    FOR i:=p1nn+1 TO p2nn DO IF NOT R.Zero#y[i] THEN RETURN FALSE END END;
   END;
   RETURN TRUE;
 END Equal;
 
 (*---------------------*)
 PROCEDURE Mul( 
-               p1,p2:T):T=
+               x,y:T):T=
 VAR
-  p1n:=NUMBER(p1^); p2n:=NUMBER(p2^);
+  p1n:=NUMBER(x^); p2n:=NUMBER(y^);
   pn:=p1n+p2n-1; p0:=0; pnn:=pn-1;
-  p:=NEW(T,pn);
+  z:=NEW(T,pn);
 BEGIN
-  FOR i:=p0 TO pnn DO p[i]:=R.Zero; END;
+  FOR i:=p0 TO pnn DO z[i]:=R.Zero; END;
 
   FOR i:=0 TO p1n-1 DO
     FOR j:=0 TO p2n-1 DO
-      p[i+j]:=p[i+j]+p1[i]*p2[j];
+      z[i+j]:=z[i+j]+x[i]*y[j];
     END;
   END;
-  RETURN p;
+  RETURN z;
 END Mul;
 
 (*---------------------*)
 PROCEDURE Div( 
-               p1,p2:T):T RAISES {Error}=
+               x,y:T):T RAISES {Error}=
 VAR
   r,q:T;
 BEGIN
-  q:=DivMod(p1,p2,r);
+  q:=DivMod(x,y,r);
   IF NOT Equal(r,Zero) THEN
     RAISE Error(Err.indivisible);
   END;
@@ -154,19 +154,19 @@ END Div;
 
 (*---------------------*)
 PROCEDURE DivMod( 
-               p1,p2:T;
+               x,y:T;
            VAR r:T):T=
 <*UNUSED*>
 CONST ftn = Module & "DivMod";
 VAR
-  p1n:=NUMBER(p1^);                  p1nn:=LAST(p1^); 
-  p2n:=NUMBER(p2^); p20:=FIRST(p2^); p2nn:=LAST(p2^);
+  p1n:=NUMBER(x^);                  p1nn:=LAST(x^); 
+  p2n:=NUMBER(y^); p20:=FIRST(y^); p2nn:=LAST(y^);
   q:T;
   qtmp,p2max:R.T;
   qn,q0,qnn,qi,ri2:CARDINAL;
 BEGIN
   (*---Copy numerator into r---*)
-  r:=NEW(T,p1n); r^:=p1^;
+  r:=NEW(T,p1n); r^:=x^;
 
   (*---check for quick exit---*)
   IF p1nn<p2nn THEN
@@ -180,7 +180,7 @@ BEGIN
   q:=NEW(T,qn); q0:=FIRST(q^); qnn:=LAST(q^);
 
   (*---find the dominant denominator term---*)
-  p2max:=p2[p2nn];
+  p2max:=y[p2nn];
 
 
   (*---compute---*)
@@ -192,7 +192,7 @@ BEGIN
     ri2:=ri+1;
     FOR p2i:=p2nn TO p20 BY -1 DO
       DEC(ri2);
-      r[ri2]:=r[ri2]-qtmp*p2[p2i];
+      r[ri2]:=r[ri2]-qtmp*y[p2i];
     END;
   END;
   RETURN q;
@@ -201,49 +201,49 @@ END DivMod;
 (*-----------------------*)
 (*
 PROCEDURE deflate( 
-                   p:T;
+                   x:T;
                    c:R.T;
                    VAR rem:R.T)=
 VAR
-  pnn:=LAST(p^);
+  pnn:=LAST(x^);
   b,psave:R.T;
 BEGIN
-  b:=p[pnn]; psave:=p[pnn-1]; p[pnn-1]:=b;
+  b:=x[pnn]; psave:=x[pnn-1]; x[pnn-1]:=b;
   FOR i:=pnn-2 TO 1 BY -1 DO
     b:=psave+c*b;
-    psave:=p[i]; p[i]:=b;
+    psave:=x[i]; x[i]:=b;
   END;
-  rem:=p[0]+c*p[1];
+  rem:=x[0]+c*x[1];
 END deflate;
 *)
 
 (*---------------------*)
-PROCEDURE Derive(p:T;           (*differentiate polynomial*)
+PROCEDURE Derive(x:T;           (*differentiate polynomial*)
                  ):T =
 VAR
-  q:=NEW(T,LAST(p^));
+  q:=NEW(T,LAST(x^));
 BEGIN
   FOR n:=0 TO LAST(q^) DO
-    q[n]:=p[n+1]*FLOAT(n+1,R.T);
+    q[n]:=x[n+1]*FLOAT(n+1,R.T);
   END;
   RETURN q;
 END Derive;
 
 (*---------------------*)
 PROCEDURE EvalDerivate( 
-                 p:T;      (*Evaluate the poly with these coefs*)
-                 x:R.T;    (*for this argument*)
-             VAR pd:ARRAY OF R.T;  (*returning p(x), p'(x)...*)
+                 x:T;      (*Evaluate the poly with these coefs*)
+                 xi:R.T;    (*for this argument*)
+             VAR pd:ARRAY OF R.T;  (*returning x(xi), x'(xi)...*)
                  nd:CARDINAL  (*for up to nd EvalDerivateatives*)
                  ) RAISES {Error}=
-(*Given a poly with coefs p, find the value at x as pd[0],
+(*Given a poly with coefs x, find the value at xi as pd[0],
 and nd more EvalDerivateatives as pd[1]..pd[nd].
 
 raises:
    Err.bad_size if nd>NUMBER(pd)+1 
 *)
 VAR
-  p0:=FIRST(p^); pnn:=LAST(p^);
+  p0:=FIRST(x^); pnn:=LAST(x^);
   pdnn:=nd; (*may be using part of pd vector*)
   fact,fac:R.T;
 BEGIN
@@ -251,16 +251,16 @@ BEGIN
     RAISE Error(Err.bad_size);
   END;
 
-  (*---initialize f(x) and clear f'(x), f"(x)...---*)
-  pd[0]:=p[pnn];
+  (*---initialize f(xi) and clear f'(xi), f"(xi)...---*)
+  pd[0]:=x[pnn];
   FOR i:=1 TO pdnn DO pd[i]:=R.Zero; END;
   
   (*---collect the raw values---*)
   FOR i:=pnn-1 TO p0 BY -1 DO
     FOR j:=pdnn TO 1 BY -1 DO
-      pd[j]:=pd[j-1]+x*pd[j];
+      pd[j]:=pd[j-1]+xi*pd[j];
     END;
-    pd[0]:=p[i]+x*pd[0];
+    pd[0]:=x[i]+xi*pd[0];
   END;
 
   (*---fix the factorials---*) 

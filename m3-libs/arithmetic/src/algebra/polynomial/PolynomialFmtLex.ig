@@ -13,7 +13,7 @@ IMPORT Wr,Thread,Fmt AS F;
 
 <*UNUSED*>
 PROCEDURE Lex(str:TEXT):T;
-PROCEDURE Fmt(p:T;
+PROCEDURE Fmt(x:T;
               style:F.Style:=F.Style.Fix;
               prec:CARDINAL:=1):TEXT RAISES {Thread.Alerted, Wr.Failure};
 

@@ -11,7 +11,7 @@ FROM xUtils IMPORT Error;
 (*==========================*)
 
 TYPE
-  (*interpretation is: a[0] + a[1]*x + a[2]* x^2...a[n]*x^n *)
+  (*interpretation is: a[0] + a[1]*xi + a[2]* xi^2...a[n]*xi^n *)
   (*text form is: T4{a0,a1,a2,a3} *)
 
   TBody = ARRAY OF R.T;
@@ -30,33 +30,33 @@ VAR
   (*CONST*) One  : T;
 
 PROCEDURE New(n:CARDINAL):T;  (*make a poly for a0..an*)
-PROCEDURE Copy(p:T):T;        (*copy p to a New poly*)
+PROCEDURE Copy(x:T):T;        (*copy x to a New poly*)
 (*
-PROCEDURE Zero(p:T);          (*set p to zeros*)
-PROCEDURE One (p:T);          (*set p to 1*)
+PROCEDURE Zero(x:T);          (*set x to zeros*)
+PROCEDURE One (x:T);          (*set x to 1*)
 *)
 
-PROCEDURE Eval(p:T;           (*eval this polynomial*)
-               x:R.T          (*at this point*)
+PROCEDURE Eval(x:T;           (*eval this polynomial*)
+               xi:R.T          (*at this point*)
                ):R.T;
-PROCEDURE Add(p1,p2:T):T;  (*return p1+p2*)
-PROCEDURE Sub(p1,p2:T):T;  (*return p1-p2*)
-PROCEDURE Equal(p1,p2:T):BOOLEAN;  (*return p1=p2*)
+PROCEDURE Add(x,y:T):T;  (*return x+y*)
+PROCEDURE Sub(x,y:T):T;  (*return x-y*)
+PROCEDURE Equal(x,y:T):BOOLEAN;  (*return x=y*)
 
-PROCEDURE Mul(p1,p2:T):T;  (*return p1*p2*)
-PROCEDURE Div(p1,p2:T):T RAISES {Error};  (*return p1/p2 if possible, will fail for floating point numbers often*)
-PROCEDURE DivMod(p1,p2:T;                 (*compute p1/p2 *) 
+PROCEDURE Mul(x,y:T):T;  (*return x*y*)
+PROCEDURE Div(x,y:T):T RAISES {Error};  (*return x/y if possible, will fail for floating point numbers often*)
+PROCEDURE DivMod(x,y:T;                 (*compute x/y *) 
               VAR r:T):T RAISES {Error};   (*giving quotient with remainder r*)
 (*
-PROCEDURE deflate(p:T;        (*divide this polynomial*)
-                  c:R.T;      (* by (x-c) *)
+PROCEDURE deflate(x:T;        (*divide this polynomial*)
+                  c:R.T;      (* by (xi-c) *)
                   VAR rem:R.T);(*leaving remainder -- possibly 0*)
 *)
-PROCEDURE Derive(p:T;           (*differentiate polynomial*)
+PROCEDURE Derive(x:T;           (*differentiate polynomial*)
                  ):T;
-PROCEDURE EvalDerivate(p:T;          (*Eval this polynomial*)
-                x:R.T;               (*for this argument*)
-           VAR pd:ARRAY OF R.T;      (*returning p(x), p'(x)...*)
+PROCEDURE EvalDerivate(x:T;          (*Eval this polynomial*)
+                xi:R.T;               (*for this argument*)
+           VAR pd:ARRAY OF R.T;      (*returning x(xi), x'(xi)...*)
                nd:CARDINAL           (*for up to nd EvalDerivateatives*)
                 ) RAISES {Error};
           (*raises:
