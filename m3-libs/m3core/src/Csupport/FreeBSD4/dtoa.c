@@ -14,16 +14,3 @@
 #endif
 
 #include "dtoa.h"
-
-/* Apparently libc defines both "__dtoa" and "dtoa".  ???  */
-
-char * __dtoa       
-#ifdef KR_headers
-        (d, mode, ndigits, decpt, sign, rve)
-        double d; int mode, ndigits, *decpt, *sign; char **rve;
-#else 
-        (double d, int mode, int ndigits, int *decpt, int *sign, char **rve)
-#endif
-{
-  return dtoa(d, mode, ndigits, decpt, sign, rve);
-}
