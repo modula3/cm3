@@ -2,7 +2,7 @@
 (* All rights reserved.                                     *)
 (* See the file COPYRIGHT for a full description.           *)
 (*                                                          *)
-(* Portions Copyright 1996, Critical Mass, Inc.             *)
+(* Portions Copyright 1996-2000, Critical Mass, Inc.        *)
 (*                                                          *)
 (* Last modified on Thu Aug 31 14:02:00 PDT 1995 by steveg  *)
 (*      modified on Wed Nov 30 13:44:49 PST 1994 by kalsow  *)
@@ -369,16 +369,16 @@ PROCEDURE IterRaw(iter: Iterator; VAR (*out*) s: Ctypes.char_star): BOOLEAN =
                 RETURN FALSE
               ELSE
                 <* FATAL OSError.E *> BEGIN OSErrorWin32.Raise() END
-              END
-            END
-          END
+              END;
+            END;
+          END;
         END;
-        s := ADR(iter.ffd.cFileName);
-        IF NOT DotOrDotDot(LOOPHOLE(s, UNTRACED REF CHAR)) THEN
-          RETURN TRUE
-        END
-        (* else continue to next entry *)
+      END;
+      s := ADR(iter.ffd.cFileName);
+      IF NOT DotOrDotDot(LOOPHOLE(s, UNTRACED REF CHAR)) THEN
+	RETURN TRUE
       END
+      (* else continue to next entry *)
     END
   END IterRaw;
 

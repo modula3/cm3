@@ -43,6 +43,7 @@ include_dir ("pqueue")
 include_dir ("sqrt")
 include_dir ("config")
 include_dir ("pickle")
+include_dir ("text")
 
 % m3_option ("-times")
 

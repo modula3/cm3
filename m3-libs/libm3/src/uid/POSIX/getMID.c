@@ -33,7 +33,7 @@ main() {
 
     printf("list.ifc_len %d\n", list.ifc_len);
 
-    for (i == 0; i < list.ifc_len / sizeof(struct ifreq); i++) {
+    for (i = 0; i < list.ifc_len / sizeof(struct ifreq); i++) {
       printf("buf[%d] = %s\n", i, buf[i].ifr_name);
       strcpy(req.ifr_name, buf[i].ifr_name);
       if (-1 == ioctl(s, SIOCRPHYSADDR, &req)) {
@@ -46,4 +46,3 @@ main() {
     };
     exit(0);
 }
-	     

@@ -10,9 +10,9 @@
 
 UNSAFE MODULE FSPosix EXPORTS FS;
 
-IMPORT Atom, AtomList, Ctypes, File, FilePosix, M3toC, OSError,
+IMPORT Atom, AtomList, Cerrno, Ctypes, File, FilePosix, M3toC, OSError,
        OSErrorPosix, Pathname, Process, RTOS, Time, Text, TextSeq, Unix,
-       Udir, Uerror, Ustat, Utime, Word;
+       Udir, Uerror, Ustat, Utime, Word, Utypes;
 
 FROM Unix IMPORT O_RDWR, O_CREAT, O_TRUNC, O_EXCL;
 
@@ -112,7 +112,7 @@ PROCEDURE CheckLink(arcs: Pathname.Arcs): Pathname.Arcs
       M3toC.FreeSharedS(path, fname);
       buf[cc] := '\000'; (* terminate the string *)
       RETURN Pathname.Decompose(M3toC.CopyStoT(p_buf))
-    ELSIF Uerror.errno = Uerror.EINVAL THEN (* not a symbolic link *)
+    ELSIF Cerrno.GetErrno() = Uerror.EINVAL THEN (* not a symbolic link *)
       M3toC.FreeSharedS(path, fname);
       RETURN NIL;
     ELSE
@@ -212,7 +212,7 @@ PROCEDURE Rename(pn0, pn1: Pathname.T) RAISES {OSError.E}=
     f1  := M3toC.SharedTtoS(pn1);
   BEGIN
     IF Unix.rename(f0, f1) < 0 THEN
-      err := Uerror.errno;
+      err := Cerrno.GetErrno();
       M3toC.FreeSharedS(pn0, f0);
       M3toC.FreeSharedS(pn1, f1);
       OSErrorPosix.Raise0(err)
@@ -326,19 +326,13 @@ PROCEDURE CStatus(s: Ctypes.char_star; VAR status: File.Status): INTEGER =
   VAR statBuf: Ustat.struct_stat;
   BEGIN
     IF Ustat.stat(s, ADR(statBuf)) < 0 THEN RETURN -1 END;
-    StatBufToStatus(statBuf, status);
-    RETURN 0
-  END CStatus;
-
-<*INLINE*>
-PROCEDURE StatBufToStatus(
-    READONLY statBuf: Ustat.struct_stat; VAR (*OUT*) status: File.Status) =
-  BEGIN
     status.type := FilePosix.FileTypeFromStatbuf(statBuf);
     (* Could make following assignments conditional on type: *)
     status.modificationTime := FLOAT(statBuf.st_mtime, LONGREAL);
-    status.size := statBuf.st_size
-  END StatBufToStatus;
+    status.size := Utypes.asLong(statBuf.st_size);
+    IF status.size < 0 THEN RETURN -1 END;
+    RETURN 0
+  END CStatus;
 
 PROCEDURE SetModificationTime(pn: Pathname.T; READONLY t: Time.T)
   RAISES {OSError.E}=
@@ -353,7 +347,7 @@ PROCEDURE SetModificationTime(pn: Pathname.T; READONLY t: Time.T)
   END SetModificationTime;
 
 PROCEDURE Fail(p: Pathname.T;  f: Ctypes.char_star) RAISES {OSError.E} =
-  VAR err := Uerror.errno;
+  VAR err := Cerrno.GetErrno();
   BEGIN
     M3toC.FreeSharedS(p, f);
     OSErrorPosix.Raise0(err);
