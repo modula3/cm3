@@ -15,12 +15,10 @@ IMPORT Uucontext;
 (*--------------------------------------------------------- thread state ---*)
 
 TYPE
-  (* State = Csetjmp.jmp_buf; *)
   State = Uucontext.ucontext_t;
   (* The machine state is saved in a "State".  This type is really
      opaque to the client, i.e. it does not need to be an array. *)
 
-(* <*EXTERNAL "_setjmp" *> *)
 <*EXTERNAL "getcontext" *>
 PROCEDURE SaveState (VAR s: State): INTEGER;
 (* Capture the currently running thread's state *)
@@ -47,6 +45,10 @@ CONST
 
 <*EXTERNAL*> VAR RTHeapRep_Fault: ADDRESS;  (* => RTHeapRep.Fault *)
 <*EXTERNAL*> VAR RTCSRC_FinishVM: ADDRESS;  (* => RTCollectorSRC.FinishVM *)
+
+(*** hooks for the stack walker ***)
+<*EXTERNAL*> VAR RTProcedureSRC_FromPC: ADDRESS; (* => RTProcedureSRC.FromPC *)
+<*EXTERNAL*> VAR RTHeapDep_Fault: ADDRESS;  (* => RTHeapDep.Fault *)
 
 (*--------------------------------------------------------- thread stacks ---*)
 
