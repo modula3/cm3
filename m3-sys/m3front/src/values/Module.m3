@@ -630,10 +630,10 @@ PROCEDURE SetGlobals (t: T) =
   BEGIN
     IF (t.has_errors) THEN (*don't bother *) RETURN END;
     IF (Host.verbose) OR (Host.load_map AND Scanner.in_main) THEN
-      Out (FALSE, Target.EOL, Target.EOL, " global data allocation for ");
-      Out (FALSE, DataName (t), Target.EOL);
       Out (TRUE, Target.EOL, Target.EOL, " global constants for ");
       Out (TRUE, DataName (t), Target.EOL);
+      Out (FALSE, Target.EOL, Target.EOL, " global data allocation for ");
+      Out (FALSE, DataName (t), Target.EOL);
     END;
     IF (t.globals[FALSE].size = 0) THEN
       EVAL Allocate (M3RT.MI_SIZE, Target.Address.align, FALSE, "*module info*");
@@ -898,12 +898,12 @@ PROCEDURE CompileModule (t: T) =
 
 PROCEDURE DeclareGlobalData (t: T) =
   BEGIN
-    CG.Comment (-1, FALSE, "module global data");
-    t.globals[FALSE].seg := CG.Declare_segment (M3ID.Add (DataName (t)),
-                                                ModuleTypeUID, is_const := FALSE);
     CG.Comment (-1, FALSE, "module global constants");
     t.globals[TRUE].seg := CG.Declare_segment (M3ID.NoID,
                                                 ModuleTypeUID, is_const := TRUE);
+    CG.Comment (-1, FALSE, "module global data");
+    t.globals[FALSE].seg := CG.Declare_segment (M3ID.Add (DataName (t)),
+                                                ModuleTypeUID, is_const := FALSE);
   END DeclareGlobalData;
 
 PROCEDURE GlobalData (is_const: BOOLEAN): CG.Var =
@@ -1072,20 +1072,20 @@ PROCEDURE GenLinkerInfo (t: T;  proc_info, type_map, rev_full, rev_part: INTEGER
     EVAL Allocate (0, Target.Address.align, TRUE, "*TOTAL*");
 
     (* generate a debugging type descriptor for the global data *)
-    CG.Comment (-1, FALSE, "global data type descriptor");
-    CG.Emit_global_record (t.globals[FALSE].size, FALSE);
     CG.Comment (-1, FALSE, "global constant type descriptor");
     CG.Emit_global_record (t.globals[TRUE].size, TRUE);
+    CG.Comment (-1, FALSE, "global data type descriptor");
+    CG.Emit_global_record (t.globals[FALSE].size, FALSE);
 
     (* finish the global data initializations *)
-    CG.Comment (-1, FALSE, "module global data");
-    CG.Bind_segment (t.globals[FALSE].seg, t.globals[FALSE].size, CG.Max_alignment,
-                     CG.Type.Struct, exported := FALSE, init := TRUE,
-                     is_const := FALSE);
     CG.Comment (-1, TRUE, "module global constants");
     CG.Bind_segment (t.globals[TRUE].seg, t.globals[TRUE].size, CG.Max_alignment,
                      CG.Type.Struct, exported := FALSE, init := TRUE,
                      is_const := TRUE);
+    CG.Comment (-1, FALSE, "module global data");
+    CG.Bind_segment (t.globals[FALSE].seg, t.globals[FALSE].size, CG.Max_alignment,
+                     CG.Type.Struct, exported := FALSE, init := TRUE,
+                     is_const := FALSE);
   END GenLinkerInfo;
 
 PROCEDURE AddFPTag (t: T;  VAR x: M3.FPInfo): CARDINAL =
