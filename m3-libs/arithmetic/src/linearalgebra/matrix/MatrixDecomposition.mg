@@ -43,7 +43,7 @@ PROCEDURE BackSubst (A: M.T; x, b: V.T) RAISES {Arith.Error} =
 
 (* Tridiagonal Matrices *)
 (*------------------------*)
-PROCEDURE HouseHolder (A: M.T) RAISES {Arith.Error} = (*nxn*)
+PROCEDURE HouseHolderD (A: M.T) RAISES {Arith.Error} = (*nxn*)
   (*Convert A to tridiagonal form (destroying original A)*)
   VAR
     n                                 := NUMBER(A^);
@@ -95,26 +95,26 @@ PROCEDURE HouseHolder (A: M.T) RAISES {Arith.Error} = (*nxn*)
         END;
       END;
     END;                         (*for row*)
-  END HouseHolder;
+  END HouseHolderD;
 
 (*---------------------*)
-PROCEDURE matrix_to_arrays (A: M.T;  (*nxn tridiagonal*)
-                            VAR a, b, c: V.T (*array form*)
-  ) RAISES {Arith.Error} =
+PROCEDURE SplitTridiagonal (A: M.T; ): Tridiagonals RAISES {Arith.Error} =
 
   VAR
-    n  := NUMBER(A^);
-    n1 := FIRST(A^);
-    nn := LAST(A^);
-    m  := NUMBER(A[0]);
+    n            := NUMBER(A^);
+    n1           := FIRST(A^);
+    nn           := LAST(A^);
+    m            := NUMBER(A[0]);
+    a, b, c: V.T;
+
   BEGIN
     IF n # m THEN
       RAISE Arith.Error(NEW(Arith.ErrorSizeMismatch).init());
     END;
 
-    IF a = NIL THEN a := NEW(V.T, n); END;
-    IF b = NIL THEN b := NEW(V.T, n); END;
-    IF c = NIL THEN c := NEW(V.T, n); END;
+    a := NEW(V.T, n);
+    b := NEW(V.T, n);
+    c := NEW(V.T, n);
 
     a[n1] := R.Zero;
     b[n1] := A[n1, n1];
@@ -128,9 +128,11 @@ PROCEDURE matrix_to_arrays (A: M.T;  (*nxn tridiagonal*)
     b[nn] := A[nn, nn];
     c[nn] := R.Zero;
 
-  END matrix_to_arrays;
+    RETURN Tridiagonals{a, b, c};
+  END SplitTridiagonal;
 (*-----------------------*)
-PROCEDURE SolveTriDiag (a, b, c, r: V.T; VAR u: V.T) RAISES {Arith.Error} =
+PROCEDURE SolveTridiagonal (t: Tridiagonals; r: V.T; VAR u: V.T)
+  RAISES {Arith.Error} =
   (**Given tridiagonal matrix A, with diagonals a,b,c:
   |  b1 c1  0    ...
   |  a2 b2 c2    ...
@@ -145,6 +147,9 @@ PROCEDURE SolveTriDiag (a, b, c, r: V.T; VAR u: V.T) RAISES {Arith.Error} =
     ftn = Module & "SolveTriDiag";
   VAR
     den: R.T;
+    a        := t.a;
+    b        := t.b;
+    c        := t.c;
     n        := NUMBER(r^);
     n1       := FIRST(r^);
     nn       := LAST(r^);
@@ -179,7 +184,7 @@ PROCEDURE SolveTriDiag (a, b, c, r: V.T; VAR u: V.T) RAISES {Arith.Error} =
 
     (*---work backward---*)
     FOR i := nn - 1 TO n1 BY -1 DO u[i] := u[i] - d[i] * u[i + 1]; END;
-  END SolveTriDiag;
+  END SolveTridiagonal;
 
 (* nxn Matrices *)
 (**A general nxn real matrix A is of the form
@@ -226,7 +231,7 @@ END GaussElim;
 *)
 
 (* LU factoring *)
-PROCEDURE LUFactor (A: M.T; VAR index: IndexArray; VAR d: INTEGER)
+PROCEDURE LUFactorD (A: M.T; VAR index: IndexArray; VAR d: INTEGER)
   RAISES {Arith.Error} =
   (**Factor A into Lower/Upper portions
   Destroys A's values.
@@ -323,10 +328,10 @@ PROCEDURE LUFactor (A: M.T; VAR index: IndexArray; VAR d: INTEGER)
 
     (*---last item---*)
     IF A[Al, Al] = R.Zero THEN A[Al, Al] := Tiny; END (* if *);
-  END LUFactor;
+  END LUFactorD;
 
 (*-----------------*)
-PROCEDURE LUBackSubst (A: M.T; B: V.T; READONLY index: IndexArray)
+PROCEDURE LUBackSubstD (A: M.T; B: V.T; READONLY index: IndexArray)
   RAISES {Arith.Error} =
   (**After LUFactor on A, solves A dot X = B.
   X is returned in B.  B's values are destroyed
@@ -372,9 +377,9 @@ PROCEDURE LUBackSubst (A: M.T; B: V.T; READONLY index: IndexArray)
       END (* if *);
       B[i] := sum / A[i, i];
     END (* for *);
-  END LUBackSubst;
+  END LUBackSubstD;
 (*-----------------*)
-PROCEDURE LUInverse (A: M.T; READONLY index: IndexArray): M.T
+PROCEDURE LUInverseD (A: M.T; READONLY index: IndexArray): M.T
   RAISES {Arith.Error} =
   (**
   Inverse of A goes to B
@@ -402,7 +407,7 @@ PROCEDURE LUInverse (A: M.T; READONLY index: IndexArray): M.T
 
     FOR i := 0 TO LAST(B^) DO
       C^ := B[i];
-      LUBackSubst(A, C, index);
+      LUBackSubstD(A, C, index);
       B[i] := C^;
       (*
           FOR j:=0 TO LAST(C^) DO C[j]:=B[i,j]; END;
@@ -411,7 +416,7 @@ PROCEDURE LUInverse (A: M.T; READONLY index: IndexArray): M.T
       *)
     END (* for *);
     RETURN B;
-  END LUInverse;
+  END LUInverseD;
 (*-----------------*)
 PROCEDURE LUDet (A: M.T; d: INTEGER): R.T =
   (*after LUFactor on A and no backsubs, returns determinant "d" is the

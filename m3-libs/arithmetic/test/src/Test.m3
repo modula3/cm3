@@ -61,10 +61,10 @@ BEGIN
     NewLine(); EVAL TestRoot();
     NewLine(); EVAL TestInterpolation();
     NewLine(); EVAL TestVector();
-  *)
     NewLine(); EVAL TestMatrix();
-  (*
+  *)
     NewLine(); EVAL TestSLE();
+  (*
     NewLine(); EVAL TestRandom();
     NewLine(); EVAL TestFFT();
     NewLine(); EVAL TestBigInteger();
