@@ -90,6 +90,7 @@ PROCEDURE MatchPattern (target                               : S.T;
     PL.Exit();
   END MatchPattern;
 
+
 PROCEDURE ComputeRho (READONLY y: ARRAY [0 .. 2] OF R.T): R.T =
   <*FATAL NA.Error*>
   VAR
@@ -225,9 +226,88 @@ PROCEDURE TestInverseDRho (READONLY x0: ARRAY [0 .. 2] OF R.T) =
              ARRAY OF TEXT{VF.Fmt(x), VF.Fmt(ComputeDRho(y^)), VF.Fmt(y)}));
   END TestInverseDRho;
 
-PROCEDURE MaximizeSmoothness (x: V.T) =
+PROCEDURE MatchPatternSmooth (target: S.T;
+                              levels, smooth, vanishing, translates: CARDINAL)
+  RAISES {BSpl.DifferentParity} =
+  <*FATAL NA.Error, Thread.Alerted, Wr.Failure*>
+
+  TYPE
+    Deriv2 = RECORD
+               first : V.T;
+               second: M.T;
+             END;
+
+  PROCEDURE Derivatives (s: S.T): Deriv2 =
+    VAR
+      gduallifted := gdual.superpose(s.upsample(2).convolve(hdual));
+      hprimal     := gduallifted.alternate();
+      hsums       := hprimal.wrapCyclic(3).getData();
+      dsums       := M.Cyclic(hsums, s.getNumber());
+      normals     := M.MulV(normalMat, s.getData());
+    BEGIN
+      RETURN
+        Deriv2{
+          first := V.Add(V.Add(normals, targetCor),
+                         M.MulV(dsums, ComputeDRho(hsums^))), second :=
+          M.Add(normalMat, M.Mul(M.Mul(dsums, ComputeDDRho(hsums^)),
+                                 M.Transpose(dsums)))};
+    END Derivatives;
+
   VAR
-    id := M.NewOne(3);
+    hdual := BSpl.GeneratorMask(smooth);
+    gdual := BSpl.WaveletMask(smooth, vanishing);
+    vancore := SIntPow.MulPower(hdual, NEW(S.T).fromArray(
+                                         ARRAY OF R.T{1.0D0, -1.0D0}, -1),
+                                vanishing);
+    phivan := Refn.Refine(vancore.scale(RT.SqRtTwo), hdual, levels);
+    psi    := Refn.Refine(gdual.scale(R.One / RT.SqRtTwo), hdual, levels);
+
+    unit   := IIntPow.Power(2, levels);
+    twonit := 2 * unit;
+    first  := MIN(psi.getFirst(), phivan.getFirst() - twonit * translates);
+    last := MAX(
+              psi.getLast(), phivan.getLast() + twonit * (translates - 1));
+    size := last - first + 1;
+
+    targetVec := V.Sub(target.clipToVector(first, size),
+                       psi.clipToVector(first, size));
+    basis          := M.New(2 * translates, size);
+    normalMat: M.T;
+    targetCor      := V.New(NUMBER(basis^));
+
+  BEGIN
+    FOR j := -translates TO translates - 1 DO
+      phivan.clipToArray(first - twonit * j, basis[j + translates]);
+      targetCor[j + translates] :=
+        VS.Inner(basis[j + translates], targetVec^);
+    END;
+
+    normalMat := M.MMA(basis);
+
+    VAR
+      der := Derivatives(NEW(S.T).fromArray(
+                           ARRAY OF R.T{0.1D0, 0.2D0, -0.1D0, 0.3D0}));
+    BEGIN
+      IO.Put(Fmt.FN("derivatives %s, %s\n",
+                    ARRAY OF TEXT{VF.Fmt(der.first), MF.Fmt(der.second)}));
+    END;
+
+    (*
+    VAR
+        coef := LA.LeastSquaresGen(
+                  basis, ARRAY OF V.T{targetVec},
+                  flags := LA.LSGenFlagSet{LA.LSGenFlag.transposed})[0];
+    BEGIN
+        IO.Put(Fmt.FN("translates %s, size %s, residuum %s, %s\n",
+                      ARRAY OF
+                        TEXT{Fmt.Int(translates), Fmt.Int(size),
+                             RF.Fmt(coef.res), VF.Fmt(coef.x)}));
+    END;
+    *)
+  END MatchPatternSmooth;
+
+PROCEDURE MaximizeSmoothness (x: V.T) =
+  VAR id := M.NewOne(3);
   BEGIN
 
   END MaximizeSmoothness;
@@ -235,7 +315,7 @@ PROCEDURE MaximizeSmoothness (x: V.T) =
 PROCEDURE Test () =
   <*FATAL BSpl.DifferentParity*>
   BEGIN
-    CASE 4 OF
+    CASE 3 OF
     | 0 =>
         MatchPattern(
           Refn.Refine(S.One, BSpl.GeneratorMask(4), 7).translate(-50), 6,
@@ -249,13 +329,17 @@ PROCEDURE Test () =
           NEW(S.T).fromArray(
             V.ArithSeq(512, -0.01D0, 0.02D0 / 512.0D0)^, -256), 6, 4, 2, 5);
     | 3 =>
+        MatchPatternSmooth(
+          NEW(S.T).fromArray(
+            V.ArithSeq(512, -0.01D0, 0.02D0 / 512.0D0)^, -256), 6, 4, 2, 2);
+    | 4 =>
         TestRho(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
         TestRho(V.FromArray(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0}));
-    | 4 =>
+    | 5 =>
         TestInverseDRho(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0});
         TestInverseDRho(ARRAY OF R.T{1.0D0, 1.0D0, 0.1D0});
         TestInverseDRho(ARRAY OF R.T{1.0D0, 1.0D0, 1.0D0});
-    | 5 =>
+    | 6 =>
         MaximizeSmoothness(V.FromArray(ARRAY OF R.T{0.9D0, 0.7D0, -0.6D0}));
     ELSE
       <*ASSERT FALSE*>
