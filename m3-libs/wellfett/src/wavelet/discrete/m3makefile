@@ -1,4 +1,0 @@
-
-include_dir("refinable")
-include_dir("basis")
-include_dir("lifting")
