@@ -1,5 +1,6 @@
 %WORKDIR = "/proj/cmass/src.1/m3-obliq"
 
+override ("netobj", ROOT & "/m3-comm")
 override ("synloc", ROOT & "/m3-obliq")
 override ("synex", ROOT & "/m3-obliq")
 override ("metasyn", ROOT & "/m3-obliq")
