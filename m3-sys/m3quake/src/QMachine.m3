@@ -1024,21 +1024,32 @@ PROCEDURE PopInclude (t: T) =
 
 PROCEDURE InitOSEnv (t: T) =
   BEGIN
+    t.shell := GetEnv(NIL, "QUAKE_SHELL");
+    t.sh_option := GetEnv(NIL, "QUAKE_SHELL_OPTION");
+    t.tmp_dir := GetEnv(NIL, "QUAKE_TMPDIR");
     IF OnUnix THEN
-      t.shell     := "/bin/sh";
-      t.sh_option := "-c";
-      t.tmp_dir   := GetEnv ("TEMP", "/tmp");
+      IF t.shell = NIL THEN t.shell := "/bin/sh" END;
+      IF t.sh_option = NIL THEN t.sh_option := "-c" END;
+      IF t.tmp_dir = NIL THEN 
+        t.tmp_dir := GetEnv ("/tmp", "TMPDIR", "TMP", "TEMP");
+      END;
     ELSE
-      t.shell     := GetEnv ("COMSPEC", "COMMAND.COM");
-      t.sh_option := "/c";
-      t.tmp_dir   := GetEnv ("TEMP", "C:\\TEMP");
+      IF t.shell = NIL THEN t.shell := GetEnv ("COMMAND.COM", "COMSPEC") END;
+      IF t.sh_option = NIL THEN t.sh_option := "/c" END;
+      IF t.tmp_dir = NIL THEN
+        t.tmp_dir   := GetEnv ("C:\\TEMP", "TMPDIR", "TMP", "TEMP");
+      END;
     END;
   END InitOSEnv;
 
-PROCEDURE GetEnv (variable, default: TEXT): TEXT =
-  VAR val := Env.Get (variable);
+PROCEDURE GetEnv (default, v0, v1, v2, v3, v4: TEXT := NIL): TEXT =
+  VAR val := Env.Get (v0);
   BEGIN
-    IF (val = NIL) THEN val := default; END;
+    IF val = NIL AND v1 # NIL THEN val := Env.Get(v1) END;
+    IF val = NIL AND v2 # NIL THEN val := Env.Get(v2) END;
+    IF val = NIL AND v3 # NIL THEN val := Env.Get(v3) END;
+    IF val = NIL AND v4 # NIL THEN val := Env.Get(v4) END;
+    IF val = NIL THEN val := default; END;
     RETURN val;
   END GetEnv;
 
