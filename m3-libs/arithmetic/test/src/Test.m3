@@ -52,7 +52,7 @@ BEGIN
   (*NewLine(); EVAL TestBits();*)
   (*NewLine(); EVAL TestInteger();*)
   NewLine(); EVAL TestReal64();
-  (*NewLine(); EVAL TestComplex();*)
+  NewLine(); EVAL TestComplex();
   (*NewLine(); EVAL TestVector();*)
   (*NewLine(); EVAL TestMatrix();*)
   (*NewLine(); EVAL TestPolynomial();*)

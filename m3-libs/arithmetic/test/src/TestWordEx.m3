@@ -1,6 +1,6 @@
 MODULE TestWordEx EXPORTS Test;
 (*Copyright (c) 1996, m3na project
-Abstract:  TestS for WordEx module.
+Abstract:  Tests for WordEx module.
 
 3/23/96 Harry George   Initial version
 
