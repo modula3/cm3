@@ -1,26 +1,26 @@
-(* Copyright (C) 1992, Digital Equipment Corporation           *)
-(* All rights reserved.                                        *)
-(* See the file COPYRIGHT for a full description.              *)
-(*                                                             *)
-(* Last modified on Mon Nov 21 11:28:44 PST 1994 by kalsow     *)
-(*      modified on Tue May  4 18:49:28 PDT 1993 by muller     *)
+(* Copyright according to COPYRIGHT-CMASS. *)
 
 UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
-IMPORT Usignal, Unix, RTMisc, Umman, Word;
+IMPORT Usignal, Unix, RTMisc;
+(* IMPORT Umman; later, see below *) 
+
+CONST 
+  SP_pos = 0;
+  SP_copy_pos = 19;
 
 PROCEDURE SP (READONLY s: State): ADDRESS =
   BEGIN
-    RETURN LOOPHOLE (s.sp, ADDRESS);
+    RETURN LOOPHOLE (s.regs [SP_pos], ADDRESS);
   END SP;
+
+(*--------------------------------------------------------- thread stacks ---*)
 
 VAR page_bytes : CARDINAL := 0;
 VAR stack_slop : CARDINAL;
 
-(*--------------------------------------------------------- thread stacks ---*)
-
 PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
-  VAR i: INTEGER; start: ADDRESS;
+  VAR (* i: INTEGER; see below *) start: ADDRESS;
   BEGIN
     IF (page_bytes = 0) THEN
       page_bytes := Unix.getpagesize ();
@@ -30,17 +30,15 @@ PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
     (* allocate enough so that we're guaranteed to get a full, aligned page *)
     INC (size, stack_slop);
     s.words := NEW (StackSpace, size);
-    (* 
-    s.first := ADR (s.words[0]);
-    s.last  := s.first + size * ADRSIZE (s.words[0]);
-    *)
 
     (* find the aligned page and unmap it *)
     start := RTMisc.Align (ADR (s.words[0]), page_bytes);
-    i := Umman.mprotect (start, page_bytes, Umman.PROT_READ);
+    (* FIXME: stack protection seems not to be as easy as this on PPC.
+              Switched off until we properly implement use of memory
+              protection. (Leads to crashes in XEventsQueued)
+    i := Umman.mprotect (start, page_bytes, Umman.PROT_NONE);
     <* ASSERT i = 0 *>
-    (* The protection should be 0, but making the page read-only 
-       is good enough to prevent unchecked runtime errors *)
+    *)
 
     (* finally, set the bounds of the usable region *)
     s.first := start + page_bytes;
@@ -48,11 +46,13 @@ PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
   END NewStack;
 
 PROCEDURE DisposeStack (VAR s: Stack) =
-  VAR i: INTEGER;  start := RTMisc.Align (ADR (s.words[0]), page_bytes);
+  (* VAR i: INTEGER;  start := RTMisc.Align (ADR (s.words[0]), page_bytes); *)
   BEGIN
     (* find the aligned page and re-map it *)
+    (* see above
     i := Umman.mprotect (start, page_bytes, Umman.PROT_READ+Umman.PROT_WRITE);
     <* ASSERT i = 0 *>
+    *)
 
     (* and finally, free the storage *)
     DISPOSE (s.words);
@@ -71,17 +71,13 @@ PROCEDURE FlushStackCache () =
 
 PROCEDURE UpdateStateForNewSP (VAR s: State; offset: INTEGER) =
   BEGIN
-    INC (s.sp, offset);
-    INC (s.bp, offset);
+    INC (s.regs [SP_pos], offset);
+    INC (s.regs [SP_copy_pos], offset);
   END UpdateStateForNewSP;
 
-PROCEDURE UpdateFrameForNewSP (a: ADDRESS;
+PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
                                <*UNUSED*> offset: INTEGER) =
   BEGIN
-    (* Zero the return address and previous frame pointer to mark the
-       thread stack end. *)
-    LOOPHOLE(a,UNTRACED REF Word.T)^ := 0;
-    LOOPHOLE(a + BYTESIZE(ADDRESS),UNTRACED REF Word.T)^ := 0;
   END UpdateFrameForNewSP;
 
 (*------------------------------------ manipulating the SIGVTALRM handler ---*)
@@ -138,3 +134,4 @@ PROCEDURE PopEFrame (frame: ADDRESS) =
 BEGIN
   sigvtalrmMask.val[0] := Usignal.sigmask(Usignal.SIGVTALRM);
 END RTThread.
+

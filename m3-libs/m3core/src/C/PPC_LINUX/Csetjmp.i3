@@ -14,10 +14,9 @@ TYPE
   ptr_t = void_star;
 
   jmp_buf = RECORD
-        bx, si, di: long;
-        bp, sp, pc: ptr_t;
-        mask_was_saved : long;
-        saved_mask : Usignal.sigset_t; 
+    regs: ARRAY [0..57] OF long;
+    mask_was_saved: long;
+    saved_mask: Usignal.sigset_t; 
   END;
 
 <*EXTERNAL*> PROCEDURE setjmp (VAR env: jmp_buf): int;
