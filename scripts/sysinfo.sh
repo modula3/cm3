@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.10 2001-02-16 11:28:32 wagner Exp $
+# $Id: sysinfo.sh,v 1.11 2001-02-16 11:43:55 wagner Exp $
 
 if [ "$SYSINFO_DONE" = "yes" ] ; then
   return 0
@@ -124,6 +124,7 @@ case "${UNAME}" in
       /usr/bin/cygpath $@
     }
     strip_exe() {
+      return 0;
     }
   ;;
 
