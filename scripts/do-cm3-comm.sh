@@ -26,6 +26,7 @@ P="${P} tcp"
 [ "${HAVE_SERIAL}" = "yes" ] && P="${P} serial"
 P="${P} netobj"
 P="${P} netobjd"
+P="${P} m3tk-misc"
 P="${P} m3tk"
 P="${P} stubgen"
 
