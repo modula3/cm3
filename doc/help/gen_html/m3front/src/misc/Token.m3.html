@@ -14,9 +14,9 @@
  Last modified on Tue Dec 20 10:37:51 PST 1994 by kalsow     
       modified on Sat Mar 16 00:31:12 1991 by muller         
 
-<P><PRE>MODULE <module><implements><A HREF="Token.i3.html">Token</A></implements></module>;
+<P><PRE>MODULE <module><implements><A HREF="#x1">Token</A></implements></module>;
 
-IMPORT <A HREF="#x1">M3ID</A>;
+IMPORT <A HREF="#x2">M3ID</A>;
 
 CONST
   Keywords = ARRAY T OF TEXT {
@@ -31,7 +31,7 @@ CONST
     &quot;}&quot;, &quot;|&quot;, &quot;&lt;:&quot;, &quot;=&gt;&quot;, &quot;*&gt;&quot;,
 
     &quot;INLINE&quot;, &quot;EXTERNAL&quot;, &quot;ASSERT&quot;, &quot;UNUSED&quot;, &quot;OBSOLETE&quot;, &quot;TRACE&quot;,
-    &quot;*CALLCONV*&quot;, &quot;IMPLICIT&quot;, &quot;DEBUG&quot;, &quot;FATAL&quot;,
+    &quot;*CALLCONV*&quot;, &quot;IMPLICIT&quot;, &quot;DEBUG&quot;, &quot;LAZYALIGN&quot;, &quot;STRICTALIGN&quot;, &quot;FATAL&quot;,
 
     &quot;AND&quot;, &quot;ANY&quot;, &quot;ARRAY&quot;, &quot;AS&quot;,
     &quot;BEGIN&quot;, &quot;BITS&quot;, &quot;BRANDED&quot;, &quot;BY&quot;,
@@ -82,7 +82,14 @@ END Token.
 </PRE>
 </inModule>
 <HR>
-<A NAME="x1">interface M3ID is in:
+<A NAME="x1">interface Token is in:
+</A><UL>
+<LI><A HREF="Token.i3.html#0TOP0">m3front/src/misc/Token.i3</A>
+<LI><A HREF="../../../mentor/src/parse/Token.i3.html#0TOP0">mentor/src/parse/Token.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface M3ID is in:
 </A><UL>
 <LI><A HREF="../../../m3middle/src/M3ID.i3.html#0TOP0">m3middle/src/M3ID.i3</A>
 <LI><A HREF="../../../m3scan/src/M3ID.i3.html#0TOP0">m3scan/src/M3ID.i3</A>

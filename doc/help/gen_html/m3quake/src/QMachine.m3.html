@@ -1022,21 +1022,32 @@ PROCEDURE <A NAME="PopInclude"><procedure>PopInclude</procedure></A> (t: T) =
 
 <P><PRE>PROCEDURE <A NAME="InitOSEnv"><procedure>InitOSEnv</procedure></A> (t: T) =
   BEGIN
+    t.shell := GetEnv(NIL, &quot;QUAKE_SHELL&quot;);
+    t.sh_option := GetEnv(NIL, &quot;QUAKE_SHELL_OPTION&quot;);
+    t.tmp_dir := GetEnv(NIL, &quot;QUAKE_TMPDIR&quot;);
     IF OnUnix THEN
-      t.shell     := &quot;/bin/sh&quot;;
-      t.sh_option := &quot;-c&quot;;
-      t.tmp_dir   := GetEnv (&quot;TEMP&quot;, &quot;/tmp&quot;);
+      IF t.shell = NIL THEN t.shell := &quot;/bin/sh&quot; END;
+      IF t.sh_option = NIL THEN t.sh_option := &quot;-c&quot; END;
+      IF t.tmp_dir = NIL THEN
+        t.tmp_dir := GetEnv (&quot;/tmp&quot;, &quot;TMPDIR&quot;, &quot;TMP&quot;, &quot;TEMP&quot;);
+      END;
     ELSE
-      t.shell     := GetEnv (&quot;COMSPEC&quot;, &quot;COMMAND.COM&quot;);
-      t.sh_option := &quot;/c&quot;;
-      t.tmp_dir   := GetEnv (&quot;TEMP&quot;, &quot;C:\\TEMP&quot;);
+      IF t.shell = NIL THEN t.shell := GetEnv (&quot;COMMAND.COM&quot;, &quot;COMSPEC&quot;) END;
+      IF t.sh_option = NIL THEN t.sh_option := &quot;/c&quot; END;
+      IF t.tmp_dir = NIL THEN
+        t.tmp_dir   := GetEnv (&quot;C:\\TEMP&quot;, &quot;TMPDIR&quot;, &quot;TMP&quot;, &quot;TEMP&quot;);
+      END;
     END;
   END InitOSEnv;
 
-PROCEDURE <A NAME="GetEnv"><procedure>GetEnv</procedure></A> (variable, default: TEXT): TEXT =
-  VAR val := Env.Get (variable);
+PROCEDURE <A NAME="GetEnv"><procedure>GetEnv</procedure></A> (default, v0, v1, v2, v3, v4: TEXT := NIL): TEXT =
+  VAR val := Env.Get (v0);
   BEGIN
-    IF (val = NIL) THEN val := default; END;
+    IF val = NIL AND v1 # NIL THEN val := Env.Get(v1) END;
+    IF val = NIL AND v2 # NIL THEN val := Env.Get(v2) END;
+    IF val = NIL AND v3 # NIL THEN val := Env.Get(v3) END;
+    IF val = NIL AND v4 # NIL THEN val := Env.Get(v4) END;
+    IF val = NIL THEN val := default; END;
     RETURN val;
   END GetEnv;
 </PRE>---------------------------------------------------- builtin procedures ---

@@ -19,14 +19,7 @@ CONST
   OS_names = ARRAY [0..1] OF TEXT { &quot;POSIX&quot;, &quot;WIN32&quot; };
 
 CONST
-  Platform_names = ARRAY [0..31] OF TEXT {
-    &quot;AIX386&quot;, &quot;ALPHA_OSF&quot;, &quot;AP3000&quot;, &quot;ARM&quot;, &quot;DS3100&quot;,
-    &quot;FreeBSD&quot;, &quot;FreeBSD2&quot;, &quot;HP300&quot;, &quot;HPPA&quot;, &quot;IBMR2&quot;,
-    &quot;IBMRT&quot;, &quot;IRIX5&quot;, &quot;LINUX&quot;, &quot;LINUXELF&quot;, &quot;NEXT&quot;,
-    &quot;NT386&quot;, &quot;OKI&quot;, &quot;OS2&quot;, &quot;SEQUENT&quot;, &quot;SOLgnu&quot;, &quot;SOLsun&quot;,
-    &quot;SPARC&quot;, &quot;SUN3&quot;, &quot;SUN386&quot;, &quot;UMAX&quot;, &quot;VAX&quot;, &quot;FreeBSD3&quot;,
-    &quot;FreeBSD4&quot;, &quot;FBSD_ALPHA&quot;, &quot;LINUXLIBC6&quot;, &quot;I386_DARWIN&quot;,
-    &quot;PPC_DARWIN&quot; };
+  Platform_names = Target.SystemNames;
 
 PROCEDURE <A NAME="Initialize"><procedure>Initialize</procedure></A> () =
   VAR zz: Scope.T;  os_type, platform_type: Type.T;  enum: Value.T;  nm: TEXT;

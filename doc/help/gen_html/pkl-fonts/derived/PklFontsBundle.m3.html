@@ -50,6 +50,9 @@ PROCEDURE <A NAME="LookUp"><procedure>LookUp</procedure></A> (&lt;*UNUSED*&gt; s
   END LookUp;
 
 CONST Names = ARRAY [0..16] OF TEXT {
+  &quot;Symbol.afm&quot;,
+  &quot;Helvetica.afm&quot;,
+  &quot;Courier-Bold.afm&quot;,
   &quot;Times-Bold.afm&quot;,
   &quot;Helvetica-Oblique.afm&quot;,
   &quot;ISOLatin1Encoding&quot;,
@@ -63,29 +66,26 @@ CONST Names = ARRAY [0..16] OF TEXT {
   &quot;Times-Italic.afm&quot;,
   &quot;Helvetica-BoldOblique.afm&quot;,
   &quot;SymbolEncoding&quot;,
-  &quot;Symbol.afm&quot;,
-  &quot;Helvetica.afm&quot;,
-  &quot;Courier-Bold.afm&quot;,
   NIL
 };
 
 VAR Elements := ARRAY [0..16] OF TEXT {
-  NIL (* E0 .. E0_7 *),
+  NIL (* E0 .. E0_3 *),
   NIL (* E1 .. E1_7 *),
-  NIL (* E2 .. E2_0 *),
-  NIL (* E3 .. E3_6 *),
-  NIL (* E4 .. E4_8 *),
-  NIL (* E5 .. E5_6 *),
-  NIL (* E6 .. E6_7 *),
-  NIL (* E7 .. E7_7 *),
-  NIL (* E8 .. E8_0 *),
-  NIL (* E9 .. E9_6 *),
-  NIL (* E10 .. E10_8 *),
-  NIL (* E11 .. E11_7 *),
-  NIL (* E12 .. E12_0 *),
-  NIL (* E13 .. E13_3 *),
+  NIL (* E2 .. E2_6 *),
+  NIL (* E3 .. E3_7 *),
+  NIL (* E4 .. E4_7 *),
+  NIL (* E5 .. E5_0 *),
+  NIL (* E6 .. E6_6 *),
+  NIL (* E7 .. E7_8 *),
+  NIL (* E8 .. E8_6 *),
+  NIL (* E9 .. E9_7 *),
+  NIL (* E10 .. E10_7 *),
+  NIL (* E11 .. E11_0 *),
+  NIL (* E12 .. E12_6 *),
+  NIL (* E13 .. E13_8 *),
   NIL (* E14 .. E14_7 *),
-  NIL (* E15 .. E15_6 *),
+  NIL (* E15 .. E15_0 *),
   NIL
 };
 
@@ -100,10 +100,6 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
         Wr.PutText (wr, E0_1);
         Wr.PutText (wr, E0_2);
         Wr.PutText (wr, E0_3);
-        Wr.PutText (wr, E0_4);
-        Wr.PutText (wr, E0_5);
-        Wr.PutText (wr, E0_6);
-        Wr.PutText (wr, E0_7);
     | 1 =&gt;
         Wr.PutText (wr, E1);
         Wr.PutText (wr, E1_0);
@@ -117,6 +113,12 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
     | 2 =&gt;
         Wr.PutText (wr, E2);
         Wr.PutText (wr, E2_0);
+        Wr.PutText (wr, E2_1);
+        Wr.PutText (wr, E2_2);
+        Wr.PutText (wr, E2_3);
+        Wr.PutText (wr, E2_4);
+        Wr.PutText (wr, E2_5);
+        Wr.PutText (wr, E2_6);
     | 3 =&gt;
         Wr.PutText (wr, E3);
         Wr.PutText (wr, E3_0);
@@ -126,6 +128,7 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
         Wr.PutText (wr, E3_4);
         Wr.PutText (wr, E3_5);
         Wr.PutText (wr, E3_6);
+        Wr.PutText (wr, E3_7);
     | 4 =&gt;
         Wr.PutText (wr, E4);
         Wr.PutText (wr, E4_0);
@@ -136,16 +139,9 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
         Wr.PutText (wr, E4_5);
         Wr.PutText (wr, E4_6);
         Wr.PutText (wr, E4_7);
-        Wr.PutText (wr, E4_8);
     | 5 =&gt;
         Wr.PutText (wr, E5);
         Wr.PutText (wr, E5_0);
-        Wr.PutText (wr, E5_1);
-        Wr.PutText (wr, E5_2);
-        Wr.PutText (wr, E5_3);
-        Wr.PutText (wr, E5_4);
-        Wr.PutText (wr, E5_5);
-        Wr.PutText (wr, E5_6);
     | 6 =&gt;
         Wr.PutText (wr, E6);
         Wr.PutText (wr, E6_0);
@@ -155,7 +151,6 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
         Wr.PutText (wr, E6_4);
         Wr.PutText (wr, E6_5);
         Wr.PutText (wr, E6_6);
-        Wr.PutText (wr, E6_7);
     | 7 =&gt;
         Wr.PutText (wr, E7);
         Wr.PutText (wr, E7_0);
@@ -166,9 +161,16 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
         Wr.PutText (wr, E7_5);
         Wr.PutText (wr, E7_6);
         Wr.PutText (wr, E7_7);
+        Wr.PutText (wr, E7_8);
     | 8 =&gt;
         Wr.PutText (wr, E8);
         Wr.PutText (wr, E8_0);
+        Wr.PutText (wr, E8_1);
+        Wr.PutText (wr, E8_2);
+        Wr.PutText (wr, E8_3);
+        Wr.PutText (wr, E8_4);
+        Wr.PutText (wr, E8_5);
+        Wr.PutText (wr, E8_6);
     | 9 =&gt;
         Wr.PutText (wr, E9);
         Wr.PutText (wr, E9_0);
@@ -178,6 +180,7 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
         Wr.PutText (wr, E9_4);
         Wr.PutText (wr, E9_5);
         Wr.PutText (wr, E9_6);
+        Wr.PutText (wr, E9_7);
     | 10 =&gt;
         Wr.PutText (wr, E10);
         Wr.PutText (wr, E10_0);
@@ -188,26 +191,29 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
         Wr.PutText (wr, E10_5);
         Wr.PutText (wr, E10_6);
         Wr.PutText (wr, E10_7);
-        Wr.PutText (wr, E10_8);
     | 11 =&gt;
         Wr.PutText (wr, E11);
         Wr.PutText (wr, E11_0);
-        Wr.PutText (wr, E11_1);
-        Wr.PutText (wr, E11_2);
-        Wr.PutText (wr, E11_3);
-        Wr.PutText (wr, E11_4);
-        Wr.PutText (wr, E11_5);
-        Wr.PutText (wr, E11_6);
-        Wr.PutText (wr, E11_7);
     | 12 =&gt;
         Wr.PutText (wr, E12);
         Wr.PutText (wr, E12_0);
+        Wr.PutText (wr, E12_1);
+        Wr.PutText (wr, E12_2);
+        Wr.PutText (wr, E12_3);
+        Wr.PutText (wr, E12_4);
+        Wr.PutText (wr, E12_5);
+        Wr.PutText (wr, E12_6);
     | 13 =&gt;
         Wr.PutText (wr, E13);
         Wr.PutText (wr, E13_0);
         Wr.PutText (wr, E13_1);
         Wr.PutText (wr, E13_2);
         Wr.PutText (wr, E13_3);
+        Wr.PutText (wr, E13_4);
+        Wr.PutText (wr, E13_5);
+        Wr.PutText (wr, E13_6);
+        Wr.PutText (wr, E13_7);
+        Wr.PutText (wr, E13_8);
     | 14 =&gt;
         Wr.PutText (wr, E14);
         Wr.PutText (wr, E14_0);
@@ -221,18 +227,682 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
     | 15 =&gt;
         Wr.PutText (wr, E15);
         Wr.PutText (wr, E15_0);
-        Wr.PutText (wr, E15_1);
-        Wr.PutText (wr, E15_2);
-        Wr.PutText (wr, E15_3);
-        Wr.PutText (wr, E15_4);
-        Wr.PutText (wr, E15_5);
-        Wr.PutText (wr, E15_6);
     ELSE (*skip*)
     END;
     RETURN TextWr.ToText (wr);
   END GetElt;
 
 CONST E0 =
+   &quot;StartFontMetrics 2.0\nComment Copyright (c) 1985, 1987, 1989, 1990 Adob&quot;
+ &amp; &quot;e Systems Incorporated.  All rights reserved.\nComment Creation Date: W&quot;
+ &amp; &quot;ed Jan 17 21:48:26 1990\nComment UniqueID 27004\nComment VMusage 28489 &quot;
+ &amp; &quot;37622\nFontName Symbol\nFullName Symbol\nFamilyName Symbol\nWeight Medi&quot;
+ &amp; &quot;um\nItalicAngle 0\nIsFixedPitch false\nFontBBox -180 -293 1090 1010\nUn&quot;
+ &amp; &quot;derlinePosition -98\nUnderlineThickness 54\nVersion 001.007\nNotice Cop&quot;
+ &amp; &quot;yright (c) 1985, 1987, 1989, 1990 Adobe Systems Incorporated.  All righ&quot;
+ &amp; &quot;ts reserved.\nEncodingScheme FontSpecific\nStartCharMetrics 189\nC 32 ;&quot;
+ &amp; &quot; WX 250 ; N space ; B 0 0 0 0 ;\nC 33 ; WX 333 ; N exclam ; B 128 -17 2&quot;
+ &amp; &quot;40 672 ;\nC 34 ; WX 713 ; N universal ; B 31 0 681 705 ;\nC 35 ; WX 500&quot;
+ &amp; &quot; ; N numbersign ; B 20 -16 481 673 ;\nC 36 ; WX 549 ; N existential ; B&quot;
+ &amp; &quot; 25 0 478 707 ;\nC 37 ; WX 833 ; N percent ; B 63 -36 771 655 ;\nC 38 ;&quot;
+ &amp; &quot; WX 778 ; N ampersand ; B 41 -18 750 661 ;\nC 39 ; WX 439 ; N suchthat &quot;
+ &amp; &quot;; B 48 -17 414 500 ;\nC 40 ; WX 333 ; N parenleft ; B 53 -191 300 673 ;&quot;
+ &amp; &quot;\nC 41 ; WX 333 ; N parenright ; B 30 -191 277 673 ;\nC 42 ; WX 500 ; N&quot;
+ &amp; &quot; asteriskmath ; B 65 134 427 551 ;\nC 43 ; WX 549 ; N plus ; B 10 0 539&quot;
+ &amp; &quot; 533 ;\nC 44 ; WX 250 ; N comma ; B 56 -152 194 104 ;\nC 45 ; WX 549 ; &quot;
+ &amp; &quot;N minus ; B 11 233 535 288 ;\nC 46 ; WX 250 ; N period ; B 69 -17 181 9&quot;
+ &amp; &quot;5 ;\nC 47 ; WX 278 ; N slash ; B 0 -18 254 646 ;\nC 48 ; WX 500 ; N zer&quot;
+ &amp; &quot;o ; B 23 -17 471 685 ;\nC 49 ; WX 500 ; N one ; B 117 0 390 673 ;\nC 50&quot;
+ &amp; &quot; ; WX 500 ; N two ; B 25 0 475 686 ;\nC 51 ; WX 500 ; N three ; B 39 -1&quot;
+ &amp; &quot;7 435 685 ;\nC 52 ; WX 500 ; N four ; B 16 0 469 685 ;\nC 53 ; WX 500 ;&quot;
+ &amp; &quot; N five ; B 29 -17 443 685 ;\nC 54 ; WX 500 ; N six ; B 36 -17 467 685 &quot;
+ &amp; &quot;;\nC 55 ; WX 500 ; N seven ; B 24 -16 448 673 ;\nC 56 ; WX 500 ; N eigh&quot;
+ &amp; &quot;t ; B 54 -18 440 685 ;\nC 57 ; WX 500 ; N nine ; B 31 -18 460 685 ;\nC &quot;
+ &amp; &quot;58 ; WX 278 ; N colon ; B 81 -17 193 460 ;\nC 59 ; WX 278 ; N semicolon&quot;
+ &amp; &quot; ; B 83 -152 221 460 ;\nC 60 ; WX 549 ; N less ; B 26 0 523 522 ;\nC 61&quot;
+ &amp; &quot; ; WX 549 ; N equal ; B 11 141 537 390 ;\nC 62 ; WX 549 ; N greater ; B&quot;
+ &amp; &quot; 26 0 523 522 ;\nC 63 ; WX 444 ; N question ; B 70 -17 412 68&quot;;
+
+CONST E0_0 =
+   &quot;6 ;\nC 64 ; WX 549 ; N congruent ; B 11 0 537 475 ;\nC 65 ; WX 722 ; N &quot;
+ &amp; &quot;Alpha ; B 4 0 684 673 ;\nC 66 ; WX 667 ; N Beta ; B 29 0 592 673 ;\nC 6&quot;
+ &amp; &quot;7 ; WX 722 ; N Chi ; B -9 0 704 673 ;\nC 68 ; WX 612 ; N Delta ; B 6 0 &quot;
+ &amp; &quot;608 688 ;\nC 69 ; WX 611 ; N Epsilon ; B 32 0 617 673 ;\nC 70 ; WX 763 &quot;
+ &amp; &quot;; N Phi ; B 26 0 741 673 ;\nC 71 ; WX 603 ; N Gamma ; B 24 0 609 673 ;\n&quot;
+ &amp; &quot;C 72 ; WX 722 ; N Eta ; B 39 0 729 673 ;\nC 73 ; WX 333 ; N Iota ; B 32&quot;
+ &amp; &quot; 0 316 673 ;\nC 74 ; WX 631 ; N theta1 ; B 18 -18 623 689 ;\nC 75 ; WX &quot;
+ &amp; &quot;722 ; N Kappa ; B 35 0 722 673 ;\nC 76 ; WX 686 ; N Lambda ; B 6 0 680 &quot;
+ &amp; &quot;688 ;\nC 77 ; WX 889 ; N Mu ; B 28 0 887 673 ;\nC 78 ; WX 722 ; N Nu ; &quot;
+ &amp; &quot;B 29 -8 720 673 ;\nC 79 ; WX 722 ; N Omicron ; B 41 -17 715 685 ;\nC 80&quot;
+ &amp; &quot; ; WX 768 ; N Pi ; B 25 0 745 673 ;\nC 81 ; WX 741 ; N Theta ; B 41 -17&quot;
+ &amp; &quot; 715 685 ;\nC 82 ; WX 556 ; N Rho ; B 28 0 563 673 ;\nC 83 ; WX 592 ; N&quot;
+ &amp; &quot; Sigma ; B 5 0 589 673 ;\nC 84 ; WX 611 ; N Tau ; B 33 0 607 673 ;\nC 8&quot;
+ &amp; &quot;5 ; WX 690 ; N Upsilon ; B -8 0 694 673 ;\nC 86 ; WX 439 ; N sigma1 ; B&quot;
+ &amp; &quot; 40 -233 436 500 ;\nC 87 ; WX 768 ; N Omega ; B 34 0 736 688 ;\nC 88 ; &quot;
+ &amp; &quot;WX 645 ; N Xi ; B 40 0 599 673 ;\nC 89 ; WX 795 ; N Psi ; B 15 0 781 68&quot;
+ &amp; &quot;4 ;\nC 90 ; WX 611 ; N Zeta ; B 44 0 636 673 ;\nC 91 ; WX 333 ; N brack&quot;
+ &amp; &quot;etleft ; B 86 -155 299 674 ;\nC 92 ; WX 863 ; N therefore ; B 163 0 701&quot;
+ &amp; &quot; 478 ;\nC 93 ; WX 333 ; N bracketright ; B 33 -155 246 674 ;\nC 94 ; WX&quot;
+ &amp; &quot; 658 ; N perpendicular ; B 15 0 652 674 ;\nC 95 ; WX 500 ; N underscore&quot;
+ &amp; &quot; ; B -2 -252 502 -206 ;\nC 96 ; WX 500 ; N radicalex ; B 480 881 1090 9&quot;
+ &amp; &quot;17 ;\nC 97 ; WX 631 ; N alpha ; B 41 -18 622 500 ;\nC 98 ; WX 549 ; N b&quot;
+ &amp; &quot;eta ; B 61 -223 515 741 ;\nC 99 ; WX 549 ; N chi ; B 12 -231 522 499 ;\n&quot;
+ &amp; &quot;C 100 ; WX 494 ; N delta ; B 40 -19 481 740 ;\nC 101 ; WX 439 ; N epsil&quot;
+ &amp; &quot;on ; B 22 -19 427 502 ;\nC 102 ; WX 521 ; N phi ; B 27 -224 490 671 ;\n&quot;
+ &amp; &quot;C 103 ; WX 411 ; N gamma ; B 5 -225 484 499 ;\nC 104 ; WX 603 ; N eta ;&quot;
+ &amp; &quot; B 0 -202 527 514 ;\nC 105 ; WX 329 ; N iota ; B 0 -17 301 503 ;\nC 106&quot;
+ &amp; &quot; ; WX 603 ; N phi1 ; B 36 -224 587 499 ;\nC 107 ; WX 549 ; N kappa ; B &quot;
+ &amp; &quot;33 0 558 501 ;\nC 108 ; WX 549 ; N lambda ; B 24 -17 54&quot;;
+
+CONST E0_1 =
+   &quot;8 739 ;\nC 109 ; WX 576 ; N mu ; B 33 -223 567 500 ;\nC 110 ; WX 521 ; &quot;
+ &amp; &quot;N nu ; B -9 -16 475 507 ;\nC 111 ; WX 549 ; N omicron ; B 35 -19 501 49&quot;
+ &amp; &quot;9 ;\nC 112 ; WX 549 ; N pi ; B 10 -19 530 487 ;\nC 113 ; WX 521 ; N the&quot;
+ &amp; &quot;ta ; B 43 -17 485 690 ;\nC 114 ; WX 549 ; N rho ; B 50 -230 490 499 ;\n&quot;
+ &amp; &quot;C 115 ; WX 603 ; N sigma ; B 30 -21 588 500 ;\nC 116 ; WX 439 ; N tau ;&quot;
+ &amp; &quot; B 10 -19 418 500 ;\nC 117 ; WX 576 ; N upsilon ; B 7 -18 535 507 ;\nC &quot;
+ &amp; &quot;118 ; WX 713 ; N omega1 ; B 12 -18 671 583 ;\nC 119 ; WX 686 ; N omega &quot;
+ &amp; &quot;; B 42 -17 684 500 ;\nC 120 ; WX 493 ; N xi ; B 27 -224 469 766 ;\nC 12&quot;
+ &amp; &quot;1 ; WX 686 ; N psi ; B 12 -228 701 500 ;\nC 122 ; WX 494 ; N zeta ; B 6&quot;
+ &amp; &quot;0 -225 467 756 ;\nC 123 ; WX 480 ; N braceleft ; B 58 -183 397 673 ;\nC&quot;
+ &amp; &quot; 124 ; WX 200 ; N bar ; B 65 -177 135 673 ;\nC 125 ; WX 480 ; N braceri&quot;
+ &amp; &quot;ght ; B 79 -183 418 673 ;\nC 126 ; WX 549 ; N similar ; B 17 203 529 30&quot;
+ &amp; &quot;7 ;\nC 161 ; WX 620 ; N Upsilon1 ; B -2 0 610 685 ;\nC 162 ; WX 247 ; N&quot;
+ &amp; &quot; minute ; B 27 459 228 735 ;\nC 163 ; WX 549 ; N lessequal ; B 29 0 526&quot;
+ &amp; &quot; 639 ;\nC 164 ; WX 167 ; N fraction ; B -180 -12 340 677 ;\nC 165 ; WX &quot;
+ &amp; &quot;713 ; N infinity ; B 26 124 688 404 ;\nC 166 ; WX 500 ; N florin ; B 2 &quot;
+ &amp; &quot;-193 494 686 ;\nC 167 ; WX 753 ; N club ; B 86 -26 660 533 ;\nC 168 ; W&quot;
+ &amp; &quot;X 753 ; N diamond ; B 142 -36 600 550 ;\nC 169 ; WX 753 ; N heart ; B 1&quot;
+ &amp; &quot;17 -33 631 532 ;\nC 170 ; WX 753 ; N spade ; B 113 -36 629 548 ;\nC 171&quot;
+ &amp; &quot; ; WX 1042 ; N arrowboth ; B 24 -15 1024 511 ;\nC 172 ; WX 987 ; N arro&quot;
+ &amp; &quot;wleft ; B 32 -15 942 511 ;\nC 173 ; WX 603 ; N arrowup ; B 45 0 571 910&quot;
+ &amp; &quot; ;\nC 174 ; WX 987 ; N arrowright ; B 49 -15 959 511 ;\nC 175 ; WX 603 &quot;
+ &amp; &quot;; N arrowdown ; B 45 -22 571 888 ;\nC 176 ; WX 400 ; N degree ; B 50 38&quot;
+ &amp; &quot;5 350 685 ;\nC 177 ; WX 549 ; N plusminus ; B 10 0 539 645 ;\nC 178 ; W&quot;
+ &amp; &quot;X 411 ; N second ; B 20 459 413 737 ;\nC 179 ; WX 549 ; N greaterequal &quot;
+ &amp; &quot;; B 29 0 526 639 ;\nC 180 ; WX 549 ; N multiply ; B 17 8 533 524 ;\nC 1&quot;
+ &amp; &quot;81 ; WX 713 ; N proportional ; B 27 123 639 404 ;\nC 182 ; WX 494 ; N p&quot;
+ &amp; &quot;artialdiff ; B 26 -20 462 746 ;\nC 183 ; WX 460 ; N bullet ; B 50 113 4&quot;
+ &amp; &quot;10 473 ;\nC 184 ; WX 549 ; N divide ; B 10 71 536 456 &quot;;
+
+CONST E0_2 =
+   &quot;;\nC 185 ; WX 549 ; N notequal ; B 15 -25 540 549 ;\nC 186 ; WX 549 ; N&quot;
+ &amp; &quot; equivalence ; B 14 82 538 443 ;\nC 187 ; WX 549 ; N approxequal ; B 14&quot;
+ &amp; &quot; 135 527 394 ;\nC 188 ; WX 1000 ; N ellipsis ; B 111 -17 889 95 ;\nC 18&quot;
+ &amp; &quot;9 ; WX 603 ; N arrowvertex ; B 280 -120 336 1010 ;\nC 190 ; WX 1000 ; N&quot;
+ &amp; &quot; arrowhorizex ; B -60 220 1050 276 ;\nC 191 ; WX 658 ; N carriagereturn&quot;
+ &amp; &quot; ; B 15 -16 602 629 ;\nC 192 ; WX 823 ; N aleph ; B 175 -18 661 658 ;\n&quot;
+ &amp; &quot;C 193 ; WX 686 ; N Ifraktur ; B 10 -53 578 740 ;\nC 194 ; WX 795 ; N Rf&quot;
+ &amp; &quot;raktur ; B 26 -15 759 734 ;\nC 195 ; WX 987 ; N weierstrass ; B 159 -21&quot;
+ &amp; &quot;1 870 573 ;\nC 196 ; WX 768 ; N circlemultiply ; B 43 -17 733 673 ;\nC &quot;
+ &amp; &quot;197 ; WX 768 ; N circleplus ; B 43 -15 733 675 ;\nC 198 ; WX 823 ; N em&quot;
+ &amp; &quot;ptyset ; B 39 -24 781 719 ;\nC 199 ; WX 768 ; N intersection ; B 40 0 7&quot;
+ &amp; &quot;32 509 ;\nC 200 ; WX 768 ; N union ; B 40 -17 732 492 ;\nC 201 ; WX 713&quot;
+ &amp; &quot; ; N propersuperset ; B 20 0 673 470 ;\nC 202 ; WX 713 ; N reflexsupers&quot;
+ &amp; &quot;et ; B 20 -125 673 470 ;\nC 203 ; WX 713 ; N notsubset ; B 36 -70 690 5&quot;
+ &amp; &quot;40 ;\nC 204 ; WX 713 ; N propersubset ; B 37 0 690 470 ;\nC 205 ; WX 71&quot;
+ &amp; &quot;3 ; N reflexsubset ; B 37 -125 690 470 ;\nC 206 ; WX 713 ; N element ; &quot;
+ &amp; &quot;B 45 0 505 468 ;\nC 207 ; WX 713 ; N notelement ; B 45 -58 505 555 ;\nC&quot;
+ &amp; &quot; 208 ; WX 768 ; N angle ; B 26 0 738 673 ;\nC 209 ; WX 713 ; N gradient&quot;
+ &amp; &quot; ; B 36 -19 681 718 ;\nC 210 ; WX 790 ; N registerserif ; B 50 -17 740 &quot;
+ &amp; &quot;673 ;\nC 211 ; WX 790 ; N copyrightserif ; B 51 -15 741 675 ;\nC 212 ; &quot;
+ &amp; &quot;WX 890 ; N trademarkserif ; B 18 293 855 673 ;\nC 213 ; WX 823 ; N prod&quot;
+ &amp; &quot;uct ; B 25 -101 803 751 ;\nC 214 ; WX 549 ; N radical ; B 10 -38 515 91&quot;
+ &amp; &quot;7 ;\nC 215 ; WX 250 ; N dotmath ; B 69 210 169 310 ;\nC 216 ; WX 713 ; &quot;
+ &amp; &quot;N logicalnot ; B 15 0 680 288 ;\nC 217 ; WX 603 ; N logicaland ; B 23 0&quot;
+ &amp; &quot; 583 454 ;\nC 218 ; WX 603 ; N logicalor ; B 30 0 578 477 ;\nC 219 ; WX&quot;
+ &amp; &quot; 1042 ; N arrowdblboth ; B 27 -20 1023 510 ;\nC 220 ; WX 987 ; N arrowd&quot;
+ &amp; &quot;blleft ; B 30 -15 939 513 ;\nC 221 ; WX 603 ; N arrowdblup ; B 39 2 567&quot;
+ &amp; &quot; 911 ;\nC 222 ; WX 987 ; N arrowdblright ; B 45 -20 954 508 ;\nC 223 ; &quot;
+ &amp; &quot;WX 603 ; N arrowdbldown ; B 44 -19 572 890 ;\nC 224 &quot;;
+
+CONST E0_3 =
+   &quot;; WX 494 ; N lozenge ; B 18 0 466 745 ;\nC 225 ; WX 329 ; N angleleft ;&quot;
+ &amp; &quot; B 25 -198 306 746 ;\nC 226 ; WX 790 ; N registersans ; B 50 -20 740 67&quot;
+ &amp; &quot;0 ;\nC 227 ; WX 790 ; N copyrightsans ; B 49 -15 739 675 ;\nC 228 ; WX &quot;
+ &amp; &quot;786 ; N trademarksans ; B 5 293 725 673 ;\nC 229 ; WX 713 ; N summation&quot;
+ &amp; &quot; ; B 14 -108 695 752 ;\nC 230 ; WX 384 ; N parenlefttp ; B 40 -293 436 &quot;
+ &amp; &quot;926 ;\nC 231 ; WX 384 ; N parenleftex ; B 40 -85 92 925 ;\nC 232 ; WX 3&quot;
+ &amp; &quot;84 ; N parenleftbt ; B 40 -293 436 926 ;\nC 233 ; WX 384 ; N bracketlef&quot;
+ &amp; &quot;ttp ; B 0 -80 341 926 ;\nC 234 ; WX 384 ; N bracketleftex ; B 0 -79 55 &quot;
+ &amp; &quot;925 ;\nC 235 ; WX 384 ; N bracketleftbt ; B 0 -80 340 926 ;\nC 236 ; WX&quot;
+ &amp; &quot; 494 ; N bracelefttp ; B 201 -75 439 926 ;\nC 237 ; WX 494 ; N bracelef&quot;
+ &amp; &quot;tmid ; B 14 -85 255 935 ;\nC 238 ; WX 494 ; N braceleftbt ; B 201 -70 4&quot;
+ &amp; &quot;39 926 ;\nC 239 ; WX 494 ; N braceex ; B 201 -80 255 935 ;\nC 241 ; WX &quot;
+ &amp; &quot;329 ; N angleright ; B 21 -198 302 746 ;\nC 242 ; WX 274 ; N integral ;&quot;
+ &amp; &quot; B 2 -107 291 916 ;\nC 243 ; WX 686 ; N integraltp ; B 332 -83 715 921 &quot;
+ &amp; &quot;;\nC 244 ; WX 686 ; N integralex ; B 332 -88 415 975 ;\nC 245 ; WX 686 &quot;
+ &amp; &quot;; N integralbt ; B 39 -81 415 921 ;\nC 246 ; WX 384 ; N parenrighttp ; &quot;
+ &amp; &quot;B 54 -293 450 926 ;\nC 247 ; WX 384 ; N parenrightex ; B 398 -85 450 92&quot;
+ &amp; &quot;5 ;\nC 248 ; WX 384 ; N parenrightbt ; B 54 -293 450 926 ;\nC 249 ; WX &quot;
+ &amp; &quot;384 ; N bracketrighttp ; B 22 -80 360 926 ;\nC 250 ; WX 384 ; N bracket&quot;
+ &amp; &quot;rightex ; B 305 -79 360 925 ;\nC 251 ; WX 384 ; N bracketrightbt ; B 20&quot;
+ &amp; &quot; -80 360 926 ;\nC 252 ; WX 494 ; N bracerighttp ; B 17 -75 255 926 ;\nC&quot;
+ &amp; &quot; 253 ; WX 494 ; N bracerightmid ; B 201 -85 442 935 ;\nC 254 ; WX 494 ;&quot;
+ &amp; &quot; N bracerightbt ; B 17 -70 255 926 ;\nC -1 ; WX 790 ; N apple ; B 56 -3&quot;
+ &amp; &quot; 733 808 ;\nEndCharMetrics\nEndFontMetrics\n&quot;;
+
+CONST E1 =
+   &quot;StartFontMetrics 2.0\nComment Copyright (c) 1985, 1987, 1989, 1990 Adob&quot;
+ &amp; &quot;e Systems Incorporated.  All rights reserved.\nComment Creation Date: T&quot;
+ &amp; &quot;hu Mar 15 08:58:00 1990\nComment UniqueID 28352\nComment VMusage 26389 &quot;
+ &amp; &quot;33281\nFontName Helvetica\nFullName Helvetica\nFamilyName Helvetica\nWe&quot;
+ &amp; &quot;ight Medium\nItalicAngle 0\nIsFixedPitch false\nFontBBox -166 -225 1000&quot;
+ &amp; &quot; 931\nUnderlinePosition -100\nUnderlineThickness 50\nVersion 001.006\nN&quot;
+ &amp; &quot;otice Copyright (c) 1985, 1987, 1989, 1990 Adobe Systems Incorporated. &quot;
+ &amp; &quot; All rights reserved.Helvetica is a trademark of Linotype AG and/or its&quot;
+ &amp; &quot; subsidiaries.\nEncodingScheme AdobeStandardEncoding\nCapHeight 718\nXH&quot;
+ &amp; &quot;eight 523\nAscender 718\nDescender -207\nStartCharMetrics 228\nC 32 ; W&quot;
+ &amp; &quot;X 278 ; N space ; B 0 0 0 0 ;\nC 33 ; WX 278 ; N exclam ; B 90 0 187 71&quot;
+ &amp; &quot;8 ;\nC 34 ; WX 355 ; N quotedbl ; B 70 463 285 718 ;\nC 35 ; WX 556 ; N&quot;
+ &amp; &quot; numbersign ; B 28 0 529 688 ;\nC 36 ; WX 556 ; N dollar ; B 32 -115 52&quot;
+ &amp; &quot;0 775 ;\nC 37 ; WX 889 ; N percent ; B 39 -19 850 703 ;\nC 38 ; WX 667 &quot;
+ &amp; &quot;; N ampersand ; B 44 -15 645 718 ;\nC 39 ; WX 222 ; N quoteright ; B 53&quot;
+ &amp; &quot; 463 157 718 ;\nC 40 ; WX 333 ; N parenleft ; B 68 -207 299 733 ;\nC 41&quot;
+ &amp; &quot; ; WX 333 ; N parenright ; B 34 -207 265 733 ;\nC 42 ; WX 389 ; N aster&quot;
+ &amp; &quot;isk ; B 39 431 349 718 ;\nC 43 ; WX 584 ; N plus ; B 39 0 545 505 ;\nC &quot;
+ &amp; &quot;44 ; WX 278 ; N comma ; B 87 -147 191 106 ;\nC 45 ; WX 333 ; N hyphen ;&quot;
+ &amp; &quot; B 44 232 289 322 ;\nC 46 ; WX 278 ; N period ; B 87 0 191 106 ;\nC 47 &quot;
+ &amp; &quot;; WX 278 ; N slash ; B -17 -19 295 737 ;\nC 48 ; WX 556 ; N zero ; B 37&quot;
+ &amp; &quot; -19 519 703 ;\nC 49 ; WX 556 ; N one ; B 101 0 359 703 ;\nC 50 ; WX 55&quot;
+ &amp; &quot;6 ; N two ; B 26 0 507 703 ;\nC 51 ; WX 556 ; N three ; B 34 -19 522 70&quot;
+ &amp; &quot;3 ;\nC 52 ; WX 556 ; N four ; B 25 0 523 703 ;\nC 53 ; WX 556 ; N five &quot;
+ &amp; &quot;; B 32 -19 514 688 ;\nC 54 ; WX 556 ; N six ; B 38 -19 518 703 ;\nC 55 &quot;
+ &amp; &quot;; WX 556 ; N seven ; B 37 0 523 688 ;\nC 56 ; WX 556 ; N eight ; B 38 -&quot;
+ &amp; &quot;19 517 703 ;\nC 57 ; WX 556 ; N nine ; B 42 -19 514 703 ;\nC 58 ; WX 27&quot;
+ &amp; &quot;8 ; N colon ; B 87 0 191 516 ;\nC 59 ; WX 278 ; N semicolon ; B 87 -147&quot;
+ &amp; &quot; 191 516 ;\nC 60 ; WX 584 ; N less ; B 48 11 536 495 ;\nC 61 ; &quot;;
+
+CONST E1_0 =
+   &quot;WX 584 ; N equal ; B 39 115 545 390 ;\nC 62 ; WX 584 ; N greater ; B 48&quot;
+ &amp; &quot; 11 536 495 ;\nC 63 ; WX 556 ; N question ; B 56 0 492 727 ;\nC 64 ; WX&quot;
+ &amp; &quot; 1015 ; N at ; B 147 -19 868 737 ;\nC 65 ; WX 667 ; N A ; B 14 0 654 71&quot;
+ &amp; &quot;8 ;\nC 66 ; WX 667 ; N B ; B 74 0 627 718 ;\nC 67 ; WX 722 ; N C ; B 44&quot;
+ &amp; &quot; -19 681 737 ;\nC 68 ; WX 722 ; N D ; B 81 0 674 718 ;\nC 69 ; WX 667 ;&quot;
+ &amp; &quot; N E ; B 86 0 616 718 ;\nC 70 ; WX 611 ; N F ; B 86 0 583 718 ;\nC 71 ;&quot;
+ &amp; &quot; WX 778 ; N G ; B 48 -19 704 737 ;\nC 72 ; WX 722 ; N H ; B 77 0 646 71&quot;
+ &amp; &quot;8 ;\nC 73 ; WX 278 ; N I ; B 91 0 188 718 ;\nC 74 ; WX 500 ; N J ; B 17&quot;
+ &amp; &quot; -19 428 718 ;\nC 75 ; WX 667 ; N K ; B 76 0 663 718 ;\nC 76 ; WX 556 ;&quot;
+ &amp; &quot; N L ; B 76 0 537 718 ;\nC 77 ; WX 833 ; N M ; B 73 0 761 718 ;\nC 78 ;&quot;
+ &amp; &quot; WX 722 ; N N ; B 76 0 646 718 ;\nC 79 ; WX 778 ; N O ; B 39 -19 739 73&quot;
+ &amp; &quot;7 ;\nC 80 ; WX 667 ; N P ; B 86 0 622 718 ;\nC 81 ; WX 778 ; N Q ; B 39&quot;
+ &amp; &quot; -56 739 737 ;\nC 82 ; WX 722 ; N R ; B 88 0 684 718 ;\nC 83 ; WX 667 ;&quot;
+ &amp; &quot; N S ; B 49 -19 620 737 ;\nC 84 ; WX 611 ; N T ; B 14 0 597 718 ;\nC 85&quot;
+ &amp; &quot; ; WX 722 ; N U ; B 79 -19 644 718 ;\nC 86 ; WX 667 ; N V ; B 20 0 647 &quot;
+ &amp; &quot;718 ;\nC 87 ; WX 944 ; N W ; B 16 0 928 718 ;\nC 88 ; WX 667 ; N X ; B &quot;
+ &amp; &quot;19 0 648 718 ;\nC 89 ; WX 667 ; N Y ; B 14 0 653 718 ;\nC 90 ; WX 611 ;&quot;
+ &amp; &quot; N Z ; B 23 0 588 718 ;\nC 91 ; WX 278 ; N bracketleft ; B 63 -196 250 &quot;
+ &amp; &quot;722 ;\nC 92 ; WX 278 ; N backslash ; B -17 -19 295 737 ;\nC 93 ; WX 278&quot;
+ &amp; &quot; ; N bracketright ; B 28 -196 215 722 ;\nC 94 ; WX 469 ; N asciicircum &quot;
+ &amp; &quot;; B -14 264 483 688 ;\nC 95 ; WX 556 ; N underscore ; B 0 -125 556 -75 &quot;
+ &amp; &quot;;\nC 96 ; WX 222 ; N quoteleft ; B 65 470 169 725 ;\nC 97 ; WX 556 ; N &quot;
+ &amp; &quot;a ; B 36 -15 530 538 ;\nC 98 ; WX 556 ; N b ; B 58 -15 517 718 ;\nC 99 &quot;
+ &amp; &quot;; WX 500 ; N c ; B 30 -15 477 538 ;\nC 100 ; WX 556 ; N d ; B 35 -15 49&quot;
+ &amp; &quot;9 718 ;\nC 101 ; WX 556 ; N e ; B 40 -15 516 538 ;\nC 102 ; WX 278 ; N &quot;
+ &amp; &quot;f ; B 14 0 262 728 ; L i fi ; L l fl ;\nC 103 ; WX 556 ; N g ; B 40 -22&quot;
+ &amp; &quot;0 499 538 ;\nC 104 ; WX 556 ; N h ; B 65 0 491 718 ;\nC 105 ; WX 222 ; &quot;
+ &amp; &quot;N i ; B 67 0 155 718 ;\nC 106 ; WX 222 ; N j ; B -16 -210 155 718 ;\nC &quot;
+ &amp; &quot;107 ; WX 500 ; N k ; B 67 0 501 718 ;\nC 108 ; WX 222 ; N l&quot;;
+
+CONST E1_1 =
+   &quot; ; B 67 0 155 718 ;\nC 109 ; WX 833 ; N m ; B 65 0 769 538 ;\nC 110 ; W&quot;
+ &amp; &quot;X 556 ; N n ; B 65 0 491 538 ;\nC 111 ; WX 556 ; N o ; B 35 -14 521 538&quot;
+ &amp; &quot; ;\nC 112 ; WX 556 ; N p ; B 58 -207 517 538 ;\nC 113 ; WX 556 ; N q ; &quot;
+ &amp; &quot;B 35 -207 494 538 ;\nC 114 ; WX 333 ; N r ; B 77 0 332 538 ;\nC 115 ; W&quot;
+ &amp; &quot;X 500 ; N s ; B 32 -15 464 538 ;\nC 116 ; WX 278 ; N t ; B 14 -7 257 66&quot;
+ &amp; &quot;9 ;\nC 117 ; WX 556 ; N u ; B 68 -15 489 523 ;\nC 118 ; WX 500 ; N v ; &quot;
+ &amp; &quot;B 8 0 492 523 ;\nC 119 ; WX 722 ; N w ; B 14 0 709 523 ;\nC 120 ; WX 50&quot;
+ &amp; &quot;0 ; N x ; B 11 0 490 523 ;\nC 121 ; WX 500 ; N y ; B 11 -214 489 523 ;\n&quot;
+ &amp; &quot;C 122 ; WX 500 ; N z ; B 31 0 469 523 ;\nC 123 ; WX 334 ; N braceleft ;&quot;
+ &amp; &quot; B 42 -196 292 722 ;\nC 124 ; WX 260 ; N bar ; B 94 -19 167 737 ;\nC 12&quot;
+ &amp; &quot;5 ; WX 334 ; N braceright ; B 42 -196 292 722 ;\nC 126 ; WX 584 ; N asc&quot;
+ &amp; &quot;iitilde ; B 61 180 523 326 ;\nC 161 ; WX 333 ; N exclamdown ; B 118 -19&quot;
+ &amp; &quot;5 215 523 ;\nC 162 ; WX 556 ; N cent ; B 51 -115 513 623 ;\nC 163 ; WX &quot;
+ &amp; &quot;556 ; N sterling ; B 33 -16 539 718 ;\nC 164 ; WX 167 ; N fraction ; B &quot;
+ &amp; &quot;-166 -19 333 703 ;\nC 165 ; WX 556 ; N yen ; B 3 0 553 688 ;\nC 166 ; W&quot;
+ &amp; &quot;X 556 ; N florin ; B -11 -207 501 737 ;\nC 167 ; WX 556 ; N section ; B&quot;
+ &amp; &quot; 43 -191 512 737 ;\nC 168 ; WX 556 ; N currency ; B 28 99 528 603 ;\nC &quot;
+ &amp; &quot;169 ; WX 191 ; N quotesingle ; B 59 463 132 718 ;\nC 170 ; WX 333 ; N q&quot;
+ &amp; &quot;uotedblleft ; B 38 470 307 725 ;\nC 171 ; WX 556 ; N guillemotleft ; B &quot;
+ &amp; &quot;97 108 459 446 ;\nC 172 ; WX 333 ; N guilsinglleft ; B 88 108 245 446 ;&quot;
+ &amp; &quot;\nC 173 ; WX 333 ; N guilsinglright ; B 88 108 245 446 ;\nC 174 ; WX 50&quot;
+ &amp; &quot;0 ; N fi ; B 14 0 434 728 ;\nC 175 ; WX 500 ; N fl ; B 14 0 432 728 ;\n&quot;
+ &amp; &quot;C 177 ; WX 556 ; N endash ; B 0 240 556 313 ;\nC 178 ; WX 556 ; N dagge&quot;
+ &amp; &quot;r ; B 43 -159 514 718 ;\nC 179 ; WX 556 ; N daggerdbl ; B 43 -159 514 7&quot;
+ &amp; &quot;18 ;\nC 180 ; WX 278 ; N periodcentered ; B 77 190 202 315 ;\nC 182 ; W&quot;
+ &amp; &quot;X 537 ; N paragraph ; B 18 -173 497 718 ;\nC 183 ; WX 350 ; N bullet ; &quot;
+ &amp; &quot;B 18 202 333 517 ;\nC 184 ; WX 222 ; N quotesinglbase ; B 53 -149 157 1&quot;
+ &amp; &quot;06 ;\nC 185 ; WX 333 ; N quotedblbase ; B 26 -149 295 106 ;\nC 186 ; WX&quot;
+ &amp; &quot; 333 ; N quotedblright ; B 26 463 295 718 ;\nC 187 ; W&quot;;
+
+CONST E1_2 =
+   &quot;X 556 ; N guillemotright ; B 97 108 459 446 ;\nC 188 ; WX 1000 ; N elli&quot;
+ &amp; &quot;psis ; B 115 0 885 106 ;\nC 189 ; WX 1000 ; N perthousand ; B 7 -19 994&quot;
+ &amp; &quot; 703 ;\nC 191 ; WX 611 ; N questiondown ; B 91 -201 527 525 ;\nC 193 ; &quot;
+ &amp; &quot;WX 333 ; N grave ; B 14 593 211 734 ;\nC 194 ; WX 333 ; N acute ; B 122&quot;
+ &amp; &quot; 593 319 734 ;\nC 195 ; WX 333 ; N circumflex ; B 21 593 312 734 ;\nC 1&quot;
+ &amp; &quot;96 ; WX 333 ; N tilde ; B -4 606 337 722 ;\nC 197 ; WX 333 ; N macron ;&quot;
+ &amp; &quot; B 10 627 323 684 ;\nC 198 ; WX 333 ; N breve ; B 13 595 321 731 ;\nC 1&quot;
+ &amp; &quot;99 ; WX 333 ; N dotaccent ; B 121 604 212 706 ;\nC 200 ; WX 333 ; N die&quot;
+ &amp; &quot;resis ; B 40 604 293 706 ;\nC 202 ; WX 333 ; N ring ; B 75 572 259 756 &quot;
+ &amp; &quot;;\nC 203 ; WX 333 ; N cedilla ; B 45 -225 259 0 ;\nC 205 ; WX 333 ; N h&quot;
+ &amp; &quot;ungarumlaut ; B 31 593 409 734 ;\nC 206 ; WX 333 ; N ogonek ; B 73 -225&quot;
+ &amp; &quot; 287 0 ;\nC 207 ; WX 333 ; N caron ; B 21 593 312 734 ;\nC 208 ; WX 100&quot;
+ &amp; &quot;0 ; N emdash ; B 0 240 1000 313 ;\nC 225 ; WX 1000 ; N AE ; B 8 0 951 7&quot;
+ &amp; &quot;18 ;\nC 227 ; WX 370 ; N ordfeminine ; B 24 304 346 737 ;\nC 232 ; WX 5&quot;
+ &amp; &quot;56 ; N Lslash ; B -20 0 537 718 ;\nC 233 ; WX 778 ; N Oslash ; B 39 -19&quot;
+ &amp; &quot; 740 737 ;\nC 234 ; WX 1000 ; N OE ; B 36 -19 965 737 ;\nC 235 ; WX 365&quot;
+ &amp; &quot; ; N ordmasculine ; B 25 304 341 737 ;\nC 241 ; WX 889 ; N ae ; B 36 -1&quot;
+ &amp; &quot;5 847 538 ;\nC 245 ; WX 278 ; N dotlessi ; B 95 0 183 523 ;\nC 248 ; WX&quot;
+ &amp; &quot; 222 ; N lslash ; B -20 0 242 718 ;\nC 249 ; WX 611 ; N oslash ; B 28 -&quot;
+ &amp; &quot;22 537 545 ;\nC 250 ; WX 944 ; N oe ; B 35 -15 902 538 ;\nC 251 ; WX 61&quot;
+ &amp; &quot;1 ; N germandbls ; B 67 -15 571 728 ;\nC -1 ; WX 611 ; N Zcaron ; B 23 &quot;
+ &amp; &quot;0 588 929 ;\nC -1 ; WX 500 ; N ccedilla ; B 30 -225 477 538 ;\nC -1 ; W&quot;
+ &amp; &quot;X 500 ; N ydieresis ; B 11 -214 489 706 ;\nC -1 ; WX 556 ; N atilde ; B&quot;
+ &amp; &quot; 36 -15 530 722 ;\nC -1 ; WX 278 ; N icircumflex ; B -6 0 285 734 ;\nC &quot;
+ &amp; &quot;-1 ; WX 333 ; N threesuperior ; B 5 270 325 703 ;\nC -1 ; WX 556 ; N ec&quot;
+ &amp; &quot;ircumflex ; B 40 -15 516 734 ;\nC -1 ; WX 556 ; N thorn ; B 58 -207 517&quot;
+ &amp; &quot; 718 ;\nC -1 ; WX 556 ; N egrave ; B 40 -15 516 734 ;\nC -1 ; WX 333 ; &quot;
+ &amp; &quot;N twosuperior ; B 4 281 323 703 ;\nC -1 ; WX 556 ; N eacute ; B 40 -15 &quot;
+ &amp; &quot;516 734 ;\nC -1 ; WX 556 ; N otilde ; B 35 -14 521 72&quot;;
+
+CONST E1_3 =
+   &quot;2 ;\nC -1 ; WX 667 ; N Aacute ; B 14 0 654 929 ;\nC -1 ; WX 556 ; N oci&quot;
+ &amp; &quot;rcumflex ; B 35 -14 521 734 ;\nC -1 ; WX 500 ; N yacute ; B 11 -214 489&quot;
+ &amp; &quot; 734 ;\nC -1 ; WX 556 ; N udieresis ; B 68 -15 489 706 ;\nC -1 ; WX 834&quot;
+ &amp; &quot; ; N threequarters ; B 45 -19 810 703 ;\nC -1 ; WX 556 ; N acircumflex &quot;
+ &amp; &quot;; B 36 -15 530 734 ;\nC -1 ; WX 722 ; N Eth ; B 0 0 674 718 ;\nC -1 ; W&quot;
+ &amp; &quot;X 556 ; N edieresis ; B 40 -15 516 706 ;\nC -1 ; WX 556 ; N ugrave ; B &quot;
+ &amp; &quot;68 -15 489 734 ;\nC -1 ; WX 1000 ; N trademark ; B 46 306 903 718 ;\nC &quot;
+ &amp; &quot;-1 ; WX 556 ; N ograve ; B 35 -14 521 734 ;\nC -1 ; WX 500 ; N scaron ;&quot;
+ &amp; &quot; B 32 -15 464 734 ;\nC -1 ; WX 278 ; N Idieresis ; B 13 0 266 901 ;\nC &quot;
+ &amp; &quot;-1 ; WX 556 ; N uacute ; B 68 -15 489 734 ;\nC -1 ; WX 556 ; N agrave ;&quot;
+ &amp; &quot; B 36 -15 530 734 ;\nC -1 ; WX 556 ; N ntilde ; B 65 0 491 722 ;\nC -1 &quot;
+ &amp; &quot;; WX 556 ; N aring ; B 36 -15 530 756 ;\nC -1 ; WX 500 ; N zcaron ; B 3&quot;
+ &amp; &quot;1 0 469 734 ;\nC -1 ; WX 278 ; N Icircumflex ; B -6 0 285 929 ;\nC -1 ;&quot;
+ &amp; &quot; WX 722 ; N Ntilde ; B 76 0 646 917 ;\nC -1 ; WX 556 ; N ucircumflex ; &quot;
+ &amp; &quot;B 68 -15 489 734 ;\nC -1 ; WX 667 ; N Ecircumflex ; B 86 0 616 929 ;\nC&quot;
+ &amp; &quot; -1 ; WX 278 ; N Iacute ; B 91 0 292 929 ;\nC -1 ; WX 722 ; N Ccedilla &quot;
+ &amp; &quot;; B 44 -225 681 737 ;\nC -1 ; WX 778 ; N Odieresis ; B 39 -19 739 901 ;&quot;
+ &amp; &quot;\nC -1 ; WX 667 ; N Scaron ; B 49 -19 620 929 ;\nC -1 ; WX 667 ; N Edie&quot;
+ &amp; &quot;resis ; B 86 0 616 901 ;\nC -1 ; WX 278 ; N Igrave ; B -13 0 188 929 ;\n&quot;
+ &amp; &quot;C -1 ; WX 556 ; N adieresis ; B 36 -15 530 706 ;\nC -1 ; WX 778 ; N Ogr&quot;
+ &amp; &quot;ave ; B 39 -19 739 929 ;\nC -1 ; WX 667 ; N Egrave ; B 86 0 616 929 ;\n&quot;
+ &amp; &quot;C -1 ; WX 667 ; N Ydieresis ; B 14 0 653 901 ;\nC -1 ; WX 737 ; N regis&quot;
+ &amp; &quot;tered ; B -14 -19 752 737 ;\nC -1 ; WX 778 ; N Otilde ; B 39 -19 739 91&quot;
+ &amp; &quot;7 ;\nC -1 ; WX 834 ; N onequarter ; B 73 -19 756 703 ;\nC -1 ; WX 722 ;&quot;
+ &amp; &quot; N Ugrave ; B 79 -19 644 929 ;\nC -1 ; WX 722 ; N Ucircumflex ; B 79 -1&quot;
+ &amp; &quot;9 644 929 ;\nC -1 ; WX 667 ; N Thorn ; B 86 0 622 718 ;\nC -1 ; WX 584 &quot;
+ &amp; &quot;; N divide ; B 39 -19 545 524 ;\nC -1 ; WX 667 ; N Atilde ; B 14 0 654 &quot;
+ &amp; &quot;917 ;\nC -1 ; WX 722 ; N Uacute ; B 79 -19 644 929 ;\nC -1 ; WX 778 ; N&quot;
+ &amp; &quot; Ocircumflex ; B 39 -19 739 929 ;\nC -1 ; WX 584 ; N l&quot;;
+
+CONST E1_4 =
+   &quot;ogicalnot ; B 39 108 545 390 ;\nC -1 ; WX 667 ; N Aring ; B 14 0 654 93&quot;
+ &amp; &quot;1 ;\nC -1 ; WX 278 ; N idieresis ; B 13 0 266 706 ;\nC -1 ; WX 278 ; N &quot;
+ &amp; &quot;iacute ; B 95 0 292 734 ;\nC -1 ; WX 556 ; N aacute ; B 36 -15 530 734 &quot;
+ &amp; &quot;;\nC -1 ; WX 584 ; N plusminus ; B 39 0 545 506 ;\nC -1 ; WX 584 ; N mu&quot;
+ &amp; &quot;ltiply ; B 39 0 545 506 ;\nC -1 ; WX 722 ; N Udieresis ; B 79 -19 644 9&quot;
+ &amp; &quot;01 ;\nC -1 ; WX 584 ; N minus ; B 39 216 545 289 ;\nC -1 ; WX 333 ; N o&quot;
+ &amp; &quot;nesuperior ; B 43 281 222 703 ;\nC -1 ; WX 667 ; N Eacute ; B 86 0 616 &quot;
+ &amp; &quot;929 ;\nC -1 ; WX 667 ; N Acircumflex ; B 14 0 654 929 ;\nC -1 ; WX 737 &quot;
+ &amp; &quot;; N copyright ; B -14 -19 752 737 ;\nC -1 ; WX 667 ; N Agrave ; B 14 0 &quot;
+ &amp; &quot;654 929 ;\nC -1 ; WX 556 ; N odieresis ; B 35 -14 521 706 ;\nC -1 ; WX &quot;
+ &amp; &quot;556 ; N oacute ; B 35 -14 521 734 ;\nC -1 ; WX 400 ; N degree ; B 54 41&quot;
+ &amp; &quot;1 346 703 ;\nC -1 ; WX 278 ; N igrave ; B -13 0 184 734 ;\nC -1 ; WX 55&quot;
+ &amp; &quot;6 ; N mu ; B 68 -207 489 523 ;\nC -1 ; WX 778 ; N Oacute ; B 39 -19 739&quot;
+ &amp; &quot; 929 ;\nC -1 ; WX 556 ; N eth ; B 35 -15 522 737 ;\nC -1 ; WX 667 ; N A&quot;
+ &amp; &quot;dieresis ; B 14 0 654 901 ;\nC -1 ; WX 667 ; N Yacute ; B 14 0 653 929 &quot;
+ &amp; &quot;;\nC -1 ; WX 260 ; N brokenbar ; B 94 -19 167 737 ;\nC -1 ; WX 834 ; N &quot;
+ &amp; &quot;onehalf ; B 43 -19 773 703 ;\nEndCharMetrics\nStartKernData\nStartKernP&quot;
+ &amp; &quot;airs 250\n\nKPX A y -40\nKPX A w -40\nKPX A v -40\nKPX A u -30\nKPX A Y&quot;
+ &amp; &quot; -100\nKPX A W -50\nKPX A V -70\nKPX A U -50\nKPX A T -120\nKPX A Q -30&quot;
+ &amp; &quot;\nKPX A O -30\nKPX A G -30\nKPX A C -30\n\nKPX B period -20\nKPX B comm&quot;
+ &amp; &quot;a -20\nKPX B U -10\n\nKPX C period -30\nKPX C comma -30\n\nKPX D period&quot;
+ &amp; &quot; -70\nKPX D comma -70\nKPX D Y -90\nKPX D W -40\nKPX D V -70\nKPX D A -&quot;
+ &amp; &quot;40\n\nKPX F r -45\nKPX F period -150\nKPX F o -30\nKPX F e -30\nKPX F c&quot;
+ &amp; &quot;omma -150\nKPX F a -50\nKPX F A -80\n\nKPX J u -20\nKPX J period -30\nK&quot;
+ &amp; &quot;PX J comma -30\nKPX J a -20\nKPX J A -20\n\nKPX K y -50\nKPX K u -30\nK&quot;
+ &amp; &quot;PX K o -40\nKPX K e -40\nKPX K O -50\n\nKPX L y -30\nKPX L quoteright -&quot;
+ &amp; &quot;160\nKPX L quotedblright -140\nKPX L Y -140\nKPX L W -70\nKPX L V -110\n&quot;
+ &amp; &quot;KPX L T -110\n\nKPX O period -40\nKPX O comma -40\nKPX O Y -70\nKPX O X&quot;
+ &amp; &quot; -60\nKPX O W -30\nKPX O V -50\nKPX O T -40\nKPX O A -20\n\nKPX P perio&quot;
+ &amp; &quot;d -180\nKPX P o -50\nKPX P e -50\nKPX&quot;;
+
+CONST E1_5 =
+   &quot; P comma -180\nKPX P a -40\nKPX P A -120\n\nKPX Q U -10\n\nKPX R Y -50\n&quot;
+ &amp; &quot;KPX R W -30\nKPX R V -50\nKPX R U -40\nKPX R T -30\nKPX R O -20\n\nKPX &quot;
+ &amp; &quot;S period -20\nKPX S comma -20\n\nKPX T y -120\nKPX T w -120\nKPX T u -1&quot;
+ &amp; &quot;20\nKPX T semicolon -20\nKPX T r -120\nKPX T period -120\nKPX T o -120\n&quot;
+ &amp; &quot;KPX T hyphen -140\nKPX T e -120\nKPX T comma -120\nKPX T colon -20\nKPX&quot;
+ &amp; &quot; T a -120\nKPX T O -40\nKPX T A -120\n\nKPX U period -40\nKPX U comma -&quot;
+ &amp; &quot;40\nKPX U A -40\n\nKPX V u -70\nKPX V semicolon -40\nKPX V period -125\n&quot;
+ &amp; &quot;KPX V o -80\nKPX V hyphen -80\nKPX V e -80\nKPX V comma -125\nKPX V col&quot;
+ &amp; &quot;on -40\nKPX V a -70\nKPX V O -40\nKPX V G -40\nKPX V A -80\n\nKPX W y -&quot;
+ &amp; &quot;20\nKPX W u -30\nKPX W period -80\nKPX W o -30\nKPX W hyphen -40\nKPX W&quot;
+ &amp; &quot; e -30\nKPX W comma -80\nKPX W a -40\nKPX W O -20\nKPX W A -50\n\nKPX Y&quot;
+ &amp; &quot; u -110\nKPX Y semicolon -60\nKPX Y period -140\nKPX Y o -140\nKPX Y i &quot;
+ &amp; &quot;-20\nKPX Y hyphen -140\nKPX Y e -140\nKPX Y comma -140\nKPX Y colon -60&quot;
+ &amp; &quot;\nKPX Y a -140\nKPX Y O -85\nKPX Y A -110\n\nKPX a y -30\nKPX a w -20\n&quot;
+ &amp; &quot;KPX a v -20\n\nKPX b y -20\nKPX b v -20\nKPX b u -20\nKPX b period -40\n&quot;
+ &amp; &quot;KPX b l -20\nKPX b comma -40\nKPX b b -10\n\nKPX c k -20\nKPX c comma -&quot;
+ &amp; &quot;15\n\nKPX colon space -50\n\nKPX comma quoteright -100\nKPX comma quote&quot;
+ &amp; &quot;dblright -100\n\nKPX e y -20\nKPX e x -30\nKPX e w -20\nKPX e v -30\nKP&quot;
+ &amp; &quot;X e period -15\nKPX e comma -15\n\nKPX f quoteright 50\nKPX f quotedblr&quot;
+ &amp; &quot;ight 60\nKPX f period -30\nKPX f o -30\nKPX f e -30\nKPX f dotlessi -28&quot;
+ &amp; &quot;\nKPX f comma -30\nKPX f a -30\n\nKPX g r -10\n\nKPX h y -30\n\nKPX k o&quot;
+ &amp; &quot; -20\nKPX k e -20\n\nKPX m y -15\nKPX m u -10\n\nKPX n y -15\nKPX n v -&quot;
+ &amp; &quot;20\nKPX n u -10\n\nKPX o y -30\nKPX o x -30\nKPX o w -15\nKPX o v -15\n&quot;
+ &amp; &quot;KPX o period -40\nKPX o comma -40\n\nKPX oslash z -55\nKPX oslash y -70&quot;
+ &amp; &quot;\nKPX oslash x -85\nKPX oslash w -70\nKPX oslash v -70\nKPX oslash u -5&quot;
+ &amp; &quot;5\nKPX oslash t -55\nKPX oslash s -55\nKPX oslash r -55\nKPX oslash q -&quot;
+ &amp; &quot;55\nKPX oslash period -95\nKPX oslash p -55\nKPX oslash o -55\nKPX osla&quot;
+ &amp; &quot;sh n -55\nKPX oslash m -55\nKPX oslash l -55\nKPX oslash k -55\nKPX osl&quot;
+ &amp; &quot;ash j -55\nKPX oslash i -55\nKPX oslash h -55\nKPX oslash g -55\nKPX os&quot;
+ &amp; &quot;lash f -55\nKPX oslash e -55\nKPX oslash d -55\nKPX oslash comma -95\nK&quot;
+ &amp; &quot;PX oslash c -55\nKPX &quot;;
+
+CONST E1_6 =
+   &quot;oslash b -55\nKPX oslash a -55\n\nKPX p y -30\nKPX p period -35\nKPX p &quot;
+ &amp; &quot;comma -35\n\nKPX period space -60\nKPX period quoteright -100\nKPX peri&quot;
+ &amp; &quot;od quotedblright -100\n\nKPX quotedblright space -40\n\nKPX quoteleft q&quot;
+ &amp; &quot;uoteleft -57\n\nKPX quoteright space -70\nKPX quoteright s -50\nKPX quo&quot;
+ &amp; &quot;teright r -50\nKPX quoteright quoteright -57\nKPX quoteright d -50\n\nK&quot;
+ &amp; &quot;PX r y 30\nKPX r v 30\nKPX r u 15\nKPX r t 40\nKPX r semicolon 30\nKPX &quot;
+ &amp; &quot;r period -50\nKPX r p 30\nKPX r n 25\nKPX r m 25\nKPX r l 15\nKPX r k 1&quot;
+ &amp; &quot;5\nKPX r i 15\nKPX r comma -50\nKPX r colon 30\nKPX r a -10\n\nKPX s w &quot;
+ &amp; &quot;-30\nKPX s period -15\nKPX s comma -15\n\nKPX semicolon space -50\n\nKP&quot;
+ &amp; &quot;X space quoteleft -60\nKPX space quotedblleft -30\nKPX space Y -90\nKPX&quot;
+ &amp; &quot; space W -40\nKPX space V -50\nKPX space T -50\n\nKPX v period -80\nKPX&quot;
+ &amp; &quot; v o -25\nKPX v e -25\nKPX v comma -80\nKPX v a -25\n\nKPX w period -60&quot;
+ &amp; &quot;\nKPX w o -10\nKPX w e -10\nKPX w comma -60\nKPX w a -15\n\nKPX x e -30&quot;
+ &amp; &quot;\n\nKPX y period -100\nKPX y o -20\nKPX y e -20\nKPX y comma -100\nKPX &quot;
+ &amp; &quot;y a -20\n\nKPX z o -15\nKPX z e -15\nEndKernPairs\nEndKernData\nStartCo&quot;
+ &amp; &quot;mposites 58\nCC Aacute 2 ; PCC A 0 0 ; PCC acute 167 195 ;\nCC Acircumf&quot;
+ &amp; &quot;lex 2 ; PCC A 0 0 ; PCC circumflex 167 195 ;\nCC Adieresis 2 ; PCC A 0 &quot;
+ &amp; &quot;0 ; PCC dieresis 167 195 ;\nCC Agrave 2 ; PCC A 0 0 ; PCC grave 167 195&quot;
+ &amp; &quot; ;\nCC Aring 2 ; PCC A 0 0 ; PCC ring 167 175 ;\nCC Atilde 2 ; PCC A 0 &quot;
+ &amp; &quot;0 ; PCC tilde 167 195 ;\nCC Ccedilla 2 ; PCC C 0 0 ; PCC cedilla 195 0 &quot;
+ &amp; &quot;;\nCC Eacute 2 ; PCC E 0 0 ; PCC acute 167 195 ;\nCC Ecircumflex 2 ; PC&quot;
+ &amp; &quot;C E 0 0 ; PCC circumflex 167 195 ;\nCC Edieresis 2 ; PCC E 0 0 ; PCC di&quot;
+ &amp; &quot;eresis 167 195 ;\nCC Egrave 2 ; PCC E 0 0 ; PCC grave 167 195 ;\nCC Iac&quot;
+ &amp; &quot;ute 2 ; PCC I 0 0 ; PCC acute -27 195 ;\nCC Icircumflex 2 ; PCC I 0 0 ;&quot;
+ &amp; &quot; PCC circumflex -27 195 ;\nCC Idieresis 2 ; PCC I 0 0 ; PCC dieresis -2&quot;
+ &amp; &quot;7 195 ;\nCC Igrave 2 ; PCC I 0 0 ; PCC grave -27 195 ;\nCC Ntilde 2 ; P&quot;
+ &amp; &quot;CC N 0 0 ; PCC tilde 205 195 ;\nCC Oacute 2 ; PCC O 0 0 ; PCC acute 223&quot;
+ &amp; &quot; 195 ;\nCC Ocircumflex 2 ; PCC O 0 0 ; PCC circumflex 223 195 ;\nCC Odi&quot;
+ &amp; &quot;eresis 2 ; PCC O 0 0 ; PCC dieresis 223 195 ;\nCC Ograve 2 ; PCC O 0 0 &quot;
+ &amp; &quot;; PCC grave 223 195 ;\nCC Otilde 2 ;&quot;;
+
+CONST E1_7 =
+   &quot; PCC O 0 0 ; PCC tilde 223 195 ;\nCC Scaron 2 ; PCC S 0 0 ; PCC caron 1&quot;
+ &amp; &quot;67 195 ;\nCC Uacute 2 ; PCC U 0 0 ; PCC acute 195 195 ;\nCC Ucircumflex&quot;
+ &amp; &quot; 2 ; PCC U 0 0 ; PCC circumflex 195 195 ;\nCC Udieresis 2 ; PCC U 0 0 ;&quot;
+ &amp; &quot; PCC dieresis 195 195 ;\nCC Ugrave 2 ; PCC U 0 0 ; PCC grave 195 195 ;\n&quot;
+ &amp; &quot;CC Yacute 2 ; PCC Y 0 0 ; PCC acute 167 195 ;\nCC Ydieresis 2 ; PCC Y 0&quot;
+ &amp; &quot; 0 ; PCC dieresis 167 195 ;\nCC Zcaron 2 ; PCC Z 0 0 ; PCC caron 139 19&quot;
+ &amp; &quot;5 ;\nCC aacute 2 ; PCC a 0 0 ; PCC acute 112 0 ;\nCC acircumflex 2 ; PC&quot;
+ &amp; &quot;C a 0 0 ; PCC circumflex 112 0 ;\nCC adieresis 2 ; PCC a 0 0 ; PCC dier&quot;
+ &amp; &quot;esis 112 0 ;\nCC agrave 2 ; PCC a 0 0 ; PCC grave 112 0 ;\nCC aring 2 ;&quot;
+ &amp; &quot; PCC a 0 0 ; PCC ring 112 0 ;\nCC atilde 2 ; PCC a 0 0 ; PCC tilde 102 &quot;
+ &amp; &quot;0 ;\nCC ccedilla 2 ; PCC c 0 0 ; PCC cedilla 84 0 ;\nCC eacute 2 ; PCC &quot;
+ &amp; &quot;e 0 0 ; PCC acute 112 0 ;\nCC ecircumflex 2 ; PCC e 0 0 ; PCC circumfle&quot;
+ &amp; &quot;x 112 0 ;\nCC edieresis 2 ; PCC e 0 0 ; PCC dieresis 112 0 ;\nCC egrave&quot;
+ &amp; &quot; 2 ; PCC e 0 0 ; PCC grave 112 0 ;\nCC iacute 2 ; PCC dotlessi 0 0 ; PC&quot;
+ &amp; &quot;C acute -27 0 ;\nCC icircumflex 2 ; PCC dotlessi 0 0 ; PCC circumflex -&quot;
+ &amp; &quot;27 0 ;\nCC idieresis 2 ; PCC dotlessi 0 0 ; PCC dieresis -27 0 ;\nCC ig&quot;
+ &amp; &quot;rave 2 ; PCC dotlessi 0 0 ; PCC grave -27 0 ;\nCC ntilde 2 ; PCC n 0 0 &quot;
+ &amp; &quot;; PCC tilde 102 0 ;\nCC oacute 2 ; PCC o 0 0 ; PCC acute 112 0 ;\nCC oc&quot;
+ &amp; &quot;ircumflex 2 ; PCC o 0 0 ; PCC circumflex 112 0 ;\nCC odieresis 2 ; PCC &quot;
+ &amp; &quot;o 0 0 ; PCC dieresis 112 0 ;\nCC ograve 2 ; PCC o 0 0 ; PCC grave 112 0&quot;
+ &amp; &quot; ;\nCC otilde 2 ; PCC o 0 0 ; PCC tilde 112 0 ;\nCC scaron 2 ; PCC s 0 &quot;
+ &amp; &quot;0 ; PCC caron 84 0 ;\nCC uacute 2 ; PCC u 0 0 ; PCC acute 112 0 ;\nCC u&quot;
+ &amp; &quot;circumflex 2 ; PCC u 0 0 ; PCC circumflex 112 0 ;\nCC udieresis 2 ; PCC&quot;
+ &amp; &quot; u 0 0 ; PCC dieresis 112 0 ;\nCC ugrave 2 ; PCC u 0 0 ; PCC grave 112 &quot;
+ &amp; &quot;0 ;\nCC yacute 2 ; PCC y 0 0 ; PCC acute 84 0 ;\nCC ydieresis 2 ; PCC y&quot;
+ &amp; &quot; 0 0 ; PCC dieresis 84 0 ;\nCC zcaron 2 ; PCC z 0 0 ; PCC caron 84 0 ;\n&quot;
+ &amp; &quot;EndComposites\nEndFontMetrics\n&quot;;
+
+CONST E2 =
+   &quot;StartFontMetrics 2.0\nComment Copyright (c) 1989, 1990, 1991, Adobe Sys&quot;
+ &amp; &quot;tems Incorporated. All rights reserved.\nComment Creation Date: Tue Sep&quot;
+ &amp; &quot; 17 14:02:41 1991\nComment UniqueID 36384\nComment VMusage 31992 40360\n&quot;
+ &amp; &quot;FontName Courier-Bold\nFullName Courier Bold\nFamilyName Courier\nWeigh&quot;
+ &amp; &quot;t Bold\nItalicAngle 0\nIsFixedPitch true\nFontBBox -113 -250 749 801\nU&quot;
+ &amp; &quot;nderlinePosition -100\nUnderlineThickness 50\nVersion 002.004\nNotice C&quot;
+ &amp; &quot;opyright (c) 1989, 1990, 1991, Adobe Systems Incorporated. All rights r&quot;
+ &amp; &quot;eserved.\nEncodingScheme AdobeStandardEncoding\nCapHeight 562\nXHeight &quot;
+ &amp; &quot;439\nAscender 626\nDescender -142\nStartCharMetrics 260\nC 32 ; WX 600 &quot;
+ &amp; &quot;; N space ; B 0 0 0 0 ;\nC 33 ; WX 600 ; N exclam ; B 202 -15 398 572 ;&quot;
+ &amp; &quot;\nC 34 ; WX 600 ; N quotedbl ; B 135 277 465 562 ;\nC 35 ; WX 600 ; N n&quot;
+ &amp; &quot;umbersign ; B 56 -45 544 651 ;\nC 36 ; WX 600 ; N dollar ; B 82 -126 51&quot;
+ &amp; &quot;9 666 ;\nC 37 ; WX 600 ; N percent ; B 5 -15 595 616 ;\nC 38 ; WX 600 ;&quot;
+ &amp; &quot; N ampersand ; B 36 -15 546 543 ;\nC 39 ; WX 600 ; N quoteright ; B 171&quot;
+ &amp; &quot; 277 423 562 ;\nC 40 ; WX 600 ; N parenleft ; B 219 -102 461 616 ;\nC 4&quot;
+ &amp; &quot;1 ; WX 600 ; N parenright ; B 139 -102 381 616 ;\nC 42 ; WX 600 ; N ast&quot;
+ &amp; &quot;erisk ; B 91 219 509 601 ;\nC 43 ; WX 600 ; N plus ; B 71 39 529 478 ;\n&quot;
+ &amp; &quot;C 44 ; WX 600 ; N comma ; B 123 -111 393 174 ;\nC 45 ; WX 600 ; N hyphe&quot;
+ &amp; &quot;n ; B 100 203 500 313 ;\nC 46 ; WX 600 ; N period ; B 192 -15 408 171 ;&quot;
+ &amp; &quot;\nC 47 ; WX 600 ; N slash ; B 98 -77 502 626 ;\nC 48 ; WX 600 ; N zero &quot;
+ &amp; &quot;; B 87 -15 513 616 ;\nC 49 ; WX 600 ; N one ; B 81 0 539 616 ;\nC 50 ; &quot;
+ &amp; &quot;WX 600 ; N two ; B 61 0 499 616 ;\nC 51 ; WX 600 ; N three ; B 63 -15 5&quot;
+ &amp; &quot;01 616 ;\nC 52 ; WX 600 ; N four ; B 53 0 507 616 ;\nC 53 ; WX 600 ; N &quot;
+ &amp; &quot;five ; B 70 -15 521 601 ;\nC 54 ; WX 600 ; N six ; B 90 -15 521 616 ;\n&quot;
+ &amp; &quot;C 55 ; WX 600 ; N seven ; B 55 0 494 601 ;\nC 56 ; WX 600 ; N eight ; B&quot;
+ &amp; &quot; 83 -15 517 616 ;\nC 57 ; WX 600 ; N nine ; B 79 -15 510 616 ;\nC 58 ; &quot;
+ &amp; &quot;WX 600 ; N colon ; B 191 -15 407 425 ;\nC 59 ; WX 600 ; N semicolon ; B&quot;
+ &amp; &quot; 123 -111 408 425 ;\nC 60 ; WX 600 ; N less ; B 66 15 523 501 ;\nC 61 ;&quot;
+ &amp; &quot; WX 600 ; N equal ; B 71 118 529 398 ;\nC 62 ; WX 600 ; N grea&quot;;
+
+CONST E2_0 =
+   &quot;ter ; B 77 15 534 501 ;\nC 63 ; WX 600 ; N question ; B 98 -14 501 580 &quot;
+ &amp; &quot;;\nC 64 ; WX 600 ; N at ; B 16 -15 584 616 ;\nC 65 ; WX 600 ; N A ; B -&quot;
+ &amp; &quot;9 0 609 562 ;\nC 66 ; WX 600 ; N B ; B 30 0 573 562 ;\nC 67 ; WX 600 ; &quot;
+ &amp; &quot;N C ; B 22 -18 560 580 ;\nC 68 ; WX 600 ; N D ; B 30 0 594 562 ;\nC 69 &quot;
+ &amp; &quot;; WX 600 ; N E ; B 25 0 560 562 ;\nC 70 ; WX 600 ; N F ; B 39 0 570 562&quot;
+ &amp; &quot; ;\nC 71 ; WX 600 ; N G ; B 22 -18 594 580 ;\nC 72 ; WX 600 ; N H ; B 2&quot;
+ &amp; &quot;0 0 580 562 ;\nC 73 ; WX 600 ; N I ; B 77 0 523 562 ;\nC 74 ; WX 600 ; &quot;
+ &amp; &quot;N J ; B 37 -18 601 562 ;\nC 75 ; WX 600 ; N K ; B 21 0 599 562 ;\nC 76 &quot;
+ &amp; &quot;; WX 600 ; N L ; B 39 0 578 562 ;\nC 77 ; WX 600 ; N M ; B -2 0 602 562&quot;
+ &amp; &quot; ;\nC 78 ; WX 600 ; N N ; B 8 -12 610 562 ;\nC 79 ; WX 600 ; N O ; B 22&quot;
+ &amp; &quot; -18 578 580 ;\nC 80 ; WX 600 ; N P ; B 48 0 559 562 ;\nC 81 ; WX 600 ;&quot;
+ &amp; &quot; N Q ; B 32 -138 578 580 ;\nC 82 ; WX 600 ; N R ; B 24 0 599 562 ;\nC 8&quot;
+ &amp; &quot;3 ; WX 600 ; N S ; B 47 -22 553 582 ;\nC 84 ; WX 600 ; N T ; B 21 0 579&quot;
+ &amp; &quot; 562 ;\nC 85 ; WX 600 ; N U ; B 4 -18 596 562 ;\nC 86 ; WX 600 ; N V ; &quot;
+ &amp; &quot;B -13 0 613 562 ;\nC 87 ; WX 600 ; N W ; B -18 0 618 562 ;\nC 88 ; WX 6&quot;
+ &amp; &quot;00 ; N X ; B 12 0 588 562 ;\nC 89 ; WX 600 ; N Y ; B 12 0 589 562 ;\nC &quot;
+ &amp; &quot;90 ; WX 600 ; N Z ; B 62 0 539 562 ;\nC 91 ; WX 600 ; N bracketleft ; B&quot;
+ &amp; &quot; 245 -102 475 616 ;\nC 92 ; WX 600 ; N backslash ; B 99 -77 503 626 ;\n&quot;
+ &amp; &quot;C 93 ; WX 600 ; N bracketright ; B 125 -102 355 616 ;\nC 94 ; WX 600 ; &quot;
+ &amp; &quot;N asciicircum ; B 108 250 492 616 ;\nC 95 ; WX 600 ; N underscore ; B 0&quot;
+ &amp; &quot; -125 600 -75 ;\nC 96 ; WX 600 ; N quoteleft ; B 178 277 428 562 ;\nC 9&quot;
+ &amp; &quot;7 ; WX 600 ; N a ; B 35 -15 570 454 ;\nC 98 ; WX 600 ; N b ; B 0 -15 58&quot;
+ &amp; &quot;4 626 ;\nC 99 ; WX 600 ; N c ; B 40 -15 545 459 ;\nC 100 ; WX 600 ; N d&quot;
+ &amp; &quot; ; B 20 -15 591 626 ;\nC 101 ; WX 600 ; N e ; B 40 -15 563 454 ;\nC 102&quot;
+ &amp; &quot; ; WX 600 ; N f ; B 83 0 547 626 ; L i fi ; L l fl ;\nC 103 ; WX 600 ; &quot;
+ &amp; &quot;N g ; B 30 -146 580 454 ;\nC 104 ; WX 600 ; N h ; B 5 0 592 626 ;\nC 10&quot;
+ &amp; &quot;5 ; WX 600 ; N i ; B 77 0 523 658 ;\nC 106 ; WX 600 ; N j ; B 63 -146 4&quot;
+ &amp; &quot;40 658 ;\nC 107 ; WX 600 ; N k ; B 20 0 585 626 ;\nC 108 ; WX 600 ; N l&quot;
+ &amp; &quot; ; B 77 0 523 626 ;\nC 109 ; WX 600 ; N m ; B -22 0 626 454&quot;;
+
+CONST E2_1 =
+   &quot; ;\nC 110 ; WX 600 ; N n ; B 18 0 592 454 ;\nC 111 ; WX 600 ; N o ; B 3&quot;
+ &amp; &quot;0 -15 570 454 ;\nC 112 ; WX 600 ; N p ; B -1 -142 570 454 ;\nC 113 ; WX&quot;
+ &amp; &quot; 600 ; N q ; B 20 -142 591 454 ;\nC 114 ; WX 600 ; N r ; B 47 0 580 454&quot;
+ &amp; &quot; ;\nC 115 ; WX 600 ; N s ; B 68 -17 535 459 ;\nC 116 ; WX 600 ; N t ; B&quot;
+ &amp; &quot; 47 -15 532 562 ;\nC 117 ; WX 600 ; N u ; B -1 -15 569 439 ;\nC 118 ; W&quot;
+ &amp; &quot;X 600 ; N v ; B -1 0 601 439 ;\nC 119 ; WX 600 ; N w ; B -18 0 618 439 &quot;
+ &amp; &quot;;\nC 120 ; WX 600 ; N x ; B 6 0 594 439 ;\nC 121 ; WX 600 ; N y ; B -4 &quot;
+ &amp; &quot;-142 601 439 ;\nC 122 ; WX 600 ; N z ; B 81 0 520 439 ;\nC 123 ; WX 600&quot;
+ &amp; &quot; ; N braceleft ; B 160 -102 464 616 ;\nC 124 ; WX 600 ; N bar ; B 255 -&quot;
+ &amp; &quot;250 345 750 ;\nC 125 ; WX 600 ; N braceright ; B 136 -102 440 616 ;\nC &quot;
+ &amp; &quot;126 ; WX 600 ; N asciitilde ; B 71 153 530 356 ;\nC 161 ; WX 600 ; N ex&quot;
+ &amp; &quot;clamdown ; B 202 -146 398 449 ;\nC 162 ; WX 600 ; N cent ; B 66 -49 518&quot;
+ &amp; &quot; 614 ;\nC 163 ; WX 600 ; N sterling ; B 72 -28 558 611 ;\nC 164 ; WX 60&quot;
+ &amp; &quot;0 ; N fraction ; B 25 -60 576 661 ;\nC 165 ; WX 600 ; N yen ; B 10 0 59&quot;
+ &amp; &quot;0 562 ;\nC 166 ; WX 600 ; N florin ; B -30 -131 572 616 ;\nC 167 ; WX 6&quot;
+ &amp; &quot;00 ; N section ; B 83 -70 517 580 ;\nC 168 ; WX 600 ; N currency ; B 54&quot;
+ &amp; &quot; 49 546 517 ;\nC 169 ; WX 600 ; N quotesingle ; B 227 277 373 562 ;\nC &quot;
+ &amp; &quot;170 ; WX 600 ; N quotedblleft ; B 71 277 535 562 ;\nC 171 ; WX 600 ; N &quot;
+ &amp; &quot;guillemotleft ; B 8 70 553 446 ;\nC 172 ; WX 600 ; N guilsinglleft ; B &quot;
+ &amp; &quot;141 70 459 446 ;\nC 173 ; WX 600 ; N guilsinglright ; B 141 70 459 446 &quot;
+ &amp; &quot;;\nC 174 ; WX 600 ; N fi ; B 12 0 593 626 ;\nC 175 ; WX 600 ; N fl ; B &quot;
+ &amp; &quot;12 0 593 626 ;\nC 177 ; WX 600 ; N endash ; B 65 203 535 313 ;\nC 178 ;&quot;
+ &amp; &quot; WX 600 ; N dagger ; B 106 -70 494 580 ;\nC 179 ; WX 600 ; N daggerdbl &quot;
+ &amp; &quot;; B 106 -70 494 580 ;\nC 180 ; WX 600 ; N periodcentered ; B 196 165 40&quot;
+ &amp; &quot;4 351 ;\nC 182 ; WX 600 ; N paragraph ; B 6 -70 576 580 ;\nC 183 ; WX 6&quot;
+ &amp; &quot;00 ; N bullet ; B 140 132 460 430 ;\nC 184 ; WX 600 ; N quotesinglbase &quot;
+ &amp; &quot;; B 175 -142 427 143 ;\nC 185 ; WX 600 ; N quotedblbase ; B 65 -142 529&quot;
+ &amp; &quot; 143 ;\nC 186 ; WX 600 ; N quotedblright ; B 61 277 525 562 ;\nC 187 ; &quot;
+ &amp; &quot;WX 600 ; N guillemotright ; B 47 70 592 446 ;\nC 188 ; &quot;;
+
+CONST E2_2 =
+   &quot;WX 600 ; N ellipsis ; B 26 -15 574 116 ;\nC 189 ; WX 600 ; N perthousan&quot;
+ &amp; &quot;d ; B -113 -15 713 616 ;\nC 191 ; WX 600 ; N questiondown ; B 99 -146 5&quot;
+ &amp; &quot;02 449 ;\nC 193 ; WX 600 ; N grave ; B 132 508 395 661 ;\nC 194 ; WX 60&quot;
+ &amp; &quot;0 ; N acute ; B 205 508 468 661 ;\nC 195 ; WX 600 ; N circumflex ; B 10&quot;
+ &amp; &quot;3 483 497 657 ;\nC 196 ; WX 600 ; N tilde ; B 89 493 512 636 ;\nC 197 ;&quot;
+ &amp; &quot; WX 600 ; N macron ; B 88 505 512 585 ;\nC 198 ; WX 600 ; N breve ; B 8&quot;
+ &amp; &quot;3 468 517 631 ;\nC 199 ; WX 600 ; N dotaccent ; B 230 485 370 625 ;\nC &quot;
+ &amp; &quot;200 ; WX 600 ; N dieresis ; B 128 485 472 625 ;\nC 202 ; WX 600 ; N rin&quot;
+ &amp; &quot;g ; B 198 481 402 678 ;\nC 203 ; WX 600 ; N cedilla ; B 205 -206 387 0 &quot;
+ &amp; &quot;;\nC 205 ; WX 600 ; N hungarumlaut ; B 68 488 588 661 ;\nC 206 ; WX 600&quot;
+ &amp; &quot; ; N ogonek ; B 169 -199 367 0 ;\nC 207 ; WX 600 ; N caron ; B 103 493 &quot;
+ &amp; &quot;497 667 ;\nC 208 ; WX 600 ; N emdash ; B -10 203 610 313 ;\nC 225 ; WX &quot;
+ &amp; &quot;600 ; N AE ; B -29 0 602 562 ;\nC 227 ; WX 600 ; N ordfeminine ; B 147 &quot;
+ &amp; &quot;196 453 580 ;\nC 232 ; WX 600 ; N Lslash ; B 39 0 578 562 ;\nC 233 ; WX&quot;
+ &amp; &quot; 600 ; N Oslash ; B 22 -22 578 584 ;\nC 234 ; WX 600 ; N OE ; B -25 0 5&quot;
+ &amp; &quot;95 562 ;\nC 235 ; WX 600 ; N ordmasculine ; B 147 196 453 580 ;\nC 241 &quot;
+ &amp; &quot;; WX 600 ; N ae ; B -4 -15 601 454 ;\nC 245 ; WX 600 ; N dotlessi ; B 7&quot;
+ &amp; &quot;7 0 523 439 ;\nC 248 ; WX 600 ; N lslash ; B 77 0 523 626 ;\nC 249 ; WX&quot;
+ &amp; &quot; 600 ; N oslash ; B 30 -24 570 463 ;\nC 250 ; WX 600 ; N oe ; B -18 -15&quot;
+ &amp; &quot; 611 454 ;\nC 251 ; WX 600 ; N germandbls ; B 22 -15 596 626 ;\nC -1 ; &quot;
+ &amp; &quot;WX 600 ; N Odieresis ; B 22 -18 578 748 ;\nC -1 ; WX 600 ; N logicalnot&quot;
+ &amp; &quot; ; B 71 103 529 413 ;\nC -1 ; WX 600 ; N minus ; B 71 203 529 313 ;\nC &quot;
+ &amp; &quot;-1 ; WX 600 ; N merge ; B 137 -15 464 487 ;\nC -1 ; WX 600 ; N degree ;&quot;
+ &amp; &quot; B 86 243 474 616 ;\nC -1 ; WX 600 ; N dectab ; B 8 0 592 320 ;\nC -1 ;&quot;
+ &amp; &quot; WX 600 ; N ll ; B -12 0 600 626 ;\nC -1 ; WX 600 ; N IJ ; B -8 -18 622&quot;
+ &amp; &quot; 562 ;\nC -1 ; WX 600 ; N Eacute ; B 25 0 560 784 ;\nC -1 ; WX 600 ; N &quot;
+ &amp; &quot;Ocircumflex ; B 22 -18 578 780 ;\nC -1 ; WX 600 ; N ucircumflex ; B -1 &quot;
+ &amp; &quot;-15 569 657 ;\nC -1 ; WX 600 ; N left ; B 65 44 535 371 ;\nC -1 ; WX 60&quot;
+ &amp; &quot;0 ; N threesuperior ; B 138 222 433 616 ;\nC -1 ; WX 6&quot;;
+
+CONST E2_3 =
+   &quot;00 ; N up ; B 136 0 463 447 ;\nC -1 ; WX 600 ; N multiply ; B 81 39 520&quot;
+ &amp; &quot; 478 ;\nC -1 ; WX 600 ; N Scaron ; B 47 -22 553 790 ;\nC -1 ; WX 600 ; &quot;
+ &amp; &quot;N tab ; B 19 0 581 562 ;\nC -1 ; WX 600 ; N Ucircumflex ; B 4 -18 596 7&quot;
+ &amp; &quot;80 ;\nC -1 ; WX 600 ; N divide ; B 71 16 529 500 ;\nC -1 ; WX 600 ; N A&quot;
+ &amp; &quot;circumflex ; B -9 0 609 780 ;\nC -1 ; WX 600 ; N eacute ; B 40 -15 563 &quot;
+ &amp; &quot;661 ;\nC -1 ; WX 600 ; N uacute ; B -1 -15 569 661 ;\nC -1 ; WX 600 ; N&quot;
+ &amp; &quot; Aacute ; B -9 0 609 784 ;\nC -1 ; WX 600 ; N copyright ; B 0 -18 600 5&quot;
+ &amp; &quot;80 ;\nC -1 ; WX 600 ; N twosuperior ; B 143 230 436 616 ;\nC -1 ; WX 60&quot;
+ &amp; &quot;0 ; N Ecircumflex ; B 25 0 560 780 ;\nC -1 ; WX 600 ; N ntilde ; B 18 0&quot;
+ &amp; &quot; 592 636 ;\nC -1 ; WX 600 ; N down ; B 137 -15 464 439 ;\nC -1 ; WX 600&quot;
+ &amp; &quot; ; N center ; B 40 14 560 580 ;\nC -1 ; WX 600 ; N onesuperior ; B 153 &quot;
+ &amp; &quot;230 447 616 ;\nC -1 ; WX 600 ; N ij ; B 6 -146 574 658 ;\nC -1 ; WX 600&quot;
+ &amp; &quot; ; N edieresis ; B 40 -15 563 625 ;\nC -1 ; WX 600 ; N graybox ; B 76 0&quot;
+ &amp; &quot; 525 599 ;\nC -1 ; WX 600 ; N odieresis ; B 30 -15 570 625 ;\nC -1 ; WX&quot;
+ &amp; &quot; 600 ; N Ograve ; B 22 -18 578 784 ;\nC -1 ; WX 600 ; N threequarters ;&quot;
+ &amp; &quot; B -47 -60 648 661 ;\nC -1 ; WX 600 ; N plusminus ; B 71 24 529 515 ;\n&quot;
+ &amp; &quot;C -1 ; WX 600 ; N prescription ; B 24 -15 599 562 ;\nC -1 ; WX 600 ; N &quot;
+ &amp; &quot;eth ; B 58 -27 543 626 ;\nC -1 ; WX 600 ; N largebullet ; B 248 229 352&quot;
+ &amp; &quot; 333 ;\nC -1 ; WX 600 ; N egrave ; B 40 -15 563 661 ;\nC -1 ; WX 600 ; &quot;
+ &amp; &quot;N ccedilla ; B 40 -206 545 459 ;\nC -1 ; WX 600 ; N notegraphic ; B 77 &quot;
+ &amp; &quot;-15 523 572 ;\nC -1 ; WX 600 ; N Udieresis ; B 4 -18 596 748 ;\nC -1 ; &quot;
+ &amp; &quot;WX 600 ; N Gcaron ; B 22 -18 594 790 ;\nC -1 ; WX 600 ; N arrowdown ; B&quot;
+ &amp; &quot; 144 -15 456 608 ;\nC -1 ; WX 600 ; N format ; B 5 -146 115 601 ;\nC -1&quot;
+ &amp; &quot; ; WX 600 ; N Otilde ; B 22 -18 578 759 ;\nC -1 ; WX 600 ; N Idieresis &quot;
+ &amp; &quot;; B 77 0 523 748 ;\nC -1 ; WX 600 ; N adieresis ; B 35 -15 570 625 ;\nC&quot;
+ &amp; &quot; -1 ; WX 600 ; N ecircumflex ; B 40 -15 563 657 ;\nC -1 ; WX 600 ; N Et&quot;
+ &amp; &quot;h ; B 30 0 594 562 ;\nC -1 ; WX 600 ; N onequarter ; B -56 -60 656 661 &quot;
+ &amp; &quot;;\nC -1 ; WX 600 ; N LL ; B -45 0 645 562 ;\nC -1 ; WX 600 ; N agrave ;&quot;
+ &amp; &quot; B 35 -15 570 661 ;\nC -1 ; WX 600 ; N Zcaron ; B 62 0&quot;;
+
+CONST E2_4 =
+   &quot; 539 790 ;\nC -1 ; WX 600 ; N Scedilla ; B 47 -206 553 582 ;\nC -1 ; WX&quot;
+ &amp; &quot; 600 ; N Idot ; B 77 0 523 748 ;\nC -1 ; WX 600 ; N Iacute ; B 77 0 523&quot;
+ &amp; &quot; 784 ;\nC -1 ; WX 600 ; N indent ; B 65 45 535 372 ;\nC -1 ; WX 600 ; N&quot;
+ &amp; &quot; Ugrave ; B 4 -18 596 784 ;\nC -1 ; WX 600 ; N scaron ; B 68 -17 535 66&quot;
+ &amp; &quot;7 ;\nC -1 ; WX 600 ; N overscore ; B 0 579 600 629 ;\nC -1 ; WX 600 ; N&quot;
+ &amp; &quot; Aring ; B -9 0 609 801 ;\nC -1 ; WX 600 ; N Ccedilla ; B 22 -206 560 5&quot;
+ &amp; &quot;80 ;\nC -1 ; WX 600 ; N Igrave ; B 77 0 523 784 ;\nC -1 ; WX 600 ; N br&quot;
+ &amp; &quot;okenbar ; B 255 -175 345 675 ;\nC -1 ; WX 600 ; N Oacute ; B 22 -18 578&quot;
+ &amp; &quot; 784 ;\nC -1 ; WX 600 ; N otilde ; B 30 -15 570 636 ;\nC -1 ; WX 600 ; &quot;
+ &amp; &quot;N Yacute ; B 12 0 589 784 ;\nC -1 ; WX 600 ; N lira ; B 72 -28 558 611 &quot;
+ &amp; &quot;;\nC -1 ; WX 600 ; N Icircumflex ; B 77 0 523 780 ;\nC -1 ; WX 600 ; N &quot;
+ &amp; &quot;Atilde ; B -9 0 609 759 ;\nC -1 ; WX 600 ; N Uacute ; B 4 -18 596 784 ;&quot;
+ &amp; &quot;\nC -1 ; WX 600 ; N Ydieresis ; B 12 0 589 748 ;\nC -1 ; WX 600 ; N ydi&quot;
+ &amp; &quot;eresis ; B -4 -142 601 625 ;\nC -1 ; WX 600 ; N idieresis ; B 77 0 523 &quot;
+ &amp; &quot;625 ;\nC -1 ; WX 600 ; N Adieresis ; B -9 0 609 748 ;\nC -1 ; WX 600 ; &quot;
+ &amp; &quot;N mu ; B -1 -142 569 439 ;\nC -1 ; WX 600 ; N trademark ; B -9 230 749 &quot;
+ &amp; &quot;562 ;\nC -1 ; WX 600 ; N oacute ; B 30 -15 570 661 ;\nC -1 ; WX 600 ; N&quot;
+ &amp; &quot; acircumflex ; B 35 -15 570 657 ;\nC -1 ; WX 600 ; N Agrave ; B -9 0 60&quot;
+ &amp; &quot;9 784 ;\nC -1 ; WX 600 ; N return ; B 19 0 581 562 ;\nC -1 ; WX 600 ; N&quot;
+ &amp; &quot; atilde ; B 35 -15 570 636 ;\nC -1 ; WX 600 ; N square ; B 19 0 581 562&quot;
+ &amp; &quot; ;\nC -1 ; WX 600 ; N registered ; B 0 -18 600 580 ;\nC -1 ; WX 600 ; N&quot;
+ &amp; &quot; stop ; B 19 0 581 562 ;\nC -1 ; WX 600 ; N udieresis ; B -1 -15 569 62&quot;
+ &amp; &quot;5 ;\nC -1 ; WX 600 ; N arrowup ; B 144 3 456 626 ;\nC -1 ; WX 600 ; N i&quot;
+ &amp; &quot;grave ; B 77 0 523 661 ;\nC -1 ; WX 600 ; N Edieresis ; B 25 0 560 748 &quot;
+ &amp; &quot;;\nC -1 ; WX 600 ; N zcaron ; B 81 0 520 667 ;\nC -1 ; WX 600 ; N arrow&quot;
+ &amp; &quot;both ; B -24 143 624 455 ;\nC -1 ; WX 600 ; N gcaron ; B 30 -146 580 66&quot;
+ &amp; &quot;7 ;\nC -1 ; WX 600 ; N arrowleft ; B -24 143 634 455 ;\nC -1 ; WX 600 ;&quot;
+ &amp; &quot; N aacute ; B 35 -15 570 661 ;\nC -1 ; WX 600 ; N ocircumflex ; B 30 -1&quot;
+ &amp; &quot;5 570 657 ;\nC -1 ; WX 600 ; N scedilla ; B 68 -206 535&quot;;
+
+CONST E2_5 =
+   &quot; 459 ;\nC -1 ; WX 600 ; N ograve ; B 30 -15 570 661 ;\nC -1 ; WX 600 ; &quot;
+ &amp; &quot;N onehalf ; B -47 -60 648 661 ;\nC -1 ; WX 600 ; N ugrave ; B -1 -15 56&quot;
+ &amp; &quot;9 661 ;\nC -1 ; WX 600 ; N Ntilde ; B 8 -12 610 759 ;\nC -1 ; WX 600 ; &quot;
+ &amp; &quot;N iacute ; B 77 0 523 661 ;\nC -1 ; WX 600 ; N arrowright ; B -34 143 6&quot;
+ &amp; &quot;24 455 ;\nC -1 ; WX 600 ; N Thorn ; B 48 0 557 562 ;\nC -1 ; WX 600 ; N&quot;
+ &amp; &quot; Egrave ; B 25 0 560 784 ;\nC -1 ; WX 600 ; N thorn ; B -14 -142 570 62&quot;
+ &amp; &quot;6 ;\nC -1 ; WX 600 ; N aring ; B 35 -15 570 678 ;\nC -1 ; WX 600 ; N ya&quot;
+ &amp; &quot;cute ; B -4 -142 601 661 ;\nC -1 ; WX 600 ; N icircumflex ; B 63 0 523 &quot;
+ &amp; &quot;657 ;\nEndCharMetrics\nStartComposites 58\nCC Aacute 2 ; PCC A 0 0 ; PC&quot;
+ &amp; &quot;C acute 30 123 ;\nCC Acircumflex 2 ; PCC A 0 0 ; PCC circumflex -30 123&quot;
+ &amp; &quot; ;\nCC Adieresis 2 ; PCC A 0 0 ; PCC dieresis -20 123 ;\nCC Agrave 2 ; &quot;
+ &amp; &quot;PCC A 0 0 ; PCC grave -50 123 ;\nCC Aring 2 ; PCC A 0 0 ; PCC ring -10 &quot;
+ &amp; &quot;123 ;\nCC Atilde 2 ; PCC A 0 0 ; PCC tilde -30 123 ;\nCC Eacute 2 ; PCC&quot;
+ &amp; &quot; E 0 0 ; PCC acute 30 123 ;\nCC Ecircumflex 2 ; PCC E 0 0 ; PCC circumf&quot;
+ &amp; &quot;lex 0 123 ;\nCC Edieresis 2 ; PCC E 0 0 ; PCC dieresis 0 123 ;\nCC Egra&quot;
+ &amp; &quot;ve 2 ; PCC E 0 0 ; PCC grave 0 123 ;\nCC Gcaron 2 ; PCC G 0 0 ; PCC car&quot;
+ &amp; &quot;on 10 123 ;\nCC Iacute 2 ; PCC I 0 0 ; PCC acute 0 123 ;\nCC Icircumfle&quot;
+ &amp; &quot;x 2 ; PCC I 0 0 ; PCC circumflex 0 123 ;\nCC Idieresis 2 ; PCC I 0 0 ; &quot;
+ &amp; &quot;PCC dieresis 0 123 ;\nCC Igrave 2 ; PCC I 0 0 ; PCC grave 0 123 ;\nCC N&quot;
+ &amp; &quot;tilde 2 ; PCC N 0 0 ; PCC tilde 0 123 ;\nCC Oacute 2 ; PCC O 0 0 ; PCC &quot;
+ &amp; &quot;acute 0 123 ;\nCC Ocircumflex 2 ; PCC O 0 0 ; PCC circumflex 0 123 ;\nC&quot;
+ &amp; &quot;C Odieresis 2 ; PCC O 0 0 ; PCC dieresis 0 123 ;\nCC Ograve 2 ; PCC O 0&quot;
+ &amp; &quot; 0 ; PCC grave 0 123 ;\nCC Otilde 2 ; PCC O 0 0 ; PCC tilde 0 123 ;\nCC&quot;
+ &amp; &quot; Scaron 2 ; PCC S 0 0 ; PCC caron 0 123 ;\nCC Uacute 2 ; PCC U 0 0 ; PC&quot;
+ &amp; &quot;C acute 30 123 ;\nCC Ucircumflex 2 ; PCC U 0 0 ; PCC circumflex 0 123 ;&quot;
+ &amp; &quot;\nCC Udieresis 2 ; PCC U 0 0 ; PCC dieresis 0 123 ;\nCC Ugrave 2 ; PCC &quot;
+ &amp; &quot;U 0 0 ; PCC grave -30 123 ;\nCC Yacute 2 ; PCC Y 0 0 ; PCC acute 30 123&quot;
+ &amp; &quot; ;\nCC Ydieresis 2 ; PCC Y 0 0 ; PCC dieresis 0 123 ;\nCC Zcaron 2 ; PC&quot;
+ &amp; &quot;C Z 0 0 ; PCC caron 0 123 ;\nCC aacute 2 ; PCC a 0 0 ; P&quot;;
+
+CONST E2_6 =
+   &quot;CC acute 0 0 ;\nCC acircumflex 2 ; PCC a 0 0 ; PCC circumflex -20 0 ;\n&quot;
+ &amp; &quot;CC adieresis 2 ; PCC a 0 0 ; PCC dieresis -10 0 ;\nCC agrave 2 ; PCC a &quot;
+ &amp; &quot;0 0 ; PCC grave -30 0 ;\nCC aring 2 ; PCC a 0 0 ; PCC ring 0 0 ;\nCC at&quot;
+ &amp; &quot;ilde 2 ; PCC a 0 0 ; PCC tilde 0 0 ;\nCC eacute 2 ; PCC e 0 0 ; PCC acu&quot;
+ &amp; &quot;te 0 0 ;\nCC ecircumflex 2 ; PCC e 0 0 ; PCC circumflex 0 0 ;\nCC edier&quot;
+ &amp; &quot;esis 2 ; PCC e 0 0 ; PCC dieresis 0 0 ;\nCC egrave 2 ; PCC e 0 0 ; PCC &quot;
+ &amp; &quot;grave 0 0 ;\nCC gcaron 2 ; PCC g 0 0 ; PCC caron -40 0 ;\nCC iacute 2 ;&quot;
+ &amp; &quot; PCC dotlessi 0 0 ; PCC acute 0 0 ;\nCC icircumflex 2 ; PCC dotlessi 0 &quot;
+ &amp; &quot;0 ; PCC circumflex -40 0 ;\nCC idieresis 2 ; PCC dotlessi 0 0 ; PCC die&quot;
+ &amp; &quot;resis -40 0 ;\nCC igrave 2 ; PCC dotlessi 0 0 ; PCC grave 0 0 ;\nCC nti&quot;
+ &amp; &quot;lde 2 ; PCC n 0 0 ; PCC tilde 0 0 ;\nCC oacute 2 ; PCC o 0 0 ; PCC acut&quot;
+ &amp; &quot;e 0 0 ;\nCC ocircumflex 2 ; PCC o 0 0 ; PCC circumflex 0 0 ;\nCC odiere&quot;
+ &amp; &quot;sis 2 ; PCC o 0 0 ; PCC dieresis 0 0 ;\nCC ograve 2 ; PCC o 0 0 ; PCC g&quot;
+ &amp; &quot;rave 0 0 ;\nCC otilde 2 ; PCC o 0 0 ; PCC tilde 0 0 ;\nCC scaron 2 ; PC&quot;
+ &amp; &quot;C s 0 0 ; PCC caron 0 0 ;\nCC uacute 2 ; PCC u 0 0 ; PCC acute 0 0 ;\nC&quot;
+ &amp; &quot;C ucircumflex 2 ; PCC u 0 0 ; PCC circumflex -20 0 ;\nCC udieresis 2 ; &quot;
+ &amp; &quot;PCC u 0 0 ; PCC dieresis -20 0 ;\nCC ugrave 2 ; PCC u 0 0 ; PCC grave -&quot;
+ &amp; &quot;30 0 ;\nCC yacute 2 ; PCC y 0 0 ; PCC acute 30 0 ;\nCC ydieresis 2 ; PC&quot;
+ &amp; &quot;C y 0 0 ; PCC dieresis 10 0 ;\nCC zcaron 2 ; PCC z 0 0 ; PCC caron 0 0 &quot;
+ &amp; &quot;;\nEndComposites\nEndFontMetrics\n&quot;;
+
+CONST E3 =
    &quot;StartFontMetrics 2.0\nComment Copyright (c) 1985, 1987, 1989, 1990 Adob&quot;
  &amp; &quot;e Systems Incorporated.  All Rights Reserved.\nComment Creation Date: T&quot;
  &amp; &quot;ue Mar 20 12:17:14 1990\nComment UniqueID 28417\nComment VMusage 30458 &quot;
@@ -263,7 +933,7 @@ CONST E0 =
  &amp; &quot;olon ; B 82 -13 251 472 ;\nC 59 ; WX 333 ; N semicolon ; B 82 -180 266 &quot;
  &amp; &quot;472 ;\nC 60 ; WX 570 ; N less ; B 31 -8 539 514 ;\nC 61 ; WX 5&quot;;
 
-CONST E0_0 =
+CONST E3_0 =
    &quot;70 ; N equal ; B 33 107 537 399 ;\nC 62 ; WX 570 ; N greater ; B 31 -8 &quot;
  &amp; &quot;539 514 ;\nC 63 ; WX 500 ; N question ; B 57 -13 445 689 ;\nC 64 ; WX 9&quot;
  &amp; &quot;30 ; N at ; B 108 -19 822 691 ;\nC 65 ; WX 722 ; N A ; B 9 0 689 690 ;\n&quot;
@@ -294,7 +964,7 @@ CONST E0_0 =
  &amp; &quot;N i ; B 16 0 255 691 ;\nC 106 ; WX 333 ; N j ; B -57 -203 263 691 ;\nC &quot;
  &amp; &quot;107 ; WX 556 ; N k ; B 22 0 543 676 ;\nC 108 ; WX 278 ; N&quot;;
 
-CONST E0_1 =
+CONST E3_1 =
    &quot; l ; B 16 0 255 676 ;\nC 109 ; WX 833 ; N m ; B 16 0 814 473 ;\nC 110 ;&quot;
  &amp; &quot; WX 556 ; N n ; B 21 0 539 473 ;\nC 111 ; WX 500 ; N o ; B 25 -14 476 4&quot;
  &amp; &quot;73 ;\nC 112 ; WX 556 ; N p ; B 19 -205 524 473 ;\nC 113 ; WX 556 ; N q &quot;
@@ -325,7 +995,7 @@ CONST E0_1 =
  &amp; &quot;63 155 ;\nC 185 ; WX 500 ; N quotedblbase ; B 14 -180 468 155 ;\nC 186 &quot;
  &amp; &quot;; WX 500 ; N quotedblright ; B 14 356 468 691 ;\nC 187&quot;;
 
-CONST E0_2 =
+CONST E3_2 =
    &quot; ; WX 500 ; N guillemotright ; B 27 36 477 415 ;\nC 188 ; WX 1000 ; N e&quot;
  &amp; &quot;llipsis ; B 82 -13 917 156 ;\nC 189 ; WX 1000 ; N perthousand ; B 7 -29&quot;
  &amp; &quot; 995 706 ;\nC 191 ; WX 500 ; N questiondown ; B 55 -201 443 501 ;\nC 19&quot;
@@ -356,7 +1026,7 @@ CONST E0_2 =
  &amp; &quot;; N twosuperior ; B 0 275 300 688 ;\nC -1 ; WX 444 ; N eacute ; B 25 -1&quot;
  &amp; &quot;4 426 713 ;\nC -1 ; WX 500 ; N otilde ; B 25 -14 476&quot;;
 
-CONST E0_3 =
+CONST E3_3 =
    &quot; 674 ;\nC -1 ; WX 722 ; N Aacute ; B 9 0 689 923 ;\nC -1 ; WX 500 ; N o&quot;
  &amp; &quot;circumflex ; B 25 -14 476 704 ;\nC -1 ; WX 500 ; N yacute ; B 16 -205 4&quot;
  &amp; &quot;80 713 ;\nC -1 ; WX 556 ; N udieresis ; B 16 -14 537 667 ;\nC -1 ; WX 7&quot;
@@ -387,7 +1057,7 @@ CONST E0_3 =
  &amp; &quot;9 884 ;\nC -1 ; WX 722 ; N Uacute ; B 16 -19 701 923 ;\nC -1 ; WX 778 ;&quot;
  &amp; &quot; N Ocircumflex ; B 35 -19 743 914 ;\nC -1 ; WX 570 ; N &quot;;
 
-CONST E0_4 =
+CONST E3_4 =
    &quot;logicalnot ; B 33 108 537 399 ;\nC -1 ; WX 722 ; N Aring ; B 9 0 689 93&quot;
  &amp; &quot;5 ;\nC -1 ; WX 278 ; N idieresis ; B -36 0 301 667 ;\nC -1 ; WX 278 ; N&quot;
  &amp; &quot; iacute ; B 16 0 290 713 ;\nC -1 ; WX 500 ; N aacute ; B 25 -14 488 713&quot;
@@ -419,7 +1089,7 @@ CONST E0_4 =
  &amp; &quot;2\nKPX L V -92\nKPX L T -92\n\nKPX N period 0\nKPX N comma 0\nKPX N A -&quot;
  &amp; &quot;20\n\nKPX O period 0\nKPX O comma &quot;;
 
-CONST E0_5 =
+CONST E3_5 =
    &quot;0\nKPX O Y -50\nKPX O X -40\nKPX O W -50\nKPX O V -50\nKPX O T -40\nKPX&quot;
  &amp; &quot; O A -40\n\nKPX P period -110\nKPX P o -20\nKPX P e -20\nKPX P comma -9&quot;
  &amp; &quot;2\nKPX P a -10\nKPX P A -74\n\nKPX Q period -20\nKPX Q comma 0\nKPX Q U&quot;
@@ -452,7 +1122,7 @@ CONST E0_5 =
  &amp; &quot;X i v -10\n\nKPX k y -15\nKPX k o -15\nKPX k e -10\n\nKPX l y 0\nKPX l &quot;
  &amp; &quot;w 0\n\nKPX m y 0\nKPX m u 0\n\nKPX n y 0\nKPX&quot;;
 
-CONST E0_6 =
+CONST E3_6 =
    &quot; n v -40\nKPX n u 0\n\nKPX o y 0\nKPX o x 0\nKPX o w -10\nKPX o v -10\n&quot;
  &amp; &quot;KPX o g 0\n\nKPX p y 0\n\nKPX period quoteright -55\nKPX period quotedb&quot;
  &amp; &quot;lright -55\n\nKPX quotedblleft quoteleft 0\nKPX quotedblleft A -10\n\nK&quot;
@@ -484,7 +1154,7 @@ CONST E0_6 =
  &amp; &quot;grave 28 210 ;\nCC Ntilde 2 ; PCC N 0 0 ; PCC tilde 195 210 ;\nCC Oacut&quot;
  &amp; &quot;e 2 ; PCC O 0 0 ; PCC acute 223 210 ;\nCC Ocirc&quot;;
 
-CONST E0_7 =
+CONST E3_7 =
    &quot;umflex 2 ; PCC O 0 0 ; PCC circumflex 223 210 ;\nCC Odieresis 2 ; PCC O&quot;
  &amp; &quot; 0 0 ; PCC dieresis 223 210 ;\nCC Ograve 2 ; PCC O 0 0 ; PCC grave 223 &quot;
  &amp; &quot;210 ;\nCC Otilde 2 ; PCC O 0 0 ; PCC tilde 223 210 ;\nCC Scaron 2 ; PCC&quot;
@@ -515,7 +1185,7 @@ CONST E0_7 =
  &amp; &quot; PCC y 0 0 ; PCC dieresis 84 0 ;\nCC zcaron 2 ; PCC z 0 0 ; PCC caron 5&quot;
  &amp; &quot;6 0 ;\nEndComposites\nEndFontMetrics\n&quot;;
 
-CONST E1 =
+CONST E4 =
    &quot;StartFontMetrics 2.0\nComment Copyright (c) 1985, 1987, 1989, 1990 Adob&quot;
  &amp; &quot;e Systems Incorporated.  All rights reserved.\nComment Creation Date: T&quot;
  &amp; &quot;hu Mar 15 10:24:18 1990\nComment UniqueID 28362\nComment VMusage 7572 4&quot;
@@ -546,7 +1216,7 @@ CONST E1 =
  &amp; &quot;09 703 ;\nC 58 ; WX 278 ; N colon ; B 87 0 301 516 ;\nC 59 ; WX 278 ; N&quot;
  &amp; &quot; semicolon ; B 56 -147 301 516 ;\nC 60 ; WX 584 ; N less ; B &quot;;
 
-CONST E1_0 =
+CONST E4_0 =
    &quot;94 11 641 495 ;\nC 61 ; WX 584 ; N equal ; B 63 115 628 390 ;\nC 62 ; W&quot;
  &amp; &quot;X 584 ; N greater ; B 50 11 597 495 ;\nC 63 ; WX 556 ; N question ; B 1&quot;
  &amp; &quot;61 0 610 727 ;\nC 64 ; WX 1015 ; N at ; B 215 -19 965 737 ;\nC 65 ; WX &quot;
@@ -577,7 +1247,7 @@ CONST E1_0 =
  &amp; &quot; B 65 0 573 718 ;\nC 105 ; WX 222 ; N i ; B 67 0 308 718 ;\nC 106 ; WX &quot;
  &amp; &quot;222 ; N j ; B -60 -210 308 718 ;\nC 107 ; WX 500 ; N k ; &quot;;
 
-CONST E1_1 =
+CONST E4_1 =
    &quot;B 67 0 600 718 ;\nC 108 ; WX 222 ; N l ; B 67 0 308 718 ;\nC 109 ; WX 8&quot;
  &amp; &quot;33 ; N m ; B 65 0 852 538 ;\nC 110 ; WX 556 ; N n ; B 65 0 573 538 ;\nC&quot;
  &amp; &quot; 111 ; WX 556 ; N o ; B 83 -14 585 538 ;\nC 112 ; WX 556 ; N p ; B 14 -&quot;
@@ -608,7 +1278,7 @@ CONST E1_1 =
  &amp; &quot; 184 ; WX 222 ; N quotesinglbase ; B 21 -149 180 106 ;\nC 185 ; WX 333 &quot;
  &amp; &quot;; N quotedblbase ; B -6 -149 318 106 ;\nC 186 ; WX 33&quot;;
 
-CONST E1_2 =
+CONST E4_2 =
    &quot;3 ; N quotedblright ; B 124 463 448 718 ;\nC 187 ; WX 556 ; N guillemot&quot;
  &amp; &quot;right ; B 120 108 528 446 ;\nC 188 ; WX 1000 ; N ellipsis ; B 115 0 908&quot;
  &amp; &quot; 106 ;\nC 189 ; WX 1000 ; N perthousand ; B 88 -19 1029 703 ;\nC 191 ; &quot;
@@ -639,7 +1309,7 @@ CONST E1_2 =
  &amp; &quot;;\nC -1 ; WX 556 ; N egrave ; B 84 -15 578 734 ;\nC -1 ; WX 333 ; N two&quot;
  &amp; &quot;superior ; B 64 281 449 703 ;\nC -1 ; WX 556 ; N eac&quot;;
 
-CONST E1_3 =
+CONST E4_3 =
    &quot;ute ; B 84 -15 587 734 ;\nC -1 ; WX 556 ; N otilde ; B 83 -14 602 722 ;&quot;
  &amp; &quot;\nC -1 ; WX 667 ; N Aacute ; B 14 0 683 929 ;\nC -1 ; WX 556 ; N ocircu&quot;
  &amp; &quot;mflex ; B 83 -14 585 734 ;\nC -1 ; WX 500 ; N yacute ; B 15 -214 600 73&quot;
@@ -670,7 +1340,7 @@ CONST E1_3 =
  &amp; &quot; WX 584 ; N divide ; B 85 -19 606 524 ;\nC -1 ; WX 667 ; N Atilde ; B 1&quot;
  &amp; &quot;4 0 699 917 ;\nC -1 ; WX 722 ; N Uacute ; B 123 -19 79&quot;;
 
-CONST E1_4 =
+CONST E4_4 =
    &quot;7 929 ;\nC -1 ; WX 778 ; N Ocircumflex ; B 105 -19 826 929 ;\nC -1 ; WX&quot;
  &amp; &quot; 584 ; N logicalnot ; B 106 108 628 390 ;\nC -1 ; WX 667 ; N Aring ; B &quot;
  &amp; &quot;14 0 654 931 ;\nC -1 ; WX 278 ; N idieresis ; B 95 0 416 706 ;\nC -1 ; &quot;
@@ -702,7 +1372,7 @@ CONST E1_4 =
  &amp; &quot;KPX L V -110\nKPX L T -110\n\nKPX O period -40\nKPX O comma -40\nKPX O &quot;
  &amp; &quot;Y -70\nKPX O X -60\nKPX O W -3&quot;;
 
-CONST E1_5 =
+CONST E4_5 =
    &quot;0\nKPX O V -50\nKPX O T -40\nKPX O A -20\n\nKPX P period -180\nKPX P o &quot;
  &amp; &quot;-50\nKPX P e -50\nKPX P comma -180\nKPX P a -40\nKPX P A -120\n\nKPX Q &quot;
  &amp; &quot;U -10\n\nKPX R Y -50\nKPX R W -30\nKPX R V -50\nKPX R U -40\nKPX R T -3&quot;
@@ -735,7 +1405,7 @@ CONST E1_5 =
  &amp; &quot; oslash k -55\nKPX oslash j -55\nKPX oslash i -55\nKPX oslash h -55\nKP&quot;
  &amp; &quot;X oslash g -55\nKPX oslas&quot;;
 
-CONST E1_6 =
+CONST E4_6 =
    &quot;h f -55\nKPX oslash e -55\nKPX oslash d -55\nKPX oslash comma -95\nKPX &quot;
  &amp; &quot;oslash c -55\nKPX oslash b -55\nKPX oslash a -55\n\nKPX p y -30\nKPX p &quot;
  &amp; &quot;period -35\nKPX p comma -35\n\nKPX period space -60\nKPX period quoteri&quot;
@@ -767,7 +1437,7 @@ CONST E1_6 =
  &amp; &quot;CC acute 264 195 ;\nCC Ocircumflex 2 ; PCC O 0 0 ; PCC circumflex 264 1&quot;
  &amp; &quot;95 ;\nCC Odieresis 2 ; PCC O 0 0 ; PC&quot;;
 
-CONST E1_7 =
+CONST E4_7 =
    &quot;C dieresis 264 195 ;\nCC Ograve 2 ; PCC O 0 0 ; PCC grave 264 195 ;\nCC&quot;
  &amp; &quot; Otilde 2 ; PCC O 0 0 ; PCC tilde 264 195 ;\nCC Scaron 2 ; PCC S 0 0 ; &quot;
  &amp; &quot;PCC caron 208 195 ;\nCC Uacute 2 ; PCC U 0 0 ; PCC acute 236 195 ;\nCC &quot;
@@ -797,7 +1467,7 @@ CONST E1_7 =
  &amp; &quot;is 2 ; PCC y 0 0 ; PCC dieresis 84 0 ;\nCC zcaron 2 ; PCC z 0 0 ; PCC c&quot;
  &amp; &quot;aron 84 0 ;\nEndComposites\nEndFontMetrics\n&quot;;
 
-CONST E2 =
+CONST E5 =
    &quot;# Last modified on Wed Dec 21 10:59:47 PST 1994 by heydon\n#\n# This fi&quot;
  &amp; &quot;le maps character names to their octal codes for the\n# PostScript ISOL&quot;
  &amp; &quot;atin1 encoding. See section E.5 of the \&quot;PostScript\n# Language Referen&quot;
@@ -833,7 +1503,7 @@ CONST E2 =
  &amp; &quot;360\nexclam\t\t041\nexclamdown\t241\nf\t\t146\nfi\t\t -1\nfive\t\t065\n&quot;
  &amp; &quot;fl\t\t -1\nflorin\t\t -1\nformat\t\t &quot;;
 
-CONST E2_0 =
+CONST E5_0 =
    &quot;-2\nfour\t\t064\nfraction\t -1\ng\t\t147\ngcaron\t\t -2\ngermandbls\t33&quot;
  &amp; &quot;7\ngrave\t\t221\ngraybox\t\t -2\ngreater\t\t076\nguillemotleft\t253\ngu&quot;
  &amp; &quot;illemotright\t273\nguilsinglleft\t -1\nguilsinglright\t -1\nh\t\t150\nh&quot;
@@ -862,7 +1532,7 @@ CONST E2_0 =
  &amp; &quot;375\nydieresis\t377\nyen\t\t245\nz\t\t172\nzcaron\t\t -1\nzero\t\t060\n&quot;
 ;
 
-CONST E3 =
+CONST E6 =
    &quot;StartFontMetrics 2.0\nComment Copyright (c) 1989, 1990, 1991, Adobe Sys&quot;
  &amp; &quot;tems Incorporated. All rights reserved.\nComment Creation Date: Tue Sep&quot;
  &amp; &quot; 17 14:13:24 1991\nComment UniqueID 36389\nComment VMusage 10055 54684\n&quot;
@@ -893,7 +1563,7 @@ CONST E3 =
  &amp; &quot;WX 600 ; N semicolon ; B 99 -111 480 425 ;\nC 60 ; WX 600 ; N less ; B &quot;
  &amp; &quot;121 15 612 501 ;\nC 61 ; WX 600 ; N equal ; B 96 118 614 398 ;&quot;;
 
-CONST E3_0 =
+CONST E6_0 =
    &quot;\nC 62 ; WX 600 ; N greater ; B 97 15 589 501 ;\nC 63 ; WX 600 ; N ques&quot;
  &amp; &quot;tion ; B 183 -14 591 580 ;\nC 64 ; WX 600 ; N at ; B 66 -15 641 616 ;\n&quot;
  &amp; &quot;C 65 ; WX 600 ; N A ; B -9 0 631 562 ;\nC 66 ; WX 600 ; N B ; B 30 0 62&quot;
@@ -924,7 +1594,7 @@ CONST E3_0 =
  &amp; &quot;06 ; WX 600 ; N j ; B 37 -146 580 658 ;\nC 107 ; WX 600 ; N k ; B 33 0 &quot;
  &amp; &quot;642 626 ;\nC 108 ; WX 600 ; N l ; B 77 0 545 626 ;\nC 109 ; &quot;;
 
-CONST E3_1 =
+CONST E6_1 =
    &quot;WX 600 ; N m ; B -22 0 648 454 ;\nC 110 ; WX 600 ; N n ; B 18 0 614 454&quot;
  &amp; &quot; ;\nC 111 ; WX 600 ; N o ; B 71 -15 622 454 ;\nC 112 ; WX 600 ; N p ; B&quot;
  &amp; &quot; -31 -142 622 454 ;\nC 113 ; WX 600 ; N q ; B 61 -142 684 454 ;\nC 114 &quot;
@@ -955,7 +1625,7 @@ CONST E3_1 =
  &amp; &quot;X 600 ; N quotedblbase ; B 35 -142 559 143 ;\nC 186 ; WX 600 ; N quoted&quot;
  &amp; &quot;blright ; B 120 277 644 562 ;\nC 187 ; WX 600 ; N gui&quot;;
 
-CONST E3_2 =
+CONST E6_2 =
    &quot;llemotright ; B 72 70 647 446 ;\nC 188 ; WX 600 ; N ellipsis ; B 35 -15&quot;
  &amp; &quot; 586 116 ;\nC 189 ; WX 600 ; N perthousand ; B -44 -15 742 616 ;\nC 191&quot;
  &amp; &quot; ; WX 600 ; N questiondown ; B 101 -146 509 449 ;\nC 193 ; WX 600 ; N g&quot;
@@ -986,7 +1656,7 @@ CONST E3_2 =
  &amp; &quot;80 ;\nC -1 ; WX 600 ; N ucircumflex ; B 70 -15 591 657 ;\nC -1 ; WX 600&quot;
  &amp; &quot; ; N left ; B 109 44 589 371 ;\nC -1 ; WX 600 ; N thre&quot;;
 
-CONST E3_3 =
+CONST E6_3 =
    &quot;esuperior ; B 193 222 525 616 ;\nC -1 ; WX 600 ; N up ; B 196 0 523 447&quot;
  &amp; &quot; ;\nC -1 ; WX 600 ; N multiply ; B 105 39 606 478 ;\nC -1 ; WX 600 ; N &quot;
  &amp; &quot;Scaron ; B 54 -22 672 790 ;\nC -1 ; WX 600 ; N tab ; B 19 0 641 562 ;\n&quot;
@@ -1017,7 +1687,7 @@ CONST E3_3 =
  &amp; &quot;\nC -1 ; WX 600 ; N onequarter ; B 14 -60 706 661 ;\nC -1 ; WX 600 ; N &quot;
  &amp; &quot;LL ; B -45 0 694 562 ;\nC -1 ; WX 600 ; N agrave ; B &quot;;
 
-CONST E3_4 =
+CONST E6_4 =
    &quot;62 -15 592 661 ;\nC -1 ; WX 600 ; N Zcaron ; B 62 0 659 790 ;\nC -1 ; W&quot;
  &amp; &quot;X 600 ; N Scedilla ; B 54 -206 672 582 ;\nC -1 ; WX 600 ; N Idot ; B 77&quot;
  &amp; &quot; 0 642 748 ;\nC -1 ; WX 600 ; N Iacute ; B 77 0 642 784 ;\nC -1 ; WX 60&quot;
@@ -1048,7 +1718,7 @@ CONST E3_4 =
  &amp; &quot;; WX 600 ; N arrowleft ; B 40 143 708 455 ;\nC -1 ; WX 600 ; N aacute ;&quot;
  &amp; &quot; B 62 -15 608 661 ;\nC -1 ; WX 600 ; N ocircumflex ; B &quot;;
 
-CONST E3_5 =
+CONST E6_5 =
    &quot;71 -15 622 657 ;\nC -1 ; WX 600 ; N scedilla ; B 67 -206 607 459 ;\nC -&quot;
  &amp; &quot;1 ; WX 600 ; N ograve ; B 71 -15 622 661 ;\nC -1 ; WX 600 ; N onehalf ;&quot;
  &amp; &quot; B 23 -60 715 661 ;\nC -1 ; WX 600 ; N ugrave ; B 70 -15 591 661 ;\nC -&quot;
@@ -1079,7 +1749,7 @@ CONST E3_5 =
  &amp; &quot; 0 0 ; PCC grave -4 123 ;\nCC Yacute 2 ; PCC Y 0 0 ; PCC acute 56 123 ;&quot;
  &amp; &quot;\nCC Ydieresis 2 ; PCC Y 0 0 ; PCC dieresis 26 123 ;\nCC&quot;;
 
-CONST E3_6 =
+CONST E6_6 =
    &quot; Zcaron 2 ; PCC Z 0 0 ; PCC caron 26 123 ;\nCC aacute 2 ; PCC a 0 0 ; P&quot;
  &amp; &quot;CC acute 0 0 ;\nCC acircumflex 2 ; PCC a 0 0 ; PCC circumflex -20 0 ;\n&quot;
  &amp; &quot;CC adieresis 2 ; PCC a 0 0 ; PCC dieresis -10 0 ;\nCC agrave 2 ; PCC a &quot;
@@ -1102,7 +1772,7 @@ CONST E3_6 =
  &amp; &quot;C y 0 0 ; PCC dieresis 10 0 ;\nCC zcaron 2 ; PCC z 0 0 ; PCC caron 0 0 &quot;
  &amp; &quot;;\nEndComposites\nEndFontMetrics\n&quot;;
 
-CONST E4 =
+CONST E7 =
    &quot;StartFontMetrics 2.0\nComment Copyright (c) 1985, 1987, 1989, 1990 Adob&quot;
  &amp; &quot;e Systems Incorporated.  All Rights Reserved.\nComment Creation Date: T&quot;
  &amp; &quot;ue Mar 20 13:14:55 1990\nComment UniqueID 28425\nComment VMusage 32721 &quot;
@@ -1133,7 +1803,7 @@ CONST E4 =
  &amp; &quot;;\nC 58 ; WX 333 ; N colon ; B 23 -13 264 459 ;\nC 59 ; WX 333 ; N semi&quot;
  &amp; &quot;colon ; B -25 -183 264 459 ;\nC 60 ; WX 570 ; N less ; B 31 -8&quot;;
 
-CONST E4_0 =
+CONST E7_0 =
    &quot; 539 514 ;\nC 61 ; WX 570 ; N equal ; B 33 107 537 399 ;\nC 62 ; WX 570&quot;
  &amp; &quot; ; N greater ; B 31 -8 539 514 ;\nC 63 ; WX 500 ; N question ; B 79 -13&quot;
  &amp; &quot; 470 684 ;\nC 64 ; WX 832 ; N at ; B 63 -18 770 685 ;\nC 65 ; WX 667 ; &quot;
@@ -1164,7 +1834,7 @@ CONST E4_0 =
  &amp; &quot;; WX 556 ; N h ; B -13 -9 498 699 ;\nC 105 ; WX 278 ; N i ; B 2 -9 263 &quot;
  &amp; &quot;684 ;\nC 106 ; WX 278 ; N j ; B -189 -207 279 684 ;\nC 107 &quot;;
 
-CONST E4_1 =
+CONST E7_1 =
    &quot;; WX 500 ; N k ; B -23 -8 483 699 ;\nC 108 ; WX 278 ; N l ; B 2 -9 290 &quot;
  &amp; &quot;699 ;\nC 109 ; WX 778 ; N m ; B -14 -9 722 462 ;\nC 110 ; WX 556 ; N n &quot;
  &amp; &quot;; B -6 -9 493 462 ;\nC 111 ; WX 500 ; N o ; B -3 -13 441 462 ;\nC 112 ;&quot;
@@ -1195,7 +1865,7 @@ CONST E4_1 =
  &amp; &quot;X 350 ; N bullet ; B 0 175 350 525 ;\nC 184 ; WX 333 ; N quotesinglbase&quot;
  &amp; &quot; ; B -5 -182 199 134 ;\nC 185 ; WX 500 ; N quotedblbas&quot;;
 
-CONST E4_2 =
+CONST E7_2 =
    &quot;e ; B -57 -182 403 134 ;\nC 186 ; WX 500 ; N quotedblright ; B 53 369 5&quot;
  &amp; &quot;13 685 ;\nC 187 ; WX 500 ; N guillemotright ; B 12 32 468 415 ;\nC 188 &quot;
  &amp; &quot;; WX 1000 ; N ellipsis ; B 40 -13 852 135 ;\nC 189 ; WX 1000 ; N pertho&quot;
@@ -1226,7 +1896,7 @@ CONST E4_2 =
  &amp; &quot;WX 500 ; N thorn ; B -120 -205 446 699 ;\nC -1 ; WX 444 ; N egrave ; B &quot;
  &amp; &quot;5 -13 398 697 ;\nC -1 ; WX 300 ; N twosuperior ; B 2&quot;;
 
-CONST E4_3 =
+CONST E7_3 =
    &quot; 274 313 683 ;\nC -1 ; WX 444 ; N eacute ; B 5 -13 435 697 ;\nC -1 ; WX&quot;
  &amp; &quot; 500 ; N otilde ; B -3 -13 491 655 ;\nC -1 ; WX 667 ; N Aacute ; B -67 &quot;
  &amp; &quot;0 593 904 ;\nC -1 ; WX 500 ; N ocircumflex ; B -3 -13 451 690 ;\nC -1 ;&quot;
@@ -1257,7 +1927,7 @@ CONST E4_3 =
  &amp; &quot;1 ; N Thorn ; B -27 0 573 669 ;\nC -1 ; WX 570 ; N divide ; B 33 -29 53&quot;
  &amp; &quot;7 535 ;\nC -1 ; WX 667 ; N Atilde ; B -67 0 593 862 ;&quot;;
 
-CONST E4_4 =
+CONST E7_4 =
    &quot;\nC -1 ; WX 722 ; N Uacute ; B 67 -18 744 904 ;\nC -1 ; WX 722 ; N Ocir&quot;
  &amp; &quot;cumflex ; B 27 -18 691 897 ;\nC -1 ; WX 606 ; N logicalnot ; B 51 108 5&quot;
  &amp; &quot;55 399 ;\nC -1 ; WX 667 ; N Aring ; B -67 0 593 921 ;\nC -1 ; WX 278 ; &quot;
@@ -1289,7 +1959,7 @@ CONST E4_4 =
  &amp; &quot;K u -20\nKPX K o -25\nKPX K e -25\nKPX K O -30\n\nKPX L y -37\nKPX L qu&quot;
  &amp; &quot;oteright -55\nKPX L quotedblri&quot;;
 
-CONST E4_5 =
+CONST E7_5 =
    &quot;ght 0\nKPX L Y -37\nKPX L W -37\nKPX L V -37\nKPX L T -18\n\nKPX N peri&quot;
  &amp; &quot;od 0\nKPX N comma 0\nKPX N A -30\n\nKPX O period 0\nKPX O comma 0\nKPX &quot;
  &amp; &quot;O Y -50\nKPX O X -40\nKPX O W -50\nKPX O V -50\nKPX O T -40\nKPX O A -4&quot;
@@ -1322,7 +1992,7 @@ CONST E4_5 =
  &amp; &quot;g y 0\nKPX g r 0\nKPX g period 0\nKPX g o 0\nKPX g i 0\nKPX g g 0\nKPX &quot;
  &amp; &quot;g e 0\nKPX g comma 0\nKPX g a 0\n\nKPX &quot;;
 
-CONST E4_6 =
+CONST E7_6 =
    &quot;h y 0\n\nKPX i v 0\n\nKPX k y 0\nKPX k o -10\nKPX k e -30\n\nKPX l y 0\n&quot;
  &amp; &quot;KPX l w 0\n\nKPX m y 0\nKPX m u 0\n\nKPX n y 0\nKPX n v -40\nKPX n u 0\n&quot;
  &amp; &quot;\nKPX o y -10\nKPX o x -10\nKPX o w -25\nKPX o v -15\nKPX o g 0\n\nKPX &quot;
@@ -1354,7 +2024,7 @@ CONST E4_6 =
  &amp; &quot;circumflex 53 207 ;\nCC Idieresis 2 ; PCC I 0 0 ; PCC dieresis 48 207 ;&quot;
  &amp; &quot;\nCC Igrave 2 ; PCC I 0 0 ; PCC grave 33 207 ;\nCC Ntilde 2&quot;;
 
-CONST E4_7 =
+CONST E7_7 =
    &quot; ; PCC N 0 0 ; PCC tilde 210 207 ;\nCC Oacute 2 ; PCC O 0 0 ; PCC acute&quot;
  &amp; &quot; 200 207 ;\nCC Ocircumflex 2 ; PCC O 0 0 ; PCC circumflex 230 207 ;\nCC&quot;
  &amp; &quot; Odieresis 2 ; PCC O 0 0 ; PCC dieresis 215 207 ;\nCC Ograve 2 ; PCC O &quot;
@@ -1385,11 +2055,11 @@ CONST E4_7 =
  &amp; &quot;C u 0 0 ; PCC grave 102 0 ;\nCC yacute 2 ; PCC y 0 0 ; PCC acute 56 0 ;&quot;
  &amp; &quot;\nCC ydieresis 2 ; PCC y 0 0 ; PCC dieresis 41 0 ;\nCC&quot;;
 
-CONST E4_8 =
+CONST E7_8 =
    &quot; zcaron 2 ; PCC z 0 0 ; PCC caron 13 0 ;\nEndComposites\nEndFontMetrics&quot;
  &amp; &quot;\n&quot;;
 
-CONST E5 =
+CONST E8 =
    &quot;StartFontMetrics 2.0\nComment Copyright (c) 1989, 1990, 1991 Adobe Syst&quot;
  &amp; &quot;ems Incorporated. All rights reserved.\nComment Creation Date: Tue Sep &quot;
  &amp; &quot;17 07:47:21 1991\nComment UniqueID 36347\nComment VMusage 31037 39405\n&quot;
@@ -1420,7 +2090,7 @@ CONST E5 =
  &amp; &quot;81 -112 371 385 ;\nC 60 ; WX 600 ; N less ; B 41 42 519 472 ;\nC 61 ; W&quot;
  &amp; &quot;X 600 ; N equal ; B 80 138 520 376 ;\nC 62 ; WX 600 ; N greater &quot;;
 
-CONST E5_0 =
+CONST E8_0 =
    &quot;; B 66 42 544 472 ;\nC 63 ; WX 600 ; N question ; B 129 -15 492 572 ;\n&quot;
  &amp; &quot;C 64 ; WX 600 ; N at ; B 77 -15 533 622 ;\nC 65 ; WX 600 ; N A ; B 3 0 &quot;
  &amp; &quot;597 562 ;\nC 66 ; WX 600 ; N B ; B 43 0 559 562 ;\nC 67 ; WX 600 ; N C &quot;
@@ -1451,7 +2121,7 @@ CONST E5_0 =
  &amp; &quot;410 657 ;\nC 107 ; WX 600 ; N k ; B 43 0 580 629 ;\nC 108 ; WX 600 ; N &quot;
  &amp; &quot;l ; B 95 0 505 629 ;\nC 109 ; WX 600 ; N m ; B -5 0 605 441&quot;;
 
-CONST E5_1 =
+CONST E8_1 =
    &quot; ;\nC 110 ; WX 600 ; N n ; B 26 0 575 441 ;\nC 111 ; WX 600 ; N o ; B 6&quot;
  &amp; &quot;2 -15 538 441 ;\nC 112 ; WX 600 ; N p ; B 9 -157 555 441 ;\nC 113 ; WX &quot;
  &amp; &quot;600 ; N q ; B 45 -157 591 441 ;\nC 114 ; WX 600 ; N r ; B 60 0 559 441 &quot;
@@ -1482,7 +2152,7 @@ CONST E5_1 =
  &amp; &quot;457 100 ;\nC 186 ; WX 600 ; N quotedblright ; B 143 328 457 562 ;\nC 18&quot;
  &amp; &quot;7 ; WX 600 ; N guillemotright ; B 37 70 563 446 ;\nC 18&quot;;
 
-CONST E5_2 =
+CONST E8_2 =
    &quot;8 ; WX 600 ; N ellipsis ; B 37 -15 563 111 ;\nC 189 ; WX 600 ; N pertho&quot;
  &amp; &quot;usand ; B 3 -15 600 622 ;\nC 191 ; WX 600 ; N questiondown ; B 108 -157&quot;
  &amp; &quot; 471 430 ;\nC 193 ; WX 600 ; N grave ; B 151 497 378 672 ;\nC 194 ; WX &quot;
@@ -1513,7 +2183,7 @@ CONST E5_2 =
  &amp; &quot; -15 562 654 ;\nC -1 ; WX 600 ; N left ; B 70 68 530 348 ;\nC -1 ; WX 6&quot;
  &amp; &quot;00 ; N threesuperior ; B 155 240 406 622 ;\nC -1 ; WX &quot;;
 
-CONST E5_3 =
+CONST E8_3 =
    &quot;600 ; N up ; B 160 0 440 437 ;\nC -1 ; WX 600 ; N multiply ; B 87 43 51&quot;
  &amp; &quot;5 470 ;\nC -1 ; WX 600 ; N Scaron ; B 72 -20 529 805 ;\nC -1 ; WX 600 ;&quot;
  &amp; &quot; N tab ; B 19 0 581 562 ;\nC -1 ; WX 600 ; N Ucircumflex ; B 17 -18 583&quot;
@@ -1544,7 +2214,7 @@ CONST E5_3 =
  &amp; &quot;C -1 ; WX 600 ; N LL ; B 8 0 592 562 ;\nC -1 ; WX 600 ; N agrave ; B 53&quot;
  &amp; &quot; -15 559 672 ;\nC -1 ; WX 600 ; N Zcaron ; B 86 0 514&quot;;
 
-CONST E5_4 =
+CONST E8_4 =
    &quot; 805 ;\nC -1 ; WX 600 ; N Scedilla ; B 72 -151 529 580 ;\nC -1 ; WX 600&quot;
  &amp; &quot; ; N Idot ; B 96 0 504 716 ;\nC -1 ; WX 600 ; N Iacute ; B 96 0 504 793&quot;
  &amp; &quot; ;\nC -1 ; WX 600 ; N indent ; B 70 68 530 348 ;\nC -1 ; WX 600 ; N Ugr&quot;
@@ -1575,7 +2245,7 @@ CONST E5_4 =
  &amp; &quot;ute ; B 53 -15 559 672 ;\nC -1 ; WX 600 ; N ocircumflex ; B 62 -15 538 &quot;
  &amp; &quot;654 ;\nC -1 ; WX 600 ; N scedilla ; B 80 -151 513 441 ;&quot;;
 
-CONST E5_5 =
+CONST E8_5 =
    &quot;\nC -1 ; WX 600 ; N ograve ; B 62 -15 538 672 ;\nC -1 ; WX 600 ; N oneh&quot;
  &amp; &quot;alf ; B 0 -57 611 665 ;\nC -1 ; WX 600 ; N ugrave ; B 21 -15 562 672 ;\n&quot;
  &amp; &quot;C -1 ; WX 600 ; N Ntilde ; B 7 -13 593 732 ;\nC -1 ; WX 600 ; N iacute &quot;
@@ -1606,7 +2276,7 @@ CONST E5_5 =
  &amp; &quot;is 2 ; PCC Y 0 0 ; PCC dieresis 0 136 ;\nCC Zcaron 2 ; PCC Z 0 0 ; PCC &quot;
  &amp; &quot;caron 0 136 ;\nCC aacute 2 ; PCC a 0 0 ; PCC acute 0 0&quot;;
 
-CONST E5_6 =
+CONST E8_6 =
    &quot; ;\nCC acircumflex 2 ; PCC a 0 0 ; PCC circumflex 0 0 ;\nCC adieresis 2&quot;
  &amp; &quot; ; PCC a 0 0 ; PCC dieresis 0 0 ;\nCC agrave 2 ; PCC a 0 0 ; PCC grave &quot;
  &amp; &quot;0 0 ;\nCC aring 2 ; PCC a 0 0 ; PCC ring 0 0 ;\nCC atilde 2 ; PCC a 0 0&quot;
@@ -1628,7 +2298,7 @@ CONST E5_6 =
  &amp; &quot;ieresis -10 0 ;\nCC zcaron 2 ; PCC z 0 0 ; PCC caron 10 0 ;\nEndComposi&quot;
  &amp; &quot;tes\nEndFontMetrics\n&quot;;
 
-CONST E6 =
+CONST E9 =
    &quot;StartFontMetrics 2.0\nComment Copyright (c) 1985, 1987, 1989, 1990 Adob&quot;
  &amp; &quot;e Systems Incorporated.  All Rights Reserved.\nComment Creation Date: T&quot;
  &amp; &quot;ue Mar 20 12:15:44 1990\nComment UniqueID 28416\nComment VMusage 30487 &quot;
@@ -1659,7 +2329,7 @@ CONST E6 =
  &amp; &quot;N colon ; B 81 -11 192 459 ;\nC 59 ; WX 278 ; N semicolon ; B 80 -141 2&quot;
  &amp; &quot;19 459 ;\nC 60 ; WX 564 ; N less ; B 28 -8 536 514 ;\nC 61 ; W&quot;;
 
-CONST E6_0 =
+CONST E9_0 =
    &quot;X 564 ; N equal ; B 30 120 534 386 ;\nC 62 ; WX 564 ; N greater ; B 28 &quot;
  &amp; &quot;-8 536 514 ;\nC 63 ; WX 444 ; N question ; B 68 -8 414 676 ;\nC 64 ; WX&quot;
  &amp; &quot; 921 ; N at ; B 116 -14 809 676 ;\nC 65 ; WX 722 ; N A ; B 15 0 706 674&quot;
@@ -1690,7 +2360,7 @@ CONST E6_0 =
  &amp; &quot; N i ; B 16 0 253 683 ;\nC 106 ; WX 278 ; N j ; B -70 -218 194 683 ;\nC&quot;
  &amp; &quot; 107 ; WX 500 ; N k ; B 7 0 505 683 ;\nC 108 ; WX 278 ; N l&quot;;
 
-CONST E6_1 =
+CONST E9_1 =
    &quot; ; B 19 0 257 683 ;\nC 109 ; WX 778 ; N m ; B 16 0 775 460 ;\nC 110 ; W&quot;
  &amp; &quot;X 500 ; N n ; B 16 0 485 460 ;\nC 111 ; WX 500 ; N o ; B 29 -10 470 460&quot;
  &amp; &quot; ;\nC 112 ; WX 500 ; N p ; B 5 -217 470 460 ;\nC 113 ; WX 500 ; N q ; B&quot;
@@ -1721,7 +2391,7 @@ CONST E6_1 =
  &amp; &quot;102 ;\nC 185 ; WX 444 ; N quotedblbase ; B 45 -141 416 102 ;\nC 186 ; W&quot;
  &amp; &quot;X 444 ; N quotedblright ; B 30 433 401 676 ;\nC 187 ;&quot;;
 
-CONST E6_2 =
+CONST E9_2 =
    &quot; WX 500 ; N guillemotright ; B 44 33 458 416 ;\nC 188 ; WX 1000 ; N ell&quot;
  &amp; &quot;ipsis ; B 111 -11 888 100 ;\nC 189 ; WX 1000 ; N perthousand ; B 7 -19 &quot;
  &amp; &quot;994 706 ;\nC 191 ; WX 444 ; N questiondown ; B 30 -218 376 466 ;\nC 193&quot;
@@ -1752,7 +2422,7 @@ CONST E6_2 =
  &amp; &quot;uperior ; B 1 270 296 676 ;\nC -1 ; WX 444 ; N eacute ; B 25 -10 424 67&quot;
  &amp; &quot;8 ;\nC -1 ; WX 500 ; N otilde ; B 29 -10 470 638 ;\nC &quot;;
 
-CONST E6_3 =
+CONST E9_3 =
    &quot;-1 ; WX 722 ; N Aacute ; B 15 0 706 890 ;\nC -1 ; WX 500 ; N ocircumfle&quot;
  &amp; &quot;x ; B 29 -10 470 674 ;\nC -1 ; WX 500 ; N yacute ; B 14 -218 475 678 ;\n&quot;
  &amp; &quot;C -1 ; WX 500 ; N udieresis ; B 9 -10 479 623 ;\nC -1 ; WX 750 ; N thre&quot;
@@ -1783,7 +2453,7 @@ CONST E6_3 =
  &amp; &quot; ; WX 722 ; N Uacute ; B 14 -14 705 890 ;\nC -1 ; WX 722 ; N Ocircumfle&quot;
  &amp; &quot;x ; B 34 -14 688 886 ;\nC -1 ; WX 564 ; N logicalnot &quot;;
 
-CONST E6_4 =
+CONST E9_4 =
    &quot;; B 30 108 534 386 ;\nC -1 ; WX 722 ; N Aring ; B 15 0 706 898 ;\nC -1 &quot;
  &amp; &quot;; WX 278 ; N idieresis ; B -9 0 288 623 ;\nC -1 ; WX 278 ; N iacute ; B&quot;
  &amp; &quot; 16 0 290 678 ;\nC -1 ; WX 444 ; N aacute ; B 37 -10 442 678 ;\nC -1 ; &quot;
@@ -1815,7 +2485,7 @@ CONST E6_4 =
  &amp; &quot;\nKPX N period 0\nKPX N comma 0\nKPX N A -35\n\nKPX O period 0\nKPX O c&quot;
  &amp; &quot;omma 0\nKPX O Y -50\nKPX O X -40\nKPX &quot;;
 
-CONST E6_5 =
+CONST E9_5 =
    &quot;O W -35\nKPX O V -50\nKPX O T -40\nKPX O A -35\n\nKPX P period -111\nKP&quot;
  &amp; &quot;X P o 0\nKPX P e 0\nKPX P comma -111\nKPX P a -15\nKPX P A -92\n\nKPX Q&quot;
  &amp; &quot; period 0\nKPX Q comma 0\nKPX Q U -10\n\nKPX R Y -65\nKPX R W -55\nKPX &quot;
@@ -1848,7 +2518,7 @@ CONST E6_5 =
  &amp; &quot;-10\nKPX k e -10\n\nKPX l y 0\nKPX l w -10\n\nKPX m y 0\nKPX m u 0\n\nK&quot;
  &amp; &quot;PX n y -15\nKPX n v -40\nKPX n u 0\n\nKPX o&quot;;
 
-CONST E6_6 =
+CONST E9_6 =
    &quot; y -10\nKPX o x 0\nKPX o w -25\nKPX o v -15\nKPX o g 0\n\nKPX p y -10\n&quot;
  &amp; &quot;\nKPX period quoteright -70\nKPX period quotedblright -70\n\nKPX quoted&quot;
  &amp; &quot;blleft quoteleft 0\nKPX quotedblleft A -80\n\nKPX quotedblright space 0&quot;
@@ -1880,7 +2550,7 @@ CONST E6_6 =
  &amp; &quot;PCC tilde 195 212 ;\nCC Oacute 2 ; PCC O 0 0 ; PCC acute 195 212 ;\nCC &quot;
  &amp; &quot;Ocircumflex 2 ; PCC O 0 0 ; PCC circumfle&quot;;
 
-CONST E6_7 =
+CONST E9_7 =
    &quot;x 195 212 ;\nCC Odieresis 2 ; PCC O 0 0 ; PCC dieresis 195 212 ;\nCC Og&quot;
  &amp; &quot;rave 2 ; PCC O 0 0 ; PCC grave 195 212 ;\nCC Otilde 2 ; PCC O 0 0 ; PCC&quot;
  &amp; &quot; tilde 195 212 ;\nCC Scaron 2 ; PCC S 0 0 ; PCC caron 112 212 ;\nCC Uac&quot;
@@ -1910,7 +2580,7 @@ CONST E6_7 =
  &amp; &quot;cute 84 0 ;\nCC ydieresis 2 ; PCC y 0 0 ; PCC dieresis 84 0 ;\nCC zcaro&quot;
  &amp; &quot;n 2 ; PCC z 0 0 ; PCC caron 56 0 ;\nEndComposites\nEndFontMetrics\n&quot;;
 
-CONST E7 =
+CONST E10 =
    &quot;StartFontMetrics 2.0\nComment Copyright (c) 1985, 1987, 1989, 1990 Adob&quot;
  &amp; &quot;e Systems Incorporated.  All Rights Reserved.\nComment Creation Date: T&quot;
  &amp; &quot;hu Mar 15 09:43:00 1990\nComment UniqueID 28357\nComment VMusage 26878 &quot;
@@ -1941,7 +2611,7 @@ CONST E7 =
  &amp; &quot;; WX 333 ; N colon ; B 92 0 242 512 ;\nC 59 ; WX 333 ; N semicolon ; B &quot;
  &amp; &quot;92 -168 242 512 ;\nC 60 ; WX 584 ; N less ; B 38 -8 546 514 ;\n&quot;;
 
-CONST E7_0 =
+CONST E10_0 =
    &quot;C 61 ; WX 584 ; N equal ; B 40 87 544 419 ;\nC 62 ; WX 584 ; N greater &quot;
  &amp; &quot;; B 38 -8 546 514 ;\nC 63 ; WX 611 ; N question ; B 60 0 556 727 ;\nC 6&quot;
  &amp; &quot;4 ; WX 975 ; N at ; B 118 -19 856 737 ;\nC 65 ; WX 722 ; N A ; B 20 0 7&quot;
@@ -1972,7 +2642,7 @@ CONST E7_0 =
  &amp; &quot; ; N i ; B 69 0 209 725 ;\nC 106 ; WX 278 ; N j ; B 3 -214 209 725 ;\nC&quot;
  &amp; &quot; 107 ; WX 556 ; N k ; B 69 0 562 718 ;\nC 108 ; WX 278 ; N&quot;;
 
-CONST E7_1 =
+CONST E10_1 =
    &quot; l ; B 69 0 209 718 ;\nC 109 ; WX 889 ; N m ; B 64 0 826 546 ;\nC 110 ;&quot;
  &amp; &quot; WX 611 ; N n ; B 65 0 546 546 ;\nC 111 ; WX 611 ; N o ; B 34 -14 578 5&quot;
  &amp; &quot;46 ;\nC 112 ; WX 611 ; N p ; B 62 -207 578 546 ;\nC 113 ; WX 611 ; N q &quot;
@@ -2003,7 +2673,7 @@ CONST E7_1 =
  &amp; &quot;27 ;\nC 185 ; WX 500 ; N quotedblbase ; B 64 -146 436 127 ;\nC 186 ; WX&quot;
  &amp; &quot; 500 ; N quotedblright ; B 64 445 436 718 ;\nC 187 ; W&quot;;
 
-CONST E7_2 =
+CONST E10_2 =
    &quot;X 556 ; N guillemotright ; B 88 76 468 484 ;\nC 188 ; WX 1000 ; N ellip&quot;
  &amp; &quot;sis ; B 92 0 908 146 ;\nC 189 ; WX 1000 ; N perthousand ; B -3 -19 1003&quot;
  &amp; &quot; 710 ;\nC 191 ; WX 611 ; N questiondown ; B 55 -195 551 532 ;\nC 193 ; &quot;
@@ -2034,7 +2704,7 @@ CONST E7_2 =
  &amp; &quot; N twosuperior ; B 9 283 324 710 ;\nC -1 ; WX 556 ; N eacute ; B 23 -14&quot;
  &amp; &quot; 528 750 ;\nC -1 ; WX 611 ; N otilde ; B 34 -14 578 7&quot;;
 
-CONST E7_3 =
+CONST E10_3 =
    &quot;37 ;\nC -1 ; WX 722 ; N Aacute ; B 20 0 702 936 ;\nC -1 ; WX 611 ; N oc&quot;
  &amp; &quot;ircumflex ; B 34 -14 578 750 ;\nC -1 ; WX 556 ; N yacute ; B 10 -214 53&quot;
  &amp; &quot;9 750 ;\nC -1 ; WX 611 ; N udieresis ; B 66 -14 545 729 ;\nC -1 ; WX 83&quot;
@@ -2065,7 +2735,7 @@ CONST E7_3 =
  &amp; &quot;702 923 ;\nC -1 ; WX 722 ; N Uacute ; B 72 -19 651 936 ;\nC -1 ; WX 778&quot;
  &amp; &quot; ; N Ocircumflex ; B 44 -19 734 936 ;\nC -1 ; WX 584 ;&quot;;
 
-CONST E7_4 =
+CONST E10_4 =
    &quot; N logicalnot ; B 40 108 544 419 ;\nC -1 ; WX 722 ; N Aring ; B 20 0 70&quot;
  &amp; &quot;2 962 ;\nC -1 ; WX 278 ; N idieresis ; B -21 0 300 729 ;\nC -1 ; WX 278&quot;
  &amp; &quot; ; N iacute ; B 69 0 329 750 ;\nC -1 ; WX 556 ; N aacute ; B 29 -14 527&quot;
@@ -2097,7 +2767,7 @@ CONST E7_4 =
  &amp; &quot;P comma -120\nKPX P a -30\nKPX P A -100\n\nKPX Q period 20\nKPX Q comma&quot;
  &amp; &quot; 20\nKPX Q U -10\n\nKPX R Y -50\nKPX &quot;;
 
-CONST E7_5 =
+CONST E10_5 =
    &quot;R W -40\nKPX R V -50\nKPX R U -20\nKPX R T -20\nKPX R O -20\n\nKPX T y &quot;
  &amp; &quot;-60\nKPX T w -60\nKPX T u -90\nKPX T semicolon -40\nKPX T r -80\nKPX T &quot;
  &amp; &quot;period -80\nKPX T o -80\nKPX T hyphen -120\nKPX T e -60\nKPX T comma -8&quot;
@@ -2130,7 +2800,7 @@ CONST E7_5 =
  &amp; &quot; r c -20\n\nKPX s w -15\n\nKPX semicolon space -40\n\nKPX space quotele&quot;
  &amp; &quot;ft -60\nKPX space quotedbllef&quot;;
 
-CONST E7_6 =
+CONST E10_6 =
    &quot;t -80\nKPX space Y -120\nKPX space W -80\nKPX space V -80\nKPX space T &quot;
  &amp; &quot;-100\n\nKPX v period -80\nKPX v o -30\nKPX v comma -80\nKPX v a -20\n\n&quot;
  &amp; &quot;KPX w period -40\nKPX w o -20\nKPX w comma -40\n\nKPX x e -10\n\nKPX y &quot;
@@ -2162,7 +2832,7 @@ CONST E7_6 =
  &amp; &quot; aring 2 ; PCC a 0 0 ; PCC ring 112 0 ;\nCC atilde 2 ; PCC a 0 0 ; PCC &quot;
  &amp; &quot;t&quot;;
 
-CONST E7_7 =
+CONST E10_7 =
    &quot;ilde 112 0 ;\nCC ccedilla 2 ; PCC c 0 0 ; PCC cedilla 132 0 ;\nCC eacut&quot;
  &amp; &quot;e 2 ; PCC e 0 0 ; PCC acute 112 0 ;\nCC ecircumflex 2 ; PCC e 0 0 ; PCC&quot;
  &amp; &quot; circumflex 112 0 ;\nCC edieresis 2 ; PCC e 0 0 ; PCC dieresis 112 0 ;\n&quot;
@@ -2181,7 +2851,7 @@ CONST E7_7 =
  &amp; &quot;s 2 ; PCC y 0 0 ; PCC dieresis 112 0 ;\nCC zcaron 2 ; PCC z 0 0 ; PCC c&quot;
  &amp; &quot;aron 84 0 ;\nEndComposites\nEndFontMetrics\n&quot;;
 
-CONST E8 =
+CONST E11 =
    &quot;# Last modified on Wed Dec 21 11:16:22 PST 1994 by heydon\n#\n# This fi&quot;
  &amp; &quot;le maps character names to their octal codes for the\n# PostScript stan&quot;
  &amp; &quot;dard encoding. See section E.5 of the \&quot;PostScript\n# Language Referenc&quot;
@@ -2217,7 +2887,7 @@ CONST E8 =
  &amp; &quot;257\nflorin\t\t246\nformat\t\t -2\nfour\t\t064\nfraction\t244\ng\t\t147&quot;
  &amp; &quot;\ngcaron\t\t -2\ngermandbls\t373\ngr&quot;;
 
-CONST E8_0 =
+CONST E11_0 =
    &quot;ave\t\t301\ngraybox\t\t -2\ngreater\t\t076\nguillemotleft\t253\nguillem&quot;
  &amp; &quot;otright\t273\nguilsinglleft\t254\nguilsinglright\t255\nh\t\t150\nhungar&quot;
  &amp; &quot;umlaut\t315\nhyphen\t\t055\ni\t\t151\niacute\t\t -1\nicircumflex\t -1\n&quot;
@@ -2244,7 +2914,7 @@ CONST E8_0 =
  &amp; &quot;\t167\nx\t\t170\ny\t\t171\nyacute\t\t -1\nydieresis\t -1\nyen\t\t245\nz&quot;
  &amp; &quot;\t\t172\nzcaron\t\t -1\nzero\t\t060\n&quot;;
 
-CONST E9 =
+CONST E12 =
    &quot;StartFontMetrics 2.0\nComment Copyright (c) 1989, 1990, 1991 Adobe Syst&quot;
  &amp; &quot;ems Incorporated. All rights reserved.\nComment Creation Date: Tue Sep &quot;
  &amp; &quot;17 09:42:19 1991\nComment UniqueID 36350\nComment VMusage 9174 52297\nF&quot;
@@ -2275,7 +2945,7 @@ CONST E9 =
  &amp; &quot;00 ; N semicolon ; B 157 -112 441 385 ;\nC 60 ; WX 600 ; N less ; B 96 &quot;
  &amp; &quot;42 610 472 ;\nC 61 ; WX 600 ; N equal ; B 109 138 600 376 ;\nC 6&quot;;
 
-CONST E9_0 =
+CONST E12_0 =
    &quot;2 ; WX 600 ; N greater ; B 85 42 599 472 ;\nC 63 ; WX 600 ; N question &quot;
  &amp; &quot;; B 222 -15 583 572 ;\nC 64 ; WX 600 ; N at ; B 127 -15 582 622 ;\nC 65&quot;
  &amp; &quot; ; WX 600 ; N A ; B 3 0 607 562 ;\nC 66 ; WX 600 ; N B ; B 43 0 616 562&quot;
@@ -2306,7 +2976,7 @@ CONST E9_0 =
  &amp; &quot;C 106 ; WX 600 ; N j ; B 52 -157 550 657 ;\nC 107 ; WX 600 ; N k ; B 58&quot;
  &amp; &quot; 0 633 629 ;\nC 108 ; WX 600 ; N l ; B 95 0 515 629 ;\nC 1&quot;;
 
-CONST E9_1 =
+CONST E12_1 =
    &quot;09 ; WX 600 ; N m ; B -5 0 615 441 ;\nC 110 ; WX 600 ; N n ; B 26 0 585&quot;
  &amp; &quot; 441 ;\nC 111 ; WX 600 ; N o ; B 102 -15 588 441 ;\nC 112 ; WX 600 ; N &quot;
  &amp; &quot;p ; B -24 -157 605 441 ;\nC 113 ; WX 600 ; N q ; B 85 -157 682 441 ;\nC&quot;
@@ -2337,7 +3007,7 @@ CONST E9_1 =
  &amp; &quot;\nC 185 ; WX 600 ; N quotedblbase ; B 115 -134 478 100 ;\nC 186 ; WX 60&quot;
  &amp; &quot;0 ; N quotedblright ; B 213 328 576 562 ;\nC 187 ; WX&quot;;
 
-CONST E9_2 =
+CONST E12_2 =
    &quot; 600 ; N guillemotright ; B 58 70 618 446 ;\nC 188 ; WX 600 ; N ellipsi&quot;
  &amp; &quot;s ; B 46 -15 575 111 ;\nC 189 ; WX 600 ; N perthousand ; B 59 -15 627 6&quot;
  &amp; &quot;22 ;\nC 191 ; WX 600 ; N questiondown ; B 105 -157 466 430 ;\nC 193 ; W&quot;
@@ -2368,7 +3038,7 @@ CONST E9_2 =
  &amp; &quot;94 -18 625 775 ;\nC -1 ; WX 600 ; N ucircumflex ; B 101 -15 572 654 ;\n&quot;
  &amp; &quot;C -1 ; WX 600 ; N left ; B 114 68 580 348 ;\nC -1 ; W&quot;;
 
-CONST E9_3 =
+CONST E12_3 =
    &quot;X 600 ; N threesuperior ; B 213 240 501 622 ;\nC -1 ; WX 600 ; N up ; B&quot;
  &amp; &quot; 223 0 503 437 ;\nC -1 ; WX 600 ; N multiply ; B 103 43 607 470 ;\nC -1&quot;
  &amp; &quot; ; WX 600 ; N Scaron ; B 76 -20 673 805 ;\nC -1 ; WX 600 ; N tab ; B 19&quot;
@@ -2399,7 +3069,7 @@ CONST E9_3 =
  &amp; &quot;N Eth ; B 43 0 645 562 ;\nC -1 ; WX 600 ; N onequarter ; B 65 -57 674 6&quot;
  &amp; &quot;65 ;\nC -1 ; WX 600 ; N LL ; B 8 0 647 562 ;\nC -1 ; W&quot;;
 
-CONST E9_4 =
+CONST E12_4 =
    &quot;X 600 ; N agrave ; B 76 -15 569 672 ;\nC -1 ; WX 600 ; N Zcaron ; B 86 &quot;
  &amp; &quot;0 643 805 ;\nC -1 ; WX 600 ; N Scedilla ; B 76 -151 650 580 ;\nC -1 ; W&quot;
  &amp; &quot;X 600 ; N Idot ; B 96 0 623 716 ;\nC -1 ; WX 600 ; N Iacute ; B 96 0 63&quot;
@@ -2430,7 +3100,7 @@ CONST E9_4 =
  &amp; &quot;157 657 669 ;\nC -1 ; WX 600 ; N arrowleft ; B 40 115 693 483 ;\nC -1 ;&quot;
  &amp; &quot; WX 600 ; N aacute ; B 76 -15 612 672 ;\nC -1 ; WX 600 &quot;;
 
-CONST E9_5 =
+CONST E12_5 =
    &quot;; N ocircumflex ; B 102 -15 588 654 ;\nC -1 ; WX 600 ; N scedilla ; B 7&quot;
  &amp; &quot;8 -151 584 441 ;\nC -1 ; WX 600 ; N ograve ; B 102 -15 588 672 ;\nC -1 &quot;
  &amp; &quot;; WX 600 ; N onehalf ; B 65 -57 669 665 ;\nC -1 ; WX 600 ; N ugrave ; B&quot;
@@ -2461,7 +3131,7 @@ CONST E9_5 =
  &amp; &quot;;\nCC Ugrave 2 ; PCC U 0 0 ; PCC grave -4 121 ;\nCC Yacute 2 ; PCC Y 0 &quot;
  &amp; &quot;0 ; PCC acute 56 121 ;\nCC Ydieresis 2 ; PCC Y 0 0 ; PC&quot;;
 
-CONST E9_6 =
+CONST E12_6 =
    &quot;C dieresis 29 136 ;\nCC Zcaron 2 ; PCC Z 0 0 ; PCC caron 29 136 ;\nCC a&quot;
  &amp; &quot;acute 2 ; PCC a 0 0 ; PCC acute 0 0 ;\nCC acircumflex 2 ; PCC a 0 0 ; P&quot;
  &amp; &quot;CC circumflex 0 0 ;\nCC adieresis 2 ; PCC a 0 0 ; PCC dieresis 0 0 ;\nC&quot;
@@ -2484,7 +3154,7 @@ CONST E9_6 =
  &amp; &quot;CC ydieresis 2 ; PCC y 0 0 ; PCC dieresis -10 0 ;\nCC zcaron 2 ; PCC z &quot;
  &amp; &quot;0 0 ; PCC caron 10 0 ;\nEndComposites\nEndFontMetrics\n&quot;;
 
-CONST E10 =
+CONST E13 =
    &quot;StartFontMetrics 2.0\nComment Copyright (c) 1985, 1987, 1989, 1990 Adob&quot;
  &amp; &quot;e Systems Incorporated.  All Rights Reserved.\nComment Creation Date: T&quot;
  &amp; &quot;ue Mar 20 13:14:56 1990\nComment UniqueID 28427\nComment VMusage 32912 &quot;
@@ -2515,7 +3185,7 @@ CONST E10 =
  &amp; &quot;33 ; N colon ; B 50 -11 261 441 ;\nC 59 ; WX 333 ; N semicolon ; B 27 -&quot;
  &amp; &quot;129 261 441 ;\nC 60 ; WX 675 ; N less ; B 84 -8 592 514 ;\nC 61&quot;;
 
-CONST E10_0 =
+CONST E13_0 =
    &quot; ; WX 675 ; N equal ; B 86 120 590 386 ;\nC 62 ; WX 675 ; N greater ; B&quot;
  &amp; &quot; 84 -8 592 514 ;\nC 63 ; WX 500 ; N question ; B 132 -12 472 664 ;\nC 6&quot;
  &amp; &quot;4 ; WX 920 ; N at ; B 118 -18 806 666 ;\nC 65 ; WX 611 ; N A ; B -51 0 &quot;
@@ -2546,7 +3216,7 @@ CONST E10_0 =
  &amp; &quot;\nC 105 ; WX 278 ; N i ; B 49 -11 264 654 ;\nC 106 ; WX 278 ; N j ; B -&quot;
  &amp; &quot;124 -207 276 654 ;\nC 107 ; WX 444 ; N k ; B 14 -11 461 68&quot;;
 
-CONST E10_1 =
+CONST E13_1 =
    &quot;3 ;\nC 108 ; WX 278 ; N l ; B 41 -11 279 683 ;\nC 109 ; WX 722 ; N m ; &quot;
  &amp; &quot;B 12 -9 704 441 ;\nC 110 ; WX 500 ; N n ; B 14 -9 474 441 ;\nC 111 ; WX&quot;
  &amp; &quot; 500 ; N o ; B 27 -11 468 441 ;\nC 112 ; WX 500 ; N p ; B -75 -205 469 &quot;
@@ -2577,7 +3247,7 @@ CONST E10_1 =
  &amp; &quot;;\nC 184 ; WX 333 ; N quotesinglbase ; B 44 -129 183 101 ;\nC 185 ; WX &quot;
  &amp; &quot;556 ; N quotedblbase ; B 57 -129 405 101 ;\nC 186 ; WX &quot;;
 
-CONST E10_2 =
+CONST E13_2 =
    &quot;556 ; N quotedblright ; B 151 436 499 666 ;\nC 187 ; WX 500 ; N guillem&quot;
  &amp; &quot;otright ; B 55 37 447 403 ;\nC 188 ; WX 889 ; N ellipsis ; B 57 -11 762&quot;
  &amp; &quot; 100 ;\nC 189 ; WX 1000 ; N perthousand ; B 25 -19 1010 706 ;\nC 191 ; &quot;
@@ -2608,7 +3278,7 @@ CONST E10_2 =
  &amp; &quot;9 683 ;\nC -1 ; WX 444 ; N egrave ; B 31 -11 412 664 ;\nC -1 ; WX 300 ;&quot;
  &amp; &quot; N twosuperior ; B 33 271 324 676 ;\nC -1 ; WX 444 &quot;;
 
-CONST E10_3 =
+CONST E13_3 =
    &quot;; N eacute ; B 31 -11 459 664 ;\nC -1 ; WX 500 ; N otilde ; B 27 -11 49&quot;
  &amp; &quot;6 624 ;\nC -1 ; WX 611 ; N Aacute ; B -51 0 564 876 ;\nC -1 ; WX 500 ; &quot;
  &amp; &quot;N ocircumflex ; B 27 -11 468 661 ;\nC -1 ; WX 444 ; N yacute ; B -24 -2&quot;
@@ -2639,7 +3309,7 @@ CONST E10_3 =
  &amp; &quot;-1 ; WX 675 ; N divide ; B 86 -11 590 517 ;\nC -1 ; WX 611 ; N Atilde ;&quot;
  &amp; &quot; B -51 0 566 836 ;\nC -1 ; WX 722 ; N Uacute ; B 102 -&quot;;
 
-CONST E10_4 =
+CONST E13_4 =
    &quot;18 765 876 ;\nC -1 ; WX 722 ; N Ocircumflex ; B 60 -18 699 873 ;\nC -1 &quot;
  &amp; &quot;; WX 675 ; N logicalnot ; B 86 108 590 386 ;\nC -1 ; WX 611 ; N Aring ;&quot;
  &amp; &quot; B -51 0 564 883 ;\nC -1 ; WX 278 ; N idieresis ; B 49 -11 353 606 ;\nC&quot;
@@ -2671,7 +3341,7 @@ CONST E10_4 =
  &amp; &quot;-35\nKPX K O -50\n\nKPX L y -30\nKPX L quoteright -37\nKPX L quotedblri&quot;
  &amp; &quot;ght 0\nKPX L Y -20\nKPX L W -5&quot;;
 
-CONST E10_5 =
+CONST E13_5 =
    &quot;5\nKPX L V -55\nKPX L T -20\n\nKPX N period 0\nKPX N comma 0\nKPX N A -&quot;
  &amp; &quot;27\n\nKPX O period 0\nKPX O comma 0\nKPX O Y -50\nKPX O X -40\nKPX O W &quot;
  &amp; &quot;-50\nKPX O V -50\nKPX O T -40\nKPX O A -55\n\nKPX P period -135\nKPX P &quot;
@@ -2704,7 +3374,7 @@ CONST E10_5 =
  &amp; &quot;KPX g period -15\nKPX g o 0\nKPX g i 0\nKPX g g -10\nKPX g e -10\nKPX g&quot;
  &amp; &quot; comma -10\nKPX g a 0\n\nKPX h y 0\n\nKPX&quot;;
 
-CONST E10_6 =
+CONST E13_6 =
    &quot; i v 0\n\nKPX k y -10\nKPX k o -10\nKPX k e -10\n\nKPX l y 0\nKPX l w 0&quot;
  &amp; &quot;\n\nKPX m y 0\nKPX m u 0\n\nKPX n y 0\nKPX n v -40\nKPX n u 0\n\nKPX o &quot;
  &amp; &quot;y 0\nKPX o x 0\nKPX o w 0\nKPX o v -10\nKPX o g -10\n\nKPX p y 0\n\nKPX&quot;
@@ -2736,7 +3406,7 @@ CONST E10_6 =
  &amp; &quot; circumflex 40 212 ;\nCC Idieresis 2 ; PCC I 0 0 ; PCC dieresis 30 212 &quot;
  &amp; &quot;;\nCC Igrave 2 ; PCC I 0 0 ; PCC grave 10 212 ;\nCC Ntild&quot;;
 
-CONST E10_7 =
+CONST E13_7 =
    &quot;e 2 ; PCC N 0 0 ; PCC tilde 177 212 ;\nCC Oacute 2 ; PCC O 0 0 ; PCC ac&quot;
  &amp; &quot;ute 195 212 ;\nCC Ocircumflex 2 ; PCC O 0 0 ; PCC circumflex 230 212 ;\n&quot;
  &amp; &quot;CC Odieresis 2 ; PCC O 0 0 ; PCC dieresis 230 212 ;\nCC Ograve 2 ; PCC &quot;
@@ -2767,11 +3437,11 @@ CONST E10_7 =
  &amp; &quot; u 0 0 ; PCC grave 84 0 ;\nCC yacute 2 ; PCC y 0 0 ; PCC acute 56 0 ;\n&quot;
  &amp; &quot;CC ydieresis 2 ; PCC y 0 0 ; PCC dieresis 36 0 ;\nCC &quot;;
 
-CONST E10_8 =
+CONST E13_8 =
    &quot;zcaron 2 ; PCC z 0 0 ; PCC caron 8 0 ;\nEndComposites\nEndFontMetrics\n&quot;
 ;
 
-CONST E11 =
+CONST E14 =
    &quot;StartFontMetrics 2.0\nComment Copyright (c) 1985, 1987, 1989, 1990 Adob&quot;
  &amp; &quot;e Systems Incorporated.  All Rights Reserved.\nComment Creation Date: T&quot;
  &amp; &quot;hu Mar 15 10:44:33 1990\nComment UniqueID 28371\nComment VMusage 7614 4&quot;
@@ -2802,7 +3472,7 @@ CONST E11 =
  &amp; &quot;8 -19 615 710 ;\nC 58 ; WX 333 ; N colon ; B 92 0 351 512 ;\nC 59 ; WX &quot;
  &amp; &quot;333 ; N semicolon ; B 56 -168 351 512 ;\nC 60 ; WX 584 ; N le&quot;;
 
-CONST E11_0 =
+CONST E14_0 =
    &quot;ss ; B 82 -8 655 514 ;\nC 61 ; WX 584 ; N equal ; B 58 87 633 419 ;\nC &quot;
  &amp; &quot;62 ; WX 584 ; N greater ; B 36 -8 609 514 ;\nC 63 ; WX 611 ; N question&quot;
  &amp; &quot; ; B 165 0 671 727 ;\nC 64 ; WX 975 ; N at ; B 186 -19 954 737 ;\nC 65 &quot;
@@ -2833,7 +3503,7 @@ CONST E11_0 =
  &amp; &quot; ; N h ; B 65 0 629 718 ;\nC 105 ; WX 278 ; N i ; B 69 0 363 725 ;\nC 1&quot;
  &amp; &quot;06 ; WX 278 ; N j ; B -42 -214 363 725 ;\nC 107 ; WX 556 ; &quot;;
 
-CONST E11_1 =
+CONST E14_1 =
    &quot;N k ; B 69 0 670 718 ;\nC 108 ; WX 278 ; N l ; B 69 0 362 718 ;\nC 109 &quot;
  &amp; &quot;; WX 889 ; N m ; B 64 0 909 546 ;\nC 110 ; WX 611 ; N n ; B 65 0 629 54&quot;
  &amp; &quot;6 ;\nC 111 ; WX 611 ; N o ; B 82 -14 643 546 ;\nC 112 ; WX 611 ; N p ; &quot;
@@ -2864,7 +3534,7 @@ CONST E11_1 =
  &amp; &quot; ;\nC 184 ; WX 278 ; N quotesinglbase ; B 41 -146 236 127 ;\nC 185 ; WX&quot;
  &amp; &quot; 500 ; N quotedblbase ; B 36 -146 463 127 ;\nC 186 ; WX&quot;;
 
-CONST E11_2 =
+CONST E14_2 =
    &quot; 500 ; N quotedblright ; B 162 445 589 718 ;\nC 187 ; WX 556 ; N guille&quot;
  &amp; &quot;motright ; B 104 76 540 484 ;\nC 188 ; WX 1000 ; N ellipsis ; B 92 0 93&quot;
  &amp; &quot;9 146 ;\nC 189 ; WX 1000 ; N perthousand ; B 76 -19 1038 710 ;\nC 191 ;&quot;
@@ -2895,7 +3565,7 @@ CONST E11_2 =
  &amp; &quot;8 ;\nC -1 ; WX 556 ; N egrave ; B 70 -14 593 750 ;\nC -1 ; WX 333 ; N t&quot;
  &amp; &quot;wosuperior ; B 69 283 449 710 ;\nC -1 ; WX 556 ; N ea&quot;;
 
-CONST E11_3 =
+CONST E14_3 =
    &quot;cute ; B 70 -14 627 750 ;\nC -1 ; WX 611 ; N otilde ; B 82 -14 646 737 &quot;
  &amp; &quot;;\nC -1 ; WX 722 ; N Aacute ; B 20 0 750 936 ;\nC -1 ; WX 611 ; N ocirc&quot;
  &amp; &quot;umflex ; B 82 -14 643 750 ;\nC -1 ; WX 556 ; N yacute ; B 42 -214 652 7&quot;
@@ -2926,7 +3596,7 @@ CONST E11_3 =
  &amp; &quot; WX 584 ; N divide ; B 82 -42 610 548 ;\nC -1 ; WX 722 ; N Atilde ; B 2&quot;
  &amp; &quot;0 0 741 923 ;\nC -1 ; WX 722 ; N Uacute ; B 116 -19 80&quot;;
 
-CONST E11_4 =
+CONST E14_4 =
    &quot;4 936 ;\nC -1 ; WX 778 ; N Ocircumflex ; B 107 -19 823 936 ;\nC -1 ; WX&quot;
  &amp; &quot; 584 ; N logicalnot ; B 105 108 633 419 ;\nC -1 ; WX 722 ; N Aring ; B &quot;
  &amp; &quot;20 0 702 962 ;\nC -1 ; WX 278 ; N idieresis ; B 69 0 455 729 ;\nC -1 ; &quot;
@@ -2958,7 +3628,7 @@ CONST E11_4 =
  &amp; &quot; -50\nKPX O T -40\nKPX O A -50\n\nKPX P period -120\nKPX P o -40\nKPX P&quot;
  &amp; &quot; e -30\nKPX P comma -120\nKPX P a&quot;;
 
-CONST E11_5 =
+CONST E14_5 =
    &quot; -30\nKPX P A -100\n\nKPX Q period 20\nKPX Q comma 20\nKPX Q U -10\n\nK&quot;
  &amp; &quot;PX R Y -50\nKPX R W -40\nKPX R V -50\nKPX R U -20\nKPX R T -20\nKPX R O&quot;
  &amp; &quot; -20\n\nKPX T y -60\nKPX T w -60\nKPX T u -90\nKPX T semicolon -40\nKPX&quot;
@@ -2991,7 +3661,7 @@ CONST E11_5 =
  &amp; &quot;iod -60\nKPX r o -20\nKPX r hyphen -20\nKPX r g -15\nKPX r d -20\nKPX r&quot;
  &amp; &quot; comma -60\nKPX r c -20\n\nKPX &quot;;
 
-CONST E11_6 =
+CONST E14_6 =
    &quot;s w -15\n\nKPX semicolon space -40\n\nKPX space quoteleft -60\nKPX spac&quot;
  &amp; &quot;e quotedblleft -80\nKPX space Y -120\nKPX space W -80\nKPX space V -80\n&quot;
  &amp; &quot;KPX space T -100\n\nKPX v period -80\nKPX v o -30\nKPX v comma -80\nKPX&quot;
@@ -3023,7 +3693,7 @@ CONST E11_6 =
  &amp; &quot;CC a 0 0 ; PCC dieresis 112 0 ;\nCC agrave 2 ; PCC a 0 0 ; PCC grave 11&quot;
  &amp; &quot;2 0 &quot;;
 
-CONST E11_7 =
+CONST E14_7 =
    &quot;;\nCC aring 2 ; PCC a 0 0 ; PCC ring 112 0 ;\nCC atilde 2 ; PCC a 0 0 ;&quot;
  &amp; &quot; PCC tilde 112 0 ;\nCC ccedilla 2 ; PCC c 0 0 ; PCC cedilla 132 0 ;\nCC&quot;
  &amp; &quot; eacute 2 ; PCC e 0 0 ; PCC acute 112 0 ;\nCC ecircumflex 2 ; PCC e 0 0&quot;
@@ -3043,7 +3713,7 @@ CONST E11_7 =
  &amp; &quot;dieresis 2 ; PCC y 0 0 ; PCC dieresis 112 0 ;\nCC zcaron 2 ; PCC z 0 0 &quot;
  &amp; &quot;; PCC caron 84 0 ;\nEndComposites\nEndFontMetrics\n&quot;;
 
-CONST E12 =
+CONST E15 =
    &quot;# Last modified on Wed Dec 21 11:02:12 PST 1994 by heydon\n#\n# This fi&quot;
  &amp; &quot;le maps character names to their octal codes for the\n# PostScript symb&quot;
  &amp; &quot;ol character set encoding. See section E.5 of the\n# \&quot;PostScript Langu&quot;
@@ -3078,7 +3748,7 @@ CONST E12 =
  &amp; &quot;ssequal\t243\nlogicaland\t331\nlogicalnot\t330\nlogicalor\t332\nlozenge&quot;
  &amp; &quot;\t\t340\nminus\t\t055\nminute\t\t24&quot;;
 
-CONST E12_0 =
+CONST E15_0 =
    &quot;2\nmu\t\t155\nmultiply\t264\nnine\t\t071\nnotelement\t317\nnotequal\t27&quot;
  &amp; &quot;1\nnotsubset\t313\nnu\t\t156\nnumbersign\t043\nomega\t\t167\nomega1\t\t&quot;
  &amp; &quot;166\nomicron\t\t157\none\t\t061\nparenleft\t050\nparenright\t051\nparen&quot;
@@ -3095,676 +3765,6 @@ CONST E12_0 =
  &amp; &quot;trademarksans\t344\ntrademarkserif\t324\ntwo\t\t062\nunderscore\t137\nu&quot;
  &amp; &quot;nion\t\t310\nuniversal\t042\nupsilon\t\t165\nweierstrass\t303\nxi\t\t17&quot;
  &amp; &quot;0\nzero\t\t060\nzeta\t\t172\n&quot;;
-
-CONST E13 =
-   &quot;StartFontMetrics 2.0\nComment Copyright (c) 1985, 1987, 1989, 1990 Adob&quot;
- &amp; &quot;e Systems Incorporated.  All rights reserved.\nComment Creation Date: W&quot;
- &amp; &quot;ed Jan 17 21:48:26 1990\nComment UniqueID 27004\nComment VMusage 28489 &quot;
- &amp; &quot;37622\nFontName Symbol\nFullName Symbol\nFamilyName Symbol\nWeight Medi&quot;
- &amp; &quot;um\nItalicAngle 0\nIsFixedPitch false\nFontBBox -180 -293 1090 1010\nUn&quot;
- &amp; &quot;derlinePosition -98\nUnderlineThickness 54\nVersion 001.007\nNotice Cop&quot;
- &amp; &quot;yright (c) 1985, 1987, 1989, 1990 Adobe Systems Incorporated.  All righ&quot;
- &amp; &quot;ts reserved.\nEncodingScheme FontSpecific\nStartCharMetrics 189\nC 32 ;&quot;
- &amp; &quot; WX 250 ; N space ; B 0 0 0 0 ;\nC 33 ; WX 333 ; N exclam ; B 128 -17 2&quot;
- &amp; &quot;40 672 ;\nC 34 ; WX 713 ; N universal ; B 31 0 681 705 ;\nC 35 ; WX 500&quot;
- &amp; &quot; ; N numbersign ; B 20 -16 481 673 ;\nC 36 ; WX 549 ; N existential ; B&quot;
- &amp; &quot; 25 0 478 707 ;\nC 37 ; WX 833 ; N percent ; B 63 -36 771 655 ;\nC 38 ;&quot;
- &amp; &quot; WX 778 ; N ampersand ; B 41 -18 750 661 ;\nC 39 ; WX 439 ; N suchthat &quot;
- &amp; &quot;; B 48 -17 414 500 ;\nC 40 ; WX 333 ; N parenleft ; B 53 -191 300 673 ;&quot;
- &amp; &quot;\nC 41 ; WX 333 ; N parenright ; B 30 -191 277 673 ;\nC 42 ; WX 500 ; N&quot;
- &amp; &quot; asteriskmath ; B 65 134 427 551 ;\nC 43 ; WX 549 ; N plus ; B 10 0 539&quot;
- &amp; &quot; 533 ;\nC 44 ; WX 250 ; N comma ; B 56 -152 194 104 ;\nC 45 ; WX 549 ; &quot;
- &amp; &quot;N minus ; B 11 233 535 288 ;\nC 46 ; WX 250 ; N period ; B 69 -17 181 9&quot;
- &amp; &quot;5 ;\nC 47 ; WX 278 ; N slash ; B 0 -18 254 646 ;\nC 48 ; WX 500 ; N zer&quot;
- &amp; &quot;o ; B 23 -17 471 685 ;\nC 49 ; WX 500 ; N one ; B 117 0 390 673 ;\nC 50&quot;
- &amp; &quot; ; WX 500 ; N two ; B 25 0 475 686 ;\nC 51 ; WX 500 ; N three ; B 39 -1&quot;
- &amp; &quot;7 435 685 ;\nC 52 ; WX 500 ; N four ; B 16 0 469 685 ;\nC 53 ; WX 500 ;&quot;
- &amp; &quot; N five ; B 29 -17 443 685 ;\nC 54 ; WX 500 ; N six ; B 36 -17 467 685 &quot;
- &amp; &quot;;\nC 55 ; WX 500 ; N seven ; B 24 -16 448 673 ;\nC 56 ; WX 500 ; N eigh&quot;
- &amp; &quot;t ; B 54 -18 440 685 ;\nC 57 ; WX 500 ; N nine ; B 31 -18 460 685 ;\nC &quot;
- &amp; &quot;58 ; WX 278 ; N colon ; B 81 -17 193 460 ;\nC 59 ; WX 278 ; N semicolon&quot;
- &amp; &quot; ; B 83 -152 221 460 ;\nC 60 ; WX 549 ; N less ; B 26 0 523 522 ;\nC 61&quot;
- &amp; &quot; ; WX 549 ; N equal ; B 11 141 537 390 ;\nC 62 ; WX 549 ; N greater ; B&quot;
- &amp; &quot; 26 0 523 522 ;\nC 63 ; WX 444 ; N question ; B 70 -17 412 68&quot;;
-
-CONST E13_0 =
-   &quot;6 ;\nC 64 ; WX 549 ; N congruent ; B 11 0 537 475 ;\nC 65 ; WX 722 ; N &quot;
- &amp; &quot;Alpha ; B 4 0 684 673 ;\nC 66 ; WX 667 ; N Beta ; B 29 0 592 673 ;\nC 6&quot;
- &amp; &quot;7 ; WX 722 ; N Chi ; B -9 0 704 673 ;\nC 68 ; WX 612 ; N Delta ; B 6 0 &quot;
- &amp; &quot;608 688 ;\nC 69 ; WX 611 ; N Epsilon ; B 32 0 617 673 ;\nC 70 ; WX 763 &quot;
- &amp; &quot;; N Phi ; B 26 0 741 673 ;\nC 71 ; WX 603 ; N Gamma ; B 24 0 609 673 ;\n&quot;
- &amp; &quot;C 72 ; WX 722 ; N Eta ; B 39 0 729 673 ;\nC 73 ; WX 333 ; N Iota ; B 32&quot;
- &amp; &quot; 0 316 673 ;\nC 74 ; WX 631 ; N theta1 ; B 18 -18 623 689 ;\nC 75 ; WX &quot;
- &amp; &quot;722 ; N Kappa ; B 35 0 722 673 ;\nC 76 ; WX 686 ; N Lambda ; B 6 0 680 &quot;
- &amp; &quot;688 ;\nC 77 ; WX 889 ; N Mu ; B 28 0 887 673 ;\nC 78 ; WX 722 ; N Nu ; &quot;
- &amp; &quot;B 29 -8 720 673 ;\nC 79 ; WX 722 ; N Omicron ; B 41 -17 715 685 ;\nC 80&quot;
- &amp; &quot; ; WX 768 ; N Pi ; B 25 0 745 673 ;\nC 81 ; WX 741 ; N Theta ; B 41 -17&quot;
- &amp; &quot; 715 685 ;\nC 82 ; WX 556 ; N Rho ; B 28 0 563 673 ;\nC 83 ; WX 592 ; N&quot;
- &amp; &quot; Sigma ; B 5 0 589 673 ;\nC 84 ; WX 611 ; N Tau ; B 33 0 607 673 ;\nC 8&quot;
- &amp; &quot;5 ; WX 690 ; N Upsilon ; B -8 0 694 673 ;\nC 86 ; WX 439 ; N sigma1 ; B&quot;
- &amp; &quot; 40 -233 436 500 ;\nC 87 ; WX 768 ; N Omega ; B 34 0 736 688 ;\nC 88 ; &quot;
- &amp; &quot;WX 645 ; N Xi ; B 40 0 599 673 ;\nC 89 ; WX 795 ; N Psi ; B 15 0 781 68&quot;
- &amp; &quot;4 ;\nC 90 ; WX 611 ; N Zeta ; B 44 0 636 673 ;\nC 91 ; WX 333 ; N brack&quot;
- &amp; &quot;etleft ; B 86 -155 299 674 ;\nC 92 ; WX 863 ; N therefore ; B 163 0 701&quot;
- &amp; &quot; 478 ;\nC 93 ; WX 333 ; N bracketright ; B 33 -155 246 674 ;\nC 94 ; WX&quot;
- &amp; &quot; 658 ; N perpendicular ; B 15 0 652 674 ;\nC 95 ; WX 500 ; N underscore&quot;
- &amp; &quot; ; B -2 -252 502 -206 ;\nC 96 ; WX 500 ; N radicalex ; B 480 881 1090 9&quot;
- &amp; &quot;17 ;\nC 97 ; WX 631 ; N alpha ; B 41 -18 622 500 ;\nC 98 ; WX 549 ; N b&quot;
- &amp; &quot;eta ; B 61 -223 515 741 ;\nC 99 ; WX 549 ; N chi ; B 12 -231 522 499 ;\n&quot;
- &amp; &quot;C 100 ; WX 494 ; N delta ; B 40 -19 481 740 ;\nC 101 ; WX 439 ; N epsil&quot;
- &amp; &quot;on ; B 22 -19 427 502 ;\nC 102 ; WX 521 ; N phi ; B 27 -224 490 671 ;\n&quot;
- &amp; &quot;C 103 ; WX 411 ; N gamma ; B 5 -225 484 499 ;\nC 104 ; WX 603 ; N eta ;&quot;
- &amp; &quot; B 0 -202 527 514 ;\nC 105 ; WX 329 ; N iota ; B 0 -17 301 503 ;\nC 106&quot;
- &amp; &quot; ; WX 603 ; N phi1 ; B 36 -224 587 499 ;\nC 107 ; WX 549 ; N kappa ; B &quot;
- &amp; &quot;33 0 558 501 ;\nC 108 ; WX 549 ; N lambda ; B 24 -17 54&quot;;
-
-CONST E13_1 =
-   &quot;8 739 ;\nC 109 ; WX 576 ; N mu ; B 33 -223 567 500 ;\nC 110 ; WX 521 ; &quot;
- &amp; &quot;N nu ; B -9 -16 475 507 ;\nC 111 ; WX 549 ; N omicron ; B 35 -19 501 49&quot;
- &amp; &quot;9 ;\nC 112 ; WX 549 ; N pi ; B 10 -19 530 487 ;\nC 113 ; WX 521 ; N the&quot;
- &amp; &quot;ta ; B 43 -17 485 690 ;\nC 114 ; WX 549 ; N rho ; B 50 -230 490 499 ;\n&quot;
- &amp; &quot;C 115 ; WX 603 ; N sigma ; B 30 -21 588 500 ;\nC 116 ; WX 439 ; N tau ;&quot;
- &amp; &quot; B 10 -19 418 500 ;\nC 117 ; WX 576 ; N upsilon ; B 7 -18 535 507 ;\nC &quot;
- &amp; &quot;118 ; WX 713 ; N omega1 ; B 12 -18 671 583 ;\nC 119 ; WX 686 ; N omega &quot;
- &amp; &quot;; B 42 -17 684 500 ;\nC 120 ; WX 493 ; N xi ; B 27 -224 469 766 ;\nC 12&quot;
- &amp; &quot;1 ; WX 686 ; N psi ; B 12 -228 701 500 ;\nC 122 ; WX 494 ; N zeta ; B 6&quot;
- &amp; &quot;0 -225 467 756 ;\nC 123 ; WX 480 ; N braceleft ; B 58 -183 397 673 ;\nC&quot;
- &amp; &quot; 124 ; WX 200 ; N bar ; B 65 -177 135 673 ;\nC 125 ; WX 480 ; N braceri&quot;
- &amp; &quot;ght ; B 79 -183 418 673 ;\nC 126 ; WX 549 ; N similar ; B 17 203 529 30&quot;
- &amp; &quot;7 ;\nC 161 ; WX 620 ; N Upsilon1 ; B -2 0 610 685 ;\nC 162 ; WX 247 ; N&quot;
- &amp; &quot; minute ; B 27 459 228 735 ;\nC 163 ; WX 549 ; N lessequal ; B 29 0 526&quot;
- &amp; &quot; 639 ;\nC 164 ; WX 167 ; N fraction ; B -180 -12 340 677 ;\nC 165 ; WX &quot;
- &amp; &quot;713 ; N infinity ; B 26 124 688 404 ;\nC 166 ; WX 500 ; N florin ; B 2 &quot;
- &amp; &quot;-193 494 686 ;\nC 167 ; WX 753 ; N club ; B 86 -26 660 533 ;\nC 168 ; W&quot;
- &amp; &quot;X 753 ; N diamond ; B 142 -36 600 550 ;\nC 169 ; WX 753 ; N heart ; B 1&quot;
- &amp; &quot;17 -33 631 532 ;\nC 170 ; WX 753 ; N spade ; B 113 -36 629 548 ;\nC 171&quot;
- &amp; &quot; ; WX 1042 ; N arrowboth ; B 24 -15 1024 511 ;\nC 172 ; WX 987 ; N arro&quot;
- &amp; &quot;wleft ; B 32 -15 942 511 ;\nC 173 ; WX 603 ; N arrowup ; B 45 0 571 910&quot;
- &amp; &quot; ;\nC 174 ; WX 987 ; N arrowright ; B 49 -15 959 511 ;\nC 175 ; WX 603 &quot;
- &amp; &quot;; N arrowdown ; B 45 -22 571 888 ;\nC 176 ; WX 400 ; N degree ; B 50 38&quot;
- &amp; &quot;5 350 685 ;\nC 177 ; WX 549 ; N plusminus ; B 10 0 539 645 ;\nC 178 ; W&quot;
- &amp; &quot;X 411 ; N second ; B 20 459 413 737 ;\nC 179 ; WX 549 ; N greaterequal &quot;
- &amp; &quot;; B 29 0 526 639 ;\nC 180 ; WX 549 ; N multiply ; B 17 8 533 524 ;\nC 1&quot;
- &amp; &quot;81 ; WX 713 ; N proportional ; B 27 123 639 404 ;\nC 182 ; WX 494 ; N p&quot;
- &amp; &quot;artialdiff ; B 26 -20 462 746 ;\nC 183 ; WX 460 ; N bullet ; B 50 113 4&quot;
- &amp; &quot;10 473 ;\nC 184 ; WX 549 ; N divide ; B 10 71 536 456 &quot;;
-
-CONST E13_2 =
-   &quot;;\nC 185 ; WX 549 ; N notequal ; B 15 -25 540 549 ;\nC 186 ; WX 549 ; N&quot;
- &amp; &quot; equivalence ; B 14 82 538 443 ;\nC 187 ; WX 549 ; N approxequal ; B 14&quot;
- &amp; &quot; 135 527 394 ;\nC 188 ; WX 1000 ; N ellipsis ; B 111 -17 889 95 ;\nC 18&quot;
- &amp; &quot;9 ; WX 603 ; N arrowvertex ; B 280 -120 336 1010 ;\nC 190 ; WX 1000 ; N&quot;
- &amp; &quot; arrowhorizex ; B -60 220 1050 276 ;\nC 191 ; WX 658 ; N carriagereturn&quot;
- &amp; &quot; ; B 15 -16 602 629 ;\nC 192 ; WX 823 ; N aleph ; B 175 -18 661 658 ;\n&quot;
- &amp; &quot;C 193 ; WX 686 ; N Ifraktur ; B 10 -53 578 740 ;\nC 194 ; WX 795 ; N Rf&quot;
- &amp; &quot;raktur ; B 26 -15 759 734 ;\nC 195 ; WX 987 ; N weierstrass ; B 159 -21&quot;
- &amp; &quot;1 870 573 ;\nC 196 ; WX 768 ; N circlemultiply ; B 43 -17 733 673 ;\nC &quot;
- &amp; &quot;197 ; WX 768 ; N circleplus ; B 43 -15 733 675 ;\nC 198 ; WX 823 ; N em&quot;
- &amp; &quot;ptyset ; B 39 -24 781 719 ;\nC 199 ; WX 768 ; N intersection ; B 40 0 7&quot;
- &amp; &quot;32 509 ;\nC 200 ; WX 768 ; N union ; B 40 -17 732 492 ;\nC 201 ; WX 713&quot;
- &amp; &quot; ; N propersuperset ; B 20 0 673 470 ;\nC 202 ; WX 713 ; N reflexsupers&quot;
- &amp; &quot;et ; B 20 -125 673 470 ;\nC 203 ; WX 713 ; N notsubset ; B 36 -70 690 5&quot;
- &amp; &quot;40 ;\nC 204 ; WX 713 ; N propersubset ; B 37 0 690 470 ;\nC 205 ; WX 71&quot;
- &amp; &quot;3 ; N reflexsubset ; B 37 -125 690 470 ;\nC 206 ; WX 713 ; N element ; &quot;
- &amp; &quot;B 45 0 505 468 ;\nC 207 ; WX 713 ; N notelement ; B 45 -58 505 555 ;\nC&quot;
- &amp; &quot; 208 ; WX 768 ; N angle ; B 26 0 738 673 ;\nC 209 ; WX 713 ; N gradient&quot;
- &amp; &quot; ; B 36 -19 681 718 ;\nC 210 ; WX 790 ; N registerserif ; B 50 -17 740 &quot;
- &amp; &quot;673 ;\nC 211 ; WX 790 ; N copyrightserif ; B 51 -15 741 675 ;\nC 212 ; &quot;
- &amp; &quot;WX 890 ; N trademarkserif ; B 18 293 855 673 ;\nC 213 ; WX 823 ; N prod&quot;
- &amp; &quot;uct ; B 25 -101 803 751 ;\nC 214 ; WX 549 ; N radical ; B 10 -38 515 91&quot;
- &amp; &quot;7 ;\nC 215 ; WX 250 ; N dotmath ; B 69 210 169 310 ;\nC 216 ; WX 713 ; &quot;
- &amp; &quot;N logicalnot ; B 15 0 680 288 ;\nC 217 ; WX 603 ; N logicaland ; B 23 0&quot;
- &amp; &quot; 583 454 ;\nC 218 ; WX 603 ; N logicalor ; B 30 0 578 477 ;\nC 219 ; WX&quot;
- &amp; &quot; 1042 ; N arrowdblboth ; B 27 -20 1023 510 ;\nC 220 ; WX 987 ; N arrowd&quot;
- &amp; &quot;blleft ; B 30 -15 939 513 ;\nC 221 ; WX 603 ; N arrowdblup ; B 39 2 567&quot;
- &amp; &quot; 911 ;\nC 222 ; WX 987 ; N arrowdblright ; B 45 -20 954 508 ;\nC 223 ; &quot;
- &amp; &quot;WX 603 ; N arrowdbldown ; B 44 -19 572 890 ;\nC 224 &quot;;
-
-CONST E13_3 =
-   &quot;; WX 494 ; N lozenge ; B 18 0 466 745 ;\nC 225 ; WX 329 ; N angleleft ;&quot;
- &amp; &quot; B 25 -198 306 746 ;\nC 226 ; WX 790 ; N registersans ; B 50 -20 740 67&quot;
- &amp; &quot;0 ;\nC 227 ; WX 790 ; N copyrightsans ; B 49 -15 739 675 ;\nC 228 ; WX &quot;
- &amp; &quot;786 ; N trademarksans ; B 5 293 725 673 ;\nC 229 ; WX 713 ; N summation&quot;
- &amp; &quot; ; B 14 -108 695 752 ;\nC 230 ; WX 384 ; N parenlefttp ; B 40 -293 436 &quot;
- &amp; &quot;926 ;\nC 231 ; WX 384 ; N parenleftex ; B 40 -85 92 925 ;\nC 232 ; WX 3&quot;
- &amp; &quot;84 ; N parenleftbt ; B 40 -293 436 926 ;\nC 233 ; WX 384 ; N bracketlef&quot;
- &amp; &quot;ttp ; B 0 -80 341 926 ;\nC 234 ; WX 384 ; N bracketleftex ; B 0 -79 55 &quot;
- &amp; &quot;925 ;\nC 235 ; WX 384 ; N bracketleftbt ; B 0 -80 340 926 ;\nC 236 ; WX&quot;
- &amp; &quot; 494 ; N bracelefttp ; B 201 -75 439 926 ;\nC 237 ; WX 494 ; N bracelef&quot;
- &amp; &quot;tmid ; B 14 -85 255 935 ;\nC 238 ; WX 494 ; N braceleftbt ; B 201 -70 4&quot;
- &amp; &quot;39 926 ;\nC 239 ; WX 494 ; N braceex ; B 201 -80 255 935 ;\nC 241 ; WX &quot;
- &amp; &quot;329 ; N angleright ; B 21 -198 302 746 ;\nC 242 ; WX 274 ; N integral ;&quot;
- &amp; &quot; B 2 -107 291 916 ;\nC 243 ; WX 686 ; N integraltp ; B 332 -83 715 921 &quot;
- &amp; &quot;;\nC 244 ; WX 686 ; N integralex ; B 332 -88 415 975 ;\nC 245 ; WX 686 &quot;
- &amp; &quot;; N integralbt ; B 39 -81 415 921 ;\nC 246 ; WX 384 ; N parenrighttp ; &quot;
- &amp; &quot;B 54 -293 450 926 ;\nC 247 ; WX 384 ; N parenrightex ; B 398 -85 450 92&quot;
- &amp; &quot;5 ;\nC 248 ; WX 384 ; N parenrightbt ; B 54 -293 450 926 ;\nC 249 ; WX &quot;
- &amp; &quot;384 ; N bracketrighttp ; B 22 -80 360 926 ;\nC 250 ; WX 384 ; N bracket&quot;
- &amp; &quot;rightex ; B 305 -79 360 925 ;\nC 251 ; WX 384 ; N bracketrightbt ; B 20&quot;
- &amp; &quot; -80 360 926 ;\nC 252 ; WX 494 ; N bracerighttp ; B 17 -75 255 926 ;\nC&quot;
- &amp; &quot; 253 ; WX 494 ; N bracerightmid ; B 201 -85 442 935 ;\nC 254 ; WX 494 ;&quot;
- &amp; &quot; N bracerightbt ; B 17 -70 255 926 ;\nC -1 ; WX 790 ; N apple ; B 56 -3&quot;
- &amp; &quot; 733 808 ;\nEndCharMetrics\nEndFontMetrics\n&quot;;
-
-CONST E14 =
-   &quot;StartFontMetrics 2.0\nComment Copyright (c) 1985, 1987, 1989, 1990 Adob&quot;
- &amp; &quot;e Systems Incorporated.  All rights reserved.\nComment Creation Date: T&quot;
- &amp; &quot;hu Mar 15 08:58:00 1990\nComment UniqueID 28352\nComment VMusage 26389 &quot;
- &amp; &quot;33281\nFontName Helvetica\nFullName Helvetica\nFamilyName Helvetica\nWe&quot;
- &amp; &quot;ight Medium\nItalicAngle 0\nIsFixedPitch false\nFontBBox -166 -225 1000&quot;
- &amp; &quot; 931\nUnderlinePosition -100\nUnderlineThickness 50\nVersion 001.006\nN&quot;
- &amp; &quot;otice Copyright (c) 1985, 1987, 1989, 1990 Adobe Systems Incorporated. &quot;
- &amp; &quot; All rights reserved.Helvetica is a trademark of Linotype AG and/or its&quot;
- &amp; &quot; subsidiaries.\nEncodingScheme AdobeStandardEncoding\nCapHeight 718\nXH&quot;
- &amp; &quot;eight 523\nAscender 718\nDescender -207\nStartCharMetrics 228\nC 32 ; W&quot;
- &amp; &quot;X 278 ; N space ; B 0 0 0 0 ;\nC 33 ; WX 278 ; N exclam ; B 90 0 187 71&quot;
- &amp; &quot;8 ;\nC 34 ; WX 355 ; N quotedbl ; B 70 463 285 718 ;\nC 35 ; WX 556 ; N&quot;
- &amp; &quot; numbersign ; B 28 0 529 688 ;\nC 36 ; WX 556 ; N dollar ; B 32 -115 52&quot;
- &amp; &quot;0 775 ;\nC 37 ; WX 889 ; N percent ; B 39 -19 850 703 ;\nC 38 ; WX 667 &quot;
- &amp; &quot;; N ampersand ; B 44 -15 645 718 ;\nC 39 ; WX 222 ; N quoteright ; B 53&quot;
- &amp; &quot; 463 157 718 ;\nC 40 ; WX 333 ; N parenleft ; B 68 -207 299 733 ;\nC 41&quot;
- &amp; &quot; ; WX 333 ; N parenright ; B 34 -207 265 733 ;\nC 42 ; WX 389 ; N aster&quot;
- &amp; &quot;isk ; B 39 431 349 718 ;\nC 43 ; WX 584 ; N plus ; B 39 0 545 505 ;\nC &quot;
- &amp; &quot;44 ; WX 278 ; N comma ; B 87 -147 191 106 ;\nC 45 ; WX 333 ; N hyphen ;&quot;
- &amp; &quot; B 44 232 289 322 ;\nC 46 ; WX 278 ; N period ; B 87 0 191 106 ;\nC 47 &quot;
- &amp; &quot;; WX 278 ; N slash ; B -17 -19 295 737 ;\nC 48 ; WX 556 ; N zero ; B 37&quot;
- &amp; &quot; -19 519 703 ;\nC 49 ; WX 556 ; N one ; B 101 0 359 703 ;\nC 50 ; WX 55&quot;
- &amp; &quot;6 ; N two ; B 26 0 507 703 ;\nC 51 ; WX 556 ; N three ; B 34 -19 522 70&quot;
- &amp; &quot;3 ;\nC 52 ; WX 556 ; N four ; B 25 0 523 703 ;\nC 53 ; WX 556 ; N five &quot;
- &amp; &quot;; B 32 -19 514 688 ;\nC 54 ; WX 556 ; N six ; B 38 -19 518 703 ;\nC 55 &quot;
- &amp; &quot;; WX 556 ; N seven ; B 37 0 523 688 ;\nC 56 ; WX 556 ; N eight ; B 38 -&quot;
- &amp; &quot;19 517 703 ;\nC 57 ; WX 556 ; N nine ; B 42 -19 514 703 ;\nC 58 ; WX 27&quot;
- &amp; &quot;8 ; N colon ; B 87 0 191 516 ;\nC 59 ; WX 278 ; N semicolon ; B 87 -147&quot;
- &amp; &quot; 191 516 ;\nC 60 ; WX 584 ; N less ; B 48 11 536 495 ;\nC 61 ; &quot;;
-
-CONST E14_0 =
-   &quot;WX 584 ; N equal ; B 39 115 545 390 ;\nC 62 ; WX 584 ; N greater ; B 48&quot;
- &amp; &quot; 11 536 495 ;\nC 63 ; WX 556 ; N question ; B 56 0 492 727 ;\nC 64 ; WX&quot;
- &amp; &quot; 1015 ; N at ; B 147 -19 868 737 ;\nC 65 ; WX 667 ; N A ; B 14 0 654 71&quot;
- &amp; &quot;8 ;\nC 66 ; WX 667 ; N B ; B 74 0 627 718 ;\nC 67 ; WX 722 ; N C ; B 44&quot;
- &amp; &quot; -19 681 737 ;\nC 68 ; WX 722 ; N D ; B 81 0 674 718 ;\nC 69 ; WX 667 ;&quot;
- &amp; &quot; N E ; B 86 0 616 718 ;\nC 70 ; WX 611 ; N F ; B 86 0 583 718 ;\nC 71 ;&quot;
- &amp; &quot; WX 778 ; N G ; B 48 -19 704 737 ;\nC 72 ; WX 722 ; N H ; B 77 0 646 71&quot;
- &amp; &quot;8 ;\nC 73 ; WX 278 ; N I ; B 91 0 188 718 ;\nC 74 ; WX 500 ; N J ; B 17&quot;
- &amp; &quot; -19 428 718 ;\nC 75 ; WX 667 ; N K ; B 76 0 663 718 ;\nC 76 ; WX 556 ;&quot;
- &amp; &quot; N L ; B 76 0 537 718 ;\nC 77 ; WX 833 ; N M ; B 73 0 761 718 ;\nC 78 ;&quot;
- &amp; &quot; WX 722 ; N N ; B 76 0 646 718 ;\nC 79 ; WX 778 ; N O ; B 39 -19 739 73&quot;
- &amp; &quot;7 ;\nC 80 ; WX 667 ; N P ; B 86 0 622 718 ;\nC 81 ; WX 778 ; N Q ; B 39&quot;
- &amp; &quot; -56 739 737 ;\nC 82 ; WX 722 ; N R ; B 88 0 684 718 ;\nC 83 ; WX 667 ;&quot;
- &amp; &quot; N S ; B 49 -19 620 737 ;\nC 84 ; WX 611 ; N T ; B 14 0 597 718 ;\nC 85&quot;
- &amp; &quot; ; WX 722 ; N U ; B 79 -19 644 718 ;\nC 86 ; WX 667 ; N V ; B 20 0 647 &quot;
- &amp; &quot;718 ;\nC 87 ; WX 944 ; N W ; B 16 0 928 718 ;\nC 88 ; WX 667 ; N X ; B &quot;
- &amp; &quot;19 0 648 718 ;\nC 89 ; WX 667 ; N Y ; B 14 0 653 718 ;\nC 90 ; WX 611 ;&quot;
- &amp; &quot; N Z ; B 23 0 588 718 ;\nC 91 ; WX 278 ; N bracketleft ; B 63 -196 250 &quot;
- &amp; &quot;722 ;\nC 92 ; WX 278 ; N backslash ; B -17 -19 295 737 ;\nC 93 ; WX 278&quot;
- &amp; &quot; ; N bracketright ; B 28 -196 215 722 ;\nC 94 ; WX 469 ; N asciicircum &quot;
- &amp; &quot;; B -14 264 483 688 ;\nC 95 ; WX 556 ; N underscore ; B 0 -125 556 -75 &quot;
- &amp; &quot;;\nC 96 ; WX 222 ; N quoteleft ; B 65 470 169 725 ;\nC 97 ; WX 556 ; N &quot;
- &amp; &quot;a ; B 36 -15 530 538 ;\nC 98 ; WX 556 ; N b ; B 58 -15 517 718 ;\nC 99 &quot;
- &amp; &quot;; WX 500 ; N c ; B 30 -15 477 538 ;\nC 100 ; WX 556 ; N d ; B 35 -15 49&quot;
- &amp; &quot;9 718 ;\nC 101 ; WX 556 ; N e ; B 40 -15 516 538 ;\nC 102 ; WX 278 ; N &quot;
- &amp; &quot;f ; B 14 0 262 728 ; L i fi ; L l fl ;\nC 103 ; WX 556 ; N g ; B 40 -22&quot;
- &amp; &quot;0 499 538 ;\nC 104 ; WX 556 ; N h ; B 65 0 491 718 ;\nC 105 ; WX 222 ; &quot;
- &amp; &quot;N i ; B 67 0 155 718 ;\nC 106 ; WX 222 ; N j ; B -16 -210 155 718 ;\nC &quot;
- &amp; &quot;107 ; WX 500 ; N k ; B 67 0 501 718 ;\nC 108 ; WX 222 ; N l&quot;;
-
-CONST E14_1 =
-   &quot; ; B 67 0 155 718 ;\nC 109 ; WX 833 ; N m ; B 65 0 769 538 ;\nC 110 ; W&quot;
- &amp; &quot;X 556 ; N n ; B 65 0 491 538 ;\nC 111 ; WX 556 ; N o ; B 35 -14 521 538&quot;
- &amp; &quot; ;\nC 112 ; WX 556 ; N p ; B 58 -207 517 538 ;\nC 113 ; WX 556 ; N q ; &quot;
- &amp; &quot;B 35 -207 494 538 ;\nC 114 ; WX 333 ; N r ; B 77 0 332 538 ;\nC 115 ; W&quot;
- &amp; &quot;X 500 ; N s ; B 32 -15 464 538 ;\nC 116 ; WX 278 ; N t ; B 14 -7 257 66&quot;
- &amp; &quot;9 ;\nC 117 ; WX 556 ; N u ; B 68 -15 489 523 ;\nC 118 ; WX 500 ; N v ; &quot;
- &amp; &quot;B 8 0 492 523 ;\nC 119 ; WX 722 ; N w ; B 14 0 709 523 ;\nC 120 ; WX 50&quot;
- &amp; &quot;0 ; N x ; B 11 0 490 523 ;\nC 121 ; WX 500 ; N y ; B 11 -214 489 523 ;\n&quot;
- &amp; &quot;C 122 ; WX 500 ; N z ; B 31 0 469 523 ;\nC 123 ; WX 334 ; N braceleft ;&quot;
- &amp; &quot; B 42 -196 292 722 ;\nC 124 ; WX 260 ; N bar ; B 94 -19 167 737 ;\nC 12&quot;
- &amp; &quot;5 ; WX 334 ; N braceright ; B 42 -196 292 722 ;\nC 126 ; WX 584 ; N asc&quot;
- &amp; &quot;iitilde ; B 61 180 523 326 ;\nC 161 ; WX 333 ; N exclamdown ; B 118 -19&quot;
- &amp; &quot;5 215 523 ;\nC 162 ; WX 556 ; N cent ; B 51 -115 513 623 ;\nC 163 ; WX &quot;
- &amp; &quot;556 ; N sterling ; B 33 -16 539 718 ;\nC 164 ; WX 167 ; N fraction ; B &quot;
- &amp; &quot;-166 -19 333 703 ;\nC 165 ; WX 556 ; N yen ; B 3 0 553 688 ;\nC 166 ; W&quot;
- &amp; &quot;X 556 ; N florin ; B -11 -207 501 737 ;\nC 167 ; WX 556 ; N section ; B&quot;
- &amp; &quot; 43 -191 512 737 ;\nC 168 ; WX 556 ; N currency ; B 28 99 528 603 ;\nC &quot;
- &amp; &quot;169 ; WX 191 ; N quotesingle ; B 59 463 132 718 ;\nC 170 ; WX 333 ; N q&quot;
- &amp; &quot;uotedblleft ; B 38 470 307 725 ;\nC 171 ; WX 556 ; N guillemotleft ; B &quot;
- &amp; &quot;97 108 459 446 ;\nC 172 ; WX 333 ; N guilsinglleft ; B 88 108 245 446 ;&quot;
- &amp; &quot;\nC 173 ; WX 333 ; N guilsinglright ; B 88 108 245 446 ;\nC 174 ; WX 50&quot;
- &amp; &quot;0 ; N fi ; B 14 0 434 728 ;\nC 175 ; WX 500 ; N fl ; B 14 0 432 728 ;\n&quot;
- &amp; &quot;C 177 ; WX 556 ; N endash ; B 0 240 556 313 ;\nC 178 ; WX 556 ; N dagge&quot;
- &amp; &quot;r ; B 43 -159 514 718 ;\nC 179 ; WX 556 ; N daggerdbl ; B 43 -159 514 7&quot;
- &amp; &quot;18 ;\nC 180 ; WX 278 ; N periodcentered ; B 77 190 202 315 ;\nC 182 ; W&quot;
- &amp; &quot;X 537 ; N paragraph ; B 18 -173 497 718 ;\nC 183 ; WX 350 ; N bullet ; &quot;
- &amp; &quot;B 18 202 333 517 ;\nC 184 ; WX 222 ; N quotesinglbase ; B 53 -149 157 1&quot;
- &amp; &quot;06 ;\nC 185 ; WX 333 ; N quotedblbase ; B 26 -149 295 106 ;\nC 186 ; WX&quot;
- &amp; &quot; 333 ; N quotedblright ; B 26 463 295 718 ;\nC 187 ; W&quot;;
-
-CONST E14_2 =
-   &quot;X 556 ; N guillemotright ; B 97 108 459 446 ;\nC 188 ; WX 1000 ; N elli&quot;
- &amp; &quot;psis ; B 115 0 885 106 ;\nC 189 ; WX 1000 ; N perthousand ; B 7 -19 994&quot;
- &amp; &quot; 703 ;\nC 191 ; WX 611 ; N questiondown ; B 91 -201 527 525 ;\nC 193 ; &quot;
- &amp; &quot;WX 333 ; N grave ; B 14 593 211 734 ;\nC 194 ; WX 333 ; N acute ; B 122&quot;
- &amp; &quot; 593 319 734 ;\nC 195 ; WX 333 ; N circumflex ; B 21 593 312 734 ;\nC 1&quot;
- &amp; &quot;96 ; WX 333 ; N tilde ; B -4 606 337 722 ;\nC 197 ; WX 333 ; N macron ;&quot;
- &amp; &quot; B 10 627 323 684 ;\nC 198 ; WX 333 ; N breve ; B 13 595 321 731 ;\nC 1&quot;
- &amp; &quot;99 ; WX 333 ; N dotaccent ; B 121 604 212 706 ;\nC 200 ; WX 333 ; N die&quot;
- &amp; &quot;resis ; B 40 604 293 706 ;\nC 202 ; WX 333 ; N ring ; B 75 572 259 756 &quot;
- &amp; &quot;;\nC 203 ; WX 333 ; N cedilla ; B 45 -225 259 0 ;\nC 205 ; WX 333 ; N h&quot;
- &amp; &quot;ungarumlaut ; B 31 593 409 734 ;\nC 206 ; WX 333 ; N ogonek ; B 73 -225&quot;
- &amp; &quot; 287 0 ;\nC 207 ; WX 333 ; N caron ; B 21 593 312 734 ;\nC 208 ; WX 100&quot;
- &amp; &quot;0 ; N emdash ; B 0 240 1000 313 ;\nC 225 ; WX 1000 ; N AE ; B 8 0 951 7&quot;
- &amp; &quot;18 ;\nC 227 ; WX 370 ; N ordfeminine ; B 24 304 346 737 ;\nC 232 ; WX 5&quot;
- &amp; &quot;56 ; N Lslash ; B -20 0 537 718 ;\nC 233 ; WX 778 ; N Oslash ; B 39 -19&quot;
- &amp; &quot; 740 737 ;\nC 234 ; WX 1000 ; N OE ; B 36 -19 965 737 ;\nC 235 ; WX 365&quot;
- &amp; &quot; ; N ordmasculine ; B 25 304 341 737 ;\nC 241 ; WX 889 ; N ae ; B 36 -1&quot;
- &amp; &quot;5 847 538 ;\nC 245 ; WX 278 ; N dotlessi ; B 95 0 183 523 ;\nC 248 ; WX&quot;
- &amp; &quot; 222 ; N lslash ; B -20 0 242 718 ;\nC 249 ; WX 611 ; N oslash ; B 28 -&quot;
- &amp; &quot;22 537 545 ;\nC 250 ; WX 944 ; N oe ; B 35 -15 902 538 ;\nC 251 ; WX 61&quot;
- &amp; &quot;1 ; N germandbls ; B 67 -15 571 728 ;\nC -1 ; WX 611 ; N Zcaron ; B 23 &quot;
- &amp; &quot;0 588 929 ;\nC -1 ; WX 500 ; N ccedilla ; B 30 -225 477 538 ;\nC -1 ; W&quot;
- &amp; &quot;X 500 ; N ydieresis ; B 11 -214 489 706 ;\nC -1 ; WX 556 ; N atilde ; B&quot;
- &amp; &quot; 36 -15 530 722 ;\nC -1 ; WX 278 ; N icircumflex ; B -6 0 285 734 ;\nC &quot;
- &amp; &quot;-1 ; WX 333 ; N threesuperior ; B 5 270 325 703 ;\nC -1 ; WX 556 ; N ec&quot;
- &amp; &quot;ircumflex ; B 40 -15 516 734 ;\nC -1 ; WX 556 ; N thorn ; B 58 -207 517&quot;
- &amp; &quot; 718 ;\nC -1 ; WX 556 ; N egrave ; B 40 -15 516 734 ;\nC -1 ; WX 333 ; &quot;
- &amp; &quot;N twosuperior ; B 4 281 323 703 ;\nC -1 ; WX 556 ; N eacute ; B 40 -15 &quot;
- &amp; &quot;516 734 ;\nC -1 ; WX 556 ; N otilde ; B 35 -14 521 72&quot;;
-
-CONST E14_3 =
-   &quot;2 ;\nC -1 ; WX 667 ; N Aacute ; B 14 0 654 929 ;\nC -1 ; WX 556 ; N oci&quot;
- &amp; &quot;rcumflex ; B 35 -14 521 734 ;\nC -1 ; WX 500 ; N yacute ; B 11 -214 489&quot;
- &amp; &quot; 734 ;\nC -1 ; WX 556 ; N udieresis ; B 68 -15 489 706 ;\nC -1 ; WX 834&quot;
- &amp; &quot; ; N threequarters ; B 45 -19 810 703 ;\nC -1 ; WX 556 ; N acircumflex &quot;
- &amp; &quot;; B 36 -15 530 734 ;\nC -1 ; WX 722 ; N Eth ; B 0 0 674 718 ;\nC -1 ; W&quot;
- &amp; &quot;X 556 ; N edieresis ; B 40 -15 516 706 ;\nC -1 ; WX 556 ; N ugrave ; B &quot;
- &amp; &quot;68 -15 489 734 ;\nC -1 ; WX 1000 ; N trademark ; B 46 306 903 718 ;\nC &quot;
- &amp; &quot;-1 ; WX 556 ; N ograve ; B 35 -14 521 734 ;\nC -1 ; WX 500 ; N scaron ;&quot;
- &amp; &quot; B 32 -15 464 734 ;\nC -1 ; WX 278 ; N Idieresis ; B 13 0 266 901 ;\nC &quot;
- &amp; &quot;-1 ; WX 556 ; N uacute ; B 68 -15 489 734 ;\nC -1 ; WX 556 ; N agrave ;&quot;
- &amp; &quot; B 36 -15 530 734 ;\nC -1 ; WX 556 ; N ntilde ; B 65 0 491 722 ;\nC -1 &quot;
- &amp; &quot;; WX 556 ; N aring ; B 36 -15 530 756 ;\nC -1 ; WX 500 ; N zcaron ; B 3&quot;
- &amp; &quot;1 0 469 734 ;\nC -1 ; WX 278 ; N Icircumflex ; B -6 0 285 929 ;\nC -1 ;&quot;
- &amp; &quot; WX 722 ; N Ntilde ; B 76 0 646 917 ;\nC -1 ; WX 556 ; N ucircumflex ; &quot;
- &amp; &quot;B 68 -15 489 734 ;\nC -1 ; WX 667 ; N Ecircumflex ; B 86 0 616 929 ;\nC&quot;
- &amp; &quot; -1 ; WX 278 ; N Iacute ; B 91 0 292 929 ;\nC -1 ; WX 722 ; N Ccedilla &quot;
- &amp; &quot;; B 44 -225 681 737 ;\nC -1 ; WX 778 ; N Odieresis ; B 39 -19 739 901 ;&quot;
- &amp; &quot;\nC -1 ; WX 667 ; N Scaron ; B 49 -19 620 929 ;\nC -1 ; WX 667 ; N Edie&quot;
- &amp; &quot;resis ; B 86 0 616 901 ;\nC -1 ; WX 278 ; N Igrave ; B -13 0 188 929 ;\n&quot;
- &amp; &quot;C -1 ; WX 556 ; N adieresis ; B 36 -15 530 706 ;\nC -1 ; WX 778 ; N Ogr&quot;
- &amp; &quot;ave ; B 39 -19 739 929 ;\nC -1 ; WX 667 ; N Egrave ; B 86 0 616 929 ;\n&quot;
- &amp; &quot;C -1 ; WX 667 ; N Ydieresis ; B 14 0 653 901 ;\nC -1 ; WX 737 ; N regis&quot;
- &amp; &quot;tered ; B -14 -19 752 737 ;\nC -1 ; WX 778 ; N Otilde ; B 39 -19 739 91&quot;
- &amp; &quot;7 ;\nC -1 ; WX 834 ; N onequarter ; B 73 -19 756 703 ;\nC -1 ; WX 722 ;&quot;
- &amp; &quot; N Ugrave ; B 79 -19 644 929 ;\nC -1 ; WX 722 ; N Ucircumflex ; B 79 -1&quot;
- &amp; &quot;9 644 929 ;\nC -1 ; WX 667 ; N Thorn ; B 86 0 622 718 ;\nC -1 ; WX 584 &quot;
- &amp; &quot;; N divide ; B 39 -19 545 524 ;\nC -1 ; WX 667 ; N Atilde ; B 14 0 654 &quot;
- &amp; &quot;917 ;\nC -1 ; WX 722 ; N Uacute ; B 79 -19 644 929 ;\nC -1 ; WX 778 ; N&quot;
- &amp; &quot; Ocircumflex ; B 39 -19 739 929 ;\nC -1 ; WX 584 ; N l&quot;;
-
-CONST E14_4 =
-   &quot;ogicalnot ; B 39 108 545 390 ;\nC -1 ; WX 667 ; N Aring ; B 14 0 654 93&quot;
- &amp; &quot;1 ;\nC -1 ; WX 278 ; N idieresis ; B 13 0 266 706 ;\nC -1 ; WX 278 ; N &quot;
- &amp; &quot;iacute ; B 95 0 292 734 ;\nC -1 ; WX 556 ; N aacute ; B 36 -15 530 734 &quot;
- &amp; &quot;;\nC -1 ; WX 584 ; N plusminus ; B 39 0 545 506 ;\nC -1 ; WX 584 ; N mu&quot;
- &amp; &quot;ltiply ; B 39 0 545 506 ;\nC -1 ; WX 722 ; N Udieresis ; B 79 -19 644 9&quot;
- &amp; &quot;01 ;\nC -1 ; WX 584 ; N minus ; B 39 216 545 289 ;\nC -1 ; WX 333 ; N o&quot;
- &amp; &quot;nesuperior ; B 43 281 222 703 ;\nC -1 ; WX 667 ; N Eacute ; B 86 0 616 &quot;
- &amp; &quot;929 ;\nC -1 ; WX 667 ; N Acircumflex ; B 14 0 654 929 ;\nC -1 ; WX 737 &quot;
- &amp; &quot;; N copyright ; B -14 -19 752 737 ;\nC -1 ; WX 667 ; N Agrave ; B 14 0 &quot;
- &amp; &quot;654 929 ;\nC -1 ; WX 556 ; N odieresis ; B 35 -14 521 706 ;\nC -1 ; WX &quot;
- &amp; &quot;556 ; N oacute ; B 35 -14 521 734 ;\nC -1 ; WX 400 ; N degree ; B 54 41&quot;
- &amp; &quot;1 346 703 ;\nC -1 ; WX 278 ; N igrave ; B -13 0 184 734 ;\nC -1 ; WX 55&quot;
- &amp; &quot;6 ; N mu ; B 68 -207 489 523 ;\nC -1 ; WX 778 ; N Oacute ; B 39 -19 739&quot;
- &amp; &quot; 929 ;\nC -1 ; WX 556 ; N eth ; B 35 -15 522 737 ;\nC -1 ; WX 667 ; N A&quot;
- &amp; &quot;dieresis ; B 14 0 654 901 ;\nC -1 ; WX 667 ; N Yacute ; B 14 0 653 929 &quot;
- &amp; &quot;;\nC -1 ; WX 260 ; N brokenbar ; B 94 -19 167 737 ;\nC -1 ; WX 834 ; N &quot;
- &amp; &quot;onehalf ; B 43 -19 773 703 ;\nEndCharMetrics\nStartKernData\nStartKernP&quot;
- &amp; &quot;airs 250\n\nKPX A y -40\nKPX A w -40\nKPX A v -40\nKPX A u -30\nKPX A Y&quot;
- &amp; &quot; -100\nKPX A W -50\nKPX A V -70\nKPX A U -50\nKPX A T -120\nKPX A Q -30&quot;
- &amp; &quot;\nKPX A O -30\nKPX A G -30\nKPX A C -30\n\nKPX B period -20\nKPX B comm&quot;
- &amp; &quot;a -20\nKPX B U -10\n\nKPX C period -30\nKPX C comma -30\n\nKPX D period&quot;
- &amp; &quot; -70\nKPX D comma -70\nKPX D Y -90\nKPX D W -40\nKPX D V -70\nKPX D A -&quot;
- &amp; &quot;40\n\nKPX F r -45\nKPX F period -150\nKPX F o -30\nKPX F e -30\nKPX F c&quot;
- &amp; &quot;omma -150\nKPX F a -50\nKPX F A -80\n\nKPX J u -20\nKPX J period -30\nK&quot;
- &amp; &quot;PX J comma -30\nKPX J a -20\nKPX J A -20\n\nKPX K y -50\nKPX K u -30\nK&quot;
- &amp; &quot;PX K o -40\nKPX K e -40\nKPX K O -50\n\nKPX L y -30\nKPX L quoteright -&quot;
- &amp; &quot;160\nKPX L quotedblright -140\nKPX L Y -140\nKPX L W -70\nKPX L V -110\n&quot;
- &amp; &quot;KPX L T -110\n\nKPX O period -40\nKPX O comma -40\nKPX O Y -70\nKPX O X&quot;
- &amp; &quot; -60\nKPX O W -30\nKPX O V -50\nKPX O T -40\nKPX O A -20\n\nKPX P perio&quot;
- &amp; &quot;d -180\nKPX P o -50\nKPX P e -50\nKPX&quot;;
-
-CONST E14_5 =
-   &quot; P comma -180\nKPX P a -40\nKPX P A -120\n\nKPX Q U -10\n\nKPX R Y -50\n&quot;
- &amp; &quot;KPX R W -30\nKPX R V -50\nKPX R U -40\nKPX R T -30\nKPX R O -20\n\nKPX &quot;
- &amp; &quot;S period -20\nKPX S comma -20\n\nKPX T y -120\nKPX T w -120\nKPX T u -1&quot;
- &amp; &quot;20\nKPX T semicolon -20\nKPX T r -120\nKPX T period -120\nKPX T o -120\n&quot;
- &amp; &quot;KPX T hyphen -140\nKPX T e -120\nKPX T comma -120\nKPX T colon -20\nKPX&quot;
- &amp; &quot; T a -120\nKPX T O -40\nKPX T A -120\n\nKPX U period -40\nKPX U comma -&quot;
- &amp; &quot;40\nKPX U A -40\n\nKPX V u -70\nKPX V semicolon -40\nKPX V period -125\n&quot;
- &amp; &quot;KPX V o -80\nKPX V hyphen -80\nKPX V e -80\nKPX V comma -125\nKPX V col&quot;
- &amp; &quot;on -40\nKPX V a -70\nKPX V O -40\nKPX V G -40\nKPX V A -80\n\nKPX W y -&quot;
- &amp; &quot;20\nKPX W u -30\nKPX W period -80\nKPX W o -30\nKPX W hyphen -40\nKPX W&quot;
- &amp; &quot; e -30\nKPX W comma -80\nKPX W a -40\nKPX W O -20\nKPX W A -50\n\nKPX Y&quot;
- &amp; &quot; u -110\nKPX Y semicolon -60\nKPX Y period -140\nKPX Y o -140\nKPX Y i &quot;
- &amp; &quot;-20\nKPX Y hyphen -140\nKPX Y e -140\nKPX Y comma -140\nKPX Y colon -60&quot;
- &amp; &quot;\nKPX Y a -140\nKPX Y O -85\nKPX Y A -110\n\nKPX a y -30\nKPX a w -20\n&quot;
- &amp; &quot;KPX a v -20\n\nKPX b y -20\nKPX b v -20\nKPX b u -20\nKPX b period -40\n&quot;
- &amp; &quot;KPX b l -20\nKPX b comma -40\nKPX b b -10\n\nKPX c k -20\nKPX c comma -&quot;
- &amp; &quot;15\n\nKPX colon space -50\n\nKPX comma quoteright -100\nKPX comma quote&quot;
- &amp; &quot;dblright -100\n\nKPX e y -20\nKPX e x -30\nKPX e w -20\nKPX e v -30\nKP&quot;
- &amp; &quot;X e period -15\nKPX e comma -15\n\nKPX f quoteright 50\nKPX f quotedblr&quot;
- &amp; &quot;ight 60\nKPX f period -30\nKPX f o -30\nKPX f e -30\nKPX f dotlessi -28&quot;
- &amp; &quot;\nKPX f comma -30\nKPX f a -30\n\nKPX g r -10\n\nKPX h y -30\n\nKPX k o&quot;
- &amp; &quot; -20\nKPX k e -20\n\nKPX m y -15\nKPX m u -10\n\nKPX n y -15\nKPX n v -&quot;
- &amp; &quot;20\nKPX n u -10\n\nKPX o y -30\nKPX o x -30\nKPX o w -15\nKPX o v -15\n&quot;
- &amp; &quot;KPX o period -40\nKPX o comma -40\n\nKPX oslash z -55\nKPX oslash y -70&quot;
- &amp; &quot;\nKPX oslash x -85\nKPX oslash w -70\nKPX oslash v -70\nKPX oslash u -5&quot;
- &amp; &quot;5\nKPX oslash t -55\nKPX oslash s -55\nKPX oslash r -55\nKPX oslash q -&quot;
- &amp; &quot;55\nKPX oslash period -95\nKPX oslash p -55\nKPX oslash o -55\nKPX osla&quot;
- &amp; &quot;sh n -55\nKPX oslash m -55\nKPX oslash l -55\nKPX oslash k -55\nKPX osl&quot;
- &amp; &quot;ash j -55\nKPX oslash i -55\nKPX oslash h -55\nKPX oslash g -55\nKPX os&quot;
- &amp; &quot;lash f -55\nKPX oslash e -55\nKPX oslash d -55\nKPX oslash comma -95\nK&quot;
- &amp; &quot;PX oslash c -55\nKPX &quot;;
-
-CONST E14_6 =
-   &quot;oslash b -55\nKPX oslash a -55\n\nKPX p y -30\nKPX p period -35\nKPX p &quot;
- &amp; &quot;comma -35\n\nKPX period space -60\nKPX period quoteright -100\nKPX peri&quot;
- &amp; &quot;od quotedblright -100\n\nKPX quotedblright space -40\n\nKPX quoteleft q&quot;
- &amp; &quot;uoteleft -57\n\nKPX quoteright space -70\nKPX quoteright s -50\nKPX quo&quot;
- &amp; &quot;teright r -50\nKPX quoteright quoteright -57\nKPX quoteright d -50\n\nK&quot;
- &amp; &quot;PX r y 30\nKPX r v 30\nKPX r u 15\nKPX r t 40\nKPX r semicolon 30\nKPX &quot;
- &amp; &quot;r period -50\nKPX r p 30\nKPX r n 25\nKPX r m 25\nKPX r l 15\nKPX r k 1&quot;
- &amp; &quot;5\nKPX r i 15\nKPX r comma -50\nKPX r colon 30\nKPX r a -10\n\nKPX s w &quot;
- &amp; &quot;-30\nKPX s period -15\nKPX s comma -15\n\nKPX semicolon space -50\n\nKP&quot;
- &amp; &quot;X space quoteleft -60\nKPX space quotedblleft -30\nKPX space Y -90\nKPX&quot;
- &amp; &quot; space W -40\nKPX space V -50\nKPX space T -50\n\nKPX v period -80\nKPX&quot;
- &amp; &quot; v o -25\nKPX v e -25\nKPX v comma -80\nKPX v a -25\n\nKPX w period -60&quot;
- &amp; &quot;\nKPX w o -10\nKPX w e -10\nKPX w comma -60\nKPX w a -15\n\nKPX x e -30&quot;
- &amp; &quot;\n\nKPX y period -100\nKPX y o -20\nKPX y e -20\nKPX y comma -100\nKPX &quot;
- &amp; &quot;y a -20\n\nKPX z o -15\nKPX z e -15\nEndKernPairs\nEndKernData\nStartCo&quot;
- &amp; &quot;mposites 58\nCC Aacute 2 ; PCC A 0 0 ; PCC acute 167 195 ;\nCC Acircumf&quot;
- &amp; &quot;lex 2 ; PCC A 0 0 ; PCC circumflex 167 195 ;\nCC Adieresis 2 ; PCC A 0 &quot;
- &amp; &quot;0 ; PCC dieresis 167 195 ;\nCC Agrave 2 ; PCC A 0 0 ; PCC grave 167 195&quot;
- &amp; &quot; ;\nCC Aring 2 ; PCC A 0 0 ; PCC ring 167 175 ;\nCC Atilde 2 ; PCC A 0 &quot;
- &amp; &quot;0 ; PCC tilde 167 195 ;\nCC Ccedilla 2 ; PCC C 0 0 ; PCC cedilla 195 0 &quot;
- &amp; &quot;;\nCC Eacute 2 ; PCC E 0 0 ; PCC acute 167 195 ;\nCC Ecircumflex 2 ; PC&quot;
- &amp; &quot;C E 0 0 ; PCC circumflex 167 195 ;\nCC Edieresis 2 ; PCC E 0 0 ; PCC di&quot;
- &amp; &quot;eresis 167 195 ;\nCC Egrave 2 ; PCC E 0 0 ; PCC grave 167 195 ;\nCC Iac&quot;
- &amp; &quot;ute 2 ; PCC I 0 0 ; PCC acute -27 195 ;\nCC Icircumflex 2 ; PCC I 0 0 ;&quot;
- &amp; &quot; PCC circumflex -27 195 ;\nCC Idieresis 2 ; PCC I 0 0 ; PCC dieresis -2&quot;
- &amp; &quot;7 195 ;\nCC Igrave 2 ; PCC I 0 0 ; PCC grave -27 195 ;\nCC Ntilde 2 ; P&quot;
- &amp; &quot;CC N 0 0 ; PCC tilde 205 195 ;\nCC Oacute 2 ; PCC O 0 0 ; PCC acute 223&quot;
- &amp; &quot; 195 ;\nCC Ocircumflex 2 ; PCC O 0 0 ; PCC circumflex 223 195 ;\nCC Odi&quot;
- &amp; &quot;eresis 2 ; PCC O 0 0 ; PCC dieresis 223 195 ;\nCC Ograve 2 ; PCC O 0 0 &quot;
- &amp; &quot;; PCC grave 223 195 ;\nCC Otilde 2 ;&quot;;
-
-CONST E14_7 =
-   &quot; PCC O 0 0 ; PCC tilde 223 195 ;\nCC Scaron 2 ; PCC S 0 0 ; PCC caron 1&quot;
- &amp; &quot;67 195 ;\nCC Uacute 2 ; PCC U 0 0 ; PCC acute 195 195 ;\nCC Ucircumflex&quot;
- &amp; &quot; 2 ; PCC U 0 0 ; PCC circumflex 195 195 ;\nCC Udieresis 2 ; PCC U 0 0 ;&quot;
- &amp; &quot; PCC dieresis 195 195 ;\nCC Ugrave 2 ; PCC U 0 0 ; PCC grave 195 195 ;\n&quot;
- &amp; &quot;CC Yacute 2 ; PCC Y 0 0 ; PCC acute 167 195 ;\nCC Ydieresis 2 ; PCC Y 0&quot;
- &amp; &quot; 0 ; PCC dieresis 167 195 ;\nCC Zcaron 2 ; PCC Z 0 0 ; PCC caron 139 19&quot;
- &amp; &quot;5 ;\nCC aacute 2 ; PCC a 0 0 ; PCC acute 112 0 ;\nCC acircumflex 2 ; PC&quot;
- &amp; &quot;C a 0 0 ; PCC circumflex 112 0 ;\nCC adieresis 2 ; PCC a 0 0 ; PCC dier&quot;
- &amp; &quot;esis 112 0 ;\nCC agrave 2 ; PCC a 0 0 ; PCC grave 112 0 ;\nCC aring 2 ;&quot;
- &amp; &quot; PCC a 0 0 ; PCC ring 112 0 ;\nCC atilde 2 ; PCC a 0 0 ; PCC tilde 102 &quot;
- &amp; &quot;0 ;\nCC ccedilla 2 ; PCC c 0 0 ; PCC cedilla 84 0 ;\nCC eacute 2 ; PCC &quot;
- &amp; &quot;e 0 0 ; PCC acute 112 0 ;\nCC ecircumflex 2 ; PCC e 0 0 ; PCC circumfle&quot;
- &amp; &quot;x 112 0 ;\nCC edieresis 2 ; PCC e 0 0 ; PCC dieresis 112 0 ;\nCC egrave&quot;
- &amp; &quot; 2 ; PCC e 0 0 ; PCC grave 112 0 ;\nCC iacute 2 ; PCC dotlessi 0 0 ; PC&quot;
- &amp; &quot;C acute -27 0 ;\nCC icircumflex 2 ; PCC dotlessi 0 0 ; PCC circumflex -&quot;
- &amp; &quot;27 0 ;\nCC idieresis 2 ; PCC dotlessi 0 0 ; PCC dieresis -27 0 ;\nCC ig&quot;
- &amp; &quot;rave 2 ; PCC dotlessi 0 0 ; PCC grave -27 0 ;\nCC ntilde 2 ; PCC n 0 0 &quot;
- &amp; &quot;; PCC tilde 102 0 ;\nCC oacute 2 ; PCC o 0 0 ; PCC acute 112 0 ;\nCC oc&quot;
- &amp; &quot;ircumflex 2 ; PCC o 0 0 ; PCC circumflex 112 0 ;\nCC odieresis 2 ; PCC &quot;
- &amp; &quot;o 0 0 ; PCC dieresis 112 0 ;\nCC ograve 2 ; PCC o 0 0 ; PCC grave 112 0&quot;
- &amp; &quot; ;\nCC otilde 2 ; PCC o 0 0 ; PCC tilde 112 0 ;\nCC scaron 2 ; PCC s 0 &quot;
- &amp; &quot;0 ; PCC caron 84 0 ;\nCC uacute 2 ; PCC u 0 0 ; PCC acute 112 0 ;\nCC u&quot;
- &amp; &quot;circumflex 2 ; PCC u 0 0 ; PCC circumflex 112 0 ;\nCC udieresis 2 ; PCC&quot;
- &amp; &quot; u 0 0 ; PCC dieresis 112 0 ;\nCC ugrave 2 ; PCC u 0 0 ; PCC grave 112 &quot;
- &amp; &quot;0 ;\nCC yacute 2 ; PCC y 0 0 ; PCC acute 84 0 ;\nCC ydieresis 2 ; PCC y&quot;
- &amp; &quot; 0 0 ; PCC dieresis 84 0 ;\nCC zcaron 2 ; PCC z 0 0 ; PCC caron 84 0 ;\n&quot;
- &amp; &quot;EndComposites\nEndFontMetrics\n&quot;;
-
-CONST E15 =
-   &quot;StartFontMetrics 2.0\nComment Copyright (c) 1989, 1990, 1991, Adobe Sys&quot;
- &amp; &quot;tems Incorporated. All rights reserved.\nComment Creation Date: Tue Sep&quot;
- &amp; &quot; 17 14:02:41 1991\nComment UniqueID 36384\nComment VMusage 31992 40360\n&quot;
- &amp; &quot;FontName Courier-Bold\nFullName Courier Bold\nFamilyName Courier\nWeigh&quot;
- &amp; &quot;t Bold\nItalicAngle 0\nIsFixedPitch true\nFontBBox -113 -250 749 801\nU&quot;
- &amp; &quot;nderlinePosition -100\nUnderlineThickness 50\nVersion 002.004\nNotice C&quot;
- &amp; &quot;opyright (c) 1989, 1990, 1991, Adobe Systems Incorporated. All rights r&quot;
- &amp; &quot;eserved.\nEncodingScheme AdobeStandardEncoding\nCapHeight 562\nXHeight &quot;
- &amp; &quot;439\nAscender 626\nDescender -142\nStartCharMetrics 260\nC 32 ; WX 600 &quot;
- &amp; &quot;; N space ; B 0 0 0 0 ;\nC 33 ; WX 600 ; N exclam ; B 202 -15 398 572 ;&quot;
- &amp; &quot;\nC 34 ; WX 600 ; N quotedbl ; B 135 277 465 562 ;\nC 35 ; WX 600 ; N n&quot;
- &amp; &quot;umbersign ; B 56 -45 544 651 ;\nC 36 ; WX 600 ; N dollar ; B 82 -126 51&quot;
- &amp; &quot;9 666 ;\nC 37 ; WX 600 ; N percent ; B 5 -15 595 616 ;\nC 38 ; WX 600 ;&quot;
- &amp; &quot; N ampersand ; B 36 -15 546 543 ;\nC 39 ; WX 600 ; N quoteright ; B 171&quot;
- &amp; &quot; 277 423 562 ;\nC 40 ; WX 600 ; N parenleft ; B 219 -102 461 616 ;\nC 4&quot;
- &amp; &quot;1 ; WX 600 ; N parenright ; B 139 -102 381 616 ;\nC 42 ; WX 600 ; N ast&quot;
- &amp; &quot;erisk ; B 91 219 509 601 ;\nC 43 ; WX 600 ; N plus ; B 71 39 529 478 ;\n&quot;
- &amp; &quot;C 44 ; WX 600 ; N comma ; B 123 -111 393 174 ;\nC 45 ; WX 600 ; N hyphe&quot;
- &amp; &quot;n ; B 100 203 500 313 ;\nC 46 ; WX 600 ; N period ; B 192 -15 408 171 ;&quot;
- &amp; &quot;\nC 47 ; WX 600 ; N slash ; B 98 -77 502 626 ;\nC 48 ; WX 600 ; N zero &quot;
- &amp; &quot;; B 87 -15 513 616 ;\nC 49 ; WX 600 ; N one ; B 81 0 539 616 ;\nC 50 ; &quot;
- &amp; &quot;WX 600 ; N two ; B 61 0 499 616 ;\nC 51 ; WX 600 ; N three ; B 63 -15 5&quot;
- &amp; &quot;01 616 ;\nC 52 ; WX 600 ; N four ; B 53 0 507 616 ;\nC 53 ; WX 600 ; N &quot;
- &amp; &quot;five ; B 70 -15 521 601 ;\nC 54 ; WX 600 ; N six ; B 90 -15 521 616 ;\n&quot;
- &amp; &quot;C 55 ; WX 600 ; N seven ; B 55 0 494 601 ;\nC 56 ; WX 600 ; N eight ; B&quot;
- &amp; &quot; 83 -15 517 616 ;\nC 57 ; WX 600 ; N nine ; B 79 -15 510 616 ;\nC 58 ; &quot;
- &amp; &quot;WX 600 ; N colon ; B 191 -15 407 425 ;\nC 59 ; WX 600 ; N semicolon ; B&quot;
- &amp; &quot; 123 -111 408 425 ;\nC 60 ; WX 600 ; N less ; B 66 15 523 501 ;\nC 61 ;&quot;
- &amp; &quot; WX 600 ; N equal ; B 71 118 529 398 ;\nC 62 ; WX 600 ; N grea&quot;;
-
-CONST E15_0 =
-   &quot;ter ; B 77 15 534 501 ;\nC 63 ; WX 600 ; N question ; B 98 -14 501 580 &quot;
- &amp; &quot;;\nC 64 ; WX 600 ; N at ; B 16 -15 584 616 ;\nC 65 ; WX 600 ; N A ; B -&quot;
- &amp; &quot;9 0 609 562 ;\nC 66 ; WX 600 ; N B ; B 30 0 573 562 ;\nC 67 ; WX 600 ; &quot;
- &amp; &quot;N C ; B 22 -18 560 580 ;\nC 68 ; WX 600 ; N D ; B 30 0 594 562 ;\nC 69 &quot;
- &amp; &quot;; WX 600 ; N E ; B 25 0 560 562 ;\nC 70 ; WX 600 ; N F ; B 39 0 570 562&quot;
- &amp; &quot; ;\nC 71 ; WX 600 ; N G ; B 22 -18 594 580 ;\nC 72 ; WX 600 ; N H ; B 2&quot;
- &amp; &quot;0 0 580 562 ;\nC 73 ; WX 600 ; N I ; B 77 0 523 562 ;\nC 74 ; WX 600 ; &quot;
- &amp; &quot;N J ; B 37 -18 601 562 ;\nC 75 ; WX 600 ; N K ; B 21 0 599 562 ;\nC 76 &quot;
- &amp; &quot;; WX 600 ; N L ; B 39 0 578 562 ;\nC 77 ; WX 600 ; N M ; B -2 0 602 562&quot;
- &amp; &quot; ;\nC 78 ; WX 600 ; N N ; B 8 -12 610 562 ;\nC 79 ; WX 600 ; N O ; B 22&quot;
- &amp; &quot; -18 578 580 ;\nC 80 ; WX 600 ; N P ; B 48 0 559 562 ;\nC 81 ; WX 600 ;&quot;
- &amp; &quot; N Q ; B 32 -138 578 580 ;\nC 82 ; WX 600 ; N R ; B 24 0 599 562 ;\nC 8&quot;
- &amp; &quot;3 ; WX 600 ; N S ; B 47 -22 553 582 ;\nC 84 ; WX 600 ; N T ; B 21 0 579&quot;
- &amp; &quot; 562 ;\nC 85 ; WX 600 ; N U ; B 4 -18 596 562 ;\nC 86 ; WX 600 ; N V ; &quot;
- &amp; &quot;B -13 0 613 562 ;\nC 87 ; WX 600 ; N W ; B -18 0 618 562 ;\nC 88 ; WX 6&quot;
- &amp; &quot;00 ; N X ; B 12 0 588 562 ;\nC 89 ; WX 600 ; N Y ; B 12 0 589 562 ;\nC &quot;
- &amp; &quot;90 ; WX 600 ; N Z ; B 62 0 539 562 ;\nC 91 ; WX 600 ; N bracketleft ; B&quot;
- &amp; &quot; 245 -102 475 616 ;\nC 92 ; WX 600 ; N backslash ; B 99 -77 503 626 ;\n&quot;
- &amp; &quot;C 93 ; WX 600 ; N bracketright ; B 125 -102 355 616 ;\nC 94 ; WX 600 ; &quot;
- &amp; &quot;N asciicircum ; B 108 250 492 616 ;\nC 95 ; WX 600 ; N underscore ; B 0&quot;
- &amp; &quot; -125 600 -75 ;\nC 96 ; WX 600 ; N quoteleft ; B 178 277 428 562 ;\nC 9&quot;
- &amp; &quot;7 ; WX 600 ; N a ; B 35 -15 570 454 ;\nC 98 ; WX 600 ; N b ; B 0 -15 58&quot;
- &amp; &quot;4 626 ;\nC 99 ; WX 600 ; N c ; B 40 -15 545 459 ;\nC 100 ; WX 600 ; N d&quot;
- &amp; &quot; ; B 20 -15 591 626 ;\nC 101 ; WX 600 ; N e ; B 40 -15 563 454 ;\nC 102&quot;
- &amp; &quot; ; WX 600 ; N f ; B 83 0 547 626 ; L i fi ; L l fl ;\nC 103 ; WX 600 ; &quot;
- &amp; &quot;N g ; B 30 -146 580 454 ;\nC 104 ; WX 600 ; N h ; B 5 0 592 626 ;\nC 10&quot;
- &amp; &quot;5 ; WX 600 ; N i ; B 77 0 523 658 ;\nC 106 ; WX 600 ; N j ; B 63 -146 4&quot;
- &amp; &quot;40 658 ;\nC 107 ; WX 600 ; N k ; B 20 0 585 626 ;\nC 108 ; WX 600 ; N l&quot;
- &amp; &quot; ; B 77 0 523 626 ;\nC 109 ; WX 600 ; N m ; B -22 0 626 454&quot;;
-
-CONST E15_1 =
-   &quot; ;\nC 110 ; WX 600 ; N n ; B 18 0 592 454 ;\nC 111 ; WX 600 ; N o ; B 3&quot;
- &amp; &quot;0 -15 570 454 ;\nC 112 ; WX 600 ; N p ; B -1 -142 570 454 ;\nC 113 ; WX&quot;
- &amp; &quot; 600 ; N q ; B 20 -142 591 454 ;\nC 114 ; WX 600 ; N r ; B 47 0 580 454&quot;
- &amp; &quot; ;\nC 115 ; WX 600 ; N s ; B 68 -17 535 459 ;\nC 116 ; WX 600 ; N t ; B&quot;
- &amp; &quot; 47 -15 532 562 ;\nC 117 ; WX 600 ; N u ; B -1 -15 569 439 ;\nC 118 ; W&quot;
- &amp; &quot;X 600 ; N v ; B -1 0 601 439 ;\nC 119 ; WX 600 ; N w ; B -18 0 618 439 &quot;
- &amp; &quot;;\nC 120 ; WX 600 ; N x ; B 6 0 594 439 ;\nC 121 ; WX 600 ; N y ; B -4 &quot;
- &amp; &quot;-142 601 439 ;\nC 122 ; WX 600 ; N z ; B 81 0 520 439 ;\nC 123 ; WX 600&quot;
- &amp; &quot; ; N braceleft ; B 160 -102 464 616 ;\nC 124 ; WX 600 ; N bar ; B 255 -&quot;
- &amp; &quot;250 345 750 ;\nC 125 ; WX 600 ; N braceright ; B 136 -102 440 616 ;\nC &quot;
- &amp; &quot;126 ; WX 600 ; N asciitilde ; B 71 153 530 356 ;\nC 161 ; WX 600 ; N ex&quot;
- &amp; &quot;clamdown ; B 202 -146 398 449 ;\nC 162 ; WX 600 ; N cent ; B 66 -49 518&quot;
- &amp; &quot; 614 ;\nC 163 ; WX 600 ; N sterling ; B 72 -28 558 611 ;\nC 164 ; WX 60&quot;
- &amp; &quot;0 ; N fraction ; B 25 -60 576 661 ;\nC 165 ; WX 600 ; N yen ; B 10 0 59&quot;
- &amp; &quot;0 562 ;\nC 166 ; WX 600 ; N florin ; B -30 -131 572 616 ;\nC 167 ; WX 6&quot;
- &amp; &quot;00 ; N section ; B 83 -70 517 580 ;\nC 168 ; WX 600 ; N currency ; B 54&quot;
- &amp; &quot; 49 546 517 ;\nC 169 ; WX 600 ; N quotesingle ; B 227 277 373 562 ;\nC &quot;
- &amp; &quot;170 ; WX 600 ; N quotedblleft ; B 71 277 535 562 ;\nC 171 ; WX 600 ; N &quot;
- &amp; &quot;guillemotleft ; B 8 70 553 446 ;\nC 172 ; WX 600 ; N guilsinglleft ; B &quot;
- &amp; &quot;141 70 459 446 ;\nC 173 ; WX 600 ; N guilsinglright ; B 141 70 459 446 &quot;
- &amp; &quot;;\nC 174 ; WX 600 ; N fi ; B 12 0 593 626 ;\nC 175 ; WX 600 ; N fl ; B &quot;
- &amp; &quot;12 0 593 626 ;\nC 177 ; WX 600 ; N endash ; B 65 203 535 313 ;\nC 178 ;&quot;
- &amp; &quot; WX 600 ; N dagger ; B 106 -70 494 580 ;\nC 179 ; WX 600 ; N daggerdbl &quot;
- &amp; &quot;; B 106 -70 494 580 ;\nC 180 ; WX 600 ; N periodcentered ; B 196 165 40&quot;
- &amp; &quot;4 351 ;\nC 182 ; WX 600 ; N paragraph ; B 6 -70 576 580 ;\nC 183 ; WX 6&quot;
- &amp; &quot;00 ; N bullet ; B 140 132 460 430 ;\nC 184 ; WX 600 ; N quotesinglbase &quot;
- &amp; &quot;; B 175 -142 427 143 ;\nC 185 ; WX 600 ; N quotedblbase ; B 65 -142 529&quot;
- &amp; &quot; 143 ;\nC 186 ; WX 600 ; N quotedblright ; B 61 277 525 562 ;\nC 187 ; &quot;
- &amp; &quot;WX 600 ; N guillemotright ; B 47 70 592 446 ;\nC 188 ; &quot;;
-
-CONST E15_2 =
-   &quot;WX 600 ; N ellipsis ; B 26 -15 574 116 ;\nC 189 ; WX 600 ; N perthousan&quot;
- &amp; &quot;d ; B -113 -15 713 616 ;\nC 191 ; WX 600 ; N questiondown ; B 99 -146 5&quot;
- &amp; &quot;02 449 ;\nC 193 ; WX 600 ; N grave ; B 132 508 395 661 ;\nC 194 ; WX 60&quot;
- &amp; &quot;0 ; N acute ; B 205 508 468 661 ;\nC 195 ; WX 600 ; N circumflex ; B 10&quot;
- &amp; &quot;3 483 497 657 ;\nC 196 ; WX 600 ; N tilde ; B 89 493 512 636 ;\nC 197 ;&quot;
- &amp; &quot; WX 600 ; N macron ; B 88 505 512 585 ;\nC 198 ; WX 600 ; N breve ; B 8&quot;
- &amp; &quot;3 468 517 631 ;\nC 199 ; WX 600 ; N dotaccent ; B 230 485 370 625 ;\nC &quot;
- &amp; &quot;200 ; WX 600 ; N dieresis ; B 128 485 472 625 ;\nC 202 ; WX 600 ; N rin&quot;
- &amp; &quot;g ; B 198 481 402 678 ;\nC 203 ; WX 600 ; N cedilla ; B 205 -206 387 0 &quot;
- &amp; &quot;;\nC 205 ; WX 600 ; N hungarumlaut ; B 68 488 588 661 ;\nC 206 ; WX 600&quot;
- &amp; &quot; ; N ogonek ; B 169 -199 367 0 ;\nC 207 ; WX 600 ; N caron ; B 103 493 &quot;
- &amp; &quot;497 667 ;\nC 208 ; WX 600 ; N emdash ; B -10 203 610 313 ;\nC 225 ; WX &quot;
- &amp; &quot;600 ; N AE ; B -29 0 602 562 ;\nC 227 ; WX 600 ; N ordfeminine ; B 147 &quot;
- &amp; &quot;196 453 580 ;\nC 232 ; WX 600 ; N Lslash ; B 39 0 578 562 ;\nC 233 ; WX&quot;
- &amp; &quot; 600 ; N Oslash ; B 22 -22 578 584 ;\nC 234 ; WX 600 ; N OE ; B -25 0 5&quot;
- &amp; &quot;95 562 ;\nC 235 ; WX 600 ; N ordmasculine ; B 147 196 453 580 ;\nC 241 &quot;
- &amp; &quot;; WX 600 ; N ae ; B -4 -15 601 454 ;\nC 245 ; WX 600 ; N dotlessi ; B 7&quot;
- &amp; &quot;7 0 523 439 ;\nC 248 ; WX 600 ; N lslash ; B 77 0 523 626 ;\nC 249 ; WX&quot;
- &amp; &quot; 600 ; N oslash ; B 30 -24 570 463 ;\nC 250 ; WX 600 ; N oe ; B -18 -15&quot;
- &amp; &quot; 611 454 ;\nC 251 ; WX 600 ; N germandbls ; B 22 -15 596 626 ;\nC -1 ; &quot;
- &amp; &quot;WX 600 ; N Odieresis ; B 22 -18 578 748 ;\nC -1 ; WX 600 ; N logicalnot&quot;
- &amp; &quot; ; B 71 103 529 413 ;\nC -1 ; WX 600 ; N minus ; B 71 203 529 313 ;\nC &quot;
- &amp; &quot;-1 ; WX 600 ; N merge ; B 137 -15 464 487 ;\nC -1 ; WX 600 ; N degree ;&quot;
- &amp; &quot; B 86 243 474 616 ;\nC -1 ; WX 600 ; N dectab ; B 8 0 592 320 ;\nC -1 ;&quot;
- &amp; &quot; WX 600 ; N ll ; B -12 0 600 626 ;\nC -1 ; WX 600 ; N IJ ; B -8 -18 622&quot;
- &amp; &quot; 562 ;\nC -1 ; WX 600 ; N Eacute ; B 25 0 560 784 ;\nC -1 ; WX 600 ; N &quot;
- &amp; &quot;Ocircumflex ; B 22 -18 578 780 ;\nC -1 ; WX 600 ; N ucircumflex ; B -1 &quot;
- &amp; &quot;-15 569 657 ;\nC -1 ; WX 600 ; N left ; B 65 44 535 371 ;\nC -1 ; WX 60&quot;
- &amp; &quot;0 ; N threesuperior ; B 138 222 433 616 ;\nC -1 ; WX 6&quot;;
-
-CONST E15_3 =
-   &quot;00 ; N up ; B 136 0 463 447 ;\nC -1 ; WX 600 ; N multiply ; B 81 39 520&quot;
- &amp; &quot; 478 ;\nC -1 ; WX 600 ; N Scaron ; B 47 -22 553 790 ;\nC -1 ; WX 600 ; &quot;
- &amp; &quot;N tab ; B 19 0 581 562 ;\nC -1 ; WX 600 ; N Ucircumflex ; B 4 -18 596 7&quot;
- &amp; &quot;80 ;\nC -1 ; WX 600 ; N divide ; B 71 16 529 500 ;\nC -1 ; WX 600 ; N A&quot;
- &amp; &quot;circumflex ; B -9 0 609 780 ;\nC -1 ; WX 600 ; N eacute ; B 40 -15 563 &quot;
- &amp; &quot;661 ;\nC -1 ; WX 600 ; N uacute ; B -1 -15 569 661 ;\nC -1 ; WX 600 ; N&quot;
- &amp; &quot; Aacute ; B -9 0 609 784 ;\nC -1 ; WX 600 ; N copyright ; B 0 -18 600 5&quot;
- &amp; &quot;80 ;\nC -1 ; WX 600 ; N twosuperior ; B 143 230 436 616 ;\nC -1 ; WX 60&quot;
- &amp; &quot;0 ; N Ecircumflex ; B 25 0 560 780 ;\nC -1 ; WX 600 ; N ntilde ; B 18 0&quot;
- &amp; &quot; 592 636 ;\nC -1 ; WX 600 ; N down ; B 137 -15 464 439 ;\nC -1 ; WX 600&quot;
- &amp; &quot; ; N center ; B 40 14 560 580 ;\nC -1 ; WX 600 ; N onesuperior ; B 153 &quot;
- &amp; &quot;230 447 616 ;\nC -1 ; WX 600 ; N ij ; B 6 -146 574 658 ;\nC -1 ; WX 600&quot;
- &amp; &quot; ; N edieresis ; B 40 -15 563 625 ;\nC -1 ; WX 600 ; N graybox ; B 76 0&quot;
- &amp; &quot; 525 599 ;\nC -1 ; WX 600 ; N odieresis ; B 30 -15 570 625 ;\nC -1 ; WX&quot;
- &amp; &quot; 600 ; N Ograve ; B 22 -18 578 784 ;\nC -1 ; WX 600 ; N threequarters ;&quot;
- &amp; &quot; B -47 -60 648 661 ;\nC -1 ; WX 600 ; N plusminus ; B 71 24 529 515 ;\n&quot;
- &amp; &quot;C -1 ; WX 600 ; N prescription ; B 24 -15 599 562 ;\nC -1 ; WX 600 ; N &quot;
- &amp; &quot;eth ; B 58 -27 543 626 ;\nC -1 ; WX 600 ; N largebullet ; B 248 229 352&quot;
- &amp; &quot; 333 ;\nC -1 ; WX 600 ; N egrave ; B 40 -15 563 661 ;\nC -1 ; WX 600 ; &quot;
- &amp; &quot;N ccedilla ; B 40 -206 545 459 ;\nC -1 ; WX 600 ; N notegraphic ; B 77 &quot;
- &amp; &quot;-15 523 572 ;\nC -1 ; WX 600 ; N Udieresis ; B 4 -18 596 748 ;\nC -1 ; &quot;
- &amp; &quot;WX 600 ; N Gcaron ; B 22 -18 594 790 ;\nC -1 ; WX 600 ; N arrowdown ; B&quot;
- &amp; &quot; 144 -15 456 608 ;\nC -1 ; WX 600 ; N format ; B 5 -146 115 601 ;\nC -1&quot;
- &amp; &quot; ; WX 600 ; N Otilde ; B 22 -18 578 759 ;\nC -1 ; WX 600 ; N Idieresis &quot;
- &amp; &quot;; B 77 0 523 748 ;\nC -1 ; WX 600 ; N adieresis ; B 35 -15 570 625 ;\nC&quot;
- &amp; &quot; -1 ; WX 600 ; N ecircumflex ; B 40 -15 563 657 ;\nC -1 ; WX 600 ; N Et&quot;
- &amp; &quot;h ; B 30 0 594 562 ;\nC -1 ; WX 600 ; N onequarter ; B -56 -60 656 661 &quot;
- &amp; &quot;;\nC -1 ; WX 600 ; N LL ; B -45 0 645 562 ;\nC -1 ; WX 600 ; N agrave ;&quot;
- &amp; &quot; B 35 -15 570 661 ;\nC -1 ; WX 600 ; N Zcaron ; B 62 0&quot;;
-
-CONST E15_4 =
-   &quot; 539 790 ;\nC -1 ; WX 600 ; N Scedilla ; B 47 -206 553 582 ;\nC -1 ; WX&quot;
- &amp; &quot; 600 ; N Idot ; B 77 0 523 748 ;\nC -1 ; WX 600 ; N Iacute ; B 77 0 523&quot;
- &amp; &quot; 784 ;\nC -1 ; WX 600 ; N indent ; B 65 45 535 372 ;\nC -1 ; WX 600 ; N&quot;
- &amp; &quot; Ugrave ; B 4 -18 596 784 ;\nC -1 ; WX 600 ; N scaron ; B 68 -17 535 66&quot;
- &amp; &quot;7 ;\nC -1 ; WX 600 ; N overscore ; B 0 579 600 629 ;\nC -1 ; WX 600 ; N&quot;
- &amp; &quot; Aring ; B -9 0 609 801 ;\nC -1 ; WX 600 ; N Ccedilla ; B 22 -206 560 5&quot;
- &amp; &quot;80 ;\nC -1 ; WX 600 ; N Igrave ; B 77 0 523 784 ;\nC -1 ; WX 600 ; N br&quot;
- &amp; &quot;okenbar ; B 255 -175 345 675 ;\nC -1 ; WX 600 ; N Oacute ; B 22 -18 578&quot;
- &amp; &quot; 784 ;\nC -1 ; WX 600 ; N otilde ; B 30 -15 570 636 ;\nC -1 ; WX 600 ; &quot;
- &amp; &quot;N Yacute ; B 12 0 589 784 ;\nC -1 ; WX 600 ; N lira ; B 72 -28 558 611 &quot;
- &amp; &quot;;\nC -1 ; WX 600 ; N Icircumflex ; B 77 0 523 780 ;\nC -1 ; WX 600 ; N &quot;
- &amp; &quot;Atilde ; B -9 0 609 759 ;\nC -1 ; WX 600 ; N Uacute ; B 4 -18 596 784 ;&quot;
- &amp; &quot;\nC -1 ; WX 600 ; N Ydieresis ; B 12 0 589 748 ;\nC -1 ; WX 600 ; N ydi&quot;
- &amp; &quot;eresis ; B -4 -142 601 625 ;\nC -1 ; WX 600 ; N idieresis ; B 77 0 523 &quot;
- &amp; &quot;625 ;\nC -1 ; WX 600 ; N Adieresis ; B -9 0 609 748 ;\nC -1 ; WX 600 ; &quot;
- &amp; &quot;N mu ; B -1 -142 569 439 ;\nC -1 ; WX 600 ; N trademark ; B -9 230 749 &quot;
- &amp; &quot;562 ;\nC -1 ; WX 600 ; N oacute ; B 30 -15 570 661 ;\nC -1 ; WX 600 ; N&quot;
- &amp; &quot; acircumflex ; B 35 -15 570 657 ;\nC -1 ; WX 600 ; N Agrave ; B -9 0 60&quot;
- &amp; &quot;9 784 ;\nC -1 ; WX 600 ; N return ; B 19 0 581 562 ;\nC -1 ; WX 600 ; N&quot;
- &amp; &quot; atilde ; B 35 -15 570 636 ;\nC -1 ; WX 600 ; N square ; B 19 0 581 562&quot;
- &amp; &quot; ;\nC -1 ; WX 600 ; N registered ; B 0 -18 600 580 ;\nC -1 ; WX 600 ; N&quot;
- &amp; &quot; stop ; B 19 0 581 562 ;\nC -1 ; WX 600 ; N udieresis ; B -1 -15 569 62&quot;
- &amp; &quot;5 ;\nC -1 ; WX 600 ; N arrowup ; B 144 3 456 626 ;\nC -1 ; WX 600 ; N i&quot;
- &amp; &quot;grave ; B 77 0 523 661 ;\nC -1 ; WX 600 ; N Edieresis ; B 25 0 560 748 &quot;
- &amp; &quot;;\nC -1 ; WX 600 ; N zcaron ; B 81 0 520 667 ;\nC -1 ; WX 600 ; N arrow&quot;
- &amp; &quot;both ; B -24 143 624 455 ;\nC -1 ; WX 600 ; N gcaron ; B 30 -146 580 66&quot;
- &amp; &quot;7 ;\nC -1 ; WX 600 ; N arrowleft ; B -24 143 634 455 ;\nC -1 ; WX 600 ;&quot;
- &amp; &quot; N aacute ; B 35 -15 570 661 ;\nC -1 ; WX 600 ; N ocircumflex ; B 30 -1&quot;
- &amp; &quot;5 570 657 ;\nC -1 ; WX 600 ; N scedilla ; B 68 -206 535&quot;;
-
-CONST E15_5 =
-   &quot; 459 ;\nC -1 ; WX 600 ; N ograve ; B 30 -15 570 661 ;\nC -1 ; WX 600 ; &quot;
- &amp; &quot;N onehalf ; B -47 -60 648 661 ;\nC -1 ; WX 600 ; N ugrave ; B -1 -15 56&quot;
- &amp; &quot;9 661 ;\nC -1 ; WX 600 ; N Ntilde ; B 8 -12 610 759 ;\nC -1 ; WX 600 ; &quot;
- &amp; &quot;N iacute ; B 77 0 523 661 ;\nC -1 ; WX 600 ; N arrowright ; B -34 143 6&quot;
- &amp; &quot;24 455 ;\nC -1 ; WX 600 ; N Thorn ; B 48 0 557 562 ;\nC -1 ; WX 600 ; N&quot;
- &amp; &quot; Egrave ; B 25 0 560 784 ;\nC -1 ; WX 600 ; N thorn ; B -14 -142 570 62&quot;
- &amp; &quot;6 ;\nC -1 ; WX 600 ; N aring ; B 35 -15 570 678 ;\nC -1 ; WX 600 ; N ya&quot;
- &amp; &quot;cute ; B -4 -142 601 661 ;\nC -1 ; WX 600 ; N icircumflex ; B 63 0 523 &quot;
- &amp; &quot;657 ;\nEndCharMetrics\nStartComposites 58\nCC Aacute 2 ; PCC A 0 0 ; PC&quot;
- &amp; &quot;C acute 30 123 ;\nCC Acircumflex 2 ; PCC A 0 0 ; PCC circumflex -30 123&quot;
- &amp; &quot; ;\nCC Adieresis 2 ; PCC A 0 0 ; PCC dieresis -20 123 ;\nCC Agrave 2 ; &quot;
- &amp; &quot;PCC A 0 0 ; PCC grave -50 123 ;\nCC Aring 2 ; PCC A 0 0 ; PCC ring -10 &quot;
- &amp; &quot;123 ;\nCC Atilde 2 ; PCC A 0 0 ; PCC tilde -30 123 ;\nCC Eacute 2 ; PCC&quot;
- &amp; &quot; E 0 0 ; PCC acute 30 123 ;\nCC Ecircumflex 2 ; PCC E 0 0 ; PCC circumf&quot;
- &amp; &quot;lex 0 123 ;\nCC Edieresis 2 ; PCC E 0 0 ; PCC dieresis 0 123 ;\nCC Egra&quot;
- &amp; &quot;ve 2 ; PCC E 0 0 ; PCC grave 0 123 ;\nCC Gcaron 2 ; PCC G 0 0 ; PCC car&quot;
- &amp; &quot;on 10 123 ;\nCC Iacute 2 ; PCC I 0 0 ; PCC acute 0 123 ;\nCC Icircumfle&quot;
- &amp; &quot;x 2 ; PCC I 0 0 ; PCC circumflex 0 123 ;\nCC Idieresis 2 ; PCC I 0 0 ; &quot;
- &amp; &quot;PCC dieresis 0 123 ;\nCC Igrave 2 ; PCC I 0 0 ; PCC grave 0 123 ;\nCC N&quot;
- &amp; &quot;tilde 2 ; PCC N 0 0 ; PCC tilde 0 123 ;\nCC Oacute 2 ; PCC O 0 0 ; PCC &quot;
- &amp; &quot;acute 0 123 ;\nCC Ocircumflex 2 ; PCC O 0 0 ; PCC circumflex 0 123 ;\nC&quot;
- &amp; &quot;C Odieresis 2 ; PCC O 0 0 ; PCC dieresis 0 123 ;\nCC Ograve 2 ; PCC O 0&quot;
- &amp; &quot; 0 ; PCC grave 0 123 ;\nCC Otilde 2 ; PCC O 0 0 ; PCC tilde 0 123 ;\nCC&quot;
- &amp; &quot; Scaron 2 ; PCC S 0 0 ; PCC caron 0 123 ;\nCC Uacute 2 ; PCC U 0 0 ; PC&quot;
- &amp; &quot;C acute 30 123 ;\nCC Ucircumflex 2 ; PCC U 0 0 ; PCC circumflex 0 123 ;&quot;
- &amp; &quot;\nCC Udieresis 2 ; PCC U 0 0 ; PCC dieresis 0 123 ;\nCC Ugrave 2 ; PCC &quot;
- &amp; &quot;U 0 0 ; PCC grave -30 123 ;\nCC Yacute 2 ; PCC Y 0 0 ; PCC acute 30 123&quot;
- &amp; &quot; ;\nCC Ydieresis 2 ; PCC Y 0 0 ; PCC dieresis 0 123 ;\nCC Zcaron 2 ; PC&quot;
- &amp; &quot;C Z 0 0 ; PCC caron 0 123 ;\nCC aacute 2 ; PCC a 0 0 ; P&quot;;
-
-CONST E15_6 =
-   &quot;CC acute 0 0 ;\nCC acircumflex 2 ; PCC a 0 0 ; PCC circumflex -20 0 ;\n&quot;
- &amp; &quot;CC adieresis 2 ; PCC a 0 0 ; PCC dieresis -10 0 ;\nCC agrave 2 ; PCC a &quot;
- &amp; &quot;0 0 ; PCC grave -30 0 ;\nCC aring 2 ; PCC a 0 0 ; PCC ring 0 0 ;\nCC at&quot;
- &amp; &quot;ilde 2 ; PCC a 0 0 ; PCC tilde 0 0 ;\nCC eacute 2 ; PCC e 0 0 ; PCC acu&quot;
- &amp; &quot;te 0 0 ;\nCC ecircumflex 2 ; PCC e 0 0 ; PCC circumflex 0 0 ;\nCC edier&quot;
- &amp; &quot;esis 2 ; PCC e 0 0 ; PCC dieresis 0 0 ;\nCC egrave 2 ; PCC e 0 0 ; PCC &quot;
- &amp; &quot;grave 0 0 ;\nCC gcaron 2 ; PCC g 0 0 ; PCC caron -40 0 ;\nCC iacute 2 ;&quot;
- &amp; &quot; PCC dotlessi 0 0 ; PCC acute 0 0 ;\nCC icircumflex 2 ; PCC dotlessi 0 &quot;
- &amp; &quot;0 ; PCC circumflex -40 0 ;\nCC idieresis 2 ; PCC dotlessi 0 0 ; PCC die&quot;
- &amp; &quot;resis -40 0 ;\nCC igrave 2 ; PCC dotlessi 0 0 ; PCC grave 0 0 ;\nCC nti&quot;
- &amp; &quot;lde 2 ; PCC n 0 0 ; PCC tilde 0 0 ;\nCC oacute 2 ; PCC o 0 0 ; PCC acut&quot;
- &amp; &quot;e 0 0 ;\nCC ocircumflex 2 ; PCC o 0 0 ; PCC circumflex 0 0 ;\nCC odiere&quot;
- &amp; &quot;sis 2 ; PCC o 0 0 ; PCC dieresis 0 0 ;\nCC ograve 2 ; PCC o 0 0 ; PCC g&quot;
- &amp; &quot;rave 0 0 ;\nCC otilde 2 ; PCC o 0 0 ; PCC tilde 0 0 ;\nCC scaron 2 ; PC&quot;
- &amp; &quot;C s 0 0 ; PCC caron 0 0 ;\nCC uacute 2 ; PCC u 0 0 ; PCC acute 0 0 ;\nC&quot;
- &amp; &quot;C ucircumflex 2 ; PCC u 0 0 ; PCC circumflex -20 0 ;\nCC udieresis 2 ; &quot;
- &amp; &quot;PCC u 0 0 ; PCC dieresis -20 0 ;\nCC ugrave 2 ; PCC u 0 0 ; PCC grave -&quot;
- &amp; &quot;30 0 ;\nCC yacute 2 ; PCC y 0 0 ; PCC acute 30 0 ;\nCC ydieresis 2 ; PC&quot;
- &amp; &quot;C y 0 0 ; PCC dieresis 10 0 ;\nCC zcaron 2 ; PCC z 0 0 ; PCC caron 0 0 &quot;
- &amp; &quot;;\nEndComposites\nEndFontMetrics\n&quot;;
 
 BEGIN
 END PklFontsBundle.

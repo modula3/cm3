@@ -14,7 +14,7 @@
 
 IMPORT <A HREF="../../../libm3/src/atom/Atom.i3.html">Atom</A>, <A HREF="../../../libm3/derived/AtomList.i3.html">AtomList</A>, <A HREF="../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../../../tcp/src/common/IP.i3.html">IP</A>, <A HREF="../../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>;
 IMPORT <A HREF="../../../libm3/src/os/POSIX/OSErrorPosix.i3.html">OSErrorPosix</A>, <A HREF="../../../m3core/src/thread/POSIX/SchedulerPosix.i3.html">SchedulerPosix</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>;
-IMPORT <A HREF="../../../m3core/src/unix/linux-libc6/Uerror.i3.html">Uerror</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Uin.i3.html">Uin</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Unix.i3.html">Unix</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Usocket.i3.html">Usocket</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Utypes.i3.html">Utypes</A>;
+IMPORT <A HREF="../../../m3core/src/C/Common/Cerrno.i3.html">Cerrno</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Uerror.i3.html">Uerror</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Uin.i3.html">Uin</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Unix.i3.html">Unix</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Usocket.i3.html">Usocket</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Utypes.i3.html">Utypes</A>;
 
 REVEAL
   <A NAME="T">T</A> = Public BRANDED &quot;UDPPosix.T&quot; OBJECT
@@ -36,7 +36,7 @@ REVEAL
 
 PROCEDURE <A NAME="Raise"><procedure>Raise</procedure></A>(a: Atom.T) RAISES {IP.Error} =
   BEGIN
-    RAISE IP.Error(AtomList.List2(a, OSErrorPosix.ErrnoAtom(Uerror.errno)));
+    RAISE IP.Error(AtomList.List2(a, OSErrorPosix.ErrnoAtom(Cerrno.GetErrno())));
   END Raise;
 
 PROCEDURE <A NAME="RaiseUnexpected"><procedure>RaiseUnexpected</procedure></A>(syscall: TEXT) RAISES {IP.Error} =
@@ -54,9 +54,11 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A>(self: T; myPort: IP.Por
     (* create socket via socket(2) system call *)
     self.fileno := Usocket.socket(Usocket.AF_INET, Usocket.SOCK_DGRAM, 0);
     IF self.fileno = -1 THEN
-      IF Uerror.errno = Uerror.EMFILE OR Uerror.errno = Uerror.ENFILE
+      WITH errno = Cerrno.GetErrno() DO
+        IF errno = Uerror.EMFILE OR errno = Uerror.ENFILE
         THEN Raise(IP.NoResources)
         ELSE RaiseUnexpected(&quot;socket(2)&quot;)
+        END
       END
     END;
 
@@ -69,7 +71,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A>(self: T; myPort: IP.Por
       status := Usocket.bind(self.fileno,
         (*INOUT*) ADR(sockaddr), BYTESIZE(Uin.struct_sockaddr_in));
       IF status # 0 THEN
-        IF Uerror.errno = Uerror.EADDRINUSE
+        IF Cerrno.GetErrno() = Uerror.EADDRINUSE
           THEN Raise(IP.PortBusy)
           ELSE RaiseUnexpected(&quot;bind(2)&quot;)
         END

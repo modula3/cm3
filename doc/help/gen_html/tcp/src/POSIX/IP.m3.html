@@ -95,7 +95,7 @@ PROCEDURE <A NAME="GetHostAddr"><procedure>GetHostAddr</procedure></A>(): Addres
 
 PROCEDURE <A NAME="InterpretError"><procedure>InterpretError</procedure></A>() RAISES {Error} =
   BEGIN
-    CASE Herrno.h_errno OF
+    CASE Herrno.Get_h_errno() OF
     | Unetdb.TRY_AGAIN, Unetdb.NO_RECOVERY, Unetdb.NO_ADDRESS =&gt;
         IPError.Raise (LookupFailure);
     ELSE

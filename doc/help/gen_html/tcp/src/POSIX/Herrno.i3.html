@@ -15,8 +15,14 @@
 <P><PRE>INTERFACE <interface>Herrno</interface>;
 
 FROM <A HREF="../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A> IMPORT int;
+</PRE> We cannot access <CODE>h_errno</CODE> directly as a variable, because on some systems
+   it is a C macro that expands to something more complicated. 
 
-&lt;*EXTERNAL*&gt; VAR h_errno: int;
+<P><PRE>&lt;*EXTERNAL &quot;m3_Herrno_Get_h_errno&quot;*&gt;
+PROCEDURE Get_h_errno(): int;
+
+&lt;*EXTERNAL &quot;m3_Herrno_Set_h_errno&quot;*&gt;
+PROCEDURE Set_h_errno(he: int);
 
 END Herrno.
 </PRE>

@@ -85,6 +85,11 @@ PROCEDURE <A NAME="Explain"><procedure>Explain</procedure></A> (a, b, c, d: TEXT
     END;
   END Explain;
 
+PROCEDURE <A NAME="Info"><procedure>Info</procedure></A> (a, b, c, d, e, f: TEXT := NIL) =
+  BEGIN
+    IF (level &gt; Level.Silent) THEN Out (a, b, c, d, e, f, Wr.EOL) END;
+  END Info;
+
 PROCEDURE <A NAME="OutL"><procedure>OutL</procedure></A> (a, b: TEXT;  l: Arg.List) =
   VAR gap: TEXT := NIL;
   BEGIN

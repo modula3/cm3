@@ -21,8 +21,6 @@
  Altered for Linux 1.1.73 with libc 4.5.26 by rrw1000@cam.ac.uk 
 
 <P><PRE>INTERFACE <interface><A HREF="Uerror.m3.html">Uerror</A></interface>;
-
-FROM <A HREF="../../C/Common/Ctypes.i3.html">Ctypes</A> IMPORT int, char_star;
 </PRE>** &lt;errno.h&gt; **
 
 <P><PRE>CONST
@@ -171,24 +169,9 @@ FROM <A HREF="../../C/Common/Ctypes.i3.html">Ctypes</A> IMPORT int, char_star;
   ERESTARTNOINTR  = 513;
   ERESTARTNOHAND  = 514;   (* restart if no handler.. *)
   ENOIOCTLCMD     = 515;   (* Present in Linux 1.1.73 *)
-
-&lt;*EXTERNAL*&gt;
-VAR
-  errno: int;
 </PRE> Extension by mjordan 
 <PRE>CONST
   Max = EDQUOT; (* should be exported from Uerror *)
-
-&lt;*EXTERNAL*&gt;
-VAR
-  sys_nerr: int;
-  sys_errlist: ARRAY [0..Max] OF char_star;
-
-PROCEDURE <A HREF="Uerror.m3.html#GetFrom_sys_errlist">GetFrom_sys_errlist</A>(n: INTEGER): char_star RAISES {};
-</PRE><BLOCKQUOTE><EM> returns entry 'n' of the 'sys_errlist' array; a checked runtime error
-   unless 0 &lt;= n &lt;= sys_nerr. Its safer and more portable to use this 
-   procedure than to access the array directly.
-</EM></BLOCKQUOTE><PRE>
 
 END Uerror.
 </PRE>

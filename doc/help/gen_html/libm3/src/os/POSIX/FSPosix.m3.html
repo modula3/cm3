@@ -18,7 +18,7 @@
 
 <P><PRE>UNSAFE MODULE <module>FSPosix</module> EXPORTS <A HREF="../Common/FS.i3.html"><implements>FS</A></implements>;
 
-IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="../../../derived/AtomList.i3.html">AtomList</A>, <A HREF="../../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../Common/File.i3.html">File</A>, <A HREF="FilePosix.i3.html">FilePosix</A>, <A HREF="../../../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="../Common/OSError.i3.html">OSError</A>,
+IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="../../../derived/AtomList.i3.html">AtomList</A>, <A HREF="../../../../m3core/src/C/Common/Cerrno.i3.html">Cerrno</A>, <A HREF="../../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../Common/File.i3.html">File</A>, <A HREF="FilePosix.i3.html">FilePosix</A>, <A HREF="../../../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="../Common/OSError.i3.html">OSError</A>,
        <A HREF="OSErrorPosix.i3.html">OSErrorPosix</A>, <A HREF="../Common/Pathname.i3.html">Pathname</A>, <A HREF="../Common/Process.i3.html">Process</A>, <A HREF="../../../../m3core/src/runtime/common/RTOS.i3.html">RTOS</A>, <A HREF="../../../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="../../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../derived/TextSeq.i3.html">TextSeq</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Unix.i3.html">Unix</A>,
        <A HREF="../../../../m3core/src/unix/linux-libc6/Udir.i3.html">Udir</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Uerror.i3.html">Uerror</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Ustat.i3.html">Ustat</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Utime.i3.html">Utime</A>, <A HREF="../../../../m3core/src/word/Word.i3.html">Word</A>;
 
@@ -119,7 +119,7 @@ PROCEDURE <A NAME="CheckLink"><procedure>CheckLink</procedure></A>(arcs: Pathnam
       M3toC.FreeSharedS(path, fname);
       buf[cc] := '\000'; (* terminate the string *)
       RETURN Pathname.Decompose(M3toC.CopyStoT(p_buf))
-    ELSIF Uerror.errno = Uerror.EINVAL THEN (* not a symbolic link *)
+    ELSIF Cerrno.GetErrno() = Uerror.EINVAL THEN (* not a symbolic link *)
       M3toC.FreeSharedS(path, fname);
       RETURN NIL;
     ELSE
@@ -219,7 +219,7 @@ PROCEDURE <A NAME="Rename"><procedure>Rename</procedure></A>(pn0, pn1: Pathname.
     f1  := M3toC.SharedTtoS(pn1);
   BEGIN
     IF Unix.rename(f0, f1) &lt; 0 THEN
-      err := Uerror.errno;
+      err := Cerrno.GetErrno();
       M3toC.FreeSharedS(pn0, f0);
       M3toC.FreeSharedS(pn1, f1);
       OSErrorPosix.Raise0(err)
@@ -360,7 +360,7 @@ PROCEDURE <A NAME="SetModificationTime"><procedure>SetModificationTime</procedur
   END SetModificationTime;
 
 PROCEDURE <A NAME="Fail"><procedure>Fail</procedure></A>(p: Pathname.T;  f: Ctypes.char_star) RAISES {OSError.E} =
-  VAR err := Uerror.errno;
+  VAR err := Cerrno.GetErrno();
   BEGIN
     M3toC.FreeSharedS(p, f);
     OSErrorPosix.Raise0(err);

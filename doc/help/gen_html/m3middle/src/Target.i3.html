@@ -28,12 +28,64 @@
     boundary (i.e. (size + align - 1) DIV align * align).
 
 
-<P>-------------------------------------------------------- initialization ---
+<P><PRE>TYPE
+  Systems = {
+    AIX386, ALPHA_OSF, AP3000, ARM, DS3100,
+    FreeBSD, FreeBSD2, HP300, HPPA, IBMR2,
+    IBMRT, IRIX5, LINUX, LINUXELF, NEXT,
+    NT386, OKI, OS2, SEQUENT, SOLgnu, SOLsun,
+    SPARC, SUN3, SUN386, UMAX, VAX, FreeBSD3,
+    FreeBSD4, FBSD_ALPHA, LINUXLIBC6, I386_DARWIN,
+    PPC_DARWIN, BSDI4, NT386GNU, PPC_LINUX, Undefined
+  };
+
+CONST
+  SystemNames = ARRAY OF TEXT {
+    (*  0 *) &quot;AIX386&quot;,
+    (*  1 *) &quot;ALPHA_OSF&quot;,
+    (*  2 *) &quot;AP3000&quot;,
+    (*  3 *) &quot;ARM&quot;,
+    (*  4 *) &quot;DS3100&quot;,
+    (*  5 *) &quot;FreeBSD&quot;,
+    (*  6 *) &quot;FreeBSD2&quot;,
+    (*  7 *) &quot;HP300&quot;,
+    (*  8 *) &quot;HPPA&quot;,
+    (*  9 *) &quot;IBMR2&quot;,
+    (* 10 *) &quot;IBMRT&quot;,
+    (* 11 *) &quot;IRIX5&quot;,
+    (* 12 *) &quot;LINUX&quot;,
+    (* 13 *) &quot;LINUXELF&quot;,
+    (* 14 *) &quot;NEXT&quot;,
+    (* 15 *) &quot;NT386&quot;,
+    (* 16 *) &quot;OKI&quot;,
+    (* 17 *) &quot;OS2&quot;,
+    (* 18 *) &quot;SEQUENT&quot;,
+    (* 19 *) &quot;SOLgnu&quot;,
+    (* 20 *) &quot;SOLsun&quot;,
+    (* 21 *) &quot;SPARC&quot;,
+    (* 22 *) &quot;SUN3&quot;,
+    (* 23 *) &quot;SUN386&quot;,
+    (* 24 *) &quot;UMAX&quot;,
+    (* 25 *) &quot;VAX&quot;,
+    (* 26 *) &quot;FreeBSD3&quot;,
+    (* 27 *) &quot;FreeBSD4&quot;,
+    (* 28 *) &quot;FBSD_ALPHA&quot;,
+    (* 29 *) &quot;LINUXLIBC6&quot;,
+    (* 30 *) &quot;I386_DARWIN&quot;,
+    (* 31 *) &quot;PPC_DARWIN&quot;,
+    (* 32 *) &quot;BSDI4&quot;,
+    (* 33 *) &quot;NT386GNU&quot;,
+    (* 34 *) &quot;PPC_LINUX&quot;
+  };
+</PRE>-------------------------------------------------------- initialization ---
 
 <P><PRE>PROCEDURE <A HREF="Target.m3.html#Init">Init</A> (system: TEXT): BOOLEAN;
 </PRE><BLOCKQUOTE><EM> Initialize the variables of this interface to reflect the architecture
    of <CODE>system</CODE>.  Returns TRUE iff the <CODE>system</CODE> was known and the initialization
    was successful.  </EM></BLOCKQUOTE><PRE>
+
+VAR (*CONST*)
+  System: Systems := Systems.Undefined; (* initialized by &quot;Init&quot; *)
 
 VAR (*CONST*)
   System_name: TEXT := NIL; (* initialized by &quot;Init&quot; *)
@@ -227,6 +279,11 @@ VAR (*CONST*)
 
   Bitfield_can_overlap: BOOLEAN;
   (* a C bit field cannot overlap two adjacent storage units *)
+
+	Allow_packed_byte_aligned: BOOLEAN;
+	(* Allow the compiler to align scalar types on byte boundaries when packing.
+	   The target processor must support byte alignment of scalar store and loads. This
+     does not remove the restriction that bitfields may not cross word boundaries. *)
 
   (* NIL checking *)
   First_readable_addr: CARDINAL;

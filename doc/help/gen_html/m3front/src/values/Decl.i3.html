@@ -27,6 +27,7 @@ TYPE
       isObsolete:  BOOLEAN  := FALSE;
       isImplicit:  BOOLEAN  := FALSE;
       callingConv: CG.CallingConvention := NIL;
+      isLazyAligned: BOOLEAN  := FALSE;
     END;
 
 PROCEDURE <A HREF="Decl.m3.html#Parse">Parse</A> (interface, top_level: BOOLEAN;  VAR fails: M3.ExSet);

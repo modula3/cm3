@@ -50,9 +50,6 @@ PROCEDURE <A NAME="LookUp"><procedure>LookUp</procedure></A> (&lt;*UNUSED*&gt; s
   END LookUp;
 
 CONST Names = ARRAY [0..10] OF TEXT {
-  &quot;ParisMetroData2&quot;,
-  &quot;panel.fv&quot;,
-  &quot;DagData&quot;,
   &quot;Sym15x15Data&quot;,
   &quot;ParisMetroData1&quot;,
   &quot;USOutlineData&quot;,
@@ -60,20 +57,23 @@ CONST Names = ARRAY [0..10] OF TEXT {
   &quot;digital.pbm&quot;,
   &quot;CRAData&quot;,
   &quot;USCitiesData&quot;,
+  &quot;ParisMetroData2&quot;,
+  &quot;panel.fv&quot;,
+  &quot;DagData&quot;,
   NIL
 };
 
 VAR Elements := ARRAY [0..10] OF TEXT {
-  NIL (* E0 .. E0_7 *),
-  NIL (* E1 .. E1_1 *),
-  NIL (* E2 .. E2_1 *),
-  NIL (* E3 .. E3_6 *),
-  NIL (* E4 .. E4_7 *),
-  NIL (* E5 .. E5_47 *),
-  NIL (* E6 .. E6_12 *),
-  E7,
-  NIL (* E8 .. E8_0 *),
-  NIL (* E9 .. E9_5 *),
+  NIL (* E0 .. E0_6 *),
+  NIL (* E1 .. E1_7 *),
+  NIL (* E2 .. E2_47 *),
+  NIL (* E3 .. E3_12 *),
+  E4,
+  NIL (* E5 .. E5_0 *),
+  NIL (* E6 .. E6_5 *),
+  NIL (* E7 .. E7_7 *),
+  NIL (* E8 .. E8_1 *),
+  NIL (* E9 .. E9_1 *),
   NIL
 };
 
@@ -91,15 +91,66 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
         Wr.PutText (wr, E0_4);
         Wr.PutText (wr, E0_5);
         Wr.PutText (wr, E0_6);
-        Wr.PutText (wr, E0_7);
     | 1 =&gt;
         Wr.PutText (wr, E1);
         Wr.PutText (wr, E1_0);
         Wr.PutText (wr, E1_1);
+        Wr.PutText (wr, E1_2);
+        Wr.PutText (wr, E1_3);
+        Wr.PutText (wr, E1_4);
+        Wr.PutText (wr, E1_5);
+        Wr.PutText (wr, E1_6);
+        Wr.PutText (wr, E1_7);
     | 2 =&gt;
         Wr.PutText (wr, E2);
         Wr.PutText (wr, E2_0);
         Wr.PutText (wr, E2_1);
+        Wr.PutText (wr, E2_2);
+        Wr.PutText (wr, E2_3);
+        Wr.PutText (wr, E2_4);
+        Wr.PutText (wr, E2_5);
+        Wr.PutText (wr, E2_6);
+        Wr.PutText (wr, E2_7);
+        Wr.PutText (wr, E2_8);
+        Wr.PutText (wr, E2_9);
+        Wr.PutText (wr, E2_10);
+        Wr.PutText (wr, E2_11);
+        Wr.PutText (wr, E2_12);
+        Wr.PutText (wr, E2_13);
+        Wr.PutText (wr, E2_14);
+        Wr.PutText (wr, E2_15);
+        Wr.PutText (wr, E2_16);
+        Wr.PutText (wr, E2_17);
+        Wr.PutText (wr, E2_18);
+        Wr.PutText (wr, E2_19);
+        Wr.PutText (wr, E2_20);
+        Wr.PutText (wr, E2_21);
+        Wr.PutText (wr, E2_22);
+        Wr.PutText (wr, E2_23);
+        Wr.PutText (wr, E2_24);
+        Wr.PutText (wr, E2_25);
+        Wr.PutText (wr, E2_26);
+        Wr.PutText (wr, E2_27);
+        Wr.PutText (wr, E2_28);
+        Wr.PutText (wr, E2_29);
+        Wr.PutText (wr, E2_30);
+        Wr.PutText (wr, E2_31);
+        Wr.PutText (wr, E2_32);
+        Wr.PutText (wr, E2_33);
+        Wr.PutText (wr, E2_34);
+        Wr.PutText (wr, E2_35);
+        Wr.PutText (wr, E2_36);
+        Wr.PutText (wr, E2_37);
+        Wr.PutText (wr, E2_38);
+        Wr.PutText (wr, E2_39);
+        Wr.PutText (wr, E2_40);
+        Wr.PutText (wr, E2_41);
+        Wr.PutText (wr, E2_42);
+        Wr.PutText (wr, E2_43);
+        Wr.PutText (wr, E2_44);
+        Wr.PutText (wr, E2_45);
+        Wr.PutText (wr, E2_46);
+        Wr.PutText (wr, E2_47);
     | 3 =&gt;
         Wr.PutText (wr, E3);
         Wr.PutText (wr, E3_0);
@@ -109,66 +160,15 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
         Wr.PutText (wr, E3_4);
         Wr.PutText (wr, E3_5);
         Wr.PutText (wr, E3_6);
-    | 4 =&gt;
-        Wr.PutText (wr, E4);
-        Wr.PutText (wr, E4_0);
-        Wr.PutText (wr, E4_1);
-        Wr.PutText (wr, E4_2);
-        Wr.PutText (wr, E4_3);
-        Wr.PutText (wr, E4_4);
-        Wr.PutText (wr, E4_5);
-        Wr.PutText (wr, E4_6);
-        Wr.PutText (wr, E4_7);
+        Wr.PutText (wr, E3_7);
+        Wr.PutText (wr, E3_8);
+        Wr.PutText (wr, E3_9);
+        Wr.PutText (wr, E3_10);
+        Wr.PutText (wr, E3_11);
+        Wr.PutText (wr, E3_12);
     | 5 =&gt;
         Wr.PutText (wr, E5);
         Wr.PutText (wr, E5_0);
-        Wr.PutText (wr, E5_1);
-        Wr.PutText (wr, E5_2);
-        Wr.PutText (wr, E5_3);
-        Wr.PutText (wr, E5_4);
-        Wr.PutText (wr, E5_5);
-        Wr.PutText (wr, E5_6);
-        Wr.PutText (wr, E5_7);
-        Wr.PutText (wr, E5_8);
-        Wr.PutText (wr, E5_9);
-        Wr.PutText (wr, E5_10);
-        Wr.PutText (wr, E5_11);
-        Wr.PutText (wr, E5_12);
-        Wr.PutText (wr, E5_13);
-        Wr.PutText (wr, E5_14);
-        Wr.PutText (wr, E5_15);
-        Wr.PutText (wr, E5_16);
-        Wr.PutText (wr, E5_17);
-        Wr.PutText (wr, E5_18);
-        Wr.PutText (wr, E5_19);
-        Wr.PutText (wr, E5_20);
-        Wr.PutText (wr, E5_21);
-        Wr.PutText (wr, E5_22);
-        Wr.PutText (wr, E5_23);
-        Wr.PutText (wr, E5_24);
-        Wr.PutText (wr, E5_25);
-        Wr.PutText (wr, E5_26);
-        Wr.PutText (wr, E5_27);
-        Wr.PutText (wr, E5_28);
-        Wr.PutText (wr, E5_29);
-        Wr.PutText (wr, E5_30);
-        Wr.PutText (wr, E5_31);
-        Wr.PutText (wr, E5_32);
-        Wr.PutText (wr, E5_33);
-        Wr.PutText (wr, E5_34);
-        Wr.PutText (wr, E5_35);
-        Wr.PutText (wr, E5_36);
-        Wr.PutText (wr, E5_37);
-        Wr.PutText (wr, E5_38);
-        Wr.PutText (wr, E5_39);
-        Wr.PutText (wr, E5_40);
-        Wr.PutText (wr, E5_41);
-        Wr.PutText (wr, E5_42);
-        Wr.PutText (wr, E5_43);
-        Wr.PutText (wr, E5_44);
-        Wr.PutText (wr, E5_45);
-        Wr.PutText (wr, E5_46);
-        Wr.PutText (wr, E5_47);
     | 6 =&gt;
         Wr.PutText (wr, E6);
         Wr.PutText (wr, E6_0);
@@ -177,485 +177,30 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
         Wr.PutText (wr, E6_3);
         Wr.PutText (wr, E6_4);
         Wr.PutText (wr, E6_5);
-        Wr.PutText (wr, E6_6);
-        Wr.PutText (wr, E6_7);
-        Wr.PutText (wr, E6_8);
-        Wr.PutText (wr, E6_9);
-        Wr.PutText (wr, E6_10);
-        Wr.PutText (wr, E6_11);
-        Wr.PutText (wr, E6_12);
+    | 7 =&gt;
+        Wr.PutText (wr, E7);
+        Wr.PutText (wr, E7_0);
+        Wr.PutText (wr, E7_1);
+        Wr.PutText (wr, E7_2);
+        Wr.PutText (wr, E7_3);
+        Wr.PutText (wr, E7_4);
+        Wr.PutText (wr, E7_5);
+        Wr.PutText (wr, E7_6);
+        Wr.PutText (wr, E7_7);
     | 8 =&gt;
         Wr.PutText (wr, E8);
         Wr.PutText (wr, E8_0);
+        Wr.PutText (wr, E8_1);
     | 9 =&gt;
         Wr.PutText (wr, E9);
         Wr.PutText (wr, E9_0);
         Wr.PutText (wr, E9_1);
-        Wr.PutText (wr, E9_2);
-        Wr.PutText (wr, E9_3);
-        Wr.PutText (wr, E9_4);
-        Wr.PutText (wr, E9_5);
     ELSE (*skip*)
     END;
     RETURN TextWr.ToText (wr);
   END GetElt;
 
 CONST E0 =
-   &quot;279\n4 Septembre \n380.00 418.00 2.00\nEdge\n166 0\nEdge\n28 1\n\n \n38&quot;
- &amp; &quot;1.00 507.00 2.00\nEdge\n179 0\nEdge\n118 1\n\nAlesia \n324.00 192.00 2.&quot;
- &amp; &quot;00\nEdge\n159 0\nEdge\n194 1\n\nAlexandre Dumas \n568.00 353.00 2.00\nE&quot;
- &amp; &quot;dge\n176 0\nEdge\n11 1\n\nAlfort-Ecole Veterinaire \n633.00 134.00 2.00&quot;
- &amp; &quot;\nEdge\n41 0\nEdge\n140 1\n\nAlma-Marceau \n252.00 390.00 2.00\nEdge\n1&quot;
- &amp; &quot;04 0\nEdge\n88 1\n\nAnatole France \n200.00 537.00 2.00\nEdge\n186 0\nE&quot;
- &amp; &quot;dge\n128 1\n\nAnvers \n399.00 493.00 2.00\nEdge\n179 0\nEdge\n13 1\n\nA&quot;
- &amp; &quot;rgentine \n198.00 434.00 2.00\nEdge\n213 0\nEdge\n42 1\n\nArts Et Metie&quot;
- &amp; &quot;rs \n442.00 390.00 4.00\nEdge\n222 0\nEdge\n263 1\nEdge\n219 2\nEdge\n2&quot;
- &amp; &quot;24 3\n\nAubervilliers-Pantin 4 Chemins \n554.00 574.00 2.00\nEdge\n87 0&quot;
- &amp; &quot;\nEdge\n203 1\n\nAvron \n584.00 335.00 2.00\nEdge\n3 0\nEdge\n160 1\n\n&quot;
- &amp; &quot;Balard \n172.00 221.00 10.00\nEdge\n129 0\n\nBarbes-Rochechouart \n430.&quot;
- &amp; &quot;00 492.00 4.00\nEdge\n7 0\nEdge\n114 1\nEdge\n48 2\nEdge\n95 3\n\nBasti&quot;
- &amp; &quot;lle \n483.00 331.00 6.00\nEdge\n254 0\nEdge\n94 1\nEdge\n29 2\nEdge\n21&quot;
- &amp; &quot;8 3\nEdge\n52 4\nEdge\n121 5\n\nBel-Air \n581.00 259.00 2.00\nEdge\n70 &quot;
- &amp; &quot;0\nEdge\n177 1\n\nBelleville \n523.00 431.00 4.00\nEdge\n55 0\nEdge\n63&quot;
- &amp; &quot; 1\nEdge\n99 2\nEdge\n216 3\n\nBerault \n656.00 287.00 2.00\nEdge\n250 &quot;
- &amp; &quot;0\nEdge\n46 1\n\nBercy \n528.00 243.00 2.00\nEdge\n217 0\nEdge\n72 1\n\n&quot;
- &amp; &quot;Billancourt \n71.00 206.00 2.00\nEdge\n188 0\nEdge\n146 1\n\nBir-Hakeim&quot;
- &amp; &quot; \n202.00 323.00 2.00\nEdge\n170 0\nEdge\n73 1\n\nBlanche \n363.00 500.&quot;
- &amp; &quot;00 2.00\nEdge\n180 0\nEdge\n179 1\n\nBoissiere \n204.00 390.00 2.00\nEd&quot;
- &amp; &quot;ge\n113 0\nEdge\n267 1\n\nBolivar \n512.00 468.00 2.00\nEdge\n108 0\nEd&quot;
- &amp; &quot;ge\n31 1\n\nBonne-Nouvelle \n427.00 421.00 4.00\nEdge\n233 0\nEdge\n260&quot;
- &amp; &quot; 1\nEdge\n233 2\nEdge\n260 3\n\nBotzaris \n546.00 465.00 3.00\nEdge\n31&quot;
- &amp; &quot; 0\nEdge\n182 1\nEdge\n69 2\n\nBoucicaut \n198.00 243.00 2.00\nEdge\n12&quot;
- &amp; &quot;9 0\nEdge\n85 1\n\nBoulets-Montreuil \n562.00 317.00 2.00\nEdge\n44 0\n&quot;
- &amp; &quot;Edge\n160 1\n\nBourse \n394.00 411.00 2.00\nEdge\n0 0\nEdge\n235 1\n\nB&quot;
- &amp; &quot;reguet-Sabin \n498.00 352.00 2.00\nEdge\n226 0\nEdge\n14 1\n\n \n312.00&quot;
- &amp; &quot; 533.00 2.00\nEdge\n115 0\nEdge\n200 1\n\nButtes Chaumont \n528.00 464.&quot;
- &amp; &quot;00 2.00\nEdge\n23 0\nEdge\n25 1\n\nBuzenval \n596.00 317.00 2.00\nEdge\n&quot;
- &amp; &quot;160 0\nEdge\n144 1\n\nCadet \n404.00 453.00 2.00\nEdge\n185 0\nEdge\n12&quot;
- &amp; &quot;0 1\n\nCambronne \n252.00 279.00 2.00\nEdge\n116 0\nEdge\n237 1\n\n&quot;;
-
-CONST E0_0 =
-   &quot;Campo-Formio \n450.00 224.00 2.00\nEdge\n251 0\nEdge\n181 1\n\nCardinal&quot;
- &amp; &quot; Lemoine \n421.00 281.00 2.00\nEdge\n112 0\nEdge\n148 1\n\n \n372.00 59&quot;
- &amp; &quot;3.00 2.00\nEdge\n243 0\nEdge\n137 1\n\nCensier-Daubenton \n412.00 250.0&quot;
- &amp; &quot;0 2.00\nEdge\n183 0\nEdge\n122 1\n\n \n323.00 368.00 2.00\nEdge\n239 0\n&quot;
- &amp; &quot;Edge\n57 1\n\nChamps Elysees Clemenceau \n289.00 401.00 4.00\nEdge\n88 &quot;
- &amp; &quot;0\nEdge\n57 1\nEdge\n155 2\nEdge\n105 3\n\nCharenton-Ecoles \n638.00 17&quot;
- &amp; &quot;0.00 2.00\nEdge\n125 0\nEdge\n4 1\n\nCharles De Gaulle Etoile \n216.00 &quot;
- &amp; &quot;427.00 5.00\nEdge\n8 0\nEdge\n97 1\nEdge\n274 2\nEdge\n264 3\nEdge\n113&quot;
- &amp; &quot; 4\n\n \n206.00 279.00 2.00\nEdge\n79 0\nEdge\n109 1\n\nCharonne \n546.&quot;
- &amp; &quot;00 335.00 2.00\nEdge\n277 0\nEdge\n27 1\n\nChateau D\'eau \n445.00 442.&quot;
- &amp; &quot;00 2.00\nEdge\n93 0\nEdge\n260 1\n\nChateau De Vincennes \n675.00 279.0&quot;
- &amp; &quot;0 10.00\nEdge\n17 0\n\nChateau Landon \n475.00 464.00 2.00\nEdge\n127 0&quot;
- &amp; &quot;\nEdge\n93 1\n\nChateau-Rouge \n422.00 512.00 2.00\nEdge\n145 0\nEdge\n&quot;
- &amp; &quot;13 1\n\nChatelet   \n415.00 356.00 7.00\nEdge\n130 0\nEdge\n103 1\nEdge&quot;
- &amp; &quot;\n123 2\nEdge\n54 3\nEdge\n190 4\nEdge\n189 5\nEdge\n103 6\n\n \n252.00&quot;
- &amp; &quot; 152.00 10.00\nEdge\n142 0\n\nChaussee-D\'antin \n374.00 443.00 4.00\nE&quot;
- &amp; &quot;dge\n120 0\nEdge\n166 1\nEdge\n101 2\nEdge\n227 3\n\nChemin Vert \n481.&quot;
- &amp; &quot;00 351.00 2.00\nEdge\n257 0\nEdge\n14 1\n\nChevaleret \n484.00 221.00 2&quot;
- &amp; &quot;.00\nEdge\n161 0\nEdge\n217 1\n\nCite \n407.00 335.00 2.00\nEdge\n49 0\n&quot;
- &amp; &quot;Edge\n253 1\n\nColonel Fabien \n500.00 470.00 2.00\nEdge\n108 0\nEdge\n&quot;
- &amp; &quot;16 1\n\nCommerce \n224.00 274.00 2.00\nEdge\n85 0\nEdge\n116 1\n\nConco&quot;
- &amp; &quot;rde \n326.00 390.00 6.00\nEdge\n40 0\nEdge\n269 1\nEdge\n105 2\nEdge\n1&quot;
- &amp; &quot;32 3\nEdge\n39 4\nEdge\n132 5\n\n \n216.00 223.00 2.00\nEdge\n209 0\nEd&quot;
- &amp; &quot;ge\n272 1\n\nCorentin Cariou \n525.00 543.00 2.00\nEdge\n203 0\nEdge\n6&quot;
- &amp; &quot;7 1\n\n \n188.00 188.00 2.00\nEdge\n133 0\nEdge\n209 1\n\nCorvisart \n4&quot;
- &amp; &quot;17.00 197.00 2.00\nEdge\n98 0\nEdge\n181 1\n\nCourcelles \n252.00 464.0&quot;
- &amp; &quot;0 2.00\nEdge\n264 0\nEdge\n156 1\n\nCouronnes \n530.00 422.00 2.00\nEdg&quot;
- &amp; &quot;e\n16 0\nEdge\n149 1\n\nCreteil-L\'echat Hopital H. Mondor \n658.00 98.&quot;
- &amp; &quot;00 2.00\nEdge\n139 0\nEdge\n66 1\n\nCreteil-PREFECTURE \n695.00 98.00 1&quot;
- &amp; &quot;0.00\nEdge\n66 0\n\nCreteil-Universite \n676.00 98.00 2.00\nEdge\n64 0\n&quot;
- &amp; &quot;Edge\n65 1\n\nCrimee \n515.00 532.00 2.00\nEdge\n59 0\nEdge\n228 1\n\nC&quot;
- &amp; &quot;roix De Chavaux \n658.00 369.00 2.00\nEdge\n229 0\nEdge\n136 &quot;;
-
-CONST E0_1 =
-   &quot;1\n\nDaube                \n572.00 482.00 2.00\nEdge\n214 0\nEdge\n25 1&quot;
- &amp; &quot;\n\nDaumesnil \n565.00 243.00 4.00\nEdge\n72 0\nEdge\n15 1\nEdge\n157 2&quot;
- &amp; &quot;\nEdge\n150 3\n\nDenfert-Rochereau \n345.00 224.00 4.00\nEdge\n221 0\nE&quot;
- &amp; &quot;dge\n159 1\nEdge\n221 2\nEdge\n248 3\n\nDugommier \n546.00 243.00 2.00\n&quot;
- &amp; &quot;Edge\n18 0\nEdge\n70 1\n\nDupleix \n220.00 309.00 2.00\nEdge\n20 0\nEdg&quot;
- &amp; &quot;e\n116 1\n\nDuroc \n289.00 298.00 4.00\nEdge\n270 0\nEdge\n234 1\nEdge\n&quot;
- &amp; &quot;245 2\nEdge\n158 3\n\nEcole-Militaire \n253.00 317.00 2.00\nEdge\n116 0&quot;
- &amp; &quot;\nEdge\n105 1\n\nEdgar Quinet \n326.00 262.00 2.00\nEdge\n158 0\nEdge\n&quot;
- &amp; &quot;221 1\n\n \n157.00 295.00 2.00\nEdge\n109 0\nEdge\n152 1\n\nEglise De P&quot;
- &amp; &quot;antin \n635.00 537.00 10.00\nEdge\n102 0\n\nEmile Zola \n218.00 279.00 &quot;
- &amp; &quot;2.00\nEdge\n116 0\nEdge\n43 1\n\nEtienne Marcel \n415.00 388.00 2.00\nE&quot;
- &amp; &quot;dge\n222 0\nEdge\n123 1\n\nEurope \n322.00 466.00 2.00\nEdge\n275 0\nEd&quot;
- &amp; &quot;ge\n249 1\n\nExelmans \n122.00 257.00 2.00\nEdge\n206 0\nEdge\n153 1\n\n&quot;
- &amp; &quot;Faidherbe-Chaligny \n528.00 317.00 2.00\nEdge\n121 0\nEdge\n225 1\n\n \n&quot;
- &amp; &quot;287.00 275.00 2.00\nEdge\n171 0\nEdge\n158 1\n\nFelix Faure \n219.00 26&quot;
- &amp; &quot;0.00 2.00\nEdge\n26 0\nEdge\n56 1\n\nFilles Du Calvaire \n477.00 389.00&quot;
- &amp; &quot; 2.00\nEdge\n224 0\nEdge\n257 1\n\nFort D\'aubervilliers \n573.00 592.0&quot;
- &amp; &quot;0 10.00\nEdge\n10 0\n\nFranklin D. Roosevelt \n270.00 408.00 4.00\nEdge&quot;
- &amp; &quot;\n97 0\nEdge\n40 1\nEdge\n5 2\nEdge\n255 3\n\n \n307.00 243.00 2.00\nEd&quot;
- &amp; &quot;ge\n158 0\nEdge\n175 1\n\nGallieni \n656.00 408.00 10.00\nEdge\n196 0\n&quot;
- &amp; &quot;\nGambetta \n589.00 398.00 3.00\nEdge\n173 0\nEdge\n196 1\nEdge\n172 2\n&quot;
- &amp; &quot;\nGare D\'orleans Austerlitz \n462.00 262.00 3.00\nEdge\n218 0\nEdge\n2&quot;
- &amp; &quot;51 1\nEdge\n112 2\n\nGare De L\'est \n454.00 450.00 6.00\nEdge\n95 0\nE&quot;
- &amp; &quot;dge\n45 1\nEdge\n95 2\nEdge\n106 3\nEdge\n47 4\nEdge\n185 5\n\nGare De &quot;
- &amp; &quot;Lyon \n508.00 279.00 2.00\nEdge\n14 0\nEdge\n225 1\n\nGare Du Nord \n44&quot;
- &amp; &quot;9.00 479.00 4.00\nEdge\n13 0\nEdge\n93 1\nEdge\n259 2\nEdge\n93 3\n\n \n&quot;
- &amp; &quot;358.00 566.00 2.00\nEdge\n137 0\nEdge\n207 1\n\nGeorge V \n248.00 416.0&quot;
- &amp; &quot;0 2.00\nEdge\n42 0\nEdge\n88 1\n\nGlaciere \n385.00 206.00 2.00\nEdge\n&quot;
- &amp; &quot;248 0\nEdge\n61 1\n\n \n500.00 423.00 2.00\nEdge\n224 0\nEdge\n16 1\n\n&quot;
- &amp; &quot; \n343.00 541.00 2.00\nEdge\n207 0\nEdge\n115 1\n\nHavre-Chaumartin \n3&quot;
- &amp; &quot;45.00 445.00 4.00\nEdge\n249 0\nEdge\n166 1\nEdge\n241 2\nEdge\n51 3\n\n&quot;
- &amp; &quot;Hoche \n602.00 519.00 2.00\nEdge\n78 0\nEdge\n205 1\n\nHotel De V&quot;;
-
-CONST E0_2 =
-   &quot;ille \n436.00 349.00 4.00\nEdge\n49 0\nEdge\n254 1\nEdge\n49 2\nEdge\n2&quot;
- &amp; &quot;19 3\n\nIena \n233.00 384.00 2.00\nEdge\n268 0\nEdge\n5 1\n\nInvalides &quot;
- &amp; &quot;\n289.00 371.00 4.00\nEdge\n75 0\nEdge\n57 1\nEdge\n40 2\nEdge\n271 3\n&quot;
- &amp; &quot;\nJacques Bonsergent \n476.00 438.00 2.00\nEdge\n93 0\nEdge\n224 1\n\nJ&quot;
- &amp; &quot;asmin \n141.00 317.00 2.00\nEdge\n151 0\nEdge\n220 1\n\nJaures \n502.00&quot;
- &amp; &quot; 492.00 6.00\nEdge\n259 0\nEdge\n55 1\nEdge\n119 2\nEdge\n259 3\nEdge\n&quot;
- &amp; &quot;127 4\nEdge\n23 5\n\n \n189.00 279.00 3.00\nEdge\n43 0\nEdge\n77 1\nEdg&quot;
- &amp; &quot;e\n154 2\n\n \n551.00 445.00 2.00\nEdge\n216 0\nEdge\n182 1\n\n \n399.0&quot;
- &amp; &quot;0 523.00 2.00\nEdge\n118 0\nEdge\n145 1\n\nJussieu \n444.00 279.00 4.00&quot;
- &amp; &quot;\nEdge\n261 0\nEdge\n183 1\nEdge\n92 2\nEdge\n36 3\n\nKleber \n209.00 4&quot;
- &amp; &quot;08.00 2.00\nEdge\n42 0\nEdge\n22 1\n\nLa Chapelle \n454.00 500.00 2.00\n&quot;
- &amp; &quot;Edge\n13 0\nEdge\n259 1\n\n \n330.00 513.00 3.00\nEdge\n100 0\nEdge\n18&quot;
- &amp; &quot;0 1\nEdge\n30 2\n\nLa Motte-Piquet Grenelle \n234.00 298.00 6.00\nEdge\n&quot;
- &amp; &quot;73 0\nEdge\n34 1\nEdge\n56 2\nEdge\n75 3\nEdge\n234 4\nEdge\n79 5\n\nLa&quot;
- &amp; &quot; Muette \n161.00 353.00 2.00\nEdge\n220 0\nEdge\n231 1\n\n \n390.00 515&quot;
- &amp; &quot;.00 2.00\nEdge\n1 0\nEdge\n111 1\n\nLaumiere \n528.00 492.00 2.00\nEdge&quot;
- &amp; &quot;\n167 0\nEdge\n108 1\n\nLec Peletier \n390.00 449.00 2.00\nEdge\n33 0\n&quot;
- &amp; &quot;Edge\n51 1\n\nLedru-Rollin \n506.00 324.00 2.00\nEdge\n14 0\nEdge\n83 1&quot;
- &amp; &quot;\n\nLes Gobelins \n424.00 228.00 2.00\nEdge\n38 0\nEdge\n181 1\n\nLes H&quot;
- &amp; &quot;alles \n406.00 372.00 2.00\nEdge\n80 0\nEdge\n49 1\n\nLes Sablons \n142&quot;
- &amp; &quot;.00 458.00 2.00\nEdge\n187 0\nEdge\n213 1\n\nLiberte \n610.00 188.00 2.&quot;
- &amp; &quot;00\nEdge\n198 0\nEdge\n41 1\n\n \n336.00 480.00 2.00\nEdge\n180 0\nEdge&quot;
- &amp; &quot;\n249 1\n\nLouis Blanc \n482.00 482.00 3.00\nEdge\n259 0\nEdge\n47 1\nE&quot;
- &amp; &quot;dge\n108 2\n\nLouise Michel \n215.00 519.00 2.00\nEdge\n6 0\nEdge\n197 &quot;
- &amp; &quot;1\n\nLourmel \n186.00 233.00 2.00\nEdge\n12 0\nEdge\n26 1\n\nLouvre \n3&quot;
- &amp; &quot;93.00 366.00 2.00\nEdge\n168 0\nEdge\n49 1\n\nMabillon \n369.00 319.00 &quot;
- &amp; &quot;2.00\nEdge\n165 0\nEdge\n236 1\n\n \n326.00 425.00 4.00\nEdge\n57 0\nEd&quot;
- &amp; &quot;ge\n166 1\nEdge\n57 2\nEdge\n249 3\n\n \n175.00 170.00 10.00\nEdge\n60 &quot;
- &amp; &quot;0\n\nMairie D\'ivry \n546.00 132.00 10.00\nEdge\n178 0\n\n \n656.00 466&quot;
- &amp; &quot;.00 10.00\nEdge\n211 0\n\nMairie De Montreuil \n690.00 390.00 10.00\nEd&quot;
- &amp; &quot;ge\n68 0\n\n \n365.00 579.00 2.00\nEdge\n37 0\nEdge\n96 1\n\nMaison Bla&quot;
- &amp; &quot;nche \n454.00 166.00 2.00\nEdge\n265 0\nEdge\n192 1\n\nMaisons-Alfort L&quot;
- &amp; &quot;es Juilli&quot;;
-
-CONST E0_3 =
-   &quot;ottes \n639.00 98.00 2.00\nEdge\n140 0\nEdge\n64 1\n\nMaisons-Alfort-St&quot;
- &amp; &quot;ade \n623.00 98.00 2.00\nEdge\n4 0\nEdge\n139 1\n\n \n258.00 185.00 2.0&quot;
- &amp; &quot;0\nEdge\n208 0\nEdge\n142 1\n\n \n252.00 168.00 2.00\nEdge\n141 0\nEdge&quot;
- &amp; &quot;\n50 1\n\nMalesherbes \n271.00 482.00 2.00\nEdge\n278 0\nEdge\n275 1\n\n&quot;
- &amp; &quot;Maraichers \n610.00 330.00 2.00\nEdge\n32 0\nEdge\n204 1\n\nMarcadet-Po&quot;
- &amp; &quot;issonniers \n417.00 527.00 4.00\nEdge\n238 0\nEdge\n48 1\nEdge\n111 2\n&quot;
- &amp; &quot;Edge\n147 3\n\nMarcel Sembat \n93.00 220.00 2.00\nEdge\n19 0\nEdge\n206&quot;
- &amp; &quot; 1\n\n \n454.00 537.00 2.00\nEdge\n145 0\nEdge\n202 1\n\nMaubert-Butual&quot;
- &amp; &quot;ite \n400.00 298.00 2.00\nEdge\n36 0\nEdge\n165 1\n\nMenilmontant \n538&quot;
- &amp; &quot;.00 414.00 2.00\nEdge\n63 0\nEdge\n173 1\n\nMichel Bizot \n582.00 232.0&quot;
- &amp; &quot;0 2.00\nEdge\n70 0\nEdge\n212 1\n\nMichel-Ange-Auteuil \n133.00 295.00 &quot;
- &amp; &quot;2.00\nEdge\n153 0\nEdge\n107 1\n\n \n133.00 295.00 2.00\nEdge\n77 0\nEd&quot;
- &amp; &quot;ge\n191 1\n\nMichel-Ange-Molitor \n125.00 270.00 4.00\nEdge\n82 0\nEdge&quot;
- &amp; &quot;\n151 1\nEdge\n191 2\nEdge\n154 3\n\n \n161.00 276.00 2.00\nEdge\n153 0&quot;
- &amp; &quot;\nEdge\n109 1\n\nMiromesnil \n295.00 442.00 4.00\nEdge\n255 0\nEdge\n24&quot;
- &amp; &quot;1 1\nEdge\n249 2\nEdge\n40 3\n\nMonceau \n273.00 464.00 2.00\nEdge\n62 &quot;
- &amp; &quot;0\nEdge\n275 1\n\nMontgallet \n546.00 264.00 2.00\nEdge\n225 0\nEdge\n7&quot;
- &amp; &quot;0 1\n\nMontparnasse Bienvenue \n307.00 279.00 8.00\nEdge\n256 0\nEdge\n&quot;
- &amp; &quot;273 1\nEdge\n171 2\nEdge\n76 3\nEdge\n84 4\nEdge\n163 5\nEdge\n74 6\nEd&quot;
- &amp; &quot;ge\n89 7\n\nMouton-Duvernet \n334.00 206.00 2.00\nEdge\n71 0\nEdge\n2 1&quot;
- &amp; &quot;\n\nNation \n572.00 299.00 6.00\nEdge\n225 0\nEdge\n210 1\nEdge\n11 2\n&quot;
- &amp; &quot;Edge\n177 3\nEdge\n27 4\nEdge\n32 5\n\nNationale \n462.00 206.00 2.00\n&quot;
- &amp; &quot;Edge\n181 0\nEdge\n53 1\n\n \n374.00 464.00 2.00\nEdge\n266 0\nEdge\n24&quot;
- &amp; &quot;6 1\n\n \n340.00 297.00 2.00\nEdge\n158 0\nEdge\n223 1\n\nOberkampf \n4&quot;
- &amp; &quot;96.00 387.00 4.00\nEdge\n224 0\nEdge\n226 1\nEdge\n224 2\nEdge\n240 3\n&quot;
- &amp; &quot;\nOdeon \n388.00 317.00 4.00\nEdge\n253 0\nEdge\n247 1\nEdge\n148 2\nEd&quot;
- &amp; &quot;ge\n131 3\n\nOpera \n366.00 425.00 6.00\nEdge\n101 0\nEdge\n0 1\nEdge\n&quot;
- &amp; &quot;51 2\nEdge\n215 3\nEdge\n132 4\nEdge\n227 5\n\nOurcq \n554.00 500.00 2.&quot;
- &amp; &quot;00\nEdge\n205 0\nEdge\n119 1\n\nPalais-Royal \n380.00 370.00 4.00\nEdge&quot;
- &amp; &quot;\n269 0\nEdge\n130 1\nEdge\n215 2\nEdge\n190 3\n\nParmentier \n510.00 4&quot;
- &amp; &quot;08.00 2.00\nEdge\n224 0\nEdge\n252 1\n\nPassy \n192.00 346.00 2.00\nEdg&quot;
- &amp; &quot;e\n267 0\nEdge\n20 1\n\nPasteur \n270.00 262.00 4.00\nEdge\n237 0\nEdge&quot;
- &amp; &quot;\n158 1\n&quot;;
-
-CONST E0_4 =
-   &quot;Edge\n276 2\nEdge\n84 3\n\nPelleport \n593.00 417.00 2.00\nEdge\n91 0\n&quot;
- &amp; &quot;Edge\n244 1\n\nPere Lachaise \n559.00 390.00 4.00\nEdge\n149 0\nEdge\n1&quot;
- &amp; &quot;76 1\nEdge\n252 2\nEdge\n91 3\n\nPereire-Mal. Juin \n249.00 494.00 2.00&quot;
- &amp; &quot;\nEdge\n197 0\nEdge\n278 1\n\n \n295.00 229.00 2.00\nEdge\n89 0\nEdge\n&quot;
- &amp; &quot;184 1\n\nPhilippe August \n561.00 375.00 2.00\nEdge\n173 0\nEdge\n3 1\n&quot;
- &amp; &quot;\nPicpus \n584.00 279.00 2.00\nEdge\n15 0\nEdge\n160 1\n\nPierre Curie &quot;
- &amp; &quot;\n528.00 149.00 2.00\nEdge\n193 0\nEdge\n134 1\n\nPigalle \n381.00 495.&quot;
- &amp; &quot;00 4.00\nEdge\n21 0\nEdge\n7 1\nEdge\n246 2\nEdge\n1 3\n\nPlace Clichy &quot;
- &amp; &quot;\n342.00 497.00 4.00\nEdge\n230 0\nEdge\n21 1\nEdge\n115 2\nEdge\n126 3&quot;
- &amp; &quot;\n\nPlace D\'italie \n436.00 206.00 5.00\nEdge\n35 0\nEdge\n61 1\nEdge\n&quot;
- &amp; &quot;161 2\nEdge\n122 3\nEdge\n265 4\n\nPlace Des Fetes \n565.00 449.00 4.00&quot;
- &amp; &quot;\nEdge\n25 0\nEdge\n214 1\nEdge\n110 2\nEdge\n262 3\n\nPlace Monge \n41&quot;
- &amp; &quot;7.00 265.00 2.00\nEdge\n112 0\nEdge\n38 1\n\n \n273.00 214.00 2.00\nEdg&quot;
- &amp; &quot;e\n175 0\nEdge\n208 1\n\nPoissoniere \n422.00 463.00 2.00\nEdge\n93 0\n&quot;
- &amp; &quot;Edge\n33 1\n\nPont De Levallois Becon \n189.00 553.00 10.00\nEdge\n6 0\n&quot;
- &amp; &quot;\nPont De Neuilly \n119.00 466.00 10.00\nEdge\n124 0\n\nPont De Sevres &quot;
- &amp; &quot;\n45.00 189.00 10.00\nEdge\n19 0\n\nPont Marie \n436.00 335.00 2.00\nEd&quot;
- &amp; &quot;ge\n49 0\nEdge\n261 1\n\nPont-Neuf \n384.00 355.00 2.00\nEdge\n168 0\nE&quot;
- &amp; &quot;dge\n49 1\n\n \n117.00 284.00 2.00\nEdge\n152 0\nEdge\n153 1\n\nPorte D&quot;
- &amp; &quot;\'italie \n463.00 145.00 2.00\nEdge\n138 0\nEdge\n199 1\n\nPorte D\'ivr&quot;
- &amp; &quot;y \n510.00 165.00 2.00\nEdge\n199 0\nEdge\n178 1\n\nPorte D\'orleans \n&quot;
- &amp; &quot;316.00 171.00 10.00\nEdge\n2 0\n\nPorte Dauphine \n161.00 408.00 10.00\n&quot;
- &amp; &quot;Edge\n274 0\n\nPorte De Bagnolet \n620.00 408.00 2.00\nEdge\n91 0\nEdge&quot;
- &amp; &quot;\n90 1\n\nPorte De Champerret \n234.00 503.00 2.00\nEdge\n128 0\nEdge\n&quot;
- &amp; &quot;174 1\n\nPorte De Charenton \n588.00 206.00 2.00\nEdge\n212 0\nEdge\n12&quot;
- &amp; &quot;5 1\n\nPorte De Choisy \n487.00 155.00 2.00\nEdge\n192 0\nEdge\n193 1\n&quot;
- &amp; &quot;\n \n295.00 552.00 10.00\nEdge\n30 0\n\nPorte De Clignancourt \n407.00 &quot;
- &amp; &quot;555.00 10.00\nEdge\n238 0\n\n \n454.00 555.00 10.00\nEdge\n147 0\n\nPor&quot;
- &amp; &quot;te De La Villete \n535.00 555.00 2.00\nEdge\n10 0\nEdge\n59 1\n\nPorte &quot;
- &amp; &quot;De Montreuil \n624.00 342.00 2.00\nEdge\n144 0\nEdge\n229 1\n\nPorte De&quot;
- &amp; &quot; Pantin \n578.00 509.00 2.00\nEdge\n102 0\nEdge\n167 1\n\nPorte De St. &quot;
- &amp; &quot;Cloud \n115.00 236.00 2.00\nEdge\n146 0\nEdge\n82 1\n\n &quot;;
-
-CONST E0_5 =
-   &quot;\n351.00 553.00 2.00\nEdge\n96 0\nEdge\n100 1\n\n \n260.00 199.00 2.00\n&quot;
- &amp; &quot;Edge\n184 0\nEdge\n141 1\n\n \n201.00 206.00 2.00\nEdge\n60 0\nEdge\n58&quot;
- &amp; &quot; 1\n\nPorte De Vincennes \n601.00 298.00 2.00\nEdge\n160 0\nEdge\n250 1&quot;
- &amp; &quot;\n\nPorte Des Lilas \n602.00 454.00 3.00\nEdge\n244 0\nEdge\n262 1\nEdg&quot;
- &amp; &quot;e\n135 2\n\nPorte Doree \n599.00 222.00 2.00\nEdge\n150 0\nEdge\n198 1\n&quot;
- &amp; &quot;\nPorte Maillot \n178.00 443.00 2.00\nEdge\n124 0\nEdge\n8 1\n\nPre-St.&quot;
- &amp; &quot; Gervais \n584.00 464.00 2.00\nEdge\n182 0\nEdge\n69 1\n\nPyramides \n3&quot;
- &amp; &quot;68.00 400.00 2.00\nEdge\n166 0\nEdge\n168 1\n\n \n540.00 441.00 2.00\nE&quot;
- &amp; &quot;dge\n16 0\nEdge\n110 1\n\nQuai De La Gare \n510.00 229.00 2.00\nEdge\n5&quot;
- &amp; &quot;3 0\nEdge\n18 1\n\nQuai De La Rapee \n473.00 291.00 2.00\nEdge\n14 0\nE&quot;
- &amp; &quot;dge\n92 1\n\n \n444.00 371.00 2.00\nEdge\n103 0\nEdge\n9 1\n\nRanelagh &quot;
- &amp; &quot;\n147.00 335.00 2.00\nEdge\n107 0\nEdge\n117 1\n\nRaspail \n344.00 243.&quot;
- &amp; &quot;00 4.00\nEdge\n273 0\nEdge\n71 1\nEdge\n76 2\nEdge\n71 3\n\nReaumur-Seb&quot;
- &amp; &quot;astopol \n422.00 396.00 4.00\nEdge\n235 0\nEdge\n9 1\nEdge\n260 2\nEdge&quot;
- &amp; &quot;\n80 3\n\n \n338.00 309.00 2.00\nEdge\n163 0\nEdge\n236 1\n\nRepublique&quot;
- &amp; &quot; \n476.00 408.00 10.00\nEdge\n263 0\nEdge\n169 1\nEdge\n106 2\nEdge\n16&quot;
- &amp; &quot;4 3\nEdge\n260 4\nEdge\n86 5\nEdge\n260 6\nEdge\n164 7\nEdge\n9 8\nEdge&quot;
- &amp; &quot;\n99 9\n\nReuilly-Diderot \n528.00 298.00 4.00\nEdge\n94 0\nEdge\n160 1&quot;
- &amp; &quot;\nEdge\n83 2\nEdge\n157 3\n\nRichard Lenoir \n510.00 367.00 2.00\nEdge\n&quot;
- &amp; &quot;164 0\nEdge\n29 1\n\nRichelieu-Drouot \n404.00 430.00 4.00\nEdge\n166 0&quot;
- &amp; &quot;\nEdge\n233 1\nEdge\n51 2\nEdge\n233 3\n\nRiquet \n504.00 519.00 2.00\n&quot;
- &amp; &quot;Edge\n67 0\nEdge\n259 1\n\nRobes-Pierre \n638.00 353.00 2.00\nEdge\n204&quot;
- &amp; &quot; 0\nEdge\n68 1\n\nRome \n312.00 482.00 2.00\nEdge\n275 0\nEdge\n180 1\n&quot;
- &amp; &quot;\nRue De La Pompe \n175.00 367.00 2.00\nEdge\n117 0\nEdge\n268 1\n\n \n&quot;
- &amp; &quot;331.00 335.00 2.00\nEdge\n236 0\nEdge\n239 1\n\nRue Montmartre \n417.00&quot;
- &amp; &quot; 425.00 4.00\nEdge\n227 0\nEdge\n24 1\nEdge\n227 2\nEdge\n24 3\n\nSegur&quot;
- &amp; &quot; \n263.00 298.00 2.00\nEdge\n74 0\nEdge\n116 1\n\nSentier \n408.00 404.&quot;
- &amp; &quot;00 2.00\nEdge\n28 0\nEdge\n222 1\n\nSevres-Babylone \n336.00 317.00 4.0&quot;
- &amp; &quot;0\nEdge\n131 0\nEdge\n270 1\nEdge\n223 2\nEdge\n232 3\n\nSevres-Lecourb&quot;
- &amp; &quot;e \n265.00 270.00 2.00\nEdge\n34 0\nEdge\n171 1\n\nSimplon \n413.00 538&quot;
- &amp; &quot;.00 2.00\nEdge\n201 0\nEdge\n145 1\n\n \n327.00 351.00 2.00\nEdge\n232 &quot;
- &amp; &quot;0\nEdge\n39 1\n\nSt. Ambroise \n523.00 357.00 2.00\nEdge\n164 0\nEdge\n&quot;
- &amp; &quot;277&quot;;
-
-CONST E0_6 =
-   &quot; 1\n\nSt. Augustin \n311.00 445.00 2.00\nEdge\n155 0\nEdge\n101 1\n\n \n&quot;
- &amp; &quot;406.00 592.00 10.00\nEdge\n243 0\n\n \n389.00 593.00 2.00\nEdge\n242 0\n&quot;
- &amp; &quot;Edge\n37 1\n\nSt. Fargeau \n598.00 435.00 2.00\nEdge\n172 0\nEdge\n211 &quot;
- &amp; &quot;1\n\n \n289.00 318.00 2.00\nEdge\n271 0\nEdge\n74 1\n\n \n381.00 482.00&quot;
- &amp; &quot; 2.00\nEdge\n162 0\nEdge\n179 1\n\nSt. Germain De Pres \n367.00 329.00 &quot;
- &amp; &quot;2.00\nEdge\n165 0\nEdge\n258 1\n\nSt. Jacques \n362.00 217.00 2.00\nEdg&quot;
- &amp; &quot;e\n71 0\nEdge\n98 1\n\nSt. Lazare \n330.00 462.00 6.00\nEdge\n81 0\nEdg&quot;
- &amp; &quot;e\n101 1\nEdge\n132 2\nEdge\n266 3\nEdge\n126 4\nEdge\n155 5\n\nSt. Man&quot;
- &amp; &quot;de Tourelles \n626.00 298.00 2.00\nEdge\n210 0\nEdge\n17 1\n\nSt. Marce&quot;
- &amp; &quot;l \n454.00 243.00 2.00\nEdge\n92 0\nEdge\n35 1\n\nSt. Maurc \n528.00 39&quot;
- &amp; &quot;0.00 2.00\nEdge\n169 0\nEdge\n173 1\n\nSt. Michel \n398.00 321.00 2.00\n&quot;
- &amp; &quot;Edge\n54 0\nEdge\n165 1\n\nSt. Paul \n457.00 339.00 2.00\nEdge\n103 0\n&quot;
- &amp; &quot;Edge\n14 1\n\nSt. Philippe-Du Roule \n274.00 427.00 2.00\nEdge\n88 0\nE&quot;
- &amp; &quot;dge\n155 1\n\nSt. Placide \n325.00 297.00 2.00\nEdge\n258 0\nEdge\n158 &quot;
- &amp; &quot;1\n\nSt. Sebastien Froissart \n479.00 370.00 2.00\nEdge\n86 0\nEdge\n52&quot;
- &amp; &quot; 1\n\nSt. Sulpice \n352.00 313.00 2.00\nEdge\n247 0\nEdge\n256 1\n\nSta&quot;
- &amp; &quot;lingrad \n491.00 500.00 6.00\nEdge\n114 0\nEdge\n108 1\nEdge\n108 2\nEd&quot;
- &amp; &quot;ge\n95 3\nEdge\n228 4\nEdge\n127 5\n\nStrasbourg St. Denis \n436.00 418&quot;
- &amp; &quot;.00 6.00\nEdge\n45 0\nEdge\n222 1\nEdge\n24 2\nEdge\n224 3\nEdge\n24 4\n&quot;
- &amp; &quot;Edge\n224 5\n\nSully-Morland \n454.00 317.00 2.00\nEdge\n189 0\nEdge\n1&quot;
- &amp; &quot;12 1\n\n \n586.00 450.00 2.00\nEdge\n182 0\nEdge\n211 1\n\nTemple \n460&quot;
- &amp; &quot;.00 404.00 2.00\nEdge\n9 0\nEdge\n224 1\n\nTernes \n234.00 450.00 2.00\n&quot;
- &amp; &quot;Edge\n42 0\nEdge\n62 1\n\nTolbiac \n445.00 186.00 2.00\nEdge\n181 0\nEd&quot;
- &amp; &quot;ge\n138 1\n\n \n361.00 464.00 2.00\nEdge\n249 0\nEdge\n162 1\n\nTrocade&quot;
- &amp; &quot;ro \n198.00 371.00 2.00\nEdge\n22 0\nEdge\n170 1\n\n \n198.00 371.00 2.&quot;
- &amp; &quot;00\nEdge\n231 0\nEdge\n104 1\n\nTuileries \n346.00 381.00 2.00\nEdge\n5&quot;
- &amp; &quot;7 0\nEdge\n168 1\n\nVaneau \n315.00 309.00 2.00\nEdge\n236 0\nEdge\n74 &quot;
- &amp; &quot;1\n\n \n289.00 342.00 2.00\nEdge\n105 0\nEdge\n245 1\n\n \n234.00 243.0&quot;
- &amp; &quot;0 2.00\nEdge\n58 0\nEdge\n276 1\n\nVavin \n334.00 267.00 2.00\nEdge\n15&quot;
- &amp; &quot;8 0\nEdge\n221 1\n\nVictor Hugo \n179.00 404.00 2.00\nEdge\n195 0\nEdge&quot;
- &amp; &quot;\n42 1\n\nVilliers \n295.00 472.00 4.00\nEdge\n156 0\nEdge\n230 1\nEdge&quot;
- &amp; &quot;\n143 2\nEdge\n81 3\n\n \n252.00 251.00 2.00\nEdge\n272 0\nEdge\n171 1\n&quot;
- &amp; &quot;\n&quot;;
-
-CONST E0_7 =
-   &quot;Voltaire \n534.00 346.00 2.00\nEdge\n240 0\nEdge\n44 1\n\nWagram \n259.&quot;
- &amp; &quot;00 492.00 2.00\nEdge\n174 0\nEdge\n143 1\n\n#+-------------------------&quot;
- &amp; &quot;--------------------------------------------------+#\n#|            Cop&quot;
- &amp; &quot;yright (C) 1992, Digital Equipment Corporation              |#\n#| \t\t&quot;
- &amp; &quot;          All rights reserved.                               |#\n#|    &quot;
- &amp; &quot;              See the file COPYRIGHT for a full description.           &quot;
- &amp; &quot;|#\n#+-----------------------------------------------------------------&quot;
- &amp; &quot;----------+#\n&quot;;
-
-CONST E1 =
-   &quot;(Scale (HScale .75) (VScale .75) (ZSplit\n  (Rim\n    (Pen 20)\n    (HB&quot;
- &amp; &quot;ox\n      (Shape\n        (Width + 0)\n        (VBox\n          (Scale &quot;
- &amp; &quot;(HScale 2) (VScale 2) \&quot;Fisheye Browser\&quot;)\n          (Pixmap (Color \&quot;&quot;
- &amp; &quot;Blue\&quot;) \&quot;digital.pbm\&quot;)\n          (Text \&quot;Send comments: mhb@src.dec.&quot;
- &amp; &quot;com\&quot;)\n          (Chisel)\n          (Glue 12)\n          (Radio\n    &quot;
- &amp; &quot;        =us\n            %input\n            (HPackSplit\n             &quot;
- &amp; &quot; (Choice %us \&quot;US\&quot;)\n              (Choice %metro1 \&quot;Metro\&quot;)\n       &quot;
- &amp; &quot;       (Choice %metro2 \&quot;METRO\&quot;)\n              (Choice %cra \&quot;CRA\&quot;)\n&quot;
- &amp; &quot;              (Choice %dag \&quot;DAG\&quot;)\n              (Choice %sym \&quot;Sym\&quot;&quot;
- &amp; &quot;)\n              (PopButton %popOther (For other) \&quot;Other...\&quot;)))))\n  &quot;
- &amp; &quot;    (Glue 20)\n      (VBox\n        (Frame\n          Chiseled\n       &quot;
- &amp; &quot;   (Rim\n            (Pen 4)\n            (Rim\n              (Pen 1)\n&quot;
- &amp; &quot;              (Shape\n                (Height + 0)\n                (VB&quot;
- &amp; &quot;ox\n                  (Radio\n                    (HBox\n              &quot;
- &amp; &quot;        (Shape (Width 50) \&quot; Mapping: \&quot;)\n                      (Glue &quot;
- &amp; &quot;4)\n                      (Choice =TRUE %cartesian \&quot;Cartesian\&quot;)\n    &quot;
- &amp; &quot;                  (Glue 4)\n                      (Choice %polar \&quot;Pola&quot;
- &amp; &quot;r\&quot;)\n                      (Glue 8 + Inf)\n                      (VBox&quot;
- &amp; &quot;\n                        (PopButton (For moreStuff) \&quot;Parms...\&quot;)\n   &quot;
- &amp; &quot;                     (HBox (Boolean %color =FALSE \&quot;Clr\&quot;) (Boolean %on&quot;
- &amp; &quot; =TRUE \&quot;Dtl\&quot;)))))\n                  (Glue 6)\n                  (Chi&quot;
- &amp; &quot;sel)\n                  (Glue 6)\n                  (HBox\n            &quot;
- &amp; &quot;        (Shape\n                      (Width 100)\n                    &quot;
- &amp; &quot;  (HBox\n                        (VBox\n                          (Shap&quot;
- &amp; &quot;e (Width + 0) \&quot;Vertex Size\&quot;)\n                          (Shape (Heigh&quot;
- &amp; &quot;t 0) (Text %fsize \&quot;????\&quot;)))\n                        Fill))\n        &quot;
- &amp; &quot;            (VBox\n                      Fill\n                      (H&quot;
- &amp; &quot;Box\n                        (Shape\n                          (Width 5&quot;
- &amp; &quot;0)\n                          (Frame\n                            Lower&quot;
- &amp; &quot;ed\n                            (TypeIn (&quot;;
-
-CONST E1_0 =
-   &quot;BgColor \&quot;VeryLightGray\&quot;) %vsize )))\n                        (Glue 4)&quot;
- &amp; &quot;\n                        (Shape\n                          (Width 100 &quot;
- &amp; &quot;+ Inf)\n                          (Scroller (Max 100) =10 %vsizeScroll)&quot;
- &amp; &quot;))\n                      Fill))\n                  (Glue 6)\n         &quot;
- &amp; &quot;         (Chisel)\n                  (Glue 6)\n                  (HBox\n&quot;
- &amp; &quot;                    (Shape\n                      (Width 100)\n        &quot;
- &amp; &quot;              (HBox (Shape (Width + 0) \&quot;Distortion\&quot;) Fill))\n        &quot;
- &amp; &quot;            (Shape\n                      (Width 50)\n                 &quot;
- &amp; &quot;     (Frame\n                        Lowered\n                        (&quot;
- &amp; &quot;TypeIn (BgColor \&quot;VeryLightGray\&quot;) %distortion)))\n                    &quot;
- &amp; &quot;(Glue 4)\n                    (Shape\n                      (Width 100 &quot;
- &amp; &quot;+ Inf)\n                      (Scroller (Max 100) =0 %distortionScroll)&quot;
- &amp; &quot;))\n                  (Glue 6)\n                  (Chisel)\n           &quot;
- &amp; &quot;       (Glue 6)\n                  (HBox\n                    (Shape\n &quot;
- &amp; &quot;                     (Width 100)\n                      (HBox (Shape (W&quot;
- &amp; &quot;idth + 0) \&quot;API Coefficient\&quot;) Fill))\n                    (Shape\n    &quot;
- &amp; &quot;                  (Width 50)\n                      (Frame Lowered (Typ&quot;
- &amp; &quot;eIn (BgColor \&quot;VeryLightGray\&quot;) %coef)))\n                    (Glue 4)\n&quot;
- &amp; &quot;                    (Shape\n                      (Width 100 + Inf)\n  &quot;
- &amp; &quot;                    (Scroller (Max 100) =1 %coefScroll)))\n            &quot;
- &amp; &quot;      (Glue 4)\n                  (HBox\n                    (Shape\n  &quot;
- &amp; &quot;                    (Width 100)\n                      (HBox (Shape (Wi&quot;
- &amp; &quot;dth + 0) \&quot;API Exponent\&quot;) Fill))\n                    (Shape\n        &quot;
- &amp; &quot;              (Width 50)\n                      (Frame Lowered (TypeIn &quot;
- &amp; &quot;(BgColor \&quot;VeryLightGray\&quot;) %exp)))\n                    (Glue 4)\n    &quot;
- &amp; &quot;                (Shape\n                      (Width 100 + Inf)\n      &quot;
- &amp; &quot;                (Scroller (Max 100) =1 %expScroll)))\n                 &quot;
- &amp; &quot; (Glue 6)\n                  (Chisel)\n                  (Glue 6)\n    &quot;
- &amp; &quot;              (HBox\n                    (Shape\n                      &quot;
- &amp; &quot;(Width&quot;;
-
-CONST E1_1 =
-   &quot; 100)\n                      (HBox (Shape (Width + 0) \&quot;VW Cutoff\&quot;) Fi&quot;
- &amp; &quot;ll))\n                    (Shape\n                      (Width 50)\n   &quot;
- &amp; &quot;                   (Frame Lowered (TypeIn (BgColor \&quot;VeryLightGray\&quot;) %&quot;
- &amp; &quot;vw)))\n                    (Glue 4)\n                    (Shape\n      &quot;
- &amp; &quot;                (Width 100 + Inf)\n                      (Scroller (Max&quot;
- &amp; &quot; 100) =0 %vwScroll))))))))\n        Fill)))\n  (ZChassis\n    (Title \&quot;&quot;
- &amp; &quot;Select data file...\&quot;)\n    %other\n    (Shape (Width 200 + Inf) (Heigh&quot;
- &amp; &quot;t 150 + Inf) (FileBrowser %file)))\n  (ZChassis\n    %moreStuff\n    (S&quot;
- &amp; &quot;hape\n      (VBox\n        (Radio\n          (HBox\n            (Shape &quot;
- &amp; &quot;(Width 50) \&quot;Mode: \&quot;)\n            (Choice =TRUE %fisheye \&quot;Fisheye\&quot;)&quot;
- &amp; &quot;\n            (Glue 8)\n            (Choice %normal \&quot;Normal\&quot;)\n      &quot;
- &amp; &quot;      Fill))\n        (Glue 4)\n        (Radio\n          (HBox\n      &quot;
- &amp; &quot;      (Shape (Width 50) \&quot;Focus: \&quot;)\n            (Choice =TRUE %mouse &quot;
- &amp; &quot;\&quot;Mouse\&quot;)\n            (Glue 8)\n            (Choice %keyboard \&quot;Keybo&quot;
- &amp; &quot;ard\&quot;)\n            Fill))\n        (Glue 4)\n        (Radio\n         &quot;
- &amp; &quot; (HBox\n            (Shape (Width 50) \&quot;Type:     \&quot;)\n            (Cho&quot;
- &amp; &quot;ice =TRUE %graphical \&quot;Graphical\&quot;)\n            (Glue 8)\n            &quot;
- &amp; &quot;(Choice %semantic \&quot;Semantic\&quot;)\n            Fill))\n        (Glue 10)\n&quot;
- &amp; &quot;        (HBox \&quot;Node color: \&quot; (Border (TypeIn %nodeColor =\&quot;Blue\&quot;)))\n&quot;
- &amp; &quot;        (Glue 4)\n        (HBox \&quot;Node interior: \&quot; (Border (TypeIn %no&quot;
- &amp; &quot;deInteriorColor =\&quot;Sky\&quot;)))\n        (Glue 4)\n        (HBox \&quot;Focus co&quot;
- &amp; &quot;lor: \&quot; (Border (TypeIn %focusColor =\&quot;Red\&quot;)))\n        (Glue 4)\n    &quot;
- &amp; &quot;    (HBox \&quot;Edge color: \&quot; (Border (TypeIn %edgeColor =\&quot;Black\&quot;)))\n  &quot;
- &amp; &quot;      (Glue 4)\n        (HBox \&quot;Text color: \&quot; (Border (TypeIn %textCol&quot;
- &amp; &quot;or =\&quot;Black\&quot;)))\n        (Glue 4)\n        (HBox\n          \&quot;Text fon&quot;
- &amp; &quot;t: \&quot;\n          (Border (TypeIn %textFont =\&quot;-*-helvetica-*-10-*\&quot;)))\n&quot;
- &amp; &quot;        (Glue 4)\n        (HBox\n          (Shape (Width + 0) \&quot;Edge th&quot;
- &amp; &quot;ickness: \&quot;)\n          (Numeric %edgeThickness =2)\n          Fill))))&quot;
- &amp; &quot;))\n\n&quot;;
-
-CONST E2 =
-   &quot;100\n0\n21.5 33.5 8.0\nEdge\n1 0\nEdge\n2 1\nEdge\n3 2\nEdge\n4 3\nEdge&quot;
- &amp; &quot;\n7 4\nEdge\n9 5\n\n1\n16.0 29.0 7.0\nEdge\n5 0\nEdge\n6 1\nEdge\n8 2\n&quot;
- &amp; &quot;Edge\n33 3\nBendPoints 2\n10.5 25.5\n10.5 23.5\nEdge\n21 4\nBendPoints &quot;
- &amp; &quot;2\n20.5 25.5\n20.5 23.5\n\n2\n21.5 29.0 7.0\n\n3\n28.5 29.0 7.0\nEdge\n&quot;
- &amp; &quot;21 0\nBendPoints 2\n22.2 25.5\n22.2 23.5\nEdge\n10 1\nEdge\n11 2\nEdge\n&quot;
- &amp; &quot;27 3\nBendPoints 2\n31.5 25.5\n31.5 23.5\n\n4\n33.0 29.0 7.0\nEdge\n12 &quot;
- &amp; &quot;0\nEdge\n13 1\n\n5\n5.0 24.5 6.0\nEdge\n14 0\nEdge\n31 1\nBendPoints 2\n&quot;
- &amp; &quot;3.2 20.5\n3.2 18.5\nEdge\n32 2\nEdge\n15 3\nEdge\n33 4\nBendPoints 2\n7&quot;
- &amp; &quot;.3 20.5\n7.3 18.5\n\n6\n13.5 24.5 6.0\nEdge\n16 0\n\n7\n16.8 24.5 6.0\n&quot;
- &amp; &quot;Edge\n17 0\nEdge\n41 1\nBendPoints 2\n15.7 20.5\n15.7 18.5\nEdge\n18 2\n&quot;
- &amp; &quot;Edge\n19 3\nEdge\n20 4\n\n8\n18.5 24.5 6.0\nEdge\n21 0\n\n9\n24.5 24.5 &quot;
- &amp; &quot;6.0\nEdge\n21 0\nEdge\n61 1\nBendPoints 5\n22.2 20.2\n22.2 18.8\n21.6 1&quot;
- &amp; &quot;5.2\n21.6 13.8\n16.5 12.0\nEdge\n22 2\nEdge\n23 3\nEdge\n47 4\nBendPoin&quot;
- &amp; &quot;ts 2\n25.6 20.5\n25.6 18.5\nEdge\n24 5\n\n10\n28.3 24.5 6.0\nEdge\n25 0&quot;
- &amp; &quot;\nEdge\n26 1\n\n11\n30.0 24.5 6.0\nEdge\n27 0\n\n12\n32.8 24.5 6.0\nEdg&quot;
- &amp; &quot;e\n28 0\nEdge\n29 1\n\n13\n34.5 24.5 6.0\n\n14\n2.0 19.5 5.0\nEdge\n30 &quot;
- &amp; &quot;0\n\n15\n6.0 19.5 5.0\nEdge\n31 0\nEdge\n32 1\nEdge\n55 2\nBendPoints 2&quot;
- &amp; &quot;\n4.2 15.5\n4.2 13.5\nEdge\n33 3\nEdge\n34 4\n\n16\n13.0 19.5 5.0\n\n17&quot;
- &amp; &quot;\n14.8 19.5 5.0\nEdge\n35 0\nEdge\n36 1\nEdge\n37 2\nEdge\n38 3\nEdge\n&quot;
- &amp; &quot;39 4\nEdge\n61 5\nBendPoints 2\n15.5 15.5\n15.5 13.5\nEdge\n40 6\nEdge\n&quot;
- &amp; &quot;41 7\nEdge\n43 8\n\n18\n16.8 19.5 5.0\nEdge\n42 0\n\n19\n18.30 19.5 5.0&quot;
- &amp; &quot;\nEdge\n43 0\nEdge\n44 0\n\n20\n19.80 19.5 5.0\nEdge\n45 0\n\n21\n21.30&quot;
- &amp; &quot; 19.5 5.0\n\n22\n23.0 19.5 5.0\nEdge\n46 0\n\n23\n24.5 19.5 5.0\n\n24\n&quot;
- &amp; &quot;26.5 19.5 5.0\nEdge\n48 0\n\n25\n28.0 19.5 5.0\n\n26\n29.5 19.5 5.0\n\n&quot;
- &amp; &quot;27\n31.0 19.5 5.0\n\n28\n32.5 19.5 5.0\n\n29\n34.0 19.5 5.0\nEdge\n49 0&quot;
- &amp; &quot;\nBendPoints 1\n30.0 16.0\nEdge\n72 1\nBendPoints 2\n30.9 15.5\n30.9 13&quot;
- &amp; &quot;.5\nEdge\n50 2\nEdge\n51 3\nEdge\n73 4\nBendPoints 2\n34.3 15.5\n34.3 1&quot;
- &amp; &quot;3.5\nEdge\n52 5\nEdge\n74 6\nBendPoints 2\n36.8 15.5\n36.8 13.5\n\n30\n&quot;
- &amp; &quot;0.0 14.5 4.0\nEdge\n53 0\n\n31\n1.5 14.5 4.0\n\n32\n3.0 14.5 4.0\nEdge\n&quot;
- &amp; &quot;54 0\nEdge\n75 1\nBendPoints 2\n4.6 11.5\n4.6 9.5\n\n33\n5.5 14.5 4.0\n&quot;
- &amp; &quot;Edge\n55 0\n\n34\n7.0 14.5 4.0\nEdge\n56 0\nEdge\n57 1\nEdge\n61 2\nBen&quot;
- &amp; &quot;dPoints 2\n7.8 13.2\n13.0 11.4\n\n35\n8.5 14.5 4.0\nEdge\n58 0\n\n36\n1&quot;
- &amp; &quot;0.0 14.5 4.0\nEdge\n59 0\nEdge\n60 1\n\n37\n1&quot;;
-
-CONST E2_0 =
-   &quot;1.5 14.5 4.0\nEdge\n61 0\n\n38\n13.0 14.5 4.0\n\n39\n14.5 14.5 4.0\n\n4&quot;
- &amp; &quot;0\n16.3 14.5 4.0\nEdge\n61 0\nEdge\n62 1\n\n41\n17.8 14.5 4.0\n\n42\n19&quot;
- &amp; &quot;.3 14.5 4.0\n\n43\n20.8 14.5 4.0\n\n44\n22.5 14.5 4.0\nEdge\n63 0\nEdge&quot;
- &amp; &quot;\n64 1\nEdge\n65 2\nEdge\n66 3\n\n45\n24.0 14.5 4.0\n\n46\n25.5 14.5 4.&quot;
- &amp; &quot;0\n\n47\n27.0 14.5 4.0\nEdge\n99 0\nBendPoints 4\n23.4 11.0\n23.4 9.0\n&quot;
- &amp; &quot;25.0 5.5\n25.0 3.5\nEdge\n67 1\nEdge\n68 2\nEdge\n69 3\n\n48\n28.5 14.5&quot;
- &amp; &quot; 4.0\nEdge\n67 0\nEdge\n68 1\nEdge\n69 2\nEdge\n86 3\nBendPoints 2\n28.&quot;
- &amp; &quot;2 11.5\n28.2 9.5\nEdge\n99 4\nBendPoints 2\n28.5 5.5\n28.5 3.5\nEdge\n7&quot;
- &amp; &quot;0 5\n\n49\n30.0 14.5 4.0\nEdge\n71 0\n\n50\n31.7 14.5 4.0\nEdge\n72 0\n&quot;
- &amp; &quot;\n51\n33.2 14.5 4.0\n\n52\n35.2 14.5 4.0\nEdge\n74 0\n\n53\n1.5 10.0 3.&quot;
- &amp; &quot;0\n\n54\n3.5 10.0 3.0\n\n55\n5.5 10.0 3.0\n\n56\n7.0 10.0 3.0\nEdge\n75&quot;
- &amp; &quot; 0\nEdge\n76 1\nEdge\n77 2\nEdge\n78 3\nEdge\n79 4\nEdge\n80 5\n\n57\n8&quot;
- &amp; &quot;.5 10.0 3.0\n\n58\n10.0 10.0 3.0\n\n59\n11.5 10.0 3.0\n\n60\n13.0 10.0 &quot;
- &amp; &quot;3.0\n\n61\n15.0 10.0 3.0\nEdge\n81 0\n\n62\n16.5 10.0 3.0\n\n63\n18.0 1&quot;
- &amp; &quot;0.0 3.0\n\n64\n19.5 10.0 3.0\nEdge\n82 0\nEdge\n83 1\nEdge\n84 2\nEdge\n&quot;
- &amp; &quot;85 3\n\n65\n21.0 10.0 3.0\n\n66\n22.5 10.0 3.0\n\n67\n24.3 10.0 3.0\n\n&quot;
- &amp; &quot;68\n25.8 10.0 3.0\n\n69\n27.3 10.0 3.0\n\n70\n29.5 10.0 3.0\nEdge\n99 0&quot;
- &amp; &quot;\nBendPoints 2\n29.0 5.5\n29.0 3.5\nEdge\n87 1\nEdge\n88 2\nEdge\n89 3\n&quot;
- &amp; &quot;\n71\n31.0 10.0 3.0\n\n72\n32.5 10.0 3.0\n\n73\n34.3 10.0 3.0\n\n74\n36&quot;
- &amp; &quot;.2 10.0 3.0\nEdge\n90 0\nEdge\n91 0\nEdge\n92 0\n\n75\n4.5 4.5 2.0\n\n7&quot;
- &amp; &quot;6\n6.0 4.5 2.0\n\n77\n7.5 4.5 2.0\nEdge\n93 0\n\n78\n9.5 4.5 2.0\nEdge\n&quot;
- &amp; &quot;94 0\n\n79\n11.0 4.5 2.0\n\n80\n12.5 4.5 2.0\n\n81\n15.4 4.5 2.0\nEdge\n&quot;
- &amp; &quot;95 0\nEdge\n96 1\nEdge\n97 2\nEdge\n98 3\n\n82\n17.2 4.5 2.0\n\n83\n18.&quot;
- &amp; &quot;7 4.5 2.0\n\n84\n20.2 4.5 2.0\n\n85\n22.7 4.5 2.0\n\n86\n27.2 4.5 2.0\n&quot;
- &amp; &quot;Edge\n99 0\n\n87\n30.0 4.5 2.0\n\n88\n31.5 4.5 2.0\n\n89\n33.0 4.5 2.0\n&quot;
- &amp; &quot;Edge\n99 0\nBendPoints 1\n33.0 3.0\n\n90\n35.2 4.5 2.0\n\n91\n36.7 4.5 &quot;
- &amp; &quot;2.0\n\n92\n38.2 4.5 2.0\n\n93\n7.5 0.5 1.0\n\n94\n9.5 0.5 1.0\n\n95\n13&quot;
- &amp; &quot;.0 0.5 1.0\n\n96\n14.5 0.5 1.0\n\n97\n16.0 0.5 1.0\n\n98\n17.5 0.5 1.0\n&quot;
- &amp; &quot;\n99\n28.5 0.5 1.0\n\n#+-----------------------------------------------&quot;
- &amp; &quot;----------------------------+#\n#|            Copyright (C) 1992, Digit&quot;
- &amp; &quot;al Equipment Corporation              |#\n#| \t\t          All rights r&quot;
- &amp; &quot;eserved.                               |#\n#|                  See the &quot;
- &amp; &quot;file COPYRIGHT for a fu&quot;;
-
-CONST E2_1 =
-   &quot;ll description.           |#\n#+---------------------------------------&quot;
- &amp; &quot;------------------------------------+#\n\n\n&quot;;
-
-CONST E3 =
    &quot;0225\nv0\n0.00 0.00 1.0\nEdge\n0015 00\nEdge\n0001 01\n\nv1\n10.00 0.00&quot;
  &amp; &quot; 1.0\nEdge\n0016 00\nEdge\n0000 01\nEdge\n0002 02\n\nv2\n20.00 0.00 1.0&quot;
  &amp; &quot;\nEdge\n0017 00\nEdge\n0001 01\nEdge\n0003 02\n\nv3\n30.00 0.00 1.0\nEd&quot;
@@ -690,7 +235,7 @@ CONST E3 =
  &amp; &quot;ge\n0017 00\nEdge\n0047 01\nEdge\n0031 02\nEdge\n0033 03\n\nv33\n30.00 &quot;
  &amp; &quot;20.00 1.0\nEdge\n0032 00\n&quot;;
 
-CONST E3_0 =
+CONST E0_0 =
    &quot;Edge\n0049 01\n\nv34\n40.00 20.00 1.0\nEdge\n0050 00\nEdge\n0018 01\n\n&quot;
  &amp; &quot;v35\n50.00 20.00 1.0\nEdge\n0051 00\nEdge\n0021 01\nEdge\n0019 02\n\nv3&quot;
  &amp; &quot;6\n60.00 20.00 1.0\nEdge\n0052 00\nEdge\n0020 01\nEdge\n0050 02\nEdge\n&quot;
@@ -725,7 +270,7 @@ CONST E3_0 =
  &amp; &quot;ge\n0077 01\nEdge\n0061 02\nEdge\n0063 03\n\nv63\n30.00 40.00 1.0\nEdge&quot;
  &amp; &quot;\n0062 00\nEdge\n0079 &quot;;
 
-CONST E3_1 =
+CONST E0_1 =
    &quot;01\n\nv64\n40.00 40.00 1.0\nEdge\n0080 00\nEdge\n0048 01\n\nv65\n50.00 &quot;
  &amp; &quot;40.00 1.0\nEdge\n0081 00\nEdge\n0051 01\nEdge\n0049 02\n\nv66\n60.00 40&quot;
  &amp; &quot;.00 1.0\nEdge\n0082 00\nEdge\n0050 01\nEdge\n0080 02\nEdge\n0052 03\n\n&quot;
@@ -760,7 +305,7 @@ CONST E3_1 =
  &amp; &quot;01\nEdge\n0091 02\nEdge\n0093 03\n\nv93\n30.00 60.00 1.0\nEdge\n0092 00&quot;
  &amp; &quot;\nEdge\n0109 01\n\nv94\n40&quot;;
 
-CONST E3_2 =
+CONST E0_2 =
    &quot;.00 60.00 1.0\nEdge\n0110 00\nEdge\n0078 01\n\nv95\n50.00 60.00 1.0\nEd&quot;
  &amp; &quot;ge\n0111 00\nEdge\n0081 01\nEdge\n0079 02\n\nv96\n60.00 60.00 1.0\nEdge&quot;
  &amp; &quot;\n0112 00\nEdge\n0080 01\nEdge\n0110 02\nEdge\n0082 03\n\nv97\n70.00 60&quot;
@@ -795,7 +340,7 @@ CONST E3_2 =
  &amp; &quot;\nEdge\n0137 01\nEdge\n0121 02\nEdge\n0123 03\n\nv123\n30.00 80.00 1.0\n&quot;
  &amp; &quot;Edge\n0122 00\nEdge\n&quot;;
 
-CONST E3_3 =
+CONST E0_3 =
    &quot;0139 01\n\nv124\n40.00 80.00 1.0\nEdge\n0140 00\nEdge\n0108 01\n\nv125\n&quot;
  &amp; &quot;50.00 80.00 1.0\nEdge\n0141 00\nEdge\n0111 01\nEdge\n0109 02\n\nv126\n6&quot;
  &amp; &quot;0.00 80.00 1.0\nEdge\n0142 00\nEdge\n0110 01\nEdge\n0140 02\nEdge\n0112&quot;
@@ -830,7 +375,7 @@ CONST E3_3 =
  &amp; &quot;00.00 1.0\nEdge\n0137 00\nEdge\n0167 01\nEdge\n0151 02\nEdge\n0153 03\n&quot;
  &amp; &quot;\nv153\n30.00 100.0&quot;;
 
-CONST E3_4 =
+CONST E0_4 =
    &quot;0 1.0\nEdge\n0152 00\nEdge\n0169 01\n\nv154\n40.00 100.00 1.0\nEdge\n01&quot;
  &amp; &quot;70 00\nEdge\n0138 01\n\nv155\n50.00 100.00 1.0\nEdge\n0171 00\nEdge\n01&quot;
  &amp; &quot;41 01\nEdge\n0139 02\n\nv156\n60.00 100.00 1.0\nEdge\n0172 00\nEdge\n01&quot;
@@ -865,7 +410,7 @@ CONST E3_4 =
  &amp; &quot;e\n0196 01\nEdge\n0180 02\nEdge\n0182 03\n\nv182\n20.00 120.00 1.0\nEdg&quot;
  &amp; &quot;e\n0167 00\nEdge\n0&quot;;
 
-CONST E3_5 =
+CONST E0_5 =
    &quot;197 01\nEdge\n0181 02\nEdge\n0183 03\n\nv183\n30.00 120.00 1.0\nEdge\n0&quot;
  &amp; &quot;182 00\nEdge\n0199 01\n\nv184\n40.00 120.00 1.0\nEdge\n0200 00\nEdge\n0&quot;
  &amp; &quot;168 01\n\nv185\n50.00 120.00 1.0\nEdge\n0201 00\nEdge\n0171 01\nEdge\n0&quot;
@@ -900,7 +445,7 @@ CONST E3_5 =
  &amp; &quot;11\n10.00 140.00 1.0\nEdge\n0196 00\nEdge\n0210 01\nEdge\n0212 02\n\nv2&quot;
  &amp; &quot;12\n20.00 140.00&quot;;
 
-CONST E3_6 =
+CONST E0_6 =
    &quot; 1.0\nEdge\n0197 00\nEdge\n0211 01\nEdge\n0213 02\n\nv213\n30.00 140.00&quot;
  &amp; &quot; 1.0\nEdge\n0212 00\n\nv214\n40.00 140.00 1.0\nEdge\n0198 00\n\nv215\n5&quot;
  &amp; &quot;0.00 140.00 1.0\nEdge\n0201 00\nEdge\n0199 01\n\nv216\n60.00 140.00 1.0&quot;
@@ -914,7 +459,7 @@ CONST E3_6 =
  &amp; &quot;2 01\nEdge\n0224 02\n\nv224\n140.00 140.00 1.0\nEdge\n0209 00\nEdge\n02&quot;
  &amp; &quot;23 01\n\n&quot;;
 
-CONST E4 =
+CONST E1 =
    &quot;279\n4 Septembre \n380.00 418.00 2.00\nEdge\n166 0\nEdge\n28 1\n\n \n38&quot;
  &amp; &quot;1.00 507.00 2.00\nEdge\n179 0\nEdge\n118 1\n\nAlesia \n324.00 192.00 2.&quot;
  &amp; &quot;00\nEdge\n159 0\nEdge\n194 1\n\nAlexandre Dumas \n568.00 353.00 2.00\nE&quot;
@@ -948,7 +493,7 @@ CONST E4 =
  &amp; &quot;160 0\nEdge\n144 1\n\nCadet \n404.00 453.00 2.00\nEdge\n185 0\nEdge\n12&quot;
  &amp; &quot;0 1\n\nCambronne \n252.00 279.00 2.00\nEdge\n116 0\nEdge\n237 1\n\nC&quot;;
 
-CONST E4_0 =
+CONST E1_0 =
    &quot;ampo-Formio \n450.00 224.00 2.00\nEdge\n251 0\nEdge\n181 1\n\nCardinal &quot;
  &amp; &quot;Lemoine \n421.00 281.00 2.00\nEdge\n112 0\nEdge\n148 1\n\n \n372.00 593&quot;
  &amp; &quot;.00 2.00\nEdge\n243 0\nEdge\n137 1\n\nCensier-Daubenton \n412.00 250.00&quot;
@@ -982,7 +527,7 @@ CONST E4_0 =
  &amp; &quot;e\n65 1\n\nCrimee \n515.00 532.00 2.00\nEdge\n59 0\nEdge\n228 1\n\nCroi&quot;
  &amp; &quot;x De Chavaux \n658.00 369.00 2.00\nEdge\n229 0\nEdge\n136 1\n\nD&quot;;
 
-CONST E4_1 =
+CONST E1_1 =
    &quot;aube                \n572.00 482.00 2.00\nEdge\n214 0\nEdge\n25 1\n\nDa&quot;
  &amp; &quot;umesnil \n565.00 243.00 4.00\nEdge\n72 0\nEdge\n15 1\nEdge\n157 2\nEdge&quot;
  &amp; &quot;\n150 3\n\nDenfert-Rochereau \n345.00 224.00 4.00\nEdge\n221 0\nEdge\n1&quot;
@@ -1016,7 +561,7 @@ CONST E4_1 =
  &amp; &quot;45.00 4.00\nEdge\n249 0\nEdge\n166 1\nEdge\n241 2\nEdge\n51 3\n\nHoche &quot;
  &amp; &quot;\n602.00 519.00 2.00\nEdge\n78 0\nEdge\n205 1\n\nHotel De Ville \n4&quot;;
 
-CONST E4_2 =
+CONST E1_2 =
    &quot;36.00 349.00 4.00\nEdge\n49 0\nEdge\n254 1\nEdge\n49 2\nEdge\n219 3\n\n&quot;
  &amp; &quot;Iena \n233.00 384.00 2.00\nEdge\n268 0\nEdge\n5 1\n\nInvalides \n289.00&quot;
  &amp; &quot; 371.00 4.00\nEdge\n75 0\nEdge\n57 1\nEdge\n40 2\nEdge\n271 3\n\nJacque&quot;
@@ -1051,7 +596,7 @@ CONST E4_2 =
  &amp; &quot;.00 166.00 2.00\nEdge\n265 0\nEdge\n192 1\n\nMaisons-Alfort Les Juillio&quot;
  &amp; &quot;ttes \n639.&quot;;
 
-CONST E4_3 =
+CONST E1_3 =
    &quot;00 98.00 2.00\nEdge\n140 0\nEdge\n64 1\n\nMaisons-Alfort-Stade \n623.00&quot;
  &amp; &quot; 98.00 2.00\nEdge\n4 0\nEdge\n139 1\n\n \n258.00 185.00 2.00\nEdge\n208&quot;
  &amp; &quot; 0\nEdge\n142 1\n\n \n252.00 168.00 2.00\nEdge\n141 0\nEdge\n50 1\n\nMa&quot;
@@ -1086,7 +631,7 @@ CONST E4_3 =
  &amp; &quot;e\n20 1\n\nPasteur \n270.00 262.00 4.00\nEdge\n237 0\nEdge\n158 1\nEdge&quot;
  &amp; &quot;\n276 2\n&quot;;
 
-CONST E4_4 =
+CONST E1_4 =
    &quot;Edge\n84 3\n\nPelleport \n593.00 417.00 2.00\nEdge\n91 0\nEdge\n244 1\n&quot;
  &amp; &quot;\nPere Lachaise \n559.00 390.00 4.00\nEdge\n149 0\nEdge\n176 1\nEdge\n2&quot;
  &amp; &quot;52 2\nEdge\n91 3\n\nPereire-Mal. Juin \n249.00 494.00 2.00\nEdge\n197 0&quot;
@@ -1120,7 +665,7 @@ CONST E4_4 =
  &amp; &quot;00 2.00\nEdge\n102 0\nEdge\n167 1\n\nPorte De St. Cloud \n115.00 236.00&quot;
  &amp; &quot; 2.00\nEdge\n146 0\nEdge\n82 1\n\n \n351.00 553.00 2.00&quot;;
 
-CONST E4_5 =
+CONST E1_5 =
    &quot;\nEdge\n96 0\nEdge\n100 1\n\n \n260.00 199.00 2.00\nEdge\n184 0\nEdge\n&quot;
  &amp; &quot;141 1\n\n \n201.00 206.00 2.00\nEdge\n60 0\nEdge\n58 1\n\nPorte De Vinc&quot;
  &amp; &quot;ennes \n601.00 298.00 2.00\nEdge\n160 0\nEdge\n250 1\n\nPorte Des Lilas&quot;
@@ -1155,7 +700,7 @@ CONST E4_5 =
  &amp; &quot;broise \n523.00 357.00 2.00\nEdge\n164 0\nEdge\n277 1\n\nSt. Augustin \n&quot;
  &amp; &quot;3&quot;;
 
-CONST E4_6 =
+CONST E1_6 =
    &quot;11.00 445.00 2.00\nEdge\n155 0\nEdge\n101 1\n\n \n406.00 592.00 1.00\nE&quot;
  &amp; &quot;dge\n243 0\n\n \n389.00 593.00 2.00\nEdge\n242 0\nEdge\n37 1\n\nSt. Far&quot;
  &amp; &quot;geau \n598.00 435.00 2.00\nEdge\n172 0\nEdge\n211 1\n\n \n289.00 318.00&quot;
@@ -1190,7 +735,7 @@ CONST E4_6 =
  &amp; &quot;3\n\n \n252.00 251.00 2.00\nEdge\n272 0\nEdge\n171 1\n\nVoltaire \n534.&quot;
  &amp; &quot;00 346&quot;;
 
-CONST E4_7 =
+CONST E1_7 =
    &quot;.00 2.00\nEdge\n240 0\nEdge\n44 1\n\nWagram \n259.00 492.00 2.00\nEdge\n&quot;
  &amp; &quot;174 0\nEdge\n143 1\n\n#+-----------------------------------------------&quot;
  &amp; &quot;----------------------------+#\n#|            Copyright (C) 1992, Digit&quot;
@@ -1199,7 +744,7 @@ CONST E4_7 =
  &amp; &quot;file COPYRIGHT for a full description.           |#\n#+----------------&quot;
  &amp; &quot;-----------------------------------------------------------+#\n&quot;;
 
-CONST E5 =
+CONST E2 =
    &quot;2091\n/Washington0\n-13545.0 003001.0 1.0\nEdge\n0001 00\n\nvertex1\n-1&quot;
  &amp; &quot;3640.0 003173.0 1.0\nEdge\n0002 00\n\nvertex2\n-13805.0 003208.0 1.0\nE&quot;
  &amp; &quot;dge\n0003 00\n\nvertex3\n-13798.0 003414.0 1.0\nEdge\n0004 00\n\nvertex&quot;
@@ -1233,7 +778,7 @@ CONST E5 =
  &amp; &quot;Edge\n0043 00\n\nvertex43\n-11313.0 002268.0 1.0\nEdge\n0044 00\n\nvert&quot;
  &amp; &quot;ex44\n-11543.0 00&quot;;
 
-CONST E5_0 =
+CONST E2_0 =
    &quot;2230.0 1.0\nEdge\n0045 00\n\nvertex45\n-11806.0 002260.0 1.0\nEdge\n004&quot;
  &amp; &quot;6 00\n\nvertex46\n-12004.0 002257.0 1.0\nEdge\n0047 00\n\nvertex47\n-12&quot;
  &amp; &quot;170.0 002221.0 1.0\nEdge\n0048 00\n\nvertex48\n-12566.0 002285.0 1.0\nE&quot;
@@ -1267,7 +812,7 @@ CONST E5_0 =
  &amp; &quot;30.0 1.0\nEdge\n0088 00\n\nvertex88\n-11313.0 002268.0 1.0\nEdge\n0089 &quot;
  &amp; &quot;00\n\nvertex89\n-&quot;;
 
-CONST E5_1 =
+CONST E2_1 =
    &quot;10335.0 002014.0 1.0\nEdge\n0090 00\n\nvertex90\n-10303.0 001912.0 1.0\n&quot;
  &amp; &quot;Edge\n0091 00\n\nvertex91\n-10174.0 001778.0 1.0\nEdge\n0092 00\n\nvert&quot;
  &amp; &quot;ex92\n-10175.0 001606.0 1.0\nEdge\n0093 00\n\nvertex93\n-10306.0 001432&quot;
@@ -1301,7 +846,7 @@ CONST E5_1 =
  &amp; &quot;0 1.0\nEdge\n0132 00\n\nvertex132\n-13111.0 -07671.0 1.0\nEdge\n0133 00&quot;
  &amp; &quot;\n\nvertex133&quot;;
 
-CONST E5_2 =
+CONST E2_2 =
    &quot;\n-13280.0 -07716.0 1.0\nEdge\n0134 00\n\nvertex134\n-13356.0 -07539.0 &quot;
  &amp; &quot;1.0\nEdge\n0135 00\n\nvertex135\n-13498.0 -07402.0 1.0\nEdge\n0136 00\n&quot;
  &amp; &quot;\nvertex136\n-13708.0 -07305.0 1.0\nEdge\n0137 00\n\nvertex137\n-13816.&quot;
@@ -1335,7 +880,7 @@ CONST E5_2 =
  &amp; &quot;\nvertex175\n-15428.0 -01019.0 1.0\nEdge\n0176 00\n\nvertex176\n-15288.&quot;
  &amp; &quot;0 -00771.0 1.0&quot;;
 
-CONST E5_3 =
+CONST E2_3 =
    &quot;\nEdge\n0177 00\n\nvertex177\n-15217.0 -00594.0 1.0\nEdge\n0178 00\n\nv&quot;
  &amp; &quot;ertex178\n-15181.0 -00419.0 1.0\nEdge\n0179 00\n\nvertex179\n-15108.0 -&quot;
  &amp; &quot;00102.0 1.0\nEdge\n0180 00\n\nfake180\n-15108.0 -00102.0 1.0\n\n/Nevada&quot;
@@ -1369,7 +914,7 @@ CONST E5_3 =
  &amp; &quot;219 00\n\nvertex219\n-09101.0 002522.0 1.0\nEdge\n0220 00\n\nvertex220\n&quot;
  &amp; &quot;-09070.0 002318&quot;;
 
-CONST E5_4 =
+CONST E2_4 =
    &quot;.0 1.0\nEdge\n0221 00\n\nvertex221\n-08941.0 002219.0 1.0\nEdge\n0222 0&quot;
  &amp; &quot;0\n\nvertex222\n-08909.0 002049.0 1.0\nEdge\n0223 00\n\nvertex223\n-090&quot;
  &amp; &quot;06.0 001876.0 1.0\nEdge\n0224 00\n\nvertex224\n-08974.0 001672.0 1.0\nE&quot;
@@ -1403,7 +948,7 @@ CONST E5_4 =
  &amp; &quot;tex263\n-07483.0 -10622.0 1.0\nEdge\n0264 00\n\nvertex264\n-08844.0 -10&quot;
  &amp; &quot;464.0 1.0\nEd&quot;;
 
-CONST E5_5 =
+CONST E2_5 =
    &quot;ge\n0265 00\n\nvertex265\n-11179.0 -09179.0 1.0\nEdge\n0266 00\n\nverte&quot;
  &amp; &quot;x266\n-11085.0 -09029.0 1.0\nEdge\n0267 00\n\nvertex267\n-10954.0 -0894&quot;
  &amp; &quot;9.0 1.0\nEdge\n0268 00\n\nvertex268\n-10895.0 -08765.0 1.0\nEdge\n0269 &quot;
@@ -1437,7 +982,7 @@ CONST E5_5 =
  &amp; &quot;307 00\n\nvertex307\n-03712.0 000299.0 1.0\nEdge\n0308 00\n\nvertex308\n&quot;
  &amp; &quot;-05528.0 00042&quot;;
 
-CONST E5_6 =
+CONST E2_6 =
    &quot;8.0 1.0\nEdge\n0309 00\n\nvertex309\n-07389.0 000631.0 1.0\nEdge\n0310 &quot;
  &amp; &quot;00\n\nvertex310\n-07447.0 000185.0 1.0\nEdge\n0311 00\n\nvertex311\n-07&quot;
  &amp; &quot;513.0 000285.0 1.0\nEdge\n0312 00\n\nvertex312\n-07676.0 000449.0 1.0\n&quot;
@@ -1471,7 +1016,7 @@ CONST E5_6 =
  &amp; &quot;\nEdge\n0351 00\n\nvertex351\n-07389.0 000631.0 1.0\nEdge\n0352 00\n\nf&quot;
  &amp; &quot;ake352\n-07389.&quot;;
 
-CONST E5_7 =
+CONST E2_7 =
    &quot;0 000631.0 1.0\n\n/Colorado9\n-06709.0 -02663.0 1.0\nEdge\n0354 00\n\nv&quot;
  &amp; &quot;ertex354\n-05153.0 -02764.0 1.0\nEdge\n0355 00\n\nvertex355\n-03889.0 -&quot;
  &amp; &quot;02868.0 1.0\nEdge\n0356 00\n\nvertex356\n-02767.0 -02961.0 1.0\nEdge\n0&quot;
@@ -1505,7 +1050,7 @@ CONST E5_7 =
  &amp; &quot;\nvertex395\n000133.0 001253.0 1.0\nEdge\n0396 00\n\nvertex396\n000145.&quot;
  &amp; &quot;0 001017.0&quot;;
 
-CONST E5_8 =
+CONST E2_8 =
    &quot; 1.0\nEdge\n0397 00\n\nvertex397\n-01619.0 001002.0 1.0\nEdge\n0398 00\n&quot;
  &amp; &quot;\nvertex398\n-03671.0 001013.0 1.0\nEdge\n0399 00\n\nvertex399\n-03521.&quot;
  &amp; &quot;0 003457.0 1.0\nEdge\n0400 00\n\nfake400\n-03521.0 003457.0 1.0\n\n/Sou&quot;
@@ -1539,7 +1084,7 @@ CONST E5_8 =
  &amp; &quot;00\n\nvertex439\n-03889.0 -02868.0 1.0\nEdge\n0440 00\n\nvertex440\n-03&quot;
  &amp; &quot;786.0 -01336.&quot;;
 
-CONST E5_9 =
+CONST E2_9 =
    &quot;0 1.0\nEdge\n0441 00\n\nfake441\n-03786.0 -01336.0 1.0\n\n/Kansas14\n-0&quot;
  &amp; &quot;2799.0 -03749.0 1.0\nEdge\n0443 00\n\nvertex443\n001019.0 -03699.0 1.0\n&quot;
  &amp; &quot;Edge\n0444 00\n\nvertex444\n001182.0 -03760.0 1.0\nEdge\n0445 00\n\nver&quot;
@@ -1573,7 +1118,7 @@ CONST E5_9 =
  &amp; &quot;\nvertex483\n-00957.0 -08464.0 1.0\nEdge\n0484 00\n\nvertex484\n-01118.&quot;
  &amp; &quot;0 -08472.0 1.&quot;;
 
-CONST E5_10 =
+CONST E2_10 =
    &quot;0\nEdge\n0485 00\n\nvertex485\n-01190.0 -08301.0 1.0\nEdge\n0486 00\n\n&quot;
  &amp; &quot;vertex486\n-01351.0 -08310.0 1.0\nEdge\n0487 00\n\nvertex487\n-01516.0 &quot;
  &amp; &quot;-08214.0 1.0\nEdge\n0488 00\n\nvertex488\r\n-01620.0 -08045.0 1.0\nEdge&quot;
@@ -1607,7 +1152,7 @@ CONST E5_10 =
  &amp; &quot;ge\n0527 00\n\nvertex527\n002343.0 -10269.0 1.0\nEdge\n0528 00\n\nverte&quot;
  &amp; &quot;x528\n002417.0 -1&quot;;
 
-CONST E5_11 =
+CONST E2_11 =
    &quot;0514.0 1.0\nEdge\n0529 00\n\nvertex529\n002488.0 -10687.0 1.0\nEdge\n05&quot;
  &amp; &quot;30 00\n\nvertex530\n002590.0 -10825.0 1.0\nEdge\n0531 00\n\nvertex531\n&quot;
  &amp; &quot;002567.0 -11074.0 1.0\nEdge\n0532 00\n\nvertex532\n002511.0 -11290.0 1.&quot;
@@ -1641,7 +1186,7 @@ CONST E5_11 =
  &amp; &quot;000348.0 -15360.0 1.0\nEdge\n0571 00\n\nvertex571\n000189.0 -15369.0 1.&quot;
  &amp; &quot;0\nEdge\n0572 0&quot;;
 
-CONST E5_12 =
+CONST E2_12 =
    &quot;0\n\nvertex572\n000026.0 -15268.0 1.0\nEdge\n0573 00\n\nvertex573\n-001&quot;
  &amp; &quot;34.0 -15239.0 1.0\nEdge\n0574 00\n\nvertex574\n-00293.0 -15249.0 1.0\nE&quot;
  &amp; &quot;dge\n0575 00\n\nvertex575\n-00455.0 -15184.0 1.0\nEdge\n0576 00\n\nvert&quot;
@@ -1675,7 +1220,7 @@ CONST E5_12 =
  &amp; &quot;ge\n0614 00\n\nvertex614\n-05102.0 -11214.0 1.0\nEdge\n0615 00\n\nverte&quot;
  &amp; &quot;x615\n-05206.0 &quot;;
 
-CONST E5_13 =
+CONST E2_13 =
    &quot;-11078.0 1.0\nEdge\n0616 00\n\nvertex616\n-05379.0 -10875.0 1.0\nEdge\n&quot;
  &amp; &quot;0617 00\n\nvertex617\n-05515.0 -10741.0 1.0\nEdge\n0618 00\n\nvertex618&quot;
  &amp; &quot;\n-05652.0 -10607.0 1.0\nEdge\n0619 00\n\nvertex619\n-05756.0 -10472.0 &quot;
@@ -1709,7 +1254,7 @@ CONST E5_13 =
  &amp; &quot;699.0 1.0\nEdge\n0658 00\n\nvertex658\n002342.0 001262.0 1.0\nEdge\n065&quot;
  &amp; &quot;9 00\n\nvertex6&quot;;
 
-CONST E5_14 =
+CONST E2_14 =
    &quot;59\n002222.0 001154.0 1.0\nEdge\n0660 00\n\nvertex660\n002135.0 001014.&quot;
  &amp; &quot;0 1.0\nEdge\n0661 00\n\nvertex661\n002083.0 000842.0 1.0\nEdge\n0662 00&quot;
  &amp; &quot;\n\nvertex662\n002186.0 000712.0 1.0\nEdge\n0663 00\n\nvertex663\n00219&quot;
@@ -1743,7 +1288,7 @@ CONST E5_14 =
  &amp; &quot;3365.0 -02455.0 1.0\nEdge\n0702 00\n\nvertex702\n003473.0 -02654.0 1.0\n&quot;
  &amp; &quot;Edge\n0703 00\n&quot;;
 
-CONST E5_15 =
+CONST E2_15 =
    &quot;\nvertex703\n003450.0 -02826.0 1.0\nEdge\n0704 00\n\nvertex704\n003364.&quot;
  &amp; &quot;0 -03002.0 1.0\nEdge\n0705 00\n\nvertex705\n003277.0 -03177.0 1.0\nEdge&quot;
  &amp; &quot;\n0706 00\n\nvertex706\n003250.0 -03281.0 1.0\nEdge\n0707 00\n\nvertex7&quot;
@@ -1777,7 +1322,7 @@ CONST E5_15 =
  &amp; &quot;ertex745\n004717.0 -06553.0 1.0\nEdge\n0746 00\n\nvertex746\n004672.0 -&quot;
  &amp; &quot;06693.0 1.0\nEd&quot;;
 
-CONST E5_16 =
+CONST E2_16 =
    &quot;ge\n0747 00\n\nvertex747\n004461.0 -06670.0 1.0\nEdge\n0748 00\n\nverte&quot;
  &amp; &quot;x748\n004233.0 -06646.0 1.0\nEdge\n0749 00\n\nvertex749\n004356.0 -0650&quot;
  &amp; &quot;1.0 1.0\nEdge\n0750 00\n\nvertex750\n004312.0 -06260.0 1.0\nEdge\n0751 &quot;
@@ -1811,7 +1356,7 @@ CONST E5_16 =
  &amp; &quot;0789 00\n\nvertex789\n002789.0 -09262.0 1.0\nEdge\n0790 00\n\nvertex790&quot;
  &amp; &quot;\n002562.0 -092&quot;;
 
-CONST E5_17 =
+CONST E2_17 =
    &quot;72.0 1.0\nEdge\n0791 00\n\nvertex791\n002370.0 -09316.0 1.0\nEdge\n0792&quot;
  &amp; &quot; 00\n\nvertex792\n002209.0 -09324.0 1.0\nEdge\n0793 00\n\nvertex793\n00&quot;
  &amp; &quot;2137.0 -09151.0 1.0\nEdge\n0794 00\n\nvertex794\n002161.0 -08939.0 1.0\n&quot;
@@ -1845,7 +1390,7 @@ CONST E5_17 =
  &amp; &quot;1.0\nEdge\n0833 00\n\nvertex833\n005293.0 -11499.0 1.0\nEdge\n0834 00\n&quot;
  &amp; &quot;\nvertex834\n0&quot;;
 
-CONST E5_18 =
+CONST E2_18 =
    &quot;05456.0 -11601.0 1.0\nEdge\n0835 00\n\nvertex835\n005364.0 -11747.0 1.0&quot;
  &amp; &quot;\nEdge\n0836 00\n\nvertex836\n005208.0 -11825.0 1.0\nEdge\n0837 00\n\nv&quot;
  &amp; &quot;ertex837\n005307.0 -11965.0 1.0\nEdge\n0838 00\n\nvertex838\n005469.0 -&quot;
@@ -1879,7 +1424,7 @@ CONST E5_18 =
  &amp; &quot;ertex876\n002590.0 -10825.0 1.0\nEdge\n0877 00\n\nvertex877\n002488.0 -&quot;
  &amp; &quot;10687.0 1.0\nE&quot;;
 
-CONST E5_19 =
+CONST E2_19 =
    &quot;dge\n0878 00\n\nvertex878\n002417.0 -10514.0 1.0\nEdge\n0879 00\n\nvert&quot;
  &amp; &quot;ex879\n002343.0 -10269.0 1.0\nEdge\n0880 00\n\nvertex880\n002239.0 -100&quot;
  &amp; &quot;97.0 1.0\nEdge\n0881 00\n\nvertex881\n002231.0 -09886.0 1.0\nEdge\n0882&quot;
@@ -1913,7 +1458,7 @@ CONST E5_19 =
  &amp; &quot;0920 00\n\nvertex920\n003429.0 -01362.0 1.0\nEdge\n0921 00\n\nvertex921&quot;
  &amp; &quot;\n003263.0 -0&quot;;
 
-CONST E5_20 =
+CONST E2_20 =
    &quot;1268.0 1.0\nEdge\n0922 00\n\nvertex922\n003187.0 -01068.0 1.0\nEdge\n09&quot;
  &amp; &quot;23 00\n\nvertex923\n003176.0 -00898.0 1.0\nEdge\n0924 00\n\nvertex924\n&quot;
  &amp; &quot;003070.0 -00734.0 1.0\nEdge\n0925 00\n\nvertex925\n003068.0 -00700.0 1.&quot;
@@ -1947,7 +1492,7 @@ CONST E5_20 =
  &amp; &quot;4.0 1.0\nEdge\n0964 00\n\nvertex964\n004917.0 -05821.0 1.0\nEdge\n0965 &quot;
  &amp; &quot;00\n\nvertex965\n&quot;;
 
-CONST E5_21 =
+CONST E2_21 =
    &quot;004741.0 -05720.0 1.0\nEdge\n0966 00\n\nvertex966\n004636.0 -05587.0 1.&quot;
  &amp; &quot;0\nEdge\n0967 00\n\nvertex967\n004626.0 -05380.0 1.0\nEdge\n0968 00\n\n&quot;
  &amp; &quot;vertex968\n004522.0 -05246.0 1.0\nEdge\n0969 00\n\nvertex969\n004385.0 &quot;
@@ -1981,7 +1526,7 @@ CONST E5_21 =
  &amp; &quot;07\n004262.0 002345.0 1.0\nEdge\n1008 00\n\nvertex1008\n004211.0 002173&quot;
  &amp; &quot;.0 1.0\nEdge&quot;;
 
-CONST E5_22 =
+CONST E2_22 =
    &quot;\n1009 00\n\nvertex1009\n004367.0 002215.0 1.0\nEdge\n1010 00\n\nvertex&quot;
  &amp; &quot;1010\n004531.0 002157.0 1.0\nEdge\n1011 00\n\nvertex1011\n004694.0 0020&quot;
  &amp; &quot;99.0 1.0\nEdge\n1012 00\n\nvertex1012\n004799.0 001969.0 1.0\nEdge\n101&quot;
@@ -2015,7 +1560,7 @@ CONST E5_22 =
  &amp; &quot;1050 00\n\nvertex1050\n003461.0 001591.0 1.0\nEdge\n1051 00\n\nvertex10&quot;
  &amp; &quot;51\n00332&quot;;
 
-CONST E5_23 =
+CONST E2_23 =
    &quot;5.0 001719.0 1.0\nEdge\n1052 00\n\nvertex1052\n003240.0 001758.0 1.0\nE&quot;
  &amp; &quot;dge\n1053 00\n\nfake1053\n003240.0 001758.0 1.0\n\n/Michigan25\n006087.&quot;
  &amp; &quot;0 001571.0 1.0\nEdge\n1055 00\n\nvertex1055\n006278.0 001549.0 1.0\nEdg&quot;
@@ -2049,7 +1594,7 @@ CONST E5_23 =
  &amp; &quot;Edge\n1093 00\n\nvertex1093\n005816.0 -00688.0 1.0\nEdge\n1094 00\n\nve&quot;
  &amp; &quot;rtex109&quot;;
 
-CONST E5_24 =
+CONST E2_24 =
    &quot;4\n005709.0 -00524.0 1.0\nEdge\n1095 00\n\nvertex1095\n005634.0 -00358.&quot;
  &amp; &quot;0 1.0\nEdge\n1096 00\n\nvertex1096\n005619.0 -00155.0 1.0\nEdge\n1097 0&quot;
  &amp; &quot;0\n\nvertex1097\n005576.0 000013.0 1.0\nEdge\n1098 00\n\nvertex1098\n00&quot;
@@ -2083,7 +1628,7 @@ CONST E5_24 =
  &amp; &quot;.0 1.0\nEdge\n1136 00\n\nvertex1136\n005547.0 -03989.0 1.0\nEdge\n1137 &quot;
  &amp; &quot;00\n\nver&quot;;
 
-CONST E5_25 =
+CONST E2_25 =
    &quot;tex1137\n005537.0 -03817.0 1.0\nEdge\n1138 00\n\nvertex1138\n005559.0 -&quot;
  &amp; &quot;03644.0 1.0\nEdge\n1139 00\n\nvertex1139\n005290.0 -01843.0 1.0\nEdge\n&quot;
  &amp; &quot;1140 00\n\nfake1140\n005290.0 -01843.0 1.0\n\n/Kentucky27\n004797.0 -06&quot;
@@ -2117,7 +1662,7 @@ CONST E5_25 =
  &amp; &quot;-04931.0 1.0\nEdge\n1179 00\n\nvertex1179\n008638.0 -05077.0 1.0\nEdge\n&quot;
  &amp; &quot;1180 &quot;;
 
-CONST E5_26 =
+CONST E2_26 =
    &quot;00\n\nvertex1180\n008520.0 -05292.0 1.0\nEdge\n1181 00\n\nvertex1181\n0&quot;
  &amp; &quot;08430.0 -05436.0 1.0\nEdge\n1182 00\n\nvertex1182\n008272.0 -05514.0 1.&quot;
  &amp; &quot;0\nEdge\n1183 00\n\nvertex1183\n008162.0 -05601.0 1.0\nEdge\n1184 00\n\n&quot;
@@ -2151,7 +1696,7 @@ CONST E5_26 =
  &amp; &quot;1117.0 1.0\nEdge\n1222 00\n\nvertex1222\n005856.0 -11121.0 1.0\nEdge\n1&quot;
  &amp; &quot;223 00\n&quot;;
 
-CONST E5_27 =
+CONST E2_27 =
    &quot;\nvertex1223\n005698.0 -11162.0 1.0\nEdge\n1224 00\n\nvertex1224\n00550&quot;
  &amp; &quot;8.0 -11205.0 1.0\nEdge\n1225 00\n\nvertex1225\n005350.0 -11282.0 1.0\nE&quot;
  &amp; &quot;dge\n1226 00\n\nvertex1226\n005194.0 -11359.0 1.0\nEdge\n1227 00\n\nver&quot;
@@ -2185,7 +1730,7 @@ CONST E5_27 =
  &amp; &quot;771.0 -08805.0 1.0\nEdge\n1265 00\n\nvertex1265\n007875.0 -08979.0 1.0\n&quot;
  &amp; &quot;Edge\n12&quot;;
 
-CONST E5_28 =
+CONST E2_28 =
    &quot;66 00\n\nvertex1266\n007946.0 -09154.0 1.0\nEdge\n1267 00\n\nvertex1267&quot;
  &amp; &quot;\n007985.0 -09330.0 1.0\nEdge\n1268 00\n\nvertex1268\n007894.0 -09512.0&quot;
  &amp; &quot; 1.0\nEdge\n1269 00\n\nvertex1269\n007935.0 -09759.0 1.0\nEdge\n1270 00&quot;
@@ -2219,7 +1764,7 @@ CONST E5_28 =
  &amp; &quot;08737.0 -03474.0 1.0\nEdge\n1308 00\n\nvertex1308\n008722.0 -03751.0 1.&quot;
  &amp; &quot;0\nEdge&quot;;
 
-CONST E5_29 =
+CONST E2_29 =
    &quot;\n1309 00\n\nvertex1309\n008603.0 -03931.0 1.0\nEdge\n1310 00\n\nvertex&quot;
  &amp; &quot;1310\n008581.0 -04039.0 1.0\nEdge\n1311 00\n\nvertex1311\n008372.0 -038&quot;
  &amp; &quot;74.0 1.0\nEdge\n1312 00\n\nvertex1312\n008207.0 -03814.0 1.0\nEdge\n131&quot;
@@ -2253,7 +1798,7 @@ CONST E5_29 =
  &amp; &quot;rtex1350\n009076.0 -04740.0 1.0\nEdge\n1351 00\n\nvertex1351\n008970.0 &quot;
  &amp; &quot;-04606&quot;;
 
-CONST E5_30 =
+CONST E2_30 =
    &quot;.0 1.0\nEdge\n1352 00\n\nvertex1352\n008799.0 -04476.0 1.0\nEdge\n1353 &quot;
  &amp; &quot;00\n\nvertex1353\n008659.0 -04310.0 1.0\nEdge\n1354 00\n\nvertex1354\n0&quot;
  &amp; &quot;08554.0 -04176.0 1.0\nEdge\n1355 00\n\nvertex1355\n008603.0 -03931.0 1.&quot;
@@ -2287,7 +1832,7 @@ CONST E5_30 =
  &amp; &quot;93 00\n\nvertex1393\n011204.0 -02522.0 1.0\nEdge\n1394 00\n\nvertex1394&quot;
  &amp; &quot;\n011269.0&quot;;
 
-CONST E5_31 =
+CONST E2_31 =
    &quot; -02558.0 1.0\nEdge\n1395 00\n\nvertex1395\n011412.0 -02687.0 1.0\nEdge&quot;
  &amp; &quot;\n1396 00\n\nvertex1396\n011585.0 -02781.0 1.0\nEdge\n1397 00\n\nvertex&quot;
  &amp; &quot;1397\n011692.0 -02879.0 1.0\nEdge\n1398 00\n\nvertex1398\n011669.0 -030&quot;
@@ -2321,7 +1866,7 @@ CONST E5_31 =
  &amp; &quot;\n\nvertex1436\n008190.0 -06461.0 1.0\nEdge\n1437 00\n\nvertex1437\n008&quot;
  &amp; &quot;349.0 -&quot;;
 
-CONST E5_32 =
+CONST E2_32 =
    &quot;06384.0 1.0\nEdge\n1438 00\n\nvertex1438\n008472.0 -06238.0 1.0\nEdge\n&quot;
  &amp; &quot;1439 00\n\nvertex1439\n008632.0 -06195.0 1.0\nEdge\n1440 00\n\nvertex14&quot;
  &amp; &quot;40\n008754.0 -06014.0 1.0\nEdge\n1441 00\n\nvertex1441\n008946.0 -05935&quot;
@@ -2355,7 +1900,7 @@ CONST E5_32 =
  &amp; &quot;771.0 1.0\nEdge\n1479 00\n\nvertex1479\n012957.0 -05870.0 1.0\nEdge\n14&quot;
  &amp; &quot;80 00\n\n&quot;;
 
-CONST E5_33 =
+CONST E2_33 =
    &quot;vertex1480\n012866.0 -06053.0 1.0\nEdge\n1481 00\n\nvertex1481\n012959.&quot;
  &amp; &quot;0 -05906.0 1.0\nEdge\n1482 00\n\nvertex1482\n013081.0 -05650.0 1.0\nEdg&quot;
  &amp; &quot;e\n1483 00\n\nvertex1483\n013023.0 -05831.0 1.0\nEdge\n1484 00\n\nverte&quot;
@@ -2389,7 +1934,7 @@ CONST E5_33 =
  &amp; &quot;10190.0 -06543.0 1.0\nEdge\n1522 00\n\nvertex1522\n010358.0 -06606.0 1.&quot;
  &amp; &quot;0\nEd&quot;;
 
-CONST E5_34 =
+CONST E2_34 =
    &quot;ge\n1523 00\n\nvertex1523\n010585.0 -06524.0 1.0\nEdge\n1524 00\n\nvert&quot;
  &amp; &quot;ex1524\n010749.0 -06480.0 1.0\nEdge\n1525 00\n\nvertex1525\n010915.0 -0&quot;
  &amp; &quot;6508.0 1.0\nEdge\n1526 00\n\nvertex1526\n011053.0 -06608.0 1.0\nEdge\n1&quot;
@@ -2423,7 +1968,7 @@ CONST E5_34 =
  &amp; &quot;tex1564\n008761.0 -06821.0 1.0\nEdge\n1565 00\n\nvertex1565\n008673.0 -&quot;
  &amp; &quot;07036.0 &quot;;
 
-CONST E5_35 =
+CONST E2_35 =
    &quot;1.0\nEdge\n1566 00\n\nvertex1566\n008809.0 -07171.0 1.0\nEdge\n1567 00\n&quot;
  &amp; &quot;\nvertex1567\n008975.0 -07234.0 1.0\nEdge\n1568 00\n\nvertex1568\n00907&quot;
  &amp; &quot;9.0 -07371.0 1.0\nEdge\n1569 00\n\nvertex1569\n009184.0 -07508.0 1.0\nE&quot;
@@ -2457,7 +2002,7 @@ CONST E5_35 =
  &amp; &quot;0\nEdge\n1607 00\n\nvertex1607\n007399.0 -07585.0 1.0\nEdge\n1608 00\n\n&quot;
  &amp; &quot;vertex16&quot;;
 
-CONST E5_36 =
+CONST E2_36 =
    &quot;08\n007325.0 -07377.0 1.0\nEdge\n1609 00\n\nvertex1609\n007285.0 -07204&quot;
  &amp; &quot;.0 1.0\nEdge\n1610 00\n\nvertex1610\n007248.0 -07100.0 1.0\nEdge\n1611 &quot;
  &amp; &quot;00\n\nfake1611\n007248.0 -07100.0 1.0\n\n/Florida38\n006401.0 -11173.0 &quot;
@@ -2491,7 +2036,7 @@ CONST E5_36 =
  &amp; &quot;.0 1.0\nEdge\n1650 00\n\nvertex1650\n012006.0 -13482.0 1.0\nEdge\n1651 &quot;
  &amp; &quot;00\n\nve&quot;;
 
-CONST E5_37 =
+CONST E2_37 =
    &quot;rtex1651\n011973.0 -13669.0 1.0\nEdge\n1652 00\n\nvertex1652\n012007.0 &quot;
  &amp; &quot;-13893.0 1.0\nEdge\n1653 00\n\nvertex1653\n011975.0 -14081.0 1.0\nEdge\n&quot;
  &amp; &quot;1654 00\n\nvertex1654\n011910.0 -14270.0 1.0\nEdge\n1655 00\n\nvertex16&quot;
@@ -2525,7 +2070,7 @@ CONST E5_37 =
  &amp; &quot;x1692\n009948.0 -12117.0 1.0\nEdge\n1693 00\n\nvertex1693\n009912.0 -11&quot;
  &amp; &quot;935.0&quot;;
 
-CONST E5_38 =
+CONST E2_38 =
    &quot; 1.0\nEdge\n1694 00\n\nvertex1694\n009875.0 -11753.0 1.0\nEdge\n1695 00&quot;
  &amp; &quot;\n\nvertex1695\n009739.0 -11502.0 1.0\nEdge\n1696 00\n\nvertex1696\n009&quot;
  &amp; &quot;576.0 -11507.0 1.0\nEdge\n1697 00\n\nvertex1697\n009442.0 -11329.0 1.0\n&quot;
@@ -2559,7 +2104,7 @@ CONST E5_38 =
  &amp; &quot;35 00\n\nvertex1735\n012274.0 -00992.0 1.0\nEdge\n1736 00\n\nvertex1736&quot;
  &amp; &quot;\n012387&quot;;
 
-CONST E5_39 =
+CONST E2_39 =
    &quot;.0 -01123.0 1.0\nEdge\n1737 00\n\nvertex1737\n012501.0 -01288.0 1.0\nEd&quot;
  &amp; &quot;ge\n1738 00\n\nvertex1738\n012677.0 -01380.0 1.0\nEdge\n1739 00\n\nvert&quot;
  &amp; &quot;ex1739\n012553.0 -01493.0 1.0\nEdge\n1740 00\n\nvertex1740\n012464.0 -0&quot;
@@ -2593,7 +2138,7 @@ CONST E5_39 =
  &amp; &quot;Edge\n1778 00\n\nvertex1778\n011669.0 -03020.0 1.0\nEdge\n1779 00\n\nve&quot;
  &amp; &quot;rtex1779&quot;;
 
-CONST E5_40 =
+CONST E2_40 =
    &quot;\n011692.0 -02879.0 1.0\nEdge\n1780 00\n\nvertex1780\n011585.0 -02781.0&quot;
  &amp; &quot; 1.0\nEdge\n1781 00\n\nvertex1781\n011412.0 -02687.0 1.0\nEdge\n1782 00&quot;
  &amp; &quot;\n\nvertex1782\n011269.0 -02558.0 1.0\nEdge\n1783 00\n\nvertex1783\n011&quot;
@@ -2627,7 +2172,7 @@ CONST E5_40 =
  &amp; &quot;00\n\nvertex1821\n010993.0 001327.0 1.0\nEdge\n1822 00\n\nvertex1822\n0&quot;
  &amp; &quot;10751.&quot;;
 
-CONST E5_41 =
+CONST E2_41 =
    &quot;0 001446.0 1.0\nEdge\n1823 00\n\nvertex1823\n010910.0 001492.0 1.0\nEdg&quot;
  &amp; &quot;e\n1824 00\n\nvertex1824\n010994.0 001636.0 1.0\nEdge\n1825 00\n\nverte&quot;
  &amp; &quot;x1825\n011074.0 001814.0 1.0\nEdge\n1826 00\n\nvertex1826\n011157.0 001&quot;
@@ -2661,7 +2206,7 @@ CONST E5_41 =
  &amp; &quot;e\n1864 00\n\nvertex1864\n012965.0 -00835.0 1.0\nEdge\n1865 00\n\nverte&quot;
  &amp; &quot;x1865\n0&quot;;
 
-CONST E5_42 =
+CONST E2_42 =
    &quot;13136.0 -00857.0 1.0\nEdge\n1866 00\n\nvertex1866\n013297.0 -00774.0 1.&quot;
  &amp; &quot;0\nEdge\n1867 00\n\nvertex1867\n013458.0 -00692.0 1.0\nEdge\n1868 00\n\n&quot;
  &amp; &quot;vertex1868\n013613.0 -00539.0 1.0\nEdge\n1869 00\n\nvertex1869\n013488.&quot;
@@ -2695,7 +2240,7 @@ CONST E5_42 =
  &amp; &quot; 1.0\nEdge\n1907 00\n\nvertex1907\n012553.0 -01493.0 1.0\nEdge\n1908 00&quot;
  &amp; &quot;\n\nvert&quot;;
 
-CONST E5_43 =
+CONST E2_43 =
    &quot;ex1908\n012677.0 -01380.0 1.0\nEdge\n1909 00\n\nvertex1909\n012501.0 -0&quot;
  &amp; &quot;1288.0 1.0\nEdge\n1910 00\n\nvertex1910\n012387.0 -01123.0 1.0\nEdge\n1&quot;
  &amp; &quot;911 00\n\nvertex1911\n012274.0 -00992.0 1.0\nEdge\n1912 00\n\nvertex191&quot;
@@ -2729,7 +2274,7 @@ CONST E5_43 =
  &amp; &quot;0\nEdge\n1950 00\n\nvertex1950\n013028.0 001840.0 1.0\nEdge\n1951 00\n\n&quot;
  &amp; &quot;vertex19&quot;;
 
-CONST E5_44 =
+CONST E2_44 =
    &quot;51\n013071.0 002051.0 1.0\nEdge\n1952 00\n\nvertex1952\n013014.0 002253&quot;
  &amp; &quot;.0 1.0\nEdge\n1953 00\n\nvertex1953\n013122.0 002470.0 1.0\nEdge\n1954 &quot;
  &amp; &quot;00\n\nvertex1954\n013136.0 002644.0 1.0\nEdge\n1955 00\n\nvertex1955\n0&quot;
@@ -2763,7 +2308,7 @@ CONST E5_44 =
  &amp; &quot;000524.0 1.0\nEdge\n1993 00\n\nvertex1993\n014104.0 000653.0 1.0\nEdge\n&quot;
  &amp; &quot;1994 &quot;;
 
-CONST E5_45 =
+CONST E2_45 =
    &quot;00\n\nvertex1994\n013932.0 000672.0 1.0\nEdge\n1995 00\n\nvertex1995\n0&quot;
  &amp; &quot;13765.0 000657.0 1.0\nEdge\n1996 00\n\nvertex1996\n013567.0 000605.0 1.&quot;
  &amp; &quot;0\nEdge\n1997 00\n\nvertex1997\n013313.0 000445.0 1.0\nEdge\n1998 00\n\n&quot;
@@ -2797,7 +2342,7 @@ CONST E5_45 =
  &amp; &quot;0 000360.0 1.0\nEdge\n2036 00\n\nvertex2036\n014224.0 000489.0 1.0\nEdg&quot;
  &amp; &quot;e\n2037 0&quot;;
 
-CONST E5_46 =
+CONST E2_46 =
    &quot;0\n\nvertex2037\n014174.0 000311.0 1.0\nEdge\n2038 00\n\nvertex2038\n01&quot;
  &amp; &quot;4087.0 000164.0 1.0\nEdge\n2039 00\n\nvertex2039\n014059.0 000149.0 1.0&quot;
  &amp; &quot;\nEdge\n2040 00\n\nvertex2040\n013832.0 000663.0 1.0\nEdge\n2041 00\n\n&quot;
@@ -2831,7 +2376,7 @@ CONST E5_46 =
  &amp; &quot;307.0 002445.0 1.0\nEdge\n2079 00\n\nvertex2079\n014147.0 002359.0 1.0\n&quot;
  &amp; &quot;Edge\n20&quot;;
 
-CONST E5_47 =
+CONST E2_47 =
    &quot;80 00\n\nvertex2080\n014202.0 002191.0 1.0\nEdge\n2081 00\n\nvertex2081&quot;
  &amp; &quot;\n014130.0 001941.0 1.0\nEdge\n2082 00\n\nvertex2082\n014083.0 001764.0&quot;
  &amp; &quot; 1.0\nEdge\n2083 00\n\nvertex2083\n013982.0 001754.0 1.0\nEdge\n2084 00&quot;
@@ -2847,7 +2392,7 @@ CONST E5_47 =
  &amp; &quot; description.           |#\n#+-----------------------------------------&quot;
  &amp; &quot;----------------------------------+#\n&quot;;
 
-CONST E6 =
+CONST E3 =
    &quot;0400\nv0\n0.00 0.00 1.0\nEdge\n0020 00\nEdge\n0001 01\n\nv1\n10.00 0.00&quot;
  &amp; &quot; 1.0\nEdge\n0021 00\nEdge\n0000 01\nEdge\n0002 02\n\nv2\n20.00 0.00 1.0&quot;
  &amp; &quot;\nEdge\n0022 00\nEdge\n0001 01\nEdge\n0003 02\n\nv3\n30.00 0.00 1.0\nEd&quot;
@@ -2882,7 +2427,7 @@ CONST E6 =
  &amp; &quot;dge\n0033 03\n\nv33\n130.00 10.00 1.0\nEdge\n0013 00\nEdge\n0053 01\nEd&quot;
  &amp; &quot;ge\n0032 02\nEdge\n0034 03\n&quot;;
 
-CONST E6_0 =
+CONST E3_0 =
    &quot;\nv34\n140.00 10.00 1.0\nEdge\n0014 00\nEdge\n0054 01\nEdge\n0033 02\nE&quot;
  &amp; &quot;dge\n0035 03\n\nv35\n150.00 10.00 1.0\nEdge\n0015 00\nEdge\n0055 01\nEd&quot;
  &amp; &quot;ge\n0034 02\nEdge\n0036 03\n\nv36\n160.00 10.00 1.0\nEdge\n0016 00\nEdg&quot;
@@ -2917,7 +2462,7 @@ CONST E6_0 =
  &amp; &quot;062 03\n\nv62\n20.00 30.00 1.0\nEdge\n0042 00\nEdge\n0082 01\nEdge\n006&quot;
  &amp; &quot;1 02\nEdge\n0063 03&quot;;
 
-CONST E6_1 =
+CONST E3_1 =
    &quot;\n\nv63\n30.00 30.00 1.0\nEdge\n0062 00\nEdge\n0084 01\n\nv64\n40.00 30&quot;
  &amp; &quot;.00 1.0\nEdge\n0085 00\nEdge\n0043 01\n\nv65\n50.00 30.00 1.0\nEdge\n00&quot;
  &amp; &quot;86 00\nEdge\n0046 01\nEdge\n0044 02\n\nv66\n60.00 30.00 1.0\nEdge\n0087&quot;
@@ -2952,7 +2497,7 @@ CONST E6_1 =
  &amp; &quot;01\nEdge\n0090 02\nEdge\n0092 03\n\nv92\n120.00 40.00 1.0\nEdge\n0072 0&quot;
  &amp; &quot;0\nEdge\n0112 01\nEdge\n&quot;;
 
-CONST E6_2 =
+CONST E3_2 =
    &quot;0091 02\nEdge\n0093 03\n\nv93\n130.00 40.00 1.0\nEdge\n0073 00\nEdge\n0&quot;
  &amp; &quot;113 01\nEdge\n0092 02\nEdge\n0094 03\n\nv94\n140.00 40.00 1.0\nEdge\n00&quot;
  &amp; &quot;74 00\nEdge\n0114 01\nEdge\n0093 02\nEdge\n0095 03\n\nv95\n150.00 40.00&quot;
@@ -2987,7 +2532,7 @@ CONST E6_2 =
  &amp; &quot;.00 60.00 1.0\nEdge\n0100 00\nEdge\n0140 01\nEdge\n0121 02\n\nv121\n10.&quot;
  &amp; &quot;00 60.00 1.0\nEdge\n01&quot;;
 
-CONST E6_3 =
+CONST E3_3 =
    &quot;01 00\nEdge\n0141 01\nEdge\n0120 02\nEdge\n0122 03\n\nv122\n20.00 60.00&quot;
  &amp; &quot; 1.0\nEdge\n0102 00\nEdge\n0142 01\nEdge\n0121 02\nEdge\n0123 03\n\nv12&quot;
  &amp; &quot;3\n30.00 60.00 1.0\nEdge\n0122 00\nEdge\n0144 01\n\nv124\n40.00 60.00 1&quot;
@@ -3022,7 +2567,7 @@ CONST E6_3 =
  &amp; &quot;\n0148 02\nEdge\n0150 03\n\nv150\n100.00 70.00 1.0\nEdge\n0130 00\nEdge&quot;
  &amp; &quot;\n0170 01\nEdge\n01&quot;;
 
-CONST E6_4 =
+CONST E3_4 =
    &quot;49 02\nEdge\n0151 03\n\nv151\n110.00 70.00 1.0\nEdge\n0131 00\nEdge\n01&quot;
  &amp; &quot;71 01\nEdge\n0150 02\nEdge\n0152 03\n\nv152\n120.00 70.00 1.0\nEdge\n01&quot;
  &amp; &quot;32 00\nEdge\n0172 01\nEdge\n0151 02\nEdge\n0153 03\n\nv153\n130.00 70.0&quot;
@@ -3057,7 +2602,7 @@ CONST E6_4 =
  &amp; &quot;0178 03\n\nv178\n180.00 80.00 1.0\nEdge\n0158 00\nEdge\n0198 01\nEdge\n&quot;
  &amp; &quot;0177 02\nEdge\n0179&quot;;
 
-CONST E6_5 =
+CONST E3_5 =
    &quot; 03\n\nv179\n190.00 80.00 1.0\nEdge\n0159 00\nEdge\n0199 01\nEdge\n0178&quot;
  &amp; &quot; 02\n\nv180\n0.00 90.00 1.0\nEdge\n0160 00\nEdge\n0200 01\nEdge\n0181 0&quot;
  &amp; &quot;2\n\nv181\n10.00 90.00 1.0\nEdge\n0161 00\nEdge\n0201 01\nEdge\n0180 02&quot;
@@ -3092,7 +2637,7 @@ CONST E6_5 =
  &amp; &quot;dge\n0208 00\nEdge\n0186 01\nEdge\n0226 02\n\nv208\n80.00 100.00 1.0\nE&quot;
  &amp; &quot;dge\n0188 00\nEdge\n&quot;;
 
-CONST E6_6 =
+CONST E3_6 =
    &quot;0228 01\nEdge\n0207 02\nEdge\n0209 03\n\nv209\n90.00 100.00 1.0\nEdge\n&quot;
  &amp; &quot;0189 00\nEdge\n0229 01\nEdge\n0208 02\nEdge\n0210 03\n\nv210\n100.00 10&quot;
  &amp; &quot;0.00 1.0\nEdge\n0190 00\nEdge\n0230 01\nEdge\n0209 02\nEdge\n0211 03\n\n&quot;
@@ -3127,7 +2672,7 @@ CONST E6_6 =
  &amp; &quot;15 00\nEdge\n0255 01\nEdge\n0234 02\nEdge\n0236 03\n\nv236\n160.00 110.&quot;
  &amp; &quot;00 1.0\nEdge\n0&quot;;
 
-CONST E6_7 =
+CONST E3_7 =
    &quot;216 00\nEdge\n0256 01\nEdge\n0235 02\nEdge\n0237 03\n\nv237\n170.00 110&quot;
  &amp; &quot;.00 1.0\nEdge\n0217 00\nEdge\n0257 01\nEdge\n0236 02\nEdge\n0238 03\n\n&quot;
  &amp; &quot;v238\n180.00 110.00 1.0\nEdge\n0218 00\nEdge\n0258 01\nEdge\n0237 02\nE&quot;
@@ -3162,7 +2707,7 @@ CONST E6_7 =
  &amp; &quot;01\n\nv264\n40.00 130.00 1.0\nEdge\n0285 00\nEdge\n0243 01\n\nv265\n50.&quot;
  &amp; &quot;00 130.00 1.0\nEd&quot;;
 
-CONST E6_8 =
+CONST E3_8 =
    &quot;ge\n0286 00\nEdge\n0246 01\nEdge\n0244 02\n\nv266\n60.00 130.00 1.0\nEd&quot;
  &amp; &quot;ge\n0287 00\nEdge\n0245 01\nEdge\n0285 02\nEdge\n0247 03\n\nv267\n70.00&quot;
  &amp; &quot; 130.00 1.0\nEdge\n0268 00\nEdge\n0246 01\nEdge\n0286 02\n\nv268\n80.00&quot;
@@ -3197,7 +2742,7 @@ CONST E6_8 =
  &amp; &quot;2 01\nEdge\n0291 02\nEdge\n0293 03\n\nv293\n130.00 140.00 1.0\nEdge\n02&quot;
  &amp; &quot;73 00\nEdge\n0&quot;;
 
-CONST E6_9 =
+CONST E3_9 =
    &quot;313 01\nEdge\n0292 02\nEdge\n0294 03\n\nv294\n140.00 140.00 1.0\nEdge\n&quot;
  &amp; &quot;0274 00\nEdge\n0314 01\nEdge\n0293 02\nEdge\n0295 03\n\nv295\n150.00 14&quot;
  &amp; &quot;0.00 1.0\nEdge\n0275 00\nEdge\n0315 01\nEdge\n0294 02\nEdge\n0296 03\n\n&quot;
@@ -3232,7 +2777,7 @@ CONST E6_9 =
  &amp; &quot; 01\nEdge\n0321 02\n\nv321\n10.00 160.00 1.0\nEdge\n0301 00\nEdge\n0341&quot;
  &amp; &quot; 01\nEdge\n0320&quot;;
 
-CONST E6_10 =
+CONST E3_10 =
    &quot; 02\nEdge\n0322 03\n\nv322\n20.00 160.00 1.0\nEdge\n0302 00\nEdge\n0342&quot;
  &amp; &quot; 01\nEdge\n0321 02\nEdge\n0323 03\n\nv323\n30.00 160.00 1.0\nEdge\n0322&quot;
  &amp; &quot; 00\nEdge\n0344 01\n\nv324\n40.00 160.00 1.0\nEdge\n0345 00\nEdge\n0303&quot;
@@ -3267,7 +2812,7 @@ CONST E6_10 =
  &amp; &quot;\n0348 02\nEdge\n0350 03\n\nv350\n100.00 170.00 1.0\nEdge\n0330 00\nEdg&quot;
  &amp; &quot;e\n0370 01\nEdge\n0&quot;;
 
-CONST E6_11 =
+CONST E3_11 =
    &quot;349 02\nEdge\n0351 03\n\nv351\n110.00 170.00 1.0\nEdge\n0331 00\nEdge\n&quot;
  &amp; &quot;0371 01\nEdge\n0350 02\nEdge\n0352 03\n\nv352\n120.00 170.00 1.0\nEdge\n&quot;
  &amp; &quot;0332 00\nEdge\n0372 01\nEdge\n0351 02\nEdge\n0353 03\n\nv353\n130.00 17&quot;
@@ -3302,7 +2847,7 @@ CONST E6_11 =
  &amp; &quot;7 01\nEdge\n0376 02\nEdge\n0378 03\n\nv378\n180.00 180.00 1.0\nEdge\n03&quot;
  &amp; &quot;58 00\nEdge\n0&quot;;
 
-CONST E6_12 =
+CONST E3_12 =
    &quot;398 01\nEdge\n0377 02\nEdge\n0379 03\n\nv379\n190.00 180.00 1.0\nEdge\n&quot;
  &amp; &quot;0359 00\nEdge\n0399 01\nEdge\n0378 02\n\nv380\n0.00 190.00 1.0\nEdge\n0&quot;
  &amp; &quot;360 00\nEdge\n0381 01\n\nv381\n10.00 190.00 1.0\nEdge\n0361 00\nEdge\n0&quot;
@@ -3330,7 +2875,7 @@ CONST E6_12 =
  &amp; &quot;      |#\n#+-----------------------------------------------------------&quot;
  &amp; &quot;----------------+#\n&quot;;
 
-CONST E7 =
+CONST E4 =
    &quot;P4\r\n190 65\r\n\000\000\377\377\361\377\377\343\377\377\307\377\377\217&quot;
  &amp; &quot;\377\377\037\377\376?\377\374}\004\000\000\377\377\361\377\377\343\377\377&quot;
  &amp; &quot;\307\377\377\217\377\377\037\377\376?\377\374\021\214\000\000\377\377\361&quot;
@@ -3412,7 +2957,7 @@ CONST E7 =
  &amp; &quot;\000\000\000\000\000\000\000\000\000\000\000\000\000\000p\000\000\000\000&quot;
  &amp; &quot;\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000&quot;;
 
-CONST E8 =
+CONST E5 =
    &quot;100\nBob\n21.5 33.5 8.0\nEdge\n1 0\nEdge\n2 1\nEdge\n3 2\nEdge\n4 3\n\n&quot;
  &amp; &quot;Wm\n16.0 29.0 7.0\nEdge\n5 0\nEdge\n6 1\nEdge\n8 2\nEdge\n7 3\n\n2\n21.&quot;
  &amp; &quot;5 29.0 7.0\nEdge\n9 0\n\n3\n28.5 29.0 7.0\nEdge\n10 1\nEdge\n11 2\n\n4\n&quot;
@@ -3448,7 +2993,7 @@ CONST E8 =
  &amp; &quot;63\n18.0 10.0 3.0\n\n64\n19.5 10.0 3.0\nEdge\n82 0\nEdge\n83 1\nEdge\n8&quot;
  &amp; &quot;4 2\nEdge\n85 &quot;;
 
-CONST E8_0 =
+CONST E5_0 =
    &quot;3\n\n65\n21.0 10.0 3.0\n\n66\n22.5 10.0 3.0\n\n67\n24.3 10.0 3.0\n\n68\n&quot;
  &amp; &quot;25.8 10.0 3.0\n\n69\n27.3 10.0 3.0\nEdge\n86 0\n\n70\n29.5 10.0 3.0\nEd&quot;
  &amp; &quot;ge\n87 1\nEdge\n88 2\nEdge\n89 3\n\n71\n31.0 10.0 3.0\n\n72\n32.5 10.0 &quot;
@@ -3468,7 +3013,7 @@ CONST E8_0 =
  &amp; &quot;file COPYRIGHT for a full description.           |#\n#+----------------&quot;
  &amp; &quot;-----------------------------------------------------------+#\n\n\n&quot;;
 
-CONST E9 =
+CONST E6 =
    &quot;0134\nSydney\n34.80 22.10 1.0 0000\nEdge\n0002 00 (* Canada,Halifax *)\n&quot;
  &amp; &quot;\nCharlottetown\n33.50 21.60 1.0 0001\nEdge\n0003 00 (* Canada,Saint Jo&quot;
  &amp; &quot;hn *)\n\nHalifax\n33.70 20.30 1.0 0002\nEdge\n0003 00 (* Canada,Saint J&quot;
@@ -3501,7 +3046,7 @@ CONST E9 =
  &amp; &quot;mington\n28.70 09.70 1.0 0019\nEdge\n0020 00 (* SC,Myrtle Beach *)\nEdg&quot;
  &amp; &quot;e\n0024 01 (* NC,Ral&quot;;
 
-CONST E9_0 =
+CONST E6_0 =
    &quot;eigh *)\nEdge\n0034 02 (* NC,Charlotte *)\n\nMyrtle Beach\n28.35 09.30 &quot;
  &amp; &quot;1.0 0020\nEdge\n0034 00 Charlotte\nEdge\n0025 01 SC,Charleston\n\nDayto&quot;
  &amp; &quot;na Beach\n28.10 04.90 1.0 0021\nEdge\n0022 00 Miami\nEdge\n0027 01 Jack&quot;
@@ -3534,7 +3079,7 @@ CONST E9_0 =
  &amp; &quot;dge\n0041 04 Cincinati\nEdge\n0040 05 Columbus\n\nColumbus\n24.60 13.60&quot;
  &amp; &quot; 2.0 0040\nEdge\n0045 00 Indianapolis\nEdge\n004&quot;;
 
-CONST E9_1 =
+CONST E6_1 =
    &quot;1 01 Cincinati\n\nCincinnati\n24.10 12.70 7.0 0041\nEdge\n0045 00 India&quot;
  &amp; &quot;napolis\nEdge\n0042 01 Knoxville\nEdge\n0059 02 St. Louis\nEdge\n0046 0&quot;
  &amp; &quot;3 Louisville\n\nKnoxville\n24.50 10.50 1.0 0042\nEdge\n0047 00 Nashvill&quot;
@@ -3567,7 +3112,7 @@ CONST E9_1 =
  &amp; &quot;02 Kansas City\nEdge\n0061 03 Springfield\nEdge\n0062 04 Little Rock\nE&quot;
  &amp; &quot;dge\n0076 05 Oklahoma City\nEdge\n0095 06&quot;;
 
-CONST E9_2 =
+CONST E6_2 =
    &quot; Denver\n\nDuluth\n19.10 17.80 1.0 0060\nEdge\n0066 00 Kenora\nEdge\n00&quot;
  &amp; &quot;72 01 Grand Forks\nEdge\n0073 02 Fargo\nEdge\n0063 03 Minneapolis\n\nSp&quot;
  &amp; &quot;ringfield\n19.30 10.90 1.0 0061\nEdge\n0065 00 Kansas City\nEdge\n0076 &quot;
@@ -3600,7 +3145,7 @@ CONST E9_2 =
  &amp; &quot;\n\nLaredo\n15.20 02.90 1.0 0079\nEdge\n0086 00 Eagle Pass\nEdge\n0087 &quot;
  &amp; &quot;01 Monterry\n\nMinot\n14.65 19.10 1.0 0080\nEdge\n0&quot;;
 
-CONST E9_3 =
+CONST E6_3 =
    &quot;088 00 Regina\nEdge\n0096 01 Malta\nEdge\n0081 02 Bismarck\n\nBismarck\n&quot;
  &amp; &quot;14.65 17.75 1.0 0081\nEdge\n0096 00 Malta\nEdge\n0097 01 Billings\nEdge&quot;
  &amp; &quot;\n0089 02 Rapid City\nEdge\n0082 03 Pierre\n\nPierre\n14.70 15.90 1.0 0&quot;
@@ -3633,7 +3178,7 @@ CONST E9_3 =
  &amp; &quot;oenix\nEdge\n0115 01 Tucson\n\nHelena\n09.05 18.25 1.0 0103\nEdge\n0107&quot;
  &amp; &quot; 00 Calgary\nEdge\n0110 01 Missoula\nEdge\n0108&quot;;
 
-CONST E9_4 =
+CONST E6_4 =
    &quot; 02 Salt Lake City\nEdge\n0104 03 Old Faithful\n\nOld Faithful\n09.50 1&quot;
  &amp; &quot;6.55 1.0 0104\nEdge\n0108 00 Salt Lake City\n\nCortez\n09.70 11.20 1.0 &quot;
  &amp; &quot;0105\nEdge\n0108 00 Salt lake City\nEdge\n0113 01 Flagstaff\n\nEdmonton&quot;
@@ -3666,7 +3211,7 @@ CONST E9_4 =
  &amp; &quot;Portland\n03.70 18.90 4.0 0127\nEdge\n0132 00 Crescent City\nEdge\n0128&quot;
  &amp; &quot; 01 Eugene\nEdge\n0133 02 San Francisco\n\nEugene\n&quot;;
 
-CONST E9_5 =
+CONST E6_5 =
    &quot;03.10 17.40 1.0 0128\nEdge\n0133 00 San Fransisco\n\nYosemite Village\n&quot;
  &amp; &quot;03.30 12.90 1.0 0129\nEdge\n0133 00 San Fransisco\nEdge\n0130 01 Los An&quot;
  &amp; &quot;geles\n\nLos Angeles\n03.50 09.95 9.0 0130\nEdge\n0133 00 San Fransisco&quot;
@@ -3679,6 +3224,461 @@ CONST E9_5 =
  &amp; &quot; See the file COPYRIGHT for a full description.           |#\n#+-------&quot;
  &amp; &quot;--------------------------------------------------------------------+#\n&quot;
 ;
+
+CONST E7 =
+   &quot;279\n4 Septembre \n380.00 418.00 2.00\nEdge\n166 0\nEdge\n28 1\n\n \n38&quot;
+ &amp; &quot;1.00 507.00 2.00\nEdge\n179 0\nEdge\n118 1\n\nAlesia \n324.00 192.00 2.&quot;
+ &amp; &quot;00\nEdge\n159 0\nEdge\n194 1\n\nAlexandre Dumas \n568.00 353.00 2.00\nE&quot;
+ &amp; &quot;dge\n176 0\nEdge\n11 1\n\nAlfort-Ecole Veterinaire \n633.00 134.00 2.00&quot;
+ &amp; &quot;\nEdge\n41 0\nEdge\n140 1\n\nAlma-Marceau \n252.00 390.00 2.00\nEdge\n1&quot;
+ &amp; &quot;04 0\nEdge\n88 1\n\nAnatole France \n200.00 537.00 2.00\nEdge\n186 0\nE&quot;
+ &amp; &quot;dge\n128 1\n\nAnvers \n399.00 493.00 2.00\nEdge\n179 0\nEdge\n13 1\n\nA&quot;
+ &amp; &quot;rgentine \n198.00 434.00 2.00\nEdge\n213 0\nEdge\n42 1\n\nArts Et Metie&quot;
+ &amp; &quot;rs \n442.00 390.00 4.00\nEdge\n222 0\nEdge\n263 1\nEdge\n219 2\nEdge\n2&quot;
+ &amp; &quot;24 3\n\nAubervilliers-Pantin 4 Chemins \n554.00 574.00 2.00\nEdge\n87 0&quot;
+ &amp; &quot;\nEdge\n203 1\n\nAvron \n584.00 335.00 2.00\nEdge\n3 0\nEdge\n160 1\n\n&quot;
+ &amp; &quot;Balard \n172.00 221.00 10.00\nEdge\n129 0\n\nBarbes-Rochechouart \n430.&quot;
+ &amp; &quot;00 492.00 4.00\nEdge\n7 0\nEdge\n114 1\nEdge\n48 2\nEdge\n95 3\n\nBasti&quot;
+ &amp; &quot;lle \n483.00 331.00 6.00\nEdge\n254 0\nEdge\n94 1\nEdge\n29 2\nEdge\n21&quot;
+ &amp; &quot;8 3\nEdge\n52 4\nEdge\n121 5\n\nBel-Air \n581.00 259.00 2.00\nEdge\n70 &quot;
+ &amp; &quot;0\nEdge\n177 1\n\nBelleville \n523.00 431.00 4.00\nEdge\n55 0\nEdge\n63&quot;
+ &amp; &quot; 1\nEdge\n99 2\nEdge\n216 3\n\nBerault \n656.00 287.00 2.00\nEdge\n250 &quot;
+ &amp; &quot;0\nEdge\n46 1\n\nBercy \n528.00 243.00 2.00\nEdge\n217 0\nEdge\n72 1\n\n&quot;
+ &amp; &quot;Billancourt \n71.00 206.00 2.00\nEdge\n188 0\nEdge\n146 1\n\nBir-Hakeim&quot;
+ &amp; &quot; \n202.00 323.00 2.00\nEdge\n170 0\nEdge\n73 1\n\nBlanche \n363.00 500.&quot;
+ &amp; &quot;00 2.00\nEdge\n180 0\nEdge\n179 1\n\nBoissiere \n204.00 390.00 2.00\nEd&quot;
+ &amp; &quot;ge\n113 0\nEdge\n267 1\n\nBolivar \n512.00 468.00 2.00\nEdge\n108 0\nEd&quot;
+ &amp; &quot;ge\n31 1\n\nBonne-Nouvelle \n427.00 421.00 4.00\nEdge\n233 0\nEdge\n260&quot;
+ &amp; &quot; 1\nEdge\n233 2\nEdge\n260 3\n\nBotzaris \n546.00 465.00 3.00\nEdge\n31&quot;
+ &amp; &quot; 0\nEdge\n182 1\nEdge\n69 2\n\nBoucicaut \n198.00 243.00 2.00\nEdge\n12&quot;
+ &amp; &quot;9 0\nEdge\n85 1\n\nBoulets-Montreuil \n562.00 317.00 2.00\nEdge\n44 0\n&quot;
+ &amp; &quot;Edge\n160 1\n\nBourse \n394.00 411.00 2.00\nEdge\n0 0\nEdge\n235 1\n\nB&quot;
+ &amp; &quot;reguet-Sabin \n498.00 352.00 2.00\nEdge\n226 0\nEdge\n14 1\n\n \n312.00&quot;
+ &amp; &quot; 533.00 2.00\nEdge\n115 0\nEdge\n200 1\n\nButtes Chaumont \n528.00 464.&quot;
+ &amp; &quot;00 2.00\nEdge\n23 0\nEdge\n25 1\n\nBuzenval \n596.00 317.00 2.00\nEdge\n&quot;
+ &amp; &quot;160 0\nEdge\n144 1\n\nCadet \n404.00 453.00 2.00\nEdge\n185 0\nEdge\n12&quot;
+ &amp; &quot;0 1\n\nCambronne \n252.00 279.00 2.00\nEdge\n116 0\nEdge\n237 1\n\n&quot;;
+
+CONST E7_0 =
+   &quot;Campo-Formio \n450.00 224.00 2.00\nEdge\n251 0\nEdge\n181 1\n\nCardinal&quot;
+ &amp; &quot; Lemoine \n421.00 281.00 2.00\nEdge\n112 0\nEdge\n148 1\n\n \n372.00 59&quot;
+ &amp; &quot;3.00 2.00\nEdge\n243 0\nEdge\n137 1\n\nCensier-Daubenton \n412.00 250.0&quot;
+ &amp; &quot;0 2.00\nEdge\n183 0\nEdge\n122 1\n\n \n323.00 368.00 2.00\nEdge\n239 0\n&quot;
+ &amp; &quot;Edge\n57 1\n\nChamps Elysees Clemenceau \n289.00 401.00 4.00\nEdge\n88 &quot;
+ &amp; &quot;0\nEdge\n57 1\nEdge\n155 2\nEdge\n105 3\n\nCharenton-Ecoles \n638.00 17&quot;
+ &amp; &quot;0.00 2.00\nEdge\n125 0\nEdge\n4 1\n\nCharles De Gaulle Etoile \n216.00 &quot;
+ &amp; &quot;427.00 5.00\nEdge\n8 0\nEdge\n97 1\nEdge\n274 2\nEdge\n264 3\nEdge\n113&quot;
+ &amp; &quot; 4\n\n \n206.00 279.00 2.00\nEdge\n79 0\nEdge\n109 1\n\nCharonne \n546.&quot;
+ &amp; &quot;00 335.00 2.00\nEdge\n277 0\nEdge\n27 1\n\nChateau D\'eau \n445.00 442.&quot;
+ &amp; &quot;00 2.00\nEdge\n93 0\nEdge\n260 1\n\nChateau De Vincennes \n675.00 279.0&quot;
+ &amp; &quot;0 10.00\nEdge\n17 0\n\nChateau Landon \n475.00 464.00 2.00\nEdge\n127 0&quot;
+ &amp; &quot;\nEdge\n93 1\n\nChateau-Rouge \n422.00 512.00 2.00\nEdge\n145 0\nEdge\n&quot;
+ &amp; &quot;13 1\n\nChatelet   \n415.00 356.00 7.00\nEdge\n130 0\nEdge\n103 1\nEdge&quot;
+ &amp; &quot;\n123 2\nEdge\n54 3\nEdge\n190 4\nEdge\n189 5\nEdge\n103 6\n\n \n252.00&quot;
+ &amp; &quot; 152.00 10.00\nEdge\n142 0\n\nChaussee-D\'antin \n374.00 443.00 4.00\nE&quot;
+ &amp; &quot;dge\n120 0\nEdge\n166 1\nEdge\n101 2\nEdge\n227 3\n\nChemin Vert \n481.&quot;
+ &amp; &quot;00 351.00 2.00\nEdge\n257 0\nEdge\n14 1\n\nChevaleret \n484.00 221.00 2&quot;
+ &amp; &quot;.00\nEdge\n161 0\nEdge\n217 1\n\nCite \n407.00 335.00 2.00\nEdge\n49 0\n&quot;
+ &amp; &quot;Edge\n253 1\n\nColonel Fabien \n500.00 470.00 2.00\nEdge\n108 0\nEdge\n&quot;
+ &amp; &quot;16 1\n\nCommerce \n224.00 274.00 2.00\nEdge\n85 0\nEdge\n116 1\n\nConco&quot;
+ &amp; &quot;rde \n326.00 390.00 6.00\nEdge\n40 0\nEdge\n269 1\nEdge\n105 2\nEdge\n1&quot;
+ &amp; &quot;32 3\nEdge\n39 4\nEdge\n132 5\n\n \n216.00 223.00 2.00\nEdge\n209 0\nEd&quot;
+ &amp; &quot;ge\n272 1\n\nCorentin Cariou \n525.00 543.00 2.00\nEdge\n203 0\nEdge\n6&quot;
+ &amp; &quot;7 1\n\n \n188.00 188.00 2.00\nEdge\n133 0\nEdge\n209 1\n\nCorvisart \n4&quot;
+ &amp; &quot;17.00 197.00 2.00\nEdge\n98 0\nEdge\n181 1\n\nCourcelles \n252.00 464.0&quot;
+ &amp; &quot;0 2.00\nEdge\n264 0\nEdge\n156 1\n\nCouronnes \n530.00 422.00 2.00\nEdg&quot;
+ &amp; &quot;e\n16 0\nEdge\n149 1\n\nCreteil-L\'echat Hopital H. Mondor \n658.00 98.&quot;
+ &amp; &quot;00 2.00\nEdge\n139 0\nEdge\n66 1\n\nCreteil-PREFECTURE \n695.00 98.00 1&quot;
+ &amp; &quot;0.00\nEdge\n66 0\n\nCreteil-Universite \n676.00 98.00 2.00\nEdge\n64 0\n&quot;
+ &amp; &quot;Edge\n65 1\n\nCrimee \n515.00 532.00 2.00\nEdge\n59 0\nEdge\n228 1\n\nC&quot;
+ &amp; &quot;roix De Chavaux \n658.00 369.00 2.00\nEdge\n229 0\nEdge\n136 &quot;;
+
+CONST E7_1 =
+   &quot;1\n\nDaube                \n572.00 482.00 2.00\nEdge\n214 0\nEdge\n25 1&quot;
+ &amp; &quot;\n\nDaumesnil \n565.00 243.00 4.00\nEdge\n72 0\nEdge\n15 1\nEdge\n157 2&quot;
+ &amp; &quot;\nEdge\n150 3\n\nDenfert-Rochereau \n345.00 224.00 4.00\nEdge\n221 0\nE&quot;
+ &amp; &quot;dge\n159 1\nEdge\n221 2\nEdge\n248 3\n\nDugommier \n546.00 243.00 2.00\n&quot;
+ &amp; &quot;Edge\n18 0\nEdge\n70 1\n\nDupleix \n220.00 309.00 2.00\nEdge\n20 0\nEdg&quot;
+ &amp; &quot;e\n116 1\n\nDuroc \n289.00 298.00 4.00\nEdge\n270 0\nEdge\n234 1\nEdge\n&quot;
+ &amp; &quot;245 2\nEdge\n158 3\n\nEcole-Militaire \n253.00 317.00 2.00\nEdge\n116 0&quot;
+ &amp; &quot;\nEdge\n105 1\n\nEdgar Quinet \n326.00 262.00 2.00\nEdge\n158 0\nEdge\n&quot;
+ &amp; &quot;221 1\n\n \n157.00 295.00 2.00\nEdge\n109 0\nEdge\n152 1\n\nEglise De P&quot;
+ &amp; &quot;antin \n635.00 537.00 10.00\nEdge\n102 0\n\nEmile Zola \n218.00 279.00 &quot;
+ &amp; &quot;2.00\nEdge\n116 0\nEdge\n43 1\n\nEtienne Marcel \n415.00 388.00 2.00\nE&quot;
+ &amp; &quot;dge\n222 0\nEdge\n123 1\n\nEurope \n322.00 466.00 2.00\nEdge\n275 0\nEd&quot;
+ &amp; &quot;ge\n249 1\n\nExelmans \n122.00 257.00 2.00\nEdge\n206 0\nEdge\n153 1\n\n&quot;
+ &amp; &quot;Faidherbe-Chaligny \n528.00 317.00 2.00\nEdge\n121 0\nEdge\n225 1\n\n \n&quot;
+ &amp; &quot;287.00 275.00 2.00\nEdge\n171 0\nEdge\n158 1\n\nFelix Faure \n219.00 26&quot;
+ &amp; &quot;0.00 2.00\nEdge\n26 0\nEdge\n56 1\n\nFilles Du Calvaire \n477.00 389.00&quot;
+ &amp; &quot; 2.00\nEdge\n224 0\nEdge\n257 1\n\nFort D\'aubervilliers \n573.00 592.0&quot;
+ &amp; &quot;0 10.00\nEdge\n10 0\n\nFranklin D. Roosevelt \n270.00 408.00 4.00\nEdge&quot;
+ &amp; &quot;\n97 0\nEdge\n40 1\nEdge\n5 2\nEdge\n255 3\n\n \n307.00 243.00 2.00\nEd&quot;
+ &amp; &quot;ge\n158 0\nEdge\n175 1\n\nGallieni \n656.00 408.00 10.00\nEdge\n196 0\n&quot;
+ &amp; &quot;\nGambetta \n589.00 398.00 3.00\nEdge\n173 0\nEdge\n196 1\nEdge\n172 2\n&quot;
+ &amp; &quot;\nGare D\'orleans Austerlitz \n462.00 262.00 3.00\nEdge\n218 0\nEdge\n2&quot;
+ &amp; &quot;51 1\nEdge\n112 2\n\nGare De L\'est \n454.00 450.00 6.00\nEdge\n95 0\nE&quot;
+ &amp; &quot;dge\n45 1\nEdge\n95 2\nEdge\n106 3\nEdge\n47 4\nEdge\n185 5\n\nGare De &quot;
+ &amp; &quot;Lyon \n508.00 279.00 2.00\nEdge\n14 0\nEdge\n225 1\n\nGare Du Nord \n44&quot;
+ &amp; &quot;9.00 479.00 4.00\nEdge\n13 0\nEdge\n93 1\nEdge\n259 2\nEdge\n93 3\n\n \n&quot;
+ &amp; &quot;358.00 566.00 2.00\nEdge\n137 0\nEdge\n207 1\n\nGeorge V \n248.00 416.0&quot;
+ &amp; &quot;0 2.00\nEdge\n42 0\nEdge\n88 1\n\nGlaciere \n385.00 206.00 2.00\nEdge\n&quot;
+ &amp; &quot;248 0\nEdge\n61 1\n\n \n500.00 423.00 2.00\nEdge\n224 0\nEdge\n16 1\n\n&quot;
+ &amp; &quot; \n343.00 541.00 2.00\nEdge\n207 0\nEdge\n115 1\n\nHavre-Chaumartin \n3&quot;
+ &amp; &quot;45.00 445.00 4.00\nEdge\n249 0\nEdge\n166 1\nEdge\n241 2\nEdge\n51 3\n\n&quot;
+ &amp; &quot;Hoche \n602.00 519.00 2.00\nEdge\n78 0\nEdge\n205 1\n\nHotel De V&quot;;
+
+CONST E7_2 =
+   &quot;ille \n436.00 349.00 4.00\nEdge\n49 0\nEdge\n254 1\nEdge\n49 2\nEdge\n2&quot;
+ &amp; &quot;19 3\n\nIena \n233.00 384.00 2.00\nEdge\n268 0\nEdge\n5 1\n\nInvalides &quot;
+ &amp; &quot;\n289.00 371.00 4.00\nEdge\n75 0\nEdge\n57 1\nEdge\n40 2\nEdge\n271 3\n&quot;
+ &amp; &quot;\nJacques Bonsergent \n476.00 438.00 2.00\nEdge\n93 0\nEdge\n224 1\n\nJ&quot;
+ &amp; &quot;asmin \n141.00 317.00 2.00\nEdge\n151 0\nEdge\n220 1\n\nJaures \n502.00&quot;
+ &amp; &quot; 492.00 6.00\nEdge\n259 0\nEdge\n55 1\nEdge\n119 2\nEdge\n259 3\nEdge\n&quot;
+ &amp; &quot;127 4\nEdge\n23 5\n\n \n189.00 279.00 3.00\nEdge\n43 0\nEdge\n77 1\nEdg&quot;
+ &amp; &quot;e\n154 2\n\n \n551.00 445.00 2.00\nEdge\n216 0\nEdge\n182 1\n\n \n399.0&quot;
+ &amp; &quot;0 523.00 2.00\nEdge\n118 0\nEdge\n145 1\n\nJussieu \n444.00 279.00 4.00&quot;
+ &amp; &quot;\nEdge\n261 0\nEdge\n183 1\nEdge\n92 2\nEdge\n36 3\n\nKleber \n209.00 4&quot;
+ &amp; &quot;08.00 2.00\nEdge\n42 0\nEdge\n22 1\n\nLa Chapelle \n454.00 500.00 2.00\n&quot;
+ &amp; &quot;Edge\n13 0\nEdge\n259 1\n\n \n330.00 513.00 3.00\nEdge\n100 0\nEdge\n18&quot;
+ &amp; &quot;0 1\nEdge\n30 2\n\nLa Motte-Piquet Grenelle \n234.00 298.00 6.00\nEdge\n&quot;
+ &amp; &quot;73 0\nEdge\n34 1\nEdge\n56 2\nEdge\n75 3\nEdge\n234 4\nEdge\n79 5\n\nLa&quot;
+ &amp; &quot; Muette \n161.00 353.00 2.00\nEdge\n220 0\nEdge\n231 1\n\n \n390.00 515&quot;
+ &amp; &quot;.00 2.00\nEdge\n1 0\nEdge\n111 1\n\nLaumiere \n528.00 492.00 2.00\nEdge&quot;
+ &amp; &quot;\n167 0\nEdge\n108 1\n\nLec Peletier \n390.00 449.00 2.00\nEdge\n33 0\n&quot;
+ &amp; &quot;Edge\n51 1\n\nLedru-Rollin \n506.00 324.00 2.00\nEdge\n14 0\nEdge\n83 1&quot;
+ &amp; &quot;\n\nLes Gobelins \n424.00 228.00 2.00\nEdge\n38 0\nEdge\n181 1\n\nLes H&quot;
+ &amp; &quot;alles \n406.00 372.00 2.00\nEdge\n80 0\nEdge\n49 1\n\nLes Sablons \n142&quot;
+ &amp; &quot;.00 458.00 2.00\nEdge\n187 0\nEdge\n213 1\n\nLiberte \n610.00 188.00 2.&quot;
+ &amp; &quot;00\nEdge\n198 0\nEdge\n41 1\n\n \n336.00 480.00 2.00\nEdge\n180 0\nEdge&quot;
+ &amp; &quot;\n249 1\n\nLouis Blanc \n482.00 482.00 3.00\nEdge\n259 0\nEdge\n47 1\nE&quot;
+ &amp; &quot;dge\n108 2\n\nLouise Michel \n215.00 519.00 2.00\nEdge\n6 0\nEdge\n197 &quot;
+ &amp; &quot;1\n\nLourmel \n186.00 233.00 2.00\nEdge\n12 0\nEdge\n26 1\n\nLouvre \n3&quot;
+ &amp; &quot;93.00 366.00 2.00\nEdge\n168 0\nEdge\n49 1\n\nMabillon \n369.00 319.00 &quot;
+ &amp; &quot;2.00\nEdge\n165 0\nEdge\n236 1\n\n \n326.00 425.00 4.00\nEdge\n57 0\nEd&quot;
+ &amp; &quot;ge\n166 1\nEdge\n57 2\nEdge\n249 3\n\n \n175.00 170.00 10.00\nEdge\n60 &quot;
+ &amp; &quot;0\n\nMairie D\'ivry \n546.00 132.00 10.00\nEdge\n178 0\n\n \n656.00 466&quot;
+ &amp; &quot;.00 10.00\nEdge\n211 0\n\nMairie De Montreuil \n690.00 390.00 10.00\nEd&quot;
+ &amp; &quot;ge\n68 0\n\n \n365.00 579.00 2.00\nEdge\n37 0\nEdge\n96 1\n\nMaison Bla&quot;
+ &amp; &quot;nche \n454.00 166.00 2.00\nEdge\n265 0\nEdge\n192 1\n\nMaisons-Alfort L&quot;
+ &amp; &quot;es Juilli&quot;;
+
+CONST E7_3 =
+   &quot;ottes \n639.00 98.00 2.00\nEdge\n140 0\nEdge\n64 1\n\nMaisons-Alfort-St&quot;
+ &amp; &quot;ade \n623.00 98.00 2.00\nEdge\n4 0\nEdge\n139 1\n\n \n258.00 185.00 2.0&quot;
+ &amp; &quot;0\nEdge\n208 0\nEdge\n142 1\n\n \n252.00 168.00 2.00\nEdge\n141 0\nEdge&quot;
+ &amp; &quot;\n50 1\n\nMalesherbes \n271.00 482.00 2.00\nEdge\n278 0\nEdge\n275 1\n\n&quot;
+ &amp; &quot;Maraichers \n610.00 330.00 2.00\nEdge\n32 0\nEdge\n204 1\n\nMarcadet-Po&quot;
+ &amp; &quot;issonniers \n417.00 527.00 4.00\nEdge\n238 0\nEdge\n48 1\nEdge\n111 2\n&quot;
+ &amp; &quot;Edge\n147 3\n\nMarcel Sembat \n93.00 220.00 2.00\nEdge\n19 0\nEdge\n206&quot;
+ &amp; &quot; 1\n\n \n454.00 537.00 2.00\nEdge\n145 0\nEdge\n202 1\n\nMaubert-Butual&quot;
+ &amp; &quot;ite \n400.00 298.00 2.00\nEdge\n36 0\nEdge\n165 1\n\nMenilmontant \n538&quot;
+ &amp; &quot;.00 414.00 2.00\nEdge\n63 0\nEdge\n173 1\n\nMichel Bizot \n582.00 232.0&quot;
+ &amp; &quot;0 2.00\nEdge\n70 0\nEdge\n212 1\n\nMichel-Ange-Auteuil \n133.00 295.00 &quot;
+ &amp; &quot;2.00\nEdge\n153 0\nEdge\n107 1\n\n \n133.00 295.00 2.00\nEdge\n77 0\nEd&quot;
+ &amp; &quot;ge\n191 1\n\nMichel-Ange-Molitor \n125.00 270.00 4.00\nEdge\n82 0\nEdge&quot;
+ &amp; &quot;\n151 1\nEdge\n191 2\nEdge\n154 3\n\n \n161.00 276.00 2.00\nEdge\n153 0&quot;
+ &amp; &quot;\nEdge\n109 1\n\nMiromesnil \n295.00 442.00 4.00\nEdge\n255 0\nEdge\n24&quot;
+ &amp; &quot;1 1\nEdge\n249 2\nEdge\n40 3\n\nMonceau \n273.00 464.00 2.00\nEdge\n62 &quot;
+ &amp; &quot;0\nEdge\n275 1\n\nMontgallet \n546.00 264.00 2.00\nEdge\n225 0\nEdge\n7&quot;
+ &amp; &quot;0 1\n\nMontparnasse Bienvenue \n307.00 279.00 8.00\nEdge\n256 0\nEdge\n&quot;
+ &amp; &quot;273 1\nEdge\n171 2\nEdge\n76 3\nEdge\n84 4\nEdge\n163 5\nEdge\n74 6\nEd&quot;
+ &amp; &quot;ge\n89 7\n\nMouton-Duvernet \n334.00 206.00 2.00\nEdge\n71 0\nEdge\n2 1&quot;
+ &amp; &quot;\n\nNation \n572.00 299.00 6.00\nEdge\n225 0\nEdge\n210 1\nEdge\n11 2\n&quot;
+ &amp; &quot;Edge\n177 3\nEdge\n27 4\nEdge\n32 5\n\nNationale \n462.00 206.00 2.00\n&quot;
+ &amp; &quot;Edge\n181 0\nEdge\n53 1\n\n \n374.00 464.00 2.00\nEdge\n266 0\nEdge\n24&quot;
+ &amp; &quot;6 1\n\n \n340.00 297.00 2.00\nEdge\n158 0\nEdge\n223 1\n\nOberkampf \n4&quot;
+ &amp; &quot;96.00 387.00 4.00\nEdge\n224 0\nEdge\n226 1\nEdge\n224 2\nEdge\n240 3\n&quot;
+ &amp; &quot;\nOdeon \n388.00 317.00 4.00\nEdge\n253 0\nEdge\n247 1\nEdge\n148 2\nEd&quot;
+ &amp; &quot;ge\n131 3\n\nOpera \n366.00 425.00 6.00\nEdge\n101 0\nEdge\n0 1\nEdge\n&quot;
+ &amp; &quot;51 2\nEdge\n215 3\nEdge\n132 4\nEdge\n227 5\n\nOurcq \n554.00 500.00 2.&quot;
+ &amp; &quot;00\nEdge\n205 0\nEdge\n119 1\n\nPalais-Royal \n380.00 370.00 4.00\nEdge&quot;
+ &amp; &quot;\n269 0\nEdge\n130 1\nEdge\n215 2\nEdge\n190 3\n\nParmentier \n510.00 4&quot;
+ &amp; &quot;08.00 2.00\nEdge\n224 0\nEdge\n252 1\n\nPassy \n192.00 346.00 2.00\nEdg&quot;
+ &amp; &quot;e\n267 0\nEdge\n20 1\n\nPasteur \n270.00 262.00 4.00\nEdge\n237 0\nEdge&quot;
+ &amp; &quot;\n158 1\n&quot;;
+
+CONST E7_4 =
+   &quot;Edge\n276 2\nEdge\n84 3\n\nPelleport \n593.00 417.00 2.00\nEdge\n91 0\n&quot;
+ &amp; &quot;Edge\n244 1\n\nPere Lachaise \n559.00 390.00 4.00\nEdge\n149 0\nEdge\n1&quot;
+ &amp; &quot;76 1\nEdge\n252 2\nEdge\n91 3\n\nPereire-Mal. Juin \n249.00 494.00 2.00&quot;
+ &amp; &quot;\nEdge\n197 0\nEdge\n278 1\n\n \n295.00 229.00 2.00\nEdge\n89 0\nEdge\n&quot;
+ &amp; &quot;184 1\n\nPhilippe August \n561.00 375.00 2.00\nEdge\n173 0\nEdge\n3 1\n&quot;
+ &amp; &quot;\nPicpus \n584.00 279.00 2.00\nEdge\n15 0\nEdge\n160 1\n\nPierre Curie &quot;
+ &amp; &quot;\n528.00 149.00 2.00\nEdge\n193 0\nEdge\n134 1\n\nPigalle \n381.00 495.&quot;
+ &amp; &quot;00 4.00\nEdge\n21 0\nEdge\n7 1\nEdge\n246 2\nEdge\n1 3\n\nPlace Clichy &quot;
+ &amp; &quot;\n342.00 497.00 4.00\nEdge\n230 0\nEdge\n21 1\nEdge\n115 2\nEdge\n126 3&quot;
+ &amp; &quot;\n\nPlace D\'italie \n436.00 206.00 5.00\nEdge\n35 0\nEdge\n61 1\nEdge\n&quot;
+ &amp; &quot;161 2\nEdge\n122 3\nEdge\n265 4\n\nPlace Des Fetes \n565.00 449.00 4.00&quot;
+ &amp; &quot;\nEdge\n25 0\nEdge\n214 1\nEdge\n110 2\nEdge\n262 3\n\nPlace Monge \n41&quot;
+ &amp; &quot;7.00 265.00 2.00\nEdge\n112 0\nEdge\n38 1\n\n \n273.00 214.00 2.00\nEdg&quot;
+ &amp; &quot;e\n175 0\nEdge\n208 1\n\nPoissoniere \n422.00 463.00 2.00\nEdge\n93 0\n&quot;
+ &amp; &quot;Edge\n33 1\n\nPont De Levallois Becon \n189.00 553.00 10.00\nEdge\n6 0\n&quot;
+ &amp; &quot;\nPont De Neuilly \n119.00 466.00 10.00\nEdge\n124 0\n\nPont De Sevres &quot;
+ &amp; &quot;\n45.00 189.00 10.00\nEdge\n19 0\n\nPont Marie \n436.00 335.00 2.00\nEd&quot;
+ &amp; &quot;ge\n49 0\nEdge\n261 1\n\nPont-Neuf \n384.00 355.00 2.00\nEdge\n168 0\nE&quot;
+ &amp; &quot;dge\n49 1\n\n \n117.00 284.00 2.00\nEdge\n152 0\nEdge\n153 1\n\nPorte D&quot;
+ &amp; &quot;\'italie \n463.00 145.00 2.00\nEdge\n138 0\nEdge\n199 1\n\nPorte D\'ivr&quot;
+ &amp; &quot;y \n510.00 165.00 2.00\nEdge\n199 0\nEdge\n178 1\n\nPorte D\'orleans \n&quot;
+ &amp; &quot;316.00 171.00 10.00\nEdge\n2 0\n\nPorte Dauphine \n161.00 408.00 10.00\n&quot;
+ &amp; &quot;Edge\n274 0\n\nPorte De Bagnolet \n620.00 408.00 2.00\nEdge\n91 0\nEdge&quot;
+ &amp; &quot;\n90 1\n\nPorte De Champerret \n234.00 503.00 2.00\nEdge\n128 0\nEdge\n&quot;
+ &amp; &quot;174 1\n\nPorte De Charenton \n588.00 206.00 2.00\nEdge\n212 0\nEdge\n12&quot;
+ &amp; &quot;5 1\n\nPorte De Choisy \n487.00 155.00 2.00\nEdge\n192 0\nEdge\n193 1\n&quot;
+ &amp; &quot;\n \n295.00 552.00 10.00\nEdge\n30 0\n\nPorte De Clignancourt \n407.00 &quot;
+ &amp; &quot;555.00 10.00\nEdge\n238 0\n\n \n454.00 555.00 10.00\nEdge\n147 0\n\nPor&quot;
+ &amp; &quot;te De La Villete \n535.00 555.00 2.00\nEdge\n10 0\nEdge\n59 1\n\nPorte &quot;
+ &amp; &quot;De Montreuil \n624.00 342.00 2.00\nEdge\n144 0\nEdge\n229 1\n\nPorte De&quot;
+ &amp; &quot; Pantin \n578.00 509.00 2.00\nEdge\n102 0\nEdge\n167 1\n\nPorte De St. &quot;
+ &amp; &quot;Cloud \n115.00 236.00 2.00\nEdge\n146 0\nEdge\n82 1\n\n &quot;;
+
+CONST E7_5 =
+   &quot;\n351.00 553.00 2.00\nEdge\n96 0\nEdge\n100 1\n\n \n260.00 199.00 2.00\n&quot;
+ &amp; &quot;Edge\n184 0\nEdge\n141 1\n\n \n201.00 206.00 2.00\nEdge\n60 0\nEdge\n58&quot;
+ &amp; &quot; 1\n\nPorte De Vincennes \n601.00 298.00 2.00\nEdge\n160 0\nEdge\n250 1&quot;
+ &amp; &quot;\n\nPorte Des Lilas \n602.00 454.00 3.00\nEdge\n244 0\nEdge\n262 1\nEdg&quot;
+ &amp; &quot;e\n135 2\n\nPorte Doree \n599.00 222.00 2.00\nEdge\n150 0\nEdge\n198 1\n&quot;
+ &amp; &quot;\nPorte Maillot \n178.00 443.00 2.00\nEdge\n124 0\nEdge\n8 1\n\nPre-St.&quot;
+ &amp; &quot; Gervais \n584.00 464.00 2.00\nEdge\n182 0\nEdge\n69 1\n\nPyramides \n3&quot;
+ &amp; &quot;68.00 400.00 2.00\nEdge\n166 0\nEdge\n168 1\n\n \n540.00 441.00 2.00\nE&quot;
+ &amp; &quot;dge\n16 0\nEdge\n110 1\n\nQuai De La Gare \n510.00 229.00 2.00\nEdge\n5&quot;
+ &amp; &quot;3 0\nEdge\n18 1\n\nQuai De La Rapee \n473.00 291.00 2.00\nEdge\n14 0\nE&quot;
+ &amp; &quot;dge\n92 1\n\n \n444.00 371.00 2.00\nEdge\n103 0\nEdge\n9 1\n\nRanelagh &quot;
+ &amp; &quot;\n147.00 335.00 2.00\nEdge\n107 0\nEdge\n117 1\n\nRaspail \n344.00 243.&quot;
+ &amp; &quot;00 4.00\nEdge\n273 0\nEdge\n71 1\nEdge\n76 2\nEdge\n71 3\n\nReaumur-Seb&quot;
+ &amp; &quot;astopol \n422.00 396.00 4.00\nEdge\n235 0\nEdge\n9 1\nEdge\n260 2\nEdge&quot;
+ &amp; &quot;\n80 3\n\n \n338.00 309.00 2.00\nEdge\n163 0\nEdge\n236 1\n\nRepublique&quot;
+ &amp; &quot; \n476.00 408.00 10.00\nEdge\n263 0\nEdge\n169 1\nEdge\n106 2\nEdge\n16&quot;
+ &amp; &quot;4 3\nEdge\n260 4\nEdge\n86 5\nEdge\n260 6\nEdge\n164 7\nEdge\n9 8\nEdge&quot;
+ &amp; &quot;\n99 9\n\nReuilly-Diderot \n528.00 298.00 4.00\nEdge\n94 0\nEdge\n160 1&quot;
+ &amp; &quot;\nEdge\n83 2\nEdge\n157 3\n\nRichard Lenoir \n510.00 367.00 2.00\nEdge\n&quot;
+ &amp; &quot;164 0\nEdge\n29 1\n\nRichelieu-Drouot \n404.00 430.00 4.00\nEdge\n166 0&quot;
+ &amp; &quot;\nEdge\n233 1\nEdge\n51 2\nEdge\n233 3\n\nRiquet \n504.00 519.00 2.00\n&quot;
+ &amp; &quot;Edge\n67 0\nEdge\n259 1\n\nRobes-Pierre \n638.00 353.00 2.00\nEdge\n204&quot;
+ &amp; &quot; 0\nEdge\n68 1\n\nRome \n312.00 482.00 2.00\nEdge\n275 0\nEdge\n180 1\n&quot;
+ &amp; &quot;\nRue De La Pompe \n175.00 367.00 2.00\nEdge\n117 0\nEdge\n268 1\n\n \n&quot;
+ &amp; &quot;331.00 335.00 2.00\nEdge\n236 0\nEdge\n239 1\n\nRue Montmartre \n417.00&quot;
+ &amp; &quot; 425.00 4.00\nEdge\n227 0\nEdge\n24 1\nEdge\n227 2\nEdge\n24 3\n\nSegur&quot;
+ &amp; &quot; \n263.00 298.00 2.00\nEdge\n74 0\nEdge\n116 1\n\nSentier \n408.00 404.&quot;
+ &amp; &quot;00 2.00\nEdge\n28 0\nEdge\n222 1\n\nSevres-Babylone \n336.00 317.00 4.0&quot;
+ &amp; &quot;0\nEdge\n131 0\nEdge\n270 1\nEdge\n223 2\nEdge\n232 3\n\nSevres-Lecourb&quot;
+ &amp; &quot;e \n265.00 270.00 2.00\nEdge\n34 0\nEdge\n171 1\n\nSimplon \n413.00 538&quot;
+ &amp; &quot;.00 2.00\nEdge\n201 0\nEdge\n145 1\n\n \n327.00 351.00 2.00\nEdge\n232 &quot;
+ &amp; &quot;0\nEdge\n39 1\n\nSt. Ambroise \n523.00 357.00 2.00\nEdge\n164 0\nEdge\n&quot;
+ &amp; &quot;277&quot;;
+
+CONST E7_6 =
+   &quot; 1\n\nSt. Augustin \n311.00 445.00 2.00\nEdge\n155 0\nEdge\n101 1\n\n \n&quot;
+ &amp; &quot;406.00 592.00 10.00\nEdge\n243 0\n\n \n389.00 593.00 2.00\nEdge\n242 0\n&quot;
+ &amp; &quot;Edge\n37 1\n\nSt. Fargeau \n598.00 435.00 2.00\nEdge\n172 0\nEdge\n211 &quot;
+ &amp; &quot;1\n\n \n289.00 318.00 2.00\nEdge\n271 0\nEdge\n74 1\n\n \n381.00 482.00&quot;
+ &amp; &quot; 2.00\nEdge\n162 0\nEdge\n179 1\n\nSt. Germain De Pres \n367.00 329.00 &quot;
+ &amp; &quot;2.00\nEdge\n165 0\nEdge\n258 1\n\nSt. Jacques \n362.00 217.00 2.00\nEdg&quot;
+ &amp; &quot;e\n71 0\nEdge\n98 1\n\nSt. Lazare \n330.00 462.00 6.00\nEdge\n81 0\nEdg&quot;
+ &amp; &quot;e\n101 1\nEdge\n132 2\nEdge\n266 3\nEdge\n126 4\nEdge\n155 5\n\nSt. Man&quot;
+ &amp; &quot;de Tourelles \n626.00 298.00 2.00\nEdge\n210 0\nEdge\n17 1\n\nSt. Marce&quot;
+ &amp; &quot;l \n454.00 243.00 2.00\nEdge\n92 0\nEdge\n35 1\n\nSt. Maurc \n528.00 39&quot;
+ &amp; &quot;0.00 2.00\nEdge\n169 0\nEdge\n173 1\n\nSt. Michel \n398.00 321.00 2.00\n&quot;
+ &amp; &quot;Edge\n54 0\nEdge\n165 1\n\nSt. Paul \n457.00 339.00 2.00\nEdge\n103 0\n&quot;
+ &amp; &quot;Edge\n14 1\n\nSt. Philippe-Du Roule \n274.00 427.00 2.00\nEdge\n88 0\nE&quot;
+ &amp; &quot;dge\n155 1\n\nSt. Placide \n325.00 297.00 2.00\nEdge\n258 0\nEdge\n158 &quot;
+ &amp; &quot;1\n\nSt. Sebastien Froissart \n479.00 370.00 2.00\nEdge\n86 0\nEdge\n52&quot;
+ &amp; &quot; 1\n\nSt. Sulpice \n352.00 313.00 2.00\nEdge\n247 0\nEdge\n256 1\n\nSta&quot;
+ &amp; &quot;lingrad \n491.00 500.00 6.00\nEdge\n114 0\nEdge\n108 1\nEdge\n108 2\nEd&quot;
+ &amp; &quot;ge\n95 3\nEdge\n228 4\nEdge\n127 5\n\nStrasbourg St. Denis \n436.00 418&quot;
+ &amp; &quot;.00 6.00\nEdge\n45 0\nEdge\n222 1\nEdge\n24 2\nEdge\n224 3\nEdge\n24 4\n&quot;
+ &amp; &quot;Edge\n224 5\n\nSully-Morland \n454.00 317.00 2.00\nEdge\n189 0\nEdge\n1&quot;
+ &amp; &quot;12 1\n\n \n586.00 450.00 2.00\nEdge\n182 0\nEdge\n211 1\n\nTemple \n460&quot;
+ &amp; &quot;.00 404.00 2.00\nEdge\n9 0\nEdge\n224 1\n\nTernes \n234.00 450.00 2.00\n&quot;
+ &amp; &quot;Edge\n42 0\nEdge\n62 1\n\nTolbiac \n445.00 186.00 2.00\nEdge\n181 0\nEd&quot;
+ &amp; &quot;ge\n138 1\n\n \n361.00 464.00 2.00\nEdge\n249 0\nEdge\n162 1\n\nTrocade&quot;
+ &amp; &quot;ro \n198.00 371.00 2.00\nEdge\n22 0\nEdge\n170 1\n\n \n198.00 371.00 2.&quot;
+ &amp; &quot;00\nEdge\n231 0\nEdge\n104 1\n\nTuileries \n346.00 381.00 2.00\nEdge\n5&quot;
+ &amp; &quot;7 0\nEdge\n168 1\n\nVaneau \n315.00 309.00 2.00\nEdge\n236 0\nEdge\n74 &quot;
+ &amp; &quot;1\n\n \n289.00 342.00 2.00\nEdge\n105 0\nEdge\n245 1\n\n \n234.00 243.0&quot;
+ &amp; &quot;0 2.00\nEdge\n58 0\nEdge\n276 1\n\nVavin \n334.00 267.00 2.00\nEdge\n15&quot;
+ &amp; &quot;8 0\nEdge\n221 1\n\nVictor Hugo \n179.00 404.00 2.00\nEdge\n195 0\nEdge&quot;
+ &amp; &quot;\n42 1\n\nVilliers \n295.00 472.00 4.00\nEdge\n156 0\nEdge\n230 1\nEdge&quot;
+ &amp; &quot;\n143 2\nEdge\n81 3\n\n \n252.00 251.00 2.00\nEdge\n272 0\nEdge\n171 1\n&quot;
+ &amp; &quot;\n&quot;;
+
+CONST E7_7 =
+   &quot;Voltaire \n534.00 346.00 2.00\nEdge\n240 0\nEdge\n44 1\n\nWagram \n259.&quot;
+ &amp; &quot;00 492.00 2.00\nEdge\n174 0\nEdge\n143 1\n\n#+-------------------------&quot;
+ &amp; &quot;--------------------------------------------------+#\n#|            Cop&quot;
+ &amp; &quot;yright (C) 1992, Digital Equipment Corporation              |#\n#| \t\t&quot;
+ &amp; &quot;          All rights reserved.                               |#\n#|    &quot;
+ &amp; &quot;              See the file COPYRIGHT for a full description.           &quot;
+ &amp; &quot;|#\n#+-----------------------------------------------------------------&quot;
+ &amp; &quot;----------+#\n&quot;;
+
+CONST E8 =
+   &quot;(Scale (HScale .75) (VScale .75) (ZSplit\n  (Rim\n    (Pen 20)\n    (HB&quot;
+ &amp; &quot;ox\n      (Shape\n        (Width + 0)\n        (VBox\n          (Scale &quot;
+ &amp; &quot;(HScale 2) (VScale 2) \&quot;Fisheye Browser\&quot;)\n          (Pixmap (Color \&quot;&quot;
+ &amp; &quot;Blue\&quot;) \&quot;digital.pbm\&quot;)\n          (Text \&quot;Send comments: mhb@src.dec.&quot;
+ &amp; &quot;com\&quot;)\n          (Chisel)\n          (Glue 12)\n          (Radio\n    &quot;
+ &amp; &quot;        =us\n            %input\n            (HPackSplit\n             &quot;
+ &amp; &quot; (Choice %us \&quot;US\&quot;)\n              (Choice %metro1 \&quot;Metro\&quot;)\n       &quot;
+ &amp; &quot;       (Choice %metro2 \&quot;METRO\&quot;)\n              (Choice %cra \&quot;CRA\&quot;)\n&quot;
+ &amp; &quot;              (Choice %dag \&quot;DAG\&quot;)\n              (Choice %sym \&quot;Sym\&quot;&quot;
+ &amp; &quot;)\n              (PopButton %popOther (For other) \&quot;Other...\&quot;)))))\n  &quot;
+ &amp; &quot;    (Glue 20)\n      (VBox\n        (Frame\n          Chiseled\n       &quot;
+ &amp; &quot;   (Rim\n            (Pen 4)\n            (Rim\n              (Pen 1)\n&quot;
+ &amp; &quot;              (Shape\n                (Height + 0)\n                (VB&quot;
+ &amp; &quot;ox\n                  (Radio\n                    (HBox\n              &quot;
+ &amp; &quot;        (Shape (Width 50) \&quot; Mapping: \&quot;)\n                      (Glue &quot;
+ &amp; &quot;4)\n                      (Choice =TRUE %cartesian \&quot;Cartesian\&quot;)\n    &quot;
+ &amp; &quot;                  (Glue 4)\n                      (Choice %polar \&quot;Pola&quot;
+ &amp; &quot;r\&quot;)\n                      (Glue 8 + Inf)\n                      (VBox&quot;
+ &amp; &quot;\n                        (PopButton (For moreStuff) \&quot;Parms...\&quot;)\n   &quot;
+ &amp; &quot;                     (HBox (Boolean %color =FALSE \&quot;Clr\&quot;) (Boolean %on&quot;
+ &amp; &quot; =TRUE \&quot;Dtl\&quot;)))))\n                  (Glue 6)\n                  (Chi&quot;
+ &amp; &quot;sel)\n                  (Glue 6)\n                  (HBox\n            &quot;
+ &amp; &quot;        (Shape\n                      (Width 100)\n                    &quot;
+ &amp; &quot;  (HBox\n                        (VBox\n                          (Shap&quot;
+ &amp; &quot;e (Width + 0) \&quot;Vertex Size\&quot;)\n                          (Shape (Heigh&quot;
+ &amp; &quot;t 0) (Text %fsize \&quot;????\&quot;)))\n                        Fill))\n        &quot;
+ &amp; &quot;            (VBox\n                      Fill\n                      (H&quot;
+ &amp; &quot;Box\n                        (Shape\n                          (Width 5&quot;
+ &amp; &quot;0)\n                          (Frame\n                            Lower&quot;
+ &amp; &quot;ed\n                            (TypeIn (&quot;;
+
+CONST E8_0 =
+   &quot;BgColor \&quot;VeryLightGray\&quot;) %vsize )))\n                        (Glue 4)&quot;
+ &amp; &quot;\n                        (Shape\n                          (Width 100 &quot;
+ &amp; &quot;+ Inf)\n                          (Scroller (Max 100) =10 %vsizeScroll)&quot;
+ &amp; &quot;))\n                      Fill))\n                  (Glue 6)\n         &quot;
+ &amp; &quot;         (Chisel)\n                  (Glue 6)\n                  (HBox\n&quot;
+ &amp; &quot;                    (Shape\n                      (Width 100)\n        &quot;
+ &amp; &quot;              (HBox (Shape (Width + 0) \&quot;Distortion\&quot;) Fill))\n        &quot;
+ &amp; &quot;            (Shape\n                      (Width 50)\n                 &quot;
+ &amp; &quot;     (Frame\n                        Lowered\n                        (&quot;
+ &amp; &quot;TypeIn (BgColor \&quot;VeryLightGray\&quot;) %distortion)))\n                    &quot;
+ &amp; &quot;(Glue 4)\n                    (Shape\n                      (Width 100 &quot;
+ &amp; &quot;+ Inf)\n                      (Scroller (Max 100) =0 %distortionScroll)&quot;
+ &amp; &quot;))\n                  (Glue 6)\n                  (Chisel)\n           &quot;
+ &amp; &quot;       (Glue 6)\n                  (HBox\n                    (Shape\n &quot;
+ &amp; &quot;                     (Width 100)\n                      (HBox (Shape (W&quot;
+ &amp; &quot;idth + 0) \&quot;API Coefficient\&quot;) Fill))\n                    (Shape\n    &quot;
+ &amp; &quot;                  (Width 50)\n                      (Frame Lowered (Typ&quot;
+ &amp; &quot;eIn (BgColor \&quot;VeryLightGray\&quot;) %coef)))\n                    (Glue 4)\n&quot;
+ &amp; &quot;                    (Shape\n                      (Width 100 + Inf)\n  &quot;
+ &amp; &quot;                    (Scroller (Max 100) =1 %coefScroll)))\n            &quot;
+ &amp; &quot;      (Glue 4)\n                  (HBox\n                    (Shape\n  &quot;
+ &amp; &quot;                    (Width 100)\n                      (HBox (Shape (Wi&quot;
+ &amp; &quot;dth + 0) \&quot;API Exponent\&quot;) Fill))\n                    (Shape\n        &quot;
+ &amp; &quot;              (Width 50)\n                      (Frame Lowered (TypeIn &quot;
+ &amp; &quot;(BgColor \&quot;VeryLightGray\&quot;) %exp)))\n                    (Glue 4)\n    &quot;
+ &amp; &quot;                (Shape\n                      (Width 100 + Inf)\n      &quot;
+ &amp; &quot;                (Scroller (Max 100) =1 %expScroll)))\n                 &quot;
+ &amp; &quot; (Glue 6)\n                  (Chisel)\n                  (Glue 6)\n    &quot;
+ &amp; &quot;              (HBox\n                    (Shape\n                      &quot;
+ &amp; &quot;(Width&quot;;
+
+CONST E8_1 =
+   &quot; 100)\n                      (HBox (Shape (Width + 0) \&quot;VW Cutoff\&quot;) Fi&quot;
+ &amp; &quot;ll))\n                    (Shape\n                      (Width 50)\n   &quot;
+ &amp; &quot;                   (Frame Lowered (TypeIn (BgColor \&quot;VeryLightGray\&quot;) %&quot;
+ &amp; &quot;vw)))\n                    (Glue 4)\n                    (Shape\n      &quot;
+ &amp; &quot;                (Width 100 + Inf)\n                      (Scroller (Max&quot;
+ &amp; &quot; 100) =0 %vwScroll))))))))\n        Fill)))\n  (ZChassis\n    (Title \&quot;&quot;
+ &amp; &quot;Select data file...\&quot;)\n    %other\n    (Shape (Width 200 + Inf) (Heigh&quot;
+ &amp; &quot;t 150 + Inf) (FileBrowser %file)))\n  (ZChassis\n    %moreStuff\n    (S&quot;
+ &amp; &quot;hape\n      (VBox\n        (Radio\n          (HBox\n            (Shape &quot;
+ &amp; &quot;(Width 50) \&quot;Mode: \&quot;)\n            (Choice =TRUE %fisheye \&quot;Fisheye\&quot;)&quot;
+ &amp; &quot;\n            (Glue 8)\n            (Choice %normal \&quot;Normal\&quot;)\n      &quot;
+ &amp; &quot;      Fill))\n        (Glue 4)\n        (Radio\n          (HBox\n      &quot;
+ &amp; &quot;      (Shape (Width 50) \&quot;Focus: \&quot;)\n            (Choice =TRUE %mouse &quot;
+ &amp; &quot;\&quot;Mouse\&quot;)\n            (Glue 8)\n            (Choice %keyboard \&quot;Keybo&quot;
+ &amp; &quot;ard\&quot;)\n            Fill))\n        (Glue 4)\n        (Radio\n         &quot;
+ &amp; &quot; (HBox\n            (Shape (Width 50) \&quot;Type:     \&quot;)\n            (Cho&quot;
+ &amp; &quot;ice =TRUE %graphical \&quot;Graphical\&quot;)\n            (Glue 8)\n            &quot;
+ &amp; &quot;(Choice %semantic \&quot;Semantic\&quot;)\n            Fill))\n        (Glue 10)\n&quot;
+ &amp; &quot;        (HBox \&quot;Node color: \&quot; (Border (TypeIn %nodeColor =\&quot;Blue\&quot;)))\n&quot;
+ &amp; &quot;        (Glue 4)\n        (HBox \&quot;Node interior: \&quot; (Border (TypeIn %no&quot;
+ &amp; &quot;deInteriorColor =\&quot;Sky\&quot;)))\n        (Glue 4)\n        (HBox \&quot;Focus co&quot;
+ &amp; &quot;lor: \&quot; (Border (TypeIn %focusColor =\&quot;Red\&quot;)))\n        (Glue 4)\n    &quot;
+ &amp; &quot;    (HBox \&quot;Edge color: \&quot; (Border (TypeIn %edgeColor =\&quot;Black\&quot;)))\n  &quot;
+ &amp; &quot;      (Glue 4)\n        (HBox \&quot;Text color: \&quot; (Border (TypeIn %textCol&quot;
+ &amp; &quot;or =\&quot;Black\&quot;)))\n        (Glue 4)\n        (HBox\n          \&quot;Text fon&quot;
+ &amp; &quot;t: \&quot;\n          (Border (TypeIn %textFont =\&quot;-*-helvetica-*-10-*\&quot;)))\n&quot;
+ &amp; &quot;        (Glue 4)\n        (HBox\n          (Shape (Width + 0) \&quot;Edge th&quot;
+ &amp; &quot;ickness: \&quot;)\n          (Numeric %edgeThickness =2)\n          Fill))))&quot;
+ &amp; &quot;))\n\n&quot;;
+
+CONST E9 =
+   &quot;100\n0\n21.5 33.5 8.0\nEdge\n1 0\nEdge\n2 1\nEdge\n3 2\nEdge\n4 3\nEdge&quot;
+ &amp; &quot;\n7 4\nEdge\n9 5\n\n1\n16.0 29.0 7.0\nEdge\n5 0\nEdge\n6 1\nEdge\n8 2\n&quot;
+ &amp; &quot;Edge\n33 3\nBendPoints 2\n10.5 25.5\n10.5 23.5\nEdge\n21 4\nBendPoints &quot;
+ &amp; &quot;2\n20.5 25.5\n20.5 23.5\n\n2\n21.5 29.0 7.0\n\n3\n28.5 29.0 7.0\nEdge\n&quot;
+ &amp; &quot;21 0\nBendPoints 2\n22.2 25.5\n22.2 23.5\nEdge\n10 1\nEdge\n11 2\nEdge\n&quot;
+ &amp; &quot;27 3\nBendPoints 2\n31.5 25.5\n31.5 23.5\n\n4\n33.0 29.0 7.0\nEdge\n12 &quot;
+ &amp; &quot;0\nEdge\n13 1\n\n5\n5.0 24.5 6.0\nEdge\n14 0\nEdge\n31 1\nBendPoints 2\n&quot;
+ &amp; &quot;3.2 20.5\n3.2 18.5\nEdge\n32 2\nEdge\n15 3\nEdge\n33 4\nBendPoints 2\n7&quot;
+ &amp; &quot;.3 20.5\n7.3 18.5\n\n6\n13.5 24.5 6.0\nEdge\n16 0\n\n7\n16.8 24.5 6.0\n&quot;
+ &amp; &quot;Edge\n17 0\nEdge\n41 1\nBendPoints 2\n15.7 20.5\n15.7 18.5\nEdge\n18 2\n&quot;
+ &amp; &quot;Edge\n19 3\nEdge\n20 4\n\n8\n18.5 24.5 6.0\nEdge\n21 0\n\n9\n24.5 24.5 &quot;
+ &amp; &quot;6.0\nEdge\n21 0\nEdge\n61 1\nBendPoints 5\n22.2 20.2\n22.2 18.8\n21.6 1&quot;
+ &amp; &quot;5.2\n21.6 13.8\n16.5 12.0\nEdge\n22 2\nEdge\n23 3\nEdge\n47 4\nBendPoin&quot;
+ &amp; &quot;ts 2\n25.6 20.5\n25.6 18.5\nEdge\n24 5\n\n10\n28.3 24.5 6.0\nEdge\n25 0&quot;
+ &amp; &quot;\nEdge\n26 1\n\n11\n30.0 24.5 6.0\nEdge\n27 0\n\n12\n32.8 24.5 6.0\nEdg&quot;
+ &amp; &quot;e\n28 0\nEdge\n29 1\n\n13\n34.5 24.5 6.0\n\n14\n2.0 19.5 5.0\nEdge\n30 &quot;
+ &amp; &quot;0\n\n15\n6.0 19.5 5.0\nEdge\n31 0\nEdge\n32 1\nEdge\n55 2\nBendPoints 2&quot;
+ &amp; &quot;\n4.2 15.5\n4.2 13.5\nEdge\n33 3\nEdge\n34 4\n\n16\n13.0 19.5 5.0\n\n17&quot;
+ &amp; &quot;\n14.8 19.5 5.0\nEdge\n35 0\nEdge\n36 1\nEdge\n37 2\nEdge\n38 3\nEdge\n&quot;
+ &amp; &quot;39 4\nEdge\n61 5\nBendPoints 2\n15.5 15.5\n15.5 13.5\nEdge\n40 6\nEdge\n&quot;
+ &amp; &quot;41 7\nEdge\n43 8\n\n18\n16.8 19.5 5.0\nEdge\n42 0\n\n19\n18.30 19.5 5.0&quot;
+ &amp; &quot;\nEdge\n43 0\nEdge\n44 0\n\n20\n19.80 19.5 5.0\nEdge\n45 0\n\n21\n21.30&quot;
+ &amp; &quot; 19.5 5.0\n\n22\n23.0 19.5 5.0\nEdge\n46 0\n\n23\n24.5 19.5 5.0\n\n24\n&quot;
+ &amp; &quot;26.5 19.5 5.0\nEdge\n48 0\n\n25\n28.0 19.5 5.0\n\n26\n29.5 19.5 5.0\n\n&quot;
+ &amp; &quot;27\n31.0 19.5 5.0\n\n28\n32.5 19.5 5.0\n\n29\n34.0 19.5 5.0\nEdge\n49 0&quot;
+ &amp; &quot;\nBendPoints 1\n30.0 16.0\nEdge\n72 1\nBendPoints 2\n30.9 15.5\n30.9 13&quot;
+ &amp; &quot;.5\nEdge\n50 2\nEdge\n51 3\nEdge\n73 4\nBendPoints 2\n34.3 15.5\n34.3 1&quot;
+ &amp; &quot;3.5\nEdge\n52 5\nEdge\n74 6\nBendPoints 2\n36.8 15.5\n36.8 13.5\n\n30\n&quot;
+ &amp; &quot;0.0 14.5 4.0\nEdge\n53 0\n\n31\n1.5 14.5 4.0\n\n32\n3.0 14.5 4.0\nEdge\n&quot;
+ &amp; &quot;54 0\nEdge\n75 1\nBendPoints 2\n4.6 11.5\n4.6 9.5\n\n33\n5.5 14.5 4.0\n&quot;
+ &amp; &quot;Edge\n55 0\n\n34\n7.0 14.5 4.0\nEdge\n56 0\nEdge\n57 1\nEdge\n61 2\nBen&quot;
+ &amp; &quot;dPoints 2\n7.8 13.2\n13.0 11.4\n\n35\n8.5 14.5 4.0\nEdge\n58 0\n\n36\n1&quot;
+ &amp; &quot;0.0 14.5 4.0\nEdge\n59 0\nEdge\n60 1\n\n37\n1&quot;;
+
+CONST E9_0 =
+   &quot;1.5 14.5 4.0\nEdge\n61 0\n\n38\n13.0 14.5 4.0\n\n39\n14.5 14.5 4.0\n\n4&quot;
+ &amp; &quot;0\n16.3 14.5 4.0\nEdge\n61 0\nEdge\n62 1\n\n41\n17.8 14.5 4.0\n\n42\n19&quot;
+ &amp; &quot;.3 14.5 4.0\n\n43\n20.8 14.5 4.0\n\n44\n22.5 14.5 4.0\nEdge\n63 0\nEdge&quot;
+ &amp; &quot;\n64 1\nEdge\n65 2\nEdge\n66 3\n\n45\n24.0 14.5 4.0\n\n46\n25.5 14.5 4.&quot;
+ &amp; &quot;0\n\n47\n27.0 14.5 4.0\nEdge\n99 0\nBendPoints 4\n23.4 11.0\n23.4 9.0\n&quot;
+ &amp; &quot;25.0 5.5\n25.0 3.5\nEdge\n67 1\nEdge\n68 2\nEdge\n69 3\n\n48\n28.5 14.5&quot;
+ &amp; &quot; 4.0\nEdge\n67 0\nEdge\n68 1\nEdge\n69 2\nEdge\n86 3\nBendPoints 2\n28.&quot;
+ &amp; &quot;2 11.5\n28.2 9.5\nEdge\n99 4\nBendPoints 2\n28.5 5.5\n28.5 3.5\nEdge\n7&quot;
+ &amp; &quot;0 5\n\n49\n30.0 14.5 4.0\nEdge\n71 0\n\n50\n31.7 14.5 4.0\nEdge\n72 0\n&quot;
+ &amp; &quot;\n51\n33.2 14.5 4.0\n\n52\n35.2 14.5 4.0\nEdge\n74 0\n\n53\n1.5 10.0 3.&quot;
+ &amp; &quot;0\n\n54\n3.5 10.0 3.0\n\n55\n5.5 10.0 3.0\n\n56\n7.0 10.0 3.0\nEdge\n75&quot;
+ &amp; &quot; 0\nEdge\n76 1\nEdge\n77 2\nEdge\n78 3\nEdge\n79 4\nEdge\n80 5\n\n57\n8&quot;
+ &amp; &quot;.5 10.0 3.0\n\n58\n10.0 10.0 3.0\n\n59\n11.5 10.0 3.0\n\n60\n13.0 10.0 &quot;
+ &amp; &quot;3.0\n\n61\n15.0 10.0 3.0\nEdge\n81 0\n\n62\n16.5 10.0 3.0\n\n63\n18.0 1&quot;
+ &amp; &quot;0.0 3.0\n\n64\n19.5 10.0 3.0\nEdge\n82 0\nEdge\n83 1\nEdge\n84 2\nEdge\n&quot;
+ &amp; &quot;85 3\n\n65\n21.0 10.0 3.0\n\n66\n22.5 10.0 3.0\n\n67\n24.3 10.0 3.0\n\n&quot;
+ &amp; &quot;68\n25.8 10.0 3.0\n\n69\n27.3 10.0 3.0\n\n70\n29.5 10.0 3.0\nEdge\n99 0&quot;
+ &amp; &quot;\nBendPoints 2\n29.0 5.5\n29.0 3.5\nEdge\n87 1\nEdge\n88 2\nEdge\n89 3\n&quot;
+ &amp; &quot;\n71\n31.0 10.0 3.0\n\n72\n32.5 10.0 3.0\n\n73\n34.3 10.0 3.0\n\n74\n36&quot;
+ &amp; &quot;.2 10.0 3.0\nEdge\n90 0\nEdge\n91 0\nEdge\n92 0\n\n75\n4.5 4.5 2.0\n\n7&quot;
+ &amp; &quot;6\n6.0 4.5 2.0\n\n77\n7.5 4.5 2.0\nEdge\n93 0\n\n78\n9.5 4.5 2.0\nEdge\n&quot;
+ &amp; &quot;94 0\n\n79\n11.0 4.5 2.0\n\n80\n12.5 4.5 2.0\n\n81\n15.4 4.5 2.0\nEdge\n&quot;
+ &amp; &quot;95 0\nEdge\n96 1\nEdge\n97 2\nEdge\n98 3\n\n82\n17.2 4.5 2.0\n\n83\n18.&quot;
+ &amp; &quot;7 4.5 2.0\n\n84\n20.2 4.5 2.0\n\n85\n22.7 4.5 2.0\n\n86\n27.2 4.5 2.0\n&quot;
+ &amp; &quot;Edge\n99 0\n\n87\n30.0 4.5 2.0\n\n88\n31.5 4.5 2.0\n\n89\n33.0 4.5 2.0\n&quot;
+ &amp; &quot;Edge\n99 0\nBendPoints 1\n33.0 3.0\n\n90\n35.2 4.5 2.0\n\n91\n36.7 4.5 &quot;
+ &amp; &quot;2.0\n\n92\n38.2 4.5 2.0\n\n93\n7.5 0.5 1.0\n\n94\n9.5 0.5 1.0\n\n95\n13&quot;
+ &amp; &quot;.0 0.5 1.0\n\n96\n14.5 0.5 1.0\n\n97\n16.0 0.5 1.0\n\n98\n17.5 0.5 1.0\n&quot;
+ &amp; &quot;\n99\n28.5 0.5 1.0\n\n#+-----------------------------------------------&quot;
+ &amp; &quot;----------------------------+#\n#|            Copyright (C) 1992, Digit&quot;
+ &amp; &quot;al Equipment Corporation              |#\n#| \t\t          All rights r&quot;
+ &amp; &quot;eserved.                               |#\n#|                  See the &quot;
+ &amp; &quot;file COPYRIGHT for a fu&quot;;
+
+CONST E9_1 =
+   &quot;ll description.           |#\n#+---------------------------------------&quot;
+ &amp; &quot;------------------------------------+#\n\n\n&quot;;
 
 BEGIN
 END FisheyeBundle.

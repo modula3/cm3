@@ -129,6 +129,7 @@ PROCEDURE <A NAME="SetUp"><procedure>SetUp</procedure></A> (t: T;  pkg, to_pkg, 
     Quake.Define (t, &quot;DEFAULT_BUILD_DIR&quot;, GetConfig (t, &quot;BUILD_DIR&quot;));
     Quake.Define (t, &quot;M3&quot;, M3Path.New (GetConfig (t, &quot;BIN_USE&quot;),
                               M3Path.ProgramName (&quot;cm3&quot;, host := TRUE)));
+    Quake.Define (t, &quot;PACKAGE_DIR&quot;, pkg);
 
     t.build_pkg       := M3ID.Add (Pathname.Last (pkg));
     t.build_pkg_dir   := M3ID.Add (pkg);
@@ -536,7 +537,7 @@ PROCEDURE <A NAME="Override"><procedure>Override</procedure></A> (t: T;  pkg: M3
       IF M3Options.major_mode = MM.Depend THEN
         Msg.Verbose (&quot;ignoring override(\&quot;&quot;, pkg_txt, QCQ, dir, QRPCR);
       ELSE
-        Msg.Out (&quot;ignoring override(\&quot;&quot;, pkg_txt, QCQ, dir, QRPCR);
+        Msg.Info (&quot;ignoring override(\&quot;&quot;, pkg_txt, QCQ, dir, QRPCR);
       END;
       t.already_warned := TRUE;
     ELSIF t.pkg_overrides.get (pkg, ref) THEN
@@ -545,8 +546,8 @@ PROCEDURE <A NAME="Override"><procedure>Override</procedure></A> (t: T;  pkg: M3
           Msg.Verbose (&quot;package \&quot;&quot;, pkg_txt, &quot;\&quot; is already overridden to &quot;,
                        ref, &quot;, ignoring new override to &quot; &amp; dir &amp; Wr.EOL);
         ELSE
-          Msg.Out (&quot;package \&quot;&quot;, pkg_txt, &quot;\&quot; is already overridden to &quot;,
-                   ref, &quot;, ignoring new override to &quot;, dir, Wr.EOL);
+          Msg.Info (&quot;package \&quot;&quot;, pkg_txt, &quot;\&quot; is already overridden to &quot;,
+                    ref, &quot;, ignoring new override to &quot;, dir &amp; Wr.EOL);
         END;
       END;
     ELSE
@@ -898,7 +899,7 @@ PROCEDURE <A NAME="DoRemoveM3Option"><procedure>DoRemoveM3Option</procedure></A>
   VAR t := Self (m);  arg: TEXT;
   BEGIN
     arg := PopText (t);
-    Msg.Out (&quot;remove_m3_option (\&quot;&quot;, arg, &quot;\&quot;) is being ignored.&quot;, Wr.EOL)
+    Msg.Info (&quot;remove_m3_option (\&quot;&quot;, arg, &quot;\&quot;) is being ignored.&quot;, Wr.EOL)
   END DoRemoveM3Option;
 </PRE>--------------------------------------------------------------- deleting --
  We don't support <CODE>-clean</CODE>.... 

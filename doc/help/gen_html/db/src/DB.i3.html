@@ -9,27 +9,73 @@
 <PRE></PRE> Copyright (C) 1996-2000, Critical Mass, Inc.  All Rights Reserved. 
  See file COPYRIGHT-CMASS for details. 
 
+<P>	Modified by Darko Volaric September 2002
+		Added functionality to support use of multiple database client interfaces concurrently.
+		Supported interfaces are: PostgreSQL, MySQL and ODBC. This interface should be source
+		compatible with the previous version. Please email darko@peter.com.au with any problems.
+
+
 <P> 
    DB is the safe Modula-3 interface for relational databases.  It
    defines two primary abstractions: database connections and
    statements.
 
 
-<P><PRE>INTERFACE <interface><A HREF="odbc/DB.m3.html">DB</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="#x1">DB</A></interface>;
 </PRE>------------------------------------------------------- connections ---
 
+<P><PRE>TYPE
+	InterfaceList = REF ARRAY OF Interface;
+	(* A database interface, usualy one for each type of database server *)
+	<A HREF="DB.m3.html#Interface">Interface</A> &lt;: InterfacePublic;
+	InterfacePublic = OBJECT
+		name: TEXT;
+	METHODS
+		set_default();
+		connect(
+			database, user_id, password: TEXT;
+			server: TEXT := NIL;
+		): T  RAISES {Error};
+		get_data_sources(): DescList  RAISES {Error};
+		get_drivers(): DescList  RAISES {Error};
+	END;
+
+PROCEDURE <A HREF="DB.m3.html#GetInterfaces">GetInterfaces</A>(): InterfaceList;
+</PRE><BLOCKQUOTE><EM>	Returns a list of Interface objects that describe the available interfaces
+		in this implementation </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="DB.m3.html#GetDefaultInterface">GetDefaultInterface</A>(): Interface;
+
+PROCEDURE <A HREF="DB.m3.html#FindInterface">FindInterface</A>(name: TEXT): Interface  RAISES {Error};
+</PRE><BLOCKQUOTE><EM>	Returns the interface with the given name, or NIL if not found </EM></BLOCKQUOTE><PRE>
+</PRE>  The following functions are provided for compatibily with the previous version of the interface. 
+		The methods of the Interface object should be used instead. 
+
+<P><PRE>PROCEDURE <A HREF="#x2">Connect</A> (
+	database, user_id, password: TEXT; (* Establish a connection to the named &quot;database&quot; using &quot;user_id&quot; and
+																				&quot;password&quot; as authentication credentials. *)
+	server: TEXT := NIL;	(* Connect to the server running on this host. May be a host name or IP number *)
+	interface: Interface := NIL; (* Use this interface to connect. If not specified the default interface is used *)
+): T  RAISES {Error};
+
+PROCEDURE <A HREF="#x3">GetDataSources</A> (): DescList  RAISES {Error};
+</PRE><BLOCKQUOTE><EM> Returns the names and descriptions of the data sources that are
+   available from the local server. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="#x4">GetDrivers</A> (): DescList  RAISES {Error};
+</PRE><BLOCKQUOTE><EM> Returns the names and descriptions of the drivers that are
+   available from the local server. </EM></BLOCKQUOTE><PRE>
+
+TYPE DescList = REF RECORD  name, description: TEXT;  next: DescList;  END;
+</PRE><P>
    A <CODE>DB.T</CODE>, or connection, represents a single connection to a database.
    Multiple connections may exist within one application and each may be
    used concurrently by multiple threads.
 
 
-<P><PRE>PROCEDURE <A HREF="odbc/DB.m3.html#Connect">Connect</A> (database, user_id, password: TEXT): T  RAISES {Error};
-</PRE><BLOCKQUOTE><EM> Establish a connection to the named <CODE>database</CODE> using <CODE>user_id</CODE> and
-  <CODE>password</CODE> as authentication credentials. </EM></BLOCKQUOTE><PRE>
-
-TYPE
+<P><PRE>TYPE
   (* a database connection *)
-  <A HREF="odbc/DB.m3.html#T">T</A> &lt;: Public;  Public = OBJECT METHODS
+  T = OBJECT METHODS
     disconnect ()              RAISES {Error};
     new_stmt (): Stmt          RAISES {Error};
     auto_commit (on: BOOLEAN)  RAISES {Error};
@@ -72,7 +118,7 @@ TYPE
 
 <P><PRE>TYPE
   (* a SQL database statement (query or update) *)
-  <A HREF="odbc/DB.m3.html#Stmt">Stmt</A> &lt;: StmtPublic;  StmtPublic = MUTEX OBJECT METHODS
+  Stmt = MUTEX OBJECT METHODS
     prepare (operation: TEXT)       RAISES {Error};
     execute (operation: TEXT)       RAISES {Error};
     fetch ():  Results              RAISES {Error};
@@ -178,18 +224,7 @@ TYPE
   <CODE>st.connection()</CODE> returns the underlying database connection used by <CODE>st</CODE>.
 
 
-<P>--------------------------------------- misc. DB server information ---
-
-<P><PRE>PROCEDURE <A HREF="odbc/DB.m3.html#GetDataSources">GetDataSources</A> (): DescList  RAISES {Error};
-</PRE><BLOCKQUOTE><EM> Returns the names and descriptions of the data sources that are
-   available from the local server. </EM></BLOCKQUOTE><PRE>
-
-PROCEDURE <A HREF="odbc/DB.m3.html#GetDrivers">GetDrivers</A> (): DescList  RAISES {Error};
-</PRE><BLOCKQUOTE><EM> Returns the names and descriptions of the drivers that are
-   available from the local server. </EM></BLOCKQUOTE><PRE>
-
-TYPE DescList = REF RECORD  name, description: TEXT;  next: DescList;  END;
-</PRE>--------------------------------------------- errors and exceptions ---
+<P>--------------------------------------------- errors and exceptions ---
 
 <P><PRE>EXCEPTION Error (ErrorDesc);
 </PRE><BLOCKQUOTE><EM> <P>
@@ -211,6 +246,34 @@ TYPE
 END DB.
 </PRE>
 </inInterface>
+<HR>
+<A NAME="x1">DB's implementation  is in:
+</A><UL>
+<LI><A HREF="DB.m3.html#0TOP0">db/src/DB.m3</A>
+<LI><A HREF="odbc/DB.m3.html#0TOP0">db/src/odbc/DB.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">procedure DB.Connect is in:
+</A><UL>
+<LI><A HREF="DB.m3.html#Connect">db/src/DB.m3</A>
+<LI><A HREF="odbc/DB.m3.html#Connect">db/src/odbc/DB.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">procedure DB.GetDataSources is in:
+</A><UL>
+<LI><A HREF="DB.m3.html#GetDataSources">db/src/DB.m3</A>
+<LI><A HREF="odbc/DB.m3.html#GetDataSources">db/src/odbc/DB.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x4">procedure DB.GetDrivers is in:
+</A><UL>
+<LI><A HREF="DB.m3.html#GetDrivers">db/src/DB.m3</A>
+<LI><A HREF="odbc/DB.m3.html#GetDrivers">db/src/odbc/DB.m3</A>
+</UL>
+<P>
 <PRE>
 
 

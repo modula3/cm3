@@ -34,6 +34,10 @@ PROCEDURE <A HREF="RTLinker.m3.html#AddUnit">AddUnit</A> (b: RT0.Binder);
 </PRE><BLOCKQUOTE><EM> Adds <CODE>b(0)</CODE> and any units it imports to the set of linked
    and initialized compilation units. </EM></BLOCKQUOTE><PRE>
 
+PROCEDURE <A HREF="RTLinker.m3.html#AddUnitImports">AddUnitImports</A> (b: RT0.Binder);
+</PRE><BLOCKQUOTE><EM> Adds any units <CODE>b(0)</CODE> imports but not <CODE>b(0)</CODE> itself to the set of linked
+   and initialized compilation units. </EM></BLOCKQUOTE><PRE>
+
 PROCEDURE <A HREF="RTLinker.m3.html#RunMainBody">RunMainBody</A> (m: RT0.ModulePtr);
 </PRE><BLOCKQUOTE><EM> Invokes <CODE>m</CODE>s main body if it hasn't already been done.
    Note: this procedure is only exported so that stack walkers

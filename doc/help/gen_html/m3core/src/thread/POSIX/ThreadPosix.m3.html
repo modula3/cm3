@@ -648,7 +648,7 @@ PROCEDURE <A NAME="XIOWait"><procedure>XIOWait</procedure></A> (fd: CARDINAL; re
         DEC (RT0u.inCritical);
       END;
       InternalYield ();
-      Cerrno.errno := self.select.errno;
+      Cerrno.SetErrno(self.select.errno);
       RETURN self.select.waitResult;
     END;
   END XIOWait;
@@ -873,7 +873,7 @@ BEGIN
                     CanRun(t);
                     EXIT;
                   ELSIF n &lt; 0 THEN
-                    t.select.errno  := Cerrno.errno;
+                    t.select.errno  := Cerrno.GetErrno();
                     t.select.waitResult := WaitResult.Error;
                     CanRun(t);
                     EXIT;
@@ -1080,6 +1080,11 @@ PROCEDURE <A NAME="DetermineContext"><procedure>DetermineContext</procedure></A>
 
       RTThread.FlushStackCache ();
 
+      IF debug THEN
+        OutAddr(&quot;modelSP:    &quot;, modelSP);
+        OutAddr(&quot;oldSP:      &quot;, oldSP);
+        OutInt(&quot;frame size: &quot;, ABS (modelSP - oldSP));
+      END;
       modelFrame := NEW (UNTRACED REF ARRAY OF Word.T,
                          ABS (modelSP - oldSP) DIV ADRSIZE (Word.T)
                          + 1 + RTThread.FramePadBottom + RTThread.FramePadTop);
@@ -1098,7 +1103,7 @@ PROCEDURE <A NAME="DetermineContext"><procedure>DetermineContext</procedure></A>
     ELSE
       (* we are starting the execution of a forked thread *)
       RTThread.handlerStack := self.context.handlers;
-      Cerrno.errno := self.context.errno;
+      Cerrno.SetErrno(self.context.errno);
       RTThread.allow_sigvtalrm ();
       DEC (RT0u.inCritical);
 
@@ -1131,7 +1136,7 @@ PROCEDURE <A NAME="InitContext"><procedure>InitContext</procedure></A> (VAR c: C
       c.stackBottom := c.stack.first;
     END;
     c.handlers    := NIL;
-    c.errno       := Cerrno.errno;
+    c.errno       := Cerrno.GetErrno();
 
     (* mark the ends of the stack for a sanity check *)
     LOOPHOLE (c.stackTop, IntPtr)^ := seal;
@@ -1185,12 +1190,12 @@ PROCEDURE <A NAME="Transfer"><procedure>Transfer</procedure></A> (VAR from, to: 
     IF (ADR (from) # ADR (to)) THEN
       RTThread.disallow_sigvtalrm ();
       from.handlers := RTThread.handlerStack;
-      from.errno := Cerrno.errno;
+      from.errno := Cerrno.GetErrno();
       self := new_self;
       myId := new_self.id;
       RTThread.Transfer (from.buf, to.buf);
       RTThread.handlerStack := from.handlers;
-      Cerrno.errno := from.errno;
+      Cerrno.SetErrno(from.errno);
       RTThread.allow_sigvtalrm ();
     END;
   END Transfer;
@@ -1465,6 +1470,25 @@ PROCEDURE <A NAME="QQ"><procedure>QQ</procedure></A>(): ADDRESS =
     RETURN ADR (xx);
   END QQ;
 
+PROCEDURE <A NAME="OutAddr"><procedure>OutAddr</procedure></A>(s: TEXT; a: ADDRESS) =
+  BEGIN
+    IF NOT debug THEN RETURN END;
+    RTIO.PutText(s);
+    RTIO.PutAddr(a);
+    RTIO.PutText(&quot;\r\n&quot;);
+    RTIO.Flush();
+  END OutAddr;
+
+PROCEDURE <A NAME="OutInt"><procedure>OutInt</procedure></A>(s: TEXT; a: INTEGER) =
+  BEGIN
+    IF NOT debug THEN RETURN END;
+    RTIO.PutText(s);
+    RTIO.PutInt(a);
+    RTIO.PutText(&quot;\r\n&quot;);
+    RTIO.Flush();
+  END OutInt;
+
+VAR debug := FALSE;
 BEGIN
 END ThreadPosix.
 </PRE>

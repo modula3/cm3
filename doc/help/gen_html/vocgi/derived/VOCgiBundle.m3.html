@@ -50,14 +50,14 @@ PROCEDURE <A NAME="LookUp"><procedure>LookUp</procedure></A> (&lt;*UNUSED*&gt; s
   END LookUp;
 
 CONST Names = ARRAY [0..2] OF TEXT {
-  &quot;vos-internal.obl&quot;,
   &quot;volib.obl&quot;,
+  &quot;vos-internal.obl&quot;,
   NIL
 };
 
 VAR Elements := ARRAY [0..2] OF TEXT {
-  E0,
-  NIL (* E1 .. E1_14 *),
+  NIL (* E0 .. E0_14 *),
+  E1,
   NIL
 };
 
@@ -66,55 +66,29 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
   VAR wr := TextWr.New ();
   BEGIN
     CASE n OF
-    | 1 =&gt;
-        Wr.PutText (wr, E1);
-        Wr.PutText (wr, E1_0);
-        Wr.PutText (wr, E1_1);
-        Wr.PutText (wr, E1_2);
-        Wr.PutText (wr, E1_3);
-        Wr.PutText (wr, E1_4);
-        Wr.PutText (wr, E1_5);
-        Wr.PutText (wr, E1_6);
-        Wr.PutText (wr, E1_7);
-        Wr.PutText (wr, E1_8);
-        Wr.PutText (wr, E1_9);
-        Wr.PutText (wr, E1_10);
-        Wr.PutText (wr, E1_11);
-        Wr.PutText (wr, E1_12);
-        Wr.PutText (wr, E1_13);
-        Wr.PutText (wr, E1_14);
+    | 0 =&gt;
+        Wr.PutText (wr, E0);
+        Wr.PutText (wr, E0_0);
+        Wr.PutText (wr, E0_1);
+        Wr.PutText (wr, E0_2);
+        Wr.PutText (wr, E0_3);
+        Wr.PutText (wr, E0_4);
+        Wr.PutText (wr, E0_5);
+        Wr.PutText (wr, E0_6);
+        Wr.PutText (wr, E0_7);
+        Wr.PutText (wr, E0_8);
+        Wr.PutText (wr, E0_9);
+        Wr.PutText (wr, E0_10);
+        Wr.PutText (wr, E0_11);
+        Wr.PutText (wr, E0_12);
+        Wr.PutText (wr, E0_13);
+        Wr.PutText (wr, E0_14);
     ELSE (*skip*)
     END;
     RETURN TextWr.ToText (wr);
   END GetElt;
 
 CONST E0 =
-   &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
- &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
- &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
- &amp; &quot;                                       *)\n(* Last modified on Tue Jan &quot;
- &amp; &quot;10 11:38:09 PST 1995 by mhb     *)\n\nvar reinstall = true;\n\ntry \n  &quot;
- &amp; &quot;net_import(\&quot;vos\&quot;, \&quot;\&quot;).ping();\n  reinstall := false;\nexcept else\n&quot;
- &amp; &quot;end;\n\nif reinstall then\n  let fv = \n    \&quot;(Shape (Width 600) (Heigh&quot;
- &amp; &quot;t 300) (Font\&quot; &amp;\n    \&quot;\\\&quot;-\\*-helvetica-bold-\\*R-\\*240-\\*\\\&quot;) (L&quot;
- &amp; &quot;abelFont\&quot; &amp;\n    \&quot;\\\&quot;-\\*-helvetica-bold-\\*R-\\*240-\\*\\\&quot;) (VBox &quot;
- &amp; &quot;(Text (BgColor\&quot; &amp;\n    \&quot;\\\&quot;DarkBrown\\\&quot;) (Color \\\&quot;White\\\&quot;) \\\&quot;&quot;
- &amp; &quot;Session Request\\\&quot;) (Text (Color\&quot; &amp;\n    \&quot;\\\&quot;DarkBrown\\\&quot;) \\\&quot;You&quot;
- &amp; &quot; are invited to join a session of\\\&quot;) (Text (Color\&quot; &amp;\n    \&quot;\\\&quot;Red\\&quot;
- &amp; &quot;\&quot;) (Name name) \\\&quot;foo\\\&quot;) Fill (HBox Fill (Button (Name accept)\&quot; &amp;\n&quot;
- &amp; &quot;    \&quot;(BgColor \\\&quot;PaleGreen\\\&quot;) (Rim (Pen 5) \\\&quot;Accept\\\&quot;)) Fill (B&quot;
- &amp; &quot;utton (Name \&quot; &amp;\n    \&quot;reject) (BgColor \\\&quot;LightRed\\\&quot;) (Rim (Pen 5)&quot;
- &amp; &quot; \\\&quot;Reject\\\&quot;)) Fill) Fill))\&quot;;\n\n  let vos = {\n    Install =&gt; meth&quot;
- &amp; &quot;(s, constructor, name)\n      let noticeform = form_new(fv);\n      for&quot;
- &amp; &quot;m_putText(noticeform, \&quot;name\&quot;, \&quot;\&quot;, name, false);\n      form_attach(&quot;
- &amp; &quot;noticeform, \&quot;accept\&quot;, \n        proc(fv) \n          form_hide(fv);\n&quot;
- &amp; &quot;          (constructor)(volibLocal);\n          end);\n      form_attac&quot;
- &amp; &quot;h(noticeform, \&quot;reject\&quot;, \n        proc(fv) \n          form_hide(fv);&quot;
- &amp; &quot; \n          ok \n          end);\n      form_show(noticeform);\n      &quot;
- &amp; &quot;ok\n      end,\n     ping =&gt; meth(s)\n        true\n     end\n    };\n &quot;
- &amp; &quot; net_export(\&quot;vos\&quot;, \&quot;\&quot;, vos);\nend;\n\n\n\n\n\n\n\n\n\n\n&quot;;
-
-CONST E1 =
    &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
  &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
  &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
@@ -146,7 +120,7 @@ CONST E1 =
  &amp; &quot; =&gt; 0, Embellishment =&gt; \&quot;\&quot;,\n    InitialState =&gt; \&quot;\&quot;, ResizeModel =&gt;&quot;
  &amp; &quot; \&quot;\&quot;, \t\n\n    (* Widget Attributes *)\n    tex&quot;;
 
-CONST E1_0 =
+CONST E0_0 =
    &quot;tLabel  =&gt; true, textString=&gt;\&quot;\&quot;, \n    pixmap =&gt; \&quot;\&quot;, initialValue =&quot;
  &amp; &quot;&gt; false, feedbackStyle =&gt; \&quot;\&quot;,\n\n    (*- getValue() returns boolean -&quot;
  &amp; &quot;*)\n    getValue =&gt; meth(s) \n     form_getBoolean(s.form, s.name) end,&quot;
@@ -178,7 +152,7 @@ CONST E1_0 =
  &amp; &quot;py(s.Contents);\n    end,\n  \n    (*- putElements(elems:[text]) -*)\n &quot;
  &amp; &quot;   putElements =&gt; meth(s, ar)\n\ts.Contents := copy(ar);\n\ts.Select&quot;;
 
-CONST E1_1 =
+CONST E0_1 =
    &quot;ions := [];\n\ts.Selection := -1;\n\tform_putText(s.form, s.name, \&quot;Ite&quot;
  &amp; &quot;ms\&quot;, pkList(s.Contents), false);\n\tok\n   end,\n\n   (*- getElement(a&quot;
  &amp; &quot;tPosition:integer) returns text -*)\n   getElement =&gt; meth(s, n)\n\ts.C&quot;
@@ -211,7 +185,7 @@ CONST E1_1 =
  &amp; &quot;1;\n\t\t\t\tend \n\t\t\tend;\n\t\telse\n\t\t\tif s.Selection &gt;= n then\n&quot;
  &amp; &quot;\t\t\t\ts.Selection := s.Selection + 1;\n\t\t\tend;\n\t\tend&quot;;
 
-CONST E1_2 =
+CONST E0_2 =
    &quot;;\t\t\t\t\n\t\ts.putElements(n, el);\n\t\ttrue;\n\texcept\n\telse\t\n\t&quot;
  &amp; &quot;\tfalse;\n\tend; \n  end,\n\n (*- selectString(st:text)  -*)\n (*-\t in&quot;
  &amp; &quot;crementalif not present turns off all -*)\n  selectString =&gt;meth(s, st)&quot;
@@ -245,7 +219,7 @@ CONST E1_2 =
  &amp; &quot;rm, s.name &amp; \&quot;filter\&quot;, \&quot;active\&quot;); \n      form_popUp(s.form, s.name&quot;
  &amp; &quot; &amp; \&quot;top\&quot;);\n      ok end,\n    (*- makeInvisible() -*)\n    m&quot;;
 
-CONST E1_3 =
+CONST E0_3 =
    &quot;akeInvisible =&gt; meth(s) \n      s.InitialState := \&quot;Vanish\&quot;;\n      re&quot;
  &amp; &quot;freshWidget( s);\n    \tok end,\n  (*- -*)\n  } \n  end,\n\n (*= button&quot;
  &amp; &quot; =*)\n  buttonNew =&gt; meth(s, n)\n  { \n    SELF =&gt; 0,\n    form =&gt; 0, \n&quot;
@@ -278,7 +252,7 @@ CONST E1_3 =
  &amp; &quot;orm, s.name &amp; \&quot;pixmap\&quot;, \&quot;\&quot;, val, false); \n     end;\n      ok end,&quot;
  &amp; &quot;\n   (*- &quot;;
 
-CONST E1_4 =
+CONST E0_4 =
    &quot;-*)\n  } \n  end,\n\n (*= choice  =*)\n  choiceNew =&gt; meth(s,  n)\n  { &quot;
  &amp; &quot;\n    SELF =&gt; 0,\n    form =&gt; 0, \n    name =&gt; n,\n    class =&gt; \&quot;choic&quot;
  &amp; &quot;e\&quot;,\n\n   (* Generic Attributes *)\n    parent =&gt; 0,\n\n    x =&gt; 0, y &quot;
@@ -311,7 +285,7 @@ CONST E1_4 =
  &amp; &quot;    (* Widget Attributes *)\n    LabelFont =&gt; \&quot;\&quot;, ReadOnly =&gt; false,\n&quot;
  &amp; &quot;    V&quot;;
 
-CONST E1_5 =
+CONST E0_5 =
    &quot;alue =&gt; \&quot;.\&quot;, Suffixes =&gt; [], ActionLabel =&gt; \&quot;\&quot;,\n\n    (*- getFilen&quot;
  &amp; &quot;ame() returns text -*)\n    getFilename =&gt; meth(s) \n      form_getText&quot;
  &amp; &quot;(s.form, s.name, \&quot;\&quot;) end,    \n\n    (*- setFilename(fnm:text) -*)\n &quot;
@@ -344,7 +318,7 @@ CONST E1_5 =
  &amp; &quot; show =&gt; meth(s) \n      if s.ParentForm is 0 then\n\tif  s.form is 0 t&quot;
  &amp; &quot;hen&quot;;
 
-CONST E1_6 =
+CONST E0_6 =
    &quot;\n\t\ts.SELF.FORM := form_new(computeSX(s));\n\t\ts.SELF.VOAttachCBacks&quot;
  &amp; &quot;();   \n\t\tform_show(s.form);\n\tend\n      else\n\t s.popUp();\n     &quot;
  &amp; &quot; end;\n   ok end,\n    (*- hide(), hides form (toplevel or anchored) -*&quot;
@@ -376,7 +350,7 @@ CONST E1_6 =
  &amp; &quot;,\n\n    (* Generic Attributes *)\n    parent =&gt; 0,\n\n    x =&gt; 0, y =&gt;&quot;
  &amp; &quot; 0, width =&gt;0, height =&gt;0, BgColor =&gt;\&quot;\&quot;, FgColor =&gt; \&quot;\&quot;&quot;;
 
-CONST E1_7 =
+CONST E0_7 =
    &quot;,\n    Font =&gt; \&quot;\&quot;, Rim =&gt; 0, Border =&gt; 0, Embellishment =&gt; \&quot;\&quot;,\n   &quot;
  &amp; &quot; InitialState =&gt; \&quot;\&quot;, ResizeModel =&gt; \&quot;\&quot;, \t\n\n    Texture =&gt; \&quot;\&quot;, &quot;
  &amp; &quot;children =&gt; 0,\t\n\n    (*- hasSelectedChoice() returns boolean -*)\n  &quot;
@@ -408,7 +382,7 @@ CONST E1_7 =
  &amp; &quot;) end,\n    (*- setValue(val) -*)\n    setValue =&gt; meth(s, val) \n     &quot;
  &amp; &quot; form_putInt(s.form, s.name , \&quot;\&quot;, val); ok  end,\n    (*- setMi&quot;;
 
-CONST E1_8 =
+CONST E0_8 =
    &quot;n(minval) -*)\n    setMin =&gt; meth(s, val) \n\ts.Min := val;\n      form&quot;
  &amp; &quot;_putInt(s.form, s.name , \&quot;Min\&quot;, val); ok end,\n    (*- setMax(maxval)&quot;
  &amp; &quot;  -*)\n    setMax =&gt; meth(s, val) \n\ts.Max := val;\n      form_putInt(&quot;
@@ -440,7 +414,7 @@ CONST E1_8 =
  &amp; &quot;returns integer -*)\n    getMin =&gt; meth(s) \n      form_getInt(s.form, &quot;
  &amp; &quot;s.name , \&quot;Min\&quot;) end,\n    (*- getMax() returns integer -*)\n    get&quot;;
 
-CONST E1_9 =
+CONST E0_9 =
    &quot;Max =&gt; meth(s) \n      form_getInt(s.form, s.name , \&quot;Max\&quot;) end,\n    &quot;
  &amp; &quot;(*- setValue(val) -*)\n    setValue =&gt; meth(s, val) \n      form_putInt&quot;
  &amp; &quot;(s.form, s.name , \&quot;\&quot;, val); ok  end,\n    (*- setMin(minval) -*)\n   &quot;
@@ -472,7 +446,7 @@ CONST E1_9 =
  &amp; &quot;activity(s.form, s.name &amp; \&quot;filter\&quot;, \&quot;active\&quot;); \n      form_popUp(s&quot;
  &amp; &quot;.form, s.name &amp; \&quot;top\&quot;);\n      ok end,\n     (*- makeInvis&quot;;
 
-CONST E1_10 =
+CONST E0_10 =
    &quot;ible() -*)\n    makeInvisible =&gt; meth(s) \n      s.InitialState := \&quot;Va&quot;
  &amp; &quot;nish\&quot;;\n      refreshWidget( s);\n    \tok end,\t   \n    (*- -*)\n  }&quot;
  &amp; &quot;\n  end,\n\n(*= textedit =*) \n  texteditNew =&gt; meth(s,  n)\n  { \n    &quot;
@@ -504,7 +478,7 @@ CONST E1_10 =
  &amp; &quot; \n      form_popUp(s.form, s.name &amp; \&quot;top\&quot;);\n      ok end,\n (*- mak&quot;
  &amp; &quot;eInvisible() -*)\n    makeInvisible =&gt; meth(s) \n      s.Initial&quot;;
 
-CONST E1_11 =
+CONST E0_11 =
    &quot;State := \&quot;Vanish\&quot;;\n      refreshWidget( s);\n    \tok end,\n   (*- -&quot;
  &amp; &quot;*)\n  }\n  end,\n\n(*= typein =*)\n  typeinNew =&gt; meth(s,  n)\n  { \n  &quot;
  &amp; &quot;  SELF =&gt; 0,\n    form =&gt; 0, \n    name =&gt; n,\n    class =&gt; \&quot;typein\&quot;,&quot;
@@ -537,7 +511,7 @@ CONST E1_11 =
  &amp; &quot;d,\n\n(*= vscroll =*)\n  vscrollNew =&gt; meth(s,  n)\n  { \n    SELF =&gt; 0&quot;
  &amp; &quot;,&quot;;
 
-CONST E1_12 =
+CONST E0_12 =
    &quot;\n    form =&gt; 0, \n    name =&gt; n,\n    class =&gt; \&quot;vscroll\&quot;,\n\n   (* G&quot;
  &amp; &quot;eneric Attributes *)\n    parent =&gt; 0,\n\n    x =&gt; 0, y =&gt; 0, width =&gt;0&quot;
  &amp; &quot;, height =&gt;0, BgColor =&gt;\&quot;\&quot;, FgColor =&gt; \&quot;\&quot;,\n    Font =&gt; \&quot;\&quot;, Rim =&quot;
@@ -569,7 +543,7 @@ CONST E1_12 =
  &amp; &quot;d,\n   (*- setWidth(wid:integer) -*)\n    setWidth =&gt; meth(s, val) \t\t&quot;
  &amp; &quot;\n      form_putInt(s.form, s.name, \&quot;Width\&quot;, val); ok end,\n  (*-&quot;;
 
-CONST E1_13 =
+CONST E0_13 =
    &quot; setSource(src:text) returns ok -*)\n    setSource =&gt; meth(s, src)\n\ts&quot;
  &amp; &quot;.AuSource := src;\n    \ts.Source := src; refreshWidget( s); ok  end,\n&quot;
  &amp; &quot;   (*- setHeight(ht:integer) -*)\n    setHeight =&gt; meth(s, val) \t\t\t\n&quot;
@@ -601,7 +575,7 @@ CONST E1_13 =
  &amp; &quot;d into volibLocal\n    in cases where the computation needs to happen l&quot;
  &amp; &quot;ocally *)\n\n(*: Join(ssn:text, host:text) returns boolean  :*)&quot;;
 
-CONST E1_14 =
+CONST E0_14 =
    &quot;\nlet Join = proc(ssn, host) \n  try\n    let sessionConst = net_import&quot;
  &amp; &quot;(ssn, host);\n    (sessionConst.New)(volibLocal);\n    true\n  except e&quot;
  &amp; &quot;lse \n    false\n  end; \nend;\n\n(* normal versions of restricted acce&quot;
@@ -617,6 +591,32 @@ CONST E1_14 =
  &amp; &quot;cal.rdOpen := meth(s, fnm)\n\trdOpen(fnm)\nend;\n\nvolibLocal.wrOpen :=&quot;
  &amp; &quot; meth(s, fnm)\n\twrOpen(fnm)\nend;\n\nvolibLocal.wrOpenAppend := meth(s&quot;
  &amp; &quot;, fnm)\n\twrOpenAppend(fnm)\nend;\nsys_popSilence();\n\n\n&quot;;
+
+CONST E1 =
+   &quot;(* Copyright (C) 1995, Digital Equipment Corporation.       *)\n(* All &quot;
+ &amp; &quot;rights reserved.                                     *)\n(* See the fil&quot;
+ &amp; &quot;e COPYRIGHT for a full description.           *)\n(*                   &quot;
+ &amp; &quot;                                       *)\n(* Last modified on Tue Jan &quot;
+ &amp; &quot;10 11:38:09 PST 1995 by mhb     *)\n\nvar reinstall = true;\n\ntry \n  &quot;
+ &amp; &quot;net_import(\&quot;vos\&quot;, \&quot;\&quot;).ping();\n  reinstall := false;\nexcept else\n&quot;
+ &amp; &quot;end;\n\nif reinstall then\n  let fv = \n    \&quot;(Shape (Width 600) (Heigh&quot;
+ &amp; &quot;t 300) (Font\&quot; &amp;\n    \&quot;\\\&quot;-\\*-helvetica-bold-\\*R-\\*240-\\*\\\&quot;) (L&quot;
+ &amp; &quot;abelFont\&quot; &amp;\n    \&quot;\\\&quot;-\\*-helvetica-bold-\\*R-\\*240-\\*\\\&quot;) (VBox &quot;
+ &amp; &quot;(Text (BgColor\&quot; &amp;\n    \&quot;\\\&quot;DarkBrown\\\&quot;) (Color \\\&quot;White\\\&quot;) \\\&quot;&quot;
+ &amp; &quot;Session Request\\\&quot;) (Text (Color\&quot; &amp;\n    \&quot;\\\&quot;DarkBrown\\\&quot;) \\\&quot;You&quot;
+ &amp; &quot; are invited to join a session of\\\&quot;) (Text (Color\&quot; &amp;\n    \&quot;\\\&quot;Red\\&quot;
+ &amp; &quot;\&quot;) (Name name) \\\&quot;foo\\\&quot;) Fill (HBox Fill (Button (Name accept)\&quot; &amp;\n&quot;
+ &amp; &quot;    \&quot;(BgColor \\\&quot;PaleGreen\\\&quot;) (Rim (Pen 5) \\\&quot;Accept\\\&quot;)) Fill (B&quot;
+ &amp; &quot;utton (Name \&quot; &amp;\n    \&quot;reject) (BgColor \\\&quot;LightRed\\\&quot;) (Rim (Pen 5)&quot;
+ &amp; &quot; \\\&quot;Reject\\\&quot;)) Fill) Fill))\&quot;;\n\n  let vos = {\n    Install =&gt; meth&quot;
+ &amp; &quot;(s, constructor, name)\n      let noticeform = form_new(fv);\n      for&quot;
+ &amp; &quot;m_putText(noticeform, \&quot;name\&quot;, \&quot;\&quot;, name, false);\n      form_attach(&quot;
+ &amp; &quot;noticeform, \&quot;accept\&quot;, \n        proc(fv) \n          form_hide(fv);\n&quot;
+ &amp; &quot;          (constructor)(volibLocal);\n          end);\n      form_attac&quot;
+ &amp; &quot;h(noticeform, \&quot;reject\&quot;, \n        proc(fv) \n          form_hide(fv);&quot;
+ &amp; &quot; \n          ok \n          end);\n      form_show(noticeform);\n      &quot;
+ &amp; &quot;ok\n      end,\n     ping =&gt; meth(s)\n        true\n     end\n    };\n &quot;
+ &amp; &quot; net_export(\&quot;vos\&quot;, \&quot;\&quot;, vos);\nend;\n\n\n\n\n\n\n\n\n\n\n&quot;;
 
 BEGIN
 END VOCgiBundle.

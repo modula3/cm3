@@ -87,8 +87,8 @@ PROCEDURE <A NAME="SetUp"><procedure>SetUp</procedure></A> (target: TEXT) =
         Msg.Verbose (&quot;--- &quot;, ModeVerb [M3Options.major_mode], to_derived,
                      &quot; ---&quot;, Wr.EOL);
       ELSE
-        Msg.Out (&quot;--- &quot;, ModeVerb [M3Options.major_mode], to_derived,
-                 &quot; ---&quot;, Wr.EOL);
+        Msg.Info (&quot;--- &quot;, ModeVerb [M3Options.major_mode], to_derived,
+                  &quot; ---&quot;, Wr.EOL);
       END;
       ChDir (to_derived);
     END;

@@ -46,6 +46,7 @@ TYPE
     isTraced  : M3.Flag;
     isEmpty   : M3.Flag;
     isSolid   : M3.Flag;
+    lazyAligned: M3.Flag;
   END;
 </PRE>** phase 0 **
 
@@ -92,6 +93,10 @@ PROCEDURE <A HREF="Type.m3.html#IsStructured">IsStructured</A> (t: T): BOOLEAN;
 PROCEDURE <A HREF="Type.m3.html#LoadScalar">LoadScalar</A> (t: T);
 </PRE><BLOCKQUOTE><EM> If 't' is not a structured type, generate code to load the scalar
    pointed to by the address on the CG stack </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="Type.m3.html#IsLazyAligned">IsLazyAligned</A> (t: T): BOOLEAN;
+
+PROCEDURE <A HREF="Type.m3.html#SetLazyAlignment">SetLazyAlignment</A> (t: T; on: BOOLEAN);
 </PRE>** phase 3 **
 
 <P><PRE>PROCEDURE <A HREF="Type.m3.html#BeginSetGlobals">BeginSetGlobals</A> ();

@@ -16,8 +16,8 @@
 
 <P><PRE>MODULE <module><implements><A HREF="AssertStmt.i3.html">AssertStmt</A></implements></module>;
 
-IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="../misc/Token.i3.html">Token</A>, <A HREF="../misc/Scanner.i3.html">Scanner</A>, <A HREF="Stmt.i3.html">Stmt</A>, <A HREF="StmtRep.i3.html">StmtRep</A>, <A HREF="../misc/Error.i3.html">Error</A>;
-IMPORT <A HREF="../misc/Host.i3.html">Host</A>, <A HREF="../exprs/EnumExpr.i3.html">EnumExpr</A>, <A HREF="#x1">Type</A>, <A HREF="../builtinTypes/Bool.i3.html">Bool</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>, <A HREF="../builtinTypes/ErrType.i3.html">ErrType</A>;
+IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="#x1">Token</A>, <A HREF="../misc/Scanner.i3.html">Scanner</A>, <A HREF="Stmt.i3.html">Stmt</A>, <A HREF="StmtRep.i3.html">StmtRep</A>, <A HREF="../misc/Error.i3.html">Error</A>;
+IMPORT <A HREF="../misc/Host.i3.html">Host</A>, <A HREF="../exprs/EnumExpr.i3.html">EnumExpr</A>, <A HREF="#x2">Type</A>, <A HREF="../builtinTypes/Bool.i3.html">Bool</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>, <A HREF="../builtinTypes/ErrType.i3.html">ErrType</A>;
 IMPORT <A HREF="../builtinTypes/Textt.i3.html">Textt</A>, <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="../exprs/NarrowExpr.i3.html">NarrowExpr</A>, <A HREF="../values/Module.i3.html">Module</A>, <A HREF="AssignStmt.i3.html">AssignStmt</A>, <A HREF="../misc/RunTyme.i3.html">RunTyme</A>;
 
 TYPE
@@ -150,7 +150,14 @@ END AssertStmt.
 </PRE>
 </inModule>
 <HR>
-<A NAME="x1">interface Type is in:
+<A NAME="x1">interface Token is in:
+</A><UL>
+<LI><A HREF="../misc/Token.i3.html#0TOP0">m3front/src/misc/Token.i3</A>
+<LI><A HREF="../../../mentor/src/parse/Token.i3.html#0TOP0">mentor/src/parse/Token.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Type is in:
 </A><UL>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>

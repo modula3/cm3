@@ -18,42 +18,6 @@
 
 IMPORT <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="TargetMap.i3.html">TargetMap</A>, <A HREF="M3RT.i3.html">M3RT</A>;
 
-CONST
-  Systems = ARRAY OF TEXT {
-    (*  0 *) &quot;AIX386&quot;,
-    (*  1 *) &quot;ALPHA_OSF&quot;,
-    (*  2 *) &quot;AP3000&quot;,
-    (*  3 *) &quot;ARM&quot;,
-    (*  4 *) &quot;DS3100&quot;,
-    (*  5 *) &quot;FreeBSD&quot;,
-    (*  6 *) &quot;FreeBSD2&quot;,
-    (*  7 *) &quot;HP300&quot;,
-    (*  8 *) &quot;HPPA&quot;,
-    (*  9 *) &quot;IBMR2&quot;,
-    (* 10 *) &quot;IBMRT&quot;,
-    (* 11 *) &quot;IRIX5&quot;,
-    (* 12 *) &quot;LINUX&quot;,
-    (* 13 *) &quot;LINUXELF&quot;,
-    (* 14 *) &quot;NEXT&quot;,
-    (* 15 *) &quot;NT386&quot;,
-    (* 16 *) &quot;OKI&quot;,
-    (* 17 *) &quot;OS2&quot;,
-    (* 18 *) &quot;SEQUENT&quot;,
-    (* 19 *) &quot;SOLgnu&quot;,
-    (* 20 *) &quot;SOLsun&quot;,
-    (* 21 *) &quot;SPARC&quot;,
-    (* 22 *) &quot;SUN3&quot;,
-    (* 23 *) &quot;SUN386&quot;,
-    (* 24 *) &quot;UMAX&quot;,
-    (* 25 *) &quot;VAX&quot;,
-    (* 26 *) &quot;FreeBSD3&quot;,
-    (* 27 *) &quot;FreeBSD4&quot;,
-    (* 28 *) &quot;FBSD_ALPHA&quot;,
-    (* 29 *) &quot;LINUXLIBC6&quot;,
-    (* 30 *) &quot;I386_DARWIN&quot;,
-    (* 31 *) &quot;PPC_DARWIN&quot;
-  };
-
 VAR (*CONST*)
   CCs : REF ARRAY OF CallingConvention;
 
@@ -63,10 +27,11 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
   BEGIN
     (* lookup the system *)
     IF (system = NIL) THEN RETURN FALSE END;
-    WHILE NOT Text.Equal (system, Systems[sys]) DO
-      INC (sys);  IF (sys &gt;= NUMBER (Systems)) THEN RETURN FALSE END;
+    WHILE NOT Text.Equal (system, SystemNames[sys]) DO
+      INC (sys);  IF (sys &gt;= NUMBER (SystemNames)) THEN RETURN FALSE END;
     END;
-    System_name := Systems[sys];
+    System := VAL(sys, Systems);
+    System_name := SystemNames[sys];
 
     (* build a generic 32-bit/IEEE system description *)
 
@@ -157,9 +122,11 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
 
     CCs := NIL;
 
+    Allow_packed_byte_aligned := FALSE;
+		
     (* add the system-specific customization *)
-    CASE sys OF
-    |  0 =&gt; (* AIX386 *)
+    CASE System OF
+    |  Systems.AIX386 =&gt;
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := FALSE;
@@ -178,7 +145,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    |  1 =&gt; (* ALPHA_OSF *)
+    |  Systems.ALPHA_OSF =&gt;
                  Integer := Int64;
                  Word    := Word64;
                  Address := Word64;   Address.cg_type := CGType.Addr;
@@ -201,7 +168,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    |  2 =&gt; (* AP3000 *)
+    |  Systems.AP3000 =&gt;
                  max_align                 := 16;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
@@ -220,7 +187,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    |  3 =&gt; (* ARM *)
+    |  Systems.ARM =&gt;
                  max_align                 := 32;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
@@ -239,7 +206,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    |  4 =&gt; (* DS3100 *)
+    |  Systems.DS3100 =&gt;
                  max_align                 := 64;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -258,7 +225,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    |  5, 6, 26, 27 =&gt; (* FreeBSD, FreeBSD2, FreeBSD3, FreeBSD4 *)
+    |  Systems.FreeBSD, Systems.FreeBSD2, Systems.FreeBSD3, Systems.FreeBSD4 =&gt;
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -277,7 +244,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    |  7 =&gt; (* HP300 *)
+    |  Systems.HP300 =&gt;
                  max_align                 := 16;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
@@ -296,7 +263,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    |  8 =&gt; (* HPPA *)
+    |  Systems.HPPA =&gt;
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
@@ -315,7 +282,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := FALSE;
                  EOL                       := &quot;\n&quot;;
 
-    |  9 =&gt; (* IBMR2 *)
+    |  Systems.IBMR2 =&gt;
                  max_align                 := 32;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
@@ -334,7 +301,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    | 10 =&gt; (* IBMRT *)
+    | Systems.IBMRT =&gt;
                  max_align                 := 32;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
@@ -353,7 +320,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    |  11 =&gt; (* IRIX5 *)
+    |  Systems.IRIX5 =&gt;
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
@@ -372,7 +339,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    |  12, 13 =&gt; (* LINUX, LINUXELF *)
+    |  Systems.LINUX, Systems.LINUXELF =&gt;
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -391,7 +358,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    | 14 =&gt; (* NEXT *)
+    | Systems.NEXT =&gt;
                  max_align                 := 16;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
@@ -410,7 +377,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    | 15 =&gt; (* NT386 *)
+    | Systems.NT386 =&gt;
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -443,7 +410,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  NTCall (7, &quot;__cdecl&quot;,    0); (* __cdecl *)
                  NTCall (8, &quot;__stdcall&quot;,  1); (* __stdcall *)
 
-    | 16 =&gt; (* OKI *)
+    | Systems.OKI =&gt;
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -462,7 +429,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    |  17 =&gt; (* OS2 *)
+    |  Systems.OS2 =&gt;
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -481,7 +448,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    | 18 =&gt; (* SEQUENT *)
+    | Systems.SEQUENT =&gt;
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -500,7 +467,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    | 19, 20 =&gt; (* SOLgnu, SOLsun *)
+    | Systems.SOLgnu, Systems.SOLsun =&gt;
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
@@ -519,7 +486,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    | 21 =&gt; (* SPARC *)
+    | Systems.SPARC =&gt;
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
@@ -538,7 +505,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    | 22 =&gt; (* SUN3 *)
+    | Systems.SUN3 =&gt;
                  max_align                 := 16;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
@@ -557,7 +524,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    | 23 =&gt; (* SUN386 *)
+    | Systems.SUN386 =&gt;
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := FALSE;
@@ -576,7 +543,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    | 24 =&gt; (* UMAX *)
+    | Systems.UMAX =&gt;
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -595,7 +562,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    | 25 =&gt; (* VAX *)
+    | Systems.VAX =&gt;
                  Real.min.fraction     := -1.70111x+38;
                  Real.max.fraction     := -1.70111x+38;
                  Longreal.min.fraction := -1.70111x+38;
@@ -621,7 +588,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    |  29 =&gt; (* LINUXLIBC6 *)
+    |  Systems.LINUXLIBC6 =&gt;
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -640,8 +607,8 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    |  30 =&gt; (* I386_DARWIN *)
-      (* FIXME: please carefully check all the values *)
+    |  Systems.I386_DARWIN =&gt;
+      (* FIXME: please carefully check all the values; not active yet *)
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
@@ -660,17 +627,91 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (system: TEXT): BOOLEAN
                  Aligned_procedures        := TRUE;
                  EOL                       := &quot;\n&quot;;
 
-    |  31 =&gt; (* PPC_DARWIN *)
-      (* FIXME: please carefully check all the values *)
+    |  Systems.PPC_DARWIN =&gt;
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
                  Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 4096 * Char.size;
-                 Jumpbuf_size              := 11 * Address.size;
+                 Jumpbuf_size              := (26 + 36 + 129 + 1 + 1) *
+                                              Address.size;
+                 Jumpbuf_align             := Word64.align;
+                 Fixed_frame_size          := 8 * Address.size;
+                 Guard_page_size           := 0 * Char.size;
+                 All_floats_legal          := TRUE;
+                 Has_stack_walker          := FALSE;
+                 Setjmp                    := &quot;_setjmp&quot;;
+                 Checks_integer_ops        := FALSE;
+                 Global_handler_stack      := TRUE;
+                 Aligned_procedures        := TRUE;
+                 EOL                       := &quot;\n&quot;;
+                 (* Allow_packed_byte_aligned := TRUE; use &lt;*LAZYALIGN*&gt;*)
+
+    | Systems.BSDI4 =&gt;
+                 max_align                 := 32;
+                 Little_endian             := TRUE;
+                 PCC_bitfield_type_matters := TRUE;
+                 Structure_size_boundary   := 8;
+                 Bitfield_can_overlap      := FALSE;
+                 First_readable_addr       := 4096;
+                 Jumpbuf_size              := 10 * Address.size;
                  Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
+                 Guard_page_size           := 4096 * Char.size;
+                 All_floats_legal          := TRUE;
+                 Has_stack_walker          := FALSE;
+                 Setjmp                    := &quot;_setjmp&quot;;
+                 Checks_integer_ops        := FALSE;
+                 Global_handler_stack      := TRUE;
+                 Aligned_procedures        := TRUE;
+                 EOL                       := &quot;\n&quot;;
+
+    | Systems.NT386GNU =&gt;
+                 max_align                 := 32;
+                 Little_endian             := TRUE;
+                 PCC_bitfield_type_matters := TRUE;
+                 Structure_size_boundary   := 8;
+                 Bitfield_can_overlap      := FALSE;
+                 First_readable_addr       := 4096;
+                 Jumpbuf_size              := 52 * Address.size;
+                 Jumpbuf_align             := Address.align;
+                 Fixed_frame_size          := 0;
+                 Guard_page_size           := 0;
+                 All_floats_legal          := TRUE;
+                 Has_stack_walker          := FALSE;
+                 Setjmp                    := &quot;setjmp&quot;;
+                 Checks_integer_ops        := FALSE;
+                 Global_handler_stack      := FALSE;
+                 Aligned_procedures        := TRUE;
+                 EOL                       := &quot;\r\n&quot;;
+                 (* initial experiments indicate that the first 64K of
+                    a process's memory on NT are &quot;free&quot; and unreadable.
+                    --- WKK  9/9/94 *)
+
+                 CCs := NEW (REF ARRAY OF CallingConvention, 9);
+                 NTCall (0, &quot;C&quot;,          0); (* __cdecl *)
+                 NTCall (1, &quot;WINAPI&quot;,     1); (* __stdcall *)
+                 NTCall (2, &quot;CALLBACK&quot;,   1); (* __stdcall *)
+                 NTCall (3, &quot;WINAPIV&quot;,    0); (* __cdecl *)
+                 NTCall (4, &quot;APIENTRY&quot;,   1); (* __stdcall *)
+                 NTCall (5, &quot;APIPRIVATE&quot;, 1); (* __stdcall *)
+                 NTCall (6, &quot;PASCAL&quot;,     1); (* __stdcall *)
+                 NTCall (7, &quot;__cdecl&quot;,    0); (* __cdecl *)
+                 NTCall (8, &quot;__stdcall&quot;,  1); (* __stdcall *)
+
+    |  Systems.PPC_LINUX =&gt;
+      (* FIXME: preliminary assumptions bound to change *)
+                 max_align                 := 64;
+                 Little_endian             := FALSE;
+                 PCC_bitfield_type_matters := TRUE;
+                 Structure_size_boundary   := 8;
+                 Bitfield_can_overlap      := FALSE;
+                 First_readable_addr       := 4096 * Char.size;
+                 Jumpbuf_size              := 58 * Address.size +
+                                              32 * Address.size + 4;
+                 Jumpbuf_align             := Word64.align;
+                 Fixed_frame_size          := 8 * Address.size;
                  Guard_page_size           := 0 * Char.size;
                  All_floats_legal          := TRUE;
                  Has_stack_walker          := FALSE;
