@@ -75,7 +75,7 @@ END TestQuadreal;
 (*-----------------------*)
 PROCEDURE TestQuadcmplx():BOOLEAN=
 CONST
-  ftn = Module & "TestCmplx";
+  ftn = Module & "TestComplex";
 VAR
   result:=TRUE;
   alpha,beta,x1,x2:C.COMPLEX;

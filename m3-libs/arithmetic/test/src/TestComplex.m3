@@ -1,4 +1,4 @@
-MODULE TestCmplx EXPORTS Test;
+MODULE TestComplex EXPORTS Test;
 (*Copyright (c) 1996, Harry George
 Abstract: Test driver for Complex
 
@@ -8,11 +8,11 @@ Abstract: Test driver for Complex
 
 IMPORT Fmt, xComplex AS C;
 (*=======================*)
-<*UNUSED*> CONST Module = "TestCmplx.";
+<*UNUSED*> CONST Module = "TestComplex.";
 
 (*------------------------------*)
-PROCEDURE TestCmplx():BOOLEAN=
-CONST ftn = Module & "TestCmplx";
+PROCEDURE TestComplex():BOOLEAN=
+CONST ftn = Module & "TestComplex";
 VAR
   a:=C.COMPLEX{1.0D0,2.0D0};
   b:=C.COMPLEX{-3.0D0,-4.0D0};
@@ -55,8 +55,8 @@ BEGIN
     Msg("p1/p2 =" & C.fmtPolar(C.pdiv(p1,p2)) & "\n");
     
   RETURN result;
-END TestCmplx;
+END TestComplex;
 
 (*=======================*)
 BEGIN
-END TestCmplx.
+END TestComplex.

@@ -1,4 +1,4 @@
-MODULE TestVect EXPORTS Test;
+MODULE TestVector EXPORTS Test;
 (*Copyright (c) 1996, m3na project
 Abstract:  TestS for Vect module.
 
@@ -11,7 +11,7 @@ FROM xReal64 IMPORT REAL64;
 
 (*=======================*)
 CONST
-  Module = "TestVect.";
+  Module = "TestVector.";
 
 (*----------------------*)
 PROCEDURE TestABC():BOOLEAN=
@@ -25,9 +25,9 @@ BEGIN
   RETURN result;   
 END TestABC;
 (*----------------------*)
-PROCEDURE TestVectors():BOOLEAN=
+PROCEDURE TestVectororBasic():BOOLEAN=
 CONST
-  ftn = Module & "TestVectors";
+  ftn = Module & "TestVectororBasic";
   n=4;
 VAR
   result:=TRUE;
@@ -58,15 +58,15 @@ BEGIN
   END;
     
   RETURN result;   
-END TestVectors;
+END TestVectororBasic;
 (*-------------------------*)
-PROCEDURE TestVect():BOOLEAN=
-CONST ftn = Module & "TestVect";
+PROCEDURE TestVector():BOOLEAN=
+CONST ftn = Module & "TestVector";
 VAR result:=TRUE;
 BEGIN
-  NewLine(); EVAL TestVectors();
+  NewLine(); EVAL TestVectororBasic();
   RETURN result;
-END TestVect;
+END TestVector;
 (*=======================*)
 BEGIN
-END TestVect.
+END TestVector.

@@ -1,4 +1,4 @@
-MODULE TestRand EXPORTS Test;
+MODULE TestRandom EXPORTS Test;
 (*Copyright (c) 1996, m3na project
 Abstract:  TestS for Rand module.
 
@@ -12,7 +12,7 @@ FROM xReal64 IMPORT REAL64;
 
 (*=======================*)
 CONST
-  Module = "TestRand.";
+  Module = "TestRandom.";
 
 (*----------------------*)
 PROCEDURE TestABC():BOOLEAN=
@@ -187,8 +187,8 @@ BEGIN
 END TestDirichlet;
 
 (*-------------------------*)
-PROCEDURE TestRand():BOOLEAN=
-CONST ftn = Module & "TestRand";
+PROCEDURE TestRandom():BOOLEAN=
+CONST ftn = Module & "TestRandom";
 VAR result:=TRUE;
 BEGIN
   NewLine(); EVAL TestEngines();
@@ -198,7 +198,7 @@ BEGIN
   NewLine(); EVAL TestGamma();
   NewLine(); EVAL TestDirichlet();
   RETURN result;
-END TestRand;
+END TestRandom;
 (*=======================*)
 BEGIN
-END TestRand.
+END TestRandom.

@@ -1,4 +1,4 @@
-MODULE TestPoly EXPORTS Test;
+MODULE TestPolynomial EXPORTS Test;
 (*Copyright (c) 1996, m3na project
 Abstract:  TestS for Poly module.
 
@@ -11,7 +11,7 @@ FROM xReal64 IMPORT REAL64;
 IMPORT xReal64 AS R, xPoly AS P;
 (*=======================*)
 CONST
-  Module = "TestPoly.";
+  Module = "TestPolynomial.";
 
 (*----------------------*)
 PROCEDURE TestABC():BOOLEAN=
@@ -129,7 +129,7 @@ BEGIN
   RETURN result;
 END TestDeriv;
 (*-------------------------*)
-PROCEDURE TestPoly():BOOLEAN=
+PROCEDURE TestPolynomial():BOOLEAN=
 CONST ftn = Module & "Testoly";
 VAR result:=TRUE;
 BEGIN
@@ -139,7 +139,7 @@ BEGIN
   NewLine(); EVAL TestDiv();
   NewLine(); EVAL TestDeriv();
   RETURN result;
-END TestPoly;
+END TestPolynomial;
 (*=======================*)
 BEGIN
-END TestPoly.
+END TestPolynomial.
