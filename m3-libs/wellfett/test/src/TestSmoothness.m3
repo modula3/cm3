@@ -278,6 +278,7 @@ PROCEDURE FourierDecay () =
             maskSpec := FFT.DFTR2C1D(mask.wrapCyclic(bandWidth)^);
             band := CV.FromArray(
                       SUBARRAY(genSpec^, bandWidth, bandWidth + 1));
+            bandWrapped            := band;
             curBandWidth           := bandWidth;
             decaySpec              := CV.New(NUMBER(genSpec^));
             k           : CARDINAL := l - 1;
@@ -301,17 +302,20 @@ PROCEDURE FourierDecay () =
                    decayBandDoub = SUBARRAY(bandDoub^, 0, curBandWidth),
                    sum           = CVS.Sum(genBand).re,
                    decaySum      = CVS.Sum(decayBand).re,
-                   decayDoubSum  = CVS.Sum(decayBandDoub).re             DO
+                   decayDoubSum  = CVS.Sum(decayBandDoub).re,
+                   wrappedSum = CVS.Sum(
+                                  SUBARRAY(bandWrapped^, 0, bandWidth)).re DO
                 SUBARRAY(decaySpec^, curBandWidth, curBandWidth) :=
                   decayBand;
                 IO.Put(
-                  Fmt.FN("%s: sum (%s) %s <-> %s <-> %s\n",
+                  Fmt.FN("%s: sum (%s)\n   %s <-> %s <-> %s <-> %s\n",
                          ARRAY OF
                            TEXT{Fmt.Int(k),
                                 (*RF.Fmt(CVT.Norm2(CVB.Sub(decayBand,
                                    genBand))),*)
                                 RF.Fmt(sum / decaySum), RF.Fmt(sum),
-                                RF.Fmt(decayDoubSum), RF.Fmt(decaySum)}));
+                                RF.Fmt(decayDoubSum), RF.Fmt(decaySum),
+                                RF.Fmt(wrappedSum)}));
                 IO.Put(
                   Fmt.FN(
                     "diff: upsampled %s, Fourier interpolated %s\n",
@@ -322,6 +326,7 @@ PROCEDURE FourierDecay () =
                 DEC(k);
               END;
               IF k = 0 THEN EXIT END;
+              (* upsample the last frequency band *)
               WITH bandNew = UpSample2(band^),
                    res     = RIntPow.MulPower(R.One, R.Half, l - k) DO
                 (*band := UpSample2(band^);*)
@@ -345,6 +350,8 @@ PROCEDURE FourierDecay () =
                 band := bandNew;
               END;
 
+              (* multiply the upsampled band with the filter mask's
+                 symbol *)
               FOR i := 0 TO rep - 1 DO
                 WITH bandSpec = SUBARRAY(band^, bandWidth * i, bandWidth) DO
                   MulVecC(bandSpec, maskSpec^, bandSpec);
@@ -358,6 +365,21 @@ PROCEDURE FourierDecay () =
               band[LAST(band^)] := C.Mul(maskSpec[0], band[LAST(band^)]);
               bandDoub[LAST(band^)] :=
                 C.Mul(maskSpec[0], bandDoub[LAST(band^)]);
+
+              (* alternative way: upsample and wrap frequency band *)
+              WITH bandWrappedNew = UpSample2(bandWrapped^) DO
+                bandWrapped := NEW(CV.T, NUMBER(bandWrapped^));
+                CVS.Add(bandWrapped^,
+                       SUBARRAY(bandWrappedNew^, 0, NUMBER(bandWrapped^)),
+                       SUBARRAY(
+                         bandWrappedNew^, bandWidth, NUMBER(bandWrapped^)));
+              END;
+              WITH bandSpec = SUBARRAY(bandWrapped^, 0, bandWidth) DO
+                MulVecC(bandSpec, maskSpec^, bandSpec);
+              END;
+              bandWrapped[LAST(bandWrapped^)] :=
+                C.Mul(maskSpec[0], bandWrapped[LAST(bandWrapped^)]);
+
 
               (* IO.Put(Fmt.FN("diff upsampled - Fourier interpolated" & "
                  after multiplication: %s\n", ARRAY OF
