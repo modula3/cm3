@@ -1,5 +1,6 @@
 !- nedit modula-3 mode
 !- start nedit with: 'nedit -import m3-nedit-mode' and then save preferences
+!- $Id: m3-nedit-mode,v 1.4 2004-01-22 16:47:34 thielema Exp $
 
 nedit.shellCommands: \
 	make Modula 3 @Modula-3:Alt+3:3:DS:\n\
