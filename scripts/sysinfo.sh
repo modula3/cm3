@@ -127,6 +127,7 @@ case "${UNAME}" in
     if [ -f /usr/bin/tar.exe ] ; then
       TAR=/usr/bin/tar.exe
     fi
+    GMAKE=${GMAKE:-make}
 
     cygpath() {
       /usr/bin/cygpath $@
@@ -151,6 +152,15 @@ case "${UNAME}" in
     fi
   ;;
 
+  Darwin*)
+    CM3_OSTYPE=POSIX
+    case "`uname -p`" in
+      powerpc*) CM3_TARGET=PPC_DARWIN;;
+      i[3456]86*) CM3_TARGET=I386_DARWIN;;
+    esac
+    GMAKE=${GMAKE:-make}
+  ;;
+
   SunOS*)
     CM3_OSTYPE=POSIX
     CM3_TARGET=SOLgnu
@@ -160,6 +170,7 @@ case "${UNAME}" in
   Linux*)
     CM3_OSTYPE=POSIX
     CM3_TARGET=LINUXLIBC6
+    GMAKE=${GMAKE:-make}
   ;;
 
   # more need to be added here, I haven't got all the platform info ready
@@ -183,6 +194,7 @@ GCC_BACKEND=${GCC_BACKEND:-${CM3_GCC_BACKEND}}
 INSTALLROOT=${INSTALLROOT:-${CM3_INSTALL}}
 PKGSDB=${PKGSDB:-$ROOT/scripts/PKGS}
 GREP=${GREP:-egrep}
+GMAKE=${GMAKE:-gmake}
 
 qgrep() {
   egrep $@ >/dev/null 2>/dev/null
@@ -237,6 +249,7 @@ debug "GCC_BACKEND = $GCC_BACKEND"
 debug "INSTALLROOT = $INSTALLROOT"
 debug "PKGSDB      = $PKGSDB"
 debug "GREP        = $GREP"
+debug "GMAKE       = $GMAKE"
 debug "TMPDIR      = $TMPDIR"
 debug "EXE         = $EXE"
 debug "SL          = $SL"
