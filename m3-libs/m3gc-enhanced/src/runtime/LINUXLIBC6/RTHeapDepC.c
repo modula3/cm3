@@ -1394,7 +1394,6 @@ const struct timezone *tzp;
   return result;
 }
 
-/*
 int sigaction(int signum, const struct sigaction *act, 
 	      struct sigaction *oldact)
 { int result;
@@ -1406,7 +1405,6 @@ int sigaction(int signum, const struct sigaction *act,
   EXIT_CRITICAL;
   return result;
 }
-*/
 
 int sigpending(set)
 sigset_t *set;
