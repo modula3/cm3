@@ -476,6 +476,18 @@ PROCEDURE TestRootOp():BOOLEAN=
     Msg("\n");
   END TestPower;
 
+  PROCEDURE NewOneChain (len:CARDINAL; c:I.T):IR.T=
+  VAR
+    x:IR.T;
+  BEGIN
+    x:=IR.New(len);
+    FOR l:=0 TO len-1 DO
+      x[l]:=1;
+    END;
+    x[len]:=c;
+    RETURN x;
+  END NewOneChain;
+
 CONST
   ftn = Module & "TestRootOp";
 VAR
@@ -494,19 +506,11 @@ BEGIN
     x,y,z:IR.T;
   BEGIN
     FOR j:=1 TO 7 DO
-      x:=IR.New(j);
-      FOR l:=0 TO j-1 DO
-        x[l]:=1;
-      END;
-      x[j]:=2;
+      x:=NewOneChain(j,2);
       (*Msg("x"&IPF.Fmt(x));*)
       FOR k:=1 TO 7 DO
         IF j+k<8 THEN (*otherwise internal overflow*)
-          y:=IR.New(k);
-          FOR l:=0 TO k-1 DO
-            y[l]:=1;
-          END;
-          y[k]:=3;
+          y:=NewOneChain(k,3);
           (*Msg("y"&IPF.Fmt(y));*)
           z:=IR.Mul(x,y);
           Msg(Fmt.FN("%s,%s - %s x %s = %s\n", ARRAY OF TEXT
@@ -549,6 +553,7 @@ BEGIN
   END;
 
   TestPower(ARRAY OF I.T{1,1,1},3);
+  TestPower(ARRAY OF I.T{2,2},2);
   TestPower(ARRAY OF I.T{2,2,2,2},1);
   TestPower(ARRAY OF I.T{2,2,2,2},2);
   TestPower(ARRAY OF I.T{2,2,2,2},3);
@@ -558,9 +563,17 @@ BEGIN
   VAR
     x,z:IR.T;
   BEGIN
+(*
     x:=IR.New(2); x^:=IR.TBody{1,-4,4};
-    z:=IR.PowN(x,1);
-    Msg(Fmt.FN("%s^2 = %s\n", ARRAY OF TEXT{IPF.Fmt(x), IPF.Fmt(z)}));
+*)
+    FOR j:=1 TO 7 DO
+      x:=NewOneChain(j,2);
+      FOR k:=1 TO 4 DO
+        z:=IR.PowN(x,k);
+        Msg(Fmt.FN("%s^%s = %s\n",
+                   ARRAY OF TEXT{IPF.Fmt(x), Fmt.Int(k), IPF.Fmt(z)}));
+      END;
+    END;
   END;
 
   RETURN result;

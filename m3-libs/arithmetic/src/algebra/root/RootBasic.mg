@@ -284,12 +284,16 @@ PROCEDURE PowN(x:T;
 VAR
   ps,psz:REF PowerSumSeq;
   j,k,l,m:CARDINAL;
-  cp:R.T;
+  cp,cx,powcx:R.T;
+  qx,qz:T;
 BEGIN
   IF y=0 THEN
     RETURN One;
   ELSE
-    ps:=ToPowerSumSeq(x,LAST(x^));
+    cx:=x[LAST(x^)];
+    qx:=ScaleUpRoots(x);
+
+    ps:=ToPowerSumSeq(qx,LAST(qx^));
     psz:=NEW(REF PowerSumSeq,NUMBER(ps^));
     k:=y-1;
     j:=0;
@@ -302,7 +306,7 @@ BEGIN
     m:=NUMBER(ps^);
     WHILE j<NUMBER(psz^) DO
       WHILE m<=k DO
-        cp:=GetNextPowerSum(ps^,l,x);
+        cp:=GetNextPowerSum(ps^,l,qx);
         ps[l]:=cp;
         INC(m);
         INC(l);
@@ -314,7 +318,15 @@ BEGIN
       INC(j);
       INC(k,y);
     END;
-    RETURN FromPowerSumSeq(psz^);
+    qz:=FromPowerSumSeq(psz^);
+
+    (*powcx:=cx^n*)
+    powcx:=cx;
+    FOR i:=2 TO y DO
+      powcx:=R.Mul(powcx,cx);
+    END;
+    ScaleDownRoots(qz^,powcx,LAST(qz^)-1);
+    RETURN qz;
   END;
 END PowN;
 
