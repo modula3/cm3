@@ -49,7 +49,8 @@ PROCEDURE DyadicFilterBankSynthesis (READONLY x: DWT.DyadicWaveletCoeffs;
       VAR xVan := SIntPow.MulPower(x.high[i], vanAtom, van1);
       BEGIN
         z := y[0].upConvolve(z, 2).superpose(
-               xVan.downsample(2).upsample(2).convolve(y[1]));
+               xVan.extractPeaks(2).convolve(y[1]));
+        (*extractPeaks works like downsample and subsequent upsample*)
       END;
     END;
     RETURN z;
