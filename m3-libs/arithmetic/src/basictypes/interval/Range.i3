@@ -35,4 +35,15 @@ PROCEDURE Add (READONLY x, y: T; ): T;
 <* INLINE *>
 PROCEDURE Scale (READONLY x: T; y: CARDINAL; ): T;
 
+
+
+<* INLINE *>
+PROCEDURE Section (READONLY x, y: T; ): T;
+(* Precondition: The ranges may not be separated, that is they must overlap
+   or *)
+
+<* INLINE *>
+PROCEDURE Union (READONLY x, y: T; ): T;
+
+
 END Range.
