@@ -1,6 +1,8 @@
 MODULE TestDaubechies;
 
-IMPORT LongRealSignal            AS S,
+IMPORT LongRealBasic             AS R,
+       LongRealTrans             AS RT,
+       LongRealSignal            AS S,
        LongRealSignalFmtLex      AS SF,
        LongRealDaubechiesWavelet AS Daub,
        IO, Fmt, Thread, Wr;
@@ -13,7 +15,7 @@ PROCEDURE Test()=
     FOR n:=0 TO 10 DO
       x := Daub.FilterAbsSqr(n);
       IO.Put(Fmt.FN("%s: %s\n",
-        ARRAY OF TEXT{Fmt.Int(n),x.fmt()}));
+        ARRAY OF TEXT{Fmt.Int(n),x.scale(R.Scalb(1.0D0,4*n-2)).fmt()}));
     END;
   END Test;
 
