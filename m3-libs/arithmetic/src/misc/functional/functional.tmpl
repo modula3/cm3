@@ -1,0 +1,44 @@
+%
+%  Quake functions to instantiate operations on generic functionals
+%  and their derivatives.
+%
+
+readonly proc Functional (nm, field, rimpl) is
+  local basic  = nm & "Functional"
+  local vfield = nm & "VectorFast"
+  local vecsup = nm & "VectorSupport"
+  local mfield = nm & "MatrixFast"
+  local rfield = field & rimpl
+  local funcder = nm & "FunctionalDeriv2"
+  build_generic_intf (basic, "Functional", [rfield, vfield, mfield, funcder], VISIBLE)
+  build_generic_impl (basic, "Functional", [rfield, vfield, mfield, funcder])
+end
+
+readonly proc FunctionalDeriv2 (nm, field, rimpl) is
+  local basic  = nm & "FunctionalDeriv2"
+  local vfield = nm & "VectorFast"
+  local vecsup = nm & "VectorSupport"
+  local mfield = nm & "MatrixFast"
+  local rfield = field & rimpl
+  build_generic_intf (basic, "FunctionalDeriv2", [rfield, vfield, mfield], VISIBLE)
+  build_generic_impl (basic, "FunctionalDeriv2", [rfield, vfield, mfield])
+end
+
+readonly proc FunctionalBasic (nm, field, rimpl) is
+  local basic  = nm & "FunctionalBasic"
+  local vfield = nm & "VectorBasic"
+  local vecsup = nm & "VectorSupport"
+  local rfield = field & rimpl
+  build_generic_intf (basic, "FunctionalBasic", [rfield, vfield], VISIBLE)
+  build_generic_impl (basic, "FunctionalBasic", [rfield, vecsup])
+end
+
+readonly proc FunctionalFast (nm, field, rimpl) is
+  FunctionalBasic(nm,field,rimpl)
+  local basic  = nm & "FunctionalBasic"
+  local fast   = nm & "FunctionalFast"
+  local rfield = field & rimpl
+  local vfield = field & "VectorFast"
+  build_generic_intf (fast,  "FunctionalFast",  [rfield, vfield, basic], VISIBLE)
+  build_generic_impl (fast,  "FunctionalFast",  [rfield])
+end
