@@ -60,7 +60,7 @@ PROCEDURE FastFmt(READONLY x: T; base: Base; pad: [1..Word.Size]): TEXT =
   BEGIN
     txt := F.Unsigned(x.data[x.size-1],base);
     FOR k:=x.size-2 TO 0 BY -1 DO
-      txt := txt & F.Pad (F.Unsigned(x.data[x.size-1],base), pad, '0');
+      txt := txt & F.Pad (F.Unsigned(x.data[k],base), pad, '0');
     END;
     RETURN txt;
   END FastFmt;
