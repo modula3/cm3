@@ -1,0 +1,63 @@
+r inf		# =>  Infinity
+-> Infinity
+
+r -inf		# => -Infinity
+-> -Infinity
+
+r INFINITY	# =>  Infinity
+-> Infinity
+
+r -INFINITY	# => -Infinity
+-> -Infinity
+
+r nan		# => NaN
+-> NaN
+
+r NaN		# => NaN
+-> NaN
+
+l inf		# =>  Infinity
+-> Infinity
+
+l -inf		# => -Infinity
+-> -Infinity
+
+l INFINITY	# =>  Infinity
+-> Infinity
+
+l -INFINITY	# => -Infinity
+-> -Infinity
+
+l nan		# => NaN
+-> NaN
+
+l NaN		# => NaN
+-> NaN
+
+e inf		# =>  Infinity
+-> Infinity
+
+e -inf		# => -Infinity
+-> -Infinity
+
+e INFINITY	# =>  Infinity
+-> Infinity
+
+e -INFINITY	# => -Infinity
+-> -Infinity
+
+e nan		# => NaN
+-> NaN
+
+e NaN		# => NaN
+-> NaN
+
+r in		# => Lexical Error
+** Raised "Lex.Error"
+
+r infi		# => Lexical Error
+** Raised "Lex.Error"
+
+r na		# => Lexical Error
+** Raised "Lex.Error"
+

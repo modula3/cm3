@@ -1,0 +1,15 @@
+% Copyright (C) 1993, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Fri Oct 28 11:49:41 PDT 1994 by kalsow
+%      modified on Mon Jun 21 11:04:33 PDT 1993 by steveg
+%      modified on Mon May 24 10:48:41 PDT 1993 by muller
+
+import ("libm3")
+
+Module    ("SLisp")
+Interface ("SLispClass")
+module    ("SLispMath")
+
+Library ("m3slisp")

@@ -1,0 +1,68 @@
+# Last modified on Tue Mar 15 16:52:51 PST 1994 by heydon
+
+# This file tests formating of the floating-point values Infinity and
+# -Infinity for each of the 3 formatting styles.
+
+# Sci -------------------------------------------------------------------------
+
+# positive
+r S 0 Inf	# " Inf  ",        " 1.0/0.0"
+r S 1 Inf	# " Inf    ",      " 1.0/0.0"
+r S 2 Inf	# " Infinity",     " 1.0/0.0 "
+r S 5 Inf	# " Infinity   ",  " 1.0/0.0    "
+l S 0 Inf	# " Inf   ",       " 1.0d0/0.0d0"
+l S 1 Inf	# " Infinity",     " 1.0d0/0.0d0"
+l S 4 Inf	# " Infinity   ",  " 1.0d0/0.0d0"
+l S 5 Inf	# " Infinity    ", " 1.0d0/0.0d0 "
+e S 0 Inf	# " Inf   ",       " 1.0x0/0.0x0"
+e S 4 Inf	# " Infinity   ",  " 1.0x0/0.0x0"
+e S 5 Inf	# " Infinity    ", " 1.0x0/0.0x0 "
+
+# negative
+r S 0 -Inf	# "-Inf  ",        "-1.0/0.0"
+r S 1 -Inf	# "-Inf    ",      "-1.0/0.0"
+r S 2 -Inf	# "-Infinity",     "-1.0/0.0 "
+r S 5 -Inf	# "-Infinity   ",  "-1.0/0.0    "
+l S 0 -Inf	# "-Inf   ",       "-1.0d0/0.0d0"
+l S 1 -Inf	# "-Infinity",     "-1.0d0/0.0d0"
+l S 4 -Inf	# "-Infinity   ",  "-1.0d0/0.0d0"
+l S 5 -Inf	# "-Infinity    ", "-1.0d0/0.0d0 "
+e S 0 -Inf	# "-Inf   ",       "-1.0x0/0.0x0"
+e S 4 -Inf	# "-Infinity   ",  "-1.0x0/0.0x0"
+e S 5 -Inf	# "-Infinity    ", "-1.0x0/0.0x0 "
+
+# Fix -------------------------------------------------------------------------
+
+# positive
+r F 0 Inf	# "Infinity", "1.0/0.0"
+r F 5 Inf	# "Infinity", "1.0/0.0"
+l F 0 Inf	# "Infinity", "1.0d0/0.0d0"
+l F 5 Inf	# "Infinity", "1.0d0/0.0d0"
+e F 0 Inf	# "Infinity", "1.0x0/0.0x0"
+e F 5 Inf	# "Infinity", "1.0x0/0.0x0"
+
+# negative
+r F 0 -Inf	# "-Infinity", "-1.0/0.0"
+r F 5 -Inf	# "-Infinity", "-1.0/0.0"
+l F 0 -Inf	# "-Infinity", "-1.0d0/0.0d0"
+l F 5 -Inf	# "-Infinity", "-1.0d0/0.0d0"
+e F 0 -Inf	# "-Infinity", "-1.0x0/0.0x0"
+e F 5 -Inf	# "-Infinity", "-1.0x0/0.0x0"
+
+# Auto ------------------------------------------------------------------------
+
+# positive
+r A 0 Inf	# "Infinity", "1.0/0.0"
+r A 5 Inf	# "Infinity", "1.0/0.0"
+l A 0 Inf	# "Infinity", "1.0d0/0.0d0"
+l A 5 Inf	# "Infinity", "1.0d0/0.0d0"
+e A 0 Inf	# "Infinity", "1.0x0/0.0x0"
+e A 5 Inf	# "Infinity", "1.0x0/0.0x0"
+
+# negative
+r A 0 -Inf	# "-Infinity", "-1.0/0.0"
+r A 5 -Inf	# "-Infinity", "-1.0/0.0"
+l A 0 -Inf	# "-Infinity", "-1.0d0/0.0d0"
+l A 5 -Inf	# "-Infinity", "-1.0d0/0.0d0"
+e A 0 -Inf	# "-Infinity", "-1.0x0/0.0x0"
+e A 5 -Inf	# "-Infinity", "-1.0x0/0.0x0"

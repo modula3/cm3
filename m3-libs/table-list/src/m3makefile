@@ -1,0 +1,27 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Tue Dec 21 10:10:29 PST 1993 by detlefs
+
+import("libm3")
+
+Generic_module("TableList")
+
+template ("table-list")
+
+TableList ("AtomAtom", "Atom", "Atom")
+TableList ("AtomRef",  "Atom", "Refany")
+TableList ("AtomText", "Atom", "Text")
+
+TableList ("RefAtom", "Refany", "Atom")
+TableList ("RefRef",  "Refany", "Refany")
+TableList ("RefText", "Refany", "Text")
+
+TableList ("TextAtom", "Text", "Atom")
+TableList ("TextRef",  "Text", "Refany")
+TableList ("TextText", "Text", "Text")
+
+% For now...
+Library("table-list")
+

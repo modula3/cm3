@@ -1,0 +1,15 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+% Last modified on Wed Jun  9 17:25:14 PDT 1993 by harrison
+%      modified on Fri May  7 21:06:11 PDT 1993 by mjordan
+%      modified on Thu May  6 12:10:31 PDT 1993 by muller
+
+Interface ("Cerrno")
+Interface ("Cstddef")
+Interface ("Cstdlib")
+Interface ("Ctypes")
+
+Module ("M3toC")
+Module ("Cstdarg")

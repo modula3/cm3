@@ -1,0 +1,10 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+% Last modified on Thu Jun 17 19:21:47 PDT 1993 by harrison
+%      modified on Tue Feb  2 10:51:11 PST 1993 by mjordan
+
+implementation ("LowPerfTool")
+
+

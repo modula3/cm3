@@ -1,0 +1,28 @@
+Copyright (C) 1992, Digital Equipment Corporation
+All rights reserved.
+See the file COPYRIGHT for a full description.
+
+Last modified on Thu Feb 24 12:08:55 PST 1994 by heydon
+
+/proj/m3/pkg/fmtlex/tests/lex/src/README
+
+DESCRIPTION
+
+  This directory contains the source for a simple program to test the Lex
+  implementation. It also contains several input files on which to run the
+  test program, and a Makefile for automatically running regression tests.
+
+  To run the test program "../DS/LexTest", see the description at the head of
+  the file "LexTest.m3". To run the regression tests, type "make all". For
+  details on setting up the regression tests, see the "Makefile".
+
+CONTENTS
+
+  LexTest.m3			source to build test program
+  m3makefile			builds Modula-3 test program
+  Makefile			makefile for controlling regression tests
+  run-tests			simple shell script to run regression tests
+  good.txt.in			input file of known-good input
+  intOverflow4.txt.in		input file to test overflow behavior
+  lexErrs.txt.in		input file to trigger lex errors
+  realPrec.txt.in		input file to test rounding to arbitrary prec.

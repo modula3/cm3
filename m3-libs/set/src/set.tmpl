@@ -1,0 +1,65 @@
+% Copyright (C) 1993 Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Mon Jul 25 11:54:58 PDT 1994 by detlefs 
+%      modified on Mon Sep 20 12:26:41 PDT 1993 by kalsow 
+
+%
+%  Quake functions to instantiate a generic table.
+%
+
+readonly proc MkSet (nm, elem) is
+  local set = nm & "Set"
+  build_generic_intf (set, "Set", [elem], VISIBLE)
+  build_generic_impl (set, "Set", [elem])
+end
+
+readonly proc mkSet (nm, elem) is
+  local set = nm & "Set"
+  build_generic_intf (set, "Set", [elem], HIDDEN)
+  build_generic_impl (set, "Set", [elem])
+end
+
+%
+% Table-based implementation
+%
+
+readonly proc MkSetDef (nm, elem) is
+  local set = nm & "Set"
+  local setDef = nm & "SetDef"
+  local elemRefTbl = nm & "RefTbl"
+  build_generic_intf (setDef, "SetDef", [set], VISIBLE)
+  build_generic_impl (setDef, "SetDef", [elem, set, elemRefTbl])
+end
+
+readonly proc mkSetDef (nm, elem) is
+  local set = nm & "Set"
+  local setDef = nm & "SetDef"
+  local elemRefTbl = nm & "RefTbl"
+  build_generic_intf (setDef, "SetDef", [set], HIDDEN)
+  build_generic_impl (setDef, "SetDef", [elem, set, elemRefTbl])
+end
+
+%
+% List-based implementation
+%
+
+readonly proc MkSetList (nm, elem) is
+  local set = nm & "Set"
+  local setList = nm & "SetList"
+  local elemList = nm & "List"
+  build_generic_intf (setList, "SetList", [set], VISIBLE)
+  build_generic_impl (setList, "SetList", [elem, set, elemList])
+end
+
+readonly proc mkSetList (nm, elem) is
+  local set = nm & "Set"
+  local setList = nm & "SetList"
+  local elemList = nm & "List"
+  build_generic_intf (setList, "SetList", [set], HIDDEN)
+  build_generic_impl (setList, "SetList", [elem, set, elemList])
+end
+
+
+

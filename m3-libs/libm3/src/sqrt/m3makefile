@@ -1,0 +1,17 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Fri Mar  4 13:11:42 PST 1994 by kalsow
+
+Generic_module ("FloatExtras")
+build_generic_intf("RealFloatExtras", "FloatExtras", ["Real"], VISIBLE)
+build_generic_impl("RealFloatExtras", "FloatExtras", ["Real", "RealFloat"])
+build_generic_intf("LongFloatExtras", "FloatExtras", ["LongReal"], VISIBLE)
+build_generic_impl("LongFloatExtras", "FloatExtras", ["LongReal", "LongFloat"])
+
+Generic_module ("Sqrt")
+build_generic_intf("RealSqrt", "Sqrt", ["Real"], VISIBLE)
+build_generic_impl("RealSqrt", "Sqrt", ["Real", "RealFloat", "RealFloatExtras"])
+build_generic_intf("LongSqrt", "Sqrt", ["LongReal"], VISIBLE)
+build_generic_impl("LongSqrt", "Sqrt", ["LongReal", "LongFloat", "LongFloatExtras"])

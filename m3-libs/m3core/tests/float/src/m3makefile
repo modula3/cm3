@@ -1,0 +1,14 @@
+/* Copyright (C) 1992, Xerox                                                 */
+/* All rights reserved.                                                      */
+
+/* Last modified on Wed May  5 11:56:49 PDT 1993 by mjordan                  */
+/*      modified on Wed Mar  4 17:59:48 PST 1992 by stolfi                   */
+/*      modified on Tue Feb 11 15:20:06 PST 1992 by muller                   */
+
+import(libm3)
+
+implementation (Main)
+module (RealTest)
+module (LongTest)
+
+program (Test)

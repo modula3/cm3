@@ -1,0 +1,32 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Thu Oct 27 15:23:11 PDT 1994 by kalsow 
+%      modified on Thu Oct 20 14:32:17 PDT 1994 by ericv 
+%      modified on Tue Mar 24 21:36:54 PST 1992 by muller
+
+Interface ("Udir")
+Module    ("Uerror")
+Interface ("Uexec")
+Interface ("Ugrp")
+Module    ("Uin")
+%--- Interface ("Uipc") -- not supported?
+Interface ("Umman")
+%--- Module    ("Umsg") -- not supported?
+Module    ("Unetdb")
+Interface ("Unix")
+Interface ("Uprocess")
+Interface ("Upwd")
+Interface ("Uresource")
+%--- Interface ("Usem") -- not supported?
+%--- Interface ("Ushm") -- not supported?
+Module    ("Usignal")   % BSDsigpause, BSDsignal are NOT the default
+Interface ("Usocket")
+Interface ("Ustat")
+Module    ("Utime")
+Module    ("Utypes")
+Interface ("Uugid")
+Interface ("Uuio")
+Interface ("Uutmp")
+

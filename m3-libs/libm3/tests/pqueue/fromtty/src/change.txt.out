@@ -1,0 +1,99 @@
+> fromelts e d c b a t r s u    
+"e" => 1
+"d" => 2
+"c" => 3
+"b" => 4
+"a" => 5
+"t" => 6
+"r" => 7
+"s" => 8
+"u" => 9
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 9
+pq.heap = Elts{NIL, "a", "b", "c", "e", "d", "t", "r", "s", "u"}
+> c 5 x
+"x" => 5
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 9
+pq.heap = Elts{NIL, "b", "d", "c", "e", "x", "t", "r", "s", "u"}
+> c 4 x
+"x" => 4
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 9
+pq.heap = Elts{NIL, "c", "d", "r", "e", "x", "t", "x", "s", "u"}
+> c 3 x
+"x" => 3
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 9
+pq.heap = Elts{NIL, "d", "e", "r", "s", "x", "t", "x", "x", "u"}
+> c 7 x
+"x" => 7
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 9
+pq.heap = Elts{NIL, "d", "e", "t", "s", "x", "x", "x", "x", "u"}
+> c 2 x
+"x" => 2
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 9
+pq.heap = Elts{NIL, "e", "s", "t", "u", "x", "x", "x", "x", "x"}
+> c 1 x
+"x" => 1
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 9
+pq.heap = Elts{NIL, "s", "u", "t", "x", "x", "x", "x", "x", "x"}
+> c 8 x
+"x" => 8
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 9
+pq.heap = Elts{NIL, "t", "u", "x", "x", "x", "x", "x", "x", "x"}
+> c 6 x
+"x" => 6
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 9
+pq.heap = Elts{NIL, "u", "x", "x", "x", "x", "x", "x", "x", "x"}
+> c 9 x
+"x" => 9
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 9
+pq.heap = Elts{NIL, "x", "x", "x", "x", "x", "x", "x", "x", "x"}
+> showelts
+  1 "x"
+  2 "x"
+  3 "x"
+  4 "x"
+  5 "x"
+  6 "x"
+  7 "x"
+  8 "x"
+  9 "x"
+> c 5 z
+"z" => 5
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 9
+pq.heap = Elts{NIL, "x", "x", "x", "x", "z", "x", "x", "x", "x"}
+> c 8 y
+"y" => 8
+> showheap
+LAST(pq.heap^) = 9; pq.sz = 9
+pq.heap = Elts{NIL, "x", "x", "x", "x", "z", "y", "x", "x", "x"}
+> dmin
+"x"
+> dmin
+"x"
+> dmin
+"x"
+> dmin
+"x"
+> dmin
+"x"
+> dmin
+"x"
+> dmin
+"x"
+> dmin
+"y"
+> dmin
+"z"
+> dmin
+Queue is empty
+> ^D

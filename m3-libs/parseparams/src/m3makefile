@@ -1,0 +1,11 @@
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Thu Oct 20 09:45:05 PDT 1994 by kalsow
+
+import ("libm3")
+
+Module ("ParseParams")
+
+Library ("m3parseparams")

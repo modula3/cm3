@@ -1,0 +1,28 @@
+# Last modified on Sun Feb 27 16:49:17 PST 1994 by heydon
+#      modified on Fri Feb 25 14:58:22 PST 1994 by kalsow
+
+# This file tests that integer overflows are caught when reading both signed
+# and unsigned integers. This file assumes that both signed and unsigned
+# integers are 4-byte words (hence, the "4" in the filename).
+
+# signed integers
+i  16_7fffffff	 	# => 2147483647
+i   2147483647		# => 2147483647
+i  16_80000000		# => Integer Overflow
+i   2147483648		# => Integer Overflow
+i  21474836400		# => Integer Overflow
+i -16_80000000		# => -2147483648
+i  -2147483648		# => -2147483648
+i -16_80000001		# => Integer Overflow
+i  -2147483649		# => Integer Overflow
+i -21474836400		# => Integer Overflow
+
+# unsigned integers
+u  ffffffff		# => ffffffff
+u 100000000		# => Integer Overflow
+
+# The following examples produce integer overflows, but should read all the
+# base-10 and -16 digits, respectively. Hence, the 'i' input should stop
+# reading at the last '9', and the 'u' input should stop reading at the 'F'.
+i 999999999999999999999		# => Integer Overflow, "ABCDEFGHIJ"
+u 999999999999999999999ABCDEF	# => Integer Overflow, "GHIJ"
