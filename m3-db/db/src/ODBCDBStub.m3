@@ -1,4 +1,4 @@
-MODULE ODBCLDBStub EXPORTS ODBCLDB;
+MODULE ODBCDBStub EXPORTS ODBCDB;
 
 (*
 	This is a "stub" that gets compiled in instead of the real db interface if
@@ -14,4 +14,4 @@ BEGIN
 END GetInterface;
 
 BEGIN
-END ODBCLDBStub.
+END ODBCDBStub.
