@@ -1,0 +1,15 @@
+/* Copyright (C)-ip992, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Wed May 19 16:34:34 PDT 1993 by msm                      */
+/*      modified on Fri Apr 30-ip5:11:00 PDT 1993 by mjordan                  */
+
+override (ui, "../../../..")
+import(ui)
+
+implementation(ButtonTest)
+
+program(ButtonTest)
+
+

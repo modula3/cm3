@@ -1,0 +1,23 @@
+(ZChild Open
+  (Insert "macros.fv")
+   (Stable (Border (Pen 2)
+     (VBox %vBox
+        (HBox
+          (Button %iconize (Pixmap "iconize.pbm"))
+          (Menu
+            (Shape (Width 20) (Pixmap "pulldown.pbm"))
+            (VBox
+              (MButton %backButton (Text LeftAlign "Back To Deck"))
+              (MButton %newButton (Text LeftAlign "Make New Deck"))
+              Bar
+              (MButton %reloadDocButton (Text LeftAlign "Reload"))
+              (MButton %duplicateDocButton (Text LeftAlign "Duplicate"))
+              (MButton %expandDocButton (Text LeftAlign "Expand One Level"))))
+          (Shape (Width + Inf)
+            (ZMove (HBox 
+                 (Texture %freeDocPreName "NWDiagonal") 
+                 (Shape (Width + 0) (Text %freeDocName LeftAlign "FreeDoc's Name"))
+                 (Texture %freeDocPostName "NEDiagonal"))))
+          (ZGrow (Pixmap "grow.pbm")))
+        (Bar 2)
+        (Shape (Width + Inf - Inf) (Height + Inf - Inf) (Generic %gen))))))

@@ -1,0 +1,15 @@
+/* Copyright (C)-ip992, Digital Equipment Corporation                         */
+/* All rights reserved.                                                      */
+/* See the file COPYRIGHT for a full description.                            */
+
+/* Last modified on Thu May 20 12:12:22 PDT 1993 by msm                      */
+/*      modified on Fri Apr 30-ip5:34:52 PDT 1993 by mjordan                  */
+
+override(ui, "../../../..")
+import(ui)
+
+implementation(Sketch2)
+
+program(Sketch2)
+
+

@@ -1,0 +1,68 @@
+.\" Copyright (C) 1995, Digital Equipment Corporation
+.\" All rights reserved.
+.\" See the file COPYRIGHT for a full description.
+.\"
+.\" Last modified on Wed Jan 17 13:44:32 PST 1996 by mhb   
+.nh
+.TH DeckScape 1
+.SH NAME
+DeckScape \- An Experimental World-Wide Web Browser
+
+.SH SYNTAX
+.B DeckScape [-clean]
+
+.SH DESCRIPTION 
+.B DeckScape
+is an experimental World-Wide Web browser based on the metaphor of a
+deck of playing cards, where each card is a Web page, and each deck is
+displayed in its own window.  As the user traverses links, new pages
+appear on top of the current deck. Retrievals are done using a
+background thread, so all visible pages in any deck are active at all
+times. Users can move and copy pages between decks, and decks can be
+used as a general-purpose way to organize material, such as hotlists,
+query results, and breadth-first expansions.
+.PP
+More details about the system can be found in SRC 135:
+  http://gatekeeper.dec.com/pub/DEC/SRC/research-reports/SRC-135a.html 
+This paper appeared in the Third International World-Wide Web Conference
+(April 1995). A short version of it appeared in CHI'95:
+  http://www.acm.org/sigchi/chi95/Electronic/documnts/shortppr/mhb2_bdy.htm
+
+.SH ENVIRONMENT VARIABLES
+.B WWW_HOME
+-- The URL of the "home" page. At SRC, the current value
+is "http://src-www.pa.dec.com/src.home.html".
+.PP
+.B http_proxy
+-- The name of a proxy server. The format is "http://foo", with
+an optional port. 
+At SRC, the current value is "http://www-proxy.pa.dec.com:8080/".
+.PP
+.B no_proxy
+-- Domain names for which no proxy should be consulted.
+The format is a comma-separated list of domain names, with
+an optional port. At SRC, the current value is "src-www,.dec.com".
+
+.SH EXTERNAL FILES
+Images are displayed using the following ppm filters:
+giftoppm, ppmtopgm, pgmtopbm, djpeg, and xbmtopbm.
+
+.SH FILES
+The system maintains the state of the decks in the file
+  ~/.deckscape
+between invocations. If the system crashes on startup,
+try deleting this file, or start DeckScape with the -clean flag. 
+The file is essentially a list of URLs;
+if you edit it, do so carefully!
+
+.SH BUGS
+The HTML viewer is fragile and vanilla. It recognizes HTML
+2.0, except for forms; however, the viewer does not deal with
+incorrect HTML very gracefully and most Web pages contain incorrect
+HTML. The system does not support external viewers.
+
+.SH AUTHOR OF OBJECT
+Marc H. Brown and Robert A. Shillner
+
+.SH AUTHOR OF DOCUMENTATION
+Marc H. Brown

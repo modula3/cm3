@@ -1,0 +1,39 @@
+(Shape (Width 600 + inf - 350) (Height 400 + inf - 100)
+  (Insert "macros.fv")
+  (VBox
+    (HBox
+      (Menu
+        (Shape (Width 60)
+          (HBox
+            Fill
+            (Shape (Width + 0) (HBox "File" (Pixmap "menuArrow.pbm")))
+            Fill))
+        (VBox
+          (MButton %newDeckButton (Text LeftAlign "New Deck"))
+          Bar
+          (MButton %flushCache (Text LeftAlign "Flush Cache"))
+          (MButton %caching (Text %cachingText LeftAlign "Disable or Enable Caching"))
+          (MButton %fgImages  (Text %fgImagesText LeftAlign "Bg or Fg Images"))
+          (MButton %zippers (Text %zippersText LeftAlign "Disable or Enable Zippers"))
+          Bar
+          (MButton %debug (Text LeftAlign "Debug"))
+          Bar
+          (PopMButton (For searchDialog) (Text LeftAlign "Search ..."))
+          (PopMButton (For helpDialog) (Text LeftAlign "Help ..."))
+          (MButton %quitButton (Text LeftAlign "Quit"))))
+      (Menu
+        (Shape (Width 60)
+          (HBox
+            Fill
+            (Shape (Width + 0) (HBox "Decks" (Pixmap "menuArrow.pbm")))
+            Fill))
+        (VBox (VBox %permanentDeckMenuVBox) Bar (VBox %deckMenuVBox)))
+      Fill)
+    Bar
+    (ZSplit %zSplit 
+        (Color "Black") 
+        (BgColor "LightGray")
+        (LightShadow "White")
+      (ZBackground (Target %target (BgColor "White") ""))
+      (Insert "Help.fv")
+      (Insert "Search.fv"))))

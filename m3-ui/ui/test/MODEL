@@ -1,0 +1,37 @@
+DIRECTORY
+  Monster.m3 ~ /v/0haM08002P.Zay/S1626.e.uilibm3,
+  EyesVBT.m3 ~ /v/0haM08002P.Zay/S1626.c.uilibm3,
+  Draw.m3 ~ /v/0haM08002P.Zay/S1626.a.uilibm3,
+  BurmaShave.i3 ~ /v/0haM08002P.Zay/S1626.5.uilibm3,
+  Cards.m3 ~ /v/0haM08002P.Zay/S1626.8.uilibm3,
+  BadBricks.m3 ~ /v/0haM08002P.Zay/S1626.4.uilibm3,
+                                                 
+  BurmaShave.m3 ~ /v/0haM08002P.Zay/S1626.6.uilibm3,
+  Argus.m3 ~ /v/0haM08002P.Zay/S1626.2.uilibm3,
+  Hello.m3 ~ /v/0haM08002P.Zay/S1626.d.uilibm3,
+  TypeInTest.m3 ~ /v/0haM08002P.Zay/S1626.14.uilibm3,
+                                                 
+  EyesVBT.i3 ~ /v/0haM08002P.Zay/S1626.b.uilibm3,
+                                              
+  PlaidVBT.i3 ~ /v/0haM08002P.Zay/S1626.f.uilibm3,
+                                                 
+  PlaidVBT.m3 ~ /v/0haM08002P.Zay/S1626.10.uilibm3,
+  README ~ /v/0haM08002P.Zay/S1626.11.uilibm3,
+  ButtonTest.m3 ~ /v/0haM08002P.Zay/S1626.7.uilibm3,
+                                                     
+                                                       
+  ColorMonster.m3 ~ /v/0haM08002P.Zay/S1626.9.uilibm3,
+                                                      
+                                                      
+                                              
+                                                  
+                                                  
+  Sketch.m3 ~ /v/0haM08002P.Zay/S1626.12.uilibm3,
+  BadBricks.1 ~ /v/0haM08002P.Zay/S1626.3.uilibm3,
+                                                     
+  Sketch2.m3 ~ /v/0haM08002P.Zay/S1626.13.uilibm3,
+  m3makefile ~ /v/0haM08002P.Zay/S1628.3f1.uilibm3,
+IMPORT
+IN {
+  owner ~ "gnelson"
+  }

@@ -1,0 +1,21 @@
+% Copyright (C) 1993, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+% Last modified on Mon Jan 30 15:10:44 PST 1995 by kalsow
+%      modified on Mon Jun 28 10:49:10 PDT 1993 by mcjones
+%      modified on Fri May 14 16:45:58 PDT 1993 by meehan
+
+import ("ui")
+import ("libm3")
+
+include_dir ("lego")
+include_dir ("vbtkitutils")
+include_dir ("vbtkitresources")
+include_dir ("etext")
+include_dir ("vtext")
+include_dir ("mtext")
+include_dir ("color")
+
+Library ("m3vbtkit")
+

@@ -1,0 +1,20 @@
+(Macro finder (first next prev typein show hide close)
+ `(TSplit Flex
+	  (LightShadow "White")
+	  (DarkShadow "Blue")
+	  (BgColor "VeryPaleBlue")
+    (Shape (Height 0) Fill)
+    (VBox %,show
+      Ridge
+      (Glue 2)
+      (HBox
+       (Shape (Width + 0) "Find:")
+       (Shape (Width 0 + 3000)
+	(Frame Lowered (TypeIn %,typein (BgColor "VeryVeryPaleBlue"))))
+       (Glue 5)
+       (Shape (Width 0 + 1000) (Rim (Pen 1) (Button %,first "First")))
+       (Shape (Width 0 + 1000) (ShadowSize 2.5) (Button %,next "Next"))
+       (Shape (Width 0 + 1000) (Rim (Pen 1) (Button %,prev "Prev.")))
+       (Glue 20)
+       (Rim (Pen 1) (PageButton %,close "C")))
+      (Glue 2))))

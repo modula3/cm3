@@ -1,0 +1,188 @@
+This is TeX, Version 3.1415 (C version 6.1) (format=latex 95.1.3)  12 JAN 1995 16:03
+**&latex2e Doc.tex
+(Doc.tex
+LaTeX2e <1994/12/01> patch level 1
+(/contrib/system/lib/tex/latex2e/latex209.def
+File: latex209.def 1994/11/28 v0.39 Standard LaTeX file
+
+Entering LaTeX 2.09 compatibility mode.
+\footheight=\dimen102
+\@maxsep=\dimen103
+\@dblmaxsep=\dimen104
+(/contrib/system/lib/tex/latex2e/tracefnt.sty
+Package: tracefnt 1994/11/18 v2.3m Standard LaTeX package (font tracing)
+\tracingfonts=\count82
+LaTeX Info: Redefining \selectfont on input line 101.
+)
+\symbold=\mathgroup4
+\symsans=\mathgroup5
+\symtypewriter=\mathgroup6
+\symitalic=\mathgroup7
+\symsmallcaps=\mathgroup8
+\symslanted=\mathgroup9
+LaTeX Font Info:    Redeclaring math alphabet \mathbf on input line 200.
+LaTeX Font Info:    Redeclaring math alphabet \mathsf on input line 201.
+LaTeX Font Info:    Redeclaring math alphabet \mathtt on input line 202.
+LaTeX Font Info:    Redeclaring math alphabet \mathit on input line 208.
+LaTeX Info: Redefining \em on input line 218.
+
+(/contrib/system/lib/tex/latex2e/latexsym.sty
+Package: latexsym 1994/09/25 v2.1f Standard LaTeX package (lasy symbols)
+\symlasy=\mathgroup10
+LaTeX Font Info:    Overwriting symbol font `lasy' in version `bold'
+(Font)                  U/lasy/m/n --> U/lasy/b/n on input line 47.
+)
+LaTeX Font Info:    Redeclaring math delimiter \lgroup on input line 283.
+LaTeX Font Info:    Redeclaring math delimiter \rgroup on input line 285.
+LaTeX Font Info:    Redeclaring math delimiter \bracevert on input line 287.
+)
+(/contrib/system/lib/tex/latex2e/article.cls
+Document Class: article 1994/12/09 v1.2x Standard LaTeX document class
+(/contrib/system/lib/tex/latex2e/size10.clo
+File: size10.clo 1994/12/09 v1.2x Standard LaTeX file (size option)
+)
+\c@part=\count83
+\c@section=\count84
+\c@subsection=\count85
+\c@subsubsection=\count86
+\c@paragraph=\count87
+\c@subparagraph=\count88
+\c@figure=\count89
+\c@table=\count90
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+Compatibility mode: definition of \rm ignored.
+Compatibility mode: definition of \sf ignored.
+Compatibility mode: definition of \tt ignored.
+Compatibility mode: definition of \bf ignored.
+Compatibility mode: definition of \it ignored.
+Compatibility mode: definition of \sl ignored.
+Compatibility mode: definition of \sc ignored.
+LaTeX Info: Redefining \cal on input line 455.
+LaTeX Info: Redefining \mit on input line 456.
+\bibindent=\dimen105
+)
+(/contrib/system/lib/tex/latex2e/times.sty
+Package: times 94/11/11 4.2 Times PSNFSS2e package
+) (Doc.aux)
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Try loading font information for OT1+ptm on input line 21.
+
+(/contrib/system/lib/tex/latex2e/OT1ptm.fd) (HyperPage.i.tex
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 23.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 23.
+LaTeX Font Info:    Try loading font information for U+lasy on input line 23.
+
+(/contrib/system/lib/tex/latex2e/Ulasy.fd
+File: Ulasy.fd 1994/09/25 v2.1fLaTeX symbol font definitions
+)
+Overfull \hbox (56.24684pt too wide) in paragraph at lines 26--26
+[]$$[]    \OT1/cmtt/m/n/10 a bounding box specified in pixels with northwest co
+rner at (0,0) 
+ []
+
+
+Overfull \hbox (88.49643pt too wide) in paragraph at lines 44--44
+[]$$[]    \OT1/cmtt/m/n/10 resetWidth (newWidth: INTEGER;  READONLY before := P
+oint.Origin): Point.T; 
+ []
+
+
+Overfull \hbox (77.99652pt too wide) in paragraph at lines 45--45
+[]$$[]    \OT1/cmtt/m/n/10 resetLooks (newLooks: Looks;  READONLY before := Poi
+nt.Origin): Point.T; 
+ []
+
+
+Overfull \hbox (93.74638pt too wide) in paragraph at lines 46--46
+[]$$[]    \OT1/cmtt/m/n/10 (*--------------------------------------------------
+----- VBT support ---*) 
+ []
+
+
+Overfull \hbox (72.74657pt too wide) in paragraph at lines 48--48
+[]$$[]    \OT1/cmtt/m/n/10 paint (dest: VBT.T;  READONLY offset: Point.T;  READ
+ONLY clip: Rect.T); 
+ []
+
+
+Overfull \hbox (93.74638pt too wide) in paragraph at lines 52--52
+[]$$[]    \OT1/cmtt/m/n/10 (*--------------------------------------------------
+---- HTML support ---*) 
+ []
+
+[1
+
+]
+Overfull \hbox (2.77722pt too wide) in paragraph at lines 71--75
+[]\OT1/cmtt/m/n/10 p.resetWidth (w, x) \OT1/ptm/m/n/10 re-com-putes the line br
+eak-ing at-tempt-ing to keep \OT1/cmtt/m/n/10 p\OT1/ptm/m/n/10 's bound-
+ []
+
+
+Overfull \hbox (4.74675pt too wide) in paragraph at lines 106--109
+[]\OT1/cmtt/m/n/10 p.locateAnchor (n) \OT1/ptm/m/n/10 re-turns the lo-ca-tion i
+n \OT1/cmtt/m/n/10 p\OT1/ptm/m/n/10 's co-or-di-nate sys-tem that cor-re-sponds
+
+ []
+
+[2]
+Overfull \hbox (20.24702pt too wide) in paragraph at lines 139--139
+[]$$[]    \OT1/cmtt/m/n/10 fontFamily : TEXT;      (* "Helvetica", "Times-Roman
+", ... *) 
+ []
+
+
+Overfull \hbox (25.49698pt too wide) in paragraph at lines 140--140
+[]$$[]    \OT1/cmtt/m/n/10 fontSize   : INTEGER;   (* the point size of "normal
+" text. *) 
+ []
+
+
+Overfull \hbox (50.99689pt too wide) in paragraph at lines 155--155
+[]$$[]   \OT1/cmtt/m/n/10 "(OnLink, t, o)" means that "p" is on a hypertext lin
+k named "t". 
+ []
+
+
+Overfull \hbox (14.24721pt too wide) in paragraph at lines 156--156
+[]$$[]   \OT1/cmtt/m/n/10 "(OnImage, t, o)" means that "p" is on an image named
+ "t". 
+ []
+
+
+Overfull \hbox (35.24702pt too wide) in paragraph at lines 157--157
+[]$$[]   \OT1/cmtt/m/n/10 "(OnMap, t, o)" means that "p" is over an active map 
+named "t" 
+ []
+
+
+Overfull \hbox (8.99725pt too wide) in paragraph at lines 158--158
+[]$$[]       \OT1/cmtt/m/n/10 at offset "o" relative to the map's northwest cor
+ner. 
+ []
+
+) [3] (Doc.aux) ) 
+Here is how much of TeX's memory you used:
+ 416 strings out of 10950
+ 4217 string characters out of 73477
+ 49655 words of memory out of 262141
+ 3273 multiletter control sequences out of 9500
+ 9857 words of font info for 37 fonts, out of 100000 for 255
+ 14 hyphenation exceptions out of 607
+ 22i,5n,19p,248b,159s stack positions out of 300i,80n,60p,3000b,4000s
+
+Output written on Doc.dvi (3 pages, 7240 bytes).

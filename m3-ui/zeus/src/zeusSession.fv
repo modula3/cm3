@@ -1,0 +1,89 @@
+; Copyright (C) 1994, Digital Equipment Corporation                         
+; All rights reserved.                                                      
+; See the file COPYRIGHT for a full description.                            
+
+(Scale
+  %scale
+  (HScale 1)
+  (VScale 1)
+(Rim
+  (Pen 8)
+  (Macro Fixed BOA (child) `(Shape (Width + 0) (Height + 0) ,child))
+  (Macro
+    Divider
+    BOA
+    (name str)
+    `(Boolean
+       %,name
+       (HBox
+         (VBox Fill Bar Fill)
+         (Shape (Width + 0) (Height + 0) ,str)
+         (VBox Fill Bar Fill))))
+  (Macro
+    Dividee
+    BOA
+    (name child)
+    `(TSplit Flex =0 %,name Circular (Generic) ,child))
+  (Macro
+    AlgInside
+    ()
+    `(VBox
+       (TSplit
+         Flex
+         =1
+         %showButtons
+         Circular
+         (Generic)
+         (VBox
+           (Glue 12)
+           (HBox
+             Fill
+             (Filter (Border (Button %abort (Rim (Pen 2) "Abort Alg"))))
+             (Glue 10)
+             Fill
+             (Border
+               (Guard
+                 (Button
+                   (DarkShadow "LightPink")
+                   (LightShadow "VeryVeryLightPink")
+                   (BgColor "VeryLightPink")
+                   %destroy
+                   (Rim (Pen 2) "Destroy Session"))))
+             Fill)))
+       (Glue 12)
+       (HBox
+         (Border
+           (Pen 2)
+           (VBox
+             (Glue 4)
+             (HBox Fill (Shape (Width + 0) (Height + 0) "Algorithms") Fill)
+             (Glue 4)
+             Bar
+             (Filter
+               (Shape
+                 (Width 80 + Inf)
+                 (Height 100 + 0)
+                 (Browser (ShadowSize 0) %algs Quick)))))
+         (Glue 12)
+         (Border
+           (Pen 2)
+           (VBox
+             (Glue 4)
+             (HBox Fill (Shape (Width + 0) (Height + 0) "Views") Fill)
+             (Glue 4)
+             Bar
+             (Filter
+               (Shape
+                 (Width 80 + Inf)
+                 (Height 100 + 0)
+                 (Browser (ShadowSize 0) %views Quick))))))))
+  (VBox
+    (Divider
+      algBool
+      (HBox Fill (Fixed "Algorithm: ") (Fixed (Text %algName "Unknown")) Fill))
+    (Dividee algT (AlgInside))
+    (Divider dataFormBool "Input for algorithm")
+    (Dividee dataFormT (HBox Fill (Generic %dataForm) Fill))
+    (Divider eventDataBool "Events")
+    (Dividee eventDataT (Generic %eventDataForm))))
+)
