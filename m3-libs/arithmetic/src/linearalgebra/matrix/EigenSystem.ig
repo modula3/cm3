@@ -24,6 +24,12 @@ PROCEDURE PowerMethod(     A       : M.T;
                            maxiter : CARDINAL := 100;
 						         ) : RT.T RAISES {Error};
 
+PROCEDURE SquareMethod(     A       : M.T;
+                       VAR v       : V.T;
+					       tol     := RT.Eps*FLOAT(100,RT.T);
+                           maxiter : CARDINAL := 100;
+						         ) : RT.T RAISES {Error};
+
 PROCEDURE Jacobi( VAR a         :M.T;
                   dim           :INTEGER;
                   VAR d         :V.T;

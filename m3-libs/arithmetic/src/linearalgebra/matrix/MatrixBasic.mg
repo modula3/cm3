@@ -285,6 +285,24 @@ BEGIN
   RETURN y;
 END Trace;
 
+PROCEDURE GetRow(x:T;k:CARDINAL):V.T=
+  VAR
+    y:=V.New(NUMBER(x[0]));
+  BEGIN
+    y^:=x[k];
+    RETURN y;
+  END GetRow;
+
+PROCEDURE GetColumn(x:T;k:CARDINAL):V.T=
+  VAR
+    y:=V.New(NUMBER(x^));
+  BEGIN
+    FOR j:=0 TO LAST(y^) DO
+      y[j]:=x[j,k];
+    END;
+    RETURN y;
+  END GetColumn;
+
 (*-----------------*)
 (*PROCEDURE Determinant(x:T):R.T;*)
 
