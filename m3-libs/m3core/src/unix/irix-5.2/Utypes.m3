@@ -9,7 +9,7 @@ MODULE Utypes;
 
 IMPORT Word;
 
-FROM Ctypes IMPORT int;
+FROM Ctypes IMPORT int, long;
 
 PROCEDURE howmany (x, y: int): int =
   BEGIN

@@ -7,7 +7,7 @@
 MODULE Utypes;
 
 IMPORT Word;
-FROM Ctypes IMPORT int;
+FROM Ctypes IMPORT int, long;
 
 PROCEDURE major (x: int): int =
   BEGIN 

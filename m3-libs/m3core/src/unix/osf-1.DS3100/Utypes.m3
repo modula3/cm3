@@ -9,6 +9,8 @@ MODULE Utypes;
 
 IMPORT Word;
 
+FROM Ctypes IMPORT long;
+
 PROCEDURE major (x: dev_t): major_t =
   BEGIN 
     RETURN Word.And (Word.Shift (x, -20), 8_07777);
