@@ -9,6 +9,7 @@ FROM FmtLexSupport IMPORT Precedence;
 FROM NADefinitions IMPORT Error;
 *)
 
+
 TYPE T = P.T;
 
 TYPE FmtStyle = RECORD elemStyle := RF.FmtStyle{};  END;

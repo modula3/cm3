@@ -1,19 +1,18 @@
 MODULE BigIntegerFmtLex;
-(*Copyright (c) 1996, m3na project
+(*Copyright (c) 1996, m3na project*)
 
-Abstract: Integers of arbitrary size
-
-*)
-
-IMPORT (*Rd, Thread, FloatMode, Lex AS L, TextRd,*)
-       Fmt AS F, Text,
-       Word;
-IMPORT BigIntegerRep   AS BR;
-IMPORT BigInteger      AS BB;
+IMPORT Rd, Wr, Thread;
+IMPORT Fmt AS F;
+IMPORT Lex AS L;
+IMPORT FloatMode;
+IMPORT Word, Text;
+IMPORT BigIntegerRep AS BR;
+IMPORT BigInteger AS BB;
 FROM FmtLexSupport IMPORT Precedence;
 FROM NADefinitions IMPORT Error, Err;
 
-<*UNUSED*> CONST Module = "BigIntegerFmtLex.";
+<*UNUSED*>
+CONST Module = "BigIntegerFmtLex.";
 
 (*
 <*FATAL Rd.Failure, Thread.Alerted*>
@@ -56,77 +55,78 @@ PROCEDURE Lex(txt: TEXT; defaultBase: [2..16]): INTEGER
 
 
 
-PROCEDURE FastFmtU(READONLY x: T; base: F.Base; pad: [1..Word.Size]): TEXT =
-  VAR
-    txt : TEXT;
+PROCEDURE FastFmtU (READONLY x: T; base: F.Base; pad: [1 .. Word.Size]):
+  TEXT =
+  VAR txt: TEXT;
   BEGIN
-    IF x.size=0 THEN
+    IF x.size = 0 THEN
       RETURN "0";
     ELSE
-      txt := F.Unsigned(x.data[x.size-1],base);
-      FOR k:=x.size-2 TO 0 BY -1 DO
-        txt := txt & F.Pad (F.Unsigned(x.data[k],base), pad, '0');
+      txt := F.Unsigned(x.data[x.size - 1], base);
+      FOR k := x.size - 2 TO 0 BY -1 DO
+        txt := txt & F.Pad(F.Unsigned(x.data[k], base), pad, '0');
       END;
     END;
     RETURN txt;
   END FastFmtU;
 
-(*can be optimized with a division routine that is specialised to small divisors*)
-PROCEDURE SlowFmtU(x: T; base: F.Base): TEXT =
+(*can be optimized with a division routine that is specialised to small
+   divisors*)
+PROCEDURE SlowFmtU (x: T; base: F.Base): TEXT =
   VAR
-    qr    := BB.QuotRem{x,BB.Zero};
-    b     : T;
-    txt   := "";
-    digit : [0..LAST(F.Base)-1];
+    qr                             := BB.QuotRem{x, BB.Zero};
+    b    : T;
+    txt                            := "";
+    digit: [0 .. LAST(F.Base) - 1];
   BEGIN
     TRY
       b := BB.FromInteger(base);
       WHILE NOT BB.IsZero(x) DO
-        qr := BR.DivModU(qr.quot,b);
+        qr := BR.DivModU(qr.quot, b);
         <*ASSERT qr.rem.size<=1*>
         digit := qr.rem.data[0];
-        IF digit<10 THEN
-          txt := Text.FromChar(VAL(ORD('0')+digit,CHAR)) & txt;
+        IF digit < 10 THEN
+          txt := Text.FromChar(VAL(ORD('0') + digit, CHAR)) & txt;
         ELSE
-          txt := Text.FromChar(VAL(ORD('a')+digit-10,CHAR)) & txt;
+          txt := Text.FromChar(VAL(ORD('a') + digit - 10, CHAR)) & txt;
         END;
       END;
     EXCEPT
-      | Error(err) => <*ASSERT err#Err.divide_by_zero*>
+    | Error (err) =>             <*ASSERT err#Err.divide_by_zero*>
     END;
-    IF Text.Empty(txt) THEN
-      RETURN "0";
-    ELSE
-      RETURN txt;
-    END;
+    IF Text.Empty(txt) THEN RETURN "0"; ELSE RETURN txt; END;
   END SlowFmtU;
 
-PROCEDURE Fmt(READONLY x: T; READONLY style := FmtStyle{}): TEXT =
-  VAR
-    txt : TEXT;
+PROCEDURE Fmt (READONLY x: T; READONLY style := FmtStyle{}): TEXT =
+  VAR txt: TEXT;
   BEGIN
     CASE style.base OF
-      |  2 => txt := FastFmtU(x, 2,Word.Size);
-      |  4 => txt := FastFmtU(x, 4,Word.Size DIV 2);
-      | 16 => txt := FastFmtU(x,16,Word.Size DIV 4);
+    | 2 => txt := FastFmtU(x, 2, Word.Size);
+    | 4 => txt := FastFmtU(x, 4, Word.Size DIV 2);
+    | 16 => txt := FastFmtU(x, 16, Word.Size DIV 4);
     ELSE
-      txt := SlowFmtU(x,style.base);
+      txt := SlowFmtU(x, style.base);
     END;
-    IF x.sign THEN
-      RETURN "-" & txt;
-    ELSE
-      RETURN txt;
-    END;
+    IF x.sign THEN RETURN "-" & txt; ELSE RETURN txt; END;
   END Fmt;
 
-PROCEDURE Tex (x : T; READONLY style := TexStyle{}; <*UNUSED*> within : Precedence) : TEXT =
+PROCEDURE Tex (         x     : T;
+               READONLY style              := TexStyle{}; <*UNUSED*>
+                        within: Precedence                           ):
+  TEXT =
   BEGIN
-    IF style.base=10 THEN
-      RETURN Fmt (x, FmtStyle{base:=style.base});
+    IF style.base = 10 THEN
+      RETURN Fmt(x, FmtStyle{base := style.base});
     ELSE
-      RETURN Fmt (x, FmtStyle{base:=style.base}) & "_{" & F.Int (style.base) & "}";
+      RETURN Fmt(x, FmtStyle{base := style.base}) & "_{"
+               & F.Int(style.base) & "}";
     END;
   END Tex;
+
+PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
+  RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted} =
+  BEGIN
+  END Lex;
 
 BEGIN
 END BigIntegerFmtLex.

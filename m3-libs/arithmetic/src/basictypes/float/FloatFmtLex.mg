@@ -1,10 +1,10 @@
 GENERIC MODULE FloatFmtLex(FI);
-(*Copyright (c) 1996, m3na project
+(*Copyright (c) 1996, m3na project*)
 
-Abstract:
-
-*)
-
+IMPORT Rd, Wr, TextWr, Thread;
+IMPORT Fmt AS F;
+IMPORT Lex AS L;
+IMPORT FloatMode;
 IMPORT Text       AS Tx,
        TextExtras AS Txe;
 FROM FmtLexSupport IMPORT Precedence, Parenthesize;
@@ -29,6 +29,8 @@ PROCEDURE Tex (x : T; READONLY style := TexStyle{}; within : Precedence) : TEXT 
     END;
   END Tex;
 
+
+PROCEDURE Lex (rd: Rd.T; READONLY style : LexStyle; ): T RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted}=BEGIN END Lex;
 
 BEGIN
 END FloatFmtLex.

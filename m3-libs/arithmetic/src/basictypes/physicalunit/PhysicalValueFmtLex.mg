@@ -1,6 +1,10 @@
 GENERIC MODULE PhysicalValueFmtLex(R, RT, C, CT, CF, UDB);
 
-IMPORT Fmt AS F, NADefinitions;
+(*IMPORT Rd, Wr, Thread;*)
+IMPORT Fmt AS F;
+(*IMPORT Lex AS L;*)
+(*IMPORT FloatMode;*)
+IMPORT NADefinitions;
 
 PROCEDURE FmtUnitPart (READONLY name: TEXT; exp: INTEGER): TEXT =
   VAR res: TEXT;
@@ -81,6 +85,13 @@ PROCEDURE Fmt (READONLY x: T; READONLY style: FmtStyle): TEXT =
       END;
     END;
   END Fmt;
+
+(*
+PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
+  RAISES {L.Error, FloatMode.Trap, Rd.Failure, Thread.Alerted} =
+  BEGIN
+  END Lex;
+*)
 
 BEGIN
 END PhysicalValueFmtLex.

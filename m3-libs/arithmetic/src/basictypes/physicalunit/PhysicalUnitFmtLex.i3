@@ -6,8 +6,8 @@ Abstract: Formatter for unit vectors.
           Mainly for debugging purposes.
 *)
 
-
 IMPORT PhysicalUnit AS U;
+
 
 TYPE T = U.T;
 
