@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-dist-sys.sh,v 1.5 2001-04-03 19:17:10 wagner Exp $
+# $Id: make-src-dist-sys.sh,v 1.6 2001-11-25 14:02:58 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -43,7 +43,12 @@ cd "${ROOT}" || exit 1
 /bin/ls -1d m3-*/*/${TARGET}p >> .tar-exclude
 echo "building exclude list..."
 find . \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
-          -name '*.rej' -or -name 'cvs-nq-up' -or -name '*-diffs' -or \
+          -name '*.rej'  -or -name 'cvs-nq-up' -or -name '*-diffs' -or \
+          -name 'PkgDep' -or -name 'PkgKind' -or -name '.bok' -or \
+          -name '*.o' -or -name '*.a' -or -name '*.dll' -or -name '*.obj' -or \
+          -name '.errors' -or -name '*.io' -or -name '*.mo' -or \
+          -name '*.so' -or -name '*.so.[0-9]*' -or -name '.M3WEB' -or \
+          -name '.M3SHIP' -or -name '.M3IMPTAB' -or -name '.M3EXPORTS' -or \
           \( -name 'CVS' -a -type d \) \) -print | \
   sed -e 's;^./;;' >> .tar-exclude
 
