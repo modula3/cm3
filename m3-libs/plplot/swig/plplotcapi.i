@@ -49,26 +49,26 @@ typedef void* PLPointer;
 
 typedef PLINT  PLArraySize;
 
-typedef PLFLT* PLFLTArray;
+typedef const PLFLT* PLFLTArray;
 typedef PLFLTArray PLFLTArrayFst;
 typedef PLFLTArray PLFLTArrayCk;
 typedef PLFLTArray PLFLTArrayX;
 typedef PLFLTArray PLFLTArrayY;
 
-typedef PLINT* PLINTArray;
+typedef const PLINT* PLINTArray;
 typedef PLINTArray PLINTArrayFst;
 typedef PLINTArray PLINTArrayCk;
 typedef PLINTArray PLINTArrayCkInterim;
+
+typedef const PLFLT const ** PLFLTMatrix;
+typedef PLFLTMatrix  PLFLTMatrixFst;
+typedef PLFLTMatrix  PLFLTMatrixCk;
 
 typedef PLFLT* PLFLTOutput;
 typedef PLINT* PLINTOutput;
 typedef char*  PLCharOutput;
 
 typedef PLFLT* PLFLTInOut;
-
-typedef PLFLT** PLFLTMatrix;
-typedef PLFLTMatrix  PLFLTMatrixFst;
-typedef PLFLTMatrix  PLFLTMatrixCk;
 
 /*--------------------------------------------------------------------------*\
  * Complex data types and other good stuff
@@ -333,7 +333,7 @@ plgfam(PLINTOutput fam, PLINTOutput num, PLINTOutput bmax);
 #if 0
 DOC(plgfnam, "Get the (current) output file name.")
 void
-plgfnam(PLCharOutput *fnam);
+plgfnam(PLCharOutput fnam);
 //temporary
 #endif
 
