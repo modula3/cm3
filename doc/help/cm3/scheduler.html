@@ -21,18 +21,18 @@ starting with the thread following the one currently running, until
 a thread that can execute is found:
 <UL>
 <LI> if it was preempted by the scheduler or called
-<A href="/interface/Scheduler"><TT>Scheduler.Yield</TT></A>,
+<A href="../gen_html/m3core/src/thread/Common/Scheduler.i3.html"><TT>Scheduler.Yield</TT></A>,
 it can execute
 
 <LI> if it is waiting for a condition or a mutex that is now free,
 it can execute
 
 <LI> if it has blocked because of a call to
-<A HREF="/interface/Thread/Pause#_DECL_"><TT>Thread.Pause</TT></A>
+<A HREF="../gen_html/m3core/src/thread/Common/Thread.i3.html"><TT>Thread.Pause</TT></A>
 (or a similar procedure), it can execute iff the timeout has expired
 
 <LI> if it has blocked because of a call to
-<A HREF="/interface/SchedulerPosix/IOWait#_DECL_"><TT>SchedulerPosix.IOWait</TT></A>,
+<A HREF="../gen_html/m3core/src/thread/POSIX/SchedulerPosix.i3.html"><TT>SchedulerPosix.IOWait</TT></A>,
 (or a similar procedure), it can execute iff the timeout is now expired 
 or a polling <TT>select(2)</TT> returns a non-zero value.
 </UL>
@@ -42,9 +42,9 @@ If such a thread is found, it becomes active.
 <P>
 
 If no thread can execute, and there are no threads blocked in a
-<A HREF="/interface/Thread/"><TT>Thread.Pause</TT></A>
+<A HREF="../gen_html/m3core/src/thread/Common/Thread.i3.html"><TT>Thread.Pause</TT></A>
 or a
-<A HREF="/interface/SchedulerPosix/"><TT>SchedulerPosix.IOWait</TT></A>,
+<A HREF="../gen_html/m3core/src/thread/POSIX/SchedulerPosix.i3.html"><TT>SchedulerPosix.IOWait</TT></A>,
 a deadlock situation is detected
 and reported. Otherwise, a combination of the file descriptors sets
 (OR of all the file descriptors sets) and timeouts (MIN of all the
@@ -56,9 +56,9 @@ waiting.
 
 The scheduler is activated when the running thread tries to acquire a
 mutex which is locked, waits for a condition, calls
-<A HREF="/interface/Thread/"><TT>Thread.Pause</TT></A>
+<A HREF="../gen_html/m3core/src/thread/Common/Thread.i3.html"><TT>Thread.Pause</TT></A>
 (or a similar procedure) with a future time, calls
-<A HREF="/interface/SchedulerPosix/"><TT>SchedulerPosix.IOWait</TT></A>,
+<A HREF="../gen_html/m3core/src/thread/POSIX/SchedulerPosix.i3.html"><TT>SchedulerPosix.IOWait</TT></A>,
 (or a similar procedure) with a non-zero valued timeout and no files
 are ready at the time of the call, or the time allocated to the thread
 has expired (preemption).
@@ -73,9 +73,9 @@ are available to the program.
 Because of the preemption implementation, Unix kernel calls
 will block the process (i.e. the Unix process sleeps even though
 some threads could run).  However,
-<A HREF="/interface/Thread/"><TT>Thread.Pause</TT></A>
+<A HREF="../gen_html/m3core/src/thread/Common/Thread.i3.html"><TT>Thread.Pause</TT></A>
 and
-<A HREF="/interface/SchedulerPosix/"><TT>SchedulerPosix.IOWait</TT></A>
+<A HREF="../gen_html/m3core/src/thread/POSIX/SchedulerPosix.i3.html"><TT>SchedulerPosix.IOWait</TT></A>
 provide functional equivalents of
 <TT>sigpause(2)</TT> and
 <TT>select(2)</TT> that do not cause the process to block.

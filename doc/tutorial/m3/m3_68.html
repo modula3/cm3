@@ -20,7 +20,9 @@ line:</p>
 <pre>-build compile and link
 -ship  install package
 -clean delete derived files
--find  locate source files</pre>
+-find  locate source files
+-depend  output package dependencies
+</pre>
 </ul>
 
 <h4>compile options: (default: <tt>-g -w1</tt>)</h4>
@@ -31,7 +33,8 @@ line:</p>
 -A disable code generation for assertions
 -once don't recompile to improve opaque object code
 -w0 .. -w3 limit compiler warning messages
--Z generate coverage analysis code</pre>
+-Z generate coverage analysis code
+-profile generate profiling code</pre>
 </ul>
 
 <h4>program and library options: (default: <tt>-o prog</tt>)</h4>

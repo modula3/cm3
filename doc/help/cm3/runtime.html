@@ -22,14 +22,14 @@ exists in the <TT>libm3/src/runtime</TT> directory.
 The allocator and
 <A HREF="gc.html">garbage collector</A>
 are based on Joel Bartlett's
-``<A HREF="bib.html#m3-Bar88">mostly copying collector</A>''.
+``<A HREF="../bib.html#m3-Bar88">mostly copying collector</A>''.
 Since that paper, we've made a few
 modifications to support a growing heap and to use extra information
 that the Modula-3 compiler generates.
 <P>
 
 On some
-<A HREF="platforms.html">platforms</A>
+<!--<A HREF="platforms.html">-->platforms<!--</A>-->
 (e.g. <TT>DS3100</TT> and <TT>ALPHA_OSF</TT>) exceptions are
 implemented by PC tables and a stack walker.
 On all other platforms, exceptions are implemented with <TT>setjmp</TT>
@@ -37,7 +37,7 @@ and <TT>longjmp</TT>.  The
 jump buffers and scope descriptors are chained together to form a
 stack.
 The
-<A HREF="../../m3sources/html/thread/src/POSIX/ThreadF.i3.html"><TT>ThreadF</TT></A>
+<A HREF="../../help/gen_html/m3core/src/thread/POSIX/ThreadF.i3.html"><TT>ThreadF</TT></A>
 interface holds the head of the chain.
 There is a distinct chain for each thread.  When an exception is
 raised, the chain is searched.  If a handler for the exception is
@@ -74,10 +74,10 @@ is implemented with <TT>setjmp</TT> and <TT>longjmp</TT>.
 A timer interrupt (<A HREF="signals.html">signal</A>)
 is used to cause preemptive thread
 switching.  The global variable
-<A HREF="../../m3sources/html/thread/src/POSIX/ThreadPosix.m3.html"><TT>ThreadPosix.self</TT></A>
+<A HREF="../gen_html/m3core/src/thread/POSIX/ThreadPosix.m3.html"><TT>ThreadPosix.self</TT></A>
 points to the
 currently running thread.  The integer
-<A HREF="../../m3sources/html/runtime/src/POSIX/RT0u.i3.html"><TT>RT0u.inCritical</TT></A>
+<A HREF="../gen_html/m3core/src/runtime/POSIX/RT0u.i3.html"><TT>RT0u.inCritical</TT></A>
 is used by the runtime to prevent thread switching during garbage
 collection and other ``atomic'' runtime operations.
 <P>

@@ -8,14 +8,14 @@
 <h2>Implementation restrictions</h2>
 
 <p>With a few exceptions, CM Modula-3 implements the Modula-3 language
-as defined in ``<a href="/help/bib.html#SPwM3">Systems Programming with
+as defined in ``<a href="../../help/bib.html#SPwM3">Systems Programming with
 Modula-3</a>''. </p>
 
 <h3>Arithmetic checking</h3>
 
 <p>CM Modula-3 does not generate any special checking for integer arithmetic
 overflow or underflow. You get whatever checking <tt>gcc</tt> gives you.
-Depending on your machine, the <tt><a href="/interface/FloatMode.i3/">FloatMode</a></tt>
+Depending on your machine, the <tt><a href="../../help/gen_html/m3core/src/float/IEEE-default/FloatMode.i3.html">FloatMode</a></tt>
 interface may be used to control floating point exceptions. </p>
 
 <h3>Packed types</h3>
@@ -31,7 +31,7 @@ which only supports aligned 32-bit loads. </p>
 <p>CM Modula-3 does not reliably detect thread stack overflows. Stacks
 are only checked for overflow on procedure entry. No checking is done on
 external procedures. Thread stacks are allocated in fixed size chunks.
-The required<a href="/interface/Thread/"> <tt>Thread</tt></a> interface has
+The required<a href="../../help/gen_html/m3core/src/thread/Common/Thread.i3.html"> <tt>Thread</tt></a> interface has
 been augmented with the <tt>SizedClosure</tt> type to allow arbitrary sized
 stacks. The default size can be adjusted with <tt>Thread.MinDefaultStackSize</tt>
 and <tt>Thread.IncDefaultStackSize</tt>. </p>
