@@ -22,6 +22,7 @@ REVEAL
 TYPE
   VKind = {      (* TYPE   VALUE                 *)
     Integer,     (* Int    int                   *)
+    LongInt,     (* LongInt int                  *)
     Float,       (* Float  float                 *)
     Stacked,     (* any    S0.type               *)
     Direct,      (* any    MEM(ADR(base) + OFFS) *)
@@ -112,6 +113,12 @@ PROCEDURE Init () =
     FOR t := FIRST (Type) TO LAST (Type) DO StackType[t] := t; END;
     FOR t := Type.Word8 TO Type.Int64 DO
       StackType[t] := Target.Integer.cg_type;
+    END;
+    IF Target.Integer # Target.Int64 THEN
+      StackType[Type.Int64] := Target.Int64.cg_type;
+    END;
+    IF Target.Word # Target.Word64 THEN
+      StackType[Type.Word64] := Target.Word64.cg_type;
     END;
 
     cg_wr := Host.env.init_code_generator ();
@@ -692,6 +699,10 @@ PROCEDURE Force () =
       | VKind.Integer =>
           x.type := Target.Integer.cg_type;
           cg.load_integer (x.type, x.int);
+
+      | VKind.LongInt =>
+          x.type := Target.Int64.cg_type;
+          cg.load_longint (x.type, x.int);
 
       | VKind.Float =>
           x.type := TargetMap.Float_types [TFloat.Prec (x.float)].cg_type;
@@ -1655,8 +1666,10 @@ PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size) =
       IF (size = s) AND (a MOD align) = 0 THEN
         (* a simple aligned store *)
         SimpleIndirectStore (x, t);
-      ELSIF (size = s) AND (a MOD 8) = 0 AND Target.Allow_packed_byte_aligned THEN
-        (* a byte aligned store, used by packed structures, supported by the processor *)
+      ELSIF (size = s) AND (a MOD 8) = 0 AND 
+        Target.Allow_packed_byte_aligned THEN
+        (* a byte aligned store, used by packed structures, supported by
+           the processor *)
         SimpleIndirectStore (x, t);
       ELSIF (size < s) THEN
         Err ("store_indirect size too large");
@@ -1814,6 +1827,15 @@ PROCEDURE Load_integer (READONLY i: Target.Int) =
       x.int  := i;
     END;
   END Load_integer;
+
+PROCEDURE Load_longint (READONLY i: Target.Int) =
+  BEGIN
+    SPush (Target.Int64.cg_type);
+    WITH x = stack[tos-1] DO
+      x.kind := VKind.LongInt;
+      x.int  := i;
+    END;
+  END Load_longint;
 
 PROCEDURE Load_float (READONLY f: Target.Float) =
   VAR t := TargetMap.Float_types [TFloat.Prec (f)].cg_type;
@@ -2307,28 +2329,36 @@ PROCEDURE Check_lo (READONLY i: Target.Int;  code: RuntimeError) =
   BEGIN
     EVAL RunTyme.LookUpProc (RunTyme.Hook.Abort);
     Force ();
-    cg.check_lo (Target.Integer.cg_type, i, code);
+    WITH x = stack [SCheck (1, "Check_lo")] DO
+      cg.check_lo (x.type, i, code);
+    END;
   END Check_lo;
 
 PROCEDURE Check_hi (READONLY i: Target.Int;  code: RuntimeError) =
   BEGIN
     EVAL RunTyme.LookUpProc (RunTyme.Hook.Abort);
     Force ();
-    cg.check_hi (Target.Integer.cg_type, i, code);
+    WITH x = stack [SCheck (1, "Check_hi")] DO
+      cg.check_hi (x.type, i, code);
+    END;
   END Check_hi;
 
 PROCEDURE Check_range (READONLY a, b: Target.Int;  code: RuntimeError) =
   BEGIN
     EVAL RunTyme.LookUpProc (RunTyme.Hook.Abort);
     Force ();
-    cg.check_range (Target.Integer.cg_type, a, b, code);
+    WITH x = stack [SCheck (1, "Check_range")] DO
+      cg.check_range (x.type, a, b, code);
+    END;
   END Check_range;
 
 PROCEDURE Check_index (code: RuntimeError) =
   BEGIN
     EVAL RunTyme.LookUpProc (RunTyme.Hook.Abort);
     EVAL Force_pair (commute := FALSE);
-    cg.check_index (Target.Integer.cg_type, code);
+    WITH x = stack [SCheck (1, "Check_index")] DO
+      cg.check_index (x.type, code);
+    END;
     SPop (1, "Check_index");
   END Check_index;
 
@@ -2336,7 +2366,9 @@ PROCEDURE Check_eq (code: RuntimeError) =
   BEGIN
     EVAL RunTyme.LookUpProc (RunTyme.Hook.Abort);
     EVAL Force_pair (commute := TRUE);
-    cg.check_eq (Target.Integer.cg_type, code);
+    WITH x = stack [SCheck (1, "Check_eq")] DO
+      cg.check_eq (x.type, code);
+    END;
     SPop (2, "Check_eq");
   END Check_eq;
 
@@ -2830,6 +2862,7 @@ CONST
 CONST
   VName = ARRAY VKind OF TEXT {
     "Integer  ",
+    "LongInt  ",
     "Float    ",
     "Stacked  ",
     "Direct   ",

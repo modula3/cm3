@@ -443,6 +443,7 @@ PROCEDURE Load_nil     ();                         (*push ; s0.A := NIL*)
 PROCEDURE Load_byte_address (x: INTEGER);          (*push ; s0.A := x *)
 PROCEDURE Load_intt    (i: INTEGER);               (*push;  s0.I := i *)
 PROCEDURE Load_integer (READONLY i: Target.Int);   (*push ; s0.I := i *)
+PROCEDURE Load_longint (READONLY i: Target.Int);   (*push ; s0.I := i *)
 PROCEDURE Load_float   (READONLY f: Target.Float); (*push ; s0.t := f *)
 
 (*------------------------------------------------------------ arithmetic ---*)

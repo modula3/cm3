@@ -122,11 +122,25 @@ PROCEDURE CheckOrdinal (tlhs: Type.T;  rhs: Expr.T) =
     constant := Expr.ConstValue (rhs);
     IF (constant # NIL) THEN rhs := constant END;
     Expr.GetBounds (rhs, rmin, rmax);
+    VAR 
+      t := Expr.TypeOf (rhs);
+      x :  Type.Info;
+    BEGIN
+      EVAL Type.CheckInfo (t, x);
+      IF x.class = Type.Class.Integer THEN
+        rmin := TInt.Expand (rmin);
+        rmax := TInt.Expand (rmax);
+      END;
+    END;
     EVAL Type.GetBounds (tlhs, lmin, lmax);
     IF TInt.LE (lmin, lmax) AND TInt.LE (rmin, rmax)
       AND (TInt.LT (lmax, rmin) OR TInt.LT (rmax, lmin)) THEN
       (* non-overlappling, non-empty ranges *)
       Error.Warn (2, "value not assignable (range fault)");
+      TInt.OutInt("lmin", lmin);
+      TInt.OutInt("lmax", lmax);
+      TInt.OutInt("rmin", rmin);
+      TInt.OutInt("rmax", rmax);
     END;
   END CheckOrdinal;
 
@@ -274,7 +288,8 @@ PROCEDURE DoEmit (tlhs: Type.T;  rhs: Expr.T) =
     END;
 
     CASE t_info.class OF
-    | Type.Class.Integer, Type.Class.Subrange, Type.Class.Enum =>
+    | Type.Class.Integer, Type.Class.LongInt, 
+      Type.Class.Subrange, Type.Class.Enum =>
         AssignOrdinal (tlhs, rhs, lhs_info);
     | Type.Class.Real, Type.Class.Longreal, Type.Class.Extended =>
         AssignFloat (rhs, lhs_info);

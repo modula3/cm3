@@ -81,6 +81,7 @@ REVEAL
     store_indirect := store_indirect;
     load_nil := load_nil;                           
     load_integer := load_integer; 
+    load_longint := load_longint; 
     load_float := load_float;
     compare := compare;
     add := add;       
@@ -553,6 +554,11 @@ PROCEDURE load_integer (xx: T;  t: IType;  READONLY i: Target.Int) =
   BEGIN
     xx.child.load_integer (t, i);
   END load_integer;
+
+PROCEDURE load_longint (xx: T;  t: IType;  READONLY i: Target.Int) =
+  BEGIN
+    xx.child.load_longint (t, i);
+  END load_longint;
 
 PROCEDURE load_float (xx: T;  t: RType;  READONLY f: Target.Float) =
   BEGIN

@@ -41,7 +41,7 @@ PROCEDURE New (READONLY value: Target.Int): Expr.T =
   BEGIN
     p := NEW (P);
     ExprRep.Init (p);
-    p.value   := value;
+    p.value   := TWord.Trim (value);
     p.checked := TRUE;
     IF TInt.EQ (value, TInt.Zero)
       THEN p.type := Null.T;
@@ -85,7 +85,8 @@ PROCEDURE Subtract (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     ELSE (* address - address *)
       TYPECASE b OF
       | NULL => RETURN FALSE;
-      | P(p) => TWord.Subtract (i, p.value, k);  c := IntegerExpr.New (k);
+      | P(p) => TWord.Subtract (i, p.value, k);
+        c := IntegerExpr.New (TWord.Trim (k));
       ELSE      RETURN FALSE;
       END;
     END;
@@ -96,6 +97,8 @@ PROCEDURE Compare (a, b: Expr.T;  VAR sign: INTEGER): BOOLEAN =
   VAR x, y: Target.Int;
   BEGIN
     IF  NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
+    x := TWord.Trim (x);
+    y := TWord.Trim (y);
     IF TWord.LT (x, y) THEN
       sign := -1
     ELSIF TWord.LT (y, x) THEN

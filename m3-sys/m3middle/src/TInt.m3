@@ -10,6 +10,8 @@ MODULE TInt;
 
 IMPORT Word, TWord;
 FROM Target IMPORT Int, Integer, IChunk, IChunks, ChunkSize, last_chunk;
+IMPORT Target; (* nedd qualification: name conflict for Word *)
+IMPORT IO;
 
 CONST (* IMPORTS *)
   RShift = Word.RightShift;
@@ -237,6 +239,19 @@ PROCEDURE LT (READONLY a, b: Int): BOOLEAN =
   VAR a_sign := And (a.x [last_chunk], SignMask);
       b_sign := And (b.x [last_chunk], SignMask);
   BEGIN
+    (*
+    IO.Put("LT: ");
+    FOR i := last_chunk TO 0 BY -1 DO
+      IO.PutInt(a.x [i]);
+      IO.Put(" ");
+    END;
+    IO.Put(", ");
+    FOR i := last_chunk TO 0 BY -1 DO
+      IO.PutInt(b.x [i]);
+      IO.Put(" ");
+    END;
+    IO.Put("\n");
+    *)
     IF (a_sign # b_sign) THEN RETURN (a_sign # 0); END;
 
     FOR i := last_chunk TO 0 BY -1 DO
@@ -345,5 +360,79 @@ PROCEDURE ToBytes (READONLY r: Int;  VAR buf: ByteArray): INTEGER =
     RETURN j;
   END ToBytes;
 
+PROCEDURE Trim (READONLY a: Int): Int =
+  VAR
+    res := a;
+    sign: Int;
+  BEGIN
+    IF Target.Integer.size >= Target.Int64.size OR 
+      Target.Word.size >= Target.Word64.size THEN
+      RETURN res;
+    END;
+    IF NOT inited THEN Init() END;
+    (* we need lazy init since Integer isn't initialized at module link time *)
+    TWord.And (a, sign_mask, sign);
+    IF NOT EQ (sign, Zero) THEN
+      TWord.Or (res, mask2, res);
+    ELSE
+      TWord.And (res, mask, res);
+    END;
+    RETURN res;
+  END Trim;
+
+PROCEDURE Expand (READONLY a: Int): Int =
+  VAR 
+    res := a;
+    sign: Int;
+  BEGIN
+    IF Target.Integer.size >= Target.Int64.size OR 
+      Target.Word.size >= Target.Word64.size THEN
+      RETURN res;
+    END;
+    IF NOT inited THEN Init () END;
+    TWord.And (a, sign_mask, sign);
+    IF NOT EQ (sign, Zero) THEN
+      TWord.Or (res, mask2, res);
+    END;
+    RETURN res;
+  END Expand;
+
+PROCEDURE OutInt (READONLY name: TEXT; READONLY a: Int; nl := TRUE) =
+  BEGIN
+    IO.Put (name & ":");
+    FOR i := last_chunk TO 0 BY -1 DO
+      IO.Put (" ");
+      IO.PutInt (a.x [i]);
+    END;
+    IF nl THEN
+      IO.Put ("\r\n");
+    END;
+  END OutInt;
+
+PROCEDURE Init () =
+  VAR
+    byte_mask, byte_shift: Int;
+    target_int_bytesize := Integer.size DIV 8;
+  BEGIN
+    IF inited THEN RETURN END;
+    EVAL FromInt (255, byte_mask);
+    EVAL FromInt (8, byte_shift);
+    EVAL FromInt (128, sign_mask);
+    mask := byte_mask;
+    FOR i := 2 TO target_int_bytesize DO
+      TWord.Shift (mask, byte_shift, mask);
+      TWord.Or (mask, byte_mask, mask);
+      TWord.Shift (sign_mask, byte_shift, sign_mask);
+    END;
+    TWord.Not (mask, mask2);
+    (* OutInt ("target word mask", mask); *)
+    (* OutInt ("target word sign_mask", sign_mask); *)
+    inited := TRUE;
+  END Init;
+
+VAR
+  inited := FALSE;
+  mask, mask2: Int;
+  sign_mask: Int;
 BEGIN
 END TInt.

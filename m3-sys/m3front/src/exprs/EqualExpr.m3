@@ -100,6 +100,7 @@ PROCEDURE Classify (ta, tb: Type.T): Kind =
     CASE ia.class OF
     | Type.Class.Error,
       Type.Class.Integer,
+      Type.Class.LongInt,
       Type.Class.Real,
       Type.Class.Longreal,
       Type.Class.Extended,

@@ -228,11 +228,13 @@ VAR (*CONST*)
   Bitfield_can_overlap: BOOLEAN;
   (* a C bit field cannot overlap two adjacent storage units *)  
 
-	Allow_packed_byte_aligned: BOOLEAN;
-	(* Allow the compiler to align scalar types on byte boundaries when packing. 
-	   The target processor must support byte alignment of scalar store and loads. This
-     does not remove the restriction that bitfields may not cross word boundaries. *)
-
+  Allow_packed_byte_aligned: BOOLEAN;
+  (* Allow the compiler to align scalar types on byte boundaries when
+     packing. The target processor must support byte alignment of
+     scalar store and loads. This does not remove the restriction that
+     bitfields may not cross word boundaries.
+  *) 
+  
   (* NIL checking *)
   First_readable_addr: CARDINAL;
   (* Read or write references to addresses in the range [0..First_readable-1]

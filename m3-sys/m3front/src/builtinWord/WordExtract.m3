@@ -126,6 +126,8 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
       (* possible that we'll preserve all bits *)
       Expr.GetBounds (ce.args[0], min, max);
     END;
+    min := TInt.Trim (min);
+    max := TInt.Trim (max);
   END GetBounds;
 
 PROCEDURE Initialize () =

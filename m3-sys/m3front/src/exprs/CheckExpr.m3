@@ -117,6 +117,15 @@ PROCEDURE Compile (p: P) =
 PROCEDURE EmitChecks (e: Expr.T;  READONLY min, max: Target.Int;
                       err: CG.RuntimeError) =
   VAR minE, maxE: Target.Int;  x: Expr.T;
+
+  PROCEDURE DumpVals () = 
+    BEGIN
+      TInt.OutInt("EmitChecks: min", min);
+      TInt.OutInt("EmitChecks: max", max);
+      TInt.OutInt("EmitChecks: minE", minE);
+      TInt.OutInt("EmitChecks: maxE", maxE);
+    END DumpVals;
+
   BEGIN
     x := Expr.ConstValue (e);
     IF (x # NIL) THEN e := x;  END;
@@ -127,12 +136,14 @@ PROCEDURE EmitChecks (e: Expr.T;  READONLY min, max: Target.Int;
         CG.Check_range (min, max, err);
       ELSIF TInt.LT (minE, min) THEN
         IF TInt.LT (maxE, min) THEN
-          Error.Warn (2, "value out of range");
+          Error.Warn (2, "EmitChecks(1): value out of range");
+          DumpVals ();
         END;
         CG.Check_lo (min, err);
       ELSIF TInt.LT (max, maxE) THEN
         IF TInt.LT (max, minE) THEN
-          Error.Warn (2, "value out of range");
+          Error.Warn (2, "EmitChecks(2): value out of range");
+          DumpVals ();
         END;
         CG.Check_hi (max, err);
       END;

@@ -101,6 +101,7 @@ TYPE
         store_indirect := store_indirect;
         load_nil      := load_nil;
         load_integer  := load_integer;
+        load_longint  := load_longint;
         load_float    := load_float;
         compare  := compare;
         add      := add;
@@ -760,6 +761,13 @@ PROCEDURE load_integer  (self: U;  t: IType;  READONLY i: Target.Int) =
     self.s_push (t);
     self.child.load_integer (t, i);
   END load_integer;
+
+PROCEDURE load_longint  (self: U;  t: IType;  READONLY i: Target.Int) =
+  (* push ; s0.t := i *)
+  BEGIN
+    self.s_push (t);
+    self.child.load_longint (t, i);
+  END load_longint;
 
 PROCEDURE load_float    (self: U;  t: RType;  READONLY f: Target.Float) =
   (* push ; s0.t := f *)

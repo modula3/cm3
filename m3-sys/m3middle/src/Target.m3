@@ -8,7 +8,7 @@
 
 MODULE Target;
 
-IMPORT Text, TargetMap, M3RT;
+IMPORT IO, Text, TargetMap, M3RT;
 
 CONST
   Systems = ARRAY OF TEXT {
@@ -694,7 +694,8 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
 
 
     <*ASSERT Integer.size MOD ChunkSize = 0 *>
-    last_chunk := Integer.size DIV ChunkSize - 1;
+    (* last_chunk := Integer.size DIV ChunkSize - 1; *)
+    last_chunk := Int64.size DIV ChunkSize - 1;
 
     (* fill in the "bytes" and "pack" fields *)
     FixI (Address, max_align);

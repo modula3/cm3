@@ -12,9 +12,10 @@ IMPORT M3, CG, Error, Token, Scanner, NamedType, Word;
 IMPORT ArrayType, PackedType, EnumType, ObjectType, RefType;
 IMPORT ProcType, UserProc, RecordType, SetType, SubrangeType, OpaqueType;
 IMPORT Value, Module, Host, TypeFP, TypeTbl, WCharr, Brand;
-IMPORT Addr, Bool, Charr, Card, EReel, Int, LReel, Mutex, Null;
+IMPORT Addr, Bool, Charr, Card, EReel, Int, LongInt, LReel, Mutex, Null;
 IMPORT ObjectRef, ObjectAdr, Reel, Reff, Textt, Target, TInt, TFloat;
 IMPORT Text, M3RT, TipeMap, TipeDesc, ErrType, OpenArrayType, M3ID;
+IMPORT IO;
 
 CONST
   NOT_CHECKED = -1;
@@ -276,7 +277,8 @@ PROCEDURE LoadScalar (t: T) =
   BEGIN
     t := Check (t);
     CASE t.info.class OF
-    | Class.Integer, Class.Real, Class.Longreal, Class.Extended,
+    | Class.Integer, Class.LongInt, Class.Real, Class.Longreal, 
+      Class.Extended, 
       Class.Enum, Class.Object, Class.Opaque, Class.Procedure,
       Class.Ref, Class.Subrange =>
         CG.Load_indirect (t.info.stk_type, 0, t.info.size);
@@ -362,7 +364,7 @@ PROCEDURE AddCell (t: T) =
 PROCEDURE IsOrdinal (t: T): BOOLEAN =
   VAR u := Check (t);  c := u.info.class;
   BEGIN
-    RETURN (c = Class.Integer) OR (c = Class.Subrange)
+    RETURN (c = Class.Integer) OR (c = Class.LongInt) OR (c = Class.Subrange)
            OR (c = Class.Enum) OR (c = Class.Error)
            OR ((c = Class.Packed) AND IsOrdinal (StripPacked (t)));
   END IsOrdinal;
@@ -376,12 +378,17 @@ PROCEDURE Number (t: T): Target.Int =
   BEGIN
     IF (c = Class.Subrange) THEN
       b := SubrangeType.Split (u, min, max);  <*ASSERT b*>
+      (* TInt.OutInt("number.subrange.min", min); *)
+      (* TInt.OutInt("number.subrange.max", max); *)
     ELSIF (c = Class.Enum) THEN
       b := TInt.FromInt (EnumType.NumElts (u), max);  <*ASSERT b*>
       RETURN max;
     ELSIF (c = Class.Integer) THEN
       min := Target.Integer.min;
       max := Target.Integer.max;
+    ELSIF (c = Class.LongInt) THEN
+      min := Target.Int64.min;
+      max := Target.Int64.max;
     ELSIF (c = Class.Error) THEN
       RETURN TInt.Zero;
     ELSIF (c = Class.Packed) THEN
@@ -392,6 +399,7 @@ PROCEDURE Number (t: T): Target.Int =
     END;
     IF TInt.Subtract (max, min, tmp)
       AND TInt.Add (tmp, TInt.One, max) THEN
+      (* TInt.OutInt("number.result", max); *)
       RETURN max;
     END;
     Error.Msg ("type has too many elements");
@@ -412,6 +420,10 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int): BOOLEAN =
     ELSIF (c = Class.Integer) THEN
       min := Target.Integer.min;
       max := Target.Integer.max;
+      RETURN TRUE;
+    ELSIF (c = Class.LongInt) THEN
+      min := Target.Int64.min;
+      max := Target.Int64.max;
       RETURN TRUE;
     ELSIF (c = Class.Packed) THEN
       RETURN GetBounds (StripPacked (u), min, max);
@@ -515,6 +527,13 @@ PROCEDURE IsSubtype (a, b: T): BOOLEAN =
 PROCEDURE IsAssignable (a, b: T): BOOLEAN =
   VAR i, e: T;  min_a, max_a, min_b, max_b, min, max: Target.Int;
   BEGIN
+    (* IO.Put("IsAssignable:\n  ");
+    WITH ac = Check(a), bc = Check(b) DO
+      DumpInfo(ac.info);
+      IO.Put("  ");
+      DumpInfo(bc.info);
+    END;
+    *)
     IF IsEqual (a, b, NIL) OR IsSubtype (b, a) THEN
       RETURN TRUE;
     ELSIF IsOrdinal (a) THEN
@@ -612,6 +631,7 @@ PROCEDURE InitCompilation () =
     EVAL TypeTbl.Put (compiled, Check(Card.T),      Card.T);
     EVAL TypeTbl.Put (compiled, Check(EReel.T),     EReel.T);
     EVAL TypeTbl.Put (compiled, Check(Int.T),       Int.T);
+    EVAL TypeTbl.Put (compiled, Check(LongInt.T),   LongInt.T);
     EVAL TypeTbl.Put (compiled, Check(LReel.T),     LReel.T);
     EVAL TypeTbl.Put (compiled, Check(Mutex.T),     Mutex.T);
     EVAL TypeTbl.Put (compiled, Check(Null.T),      Null.T);
@@ -792,6 +812,9 @@ PROCEDURE Zero (full_t: T) =
     | Class.Integer, Class.Subrange, Class.Enum =>
         CG.Load_integer (TInt.Zero);
         CG.Store_indirect (u.info.stk_type(*Target.Integer.cg_type*), 0, size);
+    | Class.LongInt =>
+        CG.Load_longint (TInt.Zero);
+        CG.Store_indirect (u.info.stk_type, 0, size);
     | Class.Real =>
         CG.Load_float (TFloat.ZeroR);
         CG.Store_indirect (CG.Type.Reel, 0, size);
@@ -885,12 +908,23 @@ PROCEDURE GenRefDesc (t: T) =
 PROCEDURE ScalarAlign (t: TT;  offset: INTEGER): BOOLEAN =
   VAR u := Check (t);
   BEGIN
-  	IF Target.Allow_packed_byte_aligned THEN
-    	RETURN (offset MOD 8 = 0);
-  	ELSE
-     	RETURN (offset MOD u.info.alignment = 0);
+    IF Target.Allow_packed_byte_aligned THEN
+      RETURN (offset MOD 8 = 0);
+    ELSE
+      RETURN (offset MOD u.info.alignment = 0);
    END;
   END ScalarAlign;
+
+PROCEDURE DumpInfo (i: Info) =
+  BEGIN
+    IO.Put("class " & ClassName[i.class]);
+    IO.Put(", stk_type "); IO.PutInt(ORD(i.stk_type));
+    IO.Put(", mem_type "); IO.PutInt(ORD(i.mem_type));
+    IO.Put(", size "); IO.PutInt(i.size);
+    IO.Put(", align "); IO.PutInt(i.alignment);
+    IO.Put(", hash "); IO.PutInt(i.hash);
+    IO.Put("\n");
+  END DumpInfo;
 
 BEGIN
 END Type.

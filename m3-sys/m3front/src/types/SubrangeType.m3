@@ -160,6 +160,16 @@ PROCEDURE Check (p: P) =
     Expr.TypeCheck (p.maxE, cs);
     p.baseType := Type.CheckInfo (p.baseType, info);
 
+    (* truncate values to available integer representation on target *)
+    IF Target.Integer.size # Target.Int64.size THEN
+      (* TInt.OutInt("subrange.check.pmin pre", p.min); *)
+      (* TInt.OutInt("subrange.check.pmax pre", p.max); *)
+      p.min := TInt.Trim (p.min);
+      p.max := TInt.Trim (p.max);
+      (* TInt.OutInt("subrange.check.pmin post", p.min); *)
+      (* TInt.OutInt("subrange.check.pmax post", p.max); *)
+    END;
+
     hash := info.hash;
     IF NOT TInt.ToInt (p.min, i) THEN i := 19 END;
     hash := Word.Plus (Word.Times (hash, 487), i);
@@ -186,11 +196,11 @@ PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
     sz := TargetMap.CG_Size[p.rep];
     z0: INTEGER;
   BEGIN
-  	IF Target.Allow_packed_byte_aligned THEN
+    IF Target.Allow_packed_byte_aligned THEN
       z0 := offset DIV 8 * 8;
-  	ELSE
+    ELSE
       z0 := offset DIV Target.Integer.align * Target.Integer.align;
-  	END;
+    END;
     RETURN (offset + sz) <= (z0 + Target.Integer.size);
   END CheckAlign;
 
