@@ -146,15 +146,17 @@ PROCEDURE MulVecC (VAR (*OUT*) z   : ARRAY OF C.T;
     END;
   END MulVecC;
 
+(* stretch (the length of) the signal by a factor of 2, remember that there
+   must be a spare value at the end of the input, thus a signal of length
+   (n+1) is transformed to one of length (2n+1) *)
 PROCEDURE UpSample2 (READONLY x: ARRAY OF C.T; ): REF ARRAY OF C.T =
-  VAR z := NEW(CV.T, 2 * NUMBER(x));
+  VAR z := NEW(CV.T, 2 * NUMBER(x) - 1);
   BEGIN
     FOR i := FIRST(x) TO LAST(x) - 1 DO
       z[2 * i] := x[i];
       z[2 * i + 1] := C.Scale(C.Add(x[i], x[i + 1]), R.Half);
     END;
-    z[LAST(z^) - 1] := x[LAST(x)];
-    z[LAST(z^)] := C.Scale(C.Add(x[LAST(x)], x[FIRST(x)]), R.Half);
+    z[LAST(z^)] := x[LAST(x)];
     RETURN z;
   END UpSample2;
 
@@ -169,8 +171,9 @@ PROCEDURE FourierDecay () =
                ARRAY OF R.T{0.3D0, 0.5D0, 0.2D0}, -1).autocorrelate();
     mask3 := NEW(S.T).fromArray(
                ARRAY OF R.T{0.23D0, 0.54D0, 0.23D0}, -1).autocorrelate();
-    mask := NEW(S.T).fromArray(ARRAY OF R.T{0.2D0, 0.8D0}).autocorrelate();
-    mask5 := NEW(S.T).fromArray(ARRAY OF R.T{0.23D0, 0.54D0, 0.23D0}, -1);
+    mask := NEW(S.T).fromArray(ARRAY OF R.T{0.5D0, 0.5D0}).autocorrelate();
+    mask5 := NEW(S.T).fromArray(ARRAY OF R.T{0.2D0, 0.8D0}).autocorrelate();
+    mask6 := NEW(S.T).fromArray(ARRAY OF R.T{0.23D0, 0.54D0, 0.23D0}, -1);
     generator           := mask;
     twopow   : CARDINAL := 1;
 
@@ -182,7 +185,7 @@ PROCEDURE FourierDecay () =
         minsize := generator.getNumber() * 2;
         (*round up to the next multiple of twopow*)
         newsize   := minsize + (-minsize) MOD twopow;
-        bandwidth := newsize DIV twopow;
+        bandWidth := newsize DIV twopow;
         genSpec   := DFTR2C1D(generator.wrapCyclic(newsize)^);
 
         (*quite a random start filter*)
@@ -194,37 +197,46 @@ PROCEDURE FourierDecay () =
         IF l > 1 THEN
           VAR
             rep     : CARDINAL := 2;
-            maskSpec           := DFTR2C1D(mask.wrapCyclic(bandwidth)^);
-            band := CV.FromArray(SUBARRAY(genSpec^, bandwidth, bandwidth));
-            decaySpec           := CV.New(NUMBER(genSpec^));
-            k        : CARDINAL := l - 1;
+            maskSpec           := DFTR2C1D(mask.wrapCyclic(bandWidth)^);
+            band := CV.FromArray(
+                      SUBARRAY(genSpec^, bandWidth, bandWidth + 1));
+            curBandWidth           := bandWidth;
+            decaySpec              := CV.New(NUMBER(genSpec^));
+            k           : CARDINAL := l - 1;
           BEGIN
-            (*CVS.Clear(SUBARRAY(decaySpec^, 0, bandwidth));*)
-            SUBARRAY(decaySpec^, 0, bandwidth) :=
-              SUBARRAY(genSpec^, 0, bandwidth);
+            PlotComplex(NEW(CS.T).fromVector(maskSpec), 0);
+            (*CVS.Clear(SUBARRAY(decaySpec^, 0, bandWidth));*)
+            SUBARRAY(decaySpec^, 0, bandWidth) :=
+              SUBARRAY(genSpec^, 0, bandWidth);
             LOOP
-              SUBARRAY(decaySpec^, NUMBER(band^), NUMBER(band^)) := band^;
-              WITH genBand = SUBARRAY(
-                               genSpec^, NUMBER(band^), NUMBER(band^)),
-                   sum  = CVS.Sum(genBand).re,
-                   bias = CVS.Sum(band^).re    DO
+              WITH genBand = SUBARRAY(genSpec^, curBandWidth, curBandWidth),
+                   (*remove spare value at the end*)
+                   decayBand = SUBARRAY(band^, 0, curBandWidth),
+                   sum       = CVS.Sum(genBand).re,
+                   decaySum  = CVS.Sum(decayBand).re             DO
+                SUBARRAY(decaySpec^, curBandWidth, curBandWidth) :=
+                  decayBand;
                 IO.Put(
                   Fmt.FN(
                     "diff %s: %s, sum (%s) %s <-> %s\n",
                     ARRAY OF
                       TEXT{Fmt.Int(k),
-                           RF.Fmt(CVT.Norm2(CVB.Sub(band^, genBand))),
-                           RF.Fmt(sum / bias), RF.Fmt(sum), RF.Fmt(bias)}));
+                           RF.Fmt(CVT.Norm2(CVB.Sub(decayBand, genBand))),
+                           RF.Fmt(sum / decaySum), RF.Fmt(sum),
+                           RF.Fmt(decaySum)}));
                 DEC(k);
               END;
               IF k = 0 THEN EXIT END;
               band := UpSample2(band^);
               FOR i := 0 TO rep - 1 DO
-                WITH bandSpec = SUBARRAY(band^, bandwidth * i, bandwidth) DO
+                WITH bandSpec = SUBARRAY(band^, bandWidth * i, bandWidth) DO
                   MulVecC(bandSpec, maskSpec^, bandSpec);
                 END;
               END;
+              <* ASSERT LAST(band^) = bandWidth * rep *>
+              band[LAST(band^)] := C.Mul(maskSpec[0], band[LAST(band^)]);
               rep := rep * 2;
+              curBandWidth := curBandWidth * 2;
             END;
             PlotComplex(NEW(CS.T).fromVector(decaySpec), l);
           END;
@@ -236,7 +248,7 @@ PROCEDURE FourierDecay () =
            not be considered here.  They also don't appear in the spectrum
            as generated by FFTW. *)
         FOR k := 2 TO l DO
-          WITH sum  = CVS.Sum(SUBARRAY(genSpec^, bandwidth, bandwidth)).re,
+          WITH sum  = CVS.Sum(SUBARRAY(genSpec^, bandWidth, bandWidth)).re,
                bias = refnMask.getValue(0)                                  DO
             IO.Put(Fmt.FN("%s: (%s) %s <-> %s\n",
                           ARRAY OF
@@ -244,7 +256,7 @@ PROCEDURE FourierDecay () =
                                  RF.Fmt(sum), RF.Fmt(bias)}));
           END;
           refnMask := refnMask.convolveDown(mask, 2);
-          bandwidth := bandwidth * 2;
+          bandWidth := bandWidth * 2;
         END;
       END;
       generator := Refn.Refine(generator, mask);
