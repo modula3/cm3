@@ -35,6 +35,7 @@ CONST
 <*INLINE*> PROCEDURE DivMod(x,y:T;VAR r:T):T RAISES {Error};  (*return x/y and write the remainder 0 in r*)
 <*INLINE*> PROCEDURE IntMod(x,y:T):T RAISES {Error};  (*return x mod y*)
 <*INLINE*> PROCEDURE Rec(x:T):T RAISES {Error};    (*return 1/x*)
+CONST Scale = Mul;
 <*OBSOLETE*> PROCEDURE ScaleInt(x:T;y:INTEGER):T;  (*return x*y*)
 
 (*---- Floating point representations ----*)
