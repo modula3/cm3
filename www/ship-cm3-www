@@ -1,5 +1,6 @@
 #!/bin/sh
 
+RSYNCOPTS="${RSYNCOPTS:- -L}"
 SHIP="$0"
 if [ -z "${REMOTE}" ] ; then
   REMOTE="root@www.elegosoft.com:/var/www/html/cm3"
@@ -47,7 +48,7 @@ for r in ${REMOTE}; do
   if [ "x${VERBOSE}" = x-v ] ; then
     echo "updating remote site ${r}..."
   fi
-  RSYNC_RSH=ssh rsync ${NOPT} ${VERBOSE} -C -ruptl \
+  RSYNC_RSH=ssh rsync ${NOPT} ${VERBOSE} -C ${RSYNCOPTS} -ruptl \
     --exclude=cm3 \
     --exclude=tmp \
     --exclude=\*~ \
