@@ -12,9 +12,8 @@ IMPORT LongRealVector AS V;
 IMPORT NADefinitions AS NA;
 IMPORT LongRealMatrix AS M;
 
-
-
 TYPE
+
   Option = {enabled, arg, nodelete, invisible, disabled, dummy5, dummy6,
             dummy7, func, bool, int, float, string};
 
@@ -153,7 +152,6 @@ TYPE
                       wx, wy: R.T;
                       window: INTEGER;
                     END;
-
 PROCEDURE CalcWorld (rx, ry: R.T; ): CalcWorldResult;
 
 (* plclear: "Clear current subpage." *)
@@ -218,19 +216,16 @@ PROCEDURE LoadFont (fnt: INTEGER; );
 (* plgchr: "Get character default height and current (scaled) height." *)
 
 TYPE GetCharacterHeightResult = RECORD def, ht: R.T;  END;
-
 PROCEDURE GetCharacterHeight (): GetCharacterHeightResult;
 
 (* plgcol0: "Get 8 bit RGB values for given color from color map 0." *)
 
 TYPE GetFGColorDiscrRGBResult = RECORD r, g, b: INTEGER;  END;
-
 PROCEDURE GetFGColorDiscrRGB (icol0: INTEGER; ): GetFGColorDiscrRGBResult;
 
 (* plgcolbg: "Get 8-bit RGB background color." *)
 
 TYPE GetBGColorDiscrRGBResult = RECORD r, g, b: INTEGER;  END;
-
 PROCEDURE GetBGColorDiscrRGB (): GetBGColorDiscrRGBResult;
 
 (* plgcompression: "Get the current compression setting." *)
@@ -239,7 +234,6 @@ PROCEDURE GetCompression (): INTEGER;
 (* plgdidev: "Retrieve current window into device space." *)
 
 TYPE GetWindowDeviceResult = RECORD mar, aspect, jx, jy: R.T;  END;
-
 PROCEDURE GetWindowDevice (): GetWindowDeviceResult;
 
 (* plgdiori: "Get plot orientation." *)
@@ -248,13 +242,11 @@ PROCEDURE GetOrientation (): R.T;
 (* plgdiplt: "Retrieve current window into plot space." *)
 
 TYPE GetWindowPlotResult = RECORD xmin, ymin, xmax, ymax: R.T;  END;
-
 PROCEDURE GetWindowPlot (): GetWindowPlotResult;
 
 (* plgfam: "Get family file parameters." *)
 
 TYPE GetFamilyFileResult = RECORD fam, num, bmax: INTEGER;  END;
-
 PROCEDURE GetFamilyFile (): GetFamilyFileResult;
 
 (* plglevel: "Get the (current) run level." *)
@@ -267,7 +259,6 @@ TYPE
                                  xp, yp                  : R.T;
                                  xleng, yleng, xoff, yoff: INTEGER;
                                END;
-
 PROCEDURE GetOutputDeviceParam (): GetOutputDeviceParamResult;
 
 (* plgra: "Switch to graphics screen." *)
@@ -276,7 +267,6 @@ PROCEDURE ShowGraphicScreen ();
 (* plgspa: "Get subpage boundaries in absolute coordinates." *)
 
 TYPE GetBoundariesResult = RECORD xmin, xmax, ymin, ymax: R.T;  END;
-
 PROCEDURE GetBoundaries (): GetBoundariesResult;
 
 (* plgstrm: "Get current stream number." *)
@@ -285,31 +275,26 @@ PROCEDURE GetStream (): INTEGER;
 (* plgvpd: "Get viewport boundaries in normalized device coordinates." *)
 
 TYPE GetVPBoundDevResult = RECORD xmin, xmax, ymin, ymax: R.T;  END;
-
 PROCEDURE GetVPBoundDev (): GetVPBoundDevResult;
 
 (* plgvpw: "Get viewport boundaries in world coordinates." *)
 
 TYPE GetVPBoundWorldResult = RECORD xmin, xmax, ymin, ymax: R.T;  END;
-
 PROCEDURE GetVPBoundWorld (): GetVPBoundWorldResult;
 
 (* plgxax: "Get x axis labeling parameters." *)
 
 TYPE GetXLabelParamResult = RECORD digmax, digits: INTEGER;  END;
-
 PROCEDURE GetXLabelParam (): GetXLabelParamResult;
 
 (* plgyax: "Get y axis labeling parameters." *)
 
 TYPE GetYLabelParamResult = RECORD digmax, digits: INTEGER;  END;
-
 PROCEDURE GetYLabelParam (): GetYLabelParamResult;
 
 (* plgzax: "Get z axis labeling parameters." *)
 
 TYPE GetZLabelParamResult = RECORD digmax, digits: INTEGER;  END;
-
 PROCEDURE GetZLabelParam (): GetZLabelParamResult;
 
 (* plhist: "Draw histogram." *)

@@ -61,7 +61,8 @@ typedef int PLINT;
 %pragma(modula3) unsafe="true";
 %pragma(modula3) library="m3plplot";
 
-%insert(m3makefile) %{import("m3na")%}
+%insert(m3makefile) %{import_lib("plplotd","/usr/lib")
+import("m3na")%}
 
 %insert(m3rawintf) %{
 TYPE
