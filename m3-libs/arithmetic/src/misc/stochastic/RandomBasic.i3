@@ -56,6 +56,7 @@ TYPE
            ):R.T;    (*Poisson, integer returned as real*)
 *)
 
+    (*slow implementation*)
     binomial(p:R.T;       (*probability of successful trial*)
              n:CARDINAL;  (*number of trials*)
             ):CARDINAL;   (*number of successful trials*)
