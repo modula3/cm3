@@ -11,8 +11,6 @@ implementation ("RTHeapDep")
 implementation ("RTSignal")
 implementation ("RTThread")
 c_source       ("RTThreadC")
-c_source       ("RTHeapDepC")
 s_source       ("_fpsetjmp")
-
-%% s_source (RTStackASM)
+c_source       ("malloc")
 
