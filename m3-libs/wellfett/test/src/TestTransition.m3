@@ -80,9 +80,9 @@ PROCEDURE AnimateTransitionEV()=
     (*PL.SetColor0(1);*)
     FOR fr:=0 TO frames DO
       VAR
-	t:=FLOAT(fr,R.T)*delta;
+        t:=FLOAT(fr,R.T)*delta;
       BEGIN
-	PlotTransitionEV(mask0.scale(R.One-t).superpose(mask1.scale(t)));
+        PlotTransitionEV(mask0.scale(R.One-t).superpose(mask1.scale(t)));
       END;
     END;
     PL.Exit();
@@ -103,11 +103,11 @@ PROCEDURE CurveTransitionEV(READONLY maskcoef0,maskcoef1:ARRAY OF R.T)=
     PL.SetEnvironment(-0.2D0,1.2D0,-10.0D0,10.0D0);
     FOR fr:=0 TO frames DO
       VAR
-	t:=FLOAT(fr,R.T)*delta;
-	mask:=mask0.scale(R.One-t).superpose(mask1.scale(t));
+        t:=FLOAT(fr,R.T)*delta;
+        mask:=mask0.scale(R.One-t).superpose(mask1.scale(t));
         ev := Eigen.EigenValuesGen(
                 Refn.TransitionMatrix(
-        	  mask.adjoint().convolve(mask)
+                  mask.adjoint().convolve(mask)
                 )
               );
         x   := NEW(V.T,NUMBER(ev.eigenvalues^));
@@ -239,11 +239,40 @@ PROCEDURE RandomMaskWithLeastEstimate():S.T=
       slice:=NEW(S.T).fromArray(rndArr).slice(3);
     BEGIN
       FOR j:=FIRST(slice^) TO LAST(slice^) DO
-	slice[j].raiseD(AThird/FLOAT(slice[j].getNumber(),R.T)-slice[j].offset());
+        slice[j].raiseD(AThird/FLOAT(slice[j].getNumber(),R.T)-slice[j].offset());
       END;
       RETURN NEW(S.T).interleave(slice^);
     END;
   END RandomMaskWithLeastEstimate;
+
+PROCEDURE RandomMask(size:CARDINAL):S.T=
+  <*FATAL NA.Error *>
+  VAR
+    rnd    := NEW(Rnd.T).init();
+    rndArr := NEW(REF ARRAY OF R.T, size);
+    mask   := NEW(S.T);
+  BEGIN
+    FOR j:=FIRST(rndArr^) TO LAST(rndArr^) DO
+      rndArr[j]:=rnd.uniform(-1.0D0,1.0D0);
+    END;
+    mask := mask.fromArray(rndArr^);
+    RETURN mask.raise(1.0D0/FLOAT(size,R.T)-mask.offset());
+  END RandomMask;
+
+PROCEDURE CompareTranslatedMasks(mask0,mask1:S.T) =
+  <*FATAL NA.Error *>
+  BEGIN
+    IO.Put(Fmt.FN("estimate: %s\n",ARRAY OF TEXT
+      {RF.Fmt(EstimateSpecRad(mask0.superpose(mask1)))
+      }));
+
+    FOR n:=-10 TO 10 DO
+      IO.Put(Fmt.FN("%s, ",ARRAY OF TEXT
+        {RF.Fmt(ComputeSpecRad(mask1.translate(3*n).superpose(mask0)))
+        }));
+    END;
+    IO.Put("\n");
+  END CompareTranslatedMasks;
 
 PROCEDURE EstimateChecks()=
   BEGIN
@@ -266,25 +295,32 @@ PROCEDURE EstimateChecks()=
     | 2 =>
       (* Check the same coefficients in different positions.
          The estimation will remain constant,
-	 what do the real eigenvalues? *)
+         what do the real eigenvalues? *)
       VAR
         mask0Arr := ARRAY [0..1] OF R.T{AThird,AThird};
         mask1Arr := ARRAY [0..0] OF R.T{AThird};
-	mask0    := NEW(S.T).fromArray(mask0Arr,0);
-	mask1    := NEW(S.T).fromArray(mask1Arr,2);
       BEGIN
-        FOR n:=0 TO 10 DO
-          CompareEstimate(mask1.translate(3*n).superpose(mask0));
-        END;
+        CompareTranslatedMasks(
+          NEW(S.T).fromArray(mask0Arr,0),
+          NEW(S.T).fromArray(mask1Arr,2)
+        );
       END;
       VAR
         mask0Arr := ARRAY [0..2] OF R.T{AThird,R.Zero,AThird};
         mask1Arr := ARRAY [0..0] OF R.T{AThird};
-	mask0    := NEW(S.T).fromArray(mask0Arr,0);
-	mask1    := NEW(S.T).fromArray(mask1Arr,1);
       BEGIN
-        FOR n:=0 TO 10 DO
-          CompareEstimate(mask1.translate(3*n).superpose(mask0));
+        CompareTranslatedMasks(
+          NEW(S.T).fromArray(mask0Arr,0),
+          NEW(S.T).fromArray(mask1Arr,2)
+        );
+      END;
+      FOR n:=0 TO 9 DO
+        VAR
+          mask  := RandomMask(4);
+          mask0 := NEW(S.T).fromArray(SUBARRAY(mask.getData()^,0,1));
+          mask1 := NEW(S.T).fromArray(SUBARRAY(mask.getData()^,1,mask.getNumber()-1));
+        BEGIN
+          CompareTranslatedMasks(mask0,mask1);
         END;
       END;
     ELSE <*ASSERT FALSE*>
