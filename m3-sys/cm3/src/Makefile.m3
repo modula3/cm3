@@ -1,9 +1,10 @@
-(* Copyright 1996 Critical Mass, Inc. All rights reserved.    *)
+(* Copyright 1996-2000 Critical Mass, Inc. All rights reserved.    *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 MODULE Makefile;
 
 IMPORT FS, M3File, M3Timers, OSError, Params, Process, Text, Thread, Wr;
-IMPORT Arg, M3Options, M3Path, Msg, Utils;
+IMPORT Arg, M3Options, M3Path, Msg, Utils, TextTextTbl;
 IMPORT MxConfig AS M3Config;
 
 TYPE
@@ -11,8 +12,10 @@ TYPE
   MM = M3Options.Mode;
 
 CONST
-  ModeName = ARRAY MM OF TEXT { "-build", "-clean", "-ship", "-find" };
-  ModeFlag = ARRAY MM OF TEXT { "_all",   "_clean", "_ship", "_find" };
+  ModeName = ARRAY MM OF TEXT { "-build", "-clean", "-ship", "-find", 
+                                "-depend" };
+  ModeFlag = ARRAY MM OF TEXT { "_all",   "_clean", "_ship", "_find", 
+                                "_depend" };
 
 TYPE
   State = RECORD
@@ -40,13 +43,13 @@ PROCEDURE Build (src_dir: TEXT): TEXT =
 
       CASE M3Options.major_mode OF
       | MM.Find => Out (wr, "M3_FIND_UNITS = []")
-      | MM.Build, MM.Clean, MM.Ship =>  (* skip *)
+      | MM.Build, MM.Clean, MM.Ship, MM.Depend =>  (* skip *)
       END;
 
       ConvertArgList (s);
 
       CASE M3Options.major_mode OF
-      | MM.Build, MM.Clean, MM.Find =>
+      | MM.Build, MM.Clean, MM.Find, MM.Depend =>
           IncludeOverrides (s, src_overrides);
           IncludeMakefile (s, src_makefile, src_dir);
 
@@ -142,6 +145,8 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
     | 'd' => IF Text.Equal(arg, "-debug") THEN
                Msg.SetLevel (Msg.Level.Debug);  ok := TRUE;
                Out (wr, "m3_option (\"-debug\")");
+             ELSIF Text.Equal (arg, "-depend") THEN
+               ok := TRUE;
              END;
 
     | 'D' => ProcessDefine (arg, wr);  ok := TRUE;
@@ -175,6 +180,11 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
                s.use_overrides := TRUE;  ok := TRUE;
              ELSIF Text.Equal (arg, "-once") THEN
                Out (wr, "M3_COMPILE_ONCE = TRUE");  ok := TRUE;
+             END;
+
+    | 'p' => IF Text.Equal(arg, "-pretend") OR 
+                Text.Equal(arg, "-profile") THEN
+               ok := TRUE;
              END;
 
     | 'O' => IF (arg_len = 2) THEN
@@ -352,12 +362,21 @@ PROCEDURE IncludeOverrides (VAR s: State;  overrides: TEXT)
         Out (s.wr, "include (\"", M3Path.Escape (overrides), "\")");
         s.found_work := TRUE;
       ELSE
-        Msg.Out ("ignoring ", overrides, Wr.EOL);
+        IF (M3Options.major_mode = MM.Depend) THEN
+          Msg.Verbose ("ignoring ", overrides, Wr.EOL);
+        ELSE
+          Msg.Out ("ignoring ", overrides, Wr.EOL);
+        END;
       END;
     ELSE
       IF (s.use_overrides) THEN
-        Msg.Out ("unable to read ", overrides,
-          ", options \"-override\" and \"-x\" ignored.", Wr.EOL);
+        IF (M3Options.major_mode = MM.Depend) THEN
+          Msg.Verbose ("unable to read ", overrides,
+                       ", options \"-override\" and \"-x\" ignored.", Wr.EOL);
+        ELSE
+          Msg.Out ("unable to read ", overrides,
+                   ", options \"-override\" and \"-x\" ignored.", Wr.EOL);
+        END;
       END;
     END;
   END IncludeOverrides;
@@ -377,8 +396,9 @@ PROCEDURE IncludeMakefile (VAR s: State;  makefile, dir: TEXT)
 
 (*----------------------------------------- pre-scan command line ---*)
 
-PROCEDURE ScanCommandLine () =
-  VAR cnt := 0;  arg: TEXT;
+PROCEDURE ScanCommandLine () : TextTextTbl.T =
+  VAR 
+    cnt := 0;  arg: TEXT;
   BEGIN
     FOR i := 1 TO Params.Count-1 DO
       arg := Params.Get (i);
@@ -386,13 +406,23 @@ PROCEDURE ScanCommandLine () =
       ELSIF Text.Equal (arg, "-clean")   THEN  SetMode (cnt, MM.Clean);
       ELSIF Text.Equal (arg, "-find")    THEN  SetMode (cnt, MM.Find);
       ELSIF Text.Equal (arg, "-ship")    THEN  SetMode (cnt, MM.Ship);
+      ELSIF Text.Equal (arg, "-depend")  THEN  SetMode (cnt, MM.Depend);
       ELSIF Text.Equal (arg, "-?")       THEN  PrintHelp ();
       ELSIF Text.Equal (arg, "-help")    THEN  PrintHelp ();
       ELSIF Text.Equal (arg, "-config")  THEN  PrintVersion (TRUE);
       ELSIF Text.Equal (arg, "-version") THEN  PrintVersion (TRUE);
+      ELSIF Text.Equal (arg, "-profile") THEN
+        EVAL defs.put("M3_PROFILING", "TRUE");
+      ELSIF Text.Equal (arg, "-pretend") THEN
+        IF i < Params.Count - 1 THEN
+          EVAL defs.put("CM3_VERSION", Params.Get(i+1));
+        ELSE
+          Msg.Error(NIL, "missing argument for -pretend");
+        END;
       END;
     END;
     IF (cnt <= 0) THEN SetMode (cnt, MM.Build); END;
+    RETURN defs;
   END ScanCommandLine;
 
 PROCEDURE SetMode (VAR cnt: INTEGER;  mode: MM) =
@@ -408,8 +438,8 @@ PROCEDURE SetMode (VAR cnt: INTEGER;  mode: MM) =
 
 PROCEDURE PrintVersion (exit: BOOLEAN) =
   BEGIN
-    Msg.Out ("Critical Mass Modula-3 version 5.1", Wr.EOL);
-    Msg.Out ("  last updated:  Nov 1, 1997", Wr.EOL);
+    Msg.Out ("Critical Mass Modula-3 version ", Val("CM3_RELEASE"), Wr.EOL);
+    Msg.Out ("  last updated: ", Val("CM3_CREATED"), Wr.EOL);
     Msg.Out ("  configuration: ", M3Config.FindFile(), Wr.EOL);
     Msg.Out (Wr.EOL);
     IF exit THEN Process.Exit (0); END;
@@ -433,6 +463,7 @@ CONST
     "  -ship          install package",
     "  -clean         delete derived files",
     "  -find          locate source files",
+    "  -depend        output package dependencies",
     "",
     "compile options:  (default: -g -w1)",
     "  -g             produce symbol table information for debugger",
@@ -441,6 +472,7 @@ CONST
     "  -once          don't recompile to improve opaque object code",
     "  -w0 .. -w3     limit compiler warning messages",
     "  -Z             generate coverage analysis code",
+    "  -profile       generate profiling code",
     "",
     "program and library options:  (default: -o prog)",
     "  -c             compile only, produce no program or library",
@@ -471,6 +503,7 @@ CONST
     "  -console       produce a Windows CONSOLE subsystem program",
     "  -gui           produce a Windows GUI subsystem program",
     "  -windows       produce a Windows GUI subsystem program",
+    "  -pretend <val> pretend to run as CM3_Version <val>",
     ""
   };
 
@@ -487,5 +520,19 @@ PROCEDURE Out (wr: Wr.T;  a, b, c, d, e: TEXT := NIL)
     Wr.PutText (wr, Wr.EOL);
   END Out;
 
+PROCEDURE Val(name: TEXT) : TEXT =
+  VAR res: TEXT := "undefined";
+  BEGIN
+    EVAL defs.get(name, res);
+    RETURN res;
+  END Val;
+
+VAR
+  defs := NEW(TextTextTbl.Default).init();
 BEGIN
+  EVAL defs.put("CM3_RELEASE", "5.1.8");       (* readable release version *)
+  EVAL defs.put("CM3_VERSION", "050108");      (* version as number *)
+  EVAL defs.put("CM3_CREATED", "2001-12-19");  (* date of last change *)
+  EVAL defs.put("M3_PROFILING", "");           (* no profiling by default *)
+  EVAL defs.put("EOL", Wr.EOL);
 END Makefile.

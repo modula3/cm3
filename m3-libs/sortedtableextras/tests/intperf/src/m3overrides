@@ -1,2 +1,2 @@
-override ("libm3", WDROOT)
-override ("sortedtableextras", WDROOT)
+override ("libm3", ROOT & "/m3-libs")
+override ("sortedtableextras", ROOT & "/m3-libs")

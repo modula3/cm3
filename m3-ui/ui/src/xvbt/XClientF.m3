@@ -437,13 +437,15 @@ PROCEDURE Connect (inst: TEXT; trsl: T := NIL): Trestle.T
            AND Text.GetChar(inst, cpos + 1) IN ASCII.Digits THEN
         TRY
           IF cpos = 0 THEN
-            machine := "localhost";
             machine := IP.GetCanonicalByAddr(IP.GetHostAddr());
           ELSE
             machine := Text.Sub(inst, 0, cpos);
             rest := IP.GetCanonicalByName(machine);
             IF rest # NIL THEN machine := rest END
-          END
+          END;
+          IF machine = NIL THEN
+            machine := "localhost";
+          END;
         EXCEPT
           IP.Error =>
         END;
@@ -451,6 +453,9 @@ PROCEDURE Connect (inst: TEXT; trsl: T := NIL): Trestle.T
           rest := Text.Sub(inst, cpos)
         ELSE
           rest := Text.Sub(inst, cpos, dpos - cpos)
+        END;
+        IF machine = NIL THEN
+          machine := "localhost";
         END;
         fullinst := machine & rest;
       ELSE

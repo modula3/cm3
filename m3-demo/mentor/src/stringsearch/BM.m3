@@ -7,7 +7,7 @@
 MODULE BM;
 
 IMPORT Algorithm, AlgsBase, StringSearchAlgClass, StringSearchIE,
-       Text, TextF, Thread, ZeusPanel;
+       Text, Thread, ZeusPanel;
 
 TYPE T = StringSearchAlgClass.T BRANDED OBJECT OVERRIDES run := Run; END;
 
@@ -24,13 +24,13 @@ PROCEDURE Run (alg: T) RAISES {Thread.Alerted} =
     IF m = 0 OR n = 0 THEN RETURN; END;
     StringSearchIE.Setup(alg, pattern, str);
     skip := InitSkip(pattern);
-    n := LAST(pattern^) - 1;
-    m := LAST(str^) - 1;
+    n := Text.Length(pattern) - 1;
+    m := Text.Length(str) - 1;
     i := n;
     j := n;
     REPEAT
       StringSearchIE.Probe(alg, j, i);
-      IF pattern[j] = str[i] THEN
+      IF Text.GetChar(pattern, j) = Text.GetChar(str, i) THEN
         StringSearchIE.Result(alg, TRUE);
         StringSearchIE.PartialMatch(alg, j, i, n - j + 1);
         DEC(i);
@@ -38,7 +38,7 @@ PROCEDURE Run (alg: T) RAISES {Thread.Alerted} =
       ELSE
         StringSearchIE.Result(alg, FALSE);
         StringSearchIE.PartialMatchClear(alg); 
-        i := i + skip[str[i]];
+        i := i + skip[Text.GetChar(str, i)];
         j := n;
         StringSearchIE.SlideTo(alg, i - n);
       END;
@@ -53,14 +53,14 @@ PROCEDURE Run (alg: T) RAISES {Thread.Alerted} =
 
 PROCEDURE InitSkip (pattern: TEXT): ARRAY CHAR OF INTEGER =
   VAR
-    n             := NUMBER(pattern^) - 1;
+    n             := Text.Length(pattern) - 1;
     skip          :  ARRAY CHAR OF INTEGER ;
   BEGIN
     FOR c := FIRST(CHAR) TO LAST(CHAR) DO
       skip[c] := n;
     END;
-    FOR j := FIRST(pattern^) TO LAST(pattern^) DO
-      skip[pattern[j]] := n - j - 1;
+    FOR j := 0 TO n DO
+      skip[Text.GetChar(pattern, j)] := n - j - 1;
     END;
     RETURN (skip);
   END InitSkip;

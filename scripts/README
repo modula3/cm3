@@ -1,0 +1,164 @@
+CM3 Free Distribution -- scripts/README $Id$
+
+This directory contains various scripts that can be used to compile /
+build / bootstrap part or all of the CM3 source distribution.
+
+These scripts can be divided in those that can be called directly and
+those intended for inclusion only. They are all standard Bourne shell
+scripts and should be executable on every system (sometimes probably
+some minor tweaks might be needed). On Windows, you can use the Cygwin
+distribution which comes with bash and most of the GNU tools, or the
+MKS tool kit and its Korn shell. I'm sorry, but there is currently no
+support for the standard NT/2000 cmd shell.
+
+You are probably most interested in one of the following:
+
+ o Use boot-cm3-with-m3.sh and do-cm3-core.sh to boot the system using
+   another M3 compiler.
+
+ o Use do-cm3-min.sh to compile the minimal set of CM3 libraries.
+
+ o Use do-m3-base.sh to compile a basic system without GUI.
+
+ o Use do-m3-std.sh to compile a standard system with GUI and full
+   networking support.
+
+ o Use do-pkg.sh to compile or clean one or more arbitrary packages.
+
+Please read the file README.BOOT for booting and porting instructions.
+Read the file README.ELEGO for instructions how to use CM3 together
+with the Elego ComPact project manager, which also allows you to
+compile, clean, and version control CM3 packages. Actually, these
+scripts are only an imperfect attempt to re-implement some of the ComPact
+project manager's functions for M3 packages.
+
+Here are some short notes about the purpose of each script:
+
+sysinfo.sh [include]
+----------
+  defines variables containing general system information, specifying
+  the M3OSTYPE (WIN32|POSIX), compiler TARGET, if a GCC_BACKEND is used,
+  the INSTALLROOT etc. This script needs to be adapted for every new
+  supported platform. Also exports find_dir() and find_file() for the
+  location of directories and files, and some other general useful
+  functions like debug() and head().
+
+find-packages.sh [include | callable ]
+----------------
+  builds a list of directories in $PKGSDB (scripts/PKGS) that are
+  probably Modula-3 package roots. This list is used to locate
+  packages by name.
+
+pkginfo.sh [include]
+----------
+  builds the $PKGSDB if it does not exist and exports the functions
+  pkg_defined() and pkgpath()
+
+pkgcmds.sh [include]
+----------
+  defines basic commands applicable to Modula-3 packages depending on
+  information from sysinfo.sh and some simple tests. Exports the
+  functions map_action(), add_action_opts(), extract_options(),
+  get_args() and show_usage(), as well as generic usage texts GEN_CMDS
+  and GEN_OPTS.
+  map_action() currently knows about the commands build or buildlocal,
+  buildglobal or buildship, ship, clean or cleanlocal, cleanglobal,
+  and realclean. `local' means that overrides are used to locate all
+  imported packages in the current workspace, `global' means that
+  packages from the installed CM3 system are used and also shipped
+  there.
+
+pkgmap.sh [callable]
+---------
+  applies a command passed with the -c option or in PKG_ACTION to a
+  set of packages passed on the command line. Also understands -n (no
+  actions) and -k (keep going in case of errors). This is the basic
+  command mapper used by all the following scripts.
+
+boot-cm3-with-m3.sh [callable]
+-------------------
+  tries to boot the CM3 source distribution (the actual compiler)
+  using another existing Modula-3 compiler. Only the minimal set of
+  needed packages is compiled.
+
+do-cm3-base.sh [callable]
+--------------
+  builds / ships / cleans the CM3 base distribution:
+  m3core, libm3, m3middle, m3quake, m3scanner, m3tools, m3cgcat,
+  m3cggen, m3bundle, bitvector, digraph, parseparams, realgeometry,
+  set, slisp, sortedtableextras, table-list, tempfiles, and tcp.
+  WIN32 =>  tapi, mklib, dll2lib, fix_nl, libdump.
+  HAVE_SERIAL => serial
+  HAVE_TCL => tcl
+
+do-cm3-comm.sh [callable]
+--------------
+  builds / ships / cleans the CM3 communication packages:
+  tcp, netobj, netobjd, m3tk, stubgen.
+  WIN32 => tapi
+  HAVE_SERIAL => serial
+
+do-cm3-core.sh [callable]
+--------------
+  builds / ships / cleans the CM3 core packages. This is what should
+  to be used in addition to boot-cm3-with-m3.sh to boot this CM3
+  distribution on a new system:
+
+  m3core, libm3, m3middle, m3linker, m3front, m3quake, cm3, m3scanner,
+  m3tools, m3cgcat, m3cggen, m3bundle, bitvector, digraph,
+  parseparams, realgeometry, set, slisp, sortedtableextras,
+  table-list, tempfiles
+  WIN32 =>  m3objfile, tapi, mklib, dll2lib, fix_nl, libdump
+  GCC_BACKEND => m3cc
+  no GCC_BACKEND => m3back, m3staloneback
+  M3GDB => m3gdb
+  HAVE_TCL => tcl
+
+do-cm3-gui.sh [callable]
+-------------
+  builds / ships / cleans the CM3 graphical user interface packages:
+
+  ui, vbtkit, tcp, cmvbt, jvideo, videovbt, web, formsvbtpixmaps,
+  formsvbt, formsview, formsedit
+  no WIN32 => X11R4
+
+do-cm3-min.sh [callable]
+-------------
+  builds / ships / cleans the CM3 minimal library set:
+
+  m3core, libm3
+
+do-cm3-std.sh [callable]
+-------------
+  builds / ships / cleans the standard CM3 distribution packages. This
+  list is intended to grow during the next releases. There are lots of
+  packages, but not all do currently compile, and not all work
+  correctly, so this is intended to define a standard set of working
+  packages including graphical user interface and communication.
+
+  m3core, libm3, m3middle, m3linker, m3front, m3quake, cm3, m3scanner,
+  m3tools, m3cgcat, m3cggen, m3bundle, bitvector, digraph,
+  parseparams, realgeometry, set, slisp, sortedtableextras,
+  table-list, tempfiles, tcp, netobj, netobjd, m3tk, stubgen, ui,
+  vbtkit, cmvbt, jvideo, videovbt, web, formsvbtpixmaps, formsvbt,
+  formsview, formsedit 
+  no WIN32 => X11R4
+  WIN32 =>  m3objfile, tapi, mklib, dll2lib, fix_nl, libdump
+  GCC_BACKEND => m3cc
+  no GCC_BACKEND => m3back, m3staloneback
+  M3GDB => m3gdb
+  HAVE_TCL => tcl
+  HAVE_SERIAL => serial
+
+do-pkg.sh [callable]
+---------
+  builds / ships / cleans one or more CM3 packages passed as arguments
+  on the command line. Recognizes generic options and commands.
+
+make-bin-dist-min.sh [callable]
+--------------------
+  Builds a minimal binary distribution archive for one platform
+  containing the compiler, low-level system libraries, m3core, libm3,
+  and the installation program. Uses STAGE [TMPDIR] as working
+  area. You only need this if you want to create your own CM3
+  distributions. 

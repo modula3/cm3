@@ -1,1 +1,2 @@
-override("bitvector", WDROOT)
+override ("libm3", ROOT & "/m3-libs")
+override ("bitvector", ROOT & "/m3-libs")

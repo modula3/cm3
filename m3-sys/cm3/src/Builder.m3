@@ -1,4 +1,5 @@
-(* Copyright 1996 Critical Mass, Inc. All rights reserved.    *)
+(* Copyright 1996-2000 Critical Mass, Inc. All rights reserved.    *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 MODULE Builder;
 
@@ -65,6 +66,20 @@ PROCEDURE CleanUp () =
       WebFile.Dump ();
     END;
   END CleanUp;
+
+PROCEDURE EmitPkgImports (READONLY units: M3Unit.Set) =
+  VAR src := units.head;
+  BEGIN
+    WHILE (src # NIL) DO
+      IF (src.imported) AND (src.kind = UK.M3LIB) THEN
+        WITH name = M3ID.ToText(src.loc.pkg) DO
+          Msg.Out (" ", name);
+        END;
+      END;
+      src := src.next;
+    END;
+    Msg.Out (Wr.EOL);
+  END EmitPkgImports; 
 
 (*-------------------------------------------------- general compilation ---*)
 (* The "global" variables of a compilation are passed around in a "State". *)
@@ -432,6 +447,7 @@ PROCEDURE BuildLibraryPool (s: State) =
   BEGIN
     WHILE (src # NIL) DO
       IF (src.imported) AND (src.kind = UK.M3LIB) THEN
+        (* Msg.Explain ("imported package ", M3ID.ToText(src.name)); *)
         ETimer.Push (M3Timers.inhale);
         Msg.Commands ("inhale ", UnitPath (src));
         ux := GetUnitLinkInfo (src, imported := TRUE);
@@ -1990,7 +2006,9 @@ PROCEDURE BuildCProgram (s: State;  shared: BOOLEAN) =
       PushArray (s, pgm_objects);
       PushArray (s, import_libs);
       PushBool  (s, shared);
-      EVAL CallProc (s, s.linker);
+      IF CallProc (s, s.linker) THEN
+        s.compile_failed := TRUE;
+      END;
     ETimer.Pop ();
   END BuildCProgram;
 
@@ -2069,7 +2087,9 @@ PROCEDURE BuildProgram (s: State;  shared: BOOLEAN) =
       PushArray (s, pgm_objects);
       PushArray (s, import_libs);
       PushBool  (s, shared);
-      EVAL CallProc (s, s.linker);
+      IF CallProc (s, s.linker) THEN
+        s.compile_failed := TRUE;
+      END;
     ETimer.Pop ();
   END BuildProgram;
 
@@ -2372,7 +2392,9 @@ PROCEDURE BuildLibrary (s: State;  shared: BOOLEAN) =
       PushArray (s, lib_objects);
       PushArray (s, import_libs);
       PushBool  (s, shared);
-      EVAL CallProc (s, s.librarian);
+      IF CallProc (s, s.librarian) THEN
+        s.compile_failed := TRUE;
+      END;
     ETimer.Pop ();
   END BuildLibrary;
 

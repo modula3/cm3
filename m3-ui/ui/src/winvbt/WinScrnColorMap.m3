@@ -43,9 +43,17 @@ PROCEDURE FromRGB (<*UNUSED*> self: T;
   END FromRGB;
 
 PROCEDURE Read (<*UNUSED*> self: T;
-                <*UNUSED*> VAR res: ARRAY OF ScrnColorMap.Entry) =
+                VAR res: ARRAY OF ScrnColorMap.Entry) =
   BEGIN
-    <* ASSERT FALSE *>  (* not yet implemented *)
+    FOR i := FIRST(res) TO LAST(res) DO
+      WITH r = WinGDI.GetRValue (res[i].pix),
+           g = WinGDI.GetGValue (res[i].pix),
+           b = WinGDI.GetBValue (res[i].pix) DO
+        res[i].rgb.r := FLOAT(Math.pow(FLOAT(r, LONGREAL) / 255.0D0, Gamma));
+        res[i].rgb.g := FLOAT(Math.pow(FLOAT(g, LONGREAL) / 255.0D0, Gamma));
+        res[i].rgb.b := FLOAT(Math.pow(FLOAT(b, LONGREAL) / 255.0D0, Gamma));
+      END;
+    END;
   END Read;
 
 

@@ -11,8 +11,9 @@
 
 MODULE ScrollerVBTClass;
 
-IMPORT AutoRepeat, Axis, Cursor, PaintOp, Pixmap, Point, Rect,
-         Region, VBT, VBTKitResources, Shadow, Trapezoid;
+IMPORT AutoRepeat, Axis, Cursor, PaintOp, Palette, Pixmap, Point,
+         Rect, Region, ScreenType, ScrnColorMap, VBT, VBTKitResources,
+         Shadow, ShadowPaint, TrestleComm;
 
 TYPE
   State = {ListenState, JumpEOFState, JumpSOFState, ContEOFState,
@@ -25,13 +26,6 @@ TYPE
 
 CONST
   Shadows = TRUE;
-  ShadowSize = 2;
-
-VAR (* CONST *)
-  ScrollShadow := Shadow.New(bg := PaintOp.FromRGB(0.4, 0.4, 0.4),
-                             fg := PaintOp.FromRGB(0.65, 0.65, 0.65),
-                             light := PaintOp.FromRGB(0.8, 0.8, 0.8),
-                             dark := PaintOp.FromRGB(0.15, 0.15, 0.15));
 
 REVEAL
   T =
@@ -64,6 +58,11 @@ REVEAL
       stripeBorder  : Pixmap.T;
       stripeTextureP: ARRAY Axis.T OF PaintOp.T;
       stripeTexture : ARRAY Axis.T OF Pixmap.T;
+
+      colors        : PaintOp.ColorQuad;
+      shadow        : Shadow.T;      (* NIL <==> don't use shadows *)
+      troughColor   : PaintOp.T;
+      shadowPixels  : CARDINAL;
 
       stripeW, stripeE, stripeN, stripeS: Dim;
 
@@ -115,6 +114,8 @@ PROCEDURE Init (v: T; axis := Axis.T.Ver; colors: PaintOp.ColorQuad := NIL): T =
       v.stripeTextureP [a] := colors.bgFg;
       v.stripeTexture [a] := Pixmap.Empty;
     END;
+    v.colors := colors;
+    v.shadow := NIL;
     v.stripeBorderP := colors.bgFg;
     v.stripeBorder := Pixmap.Solid;
     v.stripeW.millimeters := 0.25;
@@ -128,6 +129,88 @@ PROCEDURE Init (v: T; axis := Axis.T.Ver; colors: PaintOp.ColorQuad := NIL): T =
     VBT.SetCursor (v, Cursors [State.ListenState, v.axis]);
     RETURN v
   END Init;
+
+(* Initializes the parameters for drawing shadows.  Sets "v.shadow" to
+   "NIL" if shadows cannot or should not be used. *)
+PROCEDURE InitShadow(v: T; st: VBT.ScreenType) =
+  VAR
+    light, dark: PaintOp.T;
+    bgRGB, darkRGB: ScrnColorMap.RGB;
+  BEGIN
+    (* Make sure it is possible to paint shadows. *)
+    IF NOT Shadows OR st = NIL OR st.depth <= 1 OR st.cmap = NIL THEN
+      v.shadow := NIL;
+      RETURN;
+    END;
+
+    TRY
+      bgRGB := GetRGB(st, v.colors.bg);
+
+      (* If we were given shadow colors, we use them.  Otherwise we calculate
+         some reasonable ones.  The algorithm is borrowed from Tk. *)
+      TYPECASE v.colors OF
+      | Shadow.T(s) =>
+          v.shadow := s;
+          darkRGB := GetRGB(st, s.dark);
+      ELSE
+        (* For the dark shadow, reduce each of the background color
+           components by 40%. *)
+        darkRGB.r := 0.6 * bgRGB.r;
+        darkRGB.g := 0.6 * bgRGB.g;
+        darkRGB.b := 0.6 * bgRGB.b;
+        dark := PaintOp.FromRGB(darkRGB.r, darkRGB.g, darkRGB.b,
+          mode := PaintOp.Mode.Accurate, bw := PaintOp.BW.UseFg);
+
+        (* For the light shadow, boost each background color component
+           by 40% or halfway to white, whichever is greater. *)
+        light := PaintOp.FromRGB(
+          MAX(MIN(1.4 * bgRGB.r, 1.0), (bgRGB.r + 1.0) / 2.0),
+          MAX(MIN(1.4 * bgRGB.g, 1.0), (bgRGB.g + 1.0) / 2.0),
+          MAX(MIN(1.4 * bgRGB.b, 1.0), (bgRGB.b + 1.0) / 2.0),
+          mode := PaintOp.Mode.Accurate, bw := PaintOp.BW.UseFg);
+
+        v.shadow := Shadow.New(
+          bg := v.colors.bg,
+          fg := v.colors.fg,
+          light := light,
+          dark := dark);
+      END;
+    EXCEPT TrestleComm.Failure =>
+      v.shadow := NIL;
+      RETURN;
+    END;
+
+    IF NOT Shadow.Supported(v.shadow, v) THEN
+      v.shadow := NIL;
+      RETURN;
+    END;
+
+    v.shadowPixels := ROUND(VBT.MMToPixels(v, v.shadow.size, v.axis));
+    IF v.shadowPixels <= 0 THEN
+      v.shadow := NIL;
+      RETURN;
+    END;
+
+    (* Make the trough color components slightly darker than the
+       background -- 25% of the way from the background color
+       to the dark shadow. *)
+    v.troughColor := PaintOp.FromRGB(
+      (3.0 * bgRGB.r + darkRGB.r) / 4.0,
+      (3.0 * bgRGB.g + darkRGB.g) / 4.0,
+      (3.0 * bgRGB.b + darkRGB.b) / 4.0,
+      mode := PaintOp.Mode.Accurate, bw := PaintOp.BW.UseBg);
+  END InitShadow;
+
+(* Get the RGB components of a tint. *)
+PROCEDURE GetRGB(st: VBT.ScreenType; op: PaintOp.T): ScrnColorMap.RGB
+  RAISES {TrestleComm.Failure} =
+  VAR
+    ent: ARRAY [0..0] OF ScrnColorMap.Entry;
+  BEGIN
+    ent[0].pix := Palette.ResolveOp(st, op).pix;
+    st.cmap.standard().read(ent);
+    RETURN ent[0].rgb;
+  END GetRGB;
 
 PROCEDURE Update (v: T; start, end, length: CARDINAL) =
   BEGIN
@@ -205,13 +288,44 @@ PROCEDURE Colorize (v: T; colors: PaintOp.ColorQuad) =
 PROCEDURE PaintView (v: T) =
   (* LL = mu. *)
   BEGIN
-    IF Shadows AND Shadow.Supported(ScrollShadow, v) THEN
+    IF v.shadow # NIL THEN
       PaintViewWithShadows(v);
     ELSE
       PaintViewAsBefore(v);
     END;
   END PaintView;
 
+PROCEDURE PaintViewWithShadows (v: T) =
+  VAR
+    dom   : Rect.T;
+    stripe: Rect.T;
+    r     : Rect.T;
+    f     : Rect.Partition;
+  BEGIN
+    dom := VBT.Domain(v);
+    stripe := ComputeStripe(v, dom);
+
+    (* Paint the scroll.  We are careful not to draw the area of the
+       trough that will be covered by the stripe.  This helps reduce
+       the flicker. *)
+    r := Rect.Inset(dom, v.shadowPixels);
+    ShadowPaint.Border(v, Region.Full, v.shadow, Shadow.Style.Lowered,
+      r, dom);
+    Rect.Factor(r, stripe, f, 0, 0);
+    FOR i := FIRST(f) TO LAST(f) DO
+      IF i # 2 AND NOT Rect.IsEmpty(f[i]) THEN
+        VBT.PaintTint(v, f[i], v.troughColor);
+      END;
+    END;
+
+    (* Paint the stripe. *)
+    r := Rect.Inset(stripe, v.shadowPixels);
+    ShadowPaint.Border(v, Region.Full, v.shadow, Shadow.Style.Raised,
+      r, stripe);
+    VBT.PaintTint(v, r, v.shadow.bg);
+  END PaintViewWithShadows;
+
+(*  
 PROCEDURE PaintViewWithShadows (v: T) =
   VAR
     dom   : Rect.T;
@@ -273,7 +387,7 @@ PROCEDURE PaintShadow (         v                : T;
                                          out.west, in.east), bottom);
     VBT.PaintTexture(v, in, front, Pixmap.Solid);
   END PaintShadow;
-  
+*)  
   
 PROCEDURE PaintViewAsBefore (v: T) =
   VAR
@@ -315,50 +429,47 @@ PROCEDURE PaintViewAsBefore (v: T) =
 
 
 PROCEDURE ComputeStripe (v: T; r: Rect.T): Rect.T =
-  (* LL = mu. Returns the domain of the white part of the stripe. *)
+  (* LL = mu. Returns the domain of the white part of the stripe,
+     including its shadows, if any. *)
   VAR
     lo, hi             : INTEGER;
     top, bottom, height: INTEGER;
     factor             : REAL;
   BEGIN
-    IF v.axis = Axis.T.Hor THEN
-      r.north := r.north + v.scrollMargin.pixels;
-      r.south := r.south - v.scrollMargin.pixels;
-      IF r.south - r.north < v.stripeWidth.pixels THEN
-        r.south := r.north + v.stripeWidth.pixels;
-      END;
-      IF (Shadows) THEN
-        INC(r.west, 2 * ShadowSize); DEC(r.east, 2 * ShadowSize);
-      END;
-      lo := r.west;
-      hi := r.east;
-    ELSE
-      r.west := r.west + v.scrollMargin.pixels;
-      r.east := r.east - v.scrollMargin.pixels;
-      IF r.east - r.west < v.stripeWidth.pixels THEN
-        r.east := r.west + v.stripeWidth.pixels;
-      END;
-      IF (Shadows) THEN
-        INC(r.north, 2 * ShadowSize); DEC(r.south, 2 * ShadowSize);
-      END;
+    (* Make the axis vertical for simplicity.  We'll change it back
+       at the end. *)
+    r := Rect.Transpose(r, Axis.Other[v.axis]);
+
+    IF v.shadow # NIL THEN  (* Adjust for the trough shadows. *)
+      INC(r.west, v.shadowPixels);
+      DEC(r.east, v.shadowPixels);
+      r.east := MIN(r.east, r.west + v.stripeWidth.pixels + 2*v.shadowPixels);
+      INC(r.north, v.shadowPixels);
+      DEC(r.south, v.shadowPixels);
+    ELSE                    (* Adjust for the scrollMargin *)
+      INC(r.west, v.scrollMargin.pixels);
+      DEC(r.east, v.scrollMargin.pixels);
+      r.east := MIN(r.east, r.west + v.stripeWidth.pixels);
+    END;
+
+    IF v.end - v.start < v.length THEN
       lo := r.north;
       hi := r.south;
-    END;
-    IF v.end - v.start < v.length THEN
       height := hi - lo;
       factor := FLOAT (height) / FLOAT (v.length);
-      top := lo + TRUNC (FLOAT (v.start) * factor);
-      bottom := MIN (hi, lo + TRUNC (FLOAT (v.end) * factor));
+      top := lo + ROUND (FLOAT (v.start) * factor);
+      IF v.end >= v.length THEN
+        bottom := hi;
+      ELSE
+        bottom := MIN (hi, top + ROUND (FLOAT (v.end - v.start) * factor));
+      END;
       hi := MIN (hi, MAX (bottom, top + v.minStripeLen.pixels));
       lo := MAX (lo, MIN (top, hi - v.minStripeLen.pixels));
-      IF v.axis = Axis.T.Hor THEN
-        r.west := lo;
-        r.east := hi;
-      ELSE
-        r.north := lo;
-        r.south := hi;
-      END;
+      r.north := lo;
+      r.south := hi;
     END;
+
+    r := Rect.Transpose(r, Axis.Other[v.axis]);
     RETURN r;
   END ComputeStripe;
 
@@ -436,6 +547,10 @@ PROCEDURE FirstDown (v: T; READONLY cd: VBT.MouseRec) =
             v.state := State.JumpSOFState
           END;
           AutoRepeat.Start(v.repeater);
+
+      | VBT.Modifier.Mouse0..VBT.Modifier.Mouse4 =>
+          (* The wheels on scroller mice generate these events.  We
+             ignore them for now. *)
 
       ELSE <* ASSERT FALSE *>
       END;
@@ -591,10 +706,12 @@ PROCEDURE Redisplay (v: T) RAISES {} =
     Repaint(v, Region.FromRect(VBT.Domain(v)));
   END Redisplay;
 
-PROCEDURE Rescreen (                      v : T;
-                    <* UNUSED *> READONLY cd: VBT.RescreenRec)
+PROCEDURE Rescreen (         v : T;
+                    READONLY cd: VBT.RescreenRec)
   RAISES {} =
   BEGIN
+    InitShadow(v, cd.st);
+
     v.stripeW.pixels :=
       ROUND(VBT.MMToPixels(v, v.stripeW.millimeters, Axis.T.Hor));
     v.stripeE.pixels :=
@@ -623,8 +740,13 @@ PROCEDURE Shape (v: T; ax: Axis.T; <* UNUSED *> n: CARDINAL):
   BEGIN
     WITH otherAxis = Axis.Other[v.axis] DO
       shape[v.axis].lo := v.minStripeLen.pixels;
-      shape[otherAxis].lo :=
-        v.stripeWidth.pixels + 2 * v.scrollMargin.pixels;
+      shape[otherAxis].lo := v.stripeWidth.pixels;
+      IF v.shadow # NIL THEN
+        INC(shape[v.axis].lo, 4 * v.shadowPixels);
+        INC(shape[otherAxis].lo, 4 * v.shadowPixels);
+      ELSE
+        INC(shape[otherAxis].lo, 2 * v.scrollMargin.pixels);
+      END;
 
       shape[v.axis].pref := shape[v.axis].lo;
       shape[v.axis].hi :=

@@ -2,23 +2,23 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 %
-import (ui)
-import (netobj)
-import (m3tk-misc.3.1)
-import (formsvbt)
-include_dir (dblbuffer)
-override (board, "/udir/umesh/m3/board/3")
-import (board)
+import ("ui")
+import ("netobj")
+import ("m3tk-misc")
+import ("formsvbt")
+%include_dir ("dblbuffer")
+%override ("board", "/udir/umesh/m3/board/3")
+import ("board")
 
-module (View)
-module (Win)
-module (CallbackX)
-module (Do)
+module ("View")
+module ("Win")
+module ("CallbackX")
+module ("Do")
 
 resource ("WinUI.fv")
 resource ("Help.txt")
 bundle ("WinUIBundle")
 
-implementation (Client)
-program (boardclient)
+implementation ("Client")
+program ("boardclient")
 

@@ -1,4 +1,5 @@
-% Copyright 1996 Critical Mass, Inc. All rights reserved.
+% Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
+% See file COPYRIGHT-CMASS for details.
 % 
 % Standard configuration file for SPARCs running SunOS 4.1 (not Solaris)
 %
@@ -49,7 +50,8 @@ INITIAL_REACTOR_EDITOR = "emacsclient"
 % fixed the permissions.
 
 % INSTALL_ROOT = "/usr/local/"
-INSTALL_ROOT = "/proj/cmass/install.2/SPARC/"
+% INSTALL_ROOT = "/proj/cmass/install.2/SPARC/"
+INSTALL_ROOT = "/usr/local/cm3/"
 %-- handy for installations that keep all M3 stuff together
 
 BIN_INSTALL   = INSTALL_ROOT & "bin"        % executables

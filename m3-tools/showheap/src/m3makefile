@@ -8,6 +8,7 @@
 
 import ("vbtkit")
 implementation ("ShowHeap")
+build_standalone()
 Program ("showheap")
 
 ManPage ("showheap","1")

@@ -12,6 +12,7 @@ IMPORT Pathname, Pipe, Process, File, FS, RTParams;
 IMPORT M3Buf, M3File, M3Process, CoffTime;
 IMPORT QIdent, QValue, QVal, QCode, QCompiler, QVTbl, QVSeq, QScanner;
 FROM Quake IMPORT Error, ID, IDMap, NoID;
+(* IMPORT IO; *)
 
 CONST
   OnUnix = (CoffTime.EpochAdjust = 0.0d0);
@@ -216,7 +217,10 @@ PROCEDURE Eval (t: T)
           val.kind := QK.Proc;
           val.int  := 0;
           val.ref  := NEW (QValue.Proc, info := t.reg.cp.procs [arg],
-                                        env  := t.scopes [t.reg.xp-1]);
+                           env  := t.scopes [0]);
+                         (*env  := t.scopes [t.reg.xp-1]);*)
+          (* In quake all procedures are global, and we don't want
+             dynamic scoping... *)
           Push (t, val);
           val.ref := NIL;
 
@@ -543,6 +547,19 @@ PROCEDURE DoCall (t: T;  n_args: INTEGER;  isFunc, outer: BOOLEAN)
         t.reg.fn := isFunc;
         s := PushScope (t);
         s.parent := p.env;  (* use procedure's static link *)
+        (* scope debugging
+        VAR m := "\n"; BEGIN
+          FOR i := 0 TO t.reg.xp -1 DO
+            m := m & " s: " & Fmt.Int(t.scopes[i].id);
+            IF t.scopes[i].parent = NIL THEN
+              m := m & " p: NIL\n";
+            ELSE
+              m := m & " p: " & Fmt.Int(t.scopes[i].parent.id) & "\n";
+            END;
+          END;
+          IO.Put("scopes (DoCall):" & m);
+        END;
+        *)
         <*ASSERT s.parent # s*>
       END;
     END;
@@ -607,19 +624,50 @@ PROCEDURE Put (t: T;  name: ID;  READONLY value: QValue.T)
 (*----------------------------------------------- scopes & local bindings ---*)
 
 PROCEDURE PushScope (t: T): QValue.Scope =
+  VAR m := "\n";
   BEGIN
     IF (t.reg.xp >= NUMBER (t.scopes^)) THEN ExpandScopes (t); END;
     WITH s = t.scopes [t.reg.xp] DO
-      IF (s = NIL) THEN s := NEW (QValue.Scope); END;
+      IF (s = NIL) THEN 
+        s := NEW (QValue.Scope); 
+        s.id := nextScopeId;
+        INC (nextScopeId);
+      END;
       IF (t.reg.xp > 0)
         THEN s.parent := t.scopes[t.reg.xp-1];
         ELSE s.parent := NIL;
       END;
       <*ASSERT s.parent # s*>
+      (* scope debugging
+      FOR i := 0 TO t.reg.xp DO
+        m := m & " s: " & Fmt.Int(t.scopes[i].id);
+        IF t.scopes[i].parent = NIL THEN
+          m := m & " p: NIL\n";
+        ELSE
+          m := m & " p: " & Fmt.Int(t.scopes[i].parent.id) & "\n";
+        END;
+      END;
+      IO.Put("scopes:" & m);
+      *)
+      IF s.parent # NIL THEN 
+        IF s.parent.parent = s THEN
+          TRY
+            Err (t, "loop in scopes, t.reg.xp = " & Fmt.Int(t.reg.xp) & m);
+          EXCEPT
+            Error(e) => 
+            TRY
+              Wr.PutText(Stdio.stderr, e);
+            EXCEPT ELSE END;
+          END;
+          s.parent.parent := NIL;
+        END;
+      END;
       INC (t.reg.xp);
       RETURN s;
     END;
   END PushScope;
+
+VAR nextScopeId := 0;
 
 PROCEDURE ExpandScopes (t: T) =
   VAR n := NUMBER (t.scopes^);  new := NEW (ScopeStack, n+n);
@@ -655,6 +703,7 @@ PROCEDURE Define (t: T;  id: ID;  readonly: BOOLEAN): QValue.Binding
   RAISES {Error} =
   VAR old, new: QValue.Binding;
   BEGIN
+    (* IO.Put("Define(" & Fmt.Int(id) & ")\n"); *)
     WITH s = t.scopes [t.reg.xp-1] DO
       old := s.bindings;
       new := NewBinding (t);
@@ -694,6 +743,7 @@ PROCEDURE DefineGlobal (t: T;  id: ID;  readonly: BOOLEAN): QValue.Binding
 PROCEDURE LookUp (t: T;  id: ID): QValue.Binding =
   VAR s: QValue.Scope;  b: QValue.Binding;  ref: REFANY;
   BEGIN
+    (* IO.Put("LookUp(" & Fmt.Int(id) & ")\n"); *)
     (* try the local scopes first *)
     IF (t.reg.xp > 0) THEN
       s := t.scopes [t.reg.xp-1];

@@ -8,7 +8,10 @@
 
 import ("libm3")
 import ("m3tools")
+import ("parseparams")
 
+module ("Msg")
+module ("FSUtils")
 module ("FilePath")
 module ("TextDB")
 module ("DBRd")
@@ -21,6 +24,8 @@ module ("MarkUp")
 module ("M3MarkUp")
 
 implementation ("Main")
+build_standalone()
+
 Program ("m3tohtml")
 
 % man page

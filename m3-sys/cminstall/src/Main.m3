@@ -1,30 +1,50 @@
 MODULE Main;
 
-IMPORT Bundle, CMKey, CMCurrent, CoffTime, Env, File, Fmt, FS;
+IMPORT Bundle, (* CMKey, CMCurrent, *) CoffTime, Env, File, Fmt, FS;
 IMPORT M3ID, Msg, OS, OSError, Params, Pathname, Pipe, Process;
 IMPORT Quake, QScanner, QToken, Registry, Setup, Text, Text2;
-IMPORT TextWr, Thread, Time, Wr;
-FROM Msg IMPORT Out, Ask, AskBool;
+IMPORT TextSeq, TextWr, Thread, Wr;
+FROM Msg IMPORT Out, OutS, Ask, AskBool, AskChoice;
 
 CONST
   OnUnix = (CoffTime.EpochAdjust = 0.0d0);
 
   DefaultInstallDir = ARRAY BOOLEAN OF TEXT
-    { "C:\\Reactor", "/usr/local/Reactor" } [OnUnix];
+    { "c:\\cm3", "/usr/local/cm3" } [OnUnix];
 
   MinDiskSpace = 75; (* megabytes *)
 
   REACTOR_EXE = ARRAY BOOLEAN OF TEXT
     { "reactor.exe", "reactor" } [OnUnix];
 
+  CM3_EXE = ARRAY BOOLEAN OF TEXT
+    { "cm3.exe", "cm3" } [OnUnix];
+
   GZIP_EXE = ARRAY BOOLEAN OF TEXT
-    { "GZIP.EXE", "GZIP" } [OnUnix];
+    { "gzip.exe", "gzip" } [OnUnix];
 
   TAR_EXE = ARRAY BOOLEAN OF TEXT
-    { "TAR.EXE", "TAR" } [OnUnix];
+    { "tar.exe", "tar" } [OnUnix];
 
   FIXUP_EXE = ARRAY BOOLEAN OF TEXT
-    { "FIXUP.BAT", "FIXUP" } [OnUnix];
+    { "fixup.bat", "fixup" } [OnUnix];
+
+  ARCHIVES = ARRAY [0..12] OF TEXT
+    {
+      "cm3-doc",
+      "cm3-doc-5.1.0",
+      "cm3-doc-5.1.1",
+      "cm3-doc-5.1.2",
+      "cm3-doc-5.1.3",
+      "cm3-doc-5.1.4",
+      "cm3-doc-5.2.0",
+      "cm3-doc-5.2.1",
+      "cm3-doc-5.2.2",
+      "cm3-doc-5.2.3",
+      "cm3-misc",
+      "cm3-specials",
+      "cm3-fixes"
+    };
 
 VAR
   install_passwd    : TEXT;
@@ -34,24 +54,48 @@ VAR
   initial_cfg       : TEXT;
   cm3_cfg           : TEXT;
   cminstall_root    : TEXT := NIL;
+  gzip              : TEXT (* = OS.MakePath (cminstall_root, GZIP_EXE) *);
+  tar               : TEXT (* = OS.MakePath (cminstall_root, TAR_EXE) *);
 
 PROCEDURE DoIt () =
   BEGIN
     ParseParams ();
-    
-    Out ("Thank you for using Critical Mass Reactor.  This program");
+
+    IF NOT UtilsFound() THEN
+      RETURN;
+    END;
+
+    Out ();
+    Out ("Thank you for using Critical Mass CM3.  This program");
     Out ("will configure and install the system.");
     Out ();
+    Out ("cminstall_root is set to ", cminstall_root);
+    Out ("If this is not correct, please restart the installer with");
+    Out ("-root <directory-of-installer-and-system-archive>");
+    Out ();
+    Out ("The installer will ask you some questions about the locations",
+         " of programs");
+    Out ("and libraries. Usually it will display a default inside [],",
+         " which can be");
+    Out ("accepted with <Enter>.");
+    Out ("If the installer has found several choices, you may cycle through",
+         " them");
+    Out ("with `+' or `.' for the next and `-' for the previous one.");
+    Out ("You may of course also enter a completely different value.");
+    Out ();
 
+    (* disabled
     (* verify license *)
     Out ("The use of this software is subject to the license agreement");
-    Out ("in the file LICENSE.TXT on your CD.  Please read it now.");
+    Out ("in the file COPYRIGHT-CMASS.  Please read it now.");
     Out ();
     IF NOT AskBool ("Do you agree to the terms of the license?", "Y") THEN
       RETURN;
     END;
+    *)
 
     (* get the install key *)
+    (* disabled
     LOOP
       Out ();
       install_passwd := Ask ("Please enter your installation key: ", NIL);
@@ -59,6 +103,7 @@ PROCEDURE DoIt () =
       Out ();
       Out ("Sorry, that is an invalid installation key, please reenter it.");
     END;
+    *)
 
     (* get the install directory *)
     LOOP
@@ -81,7 +126,7 @@ PROCEDURE DoIt () =
         IF disk_space >= MinDiskSpace THEN EXIT; END;
         Out ("It appears that there is only about ", Fmt.Int (disk_space),
              " megabytes of space");
-        Out ("in that directory.  Reactor requires about ",
+        Out ("in that directory.  CM3 requires about ",
              Fmt.Int (MinDiskSpace), "MB of disk space.");
         IF AskBool ("Do you want to use this directory anyway?", "N") THEN
           EXIT;
@@ -104,10 +149,23 @@ PROCEDURE DoIt () =
 
     (* uncompress and copy the bits *)
     Out ();
-    Out ("Installing Reactor in: ", install_root);
+    Out ("Installing CM3 in: ", install_root);
     Out ("This may take a few minutes...");
-    Unpack ("SYSTEM");
-    Unpack (OS.MakePath ("..", "DOCS"));
+    Unpack ("system");
+    FOR i := FIRST(ARCHIVES) TO LAST(ARCHIVES) DO
+      WITH archive_name = ARCHIVES[i],
+           archive_path1 = OS.MakePath(cminstall_root, ARCHIVES[i] & ".tgz"),
+           archive_path2 = OS.MakePath(cminstall_root, ARCHIVES[i] & ".tar") DO
+        IF OS.IsExecutable(archive_path1) THEN
+          Unpack(archive_name);
+        ELSIF OS.IsExecutable(archive_path2) THEN
+          Unpack(archive_name);
+        ELSE
+          Msg.Debug ("not found: ", archive_name);
+        END;
+      END;
+    END;
+    (* Unpack (OS.MakePath ("..", "DOCS")); *)
 
     (* reinstall the new cm3.cfg file to make sure we've got the right one *)
     OS.WriteFile (cm3_cfg, initial_cfg);
@@ -115,7 +173,7 @@ PROCEDURE DoIt () =
 (*******
     (* check out networking *)
     Out ();
-    Out ("Reactor uses TCP/IP to communicate between a World-Wide Web browser");
+    Out ("CM3 uses TCP/IP to communicate between a World-Wide Web browser");
     Out ("and the server.  I'll test that networking is installed, now.  This");
     Out ("test may take up to 20 seconds, please wait.");
     TestTCP ();
@@ -126,25 +184,25 @@ PROCEDURE DoIt () =
 
     (* reminders *)
     Out ();
-    Out ("Reactor is now installed.");
+    Out ("CM3 is now installed.");
     Out ();
     Out ("Before you begin, here's a few reminders:");
     Out ();
-    Out ("  1) The Reactor executable is in:");
-    Out ("        ", OS.MakePath (install_root, "bin", REACTOR_EXE));
+    Out ("  1) The CM3 compiler executable is in:");
+    Out ("        ", OS.MakePath (install_root, "bin", CM3_EXE));
     Out ("     You may need to modify your PATH environment variable to find it.");
   IF OnUnix THEN
     Out ("     And on Unix, you may need to type \"rehash\" to your shell.");
   END;
     Out ();
   IF OnUnix THEN
-    Out ("  2) Reactor's shared libraries and any you create and ship are in:");
+    Out ("  2) CM3's shared libraries and any you create and ship are in:");
     Out ("        ", OS.MakePath (install_root, "lib"));
     Out ("     On most Unix systems you need to set the LD_LIBRARAY_PATH");
     Out ("     environment variable before running programs that use");
     Out ("     these shared libraries.");
   ELSE
-    Out ("  2) Reactor's shared libraries and any you create and ship are in:");
+    Out ("  2) CM3's shared libraries and any you create and ship are in:");
     Out ("        ", OS.MakePath (install_root, "bin"));
     Out ("     As long as that directory is on your PATH, Windows will be able");
     Out ("     to find and use these libraries.");
@@ -155,16 +213,18 @@ PROCEDURE DoIt () =
     Out ("     At any point in time, you may edit it to modify or update your");
     Out ("     installation.");
     Out ();
-    Out ("  4) Reactor will keep your personal configuration information");
+    (* disabled
+    Out ("  4) CM3 will keep your personal configuration information");
     Out ("     and private packages in \"HOME/proj\".  Be sure to set your");
-    Out ("     HOME environment variable before running Reactor.");
+    Out ("     HOME environment variable before running CM3.");
     Out ();
-    Out ("  5) A copy of this installation dialogue is in:");
+    *)
+    Out ("  4) A copy of this installation dialogue is in:");
     Out ("        ", install_log);
     Out ();
-    Out ("  6) If you had trouble with this installation or need more assistance,");
+    Out ("  5) If you had trouble with this installation or need more assistance,");
     Out ("     please send us a transcript of this installation via e-mail at");
-    Out ("     \"support@cmass.com\".");
+    Out ("     \"m3-support@elego.de\".");
     Out ();
     Out ("Thank you.");
 
@@ -202,6 +262,28 @@ TYPE
   TK = QToken.T;
   LibFile = REF RECORD file: TEXT;  next: LibFile; END;
 
+PROCEDURE LibFilesToText(l : LibFile) : TEXT =
+  VAR res : TEXT;
+  BEGIN
+    IF l = NIL THEN RETURN "(none)" END;
+    res := l.file;
+    l := l.next;
+    WHILE l # NIL DO
+      res := res & " " & l.file;
+      l := l.next;
+    END;
+    RETURN res;
+  END LibFilesToText;
+
+PROCEDURE OutResult (res : TEXT) =
+  BEGIN
+    IF res = NIL THEN
+      Out (" not found");
+    ELSE
+      Out (" found ");
+    END;
+  END OutResult;
+
 PROCEDURE GenConfig (): TEXT =
   <*FATAL Wr.Failure, Thread.Alerted*>
   TYPE
@@ -221,6 +303,8 @@ PROCEDURE GenConfig (): TEXT =
     rule       : INTEGER;
     kind       : Kind;
     lib_files  : LibFile;
+    lib_dirs   : TextSeq.T := NEW(TextSeq.T);
+    choices    : TextSeq.T := NEW(TextSeq.T);
   BEGIN
     scan.next (); (* prime the token stream *)
 
@@ -239,6 +323,8 @@ PROCEDURE GenConfig (): TEXT =
       scan.next (); (* BEGIN_CONFIG *)
 
       IF (done >= len) THEN EXIT; END;
+      EVAL choices.init();
+      EVAL lib_dirs.init();
 
       (* get the config item's title *)
       IF (scan.token # TK.String) THEN
@@ -247,11 +333,12 @@ PROCEDURE GenConfig (): TEXT =
       title := ID2Txt (scan.string);
       scan.next ();
 
-      Msg.Debug ("configure: ", title);
+      Out (title);
 
-      result := NIL;  kind := Kind.Any;  lib_files := NIL;
-      WHILE (scan.token = TK.Cardinal) AND (result = NIL) DO
+      kind := Kind.Any;  lib_files := NIL;
+      WHILE (scan.token = TK.Cardinal) DO
         confirm := TRUE;
+        result := NIL;
 
         rule := scan.cardinal;
         Msg.Debug (" => ", Fmt.Int (rule));
@@ -260,102 +347,138 @@ PROCEDURE GenConfig (): TEXT =
         CASE rule OF
         | 0 => (* exe-name *)
             v0 := GetTxt (scan);
+            OutS ("checking for executable " & v0 & "...");
             result := OS.FindExecutable (v0);
             kind := Kind.Exe;
+            OutResult (result);
 
         | 1 => (* file-extension *)
             v0 := GetTxt (scan);
+            OutS ("registry lookup by extension for " & v0 & "...");
             result := Registry.LookupByExtension (v0);
+            IF result # NIL THEN choices.addhi(result) END;
             kind := Kind.Exe;
+            OutResult (result);
 
         | 2, 3 => (* file-extension, dir-name *)
             v0 := GetTxt (scan);
             v1 := GetTxt (scan);
             v2  := Registry.LookupByExtension (v0);
+            OutS ("registry lookup by extension: file " & v0 & " dir: " &
+              v1 & "...");
             IF v2 # NIL THEN
               v2 := OS.GetAbsolutePath (Pathname.Prefix (v2), v1);
               IF (v2 # NIL) AND OS.IsDirectory (v2) THEN
                 result := v2;
-                kind := Kind.Dir;
               END;
             END;
+            kind := Kind.Dir;
+            OutResult (result);
 
         | 4 =>  (* env-variable, exe-name *)
             v0 := GetTxt (scan);
             v1 := GetTxt (scan);
+            OutS ("checking for " & v1 & " at value of environment variable " &
+              v0 & "...");
             v2 := Env.Get (v0);
             IF v2 # NIL THEN
               result := OS.FindExecutable (OS.MakePath (v2, v1));
-              kind := Kind.Exe;
             END;
+            kind := Kind.Exe;
+            OutResult (result);
 
         | 5 => (* exe-name, dir-name *)
             v0 := GetTxt (scan);
             v1 := GetTxt (scan);
+            OutS ("checking for directory " & v1 & " with executable " & 
+              v0 & "...");
             v2 := OS.FindExecutable (v0);
             IF (v2 # NIL) THEN
               v2 := OS.GetAbsolutePath (Pathname.Prefix (v2), v1);
               IF (v2 # NIL) AND OS.IsDirectory (v2) THEN
                 result := v2;
-                kind := Kind.Dir;
               END;
             END;
+            kind := Kind.Dir;
+            OutResult (result);
 
         | 6 => (* dir-name, exe-name *)
             v0 := GetTxt (scan);
             v1 := GetTxt (scan);
+            OutS ("checking for executable " & v1 & " in directory " & 
+              v0 & "...");
             result := OS.FindExecutable (OS.MakePath (v0, v1));
             kind := Kind.Exe;
+            OutResult (result);
 
         | 7 => (* install root *)
-            result := install_root;
+            result := OS.FilenameWithoutSpaces (install_root);
             kind := Kind.Dir;
             confirm := FALSE;
+            Out ("setting INSTALL_ROOT to " & result);
 
         | 8 => (* dir-name *)
             v0 := GetTxt (scan);
+            OutS ("checking for directory " & v0 & "...");
             IF OS.IsDirectory (v0) THEN
               result := v0;
-              kind := Kind.Dir;
             END;
+            kind := Kind.Dir;
+            OutResult (result);
 
         | 9 =>  (* env-variable, dir-name *)
             v0 := GetTxt (scan);
             v1 := GetTxt (scan);
             v2 := Env.Get (v0);
+            OutS ("checking for directory " & v1 & 
+              " with environment variable " & v0 & "...");
             IF v2 # NIL THEN
               v2 := OS.GetAbsolutePath (v2, v1);
               IF (v2 # NIL) AND OS.IsDirectory (v2) THEN
                 result := v2;
-                kind := Kind.Dir;
               END;
             END;
+            kind := Kind.Dir;
+            OutResult (result);
 
         | 10 => (* env-variable *)
             v0 := GetTxt (scan);
             v1 := Env.Get (v0);
+            OutS ("checking for executable " & 
+              " with environment variable " & v0 & "...");
             IF (v1 # NIL) THEN
               result := OS.FindExecutable (v1);
-              kind := Kind.Exe;
             END;
+            kind := Kind.Exe;
+            OutResult (result);
 
         | 11 => (* file-name *)
-            lib_files := NEW (LibFile, next := lib_files, file := GetTxt (scan));
+            lib_files := NEW (LibFile, next := lib_files, 
+                              file := GetTxt (scan));
+            Out ("looking for library file(s): " & LibFilesToText(lib_files));
 
         | 12 => (* dir-name *)
             v0 := GetTxt (scan);
+            IF v0 # NIL THEN
+              OutS ("checking for library files in directory " & v0 & "...");
+              lib_dirs.addhi(v0);
+            END;
             IF (v0 # NIL) AND OS.IsDirectory (v0)
               AND FilesPresent (v0, lib_files) THEN
               result := v0;
-              kind := Kind.LibPath;
             END;
+            kind := Kind.LibPath;
+            OutResult (result);
 
         | 13 => (* dir-name *)
             v0 := GetTxt (scan);
+            OutS ("checking for directory " & v0 & "...");
             IF OS.IsDirectory (v0) THEN
               result := v0;
-              kind := Kind.LibPath;
+              lib_dirs.addhi(result);
             END;
+            kind := Kind.LibPath;
+            OutResult (result);
 
         | 14 => (* install key *)
             result := install_passwd;
@@ -364,34 +487,106 @@ PROCEDURE GenConfig (): TEXT =
 
         ELSE
             ConfigErr (scan, "unknown key: " & Fmt.Int (scan.cardinal));
-
         END; (* CASE *)
+        IF result # NIL AND NOT MemberOfTextSeq(choices, result) THEN
+          choices.addhi(result)
+        END;
       END; (* WHILE *)
 
       (* confirm with the user and stick it into the config file *)
       IF confirm THEN
         LOOP
           Out ();
-          v0 := Ask (title, result);
+          v0 := AskChoice (title, choices);
           CASE kind OF
           | Kind.Any =>
               EXIT;
           | Kind.Exe =>
               IF OS.IsExecutable (v0) THEN EXIT; END;
+              v0 := OS.FilenameWithoutSpaces (v0);
               Out ();
               Out ("Please enter the name of an executable program.");
           | Kind.Dir =>
               v0 := OS.CleanDirName (v0);
+              v0 := OS.FilenameWithoutSpaces (v0);
               IF OS.IsDirectory (v0) THEN EXIT; END;
               Out ();
               Out ("Please enter the name of a directory.");
           | Kind.LibPath =>
               v0 := OS.CleanDirName (v0);
-              IF OS.IsDirectory (v0) THEN v0 := "-L" & v0;  EXIT; END;
-              Out ();
-              Out ("Please enter the name of a directory.");
+              IF v0 = NIL THEN v0 := "" END;
+              IF OS.IsDirectory (v0) THEN
+                v0 := OS.FilenameWithoutSpaces (v0);
+                IF FilesPresent (v0, lib_files) THEN
+                  v0 := "-L" & v0;
+                  EXIT;
+                ELSE
+                  Out ("The libraries " & LibFilesToText(lib_files) &
+                    " are not present in the chosen directory.");
+                  IF AskBool("Would you like to change the library names?",
+                             "yes") THEN
+                    Out ("Warning: Changing the required library names is ",
+                         "currently only partially");
+                    Out ("supported by the installer. You will have to edit ",
+                         Pathname.Join(
+                             Pathname.Join(install_root, "bin", NIL), 
+                             "cm3.cfg", NIL));
+                    Out ("manually after the installation and adapt the ",
+                         "-l suffixes in the SYSTEM_LIBS");
+                    Out ("array.");
+                    Out ("Sorry for the inconvenience.");
+                    lib_files := NIL;
+                    v0 := Ask("enter library file (or ENTER to " &
+                              "continue): ", NIL);
+                    WHILE v0 # NIL AND NOT Text.Empty(v0) DO
+                      lib_files := NEW (LibFile, next := lib_files, 
+                                        file := v0);
+                      v0 := Ask("enter library file (or ENTER to " &
+                                "continue): ", NIL);
+                    END;
+                    IF AskBool("Would you like to add library search paths?",
+                               "yes") THEN
+                      v0 := Ask("enter library directory (or ENTER to " &
+                                "continue): ", NIL);
+                      WHILE v0 # NIL AND NOT Text.Empty(v0) DO
+                        lib_dirs.addhi(v0);
+                        v0 := Ask("enter library directory (or ENTER to " &
+                                  "continue): ", NIL);
+                      END;
+                    END;
+                    Out ("looking for library file(s): " & 
+                      LibFilesToText(lib_files));
+                    EVAL choices.init();
+                    FOR i := 0 TO lib_dirs.size() - 1 DO
+                      WITH dir = lib_dirs.get(i) DO
+                        OutS ("checking in directory ", dir, "...");
+                        IF OS.IsDirectory (dir) AND lib_files # NIL AND
+                          FilesPresent (dir, lib_files) THEN
+                          OutResult (dir);
+                          IF NOT MemberOfTextSeq(choices, dir) THEN
+                            choices.addhi(dir);
+                          END;
+                        ELSE
+                          OutResult (NIL);
+                        END;
+                      END;
+                    END;
+                  ELSE
+                    IF AskBool("Would you like to continue nonetheless?",
+                               "yes") THEN
+                      EXIT;
+                    END;
+                    Out ();
+                    Out ("Please enter the name of a directory.");
+                  END;
+                END;
+              ELSE
+                Out ();
+                Out ("Please enter the name of a directory.");
+              END;
           END; (* CASE *)
         END; (* LOOP *)
+        Out ();
         result := v0;
       END;
       Wr.PutText (wr, Text2.EscapeString (result));
@@ -419,7 +614,19 @@ PROCEDURE FilesPresent (dir: TEXT;   files: LibFile): BOOLEAN =
     RETURN TRUE;
   END FilesPresent;
 
-(*---------------------------------------------- low-level quake support ---- *)
+PROCEDURE MemberOfTextSeq(tl : TextSeq.T; elem : TEXT) : BOOLEAN =
+  BEGIN
+    FOR i := 0 TO tl.size() - 1 DO
+      WITH act = tl.get(i) DO
+        IF Text.Equal(act, elem) THEN
+          RETURN TRUE;
+        END;
+      END;
+    END;
+    RETURN FALSE;
+  END MemberOfTextSeq;
+
+(*--------------------------------------------- low-level quake support ---- *)
 
 VAR
   quake_id_map := Quake.NewIDMap (Str2ID, Txt2ID, ID2Txt);
@@ -462,23 +669,56 @@ PROCEDURE ID2Txt (i: Quake.ID): TEXT =
   END ID2Txt;
 
 (*------------------------------------------- decompression and unpacking ---*)
+PROCEDURE UtilsFound() : BOOLEAN =
+  BEGIN
+    gzip := OS.MakePath (cminstall_root, GZIP_EXE);
+    tar  := OS.MakePath (cminstall_root, TAR_EXE);
+    IF NOT OS.IsExecutable(gzip) THEN
+      gzip := OS.FindExecutable(GZIP_EXE);
+      IF gzip = NIL THEN
+        Msg.Out("Cannot find gzip.");
+        Msg.Out("A workable gzip (de)compression program must be installed",
+                "and found via PATH.");
+        RETURN FALSE;
+      END;
+    END;
+    Msg.Debug ("GZIP_EXE = ", gzip);
+    IF NOT OS.IsExecutable(tar) THEN
+      tar := OS.FindExecutable(TAR_EXE);
+      IF tar = NIL THEN
+        Msg.Out("Cannot find tar.");
+        Msg.Out("A workable tar archiving program must be installed",
+                "and found via PATH.");
+        RETURN FALSE;
+      END;
+    END;
+    Msg.Debug ("TAR_EXE = ", tar);
+    RETURN TRUE;
+  END UtilsFound; 
 
 CONST
-  GZipArgs = ARRAY [0..0] OF TEXT { "-d" };
+  GZipArgs = ARRAY [0..0] OF TEXT { "-dc" };
   TarArgs  = ARRAY [0..1] OF TEXT { "-xmf", "-" };
 
 PROCEDURE Unpack (archive: TEXT) =
   VAR data: TEXT := OS.MakePath (cminstall_root, archive);
   BEGIN
-    IF OS.IsExecutable (data & ".TAR")
-      THEN UnpackTAR (data & ".TAR");
-      ELSE UnpackTGZ (data & ".TGZ");
+    IF OS.IsExecutable (data & ".tar") THEN 
+      UnpackTAR (data & ".tar");
+    ELSE
+      IF OnUnix THEN
+        UnpackTGZ (data & ".tgz");
+      ELSE
+        UnpackTGZ (data & ".tgz");
+        (* does not work, too... 
+        UnpackTGZWin32 (data & ".tgz");
+        *)
+      END;
     END;
   END Unpack;
 
 PROCEDURE UnpackTAR (data: TEXT) =
   VAR
-    tar            : TEXT := OS.MakePath (cminstall_root, TAR_EXE);
     tar_process    : Process.T;
     input, stdin   : File.T;
     stdout, stderr : File.T;
@@ -517,10 +757,50 @@ PROCEDURE UnpackTAR (data: TEXT) =
     Msg.Debug ("unpacking done.");
   END UnpackTAR;
 
+PROCEDURE UnpackTGZWin32 (data: TEXT) =
+  CONST
+    TarArgs  = ARRAY [0..1] OF TEXT { "-zxmf", "-" };
+  VAR
+    tar_process    : Process.T;
+    input, stdin   : File.T;
+    stdout, stderr : File.T;
+  BEGIN
+    Msg.Debug ("unpacking:  archive = ", data);
+
+    (* get the default file handles *)
+    Process.GetStandardFileHandles (stdin, stdout, stderr);
+
+    (* open the tar file *)
+    TRY
+      input := FS.OpenFileReadonly (data);
+    EXCEPT OSError.E (ec) =>
+      Msg.Error (ec, "Unable to open archive: ", data);
+    END;
+
+    (* create the tar process *)
+    TRY
+      tar_process := Process.Create (tar, TarArgs, stdin := input,
+                                      stdout := stdout, stderr := stderr,
+                                      wd := install_root);
+    EXCEPT OSError.E (ec) =>
+      Msg.Error (ec, "Unable to create unpacking process: ", tar);
+    END;
+
+    (* close our copy of the input file *)
+    TRY
+      input.close ();
+    EXCEPT OSError.E (ec) =>
+      Msg.Error (ec, "Trouble closing archive: ", data);
+    END;
+
+    (* wait for everybody to finish *)
+    Msg.Debug ("waiting for process completion...");
+    EVAL Process.Wait (tar_process);
+    Msg.Debug ("unpacking done.");
+  END UnpackTGZWin32;
+
 PROCEDURE UnpackTGZ (data: TEXT) =
   VAR
-    gzip           : TEXT := OS.MakePath (cminstall_root, GZIP_EXE);
-    tar            : TEXT := OS.MakePath (cminstall_root, TAR_EXE);
     gzip_process   : Process.T;
     tar_process    : Process.T;
     p_in, p_out    : Pipe.T;
@@ -528,7 +808,7 @@ PROCEDURE UnpackTGZ (data: TEXT) =
     stdout, stderr : File.T;
   BEGIN
     Msg.Debug ("unpacking:  archive = ", data);
-
+      
     (* get the default file handles *)
     Process.GetStandardFileHandles (stdin, stdout, stderr);
 
@@ -550,6 +830,7 @@ PROCEDURE UnpackTGZ (data: TEXT) =
     TRY
       gzip_process := Process.Create (gzip, GZipArgs, stdin := input,
                                       stdout := p_in, stderr := stderr);
+      Msg.Debug (gzip, " ", GZipArgs[0]);
     EXCEPT OSError.E (ec) =>
       Msg.Error (ec, "Unable to create decompression process: ", gzip);
     END;
@@ -559,6 +840,8 @@ PROCEDURE UnpackTGZ (data: TEXT) =
       tar_process := Process.Create (tar, TarArgs, stdin := p_out,
                                       stdout := stdout, stderr := stderr,
                                       wd := install_root);
+      Msg.Debug (tar, " " & TarArgs[0] & " " & TarArgs[1] & " wd = ",
+                 install_root);
     EXCEPT OSError.E (ec) =>
       Msg.Error (ec, "Unable to create unpacking process: ", tar);
     END;
@@ -622,7 +905,7 @@ PROCEDURE RunFixups () =
   END RunFixups;
 
 (*------------------------------------------------------------ decryption ---*)
-
+(* disabled
 PROCEDURE KeyCheck (passwd: TEXT): BOOLEAN =
   CONST Day = 24.0d0 * 3600.0d0;
   CONST FirstWarning = 7.0d0 * Day;
@@ -634,7 +917,7 @@ PROCEDURE KeyCheck (passwd: TEXT): BOOLEAN =
       RETURN FALSE;
     END;
 
-    Out ("Reactor Installation: ", key.banner);
+    Out ("CM3 Installation: ", key.banner);
 
     IF (key.usage = CMKey.Usage.Demo) THEN
       expire := key.expiration - Time.Now ();
@@ -642,12 +925,12 @@ PROCEDURE KeyCheck (passwd: TEXT): BOOLEAN =
         (* ok *)
       ELSIF (expire <= 0.0d0) THEN
         Out ("---");
-        Out ("--- This preview copy of Reactor has already expired.");
+        Out ("--- This preview copy of CM3 has already expired.");
         BuyIt ();
         Process.Exit (1);
       ELSE
         Out ("---");
-        Out ("--- Warning: this preview copy of Reactor will expire in ",
+        Out ("--- Warning: this preview copy of CM3 will expire in ",
                     Fmt.Int (ROUND (expire / Day)), " days.");
         BuyIt ();
       END;
@@ -658,7 +941,7 @@ PROCEDURE KeyCheck (passwd: TEXT): BOOLEAN =
 
 CONST
   BuyMsg = ARRAY OF TEXT {
-    "To purchase a non-expiring copy of Reactor, please contact:",
+    "To purchase a non-expiring copy of CM3, please contact:",
     "",
     "    Critical Mass, Inc.",
     "    1770 Massachusetts Ave.",
@@ -675,10 +958,11 @@ PROCEDURE BuyIt () =
       Out ("--- ", BuyMsg[i]);
     END;
   END BuyIt;
+*)
 
 (*---------------------------------------------------------- network test ---*)
 
-PROCEDURE TestTCP () =
+<* UNUSED *> PROCEDURE TestTCP () =
   BEGIN
     Msg.Debug ("Testing network connections");
     Msg.Debug ("Network test done.");

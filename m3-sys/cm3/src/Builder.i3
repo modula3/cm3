@@ -1,4 +1,5 @@
-(* Copyright 1996 Critical Mass, Inc. All rights reserved.    *)
+(* Copyright 1996-2000 Critical Mass, Inc. All rights reserved.    *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 INTERFACE Builder;
 
@@ -22,6 +23,9 @@ PROCEDURE JustCompile (READONLY units: M3Unit.Set;
 
 PROCEDURE CleanUp ();
 (* Last chance to dump state and clean up *)
+
+PROCEDURE EmitPkgImports (READONLY units: M3Unit.Set);
+(* Output all imported packages *)
 
 END Builder.
 

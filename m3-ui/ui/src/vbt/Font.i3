@@ -15,6 +15,8 @@
 
 INTERFACE Font;
 
+CONST Brand = "Font 1.0";
+
 TYPE T = RECORD fnt: INTEGER END; Predefined = [0..0];
 
 CONST BuiltIn = T{0};  

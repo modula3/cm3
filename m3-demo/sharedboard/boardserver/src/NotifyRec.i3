@@ -11,6 +11,8 @@ INTERFACE NotifyRec;
 IMPORT RectR,
        Item, ClientInfo;
 
+CONST Brand = "NotifyRec 1.0";
+
 TYPE T = REF RECORD
     code: Code;
     doer: ClientInfo.T;

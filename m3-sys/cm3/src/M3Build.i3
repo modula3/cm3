@@ -1,4 +1,5 @@
-(* Copyright 1996 Critical Mass, Inc. All rights reserved.    *)
+(* Copyright 1996-2000 Critical Mass, Inc. All rights reserved.    *)
+(* See file COPYRIGHT-CMASS for details. *)
 
 INTERFACE M3Build;
 
@@ -15,5 +16,7 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)  RAISES {Quake.Error};
 PROCEDURE Run (t: T;  makefile: TEXT) RAISES {Quake.Error, Thread.Alerted};
 (* Evaluate the specified makefile... *)
 
+VAR
+  done := FALSE;
 END M3Build.
 

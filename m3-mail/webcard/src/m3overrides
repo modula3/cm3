@@ -1,0 +1,4 @@
+override ("formsvbt", ROOT & "/m3-ui")
+override ("webvbt", ROOT & "/m3-ui")
+override ("web", ROOT & "/m3-www")
+override ("mtex", ROOT & "/m3-tools")

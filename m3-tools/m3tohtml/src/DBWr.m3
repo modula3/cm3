@@ -6,7 +6,7 @@
 
 UNSAFE MODULE DBWr;
 
-IMPORT FS, File, OSError, TextF;
+IMPORT FS, File, OSError, Text;
 
 CONST BIG = 16_1000000; (* 2^24 => 16M *)
 TYPE BigPtr = UNTRACED REF ARRAY [0..BIG-1] OF File.Byte;
@@ -50,8 +50,11 @@ PROCEDURE PutInt (t: T;  i: INTEGER) =
 VAR newline := ARRAY [0..0] OF CHAR { '\n' };
 
 PROCEDURE PutLine (t: T;  txt: TEXT) =
+  VAR
+    b := NEW (REF ARRAY OF CHAR, Text.Length(txt));
   BEGIN
-    PutBuf (t, SUBARRAY (txt^, 0, LAST (txt^)));
+    Text.SetChars(b^, txt);
+    PutBuf (t, b^);
     PutBuf (t, newline);
   END PutLine;
 

@@ -2,7 +2,8 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 (*                                                             *)
-(* Portions Copyright 1996, Critical Mass, Inc.                *)
+(* Portions Copyright 1996-2000, Critical Mass, Inc.           *)
+(* See file COPYRIGHT-CMASS for details.                       *)
 
 INTERFACE Quake;
 

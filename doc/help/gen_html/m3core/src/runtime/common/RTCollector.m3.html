@@ -1,0 +1,2593 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTCollector.m3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>m3core/src/runtime/common/RTCollector.m3</H2></A><HR>
+<inModule>
+<PRE></PRE> Copyright (C) 1993, Digital Equipment Corporation         
+ All rights reserved.                                      
+ See the file COPYRIGHT for a full description.            
+                                                           
+ Portions Copyright 1996-2000, Critical Mass, Inc.         
+ See file COPYRIGHT-CMASS for details.                     
+                                                           
+| Last modified on Sat Nov 19 09:37:57 PST 1994 by kalsow  
+|      modified on Fri Aug  5 14:04:35 PDT 1994 by jdd     
+|      modified on Wed Jun  2 15:00:17 PDT 1993 by muller  
+|      modified on Wed Apr 21 13:14:37 PDT 1993 by mcjones 
+|      modified on Wed Mar 10 11:01:47 PST 1993 by mjordan 
+
+<P><PRE>UNSAFE MODULE <module>RTCollector</module> EXPORTS <A HREF="RTCollector.i3.html"><implements>RTCollector</A></implements>, <A HREF="RTCollectorSRC.i3.html"><implements>RTCollectorSRC</A></implements>,
+                                  <A HREF="RTHeapRep.i3.html"><implements>RTHeapRep</A></implements>, <A HREF="RTWeakRef.i3.html"><implements>RTWeakRef</A></implements>;
+
+IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTHeapEvent.i3.html">RTHeapEvent</A>, <A HREF="RTHeapDep.i3.html">RTHeapDep</A>, <A HREF="RTHeapMap.i3.html">RTHeapMap</A>, <A HREF="RTIO.i3.html">RTIO</A>, <A HREF="../FreeBSD3/RTMachine.i3.html">RTMachine</A>;
+IMPORT <A HREF="RTMisc.i3.html">RTMisc</A>, <A HREF="RTOS.i3.html">RTOS</A>, <A HREF="RTParams.i3.html">RTParams</A>, <A HREF="../POSIX/RTPerfTool.i3.html">RTPerfTool</A>, <A HREF="RTProcess.i3.html">RTProcess</A>, <A HREF="RTType.i3.html">RTType</A>;
+IMPORT <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="../../C/Common/Cstdlib.i3.html">Cstdlib</A>, <A HREF="../../thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../thread/POSIX/ThreadF.i3.html">ThreadF</A>, <A HREF="RuntimeError.i3.html">RuntimeError</A>;
+IMPORT <A HREF="../../text/TextLiteral.i3.html">TextLiteral</A>;
+
+FROM <A HREF="RT0.i3.html">RT0</A> IMPORT Typecode, TypeDefn;
+TYPE TK = RT0.TypeKind;
+</PRE> The allocator/garbage collector for the traced heap is an adaptation of
+   the algorithm presented in the WRL Research Report 88/2, ``Compacting
+   Garbage Collection with Ambiguous Roots'', by Joel F.  Bartlett; see
+   this report for a detailed presentation.  John DeTreville modified it to
+   be incremental, generational, and VM-synchronized.
+<P>
+   The allocator/collector for the untraced heap is simply malloc/free. 
+
+<P> Much of the code below incorrectly assumes no difference between ADRSIZE
+   and BYTESIZE. 
+
+<P> In the following procedures, <CODE>RTType.Get(tc)</CODE> will fail if <CODE>tc</CODE> is not
+   proper. 
+
+<P>** RTCollector **
+
+<P><PRE>PROCEDURE <A NAME="Disable"><procedure>Disable</procedure></A> () =
+  BEGIN
+    RTOS.LockHeap();
+    BEGIN
+      FinishVM();
+      INC(disableCount);
+      partialCollectionNext := FALSE;
+    END;
+    RTOS.UnlockHeap();
+    IF perfOn THEN PerfAllow(); END;
+  END Disable;
+
+PROCEDURE <A NAME="Enable"><procedure>Enable</procedure></A> () =
+  BEGIN
+    RTOS.LockHeap();
+    BEGIN
+      DEC(disableCount);
+      CollectEnough();
+    END;
+    RTOS.UnlockHeap();
+    IF perfOn THEN PerfAllow(); END;
+  END Enable;
+
+PROCEDURE <A NAME="DisableMotion"><procedure>DisableMotion</procedure></A> () =
+  BEGIN
+    RTOS.LockHeap();
+    BEGIN
+      INC(disableMotionCount);
+    END;
+    RTOS.UnlockHeap();
+    IF perfOn THEN PerfAllow(); END;
+  END DisableMotion;
+
+PROCEDURE <A NAME="EnableMotion"><procedure>EnableMotion</procedure></A> () =
+  BEGIN
+    RTOS.LockHeap();
+    BEGIN
+      DEC(disableMotionCount);
+      CollectEnough();
+    END;
+    RTOS.UnlockHeap();
+    IF perfOn THEN PerfAllow(); END;
+  END EnableMotion;
+
+PROCEDURE <A NAME="Collect"><procedure>Collect</procedure></A> () =
+  BEGIN
+    RTOS.LockHeap();
+    BEGIN
+      FinishGC();
+      StartGC();
+      FinishGC();
+    END;
+    RTOS.UnlockHeap();
+  END Collect;
+</PRE>** RTCollectorSRC **
+
+<P> StartCollection starts a total collection, if none is in progress and if
+   collection and motion are enabled. 
+
+<P><PRE>PROCEDURE <A NAME="StartCollection"><procedure>StartCollection</procedure></A> () =
+  BEGIN
+    RTOS.LockHeap();
+    BEGIN
+      CollectorOn();
+      IF collectorState = CollectorState.Zero
+           AND disableCount + disableMotionCount = 0 THEN
+        partialCollectionNext := FALSE;
+        REPEAT CollectSome(); UNTIL collectorState # CollectorState.Zero;
+        IF NOT (incremental AND RTHeapDep.VM AND disableVMCount = 0) THEN
+          REPEAT CollectSome(); UNTIL collectorState = CollectorState.Zero;
+        END;
+      END;
+      CollectorOff();
+    END;
+    RTOS.UnlockHeap();
+  END StartCollection;
+</PRE> FinishCollection finishes the current collection, if one is on
+   progress. 
+
+<P><PRE>PROCEDURE <A NAME="FinishCollection"><procedure>FinishCollection</procedure></A> () =
+  BEGIN
+    RTOS.LockHeap();
+    BEGIN
+      CollectorOn();
+      WHILE collectorState # CollectorState.Zero DO CollectSome(); END;
+      CollectorOff();
+    END;
+    RTOS.UnlockHeap();
+  END FinishCollection;
+</PRE> DisableVM disables the use of VM protection.  While VM protection is
+   disabled, no objects on the heap will be protected.
+
+<P><PRE>PROCEDURE <A NAME="DisableVM"><procedure>DisableVM</procedure></A> () =
+  BEGIN
+    RTOS.LockHeap();
+    BEGIN
+      FinishVM();
+      INC(disableVMCount);
+    END;
+    RTOS.UnlockHeap();
+  END DisableVM;
+</PRE> EnableVM reenables the use of VM protection if EnableVM has been called
+   as many times as DisableVM.  It is a checked runtime error to call
+   EnableVM more times than DisableVM. 
+
+<P><PRE>PROCEDURE <A NAME="EnableVM"><procedure>EnableVM</procedure></A> () =
+  BEGIN
+    RTOS.LockHeap();
+    BEGIN
+      DEC(disableVMCount);
+      CollectEnough();
+    END;
+    RTOS.UnlockHeap();
+  END EnableVM;
+</PRE> FinishVM is equivalent to DisableVM{}; EnableVM().  FinishVM unprotects
+   all heap pages, and is intended for use from the debugger. 
+
+<P><PRE>PROCEDURE <A NAME="FinishVM"><procedure>FinishVM</procedure></A> () =
+  BEGIN
+    RTOS.LockHeap();
+    BEGIN
+      FinishGC();
+      CollectorOn();
+      (* no gray pages now; only protected pages are in older generation *)
+      FOR p := p0 TO p1 - 1 DO
+        IF desc[p - p0].protected THEN Protect(p, Mode.ReadWrite); END;
+      END;
+      CollectorOff();
+    END;
+    RTOS.UnlockHeap();
+  END FinishVM;
+</PRE> StartBackgroundCollection starts the background thread, if not already
+   started 
+
+<P><PRE>VAR startedBackground := FALSE;
+
+PROCEDURE <A NAME="StartBackgroundCollection"><procedure>StartBackgroundCollection</procedure></A> () =
+  VAR start := FALSE;
+  BEGIN
+    RTOS.LockHeap();
+    BEGIN
+      IF NOT startedBackground THEN
+        start := TRUE;
+        startedBackground := TRUE;
+      END;
+    END;
+    RTOS.UnlockHeap();
+    IF start THEN
+      EVAL Thread.Fork(NEW(Thread.Closure, apply := BackgroundThread));
+    END;
+  END StartBackgroundCollection;
+</PRE> ------------------------------- low-level allocation and collection 
+
+<P> We assume that references (values of the types ADDRESS and REFANY) are
+   the addresses of addressable locations and that locations with
+   successive addresses are contiguous (that is, if a points to a
+   n-locations referent then these n locations are at addresses a, a+1,
+   ..., a+n-1).
+<P>
+   The memory is viewed as a collection of pages.  Each page has a number
+   that identifies it, based on the addresses that are part of this page:
+   page p contains the addresses p * BytesPerPage to (p+1) * BytesPerPage -
+   1.
+<P>
+   The page size must be a multiple of the header size (see below).  Given
+   our conventions about page boundaries, this implies that the first
+   location of a page is properly aligned for a Header. 
+
+<P> The array desc and the global variables p0, and p1 describe the pages
+   that are part of the traced heap.  Either p0 and p1 are equal to Nil and
+   no pages are allocated; or both are valid pages and page p is allocated
+   iff
+<P>
+<PRE>
+               p0 &lt;= p &lt; p1
+           AND desc[p - p0] != Unallocated
+</PRE>
+   NUMBER (desc) must be equal to p1 - p0 if there are allocated pages.
+   Index i in desc correspond to page i + p0; that is p0 is the number of
+   the first page available in desc, and it must be in [p0 ..  p1) if there
+   are allocated pages. 
+
+<P> We keep the number of allocated pages in a global variable; it should
+   satify the invariant:
+<P>
+<PRE>
+          allocatedPages = sigma (i = p0, p1-1,
+                                   space [i - p0] # Unallocated)
+                                       if there are allocated pages,
+                           = 0 otherwise. 
+
+
+<P> </PRE>
+Each referent is immediately preceded by a header that describes the
+   type of the referent.  In the user world, this header is not visible;
+   that is, a REFANY is the address of the referent, not the address of the
+   header.
+<P>
+   Each referent is immediately followed by padding space so the combined
+   size referent size + padding is a multiple of the header size.
+   Actually, the low level routines are given a data size which is the sum
+   of the referent size and padding size and assume this data size is a
+   multiple of the header size.
+<P>
+   With this padding, addresses of headers and referent will always be
+   multiple of ADRSIZE (Header).
+<P>
+   The combination of header/referent/padding space is called a <CODE>heap
+   object</CODE>.  The size of a heap object is the size of the header, plus the
+   size of the referent, plus the size of the padding.  The alignment of a
+   heap object is the greatest of the alignment of header and the alignment
+   of the referent.
+<P>
+   We make the following assumptions:
+<P>
+   - alignment of headers is such what the addressable location following
+   any properly aligned header is properly aligned for the type ADDRESS;
+   and, for every referent: referent adrSize + padding adrSize &gt;= ADRSIZE
+   (ADDRESS)
+<P>
+   [During the garbage collection, we move heap objects.  But we need to
+   keep the forwarding information somewhere.  This condition ensures that
+   we can store the new address of the referent in the first word of the
+   old referent.]
+<P>
+   - the pages are aligned more strictly than the headers (this means that
+   the page size is a multiple of the header alignment).
+<P>
+   [We can put a header at the beginning of a page] 
+
+<P><PRE>TYPE
+  RefReferent = ADDRESS;
+
+PROCEDURE <A NAME="HeaderOf"><procedure>HeaderOf</procedure></A> (r: RefReferent): RefHeader =
+  BEGIN
+    RETURN LOOPHOLE(r - ADRSIZE(Header), RefHeader);
+  END HeaderOf;
+</PRE> If a page is allocated, it can be normal or continued.  In the first
+   case, there is a heap object just at the beginning of the page and
+   others following.  The second case occurs when a heap object was too
+   large to fit on a page: it starts at the beginning of a normal page and
+   overflows on contiguous continued pages.  Whatever space is left on the
+   last continued page is never used for another object or filler.  In
+   other words, all the headers are on normal pages.
+<P>
+   Heap objects do not need to be adjacent.  Indeed, alignment constraints
+   would make it difficult to ensure that property.  Filler objects may
+   appear before objects to align them, or after the last object on a
+   normal page to fill the page. 
+
+<P> We need to be able to determine the size of an referent during
+   collection; here is a functions to do just that.  It must be called with
+   a non-nil pointer to the Header of a heap object that is there (has not
+   been moved). 
+
+<P><PRE>PROCEDURE <A NAME="ReferentSize"><procedure>ReferentSize</procedure></A> (h: RefHeader): CARDINAL =
+  VAR
+    res: INTEGER;
+    tc: Typecode := h.typecode;
+    def: TypeDefn;
+  BEGIN
+    IF tc = Fill_1_type THEN RETURN 0; END;
+
+    IF tc = Fill_N_type THEN
+      res := LOOPHOLE(h + ADRSIZE(Header), UNTRACED REF INTEGER)^;
+      RETURN res - BYTESIZE(Header);
+    END;
+
+    IF tc = RT0.TextLitTypecode THEN
+      VAR
+        txt := LOOPHOLE (h + ADRSIZE(Header), TextLiteral.T);
+        len : INTEGER := txt.cnt;
+      BEGIN
+        IF (len &gt;= 0)
+          THEN INC (len); (* null CHAR *)
+          ELSE len := 2 (*null WIDECHAR*) - len - len;
+        END;
+        RETURN ADR (txt.buf[len]) - LOOPHOLE (txt, ADDRESS);
+      END;
+    END;
+
+    def := RTType.Get (tc);
+
+    IF (def.kind # ORD (TK.Array)) THEN
+      (* the typecell datasize tells the truth *)
+      RETURN def.dataSize;
+    END;
+</PRE> Otherwise, the referent is an open array; it has the following layout:
+<PRE>
+          pointer to the elements (ADDRESS)
+          size 1
+          ....
+          size n
+          optional padding
+          elements
+          ....
+   </PRE>
+where n is the number of open dimensions (given by the definition)
+   and each size is the number of elements along the dimension. 
+
+<P>    <PRE>VAR
+      adef := LOOPHOLE (def, RT0.ArrayTypeDefn);
+      sizes: UNTRACED REF INTEGER := h + ADRSIZE(Header) + ADRSIZE(ADDRESS);
+                                                           (* ^ elt pointer*)
+    BEGIN
+      res := 1;
+      FOR i := 0 TO adef.nDimensions - 1 DO
+        res := res * sizes^;
+        INC(sizes, ADRSIZE(sizes^));
+      END;
+      res := res * adef.elementSize;
+    END;
+    res := RTMisc.Upper(res + def.dataSize, BYTESIZE(Header));
+    RETURN res;
+  END ReferentSize;
+</PRE> The convention about page numbering allows for a simple conversion from
+   an address to the number of the page in which it is, as well as from a
+   page number to the first address is contains: 
+
+<P><PRE>PROCEDURE <A NAME="ReferentToPage"><procedure>ReferentToPage</procedure></A> (r: RefReferent): Page =
+  (* VAR p: INTEGER := LOOPHOLE(r, INTEGER) DIV BytesPerPage; *)
+  VAR p: INTEGER := Word.RightShift (LOOPHOLE(r, INTEGER), LogBytesPerPage);
+  BEGIN
+    IF p &lt; p0 OR p &gt;= p1 OR desc[p - p0].space = Space.Unallocated
+      THEN RETURN Nil;
+      ELSE RETURN p;
+    END;
+  END ReferentToPage;
+
+PROCEDURE <A NAME="HeaderToPage"><procedure>HeaderToPage</procedure></A> (r: RefHeader): Page =
+  (* VAR p: INTEGER := LOOPHOLE(r, INTEGER) DIV BytesPerPage; *)
+  VAR p: INTEGER := Word.RightShift (LOOPHOLE(r, INTEGER), LogBytesPerPage);
+  BEGIN
+    IF p &lt; p0 OR p &gt;= p1 OR desc[p - p0].space = Space.Unallocated
+      THEN RETURN Nil;
+      ELSE RETURN p;
+    END;
+  END HeaderToPage;
+
+PROCEDURE <A NAME="PageToHeader"><procedure>PageToHeader</procedure></A> (p: Page): RefHeader =
+  BEGIN
+    RETURN LOOPHOLE(p * BytesPerPage, RefHeader);
+  END PageToHeader;
+
+PROCEDURE <A NAME="PageToAddress"><procedure>PageToAddress</procedure></A> (p: Page): ADDRESS =
+  BEGIN
+    RETURN LOOPHOLE(p * BytesPerPage, ADDRESS);
+  END PageToAddress;
+</PRE> To move a heap object to the new space, modifying the original reference
+   to it 
+
+<P><PRE>TYPE Mover = RTHeapMap.Visitor OBJECT OVERRIDES apply := Move END;
+
+PROCEDURE <A NAME="Move"><procedure>Move</procedure></A> (&lt;*UNUSED*&gt; self: Mover;  cp: ADDRESS) =
+  VAR
+    refref := LOOPHOLE(cp, UNTRACED REF RefReferent);
+    ref    := refref^;
+    p      : INTEGER;
+    hdr    : RefHeader;
+  BEGIN
+    IF ref = NIL THEN RETURN; END;
+
+    (* INLINE: p := ReferentToPage(ref); *)
+    p := Word.RightShift (LOOPHOLE(ref, INTEGER), LogBytesPerPage);
+    IF p &lt; p0 OR p &gt;= p1 OR desc[p - p0].space # Space.Previous THEN RETURN; END;
+
+    (* INLINE: hdr := HeaderOf(ref); *)
+    hdr := LOOPHOLE(ref - ADRSIZE(Header), RefHeader);
+
+    IF hdr.forwarded THEN
+      (* if already moved, just update the reference *)
+      refref^ := LOOPHOLE(ref, UNTRACED REF RefReferent)^;
+      RETURN;
+    END;
+
+    IF p + 1 &lt; p1 AND desc[p - p0 + 1].continued THEN
+      (* if this is a large object, just promote the pages *)
+      VAR def := RTType.Get (hdr.typecode); BEGIN
+        IF (def.gc_map = NIL) AND (def.kind # ORD(TK.Obj))
+          THEN PromotePage(p, PromoteReason.LargePure);
+          ELSE PromotePage(p, PromoteReason.LargeImpure);
+        END;
+      END;
+      RETURN;
+    END;
+
+    (* otherwise, move the object *)
+    VAR
+      def      := RTType.Get(hdr.typecode);
+      dataSize := ReferentSize(hdr);
+      np       : RefReferent;
+    BEGIN
+      IF (def.gc_map # NIL) OR (def.kind = ORD(TK.Obj))
+        THEN np := AllocTraced(dataSize, def.dataAlignment, impureCopy);
+        ELSE np := AllocTraced(dataSize, def.dataAlignment, pureCopy);
+      END;
+      IF (np = NIL) THEN
+        RAISE RuntimeError.E (RuntimeError.T.OutOfMemory);
+      END;
+      RTMisc.Copy(hdr, HeaderOf(np), BYTESIZE(Header) + dataSize);
+      IF def.kind = ORD (TK.Array) THEN
+        (* open array: update the internal pointer *)
+        LOOPHOLE(np, UNTRACED REF ADDRESS)^ := np + def.dataSize;
+      END;
+      hdr.forwarded := TRUE;
+      LOOPHOLE(ref, UNTRACED REF RefReferent)^ := np;
+      refref^ := np;
+    END;
+  END Move;
+</PRE> Determines whether a REF has yet been moved into the new space.  Follows
+   the logic in <CODE>Move</CODE>.
+
+<P><PRE>PROCEDURE <A NAME="Moved"><procedure>Moved</procedure></A> (ref: RefReferent): BOOLEAN =
+  VAR
+    p   : INTEGER;
+    hdr : RefHeader;
+  BEGIN
+    IF ref = NIL THEN RETURN TRUE; END;
+
+    (* check the space *)
+    (* INLINE: p := ReferentToPage(ref); *)
+    p := Word.RightShift (LOOPHOLE(ref, INTEGER), LogBytesPerPage);
+    IF p &lt; p0 OR p &gt;= p1 OR desc[p - p0].space # Space.Previous THEN
+      RETURN TRUE;
+    END;
+
+    (* check the forwarded bit *)
+    (* INLINE: hdr := HeaderOf(ref); *)
+    hdr := LOOPHOLE(ref - ADRSIZE(Header), RefHeader);
+    RETURN hdr.forwarded;
+  END Moved;
+</PRE> When an allocated page is referenced by the stack, we have to move it to
+   the next space and insert it in the list of promoted pages.  In the case
+   where the page is actually part of a group of pages for a big referent,
+   we have to promote all these pages to the new space, but only the first
+   one needs to be inserted in the queue, as it is the only one containing
+   referent headers.
+<P>
+   This routine is passed to the Threads implementation.  It is called for
+   each stack, where start and stop are the addresses of the first and last
+   word of the stack under consideration. 
+
+<P><PRE>VAR
+  heap_min, heap_max: ADDRESS;
+  (* Must be set before calling NoteStackLocations *)
+
+PROCEDURE <A NAME="NoteStackLocations"><procedure>NoteStackLocations</procedure></A> (start, stop: ADDRESS) =
+  CONST Reason = ARRAY BOOLEAN OF PromoteReason {
+          PromoteReason.AmbiguousImpure, PromoteReason.AmbiguousPure };
+  VAR
+    fp : ADDRESS := start;
+    p  : ADDRESS;
+    pp : Page;
+  BEGIN
+    stop := stop - ADRSIZE (ADDRESS); (* so we don't overrun the valid addresses *)
+    WHILE fp &lt;= stop DO               (* with the memory read on the next line.  *)
+      p := LOOPHOLE(fp, UNTRACED REF ADDRESS)^;
+      IF heap_min &lt;= p AND p &lt; heap_max THEN
+        pp := Word.RightShift (LOOPHOLE(p, INTEGER), LogBytesPerPage);
+        WITH pd = desc[pp - p0] DO
+          IF pd.space = Space.Previous THEN
+            IF pd.continued THEN pp := FirstPage(pp); END;
+            PromotePage(pp, Reason[pd.pure]);
+          END;
+        END;
+      END;
+      INC(fp, RTMachine.PointerAlignment);
+    END;
+  END NoteStackLocations;
+
+TYPE
+  PromoteReason = {
+    OldProtected, OldPure, OldImpure,
+    LargePure, LargeImpure,
+    AmbiguousPure, AmbiguousImpure
+  };
+
+CONST
+  PromotedPageNeedsScan = ARRAY PromoteReason OF BOOLEAN {
+    FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE
+  };
+
+  PromoteDesc = ARRAY PromoteReason OF Desc {
+    (* OldProtected *)
+    Desc{ Space.Current, Generation.Older, pure := FALSE, gray := FALSE,
+      note := Note.OlderGeneration, protected := TRUE, continued := FALSE },
+
+    (* OldPure *)
+    Desc{ Space.Current, Generation.Older, pure := TRUE, gray := FALSE,
+      note := Note.OlderGeneration, protected := FALSE, continued := FALSE },
+
+    (* OldImpure *)
+    Desc{ Space.Current, Generation.Older, pure := FALSE, gray := TRUE,
+      note := Note.OlderGeneration, protected := FALSE, continued := FALSE },
+
+    (* LargePure *)
+    Desc{ Space.Current, Generation.Older, pure := TRUE, gray := FALSE,
+      note := Note.Large, protected := FALSE, continued := FALSE },
+
+    (* LargeImpure *)
+    Desc{ Space.Current, Generation.Older, pure := FALSE, gray := TRUE,
+      note := Note.Large, protected := FALSE, continued := FALSE },
+
+    (* AmbiguousPure *)
+    Desc{ Space.Current, Generation.Older, pure := TRUE, gray := FALSE,
+      note := Note.AmbiguousRoot, protected := FALSE, continued := FALSE },
+
+    (* AmbiguousImpure *)
+    Desc{ Space.Current, Generation.Older, pure := FALSE, gray := TRUE,
+      note := Note.AmbiguousRoot, protected := FALSE, continued := FALSE }
+  };
+
+PROCEDURE <A NAME="PromotePage"><procedure>PromotePage</procedure></A> (p: Page;  r: PromoteReason) =
+  VAR
+    d := PromoteDesc [r];
+    n_pages := PageCount(p);
+  BEGIN
+    d.generation := pureCopy.desc.generation;
+
+    WITH pd = desc[p - p0] DO
+      &lt;* ASSERT pd.space = Space.Previous *&gt;
+      &lt;* ASSERT NOT pd.continued*&gt;
+
+      IF pd.protected # d.protected THEN
+        &lt;*ASSERT NOT d.protected*&gt;
+        Protect(p, Mode.ReadWrite);
+      END;
+
+      pd := d;
+
+      IF PromotedPageNeedsScan[r] THEN
+        pd.link := impureCopy.stack;
+        impureCopy.stack := p;
+      END;
+    END;
+
+    IF n_pages &gt; 1 THEN
+      d.continued := TRUE;
+      FOR pp := p + 1 TO p + n_pages - 1 DO desc[pp - p0] := d; END;
+    END;
+
+    INC (n_promoted, n_pages);
+    IF perfOn THEN PerfChange(p, n_pages); END;
+  END PromotePage;
+
+PROCEDURE <A NAME="FillPool"><procedure>FillPool</procedure></A> (VAR p: AllocPool) =
+  BEGIN
+    InsertFiller(p.next, p.limit - p.next);
+    p.next  := NIL;
+    p.limit := NIL;
+  END FillPool;
+
+PROCEDURE <A NAME="InsertFiller"><procedure>InsertFiller</procedure></A> (start: RefHeader; n: INTEGER) =
+  BEGIN
+    IF n = 0 THEN
+      (* nothing to do *)
+    ELSIF n = ADRSIZE(Header) THEN
+      start^ := FillHeader1;
+    ELSIF n &gt;= ADRSIZE(Header) + ADRSIZE(INTEGER) THEN
+      start^ := FillHeaderN;
+      LOOPHOLE(start + ADRSIZE(Header), UNTRACED REF INTEGER)^ := n;
+    ELSE
+      &lt;* ASSERT FALSE *&gt;
+    END;
+  END InsertFiller;
+
+TYPE CollectorState = {Zero, One, Two, Three, Four, Five};
+
+VAR collectorState := CollectorState.Zero;
+
+VAR
+  threshold := ARRAY [0 .. 1] OF
+                 REAL{FLOAT(InitialBytes DIV 4 DIV BytesPerPage - 1), 1.0};
+</PRE><BLOCKQUOTE><EM> start a collection as soon as current space reaches threshold[0] /
+   threshold[1] pages; the initial value is 64KB </EM></BLOCKQUOTE><PRE>
+
+VAR
+  partialCollection: BOOLEAN;    (* whether the collection in progress is
+                                    partial, involving only the newer
+                                    generation *)
+  partialCollectionNext: BOOLEAN := FALSE; (* whether the next collection
+                                              should be partial *)
+
+VAR collectorOn: BOOLEAN := FALSE;
+
+VAR
+  signalBackground := FALSE;     (* should signal background collector
+                                    thread *)
+  signalWeak := FALSE;           (* should signal weak cleaner thread *)
+
+PROCEDURE <A NAME="CollectEnough"><procedure>CollectEnough</procedure></A> () =
+  BEGIN
+    IF collectorOn THEN RETURN; END;
+    IF Behind() THEN
+      CollectorOn();
+      IF incremental AND RTHeapDep.VM AND disableVMCount = 0 THEN
+        REPEAT CollectSome(); UNTIL NOT Behind();
+      ELSE
+        WHILE collectorState = CollectorState.Zero DO CollectSome(); END;
+        REPEAT CollectSome(); UNTIL collectorState = CollectorState.Zero;
+      END;
+      CollectorOff();
+    END;
+  END CollectEnough;
+
+PROCEDURE <A NAME="Behind"><procedure>Behind</procedure></A> (): BOOLEAN =
+  VAR n_new, n_copied: INTEGER;
+  BEGIN
+    IF disableCount + disableMotionCount &gt; 0
+         AND collectorState = CollectorState.Zero THEN
+      RETURN FALSE;
+    END;
+    n_new := newPool.n_small + newPool.n_big;
+    n_copied := pureCopy.n_small + pureCopy.n_big
+                 + impureCopy.n_small + impureCopy.n_big;
+    IF collectorState = CollectorState.Zero THEN
+      RETURN FLOAT(n_new + n_copied + n_promoted) * threshold[1] &gt;= threshold[0];
+    ELSE
+      RETURN FLOAT(n_new) * gcRatio &gt;= FLOAT(n_copied);
+    END;
+  END Behind;
+
+VAR timeUsedOnEntry: REAL;       (* time used when entered collector *)
+
+PROCEDURE <A NAME="CollectorOn"><procedure>CollectorOn</procedure></A> () =
+  (* LL &gt;= RTOS.HeapLock *)
+  BEGIN
+    &lt;* ASSERT NOT collectorOn *&gt;
+    collectorOn := TRUE;
+
+    ThreadF.SuspendOthers ();
+    (* If the collector is unprotecting pages and moving stuff around,
+       other threads cannot be running!  -- 7/16/96 WKK *)
+
+    IF RTHeapDep.VM THEN timeUsedOnEntry := RTHeapDep.TimeUsed(); END;
+
+    IF impureCopy.page # Nil THEN
+      WITH pd = desc[impureCopy.page - p0] DO
+        &lt;* ASSERT pd.gray *&gt;
+        &lt;* ASSERT pd.protected *&gt;
+      END;
+      Protect(impureCopy.page, Mode.ReadWrite);
+    END;
+  END CollectorOn;
+
+PROCEDURE <A NAME="CollectorOff"><procedure>CollectorOff</procedure></A> () =
+  (* LL &gt;= RTOS.HeapLock *)
+  BEGIN
+    &lt;* ASSERT collectorOn *&gt;
+
+    IF impureCopy.page # Nil THEN
+      WITH pd = desc[impureCopy.page - p0] DO
+        &lt;* ASSERT pd.gray *&gt;
+        &lt;* ASSERT NOT pd.protected *&gt;
+      END;
+      Protect(impureCopy.page, Mode.NoAccess);
+    END;
+
+    VAR p := impureCopy.stack; BEGIN
+      WHILE p # Nil DO
+        IF desc[p - p0].gray AND NOT desc[p - p0].protected THEN
+          Protect(p, Mode.NoAccess);
+        END;
+        p := desc[p - p0].link;
+      END;
+    END;
+
+    ThreadF.ResumeOthers ();
+
+    collectorOn := FALSE;
+
+    IF signalBackground OR signalWeak THEN
+      signalBackground := FALSE;
+      signalWeak := FALSE;
+      RTOS.BroadcastHeap();
+    END;
+
+    IF RTHeapDep.VM THEN
+      cycleCost := cycleCost + (RTHeapDep.TimeUsed() - timeUsedOnEntry);
+    END;
+  END CollectorOff;
+
+PROCEDURE <A NAME="CollectSome"><procedure>CollectSome</procedure></A> () =
+  BEGIN
+    &lt;* ASSERT disableCount = 0 *&gt;
+    CASE collectorState OF
+    | CollectorState.Zero =&gt; CollectSomeInStateZero();
+    | CollectorState.One =&gt; CollectSomeInStateOne();
+    | CollectorState.Two =&gt; CollectSomeInStateTwo();
+    | CollectorState.Three =&gt; CollectSomeInStateThree();
+    | CollectorState.Four =&gt; CollectSomeInStateFour();
+    | CollectorState.Five =&gt; CollectSomeInStateFive();
+    END;
+  END CollectSome;
+</PRE> Start a collection 
+
+<P><PRE>VAR
+  mover      : Mover    := NIL;
+  cycleCost  : REAL     := 0.0;  (* running cost of current cycle *)
+  cycleLength: CARDINAL := 1;    (* current planned cycle length *)
+  cycleL     : CARDINAL := 0;    (* length of current cycle, so far *)
+  cycleNews  : CARDINAL;         (* the number of new pages this cycle *)
+  minPrefixAvgCost: REAL;        (* minimum average cost for a prefix of
+                                    this cycle *)
+  minCycleL  : CARDINAL;         (* the length of that prefix *)
+  n_promoted : CARDINAL := 0;    (* # of pages promoted this cycle *)
+
+PROCEDURE <A NAME="CollectSomeInStateZero"><procedure>CollectSomeInStateZero</procedure></A> () =
+  BEGIN
+    &lt;* ASSERT disableCount + disableMotionCount = 0 *&gt;
+    (* compute some costs relative to previous collection *)
+    INC(cycleNews, newPool.n_small + newPool.n_big);
+    VAR prefixAvgCost := cycleCost / FLOAT(cycleNews);
+    BEGIN
+      IF prefixAvgCost &lt; minPrefixAvgCost THEN
+        minPrefixAvgCost := prefixAvgCost;
+        minCycleL := cycleL;
+      END;
+    END;
+
+    (* make generational decisions *)
+    IF generational AND RTHeapDep.VM AND disableVMCount = 0 THEN
+      pureCopy.desc.generation   := Generation.Older;
+      impureCopy.desc.generation := Generation.Older;
+      partialCollection := partialCollectionNext AND cycleL &lt; cycleLength;
+      IF NOT partialCollection THEN
+        IF minCycleL = cycleLength THEN
+          cycleLength := cycleLength + 1;
+        ELSE
+          cycleLength := MAX(cycleLength - 1, 1);
+        END;
+      END;
+    ELSE
+      pureCopy.desc.generation   := Generation.Younger;
+      impureCopy.desc.generation := Generation.Younger;
+      partialCollection := FALSE;
+    END;
+    partialCollectionNext := TRUE;
+
+    IF partialCollection THEN
+      INC(cycleL);
+    ELSE
+      cycleL := 1;
+      cycleCost := 0.0;
+      cycleNews := 0;
+      minPrefixAvgCost := LAST(REAL);
+      minCycleL := 0;
+    END;
+
+    InvokeMonitors (before := TRUE);
+
+    IF perfOn THEN PerfBegin(); END;
+
+    (* fill the rest of the current page *)
+    FillPool(newPool);
+    newPool.page  := Nil;
+    newPool.stack := Nil;
+
+    INC(collections);
+
+    (* flip spaces; newspace becomes oldspace *)
+    FOR p := p0 TO p1 - 1 DO
+      WITH pd = desc[p - p0] DO
+        IF pd.space = Space.Current THEN
+          pd.space := Space.Previous;
+          IF perfOn THEN PerfChange(p, 1); END;
+        END;
+      END;
+    END;
+
+    IF perfOn THEN PerfFlip(); END;
+
+    (* The 'new' nextSpace is empty *)
+    newPool.n_small    := 0;   newPool.n_big    := 0;
+    pureCopy.n_small   := 0;   pureCopy.n_big   := 0;
+    impureCopy.n_small := 0;   impureCopy.n_big := 0;
+    n_promoted := 0;
+
+    (* Conservatively scan the stacks for possible pointers. *)
+    (* Note: we must scan thread stacks before promoting old
+       pages, because we want to make sure that old, impure, unprotected
+       pages referenced by threads are marked as ambiguous roots.
+       Otherwise, these pages won't get cleaned by &quot;FinishThreadPages&quot;. *)
+    heap_min := PageToAddress (p0);
+    heap_max := PageToAddress (p1);
+    ThreadF.ProcessStacks(NoteStackLocations);
+    (* Now, nothing in previous space is referenced by a thread. *)
+
+    (* Promote any remaining &quot;old&quot; pages and unprotect everything else *)
+    FOR p := p0 TO p1 - 1 DO
+      WITH pd = desc[p - p0] DO
+        IF pd.space = Space.Previous AND NOT pd.continued THEN
+          IF pd.generation = Generation.Older THEN
+            IF partialCollection THEN
+              IF pd.protected THEN
+                &lt;* ASSERT NOT pd.pure *&gt;
+                PromotePage(p, PromoteReason.OldProtected);
+              ELSIF pd.pure THEN
+                PromotePage(p, PromoteReason.OldPure);
+              ELSE
+                PromotePage(p, PromoteReason.OldImpure);
+              END;
+            ELSE
+              IF pd.protected THEN Protect(p, Mode.ReadWrite); END;
+            END;
+          ELSE
+            &lt;* ASSERT NOT pd.protected *&gt;
+          END;
+        END;
+      END;
+    END;
+    (* Now, nothing in the previous space is protected or in the older
+       generation. *)
+
+    mover := NEW (Mover);  (* get one in the new space *)
+
+    (* On some systems (ie Win32) the system call wrappers are not atomic
+       with respect to the collector, so it's possible that this collection
+       started after a thread had validated its system call parameters but
+       before the system call completed.  On those systems, we must ensure
+       that the heap pages referenced by threads remain unprotected after
+       the collection begins. *)
+    IF RTHeapDep.VM AND NOT RTMachine.AtomicWrappers THEN
+      FinishThreadPages ();
+    END;
+
+    (* Scan the global variables for possible pointers *)
+    RTHeapMap.WalkGlobals (mover);
+
+    IF perfOn THEN PerfPromotedRoots(); END;
+
+    collectorState := CollectorState.One;
+    IF backgroundWaiting THEN signalBackground := TRUE; END;
+  END CollectSomeInStateZero;
+
+PROCEDURE <A NAME="FinishThreadPages"><procedure>FinishThreadPages</procedure></A> () =
+  (* Clean any pages referenced from the threads. *)
+  VAR
+    p      : Page := impureCopy.stack;
+    next_p : Page;
+  BEGIN
+    WHILE (p # Nil) DO
+      WITH pd = desc[p - p0] DO
+        next_p := pd.link;
+        IF pd.gray AND pd.note = Note.AmbiguousRoot THEN
+          CleanPage(p, thread_page := TRUE);
+        END;
+      END;
+      p := next_p;
+    END;
+  END FinishThreadPages;
+</PRE> Clean gray nodes 
+
+<P><PRE>PROCEDURE <A NAME="CollectSomeInStateOne"><procedure>CollectSomeInStateOne</procedure></A> () =
+  BEGIN
+    IF NOT CopySome() THEN collectorState := CollectorState.Two; END;
+    IF backgroundWaiting THEN signalBackground := TRUE; END;
+  END CollectSomeInStateOne;
+</PRE> Walk weakly-referenced nodes to determine order in which to do cleanup,
+   then cleanup gray nodes.  This should be broken down into parts, since
+   it may be a lengthy operation. 
+
+<P><PRE>PROCEDURE <A NAME="CollectSomeInStateTwo"><procedure>CollectSomeInStateTwo</procedure></A> () =
+  BEGIN
+    PreHandleWeakRefs();
+    collectorState := CollectorState.Three;
+    IF backgroundWaiting THEN signalBackground := TRUE; END;
+  END CollectSomeInStateTwo;
+</PRE> Clean gray nodes 
+
+<P><PRE>PROCEDURE <A NAME="CollectSomeInStateThree"><procedure>CollectSomeInStateThree</procedure></A> () =
+  BEGIN
+    (* recursively copy all objects reachable from promoted objects.  marks
+       &quot;marka&quot; and &quot;markb&quot; are cleared when objects move to the new
+       space. *)
+    IF NOT CopySome() THEN
+      PostHandleWeakRefs();      (* must be called with no gray objects *)
+      signalWeak := TRUE;
+      collectorState := CollectorState.Four;
+    END;
+    IF backgroundWaiting THEN signalBackground := TRUE; END;
+  END CollectSomeInStateThree;
+</PRE> Clean gray nodes 
+
+<P><PRE>PROCEDURE <A NAME="CollectSomeInStateFour"><procedure>CollectSomeInStateFour</procedure></A> () =
+  BEGIN
+    IF NOT CopySome() THEN collectorState := CollectorState.Five; END;
+    IF backgroundWaiting THEN signalBackground := TRUE; END;
+  END CollectSomeInStateFour;
+
+PROCEDURE <A NAME="CollectSomeInStateFive"><procedure>CollectSomeInStateFive</procedure></A> () =
+  BEGIN
+    (* free all oldspace pages; oldspace becomes freespace *)
+    FOR i := 0 TO p1 - p0 - 1 DO
+      IF desc[i].space = Space.Previous THEN
+        desc[i].space := Space.Free;
+        desc[i].continued := FALSE;
+        &lt;* ASSERT NOT desc[i].protected *&gt;
+        IF perfOn THEN PerfChange(p0 + i, 1); END;
+      END;
+    END;
+
+    RebuildFreelist();
+
+    (* fill the rest of the current copy pages *)
+    FillPool(pureCopy);  FillPool(impureCopy);
+
+    IF impureCopy.page # Nil THEN
+      WITH pd = desc[impureCopy.page - p0] DO
+        pd.gray := FALSE;
+        IF pd.generation = Generation.Older THEN
+          &lt;* ASSERT pd.space = Space.Current *&gt;
+          Protect(impureCopy.page, Mode.ReadOnly);
+        END;
+      END;
+      IF perfOn THEN PerfChange(impureCopy.page, 1); END;
+      impureCopy.page := Nil;
+    END;
+    &lt;* ASSERT impureCopy.stack = Nil *&gt;
+
+    pureCopy.page  := Nil;    impureCopy.page  := Nil;
+    pureCopy.stack := Nil;    impureCopy.stack := Nil;
+    pureCopy.next  := NIL;    impureCopy.next  := NIL;
+    pureCopy.limit := NIL;    impureCopy.limit := NIL;
+
+    IF perfOn THEN PerfEnd(); END;
+
+    InvokeMonitors(before := FALSE);
+
+    VAR n_survivors := FLOAT(pureCopy.n_small + pureCopy.n_big
+                           + impureCopy.n_small + impureCopy.n_big
+                           + n_promoted);
+    BEGIN
+      IF partialCollection THEN
+        partialCollectionNext := n_survivors * threshold[1] &lt; threshold[0];
+      ELSE
+        threshold[0] := n_survivors * (gcRatio + 1.0);
+        threshold[1] := gcRatio;
+        partialCollectionNext := TRUE;
+      END;
+    END;
+
+    collectorState := CollectorState.Zero;
+  END CollectSomeInStateFive;
+</PRE> CopySome attempts to make progress toward cleaning the new space.  It
+   returns FALSE iff there was no more work to do.
+<P>
+   It operates by cleaning the current copy page.  It may also clean some
+   number of pages on the stack.  When it returns, there is a new copy
+   page. 
+
+<P> NOTE: Any copying or cleaning may consume free pages which may trigger
+   a heap expansion.  Therefore, pointers to the page descriptors
+   (ie. <CODE>WITH pd = desc[p - p0]</CODE>) MUST NOT be saved across <CODE>CopySome</CODE>,
+   <CODE>CleanPage</CODE>, or <CODE>CleanBetween</CODE> calls. 
+
+<P><PRE>PROCEDURE <A NAME="CopySome"><procedure>CopySome</procedure></A> (): BOOLEAN =
+  VAR
+    originalPage  := impureCopy.page;
+    originalLimit := impureCopy.limit;
+    cleanTo       := PageToHeader(impureCopy.page);
+  BEGIN
+    LOOP
+      IF cleanTo &lt; impureCopy.next THEN
+        VAR ptr := impureCopy.next;
+        BEGIN
+          CleanBetween(cleanTo, ptr);
+          cleanTo := ptr;
+        END;
+      ELSE
+        IF impureCopy.stack = Nil THEN RETURN FALSE; END;
+        VAR p := impureCopy.stack;
+        BEGIN
+          WITH pd = desc[p - p0] DO
+            impureCopy.stack := pd.link;
+            &lt;* ASSERT NOT pd.pure *&gt;
+            IF pd.gray THEN CleanPage(p); END;
+          END;
+        END;
+      END;
+      IF impureCopy.page # originalPage THEN EXIT; END;
+    END;
+    CleanBetween(cleanTo, originalLimit);
+
+    (* originalPage is now in the stack; mark it not gray *)
+    IF originalPage # Nil THEN
+      WITH pd = desc[originalPage - p0] DO
+        pd.gray := FALSE;
+        IF pd.generation = Generation.Older THEN
+          &lt;* ASSERT pd.space = Space.Current *&gt;
+          Protect(originalPage, Mode.ReadOnly);
+        END;
+      END;
+      IF perfOn THEN PerfChange(originalPage, 1); END;
+    END;
+
+    RETURN TRUE;
+  END CopySome;
+
+PROCEDURE <A NAME="CleanPage"><procedure>CleanPage</procedure></A> (p: Page;  thread_page := FALSE) =
+  VAR hdr := PageToHeader(p);
+  BEGIN
+    IF desc[p - p0].protected THEN Protect(p, Mode.ReadWrite); END;
+    CleanBetween(hdr, hdr + BytesPerPage);
+    FOR i := 0 TO PageCount(p) - 1 DO
+      desc[p + i - p0].gray := FALSE;
+    END;
+    IF NOT thread_page AND desc[p - p0].generation = Generation.Older THEN
+      &lt;* ASSERT desc[p - p0].space = Space.Current *&gt;
+      Protect(p, Mode.ReadOnly);
+    END;
+    IF perfOn THEN PerfChange(p, PageCount(p)); END;
+  END CleanPage;
+
+PROCEDURE <A NAME="CleanBetween"><procedure>CleanBetween</procedure></A> (h, he: RefHeader) =
+  BEGIN
+    WHILE h &lt; he DO
+      &lt;* ASSERT Word.And (LOOPHOLE (h, INTEGER), 3) = 0 *&gt;
+      &lt;* ASSERT NOT h.forwarded *&gt;
+      h.marka := FALSE;
+      h.markb := FALSE;
+      RTHeapMap.WalkRef (h, mover);
+      INC(h, ADRSIZE(Header) + ReferentSize(h));
+    END;
+  END CleanBetween;
+</PRE> We maintain a list in weakTable, starting at weakLive0, of weak refs and
+   the objects they reference.  This table is not considered a root.  When
+   HandleWeakRefs is entered, any object mentioned in that list is a
+   candidate for cleanup.
+<P>
+   First, we determine which weakly-referenced objects with non-NIL
+   cleanups (<CODE>WRNNC objects</CODE>) are reachable from other WRNNC objects, by
+   walking the old space.  All such WRNNC objects are copied to new space,
+   and all the objects they reference.
+<P>
+   All the weakly-referenced objects left in the old space can then be
+   scheduled for cleanup; we move them from the list starting at weakLive0
+   to the list starting at weakDead0 in weakTable.  A separate thread runs
+   WeakCleaner, which does the calls to the procedures.
+<P>
+   Note that the refs in weakTable must be updated to point to new
+   space. 
+
+<P> PreHandleWeakRefs walks the weakly-references structures in old-space,
+   deciding on a cleanup order. 
+
+<P><PRE>PROCEDURE <A NAME="PreHandleWeakRefs"><procedure>PreHandleWeakRefs</procedure></A> () =
+  VAR s: Stacker;
+  BEGIN
+    (* get ready to allocate on a new page (take this out!) *)
+    FillPool(pureCopy);  FillPool(impureCopy);
+
+    (* allocate a stack on the side for walking the old space *)
+    s := InitStack();
+    (* iterate over the weak refs to walk the old space *)
+    VAR i := weakLive0;
+    BEGIN
+      WHILE i # -1 DO
+        (* here, all old-space WRNNC objects that have already been scanned
+           have marka set, as do all old-space objects reachable from them;
+           all old-space WRNNC objects that were reachable from other
+           already-scanned WRNNC objects have been promoted to the new
+           space. *)
+        WITH entry = weakTable[i] DO
+          IF entry.p # NIL AND NOT Moved(entry.r) THEN
+            (* we haven't seen this WRNNC object before *)
+            VAR header := HeaderOf(LOOPHOLE(entry.r, ADDRESS));
+            BEGIN
+              IF NOT header.marka THEN
+                &lt;* ASSERT NOT header.markb *&gt;
+                (* visit all old-space objects reachable from it; promote
+                   all other old-space WRNNC objects reachable from it;
+                   promote all old-space objects reachable from it that
+                   have &quot;marka&quot; set.  mark all visited nodes with
+                   &quot;markb&quot;. *)
+                WeakWalk1(s, entry.r);
+                &lt;* ASSERT NOT header.marka *&gt;
+                &lt;* ASSERT header.markb *&gt;
+                (* then change all &quot;markb&quot; to &quot;marka&quot; *)
+                WeakWalk2(s, entry.r);
+                &lt;* ASSERT header.marka *&gt;
+                &lt;* ASSERT NOT header.markb *&gt;
+              END;
+            END;
+          END;
+          i := entry.next;
+        END;
+      END;
+    END;
+  END PreHandleWeakRefs;
+</PRE> WeakWalk1 starts at a WRNNC object and visits all objects in old space
+   reachable from it, using <CODE>markb</CODE> to keep from visiting them more than
+   once.  All other WRNNC objects visited are promoted, as are all objects
+   already visited from other WRNNC objects. 
+
+<P><PRE>PROCEDURE <A NAME="WeakWalk1"><procedure>WeakWalk1</procedure></A> (s: Stacker; ref: RefReferent) =
+  VAR ref0 := ref;
+  BEGIN
+    &lt;* ASSERT s.empty() *&gt;
+    LOOP
+      IF NOT Moved(ref) THEN
+        VAR header := HeaderOf(ref);
+        BEGIN
+          IF header.marka THEN
+            &lt;* ASSERT NOT header.markb *&gt;
+            Move(NIL, ADR(ref));
+          ELSIF NOT header.markb THEN
+            IF header.weak AND ref # ref0 THEN
+              Move(NIL, ADR(ref));
+            ELSE
+              header.markb := TRUE;
+              RTHeapMap.WalkRef (header, s);
+            END;
+          END;
+        END;
+      END;
+      IF s.empty() THEN EXIT; END;
+      ref := s.pop();
+    END;
+  END WeakWalk1;
+</PRE> WeakWalk2 starts at a WRNNC objects and visits all objects in the old
+   space that are reachable from it, changing <CODE>markb</CODE> to <CODE>marka</CODE> 
+
+<P><PRE>PROCEDURE <A NAME="WeakWalk2"><procedure>WeakWalk2</procedure></A> (s: Stacker;  ref: RefReferent) =
+  BEGIN
+    &lt;* ASSERT s.empty() *&gt;
+    LOOP
+      IF NOT Moved(ref) THEN
+        VAR header := HeaderOf(ref);
+        BEGIN
+          IF header.markb THEN
+            header.markb := FALSE;
+            header.marka := TRUE;
+            RTHeapMap.WalkRef (header, s);
+          END;
+        END;
+      END;
+      IF s.empty() THEN EXIT; END;
+      ref := s.pop();
+    END;
+  END WeakWalk2;
+
+PROCEDURE <A NAME="PostHandleWeakRefs"><procedure>PostHandleWeakRefs</procedure></A> () =
+  BEGIN
+    (* move to a new page (take this out!) *)
+    FillPool(pureCopy);  FillPool(impureCopy);
+
+    (* iterate over all weak refs.  if the object hasn't been promoted,
+       schedule a cleanup *)
+    VAR
+      i        := weakLive0;
+      previous := -1;
+    BEGIN
+      WHILE i # -1 DO
+        WITH entry = weakTable[i] DO
+          IF Moved(entry.r) THEN
+            (* no cleanup this time; note new address *)
+            Move(NIL, ADR(entry.r));
+            previous := i;
+            i := entry.next;
+          ELSE
+            (* the weak ref is dead; there are no cleanups *)
+            VAR header := HeaderOf(LOOPHOLE(entry.r, ADDRESS));
+            BEGIN
+              header.weak := FALSE;
+            END;
+            (* move the entry from the weakLive0 list into the weakDead0 or
+               weakFree0 list *)
+            VAR next := entry.next;
+            BEGIN
+              IF previous = -1 THEN
+                weakLive0 := next;
+              ELSE
+                weakTable[previous].next := next;
+              END;
+              entry.t.a := -1;   (* keep ToRef from succeeding *)
+              IF entry.p # NIL THEN
+                entry.next := weakDead0;
+                weakDead0 := i;
+              ELSE
+                entry.next := weakFree0;
+                weakFree0 := i;
+              END;
+              i := next;
+            END;
+          END;
+        END;
+      END;
+    END;
+    (* for all entries on the weakDead0 list, including those just placed
+       there, note the new address *)
+    VAR i := weakDead0;
+    BEGIN
+      WHILE i # -1 DO
+        WITH entry = weakTable[i] DO
+          &lt;* ASSERT entry.t.a = -1 *&gt;
+          Move(NIL, ADR(entry.r));
+          i := entry.next;
+        END;
+      END;
+    END;
+    (* finally, check for objects with final cleanup enabled *)
+    VAR
+      i        := weakFinal0;
+      previous := -1;
+    BEGIN
+      WHILE i # -1 DO
+        WITH entry = weakTable[i] DO
+          IF Moved(entry.r) THEN
+            (* no cleanup this time; note new address *)
+            Move(NIL, ADR(entry.r));
+            previous := i;
+            i := entry.next;
+          ELSE
+            (* call the cleanup procedure *)
+            LOOPHOLE(entry.p, PROCEDURE (p: REFANY))(
+              LOOPHOLE(entry.r, REFANY));
+            (* take the entry off the weakFinal0 list and put it on the
+               weakFree0 list; on to the next entry *)
+            VAR next := entry.next;
+            BEGIN
+              IF previous = -1 THEN
+                weakFinal0 := next;
+              ELSE
+                weakTable[previous].next := next;
+              END;
+              entry.next := weakFree0;
+              weakFree0 := i;
+              i := next;
+            END;
+          END;
+        END;
+      END;
+    END;
+  END PostHandleWeakRefs;
+</PRE> The stack for walking the old space is maintained on the heap in the new
+   space. 
+
+<P><PRE>TYPE
+  Stacker = RTHeapMap.Visitor OBJECT
+    data : REF ARRAY OF RefReferent;
+    x0   : UNTRACED REF RefReferent;
+    x1   : UNTRACED REF RefReferent;
+    xA   : UNTRACED REF RefReferent;
+    xN   : CARDINAL;
+  METHODS
+    empty (): BOOLEAN     := StackEmpty;
+    pop   (): RefReferent := PopStack;
+  OVERRIDES
+    apply := PushStack;
+  END;
+</PRE> InitStack allocates an initial stack of 100 elements. 
+
+<P><PRE>PROCEDURE <A NAME="InitStack"><procedure>InitStack</procedure></A> (): Stacker =
+  VAR s := NEW (Stacker);
+  BEGIN
+    s.data := NEW(REF ARRAY OF RefReferent, 100);
+    s.xN   := NUMBER (s.data^);
+    s.x0   := ADR(s.data[0]);
+    s.x1   := s.x0 + s.xN * ADRSIZE(RefReferent);
+    s.xA   := s.x0;
+    RETURN s;
+  END InitStack;
+</PRE> PushStack pushes an object onto the stack, growing it if necessary. 
+
+<P><PRE>PROCEDURE <A NAME="PushStack"><procedure>PushStack</procedure></A> (s: Stacker;  cp: ADDRESS) =
+  VAR ref: RefReferent := LOOPHOLE(cp, UNTRACED REF RefReferent)^;
+  BEGIN
+    IF ref # NIL THEN
+      IF s.xA = s.x1 THEN ExpandStack (s); END;
+      s.xA^ := ref;
+      INC(s.xA, ADRSIZE(RefReferent));
+    END;
+  END PushStack;
+
+PROCEDURE <A NAME="ExpandStack"><procedure>ExpandStack</procedure></A> (s: Stacker) =
+  VAR
+    newStackN := 2 * s.xN;
+    newStack: REF ARRAY OF RefReferent := NEW(REF ARRAY OF RefReferent,
+                                                  newStackN);
+  BEGIN
+    SUBARRAY(newStack^, 0, s.xN) := SUBARRAY(s.data^, 0, s.xN);
+    s.x0   := ADR(newStack^[0]);
+    s.xA   := s.x0 + s.xN * ADRSIZE(RefReferent);
+    s.x1   := s.x0 + newStackN * ADRSIZE(RefReferent);
+    s.data := newStack;
+    s.xN   := newStackN;
+  END ExpandStack;
+</PRE> PopStack pops an object off the stack. 
+
+<P><PRE>PROCEDURE <A NAME="PopStack"><procedure>PopStack</procedure></A> (s: Stacker): RefReferent =
+  BEGIN
+    DEC(s.xA, ADRSIZE(RefReferent));
+    RETURN s.xA^;
+  END PopStack;
+</PRE> StackEmpty tells if the stack is empty. 
+
+<P><PRE>PROCEDURE <A NAME="StackEmpty"><procedure>StackEmpty</procedure></A> (s: Stacker): BOOLEAN =
+  BEGIN
+    RETURN s.xA = s.x0;
+  END StackEmpty;
+</PRE> Allocate space in the untraced heap 
+
+<P><PRE>PROCEDURE <A NAME="AllocUntraced"><procedure>AllocUntraced</procedure></A> (size: INTEGER): ADDRESS =
+  VAR res: ADDRESS;
+  BEGIN
+    RTOS.LockHeap();
+      res := Cstdlib.malloc(size);
+    RTOS.UnlockHeap();
+    RETURN res;
+  END AllocUntraced;
+</PRE> Allocate space in the traced heap for NEW or collector copies 
+
+<P><PRE>PROCEDURE <A NAME="AllocTraced"><procedure>AllocTraced</procedure></A> (dataSize, dataAlignment: CARDINAL;
+                       VAR pool: AllocPool): RefReferent =
+  (* Allocates space from &quot;pool&quot; in the traced heap. *)
+  (* LL &gt;= RTOS.LockHeap *)
+  VAR
+    res       : ADDRESS := pool.next + ADRSIZE(Header);
+    cur_align : INTEGER := Word.And(LOOPHOLE(res, INTEGER), MaxAlignMask);
+    alignment : INTEGER := align[cur_align, dataAlignment];
+    nextPtr   : ADDRESS := res + (alignment + dataSize);
+  BEGIN
+    IF nextPtr &gt; pool.limit THEN
+      (* not enough space left in the pool, take the long route *)
+      res := NIL;  nextPtr := NIL;  (* in case of GC during LongAlloc... *)
+      RETURN LongAlloc (dataSize, dataAlignment, pool);
+    END;
+
+    (* Align the referent *)
+    IF alignment # 0 THEN
+      InsertFiller(pool.next, alignment);
+      pool.next := pool.next + alignment;
+      res := pool.next + ADRSIZE(Header);
+    END;
+
+    pool.next := nextPtr;
+    RETURN res;
+  END AllocTraced;
+
+PROCEDURE <A NAME="LongAlloc"><procedure>LongAlloc</procedure></A> (dataSize, dataAlignment: CARDINAL;
+                     VAR pool: AllocPool): RefReferent =
+  (* LL &gt;= RTOS.HeapLock *)
+  VAR
+    n_bytes  := RTMisc.Upper(ADRSIZE(Header), dataAlignment) + dataSize;
+    n_pages  := (n_bytes + BytesPerPage - 1) DIV BytesPerPage;
+    res      : RefReferent;
+    filePage : Page;
+    newPage  : Page;
+    newPtr   : ADDRESS;
+    newLimit : ADDRESS;
+  BEGIN
+    (* make sure the collector gets a chance to keep up with NEW... *)
+    IF pool.desc.note = Note.Allocated THEN CollectEnough (); END;
+
+    (* get a block of &quot;n_pages&quot; contiguous, free pages; just what we need! *)
+    newPage  := FindFreePages (n_pages, pool.notAfter);
+    newPtr   := LOOPHOLE (newPage * AdrPerPage, ADDRESS);
+    newLimit := LOOPHOLE (newPtr  + AdrPerPage, ADDRESS);
+    IF (newPage = Nil) THEN RETURN NIL; END;
+
+    (* maybe we have to insert a filler to align this thing *)
+    res := RTMisc.Align(newPtr + ADRSIZE(Header), dataAlignment);
+    InsertFiller(newPtr, res - ADRSIZE(Header) - newPtr);
+
+    (* allocate the object from the new page *)
+    newPtr := LOOPHOLE(res + dataSize, RefHeader);
+
+    (* mark the new pages *)
+    desc[newPage - p0] := pool.desc;
+    IF n_pages = 1 THEN
+      INC (pool.n_small);
+    ELSE
+      INC (pool.n_big, n_pages);
+      pool.desc.continued := TRUE;
+      FOR i := 1 TO n_pages - 1 DO
+        desc[newPage + i - p0] := pool.desc;
+      END;
+      pool.desc.continued := FALSE;
+    END;
+    IF perfOn THEN PerfChange (newPage, n_pages); END;
+
+    (* decide whether to use the new page or the current pool page
+       for further allocations *)
+    IF n_pages # 1 THEN
+      (* file this page *)
+      filePage := newPage;
+    ELSIF newLimit - newPtr &gt; pool.limit - pool.next THEN
+      (* more space remains on the new page *)
+      filePage := pool.page;
+      IF pool.page # Nil THEN FillPool(pool); END;
+      pool.next  := newPtr;
+      pool.limit := newLimit;
+      pool.page  := newPage;
+    ELSE (* more space remains on the existing pool page *)
+      filePage := newPage;
+      InsertFiller(newPtr, newLimit - newPtr);
+    END;
+
+    IF filePage # Nil THEN
+      desc[filePage - p0].link := pool.stack;
+      pool.stack := filePage;
+    END;
+
+    RETURN res;
+  END LongAlloc;
+</PRE>--------------------------------------------------
+
+<P><PRE>VAR
+  backgroundWaiting   := FALSE;
+</PRE> The background thread may be present or not.  If it is present, it
+   speeds collection asynchronously.  Because it makes progress slowly, it
+   should impose only a small overhead when the mutator is running, but
+   quickly complete a collection if the collector pauses. 
+
+<P><PRE>PROCEDURE <A NAME="BackgroundThread"><procedure>BackgroundThread</procedure></A> (&lt;* UNUSED *&gt; closure: Thread.Closure): REFANY =
+  BEGIN
+    LOOP
+      backgroundWaiting := TRUE; (* no locks, unfortunately *)
+      WHILE collectorState = CollectorState.Zero DO RTOS.WaitHeap(); END;
+      backgroundWaiting := FALSE;
+      WHILE collectorState # CollectorState.Zero DO
+        RTOS.LockHeap();
+        BEGIN
+          IF collectorState # CollectorState.Zero THEN
+            CollectorOn();
+            CollectSome();
+            CollectorOff();
+          END;
+        END;
+        RTOS.UnlockHeap();
+        Thread.Pause(1.0d0);       (* one second *)
+      END;
+    END;
+  END BackgroundThread;
+</PRE> --------------------------------------------------------- collector 
+
+<P><PRE>PROCEDURE <A NAME="StartGC"><procedure>StartGC</procedure></A> () =
+  BEGIN
+    StartCollection();
+  END StartGC;
+
+PROCEDURE <A NAME="FinishGC"><procedure>FinishGC</procedure></A> () =
+  BEGIN
+    FinishCollection();
+  END FinishGC;
+
+PROCEDURE <A NAME="Crash"><procedure>Crash</procedure></A> (): BOOLEAN =
+  VAR result: BOOLEAN;
+  BEGIN
+    RTOS.LockHeap();        (* left incremented *)
+
+    IF collectorState = CollectorState.Zero THEN
+      (* no collection in progress *)
+      collectorOn := TRUE;       (* left on *)
+      result := TRUE;
+    ELSIF NOT collectorOn THEN
+      CollectorOn();             (* left on *)
+      (* finish collection *)
+      WHILE collectorState # CollectorState.Zero DO CollectSome(); END;
+      result := TRUE;
+    ELSE
+      collectorOn := TRUE;       (* left on *)
+      result := FALSE;
+    END;
+
+    (* unprotect all pages *)
+    FOR p := p0 TO p1 - 1 DO
+      IF desc[p - p0].protected THEN Protect(p, Mode.ReadWrite); END;
+    END;
+
+    RETURN result;
+  END Crash;
+</PRE> --------------------------------------------------------- debugging 
+
+<P><PRE>VAR
+  protectedCheck, refCheck: RTHeapMap.Visitor;
+
+PROCEDURE <A NAME="InstallSanityCheck"><procedure>InstallSanityCheck</procedure></A> () =
+  BEGIN
+    RegisterMonitor(
+      NEW(MonitorClosure, before := SanityCheck, after := SanityCheck));
+    IF (refCheck = NIL) THEN
+      protectedCheck := NEW (RTHeapMap.Visitor,
+                             apply := ProtectedOlderRefSanityCheck);
+      refCheck := NEW (RTHeapMap.Visitor, apply := RefSanityCheck);
+    END;
+  END InstallSanityCheck;
+</PRE> SanityCheck checks the heap for correctness when no collection is in
+   progress. 
+
+<P><PRE>PROCEDURE <A NAME="SanityCheck"><procedure>SanityCheck</procedure></A> (&lt;*UNUSED*&gt; self: MonitorClosure) =
+  VAR p := p0;
+  BEGIN
+    WHILE p &lt; p1 DO
+      CASE desc[p - p0].space OF
+      | Space.Unallocated =&gt; INC(p);
+      | Space.Previous =&gt;        &lt;* ASSERT FALSE *&gt;
+      | Space.Current =&gt;
+          &lt;* ASSERT NOT desc[p - p0].gray *&gt;
+          &lt;* ASSERT NOT desc[p - p0].continued *&gt;
+          IF desc[p - p0].protected THEN
+            &lt;* ASSERT desc[p - p0].generation = Generation.Older *&gt;
+          END;
+          (* visit the objects on the page *)
+          VAR
+            h  := PageToHeader(p);
+            he := PageToHeader(p + 1);
+          BEGIN
+            IF p = newPool.page THEN he := newPool.next; END;
+            WHILE h &lt; he DO
+              (* check the references in the object *)
+              IF desc[p - p0].protected THEN
+                RTHeapMap.WalkRef (h, protectedCheck);
+              ELSE
+                RTHeapMap.WalkRef (h, refCheck);
+              END;
+              INC(h, ADRSIZE(Header) + ReferentSize(h));
+            END;
+            IF h &gt; he THEN
+              &lt;* ASSERT HeaderToPage(h - 1) = p + PageCount(p) - 1 *&gt;
+            ELSE
+              &lt;* ASSERT PageCount(p) = 1 *&gt;
+            END;
+          END;
+          VAR
+            n := PageCount(p);
+            d := desc[p - p0];
+          BEGIN
+            d.continued := TRUE;
+            d.link := Nil;
+            LOOP
+              INC(p);
+              DEC(n);
+              IF n = 0 THEN EXIT; END;
+              VAR dd := desc[p - p0];
+              BEGIN
+                dd.link := Nil;
+                &lt;* ASSERT dd = d *&gt;
+              END;
+            END;
+          END;
+      | Space.Free =&gt;
+          &lt;* ASSERT NOT desc[p - p0].continued *&gt;
+          INC(p);
+      END;
+    END;
+    &lt;* ASSERT p = p1 *&gt;
+  END SanityCheck;
+
+PROCEDURE <A NAME="RefSanityCheck"><procedure>RefSanityCheck</procedure></A> (&lt;*UNUSED*&gt;v: RTHeapMap.Visitor;  cp  : ADDRESS) =
+  VAR ref := LOOPHOLE(cp, REF RefReferent)^;
+  BEGIN
+    IF ref # NIL THEN
+      VAR
+        p  := ReferentToPage(ref);
+        h  := HeaderOf(ref);
+        tc := h.typecode;
+      BEGIN
+        IF p0 &lt;= p AND p &lt; p1 THEN
+          &lt;* ASSERT desc[p - p0].space = Space.Current *&gt;
+          &lt;* ASSERT NOT desc[p - p0].continued *&gt;
+          &lt;* ASSERT (0 &lt; tc AND tc &lt;= RTType.MaxTypecode())
+                      OR tc = Fill_1_type
+                      OR tc = Fill_N_type *&gt;
+        ELSE
+          (* the compiler generates Text.T that are not in the traced
+             heap *)
+          &lt;* ASSERT tc = 1 *&gt;
+        END;
+      END;
+    END;
+  END RefSanityCheck;
+
+PROCEDURE <A NAME="ProtectedOlderRefSanityCheck"><procedure>ProtectedOlderRefSanityCheck</procedure></A> (&lt;*UNUSED*&gt; v  : RTHeapMap.Visitor;
+                                                   cp : ADDRESS) =
+  VAR ref := LOOPHOLE(cp, REF RefReferent)^;
+  BEGIN
+    IF ref # NIL THEN
+      VAR
+        p  := ReferentToPage(ref);
+        h  := HeaderOf(ref);
+        tc := h.typecode;
+      BEGIN
+        IF p0 &lt;= p AND p &lt; p1 THEN
+          &lt;* ASSERT desc[p - p0].space = Space.Current *&gt;
+          &lt;* ASSERT desc[p - p0].generation = Generation.Older *&gt;
+          &lt;* ASSERT NOT desc[p - p0].continued *&gt;
+          &lt;* ASSERT (0 &lt; tc AND tc &lt; RTType.MaxTypecode())
+                      OR tc = Fill_1_type
+                      OR tc = Fill_N_type *&gt;
+        ELSE
+          (* the compiler generates Text.T that are not in the traced
+             heap *)
+          &lt;* ASSERT tc = 1 *&gt;
+        END;
+      END;
+    END;
+  END ProtectedOlderRefSanityCheck;
+</PRE> ----------------------------------------------------------------------- 
+
+<P><PRE>PROCEDURE <A NAME="VisitAllRefs"><procedure>VisitAllRefs</procedure></A> (v: RefVisitor) =
+  VAR tc: Typecode;
+  BEGIN
+    TRY
+      Disable();
+      FOR p := p0 TO p1 - 1 DO
+        IF desc[p - p0].space = Space.Current
+             AND NOT desc[p - p0].continued THEN
+          VAR
+            h             := PageToHeader(p);
+            he            := PageToHeader(p + 1);
+            size: INTEGER;
+          BEGIN
+            WHILE h &lt; he AND (p # newPool.page OR h &lt; newPool.next) DO
+              size := ReferentSize(h);
+              tc := h.typecode;
+              IF tc # Fill_1_type AND tc # Fill_N_type THEN
+                IF NOT v.visit(
+                         tc, LOOPHOLE(h + ADRSIZE(Header), REFANY), size) THEN
+                  RETURN;
+                END;
+              END;
+              INC(h, ADRSIZE(Header) + size);
+            END;
+          END;
+        END;
+      END;
+    FINALLY
+      Enable();
+    END;
+  END VisitAllRefs;
+
+TYPE
+  CountClosure = MonitorClosure OBJECT
+                   tcs    : REF ARRAY OF Typecode;
+                   counts : REF ARRAY OF CARDINAL;
+                   visitor: RefVisitor;
+                 OVERRIDES
+                   after := CountRefsForTypecodes;
+                 END;
+
+TYPE
+  CountAllClosure = MonitorClosure OBJECT
+                      counts : REF ARRAY OF CARDINAL;
+                      visitor: RefVisitor;
+                    OVERRIDES
+                      after := CountRefsForAllTypecodes;
+                    END;
+
+TYPE
+  CountVisitor =
+    RefVisitor OBJECT cl: CountClosure OVERRIDES visit := One; END;
+
+  CountAllVisitor =
+    RefVisitor OBJECT cl: CountAllClosure OVERRIDES visit := All; END;
+
+PROCEDURE <A NAME="One"><procedure>One</procedure></A> (           self: CountVisitor;
+                          tc  : Typecode;
+               &lt;*UNUSED*&gt; r   : REFANY;
+               &lt;*UNUSED*&gt; size: CARDINAL      ): BOOLEAN =
+  BEGIN
+    FOR i := FIRST(self.cl.tcs^) TO LAST(self.cl.tcs^) DO
+      IF self.cl.tcs[i] = tc THEN INC(self.cl.counts[i]); RETURN TRUE; END;
+    END;
+    RETURN TRUE;
+  END One;
+
+PROCEDURE <A NAME="All"><procedure>All</procedure></A> (           self: CountAllVisitor;
+                          tc  : Typecode;
+               &lt;*UNUSED*&gt; r   : REFANY;
+               &lt;*UNUSED*&gt; size: CARDINAL         ): BOOLEAN =
+  BEGIN
+    INC(self.cl.counts[tc]);
+    RETURN TRUE;
+  END All;
+
+PROCEDURE <A NAME="CountRefsForTypecodes"><procedure>CountRefsForTypecodes</procedure></A> (cl: CountClosure) =
+  BEGIN
+    FOR i := FIRST(cl.counts^) TO LAST(cl.counts^) DO
+      cl.counts[i] := 0;
+    END;
+    VisitAllRefs(cl.visitor);
+    FOR i := FIRST(cl.tcs^) TO LAST(cl.tcs^) DO
+      RTIO.PutText(&quot;count[&quot;);
+      RTIO.PutInt(cl.tcs[i]);
+      RTIO.PutText(&quot;] = &quot;);
+      RTIO.PutInt(cl.counts[i]);
+      IF i # LAST(cl.tcs^) THEN RTIO.PutText(&quot;,  &quot;); END;
+    END;
+    RTIO.PutText(&quot;\n&quot;);
+    RTIO.Flush();
+  END CountRefsForTypecodes;
+
+PROCEDURE <A NAME="CountRefsForAllTypecodes"><procedure>CountRefsForAllTypecodes</procedure></A> (cl: CountAllClosure) =
+  BEGIN
+    FOR i := FIRST(cl.counts^) TO LAST(cl.counts^) DO
+      cl.counts[i] := 0;
+    END;
+    VisitAllRefs(cl.visitor);
+    FOR i := FIRST(cl.counts^) TO LAST(cl.counts^) DO
+      IF cl.counts[i] &gt; 1 THEN
+        RTIO.PutInt(i);
+        RTIO.PutText(&quot;: &quot;);
+        RTIO.PutInt(cl.counts[i]);
+        IF i # LAST(cl.counts^) THEN RTIO.PutText(&quot;, &quot;); END;
+      END;
+    END;
+    RTIO.PutText(&quot;\n&quot;);
+    RTIO.Flush();
+  END CountRefsForAllTypecodes;
+</PRE> ---------------------------------------------------- showheap hooks 
+
+<P><PRE>VAR
+  perfW  : RTPerfTool.Handle;
+  perfOn : BOOLEAN := FALSE;
+
+CONST
+  EventSize = (BITSIZE(RTHeapEvent.T) + BITSIZE(CHAR) - 1) DIV BITSIZE(CHAR);
+
+PROCEDURE <A NAME="PerfStart"><procedure>PerfStart</procedure></A> () =
+  VAR i, j: Page;
+  BEGIN
+    IF RTPerfTool.Start(&quot;showheap&quot;, perfW) THEN
+      perfOn := TRUE;
+      RTProcess.RegisterExitor(PerfStop);
+      PerfGrow(p0, p1 - p0);
+
+      i := p0;
+      WHILE i # Nil AND i &lt; p1 DO
+        j := i + 1;
+        WHILE j &lt; p1 AND desc[j - p0].continued DO INC(j); END;
+        IF desc[i - p0].space # Space.Free THEN PerfChange(i, j - i); END;
+        i := j;
+      END;
+    END;
+  END PerfStart;
+
+PROCEDURE <A NAME="PerfFlip"><procedure>PerfFlip</procedure></A> () =
+  VAR e := RTHeapEvent.T{kind := RTHeapEvent.Kind.Flip};
+  BEGIN
+    perfOn := RTPerfTool.Send (perfW, ADR(e), EventSize);
+  END PerfFlip;
+
+PROCEDURE <A NAME="PerfPromotedRoots"><procedure>PerfPromotedRoots</procedure></A> () =
+  VAR e := RTHeapEvent.T{kind := RTHeapEvent.Kind.Roots};
+  BEGIN
+    perfOn := RTPerfTool.Send (perfW, ADR(e), EventSize);
+  END PerfPromotedRoots;
+
+PROCEDURE <A NAME="PerfStop"><procedure>PerfStop</procedure></A> () =
+  VAR e := RTHeapEvent.T{kind := RTHeapEvent.Kind.Bye};
+  BEGIN
+    (* UNSAFE, but needed to prevent deadlock if we're crashing! *)
+    EVAL RTPerfTool.Send (perfW, ADR(e), EventSize);
+    RTPerfTool.Close (perfW);
+  END PerfStop;
+
+PROCEDURE <A NAME="PerfAllow"><procedure>PerfAllow</procedure></A> (&lt;*UNUSED*&gt; n: INTEGER := 0) =
+  VAR
+    e := RTHeapEvent.T{kind := RTHeapEvent.Kind.Off, nb :=
+                       disableCount + disableMotionCount};
+  BEGIN
+    perfOn := RTPerfTool.Send (perfW, ADR(e), EventSize);
+  END PerfAllow;
+
+PROCEDURE <A NAME="PerfBegin"><procedure>PerfBegin</procedure></A> () =
+  VAR e := RTHeapEvent.T{kind := RTHeapEvent.Kind.Begin};
+  BEGIN
+    perfOn := RTPerfTool.Send (perfW, ADR(e), EventSize);
+  END PerfBegin;
+
+PROCEDURE <A NAME="PerfEnd"><procedure>PerfEnd</procedure></A> () =
+  VAR e := RTHeapEvent.T{kind := RTHeapEvent.Kind.End};
+  BEGIN
+    perfOn := RTPerfTool.Send (perfW, ADR(e), EventSize);
+  END PerfEnd;
+
+PROCEDURE <A NAME="PerfChange"><procedure>PerfChange</procedure></A> (first: Page; nb: CARDINAL) =
+  VAR
+    e := RTHeapEvent.T{kind := RTHeapEvent.Kind.Change, first := first,
+                       nb := nb, desc := desc[first - p0]};
+  BEGIN
+    perfOn := RTPerfTool.Send (perfW, ADR(e), EventSize);
+  END PerfChange;
+
+PROCEDURE <A NAME="PerfGrow"><procedure>PerfGrow</procedure></A> (firstNew: Page; nb: CARDINAL) =
+  VAR
+    e := RTHeapEvent.T{
+           kind := RTHeapEvent.Kind.Grow, first := firstNew, nb := nb};
+  BEGIN
+    perfOn := RTPerfTool.Send (perfW, ADR(e), EventSize);
+  END PerfGrow;
+</PRE> ----------------------------------------------------------------------- 
+
+<P> RTWeakRef 
+
+<P> weakTable contains four singly-linked lists: for entries in use (rooted
+   at index weakLive0), entries with final cleanup (at weakFinal0), dead
+   entries awaiting cleanup (at weakDead0), and free entries (at
+   weakFree0).
+<P>
+   Entries in use contain the weak ref, the REF, and the procedure.  The
+   <CODE>a</CODE> field of the weak ref is the index in the table; this speeds lookup.
+   The <CODE>b</CODE> field is a unique value, taken from a 32-bit counter.
+<P>
+   Dead entries contain the same fields, but the <CODE>a</CODE> field of the weak ref
+   is set to -1 to keep lookups from succeeding.  When the cleanup
+   procedure is to be called, the original weak ref can still be
+   reconstructed, since the <CODE>a</CODE> field was the index. 
+
+<P><PRE>VAR
+  weakTable: UNTRACED REF ARRAY OF WeakEntry; (* allocated in &quot;Init&quot; *)
+             (* := NEW(UNTRACED REF ARRAY OF WeakEntry, 0); *)
+  weakLive0  := -1;              (* the root of the in-use list *)
+  weakFinal0 := -1;              (* the root of the thread-cleanup list *)
+  weakDead0  := -1;              (* the root of the dead list *)
+  weakFree0  := -1;              (* the root of the free list *)
+
+TYPE
+  Int32 = BITS 32 FOR [-16_7fffffff-1 .. 16_7fffffff];
+  WeakRefAB = RECORD
+                a: Int32;
+                b: Int32;
+              END;
+  WeakEntry = RECORD
+                t: WeakRefAB;    (* the weak ref, if well-formed *)
+                r: RefReferent;  (* the traced reference *)
+                p: ADDRESS;      (* a WeakRefCleanUpProc or a PROCEDURE(r:
+                                    REFANY) *)
+                next: INTEGER;   (* the next entry on the list *)
+              END;
+</PRE> This is WeakRef.FromRef, which returns a new weak ref for an object. 
+
+<P><PRE>VAR startedWeakCleaner := FALSE;
+
+PROCEDURE <A NAME="WeakRefFromRef"><procedure>WeakRefFromRef</procedure></A> (r: REFANY; p: WeakRefCleanUpProc := NIL): WeakRef =
+  VAR
+    start           := FALSE;
+    result: WeakRef;
+  BEGIN
+    &lt;* ASSERT r # NIL *&gt;
+    RTOS.LockHeap();
+    BEGIN
+      (* create a WeakCleaner thread the first time through *)
+      IF p # NIL AND NOT startedWeakCleaner THEN
+        start := TRUE;
+        startedWeakCleaner := TRUE;
+      END;
+      (* if necessary, expand weakTable *)
+      IF weakFree0 = -1 THEN ExpandWeakTable(); END;
+      IF p # NIL THEN
+        (* mark the object as having a weak ref with non-nil cleanup *)
+        VAR header := HeaderOf(LOOPHOLE(r, ADDRESS));
+        BEGIN
+          &lt;* ASSERT NOT header^.weak *&gt;
+          header^.weak := TRUE;
+        END;
+      END;
+      (* allocate a new entry *)
+      VAR i := weakFree0;
+      BEGIN
+        weakFree0 := weakTable[i].next;
+        (* generate a new weak ref *)
+        VAR t := WeakRefAB{a := i, b := Word.Plus(weakTable[i].t.b, 1)};
+        BEGIN
+          &lt;* ASSERT t.b # 0 *&gt;
+          (* set up the entry *)
+          weakTable[i] :=
+            WeakEntry{t := t, r := LOOPHOLE(r, RefReferent), p :=
+                      LOOPHOLE(p, ADDRESS), next := weakLive0};
+          weakLive0 := i;
+          result := LOOPHOLE(t, WeakRef);
+        END;
+      END;
+    END;
+    RTOS.UnlockHeap();
+    IF start THEN
+      EVAL Thread.Fork(NEW(Thread.Closure, apply := WeakCleaner));
+    END;
+    RETURN result;
+  END WeakRefFromRef;
+
+PROCEDURE <A NAME="ExpandWeakTable"><procedure>ExpandWeakTable</procedure></A> () =
+  VAR
+    newTable := NEW(UNTRACED REF ARRAY OF WeakEntry,
+                    2 * NUMBER(weakTable^) + 1);
+  BEGIN
+    SUBARRAY(newTable^, 0, NUMBER(weakTable^)) := weakTable^;
+    FOR i := NUMBER(weakTable^) TO NUMBER(newTable^) - 1 DO
+      WITH entry = newTable[i] DO
+        entry.t.b := 0;
+        entry.next := weakFree0;
+        weakFree0 := i;
+      END;
+    END;
+    weakTable := newTable;
+  END ExpandWeakTable;
+</PRE> This is WeakRef.ToRef, which inverts FromRef 
+
+<P><PRE>PROCEDURE <A NAME="WeakRefToRef"><procedure>WeakRefToRef</procedure></A> (READONLY t: WeakRef): REFANY =
+  VAR ab: WeakRefAB;  r: REFANY := NIL;
+  BEGIN
+    LOOPHOLE (ab, WeakRef) := t;
+    RTOS.LockHeap();
+    (* if the weak ref is not dead, we know the index *)
+    WITH entry = weakTable[ab.a] DO
+      (* check the weak ref there *)
+      IF entry.t = ab THEN
+        &lt;* ASSERT entry.r # NIL *&gt;
+        IF collectorState # CollectorState.Zero THEN
+          VAR p := ReferentToPage(entry.r);
+          BEGIN
+            &lt;* ASSERT p # Nil *&gt;
+            IF desc[p - p0].space = Space.Previous THEN
+              CollectorOn();
+              Move(NIL, ADR(entry.r));
+              CollectorOff();
+            END;
+          END;
+        END;
+        r := LOOPHOLE(entry.r, REFANY);
+      END;
+    END;
+    RTOS.UnlockHeap();
+    RETURN r;
+  END WeakRefToRef;
+</PRE> This is RTHeapRef.RegisterFinalCleanup, which registers final cleanup
+   for a heap object. 
+
+<P><PRE>PROCEDURE <A NAME="RegisterFinalCleanup"><procedure>RegisterFinalCleanup</procedure></A> (r: REFANY; p: PROCEDURE (r: REFANY)) =
+  BEGIN
+    &lt;* ASSERT r # NIL *&gt;
+    &lt;* ASSERT p # NIL *&gt;
+    RTOS.LockHeap();
+    BEGIN
+      (* if necessary, expand weakTable *)
+      IF weakFree0 = -1 THEN ExpandWeakTable(); END;
+      (* allocate a new entry *)
+      VAR i := weakFree0;
+      BEGIN
+        weakFree0 := weakTable[i].next;
+        (* set up the entry, without a weak ref *)
+        weakTable[i].r := LOOPHOLE(r, RefReferent);
+        weakTable[i].p := LOOPHOLE(p, ADDRESS);
+        weakTable[i].next := weakFinal0;
+        weakFinal0 := i;
+      END;
+    END;
+    RTOS.UnlockHeap();
+  END RegisterFinalCleanup;
+</PRE> WeakCleaner waits for entries to be placed on the dead list, then cleans
+   them up and puts them on the free list. 
+
+<P><PRE>PROCEDURE <A NAME="WeakCleaner"><procedure>WeakCleaner</procedure></A> (&lt;*UNUSED*&gt; closure: Thread.Closure): REFANY =
+  VAR
+    i   : INTEGER;
+    copy: WeakEntry;
+  BEGIN
+    LOOP
+      (* get an entry to handle.  copy its contents, then put it on the
+         free list. *)
+      WHILE weakDead0 = -1 DO RTOS.WaitHeap(); END;
+      RTOS.LockHeap();
+      IF weakDead0 = -1 THEN
+        RTOS.UnlockHeap();
+      ELSE
+        i := weakDead0;
+        WITH entry = weakTable[i] DO
+          &lt;* ASSERT entry.t.a = -1 *&gt;
+          CollectorOn();
+          Move(NIL, ADR(entry.r));
+          CollectorOff();
+          copy := entry;
+          weakDead0 := entry.next;
+          entry.next := weakFree0;
+          weakFree0 := i;
+        END;
+        RTOS.UnlockHeap();
+        (* call the registered procedure.  note that collections are
+           allowed; the copy is kept on the stack so the object won't be
+           freed during the call. *)
+        IF copy.p # NIL THEN
+          LOOPHOLE(copy.p, WeakRefCleanUpProc)(
+            LOOPHOLE(WeakRefAB{a := i, b := copy.t.b}, WeakRef),
+            LOOPHOLE(copy.r, REFANY));
+        END;
+        copy.r := NIL;           (* to help conservative collector *)
+      END;
+    END;
+  END WeakCleaner;
+</PRE> ----------------------------------------------------------------------- 
+
+<P><PRE>PROCEDURE <A NAME="FirstPage"><procedure>FirstPage</procedure></A> (p: Page): Page =
+  VAR s: Space;
+  BEGIN
+    IF (desc[p-p0].continued) THEN
+      s := desc[p - p0].space;
+      WHILE desc[p - p0].continued DO DEC(p); END;
+      &lt;*ASSERT desc[p - p0].space = s *&gt;
+    END;
+    RETURN p;
+  END FirstPage;
+
+PROCEDURE <A NAME="PageCount"><procedure>PageCount</procedure></A> (p: Page): CARDINAL =
+  VAR n := 0;
+  BEGIN
+    &lt;* ASSERT NOT desc[p - p0].continued *&gt;
+    REPEAT INC(p); INC(n); UNTIL p &gt;= p1 OR NOT desc[p - p0].continued;
+    RETURN n;
+  END PageCount;
+</PRE> ----------------------------------------------------------------------- 
+
+<P><PRE>TYPE Mode = { ReadWrite, ReadOnly, NoAccess };
+
+PROCEDURE <A NAME="Protect"><procedure>Protect</procedure></A> (p: Page;  m: Mode) =
+  CONST
+    Readable = ARRAY Mode OF BOOLEAN { TRUE, TRUE, FALSE };
+    Writable = ARRAY Mode OF BOOLEAN { TRUE, FALSE, FALSE };
+  VAR
+    n_pages   := PageCount(p);
+    protected := (m # Mode.ReadWrite);
+  BEGIN
+    &lt;* ASSERT collectorOn OR (m = Mode.ReadWrite) *&gt;
+    &lt;* ASSERT RTHeapDep.VM *&gt;
+    RTHeapDep.Protect(p, n_pages, Readable[m], Writable[m]);
+    FOR i := 0 TO n_pages - 1 DO desc[p + i - p0].protected := protected; END;
+    IF perfOn THEN PerfChange(p, n_pages); END;
+  END Protect;
+
+PROCEDURE <A NAME="Fault"><procedure>Fault</procedure></A> (addr: ADDRESS): BOOLEAN =
+  VAR p : INTEGER := Word.RightShift (LOOPHOLE(addr, INTEGER), LogBytesPerPage);
+  BEGIN
+    &lt;* ASSERT RTHeapDep.VM *&gt;
+    RTOS.LockHeap();
+
+    (* remember the time spent handling faults *)
+    cycleCost := cycleCost + RTHeapDep.VMFaultTime();
+
+    IF (p &lt; p0) OR (p1 &lt;= p) THEN
+      RTOS.UnlockHeap();
+      RETURN FALSE; (* not in heap *)
+    END;
+
+    WITH pd = desc[p - p0] DO
+
+      IF pd.space = Space.Unallocated THEN
+        RTOS.UnlockHeap();
+        RETURN FALSE;              (* not in heap *)
+      END;
+
+      IF NOT pd.protected THEN
+        RTOS.UnlockHeap();
+        RETURN TRUE;               (* was protected, but not any more *)
+      END;
+
+      &lt;* ASSERT NOT pd.pure *&gt;
+
+      IF pd.gray THEN
+        CollectorOn();
+        IF p # impureCopy.page THEN
+          CleanPage(FirstPage(p));
+        ELSIF CopySome() THEN
+          (* we cleaned the impureCopy page, but still have more to clean *)
+          &lt;* ASSERT NOT desc[p - p0].gray *&gt;
+        ELSIF desc[p - p0].gray THEN
+          &lt;* ASSERT p = impureCopy.page AND impureCopy.stack = Nil *&gt;
+          (* We just finished the collection!! *)
+          FillPool(impureCopy);
+          impureCopy.page  := Nil;
+          impureCopy.stack := Nil;
+          FOR i := 0 TO PageCount(p) - 1 DO
+            desc[p + i - p0].gray := FALSE;
+          END;
+          IF desc[p - p0].generation = Generation.Older THEN
+            &lt;* ASSERT desc[p - p0].space = Space.Current *&gt;
+            Protect(p, Mode.ReadOnly);
+          END;
+          IF perfOn THEN PerfChange(p, 1); END;
+        END;
+        CollectorOff();
+      ELSIF NOT pd.continued THEN
+        &lt;* ASSERT pd.generation = Generation.Older *&gt;
+        Protect(p, Mode.ReadWrite);
+      ELSE
+        p := FirstPage(p);
+        &lt;* ASSERT desc[p - p0].generation = Generation.Older *&gt;
+        Protect(p, Mode.ReadWrite);
+      END;
+
+    END; (* WITH *)
+
+    RTOS.UnlockHeap();
+    RETURN TRUE;        (* was protected, protection cleared *)
+  END Fault;
+</PRE> ----------------------------------------------------------------------- 
+
+<P> The inner-loop collector action is to pick a gray page and completely
+   clean it (i.e., make its referents at least gray, so that the page
+   becomes black).  The current gray page, <CODE>impureCopy.page</CODE> is
+   distinguished; it's the page that newly gray objects are copied to.
+<P>
+   To improve locality of reference in the new space, we keep the set of
+   gray pages as a stack.  This helps approximate a depth-first copy to
+   newspace.  The current page is not a member of the stack, but will
+   become one when it becomes full.  The current page is always the page
+   that contains <CODE>newPool.next</CODE>.
+<P>
+   To reduce page faults, we separate the <CODE>pure</CODE> copy pages (those whose
+   objects contain no REFs) from the <CODE>impure</CODE> ones (those with REFs).  Only
+   impure pages become gray, since pure pages can have no REFs into the old
+   space (since they have no REFs at all). 
+
+<P> ----------------------------------------------------------------------- 
+
+<P>***** Page-level allocator *****
+
+<P> The freelist is sorted by blocksize, linked through the first page in
+   each block, using the <CODE>link</CODE> field in the <CODE>desc</CODE> array.  Page allocation
+   is best-fit.  For elements of the same blocksize, they are sorted by
+   page number, to make the showheap display more easily readable, and to
+   slightly reduce fragmentation. 
+
+<P> FindFreePages allocates a run of <CODE>n</CODE> free pages, which we would prefer
+   not be near pages in the current space with notes in notAfter.  The
+   allocator can thus be used to separate pages with different notes, since
+   they will have different lifetimes.  This is a concern only when
+   incremental and generational collection are combined. 
+
+<P><PRE>PROCEDURE <A NAME="FindFreePages"><procedure>FindFreePages</procedure></A> (n: INTEGER; notAfter: Notes): Page =
+  VAR p: Page;
+  BEGIN
+    IF collectorState = CollectorState.Zero THEN
+      p := AllocateFreePagesFromBlock(n, Notes{}, TRUE);
+      IF p # Nil THEN RETURN p; END;
+    ELSE
+      p := AllocateFreePagesFromBlock(n, notAfter, TRUE);
+      IF p # Nil THEN RETURN p; END;
+      p := AllocateFreePagesFromBlock(n, Notes{}, FALSE);
+      IF p # Nil THEN RETURN p; END;
+    END;
+    IF NOT GrowHeap(n) THEN RETURN Nil; END;
+    p := AllocateFreePagesFromBlock(n, Notes{}, TRUE);
+    RETURN p;
+  END FindFreePages;
+
+VAR free: Page;                  (* the head of the freelist *)
+</PRE> AllocateFreePagesFromBlock finds the first block large enough to satisfy
+   the request.  <CODE>notAfter</CODE> is the set of page notes in the current space
+   that the block allocated from must not immediately follow; this is used
+   to separate Note.Allocated pages from Note.Copied pages.  If <CODE>front</CODE> is
+   TRUE, the pages will be allocated from the beginning of the block, else
+   from the end; this is also used to separate Note.Allocated Pages from
+   Note.Copied pages.  If the block is bigger than the request, the
+   remainder is left at the right point in the freelist.  If no block
+   exists, Nil is returned. 
+
+<P><PRE>PROCEDURE <A NAME="AllocateFreePagesFromBlock"><procedure>AllocateFreePagesFromBlock</procedure></A> (n       : INTEGER;
+                                      notAfter: Notes;
+                                      front   : BOOLEAN      ): Page =
+  VAR
+    p                   := free;
+    prevP               := Nil;
+    prevLength          := 0;
+    length    : INTEGER;
+  BEGIN
+    LOOP
+      IF p = Nil THEN RETURN Nil; END;
+      length := FreeLength(p);
+      IF length &gt;= n
+           AND NOT (p &gt; p0 AND desc[(p - 1) - p0].space = Space.Current
+                      AND desc[(p - 1) - p0].note IN notAfter) THEN
+        EXIT;
+      END;
+      prevP := p;
+      prevLength := length;
+      p := desc[p - p0].link;
+    END;
+    IF length = n THEN
+      IF prevP = Nil THEN
+        free := desc[p - p0].link;
+      ELSE
+        desc[prevP - p0].link := desc[p - p0].link;
+      END;
+      RETURN p;
+    ELSE
+      VAR
+        newP, fragP: Page;
+        fragLength : CARDINAL;
+      BEGIN
+        IF front THEN
+          newP := p;
+          fragP := p + n;
+        ELSE
+          newP := p + length - n;
+          fragP := p;
+        END;
+        fragLength := length - n;
+        IF fragLength &gt; prevLength THEN
+          IF prevP = Nil THEN
+            free := fragP;
+          ELSE
+            desc[prevP - p0].link := fragP;
+          END;
+          desc[fragP - p0].link := desc[p - p0].link;
+        ELSE
+          IF prevP = Nil THEN
+            free := desc[p - p0].link;
+          ELSE
+            desc[prevP - p0].link := desc[p - p0].link;
+          END;
+          VAR
+            pp     := free;
+            prevPP := Nil;
+          BEGIN
+            LOOP
+              IF pp = Nil THEN EXIT; END;
+              VAR length := FreeLength(pp);
+              BEGIN
+                IF length &gt; fragLength
+                     OR (length = fragLength AND pp &gt; fragP) THEN
+                  EXIT;
+                END;
+              END;
+              prevPP := pp;
+              pp := desc[pp - p0].link;
+            END;
+            desc[fragP - p0].link := pp;
+            IF prevPP = Nil THEN
+              free := fragP;
+            ELSE
+              desc[prevPP - p0].link := fragP;
+            END;
+          END;
+        END;
+        RETURN newP;
+      END;
+    END;
+  END AllocateFreePagesFromBlock;
+</PRE> RebuildFreelist rebuilds the free list, from the <CODE>desc</CODE> array.  It first
+   links all free blocks into the free list, then it sorts the free list.
+   The sort used is insertion sort, which is quadratic in the number of
+   different block sizes, but only linear in the number of pages. 
+
+<P><PRE>PROCEDURE <A NAME="RebuildFreelist"><procedure>RebuildFreelist</procedure></A> () =
+  BEGIN
+    VAR
+      prevP     := Nil;
+      prevSpace := Space.Unallocated;
+    BEGIN
+      (* link together the first pages of all free blocks *)
+      FOR p := p0 TO p1 - 1 DO
+        VAR space := desc[p - p0].space;
+        BEGIN
+          IF space = Space.Free AND prevSpace # Space.Free THEN
+            IF prevP = Nil THEN
+              free := p;
+            ELSE
+              desc[prevP - p0].link := p;
+            END;
+            prevP := p;
+          END;
+          prevSpace := space;
+        END;
+      END;
+      IF prevP = Nil THEN
+        free := Nil;
+      ELSE
+        desc[prevP - p0].link := Nil;
+      END;
+    END;
+    (* sort them, using insertion sort *)
+    VAR
+      n     := 1;                (* smallest block size *)
+      p     := free;             (* start of sublist we're examining *)
+      prevP := Nil;              (* element before sublist *)
+    BEGIN
+      LOOP
+        VAR
+          excess     := Nil;
+          prevExcess := Nil;
+        BEGIN
+          (* separate off blocks over &quot;n&quot; long into excess list *)
+          WHILE p # Nil DO
+            VAR length := FreeLength(p);
+            BEGIN
+              &lt;* ASSERT length &gt;= n *&gt;
+              IF length &gt; n THEN
+                IF prevExcess = Nil THEN
+                  excess := p;
+                ELSE
+                  desc[prevExcess - p0].link := p;
+                END;
+                IF prevP = Nil THEN
+                  free := desc[p - p0].link;
+                ELSE
+                  desc[prevP - p0].link := desc[p - p0].link;
+                END;
+                prevExcess := p;
+              ELSE
+                prevP := p;
+              END;
+            END;
+            p := desc[p - p0].link;
+          END;
+          (* maybe done *)
+          IF excess = Nil THEN EXIT; END;
+          &lt;* ASSERT prevExcess # Nil *&gt;
+          (* link longer blocks onto end *)
+          IF prevP = Nil THEN
+            free := excess;
+          ELSE
+            desc[prevP - p0].link := excess;
+          END;
+          desc[prevExcess - p0].link := Nil;
+          p := excess;
+        END;
+        (* find smallest element size of remaining bocks *)
+        n := LAST(CARDINAL);
+        VAR pp := p;
+        BEGIN
+          REPEAT
+            VAR length := FreeLength(pp);
+            BEGIN
+              IF length &lt; n THEN n := length; END;
+            END;
+            pp := desc[pp - p0].link;
+          UNTIL pp = Nil;
+        END;
+      END;
+    END;
+  END RebuildFreelist;
+</PRE> FreeLength returns the number of free pages starting at page p. 
+
+<P><PRE>PROCEDURE <A NAME="FreeLength"><procedure>FreeLength</procedure></A> (p: Page): CARDINAL =
+  BEGIN
+    &lt;* ASSERT desc[p - p0].space = Space.Free *&gt;
+    VAR pp := p + 1;
+    BEGIN
+      LOOP
+        IF pp &gt;= p1 THEN EXIT; END;
+        IF desc[pp - p0].space # Space.Free THEN EXIT; END;
+        INC(pp);
+      END;
+      RETURN pp - p;
+    END;
+  END FreeLength;
+</PRE> GrowHeap adds a block of at least <CODE>MinNewPages</CODE> free pages to the heap,
+   and links it into the free list. 
+
+<P> <CODE>MinNewBytes</CODE> is the minimum number of bytes by which to grow the heap.
+   Setting it higher reduces the number of system calls; setting it lower
+   keeps the heap a little smaller. 
+
+<P><PRE>VAR fragment0, fragment1: ADDRESS := NIL;
+
+CONST
+  InitialBytes = 262144;         (* initial heap size is 256K *)
+  MinNewBytes  = 262144;         (* grow the heap by at least 256K *)
+  MinNewFactor = 0.2;            (* grow the heap by at least 20% *)
+
+  InitialPages = (InitialBytes + BytesPerPage - 1) DIV BytesPerPage;
+  MinNewPages  = (MinNewBytes  + BytesPerPage - 1) DIV BytesPerPage;
+
+VAR
+  heap_stats := FALSE;
+  total_heap := 0;
+
+PROCEDURE <A NAME="GrowHeap"><procedure>GrowHeap</procedure></A> (pp: INTEGER): BOOLEAN =
+  VAR
+    newChunk    : ADDRESS;
+    newSideSpan : INTEGER;
+    firstNewPage: Page;
+    lastNewPage : Page;
+    newP0       : Page;
+    newP1       : Page;
+  BEGIN
+    IF max_heap_size &gt;= 0 AND total_heap &gt; max_heap_size THEN
+      RETURN FALSE;  (* heap is already too large *)
+    END;
+    IF allocatedPages = 0 THEN
+      pp := MAX(pp, InitialPages);
+    ELSE
+      pp := MAX(pp, MinNewPages);
+      pp := MAX(pp, CEILING(FLOAT(allocatedPages) * MinNewFactor));
+    END;
+    VAR bytes := (pp + 1) * BytesPerPage;
+    BEGIN
+      IF max_heap_size &gt;= 0 THEN
+        bytes := MIN (bytes, max_heap_size - total_heap);
+        IF (bytes &lt;= 0) THEN RETURN FALSE; END;
+      END;
+      newChunk := RTOS.GetMemory(bytes);
+      INC (total_heap, bytes);
+      IF heap_stats THEN
+        RTIO.PutText (&quot;Grow (&quot;);
+        RTIO.PutHex  (bytes);
+        RTIO.PutText (&quot;) =&gt; &quot;);
+        RTIO.PutHex  (LOOPHOLE (newChunk, INTEGER));
+        RTIO.PutText (&quot;   total: &quot;);
+        RTIO.PutInt  (total_heap DIV 1000000);
+        RTIO.PutText (&quot;.&quot;);
+        RTIO.PutInt  ((total_heap MOD 1000000) DIV 100000);
+        RTIO.PutText (&quot;M&quot;);
+      END;
+      IF newChunk = NIL OR newChunk = LOOPHOLE(-1, ADDRESS) THEN
+        RETURN FALSE;
+      END;
+      IF fragment1 = newChunk THEN
+        newChunk := fragment0;
+        bytes := bytes + (fragment1 - fragment0);
+      END;
+      VAR excess := (-LOOPHOLE(newChunk, INTEGER)) MOD BytesPerPage;
+      BEGIN
+        INC(newChunk, excess);
+        DEC(bytes, excess);
+      END;
+      VAR pages := bytes DIV BytesPerPage;
+      BEGIN
+        firstNewPage := LOOPHOLE(newChunk, INTEGER) DIV BytesPerPage;
+        lastNewPage := firstNewPage + pages - 1;
+        fragment0 :=
+          LOOPHOLE((firstNewPage + pages) * BytesPerPage, ADDRESS);
+        fragment1 := newChunk + bytes;
+      END;
+    END;
+    (* determine the new boundaries of the allocated pages *)
+    IF p0 = Nil THEN
+      newP0 := firstNewPage;
+      newP1 := lastNewPage + 1;
+    ELSIF firstNewPage &lt; p0 THEN
+      newP0 := firstNewPage;
+      newP1 := p1;
+    ELSIF p1 &lt;= lastNewPage THEN
+      newP0 := p0;
+      newP1 := lastNewPage + 1;
+    ELSE
+      newP0 := p0;
+      newP1 := p1;
+    END;
+    (* extend the side arrays if necessary *)
+    newSideSpan := newP1 - newP0;
+    IF desc = NIL OR newSideSpan # NUMBER(desc^) THEN
+      WITH newDesc = NEW(UNTRACED REF ARRAY OF Desc, newSideSpan) DO
+        IF desc # NIL THEN
+          FOR i := FIRST(desc^) TO LAST(desc^) DO
+            newDesc[i + p0 - newP0] := desc[i];
+          END;
+          FOR i := p1 TO firstNewPage - 1 DO
+            newDesc[i - newP0].space := Space.Unallocated;
+          END;
+          FOR i := lastNewPage + 1 TO p0 - 1 DO
+            newDesc[i - newP0].space := Space.Unallocated;
+          END;
+          DISPOSE(desc);
+        END;
+        desc := newDesc;
+      END;
+    END;
+    p0 := newP0;
+    p1 := newP1;
+    IF heap_stats THEN
+      VAR
+        span    := (p1 - p0) * BytesPerPage;
+        density := ROUND (FLOAT(total_heap) * 100.0 / FLOAT (span));
+      BEGIN
+        RTIO.PutText (&quot;   span: &quot;);
+        RTIO.PutInt  (span DIV 1000000);
+        RTIO.PutText (&quot;.&quot;);
+        RTIO.PutInt  ((span MOD 1000000) DIV 100000);
+        RTIO.PutText (&quot;M&quot;);
+        RTIO.PutText (&quot;   density: &quot;);
+        RTIO.PutInt  (density);
+        RTIO.PutText (&quot;%\n&quot;);
+        RTIO.Flush ();
+      END;
+    END;
+    FOR i := firstNewPage TO lastNewPage DO
+      desc[i - p0].space := Space.Free;
+    END;
+    IF perfOn THEN
+      PerfGrow(firstNewPage, lastNewPage - firstNewPage + 1);
+    END;
+    INC(allocatedPages, lastNewPage - firstNewPage + 1);
+    RebuildFreelist();
+    RETURN TRUE;
+  END GrowHeap;
+</PRE>** INITIALIZATION **
+
+<P><PRE>CONST MaxAlignment  = 8;
+CONST MaxAlignMask  = 2_0111;     (* bit mask to capture MaxAlignment *)
+TYPE  MaxAlignRange = [0 .. MaxAlignment - 1];
+
+VAR align: ARRAY MaxAlignRange, [1 .. MaxAlignment] OF CARDINAL;
+</PRE><BLOCKQUOTE><EM> align[i,j] == RTMisc.Align (i, j) - i </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> () =
+  BEGIN
+    weakTable := NEW(UNTRACED REF ARRAY OF WeakEntry, 0);
+
+    (* initialize the alignment array *)
+    FOR i := FIRST(align) TO LAST(align) DO
+      FOR j := FIRST(align[0]) TO LAST(align[0]) DO
+        align[i, j] := RTMisc.Upper(i, j) - i;
+      END;
+    END;
+  END Init;
+
+BEGIN
+  IF RTParams.IsPresent(&quot;nogc&quot;) THEN disableCount := 1; END;
+  IF RTParams.IsPresent(&quot;novm&quot;) THEN disableVMCount := 1; END;
+  IF RTParams.IsPresent(&quot;noincremental&quot;) THEN incremental := FALSE; END;
+  IF RTParams.IsPresent(&quot;nogenerational&quot;) THEN generational := FALSE; END;
+  IF RTParams.IsPresent(&quot;paranoidgc&quot;) THEN InstallSanityCheck(); END;
+  IF RTParams.IsPresent(&quot;heapstats&quot;) THEN heap_stats := TRUE; END;
+  PerfStart();
+END RTCollector.
+</PRE>
+</inModule>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

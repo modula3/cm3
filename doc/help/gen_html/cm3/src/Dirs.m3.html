@@ -1,0 +1,180 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: cm3/src/Dirs.m3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>cm3/src/Dirs.m3</H2></A><HR>
+<inModule>
+<PRE></PRE> Copyright 1996 Critical Mass, Inc. All rights reserved.    
+
+<P><PRE>MODULE <module><implements><A HREF="Dirs.i3.html">Dirs</A></implements></module>;
+
+IMPORT <A HREF="../../libm3/src/os/Common/FS.i3.html">FS</A>, <A HREF="../../m3middle/src/M3File.i3.html">M3File</A>, <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>, <A HREF="../../libm3/src/os/Common/Process.i3.html">Process</A>;
+IMPORT <A HREF="#x1">Msg</A>, <A HREF="M3Options.i3.html">M3Options</A>, <A HREF="M3Path.i3.html">M3Path</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>;
+
+CONST
+  ModeVerb = ARRAY M3Options.Mode OF TEXT {
+    &quot;building in &quot;, &quot;cleaning &quot;, &quot;shipping from &quot;, &quot;searching from &quot; };
+
+VAR
+  built_derived := FALSE;
+  to_derived: TEXT := NIL;
+
+PROCEDURE <A NAME="SetUp"><procedure>SetUp</procedure></A> (target: TEXT) =
+  VAR base, parent: TEXT;
+  BEGIN
+    TRY
+      initial := Process.GetWorkingDirectory ();
+    EXCEPT OSError.E(ec) =&gt;
+      Msg.FatalError (ec, &quot;unable to get full directory path: &quot;, initial);
+    END;
+    base   := Pathname.Last (initial);
+    parent := Pathname.Prefix (initial);
+
+    (* figure out where we are... *)
+
+    IF M3Path.IsEqual (base, &quot;src&quot;) THEN
+      (* we're in the source directory *)
+      package    := parent;
+      derived    := Pathname.Join (parent, target, NIL);
+      source     := initial;
+      to_initial := Pathname.Join (&quot;..&quot;, &quot;src&quot;, NIL);
+      to_source  := to_initial;
+      to_package := &quot;..&quot;;
+      to_derived := Pathname.Join (&quot;..&quot;, target, NIL);
+
+    ELSIF M3Path.IsEqual (base, target) THEN
+      (* we're in the derived directory *)
+      package    := parent;
+      derived    := initial;
+      source     := Pathname.Join (parent, &quot;src&quot;, NIL);
+      to_initial := &quot;.&quot;;
+      to_source  := Pathname.Join (&quot;..&quot;, &quot;src&quot;, NIL);
+      to_package := &quot;..&quot;;
+      to_derived := &quot;.&quot;;
+
+    ELSIF M3File.IsDirectory (&quot;src&quot;) THEN
+      (* we're in the parent directory *)
+      package    := initial;
+      derived    := Pathname.Join (initial, target, NIL);
+      source     := Pathname.Join (initial, &quot;src&quot;, NIL);
+      to_initial := &quot;..&quot;;
+      to_source  := Pathname.Join (&quot;..&quot;, &quot;src&quot;, NIL);
+      to_package := &quot;..&quot;;
+      to_derived := target;
+
+    ELSE
+      (* we'll assume we're in the parent (=source) directory *)
+      package    := initial;
+      derived    := Pathname.Join (initial, target, NIL);
+      source     := initial;
+      to_initial := &quot;..&quot;;
+      to_source  := &quot;..&quot;;
+      to_package := &quot;..&quot;;
+      to_derived := target;
+    END;
+
+    IF NOT M3Path.IsEqual (to_derived, &quot;.&quot;) THEN
+      (* move to the derived directory *)
+      IF NOT M3File.IsDirectory (to_derived) THEN
+        built_derived := TRUE;
+        MkDir (to_derived);
+      END;
+      Msg.Out (&quot;--- &quot;, ModeVerb [M3Options.major_mode], to_derived, &quot; ---&quot;, Wr.EOL);
+      ChDir (to_derived);
+    END;
+  END SetUp;
+
+PROCEDURE <A NAME="CleanUp"><procedure>CleanUp</procedure></A> () =
+  BEGIN
+    IF (to_initial # NIL) THEN ChDir (to_initial); END;
+    IF built_derived AND (to_derived # NIL) AND DirIsEmpty (to_derived) THEN
+      RmDir (to_derived);
+    END;
+  END CleanUp;
+</PRE>------------------------------------------------------ internal --
+
+<P><PRE>PROCEDURE <A NAME="ChDir"><procedure>ChDir</procedure></A> (dir: TEXT) =
+  BEGIN
+    Msg.Commands (&quot;cd &quot;, dir);
+    TRY
+      Process.SetWorkingDirectory (dir);
+    EXCEPT OSError.E(ec) =&gt;
+      Msg.FatalError (ec, &quot;unable to move to directory: &quot;, dir);
+    END;
+  END ChDir;
+
+PROCEDURE <A NAME="MkDir"><procedure>MkDir</procedure></A> (dir: TEXT) =
+  BEGIN
+    Msg.Commands (&quot;mkdir &quot;, dir);
+    TRY
+      FS.CreateDirectory (dir);
+    EXCEPT OSError.E(ec) =&gt;
+      Msg.FatalError (ec, &quot;unable to create directory: &quot;, dir);
+    END;
+  END MkDir;
+
+PROCEDURE <A NAME="RmDir"><procedure>RmDir</procedure></A> (dir: TEXT) =
+  BEGIN
+    Msg.Commands (&quot;rmdir &quot;, dir);
+    TRY
+      FS.DeleteDirectory (dir);
+    EXCEPT OSError.E =&gt;
+      (* ignore the failure...*)
+      (** Msg.FatalError (ec, &quot;unable to remove directory: &quot;, dir); **)
+    END;
+  END RmDir;
+
+PROCEDURE <A NAME="DirIsEmpty"><procedure>DirIsEmpty</procedure></A> (dir: TEXT): BOOLEAN =
+  VAR iter: FS.Iterator;  name := &quot;&quot;;  empty := FALSE;
+  BEGIN
+    TRY
+      iter := FS.Iterate (dir);
+      empty := NOT iter.next (name);
+      iter.close ();
+    EXCEPT OSError.E =&gt;
+      empty := FALSE;
+    END;
+    Msg.Verbose (&quot;is_empty (&quot;, dir, &quot;) =&gt; &quot;, name);
+    RETURN empty;
+  END DirIsEmpty;
+
+BEGIN
+END Dirs.
+</PRE>
+</inModule>
+<HR>
+<A NAME="x1">interface Msg is in:
+</A><UL>
+<LI><A HREF="Msg.i3.html#0TOP0">cm3/src/Msg.i3</A>
+<LI><A HREF="../../m3tohtml/src/Msg.i3.html#0TOP0">m3tohtml/src/Msg.i3</A>
+</UL>
+<P>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

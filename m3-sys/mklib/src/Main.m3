@@ -1,7 +1,7 @@
 UNSAFE MODULE Main;
 
 IMPORT Process, IO, Rd, Wr, FileRd, FileWr, Thread, OSError, TextRefTbl;
-IMPORT WinNT, Convert, CoffTime, File, FS, Text, Word, TextWr;
+IMPORT WinNT, Convert, CoffTime, File, FS, Text, Word, TextWr, TextSeq;
 IMPORT Fmt, Time, IntArraySort, RegularFile, WinDef, Params, Pathname;
 
 CONST
@@ -51,6 +51,9 @@ VAR
   export_len  : CARDINAL    := 0;
   export_tbl  : TextRefTbl.T := NIL;
   long_nms    : TextWr.T   := NIL;
+  verbose := FALSE;
+  cleanSymbols := TRUE;
+  ignoreTexts : TextSeq.T := NIL;
 
 PROCEDURE DoIt () =
   BEGIN
@@ -90,6 +93,20 @@ PROCEDURE ProcessArg (arg: TEXT) =
         IF Text.Length (lib_name) <= 0 THEN
           Die ("missing library name: -out:<lib>");
         END;
+      ELSIF Text.Equal (Text.Sub (arg, 0, 5), "-ign:") THEN
+        WITH ignText = Text.Sub (arg, 5) DO
+          IF ignoreTexts = NIL THEN
+            ignoreTexts := NEW(TextSeq.T).init();
+          END;
+          ignoreTexts.addhi(ignText);
+        END;
+      ELSIF Text.Equal (arg, "-v") THEN
+        verbose := TRUE;
+      ELSIF Text.Equal (arg, "-h") OR Text.Equal (arg, "-help") THEN
+        Usage();
+        Process.Exit(0);
+      ELSIF Text.Equal (arg, "-noclean") THEN
+        cleanSymbols := FALSE;
       ELSE
         Die ("unrecognized option: \"", arg, "\"");
       END;
@@ -99,6 +116,25 @@ PROCEDURE ProcessArg (arg: TEXT) =
       INC (n_files);
     END;
   END ProcessArg;
+
+PROCEDURE Usage() =
+  BEGIN
+    M("usage: mklib [-v] [-noclean] [-ign:<text>]* -out:<libname>", 
+      " <files...>");
+    M("  or");
+    M("       mklib @<cmdfile>");
+    M("");
+    M("  produces a static library containing the specified object files.");
+    M("  ");
+    M("options:");
+    M("  ");
+    M("  -v         run verbosely (produce lots of trace output)");
+    M("  -noclean   do not `clean' symbols which contain @ characters");
+    M("  -ign:TEXT  ignore (don't export) symbols starting with TEXT");
+    M("             This option may occur multiple times.");
+    M("  -out:LIBFN Create library in file LIBFN.");
+    M("");
+  END Usage;
 
 PROCEDURE ReadCommandFile (nm: TEXT) =
   (* Process each non-blank line in file "nm" as if it were
@@ -271,9 +307,11 @@ PROCEDURE ScanExports (f: FileDesc) =
     WHILE (sym < o.stringtab) DO
       IF sym.StorageClass = WinNT.IMAGE_SYM_CLASS_EXTERNAL THEN
         IF sym.SectionNumber # WinNT.IMAGE_SYM_UNDEFINED THEN
+          V ("symbol section number: ", Fmt.Int(sym.SectionNumber));
           AddExport (GetSymbolName (o, sym), f);
         ELSIF sym.Value > 0 THEN
           (* this is a BSS or COMMON symbol *)
+          V ("symbol value: ", Fmt.Int(sym.Value));
           AddExport (GetSymbolName (o, sym), f);
         END;
       END;
@@ -293,6 +331,16 @@ PROCEDURE AddExport (sym: TEXT;  f: FileDesc) =
               "  " & f2.name & "  (using this instance)" & Wr.EOL,
               "  " & f.name  & "  (ignoring this instance)");
     ELSE
+      IF ignoreTexts # NIL THEN
+        FOR i := 0 TO ignoreTexts.size() - 1 DO
+          WITH t = ignoreTexts.get(i) DO 
+            (* ignore the symbol if it starts with one of the ignore texts *)
+            IF Text.Equal(t, Text.Sub(sym, 0, Text.Length(t))) THEN
+              RETURN;
+            END;
+          END;
+        END;
+      END;
       (* a new symbol *)
       EVAL export_tbl.put (sym, f);
       exports := NEW (ExportDesc, next := exports, symbol := sym, file := f);
@@ -307,6 +355,7 @@ PROCEDURE GetSymbolName (READONLY o: ObjFile;  sym: WinNT.PIMAGE_SYMBOL): TEXT =
     offset, max_len, len: INTEGER;
     ptr: UNTRACED REF CHAR;
     buf: ARRAY [0..255] OF CHAR;
+    res: TEXT;
   BEGIN
     IF (sym.N[0] = 0) AND (sym.N[1] = 0) AND (sym.N[2] = 0) AND (sym.N[3] = 0) THEN
       (* the name is long and stored in the string table *)
@@ -334,7 +383,9 @@ PROCEDURE GetSymbolName (READONLY o: ObjFile;  sym: WinNT.PIMAGE_SYMBOL): TEXT =
       INC (len);
     END;
 
-    RETURN Text.FromChars (SUBARRAY (buf, 0, len));
+    res := Text.FromChars (SUBARRAY (buf, 0, len));
+    V(res);
+    RETURN res;
   END GetSymbolName;
 
 (*--------------------------------------------------------- LIB writer ---*)
@@ -651,7 +702,7 @@ PROCEDURE CleanName (sym: TEXT): TEXT =
     at     := Text.FindChar (sym, '@');
   BEGIN
     IF Text.GetChar (sym, 0) = '_' THEN   start := 1;   END;
-    IF (at > 0) THEN stop := at; END;
+    IF (at > 0) AND cleanSymbols THEN stop := at; END;
     RETURN Text.Sub (sym, start, stop - start);
   END CleanName;
 
@@ -704,13 +755,25 @@ PROCEDURE OpenRd (nm: TEXT): Rd.T =
 PROCEDURE Warn (a, b, c, d, e: TEXT := NIL) =
   BEGIN
     IO.Put ("warning: ");
+    M(a, b, c, d, e);
+  END Warn;
+
+PROCEDURE V (a, b, c, d, e: TEXT := NIL) =
+  BEGIN
+    IF verbose THEN
+      M (a, b, c, d, e);
+    END;
+  END V;
+
+PROCEDURE M (a, b, c, d, e: TEXT := NIL) =
+  BEGIN
     IF (a # NIL) THEN IO.Put (a); END;
     IF (b # NIL) THEN IO.Put (b); END;
     IF (c # NIL) THEN IO.Put (c); END;
     IF (d # NIL) THEN IO.Put (d); END;
     IF (e # NIL) THEN IO.Put (e); END;
     IO.Put (Wr.EOL);
-  END Warn;
+  END M;
 
 PROCEDURE Die (a, b, c, d, e: TEXT := NIL) =
   BEGIN

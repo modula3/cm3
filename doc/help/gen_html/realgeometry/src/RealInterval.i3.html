@@ -1,0 +1,172 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: realgeometry/src/RealInterval.i3</TITLE>
+</HEAD>
+<BODY bgcolor="#eeeeee">
+<A NAME="0TOP0">
+<H2>realgeometry/src/RealInterval.i3</H2></A><HR>
+<inInterface>
+<PRE></PRE> Copyright (C) 1989, Digital Equipment Corporation           
+ All rights reserved.                                        
+ See the file COPYRIGHT for a full description.              
+
+<P> Contributed by Michel Dagenais (dagenais@vlsi.polymtl.ca), 1994. 
+
+<P> An <CODE>Interval.T</CODE> is a contiguous set of REAL.  An interval <CODE>a</CODE>
+   contains an integer <CODE>n</CODE> if
+<P>
+<PRE>
+      a.lo &lt;= n  AND  n &lt; a.hi
+</PRE>
+   We impose the restriction that if an interval contains no REAL, 
+   then it must be equal as a record to <CODE>Interval.Empty</CODE>. 
+
+<P><PRE>INTERFACE <interface><A HREF="RealInterval.m3.html">RealInterval</A></interface>;
+
+TYPE T = RECORD lo, hi: REAL END;
+TYPE Bound = {Lo, Hi};
+
+CONST Empty = T { 0.0, 0.0 }; (* A point-like interval *)
+CONST Full  = T {FIRST(REAL), LAST(REAL)}; (* The biggest interval *)
+</PRE> --- Initialization --- 
+
+<P><PRE>PROCEDURE <A HREF="RealInterval.m3.html#FromBounds">FromBounds</A>(lo, hi: REAL): T;
+</PRE><BLOCKQUOTE><EM> If <CODE>lo &gt;= hi</CODE> then return <CODE>Empty</CODE>, else return <CODE>T{lo, hi}</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#FromAbsBounds">FromAbsBounds</A>(n, m: REAL): T;
+</PRE><BLOCKQUOTE><EM> Return <CODE>FromBounds(MIN(n,m), MAX(n,m))</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#FromBound">FromBound</A>(lo: REAL; s: REAL): T;
+</PRE><BLOCKQUOTE><EM> Return <CODE>FromBounds(lo, lo+s)</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#FromSize">FromSize</A>(s: REAL): T;
+</PRE><BLOCKQUOTE><EM> Return <CODE>FromBounds(0, s)</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#Center">Center</A>(READONLY a: T; n: REAL): T;
+</PRE><BLOCKQUOTE><EM> If <CODE>a</CODE> is empty then return <CODE>Empty</CODE>, else return <CODE>b</CODE> such that
+   <CODE>Size(b) = Size(a)</CODE> and <CODE>Middle(b) = n</CODE>.  </EM></BLOCKQUOTE><PRE>
+</PRE> --- Selection --- 
+
+<P><PRE>PROCEDURE <A HREF="RealInterval.m3.html#Size">Size</A>(READONLY a: T): REAL;
+</PRE><BLOCKQUOTE><EM> Return <CODE>a.hi - a.lo</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#Middle">Middle</A>(READONLY a: T): REAL;
+</PRE><BLOCKQUOTE><EM> Return <CODE>(a.hi + a.lo) DIV 2</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#PickBound">PickBound</A> (READONLY a: T; n: REAL): Bound;
+</PRE><BLOCKQUOTE><EM> Return the bound of a closest to n (one of them if equidistant) </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#Project">Project</A>(READONLY a: T; n: REAL): REAL;
+</PRE><BLOCKQUOTE><EM> Return the element of <CODE>a</CODE> that is closest to <CODE>n</CODE>.  This
+   is a checked runtime error if <CODE>a</CODE> is empty. </EM></BLOCKQUOTE><PRE>
+</PRE> --- Transformation --- 
+
+<P><PRE>PROCEDURE <A HREF="RealInterval.m3.html#Move">Move</A>(READONLY a: T; n: REAL): T;
+</PRE><BLOCKQUOTE><EM> Return <CODE>FromBounds(a.lo+n, a.hi+n)</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#Inset">Inset</A>(READONLY a: T; n: REAL): T;
+</PRE><BLOCKQUOTE><EM> If <CODE>a</CODE> is empty then return <CODE>Empty</CODE>, else return 
+   <CODE>FromBounds(a.lo + n, a.hi - n)</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#Change">Change</A>(READONLY a: T; dlo, dhi: REAL): T;
+</PRE><BLOCKQUOTE><EM> If <CODE>a</CODE> is empty then return <CODE>Empty</CODE>, else return 
+  <CODE>FromBounds(a.lo + dlo, a.hi + dhi)</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#MoveBound">MoveBound</A> (x: Bound; READONLY a: T; dn: REAL): T;
+</PRE><BLOCKQUOTE><EM> If r is empty return empty, else add dn to the edge x of a </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#Join">Join</A>(READONLY a, b: T): T;
+</PRE><BLOCKQUOTE><EM> Return the smallest interval containing both <CODE>a</CODE> and <CODE>b</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#Meet">Meet</A>(READONLY a, b: T): T;
+</PRE><BLOCKQUOTE><EM> Return the largest interval contained in both of <CODE>a</CODE> and <CODE>b</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#Chop">Chop</A> (READONLY a: T; n: REAL; VAR (* out *) b, c: T);
+</PRE><BLOCKQUOTE><EM> Chop an interval in two; b is to the left of c </EM></BLOCKQUOTE><PRE>
+
+TYPE Partition = ARRAY [0..2] OF T;
+
+PROCEDURE <A HREF="RealInterval.m3.html#Factor">Factor</A> (READONLY a, by: T; VAR (*out*) f: Partition; dn: REAL)
+ ;
+</PRE><BLOCKQUOTE><EM> a is partitioned into 3 pieces f[0]..f[2], where f[1] = Meet (a,by). The
+   order of f is such that if i&lt;j then f[i] translated by dn doesn't intersect
+   f[j]. (Only the sign of dn affects the order, not its magnitude.) </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#Mod">Mod</A>(n: REAL; READONLY a: T): REAL;
+</PRE><BLOCKQUOTE><EM> Return the member of <CODE>a</CODE> whose distance from <CODE>n</CODE> is a multiple of 
+   <CODE>Size(a)</CODE>.  This is a checked runtime error if <CODE>a</CODE> is empty. </EM></BLOCKQUOTE><PRE>
+</PRE> --- Test --- 
+
+<P><PRE>PROCEDURE <A HREF="RealInterval.m3.html#Equal">Equal</A> (READONLY a, b: T): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> Interval equality; all empty intervals are equal </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#IsEmpty">IsEmpty</A>(READONLY a: T): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> Return whether <CODE>a</CODE> is empty. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#Member">Member</A>(n: REAL; READONLY a: T): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> Return whether <CODE>n</CODE> is in <CODE>a</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#Overlap">Overlap</A>(READONLY a, b: T): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> Return whether <CODE>a</CODE> and <CODE>b</CODE> have any element in common. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#Subset">Subset</A>(READONLY a, b: T): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> Return whether <CODE>a</CODE> is contained in <CODE>b</CODE>. </EM></BLOCKQUOTE><PRE>
+</PRE> --- Standard type operations --- 
+
+<P><PRE>PROCEDURE <A HREF="RealInterval.m3.html#New">New</A> (READONLY value: T): REF T;
+</PRE><BLOCKQUOTE><EM> Allocates and initializes a new heap value </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#NewArray">NewArray</A> (size: CARDINAL;  READONLY value := Empty): REF ARRAY OF T;
+</PRE><BLOCKQUOTE><EM> Allocates a new array from the heap
+  and initializes all its elements with the given value </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#UntracedNew">UntracedNew</A> (READONLY value: T): UNTRACED REF T;
+</PRE><BLOCKQUOTE><EM> Allocates and initializes a new untraced value </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#UntracedNewArray">UntracedNewArray</A> (size: CARDINAL;  READONLY value := Empty):
+                                                       UNTRACED REF ARRAY OF T;
+</PRE><BLOCKQUOTE><EM> Allocates a new untraced array from the heap
+  and initializes all its elements with the given value </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#Compare">Compare</A> (READONLY a, b: T): INTEGER;
+</PRE><BLOCKQUOTE><EM> == RETURN (-1 if Lt (a, b), 0 if Eq (a, b), +1 o. w.) </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#Lt">Lt</A> (READONLY a, b: T): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> == RETURN (a.lo &lt; b.lo) OR ((a.lo = b.lo) AND (a.hi &lt; b.hi)) </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#Eq">Eq</A> (READONLY a, b: T): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> == RETURN (a = b) </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RealInterval.m3.html#Hash">Hash</A> (READONLY a: T): INTEGER;
+</PRE><BLOCKQUOTE><EM> == RETURN a suitable hash value  </EM></BLOCKQUOTE><PRE>
+
+END RealInterval.
+</PRE>
+</inInterface>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

@@ -1,0 +1,4 @@
+override ("libm3", ROOT & "/m3-libs")
+override ("obliq", ROOT & "/m3-obliq")
+override ("obliqlibm3", ROOT & "/m3-obliq")
+override ("obliqlibui", ROOT & "/m3-obliq")

@@ -2,14 +2,14 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 %
-import (ui)
-import (netobj)
-override (board, "/udir/umesh/m3/board/3")
-import (board)
+import ("ui")
+import ("netobj")
+%override ("board", "/udir/umesh/m3/board/3")
+import ("board")
 
-sequence (Item, Item)
+sequence ("Item", "Item")
 
-implementation (Calendar)
-program (calendar)
+implementation ("Calendar")
+program ("calendar")
 
 
