@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: install-cm3-compiler.sh,v 1.1 2003-03-21 14:39:39 wagner Exp $
+# $Id: install-cm3-compiler.sh,v 1.2 2003-03-21 16:14:42 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -22,8 +22,6 @@ FRONTEND="${INSTALLROOT}/bin/cm3"
 BACKEND="${INSTALLROOT}/bin/cm3cg"
 FRONTEND_SRC="${ROOT}/m3-sys/cm3/${CM3_TARGET}/cm3"
 BACKEND_SRC="${ROOT}/m3-sys/m3cc/${CM3_TARGET}/cm3cg"
-FRONTEND_CM3VERSION="${FRONTEND}-${CM3VERSION}"
-BACKEND_CM3VERSION="${BACKEND}-${CM3VERSION}"
 
 usage()
 {
@@ -88,7 +86,7 @@ cp_if()
   fi
   if [ -r "$2" ] ; then
     # destination exists
-    if cmp "$1" "$2"; then
+    if cmp "$1" "$2" >/dev/null 2>&1; then
       echo "cp_if: $1 and $2 identical" 1>&2
       true
     else
@@ -117,6 +115,8 @@ getversion()
 install_local_as_version()
 {
   CM3VERSION=`getversion "${FRONTEND_SRC}"`
+  FRONTEND_CM3VERSION="${FRONTEND}-${CM3VERSION}"
+  BACKEND_CM3VERSION="${BACKEND}-${CM3VERSION}"
   FRONTEND_DEST="${FRONTEND_CM3VERSION}"
   BACKEND_DEST="${BACKEND_CM3VERSION}"
   cp_if "${FRONTEND_SRC}" "${FRONTEND_DEST}"
