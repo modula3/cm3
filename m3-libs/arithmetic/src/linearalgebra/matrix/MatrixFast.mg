@@ -198,7 +198,6 @@ BEGIN
   END;
   RETURN z;
 END Mul;
-(*-----------------*)
 
 (*----------------*)
 PROCEDURE MulV(
@@ -226,6 +225,33 @@ BEGIN
   END;
   RETURN c;
 END MulV;
+
+(*-----------------*)
+PROCEDURE MulTV(
+               A:T; b:V.T):V.T RAISES {Error} =
+
+<*UNUSED*> CONST ftn = Module & "MulTV";
+VAR
+  mf:=0; ml:=LAST(A^);
+  nf:=0; nl:=LAST(A[0]);
+  c:=NEW(V.T,NUMBER(A[0]));
+BEGIN
+  IF NUMBER(b^)#NUMBER(A^) THEN
+    RAISE Error(Err.bad_size);
+  END;
+
+  FOR i:=nf TO nl DO
+    VAR
+      sum:=R.Zero;
+    BEGIN
+      FOR j:=mf TO ml DO
+	sum:=sum+A[j,i]*b[j];
+      END;
+      c[i]:=sum;
+    END;
+  END;
+  RETURN c;
+END MulTV;
 
 (*-----------------*)
 PROCEDURE Transpose(
