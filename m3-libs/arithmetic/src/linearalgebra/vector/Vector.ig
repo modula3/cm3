@@ -19,31 +19,33 @@ PROCEDURE NewZero (n: CARDINAL):
   T;                             (*make new zero vector with n components*)
 PROCEDURE NewUniform (n: CARDINAL; x: R.T):
   T;                             (*vector with all components set to x*)
-<*INLINE*>
+<* INLINE *>
 PROCEDURE FromArray (READONLY x: TBody): T;
 PROCEDURE FromVectorArray (READONLY x: TVBody): T;
-<*INLINE*>
+<* INLINE *>
 PROCEDURE FromScalar (x: R.T): T;
-<*INLINE*>
+<* INLINE *>
 PROCEDURE Copy (x: T): T;
+<* INLINE *>
+PROCEDURE Reverse (x: T): T;        (* reverse the order of the components *)
 
-<*INLINE*>
+<* INLINE *>
 PROCEDURE IsZero (x: T): BOOLEAN;
-<*INLINE*>
+<* INLINE *>
 PROCEDURE Equal (x, y: T): BOOLEAN RAISES {Error}; (*return x=y*)
 
-<*INLINE*>
+<* INLINE *>
 PROCEDURE Add (x, y: T): T RAISES {Error}; (*x+y*)
-<*INLINE*>
+<* INLINE *>
 PROCEDURE Sub (x, y: T): T RAISES {Error}; (*x-y*)
-<*INLINE*>
+<* INLINE *>
 PROCEDURE Neg (x: T): T;         (*return -x *)
 
-<*INLINE*>
+<* INLINE *>
 PROCEDURE Scale (x: T; y: R.T): T; (*x:=x*factor*)
-<*INLINE*>
+<* INLINE *>
 PROCEDURE Inner (x, y: T): R.T RAISES {Error}; (*<x,y>*)
-<*INLINE*>
+<* INLINE *>
 PROCEDURE Dot (x, y: T): R.T RAISES {Error}; (*x^T*y*)
 
 (* should be generalized to finding an orthonormal basis of the space
