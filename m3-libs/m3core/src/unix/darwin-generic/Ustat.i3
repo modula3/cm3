@@ -52,8 +52,8 @@ TYPE
     st_mtimensec : long;
     st_ctime     : time_t;
     st_ctimensec : long;
-    st_size      : off_t;
     st_pad1      : off_pad_t;
+    st_size      : off_t;
     st_blocks    : int64_t;
     st_blksize   : u_int32_t;
     st_flags     : u_int32_t;

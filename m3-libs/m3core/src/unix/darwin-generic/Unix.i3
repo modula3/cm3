@@ -28,8 +28,8 @@ CONST
 
 (*** file flags ***)
 CONST
-  FREAD =      16_0000;        (* descriptor read/receive'able *)
-  FWRITE =     16_0001;        (* descriptor write/send'ale *)
+  FREAD =      16_0001;        (* descriptor read/receive'able *)
+  FWRITE =     16_0002;        (* descriptor write/send'ale *)
   FCREAT =     16_0200;        (* create if nonexistant *)
   FEXCL =      16_0800;        (* error if already created *)
   FTRUNC  =    16_0400;        (* truncate to zero length *)
