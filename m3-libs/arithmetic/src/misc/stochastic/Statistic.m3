@@ -13,14 +13,17 @@ IMPORT LongRealBasic   AS R,
 CONST Module = "Statistic.";
 (*==========================*)
 (*----------------------*)
-PROCEDURE describe(data:R.Array;
-                VAR r:StatRec) RAISES {Error}=
+PROCEDURE Describe(data:R.Array;
+                VAR r:T) RAISES {Error}=
 (*using the 2 pass approach*)
 <*UNUSED*> CONST ftn = Module & "describe";
 VAR
   N:=NUMBER(data^); n1:=FIRST(data^); nn:=LAST(data^);
   n:=FLOAT(N,R.T);
-  sum:=R.Zero; sumdelta:=R.Zero; delta:=R.Zero; tmp:=R.Zero;
+  sum:=R.Zero;
+  sumdelta:=R.Zero;
+  delta:=R.Zero;
+  tmp:=R.Zero;
 BEGIN
   IF N<2 THEN
     (*need >=2 data points for moment*)
@@ -37,7 +40,10 @@ BEGIN
   r.avg:=sum/n;
 
   (*---pass 2---*)
-  r.adev:=R.Zero; r.var:=R.Zero; r.skew:=R.Zero; r.kurt:=R.Zero;
+  r.adev:=R.Zero;
+  r.var:=R.Zero;
+  r.skew:=R.Zero;
+  r.kurt:=R.Zero;
   FOR i:=n1 TO nn DO
     delta:=data[i]-r.avg;
     sumdelta:=sumdelta+delta;
@@ -59,9 +65,9 @@ BEGIN
   ELSE
     r.skew:=R.Zero; r.kurt:=R.Zero;
   END;
-END describe;
+END Describe;
 (*---------------------*)
-PROCEDURE avevar(data:R.Array; VAR ave,var:R.T)=
+PROCEDURE AveVar(data:R.Array; VAR ave,var:R.T)=
 VAR
   N:=NUMBER(data^); n1:=FIRST(data^); nn:=LAST(data^);
   n:=FLOAT(N,R.T);
@@ -79,9 +85,9 @@ BEGIN
     var:=var+sumdelta*sumdelta;
   END;
   var:=(var-sumdelta*sumdelta/n)/(n-R.One);
-END avevar;
+END AveVar;
 (*---------------------*)
-PROCEDURE ttest(data1,data2:R.Array;
+PROCEDURE TTest(data1,data2:R.Array;
                 VAR t,    (*Student's t-test*)
                     prob  (*probability of insignificance*)
                     :R.T) RAISES {Error}=
@@ -90,15 +96,15 @@ find t, which shows how close the means are, and
 find prob, which is small if this similarity is unlikely to
 be due to chance.  Note that their variances need to be
 similar.*)
-<*UNUSED*> CONST ftn = Module & "ttest";
+<*UNUSED*> CONST ftn = Module & "TTest";
 VAR
   N1:=NUMBER(data1^);   N2:=NUMBER(data2^);
   n1:=FLOAT(N1,R.T); n2:=FLOAT(N2,R.T);
   avg1,var1,avg2,var2,sd,df:R.T;
   vardiff:R.T;
 BEGIN
-  avevar(data1,avg1,var1);
-  avevar(data2,avg2,var2);
+  AveVar(data1,avg1,var1);
+  AveVar(data2,avg2,var2);
   vardiff:=ABS((var1-var2)/var2);
   IF vardiff>5.0D0 THEN
     RAISE Error(Err.out_of_range);
@@ -107,21 +113,21 @@ BEGIN
   sd:=RT.SqRt(((n1-R.One)*var1+(n2-R.One)*var2)/df*(R.One/n1+R.One/n2));
   t:=ABS((avg1-avg2)/sd);
   prob:=SF.BetaI(0.5D0*df,0.5D0,df/(df+t*t));
-END ttest;
+END TTest;
 
 (*--------------------*)
-PROCEDURE ftest(data1,data2:R.Array;
+PROCEDURE FTest(data1,data2:R.Array;
             VAR f,    (*F value*)
                 prob  (*probability of significance*)
                 :R.T) RAISES {Error}=
 (*do F-test, returning F and the probability that
 a difference between vars is due to chance*)
-<*UNUSED*> CONST ftn = Module & "ftest";
+<*UNUSED*> CONST ftn = Module & "FTest";
 VAR
   ave1,ave2,var1,var2,df1,df2:R.T;
 BEGIN
-  avevar(data1,ave1,var1);
-  avevar(data2,ave2,var2);
+  AveVar(data1,ave1,var1);
+  AveVar(data2,ave2,var2);
   IF var1<RT.Tiny OR var2<RT.Tiny THEN
     (*vars cannot = 0*)
     RAISE Error(Err.out_of_range);
@@ -137,9 +143,9 @@ BEGIN
   END;
   prob:=R.Two*SF.BetaI(0.5D0*df2,0.5D0*df1,df2/(df2+df1*f));
   IF prob > R.One THEN prob:=R.Two-prob; END;
-END ftest;
+END FTest;
 (*----------------------*)
-PROCEDURE chi_sqr1
+PROCEDURE ChiSqr1
                (bins:R.Array;     (*actual bin counts*)
                 ebins:R.Array;     (*expected bin counts*)
                 constraints:CARDINAL:=1;
@@ -156,7 +162,7 @@ significance of that measure.  Big chsq means big difference,
 big prob means big chance this large chsq came from pure random
 events.
 *)
-<*UNUSED*> CONST ftn = Module & "chi_sqr1";
+<*UNUSED*> CONST ftn = Module & "ChiSqr1";
 VAR
   n:=NUMBER(bins^); n1:=0; nn:=n-1;
   m:=NUMBER(ebins^);
@@ -176,9 +182,9 @@ BEGIN
   END;
   df:=FLOAT(n-constraints,R.T);
   prob:=SF.GammaQ(0.5D0*df,0.5D0*chsq);
-END chi_sqr1;
+END ChiSqr1;
 (*----------------------------*)
-PROCEDURE chi_sqr2
+PROCEDURE ChiSqr2
                (bins1:R.Array;    (*actual bin1 counts*)
                 bins2:R.Array;     (*actual bin2 counts*)
                 constraints:CARDINAL:=1;
@@ -194,7 +200,7 @@ significance of that measure.  Big chsq means big difference,
 big prob means big chance this large chsq came from pure random
 events.
 *)
-<*UNUSED*> CONST ftn = Module & "chi_sqr2";
+<*UNUSED*> CONST ftn = Module & "ChiSqr2";
 VAR
   n:=NUMBER(bins1^); n1:=0; nn:=n-1;
   m:=NUMBER(bins2^);
@@ -215,7 +221,7 @@ BEGIN
 
   df:=FLOAT(n-constraints,R.T);
   prob:=SF.GammaQ(0.5D0*df,0.5D0*chsq);
-END chi_sqr2;
+END ChiSqr2;
 
 (*==========================*)
 BEGIN
