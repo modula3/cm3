@@ -3,7 +3,7 @@ GENERIC INTERFACE FractionFmtLex(RF, Fr);
 
 (* Abstract: Formatting and parsing fraction numbers *)
 
-IMPORT Rd, Wr, Thread;
+IMPORT Rd, Thread;
 IMPORT Lex AS L;
 IMPORT FloatMode;
 (*FROM NADefinitions IMPORT Error;*)

@@ -3,7 +3,7 @@ GENERIC INTERFACE ComplexFmtLex(RF, C);
 
 (*Abstract: Formatting and parsing complex numbers*)
 
-IMPORT Rd, Wr, Thread;
+IMPORT Rd, Thread;
 IMPORT Lex AS L;
 IMPORT FloatMode;
 (*FROM NADefinitions IMPORT Error;*)

@@ -52,8 +52,8 @@ PROCEDURE Lex (rd: Rd.T; READONLY style: LexStyle; ): T
   VAR z: T;
   BEGIN
     z.re := RF.Lex(rd);
-    FSup.AssertSeparator(rd, style.sep);
-    FSup.AssertSeparator(rd, 'i');
+    FSup.AssertChar(rd, style.sep);
+    FSup.AssertChar(rd, 'i');
     z.im := RF.Lex(rd);
     RETURN z;
   END Lex;
