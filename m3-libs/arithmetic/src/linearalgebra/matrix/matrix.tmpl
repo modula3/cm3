@@ -22,7 +22,7 @@ end
 
 readonly proc EigenSystem (nm, mfield, vfield, rfield, rtrans) is
   local basic = nm & "EigenSystem"
-  build_generic_intf (basic, "EigenSystem", [mfield, vfield, rfield], VISIBLE)
+  build_generic_intf (basic, "EigenSystem", [mfield, vfield], VISIBLE)
   build_generic_impl (basic, "EigenSystem", [mfield, vfield, rfield, rtrans])
 end
 

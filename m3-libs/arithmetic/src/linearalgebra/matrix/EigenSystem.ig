@@ -9,53 +9,52 @@
 (*                                                                       *)
 (*                                                                       *)
 
-INTERFACE EigenSystem;
+GENERIC INTERFACE EigenSystem(M,V);
 
 EXCEPTION
   ArrayTooSmall;
   NoConvergence;
   ArraySizesDontMatch;
 
-(*FROM Ctypes IMPORT int;*)
-PROCEDURE Jacobi( VAR a         :REF ARRAY OF ARRAY OF LONGREAL;
+PROCEDURE Jacobi( VAR a         :M.T;
                   dim           :INTEGER;
-                  VAR d         :REF ARRAY OF LONGREAL;
-                  VAR vects     :REF ARRAY OF ARRAY OF LONGREAL;
+                  VAR d         :V.T;
+                  VAR vects     :M.T;
                   VAR nrot      :INTEGER;
                   eigenvals     := FALSE)
     RAISES {ArrayTooSmall};
-PROCEDURE EigenSort(VAR vects: REF ARRAY OF ARRAY OF LONGREAL;
-                    VAR vals: REF ARRAY OF LONGREAL)
+PROCEDURE EigenSort(VAR vects: M.T;
+                    VAR vals: V.T)
     RAISES {ArraySizesDontMatch};
 PROCEDURE Tred1(n: CARDINAL;
-                VAR a: REF ARRAY OF ARRAY OF LONGREAL;
-                VAR d,e,e2: REF ARRAY OF LONGREAL)
+                VAR a: M.T;
+                VAR d,e,e2: V.T)
     RAISES {ArraySizesDontMatch};
 
 PROCEDURE Tred2(n: CARDINAL;
-                VAR a: REF ARRAY OF ARRAY OF LONGREAL;
-                VAR d,e: REF ARRAY OF LONGREAL)
+                VAR a: M.T;
+                VAR d,e: V.T)
     RAISES {ArraySizesDontMatch};
 
 PROCEDURE Trbak1(n: CARDINAL;
-                 a: REF ARRAY OF ARRAY OF LONGREAL;
-                 d,e: REF ARRAY OF LONGREAL;
-                 VAR z: REF ARRAY OF ARRAY OF LONGREAL;
+                 a: M.T;
+                 d,e: V.T;
+                 VAR z: M.T;
                  m1,m2: CARDINAL)
     RAISES {ArraySizesDontMatch};
 
 PROCEDURE Trbak3(n: CARDINAL;
-                 a: REF ARRAY OF LONGREAL;
-                 d,e: REF ARRAY OF LONGREAL;
-                 VAR z: REF ARRAY OF ARRAY OF LONGREAL;
+                 a: V.T;
+                 d,e: V.T;
+                 VAR z: M.T;
                  m1,m2: CARDINAL)
     RAISES {ArraySizesDontMatch};
 
-PROCEDURE Tql1(VAR d,e: REF ARRAY OF LONGREAL)
+PROCEDURE Tql1(VAR d,e: V.T)
     RAISES {ArraySizesDontMatch,NoConvergence};
 
-PROCEDURE Tql2(VAR d,e: REF ARRAY OF LONGREAL;
-               VAR z: REF ARRAY OF ARRAY OF LONGREAL)
+PROCEDURE Tql2(VAR d,e: V.T;
+               VAR z: M.T)
     RAISES {ArraySizesDontMatch,NoConvergence};
 
 END EigenSystem.
