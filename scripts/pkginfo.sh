@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkginfo.sh,v 1.6 2003-01-31 19:34:18 wagner Exp $
+# $Id: pkginfo.sh,v 1.7 2003-12-30 10:46:08 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -63,7 +63,7 @@ listpkgs() {
 
 syscall_wrappers_exist() {
   T1="${ROOT}/m3-libs/m3core/src/runtime/${TARGET}/RTHeapDepC.c"
-  T1="${ROOT}/m3-libs/m3gc-enhanced/src/runtime/${TARGET}/RTHeapDepC.c"
+  T2="${ROOT}/m3-libs/m3gc-enhanced/src/runtime/${TARGET}/RTHeapDepC.c"
   if [ -f "$T1" ] ; then
     return 0
   fi
