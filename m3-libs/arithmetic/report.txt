@@ -16,10 +16,6 @@ todo:
      - integer: output of base as subscript
      - complex: suppress imaginary part if zero
      - fraction: suppress denominator if one
-  - directory structure:
-     - basic types: integer, biginteger, float, complex, polar
-     - linear algebra: vector, matrix, tensor (new)
-     - algebra: polynomial, galois field, root
   - (overflow check in integer modules)
 
 
