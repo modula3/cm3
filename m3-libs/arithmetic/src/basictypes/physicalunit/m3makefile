@@ -16,6 +16,7 @@ PhysicalValue("LongRealComplex", "LongRealComplexFast")
 PhysicalValue("ExtendedComplex", "ExtendedComplexFast")
 
 generic_module("CompositeUnit")
+generic_module("UsualUnit")
 generic_module("UnitDatabase")
 UnitDatabase("Real",            "RealBasic")
 UnitDatabase("LongReal",        "LongRealBasic")

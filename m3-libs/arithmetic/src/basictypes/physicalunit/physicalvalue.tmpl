@@ -10,13 +10,18 @@ end
 
 readonly proc UnitDatabase (nm, field) is
   local udb    = nm & "UnitDatabase"
+  local uu     = nm & "UsualUnit"
+  local uulist = uu & "List"
+  list(uu, uu)
   local cu     = nm & "CompositeUnit"
   local culist = cu & "List"
   list(cu, cu)
-  build_generic_intf (cu,  "CompositeUnit", [], VISIBLE)
-  build_generic_impl (cu,  "CompositeUnit", [udb])
-  build_generic_intf (udb, "UnitDatabase",  [field, cu, culist], VISIBLE)
-  build_generic_impl (udb, "UnitDatabase",  [       cu, culist])
+  build_generic_intf (uu,  "UsualUnit",     [field], VISIBLE)
+  build_generic_impl (uu,  "UsualUnit",     [])
+  build_generic_intf (cu,  "CompositeUnit", [uulist], VISIBLE)
+  build_generic_impl (cu,  "CompositeUnit", [])
+  build_generic_intf (udb, "UnitDatabase",  [field, uu, uulist,     culist], VISIBLE)
+  build_generic_impl (udb, "UnitDatabase",  [       uu, uulist, cu, culist])
 end
 
 

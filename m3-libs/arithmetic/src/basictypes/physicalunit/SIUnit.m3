@@ -4,7 +4,8 @@
 MODULE SIUnit;
 
 IMPORT LongRealTrans AS RT,
-       LongRealUnitDatabase AS DB;
+       LongRealUnitDatabase AS DB,
+       LongRealUsualUnit AS UU;
 
 
 PROCEDURE CreateDatabase():DB.T=
@@ -41,7 +42,7 @@ TYPE
 CONST
   isUnit      = DB.ScaledUnitFlagSet{DB.ScaledUnitFlags.isUnit};
   defScale    = DB.ScaledUnitFlagSet{DB.ScaledUnitFlags.default};
-  independent = DB.UsualUnitFlagSet{DB.UsualUnitFlags.independent};
+  independent = UU.FlagSet{UU.Flags.independent};
 
 BEGIN
   DB.AddUnit(db,voltage,scales:=SUA{

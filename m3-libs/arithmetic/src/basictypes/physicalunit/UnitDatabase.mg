@@ -1,18 +1,15 @@
-GENERIC MODULE UnitDatabase(CU,CUList);
+GENERIC MODULE UnitDatabase(UU,UUList,CU,CUList);
 
 IMPORT PhysicalUnit AS U;
 
 PROCEDURE AddUnit(VAR db:T;
                   READONLY unit:ARRAY OF U.ExpType;
-                  flags:UsualUnitFlagSet;
+                  flags:UU.FlagSet;
                   READONLY scales:ARRAY OF ScaledUnitInit)=
 VAR
-  uu := NEW(UsualUnit,unit:=U.FromArray(unit),flags:=flags);
+  newScales : REF ARRAY OF UU.ScaledUnit;
+  defScale  : CARDINAL;
 BEGIN
-  (* add new item to the list *)
-  uu.next  := db.first;
-  db.first := uu;
-
   VAR
     cnt : CARDINAL := 0;
   BEGIN
@@ -21,26 +18,32 @@ BEGIN
         INC(cnt);
       END;
     END;
-    uu.scales:=NEW(REF ARRAY OF ScaledUnit,cnt);
+    newScales:=NEW(REF ARRAY OF UU.ScaledUnit,cnt);
   END;
   VAR
     k : CARDINAL := 0;
   BEGIN
     FOR j:=0 TO LAST(scales) DO
       IF ScaledUnitFlags.isUnit IN scales[j].flags THEN
-        uu.scales[k].mag    := scales[j].mag;
-        uu.scales[k].symbol := scales[j].symbol;
+        newScales[k].mag    := scales[j].mag;
+        newScales[k].symbol := scales[j].symbol;
         IF ScaledUnitFlags.default IN scales[j].flags THEN
-          uu.defScale := k;
+          defScale := k;
         END;
         INC(k);
       END;
     END;
   END;
+
+  (* add new item to the list *)
+  db.first :=
+    UUList.Cons(
+      UU.T{unit:=U.FromArray(unit),flags:=flags,scales:=newScales,defScale:=defScale},
+      db.first);
 END AddUnit;
 
 (*
-PROCEDURE NextItem(VAR uu:UsualUnit):BOOLEAN=
+PROCEDURE NextItem(VAR uu:UU.T):BOOLEAN=
   BEGIN
     uu:=uu.next;
     RETURN uu#NIL;
@@ -50,7 +53,7 @@ PROCEDURE NextItem(VAR uu:UsualUnit):BOOLEAN=
 (*find the usual unit incl. exponent which matches best to the given unit*)
 PROCEDURE FindBestUU(READONLY db:T;remain:U.T;isFirst:BOOLEAN):CU.T=
   VAR
-    maxUU  : UsualUnit := NIL;
+    maxUU  : UUList.T := NIL;
     uu     := db.first;
     minDiff: U.ExpType := LAST(U.ExpType);
     maxExp : U.ExpType := 0;
@@ -62,7 +65,7 @@ PROCEDURE FindBestUU(READONLY db:T;remain:U.T;isFirst:BOOLEAN):CU.T=
         minExp     :U.ExpType:=0;
       BEGIN
         VAR
-          it:=uu.unit.iterate();
+          it:=uu.head.unit.iterate();
           dim:INTEGER;
           uuExp,rmExp,
           exp        :U.ExpType;
@@ -100,7 +103,7 @@ PROCEDURE FindBestUU(READONLY db:T;remain:U.T;isFirst:BOOLEAN):CU.T=
             WHILE it.next(dim,rmExp) DO
               <*ASSERT dim>0*>
               uuExp:=0;
-              EVAL uu.unit.get(dim,uuExp);
+              EVAL uu.head.unit.get(dim,uuExp);
               IF rmExp>0 THEN
                 INC (diff, rmExp - uuExp * minExp);
               ELSE
@@ -111,7 +114,7 @@ PROCEDURE FindBestUU(READONLY db:T;remain:U.T;isFirst:BOOLEAN):CU.T=
 
             IF (diff<minDiff OR
                 (maxExp<=0 AND minExp>0 AND diff<=minDiff)) AND
-               (NOT UsualUnitFlags.independent IN uu.flags OR
+               (NOT UU.Flags.independent IN uu.head.flags OR
                 (isFirst AND diff=0))  THEN
               minDiff := diff;
               maxUU   := uu;
@@ -122,7 +125,7 @@ PROCEDURE FindBestUU(READONLY db:T;remain:U.T;isFirst:BOOLEAN):CU.T=
         END;
       END;
 
-      uu := uu.next;
+      uu := uu.tail;
     END;
 
     RETURN CU.T{uu := maxUU, exp := maxExp};
@@ -140,7 +143,7 @@ BEGIN
     ucList:=CUList.Cons(FindBestUU(db,remain,ucList=NIL),ucList);
 
     (* extract the found usual unit from the given one *)
-    remain:=U.Sub(remain,U.Scale(ucList.head.uu.unit,ucList.head.exp));
+    remain:=U.Sub(remain,U.Scale(ucList.head.uu.head.unit,ucList.head.exp));
   END;
 
   (*reverse order and
