@@ -1,6 +1,7 @@
 import("libm3")
 import("m3na")
 import("wavelib")
+import("bilist")
 
 module("TestDaubechies")
 module("TestTransition")
