@@ -6,7 +6,7 @@ template("functional")
 generic_module("Functional")
 Functional("Real",     "Real",     "Basic")
 Functional("LongReal", "LongReal", "Basic")
-Functional("Extended", "Extended", "Basic")
+%Functional("Extended", "Extended", "Basic")
 
 generic_module("FunctionalDeriv2")
 FunctionalDeriv2("Real",     "Real",     "Basic")

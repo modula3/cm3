@@ -23,6 +23,8 @@ implementation("TestUnit")
 implementation("TestLapack")
 implementation("TestTex")
 implementation("TestPLPlot")
+implementation("TestFunctional")
+
 module("Test")
 program("test")
 
