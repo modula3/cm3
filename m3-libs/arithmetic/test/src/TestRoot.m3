@@ -435,6 +435,7 @@ PROCEDURE TestRootOp():BOOLEAN=
     x:=IR.FromRoots(rootx);
     y:=IR.FromRoots(rooty);
     z:=opr(x,y);
+(*
     Msg("x-poly " & IPF.Fmt(x) & "\t");
     Msg("y-poly " & IPF.Fmt(y) & "\n");
     Msg("z-poly " & IPF.Fmt(z) & "\n");
@@ -442,13 +443,18 @@ PROCEDURE TestRootOp():BOOLEAN=
     WritePowerSeq(IR.ToPowerSumSeq(y,LAST(z^)));
     WritePowerSeq(IR.ToPowerSumSeq(z,LAST(z^)));
     Msg("test zeroes ");
+*)
     FOR j:=0 TO LAST(rootx) DO
       FOR k:=0 TO LAST(rooty) DO
+(*
         Msg(Fmt.Int(j) & "," & Fmt.Int(k) & "  ");
+*)
         <*ASSERT I.IsZero(IP.Eval(z,op(rootx[j],rooty[k])))*>
       END;
     END;
+(*
     Msg("\n");
+*)
   END TestSingle;
 
   PROCEDURE TestPower(READONLY root : ARRAY OF I.T; n:I.T;) =
@@ -457,11 +463,13 @@ PROCEDURE TestRootOp():BOOLEAN=
   BEGIN
     x:=IR.FromRoots(root);
     z:=IR.PowN(x,n);
+(*
     Msg("x-poly " & IPF.Fmt(x) & "\t");
     Msg("pow-poly " & IPF.Fmt(z) & "\n");
     WritePowerSeq(IR.ToPowerSumSeq(x,LAST(z^)));
     WritePowerSeq(IR.ToPowerSumSeq(z,LAST(z^)));
     Msg("test zeroes ");
+*)
     FOR j:=0 TO LAST(root) DO
       VAR
         pow:I.T:=I.One;
@@ -469,11 +477,15 @@ PROCEDURE TestRootOp():BOOLEAN=
         FOR k:=0 TO n-1 DO
           pow:=I.Mul(pow,root[j]);
         END;
+(*
         Msg(Fmt.Int(j) & "  ");
+*)
         <*ASSERT I.IsZero(IP.Eval(z,pow))*>
       END;
     END;
+(*
     Msg("\n");
+*)
   END TestPower;
 
   PROCEDURE NewOneChain (len:CARDINAL; c:I.T):IR.T=
@@ -522,13 +534,17 @@ BEGIN
         (*Msg("y"&IPF.Fmt(y));*)
         IF j+k<8 THEN (*otherwise internal overflow*)
           z:=IR.Mul(x,y);
+(*
           Msg(Fmt.FN("%s,%s - %s * %s = %s\n", ARRAY OF TEXT
             {Fmt.Int(j), Fmt.Int(k), IPF.Fmt(x), IPF.Fmt(y), IPF.Fmt(z)}));
+*)
         END;
         IF j+k<7 THEN (*otherwise internal overflow*)
           z:=IR.Add(x,y);
+(*
           Msg(Fmt.FN("%s,%s - %s + %s = %s\n", ARRAY OF TEXT
             {Fmt.Int(j), Fmt.Int(k), IPF.Fmt(x), IPF.Fmt(y), IPF.Fmt(z)}));
+*)
         END;
       END;
     END;
@@ -553,7 +569,9 @@ BEGIN
   (2,4) -> (6,4)
 *)
     z:=IR.Mul(x,y);
+(*
     Msg(IPF.Fmt(z) & "\n");
+*)
 
     x:=IR.New(1); x^:=IR.TBody{-1,3}; (* 1/3 *)
 (*    x:=IR.New(2); x^:=IR.TBody{1,-8,15}; (* 1/3, 1/5 *)  *)
@@ -563,7 +581,9 @@ BEGIN
 (*    y:=IR.New(3); y^:=IR.TBody{-1,11,-32,28}; (* 1/2, 1/2, 1/7*)  *)
 (*    y:=IR.New(3); y^:=IR.TBody{0,1,-9,14}; (* 1/2, 1/7*)  *)
     z:=IR.Mul(x,y);
+(*
     Msg(IPF.Fmt(z) & "\n");
+*)
   END;
 
   TestPower(ARRAY OF I.T{1,1,1},3);
@@ -584,8 +604,10 @@ BEGIN
       x:=NewOneChain(j,2);
       FOR k:=1 TO 4 DO
         z:=IR.PowN(x,k);
+(*
         Msg(Fmt.FN("%s^%s = %s\n",
                    ARRAY OF TEXT{IPF.Fmt(x), Fmt.Int(k), IPF.Fmt(z)}));
+*)
         <*ASSERT IP.Equal(z,IR.PowNSlow(x,k))*>
       END;
     END;
