@@ -3,11 +3,11 @@
 
 UNSAFE MODULE DB EXPORTS DB, DBRep;
 
-IMPORT Fmt, Process, SQL, SQLext, Text, TextF, WeakRef, Word;
+IMPORT Fmt, Process, SQL, SQLext, Text, WeakRef, Word, M3toC, Ctypes;
 FROM SQLtypes IMPORT
   SQLHENV, SQLRETURN, SQLSMALLINT, SQLHDBC, SQLHSTMT, SQLINTEGER,
   SQLUINTEGER, LDOUBLE, DATE_STRUCT, TIME_STRUCT, TIMESTAMP_STRUCT,
-  SFLOAT, SWORD;
+  SFLOAT, SWORD, SQLCHAR_star;
 
 
 (* This module (ab)uses two compiler-dependent features of the code:
@@ -47,6 +47,9 @@ PROCEDURE Connect (database, user_id, password: TEXT): T  RAISES {Error} =
   VAR
     t    := NEW (T);
     err  : SQLRETURN;
+    database_c := M3toC.SharedTtoS(database);
+    user_id_c  := M3toC.SharedTtoS(user_id);
+    password_c := M3toC.SharedTtoS(password);
   BEGIN
     Init ();
 
@@ -54,9 +57,12 @@ PROCEDURE Connect (database, user_id, password: TEXT): T  RAISES {Error} =
     IF (err # SQL.SQL_SUCCESS) THEN CheckErr (err, NIL, t) END;
 
     err := SQL.SQLConnect (t.hdbc,
-             ADR (database[0]),  Text.Length (database),
-             ADR (user_id[0]),   Text.Length (user_id),
-             ADR (password[0]),  Text.Length (password));
+             LOOPHOLE(database_c, SQLCHAR_star),  Text.Length(database),
+             LOOPHOLE(user_id_c, SQLCHAR_star),   Text.Length(user_id),
+             LOOPHOLE(password_c, SQLCHAR_star),  Text.Length(password));
+    M3toC.FreeSharedS(database, database_c);
+    M3toC.FreeSharedS(user_id, user_id_c);
+    M3toC.FreeSharedS(password, password_c);
     IF (err # SQL.SQL_SUCCESS) THEN CheckErr (err, NIL, t); END;
 
     EVAL WeakRef.FromRef (t, CleanupConnection);
@@ -210,11 +216,15 @@ PROCEDURE StmtConnection (st: Stmt): T =
   END StmtConnection;
 
 PROCEDURE Prepare (st: Stmt;  operation: TEXT) RAISES {Error} =
-  VAR err: SQLRETURN;
+  VAR 
+    err: SQLRETURN;
+    operation_c := M3toC.SharedTtoS(operation);
   BEGIN
     LOCK st DO
       CheckStmt (st, 12, "prepare", check_exec := FALSE);
-      err := SQL.SQLPrepare (st.hstmt, ADR (operation[0]), Text.Length (operation));
+      err := SQL.SQLPrepare (st.hstmt, LOOPHOLE(operation, SQLCHAR_star), 
+                             Text.Length (operation));
+      M3toC.FreeSharedS(operation, operation_c);
       IF (err # SQL.SQL_SUCCESS) THEN CheckErr (err, st); END;
       st.prepared := TRUE;
       st.executed := FALSE;
@@ -224,7 +234,9 @@ PROCEDURE Prepare (st: Stmt;  operation: TEXT) RAISES {Error} =
   END Prepare;
 
 PROCEDURE Execute (st: Stmt;  operation: TEXT) RAISES {Error} =
-  VAR err: SQLRETURN;
+  VAR
+    err: SQLRETURN;
+    operation_c: Ctypes.char_star;
   BEGIN
     LOCK st DO
       CheckStmt (st, 15, "execute", check_exec := FALSE);
@@ -237,8 +249,10 @@ PROCEDURE Execute (st: Stmt;  operation: TEXT) RAISES {Error} =
         IF (err # SQL.SQL_SUCCESS) THEN CheckErr (err, st); END;
       ELSE
         st.prepared := FALSE;
-        err := SQL.SQLExecDirect (st.hstmt, ADR (operation[0]),
+        operation_c := M3toC.SharedTtoS(operation);
+        err := SQL.SQLExecDirect (st.hstmt, LOOPHOLE(operation, SQLCHAR_star),
                                   Text.Length (operation));
+        M3toC.FreeSharedS(operation, operation_c);
         IF (err # SQL.SQL_SUCCESS) THEN CheckErr (err, st); END;
       END;
       st.executed := TRUE;
@@ -888,11 +902,15 @@ PROCEDURE GetCursorName (st: Stmt): TEXT RAISES {Error} =
   END GetCursorName;
 
 PROCEDURE SetCursorName (st: Stmt;  nm: TEXT) RAISES {Error} =
-  VAR err: SQLRETURN;
+  VAR 
+    err: SQLRETURN;
+    nm_c := M3toC.SharedTtoS(nm);
   BEGIN
     LOCK st DO
       CheckStmt (st, 30, "set the cursor name in", check_exec := FALSE);
-      err := SQL.SQLSetCursorName (st.hstmt, ADR (nm[0]), Text.Length (nm));
+      err := SQL.SQLSetCursorName (st.hstmt, LOOPHOLE(nm, SQLCHAR_star),
+                                   Text.Length (nm));
+      M3toC.FreeSharedS(nm, nm_c);
       IF (err # SQL.SQL_SUCCESS) THEN CheckErr (err, st); END;
     END;
   END SetCursorName;
