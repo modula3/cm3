@@ -2,7 +2,7 @@
                                    GCC Bugs
 
    The latest version of this document is always available at
-   [1]http://www.gnu.org/software/gcc/bugs.html.
+   [1]http://gcc.gnu.org/bugs.html.
      _________________________________________________________________
 
 Table of Contents
@@ -15,25 +15,24 @@ Table of Contents
           + [7]Detailed bug reporting instructions for GNAT
           + [8]Detailed bug reporting instructions when using a
             precompiled header
-     * [9]Managing Bugs (GNATS and the test-suite)
-     * [10]Frequently Reported Bugs in GCC
-          + [11]General
-          + [12]Fortran
-          + [13]C
-          + [14]C++
-               o [15]Common problems updating from G++ 2.95 to G++ 3.0
-               o [16]Non-bugs
-               o [17]Missing features
-               o [18]Parse errors for "simple" code
-               o [19]Optimization at -O3 takes a very long time
+     * [9]Frequently Reported Bugs in GCC
+          + [10]General
+          + [11]Fortran
+          + [12]C
+          + [13]C++
+               o [14]Common problems updating from G++ 2.95 to G++ 3.0
+               o [15]Non-bugs
+               o [16]Missing features
+               o [17]Parse errors for "simple" code
+               o [18]Optimization at -O3 takes a very long time
      _________________________________________________________________
 
                                 Reporting Bugs
 
-   Our preferred way of receiving bugs is via the [20]GCC GNATS bug
+   Our preferred way of receiving bugs is via the [19]GCC GNATS bug
    reporting system.
 
-   Before you report a bug, please check the [21]list of well-known bugs
+   Before you report a bug, please check the [20]list of well-known bugs
    and, if possible in any way, try a current development snapshot. If
    you want to report a bug with versions of GCC before 3.1 we strongly
    recommend upgrading to the current release first.
@@ -101,18 +100,18 @@ Summarized bug reporting instructions
 
   Where to post it
 
-   Please submit your bug report directly to the [22]GCC GNATS bug
+   Please submit your bug report directly to the [21]GCC GNATS bug
    database. Only if this is not possible, mail all information to
-   [23]bug-gcc@gnu.org or [24]gcc-bugs@gcc.gnu.org.
+   [22]bug-gcc@gnu.org or [23]gcc-bugs@gcc.gnu.org.
 
    The GCC lists have message size limits (200 kbytes) and bug reports
    over those limits will currently be bounced. If your bug is larger
-   than that, please post it using the [25]GCC GNATS bug database.
+   than that, please post it using the [24]GCC GNATS bug database.
 
 Detailed bug reporting instructions
 
-   Please refer to the [26]next section when reporting bugs in GNAT, the
-   Ada compiler, or to the [27]one after that when reporting bugs that
+   Please refer to the [25]next section when reporting bugs in GNAT, the
+   Ada compiler, or to the [26]one after that when reporting bugs that
    appear when using a precompiled header.
 
    In general, all the information we need can be obtained by collecting
@@ -168,7 +167,7 @@ Detailed bug reporting instructions
 
 Detailed bug reporting instructions for GNAT
 
-   See the [28]previous section for bug reporting instructions for GCC
+   See the [27]previous section for bug reporting instructions for GCC
    language implementations other than Ada.
 
    Bug reports have to contain at least the following information in
@@ -200,7 +199,7 @@ Detailed bug reporting instructions for GNAT
    you have to report a bug in gnatprep).
 
    When you have checked that your report meets these criteria, please
-   submit it according to our [29]generic instructions. (If you use a
+   submit it according to our [28]generic instructions. (If you use a
    mailing list for reporting, please include an "[Ada]" tag in the
    subject.)
 
@@ -210,11 +209,11 @@ Detailed bug reporting instructions when using a precompiled header
    first thing to do is to delete the precompiled header, and try running
    the same GCC command again. If the bug happens again, the bug doesn't
    really involve precompiled headers, please report it without using
-   them by following the instructions [30]above.
+   them by following the instructions [29]above.
 
    If you've found a bug while building a precompiled header (for
    instance, the compiler crashes), follow the usual instructions
-   [31]above.
+   [30]above.
 
    If you've found a real precompiled header bug, what we'll need to
    reproduce it is the sources to build the precompiled header (as a
@@ -224,26 +223,6 @@ Detailed bug reporting instructions when using a precompiled header
 
    Please don't send us the actual precompiled header. It is likely to be
    very large and we can't use it to reproduce the problem.
-
-                   Managing Bugs (GNATS and the test-suite)
-
-   This section contains information mostly intended for GCC
-   contributors.
-
-   If you find a bug, but you are not fixing it (yet):
-    1. Create a (minimal) test-case.
-    2. Add the test-case to our test-suite, marking it as XFAIL unless
-       the bug is a regression.
-    3. Add a bug report referencing the test-case to GNATS.
-
-   If you fix a bug for which there is already a GNATS entry:
-    1. Remove the XFAIL on the test-case.
-    2. Close the bug report in GNATS.
-
-   If you find a bug, and you are fixing it right then:
-    1. Create a (minimal) test-case.
-    2. Add the test-case to our test-suite, marking it as PASS.
-    3. Check in your fixes.
      _________________________________________________________________
 
                         Frequently Reported Bugs in GCC
@@ -251,7 +230,7 @@ Detailed bug reporting instructions when using a precompiled header
 Fortran
 
    Fortran bugs are documented in the G77 manual rather than explicitly
-   listed here. Please see [32]Known Causes of Trouble with GNU Fortran
+   listed here. Please see [31]Known Causes of Trouble with GNU Fortran
    in the G77 manual.
      _________________________________________________________________
 
@@ -283,7 +262,7 @@ FILE *yyin = stdin;
 
           There is a common misconception that the GCC developers are
           responsible for GNU libc. These are in fact two entirely
-          separate projects; please check the [33]GNU libc web pages for
+          separate projects; please check the [32]GNU libc web pages for
           details.
 
    Cannot use preprocessor directive in macro arguments.
@@ -347,7 +326,7 @@ C++
    reported very often, but not yet fixed. While it is certainly better
    to fix bugs instead of documenting them, this document might save
    people the effort of writing a bug report when the bug is already
-   well-known. [34]How to report bugs tells you how to report a bug.
+   well-known. [33]How to report bugs tells you how to report a bug.
 
    There are many reasons why reported bugs don't get fixed. It might be
    difficult to fix, or fixing it might break compatibility. Often,
@@ -365,12 +344,12 @@ C++
   Common problems updating from G++ 2.95 to G++ 3.0
 
    G++ 3.0 conforms much closer to the ISO C++ standard (available at
-   [35]http://www.ncits.org/cplusplus.htm).
+   [34]http://www.ncits.org/cplusplus.htm).
 
    We have also implemented some of the core and library defect reports
    (available at
-   [36]http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/cwg_defects.html &
-   [37]http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/lwg-defects.html
+   [35]http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/cwg_defects.html &
+   [36]http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/lwg-defects.html
    respectively).
      * The ABI has changed. This means that both class layout and name
        mangling is different. You must recompile all c++ libraries (if
@@ -478,7 +457,7 @@ C++
           the nearest representable number.
 
           This is not a bug in the compiler, but an inherent limitation
-          of the float and double types. Please study [38]this paper for
+          of the float and double types. Please study [37]this paper for
           more information.
 
    Templates, scoping, and digraphs.
@@ -584,7 +563,7 @@ A B::f1(bool b)
 
 References
 
-   1. http://www.gnu.org/software/gcc/bugs.html
+   1. http://gcc.gnu.org/bugs.html
    2. http://gcc.gnu.org/bugs.html#report
    3. http://gcc.gnu.org/bugs.html#need
    4. http://gcc.gnu.org/bugs.html#dontwant
@@ -592,33 +571,32 @@ References
    6. http://gcc.gnu.org/bugs.html#detailed
    7. http://gcc.gnu.org/bugs.html#gnat
    8. http://gcc.gnu.org/bugs.html#pch
-   9. http://gcc.gnu.org/bugs.html#manage
-  10. http://gcc.gnu.org/bugs.html#known
-  11. http://gcc.gnu.org/bugs.html#general
-  12. http://gcc.gnu.org/bugs.html#fortran
-  13. http://gcc.gnu.org/bugs.html#c
-  14. http://gcc.gnu.org/bugs.html#cplusplus
-  15. http://gcc.gnu.org/bugs.html#updating
-  16. http://gcc.gnu.org/bugs.html#nonbugs
-  17. http://gcc.gnu.org/bugs.html#missing
-  18. http://gcc.gnu.org/bugs.html#parsing
-  19. http://gcc.gnu.org/bugs.html#-O3
-  20. http://gcc.gnu.org/gnats.html
-  21. http://gcc.gnu.org/bugs.html#known
-  22. http://gcc.gnu.org/gnats.html
-  23. mailto:bug-gcc@gnu.org
-  24. mailto:gcc-bugs@gcc.gnu.org
-  25. http://gcc.gnu.org/gnats.html
-  26. http://gcc.gnu.org/bugs.html#gnat
-  27. http://gcc.gnu.org/bugs.html#pch
-  28. http://gcc.gnu.org/bugs.html#detailed
-  29. http://gcc.gnu.org/bugs.html#where
+   9. http://gcc.gnu.org/bugs.html#known
+  10. http://gcc.gnu.org/bugs.html#general
+  11. http://gcc.gnu.org/bugs.html#fortran
+  12. http://gcc.gnu.org/bugs.html#c
+  13. http://gcc.gnu.org/bugs.html#cplusplus
+  14. http://gcc.gnu.org/bugs.html#updating
+  15. http://gcc.gnu.org/bugs.html#nonbugs
+  16. http://gcc.gnu.org/bugs.html#missing
+  17. http://gcc.gnu.org/bugs.html#parsing
+  18. http://gcc.gnu.org/bugs.html#-O3
+  19. http://gcc.gnu.org/gnats.html
+  20. http://gcc.gnu.org/bugs.html#known
+  21. http://gcc.gnu.org/gnats.html
+  22. mailto:bug-gcc@gnu.org
+  23. mailto:gcc-bugs@gcc.gnu.org
+  24. http://gcc.gnu.org/gnats.html
+  25. http://gcc.gnu.org/bugs.html#gnat
+  26. http://gcc.gnu.org/bugs.html#pch
+  27. http://gcc.gnu.org/bugs.html#detailed
+  28. http://gcc.gnu.org/bugs.html#where
+  29. http://gcc.gnu.org/bugs.html#detailed
   30. http://gcc.gnu.org/bugs.html#detailed
-  31. http://gcc.gnu.org/bugs.html#detailed
-  32. http://gcc.gnu.org/onlinedocs/g77/Trouble.html
-  33. http://www.gnu.org/software/glibc/
-  34. http://gcc.gnu.org/bugs.html#report
-  35. http://www.ncits.org/cplusplus.htm
-  36. http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/cwg_defects.html
-  37. http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/lwg-defects.html
-  38. http://www.validlab.com/goldberg/paper.ps
+  31. http://gcc.gnu.org/onlinedocs/g77/Trouble.html
+  32. http://www.gnu.org/software/glibc/
+  33. http://gcc.gnu.org/bugs.html#report
+  34. http://www.ncits.org/cplusplus.htm
+  35. http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/cwg_defects.html
+  36. http://anubis.dkuug.dk/jtc1/sc22/wg21/docs/lwg-defects.html
+  37. http://www.validlab.com/goldberg/paper.ps

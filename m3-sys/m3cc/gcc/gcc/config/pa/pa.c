@@ -5159,13 +5159,18 @@ output_cbranch (operands, nullify, length, negated, insn)
   static char buf[100];
   int useskip = 0;
 
-  /* A conditional branch to the following instruction (eg the delay slot) is
-     asking for a disaster.  This can happen when not optimizing.
+  /* A conditional branch to the following instruction (eg the delay slot)
+     is asking for a disaster.  This can happen when not optimizing and
+     when jump optimization fails.
 
-     In such cases it is safe to emit nothing.  */
+     While it is usually safe to emit nothing, this can fail if the preceding
+     instruction is a nullified branch with an empty delay slot and the
+     same branch target as this branch.  We could check for this but
+     jump optimization should eliminate these jumps.  It is always
+     safe to emit a nop.  */
 
   if (next_active_insn (JUMP_LABEL (insn)) == next_active_insn (insn))
-    return "";
+    return "nop";
 
   /* If this is a long branch with its delay slot unfilled, set `nullify'
      as it can nullify the delay slot and save a nop.  */
@@ -5369,7 +5374,7 @@ output_bb (operands, nullify, length, negated, insn, which)
      jump.  But be prepared just in case.  */
 
   if (next_active_insn (JUMP_LABEL (insn)) == next_active_insn (insn))
-    return "";
+    return "nop";
 
   /* If this is a long branch with its delay slot unfilled, set `nullify'
      as it can nullify the delay slot and save a nop.  */
@@ -5517,7 +5522,7 @@ output_bvb (operands, nullify, length, negated, insn, which)
      jump.  But be prepared just in case.  */
 
   if (next_active_insn (JUMP_LABEL (insn)) == next_active_insn (insn))
-    return "";
+    return "nop";
 
   /* If this is a long branch with its delay slot unfilled, set `nullify'
      as it can nullify the delay slot and save a nop.  */
@@ -5926,10 +5931,19 @@ output_millicode_call (insn, call_dest)
 	  output_asm_insn ("{bl|b,l} .+8,%%r1", xoperands);
 
 	  /* Add %r1 to the offset of our target from the next insn.  */
-	  output_asm_insn ("addil L%%%0-%1,%%r1", xoperands);
-	  ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "L",
-				     CODE_LABEL_NUMBER (xoperands[1]));
-	  output_asm_insn ("ldo R%%%0-%1(%%r1),%%r1", xoperands);
+	  if (TARGET_SOM || !TARGET_GAS)
+	    {
+	      output_asm_insn ("addil L%%%0-%1,%%r1", xoperands);
+	      ASM_OUTPUT_INTERNAL_LABEL (asm_out_file, "L",
+					 CODE_LABEL_NUMBER (xoperands[1]));
+	      output_asm_insn ("ldo R%%%0-%1(%%r1),%%r1", xoperands);
+	    }
+	  else
+	    {
+	      output_asm_insn ("addil L'%0-$PIC_pcrel$0+8,%%r1", xoperands);
+	      output_asm_insn ("ldo R'%0-$PIC_pcrel$0+12(%%r1),%%r1",
+			       xoperands);
+	    }
 
 	  /* Get the return address into %r31.  */
 	  output_asm_insn ("blr 0,%3", xoperands);
@@ -7192,12 +7206,11 @@ insn_refs_are_delayed (insn)
    ??? We might want to restructure this so that it looks more like other
    ports.  */
 rtx
-function_arg (cum, mode, type, named, incoming)
+function_arg (cum, mode, type, named)
      CUMULATIVE_ARGS *cum;
      enum machine_mode mode;
      tree type;
      int named ATTRIBUTE_UNUSED;
-     int incoming;
 {
   int max_arg_words = (TARGET_64BIT ? 8 : 4);
   int fpr_reg_base;
@@ -7331,7 +7344,7 @@ function_arg (cum, mode, type, named, incoming)
   if (((TARGET_PORTABLE_RUNTIME || TARGET_64BIT || TARGET_ELF32)
        /* If we are doing soft-float with portable runtime, then there
 	  is no need to worry about FP regs.  */
-       && ! TARGET_SOFT_FLOAT
+       && !TARGET_SOFT_FLOAT
        /* The parameter must be some kind of float, else we can just
 	  pass it in integer registers.  */
        && FLOAT_MODE_P (mode)
@@ -7340,14 +7353,15 @@ function_arg (cum, mode, type, named, incoming)
        /* libcalls do not need to pass items in both FP and general
 	  registers.  */
        && type != NULL_TREE
-       /* All this hair applies to outgoing args only.  */
-       && ! incoming)
+       /* All this hair applies to "outgoing" args only.  This includes
+	  sibcall arguments setup with FUNCTION_INCOMING_ARG.  */
+       && !cum->incoming)
       /* Also pass outgoing floating arguments in both registers in indirect
 	 calls with the 32 bit ABI and the HP assembler since there is no
 	 way to the specify argument locations in static functions.  */
-      || (! TARGET_64BIT
-	  && ! TARGET_GAS
-	  && ! incoming
+      || (!TARGET_64BIT
+	  && !TARGET_GAS
+	  && !cum->incoming
 	  && cum->indirect
 	  && FLOAT_MODE_P (mode)))
     {
