@@ -1,6 +1,7 @@
 import("libm3")
 import("arithmetic")
 import("wavelib")
+import("fftw")
 import("bilist")
 
 module("TestDaubechies")
@@ -9,6 +10,7 @@ module("TestBSpline")
 module("TestMatchWavelet")
 module("TestCDFLifting")
 module("TestTransform")
+module("TestSmoothness")
 implementation("Main")
 
 program("test")

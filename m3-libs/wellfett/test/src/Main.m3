@@ -1,6 +1,6 @@
 MODULE Main;
 
-FROM TestMatchWavelet IMPORT Test;
+FROM TestSmoothness IMPORT Test;
 
 BEGIN
   Test();
